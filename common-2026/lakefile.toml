@@ -1,0 +1,10 @@
+name = "common-2026"
+version = "0.1.0"
+defaultTargets = ["common-2026"]
+
+[[lean_lib]]
+name = "Common2026"
+
+[[lean_exe]]
+name = "common-2026"
+root = "Main"
