@@ -2,6 +2,10 @@ name = "common-2026"
 version = "0.1.0"
 defaultTargets = ["common-2026"]
 
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+
 [[lean_lib]]
 name = "Common2026"
 
