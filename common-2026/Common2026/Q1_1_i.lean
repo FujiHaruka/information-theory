@@ -12,7 +12,8 @@
     4. A ∩ Bᶜ を求めよ（Bᶜ は U における補集合）
 -/
 
-import Mathlib
+import Mathlib.Tactic.IntervalCases
+import Mathlib.Tactic.Linarith
 
 namespace Common2026.Q1_1_i
 
