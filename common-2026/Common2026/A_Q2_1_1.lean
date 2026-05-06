@@ -11,7 +11,7 @@ import Mathlib.Data.Real.Basic
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.Ring
 
-namespace Common2026.Q2_1_1
+namespace Common2026.A_Q2_1_1
 
 def f (x : ℝ) : ℝ := 2 * x ^ 2 - 8 * x + 5
 
@@ -37,4 +37,4 @@ theorem min_value :
   have h : 0 ≤ (x - 2) ^ 2 := sq_nonneg _
   linarith
 
-end Common2026.Q2_1_1
+end Common2026.A_Q2_1_1

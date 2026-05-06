@@ -13,7 +13,7 @@
 import Mathlib.Tactic.IntervalCases
 import Mathlib.Tactic.Linarith
 
-namespace Common2026.Q1_1_ii
+namespace Common2026.A_Q1_1_ii
 
 def U (n : Nat) : Prop := 2 ≤ n ∧ n ≤ 20
 
@@ -201,4 +201,4 @@ theorem part_ii (a b : Nat)
       · exact absurd hd5 (by decide)
       · exact absurd hd6 (by decide)
 
-end Common2026.Q1_1_ii
+end Common2026.A_Q1_1_ii

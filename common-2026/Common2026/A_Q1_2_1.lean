@@ -18,7 +18,7 @@
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import Mathlib.Tactic.Linarith
 
-namespace Common2026.Q1_2_1
+namespace Common2026.A_Q1_2_1
 
 open Real
 
@@ -41,4 +41,4 @@ theorem area_sum_eq
   rw [hC, sin_pi_sub]
   ring
 
-end Common2026.Q1_2_1
+end Common2026.A_Q1_2_1

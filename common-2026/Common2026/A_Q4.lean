@@ -25,7 +25,7 @@ import Mathlib.Data.Real.Basic
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.Ring
 
-namespace Common2026.Q4
+namespace Common2026.A_Q4
 
 namespace three_people
 
@@ -73,4 +73,4 @@ end four_people
 theorem three_gt_four : ((14 : ℝ)/27) - (12/27) = 2/27 ∧ (0 : ℝ) < 2/27 := by
   refine ⟨?_, ?_⟩ <;> norm_num
 
-end Common2026.Q4
+end Common2026.A_Q4

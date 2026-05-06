@@ -38,7 +38,7 @@ import Mathlib.Data.Real.Basic
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.Ring
 
-namespace Common2026.Q2_1_2
+namespace Common2026.A_Q2_1_2
 
 def f (x : ℝ) : ℝ := -2 * x ^ 2 - 4 * x + 1
 
@@ -193,4 +193,4 @@ theorem cond3_holds_right (b : ℝ) (hb : b < 1 ∨ b > 7) :
     have h2 : 0 < x - 6 := by linarith
     nlinarith
 
-end Common2026.Q2_1_2
+end Common2026.A_Q2_1_2

@@ -61,7 +61,7 @@ import Mathlib.Data.Real.Basic
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.NormNum
 
-namespace Common2026.Q2_2
+namespace Common2026.A_Q2_2
 
 /-! ## (ii) 相関係数 -/
 
@@ -134,4 +134,4 @@ theorem varY_gt_varX : ssX / 5 < ssY / 5 := by
     (より厳密な反例 (狭義の <) は端点の差をさらに広げれば構成可能)。 -/
 theorem iqr_proxy_eq : (40 - 20 : ℝ) = (40 - 20 : ℝ) := rfl
 
-end Common2026.Q2_2
+end Common2026.A_Q2_2

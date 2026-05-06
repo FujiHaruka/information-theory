@@ -25,7 +25,7 @@ import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.FieldSimp
 
-namespace Common2026.Q1_2_2
+namespace Common2026.A_Q1_2_2
 
 /-- 「凧型」四角形 (PM = PK, OM = OK, ∠M = ∠K = π/2) の面積方程式
     `PM · OM = ((PM² + OM²) / 2) · sin P` から sin P を解いた式。
@@ -113,4 +113,4 @@ theorem PQ_eq (s : ℝ) : 4 * s + 3 * s = 7 * s := by ring
 
 end part_ii
 
-end Common2026.Q1_2_2
+end Common2026.A_Q1_2_2

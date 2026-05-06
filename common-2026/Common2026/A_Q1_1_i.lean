@@ -15,7 +15,7 @@
 import Mathlib.Tactic.IntervalCases
 import Mathlib.Tactic.Linarith
 
-namespace Common2026.Q1_1_i
+namespace Common2026.A_Q1_1_i
 
 def U (n : Nat) : Prop := 2 ≤ n ∧ n ≤ 20
 
@@ -99,4 +99,4 @@ theorem A_inter_Bc :
   rw [A_of_three, B_of_four]
   omega
 
-end Common2026.Q1_1_i
+end Common2026.A_Q1_1_i

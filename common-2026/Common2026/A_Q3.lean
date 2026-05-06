@@ -32,7 +32,7 @@ import Mathlib.Data.Real.Basic
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.Ring
 
-namespace Common2026.Q3
+namespace Common2026.A_Q3
 
 /-- 二等辺三角形の中線の長さ AD。
     AB = AC = 10, BC = 12 の二等辺三角形で D を BC の中点とすると
@@ -50,4 +50,4 @@ theorem AI_ID_lengths
     A から見て AE · AP = AI · AD。AI · AD = 5 · 8 = 40。 -/
 theorem AE_AP_value : (5 : ℝ) * 8 = 40 := by norm_num
 
-end Common2026.Q3
+end Common2026.A_Q3
