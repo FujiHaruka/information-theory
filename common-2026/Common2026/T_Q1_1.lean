@@ -15,7 +15,7 @@ import Mathlib.Analysis.SpecialFunctions.Trigonometric.Bounds
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Deriv
 import Mathlib.Tactic.Linarith
 
-namespace Common2026.T_Q1_1
+namespace Common2026.T_Q1
 
 open Real
 
@@ -72,4 +72,4 @@ theorem min_value : ∀ θ ∈ Set.Icc (-1 : ℝ) 1, 5 / 6 - sin 1 ≤ f θ := b
 
 theorem min_attained : f (-1) = 5 / 6 - sin 1 := f_neg_one
 
-end Common2026.T_Q1_1
+end Common2026.T_Q1

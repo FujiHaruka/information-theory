@@ -23,9 +23,7 @@ import Common2026.T_Q3_1
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.Ring
 
-namespace Common2026.T_Q3_2
-
-open Common2026.T_Q3_1
+namespace Common2026.T_Q3
 
 /-- A が線分 PQ (xy 平面上の) 上にあること: A = (1 − t) P + t Q, t ∈ [0, 1]。 -/
 def OnSegment (A : ℝ × ℝ) (cfg : Config) : Prop :=
@@ -433,4 +431,4 @@ theorem swept_range_iff (A : ℝ × ℝ) :
     (∃ cfg : Config, OnSegment A cfg) ↔ SweptRange A :=
   ⟨forward A, backward A⟩
 
-end Common2026.T_Q3_2
+end Common2026.T_Q3

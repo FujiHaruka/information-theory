@@ -35,7 +35,7 @@ import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.IntervalCases
 
-namespace Common2026.T_Q2_1
+namespace Common2026.T_Q2
 
 /-! ### 共通定義 -/
 
@@ -101,4 +101,4 @@ theorem p_5 :
   rw [triangleTriples_5_card, allTriples_5_card]
   norm_num
 
-end Common2026.T_Q2_1
+end Common2026.T_Q2

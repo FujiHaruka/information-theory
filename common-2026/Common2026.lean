@@ -30,3 +30,6 @@ import Common2026.T_Q2_1
 import Common2026.T_Q2_2
 import Common2026.T_Q3_1
 import Common2026.T_Q3_2
+-- 東大 2024 (おまけ)
+import Common2026.T2024_Q6_1
+import Common2026.T2024_Q6_2

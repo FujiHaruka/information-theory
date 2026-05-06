@@ -34,7 +34,7 @@ import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.FieldSimp
 
-namespace Common2026.T_Q3_1
+namespace Common2026.T_Q3
 
 /-- 問題の条件を満たす配置 `(P, Q, R)`。
     P, Q は xy 平面上の点なので 2D, R は 3D で表す。 -/
@@ -284,4 +284,4 @@ theorem locus_iff (M : ℝ × ℝ) :
   rintro ⟨cfg, hM⟩
   exact ⟨circle_eq_of_config cfg M hM, midpoint_ne_five_zero cfg M hM⟩
 
-end Common2026.T_Q3_1
+end Common2026.T_Q3

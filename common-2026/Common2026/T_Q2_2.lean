@@ -29,9 +29,7 @@ import Mathlib.Tactic.FieldSimp
 import Mathlib.Tactic.LinearCombination
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 
-namespace Common2026.T_Q2_2
-
-open Common2026.T_Q2_1
+namespace Common2026.T_Q2
 
 /-! ### `coll3` の補助補題 -/
 
@@ -675,4 +673,4 @@ theorem p_2m (m : ℕ) (hm : 2 ≤ m) :
     linarith
   field_simp
 
-end Common2026.T_Q2_2
+end Common2026.T_Q2

@@ -17,10 +17,9 @@
 import Common2026.T_Q1_1
 import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 
-namespace Common2026.T_Q1_2
+namespace Common2026.T_Q1
 
 open Real MeasureTheory intervalIntegral
-open Common2026.T_Q1_1 (f f_monotone f_one f_neg_one)
 
 /-! ### 補題群 -/
 
@@ -270,4 +269,4 @@ theorem main_upper :
   rw [integral_eq_main]
   linarith [integral_f_cos_mul_cos_le]
 
-end Common2026.T_Q1_2
+end Common2026.T_Q1
