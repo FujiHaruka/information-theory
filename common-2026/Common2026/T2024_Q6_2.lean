@@ -29,8 +29,7 @@
   形式化:
     主定理は Finset 形式 `S.card ≤ 3` で表現する。証明は S を 4 つの subset
     A, B, C, D に分け、各カードの上界 + F1, F2, F3 で組み立てる
-    (場合分けは (C.card, D.card) のみ)。系として「相異なる 4 つの整数では
-    同時に素数を与えない」形も導出する。
+    (場合分けは (C.card, D.card) のみ)。
 -/
 
 import Mathlib.Data.Nat.Prime.Basic
@@ -372,27 +371,5 @@ theorem at_most_three (a b : ℤ) (S : Finset ℤ)
       · omega
     · -- C ≥ 1 ∧ D ≥ 1: F1 矛盾
       exact (hF1 hC1 hD1).elim
-
-/-! ### 系: 4 つの distinct な整数では同時に素数を与えない -/
-
-/-- 系 (旧主定理): g(n) が素数となる相異なる 4 つの整数 n₁, n₂, n₃, n₄ は存在しない。 -/
-theorem not_four_distinct_primes (a b : ℤ) (n₁ n₂ n₃ n₄ : ℤ)
-    (h12 : n₁ ≠ n₂) (h13 : n₁ ≠ n₃) (h14 : n₁ ≠ n₄)
-    (h23 : n₂ ≠ n₃) (h24 : n₂ ≠ n₄) (h34 : n₃ ≠ n₄)
-    (hp1 : IsPrimePos (g a b n₁)) (hp2 : IsPrimePos (g a b n₂))
-    (hp3 : IsPrimePos (g a b n₃)) (hp4 : IsPrimePos (g a b n₄)) : False := by
-  let S : Finset ℤ := {n₁, n₂, n₃, n₄}
-  have hS_card : S.card = 4 := by
-    show ({n₁, n₂, n₃, n₄} : Finset ℤ).card = 4
-    rw [Finset.card_insert_of_notMem (by simp [h12, h13, h14]),
-        Finset.card_insert_of_notMem (by simp [h23, h24]),
-        Finset.card_insert_of_notMem (by simp [h34]),
-        Finset.card_singleton]
-  have hS_prime : ∀ n ∈ S, IsPrimePos (g a b n) := by
-    intro n hn
-    simp [S] at hn
-    rcases hn with rfl | rfl | rfl | rfl <;> assumption
-  have h := at_most_three a b S hS_prime
-  omega
 
 end Common2026.T2024_Q6_2
