@@ -5,8 +5,10 @@ Formalization of Japan's 2026 Common Test (共通テスト) math problems in Lea
 ## Project Layout
 
 - `docs/1a.pdf`, `docs/2b.pdf` — original problem booklets (**source of truth**). `1a.pdf` covers 数学Ⅰ・A, `2b.pdf` covers 数学Ⅱ・B・C. Read them with the Read tool's `pages` parameter.
-- `Common2026/<exam>_QX_Y_z.lean` — one file per sub-problem. Naming: `<exam>_Q<oomon>_<chuumon>_<shoumon>.lean`, where `<exam>` is `A` for 1A and `B` for 2B (the same problem numbers appear in both exams, so the prefix disambiguates).
-- `Common2026.lean` — library root. After adding a new file, append `import Common2026.<exam>_QX_Y_z`.
+- `Common2026/<exam>_Q<X>...lean` — one file per **main question (大問)** by default. `<exam>` is `A` for 1A, `B` for 2B, `T` for 東大 (the same problem numbers appear across exams, so the prefix disambiguates).
+  - Sub-problems (小問) of the same 大問 share infrastructure (`def`, `private lemma`, etc.). `private` is **file-scoped, not namespace-scoped**, so splitting a 大問 across files forces helpers to leak as public symbols. Keep the 大問 in one file (e.g. `T_Q4.lean`) so private helpers stay private.
+  - Split into per-小問 files (`<exam>_QX_Y.lean`, `<exam>_QX_Y_z.lean`) only when the sub-problems are genuinely independent — different definitions, different imports, no shared helpers.
+- `Common2026.lean` — library root. After adding a new file, append the corresponding `import Common2026.<...>`.
 
 ## Build Setup
 
@@ -38,7 +40,7 @@ The Lean LSP plugin (`lean4-lake-lsp@claude-code-lsps`) is enabled, so prefer LS
 - **Primary — LSP automatic diagnostics.** After every Write/Edit to a `.lean` file, the LSP server runs `lake setup-file` in the background and surfaces results as a `<new-diagnostics>` system-reminder within a few seconds. It covers both parse errors and proof failures (`unsolved goals`, `unknown identifier`, etc). Wait for this signal after each fill — silence (or only `declaration uses 'sorry'`) means the file is clean.
 - **Secondary — `lake env lean <file>` as the definitive synchronous check.** When you need an explicit verdict (e.g., before declaring a sorry-fill done), run:
   ```bash
-  lake env lean Common2026/<exam>_QX_Y_z.lean
+  lake env lean Common2026/<exam>_Q<X>...lean
   ```
   With Mathlib oleans warm, it returns in seconds. Silent output = clean.
 - **Do NOT use `lake build` for verification.** It rebuilds every module in the library and is too slow for the inner loop. Reserve it for one-off project-wide sanity checks after a large refactor — never as the per-fill verifier.
@@ -51,9 +53,9 @@ Do **not** write a whole problem file in one shot — it gambles on getting ever
 
 1. Sketch the file as a skeleton: state every helper lemma and theorem with `:= by sorry`, plus the namespace and imports.
 2. After Write, wait for the LSP `<new-diagnostics>` reminder. Confirm the skeleton type-checks (only `sorry` warnings expected).
-3. Fill in **one** `sorry` at a time. Trust the LSP diagnostic reminder for fast feedback; reach for `lake env lean Common2026/<exam>_QX_Y_z.lean` when you want a synchronous confirmation.
+3. Fill in **one** `sorry` at a time. Trust the LSP diagnostic reminder for fast feedback; reach for `lake env lean Common2026/<exam>_Q<X>...lean` when you want a synchronous confirmation.
 4. Let the diagnostics tell you when a tactic doesn't fire or a divisor case is missing, instead of pattern-matching in your head.
 
 ## Definition of Done
 
-After solving a new problem, `lake env lean Common2026/<exam>_QX_Y_z.lean` must pass cleanly — zero errors, no remaining `sorry`, minimal warnings.
+After solving a new problem, `lake env lean Common2026/<exam>_Q<X>...lean` must pass cleanly — zero errors, no remaining `sorry`, minimal warnings.

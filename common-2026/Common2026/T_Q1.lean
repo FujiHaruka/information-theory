@@ -1,25 +1,93 @@
 /-
-東大 2026 第1問 (2)
+東大 2026 第1問
 
-  (1) で定めた M = sin 1 - 5/6 に対し、次の不等式を示せ:
-    7π/8 ≤ ∫₀^{2π} sin(cos x - x) dx ≤ 7π/8 + 4M
+(1) 関数 f(θ) = sin θ - θ + θ³/6 の区間 -1 ≤ θ ≤ 1 における
+    最大値 M および最小値 m を求めよ。
 
-  方針:
-    sin(cos x - x) = sin(cos x) cos x - cos(cos x) sin x
-    ∫₀^{2π} cos(cos x) sin x dx = 0  （置換 u = cos x で原始関数 -sin(cos x)、両端で値が等しい）
-    sin θ = θ - θ³/6 + f(θ)  （f は (1) の関数）
-    ⇒ sin(cos x) cos x = cos²x - cos⁴x/6 + f(cos x) cos x
-    ∫₀^{2π} cos²x dx = π,  ∫₀^{2π} cos⁴x dx = 3π/4  ⇒ 主項 = π - π/8 = 7π/8
-    f は奇関数で f' ≥ 0 ⇒ sign(f θ) = sign θ  ⇒  f(cos x) cos x ≥ 0
-    f(cos x) ≤ M, |cos x| の積分は 4  ⇒  ∫ f(cos x) cos x ≤ 4M
+    答え:
+      M = sin 1 - 5/6
+      m = 5/6 - sin 1
+    （f は ℝ 上で単調増加。M と m は端点で達成。）
+
+(2) (1) で定めた M = sin 1 - 5/6 に対し、次の不等式を示せ:
+      7π/8 ≤ ∫₀^{2π} sin(cos x - x) dx ≤ 7π/8 + 4M
+
+    方針:
+      sin(cos x - x) = sin(cos x) cos x - cos(cos x) sin x
+      ∫₀^{2π} cos(cos x) sin x dx = 0  （置換 u = cos x で原始関数 -sin(cos x)、両端で値が等しい）
+      sin θ = θ - θ³/6 + f(θ)  （f は (1) の関数）
+      ⇒ sin(cos x) cos x = cos²x - cos⁴x/6 + f(cos x) cos x
+      ∫₀^{2π} cos²x dx = π,  ∫₀^{2π} cos⁴x dx = 3π/4  ⇒ 主項 = π - π/8 = 7π/8
+      f は奇関数で f' ≥ 0 ⇒ sign(f θ) = sign θ  ⇒  f(cos x) cos x ≥ 0
+      f(cos x) ≤ M, |cos x| の積分は 4  ⇒  ∫ f(cos x) cos x ≤ 4M
 -/
 
-import Common2026.T_Q1_1
+import Mathlib.Analysis.Calculus.Deriv.MeanValue
 import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Bounds
+import Mathlib.Analysis.SpecialFunctions.Trigonometric.Deriv
+import Mathlib.Tactic.Linarith
 
 namespace Common2026.T_Q1
 
 open Real MeasureTheory intervalIntegral
+
+/-! ## (1) f の最大値・最小値 -/
+
+noncomputable def f (θ : ℝ) : ℝ := sin θ - θ + θ ^ 3 / 6
+
+/-- 補助 Taylor 不等式: `cos θ ≥ 1 - θ²/2` を変形したもの。 -/
+private lemma cos_taylor_lower (θ : ℝ) : 0 ≤ cos θ - 1 + θ ^ 2 / 2 := by
+  have h := Real.one_sub_sq_div_two_le_cos (x := θ)
+  linarith
+
+/-- f は微分可能で、その導関数は `cos θ - 1 + θ²/2`。 -/
+private lemma f_hasDerivAt (θ : ℝ) :
+    HasDerivAt f (cos θ - 1 + θ ^ 2 / 2) θ := by
+  have hsin : HasDerivAt sin (cos θ) θ := Real.hasDerivAt_sin θ
+  have hid : HasDerivAt (fun x : ℝ => x) (1 : ℝ) θ := hasDerivAt_id θ
+  have hpow : HasDerivAt (fun x : ℝ => x ^ 3 / 6) (θ ^ 2 / 2) θ := by
+    have h := (hasDerivAt_pow 3 θ).div_const 6
+    convert h using 1
+    push_cast
+    ring
+  have h := (hsin.sub hid).add hpow
+  exact h
+
+/-- f' ≥ 0 より f は ℝ 上単調非減少。 -/
+lemma f_monotone : Monotone f := by
+  apply monotone_of_hasDerivAt_nonneg f_hasDerivAt
+  intro θ
+  exact cos_taylor_lower θ
+
+lemma f_one : f 1 = sin 1 - 5 / 6 := by
+  show sin 1 - 1 + (1 : ℝ) ^ 3 / 6 = sin 1 - 5 / 6
+  ring
+
+lemma f_neg_one : f (-1) = 5 / 6 - sin 1 := by
+  show sin (-1) - (-1) + (-1 : ℝ) ^ 3 / 6 = 5 / 6 - sin 1
+  rw [Real.sin_neg]
+  ring
+
+/-- 区間 [-1,1] 上の最大値は `sin 1 - 5/6`、達成点は θ = 1。 -/
+theorem max_value : ∀ θ ∈ Set.Icc (-1 : ℝ) 1, f θ ≤ sin 1 - 5 / 6 := by
+  intro θ hθ
+  have h : f θ ≤ f 1 := f_monotone hθ.2
+  rw [f_one] at h
+  exact h
+
+theorem max_attained : f 1 = sin 1 - 5 / 6 := f_one
+
+/-- 区間 [-1,1] 上の最小値は `5/6 - sin 1`、達成点は θ = -1。 -/
+theorem min_value : ∀ θ ∈ Set.Icc (-1 : ℝ) 1, 5 / 6 - sin 1 ≤ f θ := by
+  intro θ hθ
+  have h : f (-1) ≤ f θ := f_monotone hθ.1
+  rw [f_neg_one] at h
+  exact h
+
+theorem min_attained : f (-1) = 5 / 6 - sin 1 := f_neg_one
+
+/-! ## (2) 積分不等式 -/
 
 /-! ### 補題群 -/
 

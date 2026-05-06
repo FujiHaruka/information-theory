@@ -24,12 +24,10 @@ import Common2026.B_Q5
 import Common2026.B_Q6
 import Common2026.B_Q7
 -- 東大 (おまけ・Common Test 範囲外)
-import Common2026.T_Q1_1
-import Common2026.T_Q1_2
-import Common2026.T_Q2_1
-import Common2026.T_Q2_2
-import Common2026.T_Q3_1
-import Common2026.T_Q3_2
+import Common2026.T_Q1
+import Common2026.T_Q2
+import Common2026.T_Q3
+import Common2026.T_Q4
 -- 東大 2024 (おまけ)
 import Common2026.T2024_Q6_1
 import Common2026.T2024_Q6_2
