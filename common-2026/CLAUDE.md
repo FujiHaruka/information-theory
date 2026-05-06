@@ -4,8 +4,7 @@ Formalization of Japan's 2026 Common Test (共通テスト) math problems in Lea
 
 ## Project Layout
 
-- `docs/1a.pdf` — original problem booklet (**source of truth**)
-- `docs/1a.txt` — manual transcription of the PDF. May contain transcription errors; **when in doubt, check the PDF**.
+- `docs/1a.pdf` — original problem booklet (**source of truth**). Read it directly with the Read tool's `pages` parameter.
 - `Common2026/QX_Y_z.lean` — one file per sub-problem. Naming: `Q<oomon>_<chuumon>_<shoumon>.lean`.
 - `Common2026.lean` — library root. After adding a new file, append `import Common2026.QX_Y_z`.
 
