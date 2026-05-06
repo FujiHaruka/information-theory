@@ -1,0 +1,15 @@
+{
+  "problem": "東大 2026 第2問",
+  "proof_log": "docs/proof-log-todai-2026-q2.md",
+  "sessions": [
+    {
+      "id": "d782e3d9-3a40-4bcf-a248-b85f80e274e9",
+      "note": "T_Q2_1 / T_Q2_2 を作成したセッション。コア解答ターン (東大第2問に進む) のみに絞り込み。proof-log 執筆ターン・コミットターンは除外。リファクタセッション (8cf46b0a / 6d311dfb) は Q1〜Q3 全体の namespace 統一なので Q2 単独のコア解答ではないため除外。",
+      "prompt_ids": ["6c7bb8b2"]
+    }
+  ],
+  "filters": {
+    "file_prefix": "Common2026/T_Q2"
+  },
+  "idle_gap_minutes": 5
+}

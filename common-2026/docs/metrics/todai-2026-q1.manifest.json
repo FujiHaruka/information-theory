@@ -1,0 +1,15 @@
+{
+  "problem": "東大 2026 第1問",
+  "proof_log": "docs/proof-log-todai-2026-q1.md",
+  "sessions": [
+    {
+      "id": "1e57b25f-f2e0-45c9-b8be-23d839ca7ee3",
+      "note": "T_Q1_1 / T_Q1_2 を作成したセッション。コア解答ターンのみに絞り込み（PDF DL・事前議論・proof-log 執筆は除外）",
+      "prompt_ids": ["444dfbd8", "e386bbf9"]
+    }
+  ],
+  "filters": {
+    "file_prefix": "Common2026/T_Q1"
+  },
+  "idle_gap_minutes": 5
+}

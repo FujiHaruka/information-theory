@@ -1,0 +1,115 @@
+{
+  "problem": "東大 2026 第1問",
+  "proof_log": "docs/proof-log-todai-2026-q1.md",
+  "generated_at": "2026-05-06T10:09:21.231Z",
+  "filters": {
+    "file_prefix": "Common2026/T_Q1"
+  },
+  "idle_gap_minutes": 5,
+  "sessions": [
+    {
+      "id": "1e57b25f-f2e0-45c9-b8be-23d839ca7ee3",
+      "note": "T_Q1_1 / T_Q1_2 を作成したセッション。コア解答ターンのみに絞り込み（PDF DL・事前議論・proof-log 執筆は除外）",
+      "start": "2026-05-06T03:22:17.549Z",
+      "end": "2026-05-06T03:44:33.275Z",
+      "wall_time_seconds": 1336,
+      "active_time_seconds": 1336,
+      "turns": 78,
+      "tool_calls": {
+        "Read": 2,
+        "Bash": 59,
+        "ToolSearch": 1,
+        "TaskCreate": 13,
+        "TaskUpdate": 25,
+        "Write": 2,
+        "Edit": 21
+      },
+      "bash_breakdown": {
+        "ls": 1,
+        "head": 1,
+        "grep": 31,
+        "find": 3,
+        "lake_env_lean": 21,
+        "lake_build": 2
+      },
+      "bash_total": 59,
+      "edits_by_file": {
+        "Common2026/T_Q1_1.lean": 7,
+        "Common2026.lean": 2,
+        "Common2026/T_Q1_2.lean": 12
+      },
+      "writes_by_file": {
+        "Common2026/T_Q1_1.lean": 1,
+        "Common2026/T_Q1_2.lean": 1
+      },
+      "reads_by_file": {
+        "Common2026/A_Q1_1_i.lean": 1,
+        "Common2026.lean": 1
+      },
+      "matched_edits": 19,
+      "matched_writes": 2,
+      "tool_errors": 0,
+      "tokens": {
+        "input": 248,
+        "output": 264061,
+        "cache_read": 16339751,
+        "cache_creation": 505428
+      },
+      "models": [
+        "claude-opus-4-7"
+      ],
+      "sidechain_entries": 0
+    }
+  ],
+  "totals": {
+    "start": "2026-05-06T03:22:17.549Z",
+    "end": "2026-05-06T03:44:33.275Z",
+    "wall_time_seconds": 1336,
+    "active_time_seconds": 1336,
+    "turns": 78,
+    "tool_calls": {
+      "Read": 2,
+      "Bash": 59,
+      "ToolSearch": 1,
+      "TaskCreate": 13,
+      "TaskUpdate": 25,
+      "Write": 2,
+      "Edit": 21
+    },
+    "bash_breakdown": {
+      "ls": 1,
+      "head": 1,
+      "grep": 31,
+      "find": 3,
+      "lake_env_lean": 21,
+      "lake_build": 2
+    },
+    "bash_total": 59,
+    "edits_by_file": {
+      "Common2026/T_Q1_1.lean": 7,
+      "Common2026.lean": 2,
+      "Common2026/T_Q1_2.lean": 12
+    },
+    "writes_by_file": {
+      "Common2026/T_Q1_1.lean": 1,
+      "Common2026/T_Q1_2.lean": 1
+    },
+    "reads_by_file": {
+      "Common2026/A_Q1_1_i.lean": 1,
+      "Common2026.lean": 1
+    },
+    "matched_edits": 19,
+    "matched_writes": 2,
+    "tool_errors": 0,
+    "tokens": {
+      "input": 248,
+      "output": 264061,
+      "cache_read": 16339751,
+      "cache_creation": 505428
+    },
+    "models": [
+      "claude-opus-4-7"
+    ],
+    "sidechain_entries": 0
+  }
+}
