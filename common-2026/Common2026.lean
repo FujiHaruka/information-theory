@@ -28,6 +28,14 @@ import Common2026.T_Q1
 import Common2026.T_Q2
 import Common2026.T_Q3
 import Common2026.T_Q4
+import Common2026.T_Q5
 -- 東大 2024 (おまけ)
 import Common2026.T2024_Q6_1
 import Common2026.T2024_Q6_2
+-- Fano 不等式 (おまけ)
+import Common2026.Fano
+import Common2026.Fano.Entropy
+import Common2026.Fano.BinaryJensen
+import Common2026.Fano.CondEntropy
+import Common2026.Fano.Core
+import Common2026.Fano.DPI

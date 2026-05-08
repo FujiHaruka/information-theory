@@ -1,0 +1,13 @@
+{
+  "problem": "Fano 不等式 Phase 1 — Markov 形 (FiniteJointPMF X X) + DPI + Phase 0 形の DPI 経由復元",
+  "proof_log": "docs/proof-log-fano-phase1.md",
+  "sessions": [
+    {
+      "id": "3619c9cc-b9e0-43e5-b7ad-b44ab31597a8",
+      "prompt_ids": ["de8ac2eb"],
+      "note": "Phase 1 実装ターン: Fano/Core.lean を Markov 形にリファクタ、Fano.lean の wrapper 追従、Fano/DPI.lean を新規追加 (log-sum 不等式 / pushforward / DPI / Phase 0 wrapper)。"
+    }
+  ],
+  "filters": { "file_prefix": "Common2026/Fano" },
+  "idle_gap_minutes": 5
+}

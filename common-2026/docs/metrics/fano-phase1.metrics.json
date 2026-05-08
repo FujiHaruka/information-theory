@@ -1,0 +1,145 @@
+{
+  "problem": "Fano 不等式 Phase 1 — Markov 形 (FiniteJointPMF X X) + DPI + Phase 0 形の DPI 経由復元",
+  "proof_log": "docs/proof-log-fano-phase1.md",
+  "generated_at": "2026-05-08T12:39:14.224Z",
+  "filters": {
+    "file_prefix": "Common2026/Fano"
+  },
+  "idle_gap_minutes": 5,
+  "sessions": [
+    {
+      "id": "3619c9cc-b9e0-43e5-b7ad-b44ab31597a8",
+      "note": "Phase 1 実装ターン: Fano/Core.lean を Markov 形にリファクタ、Fano.lean の wrapper 追従、Fano/DPI.lean を新規追加 (log-sum 不等式 / pushforward / DPI / Phase 0 wrapper)。",
+      "start": "2026-05-08T12:07:49.062Z",
+      "end": "2026-05-08T12:39:07.480Z",
+      "wall_time_seconds": 1878,
+      "active_time_seconds": 1878,
+      "turns": 87,
+      "tool_calls": {
+        "Read": 15,
+        "Bash": 48,
+        "ToolSearch": 1,
+        "TaskCreate": 6,
+        "TaskUpdate": 11,
+        "Edit": 13,
+        "Write": 4,
+        "Skill": 1
+      },
+      "bash_breakdown": {
+        "ls": 3,
+        "grep": 18,
+        "sed": 2,
+        "lake_env_lean": 13,
+        "lake_build": 4,
+        "find": 2,
+        "deno": 6
+      },
+      "bash_total": 48,
+      "edits_by_file": {
+        "Common2026/Fano.lean": 1,
+        "Common2026/Fano/DPI.lean": 10,
+        "Common2026.lean": 1,
+        "docs/metrics/fano-phase1.manifest.json": 1
+      },
+      "writes_by_file": {
+        "Common2026/Fano/Core.lean": 1,
+        "Common2026/Fano/DPI.lean": 1,
+        "docs/metrics/fano-phase1.manifest.json": 1,
+        "docs/proof-log-fano-phase1.md": 1
+      },
+      "reads_by_file": {
+        "docs/fano-phase1-plan.md": 1,
+        "Common2026/Fano": 1,
+        "Common2026/Fano.lean": 2,
+        "Common2026/Fano/Core.lean": 2,
+        "Common2026/Fano/Entropy.lean": 1,
+        "Common2026/Fano/CondEntropy.lean": 1,
+        "Common2026/Fano/BinaryJensen.lean": 1,
+        "Common2026.lean": 1,
+        "docs/fano-moonshot-plan.md": 1,
+        "Common2026/Fano/DPI.lean": 2,
+        "docs/metrics/fano-phase1.metrics.md": 1,
+        ".claude/skills/proof-log/references/template.md": 1
+      },
+      "matched_edits": 11,
+      "matched_writes": 2,
+      "tool_errors": 1,
+      "tokens": {
+        "input": 206,
+        "output": 378851,
+        "cache_read": 22011060,
+        "cache_creation": 683510
+      },
+      "models": [
+        "claude-opus-4-7"
+      ],
+      "sidechain_entries": 0
+    }
+  ],
+  "totals": {
+    "start": "2026-05-08T12:07:49.062Z",
+    "end": "2026-05-08T12:39:07.480Z",
+    "wall_time_seconds": 1878,
+    "active_time_seconds": 1878,
+    "turns": 87,
+    "tool_calls": {
+      "Read": 15,
+      "Bash": 48,
+      "ToolSearch": 1,
+      "TaskCreate": 6,
+      "TaskUpdate": 11,
+      "Edit": 13,
+      "Write": 4,
+      "Skill": 1
+    },
+    "bash_breakdown": {
+      "ls": 3,
+      "grep": 18,
+      "sed": 2,
+      "lake_env_lean": 13,
+      "lake_build": 4,
+      "find": 2,
+      "deno": 6
+    },
+    "bash_total": 48,
+    "edits_by_file": {
+      "Common2026/Fano.lean": 1,
+      "Common2026/Fano/DPI.lean": 10,
+      "Common2026.lean": 1,
+      "docs/metrics/fano-phase1.manifest.json": 1
+    },
+    "writes_by_file": {
+      "Common2026/Fano/Core.lean": 1,
+      "Common2026/Fano/DPI.lean": 1,
+      "docs/metrics/fano-phase1.manifest.json": 1,
+      "docs/proof-log-fano-phase1.md": 1
+    },
+    "reads_by_file": {
+      "docs/fano-phase1-plan.md": 1,
+      "Common2026/Fano": 1,
+      "Common2026/Fano.lean": 2,
+      "Common2026/Fano/Core.lean": 2,
+      "Common2026/Fano/Entropy.lean": 1,
+      "Common2026/Fano/CondEntropy.lean": 1,
+      "Common2026/Fano/BinaryJensen.lean": 1,
+      "Common2026.lean": 1,
+      "docs/fano-moonshot-plan.md": 1,
+      "Common2026/Fano/DPI.lean": 2,
+      "docs/metrics/fano-phase1.metrics.md": 1,
+      ".claude/skills/proof-log/references/template.md": 1
+    },
+    "matched_edits": 11,
+    "matched_writes": 2,
+    "tool_errors": 1,
+    "tokens": {
+      "input": 206,
+      "output": 378851,
+      "cache_read": 22011060,
+      "cache_creation": 683510
+    },
+    "models": [
+      "claude-opus-4-7"
+    ],
+    "sidechain_entries": 0
+  }
+}
