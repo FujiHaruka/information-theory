@@ -404,11 +404,8 @@ theorem fano_core (hcard : 2 ≤ Fintype.card X) :
   have h_qary :
       Real.binEntropy P.errorProb
           + P.errorProb * Real.log ((Fintype.card X : ℝ) - 1)
-        = Real.qaryEntropy (Fintype.card X) P.errorProb := by
-    rw [qaryEntropy_eq_fanoBoundRHS]
-    unfold fanoBoundRHS
-    push_cast
-    ring
+        = Real.qaryEntropy (Fintype.card X) P.errorProb :=
+    (qaryEntropy_eq_binEntropy_add_log _ _).symm
   linarith
 
 /-- The error probability is non-negative. -/

@@ -42,6 +42,16 @@ theorem fanoBoundRHS_eq_qaryEntropy (q : ℕ) (Pe : ℝ) :
     fanoBoundRHS q Pe = Real.qaryEntropy q Pe :=
   (qaryEntropy_eq_fanoBoundRHS q Pe).symm
 
+/-- `qaryEntropy` written as the textbook sum `binEntropy Pe + Pe · log (q - 1)`,
+without going through the intermediate `fanoBoundRHS` definition. -/
+theorem qaryEntropy_eq_binEntropy_add_log (q : ℕ) (Pe : ℝ) :
+    Real.qaryEntropy q Pe
+      = Real.binEntropy Pe + Pe * Real.log ((q : ℝ) - 1) := by
+  rw [qaryEntropy_eq_fanoBoundRHS]
+  unfold fanoBoundRHS
+  push_cast
+  ring
+
 /-- Fano's inequality, in its reusable `q`-ary form.
 
 The hypothesis is the information-theoretic estimate

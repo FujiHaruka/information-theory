@@ -87,6 +87,15 @@ def pointwiseErrorProb (μ : Measure Ω) [IsFiniteMeasure μ]
 になる `FiniteJointPMF X X` に適用するだけ。
 -/
 
+omit [DecidableEq X] [Nonempty X] in
+/-- `Q : Measure X` 上の確率質量の総和は `1`。 -/
+private lemma sum_real_singleton_eq_one (Q : Measure X) [IsProbabilityMeasure Q] :
+    ∑ x : X, Q.real {x} = 1 := by
+  rw [show (∑ x : X, Q.real {x}) = ∑ x ∈ (Finset.univ : Finset X), Q.real {x} from rfl,
+      sum_measureReal_singleton]
+  rw [show ((Finset.univ : Finset X) : Set X) = Set.univ from Finset.coe_univ]
+  simp [measureReal_def, measure_univ]
+
 /-- `Q : Measure X` (確率測度) と guess `xh : X` から構成する Phase 1 用の `FiniteJointPMF X X`。
 第二座標が `xh` での Dirac、すなわち `mass x x' = Q.real {x} · 𝟙[x' = xh]`。 -/
 def diracPMF (Q : Measure X) [IsProbabilityMeasure Q] (xh : X) :
@@ -104,22 +113,9 @@ def diracPMF (Q : Measure X) [IsProbabilityMeasure Q] (xh : X) :
       rw [Finset.sum_eq_single xh (fun b _ hb => by simp [hb]) (fun h => (h (Finset.mem_univ _)).elim)]
       simp
     rw [Finset.sum_congr rfl (fun x _ => hInner x)]
-    -- ∑ x, Q.real {x} = Q.real Set.univ = 1
-    rw [show (∑ x : X, Q.real {x}) = ∑ x ∈ (Finset.univ : Finset X), Q.real {x} from rfl,
-        sum_measureReal_singleton]
-    rw [show ((Finset.univ : Finset X) : Set X) = Set.univ from Finset.coe_univ]
-    simp [measureReal_def, measure_univ]
+    exact sum_real_singleton_eq_one Q
 
 /-! ### `diracPMF` の各種計算 -/
-
-omit [DecidableEq X] [Nonempty X] in
-/-- `Q : Measure X` 上の確率質量の総和は `1`。 -/
-private lemma sum_real_singleton_eq_one (Q : Measure X) [IsProbabilityMeasure Q] :
-    ∑ x : X, Q.real {x} = 1 := by
-  rw [show (∑ x : X, Q.real {x}) = ∑ x ∈ (Finset.univ : Finset X), Q.real {x} from rfl,
-      sum_measureReal_singleton]
-  rw [show ((Finset.univ : Finset X) : Set X) = Set.univ from Finset.coe_univ]
-  simp [measureReal_def, measure_univ]
 
 omit [Nonempty X] in
 /-- `diracPMF` の `mass` の展開形（projection 用）。 -/
@@ -338,12 +334,8 @@ theorem fano_inequality_measure_theoretic
          Real.binEntropy_le_log_two⟩)
     have hqDecomp : ∀ p : ℝ,
         Real.qaryEntropy (Fintype.card X) p
-          = p * Real.log ((Fintype.card X : ℝ) - 1) + Real.binEntropy p := by
-      intro p
-      unfold Real.qaryEntropy
-      congr 2
-      push_cast
-      ring
+          = p * Real.log ((Fintype.card X : ℝ) - 1) + Real.binEntropy p := fun p => by
+      rw [InformationTheory.qaryEntropy_eq_binEntropy_add_log]; ring
     have hLHS_eq :
         (∫ y, Real.qaryEntropy (Fintype.card X)
                 (pointwiseErrorProb μ Xs Yo decoder y) ∂(μ.map Yo))
@@ -385,11 +377,8 @@ theorem fano_inequality_measure_theoretic
   have step4 :
       Real.qaryEntropy (Fintype.card X) (errorProb μ Xs Yo decoder)
         = Real.binEntropy (errorProb μ Xs Yo decoder)
-          + errorProb μ Xs Yo decoder * Real.log ((Fintype.card X : ℝ) - 1) := by
-    rw [InformationTheory.qaryEntropy_eq_fanoBoundRHS]
-    unfold InformationTheory.fanoBoundRHS
-    push_cast
-    ring
+          + errorProb μ Xs Yo decoder * Real.log ((Fintype.card X : ℝ) - 1) :=
+    InformationTheory.qaryEntropy_eq_binEntropy_add_log _ _
   -- Chain: step1 → step2 → step3 → step4
   calc condEntropy μ Xs Yo
       ≤ ∫ y, Real.qaryEntropy (Fintype.card X)
