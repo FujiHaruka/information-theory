@@ -39,3 +39,4 @@ import Common2026.Fano.BinaryJensen
 import Common2026.Fano.CondEntropy
 import Common2026.Fano.Core
 import Common2026.Fano.DPI
+import Common2026.Fano.Measure
