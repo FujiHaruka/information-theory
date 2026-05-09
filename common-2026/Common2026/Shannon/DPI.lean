@@ -2,6 +2,7 @@ import Mathlib.InformationTheory.KullbackLeibler.Basic
 import Mathlib.InformationTheory.KullbackLeibler.ChainRule
 import Mathlib.MeasureTheory.Measure.Decomposition.IntegralRNDeriv
 import Mathlib.MeasureTheory.Function.ConditionalExpectation.RadonNikodym
+import Mathlib.MeasureTheory.Function.ConditionalExpectation.CondJensen
 import Mathlib.Probability.Kernel.CondDistrib
 import Mathlib.Probability.Kernel.Composition.MeasureCompProd
 import Mathlib.Probability.Kernel.Composition.MeasureComp
@@ -57,39 +58,73 @@ private theorem klDiv_map_le {α β : Type*}
   by_cases hμν : μ ≪ ν
   swap
   · rw [klDiv_of_not_ac hμν]; exact le_top
-  -- μ ≪ ν の主ケース: Jensen 経由
+  -- klDiv μ ν = ∞ (= llr 非可積分) も自明
+  by_cases h_int : Integrable (llr μ ν) μ
+  swap
+  · rw [klDiv_of_not_integrable h_int]; exact le_top
+  -- 主ケース: μ ≪ ν かつ klDiv μ ν < ∞
   have h_ac_map : μ.map f ≪ ν.map f := hμν.map hf
-  have hMμmap : IsFiniteMeasure (μ.map f) := Measure.isFiniteMeasure_map μ f
-  have hMνmap : IsFiniteMeasure (ν.map f) := Measure.isFiniteMeasure_map ν f
+  have _ : IsFiniteMeasure (μ.map f) := Measure.isFiniteMeasure_map μ f
+  have _ : IsFiniteMeasure (ν.map f) := Measure.isFiniteMeasure_map ν f
+  -- klFun ∘ rnDeriv の integrability と nonneg
+  have h_int_klFun : Integrable (fun x ↦ klFun (μ.rnDeriv ν x).toReal) ν :=
+    (integrable_klFun_rnDeriv_iff hμν).mpr h_int
+  have h_klFun_nn : 0 ≤ᵐ[ν] fun x ↦ klFun (μ.rnDeriv ν x).toReal :=
+    ae_of_all _ fun _ ↦ klFun_nonneg ENNReal.toReal_nonneg
+  -- comap-σ (直接式で書く: `let` だと型クラス解決が汚染される)
+  have hm : MeasurableSpace.comap f ‹MeasurableSpace β› ≤ ‹MeasurableSpace α› :=
+    hf.comap_le
   -- 両 KL を lintegral klFun 形に
   rw [klDiv_eq_lintegral_klFun_of_ac h_ac_map, klDiv_eq_lintegral_klFun_of_ac hμν]
-  -- ν.map f 上の積分を ν 上の積分に翻訳: ∫⁻ y, g y ∂(ν.map f) = ∫⁻ x, g (f x) ∂ν
+  -- ν.map f 上の積分を ν 上の積分に翻訳
   rw [show (∫⁻ y, ENNReal.ofReal
               (klFun ((μ.map f).rnDeriv (ν.map f) y).toReal) ∂(ν.map f))
         = ∫⁻ x, ENNReal.ofReal
               (klFun ((μ.map f).rnDeriv (ν.map f) (f x)).toReal) ∂ν from
       lintegral_map (by fun_prop) hf]
-  -- 残る不等式:
-  --   ∫⁻ x, ofReal (klFun ((μ.map f).rnDeriv (ν.map f) (f x)).toReal) ∂ν
-  --     ≤ ∫⁻ x, ofReal (klFun (μ.rnDeriv ν x).toReal) ∂ν
-  -- 戦略: pointwise ae 不等式 (Jensen) を作って lintegral monotonicity で持ち上げ
-  refine lintegral_mono_ae ?_
-  -- ae 不等式の構築:
-  --   ofReal (klFun ((μ.map f).rnDeriv (ν.map f) (f x)).toReal)
-  --     ≤ ofReal (klFun (μ.rnDeriv ν x).toReal)  ae[ν]
-  --
-  -- これは "pushforward の klFun(rnDeriv) は元の klFun(rnDeriv) の comap-σ 上 condExp ≤ 元"
-  -- という DPI 核. 構成要素:
-  -- 1) `toReal_rnDeriv_map`:
-  --      `((μ.map f).rnDeriv (ν.map f) (f ·)).toReal =ᵐ[ν] ν[(μ.rnDeriv ν).toReal | comap f]`
-  -- 2) `convexOn_klFun` + `ConvexOn.map_condExp_le` (Jensen):
-  --      `klFun ∘ ν[(μ.rnDeriv ν).toReal | comap f] ≤ᵐ ν[klFun ∘ (μ.rnDeriv ν).toReal | comap f]`
-  -- 3) `integral_condExp` (lintegral 版が必要、ENNReal.ofReal で持ち上げ):
-  --      `∫⁻ x, ofReal (ν[g | F] x) ∂ν = ∫⁻ x, ofReal (g x) ∂ν` (g ≥ 0 のとき)
-  -- ※ 3) を pointwise ae 不等式に組み込むには、(2) の Jensen を ae で適用したあと
-  -- 全体を `lintegral_condExp_eq` 系の補題で書き換える必要があり、かなりの plumbing 量。
-  -- Phase 4-α DPI 核の **残作業**: TODO. 詳細は handoff.md に集約。
-  sorry
+  -- toReal_rnDeriv_map: ((μ.map f).rnDeriv (ν.map f) (f ·)).toReal =ᵐ[ν] ν[(μ.rnDeriv ν ·).toReal | comap f]
+  have h_rnDeriv_map :
+      (fun x ↦ ((μ.map f).rnDeriv (ν.map f) (f x)).toReal) =ᵐ[ν]
+        ν[(fun x ↦ (μ.rnDeriv ν x).toReal) | MeasurableSpace.comap f ‹MeasurableSpace β›] :=
+    toReal_rnDeriv_map hμν hf
+  -- cond Jensen for klFun on Ici 0
+  have h_jensen :
+      (fun x ↦ klFun
+          (ν[(fun x ↦ (μ.rnDeriv ν x).toReal)
+             | MeasurableSpace.comap f ‹MeasurableSpace β›] x))
+        ≤ᵐ[ν] (ν[(fun x ↦ klFun (μ.rnDeriv ν x).toReal)
+                  | MeasurableSpace.comap f ‹MeasurableSpace β›]) :=
+    ConvexOn.map_condExp_le hm convexOn_klFun
+      (continuous_klFun.lowerSemicontinuous.lowerSemicontinuousOn _)
+      (ae_of_all _ fun _ ↦ ENNReal.toReal_nonneg)
+      isClosed_Ici
+      Measure.integrable_toReal_rnDeriv
+      h_int_klFun
+  -- LHS の klFun ∘ rnDeriv map ≤ᵐ condExp ∘ klFun ∘ rnDeriv (ENNReal.ofReal で持ち上げ)
+  have h_le_ae : (fun x ↦ ENNReal.ofReal (klFun ((μ.map f).rnDeriv (ν.map f) (f x)).toReal))
+      ≤ᵐ[ν] fun x ↦
+        ENNReal.ofReal (ν[(fun x ↦ klFun (μ.rnDeriv ν x).toReal)
+                            | MeasurableSpace.comap f ‹MeasurableSpace β›] x) := by
+    filter_upwards [h_rnDeriv_map, h_jensen] with x hx hjen
+    rw [hx]; exact ENNReal.ofReal_le_ofReal hjen
+  -- 積分: lintegral_mono_ae → ofReal-condExp-lintegral 等式 → ofReal-original-lintegral
+  have h_step1 :
+      ∫⁻ x, ENNReal.ofReal
+              (klFun ((μ.map f).rnDeriv (ν.map f) (f x)).toReal) ∂ν
+        ≤ ∫⁻ x, ENNReal.ofReal
+              (ν[(fun x ↦ klFun (μ.rnDeriv ν x).toReal)
+                  | MeasurableSpace.comap f ‹MeasurableSpace β›] x) ∂ν :=
+    lintegral_mono_ae h_le_ae
+  have h_step2 :
+      ∫⁻ x, ENNReal.ofReal
+              (ν[(fun x ↦ klFun (μ.rnDeriv ν x).toReal)
+                  | MeasurableSpace.comap f ‹MeasurableSpace β›] x) ∂ν
+        = ∫⁻ x, ENNReal.ofReal (klFun (μ.rnDeriv ν x).toReal) ∂ν := by
+    rw [← ofReal_integral_eq_lintegral_ofReal integrable_condExp
+          (condExp_nonneg h_klFun_nn),
+        integral_condExp hm,
+        ofReal_integral_eq_lintegral_ofReal h_int_klFun h_klFun_nn]
+  exact h_step1.trans h_step2.le
 
 /-- Data processing inequality: deterministic post-processing decreases mutual information.
 `Z = f(Y)` で `I(X; f(Y)) ≤ I(X; Y)`.
