@@ -42,36 +42,66 @@ noncomputable def mutualInfo
 theorem mutualInfo_nonneg (μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y) :
     0 ≤ mutualInfo μ Xs Yo := bot_le
 
-/-- KL の積測度補題: `klDiv (μ.prod ν₁) (μ.prod ν₂) = (μ Set.univ) * klDiv ν₁ ν₂`。
-DPI plumbing の起点になる予定。
+/-- KL の MeasurableEquiv 不変性: 測度同型での pushforward は KL 値を保つ。
+Mathlib 不在 (Phase 4-M0 在庫調査確認済) のため自作。
 
-**証明戦略**: `compProd_const : μ ⊗ₘ Kernel.const _ ν = μ.prod ν` で `Measure.prod` を
-`Kernel.compProd` 形に翻訳した後、KL の MeasurableEquiv 不変性 (= `Prod.swap` 経由の対称化)
-で `(ν₁ ⊗ₘ Kernel.const _ μ)` 形に持ち込み、`klDiv_compProd_left` を適用。
+戦略: `MeasurableEmbedding.rnDeriv_map` (`Decomposition/RadonNikodym.lean:516`) で
+`(μ.map e).rnDeriv (ν.map e) ∘ e =ᵐ[ν] μ.rnDeriv ν` を得て、`lintegral_map_equiv` で
+`∫⁻ ∂(ν.map e)` を `∫⁻ ∂ν` に翻訳、`klDiv_eq_lintegral_klFun_of_ac` で結ぶ。
+非 `≪` 側は `e.symm` で逆変換して矛盾。 -/
+private theorem klDiv_map_measurableEquiv {α β : Type*}
+    [MeasurableSpace α] [MeasurableSpace β]
+    (e : α ≃ᵐ β) (μ ν : Measure α) [IsFiniteMeasure μ] [IsFiniteMeasure ν] :
+    klDiv (μ.map e) (ν.map e) = klDiv μ ν := by
+  have he : MeasurableEmbedding e := e.measurableEmbedding
+  have he_sym : MeasurableEmbedding e.symm := e.symm.measurableEmbedding
+  by_cases hμν : μ ≪ ν
+  · have hμν_map : μ.map e ≪ ν.map e := he.absolutelyContinuous_map hμν
+    rw [klDiv_eq_lintegral_klFun_of_ac hμν_map, klDiv_eq_lintegral_klFun_of_ac hμν,
+        lintegral_map_equiv]
+    refine lintegral_congr_ae ?_
+    filter_upwards [he.rnDeriv_map μ ν] with x hx
+    rw [hx]
+  · have hμν_map : ¬ μ.map e ≪ ν.map e := by
+      intro h
+      apply hμν
+      have h₁ : (μ.map e).map e.symm ≪ (ν.map e).map e.symm :=
+        he_sym.absolutelyContinuous_map h
+      simpa using h₁
+    rw [klDiv_of_not_ac hμν, klDiv_of_not_ac hμν_map]
 
-**ボトルネック**: KL の MeasurableEquiv 不変性 (`klDiv_map_measurableEquiv`) は Mathlib に不在。
-`rnDeriv_map` (`MeasureTheory/Function/ConditionalExpectation/RadonNikodym.lean:83`) を経由して
-自作する必要がある (推定 50+ 行)。本補題はその完成後に着手。 -/
+/-- KL の積測度補題 (probability measure 版): `klDiv (μ.prod ν₁) (μ.prod ν₂) = klDiv ν₁ ν₂`。
+DPI plumbing の起点。
+
+戦略: `prod_swap` + `klDiv_map_measurableEquiv` で `klDiv (ν₁.prod μ) (ν₂.prod μ)` に
+変形し、`compProd_const` で `klDiv (ν₁ ⊗ₘ Kernel.const _ μ) (ν₂ ⊗ₘ Kernel.const _ μ)` に
+翻訳、`klDiv_compProd_left` を適用。`Kernel.const _ μ` が Markov である必要があるため
+`[IsProbabilityMeasure μ]` を要求。一般 `IsFiniteMeasure` 形は将来課題。 -/
 theorem klDiv_prod_const_left
     {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
-    (μ : Measure α) [SFinite μ]
-    (ν₁ ν₂ : Measure β) [SFinite ν₁] [SFinite ν₂] :
-    klDiv (μ.prod ν₁) (μ.prod ν₂) = (μ Set.univ) * klDiv ν₁ ν₂ := by
-  sorry
+    (μ : Measure α) [IsProbabilityMeasure μ]
+    (ν₁ ν₂ : Measure β) [IsFiniteMeasure ν₁] [IsFiniteMeasure ν₂] :
+    klDiv (μ.prod ν₁) (μ.prod ν₂) = klDiv ν₁ ν₂ := by
+  let e : β × α ≃ᵐ α × β := MeasurableEquiv.prodComm
+  have h₁ : (ν₁.prod μ).map e = μ.prod ν₁ := Measure.prod_swap
+  have h₂ : (ν₂.prod μ).map e = μ.prod ν₂ := Measure.prod_swap
+  rw [← h₁, ← h₂, klDiv_map_measurableEquiv e,
+      ← Measure.compProd_const, ← Measure.compProd_const, klDiv_compProd_left]
 
 /-- 相互情報量の対称性: `I(X; Y) = I(Y; X)`。
-
-**証明戦略**: `Measure.prod_swap : (ν₁.prod ν₂).map Prod.swap = ν₂.prod ν₁` と
-`Measure.map_map` で `(μ.map (Xs, Yo)).map Prod.swap = μ.map (Yo, Xs)` を示し、
-KL の MeasurableEquiv 不変性 (`Prod.swap` 経由) で結ぶ。
-
-**ボトルネック**: `klDiv_prod_const_left` と同じく `klDiv_map_measurableEquiv` が必要。
-別ルート (chain rule + symmetric formulation) もあるが、いずれも自作補題に依存。 -/
+`MeasurableEquiv.prodComm` 経由で `klDiv_map_measurableEquiv` を適用。 -/
 theorem mutualInfo_comm
-    (μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y)
+    (μ : Measure Ω) [IsFiniteMeasure μ] (Xs : Ω → X) (Yo : Ω → Y)
     (hXs : Measurable Xs) (hYo : Measurable Yo) :
     mutualInfo μ Xs Yo = mutualInfo μ Yo Xs := by
-  sorry
+  unfold mutualInfo
+  let e : Y × X ≃ᵐ X × Y := MeasurableEquiv.prodComm
+  have h₁ : (μ.map (fun ω => (Yo ω, Xs ω))).map e = μ.map (fun ω => (Xs ω, Yo ω)) := by
+    rw [Measure.map_map e.measurable (hYo.prodMk hXs)]
+    rfl
+  have h₂ : ((μ.map Yo).prod (μ.map Xs)).map e = (μ.map Xs).prod (μ.map Yo) :=
+    Measure.prod_swap
+  rw [← h₁, ← h₂, klDiv_map_measurableEquiv e]
 
 /-- 相互情報量がゼロ ↔ 独立。
 `indepFun_iff_map_prod_eq_prod_map_map` (`Independence/Basic.lean:701`) と
