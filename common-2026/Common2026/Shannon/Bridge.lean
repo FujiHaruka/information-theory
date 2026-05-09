@@ -101,8 +101,38 @@ The bridge proof goes via three independent helpers:
   `∫ y, (condDistrib Xs Yo μ y).real {x} d(μ.map Yo) = (μ.map Xs).real {x}`.
 -/
 
+/-- Helper for `klDiv_compProd_const_eq_lintegral`: identifies the compProd
+Radon-Nikodym derivative on its `b`-fiber with the kernel-side rnDeriv.
+
+The Mathlib `Probability/Kernel/Composition/RadonNikodym.lean` file (line 26-29)
+explicitly flags this as a TODO. The intended proof: for each measurable `B`
+and `s`, show
+```
+∫⁻ a in s, ∫⁻ b in B, (μ⊗ₘκ).rnDeriv (μ⊗ₘη) (a,b) ∂(η a) ∂μ = ∫⁻ a in s, κ a B ∂μ
+```
+via `setLIntegral_compProd` + `setLIntegral_rnDeriv` + `compProd_apply_prod`,
+then conclude by `ae_eq_of_forall_setLIntegral_eq_of_sigmaFinite` applied
+fiber-wise (a.e. `a`).
+
+**Status**: Phase 4-β core gap. Substantial plumbing (~80-120 行 estimate). -/
+private lemma rnDeriv_compProd_ae_eq_kernel_rnDeriv
+    {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
+    (μ : Measure α) [SFinite μ]
+    (κ η : Kernel α β) [IsSFiniteKernel κ] [IsFiniteKernel η]
+    (h_ac : μ ⊗ₘ κ ≪ μ ⊗ₘ η) :
+    ∀ᵐ a ∂μ, ∀ᵐ b ∂η a,
+      (μ ⊗ₘ κ).rnDeriv (μ ⊗ₘ η) (a, b) = (κ a).rnDeriv (η a) b := by
+  sorry
+
 /-- Fiberwise KL chain rule: when both compProd's share the same `μ` on the
-left, the full KL splits as the integral of fiberwise KLs. -/
+left, the full KL splits as the integral of fiberwise KLs.
+
+Proof sketch (assuming the rnDeriv identification helper above):
+1. Split on `∀ᵐ x ∂μ, κ x ≪ ν` (= ac of joint via `absolutelyContinuous_compProd_right_iff`)
+2. AC case: `klDiv_eq_lintegral_klFun_of_ac` on both sides, Tonelli (`lintegral_compProd`)
+   on LHS, then `lintegral_congr_ae` using `rnDeriv_compProd_ae_eq_kernel_rnDeriv`.
+3. Non-AC case: both sides ⊤ (use `klDiv_of_not_ac` and
+   `lintegral_eq_top_of_measure_eq_top_pos`-style argument). -/
 private lemma klDiv_compProd_const_eq_lintegral
     {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
     (μ : Measure α) [IsFiniteMeasure μ]
