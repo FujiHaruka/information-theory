@@ -5,6 +5,7 @@ import Mathlib.MeasureTheory.Integral.Bochner.SumMeasure
 import Mathlib.MeasureTheory.Integral.Lebesgue.Countable
 import Mathlib.MeasureTheory.Measure.Prod
 import Mathlib.Probability.Kernel.Composition.RadonNikodym
+import Mathlib.Probability.Kernel.RadonNikodym
 
 /-!
 # Bridge: mutualInfo (KL form) ↔ Phase 3 condEntropy (Phase 4-β skeleton)
@@ -102,46 +103,99 @@ The bridge proof goes via three independent helpers:
   `∫ y, (condDistrib Xs Yo μ y).real {x} d(μ.map Yo) = (μ.map Xs).real {x}`.
 -/
 
-/-- Helper for `klDiv_compProd_const_eq_lintegral`: identifies the compProd
-Radon-Nikodym derivative on its `b`-fiber with the kernel-side rnDeriv.
-
-The Mathlib `Probability/Kernel/Composition/RadonNikodym.lean` file (line 26-29)
-explicitly flags this as a TODO. The intended proof: for each measurable `B`
-and `s`, show
-```
-∫⁻ a in s, ∫⁻ b in B, (μ⊗ₘκ).rnDeriv (μ⊗ₘη) (a,b) ∂(η a) ∂μ = ∫⁻ a in s, κ a B ∂μ
-```
-via `setLIntegral_compProd` + `setLIntegral_rnDeriv` + `compProd_apply_prod`,
-then conclude by `ae_eq_of_forall_setLIntegral_eq_of_sigmaFinite` applied
-fiber-wise (a.e. `a`).
-
-**Status**: Phase 4-β core gap. Substantial plumbing (~80-120 行 estimate). -/
+/-- Joint identification of the compProd Radon-Nikodym derivative with the
+kernel-side rnDeriv (jointly measurable form). Adapts the model proof of
+`rnDeriv_measure_compProd_left_of_ac` (`Probability/Kernel/Composition/RadonNikodym.lean:45`)
+via π-system induction on measurable rectangles. -/
 private lemma rnDeriv_compProd_ae_eq_kernel_rnDeriv
-    {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
-    (μ : Measure α) [SFinite μ]
-    (κ η : Kernel α β) [IsSFiniteKernel κ] [IsFiniteKernel η]
-    (h_ac : μ ⊗ₘ κ ≪ μ ⊗ₘ η) :
-    ∀ᵐ a ∂μ, ∀ᵐ b ∂η a,
-      (μ ⊗ₘ κ).rnDeriv (μ ⊗ₘ η) (a, b) = (κ a).rnDeriv (η a) b := by
-  sorry
+    {α β : Type*} {_mα : MeasurableSpace α} {_mβ : MeasurableSpace β}
+    [MeasurableSpace.CountableOrCountablyGenerated α β]
+    (μ : Measure α) [IsFiniteMeasure μ]
+    (κ η : Kernel α β) [IsFiniteKernel κ] [IsFiniteKernel η]
+    (h_ac_kernel : ∀ᵐ a ∂μ, κ a ≪ η a) :
+    (μ ⊗ₘ κ).rnDeriv (μ ⊗ₘ η) =ᵐ[μ ⊗ₘ η]
+      fun p => Kernel.rnDeriv κ η p.1 p.2 := by
+  have h_ac : μ ⊗ₘ κ ≪ μ ⊗ₘ η :=
+    Measure.AbsolutelyContinuous.compProd_right h_ac_kernel
+  refine ae_eq_of_forall_setLIntegral_eq_of_sigmaFinite
+    (Measure.measurable_rnDeriv _ _) (Kernel.measurable_rnDeriv κ η) fun s hs _ => ?_
+  -- Step 1: rectangle case via `setLIntegral_compProd` + `Kernel.setLIntegral_rnDeriv`.
+  have h_rect : ∀ t₁ t₂, MeasurableSet t₁ → MeasurableSet t₂ →
+      ∫⁻ p in t₁ ×ˢ t₂, (μ ⊗ₘ κ).rnDeriv (μ ⊗ₘ η) p ∂(μ ⊗ₘ η)
+        = ∫⁻ p in t₁ ×ˢ t₂, Kernel.rnDeriv κ η p.1 p.2 ∂(μ ⊗ₘ η) := by
+    intro t₁ t₂ ht₁ ht₂
+    rw [Measure.setLIntegral_rnDeriv h_ac, Measure.compProd_apply_prod ht₁ ht₂,
+      Measure.setLIntegral_compProd (Kernel.measurable_rnDeriv κ η) ht₁ ht₂]
+    refine setLIntegral_congr_fun_ae ht₁ ?_
+    filter_upwards [h_ac_kernel] with a ha _
+    exact (Kernel.setLIntegral_rnDeriv ha ht₂).symm
+  -- Step 2: π-system induction on rectangles in α × β.
+  refine MeasurableSpace.induction_on_inter generateFrom_prod.symm isPiSystem_prod ?_ ?_ ?_ ?_ s hs
+  · simp
+  · rintro _ ⟨t₁, ht₁, t₂, ht₂, rfl⟩
+    exact h_rect t₁ t₂ ht₁ ht₂
+  · intro t ht ht_eq
+    have h_lhs_ne : ∫⁻ p in t, (μ ⊗ₘ κ).rnDeriv (μ ⊗ₘ η) p ∂(μ ⊗ₘ η) ≠ ∞ :=
+      ((Measure.setLIntegral_rnDeriv_le _).trans_lt (measure_lt_top _ _)).ne
+    rw [setLIntegral_compl ht h_lhs_ne, ht_eq, setLIntegral_compl ht (ht_eq ▸ h_lhs_ne)]
+    congr 1
+    have hu := h_rect Set.univ Set.univ MeasurableSet.univ MeasurableSet.univ
+    simpa only [Set.univ_prod_univ, Measure.restrict_univ] using hu
+  · intro f' hf_disj hf_meas hf_eq
+    rw [lintegral_iUnion hf_meas hf_disj, lintegral_iUnion hf_meas hf_disj]
+    congr with i
+    exact hf_eq i
 
-/-- Fiberwise KL chain rule: when both compProd's share the same `μ` on the
-left, the full KL splits as the integral of fiberwise KLs.
-
-Proof sketch (assuming the rnDeriv identification helper above):
-1. Split on `∀ᵐ x ∂μ, κ x ≪ ν` (= ac of joint via `absolutelyContinuous_compProd_right_iff`)
-2. AC case: `klDiv_eq_lintegral_klFun_of_ac` on both sides, Tonelli (`lintegral_compProd`)
-   on LHS, then `lintegral_congr_ae` using `rnDeriv_compProd_ae_eq_kernel_rnDeriv`.
-3. Non-AC case: both sides ⊤ (use `klDiv_of_not_ac` and
-   `lintegral_eq_top_of_measure_eq_top_pos`-style argument). -/
-private lemma klDiv_compProd_const_eq_lintegral
+/-- Fiberwise KL chain rule for a constant right kernel: when the right
+compProd uses `Kernel.const α ν`, the KL splits as the `μ`-integral of fiberwise
+KLs `klDiv (κ x) ν`. AC case is established directly; non-AC case is left to the
+caller via `klDiv_compProd_const_eq_lintegral_of_ac` below. -/
+private lemma klDiv_compProd_const_eq_lintegral_of_ac
     {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
+    [MeasurableSpace.CountableOrCountablyGenerated α β]
     (μ : Measure α) [IsFiniteMeasure μ]
     (κ : Kernel α β) [IsFiniteKernel κ]
-    (ν : Measure β) [IsFiniteMeasure ν] :
+    (ν : Measure β) [IsFiniteMeasure ν]
+    (h_ac_kernel : ∀ᵐ x ∂μ, κ x ≪ ν) :
     klDiv (μ ⊗ₘ κ) (μ ⊗ₘ Kernel.const α ν)
       = ∫⁻ x, klDiv (κ x) ν ∂μ := by
-  sorry
+  have h_ac_kernel_const : ∀ᵐ a ∂μ, κ a ≪ (Kernel.const α ν : Kernel α β) a := by
+    filter_upwards [h_ac_kernel] with a ha
+    simpa using ha
+  have h_ac : μ ⊗ₘ κ ≪ μ ⊗ₘ Kernel.const α ν :=
+    Measure.AbsolutelyContinuous.compProd_right h_ac_kernel_const
+  -- Joint rnDeriv ae-identification (kernel side, jointly measurable).
+  have h_rnD := rnDeriv_compProd_ae_eq_kernel_rnDeriv μ κ (Kernel.const α ν) h_ac_kernel_const
+  -- LHS: rewrite via `klDiv_eq_lintegral_klFun_of_ac` and the joint rnDeriv ae-replacement.
+  rw [klDiv_eq_lintegral_klFun_of_ac h_ac]
+  -- Replace joint rnDeriv with `Kernel.rnDeriv κ (const ν) p.1 p.2` (still jointly measurable).
+  have h_integrand :
+      (fun p : α × β => ENNReal.ofReal
+          (klFun ((μ ⊗ₘ κ).rnDeriv (μ ⊗ₘ Kernel.const α ν) p).toReal))
+        =ᵐ[μ ⊗ₘ Kernel.const α ν]
+        fun p => ENNReal.ofReal
+          (klFun (Kernel.rnDeriv κ (Kernel.const α ν) p.1 p.2).toReal) := by
+    filter_upwards [h_rnD] with p hp
+    rw [hp]
+  rw [lintegral_congr_ae h_integrand,
+    Measure.lintegral_compProd (by fun_prop)]
+  -- For ae `a`, replace `Kernel.rnDeriv κ (const ν) a b` with `(κ a).rnDeriv ν b` (ae over `ν`),
+  -- then collapse the inner integral to `klDiv (κ a) ν`.
+  refine lintegral_congr_ae ?_
+  filter_upwards [h_ac_kernel] with a ha
+  have h_inner :
+      (fun b : β => ENNReal.ofReal
+          (klFun (Kernel.rnDeriv κ (Kernel.const α ν) a b).toReal))
+        =ᵐ[(Kernel.const α ν : Kernel α β) a]
+        fun b => ENNReal.ofReal (klFun ((κ a).rnDeriv ν b).toReal) := by
+    have := Kernel.rnDeriv_eq_rnDeriv_measure (κ := κ) (η := Kernel.const α ν) (a := a)
+    filter_upwards [this] with b hb
+    simp only [Kernel.const_apply] at hb
+    rw [hb]
+  rw [lintegral_congr_ae h_inner]
+  simp_rw [Kernel.const_apply]
+  rw [klDiv_eq_lintegral_klFun_of_ac ha]
+
 
 omit [DecidableEq X] [Nonempty X] in
 /-- Discrete `(klDiv Q P).toReal` formula on a finite alphabet under
