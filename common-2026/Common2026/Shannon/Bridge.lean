@@ -302,6 +302,74 @@ private lemma integral_condDistrib_real_singleton_eq
       lintegral_condDistrib_singleton_eq μ Xs Yo hXs hYo x]
   rfl
 
+/-- Per-fibre AC of `condDistrib Xs Yo μ y` w.r.t. `μ.map Xs`. On a finite
+alphabet `X`, AC reduces to per-singleton vanishing.
+
+Strategy:
+1. For each `x : X` with `(μ.map Xs) {x} = 0`, `condDistrib y {x} = 0` ae over
+   `μ.map Yo`. This follows from `compProd_map_condDistrib`: the joint
+   `μ.map (Yo, Xs)` has zero mass on `univ × {x}`, and `compProd_apply_prod`
+   converts that to `∫⁻ y, condDistrib y {x} ∂(μ.map Yo) = 0`.
+2. Take the finite intersection over `x : X` (via `ae_all_iff`).
+3. Conclude `condDistrib y ≪ μ.map Xs`: for any `A : Set X` with `(μ.map Xs) A = 0`,
+   each `x ∈ A` has `(μ.map Xs) {x} = 0` (monotonicity), hence `condDistrib y {x} = 0`,
+   and summing over the finite `A` gives `condDistrib y A = 0`. -/
+private lemma condDistrib_ae_absolutelyContinuous_map
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Ω → X) (Yo : Ω → Y)
+    (hXs : Measurable Xs) (hYo : Measurable Yo) :
+    ∀ᵐ y ∂(μ.map Yo), condDistrib Xs Yo μ y ≪ μ.map Xs := by
+  have _ : IsProbabilityMeasure (μ.map Yo) :=
+    Measure.isProbabilityMeasure_map hYo.aemeasurable
+  have _ : IsProbabilityMeasure (μ.map Xs) :=
+    Measure.isProbabilityMeasure_map hXs.aemeasurable
+  have h_compProd : (μ.map Yo) ⊗ₘ (condDistrib Xs Yo μ)
+      = μ.map (fun ω => (Yo ω, Xs ω)) := compProd_map_condDistrib hXs.aemeasurable
+  -- Step 1: per-`x` ae vanishing of `condDistrib y {x}` when `(μ.map Xs) {x} = 0`.
+  have h_each_x : ∀ x : X, (μ.map Xs) {x} = 0 →
+      ∀ᵐ y ∂(μ.map Yo), condDistrib Xs Yo μ y {x} = 0 := by
+    intro x hx
+    have hx_meas : MeasurableSet ({x} : Set X) := measurableSet_singleton x
+    have h_joint_zero :
+        (μ.map (fun ω => (Yo ω, Xs ω))) (Set.univ ×ˢ ({x} : Set X)) = 0 := by
+      rw [Measure.map_apply (hYo.prodMk hXs) (MeasurableSet.univ.prod hx_meas)]
+      have hsubset : (fun ω => (Yo ω, Xs ω)) ⁻¹' (Set.univ ×ˢ ({x} : Set X))
+          ⊆ Xs ⁻¹' {x} := fun ω h => by simpa using h
+      have h0 : μ (Xs ⁻¹' {x}) = 0 := by
+        rwa [← Measure.map_apply hXs hx_meas]
+      exact measure_mono_null hsubset h0
+    rw [← h_compProd, Measure.compProd_apply_prod MeasurableSet.univ hx_meas,
+      lintegral_eq_zero_iff (Kernel.measurable_coe _ hx_meas)] at h_joint_zero
+    rwa [Measure.restrict_univ] at h_joint_zero
+  -- Step 2: take ae intersection over the (finitely many) `x : X`.
+  have h_combined :
+      ∀ᵐ y ∂(μ.map Yo), ∀ x : X, (μ.map Xs) {x} = 0 → condDistrib Xs Yo μ y {x} = 0 := by
+    rw [ae_all_iff]
+    intro x
+    by_cases hx : (μ.map Xs) {x} = 0
+    · filter_upwards [h_each_x x hx] with y hy _ using hy
+    · exact ae_of_all _ fun _ hxy => absurd hxy hx
+  -- Step 3: conclude AC via Finset decomposition.
+  classical
+  filter_upwards [h_combined] with y hy
+  refine Measure.AbsolutelyContinuous.mk fun A _ hA0 => ?_
+  -- Decompose `A` as finite biUnion of singletons via `Finset.univ.filter (· ∈ A)`.
+  set s : Finset X := Finset.univ.filter (· ∈ A)
+  have hA_decomp : A = ⋃ x ∈ s, ({x} : Set X) := by
+    ext z
+    simp [s, Finset.mem_filter]
+  have h_pwd : Set.PairwiseDisjoint (↑s) (fun x : X => ({x} : Set X)) :=
+    fun a _ b _ hne => Set.disjoint_singleton.mpr hne
+  have h_meas : ∀ x ∈ s, MeasurableSet ({x} : Set X) :=
+    fun x _ => measurableSet_singleton x
+  have hP_sum : ∑ x ∈ s, (μ.map Xs) {x} = 0 := by
+    rw [← measure_biUnion_finset h_pwd h_meas, ← hA_decomp]; exact hA0
+  have hP_each : ∀ x ∈ s, (μ.map Xs) {x} = 0 := fun x hx =>
+    le_antisymm (hP_sum ▸ Finset.single_le_sum (f := fun y => (μ.map Xs) {y})
+      (fun _ _ => bot_le) hx) bot_le
+  rw [hA_decomp, measure_biUnion_finset h_pwd h_meas]
+  exact Finset.sum_eq_zero fun x hx => hy x (hP_each x hx)
+
 /-- Discrete-fiber expansion of the KL divergence appearing in `mutualInfo`.
 For a finite alphabet `X` we may rewrite the joint integral as
 `∑_{x : X} ∫_y …` and pull the discrete log decomposition through.
