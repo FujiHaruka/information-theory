@@ -401,6 +401,31 @@ private theorem klDiv_joint_prod_marginals_toReal
     (klDiv (μ.map (fun ω => (Xs ω, Yo ω)))
         ((μ.map Xs).prod (μ.map Yo))).toReal
       = entropy μ Xs - InformationTheory.MeasureFano.condEntropy μ Xs Yo := by
+  have hMYo : IsProbabilityMeasure (μ.map Yo) :=
+    Measure.isProbabilityMeasure_map hYo.aemeasurable
+  have hMXs : IsProbabilityMeasure (μ.map Xs) :=
+    Measure.isProbabilityMeasure_map hXs.aemeasurable
+  -- Step 1: swap to (Yo, Xs) form via `mutualInfo_comm`.
+  have h_swap_kl : klDiv (μ.map (fun ω => (Xs ω, Yo ω))) ((μ.map Xs).prod (μ.map Yo))
+      = klDiv (μ.map (fun ω => (Yo ω, Xs ω))) ((μ.map Yo).prod (μ.map Xs)) := by
+    have := mutualInfo_comm μ Xs Yo hXs hYo
+    simpa [mutualInfo] using this
+  rw [h_swap_kl]
+  -- Step 2: rewrite both sides as compProd.
+  have h_eq_joint : μ.map (fun ω => (Yo ω, Xs ω))
+      = (μ.map Yo) ⊗ₘ (condDistrib Xs Yo μ) :=
+    (compProd_map_condDistrib hXs.aemeasurable).symm
+  have h_eq_prod : (μ.map Yo).prod (μ.map Xs)
+      = (μ.map Yo) ⊗ₘ Kernel.const Y (μ.map Xs) := Measure.compProd_const.symm
+  rw [h_eq_joint, h_eq_prod]
+  -- Step 3: Helper 1 reduces LHS to a y-lintegral of fibre KLs.
+  have h_ac_fibre := condDistrib_ae_absolutelyContinuous_map μ Xs Yo hXs hYo
+  rw [klDiv_compProd_const_eq_lintegral_of_ac (μ.map Yo) (condDistrib Xs Yo μ)
+    (μ.map Xs) h_ac_fibre]
+  -- Steps 4-8: convert lintegral.toReal → Bochner ∫ → Helper 5 expansion → split sum →
+  -- Helper 3 marginal recovery → combine to entropy - condEntropy.
+  -- This last 50-100 lines of plumbing is left as a single sorry; the proof sketch
+  -- in the docstring above (steps 5-8) is the precise plan.
   sorry
 
 /-- The MI / condEntropy bridge: for a finite-alphabet source `X`, the Phase 4-α
