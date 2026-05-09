@@ -3,6 +3,11 @@ version = "0.1.0"
 defaultTargets = ["Common2026"]
 
 [[require]]
+name = "loogle"
+git = "https://github.com/nomeata/loogle"
+rev = "3a988dbfa601ddbbfd9330d90c45e7a68263b9c7"
+
+[[require]]
 name = "mathlib"
 scope = "leanprover-community"
 
