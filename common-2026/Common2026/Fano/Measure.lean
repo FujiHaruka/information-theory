@@ -9,17 +9,18 @@ import Mathlib.Analysis.SpecialFunctions.BinaryEntropy
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 
 /-!
-# Fano's inequality: measure-theoretic form (Phase 3 skeleton)
+# Fano's inequality: measure-theoretic form (Phase 3, ムーンショット達成)
 
 Cover & Thomas / Polyanskiy 級の Fano 不等式の測度論版を、Mathlib の
-`condDistrib` (正則条件付き分布) を主役にして書く Phase 3 (ムーンショット) の起点。
+`condDistrib` (正則条件付き分布) を主役にして証明したファイル。`docs/fano-moonshot-plan.md`
+の Phase 3 ゴール (ただし decoder = deterministic な `Y → X` 版) を完成形で達成済み。
+randomized decoder `Ω → X` への一般化は Phase 3.5 として今後の課題。
 
 設定:
 * `X : Fintype`（離散・有限）— 通信路のアルファベット
 * `Y : MeasurableSpace`（任意；`ℝ`、`ℝⁿ`、Polish 空間など連続分布 OK）
 * `(Ω, μ)` 上の確率変数 `Xs : Ω → X` (送信源) と `Yo : Ω → Y` (観測)
-* `decoder : Y → X` — 決定論的復号器（Phase 3 skeleton では deterministic に固定。
-  randomized decoder への一般化は Phase 3.5 として後送り）
+* `decoder : Y → X` — 決定論的可測復号器
 
 `condDistrib` の `StandardBorelSpace` 要求は出力側の型に課されるが、本定理での出力は
 `X` であり、`Fintype + MeasurableSingletonClass + Countable` から
@@ -30,15 +31,15 @@ Phase 1 (`Common2026/Fano/Core.lean`) の離散 Fano を `y : Y` ごとに point
 `P_Yo = μ.map Yo` 上で Bochner Jensen により積分形に集約する戦略。詳細は
 `docs/fano-mathlib-inventory.md`。
 
-## 証明の構造図 (sorry-driven)
+## 証明の構造
 
 ```
 H(Xs | Yo)
   = ∫ y, [∑ x, negMulLog (Q_y {x})] dP_Yo                    -- def of condEntropy
-  ≤ ∫ y, qaryEntropy |X| (Pe_y) dP_Yo                        -- pointwise_fano
-  ≤ qaryEntropy |X| (∫ y, Pe_y dP_Yo)                        -- jensen_qaryEntropy
-  = qaryEntropy |X| (errorProb μ Xs Yo decoder)              -- errorProb_eq_integral
-  = h(Pe) + Pe · log(|X| - 1)                                -- qaryEntropy_eq_fanoBoundRHS
+  ≤ ∫ y, qaryEntropy |X| (Pe_y) dP_Yo                        -- Step 1: pointwise_fano
+  ≤ qaryEntropy |X| (∫ y, Pe_y dP_Yo)                        -- Step 2: Bochner Jensen
+  = qaryEntropy |X| (errorProb μ Xs Yo decoder)              -- Step 3: disintegration
+  = h(Pe) + Pe · log(|X| - 1)                                -- Step 4: qaryEntropy 分解
 ```
 
 ここで `Q_y = (condDistrib Xs Yo μ y).real` (`y` 条件下の `Xs` の離散分布) と
@@ -215,7 +216,8 @@ lemma pointwise_fano (Q : Measure X) [IsProbabilityMeasure Q] (xh : X)
 
 /-! ## Main theorem: Fano's inequality, measure-theoretic form
 
-各ステップを sub-sorry に分解。次セッション以降で順次埋めていく。
+ムーンショットの本丸。Step 1〜4 を `calc` で chain した完成形。各 step は
+独立補題ではなく定理内 `have` で局所構築している。
 -/
 
 /-- Fano's inequality, measure-theoretic form (deterministic decoder). -/

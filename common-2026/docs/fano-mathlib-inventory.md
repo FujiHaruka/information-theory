@@ -1,10 +1,15 @@
 # Fano Phase 3 のための Mathlib インフラ在庫調査
 
 > ムーンショット全体計画は [`docs/fano-moonshot-plan.md`](fano-moonshot-plan.md)。本ファイルは Phase 2 の成果物。
+>
+> **Status (2026-05-09): Phase 3 達成済み (deterministic decoder 形)。**
+> 本ファイルの予測 (plumbing 量・skeleton 構成・撤退ラインへの近さ) はおおむね当たり、Phase 3 は `Common2026/Fano/Measure.lean` で完成。各セクションの予測値と実測値の差分を「### Phase 3 結果」として末尾に追記している。
 
 ## 一行サマリ
 
 **Phase 3 で使う API のうち、実体（測度・カーネル・不等式・凹性）はほぼ 100% Mathlib に既存。ただし「測度論的条件付きエントロピー `condEntropy`」だけが存在しないので、ここは自前で定義する必要がある。** plumbing 量は Phase 1 と同程度〜やや上で見積もれる。撤退ラインに触れるリスクは現時点では見えていない。
+
+**Phase 3 結果**: 予測通り、自前定義したのは `condEntropy μ Xs Yo`、`errorProb`、`pointwiseErrorProb`、`diracPMF`、`pointwise_fano` の 5 種で計 ~150 行。`condDistrib` から `FiniteJointPMF X X` への橋渡しは「第二座標を Dirac にする `diracPMF`」を経由して `pointwise_fano` 7 行で完了。撤退ラインには触れず。
 
 ---
 
@@ -164,10 +169,18 @@ H(X | Y) = ∫ H(X | Y=y) dP_Y(y)                                -- 条件付き
 - **Phase 3 開始 1 週間以内に `condEntropy` 自作 + 「`condDistrib` から `FiniteJointPMF` 経由で Phase 1 を呼ぶ」橋渡し補題が書けない**場合
   → Phase 3 を「`PMF X × Kernel X (PMF Y)` の Markov 形」（軸 1+2 の中間案）に縮退する
   → これでも `Y` を可算離散に押し込めるので Cover-Thomas の半分には到達できる
+  → **判定結果（2026-05-09）**: 発動せず。`diracPMF` 経由で Phase 1 をそのまま呼べた
 
 ---
 
 ## Phase 3 着手のための skeleton
+
+> **後日追記**: 完成形は `Common2026/Fano/Measure.lean` を参照 (391 行)。当初 skeleton (下記) との差分:
+>
+> 1. signature の `𝕏̂ : Ω → X` (randomized decoder) は **`decoder : Y → X` (deterministic measurable)** に固定して着地。randomized 版は Phase 3.5 へ
+> 2. `errorProb` は `μ.map (Xs, decoder ∘ Yo)` 経由ではなく `μ.real {ω | Xs ω ≠ decoder (Yo ω)}` で直接定義
+> 3. Phase 1 への橋渡しは「`condDistrib Xs Yo μ y : Measure X` を第二座標が Dirac の `FiniteJointPMF X X` に乗せる `diracPMF` constructor + 5 つの計算 lemma」で実装。これにより `pointwise_fano` が 7 行で書ける
+> 4. 主定理証明は Step 1〜4 の `calc` 一発 chain (sub-lemma に切らず `have` で局所構築)
 
 `Common2026/Fano/Measure.lean`（または `Phase3.lean`）の出だし：
 
@@ -222,3 +235,11 @@ end InformationTheory.MeasureFano
 - 最大リスク: 「`condDistrib` から離散 PMF への翻訳補題」の plumbing 量（1〜2 週間予算）
 - 撤退ラインは新規追加（Phase 3 開始 1 週間以内に condEntropy + 橋渡しが書けないとき → PMF 軸への縮退）
 - Phase 3 着手 ready
+
+### Phase 3 結果（後日追記, 2026-05-09）
+
+- **達成**: `Common2026/Fano/Measure.lean` の `fano_inequality_measure_theoretic` が `lake env lean` silent
+- 達成形は **deterministic decoder `Y → X` (measurable) 形**。randomized decoder `𝕏̂ : Ω → X` 形は Phase 3.5 に残置
+- `condDistrib` から離散 PMF への翻訳補題は「`diracPMF Q xh : FiniteJointPMF X X` を構成 → Phase 1 の `fano_core` を呼ぶ」で 7 行 (`pointwise_fano`) に圧縮できた。最大リスクは杞憂
+- 自前定義 5 種 (`condEntropy` / `errorProb` / `pointwiseErrorProb` / `diracPMF` / `pointwise_fano`) 計 ~150 行
+- 撤退ラインはどれも発動せず
