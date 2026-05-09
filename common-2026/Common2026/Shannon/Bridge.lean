@@ -1,6 +1,7 @@
 import Common2026.Shannon.MutualInfo
 import Common2026.Fano.Measure
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
+import Mathlib.MeasureTheory.Integral.Bochner.SumMeasure
 import Mathlib.MeasureTheory.Integral.Lebesgue.Countable
 import Mathlib.MeasureTheory.Measure.Prod
 import Mathlib.Probability.Kernel.Composition.RadonNikodym
@@ -142,21 +143,67 @@ private lemma klDiv_compProd_const_eq_lintegral
       = ∫⁻ x, klDiv (κ x) ν ∂μ := by
   sorry
 
+omit [DecidableEq X] [Nonempty X] in
 /-- Discrete `(klDiv Q P).toReal` formula on a finite alphabet under
-absolute continuity.
-
-Strategy: Use `klDiv_eq_lintegral_klFun_of_ac` + `lintegral_fintype` to express
-both sides as `∑_x klFun(rnDeriv x).toReal · P.real{x}`, then identify
-`(Q.rnDeriv P x) · P{x} = Q{x}` (from `setLIntegral_rnDeriv` + `lintegral_singleton`)
-to rewrite each term as `Q.real{x} * (log Q.real{x} - log P.real{x})`. The
-`klFun(t) = t·log t - t + 1` decomposition: the linear/constant parts integrate
-to `-Q.real univ + P.real univ = -1 + 1 = 0` (both probability measures). -/
+absolute continuity. Direct route via `toReal_klDiv_of_measure_eq` + Bochner
+`integral_fintype`, with the rnDeriv identification
+`(Q.rnDeriv P x) * P{x} = Q{x}` (from `withDensity_rnDeriv_eq` + `withDensity_apply`
++ `lintegral_singleton`) bridging the per-point logarithm. -/
 private lemma klDiv_discrete_toReal_eq_sum
     (Q P : Measure X) [IsProbabilityMeasure Q] [IsProbabilityMeasure P]
     (hQP : Q ≪ P) :
     (klDiv Q P).toReal
       = ∑ x : X, Q.real {x} * (Real.log (Q.real {x}) - Real.log (P.real {x})) := by
-  sorry
+  -- (1) `Q univ = P univ = 1`, so we can use `toReal_klDiv_of_measure_eq`.
+  have h_univ : Q Set.univ = P Set.univ := by
+    rw [measure_univ, measure_univ]
+  rw [toReal_klDiv_of_measure_eq hQP h_univ]
+  -- (2) `llr Q P` is integrable on a Fintype with finite measure.
+  have h_int : Integrable (llr Q P) Q := by
+    refine ⟨(measurable_llr Q P).aestronglyMeasurable, ?_⟩
+    rw [hasFiniteIntegral_iff_enorm, lintegral_fintype]
+    exact ENNReal.sum_lt_top.mpr fun _ _ =>
+      ENNReal.mul_lt_top ENNReal.coe_lt_top (measure_lt_top _ _)
+  rw [integral_fintype h_int]
+  -- (3) Per-`x` rewrite.
+  refine Finset.sum_congr rfl fun x _ => ?_
+  -- `Q.real {x} • llr Q P x = Q.real {x} * (log Q.real {x} - log P.real {x})`
+  show Q.real {x} * Real.log (Q.rnDeriv P x).toReal
+    = Q.real {x} * (Real.log (Q.real {x}) - Real.log (P.real {x}))
+  by_cases hQx : Q.real {x} = 0
+  · simp [hQx]
+  -- (4) `Q.real {x} > 0`, so `P.real {x} > 0` (by `Q ≪ P`), and
+  --     `(Q.rnDeriv P x).toReal * P.real {x} = Q.real {x}` (rnDeriv identification).
+  have hQ_ne : Q {x} ≠ 0 := by
+    intro h
+    apply hQx
+    rw [Measure.real, h]
+    rfl
+  have hP_ne : P {x} ≠ 0 := fun h => hQ_ne (hQP h)
+  have hPx_pos : 0 < P.real {x} := by
+    refine lt_of_le_of_ne measureReal_nonneg (Ne.symm ?_)
+    intro hPx
+    apply hP_ne
+    rwa [Measure.real, ENNReal.toReal_eq_zero_iff,
+      or_iff_left (measure_ne_top P {x})] at hPx
+  have hQx_pos : 0 < Q.real {x} :=
+    lt_of_le_of_ne measureReal_nonneg (Ne.symm hQx)
+  -- ENNReal identity: `(Q.rnDeriv P x) * P {x} = Q {x}`.
+  have h_rnD_enn : (Q.rnDeriv P x) * P {x} = Q {x} := by
+    have h_wd : P.withDensity (Q.rnDeriv P) = Q :=
+      Measure.withDensity_rnDeriv_eq Q P hQP
+    have h1 : (P.withDensity (Q.rnDeriv P)) {x} = Q {x} := by rw [h_wd]
+    rw [withDensity_apply _ (measurableSet_singleton x),
+      lintegral_singleton] at h1
+    exact h1
+  -- toReal version.
+  have h_rnD_real : (Q.rnDeriv P x).toReal * P.real {x} = Q.real {x} := by
+    rw [Measure.real, Measure.real, ← ENNReal.toReal_mul, h_rnD_enn]
+  -- Solve for `(Q.rnDeriv P x).toReal = Q.real {x} / P.real {x}`.
+  have h_rnD_div : (Q.rnDeriv P x).toReal = Q.real {x} / P.real {x} := by
+    field_simp
+    linarith [h_rnD_real]
+  rw [h_rnD_div, Real.log_div hQx_pos.ne' hPx_pos.ne']
 
 /-- Marginal recovery (lintegral form). -/
 private lemma lintegral_condDistrib_singleton_eq
