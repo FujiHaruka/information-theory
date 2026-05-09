@@ -43,3 +43,4 @@ import Common2026.Fano.Measure
 -- Shannon converse (Phase 4)
 import Common2026.Shannon.MutualInfo
 import Common2026.Shannon.DPI
+import Common2026.Shannon.Bridge
