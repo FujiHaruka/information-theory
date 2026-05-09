@@ -47,6 +47,26 @@ The Lean LSP plugin (`lean4-lake-lsp@claude-code-lsps`) is enabled, so prefer LS
 - **Known LSP limitation.** The LSP tool exposed here only surfaces `hover` / `documentSymbol` etc, not `lean_goal` or `lean_diagnostic_messages`. So mid-proof goal inspection (after each tactic) isn't directly available; fall back to reading error spans from `lake env lean <file>` when stuck.
 - **LSP shows stale errors after upstream edits.** The LSP runs `lake setup-file`, which locates `.olean` files but does not rebuild them. So when you change a public symbol, namespace, or signature in module A, the LSP keeps checking dependents against A's old `.olean` and reports phantom `unknown identifier` / `function expected at ... but this term has type ?m.1` errors. In this situation `lake env lean <dependent>` will be silent — trust it over the LSP. To clear the LSP, run `lake build Common2026.<A>` once after the upstream edit; the dependent's next LSP check will pick up the fresh `.olean`.
 
+## Mathlib API Search (loogle)
+
+For "does Mathlib have lemma X?" questions, **try `loogle` before `rg`/`grep`**. Loogle answers authoritatively (e.g., `Found 0 declarations`); negative grep can miss differently-named lemmas.
+
+- **One-time index build** (~2 min, ~350 MB, gitignored under `.lake/`):
+  ```bash
+  mkdir -p .lake/build && lake exe loogle --write-index .lake/build/loogle.index
+  ```
+- **Per-query** — invoke the binary directly (skip `lake env`):
+  ```bash
+  ./.lake/packages/loogle/.lake/build/bin/loogle --read-index .lake/build/loogle.index "<query>"
+  ```
+  Cost: ~8.5 s/query with index vs ~60 s cold via `lake exe loogle`.
+- **Query syntax**:
+  - **Full namespace required**: `InformationTheory.klDiv` not `klDiv`; `MeasureTheory.Measure.map` not `Measure.map`. Loogle prints "Maybe you meant: ..." with the right qualifier.
+  - **Subterm pattern**: `InformationTheory.klDiv (MeasureTheory.Measure.map _ _) (MeasureTheory.Measure.map _ _)` finds KL applied to two pushforwards.
+  - **Multi-term (any of)**: comma-separated, e.g. `MeasurableEquiv, InformationTheory.klDiv` finds lemmas mentioning both.
+  - **Conclusion pattern**: `|- _ ≤ _` finds inequalities.
+- **Fall back to `rg`** for text-level searches: comments, docstrings, file-structure exploration, or pattern matches that aren't tied to a specific identifier.
+
 ## Workflow (sorry-driven)
 
 Do **not** write a whole problem file in one shot — it gambles on getting every divisor case and tactic incantation right with no compiler feedback. Instead:
