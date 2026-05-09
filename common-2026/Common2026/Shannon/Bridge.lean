@@ -143,7 +143,14 @@ private lemma klDiv_compProd_const_eq_lintegral
   sorry
 
 /-- Discrete `(klDiv Q P).toReal` formula on a finite alphabet under
-absolute continuity. -/
+absolute continuity.
+
+Strategy: Use `klDiv_eq_lintegral_klFun_of_ac` + `lintegral_fintype` to express
+both sides as `∑_x klFun(rnDeriv x).toReal · P.real{x}`, then identify
+`(Q.rnDeriv P x) · P{x} = Q{x}` (from `setLIntegral_rnDeriv` + `lintegral_singleton`)
+to rewrite each term as `Q.real{x} * (log Q.real{x} - log P.real{x})`. The
+`klFun(t) = t·log t - t + 1` decomposition: the linear/constant parts integrate
+to `-Q.real univ + P.real univ = -1 + 1 = 0` (both probability measures). -/
 private lemma klDiv_discrete_toReal_eq_sum
     (Q P : Measure X) [IsProbabilityMeasure Q] [IsProbabilityMeasure P]
     (hQP : Q ≪ P) :
@@ -196,7 +203,28 @@ private lemma integral_condDistrib_real_singleton_eq
 
 /-- Discrete-fiber expansion of the KL divergence appearing in `mutualInfo`.
 For a finite alphabet `X` we may rewrite the joint integral as
-`∑_{x : X} ∫_y …` and pull the discrete log decomposition through. -/
+`∑_{x : X} ∫_y …` and pull the discrete log decomposition through.
+
+Plan to combine the three helpers:
+1. `mutualInfo_comm` to swap to `(Yo, Xs)` form so the conditional that appears
+   matches `condDistrib Xs Yo μ` (the `X|Y` direction used by `condEntropy`).
+2. `compProd_map_condDistrib hXs.aemeasurable` rewrites
+   `μ.map (Yo, Xs) = (μ.map Yo) ⊗ₘ condDistrib Xs Yo μ`.
+3. `Measure.compProd_const` rewrites
+   `(μ.map Yo).prod (μ.map Xs) = (μ.map Yo) ⊗ₘ Kernel.const Y (μ.map Xs)`.
+4. `klDiv_compProd_const_eq_lintegral` (Helper 1) reduces to
+   `∫⁻ y, klDiv (condDistrib Xs Yo μ y) (μ.map Xs) ∂(μ.map Yo)`.
+5. Take `.toReal`, swap with `∫` via `integral_toReal` (need ae finite + integrable):
+   `= ∫ y, (klDiv (condDistrib Xs Yo μ y) (μ.map Xs)).toReal d(μ.map Yo)`.
+6. For each `y`, `klDiv_discrete_toReal_eq_sum` (Helper 5) expands the inner KL:
+   `= ∑ x, Q_y.real{x} * (log Q_y.real{x} - log P_X.real{x})`
+   `= -∑ x, negMulLog Q_y.real{x} - ∑ x, Q_y.real{x} * log P_X.real{x}`.
+7. Integrate over `y`:
+   - First sum integrates to `condEntropy μ Xs Yo` (definitionally).
+   - Second sum: pull out `log P_X.real{x}`, get `∑ x, [∫ y, Q_y.real{x} dP_Y] * log P_X.real{x}`,
+     apply `integral_condDistrib_real_singleton_eq` (Helper 3) to get
+     `∑ x, P_X.real{x} * log P_X.real{x} = -∑ x, negMulLog P_X.real{x} = -entropy μ Xs`.
+8. Combine: `mutualInfo.toReal = -condEntropy + entropy = entropy - condEntropy`. -/
 private theorem klDiv_joint_prod_marginals_toReal
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y)
