@@ -40,3 +40,5 @@ import Common2026.Fano.CondEntropy
 import Common2026.Fano.Core
 import Common2026.Fano.DPI
 import Common2026.Fano.Measure
+-- Shannon converse (Phase 4)
+import Common2026.Shannon.MutualInfo

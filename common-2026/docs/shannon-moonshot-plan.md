@@ -1,6 +1,7 @@
 # Shannon ムーンショット計画 🌙
 
-> **Status (2026-05-09): 計画段階**。Fano ムーンショット ([fano-moonshot-plan.md](fano-moonshot-plan.md)) の Phase 3 達成を前提とする後継プロジェクト。
+> **Status (2026-05-09): Phase 4-M0 完了**。インベントリは [`docs/shannon-mathlib-inventory.md`](shannon-mathlib-inventory.md)。Phase 4-α 着手 ready。
+> Fano ムーンショット ([fano-moonshot-plan.md](fano-moonshot-plan.md)) の Phase 3 達成を前提とする後継プロジェクト。
 > ゴールは「Mathlib に既存の `klDiv` を主軸に、mutual information / data processing inequality / Shannon converse を接続する」こと。
 
 ## Context
@@ -75,11 +76,13 @@ Phase 4-γ   : single-shot Shannon converse              ← Fano + DPI + bridge
 
 ### Approach の根幹: KL chain rule を主役にする
 
-Fano Phase 3 では `binEntropy` 凹性 + Bochner Jensen を主役にした。Phase 4 では **`klDiv_compProd` 系の chain rule** を主役にする。
+Fano Phase 3 では `binEntropy` 凹性 + Bochner Jensen を主役にした。Phase 4 では **`klDiv_compProd_eq_add` (chain rule)** を主役にする。
 
 ```
-KL(μ ⊗ κ ‖ ν ⊗ ρ) = KL(μ ‖ ν) + ∫ KL(κ(x) ‖ ρ(x)) dμ
+KL(μ ⊗ κ ‖ ν ⊗ η) = KL(μ ‖ ν) + KL(μ ⊗ κ ‖ μ ⊗ η)
 ```
+
+(`Mathlib/InformationTheory/KullbackLeibler/ChainRule.lean:204`、measurability 仮定なし、ℝ≥0∞ 値)
 
 ここから次のものが構造的に出てくる:
 
@@ -88,6 +91,12 @@ KL(μ ⊗ κ ‖ ν ⊗ ρ) = KL(μ ‖ ν) + ∫ KL(κ(x) ‖ ρ(x)) dμ
 - **MI と独立性**: `I(X; Y) = 0 ↔ X ⫫ Y`
 
 つまり「**klDiv chain rule から構造的に出てくるもの**」を順番に取り出すのが Phase 4 の基本動作。新規の凹性 Jensen は Phase 3 で組み終わっているので、Phase 4 では発生しないはず（と現時点では予想）。
+
+**M0 後の追加事項 (2026-05-09)**:
+- Mathlib にあるのは `Kernel.compProd` 形 (`⊗ₘ`) のみで、**`Measure.prod` 形 (`mutualInfo` 定義の右辺)** との橋渡し補題は不在
+  → 最初に **`klDiv_prod_eq_klDiv : klDiv (μ.prod ν₁) (μ.prod ν₂) = klDiv ν₁ ν₂`** を `Measure.prod = · ⊗ₘ Kernel.const _ ·` 経由で `klDiv_compProd_left` (`@[simp]`) から導出する
+- DPI 直接補題 (`klDiv (μ.map f) (ν.map f) ≤ klDiv μ ν`) も不在
+  → `Kernel.deterministic f` で `f` を kernel 化し、`compProd_map_condDistrib` で disintegrate して chain rule に乗せる戦略で自作
 
 ### なぜ 3 段に分けるか
 
@@ -143,6 +152,17 @@ Phase 2 (Fano) と同型の subagent 並列調査。**1 ターンで完走する
 
 1 ターン (10〜15 分)。Fano Phase 2 と同じ規模。
 
+### Phase 4-M0 結果 (2026-05-09)
+
+- **完了**: subagent 3 並列 (chain rule + DPI / product + map / fDivergence + IndepFun + Kernel) → `docs/shannon-mathlib-inventory.md` に統合
+- **既存率**: 「素材」(klDiv 定義 / chain rule / klDiv_eq_zero_iff / IndepFun ↔ map prod / condDistrib / Kernel.deterministic) は **100%**。「主役定理」(mutualInfo / DPI / KL × Measure.prod 分解) は **0%** で全自作
+- **撤退ライン判定**: 「DPI / monotonicity が驚くほど未整備」に **軽く触れている**。直接の DPI 補題は完全不在だが、`klDiv_compProd_eq_add` + `Kernel.deterministic` 経由で導出可能な見通し
+- **Phase 4-α への影響**:
+  - `mutualInfo` 定義 + `mutualInfo_nonneg` + `mutualInfo_comm` + `mutualInfo_eq_zero_iff_indep` の 4 項目は **plumbing 1〜2 日見込み** (素材完備)
+  - **DPI が最大の山場**: 50〜150 行 / 2 週間予算
+  - 補助補題: `klDiv_prod_eq_klDiv` (`Measure.prod = · ⊗ₘ Kernel.const _ ·` 経由で `klDiv_compProd_left` から導く) を最初に書くと後続が楽になる
+- **Phase 4-α 着手 ready**
+
 ---
 
 ## Phase 4-α: mutualInfo + 基本性質 + DPI
@@ -193,11 +213,14 @@ end InformationTheory.Shannon
 
 ### 鍵となる作業
 
+> M0 で各補題の Mathlib 既存状況を確認済み (詳細は [`shannon-mathlib-inventory.md`](shannon-mathlib-inventory.md))。
+
+0. **補助補題: `klDiv_prod_eq_klDiv`** — `klDiv (μ.prod ν₁) (μ.prod ν₂) = klDiv ν₁ ν₂` を `Measure.prod = · ⊗ₘ Kernel.const _ ·` 経由で `klDiv_compProd_left` から導く。10〜20 行。後続全部の起点
 1. **`mutualInfo` の定義** (10 分)
-2. **`mutualInfo_nonneg`** — klDiv が `ℝ≥0∞` 値なので signature 上自明。`toReal` 版で書く場合は `klDiv_nonneg` から
-3. **`mutualInfo_comm`** — `Measure.prod_swap` 系 + KL の swap 不変性
-4. **`mutualInfo_eq_zero_iff_indep`** — KL=0 ↔ μ=ν の既存補題から
-5. **DPI が Phase 4-α の山場** — Markov 構造 (`Z = f(Y)`) を「kernel の合成」で表現し、`klDiv_compProd` から導く。Phase 3 の `condDistrib` を使い回せる可能性が高い
+2. **`mutualInfo_nonneg`** — `zero_le _` で 1 行 (klDiv が `ℝ≥0∞` 値)。`toReal` 版で書く場合は `klDiv_nonneg` (要確認) から
+3. **`mutualInfo_comm`** — `Measure.prod_swap` ((μ.prod ν).map Prod.swap = ν.prod μ) + KL の `Measure.map Prod.swap` 不変性 (これも自作の可能性あり)。10〜20 行
+4. **`mutualInfo_eq_zero_iff_indep`** — `indepFun_iff_map_prod_eq_prod_map_map` (`Probability/Independence/Basic.lean:701`) と `klDiv_eq_zero_iff` (`KullbackLeibler/Basic.lean:377`) を合成。5〜10 行
+5. **DPI が Phase 4-α の山場** — 直接補題は Mathlib に**完全不在**。戦略: `f : Y → Z` を `Kernel.deterministic f` で kernel 化し、`compProd_map_condDistrib` で `μ.map (Xs, Yo)` を `(μ.map Xs) ⊗ₘ condDistrib Yo Xs μ` に disintegrate、`klDiv_compProd_eq_add` で chain rule を 2 回適用して比較。**50〜150 行 / 2 週間予算**
 6. **stochastic kernel 版 DPI** (オプション) — `Z = κ(Y)` で `κ` が Markov kernel の場合への一般化。Phase 4-γ で必要なら追加
 
 ### ファイル構成
@@ -355,11 +378,12 @@ log|M| = H(Msg)                                                  -- uniform mess
 
 ## 当面の next step
 
-1. このファイルをレビュー → 認識合わせ
+1. ~~このファイルをレビュー → 認識合わせ~~ (済)
 2. **Fano Phase 3 の proof-log + metrics 取得** (Phase 4 開始前にやっておくと比較が綺麗)
-3. **Phase 4-M0 着手** — Mathlib KL API インベントリ調査、subagent 並列で 1 ターン
-4. Phase 4-M0 結果を見て、必要なら本計画書の Approach / Phase 4-α 節を更新
-5. **Phase 4-α の skeleton 作成** — `Common2026/Shannon/MutualInfo.lean` の sorry-driven 出だし
+3. ~~**Phase 4-M0 着手** — Mathlib KL API インベントリ調査、subagent 並列で 1 ターン~~ (済, 2026-05-09)
+4. ~~Phase 4-M0 結果を見て、必要なら本計画書の Approach / Phase 4-α 節を更新~~ (済)
+5. **Phase 4-α の skeleton 作成** — `Common2026/Shannon/MutualInfo.lean` の sorry-driven 出だし ([`shannon-mathlib-inventory.md`](shannon-mathlib-inventory.md) 末尾の skeleton をそのまま採用) ← **次これ**
+6. **`klDiv_prod_eq_klDiv` 補助補題から sorry を割り始める**
 
 ---
 

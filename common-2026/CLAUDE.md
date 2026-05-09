@@ -56,6 +56,12 @@ Do **not** write a whole problem file in one shot — it gambles on getting ever
 3. Fill in **one** `sorry` at a time. Trust the LSP diagnostic reminder for fast feedback; reach for `lake env lean Common2026/<exam>_Q<X>...lean` when you want a synchronous confirmation.
 4. Let the diagnostics tell you when a tactic doesn't fire or a divisor case is missing, instead of pattern-matching in your head.
 
+## Commits
+
+- Commits and pushes are autonomous. Decide when to commit and push on each turn without waiting for the user to ask. The user will not give commit instructions. Commit autonomously even for changes that did not originate in the current session (e.g. uncommitted edits already on disk).
+- Do not report commits or pushes. The user is not interested in commit/push activity. Skip mentioning them in turn summaries or status updates.
+- Keep commit messages short. One concise line, no body unless absolutely necessary.
+
 ## Definition of Done
 
 After solving a new problem, `lake env lean Common2026/<exam>_Q<X>...lean` must pass cleanly — zero errors, no remaining `sorry`, minimal warnings.
