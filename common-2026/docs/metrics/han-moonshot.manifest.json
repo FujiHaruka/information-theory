@@ -1,0 +1,38 @@
+{
+  "problem": "Han 不等式ムーンショット (Phase A: 2 変数 chain rule + 「条件付けで H は減る」 / Phase B: n 変数 jointEntropy chain rule / Phase C: Han 不等式本体)",
+  "proof_log": "docs/proof-log-han-moonshot.md",
+  "sessions": [
+    {
+      "id": "6146225d-3de4-4c5c-a6ee-8a9060de9a3b",
+      "prompt_ids": ["290862d7"],
+      "note": "Phase A skeleton: Common2026/Shannon/Entropy.lean に 4 主定理 (entropy_pair_eq_entropy_add_condEntropy / condEntropy_tower / condEntropy_le_condEntropy_of_pair / condMutualInfo_eq_condEntropy_sub_condEntropy) を sorry-driven で配置 + instance チェイン裏取り。"
+    },
+    {
+      "id": "ef18b6e8-bbae-4763-a7eb-a3076468c750",
+      "prompt_ids": ["2d2ddd5a"],
+      "note": "Phase A 充填 1/4: chain rule (entropy_pair_eq_entropy_add_condEntropy ~70 行) + tower (condEntropy_tower ~40 行) + monotonicity (condEntropy_le_condEntropy_of_pair, 中間補題依存 linarith)。中間補題 (condMutualInfo_eq_condEntropy_sub_condEntropy) は sorry 残し。compProd_map_condDistrib + Real.negMulLog_mul + integral_fintype 経由。"
+    },
+    {
+      "id": "d219a097-3344-4a17-b3fe-def3ee927dc7",
+      "prompt_ids": ["bc568444", "3839b6ff"],
+      "note": "Phase A 充填 2/4: middle lemma (condMutualInfo_eq_condEntropy_sub_condEntropy)。mutualInfo_chain_rule + Bridge × 2 + condMutualInfo_comm 経由で埋める。fiber 展開ルートは却下。mutualInfo_ne_top / condMutualInfo_ne_top を新設し ENNReal.toReal_add の有限性を確保。"
+    },
+    {
+      "id": "f93c8e27-ac98-4921-a0c3-9004bdb163a4",
+      "prompt_ids": ["91603b01"],
+      "note": "Phase B skeleton: Common2026/Shannon/Han.lean を新規作成 (65 行)。jointEntropy 定義 (entropy の Fin n → α 値ラッパ) + n 変数 chain rule を sorry-driven で配置。"
+    },
+    {
+      "id": "54e6d8b7-2159-4203-b14f-3dadadd749f2",
+      "prompt_ids": ["d639fec9"],
+      "note": "Phase B 充填: jointEntropy_chain_rule_finRange の充填。Fin n の prefix induction で n 変数 chain rule を組む。"
+    },
+    {
+      "id": "060eaadf-5f9b-4336-9bb2-065012b70813",
+      "prompt_ids": ["d99070e6"],
+      "note": "Phase C 充填: Han の不等式本体 (han_inequality)。exceptIdxEquiv / fullIdxEquiv (index 同型 2 本) + exceptSplitMEquiv / piExceptMEquiv / fullSplitMEquiv (Pi 値 MeasurableEquiv 3 本) + han_single_bound (各 i での個別不等式) を経由して主定理。退化ケース (n = 0, 1) も同じ証明で通過 (hn : 1 ≤ n は不要だった)。"
+    }
+  ],
+  "filters": { "file_prefix": "Common2026/Shannon" },
+  "idle_gap_minutes": 5
+}

@@ -1,0 +1,430 @@
+{
+  "problem": "Han 不等式ムーンショット (Phase A: 2 変数 chain rule + 「条件付けで H は減る」 / Phase B: n 変数 jointEntropy chain rule / Phase C: Han 不等式本体)",
+  "proof_log": "docs/proof-log-han-moonshot.md",
+  "generated_at": "2026-05-10T07:07:17.770Z",
+  "filters": {
+    "file_prefix": "Common2026/Shannon"
+  },
+  "idle_gap_minutes": 5,
+  "sessions": [
+    {
+      "id": "6146225d-3de4-4c5c-a6ee-8a9060de9a3b",
+      "note": "Phase A skeleton: Common2026/Shannon/Entropy.lean に 4 主定理 (entropy_pair_eq_entropy_add_condEntropy / condEntropy_tower / condEntropy_le_condEntropy_of_pair / condMutualInfo_eq_condEntropy_sub_condEntropy) を sorry-driven で配置 + instance チェイン裏取り。",
+      "start": "2026-05-10T04:13:27.499Z",
+      "end": "2026-05-10T04:19:14.619Z",
+      "wall_time_seconds": 347,
+      "active_time_seconds": 347,
+      "turns": 21,
+      "tool_calls": {
+        "Skill": 1,
+        "Read": 7,
+        "Bash": 6,
+        "ToolSearch": 1,
+        "TaskCreate": 1,
+        "TaskUpdate": 2,
+        "Write": 1,
+        "Edit": 1
+      },
+      "bash_breakdown": {
+        "git": 3,
+        "lake_env_lean": 1,
+        "which": 1,
+        "other": 1
+      },
+      "bash_total": 6,
+      "edits_by_file": {
+        "Common2026.lean": 1
+      },
+      "writes_by_file": {
+        "Common2026/Shannon/Entropy.lean": 1
+      },
+      "reads_by_file": {
+        ".claude/handoff.md": 1,
+        "docs/han-mathlib-inventory.md": 1,
+        "Common2026/Shannon/Bridge.lean": 2,
+        "Common2026/Shannon/CondMutualInfo.lean": 1,
+        "Common2026/Fano/Measure.lean": 1,
+        "Common2026.lean": 1
+      },
+      "matched_edits": 0,
+      "matched_writes": 1,
+      "tool_errors": 1,
+      "tokens": {
+        "input": 55,
+        "output": 45218,
+        "cache_read": 1537487,
+        "cache_creation": 114706
+      },
+      "models": [
+        "claude-opus-4-7"
+      ],
+      "sidechain_entries": 0
+    },
+    {
+      "id": "ef18b6e8-bbae-4763-a7eb-a3076468c750",
+      "note": "Phase A 充填 1/4: chain rule (entropy_pair_eq_entropy_add_condEntropy ~70 行) + tower (condEntropy_tower ~40 行) + monotonicity (condEntropy_le_condEntropy_of_pair, 中間補題依存 linarith)。中間補題 (condMutualInfo_eq_condEntropy_sub_condEntropy) は sorry 残し。compProd_map_condDistrib + Real.negMulLog_mul + integral_fintype 経由。",
+      "start": "2026-05-10T04:21:17.705Z",
+      "end": "2026-05-10T04:47:01.526Z",
+      "wall_time_seconds": 1544,
+      "active_time_seconds": 1544,
+      "turns": 54,
+      "tool_calls": {
+        "Skill": 2,
+        "Read": 14,
+        "Bash": 46,
+        "ToolSearch": 3,
+        "TaskCreate": 4,
+        "TaskUpdate": 8,
+        "Edit": 4,
+        "TaskList": 1,
+        "Write": 1
+      },
+      "bash_breakdown": {
+        "git": 6,
+        "other": 25,
+        "rg": 12,
+        "lake_env_lean": 1,
+        "which": 1,
+        "ls": 1
+      },
+      "bash_total": 46,
+      "edits_by_file": {
+        "Common2026/Shannon/Entropy.lean": 4
+      },
+      "writes_by_file": {
+        ".claude/handoff.md": 1
+      },
+      "reads_by_file": {
+        ".claude/handoff.md": 1,
+        "Common2026/Shannon/Entropy.lean": 3,
+        "docs/han-mathlib-inventory.md": 1,
+        "Common2026/Shannon/Bridge.lean": 1,
+        "Common2026/Fano/Measure.lean": 1,
+        ".lake/packages/mathlib/Mathlib/MeasureTheory/Integral/Lebesgue/Countable.lean": 1,
+        ".lake/packages/mathlib/Mathlib/MeasureTheory/Integral/Bochner/SumMeasure.lean": 1,
+        ".lake/packages/mathlib/Mathlib/Probability/Kernel/CondDistrib.lean": 1,
+        ".lake/packages/mathlib/Mathlib/Probability/Kernel/Composition/IntegralCompProd.lean": 2,
+        "Common2026/Shannon/CondMutualInfo.lean": 1,
+        ".lake/packages/mathlib/Mathlib/InformationTheory/KullbackLeibler/ChainRule.lean": 1
+      },
+      "matched_edits": 4,
+      "matched_writes": 0,
+      "tool_errors": 2,
+      "tokens": {
+        "input": 211,
+        "output": 274175,
+        "cache_read": 14012557,
+        "cache_creation": 609817
+      },
+      "models": [
+        "claude-opus-4-7"
+      ],
+      "sidechain_entries": 0
+    },
+    {
+      "id": "d219a097-3344-4a17-b3fe-def3ee927dc7",
+      "note": "Phase A 充填 2/4: middle lemma (condMutualInfo_eq_condEntropy_sub_condEntropy)。mutualInfo_chain_rule + Bridge × 2 + condMutualInfo_comm 経由で埋める。fiber 展開ルートは却下。mutualInfo_ne_top / condMutualInfo_ne_top を新設し ENNReal.toReal_add の有限性を確保。",
+      "start": "2026-05-10T04:47:39.673Z",
+      "end": "2026-05-10T05:21:18.519Z",
+      "wall_time_seconds": 2019,
+      "active_time_seconds": 2019,
+      "turns": 104,
+      "tool_calls": {
+        "Skill": 1,
+        "Read": 31,
+        "Bash": 73,
+        "ToolSearch": 2,
+        "TaskCreate": 1,
+        "TaskUpdate": 2,
+        "Edit": 5
+      },
+      "bash_breakdown": {
+        "git": 5,
+        "rg": 36,
+        "other": 27,
+        "head": 1,
+        "lake_env_lean": 1,
+        "which": 1,
+        "ls": 2
+      },
+      "bash_total": 73,
+      "edits_by_file": {
+        "Common2026/Shannon/MutualInfo.lean": 1,
+        "Common2026/Shannon/CondMutualInfo.lean": 3,
+        "Common2026/Shannon/Entropy.lean": 1
+      },
+      "writes_by_file": {},
+      "reads_by_file": {
+        ".claude/handoff.md": 1,
+        "Common2026/Shannon/Entropy.lean": 3,
+        "Common2026/Shannon/Bridge.lean": 7,
+        "Common2026/Shannon/CondMutualInfo.lean": 5,
+        "Common2026/Shannon/MutualInfo.lean": 4,
+        ".lake/packages/mathlib/Mathlib/Probability/Kernel/Composition/Lemmas.lean": 1,
+        ".lake/packages/mathlib/Mathlib/Probability/Kernel/Composition/Prod.lean": 1,
+        ".lake/packages/mathlib/Mathlib/Probability/Kernel/CondDistrib.lean": 2,
+        "Common2026/Shannon/Converse.lean": 1,
+        ".lake/packages/mathlib/Mathlib/MeasureTheory/Measure/MeasureSpace.lean": 1,
+        ".lake/packages/mathlib/Mathlib/InformationTheory/KullbackLeibler/ChainRule.lean": 1,
+        ".lake/packages/mathlib/Mathlib/Probability/Kernel/Composition/AbsolutelyContinuous.lean": 1,
+        ".lake/packages/mathlib/Mathlib/MeasureTheory/Constructions/Polish/Basic.lean": 1,
+        ".lake/packages/mathlib/Mathlib/MeasureTheory/MeasurableSpace/Embedding.lean": 1,
+        "docs/han-moonshot-plan.md": 1
+      },
+      "matched_edits": 5,
+      "matched_writes": 0,
+      "tool_errors": 2,
+      "tokens": {
+        "input": 232,
+        "output": 233738,
+        "cache_read": 23682205,
+        "cache_creation": 387665
+      },
+      "models": [
+        "claude-opus-4-7"
+      ],
+      "sidechain_entries": 0
+    },
+    {
+      "id": "f93c8e27-ac98-4921-a0c3-9004bdb163a4",
+      "note": "Phase B skeleton: Common2026/Shannon/Han.lean を新規作成 (65 行)。jointEntropy 定義 (entropy の Fin n → α 値ラッパ) + n 変数 chain rule を sorry-driven で配置。",
+      "start": "2026-05-10T05:24:59.344Z",
+      "end": "2026-05-10T05:44:02.809Z",
+      "wall_time_seconds": 1143,
+      "active_time_seconds": 642,
+      "turns": 11,
+      "tool_calls": {
+        "Skill": 1,
+        "Read": 4,
+        "Bash": 5,
+        "ToolSearch": 2,
+        "Write": 1,
+        "TaskCreate": 3,
+        "Edit": 1,
+        "TaskUpdate": 2
+      },
+      "bash_breakdown": {
+        "git": 2,
+        "lake_env_lean": 1,
+        "which": 1,
+        "other": 1
+      },
+      "bash_total": 5,
+      "edits_by_file": {
+        "Common2026.lean": 1
+      },
+      "writes_by_file": {
+        "Common2026/Shannon/Han.lean": 1
+      },
+      "reads_by_file": {
+        ".claude/handoff.md": 1,
+        "docs/han-moonshot-plan.md": 1,
+        "Common2026/Shannon/Entropy.lean": 1,
+        "Common2026.lean": 1
+      },
+      "matched_edits": 0,
+      "matched_writes": 1,
+      "tool_errors": 1,
+      "tokens": {
+        "input": 97,
+        "output": 31971,
+        "cache_read": 1207892,
+        "cache_creation": 195554
+      },
+      "models": [
+        "claude-opus-4-7"
+      ],
+      "sidechain_entries": 0
+    },
+    {
+      "id": "54e6d8b7-2159-4203-b14f-3dadadd749f2",
+      "note": "Phase B 充填: jointEntropy_chain_rule_finRange の充填。Fin n の prefix induction で n 変数 chain rule を組む。",
+      "start": "2026-05-10T06:02:57.745Z",
+      "end": "2026-05-10T06:30:33.237Z",
+      "wall_time_seconds": 1655,
+      "active_time_seconds": 1297,
+      "turns": 55,
+      "tool_calls": {
+        "Skill": 1,
+        "Read": 8,
+        "Bash": 43,
+        "ToolSearch": 2,
+        "TaskCreate": 1,
+        "TaskUpdate": 2,
+        "Edit": 13
+      },
+      "bash_breakdown": {
+        "git": 3,
+        "ls": 1,
+        "other": 23,
+        "rg": 12,
+        "tail": 1,
+        "lake_env_lean": 1,
+        "which": 1,
+        "grep": 1
+      },
+      "bash_total": 43,
+      "edits_by_file": {
+        "Common2026/Shannon/Han.lean": 13
+      },
+      "writes_by_file": {},
+      "reads_by_file": {
+        ".claude/handoff.md": 1,
+        "Common2026/Shannon/Han.lean": 3,
+        "Common2026/Shannon/Entropy.lean": 1,
+        "Common2026/Shannon/Bridge.lean": 1,
+        ".lake/packages/mathlib/Mathlib/MeasureTheory/MeasurableSpace/Embedding.lean": 1,
+        ".lake/packages/mathlib/Mathlib/Data/Fin/Tuple/Basic.lean": 1
+      },
+      "matched_edits": 13,
+      "matched_writes": 0,
+      "tool_errors": 0,
+      "tokens": {
+        "input": 138,
+        "output": 137870,
+        "cache_read": 7608122,
+        "cache_creation": 254083
+      },
+      "models": [
+        "claude-opus-4-7"
+      ],
+      "sidechain_entries": 0
+    },
+    {
+      "id": "060eaadf-5f9b-4336-9bb2-065012b70813",
+      "note": "Phase C 充填: Han の不等式本体 (han_inequality)。exceptIdxEquiv / fullIdxEquiv (index 同型 2 本) + exceptSplitMEquiv / piExceptMEquiv / fullSplitMEquiv (Pi 値 MeasurableEquiv 3 本) + han_single_bound (各 i での個別不等式) を経由して主定理。退化ケース (n = 0, 1) も同じ証明で通過 (hn : 1 ≤ n は不要だった)。",
+      "start": "2026-05-10T06:35:27.574Z",
+      "end": "2026-05-10T07:02:16.537Z",
+      "wall_time_seconds": 1609,
+      "active_time_seconds": 1609,
+      "turns": 71,
+      "tool_calls": {
+        "Skill": 2,
+        "Read": 16,
+        "Bash": 37,
+        "ToolSearch": 3,
+        "TaskCreate": 3,
+        "TaskUpdate": 7,
+        "Edit": 23,
+        "Write": 1
+      },
+      "bash_breakdown": {
+        "git": 4,
+        "rg": 5,
+        "other": 26,
+        "lake_env_lean": 1,
+        "which": 1
+      },
+      "bash_total": 37,
+      "edits_by_file": {
+        "Common2026/Shannon/Han.lean": 23
+      },
+      "writes_by_file": {
+        ".claude/handoff.md": 1
+      },
+      "reads_by_file": {
+        ".claude/handoff.md": 1,
+        "docs/han-moonshot-plan.md": 1,
+        "Common2026/Shannon/Han.lean": 8,
+        "docs/han-mathlib-inventory.md": 1,
+        "Common2026/Shannon/Entropy.lean": 2,
+        ".lake/packages/mathlib/Mathlib/Logic/Equiv/Prod.lean": 1,
+        ".lake/packages/mathlib/Mathlib/MeasureTheory/MeasurableSpace/Embedding.lean": 2
+      },
+      "matched_edits": 23,
+      "matched_writes": 0,
+      "tool_errors": 0,
+      "tokens": {
+        "input": 202,
+        "output": 227155,
+        "cache_read": 13341811,
+        "cache_creation": 301453
+      },
+      "models": [
+        "claude-opus-4-7"
+      ],
+      "sidechain_entries": 0
+    }
+  ],
+  "totals": {
+    "start": "2026-05-10T04:13:27.499Z",
+    "end": "2026-05-10T07:02:16.537Z",
+    "wall_time_seconds": 8317,
+    "active_time_seconds": 7458,
+    "turns": 316,
+    "tool_calls": {
+      "Skill": 8,
+      "Read": 80,
+      "Bash": 210,
+      "ToolSearch": 13,
+      "TaskCreate": 13,
+      "TaskUpdate": 23,
+      "Write": 4,
+      "Edit": 47,
+      "TaskList": 1
+    },
+    "bash_breakdown": {
+      "git": 23,
+      "lake_env_lean": 6,
+      "which": 6,
+      "other": 103,
+      "rg": 65,
+      "ls": 4,
+      "head": 1,
+      "tail": 1,
+      "grep": 1
+    },
+    "bash_total": 210,
+    "edits_by_file": {
+      "Common2026.lean": 2,
+      "Common2026/Shannon/Entropy.lean": 5,
+      "Common2026/Shannon/MutualInfo.lean": 1,
+      "Common2026/Shannon/CondMutualInfo.lean": 3,
+      "Common2026/Shannon/Han.lean": 36
+    },
+    "writes_by_file": {
+      "Common2026/Shannon/Entropy.lean": 1,
+      ".claude/handoff.md": 2,
+      "Common2026/Shannon/Han.lean": 1
+    },
+    "reads_by_file": {
+      ".claude/handoff.md": 6,
+      "docs/han-mathlib-inventory.md": 3,
+      "Common2026/Shannon/Bridge.lean": 11,
+      "Common2026/Shannon/CondMutualInfo.lean": 7,
+      "Common2026/Fano/Measure.lean": 2,
+      "Common2026.lean": 2,
+      "Common2026/Shannon/Entropy.lean": 10,
+      ".lake/packages/mathlib/Mathlib/MeasureTheory/Integral/Lebesgue/Countable.lean": 1,
+      ".lake/packages/mathlib/Mathlib/MeasureTheory/Integral/Bochner/SumMeasure.lean": 1,
+      ".lake/packages/mathlib/Mathlib/Probability/Kernel/CondDistrib.lean": 3,
+      ".lake/packages/mathlib/Mathlib/Probability/Kernel/Composition/IntegralCompProd.lean": 2,
+      ".lake/packages/mathlib/Mathlib/InformationTheory/KullbackLeibler/ChainRule.lean": 2,
+      "Common2026/Shannon/MutualInfo.lean": 4,
+      ".lake/packages/mathlib/Mathlib/Probability/Kernel/Composition/Lemmas.lean": 1,
+      ".lake/packages/mathlib/Mathlib/Probability/Kernel/Composition/Prod.lean": 1,
+      "Common2026/Shannon/Converse.lean": 1,
+      ".lake/packages/mathlib/Mathlib/MeasureTheory/Measure/MeasureSpace.lean": 1,
+      ".lake/packages/mathlib/Mathlib/Probability/Kernel/Composition/AbsolutelyContinuous.lean": 1,
+      ".lake/packages/mathlib/Mathlib/MeasureTheory/Constructions/Polish/Basic.lean": 1,
+      ".lake/packages/mathlib/Mathlib/MeasureTheory/MeasurableSpace/Embedding.lean": 4,
+      "docs/han-moonshot-plan.md": 3,
+      "Common2026/Shannon/Han.lean": 11,
+      ".lake/packages/mathlib/Mathlib/Data/Fin/Tuple/Basic.lean": 1,
+      ".lake/packages/mathlib/Mathlib/Logic/Equiv/Prod.lean": 1
+    },
+    "matched_edits": 45,
+    "matched_writes": 2,
+    "tool_errors": 6,
+    "tokens": {
+      "input": 935,
+      "output": 950127,
+      "cache_read": 61390074,
+      "cache_creation": 1863278
+    },
+    "models": [
+      "claude-opus-4-7"
+    ],
+    "sidechain_entries": 0
+  }
+}
