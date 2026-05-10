@@ -48,6 +48,29 @@ For "does Mathlib have lemma X?" questions, **try `loogle` before `rg`/`grep`**.
   - **Conclusion pattern**: `|- _ ≤ _` finds inequalities.
 - **Fall back to `rg`** for text-level searches: comments, docstrings, file-structure exploration, or pattern matches that aren't tied to a specific identifier.
 
+## Subagent Inventory of Mathlib Lemmas
+
+When delegating Mathlib API inventory to a subagent ("find candidate lemmas for X"), require **structured per-lemma output**, not prose summaries. For each candidate, the subagent must record:
+
+- **`file:line` location** (e.g., `Mathlib/Foo/Bar.lean:123`).
+- **Full signature**, including the **`[...]` type-class prerequisites verbatim**. Do not let the subagent paraphrase or drop brackets.
+- **Argument types** (explicit and instance), in order.
+- **Conclusion form**, copied verbatim — not paraphrased into prose.
+
+Type-class prerequisites in particular leak silently into your main theorem the moment you apply the lemma. A missed `[StandardBorelSpace _]`, `[IsFiniteMeasure _]`, `[Countable _]` etc. forces a mid-proof pivot of the surrounding statement (or worse, of the definition itself). Reject subagent output that summarizes signatures or omits brackets, and re-prompt.
+
+## Mathlib-shape-driven Definitions
+
+When introducing a new definition that will be reasoned about via existing Mathlib lemmas, do **not** transcribe the textbook formulation directly. Before finalizing the definition:
+
+1. Identify the 1–3 Mathlib lemmas you expect to dominate proofs about this definition.
+2. Read their **conclusion form** verbatim — what shape do they return?
+3. Choose the definition so those conclusion forms are usable as-is.
+
+The textbook-equivalent form can be re-derived as a separate equivalence lemma later if needed. Skipping this step routinely forces a mid-proof definition pivot or 50–100 lines of self-written bridge lemmas to convert between "the form Mathlib hands you" and "the form your proof expects".
+
+A red flag that you skipped this step: you find yourself searching for "the lemma that turns `f (compProd ...)` into `∫⁻ ... ∂ ...`" or any analogous re-shaping bridge. If that bridge is not already in Mathlib, the cheapest fix is almost always to redefine, not to write the bridge.
+
 ## Skeleton-driven Development
 
 Do **not** write a whole proof file in one shot. Instead:
