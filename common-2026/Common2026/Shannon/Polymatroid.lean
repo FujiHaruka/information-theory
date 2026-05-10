@@ -1,3 +1,4 @@
+import Common2026.Polymatroid.Basic
 import Common2026.Shannon.HanD
 
 /-!
@@ -254,5 +255,23 @@ theorem jointEntropySubset_submodular
   -- which equals condEntropy μ XB XI by `set` definitions.
   -- Same for h_S_eq.
   linarith [h_S_eq, h_T_eq, h_ST_eq, h_BS_le_BI]
+
+/-! ## Polymatroid wrapper
+
+Joint entropy as a `Combinatorics.Polymatroid` term: the four polymatroid
+axioms are exactly the three theorems above (`jointEntropySubset_empty` /
+`jointEntropySubset_mono` / `jointEntropySubset_submodular`), repackaged
+into the `Polymatroid` structure introduced in
+`Common2026/Polymatroid/Basic.lean`. -/
+
+/-- Joint entropy as a polymatroid rank function. -/
+noncomputable def entropyPolymatroid
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i)) :
+    Combinatorics.Polymatroid (Fin n) where
+  rank S := jointEntropySubset μ Xs S
+  rank_empty := jointEntropySubset_empty μ Xs
+  rank_mono := fun _ _ h => jointEntropySubset_mono μ Xs hXs h
+  rank_submodular := jointEntropySubset_submodular μ Xs hXs
 
 end InformationTheory.Shannon
