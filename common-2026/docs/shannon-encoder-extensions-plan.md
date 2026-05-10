@@ -1,7 +1,7 @@
 # Shannon converse encoder 版補完計画 (Phase 4-δ)
 
 > **Parent**: [`shannon-moonshot-plan.md`](shannon-moonshot-plan.md) Phase 4-γ 結果セクションで deferred とした「encoder 付き版」を 2 形式で完成させるサブ計画。
-> **Status (2026-05-10)**: Plan only。skeleton 着手前。
+> **Status (2026-05-10)**: Phase 4-δ-(a) **完了** (commit d4bec7c)。Phase 4-δ-(b) は inventory 完了 (`docs/shannon-condmi-inventory.md`)、skeleton 着手前。
 
 ## Context
 
@@ -211,15 +211,16 @@ Common2026/Shannon/
 
 ## 当面の next step
 
-1. **Phase 4-δ-(a) の skeleton 作成** — `Converse.lean` 末尾に `shannon_converse_single_shot_injective_encoder` を `:= by sorry` で追加 ← **次これ**
-2. **`decoder'` の構成と measurability** — `Function.Injective.hasLeftInverse` を loogle で確認、`Measurable.of_discrete` 系で measurability
-3. **(a) の sorry を埋めて silent**
-4. **(a) の中で proof-log の生メモを取り始める** (encoder 落とし判断との対比、(b) との分岐点を記録)
-5. **(b) 着手判断** — (a) 終了時点で次のいずれかを選ぶ:
-   - そのまま (b) に進む (条件付き MI inventory subagent 1 ターン)
-   - 一度 (a) で proof-log + metrics を closed にしてから (b) を別セッションで
-6. **Phase 4-δ-(b) の inventory** — `condIndepFun`, `condMutualInfo`, `klDiv` 条件付き版の Mathlib 在庫を subagent 3 並列で 1 ターン (Phase 4-M0 / Phase 2 と同型)
-7. **(b) skeleton + 充填**
+1. ~~**Phase 4-δ-(a) の skeleton 作成**~~ ✅ commit d4bec7c (2026-05-10)
+2. ~~**`decoder'` の構成と measurability**~~ ✅ `Function.invFun` + `Function.leftInverse_invFun` + `measurable_of_countable` で 1 行ずつ
+3. ~~**(a) の sorry を埋めて silent**~~ ✅ 一発で silent (~30 行)
+4. ~~**Phase 4-δ-(b) の inventory**~~ ✅ `docs/shannon-condmi-inventory.md` に subagent 3 並列の結果を統合 (2026-05-10)
+5. **Phase 4-δ-(b) skeleton 作成** ← **次これ**
+   - `Common2026/Shannon/CondMutualInfo.lean` 新設
+   - `condMutualInfo` 定義 + `IsMarkovChain` 定義 (β 形式 = condDistrib 等式形) + chain rule + Markov 系 2 つ + DPI for Prod.fst の skeleton (5 sorry)
+   - inventory §着手順 #1〜#5 を順次充填
+6. **(b) Converse.lean に主応用** — `shannon_converse_single_shot_markov_encoder` を末尾に追加
+7. **proof-log + metrics** — Phase 4-δ-(a) と (b) を 1 ファイルにまとめて closure
 
 ---
 
