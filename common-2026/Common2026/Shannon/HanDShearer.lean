@@ -64,7 +64,7 @@ theorem shearer_inequality
       (Finset.filter_subset_filter (· < i) (Finset.subset_univ T))
   -- Step B: jointEntropy μ Xs = ∑ i, f i (Phase A chain rule with S = univ)
   have h_joint_eq : jointEntropy μ Xs = ∑ i, f i := by
-    rw [← jointEntropySubset_univ μ Xs]
+    rw [← jointEntropySubset_univ μ Xs hXs]
     rw [jointEntropySubset_chain_rule μ Xs hXs Finset.univ]
   -- Step C: f i ≥ 0 (condEntropy is nonneg)
   have hf_nonneg : ∀ i, 0 ≤ f i := by
