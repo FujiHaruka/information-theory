@@ -164,6 +164,8 @@ typical set T_ε^n := { x^n : |−(1/n) log P(x^n) − H(X)| < ε } に対し
 
 **依存 / 後続**: Seed 5 (Stein) の plumbing 半分を共有。Seed 4 → 5 の順序が自然。本 seed が片付けば Common2026 全体の射程が一気に広がる。
 
+→ `docs/shannon/aep-moonshot-plan.md`
+
 ---
 
 ## Seed 5: Stein の補題（仮説検定の最適 error exponent）
