@@ -72,6 +72,7 @@ private def subsetSplitMEquiv {T₁ T₂ : Finset (Fin n)} (h : T₁ ⊆ T₂) :
       (fun _ : ↥T₁ ⊕ ↥(T₂ \ T₁) => α)).symm).trans
     (MeasurableEquiv.piCongrLeft (fun _ : ↥T₂ => α) (subsetIdxEquiv h))
 
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- subsetSplitMEquiv が、共通生成 `Xs : Fin n → α` の T₁/T₂\T₁ 制限を
 T₂ 制限に貼り合わせる。これが reshape の中身。 -/
 private lemma subsetSplitMEquiv_apply
