@@ -1,6 +1,7 @@
 import Common2026.Shannon.MutualInfo
 import Common2026.Shannon.DPI
 import Common2026.Shannon.Bridge
+import Common2026.Shannon.CondMutualInfo
 import Common2026.Fano.Measure
 import Mathlib.MeasureTheory.Measure.Count
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
@@ -179,6 +180,55 @@ theorem shannon_converse_single_shot_injective_encoder
   have hMI_Msg_finite : mutualInfo μ Msg Yo ≠ ∞ :=
     ne_top_of_le_ne_top hMI_finite h_le_ennreal
   -- toReal レベルでの単調性
+  have h_le_real :
+      (mutualInfo μ Msg Yo).toReal ≤ (mutualInfo μ (encoder ∘ Msg) Yo).toReal :=
+    ENNReal.toReal_mono hMI_finite h_le_ennreal
+  -- 既存 single-shot に bridge
+  have h_base := shannon_converse_single_shot
+    μ Msg Yo decoder hMsg hYo hdecoder hMsg_uniform hcard hMI_Msg_finite
+  linarith
+
+/-! ## Phase 4-δ-(b): Markov encoder の系
+
+Markov chain `Msg → encoder ∘ Msg → Yo` (β-form: `Yo` の (encoder∘Msg, Msg) 条件付き分布が
+encoder∘Msg のみに依存) の仮定下では、`mutualInfo_le_of_markov` で `I(Msg; Yo) ≤
+I(encoder ∘ Msg; Yo)` が出る。injective encoder の系 (Phase 4-δ-(a)) と異なり encoder の
+injectivity を仮定しない代わりに、通信路の Markov 性を要請する形。
+
+```
+I(Msg; Yo) ≤ I(encoder ∘ Msg; Yo)         -- mutualInfo_le_of_markov (Markov chain hypothesis)
+log |M| ≤ I(Msg; Yo) + h(Pe) + Pe·log(|M|-1)  -- shannon_converse_single_shot
+```
+-/
+
+/-- Single-shot Shannon converse, Markov encoder 版:
+Markov chain `Msg → encoder ∘ Msg → Yo` (β-form) のもとで、
+`log |M| ≤ I(encoder ∘ Msg; Yo) + h(Pe) + Pe · log(|M| - 1)`. -/
+theorem shannon_converse_single_shot_markov_encoder
+    {X : Type*} [MeasurableSpace X] [StandardBorelSpace X] [Nonempty X]
+    [StandardBorelSpace Y] [Nonempty Y]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Msg : Ω → M) (encoder : M → X) (Yo : Ω → Y) (decoder : Y → M)
+    (hMsg : Measurable Msg) (hYo : Measurable Yo)
+    (hencoder : Measurable encoder) (hdecoder : Measurable decoder)
+    (hmarkov : IsMarkovChain μ Msg (encoder ∘ Msg) Yo)
+    (hMsg_uniform :
+      μ.map Msg = (Fintype.card M : ℝ≥0∞)⁻¹ • Measure.count)
+    (hcard : 2 ≤ Fintype.card M)
+    (hMI_finite : mutualInfo μ (encoder ∘ Msg) Yo ≠ ∞) :
+    Real.log (Fintype.card M) ≤
+      (mutualInfo μ (encoder ∘ Msg) Yo).toReal +
+        Real.binEntropy
+          (InformationTheory.MeasureFano.errorProb μ Msg Yo decoder) +
+        InformationTheory.MeasureFano.errorProb μ Msg Yo decoder *
+          Real.log ((Fintype.card M : ℝ) - 1) := by
+  -- Markov chain ⇒ I(Msg; Yo) ≤ I(encoder ∘ Msg; Yo)
+  have h_enc_Msg : Measurable (encoder ∘ Msg) := hencoder.comp hMsg
+  have h_le_ennreal :
+      mutualInfo μ Msg Yo ≤ mutualInfo μ (encoder ∘ Msg) Yo :=
+    mutualInfo_le_of_markov μ Msg (encoder ∘ Msg) Yo hMsg h_enc_Msg hYo hmarkov
+  have hMI_Msg_finite : mutualInfo μ Msg Yo ≠ ∞ :=
+    ne_top_of_le_ne_top hMI_finite h_le_ennreal
   have h_le_real :
       (mutualInfo μ Msg Yo).toReal ≤ (mutualInfo μ (encoder ∘ Msg) Yo).toReal :=
     ENNReal.toReal_mono hMI_finite h_le_ennreal

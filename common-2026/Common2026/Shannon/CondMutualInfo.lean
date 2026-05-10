@@ -103,8 +103,8 @@ theorem condMutualInfo_eq_zero_of_markov
 /-- Markov chain `Xs → Zc → Yo` ⇒ `I(Xs; Yo) ≤ I(Zc; Yo)`.
 
 戦略 (chain rule + condMI = 0 + DPI for `Prod.snd : Z × X → X` の合成):
-1. `mutualInfo_le_of_postprocess` を `Yo, (Zc, Xs), Prod.snd` で適用 + `mutualInfo_comm` で
-   `I(Xs; Yo) ≤ I((Zc, Xs); Yo)` を得る
+1. DPI for `Prod.snd`: `I(Yo; Xs) ≤ I(Yo; (Zc, Xs))`、`mutualInfo_comm` で両端の対称化により
+   `I(Xs; Yo) ≤ I((Zc, Xs); Yo)`
 2. `mutualInfo_chain_rule` で `I((Zc, Xs); Yo) = I(Zc; Yo) + I(Xs; Yo | Zc)`
 3. `condMutualInfo_eq_zero_of_markov` で `I(Xs; Yo | Zc) = 0`
 4. 1+2+3 を合成
@@ -118,6 +118,31 @@ theorem mutualInfo_le_of_markov
     (hXs : Measurable Xs) (hZc : Measurable Zc) (hYo : Measurable Yo)
     (hmarkov : IsMarkovChain μ Xs Zc Yo) :
     mutualInfo μ Xs Yo ≤ mutualInfo μ Zc Yo := by
-  sorry
+  have h_pair_meas : Measurable (fun ω => (Zc ω, Xs ω)) := hZc.prodMk hXs
+  -- Step 1: DPI on second arg with f := Prod.snd, applied to Yo as first arg
+  have h_snd_eq : (Prod.snd : Z × X → X) ∘ (fun ω => (Zc ω, Xs ω)) = Xs := rfl
+  have h_dpi_yo :
+      mutualInfo μ Yo (Prod.snd ∘ (fun ω => (Zc ω, Xs ω))) ≤
+        mutualInfo μ Yo (fun ω => (Zc ω, Xs ω)) :=
+    mutualInfo_le_of_postprocess μ Yo (fun ω => (Zc ω, Xs ω)) hYo h_pair_meas measurable_snd
+  rw [h_snd_eq] at h_dpi_yo
+  -- DPI: I(Yo; Xs) ≤ I(Yo; (Zc, Xs))
+  -- Symmetrize via mutualInfo_comm: I(Xs; Yo) ≤ I((Zc, Xs); Yo)
+  have h_dpi :
+      mutualInfo μ Xs Yo ≤ mutualInfo μ (fun ω => (Zc ω, Xs ω)) Yo := by
+    rw [mutualInfo_comm μ Xs Yo hXs hYo,
+        mutualInfo_comm μ (fun ω => (Zc ω, Xs ω)) Yo h_pair_meas hYo]
+    exact h_dpi_yo
+  -- Step 2: chain rule I((Zc, Xs); Yo) = I(Zc; Yo) + condMutualInfo Xs Yo Zc
+  have h_chain :
+      mutualInfo μ (fun ω => (Zc ω, Xs ω)) Yo
+        = mutualInfo μ Zc Yo + condMutualInfo μ Xs Yo Zc :=
+    mutualInfo_chain_rule μ Xs Yo Zc hXs hYo hZc
+  -- Step 3: Markov ⇒ condMI = 0
+  have h_zero : condMutualInfo μ Xs Yo Zc = 0 :=
+    condMutualInfo_eq_zero_of_markov μ Xs Zc Yo hXs hZc hYo hmarkov
+  -- Compose
+  rw [h_chain, h_zero, add_zero] at h_dpi
+  exact h_dpi
 
 end InformationTheory.Shannon
