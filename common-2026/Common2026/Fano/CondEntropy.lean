@@ -8,6 +8,14 @@ M2 lemmas. We work directly with raw mass functions `μ : X → E → Y → ℝ`
 rather than committing to a structured PMF type, because every chain rule
 becomes a `ring` identity at this level.
 
+> **Formalism boundary (2026-05-10)**: 本ファイルは Phase 1 Fano core proof
+> (`Common2026/Fano/Core.lean`) 専用の **PMF 形** entropy/condEntropy 群です。
+> Shannon converse / Han / measure-theoretic Fano (`Common2026/Fano/Measure.lean`,
+> `Common2026/Shannon/*`) で使われる **測度形** entropy (`Shannon.Bridge.entropy`)
+> および `InformationTheory.MeasureFano.condEntropy` とは parallel formalism
+> であり、相互依存はありません。新規ムーンショットは測度形を使用してください。
+> 詳細: `docs/moonshot-seeds.md` の横断観察セクション。
+
 The two non-trivial outputs are:
 
 * the algebraic chain rules `H(X, E | Y) = H(E | Y) + H(X | E, Y)` and

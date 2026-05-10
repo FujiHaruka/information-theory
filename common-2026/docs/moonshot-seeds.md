@@ -221,7 +221,7 @@ Seed 4 (AEP + 源符号化) ──→ Seed 5 (Stein)
 
 ## 横断観察 (着手前の整理候補)
 
-- `Common2026/Fano/CondEntropy.lean` (Phase 1 PMF 形) と `Common2026/Shannon/Bridge.lean` (Phase 4-β 測度形) で `entropy` / `condEntropy` が**重複定義**されている。Phase D で再利用が増えた今、どちらかに寄せる整理は次 moonshot 着手前にやる価値あり (再利用コストが今後ボディブローで効く)
+- ~~`Common2026/Fano/CondEntropy.lean` (Phase 1 PMF 形) と `Common2026/Shannon/Bridge.lean` (Phase 4-β 測度形) で `entropy` / `condEntropy` が**重複定義**されている。Phase D で再利用が増えた今、どちらかに寄せる整理は次 moonshot 着手前にやる価値あり (再利用コストが今後ボディブローで効く)~~ → ✅ 整理済 (2026-05-10): 調査の結果、両者は厳密には parallel formalism (PMF 形は `μ : α → ℝ` 関数値、測度形は `μ : Measure Ω, Xs : Ω → α`) で相互依存なし。PMF stack (`Fano/Entropy.lean` / `Fano/CondEntropy.lean` / `Fano/Core.lean`) は Phase 1 Fano core proof 専用、Shannon/Han 系列は全て測度形 (`InformationTheory.MeasureFano.condEntropy` + `Shannon.Bridge.entropy`) を使用、新規ムーンショットも測度形に統一する方針。consolidation (PMF Phase 1 を測度形に書き直し) は本来別の大規模 refactor になるためスコープ外。`Fano/Entropy.lean` / `Fano/CondEntropy.lean` 冒頭に formalism boundary docstring を追加して境界を明文化。
 - `Common2026/Shannon/` 内の `MeasurableEquiv.piCongrLeft` + `sumPiEquivProdPi` + `funUnique` 3 点セットと `entropy_measurableEquiv_comp` / `condEntropy_measurableEquiv_comp` は Seed 1〜5 全部で再利用される。`Common2026/Shannon/Pi.lean` (仮) に切り出すかは Seed 1 着手時に判断 ✅ 完了 (2026-05-10, 切り出し先: Common2026/Shannon/Pi.lean)
 
 ---
