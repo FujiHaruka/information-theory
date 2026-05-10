@@ -4,7 +4,7 @@ A Lean 4 + Mathlib formalization project. Scope evolves; for the current focus s
 
 ## Project Layout
 
-- `Common2026.lean` — library root. After adding a new file under `Common2026/`, append the corresponding `import` line here.
+- `Common2026.lean` — library root. `lake build` がここを起点にビルドする。新ファイルを足すときは原則 import を追記するが、`Common2026/Exam/` 配下（完成済みの入試ファイル）は除外している（`lake build` の負担を抑えるため）。Exam 配下の検証は `lake env lean <file>` または `lake build Common2026.Exam.<...>` で個別に行う。
 - `private` is **file-scoped, not namespace-scoped**. Sub-modules that share `private` helpers must live in the same file, or those helpers leak as public symbols.
 - `docs/` holds source materials (PDFs / plans / inventories) and per-task `proof-log-*.md` + `metrics/` outputs. Treat plan and inventory files as the source of truth for whatever is currently active.
 
