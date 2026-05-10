@@ -10,10 +10,14 @@
 
 ## 進捗
 
-- [ ] Phase 0 — Mathlib + 既存 Common2026 API インベントリ 📋 → [`loomis-whitney-mathlib-inventory.md`](loomis-whitney-mathlib-inventory.md)
-- [ ] Phase A — counting measure 上の entropy plumbing (`entropy_uniformOn_eq_log_card` / 周辺基本性質) 📋
-- [ ] Phase B — 射影 plumbing (`MeasurableEquiv` で `(Fin n → α) ≃ᵐ α × ((j : {j ≠ i}) → α)` の reshape を Pi.lean 既存補題に落とす) 📋
-- [ ] Phase C — Shearer 適用 + 射影像濃度との接続 (`loomis_whitney` 主定理) 📋
+- [x] Phase 0 — Mathlib + 既存 Common2026 API インベントリ ✅ → [`loomis-whitney-mathlib-inventory.md`](loomis-whitney-mathlib-inventory.md)
+- [x] Phase A — counting measure 上の entropy plumbing (`entropy_uniformOn_eq_log_card` / `entropy_le_log_image_card`) ✅
+- [x] Phase B — 射影 plumbing (`jointEntropySubset_le_log_projectionExcept_card`, `Pi.lean` の `entropy_measurableEquiv_comp` で reshape) ✅
+- [x] Phase C — Shearer 適用 + 射影像濃度との接続 (`loomis_whitney` 主定理) ✅
+
+**完了 (2026-05-10)**: `Common2026/Shannon/LoomisWhitney.lean` (444 行) が sorry ゼロで
+`lake env lean` silent 通過 + `lake build` 全体緑通過。
+proof-log: [`docs/proof-logs/proof-log-loomis-whitney.md`](../proof-logs/proof-log-loomis-whitney.md)
 
 ## ゴール / Approach
 
@@ -208,3 +212,19 @@ log の単調性 (Real.exp_log を経由) で
 ## 判断ログ
 
 書く頻度: Phase 中の方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
+
+### 2026-05-10 実装ターン
+
+- **Phase A `entropy_le_log_image_card` のルート確定**: 計画では「support 圧縮 → uniform 化 → Phase A 主補題」と「`negMulLog` 凹性 (Jensen)」の両論併記だったが、
+  実機では Mathlib `Real.concaveOn_negMulLog` + `ConcaveOn.le_map_sum` が直接使えたので Jensen ルート 1 本で 60 行に収まった。
+  uniform 化の bijection 経路は採用せず。
+- **`uniformOn` の confidence 値の取り出し**: `uniformOn_apply_finset` は ENNReal 戻り値で
+  `Measure.real` (= `.toReal`) との橋渡しで `ENNReal.toReal_div` + `Nat.cast_one` で 1 step、
+  `Finset.inter_singleton_of_mem` / `_of_notMem` で場合分け。`uniformOn_eq_zero_iff` は
+  support 外側の証明で 1 行に効いた (計画では明示してなかった補題)。
+- **cover 条件の `ext` 後の simp**: `j ∈ S i ↔ i ≠ j` の双方向化で、最初 `simp only [...]`
+  で過剰に潰してしまい rcases パターンが通らなかった。直接 `Finset.mem_filter` /
+  `Finset.mem_erase` で展開し `⟨fun h hij => h hij.symm, ...⟩` で 1 行化が結果的に最短。
+- **`Real.log_prod` の引数順序**: 既存インベントリの記述では `_ _ (fun i _ => ...)` と
+  3 引数で書いていたが、実物は `{s} {f}` implicit + `(hf)` explicit の 1 引数で
+  `Real.log_prod (fun i _ => h_proj_ne i)` 1 段で済む。インベントリ要訂正。

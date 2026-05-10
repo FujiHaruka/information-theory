@@ -8,11 +8,16 @@
 
 ## 進捗
 
-- [ ] 軸 1: Loomis–Whitney 自体 (Mathlib に既存しないこと) 確認 📋
-- [ ] 軸 2: `MeasureTheory.Measure.count` / `ProbabilityTheory.uniformOn` API 在庫整理 📋
-- [ ] 軸 3: 一様分布 entropy ↔ 濃度 (`Real.log` / `negMulLog` 代数支援) 📋
-- [ ] 軸 4: 射影 (drop-one-coordinate) MeasurableEquiv 流用可能性 📋
-- [ ] 軸 5: `shearer_inequality` (本 project 内) シグネチャ + cover 条件 verification 📋
+- [x] 軸 1: Loomis–Whitney 自体 (Mathlib に既存しないこと) 確認 ✅
+- [x] 軸 2: `MeasureTheory.Measure.count` / `ProbabilityTheory.uniformOn` API 在庫整理 ✅
+- [x] 軸 3: 一様分布 entropy ↔ 濃度 (`Real.log` / `negMulLog` 代数支援) ✅
+- [x] 軸 4: 射影 (drop-one-coordinate) MeasurableEquiv 流用可能性 ✅
+- [x] 軸 5: `shearer_inequality` (本 project 内) シグネチャ + cover 条件 verification ✅
+
+**実装完了 (2026-05-10)**: 全 5 軸が Phase A〜C 実装で確認済み。
+詳細 proof-log: [`docs/proof-logs/proof-log-loomis-whitney.md`](../proof-logs/proof-log-loomis-whitney.md)。
+
+判断ログに **`Real.log_prod` の引数記述ミス** 訂正を記録 (実機は `(hf)` 1 引数)。
 
 ## ゴール / Approach
 
@@ -374,3 +379,16 @@ Phase C で 1 回呼ぶだけ。argument 並びが完全に一致しているの
 ## 判断ログ
 
 書く頻度: 方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
+
+### 2026-05-10 実装ターン
+
+- **`Real.log_prod` のシグネチャ訂正**: 軸 3 の記述で
+  `theorem log_prod {α} {s} {f} (hf : ∀ x ∈ s, f x ≠ 0) : log (∏ ...) = ∑ ...` と
+  *3 引数 explicit* で書いていたが、実物は `{s} {f}` implicit + `(hf)` explicit で
+  **1 引数 explicit**。実装中 `Real.log_prod _ _ (fun i _ => h_proj_ne i)` で 3 引数版を
+  当てて型エラーになり、`Real.log_prod (fun i _ => h_proj_ne i)` 1 引数版に修正。
+- **軸 4 の `exceptIdxEquiv` 公開化判断**: 「再定義 5 行」を採用。実機では 4 行で済んだ。
+  Han Phase D `exceptIdxEquiv` の private 制約は本 plan には影響せず。
+- **軸 3 の Jensen ルート確定**: `negMulLog` 凹性 → `ConcaveOn.le_map_sum` で 1 段適用。
+  「support 圧縮 → uniform 化 → entropy_uniformOn_eq_log_card」経路は採用せず。
+  Mathlib `Real.concaveOn_negMulLog` 直接利用で `entropy_le_log_image_card` が 60 行に収束。
