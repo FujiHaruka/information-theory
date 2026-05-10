@@ -140,11 +140,119 @@ theorem jointEntropySubset_univ
   rw [← h]
   congr 1
 
+/-- subset 版 chain rule の per-summand bridge:
+`condEntropy μ (Xs (φ k)) (Fin k.val 形) = condEntropy μ (Xs (φ k)) (S.filter 形)`。
+
+`Fin k.val ≃ ↥(S.filter (· < φ k))` を `(orderIsoOfFin S).symm` 経由で構成し、
+`condEntropy_measurableEquiv_comp` で reshape。 -/
+private lemma condEntropy_chainSummand_bridge
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (S : Finset (Fin n)) (k : Fin S.card) :
+    InformationTheory.MeasureFano.condEntropy μ
+        (Xs (S.orderEmbOfFin rfl k))
+        (fun ω (j : Fin k.val) =>
+          Xs (S.orderEmbOfFin rfl ⟨j.val, j.isLt.trans k.isLt⟩) ω)
+      = InformationTheory.MeasureFano.condEntropy μ
+          (Xs (S.orderEmbOfFin rfl k))
+          (fun ω (j : ↥(S.filter (· < S.orderEmbOfFin rfl k))) => Xs j.val ω) := by
+  set φ : Fin S.card ↪o Fin n := S.orderEmbOfFin rfl
+  -- Index equiv `Fin k.val ≃ ↥(S.filter (· < φ k))` constructed via refine
+  let idx : Fin k.val ≃ ↥(S.filter (· < φ k)) := by
+    refine
+      { toFun := fun j => ⟨φ ⟨j.val, j.isLt.trans k.isLt⟩, ?_⟩
+        invFun := fun vh => ⟨((S.orderIsoOfFin rfl).symm
+            ⟨vh.val, (Finset.mem_filter.mp vh.property).1⟩).val, ?_⟩
+        left_inv := ?_
+        right_inv := ?_ }
+    · rw [Finset.mem_filter]
+      exact ⟨S.orderEmbOfFin_mem rfl _, φ.lt_iff_lt.mpr j.isLt⟩
+    · -- Goal: ((orderIso).symm ⟨vh.val, _⟩).val < k.val
+      set m : Fin S.card := (S.orderIsoOfFin rfl).symm
+        ⟨vh.val, (Finset.mem_filter.mp vh.property).1⟩
+      have hvLt : vh.val < φ k := (Finset.mem_filter.mp vh.property).2
+      have hφm : φ m = vh.val := by
+        show (S.orderEmbOfFin rfl m : Fin n) = vh.val
+        rw [← S.coe_orderIsoOfFin_apply rfl m]
+        change ((S.orderIsoOfFin rfl)
+            ((S.orderIsoOfFin rfl).symm _) : ↥S).val = vh.val
+        rw [OrderIso.apply_symm_apply]
+      exact φ.lt_iff_lt.mp (hφm ▸ hvLt)
+    · -- left_inv
+      intro j
+      apply Fin.ext
+      show ((S.orderIsoOfFin rfl).symm
+          ⟨φ ⟨j.val, j.isLt.trans k.isLt⟩, _⟩ : Fin S.card).val = j.val
+      have h1 : (⟨φ ⟨j.val, j.isLt.trans k.isLt⟩,
+          S.orderEmbOfFin_mem rfl _⟩ : ↥S)
+          = S.orderIsoOfFin rfl ⟨j.val, j.isLt.trans k.isLt⟩ := by
+        apply Subtype.ext
+        show (φ ⟨j.val, _⟩ : Fin n)
+            = (S.orderIsoOfFin rfl ⟨j.val, _⟩).val
+        rw [S.coe_orderIsoOfFin_apply]
+      rw [h1, OrderIso.symm_apply_apply]
+    · -- right_inv
+      intro vh
+      apply Subtype.ext
+      set m : Fin S.card := (S.orderIsoOfFin rfl).symm
+        ⟨vh.val, (Finset.mem_filter.mp vh.property).1⟩
+      show (φ ⟨m.val, _⟩ : Fin n) = vh.val
+      -- ⟨m.val, _⟩ as Fin S.card equals m
+      have hmEq : (⟨m.val, m.isLt⟩ : Fin S.card) = m := Fin.ext rfl
+      change (φ (⟨m.val, m.isLt⟩ : Fin S.card) : Fin n) = vh.val
+      rw [hmEq]
+      show (φ m : Fin n) = vh.val
+      rw [show (φ m : Fin n)
+          = (S.orderIsoOfFin rfl m : ↥S).val
+          from (S.coe_orderIsoOfFin_apply rfl m).symm]
+      change ((S.orderIsoOfFin rfl)
+          ((S.orderIsoOfFin rfl).symm _) : ↥S).val = vh.val
+      rw [OrderIso.apply_symm_apply]
+  -- e_cond on Pi
+  let e_cond : (Fin k.val → α) ≃ᵐ (↥(S.filter (· < φ k)) → α) :=
+    MeasurableEquiv.piCongrLeft (fun _ : ↥(S.filter (· < φ k)) => α) idx
+  have hcond_meas : Measurable
+      (fun ω (j : Fin k.val) =>
+        Xs (φ ⟨j.val, j.isLt.trans k.isLt⟩) ω) :=
+    measurable_pi_iff.mpr (fun _ => hXs _)
+  have h_eq :
+      (fun ω => e_cond (fun (j : Fin k.val) =>
+          Xs (φ ⟨j.val, j.isLt.trans k.isLt⟩) ω))
+        = fun ω (j : ↥(S.filter (· < φ k))) => Xs j.val ω := by
+    funext ω
+    funext jh
+    have h_apply :=
+      MeasurableEquiv.piCongrLeft_apply_apply
+        (β := fun _ : ↥(S.filter (· < φ k)) => α)
+        idx
+        (fun (j : Fin k.val) => Xs (φ ⟨j.val, j.isLt.trans k.isLt⟩) ω)
+        (idx.symm jh)
+    have h_idx : idx (idx.symm jh) = jh := idx.apply_symm_apply jh
+    rw [h_idx] at h_apply
+    -- h_apply : e_cond (fun j => ...) jh = Xs (φ ⟨(idx.symm jh).val, _⟩) ω
+    show e_cond (fun (j : Fin k.val) =>
+        Xs (φ ⟨j.val, j.isLt.trans k.isLt⟩) ω) jh = Xs jh.val ω
+    rw [h_apply]
+    -- Goal: Xs (φ ⟨(idx.symm jh).val, _⟩) ω = Xs jh.val ω
+    -- φ ⟨(idx.symm jh).val, _⟩ = (idx (idx.symm jh)).val = jh.val
+    have hh : ((idx (idx.symm jh)) : ↥(S.filter (· < φ k))).val = jh.val :=
+      congrArg Subtype.val h_idx
+    -- idx.toFun (idx.symm jh) = ⟨φ ⟨(idx.symm jh).val, _⟩, _⟩
+    -- so its .val = φ ⟨(idx.symm jh).val, _⟩
+    show Xs (φ ⟨(idx.symm jh).val, _⟩ : Fin n) ω = Xs jh.val ω
+    rw [show (φ ⟨(idx.symm jh).val, (idx.symm jh).isLt.trans k.isLt⟩ : Fin n)
+        = jh.val from hh]
+  exact (condEntropy_measurableEquiv_comp μ
+    (Xs (φ k)) (hXs _)
+    (fun ω (j : Fin k.val) =>
+      Xs (φ ⟨j.val, j.isLt.trans k.isLt⟩) ω) hcond_meas e_cond).symm.trans
+      (by rw [h_eq])
+
 /-- subset 版 chain rule:
 `H(X_S) = ∑ i ∈ S, H(X_i | X_{S ∩ {j : j < i}})`。
 
-Phase A の `entropy_pair_eq_entropy_add_condEntropy` を `Finset.induction_on` で
-`S` の各要素について反復適用する。 -/
+Phase B の n-変数 chain rule を `Xs ∘ orderEmbOfFin S` に適用し、
+両辺を `jointEntropySubset` 形に reshape する。 -/
 theorem jointEntropySubset_chain_rule
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -153,7 +261,63 @@ theorem jointEntropySubset_chain_rule
       = ∑ i ∈ S,
           InformationTheory.MeasureFano.condEntropy μ (Xs i)
             (fun ω (j : (S.filter (· < i))) => Xs j.val ω) := by
-  sorry
+  set φ : Fin S.card ↪o Fin n := S.orderEmbOfFin rfl
+  set Xs' : Fin S.card → Ω → α := fun k => Xs (φ k) with hXs'_def
+  have hXs'_meas : ∀ k, Measurable (Xs' k) := fun k => hXs (φ k)
+  have h_chain := jointEntropy_chain_rule μ Xs' hXs'_meas
+  -- LHS bridge: jointEntropy μ Xs' = jointEntropySubset μ Xs S
+  have h_lhs : jointEntropy μ Xs' = jointEntropySubset μ Xs S := by
+    let idx : Fin S.card ≃ ↥S := (S.orderIsoOfFin rfl).toEquiv
+    let e : (Fin S.card → α) ≃ᵐ (↥S → α) :=
+      MeasurableEquiv.piCongrLeft (fun _ : ↥S => α) idx
+    have hXs'_full : Measurable (fun ω k => Xs' k ω) :=
+      measurable_pi_iff.mpr hXs'_meas
+    have h_comp := entropy_measurableEquiv_comp μ
+      (fun ω k => Xs' k ω) hXs'_full e
+    have h_eq :
+        (fun ω => e (fun k => Xs' k ω))
+          = fun ω (j : ↥S) => Xs j.val ω := by
+      funext ω
+      funext jh
+      have h_apply :=
+        MeasurableEquiv.piCongrLeft_apply_apply (β := fun _ : ↥S => α)
+          idx (fun k => Xs' k ω) (idx.symm jh)
+      have h_idx : idx (idx.symm jh) = jh := idx.apply_symm_apply jh
+      rw [h_idx] at h_apply
+      show e (fun k => Xs' k ω) jh = Xs jh.val ω
+      rw [h_apply]
+      show Xs (φ (idx.symm jh)) ω = Xs jh.val ω
+      have h2 : (φ (idx.symm jh) : Fin n) = jh.val := by
+        show (S.orderEmbOfFin rfl (idx.symm jh) : Fin n) = jh.val
+        rw [← S.coe_orderIsoOfFin_apply rfl (idx.symm jh)]
+        change ((S.orderIsoOfFin rfl)
+            ((S.orderIsoOfFin rfl).symm jh) : ↥S).val = jh.val
+        rw [OrderIso.apply_symm_apply]
+      rw [h2]
+    rw [h_eq] at h_comp
+    unfold jointEntropy jointEntropySubset
+    exact h_comp.symm
+  -- RHS bridge: per-summand bridge + sum reindex via Finset.sum_nbij
+  have h_rhs :
+      (∑ k : Fin S.card,
+          InformationTheory.MeasureFano.condEntropy μ (Xs' k)
+            (fun ω (j : Fin k.val) =>
+              Xs' ⟨j.val, j.isLt.trans k.isLt⟩ ω))
+        = ∑ i ∈ S,
+            InformationTheory.MeasureFano.condEntropy μ (Xs i)
+              (fun ω (j : (S.filter (· < i))) => Xs j.val ω) := by
+    refine Finset.sum_nbij (fun k => φ k)
+      (fun k _ => S.orderEmbOfFin_mem rfl k) ?_ ?_ ?_
+    · intro a _ b _ h; exact φ.injective h
+    · intro v hv
+      have hrange : v ∈ Set.range (S.orderEmbOfFin rfl) := by
+        rw [Finset.range_orderEmbOfFin]; exact hv
+      obtain ⟨k, hk⟩ := hrange
+      exact ⟨k, Finset.mem_univ k, hk⟩
+    · intro k _
+      exact condEntropy_chainSummand_bridge μ Xs hXs S k
+  rw [h_lhs] at h_chain
+  rw [h_chain, h_rhs]
 
 /-- subset 版 conditioning monotonicity:
 `T₁ ⊆ T₂ ⟹ H(X_i | X_{T₂}) ≤ H(X_i | X_{T₁})`。
