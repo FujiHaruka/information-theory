@@ -213,9 +213,29 @@ end InformationTheory.Shannon
 - `Common2026.lean` に `import Common2026.Shannon.HanD` 追記
 - skeleton-driven で `jointEntropySubset` 定義 → `chain_rule` → `condEntropy_subset_anti` → `han_inequality_subset` の順に sorry を割る
 
+### Status (2026-05-10)
+
+**Phase A 完了** (HEAD `bbfa250`)。`Common2026/Shannon/HanD.lean` で 4 主定理すべて 0 sorry:
+
+- `jointEntropySubset_univ` ─ `piCongrLeft` で `(↥univ → α) ≃ᵐ (Fin n → α)` を構成し
+  `entropy_measurableEquiv_comp` で reshape (~ 25 行)
+- `condEntropy_subset_anti` ─ `T₂ ↔ T₁ ⊔ (T₂ \ T₁)` の subset split MeasurableEquiv
+  (`subsetSplitMEquiv` 補助) + `condEntropy_le_condEntropy_of_pair` を 1 度呼ぶ。induction 不要 (~ 35 行)
+- `jointEntropySubset_chain_rule` ─ `Fin S.card ≃ ↥S` (orderIsoOfFin) で
+  `jointEntropy_chain_rule μ Xs'` (Xs' k = Xs (orderEmb k)) を呼び、両辺を reshape。
+  per-summand bridge (`Fin k.val ≃ ↥(S.filter (· < φ k))`) は別 helper に切り出し。
+  RHS sum reindex は `Finset.sum_nbij` (~ 100 行 + helper)
+- `han_inequality_subset` ─ 同じく `orderEmbOfFin` で `han_inequality` を呼び、両辺 reshape。
+  per-summand bridge (`{j : Fin S.card // j ≠ k} ≃ ↥(S.erase (φ k))`) は
+  `jointEntropyExcept_orderEmb_eq` helper に切り出し (~ 90 行 + helper)
+
+副次成果: `condEntropy_measurableEquiv_comp` を `Han.lean` に追加 (conditioner 側 reshape の汎用補題、`H(Y, X) = H(Y) + H(X|Y)` 経由)。
+
+ハマりどころ: (a) `Equiv` builder の field 内で `Fin k.val` への型推論がうまく行かず `refine` builder + `?_` placeholder への切り替えで解決。(b) `rw [← h]` で `vh : ↥(S.erase (φ k))` のような `k`-依存型がある場合に motive が壊れる → `congrArg` で迂回。
+
 ### 工数感
 
-1.5〜2 週間予算。山場は (2) subset chain rule の `Finset.induction_on` と (4) `han_inequality_subset` の `orderEmbOfFin` reshape。**Han Phase B の chain rule induction が `Fin n` 上で完了済みなので、subset への持ち上げで「ほぼ写経 + 1 段 plumbing」になる見込み**。
+1.5〜2 週間予算 → **実績 1 セッション (約 4 時間) で Phase A 完**。山場の (4) `orderEmbOfFin` reshape と (2) chain rule subset 化が「Han Phase B の `entropy_measurableEquiv_comp` を index Equiv に乗せ替えるだけ」で済んだのが大きい。**Phase B / C の見積もりは大幅短縮可能**。
 
 ---
 
@@ -365,10 +385,9 @@ end InformationTheory.Shannon
 
 ## 当面の next step
 
-1. ~~**Phase 0 (D) 着手**~~ ✅ **完 (2026-05-10)**。`docs/han-phase-d-mathlib-inventory.md` 起草、本計画書 Phase A (4) / Phase B (2) / Phase B 工数感を反映済
-2. **Phase A skeleton 作成** ← **次の最初の作業**
-   - `Common2026/Shannon/HanD.lean` を sorry-driven で着手
-   - 中身: `jointEntropySubset` 定義 + 4 主定理 (`jointEntropySubset_chain_rule` / `condEntropy_subset_anti` / `han_inequality_subset` + `jointEntropySubset = jointEntropy on univ`) を `:= by sorry` で並べる
-   - LSP の `<new-diagnostics>` で `(i : ↑S) → α` instance 自動発火を実機確認 (inventory (c) の予想を裏取り)
-   - `Common2026.lean` (library root) に `import Common2026.Shannon.HanD` 追記
-3. Phase A skeleton が silent (sorry-warning だけ) になったら、4 主定理を順番に sorry-fill (`jointEntropySubset` 基本性質 → `jointEntropySubset_chain_rule` → `condEntropy_subset_anti` → `han_inequality_subset`)
+1. ~~**Phase 0 (D)**~~ ✅ **完 (2026-05-10)**
+2. ~~**Phase A skeleton + 4 sorry-fill**~~ ✅ **完 (2026-05-10、HEAD `bbfa250`)**。`Common2026/Shannon/HanD.lean` の 4 主定理すべて 0 sorry
+3. **Phase B (D-1 subset average chain) 着手** ← **次の最初の作業**
+   - `H_n ≥ H_{n-1} ≥ ... ≥ H_1`(`H_k := mean over S of size k`) の連鎖を組む
+   - Han Phase D の plan §Phase B を参照 (line 222-)
+   - Phase A の `jointEntropySubset_chain_rule` / `condEntropy_subset_anti` / `han_inequality_subset` を全部使う段階
