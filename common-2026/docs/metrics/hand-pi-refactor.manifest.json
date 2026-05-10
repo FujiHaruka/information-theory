@@ -1,0 +1,13 @@
+{
+  "problem": "HanD / Pi reshape を Mathlib MeasurableEquiv.piFinsetUnion ベースに refactor (subsetSplitMEquivAux 統一 + subset-form 撤去 + Polymatroid 3 sites migrate)",
+  "proof_log": "docs/proof-logs/proof-log-hand-pi-refactor.md",
+  "sessions": [
+    {
+      "id": "00c8becd-a7ba-4471-9995-c323798d5cba",
+      "prompt_ids": ["21e44fe4"],
+      "note": "オーケストレータ + 3 subagent (planning + 1st implementation + pivot implementation) で Phase 0/1/2/3/4 実行。Plan で想定していた -30〜-45 行は届かず net -12 行で着地、構造目標 (Mathlib bridge 3 lemma 追加 / subsetIdxEquiv 撤去 / submodular 本体無変更 / 4 ファイル silent) は全達成。"
+    }
+  ],
+  "filters": { "file_prefix": "Common2026/Shannon/" },
+  "idle_gap_minutes": 5
+}

@@ -41,8 +41,9 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 
 /-! ## Pi reshape plumbing
 
-`subsetIdxEquiv` / `subsetSplitMEquiv` / `subsetSplitMEquiv_apply` は
-`Common2026.Shannon.Pi` に移動済み (Han → Pi で transitively 見える)。 -/
+`subsetSplitMEquivAux` / `subsetSplitMEquivAux_apply` は `Common2026.Shannon.Pi` に
+集約 (Han → Pi で transitively 見える)。subset 形 (`T₁ ⊆ T₂`) は
+`Finset.disjoint_sdiff` + `Finset.union_sdiff_of_subset h` を inline で渡す。 -/
 
 /-- 部分集合 `S : Finset (Fin n)` 上の joint entropy。
 `(i : ↑S) → α` 値の random variable のエントロピー。 -/
@@ -274,12 +275,14 @@ theorem condEntropy_subset_anti
     measurable_pi_iff.mpr (fun _ => hXs _)
   have hXR_meas : Measurable XR :=
     measurable_pi_iff.mpr (fun _ => hXs _)
-  -- Bridge: subsetSplitMEquiv ∘ (XT₁, XR) = XT₂
-  let e := subsetSplitMEquiv (α := α) (n := n) hT
+  -- Bridge: subsetSplitMEquivAux ∘ (XT₁, XR) = XT₂
+  let e := subsetSplitMEquivAux (β := fun _ : Fin n => α)
+    Finset.disjoint_sdiff (Finset.union_sdiff_of_subset hT)
   have hbridge : (fun ω => e (XT₁ ω, XR ω))
       = fun ω (j : ↥T₂) => Xs j.val ω := by
     funext ω
-    exact subsetSplitMEquiv_apply hT (fun k => Xs k ω)
+    exact subsetSplitMEquivAux_apply Finset.disjoint_sdiff
+      (Finset.union_sdiff_of_subset hT) (fun k => Xs k ω)
   -- condEntropy μ (Xs i) XT₂ = condEntropy μ (Xs i) (e ∘ (XT₁, XR))
   --                          = condEntropy μ (Xs i) (XT₁, XR)        -- reshape
   have h_eq :

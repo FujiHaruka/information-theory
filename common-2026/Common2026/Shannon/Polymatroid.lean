@@ -74,19 +74,21 @@ theorem jointEntropySubset_mono
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
     {S T : Finset (Fin n)} (h : S ⊆ T) :
     jointEntropySubset μ Xs S ≤ jointEntropySubset μ Xs T := by
-  -- Setup: split T into S and T \ S via subsetSplitMEquiv.
+  -- Setup: split T into S and T \ S via subsetSplitMEquivAux.
   set XS : Ω → (↥S → α) := fun ω j => Xs j.val ω with hXS_def
   set XR : Ω → (↥(T \ S) → α) := fun ω j => Xs j.val ω with hXR_def
   have hXS_meas : Measurable XS :=
     measurable_pi_iff.mpr (fun _ => hXs _)
   have hXR_meas : Measurable XR :=
     measurable_pi_iff.mpr (fun _ => hXs _)
-  let e := subsetSplitMEquiv (α := α) (n := n) h
+  let e := subsetSplitMEquivAux (β := fun _ : Fin n => α)
+    Finset.disjoint_sdiff (Finset.union_sdiff_of_subset h)
   -- Bridge: (e ∘ (XS, XR)) ω = X_T ω
   have hbridge : (fun ω => e (XS ω, XR ω))
       = fun ω (j : ↥T) => Xs j.val ω := by
     funext ω
-    exact subsetSplitMEquiv_apply h (fun k => Xs k ω)
+    exact subsetSplitMEquivAux_apply Finset.disjoint_sdiff
+      (Finset.union_sdiff_of_subset h) (fun k => Xs k ω)
   -- Reshape entropy of X_T to entropy of the pair (XS, XR).
   have h_reshape :
       entropy μ (fun ω (j : ↥T) => Xs j.val ω)
@@ -117,9 +119,9 @@ the target `U` directly (avoiding `T₂ \ T₁` casts). -/
 /-- Disjoint-union pair chain rule. If `s ∪ t = U` and `Disjoint s t`, then
 `H(X_U) = H(X_s) + H(X_t | X_s)`.
 
-Proof: build `e : ((↥s → α) × (↥t → α)) ≃ᵐ (↥U → α)` from
-`MeasurableEquiv.piFinsetUnion` post-composed with the cast `(↥(s ∪ t) → α) ≃ᵐ
-(↥U → α)`, then apply the pair chain rule. -/
+Proof: build `e : ((↥s → α) × (↥t → α)) ≃ᵐ (↥U → α)` directly from
+`subsetSplitMEquivAux` (Mathlib `MeasurableEquiv.piFinsetUnion` + cast), then apply
+the pair chain rule. -/
 theorem jointEntropySubset_disjoint_union
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -129,34 +131,26 @@ theorem jointEntropySubset_disjoint_union
         + InformationTheory.MeasureFano.condEntropy μ
             (fun ω (j : ↥t) => Xs j.val ω)
             (fun ω (j : ↥s) => Xs j.val ω) := by
-  -- Use the existing subsetSplitMEquiv with T₁ := s, T₂ := U via h : s ⊆ U.
-  have hsU : s ⊆ U := hU ▸ Finset.subset_union_left
-  -- Show U \ s = t (using Disjoint and hU).
-  have htU : U \ s = t := by
-    rw [← hU, Finset.union_sdiff_left]
-    exact Finset.sdiff_eq_self_of_disjoint hd.symm
   set XS : Ω → (↥s → α) := fun ω j => Xs j.val ω
-  set XR : Ω → (↥(U \ s) → α) := fun ω j => Xs j.val ω
+  set XT : Ω → (↥t → α) := fun ω j => Xs j.val ω
   have hXS_meas : Measurable XS := measurable_pi_iff.mpr (fun _ => hXs _)
-  have hXR_meas : Measurable XR := measurable_pi_iff.mpr (fun _ => hXs _)
-  let e := subsetSplitMEquiv (α := α) (n := n) hsU
-  have hbridge : (fun ω => e (XS ω, XR ω))
+  have hXT_meas : Measurable XT := measurable_pi_iff.mpr (fun _ => hXs _)
+  let e := subsetSplitMEquivAux (β := fun _ : Fin n => α) hd hU
+  have hbridge : (fun ω => e (XS ω, XT ω))
       = fun ω (j : ↥U) => Xs j.val ω := by
     funext ω
-    exact subsetSplitMEquiv_apply hsU (fun k => Xs k ω)
+    exact subsetSplitMEquivAux_apply hd hU (fun k => Xs k ω)
   have h_reshape :
       entropy μ (fun ω (j : ↥U) => Xs j.val ω)
-        = entropy μ (fun ω => (XS ω, XR ω)) := by
+        = entropy μ (fun ω => (XS ω, XT ω)) := by
     rw [← hbridge]
     exact entropy_measurableEquiv_comp μ
-      (fun ω => (XS ω, XR ω)) (hXS_meas.prodMk hXR_meas) e
+      (fun ω => (XS ω, XT ω)) (hXS_meas.prodMk hXT_meas) e
   have h_chain :
-      entropy μ (fun ω => (XS ω, XR ω))
+      entropy μ (fun ω => (XS ω, XT ω))
         = entropy μ XS
-          + InformationTheory.MeasureFano.condEntropy μ XR XS :=
-    entropy_pair_eq_entropy_add_condEntropy μ XS XR hXS_meas hXR_meas
-  -- Substitute t := U \ s globally; this makes (↥t → α) coincide with (↥(U \ s) → α).
-  subst htU
+          + InformationTheory.MeasureFano.condEntropy μ XT XS :=
+    entropy_pair_eq_entropy_add_condEntropy μ XS XT hXS_meas hXT_meas
   unfold jointEntropySubset
   rw [h_reshape, h_chain]
 
@@ -174,25 +168,18 @@ theorem condEntropy_reshape_disjoint_union
         (fun ω (j : ↥U) => Xs j.val ω)
       = InformationTheory.MeasureFano.condEntropy μ Xc
           (fun ω => ((fun (j : ↥s) => Xs j.val ω), (fun (j : ↥t) => Xs j.val ω))) := by
-  -- Use subsetSplitMEquiv with hsU : s ⊆ U.
-  have hsU : s ⊆ U := hU ▸ Finset.subset_union_left
-  have htU : U \ s = t := by
-    rw [← hU, Finset.union_sdiff_left]
-    exact Finset.sdiff_eq_self_of_disjoint hd.symm
   set XS : Ω → (↥s → α) := fun ω j => Xs j.val ω
-  set XR : Ω → (↥(U \ s) → α) := fun ω j => Xs j.val ω
+  set XT : Ω → (↥t → α) := fun ω j => Xs j.val ω
   have hXS_meas : Measurable XS := measurable_pi_iff.mpr (fun _ => hXs _)
-  have hXR_meas : Measurable XR := measurable_pi_iff.mpr (fun _ => hXs _)
-  let e := subsetSplitMEquiv (α := α) (n := n) hsU
-  have hbridge : (fun ω => e (XS ω, XR ω))
+  have hXT_meas : Measurable XT := measurable_pi_iff.mpr (fun _ => hXs _)
+  let e := subsetSplitMEquivAux (β := fun _ : Fin n => α) hd hU
+  have hbridge : (fun ω => e (XS ω, XT ω))
       = fun ω (j : ↥U) => Xs j.val ω := by
     funext ω
-    exact subsetSplitMEquiv_apply hsU (fun k => Xs k ω)
-  -- Substitute t := U \ s globally to align XR's index type with t.
-  subst htU
-  rw [show (fun ω (j : ↥U) => Xs j.val ω) = fun ω => e (XS ω, XR ω) from hbridge.symm]
+    exact subsetSplitMEquivAux_apply hd hU (fun k => Xs k ω)
+  rw [show (fun ω (j : ↥U) => Xs j.val ω) = fun ω => e (XS ω, XT ω) from hbridge.symm]
   exact condEntropy_measurableEquiv_comp μ Xc hXc
-    (fun ω => (XS ω, XR ω)) (hXS_meas.prodMk hXR_meas) e
+    (fun ω => (XS ω, XT ω)) (hXS_meas.prodMk hXT_meas) e
 
 /-! ## Phase C — submodularity -/
 
