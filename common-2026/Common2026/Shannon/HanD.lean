@@ -3,7 +3,7 @@ import Common2026.Shannon.Han
 /-!
 # Han Phase D: subset 版 joint entropy infrastructure (skeleton)
 
-Han Phase D ロードマップ ([`docs/han-phase-d-plan.md`](../../../docs/han-phase-d-plan.md))
+Han Phase D ロードマップ ([`docs/han/han-phase-d-plan.md`](../../../docs/han/han-phase-d-plan.md))
 の Phase A skeleton。`Fin n` の任意部分集合 `S : Finset (Fin n)` に対する
 joint entropy `H(X_S)` を定義し、Phase B (D-1 subset average chain) /
 Phase C (D-2 Shearer) の入口となる 4 主定理を sorry-driven で並べる。

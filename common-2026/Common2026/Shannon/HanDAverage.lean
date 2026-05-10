@@ -3,7 +3,7 @@ import Common2026.Shannon.HanD
 /-!
 # Han Phase D-1: subset average chain (skeleton)
 
-Han Phase D ロードマップ ([`docs/han-phase-d-plan.md`](../../../docs/han-phase-d-plan.md))
+Han Phase D ロードマップ ([`docs/han/han-phase-d-plan.md`](../../../docs/han/han-phase-d-plan.md))
 の Phase B (D-1)。$H_k := (k \binom{n}{k})^{-1} \sum_{|S|=k} H(X_S)$ が
 $k$ について非増加であることを示す。
 

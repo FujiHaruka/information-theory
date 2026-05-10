@@ -1,6 +1,6 @@
 # Fano Phase 2 (Mathlib インフラ在庫調査) — ボトルネック分析
 
-将来「Mathlib API の broad-shallow 探索を支援するツール」「subagent 並列調査の結果検証を自動化するツール」を作るためのベースライン記録。Fano ムーンショット (`docs/fano-moonshot-plan.md`) の Phase 2 を 1 ターンで完走した記録。
+将来「Mathlib API の broad-shallow 探索を支援するツール」「subagent 並列調査の結果検証を自動化するツール」を作るためのベースライン記録。Fano ムーンショット (`docs/fano/fano-moonshot-plan.md`) の Phase 2 を 1 ターンで完走した記録。
 
 **定量データ**: [docs/metrics/fano-phase2.metrics.md](../metrics/fano-phase2.metrics.md)
 
@@ -10,8 +10,8 @@ Phase 2 のスコープは **Lean 証明ではなく Mathlib 在庫調査**。Ph
 
 成果物:
 
-- `docs/fano-mathlib-inventory.md` — 247 行、12 項目の API テーブル + 自作項目リスト + Phase 3 skeleton + 撤退ライン
-- `docs/fano-moonshot-plan.md` への 3 箇所反映（`Y : 任意の可測空間` → `[StandardBorelSpace Y]`、Phase 3 signature の typeclass 追加、撤退ラインへの判定結果記録 + 新ライン追加）
+- `docs/fano/fano-mathlib-inventory.md` — 247 行、12 項目の API テーブル + 自作項目リスト + Phase 3 skeleton + 撤退ライン
+- `docs/fano/fano-moonshot-plan.md` への 3 箇所反映（`Y : 任意の可測空間` → `[StandardBorelSpace Y]`、Phase 3 signature の typeclass 追加、撤退ラインへの判定結果記録 + 新ライン追加）
 
 Phase 2 計画書の Done 条件「**Phase 3 で使う API のうち X% が Mathlib に既存」と一文で言える状態**」 → 「**100% 既存（実体ベース）、ただし高レベル API は 0% 既存（自作必要）**」と回答できる状態に到達。
 

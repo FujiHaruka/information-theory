@@ -125,7 +125,7 @@ Common2026/Shannon/
 
 ### 成果物
 
-- `docs/han-phase-d-mathlib-inventory.md` — 上記 3 軸の調査結果 + Phase A 着手時の不確実性ランク
+- `docs/han/han-phase-d-mathlib-inventory.md` — 上記 3 軸の調査結果 + Phase A 着手時の不確実性ランク
 - 本計画書への反映 (Approach / Phase A 節)
 
 ### Done 条件
@@ -140,7 +140,7 @@ Common2026/Shannon/
 
 ### 結果 (2026-05-10 完)
 
-成果物 `docs/han-phase-d-mathlib-inventory.md`。要点:
+成果物 `docs/han/han-phase-d-mathlib-inventory.md`。要点:
 
 - (a) **Mathlib に subset average / Shearer 不在** (subagent + loogle ダブル裏取り) — Phase D 計画は破棄不要
 - (b) Phase B 二重和 reindex の **写経テンプレが Mathlib 内に存在**: `Mathlib/Algebra/Polynomial/Derivative.lean:710-728` (`sum_finset_product'` × 2 + `sum_bij'` の 5 段 calc)
@@ -205,7 +205,7 @@ end InformationTheory.Shannon
 1. **`jointEntropySubset` の定義 + 基本性質** — `S = univ` で `jointEntropy` に一致 / `S = {i}` で `entropy μ (Xs i)` に一致 / `Equiv` reshape による invariance (Han Phase C の `entropy_measurableEquiv_comp` 流用)
 2. **subset 版 chain rule** — `Finset.induction_on` で `S` を空集合から 1 元ずつ追加。Han Phase A の `entropy_pair_eq_entropy_add_condEntropy` を各段で呼ぶ。**最大の plumbing リスクは `S.filter (· < i)` 上の Pi 値と「`S` を 1 元拡張したときの prefix」の整合性**。Han Phase B `jointEntropy_chain_rule` の `Fin (n+1) → α` に対する induction は完了済みなので、それの subset generalization
 3. **subset 版 conditioning monotonicity** — `T₂ = T₁ ∪ (T₂ \ T₁)` の 2 分解 + Han Phase A `condEntropy_le_condEntropy_of_pair` の subset 版 induction。要素を 1 つずつ T₁ に追加する induction が自然
-4. **`han_inequality_subset` (Han の subset wrapper)** — `S` の `Finset.orderEmbOfFin S rfl : Fin S.card ↪o Fin n` で埋め込み → `Xs' k ω := Xs (orderEmbOfFin S rfl k) ω` を作って既存 `han_inequality` を `Xs'` に適用 → 両辺を subset 版に reshape (LHS = `(Fin S.card → α) ≃ᵐ (↑S → α)`、RHS = index `Finset.sum_bij`)。`Common2026/Shannon/Han.lean` の `entropy_measurableEquiv_comp` (line 52-77) と `piExceptMEquiv` 流儀をそのまま流用。**Phase A の山場 plumbing、見積もり 50〜70 行** (LHS reshape 20〜30 + RHS reshape 30〜40)。詳細: `docs/han-phase-d-mathlib-inventory.md` 軸 (d)
+4. **`han_inequality_subset` (Han の subset wrapper)** — `S` の `Finset.orderEmbOfFin S rfl : Fin S.card ↪o Fin n` で埋め込み → `Xs' k ω := Xs (orderEmbOfFin S rfl k) ω` を作って既存 `han_inequality` を `Xs'` に適用 → 両辺を subset 版に reshape (LHS = `(Fin S.card → α) ≃ᵐ (↑S → α)`、RHS = index `Finset.sum_bij`)。`Common2026/Shannon/Han.lean` の `entropy_measurableEquiv_comp` (line 52-77) と `piExceptMEquiv` 流儀をそのまま流用。**Phase A の山場 plumbing、見積もり 50〜70 行** (LHS reshape 20〜30 + RHS reshape 30〜40)。詳細: `docs/han/han-phase-d-mathlib-inventory.md` 軸 (d)
 
 ### Done 条件
 
@@ -299,7 +299,7 @@ H_k - H_{k+1} = S_k / (k · C(n,k)) - S_{k+1} / ((k+1) · C(n,k+1))
 2. **二重和 reindex** — `∑_{|S|=k+1} ∑_{i∈S} f(S \ {i}) = (n-k) ∑_{|T|=k} f(T)` を 5 段 calc で証明。**Phase B の山場 combinatorics、ただし Mathlib 内に写経テンプレあり**
    - **テンプレ**: `Mathlib/Algebra/Polynomial/Derivative.lean:710-728` (`iterate_derivative_prod_X_sub_C` 内)。構造: `sum_finset_product'` で外側 ` × i` を product 化 → `sum_bij'` で `(S, i) ↦ (S.erase i, i)` (with `i ∈ S`) ↔ `(T, i) ↦ (insert i T, i)` (with `i ∉ T`) の双方向写像 → `sum_finset_product'` 逆方向で再び二重和 → `mul_sum` + `sum_const` + `card_sdiff` で `(n-k)` 倍に潰す
    - 既存 Mathlib 側で `f` が `T` 全体に依存する形での 1 行補題は **無い** ことが Phase 0 で確定 (`Finset.sum_powersetCard` は cardinality 依存形のみ、`prod_powerset` は size 別分解)。**手動 `sum_bij'` + `sum_finset_product'` が必須**
-   - 詳細: `docs/han-phase-d-mathlib-inventory.md` 軸 (b)
+   - 詳細: `docs/han/han-phase-d-mathlib-inventory.md` 軸 (b)
 3. **`subset_sum_step` から `subset_average_anti` への代数** — `(k+1) · binomial(n,k+1) = (n-k) · binomial(n,k)` を `Nat.choose_succ_right_eq` 等で持ち、両辺の正規化定数を消す。`field_simp` + `ring`
 4. **`subset_average_chain` (連鎖)** — `subset_average_anti` を `Nat.le_induction` で k₁ → k₂ まで反復
 

@@ -1,6 +1,6 @@
 # Han Phase D Mathlib インベントリ (Phase 0)
 
-> **Status (2026-05-10):** 完。`docs/han-phase-d-plan.md` Phase 0 の成果物。
+> **Status (2026-05-10):** 完。`docs/han/han-phase-d-plan.md` Phase 0 の成果物。
 > 結論: **subset average / Shearer は Mathlib 未実装、Phase D を予定通り進めて良い**。
 > 加えて Phase B の山場 (二重和 reindex) は **Mathlib に既存テンプレあり**、当初見積もりより plumbing 量を圧縮できる見込み。
 
@@ -240,7 +240,7 @@ theorem han_inequality_subset
 
 ## 計画書本体への反映指示
 
-`docs/han-phase-d-plan.md` への反映点:
+`docs/han/han-phase-d-plan.md` への反映点:
 
 1. **Phase B (D) 工数感** (line 282): 「1〜1.5 週間」→ **「1 週間以内、Polynomial.Derivative.lean:710-728 が写経テンプレとして利用可能」** に更新
 2. **Phase B (D) 鍵となる作業 (2)** (line 268-270): bijection の具体形を「`(T, i) ↦ (T.erase i, i)` (with `i ∈ T`) ↔ `(T', i) ↦ (insert i T', i)` (with `i ∉ T'`) の `sum_bij'` 双方向写像」に詳細化、参照先を inventory に

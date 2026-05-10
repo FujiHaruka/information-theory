@@ -10,12 +10,12 @@ import Common2026.Shannon.DPI
 /-!
 # Conditional mutual information & Markov chains (Phase 4-δ-(b) skeleton)
 
-Shannon ムーンショット ([`docs/shannon-moonshot-plan.md`](../../../docs/shannon-moonshot-plan.md))
+Shannon ムーンショット ([`docs/shannon/shannon-moonshot-plan.md`](../../../docs/shannon/shannon-moonshot-plan.md))
 の Phase 4-δ-(b): 条件付き相互情報量 `condMutualInfo` と Markov chain 述語
 `IsMarkovChain` を定義し、chain rule と Markov ⇒ condMI = 0、その合成として
 `mutualInfo_le_of_markov` (`I(X; Y) ≤ I(Z; Y)` under `X → Z → Y`) を整備する。
 
-設計判断 / Mathlib 在庫は [`docs/shannon-condmi-inventory.md`](../../../docs/shannon-condmi-inventory.md)
+設計判断 / Mathlib 在庫は [`docs/shannon/shannon-condmi-inventory.md`](../../../docs/shannon/shannon-condmi-inventory.md)
 を参照。Markov 定式化は **β 形式** (condDistrib 等式形) を採用、Mathlib
 `condIndepFun_iff_condDistrib_prod_ae_eq_prodMkRight` (`Conditional.lean:867`) と直結する。
 

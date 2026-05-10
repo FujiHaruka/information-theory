@@ -13,10 +13,10 @@ import Common2026.Shannon.MutualInfo
 /-!
 # Data processing inequality for mutual information (Phase 4-α DPI)
 
-Shannon ムーンショット ([`docs/shannon-moonshot-plan.md`](../../../docs/shannon-moonshot-plan.md))
+Shannon ムーンショット ([`docs/shannon/shannon-moonshot-plan.md`](../../../docs/shannon/shannon-moonshot-plan.md))
 の Phase 4-α DPI: `I(X; f(Y)) ≤ I(X; Y)` (deterministic post-processing on Y).
 
-戦略 (計画書 `:223`, 在庫調査 `docs/shannon-mathlib-inventory.md` B 節):
+戦略 (計画書 `:223`, 在庫調査 `docs/shannon/shannon-mathlib-inventory.md` B 節):
 1. **核補題** `klDiv_map_le`: 一般 pushforward DPI `klDiv (μ.map f) (ν.map f) ≤ klDiv μ ν`。
    Mathlib に直接補題は **不在**。`ConvexOn.apply_rnDeriv_ae_le_integral` (`MeasureTheory/
    Measure/Decomposition/IntegralRNDeriv.lean:137`) の Jensen 不等式と `Measure.rnDeriv_map`

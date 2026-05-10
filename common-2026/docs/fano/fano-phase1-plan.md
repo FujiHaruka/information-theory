@@ -1,6 +1,6 @@
 # Phase 1: Markov 形 Fano への拡張・マイルストーン計画
 
-> ムーンショット全体計画は `docs/fano-moonshot-plan.md`。本ファイルはその Phase 1 の詳細。
+> ムーンショット全体計画は `docs/fano/fano-moonshot-plan.md`。本ファイルはその Phase 1 の詳細。
 
 ## Context
 

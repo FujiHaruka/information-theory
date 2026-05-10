@@ -1,7 +1,7 @@
 # Shannon converse encoder 版補完計画 (Phase 4-δ)
 
 > **Parent**: [`shannon-moonshot-plan.md`](shannon-moonshot-plan.md) Phase 4-γ 結果セクションで deferred とした「encoder 付き版」を 2 形式で完成させるサブ計画。
-> **Status (2026-05-10)**: Phase 4-δ-(a) **完了** (commit d4bec7c)。Phase 4-δ-(b) は inventory 完了 (`docs/shannon-condmi-inventory.md`)、skeleton 着手前。
+> **Status (2026-05-10)**: Phase 4-δ-(a) **完了** (commit d4bec7c)。Phase 4-δ-(b) は inventory 完了 (`docs/shannon/shannon-condmi-inventory.md`)、skeleton 着手前。
 
 ## Context
 
@@ -214,7 +214,7 @@ Common2026/Shannon/
 1. ~~**Phase 4-δ-(a) の skeleton 作成**~~ ✅ commit d4bec7c (2026-05-10)
 2. ~~**`decoder'` の構成と measurability**~~ ✅ `Function.invFun` + `Function.leftInverse_invFun` + `measurable_of_countable` で 1 行ずつ
 3. ~~**(a) の sorry を埋めて silent**~~ ✅ 一発で silent (~30 行)
-4. ~~**Phase 4-δ-(b) の inventory**~~ ✅ `docs/shannon-condmi-inventory.md` に subagent 3 並列の結果を統合 (2026-05-10)
+4. ~~**Phase 4-δ-(b) の inventory**~~ ✅ `docs/shannon/shannon-condmi-inventory.md` に subagent 3 並列の結果を統合 (2026-05-10)
 5. **Phase 4-δ-(b) skeleton 作成** ← **次これ**
    - `Common2026/Shannon/CondMutualInfo.lean` 新設
    - `condMutualInfo` 定義 + `IsMarkovChain` 定義 (β 形式 = condDistrib 等式形) + chain rule + Markov 系 2 つ + DPI for Prod.fst の skeleton (5 sorry)

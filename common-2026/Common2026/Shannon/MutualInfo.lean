@@ -7,11 +7,11 @@ import Mathlib.Probability.Kernel.Composition.MeasureCompProd
 /-!
 # Mutual information via KL divergence (Phase 4-α skeleton)
 
-Shannon ムーンショット ([`docs/shannon-moonshot-plan.md`](../../../docs/shannon-moonshot-plan.md))
+Shannon ムーンショット ([`docs/shannon/shannon-moonshot-plan.md`](../../../docs/shannon/shannon-moonshot-plan.md))
 の Phase 4-α: Mathlib の `klDiv` を主軸に、相互情報量 `mutualInfo`、その基本性質
 (`mutualInfo_nonneg`, `mutualInfo_comm`, `mutualInfo_eq_zero_iff_indep`) を整備する。
 
-Phase 4-M0 の在庫調査結果 ([`docs/shannon-mathlib-inventory.md`](../../../docs/shannon-mathlib-inventory.md))
+Phase 4-M0 の在庫調査結果 ([`docs/shannon/shannon-mathlib-inventory.md`](../../../docs/shannon/shannon-mathlib-inventory.md))
 に基づく skeleton。実証は sorry-driven で順次充填する。
 
 主要素材:

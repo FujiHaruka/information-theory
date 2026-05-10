@@ -1,7 +1,7 @@
 # Shannon ムーンショット計画 🌙
 
-> **Status (2026-05-10): 🌙 ムーンショット達成 (Phase 4-γ 完了)**。`Common2026/Shannon/Converse.lean` で `shannon_converse_single_shot` が sorry ゼロで通過。Phase 4-M0 〜 γ の全段が活性。インベントリは [`docs/shannon-mathlib-inventory.md`](shannon-mathlib-inventory.md)、最終振り返りは [Phase 4-γ 結果](#phase-4-γ-結果-2026-05-10) 節を参照。
-> Fano ムーンショット ([fano-moonshot-plan.md](fano-moonshot-plan.md)) の Phase 3 達成を前提とする後継プロジェクト。
+> **Status (2026-05-10): 🌙 ムーンショット達成 (Phase 4-γ 完了)**。`Common2026/Shannon/Converse.lean` で `shannon_converse_single_shot` が sorry ゼロで通過。Phase 4-M0 〜 γ の全段が活性。インベントリは [`docs/shannon/shannon-mathlib-inventory.md`](shannon-mathlib-inventory.md)、最終振り返りは [Phase 4-γ 結果](#phase-4-γ-結果-2026-05-10) 節を参照。
+> Fano ムーンショット ([fano-moonshot-plan.md](../fano/fano-moonshot-plan.md)) の Phase 3 達成を前提とする後継プロジェクト。
 > ゴールは「Mathlib に既存の `klDiv` を主軸に、mutual information / data processing inequality / Shannon converse を接続する」こと。
 
 ## Context
@@ -140,7 +140,7 @@ Phase 2 (Fano) と同型の subagent 並列調査。**1 ターンで完走する
 
 ### 成果物
 
-- `docs/shannon-mathlib-inventory.md` — 上の表の調査結果 + Phase 4-α で使える KL 補題リスト + 自作項目
+- `docs/shannon/shannon-mathlib-inventory.md` — 上の表の調査結果 + Phase 4-α で使える KL 補題リスト + 自作項目
 - 計画書 ([このファイル](shannon-moonshot-plan.md)) への調査結果反映 (主に Approach 節と Phase 4-α 節)
 
 ### Done 条件
@@ -154,7 +154,7 @@ Phase 2 (Fano) と同型の subagent 並列調査。**1 ターンで完走する
 
 ### Phase 4-M0 結果 (2026-05-09)
 
-- **完了**: subagent 3 並列 (chain rule + DPI / product + map / fDivergence + IndepFun + Kernel) → `docs/shannon-mathlib-inventory.md` に統合
+- **完了**: subagent 3 並列 (chain rule + DPI / product + map / fDivergence + IndepFun + Kernel) → `docs/shannon/shannon-mathlib-inventory.md` に統合
 - **既存率**: 「素材」(klDiv 定義 / chain rule / klDiv_eq_zero_iff / IndepFun ↔ map prod / condDistrib / Kernel.deterministic) は **100%**。「主役定理」(mutualInfo / DPI / KL × Measure.prod 分解) は **0%** で全自作
 - **撤退ライン判定**: 「DPI / monotonicity が驚くほど未整備」に **軽く触れている**。直接の DPI 補題は完全不在だが、`klDiv_compProd_eq_add` + `Kernel.deterministic` 経由で導出可能な見通し
 - **Phase 4-α への影響**:

@@ -1,6 +1,6 @@
 # Fano Phase 3 のための Mathlib インフラ在庫調査
 
-> ムーンショット全体計画は [`docs/fano-moonshot-plan.md`](fano-moonshot-plan.md)。本ファイルは Phase 2 の成果物。
+> ムーンショット全体計画は [`docs/fano/fano-moonshot-plan.md`](fano-moonshot-plan.md)。本ファイルは Phase 2 の成果物。
 >
 > **Status (2026-05-09): Phase 3 達成済み (deterministic decoder 形)。**
 > 本ファイルの予測 (plumbing 量・skeleton 構成・撤退ラインへの近さ) はおおむね当たり、Phase 3 は `Common2026/Fano/Measure.lean` で完成。各セクションの予測値と実測値の差分を「### Phase 3 結果」として末尾に追記している。
@@ -229,7 +229,7 @@ end InformationTheory.MeasureFano
 
 ## Phase 2 まとめ
 
-- インベントリは **`docs/fano-mathlib-inventory.md`**（このファイル）
+- インベントリは **`docs/fano/fano-mathlib-inventory.md`**（このファイル）
 - Phase 3 で使う API のうち実体は 100% 既存。高レベル API（`condEntropy` 等）のみ自作
 - 計画書 (`fano-moonshot-plan.md:34`) の `Y : 任意の可測空間` はそのままで OK（Phase 2 時点では `[StandardBorelSpace Y]` 必要と書いていたが、Phase 3 完成時に「`condDistrib` の StandardBorel 要求は出力側 `X` に課されるが `Fintype + MeasurableSingletonClass` から自動 derive」と判明し撤回）
 - 最大リスク: 「`condDistrib` から離散 PMF への翻訳補題」の plumbing 量（1〜2 週間予算）

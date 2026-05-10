@@ -11,7 +11,7 @@ import Mathlib.Probability.Kernel.RadonNikodym
 /-!
 # Bridge: mutualInfo (KL form) ↔ Phase 3 condEntropy (Phase 4-β skeleton)
 
-Shannon ムーンショット ([`docs/shannon-moonshot-plan.md`](../../../docs/shannon-moonshot-plan.md)) の
+Shannon ムーンショット ([`docs/shannon/shannon-moonshot-plan.md`](../../../docs/shannon/shannon-moonshot-plan.md)) の
 Phase 4-β: Phase 4-α `mutualInfo` (KL 値) と Phase 3 `condEntropy` (∫ Σ negMulLog) を、
 `X : Fintype` + `IsProbabilityMeasure μ` のもとで `H(X) - H(X|Y)` で結ぶ。
 

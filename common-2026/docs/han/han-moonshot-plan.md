@@ -122,7 +122,7 @@ Common2026/Shannon/
 
 ### 成果物
 
-- `docs/han-mathlib-inventory.md` — 上記 3 軸の調査結果 + Phase A 着手時の不確実性ランク
+- `docs/han/han-mathlib-inventory.md` — 上記 3 軸の調査結果 + Phase A 着手時の不確実性ランク
 - 本計画書 ([このファイル](han-moonshot-plan.md)) への反映 (Approach / Phase A 節)
 
 ### Done 条件

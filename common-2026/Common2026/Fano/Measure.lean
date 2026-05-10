@@ -12,7 +12,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 # Fano's inequality: measure-theoretic form (Phase 3, ムーンショット達成)
 
 Cover & Thomas / Polyanskiy 級の Fano 不等式の測度論版を、Mathlib の
-`condDistrib` (正則条件付き分布) を主役にして証明したファイル。`docs/fano-moonshot-plan.md`
+`condDistrib` (正則条件付き分布) を主役にして証明したファイル。`docs/fano/fano-moonshot-plan.md`
 の Phase 3 ゴール (ただし decoder = deterministic な `Y → X` 版) を完成形で達成済み。
 randomized decoder `Ω → X` への一般化は Phase 3.5 として今後の課題。
 
@@ -29,7 +29,7 @@ randomized decoder `Ω → X` への一般化は Phase 3.5 として今後の課
 
 Phase 1 (`Common2026/Fano/Core.lean`) の離散 Fano を `y : Y` ごとに pointwise 適用し、
 `P_Yo = μ.map Yo` 上で Bochner Jensen により積分形に集約する戦略。詳細は
-`docs/fano-mathlib-inventory.md`。
+`docs/fano/fano-mathlib-inventory.md`。
 
 ## 証明の構造
 

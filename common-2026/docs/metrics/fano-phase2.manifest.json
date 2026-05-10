@@ -8,6 +8,6 @@
       "note": "Phase 2 全体: Mathlib API 在庫調査 (subagent 6 並列) + インベントリ docs/fano-mathlib-inventory.md 執筆 + ムーンショット計画書 docs/fano-moonshot-plan.md の StandardBorel 制約反映"
     }
   ],
-  "filters": { "file_prefix": "docs/fano-" },
+  "filters": { "file_prefix": "docs/fano/fano-" },
   "idle_gap_minutes": 5
 }

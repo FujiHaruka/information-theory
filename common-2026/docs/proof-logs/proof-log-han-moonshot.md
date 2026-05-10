@@ -35,8 +35,8 @@ theorem han_inequality
   - `exceptSplitMEquiv` / `piExceptMEquiv` / `fullSplitMEquiv` (Pi 値 `MeasurableEquiv` 3 本、~35 行)
   - `han_single_bound` (各 i 個別不等式、~85 行)
   - `han_inequality` (主定理、~25 行)
-- `docs/han-moonshot-plan.md` — 4 段プラン (Phase 0/A/B/C)
-- `docs/han-mathlib-inventory.md` — Phase 0 在庫調査
+- `docs/han/han-moonshot-plan.md` — 4 段プラン (Phase 0/A/B/C)
+- `docs/han/han-mathlib-inventory.md` — Phase 0 在庫調査
 
 `lake env lean Common2026/Shannon/Han.lean` 通過 (silent)。
 
@@ -107,7 +107,7 @@ H(Xs) - H(Xs except i) ≤ H(Xs i | prefix)
 
 ## 3. Mathlib 補題探索の実録
 
-Phase 0 在庫調査 (`docs/han-mathlib-inventory.md`) で chain rule / condDistrib 周辺は事前にマップ済。実装中に loogle を **Phase A だけで 44 回 / Phase B 13 回 / Phase C 7 回** 打って追加検索した (合計 64 回、`Common2026/Shannon/` への loogle 投入歴で最多級)。
+Phase 0 在庫調査 (`docs/han/han-mathlib-inventory.md`) で chain rule / condDistrib 周辺は事前にマップ済。実装中に loogle を **Phase A だけで 44 回 / Phase B 13 回 / Phase C 7 回** 打って追加検索した (合計 64 回、`Common2026/Shannon/` への loogle 投入歴で最多級)。
 
 **見つかった主要補題** (実際に使ったもの):
 
@@ -153,7 +153,7 @@ Phase 0 在庫調査 (`docs/han-mathlib-inventory.md`) で chain rule / condDist
 
 ### 4.1 Phase A 中間補題: fiber 展開ルートを却下
 
-**症状**: skeleton 段階では「`condMutualInfo` を `klDiv_compProd_const_eq_lintegral_of_ac` (Bridge.lean Helper 1) で fiber 上に展開し、各 fiber で `mutualInfo_eq_entropy_sub_condEntropy` を呼ぶ」経路を計画していた (in `docs/han-moonshot-plan.md` §戦略)。
+**症状**: skeleton 段階では「`condMutualInfo` を `klDiv_compProd_const_eq_lintegral_of_ac` (Bridge.lean Helper 1) で fiber 上に展開し、各 fiber で `mutualInfo_eq_entropy_sub_condEntropy` を呼ぶ」経路を計画していた (in `docs/han/han-moonshot-plan.md` §戦略)。
 
 **原因**: `condMutualInfo` の compProd 形定義から `klDiv (μ ⊗ₘ κ) (μ ⊗ₘ η)` の per-fibre 展開公式が必要になるが、これは **Mathlib 不在 + 自作すると 50〜80 行**。Phase 4-δ-(b) で同じ壁に当たって却下した記憶を Phase 0 在庫調査時に拾っていた (`han-mathlib-inventory.md` で言及済)。
 
@@ -287,7 +287,7 @@ private lemma han_single_bound ...
 
 ### Phase 0 在庫調査の効果
 
-`docs/han-mathlib-inventory.md` (Phase 0 出力) が機能した点:
+`docs/han/han-mathlib-inventory.md` (Phase 0 出力) が機能した点:
 
 - `Pi.fintype` / `MeasurableSpace.pi` / `Pi.instMeasurableSingletonClass` の自動発火確認 → Phase B / C で instance 合成に詰まらず
 - 「Mathlib に Han / Shearer 不在」確定 → 自前 Han への直行を確信できた

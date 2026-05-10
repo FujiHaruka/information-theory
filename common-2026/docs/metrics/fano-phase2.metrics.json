@@ -3,7 +3,7 @@
   "proof_log": "docs/proof-logs/proof-log-fano-phase2.md",
   "generated_at": "2026-05-08T12:58:04.869Z",
   "filters": {
-    "file_prefix": "docs/fano-"
+    "file_prefix": "docs/fano/fano-"
   },
   "idle_gap_minutes": 5,
   "sessions": [

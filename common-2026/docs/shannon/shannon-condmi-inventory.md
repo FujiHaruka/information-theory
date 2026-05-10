@@ -1,6 +1,6 @@
 # Phase 4-δ-(b) 条件付き相互情報量 Mathlib 在庫調査
 
-> Phase 4-δ-(b) (Markov chain 版 Shannon converse) 着手前の Mathlib 在庫調査。Phase 4-M0 (`docs/shannon-mathlib-inventory.md`) の続編。
+> Phase 4-δ-(b) (Markov chain 版 Shannon converse) 着手前の Mathlib 在庫調査。Phase 4-M0 (`docs/shannon/shannon-mathlib-inventory.md`) の続編。
 >
 > **調査日**: 2026-05-10。subagent 3 並列で 1 ターン (`condIndepFun` / `condMutualInfo` / kernel chain rule plumbing 各 1 名)。
 

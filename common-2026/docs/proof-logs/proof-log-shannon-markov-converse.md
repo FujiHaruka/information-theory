@@ -32,13 +32,13 @@ shannon_converse_single_shot_markov_encoder
   - 補助 `permZXY_ZYX` / `permZYX_Z_XY` (`MeasurableEquiv` 2 本)、`product_map_perm_eq_compProd` / `factored_map_perm_eq_compProd_prod` (private plumbing 補題 2 本)
 - `Common2026/Shannon/Converse.lean` — `shannon_converse_single_shot_markov_encoder` を末尾追記 (240 行)
 - `Common2026/Shannon/MutualInfo.lean` — `klDiv_map_measurableEquiv` を `private` から public に格上げ (1 行 diff)
-- `docs/shannon-condmi-inventory.md` — Phase 4-δ-(b) 着手前の Mathlib 在庫調査 (146 行、subagent 3 並列で 1 ターン)
+- `docs/shannon/shannon-condmi-inventory.md` — Phase 4-δ-(b) 着手前の Mathlib 在庫調査 (146 行、subagent 3 並列で 1 ターン)
 
 `lake env lean Common2026/Shannon/CondMutualInfo.lean` / `Converse.lean` ともに silent。`lake build Common2026.Shannon.CondMutualInfo Common2026.Shannon.Converse` 通過。
 
 ## 1. 問題のキャラクター
 
-「**Mathlib に補題が無いことが事前にわかった上での自作 plumbing**」型。在庫調査 (`docs/shannon-condmi-inventory.md`) で `condMutualInfo` 定義と Markov chain 述語が Mathlib 不在であること、chain rule plumbing は Phase 4-α (DPI) 級の作業量 (135〜195 行見積) を要することは事前に見えていた。実際には **3 重 compProd の `MeasurableEquiv` plumbing** が見積 40〜60 行に対し ~200 行に膨れ、見積 4× オーバー。
+「**Mathlib に補題が無いことが事前にわかった上での自作 plumbing**」型。在庫調査 (`docs/shannon/shannon-condmi-inventory.md`) で `condMutualInfo` 定義と Markov chain 述語が Mathlib 不在であること、chain rule plumbing は Phase 4-α (DPI) 級の作業量 (135〜195 行見積) を要することは事前に見えていた。実際には **3 重 compProd の `MeasurableEquiv` plumbing** が見積 40〜60 行に対し ~200 行に膨れ、見積 4× オーバー。
 
 過去のフェーズとの規模感比較:
 
@@ -107,7 +107,7 @@ def IsMarkovChain (Xs Zc Yo) : Prop :=
 
 ## 3. Mathlib 補題探索の実録
 
-inventory フェーズで subagent 3 並列 (`condIndepFun` / `condMutualInfo` / kernel chain rule paths) を投げ、`docs/shannon-condmi-inventory.md` に整理。skeleton 着手後は実装のため追加で loogle / rg 検索した。
+inventory フェーズで subagent 3 並列 (`condIndepFun` / `condMutualInfo` / kernel chain rule paths) を投げ、`docs/shannon/shannon-condmi-inventory.md` に整理。skeleton 着手後は実装のため追加で loogle / rg 検索した。
 
 **見つかった主要補題** (chain rule plumbing で実際に使ったもの):
 

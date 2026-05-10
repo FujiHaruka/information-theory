@@ -3,7 +3,7 @@ import Common2026.Shannon.Entropy
 /-!
 # Joint entropy on `Fin n` and the n-variable chain rule (Phase B skeleton)
 
-Han 不等式ムーンショット ([`docs/han-moonshot-plan.md`](../../../docs/han-moonshot-plan.md))
+Han 不等式ムーンショット ([`docs/han/han-moonshot-plan.md`](../../../docs/han/han-moonshot-plan.md))
 の Phase B skeleton。Phase A の 2 変数 chain rule
 `entropy_pair_eq_entropy_add_condEntropy` を `Fin n` の prefix に対して反復適用して
 n 変数 chain rule を得る。Phase C (Han の不等式本体) の入口。

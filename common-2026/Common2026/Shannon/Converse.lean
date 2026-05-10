@@ -10,7 +10,7 @@ import Mathlib.Analysis.SpecialFunctions.BinaryEntropy
 /-!
 # Single-shot Shannon converse (Phase 4-γ skeleton)
 
-Shannon ムーンショット ([`docs/shannon-moonshot-plan.md`](../../../docs/shannon-moonshot-plan.md))
+Shannon ムーンショット ([`docs/shannon/shannon-moonshot-plan.md`](../../../docs/shannon/shannon-moonshot-plan.md))
 の Phase 4-γ: 通信路符号化定理の逆 (single-shot 版) を、Phase 4-β bridge と
 Phase 4-α DPI、Phase 3 Fano (Measure 版) の組み合わせで導く。
 
@@ -34,7 +34,7 @@ log|M| = H(Msg)                                           -- helper: uniform →
        ≤ I(Msg; Yo).toReal        + h(Pe) + Pe·log(|M|-1) -- Phase 3 Fano (decoder = id : M→M)
 ```
 
-なお計画書 (`docs/shannon-moonshot-plan.md` Phase 4-γ) では `I(encoder∘Msg; Yo)` を含む版が
+なお計画書 (`docs/shannon/shannon-moonshot-plan.md` Phase 4-γ) では `I(encoder∘Msg; Yo)` を含む版が
 書かれているが、Markov 仮定なしには `I(Msg; Yo) ≤ I(encoder∘Msg; Yo)` は一般に成り立たない
 ため、ここでは encoder を含まない素直な定式化を採用する。encoder 版は injective encoder の
 仮定下でこの結果から系として従う。

@@ -1,8 +1,8 @@
 ## Phase 4 シャノン converse のための Mathlib 在庫調査
 
-> ムーンショット全体計画は [`docs/shannon-moonshot-plan.md`](shannon-moonshot-plan.md)。本ファイルは Phase 4-M0 の成果物 (2026-05-09)。
+> ムーンショット全体計画は [`docs/shannon/shannon-moonshot-plan.md`](shannon-moonshot-plan.md)。本ファイルは Phase 4-M0 の成果物 (2026-05-09)。
 >
-> Fano 側の同種文書は [`docs/fano-mathlib-inventory.md`](fano-mathlib-inventory.md)。
+> Fano 側の同種文書は [`docs/fano/fano-mathlib-inventory.md`](../fano/fano-mathlib-inventory.md)。
 
 ## 一行サマリ
 
@@ -218,7 +218,7 @@ end InformationTheory.Shannon
 
 ## Phase 4-M0 まとめ
 
-- インベントリは **`docs/shannon-mathlib-inventory.md`**(このファイル)
+- インベントリは **`docs/shannon/shannon-mathlib-inventory.md`**(このファイル)
 - Phase 4-α で使う KL 補題のうち **素材は 100% 既存**、**主役定理 (mutualInfo, DPI) は 0% 既存**
 - 計画書 ([`shannon-moonshot-plan.md`](shannon-moonshot-plan.md)) の `mutualInfo` 定義案はそのまま使える
 - 最大リスク: **DPI 自作の plumbing 量** (50〜150 行見込み、2 週間予算)
