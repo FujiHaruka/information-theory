@@ -1,6 +1,7 @@
 import Common2026.Shannon.MutualInfo
 import Common2026.Fano.Measure
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
+import Mathlib.MeasureTheory.Function.SpecialFunctions.Basic
 import Mathlib.MeasureTheory.Integral.Bochner.SumMeasure
 import Mathlib.MeasureTheory.Integral.Lebesgue.Countable
 import Mathlib.MeasureTheory.Measure.Prod
@@ -422,11 +423,155 @@ private theorem klDiv_joint_prod_marginals_toReal
   have h_ac_fibre := condDistrib_ae_absolutelyContinuous_map μ Xs Yo hXs hYo
   rw [klDiv_compProd_const_eq_lintegral_of_ac (μ.map Yo) (condDistrib Xs Yo μ)
     (μ.map Xs) h_ac_fibre]
-  -- Steps 4-8: convert lintegral.toReal → Bochner ∫ → Helper 5 expansion → split sum →
-  -- Helper 3 marginal recovery → combine to entropy - condEntropy.
-  -- This last 50-100 lines of plumbing is left as a single sorry; the proof sketch
-  -- in the docstring above (steps 5-8) is the precise plan.
-  sorry
+  -- (5a) llr Q P is integrable on each fibre (Fintype + finite measure).
+  have h_int_llr : ∀ᵐ y ∂(μ.map Yo),
+      Integrable (llr (condDistrib Xs Yo μ y) (μ.map Xs)) (condDistrib Xs Yo μ y) := by
+    refine ae_of_all _ fun y => ?_
+    refine ⟨(measurable_llr _ _).aestronglyMeasurable, ?_⟩
+    rw [hasFiniteIntegral_iff_enorm, lintegral_fintype]
+    exact ENNReal.sum_lt_top.mpr fun _ _ =>
+      ENNReal.mul_lt_top ENNReal.coe_lt_top (measure_lt_top _ _)
+  -- (5b) klDiv ≠ ∞ on the AC fibre.
+  have h_klDiv_ne_top : ∀ᵐ y ∂(μ.map Yo),
+      klDiv (condDistrib Xs Yo μ y) (μ.map Xs) ≠ ∞ := by
+    filter_upwards [h_ac_fibre, h_int_llr] with y hy hint
+    exact klDiv_ne_top hy hint
+  -- (5c) Rewrite klDiv ae as ENNReal.ofReal of the Helper 5 sum.
+  have h_klDiv_eq : ∀ᵐ y ∂(μ.map Yo),
+      klDiv (condDistrib Xs Yo μ y) (μ.map Xs)
+        = ENNReal.ofReal (∑ x : X, (condDistrib Xs Yo μ y).real {x}
+            * (Real.log ((condDistrib Xs Yo μ y).real {x})
+              - Real.log ((μ.map Xs).real {x}))) := by
+    filter_upwards [h_ac_fibre, h_klDiv_ne_top] with y hy hne
+    rw [← ENNReal.ofReal_toReal hne]
+    exact congrArg ENNReal.ofReal (klDiv_discrete_toReal_eq_sum _ _ hy)
+  rw [lintegral_congr_ae h_klDiv_eq]
+  -- (5d) Convert (∫⁻ ofReal S).toReal back to a Bochner integral via nonneg + AEStronglyMeasurable.
+  have h_meas_real_Q : ∀ x : X,
+      Measurable (fun y => (condDistrib Xs Yo μ y).real {x}) :=
+    fun x => (Kernel.measurable_coe _ (measurableSet_singleton x)).ennreal_toReal
+  have h_S_meas : AEStronglyMeasurable
+      (fun y => ∑ x : X, (condDistrib Xs Yo μ y).real {x}
+        * (Real.log ((condDistrib Xs Yo μ y).real {x})
+          - Real.log ((μ.map Xs).real {x}))) (μ.map Yo) := by
+    refine Finset.aestronglyMeasurable_fun_sum (M := ℝ) _ fun x _ => ?_
+    refine AEStronglyMeasurable.mul ?_ ?_
+    · exact (h_meas_real_Q x).aestronglyMeasurable
+    · exact ((h_meas_real_Q x).log.sub_const _).aestronglyMeasurable
+  have h_S_nonneg : 0 ≤ᵐ[μ.map Yo]
+      (fun y => ∑ x : X, (condDistrib Xs Yo μ y).real {x}
+        * (Real.log ((condDistrib Xs Yo μ y).real {x})
+          - Real.log ((μ.map Xs).real {x}))) := by
+    filter_upwards [h_ac_fibre] with y hy
+    rw [← klDiv_discrete_toReal_eq_sum (condDistrib Xs Yo μ y) (μ.map Xs) hy]
+    exact ENNReal.toReal_nonneg
+  rw [← integral_eq_lintegral_of_nonneg_ae h_S_nonneg h_S_meas]
+  -- (6) Split the inner sum: Q*(logQ - logP) = Q*logQ - Q*logP, then move - outside the integral.
+  have h_split : ∀ y,
+      (∑ x : X, (condDistrib Xs Yo μ y).real {x}
+        * (Real.log ((condDistrib Xs Yo μ y).real {x})
+          - Real.log ((μ.map Xs).real {x})))
+        = (∑ x : X, (condDistrib Xs Yo μ y).real {x}
+              * Real.log ((condDistrib Xs Yo μ y).real {x}))
+          - (∑ x : X, (condDistrib Xs Yo μ y).real {x}
+              * Real.log ((μ.map Xs).real {x})) := by
+    intro y
+    rw [show (∑ x : X, (condDistrib Xs Yo μ y).real {x}
+              * Real.log ((condDistrib Xs Yo μ y).real {x}))
+            - (∑ x : X, (condDistrib Xs Yo μ y).real {x}
+              * Real.log ((μ.map Xs).real {x}))
+          = ∑ x : X, ((condDistrib Xs Yo μ y).real {x}
+              * Real.log ((condDistrib Xs Yo μ y).real {x})
+            - (condDistrib Xs Yo μ y).real {x}
+              * Real.log ((μ.map Xs).real {x}))
+          from (Finset.sum_sub_distrib (s := (Finset.univ : Finset X))
+            (f := fun x => (condDistrib Xs Yo μ y).real {x}
+                * Real.log ((condDistrib Xs Yo μ y).real {x}))
+            (g := fun x => (condDistrib Xs Yo μ y).real {x}
+                * Real.log ((μ.map Xs).real {x}))).symm]
+    refine Finset.sum_congr rfl fun x _ => ?_
+    ring
+  simp_rw [h_split]
+  -- Helper bound: 0 ≤ Q.real{x} ≤ 1 for any fibre / probability measure on a singleton.
+  have h_Q_le_one : ∀ y x, (condDistrib Xs Yo μ y).real {x} ≤ 1 :=
+    fun y x => measureReal_le_one (μ := condDistrib Xs Yo μ y) (s := {x})
+  -- Term 1: |Q.real{x} * log Q.real{x}| = negMulLog Q.real{x} ≤ 1 - Q.real{x} ≤ 1.
+  have h_int_QlogQ : ∀ x : X, Integrable
+      (fun y => (condDistrib Xs Yo μ y).real {x}
+        * Real.log ((condDistrib Xs Yo μ y).real {x})) (μ.map Yo) := by
+    intro x
+    refine Integrable.mono' (g := fun _ => (1 : ℝ))
+      (integrable_const _)
+      ((h_meas_real_Q x).mul (h_meas_real_Q x).log).aestronglyMeasurable ?_
+    refine ae_of_all _ fun y => ?_
+    have hQ_nn : 0 ≤ (condDistrib Xs Yo μ y).real {x} := measureReal_nonneg
+    have hQ_le : (condDistrib Xs Yo μ y).real {x} ≤ 1 := h_Q_le_one y x
+    have h_negMulLog_nn :
+        0 ≤ Real.negMulLog ((condDistrib Xs Yo μ y).real {x}) :=
+      Real.negMulLog_nonneg hQ_nn hQ_le
+    have h_negMulLog_le_one :
+        Real.negMulLog ((condDistrib Xs Yo μ y).real {x}) ≤ 1 := by
+      refine (Real.negMulLog_le_one_sub_self hQ_nn).trans ?_
+      linarith
+    have h_eq : (condDistrib Xs Yo μ y).real {x}
+        * Real.log ((condDistrib Xs Yo μ y).real {x})
+        = -Real.negMulLog ((condDistrib Xs Yo μ y).real {x}) := by
+      rw [Real.negMulLog]; ring
+    rw [Real.norm_eq_abs, h_eq, abs_neg, abs_of_nonneg h_negMulLog_nn]
+    exact h_negMulLog_le_one
+  -- Term 2: Q.real{x} * log P.real{x} = constant_x * Q.real{x}, bounded → integrable.
+  have h_int_QlogP : ∀ x : X, Integrable
+      (fun y => (condDistrib Xs Yo μ y).real {x}
+        * Real.log ((μ.map Xs).real {x})) (μ.map Yo) := by
+    intro x
+    refine Integrable.mul_const ?_ _
+    refine Integrable.mono' (g := fun _ => (1 : ℝ)) (integrable_const _)
+      (h_meas_real_Q x).aestronglyMeasurable ?_
+    refine ae_of_all _ fun y => ?_
+    rw [Real.norm_eq_abs, abs_of_nonneg measureReal_nonneg]
+    exact h_Q_le_one y x
+  have h_int_sumQlogQ : Integrable
+      (fun y => ∑ x : X, (condDistrib Xs Yo μ y).real {x}
+        * Real.log ((condDistrib Xs Yo μ y).real {x})) (μ.map Yo) :=
+    integrable_finsetSum _ fun x _ => h_int_QlogQ x
+  have h_int_sumQlogP : Integrable
+      (fun y => ∑ x : X, (condDistrib Xs Yo μ y).real {x}
+        * Real.log ((μ.map Xs).real {x})) (μ.map Yo) :=
+    integrable_finsetSum _ fun x _ => h_int_QlogP x
+  -- (7) Linear split of the integral.
+  rw [integral_sub h_int_sumQlogQ h_int_sumQlogP]
+  -- (7-a) First term: ∫ ∑ Q*logQ = -condEntropy.
+  have h_first :
+      (fun y => ∑ x : X, (condDistrib Xs Yo μ y).real {x}
+          * Real.log ((condDistrib Xs Yo μ y).real {x}))
+        = (fun y => -∑ x : X,
+            Real.negMulLog ((condDistrib Xs Yo μ y).real {x})) := by
+    funext y
+    rw [← Finset.sum_neg_distrib]
+    refine Finset.sum_congr rfl fun x _ => ?_
+    rw [Real.negMulLog]; ring
+  rw [h_first, integral_neg]
+  -- (7-b) Second term: ∫ ∑ Q*logP = -entropy via Helper 3.
+  rw [integral_finsetSum _ fun x _ => h_int_QlogP x]
+  have h_second_term_each : ∀ x : X,
+      ∫ y, (condDistrib Xs Yo μ y).real {x}
+        * Real.log ((μ.map Xs).real {x}) ∂(μ.map Yo)
+        = (μ.map Xs).real {x} * Real.log ((μ.map Xs).real {x}) := by
+    intro x
+    rw [integral_mul_const, integral_condDistrib_real_singleton_eq μ Xs Yo hXs hYo x]
+  simp_rw [h_second_term_each]
+  -- (8) Combine: -condEntropy - (-entropy) = entropy - condEntropy.
+  show -∫ y, ∑ x : X, Real.negMulLog ((condDistrib Xs Yo μ y).real {x}) ∂(μ.map Yo)
+      - ∑ x : X, (μ.map Xs).real {x} * Real.log ((μ.map Xs).real {x})
+    = entropy μ Xs - InformationTheory.MeasureFano.condEntropy μ Xs Yo
+  unfold entropy InformationTheory.MeasureFano.condEntropy
+  have h_entropy_term : ∑ x : X, (μ.map Xs).real {x} * Real.log ((μ.map Xs).real {x})
+      = -∑ x : X, Real.negMulLog ((μ.map Xs).real {x}) := by
+    rw [← Finset.sum_neg_distrib]
+    refine Finset.sum_congr rfl fun x _ => ?_
+    rw [Real.negMulLog]; ring
+  rw [h_entropy_term]
+  ring
 
 /-- The MI / condEntropy bridge: for a finite-alphabet source `X`, the Phase 4-α
 KL-based mutual information equals `H(X) - H(X | Y)` where `H` is the Phase 3
