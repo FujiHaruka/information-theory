@@ -13,11 +13,11 @@
 
 ## 進捗
 
-- [ ] Phase 0 — Mathlib + Common2026 (AEP 含む) API インベントリ 📋 → [`stein-mathlib-inventory.md`](stein-mathlib-inventory.md)
-- [ ] Phase A — log-likelihood ratio plumbing (`llrPmf` / `logLikelihoodRatio` / Stein 強法則) + i.i.d. 化 📋
-- [ ] Phase B — Stein lower bound (achievability): typicality 構成 → `-(1/n) log β_n ≥ klDiv - δ` 📋
-- [ ] Phase C — Stein upper bound (converse): 任意の検定 → `-(1/n) log β_n ≤ klDiv + δ` 📋
-- [ ] Phase D — 統合形 `stein_lemma`: 両側 bound → `Tendsto` 形 lim 結論 📋
+- [x] Phase 0 — Mathlib + Common2026 (AEP 含む) API インベントリ ✅ → [`stein-mathlib-inventory.md`](stein-mathlib-inventory.md)
+- [x] Phase A — log-likelihood ratio plumbing (`llrPmf` / `logLikelihoodRatio` / Stein 強法則) + i.i.d. 化 ✅ (A.7 `klDiv_pi_eq_n_smul` は B.4 で迂回 → Phase C で実装予定)
+- [x] Phase B — Stein lower bound (achievability): typicality 構成 → `-(1/n) log β_n ≥ klDiv - δ` ✅ (**publish ライン到達 2026-05-11**)
+- [ ] Phase C — Stein upper bound (converse): 任意の検定 → `-(1/n) log β_n ≤ klDiv + δ` 📋 (撤退、別 plan に切り出し)
+- [ ] Phase D — 統合形 `stein_lemma`: 両側 bound → `Tendsto` 形 lim 結論 📋 (撤退、Phase C 完了後)
 
 ## ゴール / Approach
 
@@ -415,3 +415,43 @@ end InformationTheory.Shannon.Stein
 書く頻度: Phase 中の方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
 
 <!-- 本 plan はまだ起草段階。本体着手で発見があれば追記。 -->
+
+### 2026-05-11 — Phase A〜B 完了 (publish ライン到達)
+
+**結果**: `Common2026/Shannon/Stein.lean` (625 行) で Phase A〜B 完了、`lake env lean Common2026/Shannon/Stein.lean` 緑通過 (warning 0、error 0、sorry 0)、`lake build` 緑通過。**Stein achievability publish ラインに到達**。
+
+**Phase A 完了**:
+- `llrPmf P Q : α → ℝ` (alphabet-side LR、AEP `pmfLog` の 2 分布化)
+- `logLikelihoodRatio P Q Xs i : Ω → ℝ` (per-symbol LR)
+- `integral_logLikelihoodRatio_under_P = (klDiv P Q).toReal` (= LR の期待値 = KL)
+- `stein_strong_law` (a.s. 収束、`strong_law_ae_real` を `logLikelihoodRatio` で 1 回呼ぶだけ)
+- `stein_inProbability` (確率収束、`tendstoInMeasure_of_tendsto_ae` 経由)
+
+**Phase B 完了**:
+- `steinTypicalSet P Q n ε` + `measurableSet_steinTypicalSet`
+- `steinTypicalSet_P_prob_tendsto_one` (P 側典型 → 1)
+- `steinTypicalSet_Q_prob_le` (= `Q^n(T) ≤ exp(-n(klDiv-ε))`)
+- `stein_achievability` (∃ test、α-level + β-bound)
+
+**ピボット 1: A.7 `klDiv_pi_eq_n_smul` は迂回**
+- 計画では Phase A.7 に `klDiv (Π P) (Π Q) = n · klDiv P Q` の Pi 化 chain rule を実装予定だったが、Phase B (achievability) では **typicality 経由で `Q^n(T) ≤ exp(-n·(klDiv-ε))` を直接導出**できるため不要と判明
+- B.3 の証明では `Measure.pi_singleton` (`Measure.pi μ {f} = ∏ i, μ i {f i}`) で点ごとの product 形に下し、point-wise の対数比 `llrPmf P Q (x i) = log P{x_i} - log Q{x_i}` から直接 `Π Q{x_i} / Π P{x_i} = exp(-∑ llrPmf)` を得る
+- **Phase A.7 は Phase C 着手時に必要**になる予定
+
+**ピボット 2: `stein_achievability` の statement を pi 形 + RV 仮定併存に**
+- 計画段階では statement に `Xs : ℕ → Ω → α` の i.i.d. RV を取る形を想定していたが、**結論部 (`P^n s, Q^n s` の bound)** は pi 形でないと自然に書けない
+- 妥協: 両方の hypothesis を取る + 追加で `hMapJoint : ∀ n, μ.map (jointRV Xs n) = Measure.pi (fun _ => P)` を仮定
+- `iIndepFun_iff_map_fun_eq_pi_map` (Mathlib) でこの仮定は `iIndepFun` から得られるが、AEP は `Pairwise IndepFun` (弱形) で書かれているため、ここで強形を要求する形にした
+- 改善案 (Phase C 着手時): `iIndepFun` 仮定で書き直し、`hMapJoint` は内部で導出する
+
+**ピボット 3: B.3 で `hPpos` 仮定を追加**
+- 計画段階では `hQpos : ∀ x, 0 < Q.real{x}` のみ仮定していたが、B.3 の per-point bound (`Π Q ≤ Π P · exp(...)`) を導出する際 `Π P` で割る必要があり、`hPpos : ∀ x, 0 < P.real{x}` も要求
+- これは Cover-Thomas 教科書の "regular case" に相当 (P, Q ともに full support)
+- Stein achievability 自体は `hPpos` なしでも成立する (= P がサポート外で 0 になる点を typical set 定義で除外する)が、本実装では plumbing 簡素化のため両側 full support を要求
+
+**残課題 (Phase C/D)**:
+- A.7 `klDiv_pi_eq_n_smul` の Pi 化 chain rule (Phase C で必要)
+- DPI reduction (Phase C.1)
+- Bernoulli KL の評価 (Phase C.2)
+- `Tendsto` 形統合 (Phase D)
+- 撤退ライン到達のため、Phase C/D は別 plan に切り出すか次セッションへ繰越

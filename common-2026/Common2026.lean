@@ -26,3 +26,4 @@ import Common2026.Shannon.HanDAverage
 import Common2026.Shannon.HanDShearer
 import Common2026.Shannon.LoomisWhitney
 import Common2026.Shannon.AEP
+import Common2026.Shannon.Stein
