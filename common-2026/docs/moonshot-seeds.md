@@ -79,6 +79,8 @@
 
 **依存 / 後続**: 単独で立つ。後続に matroid 理論 / 結合構造論への入口。
 
+→ `docs/han/polymatroid-moonshot-plan.md`
+
 ---
 
 ## Seed 3: Slepian–Wolf 単発 converse 🌙
