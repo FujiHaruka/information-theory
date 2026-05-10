@@ -49,7 +49,7 @@ noncomputable def jointEntropyExcept
 
 /-- entropy is invariant under push-forward by a `MeasurableEquiv`. Helper for the
 `Fin (n+1) → α` ↔ `α × (Fin n → α)` reshape used in the chain-rule induction. -/
-private lemma entropy_measurableEquiv_comp
+lemma entropy_measurableEquiv_comp
     {β γ : Type*}
     [Fintype β] [DecidableEq β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -76,6 +76,36 @@ private lemma entropy_measurableEquiv_comp
       Measure.map_apply e.measurable (measurableSet_singleton _),
       hpre]
 
+/-- conditioner side reshape: condEntropy is invariant under push-forward by
+a `MeasurableEquiv` on the conditioner. Reduces to two applications of
+`entropy_measurableEquiv_comp` via the H(Y,X) = H(Y) + H(X|Y) identity. -/
+lemma condEntropy_measurableEquiv_comp
+    {β γ : Type*}
+    [Fintype β] [DecidableEq β] [Nonempty β]
+    [MeasurableSpace β] [MeasurableSingletonClass β]
+    [Fintype γ] [DecidableEq γ] [Nonempty γ]
+    [MeasurableSpace γ] [MeasurableSingletonClass γ]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xc : Ω → α) (hXc : Measurable Xc)
+    (Yo : Ω → β) (hYo : Measurable Yo) (e : β ≃ᵐ γ) :
+    InformationTheory.MeasureFano.condEntropy μ Xc (fun ω => e (Yo ω))
+      = InformationTheory.MeasureFano.condEntropy μ Xc Yo := by
+  -- H(Yo, Xc) = H(Yo) + H(Xc | Yo)
+  have h₁ := entropy_pair_eq_entropy_add_condEntropy μ Yo Xc hYo hXc
+  -- H(e∘Yo, Xc) = H(e∘Yo) + H(Xc | e∘Yo)
+  have h₂ := entropy_pair_eq_entropy_add_condEntropy μ
+    (fun ω => e (Yo ω)) Xc (e.measurable.comp hYo) hXc
+  -- H(e∘Yo) = H(Yo)
+  have hY := entropy_measurableEquiv_comp μ Yo hYo e
+  -- H(e∘Yo, Xc) = H(Yo, Xc) via the prod equiv (e × refl α)
+  have hYX :
+      entropy μ (fun ω => (e (Yo ω), Xc ω))
+        = entropy μ (fun ω => (Yo ω, Xc ω)) := by
+    have := entropy_measurableEquiv_comp μ
+      (fun ω => (Yo ω, Xc ω)) (hYo.prodMk hXc)
+      (MeasurableEquiv.prodCongr e (.refl α))
+    simpa using this
+  linarith
 /-- n 変数 chain rule for Shannon joint entropy:
 `H(X_0, …, X_{n-1}) = ∑ i, H(X_i | X_0, …, X_{i-1})`.
 
