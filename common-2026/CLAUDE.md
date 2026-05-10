@@ -63,6 +63,15 @@ Do **not** write a whole proof file in one shot. Instead:
 - Do not report commits or pushes. The user is not interested in commit/push activity. Skip mentioning them in turn summaries or status updates.
 - Keep commit messages short. One concise line, no body unless absolutely necessary.
 
+## Handoff
+
+The `handoff` skill writes session state to `.claude/handoff.md` so the next session can `/resume` from it. Default behavior is user-triggered, but autonomously invoke it at end-of-turn when **both**:
+
+- the turn's work is finished and there is a clear, concrete next action, **and**
+- this session is a continuation of a prior handoff (started via `/resume`, or otherwise picking up an in-flight thread).
+
+If the session is ad-hoc — opened with no prior handoff context, scope unrelated to any in-flight work — do not autonomously hand off; wait for explicit instruction.
+
 ## Definition of Done
 
 `lake env lean <file>` must pass cleanly on the file you touched — zero errors, no remaining `sorry`, minimal warnings.
