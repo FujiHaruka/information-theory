@@ -75,17 +75,147 @@ def IsMarkovChain (μ : Measure Ω) [IsFiniteMeasure μ]
   μ.map (fun ω => (Zc ω, Xs ω, Yo ω))
     = (μ.map Zc) ⊗ₘ ((condDistrib Xs Zc μ) ×ₖ (condDistrib Yo Zc μ))
 
+/-- Permutation `(Z × X) × Y ≃ᵐ (Z × Y) × X`: `((z, x), y) ↦ ((z, y), x)`. -/
+private def permZXY_ZYX (Z X Y : Type*)
+    [MeasurableSpace Z] [MeasurableSpace X] [MeasurableSpace Y] :
+    (Z × X) × Y ≃ᵐ (Z × Y) × X where
+  toEquiv :=
+    { toFun := fun p => ((p.1.1, p.2), p.1.2)
+      invFun := fun q => ((q.1.1, q.2), q.1.2)
+      left_inv := fun _ => rfl
+      right_inv := fun _ => rfl }
+  measurable_toFun := by
+    refine Measurable.prodMk ?_ ?_
+    · exact (measurable_fst.comp measurable_fst).prodMk measurable_snd
+    · exact measurable_snd.comp measurable_fst
+  measurable_invFun := by
+    refine Measurable.prodMk ?_ ?_
+    · exact (measurable_fst.comp measurable_fst).prodMk measurable_snd
+    · exact measurable_snd.comp measurable_fst
+
+/-- Permutation `(Z × Y) × X ≃ᵐ Z × (X × Y)`: `((z, y), x) ↦ (z, (x, y))`. -/
+private def permZYX_Z_XY (Z X Y : Type*)
+    [MeasurableSpace Z] [MeasurableSpace X] [MeasurableSpace Y] :
+    (Z × Y) × X ≃ᵐ Z × (X × Y) where
+  toEquiv :=
+    { toFun := fun p => (p.1.1, (p.2, p.1.2))
+      invFun := fun q => ((q.1, q.2.2), q.2.1)
+      left_inv := fun _ => rfl
+      right_inv := fun _ => rfl }
+  measurable_toFun := by
+    refine Measurable.prodMk ?_ ?_
+    · exact measurable_fst.comp measurable_fst
+    · exact measurable_snd.prodMk (measurable_snd.comp measurable_fst)
+  measurable_invFun := by
+    refine Measurable.prodMk ?_ ?_
+    · exact measurable_fst.prodMk (measurable_snd.comp measurable_snd)
+    · exact measurable_fst.comp measurable_snd
+
+/-- The forward map of `permZXY_ZYX` reduces to the explicit form `((z, x), y) ↦ ((z, y), x)`. -/
+@[simp] private lemma permZXY_ZYX_apply (Z X Y : Type*)
+    [MeasurableSpace Z] [MeasurableSpace X] [MeasurableSpace Y]
+    (p : (Z × X) × Y) :
+    permZXY_ZYX Z X Y p = ((p.1.1, p.2), p.1.2) := rfl
+
+/-- The forward map of `permZYX_Z_XY` reduces to the explicit form `((z, y), x) ↦ (z, (x, y))`. -/
+@[simp] private lemma permZYX_Z_XY_apply (Z X Y : Type*)
+    [MeasurableSpace Z] [MeasurableSpace X] [MeasurableSpace Y]
+    (p : (Z × Y) × X) :
+    permZYX_Z_XY Z X Y p = (p.1.1, (p.2, p.1.2)) := rfl
+
+/-- Plumbing for chain rule (A2): pushforward of the "product" side through `permZXY_ZYX`
+gives a compProd with `(μ.map Zc).prod (μ.map Yo)` base and `Kernel.prodMkRight Y` of the
+X kernel. 戦略は `Measure.ext_of_lintegral` + Tonelli swap。 -/
+private lemma product_map_perm_eq_compProd
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    [StandardBorelSpace X] [Nonempty X]
+    (Xs : Ω → X) (Yo : Ω → Y) (Zc : Ω → Z)
+    (hXs : Measurable Xs) (hYo : Measurable Yo) (hZc : Measurable Zc) :
+    (((μ.map (fun ω => (Zc ω, Xs ω))).prod (μ.map Yo))).map (permZXY_ZYX Z X Y)
+      = ((μ.map Zc).prod (μ.map Yo)) ⊗ₘ
+          Kernel.prodMkRight Y (condDistrib Xs Zc μ) := by
+  set K_X : Kernel Z X := condDistrib Xs Zc μ with hK_X
+  have hZX : Measurable (fun ω => (Zc ω, Xs ω)) := hZc.prodMk hXs
+  have hμZX : μ.map (fun ω => (Zc ω, Xs ω)) = (μ.map Zc) ⊗ₘ K_X :=
+    (compProd_map_condDistrib hXs.aemeasurable).symm
+  have hPZ : IsProbabilityMeasure (μ.map Zc) := Measure.isProbabilityMeasure_map hZc.aemeasurable
+  have hPY : IsProbabilityMeasure (μ.map Yo) := Measure.isProbabilityMeasure_map hYo.aemeasurable
+  have hPZX : IsProbabilityMeasure (μ.map (fun ω => (Zc ω, Xs ω))) :=
+    Measure.isProbabilityMeasure_map hZX.aemeasurable
+  refine Measure.ext_of_lintegral _ fun f hf => ?_
+  have hg : Measurable (fun p : (Z × X) × Y => f ((permZXY_ZYX Z X Y) p)) :=
+    hf.comp (permZXY_ZYX Z X Y).measurable
+  -- LHS chain
+  rw [lintegral_map hf (permZXY_ZYX Z X Y).measurable]
+  rw [lintegral_prod _ hg.aemeasurable]
+  rw [hμZX, Measure.lintegral_compProd hg.lintegral_prod_right']
+  -- LHS = ∫⁻ z, ∫⁻ x ∂(K_X z), ∫⁻ y ∂(μ.map Yo), f (permZXY_ZYX ((z, x), y)) ∂(μ.map Zc)
+  -- RHS chain
+  rw [Measure.lintegral_compProd hf]
+  rw [lintegral_prod _ (Measurable.lintegral_kernel_prod_right' hf
+        (κ := Kernel.prodMkRight Y K_X)).aemeasurable]
+  -- RHS = ∫⁻ z, ∫⁻ y ∂(μ.map Yo), ∫⁻ x ∂(K_X z), f ((z, y), x) ∂(μ.map Zc)
+  refine lintegral_congr fun z => ?_
+  simp only [permZXY_ZYX_apply, Kernel.prodMkRight_apply]
+  -- LHS: ∫⁻ x ∂(K_X z), ∫⁻ y ∂(μ.map Yo), f ((z, y), x)
+  -- RHS: ∫⁻ y ∂(μ.map Yo), ∫⁻ x ∂(K_X z), f ((z, y), x)
+  rw [lintegral_lintegral_swap]
+  exact (hf.comp (by fun_prop : Measurable
+      (fun p : X × Y => ((z, p.2), p.1)))).aemeasurable
+
+/-- Plumbing for chain rule (B2): pushforward of the "factored" side through `permZYX_Z_XY`
+gives the condMutualInfo second-argument form `(μ.map Zc) ⊗ₘ (K_X ×ₖ K_Y)`. -/
+private lemma factored_map_perm_eq_compProd_prod
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    [StandardBorelSpace X] [Nonempty X]
+    [StandardBorelSpace Y] [Nonempty Y]
+    (Xs : Ω → X) (Yo : Ω → Y) (Zc : Ω → Z)
+    (hXs : Measurable Xs) (hYo : Measurable Yo) (hZc : Measurable Zc) :
+    ((μ.map (fun ω => (Zc ω, Yo ω))) ⊗ₘ
+        Kernel.prodMkRight Y (condDistrib Xs Zc μ)).map (permZYX_Z_XY Z X Y)
+      = (μ.map Zc) ⊗ₘ ((condDistrib Xs Zc μ) ×ₖ (condDistrib Yo Zc μ)) := by
+  set K_X : Kernel Z X := condDistrib Xs Zc μ
+  set K_Y : Kernel Z Y := condDistrib Yo Zc μ
+  have hμZY : μ.map (fun ω => (Zc ω, Yo ω)) = (μ.map Zc) ⊗ₘ K_Y :=
+    (compProd_map_condDistrib hYo.aemeasurable).symm
+  have : IsProbabilityMeasure (μ.map Zc) := Measure.isProbabilityMeasure_map hZc.aemeasurable
+  refine Measure.ext_of_lintegral _ fun f hf => ?_
+  have hg : Measurable (fun p : (Z × Y) × X => f ((permZYX_Z_XY Z X Y) p)) :=
+    hf.comp (permZYX_Z_XY Z X Y).measurable
+  -- LHS chain
+  rw [lintegral_map hf (permZYX_Z_XY Z X Y).measurable]
+  rw [Measure.lintegral_compProd hg]
+  rw [hμZY]
+  rw [Measure.lintegral_compProd
+        (Measurable.lintegral_kernel_prod_right' hg
+          (κ := Kernel.prodMkRight Y K_X))]
+  -- LHS = ∫⁻ z, ∫⁻ y ∂(K_Y z), ∫⁻ x ∂(K_X z), f (z, (x, y)) ∂(μ.map Zc)
+  -- RHS chain
+  rw [Measure.lintegral_compProd hf]
+  -- RHS = ∫⁻ z, ∫⁻ p ∂((K_X ×ₖ K_Y) z), f (z, p) ∂(μ.map Zc)
+  refine lintegral_congr fun z => ?_
+  simp only [permZYX_Z_XY_apply, Kernel.prodMkRight_apply, Kernel.prod_apply]
+  -- LHS-inner: ∫⁻ y ∂(K_Y z), ∫⁻ x ∂(K_X z), f (z, (x, y))
+  -- RHS-inner: ∫⁻ p ∂(K_X z).prod (K_Y z), f (z, p)
+  rw [lintegral_prod (fun b : X × Y => f (z, b))
+        ((hf.comp (by fun_prop : Measurable
+            (fun q : X × Y => (z, q)))).aemeasurable)]
+  -- After lintegral_prod: ∫⁻ x ∂(K_X z), ∫⁻ y ∂(K_Y z), f (z, (x, y))
+  rw [lintegral_lintegral_swap]
+  exact (hf.comp (by fun_prop : Measurable
+      (fun p : Y × X => (z, (p.2, p.1))))).aemeasurable
+
 /-- Chain rule: `I((Z, X); Y) = I(Z; Y) + I(X; Y | Z)`.
 
-戦略 (`docs/shannon-condmi-inventory.md` §chain rule plumbing):
-1. `μ.map ((Zc, Xs), Yo)` を 3 重 compProd `μ.map Zc ⊗ₘ condDistrib Xs Zc μ ⊗ₘ
-   condDistrib Yo (Zc, Xs) μ` に分解 (`compProd_map_condDistrib` を 2 回 + `compProd_assoc`)
-2. RHS の積測度 `(μ.map (Zc, Xs)).prod (μ.map Yo)` も同様に compProd 形へ
-3. `klDiv_compProd_eq_add` を 1 段適用し `I(Z;Y)` と condMI 部分に分離
-4. condMI 部分を `klDiv` の積分形 (`condMutualInfo` の定義) に書き換え
-
-最大の plumbing 障壁は `Kernel.compProd_assoc` (`map prodAssoc.symm` 形) を Measure 側に
-下ろす書き換え。推定 40〜60 行。 -/
+戦略 (chain rule plumbing on `(Z × X) × Y → (Z × Y) × X`):
+1. `permZXY_ZYX` で LHS の両引数を `(Z × Y) × X` 上に押し出す
+   - 第1引数 `μ.map ((Zc, Xs), Yo)` ↦ `μ.map ((Zc, Yo), Xs) = (μ.map (Zc, Yo)) ⊗ₘ condDistrib Xs (Zc, Yo) μ`
+   - 第2引数 `(μ.map (Zc, Xs)).prod (μ.map Yo)` ↦ `((μ.map Zc).prod (μ.map Yo)) ⊗ₘ Kernel.prodMkRight Y (condDistrib Xs Zc μ)` (`product_map_perm_eq_compProd`)
+2. `klDiv_compProd_eq_add` を base `(Z, Y) + X kernel` で適用
+   - 第1項 = `klDiv (μ.map (Zc, Yo)) ((μ.map Zc).prod (μ.map Yo)) = mutualInfo Zc Yo`
+   - 第2項 = `klDiv ((μ.map (Zc, Yo)) ⊗ₘ K) ((μ.map (Zc, Yo)) ⊗ₘ K')` (両 base 同一)
+3. 第2項を `permZYX_Z_XY` で `Z × (X × Y)` 上に再度押し出して `condMutualInfo` 形に対応
+   (`factored_map_perm_eq_compProd_prod` + `compProd_map_condDistrib`) -/
 theorem mutualInfo_chain_rule
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     [StandardBorelSpace X] [Nonempty X]
@@ -94,7 +224,66 @@ theorem mutualInfo_chain_rule
     (hXs : Measurable Xs) (hYo : Measurable Yo) (hZc : Measurable Zc) :
     mutualInfo μ (fun ω => (Zc ω, Xs ω)) Yo
       = mutualInfo μ Zc Yo + condMutualInfo μ Xs Yo Zc := by
-  sorry
+  set K_X : Kernel Z X := condDistrib Xs Zc μ with hK_X
+  set K_Y : Kernel Z Y := condDistrib Yo Zc μ with hK_Y
+  set K_joint : Kernel Z (X × Y) := condDistrib (fun ω => (Xs ω, Yo ω)) Zc μ with hK_joint
+  set K_pair : Kernel (Z × Y) X := condDistrib Xs (fun ω => (Zc ω, Yo ω)) μ with hK_pair
+  have hZX : Measurable (fun ω => (Zc ω, Xs ω)) := hZc.prodMk hXs
+  have hZY : Measurable (fun ω => (Zc ω, Yo ω)) := hZc.prodMk hYo
+  have hZXY : Measurable (fun ω => ((Zc ω, Xs ω), Yo ω)) := hZX.prodMk hYo
+  have hZYX : Measurable (fun ω => ((Zc ω, Yo ω), Xs ω)) := hZY.prodMk hXs
+  -- Step 1: push LHS through permZXY_ZYX
+  have h_joint_map :
+      (μ.map (fun ω => ((Zc ω, Xs ω), Yo ω))).map (permZXY_ZYX Z X Y)
+        = μ.map (fun ω => ((Zc ω, Yo ω), Xs ω)) := by
+    rw [Measure.map_map (permZXY_ZYX Z X Y).measurable hZXY]; rfl
+  have h_joint_compProd :
+      μ.map (fun ω => ((Zc ω, Yo ω), Xs ω))
+        = (μ.map (fun ω => (Zc ω, Yo ω))) ⊗ₘ K_pair :=
+    (compProd_map_condDistrib hXs.aemeasurable).symm
+  have h_LHS_klDiv :
+      mutualInfo μ (fun ω => (Zc ω, Xs ω)) Yo
+        = klDiv ((μ.map (fun ω => (Zc ω, Yo ω))) ⊗ₘ K_pair)
+                (((μ.map Zc).prod (μ.map Yo)) ⊗ₘ Kernel.prodMkRight Y K_X) := by
+    unfold mutualInfo
+    rw [← klDiv_map_measurableEquiv (permZXY_ZYX Z X Y), h_joint_map, h_joint_compProd,
+        product_map_perm_eq_compProd μ Xs Yo Zc hXs hYo hZc]
+  -- Step 2: apply chain rule (Markov kernel instances needed)
+  have hPZ : IsProbabilityMeasure (μ.map Zc) := Measure.isProbabilityMeasure_map hZc.aemeasurable
+  have hPY : IsProbabilityMeasure (μ.map Yo) := Measure.isProbabilityMeasure_map hYo.aemeasurable
+  have hPZY : IsProbabilityMeasure (μ.map (fun ω => (Zc ω, Yo ω))) :=
+    Measure.isProbabilityMeasure_map hZY.aemeasurable
+  -- Markov kernel instances (needed for klDiv_compProd_eq_add)
+  haveI : IsMarkovKernel K_pair := by rw [hK_pair]; infer_instance
+  haveI : IsMarkovKernel (Kernel.prodMkRight Y K_X) := by rw [hK_X]; infer_instance
+  rw [h_LHS_klDiv,
+      klDiv_compProd_eq_add (μ.map (fun ω => (Zc ω, Yo ω)))
+        ((μ.map Zc).prod (μ.map Yo)) K_pair (Kernel.prodMkRight Y K_X)]
+  -- Goal: klDiv μ_ZY (μ_Z × μ_Y) + klDiv (μ_ZY ⊗ K_pair) (μ_ZY ⊗ K_prodRight)
+  --     = mutualInfo μ Zc Yo + condMutualInfo μ Xs Yo Zc
+  congr 1
+  -- Second term: klDiv ((μ.map (Zc, Yo)) ⊗ₘ K_pair) ((μ.map (Zc, Yo)) ⊗ₘ Kernel.prodMkRight Y K_X)
+  --             = condMutualInfo μ Xs Yo Zc
+  haveI : IsProbabilityMeasure
+      ((μ.map (fun ω => (Zc ω, Yo ω))) ⊗ₘ K_pair) := by infer_instance
+  haveI : IsProbabilityMeasure
+      ((μ.map (fun ω => (Zc ω, Yo ω))) ⊗ₘ Kernel.prodMkRight Y K_X) := by infer_instance
+  -- Push both args through permZYX_Z_XY (klDiv invariant)
+  rw [← klDiv_map_measurableEquiv (permZYX_Z_XY Z X Y)
+        ((μ.map (fun ω => (Zc ω, Yo ω))) ⊗ₘ K_pair)
+        ((μ.map (fun ω => (Zc ω, Yo ω))) ⊗ₘ Kernel.prodMkRight Y K_X)]
+  -- Compute the two pushforwards:
+  -- (1) ((μ.map (Zc, Yo)) ⊗ₘ K_pair).map perm = (μ.map Zc) ⊗ₘ K_joint
+  have h_first :
+      ((μ.map (fun ω => (Zc ω, Yo ω))) ⊗ₘ K_pair).map (permZYX_Z_XY Z X Y)
+        = (μ.map Zc) ⊗ₘ K_joint := by
+    rw [← h_joint_compProd, Measure.map_map (permZYX_Z_XY Z X Y).measurable hZYX]
+    have : (permZYX_Z_XY Z X Y) ∘ (fun ω => ((Zc ω, Yo ω), Xs ω))
+        = fun ω => (Zc ω, (Xs ω, Yo ω)) := by ext ω <;> rfl
+    rw [this]
+    exact (compProd_map_condDistrib (hXs.prodMk hYo).aemeasurable).symm
+  rw [h_first, factored_map_perm_eq_compProd_prod μ Xs Yo Zc hXs hYo hZc]
+  rfl
 
 /-- Markov chain `Xs → Zc → Yo` (γ-form) ⇒ `I(X; Y | Z) = 0`.
 

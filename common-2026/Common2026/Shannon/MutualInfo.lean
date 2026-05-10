@@ -49,7 +49,7 @@ Mathlib 不在 (Phase 4-M0 在庫調査確認済) のため自作。
 `(μ.map e).rnDeriv (ν.map e) ∘ e =ᵐ[ν] μ.rnDeriv ν` を得て、`lintegral_map_equiv` で
 `∫⁻ ∂(ν.map e)` を `∫⁻ ∂ν` に翻訳、`klDiv_eq_lintegral_klFun_of_ac` で結ぶ。
 非 `≪` 側は `e.symm` で逆変換して矛盾。 -/
-private theorem klDiv_map_measurableEquiv {α β : Type*}
+theorem klDiv_map_measurableEquiv {α β : Type*}
     [MeasurableSpace α] [MeasurableSpace β]
     (e : α ≃ᵐ β) (μ ν : Measure α) [IsFiniteMeasure μ] [IsFiniteMeasure ν] :
     klDiv (μ.map e) (ν.map e) = klDiv μ ν := by
