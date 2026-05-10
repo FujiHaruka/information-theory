@@ -455,3 +455,22 @@ end InformationTheory.Shannon.Stein
 - Bernoulli KL の評価 (Phase C.2)
 - `Tendsto` 形統合 (Phase D)
 - 撤退ライン到達のため、Phase C/D は別 plan に切り出すか次セッションへ繰越
+
+### 2026-05-11 (再試行) — Phase C/D は別 moonshot plan として切り出し確定
+
+**状況**: Phase A〜B 完了直後の同日、Phase C/D 試行を 5 ターン制限で attack するセッションを起動。`docs/shannon/stein-moonshot-plan.md` + `Common2026/Shannon/Stein.lean` を読み戦略を判断した結果、**5 ターン以内では Phase C/D の plumbing 量 (200〜400 行、3 段の新規補題) に届かない**ことが計画記述から明白だったため、計画推奨ルートの **「skeleton も追加せず、現状 (Phase A〜B のみ) で締めて Phase C/D を別 moonshot plan に切り出す」** に従い即時撤退。
+
+**判断根拠 (再確認)**:
+- Phase C は (i) Pi 化 KL chain rule (A.7、40〜80 行)、(ii) DPI reduction (C.1、30〜60 行)、(iii) Bernoulli KL 評価 (C.2、30〜60 行)、(iv) `∀ᶠ` 乗せ替え (C.3〜C.4、50〜90 行) の 4 段、合計 150〜290 行の plumbing
+- skeleton (= statement に `:= by sorry`) を追加するだけでも 5 ターン中の 1〜2 ターンを消費、緑維持のため `omit` / `variable` 配置の調整が要るリスクあり
+- 計画推奨ルート (skeleton も追加せず別 plan 切り出し) が **本シードの整合性が最も高い**: 撤退時 sorry 0 / warning 0 を維持
+
+**確認した状態**:
+- `lake env lean Common2026/Shannon/Stein.lean` silent (warning 0、error 0、sorry 0)
+- `lake build` 緑通過 (2771 jobs)
+- 本シードは Phase A〜B (= Stein achievability publish ライン) で **完了**として close
+
+**次セッションへの引継ぎ**:
+- 別 moonshot plan を起こす (例: `docs/shannon/stein-converse-moonshot-plan.md`) ─ Phase C (converse) + Phase D (統合形) を独立 plan としてリスタート
+- A.7 `klDiv_pi_eq_n_smul` を Phase C の Phase 0 として独立に組む (Mathlib `klDiv_compProd_eq_add` + `MeasurableEquiv.piFinSuccAbove` で induction)
+- 起点ファイルは `Common2026/Shannon/Stein.lean` (本シードの成果物) に append する形を想定

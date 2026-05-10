@@ -72,3 +72,20 @@ Mathlib `Measure.pi_singleton : Measure.pi μ {f} = ∏ i, μ i {f i}` (`Mathlib
 1. `klDiv_pi_eq_n_smul` を Phase C の前段で実装 (`Mathlib/InformationTheory/KullbackLeibler/ChainRule.lean` の `klDiv_compProd_eq_add` + `klDiv_compProd_left` + `MeasurableEquiv.piFinSuccAbove` で induction、計画 Phase A.7 参照)
 2. `stein_converse` (`stein_achievability` の dual statement) skeleton を sorry-driven で書く
 3. Phase D の統合形 `stein_lemma` (両側 bound → `Tendsto`) を最後に締める
+
+## Phase C/D 試行結果 (2026-05-11 再試行)
+
+**結果**: **(c) 撤退** ─ Phase A〜B のみで本シードを締め、Phase C/D は別 moonshot plan に切り出し確定。
+
+**経緯**: Phase A〜B 完了直後の同日、5 ターン制限付きで Phase C/D を attack するセッションを起動。状況把握 (計画 + 既存実装 read) のターンで、計画記述の plumbing 見積 (Phase C: 150〜290 行 / 3 段の実質新規補題、Phase D: 30〜80 行) と 5 ターン制限が **ミスマッチ** であることが確定。計画推奨ルート「skeleton も追加せず、現状で締めて Phase C/D を別 plan に切り出す」に即時従い、:= by sorry skeleton も追加せず本シードを close。
+
+**実装に詰まったわけではない (= 5 ターン制限による設計上の撤退)**:
+- 本セッションは試行の前段 (状況把握 + 戦略判断) で「5 ターン以内に attack 不能」を確定
+- Lean/Mathlib 側の具体的詰まりは観察できず (Phase C/D は本セッションでは触らず)
+- 観察できたのは「**Phase C/D を attack する場合、5 ターン制限はそもそも合わない、独立セッション (1〜1.5 週) を割く必要がある**」という工数感のリアリティ
+
+**次セッションへの追加引継ぎ (Phase C/D 切り出し plan)**:
+- 別 plan (例: `docs/shannon/stein-converse-moonshot-plan.md`) を起こし、Phase C/D を 1〜2 週見積で独立 attack
+- 起点ファイルは本シードの成果物 `Common2026/Shannon/Stein.lean` (626 行、Phase A〜B 緑) を `import` または直接 append
+- A.7 `klDiv_pi_eq_n_smul` は別 plan の Phase 0 として独立に組む
+- 撤退ラインは別 plan 内で再設計 (本シードの撤退ライン = Phase A〜B 完了 = 既達)
