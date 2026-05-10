@@ -34,16 +34,22 @@ variable {X : Type*} [MeasurableSpace X]
 variable {Y : Type*} [MeasurableSpace Y]
 variable {Z : Type*} [MeasurableSpace Z]
 
-/-- Conditional mutual information via KL divergence:
-`I(X; Y | Z) := ∫ KL(P_{(X,Y) | Z=z} ‖ P_{X | Z=z} ⊗ P_{Y | Z=z}) dP_Z(z)`. -/
+/-- Conditional mutual information via KL divergence (compProd form):
+`I(X; Y | Z) := KL(P_Z ⊗ P_{(X,Y)|Z} ‖ P_Z ⊗ (P_{X|Z} × P_{Y|Z}))`.
+
+第 1 引数は `compProd_map_condDistrib` で `μ.map (Zc, Xs, Yo)` と等しい。compProd 形を直接の
+定義として採用する理由: Mathlib の chain rule (`klDiv_compProd_eq_add`) と直結し、γ-form Markov
+仮定下で `condMutualInfo = 0` が `klDiv_self` で trivial に従う。
+
+教科書的な積分形 `∫⁻ z, klDiv (κ_joint z) (κ_factored z) ∂(μ.map Z)` との同値性 (条件付き KL の
+公式) は補題として将来追加可能 (Mathlib に直接対応する補題は不在 — 必要になったら自作)。 -/
 noncomputable def condMutualInfo
     (μ : Measure Ω) [IsFiniteMeasure μ]
     [StandardBorelSpace X] [Nonempty X]
     [StandardBorelSpace Y] [Nonempty Y]
     (Xs : Ω → X) (Yo : Ω → Y) (Zc : Ω → Z) : ℝ≥0∞ :=
-  ∫⁻ z, klDiv (condDistrib (fun ω => (Xs ω, Yo ω)) Zc μ z)
-              ((condDistrib Xs Zc μ z).prod (condDistrib Yo Zc μ z))
-        ∂(μ.map Zc)
+  klDiv ((μ.map Zc) ⊗ₘ condDistrib (fun ω => (Xs ω, Yo ω)) Zc μ)
+        ((μ.map Zc) ⊗ₘ ((condDistrib Xs Zc μ) ×ₖ (condDistrib Yo Zc μ)))
 
 /-- Conditional mutual information is non-negative (signature 上自明、`klDiv` が `ℝ≥0∞` 値)。 -/
 theorem condMutualInfo_nonneg
@@ -53,15 +59,21 @@ theorem condMutualInfo_nonneg
     (Xs : Ω → X) (Yo : Ω → Y) (Zc : Ω → Z) :
     0 ≤ condMutualInfo μ Xs Yo Zc := bot_le
 
-/-- Markov chain `Xs → Zc → Yo` (β-form, condDistrib 等式形): `Yo` の (Zc, Xs) 条件付き分布が
-`Zc` のみに依存する。Mathlib `condIndepFun_iff_condDistrib_prod_ae_eq_prodMkRight`
-(`Conditional.lean:867`) の RHS をそのまま定義として採用。 -/
+/-- Markov chain `Xs → Zc → Yo` (γ-form, joint factorization): 結合分布が `Zc` を介して
+`Xs` と `Yo` の条件付き分布の積に分解される。Mathlib `condIndepFun_iff_map_prod_eq_prod_
+condDistrib_prod_condDistrib` (`Conditional.lean:817`) の RHS と同型。
+
+β-form (condDistrib 等式形 + `prodMkRight`) は `[StandardBorelSpace Ω]` を経由する Mathlib
+lemma を要するため (`Conditional.lean:867` の `condIndepFun_iff_condDistrib_prod_ae_eq_prodMkRight`
+は `[StandardBorelSpace Ω]` 必須)、ここでは Ω への追加制約を避けて γ-form を採用。
+
+両形式は標準 Borel 仮定下で同値 (Mathlib lemma 経由)。 -/
 def IsMarkovChain (μ : Measure Ω) [IsFiniteMeasure μ]
+    [StandardBorelSpace X] [Nonempty X]
     [StandardBorelSpace Y] [Nonempty Y]
     (Xs : Ω → X) (Zc : Ω → Z) (Yo : Ω → Y) : Prop :=
-  condDistrib Yo (fun ω => (Zc ω, Xs ω)) μ
-    =ᵐ[μ.map (fun ω => (Zc ω, Xs ω))]
-    (condDistrib Yo Zc μ).prodMkRight X
+  μ.map (fun ω => (Zc ω, Xs ω, Yo ω))
+    = (μ.map Zc) ⊗ₘ ((condDistrib Xs Zc μ) ×ₖ (condDistrib Yo Zc μ))
 
 /-- Chain rule: `I((Z, X); Y) = I(Z; Y) + I(X; Y | Z)`.
 
@@ -84,12 +96,11 @@ theorem mutualInfo_chain_rule
       = mutualInfo μ Zc Yo + condMutualInfo μ Xs Yo Zc := by
   sorry
 
-/-- Markov chain `Xs → Zc → Yo` ⇒ `I(X; Y | Z) = 0`.
+/-- Markov chain `Xs → Zc → Yo` (γ-form) ⇒ `I(X; Y | Z) = 0`.
 
-戦略: β 形式の Markov 等式で `condDistrib Yo (Zc, Xs) μ z =ᵐ condDistrib Yo Zc μ z` を取り出し、
-`condMutualInfo` の被積分関数 `klDiv ((condDistrib (Xs, Yo) Zc μ) z) ((condDistrib Xs Zc μ z).prod
-(condDistrib Yo Zc μ z))` が ae-zero になることを示す (kernel 共有 ⇒ klDiv = 0、または
-`klDiv_compProd_left` 経由)。推定 20〜30 行。 -/
+γ-form 採用により直接的な証明: condMutualInfo の第1引数 `(μ.map Zc) ⊗ₘ condDistrib (Xs, Yo) Zc μ`
+は `compProd_map_condDistrib` で `μ.map (Zc, Xs, Yo)` と一致し、γ-form Markov の RHS が第2引数
+そのものなので、両者が等しく `klDiv_self` で 0。 -/
 theorem condMutualInfo_eq_zero_of_markov
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     [StandardBorelSpace X] [Nonempty X]
@@ -98,7 +109,12 @@ theorem condMutualInfo_eq_zero_of_markov
     (hXs : Measurable Xs) (hZc : Measurable Zc) (hYo : Measurable Yo)
     (hmarkov : IsMarkovChain μ Xs Zc Yo) :
     condMutualInfo μ Xs Yo Zc = 0 := by
-  sorry
+  unfold condMutualInfo
+  have h_pair : Measurable (fun ω => (Xs ω, Yo ω)) := hXs.prodMk hYo
+  have h_num_eq : (μ.map Zc) ⊗ₘ condDistrib (fun ω => (Xs ω, Yo ω)) Zc μ
+      = μ.map (fun ω => (Zc ω, Xs ω, Yo ω)) := compProd_map_condDistrib h_pair.aemeasurable
+  rw [h_num_eq, hmarkov]
+  exact klDiv_self _
 
 /-- Markov chain `Xs → Zc → Yo` ⇒ `I(Xs; Yo) ≤ I(Zc; Yo)`.
 
