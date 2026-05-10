@@ -16,7 +16,7 @@
 - [x] Phase 0 — Mathlib + 既存 Common2026 API インベントリ ✅ → [`aep-mathlib-inventory.md`](aep-mathlib-inventory.md)
 - [x] Phase A — i.i.d. 列の formal definition + Pi 値 plumbing ✅ (= `jointRV` 定義 + 基本 `Measurable` のみ、Pi 構築は Phase B/C で実需要が出るまで保留 / 結局 B では不要、C.3 でのみ要)
 - [x] Phase B — probability AEP (`P{|−(1/n) log P(X^n) − H(X)| ≥ ε} → 0`) ✅
-- [ ] Phase C — typical set `T_ε^n` 🔄 (`measurableSet_typicalSet` ✅ / `typicalSet_prob_tendsto_one` ✅ / `typicalSet_card_le` ❌ — 部分撤退、`sorry` 残)  ⬅ **撤退ラインはここ**
+- [x] Phase C — typical set `T_ε^n` ✅ (`measurableSet_typicalSet` ✅ / `typicalSet_prob_tendsto_one` ✅ / `typicalSet_card_le` ✅ — `[∀ x, P(x) > 0]` 仮定追加で完了)  ⬅ **撤退ラインはここ — Phase A〜C 完了 = AEP 単体 publish ライン到達**
 - [ ] Phase D — 源符号化定理 weak converse (`liminf_n (log M_n / n) ≥ entropy μ X`) 📋 (deferred to next session)
 - [ ] Phase E — achievability (rate > H で error → 0) 📋 (deferred to next session)
 
@@ -433,4 +433,12 @@ end InformationTheory.Shannon
 **Phase C.3 撤退**: `typicalSet_card_le` (size bound `|T| ≤ exp(n(H+ε))`) は本セッション撤退。理由: 証明には (a) `pmfLog` の sum を `log (∏ P(x i))` に展開 (`Real.log_prod` + `P > 0` per-i)、(b) `∑_{x : Fin n → α} ∏ P(x i) = 1` (`Finset.prod_sum` の dual + `IsProbabilityMeasure (μ.map (Xs 0))` で `∑ P = 1`)、(c) `Real.exp` への往復、の 3 段が必要で見積もり 80〜120 行。**サポート外点 (`P(x) = 0`) の handling** が log_prod の `≠ 0` 仮定と衝突するため、`[∀ x, μ.map (Xs 0) {x} > 0]` (= サポート全体) 仮定追加で plumbing を軽くするのが筋。本セッションの「Phase A〜C 緑通過 = 完了」ライン到達済み (Phase A + Phase B + Phase C のうち 2/3 = `measurableSet_typicalSet` / `typicalSet_prob_tendsto_one` 完了) なので、C.3 は次セッションに分離。
 
 **Phase D / E**: 当初計画通り次セッション以降。本セッションのスコープ外。
+
+### 2026-05-11 — 第 2 セッション
+
+**Phase C.3 完了 (option A 採用)**: `typicalSet_card_le` の `sorry` を `[∀ x, (μ.map (Xs 0)).real {x} > 0]` (= `hpos` 仮定) 追加で埋めた。約 90 行追加、`lake env lean` silent / `lake build` 緑通過。第 1 セッションが見積もった撤退ライン (option A +30〜50 行) より plumbing がやや多かったが、戦略は計画通り。
+
+**`Real.log_prod` を回避し `Real.exp_sum` で進めたのが効いた**: 教科書経路の `−log P^n(x) = −∑ log P(x_i)` を `log` 側で展開する代わりに、`exp(−pmfLog x_i) = P x_i` の per-point 等式 (`Real.exp_log (hpos x)`) と `Real.exp_sum : exp(∑ f_i) = ∏ exp(f_i)` で `∏ P(x_i) = exp(−∑ pmfLog x_i)` を組み立てた。結果、`Real.log_prod` の `≠ 0` 仮定 + サポート外点 `Real.log 0 = 0` 規約との往復が不要、`hpos` から `Real.exp_log` を 1 回呼ぶだけで済んだ。教訓: **「`log` の和を展開する」より「`exp` の積を展開する」方が、log 0 = 0 規約周りの plumbing を回避しやすい**。
+
+**追加仮定なし路線が破綻した理由**: 第 1 セッションの所感「Phase B では `Real.log 0 = 0` で素通りだったので C.3 も追加仮定なしで」は **C.3 では破綻**。理由: Phase B は **期待値 (積分) 計算** で `negMulLog 0 = 0 · 0 = 0` がサポート外点を自動で 0 寄与にするが、Phase C.3 は **card の下界** (= 各点で量を持ち上げる方向) で、サポート外点 `x ∈ T` に対して下界量 `∏ P(x_i) ≥ exp(−n(H+ε))` が `0 ≥ exp(...)` で破綻する。具体的に: $f(x) = \exp(-\sum \text{pmfLog}\ x_i)$ をサポート外点込みで定義しても、$\sum_x f(x) = (1 + |\{x:P(x)=0\}|)^n$ となり $\neq 1$ で和の上界が `exp` の積構造で閉じない。card_le に必要な「下界量 × card ≤ 1」が成立しない。教訓: **Mathlib `Real.log 0 = 0` 規約は積分計算 (寄与 0 で済む) では素通りだが、card 上界 (寄与の正の下界が必要) では追加仮定で潰すのが筋**。
 

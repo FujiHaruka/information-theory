@@ -241,18 +241,123 @@ theorem measurableSet_typicalSet
 `Real.exp` rather than `2^x` to avoid the `log 2` plumbing — the textbook
 form follows by re-basing the logarithm.
 
-**注**: 本補題は本シードの撤退ラインに該当 (`docs/proof-logs/proof-log-aep.md`
-判断ログ参照)。証明には (a) `pmfLog` の sum を `log (∏ P(x i))` に展開、
-(b) Phase A の `μ.map (jointRV) = Measure.pi` (= i.i.d. 直積分布) で全 typical
-ブロックの確率和を上界、(c) `Real.exp` への往復、の 3 段が必要。Phase A の
-Pi 構築 + サポート外点 (`P(x) = 0`) handling が最大の plumbing。次セッションで
-再開予定。 -/
+**仮定 `hpos`**: 教科書 statement (Cover-Thomas Theorem 3.1.2) は暗黙に
+"support 全体" を仮定している。Mathlib `Real.log 0 = 0` 規約のもとでも、
+サポート外点を含む typical block の card は和で評価できないため (`pmfLog x i = 0`
+for `P(x_i) = 0` ⇒ $\exp(-\sum \text{pmfLog})$ が $P^n(x) = 0$ より厳密に大きくなり
+下界として使えない)、`[∀ x, P(x) > 0]` を追加で受ける。 -/
 theorem typicalSet_card_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (n : ℕ) {ε : ℝ} (hε : 0 < ε) :
+    (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (hpos : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    (n : ℕ) {ε : ℝ} (hε : 0 < ε) :
     ((typicalSet μ Xs n ε).toFinite.toFinset.card : ℝ) ≤
       Real.exp ((n : ℝ) * (entropy μ (Xs 0) + ε)) := by
-  sorry
+  -- Notation: write `P x := (μ.map (Xs 0)).real {x}` for the marginal pmf.
+  set P : α → ℝ := fun x => (μ.map (Xs 0)).real {x} with hP_def
+  -- Key fact 1: `pmfLog μ Xs x = -Real.log (P x)`, so `exp (-pmfLog μ Xs x) = P x`
+  -- (using `hpos x` so `P x > 0` and `Real.exp_log` applies).
+  have hP_pos : ∀ x, 0 < P x := hpos
+  have hexp_pmfLog : ∀ x, Real.exp (-(pmfLog μ Xs x)) = P x := by
+    intro x
+    have : -(pmfLog μ Xs x) = Real.log (P x) := by
+      simp [pmfLog, hP_def]
+    rw [this, Real.exp_log (hP_pos x)]
+  -- Key fact 2: `∑ x, P x = 1` (since `μ.map (Xs 0)` is a probability measure).
+  have hMprob : IsProbabilityMeasure (μ.map (Xs 0)) :=
+    Measure.isProbabilityMeasure_map (hXs 0).aemeasurable
+  have hsum_P : (∑ x : α, P x) = 1 := by
+    have h1 : (∑ x : α, P x) = (μ.map (Xs 0)).real (Finset.univ : Finset α) := by
+      simp [hP_def, sum_measureReal_singleton]
+    rw [h1]
+    show (μ.map (Xs 0)).real ↑(Finset.univ : Finset α) = 1
+    rw [Finset.coe_univ]
+    exact probReal_univ
+  -- Key fact 3: lower bound on `∏ i, P (x i)` for `x ∈ typicalSet`.
+  -- From `x ∈ T_ε^n` we get `(∑ i, pmfLog μ Xs (x i)) / n - H < ε`,
+  -- i.e. `∑ i, pmfLog μ Xs (x i) < n * (H + ε)` (when `n > 0`).
+  -- Hence `exp (-(∑ i, pmfLog (x i))) > exp (-n * (H + ε))`, i.e.
+  -- `∏ i, P (x i) ≥ exp (-n * (H + ε))`.
+  set H : ℝ := entropy μ (Xs 0) with hH_def
+  -- Bound the cardinality. Two cases: `n = 0` (trivial) and `n > 0` (main case).
+  rcases Nat.eq_zero_or_pos n with hn0 | hnpos
+  · -- n = 0: `Fin 0 → α` has a unique element, card ≤ 1 ≤ exp _.
+    subst hn0
+    have hcard_le : ((typicalSet μ Xs 0 ε).toFinite.toFinset.card : ℝ) ≤ 1 := by
+      have h_le : (typicalSet μ Xs 0 ε).toFinite.toFinset.card ≤ 1 := by
+        have h_sub : (typicalSet μ Xs 0 ε).toFinite.toFinset ⊆ (Finset.univ : Finset (Fin 0 → α)) :=
+          fun x _ => Finset.mem_univ x
+        calc (typicalSet μ Xs 0 ε).toFinite.toFinset.card
+            ≤ (Finset.univ : Finset (Fin 0 → α)).card := Finset.card_le_card h_sub
+          _ = Fintype.card (Fin 0 → α) := rfl
+          _ = 1 := by rw [Fintype.card_fun, Fintype.card_fin]; simp
+      exact_mod_cast h_le
+    calc ((typicalSet μ Xs 0 ε).toFinite.toFinset.card : ℝ)
+        ≤ 1 := hcard_le
+      _ = Real.exp ((0 : ℕ) * (H + ε)) := by
+          rw [Nat.cast_zero, zero_mul, Real.exp_zero]
+  · -- n > 0: use the typical-set inequality.
+    have hn_pos_R : (0 : ℝ) < n := by exact_mod_cast hnpos
+    -- Step 1: lower bound on `∏ i, P (x i)` for `x ∈ T_ε^n`.
+    have h_prod_lb : ∀ x ∈ (typicalSet μ Xs n ε).toFinite.toFinset,
+        Real.exp (-((n : ℝ) * (H + ε))) ≤ ∏ i : Fin n, P (x i) := by
+      intro x hx
+      have hxT : x ∈ typicalSet μ Xs n ε :=
+        (Set.Finite.mem_toFinset _).mp hx
+      rw [mem_typicalSet_iff] at hxT
+      -- Extract `(∑ i, pmfLog (x i)) / n < H + ε`.
+      have hupper : (∑ i : Fin n, pmfLog μ Xs (x i)) / n - H < ε :=
+        (abs_lt.mp hxT).2
+      have hupper' : (∑ i : Fin n, pmfLog μ Xs (x i)) / n < H + ε := by linarith
+      have hsum_lt : (∑ i : Fin n, pmfLog μ Xs (x i)) < (n : ℝ) * (H + ε) := by
+        have := (div_lt_iff₀ hn_pos_R).mp hupper'
+        linarith
+      have hneg : -((n : ℝ) * (H + ε)) < -(∑ i : Fin n, pmfLog μ Xs (x i)) := by linarith
+      -- `exp` is monotone.
+      have hexp_lt : Real.exp (-((n : ℝ) * (H + ε)))
+          < Real.exp (-(∑ i : Fin n, pmfLog μ Xs (x i))) := Real.exp_lt_exp.mpr hneg
+      -- Rewrite RHS as `∏ i, P (x i)`.
+      have h_rhs : Real.exp (-(∑ i : Fin n, pmfLog μ Xs (x i)))
+          = ∏ i : Fin n, P (x i) := by
+        rw [← Finset.sum_neg_distrib, Real.exp_sum]
+        exact Finset.prod_congr rfl fun i _ => hexp_pmfLog (x i)
+      rw [h_rhs] at hexp_lt
+      exact hexp_lt.le
+    -- Step 2: `∑ x ∈ T, ∏ i, P (x i) ≤ ∑ x : Fin n → α, ∏ i, P (x i) = 1`.
+    have h_total : (∑ x : Fin n → α, ∏ i : Fin n, P (x i)) = 1 := by
+      classical
+      rw [← Fintype.piFinset_univ, Finset.sum_prod_piFinset]
+      simp [hsum_P]
+    have h_nonneg : ∀ x : Fin n → α, 0 ≤ ∏ i : Fin n, P (x i) := by
+      intro x
+      exact Finset.prod_nonneg (fun i _ => (hP_pos (x i)).le)
+    have h_sum_T_le : (∑ x ∈ (typicalSet μ Xs n ε).toFinite.toFinset,
+        ∏ i : Fin n, P (x i)) ≤ 1 := by
+      calc (∑ x ∈ (typicalSet μ Xs n ε).toFinite.toFinset, ∏ i : Fin n, P (x i))
+          ≤ ∑ x : Fin n → α, ∏ i : Fin n, P (x i) := by
+              apply Finset.sum_le_sum_of_subset_of_nonneg
+              · intro x _; exact Finset.mem_univ x
+              · intro x _ _; exact h_nonneg x
+        _ = 1 := h_total
+    -- Step 3: `|T| · exp(-n(H+ε)) ≤ ∑ x ∈ T, ∏ i, P (x i) ≤ 1`.
+    have h_card_lb : ((typicalSet μ Xs n ε).toFinite.toFinset.card : ℝ)
+        * Real.exp (-((n : ℝ) * (H + ε)))
+        ≤ ∑ x ∈ (typicalSet μ Xs n ε).toFinite.toFinset, ∏ i : Fin n, P (x i) := by
+      have h_const : (∑ _x ∈ (typicalSet μ Xs n ε).toFinite.toFinset,
+            Real.exp (-((n : ℝ) * (H + ε))))
+          = ((typicalSet μ Xs n ε).toFinite.toFinset.card : ℝ)
+              * Real.exp (-((n : ℝ) * (H + ε))) := by
+        rw [Finset.sum_const, nsmul_eq_mul]
+      rw [← h_const]
+      exact Finset.sum_le_sum h_prod_lb
+    have h_combined : ((typicalSet μ Xs n ε).toFinite.toFinset.card : ℝ)
+        * Real.exp (-((n : ℝ) * (H + ε))) ≤ 1 := h_card_lb.trans h_sum_T_le
+    -- Step 4: divide by `exp(-n(H+ε)) > 0`.
+    have hexp_pos' : 0 < Real.exp ((n : ℝ) * (H + ε)) := Real.exp_pos _
+    have h_rewrite : Real.exp (-((n : ℝ) * (H + ε)))
+        = (Real.exp ((n : ℝ) * (H + ε)))⁻¹ := Real.exp_neg _
+    rw [h_rewrite, mul_inv_le_iff₀ hexp_pos'] at h_combined
+    linarith
 
 /-- **Typicality probability**: `P(jointRV Xs n ∈ T_ε^n) → 1`.
 
