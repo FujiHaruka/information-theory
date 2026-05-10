@@ -13,12 +13,12 @@
 
 ## 進捗
 
-- [ ] Phase 0 — Mathlib + 既存 Common2026 API インベントリ 📋 → [`aep-mathlib-inventory.md`](aep-mathlib-inventory.md)
-- [ ] Phase A — i.i.d. 列の formal definition + Pi 値 plumbing 📋
-- [ ] Phase B — probability AEP (`P{|−(1/n) log P(X^n) − H(X)| ≥ ε} → 0`) 📋
-- [ ] Phase C — typical set `T_ε^n` measurability + size bound + typicality probability 📋  ⬅ **撤退ラインはここ**
-- [ ] Phase D — 源符号化定理 weak converse (`liminf_n (log M_n / n) ≥ entropy μ X`) 📋 (撤退時 deferred)
-- [ ] Phase E — achievability (rate > H で error → 0) 📋 (撤退時 deferred)
+- [x] Phase 0 — Mathlib + 既存 Common2026 API インベントリ ✅ → [`aep-mathlib-inventory.md`](aep-mathlib-inventory.md)
+- [x] Phase A — i.i.d. 列の formal definition + Pi 値 plumbing ✅ (= `jointRV` 定義 + 基本 `Measurable` のみ、Pi 構築は Phase B/C で実需要が出るまで保留 / 結局 B では不要、C.3 でのみ要)
+- [x] Phase B — probability AEP (`P{|−(1/n) log P(X^n) − H(X)| ≥ ε} → 0`) ✅
+- [ ] Phase C — typical set `T_ε^n` 🔄 (`measurableSet_typicalSet` ✅ / `typicalSet_prob_tendsto_one` ✅ / `typicalSet_card_le` ❌ — 部分撤退、`sorry` 残)  ⬅ **撤退ラインはここ**
+- [ ] Phase D — 源符号化定理 weak converse (`liminf_n (log M_n / n) ≥ entropy μ X`) 📋 (deferred to next session)
+- [ ] Phase E — achievability (rate > H で error → 0) 📋 (deferred to next session)
 
 ## ゴール / Approach
 
@@ -422,4 +422,15 @@ end InformationTheory.Shannon
 
 書く頻度: Phase 中の方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
 
-<!-- まだ着手していないので空。本体実装で発見があれば追記。 -->
+### 2026-05-10 — 第 1 セッション
+
+**Phase A の小型化**: 計画上の `map_jointRV_eq_pi` (有限 Pi ↔ μ.map jointRV = Measure.pi 等式) は **Phase B では不要** (`strong_law_ae_real` は Pi 形ではなく `Y i := −log P(Xs i ω)` を直接受ける) と判断。Phase A は `jointRV` 定義 + 基本 `measurable_jointRV` のみに圧縮し、Pi 構築は Phase C.3 で実際に必要になったときまで保留。結果、**Phase A は半日相当で完了**、Phase B に直行。
+
+**Phase B 主役は `pmfLog : α → ℝ` 経由**: `logLikelihood μ Xs i ω = pmfLog μ Xs (Xs i ω)` と `pmfLog x := −log ((μ.map (Xs 0)).real {x})` で書き、`α : Fintype` の `Measurable.of_finite` で `pmfLog` の measurability、`Integrable.of_finite` で `pmfLog` の `(μ.map (Xs i))` 上 integrable、`Integrable.comp_measurable` で `logLikelihood i` の `μ` 上 integrable、`integral_map` + `integral_fintype` で期待値 = entropy、`IdentDistrib.comp` / `IndepFun.comp` で i.i.d. 性 lift、`strong_law_ae_real` で a.s. 収束、`tendstoInMeasure_of_tendsto_ae` + `tendstoInMeasure_iff_dist` で確率収束。**plumbing は当初予測 50〜100 行 → 実際 70 行で完了**、サポート外点 `P(x) = 0` の handling は **`Real.log 0 = 0` 規約と `pmfLog x = 0` で素通り** (期待値 = entropy で `negMulLog 0 = 0` も同じ規約)。事前撤退路線 (`[∀ x, μ.map (Xs 0) {x} > 0]` 仮定追加) は不要。
+
+**Phase B の `Pairwise (· ⟂ᵢ[μ] ·) on Xs` notation で parsing 詰まり**: `((· ⟂ᵢ[μ] ·) on Xs)` の anonymous lambda + `Function.onFun` 組み合わせが Lean 4 の elaborator で `⟂ᵢ[μ]` を `Prop` で解決して `on` を関数として要求 → mismatch。`Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j` の明示形に統一。Mathlib 内で `((· ⟂ᵢ[μ] ·) on Xs)` 表記が通っているのは StrongLaw.lean 内部の `variable` scope での special elaboration によると推測。ただし `strong_law_ae_real` への引数渡しは elaborator が unify するので問題なし。
+
+**Phase C.3 撤退**: `typicalSet_card_le` (size bound `|T| ≤ exp(n(H+ε))`) は本セッション撤退。理由: 証明には (a) `pmfLog` の sum を `log (∏ P(x i))` に展開 (`Real.log_prod` + `P > 0` per-i)、(b) `∑_{x : Fin n → α} ∏ P(x i) = 1` (`Finset.prod_sum` の dual + `IsProbabilityMeasure (μ.map (Xs 0))` で `∑ P = 1`)、(c) `Real.exp` への往復、の 3 段が必要で見積もり 80〜120 行。**サポート外点 (`P(x) = 0`) の handling** が log_prod の `≠ 0` 仮定と衝突するため、`[∀ x, μ.map (Xs 0) {x} > 0]` (= サポート全体) 仮定追加で plumbing を軽くするのが筋。本セッションの「Phase A〜C 緑通過 = 完了」ライン到達済み (Phase A + Phase B + Phase C のうち 2/3 = `measurableSet_typicalSet` / `typicalSet_prob_tendsto_one` 完了) なので、C.3 は次セッションに分離。
+
+**Phase D / E**: 当初計画通り次セッション以降。本セッションのスコープ外。
+
