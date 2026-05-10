@@ -44,4 +44,5 @@ import Common2026.Fano.Measure
 import Common2026.Shannon.MutualInfo
 import Common2026.Shannon.DPI
 import Common2026.Shannon.Bridge
+import Common2026.Shannon.CondMutualInfo
 import Common2026.Shannon.Converse
