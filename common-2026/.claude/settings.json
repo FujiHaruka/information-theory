@@ -1,5 +1,3 @@
 {
-  "enabledPlugins": {
-    "lean4-lake-lsp@claude-code-lsps": true
-  }
+  "enabledPlugins": {}
 }

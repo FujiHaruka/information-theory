@@ -20,13 +20,11 @@ A Lean 4 + Mathlib formalization project. Scope evolves; for the current focus s
 
 ## Verification
 
-The Lean LSP plugin (`lean4-lake-lsp@claude-code-lsps`) is enabled, so prefer LSP feedback plus single-file type-checking over full project builds.
+Prefer single-file `lake env lean <file>` over full project builds for the inner loop.
 
-- **Primary — LSP automatic diagnostics.** After every Write/Edit to a `.lean` file, the LSP server runs `lake setup-file` in the background and surfaces results as a `<new-diagnostics>` system-reminder within a few seconds. It covers both parse errors and proof failures (`unsolved goals`, `unknown identifier`, etc). Wait for this signal after each fill — silence (or only `declaration uses 'sorry'`) means the file is clean.
-- **Secondary — `lake env lean <file>` as the definitive synchronous check.** When you need an explicit verdict (e.g., before declaring a sorry-fill done), run it. Silent output = clean.
+- **Primary — `lake env lean <file>`** is the definitive synchronous check. Silent output = clean. Run after each fill / edit when you want an explicit verdict.
 - **Do NOT use `lake build` for verification.** It rebuilds every module in the library and is too slow for the inner loop. Reserve it for one-off project-wide sanity checks after a large refactor — never as the per-fill verifier.
-- **Known LSP limitation.** The LSP tool exposed here only surfaces `hover` / `documentSymbol` etc, not `lean_goal` or `lean_diagnostic_messages`. So mid-proof goal inspection (after each tactic) isn't directly available; fall back to reading error spans from `lake env lean <file>` when stuck.
-- **LSP shows stale errors after upstream edits.** The LSP runs `lake setup-file`, which locates `.olean` files but does not rebuild them. So when you change a public symbol, namespace, or signature in module A, the LSP keeps checking dependents against A's old `.olean` and reports phantom `unknown identifier` errors. In this situation `lake env lean <dependent>` will be silent — trust it over the LSP. To clear the LSP, run `lake build Common2026.<A>` once after the upstream edit; the dependent's next LSP check will pick up the fresh `.olean`.
+- **After upstream edits, dependents may need olean refresh.** When you change a public symbol, namespace, or signature in module A, dependents may still pick up A's old `.olean`. If `lake env lean <dependent>` reports phantom `unknown identifier`, run `lake build Common2026.<A>` once to refresh the olean.
 
 ## Mathlib API Search (loogle)
 
