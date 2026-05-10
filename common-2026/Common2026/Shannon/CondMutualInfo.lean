@@ -285,6 +285,66 @@ theorem mutualInfo_chain_rule
   rw [h_first, factored_map_perm_eq_compProd_prod μ Xs Yo Zc hXs hYo hZc]
   rfl
 
+/-- 条件付き相互情報量の対称性: `I(X; Y | Z) = I(Y; X | Z)`。
+
+戦略: 第 2 引数 `(X × Y)` を `(Y × X)` に交換する MeasurableEquiv
+`(refl Z).prodCongr prodComm : Z × (Y × X) ≃ᵐ Z × (X × Y)` を介し、
+`klDiv_map_measurableEquiv` で値不変。joint 側は `compProd_map_condDistrib` を 2 回挟んで
+`μ.map (Zc, Xs, Yo)` を経由、factored 側は `Measure.compProd_map` + `Kernel.prodComm_prod`
+で kernel の swap として処理。 -/
+theorem condMutualInfo_comm
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    [StandardBorelSpace X] [Nonempty X]
+    [StandardBorelSpace Y] [Nonempty Y]
+    (Xs : Ω → X) (Yo : Ω → Y) (Zc : Ω → Z)
+    (hXs : Measurable Xs) (hYo : Measurable Yo) (hZc : Measurable Zc) :
+    condMutualInfo μ Xs Yo Zc = condMutualInfo μ Yo Xs Zc := by
+  haveI : IsProbabilityMeasure (μ.map Zc) :=
+    Measure.isProbabilityMeasure_map hZc.aemeasurable
+  unfold condMutualInfo
+  have hXY : Measurable (fun ω => (Xs ω, Yo ω)) := hXs.prodMk hYo
+  have hYX : Measurable (fun ω => (Yo ω, Xs ω)) := hYo.prodMk hXs
+  let e : Z × (Y × X) ≃ᵐ Z × (X × Y) :=
+    (MeasurableEquiv.refl Z).prodCongr MeasurableEquiv.prodComm
+  -- joint pushforward via compProd_map_condDistrib + Measure.map_map
+  have h_joint :
+      ((μ.map Zc) ⊗ₘ condDistrib (fun ω => (Yo ω, Xs ω)) Zc μ).map e
+        = (μ.map Zc) ⊗ₘ condDistrib (fun ω => (Xs ω, Yo ω)) Zc μ := by
+    rw [compProd_map_condDistrib hYX.aemeasurable,
+        Measure.map_map e.measurable (hZc.prodMk hYX),
+        show (e ∘ (fun ω => (Zc ω, Yo ω, Xs ω)))
+            = (fun ω => (Zc ω, Xs ω, Yo ω)) from rfl,
+        compProd_map_condDistrib hXY.aemeasurable]
+  -- factored pushforward via Measure.compProd_map + Kernel.prodComm_prod
+  have h_factored :
+      ((μ.map Zc) ⊗ₘ ((condDistrib Yo Zc μ) ×ₖ (condDistrib Xs Zc μ))).map e
+        = (μ.map Zc) ⊗ₘ ((condDistrib Xs Zc μ) ×ₖ (condDistrib Yo Zc μ)) := by
+    show ((μ.map Zc) ⊗ₘ ((condDistrib Yo Zc μ) ×ₖ (condDistrib Xs Zc μ))).map
+            (Prod.map id MeasurableEquiv.prodComm) = _
+    rw [← Measure.compProd_map MeasurableEquiv.prodComm.measurable,
+        Kernel.prodComm_prod]
+  rw [← h_joint, ← h_factored, klDiv_map_measurableEquiv]
+
+/-- 有限アルファベットでは条件付き相互情報量は有限。chain rule
+`mutualInfo μ (Zc, Xs) Yo = mutualInfo μ Zc Yo + condMutualInfo μ Xs Yo Zc` から
+`condMutualInfo ≤ mutualInfo (Zc, Xs) Yo` で押さえる。後者は `mutualInfo_ne_top` で有限。 -/
+theorem condMutualInfo_ne_top
+    [Fintype X] [MeasurableSingletonClass X]
+    [Fintype Y] [MeasurableSingletonClass Y]
+    [Fintype Z] [MeasurableSingletonClass Z]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    [StandardBorelSpace X] [Nonempty X]
+    [StandardBorelSpace Y] [Nonempty Y]
+    (Xs : Ω → X) (Yo : Ω → Y) (Zc : Ω → Z)
+    (hXs : Measurable Xs) (hYo : Measurable Yo) (hZc : Measurable Zc) :
+    condMutualInfo μ Xs Yo Zc ≠ ∞ := by
+  have h_chain := mutualInfo_chain_rule μ Xs Yo Zc hXs hYo hZc
+  have h_le : condMutualInfo μ Xs Yo Zc
+      ≤ mutualInfo μ (fun ω => (Zc ω, Xs ω)) Yo := by
+    rw [h_chain]; exact self_le_add_left _ _
+  exact ne_top_of_le_ne_top
+    (mutualInfo_ne_top μ (fun ω => (Zc ω, Xs ω)) Yo (hZc.prodMk hXs) hYo) h_le
+
 /-- Markov chain `Xs → Zc → Yo` (γ-form) ⇒ `I(X; Y | Z) = 0`.
 
 γ-form 採用により直接的な証明: condMutualInfo の第1引数 `(μ.map Zc) ⊗ₘ condDistrib (Xs, Yo) Zc μ`

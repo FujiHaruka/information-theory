@@ -119,4 +119,85 @@ theorem mutualInfo_eq_zero_iff_indep
   rw [mutualInfo, klDiv_eq_zero_iff,
       ← indepFun_iff_map_prod_eq_prod_map_map hXs.aemeasurable hYo.aemeasurable]
 
+/-- 有限アルファベット上で結合分布が周辺積に絶対連続。Fintype の任意の集合は
+singleton の有限和に分解でき、product 測度の atom が 0 ⇒ 周辺の atom が 0 ⇒
+joint の atom も 0 (周辺射影での monotonicity)。 -/
+private lemma map_pair_absolutelyContinuous_prod_marginals
+    [Fintype X] [MeasurableSingletonClass X]
+    [Fintype Y] [MeasurableSingletonClass Y]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Ω → X) (Yo : Ω → Y)
+    (hXs : Measurable Xs) (hYo : Measurable Yo) :
+    μ.map (fun ω => (Xs ω, Yo ω)) ≪ (μ.map Xs).prod (μ.map Yo) := by
+  classical
+  refine Measure.AbsolutelyContinuous.mk fun s _ hs_zero => ?_
+  set sf : Finset (X × Y) := Finset.univ.filter (· ∈ s)
+  have hs_decomp : s = ⋃ p ∈ sf, ({p} : Set (X × Y)) := by
+    ext p; simp [sf]
+  have h_pwd : Set.PairwiseDisjoint (↑sf) (fun p : X × Y => ({p} : Set (X × Y))) :=
+    fun a _ b _ hne => Set.disjoint_singleton.mpr hne
+  have h_meas : ∀ p ∈ sf, MeasurableSet ({p} : Set (X × Y)) :=
+    fun p _ => measurableSet_singleton p
+  have h_prod_sum : ∑ p ∈ sf, ((μ.map Xs).prod (μ.map Yo)) {p} = 0 := by
+    rw [← measure_biUnion_finset h_pwd h_meas, ← hs_decomp]; exact hs_zero
+  have h_prod_each : ∀ p ∈ sf, ((μ.map Xs).prod (μ.map Yo)) {p} = 0 := fun p hp =>
+    le_antisymm (h_prod_sum ▸ Finset.single_le_sum
+      (f := fun q => ((μ.map Xs).prod (μ.map Yo)) {q})
+      (fun _ _ => bot_le) hp) bot_le
+  rw [hs_decomp, measure_biUnion_finset h_pwd h_meas]
+  refine Finset.sum_eq_zero fun ⟨x, y⟩ hp => ?_
+  have h_pt := h_prod_each (x, y) hp
+  rw [show ({(x, y)} : Set (X × Y)) = {x} ×ˢ {y} from
+    Set.singleton_prod_singleton.symm, Measure.prod_prod] at h_pt
+  rw [Measure.map_apply (hXs.prodMk hYo) (measurableSet_singleton _)]
+  rcases mul_eq_zero.mp h_pt with hX | hY
+  · refine le_antisymm ?_ bot_le
+    calc μ ((fun ω => (Xs ω, Yo ω)) ⁻¹' {(x, y)})
+        ≤ μ (Xs ⁻¹' {x}) := by
+          refine measure_mono fun ω hω => ?_
+          simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.mk.injEq] at hω
+          exact hω.1
+      _ = (μ.map Xs) {x} := (Measure.map_apply hXs (measurableSet_singleton _)).symm
+      _ = 0 := hX
+  · refine le_antisymm ?_ bot_le
+    calc μ ((fun ω => (Xs ω, Yo ω)) ⁻¹' {(x, y)})
+        ≤ μ (Yo ⁻¹' {y}) := by
+          refine measure_mono fun ω hω => ?_
+          simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.mk.injEq] at hω
+          exact hω.2
+      _ = (μ.map Yo) {y} := (Measure.map_apply hYo (measurableSet_singleton _)).symm
+      _ = 0 := hY
+
+/-- 有限アルファベットの結合分布上で `llr` は可積分。Fintype 上の確率測度では
+`lintegral_fintype` で有限和に分解され、各項が `≤ ENNReal.coe * (probability)` で有限。 -/
+private lemma integrable_llr_map_pair_prod_marginals
+    [Fintype X] [MeasurableSingletonClass X]
+    [Fintype Y] [MeasurableSingletonClass Y]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Ω → X) (Yo : Ω → Y)
+    (hXs : Measurable Xs) (hYo : Measurable Yo) :
+    Integrable
+      (llr (μ.map (fun ω => (Xs ω, Yo ω))) ((μ.map Xs).prod (μ.map Yo)))
+      (μ.map (fun ω => (Xs ω, Yo ω))) := by
+  haveI : IsProbabilityMeasure (μ.map (fun ω => (Xs ω, Yo ω))) :=
+    Measure.isProbabilityMeasure_map (hXs.prodMk hYo).aemeasurable
+  refine ⟨(measurable_llr _ _).aestronglyMeasurable, ?_⟩
+  rw [hasFiniteIntegral_iff_enorm, lintegral_fintype]
+  exact ENNReal.sum_lt_top.mpr fun _ _ =>
+    ENNReal.mul_lt_top ENNReal.coe_lt_top (measure_lt_top _ _)
+
+/-- 有限アルファベットでは相互情報量は有限。AC + integrable から `klDiv_ne_top`。
+Phase A の `condMutualInfo_eq_condEntropy_sub_condEntropy` で chain rule の
+`ENNReal.toReal_add` を有効化するために必要。 -/
+theorem mutualInfo_ne_top
+    [Fintype X] [MeasurableSingletonClass X]
+    [Fintype Y] [MeasurableSingletonClass Y]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Ω → X) (Yo : Ω → Y)
+    (hXs : Measurable Xs) (hYo : Measurable Yo) :
+    mutualInfo μ Xs Yo ≠ ∞ :=
+  klDiv_ne_top
+    (map_pair_absolutelyContinuous_prod_marginals μ Xs Yo hXs hYo)
+    (integrable_llr_map_pair_prod_marginals μ Xs Yo hXs hYo)
+
 end InformationTheory.Shannon

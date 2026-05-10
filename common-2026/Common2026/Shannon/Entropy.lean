@@ -193,12 +193,18 @@ theorem condEntropy_tower
 /-- The chain rule for conditional mutual information in Shannon (additive) form:
 `I(X; Z | Y) = H(X | Y) - H(X | Y, Z)`.
 
-Strategy (per Phase 0 inventory): expand `condMutualInfo μ Xs Zo Yo` into its compProd
-form, apply Bridge Helper 1 (`klDiv_compProd_const_eq_lintegral_of_ac`) to convert the
-joint KL into a fiber-wise integral, then invoke Bridge's main theorem
-`mutualInfo_eq_entropy_sub_condEntropy` on each fiber. The resulting fiber-wise
-expression integrates against `μ.map Yo` to produce `H(X|Y) - H(X|Y,Z)`, where the
-second term requires `condEntropy_tower` to absorb the inner conditional entropy. -/
+戦略 (handoff 改訂版): fiber 展開ルートは Bridge Helper 1 の右 kernel 定数限定が
+ネックで却下。代わりに Mathlib chain rule + Bridge × 2 + `condMutualInfo_comm` で
+組む。具体的には `mutualInfo_chain_rule` を `(Xs := Zo, Yo := Xs, Zc := Yo)` で
+適用し
+`mI(Yo,Zo; Xs) = mI(Yo; Xs) + cMI(Zo; Xs | Yo)` を得て、`mutualInfo_comm` × 2 +
+`condMutualInfo_comm` × 1 で第 1 引数側を `Xs` に統一すると
+`mI(Xs; (Yo,Zo)) = mI(Xs; Yo) + cMI(Xs; Zo | Yo)` が出る。両辺 `.toReal` を取って
+Bridge `mutualInfo_eq_entropy_sub_condEntropy` を 2 回当て entropy μ Xs を相殺。
+
+`ENNReal.toReal_add` の有限性は `mutualInfo_ne_top` (MutualInfo.lean) と
+`condMutualInfo_ne_top` (CondMutualInfo.lean、chain rule 経由で `mutualInfo_ne_top`
+に帰着) で確保。 -/
 theorem condMutualInfo_eq_condEntropy_sub_condEntropy
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y) (Zo : Ω → Z)
@@ -206,7 +212,26 @@ theorem condMutualInfo_eq_condEntropy_sub_condEntropy
     (condMutualInfo μ Xs Zo Yo).toReal
       = InformationTheory.MeasureFano.condEntropy μ Xs Yo
         - InformationTheory.MeasureFano.condEntropy μ Xs (fun ω => (Yo ω, Zo ω)) := by
-  sorry
+  have hYZ : Measurable (fun ω => (Yo ω, Zo ω)) := hYo.prodMk hZo
+  -- Step 1: chain rule with renamed args
+  have h_chain := mutualInfo_chain_rule μ Zo Xs Yo hZo hXs hYo
+  -- Step 2: commute every term to put Xs on the LHS of the mI/cMI
+  rw [mutualInfo_comm μ (fun ω => (Yo ω, Zo ω)) Xs hYZ hXs,
+      mutualInfo_comm μ Yo Xs hYo hXs,
+      condMutualInfo_comm μ Zo Xs Yo hZo hXs hYo] at h_chain
+  -- h_chain: mI(Xs; (Yo,Zo)) = mI(Xs; Yo) + cMI(Xs; Zo | Yo)
+  -- Step 3: finiteness for ENNReal.toReal_add
+  have h_mI_finite : mutualInfo μ Xs Yo ≠ ∞ :=
+    mutualInfo_ne_top μ Xs Yo hXs hYo
+  have h_cMI_finite : condMutualInfo μ Xs Zo Yo ≠ ∞ :=
+    condMutualInfo_ne_top μ Xs Zo Yo hXs hZo hYo
+  -- Step 4: take .toReal and substitute Bridge results
+  have h_chain_toReal : (mutualInfo μ Xs (fun ω => (Yo ω, Zo ω))).toReal
+      = (mutualInfo μ Xs Yo).toReal + (condMutualInfo μ Xs Zo Yo).toReal := by
+    rw [h_chain, ENNReal.toReal_add h_mI_finite h_cMI_finite]
+  rw [mutualInfo_eq_entropy_sub_condEntropy μ Xs (fun ω => (Yo ω, Zo ω)) hXs hYZ,
+      mutualInfo_eq_entropy_sub_condEntropy μ Xs Yo hXs hYo] at h_chain_toReal
+  linarith
 
 /-- Conditioning never increases entropy: `H(X | Y, Z) ≤ H(X | Y)`. Direct corollary of
 the middle lemma `condMutualInfo_eq_condEntropy_sub_condEntropy` and
