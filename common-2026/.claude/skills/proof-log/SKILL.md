@@ -1,6 +1,6 @@
 ---
 name: proof-log
-description: Lean 形式化作業のボトルネックを `docs/proof-logs/proof-log-<slug>.md` + `docs/metrics/<slug>.{manifest,metrics}.{json,md}` として残す。**ユーザーが明示的に依頼したときだけ起動する**（自動トリガーしない）。定量データは `scripts/session_metrics.ts` 任せ、本文は機械では取れない質的観察（grep 空振り、Mathlib に無かった補題、設計の後戻り）に集中させる。
+description: Lean 形式化作業のボトルネックを `docs/proof-logs/proof-log-<slug>.md` + `docs/metrics/<slug>.{manifest,metrics}.{json,md}` として残す。定量データは `scripts/session_metrics.ts` 任せ、本文は質的観察（grep 空振り、Mathlib に無かった補題、設計の後戻り）に集中させる。
 ---
 
 # proof-log
