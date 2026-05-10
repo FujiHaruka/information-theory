@@ -116,6 +116,8 @@ where δ(ε) := h(ε) + ε · log(|X × Y| - 1)  -- Fano 由来
 
 **依存 / 後続**: Seed 4 (AEP) ができれば asymptotic 化が直接続けられる。本 seed は single-shot 単独で publish 価値あり。
 
+→ `docs/shannon/slepian-wolf-moonshot-plan.md`
+
 ---
 
 ## Seed 4: AEP + 源符号化定理（漸近）🌙🌙
