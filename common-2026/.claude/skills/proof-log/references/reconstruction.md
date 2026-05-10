@@ -6,7 +6,7 @@
 
 `~/.claude/projects/<encoded-cwd>/<session-id>.jsonl`
 
-このプロジェクトでは `~/.claude/projects/-Users-haruka-dev-src-github-com-FujiHaruka-lean-projects-common-2026/` 配下。
+`<encoded-cwd>` は `pwd` の `/` と `.` を `-` に置換したもの。具体パスは `scripts/session_metrics.ts` の `defaultLogsDir()` を参照。
 
 ## 1. ターン構造を取る
 
@@ -19,7 +19,7 @@ deno run -A scripts/session_metrics.ts --turns <session-id> --file-prefix Common
 ## 2. Bash コマンド系列を時系列で取る
 
 ```bash
-JSONL=~/.claude/projects/-Users-haruka-dev-src-github-com-FujiHaruka-lean-projects-common-2026/<session-id>.jsonl
+JSONL=~/.claude/projects/$(pwd | tr '/.' '-')/<session-id>.jsonl
 
 jq -r '
   select(.type=="assistant" and .message.content)
