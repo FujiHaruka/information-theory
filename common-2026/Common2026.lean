@@ -50,3 +50,4 @@ import Common2026.Shannon.Entropy
 import Common2026.Shannon.Han
 import Common2026.Shannon.HanD
 import Common2026.Shannon.HanDAverage
+import Common2026.Shannon.HanDShearer

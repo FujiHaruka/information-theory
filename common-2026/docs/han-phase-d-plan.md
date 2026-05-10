@@ -387,7 +387,7 @@ end InformationTheory.Shannon
 
 1. ~~**Phase 0 (D)**~~ ✅ **完 (2026-05-10)**
 2. ~~**Phase A skeleton + 4 sorry-fill**~~ ✅ **完 (2026-05-10、HEAD `bbfa250`)**。`Common2026/Shannon/HanD.lean` の 4 主定理すべて 0 sorry
-3. **Phase B (D-1 subset average chain) 着手** ← **次の最初の作業**
-   - `H_n ≥ H_{n-1} ≥ ... ≥ H_1`(`H_k := mean over S of size k`) の連鎖を組む
-   - Han Phase D の plan §Phase B を参照 (line 222-)
-   - Phase A の `jointEntropySubset_chain_rule` / `condEntropy_subset_anti` / `han_inequality_subset` を全部使う段階
+3. ~~**Phase B (D-1 subset average chain)**~~ ✅ **完 (2026-05-10、HEAD `1088bfc`)**。`Common2026/Shannon/HanDAverage.lean` の 3 主定理 + 1 helper すべて 0 sorry
+4. ~~**Phase C (D-2 Shearer)**~~ ✅ **完 (2026-05-10)**。`Common2026/Shannon/HanDShearer.lean` の `shearer_inequality` が 0 sorry。Phase D 完結 (累計 8 主定理 0 sorry)。
+   - 戦略: Phase A chain rule + monotonicity を全部 `S = univ` 形に揃え、Phase B chain rule (`Fin i.val` 形) は呼ばずに reshape 1 段で済ませた。
+   - `condEntropy_nonneg` は Mathlib にも本 project にも無かったので unfold して手書き (`integral_nonneg` + `Real.negMulLog_nonneg`)。再利用するなら別ファイルに切り出す検討余地あり。
