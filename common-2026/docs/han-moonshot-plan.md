@@ -1,6 +1,6 @@
 # Han 不等式・ムーンショット計画 🌙
 
-> **Status (2026-05-10): 計画起草。** Fano (`Common2026/Fano/Measure.lean`) と Shannon converse (`Common2026/Shannon/Converse.lean`) のムーンショット達成後の後継プロジェクト。
+> **Status (2026-05-10): Phase 0 (M0) 完了。** Fano (`Common2026/Fano/Measure.lean`) と Shannon converse (`Common2026/Shannon/Converse.lean`) のムーンショット達成後の後継プロジェクト。Phase 0 結果は [`han-mathlib-inventory.md`](han-mathlib-inventory.md) — Mathlib に Han / Shearer 不在 / `Fin n → α` の instance チェイン自動発火経路 confirm / Phase A 中間補題 150〜200 行に再見積もり。次は Phase A skeleton。
 >
 > ゴールは **Han の不等式 (補集合形)** を Mathlib + 既存 `Common2026/Shannon` API の上に形式化し、そのプロセスで「次のムーンショットに渡せる共通化候補」を浮き上がらせること。
 
@@ -163,8 +163,9 @@ end InformationTheory.Shannon
 ### 鍵となる作業
 
 1. **`entropy_pair_eq_entropy_add_condEntropy` (chain rule)** — 既存 `mutualInfo_eq_entropy_sub_condEntropy` (Bridge) を 2 通りの順で適用して `H(X,Y) - H(X) = H(Y|X)` を導出。あるいは KL chain rule (`klDiv_compProd_eq_add`) から直接書き下す。50〜100 行
-2. **`condEntropy_le_condEntropy_of_pair` (条件付けで減る)** — `condMutualInfo_nonneg` を bridge して `condMutualInfo = condEntropy - condEntropy` の形に直す中間補題が要る。Phase A の山場。100〜200 行
+2. **`condEntropy_le_condEntropy_of_pair` (条件付けで減る)** — `condMutualInfo_nonneg` を bridge して `condMutualInfo = condEntropy - condEntropy` の形に直す中間補題が要る。Phase A の山場。**150〜200 行 (Bridge fiber 再利用ルート想定)**
    - 中間補題: `condMutualInfo_eq_condEntropy_sub_condEntropy: I(X; Z | Y) = H(X|Y) - H(X|Y,Z)` (要新規)
+   - **採用ルート (Phase 0 で確定)**: `condMutualInfo` は両 base 共通 compProd 形なので `Bridge.lean` の Helper 1 (`klDiv_compProd_const_eq_lintegral_of_ac`) で fiber-wise に klDiv を分解 → fiber 上で Bridge 主定理 `mutualInfo_eq_entropy_sub_condEntropy` を呼ぶ → `condEntropy` の tower 補題 (`H(X|Y,Z) = ∫ z, H_z(X|Y) d(μ.map Z)`、要 derive 50 行) で結ぶ。Bridge 全体 (~190 行) の写経は不要。詳細: [`han-mathlib-inventory.md` §3](han-mathlib-inventory.md#3-phase-a-中間補題-condmutualinfo_eq_condentropy_sub_condentropy-所要量)
 3. **両者の Real / ENNReal 整理** — `condEntropy` は `ℝ`、`mutualInfo`/`condMutualInfo` は `ℝ≥0∞`。Bridge と同じ `toReal` 取扱で揃える
 
 ### Done 条件
@@ -229,7 +230,7 @@ end InformationTheory.Shannon
 
 ### 工数感
 
-1〜2 週間予算。**最大リスクは Phase 0 で見えなかった `Fin n` Pi-値 RV の measurability instance**。詰まったら異種類型を捨てて homogeneous (`α` 固定) に追加で `MeasurableSpace.pi` の手動証明を充てる。
+1〜2 週間予算。**Pi-値 RV measurability instance の自動発火は Phase 0 で confirm 済** (`Pi.instMeasurableSingletonClass [Countable δ]` + `MeasurableSingletonClass.toDiscreteMeasurableSpace` priority 100 + DMS → SBS の chain で `Fin n → α` まで自動)。残るリスクは skeleton 書き起こし時の type-check 1 発のみ。詰まったら異種類型を捨てて homogeneous (`α` 固定) に追加で手動 instance を充てる。
 
 ---
 
@@ -302,6 +303,6 @@ end InformationTheory.Shannon
 
 ## 当面の next step
 
-1. **Phase 0 着手** — Mathlib + 既存 Shannon API インベントリ調査 (subagent 1 本 + ローカル `loogle` / `rg`)
-2. Phase 0 結果を見て、本計画書の Approach / Phase A 節を必要に応じて更新
-3. **Phase A skeleton 作成** — `Common2026/Shannon/Entropy.lean` の sorry-driven 出だし
+1. ~~**Phase 0 着手** — Mathlib + 既存 Shannon API インベントリ調査 (subagent 1 本 + ローカル `loogle` / `rg`)~~ ✅ 2026-05-10 完了 → [`han-mathlib-inventory.md`](han-mathlib-inventory.md)
+2. ~~Phase 0 結果を見て、本計画書の Approach / Phase A 節を必要に応じて更新~~ ✅ Phase A 工数感 (150〜200 行) / Phase B 最大リスク (instance 自動発火 confirm 済) 反映
+3. **Phase A skeleton 作成** — `Common2026/Shannon/Entropy.lean` の sorry-driven 出だし。3 主定理 (`entropy_pair_eq_entropy_add_condEntropy` / `condMutualInfo_eq_condEntropy_sub_condEntropy` / `condEntropy_le_condEntropy_of_pair`) + tower 補題を `:= by sorry` で並べ、`lake env lean` で instance 発火を確認 ← **次セッションの最初の作業**
