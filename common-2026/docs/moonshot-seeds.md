@@ -42,6 +42,8 @@
 
 **依存 / 後続**: 単独で立つ。後続に edge-isoperimetry / hypercube combinatorics の入口が開く。
 
+→ `docs/shannon/loomis-whitney-moonshot-plan.md`
+
 ---
 
 ## Seed 2: Submodularity of entropy / polymatroid axioms
