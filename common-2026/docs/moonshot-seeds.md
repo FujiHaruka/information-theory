@@ -203,6 +203,8 @@ type-II error β_n := Q^n(A_n) を最小化すると
 
 **依存 / 後続**: Seed 4 (AEP) を先にやると plumbing の半分が共有できる。逆は不可 (Seed 5 単独だと AEP を内側に再実装する羽目になる)。
 
+→ `docs/shannon/stein-moonshot-plan.md`
+
 ---
 
 ## 依存グラフと推奨順序
