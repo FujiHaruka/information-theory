@@ -43,7 +43,7 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 
 /-- 索引同型 `↥T₁ ⊕ ↥(T₂ \ T₁) ≃ ↥T₂` (T₁ ⊆ T₂ のとき)。
 `Equiv.Finset.union` だけでは `T₁ ∪ (T₂ \ T₁) = T₂` の cast が要るので直接構成。 -/
-private def subsetIdxEquiv {ι : Type*} [DecidableEq ι]
+def subsetIdxEquiv {ι : Type*} [DecidableEq ι]
     {T₁ T₂ : Finset ι} (h : T₁ ⊆ T₂) :
     (↥T₁ ⊕ ↥(T₂ \ T₁)) ≃ ↥T₂ where
   toFun := Sum.elim
@@ -66,7 +66,7 @@ private def subsetIdxEquiv {ι : Type*} [DecidableEq ι]
 /-- Pi 値 `(↥T₂ → α) ≃ᵐ (↥T₁ → α) × (↥(T₂\T₁) → α)` (T₁ ⊆ T₂)。
 `subsetIdxEquiv` を `MeasurableEquiv.piCongrLeft` で持ち上げ、
 `sumPiEquivProdPi` で sum を product に直す。 -/
-private def subsetSplitMEquiv {T₁ T₂ : Finset (Fin n)} (h : T₁ ⊆ T₂) :
+def subsetSplitMEquiv {T₁ T₂ : Finset (Fin n)} (h : T₁ ⊆ T₂) :
     ((↥T₁ → α) × (↥(T₂ \ T₁) → α)) ≃ᵐ (↥T₂ → α) :=
   ((MeasurableEquiv.sumPiEquivProdPi
       (fun _ : ↥T₁ ⊕ ↥(T₂ \ T₁) => α)).symm).trans
@@ -75,7 +75,7 @@ private def subsetSplitMEquiv {T₁ T₂ : Finset (Fin n)} (h : T₁ ⊆ T₂) :
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- subsetSplitMEquiv が、共通生成 `Xs : Fin n → α` の T₁/T₂\T₁ 制限を
 T₂ 制限に貼り合わせる。これが reshape の中身。 -/
-private lemma subsetSplitMEquiv_apply
+lemma subsetSplitMEquiv_apply
     {T₁ T₂ : Finset (Fin n)} (h : T₁ ⊆ T₂) (Xs : Fin n → α) :
     subsetSplitMEquiv (α := α) h
       (fun j : ↥T₁ => Xs j.val, fun j : ↥(T₂ \ T₁) => Xs j.val)

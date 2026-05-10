@@ -1,7 +1,9 @@
 # Polymatroid Axioms (Submodularity of Entropy) ムーンショット計画 🌙
 
-> **Status (2026-05-11): 起草。** Han Phase D 完了 (`Common2026/Shannon/HanD*.lean` の 8
-> 主定理が 0 sorry) と `Common2026/Shannon/Pi.lean` 切り出し直後、Loomis–Whitney
+> **Status (2026-05-11): Phase A〜C 完了 ✅ (288 行 / 0 sorry)。** Phase D は
+> 計画通り (D-b) **別 plan に切り出し** (本 plan は 3 性質単発 theorem で close)。
+> Han Phase D 完了 (`Common2026/Shannon/HanD*.lean` の 8 主定理が 0 sorry) と
+> `Common2026/Shannon/Pi.lean` 切り出し直後、Loomis–Whitney
 > ([`docs/shannon/loomis-whitney-moonshot-plan.md`](../shannon/loomis-whitney-moonshot-plan.md))
 > 完了に続く 2 本目のムーンショット。
 > Seed カード ([`docs/moonshot-seeds.md` Seed 2](../moonshot-seeds.md)) を母体に Phase 分解した。
@@ -13,11 +15,11 @@
 
 ## 進捗
 
-- [ ] Phase 0 — Mathlib + 既存 Common2026 API インベントリ 📋 → [`polymatroid-mathlib-inventory.md`](polymatroid-mathlib-inventory.md)
-- [ ] Phase A — `jointEntropySubset_empty = 0` (空集合からの entropy) 📋
-- [ ] Phase B — monotonicity (`S ⊆ T ⇒ H(X_S) ≤ H(X_T)`) 📋
-- [ ] Phase C — submodularity (`H(X_{S∪T}) + H(X_{S∩T}) ≤ H(X_S) + H(X_T)`) 📋
-- [ ] Phase D (オプション) — `Polymatroid` structure を導入し本 result をインスタンスとして登録するか判断 📋
+- [x] Phase 0 — Mathlib + 既存 Common2026 API インベントリ ✅ → [`polymatroid-mathlib-inventory.md`](polymatroid-mathlib-inventory.md)
+- [x] Phase A — `jointEntropySubset_empty = 0` (空集合からの entropy) ✅
+- [x] Phase B — monotonicity (`S ⊆ T ⇒ H(X_S) ≤ H(X_T)`) ✅
+- [x] Phase C — submodularity (`H(X_{S∪T}) + H(X_{S∩T}) ≤ H(X_S) + H(X_T)`) ✅
+- [x] Phase D (オプション) — **(D-b) 採用**: 独立 plan に切り出し、本 plan は 3 性質単発で close ✅
 
 ## ゴール / Approach
 
@@ -290,3 +292,32 @@ D-a なら 1 日 (20〜40 行、structure + instance のみ)。D-b なら 0 日 
 ## 判断ログ
 
 書く頻度: Phase 中の方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
+
+### 2026-05-11 Phase A〜C 完了, Phase D は (D-b) 採用
+
+- **着地**: `Common2026/Shannon/Polymatroid.lean` 288 行 / 0 sorry / 0 warning。
+  `lake build` 緑通過。インベントリ再見積 195〜365 行の範囲内。
+- **Phase A**: HanD chain rule base case (`Han.lean:64-85`) の写経で `IsEmpty` 経由 →
+  `Pi.uniqueOfIsEmpty` → `Real.negMulLog_one`。15 行で着地。リスクなし。
+- **Phase B**: 計画ルート α (`piFinsetUnion` 経由) を採るつもりだったが、HanD.lean
+  の `subsetSplitMEquiv` (T₁ ⊆ T₂ で同型を構成) が **本質的に同等** で plumbing が
+  軽いと判断、`private` を外して再利用に切り替え。具体的には `subsetSplitMEquiv` /
+  `subsetSplitMEquiv_apply` / `subsetIdxEquiv` の 3 つを公開化。Phase B 本体は 30 行。
+- **Phase C** (山場): 計画通り 3 ピース disjoint 分解だが、計画懸念 1 (3-piece Pi
+  reshape の cast まわり) を **「`s ∪ t = U` を引数で受ける `disjoint_union` 形 helper」**
+  で吸収する戦略に変更。具体的には:
+  - `jointEntropySubset_disjoint_union` (helper, ~30 行): `Disjoint s t` + `s ∪ t = U` →
+    `H(X_U) = H(X_s) + H(X_t | X_s)`。`subst htU` 一発で `↥(U \ s) = ↥t` の cast を
+    吸収できるのが鍵 (htU は `U \ s = t` 形で `t` を `U \ s` で置換可能)。
+  - `condEntropy_reshape_disjoint_union` (helper, ~25 行): conditioner 側 reshape も同流儀。
+  - submodular 本体 (~50 行): 上 2 helper を 3 回 + 1 回呼び、`condEntropy_le_condEntropy_of_pair`
+    1 発 + `linarith` で着地。3-piece の associativity をひと括りで済む。
+- **Phase D 判断**: Mathlib に `Polymatroid` 不在 (inventory 軸 1)、本 plan の core
+  delivery (3 性質単発 theorem) で publish 価値あり、structure 化で得られる再利用先
+  (Seed 4 / Seed 5) は本 plan のスコープ外。よって (D-b) 「別 plan に切り出し」を
+  採用、本 plan はここで close。
+- **観察**: 計画懸念 1 は `subst htU` 一発で消えた。`subsetSplitMEquiv` の `T₁ ⊆ T₂`
+  形と `MeasurableEquiv.piFinsetUnion` の `Disjoint s t` 形は機能的に同値だが、
+  proof の plumbing 上は **disjoint + union equality 両方を引数で受ける形** が
+  一番扱いやすい (Finset 等式 cast を `subst` で消せるので)。今後 Pi 値 reshape
+  系の helper を増やすときの設計指針になる。

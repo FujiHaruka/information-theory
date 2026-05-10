@@ -1,0 +1,288 @@
+import Common2026.Shannon.HanD
+
+/-!
+# Polymatroid axioms for joint entropy (Phase A〜C skeleton)
+
+Polymatroid moonshot ([`docs/han/polymatroid-moonshot-plan.md`](../../../docs/han/polymatroid-moonshot-plan.md))
+の Phase A skeleton。Han Phase D の `jointEntropySubset` (`HanD.lean:114`) が
+**polymatroid rank function の 3 性質** を満たすことを示す:
+
+* Phase A — `jointEntropySubset_empty`     : `H(X_∅) = 0`
+* Phase B — `jointEntropySubset_mono`      : `S ⊆ T ⟹ H(X_S) ≤ H(X_T)`
+* Phase C — `jointEntropySubset_submodular`:
+  `H(X_{S∪T}) + H(X_{S∩T}) ≤ H(X_S) + H(X_T)`
+
+## 戦略 (inventory より)
+
+* Phase A — `Pi.uniqueOfIsEmpty` で `(↥(∅ : Finset (Fin n)) → α)` が `Unique`、
+  HanD chain rule base case (`Han.lean:64-85`) と同じパターン。
+* Phase B — `MeasurableEquiv.piFinsetUnion`
+  (`Mathlib/MeasureTheory/MeasurableSpace/Embedding.lean:612`) で
+  `T = S ⊔ (T\S)` を pair `((↥S → α) × (↥(T\S) → α))` に reshape、
+  Phase A `entropy_pair_eq_entropy_add_condEntropy` + `condEntropy ≥ 0` で結ぶ。
+* Phase C — 3 ピース disjoint 分解 `S ∪ T = I ⊔ A ⊔ B`
+  (`I := S ∩ T`, `A := S \ T`, `B := T \ S`)。各 entropy を chain rule で展開し、
+  `condEntropy_le_condEntropy_of_pair` で `H(X_B | X_I, X_A) ≤ H(X_B | X_I)` を効かせる。
+-/
+
+namespace InformationTheory.Shannon
+
+open MeasureTheory ProbabilityTheory InformationTheory
+open scoped ENNReal NNReal
+
+variable {n : ℕ}
+variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+  [MeasurableSpace α] [MeasurableSingletonClass α]
+variable {Ω : Type*} [MeasurableSpace Ω]
+
+/-! ## Helpers -/
+
+/-- Conditional entropy is non-negative: `0 ≤ H(W | Y)`. Local copy of the
+SlepianWolf-side `condEntropy_nonneg` (kept in-file to avoid pulling SlepianWolf
+into the Polymatroid dependency closure). -/
+private theorem condEntropy_nonneg_local
+    {W : Type*} [Fintype W] [DecidableEq W] [Nonempty W]
+      [MeasurableSpace W] [MeasurableSingletonClass W]
+    {Y : Type*} [MeasurableSpace Y]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Ws : Ω → W) (Yo : Ω → Y) :
+    0 ≤ InformationTheory.MeasureFano.condEntropy μ Ws Yo := by
+  unfold InformationTheory.MeasureFano.condEntropy
+  refine integral_nonneg fun y => ?_
+  refine Finset.sum_nonneg fun x _ => ?_
+  exact Real.negMulLog_nonneg measureReal_nonneg measureReal_le_one
+
+/-! ## Phase A — empty subset entropy -/
+
+omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- Polymatroid axiom (i): empty subset entropy is zero.
+
+`(↥(∅ : Finset (Fin n)) → α)` is `Unique` via `Pi.uniqueOfIsEmpty`, so the
+push-forward measure is concentrated on `default` and `Real.negMulLog 1 = 0`. -/
+theorem jointEntropySubset_empty
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Fin n → Ω → α) :
+    jointEntropySubset μ Xs ∅ = 0 := by
+  unfold jointEntropySubset entropy
+  have hmeas : Measurable (fun ω (i : (∅ : Finset (Fin n))) => Xs i.val ω) :=
+    measurable_pi_iff.mpr (fun i => (Finset.notMem_empty i.val i.property).elim)
+  haveI : IsProbabilityMeasure
+      (μ.map (fun ω (i : (∅ : Finset (Fin n))) => Xs i.val ω)) :=
+    Measure.isProbabilityMeasure_map hmeas.aemeasurable
+  haveI : IsEmpty (↥(∅ : Finset (Fin n))) :=
+    ⟨fun i => (Finset.notMem_empty i.val i.property)⟩
+  haveI : Unique (↥(∅ : Finset (Fin n)) → α) := Pi.uniqueOfIsEmpty _
+  rw [Fintype.sum_unique]
+  have hsingle : ((μ.map (fun ω (i : (∅ : Finset (Fin n))) => Xs i.val ω)).real
+        {default} : ℝ) = 1 := by
+    have huniv : ({default} : Set (↥(∅ : Finset (Fin n)) → α)) = Set.univ := by
+      ext f; simp [Subsingleton.elim f default]
+    rw [huniv, measureReal_def, measure_univ, ENNReal.toReal_one]
+  rw [hsingle, Real.negMulLog_one]
+
+/-! ## Phase B — monotonicity -/
+
+/-- Polymatroid axiom (ii): monotonicity in `S`.
+
+`T = S ⊔ (T \ S)` reshape via `MeasurableEquiv.piFinsetUnion` followed by the
+pair chain rule and `condEntropy ≥ 0`. -/
+theorem jointEntropySubset_mono
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    {S T : Finset (Fin n)} (h : S ⊆ T) :
+    jointEntropySubset μ Xs S ≤ jointEntropySubset μ Xs T := by
+  -- Setup: split T into S and T \ S via subsetSplitMEquiv.
+  set XS : Ω → (↥S → α) := fun ω j => Xs j.val ω with hXS_def
+  set XR : Ω → (↥(T \ S) → α) := fun ω j => Xs j.val ω with hXR_def
+  have hXS_meas : Measurable XS :=
+    measurable_pi_iff.mpr (fun _ => hXs _)
+  have hXR_meas : Measurable XR :=
+    measurable_pi_iff.mpr (fun _ => hXs _)
+  let e := subsetSplitMEquiv (α := α) (n := n) h
+  -- Bridge: (e ∘ (XS, XR)) ω = X_T ω
+  have hbridge : (fun ω => e (XS ω, XR ω))
+      = fun ω (j : ↥T) => Xs j.val ω := by
+    funext ω
+    exact subsetSplitMEquiv_apply h (fun k => Xs k ω)
+  -- Reshape entropy of X_T to entropy of the pair (XS, XR).
+  have h_reshape :
+      entropy μ (fun ω (j : ↥T) => Xs j.val ω)
+        = entropy μ (fun ω => (XS ω, XR ω)) := by
+    rw [← hbridge]
+    exact entropy_measurableEquiv_comp μ
+      (fun ω => (XS ω, XR ω)) (hXS_meas.prodMk hXR_meas) e
+  -- Pair chain rule: H(XS, XR) = H(XS) + H(XR | XS).
+  have h_chain :
+      entropy μ (fun ω => (XS ω, XR ω))
+        = entropy μ XS
+          + InformationTheory.MeasureFano.condEntropy μ XR XS :=
+    entropy_pair_eq_entropy_add_condEntropy μ XS XR hXS_meas hXR_meas
+  -- condEntropy is non-negative: 0 ≤ H(XR | XS).
+  have h_cond_nn :
+      0 ≤ InformationTheory.MeasureFano.condEntropy μ XR XS :=
+    condEntropy_nonneg_local μ XR XS
+  -- Combine.
+  unfold jointEntropySubset
+  rw [h_reshape, h_chain]
+  linarith
+
+/-! ## Subset chain rule helper (used by Phase C)
+
+A "disjoint union" version of the pair chain rule that lets the caller specify
+the target `U` directly (avoiding `T₂ \ T₁` casts). -/
+
+/-- Disjoint-union pair chain rule. If `s ∪ t = U` and `Disjoint s t`, then
+`H(X_U) = H(X_s) + H(X_t | X_s)`.
+
+Proof: build `e : ((↥s → α) × (↥t → α)) ≃ᵐ (↥U → α)` from
+`MeasurableEquiv.piFinsetUnion` post-composed with the cast `(↥(s ∪ t) → α) ≃ᵐ
+(↥U → α)`, then apply the pair chain rule. -/
+theorem jointEntropySubset_disjoint_union
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    {s t U : Finset (Fin n)} (hd : Disjoint s t) (hU : s ∪ t = U) :
+    jointEntropySubset μ Xs U
+      = jointEntropySubset μ Xs s
+        + InformationTheory.MeasureFano.condEntropy μ
+            (fun ω (j : ↥t) => Xs j.val ω)
+            (fun ω (j : ↥s) => Xs j.val ω) := by
+  -- Use the existing subsetSplitMEquiv with T₁ := s, T₂ := U via h : s ⊆ U.
+  have hsU : s ⊆ U := hU ▸ Finset.subset_union_left
+  -- Show U \ s = t (using Disjoint and hU).
+  have htU : U \ s = t := by
+    rw [← hU, Finset.union_sdiff_left]
+    exact Finset.sdiff_eq_self_of_disjoint hd.symm
+  set XS : Ω → (↥s → α) := fun ω j => Xs j.val ω
+  set XR : Ω → (↥(U \ s) → α) := fun ω j => Xs j.val ω
+  have hXS_meas : Measurable XS := measurable_pi_iff.mpr (fun _ => hXs _)
+  have hXR_meas : Measurable XR := measurable_pi_iff.mpr (fun _ => hXs _)
+  let e := subsetSplitMEquiv (α := α) (n := n) hsU
+  have hbridge : (fun ω => e (XS ω, XR ω))
+      = fun ω (j : ↥U) => Xs j.val ω := by
+    funext ω
+    exact subsetSplitMEquiv_apply hsU (fun k => Xs k ω)
+  have h_reshape :
+      entropy μ (fun ω (j : ↥U) => Xs j.val ω)
+        = entropy μ (fun ω => (XS ω, XR ω)) := by
+    rw [← hbridge]
+    exact entropy_measurableEquiv_comp μ
+      (fun ω => (XS ω, XR ω)) (hXS_meas.prodMk hXR_meas) e
+  have h_chain :
+      entropy μ (fun ω => (XS ω, XR ω))
+        = entropy μ XS
+          + InformationTheory.MeasureFano.condEntropy μ XR XS :=
+    entropy_pair_eq_entropy_add_condEntropy μ XS XR hXS_meas hXR_meas
+  -- Substitute t := U \ s globally; this makes (↥t → α) coincide with (↥(U \ s) → α).
+  subst htU
+  unfold jointEntropySubset
+  rw [h_reshape, h_chain]
+
+/-- condEntropy reshape under disjoint union: when `Disjoint s t` and `s ∪ t = U`,
+the condEntropy with conditioner `X_U` equals the condEntropy with conditioner the
+pair `(X_s, X_t)`. -/
+theorem condEntropy_reshape_disjoint_union
+    {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
+      [MeasurableSpace β] [MeasurableSingletonClass β]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (Xc : Ω → β) (hXc : Measurable Xc)
+    {s t U : Finset (Fin n)} (hd : Disjoint s t) (hU : s ∪ t = U) :
+    InformationTheory.MeasureFano.condEntropy μ Xc
+        (fun ω (j : ↥U) => Xs j.val ω)
+      = InformationTheory.MeasureFano.condEntropy μ Xc
+          (fun ω => ((fun (j : ↥s) => Xs j.val ω), (fun (j : ↥t) => Xs j.val ω))) := by
+  -- Use subsetSplitMEquiv with hsU : s ⊆ U.
+  have hsU : s ⊆ U := hU ▸ Finset.subset_union_left
+  have htU : U \ s = t := by
+    rw [← hU, Finset.union_sdiff_left]
+    exact Finset.sdiff_eq_self_of_disjoint hd.symm
+  set XS : Ω → (↥s → α) := fun ω j => Xs j.val ω
+  set XR : Ω → (↥(U \ s) → α) := fun ω j => Xs j.val ω
+  have hXS_meas : Measurable XS := measurable_pi_iff.mpr (fun _ => hXs _)
+  have hXR_meas : Measurable XR := measurable_pi_iff.mpr (fun _ => hXs _)
+  let e := subsetSplitMEquiv (α := α) (n := n) hsU
+  have hbridge : (fun ω => e (XS ω, XR ω))
+      = fun ω (j : ↥U) => Xs j.val ω := by
+    funext ω
+    exact subsetSplitMEquiv_apply hsU (fun k => Xs k ω)
+  -- Substitute t := U \ s globally to align XR's index type with t.
+  subst htU
+  rw [show (fun ω (j : ↥U) => Xs j.val ω) = fun ω => e (XS ω, XR ω) from hbridge.symm]
+  exact condEntropy_measurableEquiv_comp μ Xc hXc
+    (fun ω => (XS ω, XR ω)) (hXS_meas.prodMk hXR_meas) e
+
+/-! ## Phase C — submodularity -/
+
+/-- Polymatroid axiom (iii): submodularity.
+
+3-piece disjoint decomposition `S ∪ T = I ⊔ A ⊔ B` with `I := S ∩ T`,
+`A := S \ T`, `B := T \ S`. Expand each side via chain rule and apply
+`condEntropy_le_condEntropy_of_pair` once. -/
+theorem jointEntropySubset_submodular
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (S T : Finset (Fin n)) :
+    jointEntropySubset μ Xs (S ∪ T) + jointEntropySubset μ Xs (S ∩ T)
+      ≤ jointEntropySubset μ Xs S + jointEntropySubset μ Xs T := by
+  -- Three disjoint decompositions:
+  --   (a) S       = (S∩T) ⊔ (S\T)
+  --   (b) T       = (S∩T) ⊔ (T\S)
+  --   (c) S ∪ T   = S     ⊔ (T\S)
+  have hda : Disjoint (S ∩ T) (S \ T) :=
+    (Finset.disjoint_sdiff_inter S T).symm
+  have hUa : (S ∩ T) ∪ (S \ T) = S := by
+    rw [Finset.union_comm]; exact Finset.sdiff_union_inter S T
+  have hdb : Disjoint (S ∩ T) (T \ S) := by
+    have : Disjoint (T ∩ S) (T \ S) := (Finset.disjoint_sdiff_inter T S).symm
+    rwa [Finset.inter_comm] at this
+  have hUb : (S ∩ T) ∪ (T \ S) = T := by
+    rw [Finset.inter_comm, Finset.union_comm]; exact Finset.sdiff_union_inter T S
+  have hdc : Disjoint S (T \ S) := Finset.disjoint_sdiff
+  have hUc : S ∪ (T \ S) = S ∪ T := Finset.union_sdiff_self_eq_union
+  -- Apply jointEntropySubset_disjoint_union three times.
+  have h_S_eq  := jointEntropySubset_disjoint_union μ Xs hXs hda hUa
+  have h_T_eq  := jointEntropySubset_disjoint_union μ Xs hXs hdb hUb
+  have h_ST_eq := jointEntropySubset_disjoint_union μ Xs hXs hdc hUc
+  -- Set up name shortcuts.
+  set XI : Ω → (↥(S ∩ T) → α) := fun ω j => Xs j.val ω with hXI_def
+  set XA : Ω → (↥(S \ T) → α) := fun ω j => Xs j.val ω with hXA_def
+  set XB : Ω → (↥(T \ S) → α) := fun ω j => Xs j.val ω with hXB_def
+  have hXI_meas : Measurable XI := measurable_pi_iff.mpr (fun _ => hXs _)
+  have hXA_meas : Measurable XA := measurable_pi_iff.mpr (fun _ => hXs _)
+  have hXB_meas : Measurable XB := measurable_pi_iff.mpr (fun _ => hXs _)
+  -- (c) gives: H(X_{S∪T}) = H(X_S) + H(X_B | X_S).
+  -- Reshape H(X_B | X_S) = H(X_B | (X_{S∩T}, X_{S\T})) via condEntropy_reshape_disjoint_union.
+  have h_cond_S_pair :
+      InformationTheory.MeasureFano.condEntropy μ XB
+          (fun ω (j : ↥S) => Xs j.val ω)
+        = InformationTheory.MeasureFano.condEntropy μ XB
+            (fun ω => (XI ω, XA ω)) :=
+    condEntropy_reshape_disjoint_union μ Xs hXs XB hXB_meas hda hUa
+  -- condEntropy_le_condEntropy_of_pair: H(X_B | (X_{S∩T}, X_{S\T})) ≤ H(X_B | X_{S∩T}).
+  have h_cond_le :
+      InformationTheory.MeasureFano.condEntropy μ XB
+          (fun ω => (XI ω, XA ω))
+        ≤ InformationTheory.MeasureFano.condEntropy μ XB XI :=
+    condEntropy_le_condEntropy_of_pair μ XB XI XA hXB_meas hXI_meas hXA_meas
+  -- Compute. Let H_I := jointEntropySubset μ Xs (S ∩ T), H_S := ..., etc.
+  -- From h_S_eq:  H_S  = H_I + H(X_A | X_I)
+  -- From h_T_eq:  H_T  = H_I + H(X_B | X_I)
+  -- From h_ST_eq: H_ST = H_S + H(X_B | X_S)   (and X_S = (fun ω j => ...))
+  -- We want:     H_ST + H_I ≤ H_S + H_T.
+  -- Equivalently:H_S + H(X_B | X_S) + H_I ≤ H_S + H_T = H_S + H_I + H(X_B | X_I).
+  -- Which reduces to: H(X_B | X_S) ≤ H(X_B | X_I).
+  -- And h_cond_S_pair + h_cond_le gives exactly that.
+  have h_BS_le_BI :
+      InformationTheory.MeasureFano.condEntropy μ XB
+          (fun ω (j : ↥S) => Xs j.val ω)
+        ≤ InformationTheory.MeasureFano.condEntropy μ XB XI := by
+    rw [h_cond_S_pair]; exact h_cond_le
+  -- Combine: from h_S_eq, h_T_eq, h_ST_eq, h_BS_le_BI, do linarith.
+  -- jointEntropySubset μ Xs (S ∩ T) = entropy μ XI is by definition.
+  -- The condEntropy slot in h_T_eq/h_S_eq matches XB/XA (with conditioner XI).
+  -- Note: The condEntropy slot in h_T_eq is condEntropy μ (fun ω j : ↥(T\S) => ...) (fun ω j : ↥(S∩T) => ...)
+  -- which equals condEntropy μ XB XI by `set` definitions.
+  -- Same for h_S_eq.
+  linarith [h_S_eq, h_T_eq, h_ST_eq, h_BS_le_BI]
+
+end InformationTheory.Shannon
