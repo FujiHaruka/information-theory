@@ -2,7 +2,7 @@
 
 将来「数学的に類似な定理同士の plumbing を自動化するツール」「証明書面の inequality 方向（DPI 系で `I(X;Y) ≤ I(f(X);Y)` か `I(f(X);Y) ≤ I(X;Y)` か）を事前に静的検証するツール」を作るためのベースライン記録。Shannon ムーンショット計画 (`docs/shannon-moonshot-plan.md`) の Phase 4-γ を、Phase 4-α (DPI) + Phase 4-β (bridge) + Phase 3 (Fano Measure 版) の組み合わせで 1 セッションで完走した記録。
 
-**定量データ**: [docs/metrics/shannon-converse.metrics.md](metrics/shannon-converse.metrics.md)
+**定量データ**: [docs/metrics/shannon-converse.metrics.md](../metrics/shannon-converse.metrics.md)
 
 ## 0. 対象問題と成果物
 

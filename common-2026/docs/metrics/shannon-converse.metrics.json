@@ -1,6 +1,6 @@
 {
   "problem": "Shannon ムーンショット Phase 4-γ: single-shot Shannon converse",
-  "proof_log": "docs/proof-log-shannon-converse.md",
+  "proof_log": "docs/proof-logs/proof-log-shannon-converse.md",
   "generated_at": "2026-05-10T01:02:19.298Z",
   "filters": {
     "file_prefix": "Common2026/Shannon/Converse"

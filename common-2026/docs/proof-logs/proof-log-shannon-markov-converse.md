@@ -2,7 +2,7 @@
 
 将来「Mathlib に存在する補題形に合わせて定理本体を pivot するエージェント」「`StandardBorelSpace` のような型クラス制約の伝搬を事前に静的検出するツール」「3 重 compProd 等の `MeasurableEquiv` plumbing を生成する補助ツール」を作るためのベースライン記録。Phase 4-γ (Shannon converse 本体) を Markov chain `Msg → encoder ∘ Msg → Yo` 仮定下に拡張し、`I(Msg; Yo) ≤ I(encoder ∘ Msg; Yo)` で encoder 入りの single-shot converse を導く作業を **3 セッション**で完走した記録。
 
-**定量データ**: [docs/metrics/shannon-markov-converse.metrics.md](metrics/shannon-markov-converse.metrics.md)
+**定量データ**: [docs/metrics/shannon-markov-converse.metrics.md](../metrics/shannon-markov-converse.metrics.md)
 
 ## 0. 対象問題と成果物
 

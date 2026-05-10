@@ -1,6 +1,6 @@
 {
   "problem": "Shannon ムーンショット Phase 4-δ-(b): Markov chain encoder converse + condMutualInfo / mutualInfo chain rule",
-  "proof_log": "docs/proof-log-shannon-markov-converse.md",
+  "proof_log": "docs/proof-logs/proof-log-shannon-markov-converse.md",
   "sessions": [
     {
       "id": "d389ee9e-bb21-46d4-84ea-d9cb0adbdb3f",

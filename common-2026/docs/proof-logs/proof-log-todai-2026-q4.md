@@ -2,7 +2,7 @@
 
 将来「多項式恒等式を Lean 上で押し回す」型の問題向けに、`private` 可視性 / `field_simp` 連鎖 / 場合分け爆発を自動回避するエージェントを作るためのベースライン記録。
 
-**定量データ**: [docs/metrics/todai-2026-q4.metrics.md](metrics/todai-2026-q4.metrics.md)
+**定量データ**: [docs/metrics/todai-2026-q4.metrics.md](../metrics/todai-2026-q4.metrics.md)
 
 ## 0. 対象問題と成果物
 

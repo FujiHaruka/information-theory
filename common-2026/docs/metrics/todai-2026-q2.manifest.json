@@ -1,6 +1,6 @@
 {
   "problem": "東大 2026 第2問",
-  "proof_log": "docs/proof-log-todai-2026-q2.md",
+  "proof_log": "docs/proof-logs/proof-log-todai-2026-q2.md",
   "sessions": [
     {
       "id": "d782e3d9-3a40-4bcf-a248-b85f80e274e9",
@@ -9,7 +9,7 @@
     }
   ],
   "filters": {
-    "file_prefix": "Common2026/T_Q2"
+    "file_prefix": "Common2026/Exam/Todai2026/T_Q2"
   },
   "idle_gap_minutes": 5
 }

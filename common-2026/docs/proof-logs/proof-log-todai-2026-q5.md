@@ -2,7 +2,7 @@
 
 将来「中間値定理 + 三角恒等式の代数化 + sqrt の rewrite」型の問題向けに、`sqrt_sq` の方向性 / `Mathlib.Topology` 配下のモジュール名 / `rewrite` の pattern matching を自動補正するエージェントを作るためのベースライン記録。
 
-**定量データ**: [docs/metrics/todai-2026-q5.metrics.md](metrics/todai-2026-q5.metrics.md)
+**定量データ**: [docs/metrics/todai-2026-q5.metrics.md](../metrics/todai-2026-q5.metrics.md)
 
 ## 0. 対象問題と成果物
 

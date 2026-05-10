@@ -1,6 +1,6 @@
 # Han 不等式・ムーンショット計画 🌙
 
-> **Status (2026-05-10): Phase A / B / C 全完了 (zero sorry)。** `Common2026/Shannon/Han.lean` で `han_inequality` が `lake env lean` を silent 通過。Phase A 4 主定理 (`Common2026/Shannon/Entropy.lean`) + Phase B `jointEntropy_chain_rule` + Phase C 本体 + plumbing (Pi reshape `MeasurableEquiv` 3 本 / index 同型 2 本)。退化ケース (`n = 0, 1`) も同じ証明で通過し、当初想定の `hn : 1 ≤ n` 仮定は不要と判明 (削除済)。proof-log は [`proof-log-han-moonshot.md`](proof-log-han-moonshot.md)。
+> **Status (2026-05-10): Phase A / B / C 全完了 (zero sorry)。** `Common2026/Shannon/Han.lean` で `han_inequality` が `lake env lean` を silent 通過。Phase A 4 主定理 (`Common2026/Shannon/Entropy.lean`) + Phase B `jointEntropy_chain_rule` + Phase C 本体 + plumbing (Pi reshape `MeasurableEquiv` 3 本 / index 同型 2 本)。退化ケース (`n = 0, 1`) も同じ証明で通過し、当初想定の `hn : 1 ≤ n` 仮定は不要と判明 (削除済)。proof-log は [`proof-log-han-moonshot.md`](proof-logs/proof-log-han-moonshot.md)。
 >
 > ゴールは **Han の不等式 (補集合形)** を Mathlib + 既存 `Common2026/Shannon` API の上に形式化し、そのプロセスで「次のムーンショットに渡せる共通化候補」を浮き上がらせること。
 
@@ -314,7 +314,7 @@ end InformationTheory.Shannon
 3. ~~**Phase A skeleton + 充填**~~ ✅ 2026-05-10 完了 (`Common2026/Shannon/Entropy.lean` に 4 主定理: chain rule / tower / middle lemma / 「条件付けで減る」)
 4. ~~**Phase B skeleton + 充填**~~ ✅ 2026-05-10 完了 (`jointEntropy` 定義 + n 変数 chain rule。`Common2026/Shannon/Han.lean`)
 5. ~~**Phase C 充填**~~ ✅ 2026-05-10 完了 (`han_inequality` 本体。`hn : 1 ≤ n` 不要が判明し削除、index 同型 2 本 + Pi reshape `MeasurableEquiv` 3 本 + `han_single_bound` を投入)
-6. ~~**proof-log 作成**~~ ✅ 2026-05-10 完了 → [`proof-log-han-moonshot.md`](proof-log-han-moonshot.md)
+6. ~~**proof-log 作成**~~ ✅ 2026-05-10 完了 → [`proof-log-han-moonshot.md`](proof-logs/proof-log-han-moonshot.md)
 
 ### ムーンショット完了後の方向 (user 判断)
 

@@ -1,9 +1,9 @@
 {
   "problem": "東大 2026 第2問",
-  "proof_log": "docs/proof-log-todai-2026-q2.md",
+  "proof_log": "docs/proof-logs/proof-log-todai-2026-q2.md",
   "generated_at": "2026-05-06T10:18:29.568Z",
   "filters": {
-    "file_prefix": "Common2026/T_Q2"
+    "file_prefix": "Common2026/Exam/Todai2026/T_Q2"
   },
   "idle_gap_minutes": 5,
   "sessions": [
@@ -36,27 +36,27 @@
       },
       "bash_total": 59,
       "edits_by_file": {
-        "Common2026/T_Q2_probe.lean": 4,
-        "Common2026/T_Q2_1.lean": 3,
-        "Common2026/T_Q2_2.lean": 33,
+        "Common2026/Exam/Todai2026/T_Q2_probe.lean": 4,
+        "Common2026/Exam/Todai2026/T_Q2_1.lean": 3,
+        "Common2026/Exam/Todai2026/T_Q2_2.lean": 33,
         "Common2026.lean": 1
       },
       "writes_by_file": {
-        "Common2026/T_Q2_probe.lean": 1,
-        "Common2026/T_Q2_1.lean": 1,
-        "Common2026/T_Q2_2.lean": 1
+        "Common2026/Exam/Todai2026/T_Q2_probe.lean": 1,
+        "Common2026/Exam/Todai2026/T_Q2_1.lean": 1,
+        "Common2026/Exam/Todai2026/T_Q2_2.lean": 1
       },
       "reads_by_file": {
         "docs/todai_2026.pdf": 1,
-        "Common2026/T_Q1_1.lean": 1,
-        "Common2026/T_Q1_2.lean": 1,
+        "Common2026/Exam/Todai2026/T_Q1_1.lean": 1,
+        "Common2026/Exam/Todai2026/T_Q1_2.lean": 1,
         "docs/proof-log-todai-2026-q1.md": 1,
         "Common2026/A_Q3.lean": 1,
         "Common2026/A_Q4.lean": 1,
         "Common2026.lean": 1,
         "Common2026/A_Q1_1_i.lean": 1,
         "Common2026/B_Q2_1.lean": 1,
-        "Common2026/T_Q2_2.lean": 4
+        "Common2026/Exam/Todai2026/T_Q2_2.lean": 4
       },
       "matched_edits": 40,
       "matched_writes": 3,
@@ -100,27 +100,27 @@
     },
     "bash_total": 59,
     "edits_by_file": {
-      "Common2026/T_Q2_probe.lean": 4,
-      "Common2026/T_Q2_1.lean": 3,
-      "Common2026/T_Q2_2.lean": 33,
+      "Common2026/Exam/Todai2026/T_Q2_probe.lean": 4,
+      "Common2026/Exam/Todai2026/T_Q2_1.lean": 3,
+      "Common2026/Exam/Todai2026/T_Q2_2.lean": 33,
       "Common2026.lean": 1
     },
     "writes_by_file": {
-      "Common2026/T_Q2_probe.lean": 1,
-      "Common2026/T_Q2_1.lean": 1,
-      "Common2026/T_Q2_2.lean": 1
+      "Common2026/Exam/Todai2026/T_Q2_probe.lean": 1,
+      "Common2026/Exam/Todai2026/T_Q2_1.lean": 1,
+      "Common2026/Exam/Todai2026/T_Q2_2.lean": 1
     },
     "reads_by_file": {
       "docs/todai_2026.pdf": 1,
-      "Common2026/T_Q1_1.lean": 1,
-      "Common2026/T_Q1_2.lean": 1,
+      "Common2026/Exam/Todai2026/T_Q1_1.lean": 1,
+      "Common2026/Exam/Todai2026/T_Q1_2.lean": 1,
       "docs/proof-log-todai-2026-q1.md": 1,
       "Common2026/A_Q3.lean": 1,
       "Common2026/A_Q4.lean": 1,
       "Common2026.lean": 1,
       "Common2026/A_Q1_1_i.lean": 1,
       "Common2026/B_Q2_1.lean": 1,
-      "Common2026/T_Q2_2.lean": 4
+      "Common2026/Exam/Todai2026/T_Q2_2.lean": 4
     },
     "matched_edits": 40,
     "matched_writes": 3,

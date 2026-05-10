@@ -1,6 +1,6 @@
 {
   "problem": "Han 不等式ムーンショット (Phase A: 2 変数 chain rule + 「条件付けで H は減る」 / Phase B: n 変数 jointEntropy chain rule / Phase C: Han 不等式本体)",
-  "proof_log": "docs/proof-log-han-moonshot.md",
+  "proof_log": "docs/proof-logs/proof-log-han-moonshot.md",
   "generated_at": "2026-05-10T07:07:17.770Z",
   "filters": {
     "file_prefix": "Common2026/Shannon"

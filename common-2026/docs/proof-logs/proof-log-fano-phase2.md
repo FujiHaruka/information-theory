@@ -2,7 +2,7 @@
 
 将来「Mathlib API の broad-shallow 探索を支援するツール」「subagent 並列調査の結果検証を自動化するツール」を作るためのベースライン記録。Fano ムーンショット (`docs/fano-moonshot-plan.md`) の Phase 2 を 1 ターンで完走した記録。
 
-**定量データ**: [docs/metrics/fano-phase2.metrics.md](metrics/fano-phase2.metrics.md)
+**定量データ**: [docs/metrics/fano-phase2.metrics.md](../metrics/fano-phase2.metrics.md)
 
 ## 0. 対象問題と成果物
 

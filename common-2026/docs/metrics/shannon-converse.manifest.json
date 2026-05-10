@@ -1,6 +1,6 @@
 {
   "problem": "Shannon ムーンショット Phase 4-γ: single-shot Shannon converse",
-  "proof_log": "docs/proof-log-shannon-converse.md",
+  "proof_log": "docs/proof-logs/proof-log-shannon-converse.md",
   "sessions": [
     {
       "id": "d83757bc-971b-4e04-877a-6c64fbe68c4d",

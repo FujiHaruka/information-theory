@@ -2,7 +2,7 @@
 
 将来「Mathlib 補題探索を楽にするツール」「`.olean` の依存解決と LSP 同期を診断するツール」を作るためのベースライン記録。Fano ムーンショット計画 (`docs/fano-moonshot-plan.md`) の Phase 1 を、計画 (`docs/fano-phase1-plan.md`) に沿って 1 ターンで完走した記録。
 
-**定量データ**: [docs/metrics/fano-phase1.metrics.md](metrics/fano-phase1.metrics.md)
+**定量データ**: [docs/metrics/fano-phase1.metrics.md](../metrics/fano-phase1.metrics.md)
 
 ## 0. 対象問題と成果物
 

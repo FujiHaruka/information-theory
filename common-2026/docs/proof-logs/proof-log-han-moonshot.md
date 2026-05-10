@@ -2,7 +2,7 @@
 
 将来「Pi 値の `MeasurableEquiv` reshape boilerplate を生成するエージェント」「`Fin n` の prefix / 補集合 / sum-product 分解の index 同型を自動構築するツール」「`set_option in` / docstring / private 修飾子の順序を静的に検査する linter」を作るためのベースライン記録。Han 不等式 (補集合形) を Mathlib + 既存 `Common2026/Shannon` API の上に **6 セッション**で完走した記録。
 
-**定量データ**: [docs/metrics/han-moonshot.metrics.md](metrics/han-moonshot.metrics.md)
+**定量データ**: [docs/metrics/han-moonshot.metrics.md](../metrics/han-moonshot.metrics.md)
 
 ## 0. 対象問題と成果物
 

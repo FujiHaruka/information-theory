@@ -1,9 +1,9 @@
 {
   "problem": "東大 2026 第5問",
-  "proof_log": "docs/proof-log-todai-2026-q5.md",
+  "proof_log": "docs/proof-logs/proof-log-todai-2026-q5.md",
   "generated_at": "2026-05-08T12:41:34.740Z",
   "filters": {
-    "file_prefix": "Common2026/T_Q5"
+    "file_prefix": "Common2026/Exam/Todai2026/T_Q5"
   },
   "idle_gap_minutes": 5,
   "sessions": [
@@ -35,20 +35,20 @@
       },
       "bash_total": 15,
       "edits_by_file": {
-        "Common2026/T_Q5.lean": 4,
+        "Common2026/Exam/Todai2026/T_Q5.lean": 4,
         "Common2026.lean": 1
       },
       "writes_by_file": {
-        "Common2026/T_Q5.lean": 2
+        "Common2026/Exam/Todai2026/T_Q5.lean": 2
       },
       "reads_by_file": {
         "docs/todai_2026.pdf": 1,
-        "Common2026/T_Q4.lean": 2,
-        "Common2026/T_Q3.lean": 1,
-        "Common2026/T_Q1.lean": 1,
-        "Common2026/T_Q2.lean": 1,
+        "Common2026/Exam/Todai2026/T_Q4.lean": 2,
+        "Common2026/Exam/Todai2026/T_Q3.lean": 1,
+        "Common2026/Exam/Todai2026/T_Q1.lean": 1,
+        "Common2026/Exam/Todai2026/T_Q2.lean": 1,
         "Common2026/B_Q7.lean": 1,
-        "Common2026/T_Q5.lean": 3
+        "Common2026/Exam/Todai2026/T_Q5.lean": 3
       },
       "matched_edits": 4,
       "matched_writes": 2,
@@ -91,20 +91,20 @@
     },
     "bash_total": 15,
     "edits_by_file": {
-      "Common2026/T_Q5.lean": 4,
+      "Common2026/Exam/Todai2026/T_Q5.lean": 4,
       "Common2026.lean": 1
     },
     "writes_by_file": {
-      "Common2026/T_Q5.lean": 2
+      "Common2026/Exam/Todai2026/T_Q5.lean": 2
     },
     "reads_by_file": {
       "docs/todai_2026.pdf": 1,
-      "Common2026/T_Q4.lean": 2,
-      "Common2026/T_Q3.lean": 1,
-      "Common2026/T_Q1.lean": 1,
-      "Common2026/T_Q2.lean": 1,
+      "Common2026/Exam/Todai2026/T_Q4.lean": 2,
+      "Common2026/Exam/Todai2026/T_Q3.lean": 1,
+      "Common2026/Exam/Todai2026/T_Q1.lean": 1,
+      "Common2026/Exam/Todai2026/T_Q2.lean": 1,
       "Common2026/B_Q7.lean": 1,
-      "Common2026/T_Q5.lean": 3
+      "Common2026/Exam/Todai2026/T_Q5.lean": 3
     },
     "matched_edits": 4,
     "matched_writes": 2,

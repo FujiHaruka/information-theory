@@ -2,7 +2,7 @@
 
 将来 Mathlib 補題検索を支援するツール / `set` + `field_simp` の罠を回避するタクティク提案エージェントを作るためのベースライン記録。
 
-**定量データ**: [docs/metrics/todai-2026-q3.metrics.md](metrics/todai-2026-q3.metrics.md)
+**定量データ**: [docs/metrics/todai-2026-q3.metrics.md](../metrics/todai-2026-q3.metrics.md)
 
 ## 0. 対象問題と成果物
 

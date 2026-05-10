@@ -2,7 +2,7 @@
 
 将来「Mathlib 検索を楽にするツール」「自動 sorry 埋めエージェント」を作るためのベースライン記録。
 
-**定量データ**: [docs/metrics/todai-2026-q1.metrics.md](metrics/todai-2026-q1.metrics.md)
+**定量データ**: [docs/metrics/todai-2026-q1.metrics.md](../metrics/todai-2026-q1.metrics.md)
 
 ## 0. 対象問題と成果物
 
@@ -160,4 +160,4 @@
 
 実際に打った grep コマンドの一覧と Edit 系列の詳細は JSONL に残っている。再現したい場合は `references/reconstruction.md` の手順で抽出可能。
 
-定量サマリ（ツールコール数・所要時間・ファイル別 Edit 回数など）は [metrics.md](metrics/todai-2026-q1.metrics.md) に記載。本文中で引いた「最終ファイルの 25% を `integral_abs_cos` 手書きが占める」のような具体比率もそちらに準拠。
+定量サマリ（ツールコール数・所要時間・ファイル別 Edit 回数など）は [metrics.md](../metrics/todai-2026-q1.metrics.md) に記載。本文中で引いた「最終ファイルの 25% を `integral_abs_cos` 手書きが占める」のような具体比率もそちらに準拠。

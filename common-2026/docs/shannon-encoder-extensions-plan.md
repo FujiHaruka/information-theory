@@ -5,7 +5,7 @@
 
 ## Context
 
-Phase 4-γ で `shannon_converse_single_shot` を `I(Msg; Yo)` 直接版で完成させたが、計画書当初の `I(encoder ∘ Msg; Yo)` 版は Phase 4-α DPI の方向と整合しないため落とした (`docs/proof-log-shannon-converse.md` §2 / §4.1)。本計画はその差分を 2 段で埋める:
+Phase 4-γ で `shannon_converse_single_shot` を `I(Msg; Yo)` 直接版で完成させたが、計画書当初の `I(encoder ∘ Msg; Yo)` 版は Phase 4-α DPI の方向と整合しないため落とした (`docs/proof-logs/proof-log-shannon-converse.md` §2 / §4.1)。本計画はその差分を 2 段で埋める:
 
 - **Phase 4-δ-(a)**: `encoder` が injective な場合に系として `I(Msg; Yo) ≤ I(encoder ∘ Msg; Yo)` を出す (Phase 4-α DPI を 1 回追加で呼ぶだけ)
 - **Phase 4-δ-(b)**: Markov 仮定 `Msg → encoder ∘ Msg → Yo` の下で同じ不等式を出す (条件付き mutualInfo + chain rule + 条件付き独立を新設)
@@ -227,7 +227,7 @@ Common2026/Shannon/
 ## 参照
 
 - 親計画: [`shannon-moonshot-plan.md`](shannon-moonshot-plan.md) — Phase 4-γ 結果セクションに deferred 経緯
-- Phase 4-γ proof-log: [`proof-log-shannon-converse.md`](proof-log-shannon-converse.md) §2「設計判断: encoder を引数から落とした」
+- Phase 4-γ proof-log: [`proof-log-shannon-converse.md`](proof-logs/proof-log-shannon-converse.md) §2「設計判断: encoder を引数から落とした」
 - Phase 4-α DPI: `Common2026/Shannon/DPI.lean:139` `mutualInfo_le_of_postprocess`
 - Phase 4-α MI: `Common2026/Shannon/MutualInfo.lean:36` `mutualInfo` / `:93` `mutualInfo_comm`
 - Phase 4-γ converse: `Common2026/Shannon/Converse.lean:80` `shannon_converse_single_shot`

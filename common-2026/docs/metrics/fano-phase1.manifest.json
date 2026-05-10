@@ -1,6 +1,6 @@
 {
   "problem": "Fano 不等式 Phase 1 — Markov 形 (FiniteJointPMF X X) + DPI + Phase 0 形の DPI 経由復元",
-  "proof_log": "docs/proof-log-fano-phase1.md",
+  "proof_log": "docs/proof-logs/proof-log-fano-phase1.md",
   "sessions": [
     {
       "id": "3619c9cc-b9e0-43e5-b7ad-b44ab31597a8",

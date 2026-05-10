@@ -2,7 +2,7 @@
 
 将来 Mathlib 補題探索ツール / タクティク失敗の説明可能性ツール / 重い tactic を試打する sandbox を作るためのベースライン記録。
 
-**定量データ**: [docs/metrics/todai-2026-q2.metrics.md](metrics/todai-2026-q2.metrics.md)
+**定量データ**: [docs/metrics/todai-2026-q2.metrics.md](../metrics/todai-2026-q2.metrics.md)
 
 ## 0. 対象問題と成果物
 

@@ -1,13 +1,13 @@
 # proof-log テンプレート
 
-このテンプレートに沿って `docs/proof-log-<slug>.md` を書く。各節は省略不可ではないが、削るときは「なぜ書かないか」が明確であるべき。
+このテンプレートに沿って `docs/proof-logs/proof-log-<slug>.md` を書く。各節は省略不可ではないが、削るときは「なぜ書かないか」が明確であるべき。
 
 ```markdown
 # <問題名> Lean 形式化 — ボトルネック分析
 
 将来 <具体的なツール、例: Mathlib 検索を楽にするツール / 自動 sorry 埋めエージェント> を作るためのベースライン記録。
 
-**定量データ**: [docs/metrics/<slug>.metrics.md](metrics/<slug>.metrics.md)
+**定量データ**: [docs/metrics/<slug>.metrics.md](../metrics/<slug>.metrics.md)
 
 ## 0. 対象問題と成果物
 

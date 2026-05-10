@@ -281,7 +281,7 @@ theorem error_lower_bound_decode (P : FiniteJointPMF X Y) (decode : Y → X) ...
   - `Common2026/Fano/Entropy.lean` / `CondEntropy.lean` / `BinaryJensen.lean`（不変だが念のため）
 - 旧 `decode` 引数の残骸（コメントアウトされた古いコード等）を削除
 - `scripts/session_metrics.ts` を回して metrics を取得
-- `proof-log` skill を起動して `docs/proof-log-fano-phase1.md` と `docs/metrics/fano-phase1.{manifest,metrics}.{json,md}` を生成
+- `proof-log` skill を起動して `docs/proof-logs/proof-log-fano-phase1.md` と `docs/metrics/fano-phase1.{manifest,metrics}.{json,md}` を生成
 
 **Done 条件**:
 - 全ファイル silent

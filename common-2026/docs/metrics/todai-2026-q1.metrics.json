@@ -1,9 +1,9 @@
 {
   "problem": "東大 2026 第1問",
-  "proof_log": "docs/proof-log-todai-2026-q1.md",
+  "proof_log": "docs/proof-logs/proof-log-todai-2026-q1.md",
   "generated_at": "2026-05-06T10:09:21.231Z",
   "filters": {
-    "file_prefix": "Common2026/T_Q1"
+    "file_prefix": "Common2026/Exam/Todai2026/T_Q1"
   },
   "idle_gap_minutes": 5,
   "sessions": [
@@ -34,13 +34,13 @@
       },
       "bash_total": 59,
       "edits_by_file": {
-        "Common2026/T_Q1_1.lean": 7,
+        "Common2026/Exam/Todai2026/T_Q1_1.lean": 7,
         "Common2026.lean": 2,
-        "Common2026/T_Q1_2.lean": 12
+        "Common2026/Exam/Todai2026/T_Q1_2.lean": 12
       },
       "writes_by_file": {
-        "Common2026/T_Q1_1.lean": 1,
-        "Common2026/T_Q1_2.lean": 1
+        "Common2026/Exam/Todai2026/T_Q1_1.lean": 1,
+        "Common2026/Exam/Todai2026/T_Q1_2.lean": 1
       },
       "reads_by_file": {
         "Common2026/A_Q1_1_i.lean": 1,
@@ -86,13 +86,13 @@
     },
     "bash_total": 59,
     "edits_by_file": {
-      "Common2026/T_Q1_1.lean": 7,
+      "Common2026/Exam/Todai2026/T_Q1_1.lean": 7,
       "Common2026.lean": 2,
-      "Common2026/T_Q1_2.lean": 12
+      "Common2026/Exam/Todai2026/T_Q1_2.lean": 12
     },
     "writes_by_file": {
-      "Common2026/T_Q1_1.lean": 1,
-      "Common2026/T_Q1_2.lean": 1
+      "Common2026/Exam/Todai2026/T_Q1_1.lean": 1,
+      "Common2026/Exam/Todai2026/T_Q1_2.lean": 1
     },
     "reads_by_file": {
       "Common2026/A_Q1_1_i.lean": 1,
