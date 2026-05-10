@@ -7,9 +7,9 @@
 ## 進捗
 
 - [x] Phase 0 — Mathlib + 既存 Common2026 API インベントリ ✅ → [slepian-wolf-mathlib-inventory.md](slepian-wolf-mathlib-inventory.md)
-- [ ] Phase A — side info 入り Fano wrapper + `entropy_le_log_card` 📋
-- [ ] Phase B — 3 bound (X / Y / sum) の本体実装 📋
-- [ ] Phase C — 3 bound 統合 + publish 形整理 📋
+- [x] Phase A — side info 入り Fano wrapper + `entropy_le_log_card` ✅ (2026-05-10)
+- [x] Phase B — 3 bound (X / Y / sum) の本体実装 ✅ (2026-05-10)
+- [x] Phase C — 3 bound 統合 + publish 形整理 ✅ (2026-05-10)
 
 ## ゴール / Approach
 
@@ -390,3 +390,44 @@ end InformationTheory.Shannon
 ## 判断ログ
 
 書く頻度: Phase 中の方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
+
+### 2026-05-10: Phase B X bound 派生ルートを `condMutualInfo` 経由にピボット
+
+**当初の派生** (Approach §「3 bound 共通の Cover–Thomas 派生 chain」):
+
+```
+log Mx ≥ H(eX∘Xs)
+       ≥ H(eX∘Xs | Ys)
+       = H(eX∘Xs, Xs | Ys) - H(Xs | eX∘Xs, Ys)        -- 条件付き chain rule (Phase B-3 の山場)
+       ≥ H(Xs | Ys) - H(Xs | eX∘Xs, Ys)
+       ≥ H(Xs | Ys) - δ(Pe)
+```
+
+**問題**: 「条件付き chain rule」 `H(X, Z | Y) = H(Z | Y) + H(X | Y, Z)` が `Common2026/Shannon/Entropy.lean` に未整備、新規補題 ~50 行になる。
+
+**ピボット**: `condMutualInfo_eq_condEntropy_sub_condEntropy` + `condMutualInfo_comm` の 2 本既存補題で同等の派生を実現できることを発見。
+
+```
+H(X | Ys) - H(X | Ys, EX) = (condMI Xs EX Ys).toReal      -- bridge
+                          = (condMI EX Xs Ys).toReal      -- comm
+                          = H(EX | Ys) - H(EX | Ys, Xs)   -- bridge
+                          ≤ H(EX | Ys)                    -- condEntropy_nonneg (新規 5 行)
+                          ≤ H(EX) ≤ log Mx
+```
+
+**新規補題**: `condEntropy_nonneg` (5 行) のみ。条件付き chain rule (~50 行) 回避。
+**結果**: X bound 60 行、Y bound 60 行 (X bound 写経)、sum bound 50 行。
+
+### 2026-05-10: 側 info Fano wrapper の conditioner 順を `(Yo, Si)` に固定
+
+`fano_inequality_with_side_info` で paired conditioner を `(Yo ω, Si ω)` の順とした。
+利用側 (X bound) で `Yo := Ys, Si := EX` と渡し `(Ys, EX)` 順の conditioner を得る。
+これで `condMutualInfo_eq_condEntropy_sub_condEntropy` の RHS `H(X | Ys, EX)` (≡ `condEntropy μ Xs (fun ω => (Ys ω, EX ω))`) と直接マッチし、prodComm 経由の swap (証明 ~30 行) を回避。
+
+### 2026-05-10: Phase C 統合形 = 3 bound の `And` tuple
+
+`slepian_wolf_converse_single_shot` を 3 bound の `⟨h_X, h_Y, h_sum⟩` で構成。各 bound は
+それぞれ別の Pe (X bound = marginal X error、Y bound = marginal Y error、sum bound = joint
+error) を抱えるため、構造体化せず `And` で素直に束ねる。`δ(Pe)` も inline 維持
+(計画推奨方針)。
+
