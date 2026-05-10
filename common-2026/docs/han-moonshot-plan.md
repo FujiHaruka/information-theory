@@ -1,6 +1,6 @@
 # Han 不等式・ムーンショット計画 🌙
 
-> **Status (2026-05-10): Phase 0 (M0) 完了。** Fano (`Common2026/Fano/Measure.lean`) と Shannon converse (`Common2026/Shannon/Converse.lean`) のムーンショット達成後の後継プロジェクト。Phase 0 結果は [`han-mathlib-inventory.md`](han-mathlib-inventory.md) — Mathlib に Han / Shearer 不在 / `Fin n → α` の instance チェイン自動発火経路 confirm / Phase A 中間補題 150〜200 行に再見積もり。次は Phase A skeleton。
+> **Status (2026-05-10): Phase A / B / C 全完了 (zero sorry)。** `Common2026/Shannon/Han.lean` で `han_inequality` が `lake env lean` を silent 通過。Phase A 4 主定理 (`Common2026/Shannon/Entropy.lean`) + Phase B `jointEntropy_chain_rule` + Phase C 本体 + plumbing (Pi reshape `MeasurableEquiv` 3 本 / index 同型 2 本)。退化ケース (`n = 0, 1`) も同じ証明で通過し、当初想定の `hn : 1 ≤ n` 仮定は不要と判明 (削除済)。proof-log は [`proof-log-han-moonshot.md`](proof-log-han-moonshot.md)。
 >
 > ゴールは **Han の不等式 (補集合形)** を Mathlib + 既存 `Common2026/Shannon` API の上に形式化し、そのプロセスで「次のムーンショットに渡せる共通化候補」を浮き上がらせること。
 
@@ -25,17 +25,22 @@ Han の不等式は次の理由で「第二の応用」として最適:
 
 ```lean
 theorem han_inequality
-    {n : ℕ} (hn : 1 ≤ n)
-    {α : Type*} [Fintype α] [MeasurableSpace α] [MeasurableSingletonClass α]
+    {n : ℕ}
+    {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+                [MeasurableSpace α] [MeasurableSingletonClass α]
     {Ω : Type*} [MeasurableSpace Ω]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i)) :
-    (n - 1 : ℝ) * jointEntropy μ Xs ≤
-      ∑ i : Fin n, jointEntropy μ (fun j : {j // j ≠ i} => Xs j) := by
-  sorry
+    ((n : ℝ) - 1) * jointEntropy μ Xs
+      ≤ ∑ i : Fin n, jointEntropyExcept μ Xs i
 ```
 
-ここで `jointEntropy μ Xs := entropy μ (fun ω i => Xs i ω)`（既存 `Shannon.entropy` を `Fin n → α` 値の RV に適用しただけのラッパー）。
+ヘルパ:
+
+- `jointEntropy μ Xs := entropy μ (fun ω i => Xs i ω)` — 既存 `Shannon.entropy` を `Fin n → α` 値の RV に適用しただけのラッパー
+- `jointEntropyExcept μ Xs i := entropy μ (fun ω (j : {j // j ≠ i}) => Xs j ω)` — 補集合 `{j // j ≠ i}` 上の値で entropy を取った形
+
+> **当初プランからの差分**: `hn : 1 ≤ n` を仮定していたが、`n = 0` で LHS = `(-1) · 0 = 0`、RHS = 空和 = 0 で成立。`hn` 不要が実装で判明し statement から削除。RHS は当初「無名 lambda」直書きだったが、各補題で再利用するため `jointEntropyExcept` ヘルパに切り出した。
 
 ### 非ゴール
 
@@ -242,13 +247,14 @@ end InformationTheory.Shannon
 namespace InformationTheory.Shannon
 
 theorem han_inequality
-    {n : ℕ} (hn : 1 ≤ n)
-    {α : Type*} [Fintype α] [MeasurableSpace α] [MeasurableSingletonClass α]
+    {n : ℕ}
+    {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+                [MeasurableSpace α] [MeasurableSingletonClass α]
     {Ω : Type*} [MeasurableSpace Ω]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i)) :
-    (n - 1 : ℝ) * jointEntropy μ Xs ≤
-      ∑ i : Fin n, jointEntropyExcept μ Xs i
+    ((n : ℝ) - 1) * jointEntropy μ Xs
+      ≤ ∑ i : Fin n, jointEntropyExcept μ Xs i
 
 end InformationTheory.Shannon
 ```
@@ -280,7 +286,7 @@ end InformationTheory.Shannon
 
 - `han_inequality` が `lake env lean Common2026/Shannon/Han.lean` で silent
 - Phase A + B がすべて activated (主定理が `entropy_pair_eq_entropy_add_condEntropy`, `condEntropy_le_condEntropy_of_pair`, `jointEntropy_chain_rule` を直接呼ぶ)
-- `n = 1` 退化ケース (両辺 0) も同じ証明で通るか、別途明示的に処理
+- `n = 0, 1` 退化ケース (両辺 0) も同じ証明で追加処理なしに通った (`hn : 1 ≤ n` 不要が判明し statement から削除)
 
 ### 工数感
 
@@ -305,4 +311,13 @@ end InformationTheory.Shannon
 
 1. ~~**Phase 0 着手** — Mathlib + 既存 Shannon API インベントリ調査 (subagent 1 本 + ローカル `loogle` / `rg`)~~ ✅ 2026-05-10 完了 → [`han-mathlib-inventory.md`](han-mathlib-inventory.md)
 2. ~~Phase 0 結果を見て、本計画書の Approach / Phase A 節を必要に応じて更新~~ ✅ Phase A 工数感 (150〜200 行) / Phase B 最大リスク (instance 自動発火 confirm 済) 反映
-3. **Phase A skeleton 作成** — `Common2026/Shannon/Entropy.lean` の sorry-driven 出だし。3 主定理 (`entropy_pair_eq_entropy_add_condEntropy` / `condMutualInfo_eq_condEntropy_sub_condEntropy` / `condEntropy_le_condEntropy_of_pair`) + tower 補題を `:= by sorry` で並べ、`lake env lean` で instance 発火を確認 ← **次セッションの最初の作業**
+3. ~~**Phase A skeleton + 充填**~~ ✅ 2026-05-10 完了 (`Common2026/Shannon/Entropy.lean` に 4 主定理: chain rule / tower / middle lemma / 「条件付けで減る」)
+4. ~~**Phase B skeleton + 充填**~~ ✅ 2026-05-10 完了 (`jointEntropy` 定義 + n 変数 chain rule。`Common2026/Shannon/Han.lean`)
+5. ~~**Phase C 充填**~~ ✅ 2026-05-10 完了 (`han_inequality` 本体。`hn : 1 ≤ n` 不要が判明し削除、index 同型 2 本 + Pi reshape `MeasurableEquiv` 3 本 + `han_single_bound` を投入)
+6. ~~**proof-log 作成**~~ ✅ 2026-05-10 完了 → [`proof-log-han-moonshot.md`](proof-log-han-moonshot.md)
+
+### ムーンショット完了後の方向 (user 判断)
+
+- **Phase D (subset average / Shearer)**: 「非ゴール」(line 41-45) に置いた拡張を別 plan に切り出す候補。Han 本体の `han_single_bound` パターンが再利用できるかが見どころ。
+- **Slepian-Wolf converse** (撤退ライン側にあった代替): n 変数 chain rule + Markov chain converse の組み合わせで、`Common2026/Shannon/Converse.lean` の延長として書ける見込み
+- **`Common2026/Shannon` の API 整理**: Han で擦った結果 `MeasurableEquiv.piCongrLeft` + `sumPiEquivProdPi` + `funUnique` の 3 点セットや、`entropy_measurableEquiv_comp` のような plumbing は次のムーンショットでも使う。Shannon 本体に上げるかは proof-log 観察を踏まえて検討
