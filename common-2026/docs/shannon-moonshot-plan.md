@@ -1,6 +1,6 @@
 # Shannon ムーンショット計画 🌙
 
-> **Status (2026-05-09): Phase 4-M0 完了**。インベントリは [`docs/shannon-mathlib-inventory.md`](shannon-mathlib-inventory.md)。Phase 4-α 着手 ready。
+> **Status (2026-05-10): 🌙 ムーンショット達成 (Phase 4-γ 完了)**。`Common2026/Shannon/Converse.lean` で `shannon_converse_single_shot` が sorry ゼロで通過。Phase 4-M0 〜 γ の全段が活性。インベントリは [`docs/shannon-mathlib-inventory.md`](shannon-mathlib-inventory.md)、最終振り返りは [Phase 4-γ 結果](#phase-4-γ-結果-2026-05-10) 節を参照。
 > Fano ムーンショット ([fano-moonshot-plan.md](fano-moonshot-plan.md)) の Phase 3 達成を前提とする後継プロジェクト。
 > ゴールは「Mathlib に既存の `klDiv` を主軸に、mutual information / data processing inequality / Shannon converse を接続する」こと。
 
@@ -292,11 +292,13 @@ end InformationTheory.Shannon
 
 ---
 
-## Phase 4-γ: single-shot Shannon converse
+## Phase 4-γ: single-shot Shannon converse 🎯 **達成 (2026-05-10)**
 
 ### スコープ
 
 Fano (Phase 3) + DPI (Phase 4-α) + bridge (Phase 4-β) を組み合わせて Shannon converse を導く。
+
+**当初想定 (encoder 付き)**:
 
 ```lean
 namespace InformationTheory.Shannon
@@ -321,35 +323,72 @@ theorem shannon_converse_single_shot
 end InformationTheory.Shannon
 ```
 
+> ⚠️ **encoder 版は実装で落とした** (Phase 4-γ 結果参照)。実装は `I(Msg; Yo)` 直接版。encoder 版は injective encoder の系として、または `Msg → encoder ∘ Msg → Yo` Markov 仮定の下で別補題として後付け可能 (Phase 5 候補)。
+
 ### 証明骨格 (純 plumbing)
 
 ```
 log|M| = H(Msg)                                                  -- uniform message + Phase 4-β entropy
        = I(Msg; decoder ∘ Yo) + condEntropy(Msg | decoder ∘ Yo)  -- Phase 4-β bridge
        ≤ I(Msg; Yo) + condEntropy(Msg | decoder ∘ Yo)            -- Phase 4-α DPI (decoder)
-       ≤ I(encoder ∘ Msg; Yo) + condEntropy(Msg | decoder ∘ Yo)  -- Phase 4-α DPI (encoder, 逆向き)
-       ≤ I(encoder ∘ Msg; Yo) + h(Pe) + Pe · log(|M|-1)          -- Phase 3 Fano (Measure.lean)
+       ≤ I(Msg; Yo) + h(Pe) + Pe · log(|M|-1)                    -- Phase 3 Fano (Measure.lean)
 ```
 
-最後の Fano 適用には Phase 3 の `fano_inequality_measure_theoretic` をそのまま使える (X = M, decoder の Markov 化が必要)。
+(encoder の DPI 1 段は実装では削除 — §結果参照。)
+
+最後の Fano 適用には Phase 3 の `fano_inequality_measure_theoretic` をそのまま使える (X = M, decoder = id の系)。
 
 ### 鍵となる作業
 
 1. **uniform message のエントロピー** — `H(Msg) = log |M|`。`hMsg_uniform` から計算。20 行程度
-2. **encoder / decoder の DPI 適用** — Phase 4-α の DPI を 2 回呼ぶ。シンプル
+2. **decoder の DPI 適用** — Phase 4-α の DPI を 1 回呼ぶ。シンプル
 3. **Phase 3 Fano の適用** — `fano_inequality_measure_theoretic` の signature と整合させる。`X` 引数を `M` (`Fintype` + `MeasurableSingletonClass`) として使う
-4. **chain (`calc` で連結)** — 上の 4 行をそのまま Lean に書き下す
+4. **chain (`calc` / `linarith` で連結)** — 上の 3 行をそのまま Lean に書き下す
 
 ### Done 条件
 
-- `Common2026/Shannon/Converse.lean` が `lake env lean` で silent
-- Phase 3 / 4-α / 4-β がすべて activated されている (= 削除すると converse が壊れる)
-- proof-log + metrics 取得済み
-- 全体ふりかえり: Fano プロジェクト (Phase 0〜3) + Shannon プロジェクト (Phase 4-M0〜γ) の累計工数とツールコール数を比較した metrics サマリ
+- ✅ `Common2026/Shannon/Converse.lean` が `lake env lean` で silent (124 行 / 0 errors / 0 sorry)
+- ✅ Phase 3 / 4-α / 4-β がすべて activated (主定理が `MeasureFano.fano_inequality_measure_theoretic`, `Shannon.mutualInfo_le_of_postprocess`, `Shannon.mutualInfo_eq_entropy_sub_condEntropy` を直接呼ぶ)
+- ✅ proof-log + metrics 取得済み ([proof-log-shannon-converse.md](proof-log-shannon-converse.md), [metrics/shannon-converse.metrics.md](metrics/shannon-converse.metrics.md))
+- 🟡 全体ふりかえり: 行数ベースの Fano vs Shannon plumbing 比較は下表に記録。session metrics は Fano Phase 1/2 と Shannon converse のみ取得済 (Phase 3 / 4-α / 4-β は未取得)、累計工数の定量比較は不揃い
 
 ### 工数感
 
-1 週間。証明本体は短いが、measurability assumption と Markov chain の formulation、`hMsg_uniform` の使い回しに時間がかかる見込み。
+1 週間予算。**実績: 1 セッション (14m 27s, 46 ツールコール, 3 失敗)** — ほぼ skeleton 1 ターン + 中身 1 ターンで完走。Phase 4-α / 4-β の積み上げで「組み合わせるだけ」になった効果。
+
+### 撤退ライン
+
+非該当。skeleton 着手前の plan 修正 (encoder 引数落とし、§結果参照) で polish 1 回入っただけで、本体の証明戦略は計画通り通った。
+
+### Phase 4-γ 結果 (2026-05-10)
+
+**実装と計画の差分: encoder を引数から落とした**。計画の `I(encoder ∘ Msg; Yo)` 版は Phase 4-α DPI (`mutualInfo_le_of_postprocess`) の方向と整合しない (DPI は postprocess 方向 `I(Xs; f∘Yo) ≤ I(Xs; Yo)` のみで、encoder 側 `I(Msg; Yo) ≤ I(encoder ∘ Msg; Yo)` は Markov 仮定 `Msg → encoder ∘ Msg → Yo` 別途要)。`I(Msg; Yo)` 直接版に切り替え、encoder 版は **Phase 5 候補**として deferred:
+
+- (a) **injective encoder の系**: `encoder` injective なら `mutualInfo μ Msg Yo = mutualInfo μ (encoder ∘ Msg) Yo` が成立、これを bridge して encoder 付き版を導出
+- (b) **Markov 仮定込み版**: `Msg → encoder ∘ Msg → Yo` を `condDistrib` レベルで定式化し、別補題で `mutualInfo μ Msg Yo ≤ mutualInfo μ (encoder ∘ Msg) Yo` を証明、本定理に bridge
+- 100〜200 行追加見込み。ムーンショット成立 (sorry ゼロで通る) を遅らせないため見送り
+
+**Fano vs Shannon plumbing 主役比較** (proof-log §1 を再掲)。「KL chain rule 主軸 plumbing は binEntropy 凹性主軸より速かったか」のデモ素材:
+
+| Phase | 主要ファイル | 行数 | 新規補題の中核 | 性格 |
+|---|---|---|---|---|
+| Phase 3 (Fano Measure) | `Common2026/Fano/Measure.lean` | 数百行 | `fano_inequality_measure_theoretic` | 測度論経由の重実装 |
+| Phase 4-α (DPI) | `Common2026/Shannon/DPI.lean` | 168 行 | `mutualInfo_le_of_postprocess` | klDiv の DPI 接続 |
+| Phase 4-β (bridge) | `Common2026/Shannon/Bridge.lean` | 588 行 | `mutualInfo_eq_entropy_sub_condEntropy` | KL ↔ entropy − condEntropy 同値 |
+| **Phase 4-γ (converse)** | `Common2026/Shannon/Converse.lean` | **124 行** | (組み合わせのみ) | **plumbing** |
+
+Phase 4-α 〜 4-γ で計 880 行。Fano Phase 3 の `Measure.lean` 単体と同オーダー。Phase 4-β (bridge) が ENNReal ↔ Real / 離散和 ↔ 測度積分の往復で最も重く、γ は β が片付いた後の純組み合わせとして 1 セッションで完走。
+
+**成果物**:
+
+- `Common2026/Shannon/Converse.lean` (124 行、主定理 + private helper `entropy_of_uniform_msg`)
+- `Common2026.lean` に `import Common2026.Shannon.Converse` 追記
+- [`docs/proof-log-shannon-converse.md`](proof-log-shannon-converse.md) — 質的観察 (encoder 落とし判断、`.olean` 鮮度ハマり、PATH ハマり、`omit [Inst] in` パターン)
+- [`docs/metrics/shannon-converse.{metrics,manifest}.{json,md}`](metrics/shannon-converse.metrics.md)
+
+**ツール開発への示唆** (proof-log §6 を要約):
+- 高: **inequality 方向の静的検証** — 計画 Lean 命題と利用予定補題の戻り方向を照合 (今回 encoder 落とし判断の自動化)
+- 高: **`.olean` 鮮度診断** — `lake env lean` 失敗前の上流再ビルド提示 (recurring 問題)
 
 ---
 
