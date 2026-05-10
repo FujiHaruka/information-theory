@@ -1,0 +1,23 @@
+{
+  "problem": "Shannon ムーンショット Phase 4-δ-(b): Markov chain encoder converse + condMutualInfo / mutualInfo chain rule",
+  "proof_log": "docs/proof-log-shannon-markov-converse.md",
+  "sessions": [
+    {
+      "id": "d389ee9e-bb21-46d4-84ea-d9cb0adbdb3f",
+      "prompt_ids": ["eab08e67"],
+      "note": "Phase 4-δ-(a) injective encoder 系の追加 + Phase 4-δ-(b) Mathlib 在庫調査 (docs/shannon-condmi-inventory.md 執筆)。 condMutualInfo / IsMarkovChain / mutualInfo chain rule の Mathlib 不在を確定。"
+    },
+    {
+      "id": "a19f400f-48cc-42f7-9ca7-27be5b941e2b",
+      "prompt_ids": ["d97e44cc"],
+      "note": "Phase 4-δ-(b) skeleton (CondMutualInfo.lean を新規作成、5 sorry) → composition (mutualInfo_le_of_markov + markov_encoder_converse) → condMutualInfo を rnDeriv 形から compProd 形に pivot + γ-form Markov 採用 → condMI=0 を充填。chain rule のみ sorry のまま終了。"
+    },
+    {
+      "id": "ab169a71-c571-4dbd-b122-8750dc98c911",
+      "prompt_ids": ["5884d959"],
+      "note": "Phase 4-δ-(b) 残り sorry である mutualInfo_chain_rule の充填。 H(X,Y) を二度展開する経路 + condEntropy 内の swap pair を解消する補助 swap_condEntropy 系で完了。"
+    }
+  ],
+  "filters": { "file_prefix": "Common2026/Shannon" },
+  "idle_gap_minutes": 5
+}
