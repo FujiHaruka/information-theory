@@ -1,20 +1,31 @@
 # Moonshot シードカード集
 
-> **Status (2026-05-10)**: 起草。Fano (測度論版) → Shannon converse (3 形) → Han 補集合形 → Han Phase D (subset average / Shearer) まで sorry ゼロで通った状態を起点に、次のムーンショット候補 5 本をシード化。本ファイルは「どれを次に育てるか」の意思決定用カタログ。
+> **Status (2026-05-11)**: ✅ 5 シード完了 (Seed 4: AEP は Phase A〜C 単体 publish ラインで完了 / Phase D 源符号化は別 plan、Seed 5: Stein は achievability 単体で完了 / converse は別 plan)。Loomis–Whitney → Slepian–Wolf → AEP → Stein achievability → Polymatroid を **すべて 0 sorry** で通過。次のムーンショット候補は末尾「次のシード候補」セクション参照。
+>
+> 起草時 (2026-05-10): Fano (測度論版) → Shannon converse (3 形) → Han 補集合形 → Han Phase D (subset average / Shearer) まで通った状態を起点に、次のムーンショット候補 5 本をシード化。
 >
 > ここに書いてあるのは **着手前の seed**。実装着手の判断 = 該当シードを `docs/<family>/<topic>-moonshot-plan.md` に複製 + `docs/moonshot-plan-template.md` で膨らませる。本ファイル自体はカード一覧として保ち、選定が確定したら該当カードに `→ <plan path>` のポインタを書き加える。
 
 ## 起点 (現場実装)
 
+**初期 (Seed 起草時、2026-05-10)**:
 - `Common2026/Fano/Measure.lean` — `fano_inequality_measure_theoretic` (deterministic decoder)
 - `Common2026/Shannon/{MutualInfo,DPI,Bridge,CondMutualInfo,Converse}.lean` — KL 主軸 single-shot Shannon converse 3 形 + Markov chain + chain rule
 - `Common2026/Shannon/{Entropy,Han,HanD,HanDAverage,HanDShearer}.lean` — 2 変数 / Fin n / Finset (Fin n) の chain rule + conditioning monotonicity + Han 補集合 + Han 1978 subset average + Shearer
+
+**追加 (5 シード完了後、2026-05-11)**:
+- `Common2026/Shannon/Pi.lean` — `entropy_measurableEquiv_comp` / `condEntropy_measurableEquiv_comp` (横断整理で切り出し)
+- `Common2026/Shannon/LoomisWhitney.lean` — Seed 1 完了 (444 行、Shearer 適用で `|A|^{n-1} ≤ ∏ |π_i(A)|`)
+- `Common2026/Shannon/SlepianWolf.lean` — Seed 3 完了 (511 行、3 bound + side info Fano)
+- `Common2026/Shannon/AEP.lean` — Seed 4 Phase A〜C 完了 (432 行、`aep_inProbability` + `aep_ae` + typical set 3 性質)
+- `Common2026/Shannon/Stein.lean` — Seed 5 Phase A〜B 完了 (626 行、Stein achievability)
+- `Common2026/Shannon/Polymatroid.lean` — Seed 2 完了 (288 行、submodularity + monotonicity + empty=0)
 
 このスタックを「異なる角度で擦る」5 本を以下に並べる。
 
 ---
 
-## Seed 1: Loomis–Whitney 不等式 🌙
+## Seed 1: Loomis–Whitney 不等式 🌙 ✅ 完了 (2026-05-11)
 
 **カテゴリ**: Shearer 組合せ応用 (情報理論外への漏出)
 
@@ -42,11 +53,11 @@
 
 **依存 / 後続**: 単独で立つ。後続に edge-isoperimetry / hypercube combinatorics の入口が開く。
 
-→ `docs/shannon/loomis-whitney-moonshot-plan.md`
+→ `docs/shannon/loomis-whitney-moonshot-plan.md` (Phase 0/A/B/C すべて ✅) / 実装: `Common2026/Shannon/LoomisWhitney.lean` (444 行、0 sorry) / proof-log: `docs/proof-logs/proof-log-loomis-whitney.md`
 
 ---
 
-## Seed 2: Submodularity of entropy / polymatroid axioms
+## Seed 2: Submodularity of entropy / polymatroid axioms ✅ 完了 (2026-05-11)
 
 **カテゴリ**: Han Phase D の構造的整理
 
@@ -79,11 +90,11 @@
 
 **依存 / 後続**: 単独で立つ。後続に matroid 理論 / 結合構造論への入口。
 
-→ `docs/han/polymatroid-moonshot-plan.md`
+→ `docs/han/polymatroid-moonshot-plan.md` (Phase A/B/C ✅、Phase D structure 化は別 plan に切り出し) / 実装: `Common2026/Shannon/Polymatroid.lean` (288 行、0 sorry) / proof-log: `docs/proof-logs/proof-log-polymatroid.md`
 
 ---
 
-## Seed 3: Slepian–Wolf 単発 converse 🌙
+## Seed 3: Slepian–Wolf 単発 converse 🌙 ✅ 完了 (2026-05-10)
 
 **カテゴリ**: Shannon converse の distributed 拡張
 
@@ -118,11 +129,11 @@ where δ(ε) := h(ε) + ε · log(|X × Y| - 1)  -- Fano 由来
 
 **依存 / 後続**: Seed 4 (AEP) ができれば asymptotic 化が直接続けられる。本 seed は single-shot 単独で publish 価値あり。
 
-→ `docs/shannon/slepian-wolf-moonshot-plan.md`
+→ `docs/shannon/slepian-wolf-moonshot-plan.md` (Phase A/B/C ✅) / 実装: `Common2026/Shannon/SlepianWolf.lean` (511 行、0 sorry、3 bound) / proof-log: `docs/proof-logs/proof-log-slepian-wolf.md`
 
 ---
 
-## Seed 4: AEP + 源符号化定理（漸近）🌙🌙
+## Seed 4: AEP + 源符号化定理（漸近）🌙🌙 ✅ 部分完了 (2026-05-11)
 
 **カテゴリ**: single-shot → `n → ∞` への跳躍
 
@@ -166,11 +177,11 @@ typical set T_ε^n := { x^n : |−(1/n) log P(x^n) − H(X)| < ε } に対し
 
 **依存 / 後続**: Seed 5 (Stein) の plumbing 半分を共有。Seed 4 → 5 の順序が自然。本 seed が片付けば Common2026 全体の射程が一気に広がる。
 
-→ `docs/shannon/aep-moonshot-plan.md`
+→ `docs/shannon/aep-moonshot-plan.md` (Phase A/B/C ✅ AEP 単体 publish ラインに到達 / Phase D 源符号化定理 weak converse + Phase E achievability は撤退ラインに従って次セッションへ deferred) / 実装: `Common2026/Shannon/AEP.lean` (432 行、0 sorry) / proof-log: `docs/proof-logs/proof-log-aep.md`
 
 ---
 
-## Seed 5: Stein の補題（仮説検定の最適 error exponent）
+## Seed 5: Stein の補題（仮説検定の最適 error exponent） ✅ 部分完了 (2026-05-11)
 
 **カテゴリ**: KL の operational meaning、統計的仮説検定
 
@@ -205,7 +216,7 @@ type-II error β_n := Q^n(A_n) を最小化すると
 
 **依存 / 後続**: Seed 4 (AEP) を先にやると plumbing の半分が共有できる。逆は不可 (Seed 5 単独だと AEP を内側に再実装する羽目になる)。
 
-→ `docs/shannon/stein-moonshot-plan.md`
+→ `docs/shannon/stein-moonshot-plan.md` (Phase A/B ✅ Stein achievability 単体 publish ラインに到達 / Phase C upper bound + Phase D 統合形 `stein_lemma` (両側等号) は別 plan として切り出し) / 実装: `Common2026/Shannon/Stein.lean` (626 行、0 sorry) / proof-log: `docs/proof-logs/proof-log-stein.md`
 
 ---
 
@@ -229,6 +240,30 @@ Seed 4 (AEP + 源符号化) ──→ Seed 5 (Stein)
 
 ---
 
+## 次のシード候補 (5 シード完了後、2026-05-11)
+
+5 シード完了で生まれた **deferred / sub-plan 候補** と **新規候補**:
+
+### A. 直接 deferred (本セッションの撤退ラインに従って分離)
+
+- **Stein converse (Phase C/D)**: `-(1/n) log β_n ≤ klDiv P Q + δ` の upper bound + 両側統合 `Tendsto` 形 `stein_lemma`。Phase A〜B (achievability) が `Common2026/Shannon/Stein.lean` で 0 sorry で立っているのが起点。新規 plumbing は (a) 任意検定 → Bernoulli KL の DPI reduction、(b) `klDiv (P^n) (Q^n) = n · klDiv P Q` の Pi 化 chain rule (40〜80 行の induction)、(c) 統合形の `Tendsto` 構築。見積 1〜1.5 週間 / 200〜400 行 / 中リスク。
+- **AEP Phase D (源符号化定理 weak converse)**: `liminf_n (log M_n / n) ≥ entropy μ X`。AEP 単体 (`Common2026/Shannon/AEP.lean`) が 0 sorry なので起点完備。`shannon_converse_single_shot` を block per-n 適用。`Filter.liminf` API 取り扱いが残存懸念。見積 1〜1.5 週間 / 300〜500 行 / 中リスク。
+- **AEP Phase E (achievability、rate > H で error → 0)**: typicality 構成。Phase D 完了後の自然な後続。見積 0.5〜1 週間 / 100〜300 行 / 低リスク。
+- **Polymatroid structure 化 (Phase D)**: `Polymatroid` structure を導入し本 result をインスタンス化。Mathlib に集合関数版 `Polymatroid` / `Submodular` 不在は inventory 軸 1 で確認済。本 plan は 3 性質単発 theorem で close したので別 plan に切り出した。見積 0〜1 週間 / 50〜200 行 / 低リスク (主に formalism 設計判断)。
+
+### B. 5 シード完了で開いた新シード入口
+
+- **Sanov の定理** (Stein の自然な拡張): `klDiv` の operational meaning を別形 (large deviation principle の rate function) で Lean 化。Stein で立った plumbing (log-likelihood ratio plumbing + Pi 化 chain rule) がそのまま再利用可。
+- **Hypercube edge isoperimetry / Han-Bregman bound**: Loomis–Whitney 完了で Shearer の組合せ応用 1 本立った状態。同じ enginer (Shearer) を別 cover で適用するシリーズの第 2 弾。見積 1 週間 / 200〜300 行 / 低リスク。
+- **Channel coding theorem (achievability)**: Shannon converse は完了済。achievability 半分 (Cover-Thomas Ch 7 strong typicality + jointly typical decoder) は AEP plumbing 上に構築可能。見積 4〜6 週間 / 800〜1500 行 / 高リスク。
+
+### C. 横断改善
+
+- **`Common2026/Shannon/Pi.lean` に上流 lift 候補 2 件** (Polymatroid 実装で発見): `condEntropy_nonneg` (SlepianWolf / Polymatroid 重複)、`subsetSplitMEquiv` 系 (HanD / Polymatroid 重複)。3 番目の caller が現れた時点で Pi.lean に格上げ。
+- **`HanD.lean` の Pi reshape を `MeasurableEquiv.piFinsetUnion` ベースに refactor**: Polymatroid inventory で発見、Mathlib 標準補題で自前 `subsetSplitMEquiv` を subsume できる可能性。Han Phase D 周辺の保守ターン候補。
+
+---
+
 ## 横断観察 (着手前の整理候補)
 
 - ~~`Common2026/Fano/CondEntropy.lean` (Phase 1 PMF 形) と `Common2026/Shannon/Bridge.lean` (Phase 4-β 測度形) で `entropy` / `condEntropy` が**重複定義**されている。Phase D で再利用が増えた今、どちらかに寄せる整理は次 moonshot 着手前にやる価値あり (再利用コストが今後ボディブローで効く)~~ → ✅ 整理済 (2026-05-10): 調査の結果、両者は厳密には parallel formalism (PMF 形は `μ : α → ℝ` 関数値、測度形は `μ : Measure Ω, Xs : Ω → α`) で相互依存なし。PMF stack (`Fano/Entropy.lean` / `Fano/CondEntropy.lean` / `Fano/Core.lean`) は Phase 1 Fano core proof 専用、Shannon/Han 系列は全て測度形 (`InformationTheory.MeasureFano.condEntropy` + `Shannon.Bridge.entropy`) を使用、新規ムーンショットも測度形に統一する方針。consolidation (PMF Phase 1 を測度形に書き直し) は本来別の大規模 refactor になるためスコープ外。`Fano/Entropy.lean` / `Fano/CondEntropy.lean` 冒頭に formalism boundary docstring を追加して境界を明文化。
@@ -244,6 +279,12 @@ Seed 4 (AEP + 源符号化) ──→ Seed 5 (Stein)
   - [Shannon encoder extensions](shannon/shannon-encoder-extensions-plan.md)
   - [Han moonshot](han/han-moonshot-plan.md)
   - [Han Phase D (subset average / Shearer)](han/han-phase-d-plan.md)
+- 5 シード plan (2026-05-10 / 2026-05-11):
+  - [Loomis–Whitney moonshot](shannon/loomis-whitney-moonshot-plan.md) ✅
+  - [Slepian–Wolf moonshot](shannon/slepian-wolf-moonshot-plan.md) ✅
+  - [AEP moonshot](shannon/aep-moonshot-plan.md) ✅ (Phase A〜C / Phase D/E deferred)
+  - [Stein moonshot](shannon/stein-moonshot-plan.md) ✅ (Phase A〜B / Phase C/D deferred)
+  - [Polymatroid moonshot](han/polymatroid-moonshot-plan.md) ✅ (Phase A〜C / Phase D structure 化 deferred)
 - 雛形:
   - [moonshot-plan-template.md](moonshot-plan-template.md)
   - [subplan-template.md](subplan-template.md)
