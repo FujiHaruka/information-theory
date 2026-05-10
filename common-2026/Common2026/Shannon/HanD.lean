@@ -39,77 +39,10 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-! ## Pi reshape plumbing -/
+/-! ## Pi reshape plumbing
 
-/-- 索引同型 `↥T₁ ⊕ ↥(T₂ \ T₁) ≃ ↥T₂` (T₁ ⊆ T₂ のとき)。
-`Equiv.Finset.union` だけでは `T₁ ∪ (T₂ \ T₁) = T₂` の cast が要るので直接構成。 -/
-def subsetIdxEquiv {ι : Type*} [DecidableEq ι]
-    {T₁ T₂ : Finset ι} (h : T₁ ⊆ T₂) :
-    (↥T₁ ⊕ ↥(T₂ \ T₁)) ≃ ↥T₂ where
-  toFun := Sum.elim
-    (fun x => ⟨x.val, h x.property⟩)
-    (fun x => ⟨x.val, (Finset.mem_sdiff.mp x.property).1⟩)
-  invFun := fun ⟨i, hi⟩ =>
-    if h₁ : i ∈ T₁ then Sum.inl ⟨i, h₁⟩
-    else Sum.inr ⟨i, Finset.mem_sdiff.mpr ⟨hi, h₁⟩⟩
-  left_inv := by
-    rintro (⟨i, hi⟩ | ⟨i, hi⟩)
-    · simp [hi]
-    · have hni : i ∉ T₁ := (Finset.mem_sdiff.mp hi).2
-      simp [hni]
-  right_inv := by
-    rintro ⟨i, hi⟩
-    by_cases h₁ : i ∈ T₁
-    · simp [h₁]
-    · simp [h₁]
-
-/-- Pi 値 `(↥T₂ → α) ≃ᵐ (↥T₁ → α) × (↥(T₂\T₁) → α)` (T₁ ⊆ T₂)。
-`subsetIdxEquiv` を `MeasurableEquiv.piCongrLeft` で持ち上げ、
-`sumPiEquivProdPi` で sum を product に直す。 -/
-def subsetSplitMEquiv {T₁ T₂ : Finset (Fin n)} (h : T₁ ⊆ T₂) :
-    ((↥T₁ → α) × (↥(T₂ \ T₁) → α)) ≃ᵐ (↥T₂ → α) :=
-  ((MeasurableEquiv.sumPiEquivProdPi
-      (fun _ : ↥T₁ ⊕ ↥(T₂ \ T₁) => α)).symm).trans
-    (MeasurableEquiv.piCongrLeft (fun _ : ↥T₂ => α) (subsetIdxEquiv h))
-
-omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- subsetSplitMEquiv が、共通生成 `Xs : Fin n → α` の T₁/T₂\T₁ 制限を
-T₂ 制限に貼り合わせる。これが reshape の中身。 -/
-lemma subsetSplitMEquiv_apply
-    {T₁ T₂ : Finset (Fin n)} (h : T₁ ⊆ T₂) (Xs : Fin n → α) :
-    subsetSplitMEquiv (α := α) h
-      (fun j : ↥T₁ => Xs j.val, fun j : ↥(T₂ \ T₁) => Xs j.val)
-      = fun j : ↥T₂ => Xs j.val := by
-  funext k
-  obtain ⟨j, hj⟩ := k
-  -- (subsetIdxEquiv h).symm ⟨j, hj⟩ で場合分け
-  have hk : (⟨j, hj⟩ : ↥T₂)
-      = (subsetIdxEquiv h) ((subsetIdxEquiv h).symm ⟨j, hj⟩) :=
-    ((subsetIdxEquiv h).apply_symm_apply ⟨j, hj⟩).symm
-  conv_lhs => rw [show (⟨j, hj⟩ : ↥T₂)
-      = (subsetIdxEquiv h) ((subsetIdxEquiv h).symm ⟨j, hj⟩)
-    from hk]
-  -- subsetSplitMEquiv = sumPiEquivProdPi.symm.trans (piCongrLeft _ subsetIdxEquiv)
-  -- 中の関数が Sum.elim ... なので piCongrLeft_apply_apply で展開
-  show MeasurableEquiv.piCongrLeft (fun _ : ↥T₂ => α) (subsetIdxEquiv h)
-      ((MeasurableEquiv.sumPiEquivProdPi (fun _ : ↥T₁ ⊕ ↥(T₂ \ T₁) => α)).symm
-        (fun j : ↥T₁ => Xs j.val, fun j : ↥(T₂ \ T₁) => Xs j.val))
-      ((subsetIdxEquiv h) ((subsetIdxEquiv h).symm ⟨j, hj⟩))
-    = Xs j
-  rw [MeasurableEquiv.piCongrLeft_apply_apply]
-  -- (sumPiEquivProdPi).symm (f, g) = Sum.elim f g
-  by_cases h₁ : j ∈ T₁
-  · -- inl branch
-    have hsymm : (subsetIdxEquiv h).symm ⟨j, hj⟩ = Sum.inl ⟨j, h₁⟩ := by
-      simp [subsetIdxEquiv, h₁]
-    rw [hsymm]
-    rfl
-  · -- inr branch
-    have hsymm : (subsetIdxEquiv h).symm ⟨j, hj⟩
-        = Sum.inr ⟨j, Finset.mem_sdiff.mpr ⟨hj, h₁⟩⟩ := by
-      simp [subsetIdxEquiv, h₁]
-    rw [hsymm]
-    rfl
+`subsetIdxEquiv` / `subsetSplitMEquiv` / `subsetSplitMEquiv_apply` は
+`Common2026.Shannon.Pi` に移動済み (Han → Pi で transitively 見える)。 -/
 
 /-- 部分集合 `S : Finset (Fin n)` 上の joint entropy。
 `(i : ↑S) → α` 値の random variable のエントロピー。 -/

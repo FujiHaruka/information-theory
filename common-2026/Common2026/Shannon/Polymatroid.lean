@@ -35,23 +35,6 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-! ## Helpers -/
-
-/-- Conditional entropy is non-negative: `0 ≤ H(W | Y)`. Local copy of the
-SlepianWolf-side `condEntropy_nonneg` (kept in-file to avoid pulling SlepianWolf
-into the Polymatroid dependency closure). -/
-private theorem condEntropy_nonneg_local
-    {W : Type*} [Fintype W] [DecidableEq W] [Nonempty W]
-      [MeasurableSpace W] [MeasurableSingletonClass W]
-    {Y : Type*} [MeasurableSpace Y]
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Ws : Ω → W) (Yo : Ω → Y) :
-    0 ≤ InformationTheory.MeasureFano.condEntropy μ Ws Yo := by
-  unfold InformationTheory.MeasureFano.condEntropy
-  refine integral_nonneg fun y => ?_
-  refine Finset.sum_nonneg fun x _ => ?_
-  exact Real.negMulLog_nonneg measureReal_nonneg measureReal_le_one
-
 /-! ## Phase A — empty subset entropy -/
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
@@ -120,7 +103,7 @@ theorem jointEntropySubset_mono
   -- condEntropy is non-negative: 0 ≤ H(XR | XS).
   have h_cond_nn :
       0 ≤ InformationTheory.MeasureFano.condEntropy μ XR XS :=
-    condEntropy_nonneg_local μ XR XS
+    condEntropy_nonneg μ XR XS
   -- Combine.
   unfold jointEntropySubset
   rw [h_reshape, h_chain]

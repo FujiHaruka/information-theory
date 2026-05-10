@@ -2,6 +2,7 @@ import Common2026.Shannon.Bridge
 import Common2026.Shannon.CondMutualInfo
 import Common2026.Shannon.DPI
 import Common2026.Shannon.Entropy
+import Common2026.Shannon.Pi
 import Common2026.Fano.Measure
 import Mathlib.Analysis.SpecialFunctions.BinaryEntropy
 
@@ -175,22 +176,6 @@ theorem entropy_ge_condEntropy
     mutualInfo_eq_entropy_sub_condEntropy μ Ws Yo hWs hYo
   have h_nn : 0 ≤ (mutualInfo μ Ws Yo).toReal := ENNReal.toReal_nonneg
   linarith
-
-/-- Conditional entropy is non-negative: `0 ≤ H(W | Y)`.
-被積分関数 `∑ x, negMulLog (q.real {x})` は probability measure 上の負エントロピー和
-(各項 ≥ 0)。 -/
-theorem condEntropy_nonneg
-    {Ω : Type*} [MeasurableSpace Ω]
-    {W : Type*} [Fintype W] [DecidableEq W] [Nonempty W]
-      [MeasurableSpace W] [MeasurableSingletonClass W]
-    {Y : Type*} [MeasurableSpace Y]
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Ws : Ω → W) (Yo : Ω → Y) :
-    0 ≤ InformationTheory.MeasureFano.condEntropy μ Ws Yo := by
-  unfold InformationTheory.MeasureFano.condEntropy
-  refine integral_nonneg fun y => ?_
-  refine Finset.sum_nonneg fun x _ => ?_
-  exact Real.negMulLog_nonneg measureReal_nonneg measureReal_le_one
 
 /-! ## Phase B — Slepian–Wolf 3 bound 本体
 

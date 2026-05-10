@@ -259,7 +259,7 @@ Seed 4 (AEP + 源符号化) ──→ Seed 5 (Stein)
 
 ### C. 横断改善
 
-- **`Common2026/Shannon/Pi.lean` に上流 lift 候補 2 件** (Polymatroid 実装で発見): `condEntropy_nonneg` (SlepianWolf / Polymatroid 重複)、`subsetSplitMEquiv` 系 (HanD / Polymatroid 重複)。3 番目の caller が現れた時点で Pi.lean に格上げ。
+- ~~**`Common2026/Shannon/Pi.lean` に上流 lift 候補 2 件** (Polymatroid 実装で発見): `condEntropy_nonneg` (SlepianWolf / Polymatroid 重複)、`subsetSplitMEquiv` 系 (HanD / Polymatroid 重複)。3 番目の caller が現れた時点で Pi.lean に格上げ。~~ → ✅ 完了 (2026-05-11): `condEntropy_nonneg` + `subsetIdxEquiv` / `subsetSplitMEquiv` / `subsetSplitMEquiv_apply` を `Pi.lean` に lift。SlepianWolf に `import Pi` 追加、HanD / Polymatroid の重複 (含 `condEntropy_nonneg_local`) を撤去。Pi.lean の docstring を「Shannon 共通土台」スコープに更新。
 - **`HanD.lean` の Pi reshape を `MeasurableEquiv.piFinsetUnion` ベースに refactor**: Polymatroid inventory で発見、Mathlib 標準補題で自前 `subsetSplitMEquiv` を subsume できる可能性。Han Phase D 周辺の保守ターン候補。
 
 ---
