@@ -197,6 +197,86 @@ theorem condEntropy_subset_anti
   exact condEntropy_le_condEntropy_of_pair μ (Xs i) XT₁ XR
     (hXs i) hXT₁_meas hXR_meas
 
+/-- Helper: `jointEntropyExcept` of `Xs ∘ orderEmb` at `k` equals `jointEntropySubset`
+of `S.erase (orderEmb k)`. -/
+private lemma jointEntropyExcept_orderEmb_eq
+    (μ : Measure Ω) (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (S : Finset (Fin n)) (k : Fin S.card) :
+    jointEntropyExcept μ (fun k' ω => Xs (S.orderEmbOfFin rfl k') ω) k
+      = jointEntropySubset μ Xs (S.erase (S.orderEmbOfFin rfl k)) := by
+  set φ : Fin S.card ↪o Fin n := S.orderEmbOfFin rfl
+  -- Index Equiv: {j : Fin S.card // j ≠ k} ≃ ↥(S.erase (φ k))
+  let idx : {j : Fin S.card // j ≠ k} ≃ ↥(S.erase (φ k)) :=
+    { toFun := fun jh => ⟨φ jh.val, by
+        rw [Finset.mem_erase]
+        refine ⟨?_, S.orderEmbOfFin_mem rfl _⟩
+        intro h
+        exact jh.property (φ.injective h)⟩
+      invFun := fun vh =>
+        ⟨(S.orderIsoOfFin rfl).symm ⟨vh.val, (Finset.mem_erase.mp vh.property).2⟩, by
+          intro h
+          have hv_ne : vh.val ≠ φ k := (Finset.mem_erase.mp vh.property).1
+          apply hv_ne
+          have happ := congrArg (S.orderIsoOfFin rfl) h
+          rw [OrderIso.apply_symm_apply] at happ
+          have h2 : vh.val = (S.orderIsoOfFin rfl k : ↥S).val :=
+            congrArg Subtype.val happ
+          rw [h2, S.coe_orderIsoOfFin_apply]⟩
+      left_inv := fun jh => by
+        apply Subtype.ext
+        show (S.orderIsoOfFin rfl).symm ⟨φ jh.val, _⟩ = jh.val
+        have h1 : (⟨φ jh.val, S.orderEmbOfFin_mem rfl _⟩ : ↥S)
+            = S.orderIsoOfFin rfl jh.val := by
+          apply Subtype.ext
+          show (φ jh.val : Fin n) = (S.orderIsoOfFin rfl jh.val).val
+          rw [S.coe_orderIsoOfFin_apply]
+        rw [h1, OrderIso.symm_apply_apply]
+      right_inv := fun vh => by
+        apply Subtype.ext
+        show (φ ((S.orderIsoOfFin rfl).symm
+            ⟨vh.val, (Finset.mem_erase.mp vh.property).2⟩) : Fin n) = vh.val
+        rw [show (φ ((S.orderIsoOfFin rfl).symm
+              ⟨vh.val, (Finset.mem_erase.mp vh.property).2⟩) : Fin n)
+            = (S.orderIsoOfFin rfl ((S.orderIsoOfFin rfl).symm
+                ⟨vh.val, (Finset.mem_erase.mp vh.property).2⟩) : ↥S).val
+            from (S.coe_orderIsoOfFin_apply rfl _).symm,
+            OrderIso.apply_symm_apply] }
+  -- e : ({j : Fin S.card // j ≠ k} → α) ≃ᵐ (↥(S.erase (φ k)) → α)
+  let e : ({j : Fin S.card // j ≠ k} → α) ≃ᵐ (↥(S.erase (φ k)) → α) :=
+    MeasurableEquiv.piCongrLeft (fun _ : ↥(S.erase (φ k)) => α) idx
+  unfold jointEntropyExcept jointEntropySubset
+  have hmeas : Measurable
+      (fun ω (j : {j : Fin S.card // j ≠ k}) => Xs (φ j.val) ω) :=
+    measurable_pi_iff.mpr (fun _ => hXs _)
+  have h_comp := entropy_measurableEquiv_comp μ
+    (fun ω (j : {j : Fin S.card // j ≠ k}) => Xs (φ j.val) ω) hmeas e
+  -- Pointwise: e (fun j => Xs (φ j) ω) ⟨v, hv⟩ = Xs v ω
+  have h_eq :
+      (fun ω => e (fun j : {j : Fin S.card // j ≠ k} => Xs (φ j.val) ω))
+        = fun ω (j : ↥(S.erase (φ k))) => Xs j.val ω := by
+    funext ω
+    funext ⟨v, hv⟩
+    have hk : (⟨v, hv⟩ : ↥(S.erase (φ k))) = idx (idx.symm ⟨v, hv⟩) :=
+      (idx.apply_symm_apply ⟨v, hv⟩).symm
+    conv_lhs => rw [hk]
+    show MeasurableEquiv.piCongrLeft (fun _ : ↥(S.erase (φ k)) => α) idx
+        (fun j : {j : Fin S.card // j ≠ k} => Xs (φ j.val) ω)
+        (idx (idx.symm ⟨v, hv⟩)) = Xs v ω
+    rw [MeasurableEquiv.piCongrLeft_apply_apply]
+    -- Goal: Xs (φ ((idx.symm ⟨v, hv⟩).val)) ω = Xs v ω
+    -- (idx.symm ⟨v, hv⟩).val = (S.orderIsoOfFin rfl).symm ⟨v, hvS⟩
+    -- so φ (...) = (S.orderIsoOfFin rfl ((S.orderIsoOfFin rfl).symm ⟨v, hvS⟩)).val = v
+    show Xs (φ (idx.symm ⟨v, hv⟩).val) ω = Xs v ω
+    have hvS : v ∈ S := (Finset.mem_erase.mp hv).2
+    have h1 : (idx.symm ⟨v, hv⟩).val = (S.orderIsoOfFin rfl).symm ⟨v, hvS⟩ := rfl
+    rw [h1]
+    rw [show (φ ((S.orderIsoOfFin rfl).symm ⟨v, hvS⟩) : Fin n)
+          = (S.orderIsoOfFin rfl ((S.orderIsoOfFin rfl).symm ⟨v, hvS⟩) : ↥S).val
+          from (S.coe_orderIsoOfFin_apply rfl _).symm,
+        OrderIso.apply_symm_apply]
+  rw [h_eq] at h_comp
+  exact h_comp.symm
+
 /-- Han の不等式の subset 版:
 `(|S| - 1) · H(X_S) ≤ ∑ i ∈ S, H(X_{S \ {i}})`。
 
@@ -209,6 +289,71 @@ theorem han_inequality_subset
     (S : Finset (Fin n)) :
     ((S.card : ℝ) - 1) * jointEntropySubset μ Xs S
       ≤ ∑ i ∈ S, jointEntropySubset μ Xs (S.erase i) := by
-  sorry
+  -- Embed S as Fin S.card via orderEmbOfFin
+  set φ : Fin S.card ↪o Fin n := S.orderEmbOfFin rfl with hφ_def
+  set Xs' : Fin S.card → Ω → α := fun k => Xs (φ k) with hXs'_def
+  have hXs'_meas : ∀ k, Measurable (Xs' k) := fun k => hXs (φ k)
+  -- Apply existing Fin n han_inequality
+  have h_han := han_inequality μ Xs' hXs'_meas
+  -- LHS bridge: jointEntropy μ Xs' = jointEntropySubset μ Xs S
+  have h_lhs : jointEntropy μ Xs' = jointEntropySubset μ Xs S := by
+    -- e : (Fin S.card → α) ≃ᵐ (↥S → α) via orderIsoOfFin
+    let idx : Fin S.card ≃ ↥S := (S.orderIsoOfFin rfl).toEquiv
+    let e : (Fin S.card → α) ≃ᵐ (↥S → α) :=
+      MeasurableEquiv.piCongrLeft (fun _ : ↥S => α) idx
+    have hXs'_full :
+        Measurable (fun ω k => Xs' k ω) :=
+      measurable_pi_iff.mpr hXs'_meas
+    have h_comp := entropy_measurableEquiv_comp μ
+      (fun ω k => Xs' k ω) hXs'_full e
+    -- Pointwise: e (fun k => Xs' k ω) j = Xs j.val ω
+    have h_eq :
+        (fun ω => e (fun k => Xs' k ω))
+          = fun ω (j : ↥S) => Xs j.val ω := by
+      funext ω
+      funext ⟨v, hv⟩
+      have hk : (⟨v, hv⟩ : ↥S) = idx (idx.symm ⟨v, hv⟩) :=
+        (idx.apply_symm_apply ⟨v, hv⟩).symm
+      conv_lhs => rw [hk]
+      show MeasurableEquiv.piCongrLeft (fun _ : ↥S => α) idx
+        (fun k => Xs' k ω) (idx (idx.symm ⟨v, hv⟩)) = Xs v ω
+      rw [MeasurableEquiv.piCongrLeft_apply_apply]
+      -- Goal: Xs' (idx.symm ⟨v, hv⟩) ω = Xs v ω
+      -- i.e. Xs (φ (idx.symm ⟨v, hv⟩)) ω = Xs v ω
+      -- Need: (φ (idx.symm ⟨v, hv⟩)) = v.
+      -- φ k = (S.orderIsoOfFin rfl k).val (by coe_orderIsoOfFin_apply)
+      -- so φ (idx.symm ⟨v, hv⟩) = (idx (idx.symm ⟨v, hv⟩)).val = v.
+      show Xs (φ (idx.symm ⟨v, hv⟩)) ω = Xs v ω
+      have : (φ (idx.symm ⟨v, hv⟩) : Fin n) = v := by
+        change (S.orderEmbOfFin rfl (idx.symm ⟨v, hv⟩) : Fin n) = v
+        rw [← S.coe_orderIsoOfFin_apply rfl (idx.symm ⟨v, hv⟩)]
+        show (idx (idx.symm ⟨v, hv⟩) : Fin n) = v
+        rw [idx.apply_symm_apply]
+      rw [this]
+    rw [h_eq] at h_comp
+    -- h_comp : entropy μ (fun ω j => Xs j.val ω) = entropy μ (fun ω k => Xs' k ω)
+    unfold jointEntropy jointEntropySubset
+    exact h_comp.symm
+  -- RHS bridge: 各 summand を per-k bridge で書き換えて、sum を bij で reindex
+  have h_rhs :
+      ∑ k : Fin S.card, jointEntropyExcept μ Xs' k
+        = ∑ i ∈ S, jointEntropySubset μ Xs (S.erase i) := by
+    -- Apply Finset.sum_bij from (Finset.univ : Finset (Fin S.card)) to S via φ.
+    refine Finset.sum_nbij (fun k => φ k) (fun k _ => S.orderEmbOfFin_mem rfl k)
+      ?_ ?_ ?_
+    · -- Injective on univ
+      intro a _ b _ h
+      exact φ.injective h
+    · -- Surjective onto S
+      intro v hv
+      have hrange : v ∈ Set.range (S.orderEmbOfFin rfl) := by
+        rw [Finset.range_orderEmbOfFin]; exact hv
+      obtain ⟨k, hk⟩ := hrange
+      exact ⟨k, Finset.mem_univ k, hk⟩
+    · -- Per-summand
+      intro k _
+      exact jointEntropyExcept_orderEmb_eq μ Xs hXs S k
+  rw [h_lhs, h_rhs] at h_han
+  exact h_han
 
 end InformationTheory.Shannon
