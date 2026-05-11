@@ -30,6 +30,7 @@ import Common2026.Polymatroid.Basic
 import Common2026.Shannon.Polymatroid
 import Common2026.Shannon.AEP
 import Common2026.Shannon.Stein
+import Common2026.Shannon.StrongStein
 import Common2026.Shannon.MaxEntropy
 import Common2026.Shannon.Pinsker
 import Common2026.Shannon.MIChainRule
