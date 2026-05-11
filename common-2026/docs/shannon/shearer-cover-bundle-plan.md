@@ -62,7 +62,9 @@ theorem brascamp_lieb_finset
 
 singleton cover `S i := {i}` で Brascamp-Lieb は `|A| ≤ ∏ i, |π_{i}(A)|` を与える。これを `hypercube_product_projection_bound` として corollary 化。
 
-`α = Bool` (Boolean cube) を渡せば `|π_i(A)| ≤ 2` なので `|A| ≤ 2^n` (自明)。**より有用な形**は: Han-Bregman 系の `|A|^{n-1} ≤ ∏_i |π_{-i}(A)|` (= LW) との重ね合わせで edge boundary の bound を出すが、Mathlib に `SimpleGraph.edgeBoundary` の Boolean cube 形が存在しないため、本 plan ではここまでで stop (corollary の statement を `projectionSubset {i}` 形に絞り、edge boundary の独立形式化は B-2 deferred として切り出す)。
+`α = Bool` (Boolean cube) を渡せば `|π_i(A)| ≤ 2` なので `|A| ≤ 2^n` (自明)。**より有用な形**は: Han-Bregman 系の `|A|^{n-1} ≤ ∏_i |π_{-i}(A)|` (= LW) との重ね合わせで edge boundary の bound を出すが、Mathlib に `SimpleGraph.edgeBoundary` の Boolean cube 形が存在しないため、本 plan ではここまでで stop (corollary の statement を `projectionSubset {i}` 形に絞り、edge boundary の独立形式化は B-2' deferred として切り出した)。
+
+**B-2' edge-boundary 形 完了 (2026-05-12)** → [hypercube-edge-boundary-plan.md](hypercube-edge-boundary-plan.md): Boolean cube 上の coordinate-flip pair で `edgeBoundaryCount A` を直接組合せ的に定義し, counting identity `|∂_e A| + n |A| = 2 Σ |π_{≠i}(A)|` + LW + AM-GM で `2n · |A|^{(n-1)/n} ≤ |∂_e A| + n |A|` を `Common2026/Shannon/HypercubeEdgeBoundary.lean` (692 行) に publish 完了。`SimpleGraph` 構造は持ち込まず, `Sym2` も回避。
 
 ## Phase D - LW refactor 判断 🔄 (見送り)
 
