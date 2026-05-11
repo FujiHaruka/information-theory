@@ -509,6 +509,151 @@ theorem jointlyTypicalSet_prob_tendsto_one
       Filter.atTop (𝓝 ((1 : ℝ≥0∞) - 0)) := h_cont.tendsto _ |>.comp h_compl_tendsto
   simpa using h_step
 
+/-- **Bound (c): independent-pair probability**. The probability under the **product**
+measure `μX^n × μY^n` (where `μX^n := μ.map (jointRV Xs n)` and similarly for `Y`) that
+`(X̃, Y)` lies in the jointly typical set is bounded by `exp(-n(I - 3ε))` (in the
+log form: `exp(n · (H(X,Y) - H(X) - H(Y) + 3ε))`).
+
+This is Cover-Thomas Theorem 7.6.1 (7.71). The key inputs are
+`typicalSet_prob_le` (new AEP lemma, point-wise upper bound on the probability of
+each typical block) applied to the `X` and `Y` axes, and `jointlyTypicalSet_card_le`
+for the cardinality of the joint typical set.
+
+Mutual independence (`iIndepFun`) along **each** of the `X` and `Y` axes is required
+to factorise the block laws `μ.map (jointRV Xs n) = Measure.pi (μ.map (Xs ·))`. The
+joint axis identification (`hidentZ`) is **not** required for this bound (it would
+be required only for Phase C / D, downstream of this lemma). -/
+theorem jointlyTypicalSet_indep_prob_le
+    [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindepX_full : iIndepFun (fun i => Xs i) μ)
+    (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hindepY_full : iIndepFun (fun i => Ys i) μ)
+    (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
+    (hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
+    (hposZ : ∀ p : α × β,
+      0 < (μ.map (jointSequence Xs Ys 0)).real {p})
+    (n : ℕ) {ε : ℝ} (hε : 0 < ε) :
+    (((μ.map (InformationTheory.Shannon.jointRV Xs n)).prod
+        (μ.map (InformationTheory.Shannon.jointRV Ys n))).real
+        (jointlyTypicalSet μ Xs Ys n ε))
+      ≤ Real.exp ((n : ℝ) *
+          ((InformationTheory.Shannon.entropy μ (jointSequence Xs Ys 0)
+            - InformationTheory.Shannon.entropy μ (Xs 0)
+            - InformationTheory.Shannon.entropy μ (Ys 0))
+           + 3 * ε)) := by
+  classical
+  -- Notation.
+  set μX : Measure (Fin n → α) := μ.map (InformationTheory.Shannon.jointRV Xs n)
+    with hμX_def
+  set μY : Measure (Fin n → β) := μ.map (InformationTheory.Shannon.jointRV Ys n)
+    with hμY_def
+  set HX : ℝ := InformationTheory.Shannon.entropy μ (Xs 0) with hHX_def
+  set HY : ℝ := InformationTheory.Shannon.entropy μ (Ys 0) with hHY_def
+  set HZ : ℝ := InformationTheory.Shannon.entropy μ (jointSequence Xs Ys 0)
+    with hHZ_def
+  -- The jointly typical set as a Finset.
+  set A : Set ((Fin n → α) × (Fin n → β)) := jointlyTypicalSet μ Xs Ys n ε with hA_def
+  set Afin : Finset ((Fin n → α) × (Fin n → β)) :=
+    (jointlyTypicalSet_finite μ Xs Ys n ε).toFinset with hAfin_def
+  -- The X- and Y-block laws are probability measures (hence σ-finite).
+  have hXmeas : Measurable (InformationTheory.Shannon.jointRV Xs n) :=
+    InformationTheory.Shannon.measurable_jointRV Xs hXs n
+  have hYmeas : Measurable (InformationTheory.Shannon.jointRV Ys n) :=
+    InformationTheory.Shannon.measurable_jointRV Ys hYs n
+  haveI : IsProbabilityMeasure μX :=
+    Measure.isProbabilityMeasure_map hXmeas.aemeasurable
+  haveI : IsProbabilityMeasure μY :=
+    Measure.isProbabilityMeasure_map hYmeas.aemeasurable
+  haveI : IsProbabilityMeasure (μX.prod μY) := by
+    have : IsFiniteMeasure μX := inferInstance
+    have : IsFiniteMeasure μY := inferInstance
+    infer_instance
+  -- Step 1: rewrite `(μX.prod μY).real A` as a Finset sum over `Afin`.
+  have h_sum_decomp :
+      (μX.prod μY).real A
+        = ∑ p ∈ Afin, μX.real {p.1} * μY.real {p.2} := by
+    -- `A.real = ∑ p ∈ Afin, μ.real {p}` by `sum_measureReal_singleton` applied to `μX.prod μY`.
+    have h_real_eq : (μX.prod μY).real A = ∑ p ∈ Afin, (μX.prod μY).real {p} := by
+      -- `A = ⋃ p ∈ Afin, {p}` (or use `measure_biUnion_finset`).
+      have h_coe : (Afin : Set _) = A :=
+        (jointlyTypicalSet_finite μ Xs Ys n ε).coe_toFinset
+      rw [← h_coe, ← sum_measureReal_singleton (μ := μX.prod μY) Afin]
+    rw [h_real_eq]
+    refine Finset.sum_congr rfl ?_
+    intro p _
+    -- `{p} = {p.1} ×ˢ {p.2}`.
+    have h_singleton_prod : ({p} : Set ((Fin n → α) × (Fin n → β)))
+        = ({p.1} : Set (Fin n → α)) ×ˢ ({p.2} : Set (Fin n → β)) := by
+      ext q
+      simp [Prod.ext_iff]
+    rw [h_singleton_prod]
+    exact measureReal_prod_prod _ _
+  -- Step 2: each summand bounded by `exp(-n(HX - ε)) · exp(-n(HY - ε))`.
+  have h_each_le : ∀ p ∈ Afin,
+      μX.real {p.1} * μY.real {p.2}
+        ≤ Real.exp (- (n : ℝ) * (HX - ε)) * Real.exp (- (n : ℝ) * (HY - ε)) := by
+    intro p hp
+    have hp_set : p ∈ A := (Set.Finite.mem_toFinset _).mp hp
+    rcases hp_set with ⟨hxX, hyY, _hxyZ⟩
+    -- `μX.real {p.1} ≤ exp(-n(HX - ε))`.
+    have hbdX : μX.real {p.1} ≤ Real.exp (- (n : ℝ) * (HX - ε)) :=
+      InformationTheory.Shannon.typicalSet_prob_le μ Xs hXs hindepX_full hidentX
+        hposX n p.1 hxX
+    have hbdY : μY.real {p.2} ≤ Real.exp (- (n : ℝ) * (HY - ε)) :=
+      InformationTheory.Shannon.typicalSet_prob_le μ Ys hYs hindepY_full hidentY
+        hposY n p.2 hyY
+    -- Both `≥ 0`, so multiplication preserves order.
+    have hX_nn : 0 ≤ μX.real {p.1} := measureReal_nonneg
+    have hY_nn : 0 ≤ μY.real {p.2} := measureReal_nonneg
+    have hY_exp_nn : 0 ≤ Real.exp (- (n : ℝ) * (HY - ε)) := (Real.exp_pos _).le
+    calc μX.real {p.1} * μY.real {p.2}
+        ≤ Real.exp (- (n : ℝ) * (HX - ε)) * μY.real {p.2} := by
+          exact mul_le_mul_of_nonneg_right hbdX hY_nn
+      _ ≤ Real.exp (- (n : ℝ) * (HX - ε)) * Real.exp (- (n : ℝ) * (HY - ε)) := by
+          exact mul_le_mul_of_nonneg_left hbdY (Real.exp_pos _).le
+  -- Step 3: bound the sum by `card(Afin) · exp(...)` and then bound the cardinality.
+  set C : ℝ := Real.exp (- (n : ℝ) * (HX - ε)) * Real.exp (- (n : ℝ) * (HY - ε))
+    with hC_def
+  have hC_nn : 0 ≤ C := by
+    simp only [hC_def]
+    exact mul_nonneg (Real.exp_pos _).le (Real.exp_pos _).le
+  have h_sum_le : ∑ p ∈ Afin, μX.real {p.1} * μY.real {p.2}
+      ≤ (Afin.card : ℝ) * C := by
+    calc ∑ p ∈ Afin, μX.real {p.1} * μY.real {p.2}
+        ≤ ∑ _p ∈ Afin, C := Finset.sum_le_sum h_each_le
+      _ = (Afin.card : ℝ) * C := by
+          rw [Finset.sum_const, nsmul_eq_mul]
+  -- Step 4: bound the cardinality by `jointlyTypicalSet_card_le`.
+  have h_card_le : (Afin.card : ℝ) ≤ Real.exp ((n : ℝ) * (HZ + ε)) :=
+    jointlyTypicalSet_card_le μ Xs Ys hXs hYs hposZ n hε
+  -- Step 5: combine.
+  have h_final_calc :
+      (Afin.card : ℝ) * C
+        ≤ Real.exp ((n : ℝ) * (HZ + ε)) * C :=
+    mul_le_mul_of_nonneg_right h_card_le hC_nn
+  have h_combine : (μX.prod μY).real A ≤ Real.exp ((n : ℝ) * (HZ + ε)) * C := by
+    calc (μX.prod μY).real A
+        = ∑ p ∈ Afin, μX.real {p.1} * μY.real {p.2} := h_sum_decomp
+      _ ≤ (Afin.card : ℝ) * C := h_sum_le
+      _ ≤ Real.exp ((n : ℝ) * (HZ + ε)) * C := h_final_calc
+  -- Step 6: collapse the RHS into a single `exp` with the desired exponent.
+  have h_rhs_eq :
+      Real.exp ((n : ℝ) * (HZ + ε)) * C
+        = Real.exp ((n : ℝ) * ((HZ - HX - HY) + 3 * ε)) := by
+    -- exp(a) * exp(b) * exp(c) = exp(a + b + c).
+    have h_expand : C
+        = Real.exp (- (n : ℝ) * (HX - ε) + - (n : ℝ) * (HY - ε)) := by
+      rw [hC_def, ← Real.exp_add]
+    rw [h_expand, ← Real.exp_add]
+    congr 1
+    ring
+  rw [h_rhs_eq] at h_combine
+  exact h_combine
+
 end JointlyTypical
 
 end InformationTheory.Shannon.ChannelCoding

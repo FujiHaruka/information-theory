@@ -2,18 +2,18 @@
 
 > 起草 2026-05-12 / B-7 完了直後。Cover-Thomas Ch 7.7 (random coding argument) を AEP plumbing + B-7 i.i.d. corollary `mutualInfo_iid_eq_nsmul` を入口に Lean 化。**最難関シード** (見積 800-1500 行 / 4-6 週)。
 >
-> **2026-05-12 状態**: Phase A + Phase B-(a,b) 完了。Phase B-(c) (independent pair bound) 以降は deferred (新規 AEP point-wise upper bound + i.i.d. product measure plumbing が ~200-400 行追加で必要、後段 Phase C/D と合わせて 1000-1600 行を要する見積もり)。
+> **2026-05-12 状態 (二度目の更新)**: Phase A + Phase B-(a,b,c) 完了。Phase C (random codebook + averaging) + Phase D (主定理) は依然 deferred。Phase B-(c) (independent pair bound) は AEP 拡張 (`typicalSet_prob_le`) + `iIndepFun_iff_map_fun_eq_pi_map` 経由の point-wise factorization で完成 (B-3' 区切り)。
 
 ## 進捗
 
 - [x] Phase 0 — Inventory (Mathlib + 既存 Common2026 探索) ✅ → [channel-coding-achievability-inventory.md](channel-coding-achievability-inventory.md)
 - [x] Phase A — Channel + Code 定義 ✅ (`Common2026/Shannon/ChannelCoding.lean`, 行 1-225, 約 200 行)
-- [ ] Phase B — Jointly typical set + 3 joint AEP bounds 🚧 (a, b 完了 / c deferred)
+- [x] Phase B — Jointly typical set + 3 joint AEP bounds ✅
   - [x] (a) `jointlyTypicalSet_prob_tendsto_one` ✅
   - [x] (b) `jointlyTypicalSet_card_le` ✅
-  - [ ] (c) `jointlyTypicalSet_indep_prob_le` 📋 deferred
-- [ ] Phase C — Random codebook + averaging argument 📋 deferred
-- [ ] Phase D — 主定理 (`R < C ⟹ ∃ code, P_err → 0`) 📋 deferred
+  - [x] (c) `jointlyTypicalSet_indep_prob_le` ✅ (2026-05-12 二度目)
+- [ ] Phase C — Random codebook + averaging argument 📋 deferred (B-3'')
+- [ ] Phase D — 主定理 (`R < C ⟹ ∃ code, P_err → 0`) 📋 deferred (B-3'')
 
 ## ゴール / Approach
 
@@ -81,15 +81,64 @@
 主補題 (Cover-Thomas Theorem 7.6.1):
 - [x] `jointlyTypicalSet_prob_tendsto_one` ✅ — bound (a): `P((X^n, Y^n) ∈ A_ε^n) → 1`. 既存 `typicalSet_prob_tendsto_one` を 3 軸並列で実行 + union bound on complements + `ENNReal.continuous_sub_left` で `1 - 0 = 1` 結ぶ。Pairwise IndepFun + IdentDistrib を 3 軸 (X, Y, joint) で受ける。
 - [x] `jointlyTypicalSet_card_le` ✅ — bound (b): `|A_ε^n| ≤ exp(n·(H(X,Y)+ε))`. `Finset.image` 単射 + `Finset.card_image_of_injective` で size を joint single-axis typical set に翻訳、既存 `typicalSet_card_le` 適用。`[DecidableEq α/β] [Nonempty α/β]` 要 (AEP 要件継承)。
-- [ ] `jointlyTypicalSet_indep_prob_le` 📋 **deferred**: `X̃ ⊥ Y` ⇒ `P((X̃^n, Y^n) ∈ A_ε^n) ≤ exp(-n·(I-3ε))`.
-  - **deferred 理由**: 必要な新規 plumbing が以下:
-    - **`typicalSet_prob_le`** (新規 AEP 補題): `x ∈ typicalSet ε ⟹ (μ.map (jointRV Xs n)) {x} ≤ exp(-n(H - ε))` の点別上界。これは `(μ.map (jointRV Xs n)) {x} = ∏ P(x_i)` の i.i.d. factorization が必要 (現状 AEP は `iIndepFun` を前提とした block measure factorization を持たない)。
-    - **Independent pair の joint measure**: `X̃^n ⊗ Y^n` (両者の marginal product) 上の measure を AEP の `Pairwise IndepFun` 形と整合させて立てる plumbing。
-  - **見積行数**: AEP に新規 200-300 行 + 本シード Phase B-(c) 本体 ~100 行 = 約 300-400 行追加で完了。
+- [x] `jointlyTypicalSet_indep_prob_le` ✅ (2026-05-12 二度目): `X̃^n × Y^n` 独立 product measure 下で `((μX^n) × (μY^n)) A_ε^n ≤ exp(-n(I-3ε))`.
 
-撤退理由 (Phase B-(a, b) 完了時点で stop):
-- 残り Phase B-(c) + Phase C + Phase D で合計 1000-1600 行追加。元の見積 800-1500 行を upper bound で超え、本シード 1 セッションで sorry ゼロ完了は不確実。
-- Phase A + Phase B-(a, b) 単独で再利用価値あり: Slepian-Wolf strong typicality (B 節別シード) で `jointlyTypicalSet_card_le` がそのまま使え、AEP joint 形 publish の意味で independent value がある。
+### Phase B-(c) Approach
+
+**主補題シグネチャ** (`Common2026/Shannon/ChannelCoding.lean` 末尾):
+
+```lean
+theorem jointlyTypicalSet_indep_prob_le
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindepX_full : iIndepFun (fun i => Xs i) μ)
+    (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hindepY_full : iIndepFun (fun i => Ys i) μ)
+    (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
+    (hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
+    (hposZ : ∀ p : α × β,
+      0 < (μ.map (jointSequence Xs Ys 0)).real {p})
+    (n : ℕ) {ε : ℝ} (hε : 0 < ε) :
+    (((μ.map (jointRV Xs n)).prod (μ.map (jointRV Ys n))).real
+        (jointlyTypicalSet μ Xs Ys n ε))
+      ≤ Real.exp ((n : ℝ) *
+          ((InformationTheory.Shannon.entropy μ (jointSequence Xs Ys 0)
+            - InformationTheory.Shannon.entropy μ (Xs 0)
+            - InformationTheory.Shannon.entropy μ (Ys 0))
+           + 3 * ε))
+```
+
+(LHS は `μ.real` (=`measureReal`) 形で実数値、RHS は `Real.exp` 形。`-I+3ε = HZ - HX - HY + 3ε` の符号順で書く。)
+
+**Approach** (Phase B-(c) のみ):
+
+1. **新規 AEP 補題** `typicalSet_prob_le` (`Common2026/Shannon/AEP.lean` Phase G 節として追加, ~80 行):
+   - 仮定: `iIndepFun (fun i => Xs i) μ` + `∀ i, IdentDistrib (Xs i) (Xs 0) μ μ` + `∀ x, 0 < (μ.map (Xs 0)).real {x}`.
+   - 結論: `x ∈ typicalSet μ Xs n ε ⟹ (μ.map (jointRV Xs n)).real {x} ≤ Real.exp (- (n : ℝ) * (entropy μ (Xs 0) - ε))`.
+   - 証明 plumbing:
+     - `iIndepFun.precomp (Fin.val_injective : Function.Injective (Fin.val : Fin n → ℕ))` で `iIndepFun (fun i : Fin n => Xs i.val) μ` を得る。
+     - `iIndepFun_iff_map_fun_eq_pi_map` で `μ.map (fun ω i => Xs i.val ω) = Measure.pi (fun i : Fin n => μ.map (Xs i.val))`. LHS は `jointRV Xs n` と defeq.
+     - `IdentDistrib.map_eq` で各 `i` に対し `μ.map (Xs i.val) = μ.map (Xs 0)`.
+     - `Measure.pi_singleton`: `(Measure.pi μ) {x} = ∏ i, μ i {x i}`. これを `measureReal` 形に変換 (有限積).
+     - `mem_typicalSet_iff` の片側 (`-ε < (∑/n) - H` ⇒ `n(H - ε) < ∑ pmfLog (x i)`) ⇒ `exp(-∑) < exp(-n(H-ε))` ⇒ `∏ P(x i) < exp(-n(H-ε))`.
+
+2. **本体 `jointlyTypicalSet_indep_prob_le`** (~120-150 行):
+   - 有限離散 product measure: `((μ.map (jointRV Xs n)).prod (μ.map (jointRV Ys n))).real S = ∑ (x, y) ∈ S.toFinset, μX.real {x} · μY.real {y}` (有限 alphabet).
+     - 鍵: `Set.Finite.measureReal_eq` + `Measure.prod_apply_of_mem_singleton` 系。または `Finset.tsum` form。
+   - 各 (x, y) ∈ A_ε^n は X-typical かつ Y-typical なので `μX.real {x} · μY.real {y} ≤ exp(-n(HX - ε)) · exp(-n(HY - ε)) = exp(-n(HX + HY - 2ε))` (新規 `typicalSet_prob_le` 2 回).
+   - 個数 `≤ exp(n(HZ + ε))` (B-(b) `jointlyTypicalSet_card_le`, `HZ := entropy μ (jointSequence Xs Ys 0)`)。
+   - 結合: `μ.real A ≤ exp(n(HZ + ε)) · exp(-n(HX + HY - 2ε)) = exp(n(HZ - HX - HY + 3ε)) = exp(-n(I - 3ε))`.
+
+**`hidentZ` の不要性**: Phase B-(c) では joint 軸の identification は **使わない** (X 軸 / Y 軸の i.i.d.-ness で十分)。`hposZ` は `jointlyTypicalSet_card_le` (B-(b)) の signature が要求するため受け取る。
+
+**実装場所**: AEP 拡張 (~80 行) は **`Common2026/Shannon/AEP.lean` 末尾の Phase G 節**として追加 (file 分割せず)。本体 (Phase B-(c) ~150 行) は **既存 `ChannelCoding.lean` 末尾**に追加 (file 分割せず)。両 file が `lake env lean` clean を維持する。
+
+撤退理由 (Phase B 完了時点で再 stop):
+- 残り Phase C + Phase D で 600-1000 行追加 (random codebook 上の確率空間構築 + main theorem の `n → ∞` 制御)。
+- B-3' (Phase B-(c) 単独) で完了し、Phase C-D は B-3'' deferred として切り出す。
+- Phase B 全体は **3 つの bound publish** で完成し、Slepian-Wolf 等で再利用価値あり。
 
 ## Phase C — Random codebook + averaging argument 📋
 

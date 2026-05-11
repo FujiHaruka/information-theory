@@ -1262,4 +1262,127 @@ theorem source_coding_theorem
   · -- H ≤ sInf: H is a lower bound and achievableRates is nonempty.
     exact le_csInf h_nonempty h_lb
 
+/-! ### Phase G — Point-wise probability upper bound on typicalSet
+
+Cover-Thomas Theorem 3.1.2 (a)(2): for any `x ∈ T_ε^n`,
+`P^n(x) = ∏ P(x_i) ≤ exp(-n(H - ε))`. This is the **point-wise** companion of the
+size bound `|T_ε^n| ≤ exp(n(H+ε))` and is the key input for the Phase B-(c)
+"independent-pair" bound in channel coding achievability (B-3).
+
+The factorization `μ.map (jointRV Xs n) = Measure.pi (μ.map (Xs ·))` requires
+mutual independence (`iIndepFun`), not just pairwise independence. We obtain it
+via `iIndepFun_iff_map_fun_eq_pi_map` after restricting indices `ℕ → Fin n` with
+`iIndepFun.precomp Fin.val_injective`. -/
+
+/-- **Point-wise upper bound on typical-set mass**: `(μ.map (jointRV Xs n)).real {x}
+≤ exp(- n · (H - ε))` for any `x ∈ T_ε^n`. -/
+theorem typicalSet_prob_le
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (hindep_full : iIndepFun (fun i => Xs i) μ)
+    (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hpos : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    (n : ℕ) {ε : ℝ}
+    (x : Fin n → α) (hx : x ∈ typicalSet μ Xs n ε) :
+    (μ.map (jointRV Xs n)).real {x}
+      ≤ Real.exp (- (n : ℝ) * (entropy μ (Xs 0) - ε)) := by
+  classical
+  -- Notation.
+  set P : α → ℝ := fun a => (μ.map (Xs 0)).real {a} with hP_def
+  set H : ℝ := entropy μ (Xs 0) with hH_def
+  -- Reindex `Xs` to `Fin n` via `Fin.val`.
+  have hFin_inj : Function.Injective (Fin.val : Fin n → ℕ) := Fin.val_injective
+  have hindep_fin :
+      iIndepFun (fun i : Fin n => Xs i.val) μ := hindep_full.precomp hFin_inj
+  -- Each marginal `Xs i.val` has the same law as `Xs 0`.
+  have hmap_eq : ∀ i : Fin n, μ.map (Xs i.val) = μ.map (Xs 0) := fun i =>
+    (hident i.val).map_eq
+  have hXfin_meas : ∀ i : Fin n, Measurable (Xs i.val) := fun i => hXs i.val
+  -- Cast `iIndepFun` into the product-measure identity. `Mathlib`'s
+  -- `iIndepFun_iff_map_fun_eq_pi_map` requires `[Fintype ι]`. We have that for
+  -- `Fin n`.
+  have hpi_eq :
+      μ.map (fun ω i => Xs i.val ω)
+        = Measure.pi (fun i : Fin n => μ.map (Xs i.val)) :=
+    (iIndepFun_iff_map_fun_eq_pi_map (fun i => (hXfin_meas i).aemeasurable)).mp
+      hindep_fin
+  -- Replace each `μ.map (Xs i.val)` with `μ.map (Xs 0)`.
+  have hpi_eq' :
+      μ.map (fun ω i => Xs i.val ω)
+        = Measure.pi (fun _ : Fin n => μ.map (Xs 0)) := by
+    rw [hpi_eq]
+    congr 1
+    funext i
+    exact hmap_eq i
+  -- `jointRV Xs n` is definitionally `fun ω i => Xs i.val ω` (Lean coerces `Fin n` to `ℕ`).
+  have hjoint_eq : (μ.map (jointRV Xs n) : Measure (Fin n → α))
+      = Measure.pi (fun _ : Fin n => μ.map (Xs 0)) := hpi_eq'
+  -- Evaluate on the singleton `{x}`.
+  -- `IsProbabilityMeasure (μ.map (Xs 0))` ⇒ `SigmaFinite`.
+  have hMprob : IsProbabilityMeasure (μ.map (Xs 0)) :=
+    Measure.isProbabilityMeasure_map (hXs 0).aemeasurable
+  -- Now compute `Measure.pi {x}` via `pi_singleton`.
+  have hpi_singleton :
+      Measure.pi (fun _ : Fin n => μ.map (Xs 0)) ({x} : Set (Fin n → α))
+        = ∏ i, (μ.map (Xs 0)) {x i} :=
+    Measure.pi_singleton (μ := fun _ : Fin n => μ.map (Xs 0)) x
+  have hmeas_singleton :
+      (μ.map (jointRV Xs n)) ({x} : Set (Fin n → α))
+        = ∏ i, (μ.map (Xs 0)) {x i} := by
+    rw [hjoint_eq]; exact hpi_singleton
+  -- Convert to `measureReal` (`.toReal`). Each factor is finite (probability ≤ 1).
+  have hP_pos : ∀ a, 0 < P a := hpos
+  have hP_lt_top : ∀ a, (μ.map (Xs 0)) {a} ≠ ∞ := fun a => measure_ne_top _ _
+  have hreal :
+      (μ.map (jointRV Xs n)).real {x} = ∏ i, P (x i) := by
+    unfold MeasureTheory.Measure.real
+    rw [hmeas_singleton]
+    rw [ENNReal.toReal_prod]
+    rfl
+  -- Now use the typical-set lower-side inequality.
+  -- `mem_typicalSet_iff`: `|(∑ pmfLog (x i)) / n - H| < ε`.
+  rw [mem_typicalSet_iff] at hx
+  -- Two cases: `n = 0` vs. `n > 0`.
+  rcases Nat.eq_zero_or_pos n with hn0 | hnpos
+  · -- n = 0: empty product = 1 = exp 0, and `Fin 0 → α` is a singleton.
+    subst hn0
+    have hreal0 : (μ.map (jointRV Xs 0)).real {x} = 1 := by
+      rw [hreal]
+      simp
+    rw [hreal0]
+    -- `Real.exp (- 0 * (H - ε)) = Real.exp 0 = 1`.
+    simp
+  · -- n > 0: use the upper-side lower bound on `∑ pmfLog (x i)`.
+    have hn_pos_R : (0 : ℝ) < n := by exact_mod_cast hnpos
+    -- From `|.| < ε`: `-ε < (∑ pmfLog) / n - H`, i.e. `n · (H - ε) < ∑ pmfLog`.
+    have hlower : -ε < (∑ i : Fin n, pmfLog μ Xs (x i)) / n - H := (abs_lt.mp hx).1
+    have hlower' : H - ε < (∑ i : Fin n, pmfLog μ Xs (x i)) / n := by linarith
+    have hsum_gt : (n : ℝ) * (H - ε) < ∑ i : Fin n, pmfLog μ Xs (x i) := by
+      have := (lt_div_iff₀ hn_pos_R).mp hlower'
+      linarith
+    -- `exp` is strictly monotone (and we use `≤` for the conclusion).
+    have hneg : -(∑ i : Fin n, pmfLog μ Xs (x i)) < -((n : ℝ) * (H - ε)) := by linarith
+    have hexp_lt : Real.exp (-(∑ i : Fin n, pmfLog μ Xs (x i)))
+        < Real.exp (-((n : ℝ) * (H - ε))) := Real.exp_lt_exp.mpr hneg
+    -- Rewrite LHS as `∏ i, P (x i)`.
+    have hexp_pmfLog : ∀ a, Real.exp (-(pmfLog μ Xs a)) = P a := by
+      intro a
+      have : -(pmfLog μ Xs a) = Real.log (P a) := by
+        simp [pmfLog, hP_def]
+      rw [this, Real.exp_log (hP_pos a)]
+    have hprod_eq : Real.exp (-(∑ i : Fin n, pmfLog μ Xs (x i)))
+        = ∏ i : Fin n, P (x i) := by
+      rw [← Finset.sum_neg_distrib, Real.exp_sum]
+      exact Finset.prod_congr rfl fun i _ => hexp_pmfLog (x i)
+    rw [hprod_eq] at hexp_lt
+    -- `∏ i, P (x i) < exp(-n(H-ε))` so `≤ exp(-n(H-ε))`.
+    have : ∏ i : Fin n, P (x i) ≤ Real.exp (-((n : ℝ) * (H - ε))) := hexp_lt.le
+    -- Now `-(n * (H - ε)) = -n * (H - ε)` (same number).
+    have hexp_rewrite : Real.exp (-((n : ℝ) * (H - ε)))
+        = Real.exp (-(n : ℝ) * (H - ε)) := by ring_nf
+    rw [hexp_rewrite] at this
+    -- Conclude.
+    rw [hreal]
+    exact this
+
 end InformationTheory.Shannon
