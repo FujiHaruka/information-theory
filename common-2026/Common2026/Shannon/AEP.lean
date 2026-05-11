@@ -1170,4 +1170,96 @@ theorem source_coding_achievability
   · exact codebookSize_log_div_tendsto h_R_pos
   · exact aep_errorProb_tendsto_zero μ Xs hXs hpos hindep_pair hident hε h_le
 
+/-! ### Phase F — Unified source coding theorem (両側等号)
+
+Combining Phase D (weak converse) and Phase E (achievability) yields
+`sInf (achievableRates μ Xs) = entropy μ (Xs 0)`. An "achievable code" is a family
+`(M_n, c_n, d_n)` whose error probability vanishes and whose rate `log M_n / n`
+is universally bounded (the `hM_bdd` hypothesis of Phase D). The achievability
+witnesses produced by Phase E satisfy this universally-bounded condition because
+`Tendsto rate atTop (𝓝 R)` implies `BddAbove (Set.range rate)`
+(`Filter.Tendsto.bddAbove_range`).
+-/
+
+/-- An achievable block source code: each `M_n > 0`, error probability vanishes,
+and the rate is universally bounded. -/
+structure IsAchievableCode
+    (μ : Measure Ω) (Xs : ℕ → Ω → α)
+    (M : ℕ → ℕ)
+    (c : ∀ n, (Fin n → α) → Fin (M n))
+    (d : ∀ n, Fin (M n) → (Fin n → α)) : Prop where
+  hM_pos : ∀ n, NeZero (M n)
+  hPe_to_zero :
+    Tendsto (fun n => InformationTheory.MeasureFano.errorProb μ
+              (jointRV Xs n) (fun ω => c n (jointRV Xs n ω)) (d n))
+            atTop (𝓝 0)
+  hM_bdd : ∃ R, ∀ n, Real.log (M n : ℝ) / n ≤ R
+
+/-- The set of asymptotic rates (`liminf log M_n / n`) of achievable codes. -/
+noncomputable def achievableRates
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) : Set ℝ :=
+  { r | ∃ (M : ℕ → ℕ) (c : ∀ n, (Fin n → α) → Fin (M n))
+        (d : ∀ n, Fin (M n) → (Fin n → α)),
+        IsAchievableCode μ Xs M c d ∧
+        Filter.liminf (fun n : ℕ => Real.log (M n : ℝ) / n) atTop = r }
+
+/-- (Phase D lifted) Every achievable rate is at least the entropy. -/
+theorem entropy_le_of_mem_achievableRates
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (hindep_full : iIndepFun (fun i => Xs i) μ)
+    (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hcard : 2 ≤ Fintype.card α)
+    {r : ℝ} (hr : r ∈ achievableRates μ Xs) :
+    entropy μ (Xs 0) ≤ r := by
+  obtain ⟨M, c, d, hAch, hlim⟩ := hr
+  haveI : ∀ n, NeZero (M n) := hAch.hM_pos
+  rw [← hlim]
+  exact source_coding_converse μ Xs hXs hindep_full hident hcard M c d
+    hAch.hPe_to_zero hAch.hM_bdd
+
+/-- (Phase E lifted) Any rate strictly above the entropy is achievable. -/
+theorem mem_achievableRates_of_gt_entropy
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (hpos : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    (hindep_full : iIndepFun (fun i => Xs i) μ)
+    (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    {R : ℝ} (hR : entropy μ (Xs 0) < R) :
+    R ∈ achievableRates μ Xs := by
+  obtain ⟨M, hM_pos, c, d, hRate, hPe⟩ :=
+    source_coding_achievability μ Xs hXs hpos hindep_full hident hR
+  refine ⟨M, c, d, ⟨fun n => ⟨(hM_pos n).ne'⟩, hPe, ?_⟩, hRate.liminf_eq⟩
+  -- hM_bdd: Tendsto rate (𝓝 R) ⟹ BddAbove (Set.range rate) ⟹ ∃ R', ∀ n, rate n ≤ R'.
+  obtain ⟨R', hR'⟩ := hRate.bddAbove_range
+  exact ⟨R', fun n => hR' (Set.mem_range_self n)⟩
+
+/-- **Source coding theorem (両側等号)**:
+The infimum of asymptotic rates of achievable block source codes equals the
+entropy of the source. -/
+theorem source_coding_theorem
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (hpos : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    (hindep_full : iIndepFun (fun i => Xs i) μ)
+    (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hcard : 2 ≤ Fintype.card α) :
+    sInf (achievableRates μ Xs) = entropy μ (Xs 0) := by
+  set H : ℝ := entropy μ (Xs 0) with hH_def
+  -- Lower bound H is a lower bound for achievableRates.
+  have h_lb : ∀ r ∈ achievableRates μ Xs, H ≤ r := fun r hr =>
+    entropy_le_of_mem_achievableRates μ Xs hXs hindep_full hident hcard hr
+  have h_bddBelow : BddBelow (achievableRates μ Xs) := ⟨H, h_lb⟩
+  -- Achievability gives nonemptyness (use R = H + 1).
+  have h_nonempty : (achievableRates μ Xs).Nonempty :=
+    ⟨H + 1, mem_achievableRates_of_gt_entropy μ Xs hXs hpos hindep_full hident
+      (by linarith : H < H + 1)⟩
+  apply le_antisymm
+  · -- sInf ≤ H: for every a > H, a ∈ achievableRates ⟹ sInf ≤ a; dense argument.
+    refine le_of_forall_gt_imp_ge_of_dense fun a ha => ?_
+    exact csInf_le_of_le h_bddBelow
+      (mem_achievableRates_of_gt_entropy μ Xs hXs hpos hindep_full hident ha) le_rfl
+  · -- H ≤ sInf: H is a lower bound and achievableRates is nonempty.
+    exact le_csInf h_nonempty h_lb
+
 end InformationTheory.Shannon
