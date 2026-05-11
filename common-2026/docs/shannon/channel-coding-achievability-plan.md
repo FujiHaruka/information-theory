@@ -1,14 +1,19 @@
 # Channel coding achievability ムーンショット計画 (B-3) 🌙
 
 > 起草 2026-05-12 / B-7 完了直後。Cover-Thomas Ch 7.7 (random coding argument) を AEP plumbing + B-7 i.i.d. corollary `mutualInfo_iid_eq_nsmul` を入口に Lean 化。**最難関シード** (見積 800-1500 行 / 4-6 週)。
+>
+> **2026-05-12 状態**: Phase A + Phase B-(a,b) 完了。Phase B-(c) (independent pair bound) 以降は deferred (新規 AEP point-wise upper bound + i.i.d. product measure plumbing が ~200-400 行追加で必要、後段 Phase C/D と合わせて 1000-1600 行を要する見積もり)。
 
 ## 進捗
 
 - [x] Phase 0 — Inventory (Mathlib + 既存 Common2026 探索) ✅ → [channel-coding-achievability-inventory.md](channel-coding-achievability-inventory.md)
-- [ ] Phase A — Channel + Code + Capacity 定義 🚧
-- [ ] Phase B — Jointly typical set + 3 joint AEP bounds 📋
-- [ ] Phase C — Random codebook + averaging argument 📋
-- [ ] Phase D — 主定理 (`R < C ⟹ ∃ code, P_err → 0`) 📋
+- [x] Phase A — Channel + Code 定義 ✅ (`Common2026/Shannon/ChannelCoding.lean`, 行 1-225, 約 200 行)
+- [ ] Phase B — Jointly typical set + 3 joint AEP bounds 🚧 (a, b 完了 / c deferred)
+  - [x] (a) `jointlyTypicalSet_prob_tendsto_one` ✅
+  - [x] (b) `jointlyTypicalSet_card_le` ✅
+  - [ ] (c) `jointlyTypicalSet_indep_prob_le` 📋 deferred
+- [ ] Phase C — Random codebook + averaging argument 📋 deferred
+- [ ] Phase D — 主定理 (`R < C ⟹ ∃ code, P_err → 0`) 📋 deferred
 
 ## ゴール / Approach
 
@@ -47,7 +52,7 @@
   - `Common2026/Shannon/Converse.lean`: encoder / decoder + `errorProb` の単一形は **`MeasureFano.errorProb`** で既に立っている。block 版 `errorProb` も同 namespace で追加可。
   - `Common2026/Shannon/Pi.lean`: `MeasurableEquiv` reshape
 
-## Phase A — Channel + Code + Capacity 定義 🚧
+## Phase A — Channel + Code 定義 ✅
 
 **スコープ** (新規ファイル `Common2026/Shannon/ChannelCoding.lean`、~150-300 行を見積もる):
 
@@ -65,18 +70,26 @@
 - [ ] `mutualInfo_of_inputDistribution` 定義 + basic API (well-typed, `ne_top`)
 - [ ] Phase A skeleton 単体で `lake env lean` 通過
 
-## Phase B — Jointly typical set + 3 joint AEP bounds 📋
+## Phase B — Jointly typical set + 3 joint AEP bounds 🚧
 
-**スコープ** (新規 `Common2026/Shannon/ChannelCoding/JointlyTypical.lean` 別出しを検討、~400-700 行):
+**スコープ** (`Common2026/Shannon/ChannelCoding.lean` Phase B 節、行 226-514、約 305 行):
 
-定義:
-- `jointlyTypicalSet (p : Measure α) (W : Channel α β) (n : ℕ) (ε : ℝ) : Set ((Fin n → α) × (Fin n → β))` — 3 条件 (X-typical, Y-typical, (X,Y)-typical) の交叉。
+定義 (✅):
+- `jointSequence Xs Ys : ℕ → Ω → α × β` — 既存 AEP の `typicalSet` に joint 軸を渡すための reshape ヘルパー
+- `jointlyTypicalSet μ Xs Ys n ε : Set ((Fin n → α) × (Fin n → β))` — 3 条件 (X-typical, Y-typical, (X,Y)-typical) の交叉
 
 主補題 (Cover-Thomas Theorem 7.6.1):
-- [ ] `jointlyTypicalSet_prob_tendsto_one` — bound (a): `P((X^n, Y^n) ∈ A_ε^n) → 1`. 既存 `typicalSet_prob_tendsto_one` を 3 軸並列で実行 (3 つの確率を 1 - δ で union)。
-- [ ] `jointlyTypicalSet_card_le` — bound (b): `|A_ε^n| ≤ exp(n·(H(X,Y)+ε))`. 既存 `typicalSet_card_le` を `(X, Y)` joint で適用。
-- [ ] `jointlyTypicalSet_indep_prob_le` — bound (c): `X̃ ⊥ Y` ⇒ `P((X̃^n, Y^n) ∈ A_ε^n) ≤ exp(-n·(I-3ε))`. **本シードで最も技術的**: 三つの size bound と一つの lower bound (`p^n(X-typical) · q^n(Y-typical) · (1/|A|)`) を `Real.exp` plumbing で組み合わせる。
-- [ ] Phase B 全体で `lake env lean` 通過
+- [x] `jointlyTypicalSet_prob_tendsto_one` ✅ — bound (a): `P((X^n, Y^n) ∈ A_ε^n) → 1`. 既存 `typicalSet_prob_tendsto_one` を 3 軸並列で実行 + union bound on complements + `ENNReal.continuous_sub_left` で `1 - 0 = 1` 結ぶ。Pairwise IndepFun + IdentDistrib を 3 軸 (X, Y, joint) で受ける。
+- [x] `jointlyTypicalSet_card_le` ✅ — bound (b): `|A_ε^n| ≤ exp(n·(H(X,Y)+ε))`. `Finset.image` 単射 + `Finset.card_image_of_injective` で size を joint single-axis typical set に翻訳、既存 `typicalSet_card_le` 適用。`[DecidableEq α/β] [Nonempty α/β]` 要 (AEP 要件継承)。
+- [ ] `jointlyTypicalSet_indep_prob_le` 📋 **deferred**: `X̃ ⊥ Y` ⇒ `P((X̃^n, Y^n) ∈ A_ε^n) ≤ exp(-n·(I-3ε))`.
+  - **deferred 理由**: 必要な新規 plumbing が以下:
+    - **`typicalSet_prob_le`** (新規 AEP 補題): `x ∈ typicalSet ε ⟹ (μ.map (jointRV Xs n)) {x} ≤ exp(-n(H - ε))` の点別上界。これは `(μ.map (jointRV Xs n)) {x} = ∏ P(x_i)` の i.i.d. factorization が必要 (現状 AEP は `iIndepFun` を前提とした block measure factorization を持たない)。
+    - **Independent pair の joint measure**: `X̃^n ⊗ Y^n` (両者の marginal product) 上の measure を AEP の `Pairwise IndepFun` 形と整合させて立てる plumbing。
+  - **見積行数**: AEP に新規 200-300 行 + 本シード Phase B-(c) 本体 ~100 行 = 約 300-400 行追加で完了。
+
+撤退理由 (Phase B-(a, b) 完了時点で stop):
+- 残り Phase B-(c) + Phase C + Phase D で合計 1000-1600 行追加。元の見積 800-1500 行を upper bound で超え、本シード 1 セッションで sorry ゼロ完了は不確実。
+- Phase A + Phase B-(a, b) 単独で再利用価値あり: Slepian-Wolf strong typicality (B 節別シード) で `jointlyTypicalSet_card_le` がそのまま使え、AEP joint 形 publish の意味で independent value がある。
 
 ## Phase C — Random codebook + averaging argument 📋
 
@@ -138,3 +151,5 @@ theorem channel_coding_achievability
 4. **Capacity 定義 `⨆ p, I_p` を Phase A で立てるか**: 主定理は **固定 input distribution `p` での `R < I_p`** で表現する方が短い (sup を回避)。Phase A で sup 形を立てるのは optional とし、まず固定 `p` 形で進める。
 
 5. **(2026-05-12 Phase 0 終了時の見積もり再評価)**: Phase A-D 合計 1050-1900 行を見込む。これは元の見積 800-1500 行の上限相当。**3000 行を超える兆候はない** → Phase 単位で進行可。判断 = 続行 (stop しない)。
+
+6. **(2026-05-12 Phase B-(a, b) 完了時 stop)**: 達成 514 行、残り Phase B-(c) + C + D で 1000-1600 行追加。Phase B-(c) は **i.i.d. product factorization** (現 AEP は pairwise indep のみ) の新規 plumbing が必要、見積 200-300 行 + 本体 100 行。本シード 1 セッションで sorry ゼロ完了は不確実なので **Phase A + Phase B-(a, b) で stop、deferred 区切り**。Phase A + B-(a, b) 単独で Slepian-Wolf strong typicality 等で再利用価値あり、AEP joint 形の publish として independent value がある。後続 B-1 / B-4 / B-8 シードは本シードに依存しないため進行可。

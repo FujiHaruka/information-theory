@@ -1,6 +1,6 @@
 # Moonshot シードカード集
 
-> **Status (2026-05-12)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件完了 + **B-6 最大エントロピー完了 + B-5 Pinsker 弱形 完了 + B-2 / B-9 Shearer cover bundle 完了 + B-7 MI chain rule 完了**。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 `TV ≤ √KL`) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound → MI chain rule (n 変数 + i.i.d. corollary) を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。残る伸び代は B 節既存シード (Sanov / Channel coding achievability / Strong Stein) と **B 節追加シード (Shannon code、2026-05-11 起草)**。シャープ Pinsker `TV ≤ √(KL/2)` (定数 1/√2) は **B-5' (将来) Mathlib 上流 PR** に切り出し済。Hypercube edge-boundary 形 (Han-Bregman 流) は **B-2' deferred** に切り出し (Mathlib に `SimpleGraph.edgeBoundary` の Boolean cube 形が無く本 bundle スコープ外)。
+> **Status (2026-05-12)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件完了 + **B-6 最大エントロピー完了 + B-5 Pinsker 弱形 完了 + B-2 / B-9 Shearer cover bundle 完了 + B-7 MI chain rule 完了 + B-3 Channel coding Phase A + B-(a,b) 部分完了**。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 `TV ≤ √KL`) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound → MI chain rule (n 変数 + i.i.d. corollary) → Channel coding (DMC / Code / errorProb 定義 + jointly typical set 定義 + AEP joint 形 size/prob bound) を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。残る伸び代は B 節既存シード (Sanov / Channel coding **(B)-(c)以降** / Strong Stein) と **B 節追加シード (Shannon code、2026-05-11 起草)**。シャープ Pinsker `TV ≤ √(KL/2)` (定数 1/√2) は **B-5' (将来) Mathlib 上流 PR** に切り出し済。Hypercube edge-boundary 形 (Han-Bregman 流) は **B-2' deferred** に切り出し (Mathlib に `SimpleGraph.edgeBoundary` の Boolean cube 形が無く本 bundle スコープ外)。
 >
 > 起草時 (2026-05-10): Fano (測度論版) → Shannon converse (3 形) → Han 補集合形 → Han Phase D (subset average / Shearer) まで通った状態を起点に、次のムーンショット候補 5 本をシード化。
 >
@@ -14,7 +14,7 @@
 
 - **Sanov の定理** (Stein の自然な拡張): `klDiv` の operational meaning を別形 (large deviation principle の rate function) で Lean 化。Stein で立った plumbing (log-likelihood ratio plumbing + Pi 化 chain rule) がそのまま再利用可。
 - **B-2. Hypercube edge isoperimetry / Han-Bregman bound** ✅ (singleton-cover 形) → [docs/shannon/shearer-cover-bundle-plan.md](shannon/shearer-cover-bundle-plan.md) — `hypercube_product_projection_bound`: 任意 `A ⊆ α^n` (`A.Nonempty`) で `|A| ≤ ∏ i, |π_{{i}}(A)|`。Brascamp–Lieb の `S i := {i}` / `k := 1` 特殊形として Phase C corollary。edge-boundary 形 (Han-Bregman 流) は **B-2' deferred** に切り出し: Mathlib に Boolean cube graph 既存なく、`SimpleGraph.edgeBoundary` 形は独立 inventory が必要なため本 bundle スコープ外。
-- **Channel coding theorem (achievability)**: Shannon converse は完了済。achievability 半分 (Cover-Thomas Ch 7 strong typicality + jointly typical decoder) は AEP plumbing 上に構築可能。見積 4〜6 週間 / 800〜1500 行 / 高リスク。
+- **Channel coding theorem (achievability)** 🚧 (Phase A + Phase B-(a, b) 部分完了 2026-05-12) → [docs/shannon/channel-coding-achievability-plan.md](shannon/channel-coding-achievability-plan.md) — DMC = `Kernel α β` (alias) + `Code` structure + `errorProb` / `averageErrorProb` / `mutualInfoOfChannel` を Phase A で publish (`Common2026/Shannon/ChannelCoding.lean` 514 行)。Phase B-(a, b): `jointlyTypicalSet` 定義 + `jointlyTypicalSet_prob_tendsto_one` (joint AEP, union bound on 3 complements 経由) + `jointlyTypicalSet_card_le` (`Finset.card_image_of_injective` + 既存 `typicalSet_card_le`) 完了。**Phase B-(c) (independent pair `P((X̃, Y) ∈ A) ≤ exp(-n(I-3ε))`) 以降 deferred**: 新規 AEP point-wise probability upper bound `typicalSet_prob_le` + i.i.d. product measure factorization (現 AEP は `Pairwise IndepFun` のみで `iIndepFun` 経由の block measure 分解は未整備) を含む ~1000-1600 行追加が必要。Slepian-Wolf strong typicality / 他の joint AEP 形派生に **本 514 行は単独で再利用可能**。
 - **Strong Stein** (`Tendsto → K` strict 形): 現行 Stein は `K ≤ liminf ≤ limsup ≤ K/(1-ε)` の sandwich 止まり。`1/(1-ε)` 補正を消すには strong converse (concrete bound に `1+o(1)` factor) が必要。新規 inventory: strong converse 経路 (information spectrum / Han-Verdú approach) の Mathlib delta 調査。見積 unknown (inventory 後判定)。**(2026-05-11 再評価、B-5 弱形完了後)**: B-5 弱形の `tvNorm_le_sqrt_klDiv` (Common2026.Shannon.Pinsker) で `TV` と `KL` の plumbing は揃った。strong converse の concrete bound は **B-5' (sharp Pinsker) 待ち**ではなく、弱形でも `(1+o(1))` factor は導出可能 (定数のみ √2 緩い)。information spectrum 経路を試す前に Pinsker+TV continuity 経路を試す価値あり。
 
 ### B 追加 (2026-05-11 起草、既存 5 シード + B-1〜B-4 を踏まえた後続)
@@ -30,6 +30,8 @@
 - **Pinsker → Strong Stein のショートカット** ✅ (B-5 弱形完了で再評価済 2026-05-11): 弱形 Pinsker でも qualitative `(1+o(1))` bound は導出可能と判断。シャープ版 (B-5') 待ちは不要。B-4 の inventory は本観察と独立に進める。
 - **B-2 + B-9 の bundle 化** ✅ (2026-05-11 完了): どちらも Shearer を「異なる cover ファミリ」で呼ぶだけ。実装結果: **`structure ShearerCover` 抽象化は不要だった** — `shearer_inequality` が既に任意 `ι`/`S`/`k` に対して汎用なため、新規定義 `projectionSubset S A` + reshape lemma 1 つ (`jointEntropySubset_le_log_projectionSubset_card`) だけで BL が書ける。LW は既存形を維持 (refactor 見送り、新規 `BrascampLieb.lean` と並立)。Hypercube は singleton cover corollary `hypercube_product_projection_bound` 形のみ提供、edge-boundary 形は **B-2' deferred** に切り出し。
 - **B-7 → B-3 短縮化** ✅ (2026-05-12 B-7 完了で実証): 最大の seed B-3 (Channel coding achievability、4〜6 週) を一括着手するより、B-7 (MI chain rule) を独立 plan として先に完了 → B-3 を「jointly typical decoder + 既存 MI chain rule + i.i.d. corollary」の短縮形に再見積もる方が手戻りリスクが低い。実装: chain rule 経路 (Phase B) ≠ i.i.d. corollary 経路 (Phase C、`klDiv_pi_eq_sum` 直接) と判明、Phase C は chain rule に依存せず独立 publish した方が短い (B-3 では i.i.d. corollary 単独で十分)。
+
+- **B-3 i.i.d. product factorization の欠落** 📋 (2026-05-12 B-3 Phase B-(a,b) 完了時): AEP は `Pairwise IndepFun` ベースで構築されているが、Phase B-(c) `jointlyTypicalSet_indep_prob_le` を立てるには point-wise probability `(μ.map (jointRV Xs n)) {x} = ∏ P(x_i)` が必要 → `iIndepFun` ベースの new lemma `typicalSet_prob_le` を AEP に追加する必要あり。AEP の Phase D で `entropy_jointRV_eq_n_smul` の証明に `iIndepFun` を使った block entropy chain rule は既に存在 (`AEP.lean:527`)、その plumbing を point-wise probability に延長することは技術的には可能。本シード Phase B-(c) 再開時に AEP 拡張も含めて plan に組み込む。
 
 ---
 
@@ -56,6 +58,7 @@
   - [Pinsker moonshot (B-5)](shannon/pinsker-moonshot-plan.md) ✅ (弱形 `TV ≤ √KL`)
   - [Shearer cover bundle (B-2 + B-9)](shannon/shearer-cover-bundle-plan.md) ✅
   - [MI chain rule (B-7)](shannon/mi-chain-rule-moonshot-plan.md) ✅
+  - [Channel coding achievability (B-3)](shannon/channel-coding-achievability-plan.md) 🚧 (Phase A + B-(a, b))
 - 雛形:
   - [moonshot-plan-template.md](moonshot-plan-template.md)
   - [subplan-template.md](subplan-template.md)
