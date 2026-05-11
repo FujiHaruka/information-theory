@@ -27,6 +27,7 @@ import Common2026.Shannon.HanDShearer
 import Common2026.Shannon.LoomisWhitney
 import Common2026.Shannon.BrascampLieb
 import Common2026.Shannon.HypercubeEdgeBoundary
+import Common2026.Shannon.HypercubeEdgeBoundarySharp
 import Common2026.Polymatroid.Basic
 import Common2026.Shannon.Polymatroid
 import Common2026.Shannon.AEP
