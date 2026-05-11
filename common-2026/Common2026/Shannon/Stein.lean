@@ -1119,4 +1119,363 @@ theorem stein_converse_finite_n
       ≤ (klDiv P Q).toReal / (1 - ε) + Real.log 2 / ((n : ℝ) * (1 - ε))
   exact h_target
 
+/-! ### Phase C — Tendsto 形統合: `steinOptimalBeta` + liminf/limsup sandwich
+
+`stein_achievability` (lower side, eventually) と `stein_converse_finite_n`
+(upper side, pointwise) を `steinOptimalBeta P Q n ε` 経由で liminf / limsup に
+持ち上げる:
+
+```
+(klDiv P Q).toReal ≤ liminf_n -(1/n) * log (steinOptimalBeta P Q n ε)
+limsup_n -(1/n) * log (steinOptimalBeta P Q n ε) ≤ (klDiv P Q).toReal / (1 - ε)
+```
+
+Converse の `1/(1-ε)` 補正は本 plan の `stein_converse_finite_n` の DPI + log-sum
+下界 routes で構造的に残るため、strict `Tendsto → klDiv` ではなく sandwich 形に
+なる (strong Stein には strong converse が必要)。`ε → 0+` の極限を取ると上限が
+`klDiv` に押し戻る (`inf_{ε ∈ (0,1)} K/(1-ε) = K`)。 -/
+
+/-- The set of type-II error probabilities of α-level tests at level `ε`. -/
+noncomputable def steinBetaSet
+    (P Q : Measure α) (n : ℕ) (ε : ℝ) : Set ℝ :=
+  { β : ℝ | ∃ (s : Set (Fin n → α)), MeasurableSet s ∧
+        ((Measure.pi (fun _ : Fin n => P)) sᶜ).toReal ≤ ε ∧
+        β = ((Measure.pi (fun _ : Fin n => Q)) s).toReal }
+
+/-- The optimal type-II error subject to type-I ≤ ε. -/
+noncomputable def steinOptimalBeta
+    (P Q : Measure α) (n : ℕ) (ε : ℝ) : ℝ :=
+  sInf (steinBetaSet P Q n ε)
+
+/-- `s := Set.univ` is always an α-level test (its complement has measure 0). -/
+lemma one_mem_steinBetaSet
+    (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
+    (n : ℕ) (ε : ℝ) (hε : 0 ≤ ε) :
+    (1 : ℝ) ∈ steinBetaSet P Q n ε := by
+  refine ⟨Set.univ, MeasurableSet.univ, ?_, ?_⟩
+  · rw [Set.compl_univ]
+    simp
+    exact hε
+  · show 1 = ((Measure.pi (fun _ : Fin n => Q)) Set.univ).toReal
+    rw [show ((Measure.pi (fun _ : Fin n => Q)) Set.univ).toReal
+      = (Measure.pi (fun _ : Fin n => Q)).real Set.univ from rfl, probReal_univ]
+
+lemma steinBetaSet_nonempty
+    (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
+    (n : ℕ) (ε : ℝ) (hε : 0 ≤ ε) :
+    (steinBetaSet P Q n ε).Nonempty :=
+  ⟨1, one_mem_steinBetaSet P Q n ε hε⟩
+
+lemma steinBetaSet_bddBelow
+    (P Q : Measure α) (n : ℕ) (ε : ℝ) :
+    BddBelow (steinBetaSet P Q n ε) := by
+  refine ⟨0, ?_⟩
+  rintro β ⟨s, _, _, rfl⟩
+  exact ENNReal.toReal_nonneg
+
+lemma steinOptimalBeta_nonneg
+    (P Q : Measure α) (n : ℕ) (ε : ℝ) :
+    0 ≤ steinOptimalBeta P Q n ε := by
+  by_cases h : (steinBetaSet P Q n ε).Nonempty
+  · exact le_csInf h fun _ ⟨_, _, _, hβ⟩ => hβ ▸ ENNReal.toReal_nonneg
+  · simp [steinOptimalBeta, Set.not_nonempty_iff_eq_empty.mp h, Real.sInf_empty]
+
+lemma steinOptimalBeta_le_one
+    (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
+    (n : ℕ) (ε : ℝ) (hε : 0 ≤ ε) :
+    steinOptimalBeta P Q n ε ≤ 1 :=
+  csInf_le (steinBetaSet_bddBelow P Q n ε) (one_mem_steinBetaSet P Q n ε hε)
+
+/-- Pointwise converse bound in exponential form: for any α-level test `s`,
+`Q^n s ≥ exp(-n * (K/(1-ε) + log 2 / (n(1-ε))))`. Derived from
+`stein_converse_finite_n` by taking `exp` of both sides. -/
+lemma exp_le_Qn_of_alpha_level
+    (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
+    (hPpos : ∀ x : α, 0 < P.real {x})
+    (hPQ : P ≪ Q) (hQpos : ∀ x : α, 0 < Q.real {x})
+    {ε : ℝ} (hε : 0 < ε) (hε1 : ε < 1)
+    {n : ℕ} (hn : 0 < n)
+    (s : Set (Fin n → α)) (hs : MeasurableSet s)
+    (hα : ((Measure.pi (fun _ : Fin n => P)) sᶜ).toReal ≤ ε) :
+    Real.exp (-((n : ℝ) * ((klDiv P Q).toReal / (1 - ε)
+        + Real.log 2 / ((n : ℝ) * (1 - ε)))))
+      ≤ ((Measure.pi (fun _ : Fin n => Q)) s).toReal := by
+  -- Q^n s > 0: reproduce the argument from stein_converse_finite_n.
+  set Qn : Measure (Fin n → α) := Measure.pi (fun _ : Fin n => Q)
+  set Pn : Measure (Fin n → α) := Measure.pi (fun _ : Fin n => P)
+  have hn_R_pos : (0 : ℝ) < n := by exact_mod_cast hn
+  have h_one_sub_eps_pos : (0 : ℝ) < 1 - ε := by linarith
+  -- P^n s ≥ 1 - ε > 0, hence s nonempty, hence Q^n s ≥ Q^n {x_witness} > 0.
+  have h_Pn_total : Pn.real s + Pn.real sᶜ = 1 := by
+    rw [measureReal_add_measureReal_compl hs]
+    exact probReal_univ
+  have h_Pn_sc_eq : Pn.real sᶜ = (Pn sᶜ).toReal := rfl
+  have h_Pn_s_pos : 0 < Pn.real s := by rw [h_Pn_sc_eq] at h_Pn_total; linarith
+  have h_s_nonempty : s.Nonempty := by
+    rw [Set.nonempty_iff_ne_empty]; intro h_empty
+    rw [h_empty] at h_Pn_s_pos; simp at h_Pn_s_pos
+  obtain ⟨x_w, hx_in_s⟩ := h_s_nonempty
+  have h_Qn_x_pos : 0 < Qn.real {x_w} := by
+    show 0 < ((Measure.pi (fun _ : Fin n => Q)) {x_w}).toReal
+    rw [Measure.pi_singleton, ENNReal.toReal_prod]
+    exact Finset.prod_pos (fun i _ => hQpos (x_w i))
+  have h_Qn_s_pos : 0 < Qn.real s := by
+    have h_subset : ({x_w} : Set (Fin n → α)) ⊆ s := by
+      intro y hy; simp at hy; rw [hy]; exact hx_in_s
+    have := MeasureTheory.measureReal_mono (μ := Qn) h_subset
+    linarith
+  have h_Qn_s_real_pos : 0 < ((Measure.pi (fun _ : Fin n => Q)) s).toReal := h_Qn_s_pos
+  -- Apply stein_converse_finite_n.
+  have h_conv := stein_converse_finite_n P Q hPpos hPQ hQpos hε hε1 hn s hs hα
+  -- h_conv : -(1/n) * log Q^n s ≤ K/(1-ε) + log 2/(n(1-ε))
+  -- Multiply both sides by -n: log Q^n s ≥ -n * (K/(1-ε) + log 2/(n(1-ε)))
+  set B : ℝ := (klDiv P Q).toReal / (1 - ε) + Real.log 2 / ((n : ℝ) * (1 - ε))
+  have h_log_ge : Real.log ((Measure.pi (fun _ : Fin n => Q)) s).toReal ≥ -((n : ℝ) * B) := by
+    have h_neg_inv_lt : -((1 : ℝ) / n) < 0 := by
+      have : (0 : ℝ) < 1 / n := one_div_pos.mpr hn_R_pos
+      linarith
+    -- From -(1/n) * x ≤ B and -(1/n) < 0, we get x ≥ -nB.
+    -- More directly: -(1/n) * x ≤ B ⟺ x * (-(1/n)) ≤ B ⟺ x ≥ B / (-(1/n)) = -nB.
+    have h_eq : -((n : ℝ) * B) = -n * B := by ring
+    -- Multiply h_conv by -n (negative) flips: log Q^n s ≥ -n * B.
+    -- Concretely: log Q^n s = (-n) * (-(1/n) * log Q^n s) and -(1/n) log Q^n s ≤ B.
+    have h_step : (-(n : ℝ)) * (-((1 : ℝ) / n) * Real.log ((Measure.pi (fun _ : Fin n => Q)) s).toReal)
+        ≥ (-(n : ℝ)) * B := by
+      apply mul_le_mul_of_nonpos_left h_conv
+      linarith
+    have h_simp : (-(n : ℝ)) * (-((1 : ℝ) / n) * Real.log ((Measure.pi (fun _ : Fin n => Q)) s).toReal)
+        = Real.log ((Measure.pi (fun _ : Fin n => Q)) s).toReal := by
+      field_simp
+    rw [h_simp] at h_step
+    linarith
+  -- exp_le_exp + Real.exp_log h_Qn_s_real_pos:
+  have h_exp_chain :
+      Real.exp (-((n : ℝ) * B))
+        ≤ Real.exp (Real.log ((Measure.pi (fun _ : Fin n => Q)) s).toReal) :=
+    Real.exp_le_exp.mpr h_log_ge
+  rw [Real.exp_log h_Qn_s_real_pos] at h_exp_chain
+  exact h_exp_chain
+
+/-- The set `steinBetaSet` is bounded below by `exp(-n * (K/(1-ε) + log 2/(n(1-ε))))`,
+hence `steinOptimalBeta` is also. -/
+lemma exp_le_steinOptimalBeta
+    (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
+    (hPpos : ∀ x : α, 0 < P.real {x})
+    (hPQ : P ≪ Q) (hQpos : ∀ x : α, 0 < Q.real {x})
+    {ε : ℝ} (hε : 0 < ε) (hε1 : ε < 1)
+    {n : ℕ} (hn : 0 < n) :
+    Real.exp (-((n : ℝ) * ((klDiv P Q).toReal / (1 - ε)
+        + Real.log 2 / ((n : ℝ) * (1 - ε)))))
+      ≤ steinOptimalBeta P Q n ε := by
+  apply le_csInf (steinBetaSet_nonempty P Q n ε hε.le)
+  rintro β ⟨s, hs, hα, rfl⟩
+  exact exp_le_Qn_of_alpha_level P Q hPpos hPQ hQpos hε hε1 hn s hs hα
+
+/-- `steinOptimalBeta` is strictly positive (under our hypotheses). -/
+lemma steinOptimalBeta_pos
+    (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
+    (hPpos : ∀ x : α, 0 < P.real {x})
+    (hPQ : P ≪ Q) (hQpos : ∀ x : α, 0 < Q.real {x})
+    {ε : ℝ} (hε : 0 < ε) (hε1 : ε < 1)
+    {n : ℕ} (hn : 0 < n) :
+    0 < steinOptimalBeta P Q n ε :=
+  lt_of_lt_of_le (Real.exp_pos _) (exp_le_steinOptimalBeta P Q hPpos hPQ hQpos hε hε1 hn)
+
+/-- Converse-side upper bound on the rate:
+`-(1/n) log steinOptimalBeta ≤ K/(1-ε) + log 2/(n(1-ε))`. -/
+theorem steinOptimalBeta_log_le_of_converse
+    (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
+    (hPpos : ∀ x : α, 0 < P.real {x})
+    (hPQ : P ≪ Q) (hQpos : ∀ x : α, 0 < Q.real {x})
+    {ε : ℝ} (hε : 0 < ε) (hε1 : ε < 1)
+    {n : ℕ} (hn : 0 < n) :
+    -((1 : ℝ) / n) * Real.log (steinOptimalBeta P Q n ε)
+      ≤ (klDiv P Q).toReal / (1 - ε) + Real.log 2 / ((n : ℝ) * (1 - ε)) := by
+  have h_pos := steinOptimalBeta_pos P Q hPpos hPQ hQpos hε hε1 hn
+  have h_exp_le := exp_le_steinOptimalBeta P Q hPpos hPQ hQpos hε hε1 hn
+  set B : ℝ := (klDiv P Q).toReal / (1 - ε) + Real.log 2 / ((n : ℝ) * (1 - ε))
+  -- exp(-nB) ≤ steinOptimalBeta ⟹ -nB ≤ log steinOptimalBeta ⟹ -(1/n) log ≤ B.
+  have hn_R_pos : (0 : ℝ) < n := by exact_mod_cast hn
+  have h_log_ge : -((n : ℝ) * B) ≤ Real.log (steinOptimalBeta P Q n ε) := by
+    have h_log_mono := Real.log_le_log (Real.exp_pos _) h_exp_le
+    rwa [Real.log_exp] at h_log_mono
+  -- Multiply by -(1/n) < 0, flips inequality.
+  have h_neg_inv_neg : -((1 : ℝ) / n) ≤ 0 := by
+    have : (0 : ℝ) ≤ 1 / n := by positivity
+    linarith
+  have h_step : -((1 : ℝ) / n) * Real.log (steinOptimalBeta P Q n ε)
+      ≤ -((1 : ℝ) / n) * (-((n : ℝ) * B)) :=
+    mul_le_mul_of_nonpos_left h_log_ge h_neg_inv_neg
+  have h_simp : -((1 : ℝ) / n) * (-((n : ℝ) * B)) = B := by field_simp
+  linarith
+
+/-- Achievability-side lower bound on the rate: eventually
+`K - δ ≤ -(1/n) log steinOptimalBeta`. -/
+theorem steinOptimalBeta_log_ge_of_achievability
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
+    (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hMap : μ.map (Xs 0) = P)
+    (hMapJoint : ∀ n, μ.map (jointRV Xs n) = Measure.pi (fun _ : Fin n => P))
+    (hPpos : ∀ x : α, 0 < P.real {x})
+    (hPQ : P ≪ Q) (hQpos : ∀ x : α, 0 < Q.real {x})
+    {ε δ : ℝ} (hε : 0 < ε) (hε1 : ε < 1) (hδ : 0 < δ) :
+    ∀ᶠ n : ℕ in atTop,
+      (klDiv P Q).toReal - δ
+        ≤ -((1 : ℝ) / n) * Real.log (steinOptimalBeta P Q n ε) := by
+  have h_ach := stein_achievability μ P Q Xs hXs hindep hident hMap hMapJoint
+    hPpos hPQ hQpos hε hε1 hδ
+  filter_upwards [h_ach, eventually_gt_atTop 0] with n h_ex hn_pos
+  obtain ⟨s, hs_meas, hs_alpha, hs_log⟩ := h_ex
+  -- hs_log : K - δ ≤ -(1/n) log Q^n s
+  -- (Q^n s).toReal ∈ steinBetaSet, so steinOptimalBeta ≤ Q^n s.
+  set Qn_s : ℝ := ((Measure.pi (fun _ : Fin n => Q)) s).toReal with hQns_def
+  have h_in_set : Qn_s ∈ steinBetaSet P Q n ε := ⟨s, hs_meas, hs_alpha, rfl⟩
+  have h_optBeta_le : steinOptimalBeta P Q n ε ≤ Qn_s :=
+    csInf_le (steinBetaSet_bddBelow P Q n ε) h_in_set
+  -- Both sides positive: steinOptimalBeta > 0 (from converse-side bound) and Qn_s > 0.
+  have h_opt_pos := steinOptimalBeta_pos P Q hPpos hPQ hQpos hε hε1 hn_pos
+  -- Qn_s > 0: reproduce from the achievability proof's argument (Q^n s ≥ Q^n {x} > 0).
+  have hn_R_pos : (0 : ℝ) < n := by exact_mod_cast hn_pos
+  set Pn : Measure (Fin n → α) := Measure.pi (fun _ : Fin n => P)
+  set Qn : Measure (Fin n → α) := Measure.pi (fun _ : Fin n => Q)
+  have h_Pn_total : Pn.real s + Pn.real sᶜ = 1 := by
+    rw [measureReal_add_measureReal_compl hs_meas]; exact probReal_univ
+  have h_Pn_sc_eq : Pn.real sᶜ = (Pn sᶜ).toReal := rfl
+  have h_Pn_s_pos : 0 < Pn.real s := by
+    rw [h_Pn_sc_eq] at h_Pn_total
+    have : Pn.real sᶜ = (Pn sᶜ).toReal := rfl
+    linarith [hs_alpha, h_Pn_total]
+  have h_s_nonempty : s.Nonempty := by
+    rw [Set.nonempty_iff_ne_empty]; intro h_empty
+    rw [h_empty] at h_Pn_s_pos; simp at h_Pn_s_pos
+  obtain ⟨x_w, hx_in_s⟩ := h_s_nonempty
+  have h_Qn_x_pos : 0 < Qn.real {x_w} := by
+    show 0 < ((Measure.pi (fun _ : Fin n => Q)) {x_w}).toReal
+    rw [Measure.pi_singleton, ENNReal.toReal_prod]
+    exact Finset.prod_pos (fun i _ => hQpos (x_w i))
+  have h_Qns_pos : 0 < Qn_s := by
+    have h_subset : ({x_w} : Set (Fin n → α)) ⊆ s := by
+      intro y hy; simp at hy; rw [hy]; exact hx_in_s
+    have := MeasureTheory.measureReal_mono (μ := Qn) h_subset
+    -- Qn.real {x_w} ≤ Qn.real s = Qn_s
+    have h_eq : Qn.real s = Qn_s := rfl
+    linarith
+  -- log monotonicity: log steinOptimalBeta ≤ log Qn_s.
+  have h_log_le : Real.log (steinOptimalBeta P Q n ε) ≤ Real.log Qn_s :=
+    Real.log_le_log h_opt_pos h_optBeta_le
+  -- Multiply by -(1/n) ≤ 0 flips:
+  have h_neg_inv_nonpos : -((1 : ℝ) / n) ≤ 0 := by
+    have : (0 : ℝ) ≤ 1 / n := by positivity
+    linarith
+  have h_rate_ge : -((1 : ℝ) / n) * Real.log Qn_s
+      ≤ -((1 : ℝ) / n) * Real.log (steinOptimalBeta P Q n ε) :=
+    mul_le_mul_of_nonpos_left h_log_le h_neg_inv_nonpos
+  -- Conclude from hs_log : K - δ ≤ -(1/n) log Qn_s ≤ -(1/n) log steinOptimalBeta.
+  linarith
+
+/-- **Stein's lemma (liminf/limsup sandwich)**:
+For any α-level threshold `ε ∈ (0,1)`, the optimal type-II error decays at rate
+between `K` and `K/(1-ε)`:
+
+```
+K ≤ liminf_n -(1/n) log steinOptimalBeta(P, Q, n, ε)
+limsup_n -(1/n) log steinOptimalBeta(P, Q, n, ε) ≤ K/(1-ε)
+```
+
+Strict `Tendsto → K` requires a strong converse (with `1+o(1)` factor instead of
+`1/(1-ε)`); the gap closes by sending `ε → 0+` (`inf_{ε ∈ (0,1)} K/(1-ε) = K`). -/
+theorem stein_lemma
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
+    (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hMap : μ.map (Xs 0) = P)
+    (hMapJoint : ∀ n, μ.map (jointRV Xs n) = Measure.pi (fun _ : Fin n => P))
+    (hPpos : ∀ x : α, 0 < P.real {x})
+    (hPQ : P ≪ Q) (hQpos : ∀ x : α, 0 < Q.real {x})
+    {ε : ℝ} (hε : 0 < ε) (hε1 : ε < 1) :
+    (klDiv P Q).toReal
+        ≤ Filter.liminf
+            (fun n : ℕ => -((1 : ℝ) / n) * Real.log (steinOptimalBeta P Q n ε))
+            Filter.atTop
+      ∧
+    Filter.limsup
+        (fun n : ℕ => -((1 : ℝ) / n) * Real.log (steinOptimalBeta P Q n ε))
+        Filter.atTop
+      ≤ (klDiv P Q).toReal / (1 - ε) := by
+  set K_real : ℝ := (klDiv P Q).toReal with hK_def
+  set rate : ℕ → ℝ := fun n => -((1 : ℝ) / n) * Real.log (steinOptimalBeta P Q n ε)
+    with hrate_def
+  set g : ℕ → ℝ := fun n => K_real / (1 - ε) + Real.log 2 / ((n : ℝ) * (1 - ε))
+    with hg_def
+  -- rate is universally non-negative (steinOptimalBeta ∈ [0,1] ⟹ log ≤ 0 ⟹ -(1/n) log ≥ 0).
+  have h_rate_nn : ∀ n, 0 ≤ rate n := by
+    intro n
+    have h_nn : 0 ≤ steinOptimalBeta P Q n ε := steinOptimalBeta_nonneg P Q n ε
+    have h_le_one : steinOptimalBeta P Q n ε ≤ 1 := steinOptimalBeta_le_one P Q n ε hε.le
+    have h_log_nonpos : Real.log (steinOptimalBeta P Q n ε) ≤ 0 :=
+      Real.log_nonpos h_nn h_le_one
+    have h_inv_nn : (0 : ℝ) ≤ 1 / n := by positivity
+    have h_prod_nonpos : (1 / (n : ℝ)) * Real.log (steinOptimalBeta P Q n ε) ≤ 0 :=
+      mul_nonpos_of_nonneg_of_nonpos h_inv_nn h_log_nonpos
+    show 0 ≤ -((1 : ℝ) / n) * Real.log (steinOptimalBeta P Q n ε)
+    have h_eq : -((1 : ℝ) / n) * Real.log (steinOptimalBeta P Q n ε)
+        = -((1 / n) * Real.log (steinOptimalBeta P Q n ε)) := by ring
+    rw [h_eq]; linarith
+  -- g → K/(1-ε):
+  have h_g_tendsto : Tendsto g atTop (𝓝 (K_real / (1 - ε))) := by
+    have h_one_div : Tendsto (fun n : ℕ => (1 : ℝ) / n) atTop (𝓝 0) :=
+      tendsto_one_div_atTop_nhds_zero_nat
+    have h_term : Tendsto (fun n : ℕ => Real.log 2 / ((n : ℝ) * (1 - ε)))
+        atTop (𝓝 0) := by
+      have h_ev : ∀ᶠ n : ℕ in atTop, (1 / (n : ℝ)) * (Real.log 2 / (1 - ε))
+          = Real.log 2 / ((n : ℝ) * (1 - ε)) := by
+        filter_upwards [eventually_gt_atTop 0] with n hn
+        have hn_R_ne : (n : ℝ) ≠ 0 := by exact_mod_cast hn.ne'
+        have hε_ne : (1 - ε) ≠ 0 := by linarith
+        field_simp
+      have hprod := h_one_div.mul_const (Real.log 2 / (1 - ε))
+      simp only [zero_mul] at hprod
+      exact Tendsto.congr' h_ev hprod
+    have h_const : Tendsto (fun _ : ℕ => K_real / (1 - ε)) atTop
+        (𝓝 (K_real / (1 - ε))) := tendsto_const_nhds
+    have h_add := h_const.add h_term
+    simpa using h_add
+  -- rate n ≤ g n eventually (for n > 0):
+  have h_rate_le_g : ∀ᶠ n in atTop, rate n ≤ g n := by
+    filter_upwards [eventually_gt_atTop 0] with n hn
+    exact steinOptimalBeta_log_le_of_converse P Q hPpos hPQ hQpos hε hε1 hn
+  -- g is bounded above (Tendsto ⟹ BddAbove via Filter.Tendsto.bddAbove_range).
+  obtain ⟨g_ub, hg_ub⟩ := h_g_tendsto.bddAbove_range
+  have h_rate_le_const : ∀ᶠ n in atTop, rate n ≤ g_ub := by
+    filter_upwards [h_rate_le_g] with n hn
+    exact hn.trans (hg_ub (Set.mem_range_self n))
+  -- IsCoboundedUnder:
+  have h_cobdd_le : IsCoboundedUnder (· ≤ ·) atTop rate :=
+    isCoboundedUnder_le_of_eventually_le atTop
+      (Filter.Eventually.of_forall h_rate_nn)
+  have h_cobdd_ge : IsCoboundedUnder (· ≥ ·) atTop rate :=
+    isCoboundedUnder_ge_of_eventually_le atTop h_rate_le_const
+  have h_bdd_g : IsBoundedUnder (· ≤ ·) atTop g :=
+    h_g_tendsto.isBoundedUnder_le
+  refine ⟨?_, ?_⟩
+  · -- K ≤ liminf rate.
+    -- For each δ > 0: ∀ᶠ n, K - δ ≤ rate n ⟹ K - δ ≤ liminf rate. Then take δ → 0.
+    apply le_of_forall_pos_le_add
+    intro δ hδ
+    have h_ach := steinOptimalBeta_log_ge_of_achievability μ P Q Xs hXs hindep hident
+      hMap hMapJoint hPpos hPQ hQpos hε hε1 hδ
+    have h_liminf : K_real - δ ≤ Filter.liminf rate atTop :=
+      Filter.le_liminf_of_le h_cobdd_ge h_ach
+    linarith
+  · -- limsup rate ≤ K/(1-ε).
+    have h_limsup_le : Filter.limsup rate atTop ≤ Filter.limsup g atTop :=
+      Filter.limsup_le_limsup h_rate_le_g h_cobdd_le h_bdd_g
+    rw [h_g_tendsto.limsup_eq] at h_limsup_le
+    exact h_limsup_le
+
 end InformationTheory.Shannon

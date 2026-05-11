@@ -14,10 +14,10 @@
 ## 進捗
 
 - [x] Phase 0 — Mathlib delta インベントリ (Pi 化 chain rule / DPI / log-sum 下界 / Tendsto squeeze) ✅ → [`stein-converse-mathlib-inventory.md`](stein-converse-mathlib-inventory.md)
-- [ ] Phase A — Pi 化 KL chain rule `klDiv_pi_eq_n_smul` 📋 (本 plan の山場 1)
-- [ ] Phase B — Stein converse (任意検定 → Bernoulli reduction → log-sum 下界 → `-(1/n) log Q^n s ≤ klDiv P Q + δ`) 📋 (本 plan の山場 2)
-- [ ] Phase C — `Tendsto` 統合形 `stein_lemma` 📋
-- [ ] Phase D — verify (`lake env lean Common2026/Shannon/Stein.lean` silent + `lake build` 緑) 📋
+- [x] Phase A — Pi 化 KL chain rule `klDiv_pi_eq_n_smul` ✅
+- [x] Phase B — Stein converse (任意検定 → Bernoulli reduction → log-sum 下界 → `-(1/n) log Q^n s ≤ klDiv P Q / (1-ε) + log 2/(n(1-ε))`) ✅
+- [x] Phase C — `liminf/limsup` sandwich 形 `stein_lemma` ✅ (strict `Tendsto → K` は strong converse 必要、本 plan の DPI + log-sum で残る `1/(1-ε)` 補正のため liminf/limsup sandwich `K ≤ liminf ≤ limsup ≤ K/(1-ε)` の形で着地)
+- [x] Phase D — verify (`lake env lean Common2026/Shannon/Stein.lean` silent) ✅
 
 ## ゴール / Approach
 
@@ -349,6 +349,13 @@ end InformationTheory.Shannon
 ## 判断ログ
 
 書く頻度: Phase 中の方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
+
+### 2026-05-11 — Phase C 完了 (liminf/limsup sandwich 形に着地)
+
+- **Tendsto → K の strict 形は不達**: `stein_converse_finite_n` の `-(1/n) log Q^n s ≤ K/(1-ε) + log 2/(n(1-ε))` は ε > 0 固定で上限が `K/(1-ε) > K` に収束、`limsup → K/(1-ε)`。Achievability から `liminf ≥ K`。両端不一致のため Tendsto 形は不可、**`K ≤ liminf ≤ limsup ≤ K/(1-ε)` sandwich** に着地。`ε → 0+` を取れば `K/(1-ε) → K` で gap が closing。Strong Stein (Tendsto → K) には strong converse (factor `1+o(1)` の concrete bound) が必要、本 plan の DPI + log-sum 経路では構造的に到達不可。
+- **`steinOptimalBeta P Q n ε := sInf { (Q^n s).toReal | α-level s }`** を導入、helper 7 本 (`steinBetaSet` / `one_mem` / `nonempty` / `bddBelow` / `nonneg` / `le_one`) + converse 経由の `exp_le_steinOptimalBeta` + `steinOptimalBeta_pos`、achievability/converse 両側 lift theorem を経て主定理 `stein_lemma` を assembly。
+- **`Filter.Tendsto.bddAbove_range` 再利用**: `g(n) := K/(1-ε) + log 2/(n(1-ε))` の `Tendsto → K/(1-ε)` から `BddAbove (Set.range g)` を抽出、`IsCoboundedUnder` を `isCoboundedUnder_ge_of_eventually_le` で discharge する pattern が AEP Phase F (`source_coding_theorem` の `hM_bdd` 充足) と完全同形。Mathlib 直接の plumbing で新規数学ゼロ。
+- **行数 +359 (target 100-200 を上振れ)**: 主因は `exp_le_Qn_of_alpha_level` で `Q^n s > 0` の plumbing (∃ x ∈ s witness + Pi singleton 経由) を `stein_converse_finite_n` から再演する必要があった (extract helper にすれば -20〜30 行できる)。total 1481 行 (Stein.lean) で次ファイル分割閾値 1500 接近。
 
 ### 2026-05-11 — 本 plan 起草 (親 plan Phase C/D の独立化)
 
