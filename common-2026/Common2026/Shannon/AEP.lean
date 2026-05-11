@@ -797,4 +797,377 @@ theorem source_coding_converse
   rw [h_LHS_liminf] at h_liminf_mono
   exact h_liminf_mono
 
+/-! ### Phase E — 源符号化定理 achievability
+
+Phase E は source-coding achievability (Cover-Thomas Theorem 5.4.2) を `Tendsto` 形で
+立てる。`M_n := ⌈exp(n · R)⌉` を取り、typical set ↔ `Fin M_n` の bijection で encoder /
+decoder を構成、`typicalSet_prob_tendsto_one` で error rate → 0、`Nat.le_ceil` /
+`Nat.ceil_lt_add_one` の squeeze で `log M_n / n → R`。
+
+詳細: [`docs/shannon/aep-achievability-plan.md`](../../docs/shannon/aep-achievability-plan.md).
+-/
+
+/-- The codebook size used in the achievability proof: `M_n := ⌈exp(n · R)⌉`. -/
+noncomputable def codebookSize (R : ℝ) (n : ℕ) : ℕ :=
+  Nat.ceil (Real.exp ((n : ℝ) * R))
+
+/-- `M_n ≥ 1` (so `Fin M_n` is `Nonempty`). -/
+lemma codebookSize_pos (R : ℝ) (n : ℕ) : 0 < codebookSize R n := by
+  unfold codebookSize
+  exact Nat.ceil_pos.mpr (Real.exp_pos _)
+
+instance codebookSize_neZero (R : ℝ) (n : ℕ) : NeZero (codebookSize R n) :=
+  ⟨(codebookSize_pos R n).ne'⟩
+
+/-- Cardinality of typical set is ≤ `M_n` (provided `H + ε ≤ R` and `hpos`). -/
+lemma typicalSet_card_le_codebookSize
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (hpos : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    (n : ℕ) {ε R : ℝ} (hε : 0 < ε) (h_le : entropy μ (Xs 0) + ε ≤ R) :
+    (typicalSet μ Xs n ε).toFinite.toFinset.card ≤ codebookSize R n := by
+  -- card ≤ exp(n(H+ε)) ≤ exp(nR) ≤ ⌈exp(nR)⌉ = M_n.
+  have h_card_le_exp := typicalSet_card_le μ Xs hXs hpos n hε
+  have h_mono_arg : (n : ℝ) * (entropy μ (Xs 0) + ε) ≤ (n : ℝ) * R := by
+    exact mul_le_mul_of_nonneg_left h_le (Nat.cast_nonneg n)
+  have h_exp_mono : Real.exp ((n : ℝ) * (entropy μ (Xs 0) + ε))
+      ≤ Real.exp ((n : ℝ) * R) := Real.exp_le_exp.mpr h_mono_arg
+  have h_chain : ((typicalSet μ Xs n ε).toFinite.toFinset.card : ℝ)
+      ≤ Real.exp ((n : ℝ) * R) := h_card_le_exp.trans h_exp_mono
+  have h_le_ceil : Real.exp ((n : ℝ) * R) ≤ (codebookSize R n : ℝ) := by
+    unfold codebookSize
+    exact Nat.le_ceil _
+  have h_card_le_R : ((typicalSet μ Xs n ε).toFinite.toFinset.card : ℝ)
+      ≤ (codebookSize R n : ℝ) := h_chain.trans h_le_ceil
+  exact_mod_cast h_card_le_R
+
+/-- The encoder: typical blocks → `Fin M_n` index, non-typical → 0. -/
+noncomputable def aepEncoder
+    (μ : Measure Ω) (Xs : ℕ → Ω → α)
+    (n : ℕ) (ε R : ℝ)
+    (h_card_le : (typicalSet μ Xs n ε).toFinite.toFinset.card ≤ codebookSize R n) :
+    (Fin n → α) → Fin (codebookSize R n) := by
+  classical
+  intro x
+  by_cases hx : x ∈ (typicalSet μ Xs n ε).toFinite.toFinset
+  · -- typical: equivFin index, cast into Fin M_n.
+    exact Fin.castLE h_card_le ((typicalSet μ Xs n ε).toFinite.toFinset.equivFin ⟨x, hx⟩)
+  · -- non-typical: default index 0.
+    exact ⟨0, codebookSize_pos R n⟩
+
+/-- The decoder: `Fin M_n` index → typical block (out of range → default). -/
+noncomputable def aepDecoder
+    (μ : Measure Ω) (Xs : ℕ → Ω → α)
+    (n : ℕ) (ε R : ℝ) :
+    Fin (codebookSize R n) → (Fin n → α) := by
+  classical
+  intro k
+  by_cases hk : k.val < (typicalSet μ Xs n ε).toFinite.toFinset.card
+  · -- in range: pull back via equivFin.symm, then take subtype value.
+    exact ((typicalSet μ Xs n ε).toFinite.toFinset.equivFin.symm ⟨k.val, hk⟩).val
+  · -- out of range: arbitrary block.
+    exact fun _ => Classical.arbitrary α
+
+omit [MeasurableSingletonClass α] in
+/-- **Round-trip lemma**: `d_n ∘ c_n = id` on typical set. -/
+lemma aepDecoder_aepEncoder_of_mem_typicalSet
+    (μ : Measure Ω) (Xs : ℕ → Ω → α)
+    (n : ℕ) (ε R : ℝ)
+    (h_card_le : (typicalSet μ Xs n ε).toFinite.toFinset.card ≤ codebookSize R n)
+    (x : Fin n → α) (hx : x ∈ typicalSet μ Xs n ε) :
+    aepDecoder μ Xs n ε R (aepEncoder μ Xs n ε R h_card_le x) = x := by
+  classical
+  -- x is in toFinset via Set.Finite.mem_toFinset.
+  have hxF : x ∈ (typicalSet μ Xs n ε).toFinite.toFinset :=
+    (Set.Finite.mem_toFinset _).mpr hx
+  -- Unfold encoder on the `hxF` branch.
+  unfold aepEncoder
+  rw [dif_pos hxF]
+  -- The cast preserves val, so it lands in range; equivFin.symm undoes equivFin.
+  set s : Finset (Fin n → α) := (typicalSet μ Xs n ε).toFinite.toFinset with hs_def
+  set k0 : Fin s.card := s.equivFin ⟨x, hxF⟩ with hk0_def
+  -- Note: `(Fin.castLE h_card_le k0).val = k0.val < s.card`.
+  have hcast_val : (Fin.castLE h_card_le k0).val = k0.val := rfl
+  have hk0_lt : k0.val < s.card := k0.isLt
+  -- Now unfold decoder on the in-range branch.
+  unfold aepDecoder
+  rw [dif_pos (by rw [hcast_val]; exact hk0_lt)]
+  -- Show s.equivFin.symm ⟨k0.val, _⟩ = ⟨x, hxF⟩ (subtype) then take .val.
+  have hsymm : s.equivFin.symm ⟨k0.val, hk0_lt⟩ = ⟨x, hxF⟩ := by
+    have h1 : s.equivFin.symm (s.equivFin ⟨x, hxF⟩) = ⟨x, hxF⟩ :=
+      s.equivFin.symm_apply_apply ⟨x, hxF⟩
+    -- s.equivFin ⟨x, hxF⟩ has the same .val as k0, hence the input subtypes match.
+    have heq : (⟨k0.val, hk0_lt⟩ : Fin s.card) = s.equivFin ⟨x, hxF⟩ := by
+      apply Fin.ext
+      rfl
+    rw [heq]; exact h1
+  -- Conclude: target is `(s.equivFin.symm ⟨(Fin.castLE … k0).val, …⟩).val = x`.
+  show ((s.equivFin.symm ⟨(Fin.castLE h_card_le k0).val, _⟩) : ↑s).val = x
+  -- After rewriting `Fin.castLE` val, we can apply `hsymm`.
+  have : ((s.equivFin.symm ⟨k0.val, hk0_lt⟩ : ↑s) : Fin n → α) = x := by
+    rw [hsymm]
+  exact this
+
+/-! #### Phase B — error rate Tendsto -/
+
+omit [MeasurableSingletonClass α] in
+/-- error event ⊆ {jointRV Xs n ∉ typicalSet}. The orientation matches
+`errorProb`: `Xs ω ≠ decoder (encoder (Xs ω))`. -/
+lemma error_subset_compl_typicalSet
+    (μ : Measure Ω) (Xs : ℕ → Ω → α)
+    (n : ℕ) (ε R : ℝ)
+    (h_card_le : (typicalSet μ Xs n ε).toFinite.toFinset.card ≤ codebookSize R n) :
+    {ω | jointRV Xs n ω
+            ≠ aepDecoder μ Xs n ε R (aepEncoder μ Xs n ε R h_card_le (jointRV Xs n ω))}
+      ⊆ {ω | jointRV Xs n ω ∉ typicalSet μ Xs n ε} := by
+  intro ω hω
+  simp only [Set.mem_setOf_eq] at hω ⊢
+  intro hmem
+  apply hω
+  exact (aepDecoder_aepEncoder_of_mem_typicalSet μ Xs n ε R h_card_le _ hmem).symm
+
+/-- error rate → 0. -/
+lemma aep_errorProb_tendsto_zero
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (hpos : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    {ε R : ℝ} (hε : 0 < ε) (h_le : entropy μ (Xs 0) + ε ≤ R) :
+    Tendsto
+      (fun n => InformationTheory.MeasureFano.errorProb μ
+                  (jointRV Xs n)
+                  (fun ω => aepEncoder μ Xs n ε R
+                              (typicalSet_card_le_codebookSize μ Xs hXs hpos n hε h_le)
+                              (jointRV Xs n ω))
+                  (aepDecoder μ Xs n ε R))
+      atTop (𝓝 0) := by
+  -- Sandwich: 0 ≤ errorProb n ≤ μ.real { ω | jointRV Xs n ω ∉ typicalSet ... } → 0.
+  set h_card : ∀ n, (typicalSet μ Xs n ε).toFinite.toFinset.card ≤ codebookSize R n :=
+    fun n => typicalSet_card_le_codebookSize μ Xs hXs hpos n hε h_le with h_card_def
+  -- Upper-bound: error event ⊆ ∁ typicalSet (orientation matches `errorProb`).
+  have h_subset : ∀ n,
+      {ω | jointRV Xs n ω
+              ≠ aepDecoder μ Xs n ε R
+                  ((fun ω => aepEncoder μ Xs n ε R (h_card n) (jointRV Xs n ω)) ω)}
+        ⊆ {ω | jointRV Xs n ω ∉ typicalSet μ Xs n ε} := by
+    intro n
+    exact error_subset_compl_typicalSet μ Xs n ε R (h_card n)
+  -- typicalSet measurable, complement measurable.
+  have h_meas_T : ∀ n, MeasurableSet {ω | jointRV Xs n ω ∈ typicalSet μ Xs n ε} := by
+    intro n
+    exact (measurable_jointRV Xs hXs n) (measurableSet_typicalSet μ Xs n ε)
+  -- complement of typical
+  have h_meas_comp : ∀ n, MeasurableSet {ω | jointRV Xs n ω ∉ typicalSet μ Xs n ε} := by
+    intro n; exact (h_meas_T n).compl
+  -- μ {ω | not in typicalSet} → 0 (from typicalSet_prob_tendsto_one).
+  have h_compl_tendsto :
+      Tendsto (fun n => (μ {ω | jointRV Xs n ω ∉ typicalSet μ Xs n ε}).toReal)
+        atTop (𝓝 0) := by
+    have h_pos := typicalSet_prob_tendsto_one μ Xs hXs hindep hident hε
+    -- μ {... ∉ T} = 1 - μ {... ∈ T}, hence its toReal tends to 0.
+    have h_id : ∀ n,
+        μ {ω | jointRV Xs n ω ∉ typicalSet μ Xs n ε}
+          = 1 - μ {ω | jointRV Xs n ω ∈ typicalSet μ Xs n ε} := by
+      intro n
+      have h_compl_eq :
+          {ω | jointRV Xs n ω ∉ typicalSet μ Xs n ε}
+            = {ω | jointRV Xs n ω ∈ typicalSet μ Xs n ε}ᶜ := rfl
+      rw [h_compl_eq, measure_compl (h_meas_T n) (measure_ne_top μ _), measure_univ]
+    -- toReal of the difference → 0.
+    have h_toReal_tendsto :
+        Tendsto (fun n => (1 - μ {ω | jointRV Xs n ω ∈ typicalSet μ Xs n ε}).toReal)
+          atTop (𝓝 0) := by
+      have h_cont : Continuous (fun x : ℝ≥0∞ => (1 : ℝ≥0∞) - x) :=
+        ENNReal.continuous_sub_left (by simp)
+      have h_step : Tendsto (fun n => (1 : ℝ≥0∞) -
+            μ {ω | jointRV Xs n ω ∈ typicalSet μ Xs n ε}) atTop
+          (𝓝 ((1 : ℝ≥0∞) - 1)) := h_cont.tendsto _ |>.comp h_pos
+      simp only [tsub_self] at h_step
+      have h_toReal := (ENNReal.tendsto_toReal (by simp : (0 : ℝ≥0∞) ≠ ∞)).comp h_step
+      simpa using h_toReal
+    refine Tendsto.congr (fun n => ?_) h_toReal_tendsto
+    rw [h_id n]
+  -- errorProb n = μ.real {error event} ≤ μ.real {... ∉ T} which → 0.
+  have h_error_le : ∀ n,
+      InformationTheory.MeasureFano.errorProb μ
+          (jointRV Xs n)
+          (fun ω => aepEncoder μ Xs n ε R (h_card n) (jointRV Xs n ω))
+          (aepDecoder μ Xs n ε R)
+        ≤ (μ {ω | jointRV Xs n ω ∉ typicalSet μ Xs n ε}).toReal := by
+    intro n
+    unfold InformationTheory.MeasureFano.errorProb Measure.real
+    exact ENNReal.toReal_mono (measure_ne_top μ _) (measure_mono (h_subset n))
+  have h_error_nn : ∀ n,
+      0 ≤ InformationTheory.MeasureFano.errorProb μ
+            (jointRV Xs n)
+            (fun ω => aepEncoder μ Xs n ε R (h_card n) (jointRV Xs n ω))
+            (aepDecoder μ Xs n ε R) := by
+    intro n
+    unfold InformationTheory.MeasureFano.errorProb
+    exact measureReal_nonneg
+  exact squeeze_zero h_error_nn h_error_le h_compl_tendsto
+
+/-! #### Phase C — rate Tendsto + main theorem -/
+
+/-- `log M_n / n → R` (squeeze via `Nat.le_ceil` and `Nat.ceil_lt_add_one`). -/
+lemma codebookSize_log_div_tendsto
+    {R : ℝ} (hR : 0 < R) :
+    Tendsto (fun n : ℕ => Real.log (codebookSize R n : ℝ) / n) atTop (𝓝 R) := by
+  -- Lower bound: R ≤ log M_n / n (for n ≥ 1).
+  -- Upper bound: log M_n / n ≤ log (exp(nR) + 1) / n → R.
+  set f : ℕ → ℝ := fun n => Real.log (codebookSize R n : ℝ) / n with hf_def
+  -- Show ∀ᶠ n in atTop, R ≤ f n ≤ log (exp(nR) + 1) / n.
+  -- Lower: R ≤ log M_n / n.
+  have h_lower : ∀ᶠ n in atTop, R ≤ f n := by
+    rw [Filter.eventually_atTop]
+    refine ⟨1, fun n hn => ?_⟩
+    have hn_pos_R : (0 : ℝ) < n := by exact_mod_cast hn
+    have hexp_pos : 0 < Real.exp ((n : ℝ) * R) := Real.exp_pos _
+    have h_le : Real.exp ((n : ℝ) * R) ≤ (codebookSize R n : ℝ) := by
+      unfold codebookSize
+      exact Nat.le_ceil _
+    have h_log : Real.log (Real.exp ((n : ℝ) * R)) ≤ Real.log (codebookSize R n : ℝ) :=
+      Real.log_le_log hexp_pos h_le
+    rw [Real.log_exp] at h_log
+    -- (n : ℝ) * R ≤ log (M_n) ⟹ R ≤ log (M_n) / n (n > 0).
+    have h_div := (div_le_div_iff_of_pos_right hn_pos_R).mpr h_log
+    have h_simp : (n : ℝ) * R / (n : ℝ) = R := by field_simp
+    rw [h_simp] at h_div
+    exact h_div
+  -- Upper: f n ≤ log (exp(nR) + 1) / n.
+  set g : ℕ → ℝ := fun n => Real.log (Real.exp ((n : ℝ) * R) + 1) / n with hg_def
+  have h_upper : ∀ᶠ n in atTop, f n ≤ g n := by
+    rw [Filter.eventually_atTop]
+    refine ⟨1, fun n hn => ?_⟩
+    have hn_pos_R : (0 : ℝ) < n := by exact_mod_cast hn
+    have h_ceil_lt :
+        (codebookSize R n : ℝ) < Real.exp ((n : ℝ) * R) + 1 := by
+      unfold codebookSize
+      exact Nat.ceil_lt_add_one (Real.exp_pos _).le
+    have h_ceil_pos : 0 < (codebookSize R n : ℝ) := by
+      have := codebookSize_pos R n
+      exact_mod_cast this
+    have h_log_le :
+        Real.log (codebookSize R n : ℝ) ≤ Real.log (Real.exp ((n : ℝ) * R) + 1) :=
+      (Real.log_le_log h_ceil_pos h_ceil_lt.le)
+    exact (div_le_div_iff_of_pos_right hn_pos_R).mpr h_log_le
+  -- g n → R.
+  -- log (exp(nR) + 1) = log (exp(nR) (1 + exp(-nR))) = nR + log (1 + exp(-nR)).
+  -- so g n = R + log (1 + exp(-nR)) / n. Both R is constant, second → 0.
+  have h_g_tendsto : Tendsto g atTop (𝓝 R) := by
+    have h_eq : ∀ n : ℕ, 1 ≤ n →
+        g n = R + Real.log (1 + Real.exp (-((n : ℝ) * R))) / n := by
+      intro n hn
+      have hn_pos_R : (0 : ℝ) < n := by exact_mod_cast hn
+      have hnR_pos : 0 < Real.exp ((n : ℝ) * R) := Real.exp_pos _
+      have h_inv : Real.exp ((n : ℝ) * R) + 1
+          = Real.exp ((n : ℝ) * R) * (1 + Real.exp (-((n : ℝ) * R))) := by
+        rw [mul_add, mul_one, ← Real.exp_add,
+          show (((n : ℝ) * R) + -((n : ℝ) * R)) = 0 from by ring, Real.exp_zero]
+      have h_inner_pos : 0 < 1 + Real.exp (-((n : ℝ) * R)) := by
+        have := Real.exp_pos (-((n : ℝ) * R))
+        linarith
+      have h_log_mul : Real.log (Real.exp ((n : ℝ) * R) + 1)
+          = (n : ℝ) * R + Real.log (1 + Real.exp (-((n : ℝ) * R))) := by
+        rw [h_inv, Real.log_mul hnR_pos.ne' h_inner_pos.ne', Real.log_exp]
+      show Real.log (Real.exp ((n : ℝ) * R) + 1) / n
+        = R + Real.log (1 + Real.exp (-((n : ℝ) * R))) / n
+      rw [h_log_mul, add_div]
+      have h_div_n : (n : ℝ) * R / (n : ℝ) = R := by field_simp
+      rw [h_div_n]
+    -- Use squeeze on |g n - R| ≤ log 2 / n.
+    -- Reduce target to: g n - R → 0, i.e. log(1 + exp(-nR))/n → 0.
+    -- Direct sandwich: 0 ≤ log(1 + exp(-nR))/n ≤ log 2 / n.
+    have h_bound_nn : ∀ n : ℕ, 1 ≤ n →
+        0 ≤ Real.log (1 + Real.exp (-((n : ℝ) * R))) / n := by
+      intro n hn
+      have hn_pos_R : (0 : ℝ) < n := by exact_mod_cast hn
+      have h_pos_exp : 0 < Real.exp (-((n : ℝ) * R)) := Real.exp_pos _
+      have h_one_le : 1 ≤ 1 + Real.exp (-((n : ℝ) * R)) := by linarith
+      have h_log_nn : 0 ≤ Real.log (1 + Real.exp (-((n : ℝ) * R))) :=
+        Real.log_nonneg h_one_le
+      exact div_nonneg h_log_nn hn_pos_R.le
+    have h_bound : ∀ n : ℕ, 1 ≤ n →
+        Real.log (1 + Real.exp (-((n : ℝ) * R))) / n ≤ Real.log 2 / n := by
+      intro n hn
+      have hn_pos_R : (0 : ℝ) < n := by exact_mod_cast hn
+      have h_exp_le_one : Real.exp (-((n : ℝ) * R)) ≤ 1 := by
+        have hnR_nn : 0 ≤ (n : ℝ) * R := mul_nonneg (Nat.cast_nonneg n) hR.le
+        have : -((n : ℝ) * R) ≤ 0 := by linarith
+        calc Real.exp (-((n : ℝ) * R))
+            ≤ Real.exp 0 := Real.exp_le_exp.mpr this
+          _ = 1 := Real.exp_zero
+      have h_one_le : 1 ≤ 1 + Real.exp (-((n : ℝ) * R)) := by
+        have := Real.exp_pos (-((n : ℝ) * R)); linarith
+      have h_le_two : 1 + Real.exp (-((n : ℝ) * R)) ≤ 2 := by linarith
+      have h_log_le_log2 : Real.log (1 + Real.exp (-((n : ℝ) * R))) ≤ Real.log 2 :=
+        Real.log_le_log (by linarith) h_le_two
+      exact div_le_div_of_nonneg_right h_log_le_log2 hn_pos_R.le
+    -- Use squeeze on log(1 + exp(-nR))/n.
+    have h_log2_div : Tendsto (fun n : ℕ => Real.log 2 / n) atTop (𝓝 0) := by
+      have h_one_div : Tendsto (fun n : ℕ => (1 : ℝ) / n) atTop (𝓝 0) :=
+        tendsto_one_div_atTop_nhds_zero_nat
+      have h_mul := h_one_div.const_mul (Real.log 2)
+      simp only [mul_zero] at h_mul
+      refine Tendsto.congr (fun n => ?_) h_mul
+      ring
+    have h_zero : Tendsto (fun _ : ℕ => (0 : ℝ)) atTop (𝓝 0) := tendsto_const_nhds
+    have h_inner_tendsto :
+        Tendsto (fun n : ℕ => Real.log (1 + Real.exp (-((n : ℝ) * R))) / n) atTop (𝓝 0) := by
+      apply tendsto_of_tendsto_of_tendsto_of_le_of_le' h_zero h_log2_div
+      · exact Filter.eventually_atTop.mpr ⟨1, fun n hn => h_bound_nn n hn⟩
+      · exact Filter.eventually_atTop.mpr ⟨1, fun n hn => h_bound n hn⟩
+    -- g n = R + (small term), and small → 0, so g → R + 0 = R.
+    have h_step :
+        Tendsto (fun n : ℕ => R + Real.log (1 + Real.exp (-((n : ℝ) * R))) / n) atTop
+          (𝓝 (R + 0)) := tendsto_const_nhds.add h_inner_tendsto
+    rw [add_zero] at h_step
+    -- Congr g with this representation eventually.
+    refine Tendsto.congr' ?_ h_step
+    rw [Filter.EventuallyEq, Filter.eventually_atTop]
+    refine ⟨1, fun n hn => ?_⟩
+    exact (h_eq n hn).symm
+  -- Squeeze: R ≤ f n ≤ g n eventually, R → R and g → R, hence f → R.
+  have h_const : Tendsto (fun _ : ℕ => R) atTop (𝓝 R) := tendsto_const_nhds
+  exact tendsto_of_tendsto_of_tendsto_of_le_of_le' h_const h_g_tendsto h_lower h_upper
+
+/-- **Source coding theorem, achievability**:
+For any rate `R > entropy μ (Xs 0)`, there exists a block code with rate `R` and
+vanishing error. -/
+theorem source_coding_achievability
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (hpos : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    (hindep_full : iIndepFun (fun i => Xs i) μ)
+    (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    {R : ℝ} (hR : entropy μ (Xs 0) < R) :
+    ∃ M : ℕ → ℕ, ∃ _hM_pos : ∀ n, 0 < M n,
+    ∃ c : ∀ n, (Fin n → α) → Fin (M n),
+    ∃ d : ∀ n, Fin (M n) → (Fin n → α),
+      Tendsto (fun n => Real.log (M n : ℝ) / n) atTop (𝓝 R) ∧
+      Tendsto
+        (fun n => InformationTheory.MeasureFano.errorProb μ
+                    (jointRV Xs n) (fun ω => c n (jointRV Xs n ω)) (d n))
+        atTop (𝓝 0) := by
+  -- Take ε := (R - H) / 2, so H + ε < R (in particular H + ε ≤ R).
+  set H : ℝ := entropy μ (Xs 0) with hH_def
+  set ε : ℝ := (R - H) / 2 with hε_def
+  have hε : 0 < ε := by simp only [hε_def]; linarith
+  have h_le : H + ε ≤ R := by simp only [hε_def]; linarith
+  -- R > 0: H ≥ 0 (entropy_nonneg) + R > H ≥ 0.
+  have h_R_pos : 0 < R := by
+    have hH_nn : 0 ≤ H := InformationTheory.Shannon.entropy_nonneg μ (Xs 0) (hXs 0)
+    linarith
+  -- Pairwise independence from iIndepFun.
+  have hindep_pair : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j :=
+    fun _ _ hij => hindep_full.indepFun hij
+  -- Provide existentials.
+  refine ⟨codebookSize R, fun n => codebookSize_pos R n,
+    fun n => aepEncoder μ Xs n ε R
+                (typicalSet_card_le_codebookSize μ Xs hXs hpos n hε h_le),
+    fun n => aepDecoder μ Xs n ε R, ?_, ?_⟩
+  · exact codebookSize_log_div_tendsto h_R_pos
+  · exact aep_errorProb_tendsto_zero μ Xs hXs hpos hindep_pair hident hε h_le
+
 end InformationTheory.Shannon

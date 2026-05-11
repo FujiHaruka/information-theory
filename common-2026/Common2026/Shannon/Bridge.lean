@@ -43,6 +43,15 @@ variable {Y : Type*} [MeasurableSpace Y]
 noncomputable def entropy (μ : Measure Ω) (Xs : Ω → X) : ℝ :=
   ∑ x : X, Real.negMulLog ((μ.map Xs).real {x})
 
+/-- Entropy is nonnegative: each term `negMulLog p` is nonneg for `p ∈ [0, 1]`. -/
+lemma entropy_nonneg (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Ω → X) (hXs : Measurable Xs) : 0 ≤ entropy μ Xs := by
+  have _ : IsProbabilityMeasure (μ.map Xs) :=
+    Measure.isProbabilityMeasure_map hXs.aemeasurable
+  unfold entropy
+  exact Finset.sum_nonneg fun x _ =>
+    Real.negMulLog_nonneg measureReal_nonneg measureReal_le_one
+
 omit [DecidableEq X] [Nonempty X] in
 /-- Phase 4-α `mutualInfo` is finite when `X` is a finite alphabet and `μ` a probability
 measure: the joint distribution is absolutely continuous w.r.t. the product of the
