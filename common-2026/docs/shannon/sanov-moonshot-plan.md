@@ -1,6 +1,6 @@
 # Sanov の定理 (B-1) ムーンショット計画 🌙
 
-> **Status (2026-05-12)**: **A 形完了 (Phase A〜C すべて 0 sorry)**。`Common2026/Shannon/Sanov.lean` (319 行)。**B-1' deferred** = LDP B 形 (`inf_{P ∈ E} D(P‖Q)` の `Tendsto`)。
+> **Status (2026-05-12)**: **A 形完了 (Phase A〜C すべて 0 sorry)**。`Common2026/Shannon/Sanov.lean` (319 行)。**B-1' (LDP upper bound) 完了** → [docs/shannon/sanov-ldp-b-plan.md](sanov-ldp-b-plan.md) で別 publish。**B-1'' deferred** = LDP equality 形 (`Tendsto` の双方向、`klDivIndex` 連続性 + achievable type sequence)。
 > **撤退ライン**: A 形 (`typeClass_Qn_le` + `.toReal` 形 `typeClass_Qn_le_klDiv`、Cover-Thomas 11.1.4) を 0 sorry で publish ✅。
 
 ## 進捗
