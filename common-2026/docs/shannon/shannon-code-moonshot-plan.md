@@ -1,6 +1,6 @@
 # Shannon コード (B-8) ムーンショット計画 🌙
 
-> Status (2026-05-12): 起草。シードカード [B-8](../moonshot-seeds.md#b-追加-2026-05-11-起草既存-5-シード--b-1b-4-を踏まえた後続) を膨らませた本命。最後のシード。
+> Status (2026-05-12): **完了 ✅** (期待長 sandwich、語長水準)。シードカード [B-8](../moonshot-seeds.md#b-追加-2026-05-11-起草既存-5-シード--b-1b-4-を踏まえた後続) を膨らませた本命。**Kraft 逆向き (prefix code 存在構成) は別 plan で完了**: [shannon-code-kraft-reverse-plan.md](shannon-code-kraft-reverse-plan.md) (B-8', `Common2026/Shannon/ShannonCodeKraftReverse.lean` 498 行、Shannon-Fano D-進数構成)。
 
 ## 進捗
 
