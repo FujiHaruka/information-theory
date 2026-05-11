@@ -1,0 +1,13 @@
+{
+  "problem": "Stein 補題 converse 半分 (Phase A: Pi 化 KL chain rule / Phase B: 任意検定 → Bool 上 DPI reduction + log-sum 下界 → concrete inequality stein_converse_finite_n)。Phase C (Tendsto/liminf 統合) は別 plan に分離。",
+  "proof_log": "docs/proof-logs/proof-log-stein-converse.md",
+  "sessions": [
+    {
+      "id": "00c8becd-a7ba-4471-9995-c323798d5cba",
+      "prompt_ids": ["21e44fe4"],
+      "note": "オーケストレータ + planning subagent + implementation subagent で Phase A〜B 実装。Pi 化 KL chain rule (klDiv_pi_eq_n_smul, 98 行 induction) + DPI public 化 (klDiv_map_le, 1 行) + Bool 上 sum 形 + log-sum 下界 + α-level + sign 解析 → stein_converse_finite_n (1/(1-ε) 補正項込み concrete inequality) を 0 sorry で構築 (+497 行)。Phase C は subagent 推奨に従い別 plan に分離 (新規数学なし、plumbing のみ)。Track 1/2/3 は同 session/prompt_id、metrics は合算。"
+    }
+  ],
+  "filters": { "file_prefix": "Common2026/Shannon/" },
+  "idle_gap_minutes": 5
+}

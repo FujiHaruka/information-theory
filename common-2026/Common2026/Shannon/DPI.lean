@@ -49,7 +49,7 @@ Mathlib に直接補題は **完全不在** (Phase 4-M0 在庫調査 B 節で確
 
 予算: 50〜100 行。条件付き期待値の積分・絶対連続性の `f`-pushforward への伝播・klFun
 の連続性 / 強可測性が plumbing の主体。-/
-private theorem klDiv_map_le {α β : Type*}
+theorem klDiv_map_le {α β : Type*}
     [MeasurableSpace α] [MeasurableSpace β]
     {f : α → β} (hf : Measurable f)
     (μ ν : Measure α) [IsFiniteMeasure μ] [IsFiniteMeasure ν] :

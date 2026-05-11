@@ -1,0 +1,131 @@
+{
+  "problem": "Stein 補題 converse 半分 (Phase A: Pi 化 KL chain rule / Phase B: 任意検定 → Bool 上 DPI reduction + log-sum 下界 → concrete inequality stein_converse_finite_n)。Phase C (Tendsto/liminf 統合) は別 plan に分離。",
+  "proof_log": "docs/proof-logs/proof-log-stein-converse.md",
+  "generated_at": "2026-05-11T00:20:25.371Z",
+  "filters": {
+    "file_prefix": "Common2026/Shannon/"
+  },
+  "idle_gap_minutes": 5,
+  "sessions": [
+    {
+      "id": "00c8becd-a7ba-4471-9995-c323798d5cba",
+      "note": "オーケストレータ + planning subagent + implementation subagent で Phase A〜B 実装。Pi 化 KL chain rule (klDiv_pi_eq_n_smul, 98 行 induction) + DPI public 化 (klDiv_map_le, 1 行) + Bool 上 sum 形 + log-sum 下界 + α-level + sign 解析 → stein_converse_finite_n (1/(1-ε) 補正項込み concrete inequality) を 0 sorry で構築 (+497 行)。Phase C は subagent 推奨に従い別 plan に分離 (新規数学なし、plumbing のみ)。Track 1/2/3 は同 session/prompt_id、metrics は合算。",
+      "start": "2026-05-10T22:53:55.576Z",
+      "end": "2026-05-11T00:20:20.880Z",
+      "wall_time_seconds": 5185,
+      "active_time_seconds": 3300,
+      "turns": 42,
+      "tool_calls": {
+        "AskUserQuestion": 1,
+        "Bash": 18,
+        "Agent": 7,
+        "Read": 7,
+        "ToolSearch": 1,
+        "TaskCreate": 5,
+        "TaskUpdate": 9,
+        "Edit": 4,
+        "Skill": 1,
+        "Write": 4
+      },
+      "bash_breakdown": {
+        "ls": 4,
+        "wc": 1,
+        "deno": 6,
+        "git": 3,
+        "grep": 2,
+        "cat": 2
+      },
+      "bash_total": 18,
+      "edits_by_file": {
+        "docs/moonshot-seeds.md": 3,
+        "docs/han/polymatroid-structure-plan.md": 1
+      },
+      "writes_by_file": {
+        "docs/metrics/hand-pi-refactor.manifest.json": 1,
+        "docs/proof-logs/proof-log-hand-pi-refactor.md": 1,
+        "docs/proof-logs/proof-log-polymatroid-structure.md": 1,
+        "docs/metrics/stein-converse.manifest.json": 1
+      },
+      "reads_by_file": {
+        "docs/han/hand-pi-refactor-plan.md": 1,
+        "docs/moonshot-seeds.md": 2,
+        ".claude/skills/proof-log/references/template.md": 1,
+        ".claude/skills/proof-log/references/writing-guide.md": 1,
+        "docs/metrics/hand-pi-refactor.metrics.md": 1,
+        "docs/han/polymatroid-structure-plan.md": 1
+      },
+      "matched_edits": 0,
+      "matched_writes": 0,
+      "tool_errors": 0,
+      "tokens": {
+        "input": 154,
+        "output": 171230,
+        "cache_read": 8690561,
+        "cache_creation": 516686
+      },
+      "models": [
+        "claude-opus-4-7"
+      ],
+      "sidechain_entries": 0
+    }
+  ],
+  "totals": {
+    "start": "2026-05-10T22:53:55.576Z",
+    "end": "2026-05-11T00:20:20.880Z",
+    "wall_time_seconds": 5185,
+    "active_time_seconds": 3300,
+    "turns": 42,
+    "tool_calls": {
+      "AskUserQuestion": 1,
+      "Bash": 18,
+      "Agent": 7,
+      "Read": 7,
+      "ToolSearch": 1,
+      "TaskCreate": 5,
+      "TaskUpdate": 9,
+      "Edit": 4,
+      "Skill": 1,
+      "Write": 4
+    },
+    "bash_breakdown": {
+      "ls": 4,
+      "wc": 1,
+      "deno": 6,
+      "git": 3,
+      "grep": 2,
+      "cat": 2
+    },
+    "bash_total": 18,
+    "edits_by_file": {
+      "docs/moonshot-seeds.md": 3,
+      "docs/han/polymatroid-structure-plan.md": 1
+    },
+    "writes_by_file": {
+      "docs/metrics/hand-pi-refactor.manifest.json": 1,
+      "docs/proof-logs/proof-log-hand-pi-refactor.md": 1,
+      "docs/proof-logs/proof-log-polymatroid-structure.md": 1,
+      "docs/metrics/stein-converse.manifest.json": 1
+    },
+    "reads_by_file": {
+      "docs/han/hand-pi-refactor-plan.md": 1,
+      "docs/moonshot-seeds.md": 2,
+      ".claude/skills/proof-log/references/template.md": 1,
+      ".claude/skills/proof-log/references/writing-guide.md": 1,
+      "docs/metrics/hand-pi-refactor.metrics.md": 1,
+      "docs/han/polymatroid-structure-plan.md": 1
+    },
+    "matched_edits": 0,
+    "matched_writes": 0,
+    "tool_errors": 0,
+    "tokens": {
+      "input": 154,
+      "output": 171230,
+      "cache_read": 8690561,
+      "cache_creation": 516686
+    },
+    "models": [
+      "claude-opus-4-7"
+    ],
+    "sidechain_entries": 0
+  }
+}
