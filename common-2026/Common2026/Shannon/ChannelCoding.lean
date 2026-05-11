@@ -37,7 +37,7 @@ typical set + 3 joint AEP bounds) と Phase C (random codebook averaging) は本
 namespace InformationTheory.Shannon.ChannelCoding
 
 open MeasureTheory ProbabilityTheory InformationTheory
-open scoped ENNReal NNReal BigOperators
+open scoped ENNReal NNReal BigOperators Topology
 
 /-! ## Channel (DMC) -/
 
@@ -207,5 +207,308 @@ theorem averageErrorProb_ne_top
   (c.averageErrorProb_le_one W).trans_lt ENNReal.one_lt_top |>.ne
 
 end Code
+
+/-! ## Phase B — Jointly typical set (definitions + bounds (a), (b))
+
+Cover-Thomas Theorem 7.6.1. The jointly typical set is the intersection of three
+single-axis typical conditions (X, Y, and (X, Y) jointly). Bounds (a) and (b) follow
+directly from the existing AEP single-axis theorems (`typicalSet_prob_tendsto_one` and
+`typicalSet_card_le`) applied to the joint sequence `i ↦ (Xs i, Ys i)`. The
+"independent-pair" bound (c) is the genuinely new ingredient and is deferred to a
+subsequent commit.
+
+The "marginal sequence" formulation `Xs : ℕ → Ω → α`, `Ys : ℕ → Ω → β` matches the
+AEP plumbing in `AEP.lean`. The joint sequence is `Zs i ω := (Xs i ω, Ys i ω)`. -/
+
+section JointlyTypical
+
+variable {Ω : Type*} [MeasurableSpace Ω]
+
+/-- Joint sequence over the product alphabet `α × β`. -/
+noncomputable def jointSequence
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) : ℕ → Ω → α × β :=
+  fun i ω => (Xs i ω, Ys i ω)
+
+omit [MeasurableSpace α] [MeasurableSpace β] [Fintype α] [MeasurableSingletonClass α]
+  [Fintype β] [MeasurableSingletonClass β] [MeasurableSpace Ω] in
+@[simp] lemma jointSequence_apply
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) (i : ℕ) (ω : Ω) :
+    jointSequence Xs Ys i ω = (Xs i ω, Ys i ω) := rfl
+
+omit [Fintype α] [MeasurableSingletonClass α] [Fintype β] [MeasurableSingletonClass β] in
+lemma measurable_jointSequence
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i)) (i : ℕ) :
+    Measurable (jointSequence Xs Ys i) :=
+  (hXs i).prodMk (hYs i)
+
+/-- The **jointly typical set** `A_ε^n ⊆ (Fin n → α) × (Fin n → β)`: pairs `(x, y)`
+whose empirical entropies of `X`, `Y`, and `(X, Y)` are all within `ε` of the true
+entropies.
+
+Implementation: the X-typical condition uses the marginal sequence `Xs` (via
+`InformationTheory.Shannon.typicalSet μ Xs n ε`), the Y-typical condition uses `Ys`,
+and the joint-typical condition uses the joint sequence `Zs := jointSequence Xs Ys`
+over the product alphabet `α × β`. We package this as the preimage of the three
+single-axis typical sets under the natural reshape `(Fin n → α × β) ≃ (Fin n → α) × (Fin n → β)`. -/
+noncomputable def jointlyTypicalSet
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) (n : ℕ) (ε : ℝ) :
+    Set ((Fin n → α) × (Fin n → β)) :=
+  { p |
+    (p.1 ∈ InformationTheory.Shannon.typicalSet μ Xs n ε)
+    ∧ (p.2 ∈ InformationTheory.Shannon.typicalSet μ Ys n ε)
+    ∧ (fun i => (p.1 i, p.2 i)) ∈
+        InformationTheory.Shannon.typicalSet μ (jointSequence Xs Ys) n ε }
+
+omit [MeasurableSingletonClass α] [MeasurableSingletonClass β] in
+lemma mem_jointlyTypicalSet_iff
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (n : ℕ) (ε : ℝ) (x : Fin n → α) (y : Fin n → β) :
+    (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε ↔
+      x ∈ InformationTheory.Shannon.typicalSet μ Xs n ε
+      ∧ y ∈ InformationTheory.Shannon.typicalSet μ Ys n ε
+      ∧ (fun i => (x i, y i)) ∈
+          InformationTheory.Shannon.typicalSet μ (jointSequence Xs Ys) n ε := Iff.rfl
+
+/-- The jointly typical set is measurable (finite product alphabet). -/
+theorem measurableSet_jointlyTypicalSet
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) (n : ℕ) (ε : ℝ) :
+    MeasurableSet (jointlyTypicalSet μ Xs Ys n ε) :=
+  (Set.toFinite _).measurableSet
+
+omit [MeasurableSingletonClass α] [MeasurableSingletonClass β] in
+/-- The jointly typical set is finite (it lives in a finite ambient space). -/
+lemma jointlyTypicalSet_finite
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) (n : ℕ) (ε : ℝ) :
+    (jointlyTypicalSet μ Xs Ys n ε).Finite := Set.toFinite _
+
+/-- **Bound (b): size of the jointly typical set**. The size is bounded by the size of
+the joint single-axis typical set, which (by `typicalSet_card_le` applied to the joint
+sequence over `α × β`) is at most `exp(n · (H(X, Y) + ε))`.
+
+We bound `|A_ε^n|` by the cardinality of the joint typical set, which is a strictly
+weaker (larger) bound than `2^{n(H(X,Y)+ε)}` but suffices for the channel coding
+argument. The textbook bound `|A_ε^n| ≤ 2^{n(H(X,Y)+ε)}` (in `Real.exp` base) follows
+by intersecting with the joint condition. -/
+theorem jointlyTypicalSet_card_le
+    [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hpos : ∀ p : α × β,
+      0 < (μ.map (jointSequence Xs Ys 0)).real {p})
+    (n : ℕ) {ε : ℝ} (hε : 0 < ε) :
+    ((jointlyTypicalSet μ Xs Ys n ε).toFinite.toFinset.card : ℝ) ≤
+      Real.exp ((n : ℝ) *
+        (InformationTheory.Shannon.entropy μ (jointSequence Xs Ys 0) + ε)) := by
+  -- Strategy: embed jointlyTypicalSet into the single-axis joint typical set via
+  -- the reshape (x, y) ↦ (fun i => (x i, y i)) : (Fin n → α) × (Fin n → β) → Fin n → α × β.
+  -- Then apply typicalSet_card_le to the joint sequence.
+  set Zs : ℕ → Ω → α × β := jointSequence Xs Ys with hZs_def
+  have hZs : ∀ i, Measurable (Zs i) := fun i =>
+    measurable_jointSequence Xs Ys hXs hYs i
+  -- The reshape map.
+  classical
+  let φ : (Fin n → α) × (Fin n → β) → (Fin n → α × β) :=
+    fun p i => (p.1 i, p.2 i)
+  have hφ_inj : Function.Injective φ := by
+    intro p q hpq
+    apply Prod.ext
+    · funext i
+      have := congr_fun hpq i
+      exact (Prod.mk.injEq _ _ _ _).mp this |>.1
+    · funext i
+      have := congr_fun hpq i
+      exact (Prod.mk.injEq _ _ _ _).mp this |>.2
+  -- Work directly at the finset level: build a Finset.image of jointlyTypicalSet
+  -- under φ that injects into the joint single-axis typical set's finset.
+  -- Step 1: jointlyTypicalSet's finset is in bijection (via φ) with its image
+  -- under φ at the Finset level.
+  let JT := (jointlyTypicalSet μ Xs Ys n ε).toFinite.toFinset
+  let ZT := (InformationTheory.Shannon.typicalSet μ Zs n ε).toFinite.toFinset
+  -- The image JT.image φ is a subset of ZT.
+  have h_image_sub : JT.image φ ⊆ ZT := by
+    intro z hz
+    rw [Finset.mem_image] at hz
+    obtain ⟨⟨x, y⟩, hxy_mem, rfl⟩ := hz
+    have hxy : (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε :=
+      (Set.Finite.mem_toFinset _).mp hxy_mem
+    -- The joint condition is the third conjunct
+    rw [Set.Finite.mem_toFinset]
+    exact hxy.2.2
+  have h_card_image : JT.card = (JT.image φ).card :=
+    (Finset.card_image_of_injective _ hφ_inj).symm
+  have h_card_le_finset : JT.card ≤ ZT.card := by
+    rw [h_card_image]; exact Finset.card_le_card h_image_sub
+  have h_card_le_R : (JT.card : ℝ) ≤ (ZT.card : ℝ) := by exact_mod_cast h_card_le_finset
+  -- Apply typicalSet_card_le for the joint sequence Zs.
+  have h_joint :=
+    InformationTheory.Shannon.typicalSet_card_le μ Zs hZs hpos n hε
+  exact h_card_le_R.trans h_joint
+
+/-- **Bound (a): joint AEP probability**. The probability that the block-joint pair
+`(X^n, Y^n)` lies in the jointly typical set tends to `1`.
+
+Strategy: the event "(X^n, Y^n) jointly typical" is the intersection of three single-axis
+typical events; its complement is contained in the union of three single-axis complements,
+each of which has measure tending to `0` by the single-axis `typicalSet_prob_tendsto_one`. -/
+theorem jointlyTypicalSet_prob_tendsto_one
+    [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindepX : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hindepY : Pairwise fun i j => Ys i ⟂ᵢ[μ] Ys j)
+    (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
+    (hindepZ : Pairwise fun i j =>
+      jointSequence Xs Ys i ⟂ᵢ[μ] jointSequence Xs Ys j)
+    (hidentZ : ∀ i,
+      IdentDistrib (jointSequence Xs Ys i) (jointSequence Xs Ys 0) μ μ)
+    {ε : ℝ} (hε : 0 < ε) :
+    Filter.Tendsto
+      (fun n : ℕ =>
+        μ {ω | (InformationTheory.Shannon.jointRV Xs n ω,
+                InformationTheory.Shannon.jointRV Ys n ω) ∈
+                jointlyTypicalSet μ Xs Ys n ε})
+      Filter.atTop
+      (𝓝 1) := by
+  -- Convergence of each single-axis "good" event.
+  have hX :=
+    InformationTheory.Shannon.typicalSet_prob_tendsto_one μ Xs hXs hindepX hidentX hε
+  have hY :=
+    InformationTheory.Shannon.typicalSet_prob_tendsto_one μ Ys hYs hindepY hidentY hε
+  set Zs : ℕ → Ω → α × β := jointSequence Xs Ys with hZs_def
+  have hZs : ∀ i, Measurable (Zs i) := fun i =>
+    measurable_jointSequence Xs Ys hXs hYs i
+  have hZ :=
+    InformationTheory.Shannon.typicalSet_prob_tendsto_one μ Zs hZs hindepZ hidentZ hε
+  -- Naming events.
+  set goodX : ℕ → Set Ω := fun n =>
+    {ω | InformationTheory.Shannon.jointRV Xs n ω ∈
+          InformationTheory.Shannon.typicalSet μ Xs n ε}
+  set goodY : ℕ → Set Ω := fun n =>
+    {ω | InformationTheory.Shannon.jointRV Ys n ω ∈
+          InformationTheory.Shannon.typicalSet μ Ys n ε}
+  set goodZ : ℕ → Set Ω := fun n =>
+    {ω | InformationTheory.Shannon.jointRV Zs n ω ∈
+          InformationTheory.Shannon.typicalSet μ Zs n ε}
+  -- The joint event is the intersection of the three.
+  set jointEvt : ℕ → Set Ω := fun n =>
+    {ω | (InformationTheory.Shannon.jointRV Xs n ω,
+          InformationTheory.Shannon.jointRV Ys n ω) ∈
+          jointlyTypicalSet μ Xs Ys n ε}
+  -- Key fact: jointEvt n = goodX n ∩ goodY n ∩ goodZ n.
+  -- (The joint condition on (fun i => (X_i ω, Y_i ω)) is exactly jointRV Zs n ω.)
+  have h_joint_decomp : ∀ n, jointEvt n = goodX n ∩ goodY n ∩ goodZ n := by
+    intro n
+    ext ω
+    constructor
+    · intro hω
+      obtain ⟨hX', hY', hZ'⟩ := hω
+      refine ⟨⟨hX', hY'⟩, ?_⟩
+      -- hZ' : (fun i => (jointRV Xs n ω i, jointRV Ys n ω i)) ∈ typicalSet μ Zs n ε
+      -- The function (fun i => (Xs i ω, Ys i ω)) = jointRV Zs n ω by defeq.
+      exact hZ'
+    · rintro ⟨⟨hX', hY'⟩, hZ'⟩
+      refine ⟨hX', hY', ?_⟩
+      exact hZ'
+  -- Bound `μ (jointEvt n)` from below: P(A ∩ B ∩ C) ≥ P(A) + P(B) + P(C) - 2.
+  -- We use the complement approach: P(complement of A∩B∩C) ≤ ∑ P(complement of each).
+  -- That gives μ(jointEvt n)ᶜ → 0, hence μ(jointEvt n) → 1.
+  set badX : ℕ → Set Ω := fun n => (goodX n)ᶜ
+  set badY : ℕ → Set Ω := fun n => (goodY n)ᶜ
+  set badZ : ℕ → Set Ω := fun n => (goodZ n)ᶜ
+  -- Each event is measurable (finite product alphabet).
+  have h_meas_goodX : ∀ n, MeasurableSet (goodX n) := by
+    intro n
+    have : MeasurableSet (InformationTheory.Shannon.typicalSet μ Xs n ε) :=
+      InformationTheory.Shannon.measurableSet_typicalSet μ Xs n ε
+    exact (InformationTheory.Shannon.measurable_jointRV Xs hXs n) this
+  have h_meas_goodY : ∀ n, MeasurableSet (goodY n) := by
+    intro n
+    have : MeasurableSet (InformationTheory.Shannon.typicalSet μ Ys n ε) :=
+      InformationTheory.Shannon.measurableSet_typicalSet μ Ys n ε
+    exact (InformationTheory.Shannon.measurable_jointRV Ys hYs n) this
+  have h_meas_goodZ : ∀ n, MeasurableSet (goodZ n) := by
+    intro n
+    have : MeasurableSet (InformationTheory.Shannon.typicalSet μ Zs n ε) :=
+      InformationTheory.Shannon.measurableSet_typicalSet μ Zs n ε
+    exact (InformationTheory.Shannon.measurable_jointRV Zs hZs n) this
+  -- μ(goodX n) → 1 ⇒ μ(badX n) → 0; similarly Y, Z.
+  have h_bad_tendsto : ∀ (E : ℕ → Set Ω) (hE : ∀ n, MeasurableSet (E n))
+      (h : Filter.Tendsto (fun n => μ (E n)) Filter.atTop (𝓝 1)),
+      Filter.Tendsto (fun n => μ ((E n)ᶜ)) Filter.atTop (𝓝 0) := by
+    intro E hE h
+    have h_id : ∀ n, μ ((E n)ᶜ) = 1 - μ (E n) := fun n => by
+      rw [measure_compl (hE n) (measure_ne_top μ _), measure_univ]
+    refine Filter.Tendsto.congr (fun n => (h_id n).symm) ?_
+    have h_cont : Continuous (fun x : ℝ≥0∞ => (1 : ℝ≥0∞) - x) :=
+      ENNReal.continuous_sub_left (by simp)
+    have h_step : Filter.Tendsto (fun n => (1 : ℝ≥0∞) - μ (E n)) Filter.atTop
+        (𝓝 ((1 : ℝ≥0∞) - 1)) := h_cont.tendsto _ |>.comp h
+    simpa using h_step
+  have h_badX_to_zero : Filter.Tendsto (fun n => μ (badX n)) Filter.atTop (𝓝 0) :=
+    h_bad_tendsto goodX h_meas_goodX hX
+  have h_badY_to_zero : Filter.Tendsto (fun n => μ (badY n)) Filter.atTop (𝓝 0) :=
+    h_bad_tendsto goodY h_meas_goodY hY
+  have h_badZ_to_zero : Filter.Tendsto (fun n => μ (badZ n)) Filter.atTop (𝓝 0) :=
+    h_bad_tendsto goodZ h_meas_goodZ hZ
+  -- μ(jointEvt n)ᶜ ≤ μ(badX n) + μ(badY n) + μ(badZ n) → 0.
+  have h_compl_sub : ∀ n, (jointEvt n)ᶜ ⊆ badX n ∪ badY n ∪ badZ n := by
+    intro n
+    rw [h_joint_decomp n]
+    intro ω hω
+    -- hω : ω ∉ goodX n ∩ goodY n ∩ goodZ n
+    rw [Set.mem_compl_iff, Set.mem_inter_iff, Set.mem_inter_iff,
+        not_and_or, not_and_or] at hω
+    rcases hω with (h_or | hZ_bad)
+    · rcases h_or with hX_bad | hY_bad
+      · exact Set.mem_union_left _ (Set.mem_union_left _ hX_bad)
+      · exact Set.mem_union_left _ (Set.mem_union_right _ hY_bad)
+    · exact Set.mem_union_right _ hZ_bad
+  have h_bound_compl : ∀ n,
+      μ ((jointEvt n)ᶜ) ≤ μ (badX n) + μ (badY n) + μ (badZ n) := by
+    intro n
+    calc μ ((jointEvt n)ᶜ)
+        ≤ μ (badX n ∪ badY n ∪ badZ n) := measure_mono (h_compl_sub n)
+      _ ≤ μ (badX n ∪ badY n) + μ (badZ n) := measure_union_le _ _
+      _ ≤ (μ (badX n) + μ (badY n)) + μ (badZ n) := by
+          gcongr
+          exact measure_union_le (badX n) (badY n)
+      _ = μ (badX n) + μ (badY n) + μ (badZ n) := by ring
+  -- Tendsto: μ(badX n) + μ(badY n) + μ(badZ n) → 0 + 0 + 0 = 0.
+  have h_sum_tendsto : Filter.Tendsto
+      (fun n => μ (badX n) + μ (badY n) + μ (badZ n)) Filter.atTop (𝓝 0) := by
+    have h12 : Filter.Tendsto (fun n => μ (badX n) + μ (badY n))
+        Filter.atTop (𝓝 (0 + 0)) := h_badX_to_zero.add h_badY_to_zero
+    have h_all : Filter.Tendsto (fun n => (μ (badX n) + μ (badY n)) + μ (badZ n))
+        Filter.atTop (𝓝 ((0 + 0) + 0)) := h12.add h_badZ_to_zero
+    simpa using h_all
+  -- μ((jointEvt n)ᶜ) → 0 by squeeze with `0 ≤ · ≤ (sum)`.
+  have h_compl_tendsto : Filter.Tendsto (fun n => μ ((jointEvt n)ᶜ))
+      Filter.atTop (𝓝 0) := by
+    -- bot_le for 0 ≤ μ; h_bound_compl for the upper bound; sandwich.
+    refine tendsto_of_tendsto_of_tendsto_of_le_of_le
+      tendsto_const_nhds h_sum_tendsto (fun n => bot_le) h_bound_compl
+  -- μ(jointEvt n) = 1 - μ((jointEvt n)ᶜ) → 1 - 0 = 1.
+  -- jointEvt n is measurable.
+  have h_meas_joint : ∀ n, MeasurableSet (jointEvt n) := by
+    intro n
+    rw [h_joint_decomp n]
+    exact ((h_meas_goodX n).inter (h_meas_goodY n)).inter (h_meas_goodZ n)
+  have h_id : ∀ n, μ (jointEvt n) = 1 - μ ((jointEvt n)ᶜ) := fun n => by
+    rw [measure_compl (h_meas_joint n) (measure_ne_top μ _), measure_univ]
+    -- 1 - (1 - x) = x for x ≤ 1 in ℝ≥0∞ (which holds: x = μ ≤ 1)
+    have h_le : μ (jointEvt n) ≤ 1 := prob_le_one
+    exact (ENNReal.sub_sub_cancel (by simp) h_le).symm
+  refine Filter.Tendsto.congr (fun n => (h_id n).symm) ?_
+  have h_cont : Continuous (fun x : ℝ≥0∞ => (1 : ℝ≥0∞) - x) :=
+    ENNReal.continuous_sub_left (by simp)
+  have h_step : Filter.Tendsto (fun n => (1 : ℝ≥0∞) - μ ((jointEvt n)ᶜ))
+      Filter.atTop (𝓝 ((1 : ℝ≥0∞) - 0)) := h_cont.tendsto _ |>.comp h_compl_tendsto
+  simpa using h_step
+
+end JointlyTypical
 
 end InformationTheory.Shannon.ChannelCoding
