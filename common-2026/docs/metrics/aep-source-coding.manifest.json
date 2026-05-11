@@ -1,0 +1,13 @@
+{
+  "problem": "AEP Phase D 源符号化定理 weak converse (Phase A: Pi 化 entropy chain rule / Phase B: Slepian-Wolf 流儀 4-step skeleton / Phase C: Filter.liminf 形主定理)",
+  "proof_log": "docs/proof-logs/proof-log-aep-source-coding.md",
+  "sessions": [
+    {
+      "id": "00c8becd-a7ba-4471-9995-c323798d5cba",
+      "prompt_ids": ["21e44fe4"],
+      "note": "Track 4 として実装 (orchestrator + planning + implementation subagent)。Pi 化 entropy chain rule (Han route 採用、direct induction 不要) + Slepian-Wolf flavored skeleton 再演 (Step C DPI assembly 不要) + Filter.liminf API plumbing (hM_bdd 仮定追加、IsCoboundedUnder 要件)。+368 行、AEP.lean silent。Track 1〜4 同 session/prompt_id、metrics 合算。"
+    }
+  ],
+  "filters": { "file_prefix": "Common2026/Shannon/" },
+  "idle_gap_minutes": 5
+}
