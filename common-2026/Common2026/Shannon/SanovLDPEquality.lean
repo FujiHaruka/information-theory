@@ -423,7 +423,7 @@ private lemma factorial_pow_swap_le (c k : ℕ) :
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α]
   [MeasurableSingletonClass α] in
 /-- **Product over α of per-letter factorial-power inequality**.
-`(∏ (c a)!) · (∏ (c a)^{k a}) ≤ (∏ (k a)!) · (∏ (c a)^{c a})`. -/
+`(∏ Nat.factorial (c a)) · (∏ (c a)^{k a}) ≤ (∏ (k a)!) · (∏ (c a)^{c a})`. -/
 private lemma prod_factorial_pow_swap_le (c k : α → ℕ) :
     (∏ a, Nat.factorial (c a)) * (∏ a, c a ^ k a)
       ≤ (∏ a, Nat.factorial (k a)) * (∏ a, c a ^ c a) := by
@@ -487,13 +487,13 @@ private lemma multinomial_pow_le {n : ℕ} (c k : α → ℕ)
   rw [hL2, hR2] at step2
   exact Nat.le_of_mul_le_mul_left step2 h_pos
 
-omit [MeasurableSpace α] [MeasurableSingletonClass α] in
+omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- **`multinomial univ c ≤ |T_c|`** (the bridge to the multinomial coefficient).
 
 We use a **surjection** `Φ : Fin n → α → T_c` defined via `x₀ ∈ T_c`:
 `Φ σ := x₀ ∘ σ`. By surjectivity of `Φ` (any `x ∈ T_c` is hit because both x, x₀ have
 type c so we can find a permutation taking one to the other), `n! = |Perm Fin n|`
-counts each `x ∈ T_c` with multiplicity = fiber size ≤ `∏ a, (c a)!` (the permutations
+counts each `x ∈ T_c` with multiplicity = fiber size ≤ `∏ a, Nat.factorial (c a)` (the permutations
 preserving fiber structure on x₀). So `n! ≤ |T_c| · ∏ c(a)!`, giving the goal via
 `Nat.multinomial_spec`.
 
@@ -504,40 +504,139 @@ private lemma multinomial_le_typeClass_card {n : ℕ} (c : α → ℕ)
     Nat.multinomial Finset.univ c
       ≤ (typeClassByCount (α := α) (n := n) c).toFinite.toFinset.card := by
   classical
-  -- We get a nonempty witness x₀ ∈ T_c.
+  -- Strategy: construct an injection Ψ : Perm (Fin n) → T_c × (Π a, Perm (Fin (c a))).
+  -- Then n! = |Perm (Fin n)| ≤ |T_c| · ∏ Nat.factorial (c a). Combined with multinomial_spec
+  -- (multinomial · ∏ Nat.factorial (c a) = n!), we get multinomial ≤ |T_c|.
   obtain ⟨x₀, hx₀⟩ := typeClassByCount_nonempty_of_sum c hc_sum
-  -- Key: n! ≤ |T_c| · ∏ (c a)!, combined with multinomial_spec.
-  -- We construct an injection
-  --   Ψ : T_c × (Π a, Equiv.Perm (x₀⁻¹(a))) → Equiv.Perm (Fin n)
-  -- Given (x, τ), build σ : Fin n → Fin n via: on x₀⁻¹(a), σ maps it to x⁻¹(a) using
-  -- canonical bijections (Fintype.equivOfCardEq) and τ_a.
-  -- Then σ ∈ Perm (Fin n) and Ψ is injective.
-  -- For simplicity, we use `Π a, Equiv.Perm (Fin (c a))` ≃ stabilizer of x₀.
-  -- Build the injection: Φ : (typeClassByCount c) × (Π a, Equiv.Perm (Fin (c a))) ↪ Equiv.Perm (Fin n).
-  -- Cardinalities: |Perm (Fin n)| = n!; |Π a, Perm (Fin (c a))| = ∏ c(a)!; |T_c| = |T_c|.
-  -- Φ injective ⟹ |T_c| · ∏ c(a)! ≤ n!.
-  -- Combined with multinomial_spec: multinomial · ∏ c(a)! = n!, so |T_c| ≥ multinomial.
-  -- For each x ∈ T_c, both x⁻¹(a) and x₀⁻¹(a) are Finsets of Fin n with c(a) elements.
-  -- Take canonical bijections via `Fintype.equivFinOfCardEq` (Fin (c a) ≃ x⁻¹(a)).
-  let F : (a : α) → Finset (Fin n) := fun a =>
-    (Finset.univ : Finset (Fin n)).filter fun i => x₀ i = a
-  have hF_card : ∀ a, (F a).card = c a := fun a => hx₀ a
-  -- Bijection Fin (c a) ≃ F a.
-  let e₀ : (a : α) → Fin (c a) ≃ {i // i ∈ F a} := fun a => by
-    have h : Fintype.card (Fin (c a)) = Fintype.card {i // i ∈ F a} := by
-      rw [Fintype.card_fin, Fintype.card_coe, hF_card a]
-    exact Fintype.equivOfCardEq h
-  -- Given x ∈ T_c, similarly G x : (a : α) → Finset (Fin n) with |G x a| = c a.
-  -- We don't need full machinery; just enough to count.
-  -- ALTERNATE direct approach: use `Fintype.card`-based counting argument.
-  -- |Equiv.Perm (Fin n)| = n!.
-  -- For each σ : Equiv.Perm (Fin n), let f σ := x₀ ∘ σ. Then f σ ∈ Fin n → α.
-  -- typeCount (f σ) = typeCount x₀ = c (since precomposition by perm doesn't change typeCount).
-  -- So f σ ∈ T_c, giving surjective f : Perm (Fin n) → T_c (need surjectivity).
-  -- For surjectivity: given x ∈ T_c, find σ with x₀ ∘ σ = x.
-  -- Set σ on each fiber: σ : F a → x⁻¹(a), any bijection. Combine via Equiv.Sigma.
-  -- For the inequality: each fiber of f has ≥ ∏ c(a)! elements (the "internal permutations").
-  sorry
+  -- Generic reference equiv  Fin (typeCount x a) ≃ {i // x i = a}.
+  have hcard_typeCount : ∀ (x : Fin n → α) (a : α),
+      Fintype.card (Fin (typeCount x a)) = Fintype.card {i : Fin n // x i = a} := by
+    intro x a
+    rw [Fintype.card_fin, Fintype.card_subtype]
+    rfl
+  let ePos : (x : Fin n → α) → (a : α) → Fin (typeCount x a) ≃ {i : Fin n // x i = a} :=
+    fun x a => Fintype.equivOfCardEq (hcard_typeCount x a)
+  -- For x ∈ T_c, derive  Fin (c a) ≃ {i // x i = a}.
+  let eFibOf : (x : Fin n → α) → (∀ a, typeCount x a = c a) →
+      (a : α) → Fin (c a) ≃ {i : Fin n // x i = a} :=
+    fun x h a => (Equiv.cast (by rw [h a])).trans (ePos x a)
+  let eFib₀ : (a : α) → Fin (c a) ≃ {i : Fin n // x₀ i = a} := eFibOf x₀ hx₀
+  -- Given σ, derive x σ ∈ T_c.
+  let xOf : Equiv.Perm (Fin n) → (Fin n → α) := fun σ i => x₀ (σ.symm i)
+  have h_xOf_mem : ∀ σ : Equiv.Perm (Fin n), xOf σ ∈ typeClassByCount c := by
+    intro σ a
+    show (Finset.univ.filter (fun i => xOf σ i = a)).card = c a
+    have h_eq : Finset.univ.filter (fun i : Fin n => xOf σ i = a)
+        = (Finset.univ.filter (fun j : Fin n => x₀ j = a)).map σ.toEmbedding := by
+      ext i
+      simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_map,
+        Equiv.coe_toEmbedding]
+      refine ⟨fun h_xi => ⟨σ.symm i, h_xi, Equiv.apply_symm_apply σ i⟩, ?_⟩
+      rintro ⟨j, hj, rfl⟩
+      show x₀ (σ.symm (σ j)) = a
+      rw [Equiv.symm_apply_apply]; exact hj
+    rw [h_eq, Finset.card_map]; exact hx₀ a
+  let xMem : Equiv.Perm (Fin n) → (typeClassByCount (α := α) (n := n) c) :=
+    fun σ => ⟨xOf σ, h_xOf_mem σ⟩
+  -- Restriction σ : {j // x₀ j = a} → {i // xOf σ i = a}.
+  have h_restrict_mem : ∀ (σ : Equiv.Perm (Fin n)) (a : α) (j : Fin n) (hj : x₀ j = a),
+      xOf σ (σ j) = a := fun σ a j hj => by
+    show x₀ (σ.symm (σ j)) = a
+    rw [Equiv.symm_apply_apply]; exact hj
+  -- τOf σ a : Fin (c a) ≃ Fin (c a).
+  let τOf : (σ : Equiv.Perm (Fin n)) → (∀ a, Equiv.Perm (Fin (c a))) := fun σ a =>
+    let e1 : Fin (c a) ≃ {j : Fin n // x₀ j = a} := eFib₀ a
+    let e2 : {j : Fin n // x₀ j = a} ≃ {i : Fin n // xOf σ i = a} :=
+      { toFun := fun j => ⟨σ j.val, h_restrict_mem σ a j.val j.property⟩,
+        invFun := fun i => ⟨σ.symm i.val, by
+          show x₀ (σ.symm i.val) = a; exact i.property⟩,
+        left_inv := fun j => Subtype.ext (Equiv.symm_apply_apply σ j.val),
+        right_inv := fun i => Subtype.ext (Equiv.apply_symm_apply σ i.val) }
+    let e3 : {i : Fin n // xOf σ i = a} ≃ Fin (c a) := (eFibOf (xOf σ) (h_xOf_mem σ) a).symm
+    (e1.trans e2).trans e3
+  let Ψ : Equiv.Perm (Fin n) →
+      (typeClassByCount (α := α) (n := n) c) × (∀ a, Equiv.Perm (Fin (c a))) :=
+    fun σ => (xMem σ, τOf σ)
+  -- Recovery formula: σ j = (eFibOf (xOf σ) ... (x₀ j) (τOf σ (x₀ j) ((eFib₀ (x₀ j)).symm ⟨j, rfl⟩))).val
+  have h_recovery : ∀ (σ : Equiv.Perm (Fin n)) (j : Fin n),
+      σ j = ((eFibOf (xOf σ) (h_xOf_mem σ) (x₀ j))
+              (τOf σ (x₀ j) ((eFib₀ (x₀ j)).symm ⟨j, rfl⟩))).val := by
+    intro σ j
+    set a := x₀ j
+    set k : Fin (c a) := (eFib₀ a).symm ⟨j, (rfl : x₀ j = a)⟩
+    -- Unfold τOf σ a applied to k.
+    show σ j = ((eFibOf (xOf σ) (h_xOf_mem σ) a) (τOf σ a k)).val
+    have hk_eq : (eFib₀ a) k = ⟨j, rfl⟩ := Equiv.apply_symm_apply _ _
+    have hτ_unfold : τOf σ a k =
+        (eFibOf (xOf σ) (h_xOf_mem σ) a).symm
+          ⟨σ j, h_restrict_mem σ a j rfl⟩ := by
+      show ((eFib₀ a).trans _).trans _ k = _
+      simp only [Equiv.trans_apply]
+      rw [hk_eq]
+      rfl
+    rw [hτ_unfold, Equiv.apply_symm_apply]
+  -- Ψ injective.
+  have hΨ_inj : Function.Injective Ψ := by
+    intro σ σ' hσ
+    have hxMem_eq : xMem σ = xMem σ' := (Prod.mk.injEq ..).mp hσ |>.1
+    have hx_eq : xOf σ = xOf σ' := congrArg Subtype.val hxMem_eq
+    have hτ_eq : τOf σ = τOf σ' := (Prod.mk.injEq ..).mp hσ |>.2
+    refine Equiv.ext (fun j => ?_)
+    rw [h_recovery σ j, h_recovery σ' j]
+    -- Goal: ((eFibOf (xOf σ) (h_xOf_mem σ) (x₀ j)) (τOf σ ...)).val
+    --     = ((eFibOf (xOf σ') (h_xOf_mem σ') (x₀ j)) (τOf σ' ...)).val.
+    -- Use hxMem_eq and hτ_eq to align both sides as members of the same Subtype.
+    -- The most robust way: show the result via `Subtype.ext` after using the membership-coercion.
+    -- The Subtype-valued LHS RHS, after taking .val, only require equality at the value level.
+    -- We use the fact that `eFibOf x hx a m` as a Subtype's `.val` is independent of `hx` (only x matters), and depends on x via Fintype.equivOfCardEq.
+    -- The cleanest path: substitute xOf σ with xOf σ' (then membership proofs become equal by Subsingleton).
+    set j₀ := (⟨j, (rfl : x₀ j = x₀ j)⟩ : {i : Fin n // x₀ i = x₀ j})
+    set k := (eFib₀ (x₀ j)).symm j₀
+    -- After unfolding the τ-applications, replace τOf σ with τOf σ' via hτ_eq.
+    have h_tau_at : τOf σ (x₀ j) k = τOf σ' (x₀ j) k := by rw [hτ_eq]
+    rw [h_tau_at]
+    -- Now both sides: (eFibOf (xOf σ) (h_xOf_mem σ) a (τOf σ' a k)).val vs (eFibOf (xOf σ') ...).val.
+    -- The pair `(xOf σ, h_xOf_mem σ)` equals `(xOf σ', h_xOf_mem σ')` via `hxMem_eq`.
+    -- Use Sigma to consolidate the dependency.
+    have h_pair_eq : (⟨xOf σ, h_xOf_mem σ⟩ : (typeClassByCount c)) = ⟨xOf σ', h_xOf_mem σ'⟩ :=
+      hxMem_eq
+    -- Apply this via `congr` of the auxiliary function.
+    let g : (typeClassByCount (α := α) (n := n) c) → Fin n := fun y =>
+      ((eFibOf y.val y.property (x₀ j)) (τOf σ' (x₀ j) k)).val
+    have hg_eq : g ⟨xOf σ, h_xOf_mem σ⟩ = g ⟨xOf σ', h_xOf_mem σ'⟩ := by
+      congr 1
+    exact hg_eq
+  -- Cardinality calculation.
+  have h_card_le := Fintype.card_le_of_injective Ψ hΨ_inj
+  have hL : Fintype.card (Equiv.Perm (Fin n)) = Nat.factorial n := by
+    rw [Fintype.card_perm, Fintype.card_fin]
+  have hR : Fintype.card ((typeClassByCount (α := α) (n := n) c)
+        × (∀ a, Equiv.Perm (Fin (c a))))
+      = (typeClassByCount (α := α) (n := n) c).toFinite.toFinset.card
+          * ∏ a, Nat.factorial (c a) := by
+    rw [Fintype.card_prod, Fintype.card_pi]
+    congr 1
+    · exact (Set.Finite.card_toFinset _).symm
+    · refine Finset.prod_congr rfl fun a _ => ?_
+      rw [Fintype.card_perm, Fintype.card_fin]
+  rw [hL, hR] at h_card_le
+  -- h_card_le : n! ≤ |T_c| · ∏ Nat.factorial (c a).
+  have h_spec : (∏ a, Nat.factorial (c a)) * Nat.multinomial Finset.univ c = Nat.factorial n := by
+    rw [Nat.multinomial_spec, hc_sum]
+  have h_prod_pos : 0 < ∏ a, Nat.factorial (c a) :=
+    Finset.prod_pos fun _ _ => Nat.factorial_pos _
+  -- multinomial · ∏ Nat.factorial (c a) = n! ≤ |T_c| · ∏ Nat.factorial (c a).
+  -- So multinomial ≤ |T_c|.
+  have h_mul_le : (∏ a, Nat.factorial (c a)) * Nat.multinomial Finset.univ c
+      ≤ (∏ a, Nat.factorial (c a)) *
+        (typeClassByCount (α := α) (n := n) c).toFinite.toFinset.card := by
+    rw [h_spec]
+    -- |T_c| · ∏ Nat.factorial (c a) ≥ n! = ∏ Nat.factorial (c a) · multinomial.
+    -- h_card_le : n! ≤ |T_c| · ∏ Nat.factorial (c a).
+    calc Nat.factorial n ≤ (typeClassByCount (α := α) (n := n) c).toFinite.toFinset.card * ∏ a, Nat.factorial (c a) :=
+          h_card_le
+      _ = (∏ a, Nat.factorial (c a)) * (typeClassByCount (α := α) (n := n) c).toFinite.toFinset.card := by ring
+  exact Nat.le_of_mul_le_mul_left h_mul_le h_prod_pos
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- **ℝ form of `multinomial_pow_le`**. -/
@@ -596,7 +695,7 @@ private lemma piAntidiag_card_le (n : ℕ) :
     _ = Fintype.card (α → Fin (n+1)) := by rw [Finset.card_univ]
     _ = (n+1) ^ Fintype.card α := h_card_pow
 
-omit [MeasurableSpace α] [MeasurableSingletonClass α] in
+omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- **Multinomial Stirling-free lower bound** (Cover-Thomas 11.1.3):
 `(n+1)^{-|α|} · n^n / ∏ (c a)^(c a) ≤ |T_c|`.
 
@@ -809,6 +908,7 @@ theorem typeClassByCount_card_ge
       field_simp]
     exact h_div
 
+omit [Nonempty α] in
 /-- **Lower bound on `Q^n(T_c)`** (Phase C 主補題, from `typeClassByCount_card_ge`):
 `Q^n(T_c) ≥ (n+1)^{-|α|} · exp(-n · klDivIndex c n Q)`.
 
