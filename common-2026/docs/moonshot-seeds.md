@@ -1,6 +1,6 @@
 # Moonshot シードカード集
 
-> **Status (2026-05-12)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。次の伸び代候補は新シード起草 (例: Slepian-Wolf strong typicality 派生 / Channel coding converse / Gaussian channel など)。
+> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。次の伸び代候補は新シード起草 (例: Slepian-Wolf strong typicality 派生 / Channel coding converse / Gaussian channel など)。
 >
 > 起草時 (2026-05-10): Fano (測度論版) → Shannon converse (3 形) → Han 補集合形 → Han Phase D (subset average / Shearer) まで通った状態を起点に、次のムーンショット候補 5 本をシード化。
 >
@@ -38,9 +38,24 @@
 - **D-2. Channel coding converse (general input form)** ⏸️ —
   Cover-Thomas 7.9 **完全形**。既存 `shannon_converse_single_shot` (uniform input only) を出発点に、
   任意の入力分布で `R > I(p; W) ⟹ ∃ error floor` を示す。expurgation/Fano + `mutualInfo_iid_eq_nsmul`
-  で n-channel 形にスケール。先行で `docs/reuse-test-plan.md` (分岐 A 再利用テスト) が converse
-  n-variable 化を試す予定で、その bridge 候補一覧が D-2 plan の出発点になる想定。audit-2026-05
-  §4 🟡 #8 として記録。
+  で n-channel 形にスケール。audit-2026-05 §4 🟡 #8 として記録。
+
+  **先行成果 (reuse-test-2026-05, 2026-05-13 完了)**: i.i.d. 入力下の converse n-variable 化を
+  bridge ゼロで実装、`Common2026/Shannon/ChannelCodingConverse.lean`
+  (`channel_coding_converse_iid` 1 本) として publish。`shannon_converse_single_shot_markov_encoder`
+  + `mutualInfo_iid_eq_nsmul` の合成だけで到達。これは D-2 plan の出発点として直接利用可能。
+
+  reuse-test 由来の設計判断:
+  - **uniform input 仮定の緩和は scope 縮小可**: n-channel スケーリングは single-shot 段で
+    uniform を消費し、iid 段は入力分布非依存。general input への拡張は per-symbol I(p; W) の
+    取り方 (任意 input law p) のみで、n-channel 部分は uniform から自由 → D-2 で本質的に
+    新規となるのは expurgation (uniform 仮定除去) 段のみで、n-channel 段は既存 API 流用で済む。
+  - **`mutualInfo_chain_rule_fin` は非 iid 入力で初めて出番**: iid 入力なら `iid_eq_nsmul` が
+    直接 `n · I(X_0; Y_0)` を返すため chain rule + per-summand memoryless bound は不要。
+    D-2 で general input (averaged distribution) を扱うときに `chain_rule_fin` + memoryless
+    channel での per-summand `I(X_i; Y_i | X^{<i}) ≤ I(X_i; Y_i)` 追加段が必要になる。
+    audit §4 🟡 で flag されていた "uniform input scope" が n-channel に本質ではないという
+    意味では、修復優先度はむしろ低い (他の 🟡 案件先行が合理的)。
 
 - **D-3. AEP 完全形 (lower bound + 確率収束)** ⏸️ —
   Cover-Thomas 3.1.2 **完全 3 点セット**。既存 `typicalSet_prob_le` (上界のみ) に、(a) 下界
