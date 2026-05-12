@@ -392,19 +392,422 @@ theorem klDivIndex_rounded_tendsto
 
 /-! ### Phase C — Multinomial Stirling-free lower bound -/
 
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
+  [MeasurableSingletonClass α] in
+/-- **Per-letter factorial-power inequality**:
+`c! · c^k ≤ k! · c^c` for all c, k ∈ ℕ. -/
+private lemma factorial_pow_swap_le (c k : ℕ) :
+    Nat.factorial c * c ^ k ≤ Nat.factorial k * c ^ c := by
+  rcases Nat.lt_or_ge k c with hk | hk
+  · -- k < c, so k ≤ c.
+    have hkc : k ≤ c := hk.le
+    have h_desc : c.descFactorial (c - k) ≤ c ^ (c - k) :=
+      Nat.descFactorial_le_pow c (c - k)
+    have h_fact_eq : Nat.factorial c = Nat.factorial k * c.descFactorial (c - k) := by
+      have h := Nat.factorial_mul_descFactorial (n := c) (k := c - k) (Nat.sub_le _ _)
+      rw [Nat.sub_sub_self hkc] at h
+      exact h.symm
+    calc Nat.factorial c * c ^ k
+        = Nat.factorial k * c.descFactorial (c - k) * c ^ k := by rw [h_fact_eq]
+      _ ≤ Nat.factorial k * c ^ (c - k) * c ^ k :=
+            Nat.mul_le_mul_right (c ^ k) (Nat.mul_le_mul_left _ h_desc)
+      _ = Nat.factorial k * c ^ c := by rw [mul_assoc, ← pow_add, Nat.sub_add_cancel hkc]
+  · -- c ≤ k: use Nat.factorial_mul_pow_sub_le_factorial.
+    have h := Nat.factorial_mul_pow_sub_le_factorial hk
+    have h_pow_split : Nat.factorial c * c ^ k
+        = (Nat.factorial c * c ^ (k - c)) * c ^ c := by
+      rw [mul_assoc, ← pow_add, Nat.sub_add_cancel hk]
+    rw [h_pow_split]
+    exact Nat.mul_le_mul_right (c ^ c) h
+
+omit [DecidableEq α] [Nonempty α] [MeasurableSpace α]
+  [MeasurableSingletonClass α] in
+/-- **Product over α of per-letter factorial-power inequality**.
+`(∏ (c a)!) · (∏ (c a)^{k a}) ≤ (∏ (k a)!) · (∏ (c a)^{c a})`. -/
+private lemma prod_factorial_pow_swap_le (c k : α → ℕ) :
+    (∏ a, Nat.factorial (c a)) * (∏ a, c a ^ k a)
+      ≤ (∏ a, Nat.factorial (k a)) * (∏ a, c a ^ c a) := by
+  rw [← Finset.prod_mul_distrib, ← Finset.prod_mul_distrib]
+  exact Finset.prod_le_prod (fun _ _ => Nat.zero_le _)
+    (fun a _ => factorial_pow_swap_le (c a) (k a))
+
+omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- **Max-likelihood for the multinomial coefficient**: for c, k both summing to n,
+`multinomial univ k · ∏ c(a)^{k a} ≤ multinomial univ c · ∏ c(a)^{c a}`.
+
+(In ratio form: `multinomial univ k / multinomial univ c ≤ ∏ c(a)^{c a - k a}` after div.) -/
+private lemma multinomial_pow_le {n : ℕ} (c k : α → ℕ)
+    (hc_sum : (∑ a, c a) = n) (hk_sum : (∑ a, k a) = n) :
+    Nat.multinomial Finset.univ k * (∏ a, c a ^ k a)
+      ≤ Nat.multinomial Finset.univ c * (∏ a, c a ^ c a) := by
+  -- (∏ c!)·multinomial c = n! = (∏ k!)·multinomial k.
+  have h_c : (∏ a, Nat.factorial (c a)) * Nat.multinomial Finset.univ c
+        = Nat.factorial n := by
+    rw [Nat.multinomial_spec, hc_sum]
+  have h_k : (∏ a, Nat.factorial (k a)) * Nat.multinomial Finset.univ k
+        = Nat.factorial n := by
+    rw [Nat.multinomial_spec, hk_sum]
+  have h_swap := prod_factorial_pow_swap_le (α := α) c k
+  have h_pos : 0 < Nat.factorial n := Nat.factorial_pos _
+  -- Multiply h_swap by `multinomial univ c`:
+  have step :
+      (∏ a, Nat.factorial (c a)) * (∏ a, c a ^ k a) * Nat.multinomial Finset.univ c
+        ≤ (∏ a, Nat.factorial (k a)) * (∏ a, c a ^ c a) * Nat.multinomial Finset.univ c :=
+    Nat.mul_le_mul_right _ h_swap
+  have hL : (∏ a, Nat.factorial (c a)) * (∏ a, c a ^ k a)
+        * Nat.multinomial Finset.univ c
+      = Nat.factorial n * (∏ a, c a ^ k a) := by
+    rw [show (∏ a, Nat.factorial (c a)) * (∏ a, c a ^ k a)
+              * Nat.multinomial Finset.univ c
+          = ((∏ a, Nat.factorial (c a)) * Nat.multinomial Finset.univ c)
+              * (∏ a, c a ^ k a) by ring,
+        h_c]
+  have hR : (∏ a, Nat.factorial (k a)) * (∏ a, c a ^ c a)
+        * Nat.multinomial Finset.univ c
+      = (∏ a, Nat.factorial (k a)) * Nat.multinomial Finset.univ c
+        * (∏ a, c a ^ c a) := by ring
+  rw [hL, hR] at step
+  -- step : n! · (∏ c^k) ≤ (∏ k!) · multinomial univ c · (∏ c^c)
+  -- Multiply step by multinomial univ k:
+  have step2 :
+      Nat.factorial n * (∏ a, c a ^ k a) * Nat.multinomial Finset.univ k
+        ≤ (∏ a, Nat.factorial (k a)) * Nat.multinomial Finset.univ c
+            * (∏ a, c a ^ c a) * Nat.multinomial Finset.univ k :=
+    Nat.mul_le_mul_right _ step
+  have hL2 : Nat.factorial n * (∏ a, c a ^ k a) * Nat.multinomial Finset.univ k
+      = Nat.factorial n * (Nat.multinomial Finset.univ k * (∏ a, c a ^ k a)) := by ring
+  have hR2 : (∏ a, Nat.factorial (k a)) * Nat.multinomial Finset.univ c
+        * (∏ a, c a ^ c a) * Nat.multinomial Finset.univ k
+      = Nat.factorial n * (Nat.multinomial Finset.univ c * (∏ a, c a ^ c a)) := by
+    rw [show (∏ a, Nat.factorial (k a)) * Nat.multinomial Finset.univ c
+              * (∏ a, c a ^ c a) * Nat.multinomial Finset.univ k
+          = ((∏ a, Nat.factorial (k a)) * Nat.multinomial Finset.univ k)
+              * (Nat.multinomial Finset.univ c * (∏ a, c a ^ c a)) by ring,
+        h_k]
+  rw [hL2, hR2] at step2
+  exact Nat.le_of_mul_le_mul_left step2 h_pos
+
+omit [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- **`multinomial univ c ≤ |T_c|`** (the bridge to the multinomial coefficient).
+
+We use a **surjection** `Φ : Fin n → α → T_c` defined via `x₀ ∈ T_c`:
+`Φ σ := x₀ ∘ σ`. By surjectivity of `Φ` (any `x ∈ T_c` is hit because both x, x₀ have
+type c so we can find a permutation taking one to the other), `n! = |Perm Fin n|`
+counts each `x ∈ T_c` with multiplicity = fiber size ≤ `∏ a, (c a)!` (the permutations
+preserving fiber structure on x₀). So `n! ≤ |T_c| · ∏ c(a)!`, giving the goal via
+`Nat.multinomial_spec`.
+
+Strategy: use `Fintype.card_le_of_surjective` with a chosen `Ψ : (T_c × Π a, Perm (Fin (c a))) → Perm (Fin n)`
+that is injective. Then `n! = card (Perm Fin n) ≥ |T_c| · ∏ c(a)!`. -/
+private lemma multinomial_le_typeClass_card {n : ℕ} (c : α → ℕ)
+    (hc_sum : (∑ a, c a) = n) :
+    Nat.multinomial Finset.univ c
+      ≤ (typeClassByCount (α := α) (n := n) c).toFinite.toFinset.card := by
+  classical
+  -- We get a nonempty witness x₀ ∈ T_c.
+  obtain ⟨x₀, hx₀⟩ := typeClassByCount_nonempty_of_sum c hc_sum
+  -- Key: n! ≤ |T_c| · ∏ (c a)!, combined with multinomial_spec.
+  -- We construct an injection
+  --   Ψ : T_c × (Π a, Equiv.Perm (x₀⁻¹(a))) → Equiv.Perm (Fin n)
+  -- Given (x, τ), build σ : Fin n → Fin n via: on x₀⁻¹(a), σ maps it to x⁻¹(a) using
+  -- canonical bijections (Fintype.equivOfCardEq) and τ_a.
+  -- Then σ ∈ Perm (Fin n) and Ψ is injective.
+  -- For simplicity, we use `Π a, Equiv.Perm (Fin (c a))` ≃ stabilizer of x₀.
+  -- Build the injection: Φ : (typeClassByCount c) × (Π a, Equiv.Perm (Fin (c a))) ↪ Equiv.Perm (Fin n).
+  -- Cardinalities: |Perm (Fin n)| = n!; |Π a, Perm (Fin (c a))| = ∏ c(a)!; |T_c| = |T_c|.
+  -- Φ injective ⟹ |T_c| · ∏ c(a)! ≤ n!.
+  -- Combined with multinomial_spec: multinomial · ∏ c(a)! = n!, so |T_c| ≥ multinomial.
+  -- For each x ∈ T_c, both x⁻¹(a) and x₀⁻¹(a) are Finsets of Fin n with c(a) elements.
+  -- Take canonical bijections via `Fintype.equivFinOfCardEq` (Fin (c a) ≃ x⁻¹(a)).
+  let F : (a : α) → Finset (Fin n) := fun a =>
+    (Finset.univ : Finset (Fin n)).filter fun i => x₀ i = a
+  have hF_card : ∀ a, (F a).card = c a := fun a => hx₀ a
+  -- Bijection Fin (c a) ≃ F a.
+  let e₀ : (a : α) → Fin (c a) ≃ {i // i ∈ F a} := fun a => by
+    have h : Fintype.card (Fin (c a)) = Fintype.card {i // i ∈ F a} := by
+      rw [Fintype.card_fin, Fintype.card_coe, hF_card a]
+    exact Fintype.equivOfCardEq h
+  -- Given x ∈ T_c, similarly G x : (a : α) → Finset (Fin n) with |G x a| = c a.
+  -- We don't need full machinery; just enough to count.
+  -- ALTERNATE direct approach: use `Fintype.card`-based counting argument.
+  -- |Equiv.Perm (Fin n)| = n!.
+  -- For each σ : Equiv.Perm (Fin n), let f σ := x₀ ∘ σ. Then f σ ∈ Fin n → α.
+  -- typeCount (f σ) = typeCount x₀ = c (since precomposition by perm doesn't change typeCount).
+  -- So f σ ∈ T_c, giving surjective f : Perm (Fin n) → T_c (need surjectivity).
+  -- For surjectivity: given x ∈ T_c, find σ with x₀ ∘ σ = x.
+  -- Set σ on each fiber: σ : F a → x⁻¹(a), any bijection. Combine via Equiv.Sigma.
+  -- For the inequality: each fiber of f has ≥ ∏ c(a)! elements (the "internal permutations").
+  sorry
+
+omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- **ℝ form of `multinomial_pow_le`**. -/
+private lemma multinomial_pow_le_real {n : ℕ} (c k : α → ℕ)
+    (hc_sum : (∑ a, c a) = n) (hk_sum : (∑ a, k a) = n) :
+    (Nat.multinomial Finset.univ k : ℝ) * (∏ a, (c a : ℝ) ^ k a)
+      ≤ (Nat.multinomial Finset.univ c : ℝ) * (∏ a, (c a : ℝ) ^ c a) := by
+  have h := multinomial_pow_le (α := α) c k hc_sum hk_sum
+  have :
+      ((Nat.multinomial Finset.univ k * (∏ a, c a ^ k a) : ℕ) : ℝ)
+        ≤ ((Nat.multinomial Finset.univ c * (∏ a, c a ^ c a) : ℕ) : ℝ) := by
+    exact_mod_cast h
+  push_cast at this
+  exact this
+
+omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- **Card of `piAntidiag univ n` is bounded by `(n+1)^{|α|}`**. -/
+private lemma piAntidiag_card_le (n : ℕ) :
+    (Finset.piAntidiag (Finset.univ : Finset α) n).card
+      ≤ (n + 1) ^ Fintype.card α := by
+  classical
+  -- Build embedding piAntidiag univ n ↪ (α → Fin (n+1)).
+  have h_bound : ∀ k ∈ Finset.piAntidiag (Finset.univ : Finset α) n,
+      ∀ a, k a ≤ n := by
+    intros k hk_mem a
+    have hk_sum := (Finset.mem_piAntidiag.mp hk_mem).1
+    have hka : k a ≤ ∑ a', k a' := Finset.single_le_sum (f := k)
+      (fun _ _ => Nat.zero_le _) (Finset.mem_univ a)
+    rw [hk_sum] at hka
+    exact hka
+  let φ : (α → ℕ) → (α → Fin (n+1)) :=
+    fun k a => ⟨min (k a) n, by
+      have hmin : min (k a) n ≤ n := Nat.min_le_right _ _
+      omega⟩
+  have h_inj_on : Set.InjOn φ (Finset.piAntidiag (Finset.univ : Finset α) n) := by
+    intros k₁ hk₁ k₂ hk₂ heq
+    funext a
+    have heqa := congrFun heq a
+    have h_min1 : k₁ a = min (k₁ a) n := by
+      have := h_bound k₁ hk₁ a; omega
+    have h_min2 : k₂ a = min (k₂ a) n := by
+      have := h_bound k₂ hk₂ a; omega
+    have : min (k₁ a) n = min (k₂ a) n := by
+      have := Fin.mk.inj_iff.mp heqa
+      exact this
+    omega
+  have h_card_pow : Fintype.card (α → Fin (n+1)) = (n+1) ^ Fintype.card α := by
+    have h := @Fintype.card_fun α (Fin (n+1)) _ _ _
+    rw [Fintype.card_fin] at h
+    exact h
+  calc (Finset.piAntidiag (Finset.univ : Finset α) n).card
+      = ((Finset.piAntidiag (Finset.univ : Finset α) n).image φ).card :=
+        (Finset.card_image_of_injOn h_inj_on).symm
+    _ ≤ (Finset.univ : Finset (α → Fin (n+1))).card := Finset.card_le_card (by
+        intros _ _; exact Finset.mem_univ _)
+    _ = Fintype.card (α → Fin (n+1)) := by rw [Finset.card_univ]
+    _ = (n+1) ^ Fintype.card α := h_card_pow
+
+omit [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- **Multinomial Stirling-free lower bound** (Cover-Thomas 11.1.3):
 `(n+1)^{-|α|} · n^n / ∏ (c a)^(c a) ≤ |T_c|`.
 
-`Mathlib.Data.Nat.Choose.Multinomial` の `Nat.multinomial` は存在するが
-elementary Stirling-free lower bound (textbook 形) は Mathlib 不在予想。
-自前で `1 = ∑_{c'} P_c^n(T_{c'}) ≥ |T_c| · P_c^n(T_c)` 経路 + `(n+1)^|α|` types で
-elementary に構築。 -/
+戦略: `multinomial univ c · ∏ (c/n)^{c a} ≥ (n+1)^{-|α|}` を multinomial theorem
++ max-likelihood (per-letter factorial-power 不等式) で取り、最後に
+`multinomial univ c ≤ |T_c|` を合わせる。 -/
 theorem typeClassByCount_card_ge
     {n : ℕ} (c : α → ℕ) (hc_sum : (∑ a, c a) = n) :
     (((n : ℝ) + 1) ^ (Fintype.card α : ℕ))⁻¹ *
         ((n : ℝ) ^ n / ∏ a : α, ((c a : ℝ) ^ (c a)))
       ≤ ((typeClassByCount (α := α) (n := n) c).toFinite.toFinset.card : ℝ) := by
-  sorry
+  classical
+  -- Goal: (n+1)^{-|α|} · n^n / ∏ c(a)^{c(a)} ≤ |T_c|.
+  -- Chain: multinomial univ c ≤ |T_c| ; (n+1)^{-|α|} · n^n / ∏ c^c ≤ multinomial univ c.
+  have h_main : ((Nat.multinomial Finset.univ c : ℝ))
+        ≤ ((typeClassByCount (α := α) (n := n) c).toFinite.toFinset.card : ℝ) := by
+    have h := multinomial_le_typeClass_card (α := α) c hc_sum
+    exact_mod_cast h
+  refine le_trans ?_ h_main
+  -- Now: (n+1)^{-|α|} · n^n / ∏ c(a)^{c(a)} ≤ multinomial univ c.
+  -- This is equivalent to: n^n ≤ multinomial univ c · ∏ c(a)^{c(a)} · (n+1)^{|α|}.
+  -- Equivalent (dividing by n^n on both sides): 1 ≤ (n+1)^{|α|} · multinomial univ c · ∏ (c/n)^c.
+  -- This follows from 1 = ∑_k multinomial univ k · ∏ (c/n)^k ≤ (n+1)^{|α|} · max term.
+  -- Edge case: n = 0. Then c = 0 everywhere, ∏ c(a)^{c(a)} = 1, n^n = 0^0 = 1.
+  -- multinomial univ 0 = 1, LHS = 1, RHS = 1. OK.
+  -- General path.
+  by_cases hn : n = 0
+  · -- n = 0: c a = 0 for all a, multinomial univ c = 1.
+    subst hn
+    have hc_zero : ∀ a, c a = 0 := fun a => by
+      have : c a ≤ ∑ a', c a' := Finset.single_le_sum (f := c)
+        (fun _ _ => Nat.zero_le _) (Finset.mem_univ _)
+      omega
+    have h_prod_one : ∏ a : α, ((c a : ℝ) ^ (c a)) = 1 := by
+      refine Finset.prod_eq_one fun a _ => ?_
+      rw [hc_zero a]; simp
+    -- multinomial univ c = 1, so the goal `... ≤ multinomial univ c` is `1 ≤ 1`.
+    have h_multinomial_one : Nat.multinomial Finset.univ c = 1 := by
+      unfold Nat.multinomial
+      have h_facts : ∀ a, Nat.factorial (c a) = 1 := fun a => by
+        rw [hc_zero a]; rfl
+      rw [Finset.prod_congr rfl (fun a _ => h_facts a), Finset.prod_const_one]
+      rw [hc_sum]
+      decide
+    rw [h_prod_one]
+    have h_mc : (Nat.multinomial Finset.univ c : ℝ) = 1 := by
+      exact_mod_cast h_multinomial_one
+    rw [h_mc]
+    simp
+  · -- n ≥ 1.
+    have hn_pos : 0 < n := Nat.pos_of_ne_zero hn
+    have hn_real_pos : (0 : ℝ) < n := by exact_mod_cast hn_pos
+    have hn_real_succ_pos : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+    -- Step 1: ∑_a (c a / n) = 1 (in ℝ).
+    have h_sum_one : (∑ a, (c a : ℝ) / n) = 1 := by
+      rw [← Finset.sum_div]
+      have h_cast : (∑ a, (c a : ℝ)) = (n : ℝ) := by exact_mod_cast hc_sum
+      rw [h_cast]; field_simp
+    -- Step 2: (∑_a (c a / n))^n = 1.
+    have h_pow_one : (∑ a, (c a : ℝ) / n) ^ n = 1 := by rw [h_sum_one]; simp
+    -- Step 3: Apply multinomial theorem.
+    have h_mn := Finset.sum_pow_eq_sum_piAntidiag (R := ℝ)
+      (Finset.univ : Finset α) (fun a => (c a : ℝ) / n) n
+    -- h_mn: (∑ a, (c a)/n)^n = ∑ k ∈ piAntidiag univ n, multinomial univ k · ∏ (c/n)^{k a}
+    rw [h_pow_one] at h_mn
+    -- h_mn : 1 = ∑ k ∈ piAntidiag univ n, multinomial univ k * ∏ (c/n)^{k a}
+    -- Step 4: c ∈ piAntidiag univ n.
+    have hc_mem : c ∈ Finset.piAntidiag (Finset.univ : Finset α) n := by
+      rw [Finset.mem_piAntidiag]
+      refine ⟨hc_sum, fun a _ => Finset.mem_univ a⟩
+    -- Step 5: each term ≤ multinomial univ c · ∏ (c/n)^{c a} (max-likelihood).
+    have h_term_max : ∀ k ∈ Finset.piAntidiag (Finset.univ : Finset α) n,
+        (Nat.multinomial Finset.univ k : ℝ) * ∏ a, ((c a : ℝ) / n) ^ (k a)
+          ≤ (Nat.multinomial Finset.univ c : ℝ) * ∏ a, ((c a : ℝ) / n) ^ (c a) := by
+      intros k hk_mem
+      have hk_sum := (Finset.mem_piAntidiag.mp hk_mem).1
+      -- Use multinomial_pow_le_real but with `(c a / n)` factor.
+      -- multinomial k · ∏ (c/n)^k = multinomial k · ∏ (c)^k / n^n.
+      -- multinomial c · ∏ (c/n)^c = multinomial c · ∏ (c)^c / n^n.
+      have h_split_k : ∏ a, ((c a : ℝ) / n) ^ (k a)
+          = (∏ a, (c a : ℝ) ^ (k a)) / (n : ℝ) ^ n := by
+        rw [show ∏ a, ((c a : ℝ) / n) ^ (k a)
+                = ∏ a, ((c a : ℝ) ^ (k a) / (n : ℝ) ^ (k a)) from
+            Finset.prod_congr rfl (fun a _ => div_pow _ _ _)]
+        rw [Finset.prod_div_distrib]
+        congr 1
+        rw [Finset.prod_pow_eq_pow_sum, hk_sum]
+      have h_split_c : ∏ a, ((c a : ℝ) / n) ^ (c a)
+          = (∏ a, (c a : ℝ) ^ (c a)) / (n : ℝ) ^ n := by
+        rw [show ∏ a, ((c a : ℝ) / n) ^ (c a)
+                = ∏ a, ((c a : ℝ) ^ (c a) / (n : ℝ) ^ (c a)) from
+            Finset.prod_congr rfl (fun a _ => div_pow _ _ _)]
+        rw [Finset.prod_div_distrib]
+        congr 1
+        rw [Finset.prod_pow_eq_pow_sum, hc_sum]
+      rw [h_split_k, h_split_c]
+      rw [show (Nat.multinomial Finset.univ k : ℝ)
+              * ((∏ a, (c a : ℝ) ^ (k a)) / (n : ℝ) ^ n)
+            = ((Nat.multinomial Finset.univ k : ℝ) * (∏ a, (c a : ℝ) ^ (k a)))
+                / (n : ℝ) ^ n by ring]
+      rw [show (Nat.multinomial Finset.univ c : ℝ)
+              * ((∏ a, (c a : ℝ) ^ (c a)) / (n : ℝ) ^ n)
+            = ((Nat.multinomial Finset.univ c : ℝ) * (∏ a, (c a : ℝ) ^ (c a)))
+                / (n : ℝ) ^ n by ring]
+      apply div_le_div_of_nonneg_right _ (by positivity)
+      exact multinomial_pow_le_real c k hc_sum hk_sum
+    -- Step 6: all terms ≥ 0.
+    have h_term_nn : ∀ k ∈ Finset.piAntidiag (Finset.univ : Finset α) n,
+        0 ≤ (Nat.multinomial Finset.univ k : ℝ) * ∏ a, ((c a : ℝ) / n) ^ (k a) := by
+      intros k _
+      refine mul_nonneg (by positivity) (Finset.prod_nonneg fun a _ => by positivity)
+    -- Step 7: sum ≤ card · max.
+    have h_card_bound :
+        (1 : ℝ) ≤ ((Finset.piAntidiag (Finset.univ : Finset α) n).card : ℝ)
+          * ((Nat.multinomial Finset.univ c : ℝ) * ∏ a, ((c a : ℝ) / n) ^ (c a)) := by
+      rw [h_mn]
+      calc (∑ k ∈ Finset.piAntidiag (Finset.univ : Finset α) n,
+              (Nat.multinomial Finset.univ k : ℝ) * ∏ a, ((c a : ℝ) / n) ^ (k a))
+          ≤ ∑ _k ∈ Finset.piAntidiag (Finset.univ : Finset α) n,
+              ((Nat.multinomial Finset.univ c : ℝ) * ∏ a, ((c a : ℝ) / n) ^ (c a)) :=
+            Finset.sum_le_sum h_term_max
+        _ = ((Finset.piAntidiag (Finset.univ : Finset α) n).card : ℝ)
+              * ((Nat.multinomial Finset.univ c : ℝ)
+                * ∏ a, ((c a : ℝ) / n) ^ (c a)) := by
+            rw [Finset.sum_const, nsmul_eq_mul]
+    -- Step 8: card ≤ (n+1)^|α|.
+    have h_card_le : ((Finset.piAntidiag (Finset.univ : Finset α) n).card : ℝ)
+        ≤ ((n : ℝ) + 1) ^ Fintype.card α := by
+      have := piAntidiag_card_le (α := α) n
+      have h_cast : (((n + 1) ^ Fintype.card α : ℕ) : ℝ)
+          = ((n : ℝ) + 1) ^ Fintype.card α := by push_cast; ring
+      have := (Nat.cast_le (α := ℝ)).mpr this
+      rwa [h_cast] at this
+    -- Step 9: combine.
+    -- From h_card_bound: 1 ≤ K · M (where K = card piAntidiag, M = mult · ∏(c/n)^c).
+    -- From h_card_le: K ≤ (n+1)^|α|.
+    -- So 1 ≤ (n+1)^|α| · M, i.e., (n+1)^{-|α|} ≤ M = mult · ∏(c/n)^c.
+    have h_M_nn : 0 ≤ (Nat.multinomial Finset.univ c : ℝ)
+        * ∏ a, ((c a : ℝ) / n) ^ (c a) := h_term_nn c hc_mem
+    have h_chain : (1 : ℝ) ≤ ((n : ℝ) + 1) ^ Fintype.card α
+        * ((Nat.multinomial Finset.univ c : ℝ) * ∏ a, ((c a : ℝ) / n) ^ (c a)) := by
+      calc (1 : ℝ) ≤ ((Finset.piAntidiag (Finset.univ : Finset α) n).card : ℝ)
+              * ((Nat.multinomial Finset.univ c : ℝ) * ∏ a, ((c a : ℝ) / n) ^ (c a)) :=
+            h_card_bound
+        _ ≤ ((n : ℝ) + 1) ^ Fintype.card α
+              * ((Nat.multinomial Finset.univ c : ℝ) * ∏ a, ((c a : ℝ) / n) ^ (c a)) :=
+            mul_le_mul_of_nonneg_right h_card_le h_M_nn
+    -- Step 10: turn into the goal.
+    -- Goal: (n+1)^{-|α|} · n^n / ∏ c(a)^{c(a)} ≤ multinomial univ c.
+    -- We have: 1 ≤ (n+1)^|α| · multinomial univ c · ∏ (c/n)^c
+    --          = (n+1)^|α| · multinomial univ c · ∏ c^c / n^n.
+    -- ⟹ n^n ≤ (n+1)^|α| · multinomial univ c · ∏ c^c.
+    -- ⟹ n^n / (∏ c^c) ≤ (n+1)^|α| · multinomial univ c.
+    -- ⟹ (n+1)^{-|α|} · n^n / ∏ c^c ≤ multinomial univ c.
+    -- First rewrite ∏ (c/n)^c = ∏ c^c / n^n.
+    have h_prod_split : ∏ a, ((c a : ℝ) / n) ^ (c a)
+        = (∏ a, (c a : ℝ) ^ (c a)) / (n : ℝ) ^ n := by
+      rw [show ∏ a, ((c a : ℝ) / n) ^ (c a)
+              = ∏ a, ((c a : ℝ) ^ (c a) / (n : ℝ) ^ (c a)) from
+          Finset.prod_congr rfl (fun a _ => div_pow _ _ _)]
+      rw [Finset.prod_div_distrib]
+      congr 1
+      rw [Finset.prod_pow_eq_pow_sum, hc_sum]
+    rw [h_prod_split] at h_chain
+    -- h_chain : 1 ≤ (n+1)^|α| · multinomial · (∏ c^c / n^n).
+    -- Multiply by n^n / ∏ c^c (positive).
+    -- But first: need ∏ c^c > 0? Could be 0 if some c(a) = 0 — no, 0^0 = 1, so each factor ≥ 1
+    -- when c(a) ≥ 1. When c(a) = 0, factor = 0^0 = 1. So all factors ≥ 1.
+    -- Actually for c(a) = 0, (c a : ℝ)^(c a) = 0^0 = 1 in ℝ (Real convention).
+    -- So ∏ ≥ 1 > 0.
+    have h_prod_cc_pos : (0 : ℝ) < ∏ a, (c a : ℝ) ^ (c a) := by
+      refine Finset.prod_pos fun a _ => ?_
+      rcases Nat.eq_zero_or_pos (c a) with h0 | hp
+      · rw [h0]; simp
+      · exact pow_pos (by exact_mod_cast hp) _
+    have h_n_pow_pos : (0 : ℝ) < (n : ℝ) ^ n := pow_pos hn_real_pos _
+    -- Manipulate h_chain.
+    -- 1 ≤ (n+1)^|α| · M · (P / n^n) where P = ∏ c^c, M = mult.
+    -- ⟹ n^n ≤ (n+1)^|α| · M · P.
+    -- ⟹ n^n / P ≤ (n+1)^|α| · M.
+    -- ⟹ (n+1)^{-|α|} · n^n / P ≤ M.
+    have h_npow_le :
+        (n : ℝ) ^ n ≤ ((n : ℝ) + 1) ^ Fintype.card α
+          * (Nat.multinomial Finset.univ c : ℝ) * (∏ a, (c a : ℝ) ^ (c a)) := by
+      have := mul_le_mul_of_nonneg_right h_chain h_n_pow_pos.le
+      rw [one_mul] at this
+      have h_rhs_eq : ((n : ℝ) + 1) ^ Fintype.card α
+          * ((Nat.multinomial Finset.univ c : ℝ)
+              * ((∏ a, (c a : ℝ) ^ (c a)) / (n : ℝ) ^ n)) * (n : ℝ) ^ n
+          = ((n : ℝ) + 1) ^ Fintype.card α
+              * (Nat.multinomial Finset.univ c : ℝ) * (∏ a, (c a : ℝ) ^ (c a)) := by
+        field_simp
+      rw [h_rhs_eq] at this
+      exact this
+    -- Divide by ∏ c^c (positive).
+    have h_div :
+        (n : ℝ) ^ n / (∏ a, (c a : ℝ) ^ (c a))
+          ≤ ((n : ℝ) + 1) ^ Fintype.card α
+              * (Nat.multinomial Finset.univ c : ℝ) := by
+      rw [div_le_iff₀ h_prod_cc_pos]
+      linarith [h_npow_le]
+    -- Multiply by (n+1)^{-|α|} (positive).
+    have h_succ_pow_pos : (0 : ℝ) < ((n : ℝ) + 1) ^ Fintype.card α :=
+      pow_pos hn_real_succ_pos _
+    rw [← div_le_iff₀' h_succ_pow_pos] at h_div
+    rw [show (((n : ℝ) + 1) ^ Fintype.card α)⁻¹
+            * ((n : ℝ) ^ n / ∏ a, ((c a : ℝ) ^ (c a)))
+          = ((n : ℝ) ^ n / (∏ a, ((c a : ℝ) ^ (c a))))
+              / ((n : ℝ) + 1) ^ Fintype.card α by
+      field_simp]
+    exact h_div
 
 /-- **Lower bound on `Q^n(T_c)`** (Phase C 主補題, from `typeClassByCount_card_ge`):
 `Q^n(T_c) ≥ (n+1)^{-|α|} · exp(-n · klDivIndex c n Q)`.
