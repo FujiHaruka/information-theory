@@ -10,7 +10,7 @@
 
 ## Status / 目標
 
-**🚧 in-progress `B-3''` (2/2 sorry 残)**. C-(b)/(c)-restate/(d) + D-(b) 算術完了、Fubini swap + i.i.d. ambient plumbing + entropy-MI bridge 未着。詳細は末尾「実装結果サマリ」。
+**✅ `B-3''` 完全閉鎖 (2026-05-12、0 sorry)**。Phase C-(a)-(d) + Phase D-(a)-(b) 全段 publish 済。詳細は末尾「実装結果サマリ」。
 
 主結果 (Cover-Thomas Theorem 7.7.1 achievability 半分):
 
@@ -414,29 +414,32 @@ theorem channel_coding_achievability
 
 6. **`M = Nat.ceil (Real.exp (nR))`** — 親 plan 主定理 statement にあわせる。
 
-## 実装結果サマリ (2026-05-12 拡張時点)
+## 実装結果サマリ (2026-05-12 完全閉鎖時点)
 
-- **行数**: 473 行 (`Common2026/Shannon/ChannelCodingAchievability.lean`、+111 from 362)。
-- **`lake env lean`**: 0 error / 2 sorry warning。
-- **完了範囲** (statement レベルでは Phase C 全 4 + Phase D 算術土台):
-  - **Phase C-(b)** `errorProbAt_le_E1_plus_E2` (~105 lines): decoder error event ⊆ E1 ∪ ⋃ E2 を case analysis (unique / exists 4 通り) + `measureReal_biUnion_finset_le` で union bound。
-  - **Phase C-(c)** `random_codebook_average_le` — **probabilistic-method 形へ restate 済 (statement のみ)**: `codebookMeasure p M n := Measure.pi (fun _ : Fin M => Measure.pi (fun _ : Fin n => p))` を導入、LHS を `∑ codebook, (codebookMeasure p M n).real {codebook} * (averageErrorProb).toReal` に書き換え。新仮説 `h_match_X : μ.map (Xs 0) = p` で abstract Phase B ambient と codebook law を coupling。proof body は `sorry`。
-  - **Phase C-(d)** `exists_codebook_le_avg` (~75 lines): 新 shape (`codebookMeasure`-weighted Finset sum) で **再証明**完了。`sum_measureReal_singleton` で `∑ w = 1`、`Finset.sum_lt_sum` で strict inequality、classical contradiction で pigeonhole。
-  - **Phase D-(b)** `channel_coding_achievability` — **rate-slack 算術** 充足: `R + 3ε < I` と `0 < I - R - 3ε` (linarith) を埋めた。body は `sorry`。
-- **残 sorry (2/2)**:
-  - `random_codebook_average_le` (line 293): proof body のみ。Fubini swap (codebook expectation ↔ `(X^n, Y^n)` expectation) を `h_match_X` 経由で実装する段階。
-  - `channel_coding_achievability` (line 471): 主定理 body。下記 3 つの hard blockers が明示済。
-- **Phase D-(b) hard blockers (B-3'' agent 2026-05-12 名指し)**:
-  1. **`Measure.infinitePi` plumbing on `Ω := ℕ → α × β`**: `hindepX`/`hindepY`/`hindepZ` + 全 `IdentDistrib` + 新仮説 `h_match_X` の同時取得 (~150 行)。
-  2. **entropy-MI bridge** `H(X,Y) - H(X) - H(Y) = -I(p; W)`: `Common2026/Shannon/MIChainRule.lean` には **未収載**。同 file を 50-100 行拡張して `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ` を publish 候補。
-  3. **channel positivity 仮説**: `∀ a y, 0 < W a {y}` が現主定理 signature に **未追加**。Phase B-(c) の `hposY`/`hposZ` 解消用に signature 拡張が必要。
-- **次セッションへの残作業 順**:
-  1. `Common2026/Shannon/MIChainRule.lean` 拡張 + `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ` publish (~50-100 行)。
-  2. i.i.d. ambient (`Ω := ℕ → α × β`, `μ := Measure.infinitePi (fun _ => jointDistribution p W)`) 構築 + Phase B 補題の仮定取得 plumbing ~150 行。
-  3. Phase C-(c) Fubini swap (`h_match_X` 経由で codebook average ↔ i.i.d. expectation) ~80-120 行。
-  4. Phase D-(b) (主定理) 組立 ~80-150 行: 上記 helper + channel positivity 仮説 + `Nat.ceil` plumbing + `Real.tendsto_exp_neg_atTop_nhds_zero` で `n → ∞` 制御。
-
-残 ~280-470 行 (前回見積 360-620 から restate + C-(d) + 算術分を差し引き)。
+- **行数**: 1890 行 (`Common2026/Shannon/ChannelCodingAchievability.lean`、初期 362 → +1528)。
+- **`lake env lean`**: 0 error / 0 sorry / unused-variable 警告のみ。
+- **完了範囲** (全段):
+  - **Phase C-(a)** `Codebook` abbrev + `jointTypicalDecoder` + `codebookToCode` + `decode_eq_iff_unique`。
+  - **Phase C-(b)** `errorProbAt_le_E1_plus_E2`: decoder error event ⊆ E1 ∪ ⋃ E2 を case analysis + `measureReal_biUnion_finset_le` で union bound。
+  - **Phase C-(c)** `random_codebook_average_le` (probabilistic-method 形): `codebookMeasure p M n := Measure.pi (fun _ : Fin M => Measure.pi (fun _ : Fin n => p))` を導入、LHS を `∑ codebook, (codebookMeasure p M n).real {codebook} * (averageErrorProb).toReal` 形に restate。仮説 `h_match_X` / `h_match_Z` / `hindepZ_full` で abstract ambient と codebook law を coupling。内部で 3 つの private 補題 (`block_law_X_eq_pi_p` / `block_law_Y_eq_pi` / `block_joint_law_eq_pi`) で `iIndepFun + IdentDistrib + h_match_*` → `Measure.pi` 化、Fubini-collapse 補題 `codebook_marginal_one` / `codebook_marginal_two` で per-row 平均、`random_codebook_E1_swap` / `_E2_swap` で E1 (true-codeword non-JTS) / E2 (alias-codeword JTS) の Fubini swap。E2 で `jointlyTypicalSet_indep_prob_le` 適用。
+  - **Phase C-(d)** `exists_codebook_le_avg`: `codebookMeasure`-weighted Finset sum 上の pigeonhole (`sum_measureReal_singleton` + `Finset.sum_lt_sum` + classical contradiction)。
+  - **Phase D-(a)** rate-slack 算術 (`ε := (I - R) / 6`、`R + 3ε < I`、`0 < I - R - 3ε`) + `N := max (max N₁ N₂) 1`。
+  - **Phase D-(b)** `channel_coding_achievability` 主定理: `Common2026/Shannon/IIDProductInput.lean` の ready-made instance (`iidAmbientMeasure p W` + 全 `iIndepFun` / `IdentDistrib` / `μ.map = p` 等) を消費、`Common2026/Shannon/MIChainRule.lean` + `Common2026/Shannon/ChannelCoding.lean` 拡張の entropy-MI bridge (`mutualInfoOfChannel_eq_HX_add_HY_sub_HZ`) と `entropy_eq_of_identDistrib` を chain、E1 → 0 (`jointlyTypicalSet_prob_tendsto_one` + sandwich) + E2 → 0 (`Nat.ceil_lt_add_one` + `Real.tendsto_exp_neg_atTop_nhds_zero`)、最後に `random_codebook_average_le` + `exists_codebook_le_avg` で締め。channel positivity 仮説 `hW_pos : ∀ a y, 0 < (W a).real {y}` を signature に追加。
+- **precursor (本 plan で新規追加)**:
+  - `Common2026/Shannon/IIDProductInput.lean` (399 行、0 sorry): `Ω := ℕ → α × β` 上の `Measure.infinitePi (jointDistribution p W)` i.i.d. ambient bundle、`Function.eval i` の rfl-true 性質で `MeasurableEquiv` plumbing 不要、当初見積 ~150 行を 140 行で収まる。
+  - `Common2026/Shannon/MIChainRule.lean` 拡張 (475 行、+57): joint-distribution 上の `mutualInfo_eq_entropy_add_entropy_sub_jointEntropy` を publish。
+  - `Common2026/Shannon/ChannelCoding.lean` 拡張 (706 行、+47): channel-specialized `mutualInfoOfChannel_eq_mutualInfo_prod` + `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ` を publish。
+- **追加 signature 改変**:
+  - 主定理 `channel_coding_achievability` に `hW_pos : ∀ a y, 0 < (W a).real {y}` 追加 (channel positivity)。
+  - `random_codebook_E1_swap` / `random_codebook_average_le` に `hindepZ_full : iIndepFun (fun i : ℕ => jointSequence Xs Ys i) μ` 追加 (E1 swap が `block_joint_law_eq_pi` を消費するために mutual independence が必要)。
+- **進行 (autonomous session 6 ラウンド)**:
+  1. Phase C+D skeleton + C-(b) + C-(d) → 2 sorry。
+  2. C-(c) probabilistic-method 形へ restate + C-(d) 再証明 + D-(b) 算術 → 2 sorry (statement 安定化)。
+  3. precursor 2 本並列 (`MIChainRule.lean` 拡張 + `IIDProductInput.lean` 新規) → 主定理組立準備完了。
+  4. D-(b) 主定理 close → 1 sorry (C-(c) Fubini body のみ)。
+  5. C-(c) statement upgrade (`h_match_Z` 追加) + backbone proof + `block_law_*` × 3 + Fubini decomposition (E1 / E2 helpers) → 2 sorry (E1 / E2 isolated)。
+  6. E2 swap close + E1 statement diagnosis (`hindepZ_full` 必要) → 1 sorry。
+  7. E1 swap close via `hindepZ_full` mutation → **0 sorry**。
 
 ## Risk / Fallback
 
