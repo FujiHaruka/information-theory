@@ -412,11 +412,34 @@ theorem channel_coding_achievability
 
 6. **`M = Nat.ceil (Real.exp (nR))`** — 親 plan 主定理 statement にあわせる。
 
+## 実装結果サマリ (2026-05-12 部分完了時点)
+
+- **行数**: 362 行 (`Common2026/Shannon/ChannelCodingAchievability.lean`)。
+- **`lake env lean`**: 0 error / 2 sorry warning。
+- **完了 sorry (2/4)**:
+  - `errorProbAt_le_E1_plus_E2` (Phase C-(b), ~105 lines): decoder error event ⊆ E1 ∪ ⋃ E2 を case analysis (unique / exists 4 通り) で証明、`measureReal_mono` + `measureReal_union_le` + `measureReal_biUnion_finset_le` で union bound。
+  - `exists_codebook_le_avg` (Phase C-(d), ~40 lines): `Finset.exists_le_of_sum_le` で pigeonhole。`Codebook` の nonemptiness は `Fin M` + `[Nonempty α]` から推論。
+- **残 sorry (2/4)**:
+  - `random_codebook_average_le` (Phase C-(c)): **statement 設計欠陥** — LHS が uniform-on-`Codebook M n α` (`α^{Mn}` 均等) 上の平均、RHS が `p`-i.i.d. event の `μ.real`、`p` が uniform でない限り不整合。Plan R1 fallback (probabilistic method) で LHS を `∫ ... ∂(p^{Mn})` 形に restate が必要。
+  - `channel_coding_achievability` (Phase D-(b), 主定理): Phase C-(c) 依存 + i.i.d. ambient (`Measure.infinitePi`) plumbing ~200 行 + entropy-MI chain identity bridge (`mutualInfoOfChannel = H(X)+H(Y)-H(X,Y)`、`Common2026/Shannon/MIChainRule.lean` 経由で publish 候補) ~50-100 行が追加で必要。
+- **import 追加**: `Mathlib.Probability.ProductMeasure`, `Mathlib.Probability.Independence.InfinitePi` (将来の fill 用 placeholders)。
+- **次セッションへの残作業 順** (Mathlib API 確認順):
+  1. `Common2026/Shannon/MIChainRule.lean` を伸ばして `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ` を publish (~50-100 行)。
+  2. `random_codebook_average_le` を probabilistic method 形に restate: LHS = `∫ codebook : Codebook M n α, ... ∂(Measure.pi (fun _ : Fin M => Measure.pi (fun _ : Fin n => p)))`。
+  3. i.i.d. ambient (`Ω := ℕ → α × β`, `μ := Measure.infinitePi (fun _ => jointDistribution p W)`) 構築 + Phase B 補題の `iIndepFun` / `IdentDistrib` / `hpos` 仮定取得 plumbing ~150 行。
+  4. Phase C-(c) Fubini swap (codebook average ↔ i.i.d. expectation) ~80-120 行。
+  5. Phase D-(b) (主定理) 組立 ~80-150 行: 上記 helper を呼び出し、`Nat.ceil` plumbing + `Real.tendsto_exp_neg_atTop_nhds_zero` で `n → ∞` 制御。
+
+合計 ~360-620 行追加。本セッションでは autonomously 完走に至らず、上記順で次セッション以降に着手。
+
 ## Risk / Fallback
 
 - **R1**: `Codebook` 上の sum と確率測度 (Phase C-(c) Fubini-like swap) の plumbing が
   想定より重くなる場合。Fallback: probabilistic method (cooperative measure-theoretic)
   に切り替え、`Measure.pi (fun _ : Fin M => p^n)` 上で期待値計算。
+  **2026-05-12 実装中に発覚**: 当初 statement は uniform-on-codebook 形だったが、これは
+  `p` が uniform でない限り不整合。R1 fallback (probabilistic method 形) が **本質的に必要**で、
+  Phase C-(c) は restate 待ち。
 - **R2**: `mutualInfoOfChannel` の reshape (`ℝ≥0∞` vs `ℝ`) plumbing。Fallback: 主定理を
   `entropy` 表示で書き直す。
 - **R3**: `M = Nat.ceil (...)` の `Nat` ⊆ `ℝ` cast plumbing。Fallback (R4 と共通):
