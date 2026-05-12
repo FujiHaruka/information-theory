@@ -1385,4 +1385,215 @@ theorem typicalSet_prob_le
     rw [hreal]
     exact this
 
+/-! ### Phase H — Point-wise lower bound + size lower bound (D-3, Cover-Thomas 3.1.2 完全形)
+
+`typicalSet_prob_le` (Phase G, 点別上界) と `typicalSet_prob_tendsto_one` (Phase C, 集合確率
+→ 1) と `typicalSet_card_le` (Phase C, サイズ上界) に加え、Cover-Thomas Theorem 3.1.2 の
+完全 4 帰結を充足する残り 2 本:
+- `typicalSet_prob_ge`: 点別下界 `exp(-n(H+ε)) ≤ P^n(x)` for `x ∈ T_ε^n`
+- `typicalSet_card_ge`: サイズ下界 `(1-η) · exp(n(H-ε)) ≤ |T_ε^n|` whenever `μ(T) ≥ 1-η`
+
+実装: 点別下界は `prob_le` の方向反転 (上側不等式 `(∑ pmfLog)/n - H < ε` を使う)、
+サイズ下界は `μ(T) = ∑_{x∈T} p(x) ≤ |T| · exp(-n(H-ε))` (point-wise upper bound) を
+変形して取得。-/
+
+/-- **Point-wise lower bound on typical-set mass**: for `x ∈ T_ε^n`,
+`exp(-n · (H + ε)) ≤ (μ.map (jointRV Xs n)).real {x}`. Dual of
+`typicalSet_prob_le`. -/
+theorem typicalSet_prob_ge
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (hindep_full : iIndepFun (fun i => Xs i) μ)
+    (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hpos : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    (n : ℕ) {ε : ℝ}
+    (x : Fin n → α) (hx : x ∈ typicalSet μ Xs n ε) :
+    Real.exp (- (n : ℝ) * (entropy μ (Xs 0) + ε))
+      ≤ (μ.map (jointRV Xs n)).real {x} := by
+  classical
+  set P : α → ℝ := fun a => (μ.map (Xs 0)).real {a} with hP_def
+  set H : ℝ := entropy μ (Xs 0) with hH_def
+  -- Reindex `Xs` to `Fin n` via `Fin.val`.
+  have hFin_inj : Function.Injective (Fin.val : Fin n → ℕ) := Fin.val_injective
+  have hindep_fin :
+      iIndepFun (fun i : Fin n => Xs i.val) μ := hindep_full.precomp hFin_inj
+  have hmap_eq : ∀ i : Fin n, μ.map (Xs i.val) = μ.map (Xs 0) := fun i =>
+    (hident i.val).map_eq
+  have hXfin_meas : ∀ i : Fin n, Measurable (Xs i.val) := fun i => hXs i.val
+  have hpi_eq :
+      μ.map (fun ω i => Xs i.val ω)
+        = Measure.pi (fun i : Fin n => μ.map (Xs i.val)) :=
+    (iIndepFun_iff_map_fun_eq_pi_map (fun i => (hXfin_meas i).aemeasurable)).mp
+      hindep_fin
+  have hpi_eq' :
+      μ.map (fun ω i => Xs i.val ω)
+        = Measure.pi (fun _ : Fin n => μ.map (Xs 0)) := by
+    rw [hpi_eq]
+    congr 1
+    funext i
+    exact hmap_eq i
+  have hjoint_eq : (μ.map (jointRV Xs n) : Measure (Fin n → α))
+      = Measure.pi (fun _ : Fin n => μ.map (Xs 0)) := hpi_eq'
+  have hMprob : IsProbabilityMeasure (μ.map (Xs 0)) :=
+    Measure.isProbabilityMeasure_map (hXs 0).aemeasurable
+  have hpi_singleton :
+      Measure.pi (fun _ : Fin n => μ.map (Xs 0)) ({x} : Set (Fin n → α))
+        = ∏ i, (μ.map (Xs 0)) {x i} :=
+    Measure.pi_singleton (μ := fun _ : Fin n => μ.map (Xs 0)) x
+  have hmeas_singleton :
+      (μ.map (jointRV Xs n)) ({x} : Set (Fin n → α))
+        = ∏ i, (μ.map (Xs 0)) {x i} := by
+    rw [hjoint_eq]; exact hpi_singleton
+  have hP_pos : ∀ a, 0 < P a := hpos
+  have hreal :
+      (μ.map (jointRV Xs n)).real {x} = ∏ i, P (x i) := by
+    unfold MeasureTheory.Measure.real
+    rw [hmeas_singleton]
+    rw [ENNReal.toReal_prod]
+    rfl
+  rw [mem_typicalSet_iff] at hx
+  rcases Nat.eq_zero_or_pos n with hn0 | hnpos
+  · -- n = 0: empty product = 1, RHS = exp 0 = 1.
+    subst hn0
+    have hreal0 : (μ.map (jointRV Xs 0)).real {x} = 1 := by
+      rw [hreal]; simp
+    rw [hreal0]
+    simp
+  · -- n > 0: use the upper-side bound on `(∑ pmfLog) / n - H < ε`.
+    have hn_pos_R : (0 : ℝ) < n := by exact_mod_cast hnpos
+    have hupper : (∑ i : Fin n, pmfLog μ Xs (x i)) / n - H < ε := (abs_lt.mp hx).2
+    have hupper' : (∑ i : Fin n, pmfLog μ Xs (x i)) / n < H + ε := by linarith
+    have hsum_lt : (∑ i : Fin n, pmfLog μ Xs (x i)) < (n : ℝ) * (H + ε) := by
+      have := (div_lt_iff₀ hn_pos_R).mp hupper'
+      linarith
+    have hneg : -((n : ℝ) * (H + ε)) < -(∑ i : Fin n, pmfLog μ Xs (x i)) := by linarith
+    have hexp_lt : Real.exp (-((n : ℝ) * (H + ε)))
+        < Real.exp (-(∑ i : Fin n, pmfLog μ Xs (x i))) := Real.exp_lt_exp.mpr hneg
+    have hexp_pmfLog : ∀ a, Real.exp (-(pmfLog μ Xs a)) = P a := by
+      intro a
+      have : -(pmfLog μ Xs a) = Real.log (P a) := by
+        simp [pmfLog, hP_def]
+      rw [this, Real.exp_log (hP_pos a)]
+    have hprod_eq : Real.exp (-(∑ i : Fin n, pmfLog μ Xs (x i)))
+        = ∏ i : Fin n, P (x i) := by
+      rw [← Finset.sum_neg_distrib, Real.exp_sum]
+      exact Finset.prod_congr rfl fun i _ => hexp_pmfLog (x i)
+    rw [hprod_eq] at hexp_lt
+    have hle : Real.exp (-((n : ℝ) * (H + ε))) ≤ ∏ i : Fin n, P (x i) := hexp_lt.le
+    have hexp_rewrite : Real.exp (-((n : ℝ) * (H + ε)))
+        = Real.exp (-(n : ℝ) * (H + ε)) := by ring_nf
+    rw [hexp_rewrite] at hle
+    rw [hreal]
+    exact hle
+
+/-- **Size lower bound on typical set**: if `μ(T_ε^n) ≥ 1 - η`, then
+`(1-η) · exp(n · (H - ε)) ≤ |T_ε^n|`. Combined with `typicalSet_prob_tendsto_one`
+this yields the eventually-large-n form of Cover-Thomas 3.1.2 (b)(4). -/
+theorem typicalSet_card_ge
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (hindep_full : iIndepFun (fun i => Xs i) μ)
+    (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hpos : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    (n : ℕ) {ε η : ℝ}
+    (hμ : (1 - η) ≤ (μ.map (jointRV Xs n)).real (typicalSet μ Xs n ε)) :
+    (1 - η) * Real.exp ((n : ℝ) * (entropy μ (Xs 0) - ε))
+      ≤ ((typicalSet μ Xs n ε).toFinite.toFinset.card : ℝ) := by
+  classical
+  set H : ℝ := entropy μ (Xs 0) with hH_def
+  set T : Finset (Fin n → α) := (typicalSet μ Xs n ε).toFinite.toFinset with hT_def
+  set p : (Fin n → α) → ℝ := fun x => (μ.map (jointRV Xs n)).real {x} with hp_def
+  -- Step 1: convert `μ(T)` to `∑ x ∈ T, p x` via finite-sum decomposition.
+  have h_coe : (T : Set (Fin n → α)) = typicalSet μ Xs n ε :=
+    (typicalSet μ Xs n ε).toFinite.coe_toFinset
+  have hMprob_joint : IsProbabilityMeasure (μ.map (jointRV Xs n)) :=
+    Measure.isProbabilityMeasure_map (measurable_jointRV Xs hXs n).aemeasurable
+  have h_sum_T :
+      (μ.map (jointRV Xs n)).real (typicalSet μ Xs n ε) = ∑ x ∈ T, p x := by
+    rw [← h_coe]
+    exact (sum_measureReal_singleton (μ := μ.map (jointRV Xs n)) T).symm
+  -- Step 2: `∑ x ∈ T, p x ≤ |T| · exp(-n(H-ε))` via `typicalSet_prob_le`.
+  have h_each_le : ∀ x ∈ T, p x ≤ Real.exp (-(n : ℝ) * (H - ε)) := by
+    intro x hx
+    have hxT : x ∈ typicalSet μ Xs n ε := (Set.Finite.mem_toFinset _).mp hx
+    exact typicalSet_prob_le μ Xs hXs hindep_full hident hpos n x hxT
+  have h_sum_T_le :
+      (∑ x ∈ T, p x) ≤ (T.card : ℝ) * Real.exp (-(n : ℝ) * (H - ε)) := by
+    calc (∑ x ∈ T, p x)
+        ≤ ∑ x ∈ T, Real.exp (-(n : ℝ) * (H - ε)) := Finset.sum_le_sum h_each_le
+      _ = (T.card : ℝ) * Real.exp (-(n : ℝ) * (H - ε)) := by
+          rw [Finset.sum_const, nsmul_eq_mul]
+  -- Step 3: chain `1 - η ≤ μ(T) = ∑ p ≤ |T| · exp(-n(H-ε))`.
+  have h_combined :
+      (1 - η) ≤ (T.card : ℝ) * Real.exp (-(n : ℝ) * (H - ε)) := by
+    calc (1 - η)
+        ≤ (μ.map (jointRV Xs n)).real (typicalSet μ Xs n ε) := hμ
+      _ = ∑ x ∈ T, p x := h_sum_T
+      _ ≤ (T.card : ℝ) * Real.exp (-(n : ℝ) * (H - ε)) := h_sum_T_le
+  -- Step 4: multiply both sides by `exp(n(H-ε)) > 0`.
+  have hexp_pos : 0 < Real.exp ((n : ℝ) * (H - ε)) := Real.exp_pos _
+  have h_exp_cancel :
+      Real.exp (-(n : ℝ) * (H - ε)) * Real.exp ((n : ℝ) * (H - ε)) = 1 := by
+    rw [show -(n : ℝ) * (H - ε) = -((n : ℝ) * (H - ε)) from by ring,
+        ← Real.exp_add]
+    simp
+  have h_mul := mul_le_mul_of_nonneg_right h_combined hexp_pos.le
+  -- h_mul : (1-η) * exp(n(H-ε)) ≤ |T| * exp(-n(H-ε)) * exp(n(H-ε))
+  have h_rhs :
+      (T.card : ℝ) * Real.exp (-(n : ℝ) * (H - ε)) * Real.exp ((n : ℝ) * (H - ε))
+        = (T.card : ℝ) := by
+    rw [mul_assoc, h_exp_cancel, mul_one]
+  rw [h_rhs] at h_mul
+  exact h_mul
+
+/-- **Eventually-large-n form of the size lower bound**: combining
+`typicalSet_card_ge` with `typicalSet_prob_tendsto_one`, for any `η > 0`
+there exists `N` such that for all `n ≥ N`,
+`(1-η) · exp(n · (H - ε)) ≤ |T_ε^n|`. This is Cover-Thomas 3.1.2 (b)(4)
+in its eventually-large-n form. -/
+theorem typicalSet_card_ge_eventually
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (hindep_full : iIndepFun (fun i => Xs i) μ)
+    (hindep_pair : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hpos : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    {ε η : ℝ} (hε : 0 < ε) (hη : 0 < η) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
+      (1 - η) * Real.exp ((n : ℝ) * (entropy μ (Xs 0) - ε))
+        ≤ ((typicalSet μ Xs n ε).toFinite.toFinset.card : ℝ) := by
+  -- From `typicalSet_prob_tendsto_one`: μ {ω | jointRV ω ∈ T_ε^n} → 1 in ℝ≥0∞.
+  have h_tend := typicalSet_prob_tendsto_one μ Xs hXs hindep_pair hident hε
+  -- Bridge to ℝ-tendsto: `μ.real (T) = (μ A).toReal` via `Measure.map_apply`.
+  have h_eq : ∀ n : ℕ,
+      (μ.map (jointRV Xs n)).real (typicalSet μ Xs n ε)
+        = (μ {ω | jointRV Xs n ω ∈ typicalSet μ Xs n ε}).toReal := by
+    intro n
+    show ((μ.map (jointRV Xs n)) (typicalSet μ Xs n ε)).toReal = _
+    congr 1
+    exact Measure.map_apply (measurable_jointRV Xs hXs n)
+      (measurableSet_typicalSet μ Xs n ε)
+  -- Apply `.toReal` to the ℝ≥0∞-tendsto.
+  have h_tend_R :
+      Tendsto (fun n : ℕ =>
+          (μ.map (jointRV Xs n)).real (typicalSet μ Xs n ε))
+        atTop (𝓝 1) := by
+    refine Tendsto.congr (fun n => (h_eq n).symm) ?_
+    have h_comp :
+        Tendsto (fun n : ℕ =>
+            (μ {ω | jointRV Xs n ω ∈ typicalSet μ Xs n ε}).toReal)
+          atTop (𝓝 (1 : ℝ≥0∞).toReal) :=
+      (ENNReal.continuousAt_toReal ENNReal.one_ne_top).tendsto.comp h_tend
+    simpa using h_comp
+  -- Eventually `1 - η ≤ μ.real(T_ε^n)`.
+  have h_lt : (1 - η : ℝ) < 1 := by linarith
+  have h_event :
+      ∀ᶠ n in atTop,
+        (1 - η) ≤ (μ.map (jointRV Xs n)).real (typicalSet μ Xs n ε) := by
+    filter_upwards [h_tend_R.eventually_const_lt h_lt] with n hn
+    exact hn.le
+  rcases Filter.eventually_atTop.mp h_event with ⟨N, hN⟩
+  refine ⟨N, fun n hn => ?_⟩
+  exact typicalSet_card_ge μ Xs hXs hindep_full hident hpos n (hN n hn)
+
 end InformationTheory.Shannon

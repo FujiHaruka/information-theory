@@ -1,6 +1,6 @@
 # Moonshot シードカード集
 
-> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未着手 seed は **D 節 (audit-2026-05 由来、D-1〜D-3)** と **E 節 (Cover-Thomas 系列拡張 + 強形/弱形ペア + discrete→continuous 枝分かれ、E-1〜E-10、2026-05-13 起草)**。
+> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3 (Cover-Thomas 3.1.2 完全 4 帰結、`typicalSet_prob_ge` + `typicalSet_card_ge` + eventually-N corollary)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未着手 seed は **D 節 (D-1, D-2 のみ、D-3 は完了)** と **E 節 (Cover-Thomas 系列拡張 + 強形/弱形ペア + discrete→continuous 枝分かれ、E-1〜E-10、2026-05-13 起草)**。
 >
 > 起草時 (2026-05-10): Fano (測度論版) → Shannon converse (3 形) → Han 補集合形 → Han Phase D (subset average / Shearer) まで通った状態を起点に、次のムーンショット候補 5 本をシード化。
 >
@@ -57,11 +57,24 @@
     audit §4 🟡 で flag されていた "uniform input scope" が n-channel に本質ではないという
     意味では、修復優先度はむしろ低い (他の 🟡 案件先行が合理的)。
 
-- **D-3. AEP 完全形 (lower bound + 確率収束)** ⏸️ —
-  Cover-Thomas 3.1.2 **完全 3 点セット**。既存 `typicalSet_prob_le` (上界のみ) に、(a) 下界
-  `P^n(typicalSet) ≥ (1-ε) · exp(-n(H+ε))` と (b) `μ(typicalSet) → 1` を追加。
-  full support 仮定 (`hpos : 0 < P.real {x}`) は不要なはずなので、同時に除去を試みる。
-  audit-2026-05 §4 🟡 #4 として記録。中規模 (~500 行見積)。
+- **D-3. AEP 完全形 (lower bound + 確率収束)** ✅ (2026-05-13) →
+  [docs/shannon/aep-full-form-plan.md](shannon/aep-full-form-plan.md) — Cover-Thomas
+  3.1.2 **完全 4 帰結** を `Common2026/Shannon/AEP.lean` 末尾 (Phase H, 211 行追加) で
+  publish。3 補題:
+  - `typicalSet_prob_ge`: 点別下界 `exp(-n(H+ε)) ≤ (μ.map (jointRV Xs n)).real {x}`
+    for `x ∈ T_ε^n` (既存 `typicalSet_prob_le` の方向反転鏡像、上側不等式
+    `(∑ pmfLog)/n - H < ε` を使用)
+  - `typicalSet_card_ge`: サイズ下界 `(1-η)·exp(n(H-ε)) ≤ |T_ε^n|` whenever
+    `μ.real(T) ≥ 1-η` (`typicalSet_prob_le` + 確率質量保存 `μ(T) = ∑_{x∈T} p(x)`
+    via `sum_measureReal_singleton`)
+  - `typicalSet_card_ge_eventually`: eventually-large-n 形
+    `∃ N, ∀ n ≥ N, (1-η)·exp(n(H-ε)) ≤ |T_ε^n|` (上記 + `typicalSet_prob_tendsto_one`
+    + `ENNReal.continuousAt_toReal` で ℝ≥0∞ → ℝ bridge)
+
+  既存 `typicalSet_prob_le` / `typicalSet_card_le` / `typicalSet_prob_tendsto_one`
+  と合わせ Cover-Thomas 3.1.2 (a)(1)(2) + (b)(3)(4) を完全充足。**full support 仮定の
+  除去は scope deferred** (`Real.exp_log (hpos x)` で本質的に使用、`log 0 = 0` 規約では
+  `exp 0 = 1 ≠ 0` で形式統一不能、判断ログ参照)。audit-2026-05 §4 🟡 #4 解消。
 
 ### E. Cover-Thomas 系列拡張 (2026-05-13 起草、未着手)
 
@@ -213,6 +226,7 @@
   - [Strong Stein moonshot (B-4)](shannon/strong-stein-moonshot-plan.md) ✅ (`Tendsto → K` strict)
   - [Shannon code moonshot (B-8)](shannon/shannon-code-moonshot-plan.md) ✅ (期待長 sandwich、語長水準)
   - [Shannon code Kraft 逆向き (B-8')](shannon/shannon-code-kraft-reverse-plan.md) ✅ (prefix code 存在構成、Shannon-Fano D-進数)
+  - [AEP 完全形 (D-3)](shannon/aep-full-form-plan.md) ✅ (Cover-Thomas 3.1.2 完全 4 帰結、`typicalSet_prob_ge` + `typicalSet_card_ge` + eventually-N corollary)
 - 雛形:
   - [moonshot-plan-template.md](moonshot-plan-template.md)
   - [subplan-template.md](subplan-template.md)
