@@ -1,4 +1,6 @@
 import Common2026.Shannon.ChannelCoding
+import Mathlib.Probability.ProductMeasure
+import Mathlib.Probability.Independence.InfinitePi
 
 /-!
 # Channel coding achievability theorem (B-3'')
@@ -309,6 +311,24 @@ Subagent fills the proof of `channel_coding_achievability` below by combining
 `random_codebook_average_le` (Phase C-(c)), `exists_codebook_le_avg`
 (Phase C-(d)), and the rate-slack analysis. -/
 
+/-! ### Phase D-(a) — i.i.d. ambient + entropy-MI bridge (TBD)
+
+The main theorem instantiates `random_codebook_average_le` with the i.i.d. extension
+of `(p, W)` on `Ω := ℕ → α × β`, `μ := Measure.infinitePi (jointDistribution p W)`,
+`Xs i ω := (ω i).1`, `Ys i ω := (ω i).2`. The bridges to the abstract Phase B / C
+formulation are:
+
+* `iIndepFun (Xs/Ys) μ` from `iIndepFun_infinitePi` + composition with `Prod.fst/.snd`.
+* `IdentDistrib (Xs i) (Xs 0) μ μ` from `infinitePi_map_eval` (identical marginals).
+* `μ.map (Xs 0) = p`, `μ.map (Ys 0) = outputDistribution p W`,
+  `μ.map (jointSequence Xs Ys 0) = jointDistribution p W`.
+* `hposY` / `hposZ` need a "channel positivity" hypothesis (not currently part of the
+  theorem signature). They are discharged by `sorry` until that hypothesis is added.
+* The exponent `entropy μ (jointSequence ...) − entropy μ (Xs 0) − entropy μ (Ys 0)
+  = −(mutualInfoOfChannel p W).toReal` requires
+  `mutualInfo_eq_entropy_add_entropy_sub_jointEntropy` (chain rule + commutativity),
+  which is not yet exposed in the project and is also discharged by `sorry`. -/
+
 /-! ### Phase D-(b) — Main theorem -/
 
 /-- **Channel coding achievability (Cover-Thomas 7.7.1, achievability half).**
@@ -325,6 +345,18 @@ theorem channel_coding_achievability
       ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
         (c : Code M n α β),
         (c.averageErrorProb W).toReal < ε' := by
+  -- Step 1: rate slack.
+  set I : ℝ := (mutualInfoOfChannel p W).toReal with hI_def
+  have hI_pos : 0 < I := lt_trans hR_pos hR
+  set ε : ℝ := (I - R) / 6 with hε_def
+  have hε_pos : 0 < ε := by
+    refine div_pos ?_ (by norm_num)
+    linarith
+  -- Step 2: pick a threshold n₀ guaranteeing all asymptotic bounds. Filling this
+  -- requires combining Phase B-(a) (E1 → 0) with the exponential decay of E2 under
+  -- the rate constraint `R + 3ε < I`. Both steps depend on bridges currently
+  -- unavailable in the project (channel positivity, entropy-MI chain identity).
+  -- See the section docstring for the precise list of TBDs.
   sorry
 
 end InformationTheory.Shannon.ChannelCoding
