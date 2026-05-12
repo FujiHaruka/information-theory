@@ -19,13 +19,18 @@ This file adds:
 Skeleton phase: every lemma/theorem body is `:= by sorry` (or `:= sorry` for
 non-`Prop` definitions that are sorry-placeheld). The next agent fills.
 
-## Design choices (verbatim from plan)
+## Design choices
 
-* Codebook is `Fin M → (Fin n → α)` (abbrev). The codebook average is the
-  uniform `Finset.sum` over `Finset.univ : Finset (Codebook M n α)` rather than
-  a probability measure.
+* Codebook is `Fin M → (Fin n → α)` (abbrev).
+* The **codebook average** is taken over the `p`-i.i.d. law
+  `codebookMeasure p M n := Measure.pi (fun _ : Fin M => Measure.pi (fun _ : Fin n => p))`
+  on the finite space `Codebook M n α`. The earlier-drafted uniform-on-codebook form
+  is **inconsistent** with the Phase B bounds unless `p` is uniform on `α`; the
+  probabilistic-method form (this file) matches Cover-Thomas Theorem 7.7.3-4.
 * Decoder = `Classical.dec`-based "unique joint-typical `m`, else fallback `⟨0, hM⟩`".
-* i.i.d. extension Ω := `Fin n → α × β`, `μ := Measure.pi (fun _ => jointDistribution p W)`.
+* i.i.d. extension `Ω := Fin n → α × β`, `μ := Measure.pi (fun _ => jointDistribution p W)`
+  is captured by `iidJointMeasure p W n` below; Phase D-(b) will use the infinite
+  version `Measure.infinitePi (jointDistribution p W)` once that plumbing is in.
 * Rate slack `ε := (I - R) / 6`; `M := Nat.ceil (Real.exp (n · R))`.
 -/
 
@@ -210,12 +215,48 @@ theorem errorProbAt_le_E1_plus_E2
     _ ≤ ν.real E1 + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, ν.real (E2_indiv m') := by
         gcongr
 
-/-! ### Phase C-(c) — Random codebook average bound -/
+/-! ### Phase C-(c) — Random codebook average bound (probabilistic-method form)
 
-/-- **Random codebook average.** Averaging the average error probability over a
-uniform choice of codebook decomposes (via Fubini-like coordinate swap) into
-the Phase B-(a) "joint typical event probability" + the Phase B-(c)
-independent-pair bound times `(M - 1)`. -/
+The originally-drafted statement averaged over a **uniform** distribution on
+`Codebook M n α := Fin M → (Fin n → α)`. That form is intrinsically inconsistent
+with the Phase B-(a) / B-(c) bounds, which speak about a **`p`-i.i.d.** law on
+the input alphabet. When `p` is not the uniform on `α`, the uniform-on-codebook
+expectation does *not* equal any `p`-derived quantity.
+
+We restate Phase C-(c) in the standard Cover-Thomas form: average over the
+product law `p^{Mn}` on `Codebook M n α`. Concretely, the codebook law is
+`codebookMeasure p M n := Measure.pi (fun _ : Fin M => Measure.pi (fun _ : Fin n => p))`.
+Because `α` is finite, this `Measure.pi` is determined by its values on singletons
+`{codebook}`, namely the product `∏ m i, p.real {codebook m i}`; the codebook
+average is then a finite weighted sum.
+
+The proof itself remains a placeholder (`sorry`) until the Fubini swap between
+"codebook expectation" and "i.i.d. expectation over `(X^n, Y^n)`" is built out.
+Both sides of the inequality are well-typed and compile. -/
+
+/-- Product law `p^{Mn}` on the codebook space. -/
+noncomputable def codebookMeasure
+    (p : Measure α) (M n : ℕ) : Measure (Codebook M n α) :=
+  Measure.pi (fun _ : Fin M => Measure.pi (fun _ : Fin n => p))
+
+instance codebookMeasure.instIsProbabilityMeasure
+    (p : Measure α) [IsProbabilityMeasure p] (M n : ℕ) :
+    IsProbabilityMeasure (codebookMeasure p M n) := by
+  unfold codebookMeasure
+  infer_instance
+
+/-- **Random codebook average (probabilistic-method form).** With each codeword
+drawn i.i.d. from `p^n` (so the codebook law is `codebookMeasure p M n`), the
+codebook-average of the (uniform-over-message) error probability decomposes via
+Fubini into the Phase B-(a) "joint typical event probability" plus
+`(M - 1) ·` the Phase B-(c) independent-pair bound.
+
+The proof is **deferred**: it requires (i) a Fubini-style swap between codebook
+average and the `(X^n, Y^n)` distribution under `μ`, (ii) the marginal-matching
+hypothesis `μ.map (Xs 0) = p`, and (iii) the chain of equalities relating the
+`(Measure.pi (fun i => W (codebook m i)))` channel-output law to the marginal
+of `μ` along `Ys`. The statement is checked to type-check; the proof body is
+left as `sorry`. -/
 theorem random_codebook_average_le
     (W : Channel α β) [IsMarkovKernel W]
     (p : Measure α) [IsProbabilityMeasure p]
@@ -235,9 +276,10 @@ theorem random_codebook_average_le
     (hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
     (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
     (hposZ : ∀ q : α × β,
-      0 < (μ.map (jointSequence Xs Ys 0)).real {q}) :
-    (Fintype.card (Codebook M n α) : ℝ)⁻¹ *
-      ∑ codebook : Codebook M n α,
+      0 < (μ.map (jointSequence Xs Ys 0)).real {q})
+    (h_match_X : μ.map (Xs 0) = p) :
+    ∑ codebook : Codebook M n α,
+        (codebookMeasure p M n).real {codebook} *
         ((codebookToCode μ Xs Ys hM ε codebook).averageErrorProb W).toReal
     ≤ μ.real
         {ω | (jointRV Xs n ω, jointRV Ys n ω) ∉ jointlyTypicalSet μ Xs Ys n ε}
@@ -245,63 +287,113 @@ theorem random_codebook_average_le
           Real.exp ((n : ℝ) *
             ((entropy μ (jointSequence Xs Ys 0)
               - entropy μ (Xs 0) - entropy μ (Ys 0)) + 3 * ε)) := by
+  -- The full proof requires a Fubini swap between codebook average and
+  -- `(X^n, Y^n)` law plus marginal matching `μ.map (Xs 0) = p`; both ingredients
+  -- are nontrivial plumbing that we defer. The statement compiles cleanly.
   sorry
 
-/-! ### Phase C-(d) — Pigeonhole -/
+/-! ### Phase C-(d) — Pigeonhole (probabilistic-method form)
 
-omit [DecidableEq α] [MeasurableSingletonClass α] [DecidableEq β] [Nonempty β]
+Restated to match the probabilistic-method shape of Phase C-(c): instead of a
+uniform average over `Codebook M n α`, we draw codebooks from
+`codebookMeasure p M n`. The pigeonhole is unchanged in spirit — if the
+expectation `∑ codebook, μ_codebook · f(codebook) ≤ B`, then some `codebook` in
+the support has `f(codebook) ≤ B`. The proof uses the fact that the codebook
+measure is a probability measure (mass sums to `1` over the finite space) so the
+weighted average is a convex combination. -/
+
+omit [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β]
   [MeasurableSingletonClass β] in
-/-- **Pigeonhole.** If the codebook average is `≤ B`, then there exists a single
-codebook with `averageErrorProb ≤ B`. -/
+/-- **Pigeonhole (probabilistic-method form).** If the codebook expectation is
+`≤ B`, then there exists a single codebook with `averageErrorProb ≤ B`. -/
 theorem exists_codebook_le_avg
     {Ω : Type*} [MeasurableSpace Ω]
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (W : Channel α β) [IsMarkovKernel W]
+    (p : Measure α) [IsProbabilityMeasure p]
     {M n : ℕ} (hM : 0 < M) {ε : ℝ} (B : ℝ)
     (h_avg :
-      (Fintype.card (Codebook M n α) : ℝ)⁻¹ *
-        ∑ codebook : Codebook M n α,
-          ((codebookToCode μ Xs Ys hM ε codebook).averageErrorProb W).toReal ≤ B) :
+      ∑ codebook : Codebook M n α,
+        (codebookMeasure p M n).real {codebook} *
+        ((codebookToCode μ Xs Ys hM ε codebook).averageErrorProb W).toReal ≤ B) :
     ∃ codebook : Codebook M n α,
       ((codebookToCode μ Xs Ys hM ε codebook).averageErrorProb W).toReal ≤ B := by
   classical
-  -- The codebook space is nonempty: `α` is nonempty and `Fin M` (with `0 < M`) is.
   haveI : Nonempty (Fin M) := ⟨⟨0, hM⟩⟩
-  haveI : Nonempty (Codebook M n α) := inferInstance
-  -- Hence `Fintype.card (Codebook M n α) > 0`.
-  have h_card_pos : 0 < Fintype.card (Codebook M n α) := Fintype.card_pos
-  have h_card_R_pos : (0 : ℝ) < (Fintype.card (Codebook M n α) : ℝ) := by
-    exact_mod_cast h_card_pos
-  -- Rewrite the average bound as a sum bound: `∑ … ≤ card · B`.
-  have h_sum_le :
-      ∑ codebook : Codebook M n α,
-        ((codebookToCode μ Xs Ys hM ε codebook).averageErrorProb W).toReal
-        ≤ (Fintype.card (Codebook M n α) : ℝ) * B := by
-    have := mul_le_mul_of_nonneg_left h_avg h_card_R_pos.le
-    -- LHS: card · (card⁻¹ · ∑) = ∑ when card > 0.
-    have h_simp : (Fintype.card (Codebook M n α) : ℝ) *
-        ((Fintype.card (Codebook M n α) : ℝ)⁻¹ *
-          ∑ codebook : Codebook M n α,
-            ((codebookToCode μ Xs Ys hM ε codebook).averageErrorProb W).toReal)
-        = ∑ codebook : Codebook M n α,
+  -- Strategy: a convex combination `∑ w_i x_i ≤ B` with `w_i ≥ 0` and `∑ w_i = 1`
+  -- implies `∃ i, x_i ≤ B`. Otherwise `x_i > B ∀ i`, so `∑ w_i x_i > ∑ w_i B = B`,
+  -- contradiction.
+  by_contra h_none
+  simp only [not_exists, not_le] at h_none
+  -- The codebook measure is a probability measure: `∑ codebook, w(codebook) = 1`.
+  haveI : MeasurableSingletonClass (Fin n → α) := Pi.instMeasurableSingletonClass
+  haveI : MeasurableSingletonClass (Codebook M n α) := Pi.instMeasurableSingletonClass
+  have h_sum_one : ∑ codebook : Codebook M n α,
+      (codebookMeasure p M n).real {codebook} = 1 := by
+    -- `Measure.pi` of probability measures is a probability measure.
+    haveI : IsProbabilityMeasure (codebookMeasure p M n) :=
+      codebookMeasure.instIsProbabilityMeasure p M n
+    -- `sum_measureReal_singleton`: `∑ b ∈ Finset.univ, μ.real {b} = μ.real (Finset.univ : Set _)`.
+    have h_real_univ : (codebookMeasure p M n).real
+        ((Finset.univ : Finset (Codebook M n α)) : Set _) = 1 := by
+      rw [Finset.coe_univ]
+      rw [measureReal_def, measure_univ]
+      rfl
+    have h_sum_eq :=
+      sum_measureReal_singleton (μ := codebookMeasure p M n)
+        (Finset.univ : Finset (Codebook M n α))
+    rw [h_sum_eq, h_real_univ]
+  -- Each weight is nonneg.
+  have h_w_nn : ∀ codebook : Codebook M n α,
+      0 ≤ (codebookMeasure p M n).real {codebook} := fun _ => measureReal_nonneg
+  -- The contradictory strict inequality.
+  have h_contra : B < ∑ codebook : Codebook M n α,
+      (codebookMeasure p M n).real {codebook} *
+      ((codebookToCode μ Xs Ys hM ε codebook).averageErrorProb W).toReal := by
+    calc B = B * 1 := by ring
+      _ = B * ∑ codebook : Codebook M n α,
+            (codebookMeasure p M n).real {codebook} := by rw [h_sum_one]
+      _ = ∑ codebook : Codebook M n α,
+            (codebookMeasure p M n).real {codebook} * B := by
+          rw [Finset.mul_sum]; refine Finset.sum_congr rfl (fun _ _ => by ring)
+      _ < ∑ codebook : Codebook M n α,
+            (codebookMeasure p M n).real {codebook} *
             ((codebookToCode μ Xs Ys hM ε codebook).averageErrorProb W).toReal := by
-      rw [← mul_assoc, mul_inv_cancel₀ h_card_R_pos.ne', one_mul]
-    linarith [this, h_simp.symm.le, h_simp.le]
-  -- Convert into "∑ f ≤ ∑ (const B)" so we can apply `Finset.exists_le_of_sum_le`.
-  have h_sum_const : (Fintype.card (Codebook M n α) : ℝ) * B
-      = ∑ _codebook : Codebook M n α, B := by
-    rw [Finset.sum_const, nsmul_eq_mul]
-    rfl
-  have h_sum_le' :
-      ∑ codebook : Codebook M n α,
-        ((codebookToCode μ Xs Ys hM ε codebook).averageErrorProb W).toReal
-        ≤ ∑ _codebook : Codebook M n α, B := by
-    rw [← h_sum_const]; exact h_sum_le
-  have hne : (Finset.univ : Finset (Codebook M n α)).Nonempty :=
-    Finset.univ_nonempty
-  obtain ⟨codebook, _, h_le⟩ :=
-    Finset.exists_le_of_sum_le hne h_sum_le'
-  exact ⟨codebook, h_le⟩
+          -- Use `Finset.sum_lt_sum_of_nonempty` style: strict inequality holds for
+          -- each codebook with weight > 0, weak inequality for weight = 0.
+          -- Actually the codebook space being nonempty + each term contributing
+          -- `w · B < w · x` (when w > 0) or `0 = 0` (when w = 0) suffices, but the
+          -- sum is strict iff at least one weight is positive — which holds because
+          -- `∑ w = 1 ≠ 0`.
+          have h_each : ∀ codebook : Codebook M n α,
+              (codebookMeasure p M n).real {codebook} * B
+                ≤ (codebookMeasure p M n).real {codebook} *
+                  ((codebookToCode μ Xs Ys hM ε codebook).averageErrorProb W).toReal := by
+            intro codebook
+            exact mul_le_mul_of_nonneg_left (h_none codebook).le (h_w_nn codebook)
+          -- For the strict inequality, we need at least one codebook with positive weight.
+          -- `∑ w = 1 > 0` implies some `w_i > 0`.
+          have h_exists_pos : ∃ codebook : Codebook M n α,
+              0 < (codebookMeasure p M n).real {codebook} := by
+            by_contra h_none_pos
+            simp only [not_exists, not_lt] at h_none_pos
+            have h_all_zero : ∀ codebook : Codebook M n α,
+                (codebookMeasure p M n).real {codebook} = 0 := fun c =>
+              le_antisymm (h_none_pos c) (h_w_nn c)
+            have : ∑ codebook : Codebook M n α,
+                (codebookMeasure p M n).real {codebook} = 0 := by
+              refine Finset.sum_eq_zero ?_
+              intro c _; exact h_all_zero c
+            rw [this] at h_sum_one
+            exact one_ne_zero h_sum_one.symm
+          obtain ⟨c₀, hc₀_pos⟩ := h_exists_pos
+          have h_strict :
+              (codebookMeasure p M n).real {c₀} * B
+                < (codebookMeasure p M n).real {c₀} *
+                  ((codebookToCode μ Xs Ys hM ε c₀).averageErrorProb W).toReal :=
+            mul_lt_mul_of_pos_left (h_none c₀) hc₀_pos
+          exact Finset.sum_lt_sum (fun i _ => h_each i) ⟨c₀, Finset.mem_univ _, h_strict⟩
+  exact (lt_irrefl _) (lt_of_le_of_lt h_avg h_contra)
 
 /-! ### Phase D-(a) — Existence of a low-error codebook for large `n`
 
@@ -345,18 +437,37 @@ theorem channel_coding_achievability
       ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
         (c : Code M n α β),
         (c.averageErrorProb W).toReal < ε' := by
-  -- Step 1: rate slack.
+  -- Step 1: rate slack. Set `ε := (I - R) / 6` so that `R + 3ε = (R + I)/2 < I`
+  -- and `I - R - 3ε = (I - R) / 2 > 0` — the exponent `−n(I − R − 3ε)` is then
+  -- strictly negative, which forces `(M - 1) · exp(-n(I - 3ε)) → 0`.
   set I : ℝ := (mutualInfoOfChannel p W).toReal with hI_def
   have hI_pos : 0 < I := lt_trans hR_pos hR
   set ε : ℝ := (I - R) / 6 with hε_def
   have hε_pos : 0 < ε := by
     refine div_pos ?_ (by norm_num)
     linarith
-  -- Step 2: pick a threshold n₀ guaranteeing all asymptotic bounds. Filling this
-  -- requires combining Phase B-(a) (E1 → 0) with the exponential decay of E2 under
-  -- the rate constraint `R + 3ε < I`. Both steps depend on bridges currently
-  -- unavailable in the project (channel positivity, entropy-MI chain identity).
-  -- See the section docstring for the precise list of TBDs.
+  have hR_3ε_lt_I : R + 3 * ε < I := by
+    have : 3 * ε = (I - R) / 2 := by rw [hε_def]; ring
+    rw [this]; linarith
+  have h_gap_pos : 0 < I - R - 3 * ε := by linarith
+  -- Step 2: pick a threshold `N` guaranteeing all asymptotic bounds. The full
+  -- proof would combine:
+  --   * Phase B-(a) `jointlyTypicalSet_prob_tendsto_one` with the i.i.d. ambient
+  --     `μ := Measure.infinitePi (jointDistribution p W)` (TBD plumbing), so the
+  --     E1 term `μ.real {ω | (X^n, Y^n) ∉ A_ε^n} → 0`.
+  --   * `Nat.ceil_lt_add_one` + the rate-slack `h_gap_pos`, giving
+  --     `(M - 1) · exp(-n(I - 3ε)) ≤ exp(-n(I-R-3ε)/2) · O(1) → 0`.
+  -- Both steps require: i.i.d. ambient (Ω := ℕ → α × β + Measure.infinitePi),
+  -- entropy-MI bridge (`H(X,Y) - H(X) - H(Y) = -I(p; W)`, which is `mutualInfo_eq_…`
+  -- — currently not in `Common2026/Shannon/MIChainRule.lean`), and channel
+  -- positivity `∀ a y, 0 < W a {y}` to discharge `hposY` and `hposZ`. Once these
+  -- pieces are available, the proof skeleton is:
+  --   `obtain ⟨N₁, hN₁⟩ := (E1 → 0) hε'/2`
+  --   `obtain ⟨N₂, hN₂⟩ := (E2 → 0) hε'/2`
+  --   `refine ⟨max N₁ N₂, fun n hn => ?_⟩`
+  --   `refine ⟨Nat.ceil (Real.exp (n · R)), le_refl _, ?_⟩`
+  --   `apply exists_codebook_le_avg (B := ε')`
+  --   `calc … ≤ (E1) + (E2) ≤ ε'/2 + ε'/2 = ε'` via `random_codebook_average_le`.
   sorry
 
 end InformationTheory.Shannon.ChannelCoding
