@@ -1,6 +1,6 @@
 # Moonshot シードカード集
 
-> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3 (Cover-Thomas 3.1.2 完全 4 帰結、`typicalSet_prob_ge` + `typicalSet_card_ge` + eventually-N corollary)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未着手 seed は **D 節 (D-1, D-2 のみ、D-3 は完了)** と **E 節 (Cover-Thomas 系列拡張 + 強形/弱形ペア + discrete→continuous 枝分かれ、E-1〜E-10、2026-05-13 起草)**。
+> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3 (Cover-Thomas 3.1.2 完全 4 帰結)** → **Type-class size 下界 E-2 (Cover-Thomas 11.1.3 entropy 形、bridge `n^n/∏c^c = exp(n·H(c/n))`)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未着手 seed は **D 節 (D-1, D-2、D-3 完了)** と **E 節 (E-1, E-3〜E-10、E-2 完了、2026-05-13 起草)**。
 >
 > 起草時 (2026-05-10): Fano (測度論版) → Shannon converse (3 形) → Han 補集合形 → Han Phase D (subset average / Shearer) まで通った状態を起点に、次のムーンショット候補 5 本をシード化。
 >
@@ -90,12 +90,17 @@
   achievability 強形と相補)。経路: Strong typicality (E-7 依存) または LLR-typicality
   (Strong Stein 経路の再利用)。見積 中量 (~800 行)。
 
-- **E-2. Method of types: type-class size lower bound** ⏸️ —
-  Cover-Thomas 11.1.3。既存 Stein/Sanov 内部は `|T(P)| ≤ exp(n·H(P))` 上界のみ。
-  **下界** `|T(P)| ≥ (n+1)^{-|α|} · exp(n·H(P))` を追加 (多項係数 + Stirling 下界)。
-  現状 `SanovLDPEquality.lean` (1394 行) が経由している Stein 双方向 lemma の **独立代替経路**で、
-  Sanov LDP の lower bound (`(1/n) log Q^n(⋃ T) ≥ -inf D + o(1)`) を直接出せる。
-  見積 軽量 (~500 行)、**横断 utility** として E-1 / E-5 / E-3 の前に置く価値が高い。
+- **E-2. Method of types: type-class size lower bound** ✅ (2026-05-13) →
+  [docs/shannon/type-class-lower-bound-plan.md](shannon/type-class-lower-bound-plan.md) —
+  `typeClassByCount_card_ge_entropy`: `(n+1)^{-|α|} · exp(n · H(c/n)) ≤ |T_c|`
+  (Cover-Thomas 11.1.3 size 下界、`H(c/n) := -∑ (c/n)·log(c/n)` 経験分布 entropy)。
+  既存 `SanovLDPEquality.lean:705` `typeClassByCount_card_ge` (生形 `n^n / ∏ c^c`) に
+  bridge identity `n^n / ∏ c^c = exp(n · H(c/n))` を加えるだけで取得。
+  `Common2026/Shannon/TypeClassLowerBound.lean` (181 行)、新規定義 `entropyByCount` 含む。
+  per-atom `c · log(c/n) = c · log c - c · log n` を `Nat.eq_zero_or_pos` 分岐 (`c = 0` で
+  両辺 0、`c > 0` で `Real.log_div`) で proof、Stirling 依存なし。
+  **横断 utility** として E-1 / E-5 / E-3 の前段に置く価値あり、`SanovLDPEquality`
+  Stein 経路を直接 multinomial 経路で書き直す独立代替路の出発点としても再利用可。
 
 - **E-3. Rate-distortion theorem (achievability)** ⏸️ —
   Cover-Thomas 10.5。`R(D) := inf {I(X; X̂) : 𝔼 d(X, X̂) ≤ D}` を新規定義 + 達成可能性
@@ -227,6 +232,7 @@
   - [Shannon code moonshot (B-8)](shannon/shannon-code-moonshot-plan.md) ✅ (期待長 sandwich、語長水準)
   - [Shannon code Kraft 逆向き (B-8')](shannon/shannon-code-kraft-reverse-plan.md) ✅ (prefix code 存在構成、Shannon-Fano D-進数)
   - [AEP 完全形 (D-3)](shannon/aep-full-form-plan.md) ✅ (Cover-Thomas 3.1.2 完全 4 帰結、`typicalSet_prob_ge` + `typicalSet_card_ge` + eventually-N corollary)
+  - [Type-class size lower bound (E-2)](shannon/type-class-lower-bound-plan.md) ✅ (Cover-Thomas 11.1.3 size 下界 entropy 形、`typeClassByCount_card_ge_entropy` via bridge `n^n / ∏ c^c = exp(n·H(c/n))`)
 - 雛形:
   - [moonshot-plan-template.md](moonshot-plan-template.md)
   - [subplan-template.md](subplan-template.md)
