@@ -246,18 +246,195 @@ instance codebookMeasure.instIsProbabilityMeasure
   unfold codebookMeasure
   infer_instance
 
+/-! #### Fubini helpers for the random codebook average.
+
+The two helper lemmas below carry the Fubini-style swap between
+"codebook expectation" and the `(X^n, Y^n)` joint law under `μ`.
+They are the only ingredients that use the marginal-matching hypotheses
+`h_match_X` / `h_match_Z`. -/
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [DecidableEq β] [Nonempty β] in
+/-- **Block X-law identification.** Under `iIndepFun (Xs ·) μ` and
+`h_match_X : μ.map (Xs 0) = p`, the block law `μ.map (jointRV Xs n)` equals
+`Measure.pi (fun _ : Fin n => p)`. This is the bridge to the
+`codebookMeasure p M n` structure. -/
+private lemma block_law_X_eq_pi_p
+    {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (hindepX : iIndepFun (fun i => Xs i) μ)
+    (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (p : Measure α) [IsProbabilityMeasure p]
+    (h_match_X : μ.map (Xs 0) = p) (n : ℕ) :
+    μ.map (InformationTheory.Shannon.jointRV Xs n)
+      = Measure.pi (fun _ : Fin n => p) := by
+  classical
+  -- Restrict `Xs` to `Fin n`: `Xs' : Fin n → Ω → α := fun i => Xs i`.
+  set Xs' : Fin n → Ω → α := fun i => Xs i with hXs'_def
+  have hXs'_meas : ∀ i : Fin n, AEMeasurable (Xs' i) μ := fun i => (hXs i).aemeasurable
+  -- `iIndepFun Xs' μ` from `iIndepFun (Xs ·) μ` by restriction.
+  have hindepX' : iIndepFun Xs' μ :=
+    hindepX.precomp (g := fun i : Fin n => (i : ℕ)) Fin.val_injective
+  -- Use `iIndepFun_iff_map_fun_eq_pi_map`.
+  have h_pi_form : μ.map (fun ω i => Xs' i ω)
+        = Measure.pi (fun i => μ.map (Xs' i)) :=
+    (iIndepFun_iff_map_fun_eq_pi_map hXs'_meas).mp hindepX'
+  -- `μ.map (jointRV Xs n) = μ.map (fun ω i => Xs' i ω)` (defeq).
+  have h_jointRV_eq : InformationTheory.Shannon.jointRV Xs n
+        = fun ω (i : Fin n) => Xs' i ω := rfl
+  rw [h_jointRV_eq, h_pi_form]
+  -- Each `μ.map (Xs' i) = p` via `IdentDistrib` to `Xs 0` and `h_match_X`.
+  congr 1
+  funext i
+  show μ.map (Xs i) = p
+  rw [(hidentX i).map_eq, h_match_X]
+
+omit [DecidableEq α] [Nonempty α] [Fintype β] [DecidableEq β] [Nonempty β]
+  [MeasurableSingletonClass β] in
+/-- **Block Y-law identification.** Symmetric to `block_law_X_eq_pi_p`. We do
+**not** assume `μ.map (Ys 0) = outputDistribution p W`; instead, we just identify
+`μ.map (jointRV Ys n) = Measure.pi (fun _ => μ.map (Ys 0))`. -/
+private lemma block_law_Y_eq_pi
+    {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Ys : ℕ → Ω → β) (hYs : ∀ i, Measurable (Ys i))
+    (hindepY : iIndepFun (fun i => Ys i) μ)
+    (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ) (n : ℕ) :
+    μ.map (InformationTheory.Shannon.jointRV Ys n)
+      = Measure.pi (fun _ : Fin n => μ.map (Ys 0)) := by
+  classical
+  set Ys' : Fin n → Ω → β := fun i => Ys i with hYs'_def
+  have hYs'_meas : ∀ i : Fin n, AEMeasurable (Ys' i) μ := fun i => (hYs i).aemeasurable
+  have hindepY' : iIndepFun Ys' μ :=
+    hindepY.precomp (g := fun i : Fin n => (i : ℕ)) Fin.val_injective
+  have h_pi_form : μ.map (fun ω i => Ys' i ω)
+        = Measure.pi (fun i => μ.map (Ys' i)) :=
+    (iIndepFun_iff_map_fun_eq_pi_map hYs'_meas).mp hindepY'
+  have h_jointRV_eq : InformationTheory.Shannon.jointRV Ys n
+        = fun ω (i : Fin n) => Ys' i ω := rfl
+  rw [h_jointRV_eq, h_pi_form]
+  congr 1
+  funext i
+  show μ.map (Ys i) = μ.map (Ys 0)
+  exact (hidentY i).map_eq
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
+/-- **Block joint-law identification.** Under `Pairwise … ⟂ᵢ[μ] …` for the
+joint sequence and `h_match_Z : μ.map (jointSequence Xs Ys 0) = jointDistribution p W`,
+the block-joint law `μ.map ⟨jointRV Xs n, jointRV Ys n⟩` corresponds to the product
+`Measure.pi (fun _ => jointDistribution p W)` via reshape. Stated in the
+"reshaped" form: the law of `ω ↦ fun i => (Xs i ω, Ys i ω)` is
+`Measure.pi (fun _ => jointDistribution p W)`. -/
+private lemma block_joint_law_eq_pi
+    {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindepZ_full : iIndepFun (fun i => jointSequence Xs Ys i) μ)
+    (hidentZ : ∀ i,
+      IdentDistrib (jointSequence Xs Ys i) (jointSequence Xs Ys 0) μ μ)
+    (p : Measure α) [IsProbabilityMeasure p]
+    (W : Channel α β) [IsMarkovKernel W]
+    (h_match_Z : μ.map (jointSequence Xs Ys 0) = jointDistribution p W) (n : ℕ) :
+    μ.map (fun ω (i : Fin n) => (Xs i ω, Ys i ω))
+      = Measure.pi (fun _ : Fin n => jointDistribution p W) := by
+  classical
+  set Zs' : Fin n → Ω → α × β := fun i => jointSequence Xs Ys i with hZs'_def
+  have hZs'_meas : ∀ i : Fin n, AEMeasurable (Zs' i) μ := fun i =>
+    (measurable_jointSequence Xs Ys hXs hYs i).aemeasurable
+  have hindepZ' : iIndepFun Zs' μ :=
+    hindepZ_full.precomp (g := fun i : Fin n => (i : ℕ)) Fin.val_injective
+  have h_pi_form : μ.map (fun ω i => Zs' i ω)
+        = Measure.pi (fun i => μ.map (Zs' i)) :=
+    (iIndepFun_iff_map_fun_eq_pi_map hZs'_meas).mp hindepZ'
+  have h_fn_eq : (fun ω (i : Fin n) => (Xs i ω, Ys i ω))
+        = (fun ω i => Zs' i ω) := by
+    funext ω i; rfl
+  rw [h_fn_eq, h_pi_form]
+  congr 1
+  funext i
+  show μ.map (jointSequence Xs Ys i) = jointDistribution p W
+  rw [(hidentZ i).map_eq, h_match_Z]
+
+/-- **(E1) Fubini swap.** For any message index `m`, the codebook expectation of
+the "true codeword not jointly typical" event equals the abstract i.i.d.
+expectation. -/
+private lemma random_codebook_E1_swap
+    (W : Channel α β) [IsMarkovKernel W]
+    (p : Measure α) [IsProbabilityMeasure p]
+    {M n : ℕ} (hM : 0 < M) {ε : ℝ} (hε : 0 < ε)
+    {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindepX : iIndepFun (fun i => Xs i) μ)
+    (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hindepY : iIndepFun (fun i => Ys i) μ)
+    (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
+    (hindepZ : Pairwise fun i j =>
+      jointSequence Xs Ys i ⟂ᵢ[μ] jointSequence Xs Ys j)
+    (hidentZ : ∀ i,
+      IdentDistrib (jointSequence Xs Ys i) (jointSequence Xs Ys 0) μ μ)
+    (hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
+    (hposZ : ∀ q : α × β,
+      0 < (μ.map (jointSequence Xs Ys 0)).real {q})
+    (h_match_X : μ.map (Xs 0) = p)
+    (h_match_Z : μ.map (jointSequence Xs Ys 0) = jointDistribution p W) (m : Fin M) :
+    ∑ c : Codebook M n α, (codebookMeasure p M n).real {c} *
+        (Measure.pi (fun i => W (c m i))).real
+          {y | (c m, y) ∉ jointlyTypicalSet μ Xs Ys n ε}
+      ≤ μ.real
+          {ω | (InformationTheory.Shannon.jointRV Xs n ω,
+                InformationTheory.Shannon.jointRV Ys n ω) ∉
+              jointlyTypicalSet μ Xs Ys n ε} := by
+  -- The (E1) swap requires building the explicit Fubini integral over
+  -- `codebookMeasure p M n ⊗ (Measure.pi ∘ W ∘ ·)` and identifying it with the
+  -- joint i.i.d. law on `(jointRV Xs n, jointRV Ys n)`. This is left as a
+  -- moonshot-final sorry: ~120–200 lines of `Measure.pi` reshape +
+  -- `compProd_apply_prod` + `iIndepFun_iff_map_fun_eq_pi_map` plumbing.
+  sorry
+
+/-- **(E2) Fubini swap.** For any two distinct message indices `m ≠ m'`, the
+codebook expectation of the "alias codeword jointly typical" event is bounded
+by `exp(n((HZ-HX-HY)+3ε))` via the independent-pair bound
+`jointlyTypicalSet_indep_prob_le`. -/
+private lemma random_codebook_E2_swap
+    (W : Channel α β) [IsMarkovKernel W]
+    (p : Measure α) [IsProbabilityMeasure p]
+    (hp_pos : ∀ a : α, 0 < p.real {a})
+    {M n : ℕ} (hM : 0 < M) {ε : ℝ} (hε : 0 < ε)
+    {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindepX : iIndepFun (fun i => Xs i) μ)
+    (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hindepY : iIndepFun (fun i => Ys i) μ)
+    (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
+    (hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
+    (hposZ : ∀ q : α × β,
+      0 < (μ.map (jointSequence Xs Ys 0)).real {q})
+    (h_match_X : μ.map (Xs 0) = p)
+    (h_match_Z : μ.map (jointSequence Xs Ys 0) = jointDistribution p W)
+    (m m' : Fin M) (hne : m ≠ m') :
+    ∑ c : Codebook M n α, (codebookMeasure p M n).real {c} *
+        (Measure.pi (fun i => W (c m i))).real
+          {y | (c m', y) ∈ jointlyTypicalSet μ Xs Ys n ε}
+      ≤ Real.exp ((n : ℝ) *
+            ((InformationTheory.Shannon.entropy μ (jointSequence Xs Ys 0)
+              - InformationTheory.Shannon.entropy μ (Xs 0)
+              - InformationTheory.Shannon.entropy μ (Ys 0)) + 3 * ε)) := by
+  sorry
+
 /-- **Random codebook average (probabilistic-method form).** With each codeword
 drawn i.i.d. from `p^n` (so the codebook law is `codebookMeasure p M n`), the
 codebook-average of the (uniform-over-message) error probability decomposes via
 Fubini into the Phase B-(a) "joint typical event probability" plus
 `(M - 1) ·` the Phase B-(c) independent-pair bound.
 
-The proof is **deferred**: it requires (i) a Fubini-style swap between codebook
-average and the `(X^n, Y^n)` distribution under `μ`, (ii) the marginal-matching
-hypothesis `μ.map (Xs 0) = p`, and (iii) the chain of equalities relating the
-`(Measure.pi (fun i => W (codebook m i)))` channel-output law to the marginal
-of `μ` along `Ys`. The statement is checked to type-check; the proof body is
-left as `sorry`. -/
+The structural backbone (per-codebook bound via `errorProbAt_le_E1_plus_E2`,
+sum / swap arithmetic) is fully proved here. The two genuine Fubini swap
+ingredients — `random_codebook_E1_swap` and `random_codebook_E2_swap` — are
+private lemmas above whose bodies remain `sorry`. -/
 theorem random_codebook_average_le
     (W : Channel α β) [IsMarkovKernel W]
     (p : Measure α) [IsProbabilityMeasure p]
@@ -289,24 +466,207 @@ theorem random_codebook_average_le
           Real.exp ((n : ℝ) *
             ((entropy μ (jointSequence Xs Ys 0)
               - entropy μ (Xs 0) - entropy μ (Ys 0)) + 3 * ε)) := by
-  -- The full proof decomposes via `errorProbAt_le_E1_plus_E2` into per-codeword
-  -- E1 / E2 sums averaged over the codebook law `codebookMeasure p M n`, then
-  -- a Fubini-style swap between codebook expectation and the `(X^n, Y^n)`
-  -- expectation under `μ`. The (E1) term `∑_c w(c) [Wⁿ(cₘ)] (cₘ, y) ∉ A_ε^n`
-  -- collapses to `μ.real {(X^n, Y^n) ∉ A_ε^n}` via the new hypothesis
-  -- `h_match_Z`: under `codebookMeasure p M n ⊗ Wⁿ`, the pair `(codebook m, y)`
-  -- has law `(jointDistribution p W)^n`, which by `h_match_Z` + `iIndepFun_full`
-  -- equals `μ.map ⟨jointRV Xs n, jointRV Ys n⟩`.  The (E2) term factors over
-  -- independent codewords `(cₘ, c_{m'})` to give the (Phase B-(c))
-  -- `((μ.map Xⁿ).prod (μ.map Yⁿ))` bound, which `jointlyTypicalSet_indep_prob_le`
-  -- bounds by `Real.exp(n(HZ-HX-HY+3ε))`, summed over `M-1` aliases.
-  --
-  -- The proof needs ~150 lines of measurable-Fubini bookkeeping
-  -- (Measure.pi reshape, Fubini.swap, marginal-projection via Measure.pi_map_pi,
-  -- and `IdentDistrib`-driven block-marginal equality `μ.map (jointRV Xs n)
-  -- = Measure.pi (fun _ => μ.map (Xs 0))`). Single sorry kept as the last
-  -- moonshot ingredient; statement is now consumer-ready (Path 1).
-  sorry
+  classical
+  -- Abbreviations.
+  set wM : Measure (Codebook M n α) := codebookMeasure p M n with hwM_def
+  haveI : IsProbabilityMeasure wM := by
+    rw [hwM_def]; infer_instance
+  set E1 : ℝ := μ.real
+      {ω | (jointRV Xs n ω, jointRV Ys n ω) ∉ jointlyTypicalSet μ Xs Ys n ε} with hE1_def
+  set HZ : ℝ := entropy μ (jointSequence Xs Ys 0) with hHZ_def
+  set HX : ℝ := entropy μ (Xs 0) with hHX_def
+  set HY : ℝ := entropy μ (Ys 0) with hHY_def
+  set Eexp : ℝ := Real.exp ((n : ℝ) * ((HZ - HX - HY) + 3 * ε)) with hEexp_def
+  have hEexp_nn : 0 ≤ Eexp := (Real.exp_pos _).le
+  -- The codebook space is a Fintype (the default Pi instance fires for
+  -- `Fin M → Fin n → α`; we leave `Fintype.elim` to the unifier).
+  haveI : MeasurableSingletonClass (Fin n → α) := Pi.instMeasurableSingletonClass
+  haveI : MeasurableSingletonClass (Codebook M n α) := Pi.instMeasurableSingletonClass
+  -- `errorProbAt c W m` is `≤ 1` (Markov kernel; hence finite).
+  have h_errProbAt_le_one : ∀ (c : Codebook M n α) (m : Fin M),
+      (codebookToCode μ Xs Ys hM ε c).errorProbAt W m ≤ 1 := by
+    intro c m
+    show (Measure.pi (fun i => W ((codebookToCode μ Xs Ys hM ε c).encoder m i)))
+        ((codebookToCode μ Xs Ys hM ε c).errorEvent m) ≤ 1
+    haveI : IsProbabilityMeasure
+        (Measure.pi (fun i => W ((codebookToCode μ Xs Ys hM ε c).encoder m i))) :=
+      inferInstance
+    exact prob_le_one
+  have h_errProbAt_ne_top : ∀ (c : Codebook M n α) (m : Fin M),
+      (codebookToCode μ Xs Ys hM ε c).errorProbAt W m ≠ ∞ := fun c m =>
+    (h_errProbAt_le_one c m).trans_lt ENNReal.one_lt_top |>.ne
+  -- Step 1: rewrite `(averageErrorProb).toReal = (1/M) * ∑_m (errorProbAt).toReal`.
+  have h_avg_real : ∀ c : Codebook M n α,
+      ((codebookToCode μ Xs Ys hM ε c).averageErrorProb W).toReal
+        = ((M : ℝ))⁻¹ *
+          ∑ m : Fin M, ((codebookToCode μ Xs Ys hM ε c).errorProbAt W m).toReal := by
+    intro c
+    have hM_ne : (M : ℝ≥0∞) ≠ 0 := by
+      exact_mod_cast hM.ne'
+    have hM_top : (M : ℝ≥0∞) ≠ ∞ := ENNReal.natCast_ne_top M
+    unfold Code.averageErrorProb
+    rw [if_neg hM.ne']
+    rw [ENNReal.toReal_mul, ENNReal.toReal_inv, ENNReal.toReal_natCast,
+        ENNReal.toReal_sum (fun m _ => h_errProbAt_ne_top c m)]
+  -- Step 2: bound LHS by `(1/M) * ∑_c w(c) * ∑_m (errorProbAt).toReal`,
+  -- then use `errorProbAt_le_E1_plus_E2` pointwise.
+  have h_M_pos_R : 0 < (M : ℝ) := by exact_mod_cast hM
+  have h_M_inv_nn : 0 ≤ ((M : ℝ))⁻¹ := inv_nonneg.mpr h_M_pos_R.le
+  -- Per-codebook bound from `errorProbAt_le_E1_plus_E2`.
+  set E1_indiv : Codebook M n α → Fin M → ℝ := fun c m =>
+    (Measure.pi (fun i => W (c m i))).real
+      {y | (c m, y) ∉ jointlyTypicalSet μ Xs Ys n ε} with hE1ind_def
+  set E2_indiv : Codebook M n α → Fin M → Fin M → ℝ := fun c m m' =>
+    (Measure.pi (fun i => W (c m i))).real
+      {y | (c m', y) ∈ jointlyTypicalSet μ Xs Ys n ε} with hE2ind_def
+  have h_per_cb : ∀ (c : Codebook M n α) (m : Fin M),
+      ((codebookToCode μ Xs Ys hM ε c).errorProbAt W m).toReal
+        ≤ E1_indiv c m
+          + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, E2_indiv c m m' := by
+    intro c m
+    exact errorProbAt_le_E1_plus_E2 μ Xs Ys W hM c m
+  -- Sum over `m` of the per-codebook bound, then over `c` weighted.
+  have h_sum_per_cb : ∀ c : Codebook M n α,
+      ((codebookToCode μ Xs Ys hM ε c).averageErrorProb W).toReal
+        ≤ ((M : ℝ))⁻¹ * ∑ m : Fin M,
+            (E1_indiv c m +
+              ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, E2_indiv c m m') := by
+    intro c
+    rw [h_avg_real c]
+    refine mul_le_mul_of_nonneg_left ?_ h_M_inv_nn
+    exact Finset.sum_le_sum (fun m _ => h_per_cb c m)
+  -- Weighted sum over c bound.
+  have h_w_nn : ∀ c : Codebook M n α, 0 ≤ wM.real {c} := fun _ => measureReal_nonneg
+  have h_weighted_bound :
+      ∑ c : Codebook M n α, wM.real {c} *
+          ((codebookToCode μ Xs Ys hM ε c).averageErrorProb W).toReal
+      ≤ ∑ c : Codebook M n α, wM.real {c} *
+          (((M : ℝ))⁻¹ * ∑ m : Fin M,
+            (E1_indiv c m +
+              ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, E2_indiv c m m')) := by
+    refine Finset.sum_le_sum (fun c _ => ?_)
+    exact mul_le_mul_of_nonneg_left (h_sum_per_cb c) (h_w_nn c)
+  -- Step 3: distribute & swap sum orderings.
+  -- RHS of `h_weighted_bound` = (1/M) * ∑_m (∑_c w(c) * E1_indiv c m
+  --                                       + ∑_{m'≠m} ∑_c w(c) * E2_indiv c m m').
+  have h_rhs_decomp :
+      ∑ c : Codebook M n α, wM.real {c} *
+          (((M : ℝ))⁻¹ * ∑ m : Fin M,
+            (E1_indiv c m +
+              ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, E2_indiv c m m'))
+        = ((M : ℝ))⁻¹ * ∑ m : Fin M,
+            ((∑ c : Codebook M n α, wM.real {c} * E1_indiv c m)
+            + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
+                ∑ c : Codebook M n α, wM.real {c} * E2_indiv c m m') := by
+    -- Distribute carefully using term rewriting.
+    -- Step 1: turn `wM.real {c} * ((M)⁻¹ * sum_m ...)` into
+    --   `(M)⁻¹ * sum_m (wM.real {c} * (...))` by re-associating.
+    have step1 : ∀ c : Codebook M n α,
+        wM.real {c} * (((M : ℝ))⁻¹ *
+            ∑ m : Fin M,
+              (E1_indiv c m +
+                ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, E2_indiv c m m'))
+          = ((M : ℝ))⁻¹ *
+            ∑ m : Fin M, (wM.real {c} *
+              (E1_indiv c m +
+                ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, E2_indiv c m m')) := by
+      intro c
+      rw [← mul_assoc, mul_comm (wM.real {c}) ((M : ℝ))⁻¹, mul_assoc, Finset.mul_sum]
+    rw [Finset.sum_congr rfl (fun c _ => step1 c), ← Finset.mul_sum]
+    congr 1
+    rw [Finset.sum_comm]
+    refine Finset.sum_congr rfl (fun m _ => ?_)
+    -- Goal: ∑_c wM * (E1 + ∑_{m'≠m} E2) = (∑_c wM*E1) + ∑_{m'≠m} ∑_c wM*E2
+    have step2 : ∀ c : Codebook M n α,
+        wM.real {c} *
+            (E1_indiv c m +
+              ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, E2_indiv c m m')
+          = wM.real {c} * E1_indiv c m +
+              ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
+                wM.real {c} * E2_indiv c m m' := by
+      intro c
+      rw [mul_add, Finset.mul_sum]
+    rw [Finset.sum_congr rfl (fun c _ => step2 c), Finset.sum_add_distrib,
+        Finset.sum_comm]
+  -- Step 4: bound each inner Fubini sum.
+  -- (E1) `∑_c w(c) * E1_indiv c m ≤ E1` for every `m`.
+  -- (E2) `∑_c w(c) * E2_indiv c m m' ≤ Eexp` for every `m ≠ m'`.
+  have h_E1_swap : ∀ m : Fin M,
+      ∑ c : Codebook M n α, wM.real {c} * E1_indiv c m ≤ E1 :=
+    random_codebook_E1_swap (W := W) (p := p) hM hε μ Xs Ys hXs hYs
+      hindepX hidentX hindepY hidentY hindepZ hidentZ hposX hposY hposZ
+      h_match_X h_match_Z
+  have h_E2_swap : ∀ (m m' : Fin M), m ≠ m' →
+      ∑ c : Codebook M n α, wM.real {c} * E2_indiv c m m' ≤ Eexp :=
+    random_codebook_E2_swap (W := W) (p := p) hp_pos hM hε μ Xs Ys hXs hYs
+      hindepX hidentX hindepY hidentY hposX hposY hposZ h_match_X h_match_Z
+  -- Step 5: aggregate. RHS = (1/M)*∑_m [≤ E1 + (M-1)*Eexp] = E1 + (M-1)*Eexp.
+  have h_per_m_bound : ∀ m : Fin M,
+      (∑ c : Codebook M n α, wM.real {c} * E1_indiv c m)
+        + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
+            ∑ c : Codebook M n α, wM.real {c} * E2_indiv c m m'
+        ≤ E1 + ((M : ℝ) - 1) * Eexp := by
+    intro m
+    -- The E2 inner sum: `∑_{m'≠m} … ≤ ∑_{m'≠m} Eexp = (M-1) * Eexp`.
+    have h_E2_sum :
+        ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
+            ∑ c : Codebook M n α, wM.real {c} * E2_indiv c m m'
+          ≤ ∑ _m' ∈ (Finset.univ : Finset (Fin M)).erase m, Eexp := by
+      refine Finset.sum_le_sum (fun m' hm' => ?_)
+      have hne : m ≠ m' := (Finset.mem_erase.mp hm').1.symm
+      exact h_E2_swap m m' hne
+    have h_card : ((Finset.univ : Finset (Fin M)).erase m).card = M - 1 := by
+      rw [Finset.card_erase_of_mem (Finset.mem_univ _), Finset.card_univ, Fintype.card_fin]
+    have h_E2_sum_eval :
+        ∑ _m' ∈ (Finset.univ : Finset (Fin M)).erase m, Eexp
+          = ((M : ℝ) - 1) * Eexp := by
+      rw [Finset.sum_const, nsmul_eq_mul, h_card]
+      have hM_ge : 1 ≤ M := hM
+      have : ((M - 1 : ℕ) : ℝ) = (M : ℝ) - 1 := by
+        rw [Nat.cast_sub hM_ge, Nat.cast_one]
+      rw [this]
+    calc (∑ c : Codebook M n α, wM.real {c} * E1_indiv c m)
+          + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
+              ∑ c : Codebook M n α, wM.real {c} * E2_indiv c m m'
+        ≤ E1 + ∑ _m' ∈ (Finset.univ : Finset (Fin M)).erase m, Eexp :=
+          add_le_add (h_E1_swap m) h_E2_sum
+      _ = E1 + ((M : ℝ) - 1) * Eexp := by rw [h_E2_sum_eval]
+  -- Aggregate over `m`.
+  have h_M_inv_M_eq : ((M : ℝ))⁻¹ * (M : ℝ) = 1 := by
+    field_simp
+  have h_M_card : (Finset.univ : Finset (Fin M)).card = M := by
+    rw [Finset.card_univ, Fintype.card_fin]
+  have h_final :
+      ((M : ℝ))⁻¹ * ∑ m : Fin M,
+          ((∑ c : Codebook M n α, wM.real {c} * E1_indiv c m)
+          + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
+              ∑ c : Codebook M n α, wM.real {c} * E2_indiv c m m')
+      ≤ E1 + ((M : ℝ) - 1) * Eexp := by
+    calc ((M : ℝ))⁻¹ * ∑ m : Fin M,
+            ((∑ c : Codebook M n α, wM.real {c} * E1_indiv c m)
+            + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
+                ∑ c : Codebook M n α, wM.real {c} * E2_indiv c m m')
+        ≤ ((M : ℝ))⁻¹ * ∑ _m : Fin M, (E1 + ((M : ℝ) - 1) * Eexp) := by
+          refine mul_le_mul_of_nonneg_left (Finset.sum_le_sum (fun m _ => h_per_m_bound m))
+            h_M_inv_nn
+      _ = ((M : ℝ))⁻¹ * ((M : ℝ) * (E1 + ((M : ℝ) - 1) * Eexp)) := by
+          rw [Finset.sum_const, nsmul_eq_mul, h_M_card]
+      _ = E1 + ((M : ℝ) - 1) * Eexp := by
+          rw [← mul_assoc, h_M_inv_M_eq, one_mul]
+  -- Combine.
+  calc ∑ c : Codebook M n α, wM.real {c} *
+            ((codebookToCode μ Xs Ys hM ε c).averageErrorProb W).toReal
+      ≤ ∑ c : Codebook M n α, wM.real {c} *
+            (((M : ℝ))⁻¹ * ∑ m : Fin M,
+              (E1_indiv c m +
+                ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m, E2_indiv c m m')) :=
+        h_weighted_bound
+    _ = ((M : ℝ))⁻¹ * ∑ m : Fin M,
+          ((∑ c : Codebook M n α, wM.real {c} * E1_indiv c m)
+          + ∑ m' ∈ (Finset.univ : Finset (Fin M)).erase m,
+              ∑ c : Codebook M n α, wM.real {c} * E2_indiv c m m') :=
+        h_rhs_decomp
+    _ ≤ E1 + ((M : ℝ) - 1) * Eexp := h_final
 
 /-! ### Phase C-(d) — Pigeonhole (probabilistic-method form)
 
