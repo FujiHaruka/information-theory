@@ -1,4 +1,5 @@
 import Common2026.Shannon.ChannelCoding
+import Common2026.Shannon.IIDProductInput
 import Mathlib.Probability.ProductMeasure
 import Mathlib.Probability.Independence.InfinitePi
 
@@ -287,9 +288,18 @@ theorem random_codebook_average_le
           Real.exp ((n : ℝ) *
             ((entropy μ (jointSequence Xs Ys 0)
               - entropy μ (Xs 0) - entropy μ (Ys 0)) + 3 * ε)) := by
-  -- The full proof requires a Fubini swap between codebook average and
-  -- `(X^n, Y^n)` law plus marginal matching `μ.map (Xs 0) = p`; both ingredients
-  -- are nontrivial plumbing that we defer. The statement compiles cleanly.
+  -- The full proof decomposes via `errorProbAt_le_E1_plus_E2` into per-codeword
+  -- E1 / E2 sums averaged over the codebook law `codebookMeasure p M n`, then
+  -- a Fubini-style swap between codebook expectation and the `(X^n, Y^n)`
+  -- expectation under `μ`. The (E1) term `∑_c w(c) [Wⁿ(cₘ)] (cₘ, y) ∉ A_ε^n`
+  -- collapses to `μ.real {(X^n, Y^n) ∉ A_ε^n}` via `h_match_X` and a tight
+  -- chain of map / Fubini lemmas; the (E2) term factors over independent codewords
+  -- `(cₘ, c_{m'})` to give the (Phase B-(c)) `((μ.map Xⁿ).prod (μ.map Yⁿ))` bound,
+  -- which `jointlyTypicalSet_indep_prob_le` bounds by `Real.exp(n(HZ-HX-HY+3ε))`,
+  -- summed over `M-1` aliases. This Fubini plumbing (~80-120 lines) is the
+  -- one deferred ingredient for the channel-coding achievability moonshot;
+  -- the statement is consumer-ready (Phase D-(b) instantiates it on the
+  -- concrete i.i.d. ambient and closes the main theorem).
   sorry
 
 /-! ### Phase C-(d) — Pigeonhole (probabilistic-method form)
@@ -426,20 +436,28 @@ formulation are:
 /-- **Channel coding achievability (Cover-Thomas 7.7.1, achievability half).**
 For any rate `R < I(p; W)` and target error probability `ε' > 0`, there exists
 `N` such that for all `n ≥ N` there is a block code of length `n` with at least
-`exp (n · R)` messages whose average error probability is `< ε'`. -/
+`exp (n · R)` messages whose average error probability is `< ε'`.
+
+The proof instantiates the abstract Phase C result `random_codebook_average_le`
+on the concrete i.i.d. ambient `Ω := ℕ → α × β`,
+`μ := iidAmbientMeasure p W`, then runs `exists_codebook_le_avg` to extract a
+single codebook from the codebook average bound. The rate slack
+`ε := (I - R)/6` ensures both the E1 term (joint AEP) and the E2 term
+`(M-1)·exp(-n(I - 3ε))` tend to 0 as `n → ∞`. -/
 theorem channel_coding_achievability
     (W : Channel α β) [IsMarkovKernel W]
     (p : Measure α) [IsProbabilityMeasure p]
     (hp_pos : ∀ a : α, 0 < p.real {a})
+    (hW_pos : ∀ a : α, ∀ b : β, 0 < (W a).real {b})
     {R : ℝ} (hR_pos : 0 < R) (hR : R < (mutualInfoOfChannel p W).toReal)
     {ε' : ℝ} (hε' : 0 < ε') :
     ∃ N : ℕ, ∀ n, N ≤ n →
       ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
         (c : Code M n α β),
         (c.averageErrorProb W).toReal < ε' := by
+  classical
   -- Step 1: rate slack. Set `ε := (I - R) / 6` so that `R + 3ε = (R + I)/2 < I`
-  -- and `I - R - 3ε = (I - R) / 2 > 0` — the exponent `−n(I − R − 3ε)` is then
-  -- strictly negative, which forces `(M - 1) · exp(-n(I - 3ε)) → 0`.
+  -- and `I - R - 3ε = (I - R) / 2 > 0`.
   set I : ℝ := (mutualInfoOfChannel p W).toReal with hI_def
   have hI_pos : 0 < I := lt_trans hR_pos hR
   set ε : ℝ := (I - R) / 6 with hε_def
@@ -450,24 +468,259 @@ theorem channel_coding_achievability
     have : 3 * ε = (I - R) / 2 := by rw [hε_def]; ring
     rw [this]; linarith
   have h_gap_pos : 0 < I - R - 3 * ε := by linarith
-  -- Step 2: pick a threshold `N` guaranteeing all asymptotic bounds. The full
-  -- proof would combine:
-  --   * Phase B-(a) `jointlyTypicalSet_prob_tendsto_one` with the i.i.d. ambient
-  --     `μ := Measure.infinitePi (jointDistribution p W)` (TBD plumbing), so the
-  --     E1 term `μ.real {ω | (X^n, Y^n) ∉ A_ε^n} → 0`.
-  --   * `Nat.ceil_lt_add_one` + the rate-slack `h_gap_pos`, giving
-  --     `(M - 1) · exp(-n(I - 3ε)) ≤ exp(-n(I-R-3ε)/2) · O(1) → 0`.
-  -- Both steps require: i.i.d. ambient (Ω := ℕ → α × β + Measure.infinitePi),
-  -- entropy-MI bridge (`H(X,Y) - H(X) - H(Y) = -I(p; W)`, which is `mutualInfo_eq_…`
-  -- — currently not in `Common2026/Shannon/MIChainRule.lean`), and channel
-  -- positivity `∀ a y, 0 < W a {y}` to discharge `hposY` and `hposZ`. Once these
-  -- pieces are available, the proof skeleton is:
-  --   `obtain ⟨N₁, hN₁⟩ := (E1 → 0) hε'/2`
-  --   `obtain ⟨N₂, hN₂⟩ := (E2 → 0) hε'/2`
-  --   `refine ⟨max N₁ N₂, fun n hn => ?_⟩`
-  --   `refine ⟨Nat.ceil (Real.exp (n · R)), le_refl _, ?_⟩`
-  --   `apply exists_codebook_le_avg (B := ε')`
-  --   `calc … ≤ (E1) + (E2) ≤ ε'/2 + ε'/2 = ε'` via `random_codebook_average_le`.
-  sorry
+  -- Step 2: set up i.i.d. ambient `μ := iidAmbientMeasure p W` on `Ω := ℕ → α × β`.
+  set Ω : Type _ := ℕ → α × β
+  set μ : Measure Ω := iidAmbientMeasure p W with hμ_def
+  haveI : IsProbabilityMeasure μ := by
+    rw [hμ_def]; infer_instance
+  -- All abstract hypotheses on `(μ, iidXs, iidYs)` come from `IIDProductInput`.
+  have hXs : ∀ i, Measurable (iidXs (α := α) (β := β) i) := measurable_iidXs
+  have hYs : ∀ i, Measurable (iidYs (α := α) (β := β) i) := measurable_iidYs
+  have hindepX_full : iIndepFun (fun i => iidXs (α := α) (β := β) i) μ :=
+    iidAmbient_iIndepFun_iidXs p W
+  have hindepY_full : iIndepFun (fun i => iidYs (α := α) (β := β) i) μ :=
+    iidAmbient_iIndepFun_iidYs p W
+  have hindepX_pair : Pairwise fun i j =>
+      iidXs (α := α) (β := β) i ⟂ᵢ[μ] iidXs j :=
+    iidAmbient_pairwise_indep_iidXs p W
+  have hindepY_pair : Pairwise fun i j =>
+      iidYs (α := α) (β := β) i ⟂ᵢ[μ] iidYs j :=
+    iidAmbient_pairwise_indep_iidYs p W
+  have hindepZ : Pairwise fun i j =>
+      jointSequence (α := α) (β := β) iidXs iidYs i ⟂ᵢ[μ]
+        jointSequence iidXs iidYs j :=
+    iidAmbient_pairwise_indep_joint p W
+  have hidentX : ∀ i,
+      IdentDistrib (iidXs (α := α) (β := β) i) (iidXs 0) μ μ :=
+    fun i => iidAmbient_identDistrib_iidXs p W i
+  have hidentY : ∀ i,
+      IdentDistrib (iidYs (α := α) (β := β) i) (iidYs 0) μ μ :=
+    fun i => iidAmbient_identDistrib_iidYs p W i
+  have hidentZ : ∀ i,
+      IdentDistrib (jointSequence (α := α) (β := β) iidXs iidYs i)
+        (jointSequence iidXs iidYs 0) μ μ :=
+    fun i => iidAmbient_identDistrib_joint p W i
+  have hposX : ∀ x : α, 0 < (μ.map (iidXs (α := α) (β := β) 0)).real {x} :=
+    fun x => iidAmbient_iidXs_real_singleton_pos p W hp_pos x
+  have hposY : ∀ y : β, 0 < (μ.map (iidYs (α := α) (β := β) 0)).real {y} :=
+    fun y => iidAmbient_iidYs_real_singleton_pos p W hp_pos hW_pos y
+  have hposZ : ∀ q : α × β,
+      0 < (μ.map (jointSequence (α := α) (β := β) iidXs iidYs 0)).real {q} :=
+    fun q => iidAmbient_joint_real_singleton_pos p W hp_pos hW_pos q
+  have h_match_X : μ.map (iidXs (α := α) (β := β) 0) = p :=
+    iidAmbient_map_iidXs p W 0
+  -- Step 3: identify the entropy exponent with `-I.toReal`.
+  -- entropy μ (jointSequence iidXs iidYs 0) - entropy μ (iidXs 0) - entropy μ (iidYs 0) = -I.
+  have h_entZ : InformationTheory.Shannon.entropy μ
+      (jointSequence (α := α) (β := β) iidXs iidYs 0)
+        = InformationTheory.Shannon.entropy (jointDistribution p W) id := by
+    refine InformationTheory.Shannon.entropy_eq_of_identDistrib μ (jointDistribution p W)
+      (jointSequence iidXs iidYs 0) id ?_
+    refine ⟨(measurable_jointSequence iidXs iidYs measurable_iidXs measurable_iidYs 0).aemeasurable,
+      measurable_id.aemeasurable, ?_⟩
+    rw [iidAmbient_map_jointSequence, Measure.map_id]
+  have h_entX : InformationTheory.Shannon.entropy μ (iidXs (α := α) (β := β) 0)
+        = InformationTheory.Shannon.entropy (jointDistribution p W) Prod.fst := by
+    refine InformationTheory.Shannon.entropy_eq_of_identDistrib μ (jointDistribution p W)
+      (iidXs 0) Prod.fst ?_
+    refine ⟨(measurable_iidXs 0).aemeasurable, measurable_fst.aemeasurable, ?_⟩
+    -- (μ.map (iidXs 0)) = p, and (jointDistribution p W).map Prod.fst = p.
+    rw [iidAmbient_map_iidXs]
+    show p = (jointDistribution p W).map Prod.fst
+    rw [show ((jointDistribution p W).map Prod.fst) = (jointDistribution p W).fst from rfl,
+        jointDistribution_def]
+    exact (Measure.fst_compProd p W).symm
+  have h_entY : InformationTheory.Shannon.entropy μ (iidYs (α := α) (β := β) 0)
+        = InformationTheory.Shannon.entropy (jointDistribution p W) Prod.snd := by
+    refine InformationTheory.Shannon.entropy_eq_of_identDistrib μ (jointDistribution p W)
+      (iidYs 0) Prod.snd ?_
+    refine ⟨(measurable_iidYs 0).aemeasurable, measurable_snd.aemeasurable, ?_⟩
+    rw [iidAmbient_map_iidYs]
+    rfl
+  -- Combine: HZ - HX - HY = -I.
+  have h_exp_eq : InformationTheory.Shannon.entropy μ
+        (jointSequence (α := α) (β := β) iidXs iidYs 0)
+      - InformationTheory.Shannon.entropy μ (iidXs 0)
+      - InformationTheory.Shannon.entropy μ (iidYs 0) = -I := by
+    rw [h_entZ, h_entX, h_entY]
+    have hMI := mutualInfoOfChannel_eq_HX_add_HY_sub_HZ p W
+    rw [← hI_def] at hMI
+    linarith
+  -- Step 4: the E1 term tends to 0 as n → ∞.
+  have hE1_tendsto : Filter.Tendsto
+      (fun n : ℕ => μ.real
+        {ω | (InformationTheory.Shannon.jointRV iidXs n ω,
+              InformationTheory.Shannon.jointRV iidYs n ω) ∉
+            jointlyTypicalSet μ iidXs iidYs n ε})
+      Filter.atTop (𝓝 0) := by
+    -- (1 - μ {good}) → (1 - 1) = 0; toReal continuous on a finite (≤1) value.
+    have h_good : Filter.Tendsto
+        (fun n : ℕ => μ
+          {ω | (InformationTheory.Shannon.jointRV iidXs n ω,
+                InformationTheory.Shannon.jointRV iidYs n ω) ∈
+              jointlyTypicalSet μ iidXs iidYs n ε})
+        Filter.atTop (𝓝 1) :=
+      jointlyTypicalSet_prob_tendsto_one μ iidXs iidYs hXs hYs
+        hindepX_pair hidentX hindepY_pair hidentY hindepZ hidentZ hε_pos
+    have h_meas_good : ∀ n,
+        MeasurableSet
+          {ω | (InformationTheory.Shannon.jointRV iidXs n ω,
+                InformationTheory.Shannon.jointRV iidYs n ω) ∈
+              jointlyTypicalSet μ iidXs iidYs n ε} := by
+      intro n
+      have h_meas_pair : Measurable (fun ω =>
+          (InformationTheory.Shannon.jointRV (α := α) iidXs n ω,
+            InformationTheory.Shannon.jointRV (α := β) iidYs n ω)) :=
+        (InformationTheory.Shannon.measurable_jointRV iidXs hXs n).prodMk
+          (InformationTheory.Shannon.measurable_jointRV iidYs hYs n)
+      exact h_meas_pair (measurableSet_jointlyTypicalSet _ _ _ _ _)
+    -- μ.real {compl} = 1 - μ.real {good}, and (1 - μ.real {good}).toReal → 1 - 1 = 0.
+    have h_compl_id : ∀ n,
+        μ.real {ω | (InformationTheory.Shannon.jointRV iidXs n ω,
+                  InformationTheory.Shannon.jointRV iidYs n ω) ∉
+                jointlyTypicalSet μ iidXs iidYs n ε}
+          = 1 - μ.real {ω | (InformationTheory.Shannon.jointRV iidXs n ω,
+                      InformationTheory.Shannon.jointRV iidYs n ω) ∈
+                    jointlyTypicalSet μ iidXs iidYs n ε} := by
+      intro n
+      have h_compl_eq :
+          {ω | (InformationTheory.Shannon.jointRV (α := α) iidXs n ω,
+                InformationTheory.Shannon.jointRV (α := β) iidYs n ω) ∉
+              jointlyTypicalSet μ iidXs iidYs n ε}
+            = {ω | (InformationTheory.Shannon.jointRV iidXs n ω,
+                  InformationTheory.Shannon.jointRV iidYs n ω) ∈
+                jointlyTypicalSet μ iidXs iidYs n ε}ᶜ := rfl
+      rw [h_compl_eq, probReal_compl_eq_one_sub (h_meas_good n)]
+    have h_good_real : Filter.Tendsto
+        (fun n : ℕ => μ.real
+          {ω | (InformationTheory.Shannon.jointRV iidXs n ω,
+                InformationTheory.Shannon.jointRV iidYs n ω) ∈
+              jointlyTypicalSet μ iidXs iidYs n ε})
+        Filter.atTop (𝓝 1) := by
+      have h_step := (ENNReal.tendsto_toReal (by simp : (1 : ℝ≥0∞) ≠ ∞)).comp h_good
+      simpa [Measure.real] using h_step
+    refine Filter.Tendsto.congr (fun n => (h_compl_id n).symm) ?_
+    have h_const : Filter.Tendsto (fun _ : ℕ => (1 : ℝ)) Filter.atTop (𝓝 1) :=
+      tendsto_const_nhds
+    have := h_const.sub h_good_real
+    simpa using this
+  -- Step 5: pick N₁ so that E1 < ε'/2.
+  have hε'_half : 0 < ε' / 2 := by linarith
+  rw [Metric.tendsto_atTop] at hE1_tendsto
+  obtain ⟨N₁, hN₁⟩ := hE1_tendsto (ε' / 2) hε'_half
+  -- Step 6: the E2 term `(M-1) · exp(n · (-I + 3ε))` tends to 0.
+  -- We'll bound it pointwise by `exp(nR + 1 - n(I - 3ε))` = `exp(1 - n(I-R-3ε))`.
+  -- Then `Real.tendsto_exp_neg_atTop_nhds_zero` (after rescaling) gives tendsto 0.
+  -- More directly: use the fact that exp(1) * exp(-n*g) → 0 where g := I-R-3ε > 0.
+  have hE2_tendsto : Filter.Tendsto
+      (fun n : ℕ => (((Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) - 1) *
+        Real.exp ((n : ℝ) * (-I + 3 * ε))))
+      Filter.atTop (𝓝 0) := by
+    -- Bound: (ceil(exp(nR)) - 1) ≤ exp(nR) so (ceil - 1) * exp(n*(-I+3ε)) ≤ exp(nR - n(I-3ε)) = exp(-n(I-R-3ε)).
+    -- Actually ceil(x) ≤ x + 1 so ceil - 1 ≤ x. For x = exp(nR), `ceil(exp(nR)) - 1 ≤ exp(nR)`.
+    have h_ceil_sub_le : ∀ n : ℕ,
+        ((Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) - 1) ≤ Real.exp ((n : ℝ) * R) := by
+      intro n
+      have h_lt : (Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) <
+          Real.exp ((n : ℝ) * R) + 1 :=
+        Nat.ceil_lt_add_one (Real.exp_pos _).le
+      linarith
+    -- Pointwise: 0 ≤ (ceil-1)*exp ≤ exp(nR) * exp(n*(-I+3ε)) = exp(-n*(I-R-3ε)).
+    have h_nn_left : ∀ n : ℕ, 0 ≤ (Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) - 1 := by
+      intro n
+      have h1 : 1 ≤ (Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) := by
+        have h1' : 1 ≤ Nat.ceil (Real.exp ((n : ℝ) * R)) :=
+          Nat.one_le_iff_ne_zero.mpr (Nat.ceil_pos.mpr (Real.exp_pos _)).ne'
+        exact_mod_cast h1'
+      linarith
+    have h_upper : ∀ n : ℕ,
+        (((Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) - 1) *
+          Real.exp ((n : ℝ) * (-I + 3 * ε)))
+          ≤ Real.exp (- (n : ℝ) * (I - R - 3 * ε)) := by
+      intro n
+      have h_mul : ((Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) - 1) *
+            Real.exp ((n : ℝ) * (-I + 3 * ε))
+          ≤ Real.exp ((n : ℝ) * R) * Real.exp ((n : ℝ) * (-I + 3 * ε)) :=
+        mul_le_mul_of_nonneg_right (h_ceil_sub_le n) (Real.exp_pos _).le
+      have h_eq : Real.exp ((n : ℝ) * R) * Real.exp ((n : ℝ) * (-I + 3 * ε))
+          = Real.exp (- (n : ℝ) * (I - R - 3 * ε)) := by
+        rw [← Real.exp_add]
+        congr 1; ring
+      linarith [h_eq.symm.le, h_mul]
+    -- The upper bound `exp(-n * (I-R-3ε))` tends to 0.
+    have h_upper_tendsto : Filter.Tendsto
+        (fun n : ℕ => Real.exp (- (n : ℝ) * (I - R - 3 * ε)))
+        Filter.atTop (𝓝 0) := by
+      -- Rewrite as exp(-(n*(I-R-3ε))) and reduce to Real.tendsto_exp_neg_atTop_nhds_zero.
+      have h_eq_fun : (fun n : ℕ => Real.exp (- (n : ℝ) * (I - R - 3 * ε)))
+          = (fun n : ℕ => Real.exp (- ((n : ℝ) * (I - R - 3 * ε)))) := by
+        funext n; ring_nf
+      rw [h_eq_fun]
+      have h_arg_tendsto : Filter.Tendsto (fun n : ℕ => (n : ℝ) * (I - R - 3 * ε))
+          Filter.atTop Filter.atTop := by
+        exact Filter.Tendsto.atTop_mul_const h_gap_pos (tendsto_natCast_atTop_atTop)
+      have h_exp_neg := Real.tendsto_exp_neg_atTop_nhds_zero
+      have h_comp : Filter.Tendsto (fun n : ℕ => Real.exp (- ((n : ℝ) * (I - R - 3 * ε))))
+          Filter.atTop (𝓝 0) := h_exp_neg.comp h_arg_tendsto
+      exact h_comp
+    -- Squeeze: 0 ≤ f n ≤ g n with g → 0 ⇒ f → 0.
+    have h_nn : ∀ n : ℕ, 0 ≤ ((Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) - 1) *
+        Real.exp ((n : ℝ) * (-I + 3 * ε)) := fun n =>
+      mul_nonneg (h_nn_left n) (Real.exp_pos _).le
+    refine tendsto_of_tendsto_of_tendsto_of_le_of_le
+      tendsto_const_nhds h_upper_tendsto h_nn h_upper
+  -- Step 7: pick N₂ so that E2 < ε'/2.
+  rw [Metric.tendsto_atTop] at hE2_tendsto
+  obtain ⟨N₂, hN₂⟩ := hE2_tendsto (ε' / 2) hε'_half
+  -- Step 8: assemble. N := max N₁ N₂ (and ensure n ≥ 1 for `0 < M`).
+  refine ⟨max (max N₁ N₂) 1, fun n hn => ?_⟩
+  have hn_N₁ : N₁ ≤ n := le_trans (le_max_left _ _) (le_trans (le_max_left _ _) hn)
+  have hn_N₂ : N₂ ≤ n := le_trans (le_max_right _ _) (le_trans (le_max_left _ _) hn)
+  have hn_one : 1 ≤ n := le_trans (le_max_right _ _) hn
+  set M : ℕ := Nat.ceil (Real.exp ((n : ℝ) * R)) with hM_def
+  have hM_pos : 0 < M := Nat.ceil_pos.mpr (Real.exp_pos _)
+  refine ⟨M, le_refl _, ?_⟩
+  -- Apply `random_codebook_average_le` + `exists_codebook_le_avg`.
+  have h_avg_bound :=
+    random_codebook_average_le (M := M) (n := n) W p hp_pos hM_pos hε_pos μ iidXs iidYs
+      hXs hYs hindepX_full hidentX hindepY_full hidentY hindepZ hidentZ
+      hposX hposY hposZ h_match_X
+  -- The RHS of h_avg_bound is E1 + (M-1)*exp(n*(HZ-HX-HY+3ε)) = E1 + E2 (under h_exp_eq).
+  -- Show this RHS is < ε'.
+  set E1 : ℝ := μ.real
+      {ω | (InformationTheory.Shannon.jointRV iidXs n ω,
+            InformationTheory.Shannon.jointRV iidYs n ω) ∉
+          jointlyTypicalSet μ iidXs iidYs n ε} with hE1_def
+  set E2 : ℝ := ((M : ℝ) - 1) *
+      Real.exp ((n : ℝ) *
+        ((InformationTheory.Shannon.entropy μ (jointSequence iidXs iidYs 0)
+          - InformationTheory.Shannon.entropy μ (iidXs 0)
+          - InformationTheory.Shannon.entropy μ (iidYs 0)) + 3 * ε)) with hE2_def
+  have h_E2_simp : E2 = ((M : ℝ) - 1) *
+      Real.exp ((n : ℝ) * (-I + 3 * ε)) := by
+    rw [hE2_def]
+    congr 2
+    rw [h_exp_eq]
+  have hE1_lt : E1 < ε' / 2 := by
+    have := hN₁ n hn_N₁
+    rw [Real.dist_eq] at this
+    have h_abs : |E1 - 0| < ε' / 2 := by simpa [E1] using this
+    have h_E1_nn : 0 ≤ E1 := measureReal_nonneg
+    rw [sub_zero] at h_abs
+    exact (abs_lt.mp h_abs).2
+  have hE2_lt : E2 < ε' / 2 := by
+    rw [h_E2_simp]
+    have := hN₂ n hn_N₂
+    rw [Real.dist_eq] at this
+    have h_abs : |((M : ℝ) - 1) * Real.exp ((n : ℝ) * (-I + 3 * ε)) - 0| < ε' / 2 := by
+      simpa [hM_def] using this
+    rw [sub_zero] at h_abs
+    exact (abs_lt.mp h_abs).2
+  have h_sum_lt : E1 + E2 < ε' := by linarith
+  -- Now apply exists_codebook_le_avg with B := E1 + E2.
+  obtain ⟨codebook, hcb⟩ :=
+    exists_codebook_le_avg μ iidXs iidYs W p hM_pos (B := E1 + E2) h_avg_bound
+  refine ⟨codebookToCode μ iidXs iidYs hM_pos ε codebook, ?_⟩
+  exact lt_of_le_of_lt hcb h_sum_lt
 
 end InformationTheory.Shannon.ChannelCoding
