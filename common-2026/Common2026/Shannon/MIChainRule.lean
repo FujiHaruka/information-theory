@@ -1,5 +1,6 @@
 import Common2026.Shannon.MutualInfo
 import Common2026.Shannon.CondMutualInfo
+import Common2026.Shannon.Entropy
 
 /-!
 # Mutual information chain rule (n-variable) and i.i.d. corollary (B-7)
@@ -20,6 +21,10 @@ import Common2026.Shannon.CondMutualInfo
     `μ.map (i ↦ (X_i, Y_i)) = ⊗ᵢ μ.map (X_i, Y_i) ⇒ I(X^n; Y^n) = ∑ I(X_i; Y_i)`
 * `mutualInfo_iid_eq_nsmul` ─ i.i.d. corollary: 上 + 全 i で `μ.map (X_i, Y_i)` 共通
   ⇒ `I(X^n; Y^n) = n · I(X_0; Y_0)`
+* `mutualInfo_eq_entropy_add_entropy_sub_jointEntropy` ─ entropy ↔ MI 3 項橋:
+    `I(X; Y) = H(X) + H(Y) − H(X, Y)` for any joint probability measure on `α × β`
+    (finite alphabets). B-3'' Phase D-(b) で `H(jointSeq) − H(Xs) − H(Ys) = −I(p; W)`
+    に展開して使う。
 -/
 
 namespace InformationTheory.Shannon
@@ -414,5 +419,57 @@ theorem mutualInfo_iid_eq_nsmul
   rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin]
 
 end IID
+
+/-! ## Phase D — entropy ↔ MI three-term bridge
+
+For a joint probability measure on a finite-alphabet product space `α × β`, the standard
+identity `I(X; Y) = H(X) + H(Y) − H(X, Y)` connects the `klDiv`-based `mutualInfo` to the
+Shannon-entropy `entropy`. Used in B-3'' Phase D-(b) to rewrite the joint-AEP exponent
+`H(X, Y) − H(X) − H(Y)` as `−I(p; W)`.
+-/
+
+section EntropyMIBridge
+
+variable {α β : Type*}
+  [Fintype α] [DecidableEq α] [Nonempty α]
+  [MeasurableSpace α] [MeasurableSingletonClass α]
+  [Fintype β] [DecidableEq β] [Nonempty β]
+  [MeasurableSpace β] [MeasurableSingletonClass β]
+
+/-- **Mutual-information ↔ entropy three-term identity (joint-distribution level).**
+For any probability measure `joint` on a finite-alphabet product `α × β`, the
+`klDiv`-based mutual information of its coordinates equals the standard three-term
+form `H(X) + H(Y) − H(X, Y)`, where `H(X, Y) := entropy joint id` is the joint
+entropy on `α × β`.
+
+Strategy: `mutualInfo_comm` to put `Prod.snd` first, then Bridge
+`mutualInfo_eq_entropy_sub_condEntropy` to convert MI to entropy minus conditional
+entropy; finally `entropy_pair_eq_entropy_add_condEntropy` applied to the identity
+pair `(z.1, z.2) = z` to expand the joint entropy. -/
+theorem mutualInfo_eq_entropy_add_entropy_sub_jointEntropy
+    (joint : Measure (α × β)) [IsProbabilityMeasure joint] :
+    (mutualInfo joint Prod.fst Prod.snd).toReal
+      = entropy joint Prod.fst + entropy joint Prod.snd - entropy joint id := by
+  -- Step 1: commute MI to put `Prod.snd` on the left.
+  rw [mutualInfo_comm joint Prod.fst Prod.snd measurable_fst measurable_snd]
+  -- Step 2: Bridge — (mutualInfo joint Prod.snd Prod.fst).toReal
+  --   = entropy joint Prod.snd − condEntropy joint Prod.snd Prod.fst.
+  rw [mutualInfo_eq_entropy_sub_condEntropy joint Prod.snd Prod.fst
+        measurable_snd measurable_fst]
+  -- Step 3: entropy chain rule — entropy joint id = entropy joint Prod.fst
+  --   + condEntropy joint Prod.snd Prod.fst.
+  have h_chain :
+      entropy joint (fun z : α × β => (z.1, z.2))
+        = entropy joint Prod.fst
+          + InformationTheory.MeasureFano.condEntropy joint Prod.snd Prod.fst :=
+    entropy_pair_eq_entropy_add_condEntropy joint Prod.fst Prod.snd
+      measurable_fst measurable_snd
+  -- `(fun z => (z.1, z.2)) = id` by η.
+  have h_id : (fun z : α × β => (z.1, z.2)) = (id : α × β → α × β) := by
+    funext z; rfl
+  rw [h_id] at h_chain
+  linarith
+
+end EntropyMIBridge
 
 end InformationTheory.Shannon

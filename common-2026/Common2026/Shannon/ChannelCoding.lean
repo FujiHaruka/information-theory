@@ -92,6 +92,53 @@ noncomputable def mutualInfoOfChannel (p : Measure α) (W : Channel α β) : ℝ
 theorem mutualInfoOfChannel_nonneg (p : Measure α) (W : Channel α β) :
     0 ≤ mutualInfoOfChannel p W := bot_le
 
+/-- **`mutualInfoOfChannel` equals MI of the joint coordinates.** Unfolds the
+`klDiv`-defined `mutualInfoOfChannel p W` into the canonical
+`mutualInfo (jointDistribution p W) Prod.fst Prod.snd`. Used as the bridge from
+the channel-side formulation to the joint-distribution-side three-term identity. -/
+theorem mutualInfoOfChannel_eq_mutualInfo_prod
+    (p : Measure α) [IsProbabilityMeasure p]
+    (W : Channel α β) [IsMarkovKernel W] :
+    mutualInfoOfChannel p W
+      = InformationTheory.Shannon.mutualInfo (jointDistribution p W)
+          Prod.fst Prod.snd := by
+  unfold mutualInfoOfChannel InformationTheory.Shannon.mutualInfo
+  -- Three rewrites: joint.map id = joint, joint.fst = p, joint.snd = outputDistribution.
+  have h_id : (jointDistribution p W).map (fun z : α × β => (z.1, z.2))
+      = jointDistribution p W := by
+    have : (fun z : α × β => (z.1, z.2)) = id := by funext z; rfl
+    rw [this, Measure.map_id]
+  have h_fst : (jointDistribution p W).map Prod.fst = p := by
+    show ((p ⊗ₘ W).map Prod.fst) = p
+    rw [show ((p ⊗ₘ W).map Prod.fst) = (p ⊗ₘ W).fst from rfl]
+    exact Measure.fst_compProd p W
+  have h_snd : (jointDistribution p W).map Prod.snd = outputDistribution p W := rfl
+  rw [h_id, h_fst, h_snd]
+
+/-- **Entropy ↔ mutual-information bridge for the channel (B-3'' Phase D-(b) bridge).**
+The channel mutual information equals the three-term form
+`H(X) + H(Y) − H(X, Y)` on the joint distribution `p ⊗ₘ W`, where `H` is the
+discrete Shannon entropy and `H(X, Y) := entropy (p ⊗ₘ W) id` is the joint entropy
+on `α × β`.
+
+Composing this with `entropy_eq_of_identDistrib` lets the Phase D-(b) consumer
+rewrite the joint-AEP exponent
+`H(jointSeq Xs Ys 0) − H(Xs 0) − H(Ys 0) = −(mutualInfoOfChannel p W).toReal`
+once the i.i.d. ambient `μ := Measure.infinitePi (jointDistribution p W)` is plumbed
+in (so that `μ.map (Xs 0) = p`, etc.). -/
+theorem mutualInfoOfChannel_eq_HX_add_HY_sub_HZ
+    [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+    [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β]
+    (p : Measure α) [IsProbabilityMeasure p]
+    (W : Channel α β) [IsMarkovKernel W] :
+    (mutualInfoOfChannel p W).toReal
+      = InformationTheory.Shannon.entropy (jointDistribution p W) Prod.fst
+        + InformationTheory.Shannon.entropy (jointDistribution p W) Prod.snd
+        - InformationTheory.Shannon.entropy (jointDistribution p W) id := by
+  rw [mutualInfoOfChannel_eq_mutualInfo_prod p W]
+  exact InformationTheory.Shannon.mutualInfo_eq_entropy_add_entropy_sub_jointEntropy
+    (jointDistribution p W)
+
 /-! ## Block code -/
 
 /-- A **block code** of length `n` with `M` messages over input alphabet `α` and
