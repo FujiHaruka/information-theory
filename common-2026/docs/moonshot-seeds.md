@@ -10,6 +10,44 @@
 
 ## 次のシード候補
 
+### D. audit-2026-05 由来 (棚卸し 2026-05-13 起草、未着手)
+
+`docs/audit-2026-05.md` の §4 で 🟡 判定された主定理のうち、scope 拡張が **moonshot 規模**
+(数日以上) のものを seed 化。小規模な statement 修復 (full support 除去等) は分岐 B 修復 plan
+側の管轄で、本シードには含めない。
+
+- **D-1. Shannon noisy channel coding theorem (capacity reach + max error)** ⏸️ —
+  Cover-Thomas 7.7.1 **完全形**。既存 `channel_coding_achievability` (固定 `p`, average error,
+  `hp_pos` + `hW_pos`) を出発点に、以下 3 段を載せる:
+  1. **入力分布最大化**: `C := sup_p I(p;W)` の存在 (有限 alphabet なら `Continuous` + `IsCompact`
+     による max 達成、`I(·;W)` 連続性は `entropy` の連続性 + `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ`
+     から導出) + capacity 到達 `R < C ⟹ ∃ p, R < I(p; W)`。
+  2. **expurgation (average → max error)**: 既存 codebook `c : Fin M → α^n` の `c.averageErrorProb ≤ ε`
+     から、Markov inequality で「上位半分の messages が max error ≤ 2ε」を取り、code の半分
+     `M' := M / 2` を捨てて max error 化。rate 微減 `log M' = log M - log 2` は `n → ∞` で吸収。
+  3. **full support 仮定の除去** (`hp_pos`, `hW_pos`): 0 確率 atom を持つ p / W に対しても random
+     coding を回す。`klDiv = ∞` の場合の縮退ケースで bound が自明成立する形に再定式化、
+     または full support な近似列 `p_k → p` で連続性を取る。
+  - 既存資産: `ChannelCoding.lean` (706 行、定義) + `ChannelCodingAchievability.lean` (1890 行、
+    achievability 半分) + `MIChainRule.lean` (`mutualInfo_iid_eq_nsmul`)。
+  - 候補プラン: `docs/shannon/channel-coding-shannon-theorem-plan.md` (新規、`moonshot-plan-template.md`
+    で起草)。
+  - 関連: 4 つの "弱形 / 強形ペア" (Pinsker / Stein / Sanov / **ChannelCoding ← ここだけ強形未**)
+    のうち最後の未充足。audit-2026-05 §4 🟡 #9 として記録。
+
+- **D-2. Channel coding converse (general input form)** ⏸️ —
+  Cover-Thomas 7.9 **完全形**。既存 `shannon_converse_single_shot` (uniform input only) を出発点に、
+  任意の入力分布で `R > I(p; W) ⟹ ∃ error floor` を示す。expurgation/Fano + `mutualInfo_iid_eq_nsmul`
+  で n-channel 形にスケール。先行で `docs/reuse-test-plan.md` (分岐 A 再利用テスト) が converse
+  n-variable 化を試す予定で、その bridge 候補一覧が D-2 plan の出発点になる想定。audit-2026-05
+  §4 🟡 #8 として記録。
+
+- **D-3. AEP 完全形 (lower bound + 確率収束)** ⏸️ —
+  Cover-Thomas 3.1.2 **完全 3 点セット**。既存 `typicalSet_prob_le` (上界のみ) に、(a) 下界
+  `P^n(typicalSet) ≥ (1-ε) · exp(-n(H+ε))` と (b) `μ(typicalSet) → 1` を追加。
+  full support 仮定 (`hpos : 0 < P.real {x}`) は不要なはずなので、同時に除去を試みる。
+  audit-2026-05 §4 🟡 #4 として記録。中規模 (~500 行見積)。
+
 ### B. 新シード入口 (5 シード完了で開いた)
 
 - **Sanov の定理** ✅ (A 形 2026-05-12) → [docs/shannon/sanov-moonshot-plan.md](shannon/sanov-moonshot-plan.md) — `typeClass_Qn_le` / `typeClass_Qn_le_klDiv`: 有限アルファベット上で `Q^n(T(P)) ≤ exp(-n · klDivSumForm P Q)` (Cover-Thomas 11.1.4)。`klDivSumForm` 形と `(klDiv P Q).toReal` 形両方を publish。`Common2026/Shannon/Sanov.lean` (319 行)。Stein converse `steinTypicalSet_Q_prob_le` の特化 (片側 inequality → 両側 equality) で多項係数 / `|T(P)| ≤ exp(n·H(P))` を回避。
