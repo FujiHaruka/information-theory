@@ -278,7 +278,8 @@ theorem random_codebook_average_le
     (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
     (hposZ : ∀ q : α × β,
       0 < (μ.map (jointSequence Xs Ys 0)).real {q})
-    (h_match_X : μ.map (Xs 0) = p) :
+    (h_match_X : μ.map (Xs 0) = p)
+    (h_match_Z : μ.map (jointSequence Xs Ys 0) = jointDistribution p W) :
     ∑ codebook : Codebook M n α,
         (codebookMeasure p M n).real {codebook} *
         ((codebookToCode μ Xs Ys hM ε codebook).averageErrorProb W).toReal
@@ -292,14 +293,19 @@ theorem random_codebook_average_le
   -- E1 / E2 sums averaged over the codebook law `codebookMeasure p M n`, then
   -- a Fubini-style swap between codebook expectation and the `(X^n, Y^n)`
   -- expectation under `μ`. The (E1) term `∑_c w(c) [Wⁿ(cₘ)] (cₘ, y) ∉ A_ε^n`
-  -- collapses to `μ.real {(X^n, Y^n) ∉ A_ε^n}` via `h_match_X` and a tight
-  -- chain of map / Fubini lemmas; the (E2) term factors over independent codewords
-  -- `(cₘ, c_{m'})` to give the (Phase B-(c)) `((μ.map Xⁿ).prod (μ.map Yⁿ))` bound,
-  -- which `jointlyTypicalSet_indep_prob_le` bounds by `Real.exp(n(HZ-HX-HY+3ε))`,
-  -- summed over `M-1` aliases. This Fubini plumbing (~80-120 lines) is the
-  -- one deferred ingredient for the channel-coding achievability moonshot;
-  -- the statement is consumer-ready (Phase D-(b) instantiates it on the
-  -- concrete i.i.d. ambient and closes the main theorem).
+  -- collapses to `μ.real {(X^n, Y^n) ∉ A_ε^n}` via the new hypothesis
+  -- `h_match_Z`: under `codebookMeasure p M n ⊗ Wⁿ`, the pair `(codebook m, y)`
+  -- has law `(jointDistribution p W)^n`, which by `h_match_Z` + `iIndepFun_full`
+  -- equals `μ.map ⟨jointRV Xs n, jointRV Ys n⟩`.  The (E2) term factors over
+  -- independent codewords `(cₘ, c_{m'})` to give the (Phase B-(c))
+  -- `((μ.map Xⁿ).prod (μ.map Yⁿ))` bound, which `jointlyTypicalSet_indep_prob_le`
+  -- bounds by `Real.exp(n(HZ-HX-HY+3ε))`, summed over `M-1` aliases.
+  --
+  -- The proof needs ~150 lines of measurable-Fubini bookkeeping
+  -- (Measure.pi reshape, Fubini.swap, marginal-projection via Measure.pi_map_pi,
+  -- and `IdentDistrib`-driven block-marginal equality `μ.map (jointRV Xs n)
+  -- = Measure.pi (fun _ => μ.map (Xs 0))`). Single sorry kept as the last
+  -- moonshot ingredient; statement is now consumer-ready (Path 1).
   sorry
 
 /-! ### Phase C-(d) — Pigeonhole (probabilistic-method form)
@@ -509,6 +515,9 @@ theorem channel_coding_achievability
     fun q => iidAmbient_joint_real_singleton_pos p W hp_pos hW_pos q
   have h_match_X : μ.map (iidXs (α := α) (β := β) 0) = p :=
     iidAmbient_map_iidXs p W 0
+  have h_match_Z : μ.map (jointSequence (α := α) (β := β) iidXs iidYs 0)
+        = jointDistribution p W :=
+    iidAmbient_map_jointSequence p W 0
   -- Step 3: identify the entropy exponent with `-I.toReal`.
   -- entropy μ (jointSequence iidXs iidYs 0) - entropy μ (iidXs 0) - entropy μ (iidYs 0) = -I.
   have h_entZ : InformationTheory.Shannon.entropy μ
@@ -684,7 +693,7 @@ theorem channel_coding_achievability
   have h_avg_bound :=
     random_codebook_average_le (M := M) (n := n) W p hp_pos hM_pos hε_pos μ iidXs iidYs
       hXs hYs hindepX_full hidentX hindepY_full hidentY hindepZ hidentZ
-      hposX hposY hposZ h_match_X
+      hposX hposY hposZ h_match_X h_match_Z
   -- The RHS of h_avg_bound is E1 + (M-1)*exp(n*(HZ-HX-HY+3ε)) = E1 + E2 (under h_exp_eq).
   -- Show this RHS is < ε'.
   set E1 : ℝ := μ.real
