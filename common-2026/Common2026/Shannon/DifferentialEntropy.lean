@@ -160,6 +160,7 @@ theorem differentialEntropy_dirac (m : ℝ) :
 
 /-! ## Phase B — Translation invariance / scaling -/
 
+set_option linter.unusedVariables false in
 /-- **Translation invariance** (Phase B-1): `h(X + y) = h(X)`. -/
 theorem differentialEntropy_map_add_const
     {μ : Measure ℝ} (hμ : μ ≪ volume) [SigmaFinite μ] (y : ℝ) :
@@ -373,6 +374,7 @@ theorem differentialEntropy_map_affine
 
 /-! ## Phase C — `differentialEntropy (gaussianReal m v) = (1/2) log (2πe v)` -/
 
+set_option linter.unusedVariables false in
 /-- (Phase C-1) Rewriting `differentialEntropy (gaussianReal m v)` in terms of
 `gaussianPDFReal`. -/
 theorem differentialEntropy_gaussianReal_form
@@ -497,23 +499,291 @@ theorem differentialEntropy_gaussianReal_std :
 /-! ## Phase D — Gaussian Max-entropy 定理 -/
 
 /-- (Phase D-1, **max-entropy 主定理**) 平均 `m`, 分散 ≤ `v` の `μ ≪ volume` で
-`differentialEntropy μ ≤ (1/2) log (2πe v)`. -/
+`differentialEntropy μ ≤ (1/2) log (2πe v)`.
+
+可積分性副仮説:
+* `h_ent_int` — `differentialEntropy μ` の被積分関数の Lebesgue 可積分性。Mathlib の
+  Bochner 積分は非可積分なら `0` を返すため、`h(μ) = +∞` の不可能性 (KL ≥ 0 で
+  排除されるはず) を保証するために必要。
+* `h_var_int` — 2 次モーメントの可積分性。これがないと `h_var` 仮説自体が
+  `0 ≤ v` に縮退する。 -/
 theorem differentialEntropy_le_gaussian_of_variance_le
     {μ : Measure ℝ} [IsProbabilityMeasure μ]
     (hμ : μ ≪ volume) (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0)
     (h_mean : ∫ x, x ∂μ = m)
-    (h_var : ∫ x, (x - m)^2 ∂μ ≤ (v : ℝ)) :
+    (h_var : ∫ x, (x - m)^2 ∂μ ≤ (v : ℝ))
+    (h_var_int : Integrable (fun x => (x - m)^2) μ)
+    (h_ent_int : Integrable
+      (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
     differentialEntropy μ ≤ (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v) := by
-  sorry
+  -- 戦略: `0 ≤ (klDiv μ (gaussianReal m v)).toReal = ∫ llr μ ν ∂μ`
+  --       = -h(μ) + (1/2) log(2πv) + (1/(2v)) ∫(x-m)² ∂μ
+  -- ≤ -h(μ) + (1/2) log(2πev) via `h_var`.
+  let _ := h_mean  -- mean は使わない (median 仮定相当)
+  have hv_pos : (0 : ℝ) < v := by
+    have : (v : ℝ) ≠ 0 := by exact_mod_cast hv
+    exact lt_of_le_of_ne v.coe_nonneg (Ne.symm this)
+  have h2πv_pos : (0 : ℝ) < 2 * Real.pi * v := by positivity
+  have h2v_pos : (0 : ℝ) < 2 * v := by positivity
+  have hexp_pos : (0 : ℝ) < Real.exp 1 := Real.exp_pos 1
+  set ν : Measure ℝ := gaussianReal m v with hν_def
+  have hμν : μ ≪ ν := hμ.trans (gaussianReal_absolutelyContinuous' m hv)
+  -- `(klDiv μ ν).toReal = ∫ x, llr μ ν x ∂μ`.
+  have h_meas_eq : μ Set.univ = ν Set.univ := by simp [hν_def]
+  have h_kl_eq : (klDiv μ ν).toReal = ∫ x, llr μ ν x ∂μ :=
+    toReal_klDiv_of_measure_eq hμν h_meas_eq
+  have h_kl_nn : (0 : ℝ) ≤ ∫ x, llr μ ν x ∂μ := h_kl_eq ▸ ENNReal.toReal_nonneg
+  -- 鍵: `llr μ ν x =ᵐ[μ] log (μ.rnDeriv volume x).toReal - log (gaussianPDFReal m v x)`.
+  have h_rn_chain_vol : μ.rnDeriv ν * ν.rnDeriv volume =ᵐ[volume] μ.rnDeriv volume :=
+    Measure.rnDeriv_mul_rnDeriv hμν
+  have h_rn_chain_μ : μ.rnDeriv ν * ν.rnDeriv volume =ᵐ[μ] μ.rnDeriv volume :=
+    hμ.ae_le h_rn_chain_vol
+  have h_rn_gauss_μ : ν.rnDeriv volume =ᵐ[μ] gaussianPDF m v :=
+    hμ.ae_le (rnDeriv_gaussianReal m v)
+  have h_rn_μν_pos : ∀ᵐ x ∂μ, 0 < μ.rnDeriv ν x := Measure.rnDeriv_pos hμν
+  have h_rn_μν_lt_top : ∀ᵐ x ∂μ, μ.rnDeriv ν x < ∞ :=
+    hμν.ae_le (Measure.rnDeriv_lt_top μ ν)
+  have h_llr_decomp : ∀ᵐ x ∂μ,
+      llr μ ν x = Real.log ((μ.rnDeriv volume x).toReal)
+        - Real.log (gaussianPDFReal m v x) := by
+    filter_upwards [h_rn_chain_μ, h_rn_gauss_μ, h_rn_μν_pos, h_rn_μν_lt_top]
+      with x h_chain h_gauss h_pos h_lt_top
+    have hg_pos : 0 < gaussianPDFReal m v x := gaussianPDFReal_pos m v x hv
+    have hμν_real_pos : 0 < (μ.rnDeriv ν x).toReal :=
+      ENNReal.toReal_pos h_pos.ne' h_lt_top.ne
+    -- `μ.rnDeriv volume x = μ.rnDeriv ν x * gaussianPDF m v x`
+    have h_combine : μ.rnDeriv volume x = μ.rnDeriv ν x * gaussianPDF m v x := by
+      rw [← h_chain, Pi.mul_apply, h_gauss]
+    show Real.log ((μ.rnDeriv ν x).toReal)
+        = Real.log ((μ.rnDeriv volume x).toReal) - Real.log (gaussianPDFReal m v x)
+    rw [h_combine, ENNReal.toReal_mul, toReal_gaussianPDF,
+      Real.log_mul hμν_real_pos.ne' hg_pos.ne']
+    ring
+  -- `∫ llr μ ν x ∂μ = ∫ log (μ.rnDeriv vol).toReal ∂μ - ∫ log gaussianPDFReal m v ∂μ`.
+  -- 各積分を計算するために integrability を準備。
+  -- (i) `∫ log (μ.rnDeriv vol x).toReal ∂μ = - h(μ)`:
+  --     `integral_rnDeriv_smul hμ` で `∫ g ∂μ = ∫ (μ.rnDeriv vol).toReal • g ∂vol`、
+  --     `g = log ((μ.rnDeriv vol).toReal)` で `(μ.rnDeriv vol).toReal · log ... = -negMulLog ...`
+  --     (pointwise).
+  -- ※ ただし `g` 自体は `vol` 上で必ずしも可積分でないので、`integral_rnDeriv_smul` 直接は
+  --   注意; 等号は両側とも `integral_undef = 0` で成り立つかも。簡単のために
+  --   `integral_rnDeriv_smul` の strong form (unconditional) を信じて進める。
+  have h_int_log_μ_eq :
+      ∫ x, Real.log ((μ.rnDeriv volume x).toReal) ∂μ = - differentialEntropy μ := by
+    have h_pull : ∫ x, Real.log ((μ.rnDeriv volume x).toReal) ∂μ
+        = ∫ x, (μ.rnDeriv volume x).toReal • Real.log ((μ.rnDeriv volume x).toReal) ∂volume := by
+      rw [integral_rnDeriv_smul (μ := μ) (ν := volume) hμ
+        (f := fun x => Real.log ((μ.rnDeriv volume x).toReal))]
+    rw [h_pull]
+    unfold differentialEntropy
+    rw [show -∫ x, Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume
+        = ∫ x, -Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume from (integral_neg _).symm]
+    refine integral_congr_ae ?_
+    refine Filter.Eventually.of_forall (fun x => ?_)
+    simp only [smul_eq_mul, Real.negMulLog_def]
+    ring
+  -- (ii) `∫ log gaussianPDFReal m v ∂μ = -(1/2) log(2πv) - (1/(2v)) ∫(x-m)² ∂μ`:
+  have h_log_g_eq : ∀ x, Real.log (gaussianPDFReal m v x)
+      = (-(1/2) * Real.log (2 * Real.pi * v)) + (-(1/(2 * v))) * (x - m)^2 := by
+    intro x
+    rw [log_gaussianPDFReal_eq m hv x]
+    ring
+  have h_int_log_g : Integrable (fun x => Real.log (gaussianPDFReal m v x)) μ := by
+    -- 定数 + 定数 × (x-m)² の形。
+    have h_eq : (fun x => Real.log (gaussianPDFReal m v x))
+        = fun x => (-(1/2) * Real.log (2 * Real.pi * v))
+            + (-(1/(2 * v))) * (x - m)^2 := by
+      funext x; exact h_log_g_eq x
+    rw [h_eq]
+    exact (integrable_const _).add (h_var_int.const_mul (-(1/(2 * v))))
+  have h_int_log_g_eq :
+      ∫ x, Real.log (gaussianPDFReal m v x) ∂μ
+        = -(1/2) * Real.log (2 * Real.pi * v)
+          + (-(1/(2 * v))) * ∫ x, (x - m)^2 ∂μ := by
+    rw [show (fun x => Real.log (gaussianPDFReal m v x))
+        = fun x => (-(1/2) * Real.log (2 * Real.pi * v))
+            + (-(1/(2 * v))) * (x - m)^2 from funext h_log_g_eq]
+    rw [integral_add (integrable_const _) (h_var_int.const_mul _)]
+    rw [integral_const, integral_const_mul]
+    simp
+  -- (iii) Integrability of `log (μ.rnDeriv volume x).toReal` on μ:
+  --   = -negMulLog ((μ.rnDeriv vol x).toReal) / (μ.rnDeriv vol x).toReal (when > 0).
+  --   Equivalently: `∫ g ∂μ` integrable iff `(μ.rnDeriv vol).toReal • g` integrable on vol.
+  have h_int_log_μ : Integrable (fun x => Real.log ((μ.rnDeriv volume x).toReal)) μ := by
+    -- Use `integrable_rnDeriv_smul_iff hμ`:
+    -- `Integrable (fun x => (μ.rnDeriv vol x).toReal • g x) vol ↔ Integrable g μ`.
+    rw [← integrable_rnDeriv_smul_iff (μ := μ) (ν := volume) hμ
+      (f := fun x => Real.log ((μ.rnDeriv volume x).toReal))]
+    -- Goal: `Integrable (fun x => (μ.rnDeriv vol x).toReal • log ((μ.rnDeriv vol x).toReal)) vol`
+    -- which equals `-negMulLog ((μ.rnDeriv vol x).toReal)` (pointwise).
+    refine (h_ent_int.neg).congr (Filter.Eventually.of_forall fun x => ?_)
+    show -Real.negMulLog ((μ.rnDeriv volume x).toReal)
+        = (μ.rnDeriv volume x).toReal • Real.log ((μ.rnDeriv volume x).toReal)
+    simp only [smul_eq_mul, Real.negMulLog_def]
+    ring
+  -- llr 可積分性も同様 (decomp identity).
+  have h_int_llr : Integrable (llr μ ν) μ := by
+    have h_sub : Integrable (fun x => Real.log ((μ.rnDeriv volume x).toReal)
+        - Real.log (gaussianPDFReal m v x)) μ := h_int_log_μ.sub h_int_log_g
+    refine h_sub.congr ?_
+    filter_upwards [h_llr_decomp] with x hx using hx.symm
+  -- 積分等式: `∫ llr μ ν ∂μ = -h(μ) - (-(1/2) log(2πv) - (1/(2v)) ∫(x-m)² ∂μ)`.
+  have h_int_llr_eq :
+      ∫ x, llr μ ν x ∂μ = - differentialEntropy μ + (1/2) * Real.log (2 * Real.pi * v)
+        + (1/(2 * v)) * ∫ x, (x - m)^2 ∂μ := by
+    have h_split : ∫ x, llr μ ν x ∂μ
+        = ∫ x, Real.log ((μ.rnDeriv volume x).toReal) ∂μ
+          - ∫ x, Real.log (gaussianPDFReal m v x) ∂μ := by
+      rw [← integral_sub h_int_log_μ h_int_log_g]
+      exact integral_congr_ae h_llr_decomp
+    rw [h_split, h_int_log_μ_eq, h_int_log_g_eq]
+    ring
+  -- 最終: `0 ≤ -h(μ) + (1/2) log(2πv) + (1/(2v)) ∫(x-m)² ∂μ ≤ -h(μ) + (1/2) log(2πv) + 1/2`.
+  have h_combined : (0 : ℝ) ≤ - differentialEntropy μ + (1/2) * Real.log (2 * Real.pi * v)
+      + (1/(2 * v)) * ∫ x, (x - m)^2 ∂μ := h_int_llr_eq ▸ h_kl_nn
+  -- 不等式合成: `(1/(2v)) ∫(x-m)² ∂μ ≤ (1/(2v)) · v = 1/2`.
+  have h_var_bound : (1/(2 * v)) * ∫ x, (x - m)^2 ∂μ ≤ 1/2 := by
+    have h_2v_inv_pos : 0 < 1 / (2 * (v : ℝ)) := by positivity
+    calc (1/(2 * v)) * ∫ x, (x - m)^2 ∂μ
+        ≤ (1/(2 * v)) * (v : ℝ) := mul_le_mul_of_nonneg_left h_var h_2v_inv_pos.le
+      _ = 1/2 := by field_simp
+  -- 結論: `h(μ) ≤ (1/2) log(2πv) + 1/2 = (1/2) log(2πev)`.
+  have h_log_split : Real.log (2 * Real.pi * Real.exp 1 * v)
+      = Real.log (2 * Real.pi * v) + 1 := by
+    have h_rewrite : 2 * Real.pi * Real.exp 1 * (v : ℝ)
+        = (2 * Real.pi * v) * Real.exp 1 := by ring
+    rw [h_rewrite, Real.log_mul h2πv_pos.ne' hexp_pos.ne', Real.log_exp]
+  linarith [h_combined, h_var_bound]
 
 /-- (Phase D-2, 等号条件) max-entropy 等号は `μ = gaussianReal m v` のみ。 -/
 theorem differentialEntropy_eq_gaussian_iff
     {μ : Measure ℝ} [IsProbabilityMeasure μ]
     (hμ : μ ≪ volume) (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0)
-    (h_mean : ∫ x, x ∂μ = m) (h_var : ∫ x, (x - m)^2 ∂μ = (v : ℝ)) :
+    (h_mean : ∫ x, x ∂μ = m) (h_var : ∫ x, (x - m)^2 ∂μ = (v : ℝ))
+    (h_var_int : Integrable (fun x => (x - m)^2) μ)
+    (h_ent_int : Integrable
+      (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
     differentialEntropy μ = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v)
       ↔ μ = gaussianReal m v := by
-  sorry
+  let _ := h_mean
+  constructor
+  · -- 等式 ⟹ `μ = gaussianReal m v`. D-1 と同じ展開で `(klDiv μ ν).toReal = 0` を取り出す。
+    intro h_eq
+    have hv_pos : (0 : ℝ) < v := by
+      have : (v : ℝ) ≠ 0 := by exact_mod_cast hv
+      exact lt_of_le_of_ne v.coe_nonneg (Ne.symm this)
+    have h2πv_pos : (0 : ℝ) < 2 * Real.pi * v := by positivity
+    have hexp_pos : (0 : ℝ) < Real.exp 1 := Real.exp_pos 1
+    set ν : Measure ℝ := gaussianReal m v with hν_def
+    have hμν : μ ≪ ν := hμ.trans (gaussianReal_absolutelyContinuous' m hv)
+    have h_meas_eq : μ Set.univ = ν Set.univ := by simp [hν_def]
+    -- KL.toReal の代数恒等式を再計算 (D-1 と同じ chain).
+    have h_kl_eq : (klDiv μ ν).toReal = ∫ x, llr μ ν x ∂μ :=
+      toReal_klDiv_of_measure_eq hμν h_meas_eq
+    have h_rn_chain_vol : μ.rnDeriv ν * ν.rnDeriv volume =ᵐ[volume] μ.rnDeriv volume :=
+      Measure.rnDeriv_mul_rnDeriv hμν
+    have h_rn_chain_μ : μ.rnDeriv ν * ν.rnDeriv volume =ᵐ[μ] μ.rnDeriv volume :=
+      hμ.ae_le h_rn_chain_vol
+    have h_rn_gauss_μ : ν.rnDeriv volume =ᵐ[μ] gaussianPDF m v :=
+      hμ.ae_le (rnDeriv_gaussianReal m v)
+    have h_rn_μν_pos : ∀ᵐ x ∂μ, 0 < μ.rnDeriv ν x := Measure.rnDeriv_pos hμν
+    have h_rn_μν_lt_top : ∀ᵐ x ∂μ, μ.rnDeriv ν x < ∞ :=
+      hμν.ae_le (Measure.rnDeriv_lt_top μ ν)
+    have h_llr_decomp : ∀ᵐ x ∂μ,
+        llr μ ν x = Real.log ((μ.rnDeriv volume x).toReal)
+          - Real.log (gaussianPDFReal m v x) := by
+      filter_upwards [h_rn_chain_μ, h_rn_gauss_μ, h_rn_μν_pos, h_rn_μν_lt_top]
+        with x h_chain h_gauss h_pos h_lt_top
+      have hg_pos : 0 < gaussianPDFReal m v x := gaussianPDFReal_pos m v x hv
+      have hμν_real_pos : 0 < (μ.rnDeriv ν x).toReal :=
+        ENNReal.toReal_pos h_pos.ne' h_lt_top.ne
+      have h_combine : μ.rnDeriv volume x = μ.rnDeriv ν x * gaussianPDF m v x := by
+        rw [← h_chain, Pi.mul_apply, h_gauss]
+      show Real.log ((μ.rnDeriv ν x).toReal)
+          = Real.log ((μ.rnDeriv volume x).toReal) - Real.log (gaussianPDFReal m v x)
+      rw [h_combine, ENNReal.toReal_mul, toReal_gaussianPDF,
+        Real.log_mul hμν_real_pos.ne' hg_pos.ne']
+      ring
+    have h_int_log_μ_eq :
+        ∫ x, Real.log ((μ.rnDeriv volume x).toReal) ∂μ = - differentialEntropy μ := by
+      have h_pull : ∫ x, Real.log ((μ.rnDeriv volume x).toReal) ∂μ
+          = ∫ x, (μ.rnDeriv volume x).toReal • Real.log ((μ.rnDeriv volume x).toReal) ∂volume := by
+        rw [integral_rnDeriv_smul (μ := μ) (ν := volume) hμ
+          (f := fun x => Real.log ((μ.rnDeriv volume x).toReal))]
+      rw [h_pull]
+      unfold differentialEntropy
+      rw [show -∫ x, Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume
+          = ∫ x, -Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume from (integral_neg _).symm]
+      refine integral_congr_ae ?_
+      refine Filter.Eventually.of_forall (fun x => ?_)
+      simp only [smul_eq_mul, Real.negMulLog_def]
+      ring
+    have h_log_g_eq : ∀ x, Real.log (gaussianPDFReal m v x)
+        = (-(1/2) * Real.log (2 * Real.pi * v)) + (-(1/(2 * v))) * (x - m)^2 := by
+      intro x
+      rw [log_gaussianPDFReal_eq m hv x]
+      ring
+    have h_int_log_g : Integrable (fun x => Real.log (gaussianPDFReal m v x)) μ := by
+      have h_eq : (fun x => Real.log (gaussianPDFReal m v x))
+          = fun x => (-(1/2) * Real.log (2 * Real.pi * v))
+              + (-(1/(2 * v))) * (x - m)^2 := by
+        funext x; exact h_log_g_eq x
+      rw [h_eq]
+      exact (integrable_const _).add (h_var_int.const_mul (-(1/(2 * v))))
+    have h_int_log_g_eq :
+        ∫ x, Real.log (gaussianPDFReal m v x) ∂μ
+          = -(1/2) * Real.log (2 * Real.pi * v)
+            + (-(1/(2 * v))) * ∫ x, (x - m)^2 ∂μ := by
+      rw [show (fun x => Real.log (gaussianPDFReal m v x))
+          = fun x => (-(1/2) * Real.log (2 * Real.pi * v))
+              + (-(1/(2 * v))) * (x - m)^2 from funext h_log_g_eq]
+      rw [integral_add (integrable_const _) (h_var_int.const_mul _)]
+      rw [integral_const, integral_const_mul]
+      simp
+    have h_int_log_μ : Integrable (fun x => Real.log ((μ.rnDeriv volume x).toReal)) μ := by
+      rw [← integrable_rnDeriv_smul_iff (μ := μ) (ν := volume) hμ
+        (f := fun x => Real.log ((μ.rnDeriv volume x).toReal))]
+      refine (h_ent_int.neg).congr (Filter.Eventually.of_forall fun x => ?_)
+      show -Real.negMulLog ((μ.rnDeriv volume x).toReal)
+          = (μ.rnDeriv volume x).toReal • Real.log ((μ.rnDeriv volume x).toReal)
+      simp only [smul_eq_mul, Real.negMulLog_def]
+      ring
+    have h_int_llr_eq :
+        ∫ x, llr μ ν x ∂μ = - differentialEntropy μ + (1/2) * Real.log (2 * Real.pi * v)
+          + (1/(2 * v)) * ∫ x, (x - m)^2 ∂μ := by
+      have h_split : ∫ x, llr μ ν x ∂μ
+          = ∫ x, Real.log ((μ.rnDeriv volume x).toReal) ∂μ
+            - ∫ x, Real.log (gaussianPDFReal m v x) ∂μ := by
+        rw [← integral_sub h_int_log_μ h_int_log_g]
+        exact integral_congr_ae h_llr_decomp
+      rw [h_split, h_int_log_μ_eq, h_int_log_g_eq]
+      ring
+    -- h_var (equality) と h_eq (entropy = target) から KL.toReal = 0.
+    have h_log_split : Real.log (2 * Real.pi * Real.exp 1 * v)
+        = Real.log (2 * Real.pi * v) + 1 := by
+      have h_rewrite : 2 * Real.pi * Real.exp 1 * (v : ℝ)
+          = (2 * Real.pi * v) * Real.exp 1 := by ring
+      rw [h_rewrite, Real.log_mul h2πv_pos.ne' hexp_pos.ne', Real.log_exp]
+    have h_kl_toReal_zero : (klDiv μ ν).toReal = 0 := by
+      rw [h_kl_eq, h_int_llr_eq, h_var, h_eq, h_log_split]
+      field_simp
+      ring
+    -- KL = 0 (ENNReal); これは `μ = ν`.
+    have hμν_ne_top : klDiv μ ν ≠ ∞ := by
+      -- llr integrable from `h_int_log_μ - h_int_log_g`.
+      have h_int_llr : Integrable (llr μ ν) μ := by
+        have h_sub : Integrable (fun x => Real.log ((μ.rnDeriv volume x).toReal)
+            - Real.log (gaussianPDFReal m v x)) μ := h_int_log_μ.sub h_int_log_g
+        refine h_sub.congr ?_
+        filter_upwards [h_llr_decomp] with x hx using hx.symm
+      exact klDiv_ne_top hμν h_int_llr
+    have h_kl_zero : klDiv μ ν = 0 := by
+      rwa [ENNReal.toReal_eq_zero_iff, or_iff_left hμν_ne_top] at h_kl_toReal_zero
+    exact (klDiv_eq_zero_iff.mp h_kl_zero)
+  · -- `μ = gaussianReal m v` ⟹ entropy 計算 (Phase C-3).
+    intro h_eq
+    rw [h_eq]
+    exact differentialEntropy_gaussianReal m hv
 
 /-! ## Phase E — KL bridge / corollaries -/
 
@@ -523,12 +793,218 @@ theorem klDiv_gaussianReal_gaussianReal_eq
     (klDiv (gaussianReal m₁ v₁) (gaussianReal m₂ v₂)).toReal
       = (1/2) * (Real.log ((v₂ : ℝ) / v₁) + (v₁ : ℝ) / v₂
                   + (m₁ - m₂)^2 / v₂ - 1) := by
-  sorry
+  -- 戦略: 両者とも probability で AC、`toReal_klDiv_of_measure_eq` で
+  -- `KL.toReal = ∫ x, llr ν₁ ν₂ x ∂ν₁`. `llr ν₁ ν₂ x = log g₁(x) - log g₂(x)` for
+  -- `gᵢ := gaussianPDFReal mᵢ vᵢ`. 各 log を Phase C-2 で展開して積分する。
+  have hv₁_pos : (0 : ℝ) < v₁ := by
+    have : (v₁ : ℝ) ≠ 0 := by exact_mod_cast hv₁
+    exact lt_of_le_of_ne v₁.coe_nonneg (Ne.symm this)
+  have hv₂_pos : (0 : ℝ) < v₂ := by
+    have : (v₂ : ℝ) ≠ 0 := by exact_mod_cast hv₂
+    exact lt_of_le_of_ne v₂.coe_nonneg (Ne.symm this)
+  have h2πv₁_pos : (0 : ℝ) < 2 * Real.pi * v₁ := by positivity
+  have h2πv₂_pos : (0 : ℝ) < 2 * Real.pi * v₂ := by positivity
+  set ν₁ : Measure ℝ := gaussianReal m₁ v₁ with hν₁_def
+  set ν₂ : Measure ℝ := gaussianReal m₂ v₂ with hν₂_def
+  have hν₁_ac : ν₁ ≪ volume := by rw [hν₁_def]; exact gaussianReal_absolutelyContinuous m₁ hv₁
+  have hμν : ν₁ ≪ ν₂ := hν₁_ac.trans (gaussianReal_absolutelyContinuous' m₂ hv₂)
+  have h_meas_eq : ν₁ Set.univ = ν₂ Set.univ := by simp [hν₁_def, hν₂_def]
+  have h_kl_eq : (klDiv ν₁ ν₂).toReal = ∫ x, llr ν₁ ν₂ x ∂ν₁ :=
+    toReal_klDiv_of_measure_eq hμν h_meas_eq
+  -- llr decomp: `llr ν₁ ν₂ x =ᵐ[ν₁] log g₁(x) - log g₂(x)`.
+  -- 同じ chain rule path: `ν₁.rnDeriv ν₂ * ν₂.rnDeriv vol =ᵐ[vol] ν₁.rnDeriv vol`,
+  -- ν₁.rnDeriv vol = gaussianPDF m₁ v₁, ν₂.rnDeriv vol = gaussianPDF m₂ v₂.
+  have h_rn_chain_vol : ν₁.rnDeriv ν₂ * ν₂.rnDeriv volume =ᵐ[volume] ν₁.rnDeriv volume :=
+    Measure.rnDeriv_mul_rnDeriv hμν
+  have h_rn_chain_ν₁ : ν₁.rnDeriv ν₂ * ν₂.rnDeriv volume =ᵐ[ν₁] ν₁.rnDeriv volume :=
+    hν₁_ac.ae_le h_rn_chain_vol
+  have h_rn_g₁_ν₁ : ν₁.rnDeriv volume =ᵐ[ν₁] gaussianPDF m₁ v₁ :=
+    hν₁_ac.ae_le (by rw [hν₁_def]; exact rnDeriv_gaussianReal m₁ v₁)
+  have h_rn_g₂_ν₁ : ν₂.rnDeriv volume =ᵐ[ν₁] gaussianPDF m₂ v₂ :=
+    hν₁_ac.ae_le (by rw [hν₂_def]; exact rnDeriv_gaussianReal m₂ v₂)
+  have h_rn_ν₁ν₂_pos : ∀ᵐ x ∂ν₁, 0 < ν₁.rnDeriv ν₂ x := Measure.rnDeriv_pos hμν
+  have h_rn_ν₁ν₂_lt_top : ∀ᵐ x ∂ν₁, ν₁.rnDeriv ν₂ x < ∞ :=
+    hμν.ae_le (Measure.rnDeriv_lt_top ν₁ ν₂)
+  have h_llr_decomp : ∀ᵐ x ∂ν₁,
+      llr ν₁ ν₂ x = Real.log (gaussianPDFReal m₁ v₁ x)
+        - Real.log (gaussianPDFReal m₂ v₂ x) := by
+    filter_upwards [h_rn_chain_ν₁, h_rn_g₁_ν₁, h_rn_g₂_ν₁, h_rn_ν₁ν₂_pos, h_rn_ν₁ν₂_lt_top]
+      with x h_chain h_g₁ h_g₂ h_pos h_lt_top
+    have hg₁_pos : 0 < gaussianPDFReal m₁ v₁ x := gaussianPDFReal_pos m₁ v₁ x hv₁
+    have hg₂_pos : 0 < gaussianPDFReal m₂ v₂ x := gaussianPDFReal_pos m₂ v₂ x hv₂
+    have hν₁ν₂_real_pos : 0 < (ν₁.rnDeriv ν₂ x).toReal :=
+      ENNReal.toReal_pos h_pos.ne' h_lt_top.ne
+    -- `ν₁.rnDeriv vol x = ν₁.rnDeriv ν₂ x * gaussianPDF m₂ v₂ x` (h_chain + h_g₂).
+    -- And LHS = gaussianPDF m₁ v₁ x (h_g₁). So
+    -- gaussianPDF m₁ v₁ x = ν₁.rnDeriv ν₂ x * gaussianPDF m₂ v₂ x.
+    have h_combine : (gaussianPDF m₁ v₁ x : ℝ≥0∞)
+        = ν₁.rnDeriv ν₂ x * gaussianPDF m₂ v₂ x := by
+      rw [← h_g₁, ← h_chain, Pi.mul_apply, h_g₂]
+    -- llr ν₁ ν₂ x = log (ν₁.rnDeriv ν₂ x).toReal
+    --   = log (gaussianPDFReal m₁ v₁ / gaussianPDFReal m₂ v₂)
+    --   = log gaussianPDFReal m₁ v₁ - log gaussianPDFReal m₂ v₂.
+    show Real.log ((ν₁.rnDeriv ν₂ x).toReal)
+        = Real.log (gaussianPDFReal m₁ v₁ x) - Real.log (gaussianPDFReal m₂ v₂ x)
+    have h_real_combine : gaussianPDFReal m₁ v₁ x
+        = (ν₁.rnDeriv ν₂ x).toReal * gaussianPDFReal m₂ v₂ x := by
+      have := congrArg ENNReal.toReal h_combine
+      rwa [toReal_gaussianPDF, ENNReal.toReal_mul, toReal_gaussianPDF] at this
+    rw [h_real_combine, Real.log_mul hν₁ν₂_real_pos.ne' hg₂_pos.ne']
+    ring
+  -- 各 piece の積分計算.
+  -- Phase C-2 で `log g(x) = -(1/2) log (2πv) - (x-m)²/(2v)`.
+  -- `∫(x-m₁)² ∂ν₁ = v₁`, `∫(x-m₂)² ∂ν₁ = v₁ + (m₁-m₂)²` (mean shift identity).
+  -- 鍵: `∫ x ∂ν₁ = m₁` (integral_id_gaussianReal).
+  have h_mean_ν₁ : ∫ x, x ∂ν₁ = m₁ := by rw [hν₁_def]; exact integral_id_gaussianReal
+  have h_var_ν₁ : ∫ x, (x - m₁)^2 ∂ν₁ = (v₁ : ℝ) := by
+    have hX : AEMeasurable (fun x : ℝ => x) ν₁ := measurable_id.aemeasurable
+    have h_var := variance_eq_integral (μ := ν₁) hX
+    have h_var_val : Var[fun x ↦ x; ν₁] = (v₁ : ℝ) := by
+      rw [hν₁_def]; exact_mod_cast variance_fun_id_gaussianReal
+    rw [h_var_val] at h_var
+    have h_mean_id : ∫ x, (id : ℝ → ℝ) x ∂ν₁ = m₁ := h_mean_ν₁
+    simp only [id] at h_mean_id
+    rw [h_mean_id] at h_var
+    exact h_var.symm
+  -- 2 次モーメントの可積分性. `MemLp id 2 (gaussianReal m v)` から.
+  have h_int_x2_ν₁ : Integrable (fun x : ℝ => x^2) ν₁ := by
+    have h_memLp : MemLp (id : ℝ → ℝ) 2 ν₁ := by rw [hν₁_def]; exact memLp_id_gaussianReal 2
+    -- `MemLp id 2` says `∫ |id|² ∂ν₁ < ∞`. Via `memLp_two_iff_integrable_sq_norm`.
+    have h_int_sq : Integrable (fun x : ℝ => ‖(id : ℝ → ℝ) x‖^2) ν₁ :=
+      (memLp_two_iff_integrable_sq_norm h_memLp.aestronglyMeasurable).mp h_memLp
+    refine h_int_sq.congr (Filter.Eventually.of_forall fun x => ?_)
+    show ‖x‖^2 = x^2
+    rw [Real.norm_eq_abs, sq_abs]
+  have h_int_xm₁2_ν₁ : Integrable (fun x : ℝ => (x - m₁)^2) ν₁ := by
+    have h_eq : (fun x : ℝ => (x - m₁)^2)
+        = fun x => x^2 + (-2 * m₁) * x + m₁^2 := by
+      funext x; ring
+    rw [h_eq]
+    refine (h_int_x2_ν₁.add ?_).add (integrable_const _)
+    have h_int_x : Integrable (fun x : ℝ => x) ν₁ := by
+      have h_memLp1 : MemLp (id : ℝ → ℝ) 1 ν₁ := by rw [hν₁_def]; exact memLp_id_gaussianReal 1
+      exact h_memLp1.integrable (le_refl _)
+    exact h_int_x.const_mul (-2 * m₁)
+  have h_int_xm₂2_ν₁ : Integrable (fun x : ℝ => (x - m₂)^2) ν₁ := by
+    have h_eq : (fun x : ℝ => (x - m₂)^2)
+        = fun x => x^2 + (-2 * m₂) * x + m₂^2 := by
+      funext x; ring
+    rw [h_eq]
+    refine (h_int_x2_ν₁.add ?_).add (integrable_const _)
+    have h_int_x : Integrable (fun x : ℝ => x) ν₁ := by
+      have h_memLp1 : MemLp (id : ℝ → ℝ) 1 ν₁ := by rw [hν₁_def]; exact memLp_id_gaussianReal 1
+      exact h_memLp1.integrable (le_refl _)
+    exact h_int_x.const_mul (-2 * m₂)
+  -- mean shift: `∫(x - m₂)² ∂ν₁ = ∫(x - m₁)² ∂ν₁ + (m₁ - m₂)²`.
+  -- 展開: `(x-m₂)² = (x-m₁)² + 2(x-m₁)(m₁-m₂) + (m₁-m₂)²`.
+  have h_mean_shift : ∫ x, (x - m₂)^2 ∂ν₁ = (v₁ : ℝ) + (m₁ - m₂)^2 := by
+    -- 展開: `(x-m₂)² = (x-m₁)² + 2(m₁-m₂)(x-m₁) + (m₁-m₂)²`. ν₁ で積分すれば、
+    -- 第 1 項は `v₁`, 第 2 項は `0` (中心化), 第 3 項は `(m₁-m₂)²`.
+    have h_int_x : Integrable (fun x : ℝ => x) ν₁ := by
+      have h_memLp1 : MemLp (id : ℝ → ℝ) 1 ν₁ := by rw [hν₁_def]; exact memLp_id_gaussianReal 1
+      exact h_memLp1.integrable (le_refl _)
+    have h_int_xm₁ : Integrable (fun x : ℝ => x - m₁) ν₁ :=
+      h_int_x.sub (integrable_const m₁)
+    -- 中心化積分.
+    have h_zero : ∫ x : ℝ, x - m₁ ∂ν₁ = 0 := by
+      rw [integral_sub h_int_x (integrable_const _)]
+      simp [h_mean_ν₁]
+    have h_int_shift_linear : Integrable
+        (fun x : ℝ => 2 * (m₁ - m₂) * (x - m₁)) ν₁ :=
+      h_int_xm₁.const_mul (2 * (m₁ - m₂))
+    calc ∫ x, (x - m₂)^2 ∂ν₁
+        = ∫ x, (x - m₁)^2 + 2 * (m₁ - m₂) * (x - m₁) + (m₁ - m₂)^2 ∂ν₁ := by
+          refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
+          ring
+      _ = ∫ x, (x - m₁)^2 ∂ν₁
+          + ∫ x, 2 * (m₁ - m₂) * (x - m₁) ∂ν₁
+          + ∫ x, (m₁ - m₂)^2 ∂ν₁ := by
+          rw [integral_add (f := fun x => (x - m₁)^2 + 2 * (m₁ - m₂) * (x - m₁))
+              (g := fun _ => (m₁ - m₂)^2)
+              (h_int_xm₁2_ν₁.add h_int_shift_linear) (integrable_const _),
+            integral_add (f := fun x => (x - m₁)^2)
+              (g := fun x => 2 * (m₁ - m₂) * (x - m₁))
+              h_int_xm₁2_ν₁ h_int_shift_linear]
+      _ = (v₁ : ℝ) + 2 * (m₁ - m₂) * 0 + (m₁ - m₂)^2 := by
+          rw [h_var_ν₁, integral_const_mul, h_zero, integral_const]
+          have h_ν₁_real : ν₁.real Set.univ = 1 := by
+            rw [measureReal_def]; simp [hν₁_def]
+          rw [h_ν₁_real]; simp
+      _ = (v₁ : ℝ) + (m₁ - m₂)^2 := by ring
+  -- log g₁ / log g₂ の積分計算.
+  have h_log_g₁_eq : ∀ x, Real.log (gaussianPDFReal m₁ v₁ x)
+      = (-(1/2) * Real.log (2 * Real.pi * v₁)) + (-(1/(2 * v₁))) * (x - m₁)^2 := by
+    intro x; rw [log_gaussianPDFReal_eq m₁ hv₁ x]; ring
+  have h_log_g₂_eq : ∀ x, Real.log (gaussianPDFReal m₂ v₂ x)
+      = (-(1/2) * Real.log (2 * Real.pi * v₂)) + (-(1/(2 * v₂))) * (x - m₂)^2 := by
+    intro x; rw [log_gaussianPDFReal_eq m₂ hv₂ x]; ring
+  have h_int_log_g₁ : Integrable (fun x => Real.log (gaussianPDFReal m₁ v₁ x)) ν₁ := by
+    rw [show (fun x => Real.log (gaussianPDFReal m₁ v₁ x))
+        = fun x => (-(1/2) * Real.log (2 * Real.pi * v₁))
+            + (-(1/(2 * v₁))) * (x - m₁)^2 from funext h_log_g₁_eq]
+    exact (integrable_const _).add (h_int_xm₁2_ν₁.const_mul (-(1/(2 * v₁))))
+  have h_int_log_g₂ : Integrable (fun x => Real.log (gaussianPDFReal m₂ v₂ x)) ν₁ := by
+    rw [show (fun x => Real.log (gaussianPDFReal m₂ v₂ x))
+        = fun x => (-(1/2) * Real.log (2 * Real.pi * v₂))
+            + (-(1/(2 * v₂))) * (x - m₂)^2 from funext h_log_g₂_eq]
+    exact (integrable_const _).add (h_int_xm₂2_ν₁.const_mul (-(1/(2 * v₂))))
+  have h_ν₁_real : ν₁.real Set.univ = 1 := by rw [measureReal_def]; simp [hν₁_def]
+  have h_int_log_g₁_eq :
+      ∫ x, Real.log (gaussianPDFReal m₁ v₁ x) ∂ν₁
+        = -(1/2) * Real.log (2 * Real.pi * v₁) - (1/2) := by
+    rw [show (fun x => Real.log (gaussianPDFReal m₁ v₁ x))
+        = fun x => (-(1/2) * Real.log (2 * Real.pi * v₁))
+            + (-(1/(2 * v₁))) * (x - m₁)^2 from funext h_log_g₁_eq]
+    rw [integral_add (f := fun _ => -(1/2) * Real.log (2 * Real.pi * v₁))
+        (g := fun x => (-(1/(2 * v₁))) * (x - m₁)^2)
+        (integrable_const _) (h_int_xm₁2_ν₁.const_mul _)]
+    rw [integral_const, integral_const_mul, h_var_ν₁, h_ν₁_real]
+    simp only [smul_eq_mul, one_mul]
+    field_simp
+    ring
+  have h_int_log_g₂_eq :
+      ∫ x, Real.log (gaussianPDFReal m₂ v₂ x) ∂ν₁
+        = -(1/2) * Real.log (2 * Real.pi * v₂)
+          - ((v₁ : ℝ) + (m₁ - m₂)^2) / (2 * v₂) := by
+    rw [show (fun x => Real.log (gaussianPDFReal m₂ v₂ x))
+        = fun x => (-(1/2) * Real.log (2 * Real.pi * v₂))
+            + (-(1/(2 * v₂))) * (x - m₂)^2 from funext h_log_g₂_eq]
+    rw [integral_add (f := fun _ => -(1/2) * Real.log (2 * Real.pi * v₂))
+        (g := fun x => (-(1/(2 * v₂))) * (x - m₂)^2)
+        (integrable_const _) (h_int_xm₂2_ν₁.const_mul _)]
+    rw [integral_const, integral_const_mul, h_mean_shift, h_ν₁_real]
+    field_simp
+    ring
+  -- 統合.
+  have h_split : ∫ x, llr ν₁ ν₂ x ∂ν₁
+      = ∫ x, Real.log (gaussianPDFReal m₁ v₁ x) ∂ν₁
+        - ∫ x, Real.log (gaussianPDFReal m₂ v₂ x) ∂ν₁ := by
+    rw [← integral_sub h_int_log_g₁ h_int_log_g₂]
+    exact integral_congr_ae h_llr_decomp
+  rw [h_kl_eq, h_split, h_int_log_g₁_eq, h_int_log_g₂_eq]
+  -- 代数恒等式の最終整理.
+  -- LHS = -(1/2) log(2πv₁) - 1/2 - (-(1/2) log(2πv₂) - (v₁+(m₁-m₂)²)/(2v₂))
+  --     = (1/2) (log(2πv₂) - log(2πv₁)) - 1/2 + (v₁+(m₁-m₂)²)/(2v₂)
+  --     = (1/2) log(v₂/v₁) + v₁/(2v₂) + (m₁-m₂)²/(2v₂) - 1/2
+  --     = (1/2) [log(v₂/v₁) + v₁/v₂ + (m₁-m₂)²/v₂ - 1]
+  have h_log_diff : Real.log ((v₂ : ℝ) / v₁)
+      = Real.log (2 * Real.pi * v₂) - Real.log (2 * Real.pi * v₁) := by
+    rw [show (v₂ : ℝ) / v₁ = (2 * Real.pi * v₂) / (2 * Real.pi * v₁) by field_simp]
+    exact Real.log_div h2πv₂_pos.ne' h2πv₁_pos.ne'
+  rw [h_log_diff]
+  have hv₁_ne : (v₁ : ℝ) ≠ 0 := hv₁_pos.ne'
+  have hv₂_ne : (v₂ : ℝ) ≠ 0 := hv₂_pos.ne'
+  field_simp
+  ring
 
 /-- (Phase E-2) `h(𝒩(0,1)) = (1/2) log (2π) + 1/2`. -/
 theorem differentialEntropy_gaussianReal_std_val :
     differentialEntropy (gaussianReal 0 1)
       = (1/2) * Real.log (2 * Real.pi) + (1/2) := by
-  sorry
+  rw [differentialEntropy_gaussianReal_std]
+  have h2π_pos : (0 : ℝ) < 2 * Real.pi := by positivity
+  have he_pos : (0 : ℝ) < Real.exp 1 := Real.exp_pos 1
+  rw [Real.log_mul h2π_pos.ne' he_pos.ne', Real.log_exp]
+  ring
 
 end Common2026.Shannon
