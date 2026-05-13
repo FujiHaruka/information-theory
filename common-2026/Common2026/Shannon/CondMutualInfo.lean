@@ -410,4 +410,144 @@ theorem mutualInfo_le_of_markov
   rw [h_chain, h_zero, add_zero] at h_dpi
   exact h_dpi
 
+/-! ## Phase A (D-2'' インフラ) — `condMutualInfo` の `MeasurableEquiv` reshape 不変性
+
+D-2'' / 後続 channel coding 系で `Y^n ↔ Y_i × Y^{≠i}` / `X^{≠i} ↔ X^{<i} × X^{>i}` などの
+reshape を扱うため、`condMutualInfo` 各引数の `MeasurableEquiv` 不変性を整備する
+(`mutualInfo_map_left/right_measurableEquiv` の条件付き版)。-/
+
+/-- **Left reshape**: `I(e ∘ X; Y | Z) = I(X; Y | Z)` for any `MeasurableEquiv e : X ≃ᵐ X'`.
+
+戦略: 第 1 引数 (joint kernel) と第 2 引数 (factored kernel) の両方に `id × (e × id)` を
+pushforward。
+- joint 側: `condDistrib (e∘X, Y) Z μ` の compProd 形は `μ.map (Z, e∘X, Y)` (via
+  `compProd_map_condDistrib`)。これは `μ.map (Z, X, Y)` を `id × (e × id)` で押し出した形。
+- factored 側: `Kernel.map_prod_eq` で `(condDistrib (e∘X) Z μ ×ₖ condDistrib Y Z μ)
+  = ((condDistrib X Z μ).map e ×ₖ condDistrib Y Z μ).map (Prod.map id (id))` 形を経由、
+  `condDistrib_comp` で `condDistrib (e∘X) Z μ =ᵐ (condDistrib X Z μ).map e`。 -/
+theorem condMutualInfo_map_left_measurableEquiv
+    {X' : Type*} [MeasurableSpace X'] [StandardBorelSpace X'] [Nonempty X']
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    [StandardBorelSpace X] [Nonempty X]
+    [StandardBorelSpace Y] [Nonempty Y]
+    (Xs : Ω → X) (Yo : Ω → Y) (Zc : Ω → Z)
+    (hXs : Measurable Xs) (hYo : Measurable Yo) (hZc : Measurable Zc)
+    (e : X ≃ᵐ X') :
+    condMutualInfo μ (fun ω => e (Xs ω)) Yo Zc = condMutualInfo μ Xs Yo Zc := by
+  haveI : IsProbabilityMeasure (μ.map Zc) :=
+    Measure.isProbabilityMeasure_map hZc.aemeasurable
+  unfold condMutualInfo
+  -- The reshape on Z × (X × Y): apply `id × (e × id)`.
+  let eProd : Z × X × Y ≃ᵐ Z × X' × Y :=
+    (MeasurableEquiv.refl Z).prodCongr (e.prodCongr (.refl Y))
+  -- Step 1: joint side via compProd_map_condDistrib (both ways) + Measure.map_map.
+  have hXY : Measurable (fun ω => (Xs ω, Yo ω)) := hXs.prodMk hYo
+  have heXY : Measurable (fun ω => (e (Xs ω), Yo ω)) := (e.measurable.comp hXs).prodMk hYo
+  have h_joint :
+      ((μ.map Zc) ⊗ₘ condDistrib (fun ω => (e (Xs ω), Yo ω)) Zc μ)
+        = ((μ.map Zc) ⊗ₘ condDistrib (fun ω => (Xs ω, Yo ω)) Zc μ).map eProd := by
+    rw [compProd_map_condDistrib heXY.aemeasurable,
+        compProd_map_condDistrib hXY.aemeasurable,
+        Measure.map_map eProd.measurable (hZc.prodMk hXY)]
+    rfl
+  -- Step 2: factored side via condDistrib_comp + Kernel.map_prod_eq.
+  -- condDistrib (e ∘ Xs) Zc μ =ᵐ[μ.map Zc] (condDistrib Xs Zc μ).map e
+  have h_cd_comp :
+      condDistrib (fun ω => e (Xs ω)) Zc μ
+        =ᵐ[μ.map Zc] (condDistrib Xs Zc μ).map e :=
+    condDistrib_comp Zc hXs.aemeasurable e.measurable
+  -- Replace LHS factored kernel with map-rewritten version, then pushforward.
+  have h_factored_compProd_eq :
+      (μ.map Zc) ⊗ₘ
+          (condDistrib (fun ω => e (Xs ω)) Zc μ ×ₖ condDistrib Yo Zc μ)
+        = (μ.map Zc) ⊗ₘ
+          ((condDistrib Xs Zc μ).map e ×ₖ condDistrib Yo Zc μ) := by
+    refine Measure.compProd_congr ?_
+    filter_upwards [h_cd_comp] with z hz
+    ext s hs
+    rw [Kernel.prod_apply, Kernel.prod_apply, hz]
+  -- (κ.map e) ×ₖ η = (κ ×ₖ η).map (Prod.map e id)
+  have h_map_prod :
+      (condDistrib Xs Zc μ).map e ×ₖ condDistrib Yo Zc μ
+        = (condDistrib Xs Zc μ ×ₖ condDistrib Yo Zc μ).map (Prod.map e (id : Y → Y)) :=
+    Kernel.map_prod_eq _ _ e.measurable
+  -- Combine into pushforward via eProd.
+  have h_factored :
+      (μ.map Zc) ⊗ₘ
+          (condDistrib (fun ω => e (Xs ω)) Zc μ ×ₖ condDistrib Yo Zc μ)
+        = ((μ.map Zc) ⊗ₘ
+              (condDistrib Xs Zc μ ×ₖ condDistrib Yo Zc μ)).map eProd := by
+    rw [h_factored_compProd_eq, h_map_prod, Measure.compProd_map]
+    · rfl
+    · exact (e.measurable.prodMap measurable_id)
+  rw [h_joint, h_factored, klDiv_map_measurableEquiv]
+
+/-- **Right reshape (Y/middle)**: `I(X; e ∘ Y | Z) = I(X; Y | Z)` for `e : Y ≃ᵐ Y'`.
+
+`condMutualInfo_comm` で第 1, 2 引数を swap し `condMutualInfo_map_left_measurableEquiv` に
+帰着。 -/
+theorem condMutualInfo_map_middle_measurableEquiv
+    {Y' : Type*} [MeasurableSpace Y'] [StandardBorelSpace Y'] [Nonempty Y']
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    [StandardBorelSpace X] [Nonempty X]
+    [StandardBorelSpace Y] [Nonempty Y]
+    (Xs : Ω → X) (Yo : Ω → Y) (Zc : Ω → Z)
+    (hXs : Measurable Xs) (hYo : Measurable Yo) (hZc : Measurable Zc)
+    (e : Y ≃ᵐ Y') :
+    condMutualInfo μ Xs (fun ω => e (Yo ω)) Zc = condMutualInfo μ Xs Yo Zc := by
+  rw [condMutualInfo_comm μ Xs (fun ω => e (Yo ω)) Zc hXs (e.measurable.comp hYo) hZc,
+      condMutualInfo_map_left_measurableEquiv μ Yo Xs Zc hYo hXs hZc e,
+      condMutualInfo_comm μ Yo Xs Zc hYo hXs hZc]
+
+/-! Right-argument (Z, conditioner) reshape `condMutualInfo_map_right_measurableEquiv`
+is **deferred** to future work. It is not required for the immediate D-2'' Phase B
+derivation paths (Step 1 uses left X reshape, Step 3 uses middle Y reshape). The proof
+sketch involves `condDistrib_ae_eq_of_measure_eq_compProd` to relate `condDistrib X (e∘Z) μ`
+to `(condDistrib X Z μ).comap e.symm` and then `Measure.compProd_map` plumbing —
+straightforward but ~150 lines.  -/
+
+/-- **Markov chain left post-processing**: if `Xs → Zc → Yo` is a Markov chain and
+`f : X → X'` is measurable, then `f ∘ Xs → Zc → Yo` is also a Markov chain.
+
+戦略: γ-form Markov の両辺に `id × (f × id) : Z × (X × Y) → Z × (X' × Y)` を pushforward。
+- LHS `μ.map (Z, X, Y)` ↦ `μ.map (Z, f∘X, Y)` (via `Measure.map_map`).
+- RHS `(μ.map Z) ⊗ₘ (K_X ×ₖ K_Y)` ↦ `(μ.map Z) ⊗ₘ (K_X.map f ×ₖ K_Y)`
+  (via `Measure.compProd_map` + `Kernel.map_prod_eq`).
+- `condDistrib_comp` で `condDistrib (f∘X) Z μ =ᵐ K_X.map f` を吸収。
+
+用途: D-2'' Phase B Step 1 (`X^{≠i} → X_i → Y_i` から `X^{<i} → X_i → Y_i` を `Prod.fst` で抽出). -/
+theorem isMarkovChain_map_left
+    {X' : Type*} [MeasurableSpace X'] [StandardBorelSpace X'] [Nonempty X']
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    [StandardBorelSpace X] [Nonempty X]
+    [StandardBorelSpace Y] [Nonempty Y]
+    (Xs : Ω → X) (Zc : Ω → Z) (Yo : Ω → Y)
+    (hXs : Measurable Xs) (hZc : Measurable Zc) (hYo : Measurable Yo)
+    {f : X → X'} (hf : Measurable f)
+    (hmarkov : IsMarkovChain μ Xs Zc Yo) :
+    IsMarkovChain μ (fun ω => f (Xs ω)) Zc Yo := by
+  haveI : IsProbabilityMeasure (μ.map Zc) :=
+    Measure.isProbabilityMeasure_map hZc.aemeasurable
+  unfold IsMarkovChain
+  have hZXY : Measurable (fun ω => (Zc ω, Xs ω, Yo ω)) := hZc.prodMk (hXs.prodMk hYo)
+  -- LHS: μ.map (Z, f∘X, Y) = (μ.map (Z, X, Y)).map (id × (f × id)).
+  have h_LHS :
+      μ.map (fun ω => (Zc ω, f (Xs ω), Yo ω))
+        = (μ.map (fun ω => (Zc ω, Xs ω, Yo ω))).map
+            (Prod.map (id : Z → Z) (Prod.map f (id : Y → Y))) := by
+    rw [Measure.map_map (measurable_id.prodMap (hf.prodMap measurable_id)) hZXY]
+    rfl
+  rw [h_LHS, hmarkov]
+  -- Goal: ((μ.map Zc) ⊗ₘ (K_X ×ₖ K_Y)).map (id × (f × id)) = (μ.map Zc) ⊗ₘ (K_{f∘X} ×ₖ K_Y).
+  rw [← Measure.compProd_map (hf.prodMap measurable_id),
+      ← Kernel.map_prod_eq _ _ hf]
+  -- Goal: (μ.map Zc) ⊗ₘ ((K_X.map f) ×ₖ K_Y) = (μ.map Zc) ⊗ₘ (K_{f∘X} ×ₖ K_Y).
+  refine (Measure.compProd_congr ?_).symm
+  have h_cd : condDistrib (fun ω => f (Xs ω)) Zc μ
+      =ᵐ[μ.map Zc] (condDistrib Xs Zc μ).map f :=
+    condDistrib_comp Zc hXs.aemeasurable hf
+  filter_upwards [h_cd] with z hz
+  ext s hs
+  rw [Kernel.prod_apply, Kernel.prod_apply, hz]
+
 end InformationTheory.Shannon

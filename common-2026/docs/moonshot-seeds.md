@@ -102,6 +102,21 @@
   CondMutualInfo.lean 補助補題 3 本を整備し、Phase C/D の 3 仮説を `IsMemorylessChannel` から内部派生
   する純粋形 (~200-300 行)。
 
+  **D-2'' Phase A 部分着手** (2026-05-14、CondMutualInfo.lean 413 → 555 行、0 sorry / 0 warning):
+  - ✅ `condMutualInfo_map_left_measurableEquiv` (X 引数 reshape 不変性): `compProd_map_condDistrib`
+    + `condDistrib_comp` + `Kernel.map_prod_eq` + `Measure.compProd_map` の合成。
+  - ✅ `condMutualInfo_map_middle_measurableEquiv` (Y 引数 reshape 不変性): `condMutualInfo_comm`
+    2 回経由で left に帰着。
+  - ✅ `isMarkovChain_map_left` (Markov 左 post-processing): γ-form Markov + `condDistrib_comp`。
+  - ⏸️ `condMutualInfo_map_right_measurableEquiv` (Z reshape) — deferred (~150 行と見積、
+    `condDistrib_ae_eq_of_measure_eq_compProd` + `Kernel.comap` plumbing)。
+  - ❌ `isMarkovChain_augment_left_with_middle` (Phase A.3) — deferred (`Kernel.deterministic`
+    plumbing 泥沼化見込)。
+  - **B.2 (`h_yother_zero` 派生) は `IsMemorylessChannel` 単独からは原理的に不可と判明**:
+    Markov chain `(X^{≠i}, Y^{≠i}) → X_i → Y_i` だけでは `condMI(X_i; Y^{≠i} | (X^{<i}, Y_i)) = 0`
+    を導けない (X^n の Markov 構造 or i.i.d. の追加仮定が必要)。"純粋" 化には
+    `IsMemorylessChannel` の強化が必要。Phase B/C 全体は次セッションへ。
+
 - **D-3. AEP 完全形 (lower bound + 確率収束)** ✅ (2026-05-13) →
   [docs/shannon/aep-full-form-plan.md](shannon/aep-full-form-plan.md) — Cover-Thomas
   3.1.2 **完全 4 帰結** を `Common2026/Shannon/AEP.lean` 末尾 (Phase H, 211 行追加) で
