@@ -1,6 +1,6 @@
 # Moonshot シードカード集
 
-> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3** → **Type-class size 下界 E-2** → **Strong typicality E-7** → **Csiszár I-projection E-6** → **Channel coding strong converse E-1 単発形** → **Slepian–Wolf achievability E-5 退化点 MVP** → **Channel coding general-input converse D-2 chain rule MVP (`log|M| ≤ ∑ I(X_i; Y^n | X^{<i}).toReal + Fano`、iid 仮定撤廃)** → **Rate-distortion converse E-4 single-shot MVP (`R(D̃).toReal ≤ log|M|` for `D̃ := 𝔼[d(X, decoder(encoder(X)))]`)** → **DMC feedback capacity converse E-10 chain rule + per-letter hypothesis MVP (`log|M| ≤ n·C + Fano`、`h_per_letter` 仮説形)** → **Differential entropy + Gaussian max-entropy E-9 完全形 (Phase A-E、`h(𝒩(m,v)) = (1/2) log(2πev)` + max-entropy + KL closed-form、`DifferentialEntropy.lean` 1010 行)** → **Shannon noisy channel coding theorem D-1 MVP (capacity 到達 + average→max + smoothing で hp_pos 内部処理、hW_pos のみユーザ仮定、`ChannelCodingShannonTheorem.lean` 918 行、4 ペア "弱/強形" 最後の未充足解消)** → **Feedback converse per-letter bound E-10' 完全形 (memoryless Markov reformulation 経路、`ChannelCodingFeedbackComplete.lean` 198 行、Cover-Thomas 7.12 完全形完走、CondMutualInfo 新規補題 0 行)** → **General converse memoryless per-summand bound D-2' MVP (撤退ライン形、`ChannelCodingConverseGeneralComplete.lean` 578 行、3 仮説 `h_yother_zero` / `h_split` / `h_markov_xprefix` を memoryless 性から派生可能形で受け取り、新規補題 `condMutualInfo_chain_rule_X_2var` / `_Y_2var`)** → **Rate-distortion monotonicity + specified-distortion form E-4' MVP (`RateDistortionConverseMonotone.lean` 151 行、`rateDistortionFunction_antitone` + `rate_distortion_converse_single_shot_specified`)** → **Shannon-McMillan-Breiman Phase A+B MVP (`Stationary.lean` 119 行 + `EntropyRate.lean` 498 行 = 617 行、定常過程 + entropy rate 定義 + 存在性、Phase C Birkhoff 自前 deferred)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未実装 seed は **E-3 + E-5' (plan 起草済み 2 本、2026-05-13)** と新規 **D-1' / D-2'' / E-4'' / E-8' deferred** 4 本。
+> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3** → **Type-class size 下界 E-2** → **Strong typicality E-7** → **Csiszár I-projection E-6** → **Channel coding strong converse E-1 単発形** → **Slepian–Wolf achievability E-5 退化点 MVP** → **Channel coding general-input converse D-2 chain rule MVP (`log|M| ≤ ∑ I(X_i; Y^n | X^{<i}).toReal + Fano`、iid 仮定撤廃)** → **Rate-distortion converse E-4 single-shot MVP (`R(D̃).toReal ≤ log|M|` for `D̃ := 𝔼[d(X, decoder(encoder(X)))]`)** → **DMC feedback capacity converse E-10 chain rule + per-letter hypothesis MVP (`log|M| ≤ n·C + Fano`、`h_per_letter` 仮説形)** → **Differential entropy + Gaussian max-entropy E-9 完全形 (Phase A-E、`h(𝒩(m,v)) = (1/2) log(2πev)` + max-entropy + KL closed-form、`DifferentialEntropy.lean` 1010 行)** → **Shannon noisy channel coding theorem D-1 MVP (capacity 到達 + average→max + smoothing で hp_pos 内部処理、hW_pos のみユーザ仮定、`ChannelCodingShannonTheorem.lean` 918 行、4 ペア "弱/強形" 最後の未充足解消)** → **Feedback converse per-letter bound E-10' 完全形 (memoryless Markov reformulation 経路、`ChannelCodingFeedbackComplete.lean` 198 行、Cover-Thomas 7.12 完全形完走、CondMutualInfo 新規補題 0 行)** → **General converse memoryless per-summand bound D-2' MVP (撤退ライン形、`ChannelCodingConverseGeneralComplete.lean` 578 行、3 仮説 `h_yother_zero` / `h_split` / `h_markov_xprefix` を memoryless 性から派生可能形で受け取り、新規補題 `condMutualInfo_chain_rule_X_2var` / `_Y_2var`)** → **Rate-distortion monotonicity + specified-distortion form E-4' MVP (`RateDistortionConverseMonotone.lean` 151 行、`rateDistortionFunction_antitone` + `rate_distortion_converse_single_shot_specified`)** → **Shannon-McMillan-Breiman Phase A+B MVP (`Stationary.lean` 119 行 + `EntropyRate.lean` 498 行 = 617 行、定常過程 + entropy rate 定義 + 存在性、Phase C Birkhoff 自前 deferred)** → **Slepian-Wolf binning + 期待値 collapse E-5' Phase A+B MVP (`SlepianWolfBinning.lean` 273 行、`binningMeasure` + `binning_collision_prob` (Cover-Thomas 15.4 中核 collapse lemma))** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未実装 seed は **E-3 (plan 起草済み 1 本、2026-05-13)** と新規 **D-1' / D-2'' / E-4'' / E-5'' / E-8' deferred** 5 本。
 >
 > 起草時 (2026-05-10): Fano (測度論版) → Shannon converse (3 形) → Han 補集合形 → Han Phase D (subset average / Shearer) まで通った状態を起点に、次のムーンショット候補 5 本をシード化。
 >
@@ -214,21 +214,22 @@
   各 corner-point 結果は SW rate region の 2 自明 corner を formal に pin down し、
   E-5' で任意 rate triple への拡張時に boundary check として effective。
 
-- **E-5'. Slepian–Wolf full rate region (3-bound 同時 achievability)** 🚧 (2026-05-13 plan 起草) →
+- **E-5'. Slepian–Wolf binning 機構 + 期待値 collapse MVP** ✅ (2026-05-14) →
   [docs/shannon/slepian-wolf-full-rate-region-plan.md](shannon/slepian-wolf-full-rate-region-plan.md) —
-  E-5 deferred 後継。Cover-Thomas 15.4 完全形 `R_X > H(X|Y), R_Y > H(Y|X),
-  R_X + R_Y > H(X, Y)` の rate region に対する random binning + joint typicality decoder。
-  ~2000 行規模:
-  - `binningMeasure : Measure (α^n → Fin M_X)` を Fintype 上 uniform pi で構築 (~300 行)
-  - 期待値 collapse `𝔼[1_{f_X(x) = f_X(x')}] = 1/M_X` for `x ≠ x'` (Fubini, ~400 行、
-    `ChannelCodingAchievability.codebookMeasure` の encoder-side 鏡像)
-  - error decomposition `E ⊆ E_0 ∪ E_X ∪ E_Y ∪ E_{XY}` (~200 行)
-  - conditional typical slice size bound `|{x' : (x', y^n) typical}| ≤ exp(n H(X|Y) + 2nε)`
-    (~400 行、Mathlib gap、`jointlyTypicalSet` 既存定義の fiber 解析)
-  - 各 error term expectation bound (~400 行)
-  - pigeonhole + asymptotic finalize (~300 行)
+  E-5 deferred 後継の **Phase A + B 基盤** を `Common2026/Shannon/SlepianWolfBinning.lean`
+  (273 行、0 sorry / 0 warning) で publish:
+  - `binningMeasure α n M := Measure.pi (fun _ : (Fin n → α) => uniformOn univ)` (Fintype 上 uniform pi)
+  - `IsProbabilityMeasure` instance + `binningMeasure_singleton_real` (`(1/M)^{|α|^n}` singleton mass)
+  - **`binning_collision_prob`**: `x ≠ x' ⟹ (binningMeasure α n M).real {f | f x = f x'} = 1/M`
+    (Cover-Thomas 15.4 達成性の中核 collapse lemma)
+  - `binning_collision_prob_eq_self`: 自己 collision = 1
 
-  E-5 の `swErrorProb` 定義 + 2 corner-point 結果を boundary check として再利用。
+  `codebookMeasure` Mathlib API (`Measure.pi` + `uniformOn`) で独立定義経路 (Plan 0 判断 (B))、
+  既存 `ChannelCodingAchievability` 親 file 不変。
+
+  **後継 `E-5''` deferred**: Cover-Thomas 15.4 完全形 (3-bound 同時 achievability) の Phase C-F
+  ~1700 行: conditional typical slice size bound + error decomposition + per-term expectation +
+  pigeonhole + 主定理。本 MVP の `binning_collision_prob` を中核として再利用。
 
 - **E-6. Csiszár I-projection / Pythagorean inequality** ✅ (2026-05-13) →
   [docs/shannon/csiszar-projection-plan.md](shannon/csiszar-projection-plan.md) —

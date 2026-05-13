@@ -24,13 +24,22 @@ publish 済の `swErrorProb` 定義 + 2 corner-point 結果を **boundary check*
 
 ## 進捗
 
-- [ ] Phase 0 — Codebook 機構の流用 vs 抽出判断 📋
-- [ ] Phase A — Binning 機構 (`binningMeasure`) 📋
-- [ ] Phase B — 期待値 collapse (`𝔼[1_{f(x)=f(x')}] = 1/M_X`) 📋
-- [ ] Phase C — Conditional typical slice size bound 📋
+- [x] Phase 0 — Codebook 機構の流用 vs 抽出判断 ✅ (2026-05-14、(B) 独立定義経路採用)
+- [x] Phase A — Binning 機構 (`binningMeasure`) ✅ (2026-05-14、`SlepianWolfBinning.lean` 273 行、0 sorry)
+- [x] Phase B — 期待値 collapse (`𝔼[1_{f(x)=f(x')}] = 1/M_X`) ✅ (2026-05-14、`binning_collision_prob` + `_eq_self`)
+- [ ] Phase C — Conditional typical slice size bound 📋 **後継 E-5'' deferred**
 - [ ] Phase D — Error event decomposition `E ⊆ E_0 ∪ E_X ∪ E_Y ∪ E_{XY}` 📋
 - [ ] Phase E — Per-term expectation bound 📋
 - [ ] Phase F — Pigeonhole + finalize 📋
+
+**MVP 完了サマリ (2026-05-14)**: `Common2026/Shannon/SlepianWolfBinning.lean` (273 行、0 sorry / 0 warning):
+- `binningMeasure α n M := Measure.pi (fun _ => uniformOn (univ : Set (Fin M)))`
+- `IsProbabilityMeasure` instance
+- `binningMeasure_singleton_real`: `(1/M)^{|α|^n}` singleton mass
+- `binning_collision_prob`: `x ≠ x' ⟹ Pr[f x = f x'] = 1/M` (主結果)
+- `binning_collision_prob_eq_self`: self-collision = 1
+
+A.4 marginal は Phase B 主結果が経由不要だったため skip。**後継 `E-5''` deferred**: Phase C-F (joint typicality decoder + 4-way error decomposition + per-term expectation + pigeonhole + 主定理) ~1700 行。
 
 ## ゴール / Approach
 
