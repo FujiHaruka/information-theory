@@ -35,14 +35,14 @@ defined here.
 * `blockEntropy_zero` — `H_0 = 0`. **Proved.**
 * `conditionalEntropyTail_nonneg` — `0 ≤ H(X_n | X_{<n})`. **Proved.**
 * `conditionalEntropyTail_antitone` (B.2) — `H(X_n | X_{<n})` non-increasing.
-  **`sorry`**: requires the stationary `IdentDistrib` plumbing for the pair
-  `(X_n, X_1, …, X_{n-1}) ≅ (X_{n-1}, X_0, …, X_{n-2})`.
+  **Proved**: stationarity (joint pushforward equality via `MeasurePreserving T`)
+  + conditioning monotonicity (`condEntropy_le_condEntropy_of_pair`).
 * `entropyRate_exists_of_stationary` (B.3) — `blockEntropy / n` converges.
-  **Proved** modulo (B.2): the antitone tail converges to some `L`, and Cesàro
+  **Proved**: the antitone tail converges to some `L`, and Cesàro
   on the chain-rule decomposition gives `blockEntropy / n → L`.
 * `entropyRate_eq_lim_condEntropy` (B.4) — `H(X_n | X_{<n}) → entropyRate`.
-  **Proved** modulo (B.2) via `Filter.Tendsto.limUnder_eq` on the Cesàro
-  convergence to identify `entropyRate = L = lim tail`.
+  **Proved** via `Filter.Tendsto.limUnder_eq` on the Cesàro convergence to
+  identify `entropyRate = L = lim tail`.
 -/
 
 namespace InformationTheory.Shannon
@@ -125,25 +125,241 @@ theorem blockEntropy_succ_chain_rule
   exact entropy_pair_eq_entropy_add_condEntropy μ (p.blockRV n) (p.obs n)
     h_block_meas h_obs_meas
 
-/-! ## (B.2) Antitonicity of `conditionalEntropyTail` (sketched, `sorry` in MVP)
+/-! ## (B.2) Antitonicity of `conditionalEntropyTail`
 
-`H(X_n | X_0, …, X_{n-1}) ≤ H(X_{n-1} | X_0, …, X_{n-2})`. Proof: stationarity
-gives `IdentDistrib (X_n, X_1, …, X_{n-1}) (X_{n-1}, X_0, …, X_{n-2})`, and
-applying `condEntropy_le_condEntropy_of_pair` from `CondMutualInfo.lean` gives the
-inequality.
+`H(X_{n+1} | X_0, …, X_n) ≤ H(X_n | X_0, …, X_{n-1})`. Proof:
+1. **Stationarity** (apply shift `T`): the joint pushforward
+   `μ.map (X_n, (X_0, …, X_{n-1}))` equals `μ.map (X_{n+1}, (X_1, …, X_n))`,
+   so the corresponding conditional entropies coincide (via `condDistrib_map`).
+2. **Conditioning monotonicity** (`condEntropy_le_condEntropy_of_pair`):
+   `H(X_{n+1} | (X_0, (X_1, …, X_n))) ≤ H(X_{n+1} | (X_1, …, X_n))`. The
+   conditioner `(X_0, (X_1, …, X_n))` reshapes to `blockRV (n+1)` via
+   `MeasurableEquiv.piFinSuccAbove ... 0` + `prodComm`.
+-/
 
-For the Phase B MVP this is left as `sorry`; the existence theorem (B.3) below
-asserts the limit unconditionally and uses `Real.tendsto_of_bddBelow_antitone`
-once this is in place. The MVP existence is via Cesàro from the chain rule
-without using (B.2). -/
+section AntitoneHelpers
+
+variable {μ : Measure Ω}
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- `obs n` precomposed with `T` is `obs (n+1)`. -/
+private lemma obs_comp_T
+    (p : StationaryProcess μ α) (n : ℕ) :
+    p.obs n ∘ p.T = p.obs (n + 1) := by
+  funext ω
+  show p.X (p.T^[n] (p.T ω)) = p.X (p.T^[n + 1] ω)
+  rw [show p.T^[n + 1] = p.T^[n] ∘ p.T from Function.iterate_succ p.T n]
+  rfl
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- `blockRV n` precomposed with the shift `T` is the "shifted block"
+`(X_1, X_2, …, X_n)`. -/
+private lemma blockRV_comp_T
+    (p : StationaryProcess μ α) (n : ℕ) :
+    (p.blockRV n) ∘ p.T = fun ω => fun i : Fin n => p.obs (i.val + 1) ω := by
+  funext ω
+  show p.blockRV n (p.T ω) = fun i : Fin n => p.obs (i.val + 1) ω
+  funext i
+  show p.obs i.val (p.T ω) = p.obs (i.val + 1) ω
+  -- p.obs k = X ∘ T^[k]; pre-composing with T gives X ∘ T^[k] ∘ T = X ∘ T^[k+1] = p.obs (k+1).
+  have := congr_fun (obs_comp_T (α := α) p i.val) ω
+  exact this
+
+/-- The "shifted block" `(X_1, X_2, …, X_n) : Ω → (Fin n → α)`. Used in the
+antitone proof: stationarity translates the pair `(X_n, (X_0, …, X_{n-1}))`
+forward by 1 to `(X_{n+1}, shiftedBlockRV)`. -/
+private def shiftedBlockRV
+    (p : StationaryProcess μ α) (n : ℕ) : Ω → (Fin n → α) :=
+  fun ω i => p.obs (i.val + 1) ω
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+private lemma measurable_shiftedBlockRV
+    (p : StationaryProcess μ α) (n : ℕ) :
+    Measurable (shiftedBlockRV p n) := by
+  refine measurable_pi_iff.mpr (fun i => ?_)
+  exact p.measurable_obs (i.val + 1)
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- Key joint pushforward equality coming from `MeasurePreserving T μ μ`:
+`μ.map (obs n, blockRV n) = μ.map (obs (n+1), shiftedBlockRV n)`. -/
+private lemma map_joint_eq_shifted
+    (p : StationaryProcess μ α) (n : ℕ) :
+    μ.map (fun ω => (p.obs n ω, p.blockRV n ω))
+      = μ.map (fun ω => (p.obs (n + 1) ω, shiftedBlockRV p n ω)) := by
+  -- The RHS pair equals the LHS pair precomposed with T.
+  have hT : Measurable p.T := p.measurable_T
+  have h_pair_meas : Measurable (fun ω => (p.obs n ω, p.blockRV n ω)) :=
+    (p.measurable_obs n).prodMk (p.measurable_blockRV n)
+  have h_compose :
+      (fun ω => (p.obs n ω, p.blockRV n ω)) ∘ p.T
+        = fun ω => (p.obs (n + 1) ω, shiftedBlockRV p n ω) := by
+    funext ω
+    refine Prod.ext ?_ ?_
+    · show p.obs n (p.T ω) = p.obs (n + 1) ω
+      have := obs_comp_T p n
+      exact congr_fun this ω
+    · show p.blockRV n (p.T ω) = shiftedBlockRV p n ω
+      have := blockRV_comp_T p n
+      exact congr_fun this ω
+  -- Pushforward by T preserves μ.
+  have h_T_preserves : μ.map p.T = μ := p.measurePreserving.map_eq
+  -- (μ.map T).map (...) = μ.map (... ∘ T).
+  rw [← h_compose, ← Measure.map_map h_pair_meas hT, h_T_preserves]
+
+end AntitoneHelpers
+
+/-- Conditional entropy `H(Xs | Yo)` depends only on the joint pushforward
+`μ.map (fun ω => (Xs ω, Yo ω))`. -/
+private lemma condEntropy_eq_pushforward
+    {β γ : Type*}
+    [Fintype β] [DecidableEq β] [Nonempty β]
+    [MeasurableSpace β] [MeasurableSingletonClass β]
+    [MeasurableSpace γ]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : Ω → β) (Yo : Ω → γ)
+    (hXs : Measurable Xs) (hYo : Measurable Yo) :
+    InformationTheory.MeasureFano.condEntropy μ Xs Yo
+      = InformationTheory.MeasureFano.condEntropy
+          (μ.map (fun ω => (Xs ω, Yo ω)))
+          (Prod.fst : β × γ → β) (Prod.snd : β × γ → γ) := by
+  classical
+  set ν : Measure (β × γ) := μ.map (fun ω => (Xs ω, Yo ω)) with hν_def
+  have h_pair_meas : Measurable (fun ω => (Xs ω, Yo ω)) := hXs.prodMk hYo
+  haveI : IsProbabilityMeasure ν :=
+    Measure.isProbabilityMeasure_map h_pair_meas.aemeasurable
+  -- `ν.map Prod.snd = μ.map Yo` (outer measure of both integrals agrees).
+  have h_snd_map : ν.map (Prod.snd : β × γ → γ) = μ.map Yo := by
+    rw [hν_def, Measure.map_map measurable_snd h_pair_meas]
+    rfl
+  -- `condDistrib (Prod.fst) (Prod.snd) ν =ᵐ[μ.map Yo] condDistrib Xs Yo μ`.
+  have h_cd_map :
+      ProbabilityTheory.condDistrib (Prod.fst : β × γ → β)
+          (Prod.snd : β × γ → γ) ν
+        =ᵐ[μ.map Yo] ProbabilityTheory.condDistrib Xs Yo μ := by
+    -- Apply Mathlib `condDistrib_map` with `ν := μ` (Ω-measure),
+    -- `f := (Xs, Yo)`, `X := Prod.snd`, `Y := Prod.fst`.
+    have h := ProbabilityTheory.condDistrib_map
+      (X := (Prod.snd : β × γ → γ)) (Y := (Prod.fst : β × γ → β))
+      (ν := μ) (f := fun ω => (Xs ω, Yo ω))
+      (by
+        rw [← hν_def]
+        exact measurable_snd.aemeasurable)
+      (by
+        rw [← hν_def]
+        exact measurable_fst.aemeasurable)
+      h_pair_meas.aemeasurable
+    -- h : condDistrib Prod.fst Prod.snd (μ.map (Xs,Yo))
+    --     =ᵐ[μ.map (Prod.snd ∘ (Xs,Yo))] condDistrib (Prod.fst ∘ (Xs,Yo)) (Prod.snd ∘ (Xs,Yo)) μ
+    -- Both compositions reduce by rfl: Prod.snd ∘ (Xs,Yo) = Yo, Prod.fst ∘ (Xs,Yo) = Xs.
+    simpa [hν_def] using h
+  -- Now unfold both sides; both are integrals over `μ.map Yo` of
+  -- `∑ x, negMulLog (condDistrib · · y).real {x}`. The condDistribs are
+  -- ae-equal, so integrands agree ae and integrals agree.
+  unfold InformationTheory.MeasureFano.condEntropy
+  rw [h_snd_map]
+  refine MeasureTheory.integral_congr_ae ?_
+  filter_upwards [h_cd_map] with y hy
+  rw [hy]
+
 theorem conditionalEntropyTail_antitone
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) :
     Antitone (conditionalEntropyTail μ p) := by
-  -- Stationarity + `condEntropy_le_condEntropy_of_pair` (Phase B.2).
-  -- Plumbing the `IdentDistrib (X_n, X_<n) (X_{n-1}, X_{<n-1})` chain through
-  -- `MeasurePreserving T^[1]` is the bulk of the work; left as `sorry` for the
-  -- Phase B MVP.
-  sorry
+  -- It suffices to show `f (n+1) ≤ f n` for all `n` (monotone for the dual `≥`).
+  refine antitone_nat_of_succ_le (fun n => ?_)
+  -- Step 1: by stationarity, `tail n = H(X_{n+1} | shiftedBlockRV)`.
+  have h_step1 :
+      conditionalEntropyTail μ p n
+        = InformationTheory.MeasureFano.condEntropy μ
+            (p.obs (n + 1)) (shiftedBlockRV p n) := by
+    -- Both sides depend only on the joint pushforward; use `map_joint_eq_shifted`.
+    unfold conditionalEntropyTail
+    rw [condEntropy_eq_pushforward μ (p.obs n) (p.blockRV n)
+          (p.measurable_obs n) (p.measurable_blockRV n),
+        condEntropy_eq_pushforward μ (p.obs (n + 1)) (shiftedBlockRV p n)
+          (p.measurable_obs (n + 1)) (measurable_shiftedBlockRV p n)]
+    congr 1
+    exact map_joint_eq_shifted p n
+  -- Step 2: `tail (n+1) = H(X_{n+1} | blockRV (n+1)) ≤ H(X_{n+1} | shiftedBlockRV)`
+  -- via `condEntropy_le_condEntropy_of_pair` + reshape.
+  -- `condEntropy_le_condEntropy_of_pair μ (obs (n+1)) shiftedBlockRV (obs 0)`
+  -- gives condEntropy μ (obs (n+1)) (shifted, obs 0) ≤ condEntropy μ (obs (n+1)) shifted.
+  -- Then reshape (shifted, obs 0) into blockRV (n+1) via condEntropy_measurableEquiv_comp.
+  have h_drop :
+      InformationTheory.MeasureFano.condEntropy μ (p.obs (n + 1))
+          (fun ω => (shiftedBlockRV p n ω, p.obs 0 ω))
+        ≤ InformationTheory.MeasureFano.condEntropy μ
+            (p.obs (n + 1)) (shiftedBlockRV p n) :=
+    condEntropy_le_condEntropy_of_pair μ (p.obs (n + 1))
+      (shiftedBlockRV p n) (p.obs 0)
+      (p.measurable_obs (n + 1)) (measurable_shiftedBlockRV p n)
+      (p.measurable_obs 0)
+  -- Reshape `(shifted, obs 0)` to `blockRV (n+1)` via the equiv
+  -- `e' : (Fin n → α) × α ≃ᵐ (Fin (n+1) → α)` mapping `(f, a) ↦ insertNth 0 a f`.
+  let e' : (Fin n → α) × α ≃ᵐ (Fin (n + 1) → α) :=
+    MeasurableEquiv.prodComm.trans
+      (MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) => α) 0).symm
+  have h_e'_eq : ∀ ω,
+      e' (shiftedBlockRV p n ω, p.obs 0 ω) = p.blockRV (n + 1) ω := by
+    intro ω
+    -- e' (f, a) = piFinSuccAbove.symm (a, f) = Fin.insertNth 0 a f
+    -- (Fin.succAbove 0 j = j.succ, so insertNth 0 a f at 0 is a, at j.succ is f j).
+    show (MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) => α) 0).symm
+          (p.obs 0 ω, shiftedBlockRV p n ω) = p.blockRV (n + 1) ω
+    -- The `.symm` reduces to `Fin.insertNth 0`.
+    show Fin.insertNth (n := n) (α := fun _ => α) 0
+            (p.obs 0 ω) (shiftedBlockRV p n ω)
+          = p.blockRV (n + 1) ω
+    funext i
+    -- Case on `i`: either `i = 0` (use insertNth_apply_same) or `i = j.succ`
+    -- for some `j : Fin n` (use insertNth_apply_succAbove with succAbove 0 = succ).
+    refine Fin.cases ?_ ?_ i
+    · -- i = 0.
+      change Fin.insertNth (n := n) (α := fun _ => α) 0
+              (p.obs 0 ω) (shiftedBlockRV p n ω) 0 = p.blockRV (n + 1) ω 0
+      rw [Fin.insertNth_apply_same]
+      rfl
+    · intro j
+      -- i = j.succ. Use insertNth_apply_succAbove with succAbove 0 j = j.succ.
+      have h_succ : (j.succ : Fin (n + 1)) = (0 : Fin (n + 1)).succAbove j := by
+        simp
+      rw [h_succ, Fin.insertNth_apply_succAbove]
+      -- Goal: shiftedBlockRV p n ω j = p.blockRV (n+1) ω ((0 : Fin (n+1)).succAbove j)
+      show p.obs (j.val + 1) ω
+          = p.blockRV (n + 1) ω ((0 : Fin (n + 1)).succAbove j)
+      have h_succ' : (0 : Fin (n + 1)).succAbove j = j.succ := by
+        simp
+      rw [h_succ']
+      show p.obs (j.val + 1) ω = p.obs j.succ ω
+      rfl
+  have h_reshape :
+      InformationTheory.MeasureFano.condEntropy μ (p.obs (n + 1))
+          (fun ω => (shiftedBlockRV p n ω, p.obs 0 ω))
+        = InformationTheory.MeasureFano.condEntropy μ
+            (p.obs (n + 1)) (p.blockRV (n + 1)) := by
+    have h := condEntropy_measurableEquiv_comp μ
+      (p.obs (n + 1)) (p.measurable_obs (n + 1))
+      (fun ω => (shiftedBlockRV p n ω, p.obs 0 ω))
+      ((measurable_shiftedBlockRV p n).prodMk (p.measurable_obs 0))
+      e'
+    -- h : condEntropy μ (obs (n+1)) (fun ω => e' (shifted ω, obs 0 ω))
+    --     = condEntropy μ (obs (n+1)) (fun ω => (shifted ω, obs 0 ω))
+    have h_funext : (fun ω => e' (shiftedBlockRV p n ω, p.obs 0 ω))
+        = p.blockRV (n + 1) := by
+      funext ω; exact h_e'_eq ω
+    rw [h_funext] at h
+    exact h.symm
+  -- Compose: tail (n+1) = condEntropy μ (obs (n+1)) (blockRV (n+1))
+  --        = condEntropy μ (obs (n+1)) (shifted, obs 0)  [by h_reshape.symm]
+  --        ≤ condEntropy μ (obs (n+1)) shifted          [by h_drop]
+  --        = tail n                                      [by h_step1.symm]
+  unfold conditionalEntropyTail
+  calc InformationTheory.MeasureFano.condEntropy μ
+          (p.obs (n + 1)) (p.blockRV (n + 1))
+      = InformationTheory.MeasureFano.condEntropy μ (p.obs (n + 1))
+          (fun ω => (shiftedBlockRV p n ω, p.obs 0 ω)) := h_reshape.symm
+    _ ≤ InformationTheory.MeasureFano.condEntropy μ
+          (p.obs (n + 1)) (shiftedBlockRV p n) := h_drop
+    _ = conditionalEntropyTail μ p n := h_step1.symm
 
 /-- Conditional entropy on a finite alphabet is bounded above by `log |α|`,
 hence the tail is uniformly bounded. We only need `0 ≤ tail` for (B.3). -/
@@ -159,16 +375,10 @@ We show `Tendsto (blockEntropy μ p n / n) atTop (𝓝 H)` for some `H`, by the
 following route:
 
 * The chain rule gives `blockEntropy μ p n = ∑_{i < n} conditionalEntropyTail μ p i`.
-* The Cesàro lemma `Filter.Tendsto.cesaro` would convert `Tendsto tail → Tendsto avg`.
-* Without (B.2), we know only `0 ≤ tail i ≤ log |α|`, so the tail has cluster points;
-  for the MVP existence, we take the limit of the Cesàro averages via the simpler
-  observation that bounded Cesàro-of-bounded gives a bounded sequence whose
-  convergence is governed by (B.2). With (B.2) the tail is antitone+nonneg,
-  hence convergent, and the Cesàro average converges to the same limit.
-
-For the MVP we expose the chain-rule form and the existence statement (using
-`conditionalEntropyTail_antitone` as a hypothesis, then giving the unconditional
-form via `sorry`).
+* `conditionalEntropyTail_antitone` (B.2) + non-negativity ⇒ tail converges to
+  some `L = ⨅ n, tail n`.
+* The Cesàro lemma `Filter.Tendsto.cesaro` converts `Tendsto tail → Tendsto avg`,
+  and the chain-rule identity rewrites the Cesàro average as `blockEntropy / n`.
 -/
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
@@ -246,7 +456,7 @@ theorem entropyRate_exists_of_stationary
     rw [← blockEntropy_eq_sum_conditionalEntropyTail μ p n, div_eq_inv_mul]
   exact h_cesaro.congr h_eq
 
-/-! ## (B.4) Equality with `lim conditionalEntropyTail` (sketched, `sorry` in MVP)
+/-! ## (B.4) Equality with `lim conditionalEntropyTail`
 
 `Tendsto (conditionalEntropyTail μ p) atTop (𝓝 (entropyRate μ p))`.
 
