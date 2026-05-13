@@ -17,8 +17,13 @@ E-3 (achievability) は plan-only で並走。R(D) 定義 + distortion 定義は
   - [x] **B.1** `rateDistortionFunction_le_of_feasible`
 - [x] Phase C — 単発 converse (主定理) ✅
   - [x] **C.1** `rate_distortion_converse_single_shot`
-- [ ] 後継 (deferred) — R(D) 単調性 + convexity + n-letter chain rule 経由の
-      `rate ≥ R(D)` (Jensen)
+- [x] **E-4' MVP**: R(D) antitone + specified-distortion form ✅ (2026-05-14、
+      `Common2026/Shannon/RateDistortionConverseMonotone.lean` 151 行 0 sorry)
+  - `rateDistortionFunction_antitone`: `D₁ ≤ D₂ ⟹ R(D₂) ≤ R(D₁)` (feasible set monotone)
+  - `rate_distortion_converse_single_shot_specified`: `D̃ ≤ D ⟹ R(D).toReal ≤ log|M|`
+    (親 single-shot 形 + monotonicity 合成)
+- [ ] 後継 `E-4''` (deferred) — R(D) convexity + n-letter chain rule 経由の
+      `rate ≥ R(D)` (Jensen)、Mathlib MI concavity gap で ~500-1000 行
 
 ## 実装完了
 
