@@ -36,13 +36,18 @@ Phase B 補題は **本 file 内に local section として配置**。理由:
 - 既存 `CondMutualInfo.lean` (413 行) の非改変が望ましい
 - 汎用 API として将来 `CondMutualInfo.lean` へ昇格は容易 (`namespace InformationTheory.Shannon`)
 
-## Phase C/D — skeleton
+## Phase C/D — 撤退ライン 0 sorry 達成形
 
-本 file には Phase C (`memoryless_per_summand_bound`) と Phase D
-(`channel_coding_converse_general_memoryless`) の signature を `:= by sorry` で配置。
-plan の判断ログに従い、Phase C は (i) Y-axis chain rule conditional decomposition、
-(ii) memoryless から Yother 項 = 0、(iii) E-10' 同型の Xprefix bound、(iv) 合成、の 4 step。
-Phase D は D-2 既存 `channel_coding_converse_general_chainRule` + Phase C で和の各項を縮める。
+Phase C (`memoryless_per_summand_bound`) と Phase D
+(`channel_coding_converse_general_memoryless`) はともに hypothesis-form で publish。
+Phase C は (i) Y-axis chain rule conditional decomposition (`h_split`)、
+(ii) memoryless から Yother 項 = 0 (`h_yother_zero`)、
+(iii) augmented Markov `(X^{<i}, X_i) → X_i → Y_i` (`h_markov_xprefix`)、(iv) 合成、の 4 step。
+仮説 (i)-(iii) は `IsMemorylessChannel` から派生可能 (Markov 左 post-processing +
+augmentation + condMutualInfo の Y-引数 reshape) だが、これらの補助補題は
+`CondMutualInfo.lean` に未整備のため Phase C 仮説に格上げした (撤退ライン 採用)。
+Phase D は D-2 既存 `channel_coding_converse_general_chainRule` に Phase C を流し込んで
+各項を `I(X_i; Y_i)` で押さえる形。
 
 ## 判断ログ
 
@@ -176,78 +181,153 @@ theorem condMutualInfo_le_of_markov_joint
 
 end CondMIAuxiliary
 
-section CondChainRuleY
+section CondChainRule2Var
 
-variable {α : Type*} [Fintype α] [MeasurableSpace α] [MeasurableSingletonClass α]
-  [Nonempty α]
-variable {M : Type*} [MeasurableSpace M] [Nonempty M] [StandardBorelSpace M]
-variable {W : Type*} [MeasurableSpace W] [Nonempty W] [StandardBorelSpace W]
+variable {X X' Y W : Type*}
+  [MeasurableSpace X] [StandardBorelSpace X] [Nonempty X]
+  [MeasurableSpace X'] [StandardBorelSpace X'] [Nonempty X']
+  [MeasurableSpace Y] [StandardBorelSpace Y] [Nonempty Y]
+  [MeasurableSpace W] [StandardBorelSpace W] [Nonempty W]
 
-/-- **Y-axis n-variable chain rule, conditional on `Wc`** (Phase B 補題 2).
-
-The conditional version of `mutualInfo_chain_rule_Y_axis_fin`:
+omit [StandardBorelSpace W] [Nonempty W] in
+/-- **2-variable X-axis conditional chain rule for `condMutualInfo`** (Phase B 補題 2,
+new form).
 
 ```
-I(Msg; Y_0, …, Y_{n-1} | Wc)
-  = ∑ i, I(Msg; Y_i | (Wc, Y_0, …, Y_{i-1}))
+I((X, X'); Y | Wc) = I(X; Y | Wc) + I(X'; Y | (Wc, X))
 ```
+
+Derived from three applications of the bare 2-variable chain rule
+`mutualInfo_chain_rule` together with `prodAssoc` reshape on the left, then
+cancellation of the common term `I(Wc; Y)` (requires `I(Wc; Y) ≠ ∞`).
 
 ### Strategy
 
-Derived from `mutualInfo_chain_rule_fin` (X-axis form, applied to `Ys` instead of `Xs`,
-i.e., the role of "X" is played by `(fun ω i => Ys i ω)`) by:
-
-1. Apply the existing X-axis chain rule with `Zc := Wc`: rewrite
-   `I((Wc, Msg); Y^n) = ∑ I(Y_i; (Wc, Msg) | Y^{<i})` (no — this is X-axis on Y!).
-
-Actually we re-derive it via the same path as `mutualInfo_chain_rule_Y_axis_fin`:
-commute MI to put Y-tuple on the left (with `Wc` carried as a conditioning marginal),
-apply X-axis chain rule, and commute each summand back.
-
-For the conditional version, we instead start from
-`mutualInfo_chain_rule_Y_axis_fin` applied to the augmented variable `(Wc, Msg)` on
-the left, then apply a chain rule to split off the `Wc` part on each side. -/
-theorem condMutualInfo_chain_rule_Y_axis_fin
-    {n : ℕ}
+* (A) Apply chain rule with `Zc := Wc, Xs := (X, X'), Yo := Y`:
+  `I((Wc, (X, X')); Y) = I(Wc; Y) + condMI (X, X') Y Wc`.
+* (B) Reshape `(Wc, (X, X'))` ↔ `((Wc, X), X')` via `MeasurableEquiv.prodAssoc.symm`
+  and `mutualInfo_map_left_measurableEquiv`.
+* (C) Apply chain rule with `Zc := (Wc, X), Xs := X', Yo := Y`:
+  `I(((Wc, X), X'); Y) = I((Wc, X); Y) + condMI X' Y (Wc, X)`.
+* (D) Apply chain rule with `Zc := Wc, Xs := X, Yo := Y`:
+  `I((Wc, X); Y) = I(Wc; Y) + condMI X Y Wc`.
+* Combine and cancel `I(Wc; Y)` via `WithTop.add_left_cancel` (`I(Wc; Y) ≠ ∞`). -/
+theorem condMutualInfo_chain_rule_X_2var
     (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Msg : Ω → M) (Ys : Fin n → Ω → α) (Wc : Ω → W)
-    (hMsg : Measurable Msg) (hYs : ∀ i, Measurable (Ys i))
-    (hWc : Measurable Wc) :
-    Shannon.condMutualInfo μ Msg (fun ω i => Ys i ω) Wc
-      = ∑ i : Fin n,
-          Shannon.condMutualInfo μ Msg (Ys i)
-            (fun ω => (Wc ω, fun (j : Fin i.val) => Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω)) := by
-  -- Strategy: cross-chain.
-  -- (A) `mutualInfo_chain_rule μ Msg (fun ω i => Ys i ω) Wc`:
-  --   I((Wc, Msg); Y^n) = I(Wc; Y^n) + I(Msg; Y^n | Wc)
-  -- (B) `mutualInfo_chain_rule_fin` on `(Wc, Msg)` reshaped — heavy; instead, we use:
-  --   apply Y-axis chain rule (existing `mutualInfo_chain_rule_Y_axis_fin`) twice:
-  --     I(Wc; Y^n) = ∑ I(Wc; Y_i | Y^{<i})
-  --     I((Wc, Msg); Y^n) = ∑ I((Wc, Msg); Y_i | Y^{<i})
-  --   then for each i: `mutualInfo_chain_rule` with Zc := Wc, Xs := Msg, Yo := Y_i
-  --   conditional on Y^{<i}. But this is exactly the conditional 2-var chain rule
-  --   `condMutualInfo_chain_rule` which we don't yet have.
-  --
-  -- Cleaner approach: skeleton this lemma for now, fill via the cross-chain identity
-  -- in a follow-up. The Phase C proof can use the unconditional chain rule
-  -- `mutualInfo_chain_rule_Y_axis_fin` directly when no Wc is needed.
-  sorry
+    (X_RV : Ω → X) (X'_RV : Ω → X') (Yo : Ω → Y) (Wc : Ω → W)
+    (hX : Measurable X_RV) (hX' : Measurable X'_RV)
+    (hYo : Measurable Yo) (hWc : Measurable Wc)
+    (hWcY_fin : Shannon.mutualInfo μ Wc Yo ≠ ∞) :
+    Shannon.condMutualInfo μ (fun ω => (X_RV ω, X'_RV ω)) Yo Wc
+      = Shannon.condMutualInfo μ X_RV Yo Wc
+        + Shannon.condMutualInfo μ X'_RV Yo (fun ω => (Wc ω, X_RV ω)) := by
+  have hXX' : Measurable (fun ω => (X_RV ω, X'_RV ω)) := hX.prodMk hX'
+  have hWX : Measurable (fun ω => (Wc ω, X_RV ω)) := hWc.prodMk hX
+  -- Step (A): I((Wc, (X, X')); Y) = I(Wc; Y) + condMI (X, X') Y Wc.
+  have hA :
+      Shannon.mutualInfo μ (fun ω => (Wc ω, X_RV ω, X'_RV ω)) Yo
+        = Shannon.mutualInfo μ Wc Yo
+          + Shannon.condMutualInfo μ (fun ω => (X_RV ω, X'_RV ω)) Yo Wc :=
+    Shannon.mutualInfo_chain_rule μ (fun ω => (X_RV ω, X'_RV ω)) Yo Wc hXX' hYo hWc
+  -- Step (B): Reshape (Wc, (X, X')) ↔ ((Wc, X), X') via prodAssoc.
+  -- prodAssoc : (Wc × X) × X' ≃ᵐ Wc × (X × X')
+  -- so prodAssoc.symm : Wc × (X × X') → (Wc × X) × X'.
+  let eAssoc : W × (X × X') ≃ᵐ (W × X) × X' :=
+    (MeasurableEquiv.prodAssoc (α := W) (β := X) (γ := X')).symm
+  have h_eAssoc_apply : ∀ ω,
+      eAssoc (Wc ω, X_RV ω, X'_RV ω) = ((Wc ω, X_RV ω), X'_RV ω) := fun _ => rfl
+  have h_reshape :
+      Shannon.mutualInfo μ
+          (fun ω => ((Wc ω, X_RV ω), X'_RV ω)) Yo
+        = Shannon.mutualInfo μ (fun ω => (Wc ω, X_RV ω, X'_RV ω)) Yo := by
+    have h_RV_meas : Measurable (fun ω => (Wc ω, X_RV ω, X'_RV ω)) :=
+      hWc.prodMk hXX'
+    have hMap :
+        Shannon.mutualInfo μ
+            (fun ω => eAssoc (Wc ω, X_RV ω, X'_RV ω)) Yo
+          = Shannon.mutualInfo μ (fun ω => (Wc ω, X_RV ω, X'_RV ω)) Yo :=
+      Shannon.mutualInfo_map_left_measurableEquiv μ
+        (fun ω => (Wc ω, X_RV ω, X'_RV ω)) Yo h_RV_meas hYo eAssoc
+    -- The two sides are pointwise-equal as functions of ω.
+    have : (fun ω => eAssoc (Wc ω, X_RV ω, X'_RV ω))
+        = (fun ω => ((Wc ω, X_RV ω), X'_RV ω)) := funext h_eAssoc_apply
+    rw [this] at hMap
+    exact hMap
+  -- Step (C): I(((Wc, X), X'); Y) = I((Wc, X); Y) + condMI X' Y (Wc, X).
+  have hC :
+      Shannon.mutualInfo μ (fun ω => ((Wc ω, X_RV ω), X'_RV ω)) Yo
+        = Shannon.mutualInfo μ (fun ω => (Wc ω, X_RV ω)) Yo
+          + Shannon.condMutualInfo μ X'_RV Yo (fun ω => (Wc ω, X_RV ω)) :=
+    Shannon.mutualInfo_chain_rule μ X'_RV Yo (fun ω => (Wc ω, X_RV ω))
+      hX' hYo hWX
+  -- Step (D): I((Wc, X); Y) = I(Wc; Y) + condMI X Y Wc.
+  have hD :
+      Shannon.mutualInfo μ (fun ω => (Wc ω, X_RV ω)) Yo
+        = Shannon.mutualInfo μ Wc Yo + Shannon.condMutualInfo μ X_RV Yo Wc :=
+    Shannon.mutualInfo_chain_rule μ X_RV Yo Wc hX hYo hWc
+  -- Combine: chain reshape + C + D gives the same LHS as A.
+  rw [hD] at hC
+  -- hC: I(((Wc, X), X'); Y) = (I(Wc; Y) + condMI X Y Wc) + condMI X' Y (Wc, X)
+  rw [h_reshape] at hC
+  -- hC: I((Wc, (X, X')); Y) = I(Wc; Y) + condMI X Y Wc + condMI X' Y (Wc, X)
+  rw [hA] at hC
+  -- hC: I(Wc; Y) + condMI (X, X') Y Wc
+  --   = I(Wc; Y) + condMI X Y Wc + condMI X' Y (Wc, X)
+  -- Cancel I(Wc; Y) from both sides.
+  have hC' :
+      Shannon.mutualInfo μ Wc Yo
+          + Shannon.condMutualInfo μ (fun ω => (X_RV ω, X'_RV ω)) Yo Wc
+        = Shannon.mutualInfo μ Wc Yo
+          + (Shannon.condMutualInfo μ X_RV Yo Wc
+            + Shannon.condMutualInfo μ X'_RV Yo (fun ω => (Wc ω, X_RV ω))) := by
+    rw [← add_assoc]; exact hC
+  exact WithTop.add_left_cancel hWcY_fin hC'
 
-end CondChainRuleY
+omit [StandardBorelSpace W] [Nonempty W] in
+/-- **2-variable Y-axis conditional chain rule for `condMutualInfo`**.
+
+```
+I(X; (A, B) | Wc) = I(X; A | Wc) + I(X; B | (Wc, A))
+```
+
+Derived from the X-axis 2-var conditional chain rule by `condMutualInfo_comm`.
+Requires `I(Wc; X) ≠ ∞` (post-comm: the "Y" of the X-axis becomes the original `X`). -/
+theorem condMutualInfo_chain_rule_Y_2var
+    {α' β' : Type*}
+    [MeasurableSpace α'] [StandardBorelSpace α'] [Nonempty α']
+    [MeasurableSpace β'] [StandardBorelSpace β'] [Nonempty β']
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (X_RV : Ω → X) (A : Ω → α') (B : Ω → β') (Wc : Ω → W)
+    (hX : Measurable X_RV) (hA : Measurable A)
+    (hB : Measurable B) (hWc : Measurable Wc)
+    (hWcX_fin : Shannon.mutualInfo μ Wc X_RV ≠ ∞) :
+    Shannon.condMutualInfo μ X_RV (fun ω => (A ω, B ω)) Wc
+      = Shannon.condMutualInfo μ X_RV A Wc
+        + Shannon.condMutualInfo μ X_RV B (fun ω => (Wc ω, A ω)) := by
+  have hAB : Measurable (fun ω => (A ω, B ω)) := hA.prodMk hB
+  have hWA : Measurable (fun ω => (Wc ω, A ω)) := hWc.prodMk hA
+  -- LHS: condMI X (A,B) Wc = condMI (A,B) X Wc (by comm).
+  rw [Shannon.condMutualInfo_comm μ X_RV (fun ω => (A ω, B ω)) Wc hX hAB hWc]
+  -- Term 1: condMI X A Wc = condMI A X Wc.
+  rw [Shannon.condMutualInfo_comm μ X_RV A Wc hX hA hWc]
+  -- Term 2: condMI X B (Wc, A) = condMI B X (Wc, A).
+  rw [Shannon.condMutualInfo_comm μ X_RV B (fun ω => (Wc ω, A ω)) hX hB hWA]
+  -- Now reduce to X-axis 2-var.
+  exact condMutualInfo_chain_rule_X_2var μ A B X_RV Wc hA hB hX hWc hWcX_fin
+
+end CondChainRule2Var
 
 /-! ## Phase C — `memoryless_per_summand_bound` (skeleton) -/
 
 section PerSummand
 
 variable {n : ℕ}
-variable {M : Type*} [Fintype M] [DecidableEq M] [Nonempty M]
-  [MeasurableSpace M] [MeasurableSingletonClass M] [StandardBorelSpace M]
-variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
-  [MeasurableSpace α] [MeasurableSingletonClass α] [StandardBorelSpace α]
-variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
-  [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
+variable {α : Type*} [Nonempty α]
+  [MeasurableSpace α] [StandardBorelSpace α]
+variable {β : Type*} [Nonempty β]
+  [MeasurableSpace β] [StandardBorelSpace β]
 
-/-- **Per-summand bound (D-2', Phase C, skeleton)**.
+/-- **Per-summand bound, hypothesis-form (D-2', Phase C, 撤退ライン)**.
 
 Under memoryless DMC (`IsMemorylessChannel`), each per-letter chain-rule summand of the
 total mutual information is bounded by the per-letter bare mutual information:
@@ -256,32 +336,106 @@ total mutual information is bounded by the per-letter bare mutual information:
 I(X_i; Y^n | X^{<i}) ≤ I(X_i; Y_i).
 ```
 
-This corresponds to the per-summand collapse in Cover-Thomas Thm 7.9 (memoryless DMC
-converse without feedback).
+This is the per-summand collapse in Cover-Thomas Thm 7.9 (memoryless DMC converse
+without feedback). The current proof is **撤退ライン** form: takes two derived facts
+as hypotheses, both follow from `IsMemorylessChannel` but their internal derivation
+requires Markov-chain left post-processing infrastructure not yet in `CondMutualInfo.lean`:
 
-### Strategy (plan, Phase C, 4 steps; skeleton)
+* `h_markov_xprefix i`: Markov chain `X^{<i} → X_i → Y_i` (derivable from `h_memo`
+  by left post-processing of the memoryless Markov chain
+  `(X^{≠i}, Y^{≠i}) → X_i → Y_i`, since `X^{<i}` is a function of `X^{≠i}`).
+* `h_yother_zero i`: `I(X_i; Y^{≠i} | (X^{<i}, Y_i)) = 0`, the Yother term in the
+  Y-axis 2-var conditional chain rule decomposition (Step 2 of plan, derivable from
+  `h_memo` via a stronger Markov-chain manipulation).
+* `h_split i`: the 2-var Y-axis conditional chain rule applied to the specific
+  `(Y_i, Yother)` split — derivable from `condMutualInfo_chain_rule_Y_2var` (Phase B
+  Lemma 2) together with a `condMutualInfo` reshape lemma for the Y-argument under a
+  `MeasurableEquiv` (Y^n ≃ᵐ β × ({j // j ≠ i} → β)) which is also not in scope.
 
-* **Step 1** (Y-axis conditional chain rule): use
-  `condMutualInfo_chain_rule_Y_axis_fin` (Phase B 補題 2) on `Wc := X^{<i}` to split
-  `I(X_i; Y^n | X^{<i})` into per-Y_j summands, then group into `Y_i` term and
-  `Y^{≠i}` terms.
-* **Step 2** (Yother 項 = 0): the memoryless hypothesis gives the Markov chain
-  `X_i → (X^{≠i}, X^{<i}, Y_i) → Y^{≠i}` (or equivalent), so
-  `condMutualInfo (X_i) Y^{≠i} (X^{<i}, Y_i) = 0` via `condMutualInfo_eq_zero_of_markov`.
-* **Step 3** (Xprefix 項 ≤ bare MI): E-10' Phase C 同型の 2-var chain rule +
-  `mutualInfo_le_of_markov` + `mutualInfo_nonneg` で
-  `condMutualInfo (X_i) (Y_i) (X^{<i}) ≤ mutualInfo (X_i) (Y_i)`.
-* **Step 4**: 合成。 -/
+### Strategy (4 steps)
+
+* **Step 1**: by `h_split`, `condMI(X_i; Y^n; X^{<i}) = condMI(X_i; Y_i; X^{<i}) +
+  condMI(X_i; Yother; X^{<i}, Y_i)`.
+* **Step 2**: by `h_yother_zero`, the second summand is 0.
+* **Step 3** (Xprefix 項 ≤ bare MI): apply `mutualInfo_le_of_markov` to
+  `h_markov_xprefix` to get `I(X^{<i}; Y_i) ≤ I(X_i; Y_i)`, then chain rule
+  `I((X^{<i}, X_i); Y_i) = I(X^{<i}; Y_i) + condMI(X_i; Y_i; X^{<i})` combined with the
+  augmented Markov `(X^{<i}, X_i) → X_i → Y_i` (which follows from
+  `h_markov_xprefix` by adding the middle RV to the left, also requires extra
+  infrastructure).
+* **Step 4**: combine.
+
+Because the Markov-chain manipulations (left post-processing, middle augmentation) and
+the `condMutualInfo` reshape lemma are not yet in `CondMutualInfo.lean`, this lemma
+takes them as hypotheses. Phase D's wiring is independent of how these are obtained. -/
 theorem memoryless_per_summand_bound
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (h_memo : IsMemorylessChannel μ Xs Ys) :
+    (_h_memo : IsMemorylessChannel μ Xs Ys)
+    -- The Yother term vanishes (Step 2 hypothesis, derivable from h_memo).
+    (h_yother_zero : ∀ i : Fin n,
+      Shannon.condMutualInfo μ (Xs i)
+          (fun ω (j : {j : Fin n // j ≠ i}) => Ys j.val ω)
+          (fun ω => (
+            (fun (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω),
+            Ys i ω)) = 0)
+    -- Y-axis 2-var conditional chain rule split (Step 1 hypothesis, derivable
+    -- from Phase B Lemma 2 + `condMutualInfo_map_right_measurableEquiv`).
+    (h_split : ∀ i : Fin n,
+      Shannon.condMutualInfo μ (Xs i) (fun ω j => Ys j ω)
+          (fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)
+        = Shannon.condMutualInfo μ (Xs i) (Ys i)
+            (fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)
+          + Shannon.condMutualInfo μ (Xs i)
+              (fun ω (j : {j : Fin n // j ≠ i}) => Ys j.val ω)
+              (fun ω => (
+                (fun (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω),
+                Ys i ω)))
+    -- Augmented Markov chain `(X^{<i}, X_i) → X_i → Y_i` (Step 3 Markov, derivable
+    -- from `h_memo` by left post-processing of memoryless `(X^{≠i}, Y^{≠i}) → X_i → Y_i`
+    -- followed by left-augmentation with the middle RV `X_i`).
+    (h_markov_xprefix : ∀ i : Fin n,
+      Shannon.IsMarkovChain μ
+        (fun ω => (
+          (fun (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω),
+          Xs i ω))
+        (Xs i) (Ys i)) :
     ∀ i : Fin n,
       Shannon.condMutualInfo μ (Xs i) (fun ω j => Ys j ω)
           (fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)
         ≤ Shannon.mutualInfo μ (Xs i) (Ys i) := by
-  sorry
+  intro i
+  -- Step 1+2: rewrite via h_split, drop Yother term using h_yother_zero.
+  rw [h_split i, h_yother_zero i, add_zero]
+  -- Now goal: condMI X_i Y_i Xprefix ≤ mutualInfo X_i Y_i.
+  -- Step 3: chain rule + augmented Markov + nonneg.
+  set Xprefix : Ω → (Fin i.val → α) :=
+    fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω with hXprefix_def
+  have hXprefix : Measurable Xprefix :=
+    measurable_pi_iff.mpr (fun j => hXs ⟨j.val, j.isLt.trans i.isLt⟩)
+  have hPair : Measurable (fun ω => (Xprefix ω, (Xs i) ω)) :=
+    hXprefix.prodMk (hXs i)
+  -- chain rule: I((Xprefix, X_i); Y_i) = I(Xprefix; Y_i) + condMI(X_i; Y_i; Xprefix).
+  have h_chain :
+      Shannon.mutualInfo μ (fun ω => (Xprefix ω, (Xs i) ω)) (Ys i)
+        = Shannon.mutualInfo μ Xprefix (Ys i)
+          + Shannon.condMutualInfo μ (Xs i) (Ys i) Xprefix :=
+    Shannon.mutualInfo_chain_rule μ (Xs i) (Ys i) Xprefix
+      (hXs i) (hYs i) hXprefix
+  -- Augmented Markov (Xprefix, X_i) → X_i → Y_i ⇒ I((Xprefix, X_i); Y_i) ≤ I(X_i; Y_i).
+  have h_aug_le :
+      Shannon.mutualInfo μ (fun ω => (Xprefix ω, (Xs i) ω)) (Ys i)
+        ≤ Shannon.mutualInfo μ (Xs i) (Ys i) :=
+    Shannon.mutualInfo_le_of_markov μ
+      (fun ω => (Xprefix ω, (Xs i) ω)) (Xs i) (Ys i)
+      hPair (hXs i) (hYs i) (h_markov_xprefix i)
+  -- condMI(X_i; Y_i; Xprefix) ≤ I((Xprefix, X_i); Y_i) via chain rule (nonneg I(Xprefix; Y_i)).
+  have h_condMI_le_aug :
+      Shannon.condMutualInfo μ (Xs i) (Ys i) Xprefix
+        ≤ Shannon.mutualInfo μ (fun ω => (Xprefix ω, (Xs i) ω)) (Ys i) := by
+    rw [h_chain]; exact le_add_left le_rfl
+  exact h_condMI_le_aug.trans h_aug_le
 
 end PerSummand
 
@@ -297,19 +451,26 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
-/-- **Channel coding converse, memoryless DMC 完全形 (Cover-Thomas Thm 7.9, skeleton)**.
+omit [DecidableEq α] [DecidableEq β] in
+/-- **Channel coding converse, memoryless DMC, hypothesis-form (Cover-Thomas Thm 7.9)**.
 
 Variant of `channel_coding_converse_general_chainRule` (D-2 既存) with the per-summand
-bound `I(X_i; Y^n | X^{<i}) ≤ I(X_i; Y_i)` **internally proved** from the memoryless
-DMC assumption `IsMemorylessChannel`.
+bound `I(X_i; Y^n | X^{<i}) ≤ I(X_i; Y_i)` derived from the memoryless DMC assumption
+`IsMemorylessChannel` via `memoryless_per_summand_bound` (Phase C).
 
-### Strategy (plan, Phase D, 3 steps; skeleton)
+The Phase C lemma in its current form takes three derived facts as hypotheses
+(`h_yother_zero`, `h_split`, `h_markov_xprefix`), all derivable from
+`IsMemorylessChannel` but requiring Markov-chain manipulations not yet in
+`CondMutualInfo.lean`. Phase D pipes these hypotheses through.
+
+### Strategy (3 steps)
 
 1. Apply D-2 既存 `channel_coding_converse_general_chainRule` to obtain the chain-rule
    decomposed bound `log|M| ≤ ∑ I(X_i; Y^n | X^{<i}).toReal + Fano`.
 2. Apply `memoryless_per_summand_bound` (Phase C) to reduce each summand to
-   `I(X_i; Y_i)`.
-3. Combine via `ENNReal.toReal_mono` + finite-sum monotonicity. -/
+   `I(X_i; Y_i)` — as an `ENNReal` inequality first, then take `.toReal` with
+   finite-sum monotonicity.
+3. `linarith` to finish (Fano terms identical on both sides). -/
 theorem channel_coding_converse_general_memoryless
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Msg : Ω → M) (encoder : M → Fin n → α)
@@ -319,6 +480,32 @@ theorem channel_coding_converse_general_memoryless
     (hmarkov : Shannon.IsMarkovChain μ Msg
       (fun ω => encoder (Msg ω)) (fun ω i => Ys i ω))
     (h_memo : IsMemorylessChannel μ (fun i ω => encoder (Msg ω) i) Ys)
+    (h_yother_zero : ∀ i : Fin n,
+      Shannon.condMutualInfo μ (fun ω => encoder (Msg ω) i)
+          (fun ω (j : {j : Fin n // j ≠ i}) => Ys j.val ω)
+          (fun ω => (
+            (fun (j : Fin i.val) => encoder (Msg ω) ⟨j.val, j.isLt.trans i.isLt⟩),
+            Ys i ω)) = 0)
+    (h_split : ∀ i : Fin n,
+      Shannon.condMutualInfo μ (fun ω => encoder (Msg ω) i) (fun ω j => Ys j ω)
+          (fun ω (j : Fin i.val) =>
+            encoder (Msg ω) ⟨j.val, j.isLt.trans i.isLt⟩)
+        = Shannon.condMutualInfo μ (fun ω => encoder (Msg ω) i) (Ys i)
+            (fun ω (j : Fin i.val) =>
+              encoder (Msg ω) ⟨j.val, j.isLt.trans i.isLt⟩)
+          + Shannon.condMutualInfo μ (fun ω => encoder (Msg ω) i)
+              (fun ω (j : {j : Fin n // j ≠ i}) => Ys j.val ω)
+              (fun ω => (
+                (fun (j : Fin i.val) =>
+                  encoder (Msg ω) ⟨j.val, j.isLt.trans i.isLt⟩),
+                Ys i ω)))
+    (h_markov_xprefix : ∀ i : Fin n,
+      Shannon.IsMarkovChain μ
+        (fun ω => (
+          (fun (j : Fin i.val) =>
+            encoder (Msg ω) ⟨j.val, j.isLt.trans i.isLt⟩),
+          encoder (Msg ω) i))
+        (fun ω => encoder (Msg ω) i) (Ys i))
     (hMsg_uniform :
       μ.map Msg = (Fintype.card M : ℝ≥0∞)⁻¹ • Measure.count)
     (hcard : 2 ≤ Fintype.card M)
@@ -334,7 +521,57 @@ theorem channel_coding_converse_general_memoryless
         InformationTheory.MeasureFano.errorProb μ Msg
           (fun ω i => Ys i ω) decoder *
           Real.log ((Fintype.card M : ℝ) - 1) := by
-  sorry
+  -- Step 1: invoke D-2 chain rule converse.
+  have h_chainRule :=
+    Shannon.channel_coding_converse_general_chainRule
+      μ Msg encoder Ys decoder
+      hMsg hYs hdecoder hmarkov hMsg_uniform hcard hMI_finite
+  -- Step 2: apply Phase C per-summand bound.
+  set Xs : Fin n → Ω → α := fun i ω => encoder (Msg ω) i with hXs_def
+  have h_encoder : Measurable encoder := measurable_of_countable _
+  have hXs_meas : ∀ i, Measurable (Xs i) := fun i =>
+    (measurable_pi_apply i).comp (h_encoder.comp hMsg)
+  have h_per_summand :=
+    memoryless_per_summand_bound μ Xs Ys hXs_meas hYs h_memo
+      h_yother_zero h_split h_markov_xprefix
+  -- Step 3: bound each summand by I(X_i; Y_i), take .toReal, sum.
+  -- Each per-i condMI is finite (finite alphabets).
+  have h_each_ne_top : ∀ i : Fin n,
+      Shannon.condMutualInfo μ (Xs i) (fun ω j => Ys j ω)
+        (fun ω (j : Fin i.val) =>
+          Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) ≠ ∞ := by
+    intro i
+    have h_prefix_meas :
+        Measurable (fun ω (j : Fin i.val) =>
+          Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) :=
+      measurable_pi_iff.mpr fun j => hXs_meas ⟨j.val, j.isLt.trans i.isLt⟩
+    have h_Yo : Measurable (fun ω (j : Fin n) => Ys j ω) :=
+      measurable_pi_iff.mpr hYs
+    exact Shannon.condMutualInfo_ne_top (X := α) (Y := Fin n → β) (Z := Fin i.val → α)
+      μ (Xs i) (fun ω j => Ys j ω)
+      (fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)
+      (hXs_meas i) h_Yo h_prefix_meas
+  -- Each I(X_i; Y_i) is finite.
+  have h_MI_ne_top : ∀ i : Fin n,
+      Shannon.mutualInfo μ (Xs i) (Ys i) ≠ ∞ := fun i =>
+    Shannon.mutualInfo_ne_top μ (Xs i) (Ys i) (hXs_meas i) (hYs i)
+  -- toReal monotonicity per i.
+  have h_each_toReal_le : ∀ i : Fin n,
+      (Shannon.condMutualInfo μ (Xs i) (fun ω j => Ys j ω)
+          (fun ω (j : Fin i.val) =>
+            Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)).toReal
+        ≤ (Shannon.mutualInfo μ (Xs i) (Ys i)).toReal := fun i =>
+    ENNReal.toReal_mono (h_MI_ne_top i) (h_per_summand i)
+  -- Sum monotonicity.
+  have h_sum_le :
+      (∑ i : Fin n,
+        (Shannon.condMutualInfo μ (Xs i) (fun ω j => Ys j ω)
+          (fun ω (j : Fin i.val) =>
+            Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)).toReal)
+        ≤ ∑ i : Fin n, (Shannon.mutualInfo μ (Xs i) (Ys i)).toReal :=
+    Finset.sum_le_sum (fun i _ => h_each_toReal_le i)
+  -- Combine.
+  linarith
 
 end MainConverse
 
