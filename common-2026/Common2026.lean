@@ -46,5 +46,6 @@ import Common2026.Shannon.SanovLDP
 import Common2026.Shannon.KLDivContinuous
 import Common2026.Shannon.SanovLDPEquality
 import Common2026.Shannon.TypeClassLowerBound
+import Common2026.Shannon.StrongTypicality
 import Common2026.Shannon.ShannonCode
 import Common2026.Shannon.ShannonCodeKraftReverse

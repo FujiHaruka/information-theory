@@ -1,6 +1,6 @@
 # Moonshot シードカード集
 
-> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3 (Cover-Thomas 3.1.2 完全 4 帰結)** → **Type-class size 下界 E-2 (Cover-Thomas 11.1.3 entropy 形、bridge `n^n/∏c^c = exp(n·H(c/n))`)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未着手 seed は **D 節 (D-1, D-2、D-3 完了)** と **E 節 (E-1, E-3〜E-10、E-2 完了、2026-05-13 起草)**。
+> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3 (Cover-Thomas 3.1.2 完全 4 帰結)** → **Type-class size 下界 E-2 (Cover-Thomas 11.1.3 entropy 形、bridge `n^n/∏c^c = exp(n·H(c/n))`)** → **Strong typicality E-7 (Cover-Thomas 11.2 3 主定理、per-letter `\|c/n - P\| ≤ ε` 形 + Strong→Weak bridge `\|.../n - H\| ≤ ε·L`)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未着手 seed は **D 節 (D-1, D-2、D-3 完了)** と **E 節 (E-1, E-3〜E-6, E-8〜E-10、E-2 / E-7 完了、2026-05-13 起草)**。
 >
 > 起草時 (2026-05-10): Fano (測度論版) → Shannon converse (3 形) → Han 補集合形 → Han Phase D (subset average / Shearer) まで通った状態を起点に、次のムーンショット候補 5 本をシード化。
 >
@@ -130,12 +130,27 @@
   の統一幾何**で、`SanovLDP` / `Stein` / `MaxEntropy` への横断 corollary 群を吐ける。
   見積 中量 (~600 行)、**横断 utility**。
 
-- **E-7. Strong typicality** ⏸️ —
-  Cover-Thomas 11.2。`A^{*n}_ε := {x^n : ∀ a, |(1/n) N(a|x^n) - P(a)| ≤ ε}` 定義 + 3 主定理
-  (`P^n(A^*) → 1`、size sandwich、joint version)。既存 weak typicality (`AEP.lean` 1388 行) と
-  並立。`SanovLDP.lean` の `TypeCountIndex` (`α → Fin (n+1)`) を流用、`A^*` は `∥c/n - P∥_∞ ≤ ε` 形。
-  Slepian–Wolf achievability (E-5) / Channel coding strong converse (E-1) の前段。
-  見積 中量 (~700 行)、**横断 utility**。
+- **E-7. Strong typicality** ✅ (2026-05-13) →
+  [docs/shannon/strong-typicality-plan.md](shannon/strong-typicality-plan.md) —
+  Cover-Thomas 11.2。`Common2026/Shannon/StrongTypicality.lean` (614 行) で
+  `stronglyTypicalSet := {x | ∀ a, |(typeCount x a : ℝ)/n - P(a)| ≤ ε}` を per-letter form で
+  定義 + 3 主定理を **すべて 0 sorry** で publish:
+  - `stronglyTypicalSet_prob_tendsto_one`: `μ {ω | jointRV ∈ A^*_ε} → 1`
+    (per-letter `letterIndicator` に `strong_law_ae_real` を `α` 個分回し、
+    `measure_iUnion_fintype_le` で union bound)
+  - `stronglyTypicalSet_card_le`: `|A^*_ε| ≤ exp(n(H + ε·L + δ))` for any `δ > 0`
+    where `L := ∑_a |log P(a)|` (`logSumAbs`)
+  - `stronglyTypicalSet_card_ge_eventually`: `∃ N, ∀ n ≥ N, (1-η)·exp(n(H - ε·L - δ)) ≤ |A^*_ε|`
+
+  鍵は **Strong → Weak typicality bridge** (`weak_displacement_eq_strong_sum`):
+  `(∑_i pmfLog (x_i))/n - H(P) = ∑_a (P(a) - typeCount x a / n) · log P(a)`
+  → 三角不等式 + strong typical `|...| ≤ ε` → `|.../n - H| ≤ ε·L` → `A^*_ε ⊆ T_{ε·L+δ}`
+  (`typicalSet` of weak typicality)。Phase 4 size sandwich は AEP の既存
+  `typicalSet_card_le` / `typicalSet_prob_le` を `ε ← ε·L+δ` で呼ぶだけ。
+
+  **Joint version は scope-deferred** (本 plan は `α` generic、`α := α'×β` 代入で joint 形が直接
+  得られる。marginal↔joint equivalence は E-5 Slepian–Wolf achievability の前段で別途取得可能)。
+  **横断 utility** として E-1 / E-5 の前段に置く価値あり。
 
 - **E-8. Shannon–McMillan–Breiman theorem (stationary ergodic AEP)** ⏸️ —
   Cover-Thomas 16.8。定常エルゴード過程で `-(1/n) log P(X_1,…,X_n) → H(𝒳)` a.s.。既存
@@ -233,6 +248,7 @@
   - [Shannon code Kraft 逆向き (B-8')](shannon/shannon-code-kraft-reverse-plan.md) ✅ (prefix code 存在構成、Shannon-Fano D-進数)
   - [AEP 完全形 (D-3)](shannon/aep-full-form-plan.md) ✅ (Cover-Thomas 3.1.2 完全 4 帰結、`typicalSet_prob_ge` + `typicalSet_card_ge` + eventually-N corollary)
   - [Type-class size lower bound (E-2)](shannon/type-class-lower-bound-plan.md) ✅ (Cover-Thomas 11.1.3 size 下界 entropy 形、`typeClassByCount_card_ge_entropy` via bridge `n^n / ∏ c^c = exp(n·H(c/n))`)
+  - [Strong typicality (E-7)](shannon/strong-typicality-plan.md) ✅ (Cover-Thomas 11.2 3 主定理、per-letter form + Strong→Weak bridge)
 - 雛形:
   - [moonshot-plan-template.md](moonshot-plan-template.md)
   - [subplan-template.md](subplan-template.md)
