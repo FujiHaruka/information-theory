@@ -1,6 +1,6 @@
 # Moonshot シードカード集
 
-> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3 (Cover-Thomas 3.1.2 完全 4 帰結)** → **Type-class size 下界 E-2 (Cover-Thomas 11.1.3 entropy 形、bridge `n^n/∏c^c = exp(n·H(c/n))`)** → **Strong typicality E-7 (Cover-Thomas 11.2 3 主定理、per-letter `\|c/n - P\| ≤ ε` 形 + Strong→Weak bridge `\|.../n - H\| ≤ ε·L`)** → **Csiszár I-projection E-6 (Cover-Thomas 11.6.1、存在 + 一意性 + Pythagorean 不等式)** → **Channel coding strong converse E-1 単発形 (Cover-Thomas 7.9 / Verdú-Han、`1 - Pe ≤ exp γ + (1/M) ∑_m P_m^n(highLLR_m)`)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未着手 seed は **D 節 (D-1, D-2、D-3 完了)** と **E 節 (E-3〜E-5, E-8〜E-10、E-1 / E-2 / E-6 / E-7 完了、2026-05-13 起草)**。
+> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3 (Cover-Thomas 3.1.2 完全 4 帰結)** → **Type-class size 下界 E-2 (Cover-Thomas 11.1.3 entropy 形、bridge `n^n/∏c^c = exp(n·H(c/n))`)** → **Strong typicality E-7 (Cover-Thomas 11.2 3 主定理、per-letter `\|c/n - P\| ≤ ε` 形 + Strong→Weak bridge `\|.../n - H\| ≤ ε·L`)** → **Csiszár I-projection E-6 (Cover-Thomas 11.6.1、存在 + 一意性 + Pythagorean 不等式)** → **Channel coding strong converse E-1 単発形 (Cover-Thomas 7.9 / Verdú-Han、`1 - Pe ≤ exp γ + (1/M) ∑_m P_m^n(highLLR_m)`)** → **Slepian–Wolf achievability E-5 退化点 MVP (Cover-Thomas 15.4 2 corner-point: `(log|α|, R_Y>H(Y))` + `(R_X>H(X), log|β|)`、full rate region は E-5' deferred)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未着手 seed は **D 節 (D-1, D-2、D-3 完了)** と **E 節 (E-3, E-4, E-5', E-8〜E-10、E-1 / E-2 / E-5 退化点 MVP / E-6 / E-7 完了、2026-05-13 起草)**。
 >
 > 起草時 (2026-05-10): Fano (測度論版) → Shannon converse (3 形) → Han 補集合形 → Han Phase D (subset average / Shearer) まで通った状態を起点に、次のムーンショット候補 5 本をシード化。
 >
@@ -136,12 +136,40 @@
   (`MIChainRule.lean`)。E-3 と pair で完結。`Converse.lean` のパターン再利用。
   見積 軽量 (~500 行)。E-3 とどちらを先にしても独立。
 
-- **E-5. Slepian–Wolf achievability** ⏸️ —
-  Cover-Thomas 15.4。既存 `SlepianWolf.lean` (496 行) は **single-shot converse の 3 bound のみ**。
-  `R_X > H(X|Y), R_Y > H(Y|X), R_X + R_Y > H(X, Y)` の rate region に対する
-  **random binning + joint typicality decoder** 達成可能性を追加。E-7 (strong typicality) があると
-  素直、weak typicality 経路でも書ける。`CondMutualInfo.lean` + `MIChainRule.lean` を再利用。
-  見積 中量強形 (~800 行)。
+- **E-5. Slepian–Wolf achievability** ✅ (2026-05-13, **退化点 MVP**) →
+  [docs/shannon/slepian-wolf-achievability-plan.md](shannon/slepian-wolf-achievability-plan.md) —
+  Cover-Thomas 15.4。`Common2026/Shannon/SlepianWolfAchievability.lean` (310 行) で SW
+  encoder pair の **退化点 corner-point 達成可能性 2 本**:
+  - `slepian_wolf_achievability_corner_Y`: rate pair `(log|α|, R_Y)` for `R_Y > H(Y)`
+    (X 側 trivial encoder + Y 側 `source_coding_achievability` AEP の合成)
+  - `slepian_wolf_achievability_corner_X`: 対称形 `(R_X, log|β|)` for `R_X > H(X)`
+
+  **退化点 MVP に commit**: Cover-Thomas 15.4 完全形 (3-bound rate region full
+  `R_X > H(X|Y), R_Y > H(Y|X), R_X + R_Y > H(X, Y)`) は **random binning + joint typicality
+  decoder** 経路で **~2000 行規模** (`binningMeasure : Measure (α^n → Fin M_X)` の
+  Fubini machinery + conditional typical slice size bound + 4-term error decomposition +
+  pigeonhole) で session budget 外。本 plan は **2 corner-point MVP** を publish、
+  **non-trivial corner** (`R_X = H(X|Y), R_Y = H(Y)` 等) と full rate region は
+  **E-5' deferred** 後継カードへ。
+
+  **横断 utility**: `swErrorProb` 定義は E-5' での error event definition そのまま再利用可。
+  各 corner-point 結果は SW rate region の 2 自明 corner を formal に pin down し、
+  E-5' で任意 rate triple への拡張時に boundary check として effective。
+
+- **E-5'. Slepian–Wolf full rate region (3-bound 同時 achievability)** ⏸️ —
+  E-5 deferred 後継。Cover-Thomas 15.4 完全形 `R_X > H(X|Y), R_Y > H(Y|X),
+  R_X + R_Y > H(X, Y)` の rate region に対する random binning + joint typicality decoder。
+  ~2000 行規模:
+  - `binningMeasure : Measure (α^n → Fin M_X)` を Fintype 上 uniform pi で構築 (~300 行)
+  - 期待値 collapse `𝔼[1_{f_X(x) = f_X(x')}] = 1/M_X` for `x ≠ x'` (Fubini, ~400 行、
+    `ChannelCodingAchievability.codebookMeasure` の encoder-side 鏡像)
+  - error decomposition `E ⊆ E_0 ∪ E_X ∪ E_Y ∪ E_{XY}` (~200 行)
+  - conditional typical slice size bound `|{x' : (x', y^n) typical}| ≤ exp(n H(X|Y) + 2nε)`
+    (~400 行、Mathlib gap、`jointlyTypicalSet` 既存定義の fiber 解析)
+  - 各 error term expectation bound (~400 行)
+  - pigeonhole + asymptotic finalize (~300 行)
+
+  E-5 の `swErrorProb` 定義 + 2 corner-point 結果を boundary check として再利用。
 
 - **E-6. Csiszár I-projection / Pythagorean inequality** ✅ (2026-05-13) →
   [docs/shannon/csiszar-projection-plan.md](shannon/csiszar-projection-plan.md) —
@@ -248,10 +276,11 @@
 
 ### 横断観察 (E 節シード間)
 
-- **E-2 / E-6 / E-7 先行 utility 3 本完了** (2026-05-13): 軽中量 (~480–700 行) のこの 3 本は単独で publish 価値を持ちつつ、後続 (E-1 / E-3 / E-5) の前段補題として直接効く。順序最適化: ✅ E-2 → ✅ E-7 → ✅ E-6 → E-1 → E-5 → E-3 → E-4。
+- **E-2 / E-6 / E-7 先行 utility 3 本完了** (2026-05-13): 軽中量 (~480–700 行) のこの 3 本は単独で publish 価値を持ちつつ、後続 (E-1 / E-3 / E-5) の前段補題として直接効く。順序最適化: ✅ E-2 → ✅ E-7 → ✅ E-6 → ✅ E-1 → ✅ E-5 (退化点 MVP) → E-3 → E-4 → E-5' (full rate region)。
   - E-2 (type-class lower bound) は Sanov LDP equality (`SanovLDPEquality.lean`) の Stein 経由を**直接経路に置き換える**機会で、横断改善 C と同質の整理効果。
   - E-7 (strong typicality) は E-1 (channel coding strong converse) と E-5 (Slepian–Wolf achievability) の **共通前段**。両方を予定するなら E-7 単独 plan を独立に切る方がトータル短い (B-7 → B-3 の前例)。
   - E-6 (Csiszár I-projection) 完了時の知見: **Mathlib `strictConvexOn_klFun` が既存**で、`PinskerSharp.lean` `klFun_sharp_lower` の ConvexOn refactor は**不要**だった。`stdSimplex ℝ α` (Mathlib) + `klDivPmf : (α → ℝ) → (α → ℝ) → ℝ` 直接定義で `Measure α` plumbing 全て回避、`klDivPmf_eq_log_diff_sum` (`∑ P (log P - log Q)` 形) は Sanov `klDivSumForm` と shape 一致、`Sanov.klDivSumForm_eq_toReal_klDiv` 同型の post-bridge で `(klDiv P Q).toReal` 形にも橋渡し可能 (scope-deferred)。
+- **E-5 退化点 MVP commit + E-5' deferred** (2026-05-13): Cover-Thomas 15.4 完全形 (3-bound rate region full `R_X > H(X|Y), R_Y > H(Y|X), R_X + R_Y > H(X, Y)`) は random binning + joint typicality decoder で **~2000 行規模** (`binningMeasure : Measure (α^n → Fin M_X)` Fubini machinery + conditional typical slice size bound + 4-term error decomposition + pigeonhole)。E-5 では **2 corner-point MVP** (`(log|α|, R_Y>H(Y))` + `(R_X>H(X), log|β|)`) を `source_coding_achievability` + 自明 encoder 合成で publish (310 行)、full rate region は **E-5' deferred** 後継カードに切り出し。**ChannelCodingAchievability の codebookMeasure 機構** (Phase C-(c) `random_codebook_average_le` の `Measure.pi` over `Fin M` × `Fin n` Fubini-collapse) は E-5' で **encoder-side 鏡像** (`Measure.pi` over `α^n` × `Fin M_X`) として転用可能、bin index の uniform 抽選 = codeword index 順列の本質的鏡像。E-5' 起草時はこの **mechanism reuse 観点** を判断ログに記録。
 - **強形/弱形ペア 4 種**: E-1 単発形 (2026-05-13 完了) で **Wolfowitz 鍵不等式** (`1 - Pe ≤ exp γ + (1/M) ∑_m P_m^n(highLLR_m)`) の Lean 化は達成。`Pe → 1` asymptotic 段 (WLLN-on-LLR 接続) は scope-deferred、D-1 (capacity 到達 achievability 強形) と pair で次の着手候補。両者を同時に組むと n-channel 設備 (`mutualInfo_iid_eq_nsmul`) + `IIDProductInput` ambient + `strong_law_ae_real` を共有して効率的。Pinsker (弱 B-5 / 強 B-5') / Stein (弱 + 強 B-4) / Sanov (A 形 B-1 + LDP B-1'/B-1'') の 3 ペアは弱形/強形共に完結済み。
 - **discrete → continuous の最大ジャンプ (E-9)**: 現状 42 本中 0 本が微分エントロピーに触れていない。Mathlib `MeasureTheory.gaussianReal` 整備度は読み込み未確認、Mathlib に `differentialEntropy` 自体が存在しないため**新規 Mathlib 上流 PR の母体**になりやすい。E-9 単独 publish → Gaussian channel capacity (将来 seed) → EPI (Cover-Thomas 17、将来 seed) の **3 段ロケット**で discrete 集から脱却。
 - **E-3 の機構流用 (Channel coding probabilistic-method)**: `ChannelCodingAchievability.lean` の `codebookMeasure` + `codebook_marginal_*` Fubini-collapse 補題群は **lossy source code の rate-distortion (E-3)** に **そのまま**転用可能 (codebook 上の random selection は同じ構造)。E-3 plan 起草時は plumbing を library 化 (`Common2026/Shannon/RandomCodebookProbMethod.lean` 抽出) するか直接 import するか方針判断。
@@ -297,6 +326,7 @@
   - [Strong typicality (E-7)](shannon/strong-typicality-plan.md) ✅ (Cover-Thomas 11.2 3 主定理、per-letter form + Strong→Weak bridge)
   - [Csiszár I-projection (E-6)](shannon/csiszar-projection-plan.md) ✅ (Cover-Thomas 11.6.1 存在 + 一意性 + Pythagorean 不等式、stdSimplex 上 `klDivPmf` 形 + Mathlib `strictConvexOn_klFun` 直接利用)
   - [Channel coding strong converse (E-1)](shannon/channel-coding-strong-converse-plan.md) ✅ (Cover-Thomas 7.9 / Verdú-Han 単発形、任意 deterministic code + 任意 reference Q^n で `1 - Pe ≤ exp γ + (1/M) ∑_m P_m^n(highLLR_m)`、asymptotic Pe → 1 段は scope-deferred)
+  - [Slepian–Wolf achievability (E-5 退化点 MVP)](shannon/slepian-wolf-achievability-plan.md) ✅ (Cover-Thomas 15.4 2 corner-point 達成可能性、`slepian_wolf_achievability_corner_Y` rate `(log|α|, R_Y>H(Y))` + `_corner_X` rate `(R_X>H(X), log|β|)` を `source_coding_achievability` + 自明 encoder 合成で構築、3-bound full rate region は random binning ~2000 行規模で E-5' deferred)
 - 雛形:
   - [moonshot-plan-template.md](moonshot-plan-template.md)
   - [subplan-template.md](subplan-template.md)

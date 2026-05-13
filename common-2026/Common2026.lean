@@ -19,6 +19,7 @@ import Common2026.Shannon.CondMutualInfo
 import Common2026.Shannon.Converse
 import Common2026.Shannon.Entropy
 import Common2026.Shannon.SlepianWolf
+import Common2026.Shannon.SlepianWolfAchievability
 import Common2026.Shannon.Pi
 import Common2026.Shannon.Han
 import Common2026.Shannon.HanD
