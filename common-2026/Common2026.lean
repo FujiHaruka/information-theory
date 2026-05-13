@@ -49,6 +49,7 @@ import Common2026.Shannon.ChannelCodingStrongConverse
 import Common2026.Shannon.ChannelCodingFeedback
 import Common2026.Shannon.ChannelCodingFeedbackComplete
 import Common2026.Shannon.ChannelCodingShannonTheorem
+import Common2026.Shannon.ChannelCodingShannonTheoremGeneral
 import Common2026.Shannon.RateDistortionConverse
 import Common2026.Shannon.RateDistortionConverseMonotone
 import Common2026.Shannon.RateDistortionAchievability
