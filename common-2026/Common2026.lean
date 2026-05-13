@@ -41,6 +41,7 @@ import Common2026.Shannon.ChannelCoding
 import Common2026.Shannon.IIDProductInput
 import Common2026.Shannon.ChannelCodingAchievability
 import Common2026.Shannon.ChannelCodingConverse
+import Common2026.Shannon.ChannelCodingStrongConverse
 import Common2026.Shannon.Sanov
 import Common2026.Shannon.SanovLDP
 import Common2026.Shannon.KLDivContinuous

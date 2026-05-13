@@ -1,6 +1,6 @@
 # Moonshot シードカード集
 
-> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3 (Cover-Thomas 3.1.2 完全 4 帰結)** → **Type-class size 下界 E-2 (Cover-Thomas 11.1.3 entropy 形、bridge `n^n/∏c^c = exp(n·H(c/n))`)** → **Strong typicality E-7 (Cover-Thomas 11.2 3 主定理、per-letter `\|c/n - P\| ≤ ε` 形 + Strong→Weak bridge `\|.../n - H\| ≤ ε·L`)** → **Csiszár I-projection E-6 (Cover-Thomas 11.6.1、存在 + 一意性 + Pythagorean 不等式)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未着手 seed は **D 節 (D-1, D-2、D-3 完了)** と **E 節 (E-1, E-3〜E-5, E-8〜E-10、E-2 / E-6 / E-7 完了、2026-05-13 起草)**。
+> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3 (Cover-Thomas 3.1.2 完全 4 帰結)** → **Type-class size 下界 E-2 (Cover-Thomas 11.1.3 entropy 形、bridge `n^n/∏c^c = exp(n·H(c/n))`)** → **Strong typicality E-7 (Cover-Thomas 11.2 3 主定理、per-letter `\|c/n - P\| ≤ ε` 形 + Strong→Weak bridge `\|.../n - H\| ≤ ε·L`)** → **Csiszár I-projection E-6 (Cover-Thomas 11.6.1、存在 + 一意性 + Pythagorean 不等式)** → **Channel coding strong converse E-1 単発形 (Cover-Thomas 7.9 / Verdú-Han、`1 - Pe ≤ exp γ + (1/M) ∑_m P_m^n(highLLR_m)`)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未着手 seed は **D 節 (D-1, D-2、D-3 完了)** と **E 節 (E-3〜E-5, E-8〜E-10、E-1 / E-2 / E-6 / E-7 完了、2026-05-13 起草)**。
 >
 > 起草時 (2026-05-10): Fano (測度論版) → Shannon converse (3 形) → Han 補集合形 → Han Phase D (subset average / Shearer) まで通った状態を起点に、次のムーンショット候補 5 本をシード化。
 >
@@ -82,13 +82,34 @@
 「i.i.d. → stationary 一般化」「discrete → continuous 枝分かれ」「横断 utility」の 5 軸で 10 本。
 先行 utility 群 (E-2, E-6, E-7) を置くと後続 (E-1, E-3, E-5) が大幅短縮される依存関係。
 
-- **E-1. Channel coding strong converse (Wolfowitz)** ⏸️ —
-  Cover-Thomas 7.9 strong form。既存 `shannon_converse_single_shot` (`Converse.lean` 240 行) は
-  **弱形** (`R > C ⟹ liminf P_err > 0`) のみ。`R > C ⟹ ∀ ε, eventually P_err > 1-ε` の
-  strong 形を追加。Strong Stein (`StrongStein.lean` 641 行) の channel coding 対形 — これで
-  4 つの弱形/強形ペア (Pinsker / Stein / Sanov / **ChannelCoding**) のうち最後が揃う (D-1
-  achievability 強形と相補)。経路: Strong typicality (E-7 依存) または LLR-typicality
-  (Strong Stein 経路の再利用)。見積 中量 (~800 行)。
+- **E-1. Channel coding strong converse (Wolfowitz, 単発 Verdú-Han 形)** ✅ (2026-05-13) →
+  [docs/shannon/channel-coding-strong-converse-plan.md](shannon/channel-coding-strong-converse-plan.md) —
+  Cover-Thomas 7.9 strong form の中核 **情報密度 (Verdú-Han) 単発下界** を
+  `Common2026/Shannon/ChannelCodingStrongConverse.lean` (380 行) で publish:
+  - `highLLRSet W c Q threshold m`: codeword `m` の出力 LLR threshold 超え集合
+    `{y | P_m^n.real {y} > exp(threshold) · Q.real {y}}` 定義。
+  - `channelCoding_per_codeword_decomposition`: 任意 measurable `s` で
+    `P_m^n.real s ≤ exp(threshold) · Q.real s + P_m^n.real(highLLR_m)`
+    (Strong Stein `steinTypicalSet_Q_prob_ge` の channel-coding 対形)。
+  - `channelCoding_average_success_le`: codeword 平均
+    `1 - avgPe ≤ exp(threshold)/M + (1/M) ∑_m P_m^n.real(highLLR_m)`
+    (decoder partition `∑_m Q.real(decodingRegion m) ≤ 1` で吸収)。
+  - `channelCoding_strong_converse_singleShot` (主形): `threshold := log M + γ` 代入で
+    `1 - avgPe ≤ exp γ + (1/M) ∑_m P_m^n.real(highLLR_m)` (Wolfowitz/Verdú-Han)。
+
+  **shape-driven 設計**:
+  - **任意 deterministic code、任意 reference probability measure `Q^n`** で deterministic に成立
+    (情報スペクトル形)。i.i.d. random codebook 限定でない、入力分布非依存。
+  - Strong Stein Phase A の plumbing (Markov ineq + 集合分解 + `sum_measureReal_singleton`)
+    を channel-coding 設定にそのまま転写、Mathlib gap なし。
+  - **asymptotic `Pe → 1` 段は scope-deferred** (本 plan の判断ログ 3 参照): WLLN-on-LLR
+    + `IIDProductInput` ambient 接続 (~300-500 行) で別 plan に分離可能、`highLLRSet`
+    が `steinTypicalSet` 系補集合に直接 reduce する設計。
+
+  **横断 utility**: 単発下界そのものが Wolfowitz 鍵不等式の Lean 化として publish 価値。
+  D-1 (capacity 到達 achievability 強形) と pair で 4 ペア (Pinsker / Stein / Sanov /
+  **ChannelCoding**) 完結への第一歩。Phase A per-codeword 形は単独で hypothesis testing
+  / channel resolvability 系の前段補題としても再利用可。
 
 - **E-2. Method of types: type-class size lower bound** ✅ (2026-05-13) →
   [docs/shannon/type-class-lower-bound-plan.md](shannon/type-class-lower-bound-plan.md) —
@@ -231,7 +252,7 @@
   - E-2 (type-class lower bound) は Sanov LDP equality (`SanovLDPEquality.lean`) の Stein 経由を**直接経路に置き換える**機会で、横断改善 C と同質の整理効果。
   - E-7 (strong typicality) は E-1 (channel coding strong converse) と E-5 (Slepian–Wolf achievability) の **共通前段**。両方を予定するなら E-7 単独 plan を独立に切る方がトータル短い (B-7 → B-3 の前例)。
   - E-6 (Csiszár I-projection) 完了時の知見: **Mathlib `strictConvexOn_klFun` が既存**で、`PinskerSharp.lean` `klFun_sharp_lower` の ConvexOn refactor は**不要**だった。`stdSimplex ℝ α` (Mathlib) + `klDivPmf : (α → ℝ) → (α → ℝ) → ℝ` 直接定義で `Measure α` plumbing 全て回避、`klDivPmf_eq_log_diff_sum` (`∑ P (log P - log Q)` 形) は Sanov `klDivSumForm` と shape 一致、`Sanov.klDivSumForm_eq_toReal_klDiv` 同型の post-bridge で `(klDiv P Q).toReal` 形にも橋渡し可能 (scope-deferred)。
-- **強形/弱形ペア 4 種が E-1 で完結**: Pinsker (弱 B-5 / 強 B-5') / Stein (弱 + 強 B-4) / Sanov (A 形 B-1 + LDP B-1'/B-1'') / **ChannelCoding (achievability B-3'' + converse D-2、強形 D-1 + E-1 で完結)**。D-1 (capacity 到達 achievability 強形) と E-1 (capacity 越え converse 強形) を pair で同時着手すると n-channel 設備 (`mutualInfo_iid_eq_nsmul`) を共有して効率的。
+- **強形/弱形ペア 4 種**: E-1 単発形 (2026-05-13 完了) で **Wolfowitz 鍵不等式** (`1 - Pe ≤ exp γ + (1/M) ∑_m P_m^n(highLLR_m)`) の Lean 化は達成。`Pe → 1` asymptotic 段 (WLLN-on-LLR 接続) は scope-deferred、D-1 (capacity 到達 achievability 強形) と pair で次の着手候補。両者を同時に組むと n-channel 設備 (`mutualInfo_iid_eq_nsmul`) + `IIDProductInput` ambient + `strong_law_ae_real` を共有して効率的。Pinsker (弱 B-5 / 強 B-5') / Stein (弱 + 強 B-4) / Sanov (A 形 B-1 + LDP B-1'/B-1'') の 3 ペアは弱形/強形共に完結済み。
 - **discrete → continuous の最大ジャンプ (E-9)**: 現状 42 本中 0 本が微分エントロピーに触れていない。Mathlib `MeasureTheory.gaussianReal` 整備度は読み込み未確認、Mathlib に `differentialEntropy` 自体が存在しないため**新規 Mathlib 上流 PR の母体**になりやすい。E-9 単独 publish → Gaussian channel capacity (将来 seed) → EPI (Cover-Thomas 17、将来 seed) の **3 段ロケット**で discrete 集から脱却。
 - **E-3 の機構流用 (Channel coding probabilistic-method)**: `ChannelCodingAchievability.lean` の `codebookMeasure` + `codebook_marginal_*` Fubini-collapse 補題群は **lossy source code の rate-distortion (E-3)** に **そのまま**転用可能 (codebook 上の random selection は同じ構造)。E-3 plan 起草時は plumbing を library 化 (`Common2026/Shannon/RandomCodebookProbMethod.lean` 抽出) するか直接 import するか方針判断。
 
@@ -275,6 +296,7 @@
   - [Type-class size lower bound (E-2)](shannon/type-class-lower-bound-plan.md) ✅ (Cover-Thomas 11.1.3 size 下界 entropy 形、`typeClassByCount_card_ge_entropy` via bridge `n^n / ∏ c^c = exp(n·H(c/n))`)
   - [Strong typicality (E-7)](shannon/strong-typicality-plan.md) ✅ (Cover-Thomas 11.2 3 主定理、per-letter form + Strong→Weak bridge)
   - [Csiszár I-projection (E-6)](shannon/csiszar-projection-plan.md) ✅ (Cover-Thomas 11.6.1 存在 + 一意性 + Pythagorean 不等式、stdSimplex 上 `klDivPmf` 形 + Mathlib `strictConvexOn_klFun` 直接利用)
+  - [Channel coding strong converse (E-1)](shannon/channel-coding-strong-converse-plan.md) ✅ (Cover-Thomas 7.9 / Verdú-Han 単発形、任意 deterministic code + 任意 reference Q^n で `1 - Pe ≤ exp γ + (1/M) ∑_m P_m^n(highLLR_m)`、asymptotic Pe → 1 段は scope-deferred)
 - 雛形:
   - [moonshot-plan-template.md](moonshot-plan-template.md)
   - [subplan-template.md](subplan-template.md)
