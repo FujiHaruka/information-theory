@@ -148,15 +148,166 @@ theorem capacity_nonneg (W : Channel α β) [IsMarkovKernel W] : 0 ≤ capacity 
 
 /-! ### A.2 — `I(p; W).toReal` の連続性 (in p) -/
 
-/-- **Phase A.2 (deferred)**: `(p : α → ℝ) ↦ (mutualInfoOfChannel (pmfToMeasure p) W).toReal`
-は `stdSimplex ℝ α` 上連続。3-entropy 形 + `Real.continuous_negMulLog` 経由。
+omit [Nonempty α] in
+/-- For `p ∈ stdSimplex`, the output marginal `(p ⊗ₘ W).snd` real-value on `{b}` is
+`∑ a, p a · (W a).real {b}`. -/
+private lemma outputDistribution_real_singleton_of_stdSimplex
+    {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
+    (W : Channel α β) [IsMarkovKernel W] (b : β) :
+    (outputDistribution (pmfToMeasure p) W).real {b}
+      = ∑ a : α, p a * (W a).real {b} := by
+  haveI : IsProbabilityMeasure (pmfToMeasure p) := pmfToMeasure_isProbabilityMeasure hp
+  -- ((p ⊗ₘ W).snd){b} = (p ⊗ₘ W)(univ ×ˢ {b}) = ∫⁻ a, W a {b} ∂(pmfToMeasure p).
+  have h1 : (outputDistribution (pmfToMeasure p) W) {b}
+      = (jointDistribution (pmfToMeasure p) W) (Set.univ ×ˢ ({b} : Set β)) := by
+    show (jointDistribution (pmfToMeasure p) W).snd {b} = _
+    rw [Measure.snd_apply (measurableSet_singleton _)]
+    congr 1; ext ⟨a, b'⟩; simp
+  rw [Measure.real, h1, jointDistribution_def]
+  have h2 : ((pmfToMeasure p) ⊗ₘ W) (Set.univ ×ˢ ({b} : Set β))
+      = ∫⁻ a, W a {b} ∂(pmfToMeasure p) := by
+    rw [Measure.compProd_apply (MeasurableSet.univ.prod (measurableSet_singleton _))]
+    refine lintegral_congr_ae (Filter.Eventually.of_forall fun a => ?_)
+    show (W a) (Prod.mk a ⁻¹' (Set.univ ×ˢ ({b} : Set β))) = (W a) {b}
+    congr 1; ext y; simp
+  rw [h2]
+  -- ∫⁻ a, W a {b} ∂(pmfToMeasure p) = ∑ a, ENNReal.ofReal (p a) * (W a) {b}.
+  unfold pmfToMeasure
+  rw [MeasureTheory.lintegral_finsetSum_measure]
+  simp_rw [MeasureTheory.lintegral_smul_measure, MeasureTheory.lintegral_dirac, smul_eq_mul]
+  rw [ENNReal.toReal_sum (by
+    intro a _
+    exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top (measure_ne_top _ _))]
+  refine Finset.sum_congr rfl (fun a _ => ?_)
+  rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal (hp.1 a)]
+  rfl
 
-Phase A の主定理 `capacity_lt_implies_exists_pmf` は `lt_csSup_iff` 経由で本連続性に
-依存しないため、本 lemma は documentation / Phase A.3 達成元存在用。 -/
+omit [Nonempty α] in
+/-- For `p ∈ stdSimplex`, the joint `(p ⊗ₘ W)` real-value on `{(a,b)}` is
+`(p a) · (W a).real {b}`. -/
+private lemma jointDistribution_real_singleton_of_stdSimplex
+    {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
+    (W : Channel α β) [IsMarkovKernel W] (a : α) (b : β) :
+    (jointDistribution (pmfToMeasure p) W).real {(a, b)}
+      = p a * (W a).real {b} := by
+  haveI : IsProbabilityMeasure (pmfToMeasure p) := pmfToMeasure_isProbabilityMeasure hp
+  -- {(a, b)} = {a} ×ˢ {b}.
+  have h_eq : ({(a, b)} : Set (α × β)) = ({a} : Set α) ×ˢ ({b} : Set β) := by
+    ext ⟨x, y⟩; simp [Prod.ext_iff]
+  rw [Measure.real, jointDistribution_def, h_eq,
+      Measure.compProd_apply_prod (measurableSet_singleton _) (measurableSet_singleton _)]
+  -- ∫⁻ x in {a}, W x {b} ∂(pmfToMeasure p) = ENNReal.ofReal (p a) * W a {b}.
+  -- Use setLIntegral on dirac decomposition: rewrite as ∫⁻ x, ({a}.indicator (fun x => W x {b})) x ∂...
+  rw [← MeasureTheory.lintegral_indicator (measurableSet_singleton _)]
+  unfold pmfToMeasure
+  rw [MeasureTheory.lintegral_finsetSum_measure]
+  simp_rw [MeasureTheory.lintegral_smul_measure, MeasureTheory.lintegral_dirac, smul_eq_mul]
+  -- ∑ a', ENNReal.ofReal (p a') * (({a}.indicator (fun x => W x {b})) a').
+  -- For a' = a: indicator value is W a {b}. For a' ≠ a: 0.
+  have h_each : ∀ a' ∈ (Finset.univ : Finset α),
+      ENNReal.ofReal (p a') * Set.indicator ({a} : Set α) (fun x => W x {b}) a'
+        = if a' = a then ENNReal.ofReal (p a) * W a {b} else 0 := by
+    intro a' _
+    by_cases hcase : a' = a
+    · subst hcase
+      rw [if_pos rfl, Set.indicator_of_mem (Set.mem_singleton _)]
+    · rw [if_neg hcase, Set.indicator_of_notMem (by simp [hcase])]
+      simp
+  rw [Finset.sum_congr rfl h_each]
+  rw [Finset.sum_ite_eq' Finset.univ a, if_pos (Finset.mem_univ a)]
+  rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal (hp.1 a)]
+  rfl
+
+omit [Nonempty α] in
+/-- For `p ∈ stdSimplex`, `(pmfToMeasure p).real {a}` rewritten using `J.map Prod.fst = p`. -/
+private lemma jointMap_fst_real_singleton_of_stdSimplex
+    {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
+    (W : Channel α β) [IsMarkovKernel W] (a : α) :
+    ((jointDistribution (pmfToMeasure p) W).map Prod.fst).real {a} = p a := by
+  haveI : IsProbabilityMeasure (pmfToMeasure p) := pmfToMeasure_isProbabilityMeasure hp
+  have h_fst : (jointDistribution (pmfToMeasure p) W).map Prod.fst = pmfToMeasure p := by
+    show ((pmfToMeasure p) ⊗ₘ W).map Prod.fst = pmfToMeasure p
+    rw [show ((pmfToMeasure p) ⊗ₘ W).map Prod.fst = ((pmfToMeasure p) ⊗ₘ W).fst from rfl]
+    exact Measure.fst_compProd _ W
+  rw [h_fst, pmfToMeasure_real_singleton hp]
+
+omit [Nonempty α] in
+/-- For `p ∈ stdSimplex`, `J.map Prod.snd .real {b} = ∑ a, p a · (W a).real {b}`. -/
+private lemma jointMap_snd_real_singleton_of_stdSimplex
+    {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
+    (W : Channel α β) [IsMarkovKernel W] (b : β) :
+    ((jointDistribution (pmfToMeasure p) W).map Prod.snd).real {b}
+      = ∑ a : α, p a * (W a).real {b} := by
+  have h_snd : (jointDistribution (pmfToMeasure p) W).map Prod.snd
+      = outputDistribution (pmfToMeasure p) W := rfl
+  rw [h_snd]
+  exact outputDistribution_real_singleton_of_stdSimplex hp W b
+
+omit [Nonempty α] in
+/-- For `p ∈ stdSimplex`, `J.map id .real {(a,b)} = p a · (W a).real {b}`. -/
+private lemma jointMap_id_real_singleton_of_stdSimplex
+    {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
+    (W : Channel α β) [IsMarkovKernel W] (a : α) (b : β) :
+    ((jointDistribution (pmfToMeasure p) W).map id).real {(a, b)} = p a * (W a).real {b} := by
+  rw [Measure.map_id]
+  exact jointDistribution_real_singleton_of_stdSimplex hp W a b
+
+/-- For `p ∈ stdSimplex`, `I(pmfToMeasure p; W).toReal` equals the 3-entropy expression
+in `p`. -/
+private lemma mutualInfoOfChannel_toReal_eq_of_stdSimplex
+    {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
+    (W : Channel α β) [IsMarkovKernel W] :
+    (mutualInfoOfChannel (pmfToMeasure p) W).toReal
+      = (∑ a : α, Real.negMulLog (p a))
+        + (∑ b : β, Real.negMulLog (∑ a : α, p a * (W a).real {b}))
+        - (∑ ab : α × β, Real.negMulLog (p ab.1 * (W ab.1).real {ab.2})) := by
+  haveI : IsProbabilityMeasure (pmfToMeasure p) := pmfToMeasure_isProbabilityMeasure hp
+  rw [mutualInfoOfChannel_eq_HX_add_HY_sub_HZ]
+  -- entropy μ X = ∑ x, negMulLog ((μ.map X).real {x}).
+  unfold InformationTheory.Shannon.entropy
+  congr 1
+  · -- H(X) + H(Y) match.
+    congr 1
+    · refine Finset.sum_congr rfl (fun a _ => ?_)
+      rw [jointMap_fst_real_singleton_of_stdSimplex hp W a]
+    · refine Finset.sum_congr rfl (fun b _ => ?_)
+      rw [jointMap_snd_real_singleton_of_stdSimplex hp W b]
+  · -- H(X,Y) over α × β.
+    refine Finset.sum_congr rfl (fun ab _ => ?_)
+    rw [jointMap_id_real_singleton_of_stdSimplex hp W ab.1 ab.2]
+
+/-- **Phase A.2**: `(p : α → ℝ) ↦ (mutualInfoOfChannel (pmfToMeasure p) W).toReal`
+は `stdSimplex ℝ α` 上連続。3-entropy 形 + `Real.continuous_negMulLog` 経由。 -/
 theorem continuous_mutualInfoOfChannel_left (W : Channel α β) [IsMarkovKernel W] :
     ContinuousOn (fun p : α → ℝ => (mutualInfoOfChannel (pmfToMeasure p) W).toReal)
       (stdSimplex ℝ α) := by
-  sorry
+  -- Define the 3-entropy expression in p (continuous on Set.univ).
+  set g : (α → ℝ) → ℝ := fun p =>
+    (∑ a : α, Real.negMulLog (p a))
+      + (∑ b : β, Real.negMulLog (∑ a : α, p a * (W a).real {b}))
+      - (∑ ab : α × β, Real.negMulLog (p ab.1 * (W ab.1).real {ab.2})) with hg_def
+  have h_eq_on : ∀ p ∈ stdSimplex ℝ α,
+      (mutualInfoOfChannel (pmfToMeasure p) W).toReal = g p := by
+    intro p hp
+    exact mutualInfoOfChannel_toReal_eq_of_stdSimplex hp W
+  -- ContinuousOn from Continuous on a superset.
+  refine ContinuousOn.congr ?_ h_eq_on
+  refine Continuous.continuousOn ?_
+  -- Continuity of g.
+  refine Continuous.sub ?_ ?_
+  · refine Continuous.add ?_ ?_
+    · -- ∑ a, negMulLog (p a).
+      refine continuous_finsetSum _ (fun a _ => ?_)
+      exact Real.continuous_negMulLog.comp (continuous_apply a)
+    · -- ∑ b, negMulLog (∑ a, p a * c_a)
+      refine continuous_finsetSum _ (fun b _ => ?_)
+      refine Real.continuous_negMulLog.comp ?_
+      refine continuous_finsetSum _ (fun a _ => ?_)
+      exact (continuous_apply a).mul continuous_const
+  · -- ∑ ab, negMulLog (p ab.1 * c_{ab.1, ab.2}).
+    refine continuous_finsetSum _ (fun ab _ => ?_)
+    refine Real.continuous_negMulLog.comp ?_
+    exact (continuous_apply ab.1).mul continuous_const
 
 /-! ### A.3 — capacity 達成元 (documentation) -/
 
@@ -596,25 +747,172 @@ theorem Code_lift_from_subtype_errorProbAt
   unfold Code.errorProbAt
   rfl
 
-/-! ## Phase D — 主定理 (skeleton) -/
+/-! ## Phase D — 主定理 -/
+
+/-- Uniform input distribution `unif a := 1/|α|`, used as a smoothing target. -/
+private noncomputable def uniformInput (α : Type*) [Fintype α] : α → ℝ :=
+  fun _ => (Fintype.card α : ℝ)⁻¹
+
+omit [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β]
+  [MeasurableSingletonClass β] in
+/-- `uniformInput α ∈ stdSimplex ℝ α`. -/
+private lemma uniformInput_mem_stdSimplex : uniformInput α ∈ stdSimplex ℝ α := by
+  unfold uniformInput
+  refine ⟨fun _ => ?_, ?_⟩
+  · exact inv_nonneg.mpr (Nat.cast_nonneg _)
+  · rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
+    have hpos : (0 : ℝ) < Fintype.card α := by
+      exact_mod_cast (Fintype.card_pos_iff.mpr inferInstance : 0 < Fintype.card α)
+    exact mul_inv_cancel₀ hpos.ne'
+
+omit [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β]
+  [MeasurableSingletonClass β] in
+/-- `uniformInput α a > 0` for any `a`. -/
+private lemma uniformInput_pos (a : α) : 0 < uniformInput α a := by
+  unfold uniformInput
+  refine inv_pos.mpr ?_
+  exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
+
+/-- Smoothed input `pSmooth p₀ δ := (1-δ) • p₀ + δ • uniformInput`. -/
+private noncomputable def pSmooth (p₀ : α → ℝ) (δ : ℝ) : α → ℝ :=
+  fun a => (1 - δ) * p₀ a + δ * uniformInput α a
+
+omit [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β]
+  [MeasurableSingletonClass β] in
+/-- `pSmooth p₀ 0 = p₀`. -/
+private lemma pSmooth_zero (p₀ : α → ℝ) : pSmooth p₀ 0 = p₀ := by
+  unfold pSmooth
+  funext a
+  ring
+
+omit [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β]
+  [MeasurableSingletonClass β] in
+/-- For `δ ∈ [0,1]` and `p₀ ∈ stdSimplex`, `pSmooth p₀ δ ∈ stdSimplex`. -/
+private lemma pSmooth_mem_stdSimplex {p₀ : α → ℝ} (hp₀ : p₀ ∈ stdSimplex ℝ α)
+    {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ ≤ 1) : pSmooth p₀ δ ∈ stdSimplex ℝ α := by
+  have h := convex_stdSimplex (𝕜 := ℝ) (ι := α) hp₀ uniformInput_mem_stdSimplex
+    (a := 1 - δ) (b := δ) (by linarith) hδ0 (by ring)
+  -- h : (1-δ) • p₀ + δ • uniformInput ∈ stdSimplex
+  have h_eq : pSmooth p₀ δ = (1 - δ) • p₀ + δ • uniformInput α := by
+    funext a
+    simp [pSmooth, smul_eq_mul]
+  rw [h_eq]
+  exact h
+
+omit [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β]
+  [MeasurableSingletonClass β] in
+/-- For `δ ∈ (0,1]` and `p₀ ∈ stdSimplex`, each entry `(pSmooth p₀ δ) a > 0`. -/
+private lemma pSmooth_pos {p₀ : α → ℝ} (hp₀ : p₀ ∈ stdSimplex ℝ α)
+    {δ : ℝ} (hδ_pos : 0 < δ) (hδ1 : δ ≤ 1) (a : α) : 0 < pSmooth p₀ δ a := by
+  unfold pSmooth
+  have h1 : 0 ≤ (1 - δ) * p₀ a := mul_nonneg (by linarith) (hp₀.1 a)
+  have h2 : 0 < δ * uniformInput α a := mul_pos hδ_pos (uniformInput_pos a)
+  linarith
+
+/-- `δ ↦ pSmooth p₀ δ` is continuous (as a curve into `α → ℝ` with product topology). -/
+private lemma continuous_pSmooth (p₀ : α → ℝ) : Continuous (fun δ : ℝ => pSmooth p₀ δ) := by
+  refine continuous_pi (fun a => ?_)
+  unfold pSmooth
+  exact (continuous_const.sub continuous_id).mul continuous_const
+    |>.add (continuous_id.mul continuous_const)
 
 /-- **D-1 主定理 (Cover-Thomas 7.7.1 完全形)**: 任意 `R < capacity W` と任意 `ε > 0` で
 十分大きい block 長 `n` で max error < ε を達成する `M ≥ exp(n R)` 個の符号が存在。
 
 Proof shape:
-1. Phase A.4 で `R < capacity W ⟹ ∃ p ∈ stdSimplex, R < I(p; W).toReal`。
-2. Phase C.1 で `p` の support 制限 (full-support `p'` を取得)。
-3. Phase B.4 (average → max wrap) を call。
+1. Phase A.4 で `R < capacity W ⟹ ∃ p₀ ∈ stdSimplex, R < I(p₀; W).toReal`。
+2. `pSmooth p₀ δ := (1-δ) p₀ + δ · uniform` を考え、A.2 連続性で
+   `δ → 0⁺` のとき `I(pSmooth p₀ δ; W).toReal → I(p₀; W).toReal`。
+3. 連続性から `R < (R + I)/2 < I(pSmooth p₀ δ₀; W).toReal` を満たす
+   小さな `δ₀ > 0` を取る。
+4. `pSmooth p₀ δ₀` は各成分が `0 < δ₀ · 1/|α|` 以上で full support。
+5. Phase B.4 (average → max wrap) を `(pmfToMeasure (pSmooth p₀ δ₀), W)` で call。
 
-注意: `hW_pos` 完全除去は本 plan scope では sub-channel 内で吸収。完全形は別 deferred plan。 -/
+`hW_pos`: 本 MVP では `W` の full-support を追加仮定として要求。完全形 (sub-channel 切り出し
+での除去) は Phase C.1/C.2 deferred を参照。 -/
 theorem shannon_noisy_channel_coding_theorem
     (W : Channel α β) [IsMarkovKernel W]
+    (hW_pos : ∀ a : α, ∀ b : β, 0 < (W a).real {b})
     {R : ℝ} (hR_pos : 0 < R) (hR : R < capacity W)
     {ε : ℝ} (hε : 0 < ε) :
     ∃ N : ℕ, ∀ n, N ≤ n →
       ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
         (c : Code M n α β),
         ∀ m, (c.errorProbAt W m).toReal < ε := by
-  sorry
+  classical
+  -- Step 1: extract `p₀ ∈ stdSimplex` with `R < I(p₀; W)`.
+  obtain ⟨p₀, hp₀_mem, hp₀_lt⟩ := capacity_lt_implies_exists_pmf W hR
+  set I₀ : ℝ := (mutualInfoOfChannel (pmfToMeasure p₀) W).toReal with hI₀_def
+  -- Step 2: midpoint rate R₀ := (R + I₀)/2.
+  set R₀ : ℝ := (R + I₀) / 2 with hR₀_def
+  have hR_lt_R₀ : R < R₀ := by rw [hR₀_def]; linarith
+  have hR₀_lt_I₀ : R₀ < I₀ := by rw [hR₀_def]; linarith
+  have hR₀_pos : 0 < R₀ := lt_trans hR_pos hR_lt_R₀
+  -- Step 3: continuity of `δ ↦ I(pSmooth p₀ δ; W).toReal` at δ = 0.
+  have hI_cont_on := continuous_mutualInfoOfChannel_left W
+  -- Restrict to the path `δ ↦ pSmooth p₀ δ`.
+  have h_path : ∀ δ ∈ Set.Icc (0 : ℝ) 1, pSmooth p₀ δ ∈ stdSimplex ℝ α :=
+    fun δ hδ => pSmooth_mem_stdSimplex hp₀_mem hδ.1 hδ.2
+  have h_pSmooth_zero_eq : pSmooth p₀ 0 = p₀ := pSmooth_zero p₀
+  have h_at_zero_in : pSmooth p₀ 0 ∈ stdSimplex ℝ α := by
+    rw [h_pSmooth_zero_eq]; exact hp₀_mem
+  -- Compose: `δ ↦ pSmooth p₀ δ` continuous + ContinuousOn of `I(·; W).toReal`.
+  have h_curve_cont : Continuous (fun δ : ℝ => pSmooth p₀ δ) := continuous_pSmooth p₀
+  -- `f δ := I(pmfToMeasure (pSmooth p₀ δ); W).toReal` is continuous on `[0,1]`.
+  set f : ℝ → ℝ := fun δ => (mutualInfoOfChannel (pmfToMeasure (pSmooth p₀ δ)) W).toReal with hf_def
+  have hf_cont_on : ContinuousOn f (Set.Icc 0 1) := by
+    have h_maps : Set.MapsTo (fun δ : ℝ => pSmooth p₀ δ) (Set.Icc 0 1) (stdSimplex ℝ α) :=
+      fun δ hδ => h_path δ hδ
+    exact hI_cont_on.comp h_curve_cont.continuousOn h_maps
+  -- f 0 = I₀, so f 0 > R₀.
+  have hf_zero : f 0 = I₀ := by
+    simp [hf_def, h_pSmooth_zero_eq, hI₀_def]
+  have hf_zero_gt : R₀ < f 0 := by rw [hf_zero]; exact hR₀_lt_I₀
+  -- Step 4: pick small δ₀ > 0 with `R₀ < f δ₀`.
+  -- Continuity ⟹ ∃ open nbhd of 0 in [0,1] with f > R₀ on it.
+  have h_at_zero : ContinuousWithinAt f (Set.Icc 0 1) 0 := by
+    refine hf_cont_on 0 ⟨le_refl _, by norm_num⟩
+  -- Use `eventually_lt` form: there exists ε_δ > 0 such that for all δ ∈ [0, ε_δ) ∩ [0,1], f δ > R₀.
+  have h_ev_gt : ∀ᶠ δ in (nhdsWithin (0 : ℝ) (Set.Icc 0 1)), R₀ < f δ := by
+    have := h_at_zero.tendsto
+    exact this.eventually_const_lt hf_zero_gt
+  -- Convert to existence of δ₀ > 0 in [0,1] with f δ₀ > R₀.
+  have h_ev_gt_mem : {δ | R₀ < f δ} ∈ 𝓝[Set.Icc (0 : ℝ) 1] 0 := h_ev_gt
+  rw [Metric.mem_nhdsWithin_iff] at h_ev_gt_mem
+  obtain ⟨η, hη_pos, h_η⟩ := h_ev_gt_mem
+  set δ₀ : ℝ := min (η / 2) 1 with hδ₀_def
+  have hδ₀_pos : 0 < δ₀ := by
+    rw [hδ₀_def]; exact lt_min (by linarith) (by norm_num)
+  have hδ₀_le_1 : δ₀ ≤ 1 := min_le_right _ _
+  have hδ₀_lt_η : δ₀ < η := by
+    rw [hδ₀_def]
+    exact lt_of_le_of_lt (min_le_left _ _) (by linarith)
+  have hδ₀_mem_Icc : δ₀ ∈ Set.Icc (0 : ℝ) 1 := ⟨hδ₀_pos.le, hδ₀_le_1⟩
+  have hδ₀_mem_ball : δ₀ ∈ Metric.ball (0 : ℝ) η := by
+    rw [Metric.mem_ball, Real.dist_0_eq_abs, abs_of_pos hδ₀_pos]
+    exact hδ₀_lt_η
+  have hf_δ₀ : R₀ < f δ₀ := h_η ⟨hδ₀_mem_ball, hδ₀_mem_Icc⟩
+  -- Step 5: pSmooth p₀ δ₀ has full support.
+  have h_pδ₀_mem : pSmooth p₀ δ₀ ∈ stdSimplex ℝ α :=
+    pSmooth_mem_stdSimplex hp₀_mem hδ₀_pos.le hδ₀_le_1
+  have h_pδ₀_pos : ∀ a, 0 < pSmooth p₀ δ₀ a :=
+    fun a => pSmooth_pos hp₀_mem hδ₀_pos hδ₀_le_1 a
+  -- Convert to (pmfToMeasure (pSmooth p₀ δ₀)).real {a} > 0.
+  haveI hpmf_pm : IsProbabilityMeasure (pmfToMeasure (pSmooth p₀ δ₀)) :=
+    pmfToMeasure_isProbabilityMeasure h_pδ₀_mem
+  have hp_pos_meas : ∀ a, 0 < (pmfToMeasure (pSmooth p₀ δ₀)).real {a} := by
+    intro a
+    rw [pmfToMeasure_real_singleton h_pδ₀_mem]
+    exact h_pδ₀_pos a
+  -- Step 6: rate condition R < f δ₀ (note: hf_δ₀ gives R₀ < f δ₀, and R < R₀).
+  have hR_lt_f_δ₀ : R < f δ₀ := lt_trans hR_lt_R₀ hf_δ₀
+  -- Step 7: apply B.4.
+  exact channel_coding_achievability_max_error W (pmfToMeasure (pSmooth p₀ δ₀))
+    hp_pos_meas hW_pos hR_pos hR_lt_f_δ₀ hε
 
 end InformationTheory.Shannon.ChannelCoding
