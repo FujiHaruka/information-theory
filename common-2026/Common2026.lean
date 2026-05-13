@@ -49,3 +49,4 @@ import Common2026.Shannon.TypeClassLowerBound
 import Common2026.Shannon.StrongTypicality
 import Common2026.Shannon.ShannonCode
 import Common2026.Shannon.ShannonCodeKraftReverse
+import Common2026.Shannon.CsiszarProjection
