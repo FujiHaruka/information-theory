@@ -18,13 +18,34 @@
   - `blockDistortion d n x y` + `blockDistortion_nonneg`
   - `LossyCode` structure
   - `LossyCode.expectedBlockDistortion` + `_nonneg`
-- [ ] **Phase A 完全形 (deferred)** — pmf 直接形 `RDConstraint` / `mutualInfoPmf` / `rateDistortionFunction` (pmf 形) + 達成性 + 連続性
+- [x] **Phase A 完全形** ✅ (2026-05-14、`RateDistortionAchievability.lean` 461 行、0 sorry / 0 warning):
+  - `expectedDistortionPmf` / `marginalFst` / `marginalSnd` + continuity, nonneg
+  - `RDConstraint P_X d D : Set (α × β → ℝ)` — feasible joint pmf set
+  - `RDConstraint_isClosed` / `_isCompact` / `_convex` / `_subset_stdSimplex`
+  - `mutualInfoPmf q : ℝ` — **entropy 形** `H(fst) + H(snd) − H(q)`
+    (via `Real.negMulLog`、`α × β → ℝ` 全体で連続)
+  - `continuous_mutualInfoPmf`
+  - `rateDistortionFunctionPmf := sInf (mutualInfoPmf '' RDConstraint)`
+    (binder-`⨅` ではなく `sInf` of image 形を採用、conditional-complete-lattice の
+    `BddBelow` 副条件で詰まらない)
+  - `rateDistortionFunctionPmf_attained` — `IsCompact.exists_isMinOn` 経由
+  - `rateDistortionFunctionPmf_eq_min` — 値表示 (`sInf` = `mutualInfoPmf qStar`)
+  - `detReconstructionWitness` — 単純 reconstruction `q(a,b) = P_X(a) · 𝟙[b = b₀]`
+    で `RDConstraint_nonempty_of_witness` を成立、`[DecidableEq β]` 必要
+  - `RDConstraint_mono` + `rateDistortionFunctionPmf_antitone` (`csInf_le_csInf` 経由)
 - [ ] Phase B — Joint typical lossy encoder + decoder 📋
 - [ ] Phase C — Random codebook + probabilistic method (codebookMeasure lossy mirror) 📋
 - [ ] Phase D — Error event analysis (Cover-Thomas 10.5 (10.85) bound) 📋
 - [ ] Phase E — 主定理 `rate_distortion_achievability` 📋
 
 **MVP 完了サマリ (2026-05-14)**: Phase A の structure 部分のみ publish。後続 Phase A 完全形 + B-E は **`E-3'` deferred** として ~1800 行。本 MVP は後続セッションの statement 着地点として機能。
+
+**Phase A 完全形 完了サマリ (2026-05-14)**: pmf 直接形 `R(D)` + 達成性 + 連続性 + 単調性
+を publish (合計 461 行)。後続 Phase B–E (joint typical encoder、random codebook、error
+analysis、主定理) は **`E-3'` deferred** に残るが、Phase A 完全形により後段の statement
+着地点 (`RDConstraint`, `mutualInfoPmf`, `rateDistortionFunctionPmf`) が確定した。
+**残 deferred**: pmf 形 ↔ Measure 形 `mutualInfo` の bridge (Phase B-E 開始時に必要に応じて)、
+`mutualInfoPmf_nonneg` (joint entropy subadditivity 経由、非自明、本 Phase 不要)。
 
 ## ゴール / Approach
 
@@ -512,3 +533,35 @@ theorem rate_distortion_achievability
    merge するか、別 set として並立するか**: 並立採用、`ChannelCoding.lean`
    不変原則 (B-3'' 親 plan 不変 + 子 plan 並立) に整合。
 -->
+
+### 2026-05-14: Phase A 完全形 完了
+
+1. **`mutualInfoPmf` の定義 shape: KL/log 比形 vs entropy 形 (採用)**:
+   当初 plan の pmf 形 `∑ q(a,b) log(q(a,b) / (q.fst a · q.snd b))` (CsiszarProjection の
+   `klDivPmf` ミラー) は marginal が 0 になる境界で連続性が崩れる → `RDConstraint` 全体
+   (stdSimplex 上の任意 point) で連続にならず、`IsCompact.exists_isMinOn` 直適用が困難。
+   **採用**: `negMulLog` (`x ↦ -x log x`, `negMulLog 0 = 0`) 経由の entropy 形
+   `mutualInfoPmf q := H(fst) + H(snd) − H(q)`。`Real.continuous_negMulLog` から
+   `α × β → ℝ` 全体で連続が直接出る、CCL 上での compact-上 minimizer 存在が `≤500ms`
+   で通る。
+
+2. **`rateDistortionFunctionPmf` の binder shape: `⨅ q ∈ S, f q` vs `sInf (f '' S)` (採用)**:
+   binder-`⨅` 形は ℝ (ConditionallyCompleteLattice、not CompleteLattice) では `iInf_le` /
+   `le_iInf₂` などが `BddBelow` 副条件を要求して詰まる (predicate-iInf の内側
+   `⨅ _ : q ∈ S, f q` を境界条件で扱う際に `sInf ∅` の振る舞いを引きずる)。
+   **採用**: `sInf (mutualInfoPmf '' RDConstraint P_X d D)` 形。`csInf_le` / `le_csInf` /
+   `csInf_le_csInf` が直接効く、antitone が ~10 行で通る。Phase B–E で必要なら
+   `sInf_image` 系で binder-`⨅` 形と等価変換可。
+
+3. **`detReconstructionWitness` の `[DecidableEq β]` 要求**:
+   `if b = b₀ then ... else 0` を `def` で書くため `[DecidableEq β]` が必須
+   (`Classical.em` 経由でも書けるが proof 軽さ的に classmember を取った)。
+   Phase A 完全形の 4 補題 (`detReconstructionWitness_mem_stdSimplex`,
+   `marginalFst_detReconstructionWitness`, `expectedDistortionPmf_detReconstructionWitness`,
+   `RDConstraint_nonempty_of_witness`) は `section Witness` で local instance 提供。
+
+4. **`mutualInfoPmf_nonneg` を Phase A から外す判断**:
+   `I ≥ 0` は entropy 形では `H(fst) + H(snd) ≥ H(q)` (subadditivity) と同値で非自明
+   (log-sum / Jensen 必要)。Phase B–E で `R(D) ≥ 0` を要する局面で逆向き bridge
+   (pmf 形 ↔ Measure 形 `mutualInfo_nonneg`) 経由で discharge する想定。本 Phase の
+   scope を超える。

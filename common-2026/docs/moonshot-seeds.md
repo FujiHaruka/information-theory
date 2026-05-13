@@ -1,6 +1,6 @@
 # Moonshot シードカード集
 
-> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3** → **Type-class size 下界 E-2** → **Strong typicality E-7** → **Csiszár I-projection E-6** → **Channel coding strong converse E-1 単発形** → **Slepian–Wolf achievability E-5 退化点 MVP** → **Channel coding general-input converse D-2 chain rule MVP (`log|M| ≤ ∑ I(X_i; Y^n | X^{<i}).toReal + Fano`、iid 仮定撤廃)** → **Rate-distortion converse E-4 single-shot MVP (`R(D̃).toReal ≤ log|M|` for `D̃ := 𝔼[d(X, decoder(encoder(X)))]`)** → **DMC feedback capacity converse E-10 chain rule + per-letter hypothesis MVP (`log|M| ≤ n·C + Fano`、`h_per_letter` 仮説形)** → **Differential entropy + Gaussian max-entropy E-9 完全形 (Phase A-E、`h(𝒩(m,v)) = (1/2) log(2πev)` + max-entropy + KL closed-form、`DifferentialEntropy.lean` 1010 行)** → **Shannon noisy channel coding theorem D-1 MVP (capacity 到達 + average→max + smoothing で hp_pos 内部処理、hW_pos のみユーザ仮定、`ChannelCodingShannonTheorem.lean` 918 行、4 ペア "弱/強形" 最後の未充足解消)** → **Feedback converse per-letter bound E-10' 完全形 (memoryless Markov reformulation 経路、`ChannelCodingFeedbackComplete.lean` 198 行、Cover-Thomas 7.12 完全形完走、CondMutualInfo 新規補題 0 行)** → **General converse memoryless per-summand bound D-2' MVP (撤退ライン形、`ChannelCodingConverseGeneralComplete.lean` 578 行、3 仮説 `h_yother_zero` / `h_split` / `h_markov_xprefix` を memoryless 性から派生可能形で受け取り、新規補題 `condMutualInfo_chain_rule_X_2var` / `_Y_2var`)** → **Rate-distortion monotonicity + specified-distortion form E-4' MVP (`RateDistortionConverseMonotone.lean` 151 行、`rateDistortionFunction_antitone` + `rate_distortion_converse_single_shot_specified`)** → **Shannon-McMillan-Breiman Phase A+B MVP (`Stationary.lean` 119 行 + `EntropyRate.lean` 498 行 = 617 行、定常過程 + entropy rate 定義 + 存在性、Phase C Birkhoff 自前 deferred)** → **Slepian-Wolf binning + 期待値 collapse E-5' Phase A+B MVP (`SlepianWolfBinning.lean` 273 行、`binningMeasure` + `binning_collision_prob` (Cover-Thomas 15.4 中核 collapse lemma))** → **Rate-distortion achievability E-3 Phase A skeleton MVP (`RateDistortionAchievability.lean` 120 行、`LossyCode` structure + `blockDistortion` + `expectedBlockDistortion` 定義群、後続 Phase A 完全形 + B-E は E-3' deferred)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。**未実装 seed ゼロ**。新規 **D-1' / D-2'' / E-3' / E-4'' / E-5'' / E-8' deferred** 6 本を後継として登録。
+> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3** → **Type-class size 下界 E-2** → **Strong typicality E-7** → **Csiszár I-projection E-6** → **Channel coding strong converse E-1 単発形** → **Slepian–Wolf achievability E-5 退化点 MVP** → **Channel coding general-input converse D-2 chain rule MVP (`log|M| ≤ ∑ I(X_i; Y^n | X^{<i}).toReal + Fano`、iid 仮定撤廃)** → **Rate-distortion converse E-4 single-shot MVP (`R(D̃).toReal ≤ log|M|` for `D̃ := 𝔼[d(X, decoder(encoder(X)))]`)** → **DMC feedback capacity converse E-10 chain rule + per-letter hypothesis MVP (`log|M| ≤ n·C + Fano`、`h_per_letter` 仮説形)** → **Differential entropy + Gaussian max-entropy E-9 完全形 (Phase A-E、`h(𝒩(m,v)) = (1/2) log(2πev)` + max-entropy + KL closed-form、`DifferentialEntropy.lean` 1010 行)** → **Shannon noisy channel coding theorem D-1 MVP (capacity 到達 + average→max + smoothing で hp_pos 内部処理、hW_pos のみユーザ仮定、`ChannelCodingShannonTheorem.lean` 918 行、4 ペア "弱/強形" 最後の未充足解消)** → **Feedback converse per-letter bound E-10' 完全形 (memoryless Markov reformulation 経路、`ChannelCodingFeedbackComplete.lean` 198 行、Cover-Thomas 7.12 完全形完走、CondMutualInfo 新規補題 0 行)** → **General converse memoryless per-summand bound D-2' MVP (撤退ライン形、`ChannelCodingConverseGeneralComplete.lean` 578 行、3 仮説 `h_yother_zero` / `h_split` / `h_markov_xprefix` を memoryless 性から派生可能形で受け取り、新規補題 `condMutualInfo_chain_rule_X_2var` / `_Y_2var`)** → **Rate-distortion monotonicity + specified-distortion form E-4' MVP (`RateDistortionConverseMonotone.lean` 151 行、`rateDistortionFunction_antitone` + `rate_distortion_converse_single_shot_specified`)** → **Shannon-McMillan-Breiman Phase A+B MVP (`Stationary.lean` 119 行 + `EntropyRate.lean` 498 行 = 617 行、定常過程 + entropy rate 定義 + 存在性、Phase C Birkhoff 自前 deferred)** → **Slepian-Wolf binning + 期待値 collapse E-5' Phase A+B MVP (`SlepianWolfBinning.lean` 273 行、`binningMeasure` + `binning_collision_prob` (Cover-Thomas 15.4 中核 collapse lemma))** → **Rate-distortion achievability E-3 Phase A 完全形 (`RateDistortionAchievability.lean` 461 行、`LossyCode` + pmf 直接形 `R(D)` `rateDistortionFunctionPmf` + 達成性 (`IsCompact.exists_isMinOn`) + entropy 形 `mutualInfoPmf` 連続性 + 単調性、後続 Phase B-E は E-3' deferred ~1500 行)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。**未実装 seed ゼロ**。新規 **D-1' / D-2'' / E-3' / E-4'' / E-5'' / E-8' deferred** 6 本を後継として登録。
 >
 > 起草時 (2026-05-10): Fano (測度論版) → Shannon converse (3 形) → Han 補集合形 → Han Phase D (subset average / Shearer) まで通った状態を起点に、次のムーンショット候補 5 本をシード化。
 >
@@ -183,21 +183,33 @@
   **横断 utility** として E-1 / E-5 / E-3 の前段に置く価値あり、`SanovLDPEquality`
   Stein 経路を直接 multinomial 経路で書き直す独立代替路の出発点としても再利用可。
 
-- **E-3. Rate-distortion theorem achievability Phase A skeleton MVP** ✅ (2026-05-14) →
+- **E-3. Rate-distortion theorem achievability Phase A 完全形** ✅ (2026-05-14、初回 skeleton MVP → 同日 Phase A 完全形) →
   [docs/shannon/rate-distortion-achievability-plan.md](shannon/rate-distortion-achievability-plan.md) —
-  Cover-Thomas 10.5。Phase A の **structure 部分のみ** を `Common2026/Shannon/RateDistortionAchievability.lean`
-  (120 行、0 sorry / 0 warning) で publish:
-  - `DistortionFn α β := α → β → NNReal` (abbrev)
-  - `blockDistortion d n x y := (1/n) ∑ i, d(x i)(y i)` + `_nonneg`
-  - `LossyCode M n α β` structure (encoder: `(Fin n → α) → Fin M`、decoder: `Fin M → (Fin n → β)`、`Code` の lossy mirror)
-  - `LossyCode.expectedBlockDistortion μ d := ∫ x, d^n(x, decoder(encoder x)) ∂(μ⊗n)` + `_nonneg`
+  Cover-Thomas 10.5。`Common2026/Shannon/RateDistortionAchievability.lean` (461 行、0 sorry / 0 warning):
+  - Skeleton (120 行): `DistortionFn α β := α → β → NNReal`、`blockDistortion`、`LossyCode`、
+    `LossyCode.expectedBlockDistortion`
+  - **Phase A 完全形 (+341 行)**: pmf 直接形 `R(D)` の達成性まで:
+    - `expectedDistortionPmf d q := ∑ a b, q(a,b) · d(a,b)` + `_nonneg` / continuity
+    - `marginalFst q` / `marginalSnd q` + continuity / nonneg on simplex
+    - `RDConstraint P_X d D : Set (α × β → ℝ) := {q ∈ stdSimplex | marginalFst = P_X ∧ expectedDistortionPmf d q ≤ D}`
+    - `RDConstraint_isClosed` / `_isCompact` / `_convex` / `_subset_stdSimplex` / `_mono`
+    - `mutualInfoPmf q := H(fst) + H(snd) − H(q)` (**entropy 形**、`Real.negMulLog` 経由で
+      `α × β → ℝ` 全体で連続) — KL/log 比形は marginal 0 境界で連続性が崩れるため不採用
+    - `continuous_mutualInfoPmf`
+    - `rateDistortionFunctionPmf := sInf (mutualInfoPmf '' RDConstraint)` (binder-`⨅` ではなく
+      `sInf` of image 形を採用、CCL の `BddBelow` 副条件で詰まらない)
+    - `rateDistortionFunctionPmf_attained` — `IsCompact.exists_isMinOn` 経由
+    - `rateDistortionFunctionPmf_eq_min` — 値表示 (`sInf` = `mutualInfoPmf qStar`)
+    - `detReconstructionWitness P_X b₀ (a,b) := if b = b₀ then P_X a else 0` —
+      `RDConstraint_nonempty_of_witness` の証人 (要 `[DecidableEq β]`)
+    - `rateDistortionFunctionPmf_antitone` (`csInf_le_csInf` 経由)
 
-  既存 E-4 / E-4' の `expectedDistortion d ν` / `rateDistortionFunction d P D` (Measure 形、`RateDistortionConverse.lean` + `RateDistortionConverseMonotone.lean`) を流用予定。
+  既存 E-4 / E-4' の `expectedDistortion d ν` / `rateDistortionFunction d P D` (Measure 形、`RateDistortionConverse.lean` + `RateDistortionConverseMonotone.lean`) は **並立**、本 Phase の pmf 形と bridge は B-E 開始時に必要に応じて作る (deferred)。
 
-  **後続 `E-3'` deferred (~1800 行)**: Phase A 完全形 (pmf 直接形 `RDConstraint` / `mutualInfoPmf` /
-  `rateDistortionFunction` (pmf 形) + 達成性 + 連続性) + Phase B (joint typical lossy encoder +
+  **後続 `E-3'` deferred (~1500 行に縮約)**: Phase B (joint typical lossy encoder +
   decoder) + Phase C (random codebook + Fubini collapse) + Phase D (Cover-Thomas 10.5 (10.85) bound) +
-  Phase E (主定理 `rate_distortion_achievability`)。本 MVP は後続の statement 着地点。
+  Phase E (主定理 `rate_distortion_achievability`)。Phase A 完全形完了により後段の
+  statement 着地点 (`RDConstraint`, `mutualInfoPmf`, `rateDistortionFunctionPmf`) が確定。
 
 - **E-4. Rate-distortion converse** ✅ (2026-05-13, **single-shot MVP**) →
   [docs/shannon/rate-distortion-converse-plan.md](shannon/rate-distortion-converse-plan.md) —
