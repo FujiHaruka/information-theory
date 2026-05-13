@@ -1,6 +1,6 @@
 # Moonshot シードカード集
 
-> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3** → **Type-class size 下界 E-2** → **Strong typicality E-7** → **Csiszár I-projection E-6** → **Channel coding strong converse E-1 単発形** → **Slepian–Wolf achievability E-5 退化点 MVP** → **Channel coding general-input converse D-2 chain rule MVP (`log|M| ≤ ∑ I(X_i; Y^n | X^{<i}).toReal + Fano`、iid 仮定撤廃)** → **Rate-distortion converse E-4 single-shot MVP (`R(D̃).toReal ≤ log|M|` for `D̃ := 𝔼[d(X, decoder(encoder(X)))]`)** → **DMC feedback capacity converse E-10 chain rule + per-letter hypothesis MVP (`log|M| ≤ n·C + Fano`、`h_per_letter` 仮説形)** → **Differential entropy + Gaussian max-entropy E-9 完全形 (Phase A-E、`h(𝒩(m,v)) = (1/2) log(2πev)` + max-entropy + KL closed-form、`DifferentialEntropy.lean` 1010 行)** → **Shannon noisy channel coding theorem D-1 MVP (capacity 到達 + average→max + smoothing で hp_pos 内部処理、hW_pos のみユーザ仮定、`ChannelCodingShannonTheorem.lean` 918 行、4 ペア "弱/強形" 最後の未充足解消)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未実装 seed は **E-3 + E-5' + E-8 (plan 起草済み 3 本、2026-05-13)** と新規 **D-1' / D-2' / E-4' / E-10' deferred** 4 本。
+> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3** → **Type-class size 下界 E-2** → **Strong typicality E-7** → **Csiszár I-projection E-6** → **Channel coding strong converse E-1 単発形** → **Slepian–Wolf achievability E-5 退化点 MVP** → **Channel coding general-input converse D-2 chain rule MVP (`log|M| ≤ ∑ I(X_i; Y^n | X^{<i}).toReal + Fano`、iid 仮定撤廃)** → **Rate-distortion converse E-4 single-shot MVP (`R(D̃).toReal ≤ log|M|` for `D̃ := 𝔼[d(X, decoder(encoder(X)))]`)** → **DMC feedback capacity converse E-10 chain rule + per-letter hypothesis MVP (`log|M| ≤ n·C + Fano`、`h_per_letter` 仮説形)** → **Differential entropy + Gaussian max-entropy E-9 完全形 (Phase A-E、`h(𝒩(m,v)) = (1/2) log(2πev)` + max-entropy + KL closed-form、`DifferentialEntropy.lean` 1010 行)** → **Shannon noisy channel coding theorem D-1 MVP (capacity 到達 + average→max + smoothing で hp_pos 内部処理、hW_pos のみユーザ仮定、`ChannelCodingShannonTheorem.lean` 918 行、4 ペア "弱/強形" 最後の未充足解消)** → **Feedback converse per-letter bound E-10' 完全形 (memoryless Markov reformulation 経路、`ChannelCodingFeedbackComplete.lean` 198 行、Cover-Thomas 7.12 完全形完走、CondMutualInfo 新規補題 0 行)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未実装 seed は **E-3 + E-5' + E-8 (plan 起草済み 3 本、2026-05-13)** と新規 **D-1' / D-2' / E-4' deferred** 3 本。
 >
 > 起草時 (2026-05-10): Fano (測度論版) → Shannon converse (3 形) → Han 補集合形 → Han Phase D (subset average / Shearer) まで通った状態を起点に、次のムーンショット候補 5 本をシード化。
 >
@@ -315,11 +315,25 @@
   は **E-10' deferred** (~500 行、Mathlib `CondMutualInfo.lean` に condDistrib 展開補題追加要)。
   D-2 (channel coding general converse) と組み合わせると "feedback も使えない" が出る。
 
-- **E-10'. Feedback converse per-letter bound (`I(M; Y_i | Y^{<i}) ≤ I(X_i; Y_i)`)** ⏸️ —
-  E-10 deferred 後継。`Common2026/Shannon/ChannelCodingFeedback.lean` で `h_per_letter` 仮説形
-  に抽出した命題の純粋証明。memoryless 性 ⇒ `Y_i ⊥ (M, Y^{<i}) | X_i` の condDistrib equality →
-  conditional MI の DPI で `≤`。`CondMutualInfo.lean` 拡張 (condDistrib 展開補題 + DPI 形補題)
-  ~500 行見込み。
+- **E-10'. Feedback converse per-letter bound (`I(M; Y_i | Y^{<i}) ≤ I(X_i; Y_i)`)** ✅ (2026-05-14) →
+  [docs/shannon/dmc-feedback-per-letter-bound-plan.md](shannon/dmc-feedback-per-letter-bound-plan.md) —
+  `Common2026/Shannon/ChannelCodingFeedbackComplete.lean` (198 行、0 sorry / 0 warning):
+  - `IsMemorylessFeedback μ Msg Xs Ys := ∀ i, IsMarkovChain μ (Y^{<i}, Msg) X_i Y_i`
+    (γ-form Markov、kernel W への参照なし)
+  - `feedback_per_letter_bound`: per-letter 不等式の純粋証明
+  - `channel_coding_feedback_converse_memoryless`: E-10 主定理を `h_per_letter` 仮説抜き完全形で
+
+  **証明合成 (Plan 見積 280-400 行を 50% 削減で 198 行)**: `mutualInfo_le_of_markov` 1 段
+  (`(Y^{<i}, Msg) → X_i → Y_i` Markov ⟹ `I((Y^{<i}, Msg); Y_i) ≤ I(X_i; Y_i)`) + `mutualInfo_chain_rule`
+  (LHS を `I(Y^{<i}; Y_i) + I(Msg; Y_i | Y^{<i})` に展開) + `mutualInfo_nonneg` (`I(Y^{<i}; Y_i) ≥ 0`)
+  の 3 段合成。**CondMutualInfo.lean 新規補題 0 行**。
+
+  **shape-driven 設計判断**: Phase A の RV 順を `(Y^{<i}, Msg)` (chain rule LHS の `(Zc, Xs)` と一致)
+  に揃えたことで Step 3 swap が 0 行に。CLAUDE.md "Mathlib-shape-driven Definitions" 原則の体現。
+
+  **横断 utility**: D-2 (channel coding general-input converse) の deferred bullet D-2'
+  (memoryless per-summand bound `I(X_i; Y^n | X^{<i}) ≤ I(X_i; Y_i)`) と同型の Markov reformulation
+  経路が転用可能。Cover-Thomas 7.12 が `h_per_letter` 仮説を剥がした完全形で完走。
 
 ### B. 新シード入口 (5 シード完了で開いた)
 
