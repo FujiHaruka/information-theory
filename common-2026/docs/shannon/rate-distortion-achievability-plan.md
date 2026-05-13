@@ -12,12 +12,19 @@
 
 ## 進捗
 
-- [ ] Phase 0 — 経路選択 + Codebook 機構の流用 vs 抽出判断 📋
-- [ ] Phase A — 定義 (`distortion`, `expectedDistortion`, `LossyCode`, `R(D)`) 📋
+- [x] Phase 0 — 経路選択 ✅ (2026-05-13、既存資産再利用方針)
+- [x] **Phase A skeleton MVP** ✅ (2026-05-14、`RateDistortionAchievability.lean` 120 行、0 sorry):
+  - `DistortionFn α β := α → β → NNReal`
+  - `blockDistortion d n x y` + `blockDistortion_nonneg`
+  - `LossyCode` structure
+  - `LossyCode.expectedBlockDistortion` + `_nonneg`
+- [ ] **Phase A 完全形 (deferred)** — pmf 直接形 `RDConstraint` / `mutualInfoPmf` / `rateDistortionFunction` (pmf 形) + 達成性 + 連続性
 - [ ] Phase B — Joint typical lossy encoder + decoder 📋
 - [ ] Phase C — Random codebook + probabilistic method (codebookMeasure lossy mirror) 📋
 - [ ] Phase D — Error event analysis (Cover-Thomas 10.5 (10.85) bound) 📋
 - [ ] Phase E — 主定理 `rate_distortion_achievability` 📋
+
+**MVP 完了サマリ (2026-05-14)**: Phase A の structure 部分のみ publish。後続 Phase A 完全形 + B-E は **`E-3'` deferred** として ~1800 行。本 MVP は後続セッションの statement 着地点として機能。
 
 ## ゴール / Approach
 
