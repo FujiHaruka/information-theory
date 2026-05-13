@@ -226,9 +226,26 @@
   - `rate_distortion_converse_single_shot_specified`: `∫ d(X, decoder(encoder X)) ∂μ ≤ D ⟹
     R(D).toReal ≤ log|M|` (親 single-shot + monotonicity)
 
-  **後継 `E-4''` deferred**: 実測歪み形 → n-letter 規定歪み形への昇格に必要な R(D) convexity (MI
-  concavity 経由、Mathlib gap 深い) + Jensen + 1/n 平均化。`MIChainRule.lean` の per-letter 分解と
-  組合せ ~500-1000 行。
+- **E-4''. Rate-distortion R(D) convexity + n-letter regulated form** ✅ (2026-05-14, **Phase A + B core MVP**) →
+  [docs/shannon/rate-distortion-convexity-plan.md](shannon/rate-distortion-convexity-plan.md) —
+  `Common2026/Shannon/RateDistortionConvexity.lean` (256 行、0 sorry / 0 warning):
+  - **Phase A**: `mixtureMeasure λ ν₁ ν₂` (measure-level convex combination) + 4 補題
+    (`mixtureMeasure_map_fst` / `mixtureMeasure_map_snd` の pushforward 線形性、
+    `mixtureMeasure_map_fst_eq` で X-marginal `P` 保存、`expectedDistortion_mixtureMeasure`
+    で distortion 線形性、`mixtureMeasure_feasible` で feasibility 保存)
+  - **Phase B core**: `rateDistortionFunction_convexOn` (R(D) 凸性主補題) を
+    `klDiv` joint convexity を hypothesis 化した **subnormal 形** で publish:
+    `R(λD₁+(1-λ)D₂) ≤ ofReal λ · R(D₁) + ofReal (1-λ) · R(D₂)` を、
+    任意の feasible `ν₁, ν₂` に対する mixture の `klDiv` 凸不等式 (`h_klDiv_conv`) と
+    distortion integrability (`h_int_witness`) を仮定として受け取り、`ENNReal.mul_iInf_of_ne`
+    + `iInf_add` / `add_iInf` で iInf 階層に分配 + boundary case (`lam ∈ {0, 1}`) を別 branch
+    で処理。
+
+  **後継 `E-4'''` deferred**: `klDiv` joint convexity の **log-sum inequality 経由 discharge**
+  (有限アルファベット pmf 形で per-atom 凸性 + Jensen weights) ~150-300 行。Mathlib 不在
+  (`x log x` 1 変数凸性のみ、`(p, q) ↦ p log(p/q)` 結合凸性は自作)。
+  **`E-4''C`** deferred: n-letter 規定歪み形 converse (`MIChainRule.mutualInfo_pi_eq_sum`
+  + Phase B 凸性 + Jensen 1/n 平均) ~300-500 行。
 
 - **E-5. Slepian–Wolf achievability** ✅ (2026-05-13, **退化点 MVP**) →
   [docs/shannon/slepian-wolf-achievability-plan.md](shannon/slepian-wolf-achievability-plan.md) —

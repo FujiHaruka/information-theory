@@ -52,6 +52,7 @@ import Common2026.Shannon.ChannelCodingShannonTheorem
 import Common2026.Shannon.ChannelCodingShannonTheoremGeneral
 import Common2026.Shannon.RateDistortionConverse
 import Common2026.Shannon.RateDistortionConverseMonotone
+import Common2026.Shannon.RateDistortionConvexity
 import Common2026.Shannon.RateDistortionAchievability
 import Common2026.Shannon.Sanov
 import Common2026.Shannon.SanovLDP
