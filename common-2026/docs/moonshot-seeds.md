@@ -354,6 +354,12 @@
 
   **後継 `E-8'` deferred**: Phase C (Birkhoff 自前 ~200-400 行) + Phase D (SMB 主定理 `-(1/n) log p(X^n) → H` a.s.、~80-150 行) + Phase E (i.i.d. 特殊化、~50-100 行)。Birkhoff a.s. 版 Mathlib 不在で plan の最大の山場。Lempel–Ziv (将来 seed) の前段。
 
+  **E-8' Phase C.1 着手分析 (2026-05-14)**: Phase 0' Mathlib 再調査で **martingale 経路 (Lalley) は Mathlib API では直接成立しない**ことが判明、`BirkhoffErgodic.lean` 着手前に撤退 (実装ファイル未作成)。詳細は [`docs/shannon/shannon-mcmillan-breiman-phase-c-plan.md`](shannon/shannon-mcmillan-breiman-phase-c-plan.md) §11 判断ログ。要点:
+  - `Submartingale.ae_tendsto_limitProcess` は `M_n` の収束を `limitProcess f μ` に与えるが、Birkhoff が要する `M_n / n → 0` は別物 — 直接適用不能。
+  - Mathlib に reversed/backward martingale 収束定理 (Lalley 標準証明の中核) は **不在**。
+  - `Probability/StrongLaw.lean` は **独立変数** 前提で ergodic 過程に流用不能。
+  - 推奨経路: 別 deferred 切り出し — **`E-8''` Birkhoff a.s. 自前** (backward martingale 自前 ~400-600 行 / Mathlib PR 候補) + **`E-8'` を Birkhoff 仮説形 SMB に弱体化** (Phase D 本体 `~150-200 行`、Cover-Thomas 16.8 仮説形で主目的達成)。
+
 - **E-9. Differential entropy + Gaussian max-entropy** ✅ (2026-05-13) →
   [docs/shannon/differential-entropy-plan.md](shannon/differential-entropy-plan.md) —
   Cover-Thomas 8.1, 8.6.1, 9.6。`Common2026/Shannon/DifferentialEntropy.lean` (1010 行、
