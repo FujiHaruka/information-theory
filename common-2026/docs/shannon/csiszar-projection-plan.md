@@ -8,11 +8,11 @@ Common2026 moonshot seed **E-6** ([docs/moonshot-seeds.md:125](../moonshot-seeds
 
 ## 進捗
 
-- [ ] Phase A — Real-valued KL functional `klDivPmf` + 連続性 + 厳密凸性 📋
-- [ ] Phase B — 存在 (extreme value theorem 経由) 📋
-- [ ] Phase C — 一意性 (strict convexity 経由) 📋
-- [ ] Phase D — Pythagorean inequality (1 次条件) 📋
-- [ ] Phase E — linear-family 等号 (Cover-Thomas 11.6.4 系) 📋
+- [x] Phase A — Real-valued KL functional `klDivPmf` + 連続性 + 厳密凸性 ✅
+- [x] Phase B — 存在 (extreme value theorem 経由) ✅
+- [x] Phase C — 一意性 (strict convexity 経由) ✅
+- [x] Phase D — Pythagorean inequality (1 次条件) ✅
+- [ ] Phase E — linear-family 等号 (Cover-Thomas 11.6.4 系) 📋 (scope-deferred)
 
 ## ゴール / Approach
 
@@ -136,3 +136,81 @@ Common2026 moonshot seed **E-6** ([docs/moonshot-seeds.md:125](../moonshot-seeds
 ## 判断ログ
 
 書く頻度: Phase 中の方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
+
+1. **`Π` (大文字パイ) → `K`** (2026-05-13): Lean が `Π` を dependent product 用 reserved token として扱い、binder 名に使えない。`K` (closed convex set の慣習) に rename。docstring の Π → K に合わせる。
+
+2. **`Measure α` 不採用、`α → ℝ` (pmf) + `stdSimplex ℝ α` 採用** (2026-05-13、Approach 確立時): Mathlib `stdSimplex ℝ α` (`Mathlib.Analysis.Convex.StdSimplex`) が `Convex` / `IsClosed` / `IsCompact` を off-the-shelf 提供。`Measure α` 上の同等性質は finite-alphabet で derive 可能だが topology 設定や `IsProbabilityMeasure` instance 経由で重く、scope に対して overengineer。`(klDiv P Q).toReal` 形への bridge は `Sanov.klDivSumForm_eq_toReal_klDiv` テンプレで後付け可能 (現 plan scope 外)。
+
+3. **`klFun_sharp_lower` (PinskerSharp) refactor 不要** (2026-05-13、loogle 確認時): Mathlib `strictConvexOn_klFun : StrictConvexOn ℝ (Ici 0) klFun` (`Mathlib.InformationTheory.KullbackLeibler.KLFun:62`) が既存。Phase A `klDivPmf_strictConvexOn_left` で **per-coordinate** に直接適用、`PinskerSharp.lean` 内 helper の昇格不要。
+
+4. **Pythagorean は inequality** (`≥`、Cover-Thomas 11.6.1) で実装、equality 形 (11.6.4) は **scope-deferred** (2026-05-13、設計時): 一般 closed convex `K` では equality は成立せず inequality のみ。equality 形は linear-family `K := {P : ∀ i, ∑ P g_i = c_i}` 限定で、`P + s(P - Qstar) ∈ K` (∀ `s ∈ ℝ`) から両方向 first-order `≥ 0` ⟹ `= 0` で取得可能。Phase E として保留、必要時に E-6.1 として追加 plan。
+
+5. **`csiszar_first_order_condition` の `hK_sub` 不要** (2026-05-13、実装時に発覚): 1 次条件の証明は `K` のコンパクト性を要さず、凸性 (`hK_conv`) + minimality (`hmin`) + Qstar/Q full support だけで完結。`hK_sub` を signature から除去。Pythagorean 主定理側で `hP_sum = (hK_sub hP).2` を抽出する形に整理。
+
+6. **derivative 経路を採用** (subgradient/secant 経路は不採用、2026-05-13): subgradient 不等式 `klFun(v) ≥ klFun(u) + log(u)(v-u)` を直接和をとると `klDivPmf P Q ≥ klDivPmf Q* Q + ∑ (P - Q*) log(Q*/Q)` を得るが、これは minimality を **使っていない** (`klDivPmf Q* Q ≤ klDivPmf P Q` の自明再導出に縮退、`∑ (P - Q*) log(Q*/Q) ≥ -klDivPmf Q* Q` という弱い情報しか出ない)。Pythagorean inequality は本質的に Q* の minimality を消費する 1 次条件 `∑ (P - Q*) log(Q*/Q) ≥ 0` を要し、これは `t ↦ klDivPmf ((1-t)Q* + tP) Q` の右微分 `≥ 0` でしか取れない。Mathlib `hasDerivAt_iff_tendsto_slope_left_right` + `ge_of_tendsto` + per-summand chain rule の組合せで `~80` 行で完結。
+
+## 実装完了 (2026-05-13)
+
+`Common2026/Shannon/CsiszarProjection.lean` (487 行) で 3 主定理 + 1 補助補題を publish:
+
+### 主定理
+
+- `csiszar_projection_exists` (Phase B):
+  ```
+  (hK_closed : IsClosed K) (hK_sub : K ⊆ stdSimplex ℝ α)
+  (hK_ne : K.Nonempty) (hQ_pos : ∀ a, 0 < Q a) :
+  ∃ Qstar ∈ K, IsMinOn (fun P => klDivPmf P Q) K Qstar
+  ```
+- `csiszar_projection_unique` (Phase C):
+  ```
+  (hK_conv : Convex ℝ K) (hK_sub : K ⊆ stdSimplex ℝ α)
+  (hQ_pos : ∀ a, 0 < Q a)
+  {Qstar Qstar'} (hQs : Qstar ∈ K) (hQs' : Qstar' ∈ K)
+  (hmin : IsMinOn (fun P => klDivPmf P Q) K Qstar)
+  (hmin' : IsMinOn (fun P => klDivPmf P Q) K Qstar') :
+  Qstar = Qstar'
+  ```
+- `csiszar_pythagoras_inequality` (Phase D):
+  ```
+  (hK_conv : Convex ℝ K) (hK_sub : K ⊆ stdSimplex ℝ α)
+  (hQ_sum : ∑ a, Q a = 1) (hQ_pos : ∀ a, 0 < Q a)
+  {Qstar} (hQs : Qstar ∈ K) (hQs_pos : ∀ a, 0 < Qstar a)
+  (hmin : IsMinOn (fun P => klDivPmf P Q) K Qstar)
+  {P} (hP : P ∈ K) (hP_pos : ∀ a, 0 < P a) :
+  klDivPmf P Q ≥ klDivPmf P Qstar + klDivPmf Qstar Q
+  ```
+
+### 補助補題 (再利用候補)
+
+- `klDivPmf` 定義 (`∑ a, Q a * klFun (P a / Q a)`)
+- `klDivPmf_nonneg` (任意の non-negative P, Q)
+- `continuous_klDivPmf_left` (full-support Q 下で P ↦ klDivPmf P Q 連続)
+- `klDivPmf_strictConvexOn_left` (full-support Q 下で stdSimplex 上厳密凸)
+- `klDivPmf_eq_log_diff_sum` (`= ∑ P (log P - log Q)` 標準和形、probability + full support)
+- `klDivPmf_decomp_via_intermediate` (`= klDivPmf P Qstar + ∑ P (log Qstar - log Q)`、中間点)
+- `klDivPmf_self_expand` (`klDivPmf Q* Q = ∑ Q* (log Q* - log Q)`)
+- `csiszar_first_order_condition` (∑ (P - Q*) (log Q* - log Q) ≥ 0、`HasDerivAt` 経由)
+- `isCompact_of_subset_stdSimplex` (汎用、`stdSimplex` 部分閉集合のコンパクト性)
+
+### Mathlib gap
+
+- Mathlib `klDiv` の `StrictConvexOn` (ENNReal-level) は不在。`(klDiv P Q).toReal` 形で
+  finite-measure 上に書く場合は Bochner 経由の連続性証明が必要 (`MaxEntropy.klDiv_uniformOn_univ_toReal_eq`
+  template)。本 plan は `klDivPmf` 経由で迂回。
+- Mathlib `IsLocalMinOn` 周辺に「`HasDerivAt + IsMinOn on [0, ε]` ⟹ derivative ≥ 0」の直接補題は
+  なし (1-d only)。`fderivWithin_nonneg` は `posTangentConeAt` 経由で heavy。本 plan は
+  `hasDerivAt_iff_tendsto_slope_left_right` + `ge_of_tendsto` で elementary に組む。
+
+### Downstream 利用時の注意
+
+- **`Measure α` 経由で使う場合**: `Sanov.klDivSumForm_eq_toReal_klDiv` テンプレ
+  (`MaxEntropy.klDiv_uniformOn_univ_toReal_eq` も同類) を組合せて `(klDiv P Q).toReal` 形に
+  bridge する。klDiv の `IsProbabilityMeasure` 仮説 + AC + `Integrable (llr ...)` 整備が要る。
+- **E-1 (channel coding strong converse) / E-3 (rate-distortion)**: I-projection の幾何 (Pythagorean
+  inequality) を `Π` を rate-distortion 制約集合に取って使う場面が想定される。E-3 plan 起草時に
+  「`klDivPmf` のシンプレックス vs `Measure` ambient の経路選択」を再確認。
+- **`klDivPmf_eq_log_diff_sum` の独立 utility**: Sanov の `klDivSumForm` と shape 一致 (定義は
+  `∑ Q a * klFun (P a / Q a)`、展開後は `∑ P (log P - log Q)`)。`Sanov.lean` への refactor 候補
+  (片方を deprecate して unify) は scope-deferred (両者並立で API 重複は小)。
+- **linear-family equality (11.6.4)**: 必要なら E-6.1 として追加 plan。`first_order_condition` を
+  両方向 (P と 2·Qstar - P) で適用するだけ、見積 ~50 行。

@@ -1,6 +1,6 @@
 # Moonshot シードカード集
 
-> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3 (Cover-Thomas 3.1.2 完全 4 帰結)** → **Type-class size 下界 E-2 (Cover-Thomas 11.1.3 entropy 形、bridge `n^n/∏c^c = exp(n·H(c/n))`)** → **Strong typicality E-7 (Cover-Thomas 11.2 3 主定理、per-letter `\|c/n - P\| ≤ ε` 形 + Strong→Weak bridge `\|.../n - H\| ≤ ε·L`)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未着手 seed は **D 節 (D-1, D-2、D-3 完了)** と **E 節 (E-1, E-3〜E-6, E-8〜E-10、E-2 / E-7 完了、2026-05-13 起草)**。
+> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3 (Cover-Thomas 3.1.2 完全 4 帰結)** → **Type-class size 下界 E-2 (Cover-Thomas 11.1.3 entropy 形、bridge `n^n/∏c^c = exp(n·H(c/n))`)** → **Strong typicality E-7 (Cover-Thomas 11.2 3 主定理、per-letter `\|c/n - P\| ≤ ε` 形 + Strong→Weak bridge `\|.../n - H\| ≤ ε·L`)** → **Csiszár I-projection E-6 (Cover-Thomas 11.6.1、存在 + 一意性 + Pythagorean 不等式)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未着手 seed は **D 節 (D-1, D-2、D-3 完了)** と **E 節 (E-1, E-3〜E-5, E-8〜E-10、E-2 / E-6 / E-7 完了、2026-05-13 起草)**。
 >
 > 起草時 (2026-05-10): Fano (測度論版) → Shannon converse (3 形) → Han 補集合形 → Han Phase D (subset average / Shearer) まで通った状態を起点に、次のムーンショット候補 5 本をシード化。
 >
@@ -122,13 +122,38 @@
   素直、weak typicality 経路でも書ける。`CondMutualInfo.lean` + `MIChainRule.lean` を再利用。
   見積 中量強形 (~800 行)。
 
-- **E-6. Csiszár I-projection / Pythagorean identity** ⏸️ —
-  Cover-Thomas 11.6.1, 11.6.4。凸閉集合 `Π ⊆ Δ(α)` 上で `Q* := argmin_{P ∈ Π} D(P‖Q)` の存在
-  + 一意性 + `P ∈ Π ⟹ D(P‖Q) = D(P‖Q*) + D(Q*‖Q)` Pythagorean identity。
-  `klDiv` の strict convexity (現状 sharp Pinsker の `klFun_sharp_lower` 延長) +
-  Mathlib `IsClosed.exists_forall_le` (compact 上 inf 達成)。**Sanov LDP / Gibbs / hypothesis testing
-  の統一幾何**で、`SanovLDP` / `Stein` / `MaxEntropy` への横断 corollary 群を吐ける。
-  見積 中量 (~600 行)、**横断 utility**。
+- **E-6. Csiszár I-projection / Pythagorean inequality** ✅ (2026-05-13) →
+  [docs/shannon/csiszar-projection-plan.md](shannon/csiszar-projection-plan.md) —
+  Cover-Thomas 11.6.1。凸閉集合 `K ⊆ stdSimplex ℝ α` 上で 3 主結果を `Common2026/Shannon/CsiszarProjection.lean`
+  (487 行) で publish:
+  - `csiszar_projection_exists`: 閉非空 `K` + full-support reference `Q` で
+    `∃ Q* ∈ K, IsMinOn (klDivPmf · Q) K Q*`
+    (`isCompact_stdSimplex` + `IsCompact.exists_isMinOn` + `klDivPmf` 連続性)
+  - `csiszar_projection_unique`: 凸 `K` + `Qstar, Qstar'` 両方最小化元 ⟹ 等しい
+    (Mathlib `strictConvexOn_klFun` 経由の `klDivPmf_strictConvexOn_left` で midpoint 矛盾)
+  - `csiszar_pythagoras_inequality`: 最小化元 `Q*` + `P ∈ K` (full support) で
+    `klDivPmf P Q ≥ klDivPmf P Q* + klDivPmf Q* Q` (Cover-Thomas 11.6.1)
+
+  鍵は **1 次条件** `∑ a, (P a - Q* a) (log Q* a - log Q a) ≥ 0` の導出: `φ(t) := klDivPmf ((1-t)Q* + tP) Q`
+  に `HasDerivAt φ D 0` を per-summand `hasDerivAt_klFun` + chain rule + `HasDerivAt.sum` で取得 →
+  `Pt t ∈ K` (`t ∈ [0,1]`) 凸性 + minimality で `φ 0 ≤ φ t` → `slope φ 0` の `𝓝[>] 0` 極限
+  経由で `D ≥ 0` (`hasDerivAt_iff_tendsto_slope_left_right` + `ge_of_tendsto`)。
+  代数恒等式 `klDivPmf P Q = klDivPmf P Q* + ∑ P (log Q* - log Q)` (full support, `log_div`) +
+  `klDivPmf Q* Q = ∑ Q* (log Q* - log Q)` (`klFun (Q*/Q)` 展開 + `∑ P = ∑ Q* = ∑ Q = 1`) で
+  Pythagorean に整形。
+
+  **shape-driven 設計判断**:
+  - **`Measure α` ではなく `α → ℝ` (pmf 直接) + `stdSimplex ℝ α`** を採用 (Mathlib `isCompact_stdSimplex`
+    + `convex_stdSimplex` + `isClosed_stdSimplex` off-the-shelf)。`(klDiv P Q).toReal` 形は
+    `Sanov.klDivSumForm_eq_toReal_klDiv` 経由の post-bridge で可能 (本 plan scope 外)。
+  - **`klFun_sharp_lower` (PinskerSharp) refactor は不要**: Mathlib `strictConvexOn_klFun`
+    (`Mathlib.InformationTheory.KullbackLeibler.KLFun`) が既存、そのまま再利用。
+  - **Pythagorean は inequality** (Cover-Thomas 11.6.1)。linear family 等式形 (Cover-Thomas 11.6.4)
+    は scope-deferred (plan Phase E)。一般 closed convex `K` では equality は成立しない。
+
+  **横断 utility** として `klDivPmf P Q` の独立 publish に意義あり (`Sanov.klDivSumForm`
+  と shape 共有、`klDivPmf_eq_log_diff_sum` の標準和形は他で再利用可能)。E-1 (Stein 関連)
+  / E-3 (rate-distortion) / E-5 (Slepian-Wolf achievability) の i.i.d. 最適化議論で出番。
 
 - **E-7. Strong typicality** ✅ (2026-05-13) →
   [docs/shannon/strong-typicality-plan.md](shannon/strong-typicality-plan.md) —
@@ -202,10 +227,10 @@
 
 ### 横断観察 (E 節シード間)
 
-- **E-2 / E-6 / E-7 を先行 utility として**: 軽中量 (~500–700 行) のこの 3 本は単独で publish 価値を持ちつつ、後続 (E-1 / E-3 / E-5) の前段補題として直接効く。順序最適化: **E-2 → E-7 → E-6 → E-1 → E-5 → E-3 → E-4**。
+- **E-2 / E-6 / E-7 先行 utility 3 本完了** (2026-05-13): 軽中量 (~480–700 行) のこの 3 本は単独で publish 価値を持ちつつ、後続 (E-1 / E-3 / E-5) の前段補題として直接効く。順序最適化: ✅ E-2 → ✅ E-7 → ✅ E-6 → E-1 → E-5 → E-3 → E-4。
   - E-2 (type-class lower bound) は Sanov LDP equality (`SanovLDPEquality.lean`) の Stein 経由を**直接経路に置き換える**機会で、横断改善 C と同質の整理効果。
   - E-7 (strong typicality) は E-1 (channel coding strong converse) と E-5 (Slepian–Wolf achievability) の **共通前段**。両方を予定するなら E-7 単独 plan を独立に切る方がトータル短い (B-7 → B-3 の前例)。
-  - E-6 (Csiszár I-projection) は `klDiv` strict convexity 整備に効く。sharp Pinsker (`PinskerSharp.lean`) の `klFun_sharp_lower` を ConvexOn / StrictConvexOn 形に refactor する機会。
+  - E-6 (Csiszár I-projection) 完了時の知見: **Mathlib `strictConvexOn_klFun` が既存**で、`PinskerSharp.lean` `klFun_sharp_lower` の ConvexOn refactor は**不要**だった。`stdSimplex ℝ α` (Mathlib) + `klDivPmf : (α → ℝ) → (α → ℝ) → ℝ` 直接定義で `Measure α` plumbing 全て回避、`klDivPmf_eq_log_diff_sum` (`∑ P (log P - log Q)` 形) は Sanov `klDivSumForm` と shape 一致、`Sanov.klDivSumForm_eq_toReal_klDiv` 同型の post-bridge で `(klDiv P Q).toReal` 形にも橋渡し可能 (scope-deferred)。
 - **強形/弱形ペア 4 種が E-1 で完結**: Pinsker (弱 B-5 / 強 B-5') / Stein (弱 + 強 B-4) / Sanov (A 形 B-1 + LDP B-1'/B-1'') / **ChannelCoding (achievability B-3'' + converse D-2、強形 D-1 + E-1 で完結)**。D-1 (capacity 到達 achievability 強形) と E-1 (capacity 越え converse 強形) を pair で同時着手すると n-channel 設備 (`mutualInfo_iid_eq_nsmul`) を共有して効率的。
 - **discrete → continuous の最大ジャンプ (E-9)**: 現状 42 本中 0 本が微分エントロピーに触れていない。Mathlib `MeasureTheory.gaussianReal` 整備度は読み込み未確認、Mathlib に `differentialEntropy` 自体が存在しないため**新規 Mathlib 上流 PR の母体**になりやすい。E-9 単独 publish → Gaussian channel capacity (将来 seed) → EPI (Cover-Thomas 17、将来 seed) の **3 段ロケット**で discrete 集から脱却。
 - **E-3 の機構流用 (Channel coding probabilistic-method)**: `ChannelCodingAchievability.lean` の `codebookMeasure` + `codebook_marginal_*` Fubini-collapse 補題群は **lossy source code の rate-distortion (E-3)** に **そのまま**転用可能 (codebook 上の random selection は同じ構造)。E-3 plan 起草時は plumbing を library 化 (`Common2026/Shannon/RandomCodebookProbMethod.lean` 抽出) するか直接 import するか方針判断。
@@ -249,6 +274,7 @@
   - [AEP 完全形 (D-3)](shannon/aep-full-form-plan.md) ✅ (Cover-Thomas 3.1.2 完全 4 帰結、`typicalSet_prob_ge` + `typicalSet_card_ge` + eventually-N corollary)
   - [Type-class size lower bound (E-2)](shannon/type-class-lower-bound-plan.md) ✅ (Cover-Thomas 11.1.3 size 下界 entropy 形、`typeClassByCount_card_ge_entropy` via bridge `n^n / ∏ c^c = exp(n·H(c/n))`)
   - [Strong typicality (E-7)](shannon/strong-typicality-plan.md) ✅ (Cover-Thomas 11.2 3 主定理、per-letter form + Strong→Weak bridge)
+  - [Csiszár I-projection (E-6)](shannon/csiszar-projection-plan.md) ✅ (Cover-Thomas 11.6.1 存在 + 一意性 + Pythagorean 不等式、stdSimplex 上 `klDivPmf` 形 + Mathlib `strictConvexOn_klFun` 直接利用)
 - 雛形:
   - [moonshot-plan-template.md](moonshot-plan-template.md)
   - [subplan-template.md](subplan-template.md)
