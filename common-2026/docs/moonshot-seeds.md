@@ -1,6 +1,6 @@
 # Moonshot シードカード集
 
-> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3** → **Type-class size 下界 E-2** → **Strong typicality E-7** → **Csiszár I-projection E-6** → **Channel coding strong converse E-1 単発形** → **Slepian–Wolf achievability E-5 退化点 MVP** → **Channel coding general-input converse D-2 chain rule MVP (`log|M| ≤ ∑ I(X_i; Y^n | X^{<i}).toReal + Fano`、iid 仮定撤廃)** → **Rate-distortion converse E-4 single-shot MVP (`R(D̃).toReal ≤ log|M|` for `D̃ := 𝔼[d(X, decoder(encoder(X)))]`)** → **DMC feedback capacity converse E-10 chain rule + per-letter hypothesis MVP (`log|M| ≤ n·C + Fano`、`h_per_letter` 仮説形)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未実装 seed は **D-1 + E-3 + E-5' + E-8 + E-9 (plan 起草済み 5 本、2026-05-13)** と新規 **D-2' / E-4' / E-10' deferred** 3 本。
+> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3** → **Type-class size 下界 E-2** → **Strong typicality E-7** → **Csiszár I-projection E-6** → **Channel coding strong converse E-1 単発形** → **Slepian–Wolf achievability E-5 退化点 MVP** → **Channel coding general-input converse D-2 chain rule MVP (`log|M| ≤ ∑ I(X_i; Y^n | X^{<i}).toReal + Fano`、iid 仮定撤廃)** → **Rate-distortion converse E-4 single-shot MVP (`R(D̃).toReal ≤ log|M|` for `D̃ := 𝔼[d(X, decoder(encoder(X)))]`)** → **DMC feedback capacity converse E-10 chain rule + per-letter hypothesis MVP (`log|M| ≤ n·C + Fano`、`h_per_letter` 仮説形)** → **Differential entropy + Gaussian max-entropy E-9 完全形 (Phase A-E、`h(𝒩(m,v)) = (1/2) log(2πev)` + max-entropy + KL closed-form、`DifferentialEntropy.lean` 1010 行)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未実装 seed は **D-1 + E-3 + E-5' + E-8 (plan 起草済み 4 本、2026-05-13)** と新規 **D-2' / E-4' / E-10' deferred** 3 本。
 >
 > 起草時 (2026-05-10): Fano (測度論版) → Shannon converse (3 形) → Han 補集合形 → Han Phase D (subset average / Shearer) まで通った状態を起点に、次のムーンショット候補 5 本をシード化。
 >
@@ -267,17 +267,27 @@
   `entropyRate` / 定常過程 predicate も新規定義。重量 (~1500 行、整備度依存で +500)。
   Lempel–Ziv (将来 seed) の前段。
 
-- **E-9. Differential entropy + Gaussian max-entropy** 🚧 (2026-05-13 plan 起草) →
+- **E-9. Differential entropy + Gaussian max-entropy** ✅ (2026-05-13) →
   [docs/shannon/differential-entropy-plan.md](shannon/differential-entropy-plan.md) —
-  Cover-Thomas 8.1, 8.6.1, 9.6 setup。`h(X) := -∫ f log f dx` 定義 + 基本性質
-  (translation invariance / scaling) + 与えられた分散下で Gaussian `𝒩(μ, σ²)` が h を最大化
-  (Lagrange / KL ≥ 0)。Mathlib `ProbabilityTheory.entropy` は `klDiv μ counting` 経由で
-  **discrete 専用**、`differentialEntropy` は新規定義。**Mathlib 整備度 (plan Phase 0 確認)**:
-  `ProbabilityTheory.gaussianReal` + `gaussianPDFReal` + `rnDeriv_gaussianReal` +
-  `gaussianReal_map_add_const` + `klDiv_eq_lintegral_klFun_of_ac` は **完備** (Phase A-D で直接利用可)。
-  `differentialEntropy` 自体は不在で **Mathlib 上流 PR 母体** 3 件候補 (Basic / Gaussian / KL-Gaussian)。
-  **現プロジェクトの discrete 一辺倒からの最大の枝分かれ**で、Gaussian channel capacity
-  (Cover-Thomas 9.1) への入り口。見積 重量 (~1500 行)。
+  Cover-Thomas 8.1, 8.6.1, 9.6。`Common2026/Shannon/DifferentialEntropy.lean` (1010 行、
+  13 declarations、0 sorry / 0 warning) で **Phase A-E 全段完了**:
+  - Phase A: `differentialEntropy μ := ∫ x, Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume`
+    + `differentialEntropy_eq_integral_density` + `integrable_density_log_density_of_gaussian` +
+    `differentialEntropy_dirac` (縮退ケース)
+  - Phase B: `differentialEntropy_map_add_const` (translation invariance) +
+    `differentialEntropy_map_mul_const` (`+ Real.log |c|`) + `differentialEntropy_map_affine`
+  - Phase C: `differentialEntropy_gaussianReal`: `h(𝒩(m,v)) = (1/2) log(2πev)` + std corollary
+  - Phase D: `differentialEntropy_le_gaussian_of_variance_le` (max-entropy 主定理) +
+    `differentialEntropy_eq_gaussian_iff` (等号条件、`klDiv_eq_zero_iff` 経由)
+  - Phase E: `klDiv_gaussianReal_gaussianReal_eq` + std sanity
+
+  **Mathlib 新規補題ゼロ**: `integral_rnDeriv_smul` + `Measure.rnDeriv_mul_rnDeriv` +
+  `gaussianReal_absolutelyContinuous'` + `variance_fun_id_gaussianReal` + `klDiv_eq_zero_iff`
+  の既存組合せのみ。Phase D の signature には `h_var_int : Integrable ((x-m)²) μ` +
+  `h_ent_int : Integrable (negMulLog ((rnDeriv vol)).toReal) volume` の 2 副仮説を追加
+  (Bochner 慣習で `h(μ)` 病的拡張回避)。**現プロジェクトの discrete 一辺倒からの最大の枝分かれ
+  突破**、Gaussian channel capacity (Cover-Thomas 9.1) への入り口開通。
+  **scope-deferred**: Gaussian channel capacity + EPI は別 seed/plan (~1000 行 / ~2000 行)。
 
 - **E-10. DMC capacity is unchanged by feedback (C_FB = C)** ✅ (2026-05-13, **chain rule 段 + per-letter hypothesis MVP**) →
   [docs/shannon/dmc-feedback-capacity-plan.md](shannon/dmc-feedback-capacity-plan.md) —

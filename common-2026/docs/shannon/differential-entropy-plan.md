@@ -9,12 +9,14 @@ capacity (Cover-Thomas 9.1) / EPI (17) への入り口。Mathlib `differentialEn
 
 ## 進捗
 
-- [ ] Phase 0 — Mathlib 整備度調査結果サマリ ✅ (plan 起草時点で完了)
-- [ ] Phase A — `differentialEntropy` 定義 + 基本可積分性 📋
-- [ ] Phase B — 基本性質: translation invariance / scaling 📋
-- [ ] Phase C — `h(𝒩(μ, σ²)) = (1/2) log (2πe σ²)` 計算 📋
-- [ ] Phase D — Max-entropy 定理 (variance 固定下の上界 + 等号 iff Gaussian) 📋
-- [ ] Phase E — KL bridge: `klDiv μ (gaussianReal m σ²) = h_𝒩 - h(μ) + (μ-差)` 形 📋
+- [x] Phase 0 — Mathlib 整備度調査結果サマリ ✅ (plan 起草時点で完了)
+- [x] Phase A — `differentialEntropy` 定義 + 基本可積分性 ✅ (2026-05-13)
+- [x] Phase B — 基本性質: translation invariance / scaling ✅ (2026-05-13)
+- [x] Phase C — `h(𝒩(μ, σ²)) = (1/2) log (2πe σ²)` 計算 ✅ (2026-05-13)
+- [x] Phase D — Max-entropy 定理 (variance 固定下の上界 + 等号 iff Gaussian) ✅ (2026-05-13)
+- [x] Phase E — KL bridge: `klDiv μ (gaussianReal m σ²) = h_𝒩 - h(μ) + (μ-差)` 形 ✅ (2026-05-13)
+
+**完了サマリ (2026-05-13)**: `Common2026/Shannon/DifferentialEntropy.lean` (1010 行、13 declarations、0 sorry / 0 warning)。Phase A 定義 + 可積分性 + Dirac 縮退、Phase B translation/scaling/affine、Phase C Gaussian h 公式 (`h(𝒩(m,v)) = (1/2) log(2πev)`)、Phase D max-entropy 主定理 + 等号条件 (KL = 0 ⟺ μ = gaussianReal)、Phase E KL closed-form + std sanity check。Phase D/D-2 signature には `h_var_int : Integrable ((x-m)²) μ` + `h_ent_int : Integrable (negMulLog ((rnDeriv vol)).toReal) volume` の 2 副仮説を追加 (Bochner 慣習で `h(μ)` 病的拡張回避)。Mathlib 新規補題ゼロ、`integral_rnDeriv_smul` + `Measure.rnDeriv_mul_rnDeriv` + `gaussianReal_absolutelyContinuous'` + `variance_fun_id_gaussianReal` + `klDiv_eq_zero_iff` の既存組合せのみ。
 
 ## ゴール / Approach
 
