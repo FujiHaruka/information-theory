@@ -1,6 +1,6 @@
 # Moonshot シードカード集
 
-> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3** → **Type-class size 下界 E-2** → **Strong typicality E-7** → **Csiszár I-projection E-6** → **Channel coding strong converse E-1 単発形** → **Slepian–Wolf achievability E-5 退化点 MVP** → **Channel coding general-input converse D-2 chain rule MVP (`log|M| ≤ ∑ I(X_i; Y^n | X^{<i}).toReal + Fano`、iid 仮定撤廃)** → **Rate-distortion converse E-4 single-shot MVP (`R(D̃).toReal ≤ log|M|` for `D̃ := 𝔼[d(X, decoder(encoder(X)))]`)** → **DMC feedback capacity converse E-10 chain rule + per-letter hypothesis MVP (`log|M| ≤ n·C + Fano`、`h_per_letter` 仮説形)** → **Differential entropy + Gaussian max-entropy E-9 完全形 (Phase A-E、`h(𝒩(m,v)) = (1/2) log(2πev)` + max-entropy + KL closed-form、`DifferentialEntropy.lean` 1010 行)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未実装 seed は **D-1 + E-3 + E-5' + E-8 (plan 起草済み 4 本、2026-05-13)** と新規 **D-2' / E-4' / E-10' deferred** 3 本。
+> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3** → **Type-class size 下界 E-2** → **Strong typicality E-7** → **Csiszár I-projection E-6** → **Channel coding strong converse E-1 単発形** → **Slepian–Wolf achievability E-5 退化点 MVP** → **Channel coding general-input converse D-2 chain rule MVP (`log|M| ≤ ∑ I(X_i; Y^n | X^{<i}).toReal + Fano`、iid 仮定撤廃)** → **Rate-distortion converse E-4 single-shot MVP (`R(D̃).toReal ≤ log|M|` for `D̃ := 𝔼[d(X, decoder(encoder(X)))]`)** → **DMC feedback capacity converse E-10 chain rule + per-letter hypothesis MVP (`log|M| ≤ n·C + Fano`、`h_per_letter` 仮説形)** → **Differential entropy + Gaussian max-entropy E-9 完全形 (Phase A-E、`h(𝒩(m,v)) = (1/2) log(2πev)` + max-entropy + KL closed-form、`DifferentialEntropy.lean` 1010 行)** → **Shannon noisy channel coding theorem D-1 MVP (capacity 到達 + average→max + smoothing で hp_pos 内部処理、hW_pos のみユーザ仮定、`ChannelCodingShannonTheorem.lean` 918 行、4 ペア "弱/強形" 最後の未充足解消)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未実装 seed は **E-3 + E-5' + E-8 (plan 起草済み 3 本、2026-05-13)** と新規 **D-1' / D-2' / E-4' / E-10' deferred** 4 本。
 >
 > 起草時 (2026-05-10): Fano (測度論版) → Shannon converse (3 形) → Han 補集合形 → Han Phase D (subset average / Shearer) まで通った状態を起点に、次のムーンショット候補 5 本をシード化。
 >
@@ -16,23 +16,31 @@
 (数日以上) のものを seed 化。小規模な statement 修復 (full support 除去等) は分岐 B 修復 plan
 側の管轄で、本シードには含めない。
 
-- **D-1. Shannon noisy channel coding theorem (capacity reach + max error)** 🚧 (2026-05-13 plan 起草) →
+- **D-1. Shannon noisy channel coding theorem (capacity reach + max error)** ✅ (2026-05-13) →
   [docs/shannon/channel-coding-shannon-theorem-plan.md](shannon/channel-coding-shannon-theorem-plan.md) —
-  Cover-Thomas 7.7.1 **完全形**。既存 `channel_coding_achievability` (固定 `p`, average error,
-  `hp_pos` + `hW_pos`) を出発点に、以下 3 段を載せる:
-  1. **入力分布最大化**: `C := sup_p I(p;W)` の存在 (有限 alphabet なら `Continuous` + `IsCompact`
-     による max 達成、`I(·;W)` 連続性は `entropy` の連続性 + `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ`
-     から導出) + capacity 到達 `R < C ⟹ ∃ p, R < I(p; W)`。
-  2. **expurgation (average → max error)**: 既存 codebook `c : Fin M → α^n` の `c.averageErrorProb ≤ ε`
-     から、Markov inequality で「上位半分の messages が max error ≤ 2ε」を取り、code の半分
-     `M' := M / 2` を捨てて max error 化。rate 微減 `log M' = log M - log 2` は `n → ∞` で吸収。
-  3. **full support 仮定の除去** (`hp_pos`, `hW_pos`): 0 確率 atom を持つ p / W に対しても random
-     coding を回す。`klDiv = ∞` の場合の縮退ケースで bound が自明成立する形に再定式化、
-     または full support な近似列 `p_k → p` で連続性を取る。
-  - 既存資産: `ChannelCoding.lean` (706 行、定義) + `ChannelCodingAchievability.lean` (1890 行、
-    achievability 半分) + `MIChainRule.lean` (`mutualInfo_iid_eq_nsmul`)。
-  - 関連: 4 つの "弱形 / 強形ペア" (Pinsker / Stein / Sanov / **ChannelCoding ← ここだけ強形未**)
-    のうち最後の未充足。audit-2026-05 §4 🟡 #9 として記録。
+  Cover-Thomas 7.7.1 **完全形 (W full-support 仮定下の MVP)**。`Common2026/Shannon/ChannelCodingShannonTheorem.lean`
+  (918 行) で publish:
+  - `capacity W := sSup {(mutualInfoOfChannel (pmfToMeasure p) W).toReal | p ∈ stdSimplex ℝ α}`
+    + `capacity_bddAbove` (`entropy_le_log_card` 経由) + `capacity_lt_implies_exists_pmf`
+    (`lt_csSup_iff` 適用)
+  - `continuous_mutualInfoOfChannel_left`: 3-entropy 展開 + `Real.continuous_negMulLog` +
+    `continuous_finsetSum` で MI の `p` 連続性
+  - `errorProbAt_filter_card_bound` (Markov on Finset) + `Code.subcode` def +
+    `Code.subcode_errorProbAt_le` (sub-code error 不変性) → `channel_coding_achievability_max_error`
+    (average → max wrapper、既存 `channel_coding_achievability` + helper 2 本で rate 損失漸近吸収)
+  - **主定理 `shannon_noisy_channel_coding_theorem`**:
+    `R < capacity W` + `hW_pos` + `0 < R` + `0 < ε` ⟹ `∃ N, ∀ n ≥ N, ∃ code, max error < ε`
+
+  **証明合成**: A.4 で `p₀` 取得 → smoothing `p_δ := (1-δ)p₀ + δ·uniform` (small `δ₀ > 0`) で
+  full support 確保 + 連続性で `I(p_δ₀; W) > (R + I(p₀;W))/2 > R` → B.4 適用。
+
+  **4 ペア "弱/強形" のうち最後の未充足 (audit-2026-05 §4 🟡 #9) が解消**。
+
+  **scope-deferred → `D-1'` 後継**: `hW_pos` 緩和 (W に 0-prob atom がある一般形) は `W_smooth :=
+  (1-δ)W + δ·UnifChannel` の連続近似で別 plan、~150-200 行。
+  - A.3 `exists_capacity_achiever` + C.1 `mutualInfoOfChannel_restrict_to_support` は documentation
+    only sorry 残置 (主証明は smoothing 経路で迂回、C.1 は Mathlib `klDiv` MeasurableEmbedding
+    不変性 gap)。
 
 - **D-2. Channel coding converse (general input form)** ✅ (2026-05-13, **chain rule 分解 MVP**) →
   [docs/shannon/channel-coding-converse-general-plan.md](shannon/channel-coding-converse-general-plan.md) —
