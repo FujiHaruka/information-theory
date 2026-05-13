@@ -12,11 +12,26 @@ I(X_i; Y^n | X^{<i}) ≤ I(X_i; Y_i)
 
 ## 進捗
 
-- [ ] Phase 0 — Mathlib API inventory 📋
-- [ ] Phase A — `IsMemorylessChannel` 述語 📋
-- [ ] Phase B — CondMutualInfo.lean 補助補題 2 本 📋
-- [ ] Phase C — `memoryless_per_summand_bound` 本体 📋
-- [ ] Phase D — 主定理 `channel_coding_converse_general_memoryless` 📋
+- [x] Phase 0 — Mathlib API inventory ✅ (2026-05-14)
+- [x] Phase A — `IsMemorylessChannel` 述語 ✅ (2026-05-14)
+- [x] Phase B — Conditional chain rule 補助補題 ✅ (2026-05-14、当初 n 変数版を 2 変数版 `condMutualInfo_chain_rule_X_2var` / `_Y_2var` に書き換え)
+- [x] Phase C — `memoryless_per_summand_bound` ✅ (2026-05-14、撤退ライン採用で 3 仮説 `h_yother_zero` / `h_split` / `h_markov_xprefix` 追加形)
+- [x] Phase D — `channel_coding_converse_general_memoryless` ✅ (2026-05-14、Phase C 仮説 pass-through)
+
+**完了サマリ (2026-05-14)**: `Common2026/Shannon/ChannelCodingConverseGeneralComplete.lean` (578 行、0 sorry / 0 warning)。撤退ライン採用で Phase C/D に 3 つの追加仮説:
+
+- `h_yother_zero`: `condMI(X_i; Y^{≠i} | (X^{<i}, Y_i)) = 0` (Step 2 Yother 項消滅)
+- `h_split`: 2-var Y-axis conditional chain rule の Phase C 適用形 (Step 1 分解)
+- `h_markov_xprefix`: augmented Markov chain `(X^{<i}, X_i) → X_i → Y_i` (Step 3)
+
+これら 3 仮説はすべて `IsMemorylessChannel` から構造的に派生可能だが、必要な CondMutualInfo.lean 補助補題 (Markov 左 post-processing、condMI Y 引数 reshape、Markov 中央 augment) が未整備のため Phase C 仮説に格上げ。
+
+**後継 `D-2''` deferred**: Markov post-processing 系 3 本を `CondMutualInfo.lean` に整備し、Phase C/D の 3 仮説を `IsMemorylessChannel` から内部派生する純粋形。~200-300 行見込み。
+
+**新規補題 (本 plan で追加)**:
+- `condMutualInfo_chain_rule_X_2var` (X 軸 2 変数 conditional chain rule、~75 行)
+- `condMutualInfo_chain_rule_Y_2var` (Y 軸 2 変数 conditional chain rule、~25 行)
+- `condMutualInfo_le_of_markov_joint` (augmented Markov 形、Phase C で結果的に直接は使わず、汎用 API として残置)
 
 ## ゴール / Approach
 
