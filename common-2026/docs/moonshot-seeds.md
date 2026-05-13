@@ -42,6 +42,21 @@
     only sorry 残置 (主証明は smoothing 経路で迂回、C.1 は Mathlib `klDiv` MeasurableEmbedding
     不変性 gap)。
 
+- **D-1'. Channel.smooth infrastructure (smoothing + TV bound)** ✅ (2026-05-14、Phase A-C MVP) →
+  [docs/shannon/channel-coding-shannon-theorem-general-plan.md](shannon/channel-coding-shannon-theorem-general-plan.md) —
+  Phase A `Channel.smooth W δ a := (1-δ)•W a + δ•uniformMeasureβ` + Markov 性 + atom positivity、
+  Phase B MI の `δ` 連続性 (3-entropy 展開 + `Real.continuous_negMulLog`) + `exists_smooth_capacity_gt`
+  (固定 `p₀` 経由)、Phase C TV bound `errorProbAt_smooth_TV: |errorProbAt(W_smooth δ, c, m) − errorProbAt(W, c, m)| ≤ 2 n δ`
+  を `Measure.pi` 上 `Fin.cons`-bijection + induction で tight 構成。
+  `Common2026/Shannon/ChannelCodingShannonTheoremGeneral.lean` (671 行)。
+
+  **後継 `D-1''` deferred (~250-450 行)**: Phase D 主定理 `shannon_noisy_channel_coding_theorem_general`
+  (`hW_pos` 完全除去) には parent D-1 の `N(δ)` δ-uniform 上界が必要。これは parent
+  `channel_coding_achievability` (`ChannelCodingAchievability.lean:1771, :1835`) の 2 つの
+  `Tendsto.metric_atTop` extraction を closed-form bound に書き直す parent surgery
+  (~200-400 行、AEP の rate-uniform 化 + parent N closed-form 化) が要件。Phase A-C infrastructure
+  は D-1'' で本質的に再利用。判断ログ 6 で 4 戦略を評価 (撤退理由含む)。
+
 - **D-2. Channel coding converse (general input form)** ✅ (2026-05-13, **chain rule 分解 MVP**) →
   [docs/shannon/channel-coding-converse-general-plan.md](shannon/channel-coding-converse-general-plan.md) —
   Cover-Thomas 7.9 **完全形**。既存 `shannon_converse_single_shot` (uniform input only) を出発点に、

@@ -647,76 +647,25 @@ private lemma errorProbAt_smooth_TV
   ring_nf
   rfl
 
-/-! ## Phase D — 主定理 -/
+/-! ## Phase D — 主定理 (D-1'' deferred)
 
-/-- **D-1' 主定理 (Cover-Thomas 7.7.1 完全形)**: 任意 `W : Channel α β` (Markov)、
-`R < capacity W` と `ε > 0` で十分大きい `n` で max error < ε を達成する符号が存在。
-親 D-1 から `hW_pos` 仮定を除去。
+Phase D 主定理 `shannon_noisy_channel_coding_theorem_general` (任意 `W` で `hW_pos` 除去) の
+組み立てには、Phase A-C の infrastructure に加えて parent D-1 の `N(δ)` が `δ ∈ (0, δ_B]` 上
+uniform に bounded であることが必要。これは parent D-1 (918 行) 内部の `N` 構成
+(`channel_coding_achievability`、`ChannelCodingAchievability.lean:1771, :1835` の 2 つの
+`Tendsto.metric_atTop` extraction = AEP + exp decay) を closed-form bound に書き直す surgery
+が要件で、本 D-1' の scope を超える。
 
-**実装ステータス (D-1' Phase D)**: Phase A-C (定義、Markov 性、MI 連続性、TV bound on Measure.pi)
-は完成 (0 sorry)。Phase D の主定理組み立てに最後の synchronization step (parent D-1 の `N(δ)`
-が δ ∈ (0, δ_B] 上 uniform に bounded であること) が必要だが、parent D-1 の N 構成は内部で
-ε と rate-slack に依存するため、その bounded 性を Mathlib lemma として切り出すには parent D-1
-の内部証明への踏み込みが必要 (Risks R4)。本 MVP では proof shape を残す。 -/
-theorem shannon_noisy_channel_coding_theorem_general
-    (W : Channel α β) [IsMarkovKernel W]
-    {R : ℝ} (hR_pos : 0 < R) (hR : R < capacity W)
-    {ε : ℝ} (hε : 0 < ε) :
-    ∃ N : ℕ, ∀ n, N ≤ n →
-      ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
-        (c : Code M n α β),
-        ∀ m, (c.errorProbAt W m).toReal < ε := by
-  classical
-  -- Step 1: extract p₀ and δ_B ∈ (0, 1] with R < I(p₀; W_smooth δ_B).toReal.
-  obtain ⟨p₀, hp₀_mem, δ_B, hδ_B_pos, hδ_B_le_1, h_R_lt_I_smooth⟩ :=
-    exists_smooth_capacity_gt W hR
-  haveI : IsMarkovKernel (Channel.smooth W δ_B) :=
-    Channel.smooth_isMarkovKernel W hδ_B_pos.le hδ_B_le_1
-  -- Step 2: apply parent D-1 to W_smooth δ_B with rate R, target ε/2.
-  have h_ε_half_pos : 0 < ε / 2 := by linarith
-  have h_R_lt_capacity_smooth : R < capacity (Channel.smooth W δ_B) := by
-    refine lt_of_lt_of_le h_R_lt_I_smooth ?_
-    refine le_csSup (capacity_bddAbove _) ?_
-    refine ⟨p₀, hp₀_mem, rfl⟩
-  have h_W_smooth_pos : ∀ a b, 0 < ((Channel.smooth W δ_B) a).real ({b} : Set β) :=
-    Channel.smooth_pos W hδ_B_pos hδ_B_le_1
-  obtain ⟨N_B, hN_B⟩ := shannon_noisy_channel_coding_theorem
-    (Channel.smooth W δ_B) h_W_smooth_pos hR_pos h_R_lt_capacity_smooth h_ε_half_pos
-  -- For each n ≥ N_B, parent gives M, c with errorProbAt(W_smooth δ_B, c, m) < ε/2.
-  -- TV bound: errorProbAt(W, c, m) ≤ errorProbAt(W_smooth δ_B, c, m) + 2 n δ_B.
-  -- For 2 n δ_B < ε/2, we need δ_B < ε/(4 n). For FIXED δ_B, this fails for large n.
-  --
-  -- The fix: refresh `δ` per n. For each n, define `δ_n := min(δ_B, ε/(8(n+1)))` and re-call parent.
-  -- The remaining gap is that parent D-1's `N` may depend on `δ_n`, and we need a uniform bound.
-  -- We document this gap and leave a `sorry`.
-  refine ⟨N_B, ?_⟩
-  intro n hn
-  obtain ⟨M, hM_lb, c, h_c_err⟩ := hN_B n hn
-  refine ⟨M, hM_lb, c, ?_⟩
-  intro m
-  -- The TV bound application would give errorProbAt(W, c, m) ≤ ε/2 + 2 n δ_B. The remaining step
-  -- is to ensure 2 n δ_B < ε/2 — which requires either uniform `N(δ)` bound or n-dependent `δ_n`.
-  -- For this MVP, we leave the closing arithmetic step as a documented sorry (Risk R4).
-  have h_err_smooth : (c.errorProbAt (Channel.smooth W δ_B) m).toReal < ε / 2 := h_c_err m
-  have h_TV := errorProbAt_smooth_TV c W hδ_B_pos.le hδ_B_le_1 m
-  -- |errorProbAt(W_smooth) - errorProbAt(W)| ≤ 2 n δ_B
-  -- ⟹ errorProbAt(W) ≤ errorProbAt(W_smooth) + 2 n δ_B < ε/2 + 2 n δ_B
-  have h_step :
-      (c.errorProbAt W m).toReal
-        ≤ (c.errorProbAt (Channel.smooth W δ_B) m).toReal + 2 * (n : ℝ) * δ_B := by
-    have h_abs : |(c.errorProbAt (Channel.smooth W δ_B) m).toReal
-                    - (c.errorProbAt W m).toReal| ≤ 2 * n * δ_B := h_TV
-    have h_le : (c.errorProbAt W m).toReal
-        - (c.errorProbAt (Channel.smooth W δ_B) m).toReal ≤ 2 * n * δ_B := by
-      have := neg_le_of_abs_le h_abs
-      linarith
-    linarith
-  -- (c.errorProbAt W m).toReal < ε/2 + 2 n δ_B. For ε bound we need 2nδ_B < ε/2.
-  -- This requires δ_B (which is fixed) to satisfy δ_B < ε/(4n) for all n ≥ N_B, which is impossible.
-  -- The full proof would re-pick δ_n per n; the remaining gap (Risk R4) is uniform N(δ) over δ ↘ 0.
-  -- See `docs/shannon/channel-coding-shannon-theorem-general-plan.md` 判断ログ 6 for analysis
-  -- (4 strategies, including parent surgery in ChannelCodingAchievability.lean:1771/1835 Tendsto
-  -- extractions, all deemed >1 session of work). MVP leaves this `sorry` as documented scope-deferral.
-  sorry
+**D-1'' deferred** として `moonshot-seeds.md` に登録: parent N の closed-form lemma 切り出し
+(~200-400 行) + 本 file Phase A-C を import して主定理組み立て (~50 行)。
+
+本 file が publish するのは Phase A-C の **smoothing infrastructure** のみ:
+- `Channel.smooth W δ` + Markov 性 + atom positivity (Phase A)
+- MI の `δ` 連続性 + `exists_smooth_capacity_gt` (Phase B)
+- `errorProbAt_smooth_TV`: `|errorProbAt(W_smooth δ) − errorProbAt(W)| ≤ 2 n δ` (Phase C)
+
+これは D-1'' で本質的に再利用される。詳細は判断ログ 6 を参照。 -/
+
+/-! ### Phase D の主定理 (削除済、D-1'' へ移管) -/
 
 end InformationTheory.Shannon.ChannelCoding

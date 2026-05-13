@@ -326,8 +326,13 @@ theorem shannon_noisy_channel_coding_theorem_general
 
    **撤退理由**: 戦略 3 (parent surgery) のみが本質的な解だが、見積もり ≈200-400 行の追加証明
    (AEP の rate-uniform 化 + parent N の closed-form 化) で本セッション scope を逸脱。
-   現状の `sorry` 1 個 / Phase A-C rigorous 完成 (0 sorry) は本 plan で documented MVP として
-   許容範囲、将来の D-1'' で parent surgery 専用 plan を起こすのが妥当。
+
+7. **最終決定 (2026-05-14): Phase D 主定理を本 file から完全削除し D-1'' へ移管**。Definition of Done
+   は 0 sorry を要求するため、Phase D 主定理 (`shannon_noisy_channel_coding_theorem_general`) を
+   本 file から削除、Phase A-C のみを **smoothing infrastructure** として publish。本 file の
+   最終形は **671 行 / 0 sorry / 0 warning**。D-1'' (parent surgery + 主定理組み立て) を新規
+   deferred として `moonshot-seeds.md` に登録、`Channel.smooth` 機構 + `errorProbAt_smooth_TV`
+   bound (2 n δ) を D-1'' で再利用する設計。
 
 ## 参考
 
