@@ -1,0 +1,229 @@
+# Rate-distortion converse (single-shot) ムーンショット計画 🌙
+
+E-4 シードカード ([`docs/moonshot-seeds.md`](../moonshot-seeds.md))。
+Cover-Thomas 10.4 — レート歪み関数 `R(D)` を達成可能 rate の下界として定式化する
+**single-shot 形** の converse。`𝔼 d(X, X̂) ≤ D ⟹ log M ≥ R(D)` (M = encoder の像)。
+
+E-3 (achievability) は plan-only で並走。R(D) 定義 + distortion 定義は本ファイル
+(E-4) が own し、E-3 plan はここを参照する。
+
+## 進捗
+
+- [x] Phase A — definitions ✅
+  - [x] **A.1** `expectedDistortion`: 期待歪み `∫ p, d p.1 p.2 ∂ν` (joint measure 上)
+  - [x] **A.2** `rateDistortionFunction (P : Measure α) (D : ℝ) : ℝ≥0∞` —
+        `iInf` over feasible joint measures of `klDiv ν (prod of marginals)`
+- [x] Phase B — basic properties ✅
+  - [x] **B.1** `rateDistortionFunction_le_of_feasible`
+- [x] Phase C — 単発 converse (主定理) ✅
+  - [x] **C.1** `rate_distortion_converse_single_shot`
+- [ ] 後継 (deferred) — R(D) 単調性 + convexity + n-letter chain rule 経由の
+      `rate ≥ R(D)` (Jensen)
+
+## 実装完了
+
+**実装ファイル**: [`Common2026/Shannon/RateDistortionConverse.lean`](../../Common2026/Shannon/RateDistortionConverse.lean) (213 行)
+
+**主要 def + theorem**:
+- `expectedDistortion d ν`: 期待歪み (joint 上の積分)
+- `rateDistortionFunction d P D`: R(D) 関数 (`iInf` over feasible joints)
+- `rateDistortionFunction_le_of_feasible`: feasible point の `iInf_le` 系
+- `rate_distortion_converse_single_shot`:
+  `(R(D̃)).toReal ≤ Real.log |M|` where `D̃ = ∫ d(X, decoder(encoder X)) ∂μ`
+
+**Mathlib gap**: なし。既存 `Common2026/Shannon/` 資産で完結
+(`MaxEntropy.entropy_le_log_card` + `Bridge.mutualInfo_eq_entropy_sub_condEntropy` +
+`Pi.condEntropy_nonneg` + `DPI.mutualInfo_le_of_postprocess` + `MutualInfo.mutualInfo_comm`).
+
+**0 sorry 達成**: `lake env lean Common2026/Shannon/RateDistortionConverse.lean` silent。
+
+## ゴール / Approach
+
+**最終的に証明したい定理** (本 plan scope、E-4 single-shot MVP):
+
+任意の単発 lossy code `(f : α → Fin M, g : Fin M → β)` と確率変数 `X : Ω → α` で、
+歪み `D̃ := 𝔼 d(X, g(f(X)))` のとき:
+```
+Real.log M ≥ (rateDistortionFunction (μ.map X) D̃).toReal
+```
+ここで `rateDistortionFunction P D := ⨅ ν ∈ feasibleSet P D, mutualInfoOf ν`、
+`feasibleSet P D := {ν | ν.map Prod.fst = P ∧ expectedDistortion ν ≤ D}`、
+`mutualInfoOf ν := klDiv ν ((ν.map Prod.fst).prod (ν.map Prod.snd))`。
+
+### 全体戦略 (Approach)
+
+**形 (shape)**: single-shot Shannon converse `Common2026/Shannon/Converse.lean` の
+**rate-distortion 鏡像**。Fano (誤り確率) の代わりに R(D) (期待歪み) で MI を
+下から押さえる。chain rule + Jensen 抜きで n=1 まで絞れば 0 sorry が現実的。
+
+**証明 chain**:
+```
+Real.log M ≥ entropy μ W                    -- entropy_le_log_card (MaxEntropy.lean)
+          ≥ (mutualInfo μ X W).toReal       -- I(X; W) = H(W) - H(W|X) ≤ H(W) (condEntropy nonneg)
+          ≥ (mutualInfo μ X X̂).toReal       -- DPI: X̂ = decoder ∘ W (mutualInfo_le_of_postprocess)
+          ≥ (rateDistortionFunction P_X D̃).toReal
+                                            -- iInf ≤ value at the joint ν := μ.map (X, X̂)
+```
+
+第 4 ステップが本 plan の **新規部分**。R(D) を `iInf` で定義し、`iInf_le` を
+`ν := μ.map (fun ω => (X ω, X̂ ω))` で適用する。**Mathlib-shape-driven**:
+`mutualInfo` の定義は既に `klDiv (μ.map (X, Yo)) ((μ.map X).prod (μ.map Yo))` だから、
+`mutualInfoOf ν` を `klDiv ν ((ν.map Prod.fst).prod (ν.map Prod.snd))` で定義すれば、
+`μ.map (X, X̂)` を入れた瞬間に既存 `mutualInfo μ X X̂` と **書き換え rfl**。
+(`μ.map (X, X̂).map Prod.fst = μ.map X` は `Measure.map_map` で簡約)。
+
+**`.toReal` の扱い**: `R(D)` を `ℝ≥0∞` 値で定義 → `iInf_le ≤ mutualInfoOf ν` を ENNReal
+レベルで取り、`mutualInfo μ X X̂ ≠ ∞` の前提下で `ENNReal.toReal_mono` で実数下界化。
+**有限性は本 plan では仮定**。実 closure (entropy finite ⇒ MI finite) は deferred。
+
+### 退化点 MVP scope (judgment log 1)
+
+n-letter form (`rate ≥ R(D)` 形) は **R(D) convexity (Jensen)** を要し、`R(D)` が
+joint distribution の上の凸関数であるという解析的事実は ~1000 行規模の Mathlib gap。
+本 plan は **single-shot n=1**、かつ **R(D̃) (実際の期待歪み)** で press 抑え、
+`D̃ ≤ D ⟹ R(D̃) ≥ R(D)` (単調性) は **deferred**。
+
+## 既存資産の流用
+
+`Common2026/Shannon/` 既存資産 (本 plan が完全流用):
+
+| 資産 | 用途 |
+|---|---|
+| `MaxEntropy.entropy_le_log_card` | Step 1: `H(W) ≤ log M` |
+| `Bridge.mutualInfo_eq_entropy_sub_condEntropy` | Step 2: `I(X; W) = H(W) - H(W|X)` |
+| `Fano/Measure.condEntropy_nonneg` | Step 2 plumbing: `H(W|X) ≥ 0` |
+| `MutualInfo.mutualInfo_comm` | Step 2: 必要なら左右入れ替え |
+| `DPI.mutualInfo_le_of_postprocess` | Step 3: `I(X; X̂) ≤ I(X; W)` (X̂ = decoder ∘ W) |
+| `MutualInfo.mutualInfo` (def) | Step 4: feasible joint への iInf-下界 |
+
+**新規** (本 plan で書く):
+- `expectedDistortion` (定義, ~5 行)
+- `rateDistortionFunction` (定義, ~15 行)
+- `rateDistortionFunction_le_of_feasible` (補題, ~30 行)
+- `rate_distortion_converse_single_shot` (主定理, ~100 行)
+
+総見積 ~250-400 行。
+
+## Phase A — definitions 📋
+
+### A.1 `expectedDistortion`
+
+```lean
+/-- Expected distortion of a joint distribution `ν : Measure (α × β)` under a
+distortion measure `d : α → β → ℝ`. -/
+noncomputable def expectedDistortion
+    {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
+    (d : α → β → ℝ) (ν : Measure (α × β)) : ℝ :=
+  ∫ p, d p.1 p.2 ∂ν
+```
+
+### A.2 `rateDistortionFunction`
+
+```lean
+/-- Rate-distortion function. For a source distribution `P : Measure α` and
+distortion threshold `D : ℝ`, R(D) is the infimum of `klDiv ν (marginals)`
+(i.e. the MI of the joint `ν`) over feasible joint distributions:
+- `ν.map Prod.fst = P` (marginal correct)
+- `expectedDistortion d ν ≤ D` (avg distortion ≤ D)
+
+Returns `ℝ≥0∞`. If no feasible `ν` exists, the iInf is `∞`. -/
+noncomputable def rateDistortionFunction
+    {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
+    (d : α → β → ℝ) (P : Measure α) (D : ℝ) : ℝ≥0∞ :=
+  ⨅ (ν : Measure (α × β)) (_ : ν.map Prod.fst = P)
+    (_ : expectedDistortion d ν ≤ D),
+      klDiv ν ((ν.map Prod.fst).prod (ν.map Prod.snd))
+```
+
+## Phase B — basic properties 📋
+
+### B.1 `rateDistortionFunction_le_of_feasible`
+
+```lean
+theorem rateDistortionFunction_le_of_feasible
+    (d : α → β → ℝ) (P : Measure α) (D : ℝ)
+    (ν : Measure (α × β))
+    (hν_marg : ν.map Prod.fst = P)
+    (hν_dist : expectedDistortion d ν ≤ D) :
+    rateDistortionFunction d P D
+      ≤ klDiv ν ((ν.map Prod.fst).prod (ν.map Prod.snd)) := by
+  unfold rateDistortionFunction
+  exact iInf_le_of_le ν (iInf_le_of_le hν_marg (iInf_le _ hν_dist))
+```
+
+## Phase C — 単発 converse 主定理 📋
+
+### C.1 `rate_distortion_converse_single_shot`
+
+```lean
+theorem rate_distortion_converse_single_shot
+    {α β : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+    [MeasurableSpace α] [MeasurableSingletonClass α]
+    [Fintype β] [MeasurableSpace β] [MeasurableSingletonClass β]
+    {M : Type*} [Fintype M] [MeasurableSpace M] [MeasurableSingletonClass M]
+    [Nonempty M]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (X : Ω → α) (encoder : α → M) (decoder : M → β)
+    (hX : Measurable X)
+    (d : α → β → ℝ)
+    (hMI_finite :
+      mutualInfo μ X ((decoder ∘ encoder) ∘ X) ≠ ∞) :
+    (rateDistortionFunction d (μ.map X)
+        (expectedDistortion d
+          (μ.map (fun ω => (X ω, (decoder ∘ encoder) (X ω)))))).toReal
+      ≤ Real.log (Fintype.card M) := by
+  -- See Approach: 4-step chain.
+  sorry
+```
+
+主定理の **fan in 順**:
+1. `entropy μ W ≤ Real.log (Fintype.card M)` (`entropy_le_log_card`)
+2. `(mutualInfo μ X W).toReal ≤ entropy μ W` (Bridge + `condEntropy_nonneg`)
+3. `mutualInfo μ X X̂ ≤ mutualInfo μ X W` (DPI: X̂ = decoder ∘ W)
+4. `rateDistortionFunction (μ.map X) D̃ ≤ klDiv (joint) (marg-prod) = mutualInfo μ X X̂`
+   (`rateDistortionFunction_le_of_feasible` + 定義書き換え)
+
+Step 4 詳細:
+- `ν := μ.map (fun ω => (X ω, X̂ ω))` where `X̂ := (decoder ∘ encoder) ∘ X`
+- `ν.map Prod.fst = μ.map X` (確認: `Measure.map_map` で `Prod.fst ∘ (X, X̂) = X`)
+- `expectedDistortion d ν = ∫ ω, d (X ω) (X̂ ω) ∂μ = D̃` (定義通り、`integral_map` で μ-側へ翻訳)
+- `ν.map Prod.snd = μ.map X̂`
+- `klDiv ν ((ν.map Prod.fst).prod (ν.map Prod.snd)) = mutualInfo μ X X̂` (定義 unfold)
+
+## 判断ログ
+
+書く頻度: Phase 中の方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
+
+1. **Single-shot scope に commit** (起草時): n-letter form `rate ≥ R(D)` は
+   `R(D)` の convexity (Jensen) を要し、解析的 Mathlib gap が ~500-1000 行規模。
+   本 plan は `n=1` MVP に絞り、**0 sorry 完走** を最優先する。
+   n-letter form は **後継カード E-4'** へ。
+
+2. **`R(D̃)` (実測歪み) vs `R(D)` (公称閾値)** (起草時): `D̃ ≤ D` を assume すれば
+   R(D) の **antitone monotonicity** (`D₁ ≤ D₂ ⇒ R(D₁) ≥ R(D₂)`) で `R(D̃) ≥ R(D)` を
+   出せるが、本 plan は **公称値依存を避け** `R(D̃)` 形で publish する。R(D) 単調性
+   の証明は feasible set の包含関係から ~20 行で出るが、ENNReal の `iInf_le` 系の
+   plumbing で意外と詰むため deferred。
+
+3. **`.toReal` lift の有限性仮定** (起草時): MI が `∞` のとき `.toReal = 0` なので
+   `R(D̃).toReal ≤ log M` は左辺が `0` で trivially 成立しうるが、その「成立」は
+   `iInf` の値が `∞` になる病的ケースを含んでしまう。MI 有限を仮定して非自明な
+   下界として publish する。
+
+4. **distortion measure の non-negativity** (起草時): R(D) の解析的性質
+   (単調性、`R(0)` 形) には `0 ≤ d a b` を要するが、**主定理 (本 plan)** は
+   non-negativity 不要 (定義の iInf-下界として直接使う)。よって本 plan の
+   signature には **`0 ≤ d` を assume しない**。
+
+## Mathlib gap
+
+なし。すべて既存 `Common2026/Shannon/` 資産で press できる見込み。
+新規補題は plan 内記載 4 個 (Phase A/B/C).
+
+## 後継 (deferred)
+
+- **E-4-A** R(D) 単調性 `D₁ ≤ D₂ ⇒ R(D₁) ≥ R(D₂)` — feasible set 包含 + iInf_mono、~20 行
+- **E-4-B** R(D) 凸性 — `λν₁ + (1-λ)ν₂` も feasible (歪みは凸結合)、MI は凸関数 ⇒ Jensen
+- **E-4-C** n-letter chain rule converse — `MIChainRule.lean` + i.i.d. source +
+  Jensen on R(D) で `rate ≥ R(D)`
+- **E-4-D** R(D) 連続性 (continuity of `D ↦ R(D)` on `[0, D_max)`)

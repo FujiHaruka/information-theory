@@ -1,6 +1,6 @@
 # Moonshot シードカード集
 
-> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3 (Cover-Thomas 3.1.2 完全 4 帰結)** → **Type-class size 下界 E-2 (Cover-Thomas 11.1.3 entropy 形、bridge `n^n/∏c^c = exp(n·H(c/n))`)** → **Strong typicality E-7 (Cover-Thomas 11.2 3 主定理、per-letter `\|c/n - P\| ≤ ε` 形 + Strong→Weak bridge `\|.../n - H\| ≤ ε·L`)** → **Csiszár I-projection E-6 (Cover-Thomas 11.6.1、存在 + 一意性 + Pythagorean 不等式)** → **Channel coding strong converse E-1 単発形 (Cover-Thomas 7.9 / Verdú-Han、`1 - Pe ≤ exp γ + (1/M) ∑_m P_m^n(highLLR_m)`)** → **Slepian–Wolf achievability E-5 退化点 MVP (Cover-Thomas 15.4 2 corner-point: `(log|α|, R_Y>H(Y))` + `(R_X>H(X), log|β|)`、full rate region は E-5' deferred)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未着手 seed は **D 節 (D-1, D-2、D-3 完了)** と **E 節 (E-3, E-4, E-5', E-8〜E-10、E-1 / E-2 / E-5 退化点 MVP / E-6 / E-7 完了、2026-05-13 起草)**。
+> **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3** → **Type-class size 下界 E-2** → **Strong typicality E-7** → **Csiszár I-projection E-6** → **Channel coding strong converse E-1 単発形** → **Slepian–Wolf achievability E-5 退化点 MVP** → **Channel coding general-input converse D-2 chain rule MVP (`log|M| ≤ ∑ I(X_i; Y^n | X^{<i}).toReal + Fano`、iid 仮定撤廃)** → **Rate-distortion converse E-4 single-shot MVP (`R(D̃).toReal ≤ log|M|` for `D̃ := 𝔼[d(X, decoder(encoder(X)))]`)** → **DMC feedback capacity converse E-10 chain rule + per-letter hypothesis MVP (`log|M| ≤ n·C + Fano`、`h_per_letter` 仮説形)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。未実装 seed は **D-1 + E-3 + E-5' + E-8 + E-9 (plan 起草済み 5 本、2026-05-13)** と新規 **D-2' / E-4' / E-10' deferred** 3 本。
 >
 > 起草時 (2026-05-10): Fano (測度論版) → Shannon converse (3 形) → Han 補集合形 → Han Phase D (subset average / Shearer) まで通った状態を起点に、次のムーンショット候補 5 本をシード化。
 >
@@ -16,7 +16,8 @@
 (数日以上) のものを seed 化。小規模な statement 修復 (full support 除去等) は分岐 B 修復 plan
 側の管轄で、本シードには含めない。
 
-- **D-1. Shannon noisy channel coding theorem (capacity reach + max error)** ⏸️ —
+- **D-1. Shannon noisy channel coding theorem (capacity reach + max error)** 🚧 (2026-05-13 plan 起草) →
+  [docs/shannon/channel-coding-shannon-theorem-plan.md](shannon/channel-coding-shannon-theorem-plan.md) —
   Cover-Thomas 7.7.1 **完全形**。既存 `channel_coding_achievability` (固定 `p`, average error,
   `hp_pos` + `hW_pos`) を出発点に、以下 3 段を載せる:
   1. **入力分布最大化**: `C := sup_p I(p;W)` の存在 (有限 alphabet なら `Continuous` + `IsCompact`
@@ -30,15 +31,22 @@
      または full support な近似列 `p_k → p` で連続性を取る。
   - 既存資産: `ChannelCoding.lean` (706 行、定義) + `ChannelCodingAchievability.lean` (1890 行、
     achievability 半分) + `MIChainRule.lean` (`mutualInfo_iid_eq_nsmul`)。
-  - 候補プラン: `docs/shannon/channel-coding-shannon-theorem-plan.md` (新規、`moonshot-plan-template.md`
-    で起草)。
   - 関連: 4 つの "弱形 / 強形ペア" (Pinsker / Stein / Sanov / **ChannelCoding ← ここだけ強形未**)
     のうち最後の未充足。audit-2026-05 §4 🟡 #9 として記録。
 
-- **D-2. Channel coding converse (general input form)** ⏸️ —
+- **D-2. Channel coding converse (general input form)** ✅ (2026-05-13, **chain rule 分解 MVP**) →
+  [docs/shannon/channel-coding-converse-general-plan.md](shannon/channel-coding-converse-general-plan.md) —
   Cover-Thomas 7.9 **完全形**。既存 `shannon_converse_single_shot` (uniform input only) を出発点に、
   任意の入力分布で `R > I(p; W) ⟹ ∃ error floor` を示す。expurgation/Fano + `mutualInfo_iid_eq_nsmul`
   で n-channel 形にスケール。audit-2026-05 §4 🟡 #8 として記録。
+
+  **本シードでは iid 仮定撤廃 + chain rule 分解段** を `Common2026/Shannon/ChannelCodingConverseGeneral.lean`
+  (148 行) で publish: `channel_coding_converse_general_chainRule` は
+  `log|M| ≤ ∑_i I(X_i; Y^n | X^{<i}).toReal + h(Pe) + Pe·log(|M|−1)` を任意 Markov encoder + 一様 Msg 下で
+  bridge ゼロ (`shannon_converse_single_shot_markov_encoder` + `mutualInfo_chain_rule_fin`
+  + `ENNReal.toReal_sum`) で示す。**残り 2 段** (memoryless per-summand bound
+  `I(X_i; Y^n | X^{<i}) ≤ I(X_i; Y_i)` + 凸性で `R(p_avg) → R(D)`) は **D-2' deferred**
+  (~500 行追加見込み、Mathlib に conditional MI の memoryless reduction lemma 未確認)。
 
   **先行成果 (reuse-test-2026-05, 2026-05-13 完了)**: i.i.d. 入力下の converse n-variable 化を
   bridge ゼロで実装、`Common2026/Shannon/ChannelCodingConverse.lean`
@@ -123,18 +131,39 @@
   **横断 utility** として E-1 / E-5 / E-3 の前段に置く価値あり、`SanovLDPEquality`
   Stein 経路を直接 multinomial 経路で書き直す独立代替路の出発点としても再利用可。
 
-- **E-3. Rate-distortion theorem (achievability)** ⏸️ —
+- **E-3. Rate-distortion theorem (achievability)** 🚧 (2026-05-13 plan 起草) →
+  [docs/shannon/rate-distortion-achievability-plan.md](shannon/rate-distortion-achievability-plan.md) —
   Cover-Thomas 10.5。`R(D) := inf {I(X; X̂) : 𝔼 d(X, X̂) ≤ D}` を新規定義 + 達成可能性
   `R > R(D) ⟹ ∃ code, 𝔼 d ≤ D + ε`。distortion measure `d : α → β → ℝ≥0` を導入。
   Random codebook + joint typical encoder (B-3'' lossy mirror)。
   `ChannelCodingAchievability.lean` (1890 行) の probabilistic-method 機構を
   **そのまま流用可** (codebook = β^M、ambient = α-source、encoder の選択 ≠ decoder)。
-  候補プラン: `docs/shannon/rate-distortion-achievability-plan.md`。見積 重量 (~2000 行 / 4-6 週)。
+  見積 重量 (~1980 行 / 4-6 週、plan で詳細 phase 別行数確定)。R(D) の shape は
+  E-4 が own する `rateDistortionFunction` を再利用予定。
 
-- **E-4. Rate-distortion converse** ⏸️ —
-  Cover-Thomas 10.4。`𝔼 d(X^n, X̂^n) ≤ D ⟹ rate ≥ R(D)`。Fano 経路 + DPI on `d` + MI chain rule
-  (`MIChainRule.lean`)。E-3 と pair で完結。`Converse.lean` のパターン再利用。
-  見積 軽量 (~500 行)。E-3 とどちらを先にしても独立。
+- **E-4. Rate-distortion converse** ✅ (2026-05-13, **single-shot MVP**) →
+  [docs/shannon/rate-distortion-converse-plan.md](shannon/rate-distortion-converse-plan.md) —
+  Cover-Thomas 10.4。`Common2026/Shannon/RateDistortionConverse.lean` (213 行) で
+  `rate_distortion_converse_single_shot`: 任意の単発 lossy code `(encoder : α → M, decoder : M → β)`
+  で `R(D̃).toReal ≤ log|M|` を `D̃ := 𝔼[d(X, decoder(encoder(X)))]` 実測歪み形で示す。
+
+  **R(D) shape**: `rateDistortionFunction d P D : ℝ≥0∞ := ⨅ ν (_:ν.map fst = P) (_:E[d] ≤ D), klDiv ν (P × ν.map snd)`
+  (Mathlib `iInf` over `Measure (α × β)`)。`mutualInfo μ X X̂ = klDiv (μ.map (X, X̂)) ((μ.map X).prod (μ.map X̂))`
+  の定義と feasible point `ν := μ.map (X, X̂)` を **rfl で一致** させる shape-driven 設計。
+
+  **証明 chain (4 step、~80 行)**: `entropy μ W ≤ log|M|` (`MaxEntropy.entropy_le_log_card`) →
+  `(mutualInfo μ X W).toReal ≤ entropy μ W` (Bridge + `condEntropy_nonneg`) →
+  `mutualInfo μ X X̂ ≤ mutualInfo μ X W` (DPI: `mutualInfo_le_of_postprocess`) →
+  `rateDistortionFunction d (μ.map X) D̃ ≤ mutualInfo μ X X̂` (`iInf_le` + marginal 簡約)。
+
+  **n-letter form** (`rate ≥ R(D)` for D ≥ D̃ + concavity/Jensen) は **E-4' deferred**
+  (R(D) convexity + Jensen で ~500-1000 行追加見込み)。**MI 有限性は仮定** (一般 closure 別途)。
+  既存 Common2026 資産のみで Mathlib gap ゼロ。
+
+- **E-4'. Rate-distortion converse n-letter form (R(D) convexity 込)** ⏸️ —
+  E-4 deferred 後継。実測歪み形 `R(D̃) ≤ log|M|` → 規定歪み形 `n · R(D) ≤ n · rate` への昇格に必要な
+  R(D) 単調性 + 凸性 (Jensen) + 1/n 平均化。`MIChainRule.lean` の per-letter 分解と組合せ
+  ~500-1000 行見込み。
 
 - **E-5. Slepian–Wolf achievability** ✅ (2026-05-13, **退化点 MVP**) →
   [docs/shannon/slepian-wolf-achievability-plan.md](shannon/slepian-wolf-achievability-plan.md) —
@@ -156,7 +185,8 @@
   各 corner-point 結果は SW rate region の 2 自明 corner を formal に pin down し、
   E-5' で任意 rate triple への拡張時に boundary check として effective。
 
-- **E-5'. Slepian–Wolf full rate region (3-bound 同時 achievability)** ⏸️ —
+- **E-5'. Slepian–Wolf full rate region (3-bound 同時 achievability)** 🚧 (2026-05-13 plan 起草) →
+  [docs/shannon/slepian-wolf-full-rate-region-plan.md](shannon/slepian-wolf-full-rate-region-plan.md) —
   E-5 deferred 後継。Cover-Thomas 15.4 完全形 `R_X > H(X|Y), R_Y > H(Y|X),
   R_X + R_Y > H(X, Y)` の rate region に対する random binning + joint typicality decoder。
   ~2000 行規模:
@@ -226,26 +256,52 @@
   得られる。marginal↔joint equivalence は E-5 Slepian–Wolf achievability の前段で別途取得可能)。
   **横断 utility** として E-1 / E-5 の前段に置く価値あり。
 
-- **E-8. Shannon–McMillan–Breiman theorem (stationary ergodic AEP)** ⏸️ —
+- **E-8. Shannon–McMillan–Breiman theorem (stationary ergodic AEP)** 🚧 (2026-05-13 plan 起草) →
+  [docs/shannon/shannon-mcmillan-breiman-plan.md](shannon/shannon-mcmillan-breiman-plan.md) —
   Cover-Thomas 16.8。定常エルゴード過程で `-(1/n) log P(X_1,…,X_n) → H(𝒳)` a.s.。既存
   i.i.d. AEP (`AEP.lean`) を一般化。Mathlib `MeasureTheory.Ergodic` + Birkhoff (`ergodic_iff_ae_tendsto`)
   + entropy rate `H(𝒳) := lim H(X_n | X_1, …, X_{n-1})` (定常性で存在) の machinery。
-  重量、Mathlib stationary process の整備度に依存 (~1500 行)。Lempel–Ziv (将来 seed) の前段。
+  **Mathlib 整備度 (plan Phase 0 確認)**: `MeasurePreserving` + `Ergodic` + `birkhoffSum` /
+  `birkhoffAverage` + `tendsto_ae_condExp` (Levy upward) は **整備済**。一方
+  **Birkhoff 個別エルゴード定理 a.s. 版は不在** (mean ergodic のみ) で plan の最大リスク。
+  `entropyRate` / 定常過程 predicate も新規定義。重量 (~1500 行、整備度依存で +500)。
+  Lempel–Ziv (将来 seed) の前段。
 
-- **E-9. Differential entropy + Gaussian max-entropy** ⏸️ —
+- **E-9. Differential entropy + Gaussian max-entropy** 🚧 (2026-05-13 plan 起草) →
+  [docs/shannon/differential-entropy-plan.md](shannon/differential-entropy-plan.md) —
   Cover-Thomas 8.1, 8.6.1, 9.6 setup。`h(X) := -∫ f log f dx` 定義 + 基本性質
   (translation invariance / scaling) + 与えられた分散下で Gaussian `𝒩(μ, σ²)` が h を最大化
   (Lagrange / KL ≥ 0)。Mathlib `ProbabilityTheory.entropy` は `klDiv μ counting` 経由で
-  **discrete 専用**、`differentialEntropy` は新規定義 (`MeasureTheory.gaussianReal` 上に)。
+  **discrete 専用**、`differentialEntropy` は新規定義。**Mathlib 整備度 (plan Phase 0 確認)**:
+  `ProbabilityTheory.gaussianReal` + `gaussianPDFReal` + `rnDeriv_gaussianReal` +
+  `gaussianReal_map_add_const` + `klDiv_eq_lintegral_klFun_of_ac` は **完備** (Phase A-D で直接利用可)。
+  `differentialEntropy` 自体は不在で **Mathlib 上流 PR 母体** 3 件候補 (Basic / Gaussian / KL-Gaussian)。
   **現プロジェクトの discrete 一辺倒からの最大の枝分かれ**で、Gaussian channel capacity
-  (Cover-Thomas 9.1) への入り口。見積 重量 (~1500 行)、Mathlib 上流 PR 候補多数。
+  (Cover-Thomas 9.1) への入り口。見積 重量 (~1500 行)。
 
-- **E-10. DMC capacity is unchanged by feedback (C_FB = C)** ⏸️ —
-  Cover-Thomas 7.12。feedback あり DMC (`X_i = f_i(M, Y_1, …, Y_{i-1})`) でも capacity は同じ。
-  Converse 段で `I(M; Y^n) ≤ n·C` を chain rule + memoryless 性で示すが、**feedback 下でも**
-  `I(X_i; Y_i | X^{<i}, Y^{<i}) ≤ I(X_i; Y_i)` が memoryless 性から従う点が key。
-  `MIChainRule.lean` の feedback-version 派生。**驚き定理**かつ軽量 (~400 行)。
+- **E-10. DMC capacity is unchanged by feedback (C_FB = C)** ✅ (2026-05-13, **chain rule 段 + per-letter hypothesis MVP**) →
+  [docs/shannon/dmc-feedback-capacity-plan.md](shannon/dmc-feedback-capacity-plan.md) —
+  Cover-Thomas 7.12。`Common2026/Shannon/ChannelCodingFeedback.lean` (297 行) で
+  feedback 下 channel coding converse の **chain rule 段** を 0 sorry で publish:
+  - `FeedbackCode M n α β`: 因果的 feedback 符号 (`encoder : ∀ i : Fin n, Fin M → (Fin i.val → β) → α`、
+    type signature レベルで因果性を強制)
+  - `FeedbackCode.ofCode`: 標準 `Code` の埋め込み (`C_FB ≥ C` achievability trivial 系)
+  - `mutualInfo_chain_rule_Y_axis_fin`: Y 軸 n 変数 chain rule
+    (`mutualInfo_chain_rule_fin` X 軸 + `mutualInfo_comm` + `condMutualInfo_comm` 合成)
+  - `channel_coding_feedback_converse_chain` + `_capacity`: per-letter bound
+    `h_per_letter : I(M; Y_i | Y^{<i}) ≤ I(X_i; Y_i)` を **仮説** に取った合成形
+  - `channel_coding_feedback_converse`: 主定理 `log|M| ≤ n · C + h(Pe) + Pe · log(|M|−1)`
+    (h_per_letter + per-letter cap 仮説 + Fano)
+
+  **`h_per_letter` の pure proof** (memoryless ⇒ `Y_i ⊥ (M, Y^{<i}) | X_i` の condDistrib equality 経由)
+  は **E-10' deferred** (~500 行、Mathlib `CondMutualInfo.lean` に condDistrib 展開補題追加要)。
   D-2 (channel coding general converse) と組み合わせると "feedback も使えない" が出る。
+
+- **E-10'. Feedback converse per-letter bound (`I(M; Y_i | Y^{<i}) ≤ I(X_i; Y_i)`)** ⏸️ —
+  E-10 deferred 後継。`Common2026/Shannon/ChannelCodingFeedback.lean` で `h_per_letter` 仮説形
+  に抽出した命題の純粋証明。memoryless 性 ⇒ `Y_i ⊥ (M, Y^{<i}) | X_i` の condDistrib equality →
+  conditional MI の DPI で `≤`。`CondMutualInfo.lean` 拡張 (condDistrib 展開補題 + DPI 形補題)
+  ~500 行見込み。
 
 ### B. 新シード入口 (5 シード完了で開いた)
 
@@ -327,6 +383,15 @@
   - [Csiszár I-projection (E-6)](shannon/csiszar-projection-plan.md) ✅ (Cover-Thomas 11.6.1 存在 + 一意性 + Pythagorean 不等式、stdSimplex 上 `klDivPmf` 形 + Mathlib `strictConvexOn_klFun` 直接利用)
   - [Channel coding strong converse (E-1)](shannon/channel-coding-strong-converse-plan.md) ✅ (Cover-Thomas 7.9 / Verdú-Han 単発形、任意 deterministic code + 任意 reference Q^n で `1 - Pe ≤ exp γ + (1/M) ∑_m P_m^n(highLLR_m)`、asymptotic Pe → 1 段は scope-deferred)
   - [Slepian–Wolf achievability (E-5 退化点 MVP)](shannon/slepian-wolf-achievability-plan.md) ✅ (Cover-Thomas 15.4 2 corner-point 達成可能性、`slepian_wolf_achievability_corner_Y` rate `(log|α|, R_Y>H(Y))` + `_corner_X` rate `(R_X>H(X), log|β|)` を `source_coding_achievability` + 自明 encoder 合成で構築、3-bound full rate region は random binning ~2000 行規模で E-5' deferred)
+  - [Channel coding general-input converse (D-2 chain rule MVP)](shannon/channel-coding-converse-general-plan.md) ✅ (Cover-Thomas 7.9、iid 仮定撤廃 + chain rule 分解段、`log|M| ≤ ∑_i I(X_i; Y^n | X^{<i}).toReal + Fano`、`shannon_converse_single_shot_markov_encoder` + `mutualInfo_chain_rule_fin` 合成、per-summand memoryless reduction は D-2' deferred)
+  - [Rate-distortion converse (E-4 single-shot MVP)](shannon/rate-distortion-converse-plan.md) ✅ (Cover-Thomas 10.4、`rateDistortionFunction d P D := ⨅ ν _ _, klDiv ν (P × ν.snd)` shape-driven 定義 + 単発形 `R(D̃).toReal ≤ log|M|`、`MaxEntropy.entropy_le_log_card` + DPI + Bridge + `iInf_le` 4-step chain、n-letter form は E-4' deferred)
+  - [DMC feedback capacity converse (E-10 chain rule MVP)](shannon/dmc-feedback-capacity-plan.md) ✅ (Cover-Thomas 7.12、`FeedbackCode` 因果的 encoder + Y 軸 chain rule (`mutualInfo_chain_rule_Y_axis_fin`) + per-letter `h_per_letter` 仮説形 + Fano、主定理 `log|M| ≤ n·C + Fano`、per-letter pure proof は E-10' deferred)
+- 起草中 plan (2026-05-13、実装未着手):
+  - [Channel coding theorem D-1](shannon/channel-coding-shannon-theorem-plan.md) 🚧 (Cover-Thomas 7.7.1 完全形、capacity + expurgation + full support 緩和、~700 行見込み)
+  - [Rate-distortion achievability E-3](shannon/rate-distortion-achievability-plan.md) 🚧 (Cover-Thomas 10.5、random codebook + joint typical encoder lossy mirror、`ChannelCodingAchievability.codebookMeasure` 流用、~1980 行見込み)
+  - [Slepian–Wolf full rate region E-5'](shannon/slepian-wolf-full-rate-region-plan.md) 🚧 (Cover-Thomas 15.4 完全形 3-bound rate region、random binning + joint typicality decoder、~1900-2010 行見込み)
+  - [Shannon–McMillan–Breiman E-8](shannon/shannon-mcmillan-breiman-plan.md) 🚧 (Cover-Thomas 16.8 定常エルゴード AEP、Mathlib Birkhoff a.s. 不在のため自前実装含め ~1500 行、Phase C.5 最大リスク)
+  - [Differential entropy + Gaussian max-entropy E-9](shannon/differential-entropy-plan.md) 🚧 (Cover-Thomas 8.1/8.6.1/9.6、Mathlib `gaussianReal` 完備で Phase A-D 直接実装可、~1500 行 + Mathlib 上流 PR 3 件母体)
 - 雛形:
   - [moonshot-plan-template.md](moonshot-plan-template.md)
   - [subplan-template.md](subplan-template.md)
