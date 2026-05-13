@@ -27,7 +27,7 @@ publish 済の `swErrorProb` 定義 + 2 corner-point 結果を **boundary check*
 - [x] Phase 0 — Codebook 機構の流用 vs 抽出判断 ✅ (2026-05-14、(B) 独立定義経路採用)
 - [x] Phase A — Binning 機構 (`binningMeasure`) ✅ (2026-05-14、`SlepianWolfBinning.lean` 273 行、0 sorry)
 - [x] Phase B — 期待値 collapse (`𝔼[1_{f(x)=f(x')}] = 1/M_X`) ✅ (2026-05-14、`binning_collision_prob` + `_eq_self`)
-- [ ] Phase C — Conditional typical slice size bound 📋 **後継 E-5'' deferred**
+- [x] Phase C — Conditional typical slice size bound ✅ (2026-05-14、`SlepianWolfConditionalTypicalSlice.lean` 315 行、0 sorry)
 - [ ] Phase D — Error event decomposition `E ⊆ E_0 ∪ E_X ∪ E_Y ∪ E_{XY}` 📋
 - [ ] Phase E — Per-term expectation bound 📋
 - [ ] Phase F — Pigeonhole + finalize 📋
@@ -533,7 +533,41 @@ strong typicality 経路へ pivot を検討。
 採用、内部証明では `entropy μ (jointSequence Xs Ys 0) - entropy μ (Ys 0)` で書き、
 chain rule (`MIChainRule.lean` 既存) で bridge。Phase C 起草時に re-confirm。
 
-### #4 (予約) random binning **deterministic 化** の coupling 仮説
+### #4 Phase C 実装後評価 (2026-05-14)
+
+**結果**: `SlepianWolfConditionalTypicalSlice.lean` 315 行、0 sorry / 0 warning で
+Phase C を完走。当初見積 ~380 行を下回り、Mathlib gap として新規補題
+`jointlyTypicalSet_prob_ge` を separately publish せず、AEP 既存
+`typicalSet_prob_ge` を `Zs := jointSequence Xs Ys` に直接適用する経路で迂回。
+
+**採用経路**:
+- `conditionalTypicalSlice μ Xs Ys n ε y := {x | (x, y) ∈ jointlyTypicalSet ...}` で
+  Y-fiber を定義。
+- `conditionalTypicalSlice_card_le` 主結果:
+  `|slice| ≤ exp(n(H(X,Y) - H(Y) + 2ε))`。
+- 証明戦略: y が Y-typical かで場合分け。
+  - y not Y-typical: slice = ∅ (JTS 第 2 条件で y は Y-typical 強制)、自明。
+  - y is Y-typical: `embed x i := (x i, y i) : (Fin n → α) → (Fin n → α × β)`
+    で X-fiber を Z-typical set に injection。各 `embed x` に
+    `typicalSet_prob_ge μ Zs` で `Pr ≥ exp(-n(H_Z + ε))`、合計 `|slice| · exp(-n(H_Z + ε))`。
+    一方 `embed '' F ⊆ proj_Y ⁻¹' {y}` で `(μ.map (jointRV Zs n))(proj_Y ⁻¹' {y})`
+    に押し上げ、preimage bridge `jointRV Zs n ⁻¹' (proj_Y ⁻¹' {y}) =
+    jointRV Ys n ⁻¹' {y}` で `(μ.map (jointRV Ys n)) {y}` に変換、
+    `typicalSet_prob_le μ Ys` で `≤ exp(-n(H_Y - ε))`。
+
+**判断 ログ #1 への反映**: 判断 #1 で危惧した「point-wise mass 下界が典型集合外で
+成立しない」(Risk R1) は、本 plan の Phase C は典型集合 **内** の点のみで
+評価できるため不発。R1 の strong typicality pivot は不要だった。
+
+**Phase D-F (後継カード) への引き継ぎ**:
+- 主補題 signature は `hindepY_full`, `hidentY`, `hindepZ_full`, `hidentZ`,
+  `hposY`, `hposZ` の 6 仮説。Phase E `swError_E_X_expectation_le` の証明で
+  これらをそのまま渡せる shape。
+- conditional entropy bridge (`H(X,Y) - H(Y) = H(X|Y)`) は本 file では
+  exposed せず、最終 statement で内部式のまま。Phase F-(b) の主定理組立時に
+  `MIChainRule.lean` の chain rule 補題で bridge する。
+
+### #5 (予約) random binning **deterministic 化** の coupling 仮説
 
 `ChannelCodingAchievability` Phase D-(b) で `hindepZ_full : iIndepFun (jointSequence Xs Ys) μ`
 が追加されたのと同様、本 plan の Phase E でも binning 確率測度と ambient probability
