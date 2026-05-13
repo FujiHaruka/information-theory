@@ -543,8 +543,23 @@ theorem channel_coding_achievability_max_error
 `p` 側 `hp_pos` を sub-channel 切り出しで vacuous 化。`α_supp := {a | 0 < p {a}}` 上で
 restrict した sub-channel での MI が元の MI と一致。 -/
 
-/-- **Phase C.1 (skeleton)**: `α_supp := {a | 0 < p.real {a}}` 上で restrict した
-`(p|_supp, W|_supp)` の MI は元の `mutualInfoOfChannel p W` と一致。 -/
+/-- **Phase C.1 (deferred / strategy noted)**: `α_supp := {a | 0 < p.real {a}}` 上で restrict
+した `(p|_supp, W|_supp)` の MI は元の `mutualInfoOfChannel p W` と一致。
+
+**Proof sketch (deferred)** — full elaboration ~150-200 行:
+1. `Subtype.val : α_supp → α` は `MeasurableEmbedding` (image is the measurable set
+   `{a | 0 < p.real {a}}`); `range Subtype.val = {a | 0 < p.real {a}}`.
+2. `(p.comap Subtype.val).map Subtype.val = p.restrict {a | 0 < p.real {a}} = p`
+   via `MeasurableEmbedding.map_comap` + outside-support is null.
+3. Push the joint `(p ⊗ₘ W)` and the product `p.prod q` via `Subtype.val × id`
+   to get measures on `α × β`, agreeing with the original ones (mass concentrated
+   on support).
+4. `klDiv` is invariant under `MeasurableEmbedding`-pushforward of both arguments
+   (no direct Mathlib lemma — derive via `klDiv_eq_lintegral_klFun_of_ac` and
+   `lintegral_map`).
+
+Currently consumed by `shannon_noisy_channel_coding_theorem` only; D-1's main proof
+remains gated on this. Left as `sorry` per Phase C MVP fallback in plan §C.2.2. -/
 theorem mutualInfoOfChannel_restrict_to_support
     (p : Measure α) [IsProbabilityMeasure p]
     (W : Channel α β) [IsMarkovKernel W] :
@@ -555,13 +570,31 @@ theorem mutualInfoOfChannel_restrict_to_support
             (Measurable.subtype_val measurable_id)) := by
   sorry
 
-/-- **Phase C.2 (skeleton)**: `Code` の subtype lift。`Code M n {a // 0 < p.real {a}} β` から
+/-- **Phase C.2**: `Code` の subtype lift。`Code M n {a // 0 < p.real {a}} β` から
 `Code M n α β` への injection。encoder の codomain を `Subtype → α` で expansion、`errorProbAt`
-は不変。 -/
+は不変 (`Code_lift_errorProbAt_eq` 参照)。 -/
 noncomputable def Code_lift_from_subtype
     {M n : ℕ} (p : Measure α)
-    (c : Code M n {a : α // 0 < p.real {a}} β) : Code M n α β := by
-  sorry
+    (c : Code M n {a : α // 0 < p.real {a}} β) : Code M n α β :=
+  { encoder := fun m i => (c.encoder m i).val
+    decoder := c.decoder }
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
+/-- `Code_lift_from_subtype` で得た code の `errorProbAt` は元の subtype 上 code の
+`errorProbAt` (under `W.comap Subtype.val`) と一致。`Kernel.comap_apply` で
+`W.comap Subtype.val a' = W a'.val` なので両辺は同じ `Measure.pi` を測る。 -/
+theorem Code_lift_from_subtype_errorProbAt
+    {M n : ℕ} (p : Measure α) (W : Channel α β)
+    (c : Code M n {a : α // 0 < p.real {a}} β) (m : Fin M) :
+    (Code_lift_from_subtype p c).errorProbAt W m
+      = c.errorProbAt (W.comap (Subtype.val : {a : α // 0 < p.real {a}} → α)
+          (Measurable.subtype_val measurable_id)) m := by
+  -- `errorEvent` depends only on the decoder, identical between the two codes (`rfl`).
+  -- `Measure.pi` factors agree pointwise by `Kernel.comap_apply`:
+  -- `(W.comap Subtype.val _) (c.encoder m i) = W (c.encoder m i).val`.
+  unfold Code.errorProbAt
+  rfl
 
 /-! ## Phase D — 主定理 (skeleton) -/
 
