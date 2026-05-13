@@ -713,7 +713,10 @@ theorem shannon_noisy_channel_coding_theorem_general
     linarith
   -- (c.errorProbAt W m).toReal < ε/2 + 2 n δ_B. For ε bound we need 2nδ_B < ε/2.
   -- This requires δ_B (which is fixed) to satisfy δ_B < ε/(4n) for all n ≥ N_B, which is impossible.
-  -- The full proof would re-pick δ_n; the remaining gap (Risk R4) is the n-dependence of δ.
+  -- The full proof would re-pick δ_n per n; the remaining gap (Risk R4) is uniform N(δ) over δ ↘ 0.
+  -- See `docs/shannon/channel-coding-shannon-theorem-general-plan.md` 判断ログ 6 for analysis
+  -- (4 strategies, including parent surgery in ChannelCodingAchievability.lean:1771/1835 Tendsto
+  -- extractions, all deemed >1 session of work). MVP leaves this `sorry` as documented scope-deferral.
   sorry
 
 end InformationTheory.Shannon.ChannelCoding

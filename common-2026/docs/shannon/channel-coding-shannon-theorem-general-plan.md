@@ -298,6 +298,37 @@ theorem shannon_noisy_channel_coding_theorem_general
    外から取り出すには parent の証明への踏み込みが必要。本 D-1' MVP は Phase D 主定理に **1 個の
    documented sorry** を残し、Phase A-C の rigorous 完成 (0 sorry) を確保する。
 
+6. **継続セッション (2026-05-14): 撤退決定**。Phase D の sorry を閉じるための 4 戦略を検討:
+
+   - **戦略 1 (per-`n` δ refresh, no surgery)**: `δ_n := ε/(8(n+1))` で各 `n` に parent を再 call、
+     `n_n := max(n, N(δ_n))` で code を得る。**Block** ですが `errorProbAt` の bound `2 n_n δ_n` が
+     `n_n` 側に出るため `n_n ≤ 2(n+1)` 相当の制約が要り、`N(δ_n) ≤ n + 1` (= 「`δ_n` 全領域で
+     parent's `N` が `n` 程度に bounded」) を要求 → 結局 R4 と同じ uniform bound に帰着。
+
+   - **戦略 2 (`exists_smooth_capacity_gt_uniform`)**: B.2.1 を「`∀ δ ∈ (0, δ_0]` で `R < capacity`」
+     に強化しても、強化形は `R < capacity (W_smooth δ)` までで parent の `N` 内部構成
+     (`channel_coding_achievability_max_error` line 576-665 + `channel_coding_achievability`
+     line 1605-1888 の `Tendsto.metric_atTop` extraction) には触れない → 同じ block。
+
+   - **戦略 3 (parent surgery)**: `channel_coding_achievability` の `N₁` (E1 jointly-typical-set
+     prob tendsto-0、AEP 経由) + `N₂` (E2 exponential decay) を **closed-form bound** に書き換え、
+     `N` を `(rate-slack, ε, 各 entropy の連続性 modulus)` の explicit function として
+     parent から切り出す surgery が要る。`Tendsto.metric_atTop` extraction 2 箇所
+     (`ChannelCodingAchievability.lean:1771, 1835`) と AEP 内部 (line ~1700) の rate
+     control を 1 セッション内で書き直すには重い。
+
+   - **戦略 4 (axiom化)**: Definition of Done 違反、不採用。
+
+   - **statement weakening (e.g., `Tendsto` 形, `∀ n_0, ∃ n ≥ n_0, ∃ c, error < ε`)**:
+     検証した結果、`δ` を `n` ベースで refresh する以上、weakening したとしても **同じ
+     uniform-N 制約に帰着** (`2 n δ` bound が `n` 側に出るため `δ` を `n_0` から決め打ちできない)。
+     真に逃げるには bound を `n` から外す必要があるが、TV tensorization の本質で不可。
+
+   **撤退理由**: 戦略 3 (parent surgery) のみが本質的な解だが、見積もり ≈200-400 行の追加証明
+   (AEP の rate-uniform 化 + parent N の closed-form 化) で本セッション scope を逸脱。
+   現状の `sorry` 1 個 / Phase A-C rigorous 完成 (0 sorry) は本 plan で documented MVP として
+   許容範囲、将来の D-1'' で parent surgery 専用 plan を起こすのが妥当。
+
 ## 参考
 
 - 親 plan: [`channel-coding-shannon-theorem-plan.md`](./channel-coding-shannon-theorem-plan.md)
