@@ -11,12 +11,19 @@
 
 ## 進捗
 
-- [ ] Phase 0 — Mathlib 整備度調査 (本ドキュメント末尾、要更新) 🚧
-- [ ] Phase A — 定常エルゴード過程の Lean 表現 (`MeasurePreserving` shift + `Ergodic`) 📋
-- [ ] Phase B — Entropy rate 定義 + 存在性 (定常性で `H(X_1,…,X_n)/n` 単調収束) 📋
-- [ ] Phase C — Birkhoff 接続 (`-(1/n) log p(X^n) = -(1/n) ∑ log p(X_i | X^{<i})` + 個別エルゴード) 📋
-- [ ] Phase D — 主定理 `-(1/n) log p(X^n) → H(𝒳) a.s.` 📋
-- [ ] Phase E — i.i.d. 特殊化との接続 (既存 `AEP.lean` 再 derive) 📋
+- [x] Phase 0 — Mathlib 整備度調査 ✅ (2026-05-13)
+- [x] Phase A — 定常エルゴード過程の Lean 表現 ✅ (2026-05-14、`Stationary.lean` 119 行、0 sorry)
+- [x] Phase B — Entropy rate 定義 + 存在性 ✅ (2026-05-14、`EntropyRate.lean` 498 行、0 sorry)
+- [ ] Phase C — Birkhoff 接続 📋 **後継 deferred (本 plan 最大の山場、Birkhoff a.s. 版 Mathlib 不在で自前 ~200-400 行)**
+- [ ] Phase D — 主定理 `-(1/n) log p(X^n) → H(𝒳) a.s.` 📋 **Phase C 完成後 ~80-150 行**
+- [ ] Phase E — i.i.d. 特殊化との接続 📋 **Phase D 完成後 ~50-100 行**
+
+**MVP 完了サマリ (2026-05-14)**: `Common2026/Shannon/Stationary.lean` (119 行) + `EntropyRate.lean` (498 行) = 合計 617 行、0 sorry / 0 warning。
+- Phase A: `StationaryProcess` / `ErgodicProcess` 構造体 + `obs` / `blockRV` 定義 + measurability + `identDistrib_obs_zero` (定常性ラベル)
+- Phase B: `blockEntropy` / `conditionalEntropyTail` / `entropyRate` 定義 + `blockEntropy_succ_chain_rule` (B.1) + `conditionalEntropyTail_antitone` (B.2、定常性 reshape + conditioning monotonicity) + `entropyRate_exists_of_stationary` (B.3、Cesàro) + `entropyRate_eq_lim_condEntropy` (B.4)
+- 鍵 helper: `condEntropy_eq_pushforward` (joint pushforward 等式 ⇒ condEntropy 等式、汎用性高い)
+
+**残り Phase C-E は `E-8'` deferred として後継**: Birkhoff 個別エルゴード a.s. 版が Mathlib 不在で自前 200-400 行が最大の山場。MVP の Phase A+B は Mathlib 上流 PR 候補 (`Stationary.lean` + `EntropyRate.lean` の structure 部分)。
 
 ## ゴール / Approach
 
