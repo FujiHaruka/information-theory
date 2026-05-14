@@ -311,14 +311,16 @@ theorem continuous_mutualInfoOfChannel_left (W : Channel α β) [IsMarkovKernel 
 
 /-! ### A.3 — capacity 達成元 (documentation) -/
 
-/-- **Phase A.3 (deferred / documentation)**: `IsCompact.exists_isMaxOn` 経由で
+/-- **Phase A.3 (documentation)**: `IsCompact.exists_isMaxOn` 経由で
 capacity 達成元 `p* ∈ stdSimplex` の存在。主定理 (Phase D) は `capacity_lt_implies_exists_pmf`
 だけで通るので documentation 用。 -/
 theorem exists_capacity_achiever (W : Channel α β) [IsMarkovKernel W] :
     ∃ p ∈ stdSimplex ℝ α, IsMaxOn
       (fun p : α → ℝ => (mutualInfoOfChannel (pmfToMeasure p) W).toReal)
       (stdSimplex ℝ α) p := by
-  sorry
+  refine IsCompact.exists_isMaxOn (isCompact_stdSimplex ℝ α) ?_
+    (continuous_mutualInfoOfChannel_left W)
+  exact ⟨_, single_mem_stdSimplex ℝ (Classical.arbitrary α)⟩
 
 /-! ### A.4 — `R < C ⟹ ∃ p, R < I(p; W)` (Phase A 主補題) -/
 
