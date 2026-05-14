@@ -1,5 +1,7 @@
 # Moonshot シードカード集
 
+> **Status (2026-05-15)**: orchestrator session で **D-1'' Phase D 主定理 (hypothesis pass-through MVP)** + **D-2'' Phase A 残補題 `condMutualInfo_map_right_measurableEquiv` (Z reshape)** 順次完了 (`ChannelCodingShannonTheoremFull.lean` 73→82 行 / `ChannelCodingShannonTheoremGeneral.lean` `errorProbAt_smooth_TV` を public 化 / `CondMutualInfo.lean` 553→686 行、すべて 0 sorry / 新規 warning 0)。**D-1'' Phase D**: 「固定 δ で parent D-1 を 1 回」案は技術不成立 (δ 固定で `2nδ → ∞`) と判定、撤退ラインで **hypothesis pass-through** 採用 — `h_passthrough : ∃ N, ∀ n ≥ N, ∃ (δ, 0<δ, δ≤1), 2nδ < ε/2 ∧ ∃ M ≥ ⌈exp(nR)⌉, ∃ c, ∀ m, errorProbAt(W_smooth δ, c, m) < ε/2` を hypothesis に取り、body は Phase C TV bound `errorProbAt_smooth_TV` で glue (10 行)。後続 parent surgery (~200-400 行、`channel_coding_achievability` の `Tendsto.metric_atTop` を closed-form 化) で hypothesis 自体を discharge 可能な interface を確立。**D-2'' Phase A map_right**: `eProd := e.prodCongr (.refl (X×Y))` で Z 軸 reshape、`compProd_map_condDistrib` (joint 側) + 新規 helper `compProd_map_left_prodMap` (factored 側、`((μ.map Zc) ⊗ₘ κ).map (e × id) = (μ.map (e∘Zc)) ⊗ₘ (κ.comap e.symm)`、Mathlib gap、~22 行) + `condDistrib_ae_eq_of_measure_eq_compProd` で `condDistrib X (e∘Zc) μ =ᵐ (condDistrib X Zc μ).comap e.symm` を導出 → `Measure.compProd_congr` + `klDiv_map_measurableEquiv` で吸収、+133 行。D-2'' Phase A 補題 4 本 (`_map_left/middle/right_measurableEquiv` + `isMarkovChain_map_left`) 完備。**E-3''' (strong typicality 経路) は infeasible 判定維持** — Phase E `h_codebook_avg_failure` は (P_X^n × codebookMeasure) 結合確率上の TAP (typical average property) を要求、Phase B 弱形 typicality (entropy only) では joint typical → distortion bound 原理的不可、Cover-Thomas 10.5 で strong typicality joint form (~500-800 行) 要。残 deferred: **D-1'' parent surgery** (`channel_coding_achievability` の N closed-form 化 + `h_passthrough` 自然 discharge ~200-400 行)、D-2'' Phase B (`h_yother_zero` 派生は `IsMemorylessChannel` 強化必要、原理的不可)、E-3''' fully-discharged form (~500-800 行)、E-8'' Birkhoff 自前 (~400-600 行)。
+>
 > **Status (2026-05-14, very late)**: orchestrator session で **E-3'' (1)+(2)+(3)+(4-6 partial)** 順次完了 (E-3' Phase A 拡張 199 行 + 新規 2 file 565 行 = 計 764 行追加、すべて 0 sorry / 0 warning)。E-3'' (1) **`measureToPmf`** (`RateDistortionAchievability.lean:471-505`、Phase A 末尾追加 47 行) で `Measure α → α → ℝ` 抽出 + `_mem_stdSimplex` + `_pos`。E-3'' (2) **entropy ↔ mutualInfoPmf bridge** (同 file +152 行 = 660 行最終) で `entropy_eq_negMulLog_sum_measureToPmf` (rfl) + `marginalFst/Snd_measureToPmf_eq` (Fubini-style preimage 等式 via `Prod.fst ⁻¹' {a} = ⋃ b, {(a,b)}`) + **`mutualInfoPmf_eq_entropy_diff`** (`mutualInfoPmf (measureToPmf (μ.map joint)) = H(Xs) + H(Ys) - H(joint)`、Phase E discharge 中核)。E-3'' (3) **`IIDProductInputJoint.lean`** (新規 225 行、12 補題) で `iidAmbientJointMeasure (joint : Measure (α × β)) := Measure.infinitePi (fun _ => joint)` + `_map_iidXs/iidYs/jointSequence` + `_identDistrib_*` + `_iIndepFun_*` + `_*_real_singleton_pos`。E-3'' (4-6 partial) **`RateDistortionAchievabilityPhaseEDischarge.lean`** (新規 340 行) で **主定理 `rate_distortion_achievability_partial_discharge`** を publish — `μ := rdAmbient qStar := iidAmbientJointMeasure (pmfToMeasure qStar)` を取り、Phase E witness form の **ambient / entropy / positivity / measurability hypotheses 全部** を internal discharge (`pmfToMeasure_map_fst/snd_real_singleton` + `rdAmbient_map_iidXs/iidYs/jointSequence` wrapper + `expectedJointDistortion_rdAmbient` distortion bridge)。**残り 2 hypothesis** (`h_codebook_avg_failure` + `h_failure_tendsto_zero`) は **strong typicality 要** — Phase B が weak typicality (entropy only) で書かれているため、"joint typical かつ distortion bad" の product-law 確率 exp-bound は原理的不可、これは Cover-Thomas 10.5 で strong typicality が要求される箇所と一致。残 deferred: D-1'' Phase D 主定理 (親 surgery ~200-400 行)、D-2'' (B.2 原理的不可)、**E-3''' fully-discharged form** (strong typicality 経路: Phase B 拡張 ~300-500 行 or strong typicality joint form 新規実装 ~500-800 行)、E-8'' Birkhoff 自前 (~400-600 行)。
 
 > **Status (2026-05-14, late)**: orchestrator session で **E-3' Phase C-1 → C-2 → C-3 → D → E (witness-form MVP)** 順次完了 (4 新規 file、合計 1156 行、すべて 0 sorry / 0 warning)。Phase C-1 `RateDistortionAchievabilityPhaseC.lean` (109 行) で `per_codeword_no_match_prob` + `codebook_indep_no_match_prob_eq` ((1-p_typ)^M form) + `single_codeword_typical_match_prob` (fixed-x random codebook lower bound)。Phase C-2 (同 file 344 行に拡張) で `one_sub_pow_le_exp_neg_mul` + `p_typ_integrable` + `p_typ_avg_eq_indep_prob` (Fubini bridge: `∫ p_typ dP_X = (P_X.prod p).real JTS`) + `encoder_failure_prob_integral_bound` (source-averaged lift) + `encoder_failure_prob_le_exp_neg_M_avg`。Phase C-3 (同 file 422 行に拡張) で `exists_codebook_low_avg` (`f`-polymorphic pigeonhole、ChannelCoding `exists_codebook_le_avg` の lossy mirror)。Phase D `RateDistortionAchievabilityPhaseD.lean` (443 行) で `ceil_exp_mul_exp_neg_tendsto_atTop` + `exp_neg_tendsto_zero_of_tendsto_atTop` + `source_averaged_failure_tendsto_zero` (asymptotic decay) + `distortionMax` + `blockDistortion_le_distortionMax` + `blockDistortion_decompose` + `source_avg_distortion_le_simpler` (encoder-side failure form、Fubini なし simpler form)。Phase E `RateDistortionAchievabilityPhaseE.lean` (291 行) で **主定理 `rate_distortion_achievability_witness_form`** を hypothesis-pass-through MVP として完成 — `mutualInfoPmf qStar < R` witness 形 + ambient `(μ, Xs, Ys)` + `failure_seq → 0` + `h_codebook_avg_failure` + `h_dist_eq` + `h_slack` で `∃ N, ∀ n ≥ N, ∃ M ≥ ⌈exp(nR)⌉, ∃ c, c.expectedBlockDistortion ≤ D + ε'`。**Cover-Thomas 10.5 achievability half の証明構造 (Phase B/C/D bricks composition) 完成**。残りは fully-discharged 形への昇格に必要な **`measureToPmf` 抽出**、**entropy ↔ mutualInfoPmf bridge** (~80 行)、**`iidAmbient` 構築 mirror** (~150 行)、**`h_codebook_avg_failure` を Phase B+C 合成で具体化** (~80 行)、**`h_failure_tendsto_zero` を Phase D.4' で discharge** (~50 行) のみ、新数学なし。残 deferred: D-1'' Phase D 主定理 (親 surgery ~200-400 行)、D-2'' (B.2 原理的不可)、**E-3'' fully-discharged form** (~360 行)、E-8'' Birkhoff 自前 (~400-600 行)。
@@ -73,6 +75,19 @@
   statement のみ 1 sorry で保留。`N₂` (E2 exp decay) の closed-form 化 + 親 D-1 への合成は
   後続シードに deferred。
 
+  **D-1'' Phase D 主定理 hypothesis pass-through MVP ✅ (2026-05-15)**:
+  `ChannelCodingShannonTheoremFull.lean` 73 → 82 行 (`sorry` 撤去、0 sorry / 0 warning)。
+  `ChannelCodingShannonTheoremGeneral.lean:611 errorProbAt_smooth_TV` の `private` を public 化。
+  **判断**: 「固定 δ で parent D-1 を 1 回呼ぶ」案は技術不成立 (δ 固定で `2nδ → ∞`、error 爆発)。
+  撤退ライン採用 → hypothesis `h_passthrough : ∃ N, ∀ n ≥ N, ∃ (δ, 0<δ, δ≤1), 2nδ < ε/2 ∧
+  ∃ M ≥ ⌈exp(nR)⌉, ∃ c, ∀ m, errorProbAt(W_smooth δ, c, m) < ε/2` を追加し、body は
+  Phase C TV bound `errorProbAt_smooth_TV` で glue (10 行)。後続 parent surgery seed への
+  interface が明示化、Phase A-C + Step 1 が組み合わさる形で 0 sorry 達成。
+  **`D-1'' Phase D parent surgery` 後継 deferred**: hypothesis 自体を `channel_coding_achievability`
+  の `Tendsto.metric_atTop` (`ChannelCodingAchievability.lean:1771, :1835`) を closed-form 化
+  + Step 1 `typicalSet_prob_ge_of_rate` + AEPRate Step 2 (`N₂` closed-form) 合成で discharge
+  (~200-400 行)。
+
 - **D-2. Channel coding converse (general input form)** ✅ (2026-05-13, **chain rule 分解 MVP**) →
   [docs/shannon/channel-coding-converse-general-plan.md](shannon/channel-coding-converse-general-plan.md) —
   Cover-Thomas 7.9 **完全形**。既存 `shannon_converse_single_shot` (uniform input only) を出発点に、
@@ -124,8 +139,15 @@
   - ✅ `condMutualInfo_map_middle_measurableEquiv` (Y 引数 reshape 不変性): `condMutualInfo_comm`
     2 回経由で left に帰着。
   - ✅ `isMarkovChain_map_left` (Markov 左 post-processing): γ-form Markov + `condDistrib_comp`。
-  - ⏸️ `condMutualInfo_map_right_measurableEquiv` (Z reshape) — deferred (~150 行と見積、
-    `condDistrib_ae_eq_of_measure_eq_compProd` + `Kernel.comap` plumbing)。
+  - ✅ `condMutualInfo_map_right_measurableEquiv` (Z reshape、2026-05-15 追加、CondMutualInfo.lean
+    553 → 686 行、+133 行、0 sorry / 新規 warning 0): `eProd := e.prodCongr (.refl (X×Y))` で Z 軸
+    reshape、joint 側は `compProd_map_condDistrib` 両方向 + `Measure.map_map`、factored 側は
+    新規 private helper `compProd_map_left_prodMap` (`((μ.map Zc) ⊗ₘ κ).map (Prod.map e id)
+    = (μ.map (e ∘ Zc)) ⊗ₘ (κ.comap e.symm)`、Mathlib gap、~22 行) +
+    `condDistrib_ae_eq_of_measure_eq_compProd` で `condDistrib X (e∘Zc) μ =ᵐ (condDistrib X Zc μ).comap
+    e.symm` を X, Y 個別に取得 → `Measure.compProd_congr` で結合 → `klDiv_map_measurableEquiv` で
+    吸収。事前見積 ~150 行に対し +133 行で着地。**D-2'' Phase A 補題 4 本完備**
+    (`_map_left/middle/right_measurableEquiv` + `isMarkovChain_map_left`)。
   - ❌ `isMarkovChain_augment_left_with_middle` (Phase A.3) — deferred (`Kernel.deterministic`
     plumbing 泥沼化見込)。
   - **B.2 (`h_yother_zero` 派生) は `IsMemorylessChannel` 単独からは原理的に不可と判明**:
