@@ -1044,4 +1044,404 @@ theorem swError_EY_expectation_le
         exact ENNReal.ofReal_ne_top
     _ = C * ((M_Y : ℝ))⁻¹ := ENNReal.toReal_ofReal h_rhs_nn
 
+/-! ## Phase E.4 — `swError_EXY` strict-form expectation bound under random binning.
+
+The "both coordinates differ" sub-event `swError_EXY_strict` admits a clean bound
+`|JTS| / (M_X · M_Y)` via pair-binning collision (`1/M_X · 1/M_Y`) summed over the
+joint typical set. Combined with `jointlyTypicalSet_card_le`, this gives the
+target `exp(n · (H(X,Y) + ε)) / (M_X · M_Y)`.
+
+The original `swError_EXY` (without the strict restriction) splits into three
+sub-cases by `(p.1 = X^n ?, p.2 = Y^n ?)`; the two "loose" cases (one coordinate
+agrees) are absorbed into `swError_EX` / `swError_EY` via
+`swError_EXY_subset_union`. Phase F combines this with the Phase D main
+decomposition to obtain the full 5-event union bound. -/
+
+/-- The "both coordinates differ" sub-event of `swError_EXY`. -/
+private def swError_EXY_strict
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (n : ℕ) {M_X M_Y : ℕ} (ε : ℝ)
+    (f_X : (Fin n → α) → Fin M_X) (f_Y : (Fin n → β) → Fin M_Y) : Set Ω :=
+  { ω | ∃ p : (Fin n → α) × (Fin n → β),
+            p.1 ≠ jointRV Xs n ω
+          ∧ p.2 ≠ jointRV Ys n ω
+          ∧ f_X p.1 = f_X (jointRV Xs n ω)
+          ∧ f_Y p.2 = f_Y (jointRV Ys n ω)
+          ∧ p ∈ jointlyTypicalSet μ Xs Ys n ε }
+
+/-- The full `swError_EXY` event is contained in the union of the two single-axis
+events `swError_EX`, `swError_EY` and the strict `swError_EXY_strict`. The loose
+cases (only one coordinate of the alias `p` agrees with the truth) are absorbed
+into `E_X` or `E_Y` respectively. -/
+lemma swError_EXY_subset_union
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    {n M_X M_Y : ℕ} (ε : ℝ)
+    (f_X : (Fin n → α) → Fin M_X) (f_Y : (Fin n → β) → Fin M_Y) :
+    swError_EXY μ Xs Ys n ε f_X f_Y
+      ⊆ swError_EX μ Xs Ys n ε f_X
+        ∪ swError_EY μ Xs Ys n ε f_Y
+        ∪ swError_EXY_strict μ Xs Ys n ε f_X f_Y := by
+  intro ω hω
+  rcases hω with ⟨p, hpne, hfx, hfy, hpJTS⟩
+  by_cases hp1 : p.1 = jointRV Xs n ω
+  · by_cases hp2 : p.2 = jointRV Ys n ω
+    · -- both agree ⇒ contradiction with hpne.
+      exfalso
+      exact hpne (Prod.ext hp1 hp2)
+    · -- p.1 = X^n, p.2 ≠ Y^n ⇒ ω ∈ E_Y (left ∪ right inside left).
+      left; right
+      show ω ∈ swError_EY μ Xs Ys n ε f_Y
+      refine ⟨p.2, hp2, hfy, ?_⟩
+      have : (p.1, p.2) ∈ jointlyTypicalSet μ Xs Ys n ε := hpJTS
+      rw [hp1] at this
+      exact this
+  · by_cases hp2 : p.2 = jointRV Ys n ω
+    · -- p.1 ≠ X^n, p.2 = Y^n ⇒ ω ∈ E_X.
+      left; left
+      show ω ∈ swError_EX μ Xs Ys n ε f_X
+      refine ⟨p.1, hp1, hfx, ?_⟩
+      have : (p.1, p.2) ∈ jointlyTypicalSet μ Xs Ys n ε := hpJTS
+      rw [hp2] at this
+      exact this
+    · -- both differ ⇒ ω ∈ EXY_strict.
+      right
+      exact ⟨p, hp1, hp2, hfx, hfy, hpJTS⟩
+
+private lemma measurableSet_swError_EXY_strict
+    {Xs : ℕ → Ω → α} {Ys : ℕ → Ω → β}
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (μ : Measure Ω) (n : ℕ) {M_X M_Y : ℕ} (ε : ℝ)
+    (f_X : (Fin n → α) → Fin M_X) (f_Y : (Fin n → β) → Fin M_Y) :
+    MeasurableSet (swError_EXY_strict μ Xs Ys n ε f_X f_Y) := by
+  classical
+  have hmeas : Measurable
+      (fun ω => (jointRV Xs n ω, jointRV Ys n ω)) :=
+    (measurable_jointRV Xs hXs n).prodMk (measurable_jointRV Ys hYs n)
+  let S : Set ((Fin n → α) × (Fin n → β)) :=
+    { p | ∃ q : (Fin n → α) × (Fin n → β),
+            q.1 ≠ p.1
+          ∧ q.2 ≠ p.2
+          ∧ f_X q.1 = f_X p.1
+          ∧ f_Y q.2 = f_Y p.2
+          ∧ q ∈ jointlyTypicalSet μ Xs Ys n ε }
+  have hS_meas : MeasurableSet S := (Set.toFinite S).measurableSet
+  have h_eq : swError_EXY_strict μ Xs Ys n ε f_X f_Y
+      = (fun ω => (jointRV Xs n ω, jointRV Ys n ω)) ⁻¹' S := by
+    ext ω
+    rfl
+  rw [h_eq]
+  exact hmeas hS_meas
+
+/-- **Random pair-binning alias expectation bound** (Phase E.4 utility).
+
+For a (deterministic) finite set `S` of candidate alias **pairs**, the product
+binning-measure probability that there exists `p ∈ S` with **both coordinates**
+differing from the truth and **both hashes** colliding is bounded by
+`|S| / (M_X · M_Y)`.
+
+This is the union-bound + product collision-probability skeleton specialised
+to the both-axis case: each per-pair collision factors as a product (the two
+binning measures are independent), each factor is `(M_X)⁻¹` resp. `(M_Y)⁻¹`
+by `binning_collision_prob`, and the cardinality bound trivially upper-bounds
+the count of admissible aliases. -/
+private lemma binning_pair_alias_expectation_le_aux
+    {n M_X M_Y : ℕ} [NeZero M_X] [NeZero M_Y]
+    (truth_x : Fin n → α) (truth_y : Fin n → β)
+    (S : Finset ((Fin n → α) × (Fin n → β))) :
+    ((binningMeasure α n M_X).prod (binningMeasure β n M_Y)).real
+        {fg : ((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y)
+          | ∃ p ∈ S, p.1 ≠ truth_x ∧ p.2 ≠ truth_y
+                  ∧ fg.1 p.1 = fg.1 truth_x ∧ fg.2 p.2 = fg.2 truth_y}
+      ≤ S.card * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := by
+  classical
+  -- Filter to admissible pairs (both coordinates differ from the truth).
+  set T : Finset ((Fin n → α) × (Fin n → β)) :=
+    S.filter (fun p => p.1 ≠ truth_x ∧ p.2 ≠ truth_y) with hT_def
+  set B_X : Measure ((Fin n → α) → Fin M_X) := binningMeasure α n M_X with hB_X_def
+  set B_Y : Measure ((Fin n → β) → Fin M_Y) := binningMeasure β n M_Y with hB_Y_def
+  set BP : Measure _ := B_X.prod B_Y with hBP_def
+  set evt : Set (((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y)) :=
+      {fg | ∃ p ∈ S, p.1 ≠ truth_x ∧ p.2 ≠ truth_y
+              ∧ fg.1 p.1 = fg.1 truth_x ∧ fg.2 p.2 = fg.2 truth_y} with hevt_def
+  set unionEvt : Set (((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y)) :=
+      ⋃ p ∈ T, {fg | fg.1 p.1 = fg.1 truth_x ∧ fg.2 p.2 = fg.2 truth_y}
+    with hunionEvt_def
+  have h_sub : evt ⊆ unionEvt := by
+    intro fg hfg
+    rcases hfg with ⟨p, hpS, hp1, hp2, hcoll1, hcoll2⟩
+    refine Set.mem_iUnion₂.mpr ⟨p, ?_, hcoll1, hcoll2⟩
+    simp [T, hpS, hp1, hp2]
+  have h_step1 :
+      BP.real evt ≤ BP.real unionEvt :=
+    measureReal_mono h_sub (measure_ne_top _ _)
+  -- Union bound.
+  have h_step2 :
+      BP.real unionEvt
+        ≤ ∑ p ∈ T, BP.real {fg | fg.1 p.1 = fg.1 truth_x ∧ fg.2 p.2 = fg.2 truth_y} :=
+    measureReal_biUnion_finset_le _ _
+  -- Per-pair: the collision event factors as a product of single-axis events.
+  have h_summand : ∀ p ∈ T,
+      BP.real {fg | fg.1 p.1 = fg.1 truth_x ∧ fg.2 p.2 = fg.2 truth_y}
+        = ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := by
+    intro p hp
+    have hp1 : p.1 ≠ truth_x := ((Finset.mem_filter.mp hp).2).1
+    have hp2 : p.2 ≠ truth_y := ((Finset.mem_filter.mp hp).2).2
+    -- The set is a product set.
+    have h_eq : ({fg : ((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y)
+            | fg.1 p.1 = fg.1 truth_x ∧ fg.2 p.2 = fg.2 truth_y})
+          = ({f_X | f_X p.1 = f_X truth_x} : Set ((Fin n → α) → Fin M_X)) ×ˢ
+            ({f_Y | f_Y p.2 = f_Y truth_y} : Set ((Fin n → β) → Fin M_Y)) := by
+      ext ⟨f_X, f_Y⟩
+      simp
+    rw [h_eq]
+    -- product measure of product set = product of marginal measures.
+    rw [measureReal_prod_prod]
+    -- Each factor = (M_X)⁻¹ resp. (M_Y)⁻¹ by `binning_collision_prob`.
+    rw [binning_collision_prob (M := M_X) hp1, binning_collision_prob (M := M_Y) hp2]
+  have h_step3 :
+      (∑ p ∈ T, BP.real {fg | fg.1 p.1 = fg.1 truth_x ∧ fg.2 p.2 = fg.2 truth_y})
+        = (T.card : ℝ) * (((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) := by
+    rw [Finset.sum_congr rfl h_summand, Finset.sum_const, nsmul_eq_mul]
+  have h_card : (T.card : ℝ) ≤ (S.card : ℝ) := by
+    exact_mod_cast Finset.card_filter_le S _
+  have h_mx_nn : (0 : ℝ) ≤ ((M_X : ℝ))⁻¹ :=
+    inv_nonneg.mpr (by exact_mod_cast Nat.zero_le _)
+  have h_my_nn : (0 : ℝ) ≤ ((M_Y : ℝ))⁻¹ :=
+    inv_nonneg.mpr (by exact_mod_cast Nat.zero_le _)
+  have h_prod_nn : (0 : ℝ) ≤ ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ :=
+    mul_nonneg h_mx_nn h_my_nn
+  calc BP.real evt
+      ≤ BP.real unionEvt := h_step1
+    _ ≤ ∑ p ∈ T, BP.real {fg | fg.1 p.1 = fg.1 truth_x ∧ fg.2 p.2 = fg.2 truth_y} := h_step2
+    _ = (T.card : ℝ) * (((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) := h_step3
+    _ ≤ (S.card : ℝ) * (((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) := by
+        exact mul_le_mul_of_nonneg_right h_card h_prod_nn
+    _ = (S.card : ℝ) * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := by ring
+
+/-! ### Phase E.4 main bound — `swError_EXY_strict` expectation bound.
+
+The expected `μ`-mass of the strict `E_{XY}` error event (both coordinates of
+the alias differ from the truth) over the **product** random binning hash
+`(f_X, f_Y) ∼ (binningMeasure α n M_X) × (binningMeasure β n M_Y)` is bounded by
+
+`exp(n · (H(X, Y) + ε)) / (M_X · M_Y)`
+
+— the joint typical set's cardinality bound divided by the product bin count.
+
+Strategy: 3-product Tonelli swap on `BP := B_X × B_Y` and ambient `μ`,
+followed by a per-`ω` slice bound via `binning_pair_alias_expectation_le_aux`
+applied to `S := JTS.toFinite.toFinset` (which is `ω`-independent), and
+closing with `jointlyTypicalSet_card_le`. -/
+
+set_option linter.unusedVariables false in
+theorem swError_EXY_strict_expectation_le
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hposZ : ∀ p : α × β,
+      0 < (μ.map (jointSequence Xs Ys 0)).real {p})
+    {n M_X M_Y : ℕ} [NeZero M_X] [NeZero M_Y] {ε : ℝ} (hε : 0 < ε) :
+    ∫ f_X, ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y)
+          ∂(binningMeasure β n M_Y) ∂(binningMeasure α n M_X)
+      ≤ Real.exp ((n : ℝ) * (entropy μ (jointSequence Xs Ys 0) + ε))
+        * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := by
+  classical
+  haveI : MeasurableSingletonClass ((Fin n → α) → Fin M_X) :=
+    Pi.instMeasurableSingletonClass
+  haveI : MeasurableSingletonClass ((Fin n → β) → Fin M_Y) :=
+    Pi.instMeasurableSingletonClass
+  haveI : Fintype ((Fin n → α) → Fin M_X) := Pi.instFintype
+  haveI : Fintype ((Fin n → β) → Fin M_Y) := Pi.instFintype
+  -- Notation.
+  set B_X : Measure ((Fin n → α) → Fin M_X) := binningMeasure α n M_X with hB_X_def
+  set B_Y : Measure ((Fin n → β) → Fin M_Y) := binningMeasure β n M_Y with hB_Y_def
+  set BP : Measure (((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y)) :=
+    B_X.prod B_Y with hBP_def
+  set C : ℝ := Real.exp ((n : ℝ) * (entropy μ (jointSequence Xs Ys 0) + ε)) with hC_def
+  have hC_pos : 0 < C := Real.exp_pos _
+  have hC_nn : 0 ≤ C := hC_pos.le
+  have hMxinv_nn : (0 : ℝ) ≤ ((M_X : ℝ))⁻¹ :=
+    inv_nonneg.mpr (by exact_mod_cast Nat.zero_le _)
+  have hMyinv_nn : (0 : ℝ) ≤ ((M_Y : ℝ))⁻¹ :=
+    inv_nonneg.mpr (by exact_mod_cast Nat.zero_le _)
+  have hRHS_nn : 0 ≤ C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ :=
+    mul_nonneg (mul_nonneg hC_nn hMxinv_nn) hMyinv_nn
+  have hXn : Measurable (jointRV Xs n) := measurable_jointRV Xs hXs n
+  have hYn : Measurable (jointRV Ys n) := measurable_jointRV Ys hYs n
+  have h_meas_EXY_strict : ∀ (f_X : (Fin n → α) → Fin M_X)
+      (f_Y : (Fin n → β) → Fin M_Y),
+      MeasurableSet (swError_EXY_strict μ Xs Ys n ε f_X f_Y) := fun f_X f_Y =>
+    measurableSet_swError_EXY_strict hXs hYs μ n ε f_X f_Y
+  -- The JTS finset, ω-independent.
+  set S : Finset ((Fin n → α) × (Fin n → β)) :=
+    (jointlyTypicalSet μ Xs Ys n ε).toFinite.toFinset with hS_def
+  -- JTS cardinality bound.
+  have hS_card_le : (S.card : ℝ) ≤ C := by
+    rw [hS_def, hC_def]
+    exact jointlyTypicalSet_card_le μ Xs Ys hXs hYs hposZ n hε
+  -- Per-ω slice bound on BP.real.
+  have h_per_omega : ∀ ω : Ω,
+      BP.real {fg : ((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y)
+                | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2}
+        ≤ C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := by
+    intro ω
+    set truth_x : Fin n → α := jointRV Xs n ω
+    set truth_y : Fin n → β := jointRV Ys n ω
+    -- Rewrite the per-ω set into the binning_pair_alias form.
+    have h_set_eq : {fg : ((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y)
+              | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2}
+          = {fg | ∃ p ∈ S, p.1 ≠ truth_x ∧ p.2 ≠ truth_y
+                ∧ fg.1 p.1 = fg.1 truth_x ∧ fg.2 p.2 = fg.2 truth_y} := by
+      ext fg
+      simp only [Set.mem_setOf_eq, swError_EXY_strict, hS_def, Set.Finite.mem_toFinset]
+      constructor
+      · rintro ⟨p, hp1, hp2, hfx, hfy, hpJTS⟩
+        exact ⟨p, hpJTS, hp1, hp2, hfx, hfy⟩
+      · rintro ⟨p, hpJTS, hp1, hp2, hfx, hfy⟩
+        exact ⟨p, hp1, hp2, hfx, hfy, hpJTS⟩
+    rw [h_set_eq]
+    have hA : BP.real {fg | ∃ p ∈ S, p.1 ≠ truth_x ∧ p.2 ≠ truth_y
+                  ∧ fg.1 p.1 = fg.1 truth_x ∧ fg.2 p.2 = fg.2 truth_y}
+        ≤ (S.card : ℝ) * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := by
+      simpa [BP, B_X, B_Y] using
+        binning_pair_alias_expectation_le_aux (M_X := M_X) (M_Y := M_Y) truth_x truth_y S
+    calc BP.real {fg | ∃ p ∈ S, p.1 ≠ truth_x ∧ p.2 ≠ truth_y
+                  ∧ fg.1 p.1 = fg.1 truth_x ∧ fg.2 p.2 = fg.2 truth_y}
+        ≤ (S.card : ℝ) * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := hA
+      _ ≤ C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := by
+          have hMxinv_my_nn : 0 ≤ ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ :=
+            mul_nonneg hMxinv_nn hMyinv_nn
+          have := mul_le_mul_of_nonneg_right hS_card_le hMxinv_my_nn
+          calc (S.card : ℝ) * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹
+              = (S.card : ℝ) * (((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) := by ring
+            _ ≤ C * (((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) := this
+            _ = C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := by ring
+  -- Build the product set E ⊆ (BP-space) × Ω.
+  set E : Set ((((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y)) × Ω) :=
+    {q | q.2 ∈ swError_EXY_strict μ Xs Ys n ε q.1.1 q.1.2} with hE_def
+  have hE_meas : MeasurableSet E := by
+    -- E = ⋃ (fg : (Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y),
+    --       {fg} ×ˢ swError_EXY_strict μ ... fg.1 fg.2.
+    have h_decomp : E = ⋃ fg : ((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y),
+        ({fg} : Set (((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y)))
+          ×ˢ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2 := by
+      ext ⟨g, ω⟩
+      simp [E]
+    rw [h_decomp]
+    refine MeasurableSet.iUnion (fun fg => ?_)
+    exact (measurableSet_singleton _).prod (h_meas_EXY_strict fg.1 fg.2)
+  -- Fubini: (BP.prod μ) E rewrites two ways.
+  have h_fubini1 :
+      (BP.prod μ) E
+        = ∫⁻ fg, μ (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) ∂BP := by
+    rw [Measure.prod_apply hE_meas]
+    congr 1
+  have h_fubini2 :
+      (BP.prod μ) E
+        = ∫⁻ ω, BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2} ∂μ := by
+    rw [Measure.prod_apply_symm hE_meas]
+    congr 1
+  have h_swap :
+      ∫⁻ fg, μ (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) ∂BP
+        = ∫⁻ ω, BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2} ∂μ := by
+    rw [← h_fubini1, h_fubini2]
+  -- ENNReal lift of per-ω bound.
+  have h_per_omega_ennreal : ∀ ω : Ω,
+      BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2}
+        ≤ ENNReal.ofReal (C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) := by
+    intro ω
+    have hr := h_per_omega ω
+    have hne_top : BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2} ≠ ∞ :=
+      measure_ne_top _ _
+    rw [show BP.real {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2}
+          = (BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2}).toReal from rfl] at hr
+    calc BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2}
+        = ENNReal.ofReal
+            (BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2}).toReal := by
+          rw [ENNReal.ofReal_toReal hne_top]
+      _ ≤ ENNReal.ofReal (C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) :=
+          ENNReal.ofReal_le_ofReal hr
+  have h_lint_le :
+      ∫⁻ ω, BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2} ∂μ
+        ≤ ENNReal.ofReal (C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) := by
+    calc ∫⁻ ω, BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2} ∂μ
+        ≤ ∫⁻ _, ENNReal.ofReal (C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) ∂μ :=
+          lintegral_mono h_per_omega_ennreal
+      _ = ENNReal.ofReal (C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) * μ Set.univ := by
+          rw [lintegral_const]
+      _ = ENNReal.ofReal (C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹) := by
+          rw [measure_univ, mul_one]
+  -- Bochner outer integral over BP — convert to lintegral.
+  have h_int_nn : 0 ≤ᵐ[BP] fun fg : ((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y) =>
+      μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) := by
+    refine Filter.Eventually.of_forall (fun fg => ?_)
+    exact measureReal_nonneg
+  have h_int_meas :
+      AEStronglyMeasurable
+        (fun fg : ((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y) =>
+          μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)) BP := by
+    apply Measurable.aestronglyMeasurable
+    refine Measurable.of_discrete
+  -- Bochner integrable on BP.
+  have h_integrable_BP : Integrable
+      (fun fg : ((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y) =>
+        μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)) BP := by
+    refine ⟨h_int_meas, ?_⟩
+    -- HasFiniteIntegral: ∫⁻ ‖·‖ < ∞. Bounded integrand × finite measure.
+    refine (hasFiniteIntegral_def _ _).mpr ?_
+    have h_bound : ∀ fg : ((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y),
+        ‖μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)‖₊ ≤ 1 := by
+      intro fg
+      have h_nn : 0 ≤ μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) :=
+        measureReal_nonneg
+      have h_le_one : μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) ≤ 1 := by
+        have := prob_le_one (μ := μ)
+            (s := swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)
+        unfold Measure.real
+        have h_le : (μ (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)).toReal ≤ 1 := by
+          have h_lt_one : μ (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) ≤ 1 := this
+          exact (ENNReal.toReal_le_toReal (measure_ne_top _ _) (by simp)).mpr h_lt_one
+        exact h_le
+      rw [Real.nnnorm_of_nonneg h_nn]
+      exact_mod_cast h_le_one
+    calc ∫⁻ fg, ‖μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)‖ₑ ∂BP
+        ≤ ∫⁻ _, 1 ∂BP := by
+          refine lintegral_mono fun fg => ?_
+          have hb := h_bound fg
+          rw [show ‖μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)‖ₑ
+                = ((‖μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)‖₊ : ℝ≥0∞))
+                from rfl]
+          have : ((‖μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)‖₊ : ℝ≥0∞))
+              ≤ ((1 : ℝ≥0) : ℝ≥0∞) := by exact_mod_cast hb
+          simpa using this
+      _ = BP Set.univ := by rw [lintegral_const, one_mul]
+      _ < ∞ := measure_lt_top _ _
+  -- Use Bochner Fubini to convert iterated integral to integral over BP.
+  rw [show (∫ f_X, ∫ f_Y, μ.real (swError_EXY_strict μ Xs Ys n ε f_X f_Y)
+              ∂B_Y ∂B_X)
+        = ∫ fg, μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) ∂BP from by
+    rw [integral_prod _ h_integrable_BP]]
+  -- Convert Bochner ∫ over BP to lintegral.
+  rw [integral_eq_lintegral_of_nonneg_ae h_int_nn h_int_meas]
+  have h_ofReal_eq : ∀ fg : ((Fin n → α) → Fin M_X) × ((Fin n → β) → Fin M_Y),
+      ENNReal.ofReal (μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2))
+        = μ (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) := by
+    intro fg
+    have hne_top : μ (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) ≠ ∞ :=
+      measure_ne_top _ _
+    rw [show μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)
+          = (μ (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)).toReal from rfl,
+        ENNReal.ofReal_toReal hne_top]
+  have h_lint_eq :
+      ∫⁻ fg, ENNReal.ofReal (μ.real (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2)) ∂BP
+        = ∫⁻ fg, μ (swError_EXY_strict μ Xs Ys n ε fg.1 fg.2) ∂BP := by
+    refine lintegral_congr (fun fg => ?_)
+    exact h_ofReal_eq fg
+  rw [h_lint_eq, h_swap]
+  calc (∫⁻ ω, BP {fg | ω ∈ swError_EXY_strict μ Xs Ys n ε fg.1 fg.2} ∂μ).toReal
+      ≤ (ENNReal.ofReal (C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹)).toReal := by
+        apply ENNReal.toReal_mono _ h_lint_le
+        exact ENNReal.ofReal_ne_top
+    _ = C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := ENNReal.toReal_ofReal hRHS_nn
+
 end InformationTheory.Shannon.ChannelCoding

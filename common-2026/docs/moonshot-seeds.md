@@ -296,9 +296,12 @@
   ~1700 行: conditional typical slice size bound + error decomposition + per-term expectation +
   pigeonhole + 主定理。本 MVP の `binning_collision_prob` を中核として再利用。
   **Phase C 完了** (`SlepianWolfConditionalTypicalSlice.lean` 315 行、conditional typical slice
-  size bound `≤ exp(n · (H(X|Y) + 2ε))`)、**Phase D 完了** (`SlepianWolfFullRateRegion.lean`
-  321 行、`swJointTypicalDecoder` + 4-way error decomposition
-  `swErrorProb ≤ μ(E_0) + μ(E_X) + μ(E_Y) + μ(E_{XY})`)。Phase E-F deferred。
+  size bound `≤ exp(n · (H(X|Y) + 2ε))`)、**Phase D 完了** (`SlepianWolfFullRateRegion.lean` 321 行、
+  `swJointTypicalDecoder` + 4-way error decomposition
+  `swErrorProb ≤ μ(E_0) + μ(E_X) + μ(E_Y) + μ(E_{XY})`)、**Phase E 完了** (同 file 1447 行、
+  `swError_E0_prob_tendsto_zero` + `swError_EX_expectation_le` + `swError_EY_expectation_le` +
+  `swError_EXY_strict_expectation_le` (E.4 では loose case を `swError_EXY_subset_union` 経由で
+  `E_X`/`E_Y` に吸収し、strict 形 `|JTS|/(M_X · M_Y)` bound を主結果として publish))。Phase F deferred。
 
 - **E-6. Csiszár I-projection / Pythagorean inequality** ✅ (2026-05-13) →
   [docs/shannon/csiszar-projection-plan.md](shannon/csiszar-projection-plan.md) —
