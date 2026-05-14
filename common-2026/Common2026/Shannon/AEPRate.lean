@@ -1,4 +1,5 @@
 import Common2026.Shannon.AEP
+import Common2026.Shannon.ChannelCoding
 import Mathlib.Probability.Moments.Variance
 
 /-!
@@ -360,5 +361,165 @@ theorem channelCoding_E2_lt_of_rate
       ≤ Real.exp (- (n : ℝ) * (I - R - 3 * ε)) := by
     rw [← h_exp_eq]; exact h_mul
   exact lt_of_le_of_lt h_upper_le (hN n hn)
+
+/-- **Joint AEP — closed-form rate**: for any `ε, η > 0`, there exists `N` such that for all
+`n ≥ N`, the jointly typical set has μ-measure ≥ `1 - η`. The bound `N` is built from three
+independent applications of `typicalSet_prob_ge_of_rate` (X, Y, Z = X × Y), with `η / 3` each
+plus a union bound (Bonferroni). -/
+theorem jointlyTypicalSet_prob_ge_of_rate
+    {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
+      [MeasurableSpace β] [MeasurableSingletonClass β]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindepX : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hindepY : Pairwise fun i j => Ys i ⟂ᵢ[μ] Ys j)
+    (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
+    (hindepZ : Pairwise fun i j =>
+      ChannelCoding.jointSequence Xs Ys i ⟂ᵢ[μ]
+        ChannelCoding.jointSequence Xs Ys j)
+    (hidentZ : ∀ i,
+      IdentDistrib (ChannelCoding.jointSequence Xs Ys i)
+        (ChannelCoding.jointSequence Xs Ys 0) μ μ)
+    {ε : ℝ} (hε : 0 < ε) {η : ℝ} (hη : 0 < η) :
+    ∃ N : ℕ, ∀ n ≥ N,
+      1 - η ≤ (μ {ω | (InformationTheory.Shannon.jointRV Xs n ω,
+                       InformationTheory.Shannon.jointRV Ys n ω) ∈
+                       ChannelCoding.jointlyTypicalSet μ Xs Ys n ε}).toReal := by
+  classical
+  have hη3 : 0 < η / 3 := by linarith
+  -- Three rate-uniform single-axis bounds.
+  obtain ⟨N_X, hN_X⟩ :=
+    typicalSet_prob_ge_of_rate μ Xs hXs hindepX hidentX hε hη3
+  obtain ⟨N_Y, hN_Y⟩ :=
+    typicalSet_prob_ge_of_rate μ Ys hYs hindepY hidentY hε hη3
+  set Zs : ℕ → Ω → α × β := ChannelCoding.jointSequence Xs Ys with hZs_def
+  have hZs : ∀ i, Measurable (Zs i) := fun i =>
+    ChannelCoding.measurable_jointSequence Xs Ys hXs hYs i
+  obtain ⟨N_Z, hN_Z⟩ :=
+    typicalSet_prob_ge_of_rate μ Zs hZs hindepZ hidentZ hε hη3
+  refine ⟨max (max N_X N_Y) N_Z, ?_⟩
+  intro n hn
+  have hn_N_X : N_X ≤ n :=
+    (le_max_left _ _).trans <| (le_max_left _ _).trans hn
+  have hn_N_Y : N_Y ≤ n :=
+    (le_max_right _ _).trans <| (le_max_left _ _).trans hn
+  have hn_N_Z : N_Z ≤ n := (le_max_right _ _).trans hn
+  -- Single-axis events and their complements.
+  set goodX : Set Ω :=
+    {ω | InformationTheory.Shannon.jointRV Xs n ω ∈
+          InformationTheory.Shannon.typicalSet μ Xs n ε} with hgoodX_def
+  set goodY : Set Ω :=
+    {ω | InformationTheory.Shannon.jointRV Ys n ω ∈
+          InformationTheory.Shannon.typicalSet μ Ys n ε} with hgoodY_def
+  set goodZ : Set Ω :=
+    {ω | InformationTheory.Shannon.jointRV Zs n ω ∈
+          InformationTheory.Shannon.typicalSet μ Zs n ε} with hgoodZ_def
+  set jointEvt : Set Ω :=
+    {ω | (InformationTheory.Shannon.jointRV Xs n ω,
+          InformationTheory.Shannon.jointRV Ys n ω) ∈
+          ChannelCoding.jointlyTypicalSet μ Xs Ys n ε} with hjointEvt_def
+  set badX : Set Ω := goodXᶜ
+  set badY : Set Ω := goodYᶜ
+  set badZ : Set Ω := goodZᶜ
+  -- Measurability of single-axis events.
+  have h_meas_goodX : MeasurableSet goodX :=
+    (InformationTheory.Shannon.measurable_jointRV Xs hXs n)
+      (InformationTheory.Shannon.measurableSet_typicalSet μ Xs n ε)
+  have h_meas_goodY : MeasurableSet goodY :=
+    (InformationTheory.Shannon.measurable_jointRV Ys hYs n)
+      (InformationTheory.Shannon.measurableSet_typicalSet μ Ys n ε)
+  have h_meas_goodZ : MeasurableSet goodZ :=
+    (InformationTheory.Shannon.measurable_jointRV Zs hZs n)
+      (InformationTheory.Shannon.measurableSet_typicalSet μ Zs n ε)
+  -- Joint decomposition.
+  have h_joint_decomp : jointEvt = goodX ∩ goodY ∩ goodZ := by
+    ext ω
+    constructor
+    · intro hω
+      obtain ⟨hX', hY', hZ'⟩ := hω
+      exact ⟨⟨hX', hY'⟩, hZ'⟩
+    · rintro ⟨⟨hX', hY'⟩, hZ'⟩
+      exact ⟨hX', hY', hZ'⟩
+  have h_meas_joint : MeasurableSet jointEvt := by
+    rw [h_joint_decomp]
+    exact ((h_meas_goodX.inter h_meas_goodY).inter h_meas_goodZ)
+  -- Complement ⊆ union of single-axis bads.
+  have h_compl_sub : jointEvtᶜ ⊆ badX ∪ badY ∪ badZ := by
+    rw [h_joint_decomp]
+    intro ω hω
+    rw [Set.mem_compl_iff, Set.mem_inter_iff, Set.mem_inter_iff,
+        not_and_or, not_and_or] at hω
+    rcases hω with (h_or | hZ_bad)
+    · rcases h_or with hX_bad | hY_bad
+      · exact Set.mem_union_left _ (Set.mem_union_left _ hX_bad)
+      · exact Set.mem_union_left _ (Set.mem_union_right _ hY_bad)
+    · exact Set.mem_union_right _ hZ_bad
+  -- Union bound on the complement measure (in ℝ≥0∞).
+  have h_bound_compl :
+      μ jointEvtᶜ ≤ μ badX + μ badY + μ badZ := by
+    calc μ jointEvtᶜ
+        ≤ μ (badX ∪ badY ∪ badZ) := measure_mono h_compl_sub
+      _ ≤ μ (badX ∪ badY) + μ badZ := measure_union_le _ _
+      _ ≤ (μ badX + μ badY) + μ badZ := by
+          gcongr; exact measure_union_le badX badY
+      _ = μ badX + μ badY + μ badZ := by ring
+  -- Each single-axis bad has toReal ≤ η / 3.
+  -- From hN_X: 1 - η/3 ≤ (μ goodX).toReal, with (μ badX).toReal = 1 - (μ goodX).toReal.
+  have h_goodX_le_one : μ goodX ≤ 1 := prob_le_one
+  have h_goodY_le_one : μ goodY ≤ 1 := prob_le_one
+  have h_goodZ_le_one : μ goodZ ≤ 1 := prob_le_one
+  have h_badX_toReal_eq : (μ badX).toReal = 1 - (μ goodX).toReal := by
+    rw [show badX = goodXᶜ from rfl,
+        measure_compl h_meas_goodX (measure_ne_top μ _), measure_univ,
+        ENNReal.toReal_sub_of_le h_goodX_le_one (by simp)]
+    simp
+  have h_badY_toReal_eq : (μ badY).toReal = 1 - (μ goodY).toReal := by
+    rw [show badY = goodYᶜ from rfl,
+        measure_compl h_meas_goodY (measure_ne_top μ _), measure_univ,
+        ENNReal.toReal_sub_of_le h_goodY_le_one (by simp)]
+    simp
+  have h_badZ_toReal_eq : (μ badZ).toReal = 1 - (μ goodZ).toReal := by
+    rw [show badZ = goodZᶜ from rfl,
+        measure_compl h_meas_goodZ (measure_ne_top μ _), measure_univ,
+        ENNReal.toReal_sub_of_le h_goodZ_le_one (by simp)]
+    simp
+  have h_X_bound : (μ badX).toReal ≤ η / 3 := by
+    have := hN_X n hn_N_X
+    rw [h_badX_toReal_eq]; linarith
+  have h_Y_bound : (μ badY).toReal ≤ η / 3 := by
+    have := hN_Y n hn_N_Y
+    rw [h_badY_toReal_eq]; linarith
+  have h_Z_bound : (μ badZ).toReal ≤ η / 3 := by
+    have := hN_Z n hn_N_Z
+    rw [h_badZ_toReal_eq]; linarith
+  -- Convert the ENNReal bound to a Real bound on toReal.
+  have h_badX_ne_top : μ badX ≠ ∞ := measure_ne_top μ _
+  have h_badY_ne_top : μ badY ≠ ∞ := measure_ne_top μ _
+  have h_badZ_ne_top : μ badZ ≠ ∞ := measure_ne_top μ _
+  have h_sum_ne_top : μ badX + μ badY + μ badZ ≠ ∞ := by
+    simp [h_badX_ne_top, h_badY_ne_top, h_badZ_ne_top]
+  have h_compl_toReal_le :
+      (μ jointEvtᶜ).toReal ≤ (μ badX).toReal + (μ badY).toReal + (μ badZ).toReal := by
+    have h1 := (ENNReal.toReal_le_toReal (measure_ne_top μ _) h_sum_ne_top).mpr h_bound_compl
+    have h_sum_eq :
+        (μ badX + μ badY + μ badZ).toReal
+          = (μ badX).toReal + (μ badY).toReal + (μ badZ).toReal := by
+      rw [ENNReal.toReal_add (by simp [h_badX_ne_top, h_badY_ne_top])
+            h_badZ_ne_top,
+          ENNReal.toReal_add h_badX_ne_top h_badY_ne_top]
+    rw [h_sum_eq] at h1; exact h1
+  have h_compl_le : (μ jointEvtᶜ).toReal ≤ η := by
+    have := h_compl_toReal_le
+    linarith
+  -- Convert (μ jointEvt).toReal = 1 - (μ jointEvtᶜ).toReal.
+  have h_joint_le_one : μ jointEvt ≤ 1 := prob_le_one
+  have h_jointEvt_toReal_eq : (μ jointEvt).toReal = 1 - (μ jointEvtᶜ).toReal := by
+    have h_compl_eq : μ jointEvtᶜ = 1 - μ jointEvt := by
+      rw [measure_compl h_meas_joint (measure_ne_top μ _), measure_univ]
+    rw [h_compl_eq, ENNReal.toReal_sub_of_le h_joint_le_one (by simp)]
+    simp
+  linarith [h_jointEvt_toReal_eq, h_compl_le]
 
 end InformationTheory.Shannon
