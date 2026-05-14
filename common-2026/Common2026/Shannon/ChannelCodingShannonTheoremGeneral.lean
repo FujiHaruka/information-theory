@@ -608,7 +608,7 @@ private lemma Measure_pi_real_event_diff_le
 omit [DecidableEq α] [Nonempty α] in
 /-- **C.2.3**: For `δ ∈ [0,1]`, the difference between `errorProbAt` under `W` and `W_smooth δ`
 is bounded by `2 n δ`. -/
-private lemma errorProbAt_smooth_TV
+lemma errorProbAt_smooth_TV
     {M n : ℕ} (c : Code M n α β) (W : Channel α β) [IsMarkovKernel W]
     {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ ≤ 1) (m : Fin M) :
     |(c.errorProbAt (Channel.smooth W δ) m).toReal - (c.errorProbAt W m).toReal|
