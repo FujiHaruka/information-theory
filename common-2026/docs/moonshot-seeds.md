@@ -1,5 +1,7 @@
 # Moonshot シードカード集
 
+> **Status (2026-05-14, evening)**: orchestrator session で 3 件追加 — **E-8' weakened** (`ShannonMcMillanBreiman.lean` 179 行、SMB sandwich-form + 期待値 bridge、Birkhoff (E-8'') が完成すれば仮定なし形に昇格できる正面 wrapper) + **D-1 A.3 closure** (`exists_capacity_achiever` を `IsCompact.exists_isMaxOn` で 4 行 close、`ChannelCodingShannonTheorem.lean` 内 doc-only sorry 1 件解消) + **E-3' Phase B.1 MVP** (`RateDistortionAchievabilityPhaseB.lean` 83 行、`jointTypicalLossyEncoder` + `lossyCodeOfCodebook` + spec 補題 2 本)。残 deferred: D-1'' Phase D 主定理 (親 surgery ~200-400 行)、D-2'' (B.2 原理的不可)、E-3' Phase B.2-E (~1400 行)、E-8'' Birkhoff 自前 (~400-600 行)。
+>
 > **Status (2026-05-13)**: 5 シード本体 + A 節 deferred 全件 + C 節 横断改善 全件 + **B 節 (B-1〜B-9 + 全 deferred B-1'/B-1''/B-2'/B-2''/B-5'/B-8'/B-3 Phase A+B/B-3'' Phase C+D) 完全完了**。audit-2026-05 棚卸し完了 (40🟢 / 9🟡 / 0🔴) + reuse-test-2026-05 (n-channel converse 再利用テスト、bridge ゼロ) 合格、両アーカイブは `docs/archive/`。Loomis–Whitney → Slepian–Wolf → AEP (Phase A〜F unified) → Stein (achievability + converse 半分 + liminf/limsup sandwich) → Polymatroid (structure 化込) → MaxEntropy → Pinsker (弱形 + シャープ形) → Brascamp–Lieb (組合せ形) + Hypercube product projection bound + Hypercube edge-boundary (AM-GM + entropy-sharp) → MI chain rule (n 変数 + i.i.d. corollary) → **Channel coding achievability (Cover-Thomas 7.7.1 半分、`R < I ⟹ ∃ code, P_err → 0`)** → Sanov A 形 → Sanov LDP B 形 (upper + equality 形双方向) → Strong Stein → Shannon code per-symbol (sandwich + Kraft 逆向き) → **AEP 完全形 D-3** → **Type-class size 下界 E-2** → **Strong typicality E-7** → **Csiszár I-projection E-6** → **Channel coding strong converse E-1 単発形** → **Slepian–Wolf achievability E-5 退化点 MVP** → **Channel coding general-input converse D-2 chain rule MVP (`log|M| ≤ ∑ I(X_i; Y^n | X^{<i}).toReal + Fano`、iid 仮定撤廃)** → **Rate-distortion converse E-4 single-shot MVP (`R(D̃).toReal ≤ log|M|` for `D̃ := 𝔼[d(X, decoder(encoder(X)))]`)** → **DMC feedback capacity converse E-10 chain rule + per-letter hypothesis MVP (`log|M| ≤ n·C + Fano`、`h_per_letter` 仮説形)** → **Differential entropy + Gaussian max-entropy E-9 完全形 (Phase A-E、`h(𝒩(m,v)) = (1/2) log(2πev)` + max-entropy + KL closed-form、`DifferentialEntropy.lean` 1010 行)** → **Shannon noisy channel coding theorem D-1 MVP (capacity 到達 + average→max + smoothing で hp_pos 内部処理、hW_pos のみユーザ仮定、`ChannelCodingShannonTheorem.lean` 918 行、4 ペア "弱/強形" 最後の未充足解消)** → **Feedback converse per-letter bound E-10' 完全形 (memoryless Markov reformulation 経路、`ChannelCodingFeedbackComplete.lean` 198 行、Cover-Thomas 7.12 完全形完走、CondMutualInfo 新規補題 0 行)** → **General converse memoryless per-summand bound D-2' MVP (撤退ライン形、`ChannelCodingConverseGeneralComplete.lean` 578 行、3 仮説 `h_yother_zero` / `h_split` / `h_markov_xprefix` を memoryless 性から派生可能形で受け取り、新規補題 `condMutualInfo_chain_rule_X_2var` / `_Y_2var`)** → **Rate-distortion monotonicity + specified-distortion form E-4' MVP (`RateDistortionConverseMonotone.lean` 151 行、`rateDistortionFunction_antitone` + `rate_distortion_converse_single_shot_specified`)** → **Shannon-McMillan-Breiman Phase A+B MVP (`Stationary.lean` 119 行 + `EntropyRate.lean` 498 行 = 617 行、定常過程 + entropy rate 定義 + 存在性、Phase C Birkhoff 自前 deferred)** → **Slepian-Wolf binning + 期待値 collapse E-5' Phase A+B MVP (`SlepianWolfBinning.lean` 273 行、`binningMeasure` + `binning_collision_prob` (Cover-Thomas 15.4 中核 collapse lemma))** → **Rate-distortion achievability E-3 Phase A 完全形 (`RateDistortionAchievability.lean` 461 行、`LossyCode` + pmf 直接形 `R(D)` `rateDistortionFunctionPmf` + 達成性 (`IsCompact.exists_isMinOn`) + entropy 形 `mutualInfoPmf` 連続性 + 単調性、後続 Phase B-E は E-3' deferred ~1500 行)** を **すべて 0 sorry** で通過。完了済みカードは本ファイルから撤去し、各 plan ファイル (`docs/<family>/*-plan.md`) に履歴を残置。**deferred 全件閉鎖**。**未実装 seed ゼロ**。新規 **D-1' / D-2'' / E-3' / E-4'' / E-5'' / E-8' deferred** 6 本を後継として登録。
 >
 > 起草時 (2026-05-10): Fano (測度論版) → Shannon converse (3 形) → Han 補集合形 → Han Phase D (subset average / Shearer) まで通った状態を起点に、次のムーンショット候補 5 本をシード化。
@@ -221,6 +223,13 @@
   Phase E (主定理 `rate_distortion_achievability`)。Phase A 完全形完了により後段の
   statement 着地点 (`RDConstraint`, `mutualInfoPmf`, `rateDistortionFunctionPmf`) が確定。
 
+  **E-3' Phase B.1 ✅ (2026-05-14、joint-typical lossy encoder + bundling MVP)** →
+  `Common2026/Shannon/RateDistortionAchievabilityPhaseB.lean` (83 行、0 sorry / 0 warning):
+  - `jointTypicalLossyEncoder μ Xs Ys hM ε c x`: `Classical.choose` で typical match `(x, c m) ∈ jointlyTypicalSet` の 1 つを選ぶ encoder。fallback `⟨0, hM⟩`。decoder 側 `jointTypicalDecoder` (`∃!` 要求) と対称、encoder は first match で十分なので `∃` ベース。
+  - `lossyCodeOfCodebook`: `LossyCode M n α β` への bundling (`encoder := jointTypicalLossyEncoder`, `decoder := c`)
+  - `jointTypicalLossyEncoder_spec_of_exists` / `_of_not_exists`: `dif_pos` / `dif_neg` 分岐の Classical.choose spec。
+  Phase B.2 以降 (`distortionTypicalSet` + WLLN 経由の確率収束 + average distortion bound) は次セッション。
+
 - **E-4. Rate-distortion converse** ✅ (2026-05-13, **single-shot MVP**) →
   [docs/shannon/rate-distortion-converse-plan.md](shannon/rate-distortion-converse-plan.md) —
   Cover-Thomas 10.4。`Common2026/Shannon/RateDistortionConverse.lean` (213 行) で
@@ -428,6 +437,12 @@
   - Mathlib に reversed/backward martingale 収束定理 (Lalley 標準証明の中核) は **不在**。
   - `Probability/StrongLaw.lean` は **独立変数** 前提で ergodic 過程に流用不能。
   - 推奨経路: 別 deferred 切り出し — **`E-8''` Birkhoff a.s. 自前** (backward martingale 自前 ~400-600 行 / Mathlib PR 候補) + **`E-8'` を Birkhoff 仮説形 SMB に弱体化** (Phase D 本体 `~150-200 行`、Cover-Thomas 16.8 仮説形で主目的達成)。
+
+  **E-8' weakened (sandwich 形 + 期待値 bridge) ✅ (2026-05-14)** → `Common2026/Shannon/ShannonMcMillanBreiman.lean` (179 行、0 sorry / 0 warning):
+  - `blockLogAvg μ p n ω := -(1/n) * log P_n({block_n ω})` 定義 + `measurable_blockLogAvg`
+  - **`shannon_mcmillan_breiman_of_sandwich`** (Phase D wrapper): Cover-Thomas 16.8 の **`liminf ≥ entropyRate` + `limsup ≤ entropyRate` + 有界性 4 仮説** から `Tendsto blockLogAvg n → entropyRate` a.s. を `filter_upwards` + `tendsto_of_le_liminf_of_limsup_le` で 3 行 derive。Birkhoff (E-8'') が完成したら 4 仮説を全て供給して仮定なし形に昇格できる正面 wrapper。
+  - **`expected_blockLogAvg_eq`** (期待値 sanity): `∫ ω, blockLogAvg μ p n ω ∂μ = blockEntropy μ p n / n` を `integral_map` + `integral_fintype` + `Real.negMulLog` rewrite + `ring` で。Birkhoff 不要、Phase B `entropy` 定義との bridge。
+  - **`tendsto_expected_blockLogAvg`**: 期待値レベル SMB `Tendsto (∫ blockLogAvg μ p n) atTop (𝓝 (entropyRate μ p))`、`entropyRate_exists_of_stationary` 経由 8 行。a.s. レベルが Phase C を必要とする部分。
 
 - **E-9. Differential entropy + Gaussian max-entropy** ✅ (2026-05-13) →
   [docs/shannon/differential-entropy-plan.md](shannon/differential-entropy-plan.md) —
