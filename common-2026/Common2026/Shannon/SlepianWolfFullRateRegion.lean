@@ -1444,4 +1444,163 @@ theorem swError_EXY_strict_expectation_le
         exact ENNReal.ofReal_ne_top
     _ = C * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := ENNReal.toReal_ofReal hRHS_nn
 
+/-! ## Phase F — Pigeonhole + finalize (Cover-Thomas 15.4.1 完全形)
+
+Phase D の 4 分解と Phase E.1-E.4 の bound を結合し、 binning expectation 上で
+total bound を取って pigeonhole で deterministic な encoder pair を取り出し、
+rate condition `R_X > H(Y|X)`, `R_Y > H(X|Y)`, `R_X + R_Y > H(X, Y)` の下で
+error probability → 0 を導く。
+
+本セクションは 4 declaration で構成される:
+
+* `entropy_joint_sub_marginal_eq_condEntropy` (bridge): `H(X,Y) - H(X) = H(Y|X)`.
+* `swErrorProb_total_expectation_le` (F.1): binning 上の 4 項総和 expectation bound.
+* `exists_pair_le_of_binning_integral_le` (F.2): 期待値 → deterministic 取り出し.
+* `slepian_wolf_full_rate_region_achievability` (F.3 主定理): rate region achievability.
+-/
+
+section PhaseF
+
+variable {α' β' Ω' : Type*}
+  [MeasurableSpace Ω']
+  [Fintype α'] [DecidableEq α'] [Nonempty α']
+    [MeasurableSpace α'] [MeasurableSingletonClass α']
+  [Fintype β'] [DecidableEq β'] [Nonempty β']
+    [MeasurableSpace β'] [MeasurableSingletonClass β']
+
+/-- **Bridge**: `H(X, Y) - H(X) = H(Y | X)`. Direct corollary of chain rule
+`entropy_pair_eq_entropy_add_condEntropy`. -/
+private lemma entropy_joint_sub_marginal_eq_condEntropy
+    (μ : Measure Ω') [IsProbabilityMeasure μ]
+    (X : Ω' → α') (Y : Ω' → β') (hX : Measurable X) (hY : Measurable Y) :
+    entropy μ (fun ω => (X ω, Y ω)) - entropy μ X
+      = InformationTheory.MeasureFano.condEntropy μ Y X := by
+  have h := entropy_pair_eq_entropy_add_condEntropy μ X Y hX hY
+  linarith
+
+end PhaseF
+
+/-- **F.1**: Phase D 4 分解 + Phase E.4 subset 吸収を結合した
+binning expectation total bound. 係数 2 は `EXY ⊆ EX ∪ EY ∪ EXY_strict` の
+2 重カウントを吸収. **本 commit では skeleton (sorry)**. -/
+private theorem swErrorProb_total_expectation_le
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindepY_full : iIndepFun (fun i => Ys i) μ)
+    (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
+    (hindepX_full : iIndepFun (fun i => Xs i) μ)
+    (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hindepZ_full : iIndepFun (fun i => jointSequence Xs Ys i) μ)
+    (hidentZ : ∀ i,
+      IdentDistrib (jointSequence Xs Ys i) (jointSequence Xs Ys 0) μ μ)
+    (hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
+    (hposZ : ∀ p : α × β,
+      0 < (μ.map (jointSequence Xs Ys 0)).real {p})
+    {n M_X M_Y : ℕ} [NeZero M_X] [NeZero M_Y] {ε : ℝ} (hε : 0 < ε) :
+    ∫ f_X, ∫ f_Y,
+        swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+          (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
+      ∂(binningMeasure β n M_Y) ∂(binningMeasure α n M_X)
+      ≤ μ.real (swError_E0 μ Xs Ys n ε)
+        + 2 * (Real.exp ((n : ℝ) *
+            (entropy μ (jointSequence Xs Ys 0) - entropy μ (Ys 0) + 2 * ε))
+              * ((M_X : ℝ))⁻¹)
+        + 2 * (Real.exp ((n : ℝ) *
+            (entropy μ (jointSequence Xs Ys 0) - entropy μ (Xs 0) + 2 * ε))
+              * ((M_Y : ℝ))⁻¹)
+        + Real.exp ((n : ℝ) * (entropy μ (jointSequence Xs Ys 0) + ε))
+            * ((M_X : ℝ))⁻¹ * ((M_Y : ℝ))⁻¹ := by
+  -- Strategy (5 step, 次セッション fill):
+  -- 1. `integral_mono` で Phase D 主分解 `swErrorProb_le_E0_plus_EX_plus_EY_plus_EXY` を
+  --    pointwise 適用. EX, EY, EXY 4 項に分割.
+  -- 2. ∫ μ.real (E_0) ∂B_X ∂B_Y = μ.real (E_0) (E_0 は f に非依存)、IsProbabilityMeasure で
+  --    1 吸収 (`integral_const` + `measure_univ`).
+  -- 3. EXY 項を `swError_EXY_subset_union` で展開、`measureReal_union_le` で
+  --    `μ.real EXY ≤ μ.real EX + μ.real EY + μ.real EXY_strict`. 係数 2 が出る.
+  -- 4. 残り 4 項を E.2 (`swError_EX_expectation_le`) / E.3 (`swError_EY_expectation_le`) /
+  --    E.4 strict (`swError_EXY_strict_expectation_le`) の expectation bound に各々帰着.
+  -- 5. Fubini で B_X, B_Y の積分順序自由 (`MeasureTheory.integral_prod` /
+  --    `integral_prod_swap`). 注意: EX は f_Y 非依存, EY は f_X 非依存なので
+  --    `integral_const` で対応する側を消費する.
+  sorry
+
+/-- **F.2 pigeonhole**: 期待値 ≤ δ から deterministic 取り出し。
+First moment method (`MeasureTheory.exists_le_integral`) を 2 回適用。 -/
+private lemma exists_pair_le_of_binning_integral_le
+    {n M_X M_Y : ℕ} [NeZero M_X] [NeZero M_Y]
+    (g : ((Fin n → α) → Fin M_X) → ((Fin n → β) → Fin M_Y) → ℝ)
+    (hg_int_inner : ∀ f_X, Integrable (fun f_Y => g f_X f_Y) (binningMeasure β n M_Y))
+    (hg_int_outer :
+      Integrable (fun f_X => ∫ f_Y, g f_X f_Y ∂(binningMeasure β n M_Y))
+        (binningMeasure α n M_X))
+    {δ : ℝ}
+    (hδ : ∫ f_X, ∫ f_Y, g f_X f_Y
+              ∂(binningMeasure β n M_Y) ∂(binningMeasure α n M_X) ≤ δ) :
+    ∃ f_X : (Fin n → α) → Fin M_X, ∃ f_Y : (Fin n → β) → Fin M_Y,
+      g f_X f_Y ≤ δ := by
+  classical
+  -- First moment on the outer integral: ∃ f_X, ∫ f_Y, g f_X f_Y ≤ ∫∫.
+  obtain ⟨f_X, hf_X⟩ : ∃ f_X : (Fin n → α) → Fin M_X,
+      (∫ f_Y, g f_X f_Y ∂(binningMeasure β n M_Y))
+        ≤ ∫ f_X', (∫ f_Y, g f_X' f_Y ∂(binningMeasure β n M_Y))
+            ∂(binningMeasure α n M_X) :=
+    MeasureTheory.exists_le_integral hg_int_outer
+  have hf_X_bound :
+      (∫ f_Y, g f_X f_Y ∂(binningMeasure β n M_Y)) ≤ δ :=
+    le_trans hf_X hδ
+  -- First moment on the inner integral: ∃ f_Y, g f_X f_Y ≤ ∫ f_Y, g f_X f_Y.
+  obtain ⟨f_Y, hf_Y⟩ : ∃ f_Y : (Fin n → β) → Fin M_Y,
+      g f_X f_Y ≤ ∫ f_Y', g f_X f_Y' ∂(binningMeasure β n M_Y) :=
+    MeasureTheory.exists_le_integral (hg_int_inner f_X)
+  exact ⟨f_X, f_Y, le_trans hf_Y hf_X_bound⟩
+
+/-- **F.3 主定理 (Cover-Thomas 15.4.1 完全形)**:
+Slepian-Wolf rate region achievability. condEntropy 形 hypothesis. **本 commit では skeleton (sorry)**. -/
+theorem slepian_wolf_full_rate_region_achievability
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindepX_full : iIndepFun (fun i => Xs i) μ)
+    (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hindepY_full : iIndepFun (fun i => Ys i) μ)
+    (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
+    (hindepZ_full : iIndepFun (fun i => jointSequence Xs Ys i) μ)
+    (hidentZ : ∀ i,
+      IdentDistrib (jointSequence Xs Ys i) (jointSequence Xs Ys 0) μ μ)
+    (hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
+    (hposZ : ∀ p : α × β,
+      0 < (μ.map (jointSequence Xs Ys 0)).real {p})
+    {R_X R_Y : ℝ}
+    (hRX : InformationTheory.MeasureFano.condEntropy μ (Ys 0) (Xs 0) < R_X)
+    (hRY : InformationTheory.MeasureFano.condEntropy μ (Xs 0) (Ys 0) < R_Y)
+    (hRXY : entropy μ (jointSequence Xs Ys 0) < R_X + R_Y) :
+    ∃ (M_X M_Y : ℕ → ℕ),
+      (∀ n, 0 < M_X n) ∧ (∀ n, 0 < M_Y n) ∧
+    ∃ (f_X : ∀ n, (Fin n → α) → Fin (M_X n))
+      (_f_Y : ∀ n, (Fin n → β) → Fin (M_Y n))
+      (_d : ∀ n, Fin (M_X n) × Fin (M_Y n) → (Fin n → α) × (Fin n → β)),
+      Filter.Tendsto (fun n => Real.log (M_X n : ℝ) / n) Filter.atTop (𝓝 R_X) ∧
+      Filter.Tendsto (fun n => Real.log (M_Y n : ℝ) / n) Filter.atTop (𝓝 R_Y) ∧
+      Filter.Tendsto (fun n => swErrorProb μ (jointRV Xs n) (jointRV Ys n)
+                          (f_X n) (_f_Y n) (_d n)) Filter.atTop (𝓝 0) := by
+  -- Strategy (6 step, 次セッション fill):
+  -- 0. ε > 0 slack を chain rule bridge で固定:
+  --    bridge: `entropy(joint) - entropy(Xs 0) = condEntropy (Ys 0) (Xs 0)` (本 lemma で publish).
+  --    対称: `entropy(joint) - entropy(Ys 0) = condEntropy (Xs 0) (Ys 0)` (X,Y swap で).
+  --    3ε < min(R_X - condEntropy Y X, R_Y - condEntropy X Y, (R_X+R_Y) - entropy(joint)).
+  -- 1. `M_X n := codebookSize R_X n`, `M_Y n := codebookSize R_Y n`. positivity OK.
+  -- 2. expectation bound F.1 適用、`Nat.le_ceil` で `M_X ≥ exp(n · R_X)` を入れて
+  --    各項を `exp(- n · slack)` 形に reduce. (EX 項: `exp(n(H_Z - H_Y + 2ε)) / M_X
+  --    ≤ exp(n(H_Z - H_Y + 2ε - R_X)) = exp(n(condEntropy Y X + 2ε - R_X))` < 1 となる.)
+  -- 3. 任意 δ > 0、`Real.tendsto_exp_atBot_nhds_zero` 系で N 取って `n ≥ N` で総期待値 < δ.
+  -- 4. `exists_pair_le_of_binning_integral_le` で各 n に対し `f_X n, f_Y n` 抽出
+  --    (`Classical.choose` で family を構成).
+  -- 5. decoder := `swJointTypicalDecoder μ Xs Ys ε (f_X n) (f_Y n)`.
+  -- 6. rate Tendsto は `codebookSize_log_div_tendsto` で出る。error Tendsto 0 は
+  --    Step 3-4 の任意 δ で囲める形を `Metric.tendsto_atTop` で組み立て.
+  sorry
+
 end InformationTheory.Shannon.ChannelCoding
