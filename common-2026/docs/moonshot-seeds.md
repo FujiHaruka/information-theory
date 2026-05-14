@@ -292,16 +292,15 @@
   `codebookMeasure` Mathlib API (`Measure.pi` + `uniformOn`) で独立定義経路 (Plan 0 判断 (B))、
   既存 `ChannelCodingAchievability` 親 file 不変。
 
-  **後継 `E-5''` deferred**: Cover-Thomas 15.4 完全形 (3-bound 同時 achievability) の Phase C-F
-  ~1700 行: conditional typical slice size bound + error decomposition + per-term expectation +
-  pigeonhole + 主定理。本 MVP の `binning_collision_prob` を中核として再利用。
-  **Phase C 完了** (`SlepianWolfConditionalTypicalSlice.lean` 315 行、conditional typical slice
-  size bound `≤ exp(n · (H(X|Y) + 2ε))`)、**Phase D 完了** (`SlepianWolfFullRateRegion.lean` 321 行、
-  `swJointTypicalDecoder` + 4-way error decomposition
-  `swErrorProb ≤ μ(E_0) + μ(E_X) + μ(E_Y) + μ(E_{XY})`)、**Phase E 完了** (同 file 1447 行、
-  `swError_E0_prob_tendsto_zero` + `swError_EX_expectation_le` + `swError_EY_expectation_le` +
-  `swError_EXY_strict_expectation_le` (E.4 では loose case を `swError_EXY_subset_union` 経由で
-  `E_X`/`E_Y` に吸収し、strict 形 `|JTS|/(M_X · M_Y)` bound を主結果として publish))。Phase F deferred。
+  **後継 `E-5''` 完結** (2026-05-14): Cover-Thomas 15.4.1 完全形 (3-bound 同時 achievability)。
+  本 MVP の `binning_collision_prob` を中核として再利用、Phase A〜F すべて publish:
+  Phase C `SlepianWolfConditionalTypicalSlice.lean` (315 行、conditional typical slice size bound
+  `≤ exp(n · (H(X|Y) + 2ε))`)、Phase D + E + F は `SlepianWolfFullRateRegion.lean` (2474 行、
+  0 sorry / 0 warning) に集約: `swJointTypicalDecoder` + 4-way error decomposition + Phase E
+  各 E_0/E_X/E_Y/E_{XY,strict} expectation bound + Phase F.0/F.1/F.2/F.3 (bridge + 期待値
+  aggregator + pigeonhole + **主定理 `slepian_wolf_full_rate_region_achievability`**)。主定理は
+  hypothesis `H(X|Y) < R_X, H(Y|X) < R_Y, H(X,Y) < R_X + R_Y` で codebook size `⌈exp(n·R_X)⌉,
+  `⌈exp(n·R_Y)⌉` を取り、encoder/decoder と error → 0 を Cover-Thomas 15.4.1 完全形で確立。
 
 - **E-6. Csiszár I-projection / Pythagorean inequality** ✅ (2026-05-13) →
   [docs/shannon/csiszar-projection-plan.md](shannon/csiszar-projection-plan.md) —

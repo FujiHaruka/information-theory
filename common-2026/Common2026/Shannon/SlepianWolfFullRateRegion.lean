@@ -1930,7 +1930,29 @@ private lemma exists_pair_le_of_binning_integral_le
   exact ⟨f_X, f_Y, le_trans hf_Y hf_X_bound⟩
 
 /-- **F.3 主定理 (Cover-Thomas 15.4.1 完全形)**:
-Slepian-Wolf rate region achievability. condEntropy 形 hypothesis. **本 commit では skeleton (sorry)**. -/
+Slepian-Wolf rate region achievability. `condEntropy` 形 hypothesis.
+
+任意の `(R_X, R_Y)` で `R_X > H(X|Y)`, `R_Y > H(Y|X)`, `R_X + R_Y > H(X,Y)` を満たすとき、
+`M_X n, M_Y n := ⌈exp(n·R_X)⌉, ⌈exp(n·R_Y)⌉` と取って、
+随伴する encoder `f_X n, f_Y n` と decoder `d n` が存在して
+rate が `R_X, R_Y` に収束し、error 確率が 0 に収束する。
+
+戦略:
+* slack `ε := min(sX, sY, sXY) / 6` (with `sX := R_X - H(X|Y)`, `sY := R_Y - H(Y|X)`,
+  `sXY := R_X + R_Y - H(X,Y)`, 全部 > 0).
+* `M_X n := codebookSize R_X n = ⌈exp(n·R_X)⌉`, 同様に `M_Y n`. positivity は `codebookSize_pos`.
+* F.1 expectation bound に `Nat.le_ceil` を組合せ、4 項の bound `B n` を構成:
+  `B n := μ.real(E_0 n) + 2·exp(-n·(sX - 2ε)) + 2·exp(-n·(sY - 2ε)) + exp(-n·(sXY - ε))`
+  (`M_X n ≥ exp(n·R_X)` 等で割って指数 reduce: EX 項の `exp(n(H_Z - H_Y + 2ε)) = exp(n(H(X|Y) + 2ε))`
+  を `exp(n·R_X)` で割って `exp(-n(R_X - H(X|Y) - 2ε)) = exp(-n(sX - 2ε))`.)
+* 各項 → 0: E_0 は E.1 で、残り 3 項は `Real.tendsto_exp_atBot.comp` で.
+* F.2 pigeonhole で per-n に `(f_X n, f_Y n)` 抽出 (`Classical.choose` で family).
+* rate Tendsto は `codebookSize_log_div_tendsto` 直接適用.
+* error Tendsto 0 は `squeeze_zero` で `0 ≤ swErrorProb (...) ≤ B n → 0`.
+
+注意: hypothesis は `condEntropy μ (Xs 0) (Ys 0) = H(X|Y) < R_X` の形 (alias-side bound).
+これは F.1 の EX 項の slack 方向に対応する。
+"対称" な `condEntropy μ (Ys 0) (Xs 0) = H(Y|X) < R_Y` も同様に EY 項に対応。 -/
 theorem slepian_wolf_full_rate_region_achievability
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
@@ -1947,8 +1969,8 @@ theorem slepian_wolf_full_rate_region_achievability
     (hposZ : ∀ p : α × β,
       0 < (μ.map (jointSequence Xs Ys 0)).real {p})
     {R_X R_Y : ℝ}
-    (hRX : InformationTheory.MeasureFano.condEntropy μ (Ys 0) (Xs 0) < R_X)
-    (hRY : InformationTheory.MeasureFano.condEntropy μ (Xs 0) (Ys 0) < R_Y)
+    (hRX : InformationTheory.MeasureFano.condEntropy μ (Xs 0) (Ys 0) < R_X)
+    (hRY : InformationTheory.MeasureFano.condEntropy μ (Ys 0) (Xs 0) < R_Y)
     (hRXY : entropy μ (jointSequence Xs Ys 0) < R_X + R_Y) :
     ∃ (M_X M_Y : ℕ → ℕ),
       (∀ n, 0 < M_X n) ∧ (∀ n, 0 < M_Y n) ∧
@@ -1959,21 +1981,494 @@ theorem slepian_wolf_full_rate_region_achievability
       Filter.Tendsto (fun n => Real.log (M_Y n : ℝ) / n) Filter.atTop (𝓝 R_Y) ∧
       Filter.Tendsto (fun n => swErrorProb μ (jointRV Xs n) (jointRV Ys n)
                           (f_X n) (_f_Y n) (_d n)) Filter.atTop (𝓝 0) := by
-  -- Strategy (6 step, 次セッション fill):
-  -- 0. ε > 0 slack を chain rule bridge で固定:
-  --    bridge: `entropy(joint) - entropy(Xs 0) = condEntropy (Ys 0) (Xs 0)` (本 lemma で publish).
-  --    対称: `entropy(joint) - entropy(Ys 0) = condEntropy (Xs 0) (Ys 0)` (X,Y swap で).
-  --    3ε < min(R_X - condEntropy Y X, R_Y - condEntropy X Y, (R_X+R_Y) - entropy(joint)).
-  -- 1. `M_X n := codebookSize R_X n`, `M_Y n := codebookSize R_Y n`. positivity OK.
-  -- 2. expectation bound F.1 適用、`Nat.le_ceil` で `M_X ≥ exp(n · R_X)` を入れて
-  --    各項を `exp(- n · slack)` 形に reduce. (EX 項: `exp(n(H_Z - H_Y + 2ε)) / M_X
-  --    ≤ exp(n(H_Z - H_Y + 2ε - R_X)) = exp(n(condEntropy Y X + 2ε - R_X))` < 1 となる.)
-  -- 3. 任意 δ > 0、`Real.tendsto_exp_atBot_nhds_zero` 系で N 取って `n ≥ N` で総期待値 < δ.
-  -- 4. `exists_pair_le_of_binning_integral_le` で各 n に対し `f_X n, f_Y n` 抽出
-  --    (`Classical.choose` で family を構成).
-  -- 5. decoder := `swJointTypicalDecoder μ Xs Ys ε (f_X n) (f_Y n)`.
-  -- 6. rate Tendsto は `codebookSize_log_div_tendsto` で出る。error Tendsto 0 は
-  --    Step 3-4 の任意 δ で囲める形を `Metric.tendsto_atTop` で組み立て.
-  sorry
+  classical
+  -- ## Step 0: bridge + slack ε.
+  -- abbreviations.
+  set H_Z : ℝ := entropy μ (jointSequence Xs Ys 0) with hH_Z_def
+  set H_X : ℝ := entropy μ (Xs 0) with hH_X_def
+  set H_Y : ℝ := entropy μ (Ys 0) with hH_Y_def
+  -- HYX := H(Y|X) = condEntropy μ (Ys 0) (Xs 0). HXY := H(X|Y) = condEntropy μ (Xs 0) (Ys 0).
+  set HYX : ℝ := InformationTheory.MeasureFano.condEntropy μ (Ys 0) (Xs 0) with hHYX_def
+  set HXY : ℝ := InformationTheory.MeasureFano.condEntropy μ (Xs 0) (Ys 0) with hHXY_def
+  -- Bridges (chain rule):
+  --   `H_Z - H_X = H(Y|X) = HYX` (apply with X := Xs 0, Y := Ys 0).
+  --   `H_Z - H_Y = H(X|Y) = HXY` (apply with X := Ys 0, Y := Xs 0 then Prod.swap).
+  have h_bridge_YX : H_Z - H_X = HYX := by
+    have h := entropy_joint_sub_marginal_eq_condEntropy μ (Xs 0) (Ys 0)
+      (hXs 0) (hYs 0)
+    simpa [hH_Z_def, hH_X_def, hHYX_def, jointSequence] using h
+  have h_bridge_XY : H_Z - H_Y = HXY := by
+    have h := entropy_joint_sub_marginal_eq_condEntropy μ (Ys 0) (Xs 0)
+      (hYs 0) (hXs 0)
+    -- h : entropy μ (fun ω => (Ys 0 ω, Xs 0 ω)) - entropy μ (Ys 0) = H(X|Y)
+    -- Need: entropy μ (fun ω => (Ys 0 ω, Xs 0 ω)) = H_Z.
+    have h_swap : entropy μ (fun ω => (Ys 0 ω, Xs 0 ω))
+        = entropy μ (jointSequence Xs Ys 0) := by
+      have hZ : Measurable (jointSequence Xs Ys 0) :=
+        measurable_jointSequence Xs Ys hXs hYs 0
+      -- (Ys 0 ω, Xs 0 ω) = Prod.swap (jointSequence Xs Ys 0 ω) = e (jointSequence Xs Ys 0 ω)
+      -- with e := MeasurableEquiv.prodComm.
+      have h_id : (fun ω => (Ys 0 ω, Xs 0 ω))
+          = (fun ω => (MeasurableEquiv.prodComm : α × β ≃ᵐ β × α)
+                          (jointSequence Xs Ys 0 ω)) := by
+        funext ω
+        simp [jointSequence, MeasurableEquiv.prodComm, Equiv.prodComm]
+      rw [h_id]
+      exact entropy_measurableEquiv_comp μ (jointSequence Xs Ys 0) hZ
+        (MeasurableEquiv.prodComm)
+    rw [h_swap] at h
+    simpa [hH_Z_def, hH_Y_def, hHXY_def] using h
+  -- slacks: sX = R_X - H(X|Y), sY = R_Y - H(Y|X), sXY = R_X + R_Y - H(X,Y).
+  set sX : ℝ := R_X - HXY with hsX_def
+  set sY : ℝ := R_Y - HYX with hsY_def
+  set sXY : ℝ := R_X + R_Y - H_Z with hsXY_def
+  have hsX_pos : 0 < sX := by
+    show 0 < R_X - HXY; linarith
+  have hsY_pos : 0 < sY := by
+    show 0 < R_Y - HYX; linarith
+  have hsXY_pos : 0 < sXY := by
+    show 0 < R_X + R_Y - H_Z; linarith
+  -- `R_X, R_Y > 0` (since `condEntropy ≥ 0`).
+  have hHYX_nn : 0 ≤ HYX := by
+    simpa [hHYX_def] using condEntropy_nonneg μ (Ys 0) (Xs 0)
+  have hHXY_nn : 0 ≤ HXY := by
+    simpa [hHXY_def] using condEntropy_nonneg μ (Xs 0) (Ys 0)
+  have hRX_pos : 0 < R_X := lt_of_le_of_lt hHXY_nn hRX
+  have hRY_pos : 0 < R_Y := lt_of_le_of_lt hHYX_nn hRY
+  -- ε := min(sX, sY, sXY) / 6.
+  set ε : ℝ := (min (min sX sY) sXY) / 6 with hε_def
+  have hε : 0 < ε := by
+    have h1 : 0 < min (min sX sY) sXY := lt_min (lt_min hsX_pos hsY_pos) hsXY_pos
+    have h6 : (0 : ℝ) < 6 := by norm_num
+    exact div_pos h1 h6
+  -- ε ≤ sX/6, ε ≤ sY/6, ε ≤ sXY/6.
+  have h_min_le_sX : min (min sX sY) sXY ≤ sX :=
+    (min_le_left _ _).trans (min_le_left _ _)
+  have h_min_le_sY : min (min sX sY) sXY ≤ sY :=
+    (min_le_left _ _).trans (min_le_right _ _)
+  have h_min_le_sXY : min (min sX sY) sXY ≤ sXY := min_le_right _ _
+  -- Slack lower bounds: sX - 2ε ≥ 2 sX / 3, sY - 2ε ≥ 2 sY / 3, sXY - ε ≥ 5 sXY / 6.
+  have hslack_X : 0 < sX - 2 * ε := by
+    have : 6 * ε ≤ sX := by
+      have := h_min_le_sX
+      have h6 : (0 : ℝ) ≤ 6 := by norm_num
+      nlinarith [h_min_le_sX, hsX_pos]
+    nlinarith [hsX_pos, this]
+  have hslack_Y : 0 < sY - 2 * ε := by
+    have : 6 * ε ≤ sY := by nlinarith [h_min_le_sY, hsY_pos]
+    nlinarith [hsY_pos, this]
+  have hslack_XY : 0 < sXY - ε := by
+    have : 6 * ε ≤ sXY := by nlinarith [h_min_le_sXY, hsXY_pos]
+    nlinarith [hsXY_pos, this]
+  -- Convert iIndepFun → Pairwise ⟂ᵢ (needed by `swError_E0_prob_tendsto_zero`).
+  have hindepX : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j := by
+    intro i j hij; exact hindepX_full.indepFun hij
+  have hindepY : Pairwise fun i j => Ys i ⟂ᵢ[μ] Ys j := by
+    intro i j hij; exact hindepY_full.indepFun hij
+  have hindepZ : Pairwise fun i j =>
+      jointSequence Xs Ys i ⟂ᵢ[μ] jointSequence Xs Ys j := by
+    intro i j hij; exact hindepZ_full.indepFun hij
+  -- ## Step 1: codebook sizes.
+  set M_X : ℕ → ℕ := fun n => InformationTheory.Shannon.codebookSize R_X n with hM_X_def
+  set M_Y : ℕ → ℕ := fun n => InformationTheory.Shannon.codebookSize R_Y n with hM_Y_def
+  have hM_X_pos : ∀ n, 0 < M_X n := fun n =>
+    InformationTheory.Shannon.codebookSize_pos R_X n
+  have hM_Y_pos : ∀ n, 0 < M_Y n := fun n =>
+    InformationTheory.Shannon.codebookSize_pos R_Y n
+  haveI hMX_neZero : ∀ n, NeZero (M_X n) := fun n => ⟨(hM_X_pos n).ne'⟩
+  haveI hMY_neZero : ∀ n, NeZero (M_Y n) := fun n => ⟨(hM_Y_pos n).ne'⟩
+  -- `M_X n ≥ exp(n·R_X)`, similarly for Y. (Cast to ℝ.)
+  have hM_X_ge : ∀ n : ℕ, Real.exp ((n : ℝ) * R_X) ≤ (M_X n : ℝ) := by
+    intro n
+    show Real.exp ((n : ℝ) * R_X)
+      ≤ (InformationTheory.Shannon.codebookSize R_X n : ℝ)
+    unfold InformationTheory.Shannon.codebookSize
+    exact Nat.le_ceil _
+  have hM_Y_ge : ∀ n : ℕ, Real.exp ((n : ℝ) * R_Y) ≤ (M_Y n : ℝ) := by
+    intro n
+    show Real.exp ((n : ℝ) * R_Y)
+      ≤ (InformationTheory.Shannon.codebookSize R_Y n : ℝ)
+    unfold InformationTheory.Shannon.codebookSize
+    exact Nat.le_ceil _
+  -- ## Step 2: per-n expectation bound `B n` and `∫∫ swErrorProb ≤ B n`.
+  -- B n := μ.real(E0 n) + 2·exp(-n·(sX-2ε)) + 2·exp(-n·(sY-2ε)) + exp(-n·(sXY-ε)).
+  set B : ℕ → ℝ := fun n =>
+      μ.real (swError_E0 μ Xs Ys n ε)
+      + 2 * Real.exp (- (n : ℝ) * (sX - 2 * ε))
+      + 2 * Real.exp (- (n : ℝ) * (sY - 2 * ε))
+      + Real.exp (- (n : ℝ) * (sXY - ε)) with hB_def
+  -- For each n, ∫∫ swErrorProb ≤ B n.
+  have hExp_bound : ∀ n,
+      ∫ f_X, ∫ f_Y,
+          swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+            (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
+          ∂(binningMeasure β n (M_Y n)) ∂(binningMeasure α n (M_X n))
+        ≤ B n := by
+    intro n
+    haveI : NeZero (M_X n) := hMX_neZero n
+    haveI : NeZero (M_Y n) := hMY_neZero n
+    have hF1 :=
+      swErrorProb_total_expectation_le μ Xs Ys hXs hYs
+        hindepY_full hidentY hindepX_full hidentX hindepZ_full hidentZ
+        hposX hposY hposZ (M_X := M_X n) (M_Y := M_Y n) (n := n) hε
+    -- F.1 RHS:
+    --   μ.real E0 + 2·exp(n(H_Z - H_Y + 2ε))/M_X + 2·exp(n(H_Z - H_X + 2ε))/M_Y
+    --             + exp(n(H_Z + ε))/(M_X·M_Y).
+    -- Generic helper: (A : ℝ) * (M)⁻¹ ≤ A * (exp(n·R))⁻¹ if M ≥ exp(n·R) > 0 and A ≥ 0.
+    -- Replace each ratio by exp(-n·slack).
+    -- EX ratio: H_Z - H_Y + 2ε = HXY + 2ε. Slack: R_X - HXY - 2ε = sX - 2ε.
+    have hEX_ratio : 2 * (Real.exp ((n : ℝ) * (H_Z - H_Y + 2 * ε))
+              * ((M_X n : ℝ))⁻¹)
+        ≤ 2 * Real.exp (- (n : ℝ) * (sX - 2 * ε)) := by
+      have hexp_pos : 0 < Real.exp ((n : ℝ) * (H_Z - H_Y + 2 * ε)) := Real.exp_pos _
+      have hexp_R_pos : 0 < Real.exp ((n : ℝ) * R_X) := Real.exp_pos _
+      have hMX_pos_r : (0 : ℝ) < (M_X n : ℝ) := by exact_mod_cast hM_X_pos n
+      have h_inv_le : (M_X n : ℝ)⁻¹ ≤ (Real.exp ((n : ℝ) * R_X))⁻¹ :=
+        (inv_le_inv₀ hMX_pos_r hexp_R_pos).mpr (hM_X_ge n)
+      have h_step1 :
+          Real.exp ((n : ℝ) * (H_Z - H_Y + 2 * ε)) * ((M_X n : ℝ))⁻¹
+            ≤ Real.exp ((n : ℝ) * (H_Z - H_Y + 2 * ε))
+                * (Real.exp ((n : ℝ) * R_X))⁻¹ :=
+        mul_le_mul_of_nonneg_left h_inv_le hexp_pos.le
+      -- Reduce exp ratio: exp(n·(H_Z - H_Y + 2ε)) / exp(n·R_X) = exp(-n·(sX - 2ε)).
+      have h_step2 :
+          Real.exp ((n : ℝ) * (H_Z - H_Y + 2 * ε))
+                * (Real.exp ((n : ℝ) * R_X))⁻¹
+            = Real.exp (- (n : ℝ) * (sX - 2 * ε)) := by
+        rw [← Real.exp_neg, ← Real.exp_add]
+        apply congrArg Real.exp
+        have hb : H_Z - H_Y = HXY := h_bridge_XY
+        have hsX_eq : sX = R_X - HXY := rfl
+        rw [hsX_eq, ← hb]; ring
+      have h_chained : Real.exp ((n : ℝ) * (H_Z - H_Y + 2 * ε)) * ((M_X n : ℝ))⁻¹
+            ≤ Real.exp (- (n : ℝ) * (sX - 2 * ε)) :=
+        h_step1.trans_eq h_step2
+      linarith [mul_le_mul_of_nonneg_left h_chained (by norm_num : (0 : ℝ) ≤ 2)]
+    -- EY ratio: H_Z - H_X + 2ε = HYX + 2ε. Slack: R_Y - HYX - 2ε = sY - 2ε.
+    have hEY_ratio : 2 * (Real.exp ((n : ℝ) * (H_Z - H_X + 2 * ε))
+              * ((M_Y n : ℝ))⁻¹)
+        ≤ 2 * Real.exp (- (n : ℝ) * (sY - 2 * ε)) := by
+      have hexp_pos : 0 < Real.exp ((n : ℝ) * (H_Z - H_X + 2 * ε)) := Real.exp_pos _
+      have hexp_R_pos : 0 < Real.exp ((n : ℝ) * R_Y) := Real.exp_pos _
+      have hMY_pos_r : (0 : ℝ) < (M_Y n : ℝ) := by exact_mod_cast hM_Y_pos n
+      have h_inv_le : (M_Y n : ℝ)⁻¹ ≤ (Real.exp ((n : ℝ) * R_Y))⁻¹ :=
+        (inv_le_inv₀ hMY_pos_r hexp_R_pos).mpr (hM_Y_ge n)
+      have h_step1 :
+          Real.exp ((n : ℝ) * (H_Z - H_X + 2 * ε)) * ((M_Y n : ℝ))⁻¹
+            ≤ Real.exp ((n : ℝ) * (H_Z - H_X + 2 * ε))
+                * (Real.exp ((n : ℝ) * R_Y))⁻¹ :=
+        mul_le_mul_of_nonneg_left h_inv_le hexp_pos.le
+      have h_step2 :
+          Real.exp ((n : ℝ) * (H_Z - H_X + 2 * ε))
+                * (Real.exp ((n : ℝ) * R_Y))⁻¹
+            = Real.exp (- (n : ℝ) * (sY - 2 * ε)) := by
+        rw [← Real.exp_neg, ← Real.exp_add]
+        apply congrArg Real.exp
+        have hb : H_Z - H_X = HYX := h_bridge_YX
+        have hsY_eq : sY = R_Y - HYX := rfl
+        rw [hsY_eq, ← hb]; ring
+      have h_chained : Real.exp ((n : ℝ) * (H_Z - H_X + 2 * ε)) * ((M_Y n : ℝ))⁻¹
+            ≤ Real.exp (- (n : ℝ) * (sY - 2 * ε)) :=
+        h_step1.trans_eq h_step2
+      linarith [mul_le_mul_of_nonneg_left h_chained (by norm_num : (0 : ℝ) ≤ 2)]
+    -- EXY_strict ratio: exp(n(H_Z + ε)) / (M_X · M_Y) ≤ exp(-n(sXY - ε)).
+    -- Slack: R_X + R_Y - H_Z - ε = sXY - ε.
+    have hEXY_ratio :
+        Real.exp ((n : ℝ) * (H_Z + ε)) * ((M_X n : ℝ))⁻¹ * ((M_Y n : ℝ))⁻¹
+          ≤ Real.exp (- (n : ℝ) * (sXY - ε)) := by
+      have hexp_pos : 0 < Real.exp ((n : ℝ) * (H_Z + ε)) := Real.exp_pos _
+      have hexp_RX_pos : 0 < Real.exp ((n : ℝ) * R_X) := Real.exp_pos _
+      have hexp_RY_pos : 0 < Real.exp ((n : ℝ) * R_Y) := Real.exp_pos _
+      have hMX_pos_r : (0 : ℝ) < (M_X n : ℝ) := by exact_mod_cast hM_X_pos n
+      have hMY_pos_r : (0 : ℝ) < (M_Y n : ℝ) := by exact_mod_cast hM_Y_pos n
+      have h_inv_X_le : (M_X n : ℝ)⁻¹ ≤ (Real.exp ((n : ℝ) * R_X))⁻¹ :=
+        (inv_le_inv₀ hMX_pos_r hexp_RX_pos).mpr (hM_X_ge n)
+      have h_inv_Y_le : (M_Y n : ℝ)⁻¹ ≤ (Real.exp ((n : ℝ) * R_Y))⁻¹ :=
+        (inv_le_inv₀ hMY_pos_r hexp_RY_pos).mpr (hM_Y_ge n)
+      -- exp(n(H_Z+ε)) * (M_X)⁻¹ * (M_Y)⁻¹ ≤ exp(n(H_Z+ε)) * exp(-nR_X) * exp(-nR_Y).
+      have h_mid : Real.exp ((n : ℝ) * (H_Z + ε)) * ((M_X n : ℝ))⁻¹
+              * ((M_Y n : ℝ))⁻¹
+            ≤ Real.exp ((n : ℝ) * (H_Z + ε))
+                * (Real.exp ((n : ℝ) * R_X))⁻¹
+                * (Real.exp ((n : ℝ) * R_Y))⁻¹ := by
+        have h_left :
+            Real.exp ((n : ℝ) * (H_Z + ε)) * ((M_X n : ℝ))⁻¹
+              ≤ Real.exp ((n : ℝ) * (H_Z + ε))
+                  * (Real.exp ((n : ℝ) * R_X))⁻¹ :=
+          mul_le_mul_of_nonneg_left h_inv_X_le hexp_pos.le
+        have h_left_nn : (0 : ℝ) ≤ Real.exp ((n : ℝ) * (H_Z + ε))
+                * (Real.exp ((n : ℝ) * R_X))⁻¹ := by positivity
+        have h_full :
+            Real.exp ((n : ℝ) * (H_Z + ε)) * ((M_X n : ℝ))⁻¹
+                  * ((M_Y n : ℝ))⁻¹
+              ≤ Real.exp ((n : ℝ) * (H_Z + ε))
+                    * (Real.exp ((n : ℝ) * R_X))⁻¹
+                  * ((M_Y n : ℝ))⁻¹ := by
+          apply mul_le_mul_of_nonneg_right h_left
+          exact inv_nonneg.mpr (by exact_mod_cast (hM_Y_pos n).le)
+        have h_full2 :
+            Real.exp ((n : ℝ) * (H_Z + ε))
+                  * (Real.exp ((n : ℝ) * R_X))⁻¹
+                * ((M_Y n : ℝ))⁻¹
+              ≤ Real.exp ((n : ℝ) * (H_Z + ε))
+                    * (Real.exp ((n : ℝ) * R_X))⁻¹
+                  * (Real.exp ((n : ℝ) * R_Y))⁻¹ :=
+          mul_le_mul_of_nonneg_left h_inv_Y_le h_left_nn
+        linarith
+      -- exp(n(H_Z+ε)) * exp(-nR_X) * exp(-nR_Y) = exp(n(H_Z+ε - R_X - R_Y)) = exp(-n(sXY - ε)).
+      have h_eq :
+          Real.exp ((n : ℝ) * (H_Z + ε))
+                * (Real.exp ((n : ℝ) * R_X))⁻¹
+                * (Real.exp ((n : ℝ) * R_Y))⁻¹
+            = Real.exp (- (n : ℝ) * (sXY - ε)) := by
+        rw [← Real.exp_neg, ← Real.exp_neg, ← Real.exp_add, ← Real.exp_add]
+        apply congrArg Real.exp
+        -- Goal: (n) * (H_Z + ε) + -(n * R_X) + -(n * R_Y) = -n * (sXY - ε).
+        have hs : sXY = R_X + R_Y - H_Z := rfl
+        rw [hs]; ring
+      exact h_mid.trans_eq h_eq
+    -- Combine F.1 RHS with the three ratio bounds.
+    calc ∫ f_X, ∫ f_Y,
+              swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+                (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
+              ∂(binningMeasure β n (M_Y n)) ∂(binningMeasure α n (M_X n))
+        ≤ μ.real (swError_E0 μ Xs Ys n ε)
+          + 2 * (Real.exp ((n : ℝ) *
+              (entropy μ (jointSequence Xs Ys 0) - entropy μ (Ys 0) + 2 * ε))
+                * ((M_X n : ℝ))⁻¹)
+          + 2 * (Real.exp ((n : ℝ) *
+              (entropy μ (jointSequence Xs Ys 0) - entropy μ (Xs 0) + 2 * ε))
+                * ((M_Y n : ℝ))⁻¹)
+          + Real.exp ((n : ℝ) * (entropy μ (jointSequence Xs Ys 0) + ε))
+              * ((M_X n : ℝ))⁻¹ * ((M_Y n : ℝ))⁻¹ := hF1
+      _ ≤ B n := by
+            -- After rewriting `entropy μ (jointSequence Xs Ys 0)` to `H_Z` etc.:
+            have hZ_eq : entropy μ (jointSequence Xs Ys 0) = H_Z := rfl
+            have hY_eq : entropy μ (Ys 0) = H_Y := rfl
+            have hX_eq : entropy μ (Xs 0) = H_X := rfl
+            simp only [hZ_eq, hY_eq, hX_eq]
+            show μ.real (swError_E0 μ Xs Ys n ε)
+              + 2 * (Real.exp ((n : ℝ) * (H_Z - H_Y + 2 * ε)) * ((M_X n : ℝ))⁻¹)
+              + 2 * (Real.exp ((n : ℝ) * (H_Z - H_X + 2 * ε)) * ((M_Y n : ℝ))⁻¹)
+              + Real.exp ((n : ℝ) * (H_Z + ε))
+                  * ((M_X n : ℝ))⁻¹ * ((M_Y n : ℝ))⁻¹
+              ≤ μ.real (swError_E0 μ Xs Ys n ε)
+                + 2 * Real.exp (- (n : ℝ) * (sX - 2 * ε))
+                + 2 * Real.exp (- (n : ℝ) * (sY - 2 * ε))
+                + Real.exp (- (n : ℝ) * (sXY - ε))
+            linarith [hEX_ratio, hEY_ratio, hEXY_ratio]
+  -- ## Step 3: each term of `B n` → 0.
+  -- E0 → 0 by E.1.
+  have hE0_tendsto : Filter.Tendsto (fun n => μ.real (swError_E0 μ Xs Ys n ε))
+      Filter.atTop (𝓝 0) :=
+    swError_E0_prob_tendsto_zero μ Xs Ys hXs hYs
+      hindepX hidentX hindepY hidentY hindepZ hidentZ hε
+  -- For c > 0, (fun n : ℕ => exp(-n·c)) → 0.
+  have h_exp_neg : ∀ {c : ℝ}, 0 < c →
+      Filter.Tendsto (fun n : ℕ => Real.exp (- (n : ℝ) * c))
+        Filter.atTop (𝓝 0) := by
+    intro c hc
+    -- Want: tendsto (fun n => exp((-(n:ℝ)) * c)) → 0.
+    -- Decompose: (-(n:ℝ)) * c → atBot, then exp → 0.
+    have h_natCast : Filter.Tendsto (fun n : ℕ => (n : ℝ))
+        Filter.atTop Filter.atTop := tendsto_natCast_atTop_atTop
+    have h_neg : Filter.Tendsto (fun n : ℕ => - (n : ℝ)) Filter.atTop Filter.atBot :=
+      Filter.tendsto_neg_atTop_atBot.comp h_natCast
+    have h_mul : Filter.Tendsto (fun n : ℕ => - (n : ℝ) * c)
+        Filter.atTop Filter.atBot :=
+      Filter.Tendsto.atBot_mul_const hc h_neg
+    exact Real.tendsto_exp_atBot.comp h_mul
+  have hEX_tendsto : Filter.Tendsto
+      (fun n : ℕ => 2 * Real.exp (- (n : ℝ) * (sX - 2 * ε)))
+      Filter.atTop (𝓝 0) := by
+    have h := h_exp_neg hslack_X
+    simpa using (h.const_mul 2)
+  have hEY_tendsto : Filter.Tendsto
+      (fun n : ℕ => 2 * Real.exp (- (n : ℝ) * (sY - 2 * ε)))
+      Filter.atTop (𝓝 0) := by
+    have h := h_exp_neg hslack_Y
+    simpa using (h.const_mul 2)
+  have hEXY_tendsto : Filter.Tendsto
+      (fun n : ℕ => Real.exp (- (n : ℝ) * (sXY - ε)))
+      Filter.atTop (𝓝 0) := h_exp_neg hslack_XY
+  -- B n → 0 by summing.
+  have hB_tendsto : Filter.Tendsto B Filter.atTop (𝓝 0) := by
+    have h_sum1 : Filter.Tendsto
+        (fun n => μ.real (swError_E0 μ Xs Ys n ε)
+                + 2 * Real.exp (- (n : ℝ) * (sX - 2 * ε)))
+        Filter.atTop (𝓝 (0 + 0)) := hE0_tendsto.add hEX_tendsto
+    have h_sum2 : Filter.Tendsto
+        (fun n => (μ.real (swError_E0 μ Xs Ys n ε)
+                    + 2 * Real.exp (- (n : ℝ) * (sX - 2 * ε)))
+                  + 2 * Real.exp (- (n : ℝ) * (sY - 2 * ε)))
+        Filter.atTop (𝓝 (0 + 0 + 0)) := h_sum1.add hEY_tendsto
+    have h_sum3 : Filter.Tendsto
+        (fun n => ((μ.real (swError_E0 μ Xs Ys n ε)
+                    + 2 * Real.exp (- (n : ℝ) * (sX - 2 * ε)))
+                    + 2 * Real.exp (- (n : ℝ) * (sY - 2 * ε)))
+                  + Real.exp (- (n : ℝ) * (sXY - ε)))
+        Filter.atTop (𝓝 (0 + 0 + 0 + 0)) := h_sum2.add hEXY_tendsto
+    have h_target : Filter.Tendsto B Filter.atTop (𝓝 (0 + 0 + 0 + 0)) := by
+      refine h_sum3.congr (fun n => ?_)
+      simp [hB_def]
+    simpa using h_target
+  -- ## Step 4: pigeonhole per n.
+  -- Define the "g n" integrand for F.2.
+  -- We need integrability of swErrorProb in f_Y for each f_X (inner), and of the inner
+  -- integral in f_X (outer). Reuse the bounded-by-1 + discrete pattern from F.1.
+  -- Use a local helper: a discrete, [0,1]-bounded ℝ-valued function on a Pi product is
+  -- integrable against `binningMeasure`.
+  have hInt_swErr_inner : ∀ n, ∀ f_X : (Fin n → α) → Fin (M_X n),
+      Integrable (fun f_Y => swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+                    (swJointTypicalDecoder μ Xs Ys ε f_X f_Y))
+        (binningMeasure β n (M_Y n)) := by
+    intro n f_X
+    haveI : MeasurableSingletonClass ((Fin n → β) → Fin (M_Y n)) :=
+      Pi.instMeasurableSingletonClass
+    haveI : Fintype ((Fin n → β) → Fin (M_Y n)) := Pi.instFintype
+    refine ⟨Measurable.aestronglyMeasurable Measurable.of_discrete, ?_⟩
+    refine (hasFiniteIntegral_def _ _).mpr ?_
+    -- swErrorProb is bounded by 1.
+    have h_le_one : ∀ f_Y : (Fin n → β) → Fin (M_Y n),
+        swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+          (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) ≤ 1 := by
+      intro f_Y
+      unfold swErrorProb Measure.real
+      exact (ENNReal.toReal_le_toReal (measure_ne_top _ _) (by simp)).mpr prob_le_one
+    have h_nn : ∀ f_Y : (Fin n → β) → Fin (M_Y n),
+        0 ≤ swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+              (swJointTypicalDecoder μ Xs Ys ε f_X f_Y) := fun _ =>
+      measureReal_nonneg
+    have h_bound : ∀ f_Y : (Fin n → β) → Fin (M_Y n),
+        ‖swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+                (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)‖₊ ≤ 1 := by
+      intro f_Y
+      rw [Real.nnnorm_of_nonneg (h_nn f_Y)]
+      exact_mod_cast h_le_one f_Y
+    calc ∫⁻ f_Y, ‖swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+              (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)‖ₑ ∂(binningMeasure β n (M_Y n))
+        ≤ ∫⁻ _, 1 ∂(binningMeasure β n (M_Y n)) := by
+          refine lintegral_mono fun f_Y => ?_
+          have hb := h_bound f_Y
+          rw [show ‖swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+                  (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)‖ₑ
+              = ((‖swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+                  (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)‖₊ : ℝ≥0∞)) from rfl]
+          have : ((‖swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+                  (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)‖₊ : ℝ≥0∞))
+              ≤ ((1 : ℝ≥0) : ℝ≥0∞) := by exact_mod_cast hb
+          simpa using this
+      _ = (binningMeasure β n (M_Y n)) Set.univ := by rw [lintegral_const, one_mul]
+      _ < ∞ := measure_lt_top _ _
+  have hInt_swErr_outer : ∀ n,
+      Integrable
+        (fun f_X => ∫ f_Y, swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+                      (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
+                    ∂(binningMeasure β n (M_Y n)))
+        (binningMeasure α n (M_X n)) := by
+    intro n
+    haveI : MeasurableSingletonClass ((Fin n → α) → Fin (M_X n)) :=
+      Pi.instMeasurableSingletonClass
+    haveI : Fintype ((Fin n → α) → Fin (M_X n)) := Pi.instFintype
+    refine ⟨Measurable.aestronglyMeasurable Measurable.of_discrete, ?_⟩
+    refine (hasFiniteIntegral_def _ _).mpr ?_
+    -- Inner integral is ≤ 1.
+    have h_inner_nn : ∀ f_X : (Fin n → α) → Fin (M_X n),
+        0 ≤ ∫ f_Y : (Fin n → β) → Fin (M_Y n),
+              swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+                (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
+            ∂(binningMeasure β n (M_Y n)) := fun f_X =>
+      integral_nonneg (fun _ => measureReal_nonneg)
+    have h_inner_le_one : ∀ f_X : (Fin n → α) → Fin (M_X n),
+        (∫ f_Y : (Fin n → β) → Fin (M_Y n),
+              swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+                (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
+              ∂(binningMeasure β n (M_Y n))) ≤ 1 := by
+      intro f_X
+      calc (∫ f_Y : (Fin n → β) → Fin (M_Y n),
+                swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+                  (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
+                ∂(binningMeasure β n (M_Y n)))
+          ≤ ∫ _ : (Fin n → β) → Fin (M_Y n), (1 : ℝ) ∂(binningMeasure β n (M_Y n)) := by
+            refine integral_mono (hInt_swErr_inner n f_X) (integrable_const 1) (fun f_Y => ?_)
+            unfold swErrorProb Measure.real
+            exact (ENNReal.toReal_le_toReal (measure_ne_top _ _) (by simp)).mpr prob_le_one
+        _ = 1 := by rw [integral_const, probReal_univ, smul_eq_mul, mul_one]
+    have h_bound : ∀ f_X : (Fin n → α) → Fin (M_X n),
+        ‖∫ f_Y : (Fin n → β) → Fin (M_Y n),
+                swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+                              (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
+                            ∂(binningMeasure β n (M_Y n))‖₊ ≤ 1 := by
+      intro f_X
+      rw [Real.nnnorm_of_nonneg (h_inner_nn f_X)]
+      exact_mod_cast h_inner_le_one f_X
+    calc ∫⁻ f_X, ‖∫ f_Y : (Fin n → β) → Fin (M_Y n),
+            swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+              (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
+            ∂(binningMeasure β n (M_Y n))‖ₑ ∂(binningMeasure α n (M_X n))
+        ≤ ∫⁻ _, 1 ∂(binningMeasure α n (M_X n)) := by
+          refine lintegral_mono fun f_X => ?_
+          have hb := h_bound f_X
+          rw [show ‖∫ f_Y : (Fin n → β) → Fin (M_Y n),
+                  swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+                    (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
+                  ∂(binningMeasure β n (M_Y n))‖ₑ
+              = ((‖∫ f_Y : (Fin n → β) → Fin (M_Y n),
+                  swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+                    (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
+                  ∂(binningMeasure β n (M_Y n))‖₊ : ℝ≥0∞)) from rfl]
+          have : ((‖∫ f_Y : (Fin n → β) → Fin (M_Y n),
+                    swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+                      (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
+                    ∂(binningMeasure β n (M_Y n))‖₊ : ℝ≥0∞))
+              ≤ ((1 : ℝ≥0) : ℝ≥0∞) := by exact_mod_cast hb
+          simpa using this
+      _ = (binningMeasure α n (M_X n)) Set.univ := by rw [lintegral_const, one_mul]
+      _ < ∞ := measure_lt_top _ _
+  -- Per-n existential extraction.
+  have h_per_n_choose : ∀ n, ∃ f_X : (Fin n → α) → Fin (M_X n),
+      ∃ f_Y : (Fin n → β) → Fin (M_Y n),
+      swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+            (swJointTypicalDecoder μ Xs Ys ε f_X f_Y)
+        ≤ B n := fun n =>
+    exists_pair_le_of_binning_integral_le (n := n) (M_X := M_X n) (M_Y := M_Y n)
+      (fun f_X f_Y =>
+        swErrorProb μ (jointRV Xs n) (jointRV Ys n) f_X f_Y
+          (swJointTypicalDecoder μ Xs Ys ε f_X f_Y))
+      (hInt_swErr_inner n) (hInt_swErr_outer n) (hExp_bound n)
+  -- Use Classical.choose to build (f_X n, f_Y n) family.
+  let f_X : ∀ n, (Fin n → α) → Fin (M_X n) := fun n =>
+    Classical.choose (h_per_n_choose n)
+  have h_f_X_spec : ∀ n, ∃ f_Y : (Fin n → β) → Fin (M_Y n),
+      swErrorProb μ (jointRV Xs n) (jointRV Ys n) (f_X n) f_Y
+            (swJointTypicalDecoder μ Xs Ys ε (f_X n) f_Y)
+        ≤ B n := fun n => Classical.choose_spec (h_per_n_choose n)
+  let f_Y : ∀ n, (Fin n → β) → Fin (M_Y n) := fun n =>
+    Classical.choose (h_f_X_spec n)
+  have h_pair_bound : ∀ n,
+      swErrorProb μ (jointRV Xs n) (jointRV Ys n) (f_X n) (f_Y n)
+            (swJointTypicalDecoder μ Xs Ys ε (f_X n) (f_Y n))
+        ≤ B n := fun n => Classical.choose_spec (h_f_X_spec n)
+  -- decoder family.
+  let d : ∀ n, Fin (M_X n) × Fin (M_Y n) → (Fin n → α) × (Fin n → β) :=
+    fun n => swJointTypicalDecoder μ Xs Ys ε (f_X n) (f_Y n)
+  -- ## Step 5: rate Tendsto.
+  have h_rate_X : Filter.Tendsto (fun n => Real.log (M_X n : ℝ) / n) Filter.atTop (𝓝 R_X) :=
+    InformationTheory.Shannon.codebookSize_log_div_tendsto hRX_pos
+  have h_rate_Y : Filter.Tendsto (fun n => Real.log (M_Y n : ℝ) / n) Filter.atTop (𝓝 R_Y) :=
+    InformationTheory.Shannon.codebookSize_log_div_tendsto hRY_pos
+  -- ## Step 6: error Tendsto 0 via squeeze (0 ≤ swErrorProb ≤ B → 0).
+  have h_err_nn : ∀ n,
+      0 ≤ swErrorProb μ (jointRV Xs n) (jointRV Ys n) (f_X n) (f_Y n) (d n) := fun n =>
+    measureReal_nonneg
+  have h_err_le_B : ∀ n,
+      swErrorProb μ (jointRV Xs n) (jointRV Ys n) (f_X n) (f_Y n) (d n) ≤ B n :=
+    h_pair_bound
+  have h_err_tendsto : Filter.Tendsto
+      (fun n => swErrorProb μ (jointRV Xs n) (jointRV Ys n) (f_X n) (f_Y n) (d n))
+      Filter.atTop (𝓝 0) :=
+    squeeze_zero h_err_nn h_err_le_B hB_tendsto
+  -- Assemble the existential witness.
+  exact ⟨M_X, M_Y, hM_X_pos, hM_Y_pos, f_X, f_Y, d, h_rate_X, h_rate_Y, h_err_tendsto⟩
 
 end InformationTheory.Shannon.ChannelCoding
