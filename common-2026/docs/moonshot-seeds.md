@@ -1,5 +1,7 @@
 # Moonshot シードカード集
 
+> **Status (2026-05-14, night)**: orchestrator 追加 1 件 — **E-3' Phase B.2.2** (`RateDistortionAchievabilityPhaseB.lean` 479 → 738 行、+259 行、`jointlyTypicalSet_card_ge` (private helper) + `jointlyTypicalSet_indep_prob_ge` の 2 本)。anti-direction mirror of `ChannelCoding.jointlyTypicalSet_indep_prob_le`。joint-law 入力 hypothesis `μ.real {ω | (jX, jY) ∈ JTS} ≥ 1 - η` を取り、φ-image (Fin n → α × β) を経由して `typicalSet_prob_le` on Zs で size lower bound `(1-η)·exp(n(HZ-ε))` を導出、per-summand `typicalSet_prob_ge` (X, Y 軸) で product-law 下界 `(1-η)·exp(n(HZ-HX-HY-3ε))` に合成。0 sorry / 0 warning、新規 Mathlib 補題ゼロ。Cover-Thomas 10.85 中核 single-codeword typical-match probability の lower bound 完成。残 deferred: D-1'' Phase D 主定理 (親 surgery ~200-400 行)、D-2'' (B.2 原理的不可)、E-3' Phase C-E (~1300 行、`single_codeword_typical_match_prob` consumer + random codebook averaging + 主定理)、E-8'' Birkhoff 自前 (~400-600 行)。
+>
 > **Status (2026-05-14, late evening)**: orchestrator 追加 1 件 — **E-3' Phase B.3** (`RateDistortionAchievabilityPhaseB.lean` 83 → 479 行、`distortionTypicalSet` + 6 structure 補題 + WLLN-on-d section (`distortionRealFn` / `distortionRV` + 4 helper + a.s./in-prob theorems) + `distortionTypicalSet_prob_tendsto_one` 主 wrapper)。AEP `logLikelihood` パターンを `jointSequence` 越しに verbatim 流用、Mathlib `strong_law_ae_real` + `tendstoInMeasure_of_tendsto_ae` で 0 sorry / 0 warning。残 deferred: D-1'' Phase D 主定理 (親 surgery ~200-400 行)、D-2'' (B.2 原理的不可)、E-3' Phase B.2.2 (`(1-p_typ)^M` random codebook 形、`jointlyTypicalSet_indep_prob_ge` 要)、E-3' Phase C-E (~1300 行)、E-8'' Birkhoff 自前 (~400-600 行)。
 >
 > **Status (2026-05-14, evening)**: orchestrator session で 3 件追加 — **E-8' weakened** (`ShannonMcMillanBreiman.lean` 179 行、SMB sandwich-form + 期待値 bridge、Birkhoff (E-8'') が完成すれば仮定なし形に昇格できる正面 wrapper) + **D-1 A.3 closure** (`exists_capacity_achiever` を `IsCompact.exists_isMaxOn` で 4 行 close、`ChannelCodingShannonTheorem.lean` 内 doc-only sorry 1 件解消) + **E-3' Phase B.1 MVP** (`RateDistortionAchievabilityPhaseB.lean` 83 行、`jointTypicalLossyEncoder` + `lossyCodeOfCodebook` + spec 補題 2 本)。残 deferred: D-1'' Phase D 主定理 (親 surgery ~200-400 行)、D-2'' (B.2 原理的不可)、E-3' Phase B.2-E (~1400 行)、E-8'' Birkhoff 自前 (~400-600 行)。
@@ -243,6 +245,13 @@
   - **`distortionTypicalSet_prob_tendsto_one`** (主結果): inclusion `goodJ ∩ (bigBad)ᶜ ⊆ targetEvt` + ChannelCoding `jointlyTypicalSet_prob_tendsto_one` の complement squeeze pattern verbatim 流用。**片側 inclusion のみ** (`distortionTypicalSet` は one-sided `blockDistortion ≤ E+δ`、`bigBad` は two-sided `|empirical-E| ≥ δ` ⟹ `targetEvt ⊋ goodJ ∩ (bigBad)ᶜ`、 sandwich で μ(targetEvt) → 1)。
 
   Phase B.2.2 (`single_codeword_typical_match_prob`、`(1 - p_typ)^M` random codebook 形) は **`jointlyTypicalSet_indep_prob_ge`** (anti-direction、existing `_indep_prob_le` を lower bound に書き直す) を要求、次セッションへ。
+
+  **E-3' Phase B.2.2 ✅ (2026-05-14、anti-direction joint-AEP indep probability)** →
+  `Common2026/Shannon/RateDistortionAchievabilityPhaseB.lean` (738 行、+259 行、0 sorry / 0 warning):
+  - `jointlyTypicalSet_card_ge` (private): joint-law 入力 `μ.real (joint event) ≥ 1-η` から、φ-image 経由で `typicalSet_prob_le` on Zs 経由で `|JTS| ≥ (1-η)·exp(n(HZ-ε))`
+  - `jointlyTypicalSet_indep_prob_ge`: `_indep_prob_le` mirror、per-summand `typicalSet_prob_ge` (X, Y 軸) + `_card_ge` で product-law 下界 `(1-η)·exp(n(HZ-HX-HY-3ε))`
+
+  **shape-driven 設計判断**: 入力 hypothesis は **joint-law** 形 (`μ.real {ω | (jX, jY) ∈ JTS} ≥ 1 - η`) を採用。これは `jointlyTypicalSet_prob_tendsto_one` が直接供給する形であり、product-law 形 (`(μX.prod μY).real JTS ≥ 1 - η`) では circular。φ-image (`Fin n → α × β`) で size lower bound を確立する経路により、新規 Mathlib 補題ゼロで完結。Phase C consumer (`single_codeword_typical_match_prob` の deterministic-encoder 形 → random codebook averaging 経由 `(1 - p_typ)^M` bound) は `_indep_prob_ge` を**直接呼び出すだけ**で実装可能、本 Phase は consumer-side semantics を持ち込まず純粋確率不等式として publish。
 
 - **E-4. Rate-distortion converse** ✅ (2026-05-13, **single-shot MVP**) →
   [docs/shannon/rate-distortion-converse-plan.md](shannon/rate-distortion-converse-plan.md) —
