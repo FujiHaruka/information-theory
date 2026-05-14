@@ -2,11 +2,15 @@ import Common2026.Shannon.RateDistortionAchievability
 import Common2026.Shannon.ChannelCodingAchievability
 
 /-!
-# Rate-distortion achievability — Phase B.1 (joint-typical lossy encoder + bundling)
+# Rate-distortion achievability — Phase B (joint-typical lossy encoder + distortion typical set)
 
 [`docs/shannon/rate-distortion-achievability-plan.md`](../../../docs/shannon/rate-distortion-achievability-plan.md)
-Phase B.1 MVP. Symmetric counterpart to `ChannelCodingAchievability.jointTypicalDecoder`
-on the encoder side of the lossy compression chain:
+Phase B MVP. Two pieces of infrastructure for the lossy compression chain.
+
+## Phase B.1 — joint-typical lossy encoder
+
+Symmetric counterpart to `ChannelCodingAchievability.jointTypicalDecoder` on the encoder
+side of the lossy compression chain:
 
 * `jointTypicalLossyEncoder` — given a codebook `c : Codebook M n β` and a source word
   `x : Fin n → α`, returns *some* (`Classical.choose`) message index `m` with
@@ -20,6 +24,17 @@ Note: unlike the channel-coding decoder side (`jointTypicalDecoder`), the lossy 
 does **not** require uniqueness of the typical match — any one is fine because the
 encoder's job is only to commit to a single index. Hence we use `Classical.choose`
 of `∃ m, _` rather than `Classical.choose` of `∃! m, _`.
+
+## Phase B.3 — distortion typical set
+
+The intersection of `jointlyTypicalSet` with the empirical-distortion constraint
+`blockDistortion d n x y ≤ 𝔼[d(X_0, Y_0)] + δ`:
+
+* `expectedJointDistortion μ X Y d` — Bochner integral of `d(X, Y)` under `μ`.
+* `distortionTypicalSet μ Xs Ys d n ε δ` — set of `(x, y)` jointly typical *and*
+  whose empirical block distortion is within `δ` of the joint expectation.
+* basic structure lemmas: subset to `jointlyTypicalSet`, membership iff,
+  `MeasurableSet`, finiteness.
 -/
 
 namespace InformationTheory.Shannon
@@ -79,5 +94,78 @@ theorem jointTypicalLossyEncoder_spec_of_not_exists
     jointTypicalLossyEncoder μ Xs Ys hM ε c x = ⟨0, hM⟩ := by
   unfold jointTypicalLossyEncoder
   exact dif_neg h
+
+/-! ## Phase B.3 — distortion typical set -/
+
+/-- Expected per-symbol distortion `𝔼_μ[d(X, Y)]` as a real Bochner integral. The
+bound used in `distortionTypicalSet` references this quantity at `i = 0`; under
+stationary i.i.d. hypotheses it is independent of `i`. -/
+noncomputable def expectedJointDistortion
+    (μ : Measure Ω) (X : Ω → α) (Y : Ω → β) (d : DistortionFn α β) : ℝ :=
+  ∫ ω, ((d (X ω) (Y ω) : NNReal) : ℝ) ∂μ
+
+/-- **Distortion typical set.** Pairs `(x, y) ∈ (Fin n → α) × (Fin n → β)` that are
+both (a) jointly typical in the entropy sense (`jointlyTypicalSet μ Xs Ys n ε`) and
+(b) whose empirical block distortion is within `δ` of the joint expectation
+`𝔼[d(X_0, Y_0)]`. The set used by Cover-Thomas 10.5 to bound the distortion on
+encoder-success events. -/
+noncomputable def distortionTypicalSet
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (d : DistortionFn α β) (n : ℕ) (ε δ : ℝ) :
+    Set ((Fin n → α) × (Fin n → β)) :=
+  jointlyTypicalSet μ Xs Ys n ε ∩
+    {p | blockDistortion d n p.1 p.2
+          ≤ expectedJointDistortion μ (Xs 0) (Ys 0) d + δ}
+
+/-- Membership predicate for `distortionTypicalSet`, split into the two component
+conditions. -/
+theorem mem_distortionTypicalSet_iff
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (d : DistortionFn α β) (n : ℕ) (ε δ : ℝ)
+    (x : Fin n → α) (y : Fin n → β) :
+    (x, y) ∈ distortionTypicalSet μ Xs Ys d n ε δ ↔
+      (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε ∧
+      blockDistortion d n x y
+        ≤ expectedJointDistortion μ (Xs 0) (Ys 0) d + δ := Iff.rfl
+
+/-- `distortionTypicalSet ⊆ jointlyTypicalSet`. -/
+theorem distortionTypicalSet_subset_jointlyTypicalSet
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (d : DistortionFn α β) (n : ℕ) (ε δ : ℝ) :
+    distortionTypicalSet μ Xs Ys d n ε δ ⊆ jointlyTypicalSet μ Xs Ys n ε :=
+  fun _ h => h.1
+
+/-- Joint typicality follows from membership in `distortionTypicalSet`. -/
+theorem mem_jointlyTypicalSet_of_mem_distortionTypicalSet
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (d : DistortionFn α β) (n : ℕ) (ε δ : ℝ)
+    {p : (Fin n → α) × (Fin n → β)}
+    (h : p ∈ distortionTypicalSet μ Xs Ys d n ε δ) :
+    p ∈ jointlyTypicalSet μ Xs Ys n ε := h.1
+
+/-- **B.2.1**: on `distortionTypicalSet`, the empirical block distortion is bounded
+by the joint expectation plus `δ`. This is the structural fact that drives the
+distortion bound on encoder-success events in Cover-Thomas 10.5 (10.85). -/
+theorem blockDistortion_le_of_mem_distortionTypicalSet
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (d : DistortionFn α β) (n : ℕ) (ε δ : ℝ)
+    {p : (Fin n → α) × (Fin n → β)}
+    (h : p ∈ distortionTypicalSet μ Xs Ys d n ε δ) :
+    blockDistortion d n p.1 p.2
+      ≤ expectedJointDistortion μ (Xs 0) (Ys 0) d + δ := h.2
+
+/-- `distortionTypicalSet` is finite (subset of a finite ambient `(Fin n → α) × (Fin n → β)`). -/
+theorem distortionTypicalSet_finite
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (d : DistortionFn α β) (n : ℕ) (ε δ : ℝ) :
+    (distortionTypicalSet μ Xs Ys d n ε δ).Finite :=
+  Set.toFinite _
+
+/-- `distortionTypicalSet` is measurable (subset of a finite ambient). -/
+theorem measurableSet_distortionTypicalSet
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (d : DistortionFn α β) (n : ℕ) (ε δ : ℝ) :
+    MeasurableSet (distortionTypicalSet μ Xs Ys d n ε δ) :=
+  (distortionTypicalSet_finite μ Xs Ys d n ε δ).measurableSet
 
 end InformationTheory.Shannon
