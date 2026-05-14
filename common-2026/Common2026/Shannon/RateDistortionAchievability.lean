@@ -458,4 +458,203 @@ lemma rateDistortionFunctionPmf_antitone
 
 end PmfForm
 
+/-! ## `Measure α → pmf` 抽出 (E-3'' utility)
+
+`Measure α` から `α → ℝ` (pmf) を取り出す変換と基本性質。
+`measureToPmf P a := P.real {a}`。Phase E 以降で witness 形 R(D) を
+通常の `R(D) < R` 形に昇格する際に用いる。
+-/
+
+section MeasureToPmf
+
+/-- A probability measure on a finite alphabet `α` yields a pmf `α → ℝ`. -/
+noncomputable def measureToPmf {α : Type*} [Fintype α] [MeasurableSpace α]
+    [MeasurableSingletonClass α] (P : Measure α) : α → ℝ :=
+  fun a => P.real {a}
+
+/-- `measureToPmf P a = P.real {a}` by definition. -/
+lemma measureToPmf_apply {α : Type*} [Fintype α] [MeasurableSpace α]
+    [MeasurableSingletonClass α] (P : Measure α) (a : α) :
+    measureToPmf P a = P.real {a} := rfl
+
+/-- Every component of `measureToPmf P` is non-negative. -/
+lemma measureToPmf_nonneg {α : Type*} [Fintype α] [MeasurableSpace α]
+    [MeasurableSingletonClass α] (P : Measure α) (a : α) :
+    0 ≤ measureToPmf P a := by
+  exact measureReal_nonneg
+
+/-- The components of `measureToPmf P` sum to one when `P` is a probability measure. -/
+lemma measureToPmf_sum_eq_one {α : Type*} [Fintype α] [MeasurableSpace α]
+    [MeasurableSingletonClass α] (P : Measure α) [IsProbabilityMeasure P] :
+    ∑ a, measureToPmf P a = 1 := by
+  unfold measureToPmf
+  rw [sum_measureReal_singleton (μ := P) (s := (Finset.univ : Finset α))]
+  simp [probReal_univ]
+
+/-- `measureToPmf P` lies in the standard simplex on `α`. -/
+lemma measureToPmf_mem_stdSimplex {α : Type*} [Fintype α] [MeasurableSpace α]
+    [MeasurableSingletonClass α] (P : Measure α) [IsProbabilityMeasure P] :
+    measureToPmf P ∈ stdSimplex ℝ α :=
+  ⟨fun a => measureToPmf_nonneg P a, measureToPmf_sum_eq_one P⟩
+
+/-- If every singleton has positive measure, every component of `measureToPmf P` is positive. -/
+lemma measureToPmf_pos {α : Type*} [Fintype α] [MeasurableSpace α]
+    [MeasurableSingletonClass α] (P : Measure α) [IsProbabilityMeasure P]
+    (hpos : ∀ a, 0 < P.real {a}) (a : α) :
+    0 < measureToPmf P a := hpos a
+
+end MeasureToPmf
+
+/-! ## Entropy ↔ pmf bridge (E-3'' (2))
+
+`InformationTheory.Shannon.entropy` (Bridge.lean) は finite alphabet 上で
+`∑ x, Real.negMulLog ((μ.map Xs).real {x})` — つまり pmf 形そのもの。
+このセクションは entropy / mutualInfoPmf の橋渡し:
+
+1. `entropy μ Xs = ∑ a, negMulLog (measureToPmf (μ.map Xs) a)` (definitional)
+2. joint pmf の marginal が個別 pushforward の pmf に一致
+3. `mutualInfoPmf (joint pmf) = H(X) + H(Y) − H(X, Y)`
+
+Phase E MVP との接続: `qStar := measureToPmf (μ.map (jointSequence Xs Ys 0))` で
+`mutualInfoPmf qStar` を entropy 差 (Phase B `jointlyTypicalSet_indep_prob_ge` の
+exponent) と同一視するための鍵。
+-/
+
+section EntropyBridge
+
+/-- **(1) Entropy as a `negMulLog` sum over `measureToPmf`.**
+`entropy μ Xs = ∑ a, negMulLog (measureToPmf (μ.map Xs) a)`. Both sides unfold to
+the same expression, so this is definitional (`rfl`). -/
+lemma entropy_eq_negMulLog_sum_measureToPmf
+    {Ω X : Type*} [MeasurableSpace Ω] [Fintype X] [MeasurableSpace X]
+    [MeasurableSingletonClass X] (μ : Measure Ω) (Xs : Ω → X) :
+    entropy μ Xs = ∑ a, Real.negMulLog (measureToPmf (μ.map Xs) a) := rfl
+
+/-- **(2) First-marginal identity for joint pmf.**
+`marginalFst (measureToPmf (μ.map (Xs, Ys))) = measureToPmf (μ.map Xs)`. Proved
+via the disjoint-union decomposition `Prod.fst ⁻¹' {a} = ⋃ b, {(a, b)}` plus
+`Measure.map_apply` / `map_map`. -/
+lemma marginalFst_measureToPmf_eq
+    {Ω α β : Type*} [MeasurableSpace Ω]
+    [Fintype α] [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
+    [Fintype β] [DecidableEq β] [MeasurableSpace β] [MeasurableSingletonClass β]
+    (μ : Measure Ω) [IsFiniteMeasure μ] (Xs : Ω → α) (Ys : Ω → β)
+    (hXs : Measurable Xs) (hYs : Measurable Ys) :
+    marginalFst (measureToPmf (μ.map (fun ω => (Xs ω, Ys ω))))
+      = measureToPmf (μ.map Xs) := by
+  funext a
+  -- LHS = ∑ b, (μ.map joint).real {(a, b)}; RHS = (μ.map Xs).real {a}.
+  simp only [marginalFst, measureToPmf]
+  set joint : Ω → α × β := fun ω => (Xs ω, Ys ω) with hjoint
+  have hjointMeas : Measurable joint := hXs.prodMk hYs
+  -- `μ.map joint` is finite (instance via `Measure.isFiniteMeasure_map`).
+  -- Step 1: rewrite RHS through `map_map` so both sides live on `μ.map joint`.
+  have hXs_eq : Xs = Prod.fst ∘ joint := by funext ω; rfl
+  have h_mapXs :
+      (μ.map Xs).real {a} = (μ.map joint).real (Prod.fst ⁻¹' {a}) := by
+    rw [hXs_eq, ← Measure.map_map measurable_fst hjointMeas]
+    exact map_measureReal_apply measurable_fst (MeasurableSet.singleton a)
+  rw [h_mapXs]
+  -- Step 2: decompose `Prod.fst ⁻¹' {a} = ⋃ b ∈ univ, {(a, b)}` and use
+  -- `measureReal_biUnion_finset`.
+  have h_preimage_eq :
+      (Prod.fst ⁻¹' {a} : Set (α × β))
+        = ⋃ b ∈ (Finset.univ : Finset β), ({(a, b)} : Set (α × β)) := by
+    ext p
+    constructor
+    · intro hp
+      have hp' : p.1 = a := hp
+      refine Set.mem_iUnion.mpr ⟨p.2, Set.mem_iUnion.mpr ⟨Finset.mem_univ _, ?_⟩⟩
+      simp only [Set.mem_singleton_iff]
+      ext
+      · exact hp'
+      · rfl
+    · intro hp
+      rcases Set.mem_iUnion.mp hp with ⟨b, hb⟩
+      rcases Set.mem_iUnion.mp hb with ⟨_, hb'⟩
+      simp only [Set.mem_singleton_iff] at hb'
+      simp [Set.mem_preimage, hb']
+  rw [h_preimage_eq]
+  have h_disj : (↑(Finset.univ : Finset β) : Set β).PairwiseDisjoint
+      (fun b => ({(a, b)} : Set (α × β))) := by
+    intro b₁ _ b₂ _ hb s hs1 hs2 p hp
+    have hp1 := hs1 hp
+    have hp2 := hs2 hp
+    simp only [Set.mem_singleton_iff] at hp1 hp2
+    have heq : (a, b₁) = (a, b₂) := hp1.symm.trans hp2
+    exact (hb (Prod.mk.injEq _ _ _ _ |>.mp heq).2).elim
+  have h_meas : ∀ b ∈ (Finset.univ : Finset β),
+      MeasurableSet ({(a, b)} : Set (α × β)) := fun b _ => measurableSet_singleton _
+  rw [measureReal_biUnion_finset h_disj h_meas]
+
+/-- **(2') Second-marginal identity for joint pmf.** Symmetric to
+`marginalFst_measureToPmf_eq`. -/
+lemma marginalSnd_measureToPmf_eq
+    {Ω α β : Type*} [MeasurableSpace Ω]
+    [Fintype α] [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
+    [Fintype β] [DecidableEq β] [MeasurableSpace β] [MeasurableSingletonClass β]
+    (μ : Measure Ω) [IsFiniteMeasure μ] (Xs : Ω → α) (Ys : Ω → β)
+    (hXs : Measurable Xs) (hYs : Measurable Ys) :
+    marginalSnd (measureToPmf (μ.map (fun ω => (Xs ω, Ys ω))))
+      = measureToPmf (μ.map Ys) := by
+  funext b
+  simp only [marginalSnd, measureToPmf]
+  set joint : Ω → α × β := fun ω => (Xs ω, Ys ω) with hjoint
+  have hjointMeas : Measurable joint := hXs.prodMk hYs
+  have hYs_eq : Ys = Prod.snd ∘ joint := by funext ω; rfl
+  have h_mapYs :
+      (μ.map Ys).real {b} = (μ.map joint).real (Prod.snd ⁻¹' {b}) := by
+    rw [hYs_eq, ← Measure.map_map measurable_snd hjointMeas]
+    exact map_measureReal_apply measurable_snd (MeasurableSet.singleton b)
+  rw [h_mapYs]
+  have h_preimage_eq :
+      (Prod.snd ⁻¹' {b} : Set (α × β))
+        = ⋃ a ∈ (Finset.univ : Finset α), ({(a, b)} : Set (α × β)) := by
+    ext p
+    constructor
+    · intro hp
+      have hp' : p.2 = b := hp
+      refine Set.mem_iUnion.mpr ⟨p.1, Set.mem_iUnion.mpr ⟨Finset.mem_univ _, ?_⟩⟩
+      simp only [Set.mem_singleton_iff]
+      ext
+      · rfl
+      · exact hp'
+    · intro hp
+      rcases Set.mem_iUnion.mp hp with ⟨a, ha⟩
+      rcases Set.mem_iUnion.mp ha with ⟨_, ha'⟩
+      simp only [Set.mem_singleton_iff] at ha'
+      simp [Set.mem_preimage, ha']
+  rw [h_preimage_eq]
+  have h_disj : (↑(Finset.univ : Finset α) : Set α).PairwiseDisjoint
+      (fun a => ({(a, b)} : Set (α × β))) := by
+    intro a₁ _ a₂ _ ha s hs1 hs2 p hp
+    have hp1 := hs1 hp
+    have hp2 := hs2 hp
+    simp only [Set.mem_singleton_iff] at hp1 hp2
+    have heq : (a₁, b) = (a₂, b) := hp1.symm.trans hp2
+    exact (ha (Prod.mk.injEq _ _ _ _ |>.mp heq).1).elim
+  have h_meas : ∀ a ∈ (Finset.univ : Finset α),
+      MeasurableSet ({(a, b)} : Set (α × β)) := fun a _ => measurableSet_singleton _
+  rw [measureReal_biUnion_finset h_disj h_meas]
+
+/-- **(3) Main bridge: `mutualInfoPmf` of joint pmf = entropy difference.**
+`I(X; Y) = H(X) + H(Y) − H(X, Y)`. Used in Phase E to rewrite the Phase B
+exponent `H(Z) − H(X) − H(Y) − 3ε` into `−I(X; Y) − 3ε`. -/
+lemma mutualInfoPmf_eq_entropy_diff
+    {Ω α β : Type*} [MeasurableSpace Ω]
+    [Fintype α] [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
+    [Fintype β] [DecidableEq β] [MeasurableSpace β] [MeasurableSingletonClass β]
+    (μ : Measure Ω) [IsFiniteMeasure μ] (Xs : Ω → α) (Ys : Ω → β)
+    (hXs : Measurable Xs) (hYs : Measurable Ys) :
+    mutualInfoPmf (measureToPmf (μ.map (fun ω => (Xs ω, Ys ω))))
+      = entropy μ Xs + entropy μ Ys - entropy μ (fun ω => (Xs ω, Ys ω)) := by
+  unfold mutualInfoPmf
+  rw [marginalFst_measureToPmf_eq μ Xs Ys hXs hYs,
+      marginalSnd_measureToPmf_eq μ Xs Ys hXs hYs,
+      ← entropy_eq_negMulLog_sum_measureToPmf μ Xs,
+      ← entropy_eq_negMulLog_sum_measureToPmf μ Ys,
+      ← entropy_eq_negMulLog_sum_measureToPmf μ (fun ω => (Xs ω, Ys ω))]
+
+end EntropyBridge
+
 end InformationTheory.Shannon
