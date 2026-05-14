@@ -457,4 +457,219 @@ private lemma binning_alias_expectation_le_aux
     _ ≤ (S.card : ℝ) * ((M_X : ℝ))⁻¹ := by
         exact mul_le_mul_of_nonneg_right h_card h_inv_nn
 
+/-! ## Phase E.2 — `swError_EX` expectation bound under random binning.
+
+The expected `μ`-mass of the `E_X` error event over the random binning
+hash `f_X ∼ binningMeasure α n M_X` is bounded by
+`exp(n · (H(X,Y) - H(Y) + 2ε)) / M_X` — the conditional-typical fiber
+size on the `X` axis divided by the bin count. This is the heart of the
+random-binning achievability argument on the `X`-only error axis.
+
+Strategy (Fubini + per-`ω` slice argument):
+
+1. **Tonelli swap** (Bochner integral form): the outer integral over `f_X`
+   of `μ.real (swError_EX ... f_X)` becomes the outer integral over `ω` of
+   the inner `(binningMeasure ...).real`-mass of the per-`ω` collision
+   event. Concretely we rewrite each set's `Measure.real` as the Bochner
+   integral of its indicator and apply
+   `MeasureTheory.integral_integral_swap` on the product `μ ⊗ binningMeasure`.
+
+2. **Per-`ω` rewrite**: for fixed `ω`, the slice is exactly
+   `{f_X | ∃ x' ∈ conditionalTypicalSlice μ Xs Ys n ε (jointRV Ys n ω),
+            x' ≠ jointRV Xs n ω ∧ f_X x' = f_X (jointRV Xs n ω)}`
+   by `mem_conditionalTypicalSlice_iff` (definitional).
+
+3. **Apply `binning_alias_expectation_le_aux`** with
+   `S := slice.toFinite.toFinset` and `truth := jointRV Xs n ω`. This
+   gives the per-`ω` bound `S.card * (M_X)⁻¹`.
+
+4. **Slice cardinality bound (`conditionalTypicalSlice_card_le`)**: the
+   slice cardinality is at most `exp(n · (H(X,Y) - H(Y) + 2ε))`, uniformly
+   in `ω` (the bound is `y`-independent).
+
+5. **Outer-integral closure**: integrate the uniform `ω`-pointwise bound
+   against `μ` (a probability measure) — the integral of a constant equals
+   the constant.
+
+`hε : 0 < ε` is kept in the signature as part of the public API (matches
+the `conditionalTypicalSlice_card_le` shape and is consumed by downstream
+final-rate-region theorems) even though this proof does not branch on it. -/
+
+set_option linter.unusedVariables false in
+theorem swError_EX_expectation_le
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindepY_full : iIndepFun (fun i => Ys i) μ)
+    (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
+    (hindepZ_full : iIndepFun (fun i => jointSequence Xs Ys i) μ)
+    (hidentZ : ∀ i,
+      IdentDistrib (jointSequence Xs Ys i) (jointSequence Xs Ys 0) μ μ)
+    (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
+    (hposZ : ∀ p : α × β,
+      0 < (μ.map (jointSequence Xs Ys 0)).real {p})
+    {n M_X : ℕ} [NeZero M_X] {ε : ℝ} (hε : 0 < ε) :
+    ∫ f_X, μ.real (swError_EX μ Xs Ys n ε f_X) ∂(binningMeasure α n M_X)
+      ≤ Real.exp ((n : ℝ) *
+            (entropy μ (jointSequence Xs Ys 0) - entropy μ (Ys 0) + 2 * ε))
+        * ((M_X : ℝ))⁻¹ := by
+  classical
+  haveI : MeasurableSingletonClass ((Fin n → α) → Fin M_X) :=
+    Pi.instMeasurableSingletonClass
+  haveI : Fintype ((Fin n → α) → Fin M_X) := Pi.instFintype
+  -- Notation.
+  set B_X : Measure ((Fin n → α) → Fin M_X) := binningMeasure α n M_X with hB_X_def
+  set C : ℝ := Real.exp ((n : ℝ) *
+      (entropy μ (jointSequence Xs Ys 0) - entropy μ (Ys 0) + 2 * ε)) with hC_def
+  have hC_pos : 0 < C := Real.exp_pos _
+  have hC_nn : 0 ≤ C := hC_pos.le
+  have hMinv_nn : (0 : ℝ) ≤ ((M_X : ℝ))⁻¹ :=
+    inv_nonneg.mpr (by exact_mod_cast Nat.zero_le _)
+  -- The joint pair-measurable map ω ↦ (jointRV Xs n ω, jointRV Ys n ω).
+  have hXn : Measurable (jointRV Xs n) := measurable_jointRV Xs hXs n
+  have hYn : Measurable (jointRV Ys n) := measurable_jointRV Ys hYs n
+  -- Each `swError_EX μ ... f_X` is measurable in ω.
+  have h_meas_EX : ∀ f_X : (Fin n → α) → Fin M_X,
+      MeasurableSet (swError_EX μ Xs Ys n ε f_X) := fun f_X =>
+    measurableSet_swError_EX hXs hYs μ n ε f_X
+  -- Pointwise bound on each per-`f_X` slice (Step 1, no integration yet):
+  -- Per-`ω`-slice in `f_X` (the "set of bad hashes for ω") has B_X-measure
+  -- ≤ slice.card * (M_X)⁻¹ via `binning_alias_expectation_le_aux`,
+  -- and slice.card ≤ C via `conditionalTypicalSlice_card_le`.
+  -- We package this as a pointwise inequality on `ω`.
+  have h_per_omega : ∀ ω : Ω,
+      B_X.real {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X}
+        ≤ C * ((M_X : ℝ))⁻¹ := by
+    intro ω
+    -- The per-ω set unfolds to the binning-alias-expectation form.
+    set y : Fin n → β := jointRV Ys n ω with hy_def
+    set truth : Fin n → α := jointRV Xs n ω with htruth_def
+    set slice : Set (Fin n → α) := conditionalTypicalSlice μ Xs Ys n ε y with hslice_def
+    set S : Finset (Fin n → α) :=
+      (conditionalTypicalSlice_finite μ Xs Ys n ε y).toFinset with hS_def
+    -- Rewrite the per-ω set as binning_alias form.
+    have h_set_eq : {f_X : (Fin n → α) → Fin M_X | ω ∈ swError_EX μ Xs Ys n ε f_X}
+        = {f_X | ∃ x' ∈ S, x' ≠ truth ∧ f_X x' = f_X truth} := by
+      ext f_X
+      simp only [Set.mem_setOf_eq, swError_EX, htruth_def, hy_def, hS_def,
+        Set.Finite.mem_toFinset, mem_conditionalTypicalSlice_iff]
+      constructor
+      · rintro ⟨x', hne, hcoll, hjts⟩
+        exact ⟨x', hjts, hne, hcoll⟩
+      · rintro ⟨x', hjts, hne, hcoll⟩
+        exact ⟨x', hne, hcoll, hjts⟩
+    rw [h_set_eq]
+    -- Step A: bound by S.card * (M_X)⁻¹.
+    have hA : B_X.real {f_X | ∃ x' ∈ S, x' ≠ truth ∧ f_X x' = f_X truth}
+        ≤ (S.card : ℝ) * ((M_X : ℝ))⁻¹ :=
+      binning_alias_expectation_le_aux (M_X := M_X) truth S
+    -- Step B: slice cardinality ≤ C, hence S.card ≤ C.
+    have hB : (S.card : ℝ) ≤ C := by
+      have := conditionalTypicalSlice_card_le (ε := ε) μ Xs Ys hXs hYs
+        hindepY_full hidentY hindepZ_full hidentZ hposY hposZ n y
+      rw [hS_def, hC_def]
+      exact this
+    -- Combine.
+    calc B_X.real {f_X | ∃ x' ∈ S, x' ≠ truth ∧ f_X x' = f_X truth}
+        ≤ (S.card : ℝ) * ((M_X : ℝ))⁻¹ := hA
+      _ ≤ C * ((M_X : ℝ))⁻¹ := by
+          exact mul_le_mul_of_nonneg_right hB hMinv_nn
+  -- Step 2: Build the product set E ⊆ B_X-space × Ω.
+  set E : Set (((Fin n → α) → Fin M_X) × Ω) :=
+    {p | p.2 ∈ swError_EX μ Xs Ys n ε p.1} with hE_def
+  -- E is measurable: decompose by f_X (finite).
+  have hE_meas : MeasurableSet E := by
+    -- E = ⋃ f_X, {f_X} ×ˢ swError_EX μ ... f_X.
+    have h_decomp : E = ⋃ f_X : (Fin n → α) → Fin M_X,
+        ({f_X} : Set ((Fin n → α) → Fin M_X)) ×ˢ swError_EX μ Xs Ys n ε f_X := by
+      ext ⟨g, ω⟩
+      simp [E]
+    rw [h_decomp]
+    refine MeasurableSet.iUnion (fun f_X => ?_)
+    exact (measurableSet_singleton _).prod (h_meas_EX f_X)
+  -- Step 3: Apply Fubini for measures both ways.
+  -- (B_X.prod μ) E = ∫⁻ f_X, μ (slice_f_X) ∂B_X = ∫⁻ ω, B_X (slice_ω) ∂μ.
+  have h_fubini1 :
+      (B_X.prod μ) E = ∫⁻ f_X, μ (swError_EX μ Xs Ys n ε f_X) ∂B_X := by
+    rw [Measure.prod_apply hE_meas]
+    -- Prod.mk f_X ⁻¹' E = swError_EX μ ... f_X.
+    congr 1
+  have h_fubini2 :
+      (B_X.prod μ) E
+        = ∫⁻ ω, B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X} ∂μ := by
+    rw [Measure.prod_apply_symm hE_meas]
+    congr 1
+  -- Combine: ∫⁻ f_X, μ (...) ∂B_X = ∫⁻ ω, B_X (...) ∂μ.
+  have h_swap :
+      ∫⁻ f_X, μ (swError_EX μ Xs Ys n ε f_X) ∂B_X
+        = ∫⁻ ω, B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X} ∂μ := by
+    rw [← h_fubini1, h_fubini2]
+  -- Step 4: bound the inner B_X-mass uniformly in ω.
+  -- Per-ω bound at the ENNReal level: B_X (...) ≤ ENNReal.ofReal (C * (M_X)⁻¹).
+  have h_per_omega_ennreal : ∀ ω : Ω,
+      B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X}
+        ≤ ENNReal.ofReal (C * ((M_X : ℝ))⁻¹) := by
+    intro ω
+    have hr := h_per_omega ω
+    -- B_X.real S = (B_X S).toReal; B_X S < ∞ (probability measure).
+    have hne_top : B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X} ≠ ∞ :=
+      measure_ne_top _ _
+    rw [show B_X.real {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X}
+          = (B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X}).toReal from rfl] at hr
+    -- ENNReal.ofReal preserves the inequality on toReal ≤ real.
+    have h_rhs_nn : 0 ≤ C * ((M_X : ℝ))⁻¹ := mul_nonneg hC_nn hMinv_nn
+    calc B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X}
+        = ENNReal.ofReal (B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X}).toReal := by
+          rw [ENNReal.ofReal_toReal hne_top]
+      _ ≤ ENNReal.ofReal (C * ((M_X : ℝ))⁻¹) :=
+          ENNReal.ofReal_le_ofReal hr
+  -- Integrate the uniform pointwise bound against μ.
+  have h_lint_le :
+      ∫⁻ ω, B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X} ∂μ
+        ≤ ENNReal.ofReal (C * ((M_X : ℝ))⁻¹) := by
+    calc ∫⁻ ω, B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X} ∂μ
+        ≤ ∫⁻ _, ENNReal.ofReal (C * ((M_X : ℝ))⁻¹) ∂μ :=
+          lintegral_mono h_per_omega_ennreal
+      _ = ENNReal.ofReal (C * ((M_X : ℝ))⁻¹) * μ Set.univ := by
+          rw [lintegral_const]
+      _ = ENNReal.ofReal (C * ((M_X : ℝ))⁻¹) := by
+          rw [measure_univ, mul_one]
+  -- Step 5: convert Bochner outer integral to lintegral and conclude.
+  -- Outer integrand `f_X ↦ μ.real (swError_EX ... f_X)` is non-negative.
+  have h_int_nn : 0 ≤ᵐ[B_X] fun f_X => μ.real (swError_EX μ Xs Ys n ε f_X) := by
+    refine Filter.Eventually.of_forall (fun f_X => ?_)
+    exact measureReal_nonneg
+  -- Strong measurability via Fintype + every-set-is-measurable.
+  have h_int_meas :
+      AEStronglyMeasurable
+        (fun f_X : (Fin n → α) → Fin M_X => μ.real (swError_EX μ Xs Ys n ε f_X)) B_X := by
+    -- Domain is finite + every set measurable → every function is measurable.
+    apply Measurable.aestronglyMeasurable
+    refine Measurable.of_discrete
+  rw [integral_eq_lintegral_of_nonneg_ae h_int_nn h_int_meas]
+  -- Now goal: (∫⁻ f_X, ENNReal.ofReal (μ.real ...) ∂B_X).toReal ≤ C * (M_X)⁻¹.
+  -- ENNReal.ofReal (μ.real S) = μ S (since μ S ≤ 1 < ∞).
+  have h_ofReal_eq : ∀ f_X : (Fin n → α) → Fin M_X,
+      ENNReal.ofReal (μ.real (swError_EX μ Xs Ys n ε f_X))
+        = μ (swError_EX μ Xs Ys n ε f_X) := by
+    intro f_X
+    have hne_top : μ (swError_EX μ Xs Ys n ε f_X) ≠ ∞ := measure_ne_top _ _
+    rw [show μ.real (swError_EX μ Xs Ys n ε f_X)
+          = (μ (swError_EX μ Xs Ys n ε f_X)).toReal from rfl,
+        ENNReal.ofReal_toReal hne_top]
+  -- Substitute into the lintegral.
+  have h_lint_eq :
+      ∫⁻ f_X, ENNReal.ofReal (μ.real (swError_EX μ Xs Ys n ε f_X)) ∂B_X
+        = ∫⁻ f_X, μ (swError_EX μ Xs Ys n ε f_X) ∂B_X := by
+    refine lintegral_congr (fun f_X => ?_)
+    exact h_ofReal_eq f_X
+  rw [h_lint_eq, h_swap]
+  -- Goal: (∫⁻ ω, B_X (...) ∂μ).toReal ≤ C * (M_X)⁻¹.
+  have h_rhs_nn : 0 ≤ C * ((M_X : ℝ))⁻¹ := mul_nonneg hC_nn hMinv_nn
+  calc (∫⁻ ω, B_X {f_X | ω ∈ swError_EX μ Xs Ys n ε f_X} ∂μ).toReal
+      ≤ (ENNReal.ofReal (C * ((M_X : ℝ))⁻¹)).toReal := by
+        apply ENNReal.toReal_mono _ h_lint_le
+        exact ENNReal.ofReal_ne_top
+    _ = C * ((M_X : ℝ))⁻¹ := ENNReal.toReal_ofReal h_rhs_nn
+
 end InformationTheory.Shannon.ChannelCoding
