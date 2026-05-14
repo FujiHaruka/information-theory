@@ -57,6 +57,16 @@
   (~200-400 行、AEP の rate-uniform 化 + parent N closed-form 化) が要件。Phase A-C infrastructure
   は D-1'' で本質的に再利用。判断ログ 6 で 4 戦略を評価 (撤退理由含む)。
 
+  **D-1'' Step 1 着手 (2026-05-14、partial)**: AEP rate-uniform 化を
+  `Common2026/Shannon/AEPRate.lean` (293 行) で publish。`typicalSet_prob_ge_of_rate` は
+  Chebyshev (`ProbabilityTheory.meas_ge_le_variance_div_sq`) + pairwise variance sum
+  (`ProbabilityTheory.IndepFun.variance_sum`) 経由で
+  `n ≥ ⌈Var(pmfLog) / (η ε²)⌉ + 1 → μ {typicalSet} ≥ 1 - η` を closed-form で示す。
+  これは parent surgery (戦略 3) の `N₁` (AEP block) closed-form 化に直接使える。
+  Phase D 主定理は `Common2026/Shannon/ChannelCodingShannonTheoremFull.lean` (73 行) に
+  statement のみ 1 sorry で保留。`N₂` (E2 exp decay) の closed-form 化 + 親 D-1 への合成は
+  後続シードに deferred。
+
 - **D-2. Channel coding converse (general input form)** ✅ (2026-05-13, **chain rule 分解 MVP**) →
   [docs/shannon/channel-coding-converse-general-plan.md](shannon/channel-coding-converse-general-plan.md) —
   Cover-Thomas 7.9 **完全形**。既存 `shannon_converse_single_shot` (uniform input only) を出発点に、
