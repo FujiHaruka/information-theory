@@ -16,7 +16,7 @@ namespace InformationTheory.Shannon.ChannelCoding
 
 open MeasureTheory ProbabilityTheory
 open InformationTheory.Shannon
-open scoped ENNReal NNReal
+open scoped ENNReal NNReal Topology
 
 set_option linter.unusedSectionVars false
 
@@ -317,5 +317,144 @@ lemma measurableSet_swError_EXY
     rfl
   rw [h_eq]
   exact hmeas hS_meas
+
+/-! ## Phase E.1 — `swError_E0` probability tends to zero (AEP).
+
+The "true source pair is not jointly typical" event has probability tending to `0`
+by the joint AEP (`jointlyTypicalSet_prob_tendsto_one`). This is the simplest of the
+four error-event bounds, and the only one that does **not** depend on the random
+binning measure: it is a pure statement about the underlying source process. -/
+
+theorem swError_E0_prob_tendsto_zero
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindepX : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j)
+    (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hindepY : Pairwise fun i j => Ys i ⟂ᵢ[μ] Ys j)
+    (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
+    (hindepZ : Pairwise fun i j =>
+      jointSequence Xs Ys i ⟂ᵢ[μ] jointSequence Xs Ys j)
+    (hidentZ : ∀ i,
+      IdentDistrib (jointSequence Xs Ys i) (jointSequence Xs Ys 0) μ μ)
+    {ε : ℝ} (hε : 0 < ε) :
+    Filter.Tendsto
+      (fun n : ℕ => μ.real (swError_E0 μ Xs Ys n ε))
+      Filter.atTop (𝓝 0) := by
+  classical
+  -- The "good" event: `(X^n ω, Y^n ω) ∈ jointlyTypicalSet`. Tends-to-1 by AEP.
+  have h_good : Filter.Tendsto
+      (fun n : ℕ => μ
+        {ω | (jointRV Xs n ω, jointRV Ys n ω) ∈ jointlyTypicalSet μ Xs Ys n ε})
+      Filter.atTop (𝓝 1) :=
+    jointlyTypicalSet_prob_tendsto_one μ Xs Ys hXs hYs
+      hindepX hidentX hindepY hidentY hindepZ hidentZ hε
+  -- Measurability of the good event.
+  have h_meas_good : ∀ n,
+      MeasurableSet
+        {ω | (jointRV Xs n ω, jointRV Ys n ω) ∈ jointlyTypicalSet μ Xs Ys n ε} := by
+    intro n
+    have h_meas_pair : Measurable
+        (fun ω => (jointRV Xs n ω, jointRV Ys n ω)) :=
+      (measurable_jointRV Xs hXs n).prodMk (measurable_jointRV Ys hYs n)
+    exact h_meas_pair (measurableSet_jointlyTypicalSet _ _ _ _ _)
+  -- swError_E0 is the complement of the good event.
+  have h_compl_id : ∀ n,
+      μ.real (swError_E0 μ Xs Ys n ε)
+        = 1 - μ.real
+            {ω | (jointRV Xs n ω, jointRV Ys n ω) ∈ jointlyTypicalSet μ Xs Ys n ε} := by
+    intro n
+    have h_eq :
+        (swError_E0 μ Xs Ys n ε)
+          = {ω | (jointRV Xs n ω, jointRV Ys n ω) ∈ jointlyTypicalSet μ Xs Ys n ε}ᶜ :=
+      rfl
+    rw [h_eq, probReal_compl_eq_one_sub (h_meas_good n)]
+  -- Lift `μ` tendsto to `μ.real` tendsto.
+  have h_good_real : Filter.Tendsto
+      (fun n : ℕ => μ.real
+        {ω | (jointRV Xs n ω, jointRV Ys n ω) ∈ jointlyTypicalSet μ Xs Ys n ε})
+      Filter.atTop (𝓝 1) := by
+    have h_step := (ENNReal.tendsto_toReal (by simp : (1 : ℝ≥0∞) ≠ ∞)).comp h_good
+    simpa [Measure.real] using h_step
+  -- 1 - μ.real (good) → 1 - 1 = 0.
+  refine Filter.Tendsto.congr (fun n => (h_compl_id n).symm) ?_
+  have h_const : Filter.Tendsto (fun _ : ℕ => (1 : ℝ)) Filter.atTop (𝓝 1) :=
+    tendsto_const_nhds
+  have := h_const.sub h_good_real
+  simpa using this
+
+/-! ## Phase E common utility — alias expectation bound. -/
+
+/-- **Random-binning alias expectation bound (E.2 / E.3 / E.4 common utility).**
+
+Fixing the source realization, let `S` be a (deterministic) set of candidate alias
+sequences `x'`. Then the binning-measure probability that some `x' ∈ S` with
+`x' ≠ truth` hashes to the same bin as `truth` is bounded by `|S| / M_X`.
+
+This is the union-bound + collision-probability skeleton shared by all three
+non-`E_0` error events: the only thing that varies between them is the choice of
+`S` (a conditional-typical fiber size on the `X` axis, on the `Y` axis, or on the
+joint axis).
+
+The `truth` may or may not lie in `S`; the constraint `x' ≠ truth` filters it out
+of the union, but we coarsely bound the count by `|S|` (not `|S \ {truth}|`) for
+downstream cleanliness. -/
+private lemma binning_alias_expectation_le_aux
+    {n M_X : ℕ} [NeZero M_X]
+    (truth : Fin n → α) (S : Finset (Fin n → α)) :
+    (binningMeasure α n M_X).real
+        {f_X | ∃ x' ∈ S, x' ≠ truth ∧ f_X x' = f_X truth}
+      ≤ S.card * ((M_X : ℝ))⁻¹ := by
+  classical
+  -- Step 1: the event is contained in the union over `x' ∈ S.filter (· ≠ truth)`
+  -- of the per-alias collision event `{f | f x' = f truth}`.
+  set T : Finset (Fin n → α) := S.filter (· ≠ truth) with hT_def
+  set evt : Set ((Fin n → α) → Fin M_X) :=
+      {f_X | ∃ x' ∈ S, x' ≠ truth ∧ f_X x' = f_X truth} with hevt_def
+  set unionEvt : Set ((Fin n → α) → Fin M_X) :=
+      ⋃ x' ∈ T, {f_X | f_X x' = f_X truth} with hunionEvt_def
+  have h_sub : evt ⊆ unionEvt := by
+    intro f hf
+    rcases hf with ⟨x', hxS, hne, hcoll⟩
+    refine Set.mem_iUnion₂.mpr ⟨x', ?_, hcoll⟩
+    simp [T, hxS, hne]
+  -- Step 2: lift to `μ.real` via monotonicity.
+  have h_meas_evt : MeasurableSet evt := (Set.toFinite _).measurableSet
+  have h_meas_unionEvt : MeasurableSet unionEvt := (Set.toFinite _).measurableSet
+  have h_step1 :
+      (binningMeasure α n M_X).real evt
+        ≤ (binningMeasure α n M_X).real unionEvt :=
+    measureReal_mono h_sub (measure_ne_top _ _)
+  -- Step 3: `measureReal_biUnion_finset_le` for the union bound.
+  have h_step2 :
+      (binningMeasure α n M_X).real unionEvt
+        ≤ ∑ x' ∈ T, (binningMeasure α n M_X).real {f_X | f_X x' = f_X truth} :=
+    measureReal_biUnion_finset_le _ _
+  -- Step 4: each summand is exactly `(M_X)⁻¹` since `x' ≠ truth` in the filter.
+  have h_summand : ∀ x' ∈ T,
+      (binningMeasure α n M_X).real {f_X | f_X x' = f_X truth} = ((M_X : ℝ))⁻¹ := by
+    intro x' hx'
+    have hne : x' ≠ truth := by
+      have := (Finset.mem_filter.mp hx').2
+      exact this
+    -- `binning_collision_prob` gives `(M_X)⁻¹` for distinct inputs.
+    exact binning_collision_prob hne
+  have h_step3 :
+      (∑ x' ∈ T, (binningMeasure α n M_X).real {f_X | f_X x' = f_X truth})
+        = (T.card : ℝ) * ((M_X : ℝ))⁻¹ := by
+    rw [Finset.sum_congr rfl h_summand, Finset.sum_const, nsmul_eq_mul]
+  -- Step 5: `T.card ≤ S.card`.
+  have h_card : (T.card : ℝ) ≤ (S.card : ℝ) := by
+    exact_mod_cast Finset.card_filter_le S _
+  -- Combine.
+  have h_inv_nn : (0 : ℝ) ≤ ((M_X : ℝ))⁻¹ := by
+    have : (0 : ℝ) ≤ (M_X : ℝ) := by exact_mod_cast Nat.zero_le _
+    exact inv_nonneg.mpr this
+  calc (binningMeasure α n M_X).real evt
+      ≤ (binningMeasure α n M_X).real unionEvt := h_step1
+    _ ≤ ∑ x' ∈ T, (binningMeasure α n M_X).real {f_X | f_X x' = f_X truth} := h_step2
+    _ = (T.card : ℝ) * ((M_X : ℝ))⁻¹ := h_step3
+    _ ≤ (S.card : ℝ) * ((M_X : ℝ))⁻¹ := by
+        exact mul_le_mul_of_nonneg_right h_card h_inv_nn
 
 end InformationTheory.Shannon.ChannelCoding
