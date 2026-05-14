@@ -62,6 +62,7 @@ import Common2026.Shannon.RateDistortionAchievability
 import Common2026.Shannon.RateDistortionAchievabilityPhaseB
 import Common2026.Shannon.RateDistortionAchievabilityPhaseC
 import Common2026.Shannon.RateDistortionAchievabilityPhaseD
+import Common2026.Shannon.RateDistortionAchievabilityPhaseE
 import Common2026.Shannon.RateDistortionConverseNLetter
 import Common2026.Shannon.Sanov
 import Common2026.Shannon.SanovLDP
