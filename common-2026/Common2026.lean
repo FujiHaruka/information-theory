@@ -35,6 +35,7 @@ import Common2026.Shannon.HypercubeEdgeBoundarySharp
 import Common2026.Polymatroid.Basic
 import Common2026.Shannon.Polymatroid
 import Common2026.Shannon.AEP
+import Common2026.Shannon.AEPRate
 import Common2026.Shannon.Stein
 import Common2026.Shannon.StrongStein
 import Common2026.Shannon.MaxEntropy
