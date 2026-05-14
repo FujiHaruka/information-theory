@@ -253,9 +253,18 @@
     + `iInf_add` / `add_iInf` で iInf 階層に分配 + boundary case (`lam ∈ {0, 1}`) を別 branch
     で処理。
 
-  **後継 `E-4'''` deferred**: `klDiv` joint convexity の **log-sum inequality 経由 discharge**
-  (有限アルファベット pmf 形で per-atom 凸性 + Jensen weights) ~150-300 行。Mathlib 不在
-  (`x log x` 1 変数凸性のみ、`(p, q) ↦ p log(p/q)` 結合凸性は自作)。
+  **後継 `E-4'''` 部分着手** (2026-05-14, **Step A 完成 partial**) →
+  `Common2026/Shannon/RateDistortionConvexityDischarge.lean` (189 行、0 sorry / 0 warning):
+  - `klFun_weighted_two_point` — per-atom 2 点 joint convexity (算術核): `Z = λq₁+(1-λ)q₂`
+    で case-split (`Z = 0` は AC + 符号評価で各項 = 0、`Z > 0` は重み `wᵢ = λqᵢ/Z` で
+    barycentric 書き換え + `convexOn_klFun.2`)
+  - `klDivPmf_joint_convex_two_point` — pmf 形 `∑ a, Q a · klFun (P a / Q a)` の 2 点凸性
+    (`Finset.sum_le_sum` + `Finset.mul_sum` で per-atom 集約)
+
+  **残: measure → pmf bridge** (Step B–E) deferred ~200 行: `mixtureMeasure_real_singleton`
+  / `marginalProd_real_singleton` / `klDivSumForm_mixtureMeasure_le` / `klDiv =
+  ENNReal.ofReal klDivSumForm` AC 付き bridge / `h_klDiv_conv` inhabitation。Mathlib API
+  ギャップ (Fintype 由来 integrability 流通 + AC propagation under mixture) のため別 phase。
   **`E-4''C`** deferred: n-letter 規定歪み形 converse (`MIChainRule.mutualInfo_pi_eq_sum`
   + Phase B 凸性 + Jensen 1/n 平均) ~300-500 行。
 
