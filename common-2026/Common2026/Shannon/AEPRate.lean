@@ -290,4 +290,75 @@ theorem typicalSet_prob_ge_of_rate
     simpa [ENNReal.toReal_ofReal hη.le] using this
   linarith
 
+/-- **Step 2 / part 1**: closed-form `N(g, ε')` for exponential decay.
+For any `g, ε' > 0`, there is `N` such that for all `n ≥ N`,
+`exp(- n · g) < ε'`. Concretely `N := ⌈max 0 (-log ε' / g)⌉ + 1`. -/
+theorem exp_neg_mul_lt_of_rate {g ε' : ℝ} (hg : 0 < g) (hε' : 0 < ε') :
+    ∃ N : ℕ, ∀ n ≥ N, Real.exp (- (n : ℝ) * g) < ε' := by
+  set t : ℝ := max 0 (-Real.log ε' / g) with ht_def
+  set N : ℕ := Nat.ceil t + 1 with hN_def
+  refine ⟨N, ?_⟩
+  intro n hn_ge
+  -- (n : ℝ) ≥ N ≥ ⌈t⌉ + 1 > t, since ⌈t⌉ < ⌈t⌉ + 1 ≤ n.
+  have h_t_nn : 0 ≤ t := le_max_left _ _
+  have h_ceil_lt_succ : (Nat.ceil t : ℝ) < (Nat.ceil t + 1 : ℝ) := by linarith
+  have h_t_le_ceil : t ≤ (Nat.ceil t : ℝ) := Nat.le_ceil _
+  have h_N_le_n : (N : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn_ge
+  have h_N_eq : (N : ℝ) = (Nat.ceil t : ℝ) + 1 := by
+    simp [hN_def]
+  have h_t_lt_n : t < (n : ℝ) := by
+    have : t < (N : ℝ) := by rw [h_N_eq]; linarith
+    linarith
+  -- t ≥ -log ε' / g, so -log ε' / g < n, hence -log ε' < n * g (g > 0).
+  have h_div_le_t : -Real.log ε' / g ≤ t := le_max_right _ _
+  have h_div_lt_n : -Real.log ε' / g < (n : ℝ) := lt_of_le_of_lt h_div_le_t h_t_lt_n
+  have h_neg_log_lt : -Real.log ε' < (n : ℝ) * g := by
+    rw [div_lt_iff₀ hg] at h_div_lt_n
+    exact h_div_lt_n
+  have h_lt_log : - ((n : ℝ) * g) < Real.log ε' := by linarith
+  -- Conclude via `Real.lt_log_iff_exp_lt`.
+  have h_iff := Real.lt_log_iff_exp_lt (x := - ((n : ℝ) * g)) (y := ε') hε'
+  have h_step : Real.exp (- ((n : ℝ) * g)) < ε' := h_iff.mp h_lt_log
+  -- Rewrite `- (n : ℝ) * g = - ((n : ℝ) * g)`.
+  have h_neg_eq : - (n : ℝ) * g = - ((n : ℝ) * g) := by ring
+  rw [h_neg_eq]
+  exact h_step
+
+/-- **Step 2 / part 2**: closed-form `N(I, R, ε, ε')` for the channel-coding E2 term.
+Given the AEP gap `g := I - R - 3ε > 0` and any tolerance `ε' > 0`, there is `N` such that
+for all `n ≥ N`,
+`(⌈exp(n·R)⌉ - 1) · exp(n · (-I + 3ε)) < ε'`.
+
+Closed form follows from `exp_neg_mul_lt_of_rate` plus the squeeze
+`(⌈exp(nR)⌉ - 1) · exp(n·(-I+3ε)) ≤ exp(-n · g)`. -/
+theorem channelCoding_E2_lt_of_rate
+    {I R ε ε' : ℝ} (hgap : 0 < I - R - 3 * ε) (hε' : 0 < ε') :
+    ∃ N : ℕ, ∀ n ≥ N,
+      ((Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) - 1) *
+        Real.exp ((n : ℝ) * (-I + 3 * ε)) < ε' := by
+  obtain ⟨N, hN⟩ := exp_neg_mul_lt_of_rate hgap hε'
+  refine ⟨N, ?_⟩
+  intro n hn
+  -- Pointwise upper bound (mirrors `h_upper` in ChannelCodingAchievability).
+  have h_ceil_sub_le :
+      ((Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) - 1) ≤ Real.exp ((n : ℝ) * R) := by
+    have h_lt : (Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) <
+        Real.exp ((n : ℝ) * R) + 1 :=
+      Nat.ceil_lt_add_one (Real.exp_pos _).le
+    linarith
+  have h_mul : ((Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) - 1) *
+        Real.exp ((n : ℝ) * (-I + 3 * ε))
+      ≤ Real.exp ((n : ℝ) * R) * Real.exp ((n : ℝ) * (-I + 3 * ε)) :=
+    mul_le_mul_of_nonneg_right h_ceil_sub_le (Real.exp_pos _).le
+  have h_exp_eq :
+      Real.exp ((n : ℝ) * R) * Real.exp ((n : ℝ) * (-I + 3 * ε))
+        = Real.exp (- (n : ℝ) * (I - R - 3 * ε)) := by
+    rw [← Real.exp_add]
+    congr 1; ring
+  have h_upper_le : ((Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) - 1) *
+        Real.exp ((n : ℝ) * (-I + 3 * ε))
+      ≤ Real.exp (- (n : ℝ) * (I - R - 3 * ε)) := by
+    rw [← h_exp_eq]; exact h_mul
+  exact lt_of_le_of_lt h_upper_le (hN n hn)
+
 end InformationTheory.Shannon
