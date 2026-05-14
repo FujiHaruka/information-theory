@@ -288,8 +288,27 @@
     case-split on `klDiv νᵢ marg(νᵢ) = ∞`: 有限側は `klDiv_ne_top_iff` で AC 抽出 → Step D
     適用、無限側 + boundary `lam = 0/1` は mixtureMeasure simp + ENNReal.mul_top で trivial
     bound。`h_int_witness` は `Finset.sup'` で bounded 化 + `Integrable.mono'`
-  **`E-4''C`** deferred: n-letter 規定歪み形 converse (`MIChainRule.mutualInfo_pi_eq_sum`
-  + Phase B 凸性 + Jensen 1/n 平均) ~300-500 行。
+  **`E-4''C`** 実装完了 (2026-05-14, **n-letter converse MVP**) →
+  `Common2026/Shannon/RateDistortionConverseNLetter.lean` (393 行、0 sorry / 0 warning):
+  - **Stage 1** `rate_distortion_converse_n_letter_block`:
+    `rate_distortion_converse_single_shot_specified` を
+    `(α := Fin n → α, β := Fin n → β, M := Fin M)` で **直接 instantiate**。
+    block distortion `(fun x y => blockDistortion d n x y)` を distortion measure
+    として渡し、`c.expectedBlockDistortion P_X d ≤ D` を仮定に取って
+    `(rateDistortionFunction (blockDistortion d n) (P_X^n) D).toReal ≤ log M` を出す。
+  - **Stage 2** `rate_distortion_converse_n_letter_singleLetter`:
+    single-letterized 形 `(rateDistortionFunction d_R P_X D).toReal ≤ (1/n) · log M`。
+    Chain: per-letter `R(D̃_i) ≤ I(X_i; X̂_i)`
+    (`rateDistortionFunction_le_mutualInfo_perLetter`) → MI super-additivity
+    `h_super: ∑ I(X_i; X̂_i) ≤ I(X^n; X̂^n)` (hypothesis pass-through) →
+    block-level MI bound `(mutualInfo μ X^n X̂^n).toReal ≤ log M`
+    (`mutualInfo_block_le_log_card`, DPI + max-entropy chain) → n-way Jensen +
+    block-distortion Fubini + antitonicity を **`h_jensen_antitone` 単一仮説に bundle**
+    (toReal 形)。
+  - **設計判断**: n-way Jensen + block-distortion Fubini + MI tensorization は
+    各々 ~50-200 行で独立に discharge 可能だが本 MVP では **hypothesis pass-through**
+    で抜く (Step 1.5 `mutualInfo_block_le_log_card` のみ自前 discharge)。既存
+    file は不変、新規 file 1 本のみ。
 
 - **E-5. Slepian–Wolf achievability** ✅ (2026-05-13, **退化点 MVP**) →
   [docs/shannon/slepian-wolf-achievability-plan.md](shannon/slepian-wolf-achievability-plan.md) —
