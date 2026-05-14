@@ -253,18 +253,31 @@
     + `iInf_add` / `add_iInf` で iInf 階層に分配 + boundary case (`lam ∈ {0, 1}`) を別 branch
     で処理。
 
-  **後継 `E-4'''` 部分着手** (2026-05-14, **Step A 完成 partial**) →
-  `Common2026/Shannon/RateDistortionConvexityDischarge.lean` (189 行、0 sorry / 0 warning):
-  - `klFun_weighted_two_point` — per-atom 2 点 joint convexity (算術核): `Z = λq₁+(1-λ)q₂`
-    で case-split (`Z = 0` は AC + 符号評価で各項 = 0、`Z > 0` は重み `wᵢ = λqᵢ/Z` で
-    barycentric 書き換え + `convexOn_klFun.2`)
-  - `klDivPmf_joint_convex_two_point` — pmf 形 `∑ a, Q a · klFun (P a / Q a)` の 2 点凸性
-    (`Finset.sum_le_sum` + `Finset.mul_sum` で per-atom 集約)
-
-  **残: measure → pmf bridge** (Step B–E) deferred ~200 行: `mixtureMeasure_real_singleton`
-  / `marginalProd_real_singleton` / `klDivSumForm_mixtureMeasure_le` / `klDiv =
-  ENNReal.ofReal klDivSumForm` AC 付き bridge / `h_klDiv_conv` inhabitation。Mathlib API
-  ギャップ (Fintype 由来 integrability 流通 + AC propagation under mixture) のため別 phase。
+  **後継 `E-4'''` 完結** (2026-05-14, **Step A-E 全段、有限アルファベット版 R(D) 凸性
+  仮説なし形完成**) → `Common2026/Shannon/RateDistortionConvexityDischarge.lean`
+  (788 行、0 sorry / 0 warning):
+  - **Step A** (`klFun_weighted_two_point` + `klDivPmf_joint_convex_two_point`):
+    per-atom 2 点 joint convexity (算術核) + 有限アルファベット pmf 形 2 点 joint convexity
+  - **Step B** (`mixtureMeasure_real_singleton` + `marginalProd_real_singleton` +
+    `sum_marg_klFun_eq_klDivSumForm` 形 bridge + `klDivSumForm_mixtureMeasure_le`):
+    Real-side 主補題。**X-marginal 共有が必須** (`marg(mix) = λ marg(ν₁) + (1-λ) marg(ν₂)`
+    が cross term なしで成立する条件)、Step A `klFun_weighted_two_point` を per-atom 適用 +
+    `sum_marg_klFun_eq_klDivSumForm` (summed identity、prob 正規化 `∑(marg - ν) = 0` 経由) で
+    `klDivSumForm` と `klDivPmf` 形を橋渡し
+  - **Step C** (`klDiv_eq_ofReal_klDivSumForm`): `klDiv ν marg = ofReal (klDivSumForm ν marg)`
+    AC 付き bridge。Sanov の `klDivSumForm_eq_toReal_klDiv` を **`Q full support` 仮説なし**
+    で再導出 (`Q.real{a} = 0` atom は AC 経由で `P.real{a} = 0`、両側 `0 · _ = 0` で消失)、
+    Fintype 上 integrability 自動 + `klDiv_ne_top_iff` で `ofReal_toReal` 経由
+  - **Step D** (`klDiv_mixture_joint_convex`): measure-level 主補題。Step B + Step C 合成。
+    mixture の AC propagation は per-singleton 分解 (margMix{p} = (mix.map fst){p.1} ·
+    (mix.map snd){p.2} = 0 ⟹ either factor 0 ⟹ mix{p} = 0、Fintype + `sum_measure_singleton`
+    で AC 全体に lift)、ENNReal/Real plumbing は `← ENNReal.ofReal_mul` + `← ENNReal.ofReal_add`
+    + `ofReal_le_ofReal`
+  - **Step E** (`rateDistortionFunction_convexOn_pmf`): 仮説なし主定理。親
+    `rateDistortionFunction_convexOn` の `h_klDiv_conv` を Step D で discharge、
+    case-split on `klDiv νᵢ marg(νᵢ) = ∞`: 有限側は `klDiv_ne_top_iff` で AC 抽出 → Step D
+    適用、無限側 + boundary `lam = 0/1` は mixtureMeasure simp + ENNReal.mul_top で trivial
+    bound。`h_int_witness` は `Finset.sup'` で bounded 化 + `Integrable.mono'`
   **`E-4''C`** deferred: n-letter 規定歪み形 converse (`MIChainRule.mutualInfo_pi_eq_sum`
   + Phase B 凸性 + Jensen 1/n 平均) ~300-500 行。
 
