@@ -59,6 +59,7 @@ import Common2026.Shannon.RateDistortionConverseMonotone
 import Common2026.Shannon.RateDistortionConvexity
 import Common2026.Shannon.RateDistortionConvexityDischarge
 import Common2026.Shannon.RateDistortionAchievability
+import Common2026.Shannon.RateDistortionAchievabilityPhaseB
 import Common2026.Shannon.RateDistortionConverseNLetter
 import Common2026.Shannon.Sanov
 import Common2026.Shannon.SanovLDP
