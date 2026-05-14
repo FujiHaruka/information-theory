@@ -672,4 +672,376 @@ theorem swError_EX_expectation_le
         exact ENNReal.ofReal_ne_top
     _ = C * ((M_X : ℝ))⁻¹ := ENNReal.toReal_ofReal h_rhs_nn
 
+/-! ## Phase E.3 — `swError_EY` expectation bound under random binning.
+
+Mirror of Phase E.2 with the `X` and `Y` axes swapped. The expected
+`μ`-mass of the `E_Y` error event over the random binning hash
+`f_Y ∼ binningMeasure β n M_Y` is bounded by
+`exp(n · (H(X,Y) - H(X) + 2ε)) / M_Y` — the conditional-typical
+fiber size on the `Y` axis divided by the bin count.
+
+The proof is the exact symmetric counterpart to E.2: we work with the
+Y-fiber slice (`{y' | (x, y') ∈ jointlyTypicalSet}`) instead of the
+X-fiber. Phase C only published the X-fiber form; the Y-fiber variant
+is built locally as a `private` utility below. -/
+
+/-! ### Y-fiber slice utility (mirror of Phase C). -/
+
+/-- The Y-fiber of the jointly typical set at a fixed X-block `x`. Mirror of
+`conditionalTypicalSlice` (Phase C) with the two axes swapped. -/
+private noncomputable def conditionalTypicalSliceY
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (n : ℕ) (ε : ℝ) (x : Fin n → α) : Set (Fin n → β) :=
+  { y | (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε }
+
+private lemma mem_conditionalTypicalSliceY_iff
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (n : ℕ) (ε : ℝ) (x : Fin n → α) (y : Fin n → β) :
+    y ∈ conditionalTypicalSliceY μ Xs Ys n ε x ↔
+      (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε := Iff.rfl
+
+private lemma conditionalTypicalSliceY_finite
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (n : ℕ) (ε : ℝ) (x : Fin n → α) :
+    (conditionalTypicalSliceY μ Xs Ys n ε x).Finite :=
+  Set.toFinite _
+
+private lemma conditionalTypicalSliceY_empty_of_x_not_typical
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (n : ℕ) (ε : ℝ) {x : Fin n → α}
+    (hx : x ∉ InformationTheory.Shannon.typicalSet μ Xs n ε) :
+    conditionalTypicalSliceY μ Xs Ys n ε x = ∅ := by
+  ext y
+  constructor
+  · intro hy
+    exact absurd hy.1 hx
+  · intro hy
+    exact hy.elim
+
+/-- **Y-fiber slice size bound** (mirror of `conditionalTypicalSlice_card_le`).
+For any X-block `x`, the cardinality of the Y-fiber of the jointly typical
+set at `x` is at most `exp(n · (H(X, Y) - H(X) + 2ε))`. -/
+private theorem conditionalTypicalSliceY_card_le
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindepX_full : iIndepFun (fun i => Xs i) μ)
+    (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hindepZ_full : iIndepFun (fun i => jointSequence Xs Ys i) μ)
+    (hidentZ : ∀ i,
+      IdentDistrib (jointSequence Xs Ys i) (jointSequence Xs Ys 0) μ μ)
+    (hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    (hposZ : ∀ p : α × β,
+      0 < (μ.map (jointSequence Xs Ys 0)).real {p})
+    (n : ℕ) {ε : ℝ}
+    (x : Fin n → α) :
+    ((conditionalTypicalSliceY μ Xs Ys n ε x).toFinite.toFinset.card : ℝ)
+      ≤ Real.exp ((n : ℝ) *
+          (entropy μ (jointSequence Xs Ys 0) - entropy μ (Xs 0) + 2 * ε)) := by
+  classical
+  set Zs : ℕ → Ω → α × β := jointSequence Xs Ys with hZs_def
+  have hZs : ∀ i, Measurable (Zs i) := fun i =>
+    measurable_jointSequence Xs Ys hXs hYs i
+  set HZ : ℝ := entropy μ (Zs 0) with hHZ_def
+  set HX : ℝ := entropy μ (Xs 0) with hHX_def
+  set F : Finset (Fin n → β) :=
+    (conditionalTypicalSliceY μ Xs Ys n ε x).toFinite.toFinset with hF_def
+  by_cases hxT : x ∈ InformationTheory.Shannon.typicalSet μ Xs n ε
+  · -- X-typical: full argument.
+    -- Embedding `embed : (Fin n → β) → (Fin n → α × β)`, `embed y i := (x i, y i)`.
+    let embed : (Fin n → β) → (Fin n → α × β) := fun y i => (x i, y i)
+    have hembed_inj : Function.Injective embed := by
+      intro y y' hyy
+      funext i
+      have := congr_fun hyy i
+      exact (Prod.mk.injEq _ _ _ _).mp this |>.2
+    have hF_embed_typ : ∀ y ∈ F, embed y ∈ InformationTheory.Shannon.typicalSet μ Zs n ε := by
+      intro y hy
+      have hy_set : y ∈ conditionalTypicalSliceY μ Xs Ys n ε x :=
+        (Set.Finite.mem_toFinset _).mp hy
+      exact hy_set.2.2
+    have hε_pos : 0 < ε := by
+      rcases F.eq_empty_or_nonempty with hempty | ⟨y0, hy0⟩
+      · rw [mem_typicalSet_iff] at hxT
+        exact (abs_nonneg _).trans_lt hxT
+      · have h := hF_embed_typ y0 hy0
+        rw [mem_typicalSet_iff] at h
+        exact (abs_nonneg _).trans_lt h
+    have hpoint_ge : ∀ y ∈ F,
+        Real.exp (-(n : ℝ) * (HZ + ε)) ≤
+            (μ.map (jointRV Zs n)).real {embed y} := by
+      intro y hy
+      have hyT : embed y ∈ InformationTheory.Shannon.typicalSet μ Zs n ε :=
+        hF_embed_typ y hy
+      exact typicalSet_prob_ge μ Zs hZs hindepZ_full hidentZ hposZ n (embed y) hyT
+    have hsum_ge :
+        (F.card : ℝ) * Real.exp (-(n : ℝ) * (HZ + ε)) ≤
+            ∑ y ∈ F, (μ.map (jointRV Zs n)).real {embed y} := by
+      calc (F.card : ℝ) * Real.exp (-(n : ℝ) * (HZ + ε))
+          = ∑ _y ∈ F, Real.exp (-(n : ℝ) * (HZ + ε)) := by
+            rw [Finset.sum_const, nsmul_eq_mul]
+        _ ≤ ∑ y ∈ F, (μ.map (jointRV Zs n)).real {embed y} :=
+            Finset.sum_le_sum hpoint_ge
+    have hMprobZ : IsProbabilityMeasure (μ.map (jointRV Zs n)) :=
+      Measure.isProbabilityMeasure_map (measurable_jointRV Zs hZs n).aemeasurable
+    have hMprobX : IsProbabilityMeasure (μ.map (jointRV Xs n)) :=
+      Measure.isProbabilityMeasure_map (measurable_jointRV Xs hXs n).aemeasurable
+    set FimgZ : Finset (Fin n → α × β) := F.image embed with hFimgZ_def
+    have hFimg_card : FimgZ.card = F.card :=
+      Finset.card_image_of_injective _ hembed_inj
+    have hsum_eq :
+        (∑ y ∈ F, (μ.map (jointRV Zs n)).real {embed y})
+          = ∑ z ∈ FimgZ, (μ.map (jointRV Zs n)).real {z} := by
+      symm
+      rw [hFimgZ_def]
+      apply Finset.sum_image
+      intro a _ b _ hab
+      exact hembed_inj hab
+    have hFimg_measure_eq :
+        (∑ z ∈ FimgZ, (μ.map (jointRV Zs n)).real {z})
+          = (μ.map (jointRV Zs n)).real (FimgZ : Set (Fin n → α × β)) :=
+      sum_measureReal_singleton (μ := μ.map (jointRV Zs n)) FimgZ
+    -- Step 4: `FimgZ ⊆ proj_X ⁻¹' {x}`, so its measure ≤ (μ.map (jointRV Xs n)).real {x}.
+    let proj_X : (Fin n → α × β) → (Fin n → α) := fun z i => (z i).1
+    have hproj_subset :
+        (FimgZ : Set (Fin n → α × β)) ⊆ proj_X ⁻¹' ({x} : Set (Fin n → α)) := by
+      intro z hz
+      rw [Finset.coe_image, Set.mem_image] at hz
+      obtain ⟨y, _, hyz⟩ := hz
+      show proj_X z = x
+      rw [← hyz]
+    have hbound_image :
+        (μ.map (jointRV Zs n)).real (FimgZ : Set (Fin n → α × β))
+          ≤ (μ.map (jointRV Zs n)).real (proj_X ⁻¹' ({x} : Set (Fin n → α))) :=
+      measureReal_mono (μ := μ.map (jointRV Zs n)) hproj_subset
+    have hbridge :
+        (μ.map (jointRV Zs n)).real (proj_X ⁻¹' ({x} : Set (Fin n → α)))
+          = (μ.map (jointRV Xs n)).real ({x} : Set (Fin n → α)) := by
+      have hproj_meas : Measurable proj_X := by
+        apply measurable_pi_lambda
+        intro i
+        exact (measurable_pi_apply i).fst
+      have h_meas_x : MeasurableSet ({x} : Set (Fin n → α)) :=
+        measurableSet_singleton x
+      have h_meas_pre : MeasurableSet (proj_X ⁻¹' ({x} : Set (Fin n → α))) :=
+        hproj_meas h_meas_x
+      have hZmeas : Measurable (jointRV Zs n) := measurable_jointRV Zs hZs n
+      have hXmeas : Measurable (jointRV Xs n) := measurable_jointRV Xs hXs n
+      have hpre_eq :
+          jointRV Zs n ⁻¹' (proj_X ⁻¹' ({x} : Set (Fin n → α)))
+            = jointRV Xs n ⁻¹' ({x} : Set (Fin n → α)) := by
+        ext ω
+        simp only [Set.mem_preimage, Set.mem_singleton_iff]
+        constructor
+        · intro hω
+          funext i
+          have := congr_fun hω i
+          exact this
+        · intro hω
+          funext i
+          have := congr_fun hω i
+          exact this
+      unfold MeasureTheory.Measure.real
+      rw [Measure.map_apply hZmeas h_meas_pre]
+      rw [Measure.map_apply hXmeas h_meas_x]
+      rw [hpre_eq]
+    have hXbd : (μ.map (jointRV Xs n)).real ({x} : Set (Fin n → α))
+        ≤ Real.exp (-(n : ℝ) * (HX - ε)) :=
+      typicalSet_prob_le μ Xs hXs hindepX_full hidentX hposX n x hxT
+    have hchain :
+        (F.card : ℝ) * Real.exp (-(n : ℝ) * (HZ + ε))
+          ≤ Real.exp (-(n : ℝ) * (HX - ε)) := by
+      calc (F.card : ℝ) * Real.exp (-(n : ℝ) * (HZ + ε))
+          ≤ ∑ y ∈ F, (μ.map (jointRV Zs n)).real {embed y} := hsum_ge
+        _ = ∑ z ∈ FimgZ, (μ.map (jointRV Zs n)).real {z} := hsum_eq
+        _ = (μ.map (jointRV Zs n)).real (FimgZ : Set (Fin n → α × β)) := hFimg_measure_eq
+        _ ≤ (μ.map (jointRV Zs n)).real (proj_X ⁻¹' ({x} : Set (Fin n → α))) :=
+            hbound_image
+        _ = (μ.map (jointRV Xs n)).real ({x} : Set (Fin n → α)) := hbridge
+        _ ≤ Real.exp (-(n : ℝ) * (HX - ε)) := hXbd
+    have hexp_pos : 0 < Real.exp ((n : ℝ) * (HZ + ε)) := Real.exp_pos _
+    have hexp_cancel :
+        Real.exp (-(n : ℝ) * (HZ + ε)) * Real.exp ((n : ℝ) * (HZ + ε)) = 1 := by
+      rw [show -(n : ℝ) * (HZ + ε) = -((n : ℝ) * (HZ + ε)) from by ring,
+          ← Real.exp_add]
+      simp
+    have hmul :=
+      mul_le_mul_of_nonneg_right hchain hexp_pos.le
+    have hlhs :
+        (F.card : ℝ) * Real.exp (-(n : ℝ) * (HZ + ε))
+            * Real.exp ((n : ℝ) * (HZ + ε)) = (F.card : ℝ) := by
+      rw [mul_assoc, hexp_cancel, mul_one]
+    have hrhs :
+        Real.exp (-(n : ℝ) * (HX - ε)) * Real.exp ((n : ℝ) * (HZ + ε))
+          = Real.exp ((n : ℝ) * (HZ - HX + 2 * ε)) := by
+      rw [← Real.exp_add]
+      congr 1
+      ring
+    rw [hlhs] at hmul
+    rw [hrhs] at hmul
+    exact hmul
+  · -- X not typical: F = ∅, cardinality 0, RHS ≥ 0.
+    have hempty :
+        conditionalTypicalSliceY μ Xs Ys n ε x = ∅ :=
+      conditionalTypicalSliceY_empty_of_x_not_typical μ Xs Ys n ε hxT
+    have hF_empty : F = ∅ := by
+      rw [hF_def]
+      rw [hempty]
+      simp
+    rw [hF_empty]
+    simp
+    exact (Real.exp_pos _).le
+
+/-! ### Main statement — `E_Y` expectation bound. -/
+
+set_option linter.unusedVariables false in
+theorem swError_EY_expectation_le
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hindepX_full : iIndepFun (fun i => Xs i) μ)
+    (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (hindepZ_full : iIndepFun (fun i => jointSequence Xs Ys i) μ)
+    (hidentZ : ∀ i,
+      IdentDistrib (jointSequence Xs Ys i) (jointSequence Xs Ys 0) μ μ)
+    (hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    (hposZ : ∀ p : α × β,
+      0 < (μ.map (jointSequence Xs Ys 0)).real {p})
+    {n M_Y : ℕ} [NeZero M_Y] {ε : ℝ} (hε : 0 < ε) :
+    ∫ f_Y, μ.real (swError_EY μ Xs Ys n ε f_Y) ∂(binningMeasure β n M_Y)
+      ≤ Real.exp ((n : ℝ) *
+            (entropy μ (jointSequence Xs Ys 0) - entropy μ (Xs 0) + 2 * ε))
+        * ((M_Y : ℝ))⁻¹ := by
+  classical
+  haveI : MeasurableSingletonClass ((Fin n → β) → Fin M_Y) :=
+    Pi.instMeasurableSingletonClass
+  haveI : Fintype ((Fin n → β) → Fin M_Y) := Pi.instFintype
+  -- Notation.
+  set B_Y : Measure ((Fin n → β) → Fin M_Y) := binningMeasure β n M_Y with hB_Y_def
+  set C : ℝ := Real.exp ((n : ℝ) *
+      (entropy μ (jointSequence Xs Ys 0) - entropy μ (Xs 0) + 2 * ε)) with hC_def
+  have hC_pos : 0 < C := Real.exp_pos _
+  have hC_nn : 0 ≤ C := hC_pos.le
+  have hMinv_nn : (0 : ℝ) ≤ ((M_Y : ℝ))⁻¹ :=
+    inv_nonneg.mpr (by exact_mod_cast Nat.zero_le _)
+  have hXn : Measurable (jointRV Xs n) := measurable_jointRV Xs hXs n
+  have hYn : Measurable (jointRV Ys n) := measurable_jointRV Ys hYs n
+  have h_meas_EY : ∀ f_Y : (Fin n → β) → Fin M_Y,
+      MeasurableSet (swError_EY μ Xs Ys n ε f_Y) := fun f_Y =>
+    measurableSet_swError_EY hXs hYs μ n ε f_Y
+  -- Per-`ω` slice bound.
+  have h_per_omega : ∀ ω : Ω,
+      B_Y.real {f_Y | ω ∈ swError_EY μ Xs Ys n ε f_Y}
+        ≤ C * ((M_Y : ℝ))⁻¹ := by
+    intro ω
+    set x : Fin n → α := jointRV Xs n ω with hx_def
+    set truth : Fin n → β := jointRV Ys n ω with htruth_def
+    set slice : Set (Fin n → β) := conditionalTypicalSliceY μ Xs Ys n ε x with hslice_def
+    set S : Finset (Fin n → β) :=
+      (conditionalTypicalSliceY_finite μ Xs Ys n ε x).toFinset with hS_def
+    have h_set_eq : {f_Y : (Fin n → β) → Fin M_Y | ω ∈ swError_EY μ Xs Ys n ε f_Y}
+        = {f_Y | ∃ y' ∈ S, y' ≠ truth ∧ f_Y y' = f_Y truth} := by
+      ext f_Y
+      simp only [Set.mem_setOf_eq, swError_EY, htruth_def, hx_def, hS_def,
+        Set.Finite.mem_toFinset, mem_conditionalTypicalSliceY_iff]
+      constructor
+      · rintro ⟨y', hne, hcoll, hjts⟩
+        exact ⟨y', hjts, hne, hcoll⟩
+      · rintro ⟨y', hjts, hne, hcoll⟩
+        exact ⟨y', hne, hcoll, hjts⟩
+    rw [h_set_eq]
+    have hA : B_Y.real {f_Y | ∃ y' ∈ S, y' ≠ truth ∧ f_Y y' = f_Y truth}
+        ≤ (S.card : ℝ) * ((M_Y : ℝ))⁻¹ :=
+      binning_alias_expectation_le_aux (M_X := M_Y) truth S
+    have hB : (S.card : ℝ) ≤ C := by
+      have := conditionalTypicalSliceY_card_le (ε := ε) μ Xs Ys hXs hYs
+        hindepX_full hidentX hindepZ_full hidentZ hposX hposZ n x
+      rw [hS_def, hC_def]
+      exact this
+    calc B_Y.real {f_Y | ∃ y' ∈ S, y' ≠ truth ∧ f_Y y' = f_Y truth}
+        ≤ (S.card : ℝ) * ((M_Y : ℝ))⁻¹ := hA
+      _ ≤ C * ((M_Y : ℝ))⁻¹ := by
+          exact mul_le_mul_of_nonneg_right hB hMinv_nn
+  -- Step 2: Build the product set E.
+  set E : Set (((Fin n → β) → Fin M_Y) × Ω) :=
+    {p | p.2 ∈ swError_EY μ Xs Ys n ε p.1} with hE_def
+  have hE_meas : MeasurableSet E := by
+    have h_decomp : E = ⋃ f_Y : (Fin n → β) → Fin M_Y,
+        ({f_Y} : Set ((Fin n → β) → Fin M_Y)) ×ˢ swError_EY μ Xs Ys n ε f_Y := by
+      ext ⟨g, ω⟩
+      simp [E]
+    rw [h_decomp]
+    refine MeasurableSet.iUnion (fun f_Y => ?_)
+    exact (measurableSet_singleton _).prod (h_meas_EY f_Y)
+  -- Step 3: Fubini.
+  have h_fubini1 :
+      (B_Y.prod μ) E = ∫⁻ f_Y, μ (swError_EY μ Xs Ys n ε f_Y) ∂B_Y := by
+    rw [Measure.prod_apply hE_meas]
+    congr 1
+  have h_fubini2 :
+      (B_Y.prod μ) E
+        = ∫⁻ ω, B_Y {f_Y | ω ∈ swError_EY μ Xs Ys n ε f_Y} ∂μ := by
+    rw [Measure.prod_apply_symm hE_meas]
+    congr 1
+  have h_swap :
+      ∫⁻ f_Y, μ (swError_EY μ Xs Ys n ε f_Y) ∂B_Y
+        = ∫⁻ ω, B_Y {f_Y | ω ∈ swError_EY μ Xs Ys n ε f_Y} ∂μ := by
+    rw [← h_fubini1, h_fubini2]
+  -- Step 4: ENNReal lift of per-ω bound.
+  have h_per_omega_ennreal : ∀ ω : Ω,
+      B_Y {f_Y | ω ∈ swError_EY μ Xs Ys n ε f_Y}
+        ≤ ENNReal.ofReal (C * ((M_Y : ℝ))⁻¹) := by
+    intro ω
+    have hr := h_per_omega ω
+    have hne_top : B_Y {f_Y | ω ∈ swError_EY μ Xs Ys n ε f_Y} ≠ ∞ :=
+      measure_ne_top _ _
+    rw [show B_Y.real {f_Y | ω ∈ swError_EY μ Xs Ys n ε f_Y}
+          = (B_Y {f_Y | ω ∈ swError_EY μ Xs Ys n ε f_Y}).toReal from rfl] at hr
+    have h_rhs_nn : 0 ≤ C * ((M_Y : ℝ))⁻¹ := mul_nonneg hC_nn hMinv_nn
+    calc B_Y {f_Y | ω ∈ swError_EY μ Xs Ys n ε f_Y}
+        = ENNReal.ofReal (B_Y {f_Y | ω ∈ swError_EY μ Xs Ys n ε f_Y}).toReal := by
+          rw [ENNReal.ofReal_toReal hne_top]
+      _ ≤ ENNReal.ofReal (C * ((M_Y : ℝ))⁻¹) :=
+          ENNReal.ofReal_le_ofReal hr
+  have h_lint_le :
+      ∫⁻ ω, B_Y {f_Y | ω ∈ swError_EY μ Xs Ys n ε f_Y} ∂μ
+        ≤ ENNReal.ofReal (C * ((M_Y : ℝ))⁻¹) := by
+    calc ∫⁻ ω, B_Y {f_Y | ω ∈ swError_EY μ Xs Ys n ε f_Y} ∂μ
+        ≤ ∫⁻ _, ENNReal.ofReal (C * ((M_Y : ℝ))⁻¹) ∂μ :=
+          lintegral_mono h_per_omega_ennreal
+      _ = ENNReal.ofReal (C * ((M_Y : ℝ))⁻¹) * μ Set.univ := by
+          rw [lintegral_const]
+      _ = ENNReal.ofReal (C * ((M_Y : ℝ))⁻¹) := by
+          rw [measure_univ, mul_one]
+  -- Step 5: Bochner integral lift.
+  have h_int_nn : 0 ≤ᵐ[B_Y] fun f_Y => μ.real (swError_EY μ Xs Ys n ε f_Y) := by
+    refine Filter.Eventually.of_forall (fun f_Y => ?_)
+    exact measureReal_nonneg
+  have h_int_meas :
+      AEStronglyMeasurable
+        (fun f_Y : (Fin n → β) → Fin M_Y => μ.real (swError_EY μ Xs Ys n ε f_Y)) B_Y := by
+    apply Measurable.aestronglyMeasurable
+    refine Measurable.of_discrete
+  rw [integral_eq_lintegral_of_nonneg_ae h_int_nn h_int_meas]
+  have h_ofReal_eq : ∀ f_Y : (Fin n → β) → Fin M_Y,
+      ENNReal.ofReal (μ.real (swError_EY μ Xs Ys n ε f_Y))
+        = μ (swError_EY μ Xs Ys n ε f_Y) := by
+    intro f_Y
+    have hne_top : μ (swError_EY μ Xs Ys n ε f_Y) ≠ ∞ := measure_ne_top _ _
+    rw [show μ.real (swError_EY μ Xs Ys n ε f_Y)
+          = (μ (swError_EY μ Xs Ys n ε f_Y)).toReal from rfl,
+        ENNReal.ofReal_toReal hne_top]
+  have h_lint_eq :
+      ∫⁻ f_Y, ENNReal.ofReal (μ.real (swError_EY μ Xs Ys n ε f_Y)) ∂B_Y
+        = ∫⁻ f_Y, μ (swError_EY μ Xs Ys n ε f_Y) ∂B_Y := by
+    refine lintegral_congr (fun f_Y => ?_)
+    exact h_ofReal_eq f_Y
+  rw [h_lint_eq, h_swap]
+  have h_rhs_nn : 0 ≤ C * ((M_Y : ℝ))⁻¹ := mul_nonneg hC_nn hMinv_nn
+  calc (∫⁻ ω, B_Y {f_Y | ω ∈ swError_EY μ Xs Ys n ε f_Y} ∂μ).toReal
+      ≤ (ENNReal.ofReal (C * ((M_Y : ℝ))⁻¹)).toReal := by
+        apply ENNReal.toReal_mono _ h_lint_le
+        exact ENNReal.ofReal_ne_top
+    _ = C * ((M_Y : ℝ))⁻¹ := ENNReal.toReal_ofReal h_rhs_nn
+
 end InformationTheory.Shannon.ChannelCoding
