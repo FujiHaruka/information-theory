@@ -162,7 +162,7 @@ lemma Channel.smooth_pos
 /-! ## Phase B — MI の `δ` 連続性 -/
 
 /-- Helper: for any Markov channel `K`, the 3-entropy form of MI in terms of `(K a).real {b}`. -/
-private lemma mutualInfoOfChannel_toReal_three_entropy
+lemma mutualInfoOfChannel_toReal_three_entropy
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
     (K : Channel α β) [IsMarkovKernel K] :
     (mutualInfoOfChannel (pmfToMeasure p) K).toReal
@@ -242,7 +242,7 @@ private lemma mutualInfoOfChannel_toReal_three_entropy
 
 /-- For `δ ∈ [0,1]`, `(mutualInfoOfChannel (pmfToMeasure p) (Channel.smooth W δ)).toReal` expands
 in the 3-entropy form with `(W_smooth δ a).real {b}` substituted via `smooth_real_singleton`. -/
-private lemma mutualInfoOfChannel_toReal_smooth_eq
+lemma mutualInfoOfChannel_toReal_smooth_eq
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
     (W : Channel α β) [IsMarkovKernel W] {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ ≤ 1) :
     (mutualInfoOfChannel (pmfToMeasure p) (Channel.smooth W δ)).toReal
@@ -263,7 +263,7 @@ private lemma mutualInfoOfChannel_toReal_smooth_eq
     rw [Channel.smooth_real_singleton W hδ0 hδ1]
 
 /-- `δ ↦ (mutualInfoOfChannel (pmfToMeasure p) (Channel.smooth W δ)).toReal` is continuous on `[0,1]`. -/
-private lemma continuous_mutualInfoOfChannel_right_smooth
+lemma continuous_mutualInfoOfChannel_right_smooth
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
     (W : Channel α β) [IsMarkovKernel W] :
     ContinuousOn (fun δ : ℝ =>

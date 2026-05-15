@@ -752,14 +752,14 @@ theorem Code_lift_from_subtype_errorProbAt
 /-! ## Phase D — 主定理 -/
 
 /-- Uniform input distribution `unif a := 1/|α|`, used as a smoothing target. -/
-private noncomputable def uniformInput (α : Type*) [Fintype α] : α → ℝ :=
+noncomputable def uniformInput (α : Type*) [Fintype α] : α → ℝ :=
   fun _ => (Fintype.card α : ℝ)⁻¹
 
 omit [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β]
   [MeasurableSingletonClass β] in
 /-- `uniformInput α ∈ stdSimplex ℝ α`. -/
-private lemma uniformInput_mem_stdSimplex : uniformInput α ∈ stdSimplex ℝ α := by
+lemma uniformInput_mem_stdSimplex : uniformInput α ∈ stdSimplex ℝ α := by
   unfold uniformInput
   refine ⟨fun _ => ?_, ?_⟩
   · exact inv_nonneg.mpr (Nat.cast_nonneg _)
@@ -772,20 +772,20 @@ omit [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β]
   [MeasurableSingletonClass β] in
 /-- `uniformInput α a > 0` for any `a`. -/
-private lemma uniformInput_pos (a : α) : 0 < uniformInput α a := by
+lemma uniformInput_pos (a : α) : 0 < uniformInput α a := by
   unfold uniformInput
   refine inv_pos.mpr ?_
   exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
 
 /-- Smoothed input `pSmooth p₀ δ := (1-δ) • p₀ + δ • uniformInput`. -/
-private noncomputable def pSmooth (p₀ : α → ℝ) (δ : ℝ) : α → ℝ :=
+noncomputable def pSmooth (p₀ : α → ℝ) (δ : ℝ) : α → ℝ :=
   fun a => (1 - δ) * p₀ a + δ * uniformInput α a
 
 omit [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β]
   [MeasurableSingletonClass β] in
 /-- `pSmooth p₀ 0 = p₀`. -/
-private lemma pSmooth_zero (p₀ : α → ℝ) : pSmooth p₀ 0 = p₀ := by
+lemma pSmooth_zero (p₀ : α → ℝ) : pSmooth p₀ 0 = p₀ := by
   unfold pSmooth
   funext a
   ring
@@ -794,7 +794,7 @@ omit [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β]
   [MeasurableSingletonClass β] in
 /-- For `δ ∈ [0,1]` and `p₀ ∈ stdSimplex`, `pSmooth p₀ δ ∈ stdSimplex`. -/
-private lemma pSmooth_mem_stdSimplex {p₀ : α → ℝ} (hp₀ : p₀ ∈ stdSimplex ℝ α)
+lemma pSmooth_mem_stdSimplex {p₀ : α → ℝ} (hp₀ : p₀ ∈ stdSimplex ℝ α)
     {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ ≤ 1) : pSmooth p₀ δ ∈ stdSimplex ℝ α := by
   have h := convex_stdSimplex (𝕜 := ℝ) (ι := α) hp₀ uniformInput_mem_stdSimplex
     (a := 1 - δ) (b := δ) (by linarith) hδ0 (by ring)
@@ -809,7 +809,7 @@ omit [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β]
   [MeasurableSingletonClass β] in
 /-- For `δ ∈ (0,1]` and `p₀ ∈ stdSimplex`, each entry `(pSmooth p₀ δ) a > 0`. -/
-private lemma pSmooth_pos {p₀ : α → ℝ} (hp₀ : p₀ ∈ stdSimplex ℝ α)
+lemma pSmooth_pos {p₀ : α → ℝ} (hp₀ : p₀ ∈ stdSimplex ℝ α)
     {δ : ℝ} (hδ_pos : 0 < δ) (hδ1 : δ ≤ 1) (a : α) : 0 < pSmooth p₀ δ a := by
   unfold pSmooth
   have h1 : 0 ≤ (1 - δ) * p₀ a := mul_nonneg (by linarith) (hp₀.1 a)
@@ -817,7 +817,7 @@ private lemma pSmooth_pos {p₀ : α → ℝ} (hp₀ : p₀ ∈ stdSimplex ℝ �
   linarith
 
 /-- `δ ↦ pSmooth p₀ δ` is continuous (as a curve into `α → ℝ` with product topology). -/
-private lemma continuous_pSmooth (p₀ : α → ℝ) : Continuous (fun δ : ℝ => pSmooth p₀ δ) := by
+lemma continuous_pSmooth (p₀ : α → ℝ) : Continuous (fun δ : ℝ => pSmooth p₀ δ) := by
   refine continuous_pi (fun a => ?_)
   unfold pSmooth
   exact (continuous_const.sub continuous_id).mul continuous_const
