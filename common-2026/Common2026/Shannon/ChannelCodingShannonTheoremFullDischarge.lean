@@ -517,6 +517,32 @@ lemma exists_N_log_sq_le_n (C : ℝ) (hC : 0 < C) :
   have h_final : ((n : ℝ) + 1) / 4 + 1 ≤ (n : ℝ) := by linarith
   linarith
 
+/-- **D.1.8** (generalization of D.1.7) — for any `C > 0` and any constant `D`,
+there exists `N` such that `C * (log(n+1))² + D ≤ n` for all `n ≥ N`.
+Used in Phase D.3 outer-`N` construction. -/
+lemma exists_N_log_sq_plus_const_le_n (C D : ℝ) (hC : 0 < C) :
+    ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
+      C * (Real.log ((n : ℝ) + 1))^2 + D ≤ (n : ℝ) := by
+  -- Use exists_N_log_sq_le_n with `2C`, then absorb D via N ≥ 2|D|.
+  obtain ⟨N₁, hN₁⟩ := exists_N_log_sq_le_n (2 * C) (by linarith)
+  set N : ℕ := max N₁ (Nat.ceil (2 * D + 2))
+  refine ⟨N, fun n hn => ?_⟩
+  have hN₁_le : N₁ ≤ n := (le_max_left _ _).trans hn
+  have h2D_le : (Nat.ceil (2 * D + 2) : ℕ) ≤ n := (le_max_right _ _).trans hn
+  have h2D_real : 2 * D + 2 ≤ (n : ℝ) := by
+    have h_le : (2 * D + 2 : ℝ) ≤ (Nat.ceil (2 * D + 2 : ℝ) : ℝ) := Nat.le_ceil _
+    have h_nat_le : ((Nat.ceil (2 * D + 2 : ℝ) : ℕ) : ℝ) ≤ (n : ℝ) := by
+      exact_mod_cast h2D_le
+    linarith
+  -- From hN₁: 2C(log(n+1))² + 1 ≤ n, so C(log(n+1))² ≤ (n - 1)/2.
+  have h_log_sq := hN₁ n hN₁_le
+  have hC_log_sq_le : C * (Real.log ((n : ℝ) + 1))^2 ≤ ((n : ℝ) - 1) / 2 := by
+    have h1 : 2 * C * (Real.log ((n : ℝ) + 1))^2 ≤ (n : ℝ) - 1 := by linarith
+    linarith
+  -- D ≤ (n - 2)/2 from `2 * D + 2 ≤ n`, i.e., `D ≤ (n - 2)/2`.
+  have hD_le : D ≤ ((n : ℝ) - 2) / 2 := by linarith
+  linarith
+
 /-! ## Phase D.2 — parent achievability instantiated at `(pSmooth p₀ δ_p, Channel.smooth W δ)`
 
 `channel_coding_achievability` を `p := pmfToMeasure (pSmooth p₀ δ_p)`、
