@@ -80,3 +80,4 @@ import Common2026.Shannon.DifferentialEntropy
 import Common2026.Shannon.Stationary
 import Common2026.Shannon.EntropyRate
 import Common2026.Shannon.ShannonMcMillanBreiman
+import Common2026.Shannon.BackwardFiltration
