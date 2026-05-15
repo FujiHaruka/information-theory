@@ -491,7 +491,7 @@ theorem Code.subcode_errorProbAt_le
   exact measure_mono h_subset
 
 /-- Helper: linearization `(fun n : ℕ => (n : ℝ) * c) → ∞` for `c > 0`. -/
-private lemma tendsto_nat_mul_atTop {c : ℝ} (hc : 0 < c) :
+lemma tendsto_nat_mul_atTop {c : ℝ} (hc : 0 < c) :
     Filter.Tendsto (fun n : ℕ => (n : ℝ) * c) Filter.atTop Filter.atTop := by
   refine Filter.tendsto_atTop_atTop.mpr ?_
   intro b
@@ -508,7 +508,7 @@ private lemma tendsto_nat_mul_atTop {c : ℝ} (hc : 0 < c) :
   rwa [div_mul_cancel₀ _ hc.ne'] at h_mul
 
 /-- Helper: for `0 < R < R'`, eventually `2 * ⌈exp(n R)⌉ ≤ ⌈exp(n R')⌉`. -/
-private lemma exists_N_two_ceil_exp_le
+lemma exists_N_two_ceil_exp_le
     {R R' : ℝ} (hR_pos : 0 < R) (hRR' : R < R') :
     ∃ N : ℕ, ∀ n : ℕ, N ≤ n →
       2 * Nat.ceil (Real.exp ((n : ℝ) * R))
