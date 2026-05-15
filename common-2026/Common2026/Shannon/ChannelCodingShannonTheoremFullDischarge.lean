@@ -517,4 +517,53 @@ lemma exists_N_log_sq_le_n (C : ℝ) (hC : 0 < C) :
   have h_final : ((n : ℝ) + 1) / 4 + 1 ≤ (n : ℝ) := by linarith
   linarith
 
+/-! ## Phase D.2 — parent achievability instantiated at `(pSmooth p₀ δ_p, Channel.smooth W δ)`
+
+`channel_coding_achievability` を `p := pmfToMeasure (pSmooth p₀ δ_p)`、
+`W := Channel.smooth W δ` で呼び出す wrapper。`hp_pos`/`hW_pos` を内部で導出する。
+
+* `IsMarkovKernel (Channel.smooth W δ)` は `Channel.smooth_isMarkovKernel`。
+* `IsProbabilityMeasure (pmfToMeasure (pSmooth p₀ δ_p))` は
+  `pmfToMeasure_isProbabilityMeasure ∘ pSmooth_mem_stdSimplex`。
+* `hp_pos`: `(pmfToMeasure (pSmooth p₀ δ_p)).real {a} = pSmooth p₀ δ_p a > 0`
+  (`pmfToMeasure_real_singleton` + `pSmooth_pos`).
+* `hW_pos`: `0 < (Channel.smooth W δ a).real {b}` は `Channel.smooth_pos`.
+
+N(δ) closed-form 化は後段 Phase D.3 に委譲し、本 wrapper は既存 `∃ N` 形を保つ。 -/
+
+/-- **Phase D.2** — parent achievability を smooth な `(p, W)` で呼び出す wrapper。
+`p := pmfToMeasure (pSmooth p₀ δ_p)`、`W := Channel.smooth W δ` で
+parent `channel_coding_achievability` を発火する。 -/
+theorem channel_coding_achievability_smooth_closed_form
+    (W : Channel α β) [IsMarkovKernel W]
+    (p₀ : α → ℝ) (hp₀_mem : p₀ ∈ stdSimplex ℝ α)
+    {δ_p : ℝ} (hδ_p_pos : 0 < δ_p) (hδ_p_le : δ_p ≤ 1)
+    {δ : ℝ} (hδ_pos : 0 < δ) (hδ_le : δ ≤ 1)
+    {R : ℝ} (hR_pos : 0 < R)
+    (hR_lt_I : R <
+      (mutualInfoOfChannel (pmfToMeasure (pSmooth p₀ δ_p))
+        (Channel.smooth W δ)).toReal)
+    {ε' : ℝ} (hε' : 0 < ε') :
+    ∃ N : ℕ, ∀ n, N ≤ n →
+      ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
+        (c : Code M n α β),
+        (c.averageErrorProb (Channel.smooth W δ)).toReal < ε' := by
+  -- Markov / probability instances.
+  haveI hWsmooth_mk : IsMarkovKernel (Channel.smooth W δ) :=
+    Channel.smooth_isMarkovKernel W hδ_pos.le hδ_le
+  have hp_full_mem : pSmooth p₀ δ_p ∈ stdSimplex ℝ α :=
+    pSmooth_mem_stdSimplex hp₀_mem hδ_p_pos.le hδ_p_le
+  haveI hp_full_prob : IsProbabilityMeasure (pmfToMeasure (pSmooth p₀ δ_p)) :=
+    pmfToMeasure_isProbabilityMeasure hp_full_mem
+  -- `hp_pos`: every singleton of `pmfToMeasure (pSmooth p₀ δ_p)` is positive.
+  have hp_pos : ∀ a : α, 0 < (pmfToMeasure (pSmooth p₀ δ_p)).real {a} := by
+    intro a
+    rw [pmfToMeasure_real_singleton hp_full_mem]
+    exact pSmooth_pos hp₀_mem hδ_p_pos hδ_p_le a
+  -- `hW_pos`: every (a, b) atom of `Channel.smooth W δ` is positive.
+  have hW_pos : ∀ a : α, ∀ b : β, 0 < (Channel.smooth W δ a).real {b} :=
+    Channel.smooth_pos W hδ_pos hδ_le
+  exact channel_coding_achievability (Channel.smooth W δ)
+    (pmfToMeasure (pSmooth p₀ δ_p)) hp_pos hW_pos hR_pos hR_lt_I hε'
+
 end InformationTheory.Shannon.ChannelCoding
