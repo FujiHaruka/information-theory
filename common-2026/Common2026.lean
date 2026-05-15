@@ -82,3 +82,4 @@ import Common2026.Shannon.EntropyRate
 import Common2026.Shannon.ShannonMcMillanBreiman
 import Common2026.Shannon.BackwardFiltration
 import Common2026.Shannon.BackwardMartingale
+import Common2026.Shannon.BirkhoffErgodic
