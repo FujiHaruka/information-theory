@@ -1,5 +1,7 @@
 # Moonshot シードカード集
 
+> **Status (2026-05-15, very late+1)**: orchestrator session で **parent body refactor (in-place)** 完了 (`ChannelCodingAchievability.lean:1605-1888` 284 行 → `:1606-1795` 190 行、-93 net、0 sorry / 新規 warning 0)。`hE1_tendsto` (57 行) + `hE2_tendsto` (61 行) + Tendsto.metric_atTop extraction 2 箇所 (計 ~125 行) を Step 3 Phase A `jointlyTypicalSet_prob_ge_of_rate` + Step 2 `channelCoding_E2_lt_of_rate` 直接呼び出し (~10 行) に置換。signature 不変、下流 `ChannelCodingShannonTheorem.lean` silent 維持。**コピペ軽減**: 後続 D-1'' Phase B (separate closed-form 公表 theorem) を新規 file で書く際、parent body の Tendsto plumbing コピーが**完全に不要**になり、refactored body (160 行: setup 80 + closed-form calls 10 + assembly 70) を model にそのまま流用可能。**設計判断**: `hN₁` が non-strict (`1 - ε'/2 ≤ ...`) 化したため `hE1_lt → hE1_le` リネーム、`h_sum_lt : E1 + E2 < ε'` は E2 側 strict `< ε'/2` で吸収 (linarith 通過)。今後 explicit N 公表で両側 strict にしたければ η を `ε'/4` に取り直し可。
+>
 > **Status (2026-05-15, very late)**: orchestrator session で **D-1'' Step 3 Phase A (`jointlyTypicalSet_prob_ge_of_rate`)** を追加完了 (`AEPRate.lean` 364 → 525 行、+161 行、0 sorry / 0 warning)。`typicalSet_prob_ge_of_rate` を X, Y, Z=`jointSequence` の 3 軸に `η/3` 配分で適用 → Bonferroni union bound (`measure_union_le` 2 回 on ENNReal + `ENNReal.toReal_add` 2 回) で `∃ N (closed-form), ∀ n ≥ N, 1 - η ≤ (μ {jointlyTypicalSet 入り}).toReal` を publish。既存 `jointlyTypicalSet_prob_tendsto_one` (`ChannelCoding.lean:402`、Tendsto form) の `h_joint_decomp` + `h_compl_sub` 構造を verbatim 流用、新 Mathlib API gap 0。これで D-1'' Step 3 parent surgery の **AEP 入力部品** (X, Y, Joint の closed-form rate 全て) と **E2 出力部品** (Step 2) 完備。**残: Step 3 Phase B (parent body コピペ + N₁/N₂ 差し替え)** ~250 行 (`ChannelCodingAchievabilityClosedForm.lean` 新規) — 既存 `channel_coding_achievability` 本体 (`ChannelCodingAchievability.lean:1605-1888`) を copy、`Tendsto.metric_atTop` extraction 2 箇所 (`:1771`, `:1835`) を本 Phase A + Step 2 で置換するだけ、新数学なし。
 >
 > **Status (2026-05-15, late)**: orchestrator session で **D-1'' parent surgery Step 2 (E2 exp decay closed-form)** を追加完了 (`AEPRate.lean` 293 → 364 行、+71 行、0 sorry / 0 warning)。2 補題追加: (a) **`exp_neg_mul_lt_of_rate`** — `0 < g → 0 < ε' → ∃ N, ∀ n ≥ N, exp(-n·g) < ε'` を `N := ⌈max 0 (-log ε' / g)⌉ + 1` の closed-form で publish、`Real.lt_log_iff_exp_lt` 一発 + `max 0` で ε' ≥ 1 edge case 吸収。(b) **`channelCoding_E2_lt_of_rate`** — `0 < I-R-3ε → 0 < ε' → ∃ N, ∀ n ≥ N, (⌈exp(nR)⌉-1)·exp(n(-I+3ε)) < ε'` を CCA 内 `h_upper` 補題 (`ChannelCodingAchievability.lean:1797-1810`) を verbatim 再現して squeeze + 補題 (a) で lift。**D-1'' Step 1 (`typicalSet_prob_ge_of_rate`) + Step 2 (`channelCoding_E2_lt_of_rate`) 揃った状態**、CCA の N₁/N₂ 抽出 2 箇所 (`:1771`, `:1835` の `Tendsto.metric_atTop`) を closed-form bound で置換する parent surgery (Step 3) のための部品完備。本ターン: parent surgery 本体 (~150-300 行、`channel_coding_achievability` の signature reshape + δ-uniform N export + `ChannelCodingShannonTheoremFull.lean` の hypothesis 自然 discharge) は次セッション。
@@ -78,6 +80,15 @@
   Phase D 主定理は `Common2026/Shannon/ChannelCodingShannonTheoremFull.lean` (73 行) に
   statement のみ 1 sorry で保留。`N₂` (E2 exp decay) の closed-form 化 + 親 D-1 への合成は
   後続シードに deferred。
+
+  **parent body refactor ✅ (2026-05-15、very late+1)**: `ChannelCodingAchievability.lean:1605-1888`
+  284 行 → `:1606-1795` 190 行 (-93 net、0 sorry / 新規 warning 0)。`hE1_tendsto` + `hE2_tendsto`
+  (Tendsto.metric_atTop 抽出 plumbing 計 ~125 行) を Step 3 Phase A
+  `jointlyTypicalSet_prob_ge_of_rate` + Step 2 `channelCoding_E2_lt_of_rate` 直接呼び出し
+  (~10 行) に置換。signature 不変、下流 `ChannelCodingShannonTheorem.lean` silent 維持。
+  **コピペ軽減**: D-1'' Phase B (closed-form 公表 theorem 新規 file) を後で書く際、Tendsto
+  plumbing コピー不要、refactored body (setup 80 + closed-form calls 10 + assembly 70 = 160 行)
+  をそのまま model に。`hN₁` 非 strict 化に伴い `hE1_lt → hE1_le` リネーム + E2 strict で linarith 吸収。
 
   **D-1'' Step 3 Phase A ✅ (2026-05-15、very late)**: `AEPRate.lean` 364 → 525 行 (+161 行、0 sorry / 0 warning)。
   **`jointlyTypicalSet_prob_ge_of_rate`** — `typicalSet_prob_ge_of_rate` を X / Y / Z = `jointSequence`
