@@ -367,7 +367,7 @@ omit [DecidableEq α] [Nonempty α] [Fintype β]
 /-- **Single-row marginalization.** Sum out all rows other than `m`. -/
 private lemma codebook_marginal_one
     (p : Measure α) [IsProbabilityMeasure p] (M n : ℕ)
-    (m : Fin M) (f : (Fin n → α) → ℝ) (hf_nn : ∀ x, 0 ≤ f x) :
+    (m : Fin M) (f : (Fin n → α) → ℝ) (_hf_nn : ∀ x, 0 ≤ f x) :
     ∑ c : Codebook M n α, (codebookMeasure p M n).real {c} * f (c m)
       = ∑ x : Fin n → α, (Measure.pi (fun _ : Fin n => p)).real {x} * f x := by
   classical
@@ -569,7 +569,7 @@ omit [DecidableEq α] [Nonempty α] [Fintype β]
 private lemma codebook_marginal_two
     (p : Measure α) [IsProbabilityMeasure p] (M n : ℕ)
     (m m' : Fin M) (hne : m ≠ m')
-    (f : (Fin n → α) → (Fin n → α) → ℝ) (hf_nn : ∀ x x', 0 ≤ f x x') :
+    (f : (Fin n → α) → (Fin n → α) → ℝ) (_hf_nn : ∀ x x', 0 ≤ f x x') :
     ∑ c : Codebook M n α, (codebookMeasure p M n).real {c} * f (c m) (c m')
       = ∑ x : Fin n → α, ∑ x' : Fin n → α,
           (Measure.pi (fun _ : Fin n => p)).real {x} *
@@ -720,30 +720,31 @@ private lemma codebook_marginal_two
     apply Finset.prod_eq_one; intro i _; exact h_sum_one_alpha
   rw [h_sum_other, mul_one]
 
+omit [Nonempty α] [DecidableEq β] [Nonempty β] in
 /-- **(E1) Fubini swap.** For any message index `m`, the codebook expectation of
 the "true codeword not jointly typical" event equals the abstract i.i.d.
 expectation. -/
 private lemma random_codebook_E1_swap
     (W : Channel α β) [IsMarkovKernel W]
     (p : Measure α) [IsProbabilityMeasure p]
-    {M n : ℕ} (hM : 0 < M) {ε : ℝ} (hε : 0 < ε)
+    {M n : ℕ} (_hM : 0 < M) {ε : ℝ} (_hε : 0 < ε)
     {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindepX : iIndepFun (fun i => Xs i) μ)
-    (hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
-    (hindepY : iIndepFun (fun i => Ys i) μ)
-    (hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
-    (hindepZ : Pairwise fun i j =>
+    (_hindepX : iIndepFun (fun i => Xs i) μ)
+    (_hidentX : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (_hindepY : iIndepFun (fun i => Ys i) μ)
+    (_hidentY : ∀ i, IdentDistrib (Ys i) (Ys 0) μ μ)
+    (_hindepZ : Pairwise fun i j =>
       jointSequence Xs Ys i ⟂ᵢ[μ] jointSequence Xs Ys j)
     (hindepZ_full : iIndepFun (fun i : ℕ => jointSequence Xs Ys i) μ)
     (hidentZ : ∀ i,
       IdentDistrib (jointSequence Xs Ys i) (jointSequence Xs Ys 0) μ μ)
-    (hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
-    (hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
-    (hposZ : ∀ q : α × β,
+    (_hposX : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
+    (_hposY : ∀ y : β, 0 < (μ.map (Ys 0)).real {y})
+    (_hposZ : ∀ q : α × β,
       0 < (μ.map (jointSequence Xs Ys 0)).real {q})
-    (h_match_X : μ.map (Xs 0) = p)
+    (_h_match_X : μ.map (Xs 0) = p)
     (h_match_Z : μ.map (jointSequence Xs Ys 0) = jointDistribution p W) (m : Fin M) :
     ∑ c : Codebook M n α, (codebookMeasure p M n).real {c} *
         (Measure.pi (fun i => W (c m i))).real
@@ -985,8 +986,8 @@ by `exp(n((HZ-HX-HY)+3ε))` via the independent-pair bound
 private lemma random_codebook_E2_swap
     (W : Channel α β) [IsMarkovKernel W]
     (p : Measure α) [IsProbabilityMeasure p]
-    (hp_pos : ∀ a : α, 0 < p.real {a})
-    {M n : ℕ} (hM : 0 < M) {ε : ℝ} (hε : 0 < ε)
+    (_hp_pos : ∀ a : α, 0 < p.real {a})
+    {M n : ℕ} (_hM : 0 < M) {ε : ℝ} (hε : 0 < ε)
     {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
