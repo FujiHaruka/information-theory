@@ -256,12 +256,6 @@ section Upcrossings
 
 variable {f : ℕᵒᵈ → Ω → ℝ} {ℋ : Filtration ℕᵒᵈ m₀}
 
-/-- The reverse proxy equals `revPath` of the backward-viewed sequence. -/
-private lemma revPath_backwardView_eq_reverseProxy (f : ℕᵒᵈ → Ω → ℝ) (N : ℕ) :
-    revPath (fun n : ℕ => f (OrderDual.toDual n)) N = reverseProxy N f := by
-  ext k ω
-  simp [revPath, reverseProxy]
-
 set_option linter.unusedVariables false in
 /-- **Backward upcrossing finiteness (β.2).** For a backward martingale indexed
 by `ℕᵒᵈ` with integrable head, the number of upcrossings of any interval
