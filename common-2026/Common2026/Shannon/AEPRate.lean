@@ -76,6 +76,32 @@ lemma pmfLogVariance_nonneg (μ : Measure Ω) (Xs : ℕ → Ω → α) :
   unfold pmfLogVariance variance
   exact ENNReal.toReal_nonneg
 
+/-- **Popoviciu lift**: a pointwise `|pmfLog Xs a| ≤ B` bound gives
+`pmfLogVariance ≤ B²` (via `variance_le_sq_of_bounded`). Used in Phase D.3
+parent surgery to bound axis-wise variance closed-form by `(log(|β|/δ))²` etc. -/
+lemma pmfLogVariance_le_sq_of_bounded
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    {B : ℝ}
+    (hB : ∀ a : α, |pmfLog μ Xs a| ≤ B) :
+    pmfLogVariance μ Xs ≤ B ^ 2 := by
+  unfold pmfLogVariance
+  have h_ae_Icc : ∀ᵐ ω ∂μ, logLikelihood μ Xs 0 ω ∈ Set.Icc (-B) B := by
+    refine Filter.Eventually.of_forall (fun ω => ?_)
+    have h := hB (Xs 0 ω)
+    have h_eq : logLikelihood μ Xs 0 ω = pmfLog μ Xs (Xs 0 ω) := rfl
+    rw [h_eq]
+    rw [abs_le] at h
+    exact ⟨h.1, h.2⟩
+  have hAEm : AEMeasurable (logLikelihood μ Xs 0) μ :=
+    (measurable_logLikelihood μ Xs hXs 0).aemeasurable
+  have h := variance_le_sq_of_bounded (μ := μ) (X := logLikelihood μ Xs 0)
+    (a := -B) (b := B) h_ae_Icc hAEm
+  -- (b - a) / 2 = (B - (-B)) / 2 = B
+  have h_eq : ((B - (-B)) / 2) ^ 2 = B ^ 2 := by ring
+  rw [h_eq] at h
+  exact h
+
 /-- Variance is invariant under `IdentDistrib`. -/
 lemma variance_logLikelihood_eq
     (μ : Measure Ω) [IsProbabilityMeasure μ]
