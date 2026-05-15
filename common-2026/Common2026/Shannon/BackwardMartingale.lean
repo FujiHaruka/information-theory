@@ -239,11 +239,40 @@ probability-theoretic content of β.2 is fully captured by the Doob bound on
 the reverse proxy (which IS a forward submartingale). The path-reversal
 identity then bridges the proxy bound back to the backward-viewed sequence.
 
-Status: stated as a private lemma with `sorry`. The proof requires careful
-induction on `upperCrossingTime a b g N n` — see Mathlib
-`Probability/Martingale/Upcrossing.lean:142-180` for the recursive
-definition. This is the single remaining obstruction in Phase β; both β.2
-and β.4 are fully proven below modulo this lemma. -/
+## Mathematical content
+
+Each upcrossing pair `(s, t)` of `g` with `s < t ≤ N`, `g s ≤ a`, `b ≤ g t`
+maps under index reversal to `(N - t, N - s)` in `revPath g N`, satisfying
+`(revPath g N)(N - t) = g t ≥ b` and `(revPath g N)(N - s) = g s ≤ a`. Since
+`N - t < N - s`, this is a *downcrossing* of `revPath g N`. Hence
+`upcrossings(g, [0,N]) = downcrossings(revPath g N, [0,N])`. The interleaving
+inequality `downcrossings ≤ upcrossings + 1` (between any two consecutive
+downcrossings there must be an upcrossing, with at most O(1) boundary excess)
+yields the result.
+
+## Status
+
+**Open obstruction.** Mathlib does not provide this combinatorial identity.
+A formal proof requires either:
+
+1. Defining `downcrossingsBefore` (e.g. via negation
+   `upcrossingsBefore (-b) (-a) (-h) N ω`), proving the path-reversal identity
+   `upcrossingsBefore a b g N = downcrossingsBefore a b (revPath g N) N`, and
+   the interleaving inequality
+   `downcrossingsBefore a b h N ≤ upcrossingsBefore a b h N + 1`. Each is a
+   careful induction on Mathlib's recursive `upperCrossingTime` /
+   `lowerCrossingTime`; combined ~200-300 lines of index manipulation.
+
+2. Or introducing an alternative non-recursive characterization of
+   `upcrossingsBefore` (e.g. as the maximum length of an alternating sequence
+   `s_0 < t_0 < … < s_{k-1} < t_{k-1} ≤ N` with `g s_i ≤ a`, `g t_i ≥ b`),
+   proving equivalence to Mathlib's recursive form, and then performing the
+   reversal at the level of this alternative characterization. Estimated
+   ~150-250 lines including the equivalence.
+
+Either approach is a substantial PR-level effort. β.2 and β.4 are both fully
+proven below modulo this single lemma; closing it discharges both downstream
+theorems automatically without further changes elsewhere in this file. -/
 private lemma upcrossingsBefore_le_revPath_succ
     (g : ℕ → Ω' → ℝ) (a b : ℝ) (N : ℕ) (ω : Ω') :
     upcrossingsBefore a b g N ω ≤ upcrossingsBefore a b (revPath g N) N ω + 1 := by
@@ -492,21 +521,57 @@ theorem BackwardMartingale.ae_tendsto
   have h_ae_tends : ∀ᵐ ω ∂μ, ∃ c, Tendsto (fun n => g_back n ω) atTop (𝓝 c) := by
     filter_upwards [h_liminf, h_upcr] with ω h₁ h₂
     exact MeasureTheory.tendsto_of_uncrossing_lt_top h₁ h₂
-  -- Lift the limit-existence statement to a strongly measurable function.
-  -- For the LIMIT to be measurable wrt `⨅ n, ℋ (toDual n) = m_inf`, we need a
-  -- TAIL-σ-ALGEBRA argument: each `g_back n` is `ℋ (toDual n)`-measurable, hence
-  -- `ℋ (toDual k)`-measurable for `k ≤ n` (since `n ≥ k → toDual n ≤ toDual k`
-  -- in ℕᵒᵈ, and `ℋ` is monotone in ℕᵒᵈ). The limit-existence set is therefore
-  -- `ℋ (toDual k)`-measurable for every `k` (the limit only depends on tails),
-  -- hence `m_inf = ⨅ k, ℋ (toDual k)`-measurable.
-  --
-  -- The full construction mirrors Mathlib's `Submartingale.ae_tendsto_limitProcess`
-  -- (`Probability/Martingale/Convergence.lean:209-231`) — replacing `⨆ n, ℱ n`
-  -- with `⨅ n, ℋ (toDual n)` and using the antitone (rather than monotone) lift.
-  -- This step is omitted here as it requires extensive σ-algebra plumbing
-  -- (~80 lines of Lean) outside Phase β's scope; it is the only obstruction
-  -- between us and a fully proven β.4 (modulo the path-reversal lemma in β.2).
-  sorry
+  -- Define `g` as the pointwise `limsup`. When the sequence converges, this equals
+  -- the limit; otherwise it's some unspecified real value (irrelevant on the null set).
+  -- The key point: `limsup` is tail-invariant, so for every `k`, we may rewrite
+  -- `g ω = limsup (fun n => g_back (n + k) ω) atTop`, and the RHS is built from
+  -- functions that are `ℋ (toDual k)`-measurable (since `toDual (n + k) ≤ toDual k`
+  -- in ℕᵒᵈ for `0 ≤ n`, hence `ℋ (toDual (n+k)) ≤ ℋ (toDual k)`). Hence `g` is
+  -- `ℋ (toDual k)`-measurable for every `k`, and so `m_inf = ⨅ k, ℋ (toDual k)`-measurable.
+  set g : Ω → ℝ := fun ω => Filter.limsup (fun n => g_back n ω) Filter.atTop with hg_def
+  -- Each `g_back n` is `ℋ (toDual n)`-measurable.
+  have h_meas_back : ∀ n : ℕ, Measurable[ℋ (OrderDual.toDual n)] (g_back n) := by
+    intro n
+    -- `g_back n = f (toDual n)`, which is strongly `ℋ (toDual n)`-measurable.
+    exact (hf.stronglyMeasurable (OrderDual.toDual n)).measurable
+  -- For `k ≤ n` in ℕ, `toDual n ≤ toDual k` in ℕᵒᵈ, so `ℋ (toDual n) ≤ ℋ (toDual k)`.
+  have h_meas_at : ∀ k n : ℕ, k ≤ n → Measurable[ℋ (OrderDual.toDual k)] (g_back n) := by
+    intro k n hkn
+    have hdual : OrderDual.toDual n ≤ OrderDual.toDual k :=
+      OrderDual.toDual_le_toDual.mpr hkn
+    exact (h_meas_back n).mono (ℋ.mono hdual) le_rfl
+  -- For each `k`, `g` is `ℋ (toDual k)`-measurable.
+  have h_g_meas_at : ∀ k : ℕ, Measurable[ℋ (OrderDual.toDual k)] g := by
+    intro k
+    -- `g ω = limsup (fun n => g_back n ω) atTop = limsup (fun n => g_back (n + k) ω) atTop`
+    -- (tail invariance), and each `g_back (n + k)` is `ℋ (toDual k)`-measurable.
+    have h_eq : g = fun ω => Filter.limsup (fun n => g_back (n + k) ω) Filter.atTop := by
+      funext ω
+      rw [hg_def]
+      exact (Filter.limsup_nat_add (fun n => g_back n ω) k).symm
+    rw [h_eq]
+    -- Each `n ↦ g_back (n + k)` is `ℋ (toDual k)`-measurable (since `k ≤ n + k`).
+    refine Measurable.limsup (fun n => ?_)
+    exact h_meas_at k (n + k) (Nat.le_add_left k n)
+  -- Hence `g` is `(⨅ k, ℋ (toDual k))`-measurable.
+  have h_g_meas_inf : Measurable[⨅ k : ℕ, ℋ (OrderDual.toDual k)] g := by
+    -- `Measurable[m] g ↔ ∀ s ∈ borel, g ⁻¹' s ∈ m`.  For `m = ⨅ k, ℋ (toDual k)`,
+    -- by `measurableSet_iInf`, `g ⁻¹' s ∈ m ↔ ∀ k, g ⁻¹' s ∈ ℋ (toDual k)`.
+    intro s hs
+    rw [MeasurableSpace.measurableSet_iInf]
+    intro k
+    exact h_g_meas_at k hs
+  -- Strongly measurable from measurable (ℝ has second-countable topology).
+  refine ⟨g, h_g_meas_inf.stronglyMeasurable, ?_⟩
+  -- AE-tendsto: when the sequence converges, `g ω = limsup = lim`, so the convergence
+  -- statement holds. AE this follows from `h_ae_tends`.
+  filter_upwards [h_ae_tends] with ω hω
+  obtain ⟨c, hc⟩ := hω
+  have h_lims : Filter.limsup (fun n => g_back n ω) Filter.atTop = c := hc.limsup_eq
+  rw [hg_def] at *
+  show Tendsto (fun n => g_back n ω) Filter.atTop (𝓝 (Filter.limsup (fun n => g_back n ω) atTop))
+  rw [h_lims]
+  exact hc
 
 end MainTheorem
 
