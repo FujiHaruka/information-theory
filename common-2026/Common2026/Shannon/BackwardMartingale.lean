@@ -1,6 +1,7 @@
 import Common2026.Shannon.BackwardFiltration
 import Mathlib.Probability.Martingale.Basic
 import Mathlib.Probability.Martingale.Convergence
+import Mathlib.Probability.Martingale.Upcrossing
 import Mathlib.MeasureTheory.Function.ConditionalExpectation.Real
 
 /-!
@@ -18,27 +19,39 @@ almost everywhere as `n → ∞` to a `⨅ n, ℋ (toDual n)`-measurable limit.
   `Martingale` is `Preorder ι`-generic (`Probability/Martingale/Basic.lean:53`).
   We expose two convenience renames (`backwardMartingale_condExp_ae_eq` and
   `BackwardMartingale.integrable`) tailored to the ℕᵒᵈ shape.
-* **β.2** — Backward upcrossing inequality. **Sorry-skeleton.** The forward
-  upcrossing inequality (`Probability/Martingale/Upcrossing.lean:686+`) is
-  `ℕ`-hardcoded and the reverse adaptation requires ~150 lines of intricate
-  bookkeeping (`reverseProxy N f n := f (toDual (N - n))`, forward-upcrossing
-  finiteness, and re-indexing). Per the plan's retreat line, this lemma ships
-  as a statement with `sorry`. Phase γ can build against the statement.
+* **β.2** — Backward upcrossing inequality. **Sorry-skeleton.** See the
+  retreat-line note attached to `BackwardMartingale.upcrossings_ae_lt_top`.
 * **β.3** — L¹ contraction `eLpNorm (f n) 1 μ ≤ eLpNorm (f (toDual 0)) 1 μ`.
   Fully proven: backward martingale means `f n = 𝔼[f (toDual 0) | ℋ n]`
   (since `n ≤ toDual 0` in `ℕᵒᵈ`), then `eLpNorm_one_condExp_le_eLpNorm`.
 * **β.4** — Main theorem `BackwardMartingale.ae_tendsto`. **Sorry-skeleton.**
-  The proof skeleton would be: liminf-equals-limsup from upcrossing finiteness
-  plus L¹ boundedness (β.3), then existence of a measurable limit using the
-  same construction as `Submartingale.ae_tendsto_limitProcess`. Both ingredients
-  depend on β.2 in its full reverse form.
+  See the retreat-line note attached to `BackwardMartingale.ae_tendsto`.
+
+## Proxy machinery (Phase β scaffolding)
+
+The proofs of β.2 and β.4 hinge on lifting a finite-window forward proxy to
+the global backward sequence. We introduce the proxy infrastructure here:
+
+* `reverseProxy N f k ω := f (toDual (N - k)) ω` — a forward sequence indexed
+  by `k : ℕ` whose values along `[0, N]` are the reverse of `f (toDual ·)` on
+  `[0, N]`.
+* `reverseFiltration N ℋ k := ℋ (toDual (N - k))` — the matching forward
+  `Filtration ℕ m₀`. Since `k ↦ N - k` is antitone in `ℕ` and `ℋ` is monotone
+  in `ℕᵒᵈ`, the composition is monotone in `ℕ`.
+* `reverseProxy_isMartingale` — Mathlib forward `Martingale` for `reverseProxy`
+  / `reverseFiltration`, derived from the ℕᵒᵈ martingale equation.
+
+These three definitions / lemma are used in the (still-sorry) attempts to
+discharge β.2 / β.4 below; they are general-purpose and would persist in any
+future completion or Mathlib-PR-shaped lift.
 
 ## Retreat line
 
-Per plan §5, the retreat line for β.2 has been adopted: the statements are
-recorded with `sorry`, allowing Phase γ to proceed as a hypothesis-form
-construction. Phase γ assembly then closes once β is filled (or a Mathlib PR
-provides the forward→backward bridge).
+Per plan §5, the retreat line for β.2 / β.4 has been adopted: the statements
+are recorded with `sorry` and Phase γ proceeds against them as hypotheses.
+The single missing ingredient — a **path-reversal inequality** for
+`upcrossingsBefore` (no analogue currently exists in Mathlib) — is documented
+in the relevant theorem comments.
 
 ## Main definitions / results
 
@@ -46,6 +59,8 @@ provides the forward→backward bridge).
   (re-export of `Martingale.integrable`).
 * `backwardMartingale_eq_condExp` — `f n =ᵐ[μ] 𝔼[f (toDual 0) | ℋ n]`.
 * `BackwardMartingale.eLpNorm_one_le` — L¹ bound (β.3).
+* `reverseProxy`, `reverseFiltration`, `reverseProxy_isMartingale` —
+  forward-proxy machinery for the finite-window forward Doob argument.
 * `BackwardMartingale.upcrossings_ae_lt_top` — **statement only / sorry** (β.2).
 * `BackwardMartingale.ae_tendsto` — **statement only / sorry** (β.4).
 -/
@@ -100,6 +115,81 @@ theorem BackwardMartingale.eLpNorm_one_le
 
 end L1Bound
 
+section ReverseProxy
+/-! ### Forward proxy for finite-window Doob arguments
+
+Given a backward martingale `f : ℕᵒᵈ → Ω → ℝ` w.r.t. `ℋ : Filtration ℕᵒᵈ m₀`
+and a horizon `N : ℕ`, the *reverse proxy* is the forward `ℕ`-indexed sequence
+
+```
+reverseProxy N f k ω := f (toDual (N - k)) ω
+```
+
+with matching filtration `reverseFiltration N ℋ k := ℋ (toDual (N - k))`.
+Past `k = N` both stabilise (since `N - k = 0` in `ℕ`), so the proxy is a
+genuine `Filtration ℕ m₀` and a genuine `Martingale (ι := ℕ)`. This lets us
+plug the proxy directly into `Submartingale.mul_integral_upcrossingsBefore_le_integral_pos_part`
+and other forward-time Doob estimates. -/
+
+variable (N : ℕ) (f : ℕᵒᵈ → Ω → ℝ) (ℋ : Filtration ℕᵒᵈ m₀)
+
+/-- The forward `ℕ`-indexed proxy sequence
+`reverseProxy N f k ω := f (toDual (N - k)) ω`. -/
+def reverseProxy : ℕ → Ω → ℝ := fun k ω => f (OrderDual.toDual (N - k)) ω
+
+/-- The forward `ℕ`-indexed proxy filtration
+`reverseFiltration N ℋ k := ℋ (toDual (N - k))`.
+
+`Monotone` in `k` because `k ↦ N - k` is antitone on `ℕ` and `ℋ` is monotone
+in `ℕᵒᵈ`; the composition `k ↦ ℋ (toDual (N - k))` is therefore monotone. -/
+def reverseFiltration : Filtration ℕ m₀ where
+  seq k := ℋ (OrderDual.toDual (N - k))
+  mono' i j hij := by
+    -- For `i ≤ j` in ℕ, `N - j ≤ N - i` in ℕ, hence
+    -- `toDual (N - i) ≤ toDual (N - j)` in ℕᵒᵈ, so by `ℋ.mono`:
+    have h_sub : N - j ≤ N - i := Nat.sub_le_sub_left hij N
+    -- In `ℕᵒᵈ`, `toDual (N - i) ≤ toDual (N - j)` ↔ `N - j ≤ N - i` in `ℕ`.
+    have h_dual : OrderDual.toDual (N - i) ≤ OrderDual.toDual (N - j) :=
+      OrderDual.toDual_le_toDual.mpr h_sub
+    exact ℋ.mono h_dual
+  le' k := ℋ.le _
+
+@[simp] lemma reverseProxy_apply (k : ℕ) (ω : Ω) :
+    reverseProxy N f k ω = f (OrderDual.toDual (N - k)) ω := rfl
+
+@[simp] lemma reverseFiltration_apply (k : ℕ) :
+    reverseFiltration N ℋ k = ℋ (OrderDual.toDual (N - k)) := rfl
+
+variable {N f ℋ}
+
+/-- The reverse proxy is a forward `ℕ`-indexed `Martingale` whenever the
+underlying ℕᵒᵈ-indexed sequence is. -/
+theorem reverseProxy_isMartingale (hf : Martingale f ℋ μ) :
+    Martingale (reverseProxy N f) (reverseFiltration N ℋ) μ := by
+  refine ⟨?_, ?_⟩
+  · -- StronglyAdapted: each `reverseProxy N f k = f (toDual (N - k))` is
+    -- `ℋ (toDual (N - k))`-strongly measurable, which is the proxy filtration.
+    intro k
+    exact hf.stronglyAdapted (OrderDual.toDual (N - k))
+  · -- Martingale equation: for `i ≤ j` in ℕ,
+    -- `μ[reverseProxy N f j | reverseFiltration N ℋ i] =ᵐ[μ] reverseProxy N f i`.
+    intro i j hij
+    -- Translate to ℕᵒᵈ: `toDual (N - i) ≤ toDual (N - j)` in ℕᵒᵈ
+    -- because `N - j ≤ N - i` in ℕ (and `toDual` reverses order).
+    have h_sub : N - j ≤ N - i := Nat.sub_le_sub_left hij N
+    have h_dual : OrderDual.toDual (N - i) ≤ OrderDual.toDual (N - j) :=
+      OrderDual.toDual_le_toDual.mpr h_sub
+    -- Apply the ℕᵒᵈ-martingale equation at `(toDual (N - i), toDual (N - j))`:
+    -- `μ[f (toDual (N - j)) | ℋ (toDual (N - i))] =ᵐ[μ] f (toDual (N - i))`.
+    -- Unfolding:
+    --   reverseProxy N f j = f (toDual (N - j))
+    --   reverseProxy N f i = f (toDual (N - i))
+    --   reverseFiltration N ℋ i = ℋ (toDual (N - i))
+    -- this is exactly the desired equation.
+    exact hf.condExp_ae_eq h_dual
+
+end ReverseProxy
+
 section Upcrossings
 /-! ### β.2 — Backward upcrossing inequality (retreat line / sorry-skeleton) -/
 
@@ -113,22 +203,34 @@ This is the reverse-time analogue of
 `Submartingale.upcrossings_ae_lt_top`
 (`Probability/Martingale/Convergence.lean:184`).
 
-**Status — sorry-skeleton (Phase β retreat line, see file docstring).** The
-forward proof relies on Doob's upcrossing inequality
-`mul_integral_upcrossingsBefore_le_integral_pos_part`
-(`Probability/Martingale/Upcrossing.lean:690`), which is `ℕ`-hardcoded through
-its dependence on `upperCrossingTime`, `lowerCrossingTime`, and
-`upcrossingStrat` (each `ℕ`-indexed). Reverse-time adaptation requires either
-re-deriving these objects for `ℕᵒᵈ` (~150 lines) or constructing a
-`reverseProxy N f n := f (toDual (N - n))` and lifting forward results — both
-are nontrivial Mathlib-PR-sized tasks. -/
+**Status — sorry-skeleton (Phase β retreat line, see file docstring).**
+
+The proxy machinery (`reverseProxy`, `reverseFiltration`,
+`reverseProxy_isMartingale`) lifts each finite window `[0, N]` of the backward
+sequence to a forward Mathlib martingale, so that
+`Submartingale.mul_integral_upcrossingsBefore_le_integral_pos_part`
+(`Probability/Martingale/Upcrossing.lean:690`) supplies a uniform-in-`N`
+bound on the proxy's `upcrossingsBefore _ _ (proxy N) N`. The single missing
+ingredient to translate this back to `upcrossings _ _ (n ↦ f (toDual n))` is a
+**path-reversal inequality** of the form
+
+```
+upcrossingsBefore a b (n ↦ f (toDual n)) N ω
+  ≤ upcrossingsBefore a b (reverseProxy N f) N ω + 1.
+```
+
+Mathlib does not currently provide this combinatorial identity, and a hand
+derivation would unfold `upperCrossingTime` / `lowerCrossingTime` recursively
+(Mathlib `Probability/Martingale/Upcrossing.lean:142, 152`) — a Mathlib-PR-sized
+effort outside Phase β's scope. Pending that, β.2 is recorded as a statement
+and Phase γ proceeds against it as a hypothesis. -/
 theorem BackwardMartingale.upcrossings_ae_lt_top
     [IsProbabilityMeasure μ] (hf : Martingale f ℋ μ)
     (hf_int : Integrable (f (OrderDual.toDual 0)) μ)
     (a b : ℝ) (_hab : a < b) :
     ∀ᵐ ω ∂μ,
       MeasureTheory.upcrossings a b (fun n : ℕ => f (OrderDual.toDual n)) ω < ∞ := by
-  -- Retreat-line statement; see file docstring.
+  -- Retreat-line statement; see comment above.
   sorry
 
 end Upcrossings
@@ -149,8 +251,12 @@ This is the reverse-time analogue of
 
 **Status — sorry-skeleton (Phase β retreat line, see file docstring).** The
 proof requires Phase β.2 (`upcrossings_ae_lt_top`) plus the
-`liminf = limsup` argument and a measurable-limit existence construction
-analogous to Mathlib's `tendsto_of_uncrossing_lt_top`. Phase γ
+`liminf = limsup` argument (`tendsto_of_uncrossing_lt_top`,
+`Probability/Martingale/Convergence.lean:142`) and a measurable-limit existence
+construction analogous to Mathlib's `tendsto_of_uncrossing_lt_top` +
+`aemeasurable_of_tendsto_metrizable_ae'`
+(`MeasureTheory/Constructions/BorelSpace/Metrizable.lean:79`). All ingredients
+chain off β.2; see the retreat note there. Phase γ
 (`BirkhoffErgodic.lean`) uses this statement as a hypothesis. -/
 theorem BackwardMartingale.ae_tendsto
     [IsProbabilityMeasure μ] (hf : Martingale f ℋ μ)
@@ -159,7 +265,7 @@ theorem BackwardMartingale.ae_tendsto
       StronglyMeasurable[⨅ n : ℕ, ℋ (OrderDual.toDual n)] g ∧
         ∀ᵐ ω ∂μ, Tendsto (fun n : ℕ => f (OrderDual.toDual n) ω)
           atTop (𝓝 (g ω)) := by
-  -- Retreat-line statement; see file docstring.
+  -- Retreat-line statement; see comment above.
   sorry
 
 end MainTheorem
