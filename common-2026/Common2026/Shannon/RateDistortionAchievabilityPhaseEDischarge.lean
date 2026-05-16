@@ -289,15 +289,16 @@ theorem rate_distortion_achievability_partial_discharge
     (failure_seq : ℕ → ℝ)
     (h_failure_nn : ∀ n, 0 ≤ failure_seq n)
     (h_failure_tendsto_zero : Filter.Tendsto failure_seq Filter.atTop (𝓝 0))
-    (h_codebook_avg_failure : ∀ {n : ℕ}, 0 < n →
-      ∀ {M : ℕ} (hM : 0 < M),
-        ∑ c : Codebook M n β,
+    (h_codebook_avg_failure : ∀ {n : ℕ} (hn : 0 < n),
+        ∑ c : Codebook (Nat.ceil (Real.exp ((n : ℝ) * R))) n β,
             (codebookMeasure
-                ((rdAmbient qStar).map (iidYs (α := α) (β := β) 0)) M n).real {c}
+                ((rdAmbient qStar).map (iidYs (α := α) (β := β) 0))
+                  (Nat.ceil (Real.exp ((n : ℝ) * R))) n).real {c}
               * (Measure.pi (fun _ : Fin n =>
                     (rdAmbient qStar).map (iidXs (α := α) (β := β) 0))).real
                   { x | (x, c (jointTypicalLossyEncoder (rdAmbient qStar)
-                                  iidXs iidYs hM ε c x))
+                                  iidXs iidYs
+                                  (Nat.ceil_pos.mpr (Real.exp_pos _)) ε c x))
                           ∉ distortionTypicalSet (rdAmbient qStar) iidXs iidYs
                               d n ε δ_typ }
           ≤ failure_seq n)

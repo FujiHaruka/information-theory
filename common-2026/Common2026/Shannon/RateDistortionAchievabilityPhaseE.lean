@@ -106,14 +106,16 @@ theorem rate_distortion_achievability_witness_form
     (failure_seq : ℕ → ℝ)
     (h_failure_nn : ∀ n, 0 ≤ failure_seq n)
     (h_failure_tendsto_zero : Filter.Tendsto failure_seq Filter.atTop (𝓝 0))
-    -- For each `n`, the codebook-averaged source-failure equals `failure_seq n`.
-    -- This is the Fubini bridge step delivered by Phase C-style arguments.
-    (h_codebook_avg_failure : ∀ {n : ℕ}, 0 < n →
-      ∀ {M : ℕ} (hM : 0 < M),
-        ∑ c : Codebook M n β,
-            (codebookMeasure (μ.map (Ys 0)) M n).real {c}
+    -- For each `n`, the codebook-averaged source-failure at the specific
+    -- codebook size `Mn := ⌈exp(n·R)⌉` is `≤ failure_seq n`. This is the
+    -- Fubini bridge step delivered by Phase C-style arguments.
+    (h_codebook_avg_failure : ∀ {n : ℕ} (hn : 0 < n),
+        ∑ c : Codebook (Nat.ceil (Real.exp ((n : ℝ) * R))) n β,
+            (codebookMeasure (μ.map (Ys 0))
+                (Nat.ceil (Real.exp ((n : ℝ) * R))) n).real {c}
               * (Measure.pi (fun _ : Fin n => μ.map (Xs 0))).real
-                  { x | (x, c (jointTypicalLossyEncoder μ Xs Ys hM ε c x))
+                  { x | (x, c (jointTypicalLossyEncoder μ Xs Ys
+                                  (Nat.ceil_pos.mpr (Real.exp_pos _)) ε c x))
                           ∉ distortionTypicalSet μ Xs Ys d n ε δ_typ }
           ≤ failure_seq n)
     -- Distortion slack: `δ_typ + expectedDistortionPmf d qStar ≤ D + ε' / 2`.
@@ -239,8 +241,11 @@ theorem rate_distortion_achievability_witness_form
         ring
       rw [h_sum_Edδ, h_sum_dMax_fail]
     -- Apply Fubini hypothesis (under the new notation).
-    have h_step3 : ∑ c, W c * fail c ≤ failure_seq n :=
-      h_codebook_avg_failure h_n_pos hMn_pos
+    have h_step3 : ∑ c, W c * fail c ≤ failure_seq n := by
+      have h_app := h_codebook_avg_failure h_n_pos
+      -- `h_app` has `Mn := Nat.ceil (Real.exp ((n : ℝ) * R))` baked in;
+      -- our local `Mn` matches definitionally.
+      convert h_app using 0
     -- Combine: ∑ W c * f c ≤ Edδ + dMax * failure_seq n.
     have h_step4 : dMax * ∑ c, W c * fail c ≤ dMax * failure_seq n :=
       mul_le_mul_of_nonneg_left h_step3 h_dMax_nn

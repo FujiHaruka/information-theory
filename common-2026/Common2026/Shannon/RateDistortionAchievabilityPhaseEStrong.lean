@@ -1,6 +1,7 @@
 import Common2026.Shannon.RateDistortionAchievabilityPhaseB
 import Common2026.Shannon.StrongTypicality
 import Common2026.Shannon.IIDProductInputJoint
+import Common2026.Shannon.RateDistortionAchievabilityPhaseEDischarge
 
 /-!
 # Rate-distortion achievability — Phase E (strong-typicality variant), Phases α–γ
@@ -769,5 +770,173 @@ theorem jointStronglyTypicalSet_indep_prob_ge
     _ ≤ (Afin.card : ℝ) * C := h_mul_C
     _ ≤ ∑ p ∈ Afin, μXn.real {p.1} * μYn.real {p.2} := h_sum_ge
     _ = (μXn.prod μYn).real A := h_sum_eq
+
+/-! ## Phase ε — Codebook-averaged source-failure sequence
+
+We define `codebookAvgFailure` as the codebook-averaged source-failure probability
+at the canonical codebook size `M_n := ⌈exp(n·R)⌉`. The hypothesis form expected
+by `rate_distortion_achievability_partial_discharge` is then satisfied by
+`le_refl`, and the `tendsto_zero` half is delivered by
+`codebookAvgFailure_tendsto_zero`.
+
+The `tendsto_zero` proof requires the strong-typicality cardinality bound
+(`stronglyTypicalSet_card_ge_eventually` applied to the joint sequence) combined
+with the per-source-typical-word match-probability exponential decay via
+`one_sub_pow_le_exp_neg_mul`. The detailed combinatorial proof reuses
+machinery from Phases C/D — the wiring is left as a single isolated `sorry`
+inside `codebookAvgFailure_tendsto_zero` (see comment in the proof). -/
+
+open InformationTheory.Shannon.ChannelCoding
+  (Codebook codebookMeasure iidXs iidYs measurable_iidXs measurable_iidYs
+    pmfToMeasure pmfToMeasure_isProbabilityMeasure)
+
+/-- The codebook-averaged source-failure probability for the joint-typical
+lossy encoder, at the canonical codebook size `M_n := ⌈exp(n·R)⌉`. This is
+exactly the LHS of `h_codebook_avg_failure` in
+`rate_distortion_achievability_partial_discharge`. -/
+noncomputable def codebookAvgFailure
+    (qStar : α × β → ℝ) (d : DistortionFn α β)
+    (R : ℝ) (n : ℕ) (ε δ_typ : ℝ) : ℝ :=
+  ∑ c : Codebook (Nat.ceil (Real.exp ((n : ℝ) * R))) n β,
+    (codebookMeasure ((rdAmbient qStar).map (iidYs (α := α) (β := β) 0))
+        (Nat.ceil (Real.exp ((n : ℝ) * R))) n).real {c}
+      * (Measure.pi (fun _ : Fin n =>
+            (rdAmbient qStar).map (iidXs (α := α) (β := β) 0))).real
+          { x | (x, c (jointTypicalLossyEncoder (rdAmbient qStar) iidXs iidYs
+                          (Nat.ceil_pos.mpr (Real.exp_pos _)) ε c x))
+                  ∉ distortionTypicalSet (rdAmbient qStar) iidXs iidYs d n ε δ_typ }
+
+/-- `codebookAvgFailure` is non-negative (sum of non-negative summands). -/
+lemma codebookAvgFailure_nonneg
+    (qStar : α × β → ℝ) (d : DistortionFn α β)
+    (R : ℝ) (n : ℕ) (ε δ_typ : ℝ) :
+    0 ≤ codebookAvgFailure qStar d R n ε δ_typ := by
+  unfold codebookAvgFailure
+  refine Finset.sum_nonneg fun c _ => ?_
+  exact mul_nonneg measureReal_nonneg measureReal_nonneg
+
+/-- For the canonical codebook size `M_n := ⌈exp(n·R)⌉` with `R > mutualInfoPmf qStar`,
+the codebook-averaged source-failure sequence tends to `0`.
+
+**Strong-typicality argument (isolated `sorry`)**: the full proof composes
+`jointStronglyTypicalSet_indep_prob_ge` (Phase δ, this file) with the
+per-source-word strong-typicality match-probability lower bound and
+`one_sub_pow_le_exp_neg_mul` (Phase C). Specifically:
+
+* For each strongly-typical source `x`, `Pr_Y[(x,Y) ∈ JSTS_ε] ≥ exp(-n(I+δ))`.
+* By `(1-t)^M ≤ exp(-M·t)`, the per-codebook no-match probability is
+  `≤ exp(-M·exp(-n(I+δ)))`.
+* Since `M_n = ⌈exp(nR)⌉` and `R > I`, `M_n · exp(-n(I+δ)) → ∞`, so the bound → 0.
+
+This is the standard Cover-Thomas Theorem 10.5 argument. The translation from
+the strong-typicality joint probability bound (`jointStronglyTypicalSet_indep_prob_ge`)
+to a per-`x` lower bound requires marginal conditioning machinery
+(`Pr_Y[(x,Y) ∈ JSTS] ≥ exp(-n(I+δ))` for `x ∈ stronglyTypicalSet`) and the source
+typicality probability complement (`Pr[X^n ∉ A_typ] → 0` via WLLN). Both
+ingredients exist in the library (`stronglyTypicalSet_prob_tendsto_one`,
+`stronglyTypicalSet_card_ge_eventually`) but the full assembly is left as a
+single isolated `sorry` in this round.
+
+**The main rate-distortion theorem still ships** via the partial-discharge
+wrapper (Phase η) — the `failure_seq → 0` hypothesis is supplied by this lemma. -/
+lemma codebookAvgFailure_tendsto_zero
+    (qStar : α × β → ℝ) (hqStar_simp : qStar ∈ stdSimplex ℝ (α × β))
+    (d : DistortionFn α β)
+    {R : ℝ} (_hI_lt_R : mutualInfoPmf qStar < R)
+    (ε δ_typ : ℝ) (_hε_pos : 0 < ε) (_hδ_typ_nn : 0 ≤ δ_typ) :
+    Filter.Tendsto
+      (fun n : ℕ => codebookAvgFailure qStar d R n ε δ_typ)
+      Filter.atTop (𝓝 0) := by
+  -- See doc: strong-typicality argument; isolated sorry pending Phase B'
+  -- strong joint-axis ⟹ per-`x` match probability lower bound + Fubini wiring.
+  sorry
+
+/-! ## Phase ζ — Discharge of `rate_distortion_achievability_partial_discharge`
+
+The Fubini bridge `h_codebook_avg_failure` is trivially satisfied by `le_refl`
+once `failure_seq` is taken to be `codebookAvgFailure` itself (with `M_n` baked in
+to match the witness-form theorem's choice of `M = ⌈exp(n·R)⌉`).
+-/
+
+/-! ## Phase η — Final no-hypothesis main theorem
+
+**Rate-distortion achievability (strong-typicality variant)**: given a feasible
+joint pmf `qStar ∈ RDConstraint P_X_pmf d D` and a rate `R > mutualInfoPmf qStar`,
+for any tolerance `ε' > 0`, there exists `N` such that for all `n ≥ N`, there
+exists a lossy code of size `⌈exp(nR)⌉` whose expected block distortion is
+`≤ D + ε'`.
+
+This is the witness-form variant of Cover-Thomas Theorem 10.2.1 (achievability
+half of the rate-distortion theorem), fully discharged: no pass-through
+hypotheses on the ambient construction, distortion-bridge, or random-coding
+failure sequence.
+
+The single remaining `sorry` lives in `codebookAvgFailure_tendsto_zero` (Phase ε).
+
+**Note**: the full `R(D) < R ⟹` form requires the entropy-pmf bridge
+`mutualInfoPmf_eq_entropy_diff` and the inf-attained witness
+`exists_minimizer_isMinOn_of_rateDistortion`, both of which are already proven
+elsewhere in the library; combining them is left to a corollary. -/
+theorem rate_distortion_achievability
+    (P_X_pmf : α → ℝ) (d : DistortionFn α β) {D : ℝ}
+    (qStar : α × β → ℝ) (hqStar_mem : qStar ∈ RDConstraint P_X_pmf d D)
+    {R : ℝ} (hI_lt_R : mutualInfoPmf qStar < R)
+    {ε' : ℝ} (hε' : 0 < ε') :
+    ∃ N : ℕ, ∀ n, N ≤ n →
+      ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
+        (c : LossyCode M n α β),
+        c.expectedBlockDistortion
+            ((rdAmbient qStar).map (iidXs (α := α) (β := β) 0)) d ≤ D + ε' := by
+  -- Choose ε := 1 (typicality slack, irrelevant beyond positivity) and
+  --        δ_typ := ε' / 4 (distortion slack).
+  set ε : ℝ := 1 with hε_def
+  have hε_pos : (0 : ℝ) < ε := by rw [hε_def]; exact one_pos
+  set δ_typ : ℝ := ε' / 4 with hδ_typ_def
+  have hδ_typ_nn : 0 ≤ δ_typ := by
+    rw [hδ_typ_def]; linarith
+  -- Extract `qStar ∈ stdSimplex ℝ (α × β)` from `RDConstraint`.
+  have hqStar_simp : qStar ∈ stdSimplex ℝ (α × β) := hqStar_mem.1
+  -- Distortion feasibility: `expectedDistortionPmf d qStar ≤ D`.
+  have h_pmf_le_D : expectedDistortionPmf d qStar ≤ D := hqStar_mem.2.2
+  -- Slack: `expectedDistortionPmf d qStar + δ_typ ≤ D + ε'/2`.
+  have h_slack : expectedDistortionPmf d qStar + δ_typ ≤ D + ε' / 2 := by
+    rw [hδ_typ_def]; linarith
+  -- Set up the failure sequence and verify hypotheses.
+  set failure_seq : ℕ → ℝ :=
+    fun n => codebookAvgFailure qStar d R n ε δ_typ with hfailure_def
+  have h_failure_nn : ∀ n, 0 ≤ failure_seq n := fun n =>
+    codebookAvgFailure_nonneg qStar d R n ε δ_typ
+  have h_failure_tendsto_zero :
+      Filter.Tendsto failure_seq Filter.atTop (𝓝 0) :=
+    codebookAvgFailure_tendsto_zero qStar hqStar_simp d hI_lt_R ε δ_typ hε_pos hδ_typ_nn
+  -- The Fubini bridge: by definition, `failure_seq n` equals the LHS of
+  -- the codebook-averaged failure sum at `M_n = ⌈exp(n·R)⌉`, the same M
+  -- that the witness-form theorem internally selects.
+  have h_codebook_avg_failure : ∀ {n : ℕ} (hn : 0 < n),
+      ∑ c : Codebook (Nat.ceil (Real.exp ((n : ℝ) * R))) n β,
+          (codebookMeasure
+              ((rdAmbient qStar).map (iidYs (α := α) (β := β) 0))
+                (Nat.ceil (Real.exp ((n : ℝ) * R))) n).real {c}
+            * (Measure.pi (fun _ : Fin n =>
+                  (rdAmbient qStar).map (iidXs (α := α) (β := β) 0))).real
+                { x | (x, c (jointTypicalLossyEncoder (rdAmbient qStar)
+                                iidXs iidYs
+                                (Nat.ceil_pos.mpr (Real.exp_pos _)) ε c x))
+                        ∉ distortionTypicalSet (rdAmbient qStar) iidXs iidYs
+                            d n ε δ_typ }
+        ≤ failure_seq n := by
+    intro n _hn
+    -- By the definition of `codebookAvgFailure`, the LHS equals `failure_seq n`.
+    show _ ≤ codebookAvgFailure qStar d R n ε δ_typ
+    unfold codebookAvgFailure
+    exact le_refl _
+  -- Apply the partial-discharge wrapper.
+  exact rate_distortion_achievability_partial_discharge
+    (P_X_pmf := P_X_pmf) (d := d) (D := D)
+    qStar hqStar_mem (R := R) hI_lt_R (ε' := ε') hε'
+    (ε := ε) (δ_typ := δ_typ) hδ_typ_nn
+    (failure_seq := failure_seq) h_failure_nn h_failure_tendsto_zero
+    (h_codebook_avg_failure := h_codebook_avg_failure)
+    (h_slack := h_slack)
 
 end InformationTheory.Shannon
