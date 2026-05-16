@@ -1,13 +1,16 @@
 import Common2026.Shannon.ChannelCodingConverseGeneralComplete
+import Common2026.Shannon.CondEntropyMemoryless
 import Mathlib.MeasureTheory.MeasurableSpace.Embedding
 
 /-!
 # Channel coding converse (general input) — strong memoryless variant (D-2'')
 
 [D-2'' ムーンショット plan](../../../docs/shannon/channel-coding-converse-general-d2-double-prime-plan.md)
-の Phase B Session 1。`ChannelCodingConverseGeneralComplete.lean` (D-2') が hypothesis-form
-で残した 3 仮説 (`h_yother_zero`, `h_split`, `h_markov_xprefix`) を、より強い memoryless 述語
-**`IsMemorylessChannelStrong`** から直接導出することを目標とする。
+の Phase B。`channel_coding_converse_general_memoryless_strong` は **Cover-Thomas Thm 7.9
+のエントロピー劣加法経路** (`Common2026/Shannon/CondEntropyMemoryless.lean`) を通じて
+`IsMemorylessChannelStrong` から直接導出する。D-2' hypothesis-form (3 仮説経由) は
+`h_yother_zero` が encoder 任意では偽 (反例: `X_1 := X_0`) のため、Cover-Thomas の
+劣加法 (`H(Y^n) ≤ ∑ H(Y_i)`) ＋ 強 memoryless `H(Y^n|X^n) = ∑ H(Y_i|X_i)` 経路に切り替えた。
 
 ## Scope
 
@@ -16,22 +19,19 @@ import Mathlib.MeasureTheory.MeasurableSpace.Embedding
   - outputs cond. indep.: `Y^{≠i} → X^n → Y_i`
 * `MeasurableEquiv` plumbing: `Fin n → β ≃ᵐ β × ({j // j ≠ i} → β)`
   (`piEquivPiSubtypeProd` + `funUnique` の合成)
-* `h_markov_xprefix_of_strong`: per-letter Markov を `isMarkovChain_map_left` で post-process。
-* `h_split_of_strong`: Y-axis chain rule split を `condMutualInfo_chain_rule_Y_2var`
-  + `condMutualInfo_map_middle_measurableEquiv` で discharge。
-* `h_yother_zero_of_strong` (**permanent `sorry` — claim is false**): a counterexample
-  with arbitrary encoder (`X_1 := X_0`) satisfies both `IsMemorylessChannelStrong`
-  axioms yet violates `condMI X_i Y^{≠i} (X^{<i}, Y_i) = 0`. See the lemma's own
-  doc-comment for the explicit two-letter binary calculation. Discharging this would
-  require an extra independence axiom on the encoder, or a refactor of D-2'
-  `memoryless_per_summand_bound` to follow the Cover-Thomas subadditivity route
-  (`H(Y^n) ≤ ∑ H(Y_i)`) that avoids the per-summand identity entirely.
-* `channel_coding_converse_general_memoryless_strong` (主定理): 上記 3 つを合成し、
-  既存 `channel_coding_converse_general_memoryless` を呼び出す。本定理は
-  `h_yother_zero_of_strong` の `sorry` を経由して成立。
+* `h_markov_xprefix_of_strong`, `h_split_of_strong`: D-2' hypothesis-form 用の
+  helper だが、新しい主定理経路 (Cover-Thomas) では呼ばれない **dead code**。歴史的記録
+  および将来 D-2' hypothesis-form を再利用する場合のため残置。
+* `h_yother_zero_of_strong` (**permanent `sorry` — claim is false; now dead code**):
+  see lemma docstring for counterexample. Main theorem no longer routes through it.
+* `channel_coding_converse_general_memoryless_strong` (主定理): single-shot Markov-encoder
+  converse + `mutualInfo_le_sum_per_letter_of_memoryless_strong` (Cover-Thomas Thm 7.9
+  encoder-agnostic chain) で証明。`h_yother_zero_of_strong` を経由しない。
 
-Net status: 1 `sorry` in `h_yother_zero_of_strong` (statement-level mathematical block,
-not a proof gap). Other two discharges are clean. -/
+Net status: 主定理は **encoder-agnostic** な Cover-Thomas 経路で成立し、
+`h_yother_zero_of_strong` の `sorry` を呼ばない。`CondEntropyMemoryless.lean` の
+3 つの building blocks (chain rule, Markov drop はクリア; per-summand collapse は
+sorry) を経由するが、これらは数学的に正しく、follow-up で discharge 可能。 -/
 
 namespace InformationTheory.Shannon.ChannelCodingConverseGeneral
 
@@ -295,16 +295,23 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
-omit [DecidableEq β] in
 /-- **Channel coding converse, strong memoryless DMC version (D-2'')**.
 
-`channel_coding_converse_general_memoryless` (D-2', hypothesis-form) を
-`IsMemorylessChannelStrong` から純粋に導出する。3 仮説のうち `h_split`, `h_markov_xprefix`
-は本 file で discharge 済み、`h_yother_zero` は Session 2 まで sorry (本定理は
-`h_yother_zero_of_strong` 経由でその sorry を吸収する)。
+`IsMemorylessChannelStrong` 仮定下で per-letter mutual information の和に減衰する形。
+Cover-Thomas Thm 7.9 のエントロピー劣加法経路を辿る:
 
-D-2' の主定理 hypothesis 形と同じ結論 — finite-alphabet memoryless DMC で
-Cover-Thomas Thm 7.9 の per-letter `I(X_i; Y_i)` バウンドが Fano 不等式と組み合わさる形。 -/
+```
+log |M| ≤ I(X^n; Y^n).toReal + Fano                              -- single-shot Markov encoder
+        ≤ ∑ I(X_i; Y_i).toReal + Fano                            -- mutualInfo_le_sum_per_letter_of_memoryless_strong
+```
+
+D-2' hypothesis-form (`channel_coding_converse_general_memoryless`) は 3 仮説の中に
+`h_yother_zero` を含むが、これは encoder 任意では数学的に偽である (反例: `X_1 := X_0`)
+ため、本定理はこれを **経由しない**。代わりに `mutualInfo_le_sum_per_letter_of_memoryless_strong`
+は subadditivity (encoder-agnostic) + 強 memoryless `H(Y^n|X^n) = ∑ H(Y_i|X_i)` のみを使う。
+
+引数 `h_memo : IsMemorylessChannel` は historical reasons (D-2' 互換) で残しているが、
+新しい証明経路では使われない。 -/
 theorem channel_coding_converse_general_memoryless_strong
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Msg : Ω → M) (encoder : M → Fin n → α)
@@ -313,7 +320,7 @@ theorem channel_coding_converse_general_memoryless_strong
     (hdecoder : Measurable decoder)
     (hmarkov : Shannon.IsMarkovChain μ Msg
       (fun ω => encoder (Msg ω)) (fun ω i => Ys i ω))
-    (h_memo : IsMemorylessChannel μ (fun i ω => encoder (Msg ω) i) Ys)
+    (_h_memo : IsMemorylessChannel μ (fun i ω => encoder (Msg ω) i) Ys)
     (h_strong : IsMemorylessChannelStrong μ
       (fun i ω => encoder (Msg ω) i) Ys)
     (hMsg_uniform :
@@ -331,20 +338,30 @@ theorem channel_coding_converse_general_memoryless_strong
         InformationTheory.MeasureFano.errorProb μ Msg
           (fun ω i => Ys i ω) decoder *
           Real.log ((Fintype.card M : ℝ) - 1) := by
-  -- Set up the per-letter X RV from encoder.
+  -- Set up per-letter and joint X RVs.
   set Xs : Fin n → Ω → α := fun i ω => encoder (Msg ω) i with hXs_def
   have h_encoder : Measurable encoder := measurable_of_countable _
   have hXs_meas : ∀ i, Measurable (Xs i) := fun i =>
     (measurable_pi_apply i).comp (h_encoder.comp hMsg)
-  -- Discharge h_markov_xprefix and h_split from h_strong.
-  have h_markov_xprefix := h_markov_xprefix_of_strong μ Xs Ys hXs_meas hYs h_strong
-  have h_split := h_split_of_strong μ Xs Ys hXs_meas hYs
-  have h_yother_zero := h_yother_zero_of_strong μ Xs Ys hXs_meas hYs h_strong
-  -- Apply D-2' main theorem.
-  exact channel_coding_converse_general_memoryless
-    μ Msg encoder Ys decoder hMsg hYs hdecoder hmarkov h_memo
-    h_yother_zero h_split h_markov_xprefix
-    hMsg_uniform hcard hMI_finite
+  have hY_pi : Measurable (fun ω (i : Fin n) => Ys i ω) :=
+    measurable_pi_iff.mpr hYs
+  -- Step 1: single-shot Markov-encoder converse on (X = Fin n → α, Y = Fin n → β).
+  have h_single :=
+    Shannon.shannon_converse_single_shot_markov_encoder (X := Fin n → α)
+      μ Msg encoder (fun ω i => Ys i ω) decoder
+      hMsg hY_pi h_encoder hdecoder hmarkov hMsg_uniform hcard hMI_finite
+  -- Normalize `(encoder ∘ Msg)` to `fun ω => encoder (Msg ω)`.
+  rw [show (encoder ∘ Msg) = fun ω => encoder (Msg ω) from rfl] at h_single
+  -- Step 2: Cover-Thomas Thm 7.9 — per-letter MI bound.
+  -- `fun ω => encoder (Msg ω) = fun ω j => Xs j ω` (definitional).
+  have h_pi_eq : (fun ω => encoder (Msg ω)) = (fun ω j => Xs j ω) := by
+    funext ω j; rfl
+  rw [h_pi_eq] at h_single
+  have h_per_letter :=
+    Shannon.mutualInfo_le_sum_per_letter_of_memoryless_strong μ Xs Ys hXs_meas hYs
+      h_strong.per_letter_markov h_strong.outputs_cond_indep
+  -- Combine: log |M| ≤ I(X^n; Y^n).toReal + Fano ≤ ∑ I(X_i; Y_i).toReal + Fano.
+  linarith
 
 end MainConverseStrong
 
