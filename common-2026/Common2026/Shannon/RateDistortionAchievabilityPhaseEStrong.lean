@@ -818,24 +818,61 @@ lemma codebookAvgFailure_nonneg
 /-- For the canonical codebook size `M_n := ⌈exp(n·R)⌉` with `R > mutualInfoPmf qStar`,
 the codebook-averaged source-failure sequence tends to `0`.
 
-**Strong-typicality argument (isolated `sorry`)**: the full proof composes
-`jointStronglyTypicalSet_indep_prob_ge` (Phase δ, this file) with the
-per-source-word strong-typicality match-probability lower bound and
-`one_sub_pow_le_exp_neg_mul` (Phase C). Specifically:
+**Status (final attempt 2026-05-16)**: `sorry` remains. The proof requires
+the **per-`x` conditional match-probability lower bound** (Cover-Thomas
+Lemma 10.6.1 in strong-typicality form), which is genuinely a fresh
+~200–400 LOC standalone undertaking and was not closeable within the budget
+of this round. See gap analysis below.
 
-* For each strongly-typical source `x`, `Pr_Y[(x,Y) ∈ JSTS_ε] ≥ exp(-n(I+δ))`.
-* By `(1-t)^M ≤ exp(-M·t)`, the per-codebook no-match probability is
-  `≤ exp(-M·exp(-n(I+δ)))`.
-* Since `M_n = ⌈exp(nR)⌉` and `R > I`, `M_n · exp(-n(I+δ)) → ∞`, so the bound → 0.
+**Math sketch (Cover-Thomas Theorem 10.5)**: the codebook-averaged failure
+decomposes into TWO bad events:
 
-This is the standard Cover-Thomas Theorem 10.5 argument. The translation from
-the strong-typicality joint probability bound (`jointStronglyTypicalSet_indep_prob_ge`)
-to a per-`x` lower bound requires marginal conditioning machinery
-(`Pr_Y[(x,Y) ∈ JSTS] ≥ exp(-n(I+δ))` for `x ∈ stronglyTypicalSet`) and the source
-typicality probability complement (`Pr[X^n ∉ A_typ] → 0` via WLLN). Both
-ingredients exist in the library (`stronglyTypicalSet_prob_tendsto_one`,
-`stronglyTypicalSet_card_ge_eventually`) but the full assembly is left as a
-single isolated `sorry` in this round.
+* (E1) **No JTS match**: no codeword `c m` is jointly typical with `x`.
+* (E2) **JTS match but not distortion-typical**: encoder picks `c m ∈ JTS`,
+  but `blockDistortion(x, c m) > 𝔼d + δ_typ`.
+
+For E1, the standard random-coding bound is
+`Pr[E1] ≤ Pr[X^n ∉ A_typ] + (1 - exp(-n(I+δ)))^M_n
+       ≤ Pr[X^n ∉ A_typ] + exp(-M_n · exp(-n(I+δ)))`,
+both terms → 0 (first via `stronglyTypicalSet_prob_tendsto_one`, second via
+`ceil_exp_mul_exp_neg_tendsto_atTop` + `exp_neg_tendsto_zero_of_tendsto_atTop`).
+
+For E2, **strong typicality of `(x, c m)` would imply** the distortion bound
+via `jointStronglyTypicalSet_implies_distortion_close` (with appropriate slack);
+the weak JTS the encoder targets does NOT suffice. The fix is to redefine
+`jointTypicalLossyEncoder` (currently a weak-JTS encoder) to target
+`jointStronglyTypicalSet` directly — a Phase B' rewrite.
+
+**Concrete missing intermediate lemmas** (in order of dependency):
+
+1. **`per_source_typical_match_prob_strong_ge`** (Cover-Thomas 10.6.1, strong form).
+   For `x ∈ stronglyTypicalSet μ Xs n ε_X` and i.i.d. `Y ∼ μ.map (Ys 0)^n`,
+   `Pr_Y[(x, Y) ∈ jointStronglyTypicalSet μ Xs Ys n ε] ≥ exp(-n(I(X;Y) + δ(ε)))`.
+   Proof requires conditionally-typical-set size bounds for the strong-typicality
+   notion (analogue of `SlepianWolfConditionalTypicalSlice.conditionalTypicalSlice`
+   but in the strong-typicality regime). ~150-250 LOC.
+
+2. **`per_x_jointlyTypicalSet_implies_per_x_distortionTypicalSet`** — the
+   bridge from weak JTS to weak `distortionTypicalSet`. With the strong-typical
+   encoder, the strong JTS membership implies the distortion bound via Phase γ
+   (`jointStronglyTypicalSet_implies_distortion_le`); but the current encoder
+   targets WEAK JTS, so this bridge is unavailable. ~50 LOC (modulo Phase B' rewrite).
+
+3. **`encoder_strong_failure_prob_le`** (analogue of Phase C
+   `encoder_failure_prob_le_exp_neg_M_avg`, but for the strong encoder).
+   Integrating (1) over `P_X` restricted to `stronglyTypicalSet` and combining
+   with `one_sub_pow_le_exp_neg_mul`. ~80 LOC.
+
+4. **Final assembly**: decompose `codebookAvgFailure ≤ Pr[X ∉ A_typ] + exp(-M_n · exp(-n(I+δ)))`,
+   apply `source_averaged_failure_tendsto_zero` (Phase D) to the second term and
+   `stronglyTypicalSet_prob_tendsto_one` (Phase β complement) to the first.
+   ~60 LOC.
+
+**Smallest workaround** (NOT applied here, but if pursued):
+the Phase B' rewrite of `jointTypicalLossyEncoder` to target `jointStronglyTypicalSet`
+would propagate through `distortionTypicalSet`, the partial-discharge wrapper, etc.
+This is the cleaner re-architecture; the current weak-encoder leaves the
+weak↔strong reconciliation as the dominant cost.
 
 **The main rate-distortion theorem still ships** via the partial-discharge
 wrapper (Phase η) — the `failure_seq → 0` hypothesis is supplied by this lemma. -/
@@ -847,8 +884,9 @@ lemma codebookAvgFailure_tendsto_zero
     Filter.Tendsto
       (fun n : ℕ => codebookAvgFailure qStar d R n ε δ_typ)
       Filter.atTop (𝓝 0) := by
-  -- See doc: strong-typicality argument; isolated sorry pending Phase B'
-  -- strong joint-axis ⟹ per-`x` match probability lower bound + Fubini wiring.
+  -- See doc above for the precise gap analysis. Closing this requires
+  -- (1) Cover-Thomas 10.6.1 in strong form (~150-250 LOC) AND
+  -- (2) Phase B' rewrite of `jointTypicalLossyEncoder` to target strong JTS.
   sorry
 
 /-! ## Phase ζ — Discharge of `rate_distortion_achievability_partial_discharge`
