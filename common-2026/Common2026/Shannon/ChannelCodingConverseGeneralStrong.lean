@@ -19,13 +19,19 @@ import Mathlib.MeasureTheory.MeasurableSpace.Embedding
 * `h_markov_xprefix_of_strong`: per-letter Markov を `isMarkovChain_map_left` で post-process。
 * `h_split_of_strong`: Y-axis chain rule split を `condMutualInfo_chain_rule_Y_2var`
   + `condMutualInfo_map_middle_measurableEquiv` で discharge。
-* `h_yother_zero_of_strong` (**Session 2 sorry**): outputs cond. indep. + per-letter から
-  conditioning RV を `(Xprefix, Y_i)` に置換する追加変形が必要。
+* `h_yother_zero_of_strong` (**permanent `sorry` — claim is false**): a counterexample
+  with arbitrary encoder (`X_1 := X_0`) satisfies both `IsMemorylessChannelStrong`
+  axioms yet violates `condMI X_i Y^{≠i} (X^{<i}, Y_i) = 0`. See the lemma's own
+  doc-comment for the explicit two-letter binary calculation. Discharging this would
+  require an extra independence axiom on the encoder, or a refactor of D-2'
+  `memoryless_per_summand_bound` to follow the Cover-Thomas subadditivity route
+  (`H(Y^n) ≤ ∑ H(Y_i)`) that avoids the per-summand identity entirely.
 * `channel_coding_converse_general_memoryless_strong` (主定理): 上記 3 つを合成し、
-  既存 `channel_coding_converse_general_memoryless` を呼び出す。
+  既存 `channel_coding_converse_general_memoryless` を呼び出す。本定理は
+  `h_yother_zero_of_strong` の `sorry` を経由して成立。
 
-`h_yother_zero` のみ未討究 (Markov 構造の置換が複雑) で sorry を残す。残り 2 つは clean
-discharge。 -/
+Net status: 1 `sorry` in `h_yother_zero_of_strong` (statement-level mathematical block,
+not a proof gap). Other two discharges are clean. -/
 
 namespace InformationTheory.Shannon.ChannelCodingConverseGeneral
 
@@ -219,16 +225,49 @@ lemma h_split_of_strong
     (fun ω (j : {j : Fin n // j ≠ i}) => Ys j.val ω) Xprefix
     (hXs i) (hYs i) hYother hXprefix h_fin
 
-/-- **`h_yother_zero` discharge from `IsMemorylessChannelStrong`** (Session 2 — sorry).
+/-- **`h_yother_zero` discharge from `IsMemorylessChannelStrong`** —
+**STATEMENT IS FALSE** under just the two axioms of `IsMemorylessChannelStrong`.
 
-The Yother term `condMI X_i Y^{≠i} (Xprefix, Y_i)` should vanish from
-`outputs_cond_indep i` (`Y^{≠i} → X^n → Y_i`) combined with `per_letter_markov`. The
-challenge: the conditioning RV is `(Xprefix, Y_i)`, not `X^n` alone, so direct application
-of `condMutualInfo_eq_zero_of_markov` is not possible. Need an additional Markov-chain
-rearrangement (push `X^{>i}` from the conditioning side, absorb via per-letter chain).
+The claim `condMI X_i Y^{≠i} (Xprefix, Y_i) = 0` says
+`Y^{≠i} ⫫ X_i ∣ (X^{<i}, Y_i)`. From `outputs_cond_indep` we have only
+`Y^{≠i} ⫫ Y_i ∣ X^n` (Markov `Y^{≠i} → X^n → Y_i`), and from `per_letter_markov`
+`Y_i ⫫ X^{≠i} ∣ X_i` (Markov `X^n → X_i → Y_i`). Neither axiom — nor the standard chain
+rule manipulations between them — touches the joint distribution of `(X_i, X^{≠i})`,
+which is arbitrary (the encoder is unconstrained).
 
-撤退ライン: 本 lemma は **Session 2** で discharge する。Session 1 では skeleton statement
-のみ確定し isolated `sorry` で残す。 -/
+### Counterexample (`n = 2, i = 0`)
+
+Take `α = β = {0,1}`. Let `X_0 ~ Bernoulli(1/2)` and `X_1 := X_0` (perfectly correlated
+input — a degenerate but legitimate encoder that sends the message bit twice). Let
+`N_0, N_1 ~ Bernoulli(1/4)` be iid noise independent of `X_0`, and define
+`Y_j := X_j ⊕ N_j`.
+
+* **`outputs_cond_indep` holds**: given `(X_0, X_1) = (x, x)`, `Y_0 = x ⊕ N_0` depends
+  only on `N_0` and `Y_1 = x ⊕ N_1` only on `N_1`; `N_0 ⫫ N_1`.
+* **`per_letter_markov` holds**: `Y_i = X_i ⊕ N_i` depends on `X^n` only through `X_i`.
+* **The claim fails**: with `Xprefix : Fin 0 → α` unit, conditioner reduces to `Y_0`.
+  Direct computation:
+  `P(Y_1=0 | X_0=0, Y_0=0) = P(N_1=0) = 3/4`,
+  but `P(Y_1=0 | Y_0=0) = ∑_{x_0} P(X_0=x_0|Y_0=0) P(N_1=x_0) = (3/4)(3/4)+(1/4)(1/4) = 5/8`.
+  Hence `Y_1 ⊥/ X_0 | Y_0`, so `condMI X_0 Y_1 Y_0 > 0`.
+
+### What this means for the architecture
+
+The D-2' theorem `channel_coding_converse_general_memoryless` takes `h_yother_zero` as
+a hypothesis. Under arbitrary encoders this hypothesis is _not_ implied by either
+`IsMemorylessChannel` or `IsMemorylessChannelStrong`. It holds for i.i.d.-codebook
+encoders (where `X_i ⫫ X_j`), but not for general encoders such as the one above.
+
+Cover-Thomas Thm 7.9 reaches the same final bound `I(X^n; Y^n) ≤ ∑ I(X_i; Y_i)` via
+entropy subadditivity (`H(Y^n) ≤ ∑ H(Y_i)`) rather than per-summand identity. To
+discharge D-2'' without an extra `X_i ⫫ X_j` axiom, the per-summand bound proof in D-2'
+(`memoryless_per_summand_bound`) should be reworked to follow that subadditivity route,
+which avoids `h_yother_zero` entirely. That refactor is out of scope for the present
+session.
+
+Action: leave isolated `sorry` and elevate the issue. The downstream main theorem
+`channel_coding_converse_general_memoryless_strong` still type-checks because it
+absorbs this `sorry` via `h_yother_zero_of_strong`. -/
 lemma h_yother_zero_of_strong
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
