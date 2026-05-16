@@ -24,7 +24,7 @@ Phase γ decomposes into four sub-phases:
   (`Mathlib/Dynamics/Ergodic/Function.lean:103`).
 * **γ.4** — identify the a.e. constant as `∫ f dμ`.
 
-## Status — single isolated `sorry` (Hopf identity)
+## Status — single isolated `sorry` (exchangeability)
 
 Phase γ now ships the **no-hypothesis** main theorem `birkhoff_ergodic_ae`
 plus the **hypothesis form** `birkhoff_ergodic_ae_of_limit` (γ.3 + γ.4
@@ -33,12 +33,14 @@ only). The full proof goes through `BackwardMartingale.ae_tendsto`
 where `𝒢_n` is the **f-dependent Hopf filtration**
 `σ(S_k : k ≥ ofDual n + 1)` (the partial sums `S_k`).
 
-The only remaining `sorry` is `hopf_identity`: the **Hopf rearrangement
-identity** identifying `μ[f | 𝒢_{toDual n}]` with the Birkhoff average
-`A_n`. Mathematically this is the symmetry-under-permutation property
-of the partial sums; formalising it requires a change-of-variables-on-
-comap-σ-algebra development that is not currently in Mathlib (estimated
-70–150 LOC). See `hopf_identity` docstring for details.
+The Hopf identity `hopf_identity` is now **fully derived (0 sorry)**
+from a single deeper helper lemma `condExp_iterate_eq_condExp`
+("**exchangeability**": `μ[f ∘ T^[i] | 𝒢_{toDual n}] =ᵐ μ[f | 𝒢_{toDual n}]`
+for `i ∈ [0, n]`). The exchangeability lemma packages the
+symmetry-under-permutation property of the partial sums; formalising it
+requires a change-of-variables-on-comap-σ-algebra development that is not
+currently in Mathlib (estimated 70–150 LOC). See `condExp_iterate_eq_condExp`
+docstring for details.
 
 **(Historical note.)** A previous iteration shipped `hopf_identity` with
 respect to `backwardFiltration` (`σ(T^[n])`). That statement was
@@ -63,7 +65,7 @@ file uses the correct f-dependent filtration `birkhoffFiltration`.
   `𝒢_{toDual n}`-measurable (by construction).
 * `birkhoffCondExpMartingale_isMartingale` — `M` is a backward martingale.
 * `birkhoff_ergodic_ae_of_limit` — γ.3 + γ.4 hypothesis form.
-* `birkhoff_ergodic_ae` — **main theorem** (modulo `hopf_identity`).
+* `birkhoff_ergodic_ae` — **main theorem** (modulo `condExp_iterate_eq_condExp`).
 -/
 
 namespace InformationTheory.Shannon
@@ -335,6 +337,41 @@ lemma birkhoffCondExpMartingale_isMartingale [IsFiniteMeasure μ]
       (birkhoffFiltration T hT f hf) μ :=
   martingale_condExp f (birkhoffFiltration T hT f hf) μ
 
+/-- **Exchangeability of conditional expectations under the Hopf
+filtration.** For each `i ∈ [0, n]`,
+
+```
+μ[f ∘ T^[i] | (birkhoffFiltration T hT f hf) (toDual n)]
+    =ᵐ μ[f | (birkhoffFiltration T hT f hf) (toDual n)].
+```
+
+This is the **single deep step** behind the Hopf rearrangement identity.
+It expresses the symmetry of the partial sum
+`S_{n+1} = f ∘ T^[0] + … + f ∘ T^[n]` under permutation of its `n+1`
+summands (Petersen *Ergodic Theory* Lemma 2.2.1; Williams §14.4 step
+"exchangeability").
+
+Proving this requires the change-of-variables identity
+```
+∀ A ∈ 𝒢_{toDual n}, ∫_A f ∘ T^[i] dμ = ∫_A f dμ
+```
+verified on a generating π-system (cylinder sets in `(S_{n+1}, S_{n+2}, …)`).
+The cylinder-set integral identity reduces to the joint distribution of
+`(f ∘ T^[0], …, f ∘ T^[n])` being symmetric **conditional on**
+`(S_{n+1}, S_{n+2}, …)`. Mathlib does not currently package this lemma;
+the direct development needs ≈70–150 LOC of standalone infrastructure
+(`MeasurableSpace.induction_on_inter` + a cylinder-set π-system + a
+symmetry argument over the joint distribution). We defer it. -/
+private lemma condExp_iterate_eq_condExp [IsProbabilityMeasure μ]
+    {T : Ω → Ω} (hT : MeasurePreserving T μ μ)
+    {f : Ω → ℝ} (hf : Measurable f) (_hf_int : Integrable f μ)
+    (n : ℕ) {i : ℕ} (_hi : i ≤ n) :
+    μ[fun ω => f (T^[i] ω) | (birkhoffFiltration T hT.measurable f hf)
+        (OrderDual.toDual n)]
+      =ᵐ[μ] μ[f | (birkhoffFiltration T hT.measurable f hf)
+        (OrderDual.toDual n)] := by
+  sorry
+
 /-- **Hopf rearrangement identity** (Petersen *Ergodic Theory* Thm 2.2 /
 Williams *Probability with Martingales* §14.4).
 
@@ -345,32 +382,151 @@ the conditional expectation of `f` equals the Birkhoff average:
 μ[f | (birkhoffFiltration T hT f hf) (toDual n)] =ᵐ birkhoffAverageReal T f n.
 ```
 
-**This is the only `sorry` of Phase γ.** Mathematically the proof
-("exchangeability under T") proceeds:
+The proof (modulo `condExp_iterate_eq_condExp`, which packages the
+exchangeability step) is purely algebraic:
 
 1. By construction `A_n = S_{n+1}/(n+1)` is `𝒢_{toDual n}`-measurable.
-2. For each `i ∈ [0, n]`, by symmetry of `S_{n+1}` under permutation
-   of the `n+1` summands `f ∘ T^[0], …, f ∘ T^[n]`,
-   `μ[f ∘ T^[i] | 𝒢_{toDual n}] =ᵐ μ[f | 𝒢_{toDual n}]`.
-3. Summing over `i` and dividing by `n+1`:
-   `μ[A_n | 𝒢_{toDual n}] = μ[f | 𝒢_{toDual n}]`. Since `A_n` is itself
-   `𝒢_{toDual n}`-measurable, the LHS equals `A_n` a.e. — hence the
-   identity.
-
-The exchangeability step (#2) requires a Mathlib lemma of the form
-"conditional expectation factors through measure-preserving permutations
-of the underlying transformation"; Mathlib's
-`MeasureTheory.condExp_indicator` family does not cover this, and the
-direct development requires `setIntegral_map`-style change-of-variables
-plus a symmetry argument over generating cylinder sets of `𝒢_n`
-(estimated 70–150 LOC of standalone Mathlib infrastructure). We defer
-this single lemma. -/
+2. By exchangeability (`condExp_iterate_eq_condExp`):
+   `μ[f ∘ T^[i] | 𝒢] =ᵐ μ[f | 𝒢]` for each `i ∈ [0, n]`.
+3. Linearity + measurability of `S_{n+1}` give:
+   `S_{n+1} = μ[S_{n+1} | 𝒢] = ∑_i μ[f ∘ T^[i] | 𝒢] = (n+1) · μ[f | 𝒢]`.
+4. Divide by `n+1`. -/
 private lemma hopf_identity [IsProbabilityMeasure μ]
     {T : Ω → Ω} (hT : MeasurePreserving T μ μ)
-    {f : Ω → ℝ} (hf : Measurable f) (_hf_int : Integrable f μ) (n : ℕ) :
+    {f : Ω → ℝ} (hf : Measurable f) (hf_int : Integrable f μ) (n : ℕ) :
     birkhoffCondExpMartingale (μ := μ) T hT.measurable f hf (OrderDual.toDual n)
       =ᵐ[μ] birkhoffAverageReal T f n := by
-  sorry
+  classical
+  -- Use the full filtration expression (not a `let`, to avoid typeclass-defeq issues).
+  have h𝒢_le : (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n) ≤ m₀ :=
+    (birkhoffFiltration T hT.measurable f hf).le _
+  -- Step A: `S_{n+1}` is `𝒢`-measurable.
+  have hS_meas : Measurable[(birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)]
+      (birkhoffPartialSum T f (n + 1)) :=
+    birkhoffPartialSum_measurable_birkhoffFiltration hT.measurable hf
+      (OrderDual.toDual n) le_rfl
+  -- Step C: each summand `f ∘ T^[i]` is integrable.
+  have h_each_int : ∀ i ∈ Finset.range (n + 1),
+      Integrable (fun ω => f (T^[i] ω)) μ :=
+    fun i _ => (hT.iterate i).integrable_comp_of_integrable hf_int
+  -- Step D: exchangeability — `μ[f ∘ T^[i] | 𝒢] =ᵐ μ[f | 𝒢]` for `i ≤ n`.
+  have h_exch : ∀ i ∈ Finset.range (n + 1),
+      μ[fun ω => f (T^[i] ω)
+          | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)]
+        =ᵐ[μ] μ[f | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)] := by
+    intro i hi
+    have hi' : i ≤ n := Nat.lt_succ_iff.mp (Finset.mem_range.mp hi)
+    exact condExp_iterate_eq_condExp hT hf hf_int n hi'
+  -- Step E: `S_{n+1} = ∑_i f ∘ T^[i]` pointwise.
+  have hS_eq : (birkhoffPartialSum T f (n + 1))
+      = fun ω => ∑ i ∈ Finset.range (n + 1), f (T^[i] ω) := rfl
+  -- Step F: condExp commutes with finite sums.
+  have h_sum :
+      μ[fun ω => ∑ i ∈ Finset.range (n + 1), f (T^[i] ω)
+          | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)]
+        =ᵐ[μ] ∑ i ∈ Finset.range (n + 1),
+            μ[fun ω => f (T^[i] ω)
+              | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)] := by
+    have h_swap :
+        (fun ω => ∑ i ∈ Finset.range (n + 1), f (T^[i] ω))
+          = ∑ i ∈ Finset.range (n + 1), (fun ω => f (T^[i] ω)) := by
+      funext ω
+      simp [Finset.sum_apply]
+    rw [h_swap]
+    exact MeasureTheory.condExp_finsetSum h_each_int _
+  -- Step G: ∑_i μ[f ∘ T^[i] | 𝒢] =ᵐ ∑_i μ[f | 𝒢] (a.e. equality of sums).
+  have h_sum_eq :
+      (∑ i ∈ Finset.range (n + 1),
+          μ[fun ω => f (T^[i] ω)
+            | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)])
+        =ᵐ[μ] (∑ _i ∈ Finset.range (n + 1),
+          μ[f | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)]) := by
+    have h_all : ∀ᵐ ω ∂μ, ∀ i : ℕ,
+        i ∈ Finset.range (n + 1) →
+        μ[fun ω' => f (T^[i] ω')
+            | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)] ω
+          = μ[f | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)] ω := by
+      rw [ae_all_iff]
+      intro i
+      by_cases hi : i ∈ Finset.range (n + 1)
+      · filter_upwards [h_exch i hi] with ω hω
+        intro _; exact hω
+      · refine Filter.Eventually.of_forall (fun _ h => ?_)
+        exact (hi h).elim
+    filter_upwards [h_all] with ω hω
+    simp only [Finset.sum_apply]
+    refine Finset.sum_congr rfl (fun i hi => ?_)
+    exact hω i hi
+  -- Step H: ∑ of constants over a finset = card • function.
+  have h_const_sum :
+      (∑ _i ∈ Finset.range (n + 1),
+          μ[f | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)])
+        = (n + 1 : ℕ)
+            • μ[f | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)] := by
+    rw [Finset.sum_const, Finset.card_range]
+  -- Step I: μ[S_{n+1} | 𝒢] = S_{n+1} (S_{n+1} is 𝒢-measurable & integrable).
+  have hSn1_int : Integrable (birkhoffPartialSum T f (n + 1)) μ := by
+    rw [hS_eq]
+    exact integrable_finsetSum _ h_each_int
+  have hSn1_smeas :
+      StronglyMeasurable[(birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)]
+      (birkhoffPartialSum T f (n + 1)) :=
+    hS_meas.stronglyMeasurable
+  haveI h_sf : SigmaFinite (μ.trim h𝒢_le) := by
+    haveI : IsFiniteMeasure (μ.trim h𝒢_le) := isFiniteMeasure_trim h𝒢_le
+    infer_instance
+  have h_condS :
+      μ[birkhoffPartialSum T f (n + 1)
+        | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)]
+      = birkhoffPartialSum T f (n + 1) :=
+    condExp_of_stronglyMeasurable h𝒢_le hSn1_smeas hSn1_int
+  -- Step J: Combine.
+  have h_chain : (birkhoffPartialSum T f (n + 1))
+      =ᵐ[μ] (n + 1 : ℕ)
+        • μ[f | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)] := by
+    have hc1 :
+        μ[birkhoffPartialSum T f (n + 1)
+          | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)]
+        =ᵐ[μ] (n + 1 : ℕ)
+          • μ[f | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)] := by
+      calc μ[birkhoffPartialSum T f (n + 1)
+              | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)]
+          = μ[fun ω => ∑ i ∈ Finset.range (n + 1), f (T^[i] ω)
+              | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)] := by
+            rw [hS_eq]
+        _ =ᵐ[μ] ∑ i ∈ Finset.range (n + 1),
+            μ[fun ω => f (T^[i] ω)
+              | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)] := h_sum
+        _ =ᵐ[μ] ∑ _i ∈ Finset.range (n + 1),
+            μ[f | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)] := h_sum_eq
+        _ = (n + 1 : ℕ)
+            • μ[f | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)] :=
+              h_const_sum
+    have hc2 : (birkhoffPartialSum T f (n + 1))
+        =ᵐ[μ] μ[birkhoffPartialSum T f (n + 1)
+          | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)] := by
+      rw [h_condS]
+    exact hc2.trans hc1
+  -- Step K: divide both sides by `n+1`.
+  have hn_pos : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+  have hn_ne : ((n : ℝ) + 1) ≠ 0 := ne_of_gt hn_pos
+  -- Goal: `birkhoffCondExpMartingale ... (toDual n) =ᵐ A_n`.
+  show μ[f | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)]
+        =ᵐ[μ] birkhoffAverageReal T f n
+  symm
+  filter_upwards [h_chain] with ω hω
+  set g : ℝ :=
+    μ[f | (birkhoffFiltration T hT.measurable f hf) (OrderDual.toDual n)] ω with hg_def
+  have h_smul :
+      ((n + 1 : ℕ) • μ[f | (birkhoffFiltration T hT.measurable f hf)
+        (OrderDual.toDual n)]) ω
+      = ((n : ℝ) + 1) * g := by
+    show ((n + 1 : ℕ) : ℕ) • g = ((n : ℝ) + 1) * g
+    rw [nsmul_eq_mul]
+    push_cast; ring
+  rw [h_smul] at hω
+  rw [birkhoffAverageReal_eq_partialSum_div, hω]
+  field_simp
 
 /-- **Backward martingale property of the Birkhoff average** (corollary of
 the Hopf identity).
@@ -390,7 +546,8 @@ when `ℓ < k`) to obtain the "more averaged" `A_k`.
 
 Derived from `hopf_identity` + tower property
 (`condExp_condExp_of_le`). Inherits the single `sorry` from
-`hopf_identity` — no new mathematical content. -/
+`condExp_iterate_eq_condExp` (transitively, via `hopf_identity`) —
+no new mathematical content. -/
 private lemma birkhoffMartingale_property [IsProbabilityMeasure μ]
     {T : Ω → Ω} (hT : MeasurePreserving T μ μ)
     {f : Ω → ℝ} (hf : Measurable f) (hf_int : Integrable f μ)
@@ -494,7 +651,8 @@ The proof discharges γ.1 + γ.2 by:
   `tendsto_integral_of_L1'`;
 * then invoking `birkhoff_ergodic_ae_of_limit` for γ.3 + γ.4.
 
-The single `sorry` is `hopf_identity`. -/
+The single `sorry` (transitively, via `hopf_identity`) is the
+exchangeability lemma `condExp_iterate_eq_condExp`. -/
 theorem birkhoff_ergodic_ae [IsProbabilityMeasure μ]
     {T : Ω → Ω} (hT : MeasurePreserving T μ μ) (hT_erg : Ergodic T μ)
     {f : Ω → ℝ} (hf : Integrable f μ) :
