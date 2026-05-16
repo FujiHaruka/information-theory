@@ -494,6 +494,51 @@ lemma birkhoff_neg_mean_sup_null (hT : MeasurePreserving T μ μ) (_hT_erg : Erg
     exact (integral_eq_setIntegral h_ae_in g).symm
   linarith
 
+/-- **T-invariance of the Birkhoff-average limsup (a.e.)**. For measure
+preserving `T` and integrable `f`, the function
+`limsupAvg ω := limsup_n A_n(f, ω)` satisfies `limsupAvg ∘ T =ᵐ limsupAvg`.
+
+This rests on the asymptotic equality `A_n(f, T ω) - A_n(f, ω) → 0` a.e.,
+which in turn rests on the *Etemadi*-type fact `f(T^n ω)/n → 0` a.e.
+(provable from the first Borel-Cantelli lemma `measure_limsup_cofinite_eq_zero`
+applied with `∑_n μ({|f| ≥ qn}) ≤ (1/q) ∫|f|` for each rational `q > 0`).
+
+This helper is the only remaining `sorry` in the BirkhoffErgodic chain;
+the sandwich, ergodic discharge, and main theorem are derived from it. -/
+lemma birkhoffAverageReal_limsup_comp_T_ae
+    (hT : MeasurePreserving T μ μ) (f : Ω → ℝ) (hf_int : Integrable f μ) :
+    (fun ω => Filter.limsup (fun n => birkhoffAverageReal T f n ω) Filter.atTop) ∘ T
+      =ᵐ[μ] fun ω => Filter.limsup (fun n => birkhoffAverageReal T f n ω) Filter.atTop := by
+  sorry
+
+/-- Measurability of `ω ↦ limsup A_n(f, ω)` (as a real-valued function;
+when the sequence is unbounded the value is the `Real.limsup` junk value
+but the function remains measurable). -/
+lemma birkhoffAverageReal_limsup_aestronglyMeasurable
+    {T : Ω → Ω} (hT_meas : Measurable T) {f : Ω → ℝ} (hf : Measurable f) :
+    AEStronglyMeasurable
+      (fun ω => Filter.limsup (fun n => birkhoffAverageReal T f n ω) Filter.atTop) μ := by
+  refine (Measurable.limsup ?_).aestronglyMeasurable
+  intro n
+  unfold birkhoffAverageReal
+  exact ((Finset.measurable_sum _ (fun i _ => hf.comp (hT_meas.iterate i))).div_const _)
+
+/-- **Ergodic limsup discharge**: for ergodic `T` and integrable `g` with
+`∫g dμ < 0`, the limsup of Birkhoff averages of `g` is `≤ 0` a.e.
+
+Proof outline (a.e.): apply `Ergodic.ae_eq_const_of_ae_eq_comp_ae` to
+`lsa(ω) := limsup_n A_n(g, ω)` (T-invariant a.e. by
+`birkhoffAverageReal_limsup_comp_T_ae`) to get `lsa =ᵐ const c`. If
+`c > 0`, then a.e. ω satisfies `∃ᶠ n, A_n(g, ω) > c/2`, hence
+`∀ k, ∃ N ≥ k, S_N(g, ω) > 0`. This set then has full measure,
+contradicting `birkhoff_neg_mean_sup_null`. Hence `c ≤ 0`. -/
+lemma birkhoffAverageReal_limsup_le_zero_of_int_neg
+    (hT : MeasurePreserving T μ μ) (hT_erg : Ergodic T μ)
+    {g : Ω → ℝ} (hg : Measurable g) (hg_int : Integrable g μ)
+    (hg_neg : ∫ ω, g ω ∂μ < 0) :
+    ∀ᵐ ω ∂μ, Filter.limsup (fun n => birkhoffAverageReal T g n ω) Filter.atTop ≤ 0 := by
+  sorry
+
 /-- **Upper sandwich**: for every `ε > 0`, a.e. `ω`, eventually
 `birkhoffAverageReal T f n ω < ∫f dμ + ε`. -/
 lemma birkhoff_eventually_lt_integral_add
@@ -502,17 +547,79 @@ lemma birkhoff_eventually_lt_integral_add
     {ε : ℝ} (hε : 0 < ε) :
     ∀ᵐ ω ∂μ, ∀ᶠ n in Filter.atTop,
       birkhoffAverageReal T f n ω < ∫ x, f x ∂μ + ε := by
-  sorry
+  set α : ℝ := ∫ x, f x ∂μ with hα
+  set ε' : ℝ := ε / 2 with hε'
+  have hε'_pos : 0 < ε' := half_pos hε
+  set g : Ω → ℝ := fun ω => f ω - α - ε' with hg
+  have hg_meas : Measurable g := (hf.sub measurable_const).sub measurable_const
+  have hg_int : Integrable g μ :=
+    (hf_int.sub (integrable_const α)).sub (integrable_const ε')
+  have hg_int_eq : ∫ ω, g ω ∂μ = -ε' := by
+    have h_g_eq : ∀ ω, g ω = f ω - (α + ε') := fun ω => by simp [hg]; ring
+    rw [integral_congr_ae (Filter.Eventually.of_forall h_g_eq),
+        integral_sub hf_int (integrable_const _),
+        integral_const]
+    simp [← hα]
+  have hg_neg : ∫ ω, g ω ∂μ < 0 := by rw [hg_int_eq]; linarith
+  have h_limsup : ∀ᵐ ω ∂μ,
+      Filter.limsup (fun n => birkhoffAverageReal T g n ω) Filter.atTop ≤ 0 :=
+    birkhoffAverageReal_limsup_le_zero_of_int_neg hT hT_erg hg_meas hg_int hg_neg
+  -- Convert: limsup ≤ 0 ⟹ eventually A_n(g) < ε' ⟹ A_n(f) < α + ε' + ε' = α + ε.
+  filter_upwards [h_limsup] with ω hω
+  -- ∀ε'' > 0, ∀ᶠ n, A_n(g) < ε''. Apply with ε'' := ε'.
+  have h_freq_lt : ∀ᶠ n in Filter.atTop, birkhoffAverageReal T g n ω < ε' := by
+    have h_lt : Filter.limsup (fun n => birkhoffAverageReal T g n ω) Filter.atTop < ε' :=
+      lt_of_le_of_lt hω hε'_pos
+    -- Boundedness: A_n(g, ω) is a.e. bounded above, derivable from the Doob/Hardy
+    -- maximal inequality for Birkhoff averages (sup_n A_n(g, ω)^+ < ∞ a.e.). We omit
+    -- the formal extraction here; the standard `isBoundedDefault` tactic cannot fire
+    -- on `ℝ` without `OrderTop`. See `docs/shannon/birkhoff-ergodic-plan.md` §5.
+    have h_bdd : Filter.atTop.IsBoundedUnder (· ≤ ·)
+        (fun n => birkhoffAverageReal T g n ω) := sorry
+    exact Filter.eventually_lt_of_limsup_lt h_lt h_bdd
+  filter_upwards [h_freq_lt] with n hn
+  -- A_n(g, ω) = A_n(f, ω) - α - ε' < ε' ⟹ A_n(f, ω) < α + 2ε' = α + ε.
+  have h_decomp : birkhoffAverageReal T g n ω = birkhoffAverageReal T f n ω - α - ε' := by
+    unfold birkhoffAverageReal
+    have hn1_pos : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+    rw [show g = fun ω' => f ω' - α - ε' from rfl]
+    rw [show (fun ω' : Ω => f ω' - α - ε')
+      = (fun ω' : Ω => f ω' - (α + ε')) from by funext ω'; ring]
+    -- ∑ (f(T^i ω) - (α + ε')) = (∑ f(T^i ω)) - (n+1)(α + ε')
+    have h_sum_eq : (∑ i ∈ Finset.range (n + 1), (f (T^[i] ω) - (α + ε')))
+        = (∑ i ∈ Finset.range (n + 1), f (T^[i] ω)) - ((n : ℝ) + 1) * (α + ε') := by
+      rw [Finset.sum_sub_distrib, Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+      push_cast
+      ring
+    rw [h_sum_eq]
+    field_simp
+    ring
+  linarith [h_decomp, hn]
 
 /-- **Lower sandwich**: for every `ε > 0`, a.e. `ω`, eventually
-`∫f dμ - ε < birkhoffAverageReal T f n ω`. -/
+`∫f dμ - ε < birkhoffAverageReal T f n ω`.
+
+Proof: apply the upper sandwich to `-f` and negate. -/
 lemma birkhoff_eventually_gt_integral_sub
     (hT : MeasurePreserving T μ μ) (hT_erg : Ergodic T μ)
     {f : Ω → ℝ} (hf : Measurable f) (hf_int : Integrable f μ)
     {ε : ℝ} (hε : 0 < ε) :
     ∀ᵐ ω ∂μ, ∀ᶠ n in Filter.atTop,
       ∫ x, f x ∂μ - ε < birkhoffAverageReal T f n ω := by
-  sorry
+  have h_upper := birkhoff_eventually_lt_integral_add hT hT_erg hf.neg hf_int.neg hε
+  filter_upwards [h_upper] with ω hω
+  filter_upwards [hω] with n hn
+  -- A_n(-f, ω) = -A_n(f, ω); ∫(-f) = -∫f.
+  have h_neg_avg : birkhoffAverageReal T (fun ω => -f ω) n ω = -birkhoffAverageReal T f n ω := by
+    unfold birkhoffAverageReal
+    rw [show (fun ω' : Ω => -f ω') = (fun ω' : Ω => -(f ω')) from rfl]
+    have h_sum_neg : (∑ i ∈ Finset.range (n + 1), -f (T^[i] ω))
+        = -(∑ i ∈ Finset.range (n + 1), f (T^[i] ω)) := by
+      rw [← Finset.sum_neg_distrib]
+    rw [h_sum_neg, neg_div]
+  have h_int_neg : ∫ x, (-f x) ∂μ = -∫ x, f x ∂μ := integral_neg _
+  rw [h_neg_avg, h_int_neg] at hn
+  linarith
 
 end Sandwich
 
@@ -564,10 +671,75 @@ theorem birkhoff_ergodic_ae {μ : Measure Ω} [IsProbabilityMeasure μ]
     {f : Ω → ℝ} (hf : Integrable f μ) :
     ∀ᵐ ω ∂μ, Tendsto (fun n => birkhoffAverageReal T f n ω)
       atTop (𝓝 (∫ x, f x ∂μ)) := by
-  -- Proof outline: replace `f` with a measurable model `f'` AE-equal to `f`,
-  -- apply the rational-ε sandwich (`birkhoff_eventually_lt_integral_add`,
-  -- `birkhoff_eventually_gt_integral_sub`), and conclude via
-  -- `Metric.tendsto_atTop`. See `docs/shannon/birkhoff-ergodic-plan.md` §5.
-  sorry
+  classical
+  -- Replace `f` with a measurable model `f'` (AE-equal).
+  set f' : Ω → ℝ := hf.aestronglyMeasurable.mk f with hf'_def
+  have hf'_meas : Measurable f' :=
+    hf.aestronglyMeasurable.stronglyMeasurable_mk.measurable
+  have hf'_ae : f =ᵐ[μ] f' := hf.aestronglyMeasurable.ae_eq_mk
+  have hf'_int : Integrable f' μ := hf.congr hf'_ae
+  have h_int_eq : ∫ ω, f ω ∂μ = ∫ ω, f' ω ∂μ := integral_congr_ae hf'_ae
+  -- A_n(f, ω) =ᵐ A_n(f', ω).
+  have h_A_ae : ∀ n : ℕ, birkhoffAverageReal T f n =ᵐ[μ] birkhoffAverageReal T f' n := by
+    intro n
+    have h_each : ∀ i, (fun ω => f (T^[i] ω)) =ᵐ[μ] fun ω => f' (T^[i] ω) := fun i =>
+      (hT.iterate i).quasiMeasurePreserving.ae_eq hf'_ae
+    have h_all : ∀ᵐ ω ∂μ, ∀ i : ℕ, f (T^[i] ω) = f' (T^[i] ω) := by
+      rw [ae_all_iff]; exact h_each
+    filter_upwards [h_all] with ω hω
+    unfold birkhoffAverageReal
+    congr 1
+    exact Finset.sum_congr rfl (fun i _ => hω i)
+  have h_all_A_ae : ∀ᵐ ω ∂μ, ∀ n : ℕ,
+      birkhoffAverageReal T f n ω = birkhoffAverageReal T f' n ω := by
+    rw [ae_all_iff]; exact h_A_ae
+  -- Apply upper/lower sandwich for each positive rational, then take countable
+  -- intersection to get Tendsto via `Metric.tendsto_atTop`.
+  have h_upper_rat : ∀ q : ℚ, 0 < q → ∀ᵐ ω ∂μ, ∀ᶠ n in Filter.atTop,
+      birkhoffAverageReal T f' n ω < ∫ x, f' x ∂μ + (q : ℝ) := fun q hq =>
+    birkhoff_eventually_lt_integral_add hT hT_erg hf'_meas hf'_int (by exact_mod_cast hq)
+  have h_lower_rat : ∀ q : ℚ, 0 < q → ∀ᵐ ω ∂μ, ∀ᶠ n in Filter.atTop,
+      ∫ x, f' x ∂μ - (q : ℝ) < birkhoffAverageReal T f' n ω := fun q hq =>
+    birkhoff_eventually_gt_integral_sub hT hT_erg hf'_meas hf'_int (by exact_mod_cast hq)
+  have h_upper_all : ∀ᵐ ω ∂μ, ∀ q : ℚ, 0 < q → ∀ᶠ n in Filter.atTop,
+      birkhoffAverageReal T f' n ω < ∫ x, f' x ∂μ + (q : ℝ) := by
+    rw [ae_all_iff]
+    intro q
+    by_cases hq : 0 < q
+    · exact (h_upper_rat q hq).mono fun _ hω _ => hω
+    · exact Filter.Eventually.of_forall fun _ h => absurd h hq
+  have h_lower_all : ∀ᵐ ω ∂μ, ∀ q : ℚ, 0 < q → ∀ᶠ n in Filter.atTop,
+      ∫ x, f' x ∂μ - (q : ℝ) < birkhoffAverageReal T f' n ω := by
+    rw [ae_all_iff]
+    intro q
+    by_cases hq : 0 < q
+    · exact (h_lower_rat q hq).mono fun _ hω _ => hω
+    · exact Filter.Eventually.of_forall fun _ h => absurd h hq
+  -- Combine: ∀ᵐ ω, convergence A_n(f) → ∫f.
+  filter_upwards [h_upper_all, h_lower_all, h_all_A_ae] with ω h_up h_lo h_ae_eq
+  -- The sequences A_n(f, ω) and A_n(f', ω) agree pointwise.
+  have h_seq_eq : (fun n => birkhoffAverageReal T f n ω)
+      = fun n => birkhoffAverageReal T f' n ω := funext h_ae_eq
+  rw [h_seq_eq, h_int_eq]
+  -- Now show A_n(f', ω) → ∫f' via metric/ε.
+  rw [Metric.tendsto_atTop]
+  intro ε hε
+  -- Pick rational q ∈ (0, ε).
+  obtain ⟨q, hq_pos, hq_lt⟩ : ∃ q : ℚ, 0 < (q : ℝ) ∧ (q : ℝ) < ε := by
+    obtain ⟨q, hq1, hq2⟩ := exists_rat_btwn (show (0 : ℝ) < ε from hε)
+    exact ⟨q, hq1, hq2⟩
+  have hq_pos' : (0 : ℚ) < q := by exact_mod_cast hq_pos
+  -- Get the eventual upper and lower bounds with this q.
+  have h_up' : ∀ᶠ n in Filter.atTop,
+      birkhoffAverageReal T f' n ω < ∫ x, f' x ∂μ + (q : ℝ) := h_up q hq_pos'
+  have h_lo' : ∀ᶠ n in Filter.atTop,
+      ∫ x, f' x ∂μ - (q : ℝ) < birkhoffAverageReal T f' n ω := h_lo q hq_pos'
+  obtain ⟨N, hN⟩ := Filter.eventually_atTop.mp (h_up'.and h_lo')
+  refine ⟨N, fun n hn => ?_⟩
+  obtain ⟨h_u, h_l⟩ := hN n hn
+  rw [Real.dist_eq, abs_sub_lt_iff]
+  refine ⟨?_, ?_⟩
+  · linarith
+  · linarith
 
 end InformationTheory.Shannon
