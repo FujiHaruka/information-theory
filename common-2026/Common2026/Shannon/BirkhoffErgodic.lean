@@ -494,6 +494,22 @@ lemma birkhoff_neg_mean_sup_null (hT : MeasurePreserving T μ μ) (_hT_erg : Erg
     exact (integral_eq_setIntegral h_ae_in g).symm
   linarith
 
+/-- **A.e. boundedness of Birkhoff averages** (Hardy-Littlewood-style).
+For `T` measure-preserving and `g` integrable, the sequence
+`n ↦ birkhoffAverageReal T g n ω` has bounded range a.e.
+
+Proof outline: apply `maximal_ergodic_inequality` to `g - m` for each
+`m : ℕ`. For each `n`, this gives `m · μ({maxPartialSum T (g-m) n > 0})
+≤ ∫_{set} g ≤ ‖g‖₁`. The set `{maxPartialSum T (g-m) n > 0}` translates
+to `{∃ k ≤ n-1, A_k(g) > m}`. Continuity from below in `n` gives the
+Hardy bound `μ({∃ k, A_k(g) > m}) ≤ ‖g‖₁ / m`. Intersecting over `m → ∞`:
+`μ({unbounded sup}) = 0`. Hence a.e. `BddAbove (range A_·(g, ω))`. -/
+lemma birkhoffAverageReal_ae_bddAbove
+    (hT : MeasurePreserving T μ μ)
+    {g : Ω → ℝ} (hg : Measurable g) (hg_int : Integrable g μ) :
+    ∀ᵐ ω ∂μ, BddAbove (Set.range (fun n => birkhoffAverageReal T g n ω)) := by
+  sorry
+
 /-- **T-invariance of the Birkhoff-average limsup (a.e.)**. For measure
 preserving `T` and integrable `f`, the function
 `limsupAvg ω := limsup_n A_n(f, ω)` satisfies `limsupAvg ∘ T =ᵐ limsupAvg`.
@@ -564,19 +580,16 @@ lemma birkhoff_eventually_lt_integral_add
   have h_limsup : ∀ᵐ ω ∂μ,
       Filter.limsup (fun n => birkhoffAverageReal T g n ω) Filter.atTop ≤ 0 :=
     birkhoffAverageReal_limsup_le_zero_of_int_neg hT hT_erg hg_meas hg_int hg_neg
+  have h_ae_bdd : ∀ᵐ ω ∂μ,
+      BddAbove (Set.range (fun n => birkhoffAverageReal T g n ω)) :=
+    birkhoffAverageReal_ae_bddAbove hT hg_meas hg_int
   -- Convert: limsup ≤ 0 ⟹ eventually A_n(g) < ε' ⟹ A_n(f) < α + ε' + ε' = α + ε.
-  filter_upwards [h_limsup] with ω hω
+  filter_upwards [h_limsup, h_ae_bdd] with ω hω hω_bdd
   -- ∀ε'' > 0, ∀ᶠ n, A_n(g) < ε''. Apply with ε'' := ε'.
   have h_freq_lt : ∀ᶠ n in Filter.atTop, birkhoffAverageReal T g n ω < ε' := by
     have h_lt : Filter.limsup (fun n => birkhoffAverageReal T g n ω) Filter.atTop < ε' :=
       lt_of_le_of_lt hω hε'_pos
-    -- Boundedness: A_n(g, ω) is a.e. bounded above, derivable from the Doob/Hardy
-    -- maximal inequality for Birkhoff averages (sup_n A_n(g, ω)^+ < ∞ a.e.). We omit
-    -- the formal extraction here; the standard `isBoundedDefault` tactic cannot fire
-    -- on `ℝ` without `OrderTop`. See `docs/shannon/birkhoff-ergodic-plan.md` §5.
-    have h_bdd : Filter.atTop.IsBoundedUnder (· ≤ ·)
-        (fun n => birkhoffAverageReal T g n ω) := sorry
-    exact Filter.eventually_lt_of_limsup_lt h_lt h_bdd
+    exact Filter.eventually_lt_of_limsup_lt h_lt hω_bdd.isBoundedUnder_of_range
   filter_upwards [h_freq_lt] with n hn
   -- A_n(g, ω) = A_n(f, ω) - α - ε' < ε' ⟹ A_n(f, ω) < α + 2ε' = α + ε.
   have h_decomp : birkhoffAverageReal T g n ω = birkhoffAverageReal T f n ω - α - ε' := by
