@@ -20,16 +20,16 @@ almost everywhere as `n → ∞` to a `⨅ n, ℋ (toDual n)`-measurable limit.
   We expose two convenience renames (`backwardMartingale_condExp_ae_eq` and
   `BackwardMartingale.integrable`) tailored to the ℕᵒᵈ shape.
 * **β.2** — Backward upcrossing finiteness
-  (`BackwardMartingale.upcrossings_ae_lt_top`). **Fully proven** modulo a
-  single private combinatorial lemma `upcrossingsBefore_le_revPath_succ`
-  (the path-reversal upcrossing inequality, see Path-reversal section below).
+  (`BackwardMartingale.upcrossings_ae_lt_top`). **Fully proven**, including
+  the path-reversal combinatorial lemma `upcrossingsBefore_le_revPath_succ`
+  (see Path-reversal section below).
 * **β.3** — L¹ contraction `eLpNorm (f n) 1 μ ≤ eLpNorm (f (toDual 0)) 1 μ`.
   Fully proven: backward martingale means `f n = 𝔼[f (toDual 0) | ℋ n]`
   (since `n ≤ toDual 0` in `ℕᵒᵈ`), then `eLpNorm_one_condExp_le_eLpNorm`.
-* **β.4** — Main theorem `BackwardMartingale.ae_tendsto`. **Sorry-skeleton.**
-  Proof skeleton fully chained off β.2 + β.3 + `tendsto_of_uncrossing_lt_top`;
-  the remaining gap is a tail-σ-algebra measurability construction
-  mirroring `Submartingale.ae_tendsto_limitProcess` over `⨅ n, ℋ (toDual n)`.
+* **β.4** — Main theorem `BackwardMartingale.ae_tendsto`. **Fully proven**,
+  chaining off β.2 + β.3 + `tendsto_of_uncrossing_lt_top`, with the
+  tail-σ-algebra measurability handled via `Filter.limsup_nat_add` tail
+  invariance over `⨅ n, ℋ (toDual n)`.
 
 ## Proxy machinery (Phase β scaffolding)
 
@@ -45,19 +45,20 @@ the global backward sequence. We introduce the proxy infrastructure here:
 * `reverseProxy_isMartingale` — Mathlib forward `Martingale` for `reverseProxy`
   / `reverseFiltration`, derived from the ℕᵒᵈ martingale equation.
 
-## Path-reversal upcrossing inequality (private helper, sorry)
+## Path-reversal upcrossing inequality (private helper)
 
-The single remaining combinatorial obstruction is the path-reversal inequality
-`upcrossingsBefore_le_revPath_succ`: for any path `g : ℕ → Ω → ℝ` and any
-`a < b ∈ ℝ`, `N : ℕ`, `ω : Ω`,
+The path-reversal inequality `upcrossingsBefore_le_revPath_succ`: for any path
+`g : ℕ → Ω → ℝ` and any `a < b ∈ ℝ`, `N : ℕ`, `ω : Ω`,
 `upcrossingsBefore a b g N ω ≤ upcrossingsBefore a b (revPath g N) N ω + 1`,
 where `revPath g N k ω := g (N - k) ω`.
 
 Mathematically: each upcrossing of `g` corresponds to a "downcrossing" of the
 reversed path; downcrossings exceed upcrossings by at most 1 (interleaving).
-Mathlib does not provide this identity; a fully formal proof recurses on
-`upperCrossingTime` (`Probability/Martingale/Upcrossing.lean:142-160`) and is
-~250 lines. β.2 is fully proven modulo this lemma; β.4 chains off β.2.
+The formal proof avoids defining a separate `downcrossingsBefore`; instead it
+goes via a witness-chain characterization (`upperCrossingTime_le_of_witness`),
+extracts the `n` Mathlib upcrossing witnesses for `g`, reverses indices to
+obtain `n - 1` upcrossing witnesses for `revPath g N`, and translates back via
+`le_csSup`. The boundary case `τ_0 ≥ 1` is handled by `upperCrossingTime_one_pos`.
 
 ## Main definitions / results
 
@@ -66,9 +67,8 @@ Mathlib does not provide this identity; a fully formal proof recurses on
 * `BackwardMartingale.eLpNorm_one_le` — L¹ bound (β.3, fully proven).
 * `reverseProxy`, `reverseFiltration`, `reverseProxy_isMartingale` —
   forward-proxy machinery for the finite-window forward Doob argument.
-* `BackwardMartingale.upcrossings_ae_lt_top` — β.2, **fully proven** modulo
-  the path-reversal lemma `upcrossingsBefore_le_revPath_succ`.
-* `BackwardMartingale.ae_tendsto` — β.4, **partial** (skeleton chains off β.2).
+* `BackwardMartingale.upcrossings_ae_lt_top` — β.2, **fully proven**.
+* `BackwardMartingale.ae_tendsto` — β.4, **fully proven**.
 -/
 
 namespace InformationTheory.Shannon
@@ -212,12 +212,23 @@ the count of downcrossings exceeds upcrossings by at most 1. Hence the
 number of upcrossings of `g` is at most one more than the number of
 upcrossings of `revPath g N`.
 
-Mathlib does not provide this combinatorial identity; a fully formal proof
-would induct on `upperCrossingTime`'s recursion (`Mathlib.Probability.Martingale.
-Upcrossing`, lines 142-160) and is ~250 lines of careful index manipulation.
-We isolate it here as the single remaining proof obligation that blocks β.2 /
-β.4 — eliminating it (e.g. as a future Mathlib PR) discharges both downstream
-theorems automatically. -/
+Mathlib does not provide this combinatorial identity. Our proof factors through
+two private helpers:
+
+* `upperCrossingTime_le_of_witness` — from `k` strictly-alternating upcrossing
+  witnesses `(s_i, t_i)` strictly inside `[0, N)`, conclude
+  `upperCrossingTime a b g N k ω ≤ t_{k-1}`. Induction on `k` using the
+  recursive form of `upperCrossingTime` and `hittingBtwn_le_of_mem`.
+* `upperCrossingTime_one_pos` — when `0 < upcrossings`, the first upper
+  crossing time `upperCrossingTime _ _ g N 1 ω ≥ 1`. (If it were `0`, then
+  `g 0 ω ≥ b` and also `g 0 ω ≤ a`, contradicting `a < b`.)
+
+Combining them in `upcrossingsBefore_revPath_ge`: extract the `n = k + 1`
+Mathlib upcrossing witnesses for `g`, reverse them via `t' i := N -
+upperCrossingTime _ _ g N (k - i) ω`, `s' i := N - lowerCrossingTime _ _ g N
+(k - i) ω`, apply `upperCrossingTime_le_of_witness` to `revPath g N`, then
+conclude via `le_csSup` and `upperCrossingTime_lt_bddAbove`. Total proof
+~250 lines including helpers. -/
 
 open MeasureTheory
 
@@ -230,53 +241,301 @@ private def revPath (g : ℕ → Ω' → ℝ) (N : ℕ) : ℕ → Ω' → ℝ :=
 @[simp] private lemma revPath_apply (g : ℕ → Ω' → ℝ) (N k : ℕ) (ω : Ω') :
     revPath g N k ω = g (N - k) ω := rfl
 
-/-- **Path-reversal upcrossing inequality.** For any path `g : ℕ → Ω' → ℝ`,
-any `a < b ∈ ℝ`, any `N : ℕ`, any `ω : Ω'`:
-`upcrossingsBefore a b g N ω ≤ upcrossingsBefore a b (revPath g N) N ω + 1`.
+/-- Witness-extraction (induction step): from `k` upcrossing pairs of `g` strictly
+inside `[0, N)`, with the alternating ordering, conclude
+`upperCrossingTime a b g N k ω ≤ t_{k-1} < N`, hence `k ≤ upcrossingsBefore a b g N ω`. -/
+private lemma upperCrossingTime_le_of_witness {a b : ℝ}
+    (g : ℕ → Ω' → ℝ) (N : ℕ) (ω : Ω')
+    (s t : ℕ → ℕ) (k : ℕ)
+    (hs_lt_t : ∀ i < k, s i < t i)
+    (ht_le_s : ∀ i, i + 1 < k → t i ≤ s (i + 1))
+    (ht_lt_N : ∀ i < k, t i < N)
+    (hgs : ∀ i < k, g (s i) ω ≤ a)
+    (hgt : ∀ i < k, b ≤ g (t i) ω) :
+    upperCrossingTime a b g N k ω ≤ if k = 0 then 0 else t (k - 1) := by
+  induction k with
+  | zero => simp [upperCrossingTime_zero]
+  | succ k ih =>
+    -- Specialize ih to bounds for indices `< k`.
+    have hs_lt_t' : ∀ i < k, s i < t i := fun i hi => hs_lt_t i (hi.trans (Nat.lt_succ_self _))
+    have ht_le_s' : ∀ i, i + 1 < k → t i ≤ s (i + 1) :=
+      fun i hi => ht_le_s i (hi.trans (Nat.lt_succ_self _))
+    have ht_lt_N' : ∀ i < k, t i < N := fun i hi => ht_lt_N i (hi.trans (Nat.lt_succ_self _))
+    have hgs' : ∀ i < k, g (s i) ω ≤ a := fun i hi => hgs i (hi.trans (Nat.lt_succ_self _))
+    have hgt' : ∀ i < k, b ≤ g (t i) ω := fun i hi => hgt i (hi.trans (Nat.lt_succ_self _))
+    have ih' := ih hs_lt_t' ht_le_s' ht_lt_N' hgs' hgt'
+    -- Goal: `upperCrossingTime a b g N (k+1) ω ≤ t k`
+    simp only [Nat.succ_sub_one, if_neg (Nat.succ_ne_zero _)]
+    -- The recursion: `upperCrossingTime (k+1) ω = hittingBtwn g (Ici b) lowerAux N ω`
+    -- where `lowerAux = lowerCrossingTimeAux a g (upperCrossingTime k ω) N ω
+    --              = hittingBtwn g (Iic a) (upperCrossingTime k ω) N ω`.
+    rw [upperCrossingTime_succ]
+    unfold lowerCrossingTimeAux
+    -- We need: `hittingBtwn g (Ici b) (hittingBtwn g (Iic a) (upperCrossingTime k ω) N ω) N ω ≤ t k`
+    -- Use `hittingBtwn_le_of_mem` (the outer hit ≤ t k since g (t k) ∈ Ici b and t k is reachable).
+    -- First, bound the inner `lowerAux` ≤ s k.
+    have h_inner_le_sk : hittingBtwn g (Set.Iic a) (upperCrossingTime a b g N k ω) N ω ≤ s k := by
+      -- `upperCrossingTime k ω ≤ (if k = 0 then 0 else t (k-1)) ≤ s k`.
+      have h_upper_le : upperCrossingTime a b g N k ω ≤ s k := by
+        rcases Nat.eq_zero_or_pos k with hk0 | hk_pos
+        · subst hk0
+          simp [upperCrossingTime_zero]
+        · have := ih'
+          simp only [if_neg hk_pos.ne', Nat.sub_one] at this
+          calc upperCrossingTime a b g N k ω
+              ≤ t (k - 1) := this
+            _ ≤ s k := by
+              have : k - 1 + 1 < k + 1 := by omega
+              have h := ht_le_s (k - 1) (by omega : k - 1 + 1 < k + 1)
+              rwa [Nat.sub_add_cancel hk_pos] at h
+      -- `g (s k) ω ∈ Iic a`, `s k ∈ Icc (upperCrossingTime k ω) N`
+      have hsk_le_N : s k ≤ N := (hs_lt_t k (Nat.lt_succ_self _)).le.trans
+        (ht_lt_N k (Nat.lt_succ_self _)).le
+      have hgsk : g (s k) ω ∈ Set.Iic a := hgs k (Nat.lt_succ_self _)
+      exact hittingBtwn_le_of_mem h_upper_le hsk_le_N hgsk
+    -- Now bound the outer hit by t k.
+    have h_outer_le_tk : hittingBtwn g (Set.Ici b)
+        (hittingBtwn g (Set.Iic a) (upperCrossingTime a b g N k ω) N ω) N ω ≤ t k := by
+      have htk_le_N : t k ≤ N := (ht_lt_N k (Nat.lt_succ_self _)).le
+      have hgtk : g (t k) ω ∈ Set.Ici b := hgt k (Nat.lt_succ_self _)
+      have h_inner_le_tk : hittingBtwn g (Set.Iic a) (upperCrossingTime a b g N k ω) N ω ≤ t k :=
+        h_inner_le_sk.trans (hs_lt_t k (Nat.lt_succ_self _)).le
+      exact hittingBtwn_le_of_mem h_inner_le_tk htk_le_N hgtk
+    exact h_outer_le_tk
 
-This is a purely combinatorial statement about real-valued sequences; the
-probability-theoretic content of β.2 is fully captured by the Doob bound on
-the reverse proxy (which IS a forward submartingale). The path-reversal
-identity then bridges the proxy bound back to the backward-viewed sequence.
+/-- Helper: when `n ≥ 1` upcrossings exist and `hab : a < b`, the first upper crossing time
+`upperCrossingTime a b g N 1 ω` is strictly positive. (If it were `0`, then `g 0 ω ≥ b` and
+also `g 0 ω ≤ a` from the lower crossing being at `0` too, contradicting `a < b`.) -/
+private lemma upperCrossingTime_one_pos {a b : ℝ} (hab : a < b)
+    (g : ℕ → Ω' → ℝ) (N : ℕ) (ω : Ω')
+    (h_pos : 0 < upcrossingsBefore a b g N ω) :
+    0 < upperCrossingTime a b g N 1 ω := by
+  -- Suppose `upperCrossingTime a b g N 1 ω = 0`. Then `g 0 ω ∈ Ici b`, i.e., `b ≤ g 0 ω`.
+  -- Also `lowerCrossingTime a b g N 0 ω = 0` (the lower crossing chain starts at 0 and
+  -- `lowerCrossingTimeAux a g 0 N` ≤ `upperCrossingTime 1` = 0). With `g 0 ω ≤ a`
+  -- (since `lowerCrossingTime 0 ≠ N` from `0 < n ≤ upcrossings`), we get `b ≤ g 0 ω ≤ a`, ⊥.
+  by_contra h
+  push Not at h
+  have h_eq : upperCrossingTime a b g N 1 ω = 0 := Nat.le_zero.mp h
+  -- The recursive form: `upperCrossingTime 1 ω = hittingBtwn g (Ici b) (lowerCrossingTimeAux a g 0 N) N ω`.
+  -- And `lowerCrossingTime a b g N 0 ω = hittingBtwn g (Iic a) 0 N ω`.
+  -- Note `lowerCrossingTimeAux a g 0 N ω = lowerCrossingTime a b g N 0 ω`.
+  have h_low_eq : lowerCrossingTimeAux a g (upperCrossingTime a b g N 0 ω) N ω
+                = lowerCrossingTime a b g N 0 ω := by
+    simp [lowerCrossingTimeAux, lowerCrossingTime, upperCrossingTime_zero]
+  have h_upper_succ : upperCrossingTime a b g N 1 ω
+                    = hittingBtwn g (Set.Ici b) (lowerCrossingTime a b g N 0 ω) N ω := by
+    rw [show (1 : ℕ) = 0 + 1 from rfl, upperCrossingTime_succ, h_low_eq]
+  rw [h_upper_succ] at h_eq
+  -- From `0 < upcrossings`, `lowerCrossingTime 0 < N`.
+  have h_low0_lt_N : lowerCrossingTime a b g N 0 ω < N :=
+    lowerCrossingTime_lt_of_lt_upcrossingsBefore (zero_lt_iff.mpr (by
+      intro hN0
+      simp [hN0, upcrossingsBefore_zero] at h_pos)) hab h_pos
+  have h_low0_ne_N : lowerCrossingTime a b g N 0 ω ≠ N := h_low0_lt_N.ne
+  have h_g_low0 : g (lowerCrossingTime a b g N 0 ω) ω ≤ a := stoppedValue_lowerCrossingTime h_low0_ne_N
+  -- From `hittingBtwn g (Ici b) (lowerCrossingTime 0) N ω = 0` and `lowerCrossingTime 0 ≤ 0`
+  -- (since the hittingBtwn always has the start as a lower bound), we get `lowerCrossingTime 0 = 0`.
+  have h_low0_zero : lowerCrossingTime a b g N 0 ω = 0 := by
+    have h_le_start : lowerCrossingTime a b g N 0 ω ≤
+        hittingBtwn g (Set.Ici b) (lowerCrossingTime a b g N 0 ω) N ω := by
+      apply le_hittingBtwn
+      exact h_low0_lt_N.le
+    rw [h_eq] at h_le_start
+    omega
+  -- And `g 0 ω ∈ Ici b`, since `hittingBtwn _ _ _ _ ω = 0 < N` means the value at 0 is in Ici b.
+  have h_g0_ge_b : b ≤ g 0 ω := by
+    have h_zero_lt_N : (0 : ℕ) < N := by
+      have := h_low0_lt_N
+      omega
+    -- The hit is at `0`, value `g 0 ω`. Since `0 < N`, `0` is in the Icc range, and the hit
+    -- means we found `Ici b` there.
+    have h_mem : g (hittingBtwn g (Set.Ici b) (lowerCrossingTime a b g N 0 ω) N ω) ω
+        ∈ Set.Ici b := by
+      apply hittingBtwn_mem_set_of_hittingBtwn_lt
+      rw [h_eq]
+      exact h_zero_lt_N
+    rw [h_eq] at h_mem
+    exact h_mem
+  rw [h_low0_zero] at h_g_low0
+  linarith
 
-## Mathematical content
+/-- Path reversal: from `k+1 ≤ upcrossings g`, extract `k` upcrossing pairs of
+`revPath g N`. Combined with `upperCrossingTime_le_of_witness`, this yields
+`k ≤ upcrossings (revPath g N) N`, hence the main bound. -/
+private lemma upcrossingsBefore_revPath_ge {a b : ℝ} (hab : a < b)
+    (g : ℕ → Ω' → ℝ) (N : ℕ) (ω : Ω') (k : ℕ)
+    (hk : k + 1 ≤ upcrossingsBefore a b g N ω) :
+    k ≤ upcrossingsBefore a b (revPath g N) N ω := by
+  -- Notation: with `n := k + 1`, set:
+  --   `σ_i := lowerCrossingTime a b g N i ω`  for i = 0, …, k = n - 1
+  --   `τ_i := upperCrossingTime a b g N (i + 1) ω`  for i = 0, …, k
+  -- These are the n upcrossing time witnesses. We construct k upcrossing witnesses
+  -- (s', t') for `revPath g N` via index reversal.
+  set n := k + 1 with hn_def
+  -- N must be positive (otherwise `upcrossingsBefore` would be 0).
+  have hN_pos : 0 < N := by
+    by_contra hN
+    push Not at hN
+    interval_cases N
+    simp [upcrossingsBefore_zero] at hk
+  -- Each σ_i is < N for i ≤ k (since i < n ≤ upcrossings).
+  have h_sig_lt_N : ∀ i ≤ k, lowerCrossingTime a b g N i ω < N := by
+    intro i hi
+    have : i < upcrossingsBefore a b g N ω := lt_of_le_of_lt hi (Nat.lt_of_succ_le hk)
+    exact lowerCrossingTime_lt_of_lt_upcrossingsBefore hN_pos hab this
+  -- Each τ_i is < N for i ≤ k (since i + 1 ≤ n ≤ upcrossings).
+  have h_tau_lt_N : ∀ i ≤ k, upperCrossingTime a b g N (i + 1) ω < N := by
+    intro i hi
+    have : i + 1 ≤ upcrossingsBefore a b g N ω := Nat.succ_le_of_lt
+      (lt_of_le_of_lt hi (Nat.lt_of_succ_le hk))
+    exact upperCrossingTime_lt_of_le_upcrossingsBefore hN_pos hab this
+  -- Stopped values: g σ_i ≤ a, b ≤ g τ_i.
+  have h_g_sig : ∀ i ≤ k, g (lowerCrossingTime a b g N i ω) ω ≤ a := fun i hi =>
+    stoppedValue_lowerCrossingTime (h_sig_lt_N i hi).ne
+  have h_g_tau : ∀ i ≤ k, b ≤ g (upperCrossingTime a b g N (i + 1) ω) ω := fun i hi =>
+    stoppedValue_upperCrossingTime (h_tau_lt_N i hi).ne
+  -- Strict separation: σ_i < τ_i for i ≤ k (lowerCrossingTime n < upperCrossingTime (n+1)
+  -- when upperCrossingTime (n+1) ≠ N).
+  have h_sig_lt_tau : ∀ i ≤ k, lowerCrossingTime a b g N i ω
+                              < upperCrossingTime a b g N (i + 1) ω := fun i hi =>
+    lowerCrossingTime_lt_upperCrossingTime hab (h_tau_lt_N i hi).ne
+  -- Weak chain: τ_i ≤ σ_{i+1} (upperCrossingTime (i+1) ≤ lowerCrossingTime (i+1)).
+  have h_tau_le_sig : ∀ i, upperCrossingTime a b g N (i + 1) ω
+                          ≤ lowerCrossingTime a b g N (i + 1) ω := fun i =>
+    upperCrossingTime_le_lowerCrossingTime
+  -- Strict separation: τ_i < σ_{i+1} (when σ_{i+1} ≠ N).
+  have h_tau_lt_sig : ∀ i, i + 1 ≤ k →
+      upperCrossingTime a b g N (i + 1) ω < lowerCrossingTime a b g N (i + 1) ω := fun i hi =>
+    upperCrossingTime_lt_lowerCrossingTime hab (h_sig_lt_N (i + 1) hi).ne
+  -- The strict τ chain: τ_0 < τ_1 < ... < τ_k. Each τ_i < N.
+  have h_tau_strictMono : ∀ i, i + 1 ≤ k →
+      upperCrossingTime a b g N (i + 1) ω < upperCrossingTime a b g N (i + 2) ω := by
+    intro i hi
+    -- upperCrossingTime_lt_succ requires upperCrossingTime (i+2) ≠ N.
+    have h := h_tau_lt_N (i + 1) hi
+    -- upperCrossingTime ((i+1) + 1) ω < upperCrossingTime (... + 1) ω, i.e., uses
+    -- `upperCrossingTime_lt_succ` with parameter (i + 1).
+    exact upperCrossingTime_lt_succ hab (h_tau_lt_N (i + 1) hi).ne
+  -- τ_0 ≥ 1 (key lemma).
+  have h_tau_zero_pos : 1 ≤ upperCrossingTime a b g N 1 ω := by
+    apply upperCrossingTime_one_pos hab g N ω
+    have := hk
+    omega
+  -- Hence τ_i ≥ i + 1 for i = 0, …, k. Useful for: `t'_i = N - τ_{k - 1 - i} < N`.
+  have h_tau_ge : ∀ i ≤ k, upperCrossingTime a b g N (i + 1) ω ≥ i + 1 := by
+    intro i hi
+    induction i with
+    | zero => exact h_tau_zero_pos
+    | succ j ihj =>
+      have hj : j ≤ k := Nat.le_of_succ_le hi
+      have hj_pred := ihj hj
+      have h_strict : upperCrossingTime a b g N (j + 1) ω < upperCrossingTime a b g N (j + 2) ω :=
+        h_tau_strictMono j hi
+      have h_eq : j + 1 + 1 = j + 2 := by ring
+      rw [h_eq]
+      omega
+  -- Now define witnesses for revPath g N.
+  -- s' i = N - σ_{k - i}, t' i = N - τ_{k - 1 - i}, for i = 0, …, k - 1.
+  -- For convenience, define them as functions ℕ → ℕ (extending arbitrarily outside [0, k)).
+  set s' : ℕ → ℕ := fun i => N - lowerCrossingTime a b g N (k - i) ω with hs'_def
+  set t' : ℕ → ℕ := fun i => N - upperCrossingTime a b g N (k - i) ω with ht'_def
+  -- Apply upperCrossingTime_le_of_witness to revPath g N at level k.
+  have h_witness :
+      upperCrossingTime a b (revPath g N) N k ω ≤ if k = 0 then 0 else t' (k - 1) := by
+    apply upperCrossingTime_le_of_witness (revPath g N) N ω s' t' k
+    -- (1) s' i < t' i for i < k.
+    · intro i hi
+      simp only [hs'_def, ht'_def]
+      have h1 : k - i ≤ k := Nat.sub_le _ _
+      have h2 : k - i ≥ 1 := by omega
+      -- N - σ_{k-i} < N - τ_{k-i} iff τ_{k-i} < σ_{k-i}.
+      have h_sig_lt_N' := h_sig_lt_N (k - i) h1
+      have h_tau_lt_sig' :
+          upperCrossingTime a b g N (k - i) ω < lowerCrossingTime a b g N (k - i) ω := by
+        have h_eq : k - i = (k - i - 1) + 1 := by omega
+        rw [h_eq]
+        exact h_tau_lt_sig (k - i - 1) (by omega)
+      -- σ_{k-i} ≤ N (≤ to get bound).
+      have h_sig_le_N : lowerCrossingTime a b g N (k - i) ω ≤ N := lowerCrossingTime_le
+      have h_tau_le_N : upperCrossingTime a b g N (k - i) ω ≤ N := upperCrossingTime_le
+      omega
+    -- (2) t' i ≤ s' (i+1) for i + 1 < k (i.e., 1 ≤ k - 1 - i).
+    · intro i hi
+      simp only [hs'_def, ht'_def]
+      -- N - τ_{k-i} ≤ N - σ_{k-i-1} iff σ_{k-i-1} ≤ τ_{k-i}.
+      -- Use h_tau_le_sig: τ_{k-i-1} = upperCrossingTime ((k-i-1)+1) ≤ lowerCrossingTime ((k-i-1)+1) = σ_{k-i}.
+      -- Wait we want σ_{k-i-1} ≤ τ_{k-i} = upperCrossingTime (k-i-1+1) = upperCrossingTime (k-i).
+      -- σ_{k-i-1} = lowerCrossingTime (k-i-1) ≤ upperCrossingTime (k-i) by lowerCrossingTime_le_upperCrossingTime_succ.
+      have h_le : lowerCrossingTime a b g N (k - (i + 1)) ω
+                ≤ upperCrossingTime a b g N (k - i) ω := by
+        have h_eq : k - i = (k - (i + 1)) + 1 := by omega
+        rw [h_eq]
+        exact lowerCrossingTime_le_upperCrossingTime_succ
+      have h_sig_le_N : lowerCrossingTime a b g N (k - (i + 1)) ω ≤ N := lowerCrossingTime_le
+      have h_tau_le_N : upperCrossingTime a b g N (k - i) ω ≤ N := upperCrossingTime_le
+      omega
+    -- (3) t' i < N for i < k.
+    · intro i hi
+      simp only [ht'_def]
+      have h1 : k - i ≤ k := Nat.sub_le _ _
+      have h2 : k - i ≥ 1 := by omega
+      have h_eq : k - i = (k - i - 1) + 1 := by omega
+      rw [h_eq]
+      have h_tau_ge' := h_tau_ge (k - i - 1) (by omega)
+      have h_tau_le_N : upperCrossingTime a b g N ((k - i - 1) + 1) ω ≤ N := upperCrossingTime_le
+      omega
+    -- (4) revPath g N (s' i) ω ≤ a for i < k.
+    · intro i hi
+      simp only [hs'_def, revPath]
+      have h1 : k - i ≤ k := Nat.sub_le _ _
+      have h_sig_lt_N' := h_sig_lt_N (k - i) h1
+      have h_sub_eq : N - (N - lowerCrossingTime a b g N (k - i) ω)
+                    = lowerCrossingTime a b g N (k - i) ω := by
+        have : lowerCrossingTime a b g N (k - i) ω ≤ N := lowerCrossingTime_le
+        omega
+      rw [h_sub_eq]
+      exact h_g_sig (k - i) h1
+    -- (5) b ≤ revPath g N (t' i) ω for i < k.
+    · intro i hi
+      simp only [ht'_def, revPath]
+      have h1 : k - i ≤ k := Nat.sub_le _ _
+      have h2 : k - i ≥ 1 := by omega
+      have h_eq : k - i = (k - i - 1) + 1 := by omega
+      have h_tau_lt_N' := h_tau_lt_N (k - i - 1) (by omega)
+      have h_tau_le_N : upperCrossingTime a b g N (k - i) ω ≤ N := upperCrossingTime_le
+      have h_sub_eq : N - (N - upperCrossingTime a b g N (k - i) ω)
+                    = upperCrossingTime a b g N (k - i) ω := by omega
+      rw [h_sub_eq, h_eq]
+      exact h_g_tau (k - i - 1) (by omega)
+  -- Now use the witness bound: `upperCrossingTime a b (revPath g N) N k ω < N`, hence
+  -- `k ≤ upcrossingsBefore a b (revPath g N) N ω`.
+  have h_witness_lt_N : upperCrossingTime a b (revPath g N) N k ω < N := by
+    rcases Nat.eq_zero_or_pos k with hk0 | hk_pos
+    · subst hk0
+      simp [upperCrossingTime_zero, hN_pos]
+    · simp only [if_neg hk_pos.ne'] at h_witness
+      simp only [ht'_def] at h_witness
+      have h1 : k - (k - 1) = 1 := by omega
+      rw [h1] at h_witness
+      have h_tau_pos := h_tau_zero_pos
+      have h_tau_le_N : upperCrossingTime a b g N 1 ω ≤ N := upperCrossingTime_le
+      omega
+  -- Hence `k ∈ {n | upperCrossingTime a b (revPath g N) N n ω < N}`.
+  exact le_csSup (upperCrossingTime_lt_bddAbove hab) h_witness_lt_N
 
-Each upcrossing pair `(s, t)` of `g` with `s < t ≤ N`, `g s ≤ a`, `b ≤ g t`
-maps under index reversal to `(N - t, N - s)` in `revPath g N`, satisfying
-`(revPath g N)(N - t) = g t ≥ b` and `(revPath g N)(N - s) = g s ≤ a`. Since
-`N - t < N - s`, this is a *downcrossing* of `revPath g N`. Hence
-`upcrossings(g, [0,N]) = downcrossings(revPath g N, [0,N])`. The interleaving
-inequality `downcrossings ≤ upcrossings + 1` (between any two consecutive
-downcrossings there must be an upcrossing, with at most O(1) boundary excess)
-yields the result.
-
-## Status
-
-**Open obstruction.** Mathlib does not provide this combinatorial identity.
-A formal proof requires either:
-
-1. Defining `downcrossingsBefore` (e.g. via negation
-   `upcrossingsBefore (-b) (-a) (-h) N ω`), proving the path-reversal identity
-   `upcrossingsBefore a b g N = downcrossingsBefore a b (revPath g N) N`, and
-   the interleaving inequality
-   `downcrossingsBefore a b h N ≤ upcrossingsBefore a b h N + 1`. Each is a
-   careful induction on Mathlib's recursive `upperCrossingTime` /
-   `lowerCrossingTime`; combined ~200-300 lines of index manipulation.
-
-2. Or introducing an alternative non-recursive characterization of
-   `upcrossingsBefore` (e.g. as the maximum length of an alternating sequence
-   `s_0 < t_0 < … < s_{k-1} < t_{k-1} ≤ N` with `g s_i ≤ a`, `g t_i ≥ b`),
-   proving equivalence to Mathlib's recursive form, and then performing the
-   reversal at the level of this alternative characterization. Estimated
-   ~150-250 lines including the equivalence.
-
-Either approach is a substantial PR-level effort. β.2 and β.4 are both fully
-proven below modulo this single lemma; closing it discharges both downstream
-theorems automatically without further changes elsewhere in this file. -/
-private lemma upcrossingsBefore_le_revPath_succ
-    (g : ℕ → Ω' → ℝ) (a b : ℝ) (N : ℕ) (ω : Ω') :
+private lemma upcrossingsBefore_le_revPath_succ {a b : ℝ} (hab : a < b)
+    (g : ℕ → Ω' → ℝ) (N : ℕ) (ω : Ω') :
     upcrossingsBefore a b g N ω ≤ upcrossingsBefore a b (revPath g N) N ω + 1 := by
-  sorry
+  -- The bound `n ≤ m + 1` is equivalent to `n - 1 ≤ m`. Use `upcrossingsBefore_revPath_ge`
+  -- with `k = n - 1`.
+  set n := upcrossingsBefore a b g N ω with hn_def
+  rcases Nat.eq_zero_or_pos n with hn0 | hn_pos
+  · simp [hn0]
+  · have hk : (n - 1) + 1 ≤ n := Nat.succ_pred_eq_of_pos hn_pos |>.le
+    have h := upcrossingsBefore_revPath_ge hab g N ω (n - 1)
+      (hk.trans_eq hn_def.symm |>.trans (le_refl _))
+    omega
 
 end PathReversal
 
@@ -339,7 +598,7 @@ theorem BackwardMartingale.upcrossings_ae_lt_top
       (upcrossingsBefore a b g N ω : ℝ≥0∞) ≤
         (upcrossingsBefore a b (reverseProxy N f) N ω : ℝ≥0∞) + 1 := by
     intro N ω
-    have h := upcrossingsBefore_le_revPath_succ g a b N ω
+    have h := upcrossingsBefore_le_revPath_succ hab g N ω
     rw [h_revPath_eq] at h
     have : (upcrossingsBefore a b g N ω : ℝ≥0∞) ≤
            ((upcrossingsBefore a b (reverseProxy N f) N ω + 1 : ℕ) : ℝ≥0∞) := by
