@@ -3,6 +3,8 @@ import Mathlib.Dynamics.Ergodic.Function
 import Mathlib.Dynamics.Ergodic.MeasurePreserving
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.MeasureTheory.Integral.Bochner.Set
+import Mathlib.MeasureTheory.Integral.DominatedConvergence
+import Mathlib.MeasureTheory.Measure.Typeclasses.Probability
 
 /-!
 # Birkhoff individual ergodic theorem via Garsia's maximal ergodic inequality
@@ -386,18 +388,111 @@ section Sandwich
 variable {μ : Measure Ω} [IsProbabilityMeasure μ]
   {T : Ω → Ω}
 
-/-- For ergodic `T` and integrable `g` with `∫g dμ < 0`, the set
-`{ω : sup_n S_n(g) > 0}` has measure 0.
+/-- For ergodic `T` and integrable `g` with `∫g dμ < 0`, the
+"infinitely often positive partial sum" set
+`{ω | ∀ n, ∃ N ≥ n, S_N(g, ω) > 0}` cannot have full measure.
 
-This is the "negative-mean → sup is finite" half of the Banach
-principle, and serves as the key sandwich step. -/
-lemma birkhoff_neg_mean_sup_null (hT : MeasurePreserving T μ μ) (hT_erg : Ergodic T μ)
+Proof: that set is contained in
+`B := ⋃_n {ω | maxPartialSum T g n ω > 0}` (= {ω | ∃ N ≥ 1, S_N(g, ω) > 0}).
+By the maximal ergodic inequality, `∫_{M_n > 0} g dμ ≥ 0` for each `n`.
+By dominated convergence, `∫_B g dμ = lim_n ∫_{M_n > 0} g dμ ≥ 0`.
+If the "infinitely often" set has full measure, so does `B`, hence
+`∫_B g dμ = ∫_Ω g dμ < 0`. Contradiction.
+
+(Ergodicity is not actually needed here; the contradiction is direct
+from the maximal ergodic inequality + DCT.) -/
+lemma birkhoff_neg_mean_sup_null (hT : MeasurePreserving T μ μ) (_hT_erg : Ergodic T μ)
     {g : Ω → ℝ} (hg : Measurable g) (hg_int : Integrable g μ)
     (hg_neg : ∫ ω, g ω ∂μ < 0)
     (hA_full : μ {ω | ∀ n : ℕ, ∃ N ≥ n,
       birkhoffPartialSum T g N ω > 0} = μ Set.univ) :
     False := by
-  sorry
+  classical
+  -- B_n := {ω | maxPartialSum T g n ω > 0}, monotone in n, ⋃ = B_∞.
+  set B : ℕ → Set Ω := fun n => {ω | 0 < maxPartialSum T g n ω} with hB_def
+  set B_inf : Set Ω := ⋃ n, B n with hB_inf_def
+  have hB_meas : ∀ n, MeasurableSet (B n) := fun n =>
+    (maxPartialSum_measurable hT.measurable hg n) measurableSet_Ioi
+  have hB_inf_meas : MeasurableSet B_inf := MeasurableSet.iUnion hB_meas
+  -- B_n monotone non-decreasing.
+  have hB_mono : Monotone B := by
+    intro m n hmn ω hω
+    -- ω ∈ B m means M_m(ω) > 0. Show M_n(ω) > 0.
+    show 0 < maxPartialSum T g n ω
+    have hkn : ∃ k ≤ m, 1 ≤ k ∧ birkhoffPartialSum T g k ω = maxPartialSum T g m ω := by
+      obtain ⟨k, hk1, hkm, hk_eq⟩ := exists_pos_index_attaining_max T g m ω hω
+      exact ⟨k, hkm, hk1, hk_eq⟩
+    obtain ⟨k, hkm, _hk1, hk_eq⟩ := hkn
+    have hkn' : k ≤ n := hkm.trans hmn
+    calc (0 : ℝ) < maxPartialSum T g m ω := hω
+      _ = birkhoffPartialSum T g k ω := hk_eq.symm
+      _ ≤ maxPartialSum T g n ω := birkhoffPartialSum_le_maxPartialSum T g n hkn' ω
+  -- Infinitely-often set A ⊆ B_inf.
+  set A : Set Ω := {ω | ∀ n : ℕ, ∃ N ≥ n, 0 < birkhoffPartialSum T g N ω} with hA_def
+  have hA_sub : A ⊆ B_inf := by
+    intro ω hω
+    obtain ⟨N, hN1, hN_pos⟩ := hω 1
+    refine Set.mem_iUnion.mpr ⟨N, ?_⟩
+    -- M_N(ω) ≥ S_N(ω) > 0.
+    show 0 < maxPartialSum T g N ω
+    exact lt_of_lt_of_le hN_pos (birkhoffPartialSum_le_maxPartialSum T g N le_rfl ω)
+  -- μ(B_inf) = 1 from μ(A) = 1.
+  have hμA : μ A = 1 := by
+    rw [hA_full]
+    exact measure_univ
+  have hμB_inf : μ B_inf = 1 := by
+    refine le_antisymm prob_le_one ?_
+    calc (1 : ℝ≥0∞) = μ A := hμA.symm
+      _ ≤ μ B_inf := measure_mono hA_sub
+  -- DCT: ∫_{B n} g → ∫_{B_inf} g.
+  -- Set h_n := g · 1_{B n}, h_∞ := g · 1_{B_inf}.
+  set h : ℕ → Ω → ℝ := fun n => (B n).indicator g with hh_def
+  set h_inf : Ω → ℝ := B_inf.indicator g with hh_inf_def
+  have h_ptwise_lim : ∀ ω, Tendsto (fun n => h n ω) atTop (𝓝 (h_inf ω)) := by
+    intro ω
+    by_cases h_in : ω ∈ B_inf
+    · obtain ⟨k, hk⟩ : ∃ k, ω ∈ B k := Set.mem_iUnion.mp h_in
+      refine tendsto_const_nhds.congr' ?_
+      filter_upwards [Filter.eventually_ge_atTop k] with n hn
+      show h_inf ω = h n ω
+      change B_inf.indicator g ω = (B n).indicator g ω
+      rw [Set.indicator_of_mem h_in, Set.indicator_of_mem (hB_mono hn hk)]
+    · have h_const : ∀ n, h n ω = h_inf ω := fun n =>
+        show (B n).indicator g ω = B_inf.indicator g ω by
+          rw [Set.indicator_of_notMem (fun hin => h_in (Set.mem_iUnion.mpr ⟨n, hin⟩)),
+              Set.indicator_of_notMem h_in]
+      have h_funext : (fun n => h n ω) = (fun _ : ℕ => h_inf ω) := funext h_const
+      rw [h_funext]
+      exact tendsto_const_nhds
+  have h_dom : ∀ n ω, ‖h n ω‖ ≤ ‖g ω‖ := by
+    intro n ω
+    simp only [hh_def, Set.indicator]
+    split_ifs <;> simp [Real.norm_eq_abs, abs_nonneg]
+  have hg_smeas : AEStronglyMeasurable g μ := hg.aestronglyMeasurable
+  have h_meas : ∀ n, AEStronglyMeasurable (h n) μ :=
+    fun n => (hg.indicator (hB_meas n)).aestronglyMeasurable
+  have h_int_tendsto :
+      Tendsto (fun n => ∫ ω, h n ω ∂μ) atTop (𝓝 (∫ ω, h_inf ω ∂μ)) :=
+    tendsto_integral_of_dominated_convergence (G := ℝ) (fun ω => ‖g ω‖)
+      h_meas hg_int.norm
+      (fun n => Filter.Eventually.of_forall (fun ω => h_dom n ω))
+      (Filter.Eventually.of_forall fun ω => h_ptwise_lim ω)
+  -- ∫_{B n} g ≥ 0 (maximal ergodic).
+  have h_each_nn : ∀ n, 0 ≤ ∫ ω, h n ω ∂μ := by
+    intro n
+    rw [hh_def, integral_indicator (hB_meas n)]
+    exact maximal_ergodic_inequality hT hg hg_int n
+  -- Hence ∫ h_∞ ≥ 0.
+  have h_inf_nn : 0 ≤ ∫ ω, h_inf ω ∂μ :=
+    ge_of_tendsto h_int_tendsto (Filter.Eventually.of_forall h_each_nn)
+  -- But ∫ h_∞ = ∫_{B_inf} g = ∫_Ω g (since μ(B_inf) = 1).
+  have h_int_eq : ∫ ω, h_inf ω ∂μ = ∫ ω, g ω ∂μ := by
+    rw [hh_inf_def, integral_indicator hB_inf_meas]
+    have h_ae_in : ∀ᵐ ω ∂μ, ω ∈ B_inf := by
+      rw [ae_iff]
+      exact (prob_compl_eq_zero_iff hB_inf_meas).mpr hμB_inf
+    exact (integral_eq_setIntegral h_ae_in g).symm
+  linarith
 
 /-- **Upper sandwich**: for every `ε > 0`, a.e. `ω`, eventually
 `birkhoffAverageReal T f n ω < ∫f dμ + ε`. -/
