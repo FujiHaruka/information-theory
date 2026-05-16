@@ -1,5 +1,6 @@
 import Common2026.Shannon.Stationary
 import Common2026.Shannon.EntropyRate
+import Common2026.Shannon.BirkhoffErgodic
 import Mathlib.Probability.Kernel.CondDistrib
 import Mathlib.MeasureTheory.Integral.Lebesgue.Countable
 
@@ -33,7 +34,7 @@ is the algebraic skeleton that Phase C.3 (Levy convergence) and Phase D
 namespace InformationTheory.Shannon
 
 open MeasureTheory ProbabilityTheory
-open scoped ENNReal
+open scoped ENNReal Topology
 
 variable {Ω : Type*} [MeasurableSpace Ω]
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
@@ -284,5 +285,137 @@ theorem log_block_eq_sum_pmfLogCond
     rw [h_chain, Real.log_mul (ne_of_gt h_Pn_pos) (ne_of_gt h_cond_pos), neg_add]
     rw [Finset.sum_range_succ, ← h_ih]
     rfl
+
+/-! ## Integrability and integral identity
+
+`pmfLogCond μ p l` is integrable, and its integral equals
+`conditionalEntropyTail μ p l`. This bridges the Birkhoff time-average to the
+spatial average that Phase D will use. -/
+
+omit [DecidableEq α] in
+/-- The expected per-step conditional log-likelihood equals the conditional
+entropy tail (Cover–Thomas (16.107) expectation):
+`∫ ω, pmfLogCond μ p l ω dμ = conditionalEntropyTail μ p l`.
+
+Proof: push forward through `(blockRV l, obs l)`, disintegrate via
+`compProd_map_condDistrib`, apply Fubini, evaluate the inner integral over the
+finite alphabet via `integral_fintype`, and recognize the result as the
+definition of `conditionalEntropyTail`. -/
+theorem integral_pmfLogCond_eq_conditionalEntropyTail
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (p : StationaryProcess μ α) (l : ℕ) :
+    ∫ ω, pmfLogCond μ p l ω ∂μ = conditionalEntropyTail μ p l := by
+  classical
+  have h_block_meas : Measurable (p.blockRV l) := p.measurable_blockRV l
+  have h_obs_meas : Measurable (p.obs l) := p.measurable_obs l
+  have h_pair_meas : Measurable (fun ω => (p.blockRV l ω, p.obs l ω)) :=
+    h_block_meas.prodMk h_obs_meas
+  -- Define `F : (Fin l → α) × α → ℝ` as `(y, x) ↦ -log (cd y).real {x}`.
+  set F : (Fin l → α) × α → ℝ :=
+    fun q => -Real.log ((condDistrib (p.obs l) (p.blockRV l) μ q.1).real {q.2}) with hF_def
+  have hF_meas : Measurable F := measurable_of_finite _
+  -- Step 1: `∫ ω, pmfLogCond p l ω dμ = ∫ (y, x), F (y, x) d(μ.map pair)`.
+  have h_step1 : ∫ ω, pmfLogCond μ p l ω ∂μ
+      = ∫ q, F q ∂(μ.map (fun ω => (p.blockRV l ω, p.obs l ω))) := by
+    rw [integral_map h_pair_meas.aemeasurable hF_meas.aestronglyMeasurable]
+    rfl
+  rw [h_step1]
+  -- Step 2: factor joint via compProd_map_condDistrib.
+  have h_joint : μ.map (fun ω => (p.blockRV l ω, p.obs l ω))
+      = (μ.map (p.blockRV l)) ⊗ₘ (condDistrib (p.obs l) (p.blockRV l) μ) :=
+    (compProd_map_condDistrib h_obs_meas.aemeasurable).symm
+  rw [h_joint]
+  -- Step 3: Fubini via integral_compProd.
+  haveI : IsProbabilityMeasure (μ.map (p.blockRV l)) :=
+    Measure.isProbabilityMeasure_map h_block_meas.aemeasurable
+  have hF_int :
+      Integrable F ((μ.map (p.blockRV l)) ⊗ₘ (condDistrib (p.obs l) (p.blockRV l) μ)) := by
+    rw [← h_joint]
+    exact Integrable.of_finite
+  rw [Measure.integral_compProd hF_int]
+  -- Step 4: rewrite inner integral over each `cd y` (a Markov probability measure on α)
+  -- as a finite sum: `∫ x, F (y, x) d(cd y) = ∑ x, (cd y).real {x} • F (y, x)`.
+  -- For each y, the inner integrand is bounded (Fintype), so integrable.
+  unfold conditionalEntropyTail InformationTheory.MeasureFano.condEntropy
+  refine MeasureTheory.integral_congr_ae ?_
+  refine ae_of_all _ fun y => ?_
+  -- inner: ∫ x, F (y, x) d(cd y) vs ∑ x, negMulLog ((cd y).real {x})
+  show ∫ x, F (y, x) ∂(condDistrib (p.obs l) (p.blockRV l) μ y)
+      = ∑ x, Real.negMulLog ((condDistrib (p.obs l) (p.blockRV l) μ y).real {x})
+  haveI : IsProbabilityMeasure (condDistrib (p.obs l) (p.blockRV l) μ y) := inferInstance
+  rw [integral_fintype (μ := condDistrib (p.obs l) (p.blockRV l) μ y) Integrable.of_finite]
+  refine Finset.sum_congr rfl ?_
+  intro x _
+  -- `(cd y).real {x} • F (y, x) = (cd y).real {x} * (-log ((cd y).real {x})) = negMulLog ...`
+  show (condDistrib (p.obs l) (p.blockRV l) μ y).real {x} • F (y, x)
+      = Real.negMulLog ((condDistrib (p.obs l) (p.blockRV l) μ y).real {x})
+  rw [hF_def, Real.negMulLog, smul_eq_mul]
+  ring
+
+omit [DecidableEq α] in
+/-- `pmfLogCond μ p l` is integrable. -/
+lemma integrable_pmfLogCond
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (p : StationaryProcess μ α) (l : ℕ) :
+    Integrable (pmfLogCond μ p l) μ := by
+  classical
+  have h_block_meas : Measurable (p.blockRV l) := p.measurable_blockRV l
+  have h_obs_meas : Measurable (p.obs l) := p.measurable_obs l
+  have h_pair_meas : Measurable (fun ω => (p.blockRV l ω, p.obs l ω)) :=
+    h_block_meas.prodMk h_obs_meas
+  -- View `pmfLogCond p l` as `F ∘ pair` where `F : (Fin l → α) × α → ℝ` is measurable.
+  set F : (Fin l → α) × α → ℝ :=
+    fun q => -Real.log ((condDistrib (p.obs l) (p.blockRV l) μ q.1).real {q.2})
+  have hF_meas : Measurable F := measurable_of_finite _
+  have h_eq : pmfLogCond μ p l = F ∘ (fun ω => (p.blockRV l ω, p.obs l ω)) := by
+    funext ω; rfl
+  rw [h_eq]
+  -- Integrable iff bounded ∫⁻ ‖F ∘ pair‖. Push to μ.map pair and use Fintype.
+  haveI : IsProbabilityMeasure (μ.map (fun ω => (p.blockRV l ω, p.obs l ω))) :=
+    Measure.isProbabilityMeasure_map h_pair_meas.aemeasurable
+  have h_int_pair : Integrable F (μ.map (fun ω => (p.blockRV l ω, p.obs l ω))) :=
+    Integrable.of_finite
+  exact (MeasureTheory.integrable_map_measure hF_meas.aestronglyMeasurable
+    h_pair_meas.aemeasurable).mp h_int_pair
+
+/-! ## Birkhoff per-level application (Phase D building block)
+
+For each fixed level `l`, the Birkhoff time average of `pmfLogCond p l` along
+the orbit converges a.s. to `conditionalEntropyTail μ p l`. This is the
+"l-Markov approximation" output that the SMB sandwich (Algoet–Cover) chains
+with `H_l → entropyRate` to obtain the full result. -/
+
+omit [DecidableEq α] in
+/-- **Birkhoff applied to per-step conditional log-likelihood**.
+
+For an ergodic process and fixed level `l`, the Birkhoff time average of
+`pmfLogCond p l` converges a.s. to `conditionalEntropyTail μ p l`:
+
+  `(1/(n+1)) ∑_{i=0}^{n} pmfLogCond p l (T^[i] ω) → H_l = H(X_l | X_0, …, X_{l-1})`.
+
+The proof composes:
+* `birkhoff_ergodic_ae` (file `BirkhoffErgodic.lean`) for the abstract Birkhoff
+  convergence;
+* `integrable_pmfLogCond` for integrability;
+* `integral_pmfLogCond_eq_conditionalEntropyTail` for the integral identity. -/
+theorem birkhoffAverage_pmfLogCond_tendsto
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (p : ErgodicProcess μ α) (l : ℕ) :
+    ∀ᵐ ω ∂μ, Filter.Tendsto
+      (fun n => birkhoffAverageReal p.T (pmfLogCond μ p.toStationaryProcess l) n ω)
+      Filter.atTop
+      (𝓝 (conditionalEntropyTail μ p.toStationaryProcess l)) := by
+  have h_int :
+      Integrable (pmfLogCond μ p.toStationaryProcess l) μ :=
+    integrable_pmfLogCond μ p.toStationaryProcess l
+  have h_integral_eq :
+      ∫ x, pmfLogCond μ p.toStationaryProcess l x ∂μ
+        = conditionalEntropyTail μ p.toStationaryProcess l :=
+    integral_pmfLogCond_eq_conditionalEntropyTail μ p.toStationaryProcess l
+  -- Apply Birkhoff to f := pmfLogCond and rewrite the limit via the integral identity.
+  have h_birkhoff :=
+    birkhoff_ergodic_ae p.measurePreserving p.ergodic h_int
+  rw [← h_integral_eq]
+  exact h_birkhoff
 
 end InformationTheory.Shannon
