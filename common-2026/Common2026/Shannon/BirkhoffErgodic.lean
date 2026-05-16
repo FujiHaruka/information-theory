@@ -494,16 +494,61 @@ lemma birkhoff_neg_mean_sup_null (hT : MeasurePreserving T μ μ) (_hT_erg : Erg
     exact (integral_eq_setIntegral h_ae_in g).symm
   linarith
 
+/-- **Hardy bound (finite n)**: for any `m n : ℕ`,
+`m · μ({maxPartialSum T (g - m) n > 0}) ≤ ‖g‖₁`.
+
+The maximal ergodic inequality `0 ≤ ∫_E (g - m)` rearranges to
+`m · μ(E) ≤ ∫_E g ≤ ∫|g|`, where `E := {maxPartialSum (g - m) n > 0}`.
+For `m = 0` the bound is trivial. -/
+lemma maxPartialSum_meas_le
+    (hT : MeasurePreserving T μ μ)
+    {g : Ω → ℝ} (hg : Measurable g) (hg_int : Integrable g μ) (m n : ℕ) :
+    (m : ℝ≥0∞) * μ {ω | 0 < maxPartialSum T (fun ω => g ω - (m : ℝ)) n ω}
+      ≤ ENNReal.ofReal (∫ ω, |g ω| ∂μ) := by
+  set g_m : Ω → ℝ := fun ω => g ω - (m : ℝ)
+  have hg_m_meas : Measurable g_m := hg.sub_const _
+  have hg_m_int : Integrable g_m μ := hg_int.sub (integrable_const _)
+  set E : Set Ω := {ω | 0 < maxPartialSum T g_m n ω}
+  have hE_meas : MeasurableSet E :=
+    (maxPartialSum_measurable hT.measurable hg_m_meas n) measurableSet_Ioi
+  have h_max := maximal_ergodic_inequality hT hg_m_meas hg_m_int n
+  -- ∫_E g_m = ∫_E g - m · μ(E).toReal
+  have h_decomp : ∫ ω in E, g_m ω ∂μ = ∫ ω in E, g ω ∂μ - (m : ℝ) * (μ E).toReal := by
+    rw [show g_m = fun ω => g ω - (m : ℝ) from rfl,
+        integral_sub hg_int.integrableOn (integrable_const _).integrableOn,
+        setIntegral_const]
+    rw [show μ.real E = (μ E).toReal from rfl]
+    ring
+  rw [h_decomp] at h_max
+  -- m · μ(E).toReal ≤ ∫_E g ≤ ∫|g|.
+  have h_mu_lt : μ E < ⊤ := measure_lt_top _ _
+  have h_abs_int : Integrable (fun ω => |g ω|) μ := hg_int.abs
+  have h_g_le_abs : ∫ ω in E, g ω ∂μ ≤ ∫ ω, |g ω| ∂μ := by
+    calc ∫ ω in E, g ω ∂μ
+        ≤ ∫ ω in E, |g ω| ∂μ :=
+          setIntegral_mono_ae hg_int.integrableOn h_abs_int.integrableOn
+            (Filter.Eventually.of_forall fun ω => le_abs_self _)
+      _ ≤ ∫ ω, |g ω| ∂μ :=
+          setIntegral_le_integral h_abs_int
+            (Filter.Eventually.of_forall fun ω => abs_nonneg _)
+  have h_real : (m : ℝ) * (μ E).toReal ≤ ∫ ω, |g ω| ∂μ := by linarith
+  -- Lift to ENNReal.
+  have h_m_nn : (0 : ℝ) ≤ m := Nat.cast_nonneg m
+  rw [show (m : ℝ≥0∞) = ENNReal.ofReal (m : ℝ) from
+    (ENNReal.ofReal_natCast m).symm]
+  rw [show μ E = ENNReal.ofReal (μ E).toReal from
+    (ENNReal.ofReal_toReal h_mu_lt.ne).symm]
+  rw [← ENNReal.ofReal_mul h_m_nn]
+  exact ENNReal.ofReal_le_ofReal h_real
+
 /-- **A.e. boundedness of Birkhoff averages** (Hardy-Littlewood-style).
 For `T` measure-preserving and `g` integrable, the sequence
 `n ↦ birkhoffAverageReal T g n ω` has bounded range a.e.
 
-Proof outline: apply `maximal_ergodic_inequality` to `g - m` for each
-`m : ℕ`. For each `n`, this gives `m · μ({maxPartialSum T (g-m) n > 0})
-≤ ∫_{set} g ≤ ‖g‖₁`. The set `{maxPartialSum T (g-m) n > 0}` translates
-to `{∃ k ≤ n-1, A_k(g) > m}`. Continuity from below in `n` gives the
-Hardy bound `μ({∃ k, A_k(g) > m}) ≤ ‖g‖₁ / m`. Intersecting over `m → ∞`:
-`μ({unbounded sup}) = 0`. Hence a.e. `BddAbove (range A_·(g, ω))`. -/
+Proof outline: combine `maxPartialSum_meas_le_of_one_le` (Hardy for fixed
+m and n) with continuity from below (n → ∞) and intersection over
+m : ℕ → ∞.  Each fixed m gives `μ({∃ k, A_k(g) > m}) ≤ ‖g‖₁ / m`;
+intersecting yields `μ({unbounded}) ≤ inf_m ‖g‖₁/m = 0`. -/
 lemma birkhoffAverageReal_ae_bddAbove
     (hT : MeasurePreserving T μ μ)
     {g : Ω → ℝ} (hg : Measurable g) (hg_int : Integrable g μ) :
