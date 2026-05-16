@@ -827,18 +827,82 @@ lemma birkhoffAverageReal_limsup_aestronglyMeasurable
 /-- **Ergodic limsup discharge**: for ergodic `T` and integrable `g` with
 `∫g dμ < 0`, the limsup of Birkhoff averages of `g` is `≤ 0` a.e.
 
-Proof outline (a.e.): apply `Ergodic.ae_eq_const_of_ae_eq_comp_ae` to
-`lsa(ω) := limsup_n A_n(g, ω)` (T-invariant a.e. by
-`birkhoffAverageReal_limsup_comp_T_ae`) to get `lsa =ᵐ const c`. If
-`c > 0`, then a.e. ω satisfies `∃ᶠ n, A_n(g, ω) > c/2`, hence
-`∀ k, ∃ N ≥ k, S_N(g, ω) > 0`. This set then has full measure,
-contradicting `birkhoff_neg_mean_sup_null`. Hence `c ≤ 0`. -/
+Proof: by T-invariance (`birkhoffAverageReal_limsup_comp_T_ae`) and
+ergodicity (`Ergodic.ae_eq_const_of_ae_eq_comp_ae`), `lsa =ᵐ const c`
+for some `c : ℝ`. We show `c ≤ 0` by contradiction: if `c > 0`, then a.e.
+`∃ᶠ n, A_n(g, ω) > c/2 > 0` (from limsup = c), hence
+`∀ k, ∃ N ≥ k, S_N(g, ω) > 0` (with `N := n + 1`). This full-measure set
+violates `birkhoff_neg_mean_sup_null`. -/
 lemma birkhoffAverageReal_limsup_le_zero_of_int_neg
     (hT : MeasurePreserving T μ μ) (hT_erg : Ergodic T μ)
     {g : Ω → ℝ} (hg : Measurable g) (hg_int : Integrable g μ)
     (hg_neg : ∫ ω, g ω ∂μ < 0) :
     ∀ᵐ ω ∂μ, Filter.limsup (fun n => birkhoffAverageReal T g n ω) Filter.atTop ≤ 0 := by
-  sorry
+  set lsa : Ω → ℝ :=
+    fun ω => Filter.limsup (fun n => birkhoffAverageReal T g n ω) Filter.atTop with hlsa_def
+  have h_meas : AEStronglyMeasurable lsa μ :=
+    birkhoffAverageReal_limsup_aestronglyMeasurable hT.measurable hg
+  have h_inv : lsa ∘ T =ᵐ[μ] lsa :=
+    birkhoffAverageReal_limsup_comp_T_ae hT g hg hg_int
+  obtain ⟨c, hc⟩ := hT_erg.ae_eq_const_of_ae_eq_comp_ae h_meas h_inv
+  suffices hc_nn : c ≤ 0 by
+    filter_upwards [hc] with ω hω
+    show lsa ω ≤ 0
+    rw [hω]; exact hc_nn
+  by_contra hc_neg
+  have hc_neg : 0 < c := lt_of_not_ge hc_neg
+  have hc_half : 0 < c / 2 := half_pos hc_neg
+  have h_below := birkhoffAverageReal_ae_bddAbove hT hg.neg hg_int.neg
+  -- For a.e. ω: ∀ k, ∃ N ≥ k, S_N(g, ω) > 0.
+  have h_inf_often : ∀ᵐ ω ∂μ, ∀ k : ℕ, ∃ N ≥ k, 0 < birkhoffPartialSum T g N ω := by
+    filter_upwards [hc, h_below] with ω hω hω_bdd
+    have hω' : Filter.limsup (fun n => birkhoffAverageReal T g n ω) Filter.atTop = c := hω
+    -- BddBelow A_·(g, ω) via BddAbove A_·(-g, ω).
+    obtain ⟨b, hb⟩ := hω_bdd
+    have h_bdd_below : Filter.atTop.IsBoundedUnder (· ≥ ·)
+        (fun n => birkhoffAverageReal T g n ω) := by
+      refine Filter.isBoundedUnder_of_eventually_ge (a := -b) ?_
+      refine Filter.Eventually.of_forall fun n => ?_
+      have h_neg : birkhoffAverageReal T (fun ω => -g ω) n ω
+          = -birkhoffAverageReal T g n ω := by
+        unfold birkhoffAverageReal
+        have h_sum : (∑ i ∈ Finset.range (n + 1), -g (T^[i] ω))
+            = -∑ i ∈ Finset.range (n + 1), g (T^[i] ω) := by
+          rw [← Finset.sum_neg_distrib]
+        rw [h_sum, neg_div]
+      have := hb ⟨n, h_neg⟩
+      linarith
+    have h_freq : ∃ᶠ n in Filter.atTop, c / 2 < birkhoffAverageReal T g n ω := by
+      apply Filter.frequently_lt_of_lt_limsup h_bdd_below.isCoboundedUnder_le
+      rw [hω']; linarith
+    intro k
+    obtain ⟨n, hn_avg, hn_ge⟩ :=
+      (h_freq.and_eventually (Filter.eventually_ge_atTop k)).exists
+    refine ⟨n + 1, by omega, ?_⟩
+    have hn1_pos : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+    have hS_eq : birkhoffPartialSum T g (n + 1) ω
+        = (n + 1 : ℝ) * birkhoffAverageReal T g n ω := by
+      rw [birkhoffAverageReal_eq_partialSum_div]
+      field_simp
+    rw [hS_eq]
+    exact mul_pos hn1_pos (lt_trans hc_half hn_avg)
+  -- Apply birkhoff_neg_mean_sup_null.
+  apply birkhoff_neg_mean_sup_null hT hT_erg hg hg_int hg_neg
+  have h_meas_set : MeasurableSet
+      {ω | ∀ k : ℕ, ∃ N ≥ k, 0 < birkhoffPartialSum T g N ω} := by
+    have h_eq : {ω : Ω | ∀ k : ℕ, ∃ N ≥ k, 0 < birkhoffPartialSum T g N ω}
+        = ⋂ k : ℕ, ⋃ N : ℕ, ⋃ (_ : N ≥ k), {ω : Ω | 0 < birkhoffPartialSum T g N ω} := by
+      ext ω
+      simp only [Set.mem_setOf_eq, Set.mem_iInter, Set.mem_iUnion, ge_iff_le, exists_prop]
+    rw [h_eq]
+    refine MeasurableSet.iInter fun k => MeasurableSet.iUnion fun N =>
+      MeasurableSet.iUnion fun _ => ?_
+    exact (birkhoffPartialSum_measurable hT.measurable hg N) measurableSet_Ioi
+  rw [measure_univ]
+  rw [ae_iff] at h_inf_often
+  -- h_inf_often : μ {ω | ¬ ∀ k, ∃ N ≥ k, ...} = 0
+  -- {good}ᶜ = {ω | ¬ good ω}, so μ {good}ᶜ = 0 ⟺ μ {good} = 1.
+  exact (prob_compl_eq_zero_iff h_meas_set).mp h_inf_often
 
 /-- **Upper sandwich**: for every `ε > 0`, a.e. `ω`, eventually
 `birkhoffAverageReal T f n ω < ∫f dμ + ε`. -/
