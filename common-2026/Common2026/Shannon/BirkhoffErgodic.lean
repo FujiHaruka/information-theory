@@ -545,10 +545,12 @@ lemma maxPartialSum_meas_le
 For `T` measure-preserving and `g` integrable, the sequence
 `n ↦ birkhoffAverageReal T g n ω` has bounded range a.e.
 
-Proof outline: combine `maxPartialSum_meas_le_of_one_le` (Hardy for fixed
-m and n) with continuity from below (n → ∞) and intersection over
-m : ℕ → ∞.  Each fixed m gives `μ({∃ k, A_k(g) > m}) ≤ ‖g‖₁ / m`;
-intersecting yields `μ({unbounded}) ≤ inf_m ‖g‖₁/m = 0`. -/
+Proof: combine `maxPartialSum_meas_le` (Hardy for fixed m, n) with
+continuity from below (n → ∞) and intersection over `m : ℕ → ∞`. The
+"unbounded above" set is contained in `⋂_m ⋃_n {maxPartialSum (g-m) n > 0}`;
+each `⋃_n` is bounded by `‖g‖₁/m` (`Monotone.measure_iUnion` +
+`maxPartialSum_meas_le`), so the intersection has measure 0 by
+Archimedean (`exists_nat_gt`). -/
 lemma birkhoffAverageReal_ae_bddAbove
     (hT : MeasurePreserving T μ μ)
     {g : Ω → ℝ} (hg : Measurable g) (hg_int : Integrable g μ) :
