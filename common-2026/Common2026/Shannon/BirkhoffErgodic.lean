@@ -541,21 +541,116 @@ lemma maxPartialSum_meas_le
   rw [← ENNReal.ofReal_mul h_m_nn]
   exact ENNReal.ofReal_le_ofReal h_real
 
+/-- **Hardy bound (union)**: union of `{maxPartialSum (g - m) n > 0}` over
+`n` is bounded by `‖g‖₁ / m` (in ENNReal). -/
+lemma maxPartialSum_meas_iUnion_le
+    (hT : MeasurePreserving T μ μ)
+    {g : Ω → ℝ} (hg : Measurable g) (hg_int : Integrable g μ) (m : ℕ) :
+    (m : ℝ≥0∞) *
+      μ (⋃ n, {ω | 0 < maxPartialSum T (fun ω => g ω - (m : ℝ)) n ω})
+      ≤ ENNReal.ofReal (∫ ω, |g ω| ∂μ) := by
+  -- Monotonicity of {0 < maxPartialSum (g - m) n} in n.
+  have h_mono : Monotone (fun n =>
+      {ω | 0 < maxPartialSum T (fun ω => g ω - (m : ℝ)) n ω}) := by
+    intro a b hab ω hω
+    show 0 < maxPartialSum T (fun ω => g ω - (m : ℝ)) b ω
+    obtain ⟨k, _, hka, hk_eq⟩ :=
+      exists_pos_index_attaining_max T (fun ω => g ω - (m : ℝ)) a ω hω
+    calc (0 : ℝ)
+        < maxPartialSum T (fun ω => g ω - (m : ℝ)) a ω := hω
+      _ = birkhoffPartialSum T (fun ω => g ω - (m : ℝ)) k ω := hk_eq.symm
+      _ ≤ maxPartialSum T (fun ω => g ω - (m : ℝ)) b ω :=
+          birkhoffPartialSum_le_maxPartialSum T _ b (hka.trans hab) ω
+  rw [h_mono.measure_iUnion, ENNReal.mul_iSup]
+  exact iSup_le fun n => maxPartialSum_meas_le hT hg hg_int m n
+
 /-- **A.e. boundedness of Birkhoff averages** (Hardy-Littlewood-style).
 For `T` measure-preserving and `g` integrable, the sequence
 `n ↦ birkhoffAverageReal T g n ω` has bounded range a.e.
 
-Proof: combine `maxPartialSum_meas_le` (Hardy for fixed m, n) with
-continuity from below (n → ∞) and intersection over `m : ℕ → ∞`. The
-"unbounded above" set is contained in `⋂_m ⋃_n {maxPartialSum (g-m) n > 0}`;
-each `⋃_n` is bounded by `‖g‖₁/m` (`Monotone.measure_iUnion` +
-`maxPartialSum_meas_le`), so the intersection has measure 0 by
-Archimedean (`exists_nat_gt`). -/
+Proof: combine `maxPartialSum_meas_iUnion_le` (Hardy union bound) with
+the inclusion `{¬BddAbove range A_·} ⊆ ⋂_m ⋃_n {maxPartialSum (g-m) n > 0}`
+(positive Birkhoff sum from `A_k > m`) and `exists_nat_gt` (Archimedean
+choice of `m` large to push `‖g‖₁/m < ε`). -/
 lemma birkhoffAverageReal_ae_bddAbove
     (hT : MeasurePreserving T μ μ)
     {g : Ω → ℝ} (hg : Measurable g) (hg_int : Integrable g μ) :
     ∀ᵐ ω ∂μ, BddAbove (Set.range (fun n => birkhoffAverageReal T g n ω)) := by
-  sorry
+  classical
+  rw [ae_iff]
+  set U : ℕ → Set Ω := fun m =>
+    ⋃ n, {ω | 0 < maxPartialSum T (fun ω => g ω - (m : ℝ)) n ω}
+  -- Step 1: {¬BddAbove} ⊆ ⋂_m U m.
+  have h_subset :
+      {ω | ¬ BddAbove (Set.range (fun n => birkhoffAverageReal T g n ω))}
+        ⊆ ⋂ m, U m := by
+    intro ω hω
+    rw [Set.mem_setOf_eq, not_bddAbove_iff] at hω
+    refine Set.mem_iInter.mpr fun m => ?_
+    obtain ⟨_, ⟨k, rfl⟩, hk⟩ := hω (m : ℝ)
+    refine Set.mem_iUnion.mpr ⟨k + 1, ?_⟩
+    show 0 < maxPartialSum T (fun ω => g ω - (m : ℝ)) (k + 1) ω
+    -- A_k(g, ω) > m ⟹ S_{k+1}(g - m, ω) > 0.
+    have hk1_pos : (0 : ℝ) < (k : ℝ) + 1 := by positivity
+    have hS_eq : birkhoffPartialSum T (fun ω => g ω - (m : ℝ)) (k + 1) ω
+        = (k + 1 : ℝ) * birkhoffAverageReal T g k ω - (k + 1 : ℝ) * m := by
+      unfold birkhoffPartialSum birkhoffAverageReal
+      rw [Finset.sum_sub_distrib, Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+      have hk1_ne : ((k : ℝ) + 1) ≠ 0 := ne_of_gt hk1_pos
+      field_simp
+      push_cast
+      ring
+    have hS_pos : 0 < birkhoffPartialSum T (fun ω => g ω - (m : ℝ)) (k + 1) ω := by
+      rw [hS_eq]; nlinarith
+    exact hS_pos.trans_le
+      (birkhoffPartialSum_le_maxPartialSum T _ (k + 1) le_rfl ω)
+  -- Step 2: μ(⋂_m U m) = 0 via Archimedean.
+  refine measure_mono_null h_subset ?_
+  -- Bound: for every m, (m : ℝ≥0∞) * μ(U m) ≤ ‖g‖₁.
+  have h_U_bound : ∀ m : ℕ, (m : ℝ≥0∞) * μ (U m) ≤ ENNReal.ofReal (∫ ω, |g ω| ∂μ) :=
+    fun m => maxPartialSum_meas_iUnion_le hT hg hg_int m
+  -- Use Archimedean to get μ(⋂_m U m) ≤ ε for arbitrary ε > 0.
+  rw [← nonpos_iff_eq_zero]
+  refine ENNReal.le_of_forall_pos_le_add fun ε hε h_top => ?_
+  -- Pick m > ‖g‖₁ / ε (real division).
+  obtain ⟨m, hm⟩ := exists_nat_gt ((∫ ω, |g ω| ∂μ) / (ε : ℝ))
+  -- m ≥ 1 because m > ‖g‖₁/ε ≥ 0 and m : ℕ (so m ≥ 1 if m > 0; we'll separately handle m = 0).
+  have hε_pos : (0 : ℝ) < ε := by exact_mod_cast hε
+  have h_int_nn : 0 ≤ ∫ ω, |g ω| ∂μ := integral_nonneg fun _ => abs_nonneg _
+  have hm_pos : 0 < m := by
+    rcases Nat.eq_zero_or_pos m with h | h
+    · subst h
+      have h_div : 0 ≤ (∫ ω, |g ω| ∂μ) / (ε : ℝ) := div_nonneg h_int_nn hε_pos.le
+      push_cast at hm
+      linarith
+    · exact h
+  have hm_ne : (m : ℝ≥0∞) ≠ 0 := by
+    simp only [Ne, Nat.cast_eq_zero]; omega
+  have hm_top : (m : ℝ≥0∞) ≠ ∞ := ENNReal.natCast_ne_top m
+  have hm_real_pos : (0 : ℝ) < (m : ℝ) := by exact_mod_cast hm_pos
+  -- μ(⋂_m U m) ≤ μ(U m) ≤ ‖g‖₁/m < ε.
+  have h_lt : μ (⋂ m, U m) < (ε : ℝ≥0∞) := by
+    calc μ (⋂ m, U m)
+        ≤ μ (U m) := measure_mono (Set.iInter_subset U m)
+      _ ≤ ENNReal.ofReal (∫ ω, |g ω| ∂μ) / (m : ℝ≥0∞) := by
+          rw [ENNReal.le_div_iff_mul_le (Or.inl hm_ne) (Or.inl hm_top), mul_comm]
+          exact h_U_bound m
+      _ < (ε : ℝ≥0∞) := by
+          have h_real_lt : (∫ ω, |g ω| ∂μ) / (m : ℝ) < (ε : ℝ) := by
+            rw [div_lt_iff₀ hm_real_pos]
+            rw [div_lt_iff₀ hε_pos] at hm
+            linarith
+          have h_rhs_eq : ENNReal.ofReal (∫ ω, |g ω| ∂μ) / (m : ℝ≥0∞)
+              = ENNReal.ofReal ((∫ ω, |g ω| ∂μ) / (m : ℝ)) := by
+            rw [show (m : ℝ≥0∞) = ENNReal.ofReal (m : ℝ) from
+                (ENNReal.ofReal_natCast m).symm]
+            rw [← ENNReal.ofReal_div_of_pos hm_real_pos]
+          rw [h_rhs_eq, show ((ε : ℝ≥0∞)) = ENNReal.ofReal ((ε : ℝ)) from
+              (ENNReal.ofReal_coe_nnreal).symm]
+          exact (ENNReal.ofReal_lt_ofReal_iff hε_pos).mpr h_real_lt
+  calc μ (⋂ m, U m)
+      ≤ (ε : ℝ≥0∞) := le_of_lt h_lt
+    _ = 0 + (ε : ℝ≥0∞) := by rw [zero_add]
 
 /-- **T-invariance of the Birkhoff-average limsup (a.e.)**. For measure
 preserving `T` and integrable `f`, the function
