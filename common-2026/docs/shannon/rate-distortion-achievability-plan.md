@@ -37,6 +37,7 @@
 - [ ] Phase C — Random codebook + probabilistic method (codebookMeasure lossy mirror) 📋
 - [ ] Phase D — Error event analysis (Cover-Thomas 10.5 (10.85) bound) 📋
 - [ ] Phase E — 主定理 `rate_distortion_achievability` 📋
+- [ ] Phase E (strong, E-3''' fully-discharged) — [rate-distortion-achievability-phase-e-strong-plan.md](rate-distortion-achievability-phase-e-strong-plan.md) 📋 (`RateDistortionAchievabilityPhaseEStrong.lean` 980 LOC, 1 sorry @ L890)
 
 **MVP 完了サマリ (2026-05-14)**: Phase A の structure 部分のみ publish。後続 Phase A 完全形 + B-E は **`E-3'` deferred** として ~1800 行。本 MVP は後続セッションの statement 着地点として機能。
 

@@ -696,23 +696,123 @@ theorem channel_coding_achievability_max_error
 `p` 側 `hp_pos` を sub-channel 切り出しで vacuous 化。`α_supp := {a | 0 < p {a}}` 上で
 restrict した sub-channel での MI が元の MI と一致。 -/
 
-/-- **Phase C.1 (deferred / strategy noted)**: `α_supp := {a | 0 < p.real {a}}` 上で restrict
-した `(p|_supp, W|_supp)` の MI は元の `mutualInfoOfChannel p W` と一致。
+/-! ### Helpers for `mutualInfoOfChannel_restrict_to_support` (Phase C.1)
 
-**Proof sketch (deferred)** — full elaboration ~150-200 行:
-1. `Subtype.val : α_supp → α` は `MeasurableEmbedding` (image is the measurable set
-   `{a | 0 < p.real {a}}`); `range Subtype.val = {a | 0 < p.real {a}}`.
-2. `(p.comap Subtype.val).map Subtype.val = p.restrict {a | 0 < p.real {a}} = p`
-   via `MeasurableEmbedding.map_comap` + outside-support is null.
-3. Push the joint `(p ⊗ₘ W)` and the product `p.prod q` via `Subtype.val × id`
-   to get measures on `α × β`, agreeing with the original ones (mass concentrated
-   on support).
+**Strategy**: route via `klDiv` invariance under `MeasurableEmbedding`-pushforward.
+1. `Subtype.val : α_supp → α` (with `α_supp := {a | 0 < p.real {a}}`) is a
+   `MeasurableEmbedding` (`α` is `Fintype` so `α_supp` is measurable).
+2. `(p.comap Subtype.val).map Subtype.val = p` (via `MeasurableEmbedding.map_comap` +
+   `p` concentrates on its support).
+3. The joint `(p ⊗ₘ W)` and product `p.prod q` are pushforwards via `Prod.map Subtype.val id`
+   of the corresponding subtype-side joint/product.
 4. `klDiv` is invariant under `MeasurableEmbedding`-pushforward of both arguments
-   (no direct Mathlib lemma — derive via `klDiv_eq_lintegral_klFun_of_ac` and
-   `lintegral_map`).
+   (derived here from `klDiv_eq_lintegral_klFun_of_ac` + `MeasurableEmbedding.rnDeriv_map` +
+   `MeasurableEmbedding.lintegral_map`). -/
 
-Currently consumed by `shannon_noisy_channel_coding_theorem` only; D-1's main proof
-remains gated on this. Left as `sorry` per Phase C MVP fallback in plan §C.2.2. -/
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
+/-- For a `MeasurableEmbedding f`, AC of pushforwards is equivalent to AC of the originals.
+This is the contrapositive of `MeasurableEmbedding.absolutelyContinuous_map` together with
+that lemma itself. -/
+private lemma absolutelyContinuous_map_iff_of_measurableEmbedding
+    {α' β' : Type*} {_ : MeasurableSpace α'} {_ : MeasurableSpace β'} {f : α' → β'}
+    (hf : MeasurableEmbedding f) (μ ν : Measure α') :
+    μ.map f ≪ ν.map f ↔ μ ≪ ν := by
+  refine ⟨fun h s hνs ↦ ?_, fun h ↦ hf.absolutelyContinuous_map h⟩
+  -- `μ s = (μ.map f) (f '' s)` by `hf.map_apply` + injectivity of `f`.
+  have hν_image : ν.map f (f '' s) = 0 := by
+    rw [hf.map_apply, hf.injective.preimage_image]; exact hνs
+  have hμ_image : μ.map f (f '' s) = 0 := h hν_image
+  rwa [hf.map_apply, hf.injective.preimage_image] at hμ_image
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
+/-- **`klDiv` is invariant under `MeasurableEmbedding`-pushforward** of both arguments
+(finite-measure side). Proof: split on `μ ≪ ν`; in the AC case use the lintegral form
+`klDiv_eq_lintegral_klFun_of_ac` + `MeasurableEmbedding.rnDeriv_map` +
+`MeasurableEmbedding.lintegral_map`; in the not-AC case both sides are `∞`. -/
+private lemma klDiv_map_measurableEmbedding
+    {α' β' : Type*} {_ : MeasurableSpace α'} {_ : MeasurableSpace β'} {f : α' → β'}
+    (hf : MeasurableEmbedding f) (μ ν : Measure α')
+    [IsFiniteMeasure μ] [IsFiniteMeasure ν] :
+    klDiv (μ.map f) (ν.map f) = klDiv μ ν := by
+  by_cases hac : μ ≪ ν
+  · have hac' : μ.map f ≪ ν.map f := hf.absolutelyContinuous_map hac
+    rw [klDiv_eq_lintegral_klFun_of_ac hac, klDiv_eq_lintegral_klFun_of_ac hac']
+    -- Rewrite the LHS via lintegral_map for measurable embedding.
+    rw [hf.lintegral_map (fun y => ENNReal.ofReal
+      (InformationTheory.klFun ((μ.map f).rnDeriv (ν.map f) y).toReal))]
+    -- Now compare ∫⁻ x, klFun ((μ.map f).rnDeriv (ν.map f) (f x)).toReal ∂ν vs ∫⁻ x, klFun ((μ.rnDeriv ν) x).toReal ∂ν.
+    refine lintegral_congr_ae ?_
+    filter_upwards [hf.rnDeriv_map μ ν] with x hx
+    rw [hx]
+  · have hac_map_iff := absolutelyContinuous_map_iff_of_measurableEmbedding hf μ ν
+    have hac' : ¬ (μ.map f ≪ ν.map f) := fun h => hac (hac_map_iff.mp h)
+    rw [klDiv_of_not_ac hac, klDiv_of_not_ac hac']
+
+omit [DecidableEq α] [Nonempty α] in
+/-- The support set `{a : α | 0 < p.real {a}}` is measurable (singletons are measurable). -/
+private lemma measurableSet_support (p : Measure α) :
+    MeasurableSet {a : α | 0 < p.real {a}} := by
+  -- In `MeasurableSingletonClass α`, every set is measurable... actually it requires `Countable α`
+  -- but we have `Fintype α`. Use `Set.Finite.measurableSet`.
+  exact (Set.toFinite _).measurableSet
+
+omit [DecidableEq α] [Nonempty α] in
+/-- `Subtype.val : {a // 0 < p.real {a}} → α` is a `MeasurableEmbedding`. -/
+private lemma measurableEmbedding_subtype_support (p : Measure α) :
+    MeasurableEmbedding (Subtype.val : {a : α // 0 < p.real {a}} → α) :=
+  MeasurableEmbedding.subtype_coe (measurableSet_support p)
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- `range Subtype.val = {a | 0 < p.real {a}}`. -/
+private lemma range_subtype_val_support (p : Measure α) :
+    Set.range (Subtype.val : {a : α // 0 < p.real {a}} → α)
+      = {a : α | 0 < p.real {a}} := Subtype.range_val
+
+omit [DecidableEq α] [Nonempty α] in
+/-- `p` is null outside its support `{a | 0 < p.real {a}}`. -/
+private lemma measure_compl_support_eq_zero (p : Measure α) [IsFiniteMeasure p] :
+    p ({a : α | 0 < p.real {a}}ᶜ) = 0 := by
+  -- The complement is finite (subset of `Fintype α`); rewrite as a finite union of singletons.
+  have hcompl_eq : ({a : α | 0 < p.real {a}}ᶜ : Set α) = ⋃ a ∈ (Finset.univ.filter
+      (fun a => ¬ 0 < p.real {a})), ({a} : Set α) := by
+    ext x
+    simp [Set.mem_compl_iff, Set.mem_setOf_eq]
+  rw [hcompl_eq, measure_biUnion_finset (fun a _ b _ hab => by
+        simpa [Function.onFun, Set.disjoint_singleton] using hab)
+      (fun a _ => MeasurableSet.singleton a)]
+  refine Finset.sum_eq_zero (fun a ha => ?_)
+  -- `a` is in the filter, so `¬ 0 < p.real {a}`.
+  have hnot : ¬ 0 < p.real {a} := (Finset.mem_filter.mp ha).2
+  -- Hence `p.real {a} = 0`.
+  have hreal : p.real {a} = 0 :=
+    le_antisymm (not_lt.mp hnot) measureReal_nonneg
+  -- Translate `p.real {a} = 0` to `p {a} = 0` (since `p {a} ≠ ∞`).
+  have hne_top : p {a} ≠ ∞ := measure_ne_top p _
+  have htoReal : (p {a}).toReal = 0 := hreal
+  rcases (ENNReal.toReal_eq_zero_iff _).mp htoReal with h | h
+  · exact h
+  · exact (hne_top h).elim
+
+omit [DecidableEq α] [Nonempty α] in
+/-- The pushforward of `p.comap Subtype.val` back along `Subtype.val` recovers `p`,
+because `p` is concentrated on its support. -/
+private lemma map_comap_subtype_support_eq_self
+    (p : Measure α) [IsFiniteMeasure p] :
+    (p.comap (Subtype.val : {a : α // 0 < p.real {a}} → α)).map Subtype.val = p := by
+  rw [(measurableEmbedding_subtype_support p).map_comap, range_subtype_val_support]
+  -- `p.restrict S = p` because `p` is concentrated on `S = {a | 0 < p.real {a}}`.
+  refine Measure.restrict_eq_self_of_ae_mem ?_
+  -- `∀ᵐ a ∂p, a ∈ S` iff `p Sᶜ = 0`.
+  rw [Filter.eventually_iff_exists_mem]
+  refine ⟨{a : α | 0 < p.real {a}}, ?_, fun a ha => ha⟩
+  rw [mem_ae_iff]
+  -- `{a | a ∈ S}ᶜ = Sᶜ`.
+  exact measure_compl_support_eq_zero p
+
+omit [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β]
+  [MeasurableSingletonClass β] in
 theorem mutualInfoOfChannel_restrict_to_support
     (p : Measure α) [IsProbabilityMeasure p]
     (W : Channel α β) [IsMarkovKernel W] :
@@ -721,7 +821,78 @@ theorem mutualInfoOfChannel_restrict_to_support
           (p.comap (Subtype.val : {a : α // 0 < p.real {a}} → α))
           (W.comap (Subtype.val : {a : α // 0 < p.real {a}} → α)
             (Measurable.subtype_val measurable_id)) := by
-  sorry
+  -- Set up notation: j is the subtype inclusion, an `MeasurableEmbedding`.
+  set j : {a : α // 0 < p.real {a}} → α := Subtype.val with hj_def
+  have hj_meas : Measurable j := Measurable.subtype_val measurable_id
+  have hj_emb : MeasurableEmbedding j := measurableEmbedding_subtype_support p
+  set p_supp : Measure {a : α // 0 < p.real {a}} := p.comap j with hp_supp_def
+  set W_supp : Channel {a : α // 0 < p.real {a}} β := W.comap j hj_meas with hW_supp_def
+  -- `p_supp` is a probability measure.
+  haveI : IsProbabilityMeasure p_supp := by
+    refine hj_emb.isProbabilityMeasure_comap ?_
+    -- ∀ᵐ a ∂p, a ∈ range j; range j = support.
+    rw [MeasureTheory.ae_iff, ← Set.compl_setOf]
+    show p (({a : α | a ∈ Set.range j})ᶜ) = 0
+    rw [show ({a : α | a ∈ Set.range j} : Set α) = Set.range j from rfl,
+      range_subtype_val_support]
+    exact measure_compl_support_eq_zero p
+  -- `W_supp` is a Markov kernel (Mathlib instance).
+  haveI : IsMarkovKernel W_supp := Kernel.IsMarkovKernel.comap W hj_meas
+  -- ===== Step 1: Joint pushforward = original joint. =====
+  -- `(p_supp ⊗ₘ W_supp).map (Prod.map j id) = p ⊗ₘ W`
+  have h_joint_map : (p_supp ⊗ₘ W_supp).map (Prod.map j (id : β → β)) = p ⊗ₘ W := by
+    refine Measure.ext fun T hT => ?_
+    have h_emb_map : MeasurableEmbedding (Prod.map j (id : β → β)) :=
+      hj_emb.prodMap MeasurableEmbedding.id
+    rw [h_emb_map.map_apply, Measure.compProd_apply hT,
+      Measure.compProd_apply (h_emb_map.measurable hT)]
+    -- LHS: ∫⁻ a' ∂p_supp, W_supp a' (Prod.mk a' ⁻¹' (Prod.map j id ⁻¹' T))
+    -- RHS: ∫⁻ a ∂p, W a (Prod.mk a ⁻¹' T)
+    -- W_supp a' = W (j a') by Kernel.comap_apply.
+    have h_pre (a' : {a : α // 0 < p.real {a}}) :
+        W_supp a' (Prod.mk a' ⁻¹' (Prod.map j (id : β → β) ⁻¹' T))
+          = W (j a') (Prod.mk (j a') ⁻¹' T) := by
+      rw [show W_supp = W.comap j hj_meas from rfl, Kernel.comap_apply]
+      -- Prod.mk a' ⁻¹' (Prod.map j id ⁻¹' T) = Prod.mk (j a') ⁻¹' T as sets.
+      have h_set :
+          Prod.mk a' ⁻¹' (Prod.map j (id : β → β) ⁻¹' T) = Prod.mk (j a') ⁻¹' T := by
+        ext b; simp [Prod.map_apply]
+      rw [h_set]
+    simp_rw [h_pre]
+    -- Now convert ∫⁻ a' ∂p_supp to ∫⁻ a ∂p via map_comap_subtype_support_eq_self.
+    -- p_supp = p.comap j by definition; (p.comap j).map j = p.
+    have h_map_back : (p.comap j).map j = p := map_comap_subtype_support_eq_self p
+    calc ∫⁻ a' : {a : α // 0 < p.real {a}}, W (j a') (Prod.mk (j a') ⁻¹' T) ∂p_supp
+        = ∫⁻ a' : {a : α // 0 < p.real {a}}, W (j a') (Prod.mk (j a') ⁻¹' T) ∂(p.comap j) := by
+            rw [hp_supp_def]
+      _ = ∫⁻ a, W a (Prod.mk a ⁻¹' T) ∂((p.comap j).map j) := by
+            rw [hj_emb.lintegral_map]
+      _ = ∫⁻ a, W a (Prod.mk a ⁻¹' T) ∂p := by rw [h_map_back]
+  -- ===== Step 2: Output distribution is invariant. =====
+  -- outputDistribution p_supp W_supp = outputDistribution p W
+  have h_output_eq : outputDistribution p_supp W_supp = outputDistribution p W := by
+    unfold outputDistribution jointDistribution
+    rw [← h_joint_map, Measure.snd, Measure.snd,
+      Measure.map_map measurable_snd (hj_emb.measurable.prodMap measurable_id)]
+    -- Prod.snd ∘ Prod.map j id = Prod.snd (after eta).
+    rfl
+  -- ===== Step 3: Product pushforward = original product. =====
+  -- (p_supp.prod (outputDistribution p_supp W_supp)).map (Prod.map j id) = p.prod q
+  have h_prod_map : (p_supp.prod (outputDistribution p_supp W_supp)).map
+        (Prod.map j (id : β → β))
+      = p.prod (outputDistribution p W) := by
+    rw [h_output_eq]
+    -- Use Measure.map_prod_map with f := j, g := id.
+    rw [← Measure.map_prod_map (μa := p_supp) (μc := outputDistribution p W)
+      hj_meas measurable_id]
+    rw [map_comap_subtype_support_eq_self, Measure.map_id]
+  -- ===== Step 4: Apply `klDiv` invariance. =====
+  show klDiv (jointDistribution p W) (p.prod (outputDistribution p W))
+    = klDiv (jointDistribution p_supp W_supp)
+        (p_supp.prod (outputDistribution p_supp W_supp))
+  unfold jointDistribution
+  rw [← h_joint_map, ← h_prod_map]
+  exact klDiv_map_measurableEmbedding (hj_emb.prodMap MeasurableEmbedding.id) _ _
 
 /-- **Phase C.2**: `Code` の subtype lift。`Code M n {a // 0 < p.real {a}} β` から
 `Code M n α β` への injection。encoder の codomain を `Subtype → α` で expansion、`errorProbAt`

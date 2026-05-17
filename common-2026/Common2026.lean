@@ -76,6 +76,8 @@ import Common2026.Shannon.KLDivContinuous
 import Common2026.Shannon.SanovLDPEquality
 import Common2026.Shannon.TypeClassLowerBound
 import Common2026.Shannon.StrongTypicality
+import Common2026.Shannon.ConditionalMethodOfTypes
+import Common2026.Shannon.RateDistortionAchievabilityPhaseEStrongFinal
 import Common2026.Shannon.ShannonCode
 import Common2026.Shannon.ShannonCodeKraftReverse
 import Common2026.Shannon.CsiszarProjection

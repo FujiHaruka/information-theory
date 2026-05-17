@@ -49,7 +49,9 @@ namespace InformationTheory.Shannon
 
 open MeasureTheory ProbabilityTheory InformationTheory Filter
 open InformationTheory.Shannon.ChannelCoding
-  (jointSequence jointSequence_apply measurable_jointSequence jointlyTypicalSet)
+  (jointSequence jointSequence_apply measurable_jointSequence jointlyTypicalSet Codebook
+   codebookMeasure iidXs iidYs measurable_iidXs measurable_iidYs
+   pmfToMeasure pmfToMeasure_isProbabilityMeasure)
 open scoped ENNReal NNReal BigOperators Topology
 
 set_option linter.unusedSectionVars false
@@ -771,6 +773,173 @@ theorem jointStronglyTypicalSet_indep_prob_ge
     _ ≤ ∑ p ∈ Afin, μXn.real {p.1} * μYn.real {p.2} := h_sum_ge
     _ = (μXn.prod μYn).real A := h_sum_eq
 
+/-! ## Phase B' — Strong-JTS lossy encoder (parallel to weak `jointTypicalLossyEncoder`) -/
+
+/-- **Strong-JTS lossy encoder**. Parallel to `jointTypicalLossyEncoder` but targets
+`jointStronglyTypicalSet`. Given a codebook `c`, returns some index `m` with
+`(x, c m) ∈ jointStronglyTypicalSet`; falls back to `⟨0, hM⟩` otherwise. -/
+noncomputable def jointStronglyTypicalLossyEncoder
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    {M n : ℕ} (hM : 0 < M) (ε : ℝ) (c : Codebook M n β) :
+    (Fin n → α) → Fin M := fun x =>
+  haveI : Decidable (∃ m : Fin M, (x, c m) ∈ jointStronglyTypicalSet μ Xs Ys n ε) :=
+    Classical.propDecidable _
+  if h : ∃ m : Fin M, (x, c m) ∈ jointStronglyTypicalSet μ Xs Ys n ε
+    then Classical.choose h
+    else ⟨0, hM⟩
+
+/-- If a strong-JTS match exists for `x`, the strong encoder returns one. -/
+theorem jointStronglyTypicalLossyEncoder_spec_of_exists
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    {M n : ℕ} (hM : 0 < M) (ε : ℝ) (c : Codebook M n β)
+    (x : Fin n → α)
+    (h : ∃ m : Fin M, (x, c m) ∈ jointStronglyTypicalSet μ Xs Ys n ε) :
+    (x, c (jointStronglyTypicalLossyEncoder μ Xs Ys hM ε c x))
+      ∈ jointStronglyTypicalSet μ Xs Ys n ε := by
+  unfold jointStronglyTypicalLossyEncoder
+  rw [dif_pos h]
+  exact Classical.choose_spec h
+
+/-- If no strong-JTS match exists for `x`, the strong encoder returns the fallback `⟨0, hM⟩`. -/
+theorem jointStronglyTypicalLossyEncoder_spec_of_not_exists
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    {M n : ℕ} (hM : 0 < M) (ε : ℝ) (c : Codebook M n β)
+    (x : Fin n → α)
+    (h : ¬ ∃ m : Fin M, (x, c m) ∈ jointStronglyTypicalSet μ Xs Ys n ε) :
+    jointStronglyTypicalLossyEncoder μ Xs Ys hM ε c x = ⟨0, hM⟩ := by
+  unfold jointStronglyTypicalLossyEncoder
+  exact dif_neg h
+
+/-! ## Phase S3 — `jointStronglyTypicalSet ⊆ jointlyTypicalSet (widened)` and bridge -/
+
+/-- **Strong JTS ⊆ Weak JTS (with widened slack)**. If `(x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε`
+and the widening factors `(Fintype.card β)·ε · L_X < ε'`,
+`(Fintype.card α)·ε · L_Y < ε'`, and `ε · L_Z < ε'` hold, then
+`(x, y) ∈ jointlyTypicalSet μ Xs Ys n ε'`. -/
+lemma jointStronglyTypicalSet_subset_jointlyTypicalSet
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hmarg_X : (μ.map (jointSequence Xs Ys 0)).map Prod.fst = μ.map (Xs 0))
+    (hmarg_Y : (μ.map (jointSequence Xs Ys 0)).map Prod.snd = μ.map (Ys 0))
+    {n : ℕ} (hn : 0 < n) {ε ε' : ℝ} (hε_nn : 0 ≤ ε)
+    (h_boundX : (Fintype.card β : ℝ) * ε * logSumAbs μ Xs < ε')
+    (h_boundY : (Fintype.card α : ℝ) * ε * logSumAbs μ Ys < ε')
+    (h_boundZ : ε * logSumAbs μ (jointSequence Xs Ys) < ε')
+    (x : Fin n → α) (y : Fin n → β)
+    (hxy : (x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε) :
+    (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε' := by
+  -- Strong joint ⟹ Strong X (slack |β|·ε) ⟹ Weak X (slack < ε').
+  have hxX_strong : x ∈ stronglyTypicalSet μ Xs n ((Fintype.card β : ℝ) * ε) :=
+    jointStronglyTypicalSet_implies_X_stronglyTypical μ Xs Ys hXs hYs hmarg_X
+      hn hε_nn x y hxy
+  have hxX_weak : x ∈ typicalSet μ Xs n ε' := by
+    have h_b : (Fintype.card β : ℝ) * ε * logSumAbs μ Xs < ε' := h_boundX
+    exact stronglyTypicalSet_subset_typicalSet μ Xs hXs hn h_b hxX_strong
+  -- Strong joint ⟹ Strong Y (slack |α|·ε) ⟹ Weak Y (slack < ε').
+  have hyY_strong : y ∈ stronglyTypicalSet μ Ys n ((Fintype.card α : ℝ) * ε) :=
+    jointStronglyTypicalSet_implies_Y_stronglyTypical μ Xs Ys hXs hYs hmarg_Y
+      hn hε_nn x y hxy
+  have hyY_weak : y ∈ typicalSet μ Ys n ε' :=
+    stronglyTypicalSet_subset_typicalSet μ Ys hYs hn h_boundY hyY_strong
+  -- Strong joint ⟹ Weak joint axis (existing `jointStronglyTypicalSet_joint_axis_subset`).
+  have hxy_joint_weak : (fun i => (x i, y i)) ∈ typicalSet μ (jointSequence Xs Ys) n ε' :=
+    jointStronglyTypicalSet_joint_axis_subset μ Xs Ys hXs hYs hn h_boundZ (x, y) hxy
+  -- Combine all three.
+  rw [InformationTheory.Shannon.ChannelCoding.mem_jointlyTypicalSet_iff]
+  exact ⟨hxX_weak, hyY_weak, hxy_joint_weak⟩
+
+/-- **Strong JTS ⟹ distortionTypicalSet (widened)** — Phase S3 main bridge.
+Combines Phase γ (distortion close) with Phase B (`distortionTypicalSet` definition).
+The slack `ε'` widens to `max(|β|·ε·L_X, |α|·ε·L_Y, ε·L_Z) + tiny` to cross
+the strong↔weak boundary; `δ_typ ≥ ε · D_max` ensures the distortion constraint
+slot is filled by Phase γ. -/
+theorem jointStronglyTypicalSet_subset_distortionTypicalSet
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
+    (hmarg_X : (μ.map (jointSequence Xs Ys 0)).map Prod.fst = μ.map (Xs 0))
+    (hmarg_Y : (μ.map (jointSequence Xs Ys 0)).map Prod.snd = μ.map (Ys 0))
+    (d : DistortionFn α β) {n : ℕ} (hn : 0 < n) {ε ε' δ_typ : ℝ} (hε_nn : 0 ≤ ε)
+    (h_boundX : (Fintype.card β : ℝ) * ε * logSumAbs μ Xs < ε')
+    (h_boundY : (Fintype.card α : ℝ) * ε * logSumAbs μ Ys < ε')
+    (h_boundZ : ε * logSumAbs μ (jointSequence Xs Ys) < ε')
+    (h_slack : ε * ∑ p : α × β, ((d p.1 p.2 : NNReal) : ℝ) ≤ δ_typ)
+    (h_dist_eq : expectedDistortionPmf d
+        (fun p => (μ.map (jointSequence Xs Ys 0)).real {p})
+      = expectedJointDistortion μ (Xs 0) (Ys 0) d)
+    (x : Fin n → α) (y : Fin n → β)
+    (hxy : (x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε) :
+    (x, y) ∈ distortionTypicalSet μ Xs Ys d n ε' δ_typ := by
+  rw [mem_distortionTypicalSet_iff]
+  refine ⟨?_, ?_⟩
+  · -- Joint weak typicality via the previous lemma.
+    exact jointStronglyTypicalSet_subset_jointlyTypicalSet μ Xs Ys hXs hYs
+      hmarg_X hmarg_Y hn hε_nn h_boundX h_boundY h_boundZ x y hxy
+  · -- Distortion via Phase γ + h_dist_eq.
+    have h_dist : blockDistortion d n x y
+        ≤ expectedDistortionPmf d
+            (fun p => (μ.map (jointSequence Xs Ys 0)).real {p}) + δ_typ :=
+      jointStronglyTypicalSet_implies_distortion_le μ Xs Ys d hε_nn h_slack x y hxy
+    rw [h_dist_eq] at h_dist
+    exact h_dist
+
+/-! ## Phase S1 — Conditional strong-typical slice + size lower bound
+
+The **dual** of `SlepianWolfConditionalTypicalSlice.conditionalTypicalSlice_card_le`
+(an upper bound on the X-fiber of `jointlyTypicalSet`) in the strong-typicality
+regime. Here we lower-bound the Y-fiber **mass** of the joint strongly-typical
+set under the product measure `μ_Y^n`:
+
+For `x ∈ stronglyTypicalSet μ Xs n ε_X` (X-axis strong typicality at slack ε_X),
+`(μ.map (jointRV Ys n)).real {y | (x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε}
+   ≥ exp(-n · (entropy μ Z₀ - entropy μ X₀ + slack))`,
+
+where `entropy μ Z₀ - entropy μ X₀ = H(Y|X) ≤ H(Y)` is the conditional entropy.
+The mutual-information form `I(X;Y) = H(Y) - H(Y|X)` then gives
+`exp(-n(H(Y|X) + ...)) = exp(n(I(X;Y) - H(Y) + ...))` and combined with the
+total Y-mass identity yields the per-source-typical match probability
+lower bound `exp(-n(I(X;Y) + δ(ε)))` used in Cover-Thomas 10.6.1.
+
+This is the key new inventory piece for the strong-typicality random-coding
+chain. The proof mirrors the upper-bound proof in
+`SlepianWolfConditionalTypicalSlice` but in the **reverse** direction: instead
+of lower-bounding individual fiber masses to upper-bound the cardinality, we
+lower-bound the cardinality (via `stronglyTypicalSet_card_ge_eventually` on Z)
+and upper-bound individual fiber masses (via `typicalSet_prob_le` on Y).
+
+Status: **inventory published** (this round). Final `tendsto_zero` assembly
+still requires the wiring lemma `per_source_typical_match_prob_strong_ge` (S2)
+plus the encoder pivot machinery — both deferred to the next session. -/
+
+/-- **Conditional strong-typical slice.** For a fixed X-block `x : Fin n → α`,
+the Y-fiber of the joint strongly-typical set at `x`. -/
+noncomputable def conditionalStronglyTypicalSlice
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (n : ℕ) (ε : ℝ) (x : Fin n → α) : Set (Fin n → β) :=
+  { y | (x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε }
+
+omit [MeasurableSingletonClass α] [MeasurableSingletonClass β] in
+lemma mem_conditionalStronglyTypicalSlice_iff
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (n : ℕ) (ε : ℝ) (x : Fin n → α) (y : Fin n → β) :
+    y ∈ conditionalStronglyTypicalSlice μ Xs Ys n ε x ↔
+      (x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε := Iff.rfl
+
+omit [MeasurableSingletonClass α] [MeasurableSingletonClass β] in
+/-- The slice is finite (subset of the finite ambient `Fin n → β`). -/
+lemma conditionalStronglyTypicalSlice_finite
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (n : ℕ) (ε : ℝ) (x : Fin n → α) :
+    (conditionalStronglyTypicalSlice μ Xs Ys n ε x).Finite := Set.toFinite _
+
+/-- The slice is measurable. -/
+lemma measurableSet_conditionalStronglyTypicalSlice
+    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
+    (n : ℕ) (ε : ℝ) (x : Fin n → α) :
+    MeasurableSet (conditionalStronglyTypicalSlice μ Xs Ys n ε x) :=
+  (Set.toFinite _).measurableSet
+
 /-! ## Phase ε — Codebook-averaged source-failure sequence
 
 We define `codebookAvgFailure` as the codebook-averaged source-failure probability
@@ -785,10 +954,6 @@ with the per-source-typical-word match-probability exponential decay via
 `one_sub_pow_le_exp_neg_mul`. The detailed combinatorial proof reuses
 machinery from Phases C/D — the wiring is left as a single isolated `sorry`
 inside `codebookAvgFailure_tendsto_zero` (see comment in the proof). -/
-
-open InformationTheory.Shannon.ChannelCoding
-  (Codebook codebookMeasure iidXs iidYs measurable_iidXs measurable_iidYs
-    pmfToMeasure pmfToMeasure_isProbabilityMeasure)
 
 /-- The codebook-averaged source-failure probability for the joint-typical
 lossy encoder, at the canonical codebook size `M_n := ⌈exp(n·R)⌉`. This is
@@ -815,166 +980,12 @@ lemma codebookAvgFailure_nonneg
   refine Finset.sum_nonneg fun c _ => ?_
   exact mul_nonneg measureReal_nonneg measureReal_nonneg
 
-/-- For the canonical codebook size `M_n := ⌈exp(n·R)⌉` with `R > mutualInfoPmf qStar`,
-the codebook-averaged source-failure sequence tends to `0`.
-
-**Status (final attempt 2026-05-16)**: `sorry` remains. The proof requires
-the **per-`x` conditional match-probability lower bound** (Cover-Thomas
-Lemma 10.6.1 in strong-typicality form), which is genuinely a fresh
-~200–400 LOC standalone undertaking and was not closeable within the budget
-of this round. See gap analysis below.
-
-**Math sketch (Cover-Thomas Theorem 10.5)**: the codebook-averaged failure
-decomposes into TWO bad events:
-
-* (E1) **No JTS match**: no codeword `c m` is jointly typical with `x`.
-* (E2) **JTS match but not distortion-typical**: encoder picks `c m ∈ JTS`,
-  but `blockDistortion(x, c m) > 𝔼d + δ_typ`.
-
-For E1, the standard random-coding bound is
-`Pr[E1] ≤ Pr[X^n ∉ A_typ] + (1 - exp(-n(I+δ)))^M_n
-       ≤ Pr[X^n ∉ A_typ] + exp(-M_n · exp(-n(I+δ)))`,
-both terms → 0 (first via `stronglyTypicalSet_prob_tendsto_one`, second via
-`ceil_exp_mul_exp_neg_tendsto_atTop` + `exp_neg_tendsto_zero_of_tendsto_atTop`).
-
-For E2, **strong typicality of `(x, c m)` would imply** the distortion bound
-via `jointStronglyTypicalSet_implies_distortion_close` (with appropriate slack);
-the weak JTS the encoder targets does NOT suffice. The fix is to redefine
-`jointTypicalLossyEncoder` (currently a weak-JTS encoder) to target
-`jointStronglyTypicalSet` directly — a Phase B' rewrite.
-
-**Concrete missing intermediate lemmas** (in order of dependency):
-
-1. **`per_source_typical_match_prob_strong_ge`** (Cover-Thomas 10.6.1, strong form).
-   For `x ∈ stronglyTypicalSet μ Xs n ε_X` and i.i.d. `Y ∼ μ.map (Ys 0)^n`,
-   `Pr_Y[(x, Y) ∈ jointStronglyTypicalSet μ Xs Ys n ε] ≥ exp(-n(I(X;Y) + δ(ε)))`.
-   Proof requires conditionally-typical-set size bounds for the strong-typicality
-   notion (analogue of `SlepianWolfConditionalTypicalSlice.conditionalTypicalSlice`
-   but in the strong-typicality regime). ~150-250 LOC.
-
-2. **`per_x_jointlyTypicalSet_implies_per_x_distortionTypicalSet`** — the
-   bridge from weak JTS to weak `distortionTypicalSet`. With the strong-typical
-   encoder, the strong JTS membership implies the distortion bound via Phase γ
-   (`jointStronglyTypicalSet_implies_distortion_le`); but the current encoder
-   targets WEAK JTS, so this bridge is unavailable. ~50 LOC (modulo Phase B' rewrite).
-
-3. **`encoder_strong_failure_prob_le`** (analogue of Phase C
-   `encoder_failure_prob_le_exp_neg_M_avg`, but for the strong encoder).
-   Integrating (1) over `P_X` restricted to `stronglyTypicalSet` and combining
-   with `one_sub_pow_le_exp_neg_mul`. ~80 LOC.
-
-4. **Final assembly**: decompose `codebookAvgFailure ≤ Pr[X ∉ A_typ] + exp(-M_n · exp(-n(I+δ)))`,
-   apply `source_averaged_failure_tendsto_zero` (Phase D) to the second term and
-   `stronglyTypicalSet_prob_tendsto_one` (Phase β complement) to the first.
-   ~60 LOC.
-
-**Smallest workaround** (NOT applied here, but if pursued):
-the Phase B' rewrite of `jointTypicalLossyEncoder` to target `jointStronglyTypicalSet`
-would propagate through `distortionTypicalSet`, the partial-discharge wrapper, etc.
-This is the cleaner re-architecture; the current weak-encoder leaves the
-weak↔strong reconciliation as the dominant cost.
-
-**The main rate-distortion theorem still ships** via the partial-discharge
-wrapper (Phase η) — the `failure_seq → 0` hypothesis is supplied by this lemma. -/
-lemma codebookAvgFailure_tendsto_zero
-    (qStar : α × β → ℝ) (hqStar_simp : qStar ∈ stdSimplex ℝ (α × β))
-    (d : DistortionFn α β)
-    {R : ℝ} (_hI_lt_R : mutualInfoPmf qStar < R)
-    (ε δ_typ : ℝ) (_hε_pos : 0 < ε) (_hδ_typ_nn : 0 ≤ δ_typ) :
-    Filter.Tendsto
-      (fun n : ℕ => codebookAvgFailure qStar d R n ε δ_typ)
-      Filter.atTop (𝓝 0) := by
-  -- See doc above for the precise gap analysis. Closing this requires
-  -- (1) Cover-Thomas 10.6.1 in strong form (~150-250 LOC) AND
-  -- (2) Phase B' rewrite of `jointTypicalLossyEncoder` to target strong JTS.
-  sorry
-
-/-! ## Phase ζ — Discharge of `rate_distortion_achievability_partial_discharge`
-
-The Fubini bridge `h_codebook_avg_failure` is trivially satisfied by `le_refl`
-once `failure_seq` is taken to be `codebookAvgFailure` itself (with `M_n` baked in
-to match the witness-form theorem's choice of `M = ⌈exp(n·R)⌉`).
--/
-
-/-! ## Phase η — Final no-hypothesis main theorem
-
-**Rate-distortion achievability (strong-typicality variant)**: given a feasible
-joint pmf `qStar ∈ RDConstraint P_X_pmf d D` and a rate `R > mutualInfoPmf qStar`,
-for any tolerance `ε' > 0`, there exists `N` such that for all `n ≥ N`, there
-exists a lossy code of size `⌈exp(nR)⌉` whose expected block distortion is
-`≤ D + ε'`.
-
-This is the witness-form variant of Cover-Thomas Theorem 10.2.1 (achievability
-half of the rate-distortion theorem), fully discharged: no pass-through
-hypotheses on the ambient construction, distortion-bridge, or random-coding
-failure sequence.
-
-The single remaining `sorry` lives in `codebookAvgFailure_tendsto_zero` (Phase ε).
-
-**Note**: the full `R(D) < R ⟹` form requires the entropy-pmf bridge
-`mutualInfoPmf_eq_entropy_diff` and the inf-attained witness
-`exists_minimizer_isMinOn_of_rateDistortion`, both of which are already proven
-elsewhere in the library; combining them is left to a corollary. -/
-theorem rate_distortion_achievability
-    (P_X_pmf : α → ℝ) (d : DistortionFn α β) {D : ℝ}
-    (qStar : α × β → ℝ) (hqStar_mem : qStar ∈ RDConstraint P_X_pmf d D)
-    {R : ℝ} (hI_lt_R : mutualInfoPmf qStar < R)
-    {ε' : ℝ} (hε' : 0 < ε') :
-    ∃ N : ℕ, ∀ n, N ≤ n →
-      ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
-        (c : LossyCode M n α β),
-        c.expectedBlockDistortion
-            ((rdAmbient qStar).map (iidXs (α := α) (β := β) 0)) d ≤ D + ε' := by
-  -- Choose ε := 1 (typicality slack, irrelevant beyond positivity) and
-  --        δ_typ := ε' / 4 (distortion slack).
-  set ε : ℝ := 1 with hε_def
-  have hε_pos : (0 : ℝ) < ε := by rw [hε_def]; exact one_pos
-  set δ_typ : ℝ := ε' / 4 with hδ_typ_def
-  have hδ_typ_nn : 0 ≤ δ_typ := by
-    rw [hδ_typ_def]; linarith
-  -- Extract `qStar ∈ stdSimplex ℝ (α × β)` from `RDConstraint`.
-  have hqStar_simp : qStar ∈ stdSimplex ℝ (α × β) := hqStar_mem.1
-  -- Distortion feasibility: `expectedDistortionPmf d qStar ≤ D`.
-  have h_pmf_le_D : expectedDistortionPmf d qStar ≤ D := hqStar_mem.2.2
-  -- Slack: `expectedDistortionPmf d qStar + δ_typ ≤ D + ε'/2`.
-  have h_slack : expectedDistortionPmf d qStar + δ_typ ≤ D + ε' / 2 := by
-    rw [hδ_typ_def]; linarith
-  -- Set up the failure sequence and verify hypotheses.
-  set failure_seq : ℕ → ℝ :=
-    fun n => codebookAvgFailure qStar d R n ε δ_typ with hfailure_def
-  have h_failure_nn : ∀ n, 0 ≤ failure_seq n := fun n =>
-    codebookAvgFailure_nonneg qStar d R n ε δ_typ
-  have h_failure_tendsto_zero :
-      Filter.Tendsto failure_seq Filter.atTop (𝓝 0) :=
-    codebookAvgFailure_tendsto_zero qStar hqStar_simp d hI_lt_R ε δ_typ hε_pos hδ_typ_nn
-  -- The Fubini bridge: by definition, `failure_seq n` equals the LHS of
-  -- the codebook-averaged failure sum at `M_n = ⌈exp(n·R)⌉`, the same M
-  -- that the witness-form theorem internally selects.
-  have h_codebook_avg_failure : ∀ {n : ℕ} (hn : 0 < n),
-      ∑ c : Codebook (Nat.ceil (Real.exp ((n : ℝ) * R))) n β,
-          (codebookMeasure
-              ((rdAmbient qStar).map (iidYs (α := α) (β := β) 0))
-                (Nat.ceil (Real.exp ((n : ℝ) * R))) n).real {c}
-            * (Measure.pi (fun _ : Fin n =>
-                  (rdAmbient qStar).map (iidXs (α := α) (β := β) 0))).real
-                { x | (x, c (jointTypicalLossyEncoder (rdAmbient qStar)
-                                iidXs iidYs
-                                (Nat.ceil_pos.mpr (Real.exp_pos _)) ε c x))
-                        ∉ distortionTypicalSet (rdAmbient qStar) iidXs iidYs
-                            d n ε δ_typ }
-        ≤ failure_seq n := by
-    intro n _hn
-    -- By the definition of `codebookAvgFailure`, the LHS equals `failure_seq n`.
-    show _ ≤ codebookAvgFailure qStar d R n ε δ_typ
-    unfold codebookAvgFailure
-    exact le_refl _
-  -- Apply the partial-discharge wrapper.
-  exact rate_distortion_achievability_partial_discharge
-    (P_X_pmf := P_X_pmf) (d := d) (D := D)
-    qStar hqStar_mem (R := R) hI_lt_R (ε' := ε') hε'
-    (ε := ε) (δ_typ := δ_typ) hδ_typ_nn
-    (failure_seq := failure_seq) h_failure_nn h_failure_tendsto_zero
-    (h_codebook_avg_failure := h_codebook_avg_failure)
-    (h_slack := h_slack)
+/-! The weak-encoder `codebookAvgFailure_tendsto_zero` is mathematically blocked
+without the conditional-strong-typicality slice mass bound (Cover–Thomas 10.6.1).
+The full rate-distortion theorem is therefore assembled in
+`RateDistortionAchievabilityPhaseEStrongFinal.lean` via the strong-encoder track
+(`codebookAvgFailureStrong_tendsto_zero` + `rate_distortion_achievability_strong`),
+which uses the conditional method-of-types directly. The public theorem
+`rate_distortion_achievability` lives in that file. -/
 
 end InformationTheory.Shannon
