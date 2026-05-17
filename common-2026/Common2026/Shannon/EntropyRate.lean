@@ -210,7 +210,7 @@ end AntitoneHelpers
 
 /-- Conditional entropy `H(Xs | Yo)` depends only on the joint pushforward
 `μ.map (fun ω => (Xs ω, Yo ω))`. -/
-private lemma condEntropy_eq_pushforward
+lemma condEntropy_eq_pushforward
     {β γ : Type*}
     [Fintype β] [DecidableEq β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]

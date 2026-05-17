@@ -10,6 +10,9 @@ import Mathlib.MeasureTheory.Function.ConditionalExpectation.Basic
 import Mathlib.MeasureTheory.Function.ConditionalExpectation.Indicator
 import Mathlib.Probability.Martingale.Basic
 import Mathlib.Probability.Martingale.Convergence
+import Mathlib.MeasureTheory.Measure.MeasuredSets
+import Mathlib.MeasureTheory.OuterMeasure.BorelCantelli
+import Mathlib.Dynamics.Ergodic.Ergodic
 
 /-!
 # 2-sided stationary extension `μ_ℤ` (SMB Phase D — sub-plan)
@@ -70,7 +73,7 @@ through Phase G, with Phase A being the skeleton. Phase H (the actual SMB
 namespace InformationTheory.Shannon.TwoSided
 
 open MeasureTheory ProbabilityTheory Filter
-open scoped ENNReal Topology
+open scoped ENNReal Topology symmDiff
 
 variable {Ω : Type*} [MeasurableSpace Ω]
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
@@ -490,22 +493,6 @@ theorem rightInverse_shiftZSymm :
     Function.RightInverse (shiftZSymm (α := α)) shiftZ := by
   intro x; funext i; simp [shiftZ, shiftZSymm]
 
-/-- The two-sided shift is ergodic when the underlying process is.
-
-**Status**: declared as `sorry`. Phase E plan (R1, 100-200 LOC) defers this to a
-cross-phase task once Phase F coupling is available. The intended route uses
-`MeasureTheory.MeasurePreserving.ergodic_of_ergodic_semiconj` after building
-a measure-preserving semiconjugacy between `(Ω, T, μ)` and `((ℤ → α), shiftZ, μZ)`.
-The obstacle is that stationarity alone does not canonically produce such a
-semiconjugacy on the full ℤ-side; the standard workaround is to argue that any
-ℤ-shift-invariant cylinder approximation is essentially an `ℕ`-invariant event,
-which transfers to a `T`-invariant event on `Ω` via `μZ_nat_proj_eq` / Phase F,
-then use the triviality of `T`-invariant events. The full formalization is
-budgeted as a follow-up. -/
-theorem ergodic_shiftZ (p : ErgodicProcess μ α) :
-    Ergodic (shiftZ : (∀ _ : ℤ, α) → _) (μZ μ p.toStationaryProcess) := by
-  sorry
-
 end Shift
 
 /-! ## Phase F — coupling with the one-sided side -/
@@ -668,6 +655,525 @@ theorem μZ_block_cylinder_eq (n : ℕ) (s : Fin n → α) :
     exact congrFun h i
 
 end Coupling
+
+/-! ## Phase E.5 — `ergodic_shiftZ`
+
+Two-sided shift ergodicity via **cylinder approximation + ℕ-factor transfer**.
+
+**Strategy A (cylinder approximation)**. For a `shiftZ`-invariant measurable set
+`A ⊆ (ℤ → α)`:
+
+1. Approximate `A` by a finite cylinder `t` (over some `F ⊆ ℤ`) up to ε in symmetric
+   difference — via `MeasureTheory.exists_measure_symmDiff_lt_of_generateFrom_isSetRing`
+   on `measurableCylinders` (a set ring generating the product σ-algebra).
+2. For `k` large enough that `F + k ⊆ ℕ`, the shifted cylinder
+   `shiftZ^[k]⁻¹' t` is a cylinder over a nonnegative index set,
+   hence lies in `cylinderEvents {i : ℤ | 0 ≤ i}`.
+3. By measure-preservation of `shiftZ^[k]` and shift-invariance of `A`,
+   `μZ(A Δ shiftZ^[k]⁻¹' t) = μZ(A Δ t) < ε`, so `A` is approximable to within
+   any ε by sets in `cylinderEvents {i : ℤ | 0 ≤ i}`.
+4. Hence `A` is `μZ`-a.e. equal to some `A' = natProj⁻¹' B` for measurable `B`,
+   and `B` is `shiftN`-invariant mod-null on `μ.map forwardEmbed`.
+5. `(ℕ → α, shiftN, μ.map forwardEmbed)` is ergodic (forward
+   `ergodic_of_ergodic_semiconj` from `(Ω, T, μ)` via `forwardEmbed`).
+6. Conclude `μZ(A) = μN(B) ∈ {0, 1}`.
+-/
+
+section Ergodicity
+
+variable (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
+
+/-- The one-sided (`ℕ`-indexed) shift `σ_ℕ : (ℕ → α) → (ℕ → α)`, `σ_ℕ y i := y (i+1)`. -/
+def shiftN : (∀ _ : ℕ, α) → (∀ _ : ℕ, α) := fun y i => y (i + 1)
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- The forward shift on `ℕ → α` is measurable. -/
+theorem measurable_shiftN : Measurable (shiftN : (∀ _ : ℕ, α) → _) :=
+  measurable_pi_iff.mpr (fun i => measurable_pi_apply (i + 1))
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [IsProbabilityMeasure μ] in
+/-- The forward embedding semiconjugates `T` and `shiftN`. -/
+theorem forwardEmbed_semiconj :
+    Function.Semiconj (forwardEmbed (μ := μ) p) p.T shiftN := by
+  intro ω
+  funext i
+  show p.obs i (p.T ω) = p.obs (i + 1) ω
+  simp only [StationaryProcess.obs, Function.comp_apply, ← Function.iterate_succ_apply]
+
+omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- The ℕ-projection `natProj : (ℤ → α) → (ℕ → α)`, `natProj x i := x (i : ℤ)`. -/
+def natProj : (∀ _ : ℤ, α) → (∀ _ : ℕ, α) := fun x i => x (i : ℤ)
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- `natProj` is measurable. -/
+theorem measurable_natProj : Measurable (natProj (α := α)) :=
+  measurable_pi_iff.mpr (fun i => measurable_pi_apply (i : ℤ))
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
+  [MeasurableSingletonClass α] [IsProbabilityMeasure μ] in
+/-- `natProj` semiconjugates `shiftZ` and `shiftN`. -/
+theorem natProj_semiconj :
+    Function.Semiconj (natProj (α := α)) shiftZ shiftN := by
+  intro x
+  funext i
+  show shiftZ x (i : ℤ) = natProj x (i + 1)
+  show x ((i : ℤ) + 1) = x (((i + 1 : ℕ) : ℤ))
+  push_cast
+  rfl
+
+omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- `natProj` is measure-preserving from `μZ` to `μ.map forwardEmbed`. -/
+theorem measurePreserving_natProj :
+    MeasurePreserving (natProj (α := α)) (μZ μ p) (μ.map (forwardEmbed (μ := μ) p)) := by
+  refine ⟨measurable_natProj, ?_⟩
+  exact μZ_nat_proj_eq μ p
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [IsProbabilityMeasure μ] in
+/-- `forwardEmbed` is measure-preserving from `μ` to its pushforward. -/
+theorem measurePreserving_forwardEmbed :
+    MeasurePreserving (forwardEmbed (μ := μ) p) μ (μ.map (forwardEmbed (μ := μ) p)) :=
+  ⟨measurable_forwardEmbed (μ := μ) p, rfl⟩
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [IsProbabilityMeasure μ] in
+/-- The forward shift on `(ℕ → α, μ.map forwardEmbed)` is ergodic when the underlying
+process is ergodic. Direct application of `ergodic_of_ergodic_semiconj` with
+`forwardEmbed` as the measure-preserving semiconjugacy from `(Ω, T, μ)`. -/
+theorem ergodic_shiftN (p : ErgodicProcess μ α) :
+    Ergodic (shiftN : (∀ _ : ℕ, α) → _) (μ.map (forwardEmbed (μ := μ) p.toStationaryProcess)) :=
+  (measurePreserving_forwardEmbed μ p.toStationaryProcess).ergodic_of_ergodic_semiconj
+    p.ergodic measurable_shiftN (forwardEmbed_semiconj μ p.toStationaryProcess)
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
+  [MeasurableSingletonClass α] [IsProbabilityMeasure μ] in
+/-- `shiftZ` iterated `k` times: `shiftZ^[k] x i = x (i + k)`. -/
+lemma shiftZ_iterate_apply (k : ℕ) (x : ∀ _ : ℤ, α) (i : ℤ) :
+    (shiftZ^[k] x) i = x (i + k) := by
+  induction k generalizing i with
+  | zero => simp
+  | succ n ih =>
+    rw [Function.iterate_succ_apply']
+    show (shiftZ^[n] x) (i + 1) = x (i + ((n + 1 : ℕ) : ℤ))
+    rw [ih]
+    congr 1
+    push_cast
+    ring
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [IsProbabilityMeasure μ] in
+/-- Preimage of a measurable cylinder over `F` under `shiftZ^[k]` is a measurable
+cylinder over `F + k = F.image (· + k)`. -/
+lemma shiftZ_iterate_preimage_cylinder (k : ℕ) (F : Finset ℤ)
+    {S : Set (∀ _ : F, α)} (hS : MeasurableSet S) :
+    ∃ S' : Set (∀ _ : F.image (fun j : ℤ => j + (k : ℤ)), α),
+      MeasurableSet S' ∧
+      shiftZ^[k] ⁻¹' (cylinder F S)
+        = cylinder (F.image (fun j : ℤ => j + (k : ℤ))) S' := by
+  classical
+  set F' : Finset ℤ := F.image (fun j : ℤ => j + (k : ℤ)) with hF'
+  have hbij_mem : ∀ j : F, j.1 + (k : ℤ) ∈ F' := by
+    intro j
+    rw [hF', Finset.mem_image]
+    exact ⟨j.1, j.2, rfl⟩
+  set ξ : (∀ _ : F', α) → (∀ _ : F, α) :=
+    fun f j => f ⟨j.1 + (k : ℤ), hbij_mem j⟩ with hξ_def
+  have hmeas_ξ : Measurable ξ :=
+    measurable_pi_iff.mpr (fun _ => measurable_pi_apply _)
+  refine ⟨ξ ⁻¹' S, hmeas_ξ hS, ?_⟩
+  ext x
+  show (F.restrict (shiftZ^[k] x)) ∈ S ↔ (F'.restrict x) ∈ ξ ⁻¹' S
+  simp only [Set.mem_preimage]
+  have h_eq : F.restrict (shiftZ^[k] x) = ξ (F'.restrict x) := by
+    funext j
+    show (shiftZ^[k] x) j.1 = (F'.restrict x) ⟨j.1 + (k : ℤ), hbij_mem j⟩
+    rw [shiftZ_iterate_apply]
+    rfl
+  rw [h_eq]
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [IsProbabilityMeasure μ] in
+/-- Preimage under `shiftZ^[k]` preserves measurable cylinders: the preimage of
+a `measurableCylinders` element is again in `measurableCylinders`. -/
+lemma shiftZ_iterate_preimage_mem_measurableCylinders (k : ℕ)
+    {t : Set (∀ _ : ℤ, α)} (ht : t ∈ measurableCylinders (fun _ : ℤ => α)) :
+    shiftZ^[k] ⁻¹' t ∈ measurableCylinders (fun _ : ℤ => α) := by
+  obtain ⟨F, S, hS, rfl⟩ := (mem_measurableCylinders t).mp ht
+  obtain ⟨S', hS', heq⟩ := shiftZ_iterate_preimage_cylinder (α := α) k F hS
+  rw [heq]
+  exact cylinder_mem_measurableCylinders _ _ hS'
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [IsProbabilityMeasure μ] in
+/-- After shifting by `k ≥ -F.min` (when `F` is nonempty), the cylinder lies
+in `cylinderEvents {i : ℤ | 0 ≤ i}` (the positive-index σ-algebra). The witness
+index set is `F.image (· + k)`, all of whose elements are ≥ 0. -/
+lemma shiftZ_iterate_preimage_cylinder_in_pos
+    {F : Finset ℤ} {S : Set (∀ _ : F, α)} (hS : MeasurableSet S)
+    {k : ℕ} (hk : ∀ j ∈ F, (0 : ℤ) ≤ j + k) :
+    MeasurableSet[cylinderEvents (X := fun _ : ℤ => α) {i : ℤ | 0 ≤ i}]
+      (shiftZ^[k] ⁻¹' (cylinder F S)) := by
+  classical
+  obtain ⟨S', hS', heq⟩ := shiftZ_iterate_preimage_cylinder (α := α) k F hS
+  rw [heq]
+  -- The cylinder `cylinder (F.image (· + k)) S'` is measurable in
+  -- `cylinderEvents {≥ 0}` because all indices in `F.image (· + k)` are ≥ 0.
+  set F' : Finset ℤ := F.image (fun j : ℤ => j + (k : ℤ)) with hF'
+  -- Show `(cylinder F' S')` is measurable in `cylinderEvents {≥ 0}`.
+  -- A cylinder is `restrict F' ⁻¹' S'`. The map `restrict F'` is measurable in
+  -- `cylinderEvents {≥ 0}` iff each coordinate `(· i)` for `i ∈ F'` is.
+  have hF'_pos : ∀ i ∈ F', (0 : ℤ) ≤ i := by
+    intro i hi
+    rw [hF', Finset.mem_image] at hi
+    obtain ⟨j, hj, rfl⟩ := hi
+    exact hk j hj
+  -- The restriction `F'.restrict : (ℤ → α) → (∀ _ : F', α)` is measurable
+  -- in cylinderEvents {≥ 0} via measurable_pi_iff (per coord).
+  have hres :
+      Measurable[cylinderEvents (X := fun _ : ℤ => α) {i : ℤ | 0 ≤ i}]
+        (F'.restrict : (∀ _ : ℤ, α) → (∀ _ : F', α)) := by
+    rw [@measurable_pi_iff]
+    intro i
+    -- The map `x ↦ x i.1` for `i.1 ∈ F'` (so `i.1 ≥ 0`) is `cylinderEvents {≥0}`-measurable.
+    exact measurable_cylinderEvent_apply (Δ := {i : ℤ | 0 ≤ i}) (X := fun _ : ℤ => α)
+      (hF'_pos i.1 i.2)
+  exact hres hS'
+
+end Ergodicity
+
+section ErgodicityMain
+
+variable (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
+
+/-- The positive-index σ-algebra on `ℤ → α`, i.e., the σ-algebra of events
+depending only on coordinates `i ≥ 0`. -/
+@[reducible] def posSigma : MeasurableSpace (∀ _ : ℤ, α) :=
+  cylinderEvents (X := fun _ : ℤ => α) {i : ℤ | 0 ≤ i}
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [IsProbabilityMeasure μ] in
+/-- `posSigma ≤ pi`. -/
+lemma posSigma_le_pi : posSigma (α := α) ≤ MeasurableSpace.pi :=
+  cylinderEvents_le_pi
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [IsProbabilityMeasure μ] in
+/-- `natProj` is measurable from `posSigma` to `pi` on `ℕ → α`. -/
+lemma measurable_natProj_posSigma :
+    Measurable[posSigma (α := α)] (natProj (α := α)) := by
+  rw [@measurable_pi_iff]
+  intro i
+  -- `(natProj x) i = x (i : ℤ)`, with `(i : ℤ) ≥ 0`.
+  show Measurable[posSigma (α := α)] (fun x : (∀ _ : ℤ, α) => x (i : ℤ))
+  exact measurable_cylinderEvent_apply (Δ := {i : ℤ | 0 ≤ i}) (X := fun _ : ℤ => α)
+    (Int.natCast_nonneg i)
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [IsProbabilityMeasure μ] in
+/-- A `posSigma`-measurable set is the `natProj`-preimage of a measurable set
+in `ℕ → α`. This is the **factoring lemma**: positive-index events factor through `natProj`. -/
+lemma exists_preimage_natProj_of_posSigma
+    {A : Set (∀ _ : ℤ, α)} (hA : MeasurableSet[posSigma (α := α)] A) :
+    ∃ B : Set (∀ _ : ℕ, α), MeasurableSet B ∧ A = natProj ⁻¹' B := by
+  -- The σ-algebra `posSigma` is generated by `(· i)⁻¹' (measurable in α)` for `i ≥ 0`.
+  -- The map `natProj` is measurable from `posSigma` to `pi` (just shown).
+  -- We need: `posSigma = MeasurableSpace.comap natProj MeasurableSpace.pi`.
+  -- ⇒ direction: posSigma ≤ comap natProj pi, since natProj is posSigma → pi measurable.
+  -- ⇐ direction: comap natProj pi ≤ posSigma. Each generator of comap is
+  --   `natProj⁻¹ (measurable set in ℕ→α)` and we need it in posSigma.
+  --   Suffices to check on a π-system generating pi on ℕ→α: take cylinders or coord generators.
+  --   `natProj⁻¹ ((· i)⁻¹ S) = ((· i) ∘ natProj)⁻¹ S = (· (i : ℤ))⁻¹ S` for `S ⊆ α` measurable.
+  --   Since `(i : ℤ) ≥ 0`, `(· (i : ℤ))⁻¹ S ∈ posSigma`. ✓
+  -- Show: posSigma = comap natProj pi
+  have h_comap : (MeasurableSpace.pi : MeasurableSpace (∀ _ : ℕ, α)).comap (natProj (α := α))
+      = posSigma (α := α) := by
+    -- Two-side antisymm.
+    apply le_antisymm
+    · -- comap pi ≤ posSigma
+      -- pi on ℕ→α = ⨆ i, (m_α).comap (· i)
+      -- So comap natProj pi = ⨆ i, comap natProj ((m_α).comap (· i))
+      --                     = ⨆ i, (m_α).comap ((· i) ∘ natProj)
+      --                     = ⨆ i, (m_α).comap (· (i:ℤ))
+      -- And (m_α).comap (· (i:ℤ)) ≤ posSigma because (i:ℤ) ≥ 0.
+      rw [show (MeasurableSpace.pi : MeasurableSpace (∀ _ : ℕ, α))
+            = ⨆ i : ℕ, (inferInstance : MeasurableSpace α).comap (fun x : (∀ _ : ℕ, α) => x i) from rfl]
+      rw [MeasurableSpace.comap_iSup]
+      refine iSup_le (fun i => ?_)
+      rw [MeasurableSpace.comap_comp]
+      -- Goal: (m_α).comap ((·i) ∘ natProj) ≤ posSigma
+      -- (·i) ∘ natProj = fun x => natProj x i = fun x => x (i:ℤ)
+      show ((inferInstance : MeasurableSpace α).comap
+        (fun x : (∀ _ : ℤ, α) => natProj x i)) ≤ posSigma (α := α)
+      show ((inferInstance : MeasurableSpace α).comap
+        (fun x : (∀ _ : ℤ, α) => x (i : ℤ))) ≤ posSigma (α := α)
+      -- This generator is in cylinderEvents {≥ 0} because (i:ℤ) ≥ 0.
+      refine le_iSup₂ (f := fun (j : ℤ) (_ : j ∈ {i : ℤ | 0 ≤ i}) =>
+        ((inferInstance : MeasurableSpace α).comap
+          (fun x : (∀ _ : ℤ, α) => x j))) (i : ℤ) ?_
+      exact Int.natCast_nonneg i
+    · -- posSigma ≤ comap natProj pi
+      -- posSigma = ⨆ i ∈ {≥ 0}, (m_α).comap (·i)
+      -- We need each generator in comap natProj pi.
+      refine iSup₂_le (fun i hi => ?_)
+      -- Generator: (m_α).comap (· i) for i ≥ 0.
+      -- (· i : ℤ → α → α). Since i ≥ 0, set j := i.toNat, then i = j.
+      -- (·i) = (·(j:ℤ)) = (·j) ∘ natProj. So (m_α).comap (·i) = comap natProj ((m_α).comap (·j)).
+      set j : ℕ := i.toNat with hj_def
+      have hij : (j : ℤ) = i := Int.toNat_of_nonneg hi
+      have h_eq : (fun x : (∀ _ : ℤ, α) => x i)
+          = (fun y : (∀ _ : ℕ, α) => y j) ∘ natProj := by
+        funext x
+        show x i = natProj x j
+        show x i = x (j : ℤ)
+        rw [hij]
+      rw [h_eq, ← MeasurableSpace.comap_comp]
+      -- (m_α).comap ((·j) ∘ natProj) ≤ comap natProj pi
+      refine MeasurableSpace.comap_mono ?_
+      -- (m_α).comap (·j : ℕ→α → α) ≤ pi
+      exact le_iSup (fun i : ℕ => ((inferInstance : MeasurableSpace α).comap
+        (fun y : (∀ _ : ℕ, α) => y i))) j
+  -- Now A ∈ posSigma = comap natProj pi means A = natProj⁻¹ B for some pi-measurable B.
+  rw [← h_comap] at hA
+  obtain ⟨B, hB, hB_eq⟩ := MeasurableSpace.measurableSet_comap.mp hA
+  exact ⟨B, hB, hB_eq.symm⟩
+
+end ErgodicityMain
+
+section ErgodicityProof
+
+variable (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α)
+
+omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- The two-sided shift is ergodic when the underlying process is ergodic.
+
+**Strategy A (cylinder approximation + ℕ-factor transfer).** For any
+`shiftZ`-invariant measurable set `A`, approximate `A` to within ε by a
+measurable cylinder, then shift to move the index set into the nonnegative
+half-line. This yields a `posSigma`-measurable approximation, so `A` is μZ-a.e.
+equal to a `posSigma`-measurable set `A' = natProj⁻¹ B`. By ergodicity of
+`shiftN` on `μ.map forwardEmbed`, `B` is either null or co-null, hence so is `A`. -/
+theorem ergodic_shiftZ :
+    Ergodic (shiftZ : (∀ _ : ℤ, α) → _) (μZ μ p.toStationaryProcess) := by
+  classical
+  set q : StationaryProcess μ α := p.toStationaryProcess with hq_def
+  set ν : Measure (∀ _ : ℕ, α) := μ.map (forwardEmbed (μ := μ) q) with hν_def
+  have hν_prob : IsProbabilityMeasure ν :=
+    Measure.isProbabilityMeasure_map (measurable_forwardEmbed (μ := μ) q).aemeasurable
+  -- Ergodicity of shiftN on ν.
+  have hN : Ergodic (shiftN : (∀ _ : ℕ, α) → _) ν := ergodic_shiftN μ p
+  refine ⟨measurePreserving_shiftZ μ q, ?_⟩
+  refine ⟨fun A hA hA_inv => ?_⟩
+  -- Step 1: reduce `EventuallyConst A` to `μZ A = 0 ∨ μZ (A^c) = 0`.
+  rw [eventuallyConst_set']
+  -- Step 2: extract `A` to `posSigma`-measurable form modulo null.
+  -- Cylinder approximation: for each ε > 0, find a cylinder t with μZ(A Δ t) < ε.
+  -- Shift t to be in posSigma. Conclude A ∈ (posSigma) modulo null.
+  -- Then use ergodicity of shiftN.
+  -- We extract `A =ᵐ A'` for some `posSigma`-measurable `A'`.
+  have h_approx_pos : ∃ A' : Set (∀ _ : ℤ, α),
+      MeasurableSet[posSigma (α := α)] A' ∧ A =ᵐ[μZ μ q] A' := by
+    -- Step (a): For each n, find a cylinder t_n with μZ(A Δ t_n) < 2^{-(n+1)}.
+    have hC : ∃ D : Set (Set (∀ _ : ℤ, α)),
+        D.Countable ∧ D ⊆ measurableCylinders (fun _ : ℤ => α) ∧
+          μZ μ q (⋃₀ D)ᶜ = 0 := by
+      refine ⟨{Set.univ}, Set.countable_singleton _, ?_, ?_⟩
+      · intro s hs
+        rw [Set.mem_singleton_iff] at hs
+        subst hs
+        rw [← cylinder_univ (∅ : Finset ℤ)]
+        exact cylinder_mem_measurableCylinders _ _ MeasurableSet.univ
+      · simp
+    -- For each n, use the symmDiff approximation lemma.
+    have h_approx : ∀ n : ℕ, ∃ t ∈ measurableCylinders (fun _ : ℤ => α),
+        μZ μ q (t ∆ A) < (1 / 2 : ℝ≥0∞) ^ (n + 1) := by
+      intro n
+      exact exists_measure_symmDiff_lt_of_generateFrom_isSetRing
+        isSetRing_measurableCylinders hC generateFrom_measurableCylinders.symm hA
+        (ENNReal.pow_pos (by norm_num) (n + 1))
+    choose t ht_mem ht_lt using h_approx
+    -- For each n, t n is a cylinder over some F_n.
+    have ht_cyl : ∀ n, ∃ (F : Finset ℤ) (S : Set (∀ _ : F, α)),
+        MeasurableSet S ∧ t n = cylinder F S := fun n =>
+      (mem_measurableCylinders (t n)).mp (ht_mem n)
+    choose F S hS_meas hF_eq using ht_cyl
+    -- For each n, pick k_n large enough so F_n + k_n ⊆ ℕ.
+    -- Set k_n := max(0, -min(F_n)).toNat if F_n nonempty, else 0.
+    set k : ℕ → ℕ := fun n =>
+      if h : (F n).Nonempty then (-(F n).min' h).toNat else 0 with hk_def
+    -- For each n, all elements of F_n shifted by k_n are nonneg.
+    have hk_nonneg : ∀ n, ∀ j ∈ F n, (0 : ℤ) ≤ j + (k n : ℤ) := by
+      intro n j hj
+      by_cases hF : (F n).Nonempty
+      · simp only [hk_def, dif_pos hF]
+        have hmin_le : (F n).min' hF ≤ j := (F n).min'_le _ hj
+        by_cases hpos : 0 ≤ -(F n).min' hF
+        · have hcoe : ((-((F n).min' hF)).toNat : ℤ) = -((F n).min' hF) :=
+            Int.toNat_of_nonneg hpos
+          rw [hcoe]; linarith
+        · push Not at hpos
+          have h0 : 0 ≤ j := le_trans (by linarith) hmin_le
+          have : (0 : ℤ) ≤ ((-((F n).min' hF)).toNat : ℤ) := Int.natCast_nonneg _
+          linarith
+      · exact absurd ⟨j, hj⟩ hF
+    -- Define s_n := shiftZ^[k_n]⁻¹' t_n. Cylinder + in posSigma.
+    set s : ℕ → Set (∀ _ : ℤ, α) := fun n => shiftZ^[k n] ⁻¹' t n with hs_def
+    have hs_pos : ∀ n, MeasurableSet[posSigma (α := α)] (s n) := by
+      intro n
+      rw [hs_def]
+      simp only
+      rw [hF_eq n]
+      exact shiftZ_iterate_preimage_cylinder_in_pos (α := α) (hS_meas n) (hk_nonneg n)
+    have hs_meas : ∀ n, MeasurableSet (s n) := fun n =>
+      cylinderEvents_le_pi (s n) (hs_pos n)
+    -- μZ(s_n Δ A) = μZ(t_n Δ A) (via measure preservation + shift invariance).
+    have hs_diff : ∀ n, μZ μ q (s n ∆ A) < (1 / 2 : ℝ≥0∞) ^ (n + 1) := by
+      intro n
+      -- s_n Δ A = shiftZ^[k]⁻¹ t_n Δ shiftZ^[k]⁻¹ A (since A = shiftZ^[k]⁻¹ A by invariance).
+      have hA_iter : ∀ k', shiftZ^[k'] ⁻¹' A = A := by
+        intro k'
+        induction k' with
+        | zero => simp
+        | succ m ih =>
+          show (shiftZ^[m + 1]) ⁻¹' A = A
+          rw [Function.iterate_succ, Set.preimage_comp]
+          -- shiftZ^[m+1] = shiftZ^[m] ∘ shiftZ. So preimage is (shiftZ^[m] ∘ shiftZ)⁻¹ A = shiftZ⁻¹ (shiftZ^[m]⁻¹ A) = shiftZ⁻¹ A = A.
+          rw [ih, hA_inv]
+      have h_diff_eq : s n ∆ A = shiftZ^[k n] ⁻¹' (t n ∆ A) := by
+        -- shiftZ^[k]⁻¹ (t Δ A) = (shiftZ^[k]⁻¹ t) Δ (shiftZ^[k]⁻¹ A) = s_n Δ A.
+        rw [Set.preimage_symmDiff, hA_iter (k n)]
+      rw [h_diff_eq]
+      have hmp : MeasurePreserving (shiftZ^[k n] : (∀ _ : ℤ, α) → _) (μZ μ q) (μZ μ q) :=
+        (measurePreserving_shiftZ μ q).iterate (k n)
+      have h_meas_diff : NullMeasurableSet (t n ∆ A) (μZ μ q) :=
+        (((MeasurableSet.of_mem_measurableCylinders (ht_mem n)).symmDiff hA)).nullMeasurableSet
+      rw [hmp.measure_preimage h_meas_diff]
+      exact ht_lt n
+    -- Borel-Cantelli: ∑ μZ(s_n Δ A) ≤ ∑ (1/2)^{n+1} ≤ ∑ (1/2)^n, so limsup (s_n Δ A) is null.
+    have h_sum_fin : ∑' n : ℕ, μZ μ q (s n ∆ A) ≠ ∞ := by
+      have h_geom_fin : ∑' n : ℕ, (1 / 2 : ℝ≥0∞) ^ n ≠ ∞ := by
+        rw [ENNReal.tsum_geometric]
+        simp
+      have h_le : ∀ n : ℕ, μZ μ q (s n ∆ A) ≤ (1 / 2 : ℝ≥0∞) ^ n := by
+        intro n
+        refine le_trans (le_of_lt (hs_diff n)) ?_
+        -- (1/2)^(n+1) = (1/2)^n * (1/2) ≤ (1/2)^n.
+        rw [pow_succ]
+        refine mul_le_of_le_one_right' ?_
+        norm_num
+      exact ne_top_of_le_ne_top h_geom_fin (ENNReal.tsum_le_tsum h_le)
+    have h_limsup_null : μZ μ q (Filter.limsup (fun n => s n ∆ A) Filter.atTop) = 0 :=
+      MeasureTheory.measure_limsup_atTop_eq_zero h_sum_fin
+    -- Define A' := Filter.liminf s atTop. Show A' ∈ posSigma and A =ᵐ A'.
+    refine ⟨Filter.liminf s Filter.atTop, ?_, ?_⟩
+    · -- liminf s = ⨆ n, ⨅ m ≥ n, s m. Each s m ∈ posSigma; closed under ⨅, ⨆.
+      rw [Filter.liminf_eq_iSup_iInf_of_nat]
+      -- Goal: MeasurableSet[posSigma] (⨆ n, ⨅ i ≥ n, s i)
+      -- ⨆ on sets is ⋃, ⨅ is ⋂. Apply MeasurableSet.iUnion + MeasurableSet.iInter.
+      refine MeasurableSet.iUnion (fun n => ?_)
+      refine MeasurableSet.iInter (fun m => ?_)
+      refine MeasurableSet.iInter (fun _ => hs_pos m)
+    · -- A =ᵐ liminf s.
+      -- The set `limsup (s n Δ A)` has μZ measure 0. For x outside this null set,
+      -- x ∈ s n Δ A only finitely often, i.e., eventually x ∈ A ↔ x ∈ s n.
+      -- So x ∈ A ↔ (x ∈ s n for all sufficiently large n) ↔ x ∈ liminf s.
+      have h_ae_notin : ∀ᵐ x ∂(μZ μ q), x ∉ Filter.limsup (fun n => s n ∆ A) Filter.atTop :=
+        measure_eq_zero_iff_ae_notMem.mp h_limsup_null
+      filter_upwards [h_ae_notin] with x hx
+      -- hx : x ∉ limsup (fun n => s n ∆ A) atTop
+      -- Goal: A x = liminf s atTop x  (Set membership as `Prop` equality)
+      rw [mem_limsup_iff_frequently_mem, Filter.not_frequently] at hx
+      -- hx : ∀ᶠ n in atTop, x ∉ s n ∆ A
+      apply propext
+      show x ∈ A ↔ x ∈ Filter.liminf s Filter.atTop
+      rw [mem_liminf_iff_eventually_mem]
+      -- Goal: x ∈ A ↔ ∀ᶠ n in atTop, x ∈ s n.
+      constructor
+      · intro hxA
+        filter_upwards [hx] with n hxn
+        by_contra hxs
+        exact hxn (Or.inr ⟨hxA, hxs⟩)
+      · intro hxs
+        rcases (hxs.and hx).exists with ⟨n, hxsn, hxn_diff⟩
+        by_contra hxA
+        exact hxn_diff (Or.inl ⟨hxsn, hxA⟩)
+  obtain ⟨A', hA'_pos, hAA'⟩ := h_approx_pos
+  -- A' = natProj⁻¹ B for some measurable B.
+  obtain ⟨B, hB, hA'_eq⟩ := exists_preimage_natProj_of_posSigma (α := α) hA'_pos
+  -- B is shiftN-invariant mod null on ν.
+  have h_natProj_mp : MeasurePreserving (natProj (α := α)) (μZ μ q) ν :=
+    measurePreserving_natProj μ q
+  -- shiftZ⁻¹ A = A. Apply natProj.
+  -- shiftZ⁻¹ A =ᵐ shiftZ⁻¹ A' (since A =ᵐ A')
+  -- shiftZ⁻¹ A' = shiftZ⁻¹ (natProj⁻¹ B) = (natProj ∘ shiftZ)⁻¹ B = (shiftN ∘ natProj)⁻¹ B
+  --             = natProj⁻¹ (shiftN⁻¹ B)
+  -- So A =ᵐ natProj⁻¹ B and A = shiftZ⁻¹ A =ᵐ natProj⁻¹ (shiftN⁻¹ B). Hence
+  -- natProj⁻¹ B =ᵐ natProj⁻¹ (shiftN⁻¹ B), so ν(B Δ shiftN⁻¹ B) = 0.
+  have h_inv_mod : shiftN ⁻¹' B =ᵐ[ν] B := by
+    -- Derive via measure-preserving + the shift invariance of A.
+    -- natProj⁻¹ (shiftN⁻¹ B Δ B) has μZ measure 0.
+    have h1 : natProj ⁻¹' (shiftN ⁻¹' B) = shiftZ ⁻¹' A' := by
+      rw [hA'_eq]
+      ext x
+      -- LHS: shiftN (natProj x) ∈ B. RHS: natProj (shiftZ x) ∈ B.
+      -- natProj_semiconj: natProj ∘ shiftZ = shiftN ∘ natProj.
+      simp only [Set.mem_preimage]
+      rw [show natProj (shiftZ x) = shiftN (natProj x) from
+        natProj_semiconj (α := α) x]
+    have h2 : shiftZ ⁻¹' A' =ᵐ[μZ μ q] A' := by
+      -- shiftZ⁻¹ A =ᵐ shiftZ⁻¹ A' (since A =ᵐ A'), and shiftZ⁻¹ A = A by hA_inv, so
+      -- shiftZ⁻¹ A' =ᵐ A =ᵐ A'.
+      have hA_inv' : shiftZ ⁻¹' A' =ᵐ[μZ μ q] shiftZ ⁻¹' A :=
+        (measurePreserving_shiftZ μ q).quasiMeasurePreserving.ae_eq_comp hAA'.symm
+      have step1 : shiftZ ⁻¹' A' =ᵐ[μZ μ q] A := hA_inv ▸ hA_inv'
+      exact step1.trans hAA'
+    -- natProj⁻¹ (shiftN⁻¹ B) =ᵐ natProj⁻¹ B (via h1 + hA'_eq + h2)
+    have h3 : natProj ⁻¹' (shiftN ⁻¹' B) =ᵐ[μZ μ q] natProj ⁻¹' B := by
+      rw [h1, ← hA'_eq]; exact h2
+    -- Push through measure-preserving natProj to get shiftN⁻¹ B =ᵐ[ν] B.
+    have h4 : (μZ μ q) (natProj ⁻¹' ((shiftN ⁻¹' B) ∆ B)) = 0 := by
+      have : natProj ⁻¹' ((shiftN ⁻¹' B) ∆ B)
+          = (natProj ⁻¹' (shiftN ⁻¹' B)) ∆ (natProj ⁻¹' B) := by
+        ext x; simp [Set.mem_symmDiff, Set.mem_preimage]
+      rw [this]
+      exact measure_symmDiff_eq_zero_iff.mpr h3
+    have h5 : ν ((shiftN ⁻¹' B) ∆ B) = 0 := by
+      have := h_natProj_mp.measure_preimage (s := (shiftN ⁻¹' B) ∆ B)
+        ((measurable_shiftN hB).symmDiff hB).nullMeasurableSet
+      rw [this] at h4
+      exact h4
+    -- ν((shiftN⁻¹B) Δ B) = 0 ⇒ shiftN⁻¹ B =ᵐ B.
+    exact measure_symmDiff_eq_zero_iff.mp h5
+  -- By shiftN ergodicity: B =ᵐ ∅ ∨ B =ᵐ univ.
+  have h_or : B =ᵐ[ν] (∅ : Set _) ∨ B =ᵐ[ν] (Set.univ : Set _) := by
+    refine hN.quasiErgodic.ae_empty_or_univ₀ hB.nullMeasurableSet ?_
+    exact h_inv_mod
+  rcases h_or with h_zero | h_one
+  · left
+    -- B =ᵐ ∅ implies natProj⁻¹ B =ᵐ ∅ implies A' =ᵐ ∅ implies A =ᵐ ∅.
+    have hB_zero : ν B = 0 := ae_eq_empty.mp h_zero
+    have hA'_zero : μZ μ q A' = 0 := by
+      rw [hA'_eq, h_natProj_mp.measure_preimage hB.nullMeasurableSet]
+      exact hB_zero
+    have hA_zero : μZ μ q A = 0 := by
+      have h := measure_mono_ae hAA'.le
+      exact le_antisymm (h.trans hA'_zero.le) bot_le
+    exact ae_eq_empty.mpr hA_zero
+  · right
+    -- B =ᵐ univ implies B^c =ᵐ ∅ implies ν B^c = 0 ⇒ ν B = 1 ⇒ μZ A' = 1 ⇒ μZ A = 1.
+    have hB_univ : ν (Bᶜ) = 0 := ae_eq_univ.mp h_one
+    have hA'_compl : μZ μ q (A'ᶜ) = 0 := by
+      have : A'ᶜ = natProj ⁻¹' (Bᶜ) := by rw [hA'_eq]; rfl
+      rw [this, h_natProj_mp.measure_preimage hB.compl.nullMeasurableSet]
+      exact hB_univ
+    have hA_compl : μZ μ q (Aᶜ) = 0 := by
+      have hA_compl_ae : Aᶜ =ᵐ[μZ μ q] A'ᶜ := hAA'.compl
+      have := ae_eq_empty.mp ((hA_compl_ae.trans (ae_eq_empty.mpr hA'_compl)) :
+        Aᶜ =ᵐ[μZ μ q] (∅ : Set _))
+      exact this
+    exact ae_eq_univ.mpr hA_compl
+
+end ErgodicityProof
 
 /-! ## Phase G — forward filtration of finite past + `pmfLogCond` Levy
 
@@ -1520,6 +2026,428 @@ private lemma integral_pmfLogCondPast_eq_sum (k : ℕ) :
   intro a _
   exact integral_indicator_mul_negLog_condProbPast μ p k a
 
+/-! ### Phase G bridge to `conditionalEntropyTail`
+
+The remaining piece of the integral identity is matching the `μZ`-side condExp
+formulation of `condProbPast` with the `μ`-side `condDistrib` formulation of
+`conditionalEntropyTail`. We bridge through:
+* `pastBlock k : (∀ _ : ℤ, α) → (Fin k → α)`, the projection
+  `x ↦ (x(-k), x(-k+1), …, x(-1))`; viewing the finite past as a finite-dimensional
+  RV;
+* `condDistrib_ae_eq_condExp` to identify `condProbPast a k` with
+  `(condDistrib coord0 (pastBlock k) (μZ) (pastBlock k x)).real {a}`;
+* a stationarity-driven joint-law equality between the `μZ`-pushforward of
+  `(coord0, pastBlock k)` and the `μ`-pushforward of `(obs k, blockRV k)`,
+  which transports `condEntropy` between the two sides via
+  `condEntropy_eq_pushforward`. -/
+
+/-- The "past block" projection: `pastBlock k x i := x (i.val - k)`.
+Maps `x : ℤ → α` to its restriction at indices `{-k, -k+1, …, -1}`, viewed
+as a function `Fin k → α`. -/
+def pastBlock (k : ℕ) : (∀ _ : ℤ, α) → (Fin k → α) :=
+  fun x i => x ((i.val : ℤ) - k)
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [IsProbabilityMeasure μ] in
+/-- The past block projection is measurable. -/
+lemma measurable_pastBlock (k : ℕ) :
+    Measurable (pastBlock k : (∀ _ : ℤ, α) → (Fin k → α)) := by
+  refine measurable_pi_iff.mpr (fun i => ?_)
+  exact measurable_pi_apply _
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [IsProbabilityMeasure μ] in
+/-- The comap of `MeasurableSpace.pi` along `pastBlock k` equals `pastSigma k`.
+This is the algebraic identification of the "past block" σ-algebra with the
+generator-form `pastSigma k`. -/
+lemma comap_pastBlock_eq_pastSigma (k : ℕ) :
+    (MeasurableSpace.pi : MeasurableSpace (Fin k → α)).comap (pastBlock k)
+      = pastSigma (α := α) k := by
+  -- `MeasurableSpace.pi (Fin k → α) = ⨆ i : Fin k, m_α.comap (·i)`.
+  -- comap pulls back: `(⨆ M).comap f = ⨆ M.comap f`.
+  -- So LHS = `⨆ i : Fin k, m_α.comap (fun x => x ((i.val : ℤ) - k))`.
+  -- RHS = `cylinderEvents {j : ℤ | -k ≤ j ∧ j ≤ -1} = ⨆ j ∈ {-k,…,-1}, m_α.comap (·j)`.
+  -- A `Fin k`-indexed iSup over `i.val - k` and a `ℤ`-indexed (restricted) iSup over
+  -- `j ∈ {-k,…,-1}` are the same family.
+  -- Use `measurable_iff_comap_le`/`measurable_pi_iff` style: a σ-algebra ≤ another
+  -- iff the identity map is measurable. Equivalent direct comap rewriting:
+  apply le_antisymm
+  · -- LHS ≤ RHS: rewrite `MeasurableSpace.pi` as iSup of coordinate comaps,
+    -- pull comap through iSup, identify each `Fin k → α` coord with a ℤ index.
+    change MeasurableSpace.comap (pastBlock k) MeasurableSpace.pi ≤ _
+    rw [show (MeasurableSpace.pi : MeasurableSpace (Fin k → α))
+        = ⨆ i : Fin k, MeasurableSpace.comap (fun x : Fin k → α => x i) inferInstance from rfl,
+      MeasurableSpace.comap_iSup]
+    refine iSup_le (fun i => ?_)
+    rw [MeasurableSpace.comap_comp]
+    -- Goal: `m_α.comap (fun x => x ((i.val : ℤ) - k)) ≤ pastSigma k`.
+    have hi_mem : ((i.val : ℤ) - k) ∈ ({j : ℤ | -(k : ℤ) ≤ j ∧ j ≤ -1} : Set ℤ) := by
+      refine ⟨?_, ?_⟩
+      · have h1 : (0 : ℤ) ≤ (i.val : ℤ) := Int.natCast_nonneg _
+        linarith
+      · have h2 : (i.val : ℤ) ≤ k - 1 := by
+          have hh : i.val < k := i.2
+          have : (i.val : ℤ) < (k : ℤ) := by exact_mod_cast hh
+          linarith
+        linarith
+    -- `pastSigma k` reduces to the cylinderEvents iSup.
+    change MeasurableSpace.comap (fun x : (∀ _ : ℤ, α) => x ((i.val : ℤ) - k))
+        inferInstance ≤ cylinderEvents (X := fun _ : ℤ => α) _
+    show _ ≤ ⨆ j ∈ ({j : ℤ | -(k : ℤ) ≤ j ∧ j ≤ -1} : Set ℤ),
+            MeasurableSpace.comap (fun x : (∀ _ : ℤ, α) => x j) inferInstance
+    exact le_iSup₂ (f := fun j _ =>
+      MeasurableSpace.comap (fun x : (∀ _ : ℤ, α) => x j) inferInstance)
+      ((i.val : ℤ) - k) hi_mem
+  · -- RHS ≤ LHS.
+    change cylinderEvents (X := fun _ : ℤ => α) _
+          ≤ MeasurableSpace.comap (pastBlock k) MeasurableSpace.pi
+    show ⨆ j ∈ ({j : ℤ | -(k : ℤ) ≤ j ∧ j ≤ -1} : Set ℤ),
+            MeasurableSpace.comap (fun x : (∀ _ : ℤ, α) => x j) inferInstance
+          ≤ MeasurableSpace.comap (pastBlock k) MeasurableSpace.pi
+    refine iSup₂_le (fun j hj => ?_)
+    obtain ⟨h_lo, h_hi⟩ := hj
+    -- j ∈ [-k, -1], so j + k ∈ [0, k-1], cast to Fin k.
+    have hj_plus_k_nn : (0 : ℤ) ≤ j + k := by linarith
+    set i : ℕ := (j + k).toNat with hi_def
+    have hi_eq_int : (i : ℤ) = j + k := Int.toNat_of_nonneg hj_plus_k_nn
+    have hi_lt : i < k := by
+      have : (i : ℤ) < (k : ℤ) := by rw [hi_eq_int]; linarith
+      exact_mod_cast this
+    let i' : Fin k := ⟨i, hi_lt⟩
+    have hj_eq : j = (i'.val : ℤ) - k := by
+      show j = ((i : ℤ)) - k
+      rw [hi_eq_int]; ring
+    rw [hj_eq]
+    -- Goal: `m_α.comap (fun x => x ((i'.val : ℤ) - k)) ≤ (m_pi).comap (pastBlock k)`.
+    rw [show (MeasurableSpace.pi : MeasurableSpace (Fin k → α))
+        = ⨆ ii : Fin k, MeasurableSpace.comap (fun x : Fin k → α => x ii) inferInstance from rfl,
+      MeasurableSpace.comap_iSup]
+    refine le_trans ?_ (le_iSup _ i')
+    rw [MeasurableSpace.comap_comp]
+    -- (m_α.comap (fun x : Fin k → α => x i')).comap (pastBlock k)
+    --   = m_α.comap (fun x => pastBlock k x i')
+    --   = m_α.comap (fun x => x ((i'.val : ℤ) - k))
+    -- which matches LHS.
+    rfl
+
+/-! ### Joint-law identification via stationarity -/
+
+omit [DecidableEq α] [Nonempty α] in
+/-- **Joint-law equality** (Phase F-style, the key bridge for the integral identity).
+
+The pushforward of `μZ` under the joint map `x ↦ (coord0 x, pastBlock k x)`
+equals the pushforward of `μ` under `ω ↦ (p.obs k ω, p.blockRV k ω)`.
+
+Proof: both sides are probability measures on `α × (Fin k → α)`. We show they
+agree on rectangles `{a} ×ˢ {s}`, which is enough since the spaces are finite.
+The LHS rectangle reduces, via stationarity (shift by `k`), to the marginal at
+the index set `{0, 1, …, k}`, which by Phase F equals the ℕ-side block.
+The RHS rectangle is exactly the singleton mass of `μ.map (p.blockRV (k+1))`
+at the corresponding `Fin (k+1) → α`. -/
+theorem joint_pastBlock_coord0_eq (k : ℕ) :
+    (μZ μ p).map (fun x : (∀ _ : ℤ, α) => (coord0 x, pastBlock k x))
+      = μ.map (fun ω : Ω => (p.obs k ω, p.blockRV k ω)) := by
+  classical
+  -- Both are probability measures on `α × (Fin k → α)` (finite × finite).
+  have hpair_meas_Z : Measurable (fun x : (∀ _ : ℤ, α) => (coord0 x, pastBlock k x)) :=
+    (measurable_coord0).prodMk (measurable_pastBlock k)
+  have hpair_meas_Ω : Measurable (fun ω : Ω => (p.obs k ω, p.blockRV k ω)) :=
+    (p.measurable_obs k).prodMk (p.measurable_blockRV k)
+  -- Both are probability measures (in particular, finite).
+  haveI : IsProbabilityMeasure
+      ((μZ μ p).map (fun x : (∀ _ : ℤ, α) => (coord0 x, pastBlock k x))) :=
+    Measure.isProbabilityMeasure_map hpair_meas_Z.aemeasurable
+  haveI : IsProbabilityMeasure
+      (μ.map (fun ω : Ω => (p.obs k ω, p.blockRV k ω))) :=
+    Measure.isProbabilityMeasure_map hpair_meas_Ω.aemeasurable
+  -- It suffices to show equality on singletons (finite types).
+  refine Measure.ext_of_singleton ?_
+  rintro ⟨a, s⟩
+  -- LHS: μZ {x | coord0 x = a ∧ pastBlock k x = s}
+  --     = μZ {x | x 0 = a ∧ ∀ i : Fin k, x ((i.val:ℤ)-k) = s i}
+  -- We compute this via the shifted-marginal identity at index set
+  --   `J := {-k, -k+1, ..., 0}` (i.e. all `(i.val:ℤ)-k` for `i : Fin (k+1)`).
+  -- Equivalently, by stationarity (shift `N := k`), this equals the marginal at
+  -- `{0, 1, ..., k}`, which is the law of `blockRV (k+1)` indexed naturally;
+  -- a relabeling identifies the LHS singleton with `μ.map (blockRV (k+1)) {s_full}`
+  -- where `s_full : Fin (k+1) → α`, `s_full i = if i = last then a else s ⟨i.val, _⟩`.
+  -- The RHS singleton μ.map (obs k, blockRV k) {(a, s)} also equals
+  -- μ.map (blockRV (k+1)) {s_full} via the `e : Fin (k+1) → α ≃ᵐ α × (Fin k → α)`
+  -- of `piFinSuccAbove (Fin.last k)`. So both sides agree.
+  -- We carry out this computation through `μZ_block_cylinder_eq` plus stationarity.
+  -- Define `s_full : Fin (k+1) → α` via `Fin.snoc s a`.
+  -- `Fin.snoc s a` satisfies `(Fin.snoc s a) i.castSucc = s i` and
+  -- `(Fin.snoc s a) (Fin.last k) = a`.
+  set s_full : Fin (k + 1) → α := Fin.snoc s a with hs_full_def
+  -- LHS singleton evaluation.
+  -- Both LHS and RHS singletons map to μ.map (blockRV (k+1)) {s_full}.
+  have h_LHS :
+      (μZ μ p).map (fun x : (∀ _ : ℤ, α) => (coord0 x, pastBlock k x)) {(a, s)}
+        = (μ.map (p.blockRV (k + 1))) {s_full} := by
+    -- Step LHS-1: rewrite the LHS as μZ of a set, then split into shifted-marginal.
+    rw [Measure.map_apply hpair_meas_Z (measurableSet_singleton _)]
+    -- Preimage rewrite: { x | (x 0 = a) ∧ pastBlock k x = s }
+    --   = { x | ∀ i : Fin (k+1), x ((i.val:ℤ) - k) = s_full i }
+    have hpre : (fun x : (∀ _ : ℤ, α) => (coord0 x, pastBlock k x)) ⁻¹' {(a, s)}
+        = { x : (∀ _ : ℤ, α) | ∀ i : Fin (k + 1), x ((i.val : ℤ) - k) = s_full i } := by
+      ext x
+      simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.mk.injEq, Set.mem_setOf_eq]
+      constructor
+      · rintro ⟨hcoord, hpast⟩
+        intro i
+        -- Cases on i: either i = Fin.last k or i = j.castSucc for j : Fin k.
+        refine Fin.lastCases ?_ ?_ i
+        · -- i = Fin.last k: x ((k:ℤ) - k) = x 0 = a = s_full (Fin.last k).
+          have h_int_last : ((Fin.last k).val : ℤ) - k = 0 := by
+            show ((k : ℤ)) - k = 0; ring
+          rw [h_int_last, hs_full_def, Fin.snoc_last]
+          exact hcoord
+        · intro j
+          -- i = j.castSucc: x (j.val - k) = (pastBlock k x) j = s j = s_full j.castSucc.
+          have hj_cast_val : (j.castSucc : Fin (k+1)).val = j.val := rfl
+          rw [hs_full_def, Fin.snoc_castSucc]
+          show x ((j.val : ℤ) - k) = s j
+          have : pastBlock k x j = s j := congr_fun hpast _
+          exact this
+      · intro hall
+        refine ⟨?_, ?_⟩
+        · -- coord0 x = a: extract `i = Fin.last k`.
+          have h_int_last : ((Fin.last k).val : ℤ) - k = 0 := by
+            show ((k : ℤ)) - k = 0; ring
+          have hlast := hall (Fin.last k)
+          rw [h_int_last, hs_full_def, Fin.snoc_last] at hlast
+          exact hlast
+        · funext j
+          have h := hall j.castSucc
+          rw [hs_full_def, Fin.snoc_castSucc] at h
+          show x ((j.val : ℤ) - k) = s j
+          have hcast_val : (j.castSucc : Fin (k+1)).val = j.val := rfl
+          rw [hcast_val] at h
+          exact h
+    rw [hpre]
+    -- Now the LHS set is `{ x | ∀ i : Fin (k+1), x ((i.val:ℤ) - k) = s_full i }`,
+    -- a cylinder on the index set `J := { (i.val:ℤ) - k | i : Fin (k+1) }`.
+    -- Apply shifted marginal: with shift N = k, obsZ μ p k J ω = block at indices
+    -- ((i.val:ℤ) - k + k).toNat = i.val, i.e. p.obs i.val ω, recovering p.blockRV (k+1) ω.
+    -- We reuse `μZ_block_cylinder_eq` style: stationarity transports.
+    -- Easier path: build the equality via `shiftedMarginal_eq_of_shift` directly.
+    set J : Finset ℤ :=
+      (Finset.univ.image (fun i : Fin (k + 1) => (i.val : ℤ) - k))
+      with hJ_def
+    -- Membership of `(i.val : ℤ) - k` in J.
+    have hi_mem : ∀ i : Fin (k + 1), ((i.val : ℤ) - k) ∈ J := by
+      intro i
+      rw [hJ_def, Finset.mem_image]
+      exact ⟨i, Finset.mem_univ _, rfl⟩
+    -- Set up the cylinder base S_J : Set (∀ _ : J, α).
+    set S_J : Set (∀ _ : J, α) :=
+      { f | ∀ i : Fin (k + 1), f ⟨((i.val : ℤ) - k), hi_mem i⟩ = s_full i } with hS_J
+    -- S_J is measurable (finite type intersection over Fin (k+1)).
+    have hS_J_meas : MeasurableSet S_J := by
+      have h_inter : S_J = ⋂ i : Fin (k + 1),
+          { f : ∀ _ : J, α | f ⟨((i.val : ℤ) - k), hi_mem i⟩ = s_full i } := by
+        ext f; simp [hS_J]
+      rw [h_inter]
+      refine MeasurableSet.iInter (fun i => ?_)
+      have hpre' : { f : ∀ _ : J, α | f ⟨((i.val : ℤ) - k), hi_mem i⟩ = s_full i }
+          = (fun f : ∀ _ : J, α => f ⟨((i.val : ℤ) - k), hi_mem i⟩) ⁻¹' {s_full i} := rfl
+      rw [hpre']
+      exact (measurable_pi_apply _) (measurableSet_singleton _)
+    -- The LHS set equals `cylinder J S_J`.
+    have h_set_eq :
+        { x : (∀ _ : ℤ, α) | ∀ i : Fin (k + 1), x ((i.val : ℤ) - k) = s_full i }
+          = cylinder J S_J := by
+      ext x
+      simp only [Set.mem_setOf_eq, cylinder, Set.mem_preimage, Finset.restrict, hS_J]
+    rw [h_set_eq, μZ_cylinder μ p hS_J_meas]
+    -- Now: shiftedMarginal μ p J S_J = μ.map (p.blockRV (k+1)) {s_full}.
+    -- All elements of J are ≥ -k; we pick shift N = k.
+    have hJ_shift : ∀ j ∈ J, (0 : ℤ) ≤ j + k := by
+      intro j hj
+      rw [hJ_def, Finset.mem_image] at hj
+      obtain ⟨i, _, rfl⟩ := hj
+      have h1 : (0 : ℤ) ≤ (i.val : ℤ) := Int.natCast_nonneg _
+      linarith
+    rw [shiftedMarginal_eq_of_shift μ p J k hJ_shift,
+        Measure.map_apply (measurable_obsZ μ p k J) hS_J_meas]
+    -- The preimage under obsZ μ p k J equals the preimage of {s_full} under blockRV (k+1).
+    rw [Measure.map_apply (p.measurable_blockRV (k+1)) (measurableSet_singleton _)]
+    apply congrArg
+    ext ω
+    simp only [Set.mem_preimage, hS_J, Set.mem_setOf_eq, obsZ, Set.mem_singleton_iff]
+    constructor
+    · intro hf
+      funext i
+      have := hf i
+      -- hf i : p.obs ((((i.val : ℤ) - k) + k).toNat) ω = s_full i
+      -- Compute ((i.val : ℤ) - k + k).toNat = i.val.
+      have hcast : ((((i.val : ℤ) - k) + ((k : ℕ) : ℤ)).toNat) = i.val := by
+        have : ((i.val : ℤ) - k) + ((k : ℕ) : ℤ) = (i.val : ℤ) := by ring
+        rw [this]
+        exact_mod_cast Int.toNat_natCast _
+      show p.blockRV (k+1) ω i = s_full i
+      rw [hcast] at this
+      exact this
+    · intro hf i
+      have hcast : ((((i.val : ℤ) - k) + ((k : ℕ) : ℤ)).toNat) = i.val := by
+        have : ((i.val : ℤ) - k) + ((k : ℕ) : ℤ) = (i.val : ℤ) := by ring
+        rw [this]
+        exact_mod_cast Int.toNat_natCast _
+      rw [hcast]
+      exact congr_fun hf i
+  -- Now RHS: μ.map (obs k, blockRV k) {(a, s)} = μ.map (blockRV (k+1)) {s_full}.
+  have h_RHS :
+      μ.map (fun ω : Ω => (p.obs k ω, p.blockRV k ω)) {(a, s)}
+        = (μ.map (p.blockRV (k + 1))) {s_full} := by
+    rw [Measure.map_apply hpair_meas_Ω (measurableSet_singleton _),
+        Measure.map_apply (p.measurable_blockRV (k+1)) (measurableSet_singleton _)]
+    apply congrArg
+    ext ω
+    simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.mk.injEq]
+    constructor
+    · rintro ⟨hobs, hblock⟩
+      funext i
+      refine Fin.lastCases ?_ ?_ i
+      · -- i = Fin.last k: p.blockRV (k+1) ω (Fin.last k) = p.obs k ω = a = s_full (Fin.last k).
+        rw [hs_full_def, Fin.snoc_last]
+        show p.obs (Fin.last k) ω = a
+        show p.obs k ω = a
+        exact hobs
+      · intro j
+        -- i = j.castSucc: p.blockRV (k+1) ω j.castSucc = p.obs j.val ω = p.blockRV k ω j = s j.
+        rw [hs_full_def, Fin.snoc_castSucc]
+        show p.obs j.castSucc.val ω = s j
+        have h1 : (j.castSucc : Fin (k+1)).val = j.val := rfl
+        rw [h1]
+        show p.obs j.val ω = s j
+        have h2 : p.blockRV k ω j = p.obs j.val ω := rfl
+        rw [← h2, hblock]
+    · intro hblock_full
+      refine ⟨?_, ?_⟩
+      · -- p.obs k ω = a (extract Fin.last k).
+        have hlast := congr_fun hblock_full (Fin.last k)
+        rw [hs_full_def, Fin.snoc_last] at hlast
+        show p.obs k ω = a
+        show p.obs (Fin.last k) ω = a
+        exact hlast
+      · funext j
+        have hj := congr_fun hblock_full j.castSucc
+        rw [hs_full_def, Fin.snoc_castSucc] at hj
+        show p.obs j.val ω = s j
+        have h1 : (j.castSucc : Fin (k+1)).val = j.val := rfl
+        have h2 : p.blockRV (k + 1) ω j.castSucc = p.obs j.castSucc.val ω := rfl
+        rw [h2] at hj
+        rw [h1] at hj
+        exact hj
+  rw [h_LHS, h_RHS]
+
+omit [DecidableEq α] in
+/-- **Conditional expectation identification**: `condProbPast a k` agrees a.s.
+with the `condDistrib`-form regular conditional probability built from
+`(coord0, pastBlock k)`. -/
+lemma condProbPast_ae_eq_condDistrib (a : α) (k : ℕ) :
+    condProbPast μ p a k =ᵐ[μZ μ p]
+      fun x => (ProbabilityTheory.condDistrib coord0 (pastBlock k) (μZ μ p)
+        (pastBlock k x)).real {a} := by
+  -- Apply `condDistrib_ae_eq_condExp` with Y := coord0, X := pastBlock k, s := {a}.
+  -- This gives:
+  --   `(condDistrib coord0 pastBlock μZ (pastBlock k x)).real {a}
+  --      =ᵐ[μZ] μZ⟦coord0 ⁻¹' {a} | (m_α^Fin k).comap (pastBlock k)⟧`
+  -- and we identify the σ-algebra via `comap_pastBlock_eq_pastSigma`.
+  -- `condProbPast a k x` is defined as `μZ[indicator(coord0=a) | pastFiltration k]
+  --   = μZ[indicator | pastSigma k]`, so we need to relate to `μZ⟦coord0⁻¹{a} | pastSigma k⟧`.
+  -- Recall: `μZ⟦S | m⟧ = μZ[indicator(S) | m]` by definition. So both formulas agree.
+  have h_ae := ProbabilityTheory.condDistrib_ae_eq_condExp (μ := μZ μ p)
+    (X := pastBlock k) (Y := coord0)
+    (measurable_pastBlock k) measurable_coord0 (measurableSet_singleton a)
+  -- h_ae : (fun x => (condDistrib coord0 (pastBlock k) μZ (pastBlock k x)).real {a})
+  --   =ᵐ[μZ] μZ⟦coord0 ⁻¹' {a} | (m_α).comap (pastBlock k)⟧
+  --   = μZ⟦coord0 ⁻¹' {a} | pastSigma k⟧  (after rewriting the comap)
+  -- Note: `μ⟦s | m⟧ := μ[s.indicator (fun _ => (1 : ℝ)) | m]`.
+  -- So `μZ⟦coord0 ⁻¹' {a} | pastSigma k⟧ = μZ[indicator | pastSigma k] = condProbPast a k`.
+  symm
+  have h_sigma_eq : (inferInstance : MeasurableSpace (Fin k → α)).comap (pastBlock k)
+      = (pastFiltration (α := α)) k := comap_pastBlock_eq_pastSigma k
+  -- Rewrite the conditional expectation σ-algebra.
+  refine h_ae.trans ?_
+  -- Goal: μZ⟦coord0 ⁻¹' {a} | _.comap (pastBlock k)⟧ =ᵐ condProbPast a k.
+  unfold condProbPast
+  show (μZ μ p)⟦coord0 ⁻¹' {a} | (inferInstance : MeasurableSpace (Fin k → α)).comap (pastBlock k)⟧
+      =ᵐ[μZ μ p] (μZ μ p)[(coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ))
+          | (pastFiltration (α := α)) k]
+  rw [h_sigma_eq]
+
+/-! ### Integral identity proof -/
+
+omit [DecidableEq α] in
+/-- The integral `∫_μZ negMulLog(condProbPast a k x) dμZ` equals the integral
+`∫_μZ negMulLog((condDistrib coord0 pastBlock μZ (pastBlock k x)).real {a}) dμZ`. -/
+private lemma integral_negMulLog_condProbPast_eq (a : α) (k : ℕ) :
+    ∫ x, Real.negMulLog (condProbPast μ p a k x) ∂(μZ μ p)
+      = ∫ x, Real.negMulLog
+          ((ProbabilityTheory.condDistrib coord0 (pastBlock k) (μZ μ p)
+            (pastBlock k x)).real {a}) ∂(μZ μ p) := by
+  classical
+  refine integral_congr_ae ?_
+  filter_upwards [condProbPast_ae_eq_condDistrib μ p a k] with x hx
+  rw [hx]
+
+omit [DecidableEq α] in
+/-- The sum of per-atom integrals collapses via `integral_map` into a single
+integral over the pushforward `μZ.map (pastBlock k)` of `condEntropy` integrand.
+This is the key bridge between `pmfLogCondPast` and `MeasureFano.condEntropy`. -/
+private lemma sum_integral_negMulLog_condDistrib_eq_condEntropy (k : ℕ) :
+    (∑ a, ∫ x, Real.negMulLog
+        ((ProbabilityTheory.condDistrib coord0 (pastBlock k) (μZ μ p)
+          (pastBlock k x)).real {a}) ∂(μZ μ p))
+      = InformationTheory.MeasureFano.condEntropy
+          (μZ μ p) coord0 (pastBlock k) := by
+  classical
+  -- Each summand: push through integral_map (since coord0 (pastBlock k x) is well-defined).
+  -- The bound function `y ↦ negMulLog ((condDistrib coord0 pastBlock μZ y).real {a})`
+  -- is measurable (composition of measurable_of_finite on the kernel y ↦ measure
+  -- and continuous Real.negMulLog).
+  -- After integral_map, sum the result over a; the sum-of-integrals = integral-of-sum.
+  have hpast_meas : Measurable (pastBlock k : (∀ _ : ℤ, α) → (Fin k → α)) :=
+    measurable_pastBlock k
+  -- Define f_a : (Fin k → α) → ℝ.
+  set f : α → (Fin k → α) → ℝ := fun a y =>
+    Real.negMulLog ((ProbabilityTheory.condDistrib coord0 (pastBlock k) (μZ μ p) y).real {a})
+    with hf_def
+  have hf_meas : ∀ a, Measurable (f a) := fun a => measurable_of_finite _
+  -- Step 1: each summand = ∫ y, f a y ∂(μZ.map pastBlock).
+  have h_per_a : ∀ a, ∫ x, Real.negMulLog
+      ((ProbabilityTheory.condDistrib coord0 (pastBlock k) (μZ μ p)
+        (pastBlock k x)).real {a}) ∂(μZ μ p)
+        = ∫ y, f a y ∂((μZ μ p).map (pastBlock k)) := by
+    intro a
+    rw [integral_map hpast_meas.aemeasurable (hf_meas a).aestronglyMeasurable]
+  simp_rw [h_per_a]
+  -- Step 2: sum-of-integrals = integral-of-sum (for finite sums and integrable terms;
+  -- finite alphabet + bounded integrand makes this trivial via integral_finsetSum).
+  rw [← integral_finsetSum (s := (Finset.univ : Finset α)) (f := f)
+        (fun a _ => Integrable.of_finite)]
+  -- Now the goal is exactly the definition of MeasureFano.condEntropy.
+  unfold InformationTheory.MeasureFano.condEntropy
+  rfl
+
+omit [DecidableEq α] in
+/-- The `μZ`-side `condEntropy` of `(coord0, pastBlock k)` equals the `μ`-side
+`condEntropy` of `(obs k, blockRV k)` via the joint-law equality. -/
+private lemma condEntropy_μZ_eq_condEntropy_μ (k : ℕ) :
+    InformationTheory.MeasureFano.condEntropy (μZ μ p) coord0 (pastBlock k)
+      = InformationTheory.MeasureFano.condEntropy μ (p.obs k) (p.blockRV k) := by
+  classical
+  -- Apply condEntropy_eq_pushforward symmetrically; the joint pushforwards agree
+  -- by joint_pastBlock_coord0_eq.
+  rw [InformationTheory.Shannon.condEntropy_eq_pushforward (μZ μ p) coord0 (pastBlock k)
+        measurable_coord0 (measurable_pastBlock k),
+      InformationTheory.Shannon.condEntropy_eq_pushforward μ (p.obs k) (p.blockRV k)
+        (p.measurable_obs k) (p.measurable_blockRV k)]
+  congr 1
+  exact joint_pastBlock_coord0_eq μ p k
+
+omit [DecidableEq α] in
 /-- **Per-step integral identity**: integrating `pmfLogCondPast k` against `μZ`
 gives `conditionalEntropyTail μ p k`.
 
@@ -1527,56 +2455,274 @@ The proof structure:
 1. Decompose `∫ pmfLogCondPast k dμZ` into a finite sum of
    `∫ negMulLog(condProbPast a k) dμZ` (via `integral_pmfLogCondPast_eq_sum`).
 2. Identify each `condProbPast a k` with the `condDistrib`-form regular
-   conditional probability (via `condDistrib_ae_eq_condExp` after identifying
-   `pastSigma k` with the comap of an appropriate projection).
-3. Transport the resulting integral along the joint pushforward to the
-   `(blockRV k, obs k)` side via Phase B's `shiftedMarginal` identity.
-4. Recognize the result as `condEntropy μ (p.obs k) (p.blockRV k)
-   = conditionalEntropyTail μ p k`.
-
-**Deferred** — step 2 (`condProbPast` vs `condDistrib` identification) and
-step 3 (joint-law transport) are ~250-400 LOC of bridging infrastructure;
-budgeted as a follow-up. The forward-filtration redesign is mathematically
-complete; what remains is purely a glue lemma between the `μZ`-side
-condExp-defined past entropy and the `μ`-side condDistrib-defined past
-entropy, both well-defined on their respective sides. -/
-private lemma integral_pmfLogCondPast_eq_conditionalEntropyTail (k : ℕ) :
+   conditional probability (via `condProbPast_ae_eq_condDistrib`).
+3. Bridge the sum to `condEntropy μZ coord0 (pastBlock k)` via `integral_map`
+   and the definition of `MeasureFano.condEntropy`.
+4. Transport to the `μ`-side via `condEntropy_μZ_eq_condEntropy_μ` (joint-law
+   equality + `condEntropy_eq_pushforward`). -/
+theorem integral_pmfLogCondPast_eq_conditionalEntropyTail (k : ℕ) :
     ∫ x, pmfLogCondPast μ p k x ∂(μZ μ p) = conditionalEntropyTail μ p k := by
-  sorry
+  classical
+  -- Step 1: decompose.
+  rw [integral_pmfLogCondPast_eq_sum μ p k]
+  -- Step 2: each summand: switch from condProbPast to condDistrib-form.
+  rw [show (∑ a, ∫ x, Real.negMulLog (condProbPast μ p a k x) ∂(μZ μ p))
+        = ∑ a, ∫ x, Real.negMulLog
+            ((ProbabilityTheory.condDistrib coord0 (pastBlock k) (μZ μ p)
+              (pastBlock k x)).real {a}) ∂(μZ μ p) from
+      Finset.sum_congr rfl (fun a _ => integral_negMulLog_condProbPast_eq μ p a k)]
+  -- Step 3: collapse sum + integrals into condEntropy μZ.
+  rw [sum_integral_negMulLog_condDistrib_eq_condEntropy μ p k]
+  -- Step 4: transport via joint-law equality.
+  rw [condEntropy_μZ_eq_condEntropy_μ μ p k]
+  rfl
+
+omit [DecidableEq α] [Nonempty α] in
+/-- **Pull-out identity for `pmfLogCondInfty`** (analogue of
+`integral_indicator_mul_negLog_condProbPast` for the infinite-past condExp):
+integrating `1_{coord_0=a} * (-log condProbInfty a)` equals integrating
+`negMulLog(condProbInfty a)`. -/
+private lemma integral_indicator_mul_negLog_condProbInfty (a : α) :
+    ∫ x, (coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ)) x
+        * (-Real.log (condProbInfty μ p a x)) ∂(μZ μ p)
+      = ∫ x, Real.negMulLog (condProbInfty μ p a x) ∂(μZ μ p) := by
+  classical
+  set ind : (∀ _ : ℤ, α) → ℝ :=
+    (coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ)) with hind_def
+  set g : (∀ _ : ℤ, α) → ℝ := condProbInfty μ p a with hg_def
+  set m : MeasurableSpace (∀ _ : ℤ, α) := ⨆ n : ℕ, (pastFiltration (α := α)) n with hm_def
+  have hm_le : m ≤ MeasurableSpace.pi :=
+    iSup_le (fun n => (pastFiltration (α := α)).le n)
+  have h_int_ind : Integrable ind (μZ μ p) := integrable_indicator_coord0_eq μ p a
+  have h_int_prod : Integrable (fun x => ind x * (-Real.log (g x))) (μZ μ p) := by
+    refine integrable_indicator_mul_negLog_of_condExp μ p m hm_le a g ?_ ?_ ?_ ?_
+    · exact stronglyMeasurable_condProbInfty μ p a
+    · exact condProbInfty_eq_condExp_tail μ p a
+    · exact ae_zero_le_condProbInfty μ p a
+    · exact ae_condProbInfty_le_one μ p a
+  -- `(-log g)` is `m`-measurable.
+  have h_g_meas_m : Measurable[m] g := (stronglyMeasurable_condProbInfty μ p a).measurable
+  have h_neglog_g_meas_m : Measurable[m] (fun x => -Real.log (g x)) :=
+    (Real.measurable_log.comp h_g_meas_m).neg
+  have h_neglog_g_asm : AEStronglyMeasurable[m] (fun x => -Real.log (g x)) (μZ μ p) :=
+    h_neglog_g_meas_m.stronglyMeasurable.aestronglyMeasurable
+  -- Pull-out: μZ[(-log g) * ind | m] =ᵐ (-log g) * μZ[ind | m] =ᵐ (-log g) * g.
+  have h_pullout :
+      (μZ μ p)[fun x => (-Real.log (g x)) * ind x | m]
+        =ᵐ[μZ μ p] fun x => (-Real.log (g x)) * g x := by
+    have h_prod' : Integrable (fun x => (-Real.log (g x)) * ind x) (μZ μ p) := by
+      refine h_int_prod.congr ?_
+      filter_upwards with x using by ring
+    have h_pull :
+        (μZ μ p)[fun x => (-Real.log (g x)) * ind x | m]
+          =ᵐ[μZ μ p] fun x => (-Real.log (g x)) * (μZ μ p)[ind | m] x :=
+      condExp_mul_of_aestronglyMeasurable_left h_neglog_g_asm h_prod' h_int_ind
+    refine h_pull.trans ?_
+    filter_upwards [condProbInfty_eq_condExp_tail μ p a] with x hx
+    -- hx : condProbInfty μ p a x = (μZ μ p)[ind | m] x
+    -- Goal: (-log g x) * μZ[ind | m] x = (-log g x) * g x
+    rw [hg_def, hx]
+  have h1 : ∫ x, ind x * (-Real.log (g x)) ∂(μZ μ p)
+      = ∫ x, (-Real.log (g x)) * ind x ∂(μZ μ p) := by
+    refine integral_congr_ae ?_
+    filter_upwards with x using by ring
+  have h2 : ∫ x, (-Real.log (g x)) * ind x ∂(μZ μ p)
+      = ∫ x, ((μZ μ p)[fun x => (-Real.log (g x)) * ind x | m]) x ∂(μZ μ p) :=
+    (integral_condExp hm_le).symm
+  have h3 : ∫ x, ((μZ μ p)[fun x => (-Real.log (g x)) * ind x | m]) x ∂(μZ μ p)
+      = ∫ x, (-Real.log (g x)) * g x ∂(μZ μ p) :=
+    integral_congr_ae h_pullout
+  have h4 : ∫ x, (-Real.log (g x)) * g x ∂(μZ μ p)
+      = ∫ x, Real.negMulLog (g x) ∂(μZ μ p) := by
+    refine integral_congr_ae ?_
+    filter_upwards with x
+    rw [Real.negMulLog]; ring
+  rw [h1, h2, h3, h4]
+
+omit [DecidableEq α] [Nonempty α] in
+/-- The integral of `pmfLogCondInfty` decomposes as a finite sum of `negMulLog`
+integrals of the per-atom infinite-past conditional probabilities. -/
+private lemma integral_pmfLogCondInfty_eq_sum :
+    ∫ x, pmfLogCondInfty μ p x ∂(μZ μ p)
+      = ∑ a, ∫ x, Real.negMulLog (condProbInfty μ p a x) ∂(μZ μ p) := by
+  classical
+  have h_eq : pmfLogCondInfty μ p = fun x =>
+      ∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ)) x
+        * (-Real.log (condProbInfty μ p a x)) := by
+    funext x
+    exact pmfLogCondInfty_eq_sum_indicator_neg_log μ p x
+  rw [h_eq]
+  have h_int_a : ∀ a : α, Integrable
+      (fun x => Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ)) x
+        * (-Real.log (condProbInfty μ p a x))) (μZ μ p) := by
+    intro a
+    refine integrable_indicator_mul_negLog_of_condExp μ p
+      (⨆ n : ℕ, (pastFiltration (α := α)) n)
+      (iSup_le (fun n => (pastFiltration (α := α)).le n)) a
+      (condProbInfty μ p a) (stronglyMeasurable_condProbInfty μ p a) ?_
+      (ae_zero_le_condProbInfty μ p a) (ae_condProbInfty_le_one μ p a)
+    exact condProbInfty_eq_condExp_tail μ p a
+  rw [integral_finsetSum _ (fun a _ => h_int_a a)]
+  refine Finset.sum_congr rfl ?_
+  intro a _
+  exact integral_indicator_mul_negLog_condProbInfty μ p a
+
+omit [DecidableEq α] [Nonempty α] in
+/-- **DCT step for each summand**: by forward Lévy a.s. convergence of
+`condProbPast a k → condProbInfty a` and the uniform bound `negMulLog ∈ [0, 1]`
+on `[0, 1]`, the integral `∫ negMulLog(condProbPast a k)` converges to
+`∫ negMulLog(condProbInfty a)`. -/
+private lemma tendsto_integral_negMulLog_condProbPast (a : α) :
+    Tendsto (fun k : ℕ => ∫ x, Real.negMulLog (condProbPast μ p a k x) ∂(μZ μ p))
+      atTop (𝓝 (∫ x, Real.negMulLog (condProbInfty μ p a x) ∂(μZ μ p))) := by
+  classical
+  -- Use DCT with constant bound `Real.exp (-1)` (= max of negMulLog on [0,1] at 1/e).
+  -- AE: condProbPast a k x → condProbInfty a x.
+  have h_ae : ∀ᵐ x ∂(μZ μ p),
+      Tendsto (fun k : ℕ => Real.negMulLog (condProbPast μ p a k x)) atTop
+        (𝓝 (Real.negMulLog (condProbInfty μ p a x))) := by
+    filter_upwards [condProbPast_tendsto_condProbInfty μ p a] with x hx
+    exact (Real.continuous_negMulLog.tendsto _).comp hx
+  -- Each negMulLog(condProbPast a k x) is in [0, 1] ae (since negMulLog x ≤ 1 - x ≤ 1 on [0,1]).
+  have h_bound : ∀ k : ℕ, ∀ᵐ x ∂(μZ μ p),
+      ‖Real.negMulLog (condProbPast μ p a k x)‖ ≤ 1 := by
+    intro k
+    filter_upwards [ae_zero_le_condProbPast μ p a k, ae_condProbPast_le_one μ p a k]
+      with x hx_nn hx_le
+    have hx_nn' : (0 : ℝ) ≤ condProbPast μ p a k x := hx_nn
+    have hx_le' : condProbPast μ p a k x ≤ 1 := hx_le
+    have h_nn : 0 ≤ Real.negMulLog (condProbPast μ p a k x) :=
+      Real.negMulLog_nonneg hx_nn' hx_le'
+    have h_le_sub : Real.negMulLog (condProbPast μ p a k x) ≤ 1 - condProbPast μ p a k x :=
+      Real.negMulLog_le_one_sub_self hx_nn'
+    have h_le_one : Real.negMulLog (condProbPast μ p a k x) ≤ 1 := by linarith
+    rw [Real.norm_eq_abs, abs_of_nonneg h_nn]
+    exact h_le_one
+  -- Bound function is constant (integrable on finite measure).
+  have h_bound_int : Integrable (fun _ : (∀ _ : ℤ, α) => (1 : ℝ)) (μZ μ p) :=
+    integrable_const _
+  -- Each F_k is AEStronglyMeasurable: negMulLog ∘ condProbPast a k.
+  have h_meas : ∀ k : ℕ, AEStronglyMeasurable
+      (fun x : (∀ _ : ℤ, α) => Real.negMulLog (condProbPast μ p a k x)) (μZ μ p) := by
+    intro k
+    refine Real.continuous_negMulLog.measurable.comp_aemeasurable ?_
+      |>.aestronglyMeasurable
+    refine ((stronglyMeasurable_condProbPast μ p a k).mono
+      ((pastFiltration (α := α)).le k)).measurable.aemeasurable
+  exact tendsto_integral_of_dominated_convergence (F := fun k => fun x =>
+    Real.negMulLog (condProbPast μ p a k x))
+    (f := fun x => Real.negMulLog (condProbInfty μ p a x))
+    (bound := fun _ => (1 : ℝ))
+    h_meas h_bound_int h_bound h_ae
 
 /-- **The SMB integral identity** `∫ pmfLogCondInfty dμZ = entropyRate μ p`.
 
 Combines:
 * `integral_pmfLogCondPast_eq_conditionalEntropyTail` — the per-step identity;
-* DCT (forward Lévy a.s. limit + `[0, log(card α)]` uniform bound on
-  `pmfLogCondPast`) — passing the integral to the limit;
+* DCT (forward Lévy a.s. limit + `Real.exp (-1)` uniform bound on `negMulLog`)
+  applied per atom — `∫ negMulLog(condProbPast a k) → ∫ negMulLog(condProbInfty a)`;
 * `entropyRate_eq_lim_condEntropy` — `conditionalEntropyTail μ p k → entropyRate`. -/
 theorem integral_pmfLogCondInfty_eq_entropyRate :
     ∫ x, pmfLogCondInfty μ p x ∂(μZ μ p) = entropyRate μ p := by
   classical
-  -- (1) Per-step identity for each `k`: `∫ pmfLogCondPast k = conditionalEntropyTail k`.
+  -- The sequence `n ↦ ∫ pmfLogCondPast n dμZ` converges to both
+  -- `∫ pmfLogCondInfty dμZ` (by DCT applied to each summand) and `entropyRate μ p`
+  -- (by the per-step identity + `entropyRate_eq_lim_condEntropy`). Apply
+  -- `tendsto_nhds_unique`.
+  -- Step 1: `∫ pmfLogCondPast k → ∫ pmfLogCondInfty`.
+  have h_lim1 : Tendsto (fun k : ℕ => ∫ x, pmfLogCondPast μ p k x ∂(μZ μ p))
+      atTop (𝓝 (∫ x, pmfLogCondInfty μ p x ∂(μZ μ p))) := by
+    -- Rewrite both sides as finite sums.
+    have h_LHS : ∀ k : ℕ, ∫ x, pmfLogCondPast μ p k x ∂(μZ μ p)
+        = ∑ a, ∫ x, Real.negMulLog (condProbPast μ p a k x) ∂(μZ μ p) :=
+      integral_pmfLogCondPast_eq_sum μ p
+    have h_RHS : ∫ x, pmfLogCondInfty μ p x ∂(μZ μ p)
+        = ∑ a, ∫ x, Real.negMulLog (condProbInfty μ p a x) ∂(μZ μ p) :=
+      integral_pmfLogCondInfty_eq_sum μ p
+    rw [h_RHS]
+    refine Tendsto.congr (fun k => (h_LHS k).symm) ?_
+    -- Finite sum of convergent sequences converges to the sum.
+    exact tendsto_finsetSum _ (fun a _ => tendsto_integral_negMulLog_condProbPast μ p a)
+  -- Step 2: `∫ pmfLogCondPast k = conditionalEntropyTail k → entropyRate μ p`.
   have h_step : ∀ k : ℕ,
       ∫ x, pmfLogCondPast μ p k x ∂(μZ μ p) = conditionalEntropyTail μ p k :=
     fun k => integral_pmfLogCondPast_eq_conditionalEntropyTail μ p k
-  -- (2) Forward Lévy: `pmfLogCondPast k → pmfLogCondInfty` a.s.
-  have h_ae_lim := pmfLogCondPast_tendsto_pmfLogCondInfty μ p
-  -- (3) Uniform bound on `‖pmfLogCondPast k‖` for DCT.
-  -- `pmfLogCondPast k x = -log(condProbPast (coord0 x) k x)` (modulo null set).
-  -- Bound: `0 ≤ pmfLogCondPast k x ≤ -log(condProbInfty (coord0 x) x)` — not uniform
-  -- in `k` in a strong sense. Use `∫ |pmfLogCondPast k| = ∫ pmfLogCondPast k ≤ log(card α)`
-  -- (Jensen / Gibbs) for a uniform integrability argument via `MartingaleTheorem.tendsto_integral`.
-  -- (Cleaner path: each `pmfLogCondPast k` is in [0, ∞), and the family is uniformly
-  -- bounded in L¹ by `log(card α)`; UI + a.s. convergence + Scheffe gives L¹ convergence,
-  -- hence integral convergence.)
-  --
-  -- DEFERRED: requires per-step uniform L¹ bound `∫ pmfLogCondPast k ≤ log(card α)`
-  -- (which follows from positivity of negMulLog + ∑_a g_a = 1 + Jensen on -log),
-  -- plus a uniform-integrability or domination argument. Concretely, this is
-  -- ~80-150 LOC of integration estimates around the conditional Gibbs inequality.
-  -- Combined with `h_step` and `entropyRate_eq_lim_condEntropy`, the result follows
-  -- by `tendsto_nhds_unique`.
-  sorry
+  have h_lim2 : Tendsto (fun k : ℕ => ∫ x, pmfLogCondPast μ p k x ∂(μZ μ p))
+      atTop (𝓝 (entropyRate μ p)) := by
+    refine Tendsto.congr (fun k => (h_step k).symm) ?_
+    exact entropyRate_eq_lim_condEntropy μ p
+  -- Step 3: uniqueness of limit.
+  exact tendsto_nhds_unique h_lim1 h_lim2
 
 end Backward
+
+/-! ## Mathlib-gap: `condExp` commutes with measure-preserving transforms
+
+For a measure-preserving `T : Ω₁ → Ω₂` and `n` a sub-σ-algebra of `m₂`,
+`(μ₂[f | n]) ∘ T =ᵐ μ₁[f ∘ T | n.comap T]`. Mathlib provides no direct named
+version; proved via `ae_eq_condExp_of_forall_setIntegral_eq`. Used by
+`integral_MRatioLowerZ_le_one` to identify shifted `condProbInfty` with a
+condExp w.r.t. `shifted(negPastSigma)`. -/
+
+section MeasurePreservingCondExp
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+lemma condExp_comp_measurePreserving
+    {Ω₁ Ω₂ : Type*} [m₁ : MeasurableSpace Ω₁] [m₂ : MeasurableSpace Ω₂]
+    {μ₁ : Measure Ω₁} {μ₂ : Measure Ω₂} [IsFiniteMeasure μ₁] [IsFiniteMeasure μ₂]
+    {T : Ω₁ → Ω₂} (h_mp : MeasurePreserving T μ₁ μ₂)
+    {f : Ω₂ → ℝ} (hf : Integrable f μ₂)
+    (n : MeasurableSpace Ω₂) (hn : n ≤ m₂) :
+    (fun x => (μ₂[f | n]) (T x)) =ᵐ[μ₁] μ₁[f ∘ T | n.comap T] := by
+  -- KEY TYPECLASS WORKAROUND: hide `n` behind `letI` so it stops competing for synthesis.
+  -- After this point, any "synthesize MeasurableSpace Ω₂" picks `m₂` (the only `[..]` instance).
+  letI : MeasurableSpace Ω₂ := m₂
+  -- Pull the structure fields.
+  have hT_meas : Measurable T := h_mp.measurable
+  have h_mp_eq : Measure.map T μ₁ = μ₂ := h_mp.map_eq
+  -- `n.comap T ≤ m₁`.
+  have hcomap_le : n.comap T ≤ m₁ := fun s ⟨t, ht_n, hts⟩ => hts ▸ hT_meas (hn _ ht_n)
+  -- `SigmaFinite (μ₁.trim hcomap_le)` from finiteness.
+  haveI : IsFiniteMeasure (μ₁.trim hcomap_le) := isFiniteMeasure_trim _
+  -- Integrability of pulled-back functions.
+  have h_cE_int : Integrable (μ₂[f | n]) μ₂ := integrable_condExp
+  have h_cE_comp_int : Integrable ((μ₂[f | n]) ∘ T) μ₁ :=
+    h_mp.integrable_comp_of_integrable h_cE_int
+  have hf_comp : Integrable (f ∘ T) μ₁ :=
+    h_mp.integrable_comp_of_integrable hf
+  -- Goal: `(μ₂[f|n]) ∘ T =ᵐ μ₁[f∘T | n.comap T]`. Direct from `ae_eq_condExp_of_forall_setIntegral_eq`.
+  have h_rev : (fun x => (μ₂[f | n]) (T x)) =ᵐ[μ₁] μ₁[f ∘ T | n.comap T] := by
+    refine ae_eq_condExp_of_forall_setIntegral_eq hcomap_le hf_comp ?_ ?_ ?_
+    · intro s _ _; exact h_cE_comp_int.integrableOn
+    · intro s hs _
+      obtain ⟨B, hB_n, rfl⟩ := hs
+      have hB_m₂ : MeasurableSet B := hn _ hB_n
+      -- Cache `g := μ₂[f|n]` so rewrites in `μ₂ → μ₁.map T` don't touch the inner `μ₂` of g.
+      set g : Ω₂ → ℝ := μ₂[f | n] with hg_def
+      have h_g_meas_m₂ : Measurable g :=
+        (stronglyMeasurable_condExp.mono hn).measurable
+      have h_g_int : Integrable g μ₂ := h_cE_int
+      have h_g_comp_int : Integrable (g ∘ T) μ₁ := h_cE_comp_int
+      have h_lhs : ∫ x in T ⁻¹' B, g (T x) ∂μ₁ = ∫ y in B, g y ∂μ₂ := by
+        conv_rhs => rw [← h_mp_eq]
+        rw [setIntegral_map hB_m₂ h_g_meas_m₂.aestronglyMeasurable hT_meas.aemeasurable]
+      have h_mid : ∫ y in B, g y ∂μ₂ = ∫ y in B, f y ∂μ₂ := by
+        rw [hg_def]; exact setIntegral_condExp hn hf hB_n
+      have h_rhs : ∫ y in B, f y ∂μ₂ = ∫ x in T ⁻¹' B, (f ∘ T) x ∂μ₁ := by
+        have h_asm : AEStronglyMeasurable f (Measure.map T μ₁) := by
+          rw [h_mp_eq]; exact hf.aestronglyMeasurable
+        conv_lhs => rw [← h_mp_eq]
+        rw [setIntegral_map hB_m₂ h_asm hT_meas.aemeasurable]
+        rfl
+      show ∫ x in T ⁻¹' B, g (T x) ∂μ₁ = ∫ x in T ⁻¹' B, (f ∘ T) x ∂μ₁
+      rw [h_lhs, h_mid, h_rhs]
+    · refine StronglyMeasurable.aestronglyMeasurable ?_
+      have h_sm_m₂ : StronglyMeasurable[n] (μ₂[f | n]) := stronglyMeasurable_condExp
+      -- `T : (Ω₁, n.comap T) → (Ω₂, n)` is measurable by definition of comap.
+      have hT_comap : @Measurable Ω₁ Ω₂ (n.comap T) n T := fun s hs => ⟨s, hs, rfl⟩
+      exact h_sm_m₂.comp_measurable hT_comap
+  exact h_rev
+
+end MeasurePreservingCondExp
 
 end InformationTheory.Shannon.TwoSided
