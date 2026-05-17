@@ -401,6 +401,178 @@ lemma sum_qkSingleton_le_one
     simp_rw [h_inner, mul_one]
     exact ih
 
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- `Fin.init` of `blockRV (n+1) ω` is `blockRV n ω`. -/
+private lemma init_blockRV
+    (p : StationaryProcess μ α) (n : ℕ) (ω : Ω) :
+    Fin.init (p.blockRV (n + 1) ω) = p.blockRV n ω := by
+  funext i; rfl
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- The last coordinate of `blockRV (n+1) ω` is `obs n ω`. -/
+private lemma blockRV_last
+    (p : StationaryProcess μ α) (n : ℕ) (ω : Ω) :
+    p.blockRV (n + 1) ω (Fin.last n) = p.obs n ω := rfl
+
+omit [DecidableEq α] in
+/-- For `n ≤ k`, the `markovFactor` evaluated at `blockRV (n+1) ω` equals the
+conditional kernel singleton mass entering `pmfLogCond μ p n ω`. -/
+private lemma markovFactor_blockRV_le
+    (μ : Measure Ω) [IsFiniteMeasure μ] (p : StationaryProcess μ α) {k n : ℕ}
+    (hnk : n ≤ k) (ω : Ω) :
+    markovFactor μ p k n (p.blockRV (n + 1) ω)
+      = (condDistrib (p.obs n) (p.blockRV n) μ (p.blockRV n ω)) {p.obs n ω} := by
+  unfold markovFactor
+  simp only [hnk, dif_pos, init_blockRV, blockRV_last]
+
+omit [DecidableEq α] in
+/-- For `k ≤ n`, the `markovFactor` evaluated at `blockRV (n+1) ω` equals the
+conditional kernel singleton mass at the shifted point `T^[n-k] ω`. -/
+private lemma markovFactor_blockRV_gt
+    (μ : Measure Ω) [IsFiniteMeasure μ] (p : StationaryProcess μ α) {k n : ℕ}
+    (hkn : k ≤ n) (ω : Ω) :
+    markovFactor μ p k n (p.blockRV (n + 1) ω)
+      = (condDistrib (p.obs k) (p.blockRV k) μ
+          (p.blockRV k (p.T^[n - k] ω))) {p.obs k (p.T^[n - k] ω)} := by
+  unfold markovFactor
+  by_cases hnk : n ≤ k
+  · -- n ≤ k and k ≤ n ⇒ n = k.
+    have hnk_eq : n = k := le_antisymm hnk hkn
+    subst hnk_eq
+    simp only [le_refl, dif_pos, init_blockRV, blockRV_last,
+      Nat.sub_self]
+    rfl
+  · simp only [hnk, dif_neg, not_false_iff]
+    -- Window prefix: `fun j : Fin k => blockRV (n+1) ω ⟨n-k+j, _⟩
+    --              = blockRV k (T^[n-k] ω)`.
+    have h_arg : (fun j : Fin k => p.blockRV (n + 1) ω
+          ⟨n - k + j.val, by have := j.isLt; omega⟩)
+        = p.blockRV k (p.T^[n - k] ω) := by
+      funext j
+      -- LHS: obs (n-k+j.val) ω = X (T^[n-k+j.val] ω) = X (T^[j.val] (T^[n-k] ω))
+      -- RHS: obs j.val (T^[n-k] ω) = X (T^[j.val] (T^[n-k] ω)).
+      show p.obs (n - k + j.val) ω = p.obs j.val (p.T^[n - k] ω)
+      unfold StationaryProcess.obs
+      show p.X (p.T^[n - k + j.val] ω) = p.X (p.T^[j.val] (p.T^[n - k] ω))
+      rw [← Function.iterate_add_apply p.T j.val (n - k) ω, Nat.add_comm j.val (n - k)]
+    -- Last coordinate: `blockRV (n+1) ω (Fin.last n) = obs n ω = obs k (T^[n-k] ω)`.
+    have h_last : p.blockRV (n + 1) ω (Fin.last n) = p.obs k (p.T^[n - k] ω) := by
+      show p.obs n ω = p.obs k (p.T^[n - k] ω)
+      unfold StationaryProcess.obs
+      show p.X (p.T^[n] ω) = p.X (p.T^[k] (p.T^[n - k] ω))
+      rw [← Function.iterate_add_apply]
+      congr 2
+      omega
+    rw [h_arg, h_last]
+
+omit [DecidableEq α] in
+/-- **M1 (bridge for L1)**: a.s., `qkSingleton μ p k n (blockRV n ω)` equals
+`ofReal (exp (-negLogQk μ p k n ω))`. -/
+lemma qkSingleton_blockRV_eq_ofReal_exp_negLogQk
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (k n : ℕ) :
+    ∀ᵐ ω ∂μ,
+      qkSingleton μ p k n (p.blockRV n ω)
+        = ENNReal.ofReal (Real.exp (-negLogQk μ p k n ω)) := by
+  induction n with
+  | zero =>
+    refine Filter.Eventually.of_forall (fun ω => ?_)
+    -- LHS: qkSingleton k 0 _ = 1; RHS: ofReal (exp(-0)) = ofReal 1 = 1.
+    show qkSingleton μ p k 0 (p.blockRV 0 ω)
+        = ENNReal.ofReal (Real.exp (-negLogQk μ p k 0 ω))
+    unfold negLogQk
+    simp [qkSingleton]
+  | succ n ih =>
+    -- Branch on n ≤ k vs n > k for the new markovFactor.
+    by_cases hnk : n ≤ k
+    · -- Case n ≤ k: use cond_singleton_pos_ae at n.
+      filter_upwards [ih, cond_singleton_pos_ae μ p n] with ω h_ih h_pos
+      -- qkSingleton (n+1) (blockRV (n+1) ω)
+      --   = qkSingleton n (init (blockRV (n+1) ω)) * markovFactor n (blockRV (n+1) ω)
+      --   = qkSingleton n (blockRV n ω) * (cd ...) {obs n ω}                [via M1 helpers]
+      --   = ofReal(exp(-negLogQk n ω)) * ofReal(exp(-pmfLogCond μ p n ω))   [by IH and positivity]
+      --   = ofReal(exp(-negLogQk n ω - pmfLogCond μ p n ω))
+      --   = ofReal(exp(-(negLogQk n ω + pmfLogCond μ p n ω)))
+      --   = ofReal(exp(-negLogQk (n+1) ω))                                  [unfolding range_succ]
+      have h_qk_succ : qkSingleton μ p k (n + 1) (p.blockRV (n + 1) ω)
+          = qkSingleton μ p k n (Fin.init (p.blockRV (n + 1) ω))
+            * markovFactor μ p k n (p.blockRV (n + 1) ω) := rfl
+      rw [h_qk_succ, init_blockRV, markovFactor_blockRV_le μ p hnk, h_ih]
+      -- Now: ofReal(exp(-negLogQk n ω)) * (cd ...){obs n ω} = ofReal(exp(-negLogQk (n+1) ω)).
+      set m : ℝ≥0∞ := (condDistrib (p.obs n) (p.blockRV n) μ (p.blockRV n ω)) {p.obs n ω}
+        with hm_def
+      have h_m_real_pos : 0 < m.toReal := h_pos
+      have h_m_ne_zero : m ≠ 0 := by
+        intro h
+        rw [h] at h_m_real_pos
+        simp at h_m_real_pos
+      have h_m_ne_top : m ≠ ∞ := by
+        -- m ≤ 1 since condDistrib is a Markov kernel.
+        have : m ≤ 1 := by
+          rw [hm_def]
+          exact prob_le_one
+        exact ne_top_of_le_ne_top ENNReal.one_ne_top this
+      have h_m_eq : m = ENNReal.ofReal m.toReal := (ENNReal.ofReal_toReal h_m_ne_top).symm
+      rw [h_m_eq]
+      rw [← ENNReal.ofReal_mul (Real.exp_nonneg _)]
+      congr 1
+      -- exp(-negLogQk n ω) * m.toReal = exp(-negLogQk (n+1) ω).
+      -- m.toReal = exp(log m.toReal) = exp(-pmfLogCond μ p n ω) since pmfLogCond n ω = -log m.toReal.
+      have h_pmf : pmfLogCond μ p n ω = -Real.log m.toReal := by
+        show -Real.log m.toReal = -Real.log m.toReal
+        rfl
+      have h_exp_pmf : Real.exp (-pmfLogCond μ p n ω) = m.toReal := by
+        rw [h_pmf, neg_neg]
+        exact Real.exp_log h_m_real_pos
+      have h_markov_eq : pmfLogCondMarkov μ p k n ω = pmfLogCond μ p n ω := by
+        unfold pmfLogCondMarkov
+        simp [hnk]
+      have h_negLogQk_succ : negLogQk μ p k (n + 1) ω
+          = negLogQk μ p k n ω + pmfLogCondMarkov μ p k n ω := by
+        unfold negLogQk
+        rw [Finset.sum_range_succ]
+      rw [h_negLogQk_succ, h_markov_eq, ← h_exp_pmf]
+      rw [neg_add, Real.exp_add]
+    · -- Case k < n (n > k). Use shifted cond_singleton_pos_ae.
+      have hkn : k ≤ n := (not_le.mp hnk).le
+      -- Shifted positivity at T^[n-k] ω.
+      have h_shifted_pos : ∀ᵐ ω ∂μ, 0 < (condDistrib (p.obs k) (p.blockRV k) μ
+          (p.blockRV k (p.T^[n - k] ω))).real {p.obs k (p.T^[n - k] ω)} :=
+        (p.measurePreserving.iterate (n - k)).quasiMeasurePreserving.ae
+          (cond_singleton_pos_ae μ p k)
+      filter_upwards [ih, h_shifted_pos] with ω h_ih h_pos
+      have h_qk_succ : qkSingleton μ p k (n + 1) (p.blockRV (n + 1) ω)
+          = qkSingleton μ p k n (Fin.init (p.blockRV (n + 1) ω))
+            * markovFactor μ p k n (p.blockRV (n + 1) ω) := rfl
+      rw [h_qk_succ, init_blockRV, markovFactor_blockRV_gt μ p hkn, h_ih]
+      set m : ℝ≥0∞ := (condDistrib (p.obs k) (p.blockRV k) μ
+          (p.blockRV k (p.T^[n - k] ω))) {p.obs k (p.T^[n - k] ω)} with hm_def
+      have h_m_real_pos : 0 < m.toReal := h_pos
+      have h_m_ne_zero : m ≠ 0 := by
+        intro h
+        rw [h] at h_m_real_pos
+        simp at h_m_real_pos
+      have h_m_ne_top : m ≠ ∞ := by
+        have : m ≤ 1 := by rw [hm_def]; exact prob_le_one
+        exact ne_top_of_le_ne_top ENNReal.one_ne_top this
+      have h_m_eq : m = ENNReal.ofReal m.toReal := (ENNReal.ofReal_toReal h_m_ne_top).symm
+      rw [h_m_eq]
+      rw [← ENNReal.ofReal_mul (Real.exp_nonneg _)]
+      congr 1
+      have h_pmf_shift : pmfLogCond μ p k (p.T^[n - k] ω) = -Real.log m.toReal := rfl
+      have h_exp_pmf : Real.exp (-pmfLogCond μ p k (p.T^[n - k] ω)) = m.toReal := by
+        rw [h_pmf_shift, neg_neg]
+        exact Real.exp_log h_m_real_pos
+      have h_markov_eq : pmfLogCondMarkov μ p k n ω
+          = pmfLogCond μ p k (p.T^[n - k] ω) := by
+        unfold pmfLogCondMarkov
+        simp [hnk]
+      have h_negLogQk_succ : negLogQk μ p k (n + 1) ω
+          = negLogQk μ p k n ω + pmfLogCondMarkov μ p k n ω := by
+        unfold negLogQk
+        rw [Finset.sum_range_succ]
+      rw [h_negLogQk_succ, h_markov_eq, ← h_exp_pmf]
+      rw [neg_add, Real.exp_add]
+
 omit [DecidableEq α] in
 /-- A.s. equivalence between the new `MRatioUp` ratio form and the old
 exp-of-difference form used by downstream lemmas (`MRatioUp_le_sq_eventually`,
@@ -411,7 +583,70 @@ lemma MRatioUp_eq_ofReal_exp_old
       qkSingleton μ p k n (p.blockRV n ω) / (μ.map (p.blockRV n)) {p.blockRV n ω}
         = ENNReal.ofReal (Real.exp (
             (n : ℝ) * blockLogAvg μ p n ω - negLogQk μ p k n ω)) := by
-  sorry
+  -- M1 handles the numerator; block_singleton_pos_ae_at handles the denominator.
+  filter_upwards [qkSingleton_blockRV_eq_ofReal_exp_negLogQk μ p k n,
+                  block_singleton_pos_ae_at μ p n] with ω h_qk h_pos
+  set P : ℝ≥0∞ := (μ.map (p.blockRV n)) {p.blockRV n ω} with hP_def
+  have h_P_real_pos : 0 < P.toReal := h_pos
+  have h_P_ne_zero : P ≠ 0 := by
+    intro h; rw [h] at h_P_real_pos; simp at h_P_real_pos
+  have h_P_ne_top : P ≠ ∞ := by
+    have h_prob : IsProbabilityMeasure (μ.map (p.blockRV n)) :=
+      Measure.isProbabilityMeasure_map (p.measurable_blockRV n).aemeasurable
+    have : P ≤ 1 := by rw [hP_def]; exact prob_le_one
+    exact ne_top_of_le_ne_top ENNReal.one_ne_top this
+  have h_P_eq : P = ENNReal.ofReal P.toReal := (ENNReal.ofReal_toReal h_P_ne_top).symm
+  rw [h_qk]
+  -- Goal: ofReal(exp(-negLogQk)) / P = ofReal(exp(n*blockLogAvg - negLogQk)).
+  -- Rewrite n*blockLogAvg via the definition: when n ≥ 1, n*blockLogAvg = -log P.toReal,
+  -- so exp(n*blockLogAvg - negLogQk) = exp(-log P.toReal) * exp(-negLogQk)
+  --                                  = (1/P.toReal) * exp(-negLogQk)
+  --                                  = exp(-negLogQk) / P.toReal.
+  -- For n = 0: blockLogAvg = -(1/0) * log P = 0 and P.toReal = 1 (block 0 has mass 1).
+  by_cases hn : n = 0
+  · subst hn
+    -- n = 0: negLogQk = 0; P = 1 (empty product); LHS = 1/1 = 1; RHS = ofReal(exp 0) = 1.
+    have h_P_one : P = 1 := by
+      rw [hP_def]
+      have h_meas : Measurable (p.blockRV 0) := p.measurable_blockRV 0
+      rw [Measure.map_apply h_meas (measurableSet_singleton _)]
+      have h_univ : (p.blockRV 0) ⁻¹' {p.blockRV 0 ω} = Set.univ := by
+        ext ω'
+        simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_univ, iff_true]
+        funext i; exact i.elim0
+      rw [h_univ]; exact measure_univ
+    rw [h_P_one]
+    have h_negLogQk_zero : negLogQk μ p k 0 ω = 0 := by
+      unfold negLogQk; simp
+    rw [h_negLogQk_zero]
+    have h_blockLogAvg_zero : (0 : ℕ) * blockLogAvg μ p 0 ω - (0 : ℝ) = 0 := by
+      simp
+    rw [show ((0 : ℕ) : ℝ) * blockLogAvg μ p 0 ω - (0 : ℝ) = 0 by simp]
+    simp [Real.exp_zero]
+  · -- n ≥ 1.
+    have hn_pos : 0 < (n : ℝ) := by exact_mod_cast Nat.pos_of_ne_zero hn
+    have hn_ne : (n : ℝ) ≠ 0 := hn_pos.ne'
+    -- n * blockLogAvg μ p n ω = -log P.toReal.
+    have h_blockLogAvg_real : ((n : ℝ)) * blockLogAvg μ p n ω = -Real.log P.toReal := by
+      unfold blockLogAvg
+      show ((n : ℝ)) * (-(1 / (n : ℝ)) * Real.log ((μ.map (p.blockRV n)).real {p.blockRV n ω}))
+          = -Real.log P.toReal
+      have h_P_real_eq : (μ.map (p.blockRV n)).real {p.blockRV n ω} = P.toReal := rfl
+      rw [h_P_real_eq]
+      field_simp
+    rw [h_blockLogAvg_real]
+    -- exp(-log P.toReal - negLogQk) = exp(-negLogQk) / P.toReal (in ℝ, P.toReal > 0).
+    have h_split : Real.exp (-Real.log P.toReal - negLogQk μ p k n ω)
+        = Real.exp (-negLogQk μ p k n ω) / P.toReal := by
+      have h_rearr : -Real.log P.toReal - negLogQk μ p k n ω
+            = -negLogQk μ p k n ω + -Real.log P.toReal := by ring
+      rw [h_rearr, Real.exp_add]
+      rw [show Real.exp (-Real.log P.toReal) = (P.toReal)⁻¹ by
+        rw [Real.exp_neg, Real.exp_log h_P_real_pos]]
+      rw [div_eq_mul_inv]
+    rw [h_split]
+    -- ofReal (exp(-negLogQk) / P.toReal) = ofReal(exp(-negLogQk)) / ofReal(P.toReal) = ofReal(exp(-negLogQk)) / P.
+    rw [ENNReal.ofReal_div_of_pos h_P_real_pos, ← h_P_eq]
 
 /-- Upward likelihood ratio: `exp(n · blockLogAvg - negLogQk)` lifted to ENNReal. -/
 noncomputable def MRatioUp
@@ -473,6 +708,7 @@ theorem integral_MRatioUp_le_one
     · simp [hb_top, ENNReal.div_top]
     · rw [ENNReal.div_mul_cancel hb_zero hb_top]
 
+omit [DecidableEq α] in
 /-- Borel–Cantelli consequence: the upward ratio is eventually bounded by `n²` a.s. -/
 theorem MRatioUp_le_sq_eventually
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (k : ℕ) :
@@ -588,6 +824,7 @@ theorem MRatioLo_le_sq_eventually
 
 /-! ## D.4 — limsup direction -/
 
+omit [DecidableEq α] in
 /-- Logarithmic form of `MRatioUp_le_sq_eventually`: pointwise `blockLogAvg`
 upper bound by the `k`-Markov approximation plus a `2 log n / n` error. -/
 theorem blockLogAvg_le_negLogQk_plus_error
@@ -626,6 +863,7 @@ theorem blockLogAvg_le_negLogQk_plus_error
     exact h
   linarith
 
+omit [DecidableEq α] in
 /-- Taking `limsup` in `blockLogAvg_le_negLogQk_plus_error` and using
 Birkhoff for the `k`-Markov approximation gives the per-`k` limsup bound. -/
 theorem limsup_blockLogAvg_le_condEntropyTail
@@ -734,12 +972,47 @@ theorem algoet_cover_liminf_bound
 
 /-! ## D.6 — Boundedness -/
 
-/-- A.s. boundedness above for `blockLogAvg`. -/
+omit [DecidableEq α] in
+/-- A.s. boundedness above for `blockLogAvg`.
+
+A.s., `blockLogAvg ≤ negLogQk(k=0)/n + 2·log n / n` (from
+`blockLogAvg_le_negLogQk_plus_error`), and the RHS converges a.s. to
+`conditionalEntropyTail μ p 0` (finite), hence the RHS is eventually bounded
+above and so is `blockLogAvg`. -/
 theorem blockLogAvg_bddAbove_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ, Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
       (fun n => blockLogAvg μ p.toStationaryProcess n ω) := by
-  sorry
+  -- log n / n → 0.
+  have h_log_div : Filter.Tendsto (fun n : ℕ => 2 * Real.log (n : ℝ) / (n : ℝ))
+      Filter.atTop (𝓝 0) := by
+    have h_log : Filter.Tendsto (fun n : ℕ => Real.log (n : ℝ) / (n : ℝ))
+        Filter.atTop (𝓝 0) := by
+      have h_real : Filter.Tendsto (fun x : ℝ => Real.log x ^ 1 / (1 * x + 0))
+          Filter.atTop (𝓝 0) := Real.tendsto_pow_log_div_mul_add_atTop 1 0 1 one_ne_zero
+      have h_comp := h_real.comp tendsto_natCast_atTop_atTop
+      refine h_comp.congr (fun n => ?_)
+      simp
+    have h_mul := h_log.const_mul (2 : ℝ)
+    simp only [mul_zero] at h_mul
+    refine h_mul.congr (fun n => ?_)
+    rw [mul_div_assoc]
+  filter_upwards [blockLogAvg_le_negLogQk_plus_error μ p.toStationaryProcess 0,
+                  negLogQk_div_tendsto_condEntropyTail μ p 0] with ω h_bound h_neg
+  -- RHS: negLogQk(0)/n + 2 log n / n → H_0 (a.s.).
+  have h_rhs : Filter.Tendsto
+      (fun n : ℕ => negLogQk μ p.toStationaryProcess 0 n ω / (n : ℝ)
+        + 2 * Real.log (n : ℝ) / (n : ℝ))
+      Filter.atTop
+      (𝓝 (conditionalEntropyTail μ p.toStationaryProcess 0)) := by
+    have := h_neg.add h_log_div
+    simpa using this
+  -- RHS is bounded above (any convergent sequence in ℝ is bounded).
+  have h_rhs_bdd : Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
+      (fun n : ℕ => negLogQk μ p.toStationaryProcess 0 n ω / (n : ℝ)
+        + 2 * Real.log (n : ℝ) / (n : ℝ)) := h_rhs.isBoundedUnder_le
+  -- blockLogAvg ≤ RHS eventually, so it is bounded above too.
+  exact h_rhs_bdd.mono_le h_bound
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- A.s. boundedness below for `blockLogAvg`. -/
