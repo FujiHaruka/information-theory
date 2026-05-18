@@ -573,14 +573,52 @@ private lemma mutualInfo_per_letter_eq_marginal
   rw [h_joint_eq]
   rfl
 
+omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
+/-- **Auxiliary lemma**: under `μ := q ⊗ₘ (toBlock W n)`, the joint of `(X^n, Y_i)`
+factors as `q ⊗ₘ (W.comap (eval i))` — i.e., `Y_i ~ W (X^n_i)`.
+
+This is the per-coordinate marginalization of `Measure.pi`: integrating out all
+`Y_j` for `j ≠ i` leaves only `W (x i)`. -/
+private lemma map_xn_yi_eq_compProd_comap
+    (W : Channel α β) [IsMarkovKernel W] (n : ℕ)
+    (q : Measure (Fin n → α)) [IsProbabilityMeasure q]
+    (i : Fin n) :
+    (q ⊗ₘ Channel.toBlock W n).map
+        (fun z : (Fin n → α) × (Fin n → β) => (z.1, z.2 i))
+      = q ⊗ₘ (W.comap (fun x : Fin n → α => x i) (measurable_pi_apply i)) := by
+  have hmeas_map : Measurable
+      (fun z : (Fin n → α) × (Fin n → β) => (z.1, z.2 i)) :=
+    measurable_fst.prodMk ((measurable_pi_apply i).comp measurable_snd)
+  refine Measure.ext_of_lintegral _ fun f hf => ?_
+  rw [lintegral_map hf hmeas_map]
+  -- LHS: ∫⁻ z, f (z.1, z.2 i) ∂(q ⊗ₘ toBlock W n).
+  have hg_meas : Measurable (fun z : (Fin n → α) × (Fin n → β) => f (z.1, z.2 i)) :=
+    hf.comp hmeas_map
+  rw [Measure.lintegral_compProd hg_meas]
+  rw [Measure.lintegral_compProd hf]
+  refine lintegral_congr fun x => ?_
+  -- Inner: ∫⁻ y ∂(toBlock W n x), f (x, y i) = ∫⁻ b ∂(W (x i)), f (x, b)
+  rw [Kernel.comap_apply]
+  rw [Channel.toBlock_apply]
+  -- (toBlock W n) x = Measure.pi (fun j => W (x j)); marginalize at i via `measurePreserving_eval`.
+  have hmp := measurePreserving_eval (μ := fun j : Fin n => W (x j)) i
+  have h_eq : ∫⁻ y : Fin n → β, f (x, y i) ∂(Measure.pi (fun j : Fin n => W (x j)))
+        = ∫⁻ b : β, f (x, b) ∂(W (x i)) := by
+    rw [← hmp.map_eq]
+    -- RHS now: ∫⁻ b, f (x, b) ∂(map (eval i) (pi ...)). Apply lintegral_map.
+    rw [lintegral_map (f := fun b : β => f (x, b))
+          (g := fun y : Fin n → β => y i)
+          (hf.comp (measurable_const.prodMk measurable_id))
+          (measurable_pi_apply i)]
+  exact h_eq
+
+omit [DecidableEq α] [DecidableEq β] in
 /-- IsMarkovChain `(X^n) → X_i → Y_i` under `μ := q ⊗ₘ (toBlock W n)`.
 
-**Status: deferred**. Mathematically true (the channel is per-letter memoryless,
-so `Y_i` depends on `X^n` only through `X_i`). The proof reduces to identifying
-`condDistrib (z.2 i) (z.1 i) μ =ᵐ W` (via `condDistrib_ae_eq_of_measure_eq_compProd`
-+ `per_letter_marginal_eq_compProd`, ~10 lines) plus the compProd-of-prod-kernel
-factorization of the triple joint `μ.map (z.1 i, z.1, z.2 i)` (~30-50 lines of
-`compProd_congr` + `Kernel.prod` manipulations). Total: ~50-80 lines. -/
+**Strategy**: identify `condDistrib (z.2 i) (z.1 i) μ =ᵐ W` via
+`per_letter_marginal_eq_compProd`, then verify the triple-joint factorization
+by `Measure.ext_of_lintegral`. -/
 private lemma isMarkovChain_per_letter_input
     [StandardBorelSpace α] [StandardBorelSpace β]
     (W : Channel α β) [IsMarkovKernel W] (n : ℕ)
@@ -590,15 +628,198 @@ private lemma isMarkovChain_per_letter_input
       (fun z : (Fin n → α) × (Fin n → β) => z.1)
       (fun z : (Fin n → α) × (Fin n → β) => z.1 i)
       (fun z : (Fin n → α) × (Fin n → β) => z.2 i) := by
-  sorry
+  set μ : Measure ((Fin n → α) × (Fin n → β)) := q ⊗ₘ Channel.toBlock W n with hμ_def
+  haveI : IsProbabilityMeasure μ := by rw [hμ_def]; infer_instance
+  -- Measurability assumptions for the three RVs.
+  have hZc_meas : Measurable (fun z : (Fin n → α) × (Fin n → β) => z.1 i) :=
+    (measurable_pi_apply i).comp measurable_fst
+  have hXs_meas : Measurable (fun z : (Fin n → α) × (Fin n → β) => z.1) :=
+    measurable_fst
+  have hYo_meas : Measurable (fun z : (Fin n → α) × (Fin n → β) => z.2 i) :=
+    (measurable_pi_apply i).comp measurable_snd
+  haveI : IsProbabilityMeasure (μ.map (fun z : (Fin n → α) × (Fin n → β) => z.1 i)) :=
+    Measure.isProbabilityMeasure_map hZc_meas.aemeasurable
+  unfold InformationTheory.Shannon.IsMarkovChain
+  -- Kernel abbreviations.
+  set K_X : Kernel α (Fin n → α) :=
+    condDistrib (fun z : (Fin n → α) × (Fin n → β) => z.1)
+      (fun z : (Fin n → α) × (Fin n → β) => z.1 i) μ with hK_X_def
+  set K_Y : Kernel α β :=
+    condDistrib (fun z : (Fin n → α) × (Fin n → β) => z.2 i)
+      (fun z : (Fin n → α) × (Fin n → β) => z.1 i) μ with hK_Y_def
+  -- Marginal: μ.map (z.1 i) = q.map (eval i).
+  have h_map_X_i : μ.map (fun z : (Fin n → α) × (Fin n → β) => z.1 i)
+      = q.map (fun x : Fin n → α => x i) := by
+    have h_comp : (fun z : (Fin n → α) × (Fin n → β) => z.1 i)
+        = (fun x : Fin n → α => x i) ∘ Prod.fst := rfl
+    rw [h_comp, ← Measure.map_map (measurable_pi_apply i) measurable_fst]
+    rw [hμ_def, show μ.map Prod.fst = μ.fst from rfl, hμ_def, Measure.fst_compProd]
+  -- Step 1: identify K_Y =ᵐ W via the per-letter marginal compProd identity.
+  have hK_Y_eq : K_Y =ᵐ[μ.map (fun z : (Fin n → α) × (Fin n → β) => z.1 i)]
+      (W : Kernel α β) := by
+    refine condDistrib_ae_eq_of_measure_eq_compProd
+      (fun z : (Fin n → α) × (Fin n → β) => z.1 i) hYo_meas.aemeasurable ?_
+    have h := per_letter_marginal_eq_compProd W n q i
+    rw [h_map_X_i, ← h]
+  -- Step 2: Substitute K_Y → W on RHS via `compProd_congr`.
+  have h_compProd_eq :
+      (μ.map (fun z : (Fin n → α) × (Fin n → β) => z.1 i)) ⊗ₘ (K_X ×ₖ K_Y)
+        = (μ.map (fun z : (Fin n → α) × (Fin n → β) => z.1 i)) ⊗ₘ (K_X ×ₖ W) := by
+    refine Measure.compProd_congr ?_
+    filter_upwards [hK_Y_eq] with a ha
+    ext s hs
+    rw [Kernel.prod_apply, Kernel.prod_apply, ha]
+  rw [h_compProd_eq]
+  -- Step 3: Prove the (substituted) triple-joint factorization via `Measure.ext_of_lintegral`.
+  have h_LHS_meas : Measurable
+      (fun z : (Fin n → α) × (Fin n → β) => (z.1 i, z.1, z.2 i)) :=
+    hZc_meas.prodMk (hXs_meas.prodMk hYo_meas)
+  refine Measure.ext_of_lintegral _ fun f hf => ?_
+  -- LHS: ∫⁻ z, f (z.1 i, z.1, z.2 i) ∂μ
+  rw [lintegral_map hf h_LHS_meas]
+  -- Reshape LHS through (z.1, z.2 i) via map_xn_yi_eq_compProd_comap.
+  have hg_meas : Measurable (fun p : (Fin n → α) × β => f (p.1 i, p.1, p.2)) :=
+    hf.comp (((measurable_pi_apply i).comp measurable_fst).prodMk
+      (measurable_fst.prodMk measurable_snd))
+  have h_LHS_via_pair :
+      ∫⁻ z : (Fin n → α) × (Fin n → β), f (z.1 i, z.1, z.2 i) ∂μ
+        = ∫⁻ p : (Fin n → α) × β, f (p.1 i, p.1, p.2)
+            ∂((q ⊗ₘ (W.comap (fun x : Fin n → α => x i) (measurable_pi_apply i)))) := by
+    have hmap_meas : Measurable
+        (fun z : (Fin n → α) × (Fin n → β) => (z.1, z.2 i)) :=
+      measurable_fst.prodMk ((measurable_pi_apply i).comp measurable_snd)
+    have h_eq_via_comp :
+        ∫⁻ z : (Fin n → α) × (Fin n → β), f (z.1 i, z.1, z.2 i) ∂μ
+          = ∫⁻ z : (Fin n → α) × (Fin n → β),
+              (fun p : (Fin n → α) × β => f (p.1 i, p.1, p.2))
+                ((fun z' : (Fin n → α) × (Fin n → β) => (z'.1, z'.2 i)) z) ∂μ := by
+      rfl
+    rw [h_eq_via_comp]
+    rw [← lintegral_map hg_meas hmap_meas]
+    -- ∫⁻ p ∂(μ.map ...), ... where μ.map ... = q ⊗ₘ W.comap ...
+    rw [hμ_def] at *
+    rw [map_xn_yi_eq_compProd_comap W n q i]
+  rw [h_LHS_via_pair]
+  -- LHS now: ∫⁻ x ∂q, ∫⁻ b ∂(W (x i)), f (x i, x, b)
+  rw [Measure.lintegral_compProd hg_meas]
+  simp only [Kernel.comap_apply]
+  -- Define G (a, x) := ∫⁻ b ∂(W a), f (a, x, b), and rewrite LHS as ∫⁻ x ∂q, G (x i, x)
+  --                                            = ∫⁻ p ∂(q.map (fun x => (x i, x))), G p.
+  set G : α × (Fin n → α) → ℝ≥0∞ :=
+    fun p => ∫⁻ b : β, f (p.1, p.2, b) ∂(W p.1) with hG_def
+  have hG_meas : Measurable G := by
+    -- G p = ∫⁻ b, f (p.1, p.2, b) ∂(W p.1).
+    -- Treat as a composition: factor `p.1` out via `W.comap Prod.fst`.
+    -- Let K' : Kernel (α × (Fin n → α)) β := W.comap Prod.fst measurable_fst.
+    -- Then G p = ∫⁻ b, f (p.1, p.2, b) ∂(K' p), which is `Measurable.lintegral_kernel_prod_right'`.
+    let K' : Kernel (α × (Fin n → α)) β :=
+      W.comap (Prod.fst : α × (Fin n → α) → α) measurable_fst
+    have h_eq_K' : G = fun p : α × (Fin n → α) =>
+        ∫⁻ b : β, f (p.1, p.2, b) ∂(K' p) := by
+      funext p
+      simp [G, K', Kernel.comap_apply]
+    rw [h_eq_K']
+    exact Measurable.lintegral_kernel_prod_right' (κ := K')
+      (f := fun pp : (α × (Fin n → α)) × β => f (pp.1.1, pp.1.2, pp.2))
+      (hf.comp (((measurable_fst.comp measurable_fst).prodMk
+        ((measurable_snd.comp measurable_fst).prodMk measurable_snd))))
+  -- LHS = ∫⁻ x ∂q, G (x i, x).
+  have h_LHS_via_G :
+      ∫⁻ x : Fin n → α, ∫⁻ b : β, f (x i, x, b) ∂(W (x i)) ∂q
+        = ∫⁻ x : Fin n → α, G (x i, x) ∂q := by
+    refine lintegral_congr fun x => ?_
+    rfl
+  rw [h_LHS_via_G]
+  -- Rewrite as ∫⁻ p ∂(q.map (fun x => (x i, x))), G p.
+  have h_map_pair :
+      ∫⁻ x : Fin n → α, G (x i, x) ∂q
+        = ∫⁻ p : α × (Fin n → α), G p ∂(q.map (fun x : Fin n → α => (x i, x))) := by
+    rw [lintegral_map hG_meas ((measurable_pi_apply i).prodMk measurable_id)]
+  rw [h_map_pair]
+  -- RHS: ∫⁻ ⋯ ∂((μ.map z.1 i) ⊗ₘ (K_X ×ₖ W))
+  rw [h_map_X_i]
+  rw [Measure.lintegral_compProd hf]
+  -- RHS: ∫⁻ a ∂(q.map (eval i)), ∫⁻ p ∂((K_X ×ₖ W) a), f (a, p.1, p.2)
+  --    = ∫⁻ a ∂(q.map (eval i)), ∫⁻ x ∂(K_X a), ∫⁻ b ∂(W a), f (a, x, b)
+  have h_inner_split : ∀ a : α,
+      ∫⁻ p : (Fin n → α) × β, f (a, p.1, p.2) ∂((K_X ×ₖ W) a)
+        = ∫⁻ x : Fin n → α, ∫⁻ b : β, f (a, x, b) ∂(W a) ∂(K_X a) := by
+    intro a
+    rw [Kernel.prod_apply]
+    rw [lintegral_prod (fun p : (Fin n → α) × β => f (a, p.1, p.2))
+      (hf.comp (measurable_const.prodMk
+        (measurable_fst.prodMk measurable_snd))).aemeasurable]
+  simp_rw [h_inner_split]
+  -- Inner ∫⁻ b is exactly G (a, x).
+  have h_inner_is_G : ∀ a : α, ∀ x : Fin n → α,
+      ∫⁻ b : β, f (a, x, b) ∂(W a) = G (a, x) := fun _ _ => rfl
+  simp_rw [h_inner_is_G]
+  -- RHS: ∫⁻ a ∂q.map (eval i), ∫⁻ x ∂(K_X a), G (a, x)
+  --    = ∫⁻ p ∂(q.map (eval i) ⊗ₘ K_X), G p
+  rw [← Measure.lintegral_compProd hG_meas]
+  -- Identify (q.map (eval i)) ⊗ₘ K_X = q.map (fun x => (x i, x)).
+  have hK_X_compProd :
+      (q.map (fun x : Fin n → α => x i)) ⊗ₘ K_X
+        = q.map (fun x : Fin n → α => (x i, x)) := by
+    have h : (μ.map (fun z : (Fin n → α) × (Fin n → β) => z.1 i)) ⊗ₘ K_X
+        = μ.map (fun z : (Fin n → α) × (Fin n → β) => (z.1 i, z.1)) :=
+      compProd_map_condDistrib (μ := μ)
+        (X := fun z : (Fin n → α) × (Fin n → β) => z.1 i)
+        (Y := fun z : (Fin n → α) × (Fin n → β) => z.1)
+        (mβ := inferInstance) hXs_meas.aemeasurable
+    rw [← h_map_X_i]
+    rw [h]
+    -- μ.map (fun z => (z.1 i, z.1)) = q.map (fun x => (x i, x))
+    have h_comp : (fun z : (Fin n → α) × (Fin n → β) => (z.1 i, z.1))
+        = (fun x : Fin n → α => (x i, x)) ∘ Prod.fst := rfl
+    rw [h_comp]
+    have h_pair_meas : Measurable (fun x : Fin n → α => (x i, x)) :=
+      (measurable_pi_apply i).prodMk measurable_id
+    rw [← Measure.map_map h_pair_meas measurable_fst]
+    rw [hμ_def, show μ.map Prod.fst = μ.fst from rfl, hμ_def, Measure.fst_compProd]
+  rw [hK_X_compProd]
 
+omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
+/-- **Auxiliary**: under `μ := q ⊗ₘ (toBlock W n)`, the joint of `(X^n, Y^{≠i})`
+factors as `q ⊗ₘ K_noI` where `K_noI x = Measure.pi (fun j : {j // j ≠ i} => W (x j.val))`. -/
+private lemma map_xn_yNoI_eq_compProd_pi
+    (W : Channel α β) [IsMarkovKernel W] (n : ℕ)
+    (q : Measure (Fin n → α)) [IsProbabilityMeasure q]
+    (i : Fin n) :
+    (q ⊗ₘ Channel.toBlock W n).map
+        (fun z : (Fin n → α) × (Fin n → β) =>
+          (z.1, fun j : {j : Fin n // j ≠ i} => z.2 j.val))
+      = q ⊗ₘ (Channel.toBlock W n).map
+          (fun y : Fin n → β => fun j : {j : Fin n // j ≠ i} => y j.val) := by
+  have hmeas_proj : Measurable
+      (fun y : Fin n → β => fun j : {j : Fin n // j ≠ i} => y j.val) :=
+    measurable_pi_iff.mpr (fun j => measurable_pi_apply j.val)
+  have hmeas_map : Measurable
+      (fun z : (Fin n → α) × (Fin n → β) =>
+        (z.1, fun j : {j : Fin n // j ≠ i} => z.2 j.val)) :=
+    measurable_fst.prodMk (hmeas_proj.comp measurable_snd)
+  refine Measure.ext_of_lintegral _ fun f hf => ?_
+  rw [lintegral_map hf hmeas_map]
+  -- Goal: ∫⁻ z ∂(q ⊗ₘ toBlock W n), f (z.1, z.2 ∘ ↑) = ∫⁻ z ∂(q ⊗ₘ (...)map), f z
+  have hg_meas : Measurable
+      (fun z : (Fin n → α) × (Fin n → β) => f (z.1, fun j : {j : Fin n // j ≠ i} => z.2 j.val)) :=
+    hf.comp hmeas_map
+  rw [Measure.lintegral_compProd hg_meas]
+  rw [Measure.lintegral_compProd hf]
+  refine lintegral_congr fun x => ?_
+  -- Inner: ∫⁻ y ∂(toBlock W n x), f (x, y ∘ ↑) = ∫⁻ z ∂((toBlock W n x).map (y ∘ ↑)), f (x, z)
+  rw [Kernel.map_apply _ hmeas_proj]
+  symm
+  exact lintegral_map (hf.comp (measurable_const.prodMk measurable_id)) hmeas_proj
+
+omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] [DecidableEq β] in
 /-- IsMarkovChain `Y^{≠i} → X^n → Y_i` under `μ := q ⊗ₘ (toBlock W n)`.
 
-**Status: deferred**. Mathematically true (conditional on the full input `X^n`,
-all coordinates of `Y^n` are independent due to the `Measure.pi` structure of
-`Channel.toBlock W n`). The proof reduces to identifying the two condDistribs:
-`condDistrib (z.2 i) (z.1) μ =ᵐ W.comap (eval i)` and similarly for the `{j ≠ i}`
-product, plus the kernel-product factorization. ~50-100 lines. -/
+**Strategy**: identify both condDistribs simultaneously by writing the joint
+factorization `μ.map (z.1, z.2 ∘ ↑, z.2 i) = (μ.map z.1) ⊗ₘ (K_YnoI ×ₖ K_Yi)`
+where the two kernels are `W`-derived per-coordinate kernels, then use
+`condDistrib_ae_eq_of_measure_eq_compProd` to close the gap. -/
 private lemma isMarkovChain_outputs_cond_indep
     [StandardBorelSpace α] [StandardBorelSpace β]
     (W : Channel α β) [IsMarkovKernel W] (n : ℕ)
@@ -608,7 +829,174 @@ private lemma isMarkovChain_outputs_cond_indep
       (fun (z : (Fin n → α) × (Fin n → β)) (j : {j : Fin n // j ≠ i}) => z.2 j.val)
       (fun z : (Fin n → α) × (Fin n → β) => z.1)
       (fun z : (Fin n → α) × (Fin n → β) => z.2 i) := by
-  sorry
+  set μ : Measure ((Fin n → α) × (Fin n → β)) := q ⊗ₘ Channel.toBlock W n with hμ_def
+  haveI : IsProbabilityMeasure μ := by rw [hμ_def]; infer_instance
+  haveI : IsProbabilityMeasure q := inferInstance
+  haveI : IsProbabilityMeasure (μ.map (fun z : (Fin n → α) × (Fin n → β) => z.1)) := by
+    refine Measure.isProbabilityMeasure_map ?_
+    exact measurable_fst.aemeasurable
+  -- Measurabilities.
+  have hXs_meas : Measurable (fun z : (Fin n → α) × (Fin n → β) => z.1) :=
+    measurable_fst
+  have hYi_meas : Measurable (fun z : (Fin n → α) × (Fin n → β) => z.2 i) :=
+    (measurable_pi_apply i).comp measurable_snd
+  have hYnoI_meas : Measurable
+      (fun (z : (Fin n → α) × (Fin n → β)) (j : {j : Fin n // j ≠ i}) => z.2 j.val) :=
+    measurable_pi_iff.mpr (fun j => (measurable_pi_apply j.val).comp measurable_snd)
+  -- Kernels.
+  set W_i : Kernel (Fin n → α) β :=
+    W.comap (fun x : Fin n → α => x i) (measurable_pi_apply i) with hW_i_def
+  set W_noI : Kernel (Fin n → α) ({j : Fin n // j ≠ i} → β) :=
+    (Channel.toBlock W n).map
+      (fun y : Fin n → β => fun j : {j : Fin n // j ≠ i} => y j.val) with hW_noI_def
+  have hW_noI_markov : IsMarkovKernel W_noI := by
+    rw [hW_noI_def]
+    refine Kernel.IsMarkovKernel.map _ ?_
+    exact measurable_pi_iff.mpr (fun j => measurable_pi_apply j.val)
+  -- condDistribs.
+  set K_Yi : Kernel (Fin n → α) β :=
+    condDistrib (fun z : (Fin n → α) × (Fin n → β) => z.2 i)
+      (fun z : (Fin n → α) × (Fin n → β) => z.1) μ with hK_Yi_def
+  set K_YnoI : Kernel (Fin n → α) ({j : Fin n // j ≠ i} → β) :=
+    condDistrib (fun (z : (Fin n → α) × (Fin n → β)) (j : {j : Fin n // j ≠ i}) => z.2 j.val)
+      (fun z : (Fin n → α) × (Fin n → β) => z.1) μ with hK_YnoI_def
+  -- Marginal: μ.map (z.1) = q.
+  have h_map_X : μ.map (fun z : (Fin n → α) × (Fin n → β) => z.1) = q := by
+    rw [hμ_def, show (fun z : (Fin n → α) × (Fin n → β) => z.1) = Prod.fst from rfl]
+    rw [show μ.map Prod.fst = μ.fst from rfl]
+    rw [hμ_def, Measure.fst_compProd]
+  unfold InformationTheory.Shannon.IsMarkovChain
+  -- Step 1: identify K_Yi =ᵐ W_i.
+  have hK_Yi_eq : K_Yi =ᵐ[μ.map (fun z : (Fin n → α) × (Fin n → β) => z.1)] W_i := by
+    refine condDistrib_ae_eq_of_measure_eq_compProd
+      (fun z : (Fin n → α) × (Fin n → β) => z.1) hYi_meas.aemeasurable ?_
+    rw [h_map_X]
+    rw [hW_i_def]
+    -- μ.map (z.1, z.2 i) = q ⊗ₘ W.comap (eval i)
+    rw [hμ_def]
+    exact map_xn_yi_eq_compProd_comap W n q i
+  -- Step 2: identify K_YnoI =ᵐ W_noI.
+  have hK_YnoI_eq : K_YnoI =ᵐ[μ.map (fun z : (Fin n → α) × (Fin n → β) => z.1)] W_noI := by
+    refine condDistrib_ae_eq_of_measure_eq_compProd
+      (fun z : (Fin n → α) × (Fin n → β) => z.1) hYnoI_meas.aemeasurable ?_
+    rw [h_map_X, hW_noI_def, hμ_def]
+    exact map_xn_yNoI_eq_compProd_pi W n q i
+  -- Step 3: substitute K_YnoI → W_noI and K_Yi → W_i on RHS.
+  have h_compProd_eq :
+      (μ.map (fun z : (Fin n → α) × (Fin n → β) => z.1)) ⊗ₘ (K_YnoI ×ₖ K_Yi)
+        = (μ.map (fun z : (Fin n → α) × (Fin n → β) => z.1)) ⊗ₘ (W_noI ×ₖ W_i) := by
+    refine Measure.compProd_congr ?_
+    filter_upwards [hK_YnoI_eq, hK_Yi_eq] with a hY' hYi'
+    ext s hs
+    rw [Kernel.prod_apply, Kernel.prod_apply, hY', hYi']
+  rw [h_compProd_eq]
+  -- Step 4: Prove the joint factorization by showing the kernel equality
+  --   W_noI ×ₖ W_i = (toBlock W n).map (fun y => (y ∘ ↑, y i))
+  -- and then applying Measure.compProd_map.
+  rw [h_map_X]
+  -- Goal: μ.map (z => (z.1, z.2 ∘ ↑, z.2 i)) = q ⊗ₘ (W_noI ×ₖ W_i)
+  have hmap_pair : Measurable (fun y : Fin n → β =>
+      ((fun j : {j : Fin n // j ≠ i} => y j.val), y i)) :=
+    (measurable_pi_iff.mpr (fun j => measurable_pi_apply j.val)).prodMk (measurable_pi_apply i)
+  have h_kernel_eq :
+      W_noI ×ₖ W_i = (Channel.toBlock W n).map
+          (fun y : Fin n → β => ((fun j : {j : Fin n // j ≠ i} => y j.val), y i)) := by
+    -- Pointwise equality at each x; both sides are probability measures on a finite space.
+    classical
+    refine Kernel.ext (fun x => ?_)
+    refine Measure.ext_of_singleton (fun yb => ?_)
+    obtain ⟨y', b⟩ := yb
+    -- Compute LHS as singleton-product:
+    have h_LHS_compute :
+        ((W_noI ×ₖ W_i) x) {(y', b)}
+          = (∏ j : Fin n, W (x j)
+              (if h : j = i then (Set.univ : Set β) else ({y' ⟨j, h⟩} : Set β))) *
+            W (x i) ({b} : Set β) := by
+      rw [Kernel.prod_apply]
+      rw [show ({(y', b)} : Set (({j : Fin n // j ≠ i} → β) × β))
+          = ({y'} : Set _) ×ˢ ({b} : Set β) from by
+        ext ⟨p, c⟩; simp [Prod.ext_iff]]
+      rw [Measure.prod_prod, hW_noI_def, hW_i_def]
+      rw [Kernel.map_apply _ (measurable_pi_iff.mpr (fun j => measurable_pi_apply j.val))]
+      rw [Kernel.comap_apply, Channel.toBlock_apply]
+      rw [Measure.map_apply (measurable_pi_iff.mpr (fun j => measurable_pi_apply j.val))
+          (measurableSet_singleton _)]
+      have h_LHS_inner_set :
+          (fun y : Fin n → β => fun j : {j : Fin n // j ≠ i} => y j.val) ⁻¹'
+            ({y'} : Set ({j : Fin n // j ≠ i} → β))
+            = Set.univ.pi (fun j : Fin n =>
+              if h : j = i then (Set.univ : Set β) else ({y' ⟨j, h⟩} : Set β)) := by
+        ext y
+        simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_pi, Set.mem_univ,
+                   true_imp_iff]
+        refine ⟨?_, ?_⟩
+        · intro hy j; by_cases h : j = i
+          · simp [h]
+          · have := congrFun hy ⟨j, h⟩; simp [h, this]
+        · intro h; funext ⟨j, hj⟩
+          have := h j; simp [hj] at this; exact this
+      rw [h_LHS_inner_set, Measure.pi_pi]
+    -- Compute RHS as singleton:
+    have h_RHS_compute :
+        ((Channel.toBlock W n).map
+            (fun y : Fin n → β => ((fun j : {j : Fin n // j ≠ i} => y j.val), y i)) x)
+              {(y', b)}
+          = ∏ j : Fin n, W (x j)
+              (if h : j = i then ({b} : Set β) else ({y' ⟨j, h⟩} : Set β)) := by
+      rw [Kernel.map_apply _ hmap_pair]
+      rw [Measure.map_apply hmap_pair (measurableSet_singleton _)]
+      rw [Channel.toBlock_apply]
+      have h_RHS_preimage :
+          (fun y : Fin n → β => ((fun j : {j : Fin n // j ≠ i} => y j.val), y i)) ⁻¹'
+            ({(y', b)} : Set (({j : Fin n // j ≠ i} → β) × β))
+            = Set.univ.pi (fun j : Fin n =>
+              if h : j = i then ({b} : Set β) else ({y' ⟨j, h⟩} : Set β)) := by
+        ext y
+        simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.mk.injEq, Set.mem_pi,
+                   Set.mem_univ, true_imp_iff]
+        refine ⟨?_, ?_⟩
+        · rintro ⟨hy', hy_i⟩ j; by_cases h : j = i
+          · subst h; simp [hy_i]
+          · have := congrFun hy' ⟨j, h⟩; simp [h, this]
+        · intro h; refine ⟨?_, ?_⟩
+          · funext ⟨j, hj⟩; have := h j; simp [hj] at this; exact this
+          · have := h i; simp at this; exact this
+      rw [h_RHS_preimage, Measure.pi_pi]
+    rw [h_LHS_compute, h_RHS_compute]
+    -- LHS: (∏ j, W (x j) (if h : j = i then univ else {y' ⟨j, h⟩})) * W (x i) {b}
+    -- RHS: ∏ j, W (x j) (if h : j = i then {b} else {y' ⟨j, h⟩})
+    -- Split the products at j = i.
+    rw [show ∏ j : Fin n, W (x j)
+            (if h : j = i then ({b} : Set β) else ({y' ⟨j, h⟩} : Set β))
+        = W (x i) ({b} : Set β) *
+            ∏ j : Fin n, W (x j)
+              (if h : j = i then (Set.univ : Set β) else ({y' ⟨j, h⟩} : Set β)) from ?_]
+    · ring
+    · -- Pull out the j = i factor.
+      have h_i_mem : i ∈ (Finset.univ : Finset (Fin n)) := Finset.mem_univ i
+      rw [← Finset.mul_prod_erase _ _ h_i_mem]
+      rw [← Finset.mul_prod_erase _ (fun j : Fin n => W (x j)
+        (if h : j = i then (Set.univ : Set β) else ({y' ⟨j, h⟩} : Set β))) h_i_mem]
+      have h_at_i_LHS : W (x i)
+          (if h : i = i then ({b} : Set β) else ({y' ⟨i, h⟩} : Set β))
+            = W (x i) ({b} : Set β) := by simp
+      have h_at_i_RHS : W (x i)
+          (if h : i = i then (Set.univ : Set β) else ({y' ⟨i, h⟩} : Set β))
+            = W (x i) (Set.univ : Set β) := by simp
+      have h_RHS_univ : W (x i) (Set.univ : Set β) = 1 := measure_univ
+      rw [h_at_i_LHS, h_at_i_RHS, h_RHS_univ]
+      -- Goal: W (x i) {b} * ∏ (j ∈ erase i), ... = W (x i) {b} * (1 * ∏ (j ∈ erase i), ...)
+      rw [one_mul]
+      congr 1
+      apply Finset.prod_congr rfl
+      intro j hj
+      have hj_ne : j ≠ i := Finset.ne_of_mem_erase hj
+      simp [hj_ne]
+  -- Apply compProd_map.
+  rw [h_kernel_eq, Measure.compProd_map hmap_pair]
+  -- Goal: μ.map (...) = (q ⊗ₘ toBlock W n).map (Prod.map id (fun y => (y ∘ ↑, y i)))
+  -- The two maps are pointwise equal: (z.1, z.2 ∘ ↑, z.2 i) = Prod.map id (...) (z.1, z.2).
+  rfl
 
 /-- Phase 4-α (≤ direction): block capacity is bounded by `n · capacity W`.
 
