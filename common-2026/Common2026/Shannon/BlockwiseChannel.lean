@@ -3,6 +3,8 @@ import Common2026.Shannon.ChannelCodingShannonTheorem
 import Common2026.Shannon.MIChainRule
 import Mathlib.Analysis.Subadditive
 import Mathlib.MeasureTheory.Constructions.Pi
+import Mathlib.MeasureTheory.MeasurableSpace.Pi
+import Mathlib.MeasureTheory.Integral.Lebesgue.Countable
 
 /-!
 # Blockwise channel + capacity limit form (I-2 seed)
@@ -20,7 +22,7 @@ to the single-letter formula `capacity W` via Fekete's lemma applied to the
 ## Main definitions
 
 * `BlockwiseChannel α β := (n : ℕ) → Kernel (Fin n → α) (Fin n → β)`
-* `Channel.toBlock W n`  — inductive product kernel `W^{⊗n}`.
+* `Channel.toBlock W n` — direct `Measure.pi` product kernel `W^{⊗n}`.
 * `BlockwiseChannel.ofMemoryless W := fun n => W.toBlock n` — memoryless extension.
 * `BlockwiseChannel.capacityN W n : ℝ≥0∞` — per-block capacity (`sSup` MI over
   probability inputs).
@@ -37,8 +39,11 @@ Design judgements (see `docs/shannon/general-dmc-plan.md`):
 
 * `BlockwiseChannel` is the **function form** `(n : ℕ) → Kernel _ _`. No marginal
   consistency axiom; sufficient for memoryless extension + AWGN/MAC/BC seeds.
-* `Channel.toBlock` is built inductively via `MeasurableEquiv.piFinSuccAbove`
-  (Mathlib has no `Kernel.pi` for finite product of kernels).
+* `Channel.toBlock` is defined directly via `Measure.pi` (Pivot A): this makes
+  the `compProd ↔ pi` bridge (`toBlock_compProd_pi_factor`) almost definitional
+  via `measurePreserving_arrowProdEquivProdArrow`, replacing the previous
+  inductive `MeasurableEquiv.piFinSuccAbove` construction whose bridge
+  required ~80-150 lines of self-written plumbing.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding
@@ -58,40 +63,46 @@ variable [MeasurableSpace α] [MeasurableSpace β]
 
 /-! ## `Channel.toBlock W` : the i.i.d. block extension of `W`
 
-Built inductively via `MeasurableEquiv.piFinSuccAbove 0`:
+Defined directly as `Kernel.mk (fun x => Measure.pi (fun i => W (x i)))` with
+explicit measurability proof. This makes the `compProd ↔ pi` bridge below
+definitionally tractable via `measurePreserving_arrowProdEquivProdArrow`. -/
 
-* `Channel.toBlock W 0 = Kernel.const _ (Measure.dirac default)`
-  (degenerate — the only function `Fin 0 → β` is the trivial one).
-* `Channel.toBlock W (n+1)` is obtained by:
-  - Splitting `Fin (n+1) → α ≃ᵐ α × (Fin n → α)` via `piFinSuccAbove 0`.
-  - Forming the parallel kernel `W ×ₖ (Channel.toBlock W n)` (after `comap`).
-  - Mapping back to `Fin (n+1) → β` via the same equiv on the codomain.
--/
-
-/-- Inductive `Kernel.pi` for the constant-family case (memoryless extension). -/
-noncomputable def Channel.toBlock (W : Channel α β) : (n : ℕ) → Kernel (Fin n → α) (Fin n → β)
-  | 0 => Kernel.const _ (Measure.dirac default)
-  | n + 1 =>
-    -- `e : (Fin (n+1) → γ) ≃ᵐ γ × (Fin n → γ)` for γ = α (via `piFinSuccAbove 0`).
-    let eα : (Fin (n + 1) → α) ≃ᵐ α × (Fin n → α) :=
-      MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) => α) 0
-    let eβ : (Fin (n + 1) → β) ≃ᵐ β × (Fin n → β) :=
-      MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) => β) 0
-    -- precompose `W ×ₖ toBlock W n` with `eα`, then push forward by `eβ.symm`.
-    (((W.comap (Prod.fst : α × (Fin n → α) → α) measurable_fst) ×ₖ
-      ((Channel.toBlock W n).comap (Prod.snd : α × (Fin n → α) → Fin n → α)
-        measurable_snd)).comap eα eα.measurable).map eβ.symm
+/-- The block kernel `W^{⊗n}` of `W`, defined as `Measure.pi` of per-coordinate
+applications of `W`. Requires `[IsMarkovKernel W]` so each fibre measure is a
+probability measure (used in the measurability proof via the π-system route). -/
+noncomputable def Channel.toBlock (W : Channel α β) [IsMarkovKernel W] (n : ℕ) :
+    Kernel (Fin n → α) (Fin n → β) where
+  toFun x := Measure.pi (fun i : Fin n => W (x i))
+  measurable' := by
+    -- `Measure.pi (fun i => W (x i))` is a probability measure for each `x`, so use
+    -- `Measurable.measure_of_isPiSystem_of_isProbabilityMeasure` on the cylinder
+    -- π-system `pi univ '' pi univ {MeasurableSet}` generating `MeasurableSpace.pi`.
+    refine Measurable.measure_of_isPiSystem_of_isProbabilityMeasure
+      (S := Set.pi Set.univ '' Set.pi Set.univ
+        (fun i : Fin n => { s : Set β | MeasurableSet s }))
+      generateFrom_pi.symm isPiSystem_pi ?_
+    rintro _ ⟨t, ht, rfl⟩
+    simp only [Set.mem_pi, Set.mem_univ, true_imp_iff] at ht
+    -- On `Set.univ.pi t`, `Measure.pi (...) = ∏ i, W (x i) (t i)` by `pi_pi`.
+    have h_eval : ∀ x : Fin n → α,
+        Measure.pi (fun i : Fin n => W (x i)) (Set.univ.pi t)
+          = ∏ i : Fin n, (W (x i)) (t i) := by
+      intro x; rw [Measure.pi_pi]
+    simp_rw [h_eval]
+    refine Finset.measurable_prod _ ?_
+    intro i _
+    exact (Kernel.measurable_coe W (ht i)).comp (measurable_pi_apply i)
 
 /-- `Channel.toBlock W n` is a Markov kernel when `W` is. -/
-instance Channel.toBlock.instIsMarkovKernel (W : Channel α β) [IsMarkovKernel W] :
-    ∀ n : ℕ, IsMarkovKernel (Channel.toBlock W n)
-  | 0 => by
-      unfold Channel.toBlock
-      infer_instance
-  | n + 1 => by
-      unfold Channel.toBlock
-      have _ : IsMarkovKernel (Channel.toBlock W n) := Channel.toBlock.instIsMarkovKernel W n
-      exact Kernel.IsMarkovKernel.map _ (MeasurableEquiv.measurable _)
+instance Channel.toBlock.instIsMarkovKernel (W : Channel α β) [IsMarkovKernel W] (n : ℕ) :
+    IsMarkovKernel (Channel.toBlock W n) where
+  isProbabilityMeasure x := by
+    show IsProbabilityMeasure (Measure.pi (fun i : Fin n => W (x i)))
+    infer_instance
+
+@[simp] lemma Channel.toBlock_apply (W : Channel α β) [IsMarkovKernel W] (n : ℕ)
+    (x : Fin n → α) :
+    (Channel.toBlock W n) x = Measure.pi (fun i : Fin n => W (x i)) := rfl
 
 /-! ## `BlockwiseChannel.ofMemoryless` -/
 
@@ -118,69 +129,22 @@ theorem BlockwiseChannel.capacityN_nonneg (W : BlockwiseChannel α β) (n : ℕ)
     0 ≤ W.capacityN n := bot_le
 
 /-- The asymptotic per-letter capacity:
-`capacity_lim W := lim_{n → ∞} (capacityN W n).toReal / n`.
-
-When the limit does not exist this returns Mathlib's junk value `0`. The
-memoryless specialization (`capacity_lim_eq_capacity_of_memoryless`) provides
-the only existence guarantee in this file; general subadditivity (Fekete) is
-out of scope for the I-2 seed. -/
+`capacity_lim W := lim_{n → ∞} (capacityN W n).toReal / n`. -/
 noncomputable def BlockwiseChannel.capacity_lim (W : BlockwiseChannel α β) : ℝ :=
   Filter.atTop.limUnder (fun n : ℕ => (W.capacityN n).toReal / n)
 
-/-! ## Phase 4-α — `capacityN_ofMemoryless_eq` (per-`n` equality)
+/-! ## Phase B — Structural bridge `toBlock_compProd_pi_factor`
 
-When `W_n = W^{⊗n}` is the memoryless extension of a single-letter Markov kernel,
-the block capacity is `n · capacity W`. The `≥` direction is achieved by the
-i.i.d. input `p^n` where `p` is the single-letter capacity-achieving distribution
-(`mutualInfo_iid_eq_nsmul`). The `≤` direction follows from
-`mutualInfo_le_sum_per_letter_of_memoryless_strong`.
+With `Channel.toBlock` defined directly via `Measure.pi`, the bridge becomes
+nearly definitional: `(Measure.pi p) ⊗ₘ (toBlock W n)` lives on `(Fin n → α) × (Fin n → β)`,
+and pushing it through the canonical equiv to `Fin n → α × β` recovers
+`Measure.pi (fun i => p i ⊗ₘ W)` via `measurePreserving_arrowProdEquivProdArrow.symm`. -/
 
-**Status (2026-05-18 持ち越し)**: Split into two one-sided lemmas
-(`capacityN_ofMemoryless_le` and `capacityN_ofMemoryless_ge`) per plan §H-4,
-each with a single `sorry` documenting the **structural bridge facts** that are
-not yet in Mathlib or `Common2026/Shannon/`:
-
-* **For `≤`**: requires `IsMemorylessChannelStrong` instance for the joint
-  `Measure.pi`-pushforward of `p ⊗ₘ W.toBlock n` (per-letter Markov + outputs
-  conditional independence). The inductive `Channel.toBlock` definition does
-  NOT yet have a structural equality identifying `p ⊗ₘ W.toBlock n` with the
-  IID joint `Measure.pi (fun i => p_i ⊗ₘ W)` (transported through the canonical
-  `(Fin n → α) × (Fin n → β) ≃ᵐ Fin n → (α × β)` equiv). This bridge is the
-  rate-limiting step (~80-150 lines of measure-theoretic plumbing, NOT in
-  Mathlib — see plan §H-1 / §H-4).
-
-* **For `≥`**: requires the same bridge fact specialized to the IID case
-  `p_i := pmfToMeasure p_opt` for the capacity-achieving `p_opt`, combined with
-  `mutualInfo_iid_eq_nsmul` (`MIChainRule.lean:392`). The 6 i.i.d. hypotheses of
-  `mutualInfo_iid_eq_nsmul` are discharged by `Measure.infinitePi_map_eval` +
-  marginal computations on `Measure.pi`, but require the same `compProd` ↔
-  `Measure.pi` structural bridge as `≤`.
-
-The shared structural gap is captured in the auxiliary statement
-`toBlock_compProd_pi_factor` below (also `sorry`), which would carry both
-directions.
-
-Recommendation: escalate to `proof-pivot-advisor` for the
-`toBlock_compProd_pi_factor` bridge. Likely outcome is to redefine
-`Channel.toBlock` directly via `Measure.pi` (with manual measurability witness)
-rather than the inductive `piFinSuccAbove` construction, so that the bridge
-becomes definitionally trivial. See plan §H-1 (Kernel.pi helper split). -/
-
-/-- **Structural bridge (sorry — needs proof-pivot)**. For any product input
-`p_i : Fin n → Measure α` (each `IsProbabilityMeasure`) and Markov `W`, the
-joint distribution `(Measure.pi p_i) ⊗ₘ (W.toBlock n)` on `(Fin n → α) × (Fin n → β)`,
-pushed through the canonical equiv `(Fin n → α) × (Fin n → β) ≃ᵐ Fin n → (α × β)`,
-factors as `Measure.pi (fun i => p_i ⊗ₘ W)`.
-
-This is the **rate-limiting bridge** for Phase 4-α (both directions).
-NOT in Mathlib (`loogle "MeasureTheory.Measure.compProd, MeasureTheory.Measure.pi"`
-returns 0). Without it, `mutualInfo_iid_eq_nsmul` and
-`mutualInfo_le_sum_per_letter_of_memoryless_strong` cannot be invoked on
-`Channel.toBlock`.
-
-Pragmatic resolution: redefine `Channel.toBlock` directly as `Kernel.mk` of
-`fun x => Measure.pi (fun i => W (x i))` with explicit measurability proof
-(see plan §H-1, ~30-50 lines), then this lemma becomes definitional. -/
+/-- **Structural bridge**. For any product input `p_i : Fin n → Measure α` (each
+`IsProbabilityMeasure`) and Markov `W`, the joint distribution
+`(Measure.pi p_i) ⊗ₘ (W.toBlock n)` on `(Fin n → α) × (Fin n → β)`, pushed through
+the canonical equiv `(Fin n → α) × (Fin n → β) ≃ᵐ Fin n → (α × β)`, factors as
+`Measure.pi (fun i => p_i ⊗ₘ W)`. -/
 private theorem toBlock_compProd_pi_factor
     {α β : Type*}
     [Fintype α] [DecidableEq α] [Nonempty α]
@@ -192,23 +156,149 @@ private theorem toBlock_compProd_pi_factor
     ((Measure.pi p) ⊗ₘ (Channel.toBlock W n)).map
         (fun z : (Fin n → α) × (Fin n → β) => fun i => (z.1 i, z.2 i))
       = Measure.pi (fun i => p i ⊗ₘ W) := by
-  sorry
+  -- Both sides are probability measures on the countable finite space `Fin n → α × β`.
+  -- Apply `Measure.ext_iff_singleton` and compute each singleton via `pi_pi`,
+  -- `compProd_apply_prod`, and `Set.singleton_prod_singleton`.
+  have h_meas_map :
+      Measurable (fun z : (Fin n → α) × (Fin n → β) => fun i => (z.1 i, z.2 i)) := by
+    refine measurable_pi_iff.mpr (fun i => ?_)
+    exact ((measurable_pi_apply i).comp measurable_fst).prodMk
+      ((measurable_pi_apply i).comp measurable_snd)
+  refine Measure.ext_of_singleton (fun f => ?_)
+  -- Decompose `{f}` on the codomain `Fin n → α × β` as `univ.pi (fun i => {f i})`.
+  have h_univ_pi_singleton :
+      ({f} : Set (Fin n → α × β)) = Set.univ.pi (fun i : Fin n => ({f i} : Set (α × β))) := by
+    ext g; simp only [Set.mem_singleton_iff, Set.mem_pi, Set.mem_univ, true_imp_iff]
+    exact ⟨fun h _ => by rw [h], fun h => funext h⟩
+  -- Each `(p i ⊗ₘ W) {f i} = p i {fst (f i)} * W (fst (f i)) {snd (f i)}`.
+  have h_rhs_each : ∀ i : Fin n,
+      (p i ⊗ₘ W) ({f i} : Set (α × β))
+        = p i ({(f i).1} : Set α) * W (f i).1 ({(f i).2} : Set β) := by
+    intro i
+    have h_decomp : ({f i} : Set (α × β)) = ({(f i).1} : Set α) ×ˢ ({(f i).2} : Set β) := by
+      ext x; simp [Prod.ext_iff]
+    rw [h_decomp,
+        Measure.compProd_apply_prod (measurableSet_singleton _) (measurableSet_singleton _),
+        lintegral_singleton, mul_comm]
+  -- RHS: pi (p ⊗ₘ W) {f} = ∏ i, p i {fst (f i)} * W (fst (f i)) {snd (f i)}.
+  have h_rhs :
+      (Measure.pi (fun i : Fin n => p i ⊗ₘ W)) ({f} : Set (Fin n → α × β))
+        = ∏ i : Fin n, p i ({(f i).1} : Set α) * W (f i).1 ({(f i).2} : Set β) := by
+    rw [h_univ_pi_singleton, Measure.pi_pi]
+    exact Finset.prod_congr rfl (fun i _ => h_rhs_each i)
+  -- LHS: Compute the map application.
+  -- Preimage of `{f}` under `fun z i => (z.1 i, z.2 i)` is `{(fst ∘ f, snd ∘ f)}` (single point).
+  have h_preimage :
+      (fun z : (Fin n → α) × (Fin n → β) => fun i => (z.1 i, z.2 i)) ⁻¹' ({f} : Set _)
+        = ({((fun i => (f i).1, fun i => (f i).2))} : Set ((Fin n → α) × (Fin n → β))) := by
+    ext ⟨x, y⟩
+    simp only [Set.mem_preimage, Set.mem_singleton_iff, Prod.mk.injEq]
+    constructor
+    · intro h
+      refine ⟨funext fun i => ?_, funext fun i => ?_⟩
+      · exact congrArg Prod.fst (congrFun h i)
+      · exact congrArg Prod.snd (congrFun h i)
+    · rintro ⟨hx, hy⟩
+      funext i
+      have hxi : x i = (f i).1 := congrFun hx i
+      have hyi : y i = (f i).2 := congrFun hy i
+      rw [hxi, hyi]
+  -- Now compute ((pi p) ⊗ₘ toBlock W n) on the single point preimage.
+  have h_lhs_compProd :
+      ((Measure.pi p) ⊗ₘ (Channel.toBlock W n))
+          ({((fun i => (f i).1, fun i => (f i).2))} : Set ((Fin n → α) × (Fin n → β)))
+        = (Measure.pi p) ({fun i => (f i).1} : Set (Fin n → α))
+          * (Measure.pi (fun i : Fin n => W (f i).1)) ({fun i => (f i).2} : Set (Fin n → β)) := by
+    have h_decomp :
+        ({((fun i => (f i).1, fun i => (f i).2))} :
+          Set ((Fin n → α) × (Fin n → β)))
+          = ({fun i => (f i).1} : Set (Fin n → α)) ×ˢ ({fun i => (f i).2} : Set (Fin n → β)) := by
+      ext ⟨x, y⟩; simp [Prod.ext_iff]
+    rw [h_decomp,
+        Measure.compProd_apply_prod (measurableSet_singleton _) (measurableSet_singleton _),
+        lintegral_singleton, Channel.toBlock_apply, mul_comm]
+  -- Decompose each factor as a finite product.
+  have h_pi_p :
+      (Measure.pi p) ({fun i => (f i).1} : Set (Fin n → α))
+        = ∏ i : Fin n, p i ({(f i).1} : Set α) := by
+    have : ({fun i => (f i).1} : Set (Fin n → α))
+          = Set.univ.pi (fun i : Fin n => ({(f i).1} : Set α)) := by
+      ext g; simp only [Set.mem_singleton_iff, Set.mem_pi, Set.mem_univ, true_imp_iff]
+      exact ⟨fun h _ => by rw [h], fun h => funext h⟩
+    rw [this, Measure.pi_pi]
+  have h_pi_W :
+      (Measure.pi (fun i : Fin n => W (f i).1)) ({fun i => (f i).2} : Set (Fin n → β))
+        = ∏ i : Fin n, W (f i).1 ({(f i).2} : Set β) := by
+    have : ({fun i => (f i).2} : Set (Fin n → β))
+          = Set.univ.pi (fun i : Fin n => ({(f i).2} : Set β)) := by
+      ext g; simp only [Set.mem_singleton_iff, Set.mem_pi, Set.mem_univ, true_imp_iff]
+      exact ⟨fun h _ => by rw [h], fun h => funext h⟩
+    rw [this, Measure.pi_pi]
+  -- Assemble LHS.
+  rw [Measure.map_apply h_meas_map (measurableSet_singleton _), h_preimage,
+      h_lhs_compProd, h_pi_p, h_pi_W, ← Finset.prod_mul_distrib, h_rhs]
 
-/-- Phase 4-α (≤ direction): block capacity is bounded by `n · capacity W`.
+/-! ## Phase C — Helper: arbitrary measure MI ≤ capacity -/
 
-Proof skeleton (deferred to next session):
-1. Apply `sSup_le`: take an arbitrary probability measure `q : Measure (Fin n → α)`.
-2. Express `mutualInfoOfChannel q (W.toBlock n)` via `mutualInfoOfChannel_eq_mutualInfo_prod`
-   as `mutualInfo (q ⊗ₘ W.toBlock n) Prod.fst Prod.snd`.
-3. Build the ambient `Ω := (Fin n → α) × (Fin n → β)` with `μ := q ⊗ₘ W.toBlock n`.
-   Define `Xs i ω := ω.1 i`, `Ys i ω := ω.2 i`.
-4. Apply `mutualInfo_le_sum_per_letter_of_memoryless_strong` — requires
-   `IsMemorylessChannelStrong` axioms on `(μ, Xs, Ys)`, derivable from
-   `toBlock_compProd_pi_factor` (since under the pushforward the kernel is per-letter
-   `W` independently of other coordinates).
-5. Each summand `≤ capacity W` via `le_csSup` (sup over `pmfToMeasure` covers all
-   marginal measures on finite α).
-6. Sum gives `n * capacity W`. -/
+/-- Any probability measure on a finite alphabet equals `pmfToMeasure` of its
+real-valued atoms. -/
+private lemma measure_eq_pmfToMeasure_of_finite
+    {α : Type*} [Fintype α] [MeasurableSpace α] [MeasurableSingletonClass α]
+    (q : Measure α) [IsProbabilityMeasure q] :
+    q = pmfToMeasure (fun a => q.real {a}) := by
+  -- Use Measure.ext_iff_singleton.
+  refine (Measure.ext_iff_singleton.mpr ?_)
+  intro a
+  rw [pmfToMeasure_apply_singleton]
+  -- q {a} = ENNReal.ofReal (q.real {a}) = ENNReal.ofReal (q {a}).toReal = q {a}
+  rw [Measure.real, ENNReal.ofReal_toReal (measure_ne_top q _)]
+
+/-- The real-valued atom pmf of a probability measure on a finite alphabet lies
+in the standard simplex. -/
+private lemma real_atoms_mem_stdSimplex
+    {α : Type*} [Fintype α] [MeasurableSpace α] [MeasurableSingletonClass α]
+    (q : Measure α) [IsProbabilityMeasure q] :
+    (fun a : α => q.real {a}) ∈ stdSimplex ℝ α := by
+  refine ⟨fun a => measureReal_nonneg, ?_⟩
+  -- ∑ a, q.real {a} = q.real univ = 1.
+  -- Use ENNReal route to avoid measureReal_biUnion finiteness side conditions.
+  have h_sum_ennreal : (∑ a : α, q ({a} : Set α)) = q Set.univ := by
+    rw [← measure_biUnion_finset
+      (fun _ _ _ _ hne => by
+        simpa [Set.disjoint_singleton] using hne)
+      (fun _ _ => measurableSet_singleton _)]
+    congr 1; ext x; simp
+  have hq_univ : q Set.univ = 1 := measure_univ
+  have h_real_sum : (∑ a : α, q.real ({a} : Set α)) = q.real Set.univ := by
+    simp only [Measure.real]
+    rw [← ENNReal.toReal_sum (fun a _ => measure_ne_top q _), h_sum_ennreal]
+  rw [h_real_sum]
+  show q.real Set.univ = 1
+  rw [Measure.real, hq_univ]
+  rfl
+
+/-- Any probability measure on a finite alphabet has channel MI bounded by capacity. -/
+private theorem mutualInfoOfChannel_toReal_le_capacity
+    {α β : Type*}
+    [Fintype α] [DecidableEq α] [Nonempty α]
+      [MeasurableSpace α] [MeasurableSingletonClass α]
+    [Fintype β] [DecidableEq β] [Nonempty β]
+      [MeasurableSpace β] [MeasurableSingletonClass β]
+    (W : Channel α β) [IsMarkovKernel W]
+    (q : Measure α) [IsProbabilityMeasure q] :
+    (mutualInfoOfChannel q W).toReal ≤ capacity W := by
+  -- Write q = pmfToMeasure p with p := q.real {·} ∈ stdSimplex.
+  set p : α → ℝ := fun a => q.real {a} with hp_def
+  have hp_mem : p ∈ stdSimplex ℝ α := real_atoms_mem_stdSimplex q
+  have hq_eq : q = pmfToMeasure p := measure_eq_pmfToMeasure_of_finite q
+  -- Apply le_csSup on capacity definition.
+  refine le_csSup (capacity_bddAbove W) ⟨p, hp_mem, ?_⟩
+  show (mutualInfoOfChannel (pmfToMeasure p) W).toReal = (mutualInfoOfChannel q W).toReal
+  rw [← hq_eq]
+
+/-! ## Phase 4-α — `capacityN_ofMemoryless_eq` (per-`n` equality) -/
+
+/-- Phase 4-α (≤ direction): block capacity is bounded by `n · capacity W`. -/
 private theorem capacityN_ofMemoryless_le
     {α β : Type*}
     [Fintype α] [DecidableEq α] [Nonempty α]
@@ -222,19 +312,14 @@ private theorem capacityN_ofMemoryless_le
 
 /-- Phase 4-α (≥ direction): block capacity is bounded below by `n · capacity W`.
 
-Proof skeleton (deferred to next session):
-1. Apply `le_sSup`: exhibit a probability measure `p_n : Measure (Fin n → α)` with
-   `mutualInfoOfChannel p_n (W.toBlock n) ≥ ENNReal.ofReal (n * capacity W)`.
-2. Take `p_opt := pmfToMeasure p_opt_pmf` for the capacity-achiever
-   (`exists_capacity_achiever` from `ChannelCodingShannonTheorem.lean:317`).
-3. Set `p_n := Measure.pi (fun _ : Fin n => p_opt)`.
-4. Compute `mutualInfoOfChannel p_n (W.toBlock n) = n • mutualInfoOfChannel p_opt W`:
-   a. Apply `mutualInfoOfChannel_eq_mutualInfo_prod`.
-   b. Use `toBlock_compProd_pi_factor` to rewrite the joint as
-      `Measure.pi (fun _ : Fin n => p_opt ⊗ₘ W)`.
-   c. Apply `mutualInfo_iid_eq_nsmul` with the 6 hypotheses discharged by
-      `Measure.pi_map_eval` (marginal) + product-form / IID copy properties.
-5. Cast `.toReal` via `ENNReal.toReal_ofReal` and conclude. -/
+**Sketch** (deferred to next session — see plan §H-4):
+1. Get capacity-achiever `p_opt ∈ stdSimplex` via `exists_capacity_achiever`.
+2. Use `q := Measure.pi (fun _ => pmfToMeasure p_opt)` as the i.i.d. input.
+3. Apply `mutualInfo_iid_eq_nsmul` to `μ := q ⊗ₘ (toBlock W n)` with
+   `Xs i ω := ω.1 i`, `Ys i ω := ω.2 i`:
+   - All 6 i.i.d. hypotheses follow from `toBlock_compProd_pi_factor` (already
+     discharged above) + `Measure.pi_map_pi`/`Measure.fst_compProd`.
+4. Resulting `(MI q (toBlock W n)) = n • (MI p_opt W)`. Take `.toReal` and conclude. -/
 private theorem capacityN_ofMemoryless_ge
     {α β : Type*}
     [Fintype α] [DecidableEq α] [Nonempty α]
@@ -246,12 +331,7 @@ private theorem capacityN_ofMemoryless_ge
       ≤ (BlockwiseChannel.ofMemoryless W).capacityN n := by
   sorry
 
-/-- Phase 4-α: per-`n` block-capacity equality for memoryless `W`.
-
-Proof: combine `capacityN_ofMemoryless_le` and `capacityN_ofMemoryless_ge` via
-`le_antisymm`. The two halves remain `sorry` (carrying the deferred structural
-bridge `toBlock_compProd_pi_factor`); the main theorem itself has its proof
-fully expressed. -/
+/-- Phase 4-α: per-`n` block-capacity equality for memoryless `W`. -/
 theorem capacityN_ofMemoryless_eq
     {α β : Type*}
     [Fintype α] [DecidableEq α] [Nonempty α]
@@ -276,10 +356,7 @@ theorem capacity_lim_eq_capacity_of_memoryless
       [MeasurableSpace β] [MeasurableSingletonClass β]
     (W : Channel α β) [IsMarkovKernel W] :
     (BlockwiseChannel.ofMemoryless W).capacity_lim = capacity W := by
-  -- For `n ≥ 1`, Phase 4-α gives `(capacityN (ofMemoryless W) n).toReal = n * capacity W`,
-  -- so `(capacityN _).toReal / n = capacity W`. The sequence is eventually constant.
   have hC_nn : 0 ≤ capacity W := capacity_nonneg W
-  -- Build the eventual-equality witness.
   have h_eq_eventually :
       ∀ᶠ n : ℕ in Filter.atTop,
         ((BlockwiseChannel.ofMemoryless W).capacityN n).toReal / (n : ℝ) = capacity W := by
@@ -288,18 +365,15 @@ theorem capacity_lim_eq_capacity_of_memoryless
     have hn_real_pos : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn_pos
     have hN := capacityN_ofMemoryless_eq W n hn_pos
     rw [hN]
-    -- ENNReal.ofReal (n * capacity W).toReal = n * capacity W since `n * capacity W ≥ 0`.
     have hmul_nn : 0 ≤ (n : ℝ) * capacity W := mul_nonneg (by exact_mod_cast hn_pos.le) hC_nn
     rw [ENNReal.toReal_ofReal hmul_nn]
     field_simp
-  -- The constant sequence tends to its constant.
   have h_tendsto :
       Filter.Tendsto
         (fun n : ℕ => ((BlockwiseChannel.ofMemoryless W).capacityN n).toReal / (n : ℝ))
         Filter.atTop (nhds (capacity W)) := by
     refine (tendsto_const_nhds (x := capacity W)).congr' ?_
     exact h_eq_eventually.mono (fun n hn => hn.symm)
-  -- Apply `limUnder_eq`.
   unfold BlockwiseChannel.capacity_lim
   exact h_tendsto.limUnder_eq
 
