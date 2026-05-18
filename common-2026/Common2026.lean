@@ -51,6 +51,7 @@ import Common2026.Shannon.ChannelCodingConverseGeneral
 import Common2026.Shannon.ChannelCodingConverseGeneralComplete
 import Common2026.Shannon.CondEntropyMemoryless
 import Common2026.Shannon.ChannelCodingConverseGeneralStrong
+import Common2026.Shannon.ChannelCodingConverseMemorylessPure
 import Common2026.Shannon.ChannelCodingStrongConverse
 import Common2026.Shannon.ChannelCodingFeedback
 import Common2026.Shannon.ChannelCodingFeedbackComplete
