@@ -92,3 +92,7 @@ import Common2026.Shannon.BackwardFiltration
 import Common2026.Shannon.BackwardMartingale
 import Common2026.Shannon.BirkhoffErgodic
 import Common2026.Probability.TwoSidedExtension
+-- Typed Random Variable API (I-1)
+import Common2026.Shannon.TypedRV
+-- Asymptotic / exponent framework (I-3)
+import Common2026.InformationTheory.Asymptotic
