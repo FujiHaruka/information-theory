@@ -1,0 +1,274 @@
+# Verified Information Theory Textbook ロードマップ 📚
+
+> **目的**: 本プロジェクトの最終アウトプットを「形式証明済み定理から生成される情報理論の教科書」とする。
+> Cover & Thomas *Elements of Information Theory* を骨格に、Lean 4 + Mathlib で 0 sorry に着地した
+> 主定理群を一次資料として、**reference library** と **読み物としての教科書原稿** の両方を publish する。
+> 単発 seed の `docs/moonshot-seeds.md` がカード一覧、本ファイルは **章単位の完成判定 + 残ギャップを束ねる
+> 上位ロードマップ**。
+
+<!--
+雛形メモ:
+- 本ファイルは複数 moonshot seed を束ねる上位ロードマップ。個別 seed は `docs/moonshot-seeds.md`
+  にカード化し、本ファイルからは「章単位の完成判定」「seed ↔ 章のマッピング」で参照する。
+- 章単位の進捗表は append-only 更新。状態絵文字: 📋 未着手 / 🚧 進行中 / ✅ 完了 / 🔄 方針変更
+- 各 seed は `→ <plan path>` ポインタを書き、計画着手時に該当 plan ファイルを生やす
+- 「教科書として穴がない」基準で seed を選定。Cover-Thomas Ch.6 / 13 / 14 / 16 は明示的に scope-out
+-->
+
+## ゴール / Approach
+
+**最終ゴール**: Cover & Thomas *Elements of Information Theory* (2nd ed.) の Ch.2–12, 15, 17 を骨格
+として、**Lean 形式化された定理から生成される教科書**を publish する。本プロジェクトの主成果物は
+3 層に分かれる:
+
+1. **Verified library** (`Common2026/`): 主定理が 0 sorry で publish 済みの Lean モジュール群。
+2. **Typed RV API**: 教科書として読める書き味 (`entropy X`, `mutualInfo X Y`, `H(X|Y)`) を支える
+   外向き API 層。internal 証明は measure-theoretic 表現で良いが、教科書本文と一対一対応する
+   notation / 補助 lemma を確立する。
+3. **教科書原稿**: 上記 2 層を一次資料として、各章の定理ステートメントと証明ハイライトを Lean
+   定義へ link した markdown / LaTeX / 製本物。
+
+**Approach**: 既に完成している discrete core (Ch.2–5, 7, 10, 11 大部分) を起点に、`Tier 1 → Tier 4`
+の順で seed 化 + 着手する。各 seed は **`docs/moonshot-seeds.md` にカード追加**して個別計画
+(`docs/<family>/<topic>-moonshot-plan.md`) に展開、本ロードマップでは **章単位の完成判定 + seed
+依存関係** だけを管理する。
+
+## 完成判定
+
+「Lean で verified な Cover & Thomas」を名乗るための必要条件:
+
+- **Ch.2–5, 7–12, 15, 17 の主定理が 0 sorry で publish 済み** (詳細は下記章対応表)
+- **Typed RV API** が外向き API として揃い、教科書本文の statement が形式化版に直接対応する
+- 各 seed が `docs/<family>/<topic>-moonshot-plan.md` で計画化され、phase 単位で archive 可能
+- 主成果物 3 層 (library / API / 原稿) の各層に index と cross-link がある
+
+**scope-out (専門性が異なるため別 library 化)**:
+
+- Ch.6 Gambling and Data Compression (Kelly criterion / doubling rate)
+- Ch.13 Universal Source Coding の一部 (LZ78 漸近最適性は scope-in、Lempel-Ziv complexity は out)
+- Ch.14 Kolmogorov Complexity (計算可能性論との接合点、別 library)
+- Ch.16 Information Theory and Portfolio Theory
+
+## 章対応進捗
+
+| Ch. | 章タイトル | 状態 | 代表定理 (済) | 必要追加 seed |
+|---|---|---|---|---|
+| 2 | Entropy, Relative Entropy, Mutual Information | ✅ | `Shannon/Entropy`, `MutualInfo`, `MIChainRule`, DPI | — |
+| 3 | AEP | ✅ | `AEP.aep_ae`, `aep_inProbability`, `typicalSet_*` | — |
+| 4 | Entropy Rates of Stochastic Processes | ✅ | `EntropyRate.entropyRate_exists_of_stationary`, `_eq_lim_condEntropy`, `ShannonMcMillanBreiman`, `BirkhoffErgodic` | — |
+| 5 | Data Compression | 🟡 | `ShannonCode.shannonCode_expected_length_bounds`, Kraft 逆 | **T1-A Huffman**, **T4-A Arithmetic / LZ78** |
+| 6 | Gambling and Data Compression | ✖ scope-out | — | — |
+| 7 | Channel Capacity | ✅ | `shannon_noisy_channel_coding_theorem_general_full`, `_strong_converse`, `_feedback_complete` | — |
+| 8 | Differential Entropy | ✅ | `DifferentialEntropy.differentialEntropy_gaussianReal`, `_le_gaussian_of_variance_le` | — |
+| 9 | Gaussian Channel | 📋 | — | **T2-A AWGN**, **T2-B Parallel Gaussian + water-filling**, **T2-C Bandlimited / Shannon-Hartley** |
+| 10 | Rate Distortion | ✅ | `rate_distortion_achievability`, `_converse_*`, `_convexity`, n-letter converse | — |
+| 11 | Information Theory and Statistics | 🟡 | `stein_strong_law`, `sanov_ldp_equality`, `Pinsker`, `CsiszarProjection` | **T1-B Chernoff**, **T1-C Cramér**, **T1-D Hoeffding tradeoff** |
+| 12 | Maximum Entropy | 🟡 | `entropy_le_log_card`, `entropy_eq_log_card_iff` | **T3-A Constrained MaxEnt (Lagrange / exponential family)** |
+| 13 | Universal Source Coding | 📋 | — | **T4-A LZ78 漸近最適性** (Kolmogorov complexity 部分は scope-out) |
+| 14 | Kolmogorov Complexity | ✖ scope-out | — | — |
+| 15 | Network Information Theory | 🟡 | `SlepianWolf*` 完備 | **T3-B MAC**, **T3-C Broadcast (degraded)**, **T3-D Wyner-Ziv**, **T3-E Joint source-channel coding (separation)**, **T3-F Relay + cut-set** |
+| 16 | Information Theory and Portfolio Theory | ✖ scope-out | — | — |
+| 17 | Inequalities in Information Theory | 🟡 | `Han`, `Shearer`, `LoomisWhitney`, `BrascampLieb`, `HypercubeEdgeBoundary`, `Pinsker`, `_sharp` | **T2-D EPI**, **T2-E Brunn-Minkowski**, **T2-F Fisher info / de Bruijn identity** |
+
+状態: ✅ = 主定理 publish 済 / 🟡 = 部分達成、追加 seed 要 / 📋 = 未着手 / ✖ = scope-out / 🔄 = 方針変更
+
+## seed カード (未着手分)
+
+> ここから下は **追加すべき seed 一覧**。優先度ではなく Tier (穴の深さ) で分類。すべて 📋 未着手。
+> 着手判断 = 該当 seed を `docs/moonshot-seeds.md` のカード一覧にコピー + `docs/<family>/<topic>-moonshot-plan.md`
+> を生成して `moonshot-plan-template.md` で膨らませる。本ロードマップにはポインタ `→ <plan path>` を追記する。
+
+### Tier 1 — discrete core の穴 (教科書として必須)
+
+#### T1-A. Huffman 最適性 📋
+
+- **目的**: Ch.5 を Shannon code 紹介で終わらせない。最小平均符号長を達成する prefix code の構成と最適性。
+- **statement**: 任意の pmf `p : Fin n → ℝ` に対し、Huffman 木が生成する prefix code が
+  `∀ C : PrefixCode, expectedLength p (huffmanCode p) ≤ expectedLength p C` を満たす。
+- **基盤**: `Common2026/Shannon/ShannonCode.lean`, `ShannonCodeKraftReverse.lean` (Kraft 不等式逆向き)。
+- **依存**: なし (独立して着手可)。
+- **想定 family**: `docs/shannon/huffman-*`。
+
+#### T1-B. Chernoff Information 📋
+
+- **目的**: Bayesian 仮説検定の指数。Stein と並ぶ Ch.11 の柱の片側。
+- **statement**: `P_e^{(n)} \doteq \exp(-n \cdot C(P_1, P_2))` where `C(P_1, P_2) := -\min_{λ ∈ [0,1]} \log \sum_x P_1(x)^λ P_2(x)^{1-λ}`。
+- **基盤**: `Stein.lean`, `StrongStein.lean`, `Pinsker.lean`。proof-log で「Stein/Sanov plumbing から 70-80% 再利用可」と記録。
+- **依存**: T1-D (Hoeffding tradeoff) との補間関係。
+- **想定 family**: `docs/shannon/chernoff-*`。
+
+#### T1-C. Cramér's Theorem 📋
+
+- **目的**: IID 和の LDP。large deviations の独立 statement。
+- **statement**: 独立同分布 `X_i` に対し、`(1/n) \log P[\bar{S}_n \in A] \to -\inf_{x \in A} I(x)` where `I = Λ^*`。
+- **基盤**: `SanovLDPEquality.lean` (Sanov の上下完成) からほぼ含意可。
+- **依存**: 独立形 statement への reshape。
+- **想定 family**: `docs/shannon/cramer-*`。
+
+#### T1-D. Hoeffding bound (Type I/II tradeoff exponent) 📋
+
+- **目的**: Stein (Type II 固定) と Chernoff (Bayesian) の補間。
+- **statement**: 任意の `α ∈ [0, D(P_1\|P_2)]` に対し、`E_2(α) := \min_{Q : D(Q\|P_1) ≤ α} D(Q\|P_2)`。
+- **基盤**: T1-B Chernoff と一括で進めるのが自然。
+- **想定 family**: `docs/shannon/hoeffding-tradeoff-*`。
+
+### Tier 2 — continuous / Gaussian theory の完成
+
+#### T2-A. AWGN Channel Capacity 📋
+
+- **目的**: Ch.9 開通。Gaussian channel `Y = X + Z`, `Z ∼ 𝒩(0, N)` の容量 `C = (1/2)\log(1 + P/N)`。
+- **statement**: 出力電力制約 `𝔼[X^2] ≤ P` の下で `C = (1/2)\log(1 + P/N)` が達成 + converse。
+- **基盤**: `DifferentialEntropy.lean` (Gaussian entropy + max entropy 完成)。
+- **依存**: typed RV API 経路の continuous 版整備。
+- **想定 family**: `docs/shannon/awgn-*`。
+
+#### T2-B. Parallel Gaussian Channels + Water-filling 📋
+
+- **目的**: Ch.9 を AWGN 単独で終わらせない。容量領域の制約付き最大化。
+- **statement**: 並列 AWGN `Y_i = X_i + Z_i`, `Z_i ∼ 𝒩(0, N_i)` の総電力制約下の容量と water-filling 解。
+- **依存**: T2-A AWGN。
+- **想定 family**: `docs/shannon/parallel-gaussian-*`。
+
+#### T2-C. Bandlimited Channel / Shannon-Hartley 📋
+
+- **目的**: 連続時間 AWGN への接続。
+- **statement**: 帯域 `W`, 雑音電力密度 `N_0` の bandlimited AWGN の容量 `C = W \log(1 + P/(N_0 W))`。
+- **依存**: T2-A + 連続時間版の sampling theorem (Mathlib gap 調査要)。
+- **想定 family**: `docs/shannon/shannon-hartley-*`。
+
+#### T2-D. Entropy Power Inequality 📋
+
+- **目的**: Ch.17 の頂点。Gaussian theory の閉じ。
+- **statement**: 独立 `X, Y` に対し `e^{2h(X+Y)} ≥ e^{2h(X)} + e^{2h(Y)}`。
+- **基盤**: `DifferentialEntropy.lean`, T2-F Fisher info + de Bruijn 経由が標準。
+- **依存**: T2-A / T2-F。
+- **想定 family**: `docs/shannon/epi-*`。
+
+#### T2-E. Brunn-Minkowski (entropy form) 📋
+
+- **目的**: EPI と表裏。`LoomisWhitney` の系譜で自然な後続。
+- **statement**: 凸体 `A, B ⊂ ℝ^n` に対し `|A + B|^{1/n} ≥ |A|^{1/n} + |B|^{1/n}` の entropy 形。
+- **依存**: T2-D EPI と相互強化。
+- **想定 family**: `docs/shannon/brunn-minkowski-*`。
+
+#### T2-F. Fisher Information + de Bruijn Identity 📋
+
+- **目的**: T2-D EPI の証明経路として標準。
+- **statement**: `(d/dt) h(X + \sqrt{t} Z) = (1/2) J(X + \sqrt{t} Z)` where `J` は Fisher information。
+- **依存**: なし (T2-A 後、T2-D の前)。
+- **想定 family**: `docs/shannon/fisher-info-*`。
+
+### Tier 3 — Maximum Entropy + Network IT
+
+#### T3-A. Constrained Maximum Entropy (Lagrange / exponential family) 📋
+
+- **目的**: Ch.12 を実質化。`entropy_le_log_card` 単独では薄い。
+- **statement**: 制約 `𝔼[f_i(X)] = c_i` 下で max entropy 分布が exponential family `p^*(x) = \exp(\sum \lambda_i f_i(x) - \psi(\lambda))` となる characterization。
+- **基盤**: `MaxEntropy.lean`, `CsiszarProjection.lean` (I-projection との対応)。
+- **依存**: なし。
+- **想定 family**: `docs/shannon/max-entropy-constrained-*`。
+
+#### T3-B. Multiple Access Channel (MAC) 📋
+
+- **目的**: network IT の最初の柱。Ch.15 の入口。
+- **statement**: MAC `(X_1, X_2) \to Y` の capacity region characterization (`R_1 ≤ I(X_1; Y | X_2)`, `R_2 ≤ I(X_2; Y | X_1)`, `R_1 + R_2 ≤ I(X_1, X_2; Y)`)。
+- **基盤**: `ChannelCoding*` 系の単一ユーザ achievability / converse、`SlepianWolf*` の region 表現。
+- **依存**: typed RV API (multi-user 表現)。
+- **想定 family**: `docs/shannon/mac-*`。
+
+#### T3-C. Broadcast Channel (degraded) 📋
+
+- **目的**: Ch.15 の第 2 柱。superposition coding。
+- **statement**: degraded BC `X \to Y_1 \to Y_2` の capacity region。
+- **依存**: T3-B MAC で multi-user API 整備後。
+- **想定 family**: `docs/shannon/broadcast-channel-*`。
+
+#### T3-D. Wyner-Ziv 📋
+
+- **目的**: lossy distributed (decoder-side info)。Slepian-Wolf plan で対象外と明記された箇所を回収。
+- **statement**: side info `Y` (at decoder only) で `X` を distortion `D` 以下で再現する rate `R_{WZ}(D) = \min_{p(u|x)} \min_{f} [I(X; U) - I(Y; U)]`。
+- **基盤**: `SlepianWolf*` + `RateDistortion*`。
+- **依存**: 既存 RD + SW で十分。
+- **想定 family**: `docs/shannon/wyner-ziv-*`。
+
+#### T3-E. Joint Source-Channel Coding (Separation Theorem) 📋
+
+- **目的**: Ch.5 (source) と Ch.7 (channel) を統合する meta-定理。教科書として章間統合が要る。
+- **statement**: stationary ergodic source の entropy rate `H(\mathcal{X}) < C` ⟺ source を error 0 で channel 経由再現可能。
+- **基盤**: `source_coding_theorem` + `shannon_noisy_channel_coding_theorem_general_full` + `EntropyRate.lean`。
+- **依存**: T3-B MAC 不要、独立。
+- **想定 family**: `docs/shannon/separation-theorem-*`。
+
+#### T3-F. Relay Channel + Cut-set bound 📋
+
+- **目的**: Ch.15 の第 3 柱。outer bound でも publish 価値あり。
+- **statement**: relay channel の cut-set outer bound。
+- **依存**: T3-B / T3-C 後。
+- **想定 family**: `docs/shannon/relay-channel-*`。
+
+### Tier 4 — Universal coding
+
+#### T4-A. Arithmetic Coding / Lempel-Ziv (LZ78) 漸近最適性 📋
+
+- **目的**: Ch.13 の柱。stationary ergodic source に対する universal coding。
+- **statement**: LZ78 圧縮率が entropy rate に a.s. 収束 `\lim (1/n) \ell(LZ(X^n)) = H(\mathcal{X})`。
+- **基盤**: `EntropyRate.lean`, `ShannonMcMillanBreiman.lean`, `BirkhoffErgodic.lean`。
+- **依存**: なし (Ch.4 完成済みで足場 OK)。
+- **想定 family**: `docs/shannon/lz78-*`, `docs/shannon/arithmetic-coding-*`。
+
+### Tier ∞ — Infrastructure (専用 family)
+
+#### I-1. Typed Random Variable API 📋
+
+- **目的**: 教科書本文と一対一対応する `entropy X`, `mutualInfo X Y`, `H(X|Y)`, `D(X \| Y)` の書き味確立。
+  本ロードマップの 3 層成果物の真ん中。
+- **scope**: 既存 `Common2026/Shannon/Entropy.lean`, `MutualInfo.lean`, `Fano/CondEntropy.lean` 等の
+  外向き wrapping。internal の measure-theoretic 表現は不変、bridge lemma + notation のみ追加。
+- **想定 family**: `docs/api/typed-rv-*`。
+
+#### I-2. General DMC capacity (limit form) 📋
+
+- **目的**: 現状 memoryless 限定の channel coding を `lim (1/n) max_{p^n} I(X^n; Y^n)` 一般形へ。
+- **scope**: `IIDProductInput*` を `BlockwiseChannel` 抽象に持ち上げる refactor + 一般 channel での
+  capacity 定義 + memoryless 場合の specialization。
+- **依存**: T2-A / T3-B 着手前に整備したい (channel 抽象を後から変えると下流大改修)。
+- **想定 family**: `docs/shannon/general-dmc-*`。
+
+#### I-3. Asymptotic / exponent framework 📋
+
+- **目的**: 各 proof で inline に書いている exponent / rate 表現を集約。
+- **scope**: `\doteq` (exponent equality), `o(n)` notation, exponent function 共通 API。
+- **想定 family**: `docs/api/asymptotic-*`。
+
+## 推奨着手順
+
+依存関係に従う場合の自然な順序 (実装コストではなく **正しさ起点**):
+
+1. **I-1 Typed RV API** + **I-2 General DMC** + **I-3 Asymptotic framework**
+   — 後続 seed が全部この上に乗るため、最初に整備しないと後で大改修コスト。
+2. **T1-A Huffman**, **T1-B Chernoff**, **T1-C Cramér**, **T1-D Hoeffding** (discrete core 穴埋め、並列着手可)。
+3. **T2-A AWGN** → **T2-B Parallel Gaussian** → **T2-C Shannon-Hartley** (Gaussian channel 三段)。
+4. **T2-F Fisher** → **T2-D EPI** → **T2-E Brunn-Minkowski** (inequalities 三段)。
+5. **T3-A Constrained MaxEnt** (Ch.12 独立完成)。
+6. **T3-E Separation theorem** (Ch.5 + Ch.7 統合、独立着手可)。
+7. **T3-B MAC** → **T3-C BC** → **T3-D Wyner-Ziv** → **T3-F Relay** (network IT 段階的)。
+8. **T4-A LZ78 + Arithmetic** (Ch.13 仕上げ、Ch.4 基盤完成済みで独立)。
+
+## 教科書原稿 (層 3) の方針
+
+- **形式**: markdown 原稿 → LaTeX → 製本 PDF。各定理は Lean 定義 (`Common2026/...`) へ permalink。
+- **対象読者**: 学部 4 年生〜大学院初年度。Cover-Thomas を読みながら横で開ける形式化版を想定。
+- **構成**: 章は Cover-Thomas の章番号に追従。`scope-out` 章 (Ch.6/13 部分/14/16) は省略。
+- **執筆判断**: 各章は対応する Lean 定理がすべて 0 sorry になった時点で初稿着手。1 章完成 →
+  cross-link 整備 → publish の段階管理。
+- **layout**: `docs/textbook/` 下に章別 markdown を生やす想定 (本ロードマップ完成時点では未生成)。
+
+## 判断ログ
+
+書く頻度: seed 追加/撤退、Tier 移動、章ステータス変更、scope-out 判定の修正があったとき。append-only。
+
+1. **2026-05-18 起草**: ユーザー指示「教科書化を最終目的に据えてロードマップを書く」を受けて
+   `docs/textbook-roadmap.md` 新規作成。Cover-Thomas Ch.2–17 のうち Ch.6 / 14 / 16 を scope-out、
+   Ch.13 を partial scope-in (LZ78 のみ) と確定。Tier 1–4 + Infrastructure として 18 seed を登録。
+   既存 `docs/moonshot-seeds.md` は単発 seed カード一覧として残置、本ファイルは章単位の上位
+   ロードマップとして並置する役割分担とする。
