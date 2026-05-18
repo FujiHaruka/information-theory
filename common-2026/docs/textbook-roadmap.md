@@ -56,7 +56,7 @@
 | 2 | Entropy, Relative Entropy, Mutual Information | ✅ | `Shannon/Entropy`, `MutualInfo`, `MIChainRule`, DPI | — | — |
 | 3 | AEP | ✅ | `AEP.aep_ae`, `aep_inProbability`, `typicalSet_*` | — | — |
 | 4 | Entropy Rates of Stochastic Processes | ✅ | `EntropyRate.entropyRate_exists_of_stationary`, `_eq_lim_condEntropy`, `ShannonMcMillanBreiman`, `BirkhoffErgodic` | — | — |
-| 5 | Data Compression | 🟡 | `ShannonCode.shannonCode_expected_length_bounds`, Kraft 逆 | **T1-A Huffman**, **T4-A Arithmetic / LZ78** | ~2.5-4k |
+| 5 | Data Compression | 🟡 | `ShannonCode.shannonCode_expected_length_bounds`, Kraft 逆, **`Huffman.huffmanLength_kraft_le_one` + `exists_huffman_prefix_code`** | **T1-A' Huffman 真最適性** (任意 `l` 比較), **T4-A Arithmetic / LZ78** | ~2.5-4k |
 | 6 | Gambling and Data Compression | ✖ scope-out | — | — | — |
 | 7 | Channel Capacity | ✅ | `shannon_noisy_channel_coding_theorem_general_full`, `_strong_converse`, `_feedback_complete` | — | — |
 | 8 | Differential Entropy | ✅ | `DifferentialEntropy.differentialEntropy_gaussianReal`, `_le_gaussian_of_variance_le` | — | — |
@@ -82,15 +82,28 @@
 
 ### Tier 1 — discrete core の穴 (教科書として必須)
 
-#### T1-A. Huffman 最適性 📋
+#### T1-A. Huffman 最適性 (Phase 3 完遂) ✅ (2026-05-19) → [docs/shannon/huffman-moonshot-plan.md](shannon/huffman-moonshot-plan.md)
 
-- **目的**: Ch.5 を Shannon code 紹介で終わらせない。最小平均符号長を達成する prefix code の構成と最適性。
-- **statement**: 任意の pmf `p : Fin n → ℝ` に対し、Huffman 木が生成する prefix code が
-  `∀ C : PrefixCode, expectedLength p (huffmanCode p) ≤ expectedLength p C` を満たす。
-- **基盤**: `Common2026/Shannon/ShannonCode.lean`, `ShannonCodeKraftReverse.lean` (Kraft 不等式逆向き)。
-- **依存**: なし (独立して着手可)。
-- **想定 family**: `docs/shannon/huffman-*`。
-- **規模**: ~500-700 行 (Huffman 木構成 ~150 + sibling property + 最適性 induction ~300-400 + Kraft bridge ~100)。
+- **publish**: `Common2026/Shannon/Huffman.lean` (953 行、0 sorry / 0 warning) で 4 件:
+  - `huffmanLength : Measure α → α → ℕ` (`Multiset (Finset α × ℝ)` 上の `Nat.strongRec on s.card` で再帰、`huffmanStep` を Subtype 化して spec 焼き込み)
+  - `huffmanLength_pos`
+  - `huffmanLength_kraft_le_one` (`kraftPerGroup` weighted sum invariant 経路、~310 行核)
+  - `exists_huffman_prefix_code` (`ShannonCodeKraftReverse.exists_prefix_code_of_kraft` 経由副系)
+- **scope**: amend 後 plan の Phase 3 完遂形 (`huffmanLength` 構成 + Kraft 充足 + prefix code 副系)。
+- **scope-out → T1-A'**: Cover-Thomas Theorem 5.8.1 の主定理 (任意 Kraft-feasible `l` との比較形) は分離 (sibling property + n → n-1 induction)。Ch.5 行は T1-A' 完了で 🟢 へ昇格。
+- **判断ログ**: §C-5 `Multiset.strongInductionOn` → `Nat.strongRec on s.card` pivot (Session 2)、§C-6 `huffmanStep` Subtype + `HuffmanGrouping` invariant 強化 (Session 4) で Phase 3 着地 (詳細は plan §判断ログ #1-#5)。
+
+#### T1-A'. Huffman 最適性 (sibling property + 任意 `l` 比較) 📋
+
+- **目的**: T1-A で scope-out された Cover-Thomas Theorem 5.8.1 の主定理 (任意 Kraft-feasible
+  `l` との比較形) を publish。T1-A の Phase 4-5 を分離した後続 seed.
+- **statement**: `∀ (l : α → ℕ), (∀ a, 0 < l a) → kraftSum 2 l ≤ 1 →
+  expectedLength P (huffmanLength P) ≤ expectedLength P l`
+- **基盤**: T1-A で確立した `huffmanLength` (`Nat.strongRec on s.card` 経由) + Subtype 化された
+  `huffmanStep` (C-6).
+- **依存**: T1-A 完了済が前提.
+- **想定 family**: `docs/shannon/huffman-optimality-*`.
+- **規模**: ~400-500 行 (`exists_sibling_min_pair` ~150 + 主定理 `n → n-1` induction ~250-350).
 
 #### T1-B. Chernoff Information 📋
 
