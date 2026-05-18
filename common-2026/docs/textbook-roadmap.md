@@ -51,26 +51,28 @@
 
 ## 章対応進捗
 
-| Ch. | 章タイトル | 状態 | 代表定理 (済) | 必要追加 seed |
-|---|---|---|---|---|
-| 2 | Entropy, Relative Entropy, Mutual Information | ✅ | `Shannon/Entropy`, `MutualInfo`, `MIChainRule`, DPI | — |
-| 3 | AEP | ✅ | `AEP.aep_ae`, `aep_inProbability`, `typicalSet_*` | — |
-| 4 | Entropy Rates of Stochastic Processes | ✅ | `EntropyRate.entropyRate_exists_of_stationary`, `_eq_lim_condEntropy`, `ShannonMcMillanBreiman`, `BirkhoffErgodic` | — |
-| 5 | Data Compression | 🟡 | `ShannonCode.shannonCode_expected_length_bounds`, Kraft 逆 | **T1-A Huffman**, **T4-A Arithmetic / LZ78** |
-| 6 | Gambling and Data Compression | ✖ scope-out | — | — |
-| 7 | Channel Capacity | ✅ | `shannon_noisy_channel_coding_theorem_general_full`, `_strong_converse`, `_feedback_complete` | — |
-| 8 | Differential Entropy | ✅ | `DifferentialEntropy.differentialEntropy_gaussianReal`, `_le_gaussian_of_variance_le` | — |
-| 9 | Gaussian Channel | 📋 | — | **T2-A AWGN**, **T2-B Parallel Gaussian + water-filling**, **T2-C Bandlimited / Shannon-Hartley** |
-| 10 | Rate Distortion | ✅ | `rate_distortion_achievability`, `_converse_*`, `_convexity`, n-letter converse | — |
-| 11 | Information Theory and Statistics | 🟡 | `stein_strong_law`, `sanov_ldp_equality`, `Pinsker`, `CsiszarProjection` | **T1-B Chernoff**, **T1-C Cramér**, **T1-D Hoeffding tradeoff** |
-| 12 | Maximum Entropy | 🟡 | `entropy_le_log_card`, `entropy_eq_log_card_iff` | **T3-A Constrained MaxEnt (Lagrange / exponential family)** |
-| 13 | Universal Source Coding | 📋 | — | **T4-A LZ78 漸近最適性** (Kolmogorov complexity 部分は scope-out) |
-| 14 | Kolmogorov Complexity | ✖ scope-out | — | — |
-| 15 | Network Information Theory | 🟡 | `SlepianWolf*` 完備 | **T3-B MAC**, **T3-C Broadcast (degraded)**, **T3-D Wyner-Ziv**, **T3-E Joint source-channel coding (separation)**, **T3-F Relay + cut-set** |
-| 16 | Information Theory and Portfolio Theory | ✖ scope-out | — | — |
-| 17 | Inequalities in Information Theory | 🟡 | `Han`, `Shearer`, `LoomisWhitney`, `BrascampLieb`, `HypercubeEdgeBoundary`, `Pinsker`, `_sharp` | **T2-D EPI**, **T2-E Brunn-Minkowski**, **T2-F Fisher info / de Bruijn identity** |
+| Ch. | 章タイトル | 状態 | 代表定理 (済) | 必要追加 seed | 規模 |
+|---|---|---|---|---|---|
+| 2 | Entropy, Relative Entropy, Mutual Information | ✅ | `Shannon/Entropy`, `MutualInfo`, `MIChainRule`, DPI | — | — |
+| 3 | AEP | ✅ | `AEP.aep_ae`, `aep_inProbability`, `typicalSet_*` | — | — |
+| 4 | Entropy Rates of Stochastic Processes | ✅ | `EntropyRate.entropyRate_exists_of_stationary`, `_eq_lim_condEntropy`, `ShannonMcMillanBreiman`, `BirkhoffErgodic` | — | — |
+| 5 | Data Compression | 🟡 | `ShannonCode.shannonCode_expected_length_bounds`, Kraft 逆 | **T1-A Huffman**, **T4-A Arithmetic / LZ78** | ~2.5-4k |
+| 6 | Gambling and Data Compression | ✖ scope-out | — | — | — |
+| 7 | Channel Capacity | ✅ | `shannon_noisy_channel_coding_theorem_general_full`, `_strong_converse`, `_feedback_complete` | — | — |
+| 8 | Differential Entropy | ✅ | `DifferentialEntropy.differentialEntropy_gaussianReal`, `_le_gaussian_of_variance_le` | — | — |
+| 9 | Gaussian Channel | 📋 | — | **T2-A AWGN**, **T2-B Parallel Gaussian + water-filling**, **T2-C Bandlimited / Shannon-Hartley** | ~2-3.5k |
+| 10 | Rate Distortion | ✅ | `rate_distortion_achievability`, `_converse_*`, `_convexity`, n-letter converse | — | — |
+| 11 | Information Theory and Statistics | 🟡 | `stein_strong_law`, `sanov_ldp_equality`, `Pinsker`, `CsiszarProjection` | **T1-B Chernoff**, **T1-C Cramér**, **T1-D Hoeffding tradeoff** | ~1-1.7k |
+| 12 | Maximum Entropy | 🟡 | `entropy_le_log_card`, `entropy_eq_log_card_iff` | **T3-A Constrained MaxEnt (Lagrange / exponential family)** | ~400-700 |
+| 13 | Universal Source Coding | 📋 | — | **T4-A LZ78 漸近最適性** (Kolmogorov complexity 部分は scope-out) | ~1.5-2.5k |
+| 14 | Kolmogorov Complexity | ✖ scope-out | — | — | — |
+| 15 | Network Information Theory | 🟡 | `SlepianWolf*` 完備 | **T3-B MAC**, **T3-C Broadcast (degraded)**, **T3-D Wyner-Ziv**, **T3-E Joint source-channel coding (separation)**, **T3-F Relay + cut-set** | ~5-9k |
+| 16 | Information Theory and Portfolio Theory | ✖ scope-out | — | — | — |
+| 17 | Inequalities in Information Theory | 🟡 | `Han`, `Shearer`, `LoomisWhitney`, `BrascampLieb`, `HypercubeEdgeBoundary`, `Pinsker`, `_sharp` | **T2-D EPI**, **T2-E Brunn-Minkowski**, **T2-F Fisher info / de Bruijn identity** | ~1.8-2.6k |
 
 状態: ✅ = 主定理 publish 済 / 🟡 = 部分達成、追加 seed 要 / 📋 = 未着手 / ✖ = scope-out / 🔄 = 方針変更
+
+**規模の単位**: Lean 行数。±50% 程度の幅で見積もる。基準: `ChannelCodingShannonTheorem.lean` 918 行 / `DifferentialEntropy.lean` 1010 行 / `BirkhoffErgodic.lean` 920 行 / `AEPRate.lean` 831 行 / `ShannonCode*.lean` 系合計 ~700 行。**章別合計 + Infrastructure ~1.3-2.3k = 全体 ~16-25k 行**。
 
 ## seed カード (未着手分)
 
@@ -88,6 +90,7 @@
 - **基盤**: `Common2026/Shannon/ShannonCode.lean`, `ShannonCodeKraftReverse.lean` (Kraft 不等式逆向き)。
 - **依存**: なし (独立して着手可)。
 - **想定 family**: `docs/shannon/huffman-*`。
+- **規模**: ~500-700 行 (Huffman 木構成 ~150 + sibling property + 最適性 induction ~300-400 + Kraft bridge ~100)。
 
 #### T1-B. Chernoff Information 📋
 
@@ -96,6 +99,7 @@
 - **基盤**: `Stein.lean`, `StrongStein.lean`, `Pinsker.lean`。proof-log で「Stein/Sanov plumbing から 70-80% 再利用可」と記録。
 - **依存**: T1-D (Hoeffding tradeoff) との補間関係。
 - **想定 family**: `docs/shannon/chernoff-*`。
+- **規模**: ~400-600 行 (Chernoff exponent 定義 + 凸性 ~150 + tilted distribution + Sanov 経由 lower bound ~200 + upper bound ~150)。
 
 #### T1-C. Cramér's Theorem 📋
 
@@ -104,6 +108,7 @@
 - **基盤**: `SanovLDPEquality.lean` (Sanov の上下完成) からほぼ含意可。
 - **依存**: 独立形 statement への reshape。
 - **想定 family**: `docs/shannon/cramer-*`。
+- **規模**: ~300-500 行 (Sanov LDP からの contraction principle 経由 reshape ~200 + Legendre transform + Λ^* 同一視 ~100-200)。
 
 #### T1-D. Hoeffding bound (Type I/II tradeoff exponent) 📋
 
@@ -111,6 +116,7 @@
 - **statement**: 任意の `α ∈ [0, D(P_1\|P_2)]` に対し、`E_2(α) := \min_{Q : D(Q\|P_1) ≤ α} D(Q\|P_2)`。
 - **基盤**: T1-B Chernoff と一括で進めるのが自然。
 - **想定 family**: `docs/shannon/hoeffding-tradeoff-*`。
+- **規模**: ~200-300 行追加 (T1-B と一括着手で 600-900 行)。
 
 ### Tier 2 — continuous / Gaussian theory の完成
 
@@ -121,6 +127,7 @@
 - **基盤**: `DifferentialEntropy.lean` (Gaussian entropy + max entropy 完成)。
 - **依存**: typed RV API 経路の continuous 版整備。
 - **想定 family**: `docs/shannon/awgn-*`。
+- **規模**: ~1000-1500 行 (continuous channel 抽象 ~300 + achievability sphere packing / joint typicality ~400-600 + converse ~300-400 + capacity-cost wrapping ~100)。 `moonshot-seeds.md` で既に「~1000 行」と見積もり済み。
 
 #### T2-B. Parallel Gaussian Channels + Water-filling 📋
 
@@ -128,6 +135,7 @@
 - **statement**: 並列 AWGN `Y_i = X_i + Z_i`, `Z_i ∼ 𝒩(0, N_i)` の総電力制約下の容量と water-filling 解。
 - **依存**: T2-A AWGN。
 - **想定 family**: `docs/shannon/parallel-gaussian-*`。
+- **規模**: ~400-600 行 (KKT 条件 + Lagrange 最適化 ~250 + 一意性 + monotonicity ~150-300)。
 
 #### T2-C. Bandlimited Channel / Shannon-Hartley 📋
 
@@ -135,6 +143,7 @@
 - **statement**: 帯域 `W`, 雑音電力密度 `N_0` の bandlimited AWGN の容量 `C = W \log(1 + P/(N_0 W))`。
 - **依存**: T2-A + 連続時間版の sampling theorem (Mathlib gap 調査要)。
 - **想定 family**: `docs/shannon/shannon-hartley-*`。
+- **規模**: ~600-1000 行 (Whittaker-Shannon sampling Mathlib gap 埋め ~400-600 + bandlimited from AWGN ~200-400)。Mathlib 上流調査次第で +500 行。
 
 #### T2-D. Entropy Power Inequality 📋
 
@@ -143,6 +152,7 @@
 - **基盤**: `DifferentialEntropy.lean`, T2-F Fisher info + de Bruijn 経由が標準。
 - **依存**: T2-A / T2-F。
 - **想定 family**: `docs/shannon/epi-*`。
+- **規模**: ~800-1200 行。`moonshot-seeds.md` で「~2000 行」見積もり済みだが、T2-F (Fisher) を独立 seed 化したので本 seed は EPI 本体に集中。Stam の inequality + 1-parameter ODE 積分。
 
 #### T2-E. Brunn-Minkowski (entropy form) 📋
 
@@ -150,6 +160,7 @@
 - **statement**: 凸体 `A, B ⊂ ℝ^n` に対し `|A + B|^{1/n} ≥ |A|^{1/n} + |B|^{1/n}` の entropy 形。
 - **依存**: T2-D EPI と相互強化。
 - **想定 family**: `docs/shannon/brunn-minkowski-*`。
+- **規模**: ~400-600 行 (EPI からの specialization + 凸体測度との橋渡し)。
 
 #### T2-F. Fisher Information + de Bruijn Identity 📋
 
@@ -157,6 +168,7 @@
 - **statement**: `(d/dt) h(X + \sqrt{t} Z) = (1/2) J(X + \sqrt{t} Z)` where `J` は Fisher information。
 - **依存**: なし (T2-A 後、T2-D の前)。
 - **想定 family**: `docs/shannon/fisher-info-*`。
+- **規模**: ~600-800 行 (Fisher info 定義 + score function 性質 ~250 + de Bruijn identity (Mathlib にあるか調査要、無ければ Stein's identity + ガウス convolution 経由) ~350-550)。
 
 ### Tier 3 — Maximum Entropy + Network IT
 
@@ -167,6 +179,7 @@
 - **基盤**: `MaxEntropy.lean`, `CsiszarProjection.lean` (I-projection との対応)。
 - **依存**: なし。
 - **想定 family**: `docs/shannon/max-entropy-constrained-*`。
+- **規模**: ~400-700 行 (Lagrange 双対性 + KKT ~200 + exponential family characterization + uniqueness ~200-300 + Csiszar projection 経由 alternative proof ~100-200)。
 
 #### T3-B. Multiple Access Channel (MAC) 📋
 
@@ -175,6 +188,7 @@
 - **基盤**: `ChannelCoding*` 系の単一ユーザ achievability / converse、`SlepianWolf*` の region 表現。
 - **依存**: typed RV API (multi-user 表現)。
 - **想定 family**: `docs/shannon/mac-*`。
+- **規模**: ~1500-2500 行 (multi-user channel 抽象 ~300 + region 定義 + convexity ~300 + achievability (joint typicality multi-user) ~600-1000 + converse (Fano + chain rule multi-user) ~300-500 + corner-point 経由形 ~100-200)。単一ユーザ channel coding の 2-3 倍。
 
 #### T3-C. Broadcast Channel (degraded) 📋
 
@@ -182,6 +196,7 @@
 - **statement**: degraded BC `X \to Y_1 \to Y_2` の capacity region。
 - **依存**: T3-B MAC で multi-user API 整備後。
 - **想定 family**: `docs/shannon/broadcast-channel-*`。
+- **規模**: ~1500-2500 行。MAC と同等規模。superposition coding 構造で achievability は MAC とパターン共有可能。
 
 #### T3-D. Wyner-Ziv 📋
 
@@ -190,6 +205,7 @@
 - **基盤**: `SlepianWolf*` + `RateDistortion*`。
 - **依存**: 既存 RD + SW で十分。
 - **想定 family**: `docs/shannon/wyner-ziv-*`。
+- **規模**: ~1000-1500 行 (rate function 定義 + 凸性 ~250 + achievability binning + jointly typical ~500-800 + converse ~250-450)。
 
 #### T3-E. Joint Source-Channel Coding (Separation Theorem) 📋
 
@@ -198,6 +214,7 @@
 - **基盤**: `source_coding_theorem` + `shannon_noisy_channel_coding_theorem_general_full` + `EntropyRate.lean`。
 - **依存**: T3-B MAC 不要、独立。
 - **想定 family**: `docs/shannon/separation-theorem-*`。
+- **規模**: ~300-500 行 (既存 source + channel の composition で新数学なし、achievability ~150 + converse ~150-200 + ergodic source 対応 ~50-100)。
 
 #### T3-F. Relay Channel + Cut-set bound 📋
 
@@ -205,6 +222,7 @@
 - **statement**: relay channel の cut-set outer bound。
 - **依存**: T3-B / T3-C 後。
 - **想定 family**: `docs/shannon/relay-channel-*`。
+- **規模**: ~600-1000 行 (cut-set 定義 + outer bound のみ。inner bound (decode-and-forward / compress-and-forward) は scope-out で半分)。フル形 (inner + outer) は ~1500-2500 行。
 
 ### Tier 4 — Universal coding
 
@@ -215,6 +233,7 @@
 - **基盤**: `EntropyRate.lean`, `ShannonMcMillanBreiman.lean`, `BirkhoffErgodic.lean`。
 - **依存**: なし (Ch.4 完成済みで足場 OK)。
 - **想定 family**: `docs/shannon/lz78-*`, `docs/shannon/arithmetic-coding-*`。
+- **規模**: ~1500-2500 行 (LZ78 phrase 木構造 ~300 + Ziv's inequality + phrase counting ~500-800 + SMB 経由 entropy rate 上界 ~400-600 + arithmetic coding (precision + intervals) ~300-500 + 漸近最適性合流 ~200)。
 
 ### Tier ∞ — Infrastructure (専用 family)
 
@@ -225,6 +244,7 @@
 - **scope**: 既存 `Common2026/Shannon/Entropy.lean`, `MutualInfo.lean`, `Fano/CondEntropy.lean` 等の
   外向き wrapping。internal の measure-theoretic 表現は不変、bridge lemma + notation のみ追加。
 - **想定 family**: `docs/api/typed-rv-*`。
+- **規模**: ~400-800 行 (wrapper def + 既存 measure-theoretic 補題への bridge ~300-500 + notation + 簡易書き換え `simp` set ~100-300)。新数学なし。
 
 #### I-2. General DMC capacity (limit form) 📋
 
@@ -233,12 +253,14 @@
   capacity 定義 + memoryless 場合の specialization。
 - **依存**: T2-A / T3-B 着手前に整備したい (channel 抽象を後から変えると下流大改修)。
 - **想定 family**: `docs/shannon/general-dmc-*`。
+- **規模**: ~600-1000 行 (`BlockwiseChannel` 抽象 + `capacity_lim` 定義 + 存在・凸性 ~300 + memoryless specialization (既存 capacity と一致) ~200-400 + informationally stable channels 経由 spectral form ~100-300)。
 
 #### I-3. Asymptotic / exponent framework 📋
 
 - **目的**: 各 proof で inline に書いている exponent / rate 表現を集約。
 - **scope**: `\doteq` (exponent equality), `o(n)` notation, exponent function 共通 API。
 - **想定 family**: `docs/api/asymptotic-*`。
+- **規模**: ~300-500 行 (notation 定義 + 基本性質 (transitivity, scalar) + `Tendsto.metric_atTop` の closed-form 抽出パターンの一般化 wrapper)。
 
 ## 推奨着手順
 
@@ -253,6 +275,23 @@
 6. **T3-E Separation theorem** (Ch.5 + Ch.7 統合、独立着手可)。
 7. **T3-B MAC** → **T3-C BC** → **T3-D Wyner-Ziv** → **T3-F Relay** (network IT 段階的)。
 8. **T4-A LZ78 + Arithmetic** (Ch.13 仕上げ、Ch.4 基盤完成済みで独立)。
+
+## 規模の総計
+
+| 層 | 規模 (±50%) |
+|---|---|
+| Tier 1 (discrete 穴埋め: Huffman / Chernoff / Cramér / Hoeffding) | ~1.4-2.1k 行 |
+| Tier 2 (Gaussian channel + EPI 系: T2-A〜F) | ~3.8-5.6k 行 |
+| Tier 3 (MaxEnt + Network IT: T3-A〜F) | ~5.3-8.8k 行 |
+| Tier 4 (Universal coding: T4-A) | ~1.5-2.5k 行 |
+| Infrastructure (I-1〜3) | ~1.3-2.3k 行 |
+| **追加合計** | **~13.3-21.3k 行** |
+| (参考) 既存 `Common2026/Shannon/` 完成分 | ~30k 行強 |
+
+「Cover-Thomas Ch.2-12+15+17 を verified library で代替」する規模は、現状の Shannon 配下 (~30k 行) に
+**追加で ~15-20k 行** の見立て。proof-log の自己評価 (「派生定理の 70-80% は plumbing 再利用」) を踏まえ、
+T1-B/C/D の Sanov plumbing 再利用、T2-D の T2-F 再利用、T3-C の T3-B 再利用、T3-F の T3-B/C 再利用で、
+**実質的な「新規証明 onset」は ~10-13k 行程度**と推定。
 
 ## 教科書原稿 (層 3) の方針
 
@@ -272,3 +311,7 @@
    Ch.13 を partial scope-in (LZ78 のみ) と確定。Tier 1–4 + Infrastructure として 18 seed を登録。
    既存 `docs/moonshot-seeds.md` は単発 seed カード一覧として残置、本ファイルは章単位の上位
    ロードマップとして並置する役割分担とする。
+2. **2026-05-18 サイズ見積もり追記**: 各 seed カードに「規模」行を追加 (±50% 精度)、章対応表に
+   「規模」列、規模の総計節を追加。基準は既存ファイル行数 (`ChannelCodingShannonTheorem.lean` 918,
+   `DifferentialEntropy.lean` 1010, `BirkhoffErgodic.lean` 920, `AEPRate.lean` 831)。追加合計
+   ~13-21k 行 (実質新規 ~10-13k)、既存 ~30k に対し 1/3-2/3 規模の増分。
