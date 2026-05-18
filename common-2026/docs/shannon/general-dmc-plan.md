@@ -503,6 +503,26 @@ I-2 の `capacity_lim` 形 publish により、これら seed の **converse 経
    主接続補題は per-`n` 等式 (4-α) + Fekete (4-β) の 2 段、5 ターンで進まなければ
    片側不等式 2 本に分割 (§H-4)。
 
+3. **2026-05-18 実装 (Session 2)**: Phase 4-α attempt → §H-4 発動 → split のみ、3 sorry。
+   - **発見**: `Channel.toBlock` の inductive 定義 (`Kernel.prod` + `Kernel.comap` + `Kernel.map`
+     再帰) と `Measure.pi`/`compProd` の構造的接続が完全に未整備。在庫 §C 既存補題
+     (`mutualInfo_iid_eq_nsmul`, `mutualInfo_le_sum_per_letter_of_memoryless_strong`) は
+     どちらも **`Measure.pi`-pushforward された joint distribution が前提** だが、
+     `(p^n) ⊗ₘ (W.toBlock n)` を `Measure.pi (fun i => p ⊗ₘ W)` (経由 `(Fin n→α)×(Fin n→β) ≃ᵐ Fin n → α × β`)
+     に factorize する補題が **Mathlib にも project にも 0 件** (`loogle "MeasureTheory.Measure.compProd, MeasureTheory.Measure.pi"` 0 hit)。
+   - **対応 (§H-4 発動)**: Phase 4-α の単一 sorry を 3 つに split:
+     - `toBlock_compProd_pi_factor` (構造的橋渡し、~80-150 行見込み、sorry)
+     - `capacityN_ofMemoryless_le` (≤ 方向、sorry、bridge を使う proof skeleton コメント付)
+     - `capacityN_ofMemoryless_ge` (≥ 方向、sorry、同上)
+     main theorem `capacityN_ofMemoryless_eq` は `le_antisymm` のみで **0 sorry** に再構成。
+   - **regression check**: 9 既存 0-sorry ファイル全 silent (Phase 5 部分達成)。
+   - **次セッション推奨**: `proof-pivot-advisor` にエスカレーション。`Channel.toBlock` を
+     `Kernel.mk` + `fun x => Measure.pi (fun i => W (x i))` の直接定義に **再定義** すれば
+     `toBlock_compProd_pi_factor` が definitional に近づき、ボトルネック解消。§H-1 撤退ライン
+     の発動 (Phase 2 で 30 行越えなく避けていた measurability proof) を **後追い的に発動** する
+     形になる。試算: measurability ~30-50 行追加、bridge facts ~30-50 行、両側 ~100-150 行
+     合計 ~150-250 行で Phase 4-α 0 sorry 到達見込み。
+
 2. **2026-05-18 実装 (Session 1)**: Phase 0〜3 + Phase 4-β 完了 / Phase 4-α は 1 sorry 残し。
    - Phase 0: 確認結果 — `ProbabilityTheory.Kernel.pi` Mathlib 不在 (loogle / rg 双方 0 件),
      `Subadditive.tendsto_lim` Mathlib 在 (`Mathlib/Analysis/Subadditive.lean:87`,
