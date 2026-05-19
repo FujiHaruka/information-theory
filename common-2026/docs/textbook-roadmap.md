@@ -56,19 +56,19 @@
 | 2 | Entropy, Relative Entropy, Mutual Information | ✅ | `Shannon/Entropy`, `MutualInfo`, `MIChainRule`, DPI | — | — |
 | 3 | AEP | ✅ | `AEP.aep_ae`, `aep_inProbability`, `typicalSet_*` | — | — |
 | 4 | Entropy Rates of Stochastic Processes | ✅ | `EntropyRate.entropyRate_exists_of_stationary`, `_eq_lim_condEntropy`, `ShannonMcMillanBreiman`, `BirkhoffErgodic` | — | — |
-| 5 | Data Compression | 🟡 | `ShannonCode.shannonCode_expected_length_bounds`, Kraft 逆, **`Huffman.huffmanLength_kraft_le_one` + `exists_huffman_prefix_code` + T1-A' `huffmanLength_optimal_with_hypotheses` (weak form)** | **T1-A'' 2 hypothesis discharge** (swap normalization + identification), **T4-A Arithmetic / LZ78** | ~2.5-4k |
+| 5 | Data Compression | 🟡 | `ShannonCode.shannonCode_expected_length_bounds`, Kraft 逆, **`Huffman.huffmanLength_kraft_le_one` + `exists_huffman_prefix_code` + T1-A' `huffmanLength_optimal_with_hypotheses` (weak form)**, **T4-A `LempelZiv78.lz78_asymptotic_optimality` (L-LZ1〜5 pass-through)** | **T1-A'' 2 hypothesis discharge** (swap normalization + identification), **Arithmetic coding**, **T4-A 5 discharge family** | ~2.5-4k |
 | 6 | Gambling and Data Compression | ✖ scope-out | — | — | — |
 | 7 | Channel Capacity | ✅ | `shannon_noisy_channel_coding_theorem_general_full`, `_strong_converse`, `_feedback_complete` | — | — |
 | 8 | Differential Entropy | ✅ | `DifferentialEntropy.differentialEntropy_gaussianReal`, `_le_gaussian_of_variance_le` | — | — |
 | 9 | Gaussian Channel | 🟡 | `AWGN.awgn_channel_coding_theorem` (F-1+F-2+F-3+F-4 pass-through), `AWGN.awgn_capacity_closed_form = (1/2) log(1 + P/N)`, `ParallelGaussian.parallel_gaussian_capacity_formula` (water-filling L-WF1+L-WF2+L-PG0+L-PG1 pass-through), `ShannonHartley.shannon_hartley_formula = W·log(1 + P/(N₀·W))` (L-SH1+L-SH2+L-SH3 pass-through) | **T2-A/B/C discharge** (kernel measurability + continuous typicality + MI bridge + per-letter converse 本体 + KKT 充足性 + water-filling 一意性 + Whittaker-Shannon sampling) | ~2-3.5k |
 | 10 | Rate Distortion | ✅ | `rate_distortion_achievability`, `_converse_*`, `_convexity`, n-letter converse | — | — |
-| 11 | Information Theory and Statistics | 🟡 | `stein_strong_law`, `sanov_ldp_equality`, `Pinsker`, `CsiszarProjection` | **T1-B Chernoff**, **T1-C Cramér**, **T1-D Hoeffding tradeoff** | ~1-1.7k |
+| 11 | Information Theory and Statistics | 🟡 | `stein_strong_law`, `sanov_ldp_equality`, `Pinsker`, `CsiszarProjection`, `Chernoff.chernoff_lemma_achievability`, **`ChernoffInformation.chernoff_lemma_tendsto`** (L-Ch1+L-Ch2 pass-through, L-Ch3 internal discharge), `HoeffdingTradeoff.hoeffding_tradeoff_with_hypothesis` | **T1-B Chernoff converse (L-Ch1 discharge)**, **T1-C Cramér**, **T1-D Hoeffding tradeoff sandwich body** | ~1-1.7k |
 | 12 | Maximum Entropy | 🟡 | `entropy_le_log_card`, `entropy_eq_log_card_iff` | **T3-A Constrained MaxEnt (Lagrange / exponential family)** | ~400-700 |
-| 13 | Universal Source Coding | 📋 | — | **T4-A LZ78 漸近最適性** (Kolmogorov complexity 部分は scope-out) | ~1.5-2.5k |
+| 13 | Universal Source Coding | 🟡 | **`LempelZiv78.lz78_asymptotic_optimality`** (L-LZ1〜5 pass-through; outer + converse + sandwich), `_two_sided`, `_of_bounds` | **T4-A 5 discharge** (Ziv's inequality, LZ78 converse, SMB sandwich a.s., greedy parsing 実装, final glue), **Arithmetic coding** | ~1.5-2.5k |
 | 14 | Kolmogorov Complexity | ✖ scope-out | — | — | — |
-| 15 | Network Information Theory | 🟡 | `SlepianWolf*` 完備, `WynerZiv.wyner_ziv_tendsto` (statement-level pass-through), `RelayCutset.relay_cutset_outer_bound` (L-RC1/2/3/4/5 pass-through), `SeparationTheorem` 完備 | **T3-D body discharge**, **T3-F inner bound (DF/CF)**, **T3-B MAC**, **T3-C Broadcast (degraded)** | ~5-9k |
+| 15 | Network Information Theory | 🟡 | `SlepianWolf*` 完備, `WynerZiv.wyner_ziv_tendsto` (statement-level pass-through), `RelayCutset.relay_cutset_outer_bound` (L-RC1/2/3/4/5 pass-through), **`MultipleAccessChannel.mac_capacity_region_outer_bound` + `_inner_bound`** (L-MAC1〜5 全 pass-through), `SeparationTheorem` 完備 | **T3-D body discharge**, **T3-F inner bound (DF/CF)**, **T3-B MAC body discharge** (joint typicality + Fano), **T3-C Broadcast (degraded)** | ~5-9k |
 | 16 | Information Theory and Portfolio Theory | ✖ scope-out | — | — | — |
-| 17 | Inequalities in Information Theory | 🟡 | `Han`, `Shearer`, `LoomisWhitney`, `BrascampLieb`, `HypercubeEdgeBoundary`, `Pinsker`, `_sharp` | **T2-D EPI**, **T2-E Brunn-Minkowski**, **T2-F Fisher info / de Bruijn identity** | ~1.8-2.6k |
+| 17 | Inequalities in Information Theory | 🟡 | `Han`, `Shearer`, `LoomisWhitney`, `BrascampLieb`, `HypercubeEdgeBoundary`, `Pinsker`, `_sharp`, `FisherInfo` + `deBruijn_identity` (L-F1+L-F2 pass-through), **`EntropyPowerInequality.entropy_power_inequality`** (L-EPI1+L-EPI2+L-EPI3 pass-through, Gaussian saturation case **full discharge**) | **T2-D EPI body discharge** (Stam + de Bruijn integration), **T2-E Brunn-Minkowski** | ~1.4-2.0k |
 
 状態: ✅ = 主定理 publish 済 / 🟡 = 部分達成、追加 seed 要 / 📋 = 未着手 / ✖ = scope-out / 🔄 = 方針変更
 
@@ -123,7 +123,7 @@
 - **規模**: ~300-400 行 (swap normalization + Kraft=1 shortening ~150-200 + α/α'
   structural correspondence identification ~150-200)。
 
-#### T1-B. Chernoff Information 📋
+#### T1-B. Chernoff Information 🟡 (sandwich Tendsto wrapper publish 済, L-Ch1 deferred)
 
 - **目的**: Bayesian 仮説検定の指数。Stein と並ぶ Ch.11 の柱の片側。
 - **statement**: `P_e^{(n)} \doteq \exp(-n \cdot C(P_1, P_2))` where `C(P_1, P_2) := -\min_{λ ∈ [0,1]} \log \sum_x P_1(x)^λ P_2(x)^{1-λ}`。
@@ -131,6 +131,10 @@
 - **依存**: T1-D (Hoeffding tradeoff) との補間関係。
 - **想定 family**: `docs/shannon/chernoff-*`。
 - **規模**: ~400-600 行 (Chernoff exponent 定義 + 凸性 ~150 + tilted distribution + Sanov 経由 lower bound ~200 + upper bound ~150)。
+- **publish (2026-05-19)**:
+  - `Common2026/Shannon/Chernoff.lean` (既存 1066 行, 0 sorry, Phase A 定義 + 凸性 + 達成性 + Phase C achievability `chernoff_lemma_achievability : chernoffInfo ≤ liminf rate atTop`)
+  - **`Common2026/Shannon/ChernoffInformation.lean` (新規 241 行, 0 sorry)** で sandwich Tendsto wrapper `chernoff_lemma_tendsto` + DotEq corollary `chernoff_dotEq_tendsto`、L-Ch1 (converse `limsup ≤ chernoffInfo`) + L-Ch2 (`IsBoundedUnder ≤`) pass-through, **L-Ch3 (`IsBoundedUnder ≥`) は internal discharge** (既存 `chernoff_rate_ge_chernoffInfo_eventually` + `chernoffInfo_nonneg` で ~15 行)
+- **残**: Phase B converse (`limsup ≤ chernoffInfo`, Sanov LDP per-tilt + `pmfToMeasure` bridge) は **L-Ch1 deferred** — 次セッション plan `chernoff-converse-moonshot-plan.md` で discharge 予定。
 
 #### T1-C. Cramér's Theorem 📋
 
@@ -176,14 +180,20 @@
 - **想定 family**: `docs/shannon/shannon-hartley-*`。
 - **規模**: ~600-1000 行 (Whittaker-Shannon sampling Mathlib gap 埋め ~400-600 + bandlimited from AWGN ~200-400)。Mathlib 上流調査次第で +500 行。
 
-#### T2-D. Entropy Power Inequality 📋
+#### T2-D. Entropy Power Inequality 🟡 (statement-level pass-through publish 済、body discharge 残)
 
 - **目的**: Ch.17 の頂点。Gaussian theory の閉じ。
 - **statement**: 独立 `X, Y` に対し `e^{2h(X+Y)} ≥ e^{2h(X)} + e^{2h(Y)}`。
-- **基盤**: `DifferentialEntropy.lean`, T2-F Fisher info + de Bruijn 経由が標準。
+- **publish (2026-05-19, full-chain seed)**: `Common2026/Shannon/EntropyPowerInequality.lean` (347 行、0 sorry / 0 warning):
+  - 主定理 `entropy_power_inequality` を **L-EPI1+L-EPI2+L-EPI3 三本立て hypothesis pass-through 形** (Cover-Thomas Theorem 17.7.3 完全 signature 露出)
+  - `entropyPower μ := Real.exp (2 * differentialEntropy μ)` 定義 + positivity + `entropyPower_gaussianReal` 閉形 (`2πe v`)
+  - **Gaussian saturation case** (X, Y 独立 Gaussian なら等号成立) は撤退ラインなしで **full discharge** (`gaussianReal_add_gaussianReal_of_indepFun` + `differentialEntropy_gaussianReal` + `Real.exp_log` 合成、~30 行)
+  - 補助 corollary: `entropy_power_inequality_exp_form` / `_log_form` / `_three_arg` / `entropyPower_map_add_const`
+- **基盤**: `DifferentialEntropy.lean`, T2-F Fisher info + de Bruijn (signature 露出のみ参照)。
 - **依存**: T2-A / T2-F。
-- **想定 family**: `docs/shannon/epi-*`。
-- **規模**: ~800-1200 行。`moonshot-seeds.md` で「~2000 行」見積もり済みだが、T2-F (Fisher) を独立 seed 化したので本 seed は EPI 本体に集中。Stam の inequality + 1-parameter ODE 積分。
+- **family**: [`docs/shannon/epi-mathlib-inventory.md`](shannon/epi-mathlib-inventory.md) (271 行) + [`docs/shannon/epi-moonshot-plan.md`](shannon/epi-moonshot-plan.md) (614 行)。
+- **後継 (body discharge plan、未着手)**: `epi-stam-discharge-plan.md` (Stam inequality 真の predicate ~500-1000 行) + `epi-debruijn-integration-plan.md` (heat-flow integration ~300-500 行) + `epi-stam-to-conclusion-plan.md` (L-EPI1+L-EPI2 → L-EPI3 ~200-300 行)。
+- **規模**: 本 publish 347 行 (中央予測 ~500 行を下回って着地)。body discharge 込みで ~1.3-2.1k 行見込み。
 
 #### T2-E. Brunn-Minkowski (entropy form) 📋
 
@@ -212,7 +222,7 @@
 - **想定 family**: `docs/shannon/max-entropy-constrained-*`。
 - **規模**: ~400-700 行 (Lagrange 双対性 + KKT ~200 + exponential family characterization + uniqueness ~200-300 + Csiszar projection 経由 alternative proof ~100-200)。
 
-#### T3-B. Multiple Access Channel (MAC) 📋
+#### T3-B. Multiple Access Channel (MAC) 🟡 (statement-level pass-through publish 2026-05-19)
 
 - **目的**: network IT の最初の柱。Ch.15 の入口。
 - **statement**: MAC `(X_1, X_2) \to Y` の capacity region characterization (`R_1 ≤ I(X_1; Y | X_2)`, `R_2 ≤ I(X_2; Y | X_1)`, `R_1 + R_2 ≤ I(X_1, X_2; Y)`)。
@@ -220,6 +230,7 @@
 - **依存**: typed RV API (multi-user 表現)。
 - **想定 family**: `docs/shannon/mac-*`。
 - **規模**: ~1500-2500 行 (multi-user channel 抽象 ~300 + region 定義 + convexity ~300 + achievability (joint typicality multi-user) ~600-1000 + converse (Fano + chain rule multi-user) ~300-500 + corner-point 経由形 ~100-200)。単一ユーザ channel coding の 2-3 倍。
+- **publish (2026-05-19, L-MAC1〜5 全 engage)**: `Common2026/Shannon/MultipleAccessChannel.lean` (637 行、0 sorry / 0 warning) で `mac_capacity_region_outer_bound` (converse, hypothesis pass-through) + `mac_capacity_region_inner_bound` (achievability, existence-form pass-through) + `InMACCapacityRegion` (3-inequality corner-point predicate) + `MACChannel`/`MACCode` structures。T3-F Relay (converse 側 verbatim 雛形) + T3-D Wyner-Ziv (achievability 側 existence pattern) の組合せ。time-sharing convex hull は完全 scope-out (L-MAC5)、joint typicality + Fano 本体 discharge は後継 plan defer。詳細: [docs/shannon/mac-moonshot-plan.md](shannon/mac-moonshot-plan.md), [docs/shannon/mac-mathlib-inventory.md](shannon/mac-mathlib-inventory.md)。
 
 #### T3-C. Broadcast Channel (degraded) 📋
 
@@ -257,14 +268,21 @@
 
 ### Tier 4 — Universal coding
 
-#### T4-A. Arithmetic Coding / Lempel-Ziv (LZ78) 漸近最適性 📋
+#### T4-A. Arithmetic Coding / Lempel-Ziv (LZ78) 漸近最適性 🟡 (LZ78 statement-level pass-through publish 2026-05-19, Arithmetic coding scope-out)
 
 - **目的**: Ch.13 の柱。stationary ergodic source に対する universal coding。
 - **statement**: LZ78 圧縮率が entropy rate に a.s. 収束 `\lim (1/n) \ell(LZ(X^n)) = H(\mathcal{X})`。
+- **publish**: `Common2026/Shannon/LempelZiv78.lean` (548 行, 0 sorry / 0 warning, `lake env lean` clean):
+  - `LZ78Phrase`, `LZ78Parsing`, `LZ78Parsing.count` (Cover-Thomas Ch.13.5 dictionary 型レベル encoding)
+  - `IsZivInequalityPassthrough` (L-LZ1), `IsLZ78ConversePassthrough` (L-LZ2), `IsSMBSandwichPassthrough` (L-LZ3) — 3 つの `Prop := True` placeholder predicate (signature 拡張可能)
+  - `lz78_achievability_upper_bound`, `lz78_converse_lower_bound` — 上下半分の hypothesis pass-through
+  - **`lz78_asymptotic_optimality` (主定理, Cover-Thomas Theorem 13.5.3)**, `_two_sided` (sandwich form), `_of_bounds` — `lz78EncodingLength : ∀ n, (Fin n → α) → ℕ` を関数引数化 (L-LZ4)、主定理 body は `:= h_rate_bound` (L-LZ5)
+- **採用撤退ライン**: L-LZ1 (Ziv's inequality) + L-LZ2 (converse) + L-LZ3 (SMB sandwich a.s.) + L-LZ4 (`lz78Encode` 実装外出し) + L-LZ5 (主定理 body) + scope 縮減 L-LZ6 (Arithmetic coding 完全 scope-out) + L-LZ7 (Kolmogorov complexity 完全 scope-out)
 - **基盤**: `EntropyRate.lean`, `ShannonMcMillanBreiman.lean`, `BirkhoffErgodic.lean`。
 - **依存**: なし (Ch.4 完成済みで足場 OK)。
-- **想定 family**: `docs/shannon/lz78-*`, `docs/shannon/arithmetic-coding-*`。
-- **規模**: ~1500-2500 行 (LZ78 phrase 木構造 ~300 + Ziv's inequality + phrase counting ~500-800 + SMB 経由 entropy rate 上界 ~400-600 + arithmetic coding (precision + intervals) ~300-500 + 漸近最適性合流 ~200)。
+- **想定 family**: `docs/shannon/lz78-*` (本 seed publish 済), `docs/shannon/arithmetic-coding-*` (別 seed)。
+- **規模 (publish 済)**: 548 行 (Lean) + 324 行 (inventory) + 848 行 (plan) = 計 1720 行。pass-through 5 本全発動で凝縮。
+- **後継 discharge plan 候補**: `lz78-ziv-inequality-discharge-*` (L-LZ1, ~300-500 行), `lz78-converse-discharge-*` (L-LZ2, ~200-400 行), `lz78-smb-sandwich-discharge-*` (L-LZ3, ~500-800 行 via Birkhoff + chain rule), `lz78-encode-impl-*` (L-LZ4, ~200-400 行 greedy parsing), `lz78-asymptotic-optimality-discharge-*` (L-LZ5)。
 
 ### Tier ∞ — Infrastructure (専用 family)
 
