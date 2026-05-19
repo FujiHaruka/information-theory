@@ -17,10 +17,10 @@
 
 - [x] Phase 0 — Mathlib + Common2026 API 在庫 ✅ → [`chernoff-hoeffding-mathlib-inventory.md`](chernoff-hoeffding-mathlib-inventory.md)
 - [x] **Tier 0 publish — Chernoff/Hoeffding 定義 + 基本性質 (`chernoffInfo`, `chernoffInfo_attained`, `chernoffInfo_nonneg`, `hoeffdingE2`, `hoeffdingE2_attained`, `hoeffdingE2_nonneg`, `klDivPmf_self_eq_zero`) ✅** (2026-05-19, 0 sorry, library root 編入済, `Common2026/Shannon/Chernoff.lean` ~280 行)
-- [ ] Phase A 残 — `convexOn_chernoffLogZ` (Hölder 凸性) + mediator-tilted bridge 📋
+- [x] **Phase A 残 — `convexOn_chernoffLogZ` (Hölder 凸性) + `chernoffMediator` pmf bridge ✅** (2026-05-19, 0 sorry, +307 行, `Common2026/Shannon/Chernoff.lean` ~663 行)
 - [ ] Phase B — Chernoff lower bound (Sanov LDP per-tilt 経由) 📋
 - [ ] Phase C — Chernoff upper bound (tilted likelihood-ratio test 経由) 📋
-- [ ] Phase D 残 — `hoeffdingE2` 一意性 (任意) + 連続性 (任意) 📋
+- [x] **Phase D 残 — `hoeffdingE2_unique` 一意性 (Csiszar + strict-convex 経由) ✅** (2026-05-19, 0 sorry, 連続性は別件で deferred)
 - [ ] Phase E — 主定理 wrapper (`chernoff_lemma` / `hoeffding_tradeoff` `Tendsto` 形) 📋
 
 ## ゴール / Approach
@@ -481,3 +481,8 @@ Phase B (rate ≤ chernoffInfo) と sandwich → `Tendsto`。
 4. **(2026-05-19) T1-B + T1-D 一括着手で start**: roadmap §T1-D 規模見積 (200-300 行追加) が「T1-B 一括で 600-900 行」と明示しており、Csiszar projection の `csiszar_projection_exists` 直接適用で Hoeffding `min` 達成性が **~60-90 行** に圧縮可能 (在庫 §自作 4 + §自作 5)。Sanov LDP per-tilt の machinery が T1-B / T1-D で **共通** (T1-B は per-`λ`、T1-D は per-`Qstar`) なので、Phase B-E を **共有 plumbing** で進めるほうが分離より工数小。万一 Phase E で T1-D 側が詰まれば撤退ライン L-S1 で分離。
 
 5. **(2026-05-19) Tier 0 で全 publish 形を `α → ℝ` pmf 形に統一**: Plan A-1 では `chernoffMediator = P₁.tilted (lam • llrPmf P₂ P₁)` を Mathlib `Measure` 経路で定義する予定だったが、Tier 0 baseline では **`α → ℝ` pmf 形に統一**して publish した。理由: (i) `chernoffZSum P₁ P₂ lam := ∑ a, (P₁ a)^(1-lam) * (P₂ a)^lam` は textbook 形そのまま、`Real.rpow` 算術だけで完結し、`Measure` ⇄ `α → ℝ` の `Measure.real {x}` bridge を全く要求しない。(ii) `hoeffdingE2` の constraint set `{Q : klDivPmf Q P₁ ≤ α}` が既に `CsiszarProjection.klDivPmf : (α → ℝ) → (α → ℝ) → ℝ` の `α → ℝ` 形で書かれており、両主定義の signature を揃えると Tier 1+ で Lagrange duality / Csiszar Pythagoras 経路が混乱なく合成可能。Mediator `T_λ` を `Measure` 経路で導入するのは Tier 1+ の `chernoff_lemma` (Sanov LDP per-tilt) 着手時に必要になった段階でよい — Tier 0 の publish には不要。これにより Tier 0 で **`logZ` 凸性 (Hölder 経路, plan A-5)** も skip し、`chernoffInfo_attained` を `IsCompact.exists_sInf_image_eq` の 1 発で取った (凸性は Tier 1+ で Sanov LDP per-tilt 起動の `h_minimizer` 仮定整理時に再要請されるが、その時 mediator 形 (`(1-λ)·D(T_λ‖P₁) + λ·D(T_λ‖P₂) = -log Z(λ)`) も同時に必要なので一括でフォロー予定)。
+
+6. **(2026-05-19) Phase A残 (`convexOn_chernoffLogZ` + mediator) と Phase D残 (`hoeffdingE2_unique`) を pmf 形のまま publish**: 判断ログ #5 に従い mediator も pmf 形 (`chernoffMediator P₁ P₂ lam : α → ℝ := (P₁ a)^(1-lam) * (P₂ a)^lam / Z(λ)`) で publish。Mathlib `Measure.tilted` への bridge は Phase B 着手時 (Sanov LDP per-tilt が `Q : Measure α` を要求するため) に必要となるが、Phase A残 + D残のスコープでは不要 — chernoffMediator は pmf として positivity + sum_eq_one + 端点 (lam = 0 → P₁, lam = 1 → P₂) のみ publish すれば Phase B/C で `pmfToMeasure` 経由で Measure に持ち上げ可能。Hölder 凸性は `Real.HolderConjugate.inv_one_sub_inv` (`(1/a, 1/(1-a))` for `0 < a < 1`) + `Real.inner_le_Lp_mul_Lq_of_nonneg` で **95 行**で取れた (撤退ライン L-P2 「100 行超え」を僅かに下回り、L-P2 発動なし)。端点 `a = 0` / `a = 1` は `ConvexOn` 定義の degenerate case (片方の weight が 0、線形結合が片方の端点に退化) で `rfl` 1 発でクリア。`hoeffdingE2_unique` は `klDivPmf_strictConvexOn_left` + midpoint argument + `K` の凸性 (`klDivPmf · P₁` の凸性 from `strictConvexOn.convexOn`) で 50 行。
+
+7. **(2026-05-19) Phase B (Chernoff lower bound) は本 plan の本セッションで未着手、Phase C/E も未着手**: スコープ判定: Phase B-C は `bayesErrorMin` 定義 + Sanov LDP per-tilt + matching set 議論で **2-3 session 必要** (plan 見積 250-330 行 vs 残時間)。本セッションでは Phase A残 + D残のみ完遂 (+307 行) し、合計 663 行 0 sorry で停止。Phase B/C/E は次セッションへ。撤退ライン非発動 (L-S1〜L-S3 / L-P1〜L-P3 いずれも未トリガー)。
+
