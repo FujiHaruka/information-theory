@@ -1,6 +1,7 @@
 import Common2026.Shannon.CsiszarProjection
 import Common2026.Shannon.Chernoff
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
+import Mathlib.Analysis.SpecialFunctions.BinaryEntropy
 
 /-!
 # Constrained Maximum Entropy (Cover–Thomas Theorem 12.1.1) — T3-A
@@ -357,5 +358,162 @@ theorem entropy_eq_gibbs_iff_of_constraints [Nonempty α]
         · intro h; linarith]
   exact klDivPmf_eq_zero_iff_pmf hP (gibbsPmf_mem_stdSimplex f lam)
           (gibbsPmf_pos f lam)
+
+/-! ## Phase E — 特例展開 (Tier 3 stretch) -/
+
+/-! ### E-1 Uniform 退化 (空制約 ⟹ uniform pmf, 教科書 12.1 trivial case)
+
+`f := 0 : Fin k → α → ℝ` (例えば `k = 0` の空制約) のとき、`gibbsPmf` は uniform pmf
+`x ↦ 1 / Fintype.card α` に等しい (`λ` の値に無依存)。エントロピーは `log (Fintype.card α)`
+で、`MaxEntropy.entropy_le_log_card` の pmf 形に一致する。
+-/
+
+/-- `gibbsZ` of the zero feature map is just `Fintype.card α` (each `exp 0 = 1` summed
+`N` times). -/
+lemma gibbsZ_zero [Nonempty α] (lam : Fin k → ℝ) :
+    gibbsZ (0 : Fin k → α → ℝ) lam = (Fintype.card α : ℝ) := by
+  unfold gibbsZ
+  have h_term : ∀ y : α, Real.exp (∑ i, lam i * (0 : Fin k → α → ℝ) i y) = 1 := by
+    intro y
+    have h_sum_zero : (∑ i, lam i * (0 : Fin k → α → ℝ) i y) = 0 := by
+      simp
+    rw [h_sum_zero, Real.exp_zero]
+  rw [Finset.sum_congr rfl (fun y _ => h_term y)]
+  rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, mul_one]
+
+/-- With the zero feature map, `gibbsPmf` is the uniform pmf `x ↦ 1 / Fintype.card α`. -/
+lemma gibbsPmf_zero_eq_uniform [Nonempty α] (lam : Fin k → ℝ) :
+    gibbsPmf (0 : Fin k → α → ℝ) lam = fun _ => (1 : ℝ) / Fintype.card α := by
+  funext x
+  unfold gibbsPmf
+  rw [gibbsZ_zero lam]
+  have h_num : Real.exp (∑ i, lam i * (0 : Fin k → α → ℝ) i x) = 1 := by
+    have : (∑ i, lam i * (0 : Fin k → α → ℝ) i x) = 0 := by simp
+    rw [this, Real.exp_zero]
+  rw [h_num]
+
+/-- Entropy of the uniform pmf `x ↦ 1 / N` is `log N`. -/
+lemma entropy_uniform_pmf [Nonempty α] :
+    ∑ _x : α, Real.negMulLog ((1 : ℝ) / Fintype.card α) = Real.log (Fintype.card α) := by
+  set N : ℕ := Fintype.card α with hN_def
+  have hN_pos : 0 < N := Fintype.card_pos
+  have hN_pos_R : (0 : ℝ) < N := by exact_mod_cast hN_pos
+  have hN_ne_R : (N : ℝ) ≠ 0 := hN_pos_R.ne'
+  -- ∑ x, c = (Fintype.card α : ℕ) • c = (N : ℝ) * c.
+  rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
+  -- N * negMulLog (1/N) = N * (-(1/N) * log (1/N))
+  --                     = -log (1/N) = log N.
+  rw [Real.negMulLog]
+  rw [show ((1 : ℝ) / N) = (N : ℝ)⁻¹ from by rw [one_div]]
+  rw [Real.log_inv]
+  rw [← hN_def]
+  field_simp
+
+/-- **E-1 (Tier 3 特例)** — エントロピーの uniform pmf 評価値:
+`∑ x, negMulLog (gibbsPmf 0 lam x) = log (Fintype.card α)`. これは
+`MaxEntropy.entropy_le_log_card` の pmf 形 (sup) と一致する。 -/
+theorem entropy_gibbsPmf_zero_eq_log_card [Nonempty α] (lam : Fin k → ℝ) :
+    ∑ x : α, Real.negMulLog (gibbsPmf (0 : Fin k → α → ℝ) lam x)
+      = Real.log (Fintype.card α) := by
+  rw [show (fun x => Real.negMulLog (gibbsPmf (0 : Fin k → α → ℝ) lam x))
+        = (fun _ : α => Real.negMulLog ((1 : ℝ) / Fintype.card α)) from by
+        funext x
+        rw [gibbsPmf_zero_eq_uniform lam]]
+  exact entropy_uniform_pmf
+
+/-! ### E-2 Two-point exponential (Bernoulli, 教科書 Ex. 12.1)
+
+`α := Bool`, `k := 1`, `f 0 := fun b => if b then 1 else 0`, `c 0 := μ` のとき、
+mean constraint `gibbsPmf f λ true * 1 + gibbsPmf f λ false * 0 = μ` を満たす ansatz `λ`
+について、`gibbsPmf f λ true = μ`, `gibbsPmf f λ false = 1 - μ` で entropy が `binEntropy μ`
+に等しい。Lagrange parameter の具体値 `λ 0 = log (μ / (1-μ))` は scope 外 (ansatz pass-through)。
+-/
+
+/-- The two-point feature map: indicator of `true`. -/
+noncomputable def boolFeature : Fin 1 → Bool → ℝ :=
+  fun _ b => if b then 1 else 0
+
+/-- For any `λ : Fin 1 → ℝ`, `gibbsPmf boolFeature λ true + gibbsPmf boolFeature λ false = 1`
+(restatement of `gibbsPmf_sum_eq_one` on `Bool`). -/
+lemma gibbsPmf_bool_sum_eq_one (lam : Fin 1 → ℝ) :
+    gibbsPmf boolFeature lam true + gibbsPmf boolFeature lam false = 1 := by
+  have h := gibbsPmf_sum_eq_one (α := Bool) boolFeature lam
+  rw [Fintype.sum_bool] at h
+  exact h
+
+/-- For any `λ` and any `μ ∈ (0,1)`, if the mean constraint
+`gibbsPmf boolFeature λ · 1 + gibbsPmf boolFeature λ · 0 = μ` holds, then
+`gibbsPmf boolFeature λ true = μ`. -/
+lemma gibbsPmf_bool_true_eq_of_mean
+    (lam : Fin 1 → ℝ) (μ : ℝ)
+    (h_mean : ∑ b : Bool, gibbsPmf boolFeature lam b * boolFeature 0 b = μ) :
+    gibbsPmf boolFeature lam true = μ := by
+  rw [Fintype.sum_bool] at h_mean
+  -- boolFeature 0 true = 1, boolFeature 0 false = 0
+  simp [boolFeature] at h_mean
+  exact h_mean
+
+/-- Companion to the above: `gibbsPmf boolFeature λ false = 1 - μ`. -/
+lemma gibbsPmf_bool_false_eq_of_mean
+    (lam : Fin 1 → ℝ) (μ : ℝ)
+    (h_mean : ∑ b : Bool, gibbsPmf boolFeature lam b * boolFeature 0 b = μ) :
+    gibbsPmf boolFeature lam false = 1 - μ := by
+  have h_sum := gibbsPmf_bool_sum_eq_one lam
+  have h_true := gibbsPmf_bool_true_eq_of_mean lam μ h_mean
+  linarith
+
+/-- **E-2 (Tier 3 特例)** — Bernoulli ansatz: under mean constraint `μ`, the gibbs
+entropy on `Bool` is exactly the binary entropy `Real.binEntropy μ` (= textbook
+`-μ log μ - (1-μ) log (1-μ)`, Ex. 12.1). -/
+theorem entropy_gibbsPmf_bool_eq_binEntropy
+    (lam : Fin 1 → ℝ) (μ : ℝ)
+    (h_mean : ∑ b : Bool, gibbsPmf boolFeature lam b * boolFeature 0 b = μ) :
+    ∑ b : Bool, Real.negMulLog (gibbsPmf boolFeature lam b) = Real.binEntropy μ := by
+  rw [Fintype.sum_bool]
+  rw [gibbsPmf_bool_true_eq_of_mean lam μ h_mean,
+      gibbsPmf_bool_false_eq_of_mean lam μ h_mean]
+  rw [Real.binEntropy_eq_negMulLog_add_negMulLog_one_sub]
+
+/-! ### E-3 Discretized exponential (geometric ratio form, 教科書 Ex. 12.2)
+
+`α := Fin (N+1)` (`Nonempty` 確保のため `Nat.succ`), `k := 1`,
+`f 0 := fun x => (x : ℝ)` のとき、`gibbsPmf` は geometric ratio `q := exp (λ 0)` で
+`x ↦ q^x / ∑ y, q^y` 形 (closed form)。Lagrange parameter `λ` の存在性 / mean `μ` との
+具体的対応は scope 外 (ansatz pass-through、`gibbsPmf` の shape のみ確定する)。
+-/
+
+/-- The discrete "linear" feature map on `Fin (N+1)`: `f 0 x := (x.val : ℝ)`. -/
+noncomputable def linearFeature {N : ℕ} : Fin 1 → Fin (N + 1) → ℝ :=
+  fun _ x => (x : ℝ)
+
+/-- **E-3 (Tier 3 特例)** — discretized exponential closed form: setting `q := exp (λ 0)`,
+the Gibbs distribution with the linear feature is the geometric ratio
+`x ↦ q^x.val / ∑ y, q^y.val` on `Fin (N+1)`. Lagrange parameter `λ` is left as an
+ansatz; choosing `λ 0 = log q` then yields the geometric distribution with ratio `q`. -/
+theorem gibbsPmf_linearFeature_eq_geometric {N : ℕ} (lam : Fin 1 → ℝ) :
+    gibbsPmf (linearFeature (N := N)) lam
+      = fun x : Fin (N + 1) =>
+          (Real.exp (lam 0)) ^ (x : ℕ)
+            / ∑ y : Fin (N + 1), (Real.exp (lam 0)) ^ (y : ℕ) := by
+  funext x
+  unfold gibbsPmf gibbsZ linearFeature
+  -- Numerator: exp (∑ i, lam i * (x : ℝ)) where the sum is only over `i = 0`.
+  --          = exp (lam 0 * (x : ℝ)) = exp (lam 0) ^ (x : ℕ).
+  have h_num : Real.exp (∑ i, lam i * (x : ℝ)) = (Real.exp (lam 0)) ^ (x : ℕ) := by
+    have h_sum : (∑ i : Fin 1, lam i * (x : ℝ)) = lam 0 * (x : ℝ) := by
+      rw [Fin.sum_univ_one]
+    rw [h_sum, show ((x : Fin (N + 1)) : ℝ) = ((x : ℕ) : ℝ) from rfl,
+        show lam 0 * ((x : ℕ) : ℝ) = ((x : ℕ) : ℝ) * lam 0 from mul_comm _ _,
+        ← Real.exp_nat_mul]
+  -- Denominator: ∑ y, exp (lam 0 * (y : ℝ)) = ∑ y, (exp (lam 0)) ^ (y : ℕ).
+  have h_den : (∑ y : Fin (N + 1), Real.exp (∑ i, lam i * (y : ℝ)))
+                = ∑ y : Fin (N + 1), (Real.exp (lam 0)) ^ (y : ℕ) := by
+    refine Finset.sum_congr rfl (fun y _ => ?_)
+    have h_sum : (∑ i : Fin 1, lam i * (y : ℝ)) = lam 0 * (y : ℝ) := by
+      rw [Fin.sum_univ_one]
+    rw [h_sum, show ((y : Fin (N + 1)) : ℝ) = ((y : ℕ) : ℝ) from rfl,
+        show lam 0 * ((y : ℕ) : ℝ) = ((y : ℕ) : ℝ) * lam 0 from mul_comm _ _,
+        ← Real.exp_nat_mul]
+  rw [h_num, h_den]
 
 end InformationTheory.Shannon.MaxEntropyConstrained

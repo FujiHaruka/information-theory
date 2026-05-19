@@ -536,13 +536,19 @@ Tier 1 等式バージョン (`entropy_eq_gibbs_iff_of_constraints`) を `csisza
 
 ### 候補
 
-- [ ] **E-1 Uniform 退化**: `f := 0` (空制約) で `gibbsPmf 0 lam = (1 / Fintype.card α : α → ℝ)`
-  (uniform pmf) ↔ `entropy_le_gibbs_of_constraints` から `entropy_le_log_card` 再導出。**既存
-  `MaxEntropy.lean` との一致確認**。~30 行。
-- [ ] **E-2 2-point exponential**: `α := Bool`, `k := 1`, `f 0 := fun b => if b then 1 else 0`,
-  `c := p` で `gibbsPmf` が `Bernoulli(p)` に一致することの確認。教科書 Ex. 12.1 対応。~40 行。
-- [ ] **E-3 Discretized exponential**: `α := Fin N`, `f := fun _ x => (x : ℝ)`, `c := μ` で
-  `gibbsPmf` が discrete exponential 分布。教科書 Ex. 12.2 対応。~50 行。
+- [x] **E-1 Uniform 退化** ✅ (2026-05-19): `gibbsZ_zero`, `gibbsPmf_zero_eq_uniform`,
+  `entropy_uniform_pmf`, `entropy_gibbsPmf_zero_eq_log_card`. `gibbsPmf 0 lam x = 1/N` の
+  closed form + entropy = `log N`。`MaxEntropy.entropy_le_log_card` (measure 形) と pmf 形で
+  整合。~50 行。
+- [x] **E-2 2-point exponential** ✅ (2026-05-19): `boolFeature`, `gibbsPmf_bool_sum_eq_one`,
+  `gibbsPmf_bool_true_eq_of_mean`, `gibbsPmf_bool_false_eq_of_mean`,
+  `entropy_gibbsPmf_bool_eq_binEntropy`. Bernoulli ansatz、mean constraint `μ` で
+  `gibbsPmf true = μ`, `gibbsPmf false = 1-μ`、entropy = `Real.binEntropy μ`
+  (Mathlib `binEntropy_eq_negMulLog_add_negMulLog_one_sub` 経由)。~65 行。
+- [x] **E-3 Discretized exponential** ✅ (2026-05-19): `linearFeature`,
+  `gibbsPmf_linearFeature_eq_geometric`. `α := Fin (N+1)`, geometric ratio
+  `q := exp (λ 0)` で `gibbsPmf x = q^x / ∑ y, q^y` (closed form)。Lagrange `λ` 存在性は
+  scope 外 (ansatz pass-through)。~45 行。
 
 ### 工数感
 
@@ -674,3 +680,34 @@ Tier 1 等式バージョン (`entropy_eq_gibbs_iff_of_constraints`) を `csisza
    - Phase D は `Common2026.lean` への import 行 1 行追加のみ (docstring は最初から書いてある)。
    - 全体として「**最初の手筋 (Gibbs + Csiszár `klDivPmf` pmf 直接ルート + ansatz pass-through)
      で 0 sorry / 0 warning に到達**」。**Phase E (Tier 3 特例展開) は本セッション 未着手、別 plan で対応想定**。
+
+5. **(2026-05-19) Phase E (Tier 3 stretch) を 1 セッションで完成、撤退ライン非発動**:
+   `MaxEntropyConstrained.lean` = 519 行 (Tier 2 完成時 361 行に対して +158 行、stretch 見積もり
+   +170-270 の下限以下)。E-1 / E-2 / E-3 すべて 0 sorry / silent pass。
+   - **E-1 (~50 行)**: `gibbsZ_zero` (`f := 0` で `gibbsZ = N`) → `gibbsPmf_zero_eq_uniform`
+     (`gibbsPmf 0 lam x = 1/N`) → `entropy_uniform_pmf` (`∑ negMulLog (1/N) = log N`) →
+     `entropy_gibbsPmf_zero_eq_log_card` の 4 段。`Real.log_inv` + `Finset.sum_const` 直接ルート、
+     `field_simp` で `(N : ℝ) ≠ 0` の処理を吸収。`MaxEntropy.entropy_le_log_card` (measure 形) と
+     **pmf 形** で表裏一体だが、PMF↔measure bridge は未整備 (scope 外)、再導出ではなく独立証明。
+   - **E-2 (~65 行)**: `boolFeature := fun _ b => if b then 1 else 0` で 4 個の補題:
+     `sum_eq_one` / `true_eq_of_mean` / `false_eq_of_mean` / 主定理。`Fintype.sum_bool` で
+     `Bool` 上の和を `f true + f false` に展開、mean constraint から直接 `gibbsPmf true = μ` を
+     抜き出せた。Mathlib `Real.binEntropy_eq_negMulLog_add_negMulLog_one_sub` (Ex. 12.1 の
+     ` -μ log μ - (1-μ) log (1-μ)` 形) で entropy 値を closed form 化。
+   - **E-3 (~45 行)**: `linearFeature := fun _ x => (x : ℝ)` で `Fin (N+1)` 上、
+     `gibbsPmf x = exp(λ 0)^x / ∑ y, exp(λ 0)^y` の geometric ratio 形を `Real.exp_nat_mul`
+     (`exp (n * x) = exp x ^ n`) + `Fin.sum_univ_one` で得る。Lagrange `λ` の存在性 / mean `μ`
+     との具体的対応 (q = μ/(N(1-μ)+μ) 型) は scope 外、ansatz pass-through で closed form の
+     **shape のみ**確定。
+   - **設計判断**: E-3 は元計画では「discrete exponential 分布の具体形 + Lagrange `λ` 解析」
+     まで含めると 80-120 行 + λ 存在性に逆関数定理 / Banach 固定点が必要だったが、**ansatz
+     pass-through** の原則を貫いて「`gibbsPmf` の closed-form shape のみ示す」に scope を
+     絞ったため ~45 行に収まった。教科書 Ex. 12.2 の「mean を持つ最大エントロピー分布は
+     geometric distribution」という主張は、`entropy_le_gibbs_of_constraints` + 本 E-3 の
+     合成で「mean `μ` 制約下で `H(P) ≤ H(gibbsPmf linearFeature lam)` (Tier 1) かつ
+     gibbs は geometric ratio 形 (E-3)」として再構成可能、ただし `λ` の存在性は別 seed
+     (`max-entropy-constrained-existence-*`) で扱う。
+   - **詰まった点**: `entropy_uniform_pmf` で `Finset.card_univ` 後の `(Fintype.card α : ℝ)`
+     と `set N := Fintype.card α` で導入した `N` が `field_simp` 直前に同一視されず unsolved
+     goal が残った (1 ターン)。`rw [← hN_def]` 1 行で fix。それ以外は skeleton → 1-sorry fill
+     のループが詰まりなく回り、proof-pivot 発動なし。
