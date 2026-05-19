@@ -184,4 +184,64 @@ theorem SwapNormalizationHypothesis_trivial_when_eq
         ≤ InformationTheory.Shannon.ShannonCode.expectedLength Q ll := by
   exact ⟨ll, hll_pos, hll_kraft, h_eq, le_refl _⟩
 
+/-! ### `Equiv.swap` の対称性 + 自明 case 拡張 -/
+
+omit [Fintype α] [Nonempty α] [MeasurableSpace α]
+  [MeasurableSingletonClass α] in
+/-- **swap 対称性**: `l ∘ Equiv.swap a m = l ∘ Equiv.swap m a` (Mathlib `Equiv.swap_comm`
+を `∘` 形に持ち上げ). 後続 T1-A''' で「swap 順序非依存」を主張する step で利用. -/
+theorem swap_comp_symm (l : α → ℕ) (a m : α) :
+    l ∘ Equiv.swap a m = l ∘ Equiv.swap m a := by
+  funext x
+  show l ((Equiv.swap a m) x) = l ((Equiv.swap m a) x)
+  rw [Equiv.swap_comm]
+
+omit [Fintype α] [Nonempty α] [MeasurableSpace α]
+  [MeasurableSingletonClass α] in
+/-- **swap 値の対称性**: `(l ∘ Equiv.swap a m) m = l a` (代表値). swap 後の値が a と m を
+入れ替えるという swap の defining property を `∘` 形で再公開. -/
+theorem swap_value_at_m (l : α → ℕ) (a m : α) :
+    (l ∘ Equiv.swap a m) m = l a := by
+  show l ((Equiv.swap a m) m) = l a
+  rw [Equiv.swap_apply_right]
+
+omit [Fintype α] [Nonempty α] [MeasurableSpace α]
+  [MeasurableSingletonClass α] in
+/-- **swap 値の対称性 2**: `(l ∘ Equiv.swap a m) a = l m`. -/
+theorem swap_value_at_a (l : α → ℕ) (a m : α) :
+    (l ∘ Equiv.swap a m) a = l m := by
+  show l ((Equiv.swap a m) a) = l m
+  rw [Equiv.swap_apply_left]
+
+omit [Fintype α] [Nonempty α] [MeasurableSpace α]
+  [MeasurableSingletonClass α] in
+/-- **swap 不動点**: `x ≠ a → x ≠ m → (l ∘ Equiv.swap a m) x = l x`. swap の点 outside
+`{a, m}` での自明性を `∘` 形で再公開. -/
+theorem swap_value_outside (l : α → ℕ) (a m x : α) (hxa : x ≠ a) (hxm : x ≠ m) :
+    (l ∘ Equiv.swap a m) x = l x := by
+  show l ((Equiv.swap a m) x) = l x
+  rw [Equiv.swap_apply_of_ne_of_ne hxa hxm]
+
+/-! ### `SwapNormalizationHypothesis` 自明 case の対称性 -/
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
+  [MeasurableSingletonClass α] in
+/-- **trivial case 対称性**: `ll a = ll b → ll b = ll a` で対称形 hypothesis も成立。
+本 lemma は `SwapNormalizationHypothesis_trivial_when_eq` を symm 形に並置するだけで、
+swap pair `(a, b)` の順序を反転した形を提供. -/
+theorem SwapNormalizationHypothesis_trivial_when_eq_symm
+    {β : Type*} [Fintype β] [DecidableEq β]
+    [MeasurableSpace β] [MeasurableSingletonClass β]
+    (Q : Measure β) [IsProbabilityMeasure Q]
+    (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
+    (hll_kraft : ∑ x : β, ((2 : ℝ)) ^ (-(ll x : ℤ)) ≤ 1)
+    (a b : β) (h_eq : ll a = ll b) :
+    ∃ l_norm : β → ℕ,
+      (∀ x, 0 < l_norm x) ∧
+      (∑ x : β, ((2 : ℝ)) ^ (-(l_norm x : ℤ)) ≤ 1) ∧
+      l_norm b = l_norm a ∧
+      InformationTheory.Shannon.ShannonCode.expectedLength Q l_norm
+        ≤ InformationTheory.Shannon.ShannonCode.expectedLength Q ll := by
+  exact ⟨ll, hll_pos, hll_kraft, h_eq.symm, le_refl _⟩
+
 end InformationTheory.Shannon.Huffman

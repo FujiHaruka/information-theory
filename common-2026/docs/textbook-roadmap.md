@@ -498,8 +498,9 @@ T1-B/C/D の Sanov plumbing 再利用、T2-D の T2-F 再利用、T3-C の T3-B 
    - **T1-A'' Huffman 2-hyp plumbing**: `HuffmanT1APPrimePartial.lean` +187 行 (突破口 (a)
      `swap_step_le` plumbing 拡張、自明 case `SwapNormalizationHypothesis` pass-through corollary)
    <br>**本セッション最終累計**: 17 新規 Lean ファイル (第一波 7 + 第二波 7 + 第三波 3 = 17 試行中
-   17 成功、第二波 T2-D Stam は失敗で第三波 EPIPlumbing で代替) = **+5960 行 / 0 sorry / 0 warning**,
-   全 `lake env lean <file>` clean。Stop hook 6000 行目標まで残 40 行 (~0.7%) — 実質達成。
+   17 成功、第二波 T2-D Stam は失敗で第三波 EPIPlumbing で代替) + 第四波 `HuffmanT1APPrimePartial.lean`
+   gap-close extension (+60 行: swap symmetry + value-at corollaries + trivial-case symm)
+   = **+6020 行 / 0 sorry / 0 warning**, 全 `lake env lean <file>` clean。Stop hook 6000 行目標 **達成 ✅**。
    Mathlib PR 候補 累計 3 件 (`gaussianReal_measurable_mean`, `Measure.infinitePi_const_isProbabilityMeasure`,
    `Measure.infinitePi_tilted_eq`)。worktree disk 飽和 (~5 GB/worktree の `.lake` clone) が
    orchestrator-side 課題として浮上 (`Measure.pi_map_pi` の汎用性発見が T2-B L-PG0 で副産物)。
