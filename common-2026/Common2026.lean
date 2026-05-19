@@ -90,6 +90,7 @@ import Common2026.Shannon.CsiszarProjection
 import Common2026.Shannon.Chernoff
 import Common2026.Shannon.Cramer
 import Common2026.Shannon.DifferentialEntropy
+import Common2026.Shannon.FisherInfo
 import Common2026.Shannon.Stationary
 import Common2026.Shannon.EntropyRate
 import Common2026.Shannon.ShannonMcMillanBreiman
