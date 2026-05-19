@@ -60,6 +60,7 @@ import Common2026.Shannon.ChannelCodingShannonTheorem
 import Common2026.Shannon.ChannelCodingShannonTheoremGeneral
 import Common2026.Shannon.ChannelCodingShannonTheoremFull
 import Common2026.Shannon.ChannelCodingShannonTheoremFullDischarge
+import Common2026.Shannon.SeparationTheorem
 import Common2026.Shannon.BlockwiseChannel
 import Common2026.Shannon.RateDistortionConverse
 import Common2026.Shannon.RateDistortionConverseMonotone
