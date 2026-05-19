@@ -151,3 +151,17 @@ import Common2026.Shannon.AWGNF2F3Discharge
 -- Wave5 gap-close
 import Common2026.Shannon.LZ78ConverseDischarge
 import Common2026.Shannon.CramerLC2PhaseC
+-- Wave6 parallel-10 body discharge
+import Common2026.Shannon.AWGNMIBridge
+import Common2026.Shannon.ParallelGaussianKKT
+import Common2026.Shannon.EPIL3Integration
+import Common2026.Shannon.ChernoffPerTiltDischarge
+import Common2026.Shannon.MACL2Discharge
+import Common2026.Shannon.BroadcastChannelSuperpositionBody
+import Common2026.Shannon.RelayInnerBodyDischarge
+import Common2026.Shannon.LZ78SMBSandwich
+import Common2026.Shannon.WhittakerShannonFull
+-- Wave6 gap-close
+import Common2026.Shannon.HuffmanT1APPrimeBody
+import Common2026.Shannon.HoeffdingSandwichBody
+import Common2026.Shannon.WynerZivConvexityBody
