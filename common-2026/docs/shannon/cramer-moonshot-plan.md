@@ -23,8 +23,8 @@
 - [x] Phase 0 — Mathlib + Common2026 API 在庫 ✅ → [`cramer-mathlib-inventory.md`](cramer-mathlib-inventory.md)
 - [x] Phase A — `legendre` + `cramerRate` 定義 + 基本性質 + skeleton ✅ (Tier 0, 2026-05-19)
 - [x] Phase B — Cramér upper bound (per-n Chernoff + log form + limsup form + Legendre form, i.i.d. strengthening) ✅ (Tier 1–3, 2026-05-19)
-- [ ] Phase C — Cramér lower bound (tilted change of measure + tilted-下 LLN) 📋
-- [ ] Phase D — 主定理 wrapper (`Tendsto` 形 sandwich + `Common2026.lean` 編入) 🔄 (Phase D-4 編入のみ Tier 0 で前倒し済、`Tendsto` sandwich は lower bound 完成後に defer)
+- [x] Phase C — Cramér lower bound 🔄 L-C2 縮退 publish (2026-05-19): bounded-RV plumbing (`mem_interior_integrableExpSet_of_bounded` / `isProbabilityMeasure_tilted_of_bounded` / `integral_tilted_eq_deriv_cgf`) + `klDiv_tilted_eq` (KL-of-tilted 恒等式) + `cramer_lower` / `cramer_lower_legendre` (`h_tilted_lower` 仮定形、tilted 下 n-IID LLN は別 plan に defer)
+- [x] Phase D — 主定理 wrapper ✅ (2026-05-19): `cramer_tendsto` sandwich (`cramer_upper_legendre` + `cramer_lower_legendre`)、`Common2026.lean` 編入済 (Phase D-4)
 
 ## ゴール / Approach
 
@@ -557,6 +557,10 @@ Common2026.lean              ← `import Common2026.Shannon.Cramer` を追記 (P
 ## 判断ログ
 
 書く頻度: Phase 中の方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
+
+5. **(2026-05-19) Phase C で撤退ライン L-C2 発動、`cramer_lower` を `h_tilted_lower` 仮定形 publish**: Phase C-1 (`klDiv_tilted_eq` KL-of-tilted 恒等式) と Phase C-2 (`mem_interior_integrableExpSet_of_bounded` / `isProbabilityMeasure_tilted_of_bounded` / `integral_tilted_eq_deriv_cgf` の bounded-RV plumbing) は完走。一方 Phase C-3 (tilted 下 LLN: `(infinitePi μ).tilted (∑ lam * X i)` と `infinitePi (μ.tilted ...)` の n-IID 再構築) は Mathlib に直接 lemma が無く、1 session 内では完了不能。撤退ライン L-C2 発動: `cramer_lower` / `cramer_lower_legendre` の signature に「tilted-下 Chernoff lower bound」を hypothesis `h_tilted_lower` として外出し、tilted-LLN の整備は別 plan (`cramer-tilted-lln-plan.md`) へ defer。これで Cover-Thomas 11.4.1 の **statement 完成形** (`cramer_tendsto` sandwich) は publish 確保。最終 637 行、Tier 2 = 0 sorry。
+
+4. **(2026-05-19) `klDiv_tilted_eq` を `klDiv` (`ℝ≥0∞` 値) でなく `∫ log (rnDeriv)` 形で書く**: plan §C-1 で judgement candidate 提示済 (`klDiv` Mathlib 定義は `∫⁻ x, klFun (μ.rnDeriv ν) ∂ν`、`toReal` 落としに `klDiv (tilted) μ < ⊤` 確認が散らかる)。本実装では `∫ ω, Real.log ((tilted).rnDeriv μ ω).toReal ∂(tilted) = lam * (tilted)[X] - cgf X μ lam` の積分形を直接 publish、`Real.log_rnDeriv_tilted_left_self` + `integral_congr_ae` + `tilted_absolutelyContinuous.ae_eq` + `IsProbabilityMeasure (tilted)` (constant integral 取り出し) で 30 行強。`klDiv` API 経由のブリッジは不採用 (Mathlib `klDiv` 未満で `klFun` の `log + (·) - 1` 形が要らないため `∫ log (rnDeriv)` で十分)。
 
 1. **(2026-05-19) Sanov contraction principle 経路を不採用、Mathlib `cgf` + `Measure.tilted` 直接経路を採用**: roadmap §T1-C は「`SanovLDPEquality.lean` からほぼ含意」「Sanov LDP からの contraction principle 経由 reshape ~200 行」と見積もるが、inventory §H の **Sanov → Cramér bridge 難しさ分析** で「集合形 `Q^n(⋃ T_c)` から sample mean 形 `Q^n({x | a ≤ S̄_n})` への reshape が 2 段 (E_n 構成 + Donsker-Varadhan 双対) で各 80-150 行」と判明。一方 Mathlib `cgf` + `iIndepFun.cgf_sum` + `measure_ge_le_exp_cgf` + `Measure.tilted` が完備で、Cramér upper bound は **~80-120 行**、lower bound は **~120-180 行**で書ける。**Sanov を再利用しないことで -120 行**、加えて `SanovLDPEquality` / `SanovLDP` / `KLDivContinuous` / `CsiszarProjection` を **import 不要** で `Cramer.lean` を独立 file として保てる (CLAUDE.md `Import Policy` 厳守)。
 
