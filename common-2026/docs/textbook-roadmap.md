@@ -268,14 +268,16 @@
 
 ### Tier ∞ — Infrastructure (専用 family)
 
-#### I-1. Typed Random Variable API 📋
+#### I-1. Typed Random Variable API ✅ (2026-05-19 publish)
 
 - **目的**: 教科書本文と一対一対応する `entropy X`, `mutualInfo X Y`, `H(X|Y)`, `D(X \| Y)` の書き味確立。
   本ロードマップの 3 層成果物の真ん中。
 - **scope**: 既存 `Common2026/Shannon/Entropy.lean`, `MutualInfo.lean`, `Fano/CondEntropy.lean` 等の
   外向き wrapping。internal の measure-theoretic 表現は不変、bridge lemma + notation のみ追加。
 - **想定 family**: `docs/api/typed-rv-*`。
-- **規模**: ~400-800 行 (wrapper def + 既存 measure-theoretic 補題への bridge ~300-500 + notation + 簡易書き換え `simp` set ~100-300)。新数学なし。
+- **publish**: `Common2026/Shannon/TypedRV.lean` (363 行 / 0 sorry / 0 warning)。
+- **代表 API**: `klDivRV μ X Y`, `differentialEntropyRV μ X` (新規 `def` 2 個) + `Shannon.condEntropy` (`MeasureFano.condEntropy` への `abbrev` 再エクスポート) + notation `H(μ; X)` / `H(μ; X | Y)` / `I(μ; X ; Y)` / `I(μ; X ; Y | Z)` / `D(μ; X ∥ Y)` (`scoped[InformationTheory.Shannon]`、`notation3:max`、`μ` 明示形) + 主補題 RV-form 層 10 lemma (`entropy_nonneg_rv`, `entropy_le_log_card_rv`, `mutualInfo_nonneg_rv`, `mutualInfo_comm_rv`, `mutualInfo_eq_zero_iff_indep_rv`, `condMutualInfo_nonneg_rv`, `condMutualInfo_comm_rv`, `mutualInfo_chain_rule_rv`, `mutualInfo_le_of_postprocess_rv` (DPI typed), `klDivRV_self`, `klDivRV_nonneg`)。
+- **規模**: ~400-800 行 (wrapper def + 既存 measure-theoretic 補題への bridge ~300-500 + notation + 簡易書き換え `simp` set ~100-300)。新数学なし。**実績**: 363 行 (見積もり下限内)、bridge lemma 新規追加ゼロ (既存 Mathlib + Common2026 API への 1 行 alias で全 RV-form 補題が割れた)。
 
 #### I-2. General DMC capacity (limit form) 📋
 

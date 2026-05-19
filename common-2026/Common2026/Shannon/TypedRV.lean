@@ -1,6 +1,8 @@
 import Common2026.Shannon.Bridge
 import Common2026.Shannon.MutualInfo
 import Common2026.Shannon.CondMutualInfo
+import Common2026.Shannon.DPI
+import Common2026.Shannon.SlepianWolf
 import Common2026.Fano.Measure
 import Common2026.Shannon.DifferentialEntropy
 import Mathlib.InformationTheory.KullbackLeibler.Basic
@@ -180,5 +182,182 @@ example {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω)
   klDivRV_def μ X Y
 
 end Examples
+
+/-! ## Phase 5 — Typed-form main lemmas
+
+教科書本文と一対一対応する RV-form 主補題層 (`docs/api/typed-rv-plan.md` 判断ログ #5)。
+全て既存 measure-form 補題への 1 行 alias (新数学ゼロ)。`_rv` suffix で既存無印名との
+衝突を回避。 -/
+
+section MainLemmasRV
+
+variable {Ω : Type*} [MeasurableSpace Ω]
+
+/-! ### Entropy -/
+
+/-- `H(X) ≥ 0` (typed RV form): `entropy_nonneg` の RV-form alias. -/
+theorem entropy_nonneg_rv
+    {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+    [MeasurableSpace α] [MeasurableSingletonClass α]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (X : Ω → α) (hX : Measurable X) :
+    0 ≤ entropy μ X :=
+  entropy_nonneg μ X hX
+
+/-- `H(X) ≤ log |α|` (typed RV form): `entropy_le_log_card` の RV-form alias.
+
+Cover-Thomas (2.6.4) "Maximum entropy of a discrete random variable on a finite
+alphabet is attained by the uniform distribution." -/
+theorem entropy_le_log_card_rv
+    {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+    [MeasurableSpace α] [MeasurableSingletonClass α]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (X : Ω → α) (hX : Measurable X) :
+    entropy μ X ≤ Real.log (Fintype.card α) :=
+  entropy_le_log_card μ X hX
+
+/-! ### Mutual information -/
+
+/-- `I(X; Y) ≥ 0` (typed RV form): `mutualInfo_nonneg` の RV-form alias. -/
+theorem mutualInfo_nonneg_rv
+    {α : Type*} [MeasurableSpace α]
+    {β : Type*} [MeasurableSpace β]
+    (μ : Measure Ω) (X : Ω → α) (Y : Ω → β) :
+    0 ≤ mutualInfo μ X Y :=
+  mutualInfo_nonneg μ X Y
+
+/-- `I(X; Y) = I(Y; X)` (typed RV form): `mutualInfo_comm` の RV-form alias.
+
+Cover-Thomas (2.4.1) "Mutual information is symmetric." -/
+theorem mutualInfo_comm_rv
+    {α : Type*} [MeasurableSpace α]
+    {β : Type*} [MeasurableSpace β]
+    (μ : Measure Ω) [IsFiniteMeasure μ]
+    (X : Ω → α) (Y : Ω → β)
+    (hX : Measurable X) (hY : Measurable Y) :
+    mutualInfo μ X Y = mutualInfo μ Y X :=
+  mutualInfo_comm μ X Y hX hY
+
+/-- `I(X; Y) = 0 ↔ X ⟂ Y` (typed RV form). -/
+theorem mutualInfo_eq_zero_iff_indep_rv
+    {α : Type*} [MeasurableSpace α]
+    {β : Type*} [MeasurableSpace β]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (X : Ω → α) (Y : Ω → β)
+    (hX : Measurable X) (hY : Measurable Y) :
+    mutualInfo μ X Y = 0 ↔ IndepFun X Y μ :=
+  mutualInfo_eq_zero_iff_indep μ X Y hX hY
+
+/-! ### Conditional mutual information -/
+
+/-- `I(X; Y | Z) ≥ 0` (typed RV form): `condMutualInfo_nonneg` の RV-form alias. -/
+theorem condMutualInfo_nonneg_rv
+    {α : Type*} [MeasurableSpace α] [StandardBorelSpace α] [Nonempty α]
+    {β : Type*} [MeasurableSpace β] [StandardBorelSpace β] [Nonempty β]
+    {γ : Type*} [MeasurableSpace γ]
+    (μ : Measure Ω) [IsFiniteMeasure μ]
+    (X : Ω → α) (Y : Ω → β) (Z : Ω → γ) :
+    0 ≤ condMutualInfo μ X Y Z :=
+  condMutualInfo_nonneg μ X Y Z
+
+/-- `I(X; Y | Z) = I(Y; X | Z)` (typed RV form). -/
+theorem condMutualInfo_comm_rv
+    {α : Type*} [MeasurableSpace α] [StandardBorelSpace α] [Nonempty α]
+    {β : Type*} [MeasurableSpace β] [StandardBorelSpace β] [Nonempty β]
+    {γ : Type*} [MeasurableSpace γ]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (X : Ω → α) (Y : Ω → β) (Z : Ω → γ)
+    (hX : Measurable X) (hY : Measurable Y) (hZ : Measurable Z) :
+    condMutualInfo μ X Y Z = condMutualInfo μ Y X Z :=
+  condMutualInfo_comm μ X Y Z hX hY hZ
+
+/-! ### Chain rule -/
+
+/-- Chain rule (typed RV form):
+`I((Z, X); Y) = I(Z; Y) + I(X; Y | Z)`.
+
+Cover-Thomas (2.5.2) "Chain rule for mutual information." -/
+theorem mutualInfo_chain_rule_rv
+    {α : Type*} [MeasurableSpace α] [StandardBorelSpace α] [Nonempty α]
+    {β : Type*} [MeasurableSpace β] [StandardBorelSpace β] [Nonempty β]
+    {γ : Type*} [MeasurableSpace γ]
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (X : Ω → α) (Y : Ω → β) (Z : Ω → γ)
+    (hX : Measurable X) (hY : Measurable Y) (hZ : Measurable Z) :
+    mutualInfo μ (fun ω => (Z ω, X ω)) Y
+      = mutualInfo μ Z Y + condMutualInfo μ X Y Z :=
+  mutualInfo_chain_rule μ X Y Z hX hY hZ
+
+/-! ### Data processing inequality -/
+
+/-- Data processing inequality (typed RV form):
+post-processing `Y ↦ f(Y)` cannot increase mutual information.
+
+`I(X; f(Y)) ≤ I(X; Y)` — Cover-Thomas (2.8.1). -/
+theorem mutualInfo_le_of_postprocess_rv
+    {α : Type*} [MeasurableSpace α]
+    {β : Type*} [MeasurableSpace β]
+    {γ : Type*} [MeasurableSpace γ]
+    (μ : Measure Ω) [IsFiniteMeasure μ]
+    (X : Ω → α) (Y : Ω → β) (hX : Measurable X) (hY : Measurable Y)
+    {f : β → γ} (hf : Measurable f) :
+    mutualInfo μ X (f ∘ Y) ≤ mutualInfo μ X Y :=
+  mutualInfo_le_of_postprocess μ X Y hX hY hf
+
+/-! ### KL divergence (typed RV form) -/
+
+/-- `D(X ‖ X) = 0` (typed RV form): KL of a measure with itself is zero.
+
+`[IsFiniteMeasure μ]` で `μ.map X` も finite (→ SigmaFinite) を経由。 -/
+@[simp] theorem klDivRV_self
+    {α : Type*} [MeasurableSpace α]
+    (μ : Measure Ω) [IsFiniteMeasure μ]
+    (X : Ω → α) :
+    klDivRV μ X X = 0 := by
+  unfold klDivRV
+  exact klDiv_self _
+
+/-- `D(X ‖ Y) ≥ 0` (typed RV form): signature 上自明 (`ℝ≥0∞` 値) だが教科書対応のため publish. -/
+theorem klDivRV_nonneg
+    {α : Type*} [MeasurableSpace α]
+    (μ : Measure Ω) (X Y : Ω → α) :
+    0 ≤ klDivRV μ X Y := bot_le
+
+end MainLemmasRV
+
+/-! ## Phase 5 — Sanity examples for typed-form main lemmas -/
+
+section MainLemmasExamples
+
+open scoped InformationTheory.Shannon
+
+/-- Notation `H(μ; X) ≥ 0` 経由で `entropy_nonneg_rv` を呼び出せる。 -/
+example {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
+    {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+    [MeasurableSpace α] [MeasurableSingletonClass α]
+    (X : Ω → α) (hX : Measurable X) :
+    0 ≤ H(μ; X) :=
+  entropy_nonneg_rv μ X hX
+
+/-- Notation `I(μ; X ; Y) = I(μ; Y ; X)` 経由で `mutualInfo_comm_rv` を呼び出せる。 -/
+example {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsFiniteMeasure μ]
+    {α : Type*} [MeasurableSpace α]
+    {β : Type*} [MeasurableSpace β]
+    (X : Ω → α) (Y : Ω → β)
+    (hX : Measurable X) (hY : Measurable Y) :
+    I(μ; X ; Y) = I(μ; Y ; X) :=
+  mutualInfo_comm_rv μ X Y hX hY
+
+/-- DPI (typed): post-processing cannot increase MI. -/
+example {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsFiniteMeasure μ]
+    {α : Type*} [MeasurableSpace α]
+    {β : Type*} [MeasurableSpace β]
+    {γ : Type*} [MeasurableSpace γ]
+    (X : Ω → α) (Y : Ω → β) (hX : Measurable X) (hY : Measurable Y)
+    {f : β → γ} (hf : Measurable f) :
+    mutualInfo μ X (f ∘ Y) ≤ I(μ; X ; Y) :=
+  mutualInfo_le_of_postprocess_rv μ X Y hX hY hf
+
+end MainLemmasExamples
 
 end InformationTheory.Shannon

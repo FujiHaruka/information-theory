@@ -1,5 +1,9 @@
 # Moonshot シードカード集
 
+> **Status (2026-05-19, I-1 full-chain)**: Infrastructure seed **I-1 Typed Random Variable API** を full-chain (inventory + plan + skeleton + 主補題層拡張) で完遂 ✅。`Common2026/Shannon/TypedRV.lean` (363 行 / 0 sorry / 0 warning) publish。
+>
+> - **I-1 Typed Random Variable API** (core publish 2026-05-18 + 主補題層 2026-05-19): 新規 `def` 2 個 (`klDivRV`, `differentialEntropyRV`) + `abbrev` 1 個 (`Shannon.condEntropy` 再エクスポート) + notation 5 個 (`scoped[InformationTheory.Shannon]`、`notation3:max`、`H(μ; X)` / `H(μ; X | Y)` / `I(μ; X ; Y)` / `I(μ; X ; Y | Z)` / `D(μ; X ∥ Y)`) + 主補題 RV-form 層 10 lemma (`entropy_nonneg_rv`, `entropy_le_log_card_rv`, `mutualInfo_{nonneg,comm,eq_zero_iff_indep}_rv`, `condMutualInfo_{nonneg,comm}_rv`, `mutualInfo_chain_rule_rv`, `mutualInfo_le_of_postprocess_rv` (DPI typed), `klDivRV_self`, `klDivRV_nonneg`)。**新数学ゼロ / bridge lemma 新規追加ゼロ** — 全 RV-form 補題は既存 measure-form 補題への 1 行 alias で割れた。判断ログ §2-3 で `notation3:max` + `μ` 明示形に縮退、§5 で主補題 `_rv` suffix layer を追加。
+>
 > **Status (2026-05-19, parallel-8 + direct)**: orchestrator session で **7 seed 並列 chain + 1 seed orchestrator 直接実装で合計 +3069 行 / 0 sorry / 0 warning で publish** ✅。最終 seed T2-C は claude agent が API 529 overload で 2 回連続失敗したため orchestrator 直接実装に switch、+327 行で 3000+ 行目標達成。
 >
 > - **T2-C Shannon-Hartley** (L-SH1+L-SH2+L-SH3 pass-through、直接実装): `ShannonHartley.lean` +327 行。`bandlimitedAwgnCapacity W N₀ P := W · log(1 + P/(N₀·W))` + `perSampleAwgnCapacity` (Nyquist) + `shannon_hartley_formula` 主定理 + 補助 corollary 群 (high-SNR / low-SNR / 単調性 / anti-monotonicity / non-negativity / zero-P / bits-per-sec 形 / wideband-limit hypothesis pass-through)。Whittaker-Shannon sampling Mathlib gap は L-SH1 で吸収。

@@ -376,3 +376,16 @@ noncomputable def capacity_lim (W : BlockwiseChannel α β) : ℝ :=
    教科書 `H(X)` から `H(μ; X)` への 1 段増だが、Mathlib `IndepFun` `X ⟂ᵢ[μ] Y` precedent と整合。**`D(X ‖ Y)` の `‖` (U+2016) は norm token `‖x‖` と衝突するため `∥` (U+2225 Parallel To) に置換**。editor 表示は近似だが意味は完全保存。
 
 4. **2026-05-18 Phase 4 verify 完了**: `lake env lean Common2026/Shannon/TypedRV.lean` silent (184 行 / 0 sorry / 0 error)。regression check 7 ファイル (`Bridge` / `MutualInfo` / `CondMutualInfo` / `Fano/Measure` / `DifferentialEntropy` / `Han` / `AEP`) 全て exit 0、warning は既存のもののみ (本タスク起因 0)。bridge lemma 新規追加ゼロを維持。判断ログ 2, 3 で確定した notation 形 (5 つ) を最終採用。
+
+5. **2026-05-19 Phase 5 — typed-form main lemma 層拡張**: orchestrator から I-1 を「full-chain で 1 セッション完遂」依頼が来た時点で、core publish (notation 5 個 + alias 2 個 + abbrev 1 個 + `_def` lemma 2 個) は既に完了。教科書本文と一対一対応する **typed-form 主補題** (`mutualInfo_comm`, `entropy_nonneg`, `entropy_le_log_card`, `mutualInfo_chain_rule`, `mutualInfo_le_of_postprocess` 等) を `InformationTheory.Shannon` namespace 直下に **無印 RV-form** で並べる layer を追加。実装は全て既存 measure-form 補題への 1 行 alias (`:= mutualInfo_comm μ X Y hX hY`) — 新数学ゼロ、`rfl` / direct call のみ。本 Phase で publish される lemma セット:
+
+   - `entropy_nonneg_rv`, `entropy_le_log_card_rv` (typed alias for `Bridge.entropy_nonneg`, `SlepianWolf.entropy_le_log_card`)
+   - `mutualInfo_nonneg_rv`, `mutualInfo_comm_rv`, `mutualInfo_eq_zero_iff_indep_rv`
+   - `condMutualInfo_nonneg_rv`, `condMutualInfo_comm_rv`
+   - `mutualInfo_chain_rule_rv`
+   - `mutualInfo_le_of_postprocess_rv` (typed DPI)
+   - `klDivRV_self`, `klDivRV_nonneg` (signature 自明だが教科書 `D(X‖X) = 0` のため publish)
+
+   layer 名規約: 既存 `Common2026/Shannon/...` 補題は **削除・rename しない**、本 file は wrapper を追加するだけ。`_rv` suffix で「typed RV form」を示すが、`InformationTheory.Shannon` namespace 内では `condEntropy` のような名前衝突が起きるため、衝突がある場合は `_rv` で逃がす、ない場合は無印で再公開する (例: `mutualInfo_comm` は measure-form と RV-form で型クラスが完全に同じなため逃がす必要なし — abbrev で再公開はせず `_rv` 名で publish)。
+
+   規模見積もり: +~150-250 行 / 10-15 lemma。本 Phase の Done 条件は core publish と同じ (`lake env lean` clean / 0 sorry / 0 warning / regression なし)。撤退ライン §H-1〜4 は同等に適用、特に L-RV1 (alias 1 本が rfl で割れない場合は `unfold + simp [...]` に fallback、3 ターン進まないなら hypothesis pass-through に逃がし bridge は plan defer) を新規導入。
