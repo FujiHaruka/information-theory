@@ -22,7 +22,7 @@
 
 - [x] Phase 0 — Mathlib + Common2026 API 在庫 ✅ → [`cramer-mathlib-inventory.md`](cramer-mathlib-inventory.md)
 - [x] Phase A — `legendre` + `cramerRate` 定義 + 基本性質 + skeleton ✅ (Tier 0, 2026-05-19)
-- [x] Phase B — Cramér upper bound (per-n Chernoff + log form + limsup form, i.i.d. strengthening) ✅ (Tier 1–2, 2026-05-19)
+- [x] Phase B — Cramér upper bound (per-n Chernoff + log form + limsup form + Legendre form, i.i.d. strengthening) ✅ (Tier 1–3, 2026-05-19)
 - [ ] Phase C — Cramér lower bound (tilted change of measure + tilted-下 LLN) 📋
 - [ ] Phase D — 主定理 wrapper (`Tendsto` 形 sandwich + `Common2026.lean` 編入) 🔄 (Phase D-4 編入のみ Tier 0 で前倒し済、`Tendsto` sandwich は lower bound 完成後に defer)
 

@@ -292,4 +292,35 @@ theorem cramer_upper [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
       lam hlam
   exact Filter.limsup_le_of_le h_cobdd h_eventually
 
+/-- **Cramér upper bound, Legendre form** (Cover-Thomas 11.4.1 upper half,
+asymptotic statement).
+
+If the Legendre transform of `Λ = cgf (X 0) μ` at `a` is attained by some
+non-negative `lam` (`hlam_opt`), then
+
+`limsup_n (1/n) log P[a·n ≤ Sₙ] ≤ -cramerRate (X 0) μ a`.
+
+The achievement hypothesis `hlam_opt` is the textbook condition `a ≥ 𝔼[X]`
+(combined with the convexity / continuity of `Λ`); we leave its discharge as a
+Tier 3 follow-up so that this main statement can be shipped now with the
+cleanest possible signature. -/
+theorem cramer_upper_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
+    (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
+    (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
+    (h_bdd : ∃ M, ∀ i ω, |X i ω| ≤ M)
+    (a : ℝ) (lam : ℝ) (hlam : 0 ≤ lam)
+    (hlam_opt : lam * a - cgf (X 0) μ lam = cramerRate (X 0) μ a)
+    (h_pos : ∀ᶠ n : ℕ in atTop,
+      0 < μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})
+    (h_cobdd : Filter.IsCoboundedUnder (· ≤ ·) atTop
+      (fun n : ℕ =>
+        (1 / (n : ℝ)) * Real.log
+          (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}))) :
+    limsup (fun n : ℕ =>
+        (1 / (n : ℝ)) * Real.log
+          (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop
+      ≤ -cramerRate (X 0) μ a := by
+  have h := cramer_upper (μ := μ) h_indep h_meas h_ident h_bdd a lam hlam h_pos h_cobdd
+  rw [← hlam_opt]; exact h
+
 end InformationTheory.Shannon.Cramer
