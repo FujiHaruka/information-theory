@@ -136,4 +136,115 @@ lemma cgf_sum_eq_nsmul {X : ℕ → Ω → ℝ}
   rw [h_sum, Finset.sum_congr rfl h_each, Finset.sum_const, Finset.card_range,
     nsmul_eq_mul]
 
+/-! ## Tier 1 — Cramér upper bound (per-n Chernoff bound, i.i.d. strengthening) -/
+
+/-- **Per-n Chernoff bound** for the upper tail of an i.i.d. sum of bounded real
+random variables (Cover-Thomas 11.4.1 upper half, point-wise in `n`).
+
+We specialise Mathlib's single-variable Chernoff bound `measure_ge_le_exp_cgf`
+at `X := ∑ i ∈ range n, X i` and fold in the i.i.d. cgf-sum identity
+`cgf_sum_eq_nsmul`. The resulting bound is the headline statement of
+Cover-Thomas's upper Cramér: tilt by any `lam ≥ 0` and the upper-tail
+probability decays exponentially with rate at least `lam * a − Λ(lam)`. -/
+lemma chernoff_bound_n_iid [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
+    (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
+    (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
+    (h_bdd : ∃ M, ∀ i ω, |X i ω| ≤ M)
+    (a : ℝ) (n : ℕ) (lam : ℝ) (hlam : 0 ≤ lam) :
+    μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}
+      ≤ Real.exp (-(n : ℝ) * (lam * a - cgf (X 0) μ lam)) := by
+  -- Hypothesis pass-through: bounded RVs ⇒ all exponential moments integrable.
+  have h_int : ∀ t i, Integrable (fun ω => Real.exp (t * X i ω)) μ := by
+    intro t i
+    obtain ⟨M, hM⟩ := h_bdd
+    exact integrable_exp_mul_of_bounded (h_meas i) ⟨M, hM i⟩ t
+  -- Build the integrability of `exp (lam * (∑ X i))` directly.
+  have h_sum_meas_pt : Measurable (fun ω => ∑ i ∈ Finset.range n, X i ω) :=
+    Finset.measurable_sum _ (fun i _ => h_meas i)
+  have h_sum_bdd_pt :
+      ∃ M', ∀ ω, |∑ i ∈ Finset.range n, X i ω| ≤ M' := by
+    obtain ⟨M, hM⟩ := h_bdd
+    refine ⟨(n : ℝ) * M, ?_⟩
+    intro ω
+    have h_le : |∑ i ∈ Finset.range n, X i ω| ≤ ∑ i ∈ Finset.range n, |X i ω| :=
+      Finset.abs_sum_le_sum_abs _ _
+    have h_each : ∑ i ∈ Finset.range n, |X i ω| ≤ ∑ _i ∈ Finset.range n, M :=
+      Finset.sum_le_sum (fun i _ => hM i ω)
+    have h_const : ∑ _i ∈ Finset.range n, M = (n : ℝ) * M := by
+      rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+    exact h_le.trans (h_each.trans h_const.le)
+  have h_int_sum_pt :
+      Integrable (fun ω => Real.exp (lam * ∑ i ∈ Finset.range n, X i ω)) μ :=
+    integrable_exp_mul_of_bounded h_sum_meas_pt h_sum_bdd_pt lam
+  -- Apply Mathlib Chernoff bound to the pointwise-sum at threshold `ε := a * n`.
+  -- Convert `(∑ Xi) ω` and `∑ Xi ω` freely via `Finset.sum_apply`.
+  have h_fun_eq :
+      (fun ω => (∑ i ∈ Finset.range n, X i) ω)
+        = fun ω => ∑ i ∈ Finset.range n, X i ω := by
+    funext ω; rw [Finset.sum_apply]
+  have h_int_sum : Integrable
+      (fun ω => Real.exp (lam * (∑ i ∈ Finset.range n, X i) ω)) μ := by
+    have : (fun ω => Real.exp (lam * (∑ i ∈ Finset.range n, X i) ω))
+        = fun ω => Real.exp (lam * ∑ i ∈ Finset.range n, X i ω) := by
+      funext ω; rw [Finset.sum_apply]
+    rw [this]; exact h_int_sum_pt
+  have h_chernoff :
+      μ.real {ω | (a : ℝ) * n ≤ (∑ i ∈ Finset.range n, X i) ω}
+        ≤ Real.exp (-lam * ((a : ℝ) * n) + cgf (∑ i ∈ Finset.range n, X i) μ lam) :=
+    measure_ge_le_exp_cgf (X := ∑ i ∈ Finset.range n, X i) (μ := μ)
+      ((a : ℝ) * n) hlam h_int_sum
+  -- Translate measure set: `(∑ X i) ω = ∑ X i ω`.
+  have h_set_eq :
+      {ω | (a : ℝ) * n ≤ (∑ i ∈ Finset.range n, X i) ω}
+        = {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω} := by
+    ext ω
+    simp [Finset.sum_apply]
+  rw [h_set_eq] at h_chernoff
+  -- Rewrite the exponent using the i.i.d. cgf-sum identity.
+  have h_cgf_sum :
+      cgf (∑ i ∈ Finset.range n, X i) μ lam = (n : ℝ) * cgf (X 0) μ lam :=
+    cgf_sum_eq_nsmul h_indep h_meas h_ident h_int lam n
+  -- Combine and refactor the exponent:
+  -- `-lam * (a * n) + n * Λ(lam) = -n * (lam * a - Λ(lam))`.
+  refine h_chernoff.trans ?_
+  rw [h_cgf_sum]
+  apply Real.exp_le_exp.mpr
+  linarith
+
+/-- **Per-n Cramér upper bound, log form**: for each `n ≥ 1` with positive tail
+probability, `(1/n) · log P[a·n ≤ Sₙ] ≤ -(lam · a − Λ(lam))` for every
+`lam ≥ 0`.
+
+This is the log-form rearrangement of `chernoff_bound_n_iid`; taking the
+supremum over `lam ≥ 0` would give `(1/n) log P ≤ -legendre Λ a` (provided the
+Legendre transform is well-defined), but the supremum is left as a Tier 2
+follow-up. -/
+lemma cramer_log_bound_n_iid [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
+    (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
+    (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
+    (h_bdd : ∃ M, ∀ i ω, |X i ω| ≤ M)
+    (a : ℝ) {n : ℕ} (hn : 0 < n)
+    (h_pos : 0 < μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})
+    (lam : ℝ) (hlam : 0 ≤ lam) :
+    (1 / (n : ℝ)) * Real.log
+        (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})
+      ≤ -(lam * a - cgf (X 0) μ lam) := by
+  have h_cb := chernoff_bound_n_iid (μ := μ) h_indep h_meas h_ident h_bdd a n lam hlam
+  -- Take `log` on both sides; `log` is monotone on positives.
+  have h_log_le :
+      Real.log (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})
+        ≤ -(n : ℝ) * (lam * a - cgf (X 0) μ lam) := by
+    have h := Real.log_le_log h_pos h_cb
+    rwa [Real.log_exp] at h
+  -- Divide by `n > 0`.
+  have hn' : (0 : ℝ) < n := by exact_mod_cast hn
+  have h_one_div_pos : 0 < (1 / (n : ℝ)) := by positivity
+  have h_div :
+      (1 / (n : ℝ)) * Real.log
+        (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})
+        ≤ (1 / (n : ℝ)) * (-(n : ℝ) * (lam * a - cgf (X 0) μ lam)) :=
+    mul_le_mul_of_nonneg_left h_log_le h_one_div_pos.le
+  refine h_div.trans (le_of_eq ?_)
+  field_simp
+
 end InformationTheory.Shannon.Cramer
