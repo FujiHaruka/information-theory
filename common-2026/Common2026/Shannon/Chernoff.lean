@@ -212,6 +212,39 @@ theorem chernoffInfo_nonneg
       ≤ Real.log (chernoffZSum P₁ P₂ 0) := csInf_le h_bdd h_logZ0_in_img
     _ = 0 := h_logZ0
 
+/-! ### A-5 Chernoff information symmetry `C(P₁, P₂) = C(P₂, P₁)` -/
+
+omit [DecidableEq α] in
+/-- **Symmetry of `chernoffZSum`** in `λ ↔ 1 - λ`:
+`Z_{P₁,P₂}(λ) = Z_{P₂,P₁}(1 - λ)` (just swap the exponents). -/
+lemma chernoffZSum_swap (P₁ P₂ : α → ℝ) (lam : ℝ) :
+    chernoffZSum P₁ P₂ lam = chernoffZSum P₂ P₁ (1 - lam) := by
+  unfold chernoffZSum
+  refine Finset.sum_congr rfl fun a _ => ?_
+  -- (P₁ a)^(1-λ) * (P₂ a)^λ vs (P₂ a)^(1-(1-λ)) * (P₁ a)^(1-λ) = (P₂ a)^λ * (P₁ a)^(1-λ)
+  rw [show (1 : ℝ) - (1 - lam) = lam by ring]
+  ring
+
+/-- **Chernoff information is symmetric**: `chernoffInfo P₁ P₂ = chernoffInfo P₂ P₁`.
+
+Proof: the image `(log ∘ Z_{P₁,P₂}) '' Icc 0 1` equals `(log ∘ Z_{P₂,P₁}) '' Icc 0 1`
+via the change of variable `λ ↔ 1 - λ` (which is a self-bijection on `Icc 0 1`). -/
+theorem chernoffInfo_symm (P₁ P₂ : α → ℝ) :
+    chernoffInfo P₁ P₂ = chernoffInfo P₂ P₁ := by
+  unfold chernoffInfo
+  congr 1
+  -- Show the two images are equal (under the same sInf).
+  refine congrArg sInf ?_
+  apply Set.eq_of_subset_of_subset
+  · rintro y ⟨lam, hlam, rfl⟩
+    refine ⟨1 - lam, ⟨by linarith [hlam.2], by linarith [hlam.1]⟩, ?_⟩
+    simp only
+    rw [← chernoffZSum_swap P₁ P₂ lam]
+  · rintro y ⟨lam, hlam, rfl⟩
+    refine ⟨1 - lam, ⟨by linarith [hlam.2], by linarith [hlam.1]⟩, ?_⟩
+    simp only
+    rw [← chernoffZSum_swap P₂ P₁ lam]
+
 /-! ## Phase D — Hoeffding tradeoff exponent (Tier 0: 定義 + min 達成性) -/
 
 /-- `klDivPmf P P = 0`: KL divergence of any pmf with itself is zero.
