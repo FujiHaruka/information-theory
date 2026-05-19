@@ -385,8 +385,10 @@ lemma expectedLength_bridge_R
     (l : α → ℕ) (hl_pos : ∀ a, 0 < l a)
     (a b : α) (hab : a ≠ b)
     (h_lab : l a = l b)
+    (h_la_ge_2 : 2 ≤ l a)
     (hl_kraft : ∑ x : α, ((2 : ℝ)) ^ (-(l x : ℤ)) ≤ 1) :
     ∃ l' : { x : α // x ≠ b } → ℕ,
+      (∀ x, 0 < l' x) ∧
       (∑ x : { x : α // x ≠ b }, ((2 : ℝ)) ^ (-(l' x : ℤ)) ≤ 1) ∧
       InformationTheory.Shannon.ShannonCode.expectedLength P l
         = InformationTheory.Shannon.ShannonCode.expectedLength
@@ -394,7 +396,12 @@ lemma expectedLength_bridge_R
           + (P.real {a} + P.real {b}) := by
   classical
   -- l' の定義
-  refine ⟨fun x => if x.val = a then l a - 1 else l x.val, ?_, ?_⟩
+  refine ⟨fun x => if x.val = a then l a - 1 else l x.val, ?_, ?_, ?_⟩
+  · -- positivity: x.val = a 側は l a - 1 ≥ 1; otherwise hl_pos.
+    intro x
+    by_cases hxa : x.val = a
+    · simp only [hxa, if_true]; omega
+    · simp only [hxa, if_false]; exact hl_pos x.val
   · -- Kraft inequality
     set l' : { x : α // x ≠ b } → ℕ :=
       fun x => if x.val = a then l a - 1 else l x.val with hl'_def
@@ -636,6 +643,104 @@ private lemma fintype_card_subtype_ne (b : α) :
   rw [Finset.card_erase_of_mem (Finset.mem_univ b)]
   rfl
 
+omit [Nonempty α] [MeasurableSingletonClass α] in
+/-- **Phase 4 sub-helper — single swap step**: `Equiv.swap a m` で `l` を入れ替えると、
+`l a ≤ l m` ∧ `P.real {a} ≤ P.real {m}` の下で expected length が非増加, Kraft 和は不変.
+さらに `(l ∘ Equiv.swap a m) a = l m`, `(l ∘ Equiv.swap a m) m = l a`. -/
+lemma swap_step_le
+    (P : Measure α) [IsProbabilityMeasure P]
+    (l : α → ℕ) (hl_pos : ∀ x, 0 < l x)
+    (hl_kraft : ∑ x : α, ((2 : ℝ)) ^ (-(l x : ℤ)) ≤ 1)
+    (a m : α)
+    (h_la_le_lm : l a ≤ l m) (h_Pa_le_Pm : P.real {a} ≤ P.real {m}) :
+    let l' := l ∘ Equiv.swap a m
+    (∀ x, 0 < l' x) ∧
+    (∑ x : α, ((2 : ℝ)) ^ (-(l' x : ℤ)) ≤ 1) ∧
+    InformationTheory.Shannon.ShannonCode.expectedLength P l'
+      ≤ InformationTheory.Shannon.ShannonCode.expectedLength P l ∧
+    l' a = l m ∧ l' m = l a := by
+  classical
+  set σ : α ≃ α := Equiv.swap a m with hσ_def
+  set l' : α → ℕ := l ∘ σ with hl'_def
+  have hl'_pos : ∀ x, 0 < l' x := fun x => hl_pos (σ x)
+  have hl'_a : l' a = l m := by simp [hl'_def, hσ_def, Equiv.swap_apply_left]
+  have hl'_m : l' m = l a := by simp [hl'_def, hσ_def, Equiv.swap_apply_right]
+  -- Kraft: ∑ x : α, 2^(-l' x) = ∑ x : α, 2^(-l (σ x)) = ∑ x : α, 2^(-l x)
+  have hkraft' : ∑ x : α, ((2 : ℝ)) ^ (-(l' x : ℤ)) ≤ 1 := by
+    have h_eq : (∑ x : α, ((2 : ℝ)) ^ (-(l' x : ℤ)))
+        = ∑ x : α, ((2 : ℝ)) ^ (-(l x : ℤ)) := by
+      show (∑ x : α, ((2 : ℝ)) ^ (-(l (σ x) : ℤ))) = _
+      exact Equiv.sum_comp σ (fun x => ((2 : ℝ)) ^ (-(l x : ℤ)))
+    rw [h_eq]; exact hl_kraft
+  -- Expected length: E[l'] - E[l] = (P{a} - P{m}) * (l m - l a) ≤ 0
+  -- (∵ P{a} ≤ P{m} and l a ≤ l m, so (P{a}-P{m})*(l m - l a) ≤ 0)
+  have hexpL' :
+      InformationTheory.Shannon.ShannonCode.expectedLength P l'
+        ≤ InformationTheory.Shannon.ShannonCode.expectedLength P l := by
+    unfold InformationTheory.Shannon.ShannonCode.expectedLength
+    by_cases ham : a = m
+    · -- a = m: σ = identity, so l' = l, trivial
+      have hσ_id : σ = Equiv.refl α := by rw [hσ_def, ham]; exact Equiv.swap_self m
+      have : l' = l := by
+        funext x; show l (σ x) = l x; rw [hσ_id]; rfl
+      rw [this]
+    · -- a ≠ m
+      -- ∑ x, P{x} * l' x = ∑ x, P{x} * l (σ x).
+      -- Split: x = a, x = m, other.
+      have h_univ_eq : (Finset.univ : Finset α)
+          = insert a (insert m ((Finset.univ : Finset α).erase a |>.erase m)) := by
+        ext x; simp only [Finset.mem_insert, Finset.mem_erase, Finset.mem_univ, and_true]
+        constructor
+        · intro _; by_cases hxa : x = a
+          · left; exact hxa
+          · by_cases hxm : x = m
+            · right; left; exact hxm
+            · right; right; exact ⟨hxm, hxa⟩
+        · intro _; trivial
+      have hm_not_in : m ∉ ((Finset.univ : Finset α).erase a |>.erase m) := by
+        simp
+      have ha_not_in : a ∉ insert m ((Finset.univ : Finset α).erase a |>.erase m) := by
+        simp [Ne.symm ham]
+      -- Both sums split using h_univ_eq
+      have h_split : ∀ f : α → ℝ,
+          (∑ x : α, f x) = f a + f m
+            + ∑ x ∈ ((Finset.univ : Finset α).erase a).erase m, f x := by
+        intro f
+        conv_lhs => rw [show (Finset.univ : Finset α) = insert a (insert m
+            (((Finset.univ : Finset α).erase a).erase m)) from h_univ_eq]
+        rw [Finset.sum_insert ha_not_in, Finset.sum_insert hm_not_in]
+        ring
+      rw [h_split (fun x => P.real {x} * (l' x : ℝ)),
+          h_split (fun x => P.real {x} * (l x : ℝ))]
+      -- For x ∈ erase erase: σ x = x, so l' x = l x
+      have h_eq_other : ∀ x ∈ ((Finset.univ : Finset α).erase a).erase m,
+          P.real {x} * (l' x : ℝ) = P.real {x} * (l x : ℝ) := by
+        intro x hx
+        have hxm : x ≠ m :=
+          (Finset.mem_erase.mp hx).1
+        have hxa : x ≠ a := by
+          rcases Finset.mem_erase.mp (Finset.mem_of_mem_erase hx) with ⟨hne, _⟩
+          exact hne
+        have hσx : σ x = x := Equiv.swap_apply_of_ne_of_ne hxa hxm
+        show P.real {x} * (l (σ x) : ℝ) = P.real {x} * (l x : ℝ)
+        rw [hσx]
+      have h_sum_eq : (∑ x ∈ ((Finset.univ : Finset α).erase a).erase m,
+                        P.real {x} * (l' x : ℝ))
+          = ∑ x ∈ ((Finset.univ : Finset α).erase a).erase m,
+              P.real {x} * (l x : ℝ) :=
+        Finset.sum_congr rfl h_eq_other
+      rw [h_sum_eq, hl'_a, hl'_m]
+      -- Want: P{a}*l m + P{m}*l a + S ≤ P{a}*l a + P{m}*l m + S
+      -- ⟺ (P{m} - P{a})*(l m - l a) ≥ 0
+      have hPa : (0 : ℝ) ≤ P.real {m} - P.real {a} := by linarith
+      have hLa : (0 : ℝ) ≤ ((l m : ℝ) - (l a : ℝ)) := by
+        have : ((l a : ℝ)) ≤ ((l m : ℝ)) := by exact_mod_cast h_la_le_lm
+        linarith
+      have hprod : (0 : ℝ) ≤ (P.real {m} - P.real {a}) * ((l m : ℝ) - (l a : ℝ)) :=
+        mul_nonneg hPa hLa
+      nlinarith [hprod]
+  exact ⟨hl'_pos, hkraft', hexpL', hl'_a, hl'_m⟩
+
 omit [MeasurableSingletonClass α] in
 /-- **Phase 4 helper — swap normalization**: 任意の Kraft-feasible `l` を
 `l_norm a = l_norm b` を満たす形に変換できる. expected length は増えず、Kraft 不等式も維持される. -/
@@ -864,13 +969,9 @@ private theorem huffmanLength_optimal_aux (n : ℕ)
           rw [← hln_eq_ab, h_la_eq_1]; norm_num
         rw [h_pow_a, h_pow_b] at h_sum_three
         linarith
-      -- Bridge R: ∃ l', kraft ∧ E[l_norm] = E[mergedMeasure, l'] + (P{a} + P{b})
-      obtain ⟨l', hl'_kraft, hl'_eq⟩ :=
-        expectedLength_bridge_R P l_norm hln_pos a b hab hln_eq_ab hln_kraft
-      -- l' is positive: for x ≠ a', l' x = l_norm x.val > 0; for x = a', l' x = l_norm a - 1 ≥ 1.
-      -- But l' is constructed by Bridge R as the specific witness; we need to extract the witness's
-      -- positivity. The current expectedLength_bridge_R doesn't return positivity. Re-state:
-      -- l' x := if x.val = a then l_norm a - 1 else l_norm x.val (by Bridge R construction)
+      -- Bridge R: ∃ l', positivity ∧ kraft ∧ E[l_norm] = E[mergedMeasure, l'] + (P{a} + P{b})
+      obtain ⟨l', hl'_pos, hl'_kraft, hl'_eq⟩ :=
+        expectedLength_bridge_R P l_norm hln_pos a b hab hln_eq_ab hln_a_ge_2 hln_kraft
       -- mergedMeasure の IsProbabilityMeasure instance
       have hP'_inst : IsProbabilityMeasure (mergedMeasure P a b hab) :=
         mergedMeasure_isProbabilityMeasure P a b hab
@@ -883,8 +984,34 @@ private theorem huffmanLength_optimal_aux (n : ℕ)
         fintype_card_subtype_ne b
       have h_card_α'_lt : Fintype.card { y : α // y ≠ b } < n := by
         rw [h_card_α', ← hn]; omega
-      -- TODO: complete: need 0 < l' x (uses l_norm a ≥ 2), IH application, Bridge L composition.
-      sorry
+      -- α' is nonempty: a ≠ b ⇒ ⟨a, hab⟩ : α'.
+      haveI : Nonempty { y : α // y ≠ b } := ⟨⟨a, hab⟩⟩
+      -- IH 適用: huffmanLength の方が l' より expected length 小
+      have h_IH :
+          InformationTheory.Shannon.ShannonCode.expectedLength
+              (mergedMeasure P a b hab) (huffmanLength (mergedMeasure P a b hab))
+            ≤ InformationTheory.Shannon.ShannonCode.expectedLength
+              (mergedMeasure P a b hab) l' :=
+        IH _ h_card_α'_lt (mergedMeasure P a b hab) hP'_pos l' hl'_pos hl'_kraft rfl
+      -- huffmanLength_mergedMeasure_eq: huffmanLength (mergedMeasure ...) x = L'(x)
+      have h_L'_link := huffmanLength_mergedMeasure_eq P hP h_card_ge_3 a b hab h_sib
+      -- Bridge L: E[P, huffmanLength P] = E[merged, huffmanLength merged] + (P{a} + P{b})
+      have h_BL := huffmanLength_bridge_L P hP h_card_ge_2 a b hab h_sib
+        (huffmanLength (mergedMeasure P a b hab)) h_L'_link
+      -- 連結: E[P, huffmanLength P]
+      --     = E[merged, huffmanLength merged] + (P{a}+P{b})    -- (h_BL)
+      --     ≤ E[merged, l']                  + (P{a}+P{b})     -- (h_IH)
+      --     = E[P, l_norm]                                    -- (hl'_eq, rearranged)
+      --     ≤ E[P, l]                                          -- (hln_le)
+      calc InformationTheory.Shannon.ShannonCode.expectedLength P (huffmanLength P)
+          = InformationTheory.Shannon.ShannonCode.expectedLength
+              (mergedMeasure P a b hab) (huffmanLength (mergedMeasure P a b hab))
+            + (P.real {a} + P.real {b}) := h_BL
+        _ ≤ InformationTheory.Shannon.ShannonCode.expectedLength
+              (mergedMeasure P a b hab) l'
+            + (P.real {a} + P.real {b}) := by linarith
+        _ = InformationTheory.Shannon.ShannonCode.expectedLength P l_norm := by linarith
+        _ ≤ InformationTheory.Shannon.ShannonCode.expectedLength P l := hln_le
 
 /-- **主定理 (Cover-Thomas Theorem 5.8.1)** — Huffman 語長は任意の Kraft-feasible 語長関数
 より expected length が小さい. -/
