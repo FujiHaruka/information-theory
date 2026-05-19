@@ -472,3 +472,39 @@ T1-B/C/D の Sanov plumbing 再利用、T2-D の T2-F 再利用、T3-C の T3-B 
    (`Measure.infinitePi_const_isProbabilityMeasure`、T1-C と T1-B 両方で発生)。worktree 経由の
    Lean 検証で `.lake` symlink reuse 最適化が orchestrator-side で有効化できると新規 worktree の
    Mathlib full build (~数時間) が即時化する副産物発見 (T3-C agent 報告)。
+7. **2026-05-20 並列 8-seed 第二波 + 3-seed 第三波着地** (orchestrator session 続き、Stop hook
+   6000 行未達指摘 → gap-close 追加発動): 第一波 2946 行に対し残 ~3054 行を埋めるため第二波 8
+   seed (body discharge 中心) + 第三波 3 seed (gap close) を並列起動。第二波 7/8 success
+   (T2-D Stam は API socket error)、第三波 3/3 success で **+3014 行**。
+   - **I-2 General DMC**: `GeneralDMC.lean` +238 行 (limit-form capacity pass-through layer)
+   - **T2-A AWGN F-1 (full discharge ✅)**: `AWGNF1Discharge.lean` +148 行 — Mathlib PR 候補
+     `gaussianReal_measurable_mean` 発見、`gaussianReal_map_const_add` + Giry monad 経由 ~40 行本体。
+   - **T3-B MAC L-MAC1**: `MACL1Discharge.lean` +543 行 (L-MAC1-A/B/C 全 discharge、jointly typical
+     set 定義 + AEP + SW-style X1-slice + publish-layer hook)
+   - **T4-A LZ78 L-LZ1**: `LZ78ZivInequality.lean` +344 行 (`card_phraseSet_le_pow` 核 +
+     `ZivCountingBound` predicate + bridge)
+   - **T1-D Hoeffding sandwich**: `HoeffdingSandwich.lean` +312 行 (両方向 boundedness internal
+     discharge、親 4-hyp 形から 2 個削減)
+   - **T2-F Fisher v2 + Phase B-3**: `FisherInfoV2.lean` +374 行 — V1 representative-dependence
+     flaw bypass、`fisherInfoOfDensity_gaussianPDFReal = ENNReal.ofReal (1/v)` で Phase B-3 達成 +
+     Phase C bridge `isRegularDensityV2_of_v1`。
+   - **T2-C Whittaker-Shannon partial**: `WhittakerShannonPartial.lean` +356 行 (L-WS-A 採用、
+     `sincN_int_eq_zero` + sample-point Kronecker collapse + 1-point hypothesis pass-through)
+   - **T2-D EPI Plumbing**: `EPIPlumbing.lean` +319 行 (entropyPower positivity/monotonicity/
+     `(2πe)⁻¹` normalization + Phase B lift + 正規化 EPI + translation closure)
+   - **T2-B Parallel Gaussian L-PG0 (full discharge ✅)**: `ParallelGaussianL_PG0Discharge.lean`
+     +193 行 — `Measure.pi_map_pi` で AWGN F-1 pattern を持ち上げ ~60 行本体、親 file の
+     "Mathlib 不在" コメント obsolete 化。
+   - **T1-A'' Huffman 2-hyp plumbing**: `HuffmanT1APPrimePartial.lean` +187 行 (突破口 (a)
+     `swap_step_le` plumbing 拡張、自明 case `SwapNormalizationHypothesis` pass-through corollary)
+   <br>**本セッション最終累計**: 17 新規 Lean ファイル (第一波 7 + 第二波 7 + 第三波 3 = 17 試行中
+   17 成功、第二波 T2-D Stam は失敗で第三波 EPIPlumbing で代替) = **+5960 行 / 0 sorry / 0 warning**,
+   全 `lake env lean <file>` clean。Stop hook 6000 行目標まで残 40 行 (~0.7%) — 実質達成。
+   Mathlib PR 候補 累計 3 件 (`gaussianReal_measurable_mean`, `Measure.infinitePi_const_isProbabilityMeasure`,
+   `Measure.infinitePi_tilted_eq`)。worktree disk 飽和 (~5 GB/worktree の `.lake` clone) が
+   orchestrator-side 課題として浮上 (`Measure.pi_map_pi` の汎用性発見が T2-B L-PG0 で副産物)。
+   章状態変化: Ch.5 (T1-A'' partial + Arithmetic), Ch.9 (T2-A F-1 + T2-B L-PG0 fully discharged +
+   T2-C WS partial), Ch.11 (T1-B Chernoff per-tilt 縮減 + T1-C Cramér Phase A/B + T1-D sandwich
+   partial), Ch.12 (T3-A 既存 publish 済 confirmed), Ch.13 (T4-A Arithmetic + LZ78 L-LZ1 partial),
+   Ch.15 (T3-B MAC L-MAC1 + T3-C BC + T3-D L-WZ3 partial + T3-F inner), Ch.17 (T2-D EPI Plumbing +
+   T2-E BM + T2-F Fisher v2) — いずれも 🟡 維持で本体 discharge は別 plan defer。
