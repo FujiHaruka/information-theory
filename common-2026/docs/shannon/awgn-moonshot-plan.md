@@ -1135,6 +1135,20 @@ inventory §F の 3 ライン (F-1, F-2, F-3) を本 plan に転記:
 
 書く頻度: Phase 中の方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
 
+### 後続 (2026-05-20, F-4 / 撤退ライン discharge)
+
+6. **撤退ライン F-4 (kernel measurability) discharge 完了** → follow-up plan
+   [`awgn-f1-discharge-moonshot-plan.md`](awgn-f1-discharge-moonshot-plan.md) で
+   `Common2026/Shannon/AWGNF1Discharge.lean` (148 行) を publish。
+   `Measurable (fun x : ℝ => gaussianReal x N)` を Mathlib `gaussianReal_map_const_add`
+   (`μ = 0` で `(gaussianReal 0 N).map (x + ·) = gaussianReal x N`) + Giry monad
+   `Measure.measurable_of_measurable_coe` + `measurable_measure_prodMk_left` の組合せで
+   完全証明 (`isAwgnChannelMeasurable`)。`awgn_channel_coding_theorem` を `h_meas` 引数
+   なし形で再 publish (`awgn_theorem_F1_discharged`)、capacity も同様
+   (`awgn_capacity_closed_form_F1_discharged`)。当初予想 50-100 行を **map 補題に
+   帰着させたことで実績 148 行**（うち本体補題 ~40 行、wrapper + header が残り）。
+   seed プロンプト側では同じ箇所を「F-1 (kernel measurability)」と呼ぶ点に注意。
+
 ### 確定済 (2026-05-19, Phase A-D 一括実装)
 
 1. **撤退ライン F-1 + F-2 + F-3 + F-4 の組合せ発動を確定**: 在庫 §F の 3 ライン
