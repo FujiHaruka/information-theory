@@ -60,7 +60,7 @@
 | 6 | Gambling and Data Compression | ✖ scope-out | — | — | — |
 | 7 | Channel Capacity | ✅ | `shannon_noisy_channel_coding_theorem_general_full`, `_strong_converse`, `_feedback_complete` | — | — |
 | 8 | Differential Entropy | ✅ | `DifferentialEntropy.differentialEntropy_gaussianReal`, `_le_gaussian_of_variance_le` | — | — |
-| 9 | Gaussian Channel | 📋 | — | **T2-A AWGN**, **T2-B Parallel Gaussian + water-filling**, **T2-C Bandlimited / Shannon-Hartley** | ~2-3.5k |
+| 9 | Gaussian Channel | 🟡 | `AWGN.awgn_channel_coding_theorem` (F-1+F-2+F-3+F-4 pass-through), `AWGN.awgn_capacity_closed_form = (1/2) log(1 + P/N)` | **T2-A discharge** (kernel measurability + continuous typicality + MI bridge + per-letter converse 本体), **T2-B Parallel Gaussian**, **T2-C Bandlimited / Shannon-Hartley** | ~2-3.5k |
 | 10 | Rate Distortion | ✅ | `rate_distortion_achievability`, `_converse_*`, `_convexity`, n-letter converse | — | — |
 | 11 | Information Theory and Statistics | 🟡 | `stein_strong_law`, `sanov_ldp_equality`, `Pinsker`, `CsiszarProjection` | **T1-B Chernoff**, **T1-C Cramér**, **T1-D Hoeffding tradeoff** | ~1-1.7k |
 | 12 | Maximum Entropy | 🟡 | `entropy_le_log_card`, `entropy_eq_log_card_iff` | **T3-A Constrained MaxEnt (Lagrange / exponential family)** | ~400-700 |
@@ -346,3 +346,41 @@ T1-B/C/D の Sanov plumbing 再利用、T2-D の T2-F 再利用、T3-C の T3-B 
    「規模」列、規模の総計節を追加。基準は既存ファイル行数 (`ChannelCodingShannonTheorem.lean` 918,
    `DifferentialEntropy.lean` 1010, `BirkhoffErgodic.lean` 920, `AEPRate.lean` 831)。追加合計
    ~13-21k 行 (実質新規 ~10-13k)、既存 ~30k に対し 1/3-2/3 規模の増分。
+3. **2026-05-19 並列 5-seed 着地** (orchestrator session): 5 seed を並列 subagent chain で
+   駆動して合計 **+1975 行 / 0 sorry / 0 warning** で publish。シード別:
+   - **T1-D Hoeffding** (L-H4 variational scaffolding 形): `HoeffdingTradeoff.lean` +316 行。
+     `hoeffding_tradeoff_with_hypothesis` (`hQs_pos` 仮定形 Tendsto) + 14 declarations
+     (pmf↔Measure bridge + Type II + 凸性 + Pythagoras)。`hoeffdingE2_minimizer_full_support`
+     の log-singularity gradient 引数 (~30-50 行) を要するため Phase C/D sandwich Tendsto は
+     後継 plan `hoeffding-tradeoff-sandwich-plan.md` に分離。Ch.11 行は 🟡 のまま。
+   - **T2-A AWGN** (F-1+F-2+F-3+F-4 hypothesis pass-through): `AWGN.lean` 275 +
+     `AWGNAchievability.lean` 72 + `AWGNConverse.lean` 94 + `AWGNMain.lean` 107 = +548 行。
+     `awgn_channel_coding_theorem` 主定理 + `awgn_capacity_closed_form` corollary publish。
+     新規 F-4 (kernel measurability、Mathlib に `Measurable (fun x => gaussianReal x N)` の
+     直接 lemma がない) を本実装で発見。Ch.9 行は 🟡 昇格 (主定理 hypothesis 形で publish)。
+   - **T2-F Fisher Gaussian discharge** (L-G3 Stage 1): `FisherInfoGaussian.lean` 329 新規
+     + `FisherInfo.lean` 14 back-port = +343 行。Phase A (`IsRegularDensity gaussianReal m v`
+     instance) + Phase B-1/B-2 完了。`fisherInfo` 定義に representative-dependence flaw
+     (`Measure.rnDeriv` の `Classical.choose` 経由で Gaussian の場合 `fisherInfo = 0`) を発見、
+     parent plan Tier 2 publish 形を破壊するため後継 plan で fisherInfo 再定義 + Phase B-3/C/D
+     を扱う。Ch.17 行は 🟡 のまま。
+   - **T1-C Cramér L-C2 (部分 discharge)** (L-D3 撤退): `CramerLC2Discharge.lean` +171 行。
+     Phase A tilted IID plumbing 6 補題 (`cgf_eval_eq_cgf_base`, `iIndepFun_tilted_ambient`,
+     `identDistrib_tilted_ambient`, `iIndepFun_eval_under_infinitePi`,
+     `identDistrib_eval_under_infinitePi`, `bounded_eval_family`) を独立 infrastructure publish。
+     `cramer_lower_discharged` (hypothesis-free) は未達 — `IsProbabilityMeasure
+     (Measure.infinitePi (fun _ : ℕ => μ₀.tilted ...))` instance synthesis の beta-reduction
+     不一致で Phase B 詰まり (Mathlib PR 候補)。Ch.11 行は 🟡 のまま。
+   - **T3-D Wyner-Ziv** (L-WZ1/2/3 + L-WP-statement-pass): `WynerZiv.lean` 366 +
+     `WynerZivAchievability.lean` 99 + `WynerZivConverse.lean` 132 = +597 行。Phase A 完全実装
+     (`WynerZivCode` + `wzMarginal*` + `wzMutualInfo*` + `WynerZivConstraint` + `wynerZivRatePmf` +
+     attained_slice 形)。Phase B/C/D は statement-level pass-through で publish — random binning +
+     三項 jointly typical decoder + n-letter chain rule の本体 discharge は別 plan defer。
+     Ch.15 行は 🟡 のまま (statement-level の Wyner-Ziv は publish 済、本体 discharge は別 plan)。
+   - **T1-A'' Huffman 2-hypothesis discharge** (no-op 再判定): judgement log #3 で前回 no-op 判定
+     (~550 行 / 4-6 セッション、1 セッション完遂不可) を再確認、Phase 0 probe のみ実施で着手前撤退。
+     Ch.5 行は 🟡 のまま (T1-A' weak form publish 済、T1-A'' 完全 discharge は未達)。
+   <br>**集計**: 11 ファイル新規 + 1 ファイル back-port 修正、全 `lake env lean` clean。今回は
+   parent definition flaw 発見 (T2-F の `fisherInfo` representative-dependence) と Mathlib 上流
+   PR 候補 2 件 (`Measure.infinitePi_const_isProbabilityMeasure`, `Measurable (fun x => gaussianReal x N)`)
+   が副産物。

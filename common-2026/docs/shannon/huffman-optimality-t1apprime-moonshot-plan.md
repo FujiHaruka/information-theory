@@ -787,3 +787,33 @@ hypothesis を discharge.
    **Definition of Done 状態**: 既存 `lake env lean Common2026/Shannon/HuffmanOptimality.lean`
    は silent (0 sorry / 0 error / 既存 warning なし、T1-A' 状態完全維持)。T1-A'' 進捗
    チェックボックスは全て unchecked のまま、後続セッションで再着手.
+
+3. **2026-05-19 再着手評価 #2 — 案 Y 再採用、no-op 維持**: 判断ログ #2 以後の Mathlib 状態と
+   `HuffmanOptimality.lean` (1054 行 / 0 sorry / weak form publish) は不変であることを Phase 0
+   1 行 probe で再確認:
+   - `loogle "Tuple.bubble_sort_induction"`: `Mathlib.Data.Fin.Tuple.BubbleSortInduction` ヒット
+     1 件、依然 `Fin n → α` 専用 (Fintype 一般化 API は不在). C-A-1 alt (i) `Fintype.equivFin`
+     bridge ~30 行が依然必要。
+   - `loogle "Multiset.map_congr"`: `Mathlib.Data.Multiset.MapFold` ヒット 1 件、署名不変.
+     Phase B0 lift 構造補題は依然 ~80 行見込み (判断ログ #2 から不変).
+
+   判断ログ #2 の技術ボトルネック評価 (Phase A 完成 ~250 + Phase B 完成 ~300 = ~550 行、
+   推定 4-6 セッション + proof-pivot-advisor 2-3 回) は **本セッション着手判断時点でも全く
+   同一**。新たに利用可能になった Mathlib API も、scope を下げる新発見もなく、partial sorry
+   publish は依然 DoD 違反のため不可。L-4a (Phase A 単独 publish) も Phase A 単独で ~250 行
+   要するため 1 セッション完遂不可。
+
+   **採用方針**: 案 Y (no-op) **再採用**。`HuffmanOptimality.lean` は T1-A' 完成形のまま
+   unchanged 維持、本判断ログ #3 のみ追記。Phase 0 1 行 probe 2 件以外の API call なし。
+
+   #### 次セッション最初の一手 (本判断ログ #3 から派生、判断ログ #2 と重複部は省略)
+
+   T1-A'' は 1 セッション完遂前提では着手不可。**~2-3 セッション分の連続実装 budget が
+   確保された場合に再着手**を推奨。budget 確保が困難なら、ロードマップ全体で T1-A'' の
+   優先度を見直し、別 seed (T2-G, T3-E など) を先行させる選択肢も検討。再着手時は判断ログ
+   #2 の skeleton 起動方針 (Phase A1 `Tuple.bubble_sort_induction` + `Fintype.equivFin`
+   bridge 採用 + proof-pivot-advisor 1 回投入で Phase A1 / Phase B0 signature 確定) を踏襲.
+
+   **Definition of Done 状態**: 既存 `Common2026/Shannon/HuffmanOptimality.lean` は不変
+   (1054 行 / 0 sorry / weak form publish)。`lake env lean` 再実行は不要 (T1-A' 完成形
+   をそのまま維持). T1-A'' 進捗チェックボックスは全 unchecked.

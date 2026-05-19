@@ -121,51 +121,65 @@ theorem differentialEntropy_map_eq_integral_pdf_log_pdf
 /-- **Regular density predicate** (Cover-Thomas 17.7 仮定の集約). Bundles the
 differentiability + positivity + tail-vanishing + integrability conditions needed
 for `integral_logDeriv_pdf_eq_zero`. **L-F2 撤退ライン形** — we expose this as a
-predicate to be discharged downstream rather than verifying it for general `X`. -/
+predicate to be discharged downstream rather than verifying it for general `X`.
+
+**a.e.-representative form** (back-ported 2026-05-19 for Gaussian discharge):
+since `pdf X P volume` is only defined up to a.e. equivalence (`MeasureTheory.pdf`
+returns a specific representative of an a.e. class), pointwise smoothness /
+positivity conditions cannot be discharged for general `X` even when a smooth
+representative exists. The structure exposes a chosen smooth representative
+`density : ℝ → ℝ` together with an a.e.-equality `pdf_ae_eq` and lifts the
+pointwise regularity conditions to `density`. Downstream discharge (e.g. Gaussian
+in `FisherInfoGaussian.lean`) provides `density := gaussianPDFReal m v`. -/
 structure IsRegularDensity {Ω : Type*} [MeasurableSpace Ω]
-    (X : Ω → ℝ) (P : Measure Ω) [HasPDF X P volume] : Prop where
-  /-- The (real-valued) PDF is differentiable on all of `ℝ`. -/
-  diff : Differentiable ℝ (fun x => (pdf X P volume x).toReal)
-  /-- The PDF is strictly positive everywhere (so `logDeriv` is well-defined). -/
-  pos : ∀ x, 0 < (pdf X P volume x).toReal
-  /-- The PDF tends to `0` at `-∞`. -/
-  tail_bot : Filter.Tendsto (fun x => (pdf X P volume x).toReal) Filter.atBot (nhds 0)
-  /-- The PDF tends to `0` at `+∞`. -/
-  tail_top : Filter.Tendsto (fun x => (pdf X P volume x).toReal) Filter.atTop (nhds 0)
-  /-- The derivative of the PDF is Lebesgue-integrable on all of `ℝ`. -/
-  integrable_deriv :
-    Integrable (fun x => deriv (fun y => (pdf X P volume y).toReal) x) volume
+    (X : Ω → ℝ) (P : Measure Ω) [HasPDF X P volume] where
+  /-- A smooth representative of the PDF (`(pdf X P volume x).toReal` is a.e.-equal
+  to this representative, see `pdf_ae_eq`). -/
+  density : ℝ → ℝ
+  /-- `(pdf X P volume).toReal` equals the smooth representative `density` a.e. -/
+  pdf_ae_eq : (fun x => (pdf X P volume x).toReal) =ᵐ[volume] density
+  /-- The representative is differentiable on all of `ℝ`. -/
+  diff : Differentiable ℝ density
+  /-- The representative is strictly positive everywhere (so `logDeriv` is well-defined). -/
+  pos : ∀ x, 0 < density x
+  /-- The representative tends to `0` at `-∞`. -/
+  tail_bot : Filter.Tendsto density Filter.atBot (nhds 0)
+  /-- The representative tends to `0` at `+∞`. -/
+  tail_top : Filter.Tendsto density Filter.atTop (nhds 0)
+  /-- The derivative of the representative is Lebesgue-integrable on all of `ℝ`. -/
+  integrable_deriv : Integrable (deriv density) volume
   /-- Score-times-density `logDeriv p · p = deriv p` is the antiderivative
   whose integral over `ℝ` equals the boundary difference of `p`. Bundled here as
   a hypothesis equivalent to FTC + tail-vanish on the half-lines; downstream
   discharge can use `MeasureTheory.integral_deriv_eq_sub` or its improper variants. -/
-  integral_deriv_eq_zero :
-    ∫ x, deriv (fun y => (pdf X P volume y).toReal) x ∂volume = 0
+  integral_deriv_eq_zero : ∫ x, deriv density x ∂volume = 0
 
 /-- **Score function expectation vanishes** (Cover-Thomas 17.7, regular density form).
 
-`∫ (logDeriv p)(x) · p(x) dx = ∫ p'(x) dx = p(∞) - p(-∞) = 0` for a sufficiently
-regular density `p`. We expose this in **L-F2 form**: the smoothness + positivity +
-tail conditions are bundled into `IsRegularDensity`, which is to be discharged by
-the caller (Gaussian densities satisfy it; general densities may not). -/
+For the smooth representative `density` provided by `IsRegularDensity`,
+`∫ (logDeriv density)(x) · density(x) dx = ∫ density'(x) dx = density(∞) - density(-∞) = 0`.
+
+We expose this in **L-F2 form**: the smoothness + positivity + tail conditions are
+bundled into `IsRegularDensity`, which is to be discharged by the caller (Gaussian
+densities satisfy it; general densities may not). Stated on the smooth
+representative `h_reg.density`; combine with `h_reg.pdf_ae_eq` if needed to
+re-cast in terms of `(pdf X P volume).toReal` via an a.e.-integral congruence. -/
 theorem integral_logDeriv_pdf_eq_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X : Ω → ℝ) [HasPDF X P volume]
     (h_reg : IsRegularDensity X P) :
-    ∫ x, logDeriv (fun y => (pdf X P volume y).toReal) x
-         * (pdf X P volume x).toReal ∂volume = 0 := by
-  -- Pointwise: `logDeriv p x * p x = (deriv p x / p x) * p x = deriv p x` since `p x > 0`.
-  let p : ℝ → ℝ := fun x => (pdf X P volume x).toReal
-  have h_eq : ∀ x, logDeriv p x * p x = deriv p x := by
+    ∫ x, logDeriv h_reg.density x * h_reg.density x ∂volume = 0 := by
+  -- Pointwise: `logDeriv g x * g x = (deriv g x / g x) * g x = deriv g x` since `g x > 0`.
+  set g : ℝ → ℝ := h_reg.density with hg
+  have h_eq : ∀ x, logDeriv g x * g x = deriv g x := by
     intro x
-    have hpx : p x ≠ 0 := (h_reg.pos x).ne'
-    rw [logDeriv_apply, div_mul_cancel₀ _ hpx]
+    have hgx : g x ≠ 0 := (h_reg.pos x).ne'
+    rw [logDeriv_apply, div_mul_cancel₀ _ hgx]
   -- Apply pointwise rewriting to the integral.
-  have h_int : ∫ x, logDeriv p x * p x ∂volume = ∫ x, deriv p x ∂volume :=
+  have h_int : ∫ x, logDeriv g x * g x ∂volume = ∫ x, deriv g x ∂volume :=
     integral_congr_ae (Filter.Eventually.of_forall h_eq)
-  calc ∫ x, logDeriv p x * (pdf X P volume x).toReal ∂volume
-      = ∫ x, logDeriv p x * p x ∂volume := rfl
-    _ = ∫ x, deriv p x ∂volume := h_int
+  calc ∫ x, logDeriv g x * g x ∂volume
+      = ∫ x, deriv g x ∂volume := h_int
     _ = 0 := h_reg.integral_deriv_eq_zero
 
 /-! ## Phase E — de Bruijn identity (Tier 2, L-F1 + L-F2 適用形) -/

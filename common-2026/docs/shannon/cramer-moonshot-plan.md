@@ -23,7 +23,7 @@
 - [x] Phase 0 — Mathlib + Common2026 API 在庫 ✅ → [`cramer-mathlib-inventory.md`](cramer-mathlib-inventory.md)
 - [x] Phase A — `legendre` + `cramerRate` 定義 + 基本性質 + skeleton ✅ (Tier 0, 2026-05-19)
 - [x] Phase B — Cramér upper bound (per-n Chernoff + log form + limsup form + Legendre form, i.i.d. strengthening) ✅ (Tier 1–3, 2026-05-19)
-- [x] Phase C — Cramér lower bound 🔄 L-C2 縮退 publish (2026-05-19): bounded-RV plumbing (`mem_interior_integrableExpSet_of_bounded` / `isProbabilityMeasure_tilted_of_bounded` / `integral_tilted_eq_deriv_cgf`) + `klDiv_tilted_eq` (KL-of-tilted 恒等式) + `cramer_lower` / `cramer_lower_legendre` (`h_tilted_lower` 仮定形、tilted 下 n-IID LLN は別 plan に defer)
+- [x] Phase C — Cramér lower bound 🔄 L-C2 縮退 publish (2026-05-19): bounded-RV plumbing (`mem_interior_integrableExpSet_of_bounded` / `isProbabilityMeasure_tilted_of_bounded` / `integral_tilted_eq_deriv_cgf`) + `klDiv_tilted_eq` (KL-of-tilted 恒等式) + `cramer_lower` / `cramer_lower_legendre` (`h_tilted_lower` 仮定形、tilted 下 n-IID LLN は別 plan に defer)。後継 plan `cramer-lc2-discharge-moonshot-plan.md` で Phase A scaffolding (`CramerLC2Discharge.lean` 171 行) を追加 publish (2026-05-19、judgement #6)、Phase B-C は L-D3 撤退で後続 plan へ defer。
 - [x] Phase D — 主定理 wrapper ✅ (2026-05-19): `cramer_tendsto` sandwich (`cramer_upper_legendre` + `cramer_lower_legendre`)、`Common2026.lean` 編入済 (Phase D-4)
 
 ## ゴール / Approach
@@ -557,6 +557,8 @@ Common2026.lean              ← `import Common2026.Shannon.Cramer` を追記 (P
 ## 判断ログ
 
 書く頻度: Phase 中の方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
+
+6. **(2026-05-19) L-C2 後継 discharge plan は Phase A scaffolding まで完了、Phase B-C は後続 plan へ defer (L-D3 撤退)**: 後継 plan `cramer-lc2-discharge-moonshot-plan.md` で `cramer_lower_discharged` (`h_tilted_lower` 仮定なし形) の完全 publish を目指したが、本セッションで Phase A (tilted IID plumbing: `cgf_eval_eq_cgf_base`, `iIndepFun_tilted_ambient`, `identDistrib_tilted_ambient`, `iIndepFun_eval_under_infinitePi`, `identDistrib_eval_under_infinitePi`, `bounded_eval_family`) を `Common2026/Shannon/CramerLC2Discharge.lean` 171 行で publish 達成 (0 sorry, 0 errors, 0 warnings)。一方 Phase B (`strong_law_ae_real` 起動 + in-probability LLN) は **`IsProbabilityMeasure (Measure.infinitePi (fun _ : ℕ => μ₀.tilted ...))` instance の型クラス検索が repeatedly stuck** で詰まり、後続 plan に defer (詳細は後継 plan §判断ログ #1)。本親 plan の `cramer_lower` の **L-C2 退避形 (hypothesis 引数あり) は引き続き有効**、`cramer_lower_discharged` の publish は未達。Phase A scaffolding は後続 plan が import して B/C を継続可能な形で publish。
 
 5. **(2026-05-19) Phase C で撤退ライン L-C2 発動、`cramer_lower` を `h_tilted_lower` 仮定形 publish**: Phase C-1 (`klDiv_tilted_eq` KL-of-tilted 恒等式) と Phase C-2 (`mem_interior_integrableExpSet_of_bounded` / `isProbabilityMeasure_tilted_of_bounded` / `integral_tilted_eq_deriv_cgf` の bounded-RV plumbing) は完走。一方 Phase C-3 (tilted 下 LLN: `(infinitePi μ).tilted (∑ lam * X i)` と `infinitePi (μ.tilted ...)` の n-IID 再構築) は Mathlib に直接 lemma が無く、1 session 内では完了不能。撤退ライン L-C2 発動: `cramer_lower` / `cramer_lower_legendre` の signature に「tilted-下 Chernoff lower bound」を hypothesis `h_tilted_lower` として外出し、tilted-LLN の整備は別 plan (`cramer-tilted-lln-plan.md`) へ defer。これで Cover-Thomas 11.4.1 の **statement 完成形** (`cramer_tendsto` sandwich) は publish 確保。最終 637 行、Tier 2 = 0 sorry。
 
