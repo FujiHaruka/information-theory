@@ -98,9 +98,11 @@ import Common2026.Shannon.AWGN
 import Common2026.Shannon.AWGNAchievability
 import Common2026.Shannon.AWGNConverse
 import Common2026.Shannon.AWGNMain
+import Common2026.Shannon.ParallelGaussian
 import Common2026.Shannon.WynerZiv
 import Common2026.Shannon.WynerZivAchievability
 import Common2026.Shannon.WynerZivConverse
+import Common2026.Shannon.RelayCutset
 import Common2026.Shannon.Stationary
 import Common2026.Shannon.EntropyRate
 import Common2026.Shannon.ShannonMcMillanBreiman

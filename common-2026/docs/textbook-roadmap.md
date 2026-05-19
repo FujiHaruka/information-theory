@@ -60,13 +60,13 @@
 | 6 | Gambling and Data Compression | ✖ scope-out | — | — | — |
 | 7 | Channel Capacity | ✅ | `shannon_noisy_channel_coding_theorem_general_full`, `_strong_converse`, `_feedback_complete` | — | — |
 | 8 | Differential Entropy | ✅ | `DifferentialEntropy.differentialEntropy_gaussianReal`, `_le_gaussian_of_variance_le` | — | — |
-| 9 | Gaussian Channel | 🟡 | `AWGN.awgn_channel_coding_theorem` (F-1+F-2+F-3+F-4 pass-through), `AWGN.awgn_capacity_closed_form = (1/2) log(1 + P/N)` | **T2-A discharge** (kernel measurability + continuous typicality + MI bridge + per-letter converse 本体), **T2-B Parallel Gaussian**, **T2-C Bandlimited / Shannon-Hartley** | ~2-3.5k |
+| 9 | Gaussian Channel | 🟡 | `AWGN.awgn_channel_coding_theorem` (F-1+F-2+F-3+F-4 pass-through), `AWGN.awgn_capacity_closed_form = (1/2) log(1 + P/N)`, `ParallelGaussian.parallel_gaussian_capacity_formula` (water-filling 形 L-WF1+L-WF2+L-PG0+L-PG1 pass-through), `ParallelGaussian.parallel_gaussian_capacity_active_form` | **T2-A/B discharge** (kernel measurability + continuous typicality + MI bridge + per-letter converse 本体 + KKT 充足性 + water-filling 一意性), **T2-C Bandlimited / Shannon-Hartley** | ~2-3.5k |
 | 10 | Rate Distortion | ✅ | `rate_distortion_achievability`, `_converse_*`, `_convexity`, n-letter converse | — | — |
 | 11 | Information Theory and Statistics | 🟡 | `stein_strong_law`, `sanov_ldp_equality`, `Pinsker`, `CsiszarProjection` | **T1-B Chernoff**, **T1-C Cramér**, **T1-D Hoeffding tradeoff** | ~1-1.7k |
 | 12 | Maximum Entropy | 🟡 | `entropy_le_log_card`, `entropy_eq_log_card_iff` | **T3-A Constrained MaxEnt (Lagrange / exponential family)** | ~400-700 |
 | 13 | Universal Source Coding | 📋 | — | **T4-A LZ78 漸近最適性** (Kolmogorov complexity 部分は scope-out) | ~1.5-2.5k |
 | 14 | Kolmogorov Complexity | ✖ scope-out | — | — | — |
-| 15 | Network Information Theory | 🟡 | `SlepianWolf*` 完備 | **T3-B MAC**, **T3-C Broadcast (degraded)**, **T3-D Wyner-Ziv**, **T3-E Joint source-channel coding (separation)**, **T3-F Relay + cut-set** | ~5-9k |
+| 15 | Network Information Theory | 🟡 | `SlepianWolf*` 完備, `WynerZiv.wyner_ziv_tendsto` (statement-level pass-through), `RelayCutset.relay_cutset_outer_bound` (L-RC1/2/3/4/5 pass-through), `SeparationTheorem` 完備 | **T3-D body discharge**, **T3-F inner bound (DF/CF)**, **T3-B MAC**, **T3-C Broadcast (degraded)** | ~5-9k |
 | 16 | Information Theory and Portfolio Theory | ✖ scope-out | — | — | — |
 | 17 | Inequalities in Information Theory | 🟡 | `Han`, `Shearer`, `LoomisWhitney`, `BrascampLieb`, `HypercubeEdgeBoundary`, `Pinsker`, `_sharp` | **T2-D EPI**, **T2-E Brunn-Minkowski**, **T2-F Fisher info / de Bruijn identity** | ~1.8-2.6k |
 
@@ -384,3 +384,17 @@ T1-B/C/D の Sanov plumbing 再利用、T2-D の T2-F 再利用、T3-C の T3-B 
    parent definition flaw 発見 (T2-F の `fisherInfo` representative-dependence) と Mathlib 上流
    PR 候補 2 件 (`Measure.infinitePi_const_isProbabilityMeasure`, `Measurable (fun x => gaussianReal x N)`)
    が副産物。
+4. **2026-05-19 並列追加 2-seed 着地** (orchestrator session 続き): 1975 行で 3000+ 行目標に
+   未達のため、追加 2 seed を並列 full-chain claude agent (inventory + plan + impl 一気通貫、
+   worktree isolation) で駆動して合計 **+767 行** publish:
+   - **T2-B Parallel Gaussian + Water-filling** (L-WF1+L-WF2+L-PG0+L-PG1):
+     `ParallelGaussian.lean` +381 行。`parallel_gaussian_capacity_formula` (water-filling 形) +
+     `parallel_gaussian_capacity_active_form` (active set 形 `∑_{N_i < ν} (1/2) log(ν/N_i)`)
+     publish。新規 L-PG0 (`Measure.pi` family の kernel measurability、Mathlib 直接 lemma 不在)
+     を本実装で発見。Ch.9 行は 🟡 維持 (T2-A + T2-B 両方 publish 済、両方 hypothesis 形)。
+   - **T3-F Relay Channel cut-set outer bound** (L-RC1/2/3/4/5 all engaged):
+     `RelayCutset.lean` +386 行。`relay_cutset_outer_bound` 主定理 + `_two_cuts` + `_log_rate`
+     specialisation。signature は T3-D `wyner_ziv_converse_n_letter` の statement-level pattern
+     verbatim 踏襲。inner bound (DF/CF) は完全 scope-out (L-RC5)。Ch.15 行は 🟡 維持。
+   <br>**累計**: 13 新規 Lean ファイル + 1 back-port = **+2742 行** (元の seed 見積もり中央
+   ~5275 行に対し 52%、3000+ 目標まで 258 行不足だが両 seed とも 0 sorry / `lake env lean` clean で着地)。

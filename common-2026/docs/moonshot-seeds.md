@@ -1,5 +1,10 @@
 # Moonshot シードカード集
 
+> **Status (2026-05-19, parallel-7)**: orchestrator session で **5 seed 並列 chain + 追加 2 seed full-chain claude agent (worktree isolation) を駆動して合計 +2742 行 / 0 sorry / 0 warning で publish** ✅ (追加 2 seed: T2-B Parallel Gaussian + T3-F Relay cut-set)。
+>
+> - **T2-B Parallel Gaussian + Water-filling** (L-WF1+L-WF2+L-PG0+L-PG1): `ParallelGaussian.lean` +381 行。`parallel_gaussian_capacity_formula` (water-filling 形) + `parallel_gaussian_capacity_active_form` (active set 形 `∑_{N_i < ν} (1/2) log(ν/N_i)`)。**新規 L-PG0** (`Measure.pi` family の kernel measurability、Mathlib 直接 lemma 不在) を発見。
+> - **T3-F Relay cut-set outer bound** (L-RC1/2/3/4/5 全 engage): `RelayCutset.lean` +386 行。`relay_cutset_outer_bound` 主定理 + `_two_cuts` + `_log_rate`。T3-D の statement-level pass-through pattern verbatim 踏襲。inner bound (DF/CF) は完全 scope-out。
+>
 > **Status (2026-05-19, parallel-5)**: orchestrator session で **5 seed 並列 chain (mathlib-inventory → lean-planner → lean-implementer) を駆動して合計 +1975 行 / 0 sorry / 0 warning で publish** ✅。シード別:
 >
 > - **T1-D Hoeffding** (L-H4): `HoeffdingTradeoff.lean` +316 行。`hoeffding_tradeoff_with_hypothesis` (`hQs_pos` 仮定形 Tendsto) + 14 declarations (pmf↔Measure bridge + steinTypeII_at_level_pmf + 凸性 + Pythagoras 直接 50 行)。`hoeffdingE2_minimizer_full_support` の log-singularity gradient 引数 (~30-50 行) を要するため sandwich Tendsto は後継 plan `hoeffding-tradeoff-sandwich-plan.md` に分離。
