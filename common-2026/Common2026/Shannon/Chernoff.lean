@@ -660,4 +660,407 @@ theorem hoeffdingE2_unique
     exact csInf_le h_bdd h_in_img
   linarith
 
+/-! ## Phase C — Chernoff achievability (Bayes error upper bound → rate lower bound)
+
+Cover-Thomas Theorem 11.9.1 の **achievability side** (rate-side lower bound):
+
+```
+bayesErrorMinPmf P₁ P₂ n ≤ (1/2) · Z(λ)^n      (for all λ ∈ Icc 0 1)
+```
+⟹ `liminf_n -(1/n) log bayesErrorMinPmf ≥ chernoffInfo P₁ P₂`.
+
+**自前 pmf 形 n-IID**: 既存 `Measure.pi` plumbing を使わず、有限和 `∑_{x : Fin n → α}` と
+有限積 `∏ i, P (x i)` で書く。Phase E (Sanov LDP per-tilt) で Measure 経路に持ち上げる際は
+別補題で繋ぐ。
+
+### Phase C スコープ
+
+* `bayesErrorMinPmf P₁ P₂ n` — n-IID Bayes error (optimal Bayes test の minimum)
+* `chernoffMin_per_point_le` — per-point `min(a, b) ≤ a^{1-λ} · b^λ` (Hölder degenerate)
+* `bayesErrorMinPmf_le_half_Z_pow` — `bayesErrorMinPmf ≤ (1/2) Z(λ)^n`
+* `chernoff_rate_ge_chernoffInfo_of_pos` — `λ ∈ Icc 0 1` 個別形
+* `chernoff_achievability` — rate-side achievability (`liminf ≥ chernoffInfo`)
+-/
+
+/-- **n-IID Bayes error** in pmf form:
+`bayesErrorMinPmf P₁ P₂ n := (1/2) · ∑_{x : Fin n → α} min(∏ P₁(x_i), ∏ P₂(x_i))`.
+
+This is the **optimal Bayes error** for the 2-class hypothesis test with equal priors
+`1/2 : 1/2` on `n` IID samples (Bayes-optimal rule decides `i := argmax_i P_i^n(x)`,
+giving error contribution `(1/2) · min(P₁^n(x), P₂^n(x))` per `x`). -/
+noncomputable def bayesErrorMinPmf (P₁ P₂ : α → ℝ) (n : ℕ) : ℝ :=
+  (1 / 2 : ℝ) * ∑ x : Fin n → α, min (∏ i, P₁ (x i)) (∏ i, P₂ (x i))
+
+/-! ### C-1 Per-point bound `min(a, b) ≤ a^{1-λ} · b^λ` -/
+
+omit [DecidableEq α] in
+/-- **Geometric mean inequality** (degenerate Hölder form):
+`min(a, b) ≤ a^{1-λ} · b^λ` for `a, b ≥ 0`, `λ ∈ [0, 1]`. -/
+lemma min_le_rpow_mul_rpow
+    {a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) {lam : ℝ}
+    (hlam_nn : 0 ≤ lam) (hlam_le : lam ≤ 1) :
+    min a b ≤ a ^ (1 - lam) * b ^ lam := by
+  have h_min_nn : 0 ≤ min a b := le_min ha hb
+  have h_one_sub : 0 ≤ 1 - lam := by linarith
+  -- min a b ^ (1 - lam) ≤ a ^ (1 - lam) (since min ≤ a, both ≥ 0, exponent ≥ 0)
+  have h1 : (min a b) ^ (1 - lam) ≤ a ^ (1 - lam) :=
+    Real.rpow_le_rpow h_min_nn (min_le_left _ _) h_one_sub
+  -- min a b ^ lam ≤ b ^ lam
+  have h2 : (min a b) ^ lam ≤ b ^ lam :=
+    Real.rpow_le_rpow h_min_nn (min_le_right _ _) hlam_nn
+  -- Combine: min a b = min a b ^ ((1-lam) + lam) = min a b ^ (1-lam) * min a b ^ lam ≤ a^(1-lam) * b^lam
+  have h_mul :
+      (min a b) ^ (1 - lam) * (min a b) ^ lam ≤ a ^ (1 - lam) * b ^ lam := by
+    have h_pow1_nn : 0 ≤ (min a b) ^ (1 - lam) := Real.rpow_nonneg h_min_nn _
+    have h_pow_a_nn : 0 ≤ a ^ (1 - lam) := Real.rpow_nonneg ha _
+    have h_pow_b_nn : 0 ≤ b ^ lam := Real.rpow_nonneg hb _
+    have step1 : (min a b) ^ (1 - lam) * (min a b) ^ lam ≤ a ^ (1 - lam) * (min a b) ^ lam :=
+      mul_le_mul_of_nonneg_right h1 (Real.rpow_nonneg h_min_nn _)
+    have step2 : a ^ (1 - lam) * (min a b) ^ lam ≤ a ^ (1 - lam) * b ^ lam :=
+      mul_le_mul_of_nonneg_left h2 h_pow_a_nn
+    linarith
+  have h_sum_eq : (min a b) ^ (1 - lam) * (min a b) ^ lam = min a b := by
+    rw [← Real.rpow_add_of_nonneg h_min_nn h_one_sub hlam_nn]
+    ring_nf
+    exact Real.rpow_one _
+  linarith [h_sum_eq ▸ h_mul]
+
+/-! ### C-2 `bayesErrorMinPmf ≤ (1/2) Z(λ)^n` -/
+
+omit [DecidableEq α] in
+/-- **Auxiliary: n-IID per-point factorization**:
+`∏ i, (P₁ (x i)) ^ (1-lam) * (P₂ (x i)) ^ lam = (∏ i, P₁ (x i)) ^ (1-lam) * (∏ i, P₂ (x i)) ^ lam`
+under `P₁, P₂ ≥ 0`. -/
+lemma prod_rpow_mul_rpow
+    (P₁ P₂ : α → ℝ) (hP₁_nn : ∀ a, 0 ≤ P₁ a) (hP₂_nn : ∀ a, 0 ≤ P₂ a)
+    {n : ℕ} (x : Fin n → α) (lam : ℝ) :
+    ∏ i, (P₁ (x i)) ^ (1 - lam) * (P₂ (x i)) ^ lam
+      = (∏ i, P₁ (x i)) ^ (1 - lam) * (∏ i, P₂ (x i)) ^ lam := by
+  -- Split the product, then push rpow through ∏.
+  rw [Finset.prod_mul_distrib]
+  -- ∏ i, (P₁ (x i))^(1-lam) = (∏ i, P₁ (x i))^(1-lam)
+  have h1 : (∏ i, (P₁ (x i)) ^ (1 - lam)) = (∏ i, P₁ (x i)) ^ (1 - lam) :=
+    Real.finsetProd_rpow Finset.univ (fun i => P₁ (x i)) (fun i _ => hP₁_nn (x i)) (1 - lam)
+  have h2 : (∏ i, (P₂ (x i)) ^ lam) = (∏ i, P₂ (x i)) ^ lam :=
+    Real.finsetProd_rpow Finset.univ (fun i => P₂ (x i)) (fun i _ => hP₂_nn (x i)) lam
+  rw [h1, h2]
+
+omit [DecidableEq α] in
+/-- **n-IID Chernoff partition function via product factorization**:
+`∑_{x : Fin n → α} (∏ i, P₁ (x i))^(1-lam) · (∏ i, P₂ (x i))^lam = Z(λ)^n`. -/
+lemma sum_prod_rpow_eq_Z_pow
+    (P₁ P₂ : α → ℝ) (hP₁_nn : ∀ a, 0 ≤ P₁ a) (hP₂_nn : ∀ a, 0 ≤ P₂ a)
+    (lam : ℝ) (n : ℕ) :
+    ∑ x : Fin n → α, (∏ i, P₁ (x i)) ^ (1 - lam) * (∏ i, P₂ (x i)) ^ lam
+      = (chernoffZSum P₁ P₂ lam) ^ n := by
+  -- Rewrite each term as ∏ i, (P₁ (x i))^(1-lam) * (P₂ (x i))^lam (Phase C-2 prod_rpow_mul_rpow)
+  -- then ∑ over (Fin n → α) of ∏ i, f (x i) = (∑ a, f a)^n (Finset.prod_univ_sum or pi).
+  have h_term_eq : ∀ x : Fin n → α,
+      (∏ i, P₁ (x i)) ^ (1 - lam) * (∏ i, P₂ (x i)) ^ lam
+        = ∏ i, (P₁ (x i)) ^ (1 - lam) * (P₂ (x i)) ^ lam := by
+    intro x
+    rw [prod_rpow_mul_rpow P₁ P₂ hP₁_nn hP₂_nn x lam]
+  simp_rw [h_term_eq]
+  -- ∑ x : Fin n → α, ∏ i, f (x i) = (∑ a, f a) ^ n via Finset.sum_pow'.
+  set g : α → ℝ := fun a => (P₁ a) ^ (1 - lam) * (P₂ a) ^ lam with hg_def
+  show (∑ x : Fin n → α, ∏ i, g (x i)) = (chernoffZSum P₁ P₂ lam) ^ n
+  have h_sum_pow := Finset.sum_pow' (s := (Finset.univ : Finset α)) (f := g) (n := n)
+  -- h_sum_pow : (∑ a ∈ univ, g a) ^ n = ∑ p ∈ piFinset (fun _ : Fin n => univ), ∏ i, g (p i)
+  rw [show chernoffZSum P₁ P₂ lam = ∑ a, g a from rfl]
+  rw [h_sum_pow]
+  -- Now: ∑ x : Fin n → α, ∏ i, g (x i) = ∑ p ∈ piFinset (fun _ => univ), ∏ i, g (p i).
+  -- piFinset (fun _ => univ) = univ via Fintype.piFinset_univ.
+  rw [Fintype.piFinset_univ]
+
+/-- **`bayesErrorMinPmf ≤ (1/2) · Z(λ)^n`** for each `λ ∈ Icc 0 1`.
+
+Cover-Thomas 11.9.1 の core inequality. Per-point `min(a, b) ≤ a^{1-λ} · b^λ` を
+`a := ∏ P₁(x_i)`, `b := ∏ P₂(x_i)` で起動 → sum over x → `Z(λ)^n`. -/
+theorem bayesErrorMinPmf_le_half_Z_pow
+    (P₁ P₂ : α → ℝ) (hP₁_nn : ∀ a, 0 ≤ P₁ a) (hP₂_nn : ∀ a, 0 ≤ P₂ a)
+    (n : ℕ) {lam : ℝ} (hlam_nn : 0 ≤ lam) (hlam_le : lam ≤ 1) :
+    bayesErrorMinPmf P₁ P₂ n ≤ (1 / 2 : ℝ) * (chernoffZSum P₁ P₂ lam) ^ n := by
+  unfold bayesErrorMinPmf
+  -- (1/2) ∑ min ≤ (1/2) ∑ (∏ P₁)^(1-λ) (∏ P₂)^λ = (1/2) Z(λ)^n
+  have h_half_nn : (0 : ℝ) ≤ 1 / 2 := by norm_num
+  apply mul_le_mul_of_nonneg_left _ h_half_nn
+  -- ∑ x, min(∏ P₁, ∏ P₂) ≤ ∑ x, (∏ P₁)^(1-λ) (∏ P₂)^λ = Z(λ)^n
+  have h_pointwise : ∀ x : Fin n → α,
+      min (∏ i, P₁ (x i)) (∏ i, P₂ (x i))
+        ≤ (∏ i, P₁ (x i)) ^ (1 - lam) * (∏ i, P₂ (x i)) ^ lam := by
+    intro x
+    have h_prod_P₁_nn : 0 ≤ ∏ i, P₁ (x i) :=
+      Finset.prod_nonneg (fun i _ => hP₁_nn (x i))
+    have h_prod_P₂_nn : 0 ≤ ∏ i, P₂ (x i) :=
+      Finset.prod_nonneg (fun i _ => hP₂_nn (x i))
+    exact min_le_rpow_mul_rpow h_prod_P₁_nn h_prod_P₂_nn hlam_nn hlam_le
+  have h_sum_le :
+      ∑ x : Fin n → α, min (∏ i, P₁ (x i)) (∏ i, P₂ (x i))
+        ≤ ∑ x : Fin n → α, (∏ i, P₁ (x i)) ^ (1 - lam) * (∏ i, P₂ (x i)) ^ lam :=
+    Finset.sum_le_sum (fun x _ => h_pointwise x)
+  rw [sum_prod_rpow_eq_Z_pow P₁ P₂ hP₁_nn hP₂_nn lam n] at h_sum_le
+  exact h_sum_le
+
+/-! ### C-3 Positivity of `bayesErrorMinPmf` (full support から自動) -/
+
+/-- **`bayesErrorMinPmf > 0`** under full support `P₁, P₂ > 0`. -/
+lemma bayesErrorMinPmf_pos
+    (P₁ P₂ : α → ℝ) [Nonempty α]
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) (n : ℕ) :
+    0 < bayesErrorMinPmf P₁ P₂ n := by
+  unfold bayesErrorMinPmf
+  have h_half_pos : (0 : ℝ) < 1 / 2 := by norm_num
+  refine mul_pos h_half_pos ?_
+  -- ∑ x, min(∏ P₁, ∏ P₂) > 0: each term ≥ 0, and there exists x (e.g., const) with positive value.
+  apply Finset.sum_pos
+  · intro x _
+    have h_prod_P₁_pos : 0 < ∏ i, P₁ (x i) :=
+      Finset.prod_pos (fun i _ => hP₁_pos (x i))
+    have h_prod_P₂_pos : 0 < ∏ i, P₂ (x i) :=
+      Finset.prod_pos (fun i _ => hP₂_pos (x i))
+    exact lt_min h_prod_P₁_pos h_prod_P₂_pos
+  · exact Finset.univ_nonempty
+
+/-! ### C-4 Rate lower bound per `λ`: `-(1/n) log bayesErrorMinPmf ≥ -log Z(λ) - (log 2)/n` -/
+
+/-- For each fixed `λ ∈ Icc 0 1`,
+`-(1/n) log bayesErrorMinPmf ≥ -log Z(λ) + (log 2)/n` (eventually for `n ≥ 1`).
+
+The `+ log 2 / n` slack term vanishes as `n → ∞`, leaving `-log Z(λ)` (and after `min`
+over `λ`, `chernoffInfo`). -/
+lemma chernoff_rate_ge_neg_log_Z_per_lam
+    (P₁ P₂ : α → ℝ) [Nonempty α]
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
+    {lam : ℝ} (hlam_nn : 0 ≤ lam) (hlam_le : lam ≤ 1)
+    {n : ℕ} (hn : 0 < n) :
+    -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)
+      ≥ -Real.log (chernoffZSum P₁ P₂ lam) + Real.log 2 / n := by
+  have hP₁_nn : ∀ a, 0 ≤ P₁ a := fun a => (hP₁_pos a).le
+  have hP₂_nn : ∀ a, 0 ≤ P₂ a := fun a => (hP₂_pos a).le
+  -- bayesErrorMinPmf ≤ (1/2) · Z(λ)^n
+  have h_le := bayesErrorMinPmf_le_half_Z_pow P₁ P₂ hP₁_nn hP₂_nn n hlam_nn hlam_le
+  have h_pos := bayesErrorMinPmf_pos P₁ P₂ hP₁_pos hP₂_pos n
+  have hZ_pos : 0 < chernoffZSum P₁ P₂ lam :=
+    chernoffZSum_pos P₁ P₂ hP₁_pos hP₂_pos lam
+  have hZ_pow_pos : (0 : ℝ) < (chernoffZSum P₁ P₂ lam) ^ n := pow_pos hZ_pos n
+  have h_half_Z_pos : (0 : ℝ) < (1 / 2 : ℝ) * (chernoffZSum P₁ P₂ lam) ^ n :=
+    mul_pos (by norm_num) hZ_pow_pos
+  -- Take log of both sides (positives).
+  have h_log_le :
+      Real.log (bayesErrorMinPmf P₁ P₂ n)
+        ≤ Real.log ((1 / 2 : ℝ) * (chernoffZSum P₁ P₂ lam) ^ n) :=
+    Real.log_le_log h_pos h_le
+  -- Expand RHS: log((1/2) · Z^n) = log(1/2) + n · log Z = -log 2 + n · log Z.
+  have h_log_expand :
+      Real.log ((1 / 2 : ℝ) * (chernoffZSum P₁ P₂ lam) ^ n)
+        = -Real.log 2 + (n : ℝ) * Real.log (chernoffZSum P₁ P₂ lam) := by
+    rw [Real.log_mul (by norm_num) hZ_pow_pos.ne']
+    rw [Real.log_pow]
+    congr 1
+    rw [show (1 / 2 : ℝ) = (2 : ℝ)⁻¹ from by norm_num]
+    rw [Real.log_inv]
+  rw [h_log_expand] at h_log_le
+  -- Multiply by -(1/n) (negative, flips inequality).
+  have hn_R_pos : (0 : ℝ) < n := by exact_mod_cast hn
+  have h_neg_inv : -((1 : ℝ) / n) ≤ 0 := by
+    have : (0 : ℝ) ≤ 1 / n := by positivity
+    linarith
+  have h_mul :
+      -((1 : ℝ) / n) * (-Real.log 2 + (n : ℝ) * Real.log (chernoffZSum P₁ P₂ lam))
+        ≤ -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n) :=
+    mul_le_mul_of_nonpos_left h_log_le h_neg_inv
+  -- Simplify LHS: -(1/n) * (-log 2 + n · log Z) = (log 2)/n - log Z
+  have h_simp :
+      -((1 : ℝ) / n) * (-Real.log 2 + (n : ℝ) * Real.log (chernoffZSum P₁ P₂ lam))
+        = Real.log 2 / n - Real.log (chernoffZSum P₁ P₂ lam) := by
+    field_simp
+    ring
+  rw [h_simp] at h_mul
+  linarith
+
+/-- For each fixed `λ* ∈ Icc 0 1` attaining `chernoffInfo` (= `-log Z(λ*)`),
+`-(1/n) log bayesErrorMinPmf ≥ chernoffInfo + (log 2)/n` (eventually for `n ≥ 1`). -/
+lemma chernoff_rate_ge_chernoffInfo_eventually
+    (P₁ P₂ : α → ℝ) [Nonempty α]
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
+    ∀ᶠ n : ℕ in atTop,
+      -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)
+        ≥ chernoffInfo P₁ P₂ + Real.log 2 / n := by
+  obtain ⟨lam_star, hlam_mem, hlam_eq⟩ := chernoffInfo_attained P₁ P₂ hP₁_pos hP₂_pos
+  -- chernoffInfo = -log Z(λ*), λ* ∈ Icc 0 1
+  filter_upwards [eventually_gt_atTop 0] with n hn
+  have h := chernoff_rate_ge_neg_log_Z_per_lam P₁ P₂ hP₁_pos hP₂_pos hlam_mem.1 hlam_mem.2 hn
+  rw [hlam_eq]
+  linarith
+
+/-- **Auxiliary upper bound**: `rate n ≤ -log p_min - (log 2)/n` (loose, just to get
+boundedness for `liminf` plumbing). Here `p_min := min over a of (min (P₁ a) (P₂ a))`. -/
+private lemma chernoff_rate_le_aux_upper
+    (P₁ P₂ : α → ℝ) [Nonempty α]
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
+    ∃ M : ℝ, ∀ᶠ n : ℕ in atTop,
+      -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n) ≤ M := by
+  -- p_min := min over a of min(P₁ a, P₂ a) > 0.
+  classical
+  obtain ⟨a₀, _, ha₀⟩ := Finset.exists_min_image (s := (Finset.univ : Finset α))
+    (f := fun a => min (P₁ a) (P₂ a)) ⟨Classical.choice inferInstance, Finset.mem_univ _⟩
+  set p_min : ℝ := min (P₁ a₀) (P₂ a₀) with hpmin_def
+  have hpmin_pos : 0 < p_min := lt_min (hP₁_pos a₀) (hP₂_pos a₀)
+  -- Lower bound: bayesErrorMinPmf ≥ (1/2) · p_min^n · (#α)^n... actually simpler:
+  -- bayesErrorMinPmf ≥ (1/2) * min(∏ P₁(x_0), ∏ P₂(x_0)) for x_0 = const a₀.
+  -- = (1/2) * min((P₁ a₀)^n, (P₂ a₀)^n) ≥ (1/2) * p_min^n.
+  refine ⟨-Real.log p_min + Real.log 2, ?_⟩
+  filter_upwards [eventually_gt_atTop 0] with n hn
+  have hn_R : (0 : ℝ) < n := by exact_mod_cast hn
+  -- Lower bound on bayesErrorMinPmf via const a₀ vector.
+  -- bayesErrorMinPmf = (1/2) * ∑ x, min(∏ P₁(x_i), ∏ P₂(x_i))
+  -- Take x := fun _ => a₀: ∏ P₁(x_i) = (P₁ a₀)^n, ∏ P₂(x_i) = (P₂ a₀)^n.
+  -- min((P₁ a₀)^n, (P₂ a₀)^n) ≥ p_min^n (using p_min ≤ both).
+  have h_pmin_le_P₁_a₀ : p_min ≤ P₁ a₀ := min_le_left _ _
+  have h_pmin_le_P₂_a₀ : p_min ≤ P₂ a₀ := min_le_right _ _
+  have h_pmin_pow_le : ∀ x : Fin n → α, p_min ^ n ≤ min (∏ i, P₁ (x i)) (∏ i, P₂ (x i)) := by
+    intro x
+    refine le_min ?_ ?_
+    · -- p_min^n ≤ ∏ i, P₁ (x i). Use ∀ i, p_min ≤ P₁ (x i).
+      calc p_min ^ n = ∏ _i : Fin n, p_min := by rw [Finset.prod_const, Finset.card_univ, Fintype.card_fin]
+        _ ≤ ∏ i : Fin n, P₁ (x i) := by
+            refine Finset.prod_le_prod (fun i _ => hpmin_pos.le) (fun i _ => ?_)
+            have := ha₀ (x i) (Finset.mem_univ _)
+            exact le_trans this (min_le_left _ _)
+    · calc p_min ^ n = ∏ _i : Fin n, p_min := by rw [Finset.prod_const, Finset.card_univ, Fintype.card_fin]
+        _ ≤ ∏ i : Fin n, P₂ (x i) := by
+            refine Finset.prod_le_prod (fun i _ => hpmin_pos.le) (fun i _ => ?_)
+            have := ha₀ (x i) (Finset.mem_univ _)
+            exact le_trans this (min_le_right _ _)
+  -- Sum lower bound: ∑ x, min(...) ≥ #(Fin n → α) · p_min^n ≥ 1 · p_min^n (taking just one term).
+  have h_sum_ge :
+      ∑ x : Fin n → α, min (∏ i, P₁ (x i)) (∏ i, P₂ (x i)) ≥ p_min ^ n := by
+    -- ∑ ≥ const vector term ≥ p_min^n.
+    set x_const : Fin n → α := fun _ => a₀
+    have h_term_ge : min (∏ i, P₁ (x_const i)) (∏ i, P₂ (x_const i)) ≥ p_min ^ n :=
+      h_pmin_pow_le x_const
+    have h_term_nn : ∀ x : Fin n → α, 0 ≤ min (∏ i, P₁ (x i)) (∏ i, P₂ (x i)) := by
+      intro x
+      refine le_min ?_ ?_
+      · exact Finset.prod_nonneg (fun i _ => (hP₁_pos (x i)).le)
+      · exact Finset.prod_nonneg (fun i _ => (hP₂_pos (x i)).le)
+    have h_le_sum :=
+      Finset.single_le_sum (s := (Finset.univ : Finset (Fin n → α)))
+        (f := fun x => min (∏ i, P₁ (x i)) (∏ i, P₂ (x i)))
+        (fun x _ => h_term_nn x) (Finset.mem_univ x_const)
+    linarith
+  -- So bayesErrorMinPmf ≥ (1/2) p_min^n.
+  have h_bayes_ge : bayesErrorMinPmf P₁ P₂ n ≥ (1 / 2 : ℝ) * p_min ^ n := by
+    unfold bayesErrorMinPmf
+    have h_half_nn : (0 : ℝ) ≤ 1 / 2 := by norm_num
+    have := mul_le_mul_of_nonneg_left h_sum_ge h_half_nn
+    linarith
+  -- log bayesErrorMinPmf ≥ log((1/2) p_min^n) = -log 2 + n · log p_min.
+  have h_bayes_pos : (0 : ℝ) < bayesErrorMinPmf P₁ P₂ n :=
+    bayesErrorMinPmf_pos P₁ P₂ hP₁_pos hP₂_pos n
+  have h_lb_pos : (0 : ℝ) < (1 / 2 : ℝ) * p_min ^ n :=
+    mul_pos (by norm_num) (pow_pos hpmin_pos n)
+  have h_log_ge :
+      Real.log ((1 / 2 : ℝ) * p_min ^ n) ≤ Real.log (bayesErrorMinPmf P₁ P₂ n) :=
+    Real.log_le_log h_lb_pos h_bayes_ge
+  have h_log_expand :
+      Real.log ((1 / 2 : ℝ) * p_min ^ n) = -Real.log 2 + (n : ℝ) * Real.log p_min := by
+    rw [Real.log_mul (by norm_num) (pow_pos hpmin_pos n).ne']
+    rw [Real.log_pow]
+    congr 1
+    rw [show (1 / 2 : ℝ) = (2 : ℝ)⁻¹ from by norm_num]
+    rw [Real.log_inv]
+  rw [h_log_expand] at h_log_ge
+  -- Multiply by -(1/n) (negative), flips:
+  --   -(1/n) * log bayes ≤ -(1/n) * (-log 2 + n · log p_min) = log 2 / n - log p_min ≤ -log p_min + log 2.
+  have h_neg_inv : -((1 : ℝ) / n) ≤ 0 := by
+    have : (0 : ℝ) ≤ 1 / n := by positivity
+    linarith
+  have h_mul :
+      -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)
+        ≤ -((1 : ℝ) / n) * (-Real.log 2 + (n : ℝ) * Real.log p_min) :=
+    mul_le_mul_of_nonpos_left h_log_ge h_neg_inv
+  have h_simp :
+      -((1 : ℝ) / n) * (-Real.log 2 + (n : ℝ) * Real.log p_min)
+        = Real.log 2 / n - Real.log p_min := by
+    field_simp
+    ring
+  rw [h_simp] at h_mul
+  -- log 2 / n - log p_min ≤ log 2 - log p_min = -log p_min + log 2.
+  -- (since log 2 / n ≤ log 2 for n ≥ 1, with log 2 > 0)
+  have h_log2_pos : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  have h_log2_div_le : Real.log 2 / n ≤ Real.log 2 := by
+    have h_div : Real.log 2 / n = Real.log 2 * (1 / n) := by ring
+    rw [h_div]
+    have h_inv_le : (1 / (n : ℝ)) ≤ 1 := by
+      rw [div_le_one hn_R]
+      exact_mod_cast hn
+    have := mul_le_mul_of_nonneg_left h_inv_le h_log2_pos.le
+    linarith [this]
+  linarith
+
+/-- **Chernoff achievability** (rate-side lower bound):
+`liminf_n -(1/n) log bayesErrorMinPmf ≥ chernoffInfo P₁ P₂`. -/
+theorem chernoff_achievability
+    (P₁ P₂ : α → ℝ) [Nonempty α]
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
+    chernoffInfo P₁ P₂ ≤ Filter.liminf
+      (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) atTop := by
+  -- Strategy: Eventually `chernoffInfo ≤ rate n` (since `chernoffInfo + log 2 / n ≤ rate n`,
+  -- and `log 2 / n > 0`). Use `le_liminf_of_le`. The required `IsCoboundedUnder (·≥·)`
+  -- follows from a uniform upper bound on `rate n` (via `IsBoundedUnder.isCoboundedUnder_flip`).
+  have h_event := chernoff_rate_ge_chernoffInfo_eventually P₁ P₂ hP₁_pos hP₂_pos
+  have h_log2_pos : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+  -- Get an upper bound for cobounded.
+  obtain ⟨M, hM⟩ := chernoff_rate_le_aux_upper P₁ P₂ hP₁_pos hP₂_pos
+  apply Filter.le_liminf_of_le
+  · -- IsCoboundedUnder (·≥·): use the flip of IsBoundedUnder (·≤·).
+    have h_bdd_above : Filter.IsBoundedUnder (· ≤ ·) atTop
+        (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) := ⟨M, hM⟩
+    exact h_bdd_above.isCoboundedUnder_ge
+  · -- ∀ᶠ n in atTop, chernoffInfo ≤ rate n.
+    filter_upwards [h_event, eventually_gt_atTop 0] with n h_event_n hn
+    have hn_R : (0 : ℝ) < n := by exact_mod_cast hn
+    have h_pos : (0 : ℝ) < Real.log 2 / n := div_pos h_log2_pos hn_R
+    linarith
+
+/-! ## Phase B — Chernoff converse (Bayes error lower bound → rate upper bound)
+
+Cover-Thomas Theorem 11.9.1 の **converse side** (rate-side upper bound):
+
+```
+limsup_n -(1/n) log bayesErrorMinPmf ≤ chernoffInfo P₁ P₂
+```
+
+**Strategy** (judgement log #6 に従い Measure 経路): `chernoffMediator T_λ*` を pmf として
+構築し、それを `pmfToMeasure` で `Measure α` に lift。`sanov_ldp_equality` を `Q := P_i (Measure)`
+で per-tilt 起動し、Bayes error を `P_i^n (typeClass T_λ*)` で下から押さえる。
+
+本セッションでは Phase C の achievability のみで publish 完成。Phase B converse は
+**deferred** (撤退ライン L-S2 適用): 次セッションで Sanov LDP per-tilt 起動を補強。
+-/
+
+/-! ## Phase E — 主定理 wrapper (Phase C: achievability のみで publish)
+
+`chernoffInfo` を rate として「achievability `liminf ≥ chernoffInfo`」を主定理として publish。
+Phase B converse (rate `limsup ≤`) は本セッションでは未着手 (撤退ライン L-S2)。
+
+main wrapper `chernoff_lemma_achievability`:
+
+```
+liminf -(1/n) log bayesErrorMinPmf ≥ chernoffInfo P₁ P₂
+```
+-/
+
+/-- **Chernoff achievability** (T1-B Tier 1 publish, Cover-Thomas Theorem 11.9.1 半分):
+`bayesErrorMinPmf` の指数収束 rate は少なくとも `chernoffInfo P₁ P₂` 以上.
+
+撤退ライン L-S2: converse side (`limsup ≤`) は本セッションでは未着手. -/
+theorem chernoff_lemma_achievability
+    (P₁ P₂ : α → ℝ) [Nonempty α]
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
+    chernoffInfo P₁ P₂ ≤ Filter.liminf
+      (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) atTop :=
+  chernoff_achievability P₁ P₂ hP₁_pos hP₂_pos
+
 end InformationTheory.Shannon.Chernoff

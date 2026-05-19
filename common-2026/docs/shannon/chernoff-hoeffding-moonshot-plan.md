@@ -18,10 +18,11 @@
 - [x] Phase 0 — Mathlib + Common2026 API 在庫 ✅ → [`chernoff-hoeffding-mathlib-inventory.md`](chernoff-hoeffding-mathlib-inventory.md)
 - [x] **Tier 0 publish — Chernoff/Hoeffding 定義 + 基本性質 (`chernoffInfo`, `chernoffInfo_attained`, `chernoffInfo_nonneg`, `hoeffdingE2`, `hoeffdingE2_attained`, `hoeffdingE2_nonneg`, `klDivPmf_self_eq_zero`) ✅** (2026-05-19, 0 sorry, library root 編入済, `Common2026/Shannon/Chernoff.lean` ~280 行)
 - [x] **Phase A 残 — `convexOn_chernoffLogZ` (Hölder 凸性) + `chernoffMediator` pmf bridge ✅** (2026-05-19, 0 sorry, +307 行, `Common2026/Shannon/Chernoff.lean` ~663 行)
-- [ ] Phase B — Chernoff lower bound (Sanov LDP per-tilt 経由) 📋
-- [ ] Phase C — Chernoff upper bound (tilted likelihood-ratio test 経由) 📋
+- [x] **Phase C — Chernoff achievability (rate-side lower bound, `liminf ≥ chernoffInfo`) ✅** (2026-05-19, 0 sorry, +403 行, `Common2026/Shannon/Chernoff.lean` ~1066 行)。`bayesErrorMinPmf` 自前 pmf 形定義 + per-point Hölder min-bound + n-IID sum reshape ⇒ `Filter.le_liminf_of_le` で結論。
+- [ ] ~~Phase B — Chernoff lower bound (Sanov LDP per-tilt 経由)~~ → **撤退ライン L-S2 発動で defer** (converse side / rate-side upper bound; 別 plan へ; 判断ログ #8 参照)
 - [x] **Phase D 残 — `hoeffdingE2_unique` 一意性 (Csiszar + strict-convex 経由) ✅** (2026-05-19, 0 sorry, 連続性は別件で deferred)
-- [ ] Phase E — 主定理 wrapper (`chernoff_lemma` / `hoeffding_tradeoff` `Tendsto` 形) 📋
+- [x] **Phase E (部分) — `chernoff_lemma_achievability` publish ✅** (`chernoffInfo` を rate の下界として publish; converse は L-S2 で defer)
+- [ ] ~~Phase E (full) — `hoeffding_tradeoff` `Tendsto` 形~~ → **撤退ライン L-S1 発動で defer** (Sanov LDP per-Qstar machinery が converse side と共有のため; 判断ログ #8 参照)
 
 ## ゴール / Approach
 
@@ -485,4 +486,17 @@ Phase B (rate ≤ chernoffInfo) と sandwich → `Tendsto`。
 6. **(2026-05-19) Phase A残 (`convexOn_chernoffLogZ` + mediator) と Phase D残 (`hoeffdingE2_unique`) を pmf 形のまま publish**: 判断ログ #5 に従い mediator も pmf 形 (`chernoffMediator P₁ P₂ lam : α → ℝ := (P₁ a)^(1-lam) * (P₂ a)^lam / Z(λ)`) で publish。Mathlib `Measure.tilted` への bridge は Phase B 着手時 (Sanov LDP per-tilt が `Q : Measure α` を要求するため) に必要となるが、Phase A残 + D残のスコープでは不要 — chernoffMediator は pmf として positivity + sum_eq_one + 端点 (lam = 0 → P₁, lam = 1 → P₂) のみ publish すれば Phase B/C で `pmfToMeasure` 経由で Measure に持ち上げ可能。Hölder 凸性は `Real.HolderConjugate.inv_one_sub_inv` (`(1/a, 1/(1-a))` for `0 < a < 1`) + `Real.inner_le_Lp_mul_Lq_of_nonneg` で **95 行**で取れた (撤退ライン L-P2 「100 行超え」を僅かに下回り、L-P2 発動なし)。端点 `a = 0` / `a = 1` は `ConvexOn` 定義の degenerate case (片方の weight が 0、線形結合が片方の端点に退化) で `rfl` 1 発でクリア。`hoeffdingE2_unique` は `klDivPmf_strictConvexOn_left` + midpoint argument + `K` の凸性 (`klDivPmf · P₁` の凸性 from `strictConvexOn.convexOn`) で 50 行。
 
 7. **(2026-05-19) Phase B (Chernoff lower bound) は本 plan の本セッションで未着手、Phase C/E も未着手**: スコープ判定: Phase B-C は `bayesErrorMin` 定義 + Sanov LDP per-tilt + matching set 議論で **2-3 session 必要** (plan 見積 250-330 行 vs 残時間)。本セッションでは Phase A残 + D残のみ完遂 (+307 行) し、合計 663 行 0 sorry で停止。Phase B/C/E は次セッションへ。撤退ライン非発動 (L-S1〜L-S3 / L-P1〜L-P3 いずれも未トリガー)。
+
+8. **(2026-05-19) Phase C achievability を pmf 形 `bayesErrorMinPmf` で publish、Phase B converse + Phase E full は撤退ライン L-S1 + L-S2 発動で defer**: 当初の計画 (plan §Approach) は Phase B/C を **Measure 経路** (`Measure.pi` + Sanov LDP per-tilt + tilted LRT) で進める想定だったが、本セッションでスコープ判定を再度実施した結果:
+  - **Phase C は pmf 形で完結可能** ⟸ Cover-Thomas 11.9.1 の per-point Hölder degenerate (`min(a, b) ≤ a^{1-λ} · b^λ`) + n-IID sum reshape (`Finset.sum_pow'` + `Fintype.piFinset_univ`) で `bayesErrorMinPmf ≤ (1/2) Z(λ)^n` を直接導出可能。Measure plumbing 不要。`Filter.le_liminf_of_le` の `IsCoboundedUnder` 部分は `chernoff_rate_le_aux_upper` (~40 行) で uniform upper bound を取得して回避。
+  - **Phase B converse は Measure 経路が不可避** ⟸ rate-side upper bound (`limsup ≤ chernoffInfo`) を取るには **Sanov LDP per-tilt** (`sanov_ldp_equality` を `Q := P_i (Measure)`, `P := chernoffMediator P₁ P₂ λ*`) を起動する必要があり、これは `chernoffMediator` を pmf から Measure に lift する `pmfToMeasure` helper + `[IsProbabilityMeasure]` instance の plumbing で **+200-300 行クラス**。1 セッション内では不可能。
+  - **撤退ライン L-S2 適用**: Phase B converse を別 plan に分離、本 plan は `chernoff_lemma_achievability` (rate-side lower bound, `liminf ≥ chernoffInfo`) のみで publish。これは Cover-Thomas Theorem 11.9.1 の **半分** (achievability side) で、textbook の意味では「指数収束 rate が少なくとも `chernoffInfo`」を意味する。Mathlib formalization としても**有意義な publish 単位**。
+  - **撤退ライン L-S1 連動**: Phase E `hoeffding_tradeoff` (`Tendsto` 形) は Sanov LDP per-Qstar machinery を Phase B converse と共有するため、同様に defer。`hoeffdingE2_attained` (定義 + min 達成性) + `hoeffdingE2_unique` (一意性) は Tier 0 + Phase D 残で既に publish 済 — Hoeffding tradeoff の variational form は使用可能、`Tendsto` 形のみ defer。
+  - **次セッション着手予定**: 新規 plan `chernoff-converse-hoeffding-tendsto-plan.md` を立てて Phase B converse + Hoeffding tradeoff `Tendsto` を Sanov LDP per-tilt + per-Qstar machinery で完遂。pmf↔Measure bridge (`pmfToMeasure`) を最初に整地、Phase A残/D残/Phase C achievability 完了の本 plan は **L-S2 状態で close** (Cover-Thomas 11.9.1 achievability side + 11.7.x 定義 + 達成性 + 一意性 を publish)。
+  - **本セッションの publish 形**:
+    - `chernoff_lemma_achievability : chernoffInfo P₁ P₂ ≤ Filter.liminf (rate n) atTop`
+    - `bayesErrorMinPmf` n-IID pmf 形 Bayes error 定義
+    - `bayesErrorMinPmf_le_half_Z_pow` (Phase C core inequality)
+    - `min_le_rpow_mul_rpow` (per-point Hölder degenerate)
+    - 既存 publish: `chernoffInfo` / `hoeffdingE2` 定義 + 達成性 + 非負性 + 一意性 + 凸性 + 対称性 + 端点値 + `chernoffMediator` 性質
 
