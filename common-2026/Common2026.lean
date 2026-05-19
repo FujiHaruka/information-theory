@@ -39,6 +39,7 @@ import Common2026.Shannon.AEPRate
 import Common2026.Shannon.Stein
 import Common2026.Shannon.StrongStein
 import Common2026.Shannon.MaxEntropy
+import Common2026.Shannon.MaxEntropyConstrained
 import Common2026.Shannon.Pinsker
 import Common2026.Shannon.PinskerSharp
 import Common2026.Shannon.MIChainRule
