@@ -56,19 +56,19 @@
 | 2 | Entropy, Relative Entropy, Mutual Information | ✅ | `Shannon/Entropy`, `MutualInfo`, `MIChainRule`, DPI | — | — |
 | 3 | AEP | ✅ | `AEP.aep_ae`, `aep_inProbability`, `typicalSet_*` | — | — |
 | 4 | Entropy Rates of Stochastic Processes | ✅ | `EntropyRate.entropyRate_exists_of_stationary`, `_eq_lim_condEntropy`, `ShannonMcMillanBreiman`, `BirkhoffErgodic` | — | — |
-| 5 | Data Compression | 🟡 | `ShannonCode.shannonCode_expected_length_bounds`, Kraft 逆, **`Huffman.huffmanLength_kraft_le_one` + `exists_huffman_prefix_code` + T1-A' `huffmanLength_optimal_with_hypotheses` (weak form)**, **T4-A `LempelZiv78.lz78_asymptotic_optimality` (L-LZ1〜5 pass-through)** | **T1-A'' 2 hypothesis discharge** (swap normalization + identification), **Arithmetic coding**, **T4-A 5 discharge family** | ~2.5-4k |
+| 5 | Data Compression | 🟡 | `ShannonCode.shannonCode_expected_length_bounds`, Kraft 逆, **`Huffman.huffmanLength_kraft_le_one` + `exists_huffman_prefix_code` + T1-A' `huffmanLength_optimal_with_hypotheses` (weak form)**, **T4-A `LempelZiv78.lz78_asymptotic_optimality` (L-LZ1〜5 pass-through)**, **`ArithmeticCoding.arithmetic_coding_expected_length_bounds` (L-AC1+L-AC2+L-AC3 pass-through)** | **T1-A'' 2 hypothesis discharge** (swap normalization + identification), **T4-A 5 discharge family**, **Arithmetic coding 3 discharge** | ~2.5-4k |
 | 6 | Gambling and Data Compression | ✖ scope-out | — | — | — |
 | 7 | Channel Capacity | ✅ | `shannon_noisy_channel_coding_theorem_general_full`, `_strong_converse`, `_feedback_complete` | — | — |
 | 8 | Differential Entropy | ✅ | `DifferentialEntropy.differentialEntropy_gaussianReal`, `_le_gaussian_of_variance_le` | — | — |
 | 9 | Gaussian Channel | 🟡 | `AWGN.awgn_channel_coding_theorem` (F-1+F-2+F-3+F-4 pass-through), `AWGN.awgn_capacity_closed_form = (1/2) log(1 + P/N)`, `ParallelGaussian.parallel_gaussian_capacity_formula` (water-filling L-WF1+L-WF2+L-PG0+L-PG1 pass-through), `ShannonHartley.shannon_hartley_formula = W·log(1 + P/(N₀·W))` (L-SH1+L-SH2+L-SH3 pass-through) | **T2-A/B/C discharge** (kernel measurability + continuous typicality + MI bridge + per-letter converse 本体 + KKT 充足性 + water-filling 一意性 + Whittaker-Shannon sampling) | ~2-3.5k |
 | 10 | Rate Distortion | ✅ | `rate_distortion_achievability`, `_converse_*`, `_convexity`, n-letter converse | — | — |
-| 11 | Information Theory and Statistics | 🟡 | `stein_strong_law`, `sanov_ldp_equality`, `Pinsker`, `CsiszarProjection`, `Chernoff.chernoff_lemma_achievability`, **`ChernoffInformation.chernoff_lemma_tendsto`** (L-Ch1+L-Ch2 pass-through, L-Ch3 internal discharge), `HoeffdingTradeoff.hoeffding_tradeoff_with_hypothesis` | **T1-B Chernoff converse (L-Ch1 discharge)**, **T1-C Cramér**, **T1-D Hoeffding tradeoff sandwich body** | ~1-1.7k |
+| 11 | Information Theory and Statistics | 🟡 | `stein_strong_law`, `sanov_ldp_equality`, `Pinsker`, `CsiszarProjection`, `Chernoff.chernoff_lemma_achievability`, **`ChernoffInformation.chernoff_lemma_tendsto`** (L-Ch1+L-Ch2 pass-through, L-Ch3 internal discharge), **`ChernoffConverse.chernoff_lemma_tendsto_from_per_tilt`** (hypothesis 2→1 per-tilt 縮減), `HoeffdingTradeoff.hoeffding_tradeoff_with_hypothesis`, `CramerLC2DischargeExt.tilted_lln_ae` + `_in_probability_real` (T1-C Phase B partial discharge) | **T1-B per-tilt full discharge** (Sanov LDP at optimum λ\*), **T1-C Phase C completion** (Mathlib gap `Measure.infinitePi_tilted_eq`), **T1-D Hoeffding tradeoff sandwich body** | ~1-1.7k |
 | 12 | Maximum Entropy | 🟡 | `entropy_le_log_card`, `entropy_eq_log_card_iff` | **T3-A Constrained MaxEnt (Lagrange / exponential family)** | ~400-700 |
 | 13 | Universal Source Coding | 🟡 | **`LempelZiv78.lz78_asymptotic_optimality`** (L-LZ1〜5 pass-through; outer + converse + sandwich), `_two_sided`, `_of_bounds` | **T4-A 5 discharge** (Ziv's inequality, LZ78 converse, SMB sandwich a.s., greedy parsing 実装, final glue), **Arithmetic coding** | ~1.5-2.5k |
 | 14 | Kolmogorov Complexity | ✖ scope-out | — | — | — |
-| 15 | Network Information Theory | 🟡 | `SlepianWolf*` 完備, `WynerZiv.wyner_ziv_tendsto` (statement-level pass-through), `RelayCutset.relay_cutset_outer_bound` (L-RC1/2/3/4/5 pass-through), **`MultipleAccessChannel.mac_capacity_region_outer_bound` + `_inner_bound`** (L-MAC1〜5 全 pass-through), `SeparationTheorem` 完備 | **T3-D body discharge**, **T3-F inner bound (DF/CF)**, **T3-B MAC body discharge** (joint typicality + Fano), **T3-C Broadcast (degraded)** | ~5-9k |
+| 15 | Network Information Theory | 🟡 | `SlepianWolf*` 完備, `WynerZiv.wyner_ziv_tendsto` (statement-level pass-through), **`WynerZivDischarge.wynerZivRatePmf_antitone`** (L-WZ3 D-antitone partial discharge), `RelayCutset.relay_cutset_outer_bound` (L-RC1/2/3/4/5 pass-through), **`RelayInnerBound.relay_df_inner_bound` + `_cf_inner_bound`** (L-RI1〜4 pass-through), **`MultipleAccessChannel.mac_capacity_region_outer_bound` + `_inner_bound`** (L-MAC1〜5 全 pass-through), **`BroadcastChannel.bc_capacity_region_outer_bound` + `_inner_bound`** (L-BC1〜4 pass-through, degraded BC), `SeparationTheorem` 完備 | **T3-D L-WZ3 full + L-WZ1/2 discharge**, **T3-B MAC body discharge** (joint typicality + Fano), **T3-C BC body discharge** (superposition coding), **T3-F inner body discharge** | ~5-9k |
 | 16 | Information Theory and Portfolio Theory | ✖ scope-out | — | — | — |
-| 17 | Inequalities in Information Theory | 🟡 | `Han`, `Shearer`, `LoomisWhitney`, `BrascampLieb`, `HypercubeEdgeBoundary`, `Pinsker`, `_sharp`, `FisherInfo` + `deBruijn_identity` (L-F1+L-F2 pass-through), **`EntropyPowerInequality.entropy_power_inequality`** (L-EPI1+L-EPI2+L-EPI3 pass-through, Gaussian saturation case **full discharge**) | **T2-D EPI body discharge** (Stam + de Bruijn integration), **T2-E Brunn-Minkowski** | ~1.4-2.0k |
+| 17 | Inequalities in Information Theory | 🟡 | `Han`, `Shearer`, `LoomisWhitney`, `BrascampLieb`, `HypercubeEdgeBoundary`, `Pinsker`, `_sharp`, `FisherInfo` + `deBruijn_identity` (L-F1+L-F2 pass-through), **`EntropyPowerInequality.entropy_power_inequality`** (L-EPI1+L-EPI2+L-EPI3 pass-through, Gaussian saturation case **full discharge**), **`BrunnMinkowski.brunn_minkowski_entropy_inequality` + `_convex_body`** (L-BM1/L-BM1'/L-BM2/L-BM3 pass-through, Cor.17.9.3 形) | **T2-D EPI body discharge** (Stam + de Bruijn integration), **T2-E BM body discharge** (concavity-of-log bridge) | ~1.4-2.0k |
 
 状態: ✅ = 主定理 publish 済 / 🟡 = 部分達成、追加 seed 要 / 📋 = 未着手 / ✖ = scope-out / 🔄 = 方針変更
 
@@ -428,3 +428,47 @@ T1-B/C/D の Sanov plumbing 再利用、T2-D の T2-F 再利用、T3-C の T3-B 
    (T2-A AWGN + T2-B Parallel Gaussian + T2-C Shannon-Hartley) 全て publish 済で🟡 維持
    (本体 discharge は別 plan defer)。<br>**最終累計**: 14 新規 Lean ファイル + 1 back-port =
    **+3069 行** (3000+ 行目標達成 ✅、元の seed 見積もり中央 ~5775 行に対し 53%)。
+6. **2026-05-20 並列 7-seed 着地** (orchestrator session、worktree isolation 経由): textbook-roadmap
+   の残シードから 7 件を選定し (見積もり中央 ~5900 行)、`isolation: "worktree"` の `claude` agent
+   を並列起動して各 agent 内で `mathlib-inventory` + `lean-planner` + `lean-implementer` の
+   full-chain を走らせる pattern で publish。
+   - **T3-C Broadcast Channel (degraded)**: `BroadcastChannel.lean` +650 行。`bc_capacity_region_outer_bound`
+     + `_inner_bound` (L-BC1〜4 hypothesis pass-through, MAC verbatim 雛形)。Cover-Thomas 15.6.2
+     superposition coding 形。Ch.15 行は 🟡 維持。
+   - **T4-A Arithmetic Coding**: `ArithmeticCoding.lean` +288 行。`arithmetic_coding_expected_length_bounds`
+     (Cover-Thomas 13.3.3, `H(P) ≤ E[L] ≤ H(P)+2`) + `_prefix_free` + `_unique_decodable`
+     (L-AC1+L-AC2+L-AC3 hypothesis pass-through)。Ch.5/13 行は 🟡 維持。
+   - **T3-F Relay inner bound (DF/CF)**: `RelayInnerBound.lean` +629 行。`relay_df_inner_bound`
+     (Cover-Thomas 15.10.2) + `relay_cf_inner_bound` (15.10.3) + `InRelayDFRate`/`InRelayCFRate`
+     predicates + outer 統合 wrappers (L-RI1〜4 全 engage)。Ch.15 で outer + inner 両側 publish 済。
+   - **T2-E Brunn-Minkowski**: `BrunnMinkowski.lean` +310 行。`brunn_minkowski_entropy_inequality`
+     (Cover-Thomas 17.9.2) + `_convex_body` (Cor.17.9.3 形)。`(2/n)·h` 形と `(1/n)·h` 形 (sharper)
+     の両方を別 hypothesis (L-BM1 + L-BM1') として pass-through する設計を判断ログとして記録 —
+     `c² ≥ a²+b²` 形から `c ≥ a+b` を引き出す concavity-of-log 経路が形式化では non-trivial と発見。
+   - **T1-B Chernoff converse (L-Ch1 partial discharge)**: `ChernoffConverse.lean` +448 行。
+     `chernoffMediator` (Cover-Thomas 11.9.7 tilted pmf 定義) + L-Ch2 internal discharge
+     (`chernoff_rate_isBoundedUnder_le` を Chernoff.lean の `private` 補題を独立再構築で迂回) +
+     **`chernoff_lemma_tendsto_from_per_tilt`** で 親 `ChernoffInformation.chernoff_lemma_tendsto`
+     を hypothesis 2→1 縮減した sandwich `Tendsto` re-publish。Per-tilt hypothesis 一本の完全
+     discharge は `Measure.infinitePi (pmfToMeasure (chernoffMediator P₁ P₂ λ*))` の
+     `IsProbabilityMeasure` instance synthesis (Cramer L-C2 と同種 gap) と Sanov LDP per-tilt
+     起動 (~600-1000 行) が必要で別 seed defer。
+   - **T1-C Cramér L-C2 extension**: `CramerLC2DischargeExt.lean` +257 行。Mathlib gap bypass
+     lemma `isProbabilityMeasure_infinitePi_tilted_of_bounded` (PR 候補) + `pairwise_indepFun_tilted_ambient`
+     + `integrable_eval_under_infinitePi_tilted` + `integral_eval_under_infinitePi_tilted` +
+     `tilted_lln_ae` (a.s. LLN on tilted ambient) + `tilted_lln_in_probability_real`
+     (`TendstoInMeasure` 形)。親 `Cramer.cramer_lower` の `h_tilted_lower` hypothesis 自体の
+     縮減 (Phase C) は `Measure.infinitePi (μ₀).tilted (∑ ...) ↔ Measure.infinitePi (μ₀.tilted ...)`
+     の n-letter RN-deriv 同定が Mathlib 不在で別 seed defer。
+   - **T3-D Wyner-Ziv L-WZ3 partial discharge**: `WynerZivDischarge.lean` +364 行。
+     **`wynerZivRatePmf_antitone`** (D-antitone full discharge, L-WZ3 の monotone half) +
+     凸性 building blocks (`wzMarginalXY_add`/`_smul` + `wzExpectedDistortion_add`/`_smul` +
+     `convex_stdSimplex_wynerZiv` + 凸結合 lemma 群)。L-WZ3 full convexity 主定理は Markov
+     cross-product 制約 (`q(x,y,u)·Σ q(x,y',u') = q(x,y,u')·Σ q(x,y',u)`) が二次形式で
+     凸結合下で交差項が消えない non-affine 性で deferred — `q(u|x)` factorization hypothesis 化
+     が標準路と判断ログ。
+   <br>**集計**: 7 新規 Lean ファイル = **+2946 行** (元の seed 見積もり中央 ~5900 行に対し 50%)、
+   全 `lake env lean <file>` clean / 0 sorry / 0 warning。Mathlib PR 候補 1 件追加
+   (`Measure.infinitePi_const_isProbabilityMeasure`、T1-C と T1-B 両方で発生)。worktree 経由の
+   Lean 検証で `.lake` symlink reuse 最適化が orchestrator-side で有効化できると新規 worktree の
+   Mathlib full build (~数時間) が即時化する副産物発見 (T3-C agent 報告)。
