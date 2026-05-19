@@ -117,6 +117,7 @@ import Common2026.Shannon.Stationary
 import Common2026.Shannon.EntropyRate
 import Common2026.Shannon.ShannonMcMillanBreiman
 import Common2026.Shannon.LempelZiv78
+import Common2026.Shannon.LZ78ZivInequality
 import Common2026.Shannon.ArithmeticCoding
 import Common2026.Shannon.SMBAlgoetCover
 import Common2026.Shannon.SMBChainRule
