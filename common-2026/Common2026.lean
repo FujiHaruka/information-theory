@@ -138,3 +138,13 @@ import Common2026.Probability.TwoSidedExtension
 import Common2026.Shannon.TypedRV
 -- Asymptotic / exponent framework (I-3)
 import Common2026.InformationTheory.Asymptotic
+-- Wave5 parallel-10 publish
+import Common2026.Shannon.EPIStamDischarge
+import Common2026.Shannon.BrunnMinkowskiConcavity
+import Common2026.Shannon.MaxEntropyConstrainedKKT
+import Common2026.Shannon.WynerZivBinningBody
+import Common2026.Shannon.BroadcastChannelSuperposition
+import Common2026.Shannon.LZ78GreedyParsing
+import Common2026.Shannon.FisherInfoV2DeBruijn
+import Common2026.Shannon.MACBodyDischarge
+import Common2026.Shannon.AWGNF2F3Discharge
