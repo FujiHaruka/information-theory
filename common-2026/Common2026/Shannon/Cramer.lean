@@ -247,4 +247,49 @@ lemma cramer_log_bound_n_iid [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
   refine h_div.trans (le_of_eq ?_)
   field_simp
 
+/-! ## Tier 2 — Cramér upper bound (limsup form) -/
+
+/-- **Cramér upper bound, limsup form** (Cover-Thomas 11.4.1 upper half).
+
+For each `lam ≥ 0`, the upper-tail probability of the i.i.d. sample sum decays
+at exponential rate at least `lam * a − Λ(lam)`:
+
+`limsup_n (1/n) log P[a·n ≤ Sₙ] ≤ -(lam · a − Λ(lam))`.
+
+Taking the supremum over `lam ≥ 0` (and then justifying the agreement with the
+unrestricted Legendre transform under `a ≥ 𝔼[X]`) recovers the textbook
+`-cramerRate (X 0) μ a`; that supremum step is left for follow-up work.
+
+Two technical hypotheses make the result clean:
+* `h_pos` — the tail probability is eventually positive (e.g. when `a ≤ ess sup
+  X`), so that `log` is finite.
+* `h_cobdd` — the resulting log-rate sequence is cobounded below in the limsup
+  sense. This holds whenever the sequence does not blow up to `-∞`, e.g. when
+  the tail probabilities admit any sub-exponential lower bound. -/
+theorem cramer_upper [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
+    (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
+    (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
+    (h_bdd : ∃ M, ∀ i ω, |X i ω| ≤ M)
+    (a : ℝ) (lam : ℝ) (hlam : 0 ≤ lam)
+    (h_pos : ∀ᶠ n : ℕ in atTop,
+      0 < μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})
+    (h_cobdd : Filter.IsCoboundedUnder (· ≤ ·) atTop
+      (fun n : ℕ =>
+        (1 / (n : ℝ)) * Real.log
+          (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}))) :
+    limsup (fun n : ℕ =>
+        (1 / (n : ℝ)) * Real.log
+          (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop
+      ≤ -(lam * a - cgf (X 0) μ lam) := by
+  -- Eventually `(1/n) log P ≤ -(lam · a − Λ(lam))` via `cramer_log_bound_n_iid`.
+  have h_eventually :
+      ∀ᶠ n : ℕ in atTop,
+        (1 / (n : ℝ)) * Real.log
+          (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})
+          ≤ -(lam * a - cgf (X 0) μ lam) := by
+    filter_upwards [eventually_gt_atTop 0, h_pos] with n hn h_pos_n
+    exact cramer_log_bound_n_iid (μ := μ) h_indep h_meas h_ident h_bdd a hn h_pos_n
+      lam hlam
+  exact Filter.limsup_le_of_le h_cobdd h_eventually
+
 end InformationTheory.Shannon.Cramer
