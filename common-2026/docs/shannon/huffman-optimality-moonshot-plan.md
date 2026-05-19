@@ -20,6 +20,15 @@
 > `huffmanLength` を主役、sibling property (Lemma 5.8.1) を intermediate lemma 化し、
 > `Fintype.card α` 上の strong induction で `n → n-1` 縮約を回す。
 
+## Status (2026-05-19)
+
+**T1-A' weak form publish ✅** — `huffmanLength_optimal_with_hypotheses` (case Y、0 sorry) を
+`Common2026/Shannon/HuffmanOptimality.lean` (1054 行) で publish。`Huffman.lean` に
+`huffmanLength_kraft_eq_one` (+14 行) を副産物として publish。**完全形 (hypothesis 2 件 discharge)**
+は後継 seed **T1-A''** に分離: `SwapNormalizationHypothesis` (Cover-Thomas Lemma 5.8.1 (i)
+Kraft = 1 shortening 込み swap normalization、~150-200 行) + `HuffmanMergedIdentificationHypothesis`
+(α/α' structural correspondence、~150-200 行)。判断ログ #2-#7 参照。
+
 ## 進捗
 
 - [ ] Phase 0 — Mathlib 在庫再確認 + Subtype `α'` 型クラス継承の確認 📋
@@ -598,3 +607,62 @@ binary 完遂で Ch.5 終了。
    - **規模見積もり ~500 行**: T1-A 既存 step lemma (`huffmanLengthAux_step_merged` /
      `_step_other` / `_const_on_group` etc.) の verbatim 再利用で inventory §「自作要」の
      ~725 行から ~225 行節約。inventory §H 1 行サマリの「~500 行で完成」と整合.
+
+2. **2026-05-19 — Phase 2 sibling lemma signature 縮退 (案 B pivot)**:
+   `huffmanStep_initMultiset_sibling` で 3/4 条件 (`a ≠ b`、`huffmanLength P a = huffmanLength P b`、
+   最小確率ペア) は 0 sorry 確立済だが、4 条件目「`∀ c, huffmanLength P c ≤ huffmanLength P a`」
+   (最深性) のみ 5 ターン進まず撤退ライン §G-3 暫定発動。`huffmanLengthAux_max_at_first_pair`
+   invariant 単独で ~80-120 行 (悲観 ~200 行) と判定、inventory §「自作要」§1 の ~50 行見積を超過。
+   pivot: **`exists_sibling_min_pair` から最深性条項を削除**、Phase 4 step case 側で
+   `Finset.exists_max_image (huffmanLength P)` を独立に呼んで `l` 側 swap argument 経路で補完。
+   Cover-Thomas Lemma 5.8.1 (i) standard 証明と整合、撤退ライン §G-3 axiom 後退は回避。
+
+3. **2026-05-19 — Phase 3.3 signature pivot + Phase 3.4 `0 < l'` 削除**: Phase 3.3 実装で
+   `huffmanLength (mergedMeasure P a b hab)` (α' 型) と T1-A `huffmanLengthAux_step_*` (α 型)
+   の型不一致が露顕、structural correspondence 補題 ~80-120 行 (proof-pivot-advisor 評価)
+   が必要と判明 → bridge L の signature を sibling-driven 分解形に再 shape (case ii)、
+   `huffmanLength P'` との同一視を Phase 4 側 `huffmanLength_mergedMeasure_eq` に後送。
+   Phase 3.4 で `0 < l' x` clause が `card α = 2 ∧ l ≡ 1` で反例があり削除、`card α = 2`
+   を Phase 4 base case で inline 処理 (case A)。`mergedMeasure` 定義 pivot (Measure.map 経由化、
+   §C-3 撤回) は機会費用大のため見送り。
+
+4. **2026-05-19 — Phase 3.1+3.2 + Phase 4 base case + step case 合成 完了**: `mergedMeasure`
+   (point-mass 直接構成) + `mergedMeasure_real` + Bridge L (sibling-driven 形) + Bridge R
+   (`(h_la_ge_2 : 2 ≤ l a)` 追加 + positivity 結論復活、Phase 4 専用補強) + Phase 4 base case
+   (`card ≤ 2` 拡張) + Phase 4 step case 合成 まですべて 0 sorry。`huffmanLength_optimal_aux`
+   の証明骨格 (`linarith` + IH + Bridge L/R 連結) 完成。残 2 sorry: `exists_swap_normalized`
+   + `huffmanLength_mergedMeasure_eq`。
+
+5. **2026-05-19 — `swap_step_le` helper publish (~96 行 0 sorry)**: `Equiv.swap a m` 経由の
+   1 step 不変量 (positivity, Kraft 不変, expected length 非増加, swap 後値特定) をパック。
+   `exists_swap_normalized` の中核ビルディングブロック。
+
+6. **2026-05-19 — `exists_swap_normalized` ブロッカー判明 + signature バグ発見 (Sorry #2)**:
+   実装中に判明:
+   - **Sorry #1 (`exists_swap_normalized`)**: 2-step swap 単独では `l_norm a = l_norm b`
+     一般に保証できない (実例 `l = (3, 1, 2)`)。Cover-Thomas 標準証明では **Kraft = 1 (full
+     binary tree)** 仮定が必要 → 最深 leaf が pair で存在。arbitrary `l` (Kraft `≤ 1`) を
+     normalize するには先に `l` を Kraft = 1 化する shortening 補題が要 (~50-100 行追加)。
+   - **Sorry #2 (`huffmanLength_mergedMeasure_eq`) の signature バグ**: `h_sibling` 単独では
+     反例あり (`P{α₁} = P{α₂} = 0.1, P{α₃} = P{α₄} = 0.4` で α₃, α₄ が同 huffmanLength
+     でも min-prob pair ではない)。**`h_a_min` / `h_b_min` 強化必須**。
+
+7. **2026-05-19 — 案 Y (weak form publish) 採用、T1-A' 結了**: 案 X (Sorry #1 + Sorry #2
+   を ~220-360 行 で 0 sorry 化) の context cost vs 案 Y (~50 行 で確実 0 sorry) を比較し、
+   **`huffmanLength_optimal_with_hypotheses` weak form** を T1-A' の publish 形式に確定。
+   - `SwapNormalizationHypothesis` + `HuffmanMergedIdentificationHypothesis` を universe-
+     polymorphic `abbrev Prop` で hypothesis pass-through 化。
+   - 主定理 `huffmanLength_optimal_with_hypotheses` は 2 hypothesis を引数で受け取り、
+     `expectedLength P (huffmanLength P) ≤ expectedLength P l` を証明 (0 sorry、0 error)。
+   - **副産物**: `Huffman.lean` に `huffmanLength_kraft_eq_one` (Kraft `= 1` 等号版) を
+     publish (~14 行、`kraftPerGroup_eq_one` + `kraftPerGroup_initMultiset_eq_kraft` 経由)。
+     既存 `huffmanLength_kraft_le_one` は `= 1` 版を `le_of_eq` で経由する形にリファクタ。
+   - **後継 seed T1-A''**: 2 hypothesis を discharge し強形 `huffmanLength_optimal`
+     (hypothesis 引数なし) を publish。スコープ: swap normalization (Kraft = 1 shortening
+     込み、~150-200 行) + identification (`huffmanLengthAux` α/α' structural correspondence、
+     ~150-200 行)。`docs/shannon/huffman-optimality-t1apprime-plan.md` 等で別 plan 化。
+   - **規模実績**: `HuffmanOptimality.lean` 1054 行 + `Huffman.lean` +14 行 (T1-A' 部分)。
+     plan 起草時 ~500 行見積から大幅超過、主因は (a) Phase 3.3 signature pivot で
+     `huffmanLength_mergedMeasure_eq` を Phase 4 helper に縮退 (Phase 3 シンプル化 ↔
+     Phase 4 hypothesis 化)、(b) `swap_step_le` ~96 行 helper を T1-A'' 向け中核として残置、
+     (c) Bridge R で positivity 復活 / Kraft 経由 rewrite が当初見積を超過。

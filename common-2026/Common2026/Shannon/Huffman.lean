@@ -919,10 +919,11 @@ lemma kraftPerGroup_initMultiset_eq_kraft (P : Measure α) :
   exact hsimp a
 
 omit [MeasurableSingletonClass α] in
-/-- Huffman 語長は Kraft 不等式 (D = 2) を充足 (実は等号). -/
-theorem huffmanLength_kraft_le_one (P : Measure α) [IsProbabilityMeasure P]
+/-- Huffman 語長は Kraft 不等式 (D = 2) を **等号** で充足: `∑ 2^(-huffmanLength) = 1`.
+これは `kraftPerGroup` が `HuffmanGrouping` 上常に `1` であることから従う. -/
+theorem huffmanLength_kraft_eq_one (P : Measure α) [IsProbabilityMeasure P]
     (_hP : ∀ a, 0 < P.real {a}) :
-    ∑ a : α, ((2 : ℝ)) ^ (-(huffmanLength P a : ℤ)) ≤ 1 := by
+    ∑ a : α, ((2 : ℝ)) ^ (-(huffmanLength P a : ℤ)) = 1 := by
   rw [← kraftPerGroup_initMultiset_eq_kraft P]
   have hinit : HuffmanGrouping (initMultiset P) := initMultiset_huffmanGrouping P
   have hcard : 1 ≤ (initMultiset P).card := by
@@ -930,7 +931,14 @@ theorem huffmanLength_kraft_le_one (P : Measure α) [IsProbabilityMeasure P]
     rw [Multiset.card_map]
     have : 0 < Fintype.card α := Fintype.card_pos
     exact this
-  rw [kraftPerGroup_eq_one _ hcard hinit]
+  exact kraftPerGroup_eq_one _ hcard hinit
+
+omit [MeasurableSingletonClass α] in
+/-- Huffman 語長は Kraft 不等式 (D = 2) を充足 (実は等号). -/
+theorem huffmanLength_kraft_le_one (P : Measure α) [IsProbabilityMeasure P]
+    (hP : ∀ a, 0 < P.real {a}) :
+    ∑ a : α, ((2 : ℝ)) ^ (-(huffmanLength P a : ℤ)) ≤ 1 := by
+  rw [huffmanLength_kraft_eq_one P hP]
 
 omit [MeasurableSingletonClass α] in
 /-- **副系**: Huffman 語長から prefix code が構成できる

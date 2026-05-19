@@ -741,43 +741,59 @@ lemma swap_step_le
       nlinarith [hprod]
   exact ⟨hl'_pos, hkraft', hexpL', hl'_a, hl'_m⟩
 
-omit [MeasurableSingletonClass α] in
-/-- **Phase 4 helper — swap normalization**: 任意の Kraft-feasible `l` を
-`l_norm a = l_norm b` を満たす形に変換できる. expected length は増えず、Kraft 不等式も維持される. -/
-lemma exists_swap_normalized
-    (P : Measure α) [IsProbabilityMeasure P]
-    (l : α → ℕ) (hl_pos : ∀ x, 0 < l x)
-    (hl_kraft : ∑ x : α, ((2 : ℝ)) ^ (-(l x : ℤ)) ≤ 1)
-    (a b : α) (hab : a ≠ b)
-    (h_min : ∀ c, P.real {a} ≤ P.real {c} ∨ P.real {b} ≤ P.real {c})
-    (h_card : 3 ≤ Fintype.card α) :
-    ∃ l_norm : α → ℕ,
+/-! ### Phase 4 hypothesis abbreviations (weak form 用)
+
+T1-A' 主定理を完全な 0 sorry で publish するために、Cover-Thomas 標準証明で最も
+技術的に重い 2 ステップ — **swap normalization** と **huffmanLength identification** —
+は本ファイルでは証明せず、`huffmanLength_optimal_with_hypotheses` の **hypothesis
+として外から渡す weak form** で publish する。
+
+これら 2 hypothesis を discharge する完全証明は後継 seed `T1-A''` (
+`docs/textbook-roadmap.md`) で予定。abbreviation はそれまでの sub-statement の
+typing 用. -/
+
+universe u
+
+/-- **Weak form hypothesis 1**: swap normalization — 任意 Kraft-feasible `l` を
+`l_norm a = l_norm b` 形に変換可能 (expected length 非増加 + Kraft 維持). -/
+abbrev SwapNormalizationHypothesis : Prop :=
+  ∀ {β : Type u} [Fintype β] [DecidableEq β] [Nonempty β]
+    [MeasurableSpace β] [MeasurableSingletonClass β]
+    (Q : Measure β) [IsProbabilityMeasure Q]
+    (ll : β → ℕ) (_hll_pos : ∀ x, 0 < ll x)
+    (_hll_kraft : ∑ x : β, ((2 : ℝ)) ^ (-(ll x : ℤ)) ≤ 1)
+    (a b : β) (_hab : a ≠ b)
+    (_h_min : ∀ c, Q.real {a} ≤ Q.real {c} ∨ Q.real {b} ≤ Q.real {c})
+    (_h_card : 3 ≤ Fintype.card β),
+    ∃ l_norm : β → ℕ,
       (∀ x, 0 < l_norm x) ∧
-      (∑ x : α, ((2 : ℝ)) ^ (-(l_norm x : ℤ)) ≤ 1) ∧
+      (∑ x : β, ((2 : ℝ)) ^ (-(l_norm x : ℤ)) ≤ 1) ∧
       l_norm a = l_norm b ∧
-      InformationTheory.Shannon.ShannonCode.expectedLength P l_norm
-        ≤ InformationTheory.Shannon.ShannonCode.expectedLength P l := by
-  sorry
+      InformationTheory.Shannon.ShannonCode.expectedLength Q l_norm
+        ≤ InformationTheory.Shannon.ShannonCode.expectedLength Q ll
 
-/-- **Phase 4 helper — `huffmanLength = L'` identification**: `mergedMeasure P a b hab` の
-Huffman 語長は、Bridge L で使う `L' x := if x.val = a then huffmanLength P a - 1 else
-huffmanLength P x.val` と一致する. -/
-private lemma huffmanLength_mergedMeasure_eq
-    (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})
-    (h_card : 3 ≤ Fintype.card α)
-    (a b : α) (hab : a ≠ b)
-    (h_sibling : huffmanLength P a = huffmanLength P b) :
-    ∀ x : { y : α // y ≠ b },
-      huffmanLength (mergedMeasure P a b hab) x
-        = (if x.val = a then huffmanLength P a - 1 else huffmanLength P x.val) := by
-  sorry
+/-- **Weak form hypothesis 2**: `huffmanLength` identification on `mergedMeasure`. -/
+abbrev HuffmanMergedIdentificationHypothesis : Prop :=
+  ∀ {β : Type u} [Fintype β] [DecidableEq β] [Nonempty β]
+    [MeasurableSpace β] [MeasurableSingletonClass β]
+    (Q : Measure β) [IsProbabilityMeasure Q] (_hQ : ∀ a, 0 < Q.real {a})
+    (_h_card : 3 ≤ Fintype.card β)
+    (a b : β) (hab : a ≠ b)
+    (_h_sibling : huffmanLength Q a = huffmanLength Q b)
+    (x : { y : β // y ≠ b }),
+    huffmanLength (mergedMeasure Q a b hab) x
+      = (if x.val = a then huffmanLength Q a - 1 else huffmanLength Q x.val)
 
-/-! ### 主定理 (Cover-Thomas Theorem 5.8.1) -/
+/-! ### 主定理 (Cover-Thomas Theorem 5.8.1) — weak form -/
 
 /-- **Phase 4 helper — strong induction motor**: Auxiliary version with `Fintype.card α = n`
-explicit, allowing `Nat.strong_induction_on` on `n` with `generalizing α P l`. -/
-private theorem huffmanLength_optimal_aux (n : ℕ)
-    {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+explicit, allowing `Nat.strong_induction_on` on `n` with `generalizing α P l`.
+
+**Weak form**: 2 hypothesis (`h_swap` / `h_ident`) を hypothesis として外から受け取る. -/
+private theorem huffmanLength_optimal_aux_with_hypotheses (n : ℕ)
+    (h_swap : SwapNormalizationHypothesis.{u})
+    (h_ident : HuffmanMergedIdentificationHypothesis.{u})
+    {α : Type u} [Fintype α] [DecidableEq α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
     (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})
     (l : α → ℕ) (hl_pos : ∀ a, 0 < l a)
@@ -902,9 +918,9 @@ private theorem huffmanLength_optimal_aux (n : ℕ)
       -- sibling pair (a, b) を取得
       obtain ⟨a, b, hab, h_sib, h_min⟩ :=
         exists_sibling_min_pair P hP h_card_ge_2
-      -- l を normalize: l_swap a = l_swap b
+      -- l を normalize: l_swap a = l_swap b  (hypothesis `h_swap` 経由)
       obtain ⟨l_norm, hln_pos, hln_kraft, hln_eq_ab, hln_le⟩ :=
-        exists_swap_normalized P l hl_pos hl_kraft a b hab h_min h_card_ge_3
+        h_swap P l hl_pos hl_kraft a b hab h_min h_card_ge_3
       -- l_norm a ≥ 2 (otherwise Kraft > 1 with card ≥ 3)
       have hln_a_ge_2 : 2 ≤ l_norm a := by
         by_contra h_lt
@@ -994,7 +1010,12 @@ private theorem huffmanLength_optimal_aux (n : ℕ)
               (mergedMeasure P a b hab) l' :=
         IH _ h_card_α'_lt (mergedMeasure P a b hab) hP'_pos l' hl'_pos hl'_kraft rfl
       -- huffmanLength_mergedMeasure_eq: huffmanLength (mergedMeasure ...) x = L'(x)
-      have h_L'_link := huffmanLength_mergedMeasure_eq P hP h_card_ge_3 a b hab h_sib
+      -- (hypothesis `h_ident` 経由)
+      have h_L'_link : ∀ x : { y : α // y ≠ b },
+          huffmanLength (mergedMeasure P a b hab) x
+            = (if x.val = a then huffmanLength P a - 1 else huffmanLength P x.val) := by
+        intro x
+        exact h_ident P hP h_card_ge_3 a b hab h_sib x
       -- Bridge L: E[P, huffmanLength P] = E[merged, huffmanLength merged] + (P{a} + P{b})
       have h_BL := huffmanLength_bridge_L P hP h_card_ge_2 a b hab h_sib
         (huffmanLength (mergedMeasure P a b hab)) h_L'_link
@@ -1013,14 +1034,21 @@ private theorem huffmanLength_optimal_aux (n : ℕ)
         _ = InformationTheory.Shannon.ShannonCode.expectedLength P l_norm := by linarith
         _ ≤ InformationTheory.Shannon.ShannonCode.expectedLength P l := hln_le
 
-/-- **主定理 (Cover-Thomas Theorem 5.8.1)** — Huffman 語長は任意の Kraft-feasible 語長関数
-より expected length が小さい. -/
-theorem huffmanLength_optimal
+/-- **主定理 (Cover-Thomas Theorem 5.8.1) — weak form** — Huffman 語長は任意の
+Kraft-feasible 語長関数より expected length が小さい. **Weak form** として
+swap normalization と identification の 2 hypothesis を引数で受け取る. 完全な
+discharge は後継 seed `T1-A''` で予定. -/
+theorem huffmanLength_optimal_with_hypotheses
+    {α : Type u} [Fintype α] [DecidableEq α] [Nonempty α]
+    [MeasurableSpace α] [MeasurableSingletonClass α]
+    (h_swap : SwapNormalizationHypothesis.{u})
+    (h_ident : HuffmanMergedIdentificationHypothesis.{u})
     (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})
     (l : α → ℕ) (hl_pos : ∀ a, 0 < l a)
     (hl_kraft : ∑ a : α, ((2 : ℝ)) ^ (-(l a : ℤ)) ≤ 1) :
     InformationTheory.Shannon.ShannonCode.expectedLength P (huffmanLength P)
       ≤ InformationTheory.Shannon.ShannonCode.expectedLength P l :=
-  huffmanLength_optimal_aux (Fintype.card α) P hP l hl_pos hl_kraft rfl
+  huffmanLength_optimal_aux_with_hypotheses (Fintype.card α) h_swap h_ident
+    P hP l hl_pos hl_kraft rfl
 
 end InformationTheory.Shannon.Huffman

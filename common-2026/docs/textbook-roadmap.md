@@ -56,7 +56,7 @@
 | 2 | Entropy, Relative Entropy, Mutual Information | ✅ | `Shannon/Entropy`, `MutualInfo`, `MIChainRule`, DPI | — | — |
 | 3 | AEP | ✅ | `AEP.aep_ae`, `aep_inProbability`, `typicalSet_*` | — | — |
 | 4 | Entropy Rates of Stochastic Processes | ✅ | `EntropyRate.entropyRate_exists_of_stationary`, `_eq_lim_condEntropy`, `ShannonMcMillanBreiman`, `BirkhoffErgodic` | — | — |
-| 5 | Data Compression | 🟡 | `ShannonCode.shannonCode_expected_length_bounds`, Kraft 逆, **`Huffman.huffmanLength_kraft_le_one` + `exists_huffman_prefix_code`** | **T1-A' Huffman 真最適性** (任意 `l` 比較), **T4-A Arithmetic / LZ78** | ~2.5-4k |
+| 5 | Data Compression | 🟡 | `ShannonCode.shannonCode_expected_length_bounds`, Kraft 逆, **`Huffman.huffmanLength_kraft_le_one` + `exists_huffman_prefix_code` + T1-A' `huffmanLength_optimal_with_hypotheses` (weak form)** | **T1-A'' 2 hypothesis discharge** (swap normalization + identification), **T4-A Arithmetic / LZ78** | ~2.5-4k |
 | 6 | Gambling and Data Compression | ✖ scope-out | — | — | — |
 | 7 | Channel Capacity | ✅ | `shannon_noisy_channel_coding_theorem_general_full`, `_strong_converse`, `_feedback_complete` | — | — |
 | 8 | Differential Entropy | ✅ | `DifferentialEntropy.differentialEntropy_gaussianReal`, `_le_gaussian_of_variance_le` | — | — |
@@ -93,17 +93,35 @@
 - **scope-out → T1-A'**: Cover-Thomas Theorem 5.8.1 の主定理 (任意 Kraft-feasible `l` との比較形) は分離 (sibling property + n → n-1 induction)。Ch.5 行は T1-A' 完了で 🟢 へ昇格。
 - **判断ログ**: §C-5 `Multiset.strongInductionOn` → `Nat.strongRec on s.card` pivot (Session 2)、§C-6 `huffmanStep` Subtype + `HuffmanGrouping` invariant 強化 (Session 4) で Phase 3 着地 (詳細は plan §判断ログ #1-#5)。
 
-#### T1-A'. Huffman 最適性 (sibling property + 任意 `l` 比較) 📋
+#### T1-A'. Huffman 最適性 (sibling property + 任意 `l` 比較、weak form) ✅ (2026-05-19) → [docs/shannon/huffman-optimality-moonshot-plan.md](shannon/huffman-optimality-moonshot-plan.md)
 
-- **目的**: T1-A で scope-out された Cover-Thomas Theorem 5.8.1 の主定理 (任意 Kraft-feasible
-  `l` との比較形) を publish。T1-A の Phase 4-5 を分離した後続 seed.
+- **publish**: `Common2026/Shannon/HuffmanOptimality.lean` (1054 行、0 sorry / 0 warning) で
+  `huffmanLength_optimal_with_hypotheses` — Cover-Thomas Theorem 5.8.1 の主定理を
+  **2 hypothesis pass-through 形** (`SwapNormalizationHypothesis` + `HuffmanMergedIdentificationHypothesis`、
+  `abbrev Prop` で universe-polymorphic) で publish。証明骨格 (Phase 4 strong induction +
+  Bridge L/R + `swap_step_le` ~96 行 helper) は完成。
+- **副産物**: `Common2026/Shannon/Huffman.lean` (953 → 961 行) に `huffmanLength_kraft_eq_one`
+  (Kraft `= 1` 等号版、~14 行) を追加 publish。
+- **判断ログ要点**: Phase 2 sibling 最深性 → 案 B pivot (Phase 4 で `l` 側 swap)、Phase 3.3
+  type 不一致 → bridge L sibling-driven 化、Phase 3.4 `0 < l'` 反例 → `card = 2` を Phase 4
+  base case 吸収、Phase 4 swap normalization で 2-step swap 不十分 (Kraft = 1 が要) + Sorry #2
+  signature バグ発見 → 案 Y (weak form) 採用 (plan 判断ログ #2-#7 参照、proof-pivot-advisor
+  相談 2 回)。
+- **scope-out → T1-A''**: 2 hypothesis 完全 discharge は分離。Ch.5 🟢 昇格は T1-A'' 完了後。
+
+#### T1-A''. Huffman 最適性 (2 hypothesis 完全 discharge) 📋
+
+- **目的**: T1-A' で hypothesis pass-through 化された 2 件 (`SwapNormalizationHypothesis` +
+  `HuffmanMergedIdentificationHypothesis`) を完全証明し、強形 `huffmanLength_optimal`
+  (引数 hypothesis なし) を publish。Cover-Thomas Theorem 5.8.1 真の主定理を fully discharged
+  形で達成。
 - **statement**: `∀ (l : α → ℕ), (∀ a, 0 < l a) → kraftSum 2 l ≤ 1 →
-  expectedLength P (huffmanLength P) ≤ expectedLength P l`
-- **基盤**: T1-A で確立した `huffmanLength` (`Nat.strongRec on s.card` 経由) + Subtype 化された
-  `huffmanStep` (C-6).
-- **依存**: T1-A 完了済が前提.
-- **想定 family**: `docs/shannon/huffman-optimality-*`.
-- **規模**: ~400-500 行 (`exists_sibling_min_pair` ~150 + 主定理 `n → n-1` induction ~250-350).
+  expectedLength P (huffmanLength P) ≤ expectedLength P l` を **hypothesis なし**で。
+- **基盤**: T1-A' で確立した骨格 + `swap_step_le` helper + `huffmanLength_kraft_eq_one`。
+- **依存**: T1-A' 完了済。
+- **想定 family**: `docs/shannon/huffman-optimality-t1apprime-*`.
+- **規模**: ~300-400 行 (swap normalization + Kraft=1 shortening ~150-200 + α/α'
+  structural correspondence identification ~150-200)。
 
 #### T1-B. Chernoff Information 📋
 
