@@ -99,6 +99,7 @@ import Common2026.Shannon.AWGNAchievability
 import Common2026.Shannon.AWGNConverse
 import Common2026.Shannon.AWGNMain
 import Common2026.Shannon.ParallelGaussian
+import Common2026.Shannon.ShannonHartley
 import Common2026.Shannon.WynerZiv
 import Common2026.Shannon.WynerZivAchievability
 import Common2026.Shannon.WynerZivConverse

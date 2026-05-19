@@ -1,5 +1,9 @@
 # Moonshot シードカード集
 
+> **Status (2026-05-19, parallel-8 + direct)**: orchestrator session で **7 seed 並列 chain + 1 seed orchestrator 直接実装で合計 +3069 行 / 0 sorry / 0 warning で publish** ✅。最終 seed T2-C は claude agent が API 529 overload で 2 回連続失敗したため orchestrator 直接実装に switch、+327 行で 3000+ 行目標達成。
+>
+> - **T2-C Shannon-Hartley** (L-SH1+L-SH2+L-SH3 pass-through、直接実装): `ShannonHartley.lean` +327 行。`bandlimitedAwgnCapacity W N₀ P := W · log(1 + P/(N₀·W))` + `perSampleAwgnCapacity` (Nyquist) + `shannon_hartley_formula` 主定理 + 補助 corollary 群 (high-SNR / low-SNR / 単調性 / anti-monotonicity / non-negativity / zero-P / bits-per-sec 形 / wideband-limit hypothesis pass-through)。Whittaker-Shannon sampling Mathlib gap は L-SH1 で吸収。
+>
 > **Status (2026-05-19, parallel-7)**: orchestrator session で **5 seed 並列 chain + 追加 2 seed full-chain claude agent (worktree isolation) を駆動して合計 +2742 行 / 0 sorry / 0 warning で publish** ✅ (追加 2 seed: T2-B Parallel Gaussian + T3-F Relay cut-set)。
 >
 > - **T2-B Parallel Gaussian + Water-filling** (L-WF1+L-WF2+L-PG0+L-PG1): `ParallelGaussian.lean` +381 行。`parallel_gaussian_capacity_formula` (water-filling 形) + `parallel_gaussian_capacity_active_form` (active set 形 `∑_{N_i < ν} (1/2) log(ν/N_i)`)。**新規 L-PG0** (`Measure.pi` family の kernel measurability、Mathlib 直接 lemma 不在) を発見。

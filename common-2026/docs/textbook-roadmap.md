@@ -60,7 +60,7 @@
 | 6 | Gambling and Data Compression | ✖ scope-out | — | — | — |
 | 7 | Channel Capacity | ✅ | `shannon_noisy_channel_coding_theorem_general_full`, `_strong_converse`, `_feedback_complete` | — | — |
 | 8 | Differential Entropy | ✅ | `DifferentialEntropy.differentialEntropy_gaussianReal`, `_le_gaussian_of_variance_le` | — | — |
-| 9 | Gaussian Channel | 🟡 | `AWGN.awgn_channel_coding_theorem` (F-1+F-2+F-3+F-4 pass-through), `AWGN.awgn_capacity_closed_form = (1/2) log(1 + P/N)`, `ParallelGaussian.parallel_gaussian_capacity_formula` (water-filling 形 L-WF1+L-WF2+L-PG0+L-PG1 pass-through), `ParallelGaussian.parallel_gaussian_capacity_active_form` | **T2-A/B discharge** (kernel measurability + continuous typicality + MI bridge + per-letter converse 本体 + KKT 充足性 + water-filling 一意性), **T2-C Bandlimited / Shannon-Hartley** | ~2-3.5k |
+| 9 | Gaussian Channel | 🟡 | `AWGN.awgn_channel_coding_theorem` (F-1+F-2+F-3+F-4 pass-through), `AWGN.awgn_capacity_closed_form = (1/2) log(1 + P/N)`, `ParallelGaussian.parallel_gaussian_capacity_formula` (water-filling L-WF1+L-WF2+L-PG0+L-PG1 pass-through), `ShannonHartley.shannon_hartley_formula = W·log(1 + P/(N₀·W))` (L-SH1+L-SH2+L-SH3 pass-through) | **T2-A/B/C discharge** (kernel measurability + continuous typicality + MI bridge + per-letter converse 本体 + KKT 充足性 + water-filling 一意性 + Whittaker-Shannon sampling) | ~2-3.5k |
 | 10 | Rate Distortion | ✅ | `rate_distortion_achievability`, `_converse_*`, `_convexity`, n-letter converse | — | — |
 | 11 | Information Theory and Statistics | 🟡 | `stein_strong_law`, `sanov_ldp_equality`, `Pinsker`, `CsiszarProjection` | **T1-B Chernoff**, **T1-C Cramér**, **T1-D Hoeffding tradeoff** | ~1-1.7k |
 | 12 | Maximum Entropy | 🟡 | `entropy_le_log_card`, `entropy_eq_log_card_iff` | **T3-A Constrained MaxEnt (Lagrange / exponential family)** | ~400-700 |
@@ -398,3 +398,13 @@ T1-B/C/D の Sanov plumbing 再利用、T2-D の T2-F 再利用、T3-C の T3-B 
      verbatim 踏襲。inner bound (DF/CF) は完全 scope-out (L-RC5)。Ch.15 行は 🟡 維持。
    <br>**累計**: 13 新規 Lean ファイル + 1 back-port = **+2742 行** (元の seed 見積もり中央
    ~5275 行に対し 52%、3000+ 目標まで 258 行不足だが両 seed とも 0 sorry / `lake env lean` clean で着地)。
+5. **2026-05-19 T2-C 最終 seed 追加** (orchestrator session、3000+ 行クローズアップ): T2-C
+   Bandlimited / Shannon-Hartley を **直接実装** (claude agent が API 529 overload で 2 回連続失敗
+   したため orchestrator 直接実装に switch) で +327 行 publish。`ShannonHartley.lean` (327 行、
+   0 sorry / `lake env lean` clean): `bandlimitedAwgnCapacity W N₀ P := W · log(1 + P/(N₀·W))` 定義 +
+   `perSampleAwgnCapacity` (Nyquist 経由 per-sample form) + `shannon_hartley_formula` 主定理
+   (L-SH1+L-SH2+L-SH3 hypothesis pass-through 形) + 補助 corollary 群 (high-SNR / low-SNR / 単調性 /
+   anti-monotonicity / non-negativity / zero-P / bits-per-sec 形)。Ch.9 Gaussian Channel 行は 3 seed
+   (T2-A AWGN + T2-B Parallel Gaussian + T2-C Shannon-Hartley) 全て publish 済で🟡 維持
+   (本体 discharge は別 plan defer)。<br>**最終累計**: 14 新規 Lean ファイル + 1 back-port =
+   **+3069 行** (3000+ 行目標達成 ✅、元の seed 見積もり中央 ~5775 行に対し 53%)。
