@@ -509,3 +509,76 @@ T1-B/C/D の Sanov plumbing 再利用、T2-D の T2-F 再利用、T3-C の T3-B 
    partial), Ch.12 (T3-A 既存 publish 済 confirmed), Ch.13 (T4-A Arithmetic + LZ78 L-LZ1 partial),
    Ch.15 (T3-B MAC L-MAC1 + T3-C BC + T3-D L-WZ3 partial + T3-F inner), Ch.17 (T2-D EPI Plumbing +
    T2-E BM + T2-F Fisher v2) — いずれも 🟡 維持で本体 discharge は別 plan defer。
+8. **2026-05-20 並列 wave6 第一波 9-seed + 第二波 3-seed gap-close 着地** (orchestrator session、worktree
+   isolation): textbook-roadmap 残シードの body discharge を中心に 10 seed 並列 + 3 seed gap-close 並列で
+   駆動して **+6356 行 / 0 sorry / 0 warning** publish (合計 12 新規 Lean ファイル、wave5 既存 1 件は重複検出で
+   skip)。第一波 (9 新規):
+   - **T2-A AWGN MI bridge**: `AWGNMIBridge.lean` +306 行。`h_mi_bridge` (Cover-Thomas 9.2.1) を 3 primitive
+     predicates (`IsAwgnOutputGaussian` + `IsAwgnMIDecomp` + `IsAwgnCondEntropyEqNoise`) に縮減、#3 は
+     `differentialEntropy_gaussianReal_mean_invariant` で完全 discharge (実質 2 hypothesis)。
+     `awgn_theorem_F2_discharged` + `awgn_capacity_closed_form_F2_discharged` 再 publish。Mathlib PR 候補
+     1 件 (`differentialEntropy (gaussianReal m v) = differentialEntropy (gaussianReal 0 v)` mean-translation)。
+   - **T2-B Parallel Gaussian L-WF KKT**: `ParallelGaussianKKT.lean` +353 行。**L-WF1 full discharge via IVT**
+     (`intermediate_value_Icc` + `Continuous.max` + `continuous_finsetSum` + `(n+1)·(P+1) ≥ P` 端値)。
+     L-WF2 + L-PG1 は `WaterFillingOptimalityCertificate` + `ParallelGaussianChainRuleBundle` certificate
+     predicate で双方向 reduction publish。統合形 `parallel_gaussian_capacity_formula_KKT_discharged` +
+     `_active_form_KKT_discharged` で capacity formula 完成 (L-WF1 internal discharge、L-WF2/L-PG1 certificate)。
+   - **T2-D EPI L-EPI3 final integration**: `EPIL3Integration.lean` +522 行。`IsEPIL3IntegratedPipeline`
+     (Stam + Stam-to-EPI bridge bundle) 導入で主定理を **単一 hypothesis** に縮減 publish、Gaussian
+     saturation case `entropy_power_inequality_gaussian_full` で hypothesis-free に discharge、
+     log/exp/normalized form + 3-arg/4-arg chain variants + V2 de Bruijn 引用も整備 (撤退ライン: Csiszár
+     coupling 本体は `IsStamToEPIBridgeHyp` predicate pass-through)。
+   - **T1-B Chernoff per-tilt Sanov discharge**: `ChernoffPerTiltDischarge.lean` +470 行。
+     **`IsBayesErrorPerTiltLowerBound` predicate** (Cramér L-C2 Phase C `IsMeasureInfinitePiTiltedEq` と
+     structurally **完全同型** — 同じ Mathlib gap `Measure.infinitePi (μ).tilted ↔ Measure.infinitePi (μ.tilted)`
+     n-letter RN-deriv 同定) で per-tilt hypothesis を more primitive な述語に reduce。
+     `chernoff_lemma_tendsto_discharged` + `chernoff_dotEq_tendsto_discharged` (atomic 単一仮説形) +
+     `chernoffMediatorMeasure` (Sanov LDP launch ターゲット) publish (Phase A-J)。
+   - **T3-B MAC L-MAC2 Fano converse**: `MACL2Discharge.lean` +486 行。**`MACSingleFanoBound` +
+     `MACPerLetterChain₁/₂` structural Prop pass-through** で Cover-Thomas eq.15.44-15.46 を
+     `n·R_k ≤ I_marg + 1 + Pe·log M_k` + `I_marg ≤ n·I_k` の 2 ステップ structural form に reduce、
+     `mac_converse_fano_body_single₁/₂` + corner extraction + `_limit` 2 本 + `mac_single_rate_bound₁/₂_with_body` +
+     `mac_capacity_region_outer_bound_with_fano_body` (3-bound 合流) + publish-layer hook 6 主要定理。
+   - **T3-C BC superposition body**: `BroadcastChannelSuperpositionBody.lean` +844 行。**MAC body discharge
+     verbatim 流用** (`bcReceiver1JointlyTypicalSet := macJointlyTypicalSet` の definitional 一致経由)。
+     receiver-1 4-event Bonferroni (`F₀ … F₃`) + receiver-2 2-event Bonferroni (`G₀, G₁`) + union-bound
+     calc chain + `bcJTSCode` two-receiver combine + publish-layer hook (撤退ライン: L-BC2-I random codebook
+     averaging は scope-out)。
+   - **T3-F Relay inner DF/CF body**: `RelayInnerBodyDischarge.lean` +645 行。**`IsRelayDFBlockMarkovWitness` +
+     `IsRelayCFBinningWitness` structural witness predicate** (既存 Existence Prop と definitionally equal で
+     bridge が `:= h` の 1 行)、CF 側は `relayCFBinningMeasure` (= `wzBinningMeasure` の relay namespace 別名 +
+     `IsProbabilityMeasure`) で WZ binning machinery 再エクスポート、両 main theorem に discharged 版 + bridge 併設。
+   - **T4-A LZ78 L-LZ3 SMB sandwich**: `LZ78SMBSandwich.lean` +604 行。**`IsSMBSandwichPassthrough` を
+     hypothesis-free に discharge** (SMBAlgoetCover.lean の `shannon_mcmillan_breiman` が既に hypothesis-free と
+     判明、L-LZ3 完全 internal 化)。`lz78_asymptotic_optimality_two_sided_smb_discharged` publish (LZ78 主定理から
+     L-LZ3 hypothesis 削除)。Cover-Thomas Theorem 13.5.3 の "L-LZ3 hypothesis pass-through" 表記は obsolete 化候補。
+   - **T2-C Whittaker-Shannon full**: `WhittakerShannonFull.lean` +576 行。**Tier 1 finite-window full
+     discharge** (`whittakerShannonSeries` symmetric finite window + `_at_sample` honest 証明 + off-window
+     collapse + empty-window + zero/add/smul/sub/neg/linear-combo + continuity/measurability + `(2N+1)·M`
+     sup bound + card identity)。Tier 2 (infinite series) は `IsBandlimitedFull` predicate pass-through で wrap、
+     L-SH1/L-SH2/L-SH3 chain to `ShannonHartley.lean` で `shannon_hartley_via_full` (nats/sec + bits/sec) publish。
+   <br>第二波 gap-close (3 新規):
+   - **T1-A'' Huffman 2-hyp body extension**: `HuffmanT1APPrimeBody.lean` +594 行。
+     `SwapStepLeChainHypothesis` primitive + trivial discharge + `SwapNormalizationHypothesis` の `ll a = ll b`
+     case の universe-polymorphic discharge + alt-witness via `Equiv.swap a b` + `HuffmanMergedIdentificationHypothesis`
+     の point-wise extractor + `HuffmanCombinedHypothesis` wrapper 群 (13 sections A-M)。完全 discharge は
+     4-6 セッション scope で defer。
+   - **T1-D Hoeffding sandwich body**: `HoeffdingSandwichBody.lean` +335 行。**L-H4-FS** (`IsHoeffdingMinimizerFullSupport`
+     predicate pass-through) + **L-H4-FB** 両端境界 **full discharge** (`α = 0` 全域 → `K = {P₁}` singleton 経由
+     Qstar = P₁、`α ≥ klDivPmf P₂ P₁` → `hoeffdingE2 = 0` 経由 Qstar = P₂)。
+     `hoeffding_tradeoff_sandwich_via_predicate` + `_at_boundary_alpha_ge_kl` publish。
+   - **T3-D Wyner-Ziv L-WZ3 convexity full**: `WynerZivConvexityBody.lean` +621 行。**`IsWynerZivFactorizable`
+     affine predicate** (`∃ κ, q(x,y,u) = κ(x,u)·P_XY(x,y)` + 行確率性) で Markov cross-product 制約を
+     factorization 経由 affine 化、`wynerZivRateFactorizable_convex_in_D` で rate-level convexity 完成
+     (Lemma 15.9 objective convexity は `h_obj_convex` hypothesis pass-through、`WynerZivConstraint`
+     非アフィン Markov を bypass)。25 declarations publish。
+   <br>**集計**: 12 新規 Lean ファイル = **+6356 行** (中央見積 6200 から +156, 6000+ 目標 達成 ✅)、
+   wave5 既存 `WynerZivBinningBody.lean` (613 行) は agent 起動時の存在 check で skip。`Common2026.lean` に
+   import 12 行追加、全 `lake env lean <file>` clean / 0 sorry / 0 warning。Mathlib PR 候補 累計 4 件
+   (`differentialEntropy_mean_invariant` を新規追加)。発見した structural 同型: Cramér L-C2 Phase C と
+   Chernoff per-tilt discharge が完全同型 (両者 `Measure.infinitePi (μ).tilted ↔ Measure.infinitePi (μ.tilted)`
+   n-letter RN-deriv 同定の Mathlib gap で詰まる)、将来 LDP per-tilt 統一 predicate 候補。章状態: Ch.5 (T1-A''
+   body extension), Ch.9 (T2-A MI bridge 3-primitive + T2-B L-WF1 full discharge + T2-C WS Tier 1 full discharge),
+   Ch.11 (T1-B Chernoff per-tilt predicate-form + T1-D sandwich 両端 full discharge), Ch.13 (T4-A L-LZ3
+   internal化), Ch.15 (T3-B MAC L-MAC2 + T3-C BC body + T3-D L-WZ3 convexity full + T3-F inner body),
+   Ch.17 (T2-D EPI L-EPI3 single-hyp + Gaussian full) — いずれも 🟡 維持で残部分は別 plan defer。
