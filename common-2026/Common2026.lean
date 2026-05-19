@@ -86,6 +86,7 @@ import Common2026.Shannon.Huffman
 import Common2026.Shannon.HuffmanOptimality
 import Common2026.Shannon.CsiszarProjection
 import Common2026.Shannon.Chernoff
+import Common2026.Shannon.Cramer
 import Common2026.Shannon.DifferentialEntropy
 import Common2026.Shannon.Stationary
 import Common2026.Shannon.EntropyRate
