@@ -206,3 +206,8 @@ import Common2026.Shannon.BroadcastChannelExistenceBridgeBody
 import Common2026.Shannon.BrunnMinkowski1DSuperlevelBody
 import Common2026.Shannon.WynerZivObjectiveConvexityBody
 import Common2026.Shannon.GaussianPDFVarianceDerivBody
+import Common2026.Shannon.FisherDeBruijnGaussianWitness
+import Common2026.Shannon.MACRandomCodebookAveraging
+import Common2026.Shannon.HuffmanSwapNormalizationBody
+import Common2026.Shannon.WynerZivDecoderFailureAssembly
+import Common2026.Shannon.BroadcastChannelBonferroniDecay
