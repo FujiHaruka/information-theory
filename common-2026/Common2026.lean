@@ -196,3 +196,13 @@ import Common2026.Shannon.AWGNMIDecompBody
 import Common2026.Shannon.WynerZivPackingBody
 import Common2026.Shannon.RelayCFBinningBody
 import Common2026.Shannon.ParallelGaussianWFCertBody
+import Common2026.Shannon.HoeffdingLagrangeIVTBody
+import Common2026.Shannon.ParallelGaussianWFStationarityBody
+import Common2026.Shannon.LZ78PhraseCountAsymptoticBody
+import Common2026.Shannon.HuffmanMergedIdentBody
+import Common2026.Shannon.WynerZivCoveringTypicalityBody
+import Common2026.Shannon.MACCornerAchievabilityBody
+import Common2026.Shannon.BroadcastChannelExistenceBridgeBody
+import Common2026.Shannon.BrunnMinkowski1DSuperlevelBody
+import Common2026.Shannon.WynerZivObjectiveConvexityBody
+import Common2026.Shannon.GaussianPDFVarianceDerivBody
