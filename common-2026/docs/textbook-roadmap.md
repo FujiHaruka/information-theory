@@ -709,3 +709,14 @@ T1-B/C/D の Sanov plumbing 再利用、T2-D の T2-F 再利用、T3-C の T3-B 
     populate、(b) merge 時に重複 declaration を grep で検出、の 2 防御が必須。Mathlib gap closure 1 件 (`gaussianPDFRealVar` variance-deriv)、
     残存 frontier gap: condExp-of-score (Stam Step1-2)、infinitePi-tilted RN (Chernoff/Cramér per-tilt)、joint perspective convexity of
     `p·log(p/q)` (WZ cond-ent core)。章状態は Ch.5/9/11/13/15/17 とも 🟡 維持で残部分は別 plan defer。
+12. **2026-05-20 WZ cond-ent convexity core discharge** (orchestrator session、調査→計画→実装を agent chain で駆動、自走非並列): wave10 で
+    drop された S23 (frontier gap「joint perspective convexity of `p·log(p/q)` (WZ cond-ent core)」) を full discharge。`Common2026/Shannon/WynerZivCondEntDiffConvexBody.lean`
+    新規 393 行 (0 sorry / 0 warning) で `wynerZivCondEntDiffConvex_holds` (`WynerZivCondEntDiffConvex` を `P_XY ≥ 0` のみで無条件成立) +
+    `wynerZivRateFactorizable_convex_in_D_unconditional` (L-WZ3 full convexity、`h_core` 仮定を完全消去) を publish。鍵は **pmf 形 (Real・有限)**
+    を選んだこと — `RateDistortionConvexity.lean:25` が measure 形 (`klDiv : ℝ≥0∞`) で詰めた ~500 行 gap を回避し、既存 `Common2026/Fano/DPI.lean:44`
+    `log_sum_inequality_negMulLog` をそのまま核エンジンに使えた。証明経路: factorisation で per-`u` block-gap = XU-gap を一致させ (`negMulLog_mul` で
+    `neg(P)` 係数が混合下で相殺)、per-`y` に log-sum 不等式を 2 回当てて符号反転 → `∑_u` 集約。最大リスクと見ていた `h_ac` 絶対連続性は
+    `w·r ≤ m=0, w>0, r≥0` で自明化し撤退 (full-support 縮退) 不要。**残存 frontier gap は 2 件に減**: condExp-of-score (Stam Step1-2)、
+    infinitePi-tilted RN (Chernoff/Cramér per-tilt)。家系 docs: `wyner-ziv-convexity-discharge-{mathlib-inventory,moonshot-plan}.md`。Ch.15 は
+    L-WZ1/2 + L-WZ3 残部のため 🟡 維持。再発見: 計画指定の定理名 `wynerZivRateFactorizable_convex_in_D` が既存 hypothesis 版と同 namespace で
+    衝突 — roadmap #11 line 705 の name-clash 罠と同種で、unconditional 版は `_unconditional` 別名が必須だった。
