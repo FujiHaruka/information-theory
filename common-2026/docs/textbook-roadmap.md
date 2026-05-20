@@ -686,3 +686,26 @@ T1-B/C/D の Sanov plumbing 再利用、T2-D の T2-F 再利用、T3-C の T3-B 
     と defeq で decoder-failure content を持たない、G4 WF certificate は `IsWaterFillingOptimal` と defeq) — pass-through
     predicate を切る時点で「discharge 可能な真 statement か」を確認すべきという feedback。章状態は Ch.5/9/11/13/15/17 とも
     🟡 維持で残部分は別 plan defer。
+11. **2026-05-20 並列 wave10 batch1-5 (22 seed) 着地** (orchestrator session、worktree isolation 経由): wave9 の各 sub-predicate を
+    更に body discharge する seed を 5 並列 × 5 batch (同時最大 5) で駆動。事前に general-purpose agent で「genuine か no-op か / Mathlib
+    gap で blocked か」を選別した 15 候補 menu を作り、no-op 確定 predicate (`IsStamFisherCoupling` defeq, `IsCoveringRandomCodebookHyp`
+    等) と infinitePi-tilted gap blocked seed (Chernoff/Cramér per-tilt) を除外して選定。**+6586 行 / 0 sorry / 0 warning** publish
+    (22 新規 Lean ファイル、`lake build` 全成功)。完全 discharge 到達: S2 WF KKT stationarity (共通 Lagrange multiplier `1/(2ν)`)、
+    S3 LZ78 phrase-count `O(n/log n)` (Asymptotics 反転)、S8 1-D Brunn-Minkowski (`vol(A+B) ≥ vol A + vol B` を Mathlib 不在の
+    ため一から証明)、S10 Gaussian variance-derivative (`gaussianPDFRealVar` 導入で Mathlib gap closure) + `IsHeatTimeDerivHyp`、
+    S16 layer-cake (`Integrable.integral_eq_integral_meas_le`)、S18 Hoeffding I-projection minimality (exponential-family Pythagorean
+    master identity、`csiszar_pythagoras` は循環で使えず直接証明)、S20 EPI Stam→de Bruijn conclusion (Gaussian hypothesis-free)。
+    genuine vertical reduction: S1 Hoeffding `mem` IVT discharge + `realises`→`IsHoeffdingTiltMinimal` (S18 で full discharge)、
+    S4 Huffman merged-ident (measure→multiset 層 full、`Classical.choose` argmin の relabel 非可換性で残部 defer)、S5/S14 WZ
+    covering AEP + packing 合流 decoder-failure、S6 MAC error-carrying predicate `MACAchievableWithError` 導入 (bare `MACInnerBoundExistence`
+    が degenerate no-op と判明) + S12 4-event averaging + S21 per-event AEP decay、S7/S15 BC ensemble averaging + Bonferroni
+    ℝ≥0∞→ℝ + AEP decay、S9 WZ objective convexity→`WynerZivCondEntDiffConvex`、S11 Gaussian de Bruijn witness (spatial+time 両 deriv
+    internal)、S13 Huffman swap-normalization 4-conjunct→1-conjunct、S17 WZ decoder-failure→distortion bridge、S19 LZ78 two-sided
+    で 3 passthrough + 2 SMB bound 削除、S22 MAC Fano converse (measure-theoretic Fano discharge)。**S23 (WZ cond-ent convexity core)
+    は drop**: worktree が古い commit から分岐し S9 を見ずに `WynerZivCondEntDiffConvex` を再発明、3 declaration が S9 と name clash +
+    内容も重複のため merge せず (6586 行は S23 抜きの実数)。発見した運用課題: `isolation: "worktree"` が current HEAD でなく古い base
+    commit から分岐する場合があり、同 wave 内の先行 seed の成果物が後続 worktree に見えず重複実装/olean 不在/name clash を生む — batch 間で
+    commit して HEAD を進めても worktree base が追従しないことがあるため、(a) 各 batch 後に新 module を `lake build` して olean を共有 .lake に
+    populate、(b) merge 時に重複 declaration を grep で検出、の 2 防御が必須。Mathlib gap closure 1 件 (`gaussianPDFRealVar` variance-deriv)、
+    残存 frontier gap: condExp-of-score (Stam Step1-2)、infinitePi-tilted RN (Chernoff/Cramér per-tilt)、joint perspective convexity of
+    `p·log(p/q)` (WZ cond-ent core)。章状態は Ch.5/9/11/13/15/17 とも 🟡 維持で残部分は別 plan defer。
