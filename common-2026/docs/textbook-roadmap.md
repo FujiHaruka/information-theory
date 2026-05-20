@@ -92,14 +92,14 @@
 | 2 Entropy/MI/DPI | `MIChainRule`, entropy/DPI 一式 | 🟢 |
 | 3 AEP | `source_coding_achievability`/`_converse` (iid honest hyps) | 🟢ʰ |
 | 4 Entropy rate/SMB | `shannon_mcmillan_breiman` 無条件 (`SMBAlgoetCover.lean`)、`birkhoff_ergodic_ae` | 🟢 |
-| 5 Data compression | ShannonCode/Kraft 🟢；Huffman 最適性 🟢ʰ (強形 `huffmanLength_optimal` は 📋)；Arithmetic coding 🟠 (`:= True` 3 本) |
+| 5 Data compression | ShannonCode/Kraft 🟢；Huffman 最適性 🟢ʰ (強形 `huffmanLength_optimal` は 📋)；**Arithmetic coding 🟢ʰ (RESOLVED 2026-05-20: SFE genuine discharge — `sfeLength`+prefix-free 構成 (`exists_prefix_code_of_kraft`→`finTwoEquiv` lift)+`H≤E[L]≤H+2`+unique decodability、0 sorry、honest 仮定は full-support `hP` のみ)** |
 | 7 Channel capacity | `shannon_..._general_full` 無条件、feedback complete；一部 converse は honest pass-through (文書化済) | 🟢/🟢ʰ |
 | 8 Differential entropy | `differentialEntropy_*` (Bochner honest hyps) | 🟢ʰ |
 | 9 Gaussian channel | **AWGN 🟠 (F-2/F-3 は id-alias で実 discharge でない)；ParallelGaussian 🟠 (`:= h_per_coord` 結論=仮説、L-PG1 循環)；Shannon-Hartley / Whittaker 🟠ʰ (RESOLVED 2026-05-20: L-SH1/2/3・L-WS-A を undischarged placeholder と明記、`shannon_hartley_formula` は循環でなく `h_two_w` 開仮説 pass-through、`whittaker_shannon_one_point` は `rfl` 廃して `recovered = f` 仮説 pass-through 化。sinc 下層は genuine 維持)。NAME 整合 2026-05-20: AWGN/PG の `*_discharged` 名を honest 化 — F-2/F-3 (resp. per-coord L-PG1) が hypothesis として開いたままの top 定理を改名 (`awgn_theorem_F1F2F3_discharged`→`awgn_theorem_of_F2F3_hypotheses` 等) + ⚠️ docstring 付与。genuine 層 (F-1 / L-PG0 / L-WF1 IVT / L-WF2 concavity certificate) は不変。** |
 | 10 Rate distortion | achievability 🟢ʰ、converse 🟢、convexity 🟢 (finite) |
 | 11 Statistics | Stein/StrongStein/Sanov/Pinsker(weak+sharp)/Csiszar 🟢；Chernoff/Cramer (CLT closure 込, 真) 🟢ʰ；**Hoeffding tradeoff 🟠 (`_with_hypothesis` のみ、achiev+converse を仮説化)** |
 | 12 Maximum entropy | `entropy_le_log_card` 🟢、Constrained 🟢ʰ |
-| 13 Universal coding | **LZ78 🟠 (`:= True` 3 本 + 結論=仮説)；Arithmetic 🟠** |
+| 13 Universal coding | **LZ78 🟠 (`:= True` 3 本 + 結論=仮説)；Arithmetic 🟢ʰ (RESOLVED 2026-05-20、SFE genuine discharge — Ch.5 行参照)** |
 | 15 Network IT | SlepianWolf 🟢/🟢ʰ、WynerZiv convexity 🟢；**MAC/BC/Relay/WynerZiv headline 🟠 (L-MAC/L-BC/L-RC/L-RI/L-WZ pass-through、設計通り)** |
 | 17 Inequalities | Han/Shearer/LoomisWhitney/Hypercube/BrascampLieb/Pinsker 🟢；**Fisher 🟢ʰ (RESOLVED 2026-05-20: バグ V1 `fisherInfo` は DELETE、EPI/Stam scaffolding を a.e.-class-invariant V2 `fisherInfoOfMeasureV2`/`fisherInfoOfDensity` に migrate、Gaussian `= 1/v` + de Bruijn 健全)；EPI 🟠 (`:= h_epi` + L-EPI1/2 `:= True`、本体 discharge 残)；BM 🟠 (`:= h_bm`)** |
 
