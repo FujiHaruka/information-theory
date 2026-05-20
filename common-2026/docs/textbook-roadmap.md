@@ -720,3 +720,17 @@ T1-B/C/D の Sanov plumbing 再利用、T2-D の T2-F 再利用、T3-C の T3-B 
     infinitePi-tilted RN (Chernoff/Cramér per-tilt)。家系 docs: `wyner-ziv-convexity-discharge-{mathlib-inventory,moonshot-plan}.md`。Ch.15 は
     L-WZ1/2 + L-WZ3 残部のため 🟡 維持。再発見: 計画指定の定理名 `wynerZivRateFactorizable_convex_in_D` が既存 hypothesis 版と同 namespace で
     衝突 — roadmap #11 line 705 の name-clash 罠と同種で、unconditional 版は `_unconditional` 別名が必須だった。
+13. **2026-05-20 infinitePi-tilted RN: 有限 tilt 因子分解 core 着地 (Phase 1)** (orchestrator session 続き、調査→計画→実装 agent chain、自走非並列):
+    残存最深 frontier gap「infinitePi-tilted RN (Chernoff/Cramér per-tilt)」に着手。両 frontier gap の feasibility を並列 inventory で先に判定し、
+    **どちらも full 形は Mathlib-PR 級 (~120-300 行 upstream measure theory) で 1 セッション 0-sorry 不可**と確定 (infinitePi-tilted=verdict (c)寄り、
+    condExp-of-score=一般 X,Y は (c)・Gaussian 限定のみ GO)。ユーザー判断で「最高レバレッジ (Chernoff converse + Cramér lower 同時 unblock) の
+    infinitePi-tilted に着手、full 0-sorry 未達を承知」を選択。**今セッション deliverable**: inventory が特定した「足りない 1 ピース」=
+    有限 `Measure.pi` の tilt 因子分解を `Common2026/Shannon/MeasurePiTiltedFactorization.lean` (154 行、0 sorry / 0 warning) で full discharge:
+    `pi_tilted_sum_eq_pi_tilted` (`(Measure.pi μ₀).tilted (∑ lam·Y(·i)) = Measure.pi (μ₀.tilted (lam·Y))`) を `Measure.pi_eq` + `tilted_apply'` +
+    自前 Tonelli `lintegral_pi_prod` (Mathlib に Bochner 版 `integral_fin_nat_prod_eq_prod` はあるが lintegral 版が欠落、`Fin n` 帰納で自作・単独 PR 候補) で証明。
+    **残差**: `IsMeasureInfinitePiTiltedEq` 本体は未縮約 (Phase 2 cylinder lift via `infinitePi_cylinder` → Phase 3 change-of-measure `setLIntegral_rnDeriv` →
+    Phase 4 既存 `CramerLC2DischargeExt.tilted_lln_in_probability_real` (tilted LLN は既に 0-sorry 完備) 合流)。frontier gap は **closed でなく Phase 1 done** —
+    残 gap は「tilted ambient ↔ un-tilted ambient を cylinder 上で結ぶ change-of-measure」一点に局在。家系 docs:
+    `infinitepi-tilted-rn-discharge-{mathlib-inventory,moonshot-plan}.md`。Ch.11 は 🟡 維持。判明: Chernoff 側 `IsBayesErrorPerTiltLowerBound` は
+    pmf-level で `infinitePi` を経由せず有限因子分解 core を共有しない (Cramér 専用)。`rw` での `lintegral_prod_mul` 適用は higher-order pattern 不一致で
+    罠 (`have` 具体化 + `simp only` ベータ簡約で回避)。残存 frontier gap: condExp-of-score (Stam Step1-2)、infinitePi-tilted RN (Phase 2-4 残)。

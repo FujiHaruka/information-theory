@@ -151,6 +151,7 @@ import Common2026.Shannon.AWGNF2F3Discharge
 -- Wave5 gap-close
 import Common2026.Shannon.LZ78ConverseDischarge
 import Common2026.Shannon.CramerLC2PhaseC
+import Common2026.Shannon.MeasurePiTiltedFactorization
 -- Wave6 parallel-10 body discharge
 import Common2026.Shannon.AWGNMIBridge
 import Common2026.Shannon.ParallelGaussianKKT
