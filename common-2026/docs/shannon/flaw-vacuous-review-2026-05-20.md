@@ -209,6 +209,29 @@ completeness; none should be "fixed" beyond eventually discharging them.
 
 ---
 
+## Related: Shannon-Hartley / Whittaker-Shannon — **RESOLVED (2026-05-20)**
+
+> Not part of the EPI/Stam findings above (this review covered the
+> Fisher/EPI chain), but the companion FLAW-VACUOUS item tracked in
+> `docs/textbook-roadmap.md` (Ch.9 row) and
+> `whittaker-shannon-partial-moonshot-plan.md` was fixed in the same pass.
+> `ShannonHartley.shannon_hartley_formula` was **circular** (`C` supplied via
+> `IsTwoWDegreesOfFreedom := C = 2W·perSample`, i.e. the closed form itself)
+> and `WhittakerShannonPartial.whittaker_shannon_one_point` was `rfl`
+> (`f t = f t`). Both are now **honest conditional pass-through**: the formula
+> theorem's docstring states plainly that the operational `2W` DoF identity
+> `h_two_w` is taken as an *open* hypothesis (needs Whittaker-Shannon / Nyquist
+> sampling + continuous AEP, absent from Mathlib) and the body only does the
+> residual `2W·perSample → W·log(1+SNR)` algebra; the 1-point theorem now takes
+> an explicit `recovered` value + reconstruction-equality hypothesis instead of
+> being `rfl`. L-SH1/L-SH2/L-SH3 and L-WS-A `def`s remain `:= True`-style
+> placeholders but their docstrings are relabelled **undischarged placeholders**
+> (no longer implying discharge). The genuine sinc layer
+> (`sincN_int_eq_kronecker`, `whittaker_shannon_sample_collapse`,
+> `whittaker_shannon_collapsed_value`) is untouched and stays 0-sorry. All three
+> modules (`ShannonHartley`, `WhittakerShannonPartial`, dependent
+> `WhittakerShannonFull`) build clean.
+
 ## Bottom line
 
 The directory's headline theorems are pervasively "hypothesis pass-through," but

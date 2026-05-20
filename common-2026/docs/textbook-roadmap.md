@@ -95,7 +95,7 @@
 | 5 Data compression | ShannonCode/Kraft 🟢；Huffman 最適性 🟢ʰ (強形 `huffmanLength_optimal` は 📋)；Arithmetic coding 🟠 (`:= True` 3 本) |
 | 7 Channel capacity | `shannon_..._general_full` 無条件、feedback complete；一部 converse は honest pass-through (文書化済) | 🟢/🟢ʰ |
 | 8 Differential entropy | `differentialEntropy_*` (Bochner honest hyps) | 🟢ʰ |
-| 9 Gaussian channel | **AWGN 🟠 (F-2/F-3 は id-alias で実 discharge でない)；ParallelGaussian 🟠 (`:= h_per_coord` 結論=仮説、L-PG1 循環)；Shannon-Hartley / Whittaker 🔴 (L-SH 全 `True`、`shannon_hartley_formula` は C=答え を定義、`whittaker_shannon_one_point` は `rfl`)** |
+| 9 Gaussian channel | **AWGN 🟠 (F-2/F-3 は id-alias で実 discharge でない)；ParallelGaussian 🟠 (`:= h_per_coord` 結論=仮説、L-PG1 循環)；Shannon-Hartley / Whittaker 🟠ʰ (RESOLVED 2026-05-20: L-SH1/2/3・L-WS-A を undischarged placeholder と明記、`shannon_hartley_formula` は循環でなく `h_two_w` 開仮説 pass-through、`whittaker_shannon_one_point` は `rfl` 廃して `recovered = f` 仮説 pass-through 化。sinc 下層は genuine 維持)** |
 | 10 Rate distortion | achievability 🟢ʰ、converse 🟢、convexity 🟢 (finite) |
 | 11 Statistics | Stein/StrongStein/Sanov/Pinsker(weak+sharp)/Csiszar 🟢；Chernoff/Cramer (CLT closure 込, 真) 🟢ʰ；**Hoeffding tradeoff 🟠 (`_with_hypothesis` のみ、achiev+converse を仮説化)** |
 | 12 Maximum entropy | `entropy_le_log_card` 🟢、Constrained 🟢ʰ |
@@ -108,7 +108,7 @@
 - **HIGH-1 — EPI/Stam の Gaussian discharge が空虚**: `*_of_gaussian_fisherInfo_zero` (`EPIStamStep12Body.lean:327` 他) は `intro; exfalso; linarith` で、V1 `fisherInfo (gaussian) = 0` を使い前提 `0 < J_X` を矛盾させて discharge。Stam 不等式を「Gaussian で証明した」ことになっていない。正しい V2 (`StamGaussianBound.lean`) は headline chain に未配線。
 - **HIGH-2 — `entropy_power_inequality_gaussian_via_stamDeBruijn`** (`EPIStamDeBruijnConclusion.lean:269`): Stam ステップは HIGH-1 の空虚経路、実体は Gaussian saturation の閉形のみ。「EPI via Stam」は非 Gaussian では「EPI given EPI」、Gaussian では Stam 半分が空虚。
 - **根因 — V1 `fisherInfo` バグ** (`FisherInfo.lean:58`、`rnDeriv`/`Classical.choose` 経由で Gaussian に 0)。V1 は dead だが import 生存中 → 将来の caller が罠を踏む。**V1 deprecate + Stam chain を V2 に配線が修正の本筋** (純 plumbing、難所ではない)。
-- **Shannon-Hartley / Whittaker** (`ShannonHartley.lean`, `WhittakerShannonPartial.lean`): L-SH1/2/3 が `True`、`shannon_hartley_formula` は容量=答えを定義、補間定理が `rfl`。sinc 性質の下層のみ真。
+- **Shannon-Hartley / Whittaker** (`ShannonHartley.lean`, `WhittakerShannonPartial.lean`) — **RESOLVED (2026-05-20)**: L-SH1/2/3・L-WS-A の `def` body は据え置きだが ⚠️ docstring で **undischarged placeholder** と明記 (「discharged」表記を排除)。`shannon_hartley_formula` は循環を解消し `h_two_w`(開な `2W` DoF 恒等式) を取り込む conditional pass-through と明示、`whittaker_shannon_one_point` は `rfl` を廃し `recovered`+`h_reconstruct` 仮説を取り結論する非自明 pass-through 化。sinc 性質の下層 (`sincN_int_eq_kronecker` / `whittaker_shannon_sample_collapse` / `whittaker_shannon_collapsed_value`) は genuine 0-sorry のまま維持。
 - **MED — `entropy_power_inequality`** (`EntropyPowerInequality.lean:188`) body `:= h_epi` (結論=仮説)。header では透明だが定理名での引用は誤解を招く。
 
 ### 監査で判明したその他

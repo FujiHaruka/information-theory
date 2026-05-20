@@ -4,14 +4,21 @@
 **Target file**: `Common2026/Shannon/WhittakerShannonPartial.lean`
 **Companion**: `Common2026/Shannon/ShannonHartley.lean` (327 行, L-SH1+L-SH2+L-SH3 pass-through, signature freeze)
 
-> 実態整合 (2026-05-20): DONE (L-WS-A scope) + FLAW-VACUOUS (interp / L-SH placeholder)。
+> 実態整合 (2026-05-20): DONE (L-WS-A scope) + FLAW-VACUOUS → **RESOLVED (2026-05-20)**。
 > `Common2026/Shannon/WhittakerShannonPartial.lean` は **sinc 基本性質群** (`sincN_int_eq_kronecker` L140,
 > `whittaker_shannon_sample_collapse` L165, `whittaker_shannon_collapsed_value` L235) を実証明で publish 済 (0 sorry) —
-> これは genuine。だが `IsWhittakerShannonInterpolation` (L200) は `:= 0 < W ∧ ∃ _S, True` の **vacuous placeholder**、
-> `whittaker_shannon_one_point` (L224) は `f t = f t := rfl` (自明)。Companion `ShannonHartley.lean` の
-> L-SH1/2/3 (`IsBandlimitedSamplingHypothesis := ∃ _h, True` L89 / `IsBandlimitedKernel := 0 < W` L93 /
-> `IsTwoWDegreesOfFreedom := C = 2W·perSample` L97) も全て vacuous/circular で、headline
-> `shannon_hartley_formula` (`ShannonHartley.lean:165`) は C を答えに定義して rewrite するだけ。FLAW-VACUOUS。
+> これは genuine、不変。
+>
+> **RESOLVED (2026-05-20)** — circular/trivial を honest conditional pass-through に是正:
+> - `shannon_hartley_formula` は循環 (C を `IsTwoWDegreesOfFreedom := C = 2W·perSample` で渡し答えに定義) を解消。
+>   signature 据え置き (依存 `WhittakerShannonFull.lean` 維持) のまま docstring で「`h_two_w` は **開** な `2W` DoF 恒等式を
+>   取り込む conditional pass-through、本体は残余の `2W·perSample → W·log(1+SNR)` 代数のみ」と明示。
+> - `whittaker_shannon_one_point` は `f t = f t := rfl` を廃し、`recovered : ℝ` + `h_reconstruct : recovered = f(n₀/(2W))`
+>   を取り結論する非自明 pass-through に変更 (依存なしで signature 変更可だった)。
+> - `IsWhittakerShannonInterpolation` (L200) / `IsBandlimitedSamplingHypothesis` / `IsBandlimitedKernel` /
+>   `IsTwoWDegreesOfFreedom` の `def` body は据え置き (placeholder のまま) だが、docstring を
+>   **undischarged placeholder** と明記 (「discharged」表記を排除、`mk_*` builder も「discharge しない」と注記)。
+> - sinc 下層 + `WhittakerShannonFull.lean` (finite-window 実証明) は不変・0 sorry。3 module とも `lake build` clean。
 
 ## Context
 

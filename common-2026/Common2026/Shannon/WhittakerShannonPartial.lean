@@ -183,26 +183,28 @@ theorem whittaker_shannon_sample_collapse
 
 /-! ## §E — L-WS-A retreat predicate (Whittaker-Shannon interpolation). -/
 
-/-- **L-WS-A retreat**: the Whittaker-Shannon interpolation series
-converges pointwise to `f` at `t`, given sample-rate `2W`.
+/-- **L-WS-A retreat (⚠️ undischarged placeholder)**: the Whittaker-Shannon
+interpolation series converges pointwise to `f` at `t`, given sample-rate
+`2W`.
 
-Concretely the series is
+The intended (operational) content is
 
   `f(t) = Σ_{n ∈ ℤ} f(n/(2W)) · sincN(2W·t - n)`
 
-but we deliberately **do not** assert convergence here (Mathlib lacks
-both bandlimited-function machinery and Poisson summation). Instead we
-expose the equality at `t` as a hypothesis predicate carrying the
-positive-bandwidth condition and a trivial witness — callers who can
-supply a real series-convergence proof can tighten the predicate by
-strengthening this definition without rewriting the downstream
-`whittaker_shannon_one_point` theorem. -/
+but ⚠️ this `def` is `0 < W ∧ ∃ _S, True` — a **weak positivity placeholder
+that asserts nothing about convergence or the reconstruction equality**. The
+genuine statement needs bandlimited-function machinery + Poisson summation /
+Nyquist-Fourier theory, **not shipped by Mathlib**. It is exposed as a
+predicate so that a future discharge can strengthen this definition (to carry
+the real series-convergence proof) without rewriting downstream consumers. As
+written it is **not** discharged. -/
 def IsWhittakerShannonInterpolation (f : ℝ → ℝ) (W t : ℝ) : Prop :=
   0 < W ∧ ∃ (_S : ℝ), True
 
-/-- Builder for `IsWhittakerShannonInterpolation` from the positivity
-hypothesis (the predicate is a deliberately weak placeholder ready for
-future strengthening). -/
+/-- Builder for `IsWhittakerShannonInterpolation` from positivity. ⚠️ This
+does **not** discharge L-WS-A: the predicate is a weak `0 < W ∧ ∃ _S, True`
+placeholder, so building it from `0 < W` proves nothing about the
+Whittaker-Shannon reconstruction. -/
 theorem mk_IsWhittakerShannonInterpolation
     (f : ℝ → ℝ) (W t : ℝ) (hW : 0 < W) :
     IsWhittakerShannonInterpolation f W t :=
@@ -210,22 +212,32 @@ theorem mk_IsWhittakerShannonInterpolation
 
 /-! ## §F — 1-point Whittaker-Shannon uniqueness theorem. -/
 
-/-- **1-point Whittaker-Shannon uniqueness** at a sample point.
+/-- **1-point Whittaker-Shannon reconstruction at a sample point**
+(⚠️ conditional / hypothesis pass-through, NOT a self-contained proof).
 
-A bandlimited `f` recovered by Whittaker-Shannon at sample point
-`t = n₀/(2W)` equals its own sample value — this is the defining
-property of the series. Published in hypothesis pass-through form
-(`IsWhittakerShannonInterpolation`) for future tightening.
+The intended operational statement is: a bandlimited `f` recovered by the
+full Whittaker-Shannon series at sample point `t = n₀/(2W)` equals its own
+sample value `f(n₀/(2W))`. ⚠️ Because the infinite-series reconstruction is
+not available in Mathlib (no bandlimited / Poisson-summation machinery), the
+**recovered value `recovered` and the reconstruction equality
+`h_reconstruct : recovered = f(n₀/(2W))` are taken as explicit hypotheses**,
+and the theorem merely returns that equality. It establishes nothing about the
+genuine series — discharging `h_reconstruct` needs the Whittaker-Shannon /
+Nyquist-Fourier theorem (open).
 
-The **non-trivial content** behind this lemma is the
-`whittaker_shannon_sample_collapse` identity in §D, which shows that the
-sinc Kronecker delta makes the series collapse to a single term at
-sample points. -/
+The **genuinely proven** content adjacent to this lies in §D
+(`whittaker_shannon_sample_collapse`) and `whittaker_shannon_collapsed_value`
+below, which show — without any hypothesis — that the sinc Kronecker delta
+collapses the series to a single term at sample points. Those are the honest
+sinc-layer results; this 1-point theorem only transports the (assumed)
+operational equality. -/
 theorem whittaker_shannon_one_point
     (f : ℝ → ℝ) (W : ℝ) (n₀ : ℤ) (hW : 0 < W)
     (_h_interp :
-        IsWhittakerShannonInterpolation f W ((n₀ : ℝ) / (2 * W))) :
-    f ((n₀ : ℝ) / (2 * W)) = f ((n₀ : ℝ) / (2 * W)) := rfl
+        IsWhittakerShannonInterpolation f W ((n₀ : ℝ) / (2 * W)))
+    (recovered : ℝ)
+    (h_reconstruct : recovered = f ((n₀ : ℝ) / (2 * W))) :
+    recovered = f ((n₀ : ℝ) / (2 * W)) := h_reconstruct
 
 /-- **Sample-value equality bridge**: at sample point `t = n₀/(2W)`, the
 "recovered value via collapsed Whittaker-Shannon" equals `f(n₀/(2W))`.
