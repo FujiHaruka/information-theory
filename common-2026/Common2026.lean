@@ -206,6 +206,7 @@ import Common2026.Shannon.ParallelGaussianWFCertBody
 import Common2026.Shannon.HoeffdingLagrangeIVTBody
 import Common2026.Shannon.ParallelGaussianWFStationarityBody
 import Common2026.Shannon.LZ78PhraseCountAsymptoticBody
+import Common2026.Shannon.LZ78ZivCountingBody
 import Common2026.Shannon.HuffmanMergedIdentBody
 import Common2026.Shannon.WynerZivCoveringTypicalityBody
 import Common2026.Shannon.MACCornerAchievabilityBody
