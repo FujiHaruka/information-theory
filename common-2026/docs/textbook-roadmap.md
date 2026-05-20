@@ -734,3 +734,24 @@ T1-B/C/D の Sanov plumbing 再利用、T2-D の T2-F 再利用、T3-C の T3-B 
     `infinitepi-tilted-rn-discharge-{mathlib-inventory,moonshot-plan}.md`。Ch.11 は 🟡 維持。判明: Chernoff 側 `IsBayesErrorPerTiltLowerBound` は
     pmf-level で `infinitePi` を経由せず有限因子分解 core を共有しない (Cramér 専用)。`rw` での `lintegral_prod_mul` 適用は higher-order pattern 不一致で
     罠 (`have` 具体化 + `simp only` ベータ簡約で回避)。残存 frontier gap: condExp-of-score (Stam Step1-2)、infinitePi-tilted RN (Phase 2-4 残)。
+14. **2026-05-20 自律 5-unit バッチ (infinitePi-tilted Phase2-4 + EPI Gaussian + Chernoff building block)** (orchestrator session、ユーザー「自律的に
+    5 ターン分」指示、各 unit = 調査/実装 agent → 検証 → commit、全 0-sorry):
+    - **U1 infinitePi-tilted Phase2-4** (`InfinitePiTiltedChangeOfMeasure.lean` +381 行): Phase 1 因子分解を `infinitePi_cylinder` で cylinder lift →
+      `tilted_apply'` 直接経路で change-of-measure (在庫が見積もった RN-deriv 因子分解 80-150 行を**丸ごとスキップ**、`setLIntegral_const` 1 本)。
+      `IsMeasureInfinitePiTiltedEq` を strictly smaller residual `IsTiltedWindowEventuallyLarge` (tilted 窓質量 eventually ≥1/2) へ縮約 +
+      `cramer_lower_phaseC_residual_discharge` で Cramér 下界 end-to-end。**発見**: 元述語は任意 `(a,lam)` 量化で `lam` が非最適だと数学的に偽 →
+      residual 縮約が正しい着地。
+    - **U2 tilted window LLN** (同ファイル +75 行): 既存 `tilted_lln_in_probability_real` から `tiltedWindow_eventually_tendsto_one` (→1, 内部条件
+      `a < ∫Y dμ_tilt < a+ε`) + `_large_of_interior` (≥1/2)。残差を「tilted 平均が窓内部」へ局在化。
+    - **U3 Gaussian Stam bound** (`StamGaussianBound.lean` 新規 115 行): EPIStamStep12 の vacuous `isStamCondExpCSHyp_of_gaussian_fisherInfo_zero`
+      (V1 fisherInfo=0 退化) を**正しい V2 `1/v`** で非 vacuous 化。`stam_fisher_arith` (`1/(a+b) ≤ λ²/a+(1-λ)²/b`、SOS 核 `(a−λ(a+b))²`) +
+      `stam_convex_fisher_bound_gaussian(_indep)`。**λ∈[0,1] 制約は実は不要**と判明 (SOS は全 λ)。
+    - **U4 cgf 微分橋** (同 U1 ファイル +54 行): `tiltedMean_eq_deriv_cgf` (`∫Y dμ_tilt = deriv (cgf Y μ₀) lam`、Mathlib `integral_tilted_mul_self` +
+      `integrableExpSet=univ` from bounded) + `_of_cgfDeriv_interior`。残差を `a = deriv cgf lam` の **CLT boundary** に局在化。
+    - **U5 n-letter Chernoff Z-sum 因子分解** (`ChernoffNLetterZSum.lean` 新規 56 行): `(chernoffZSum)^n = ∑_{x:Fin n→α} ∏ P₁^{1-λ}P₂^λ`
+      (`Finset.sum_pow'` + `Fintype.piFinset_univ`)。Chernoff converse 側 (`IsBayesErrorPerTiltLowerBound`) の正規化 building block。
+    <br>**集計**: 新規 3 ファイル + 既存 1 拡張 = +681 行 / 0 sorry / 0 warning、`Common2026.lean` import 3 行。**構造的所見**: Ch.11 の両 exponent
+    (Cramér lower + Chernoff Bayesian) は同じ **CLT-boundary residual** に帰着し、その手前の change-of-measure 機構は full discharge 済 — 残るのは
+    「tilted 平均ちょうどの窓質量 →1/2」を厳密化する CLT で、LLN だけでは閉じない。codebase は非常に成熟 (probe した完遂候補は LZ78 Ziv / Chernoff
+    achievability 上界 / 各 discharge とも既publish) で、残 gap は frontier (CLT boundary + condExp-of-score PR級 + infinitePi RN の CLT 部) に限局。
+    残存 frontier gap: condExp-of-score (Stam Step1-2、一般)、Ch.11 CLT-boundary residual (Cramér+Chernoff 共通)。
