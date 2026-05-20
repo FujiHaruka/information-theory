@@ -5,6 +5,7 @@ import Mathlib.InformationTheory.KullbackLeibler.Basic
 import Mathlib.Probability.Kernel.Composition.RadonNikodym
 import Mathlib.Probability.Kernel.Composition.IntegralCompProd
 import Mathlib.Probability.Kernel.Composition.MeasureComp
+import Mathlib.Probability.Kernel.CompProdEqIff
 import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
 
 /-!
@@ -93,6 +94,127 @@ theorem integral_log_density_fibre
         refine integral_congr_ae (Filter.Eventually.of_forall (fun y => ?_))
         rw [Real.negMulLog_def]
         ring
+
+/-- **Linchpin: fibre form of the compProd Radon-Nikodym derivative** (Mathlib TODO,
+`Composition/RadonNikodym.lean:28-29`). For finite `μ, κ, η` with `μ ⊗ₘ κ ≪ μ ⊗ₘ η`,
+the conditional rnDeriv `∂(μ⊗ₘκ)/∂(μ⊗ₘη)` is `(μ⊗ₘη)`-a.e. the fibrewise kernel
+rnDeriv `Kernel.rnDeriv κ η p.1 p.2`.
+
+Proof (withDensity route): `μ⊗ₘκ ≪ μ⊗ₘη` gives `κ a ≪ η a` a.e. (`kernel_of_compProd`),
+so `κ =ᵐ[μ] η.withDensity (κ.rnDeriv η)` (`withDensity_rnDeriv_eq`); hence
+`μ⊗ₘκ = μ⊗ₘ(η.withDensity (κ.rnDeriv η)) = (μ⊗ₘη).withDensity (fun p ↦ κ.rnDeriv η p.1 p.2)`
+(`compProd_congr` + `compProd_withDensity`); finish with `Measure.rnDeriv_withDensity`. -/
+theorem rnDeriv_compProd_fibre
+    {α β : Type*} {mα : MeasurableSpace α} {mβ : MeasurableSpace β}
+    [MeasurableSpace.CountableOrCountablyGenerated α β]
+    {μ : Measure α} {κ η : Kernel α β}
+    [IsFiniteMeasure μ] [IsFiniteKernel κ] [IsFiniteKernel η]
+    (h_ac : μ ⊗ₘ κ ≪ μ ⊗ₘ η) :
+    (μ ⊗ₘ κ).rnDeriv (μ ⊗ₘ η)
+      =ᵐ[μ ⊗ₘ η] fun p => Kernel.rnDeriv κ η p.1 p.2 := by
+  -- fibrewise absolute continuity from the joint one
+  have h_ac_fibre : ∀ᵐ a ∂μ, κ a ≪ η a := h_ac.kernel_of_compProd
+  -- the measurable density `g p := Kernel.rnDeriv κ η p.1 p.2`
+  have hg_meas : Measurable (Function.uncurry (Kernel.rnDeriv κ η)) :=
+    Kernel.measurable_rnDeriv κ η
+  -- `κ =ᵐ[μ] η.withDensity (κ.rnDeriv η)`
+  have hκ_eq : κ =ᵐ[μ] η.withDensity (Kernel.rnDeriv κ η) := by
+    filter_upwards [h_ac_fibre] with a ha using (Kernel.withDensity_rnDeriv_eq ha).symm
+  -- transport to compProd, then to a withDensity of the joint measure
+  have h_cp : μ ⊗ₘ κ = (μ ⊗ₘ η).withDensity (fun p => Kernel.rnDeriv κ η p.1 p.2) := by
+    rw [Measure.compProd_congr hκ_eq, Measure.compProd_withDensity hg_meas]
+  -- finish: rnDeriv of a withDensity is the density
+  rw [h_cp]
+  exact Measure.rnDeriv_withDensity (μ ⊗ₘ η) (by fun_prop)
+
+/-- **Per-measure log-density split** (Bayes step, genuine). For `ν ≪ q ≪ volume`
+all `σ`-finite, the log of the relative density `dν/dq` splits as the difference of
+the two `volume`-log-densities:
+`log (dν/dq y) = log (dν/dvol y) − log (dq/dvol y)`, `ν`-a.e. Built from the rnDeriv
+chain rule `dν/dq · dq/dvol =ᵐ dν/dvol` plus positivity (`q ≪ vol` ⇒ `dq/dvol > 0`
+on `ν` since `ν ≪ q`). -/
+theorem log_rnDeriv_split
+    {ν q : Measure ℝ} [SigmaFinite ν] [SigmaFinite q]
+    (hνq : ν ≪ q) (hq_vol : q ≪ volume) :
+    (fun y => Real.log ((ν.rnDeriv q y).toReal))
+      =ᵐ[ν]
+    (fun y => Real.log ((ν.rnDeriv volume y).toReal)
+                - Real.log ((q.rnDeriv volume y).toReal)) := by
+  -- chain rule  dν/dq · dq/dvol =ᵐ[q] dν/dvol, transported to ν
+  have h_chain : (fun y => ν.rnDeriv q y * q.rnDeriv volume y)
+      =ᵐ[ν] ν.rnDeriv volume :=
+    hνq.ae_le (Measure.rnDeriv_mul_rnDeriv' (μ := ν) (ν := q) (κ := volume) hq_vol)
+  -- positivity / finiteness of both factors, ν-a.e.
+  have h_pos_νq : ∀ᵐ y ∂ν, 0 < ν.rnDeriv q y := Measure.rnDeriv_pos hνq
+  have h_lt_νq : ∀ᵐ y ∂ν, ν.rnDeriv q y < ∞ := hνq.ae_le (Measure.rnDeriv_lt_top ν q)
+  have h_pos_q : ∀ᵐ y ∂ν, 0 < q.rnDeriv volume y := hνq.ae_le (Measure.rnDeriv_pos hq_vol)
+  have h_lt_q : ∀ᵐ y ∂ν, q.rnDeriv volume y < ∞ :=
+    hνq.ae_le (hq_vol.ae_le (Measure.rnDeriv_lt_top q volume))
+  filter_upwards [h_chain, h_pos_νq, h_lt_νq, h_pos_q, h_lt_q]
+    with y hy hpos1 hlt1 hpos2 hlt2
+  -- both toReal factors are strictly positive, hence nonzero
+  have hne1 : ((ν.rnDeriv q y).toReal) ≠ 0 :=
+    (ENNReal.toReal_pos hpos1.ne' hlt1.ne).ne'
+  have hne2 : ((q.rnDeriv volume y).toReal) ≠ 0 :=
+    (ENNReal.toReal_pos hpos2.ne' hlt2.ne).ne'
+  -- rewrite log(dν/dvol) = log((dν/dq)·(dq/dvol)) and split
+  rw [← hy, ENNReal.toReal_mul, Real.log_mul hne1 hne2]
+  ring
+
+/-- **★ General Bayes density split of the joint llr** (genuine, modulo named ac
+hyps). For input law `p`, Markov channel `W`, output `q := outputDistribution p W`,
+with each fibre `≪ q ≪ volume` and joint `≪ p.prod q`, the log-likelihood ratio of
+the joint against the product factorizes into fibre/output log-densities. This is
+the body of the residual hypothesis `h_llr_split`. Combines the linchpin
+`rnDeriv_compProd_fibre` (at `η := Kernel.const ℝ q`) with `rnDeriv_eq_rnDeriv_measure`
+and the per-fibre `log_rnDeriv_split`. -/
+theorem llr_compProd_prod_split
+    (q : Measure ℝ) [IsProbabilityMeasure q]
+    (hWx_q : ∀ x, W x ≪ q) (hq_vol : q ≪ volume)
+    (h_joint_ac : (p ⊗ₘ W) ≪ p.prod q)
+    -- joint measurability of the fibre volume-density (AWGN: Gaussian pdf in `(x,y)`)
+    (h_meas_fibre : Measurable (fun z : ℝ × ℝ => (W z.1).rnDeriv volume z.2)) :
+    (fun z => llr (p ⊗ₘ W) (p.prod q) z)
+      =ᵐ[p ⊗ₘ W]
+    (fun z => Real.log ((W z.1).rnDeriv volume z.2).toReal
+                - Real.log (q.rnDeriv volume z.2).toReal) := by
+  -- present `p.prod q` as a compProd with the constant kernel `Kernel.const ℝ q`
+  have h_prod : p.prod q = p ⊗ₘ (Kernel.const ℝ q) := (Measure.compProd_const).symm
+  -- joint ≪ compProd-const  (rewrite of `h_joint_ac`)
+  have h_ac' : (p ⊗ₘ W) ≪ p ⊗ₘ (Kernel.const ℝ q) := by rwa [h_prod] at h_joint_ac
+  -- (1) linchpin: joint rnDeriv =ᵐ[p⊗ₘ const q] fibrewise kernel rnDeriv;
+  --     transport to a.e. on the joint via `h_ac'`
+  have h1 : (p ⊗ₘ W).rnDeriv (p.prod q)
+      =ᵐ[p ⊗ₘ W] fun z => Kernel.rnDeriv W (Kernel.const ℝ q) z.1 z.2 := by
+    rw [h_prod]
+    exact h_ac'.ae_le (rnDeriv_compProd_fibre h_ac')
+  -- (2+3) per-fibre: log of the fibrewise kernel rnDeriv splits, lifted to the joint
+  have h_split : (fun z => Real.log ((Kernel.rnDeriv W (Kernel.const ℝ q) z.1 z.2)).toReal)
+      =ᵐ[p ⊗ₘ W] fun z => Real.log ((W z.1).rnDeriv volume z.2).toReal
+                  - Real.log (q.rnDeriv volume z.2).toReal := by
+    refine Measure.ae_compProd_of_ae_ae ?_ ?_
+    · refine measurableSet_eq_fun ?_ ?_
+      · exact (Kernel.measurable_rnDeriv W (Kernel.const ℝ q)).ennreal_toReal.log
+      · exact (h_meas_fibre.ennreal_toReal.log).sub
+          (((Measure.measurable_rnDeriv q volume).comp measurable_snd).ennreal_toReal.log)
+    · -- a.e. `a ∂p`, a.e. `b ∂(W a)`
+      filter_upwards with a
+      -- fibre kernel rnDeriv = fibre measure rnDeriv `(W a).rnDeriv q`, a.e. on `W a`
+      have hker : (fun b => Kernel.rnDeriv W (Kernel.const ℝ q) a b)
+          =ᵐ[W a] fun b => (W a).rnDeriv q b := by
+        have := (hWx_q a).ae_le
+          (Kernel.rnDeriv_eq_rnDeriv_measure (κ := W) (η := Kernel.const ℝ q) (a := a))
+        simpa only [Kernel.const_apply] using this
+      filter_upwards [hker, log_rnDeriv_split (hWx_q a) hq_vol] with b hb hb_split
+      rw [hb, hb_split]
+  -- assemble:  llr = log(joint rnDeriv).toReal = log(fibre kernel rnDeriv).toReal = split
+  have h_llr_eq : (fun z => llr (p ⊗ₘ W) (p.prod q) z)
+      =ᵐ[p ⊗ₘ W]
+      fun z => Real.log ((Kernel.rnDeriv W (Kernel.const ℝ q) z.1 z.2)).toReal := by
+    simp only [llr_def]
+    filter_upwards [h1] with z hz1
+    rw [hz1]
+  exact h_llr_eq.trans h_split
 
 /-- **★ Continuous-channel MI chain rule body** (AWGN-independent, 🟢ʰ honest).
 
@@ -197,41 +319,47 @@ set_option linter.unusedSectionVars false
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal BigOperators Topology
 
+/-- **Each AWGN fibre is absolutely continuous w.r.t. the (Gaussian) output law.**
+`gaussianReal x N ≪ volume ≪ gaussianReal 0 (P.toNNReal+N) = q`, both full-support
+Gaussians. Used to discharge the joint absolute continuity `p⊗ₘW ≪ p.prod q` and the
+Bayes density split. -/
+theorem awgnChannel_apply_absolutelyContinuous_output
+    (P : ℝ) (N : ℝ≥0) (hN : N ≠ 0) (hPN : P.toNNReal + N ≠ 0)
+    (h_meas : IsAwgnChannelMeasurable N)
+    (h_out : IsAwgnOutputGaussian P N h_meas) (x : ℝ) :
+    (awgnChannel N h_meas) x
+      ≪ InformationTheory.Shannon.ChannelCoding.outputDistribution
+          (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas) := by
+  rw [h_out, awgnChannel_apply]
+  exact (gaussianReal_absolutelyContinuous x hN).trans
+    (gaussianReal_absolutelyContinuous' 0 hPN)
+
 open InformationTheory.Shannon.ChannelCoding in
-/-- **★ AWGN instance discharge of `IsContChannelMIDecompHyp` (F-2′, honest).**
+/-- **★ AWGN instance discharge of `IsContChannelMIDecompHyp` (F-2′).**
 
 Applies the general body `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` at the AWGN
-instance `p := gaussianReal 0 P.toNNReal`, `W := awgnChannel N h_meas`. The two
-cheap absolute-continuity side conditions (`hW_ac`, `hq_ac`) are discharged directly
-from Gaussian facts (`gaussianReal_absolutelyContinuous`,
-`awgn_output_absolutelyContinuous_of_outputGaussian`).
+instance `p := gaussianReal 0 P.toNNReal`, `W := awgnChannel N h_meas`. Discharged
+genuinely (no longer hypotheses):
 
-The remaining hypotheses — the **Bayes density split** `h_llr_split`, the joint /
-marginal integrabilities, and the joint absolute continuity `h_joint_ac` — all rest
-on the *conditional Radon-Nikodym derivative fibre identification*
-`(p⊗ₘW).rnDeriv (p.prod q) (x,y) =ᵐ (W x).rnDeriv vol y / q.rnDeriv vol y`, which is
-**absent from Mathlib** (`rnDeriv_compProd` stops at the abstract conditional rnDeriv
-and offers no fibre form). Genuinely deriving it would replicate the
-`rnDeriv_measure_compProd_left` rectangle-integral construction from scratch (>80
-lines, plan 撤退ライン D-2 = F-2′). We therefore carry exactly these residual facts as
-named hypotheses: this reduces the parent F-2 from "the entire MI chain-rule formula"
-to "the single density split", one step more specific. -/
+* the fibre / output absolute continuities `hW_ac`, `hq_ac` (Gaussian facts);
+* the **joint absolute continuity** `p⊗ₘW ≪ p.prod q`
+  (`absolutelyContinuous_compProd_right_iff` + fibre-vs-output ac);
+* the **Bayes density split** `h_llr_split` — discharged by the general
+  `llr_compProd_prod_split`, which rests on the now-proved **linchpin**
+  `rnDeriv_compProd_fibre` (the Mathlib TODO fibre form of the compProd rnDeriv).
+
+The only residual hypotheses are the joint measurability of the fibre Gaussian
+density `h_meas_fibre` (needed by `llr_compProd_prod_split` to lift the per-fibre
+log split through `ae_compProd_of_ae_ae`; absent from Mathlib as a joint
+measurability of measure-form rnDerivs) and the three log-density integrabilities
+(Gaussian moment bounds). This shrinks the residual from "the whole MI chain rule"
+to a measurability fact plus integrabilities. -/
 theorem isContChannelMIDecompHyp_awgn
     (P : ℝ) (N : ℝ≥0) (hN : N ≠ 0) (hPN : P.toNNReal + N ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
     (h_out : IsAwgnOutputGaussian P N h_meas)
-    (h_joint_ac :
-      ((gaussianReal 0 P.toNNReal) ⊗ₘ (awgnChannel N h_meas))
-        ≪ (gaussianReal 0 P.toNNReal).prod
-            (outputDistribution (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas)))
-    (h_llr_split :
-      (fun z => llr ((gaussianReal 0 P.toNNReal) ⊗ₘ (awgnChannel N h_meas))
-          ((gaussianReal 0 P.toNNReal).prod
-            (outputDistribution (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas))) z)
-        =ᵐ[(gaussianReal 0 P.toNNReal) ⊗ₘ (awgnChannel N h_meas)]
-      (fun z => Real.log (((awgnChannel N h_meas) z.1).rnDeriv volume z.2).toReal
-                  - Real.log ((outputDistribution (gaussianReal 0 P.toNNReal)
-                      (awgnChannel N h_meas)).rnDeriv volume z.2).toReal))
+    (h_meas_fibre :
+      Measurable (fun z : ℝ × ℝ => ((awgnChannel N h_meas) z.1).rnDeriv volume z.2))
     (h_int_fibre_joint :
       Integrable (fun z =>
           Real.log (((awgnChannel N h_meas) z.1).rnDeriv volume z.2).toReal)
@@ -248,42 +376,54 @@ theorem isContChannelMIDecompHyp_awgn
         (outputDistribution (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas))) :
     IsContChannelMIDecompHyp
       (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas) := by
+  classical
+  set p := gaussianReal 0 P.toNNReal with hp_def
+  set W := awgnChannel N h_meas with hW_def
+  set q := outputDistribution p W with hq_def
+  -- output law is a probability measure (it is the Gaussian `gaussianReal 0 (P+N)`)
+  have hq_prob : IsProbabilityMeasure q := by
+    rw [hq_def, h_out]; infer_instance
+  -- fibre-vs-output absolute continuity
+  have hWx_q : ∀ x, W x ≪ q :=
+    awgnChannel_apply_absolutelyContinuous_output P N hN hPN h_meas h_out
+  -- output ≪ volume
+  have hq_vol : q ≪ volume :=
+    awgn_output_absolutelyContinuous_of_outputGaussian P N hPN h_meas h_out
+  -- joint absolute continuity `p⊗ₘW ≪ p.prod q`
+  have h_joint_ac : (p ⊗ₘ W) ≪ p.prod q := by
+    rw [show p.prod q = p ⊗ₘ (Kernel.const ℝ q) from (Measure.compProd_const).symm]
+    exact Measure.absolutelyContinuous_compProd_right_iff.mpr
+      (Filter.Eventually.of_forall (fun x => by simpa only [Kernel.const_apply] using hWx_q x))
+  -- Bayes density split via the general linchpin-backed lemma
+  have h_llr_split := llr_compProd_prod_split (p := p) (W := W) q hWx_q hq_vol
+    h_joint_ac h_meas_fibre
   unfold IsContChannelMIDecompHyp
   refine mutualInfoOfChannel_toReal_eq_diffEntropy_sub
-    (W := awgnChannel N h_meas) ?_ ?_ h_joint_ac h_llr_split
+    (W := W) ?_ ?_ h_joint_ac h_llr_split
     h_int_fibre_joint h_int_out_joint h_int_out_marg
   · -- hW_ac : each fibre ≪ volume
     exact awgnChannel_apply_absolutelyContinuous N hN h_meas
   · -- hq_ac : output ≪ volume
-    exact awgn_output_absolutelyContinuous_of_outputGaussian P N hPN h_meas h_out
+    exact hq_vol
 
 open InformationTheory.Shannon.ChannelCoding in
-/-- **F-2′ wrapper: `IsAwgnMIDecomp` from the AWGN density-split residuals.**
+/-- **F-2′ wrapper: `IsAwgnMIDecomp` from the shrunk AWGN residuals.**
 
 Composes `isContChannelMIDecompHyp_awgn` with the existing combinator
 `awgn_midecomp_of_cont_chain`. The opaque MI-decomp predicate `IsAwgnMIDecomp` is now
-reduced from "the whole AWGN MI chain-rule formula" to the strictly-more-primitive
-Bayes density split `h_llr_split` plus its joint/marginal integrabilities and joint
-absolute continuity — the residual facts that need the conditional-rnDeriv fibre
-identification absent from Mathlib. Everything else in the MI chain rule
-(KL→integral, Fubini split, both differential-entropy identifications, output
-marginal) is genuinely discharged by the general body. -/
+reduced — via the genuinely-proved **linchpin** `rnDeriv_compProd_fibre` and the
+general `llr_compProd_prod_split` — from "the whole AWGN MI chain-rule formula" to
+just the fibre Gaussian-density joint measurability `h_meas_fibre` plus the three
+log-density integrabilities. The Bayes density split, the joint absolute continuity,
+and both fibre/output absolute continuities are all discharged. Everything else in
+the MI chain rule (KL→integral, Fubini split, both differential-entropy
+identifications, output marginal) is genuinely discharged by the general body. -/
 theorem isAwgnMIDecomp_of_densitySplit
     (P : ℝ) (N : ℝ≥0) (hN : N ≠ 0) (hPN : P.toNNReal + N ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
     (h_out : IsAwgnOutputGaussian P N h_meas)
-    (h_joint_ac :
-      ((gaussianReal 0 P.toNNReal) ⊗ₘ (awgnChannel N h_meas))
-        ≪ (gaussianReal 0 P.toNNReal).prod
-            (outputDistribution (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas)))
-    (h_llr_split :
-      (fun z => llr ((gaussianReal 0 P.toNNReal) ⊗ₘ (awgnChannel N h_meas))
-          ((gaussianReal 0 P.toNNReal).prod
-            (outputDistribution (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas))) z)
-        =ᵐ[(gaussianReal 0 P.toNNReal) ⊗ₘ (awgnChannel N h_meas)]
-      (fun z => Real.log (((awgnChannel N h_meas) z.1).rnDeriv volume z.2).toReal
-                  - Real.log ((outputDistribution (gaussianReal 0 P.toNNReal)
-                      (awgnChannel N h_meas)).rnDeriv volume z.2).toReal))
+    (h_meas_fibre :
+      Measurable (fun z : ℝ × ℝ => ((awgnChannel N h_meas) z.1).rnDeriv volume z.2))
     (h_int_fibre_joint :
       Integrable (fun z =>
           Real.log (((awgnChannel N h_meas) z.1).rnDeriv volume z.2).toReal)
@@ -300,7 +440,7 @@ theorem isAwgnMIDecomp_of_densitySplit
         (outputDistribution (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas))) :
     IsAwgnMIDecomp P N h_meas :=
   awgn_midecomp_of_cont_chain P N h_meas
-    (isContChannelMIDecompHyp_awgn P N hN hPN h_meas h_out h_joint_ac h_llr_split
+    (isContChannelMIDecompHyp_awgn P N hN hPN h_meas h_out h_meas_fibre
       h_int_fibre_joint h_int_out_joint h_int_out_marg)
 
 end InformationTheory.Shannon.AWGN
