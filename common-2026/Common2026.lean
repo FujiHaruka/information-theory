@@ -198,6 +198,7 @@ import Common2026.Shannon.LZ78GreedyParsingImpl
 import Common2026.Shannon.HoeffdingInteriorGradientBody
 import Common2026.Shannon.HuffmanSwapStepChainBody
 import Common2026.Shannon.AWGNMIDecompBody
+import Common2026.Shannon.ContChannelMIDecomp
 import Common2026.Shannon.WynerZivPackingBody
 import Common2026.Shannon.RelayCFBinningBody
 import Common2026.Shannon.ParallelGaussianWFCertBody
