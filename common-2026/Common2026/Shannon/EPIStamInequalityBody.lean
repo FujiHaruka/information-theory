@@ -300,47 +300,14 @@ theorem isStamScoreConvolution_of_gaussian
     (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
     IsStamScoreConvolution X Y P := trivial
 
-/-- **Optimal Cauchy-Schwarz Gaussian discharge** — for Gaussian X, Y with
-non-zero variance, the optimal CS predicate is discharged via Fisher info zero
-flag (`fisherInfo_gaussianReal_eq_zero` on V1) so that the precondition
-`0 < J_X` fails. -/
-theorem isStamCauchySchwarzOptimal_of_gaussian_fisherInfo_zero
-    {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω)
-    (hX_zero_toReal :
-      (Common2026.Shannon.fisherInfo (P.map X)).toReal = 0) :
-    IsStamCauchySchwarzOptimal X Y P := by
-  intro J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
-  exfalso
-  rw [hX_zero_toReal] at hJX_def
-  linarith
-
-/-- **Score-convolution + optimal CS Gaussian discharge** via the V1 Fisher info
-representative artefact. For Gaussian `X` with `fisherInfo (P.map X) = 0` (V1
-representative artefact, see `FisherInfoGaussian.lean` L-G3), both predicates
-discharge vacuously, and the Stam inequality follows directly via
-`isStamInequalityHyp_via_body`. -/
-theorem isStamInequalityHyp_of_gaussian_via_body
-    {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω)
-    (hX_zero_toReal :
-      (Common2026.Shannon.fisherInfo (P.map X)).toReal = 0) :
-    IsStamInequalityHyp X Y P :=
-  isStamInequalityHyp_via_body
-    (isStamScoreConvolution_trivial X Y P)
-    (isStamCauchySchwarzOptimal_of_gaussian_fisherInfo_zero X Y P hX_zero_toReal)
-
-/-- **Symmetric Gaussian discharge via Y-side zero**. -/
-theorem isStamInequalityHyp_of_gaussian_via_body_Y
-    {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω)
-    (hY_zero_toReal :
-      (Common2026.Shannon.fisherInfo (P.map Y)).toReal = 0) :
-    IsStamInequalityHyp X Y P := by
-  intro J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
-  exfalso
-  rw [hY_zero_toReal] at hJY_def
-  linarith
+/- **RESOLVED (2026-05-20):** the former `isStamCauchySchwarzOptimal_of_gaussian_fisherInfo_zero`
+and its chain lemmas `isStamInequalityHyp_of_gaussian_via_body` /
+`isStamInequalityHyp_of_gaussian_via_body_Y` discharged the optimal-CS predicate
+vacuously by `exfalso`-ing the `0 < J_X` (resp. `0 < J_Y`) precondition against
+the buggy V1 `fisherInfo = 0` artefact for Gaussians. They asserted nothing about
+Stam actually holding and were removed. The genuine Gaussian EPI runs via
+`entropy_power_inequality_gaussian_saturation` (see `epi_via_stam_body_gaussian`
+in §6 below). -/
 
 /-! ## §6 — EPI pipeline integration with body discharge -/
 

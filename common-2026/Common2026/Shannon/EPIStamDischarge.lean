@@ -126,21 +126,6 @@ def IsStamInequalityHyp {Ω : Type*} [MeasurableSpace Ω]
     J_sum = (Common2026.Shannon.fisherInfo (P.map (fun ω => X ω + Y ω))).toReal →
     1 / J_sum ≥ 1 / J_X + 1 / J_Y
 
-/-- Trivial discharge: the Stam hypothesis vacuously holds whenever both
-`J(X)` and `J(Y)` are `0` (Dirac-like case), because the precondition
-`0 < J_X` fails. -/
-theorem isStamInequalityHyp_of_fisher_info_zero
-    {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω)
-    (hX_zero : Common2026.Shannon.fisherInfo (P.map X) = 0)
-    (hY_zero : Common2026.Shannon.fisherInfo (P.map Y) = 0) :
-    IsStamInequalityHyp X Y P := by
-  intro J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
-  -- `J_X = (0).toReal = 0` contradicts `0 < J_X`.
-  rw [hX_zero] at hJX_def
-  simp at hJX_def
-  linarith
-
 /-- **Bridge L-EPI1**: the genuine Stam-inequality hypothesis trivially implies
 the `EntropyPowerInequality.lean` placeholder
 `IsStamInequalityHypothesis (= True)`. This bridge keeps callers free to upgrade
@@ -263,27 +248,16 @@ hypotheses are **all discharged for free**: Stam becomes the trivial inverse
 identity (because `J(N(m, v)) = 1/v` closed-form), and de Bruijn-integration
 collapses to the linear variance increase along the heat flow.
 
-The block below packages this discharge as separate corollaries reused in §7.
--/
+The block below packages this discharge via the genuine Gaussian saturation
+result (`entropy_power_inequality_gaussian_saturation`) reused in §7.
 
-/-- **Stam predicate vacuously holds whenever the supplied Fisher information
-data is degenerate**: a caller who supplies `J_X = (Common2026.Shannon.fisherInfo
-(P.map X)).toReal` with `J_X = 0` (e.g. the V1 `fisherInfo` representative
-returns `0` for the Gaussian law) trivially satisfies the Stam predicate via
-precondition fail. This is the structural Gaussian saturation path: we do *not*
-prove `fisherInfo (gaussianReal m v) = 0` (a Mathlib-V1 representative artefact);
-instead we expose the vacuous-truth witness for callers that have established
-the V1 `= 0` value separately. -/
-theorem isStamInequalityHyp_of_fisherInfoReal_zero
-    {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω)
-    (hX_zero_toReal :
-      (Common2026.Shannon.fisherInfo (P.map X)).toReal = 0) :
-    IsStamInequalityHyp X Y P := by
-  intro J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
-  exfalso
-  rw [hX_zero_toReal] at hJX_def
-  linarith
+**RESOLVED (2026-05-20):** the former `isStamInequalityHyp_of_fisherInfoReal_zero`
+(and its `_sum_zero` / `_Y_zero` siblings) discharged the Stam predicate by
+`exfalso`-ing the `0 < J_X` precondition against the buggy V1 `fisherInfo = 0`
+artefact for Gaussians. That asserted *nothing* about Stam actually holding and
+was removed. The genuine Gaussian EPI path runs entirely through
+`entropy_power_inequality_gaussian_saturation` (see §7).
+-/
 
 /-! ## §6 — Stam-to-EPI bridge + 合成 wrapper -/
 
@@ -424,34 +398,6 @@ theorem epi_via_stam_three_arg
   exact entropy_power_inequality_three_arg P X Y Z h_xyz_epi h_xy_epi
 
 /-! ## §10 — Stam predicate manipulation -/
-
-/-- **Stam predicate trivial degeneracy**: when the sum-side Fisher information
-projection is `0`, the precondition `0 < J_sum` fails so the Stam inequality
-holds vacuously. -/
-theorem isStamInequalityHyp_of_fisherInfoReal_sum_zero
-    {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω)
-    (hSum_zero_toReal :
-      (Common2026.Shannon.fisherInfo
-        (P.map (fun ω => X ω + Y ω))).toReal = 0) :
-    IsStamInequalityHyp X Y P := by
-  intro J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
-  exfalso
-  rw [hSum_zero_toReal] at hJsum_def
-  linarith
-
-/-- **Stam predicate degeneracy on `Y` side**: same as `_of_fisherInfoReal_zero`
-but routed through `Y`. -/
-theorem isStamInequalityHyp_of_fisherInfoReal_Y_zero
-    {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω)
-    (hY_zero_toReal :
-      (Common2026.Shannon.fisherInfo (P.map Y)).toReal = 0) :
-    IsStamInequalityHyp X Y P := by
-  intro J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
-  exfalso
-  rw [hY_zero_toReal] at hJY_def
-  linarith
 
 /-- **Stam predicate is preserved under arithmetic equivalent rephrasings**: if
 two functions `X, Y` are pointwise equal to `X', Y'` then their Stam predicates
@@ -737,19 +683,5 @@ theorem epi_via_stam_recovers_predicate
     (h_bridge : IsStamToEPIBridgeHyp X Y P) :
     IsEntropyPowerInequalityHypothesis X Y P :=
   h_bridge h_stam
-
-/-- **Trivial Stam = constant bridge**: the trivial Stam hypothesis (e.g.
-`isStamInequalityHyp_of_fisherInfoReal_zero`) combined with `isStamToEPIBridgeHyp_of_epi`
-recovers the EPI exactly. -/
-theorem epi_from_degenerate_stam
-    {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω)
-    (hX_zero_toReal :
-      (Common2026.Shannon.fisherInfo (P.map X)).toReal = 0)
-    (h_epi : IsEntropyPowerInequalityHypothesis X Y P) :
-    IsEntropyPowerInequalityHypothesis X Y P := by
-  have h_stam := isStamInequalityHyp_of_fisherInfoReal_zero X Y P hX_zero_toReal
-  have h_bridge := isStamToEPIBridgeHyp_of_epi h_epi
-  exact epi_via_stam X Y X h_stam h_bridge
 
 end InformationTheory.Shannon.EPIStamDischarge

@@ -308,39 +308,26 @@ theorem isStamCauchySchwarz_of_step12 {Ω : Type*} [MeasurableSpace Ω]
     IsStamCauchySchwarz X Y P :=
   isStamCauchySchwarz_of_condExpCSHyp h_cs
 
-/-! ## §5 — Gaussian saturation discharge
+/-! ## §5 — Gaussian discharge
 
-For Gaussian `X` with the V1 representative artefact `fisherInfo (P.map X) = 0`
-(`FisherInfoGaussian.lean` L-G3), both typed predicates discharge: Step 1 always
-holds (witness construction), and Step 2 holds vacuously (precondition
-`0 < J_X` fails). Thus the full Stam chain reduces to the Wave 7 Gaussian route
-without any pass-through hypothesis.
+**RESOLVED (2026-05-20):** the former `isStamCondExpCSHyp_of_gaussian_fisherInfo_zero`
+(and the Step 1+2 chain `isStamInequalityHyp_of_gaussian_via_step12`) discharged
+Step 2 vacuously by `exfalso`-ing the `0 < J_X` precondition against the buggy V1
+`fisherInfo = 0` artefact for Gaussians. That asserted nothing about Stam actually
+holding and was removed. The genuine Gaussian EPI runs via
+`entropy_power_inequality_gaussian_saturation`; the genuine *non-vacuous* Gaussian
+convex Fisher bound (keyed on the V2 Fisher information) is
+`Common2026.Shannon.FisherInfoV2.stam_convex_fisher_bound_gaussian`
+(`StamGaussianBound.lean`).
+
+Step 1 (`IsStamScoreConvHyp`) is a witness-construction predicate and discharges
+unconditionally — kept below.
 -/
 
 /-- **Step-1 Gaussian discharge** — the typed predicate holds unconditionally. -/
 theorem isStamScoreConvHyp_of_gaussian {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : IsStamScoreConvHyp X Y P :=
   isStamScoreConvHyp_intro X Y P
-
-/-- **Step-2 Gaussian discharge** via the V1 Fisher-info-zero artefact: the
-precondition `0 < J_X` is contradicted, so the ∀λ bound holds vacuously. -/
-theorem isStamCondExpCSHyp_of_gaussian_fisherInfo_zero {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω)
-    (hX_zero_toReal : (Common2026.Shannon.fisherInfo (P.map X)).toReal = 0) :
-    IsStamCondExpCSHyp X Y P := by
-  intro J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def lam hlo hhi
-  exfalso
-  rw [hX_zero_toReal] at hJX_def
-  linarith
-
-/-- **Full Gaussian Stam discharge via Step 1+2 chain** (X-side zero artefact). -/
-theorem isStamInequalityHyp_of_gaussian_via_step12 {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω)
-    (hX_zero_toReal : (Common2026.Shannon.fisherInfo (P.map X)).toReal = 0) :
-    IsStamInequalityHyp X Y P :=
-  isStamInequalityHyp_of_step12
-    (isStamScoreConvHyp_of_gaussian X Y P)
-    (isStamCondExpCSHyp_of_gaussian_fisherInfo_zero X Y P hX_zero_toReal)
 
 /-! ## §6 — Sanity / regression theorems on the discharged analytic core -/
 

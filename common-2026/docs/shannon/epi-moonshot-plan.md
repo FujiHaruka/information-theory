@@ -1,5 +1,13 @@
 # Entropy Power Inequality (T2-D) ムーンショット計画 🌙
 
+> **RESOLVED (2026-05-20) — flaw-vacuous fix**: the vacuous "Gaussian Stam
+> discharge" family (`*_of_gaussian_fisherInfo_zero`, `*_of_fisherInfoReal_zero`,
+> `*_v1_zero`, and `entropy_power_inequality_gaussian_via_stamDeBruijn`) was
+> **removed**. Those `exfalso`-ed the `0 < J_X` precondition against the buggy V1
+> `fisherInfo = 0` artefact and asserted nothing about Stam. The genuine Gaussian
+> EPI remains via `entropy_power_inequality_gaussian_saturation`. See
+> [`flaw-vacuous-review-2026-05-20.md`](flaw-vacuous-review-2026-05-20.md) HIGH-1/2.
+
 > **Parent**: [`textbook-roadmap.md`](../textbook-roadmap.md) §「Tier 2 — T2-D.
 > Entropy Power Inequality」
 >

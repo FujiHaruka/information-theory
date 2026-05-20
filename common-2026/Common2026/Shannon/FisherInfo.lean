@@ -54,7 +54,19 @@ open scoped ENNReal NNReal Real
 score function (`Mathlib/Analysis/Calculus/LogDeriv.lean:34`).
 
 Returns `ℝ≥0∞` to capture `J = +∞` for irregular families (consistent with `klDiv`'s
-return type). Use `(fisherInfo μ).toReal` to project to `ℝ` when the value is known finite. -/
+return type). Use `(fisherInfo μ).toReal` to project to `ℝ` when the value is known finite.
+
+⚠️ **BUGGED: returns `0` for Gaussian laws, do not use for genuine results.** The
+definition reasons about the `Classical.choose` Lebesgue-decomposition representative
+of `μ.rnDeriv volume`, which is non-differentiable a.e., so `logDeriv` collapses to
+`0` a.e. — hence `fisherInfo (gaussianReal m v) = 0` instead of the correct `1/v`
+(documented at `FisherInfoGaussian.lean` Judgement #2 and `FisherInfoV2.lean` header).
+The correct, a.e.-class-invariant version is
+`Common2026.Shannon.FisherInfoV2.fisherInfoOfDensity` (gives `1/v` for Gaussians).
+This def is retained only as the type-level scaffold of the genuine *open* Stam /
+de Bruijn predicates (`IsStamInequalityHyp`, `IsRegularDeBruijnHyp`, …); no honest
+result should depend on its *value*. The vacuous "Gaussian Stam discharges" that
+exploited the `= 0` artefact were removed 2026-05-20 (see `flaw-vacuous-review`). -/
 noncomputable def fisherInfo (μ : Measure ℝ) : ℝ≥0∞ :=
   ∫⁻ x, ENNReal.ofReal ((logDeriv (fun y => (μ.rnDeriv volume y).toReal) x) ^ 2)
     * μ.rnDeriv volume x ∂volume

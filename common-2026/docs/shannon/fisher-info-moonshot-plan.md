@@ -1,5 +1,12 @@
 # Fisher Information + de Bruijn Identity ムーンショット計画 🌙 (T2-F)
 
+> **RESOLVED (2026-05-20) — flaw-vacuous fix**: V1 `fisherInfo` (`FisherInfo.lean`)
+> now carries a `⚠️ BUGGED` deprecation docstring (returns `0` for Gaussians; use
+> `FisherInfoV2.fisherInfoOfDensity`). The vacuous Stam discharges that exploited
+> the `= 0` artefact were removed; the def is kept only as the type-level scaffold
+> of the genuine *open* Stam/de Bruijn predicates. See
+> [`flaw-vacuous-review-2026-05-20.md`](flaw-vacuous-review-2026-05-20.md) HIGH-1.
+
 <!--
 雛形メモ (moonshot-plan-template.md より):
 - 進捗ブロック: `- [ ] Phase 名 — 短い説明 状態絵文字 (関連ファイルへのリンク)` の形式

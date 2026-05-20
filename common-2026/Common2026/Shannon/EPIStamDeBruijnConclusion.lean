@@ -54,10 +54,10 @@ the bridge into `scaling`/`limit`, but its `stam` field was a *black-box*
 The refined pipeline `IsEPIStamDeBruijnPipeline` (§3) bundles only the
 genuinely-irreducible primitives (the two Stam primitives + the Stam→EPI bridge),
 reduces to the monolithic `IsEPIL3IntegratedPipeline`, and lands the EPI
-conclusion (§4). The Gaussian case is **hypothesis-free** (§5): both Stam
-primitives discharge vacuously (V1 Fisher-info-zero artefact) and the bridge via
-Gaussian saturation; we also re-verify the standalone hypothesis-free Gaussian EPI
-`entropy_power_inequality_gaussian_full`.
+conclusion (§4). The genuine Gaussian EPI (§5) is obtained directly from Gaussian
+saturation (`entropy_power_inequality_gaussian_full'`), with no Stam claim. (The
+former Gaussian *pipeline* discharge routed the Stam half through the buggy V1
+Fisher-info-zero artefact and was removed — see §5, RESOLVED 2026-05-20.)
 
 ## Genuinely-irreducible primitives remaining
 
@@ -81,8 +81,7 @@ internally here.
 * `IsEPIStamDeBruijnPipeline` — refined pipeline (§3)
 * `isEPIL3IntegratedPipeline_of_stamDeBruijn` — reduction to monolithic (§3)
 * `entropy_power_inequality_via_stamDeBruijn` — main EPI (§4)
-* `isEPIStamDeBruijnPipeline_of_gaussian` / `entropy_power_inequality_gaussian_full'`
-  — Gaussian hypothesis-free discharge (§5)
+* `entropy_power_inequality_gaussian_full'` — genuine Gaussian EPI via saturation (§5)
 * `deBruijn_gap_deriv_nonneg_gaussian` — composed Gaussian gap monotonicity (§6)
 -/
 
@@ -239,45 +238,17 @@ theorem isEPIStamDeBruijnPipeline_of_primitives
   totalExp := h_te
   bridge := h_bridge
 
-/-! ## §5 — Gaussian full discharge (hypothesis-free) -/
+/-! ## §5 — Gaussian EPI (genuine, via saturation)
 
-/-- **Refined pipeline Gaussian discharge (hypothesis-free)**. For independent
-Gaussians `X, Y` with non-zero variance:
-
-* Step 1 (`IsStamScoreConvolution`) is the trivial placeholder.
-* Step 3 (`IsStamTotalExpectation`) discharges vacuously via the V1 Fisher-info
-  zero artefact (`fisherInfo (P.map X) = 0` makes the `0 < J_X` precondition
-  fail).
-* The bridge discharges via Gaussian saturation
-  (`isStamToEPIBridgeHyp_of_gaussian`).
-
-No upstream hypothesis is needed (besides the V1-zero artefact value). -/
-theorem isEPIStamDeBruijnPipeline_of_gaussian
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
-    (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂)
-    (hX_v1_zero : (Common2026.Shannon.fisherInfo (P.map X)).toReal = 0) :
-    IsEPIStamDeBruijnPipeline X Y P where
-  convScore := isStamScoreConvolution_trivial X Y P
-  totalExp := isStamTotalExpectation_of_gaussian_fisherInfo_zero X Y P hX_v1_zero
-  bridge := isStamToEPIBridgeHyp_of_gaussian P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
-
-/-- **Gaussian EPI via the refined pipeline** (hypothesis-free up to the V1-zero
-artefact). -/
-theorem entropy_power_inequality_gaussian_via_stamDeBruijn
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
-    (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂)
-    (hX_v1_zero : (Common2026.Shannon.fisherInfo (P.map X)).toReal = 0) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
-  have h := isEPIStamDeBruijnPipeline_of_gaussian
-    P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY hX_v1_zero
-  exact entropy_power_inequality_via_stamDeBruijn P X Y hX hY hXY h
+**RESOLVED (2026-05-20):** the former `isEPIStamDeBruijnPipeline_of_gaussian` and
+`entropy_power_inequality_gaussian_via_stamDeBruijn` were removed. They presented a
+Gaussian EPI "via Stam + de Bruijn", but the Stam half (`totalExp`) was discharged
+vacuously through the buggy V1 `fisherInfo = 0` artefact (`exfalso` on `0 < J_X`),
+so the Stam/de Bruijn machinery played no load-bearing role — the inequality came
+entirely from Gaussian saturation. The genuine Gaussian EPI is
+`entropy_power_inequality_gaussian_full'` below (direct from
+`entropy_power_inequality_gaussian_saturation`), which carries no Stam claim.
+-/
 
 /-- **Gaussian EPI fully hypothesis-free** (re-verification + extension of
 `EPIL3Integration.entropy_power_inequality_gaussian_full`). The saturation case

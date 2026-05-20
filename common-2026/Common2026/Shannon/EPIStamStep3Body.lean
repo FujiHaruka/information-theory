@@ -57,8 +57,8 @@ The deliverables are:
    (§4) — Step 3 → Step 4 bridge into `IsStamCauchySchwarzOptimal`.
 5. `isStamInequalityHyp_via_step3` (§4) — full Step 1→4 chain to the genuine
    `IsStamInequalityHyp` signature.
-6. `isStamFisherCoupling_of_gaussian_saturation` / `stam_coupling_saturates`
-   (§5) — Gaussian saturation: Step 3 holds with *equality* at the optimal λ.
+6. `stam_coupling_saturates` (§5) — Gaussian saturation: Step 3 holds with
+   *equality* at the optimal λ (arithmetic kernel).
 
 ### 撤退ライン (本 file で発動)
 
@@ -80,9 +80,8 @@ The deliverables are:
 * `isStamCauchySchwarzOptimal_of_coupling` (§4) — Step 3 → optimal-CS bridge
 * `stam_step3_to_step4_optimal` (§4) — Step 3 → Step 4 chain to harmonic mean
 * `isStamInequalityHyp_via_step3` (§4) — full Step 1→4 chain deliverable
-* `isStamFisherCoupling_of_gaussian_saturation` (§5) — Gaussian discharge
-* `stam_coupling_saturates` (§5) — Gaussian saturation equality witness
-* `epi_via_stam_step3_gaussian` (§6) — pipeline integration
+* `stam_coupling_saturates` (§5) — Gaussian saturation equality witness (arithmetic)
+* `epi_via_stam_step3_gaussian` (§6) — pipeline integration (via Gaussian saturation)
 -/
 
 namespace InformationTheory.Shannon.EPIStamStep3Body
@@ -262,33 +261,18 @@ theorem isStamInequalityHyp_via_step3 {Ω : Type*} [MeasurableSpace Ω]
     IsStamInequalityHyp X Y P :=
   isStamInequalityHyp_via_body h_conv (isStamCauchySchwarzOptimal_of_coupling h_te)
 
-/-! ## §5 — Gaussian saturation: Step 3 holds with equality at the optimum -/
+/-! ## §5 — Gaussian saturation: Step 3 holds with equality at the optimum
 
-/-- **Total-expectation Gaussian discharge** via the V1 Fisher-info zero
-artefact. For Gaussian `X` with `(fisherInfo (P.map X)).toReal = 0` (V1
-representative, see `FisherInfoGaussian.lean`), the precondition `0 < J_X` fails
-so the total-expectation predicate holds vacuously. -/
-theorem isStamTotalExpectation_of_gaussian_fisherInfo_zero
-    {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω)
-    (hX_zero_toReal :
-      (Common2026.Shannon.fisherInfo (P.map X)).toReal = 0) :
-    IsStamTotalExpectation X Y P := by
-  intro J_X J_Y J_sum lam hJX hJY hJsum hlam_lo hlam_hi hJX_def hJY_def hJsum_def
-  exfalso
-  rw [hX_zero_toReal] at hJX_def
-  linarith
-
-/-- **Step 3 coupling Gaussian discharge**: for Gaussian `X` with V1 Fisher-info
-zero, the symmetric Fisher coupling holds (vacuously). -/
-theorem isStamFisherCoupling_of_gaussian_saturation
-    {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω)
-    (hX_zero_toReal :
-      (Common2026.Shannon.fisherInfo (P.map X)).toReal = 0) :
-    IsStamFisherCoupling X Y P :=
-  isStamFisherCoupling_of_totalExpectation
-    (isStamTotalExpectation_of_gaussian_fisherInfo_zero X Y P hX_zero_toReal)
+**RESOLVED (2026-05-20):** the former `isStamTotalExpectation_of_gaussian_fisherInfo_zero`,
+`isStamFisherCoupling_of_gaussian_saturation`, and the Step-3 chain
+`isStamInequalityHyp_of_gaussian_via_step3` discharged the total-expectation /
+coupling predicates vacuously by `exfalso`-ing the `0 < J_X` precondition against
+the buggy V1 `fisherInfo = 0` artefact for Gaussians. They asserted nothing about
+Stam actually holding and were removed. The genuine Gaussian EPI runs via
+`entropy_power_inequality_gaussian_saturation` (see `epi_via_stam_step3_gaussian`
+below); the arithmetic saturation kernel `stam_coupling_saturates` is genuine and
+kept.
+-/
 
 /-- **Gaussian saturation equality witness** (Step 3 equality condition).
 
@@ -304,17 +288,6 @@ theorem stam_coupling_saturates {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
   have hab_ne : a + b ≠ 0 := hab.ne'
   field_simp
   ring
-
-/-- **Gaussian saturation gives full Stam inequality** via the Step-3 path. -/
-theorem isStamInequalityHyp_of_gaussian_via_step3
-    {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω)
-    (hX_zero_toReal :
-      (Common2026.Shannon.fisherInfo (P.map X)).toReal = 0) :
-    IsStamInequalityHyp X Y P :=
-  isStamInequalityHyp_via_step3
-    (isStamScoreConvolution_trivial X Y P)
-    (isStamTotalExpectation_of_gaussian_fisherInfo_zero X Y P hX_zero_toReal)
 
 /-! ## §6 — EPI pipeline integration via Step 3 -/
 

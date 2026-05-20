@@ -20,7 +20,22 @@ vacuity, and trivial-value placeholder defs.
 
 ---
 
-## HIGH-1 — Vacuous "Gaussian discharge" of the Stam inequality (seed defect, fully confirmed)
+## HIGH-1 — Vacuous "Gaussian discharge" of the Stam inequality (seed defect, fully confirmed) — **RESOLVED (2026-05-20)**
+
+> **RESOLVED (2026-05-20).** All `*_of_gaussian_fisherInfo_zero` /
+> `*_of_fisherInfoReal_zero` / `*_v1_zero` discharges and their chain wrappers
+> (`isStamInequalityHyp_of_gaussian_via_step12/_step3/_body[_Y]`,
+> `isStamFisherCoupling_of_gaussian_saturation`, `epi_from_degenerate_stam`,
+> `isEPIL3IntegratedPipeline_gaussian`) were **removed**. They proved the Stam
+> predicates only by `exfalso`-ing the `0 < J_X` precondition against the buggy
+> V1 `fisherInfo = 0` value. Nothing genuine depended on them: the genuine
+> Gaussian EPI runs through `entropy_power_inequality_gaussian_saturation`, and
+> the non-vacuous V2 Gaussian convex Fisher bound is
+> `FisherInfoV2.stam_convex_fisher_bound_gaussian`. V1 `fisherInfo` itself is now
+> carrying a `⚠️ BUGGED` deprecation docstring (kept only as the type-level
+> scaffold of the genuine *open* Stam/de Bruijn predicates; no honest result uses
+> its value).
+
 
 **Files / declarations:**
 - `Common2026/Shannon/EPIStamStep12Body.lean:327` `isStamCondExpCSHyp_of_gaussian_fisherInfo_zero`
@@ -66,7 +81,16 @@ theorems are presented as the Gaussian instance of a real result.
 
 ---
 
-## HIGH-2 — `entropy_power_inequality_gaussian_via_stamDeBruijn`: name claims a Stam+de Bruijn derivation that is vacuous
+## HIGH-2 — `entropy_power_inequality_gaussian_via_stamDeBruijn`: name claims a Stam+de Bruijn derivation that is vacuous — **RESOLVED (2026-05-20)**
+
+> **RESOLVED (2026-05-20).** `entropy_power_inequality_gaussian_via_stamDeBruijn`
+> and its pipeline witness `isEPIStamDeBruijnPipeline_of_gaussian` were
+> **removed** (the Stam half was discharged vacuously via the V1-zero artefact, so
+> the Stam/de Bruijn machinery was non-load-bearing). No genuine result is lost:
+> the honest Gaussian EPI is `entropy_power_inequality_gaussian_full'`
+> (`EPIStamDeBruijnConclusion.lean`, direct from
+> `entropy_power_inequality_gaussian_saturation`, no Stam mention).
+
 
 **File / declaration:** `Common2026/Shannon/EPIStamDeBruijnConclusion.lean:269`
 `entropy_power_inequality_gaussian_via_stamDeBruijn` (and its pipeline witness

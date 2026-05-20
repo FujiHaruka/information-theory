@@ -1,5 +1,13 @@
 # Fisher Info / de Bruijn — Gaussian discharge ムーンショット計画 🌙 (T2-F follow-up)
 
+> **RESOLVED (2026-05-20) — flaw-vacuous fix**: the Gaussian *Stam* discharges
+> that this plan's chain produced via the V1 `fisherInfo = 0` artefact were
+> **vacuous** (`exfalso` on `0 < J_X`) and have been removed. The genuine Gaussian
+> EPI is `entropy_power_inequality_gaussian_saturation`; the genuine non-vacuous
+> Gaussian convex Fisher bound is `FisherInfoV2.stam_convex_fisher_bound_gaussian`
+> (V2-keyed, `1/v`). See
+> [`flaw-vacuous-review-2026-05-20.md`](flaw-vacuous-review-2026-05-20.md) HIGH-1.
+
 <!--
 雛形メモ (moonshot-plan-template.md より):
 - 進捗ブロック: `- [ ] Phase 名 — 短い説明 状態絵文字 (関連ファイルへのリンク)` の形式

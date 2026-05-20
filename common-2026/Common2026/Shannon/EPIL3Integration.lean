@@ -37,10 +37,13 @@ L-EPI3 を取り出す **integrated pipeline** を整える。
   `IsStamToEPIBridgeHyp X Y P` の最小組合せで L-EPI3 を生成。
 * §2 — **integrated 主定理**: integrated pipeline → EPI。`Common2026/Shannon/EPIStamDischarge.lean`
   の `epi_via_stam_main` を packaging。
-* §3 — **Gaussian full discharge**: `X, Y` がともに Gaussian なら integrated
-  pipeline が **hypothesis-free** に discharge できる (Stam pred は vacuous
-  via `isStamInequalityHyp_of_fisherInfoReal_zero` で trivial、bridge は
-  Gaussian saturation で trivial)。撤退ライン採用なし。
+* §3 — **Gaussian EPI**: `X, Y` がともに Gaussian なら EPI は等号で成立
+  (`entropy_power_inequality_gaussian_saturation` 直行)。integrated pipeline 形は
+  `entropy_power_inequality_gaussian_via_pipeline` が真の `IsStamInequalityHyp`
+  を引数で受ける (honest pass-through)。
+  **RESOLVED (2026-05-20):** 旧 `isStamInequalityHyp_of_gaussian_v1_zero` /
+  `isEPIL3IntegratedPipeline_gaussian` は buggy V1 `fisherInfo = 0` artefact で
+  `0 < J_X` precondition を `exfalso` するだけの vacuous discharge だったため削除。
 * §4 — **variants**: log / exp / normalized form 全部 integrated pipeline 経由。
 * §5 — **chain forms**: 3-arg / 4-arg EPI を integrated pipeline 1 本立てで。
 * §6 — **predicate manipulation**: symm / refl / pass-through helpers。
@@ -400,34 +403,15 @@ theorem isEPIL3IntegratedPipeline_of_translates
     isStamInequalityHyp_of_fisherInfo_eq (hJX a).symm (hJY b).symm (hJsum a b).symm h.stam
   bridge := h_bridge_t a b
 
-/-! ## §9 — Concrete Gaussian witnesses (full discharge, hypothesis-free) -/
+/-! ## §9 — Concrete Gaussian EPI (genuine, via saturation)
 
-/-- **Gaussian Stam discharge via the V1 Fisher-info-zero artefact**. The V1
-`fisherInfo (gaussianReal _ _)` representative returns `0` (an artefact of the
-representative choice — cf. `FisherInfoGaussian.lean` L-G3 retreat). Using
-this V1 representative value, `IsStamInequalityHyp X Y P` holds vacuously
-whenever `P.map X` is Gaussian (the `0 < J_X` precondition fails). -/
-theorem isStamInequalityHyp_of_gaussian_v1_zero
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    {P : Measure Ω}
-    (X Y : Ω → ℝ)
-    (hX_v1_zero : (Common2026.Shannon.fisherInfo (P.map X)).toReal = 0) :
-    IsStamInequalityHyp X Y P :=
-  isStamInequalityHyp_of_fisherInfoReal_zero X Y P hX_v1_zero
-
-/-- **Concrete Gaussian integrated pipeline** (hypothesis-free, with Stam from
-V1 artefact). -/
-theorem isEPIL3IntegratedPipeline_gaussian
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
-    (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂)
-    (hX_v1_zero : (Common2026.Shannon.fisherInfo (P.map X)).toReal = 0) :
-    IsEPIL3IntegratedPipeline X Y P := by
-  have h_stam := isStamInequalityHyp_of_gaussian_v1_zero X Y hX_v1_zero
-  exact isEPIL3IntegratedPipeline_of_gaussian P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂
-    hLawX hLawY h_stam
+**RESOLVED (2026-05-20):** the former `isStamInequalityHyp_of_gaussian_v1_zero`
+and `isEPIL3IntegratedPipeline_gaussian` discharged the Stam predicate vacuously
+through the buggy V1 `fisherInfo = 0` artefact for Gaussians and were removed. The
+genuine Gaussian EPI is `entropy_power_inequality_gaussian_full` below (direct from
+`entropy_power_inequality_gaussian_saturation`); the integrated-pipeline form takes
+a real `IsStamInequalityHyp` argument (`entropy_power_inequality_gaussian_via_pipeline`).
+-/
 
 /-- **Gaussian EPI hypothesis-free**: combine the Gaussian saturation case
 directly (no Stam predicate needed for the inequality itself; the predicate
