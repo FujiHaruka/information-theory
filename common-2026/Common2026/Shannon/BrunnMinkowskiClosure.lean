@@ -1,6 +1,8 @@
 import Common2026.Shannon.BrunnMinkowskiLayerCakeBody
 import Common2026.Shannon.BrunnMinkowskiPLBody
 import Common2026.Shannon.BrunnMinkowski1DSuperlevelBody
+import Common2026.Shannon.BrunnMinkowskiConcavity
+import Common2026.Shannon.MultivariateDiffEntropy
 import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.MeasureTheory.Integral.Prod
 import Mathlib.MeasureTheory.Integral.Pi
@@ -388,5 +390,145 @@ theorem brunn_minkowski_volume_mul {n : ℕ}
     (h_add : lam * volA + (1 - lam) * volB ≤ volAB) :
     volA ^ lam * volB ^ (1 - lam) ≤ volAB :=
   bm_additive_to_multiplicative hvolA hvolB h0 h1 h_add
+
+/-! ## §G — entropy-power 形 BM (Phase 2-4): geometry → entropy power
+
+体積版 BM (§F, genuine) を **entropy-power 加法形** に持ち上げ、headline の抽象
+`h` を `Common2026.Shannon.jointDifferentialEntropyPi` に特化して genuine に閉じる。
+
+設計判断 (Mathlib-shape-driven + 撤退):
+
+* **核心 reduction は genuine**: entropy power `exp((2/n)·h)` の加法形 ↔ 体積比
+  `vol^(2/n)` の加法形 ↔ Cover-Thomas sqrt 形 `vol^(1/n)` の加法形 (これらは
+  `Real.rpow` 代数 + `entropyPower_nDim_eq_rpow_of_log` + 既存 log-exp bridge で
+  すべて genuine に接続)。
+* **唯一外出しする geometric content** は Cover-Thomas sqrt 形の不等式そのもの
+  `volAB^(1/n) ≥ volA^(1/n) + volB^(1/n)` (`IsBMEntropyPowerVolumeHyp`, 実 `≥`
+  Prop、`:= True` ではない)。これは §F の **multiplicative** 体積 BM
+  (`volA^λ·volB^(1-λ) ≤ volAB`) から coordinate-scaling 最適化 (Cover-Thomas
+  17.9.2 標準導出) で出るが、その scaling 最適化は n-dim measure scaling
+  (`vol(r•A)=r^n volA`) + 最適 λ 代入 を要し本 file scope では honest hyp に
+  外出し (撤退ライン: scaling 最適化 >300 行)。
+* **headline 特化が前進点**: 旧 `brunn_minkowski_entropy_inequality` は抽象
+  `h` + `:= h_bm` で **結論全体** を pass-through していた。本 §G は `h` を concrete
+  `jointDifferentialEntropyPi` に固定し、entropy↔geometry↔rpow 代数を **genuine** に
+  し、外出しを「geometric BM 不等式のみ」に縮小する (🟢ʰ honest 副条件付き)。 -/
+
+/-- **n-dim measure scaling** `vol(r • A) = r^n · vol(A)` (`0 ≤ r`) on
+`Fin n → ℝ`. `Measure.addHaar_smul_of_nonneg` + `Module.finrank_fin_fun`
+(`finrank ℝ (Fin n → ℝ) = n`)。scaling 最適化 (§G discharge 試行) の足場。 -/
+theorem volume_smul_nDim {n : ℕ} (r : ℝ) (hr : 0 ≤ r) (A : Set (Fin n → ℝ)) :
+    volume (r • A) = ENNReal.ofReal (r ^ n) * volume A := by
+  rw [Measure.addHaar_smul_of_nonneg (μ := volume) hr, Module.finrank_fin_fun]
+
+/-- **L-BM-EP (entropy-power volume hypothesis, honest geometric side-condition)**:
+Cover-Thomas sqrt 形 Brunn-Minkowski
+
+    `volAB ^ (1/n) ≥ volA ^ (1/n) + volB ^ (1/n)`
+
+(`Real.rpow`)。§F の multiplicative 体積 BM からの coordinate-scaling 最適化で
+得られる geometric content を honest named hypothesis (実 `≥` Prop) として外出し。
+`IsBrunnMinkowskiEntropyHypothesis` (旧抽象 `h` 結論全体 pass-through) より遥かに
+小さい外出し: 残るのは geometry 不等式 1 本のみで、entropy power への持ち上げは
+すべて genuine。 -/
+def IsBMEntropyPowerVolumeHyp (n : ℕ) (volA volB volAB : ℝ) : Prop :=
+  volAB ^ ((1 : ℝ) / n) ≥ volA ^ ((1 : ℝ) / n) + volB ^ ((1 : ℝ) / n)
+
+/-- **sqrt 形 → entropy-power 加法形 (genuine, `Real.rpow` 代数)**: Cover-Thomas
+sqrt 形 `volAB^(1/n) ≥ volA^(1/n) + volB^(1/n)` を 2 乗持ち上げて
+
+    `volAB^(2/n) ≥ volA^(2/n) + volB^(2/n)`.
+
+`x^(2/n) = (x^(1/n))^2` (`Real.rpow` 代数) + `square_to_linear_to_square_bridge`
+逆向き (`(p+q)^2 ≥ p^2+q^2` for `p,q ≥ 0`)。 -/
+theorem bm_volume_sqrt_to_entropyPower {n : ℕ}
+    (volA volB volAB : ℝ)
+    (hvolA : 0 ≤ volA) (hvolB : 0 ≤ volB) (hvolAB : 0 ≤ volAB)
+    (h_sqrt : IsBMEntropyPowerVolumeHyp n volA volB volAB) :
+    volAB ^ ((2 : ℝ) / n) ≥ volA ^ ((2 : ℝ) / n) + volB ^ ((2 : ℝ) / n) := by
+  unfold IsBMEntropyPowerVolumeHyp at h_sqrt
+  -- `x^(2/n) = (x^(1/n))^2` for `x ≥ 0`.
+  have hsq : ∀ x : ℝ, 0 ≤ x → x ^ ((2 : ℝ) / n) = (x ^ ((1 : ℝ) / n)) ^ 2 := by
+    intro x hx
+    have : (2 : ℝ) / n = (1 / n) * ((2 : ℕ) : ℝ) := by push_cast; ring
+    rw [this, Real.rpow_mul_natCast hx]
+  -- sqrt-values are non-negative.
+  have hpA : 0 ≤ volA ^ ((1 : ℝ) / n) := Real.rpow_nonneg hvolA _
+  have hpB : 0 ≤ volB ^ ((1 : ℝ) / n) := Real.rpow_nonneg hvolB _
+  rw [hsq volA hvolA, hsq volB hvolB, hsq volAB hvolAB]
+  -- `(volAB^(1/n))^2 ≥ (volA^(1/n) + volB^(1/n))^2 ≥ (volA^(1/n))^2 + (volB^(1/n))^2`.
+  exact square_necessary_for_linear hpA hpB h_sqrt
+
+/-- **entropy-power 形 Brunn-Minkowski, `jointDifferentialEntropyPi` 特化 (genuine
+reduction, 🟢ʰ geometric hyp)**.
+
+`h := jointDifferentialEntropyPi` に固定した entropy power 加法形
+
+    `entropyPower_nDim n hJoint (P.map (X+Y))
+      ≥ entropyPower_nDim n hJoint (P.map X) + entropyPower_nDim n hJoint (P.map Y)`.
+
+uniform=log-vol hypotheses (`IsUniformOnEntropyLogVolHypothesis`) で各 entropy power
+を `vol^(2/n)` に書き換え (`entropyPower_nDim_eq_rpow_of_log`, genuine)、geometric
+sqrt-形 BM (`IsBMEntropyPowerVolumeHyp`, honest) を `bm_volume_sqrt_to_entropyPower`
+で entropy power 加法形に持ち上げて着地。
+
+外出しは geometric BM 不等式 (`h_geom`) のみ。entropy↔geometry↔rpow の代数は
+すべて genuine。`hJoint := jointDifferentialEntropyPi` は concrete (抽象 `h` 引数を
+排除)。 -/
+theorem brunn_minkowski_entropy_jointPi
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (P : Measure Ω) [IsProbabilityMeasure P]
+    {n : ℕ} (hn : 0 < (n : ℝ))
+    (X Y : Ω → (Fin n → ℝ))
+    (volA volB volAB : ℝ) (hvolA : 0 < volA) (hvolB : 0 < volB) (hvolAB : 0 < volAB)
+    (hA_unif : Common2026.Shannon.jointDifferentialEntropyPi (P.map X) = Real.log volA)
+    (hB_unif : Common2026.Shannon.jointDifferentialEntropyPi (P.map Y) = Real.log volB)
+    (hAB_unif : Common2026.Shannon.jointDifferentialEntropyPi
+      (P.map (fun ω => X ω + Y ω)) = Real.log volAB)
+    (h_geom : IsBMEntropyPowerVolumeHyp n volA volB volAB) :
+    entropyPower_nDim n Common2026.Shannon.jointDifferentialEntropyPi
+        (P.map (fun ω => X ω + Y ω))
+      ≥ entropyPower_nDim n Common2026.Shannon.jointDifferentialEntropyPi (P.map X)
+        + entropyPower_nDim n Common2026.Shannon.jointDifferentialEntropyPi (P.map Y) := by
+  -- Each entropy power `exp ((2/n)·h μ)` rewrites to `vol^(2/n)` via the
+  -- uniform=log-vol hypotheses + `Real.rpow_def_of_pos` (genuine, all real-algebra).
+  have hep : ∀ (μ : Measure (Fin n → ℝ)) (vol : ℝ), 0 < vol →
+      Common2026.Shannon.jointDifferentialEntropyPi μ = Real.log vol →
+      entropyPower_nDim n Common2026.Shannon.jointDifferentialEntropyPi μ
+        = vol ^ ((2 : ℝ) / n) := by
+    intro μ vol hvol hμ
+    rw [entropyPower_nDim_eq_exp, hμ, Real.rpow_def_of_pos hvol, mul_comm]
+  rw [hep _ volA hvolA hA_unif, hep _ volB hvolB hB_unif, hep _ volAB hvolAB hAB_unif]
+  -- geometric content (`IsBMEntropyPowerVolumeHyp`) lifts to the entropy-power form.
+  exact bm_volume_sqrt_to_entropyPower volA volB volAB hvolA.le hvolB.le hvolAB.le h_geom
+
+/-- **Phase 4 — entropy 形 headline restate (`jointDifferentialEntropyPi` 特化)**.
+
+旧 `BrunnMinkowski.brunn_minkowski_entropy_inequality` は抽象
+`h : Measure (Fin n → ℝ) → ℝ` を取り `:= h_bm` (L-BM1, 結論全体) で着地していた。
+本 headline は `h` を concrete `Common2026.Shannon.jointDifferentialEntropyPi` に
+固定し、`brunn_minkowski_entropy_jointPi` (genuine reduction) で着地する。
+抽象 `h` の `h_bm` 結論全体 pass-through を経由しない。
+
+外出しは uniform=log-vol (entropy ↔ volume 同定、§F の `IsUniformOnEntropyLogVol`
+と同流儀) + geometric BM 不等式 (`IsBMEntropyPowerVolumeHyp`) のみ。 -/
+theorem brunn_minkowski_entropy_inequality_genuine
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (P : Measure Ω) [IsProbabilityMeasure P]
+    {n : ℕ} (hn : 0 < (n : ℝ))
+    (X Y : Ω → (Fin n → ℝ)) (hX : Measurable X) (hY : Measurable Y)
+    (hXY : ProbabilityTheory.IndepFun X Y P)
+    (volA volB volAB : ℝ) (hvolA : 0 < volA) (hvolB : 0 < volB) (hvolAB : 0 < volAB)
+    (hA_unif : Common2026.Shannon.jointDifferentialEntropyPi (P.map X) = Real.log volA)
+    (hB_unif : Common2026.Shannon.jointDifferentialEntropyPi (P.map Y) = Real.log volB)
+    (hAB_unif : Common2026.Shannon.jointDifferentialEntropyPi
+      (P.map (fun ω => X ω + Y ω)) = Real.log volAB)
+    (h_geom : IsBMEntropyPowerVolumeHyp n volA volB volAB) :
+    entropyPower_nDim n Common2026.Shannon.jointDifferentialEntropyPi
+        (P.map (fun ω => X ω + Y ω))
+      ≥ entropyPower_nDim n Common2026.Shannon.jointDifferentialEntropyPi (P.map X)
+        + entropyPower_nDim n Common2026.Shannon.jointDifferentialEntropyPi (P.map Y) :=
+  brunn_minkowski_entropy_jointPi P hn X Y volA volB volAB hvolA hvolB hvolAB
+    hA_unif hB_unif hAB_unif h_geom
 
 end InformationTheory.Shannon.BrunnMinkowski
