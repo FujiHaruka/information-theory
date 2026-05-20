@@ -2,6 +2,7 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.MeasureTheory.Measure.Portmanteau
 import Mathlib.Probability.CentralLimitTheorem
 import Common2026.Shannon.CramerLC2DischargeExt
+import Common2026.Shannon.InfinitePiTiltedChangeOfMeasure
 
 /-!
 # Cramér / Chernoff CLT-boundary closure — foundations (Phase 1-2) + CLT (Phase 3-4)
@@ -324,5 +325,229 @@ theorem tiltedWindow_eventually_large_of_boundary
     simp only [sub_zero] at this
     exact this.congr (fun n => (hwin_eq n).symm)
   exact hwin_tendsto.eventually_const_le (show (1 : ℝ) / 4 < 1 / 2 by norm_num)
+
+/-! ## Phase 5 — `∃ C > 0` relaxed change-of-measure, single-`a` slice
+
+The Phase-4 boundary lemma `tiltedWindow_eventually_large_of_boundary` only
+delivers window mass `≥ 1/4`, whereas the residual reduction
+`isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge` hardcodes the `≥ 1/2`
+threshold (and quantifies over *all* `a`). This section re-runs the Phase-2/3
+change-of-measure (`change_of_measure_lower_bound_pi` + the cylinder lift
+`infinitePi_partialSum_event_eq_pi`) at a *single* `a`, threading an arbitrary
+positive constant `C` through instead of the fixed `1/2`. The output is the
+`a`-slice of `IsMeasureInfinitePiTiltedEq`, in the exact `h_tilted_lower` shape
+consumed by the parent `cramer_lower`. -/
+
+/-- **`∃ C > 0` relaxed change-of-measure, single-`a` slice** (Phase 5).
+
+Given, at a fixed threshold `a`, that for every `ε > 0` the tilted-side window
+mass is eventually `≥` some positive constant `C` (the boundary case only gives
+`1/4`, well below the `1/2` of `isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge`),
+the un-tilted half-line mass admits the Chernoff lower bound `C · exp(…) ≤ …`.
+This is the `a`-slice of `IsMeasureInfinitePiTiltedEq`, already in the
+`cramer_lower` `h_tilted_lower` shape. -/
+theorem isMeasureInfinitePiTiltedEq_at_of_window
+    {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
+    {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
+    (lam : ℝ) (hlam : 0 ≤ lam) (a : ℝ)
+    (h_win : ∀ ε > 0, ∃ C > 0, ∀ᶠ n : ℕ in atTop,
+      C ≤ (Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))).real
+          {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)
+            ∧ ∑ i ∈ Finset.range n, Y (ω i) < (a + ε) * n}) :
+    ∀ ε > 0, ∃ C > 0, ∀ᶠ n : ℕ in atTop,
+      C * Real.exp (-(n : ℝ) * (lam * a - cgf Y μ₀ lam + lam * ε))
+        ≤ (Measure.infinitePi (fun _ : ℕ => μ₀)).real
+            {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)} := by
+  haveI hp : IsProbabilityMeasure (μ₀.tilted (fun ω => lam * Y ω)) :=
+    isProbabilityMeasure_tilted_of_bounded hY h_bdd lam
+  intro ε hε
+  obtain ⟨C, hC_pos, hC_event⟩ := h_win ε hε
+  refine ⟨C, hC_pos, ?_⟩
+  -- The tilted window mass is eventually ≥ C.
+  filter_upwards [hC_event] with n hn
+  -- Cylinder lift, un-tilted side: half-line event.
+  have hPE : MeasurableSet {r : ℝ | a * (n : ℝ) ≤ r} :=
+    measurableSet_le measurable_const measurable_id
+  have hlift_E := infinitePi_partialSum_event_eq_pi (ν := μ₀) hY n
+      (fun r => a * (n : ℝ) ≤ r) hPE
+  -- Cylinder lift, tilted side: window event.
+  have hPW : MeasurableSet {r : ℝ | a * (n : ℝ) ≤ r ∧ r < (a + ε) * n} :=
+    (measurableSet_le measurable_const measurable_id).inter
+      (measurableSet_lt measurable_id measurable_const)
+  have hlift_W := infinitePi_partialSum_event_eq_pi
+      (ν := μ₀.tilted (fun ω => lam * Y ω)) hY n
+      (fun r => a * (n : ℝ) ≤ r ∧ r < (a + ε) * n) hPW
+  -- Phase 3 change-of-measure at the finite level.
+  have hcm := change_of_measure_lower_bound_pi (n := n) (μ₀ := μ₀) hY h_bdd a ε lam hlam
+  -- Convert change-of-measure to `.real` form.
+  have hfin_E : (Measure.pi (fun _ : Fin n => μ₀))
+      {x : Fin n → Ω₀ | a * n ≤ ∑ i, Y (x i)} ≠ ⊤ := (measure_ne_top _ _)
+  have hcm_real :
+      Real.exp (-(n : ℝ) * (lam * a - cgf Y μ₀ lam + lam * ε))
+          * (Measure.pi (fun _ : Fin n => μ₀.tilted (fun ω => lam * Y ω))).real
+              {x : Fin n → Ω₀ | a * n ≤ ∑ i, Y (x i) ∧ ∑ i, Y (x i) < (a + ε) * n}
+        ≤ (Measure.pi (fun _ : Fin n => μ₀)).real
+              {x : Fin n → Ω₀ | a * n ≤ ∑ i, Y (x i)} := by
+    have h := ENNReal.toReal_mono hfin_E hcm
+    rwa [ENNReal.toReal_mul, ENNReal.toReal_ofReal (le_of_lt (Real.exp_pos _))] at h
+  -- Cylinder lift identifies the un-tilted half-line `.real`.
+  have hE_real : (Measure.infinitePi (fun _ : ℕ => μ₀)).real
+        {ω : ℕ → Ω₀ | a * (n : ℝ) ≤ ∑ i ∈ Finset.range n, Y (ω i)}
+      = (Measure.pi (fun _ : Fin n => μ₀)).real
+          {x : Fin n → Ω₀ | a * (n : ℝ) ≤ ∑ i, Y (x i)} := by
+    rw [measureReal_def, measureReal_def, hlift_E]
+  -- Cylinder lift identifies the tilted window `.real`.
+  have hW_real : (Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))).real
+        {ω : ℕ → Ω₀ | a * (n : ℝ) ≤ ∑ i ∈ Finset.range n, Y (ω i)
+          ∧ ∑ i ∈ Finset.range n, Y (ω i) < (a + ε) * n}
+      = (Measure.pi (fun _ : Fin n => μ₀.tilted (fun ω => lam * Y ω))).real
+          {x : Fin n → Ω₀ | a * (n : ℝ) ≤ ∑ i, Y (x i) ∧ ∑ i, Y (x i) < (a + ε) * n} := by
+    rw [measureReal_def, measureReal_def, hlift_W]
+  rw [hE_real]
+  refine le_trans ?_ hcm_real
+  rw [mul_comm C]
+  refine mul_le_mul_of_nonneg_left ?_ (le_of_lt (Real.exp_pos _))
+  rw [hW_real] at hn
+  exact hn
+
+/-- **`a`-slice discharge at the boundary** (Phase 5+4 glue).
+
+Injects the Phase-4 boundary lemma (`tiltedWindow_eventually_large_of_boundary`,
+constant `1/4`) into the `∃ C > 0` relaxed change-of-measure
+`isMeasureInfinitePiTiltedEq_at_of_window`, at the boundary threshold
+`a = m := ∫ Y ∂(μ₀.tilted (lam·Y))`. Yields the `a`-slice of
+`IsMeasureInfinitePiTiltedEq` at `a = m`, with no residual largeness hypothesis
+(only non-degeneracy of the tilted variance). -/
+theorem tiltedHalfLine_chernoff_lower_at_boundary
+    {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
+    {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
+    (lam : ℝ) (hlam : 0 ≤ lam)
+    (hVar : (0 : ℝ) < Var[fun ω : ℕ → Ω₀ => Y (ω 0);
+        Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))]) :
+    ∀ ε > 0, ∃ C > 0, ∀ᶠ n : ℕ in atTop,
+      C * Real.exp (-(n : ℝ) *
+          (lam * (∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)))
+            - cgf Y μ₀ lam + lam * ε))
+        ≤ (Measure.infinitePi (fun _ : ℕ => μ₀)).real
+            {ω : ℕ → Ω₀ |
+              (∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω))) * n
+                ≤ ∑ i ∈ Finset.range n, Y (ω i)} := by
+  set m : ℝ := ∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)) with hmdef
+  -- The `∃ C > 0` window hypothesis at `a = m`, with `C = 1/4` from the boundary lemma.
+  have h_win : ∀ ε > 0, ∃ C > 0, ∀ᶠ n : ℕ in atTop,
+      C ≤ (Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))).real
+          {ω : ℕ → Ω₀ | m * n ≤ ∑ i ∈ Finset.range n, Y (ω i)
+            ∧ ∑ i ∈ Finset.range n, Y (ω i) < (m + ε) * n} := by
+    intro ε hε
+    exact ⟨1 / 4, by norm_num,
+      tiltedWindow_eventually_large_of_boundary (μ₀ := μ₀) hY h_bdd lam hε hVar⟩
+  exact isMeasureInfinitePiTiltedEq_at_of_window hY h_bdd lam hlam m h_win
+
+/-! ## Phase 6 — per-`a` Cramér lower bound from the `a`-slice
+
+`cramer_lower_phaseC_partial_discharge` requires the full `∀a∀ε`
+`IsMeasureInfinitePiTiltedEq` predicate. Its body, however, only consumes the
+`a`-slice (via `tilted_lower_from_predicate`, which uses `h_pred a ε hε`). We
+add a per-`a` wrapper `cramer_lower_at` taking the `a`-slice directly and routing
+straight through the parent `cramer_lower`, then specialize it at the optimal
+tilt threshold `a = deriv (cgf Y μ₀) lam` to obtain the **unconditional** Cramér
+lower bound. -/
+
+/-- **Per-`a` Cramér lower bound from the `a`-slice** (Phase 6).
+
+A single-`a` variant of `cramer_lower_phaseC_partial_discharge`: instead of the
+full `IsMeasureInfinitePiTiltedEq` predicate it consumes only the `a`-slice (the
+`h_tilted_lower` shape), routing directly through the parent `cramer_lower`.
+Existing wrappers are untouched. -/
+theorem cramer_lower_at
+    {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
+    {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
+    (a lam : ℝ) (hlam : 0 ≤ lam)
+    (h_coboundedBelow : Filter.IsCoboundedUnder (· ≥ ·) atTop
+      (fun n : ℕ =>
+        (1 / (n : ℝ)) * Real.log
+          ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
+            {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})))
+    (h_slice : ∀ ε > 0, ∃ C > 0, ∀ᶠ n : ℕ in atTop,
+      C * Real.exp (-(n : ℝ) * (lam * a - cgf Y μ₀ lam + lam * ε))
+        ≤ (Measure.infinitePi (fun _ : ℕ => μ₀)).real
+            {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)}) :
+    -(lam * a
+        - cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
+            (Measure.infinitePi (fun _ : ℕ => μ₀)) lam)
+      ≤ liminf (fun n : ℕ =>
+          (1 / (n : ℝ)) * Real.log
+            ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
+              {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop := by
+  -- Phase A plumbing: the eval family is iIndepFun + IdentDistrib + bounded.
+  have h_indep : iIndepFun (fun i : ℕ => fun ω : ℕ → Ω₀ => Y (ω i))
+      (Measure.infinitePi (fun _ : ℕ => μ₀)) :=
+    iIndepFun_eval_under_infinitePi (μ₀ := μ₀) hY_meas
+  have h_meas : ∀ i, Measurable (fun ω : ℕ → Ω₀ => Y (ω i)) :=
+    fun i => hY_meas.comp (measurable_pi_apply i)
+  have h_ident : ∀ i, IdentDistrib
+      (fun ω : ℕ → Ω₀ => Y (ω i)) (fun ω : ℕ → Ω₀ => Y (ω 0))
+      (Measure.infinitePi (fun _ : ℕ => μ₀))
+      (Measure.infinitePi (fun _ : ℕ => μ₀)) :=
+    fun i => identDistrib_eval_under_infinitePi hY_meas i
+  have h_bdd_eval : ∃ M, ∀ i ω, |(fun (ω : ℕ → Ω₀) => Y (ω i)) ω| ≤ M := by
+    obtain ⟨M, hM⟩ := bounded_eval_family h_bdd
+    exact ⟨M, hM⟩
+  -- The `a`-slice is the `h_tilted_lower` shape modulo the CGF bridge
+  -- `cgf (Y ∘ eval 0) (infinitePi μ₀) lam = cgf Y μ₀ lam`.
+  have h_cgf := cgf_eval_eq_cgf_base (μ₀ := μ₀) (Y := Y) hY_meas 0 lam
+  have h_tilted_lower : ∀ ε > 0, ∃ C > 0, ∀ᶠ n : ℕ in atTop,
+      C * Real.exp (-(n : ℝ) *
+          (lam * a
+            - cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
+                (Measure.infinitePi (fun _ : ℕ => μ₀)) lam
+            + lam * ε))
+        ≤ (Measure.infinitePi (fun _ : ℕ => μ₀)).real
+            {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)} := by
+    intro ε hε
+    obtain ⟨C, hC_pos, hC_event⟩ := h_slice ε hε
+    refine ⟨C, hC_pos, hC_event.mono fun n hn => ?_⟩
+    rwa [h_cgf]
+  exact cramer_lower (μ := Measure.infinitePi (fun _ : ℕ => μ₀))
+    h_indep h_meas h_ident h_bdd_eval a lam hlam h_coboundedBelow h_tilted_lower
+
+/-- **Unconditional Cramér lower bound at the optimal tilt threshold** (Phase 6
+main).
+
+At the optimal threshold `a = deriv (cgf Y μ₀) lam` (= the tilted mean,
+`tiltedMean_eq_deriv_cgf`), with bounded measurable `Y` and *non-degenerate*
+tilted variance, the Cramér lower bound holds with **no residual largeness
+hypothesis**. The boundary window mass `≥ 1/4` (`tiltedWindow_…_of_boundary`)
+feeds the `∃ C > 0` relaxed change-of-measure (Phase 5), whose `a`-slice output
+is discharged through the per-`a` `cramer_lower_at`. -/
+theorem cramer_lower_at_cgfDeriv_unconditional
+    {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
+    {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
+    (lam : ℝ) (hlam : 0 ≤ lam)
+    (hVar : (0 : ℝ) < Var[fun ω : ℕ → Ω₀ => Y (ω 0);
+        Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))])
+    (h_coboundedBelow : Filter.IsCoboundedUnder (· ≥ ·) atTop
+      (fun n : ℕ =>
+        (1 / (n : ℝ)) * Real.log
+          ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
+            {ω : ℕ → Ω₀ |
+              deriv (cgf Y μ₀) lam * n ≤ ∑ i ∈ Finset.range n, Y (ω i)}))) :
+    -(lam * deriv (cgf Y μ₀) lam
+        - cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
+            (Measure.infinitePi (fun _ : ℕ => μ₀)) lam)
+      ≤ liminf (fun n : ℕ =>
+          (1 / (n : ℝ)) * Real.log
+            ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
+              {ω : ℕ → Ω₀ |
+                deriv (cgf Y μ₀) lam * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop := by
+  -- The optimal threshold is the tilted mean, `a = m = deriv (cgf Y μ₀) lam`.
+  have hmean : (∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω))) = deriv (cgf Y μ₀) lam :=
+    tiltedMean_eq_deriv_cgf (μ₀ := μ₀) hY_meas h_bdd lam
+  -- The boundary `a`-slice, with its threshold rewritten to `deriv (cgf Y μ₀) lam`.
+  have h_slice := tiltedHalfLine_chernoff_lower_at_boundary
+    (μ₀ := μ₀) hY_meas h_bdd lam hlam hVar
+  rw [hmean] at h_slice
+  exact cramer_lower_at hY_meas h_bdd (deriv (cgf Y μ₀) lam) lam hlam
+    h_coboundedBelow h_slice
 
 end InformationTheory.Shannon.Cramer.Discharge
