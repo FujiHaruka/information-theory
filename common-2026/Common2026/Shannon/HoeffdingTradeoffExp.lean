@@ -13,8 +13,13 @@ This file fixes the **DEF-FLAW** of the constant-α `steinTypeII_at_level_pmf`
 headline (sandwich plan judgement log #4): the operational quantity is
 redefined at the **exponential level** — the acceptance region is the
 KL-sublevel set of empirical types `E_r n = {c | klDivIndex c n P₁ ≤ r}` — and
-the resulting Type-II error converges to `hoeffdingE2 P₁ P₂ r` by a single call
-to the two-sided Sanov LDP equality (`sanov_ldp_equality`).
+the resulting Type-II error converges to `hoeffdingE2 P₁ P₂ r`. The two
+directions are proved separately: the converse (limsup) via
+`sanov_ldp_upper_bound` on the non-perturbed minimizer `Qstar`, and the
+achievability (liminf) via `sanov_ldp_lower_bound_pointwise` on a perturbation
+`Qstar_ε = (1-ε)·Qstar + ε·P₁` (strict KL-interior, so the rounded types are
+eventually in `E_r`) followed by `ε → 0`. The headline `hoeffding_tradeoff_exp`
+is **hypothesis-free** on the interior `0 < r < klDivPmf P₂ P₁` (no `h_in_E`).
 
 See `docs/shannon/hoeffding-exponent-level-redef-plan.md`.
 -/
