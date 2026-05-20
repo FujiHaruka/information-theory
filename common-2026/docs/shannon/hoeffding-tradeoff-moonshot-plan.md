@@ -778,3 +778,10 @@ Phase C (achievability, `liminf ≥ E_2(α)`) + Phase D (converse, `limsup ≤ E
    - `hoeffding_tradeoff_with_hypothesis` (sandwich Tendsto, hypothesis 形)
 
    合計 316 行, 0 sorry。
+
+4. **(2026-05-20) Phase C/D の残スコープを `hoeffding-tradeoff-sandwich-plan.md` に正式切り出し** —
+   判断 #3 で予告した残スコープ (achievability `h_liminf` + converse `h_limsup` の 2 変分仮定 discharge) を
+   サブ計画 [`hoeffding-tradeoff-sandwich-plan.md`](hoeffding-tradeoff-sandwich-plan.md) に起草。
+   設計の核は **abstract L-H4 (`hoeffdingE2_minimizer_full_support`) を `alpha` の 3-case 分割
+   (α=0 / 0<α≤klDivPmf P₂ P₁ / klDivPmf P₂ P₁≤α) で構成的に回避** する点 (各 case の constructive
+   minimizer 補題は既に 0-sorry 完成済)。残リスクは Phase 3 の Type-I AEP のみに局所化。

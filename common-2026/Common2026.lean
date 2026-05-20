@@ -219,6 +219,7 @@ import Common2026.Shannon.BroadcastChannelBonferroniDecay
 import Common2026.Shannon.BrunnMinkowskiLayerCakeBody
 import Common2026.Shannon.WynerZivAchievabilityBridge
 import Common2026.Shannon.HoeffdingMinimizerAttainment
+import Common2026.Shannon.HoeffdingSandwichDischarge
 import Common2026.Shannon.LZ78FinalGlue
 import Common2026.Shannon.EPIStamDeBruijnConclusion
 import Common2026.Shannon.MACPerEventAEPDecay
