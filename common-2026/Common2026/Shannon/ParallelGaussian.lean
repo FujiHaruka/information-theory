@@ -252,14 +252,20 @@ water-filling at level `ν*` satisfying `∑_i max(0, ν* - N_i) = P`:
 
 `C = ∑_i (1/2) log(1 + max(0, ν* - N_i) / N_i)`.
 
-⚠️ NOT a discharge: this is a hypothesis pass-through (`:= h_per_coord`). The
-per-coordinate water-filling reduction (L-PG1, `h_per_coord`) is the conclusion
-itself, taken as a hypothesis and OPEN; L-WF1/L-WF2 are also taken as hypotheses
-here. The genuine reduction needs water-filling KKT + per-coord AWGN capacity
-(continuous AEP / sphere-shell volume) machinery absent from Mathlib. Genuine
-discharges of the *individual* layers live in the `*_discharged` re-publishes
-(L-PG0 kernel measurability, L-WF1 IVT existence, L-WF2 concavity certificate);
-L-PG1 stays OPEN throughout.
+⚠️ This statement is a hypothesis pass-through (`:= h_per_coord`); the genuine
+discharge lives in the `*_discharged` re-publishes (see below). Because
+`parallelGaussianCapacity` is the **information capacity** (`sSup` of mutual
+information), *not* an operational coding theorem, the reduction needs **no**
+continuous AEP / sphere-shell volume machinery: it is a sup-sandwich
+(`Real.le_antisymm` of `le_csSup` achiever lower bound + `csSup_le` max-entropy
+upper bound), mirroring the single-coordinate `AWGN.awgnCapacity_eq`.
+
+Genuine discharges of all layers live in the `*_discharged` re-publishes:
+* L-PG0 kernel measurability, L-WF1 IVT existence, L-WF2 concavity certificate;
+* **L-PG1** is genuinely discharged in
+  `ParallelGaussianPerCoord.isParallelGaussianPerCoordReduction_discharged`
+  (sup-sandwich; residual honest analytic hypotheses bundled in
+  `IsParallelGaussianPerCoordRegularity`, 🟢ʰ).
 
 撤退ライン L-WF1 + L-WF2 + L-PG1 全採用形 (hypothesis pass-through 3 本):
 * `h_kkt` (L-WF1): water level `ν` が全電力 `P` を使い切る KKT 条件

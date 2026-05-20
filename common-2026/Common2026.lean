@@ -227,3 +227,4 @@ import Common2026.Shannon.MACPerEventAEPDecay
 import Common2026.Shannon.MACFanoConverseBody
 import Common2026.Shannon.WynerZivCondEntDiffConvexBody
 import Common2026.Shannon.EPIConvolutionDensity
+import Common2026.Shannon.ParallelGaussianPerCoord
