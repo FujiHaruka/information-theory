@@ -531,4 +531,168 @@ theorem brunn_minkowski_entropy_inequality_genuine
   brunn_minkowski_entropy_jointPi P hn X Y volA volB volAB hvolA hvolB hvolAB
     hA_unif hB_unif hAB_unif h_geom
 
+/-! ## §H — geometric honest hyp の縮約: sqrt 形 BM の λ-最適化 discharge
+
+§G では geometric content を sqrt 形 `IsBMEntropyPowerVolumeHyp`
+(`volAB^(1/n) ≥ volA^(1/n) + volB^(1/n)`) として丸ごと honest 仮定にしていた。
+本 §H はこれを **より primitive な scalar-multiplicative BM 仮定**
+`IsBMScaledMulHyp` (Cover-Thomas 17.9.2 の出発点である scaled multiplicative
+BM) に **縮約** する: `IsBMScaledMulHyp ⇒ IsBMEntropyPowerVolumeHyp` を
+λ-最適化 (`λ = volA^(1/n)/(volA^(1/n)+volB^(1/n))`) + `Real.rpow` 代数で
+**genuine** に証明する (`bm_scaledMul_to_sqrt`)。
+
+さらに `IsBMScaledMulHyp` が geometric BM の image であることを
+`bm_geom_to_scaledMul` (`volume_smul_nDim` で scaling 因子 `r^n` を回収し、集合恒等式
+`λ • (λ⁻¹ • A) + (1-λ) • ((1-λ)⁻¹ • B) = A + B` で plain Minkowski sum に橋渡し)
+で示し、`IsBMScaledMulHyp` が `:= True` 系の vacuous placeholder ではなく
+genuine geometric content の scalar 投影であることを担保する。 -/
+
+/-- **L-BM-EP' (scaled multiplicative BM hypothesis, honest geometric
+side-condition, `IsBMEntropyPowerVolumeHyp` より primitive)**: Cover-Thomas
+17.9.2 の出発点。任意の内点 `λ ∈ (0,1)` で
+
+    `(λ^(-n) · volA) ^ λ · ((1-λ)^(-n) · volB) ^ (1-λ) ≤ volAB`.
+
+これは集合 `A₁ = λ⁻¹ • A`, `B₁ = (1-λ)⁻¹ • B` への乗法形 geometric BM
+`vol(A₁)^λ · vol(B₁)^(1-λ) ≤ vol(λ • A₁ + (1-λ) • B₁) = vol(A + B)` に
+`volume_smul_nDim` (`vol(r•A)=r^n volA`) を代入したもの (`bm_geom_to_scaledMul`
+で genuine に geometric BM から導出可能)。sqrt 形 `IsBMEntropyPowerVolumeHyp`
+より primitive で、λ-最適化を経由せず素直に geometric BM の image。 -/
+def IsBMScaledMulHyp (n : ℕ) (volA volB volAB : ℝ) : Prop :=
+  ∀ lam : ℝ, 0 < lam → lam < 1 →
+    (lam ^ (-(n : ℝ)) * volA) ^ lam * ((1 - lam) ^ (-(n : ℝ)) * volB) ^ (1 - lam)
+      ≤ volAB
+
+/-- **scaled multiplicative BM ⇒ sqrt 形 BM (genuine, λ-最適化 + `Real.rpow` 代数)**.
+
+Cover-Thomas 17.9.2 標準導出: `s := volA^(1/n)`, `t := volB^(1/n)` (共に正) と
+最適 `λ := s/(s+t)` (`1-λ = t/(s+t)`) を代入すると `s/λ = s+t = t/(1-λ)` なので
+`(λ^(-n)·volA)^λ = ((s/λ)^n)^λ = (s+t)^(nλ)`、同様に右因子 `= (s+t)^(n(1-λ))`、
+積は `(s+t)^n`。よって `(s+t)^n ≤ volAB`、両辺に `(·)^(1/n)` (単調) を施し
+`((s+t)^n)^(1/n) = s+t` で `s + t ≤ volAB^(1/n)`、すなわち sqrt 形 BM。 -/
+theorem bm_scaledMul_to_sqrt {n : ℕ}
+    (volA volB volAB : ℝ)
+    (hvolA : 0 < volA) (hvolB : 0 < volB) (hn : 0 < n)
+    (h_scaled : IsBMScaledMulHyp n volA volB volAB) :
+    IsBMEntropyPowerVolumeHyp n volA volB volAB := by
+  unfold IsBMEntropyPowerVolumeHyp
+  have hnR : (0 : ℝ) < n := by exact_mod_cast hn
+  have hnne : (n : ℝ) ≠ 0 := ne_of_gt hnR
+  -- sqrt values `s, t` and their basics.
+  set s : ℝ := volA ^ ((1 : ℝ) / n) with hs
+  set t : ℝ := volB ^ ((1 : ℝ) / n) with ht
+  have hs_pos : 0 < s := Real.rpow_pos_of_pos hvolA _
+  have ht_pos : 0 < t := Real.rpow_pos_of_pos hvolB _
+  have hc_pos : 0 < s + t := by linarith
+  -- `s ^ n = volA`, `t ^ n = volB`.
+  have hsn : s ^ (n : ℝ) = volA := by
+    rw [hs, ← Real.rpow_mul hvolA.le, one_div, inv_mul_cancel₀ hnne, Real.rpow_one]
+  have htn : t ^ (n : ℝ) = volB := by
+    rw [ht, ← Real.rpow_mul hvolB.le, one_div, inv_mul_cancel₀ hnne, Real.rpow_one]
+  -- optimal `λ = s/(s+t)`.
+  set lam : ℝ := s / (s + t) with hlam
+  have hlam_pos : 0 < lam := div_pos hs_pos hc_pos
+  have hlam_lt : lam < 1 := by
+    rw [hlam, div_lt_one hc_pos]; linarith
+  have hlam1 : 1 - lam = t / (s + t) := by
+    rw [hlam]; field_simp; ring
+  have hlam_ne : lam ≠ 0 := ne_of_gt hlam_pos
+  have h1lam_pos : 0 < 1 - lam := by rw [hlam1]; positivity
+  have hlam1_ne : (1 - lam) ≠ 0 := ne_of_gt h1lam_pos
+  -- the two scaling collapses: `λ^(-n)·volA = (s+t)^n` and same for the `t` factor.
+  have hcollapse_s : lam ^ (-(n : ℝ)) * volA = (s + t) ^ (n : ℝ) := by
+    rw [← hsn, Real.rpow_neg hlam_pos.le, ← div_eq_inv_mul, ← Real.div_rpow hs_pos.le hlam_pos.le,
+      hlam]
+    congr 1
+    field_simp
+  have hcollapse_t : (1 - lam) ^ (-(n : ℝ)) * volB = (s + t) ^ (n : ℝ) := by
+    rw [← htn, Real.rpow_neg h1lam_pos.le, ← div_eq_inv_mul,
+      ← Real.div_rpow ht_pos.le h1lam_pos.le, hlam1]
+    congr 1
+    field_simp
+  -- the scaled multiplicative BM at the optimal `λ` collapses to `(s+t)^n ≤ volAB`.
+  have hkey := h_scaled lam hlam_pos hlam_lt
+  rw [hcollapse_s, hcollapse_t] at hkey
+  have hcn : ((s + t) ^ (n : ℝ)) ^ lam * ((s + t) ^ (n : ℝ)) ^ (1 - lam)
+      = (s + t) ^ (n : ℝ) := by
+    rw [← Real.rpow_mul hc_pos.le, ← Real.rpow_mul hc_pos.le, ← Real.rpow_add hc_pos]
+    congr 1
+    ring
+  rw [hcn] at hkey
+  -- apply `(·)^(1/n)` (monotone) and cancel `((s+t)^n)^(1/n) = s+t`.
+  have hmono := Real.rpow_le_rpow (by positivity) hkey (by positivity : (0 : ℝ) ≤ 1 / n)
+  rw [← Real.rpow_mul hc_pos.le, one_div, mul_inv_cancel₀ hnne, Real.rpow_one] at hmono
+  rw [ge_iff_le, one_div]
+  exact hmono
+
+/-- **集合恒等式 (scaling で plain Minkowski sum を回収)**: `λ ≠ 0`,
+`1-λ ≠ 0` で `λ • (λ⁻¹ • A) + (1-λ) • ((1-λ)⁻¹ • B) = A + B` on `Fin n → ℝ`.
+`smul_smul` + `mul_inv_cancel` + `one_smul`。 -/
+theorem smul_inv_smul_add_eq {n : ℕ} (A B : Set (Fin n → ℝ)) (lam : ℝ)
+    (hlam : lam ≠ 0) (hlam' : (1 - lam) ≠ 0) :
+    lam • ((lam⁻¹ : ℝ) • A) + (1 - lam) • (((1 - lam)⁻¹ : ℝ) • B) = A + B := by
+  rw [smul_smul, smul_smul, mul_inv_cancel₀ hlam, mul_inv_cancel₀ hlam',
+    one_smul, one_smul]
+
+/-- **geometric BM ⇒ scaled multiplicative BM (genuine, `volume_smul_nDim` 接続)**:
+multiplicative geometric BM `vol(A₁)^λ vol(B₁)^(1-λ) ≤ vol(λ•A₁+(1-λ)•B₁)`
+(`h_geom_mul`、§F `brunn_minkowski_volume_indicator` で供給) を、`A₁ = λ⁻¹•A`,
+`B₁ = (1-λ)⁻¹•B` で取り、`volume_smul_nDim` で `vol(A₁) = (λ⁻¹)^n volA` 等を
+代入、集合恒等式 (`smul_inv_smul_add_eq`) で `λ•A₁+(1-λ)•B₁ = A+B` に橋渡しして
+`IsBMScaledMulHyp n volA volB volAB` (with `volAB = vol(A+B)`) を得る。
+これで `IsBMScaledMulHyp` が genuine geometric content の scalar 投影であることを
+担保 (`volume_smul_nDim` を genuine に使用)。 -/
+theorem bm_geom_to_scaledMul {n : ℕ} (A B : Set (Fin n → ℝ))
+    (hvolA : volume A ≠ ∞) (hvolB : volume B ≠ ∞)
+    (h_geom_mul : ∀ lam : ℝ, 0 < lam → lam < 1 →
+      (volume ((lam⁻¹ : ℝ) • A)).toReal ^ lam
+          * (volume (((1 - lam)⁻¹ : ℝ) • B)).toReal ^ (1 - lam)
+        ≤ (volume (lam • ((lam⁻¹ : ℝ) • A)
+            + (1 - lam) • (((1 - lam)⁻¹ : ℝ) • B))).toReal) :
+    IsBMScaledMulHyp n (volume A).toReal (volume B).toReal (volume (A + B)).toReal := by
+  intro lam hlam_pos hlam_lt
+  have h1lam_pos : 0 < 1 - lam := by linarith
+  have hlam_ne : lam ≠ 0 := ne_of_gt hlam_pos
+  have hlam1_ne : (1 - lam) ≠ 0 := ne_of_gt h1lam_pos
+  -- `vol(r • A).toReal = r^n · vol(A).toReal` for `0 < r`, `vol A ≠ ∞`, expressed
+  -- with the scaling factor `r^(-n)` in `rpow` form: `(r⁻¹)^n = r^(-(n:ℝ))`.
+  have hscale : ∀ (r : ℝ), 0 < r → ∀ (S : Set (Fin n → ℝ)), volume S ≠ ∞ →
+      (volume ((r⁻¹ : ℝ) • S)).toReal = r ^ (-(n : ℝ)) * (volume S).toReal := by
+    intro r hr S hS
+    rw [volume_smul_nDim _ (by positivity) S, ENNReal.toReal_mul,
+      ENNReal.toReal_ofReal (by positivity)]
+    congr 1
+    rw [Real.rpow_neg hr.le, Real.rpow_natCast, ← inv_pow]
+  -- rewrite both scaled volumes and the Minkowski-sum set in `h_geom_mul`.
+  have hkey := h_geom_mul lam hlam_pos hlam_lt
+  rw [hscale lam hlam_pos A hvolA, hscale (1 - lam) h1lam_pos B hvolB,
+    smul_inv_smul_add_eq A B lam hlam_ne hlam1_ne] at hkey
+  exact hkey
+
+/-- **Phase 4' — entropy 形 headline (`IsBMScaledMulHyp` 縮約版)**.
+
+`brunn_minkowski_entropy_inequality_genuine` と同結論だが、geometric honest 仮定を
+sqrt 形 `IsBMEntropyPowerVolumeHyp` から **より primitive な** scaled multiplicative
+`IsBMScaledMulHyp` に縮約 (sqrt 形への λ-最適化持ち上げ `bm_scaledMul_to_sqrt` を
+内部で genuine に消費)。残る honest 仮定は uniform=log-vol 3 本 + scaled
+multiplicative BM 1 本のみで、sqrt 形特有の λ-最適化代数は headline 外に出た。 -/
+theorem brunn_minkowski_entropy_inequality_scaledMul
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (P : Measure Ω) [IsProbabilityMeasure P]
+    {n : ℕ} (hn : 0 < n)
+    (X Y : Ω → (Fin n → ℝ))
+    (volA volB volAB : ℝ) (hvolA : 0 < volA) (hvolB : 0 < volB) (hvolAB : 0 < volAB)
+    (hA_unif : Common2026.Shannon.jointDifferentialEntropyPi (P.map X) = Real.log volA)
+    (hB_unif : Common2026.Shannon.jointDifferentialEntropyPi (P.map Y) = Real.log volB)
+    (hAB_unif : Common2026.Shannon.jointDifferentialEntropyPi
+      (P.map (fun ω => X ω + Y ω)) = Real.log volAB)
+    (h_scaled : IsBMScaledMulHyp n volA volB volAB) :
+    entropyPower_nDim n Common2026.Shannon.jointDifferentialEntropyPi
+        (P.map (fun ω => X ω + Y ω))
+      ≥ entropyPower_nDim n Common2026.Shannon.jointDifferentialEntropyPi (P.map X)
+        + entropyPower_nDim n Common2026.Shannon.jointDifferentialEntropyPi (P.map Y) :=
+  brunn_minkowski_entropy_jointPi P (by exact_mod_cast hn) X Y volA volB volAB
+    hvolA hvolB hvolAB hA_unif hB_unif hAB_unif
+    (bm_scaledMul_to_sqrt volA volB volAB hvolA hvolB hn h_scaled)
+
 end InformationTheory.Shannon.BrunnMinkowski
