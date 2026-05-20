@@ -90,6 +90,7 @@ import Common2026.Shannon.HuffmanOptimality
 import Common2026.Shannon.HuffmanT1APPrimePartial
 import Common2026.Shannon.CsiszarProjection
 import Common2026.Shannon.Chernoff
+import Common2026.Shannon.ChernoffNLetterZSum
 import Common2026.Shannon.ChernoffInformation
 import Common2026.Shannon.ChernoffConverse
 import Common2026.Shannon.Cramer
