@@ -623,3 +623,20 @@ proof-log を最終に append)。
    capacity 等号 の 3 主張) を signature 露出。本体は L-PG1 単独で済む
    (`:= h_per_coord`) が、L-WF1 + L-WF2 を discharge plan への bridge として
    signature に残す。
+
+---
+
+## 撤退ライン discharge 子 plan へのポインタ
+
+- **L-WF1 / L-WF2 (water-filling 層) → genuine discharge 済**:
+  `ParallelGaussianKKT.lean` (`exists_waterFillingKKT_of_pos` IVT 存在) +
+  `ParallelGaussianWFCertBody.lean` / `ParallelGaussianWFStationarityBody.lean`
+  (log-concavity tangent + Lagrange certificate)。0 sorry。
+- **L-PG0 (parallel kernel measurability) → genuine discharge 済**:
+  `ParallelGaussianL_PG0Discharge.lean` (`isParallelGaussianKernelMeasurable`)。
+- **L-PG1 (per-coordinate AWGN reduction、情報理論コア、唯一の残 OPEN) →**
+  [`parallel-gaussian-chain-rule-plan.md`](parallel-gaussian-chain-rule-plan.md)。
+  **MI 分解 bridge (`ContChannelMIDecomp.lean`) を per-coord fibre に適用する payoff plan**。
+  情報容量 (`sSup` of MI) ⇒ continuous AEP 不要、4 ステップ (MI 優加法性 ≤ /
+  per-coord 上界 / Gaussian achiever ≥ / water-filling 最適化) で genuine 化。
+  最重リスク = MI 優加法性 (相関入力 `≤`、`mutualInfo_pi_eq_sum` は product 入力 `=` のみ)。
