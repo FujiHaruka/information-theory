@@ -1,4 +1,5 @@
 import Common2026.Shannon.BrunnMinkowskiPLBody
+import Common2026.Shannon.BrunnMinkowski1DSuperlevelBody
 import Mathlib.MeasureTheory.Integral.Layercake
 import Mathlib.MeasureTheory.Integral.Bochner.Set
 import Mathlib.MeasureTheory.Measure.Real
@@ -216,5 +217,72 @@ theorem isPrekopaLeindlerHyp_of_layercake
     IsPrekopaLeindlerHyp f g hfn lam intF intG intH :=
   prekopa_leindler_1D_layercake f g hfn lam h0 h1 muF muG muH
     intF intG intH hF hG hH h_pt h_sl_meas h_lc h_tail h_sl_pos
+
+/-! ## §E — superlevel hypothesis を引数から落とした 1 次元 PL -/
+
+/-- **`h_sl_pos` を `IsPL11DSuperLevelHyp` から派生 (`t > 0 ⟹ t ≥ 0`)**:
+`superlevel_setIntegral_mono` が要求する `∀ t > 0, ...` は
+`IsPL11DSuperLevelHyp` (= `∀ t ≥ 0, ...`) の `t > 0` への制限。両者を別個に
+受けていた `prekopa_leindler_1D_layercake` を 1 本に統合するための橋。 -/
+theorem pl1SuperLevel_pos_of_hyp
+    (muF muG muH : ℝ → ℝ) (lam : ℝ)
+    (h_sl_meas : IsPL11DSuperLevelHyp muF muG muH lam) :
+    ∀ t : ℝ, 0 < t → lam * muF t + (1 - lam) * muG t ≤ muH t :=
+  fun t ht => h_sl_meas t ht.le
+
+/-- **1 次元 PL (superlevel hypothesis を genuine に discharge した版)**.
+
+`prekopa_leindler_1D_layercake` は superlevel-set 測度不等式を **2 本**
+(`h_sl_meas : IsPL11DSuperLevelHyp` と `h_sl_pos : ∀ t > 0, ...`) hypothesis
+として両取りしていた。本定理はそれらを引数から **完全に除去** する:
+`f, g, hfn : ℝ → ℝ` の点ごと PL 仮定 (`h_pt`) と superlevel 集合の
+honest regularity (compact / 非空 / 有限) のみから、
+`BrunnMinkowski1DSuperlevelBody.isPL11DSuperLevelHyp_real` で
+`IsPL11DSuperLevelHyp` を内部 produce し (genuine 1 次元 Brunn-Minkowski)、
+そこから `h_sl_pos` も `pl1SuperLevel_pos_of_hyp` で派生して
+layer-cake change-of-variable に流す。
+
+tail 測度は `muφ t := (volume {x | t ≤ φ x}).toReal` に固定され、layer-cake
+積分恒等式 (`h_lc`) と tail 可積分性 (`h_tail`) のみ残る (これらは genuine
+measure content であり no-op ではない)。superlevel BM 自体は本 chain で
+完全に discharge 済 (sorry 0)。 -/
+theorem prekopa_leindler_1D_superlevel_discharged
+    (f g hfn : ℝ → ℝ) (lam : ℝ)
+    (h0 : 0 ≤ lam) (h1 : lam ≤ 1)
+    (intF intG intH : ℝ)
+    (hF : 0 ≤ intF) (hG : 0 ≤ intG) (hH : 0 ≤ intH)
+    (hF_compact : ∀ t : ℝ, 0 ≤ t → IsCompact {x : ℝ | t ≤ f x})
+    (hG_compact : ∀ t : ℝ, 0 ≤ t → IsCompact {x : ℝ | t ≤ g x})
+    (hF_ne : ∀ t : ℝ, 0 ≤ t → ({x : ℝ | t ≤ f x}).Nonempty)
+    (hG_ne : ∀ t : ℝ, 0 ≤ t → ({x : ℝ | t ≤ g x}).Nonempty)
+    (hH_fin : ∀ t : ℝ, 0 ≤ t → volume {x : ℝ | t ≤ hfn x} ≠ ∞)
+    (h_pt : ∀ x y : ℝ,
+      f x ^ lam * g y ^ (1 - lam) ≤ hfn (lam * x + (1 - lam) * y))
+    (h_lc : IsPL1LayerCakeIntegralHyp
+      (fun t => (volume {x : ℝ | t ≤ f x}).toReal)
+      (fun t => (volume {x : ℝ | t ≤ g x}).toReal)
+      (fun t => (volume {x : ℝ | t ≤ hfn x}).toReal) intF intG intH)
+    (h_tail : IsTailIntegrableHyp
+      (fun t => (volume {x : ℝ | t ≤ f x}).toReal)
+      (fun t => (volume {x : ℝ | t ≤ g x}).toReal)
+      (fun t => (volume {x : ℝ | t ≤ hfn x}).toReal)) :
+    intF ^ lam * intG ^ (1 - lam) ≤ intH := by
+  -- 1 次元 superlevel Brunn-Minkowski を pointwise PL + regularity から produce.
+  have h_sl_meas :
+      IsPL11DSuperLevelHyp
+        (fun t => (volume {x : ℝ | t ≤ f x}).toReal)
+        (fun t => (volume {x : ℝ | t ≤ g x}).toReal)
+        (fun t => (volume {x : ℝ | t ≤ hfn x}).toReal) lam :=
+    isPL11DSuperLevelHyp_real f g hfn lam h0 h1 hF_compact hG_compact
+      hF_ne hG_ne hH_fin h_pt
+  -- `t > 0` 版を派生し、layer-cake change-of-variable で加法形 PL に流す.
+  have h_sl_pos := pl1SuperLevel_pos_of_hyp _ _ _ lam h_sl_meas
+  have h_add : IsPL1AdditiveHyp intF intG intH lam :=
+    pl1_additive_via_layercake _ _ _ intF intG intH lam h0 h1 h_lc h_tail h_sl_pos
+  -- 加法形 ⇒ 乗法形 (重み付き AM-GM).
+  unfold IsPL1AdditiveHyp at h_add
+  have hamgm : intF ^ lam * intG ^ (1 - lam) ≤ lam * intF + (1 - lam) * intG :=
+    weighted_amgm_lambda hF hG h0 h1
+  linarith
 
 end InformationTheory.Shannon.BrunnMinkowski
