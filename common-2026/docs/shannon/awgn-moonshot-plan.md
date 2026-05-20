@@ -5,7 +5,7 @@
 > MI bridge (F-2) + converse (F-3 `IsAwgnConverseHypothesis`) を **honest pass-through hyp** で publish (`:= True` ではない、0 sorry)。
 > `IsAwgnTypicalityHypothesis` (`AWGNAchievability.lean:39`)・`IsAwgnConverseHypothesis` (`AWGNConverse.lean:56`) は実体ある非自明 Prop。
 > F-1 kernel measurability のみ `AWGNF1Discharge.lean:60` で完全 discharge 済。
-> **注意**: `AWGNF2F3Discharge.lean` の `awgn_theorem_F1F2F3_discharged` (L294) は F-2/F-3 の*実 discharge ではない* —
+> **注意**: `AWGNF2F3Discharge.lean` の `awgn_theorem_of_F2F3_hypotheses` (旧名 `awgn_theorem_F1F2F3_discharged`、honest 改名 2026-05-20) は F-2/F-3 の*実 discharge ではない* —
 > `IsAwgnF2DecodingHypothesis`/`IsAwgnF3ChainHypothesis` は元 hyp と同形の alias (id-like reduction)、
 > `IsAwgnF3PerLetterHypothesis` (`AWGNF2F3Discharge.lean:229`) は `:= ... True` の placeholder。F-2/F-3 の実体は未着手。
 

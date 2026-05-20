@@ -260,8 +260,13 @@ equality:
   water-filling sum (water-filling product Gaussian as input law).
 * `h_certificate` — antisymmetry closure (`a ≤ b ∧ b ≤ a → a = b`).
 
-The bundle predicate is satisfied iff the parallel-capacity-formula equality
-holds. Discharge of the bundle is deferred to
+⚠️ OPEN — conclusion-as-hypothesis: the bundle is just the capacity-formula
+equality split into its two inequalities (`cap ≤ sum ∧ sum ≤ cap`), so satisfying
+it is equivalent to assuming the L-PG1 per-coordinate reduction outright. Neither
+inequality is proved here; `isParallelGaussianPerCoordReduction_of_bundle` only
+re-assembles them via `le_antisymm`. The genuine bound needs the memoryless chain
+rule + per-coord AWGN converse/achievability (continuous AEP / sphere-shell
+volume) machinery absent from Mathlib. Deferred to
 `parallel-gaussian-chain-rule-plan.md`. -/
 def ParallelGaussianChainRuleBundle {n : ℕ} (P : ℝ)
     (N : Fin n → ℝ≥0) (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -301,7 +306,16 @@ Combines `exists_waterFillingKKT_of_pos` with the optimality certificate +
 chain rule bundle to deliver the full capacity formula. The signature has
 *two* abstract hypotheses (certificate + bundle) instead of three predicate
 arguments; in particular, the water-level `ν` is now produced internally by
-existence (L-WF1 discharged). -/
+existence (L-WF1 discharged).
+
+⚠️ NOT a full discharge: L-PG1 (the per-coordinate water-filling reduction)
+remains OPEN — it enters via `h_for_bundle : … → ParallelGaussianChainRuleBundle`,
+a conclusion-as-hypothesis (the capacity equality split into two inequalities).
+The optimality certificate (`h_for_cert`) is also still taken as a hypothesis
+here. Genuinely closed in *this* theorem: L-WF1 (KKT water-level existence, via
+IVT) and L-PG0 (kernel measurability, upstream). The genuine L-PG1 reduction needs
+the memoryless chain rule + per-coord AWGN capacity (continuous AEP / sphere-shell
+volume) machinery absent from Mathlib. -/
 theorem parallel_gaussian_capacity_formula_KKT_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -326,6 +340,11 @@ theorem parallel_gaussian_capacity_formula_KKT_discharged {n : ℕ}
     hν_kkt h_unique h_per_coord
 
 /-- **Active-set form (L-WF1 discharged + L-WF2/L-PG1 certificate forms)**.
+
+⚠️ NOT a full discharge: L-PG1 (per-coordinate reduction) remains OPEN via the
+conclusion-as-hypothesis bundle `h_for_bundle`; L-WF2 (`h_for_cert`) is also a
+hypothesis. Only L-WF1 (KKT existence) and L-PG0 (kernel measurability) are
+genuinely closed.
 
 Cover-Thomas Ch.9.4 Theorem 9.4.1 alternative form. Combines
 `parallel_gaussian_capacity_formula_KKT_discharged` with

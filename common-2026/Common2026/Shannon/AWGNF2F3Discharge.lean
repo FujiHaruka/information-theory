@@ -63,11 +63,11 @@ Bruijn の hypothesis pass-through wave と同様)。
      `IsAwgnF3ChainHypothesis` (chain rule + Fano data processing) を予約。
    - `awgn_converse_fano_body` =
      `IsAwgnF3ChainHypothesis → IsAwgnConverseHypothesis` (id-like reduction)。
-3. **再 publish**:
-   - `awgn_theorem_F1F2F3_discharged`: `AWGNF1Discharge.awgn_theorem_F1_discharged`
+3. **再 publish** (⚠️ F-2/F-3 は OPEN、hypothesis として渡すだけ):
+   - `awgn_theorem_of_F2F3_hypotheses`: `AWGNF1Discharge.awgn_theorem_F1_discharged`
      の `h_typicality` を F-2 body から、`h_converse` を F-3 body から導出した形。
      signature には MI bridge hypothesis (F-2' MI bridge は別) と F-2 / F-3 の
-     primitive hypothesis (predicate) が残る。
+     primitive hypothesis (predicate) が残る。F-2/F-3 自体は未 discharge。
 
 ## 規模見積
 
@@ -77,7 +77,7 @@ Bruijn の hypothesis pass-through wave と同様)。
   `awgnJointlyTypicalSet_measurable` 等): ~150-250 行
 - body lemmas (`awgn_achievability_jointly_typical_body` /
   `awgn_converse_fano_body`): ~100-200 行
-- `awgn_theorem_F1F2F3_discharged` 再 publish: ~100-150 行
+- `awgn_theorem_of_F2F3_hypotheses` 再 publish: ~100-150 行
 
 合計 **~500-800 行** (MVP 縮減で 0 sorry / 0 warning 達成可能、実体 discharge は
 別 plan)。
@@ -223,13 +223,17 @@ where `X_i` is the marginal of the i-th input symbol under uniform message and
 converse (Cover-Thomas 9.1.2 inner step), discharged via
 `differentialEntropy_le_gaussian_of_variance_le`.
 
-Following the F-3 撤退ライン convention from `AWGNConverse.lean`, the per-letter
-integrability hypotheses (`h_ent_int`) are bundled in here as a single opaque
-predicate (the discharge layer will assemble them per-`(c, i)`). -/
+⚠️ OPEN placeholder: the body is `True`, so this predicate carries NO actual
+content yet — it is a stub for the per-letter Gaussian max-entropy bound, not a
+discharge. The genuine per-letter MI bound needs continuous differential-entropy
+/ Gaussian extremality machinery absent from Mathlib (deferred to
+`awgn-converse-aux-plan.md`). Following the F-3 撤退ライン convention from
+`AWGNConverse.lean`, the per-letter integrability hypotheses (`h_ent_int`) are
+bundled in here (the discharge layer will assemble them per-`(c, i)`). -/
 def IsAwgnF3PerLetterHypothesis (P : ℝ) (N : ℝ≥0)
     (h_meas : IsAwgnChannelMeasurable N) : Prop :=
   ∀ {M n : ℕ} (_hM : 2 ≤ M) (_c : AwgnCode M n P) (_i : Fin n),
-    True  -- abstract per-letter ≤ bound (consumed by `IsAwgnF3ChainHypothesis`)
+    True  -- OPEN placeholder (`True`): abstract per-letter ≤ bound, not yet discharged
 
 /-- **F-3 body hypothesis 2: chain rule + Fano data processing aggregation.**
 
@@ -272,26 +276,30 @@ theorem awgn_converse_fano_body
     IsAwgnConverseHypothesis P N h_meas :=
   fun _hM c Pe hPe => h_chain _hM c Pe hPe
 
-/-! ## Phase D — `awgn_theorem_F1F2F3_discharged` re-publish -/
+/-! ## Phase D — `awgn_theorem_of_F2F3_hypotheses` re-publish (⚠️ F-2/F-3 OPEN) -/
 
-/-- **AWGN channel coding theorem** (F-1 + F-2 + F-3 body discharge).
+/-- **AWGN channel coding theorem — F-1 discharged, F-2/F-3 taken as hypotheses.**
 
-`AWGNF1Discharge.awgn_theorem_F1_discharged` の `h_typicality` を F-2 body
-(`awgn_achievability_jointly_typical_body`) で導出し、`h_converse` を F-3 body
-(`awgn_converse_fano_body`) で導出した形。
+⚠️ NOT a full discharge: F-2 (continuous jointly-typical decoding) and F-3
+(per-letter MI Fano converse) remain OPEN — they are *taken as hypotheses*
+(`h_F2 : IsAwgnF2DecodingHypothesis`, `h_F3_per_letter`, `h_F3_chain`). Note
+`IsAwgnF3PerLetterHypothesis := True` is an OPEN placeholder, not a discharge.
+A genuine discharge needs continuous AEP / sphere-shell volume (F-2) and chain
+rule + Fano data processing + Gaussian max-entropy (F-3) machinery absent from
+Mathlib. Only F-1 (kernel measurability, via
+`AWGNF1Discharge.awgn_theorem_F1_discharged`) is genuinely closed here.
 
-signature の構造的 hypothesis (F-1 = `h_typicality`、F-3 = `h_converse`) は
-本 file の `IsAwgnF2DecodingHypothesis` / `IsAwgnF3PerLetterHypothesis` +
-`IsAwgnF3ChainHypothesis` に置き換わり、**MI bridge (F-2' 別 layer)** は
-そのまま pass-through。
+This wrapper threads the F-2 hypothesis through
+`awgn_achievability_jointly_typical_body` (an identity-shaped reduction) and the
+F-3 hypotheses through `awgn_converse_fano_body` (likewise), then hands off to the
+F-1-discharged theorem. The MI bridge (F-2' layer) is passed through unchanged.
 
-実体 (continuous AEP + Gaussian random codebook、Fano + chain rule + per-letter
-max-entropy 連鎖) の discharge は別 plan へ:
+実体 discharge は別 plan へ:
 
 * F-2 → `awgn-achievability-typicality-plan.md` (Tier 3)
 * F-3 → `awgn-converse-aux-plan.md` (Tier 3)
 -/
-theorem awgn_theorem_F1F2F3_discharged
+theorem awgn_theorem_of_F2F3_hypotheses
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_F2 : IsAwgnF2DecodingHypothesis P N (isAwgnChannelMeasurable N))
     (h_F3_per_letter : IsAwgnF3PerLetterHypothesis P N (isAwgnChannelMeasurable N))
@@ -319,12 +327,16 @@ theorem awgn_theorem_F1F2F3_discharged
 
 /-! ## Phase E — Capacity closed form re-publish (F-1 + F-2-MI-bridge) -/
 
-/-- **AWGN capacity closed form** (re-statement; F-1 + F-2-MI-bridge layer).
+/-- **AWGN capacity closed form — F-1 discharged, max-entropy/bddAbove taken as
+hypotheses.**
 
-`AWGNF1Discharge.awgn_capacity_closed_form_F1_discharged` を再 publish
-(F-2 / F-3 body layer の hypotheses は capacity 式には関与せず、ここでは F-2'
-MI bridge / bddAbove / max-entropy hypothesis をそのまま pass-through)。 -/
-theorem awgn_capacity_closed_form_F1F2F3_discharged
+⚠️ NOT a full discharge: the supremum closed form still TAKES `h_bridge_gauss`,
+`h_bdd`, and the max-entropy bound `h_max_ent` as hypotheses. The genuine
+max-entropy step needs continuous differential-entropy / Gaussian extremality
+machinery absent from Mathlib. Only the F-1 layer (kernel measurability) is
+closed here; this re-publishes
+`AWGNF1Discharge.awgn_capacity_closed_form_F1_discharged` unchanged in content. -/
+theorem awgn_capacity_closed_form_of_maxent_hypotheses
     (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_bridge_gauss :
         (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel

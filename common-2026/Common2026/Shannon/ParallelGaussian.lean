@@ -225,7 +225,12 @@ optimal) water level `ν`. Bundles in one predicate:
 (c) variance partition feasibility (`∑_i ∫ x_i² ∂p ≤ P` ⇒ allocation exists with
     `∑ Var_i = P_i^*` and `∑ P_i^* ≤ P`).
 
-Discharging this hypothesis is deferred to
+⚠️ OPEN — conclusion-as-hypothesis: this predicate is *literally* the capacity
+formula being claimed (`parallelGaussianCapacity … = ∑ …`). Assuming it and
+returning it (as `parallel_gaussian_capacity_formula` does, `:= h_per_coord`) is
+NOT a discharge of the per-coordinate water-filling reduction (L-PG1). The genuine
+proof needs the memoryless chain rule + per-coord AWGN capacity machinery
+(continuous AEP / sphere-shell volume), absent from Mathlib. Deferred to
 `parallel-gaussian-chain-rule-plan.md`. -/
 def IsParallelGaussianPerCoordReduction {n : ℕ} (P : ℝ)
     (N : Fin n → ℝ≥0) (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -246,6 +251,15 @@ with total power constraint `∑_i E[X_i²] ≤ P`, the capacity is achieved by
 water-filling at level `ν*` satisfying `∑_i max(0, ν* - N_i) = P`:
 
 `C = ∑_i (1/2) log(1 + max(0, ν* - N_i) / N_i)`.
+
+⚠️ NOT a discharge: this is a hypothesis pass-through (`:= h_per_coord`). The
+per-coordinate water-filling reduction (L-PG1, `h_per_coord`) is the conclusion
+itself, taken as a hypothesis and OPEN; L-WF1/L-WF2 are also taken as hypotheses
+here. The genuine reduction needs water-filling KKT + per-coord AWGN capacity
+(continuous AEP / sphere-shell volume) machinery absent from Mathlib. Genuine
+discharges of the *individual* layers live in the `*_discharged` re-publishes
+(L-PG0 kernel measurability, L-WF1 IVT existence, L-WF2 concavity certificate);
+L-PG1 stays OPEN throughout.
 
 撤退ライン L-WF1 + L-WF2 + L-PG1 全採用形 (hypothesis pass-through 3 本):
 * `h_kkt` (L-WF1): water level `ν` が全電力 `P` を使い切る KKT 条件

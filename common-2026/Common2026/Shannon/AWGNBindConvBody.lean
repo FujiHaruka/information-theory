@@ -125,10 +125,17 @@ theorem isAwgnOutputGaussian_discharged
     IsAwgnOutputGaussian P N h_meas :=
   awgn_output_gaussian_of_bind_eq_conv P N h_meas (isAwgnBindEqConv_discharged P N h_meas)
 
-/-- **AWGN channel coding theorem** (F-2 output-Gaussian body fully discharged).
-Re-publishes `awgn_theorem_F2_F3_fully_discharged` with the `IsAwgnBindEqConv`
-hypothesis now dispatched automatically by `isAwgnBindEqConv_discharged`. -/
-theorem awgn_theorem_F2_F3_bindconv_discharged
+/-- **AWGN channel coding theorem — output-Gaussian (bind/conv) genuinely closed,
+typicality/MI-decomp/converse taken as hypotheses.**
+
+⚠️ NOT a full discharge: F-2 typicality (`h_typicality`), the MI decomposition
+(`h_decomp`) and F-3 converse (`h_converse`) remain OPEN — taken as hypotheses.
+The genuine proofs need continuous AEP / sphere-shell volume (typicality), the
+density-level continuous MI chain rule (MI-decomp) and chain rule + Fano +
+Gaussian max-entropy (converse), absent from Mathlib. What is genuinely closed
+here (beyond F-1): the output-Gaussian fact via the now-proved bind/conv bridge
+`isAwgnBindEqConv_discharged`, so `IsAwgnBindEqConv` is dispatched automatically. -/
+theorem awgn_theorem_of_typicality_converse_bindconv_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_typicality : IsAwgnTypicalityHypothesis P N (isAwgnChannelMeasurable N))
     (h_decomp : IsAwgnMIDecomp P N (isAwgnChannelMeasurable N))
@@ -142,13 +149,18 @@ theorem awgn_theorem_F2_F3_bindconv_discharged
                   (awgnChannel N (isAwgnChannelMeasurable N)) m).toReal < ε := by
   have h_bridge : IsAwgnBindEqConv P N (isAwgnChannelMeasurable N) :=
     isAwgnBindEqConv_discharged P N (isAwgnChannelMeasurable N)
-  exact awgn_theorem_F2_F3_fully_discharged P hP N hN
+  exact awgn_theorem_of_typicality_converse_bindconv P hP N hN
     h_typicality h_bridge h_decomp h_converse hR_pos hR_lt_C hε
 
-/-- **AWGN capacity closed form** (F-2 output-Gaussian body fully discharged).
-Re-publishes `awgn_capacity_closed_form_F2_F3_fully_discharged` with the
-`IsAwgnBindEqConv` hypothesis dispatched automatically. -/
-theorem awgn_capacity_closed_form_F2_F3_bindconv_discharged
+/-- **AWGN capacity closed form — output-Gaussian (bind/conv) genuinely closed,
+MI-decomp/bddAbove/max-entropy taken as hypotheses.**
+
+⚠️ NOT a full discharge: the MI decomposition (`h_decomp`), `h_bdd` and the
+max-entropy bound (`h_max_ent`) remain OPEN — taken as hypotheses (max-entropy /
+continuous MI chain rule machinery absent from Mathlib). Only the output-Gaussian
+fact is genuinely closed via the now-proved bind/conv bridge, so `IsAwgnBindEqConv`
+is dispatched automatically. -/
+theorem awgn_capacity_closed_form_of_maxent_bindconv_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_decomp : IsAwgnMIDecomp P N (isAwgnChannelMeasurable N))
     (h_bdd :
@@ -165,7 +177,7 @@ theorem awgn_capacity_closed_form_F2_F3_bindconv_discharged
       = (1/2) * Real.log (1 + P / (N : ℝ)) := by
   have h_bridge : IsAwgnBindEqConv P N (isAwgnChannelMeasurable N) :=
     isAwgnBindEqConv_discharged P N (isAwgnChannelMeasurable N)
-  exact awgn_capacity_closed_form_F2_F3_fully_discharged P hP N hN
+  exact awgn_capacity_closed_form_of_maxent_bindconv P hP N hN
     h_bridge h_decomp h_bdd h_max_ent
 
 end InformationTheory.Shannon.AWGN

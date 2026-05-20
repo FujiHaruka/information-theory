@@ -129,8 +129,16 @@ theorem waterFillingCertificate_of_KKT {n : ℕ} (P : ℝ) (hP : 0 < P)
 Same conclusion as `parallel_gaussian_capacity_formula_WFcert_discharged`, but
 the Lagrange-bundle hypothesis `h_for_lagrange` is now **eliminated**: the common
 Lagrange multiplier (KKT stationarity + complementary slackness) is produced
-internally from the KKT water-level structure. Only the chain-rule bundle
-(L-PG1, a separate plan) remains a hypothesis. -/
+internally from the KKT water-level structure.
+
+⚠️ NOT a full discharge: L-PG1 (the per-coordinate water-filling reduction)
+remains OPEN — `h_for_bundle` is a conclusion-as-hypothesis (the capacity equality
+split into two inequalities). It is the *only* remaining open hypothesis: L-WF1
+(KKT existence), L-WF2 (water-filling optimality, now from genuine concavity +
+internally-exhibited multiplier) and L-PG0 (kernel measurability) are all
+genuinely closed. The genuine L-PG1 reduction needs the memoryless chain rule +
+per-coord AWGN capacity (continuous AEP / sphere-shell volume) machinery absent
+from Mathlib. -/
 theorem parallel_gaussian_capacity_formula_WFstat_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (hN_pos : ∀ i, 0 < (N i : ℝ))

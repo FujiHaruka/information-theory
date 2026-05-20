@@ -315,8 +315,16 @@ theorem waterFillingCertificate_of_bundle {n : ℕ}
 Same conclusion as `parallel_gaussian_capacity_formula_KKT_discharged`, but the
 optimality certificate is now produced *internally* from a Lagrange-multiplier
 bundle (KKT stationarity + complementary slackness) instead of taken as an
-abstract hypothesis. The chain-rule bundle is still passed through (L-PG1, a
-separate plan). -/
+abstract hypothesis.
+
+⚠️ NOT a full discharge: L-PG1 (the per-coordinate water-filling reduction)
+remains OPEN — `h_for_bundle` is a conclusion-as-hypothesis (the capacity equality
+split into two inequalities). The Lagrange-bundle *existence* (`h_for_lagrange`,
+the convex-duality multiplier) is also still taken as a hypothesis (KKT-uniqueness
+wall). Genuinely closed here: the certificate *body* (Lagrange reduction from a
+given bundle, via genuine log-concavity), plus upstream L-WF1 and L-PG0. The
+genuine L-PG1 reduction needs chain rule + per-coord AWGN capacity (continuous
+AEP / sphere-shell volume) machinery absent from Mathlib. -/
 theorem parallel_gaussian_capacity_formula_WFcert_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)

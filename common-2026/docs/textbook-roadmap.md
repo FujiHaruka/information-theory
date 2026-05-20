@@ -95,7 +95,7 @@
 | 5 Data compression | ShannonCode/Kraft 🟢；Huffman 最適性 🟢ʰ (強形 `huffmanLength_optimal` は 📋)；Arithmetic coding 🟠 (`:= True` 3 本) |
 | 7 Channel capacity | `shannon_..._general_full` 無条件、feedback complete；一部 converse は honest pass-through (文書化済) | 🟢/🟢ʰ |
 | 8 Differential entropy | `differentialEntropy_*` (Bochner honest hyps) | 🟢ʰ |
-| 9 Gaussian channel | **AWGN 🟠 (F-2/F-3 は id-alias で実 discharge でない)；ParallelGaussian 🟠 (`:= h_per_coord` 結論=仮説、L-PG1 循環)；Shannon-Hartley / Whittaker 🟠ʰ (RESOLVED 2026-05-20: L-SH1/2/3・L-WS-A を undischarged placeholder と明記、`shannon_hartley_formula` は循環でなく `h_two_w` 開仮説 pass-through、`whittaker_shannon_one_point` は `rfl` 廃して `recovered = f` 仮説 pass-through 化。sinc 下層は genuine 維持)** |
+| 9 Gaussian channel | **AWGN 🟠 (F-2/F-3 は id-alias で実 discharge でない)；ParallelGaussian 🟠 (`:= h_per_coord` 結論=仮説、L-PG1 循環)；Shannon-Hartley / Whittaker 🟠ʰ (RESOLVED 2026-05-20: L-SH1/2/3・L-WS-A を undischarged placeholder と明記、`shannon_hartley_formula` は循環でなく `h_two_w` 開仮説 pass-through、`whittaker_shannon_one_point` は `rfl` 廃して `recovered = f` 仮説 pass-through 化。sinc 下層は genuine 維持)。NAME 整合 2026-05-20: AWGN/PG の `*_discharged` 名を honest 化 — F-2/F-3 (resp. per-coord L-PG1) が hypothesis として開いたままの top 定理を改名 (`awgn_theorem_F1F2F3_discharged`→`awgn_theorem_of_F2F3_hypotheses` 等) + ⚠️ docstring 付与。genuine 層 (F-1 / L-PG0 / L-WF1 IVT / L-WF2 concavity certificate) は不変。** |
 | 10 Rate distortion | achievability 🟢ʰ、converse 🟢、convexity 🟢 (finite) |
 | 11 Statistics | Stein/StrongStein/Sanov/Pinsker(weak+sharp)/Csiszar 🟢；Chernoff/Cramer (CLT closure 込, 真) 🟢ʰ；**Hoeffding tradeoff 🟠 (`_with_hypothesis` のみ、achiev+converse を仮説化)** |
 | 12 Maximum entropy | `entropy_le_log_card` 🟢、Constrained 🟢ʰ |
@@ -632,7 +632,7 @@ T1-B/C/D の Sanov plumbing 再利用、T2-D の T2-F 再利用、T3-C の T3-B 
    + 第二波 4 seed gap-close を並列駆動して **+6210 行 / 0 sorry / 0 warning** publish (14 新規 Lean ファイル、
    `lake build Common2026` 3133 jobs 全成功)。第一波 (10 試行中 9 成功、S10 I-3 は既存 publish と判明し skip):
    - **S1 T2-A AWGNMIBridgeDischarge**: +194 行。`IsAwgnOutputGaussian` body discharge (`IsAwgnBindEqConv` 新
-     primitive 経由) + `IsAwgnMIDecomp` 撤退ライン pass-through + `awgn_theorem_F2_F3_fully_discharged` 再 publish。
+     primitive 経由) + `IsAwgnMIDecomp` 撤退ライン pass-through + `awgn_theorem_of_typicality_converse_bindconv` (旧名 `awgn_theorem_F2_F3_fully_discharged`) 再 publish。
    - **S2 T2-D EPIStamToBridge**: +631 行。`IsStamToEPIBridgeHyp` を `IsStamToEPIScalingHyp` + `IsStamToEPILimitHyp`
      の 2 sub-predicate に分解 + body discharge (Csiszár scaling-path 単調性 + heat-flow endpoint Gaussian saturation)、
      Gaussian saturation case は full discharge。

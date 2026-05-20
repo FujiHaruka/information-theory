@@ -146,14 +146,20 @@ theorem isParallelGaussianKernelMeasurable {n : ℕ} (N : Fin n → ℝ≥0) :
 /-- **Parallel Gaussian capacity formula** (L-PG0 discharge 形, Cover-Thomas
 Theorem 9.4.1).
 
+⚠️ ONLY L-PG0 (parallel kernel measurability) is discharged here. The
+per-coordinate water-filling reduction (L-PG1, `h_per_coord`, a
+conclusion-as-hypothesis) remains OPEN, as do L-WF1 (`h_kkt`) and L-WF2
+(`h_unique`) — all taken as hypotheses. The genuine L-PG1 reduction needs
+water-filling KKT + per-coord AWGN capacity (continuous AEP / sphere-shell volume)
+machinery absent from Mathlib.
+
 親定理 `parallel_gaussian_capacity_formula` (`ParallelGaussian.lean`) の
 `h_parallel_meas` (= `IsParallelGaussianKernelMeasurable N`) を本 file の
-`isParallelGaussianKernelMeasurable N` で埋めて再 publish。signature から
-`h_parallel_meas` が消える。
+`isParallelGaussianKernelMeasurable N` で埋めて再 publish (= L-PG0 discharge)。
+signature から `h_parallel_meas` が消える。
 
 残りの撤退ライン hypothesis (L-PG1 per-coord reduction / L-WF1 KKT /
-L-WF2 optimality / L-PG0' = per-coord AWGN F-1 bundle in `h_meas`)
-はそのまま pass-through。 -/
+L-WF2 optimality) はそのまま pass-through (未 discharge)。 -/
 theorem parallel_gaussian_capacity_formula_PG0_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -171,6 +177,10 @@ theorem parallel_gaussian_capacity_formula_PG0_discharged {n : ℕ}
 
 /-- **Active-set form of the parallel Gaussian capacity formula**
 (L-PG0 discharge 形, Cover-Thomas Theorem 9.4.1 restated).
+
+⚠️ ONLY L-PG0 (kernel measurability) is discharged; L-PG1 (`h_per_coord`,
+conclusion-as-hypothesis), L-WF1 (`h_kkt`) and L-WF2 (`h_unique`) remain OPEN —
+taken as hypotheses.
 
 親 `parallel_gaussian_capacity_active_form` の `h_parallel_meas` を埋めて
 再 publish。 -/

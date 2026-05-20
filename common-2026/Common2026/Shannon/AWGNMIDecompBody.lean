@@ -59,10 +59,10 @@ This file therefore performs an **honest vertical sub-decomposition**:
    predicate is definitionally the AWGN predicate, so
    `awgn_midecomp_of_cont_chain` discharges `IsAwgnMIDecomp` from
    `IsContChannelMIDecompHyp` by an `exact`.
-4. **Phase D — Re-publish.** `awgn_theorem_F2_F3_midecomp_discharged` and the
-   capacity form re-expose the wave7 theorems with the `IsAwgnMIDecomp`
-   hypothesis replaced by the smaller, AWGN-independent
-   `IsContChannelMIDecompHyp`.
+4. **Phase D — Re-publish.** `awgn_theorem_of_typicality_converse_midecomp_discharged`
+   and the capacity form re-expose the wave7 theorems with the `IsAwgnMIDecomp`
+   hypothesis replaced by the smaller, AWGN-independent `IsContChannelMIDecompHyp`
+   (⚠️ still OPEN; typicality/converse also remain OPEN hypotheses).
 
 ## 撤退ライン
 
@@ -180,13 +180,18 @@ theorem cont_chain_of_awgn_midecomp
 
 /-! ## Phase D — Re-publish: `IsAwgnMIDecomp` replaced by `IsContChannelMIDecompHyp` -/
 
-/-- **AWGN channel coding theorem** (F-2/F-3 with the MI-decomp hypothesis
-reduced to the AWGN-independent continuous chain rule). Re-publishes
-`AWGNMIBridgeDischarge.awgn_theorem_F2_F3_fully_discharged` with the opaque
-`IsAwgnMIDecomp` argument replaced by `IsContChannelMIDecompHyp`. The bind/conv
-bridge (output-Gaussian) and converse/typicality hypotheses pass through
-unchanged. -/
-theorem awgn_theorem_F2_F3_midecomp_discharged
+/-- **AWGN channel coding theorem — MI-decomp reduced to a continuous chain-rule
+hypothesis, typicality/converse still taken as hypotheses.**
+
+⚠️ NOT a full discharge: F-2 typicality (`h_typicality`) and F-3 converse
+(`h_converse`) remain OPEN — taken as hypotheses (continuous AEP / sphere-shell
+volume, chain rule + Fano + Gaussian max-entropy, all absent from Mathlib). The
+MI decomposition is *not* discharged either: it is merely *reduced* to the
+strictly-more-primitive, AWGN-independent continuous chain-rule hypothesis
+`IsContChannelMIDecompHyp` (still OPEN — its body needs the density-level klDiv
+expansion, absent from Mathlib). What IS closed beyond F-1: the output-Gaussian
+fact (via the now-proved bind/conv bridge, dispatched automatically). -/
+theorem awgn_theorem_of_typicality_converse_midecomp_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_typicality : IsAwgnTypicalityHypothesis P N (isAwgnChannelMeasurable N))
     (h_bridge : IsAwgnBindEqConv P N (isAwgnChannelMeasurable N))
@@ -202,14 +207,18 @@ theorem awgn_theorem_F2_F3_midecomp_discharged
                   (awgnChannel N (isAwgnChannelMeasurable N)) m).toReal < ε := by
   have h_decomp : IsAwgnMIDecomp P N (isAwgnChannelMeasurable N) :=
     awgn_midecomp_of_cont_chain P N (isAwgnChannelMeasurable N) h_chain
-  exact awgn_theorem_F2_F3_fully_discharged P hP N hN h_typicality
+  exact awgn_theorem_of_typicality_converse_bindconv P hP N hN h_typicality
     h_bridge h_decomp h_converse hR_pos hR_lt_C hε
 
-/-- **AWGN capacity closed form** (MI-decomp hypothesis reduced to the
-AWGN-independent continuous chain rule). Re-publishes
-`AWGNMIBridgeDischarge.awgn_capacity_closed_form_F2_F3_fully_discharged` with the
-opaque `IsAwgnMIDecomp` argument replaced by `IsContChannelMIDecompHyp`. -/
-theorem awgn_capacity_closed_form_F2_F3_midecomp_discharged
+/-- **AWGN capacity closed form — MI-decomp reduced to a continuous chain-rule
+hypothesis, bddAbove/max-entropy still taken as hypotheses.**
+
+⚠️ NOT a full discharge: `h_bdd` and the max-entropy bound (`h_max_ent`) remain
+OPEN — taken as hypotheses. The MI decomposition is only *reduced* to the
+still-OPEN AWGN-independent continuous chain-rule hypothesis
+`IsContChannelMIDecompHyp`, not discharged. Only the output-Gaussian fact is
+genuinely closed (via the proved bind/conv bridge). -/
+theorem awgn_capacity_closed_form_of_maxent_midecomp_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_bridge : IsAwgnBindEqConv P N (isAwgnChannelMeasurable N))
     (h_chain : IsContChannelMIDecompHyp
@@ -228,7 +237,7 @@ theorem awgn_capacity_closed_form_F2_F3_midecomp_discharged
       = (1/2) * Real.log (1 + P / (N : ℝ)) := by
   have h_decomp : IsAwgnMIDecomp P N (isAwgnChannelMeasurable N) :=
     awgn_midecomp_of_cont_chain P N (isAwgnChannelMeasurable N) h_chain
-  exact awgn_capacity_closed_form_F2_F3_fully_discharged P hP N hN
+  exact awgn_capacity_closed_form_of_maxent_bindconv P hP N hN
     h_bridge h_decomp h_bdd h_max_ent
 
 end InformationTheory.Shannon.AWGN
