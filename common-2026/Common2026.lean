@@ -211,3 +211,10 @@ import Common2026.Shannon.MACRandomCodebookAveraging
 import Common2026.Shannon.HuffmanSwapNormalizationBody
 import Common2026.Shannon.WynerZivDecoderFailureAssembly
 import Common2026.Shannon.BroadcastChannelBonferroniDecay
+import Common2026.Shannon.BrunnMinkowskiLayerCakeBody
+import Common2026.Shannon.WynerZivAchievabilityBridge
+import Common2026.Shannon.HoeffdingMinimizerAttainment
+import Common2026.Shannon.LZ78FinalGlue
+import Common2026.Shannon.EPIStamDeBruijnConclusion
+import Common2026.Shannon.MACPerEventAEPDecay
+import Common2026.Shannon.MACFanoConverseBody
