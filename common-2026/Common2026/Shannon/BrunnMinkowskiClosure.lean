@@ -6,6 +6,9 @@ import Common2026.Shannon.MultivariateDiffEntropy
 import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.MeasureTheory.Integral.Prod
 import Mathlib.MeasureTheory.Integral.Pi
+import Mathlib.MeasureTheory.Integral.IntegrableOn
+import Mathlib.Topology.Algebra.Monoid
+import Mathlib.Topology.Algebra.ConstMulAction
 
 /-!
 # Brunn-Minkowski full closure — Phase 1: n-dim Prékopa-Leindler (Fubini 帰納)
@@ -694,5 +697,152 @@ theorem brunn_minkowski_entropy_inequality_scaledMul
   brunn_minkowski_entropy_jointPi P (by exact_mod_cast hn) X Y volA volB volAB
     hvolA hvolB hvolAB hA_unif hB_unif hAB_unif
     (bm_scaledMul_to_sqrt volA volB volAB hvolA hvolB hn h_scaled)
+
+/-! ## §I — indicator/compact ケースの readiness genuine 供給
+
+§F の `brunn_minkowski_volume_indicator` は n 次元 PL の結論 `h_pl` を **丸ごと
+hypothesis** で受けていた。本 §I は `A, B` を **compact** に固定することで、
+`prekopa_leindler_nDim` の引数のうち **解析的 slice readiness (`IsSlicePLReadyHyp`)
+以外** をすべて genuine に供給する:
+
+* **measurability / 有限測度**: `IsCompact.measurableSet` (T2) / `IsCompact.add` /
+  `IsCompact.smul` / `IsCompact.measure_ne_top`。Minkowski 結合 `λ•A+(1-λ)•B` の
+  compact 性を伝播させ、3 集合すべてが genuine に可測・有限測度。
+* **indicator の Integrable**: `integrable_indicator_iff` + `integrableOn_const`
+  (有限測度から)。
+* **slice の非負性**: `sliceInt (1_S) s = ∫ w, 1_S (cons s w) ≥ 0`
+  (`integral_nonneg`、indicator は非負)。
+* **点ごと PL**: §E の `indicator_pointwise_pl` (genuine)。
+
+残る honest 入力は `IsSlicePLReadyHyp` (slice 測度関数の superlevel regularity +
+layer-cake + tail、本 file scope 外の irreducible 解析的内容) と帰納仮定
+(n 次元 clean PL) のみ。これにより体積版 BM の honest 表面が「n 次元 PL 結論
+丸ごと」から「slice readiness のみ」へ大幅縮約される。 -/
+
+/-- **indicator の Integrable (genuine, 有限測度から)**: 可測 `S` で
+`volume S ≠ ∞` ならば実数値 indicator `1_S` は `volume` 可積分。
+`integrable_indicator_iff` + `integrableOn_const`。 -/
+theorem indicator_integrable {n : ℕ} (S : Set (Fin n → ℝ))
+    (hS : MeasurableSet S) (hfin : volume S ≠ ∞) :
+    Integrable (S.indicator (fun _ => (1 : ℝ))) :=
+  (integrable_indicator_iff hS).mpr (integrableOn_const hfin)
+
+/-- **slice 積分の非負性 (genuine)**: pointwise 非負 `f` について
+`sliceInt f s = ∫ w, f (cons s w) ≥ 0`。`integral_nonneg`。 -/
+theorem sliceInt_nonneg {n : ℕ} (f : (Fin (n + 1) → ℝ) → ℝ)
+    (hf : ∀ x, 0 ≤ f x) (s : ℝ) : 0 ≤ sliceInt f s :=
+  integral_nonneg (fun _ => hf _)
+
+/-- **indicator の点ごと非負性 (genuine helper)**: `1_S x ≥ 0`。 -/
+theorem indicator_one_nonneg {n : ℕ} (S : Set (Fin n → ℝ)) (x : Fin n → ℝ) :
+    0 ≤ S.indicator (fun _ => (1 : ℝ)) x :=
+  Set.indicator_nonneg (fun _ _ => zero_le_one) x
+
+/-- **体積版 Brunn-Minkowski (indicator/compact ケース, readiness 以外 genuine)**.
+
+`A, B` compact (`0 < λ < 1`) について、`prekopa_leindler_nDim` の引数のうち
+measurability / 有限測度 / indicator integrability / slice 非負性 / 点ごと PL を
+すべて §I/§E の genuine helper で供給し、残る honest 入力を **slice readiness
+(`IsSlicePLReadyHyp`) と n 次元 clean PL 帰納仮定 (`ih`) のみ** に縮約した体積版 BM:
+
+    `(vol A)^λ * (vol B)^(1-λ) ≤ vol(λ•A + (1-λ)•B)` (`.toReal`).
+
+§F の `brunn_minkowski_volume_indicator` (n 次元 PL 結論を丸ごと hypothesis 化)
+と違い、PL 結論は本定理内部で `prekopa_leindler_nDim` から genuine に組む。 -/
+theorem brunn_minkowski_volume_indicator_compact {n : ℕ}
+    (A B : Set (Fin (n + 1) → ℝ)) (lam : ℝ)
+    (h0 : 0 < lam) (h1 : lam < 1)
+    (hA : IsCompact A) (hB : IsCompact B)
+    (ih : ∀ (f' g' hfn' : (Fin n → ℝ) → ℝ),
+      (0 ≤ ∫ w, f' w) → (0 ≤ ∫ w, g' w) → (0 ≤ ∫ w, hfn' w) →
+      (∀ x y : Fin n → ℝ,
+        f' x ^ lam * g' y ^ (1 - lam) ≤ hfn' (lam • x + (1 - lam) • y)) →
+      (∫ w, f' w) ^ lam * (∫ w, g' w) ^ (1 - lam) ≤ ∫ w, hfn' w)
+    (h_ready : IsSlicePLReadyHyp
+      (A.indicator (fun _ => (1 : ℝ))) (B.indicator (fun _ => (1 : ℝ)))
+      ((lam • A + (1 - lam) • B).indicator (fun _ => (1 : ℝ)))
+      lam (volume A).toReal (volume B).toReal
+      (volume (lam • A + (1 - lam) • B)).toReal) :
+    (volume A).toReal ^ lam * (volume B).toReal ^ (1 - lam)
+      ≤ (volume (lam • A + (1 - lam) • B)).toReal := by
+  -- compact 性を Minkowski 結合に伝播 → 可測 / 有限測度.
+  set C : Set (Fin (n + 1) → ℝ) := lam • A + (1 - lam) • B with hC
+  have hCcpt : IsCompact C := (hA.smul lam).add (hB.smul (1 - lam))
+  have hA_meas : MeasurableSet A := hA.measurableSet
+  have hB_meas : MeasurableSet B := hB.measurableSet
+  have hC_meas : MeasurableSet C := hCcpt.measurableSet
+  have hA_fin : volume A ≠ ∞ := hA.measure_ne_top
+  have hB_fin : volume B ≠ ∞ := hB.measure_ne_top
+  have hC_fin : volume C ≠ ∞ := hCcpt.measure_ne_top
+  -- 3 indicator 関数と各々の積分=体積恒等式.
+  set fA : (Fin (n + 1) → ℝ) → ℝ := A.indicator (fun _ => (1 : ℝ)) with hfA
+  set fB : (Fin (n + 1) → ℝ) → ℝ := B.indicator (fun _ => (1 : ℝ)) with hfB
+  set fC : (Fin (n + 1) → ℝ) → ℝ := C.indicator (fun _ => (1 : ℝ)) with hfC
+  have heqA : (volume A).toReal = ∫ x, fA x :=
+    (integral_indicator_one_eq_volume A hA_meas).symm
+  have heqB : (volume B).toReal = ∫ x, fB x :=
+    (integral_indicator_one_eq_volume B hB_meas).symm
+  have heqC : (volume C).toReal = ∫ x, fC x :=
+    (integral_indicator_one_eq_volume C hC_meas).symm
+  -- 点ごと PL (§E, genuine).
+  have h_pt : ∀ x y : Fin (n + 1) → ℝ,
+      fA x ^ lam * fB y ^ (1 - lam) ≤ fC (lam • x + (1 - lam) • y) :=
+    indicator_pointwise_pl A B lam h0 h1
+  -- slice 非負性 (indicator 非負 → integral_nonneg).
+  have hA_nn : ∀ s, 0 ≤ sliceInt fA s :=
+    fun s => sliceInt_nonneg fA (indicator_one_nonneg A) s
+  have hB_nn : ∀ s, 0 ≤ sliceInt fB s :=
+    fun s => sliceInt_nonneg fB (indicator_one_nonneg B) s
+  have hC_nn : ∀ s, 0 ≤ sliceInt fC s :=
+    fun s => sliceInt_nonneg fC (indicator_one_nonneg C) s
+  -- n 次元 PL を 3 indicator に適用 (slice readiness 以外すべて genuine 供給).
+  have hpl := prekopa_leindler_nDim fA fB fC lam h0.le h1.le
+    (volume A).toReal (volume B).toReal (volume C).toReal
+    ENNReal.toReal_nonneg ENNReal.toReal_nonneg ENNReal.toReal_nonneg
+    h_pt heqA heqB heqC
+    (indicator_integrable A hA_meas hA_fin)
+    (indicator_integrable B hB_meas hB_fin)
+    (indicator_integrable C hC_meas hC_fin)
+    hA_nn hB_nn hC_nn ih h_ready
+  exact hpl
+
+/-- **scaled multiplicative BM ⇐ indicator/compact 体積 BM (readiness 経由)**:
+`bm_geom_to_scaledMul` の `h_geom_mul` (scaled 集合での乗法形 geometric BM) を、
+`brunn_minkowski_volume_indicator_compact` で各 `λ` ごとに genuine 供給して
+`IsBMScaledMulHyp` を組む。compact 性は scaling/Minkowski で伝播。残る honest 入力は
+各 scaled 集合での slice readiness (`h_ready`) と n 次元 clean PL (`ih`) のみ。 -/
+theorem bm_scaledMul_of_compact {n : ℕ}
+    (A B : Set (Fin (n + 1) → ℝ))
+    (hA : IsCompact A) (hB : IsCompact B)
+    (ih : ∀ (lam : ℝ), 0 < lam → lam < 1 →
+      ∀ (f' g' hfn' : (Fin n → ℝ) → ℝ),
+      (0 ≤ ∫ w, f' w) → (0 ≤ ∫ w, g' w) → (0 ≤ ∫ w, hfn' w) →
+      (∀ x y : Fin n → ℝ,
+        f' x ^ lam * g' y ^ (1 - lam) ≤ hfn' (lam • x + (1 - lam) • y)) →
+      (∫ w, f' w) ^ lam * (∫ w, g' w) ^ (1 - lam) ≤ ∫ w, hfn' w)
+    (h_ready : ∀ (lam : ℝ), 0 < lam → lam < 1 →
+      IsSlicePLReadyHyp
+        (((lam⁻¹ : ℝ) • A).indicator (fun _ => (1 : ℝ)))
+        ((((1 - lam)⁻¹ : ℝ) • B).indicator (fun _ => (1 : ℝ)))
+        ((lam • ((lam⁻¹ : ℝ) • A)
+          + (1 - lam) • (((1 - lam)⁻¹ : ℝ) • B)).indicator (fun _ => (1 : ℝ)))
+        lam (volume ((lam⁻¹ : ℝ) • A)).toReal
+        (volume (((1 - lam)⁻¹ : ℝ) • B)).toReal
+        (volume (lam • ((lam⁻¹ : ℝ) • A)
+          + (1 - lam) • (((1 - lam)⁻¹ : ℝ) • B))).toReal) :
+    IsBMScaledMulHyp (n + 1) (volume A).toReal (volume B).toReal
+      (volume (A + B)).toReal := by
+  -- A, B の有限測度 (compact).
+  have hA_fin : volume A ≠ ∞ := hA.measure_ne_top
+  have hB_fin : volume B ≠ ∞ := hB.measure_ne_top
+  -- 各 λ で scaled 集合の乗法形 geometric BM を `brunn_minkowski_volume_indicator_compact`
+  -- で genuine 供給 (compact 性は scaling で伝播).
+  refine bm_geom_to_scaledMul A B hA_fin hB_fin ?_
+  intro lam hlam_pos hlam_lt
+  exact brunn_minkowski_volume_indicator_compact
+    ((lam⁻¹ : ℝ) • A) (((1 - lam)⁻¹ : ℝ) • B) lam hlam_pos hlam_lt
+    (hA.smul _) (hB.smul _)
+    (ih lam hlam_pos hlam_lt)
+    (h_ready lam hlam_pos hlam_lt)
 
 end InformationTheory.Shannon.BrunnMinkowski
