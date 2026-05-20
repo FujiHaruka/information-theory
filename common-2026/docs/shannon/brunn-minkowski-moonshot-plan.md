@@ -150,3 +150,13 @@ EPI 経由路は `brunn-minkowski-from-epi-discharge-plan.md` 別 plan に defer
 - `Common2026.lean` に import 追加 (本 plan は親指示で **不変** 制約のため
   追加 import は本 plan scope 外、後続 publish PR に塞ぐ)
 - `docs/textbook-roadmap.md` 不変 (本 plan は親指示で **不変** 制約)
+
+## Full genuine closure (後続 plan)
+
+本 moonshot は L-BM1 を `:= h_bm` で着地する pass-through publish。L-BM1 を
+**genuine に discharge** し体積版 / entropy 版 BM を真に閉じる closure plan は
+[`brunn-minkowski-closure-plan.md`](brunn-minkowski-closure-plan.md) に分離。
+BM は残① で唯一 fundamental Mathlib gap を持たない (PL = AM-GM + layer-cake から
+構築可、1D 版 genuine 既存)。残 gap は Fubini 帰納の配線 3 bridge
+(n-dim PL Fubini / prob↔幾何 / max-entropy + `jointDifferentialEntropyPi` 特化)。
+Phase 1 単独で体積版 BM は段階着地。
