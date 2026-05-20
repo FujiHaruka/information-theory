@@ -165,3 +165,18 @@ import Common2026.Shannon.WhittakerShannonFull
 import Common2026.Shannon.HuffmanT1APPrimeBody
 import Common2026.Shannon.HoeffdingSandwichBody
 import Common2026.Shannon.WynerZivConvexityBody
+-- Wave7 parallel-10 + gap-close
+import Common2026.Shannon.AWGNMIBridgeDischarge
+import Common2026.Shannon.EPIStamToBridge
+import Common2026.Shannon.EPIStamInequalityBody
+import Common2026.Shannon.BrunnMinkowskiFunctional
+import Common2026.Shannon.FisherInfoV2DeBruijnBody
+import Common2026.Shannon.MACCornerPoint
+import Common2026.Shannon.BroadcastChannelRandomCodebook
+import Common2026.Shannon.WynerZivConverseChain
+import Common2026.Shannon.LZ78ConverseAsymptotic
+import Common2026.Shannon.ChernoffPerTiltSanov
+import Common2026.Shannon.HoeffdingInteriorBody
+import Common2026.Shannon.WynerZivBinningCovering
+import Common2026.Shannon.GeneralDMCExtension
+import Common2026.Shannon.CramerPhaseDGapWorkaround

@@ -582,3 +582,54 @@ T1-B/C/D の Sanov plumbing 再利用、T2-D の T2-F 再利用、T3-C の T3-B 
    Ch.11 (T1-B Chernoff per-tilt predicate-form + T1-D sandwich 両端 full discharge), Ch.13 (T4-A L-LZ3
    internal化), Ch.15 (T3-B MAC L-MAC2 + T3-C BC body + T3-D L-WZ3 convexity full + T3-F inner body),
    Ch.17 (T2-D EPI L-EPI3 single-hyp + Gaussian full) — いずれも 🟡 維持で残部分は別 plan defer。
+9. **2026-05-20 並列 wave7 第一波 10-seed + 第二波 4-seed gap-close 着地** (orchestrator session、worktree
+   isolation 経由): wave6 で残った body discharge / predicate-decomposition / extension を中心に第一波 10 seed
+   + 第二波 4 seed gap-close を並列駆動して **+6210 行 / 0 sorry / 0 warning** publish (14 新規 Lean ファイル、
+   `lake build Common2026` 3133 jobs 全成功)。第一波 (10 試行中 9 成功、S10 I-3 は既存 publish と判明し skip):
+   - **S1 T2-A AWGNMIBridgeDischarge**: +194 行。`IsAwgnOutputGaussian` body discharge (`IsAwgnBindEqConv` 新
+     primitive 経由) + `IsAwgnMIDecomp` 撤退ライン pass-through + `awgn_theorem_F2_F3_fully_discharged` 再 publish。
+   - **S2 T2-D EPIStamToBridge**: +631 行。`IsStamToEPIBridgeHyp` を `IsStamToEPIScalingHyp` + `IsStamToEPILimitHyp`
+     の 2 sub-predicate に分解 + body discharge (Csiszár scaling-path 単調性 + heat-flow endpoint Gaussian saturation)、
+     Gaussian saturation case は full discharge。
+   - **S3 T2-D EPIStamInequalityBody**: +515 行。Stam 4-step body discharge (Step 4 = λ optimization closed form
+     完全 discharge `J_sum ≤ J_X J_Y / (J_X + J_Y)`、Step 1-3 score-conv + Cauchy-Schwarz on condExp は predicate
+     pass-through)、Gaussian end-to-end EPI 検証 + Wave 6 EPIL3Integration への bridge。
+   - **S4 T2-E BrunnMinkowskiFunctional**: +708 行。Prékopa-Leindler 関数形 (L-PL1/2/3 hypothesis) + 凸体 BM
+     specialization + `IsLogConcaveMeasure` structure + EPI bridge (`entropy_le_logVolume_of_logConcave`) + λ
+     edge cases + Cover-Thomas 17.9 bundle。
+   - **S5 T2-F FisherInfoV2DeBruijnBody**: +359 行。heat-flow + IBP の 2 predicate (L-FV2DB-A/B) で de Bruijn
+     body discharge を composition 形式で完了、Gaussian instance 証明付き。
+   - **S6 T3-B MACCornerPoint**: +409 行。2 corner points + 5-vertex pentagon convex hull + time-sharing closure +
+     `IsMACTimeSharingHyp` pass-through + capacity region = pentagon set equality。
+   - **S7 T3-C BroadcastChannelRandomCodebook**: +545 行。Markov pigeonhole `bc_exists_codebook_of_avg_le` + 存在
+     抽出 + BCInnerBoundExistence への iff bridge (definitional 一致経由)。
+   - **S8 T3-D WynerZivConverseChain**: +560 行。3-predicate bundle (per-letter + Csiszár sum identity + Jensen
+     antitone) で chain assembly form 再構築、`wyner_ziv_converse_chain` 主定理 + 5 副定理 publish。
+   - **S9 T4-A LZ78ConverseAsymptotic**: +515 行。`IsZivCountingAsymptoticBound` + `IsLZ78PhraseCountAsymptotic`
+     (= `c =O[atTop] B`) + sandwich predicate + ZivInequalityPassthrough/SMBSandwichPassthrough bridge。
+   - **S10 I-3 Asymptotic**: 0 新規行 (既存 publish と判明、`Common2026/InformationTheory/Asymptotic.lean` 195 行
+     は wave5 以前の commit `4c8ceff` で publish 済、agent はサニティチェックのみ)。
+   <br>第一波 S10 skip 補完として **S10' T1-B ChernoffPerTiltSanov**: +374 行。`IsChernoffNLetterRN` predicate
+   (Cramér L-C2 Phase C と structurally 同型 — n-letter RN-deriv on infinite-product tilt) + chain wrappers +
+   `chernoffMediatorMeasure_pi_*` plumbing + Mathlib-gap pass-through publish。
+   <br>第二波 gap-close (4 新規):
+   - **G1 T1-D HoeffdingInteriorBody**: +370 行。`IsHoeffdingInteriorGradient` + `IsHoeffdingInteriorMinimizer`
+     2 predicate + 8 connecting lemmas (bridges + Pythagoras + sandwich Tendsto)、interior `0 < α < klDivPmf P₂ P₁`
+     regime を 2 hypothesis 化、両端境界 wave6 完了済との合流路。
+   - **G2 T3-D WynerZivBinningCovering**: +481 行。covering / packing 2 sub-predicate + decoder failure 合成
+     `wyner_ziv_binning_via_covering_packing` + 漸近 existence form (`wyner_ziv_binning_existence_of_covering_packing`)。
+   - **G3 I-2 GeneralDMCExtension**: +253 行。`IsInformationallyStable` + `IsSpectralCapacityForm` (Verdú-Han 1994)
+     predicates + memoryless concrete instances + spectral pass-through layer。
+   - **G4 T1-C CramerPhaseDGapWorkaround**: +296 行。cylinder-form `IsCramerNLetterRNCylinder` + `IsCaratheodoryExtensionHyp`
+     + Phase C bridge + **`IsCramerChernoffNLetterRNUnified` structure** (Cramér × Chernoff 同型 Mathlib-gap unification)。
+   <br>**集計**: 14 新規 Lean ファイル = **+6210 行** (中央見積 ~5500-6000 から +210、6000+ 目標 達成 ✅)、
+   `Common2026.lean` に import 14 行追加、`lake build Common2026` 3133 jobs 全成功 / 0 sorry / 0 warning。
+   発見した structural 同型の活用: wave6 で予言した Cramér L-C2 Phase C と Chernoff per-tilt の同型を G4 で
+   `IsCramerChernoffNLetterRNUnified` structure として明示化 (両者 `Measure.infinitePi (μ).tilted ↔
+   Measure.infinitePi (μ.tilted)` n-letter RN-deriv 同定の Mathlib gap を 1 述語にまとめた、将来 LDP per-tilt
+   統一 PR 候補)。Mathlib gap predicate naming pattern (`Is...NLetterRN`, `Is...CaratheodoryExtensionHyp`) を
+   wave7 で定着、後続 discharge plan の参照点として整備。章状態: Ch.5 (T1-A'' body extension wave6 継続), Ch.9
+   (T2-A MI bridge primitive 1/3 discharged), Ch.11 (T1-B per-tilt RN predicate-form + T1-C Phase D cylinder-form
+   + T1-D interior 2 predicates), Ch.13 (T4-A LZ78 converse asymptotic), Ch.15 (T3-B MAC pentagon + T3-C BC random
+   codebook + T3-D L-WZ1 covering/packing + L-WZ2 chain), Ch.17 (T2-D Stam-to-EPI bridge + Stam inequality Step 4
+   full + T2-E Prékopa-Leindler + T2-F de Bruijn predicate) — いずれも 🟡 維持で残部分は別 plan defer。
