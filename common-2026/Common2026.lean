@@ -180,3 +180,15 @@ import Common2026.Shannon.HoeffdingInteriorBody
 import Common2026.Shannon.WynerZivBinningCovering
 import Common2026.Shannon.GeneralDMCExtension
 import Common2026.Shannon.CramerPhaseDGapWorkaround
+import Common2026.Shannon.AWGNBindConvBody
+import Common2026.Shannon.EPIStamStep12Body
+import Common2026.Shannon.EPIStamStep3Body
+import Common2026.Shannon.BrunnMinkowskiPLBody
+import Common2026.Shannon.FisherInfoV2HeatFlowBody
+import Common2026.Shannon.MACTimeSharingBody
+import Common2026.Shannon.BroadcastChannelAveraging
+import Common2026.Shannon.WynerZivCoveringBody
+import Common2026.Shannon.RelayDFBlockMarkovBody
+import Common2026.Shannon.LZ78GreedyParsingImpl
+import Common2026.Shannon.HoeffdingInteriorGradientBody
+import Common2026.Shannon.HuffmanSwapStepChainBody
