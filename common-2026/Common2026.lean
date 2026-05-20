@@ -94,6 +94,7 @@ import Common2026.Shannon.ChernoffNLetterZSum
 import Common2026.Shannon.ChernoffInformation
 import Common2026.Shannon.ChernoffConverse
 import Common2026.Shannon.Cramer
+import Common2026.Shannon.CramerCLTClosure
 import Common2026.Shannon.CramerLC2Discharge
 import Common2026.Shannon.CramerLC2DischargeExt
 import Common2026.Shannon.HoeffdingTradeoff
