@@ -195,6 +195,7 @@ import Common2026.Shannon.BroadcastChannelAveraging
 import Common2026.Shannon.WynerZivCoveringBody
 import Common2026.Shannon.RelayDFBlockMarkovBody
 import Common2026.Shannon.LZ78GreedyParsingImpl
+import Common2026.Shannon.LZ78GreedyLongestPrefix
 import Common2026.Shannon.HoeffdingInteriorGradientBody
 import Common2026.Shannon.HuffmanSwapStepChainBody
 import Common2026.Shannon.AWGNMIDecompBody
