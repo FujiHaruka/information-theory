@@ -347,6 +347,14 @@ theorem lz78_impl_encoding_length_per_symbol_le (n : ℕ) (hn : 0 < n)
   push_cast
   ring
 
+/-- **Per-symbol bit-rate is nonnegative**: the greedy encoding length
+divided by `n` is `≥ 0` for every `n` (including `n = 0`, where the
+division is `0/0 = 0`). The numerator is a `ℕ` cast and the denominator a
+`ℕ` cast, so the quotient is a nonnegative real. -/
+theorem lz78_impl_encoding_length_per_symbol_nonneg (n : ℕ) (x : Fin n → α) :
+    (0 : ℝ) ≤ (lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ) :=
+  div_nonneg (by positivity) (by positivity)
+
 end EncodingLength
 
 /-! ## §6. `IsLZ78EncodingLengthBoundPassthrough` analogue -/

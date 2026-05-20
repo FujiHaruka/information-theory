@@ -300,6 +300,28 @@ variable [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 variable {Ω : Type*} [MeasurableSpace Ω]
 
+/-- **Genuine lower boundedness of the greedy per-symbol rate**.
+
+For the concrete greedy implementation, the per-symbol output rate
+`(lz78GreedyImplEncodingLength n (blockRV n ω) : ℝ) / n` is `≥ 0` for
+*every* `n` and *every* `ω` (the numerator and denominator are both `ℕ`
+casts), so it is uniformly bounded below by `0`. This discharges the
+`IsBoundedUnder (· ≥ ·)` hypothesis of the headline genuinely — it is a
+property of the greedy code, not an external assumption. -/
+theorem lz78GreedyImpl_isBoundedUnder_ge
+    (μ : Measure Ω) (p : ErgodicProcess μ α) :
+    ∀ᵐ ω ∂μ,
+      Filter.IsBoundedUnder (· ≥ ·) Filter.atTop
+        (fun n =>
+          (lz78GreedyImplEncodingLength n
+              (p.toStationaryProcess.blockRV n ω) : ℝ)
+            / (n : ℝ)) := by
+  refine Filter.Eventually.of_forall (fun ω => ?_)
+  refine Filter.isBoundedUnder_of_eventually_ge (a := 0) ?_
+  exact Filter.Eventually.of_forall (fun n =>
+    lz78_impl_encoding_length_per_symbol_nonneg n
+      (p.toStationaryProcess.blockRV n ω))
+
 /-- **S19 final headline — two-sided LZ78 optimality for the genuine
 greedy implementation**.
 
@@ -339,6 +361,50 @@ theorem lz78_two_sided_optimality_greedy_impl
         (𝓝 (entropyRate μ p.toStationaryProcess)) :=
   lz78_two_sided_optimality_ergodic μ p (@lz78GreedyImplEncodingLength α _ _)
     h_achiev h_converse h_bdd_above h_bdd_below
+
+/-- **S19 final headline — greedy two-sided optimality with lower
+boundedness discharged**.
+
+Same as `lz78_two_sided_optimality_greedy_impl`, but the
+`IsBoundedUnder (· ≥ ·)` hypothesis (`h_bdd_below`) is **dropped** — it is
+genuinely discharged internally via `lz78GreedyImpl_isBoundedUnder_ge`
+(the greedy per-symbol rate is `≥ 0` by construction). The headline now
+carries only **three** honest hypotheses:
+
+* `h_achiev` — Cover–Thomas Eq. 13.124 achievability chain (Ziv side);
+* `h_converse` — Cover–Thomas Eq. 13.130 converse chain;
+* `h_bdd_above` — `IsBoundedUnder (· ≤ ·)` upper boundedness of the
+  per-symbol rate. This one is *not* dischargeable from the greedy
+  bit-length bound: that bound is `≤ log(n+1) + log|α| + 2`, which grows
+  with `n` and hence gives no uniform upper constant. It is the genuine
+  residual boundedness input required by
+  `tendsto_of_le_liminf_of_limsup_le`.
+
+The two SMB-side sandwich bounds and all three `True` pass-throughs
+remain discharged internally (as in the parent headline). -/
+theorem lz78_two_sided_optimality_greedy_impl_bdd_below_free
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (p : ErgodicProcess μ α)
+    (h_achiev : IsLZ78AchievabilityChainHyp μ p.toStationaryProcess
+                  (@lz78GreedyImplEncodingLength α _ _))
+    (h_converse : IsLZ78ConverseChainHyp μ p.toStationaryProcess
+                  (@lz78GreedyImplEncodingLength α _ _))
+    (h_bdd_above : ∀ᵐ ω ∂μ,
+        Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
+          (fun n =>
+            (lz78GreedyImplEncodingLength n
+                (p.toStationaryProcess.blockRV n ω) : ℝ)
+              / (n : ℝ))) :
+    ∀ᵐ ω ∂μ,
+      Filter.Tendsto
+        (fun n =>
+          (lz78GreedyImplEncodingLength n
+              (p.toStationaryProcess.blockRV n ω) : ℝ)
+            / (n : ℝ))
+        Filter.atTop
+        (𝓝 (entropyRate μ p.toStationaryProcess)) :=
+  lz78_two_sided_optimality_greedy_impl μ p h_achiev h_converse h_bdd_above
+    (lz78GreedyImpl_isBoundedUnder_ge μ p)
 
 end GreedyImplHeadline
 
