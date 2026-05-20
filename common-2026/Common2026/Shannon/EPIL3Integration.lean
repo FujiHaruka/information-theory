@@ -3,7 +3,6 @@ import Common2026.Shannon.EPIPlumbing
 import Common2026.Shannon.EPIStamDischarge
 import Common2026.Shannon.FisherInfoV2DeBruijn
 import Common2026.Shannon.FisherInfoV2
-import Common2026.Shannon.FisherInfo
 import Common2026.Shannon.FisherInfoGaussian
 import Common2026.Shannon.DifferentialEntropy
 import Mathlib.Analysis.SpecialFunctions.Exp
@@ -386,21 +385,25 @@ theorem isEPIL3IntegratedPipeline_of_translates
     {Ω : Type*} [MeasurableSpace Ω]
     {P : Measure Ω}
     {X Y : Ω → ℝ}
-    (hJX : ∀ a : ℝ, Common2026.Shannon.fisherInfo (P.map (fun ω => X ω + a))
-                    = Common2026.Shannon.fisherInfo (P.map X))
-    (hJY : ∀ b : ℝ, Common2026.Shannon.fisherInfo (P.map (fun ω => Y ω + b))
-                    = Common2026.Shannon.fisherInfo (P.map Y))
-    (hJsum : ∀ a b : ℝ,
-        Common2026.Shannon.fisherInfo
-          (P.map (fun ω => (X ω + a) + (Y ω + b)))
-        = Common2026.Shannon.fisherInfo (P.map (fun ω => X ω + Y ω)))
+    (hJX : ∀ a : ℝ, ∀ f : ℝ → ℝ,
+        Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map (fun ω => X ω + a)) f
+          = Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) f)
+    (hJY : ∀ b : ℝ, ∀ f : ℝ → ℝ,
+        Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map (fun ω => Y ω + b)) f
+          = Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) f)
+    (hJsum : ∀ a b : ℝ, ∀ f : ℝ → ℝ,
+        Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+          (P.map (fun ω => (X ω + a) + (Y ω + b))) f
+        = Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+            (P.map (fun ω => X ω + Y ω)) f)
     (h_bridge_t : ∀ a b : ℝ,
         IsStamToEPIBridgeHyp (fun ω => X ω + a) (fun ω => Y ω + b) P)
     (a b : ℝ)
     (h : IsEPIL3IntegratedPipeline X Y P) :
     IsEPIL3IntegratedPipeline (fun ω => X ω + a) (fun ω => Y ω + b) P where
   stam :=
-    isStamInequalityHyp_of_fisherInfo_eq (hJX a).symm (hJY b).symm (hJsum a b).symm h.stam
+    isStamInequalityHyp_of_fisherInfo_eq
+      (fun f => (hJX a f).symm) (fun f => (hJY b f).symm) (fun f => (hJsum a b f).symm) h.stam
   bridge := h_bridge_t a b
 
 /-! ## §9 — Concrete Gaussian EPI (genuine, via saturation)

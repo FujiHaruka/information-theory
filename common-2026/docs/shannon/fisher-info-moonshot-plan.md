@@ -1,5 +1,7 @@
 # Fisher Information + de Bruijn Identity ムーンショット計画 🌙 (T2-F)
 
+> **DELETED (2026-05-20)**: V1 `fisherInfo` / `fisherInfoReal` / `IsRegularDeBruijnHyp` / `deBruijn_identity` were removed from `FisherInfo.lean` and the EPI/Stam scaffolding migrated to V2 `FisherInfoV2.fisherInfoOfMeasureV2` (full build green, 0 sorry).
+>
 > **RESOLVED (2026-05-20) — flaw-vacuous fix**: V1 `fisherInfo` (`FisherInfo.lean`)
 > now carries a `⚠️ BUGGED` deprecation docstring (returns `0` for Gaussians; use
 > `FisherInfoV2.fisherInfoOfDensity`). The vacuous Stam discharges that exploited

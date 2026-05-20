@@ -31,10 +31,19 @@ vacuity, and trivial-value placeholder defs.
 > V1 `fisherInfo = 0` value. Nothing genuine depended on them: the genuine
 > Gaussian EPI runs through `entropy_power_inequality_gaussian_saturation`, and
 > the non-vacuous V2 Gaussian convex Fisher bound is
-> `FisherInfoV2.stam_convex_fisher_bound_gaussian`. V1 `fisherInfo` itself is now
-> carrying a `⚠️ BUGGED` deprecation docstring (kept only as the type-level
-> scaffold of the genuine *open* Stam/de Bruijn predicates; no honest result uses
-> its value).
+> `FisherInfoV2.stam_convex_fisher_bound_gaussian`.
+>
+> **UPDATE (2026-05-20, follow-up):** V1 `fisherInfo` is no longer merely
+> deprecated — it has been **DELETED** from `FisherInfo.lean`, together with
+> `fisherInfo_nonneg`, `fisherInfo_eq_lintegral_logDeriv_sq`, `fisherInfo_dirac`,
+> `fisherInfoReal`, `fisherInfoReal_dirac`, `fisherInfoReal_nonneg`,
+> `IsRegularDeBruijnHyp`, and `deBruijn_identity` (all V1-keyed). The EPI/Stam
+> scaffolding predicates (`IsStamInequalityHyp`, `IsStamCauchySchwarz(Optimal)`,
+> `IsStamScoreConvHyp`, `IsStamCondExpCSHyp`, `IsStamTotalExpectation`,
+> `IsDeBruijnRegularityHyp`, `IsDeBruijnIntegrationHyp`) were migrated to the
+> a.e.-class-invariant V2 `FisherInfoV2.fisherInfoOfMeasureV2` (and
+> `IsRegularDeBruijnHypV2`). The full build is green with 0 sorry; the root-cause
+> trap can no longer be re-entered because the buggy symbol no longer exists.
 
 
 **Files / declarations:**

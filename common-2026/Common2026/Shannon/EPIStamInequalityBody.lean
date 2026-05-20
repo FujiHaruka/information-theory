@@ -2,8 +2,8 @@ import Common2026.Shannon.EntropyPowerInequality
 import Common2026.Shannon.EPIPlumbing
 import Common2026.Shannon.EPIStamDischarge
 import Common2026.Shannon.EPIL3Integration
-import Common2026.Shannon.FisherInfo
 import Common2026.Shannon.FisherInfoV2
+import Common2026.Shannon.FisherInfoV2DeBruijn
 import Common2026.Shannon.FisherInfoGaussian
 import Common2026.Shannon.DifferentialEntropy
 import Mathlib.Analysis.SpecialFunctions.Exp
@@ -133,10 +133,11 @@ real-valued Fisher info projections. The predicate enforces only the
 §3. -/
 def IsStamCauchySchwarz {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
-  ∀ (J_X J_Y J_sum : ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
-    J_X = (Common2026.Shannon.fisherInfo (P.map X)).toReal →
-    J_Y = (Common2026.Shannon.fisherInfo (P.map Y)).toReal →
-    J_sum = (Common2026.Shannon.fisherInfo (P.map (fun ω => X ω + Y ω))).toReal →
+  ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
+    J_X = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
+    J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
+    J_sum = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+              (P.map (fun ω => X ω + Y ω)) fXY).toReal →
     ∃ lam : ℝ, 0 ≤ lam ∧ lam ≤ 1 ∧
       J_sum ≤ lam ^ 2 * J_X + (1 - lam) ^ 2 * J_Y
 
@@ -145,12 +146,12 @@ theorem isStamCauchySchwarz_symm {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h : IsStamCauchySchwarz X Y P) :
     IsStamCauchySchwarz Y X P := by
-  intro J_Y J_X J_sum hJY hJX hJsum hJY_def hJX_def hJsum_def
+  intro J_Y J_X J_sum fY fX fXY hJY hJX hJsum hJY_def hJX_def hJsum_def
   have h_comm : (fun ω => Y ω + X ω) = fun ω => X ω + Y ω := by
     funext ω; ring
   rw [h_comm] at hJsum_def
   obtain ⟨lam, hlam_lo, hlam_hi, hbd⟩ :=
-    h J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
+    h J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
   refine ⟨1 - lam, by linarith, by linarith, ?_⟩
   -- `J_sum ≤ lam² J_X + (1 - lam)² J_Y = (1 - (1 - lam))² J_X + (1 - lam)² J_Y`.
   have : (1 - (1 - lam)) ^ 2 = lam ^ 2 := by ring
@@ -161,15 +162,16 @@ never holds in practice, but the predicate is preserved by the natural Gaussian
 saturation. -/
 theorem isStamCauchySchwarz_of_lambda_one {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
-    (h_bd : ∀ (J_X J_Y J_sum : ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
-      J_X = (Common2026.Shannon.fisherInfo (P.map X)).toReal →
-      J_Y = (Common2026.Shannon.fisherInfo (P.map Y)).toReal →
-      J_sum = (Common2026.Shannon.fisherInfo (P.map (fun ω => X ω + Y ω))).toReal →
+    (h_bd : ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
+      J_X = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
+      J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
+      J_sum = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+                (P.map (fun ω => X ω + Y ω)) fXY).toReal →
       J_sum ≤ J_X) :
     IsStamCauchySchwarz X Y P := by
-  intro J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
+  intro J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
   refine ⟨1, by norm_num, by norm_num, ?_⟩
-  have hbd := h_bd J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
+  have hbd := h_bd J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
   have hJY_nn : 0 ≤ J_Y := hJY.le
   nlinarith [sq_nonneg ((1 : ℝ) - 1), sq_nonneg (1 - (1 : ℝ))]
 
@@ -236,10 +238,11 @@ Strengthens `IsStamCauchySchwarz` to require the witness `λ = J_Y / (J_X + J_Y)
 which is the optimal λ minimizing `λ² J_X + (1-λ)² J_Y`. -/
 def IsStamCauchySchwarzOptimal {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
-  ∀ (J_X J_Y J_sum : ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
-    J_X = (Common2026.Shannon.fisherInfo (P.map X)).toReal →
-    J_Y = (Common2026.Shannon.fisherInfo (P.map Y)).toReal →
-    J_sum = (Common2026.Shannon.fisherInfo (P.map (fun ω => X ω + Y ω))).toReal →
+  ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
+    J_X = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
+    J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
+    J_sum = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+              (P.map (fun ω => X ω + Y ω)) fXY).toReal →
     J_sum ≤ J_X * J_Y / (J_X + J_Y)
 
 /-- The optimal Cauchy-Schwarz predicate is symmetric in `X, Y`. -/
@@ -247,11 +250,11 @@ theorem isStamCauchySchwarzOptimal_symm {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h : IsStamCauchySchwarzOptimal X Y P) :
     IsStamCauchySchwarzOptimal Y X P := by
-  intro J_Y J_X J_sum hJY hJX hJsum hJY_def hJX_def hJsum_def
+  intro J_Y J_X J_sum fY fX fXY hJY hJX hJsum hJY_def hJX_def hJsum_def
   have h_comm : (fun ω => Y ω + X ω) = fun ω => X ω + Y ω := by
     funext ω; ring
   rw [h_comm] at hJsum_def
-  have h_inst := h J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
+  have h_inst := h J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
   -- `J_X J_Y / (J_X + J_Y) = J_Y J_X / (J_Y + J_X)` — same value.
   have h_eq : J_X * J_Y / (J_X + J_Y) = J_Y * J_X / (J_Y + J_X) := by
     congr 1 <;> ring
@@ -266,13 +269,14 @@ theorem stam_inequality_via_predicate_optimal
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvolution X Y P)
     (h_cs_opt : IsStamCauchySchwarzOptimal X Y P) :
-    ∀ (J_X J_Y J_sum : ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
-      J_X = (Common2026.Shannon.fisherInfo (P.map X)).toReal →
-      J_Y = (Common2026.Shannon.fisherInfo (P.map Y)).toReal →
-      J_sum = (Common2026.Shannon.fisherInfo (P.map (fun ω => X ω + Y ω))).toReal →
+    ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
+      J_X = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
+      J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
+      J_sum = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+                (P.map (fun ω => X ω + Y ω)) fXY).toReal →
       1 / J_sum ≥ 1 / J_X + 1 / J_Y := by
-  intro J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
-  have h_le := h_cs_opt J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
+  intro J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
+  have h_le := h_cs_opt J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
   exact stam_inverse_form_of_harmonic_mean hJX hJY hJsum h_le
 
 /-- **`IsStamInequalityHyp` from body predicates**. The genuine Stam-inequality
@@ -284,9 +288,9 @@ theorem isStamInequalityHyp_via_body
     (h_conv : IsStamScoreConvolution X Y P)
     (h_cs_opt : IsStamCauchySchwarzOptimal X Y P) :
     IsStamInequalityHyp X Y P := by
-  intro J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
+  intro J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
   exact stam_inequality_via_predicate_optimal h_conv h_cs_opt
-    J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
+    J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
 
 /-! ## §5 — Gaussian saturation discharge -/
 
@@ -345,7 +349,7 @@ theorem isStamCauchySchwarz_of_optimal
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h : IsStamCauchySchwarzOptimal X Y P) :
     IsStamCauchySchwarz X Y P := by
-  intro J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
+  intro J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
   -- Optimal λ = J_Y / (J_X + J_Y) gives the inequality
   -- `J_sum ≤ λ² J_X + (1-λ)² J_Y = J_X J_Y / (J_X + J_Y)`.
   refine ⟨J_Y / (J_X + J_Y), ?_, ?_, ?_⟩
@@ -353,7 +357,7 @@ theorem isStamCauchySchwarz_of_optimal
   · have hsum : 0 < J_X + J_Y := by linarith
     rw [div_le_one hsum]
     linarith
-  · have h_le := h J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
+  · have h_le := h J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
     have h_min := stam_lambda_min hJX hJY
     -- `lam² J_X + (1-lam)² J_Y = J_X J_Y / (J_X + J_Y)` at `lam = J_Y/(J_X+J_Y)`.
     show J_sum ≤ (J_Y / (J_X + J_Y)) ^ 2 * J_X
@@ -418,15 +422,16 @@ witness with `λ = J_Y / (J_X + J_Y)`, the optimal-form predicate is recovered. 
 theorem isStamCauchySchwarzOptimal_of_lambda_optimal
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
-    (h : ∀ (J_X J_Y J_sum : ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
-      J_X = (Common2026.Shannon.fisherInfo (P.map X)).toReal →
-      J_Y = (Common2026.Shannon.fisherInfo (P.map Y)).toReal →
-      J_sum = (Common2026.Shannon.fisherInfo (P.map (fun ω => X ω + Y ω))).toReal →
+    (h : ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
+      J_X = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
+      J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
+      J_sum = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+                (P.map (fun ω => X ω + Y ω)) fXY).toReal →
       J_sum ≤ (J_Y / (J_X + J_Y)) ^ 2 * J_X
               + (1 - J_Y / (J_X + J_Y)) ^ 2 * J_Y) :
     IsStamCauchySchwarzOptimal X Y P := by
-  intro J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
-  have h_bd := h J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
+  intro J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
+  have h_bd := h J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
   have h_min := stam_lambda_min hJX hJY
   linarith [h_min]
 

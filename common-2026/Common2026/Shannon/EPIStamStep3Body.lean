@@ -2,8 +2,8 @@ import Common2026.Shannon.EntropyPowerInequality
 import Common2026.Shannon.EPIPlumbing
 import Common2026.Shannon.EPIStamDischarge
 import Common2026.Shannon.EPIStamInequalityBody
-import Common2026.Shannon.FisherInfo
 import Common2026.Shannon.FisherInfoV2
+import Common2026.Shannon.FisherInfoV2DeBruijn
 import Common2026.Shannon.FisherInfoGaussian
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
@@ -150,11 +150,12 @@ The cross-term orthogonality and the `condExp` integral are not in Mathlib
 result for any λ-witness, which the §3 chain then existentially packages. -/
 def IsStamTotalExpectation {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
-  ∀ (J_X J_Y J_sum lam : ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
+  ∀ (J_X J_Y J_sum lam : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
     0 ≤ lam → lam ≤ 1 →
-    J_X = (Common2026.Shannon.fisherInfo (P.map X)).toReal →
-    J_Y = (Common2026.Shannon.fisherInfo (P.map Y)).toReal →
-    J_sum = (Common2026.Shannon.fisherInfo (P.map (fun ω => X ω + Y ω))).toReal →
+    J_X = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
+    J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
+    J_sum = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+              (P.map (fun ω => X ω + Y ω)) fXY).toReal →
     J_sum ≤ lam ^ 2 * J_X + (1 - lam) ^ 2 * J_Y
 
 /-- The total-expectation predicate is symmetric in `X, Y` (swap `λ ↦ 1 - λ`). -/
@@ -162,12 +163,12 @@ theorem isStamTotalExpectation_symm {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h : IsStamTotalExpectation X Y P) :
     IsStamTotalExpectation Y X P := by
-  intro J_Y J_X J_sum lam hJY hJX hJsum hlam_lo hlam_hi hJY_def hJX_def hJsum_def
+  intro J_Y J_X J_sum lam fY fX fXY hJY hJX hJsum hlam_lo hlam_hi hJY_def hJX_def hJsum_def
   -- Reduce the `Y + X` sum to `X + Y`, then invoke `h` at the swapped λ ↦ 1 - λ.
   have h_comm : (fun ω => Y ω + X ω) = fun ω => X ω + Y ω := by
     funext ω; ring
   rw [h_comm] at hJsum_def
-  have h_bd := h J_X J_Y J_sum (1 - lam) hJX hJY hJsum
+  have h_bd := h J_X J_Y J_sum (1 - lam) fX fY fXY hJX hJY hJsum
     (by linarith) (by linarith) hJX_def hJY_def hJsum_def
   -- `h_bd : J_sum ≤ (1-lam)² J_X + (1 - (1-lam))² J_Y`. Note `1 - (1-lam) = lam`.
   have h_rw : (1 - (1 - lam)) ^ 2 = lam ^ 2 := by ring
@@ -191,10 +192,10 @@ theorem isStamFisherCoupling_of_totalExpectation {Ω : Type*} [MeasurableSpace �
     IsStamFisherCoupling X Y P := by
   -- `IsStamFisherCoupling` unfolds to `IsStamCauchySchwarz`, the existential-λ
   -- form. Package the optimal λ = J_Y / (J_X + J_Y) ∈ [0,1] as the witness.
-  intro J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
+  intro J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
   obtain ⟨hlam_lo, hlam_hi⟩ := stam_optimal_lambda_mem_unit hJX hJY
   refine ⟨J_Y / (J_X + J_Y), hlam_lo, hlam_hi, ?_⟩
-  exact h J_X J_Y J_sum (J_Y / (J_X + J_Y)) hJX hJY hJsum
+  exact h J_X J_Y J_sum (J_Y / (J_X + J_Y)) fX fY fXY hJX hJY hJsum
     hlam_lo hlam_hi hJX_def hJY_def hJsum_def
 
 /-- **Step 1 + Step 2 → Step 3 chain** (the named bridge).
@@ -225,12 +226,12 @@ theorem isStamCauchySchwarzOptimal_of_coupling {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_te : IsStamTotalExpectation X Y P) :
     IsStamCauchySchwarzOptimal X Y P := by
-  intro J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
+  intro J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
   -- Feed the optimal λ = J_Y / (J_X + J_Y) ∈ [0,1] into the total-expectation
   -- sub-step, then collapse the coupling RHS to the harmonic mean via
   -- `stam_lambda_min`.
   obtain ⟨hlam_lo, hlam_hi⟩ := stam_optimal_lambda_mem_unit hJX hJY
-  have h_bd := h_te J_X J_Y J_sum (J_Y / (J_X + J_Y)) hJX hJY hJsum
+  have h_bd := h_te J_X J_Y J_sum (J_Y / (J_X + J_Y)) fX fY fXY hJX hJY hJsum
     hlam_lo hlam_hi hJX_def hJY_def hJsum_def
   have h_min := stam_lambda_min hJX hJY
   -- `h_min : (J_Y/(J_X+J_Y))² J_X + (1 - J_Y/(J_X+J_Y))² J_Y = J_X J_Y / (J_X+J_Y)`.
@@ -242,10 +243,11 @@ chains through Step 4 (`stam_lambda_min`) to the harmonic-mean upper bound
 theorem stam_step3_to_step4_optimal {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_te : IsStamTotalExpectation X Y P) :
-    ∀ (J_X J_Y J_sum : ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
-      J_X = (Common2026.Shannon.fisherInfo (P.map X)).toReal →
-      J_Y = (Common2026.Shannon.fisherInfo (P.map Y)).toReal →
-      J_sum = (Common2026.Shannon.fisherInfo (P.map (fun ω => X ω + Y ω))).toReal →
+    ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
+      J_X = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
+      J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
+      J_sum = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+                (P.map (fun ω => X ω + Y ω)) fXY).toReal →
       J_sum ≤ J_X * J_Y / (J_X + J_Y) :=
   isStamCauchySchwarzOptimal_of_coupling h_te
 

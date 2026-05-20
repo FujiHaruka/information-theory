@@ -1,5 +1,7 @@
 # Fisher Info / de Bruijn — Gaussian discharge ムーンショット計画 🌙 (T2-F follow-up)
 
+> **DELETED (2026-05-20)**: V1 `fisherInfo` was removed from `FisherInfo.lean` and the EPI/Stam scaffolding migrated to V2 `FisherInfoV2.fisherInfoOfMeasureV2` (full build green, 0 sorry).
+>
 > **RESOLVED (2026-05-20) — flaw-vacuous fix**: the Gaussian *Stam* discharges
 > that this plan's chain produced via the V1 `fisherInfo = 0` artefact were
 > **vacuous** (`exfalso` on `0 < J_X`) and have been removed. The genuine Gaussian

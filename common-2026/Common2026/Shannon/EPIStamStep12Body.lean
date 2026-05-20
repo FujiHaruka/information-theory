@@ -1,6 +1,7 @@
 import Common2026.Shannon.EPIStamInequalityBody
 import Common2026.Shannon.EPIStamDischarge
 import Common2026.Shannon.FisherInfoV2
+import Common2026.Shannon.FisherInfoV2DeBruijn
 import Mathlib.Tactic.Positivity
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.Ring
@@ -163,9 +164,9 @@ discharged* by `isStamScoreConvHyp_intro`, unlike the `True` placeholder it
 replaces — the witness it produces is exactly the one the proof needs. -/
 def IsStamScoreConvHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
-  ∀ (J_X J_Y : ℝ), 0 < J_X → 0 < J_Y →
-    J_X = (Common2026.Shannon.fisherInfo (P.map X)).toReal →
-    J_Y = (Common2026.Shannon.fisherInfo (P.map Y)).toReal →
+  ∀ (J_X J_Y : ℝ) (fX fY : ℝ → ℝ), 0 < J_X → 0 < J_Y →
+    J_X = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
+    J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
     ∃ lam : ℝ, 0 ≤ lam ∧ lam ≤ 1 ∧ lam = J_Y / (J_X + J_Y)
 
 /-- The score-convolution typed predicate is genuinely provable: the optimal
@@ -174,7 +175,7 @@ This replaces the Wave 7 `trivial` discharge of the `True` placeholder with a
 real construction. -/
 theorem isStamScoreConvHyp_intro {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : IsStamScoreConvHyp X Y P := by
-  intro J_X J_Y hJX hJY hJX_def hJY_def
+  intro J_X J_Y fX fY hJX hJY hJX_def hJY_def
   refine ⟨J_Y / (J_X + J_Y), ?_, ?_, rfl⟩
   · positivity
   · have hsum : 0 < J_X + J_Y := by linarith
@@ -213,10 +214,11 @@ granted for all `λ`, §4 derives the optimal bound *fully* via the Wave 7
 λ-optimization. -/
 def IsStamCondExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
-  ∀ (J_X J_Y J_sum : ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
-    J_X = (Common2026.Shannon.fisherInfo (P.map X)).toReal →
-    J_Y = (Common2026.Shannon.fisherInfo (P.map Y)).toReal →
-    J_sum = (Common2026.Shannon.fisherInfo (P.map (fun ω => X ω + Y ω))).toReal →
+  ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
+    J_X = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
+    J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
+    J_sum = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+              (P.map (fun ω => X ω + Y ω)) fXY).toReal →
     ∀ lam : ℝ, 0 ≤ lam → lam ≤ 1 →
       J_sum ≤ lam ^ 2 * J_X + (1 - lam) ^ 2 * J_Y
 
@@ -225,11 +227,11 @@ def IsStamCondExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
 theorem isStamCauchySchwarz_of_condExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω} (h : IsStamCondExpCSHyp X Y P) :
     IsStamCauchySchwarz X Y P := by
-  intro J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
+  intro J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
   have hsum : 0 < J_X + J_Y := by linarith
   refine ⟨J_Y / (J_X + J_Y), by positivity, ?_, ?_⟩
   · rw [div_le_one hsum]; linarith
-  · exact h J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
+  · exact h J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
       (J_Y / (J_X + J_Y)) (by positivity) (by rw [div_le_one hsum]; linarith)
 
 /-- The Step-2 typed predicate is congruent under function equality. -/
@@ -242,10 +244,10 @@ theorem isStamCondExpCSHyp_congr {Ω : Type*} [MeasurableSpace Ω]
 theorem isStamCondExpCSHyp_symm {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω} (h : IsStamCondExpCSHyp X Y P) :
     IsStamCondExpCSHyp Y X P := by
-  intro J_Y J_X J_sum hJY hJX hJsum hJY_def hJX_def hJsum_def lam hlo hhi
+  intro J_Y J_X J_sum fY fX fXY hJY hJX hJsum hJY_def hJX_def hJsum_def lam hlo hhi
   have h_comm : (fun ω => Y ω + X ω) = fun ω => X ω + Y ω := by funext ω; ring
   rw [h_comm] at hJsum_def
-  have hbd := h J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
+  have hbd := h J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
     (1 - lam) (by linarith) (by linarith)
   have heq : (1 - (1 - lam)) ^ 2 = lam ^ 2 := by ring
   linarith [hbd, heq]
@@ -262,10 +264,10 @@ Step 2-3 to the harmonic-mean form. -/
 theorem stamCauchySchwarzOptimal_of_condExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω} (h : IsStamCondExpCSHyp X Y P) :
     IsStamCauchySchwarzOptimal X Y P := by
-  intro J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
+  intro J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
   have hsum : 0 < J_X + J_Y := by linarith
   -- Instantiate Step 2 at the optimal λ = J_Y / (J_X + J_Y).
-  have h_bd := h J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
+  have h_bd := h J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
     (J_Y / (J_X + J_Y)) (by positivity) (by rw [div_le_one hsum]; linarith)
   -- Wave 7 closed form: at λ*, the convex bound equals the harmonic mean.
   have h_min := stam_lambda_min hJX hJY

@@ -1,7 +1,7 @@
 import Common2026.Shannon.EntropyPowerInequality
 import Common2026.Shannon.EPIPlumbing
-import Common2026.Shannon.FisherInfo
 import Common2026.Shannon.FisherInfoV2
+import Common2026.Shannon.FisherInfoV2DeBruijn
 import Common2026.Shannon.FisherInfoGaussian
 import Common2026.Shannon.DifferentialEntropy
 import Mathlib.Analysis.SpecialFunctions.Exp
@@ -120,10 +120,11 @@ To avoid division-by-zero, we phrase the predicate to require either
 projections (with finiteness). -/
 def IsStamInequalityHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
-  ∀ (J_X J_Y J_sum : ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
-    J_X = (Common2026.Shannon.fisherInfo (P.map X)).toReal →
-    J_Y = (Common2026.Shannon.fisherInfo (P.map Y)).toReal →
-    J_sum = (Common2026.Shannon.fisherInfo (P.map (fun ω => X ω + Y ω))).toReal →
+  ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
+    J_X = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
+    J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
+    J_sum = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+              (P.map (fun ω => X ω + Y ω)) fXY).toReal →
     1 / J_sum ≥ 1 / J_X + 1 / J_Y
 
 /-- **Bridge L-EPI1**: the genuine Stam-inequality hypothesis trivially implies
@@ -144,11 +145,11 @@ theorem isStamInequalityHyp_symm
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h : IsStamInequalityHyp X Y P) :
     IsStamInequalityHyp Y X P := by
-  intro J_Y J_X J_sum hJY hJX hJsum hJY_def hJX_def hJsum_def
+  intro J_Y J_X J_sum fY fX fXY hJY hJX hJsum hJY_def hJX_def hJsum_def
   have h_comm : (fun ω => Y ω + X ω) = fun ω => X ω + Y ω := by
     funext ω; ring
   rw [h_comm] at hJsum_def
-  have h_inst := h J_X J_Y J_sum hJX hJY hJsum hJX_def hJY_def hJsum_def
+  have h_inst := h J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
   linarith
 
 /-! ## §3 — de Bruijn regularity predicate -/
@@ -165,17 +166,21 @@ saturation).
 Used as hypothesis pass-through; Mathlib has no machinery for any of these
 ingredients (`rg "deBruijn" → 0 hit`). -/
 structure IsDeBruijnRegularityHyp {Ω : Type*} [MeasurableSpace Ω]
-    (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
-    [HasPDF X P volume] : Prop where
+    (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] where
   /-- For each strictly positive `t`, the family is regular in the de Bruijn
-  sense. -/
-  reg_at : ∀ t : ℝ, 0 < t → Common2026.Shannon.IsRegularDeBruijnHyp X Z P t
-  /-- The derivative is integrable on `(0, ∞)`. Stated using interval integral. -/
+  sense (V2 form, RHS keyed on V2 Fisher info; `IsRegularDeBruijnHypV2` carries a
+  density witness so this structure is data- rather than `Prop`-valued). -/
+  reg_at : ∀ t : ℝ, 0 < t → Common2026.Shannon.FisherInfoV2.IsRegularDeBruijnHypV2 X Z P t
+  /-- The derivative is integrable on `(0, ∞)`, for some smooth density witness
+  `density_path t` along the heat-flow path. Stated using interval integral with
+  the V2 (density-keyed) Fisher info. -/
   integrable_deriv :
-    Integrable
-      (fun t : ℝ => (1/2)
-        * (Common2026.Shannon.fisherInfo (P.map (fun ω => X ω + Real.sqrt t * Z ω))).toReal)
-      (volume.restrict (Set.Ioi 0))
+    ∃ density_path : ℝ → ℝ → ℝ,
+      Integrable
+        (fun t : ℝ => (1/2)
+          * (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+              (P.map (fun ω => X ω + Real.sqrt t * Z ω)) (density_path t)).toReal)
+        (volume.restrict (Set.Ioi 0))
 
 /-! ## §4 — de Bruijn integration predicate (Cover-Thomas Lemma 17.7.2 真 signature) -/
 
@@ -196,14 +201,14 @@ and the fundamental theorem of calculus along an unbounded interval (`rg
 "intervalIntegral.integral_deriv" → only bounded-interval forms`). -/
 def IsDeBruijnIntegrationHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) (T : ℝ) : Prop :=
-  ∀ (h_X h_target : ℝ),
+  ∀ (h_X h_target : ℝ) (fPath : ℝ → ℝ → ℝ),
     h_X = Common2026.Shannon.differentialEntropy (P.map X) →
     h_target = Common2026.Shannon.differentialEntropy
                 (P.map (fun ω => X ω + Real.sqrt T * Z ω)) →
     h_target - h_X
       = ∫ t in Set.Ioo 0 T, (1/2)
-        * (Common2026.Shannon.fisherInfo
-            (P.map (fun ω => X ω + Real.sqrt t * Z ω))).toReal ∂volume
+        * (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+            (P.map (fun ω => X ω + Real.sqrt t * Z ω)) (fPath t)).toReal ∂volume
 
 /-- Trivial degenerate case: when `T ≤ 0` the integration interval `(0, T)` is
 empty, so the identity is `h_target - h_X = 0`. This holds whenever
@@ -216,7 +221,7 @@ theorem isDeBruijnIntegrationHyp_at_zero
         Common2026.Shannon.differentialEntropy
           (P.map (fun ω => X ω + Real.sqrt 0 * Z ω))) :
     IsDeBruijnIntegrationHyp X Z P 0 := by
-  intro h_X h_target hX_def htarget_def
+  intro h_X h_target fPath hX_def htarget_def
   -- Integral over the empty set `Ioo 0 0` is 0.
   have h_empty : Set.Ioo (0 : ℝ) 0 = ∅ := by
     ext x
@@ -418,26 +423,28 @@ is translation-invariant) is in the downstream discharge plan. -/
 theorem isStamInequalityHyp_of_fisherInfo_eq
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y X' Y' : Ω → ℝ} {P : Measure Ω}
-    (hJX : Common2026.Shannon.fisherInfo (P.map X)
-          = Common2026.Shannon.fisherInfo (P.map X'))
-    (hJY : Common2026.Shannon.fisherInfo (P.map Y)
-          = Common2026.Shannon.fisherInfo (P.map Y'))
-    (hJsum : Common2026.Shannon.fisherInfo (P.map (fun ω => X ω + Y ω))
-          = Common2026.Shannon.fisherInfo (P.map (fun ω => X' ω + Y' ω)))
+    (hJX : ∀ f : ℝ → ℝ, Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) f
+          = Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X') f)
+    (hJY : ∀ f : ℝ → ℝ, Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) f
+          = Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y') f)
+    (hJsum : ∀ f : ℝ → ℝ,
+        Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map (fun ω => X ω + Y ω)) f
+          = Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+              (P.map (fun ω => X' ω + Y' ω)) f)
     (h : IsStamInequalityHyp X Y P) :
     IsStamInequalityHyp X' Y' P := by
-  intro J_X J_Y J_sum hJX_pos hJY_pos hJsum_pos hJX_def hJY_def hJsum_def
+  intro J_X J_Y J_sum fX fY fXY hJX_pos hJY_pos hJsum_pos hJX_def hJY_def hJsum_def
   have hJX_def' :
-      J_X = (Common2026.Shannon.fisherInfo (P.map X)).toReal := by
+      J_X = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal := by
     rw [hJX_def, hJX]
   have hJY_def' :
-      J_Y = (Common2026.Shannon.fisherInfo (P.map Y)).toReal := by
+      J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal := by
     rw [hJY_def, hJY]
   have hJsum_def' :
-      J_sum = (Common2026.Shannon.fisherInfo
-              (P.map (fun ω => X ω + Y ω))).toReal := by
+      J_sum = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+              (P.map (fun ω => X ω + Y ω)) fXY).toReal := by
     rw [hJsum_def, hJsum]
-  exact h J_X J_Y J_sum hJX_pos hJY_pos hJsum_pos hJX_def' hJY_def' hJsum_def'
+  exact h J_X J_Y J_sum fX fY fXY hJX_pos hJY_pos hJsum_pos hJX_def' hJY_def' hJsum_def'
 
 /-! ## §11 — de Bruijn regularity manipulation -/
 

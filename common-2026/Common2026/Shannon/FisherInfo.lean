@@ -7,36 +7,33 @@ import Mathlib.MeasureTheory.Measure.Dirac
 import Common2026.Shannon.DifferentialEntropy
 
 /-!
-# Fisher information + de Bruijn identity (T2-F)
+# Fisher information density helpers (T2-F)
 
 Common2026 T2-F ムーンショット ([`docs/shannon/fisher-info-moonshot-plan.md`])。
 
-Cover-Thomas Ch.17.7 の Fisher information 定義 + de Bruijn identity。Mathlib に
-Fisher info の概念は不在 (inventory §A) なので本 file で定義 + 性質 + de Bruijn を組む。
+**V1 `fisherInfo` was DELETED on 2026-05-20** (representative-dependence flaw:
+returned `0` for Gaussians). The correct Fisher information lives in
+`FisherInfoV2.lean` (`fisherInfoOfDensity`) and `FisherInfoV2DeBruijn.lean`
+(`fisherInfoOfMeasureV2` + V2 de Bruijn identity); the EPI/Stam scaffolding was
+migrated to those. This file retains only the **density-based, `fisherInfo`-free**
+helpers below.
+
 **Score function** は Mathlib `logDeriv f := deriv f / f`
 (`Mathlib/Analysis/Calculus/LogDeriv.lean:34`) が偶発的に同形で存在するため再利用
 (inventory §B、Mathlib-shape-driven 原則)。
 
-## 主シグネチャ
+## 主シグネチャ (retained, density-based)
 
-* `fisherInfo` — Phase A 定義 (logDeriv ベース、`ℝ≥0∞` 値)
-* `fisherInfo_nonneg`, `fisherInfo_eq_lintegral_logDeriv_sq` — Tier 0 unfold 補助
-* `fisherInfo_dirac` — Tier 0 退化 case (Dirac measure → `0`)
 * `IsRegularDensity` — Phase B regularity predicate (Cover-Thomas 17.7 仮定の集約)
 * `integral_logDeriv_pdf_eq_zero` — Phase B score 期待値 0 (L-F2: predicate 形 hypothesis pass-through)
-* `IsRegularDeBruijnHyp` — Phase E de Bruijn 用 regularity predicate (L-F1 + L-F2 統合)
-* `deBruijn_identity` — Phase E 主定理 `(d/dt) h(P_{X+√t Z}) = (1/2) J(P_{X+√t Z})`
-  (L-F1: heat-eq + dominated bound + IBP は predicate の中に hypothesis として外出し)
+* `differentialEntropy_map_eq_integral_pdf_log_pdf` — pdf-log-pdf bridge
 
-## 撤退ライン (本実装で適用済)
+## DELETED 2026-05-20 (V1 `fisherInfo` flaw)
 
-本 plan の Tier 2 (de Bruijn identity 主定理) は **L-F1 + L-F2 適用形** で publish:
-Gaussian heat equation (Phase C) と `d/ds`-step dominated bound (Phase D-3) を
-`IsRegularDeBruijnHyp` predicate に hypothesis として集約。一般の `X` で本 predicate を
-discharge するには別 plan (`fisher-info-heat-eq-plan.md` / `fisher-info-dominated-bound-plan.md`)
-が要る。本 file はその hypothesis pass-through 形での publish が valuable な範囲を表す。
-
-cf. inventory §H 撤退ライン + plan §撤退ライン。
+`fisherInfo`, `fisherInfo_nonneg`, `fisherInfo_eq_lintegral_logDeriv_sq`,
+`fisherInfo_dirac`, `fisherInfoReal`, `fisherInfoReal_dirac`,
+`fisherInfoReal_nonneg`, `IsRegularDeBruijnHyp`, `deBruijn_identity` — all keyed on
+the buggy V1 `fisherInfo`. Replaced by `FisherInfoV2` / `FisherInfoV2DeBruijn`.
 -/
 
 namespace Common2026.Shannon
@@ -46,71 +43,20 @@ set_option linter.unusedSectionVars false
 open MeasureTheory Real ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal Real
 
-/-! ## Phase A — `fisherInfo` 定義 + Tier 0 基本性質 -/
+/-! ## Phase A — V1 `fisherInfo` (DELETED 2026-05-20)
 
-/-- **Fisher information** of a measure `μ` on `ℝ` with density `p := μ.rnDeriv volume`.
-
-`J(μ) := ∫⁻ (logDeriv p x)² · p x dx` where `logDeriv f := deriv f / f` is Mathlib's
-score function (`Mathlib/Analysis/Calculus/LogDeriv.lean:34`).
-
-Returns `ℝ≥0∞` to capture `J = +∞` for irregular families (consistent with `klDiv`'s
-return type). Use `(fisherInfo μ).toReal` to project to `ℝ` when the value is known finite.
-
-⚠️ **BUGGED: returns `0` for Gaussian laws, do not use for genuine results.** The
-definition reasons about the `Classical.choose` Lebesgue-decomposition representative
-of `μ.rnDeriv volume`, which is non-differentiable a.e., so `logDeriv` collapses to
-`0` a.e. — hence `fisherInfo (gaussianReal m v) = 0` instead of the correct `1/v`
-(documented at `FisherInfoGaussian.lean` Judgement #2 and `FisherInfoV2.lean` header).
-The correct, a.e.-class-invariant version is
-`Common2026.Shannon.FisherInfoV2.fisherInfoOfDensity` (gives `1/v` for Gaussians).
-This def is retained only as the type-level scaffold of the genuine *open* Stam /
-de Bruijn predicates (`IsStamInequalityHyp`, `IsRegularDeBruijnHyp`, …); no honest
-result should depend on its *value*. The vacuous "Gaussian Stam discharges" that
-exploited the `= 0` artefact were removed 2026-05-20 (see `flaw-vacuous-review`). -/
-noncomputable def fisherInfo (μ : Measure ℝ) : ℝ≥0∞ :=
-  ∫⁻ x, ENNReal.ofReal ((logDeriv (fun y => (μ.rnDeriv volume y).toReal) x) ^ 2)
-    * μ.rnDeriv volume x ∂volume
-
-/-- Fisher information is non-negative (trivially, as an `ℝ≥0∞` value). -/
-theorem fisherInfo_nonneg (μ : Measure ℝ) : 0 ≤ fisherInfo μ := bot_le
-
-/-- Unfold lemma for `fisherInfo`. -/
-theorem fisherInfo_eq_lintegral_logDeriv_sq (μ : Measure ℝ) :
-    fisherInfo μ
-      = ∫⁻ x, ENNReal.ofReal ((logDeriv (fun y => (μ.rnDeriv volume y).toReal) x) ^ 2)
-          * μ.rnDeriv volume x ∂volume := rfl
-
-/-- **Dirac case**: a Dirac measure is singular to `volume`, so its Radon-Nikodym
-derivative vanishes a.e. and its Fisher information is `0`. -/
-theorem fisherInfo_dirac (m : ℝ) : fisherInfo (Measure.dirac m) = 0 := by
-  unfold fisherInfo
-  -- The rnDeriv of `dirac m` w.r.t. volume is 0 a.e.[volume], so the integrand vanishes.
-  have h_sing : Measure.dirac m ⟂ₘ (volume : Measure ℝ) :=
-    MeasureTheory.mutuallySingular_dirac m volume
-  have h_rn : (Measure.dirac m).rnDeriv volume =ᵐ[volume] 0 :=
-    MeasureTheory.Measure.MutuallySingular.rnDeriv_ae_eq_zero h_sing
-  -- Replace the integrand by `0` a.e. using `h_rn` on the multiplicand factor.
-  have h_zero : ∀ᵐ x ∂(volume : Measure ℝ),
-      ENNReal.ofReal ((logDeriv (fun y => ((Measure.dirac m).rnDeriv volume y).toReal) x) ^ 2)
-          * (Measure.dirac m).rnDeriv volume x
-        = 0 := by
-    filter_upwards [h_rn] with x hx
-    simp [hx]
-  rw [lintegral_congr_ae h_zero]
-  simp
-
-/-- Real-valued projection of `fisherInfo`. Convenience for callers (e.g.,
-`deBruijn_identity`) that need an `ℝ`-valued Fisher information; loses information
-about `J = +∞` (irregular families) but is the natural shape for `HasDerivAt` consumers. -/
-noncomputable def fisherInfoReal (μ : Measure ℝ) : ℝ := (fisherInfo μ).toReal
-
-@[simp] theorem fisherInfoReal_dirac (m : ℝ) : fisherInfoReal (Measure.dirac m) = 0 := by
-  unfold fisherInfoReal
-  rw [fisherInfo_dirac]
-  simp
-
-theorem fisherInfoReal_nonneg (μ : Measure ℝ) : 0 ≤ fisherInfoReal μ :=
-  ENNReal.toReal_nonneg
+The V1 `fisherInfo (μ : Measure ℝ) : ℝ≥0∞` definition and its companions
+(`fisherInfo_nonneg`, `fisherInfo_eq_lintegral_logDeriv_sq`, `fisherInfo_dirac`,
+`fisherInfoReal`, `fisherInfoReal_dirac`, `fisherInfoReal_nonneg`) were **deleted**
+on 2026-05-20. They reasoned about the `Classical.choose` Lebesgue-decomposition
+representative of `μ.rnDeriv volume`, which is non-differentiable a.e., so
+`logDeriv` collapsed to `0` a.e. — giving the wrong value `fisherInfo (gaussianReal
+m v) = 0` instead of `1/v` (representative-dependence flaw, see
+`FisherInfoGaussian.lean` Judgement #2). The correct, a.e.-class-invariant version
+is `Common2026.Shannon.FisherInfoV2.fisherInfoOfDensity` (gives `1/v` for
+Gaussians), with the measure-keyed wrapper
+`Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2` in `FisherInfoV2DeBruijn.lean`.
+The EPI/Stam scaffolding predicates were migrated to `fisherInfoOfMeasureV2`. -/
 
 /-- **Bridge**: `differentialEntropy (P.map Y) = -∫ p(x) · log p(x) dx` where
 `p := pdf Y P volume` is the PDF of `Y`. Combines `pdf_def`-style `P.map Y = volume.withDensity p`
@@ -194,55 +140,15 @@ theorem integral_logDeriv_pdf_eq_zero
       = ∫ x, deriv g x ∂volume := h_int
     _ = 0 := h_reg.integral_deriv_eq_zero
 
-/-! ## Phase E — de Bruijn identity (Tier 2, L-F1 + L-F2 適用形) -/
+/-! ## Phase E — V1 de Bruijn identity (DELETED 2026-05-20)
 
-/-- **Regularity predicate for de Bruijn identity** (Cover-Thomas 17.7.2 hypotheses).
-
-Bundles the family-level regularity needed for the de Bruijn identity. This is the
-**L-F1 + L-F2 adapted form** of the moonshot plan: the Gaussian heat equation
-(`gaussianPDF_heat_eq` from Phase C of the plan), the `d/ds`-step parametric
-differentiation (`hasDerivAt_integral_of_dominated_loc_of_deriv_le` from Phase D),
-and the IBP convergence at infinity (Phase E) are all bundled here as a
-hypothesis to be discharged downstream.
-
-The field `derivAt_entropy_eq_half_fisher` is the de Bruijn identity itself, packaged
-as a hypothesis. Downstream callers who can verify it (e.g., for `X` Gaussian) get a
-fully proved de Bruijn statement; otherwise this acts as the L-F1+L-F2 hypothesis
-pass-through stub that preserves the statement form. -/
-structure IsRegularDeBruijnHyp {Ω : Type*} [MeasurableSpace Ω] (X Z : Ω → ℝ) (P : Measure Ω)
-    [IsProbabilityMeasure P] [HasPDF X P volume] (t : ℝ) : Prop where
-  /-- `Z` is standard normal (independence with `X` is a separate hypothesis of the
-  main theorem, not part of this predicate). -/
-  Z_law : P.map Z = gaussianReal 0 1
-  /-- The heat-equation-driven derivative identity (Cover-Thomas 17.7.2):
-  `(d/ds) h(X + √s · Z) ⌊_{s = t} = (1/2) · J(X + √t · Z)`. -/
-  derivAt_entropy_eq_half_fisher :
-    HasDerivAt
-      (fun s => differentialEntropy (P.map (fun ω => X ω + Real.sqrt s * Z ω)))
-      ((1/2) * (fisherInfo (P.map (fun ω => X ω + Real.sqrt t * Z ω))).toReal)
-      t
-
-/-- **de Bruijn identity** (Cover-Thomas 17.7.2). For `X ⟂ Z` with `Z ∼ 𝒩(0, 1)`,
-
-`(d/dt) h(X + √t · Z) = (1/2) · J(X + √t · Z)`.
-
-**L-F1 + L-F2 適用形**: the heat-equation / dominated-bound / IBP machinery is
-packaged into `IsRegularDeBruijnHyp` as a hypothesis predicate; verifying it for
-specific families (Gaussian `X` is the canonical case) is deferred to follow-up
-work (`fisher-info-heat-eq-plan.md` / `fisher-info-dominated-bound-plan.md`).
-This statement-form publish preserves the de Bruijn signature so downstream
-T2-D EPI work can already cite it. -/
-theorem deBruijn_identity
-    {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
-    (X Z : Ω → ℝ) (_hX : Measurable X) (_hZ : Measurable Z)
-    (_hXZ : IndepFun X Z P)
-    [HasPDF X P volume]
-    {t : ℝ} (_ht : 0 < t)
-    (h_reg : IsRegularDeBruijnHyp X Z P t) :
-    HasDerivAt
-      (fun s => differentialEntropy (P.map (fun ω => X ω + Real.sqrt s * Z ω)))
-      ((1/2) * (fisherInfo (P.map (fun ω => X ω + Real.sqrt t * Z ω))).toReal)
-      t :=
-  h_reg.derivAt_entropy_eq_half_fisher
+The V1 `IsRegularDeBruijnHyp` predicate and `deBruijn_identity` theorem were
+**deleted** on 2026-05-20: their RHS used the (deleted, buggy) V1 `fisherInfo`,
+which evaluates to `0` for Gaussians. The correct V2 equivalents
+`Common2026.Shannon.FisherInfoV2.IsRegularDeBruijnHypV2` and
+`Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2` (RHS keyed on
+`fisherInfoOfDensityReal`, evaluating to `1/v` for Gaussians) live in
+`FisherInfoV2DeBruijn.lean`, together with the hypothesis-free Gaussian discharge
+`deBruijn_identity_v2_gaussian`. -/
 
 end Common2026.Shannon
