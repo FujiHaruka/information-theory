@@ -410,3 +410,13 @@ Phase 2 (`converse`) + Phase 3 (`achievability`) を `hoeffding_tradeoff_sandwic
    `hoeffding-exponent-level-redef-plan.md`** が必要 (`steinTypeII_exp P₁ P₂ n r := sInf{β | ∃ s,
    (1-P₁ⁿ(s)) ≤ exp(-n·r) ∧ β = P₂ⁿ(s)}` 形 + sandwich machinery の再導出 + Sanov 両側)。これは
    V1 fisherInfo / 旧 Shannon-Hartley 循環と同種の「定義が wrong target を実現」flaw。
+5. **(計画起草、2026-05-21) 指数 level 再定義サブ計画を起草 →
+   [`hoeffding-exponent-level-redef-plan.md`](hoeffding-exponent-level-redef-plan.md)** — #4 で必要と
+   した再定義計画を作成。設計は #4 の textbook `sInf{β | ∃ s, (1-P₁ⁿ(s)) ≤ exp(-n·r) ∧ β = P₂ⁿ(s)}`
+   形 (抽象 Finset `s`) でなく、CLAUDE.md「Mathlib-shape-driven」に従い **type-index Finset 直定義**
+   `E_r n := univ.filter (klDivIndex c n P₁ ≤ r)` / `steinTypeII_exp := (P₂ⁿ(⋃_{E_r} T_c)).toReal` に
+   確定 (Sanov 結論形 `⋃ c∈E n, typeClassByCount` と直接噛ませ、欠落 bridge 再導入を回避)。feasibility
+   CONDITIONAL-YES (Mathlib 壁なし)。achievability+converse は `sanov_ldp_equality` 単一呼び出しに
+   collapse、Type-I は `sanov_ldp_upper_bound` complement で genuine (本 plan の自作 AEP gap が消滅)、
+   Qstar/minimizer は本 plan の `exists_hoeffding_minimizer_full_support` / `hoeffding_minimizer_ge`
+   reuse。残リスクは統合 2 点 (complement type-union rewrite + closed/strict sublevel 整合)。
