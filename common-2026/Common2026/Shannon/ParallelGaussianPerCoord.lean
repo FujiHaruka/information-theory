@@ -2,6 +2,7 @@ import Common2026.Shannon.ParallelGaussian
 import Common2026.Shannon.ParallelGaussianKKT
 import Common2026.Shannon.ContChannelMIDecomp
 import Common2026.Shannon.DifferentialEntropy
+import Common2026.Shannon.MultivariateDiffEntropy
 import Common2026.Shannon.MIChainRule
 import Common2026.Shannon.ChannelCoding
 import Mathlib.MeasureTheory.Constructions.Pi
@@ -225,6 +226,66 @@ theorem parallelGaussianCapacity_le_sum {n : ℕ} (P : ℝ)
     refine hP'_le.trans ?_
     rw [h_RHS_wf]
     exact h_opt P' hP'_nn hP'_sum
+
+/-! ## `max_ent` reduction via genuine output-entropy subadditivity
+
+The honest `IsParallelGaussianPerCoordRegularity.max_ent` previously bundled
+*three* facts on faith: (a) MI superadditivity (= output differential-entropy
+subadditivity `h(Yⁿ) ≤ ∑ h(Yᵢ)`), (b) per-coord max-entropy, (c) variance
+allocation. With `Common2026.Shannon.jointDifferentialEntropyPi_le_sum` now
+**genuine**, (a) is no longer a hypothesis. The lemma below derives the `max_ent`
+bound from genuine subadditivity plus the *isolated, smaller* honest pieces — the
+channel↔RV multivariate MI decomposition and the per-coord
+`h(Yᵢ) − h(Yᵢ|Xᵢ) ≤ (1/2) log(1 + P'ᵢ/Nᵢ)` bound — neither of which is the
+subadditivity that this foundation now supplies. -/
+
+open Common2026.Shannon in
+/-- **`max_ent` from genuine subadditivity.** Let `μ_Y := outputDistribution`-style
+joint output law on `Fin n → ℝ`, `μᵢ := μ_Y.map (· i)` its coordinate marginals, and
+write the channel MI as `h(Yⁿ) − condTerm` (the honest multivariate channel↔RV
+decomposition, supplied as `h_decomp`). If subadditivity's honest hypotheses hold for
+`μ_Y` and the per-coord pieces meet the water-filling allocation bound `h_perCoord`,
+then the channel MI is bounded by `∑ᵢ (1/2) log(1 + P'ᵢ/Nᵢ)`. The output-entropy
+subadditivity step is `jointDifferentialEntropyPi_le_sum` (genuine); only the
+decomposition and per-coord bound stay honest. -/
+theorem parallelGaussian_max_ent_le_of_subadditivity {n : ℕ}
+    (μY : Measure (Fin n → ℝ)) [IsProbabilityMeasure μY]
+    [∀ i, IsProbabilityMeasure (μY.map (fun z => z i))]
+    (miReal condTerm : ℝ) (P' : Fin n → ℝ) (N : Fin n → ℝ≥0)
+    -- (honest) channel↔RV multivariate MI decomposition  I = h(Yⁿ) − condTerm
+    (h_decomp : miReal = jointDifferentialEntropyPi μY - condTerm)
+    -- (genuine) subadditivity hypotheses for the output law
+    (h_marg_ac : ∀ i, (μY.map (fun z => z i)) ≪ volume)
+    (hμ_ac : μY ≪ (volume : Measure (Fin n → ℝ)))
+    (h_joint_ac : μY ≪ Measure.pi (fun i => μY.map (fun z => z i)))
+    (h_llr_split :
+      (fun z => llr μY (Measure.pi (fun i => μY.map (fun z => z i))) z)
+        =ᵐ[μY]
+      (fun z => Real.log ((μY.rnDeriv volume z).toReal)
+                  - (∑ i, Real.log (((μY.map (fun z => z i)).rnDeriv volume (z i)).toReal))))
+    (h_int_marg : ∀ i,
+      Integrable (fun z => Real.log (((μY.map (fun z => z i)).rnDeriv volume (z i)).toReal)) μY)
+    (h_int_joint :
+      Integrable (fun z => Real.log ((μY.rnDeriv volume z).toReal)) μY)
+    (h_marg_id : ∀ i,
+      (∫ z, Real.log (((μY.map (fun z => z i)).rnDeriv volume (z i)).toReal) ∂μY)
+        = ∫ x, Real.log (((μY.map (fun z => z i)).rnDeriv volume x).toReal)
+            ∂(μY.map (fun z => z i)))
+    -- (honest) per-coord max-entropy + variance allocation:
+    --   ∑ᵢ h(Yᵢ) − condTerm ≤ ∑ᵢ (1/2) log(1 + P'ᵢ/Nᵢ)
+    (h_perCoord :
+      (∑ i, differentialEntropy (μY.map (fun z => z i))) - condTerm
+        ≤ ∑ i, (1/2) * Real.log (1 + P' i / (N i : ℝ))) :
+    miReal ≤ ∑ i, (1/2) * Real.log (1 + P' i / (N i : ℝ)) := by
+  -- ★ genuine output-entropy subadditivity: h(Yⁿ) ≤ ∑ᵢ h(Yᵢ)
+  have h_subadd : jointDifferentialEntropyPi μY
+      ≤ ∑ i, differentialEntropy (μY.map (fun z => z i)) :=
+    jointDifferentialEntropyPi_le_sum h_marg_ac hμ_ac h_joint_ac h_llr_split
+      h_int_marg h_int_joint h_marg_id
+  -- I = h(Yⁿ) − condTerm ≤ ∑ h(Yᵢ) − condTerm ≤ ∑ (1/2) log(1 + P'ᵢ/Nᵢ)
+  rw [h_decomp]
+  refine le_trans ?_ h_perCoord
+  linarith [h_subadd]
 
 /-! ## L-PG1 genuine discharge (段 1) -/
 
