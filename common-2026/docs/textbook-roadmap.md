@@ -101,7 +101,7 @@
 | 12 Maximum entropy | `entropy_le_log_card` 🟢、Constrained 🟢ʰ |
 | 13 Universal coding | **LZ78 🟠 (`:= True` 3 本 + 結論=仮説)；Arithmetic 🟢ʰ (RESOLVED 2026-05-20、SFE genuine discharge — Ch.5 行参照)** |
 | 15 Network IT | SlepianWolf 🟢/🟢ʰ、WynerZiv convexity 🟢；**MAC/BC/Relay/WynerZiv headline 🟠 (L-MAC/L-BC/L-RC/L-RI/L-WZ pass-through、設計通り)** |
-| 17 Inequalities | Han/Shearer/LoomisWhitney/Hypercube/BrascampLieb/Pinsker 🟢；**Fisher 🟢ʰ (RESOLVED 2026-05-20: バグ V1 `fisherInfo` は DELETE、EPI/Stam scaffolding を a.e.-class-invariant V2 `fisherInfoOfMeasureV2`/`fisherInfoOfDensity` に migrate、Gaussian `= 1/v` + de Bruijn 健全)；EPI 🟠 (`:= h_epi` + L-EPI1/2 `:= True`、本体 discharge 残)；BM 🟠 (`:= h_bm`)** |
+| 17 Inequalities | Han/Shearer/LoomisWhitney/Hypercube/BrascampLieb/Pinsker 🟢；**Fisher 🟢ʰ (RESOLVED 2026-05-20: バグ V1 `fisherInfo` は DELETE、EPI/Stam scaffolding を a.e.-class-invariant V2 `fisherInfoOfMeasureV2`/`fisherInfoOfDensity` に migrate、Gaussian `= 1/v` + de Bruijn 健全)；EPI 🟠 (`:= h_epi` + L-EPI1/2 `:= True`、本体 discharge 残)；**BM 🟠→🟢ʰ (2026-05-21、`BrunnMinkowskiClosure.lean`): 体積版 BM genuine + n-dim Prékopa-Leindler `prekopa_leindler_nDim` genuine (Fubini 帰納、最重の `piFinSuccAbove` measure 統合は Mathlib gap なし)。entropy 形 headline `brunn_minkowski_entropy_inequality_genuine`/`_scaledMul` は抽象 `h` を `jointDifferentialEntropyPi`(#12) に特化し、entropy↔geometry↔rpow + λ-最適化 (`bm_scaledMul_to_sqrt`) を全 genuine 化。残 honest = `IsSlicePLReadyHyp` (n-dim PL の slice 解析的 readiness) + uniform=log-vol 同定、fundamental Mathlib 壁なし。`:= h_bm` 完全 pass-through から脱却**** |
 
 ### ✅ FLAW-VACUOUS 不備 (全件 RESOLVED 2026-05-20、詳細 → [`flaw-vacuous-review-2026-05-20.md`](shannon/flaw-vacuous-review-2026-05-20.md))
 
