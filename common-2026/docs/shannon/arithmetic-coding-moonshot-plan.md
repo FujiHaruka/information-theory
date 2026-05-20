@@ -106,3 +106,7 @@ end InformationTheory.Shannon.ArithmeticCoding
 
 * `lake env lean Common2026/Shannon/ArithmeticCoding.lean` silent (0 errors, 0 sorry, 0 warning)
 * `Common2026.lean` 編入後 `lake build` の delta は 1 ファイル分
+
+---
+
+→ genuine discharge (pass-through 全面置換、二進展開回避、期待長 + prefix-free full discharge / unique-decodable は L-AC4 条件付き) は [`arithmetic-coding-discharge-plan.md`](./arithmetic-coding-discharge-plan.md) を参照。
