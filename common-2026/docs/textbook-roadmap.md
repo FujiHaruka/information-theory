@@ -633,3 +633,56 @@ T1-B/C/D の Sanov plumbing 再利用、T2-D の T2-F 再利用、T3-C の T3-B 
    + T1-D interior 2 predicates), Ch.13 (T4-A LZ78 converse asymptotic), Ch.15 (T3-B MAC pentagon + T3-C BC random
    codebook + T3-D L-WZ1 covering/packing + L-WZ2 chain), Ch.17 (T2-D Stam-to-EPI bridge + Stam inequality Step 4
    full + T2-E Prékopa-Leindler + T2-F de Bruijn predicate) — いずれも 🟡 維持で残部分は別 plan defer。
+10. **2026-05-20 並列 wave9 第一波 12-seed + 第二波 4-seed gap-close 着地** (orchestrator session、worktree
+    isolation 経由): wave7 の各 sub-predicate を更に body discharge する 12 seed を並列起動 + 6000 行到達のため
+    gap-close 4 seed を追加並列で駆動して **+6241 行 / 0 sorry / 0 warning** publish (16 新規 Lean ファイル、
+    `lake build` 全成功)。第一波 (12 新規, 計 4515 行):
+    - **S1 T2-A AWGNBindConvBody** (+171, **完全 discharge**): `IsAwgnBindEqConv` を撤退ラインなしで full discharge。
+      汎用 `bind_eq_conv_of_translation_kernel` (任意 translation kernel `κ x = ν.map (x+·)` で `κ ∘ₘ p = p ∗ ν`)
+      を `Measure.lintegral_conv` (to_additive 生成名) + `lintegral_bind` で 6 行本体、AWGN 特殊化で wave7 hypothesis 解消。
+    - **S2 T2-D EPIStamStep12Body** (+371): Stam Step 1 (score-conv `IsStamScoreConvHyp`) + Step 2 (`IsStamCondExpCSHyp`)
+      を wave7 の `Prop := True` placeholder から data-carrying typed predicate へ昇格、λ-optimization 代数 (CS 2点形 +
+      Jensen squared-mean) を full discharge。
+    - **S3 T2-D EPIStamStep3Body** (+404): Step 3 を `IsStamTotalExpectation` (∀λ coupling、wave7 `IsStamCauchySchwarz`
+      より primitive) に分解、Step 1→4 full chain で真 signature `IsStamInequalityHyp` 導出。
+    - **S4 T2-E BrunnMinkowskiPLBody** (+342): Prékopa-Leindler L-PL1/L-PL2 body — weighted AM-GM + 1次元 superlevel
+      乗法化 + Fubini slice 結合を実証明 (genuine measure-theoretic content は 5 sub-predicate に外出し)。
+    - **S5 T2-F FisherInfoV2HeatFlowBody** (+268, **spatial 半完全 discharge**): heat kernel の空間 1階/2階微分
+      (`∂_x g_t = -(x/t)g_t`, `∂²_x g_t = (x²/t²-1/t)g_t`) を `deriv_gaussianPDFReal` + product rule で internal
+      discharge、Gaussian semigroup composition も discharge。time-derivative (variance 微分 Mathlib 不在) は pass-through。
+      (agent が background compile 待ちで途中停止したため orchestrator が spatial 微分を直接 internal discharge して着地。)
+    - **S6 T3-B MACTimeSharingBody** (+447): `IsMACTimeSharingHyp` reverse inclusion (capacity region ⊆ pentagon convex
+      hull) を明示 2-segment Carathéodory 分解で実証明、pentagon = capacity region 両側完全 publish。
+      発見: wave7 の `IsMACTimeSharingHyp` は非負性なし形で false にもなり得た — discharge 試行で statement 前提不足が露見、
+      `0 ≤ R₁,R₂` 下で discharge。
+    - **S7 T3-C BroadcastChannelAveraging** (+414): L-BC2-I codebook averaging body — linearity-of-expectation
+      (`Finset.sum_comm`) + Markov pigeonhole で `∑w·Pe ≤ B ⇒ ∃C, Pe(C) ≤ B` を実証明、wave7 `h_avg` placeholder を discharge。
+    - **S8 T3-D WynerZivCoveringBody** (+475): covering lemma body — AEP joint-typicality probability bound から complement
+      arithmetic で `IsWynerZivBinningCovering` discharge、covering existence + covering→packing→decoder-fail feed。
+    - **S9 T3-F RelayDFBlockMarkovBody** (+452): DF block-Markov witness body — `RelayBlockMarkovCode` structure +
+      3 sub-hyp 分解 + 構成的 existence bridge (`RelayDFInnerBoundExistence` を実際に build)。
+    - **S10 T4-A LZ78GreedyParsingImpl** (+451): L-LZ4 — longest-prefix-match greedy parse の具象実装 (back-pointer
+      invariant + `count ≤ n` 証明) で `lz78_asymptotic_optimality_with_greedy_impl` 再 publish。
+    - **S11 T1-D HoeffdingInteriorGradientBody** (+327): interior gradient body — `hoeffdingTilt = chernoffMediator` で
+      `Q* ∝ P₁^{1-λ}P₂^λ` 実現、stationarity `log Q* - (1-λ)log P₁ - λ log P₂ = const` を rpow 代数で full discharge。
+    - **S12 T1-A'' HuffmanSwapStepChainBody** (+393): SwapStepLe chain composition (`Equiv.Perm` 分解) sub-predicate 化 +
+      n-step swap normalization lift + universe-polymorphic corollary 群。
+    <br>第二波 gap-close (4 新規, 計 1726 行):
+    - **G1 T2-A AWGNMIDecompBody** (+234): `IsAwgnMIDecomp` を AWGN 非依存の continuous-channel MI chain-rule predicate
+      `IsContChannelMIDecompHyp` (`I(X;Y) = h(Y) - h(Y|X)`) に縮減、AWGN 絶対連続性 side condition は full discharge。
+    - **G2 T3-D WynerZivPackingBody** (+581): packing body — union bound + `1/M` collision + first moment method
+      (`exists_le_integral`) で `IsWynerZivBinningPacking` を実 discharge (SW `swError` 平均化を WZ に verbatim port)、
+      covering と合流で `ε₁ + S/M` decoder-failure bound。
+    - **G3 T3-F RelayCFBinningBody** (+562): CF binning witness body — `IsCFCompressionHyp`/`IsCFBinningDecodableHyp`/
+      `IsCFSideInfoDecodeHyp` 分解、WZ covering/packing union bound 再利用で CF decoder-failure `≤ ε_cov+ε_pack` 実証明。
+    - **G4 T2-B ParallelGaussianWFCertBody** (+349): water-filling certificate body — `(1/2)log(1+t/N_i)` の concavity
+      (`AntitoneOn.concaveOn_of_deriv`) + concave tangent bound + KKT stationarity/complementary slackness を実証明、
+      Lagrange multiplier 存在のみ hypothesis。
+    <br>**集計**: 16 新規 Lean ファイル = **+6241 行** (6000+ 目標 達成 ✅)、`Common2026.lean` に import 16 行追加、
+    `lake build` 全モジュール成功 / 0 sorry / 0 warning。本 wave の特徴: wave7 が pass-through 化した sub-predicate を
+    更に「body discharge or より primitive な predicate へ vertical 分解」する第 2 段で、2 件 (S1 AWGN BindConv, S5 Fisher
+    spatial 微分) は完全 discharge 到達。複数 agent 報告で「wave6/7 の certificate/witness predicate が parent と
+    definitionally equal な no-op だった」点が判明 (S6 MAC time-sharing は非負性前提不足、G3 Relay CF witness は existence
+    と defeq で decoder-failure content を持たない、G4 WF certificate は `IsWaterFillingOptimal` と defeq) — pass-through
+    predicate を切る時点で「discharge 可能な真 statement か」を確認すべきという feedback。章状態は Ch.5/9/11/13/15/17 とも
+    🟡 維持で残部分は別 plan defer。
