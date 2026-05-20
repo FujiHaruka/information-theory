@@ -7,6 +7,7 @@ import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.MeasureTheory.Integral.Prod
 import Mathlib.MeasureTheory.Integral.Pi
 import Mathlib.MeasureTheory.Integral.IntegrableOn
+import Mathlib.MeasureTheory.Measure.Prod
 import Mathlib.Topology.Algebra.Monoid
 import Mathlib.Topology.Algebra.ConstMulAction
 
@@ -844,5 +845,109 @@ theorem bm_scaledMul_of_compact {n : ℕ}
     (hA.smul _) (hB.smul _)
     (ih lam hlam_pos hlam_lt)
     (h_ready lam hlam_pos hlam_lt)
+
+/-! ## §J — slice 体積関数の superlevel **可測性** genuine 供給 (compact ケース)
+
+`IsSlicePLReadyHyp` の 7 条件は slice 体積関数 `g(s) := sliceInt (1_S) s` の
+superlevel 集合 `{s | t ≤ g s}` に **compact 性** (条件 1,2) と **有限測度**
+(条件 5) を `∀ t ≥ 0` で要求する。
+
+**重要な構造的発見 (vacuity)**: indicator の slice 体積関数は `g ≥ 0` ゆえ
+`t = 0` で `{s | 0 ≤ g s} = (Set.univ : Set ℝ)`。これは compact でも有限測度でも
+ないので、`IsSlicePLReadyHyp (1_A) (1_B) (1_C) ...` (compact 消費版) は
+**`t = 0` で充足不能**。すなわち `brunn_minkowski_volume_indicator_compact` /
+`bm_scaledMul_of_compact` の honest 仮定は満たせず、これらは latent vacuous。
+真の修正は 1D engine の `t ≥ 0` 量化を `t > 0` に絞ること (layer-cake/tail/additive
+は実際 `t > 0` しか使わない — `superlevel_setIntegral_mono` 参照)。本 §J は
+その前段として、scope 内で genuine に供給可能な **superlevel 可測性** を
+Mathlib `measurable_measure_prodMk_left` から立てる。
+
+* `sliceInt_indicator_eq_slice_measure` — `sliceInt (1_S) s = (vol(slice_s)).toReal`
+  (`integral_indicator_one`, genuine)。`slice_s := (Fin.cons s ·) ⁻¹' S`。
+* `measurable_sliceInt_indicator` — `Measurable (sliceInt (1_S))`
+  (`measurable_measure_prodMk_left` を `piFinSuccAbove` reshape 経由で適用、genuine)。
+* `measurableSet_sliceInt_indicator_superlevel` — `MeasurableSet {s | t ≤ sliceInt (1_S) s}`。
+
+これらは compact 性 (条件 1,2) より弱いが、将来の superlevel **上半連続性**
+(`t > 0` で closed + bounded ⇒ compact) build の足場であり、可測性自体は
+本 chain で初めて genuine 化される (従来は compact 仮定の中に埋もれていた)。 -/
+
+/-- **`Fin.cons s ·` の可測性 (genuine helper)**: `w ↦ Fin.cons s w` は可測。
+各座標 `i` を `Fin.cases` で分け、`0` 成分は定数、`succ j` 成分は射影 `w j`。 -/
+theorem measurable_cons_left {n : ℕ} (s : ℝ) :
+    Measurable (fun w : Fin n → ℝ => (Fin.cons s w : Fin (n + 1) → ℝ)) := by
+  refine measurable_pi_iff.mpr (fun i => ?_)
+  refine Fin.cases ?_ ?_ i
+  · simpa only [Fin.cons_zero] using measurable_const
+  · intro j
+    simpa only [Fin.cons_succ] using measurable_pi_apply j
+
+/-- **slice 集合の可測性 (genuine helper)**: 可測 `S` で `(Fin.cons s ·) ⁻¹' S` 可測。 -/
+theorem measurableSet_slice {n : ℕ} (S : Set (Fin (n + 1) → ℝ))
+    (hS : MeasurableSet S) (s : ℝ) :
+    MeasurableSet ((fun w : Fin n → ℝ => Fin.cons s w) ⁻¹' S) :=
+  hS.preimage (measurable_cons_left s)
+
+/-- **slice 積分 (indicator) = slice 体積 (genuine)**: 可測 `S` で
+`sliceInt (1_S) s = (vol((Fin.cons s ·)⁻¹' S)).toReal`。
+slice 関数 `w ↦ 1_S (cons s w) = 1_{slice} w` (indicator 引き戻し) +
+`integral_indicator_one` (可測 slice)。 -/
+theorem sliceInt_indicator_eq_slice_measure {n : ℕ}
+    (S : Set (Fin (n + 1) → ℝ)) (hS : MeasurableSet S) (s : ℝ) :
+    sliceInt (S.indicator (fun _ => (1 : ℝ))) s
+      = (volume ((fun w : Fin n → ℝ => Fin.cons s w) ⁻¹' S)).toReal := by
+  unfold sliceInt
+  have hpre : MeasurableSet ((fun w : Fin n → ℝ => Fin.cons s w) ⁻¹' S) :=
+    measurableSet_slice S hS s
+  rw [show (fun w : Fin n → ℝ => S.indicator (fun _ => (1 : ℝ)) (Fin.cons s w))
+      = ((fun w : Fin n → ℝ => Fin.cons s w) ⁻¹' S).indicator (fun _ => (1 : ℝ)) from by
+        ext w; simp only [Set.indicator]; rfl]
+  rw [show (fun _ : Fin n → ℝ => (1 : ℝ)) = (1 : (Fin n → ℝ) → ℝ) from rfl,
+    integral_indicator_one hpre]
+  rfl
+
+/-- **slice 体積関数 = prodMk-slice 測度 (genuine reshape)**: `piFinSuccAbove 0`
+で `Fin.cons s w = e.symm (s, w)` ゆえ `(Fin.cons s ·)⁻¹' S = Prod.mk s ⁻¹' (e.symm ⁻¹' S)`。
+これにより slice 体積が `Measure.prod` の slice 測度形になり、Mathlib の
+`measurable_measure_prodMk_left` が直接効く形になる。 -/
+theorem slice_preimage_eq_prodMk {n : ℕ} (S : Set (Fin (n + 1) → ℝ)) (s : ℝ) :
+    (fun w : Fin n → ℝ => Fin.cons s w) ⁻¹' S
+      = Prod.mk s ⁻¹'
+        ((MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) => ℝ) 0).symm ⁻¹' S) := by
+  ext w
+  simp only [Set.mem_preimage]
+  rw [show (MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) => ℝ) 0).symm (s, w)
+      = Fin.cons s w from by
+        simp only [MeasurableEquiv.piFinSuccAbove_symm_apply, Fin.insertNthEquiv_zero]; rfl]
+
+/-- **slice 体積関数の可測性 (genuine, Mathlib `measurable_measure_prodMk_left`)**:
+可測 `S` について `s ↦ sliceInt (1_S) s` は可測。reshape で slice 体積を
+`Measure.prod` の slice 測度 `s ↦ vol(Prod.mk s ⁻¹' (e.symm⁻¹' S))` に直し、
+`measurable_measure_prodMk_left` (`[SFinite volume]`、`Fin n → ℝ` の Haar は σ-finite)
+で可測。`.toReal` は `ENNReal.measurable_toReal` で保たれる。 -/
+theorem measurable_sliceInt_indicator {n : ℕ}
+    (S : Set (Fin (n + 1) → ℝ)) (hS : MeasurableSet S) :
+    Measurable (sliceInt (S.indicator (fun _ => (1 : ℝ)))) := by
+  -- rewrite the slice integral to the `.toReal` of the prodMk-slice measure.
+  have hfun : sliceInt (S.indicator (fun _ => (1 : ℝ)))
+      = fun s : ℝ => (volume (Prod.mk s ⁻¹'
+        ((MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) => ℝ) 0).symm ⁻¹' S))).toReal := by
+    funext s
+    rw [sliceInt_indicator_eq_slice_measure S hS s, slice_preimage_eq_prodMk S s]
+  rw [hfun]
+  -- the reshaped set is measurable; `measurable_measure_prodMk_left` + `.toReal`.
+  have hS' : MeasurableSet
+      ((MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) => ℝ) 0).symm ⁻¹' S) :=
+    (MeasurableEquiv.piFinSuccAbove (fun _ : Fin (n + 1) => ℝ) 0).symm.measurableSet_preimage.mpr hS
+  exact (measurable_measure_prodMk_left hS').ennreal_toReal
+
+/-- **slice 体積関数の superlevel 可測性 (genuine)**: 可測 `S` について
+`{s | t ≤ sliceInt (1_S) s}` は可測 (全 `t`)。`measurable_sliceInt_indicator` +
+`measurableSet_le`。compact 仮定 (条件 1,2) より弱いが、`IsSlicePLReadyHyp` で
+従来 compact に埋もれていた可測性内容を本 chain で初めて genuine に取り出したもの。 -/
+theorem measurableSet_sliceInt_indicator_superlevel {n : ℕ}
+    (S : Set (Fin (n + 1) → ℝ)) (hS : MeasurableSet S) (t : ℝ) :
+    MeasurableSet {s : ℝ | t ≤ sliceInt (S.indicator (fun _ => (1 : ℝ))) s} :=
+  measurableSet_le measurable_const (measurable_sliceInt_indicator S hS)
 
 end InformationTheory.Shannon.BrunnMinkowski
