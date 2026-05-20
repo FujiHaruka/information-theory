@@ -473,4 +473,58 @@ theorem tiltedWindow_eventually_large_of_interior
   (tiltedWindow_eventually_tendsto_one hY h_bdd lam h_lo h_hi).eventually_const_le
     (by norm_num)
 
+/-! ## cgf-calculus form of the interior window condition -/
+
+/-- **Tilted mean = cgf derivative** (cgf-derivative bridge).
+
+For a bounded measurable `Y` under a probability measure `μ₀`, the tilted mean
+`∫ Y ∂(μ₀.tilted (lam·Y))` equals the first derivative of the cgf at `lam`:
+`∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)) = deriv (cgf Y μ₀) lam`.
+
+This is Mathlib's `ProbabilityTheory.integral_tilted_mul_self`, whose interior
+side condition `lam ∈ interior (integrableExpSet Y μ₀)` is discharged for free
+here: boundedness of `Y` makes `exp (t·Y)` integrable for *every* `t`
+(`Cramer.integrable_exp_mul_of_bounded`), so `integrableExpSet Y μ₀ = Set.univ`
+and its interior is again `Set.univ`. -/
+theorem tiltedMean_eq_deriv_cgf
+    {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
+    {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) :
+    ∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)) = deriv (cgf Y μ₀) lam := by
+  have h_univ : integrableExpSet Y μ₀ = Set.univ := by
+    refine Set.eq_univ_of_forall (fun t => ?_)
+    exact Cramer.integrable_exp_mul_of_bounded hY h_bdd t
+  have hmem : lam ∈ interior (integrableExpSet Y μ₀) := by
+    rw [h_univ, interior_univ]
+    exact Set.mem_univ lam
+  exact integral_tilted_mul_self hmem
+
+/-- **Per-instance tilted window mass ≥ 1/2** (cgf-derivative interior case).
+
+cgf-calculus restatement of `tiltedWindow_eventually_large_of_interior`: the
+interior condition `a < tilted mean < a + ε` is rewritten via the
+cgf-derivative bridge `tiltedMean_eq_deriv_cgf` as `a < deriv (cgf Y μ₀) lam`,
+`deriv (cgf Y μ₀) lam < a + ε`. Whenever the cgf derivative at `lam` lands
+strictly inside the window, the tilted infinite-product window mass is
+eventually `≥ 1/2` (indeed `→ 1`).
+
+The only residual gap left after this lemma is the **CLT boundary** case
+`a = deriv (cgf Y μ₀) lam` (= tilted mean): squeezing the window mass to `1/2`
+there requires a central-limit-theorem refinement, not the law of large numbers.
+The interior `a < deriv (cgf Y μ₀) lam < a + ε` is fully discharged here, with
+the window mass tending to `1`. -/
+theorem tiltedWindow_eventually_large_of_cgfDeriv_interior
+    {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
+    {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ)
+    {a ε : ℝ}
+    (h_lo : a < deriv (cgf Y μ₀) lam)
+    (h_hi : deriv (cgf Y μ₀) lam < a + ε) :
+    ∀ᶠ n : ℕ in atTop,
+      (1 : ℝ) / 2 ≤ (Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))).real
+          {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)
+            ∧ ∑ i ∈ Finset.range n, Y (ω i) < (a + ε) * n} := by
+  have hbridge := tiltedMean_eq_deriv_cgf (μ₀ := μ₀) hY h_bdd lam
+  refine tiltedWindow_eventually_large_of_interior hY h_bdd lam ?_ ?_
+  · rw [hbridge]; exact h_lo
+  · rw [hbridge]; exact h_hi
+
 end InformationTheory.Shannon.Cramer.Discharge
