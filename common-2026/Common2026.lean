@@ -143,6 +143,7 @@ import Common2026.InformationTheory.Asymptotic
 -- Wave5 parallel-10 publish
 import Common2026.Shannon.EPIStamDischarge
 import Common2026.Shannon.BrunnMinkowskiConcavity
+import Common2026.Shannon.BrunnMinkowskiClosure
 import Common2026.Shannon.MaxEntropyConstrainedKKT
 import Common2026.Shannon.WynerZivBinningBody
 import Common2026.Shannon.BroadcastChannelSuperposition
