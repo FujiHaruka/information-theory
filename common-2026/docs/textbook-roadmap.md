@@ -101,15 +101,17 @@
 | 12 Maximum entropy | `entropy_le_log_card` 🟢、Constrained 🟢ʰ |
 | 13 Universal coding | **LZ78 🟠 (`:= True` 3 本 + 結論=仮説)；Arithmetic 🟠** |
 | 15 Network IT | SlepianWolf 🟢/🟢ʰ、WynerZiv convexity 🟢；**MAC/BC/Relay/WynerZiv headline 🟠 (L-MAC/L-BC/L-RC/L-RI/L-WZ pass-through、設計通り)** |
-| 17 Inequalities | Han/Shearer/LoomisWhitney/Hypercube/BrascampLieb/Pinsker 🟢；**Fisher 🔴 (V1 `fisherInfo` は Gaussian で 0 を返すバグ → `= 1/v` は V1 で証明不能；V2 `fisherInfoOfDensity` が正しく Gaussian de Bruijn 済)；EPI 🟠 (`:= h_epi` + L-EPI1/2 `:= True`)；BM 🟠 (`:= h_bm`)** |
+| 17 Inequalities | Han/Shearer/LoomisWhitney/Hypercube/BrascampLieb/Pinsker 🟢；**Fisher 🟢ʰ (RESOLVED 2026-05-20: バグ V1 `fisherInfo` は DELETE、EPI/Stam scaffolding を a.e.-class-invariant V2 `fisherInfoOfMeasureV2`/`fisherInfoOfDensity` に migrate、Gaussian `= 1/v` + de Bruijn 健全)；EPI 🟠 (`:= h_epi` + L-EPI1/2 `:= True`、本体 discharge 残)；BM 🟠 (`:= h_bm`)** |
 
-### 🔴 FLAW-VACUOUS 不備 (要修正、詳細 → [`flaw-vacuous-review-2026-05-20.md`](shannon/flaw-vacuous-review-2026-05-20.md))
+### ✅ FLAW-VACUOUS 不備 (全件 RESOLVED 2026-05-20、詳細 → [`flaw-vacuous-review-2026-05-20.md`](shannon/flaw-vacuous-review-2026-05-20.md))
 
-- **HIGH-1 — EPI/Stam の Gaussian discharge が空虚**: `*_of_gaussian_fisherInfo_zero` (`EPIStamStep12Body.lean:327` 他) は `intro; exfalso; linarith` で、V1 `fisherInfo (gaussian) = 0` を使い前提 `0 < J_X` を矛盾させて discharge。Stam 不等式を「Gaussian で証明した」ことになっていない。正しい V2 (`StamGaussianBound.lean`) は headline chain に未配線。
-- **HIGH-2 — `entropy_power_inequality_gaussian_via_stamDeBruijn`** (`EPIStamDeBruijnConclusion.lean:269`): Stam ステップは HIGH-1 の空虚経路、実体は Gaussian saturation の閉形のみ。「EPI via Stam」は非 Gaussian では「EPI given EPI」、Gaussian では Stam 半分が空虚。
-- **根因 — V1 `fisherInfo` バグ** (`FisherInfo.lean:58`、`rnDeriv`/`Classical.choose` 経由で Gaussian に 0)。V1 は dead だが import 生存中 → 将来の caller が罠を踏む。**V1 deprecate + Stam chain を V2 に配線が修正の本筋** (純 plumbing、難所ではない)。
-- **Shannon-Hartley / Whittaker** (`ShannonHartley.lean`, `WhittakerShannonPartial.lean`) — **RESOLVED (2026-05-20)**: L-SH1/2/3・L-WS-A の `def` body は据え置きだが ⚠️ docstring で **undischarged placeholder** と明記 (「discharged」表記を排除)。`shannon_hartley_formula` は循環を解消し `h_two_w`(開な `2W` DoF 恒等式) を取り込む conditional pass-through と明示、`whittaker_shannon_one_point` は `rfl` を廃し `recovered`+`h_reconstruct` 仮説を取り結論する非自明 pass-through 化。sinc 性質の下層 (`sincN_int_eq_kronecker` / `whittaker_shannon_sample_collapse` / `whittaker_shannon_collapsed_value`) は genuine 0-sorry のまま維持。
-- **MED — `entropy_power_inequality`** (`EntropyPowerInequality.lean:188`) body `:= h_epi` (結論=仮説)。header では透明だが定理名での引用は誤解を招く。
+> 監査で挙げた 🔴 退化定義は **全て解消済み**。空虚 discharge は削除、buggy V1 `fisherInfo` は DELETE、Shannon-Hartley/Whittaker は de-circularize 済。残るのは ① の honest pass-through 本体 discharge (🟠、退化ではない) のみ。
+
+- **HIGH-1 — EPI/Stam の Gaussian discharge が空虚** — **RESOLVED**: `*_of_gaussian_fisherInfo_zero` 系 (`exfalso` で `0 < J_X` を V1 `fisherInfo = 0` に矛盾させる空虚経路) と chain wrapper を全削除。genuine な Gaussian EPI は `entropy_power_inequality_gaussian_saturation` 経由、非空虚 V2 bound は `FisherInfoV2.stam_convex_fisher_bound_gaussian`。
+- **HIGH-2 — `entropy_power_inequality_gaussian_via_stamDeBruijn`** — **RESOLVED**: 当該定理と `isEPIStamDeBruijnPipeline_of_gaussian` を削除 (Stam 半分が HIGH-1 の空虚経路で non-load-bearing)。honest な Gaussian EPI は `entropy_power_inequality_gaussian_full'`。
+- **根因 — V1 `fisherInfo` バグ** — **RESOLVED**: V1 `fisherInfo` 一族 (`fisherInfo`/`fisherInfoReal`/`deBruijn_identity` 等) を `FisherInfo.lean` から **DELETE**。EPI/Stam scaffolding predicate を a.e.-class-invariant V2 `fisherInfoOfMeasureV2` に migrate。buggy symbol が存在しなくなったため再罠化不能、full build green 0 sorry。
+- **Shannon-Hartley / Whittaker** (`ShannonHartley.lean`, `WhittakerShannonPartial.lean`) — **RESOLVED**: `shannon_hartley_formula` は循環を解消し `h_two_w`(開な `2W` DoF 恒等式) を取り込む conditional pass-through、`whittaker_shannon_one_point` は `rfl` を廃し `recovered`+`h_reconstruct` 仮説の非自明 pass-through 化。L-SH1/2/3・L-WS-A の `def` は ⚠️ docstring で **undischarged placeholder** と明記。sinc 下層は genuine 0-sorry 維持。
+- **MED — `entropy_power_inequality`** (`EntropyPowerInequality.lean:188`) body `:= h_epi` (結論=仮説) — **honest pass-through として残置** (退化ではない、header 透明)。本体 discharge は ① T2-D EPI の作業範囲。
 
 ### 監査で判明したその他
 
