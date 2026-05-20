@@ -1,5 +1,6 @@
 # HanD / Pi reshape refactor: `MeasurableEquiv.piFinsetUnion` 統合 計画 🧹
 
+> 実態整合 (2026-05-20): DONE (Phase 1〜4 + 判断ログの追加撤去まで完了)。`Common2026/Shannon/Pi.lean` から `subsetIdxEquiv` は完全消失 (`rg` 0 hits)、subset-form `subsetSplitMEquiv` も撤去済。現存 API は `subsetSplitMEquivAux` (`Pi.lean:160`) + `MeasurableEquiv.piFinsetUnion_apply_left/right` (`Pi.lean:138,148`) に集約。`lake env lean Common2026/Shannon/Pi.lean` silent。これは refactor plan で新規 headline thm なし。
 > **Status (2026-05-11)**: 起草。Polymatroid moonshot (`docs/han/polymatroid-moonshot-plan.md`)
 > 完了直後の **C 横断改善** ([`docs/moonshot-seeds.md` §C](../moonshot-seeds.md))
 > から派生。ムーンショット級の新規証明ではなく、**plumbing tightening** (= 自前

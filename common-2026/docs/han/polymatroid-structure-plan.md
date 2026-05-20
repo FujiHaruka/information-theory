@@ -1,5 +1,6 @@
 # Polymatroid Structure 化 ムーンショット計画 🌙
 
+> 実態整合 (2026-05-20): DONE-UNCOND — Phase A/B 共に完了済 (進捗欄の 📋 は STALE)。`structure Polymatroid` は `Common2026/Polymatroid/Basic.lean:34` に存在 (`[DecidableEq ι]` のみ、`rank`/`rank_empty`/`rank_mono`/`rank_submodular`)、`entropyPolymatroid : Combinatorics.Polymatroid (Fin n)` は `Common2026/Shannon/Polymatroid.lean:268` で 4 field を既存主定理に wrap (新証明なし)。両ファイル `lake env lean` silent、0 sorry。Phase C はオプションで未着手だが本体 DoD は達成。
 > **Status (2026-05-11): 起草。** Polymatroid 主 plan
 > ([`polymatroid-moonshot-plan.md`](polymatroid-moonshot-plan.md)) Phase D
 > 「(D-b) 別 plan に切り出し」の判断に従って独立 plan として立て直した
@@ -17,9 +18,9 @@
 ## 進捗
 
 - [x] Phase 0 — Mathlib + 既存 Common2026 API インベントリ ✅ → [`polymatroid-structure-mathlib-inventory.md`](polymatroid-structure-mathlib-inventory.md)
-- [ ] Phase A — `Polymatroid` structure 導入 (`Common2026/Polymatroid/Basic.lean` 新規) 📋
-- [ ] Phase B — `entropyPolymatroid` 登録 (`Common2026/Shannon/Polymatroid.lean` 末尾追記) 📋
-- [ ] Phase C (オプション) — projection alias / API helper 整備 📋
+- [x] Phase A — `Polymatroid` structure 導入 (`Common2026/Polymatroid/Basic.lean:34`) ✅ 実態整合 2026-05-20
+- [x] Phase B — `entropyPolymatroid` 登録 (`Common2026/Shannon/Polymatroid.lean:268`) ✅ 実態整合 2026-05-20
+- [ ] Phase C (オプション) — projection alias / API helper 整備 📋 (未着手、本体 DoD は Phase B で達成)
 
 ## ゴール / Approach
 

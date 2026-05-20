@@ -1,16 +1,17 @@
 # I-3 Asymptotic / Exponent Framework サブ計画
 
 > **Parent**: [`../textbook-roadmap.md`](../textbook-roadmap.md) §「Tier ∞ — Infrastructure / I-3. Asymptotic / exponent framework」
+> 実態整合 (2026-05-20): DONE-UNCOND — Phase 1〜4 完了済 (進捗欄 📋 は STALE)。`Common2026/InformationTheory/Asymptotic.lean` に `DotEq` (`:43`、`IsLittleO` 実定義、`True` ではない) + `refl`/`symm`/`trans`/`mul`/`inv` + `dotEq_iff_tendsto_log_div` (`:116`) + `exp_decay_N_of_pos` (`:148`、constructive witness で実証) が存在。`lake env lean` silent、0 sorry。`dotEq_iff_tendsto_log_div` は `Common2026/Shannon/ChernoffInformation.lean` で実利用。
 > **Status (2026-05-18)**: 起草。在庫調査 ([`asymptotic-mathlib-inventory.md`](asymptotic-mathlib-inventory.md)) 完了直後。
 > **規模**: 1 ファイル 80〜150 行、1〜2 セッション (合計 1.5〜3 時間)。新数学なし、新規 `def` 1 個 (`DotEq`) + 基本性質 lemma 4〜6 個 (`refl`/`symm`/`trans`/`mul`/`inv`) + closed-form rate extraction wrapper 1〜2 個 + `o(n)` notation 説明 docstring。
 
 ## 進捗
 
 - [x] M0 在庫調査 ✅ → [`asymptotic-mathlib-inventory.md`](asymptotic-mathlib-inventory.md)
-- [ ] Phase 1 — skeleton (`DotEq` def + 基本性質 + wrapper 宣言を全部 `:= by sorry` で書き出して silent) 📋
-- [ ] Phase 2 — alias / 基本性質充填 (`refl`/`symm`/`trans`/`mul`/`inv` 等を Mathlib `IsLittleO` 経由で割る) 📋
-- [ ] Phase 3 — closed-form rate extraction wrapper (`exp_decay_N_of_pos`) 充填 + `DotEq ↔ Tendsto` bridge + サンプル `example` 📋
-- [ ] Phase 4 — verify (`lake env lean` silent + 既存 `AEPRate.lean` regression check) 📋
+- [x] Phase 1 — skeleton ✅ 実態整合 2026-05-20
+- [x] Phase 2 — alias / 基本性質充填 (`refl`/`symm`/`trans`/`mul`/`inv`) ✅ 実態整合 2026-05-20
+- [x] Phase 3 — `exp_decay_N_of_pos` + `dotEq_iff_tendsto_log_div` bridge + `example` ✅ 実態整合 2026-05-20
+- [x] Phase 4 — verify (`lake env lean` silent) ✅ 実態整合 2026-05-20
 
 ## A. Context
 

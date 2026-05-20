@@ -1,16 +1,17 @@
 # I-1 Typed Random Variable API サブ計画
 
 > **Parent**: [`../textbook-roadmap.md`](../textbook-roadmap.md) §「Tier ∞ — Infrastructure / I-1. Typed Random Variable API」
+> 実態整合 (2026-05-20): DONE-UNCOND — Phase 1〜5 完了済 (進捗欄 📋 は STALE)。`Common2026/Shannon/TypedRV.lean` に `klDivRV` (`:66`) / `differentialEntropyRV` (`:83`) / `condEntropy` re-export + notation 5 つ (`μ` 明示形に縮退、判断ログ 3) + `_def` lemma (`rfl`) + Phase 5 typed-form 主補題層が存在。`lake env lean Common2026/Shannon/TypedRV.lean` silent、0 sorry。新数学なし、全 alias は既存 measure-form への薄い wrapper。
 > **Status (2026-05-18)**: 起草。在庫調査 ([`typed-rv-mathlib-inventory.md`](typed-rv-mathlib-inventory.md)) 完了直後。
 > **規模**: 1 ファイル 50〜80 行、1〜2 セッション (合計 1〜3 時間)。新数学なし、新規 `def` 2 個 + `abbrev` 1 個 + notation 5 行 + サンプル `example` 1 個。
 
 ## 進捗
 
 - [x] M0 在庫調査 ✅ → [`typed-rv-mathlib-inventory.md`](typed-rv-mathlib-inventory.md)
-- [ ] Phase 1 — skeleton (alias / def / notation を全部 `:= sorry` で書き出して silent) 📋
-- [ ] Phase 2 — `klDivRV` / `differentialEntropyRV` 充填 + `condEntropy` re-export 📋
-- [ ] Phase 3 — notation 宣言 + 1 文字衝突解消 + サンプル `example` 📋
-- [ ] Phase 4 — verify (`lake env lean` silent + 既存ファイル regression check) 📋
+- [x] Phase 1 — skeleton ✅ 実態整合 2026-05-20
+- [x] Phase 2 — `klDivRV` / `differentialEntropyRV` 充填 + `condEntropy` re-export ✅ 実態整合 2026-05-20
+- [x] Phase 3 — notation 宣言 + 衝突解消 + `example` ✅ 実態整合 2026-05-20
+- [x] Phase 4 — verify (`lake env lean` silent + regression check) ✅ 実態整合 2026-05-20
 
 ## A. Context
 

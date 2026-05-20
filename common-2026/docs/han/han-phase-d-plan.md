@@ -1,5 +1,6 @@
 # Han Phase D ロードマップ: subset average → Shearer 🌙
 
+> 実態整合 (2026-05-20): DONE-UNCOND (Phase A〜C 全完了)。`han_inequality_subset` (`Common2026/Shannon/HanD.lean:387`) / `subset_average_chain` (`HanDAverage.lean:171`) / `shearer_inequality` (`HanDShearer.lean:41`) いずれも標準 typeclass binder のみ、pass-through 仮定なし、0 sorry。下記「next step」の ✅ 完了記録は実態と一致。
 > **Status (2026-05-10): 起草。** Han 不等式ムーンショット ([han-moonshot-plan.md](han-moonshot-plan.md)) Phase A/B/C 完了 (`Common2026/Shannon/Han.lean` zero sorry) を受けた後継。
 >
 > ゴールは **Han 1978 原論文の subset average 形 ($H_1 \ge H_2 \ge \cdots \ge H_n$)** をまず形式化し、続けて **Shearer の不等式** ($k$-cover 条件下 $k \cdot H(X_{[n]}) \le \sum_j H(X_{S_j})$) に lift すること。中間 abort 可能で、D-1 (subset average) 完了時点で publish 価値あり。

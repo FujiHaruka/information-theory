@@ -1,6 +1,8 @@
 # Phase 1: Markov 形 Fano への拡張・マイルストーン計画
 
 > ムーンショット全体計画は `docs/fano/fano-moonshot-plan.md`。本ファイルはその Phase 1 の詳細。
+>
+> 実態整合 (2026-05-20): DONE-UNCOND — Markov 形 `fano_inequality (hcard : 2 ≤ Fintype.card X) : P.condEntropy ≤ fanoBoundRHSOfAlphabet X P.errorProb` が `Common2026/Fano/Core.lean:424` に存在 (P : FiniteJointPMF X X、`hcore` なし)。DPI `condEntropy_le_pushforward_condEntropy` (`Common2026/Fano/DPI.lean:184`、`negMulLog` 凹性 + log-sum で実証) + Phase 0 復元 `fano_inequality_decode` (`DPI.lean:355`)。`lake env lean` silent、0 sorry。本 plan の全 milestone (P1-M0〜M5) 達成済。
 
 ## Context
 

@@ -1,5 +1,7 @@
 # Fano の不等式・本丸の証明計画
 
+> 実態整合 (2026-05-20): DONE-UNCOND — 本 plan のゴール (`hcore` 仮定を消す) は達成済。`fano_core (hcard : 2 ≤ Fintype.card X) : P.condEntropy ≤ Real.qaryEntropy (Fintype.card X) P.errorProb` が `Common2026/Fano/Core.lean:379` に存在し、外部 `hcore` なしで chain rule 2 通り + `H(E|X,Y)=0` から実証 (`fano_inequality` も `Core.lean:424` で `hcore` なし)。`lake env lean Common2026/Fano/Core.lean` silent、0 sorry。下記 Context 「hcore は仮説として外から渡されているだけ」は STALE。
+
 ## Context
 
 `Common2026/Fano.lean` の現状：

@@ -1,5 +1,6 @@
 # Fano 不等式・ムーンショット計画 🌙
 
+> 実態整合 (2026-05-20): DONE-UNCOND (deterministic decoder 形) — `fano_inequality_measure_theoretic` (`Common2026/Fano/Measure.lean:224`、binder は `[IsProbabilityMeasure μ]` + `Measurable` 3 本 + `hcard` のみ、pass-through 仮定なし) が外部仮定なしで実証、`lake env lean Common2026/Fano/Measure.lean` silent、0 sorry。下流 9+ ファイル (`Converse`/`AWGNConverse`/`SlepianWolf`/`MAC*` 等) が実利用。残課題は Phase 3.5 (randomized decoder) のみ、オプション扱いで実態一致。
 > **Status (2026-05-09): Phase 0 / 1 / 2 / 3 すべて達成。**
 > 測度論版 Fano 不等式 (deterministic decoder 形) は `Common2026/Fano/Measure.lean` の
 > `fano_inequality_measure_theoretic` で `lake env lean` silent。残課題は「Phase 3.5: randomized decoder
