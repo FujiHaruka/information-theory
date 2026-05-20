@@ -755,3 +755,20 @@ T1-B/C/D の Sanov plumbing 再利用、T2-D の T2-F 再利用、T3-C の T3-B 
     「tilted 平均ちょうどの窓質量 →1/2」を厳密化する CLT で、LLN だけでは閉じない。codebase は非常に成熟 (probe した完遂候補は LZ78 Ziv / Chernoff
     achievability 上界 / 各 discharge とも既publish) で、残 gap は frontier (CLT boundary + condExp-of-score PR級 + infinitePi RN の CLT 部) に限局。
     残存 frontier gap: condExp-of-score (Stam Step1-2、一般)、Ch.11 CLT-boundary residual (Cramér+Chernoff 共通)。
+15. **2026-05-20 自律 5-unit バッチ #2: Cramér CLT-boundary residual full closure** (orchestrator session、ユーザー「あと 5 ターン」指示、
+    調査→計画→実装(3分割) agent chain、全 0-sorry): #14 で局在化した CLT-boundary residual を Mathlib CLT で**実際に閉じた**。在庫 verdict GO
+    (~80% 既存、唯一の「一から」は Gaussian median)。`Common2026/Shannon/CramerCLTClosure.lean` 新規 553 行 (0 sorry / 0 warning):
+    - **U6 在庫 / U7 計画**: `cramer-chernoff-clt-closure-{mathlib-inventory,moonshot-plan}.md`。
+    - **U8 (Phase1-2, +97)**: `gaussianReal_Ici_eq_half` (Gaussian median `gaussianReal 0 v {0≤·}=1/2`、Mathlib 不在を `gaussianReal_map_neg`
+      対称性 + `noAtoms_gaussianReal` で自作) + portmanteau half-line bridge (`ProbabilityMeasure.tendsto_measure_of_null_frontier_of_tendsto'`、
+      ℝ で `StandardBorelSpace` 不要)。
+    - **U9 (Phase3-4, +231)**: Mathlib `tendstoInDistribution_inv_sqrt_mul_sum_sub` を **tilted ambient に実適用** (`tiltedAmbient_clt`、既存
+      `iIndepFun_tilted_ambient`/`identDistrib_tilted_ambient` が CLT 前提と字面一致) → scaling 集合書換 `{∑Y/n≥m}={(√n)⁻¹∑(Yₖ−m)≥0}` →
+      `tiltedHalfLine_tendsto_half` (→1/2) → `tiltedWindow_eventually_large_of_boundary` (窓質量→1/2、≥1/4)。
+    - **U10 (Phase5-6, +185)**: `∃C>0` 緩和 change-of-measure (`isMeasureInfinitePiTiltedEq_at_of_window`、既存 reduction の `1/2`→任意 C 差替え) +
+      per-a 迂回 `cramer_lower_at` → **`cramer_lower_at_cgfDeriv_unconditional`**: `a = deriv (cgf Y μ₀) lam` (= 最適 tilt 閾値) で Cramér 下界
+      `-(lam·a − cgf) ≤ liminf rate` を **residual 仮定なし** (bounded Y + 非退化 Var>0 + 標準 coboundedness のみ) で達成。
+    <br>**到達**: Cramér lower bound は最適 tilt 閾値で fully discharged。`= −Λ*(a)` (Legendre) の Cramér 下界が hypothesis-free に。**Chernoff converse は別 ambient**
+    (pmf-level、#14 U5 の `chernoffZSum_pow_eq_sum_prod` が足場) で同型 CLT closure が必要 — 本 closure の構造をそのまま port 可能。**残存 frontier gap**:
+    condExp-of-score (Stam Step1-2、一般、PR級)、Chernoff converse の pmf-level CLT closure (Cramér の port)。Ch.11 は Cramér lower が closure 到達で
+    一段前進、🟡 維持 (Chernoff converse 残)。所見: Gaussian median (median=mean for symmetric) が Mathlib 不在で唯一の自作、それ以外は CLT/portmanteau の既存組立。
