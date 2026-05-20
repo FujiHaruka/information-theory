@@ -334,6 +334,62 @@ theorem awgnChannel_apply_absolutelyContinuous_output
   exact (gaussianReal_absolutelyContinuous x hN).trans
     (gaussianReal_absolutelyContinuous' 0 hPN)
 
+/-- **Second moment of a real Gaussian is integrable.** `(y − m)²` is integrable
+against `gaussianReal m' v'` (any mean / variance), since `id ∈ L²(gaussianReal)`
+(`memLp_id_gaussianReal`). Needed to discharge the Gaussian log-density
+integrabilities (the log pdf is a constant plus a `(y − m)²` term). -/
+theorem integrable_sq_sub_gaussianReal (m m' : ℝ) (v' : ℝ≥0) :
+    Integrable (fun y => (y - m) ^ 2) (gaussianReal m' v') := by
+  -- `id ∈ L²` and `id ∈ L¹`, so `y², y, 1` are all integrable; expand `(y-m)²`.
+  have h_sq : Integrable (fun y : ℝ => y ^ 2) (gaussianReal m' v') :=
+    (memLp_id_gaussianReal (μ := m') (v := v') 2).integrable_sq
+  have h_id : Integrable (fun y : ℝ => y) (gaussianReal m' v') := by
+    have := (memLp_id_gaussianReal (μ := m') (v := v') 1).integrable (by norm_num)
+    simpa using this
+  have h_eq : (fun y : ℝ => (y - m) ^ 2)
+      = fun y => y ^ 2 - 2 * m * y + m ^ 2 := by
+    funext y; ring
+  rw [h_eq]
+  exact ((h_sq.sub (h_id.const_mul (2 * m))).add (integrable_const (m ^ 2)))
+
+/-- **Log Gaussian density is integrable against a Gaussian law.** For `v ≠ 0`,
+`fun y => Real.log (gaussianPDFReal m v y)` is integrable against `gaussianReal m' v'`.
+The log pdf splits as `c₀ + c₁·(y − m)²`, a constant plus a finite-second-moment term. -/
+theorem integrable_log_gaussianPDFReal_gaussianReal
+    (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) (m' : ℝ) (v' : ℝ≥0) :
+    Integrable (fun y => Real.log (gaussianPDFReal m v y)) (gaussianReal m' v') := by
+  -- `log (gaussianPDFReal m v y) = c₀ + c₁·(y − m)²` (Phase C-2 split).
+  have h_eq : (fun y => Real.log (gaussianPDFReal m v y))
+      = fun y => (-(1/2) * Real.log (2 * Real.pi * v))
+          + (-(1 / (2 * (v : ℝ)))) * (y - m) ^ 2 := by
+    funext y
+    rw [Common2026.Shannon.log_gaussianPDFReal_eq m hv y]
+    ring
+  rw [h_eq]
+  exact (integrable_const _).add
+    ((integrable_sq_sub_gaussianReal m m' v').const_mul (-(1 / (2 * (v : ℝ)))))
+
+/-- **Log of the Gaussian rnDeriv (toReal) is integrable against the Gaussian law.**
+For `v ≠ 0`, `fun y => Real.log ((gaussianReal m v).rnDeriv volume y).toReal` is
+integrable against `gaussianReal m v`. Bridges the literal `Measure.rnDeriv` form
+appearing in the honest hypotheses to `gaussianPDFReal` via the a.e. identity
+`rnDeriv_gaussianReal`, then `integrable_log_gaussianPDFReal_gaussianReal`. -/
+theorem integrable_log_rnDeriv_gaussianReal
+    (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
+    Integrable (fun y => Real.log ((gaussianReal m v).rnDeriv volume y).toReal)
+      (gaussianReal m v) := by
+  -- `rnDeriv =ᵐ[gaussianReal] gaussianPDF`, transported from vol via absolute continuity.
+  have h_rn : (gaussianReal m v).rnDeriv volume =ᵐ[gaussianReal m v] gaussianPDF m v :=
+    (gaussianReal_absolutelyContinuous m hv).ae_le (rnDeriv_gaussianReal m v)
+  -- the log-density observables agree a.e. on `gaussianReal m v`
+  have h_log :
+      (fun y => Real.log (gaussianPDFReal m v y))
+        =ᵐ[gaussianReal m v]
+      (fun y => Real.log ((gaussianReal m v).rnDeriv volume y).toReal) := by
+    filter_upwards [h_rn] with y hy
+    rw [hy, toReal_gaussianPDF]
+  exact (integrable_log_gaussianPDFReal_gaussianReal m hv m v).congr h_log
+
 open InformationTheory.Shannon.ChannelCoding in
 /-- **★ AWGN instance discharge of `IsContChannelMIDecompHyp` (F-2′).**
 
@@ -348,12 +404,20 @@ genuinely (no longer hypotheses):
   `llr_compProd_prod_split`, which rests on the now-proved **linchpin**
   `rnDeriv_compProd_fibre` (the Mathlib TODO fibre form of the compProd rnDeriv).
 
-The only residual hypotheses are the joint measurability of the fibre Gaussian
-density `h_meas_fibre` (needed by `llr_compProd_prod_split` to lift the per-fibre
-log split through `ae_compProd_of_ae_ae`; absent from Mathlib as a joint
-measurability of measure-form rnDerivs) and the three log-density integrabilities
-(Gaussian moment bounds). This shrinks the residual from "the whole MI chain rule"
-to a measurability fact plus integrabilities. -/
+The residual hypotheses are now just (a) the joint measurability of the fibre
+Gaussian density `h_meas_fibre` and (b) the fibre log-density integrability
+`h_int_fibre_joint`. **Both depend on the same genuine Mathlib gap**: the joint
+(in `(x, y)`) measurability of the *measure-form* parameterized rnDeriv
+`fun z => (gaussianReal z.1 N).rnDeriv volume z.2`. Mathlib only provides this for
+the *kernel-form* rnDeriv (`Kernel.measurable_rnDeriv`), which is merely `=ᵐ` to
+the measure form (`Kernel.rnDeriv_eq_rnDeriv_measure`); the a.e.-to-measurable
+bridge needs a measurable equality set, which is exactly the missing fact (circular).
+The two **output**-side log-density integrabilities are discharged here genuinely
+from the Gaussian density facts: `h_int_out_joint` (the integrand depends only on
+`z.2`, so it is `g ∘ snd` with `(p ⊗ₘ W).snd = outputDistribution = q`) reduces to
+`h_int_out_marg`, which is `integrable_log_rnDeriv_gaussianReal` at
+`q = gaussianReal 0 (P + N)`. This shrinks the residual from four honest
+hypotheses to two (both pinned to the single rnDeriv joint-measurability gap). -/
 theorem isContChannelMIDecompHyp_awgn
     (P : ℝ) (N : ℝ≥0) (hN : N ≠ 0) (hPN : P.toNNReal + N ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -363,17 +427,7 @@ theorem isContChannelMIDecompHyp_awgn
     (h_int_fibre_joint :
       Integrable (fun z =>
           Real.log (((awgnChannel N h_meas) z.1).rnDeriv volume z.2).toReal)
-        ((gaussianReal 0 P.toNNReal) ⊗ₘ (awgnChannel N h_meas)))
-    (h_int_out_joint :
-      Integrable (fun z =>
-          Real.log ((outputDistribution (gaussianReal 0 P.toNNReal)
-            (awgnChannel N h_meas)).rnDeriv volume z.2).toReal)
-        ((gaussianReal 0 P.toNNReal) ⊗ₘ (awgnChannel N h_meas)))
-    (h_int_out_marg :
-      Integrable (fun y =>
-          Real.log ((outputDistribution (gaussianReal 0 P.toNNReal)
-            (awgnChannel N h_meas)).rnDeriv volume y).toReal)
-        (outputDistribution (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas))) :
+        ((gaussianReal 0 P.toNNReal) ⊗ₘ (awgnChannel N h_meas))) :
     IsContChannelMIDecompHyp
       (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas) := by
   classical
@@ -397,6 +451,24 @@ theorem isContChannelMIDecompHyp_awgn
   -- Bayes density split via the general linchpin-backed lemma
   have h_llr_split := llr_compProd_prod_split (p := p) (W := W) q hWx_q hq_vol
     h_joint_ac h_meas_fibre
+  -- ★ output marginal log-density integrability (Gaussian fact, q = 𝒩(0, P+N))
+  have h_int_out_marg :
+      Integrable (fun y => Real.log (q.rnDeriv volume y).toReal) q := by
+    rw [hq_def, h_out]
+    exact integrable_log_rnDeriv_gaussianReal 0 hPN
+  -- ★ joint output log-density integrability: integrand = (log-density ∘ snd),
+  --    and `(p ⊗ₘ W).snd = outputDistribution p W = q`, so reduce to `h_int_out_marg`.
+  have h_int_out_joint :
+      Integrable (fun z => Real.log (q.rnDeriv volume z.2).toReal) (p ⊗ₘ W) := by
+    have h_eq : q = (p ⊗ₘ W).map Prod.snd := rfl
+    have hg_aesm :
+        AEStronglyMeasurable (fun y => Real.log (q.rnDeriv volume y).toReal) q :=
+      h_int_out_marg.aestronglyMeasurable
+    rw [show (fun z : ℝ × ℝ => Real.log (q.rnDeriv volume z.2).toReal)
+          = (fun y => Real.log (q.rnDeriv volume y).toReal) ∘ Prod.snd from rfl]
+    refine (integrable_map_measure ?_ measurable_snd.aemeasurable).mp ?_
+    · rw [← h_eq]; exact hg_aesm
+    · rw [← h_eq]; exact h_int_out_marg
   unfold IsContChannelMIDecompHyp
   refine mutualInfoOfChannel_toReal_eq_diffEntropy_sub
     (W := W) ?_ ?_ h_joint_ac h_llr_split
@@ -413,11 +485,14 @@ Composes `isContChannelMIDecompHyp_awgn` with the existing combinator
 `awgn_midecomp_of_cont_chain`. The opaque MI-decomp predicate `IsAwgnMIDecomp` is now
 reduced — via the genuinely-proved **linchpin** `rnDeriv_compProd_fibre` and the
 general `llr_compProd_prod_split` — from "the whole AWGN MI chain-rule formula" to
-just the fibre Gaussian-density joint measurability `h_meas_fibre` plus the three
-log-density integrabilities. The Bayes density split, the joint absolute continuity,
-and both fibre/output absolute continuities are all discharged. Everything else in
+just the fibre Gaussian-density joint measurability `h_meas_fibre` plus the fibre
+log-density integrability `h_int_fibre_joint`. The Bayes density split, the joint
+absolute continuity, both fibre/output absolute continuities and the two
+**output-side** log-density integrabilities are all discharged. Everything else in
 the MI chain rule (KL→integral, Fubini split, both differential-entropy
-identifications, output marginal) is genuinely discharged by the general body. -/
+identifications, output marginal) is genuinely discharged by the general body. The
+two residuals are both pinned to the single Mathlib gap (joint measurability of the
+measure-form parameterized rnDeriv). -/
 theorem isAwgnMIDecomp_of_densitySplit
     (P : ℝ) (N : ℝ≥0) (hN : N ≠ 0) (hPN : P.toNNReal + N ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -427,20 +502,10 @@ theorem isAwgnMIDecomp_of_densitySplit
     (h_int_fibre_joint :
       Integrable (fun z =>
           Real.log (((awgnChannel N h_meas) z.1).rnDeriv volume z.2).toReal)
-        ((gaussianReal 0 P.toNNReal) ⊗ₘ (awgnChannel N h_meas)))
-    (h_int_out_joint :
-      Integrable (fun z =>
-          Real.log ((outputDistribution (gaussianReal 0 P.toNNReal)
-            (awgnChannel N h_meas)).rnDeriv volume z.2).toReal)
-        ((gaussianReal 0 P.toNNReal) ⊗ₘ (awgnChannel N h_meas)))
-    (h_int_out_marg :
-      Integrable (fun y =>
-          Real.log ((outputDistribution (gaussianReal 0 P.toNNReal)
-            (awgnChannel N h_meas)).rnDeriv volume y).toReal)
-        (outputDistribution (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas))) :
+        ((gaussianReal 0 P.toNNReal) ⊗ₘ (awgnChannel N h_meas))) :
     IsAwgnMIDecomp P N h_meas :=
   awgn_midecomp_of_cont_chain P N h_meas
     (isContChannelMIDecompHyp_awgn P N hN hPN h_meas h_out h_meas_fibre
-      h_int_fibre_joint h_int_out_joint h_int_out_marg)
+      h_int_fibre_joint)
 
 end InformationTheory.Shannon.AWGN
