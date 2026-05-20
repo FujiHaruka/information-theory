@@ -3,6 +3,8 @@
 <!-- B-5' (deferred from B-5 弱形): docs/moonshot-seeds.md より B-5' 切り出し分を本格 plan 化 -->
 
 > **Parent**: [`pinsker-moonshot-plan.md`](pinsker-moonshot-plan.md) — 弱形 (`TV ≤ √KL`, 定数 1, Bretagnolle-Huber 経路) を完了済。**本 plan は定数を `1/√2` まで強化** (Cover-Thomas 11.6 strict 形 `TV ≤ √(KL/2)`)。
+>
+> **実態整合 (2026-05-20): DONE-UNCOND** — Phase A〜B 完了。`Common2026/Shannon/PinskerSharp.lean:207` の `klFun_sharp_lower` (`∀ t ≥ 0, 3(t-1)² ≤ 2(t+2)·klFun t`) + `PinskerSharp.lean:306` の主定理 `tvNorm_le_sqrt_klDiv_div_two` (`Pinsker.tvNorm P Q ≤ Real.sqrt ((klDiv P Q).toReal / 2)`、定数 1/√2、std binders `hPQ : P ≪ Q`)。0 sorry / 0 `:=True`。実装結果サマリ (line 138 以降) も実態と一致。
 
 ## 進捗
 

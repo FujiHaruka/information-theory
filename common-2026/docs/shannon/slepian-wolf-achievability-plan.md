@@ -5,6 +5,8 @@ Cover-Thomas 15.4 — 既存 `SlepianWolf.lean` (496 行 single-shot converse 3 
 出発点に、deterministic encoder pair の existence statement (rate region achievability の
 **第一段**) を追加。
 
+> 実態整合 (2026-05-20): **DONE-UNCOND (2 corner-point, 計画通り) — Phase A-D 完了表記は CODE と一致**。`Common2026/Shannon/SlepianWolfAchievability.lean` (14861 B, 0 sorry)。`slepian_wolf_achievability_via_Y_aep` (SlepianWolfAchievability.lean:132) は実証明 (`source_coding_achievability` + X 側 `Fintype.equivFin` trivial encoder の合成、SW error event = Y-AEP error を集合等価で証明)。corner 2 件 `_corner_Y` (:219) / `_corner_X` (:252) も実 publish。full 3-bound rate region は別 plan で discharge 済 (下記注記)。FLAW なし。
+
 ## 進捗
 
 - [x] Phase A — definitions (`swErrorProb` 主誤り測度) ✅

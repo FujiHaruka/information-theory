@@ -4,6 +4,15 @@
 **Target file**: `Common2026/Shannon/WhittakerShannonPartial.lean`
 **Companion**: `Common2026/Shannon/ShannonHartley.lean` (327 行, L-SH1+L-SH2+L-SH3 pass-through, signature freeze)
 
+> 実態整合 (2026-05-20): DONE (L-WS-A scope) + FLAW-VACUOUS (interp / L-SH placeholder)。
+> `Common2026/Shannon/WhittakerShannonPartial.lean` は **sinc 基本性質群** (`sincN_int_eq_kronecker` L140,
+> `whittaker_shannon_sample_collapse` L165, `whittaker_shannon_collapsed_value` L235) を実証明で publish 済 (0 sorry) —
+> これは genuine。だが `IsWhittakerShannonInterpolation` (L200) は `:= 0 < W ∧ ∃ _S, True` の **vacuous placeholder**、
+> `whittaker_shannon_one_point` (L224) は `f t = f t := rfl` (自明)。Companion `ShannonHartley.lean` の
+> L-SH1/2/3 (`IsBandlimitedSamplingHypothesis := ∃ _h, True` L89 / `IsBandlimitedKernel := 0 < W` L93 /
+> `IsTwoWDegreesOfFreedom := C = 2W·perSample` L97) も全て vacuous/circular で、headline
+> `shannon_hartley_formula` (`ShannonHartley.lean:165`) は C を答えに定義して rewrite するだけ。FLAW-VACUOUS。
+
 ## Context
 
 `ShannonHartley.lean` published 2026-05-19 in **statement-level hypothesis

@@ -1,5 +1,14 @@
 # SMB: 2-sided stationary extension `μ_ℤ` サブ計画 🌙
 
+> 実態整合 (2026-05-20): DONE-UNCOND (別ファイル) — 2-sided 拡張は完成済だが、
+> 計画した `SMBSandwich.lean` ではなく `Common2026/Probability/TwoSidedExtension.lean`
+> (141 KB、real-sorry 0; line 46-52 の `sorry` 言及は古い doc コメントのみ) に実装。
+> 主要 decl: `μZ` (:348)、`shiftZ` (:393) + `measurePreserving_shiftZ` (:417)、
+> `ergodic_shiftZ` (:956)、`natProj` (:706) + `measurePreserving_natProj` (:727)、
+> `forwardEmbed` (:505)。これらが無条件 `shannon_mcmillan_breiman`
+> (`SMBAlgoetCover.lean:2840`、import :3 で TwoSidedExtension を取り込む) の
+> `algoet_cover_liminf_bound` (:2751) の `liminf ≥ entropyRate` 段を支える。全 Phase M0–H 達成。
+>
 > **Parent**: [`shannon-mcmillan-breiman-phase-d-plan.md`](shannon-mcmillan-breiman-phase-d-plan.md) §"残: Algoet–Cover sandwich" `h_liminf` 段
 >
 > 親 plan の Algoet–Cover sandwich のうち **`liminf blockLogAvg ≥ entropyRate` (lower bound)** は、
@@ -10,16 +19,15 @@
 
 ## 進捗
 
-- [ ] M0 — Mathlib 在庫 + Route 決定 (Route A vs B) 📋
-- [ ] Phase A — file 構造 / namespace / imports 📋
-- [ ] Phase B — cylinder + shifted finite-marginal の定義 📋
-- [ ] Phase C — projective consistency + σ-additivity (=「ε空 cylinders → 0」) 📋
-- [ ] Phase D — Carathéodory 拡張で `μ_ℤ : Measure (ℤ → α)` 構成 📋
-- [ ] Phase E — `shift : (ℤ → α) → (ℤ → α)` の `MeasurePreserving` + `Ergodic` 移植 📋
-- [ ] Phase F — `(Ω, T, μ)` ↔ `(ℤ → α, shift, μ_ℤ)` の coupling (ℕ-projection 一致) 📋
-- [ ] Phase G — backward filtration `pastFiltration` + `pmfLogCondInfty` (Levy 適用) 📋
-- [ ] Phase H — `liminf` SMB lower bound discharge into existing
-      `shannon_mcmillan_breiman_of_sandwich` 📋
+- [x] M0 — Mathlib 在庫 + Route 決定 (Route A vs B) ✅
+- [x] Phase A — file 構造 / namespace / imports ✅ (`Common2026/Probability/TwoSidedExtension.lean`)
+- [x] Phase B — cylinder + shifted finite-marginal の定義 ✅
+- [x] Phase C — projective consistency + σ-additivity ✅
+- [x] Phase D — Carathéodory 拡張で `μZ : Measure (ℤ → α)` 構成 ✅ (TwoSidedExtension.lean:348)
+- [x] Phase E — `shiftZ` の `MeasurePreserving` + `Ergodic` ✅ (`measurePreserving_shiftZ` :417 / `ergodic_shiftZ` :956)
+- [x] Phase F — coupling (ℕ-projection 一致) ✅ (`natProj` :706 / `forwardEmbed` :505 / `measurePreserving_natProj` :727)
+- [x] Phase G — past filtration + `pmfLogCondInfty` (Levy 適用) ✅
+- [x] Phase H — `liminf` SMB lower bound discharge ✅ (`SMBAlgoetCover.lean:algoet_cover_liminf_bound:2751`)
 
 ## ゴール / Approach
 

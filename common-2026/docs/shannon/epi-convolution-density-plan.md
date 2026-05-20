@@ -18,6 +18,16 @@
 >
 > **Status (2026-05-20)**: 着手前。本 plan は計画のみ。proof-log: yes (Phase 2 lconvolution bridge は
 > 失敗確率が高く判断ログ必須)。
+>
+> **実態整合 (2026-05-20): DONE-UNCOND (全 Phase 完了、0 sorry)** — `Common2026/Shannon/EPIConvolutionDensity.lean`
+> (201 行、`Common2026.lean:227` で import 済) が全 deliverable を publish 済。Phase 1 `convDensityReal`
+> (`:57`) / Phase 3 `hasDerivAt_convDensityReal` (`:79`、honest 解析仮定) / Phase 4 `logDeriv_convDensityReal`
+> (`:108`) は計画通り。**Phase 2 (riskiest) は L-Conv-2 へ撤退せず無条件 discharge**:
+> `pdf_add_toReal_ae_eq_convDensityReal` (`:180`、`IndepFun` 下で 0 sorry) + `convDensityReal_toReal_pdf_eq_lconvolution`
+> (`:140`)。落とし穴 (b) (convolution-integrability wall) は `integral_toReal` を使い
+> `ofReal_integral_eq_lintegral_ofReal` を回避することで side-step 済 (`:131-139` docstring 参照)。
+> 撤退ライン用 named hyp `IsPdfAddConvDensityHyp` (`:124`) は `isPdfAddConvDensityHyp_of_indepFun` (`:194`)
+> で無条件 discharge 済。下記「進捗」チェックボックスは全て完了扱い。
 
 ## 進捗
 

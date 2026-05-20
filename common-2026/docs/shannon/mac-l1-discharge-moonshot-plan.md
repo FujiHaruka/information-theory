@@ -3,6 +3,8 @@
 > **Parent**: T3-B Multiple Access Channel (`docs/textbook-roadmap.md` §Tier 3,
 > Cover-Thomas Ch.15.3, MAC achievability).
 >
+> 実態整合 (2026-05-20): **DONE-HONEST-HYPS (計画通り、partial discharge) — plan の「Drafting」表記は STALE**。`Common2026/Shannon/MACL1Discharge.lean` (26337 B, 0 sorry) に L-MAC1-A/B/C 実装済: `macJointlyTypicalSet_card_le` (MACL1Discharge.lean:204、実証明 — φ-injection で 3-tuple JTS を α₁×α₂×β 上の joint typical set に埋め込み `typicalSet_card_le` 適用)、`macJointlyTypicalSet_prob_tendsto_one` (:281、実証明 — 4 single-axis good event の交差 → 各 `typicalSet_prob_tendsto_one`)。publish-layer hook `mac_capacity_region_inner_bound_with_joint_typ_aep` (:532) は親の `:= h_existence` pass-through (計画通り、4-error-event Bonferroni body = L-MAC1-D は deferred)。FLAW なし。Common2026.lean に import 済。
+>
 > **Status (2026-05-20):** Drafting. Parent file `MultipleAccessChannel.lean`
 > (637 lines, 2026-05-19) is fully published in statement-level
 > hypothesis pass-through form with `_h_joint_typ : True` placeholder for

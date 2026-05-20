@@ -18,6 +18,16 @@
 > L-EPI* 新規。**撤退ライン L-EPI1 + L-EPI2 + L-EPI3 全採用形で publish** (seed
 > 規模 ~420-630 行内に着地、roadmap 中央 800-1200 行よりタイト)。
 >
+> **実態整合 (2026-05-20): PASS-THROUGH (publish 済、撤退ライン全採用、主定理 vacuous-safe だが核は仮定渡し)** —
+> `Common2026/Shannon/EntropyPowerInequality.lean` が全 Phase publish 済。主定理 `entropy_power_inequality`
+> (`:188`) は `IsEntropyPowerInequalityHypothesis` (= EPI 結論そのもの、`:168`) を受け取り本体 `:= h_epi` (`:197`) で着地
+> = **conclusion-as-hypothesis retreat**。`IsStamInequalityHypothesis` (`:138`) と `IsDeBruijnIntegrationHypothesis`
+> (`:152`) は両方 **`Prop := True` placeholder** (signature 露出のみ、本体未使用、`isStamInequalityHypothesis_trivial`
+> `:142` / `isDeBruijnIntegrationHypothesis_trivial` `:156` で trivially 充足)。Phase D Gaussian saturation case
+> `entropy_power_inequality_gaussian_saturation` (`:226`) のみ **full discharge** (0 sorry、等号、撤退ラインなし)。
+> ⇒ 全 Phase A-E の `[ ]` は実態として完了 (Phase C/主定理は pass-through、Phase D は honest)。EPI 一般形は
+> 依然 discharge されておらず (L-EPI3 = 結論 hypothesis)、真の discharge は後続 plan へ。
+>
 > **Goal**: 新規ファイル `Common2026/Shannon/EntropyPowerInequality.lean` で
 > **Cover-Thomas Theorem 17.7.3** (`exp(2 h(X+Y)) ≥ exp(2 h(X)) + exp(2 h(Y))`)
 > を **hypothesis pass-through 形 (L-EPI1 + L-EPI2 + L-EPI3 三本)** で publish。

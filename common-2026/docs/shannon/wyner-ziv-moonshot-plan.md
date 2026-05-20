@@ -32,6 +32,8 @@
 
 ## Status (2026-05-19)
 
+> 実態整合 (2026-05-20): **PASS-THROUGH (計画通り) — 全 Phase 実装済、plan の「Phase 0 起草中」表記は STALE**。3 file publish 済 (全 0 sorry)。`wyner_ziv_achievability_existence` (WynerZivAchievability.lean:78) は `_h_R_gt` + `h_ach_existence : ∀ε>0, ∃N...` を取り body `:= h_ach_existence` (pass-through)。converse `wyner_ziv_converse_n_letter` (WynerZivConverse.lean:86) は `_h_csiszar : True` `_h_jensen : True` + `h_rate_bound`、body `:= h_rate_bound`。Phase D wrapper `wyner_ziv_tendsto` (WynerZiv.lean:357) は `le_antisymm h_conv h_ach` (両 rate 不等式を hyp で受ける)。L-WZ1/2/3 全 pass-through (FLAW なし — 計画通り)。**注: L-WZ3 (R_WZ(D) 凸性) は別 plan `wyner-ziv-convexity-discharge` で full discharge 済 (`wynerZivCondEntDiffConvex_holds`)**。下流 discharge body 多数実在 (WynerZivBinningBody / ConverseChain / CoveringBody 等、全 0 sorry)。
+
 **Phase 0 起草中** (`wyner-ziv-mathlib-inventory.md`)。在庫から既存率 ~65%、自作必要 8 件、
 撤退ライン 3 本全発動下で seed 規模 (1000-1500 行) 内に収まると確定。最大の novel 構造構築は
 (a) `wynerZivRatePmf` 定義 + 連続性 + 達成性 (~280-350 行) と (b) auxiliary RV

@@ -1,5 +1,7 @@
 # T1-A Huffman 最適性 ムーンショット計画 🌙
 
+> 実態整合 (2026-05-20): DONE-UNCOND — `huffmanLength` / `huffmanLength_pos` / `huffmanLength_kraft_le_one` / `exists_huffman_prefix_code` の 4 件は本 plan scope (Phase 3) 通り 0 sorry で publish 済。`Common2026/Shannon/Huffman.lean:337` (`huffmanLength`)、`:938` (`huffmanLength_kraft_le_one`、標準 typeclass binder のみ、pass-through なし)、`:946` (`exists_huffman_prefix_code`)。主定理 optimality は本 plan scope-out (T1-A' へ)。
+
 > **Parent**: [`textbook-roadmap.md`](../textbook-roadmap.md) §「Tier 1 — T1-A. Huffman 最適性 📋」
 > **Inventory**: [`huffman-mathlib-inventory.md`](./huffman-mathlib-inventory.md)
 > **先行 (基盤)**:

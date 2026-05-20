@@ -7,6 +7,13 @@
 
 ## Status / 目標
 
+> **実態整合 (2026-05-20): DONE-UNCOND (publish 済、0 sorry)** —
+> `Common2026/Shannon/HypercubeEdgeBoundary.lean` (~692 行) が全主目標を実在の定理として publish 済:
+> `edgeBoundaryCount` (`:69`)、counting identity `edgeBoundary_count_eq` (`:589`)、AM-GM bound
+> `edgeBoundary_ge_AMGM` (`:671`)、いずれも pass-through なし、`rg -nw sorry` 空振り (0 sorry)。
+> **命名差異 1 件**: 副目標の `internal_edges_eq` は実コードでは `internal_pair_count_eq_projection_sum`
+> (`:580`) として publish (中身は counting 途中段で一致)。下記 Phase は全て `[x]` で実態と整合。
+
 deferred `B-2'`. 主目標は以下 3 件:
 
 1. **Edge boundary count `edgeBoundaryCount A`** を独自定義 (Mathlib に `SimpleGraph.edgeBoundary` 既存なし、`Sym2` 回避)。

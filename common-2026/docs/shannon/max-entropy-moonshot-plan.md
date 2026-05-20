@@ -1,5 +1,10 @@
 # 最大エントロピー ムーンショット計画 🌙 (B-6)
 
+> 実態整合 (2026-05-20): **DONE-UNCOND — 進捗ブロックの全 [x] が実態と一致 (この plan は正確)**。
+> `Common2026/Shannon/MaxEntropy.lean` (0 sorry) に Phase A `klDiv_uniformOn_univ_toReal_eq` (:123)、
+> Phase B `entropy_le_log_card` (:229)、Phase C `entropy_eq_log_card_iff` (:241) を honest に publish。
+> いずれも vacuous/pass-through なし。
+
 <!-- B-6 シード: docs/moonshot-seeds.md より複製・膨らませ -->
 
 ## 進捗

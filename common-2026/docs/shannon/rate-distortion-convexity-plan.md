@@ -1,5 +1,13 @@
 # Rate-distortion convexity + n-letter regulated-distortion form (E-4'' deferred)
 
+> 実態整合 (2026-05-20): DONE — Phase B 主補題 + 有限アルファベット discharge 完了。
+> `rateDistortionFunction_convexOn` (`Common2026/Shannon/RateDistortionConvexity.lean:136`) は
+> `h_klDiv_conv` (joint-klDiv convexity = Mathlib gap) を honest hyp 化した subnormal 形 (0 sorry)。
+> その hyp は `rateDistortionFunction_convexOn_pmf` (`RateDistortionConvexityDischarge.lean:694`、`[Fintype α] [Fintype β]`)
+> が **完全 discharge** → 有限アルファベットでは DONE-UNCOND (0 sorry / 0 axiom)。
+> Phase C `rate_distortion_converse_n_letter_specified` は本 file 名では未着手だが、n-letter converse
+> (`n_block`/`n_singleLetter`) は `RateDistortionConverseNLetter.lean` に別途 landing 済 (本 plan scope 外)。
+
 E-4'' シードカード ([`docs/moonshot-seeds.md`](../moonshot-seeds.md))、E-4 / E-4' の後継。
 親シード: `Common2026/Shannon/RateDistortionConverseMonotone.lean` (151 行、E-4' 完了)。
 

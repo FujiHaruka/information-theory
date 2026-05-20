@@ -8,6 +8,11 @@
 - `rg "^- \[ \]"` で残タスク横断 grep、`rg "🔄"` でピボット箇所だけ拾える
 -->
 
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — 全 Phase 完了。Phase D weak converse =
+> `source_coding_converse` (`Common2026/Shannon/AEP.lean:704`)、Phase E achievability =
+> `source_coding_achievability` (AEP.lean:1138)、両側等号 `source_coding_theorem`
+> (AEP.lean:1240)。AEP.lean 全体 0 sorry、仮定は i.i.d. 標準形 (`iIndepFun`/`IdentDistrib`/`hpos`) のみ。
+>
 > **Status (2026-05-10)**: 起草。シードカード [Seed 4](../moonshot-seeds.md#seed-4-aep--源符号化定理漸近-) を膨らませた本命 4〜6 週間ムーンショット。
 > **撤退ライン**: Phase A〜C 完了 (= AEP 単体) で publish 価値あり。源符号化定理 (Phase D / E) はそこから separable に切り出せる。
 
@@ -17,8 +22,8 @@
 - [x] Phase A — i.i.d. 列の formal definition + Pi 値 plumbing ✅ (= `jointRV` 定義 + 基本 `Measurable` のみ、Pi 構築は Phase B/C で実需要が出るまで保留 / 結局 B では不要、C.3 でのみ要)
 - [x] Phase B — probability AEP (`P{|−(1/n) log P(X^n) − H(X)| ≥ ε} → 0`) ✅
 - [x] Phase C — typical set `T_ε^n` ✅ (`measurableSet_typicalSet` ✅ / `typicalSet_prob_tendsto_one` ✅ / `typicalSet_card_le` ✅ — `[∀ x, P(x) > 0]` 仮定追加で完了)  ⬅ **撤退ラインはここ — Phase A〜C 完了 = AEP 単体 publish ライン到達**
-- [ ] Phase D — 源符号化定理 weak converse (`liminf_n (log M_n / n) ≥ entropy μ X`) 📋 (deferred to next session)
-- [ ] Phase E — achievability (rate > H で error → 0) 📋 (deferred to next session)
+- [x] Phase D — 源符号化定理 weak converse (`liminf_n (log M_n / n) ≥ entropy μ X`) ✅ (`source_coding_converse`, AEP.lean:704)
+- [x] Phase E — achievability (rate > H で error → 0) ✅ (`source_coding_achievability`, AEP.lean:1138)
 
 ## ゴール / Approach
 

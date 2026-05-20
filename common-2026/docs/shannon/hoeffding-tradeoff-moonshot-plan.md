@@ -1,5 +1,14 @@
 # Hoeffding tradeoff (T1-D) ムーンショット計画 🌙
 
+> 実態整合 (2026-05-20): **PASS-THROUGH (sandwich 形)。headline `hoeffding_tradeoff` (unconditional
+> Tendsto) は未 publish**。`Common2026/Shannon/HoeffdingTradeoff.lean` (0 sorry) に実在するのは
+> `hoeffding_tradeoff_with_hypothesis` (:296) で、**achievability (`h_liminf`) と converse (`h_limsup`)
+> の両方**を hypothesis として取り (+ 両 boundedness)、本体は `tendsto_of_le_liminf_of_limsup_le` 一行。
+> 数学的中身 (liminf ≥ E2 / limsup ≤ E2) は全て pass-through で、Phase C/D は L-H4 で defer のまま。
+> Scaffolding は publish 済: `steinTypeII_at_level_pmf` (:115)、`hoeffding_minimizer_ge` (:236,
+> Pythagoras 経由)、`hoeffdingE2_minimizer_full_support` (full-support は hypothesis 形)。
+> §進捗 Phase C/D の defer 記載は正確だが、§ゴール記載の `hoeffding_tradeoff` 名は実態に無い。
+
 <!--
 雛形メモ (moonshot-plan-template.md より):
 - 進捗ブロック: `- [ ] Phase 名 — 短い説明 状態絵文字 (関連ファイルへのリンク)` の形式

@@ -9,6 +9,8 @@
 - [x] Phase B — Codeword-average Verdú-Han 下界 + decoder partition による `∑ Q ≤ 1` ✅
 - [x] Phase C — 主形 `1 - Pe ≤ exp γ + tail` (with `threshold := log M + γ`) ✅
 
+> 実態整合 (2026-05-20): DONE (single-shot scope) — `channelCoding_strong_converse_singleShot` (`Common2026/Shannon/ChannelCodingStrongConverse.lean:361`、0 sorry) が任意 code・任意 reference `Q` で Verdú-Han 単発下界を結論。pass-through Prop / vacuous 無し。asymptotic `Pe → 1` (WLLN 接続) は本 plan で予定どおり scope-deferred (判断ログ 3 / downstream 注記)。
+
 ## ゴール / Approach
 
 **ゴール**: i.i.d. 入力 + memoryless channel 下で、任意の符号 `c : Code M n α β` に対して、`R := log M / n > I(p; W)` のとき

@@ -3,6 +3,8 @@
 > 起草 2026-05-12 / B-7 完了直後。Cover-Thomas Ch 7.7 (random coding argument) を AEP plumbing + B-7 i.i.d. corollary `mutualInfo_iid_eq_nsmul` を入口に Lean 化。**最難関シード** (見積 800-1500 行 / 4-6 週)。
 >
 > **2026-05-12 状態 (二度目の更新)**: Phase A + Phase B-(a,b,c) 完了。Phase C (random codebook + averaging) + Phase D (主定理) は依然 deferred。Phase B-(c) (independent pair bound) は AEP 拡張 (`typicalSet_prob_le`) + `iIndepFun_iff_map_fun_eq_pi_map` 経由の point-wise factorization で完成 (B-3' 区切り)。
+>
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — Phase C+D は子 plan B-3'' (`channel-coding-phase-cd-plan.md`) で完全閉鎖済。主定理 `channel_coding_achievability` (`Common2026/Shannon/ChannelCodingAchievability.lean:1607`、0 sorry) が `(W p hp_pos hW_pos R hR ε')` で `∃ N, ∀ n ≥ N, ∃ M c, (c.averageErrorProb W).toReal < ε'` を結論。本ファイル (`ChannelCoding.lean`) は Phase B 3 bound のみ (B-3') で、Phase C/D は別ファイル。下記 Phase C/D の「deferred」記述は B-3'' で解消済 (stale)。
 
 ## 進捗
 

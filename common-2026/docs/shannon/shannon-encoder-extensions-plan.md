@@ -3,6 +3,8 @@
 > **Parent**: [`shannon-moonshot-plan.md`](shannon-moonshot-plan.md) Phase 4-γ 結果セクションで deferred とした「encoder 付き版」を 2 形式で完成させるサブ計画。
 > **Status (2026-05-10)**: Phase 4-δ-(a) **完了** (commit d4bec7c)。Phase 4-δ-(b) は inventory 完了 (`docs/shannon/shannon-condmi-inventory.md`)、skeleton 着手前。
 
+> 実態整合 (2026-05-20): 両 Phase とも DONE-HONEST-HYPS (plan の (b) 「skeleton 着手前」記述は stale)。(a) `shannon_converse_single_shot_injective_encoder` (`Common2026/Shannon/Converse.lean:141`、`hencoder_inj : Function.Injective encoder` 仮定) と (b) `shannon_converse_single_shot_markov_encoder` (`:207`、`hmarkov : IsMarkovChain μ Msg (encoder ∘ Msg) Yo` 仮定) がいずれも 0 sorry で publish 済 (`CondMutualInfo.lean` も存在)。仮定は genuine analytic (injectivity / Markov chain)、pass-through 不在。
+
 ## Context
 
 Phase 4-γ で `shannon_converse_single_shot` を `I(Msg; Yo)` 直接版で完成させたが、計画書当初の `I(encoder ∘ Msg; Yo)` 版は Phase 4-α DPI の方向と整合しないため落とした (`docs/proof-logs/proof-log-shannon-converse.md` §2 / §4.1)。本計画はその差分を 2 段で埋める:

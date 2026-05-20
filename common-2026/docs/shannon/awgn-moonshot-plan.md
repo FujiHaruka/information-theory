@@ -1,5 +1,14 @@
 # AWGN Channel Capacity ムーンショット計画 🌙 (T2-A)
 
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — headline `awgn_channel_coding_theorem`
+> (`Common2026/Shannon/AWGNMain.lean:59`) は achievability (F-1 `IsAwgnTypicalityHypothesis`) +
+> MI bridge (F-2) + converse (F-3 `IsAwgnConverseHypothesis`) を **honest pass-through hyp** で publish (`:= True` ではない、0 sorry)。
+> `IsAwgnTypicalityHypothesis` (`AWGNAchievability.lean:39`)・`IsAwgnConverseHypothesis` (`AWGNConverse.lean:56`) は実体ある非自明 Prop。
+> F-1 kernel measurability のみ `AWGNF1Discharge.lean:60` で完全 discharge 済。
+> **注意**: `AWGNF2F3Discharge.lean` の `awgn_theorem_F1F2F3_discharged` (L294) は F-2/F-3 の*実 discharge ではない* —
+> `IsAwgnF2DecodingHypothesis`/`IsAwgnF3ChainHypothesis` は元 hyp と同形の alias (id-like reduction)、
+> `IsAwgnF3PerLetterHypothesis` (`AWGNF2F3Discharge.lean:229`) は `:= ... True` の placeholder。F-2/F-3 の実体は未着手。
+
 <!--
 雛形メモ (moonshot-plan-template.md より):
 - 進捗ブロック: `- [ ] Phase 名 — 短い説明 状態絵文字 (関連ファイルへのリンク)` の形式

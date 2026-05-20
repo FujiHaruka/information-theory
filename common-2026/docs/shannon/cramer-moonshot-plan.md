@@ -1,5 +1,12 @@
 # Cramér's Theorem ムーンショット計画 🌙 (T1-C)
 
+> 実態整合 (2026-05-20): **進捗ブロック記載どおり (この plan は正確)**。`Common2026/Shannon/Cramer.lean`
+> (0 sorry) に `cramer_upper` (:272, DONE-HONEST-HYPS: h_pos+h_cobdd)、`cramer_lower` (:448,
+> DONE-HONEST-HYPS: `h_tilted_lower` 残置形 L-C2)、`cramer_lower_legendre` (:557)、`cramer_tendsto`
+> (:589, sandwich) を publish。`cramer_lower` の `h_tilted_lower` 残置は L-C2 撤退どおりだが、後継チェーンで
+> 内部点 `a = deriv (cgf Y μ₀) lam` での unconditional 化を達成済
+> (`CramerCLTClosure.cramer_lower_at_cgfDeriv_unconditional`、residual 仮定なし)。
+
 <!--
 雛形メモ (moonshot-plan-template.md より):
 - 進捗ブロック: `- [ ] Phase 名 — 短い説明 状態絵文字 (関連ファイルへのリンク)` の形式

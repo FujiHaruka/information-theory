@@ -36,6 +36,8 @@
 
 ## Status (2026-05-19)
 
+> 実態整合 (2026-05-20): **DONE (achievability=DONE-UNCOND, converse=DONE-HONEST-HYPS) — plan の Phase A-D 完了表記は CODE と一致 (STALE でない)**。`Common2026/Shannon/SeparationTheorem.lean` (28396 B, 0 sorry)。`separation_achievability_iid` (SeparationTheorem.lean:309) は実証明 (rate splitting `H<R_src<R_ch<C` + `source_coding_achievability` + `shannon_noisy_channel_coding_theorem_general_full` 合成、honest hyp `hHC : entropy < capacity`)。`separation_converse_iid` (:445) も実証明だが channel-side rate bound (`hM_ch_bdd`, `hR_ch_le_C`) を honest hypothesis として pass-through (plan line 51 の「hypothesis pass-through 形」記述と一致、source-side converse は `source_coding_converse` で実 discharge)。FLAW なし。
+
 **Phase 0 (Mathlib + Common2026 在庫) 完了** — inventory で「**既存率 ~70% (composition 全体)、
 自作必要 4 件 ~160 行、撤退ライン L-S0 確定発動 (stationary ergodic 一般化は別 plan で deferred)、
 規模 350-500 行 (IID + achievability + converse 込)**」を確定。`composeCode` / `errorProb_composed_le` /

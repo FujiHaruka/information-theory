@@ -1,5 +1,7 @@
 # Wyner–Ziv `WynerZivCondEntDiffConvex` full discharge — moonshot plan 🌙
 
+> 実態整合 (2026-05-20): **DONE-UNCOND (L-WZ3 凸性 full discharge 達成) — plan の「実装未着手 / Phase 1-6 全 `[ ]`」表記は STALE、実装完了**。`Common2026/Shannon/WynerZivCondEntDiffConvexBody.lean` (20628 B, 0 sorry, `True` placeholder なし)。主定理 `wynerZivCondEntDiffConvex_holds` (WynerZivCondEntDiffConvexBody.lean:354) は唯一の honest hyp `h_pmf_nn : ∀p, 0 ≤ P_XY p` の下で `WynerZivCondEntDiffConvex` を **無条件 (第一目標) 証明** — per-u block convexity `wzCondEntDiff_block_convex` (:214、`log_sum_inequality_negMulLog` per-atom 路線) を `∑_u` 集約。unconditional rate wrapper `wynerZivRateFactorizable_convex_in_D_unconditional` (:372) で `_of_condEntDiff` の `h_core` を消去 (`h_pmf : P_XY ∈ stdSimplex` から `h_pmf.1` 供給、rate-level 真 unconditional)。affine 翻訳 `wzMarginalXU/YU_smul_add` (:47,:55)、block↔joint 同一視 (:337) も実証明。FLAW なし。Common2026.lean に import 済 (line 226)。
+>
 > **Status**: 計画起草のみ (2026-05-20)。実装未着手。
 >
 > **target**: 教科書ロードマップ (`docs/textbook-roadmap.md:710`) が「残存 frontier gap = joint perspective convexity of ...」と名指しした Wyner–Ziv rate function 凸性 (Cover–Thomas Lemma 15.9) の **irreducible analytic core** を **無条件で full discharge** する。周辺 (`H(U)` cancellation, `H(X)−H(Y)` constancy, assembly, rate wrapper) は `WynerZivObjectiveConvexityBody.lean` で全 discharge 済。残るのは 1 つの凸性述語 `WynerZivCondEntDiffConvex` だけ。

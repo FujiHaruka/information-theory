@@ -19,6 +19,10 @@
 `lake env lean` silent 通過 + `lake build` 全体緑通過。
 proof-log: [`docs/proof-logs/proof-log-loomis-whitney.md`](../proof-logs/proof-log-loomis-whitney.md)
 
+> **実態整合 (2026-05-20): DONE-UNCOND (plan は正確)** — 主定理 `loomis_whitney`
+> (`Common2026/Shannon/LoomisWhitney.lean:351`) は 0 sorry / pass-through なしで実在、Shearer engine 経由の
+> 純コンビ不等式を無条件証明。plan の Status と一致、修正不要。
+
 ## ゴール / Approach
 
 **ゴール**: 任意 $n \ge 1$ の有限族 `α : Fin n → Type` 上の有限部分集合 `A : Finset (Π i, α i)` に対し

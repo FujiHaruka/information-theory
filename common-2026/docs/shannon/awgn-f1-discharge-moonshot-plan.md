@@ -1,5 +1,10 @@
 # AWGN F-1 (kernel measurability) discharge ムーンショット計画 🌙 (T2-A follow-up)
 
+> 実態整合 (2026-05-20): DONE-UNCOND — `isAwgnChannelMeasurable` 完全証明済。
+> `Common2026/Shannon/AWGNF1Discharge.lean:60` `theorem isAwgnChannelMeasurable (N : ℝ≥0) : IsAwgnChannelMeasurable N` を
+> `gaussianReal_map_const_add` + `measurable_measure_prodMk_left` の実 Mathlib 証明 (`:= True` ではない、0 sorry) で discharge。
+> `awgn_theorem_F1_discharged` (L100) は `h_meas` 引数を消去して再 publish 済 (残りの F-2/F-3 系 hyp は honest pass-through で継続)。
+
 <!--
 雛形メモ (moonshot-plan-template.md より):
 - 進捗ブロック: `- [ ] Phase 名 — 短い説明 状態絵文字 (関連ファイルへのリンク)` の形式

@@ -14,10 +14,12 @@ error 化し、(3) **full support 仮定を除去**して任意 `p, W` に対す
 ## 進捗
 
 - [x] Phase 0 — 経路選択判断 ✅ (2026-05-13)
-- [x] Phase A — 入力分布最大化 ✅ (2026-05-13、A.1 + A.2 連続性 + A.4 lt 特性化、A.3 達成元は documentation only sorry 残置)
+- [x] Phase A — 入力分布最大化 ✅ (2026-05-13、A.1 + A.2 連続性 + A.4 lt 特性化、A.3 達成元)
 - [x] Phase B — Expurgation ✅ (2026-05-13、B.1 + B.2 + B.4 average→max wrapper)
-- [x] Phase C — Full support 仮定除去 ✅ (2026-05-13、smoothing 経路で hp_pos 迂回。C.1 sub-channel 切り出しは Mathlib `klDiv` MeasurableEmbedding 不変性 gap で documentation only sorry 残置、C.2 Code lift は 0 sorry 化済だが未使用)
+- [x] Phase C — Full support 仮定除去 ✅ (2026-05-13、smoothing 経路で hp_pos 迂回)
 - [x] Phase D — 主定理 `shannon_noisy_channel_coding_theorem` 統合 ✅ (2026-05-13、`hW_pos` のみユーザ仮定、`hp_pos` smoothing 経路で内部処理)
+
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — `shannon_noisy_channel_coding_theorem` (`Common2026/Shannon/ChannelCodingShannonTheorem.lean:1011`) は `hW_pos : ∀ a b, 0 < (W a).real {b}` の正直な full-support 仮説 + `R < capacity W` のみで max-error 達成形を結論。ファイル全体で real-sorry **ゼロ** (`exists_capacity_achiever:317` / `mutualInfoOfChannel_restrict_to_support:816` も 0 sorry — 下記の "A.3 + C.1 documentation only sorry" 記述は stale で、現状の code には documentation sorry も残っていない)。`hW_pos` 除去版は後継 D-1' / D-1'' で完成 (`shannon_noisy_channel_coding_theorem_general_full`、下記参照)。
 
 **完了サマリ (2026-05-13)**: `Common2026/Shannon/ChannelCodingShannonTheorem.lean` (918 行、13 declarations、D 主定理 0 sorry / A.3 + C.1 documentation only sorry)。Cover-Thomas 7.7.1 完全形:
 ```

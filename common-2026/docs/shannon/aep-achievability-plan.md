@@ -8,6 +8,12 @@
 - `rg "^- \[ \]"` で残タスク横断 grep、`rg "🔄"` でピボット箇所だけ拾える
 -->
 
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — `source_coding_achievability` 完成済
+> (`Common2026/Shannon/AEP.lean:1138`、0 sorry)。仮定は `iIndepFun` / `IdentDistrib` /
+> `hpos : ∀ x, 0 < (μ.map (Xs 0)).real {x}` の i.i.d. 標準形のみ (pass-through なし)。
+> 結論は `Tendsto (log M_n / n) (𝓝 R) ∧ Tendsto errorProb (𝓝 0)`。Phase F の
+> `source_coding_theorem` (両側等号、AEP.lean:1240) も完成。
+>
 > **Status (2026-05-11)**: 起草。AEP moonshot ([`aep-moonshot-plan.md`](aep-moonshot-plan.md))
 > Phase E (achievability) の deferred 単独 plan。
 > シードカード ([`moonshot-seeds.md` "次のシード候補 A. 直接 deferred"](../moonshot-seeds.md#a-直接-deferred))
@@ -21,10 +27,10 @@
 ## 進捗
 
 - [x] Phase 0 — Mathlib + 既存 Common2026 API インベントリ ✅ → [`aep-achievability-mathlib-inventory.md`](aep-achievability-mathlib-inventory.md)
-- [ ] Phase A — encoder / decoder 構成 + round-trip lemma (`d_n ∘ c_n = id` on typicalSet) 📋
-- [ ] Phase B — error rate bound (`error ⊆ ∁ typicalSet` + Tendsto 0) 📋
-- [ ] Phase C — rate Tendsto (`log M_n / n → R`) + 主定理組成 📋
-- [ ] Phase D — verify (`lake env lean Common2026/Shannon/AEP.lean` silent + proof-log + metrics) 📋
+- [x] Phase A — encoder / decoder 構成 + round-trip lemma (`d_n ∘ c_n = id` on typicalSet) ✅ (AEP.lean: `aepEncoder` / `aepDecoder`)
+- [x] Phase B — error rate bound (`error ⊆ ∁ typicalSet` + Tendsto 0) ✅ (`aep_errorProb_tendsto_zero`)
+- [x] Phase C — rate Tendsto (`log M_n / n → R`) + 主定理組成 ✅ (`source_coding_achievability`, AEP.lean:1138)
+- [x] Phase D — verify (AEP.lean 0 sorry) ✅
 
 ## ゴール / Approach
 

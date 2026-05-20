@@ -1,5 +1,11 @@
 # MI chain rule ムーンショット計画 🌙 (B-7)
 
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — 両 headline 完成済、0 sorry。
+> 一般 chain rule `mutualInfo_chain_rule_fin` (`Common2026/Shannon/MIChainRule.lean:117`、
+> 標準 `[StandardBorelSpace Y] [Nonempty Y]` + measurability 仮定のみ)、i.i.d. corollary
+> `mutualInfo_iid_eq_nsmul` (MIChainRule.lean:392、`I(X^n;Y^n) = n • I(X_0;Y_0)`、
+> i.i.d. 分布等式 (`μ.map = Measure.pi …` + copy 仮定) の honest 形)。pass-through なし。
+>
 > [moonshot-seeds.md](../moonshot-seeds.md) §B-7 の本体計画。前段 B-6 (MaxEntropy) / B-5 (Pinsker 弱形) / B-2+B-9 (Brascamp–Lieb + Hypercube) 完了後、B-3 (Channel coding achievability) の前段補題として独立着手 (2026-05-11)。
 
 ## 進捗

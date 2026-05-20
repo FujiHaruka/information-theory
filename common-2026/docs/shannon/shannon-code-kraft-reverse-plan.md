@@ -2,6 +2,8 @@
 
 > Status (2026-05-12): **完了 ✅**。`Common2026/Shannon/ShannonCodeKraftReverse.lean` (498 行、0 sorry / 0 error / 0 warning)。B-8 期待長 sandwich (`docs/shannon/shannon-code-moonshot-plan.md`) と並立 publish。
 
+> 実態整合 (2026-05-20): DONE-UNCOND — `exists_prefix_code_of_kraft` (`Common2026/Shannon/ShannonCodeKraftReverse.lean:482`、`{D}(hD : 2 ≤ D)(l)(hl : ∀ a, 0 < l a)(hk : Σ D^(-l a) ≤ 1) : ∃ c, Injective c ∧ (∀ a, (c a).length = l a) ∧ IsPrefixFree c`) を 0 sorry で証明、`shannonFanoCode_injective` / `shannonFanoCode_prefixFree` 経由。pass-through / `Prop := True` 不在。
+
 ## 進捗
 
 - [x] Phase 0 — Mathlib API インベントリ (List.IsPrefix / Nat.mod_pow_succ / List.mergeSort) ✅

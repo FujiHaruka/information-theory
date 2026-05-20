@@ -4,10 +4,12 @@
 
 ## 進捗
 
-- [ ] Phase 0 — Mathlib / Common2026 在庫確認 (graphoid weak union / marginalize 経路) 📋
-- [ ] Phase A — bridge 補題 `isMemorylessChannelStrong_of_isMemorylessChannel` 📋
-- [ ] Phase B — pure 主定理 `channel_coding_converse_general_memoryless_pure` 📋
-- [ ] Phase C — `Common2026.lean` import 追記 + smoke 検証 📋
+- [x] Phase 0 — Mathlib / Common2026 在庫確認 (graphoid weak union / marginalize 経路) ✅
+- [x] Phase A — bridge 補題 (`per_letter_markov_of_memoryless` + `outputs_cond_indep_of_memoryless`) ✅
+- [x] Phase B — pure 主定理 `channel_coding_converse_general_memoryless_pure` ✅
+- [x] Phase C — `Common2026.lean` import 追記 + smoke 検証 ✅
+
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — 本サブ計画は完了済 (進捗マーカーが起草時の `[ ]` のまま stale だった)。証拠: `channel_coding_converse_general_memoryless_pure` (`Common2026/Shannon/ChannelCodingConverseMemorylessPure.lean:650`、0 sorry) は `h_memo : IsMemorylessChannel` のみを取り (pass-through Prop 仮説なし)、内部で `IsMemorylessChannelStrong` を bridge 補題 2 本で派生して `_strong` wrapper を呼ぶ。bridge `outputs_cond_indep_of_memoryless` (`:567`) は graphoid weak union (`isMarkovChain_weakUnion_left_to_conditioner`) + measurableEquiv reshape で実証 (vacuous でない)。`Common2026.lean:55` に import 済。これにより親 D-2'' の "deferred" を解消。
 
 ## 背景
 

@@ -14,6 +14,8 @@
 >
 > **Status (2026-05-19)**: 計画起草。実装未着手。
 >
+> 実態整合 (2026-05-20): PASS-THROUGH (本 plan の goal たる強形 `huffmanLength_optimal` は未達)。本 plan が目標とした hypothesis 引数なしの強形 `swap_normalization_proof` / `huffman_merged_identification_proof` / `huffmanLength_optimal` は **コード上に不在**。代わりに後続の body file 群 (`HuffmanSwapNormalizationBody.lean`、`HuffmanMergedIdentBody.lean`、`HuffmanT1APPrimeBody.lean`、`HuffmanSwapStepChainBody.lean`) が 2 hypothesis を**さらに別の analytic hypothesis** (`EqualizingPermHypothesis` `HuffmanSwapNormalizationBody.lean:95`、`MergedHuffmanAuxIdentHypothesis` `HuffmanMergedIdentBody.lean:135` 等) へ縦分解する vertical-reduction 補題を 0 sorry で publish するに留まる (全 variant が hypothesis を保持、例 `huffmanLength_optimal_terminal` `HuffmanT1APPrimeBody.lean:583`)。元 2 hypothesis は **discharge されておらず**、Cover-Thomas Thm 5.8.1 の解析的核心 (swap normalization の Kraft=1 shortening + α/α' identification) は未証明のまま。`Prop := True` 形ではないので vacuous ではないが、headline goal は未達。
+>
 > **Goal**: T1-A' で `Prop` abbrev として hypothesis pass-through 化された 2 件
 > (`SwapNormalizationHypothesis` + `HuffmanMergedIdentificationHypothesis`) を完全証明し、
 > 引数 hypothesis なしの **強形 `huffmanLength_optimal`** (Cover-Thomas Theorem 5.8.1) を

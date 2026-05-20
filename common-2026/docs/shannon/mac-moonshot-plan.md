@@ -38,6 +38,8 @@
 
 ## Status (2026-05-19)
 
+> 実態整合 (2026-05-20): **PASS-THROUGH (計画通り) — 全 Phase 実装済、plan の「Phase 0 起草中」表記は STALE**。`Common2026/Shannon/MultipleAccessChannel.lean` (26945 B, 0 sorry) で両主定理 publish 済。`mac_capacity_region_outer_bound` (MultipleAccessChannel.lean:464) は `_h_fano : True` `_h_chain : True` + `h_rate_bound : InMACCapacityRegion ...`、body `:= h_rate_bound`、`mac_capacity_region_inner_bound` (:567) は `_h_joint_typ : True` + `h_existence : MACInnerBoundExistence ...`、body `:= h_existence`。L-MAC1〜5 全 pass-through (FLAW なし — 計画通り)。partial discharge layer `MACL1Discharge.lean` (L-MAC1-A/B/C 実証明) は別 plan で publish 済。
+
 **Phase 0 起草中** (`mac-mathlib-inventory.md`)。在庫から既存率 ~80%、自作必要 4 件、撤退ライン
 5 本全発動下で seed 規模 (700-1150 行) 内に収まると確定。最大の novel 構造構築は
 (a) `MACCode` structure (encoder × 2 + pair-output decoder) と (b) `InMACCapacityRegion`

@@ -74,6 +74,51 @@
 
 **規模の単位**: Lean 行数。±50% 程度の幅で見積もる。基準: `ChannelCodingShannonTheorem.lean` 918 行 / `DifferentialEntropy.lean` 1010 行 / `BirkhoffErgodic.lean` 920 行 / `AEPRate.lean` 831 行 / `ShannonCode*.lean` 系合計 ~700 行。**章別合計 + Infrastructure ~1.3-2.3k = 全体 ~16-25k 行**。
 
+## 実態整合監査 (2026-05-20)
+
+89 計画ファイルを実コードと突き合わせる全数監査を実施 (各 plan に `> 実態整合 (2026-05-20): …`
+行を追記済)。**最大の発見: 計画/ロードマップの status は実態より大幅に stale で、しかも
+「0 sorry = 完成」ではない。** 0 sorry でも (a) 真に無条件 / (b) honest な解析仮定付き /
+(c) `Prop := True` または結論そのものを hypothesis に取る pass-through / (d) **退化定義を突いて
+偶然成立する flaw-vacuous** の 4 段階がある。着手先選定は plan ではなく **実 `.lean` の headline
+定理の signature と body** を直接見て判断すること。
+
+**状態区分** (本監査で導入): 🟢 DONE-UNCOND (無条件) / 🟢ʰ DONE-HONEST-HYPS (honest 解析仮定付き) /
+🟠 PASS-THROUGH (`:= True` / 結論=仮説、数学的核心は未証明) / 🔴 FLAW-VACUOUS (退化定義の悪用) /
+📋 UNSTARTED。
+
+| Ch. | headline の真の状態 | 区分 |
+|---|---|---|
+| 2 Entropy/MI/DPI | `MIChainRule`, entropy/DPI 一式 | 🟢 |
+| 3 AEP | `source_coding_achievability`/`_converse` (iid honest hyps) | 🟢ʰ |
+| 4 Entropy rate/SMB | `shannon_mcmillan_breiman` 無条件 (`SMBAlgoetCover.lean`)、`birkhoff_ergodic_ae` | 🟢 |
+| 5 Data compression | ShannonCode/Kraft 🟢；Huffman 最適性 🟢ʰ (強形 `huffmanLength_optimal` は 📋)；Arithmetic coding 🟠 (`:= True` 3 本) |
+| 7 Channel capacity | `shannon_..._general_full` 無条件、feedback complete；一部 converse は honest pass-through (文書化済) | 🟢/🟢ʰ |
+| 8 Differential entropy | `differentialEntropy_*` (Bochner honest hyps) | 🟢ʰ |
+| 9 Gaussian channel | **AWGN 🟠 (F-2/F-3 は id-alias で実 discharge でない)；ParallelGaussian 🟠 (`:= h_per_coord` 結論=仮説、L-PG1 循環)；Shannon-Hartley / Whittaker 🔴 (L-SH 全 `True`、`shannon_hartley_formula` は C=答え を定義、`whittaker_shannon_one_point` は `rfl`)** |
+| 10 Rate distortion | achievability 🟢ʰ、converse 🟢、convexity 🟢 (finite) |
+| 11 Statistics | Stein/StrongStein/Sanov/Pinsker(weak+sharp)/Csiszar 🟢；Chernoff/Cramer (CLT closure 込, 真) 🟢ʰ；**Hoeffding tradeoff 🟠 (`_with_hypothesis` のみ、achiev+converse を仮説化)** |
+| 12 Maximum entropy | `entropy_le_log_card` 🟢、Constrained 🟢ʰ |
+| 13 Universal coding | **LZ78 🟠 (`:= True` 3 本 + 結論=仮説)；Arithmetic 🟠** |
+| 15 Network IT | SlepianWolf 🟢/🟢ʰ、WynerZiv convexity 🟢；**MAC/BC/Relay/WynerZiv headline 🟠 (L-MAC/L-BC/L-RC/L-RI/L-WZ pass-through、設計通り)** |
+| 17 Inequalities | Han/Shearer/LoomisWhitney/Hypercube/BrascampLieb/Pinsker 🟢；**Fisher 🔴 (V1 `fisherInfo` は Gaussian で 0 を返すバグ → `= 1/v` は V1 で証明不能；V2 `fisherInfoOfDensity` が正しく Gaussian de Bruijn 済)；EPI 🟠 (`:= h_epi` + L-EPI1/2 `:= True`)；BM 🟠 (`:= h_bm`)** |
+
+### 🔴 FLAW-VACUOUS 不備 (要修正、詳細 → [`flaw-vacuous-review-2026-05-20.md`](shannon/flaw-vacuous-review-2026-05-20.md))
+
+- **HIGH-1 — EPI/Stam の Gaussian discharge が空虚**: `*_of_gaussian_fisherInfo_zero` (`EPIStamStep12Body.lean:327` 他) は `intro; exfalso; linarith` で、V1 `fisherInfo (gaussian) = 0` を使い前提 `0 < J_X` を矛盾させて discharge。Stam 不等式を「Gaussian で証明した」ことになっていない。正しい V2 (`StamGaussianBound.lean`) は headline chain に未配線。
+- **HIGH-2 — `entropy_power_inequality_gaussian_via_stamDeBruijn`** (`EPIStamDeBruijnConclusion.lean:269`): Stam ステップは HIGH-1 の空虚経路、実体は Gaussian saturation の閉形のみ。「EPI via Stam」は非 Gaussian では「EPI given EPI」、Gaussian では Stam 半分が空虚。
+- **根因 — V1 `fisherInfo` バグ** (`FisherInfo.lean:58`、`rnDeriv`/`Classical.choose` 経由で Gaussian に 0)。V1 は dead だが import 生存中 → 将来の caller が罠を踏む。**V1 deprecate + Stam chain を V2 に配線が修正の本筋** (純 plumbing、難所ではない)。
+- **Shannon-Hartley / Whittaker** (`ShannonHartley.lean`, `WhittakerShannonPartial.lean`): L-SH1/2/3 が `True`、`shannon_hartley_formula` は容量=答えを定義、補間定理が `rfl`。sinc 性質の下層のみ真。
+- **MED — `entropy_power_inequality`** (`EntropyPowerInequality.lean:188`) body `:= h_epi` (結論=仮説)。header では透明だが定理名での引用は誤解を招く。
+
+### 監査で判明したその他
+
+- `general-dmc-moonshot-plan.md` は 0 byte 空ファイルだった (実装は `BlockwiseChannel.lean`/`GeneralDMC.lean` に存在、リダイレクト追記済)。
+- 多数 plan が「全 phase `[ ]` / judgment log が起草時凍結」なのにコードは 0 sorry 完成 (例: `sanov-ldp-equality`, `slepian-wolf-full-rate-region`, `wyner-ziv-convexity-discharge`, channel-coding 系 D-1''/ychain/I-2, Cramér/infinitepi chain)。
+- name mismatch: `cramer_lower_boundary_unconditional`→実 `cramer_lower_at_cgfDeriv_unconditional`；`hoeffding_tradeoff`→実 `_with_hypothesis` のみ；`stein_lemma` は Tendsto でなく liminf/limsup sandwich；`pinsker-moonshot` headline は sharp だが実体は weak `√KL`。
+- discharge chain (cramer→lc2-discharge→lc2-ext→infinitepi-tilted→clt-closure) は前者の deferred 仮説を後者が discharge する forward 依存。各 plan に「discharged-by」前方ポインタが無く、単独で読むと完成度を過小評価する。
+- 残 `docs/han` (10) / `docs/fano` (4) / `docs/api` (4) は本監査の対象外 (follow-up)。
+
 ## seed カード (未着手分)
 
 > ここから下は **追加すべき seed 一覧**。優先度ではなく Tier (穴の深さ) で分類。すべて 📋 未着手。

@@ -18,6 +18,8 @@ I(X_i; Y^n | X^{<i}) ≤ I(X_i; Y_i)
 - [x] Phase C — `memoryless_per_summand_bound` ✅ (2026-05-14、撤退ライン採用で 3 仮説 `h_yother_zero` / `h_split` / `h_markov_xprefix` 追加形)
 - [x] Phase D — `channel_coding_converse_general_memoryless` ✅ (2026-05-14、Phase C 仮説 pass-through)
 
+> 実態整合 (2026-05-20): PASS-THROUGH (正直に文書化済) — `channel_coding_converse_general_memoryless` (`Common2026/Shannon/ChannelCodingConverseGeneralComplete.lean:474`、0 sorry) は `h_yother_zero` / `h_split` / `h_markov_xprefix` を pass-through 仮説として受け取る。これら 3 仮説の `IsMemorylessChannel` からの内部派生 (= pure 形) は後継 [`channel-coding-converse-memoryless-ychain-plan.md`](./channel-coding-converse-memoryless-ychain-plan.md) で完成済 (`channel_coding_converse_general_memoryless_pure`)。本 plan 段の D-2' は予定どおり PASS-THROUGH 形で正しい。
+
 **完了サマリ (2026-05-14)**: `Common2026/Shannon/ChannelCodingConverseGeneralComplete.lean` (578 行、0 sorry / 0 warning)。撤退ライン採用で Phase C/D に 3 つの追加仮説:
 
 - `h_yother_zero`: `condMI(X_i; Y^{≠i} | (X^{<i}, Y_i)) = 0` (Step 2 Yother 項消滅)

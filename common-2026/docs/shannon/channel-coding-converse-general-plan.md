@@ -9,6 +9,8 @@
 - [x] Phase B — chain rule 代入 + toReal 分配 ✅
 - [x] Phase C — 主定理 `channel_coding_converse_general_chainRule` 完成 ✅
 
+> 実態整合 (2026-05-20): DONE (chain-rule scope) — `channel_coding_converse_general_chainRule` (`Common2026/Shannon/ChannelCodingConverseGeneral.lean:73`、0 sorry) が IID 仮定なしの一般入力 chain-rule 形 `log|M| ≤ ∑ I(X_i; Y^n | X^{<i}).toReal + Fano` を結論。memoryless per-summand bound は予定どおり後継 D-2' / D-2'' (`ChannelCodingConverseGeneralComplete.lean` / `ChannelCodingConverseMemorylessPure.lean`) で完成済。
+
 ## ゴール / Approach
 
 **最終ゴール (D-2 完全形、Cover-Thomas 7.9 一般入力 converse)**:

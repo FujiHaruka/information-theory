@@ -31,6 +31,8 @@
 
 ## Status (2026-05-20)
 
+> 実態整合 (2026-05-20): **PASS-THROUGH (計画通り) — 全 Phase 実装済、plan の「Phase 0 起草中」表記は STALE**。`Common2026/Shannon/BroadcastChannel.lean` (28642 B, 0 sorry) で両主定理 publish 済。`bc_capacity_region_outer_bound` (BroadcastChannel.lean:472) は `_h_fano : True` `_h_chain : True` + `h_rate_bound : InBCCapacityRegion ...` を取り body `:= h_rate_bound`、`bc_capacity_region_inner_bound` (:580) は `_h_joint_typ : True` + `h_existence : BCInnerBoundExistence ...` を取り body `:= h_existence`。L-BC1〜5 全 pass-through (FLAW なし — 計画通りの statement-level pass-through)。下流 discharge layer も実在: `BroadcastChannelSuperposition.lean` / `BroadcastChannelRandomCodebook.lean` (全 0 sorry)。Common2026.lean に import 済。
+
 **Phase 0 起草中** (`broadcast-channel-mathlib-inventory.md` と並行)。在庫から既存率 ~85%、
 自作必要 3 件 (BroadcastChannel abbrev / BroadcastCode structure / InBCCapacityRegion
 predicate)、撤退ライン 5 本全発動下で seed 規模 (700-1150 行) 内に収まると確定。最大の novel

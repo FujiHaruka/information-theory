@@ -1,5 +1,11 @@
 # Birkhoff 個別エルゴード定理 a.s. 自前実装計画 (E-8'' 経路 A)
 
+> 実態整合 (2026-05-20): DONE-UNCOND — headline `birkhoff_ergodic_ae` 完成済
+> (`Common2026/Shannon/BirkhoffErgodic.lean:1031`、0 sorry)。仮定は標準 typeclass のみ
+> (`[IsProbabilityMeasure μ]` + `MeasurePreserving T μ μ` + `Ergodic T μ` +
+> `Integrable f μ`)、pass-through なし。SMB 仮説なし形昇格も達成: 無条件
+> `shannon_mcmillan_breiman` は `Common2026/Shannon/SMBAlgoetCover.lean:2840`。
+>
 > **Status**: 2026-05-16 起草。
 > Phase C 撤退ログ (`shannon-mcmillan-breiman-phase-c-plan.md` §11) を受け、**経路 A (backward martingale 自前)** を採用。SMB 主定理仮説なし形への昇格を最終目標とする。
 

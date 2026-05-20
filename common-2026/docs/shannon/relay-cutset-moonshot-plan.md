@@ -29,6 +29,8 @@
 
 ## Status (2026-05-19)
 
+> 実態整合 (2026-05-20): **PASS-THROUGH (計画通り) — 実装済、plan の「Phase 0 起草中」表記は STALE**。`Common2026/Shannon/RelayCutset.lean` (14918 B, 0 sorry) に `relay_cutset_outer_bound` (RelayCutset.lean:343) publish 済: `_h_csiszar : True` `_h_chain : True` + `h_rate_bound : R ≤ relayCutsetBound Ib Im` を取り body `:= h_rate_bound`。L-RC1〜5 全 pass-through (FLAW なし — 計画通り outer bound only)。
+
 **Phase 0 起草中** (`relay-cutset-mathlib-inventory.md`)。在庫から既存率 ~75%、自作必要
 5 件、撤退ライン 4 本全発動下で seed 規模 (600-1000 行) 内に収まると確定。最大の novel
 構造構築は (a) `RelayCode` structure (encoder + relay + decoder) と (b)

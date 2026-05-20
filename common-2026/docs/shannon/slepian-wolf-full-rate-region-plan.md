@@ -22,15 +22,17 @@ publish 済の `swErrorProb` 定義 + 2 corner-point 結果を **boundary check*
 > (Phase 0 判断)。B-3'' で前例化した「親 file 不変 + 子 file 並立 publish」パターン
 > の SW 版。
 
+> 実態整合 (2026-05-20): **DONE-UNCOND — plan の Phase D/E/F 未完表記 (`[ ]`) は STALE、実際は full-region 主定理まで完了**。`Common2026/Shannon/SlepianWolfFullRateRegion.lean` (127745 B, 0 sorry) に headline `slepian_wolf_full_rate_region_achievability` (SlepianWolfFullRateRegion.lean:1956) publish 済 — 3-bound rate region 全域 (`H(X|Y)<R_X`, `H(Y|X)<R_Y`, `H(X,Y)<R_X+R_Y`) の達成可能性を random binning + joint typicality decoder で **完全証明** (honest IID + full-support hyp、`Tendsto rate (𝓝 R_X/R_Y)` + `Tendsto swErrorProb (𝓝 0)`)。下流 D/E/F (4-way error decomposition + per-term expectation + pigeonhole) も全て同 file 内で discharge。FLAW なし。Common2026.lean に import 済。
+
 ## 進捗
 
 - [x] Phase 0 — Codebook 機構の流用 vs 抽出判断 ✅ (2026-05-14、(B) 独立定義経路採用)
 - [x] Phase A — Binning 機構 (`binningMeasure`) ✅ (2026-05-14、`SlepianWolfBinning.lean` 273 行、0 sorry)
 - [x] Phase B — 期待値 collapse (`𝔼[1_{f(x)=f(x')}] = 1/M_X`) ✅ (2026-05-14、`binning_collision_prob` + `_eq_self`)
 - [x] Phase C — Conditional typical slice size bound ✅ (2026-05-14、`SlepianWolfConditionalTypicalSlice.lean` 315 行、0 sorry)
-- [ ] Phase D — Error event decomposition `E ⊆ E_0 ∪ E_X ∪ E_Y ∪ E_{XY}` 📋
-- [ ] Phase E — Per-term expectation bound 📋
-- [ ] Phase F — Pigeonhole + finalize 📋
+- [x] Phase D — Error event decomposition `E ⊆ E_0 ∪ E_X ∪ E_Y ∪ E_{XY}` ✅ (2026-05-20 実態整合、`SlepianWolfFullRateRegion.lean`)
+- [x] Phase E — Per-term expectation bound ✅ (2026-05-20 実態整合)
+- [x] Phase F — Pigeonhole + finalize ✅ (2026-05-20 実態整合、`slepian_wolf_full_rate_region_achievability:1956` 0 sorry)
 
 **MVP 完了サマリ (2026-05-14)**: `Common2026/Shannon/SlepianWolfBinning.lean` (273 行、0 sorry / 0 warning):
 - `binningMeasure α n M := Measure.pi (fun _ => uniformOn (univ : Set (Fin M)))`

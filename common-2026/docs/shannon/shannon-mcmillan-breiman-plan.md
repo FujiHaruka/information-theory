@@ -2,6 +2,14 @@
 
 (E-8 / moonshot-seeds.md, 2026-05-13 起草)
 
+> 実態整合 (2026-05-20): 主定理 DONE-UNCOND — 無条件 `shannon_mcmillan_breiman`
+> 完成済 (`Common2026/Shannon/SMBAlgoetCover.lean:2840`、0 sorry、標準 `ErgodicProcess μ α`
+> 仮定のみ)。4 sandwich 仮説は `algoet_cover_liminf_bound` / `algoet_cover_limsup_bound`
+> / `blockLogAvg_bddAbove_ae` / `blockLogAvg_bddBelow_ae` で real discharge (pass-through
+> でない)。liminf 下界は 2-sided 拡張 `μZ` (`Common2026/Probability/TwoSidedExtension.lean`、
+> `ergodic_shiftZ` 経由) を使用。Phase C Birkhoff = `BirkhoffErgodic.lean:1031`。
+> 例外: Phase E **i.i.d. 特殊化 `aep_strong_of_smb`** は UNSTARTED (コードに存在せず)。
+>
 > **Status (2026-05-13)**: 起草。`AEP.lean` (i.i.d.) を **定常エルゴード** に一般化する
 > Cover-Thomas 16.8 SMB の Lean 形。Mathlib `Dynamics/Ergodic` + `Martingale/Convergence`
 > (Levy's upward theorem) が前段揃っており、唯一の主要 gap は **定常確率過程の表現** と
@@ -14,9 +22,9 @@
 - [x] Phase 0 — Mathlib 整備度調査 ✅ (2026-05-13)
 - [x] Phase A — 定常エルゴード過程の Lean 表現 ✅ (2026-05-14、`Stationary.lean` 119 行、0 sorry)
 - [x] Phase B — Entropy rate 定義 + 存在性 ✅ (2026-05-14、`EntropyRate.lean` 498 行、0 sorry)
-- [ ] Phase C — Birkhoff 接続 📋 **後継 deferred (本 plan 最大の山場、Birkhoff a.s. 版 Mathlib 不在で自前 ~200-400 行)**
-- [ ] Phase D — 主定理 `-(1/n) log p(X^n) → H(𝒳) a.s.` 📋 **Phase C 完成後 ~80-150 行**
-- [ ] Phase E — i.i.d. 特殊化との接続 📋 **Phase D 完成後 ~50-100 行**
+- [x] Phase C — Birkhoff 接続 ✅ (`BirkhoffErgodic.lean:1031` `birkhoff_ergodic_ae`)
+- [x] Phase D — 主定理 `-(1/n) log p(X^n) → H(𝒳) a.s.` ✅ (`SMBAlgoetCover.lean:2840`、Algoet–Cover 経路)
+- [ ] Phase E — i.i.d. 特殊化との接続 📋 UNSTARTED (`aep_strong_of_smb` 未着手、コードに存在せず)
 
 **MVP 完了サマリ (2026-05-14)**: `Common2026/Shannon/Stationary.lean` (119 行) + `EntropyRate.lean` (498 行) = 合計 617 行、0 sorry / 0 warning。
 - Phase A: `StationaryProcess` / `ErgodicProcess` 構造体 + `obs` / `blockRV` 定義 + measurability + `identDistrib_obs_zero` (定常性ラベル)

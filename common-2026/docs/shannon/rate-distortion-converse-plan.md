@@ -1,5 +1,11 @@
 # Rate-distortion converse (single-shot) ムーンショット計画 🌙
 
+> 実態整合 (2026-05-20): DONE-UNCOND (single-shot) — headline `rate_distortion_converse_single_shot`
+> (`Common2026/Shannon/RateDistortionConverse.lean:133`) は DPI + Fano + max-entropy 連鎖の実証明 (0 sorry) で publish、
+> 副条件は `hMI_W_finite` (MI 有限性) のみで honest。E-4' `rate_distortion_converse_single_shot_specified` +
+> `rateDistortionFunction_antitone` (`RateDistortionConverseMonotone.lean:65,37`) も完了。
+> 後継 E-4'' (convexity + n-letter) は `rate-distortion-convexity-plan.md` 側に landing 済。
+
 E-4 シードカード ([`docs/moonshot-seeds.md`](../moonshot-seeds.md))。
 Cover-Thomas 10.4 — レート歪み関数 `R(D)` を達成可能 rate の下界として定式化する
 **single-shot 形** の converse。`𝔼 d(X, X̂) ≤ D ⟹ log M ≥ R(D)` (M = encoder の像)。

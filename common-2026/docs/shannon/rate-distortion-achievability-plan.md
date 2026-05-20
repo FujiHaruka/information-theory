@@ -1,5 +1,12 @@
 # Rate-distortion theorem achievability ムーンショット計画 🌙
 
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — Phase B-E すべて landing 済 (進捗の📋は stale)。
+> headline `rate_distortion_achievability` は `Common2026/Shannon/RateDistortionAchievabilityPhaseEStrongFinal.lean:1635`
+> に strong-typicality track で publish 済 (0 sorry / 0 axiom)。Phase B の `jointlyTypicalSet_indep_prob_ge`
+> (`RateDistortionAchievabilityPhaseB.lean:616`) も実証明。残る honest pass-through hyp:
+> `h_jts_subset_dts` (strong-JTS⊆distortion-typical) + rate-gap/distortion-budget/KL-dominate 各条件 + `hqStar_pos`。
+> 詳細は `rate-distortion-achievability-phase-e-strong-plan.md` の実態整合を参照。
+
 (E-3 / [docs/moonshot-seeds.md](../moonshot-seeds.md), 2026-05-13 起草)
 
 > Cover-Thomas 10.5 achievability 半分。`R(D) := inf {I(X; X̂) : 𝔼 d(X, X̂) ≤ D}`

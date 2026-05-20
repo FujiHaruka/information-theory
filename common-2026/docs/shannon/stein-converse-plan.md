@@ -10,6 +10,8 @@
 
 > **Status (2026-05-11)**: 起草。シードカード [moonshot-seeds.md A 節 Stein converse](../moonshot-seeds.md#a-直接-deferred-本セッションの撤退ラインに従って分離) を膨らませた 1〜1.5 週間ムーンショット。**親 plan**: [`stein-moonshot-plan.md`](stein-moonshot-plan.md) (Phase A〜B = achievability 完了 / Phase C/D を本 plan に切り出し)。
 > **撤退ライン**: 本 plan 全体の Definition of Done = `stein_lemma` 0 sorry。途中撤退は **Phase A (Pi 化 chain rule) のみ完了 + Phase B/C は別セッションへ繰越** (achievability 単体で publish ライン到達済みのため converse 不達でも全体破綻はしない)。
+>
+> **実態整合 (2026-05-20): DONE-UNCOND (sandwich 形に着地)** — Phase A〜D すべて完了。`Common2026/Shannon/Stein.lean:1390` の `stein_lemma` は **liminf/limsup sandwich** (`K ≤ liminf ∧ limsup ≤ K/(1-ε)`) で discharge (Goal 部の strict `Tendsto` 形ではない、判断ログ 2026-05-11 参照)。converse は `stein_converse_finite_n` (Stein.lean:975、std binders、`_hPpos`/`_hε` は未使用だが honest binder)。`Stein.lean` 全体 0 sorry / 0 `:=True`。strict `Tendsto` 形は `strong-stein-moonshot-plan.md` の `stein_strong_lemma` で別途達成済。
 
 ## 進捗
 

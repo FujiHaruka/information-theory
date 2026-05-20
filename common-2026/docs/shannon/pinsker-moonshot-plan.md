@@ -2,6 +2,8 @@
 
 <!-- B-5 シード: docs/moonshot-seeds.md より複製・膨らませ -->
 
+> **実態整合 (2026-05-20): DONE-UNCOND (弱形に着地)** — Phase A〜B 完了。`Common2026/Shannon/Pinsker.lean:118` の `tvNorm_le_sqrt_klDiv` が **弱形** `tvNorm P Q ≤ Real.sqrt (klDiv P Q).toReal` (定数 1、Bretagnolle-Huber 経路) を std binders (`hPQ : P ≪ Q` のみ) で discharge、0 sorry / 0 `:=True`。**注**: 本 plan の「ゴール」見出し (line 13) と Phase B シグネチャ block (line 105) は sharp 形 `√(klDiv/2)` を記載しており stale; 実際の定理は判断ログ pivot 2 通り弱形。sharp 形は `pinsker-sharp-moonshot-plan.md` (`PinskerSharp.lean`) で別途達成済。
+
 ## 進捗
 
 - [x] Phase 0 — Mathlib + 既存 Common2026 API インベントリ ✅ → [pinsker-mathlib-inventory.md](pinsker-mathlib-inventory.md)

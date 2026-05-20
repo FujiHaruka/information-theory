@@ -1,5 +1,12 @@
 # Rate-distortion achievability — E-3''' fully-discharged サブ計画
 
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — 当 plan が閉じる対象だった `codebookAvgFailure_tendsto_zero` の
+> 単一 sorry は**解消済** (weak-encoder track は数学的に行き詰まったため strong-encoder track に移行)。
+> headline `rate_distortion_achievability` (`Common2026/Shannon/RateDistortionAchievabilityPhaseEStrongFinal.lean:1635`)
+> は 0 sorry / 0 axiom で publish。核 `codebookAvgFailureStrong_tendsto_zero` (同 file L735) も実証明。
+> 残る hyp 群 (`h_jts_subset_dts` strong-JTS⊆distortion-typical bridge、rate-gap/distortion-budget/KL-dominate 各条件、
+> `hqStar_pos`) は honest pass-through。`RateDistortionAchievabilityPhaseEStrong.lean:955` の "sorry" 言及は履歴コメントのみ (実 sorry なし)。
+
 > **Parent**: [`rate-distortion-achievability-plan.md`](rate-distortion-achievability-plan.md) §Phase E (strong-typicality variant)
 >
 > **Status (起草 2026-05-18)**: Phase E (strong) は本体 `RateDistortionAchievabilityPhaseEStrong.lean` の Phases α–δ + ζ + η が完了 (980 LOC、1 sorry @ L890)。本サブ計画は **その 1 sorry — `codebookAvgFailure_tendsto_zero` — を閉じる** ことのみを目的とする。

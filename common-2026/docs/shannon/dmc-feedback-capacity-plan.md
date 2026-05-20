@@ -12,8 +12,10 @@ capacity は同じ。converse 段で `I(M; Y^n) ≤ n·C` を chain rule + memor
 - [x] Phase B — chain-rule 形 converse: `I(M; Y^n) ≤ ∑ I(X_i; Y_i)` (per-letter bound 仮定) ✅
 - [x] Phase C — capacity 上界: `I(M; Y^n) ≤ n·C` (per-letter bound + 各 i での `I(X_i;Y_i) ≤ C` 仮定) ✅
 - [x] Phase D — Fano と合成して `log|M| ≤ n·C + h(Pe) + Pe·log(|M|-1)` ✅
-- [ ] **後継 (E-10' deferred)** — `feedback_per_letter_bound` (memoryless ⇒
-      `I(M; Y_i | Y^{<i}) ≤ I(X_i; Y_i)`) の純粋証明 📋
+- [x] **後継 (E-10')** — `feedback_per_letter_bound` (memoryless ⇒
+      `I(M; Y_i | Y^{<i}) ≤ I(X_i; Y_i)`) の純粋証明 ✅ (E-10' で完成、下記参照)
+
+> 実態整合 (2026-05-20): DONE — 本 plan (E-10 MVP, chain-rule + Fano 合成) は `channel_coding_feedback_converse` (`Common2026/Shannon/ChannelCodingFeedback.lean:244`、0 sorry) で完成。`h_per_letter` を pass-through 仮説に取る MVP 形だが、後継 E-10' (`channel-coding-feedback-per-letter-bound-plan.md` の実体 `ChannelCodingFeedbackComplete.lean`) が `feedback_per_letter_bound` (`:116`、`IsMemorylessFeedback` から派生、0 sorry) でこれを剥がし、`channel_coding_feedback_converse_memoryless` (`:171`) が完全形を結論済。
 
 ## ゴール / Approach
 

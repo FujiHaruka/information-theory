@@ -1,5 +1,14 @@
 # Parallel Gaussian Channels + Water-filling ムーンショット計画 🌙 (T2-B)
 
+> 実態整合 (2026-05-20): PASS-THROUGH (headline) — `parallel_gaussian_capacity_formula`
+> (`Common2026/Shannon/ParallelGaussian.lean:263`) は body が `:= h_per_coord`、その
+> `IsParallelGaussianPerCoordReduction` (`ParallelGaussian.lean:230`) は **結論そのもの**
+> (`parallelGaussianCapacity ... = ∑ ...`) を Prop 化した hyp → `:= h_concl` retreat。0 sorry だが容量公式の実体は未証明。
+> L-WF1 (`IsWaterFillingKKT`) は honest non-trivial Prop で `exists_waterFillingKKT_of_pos`
+> (`ParallelGaussianKKT.lean:141`) が IVT で**実 discharge 済**。L-WF2/L-PG1 の "discharge"
+> (`ParallelGaussianKKT.lean:235,276`) は定義的同一 alias/antisymmetry で実体なし。
+> L-PG0 kernel measurability は `ParallelGaussianL_PG0Discharge.lean:98` で完全 discharge 済。
+
 <!--
 雛形メモ (moonshot-plan-template.md より):
 - 進捗ブロック: `- [ ] Phase 名 — 短い説明 状態絵文字 (関連ファイルへのリンク)` の形式

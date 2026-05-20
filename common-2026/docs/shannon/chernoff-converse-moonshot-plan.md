@@ -1,5 +1,14 @@
 # Chernoff converse (L-Ch1) discharge ムーンショット計画 🌙 (T1-B follow-up)
 
+> 実態整合 (2026-05-20): **DONE-HONEST-HYPS (per-tilt 縮減形、L-CC2 着地)** — 計画通り完了。
+> `Common2026/Shannon/ChernoffConverse.lean` (0 sorry) に `chernoffMediator` (:101) +
+> `chernoff_rate_isBoundedUnder_le` (:149, internal discharge) + `chernoff_converse_from_per_tilt`
+> (:270) + `chernoff_converse_discharged` (:400) + `chernoff_lemma_tendsto_from_per_tilt` (:432) を全 publish。
+> `h_per_tilt` は honest な指数下界仮定 (`∃ lam ∈ Icc 0 1, chernoffInfo = -log Z(lam) ∧ ∃ C>0, ∀ᶠ n,
+> C·Z^n ≤ 2·bayesErrorMinPmf`、ChernoffConverse.lean:403-407) で `:=True` でも vacuous でもない。
+> `h_bdd_le` は internal discharge 済 (hypothesis 2→1)。完全 discharge (Sanov LDP per-tilt 起動で
+> `h_per_tilt` を消す) は依然未着手 (別 plan)。**進捗ブロックの Phase 1-6 が全 [ ] のままだが実態は全完了。**
+
 > **Parent**: [`chernoff-moonshot-plan.md`](chernoff-moonshot-plan.md) §撤退ライン L-Ch1 +
 > [`chernoff-mathlib-inventory.md`](chernoff-mathlib-inventory.md)
 >

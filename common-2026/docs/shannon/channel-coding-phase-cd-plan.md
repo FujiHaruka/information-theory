@@ -12,6 +12,8 @@
 
 **✅ `B-3''` 完全閉鎖 (2026-05-12、0 sorry)**。Phase C-(a)-(d) + Phase D-(a)-(b) 全段 publish 済。詳細は末尾「実装結果サマリ」。
 
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — `channel_coding_achievability` (`Common2026/Shannon/ChannelCodingAchievability.lean:1607`、0 sorry) を確認。signature は std typeclass binders + 正直な positivity 仮説 `hp_pos : ∀ a, 0 < p.real {a}` / `hW_pos : ∀ a b, 0 < (W a).real {b}` (full-support、後段 D-1 で smoothing 除去) のみ。pass-through Prop 仮説なし。下記 signature 例は `hW_pos` 追加前の旧形 (実装結果サマリ参照で訂正済)。
+
 主結果 (Cover-Thomas Theorem 7.7.1 achievability 半分):
 
 ```lean

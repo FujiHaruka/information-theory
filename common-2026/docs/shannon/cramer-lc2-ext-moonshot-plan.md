@@ -1,5 +1,13 @@
 # Cramér L-C2 extension ムーンショット計画 🌙 (T1-C follow-up extension)
 
+> 実態整合 (2026-05-20): **DONE-HONEST-HYPS (Phase A'+B-1+B-3 完遂)** — 計画通り完了。
+> `Common2026/Shannon/CramerLC2DischargeExt.lean` (0 sorry) に全 publish 済: Phase A' bypass 補題
+> `isProbabilityMeasure_infinitePi_tilted_of_bounded` (:85) / `pairwise_indepFun_tilted_ambient` (:99) /
+> `integrable_eval_under_infinitePi_tilted` (:111) / `integral_eval_under_infinitePi_tilted` (:132)、
+> Phase B-1 `tilted_lln_ae` (:165)、Phase B-3 `tilted_lln_in_probability` (:205) + `.real` 形 corollary
+> `tilted_lln_in_probability_real` (:236)。Phase C (change-of-measure) は予告どおり scope 外だが後継
+> `infinitepi-tilted` plan で discharge 済。**進捗 Phase 0-V が全 [ ] のままだが実態は全完了。**
+
 > **Parent**: [`cramer-lc2-discharge-moonshot-plan.md`](cramer-lc2-discharge-moonshot-plan.md) (Phase A まで publish 済、Phase B-C が L-D3 撤退状態)
 >
 > **Predecessor (publish)**: `Common2026/Shannon/CramerLC2Discharge.lean` (171 行、Phase A tilted IID plumbing 6 補題)

@@ -31,6 +31,8 @@
 
 ## Status (2026-05-20)
 
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS (partial counting layer) かつ headline passthrough は依然 FLAW-VACUOUS — file `Common2026/Shannon/LZ78ZivInequality.lean` (0 sorry) は **genuine な組み合わせ counting 補題** を publish 済: `LZ78Parsing.card_phraseSet_le_count` `:161`、`card_phraseSet_le_pow` `:204`、`card_phraseSet_le_succ_mul_card` `:236`、real-valued predicate `ZivCountingBound` `:280` + 派生補題。ただし bridge `IsZivInequalityPassthrough.ofZivCountingBound` (`:325`) の body は **`True.intro`** で、親 `IsZivInequalityPassthrough` は `lz78-moonshot-plan.md` で依然 `Prop := True` のまま — Ziv's inequality 本体は **discharge されていない** (plan の L-LZ1-A/B scope 通り、L-LZ1-C は撤退)。counting plumbing は実体あり、passthrough discharge は未達。
+
 **Phase 0 起草中**。親 plan `lz78-moonshot-plan.md` が完了 (LZ78.lean publish 済 2026-05-19)、本 plan は その直接の **部分 discharge** 後続。`IsZivInequalityPassthrough` の `True` placeholder を **完全置換しない**: combinatorial counting plumbing 部分のみを **新規の `ZivCountingBound` predicate** で publish + `.trivial`-type 構築可能 lemma で `IsZivInequalityPassthrough` への bridge を提供。
 
 ## 進捗

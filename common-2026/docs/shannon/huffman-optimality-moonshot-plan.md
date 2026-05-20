@@ -22,6 +22,8 @@
 
 ## Status (2026-05-19)
 
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — 主定理 `huffmanLength_optimal_with_hypotheses` (`Common2026/Shannon/HuffmanOptimality.lean:1041`) は 2 つの **genuine analytic Prop hypothesis** (`SwapNormalizationHypothesis` `:759`、`HuffmanMergedIdentificationHypothesis` `:776` — どちらも `∀…∃…` の実質 Prop で `:= True` ではない) を引数で受けて `expectedLength P (huffmanLength P) ≤ expectedLength P l` を 0 sorry で証明。`exists_sibling_min_pair` (`:227`) も 0 sorry publish 済 (ただし判断ログ #2 で最深性条項は削除済)。hypothesis 引数なしの強形 `huffmanLength_optimal` は **未 publish** (全 variant が hypothesis を保持、T1-A'' へ)。pass-through (`Prop := True`) は不在。
+
 **T1-A' weak form publish ✅** — `huffmanLength_optimal_with_hypotheses` (case Y、0 sorry) を
 `Common2026/Shannon/HuffmanOptimality.lean` (1054 行) で publish。`Huffman.lean` に
 `huffmanLength_kraft_eq_one` (+14 行) を副産物として publish。**完全形 (hypothesis 2 件 discharge)**

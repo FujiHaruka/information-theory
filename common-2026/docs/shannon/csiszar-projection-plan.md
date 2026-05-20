@@ -6,6 +6,8 @@ Common2026 moonshot seed **E-6** ([docs/moonshot-seeds.md:125](../moonshot-seeds
 > `Q* := argmin_{P ∈ Π} D(P‖Q)` の存在 + 一意性 +
 > `P ∈ Π ⟹ D(P‖Q) ≥ D(P‖Q*) + D(Q*‖Q)` Pythagorean inequality。
 
+> **実態整合 (2026-05-20): DONE-UNCOND (Phase A〜D) + Phase E genuinely deferred** — `Common2026/Shannon/CsiszarProjection.lean` (487 行) に 3 主定理: `csiszar_projection_exists` (:172)、`csiszar_projection_unique` (:186)、`csiszar_pythagoras_inequality` (:449)。すべて std binders (closed/convex/full-support は honest 仮定、pass-through なし)、0 sorry / 0 `:=True`。Phase E (linear-family equality `csiszar_pythagoras_linear_family`) は **コード未着手** (`[ ]` 表記は正確、`rg` で 0 hit)。
+
 ## 進捗
 
 - [x] Phase A — Real-valued KL functional `klDivPmf` + 連続性 + 厳密凸性 ✅

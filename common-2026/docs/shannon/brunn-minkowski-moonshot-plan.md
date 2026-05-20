@@ -28,6 +28,15 @@ exp ((2/n) · h(X + Y)) ≥ exp ((2/n) · h(X)) + exp ((2/n) · h(Y))
 
 を Common2026 `Common2026/Shannon/BrunnMinkowski.lean` に publish。
 
+> **実態整合 (2026-05-20): PASS-THROUGH (publish 済、L-BM1 conclusion-as-hypothesis retreat、0 sorry)** —
+> `Common2026/Shannon/BrunnMinkowski.lean` が主定理 `brunn_minkowski_entropy_inequality` (`:183`) を publish 済。
+> 本体は `IsBrunnMinkowskiEntropyHypothesis` (= BM 結論そのもの、`:132`) を受け取り `:= h_bm` (`:192`) で着地
+> = **conclusion-as-hypothesis retreat** (EPI L-EPI3 と同型)。補助 hyp `IsUniformOnEntropyLogVolHypothesis` (`:148`、
+> `h μ = Real.log vol`) と `IsMinkowskiSumMeasurableHypothesis` (`:161`、`MeasurableSet (A+B)`) は **`:= True`
+> ではなく内容を持つ** (前者は等式、後者は可測性) が、いずれも本体未 discharge の外出し仮定。露出形
+> `_exp_form` (`:198`) / 凸体系 `brunn_minkowski_convex_body` (`:234`) / 3-arg (`:278`) も同 pass-through で publish。
+> BM 不等式自体は依然 discharge されておらず、真の証明は後続 plan へ。下記 Phase は全て pass-through 形で完了済。
+
 **系 (Cover-Thomas Cor. 17.9.3)**: 凸体 `A, B ⊂ ℝ^n` (有限正測度) に対し
 `X ∼ Uniform A`, `Y ∼ Uniform B` を取ると上記より
 

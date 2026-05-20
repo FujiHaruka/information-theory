@@ -1,5 +1,11 @@
 # Strong typicality (E-7) ムーンショット計画 🌙
 
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — 3 headline 完成済、0 sorry。
+> `stronglyTypicalSet_prob_tendsto_one` (`Common2026/Shannon/StrongTypicality.lean:212`)、
+> `stronglyTypicalSet_card_le` (:456、size 上界)、`stronglyTypicalSet_card_ge_eventually`
+> (:503、size 下界 eventually 形)。仮定は i.i.d. 標準形 (`iIndepFun`/`Pairwise IndepFun`/
+> `IdentDistrib`/`hpos`) のみ、pass-through なし。joint version は当初計画通り scope deferred。
+>
 > **シード由来**: `docs/moonshot-seeds.md` §E.E-7 (2026-05-13 起草)
 > Cover-Thomas 11.2 — `A^{*n}_ε := {x^n : ∀ a, |(1/n) N(a|x^n) - P(a)| ≤ ε}`
 > の 3 主定理 (`P^n(A^*) → 1`、size sandwich、joint version)。weak typicality

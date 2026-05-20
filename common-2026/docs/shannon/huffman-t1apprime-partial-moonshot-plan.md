@@ -10,6 +10,8 @@
 > **Status (2026-05-20)**: 計画起草 + 着手。本 plan は完全 hypothesis discharge を scope-out し、
 > Hypothesis 1 (`SwapNormalizationHypothesis`) の周辺 plumbing / 1 通り完遂可能 partial 補題群を
 > **独立 publish** する縮小 scope 計画.
+>
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS (partial、scope 通り) — `Common2026/Shannon/HuffmanT1APPrimePartial.lean` (0 sorry) に plan 記載の補題群を publish 済: `swap_step_le_pos` `:47` / `_kraft` `:58` / `_expectedLength_le` `:69` / `_values` `:81`、`swap_step_le_self` `:106`、`swap_compose_self_eq` `:147`、`SwapNormalizationHypothesis_trivial_when_eq` `:172` (`ll a = ll b` の trivial case のみ — `l_norm := ll` で自己 discharge)。これらは plumbing 補題で、`SwapNormalizationHypothesis` の **非自明 case は discharge されていない** (plan scope-out 通り)。pass-through (`Prop := True`) 不在。本 plan の縮小 scope DoD は達成。
 
 ## Goal (縮小)
 

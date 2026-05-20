@@ -3,13 +3,19 @@
 > **シード由来**: `docs/moonshot-seeds.md` §D.D-3 (audit-2026-05 §4 🟡 #4)
 > Cover-Thomas Theorem 3.1.2 **完全 3 点セット** — 既存 `typicalSet_prob_le` (上界のみ)
 > に下界 + サイズ下界を補完し、Cover-Thomas (1)〜(4) の全 4 帰結を publish。
+>
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — 両 headline 完成済。
+> `typicalSet_prob_ge` (`Common2026/Shannon/AEP.lean:1403`、点別下界 `exp(-n(H+ε)) ≤ p(x)`)、
+> `typicalSet_card_ge` (AEP.lean:1492、`(1-η)·exp(n(H-ε)) ≤ |T|`)、
+> `typicalSet_card_ge_eventually` (AEP.lean:1554) いずれも 0 sorry、
+> 仮定は `iIndepFun` / `IdentDistrib` / `hpos` の i.i.d. 標準形のみ (pass-through なし)。
 
 ## 進捗
 
-- [ ] Phase 0 — 起草: 既存 `AEP.lean` 末尾の構造を把握 ✅ (2026-05-13)
-- [ ] Phase 1 — 点別下界 `typicalSet_prob_ge` 📋
-- [ ] Phase 2 — サイズ下界 `typicalSet_card_ge` 📋
-- [ ] Phase 3 — full support 仮定の見直し (吸収可否、形式統一) 📋
+- [x] Phase 0 — 起草: 既存 `AEP.lean` 末尾の構造を把握 ✅ (2026-05-13)
+- [x] Phase 1 — 点別下界 `typicalSet_prob_ge` ✅ (AEP.lean:1403)
+- [x] Phase 2 — サイズ下界 `typicalSet_card_ge` ✅ (AEP.lean:1492、`_eventually` 形 :1554 も)
+- [x] Phase 3 — full support 仮定の見直し ✅ (`hpos` で統一)
 
 ## ゴール / Approach
 

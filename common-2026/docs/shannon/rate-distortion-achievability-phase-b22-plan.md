@@ -1,5 +1,10 @@
 # E-3' Phase B.2.2 — `jointlyTypicalSet_indep_prob_ge` 実装計画
 
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — `jointlyTypicalSet_indep_prob_ge` 実装済。
+> `Common2026/Shannon/RateDistortionAchievabilityPhaseB.lean:616`
+> `theorem jointlyTypicalSet_indep_prob_ge ...` を実証明 (0 sorry) で publish。
+> 入力 hyp は計画通り joint-law 形 `hμJTS : (1-η) ≤ μ.real {ω | (jX,jY) ∈ JTS}` (L632)、circular でない honest 仮定。
+
 > Append site: end of `Common2026/Shannon/RateDistortionAchievabilityPhaseB.lean` (現状 479 行)
 
 ## Approach

@@ -1,5 +1,12 @@
 # T2-B L-PG0 discharge: Parallel Gaussian kernel measurability
 
+> 実態整合 (2026-05-20): DONE-UNCOND — `isParallelGaussianKernelMeasurable` 完全証明済。
+> `Common2026/Shannon/ParallelGaussianL_PG0Discharge.lean:98`
+> `theorem isParallelGaussianKernelMeasurable {n} (N : Fin n → ℝ≥0) : IsParallelGaussianKernelMeasurable N` を
+> `Measure.pi` pushforward + `measurable_measure_prodMk_left` の実証明 (`:= True` ではない、0 sorry) で discharge。
+> `parallel_gaussian_capacity_formula_PG0_discharged` (L157) で `h_parallel_meas` 引数を消去して再 publish 済
+> (残りの L-PG1/L-WF1/L-WF2 hyp は親 plan 通り pass-through で継続)。
+
 撤退ライン **L-PG0 (parallel kernel measurability)** — predicate
 
 ```

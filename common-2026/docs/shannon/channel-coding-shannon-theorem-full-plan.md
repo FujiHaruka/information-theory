@@ -8,12 +8,14 @@
 
 ## 進捗
 
-- [ ] Phase D.0 — `exists_smooth_capacity_gt_uniform` (δ-uniform 化)
-- [ ] Phase D.0' — `pSmooth` 統合 + (p, δ) joint continuity
-- [ ] Phase D.1 — `pmfLogVariance` δ-asymptotic bound (per-axis)
-- [ ] Phase D.2 — parent body inline copy with closed-form N export
-- [ ] Phase D.3 — `δ_n := min(δ_B, ε/(8(n+1)))` choice + index assemble
-- [ ] Phase D.4 — 主定理 + `ChannelCodingShannonTheoremFull.lean` の `h_passthrough` discharge
+- [x] Phase D.0 — `exists_smooth_capacity_gt_uniform` (δ-uniform 化) ✅
+- [x] Phase D.0' — `pSmooth` 統合 + (p, δ) joint continuity ✅
+- [x] Phase D.1 — `pmfLogVariance` δ-asymptotic bound (per-axis) ✅
+- [x] Phase D.2 — parent body inline copy with closed-form N export ✅
+- [x] Phase D.3 — `δ_n := min(δ_B, ε/(8(n+1)))` choice + index assemble ✅
+- [x] Phase D.4 — 主定理 + `h_passthrough` discharge ✅
+
+> 実態整合 (2026-05-20): DONE-UNCOND — 進捗マーカーが起草時の `[ ]` のまま stale だった。Phase D は完全閉鎖済。証拠: `shannon_noisy_channel_coding_theorem_general_full` (`Common2026/Shannon/ChannelCodingShannonTheoremFullDischarge.lean:1588`、0 sorry) は `(W : Channel α β) [IsMarkovKernel W] (hR_pos : 0 < R) (hR : R < capacity W) (hε : 0 < ε)` のみで max-error 達成形を結論 — **`hW_pos` も `h_passthrough` も無し** (完全無条件)。内部で `exists_N_for_smooth_achievability_uniform` (two-layer smoothing) + `errorProbAt_smooth_TV` で組立。`Common2026.lean:62` に import 済。なお `ChannelCodingShannonTheoremFull.lean` の `shannon_noisy_channel_coding_theorem_general` は依然 `h_passthrough` 形 MVP として残るが、Discharge file の `_full` 版が無条件最終形。
 
 ---
 

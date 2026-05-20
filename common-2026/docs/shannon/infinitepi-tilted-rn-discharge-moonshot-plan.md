@@ -1,5 +1,19 @@
 # infinitePi-tilted RN discharge ムーンショット計画 🌙 (T1-C Cramér Phase C + Chernoff converse 同根 frontier)
 
+> 実態整合 (2026-05-20): **DONE — Phase 1-4 全達成、当初の「最低保証」を大きく超過**。進捗ブロックと
+> 判断ログが起草時のまま (Phase 0-V 全 [ ]、判断ログは起草 2 件のみ) で **重度に陳腐化**。実態:
+> - Phase 1 本丸 `pi_tilted_sum_eq_pi_tilted` ✅ `Common2026/Shannon/MeasurePiTiltedFactorization.lean:121`
+>   (0 sorry、独立 module 化も判断どおり)。fintype 版 `pi_tilted_sum_eq_pi_tilted_fintype` も
+>   `InfinitePiTiltedChangeOfMeasure.lean:106`。
+> - Phase 2-3 cylinder lift + change-of-measure ✅ `InfinitePiTiltedChangeOfMeasure.lean`:
+>   `infinitePi_partialSum_event_eq_pi` (:139)、`change_of_measure_lower_bound_pi` (:189)。
+> - Phase 4 ✅ residual predicate `IsTiltedWindowEventuallyLarge` (:282) + reduction
+>   `isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge` (:293) + `cramer_lower_phaseC_residual_discharge`
+>   (:361)。interior ケースは `tiltedWindow_eventually_large_of_interior` (:463) で discharge。W-3 撤退
+>   (residual 縮約) どおり着地し、**boundary ケースは後継 `cramer-chernoff-clt-closure` plan で CLT closure 済**。
+> - `CramerLC2PhaseC.lean` の `IsMeasureInfinitePiTiltedEq` (:84) + `cramer_lower_phaseC_partial_discharge`
+>   (:142) も 0 sorry。全関連 file 0 sorry。
+
 <!--
 雛形メモ (moonshot-plan-template.md より):
 - 進捗ブロック: `- [ ] Phase 名 — 短い説明 状態絵文字 (関連ファイルへのリンク)` の形式

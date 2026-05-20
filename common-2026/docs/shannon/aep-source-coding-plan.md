@@ -8,6 +8,12 @@
 - `rg "^- \[ \]"` で残タスク横断 grep、`rg "🔄"` でピボット箇所だけ拾える
 -->
 
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — headline `source_coding_converse`
+> 完成済 (`Common2026/Shannon/AEP.lean:704`、0 sorry)。仮定は `iIndepFun` /
+> `IdentDistrib` / `hcard : 2 ≤ Fintype.card α` + `hPe_to_zero` (誤り率→0) +
+> `hM_bdd` (rate 上界) の honest 形のみ、pass-through なし。結論
+> `entropy μ (Xs 0) ≤ liminf (log M_n / n) atTop`。
+>
 > **Status (2026-05-11)**: 起草。AEP moonshot ([`aep-moonshot-plan.md`](aep-moonshot-plan.md))
 > の Phase D を分離して deferred 単独 plan 化。
 > シードカード ([`moonshot-seeds.md` "次のシード候補 A. 直接 deferred"](../moonshot-seeds.md#a-直接-deferred)) の見積
@@ -18,10 +24,10 @@
 ## 進捗
 
 - [x] Phase 0 — Mathlib + 既存 Common2026 API インベントリ ✅ → [`aep-source-coding-mathlib-inventory.md`](aep-source-coding-mathlib-inventory.md)
-- [ ] Phase A — i.i.d. block entropy chain rule (`H(X^n) = n · H(X)` + 補助 2 本) 📋
-- [ ] Phase B — per-n converse bound (`H(X^n) ≤ log M_n + h(Pe_n) + Pe_n · n · log |α|`、Slepian–Wolf 流儀の 4-step 骨格再演) 📋
-- [ ] Phase C — `Filter.liminf` 形主定理 (`entropy μ (Xs 0) ≤ liminf (log M_n / n) atTop`) 📋
-- [ ] Phase D — verify (`lake env lean Common2026/Shannon/AEP.lean` silent + proof-log + metrics) 📋
+- [x] Phase A — i.i.d. block entropy chain rule (`H(X^n) = n · H(X)` + 補助 2 本) ✅
+- [x] Phase B — per-n converse bound (Slepian–Wolf 流儀の 4-step) ✅
+- [x] Phase C — `Filter.liminf` 形主定理 (`source_coding_converse`, AEP.lean:704) ✅
+- [x] Phase D — verify (AEP.lean 0 sorry) ✅
 
 ## ゴール / Approach
 

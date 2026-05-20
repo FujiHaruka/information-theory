@@ -1,5 +1,10 @@
 # 微分エントロピー + Gaussian 最大エントロピー ムーンショット計画 🌙 (E-9)
 
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — `Common2026/Shannon/DifferentialEntropy.lean` (0 sorry, 0 vacuous)。
+> headline `differentialEntropy_le_gaussian_of_variance_le` (L510) + `differentialEntropy_eq_gaussian_iff` (L659) は
+> 実 KL-divergence 証明 (`klDiv`/`llr` 経由) で publish。副 hyp `h_var_int`/`h_ent_int` は Bochner integrability の honest 仮定
+> (`:= True` ではない)。Gaussian h 公式 `differentialEntropy_gaussianReal` (L406) は無条件。FLAW-VACUOUS なし。
+
 (E-9 / [docs/moonshot-seeds.md](../moonshot-seeds.md), 2026-05-13 起草)
 
 Cover-Thomas 8.1 (微分エントロピー定義), 8.6.1 (translation / scaling), 9.6 (Gaussian

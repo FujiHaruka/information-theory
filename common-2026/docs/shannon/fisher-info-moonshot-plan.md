@@ -14,6 +14,19 @@
 >
 > **Status (2026-05-19)**: 1 セッションで全 Phase publish 完了 (`Common2026/Shannon/FisherInfo.lean` 222 行)。Tier 0 (Phase A) と `differentialEntropy` ↔ pdf 橋渡しは完全実装。Tier 1 (Phase B) は **L-F2 適用形** = `IsRegularDensity` predicate + `integral_logDeriv_pdf_eq_zero` hypothesis pass-through。Tier 2 (Phase C-E) は **L-F1+L-F2 適用形** = `IsRegularDeBruijnHyp` predicate に heat-eq / dominated-bound / IBP を hypothesis として集約し `deBruijn_identity` signature を完全形で publish。Gaussian instance (`IsRegularDeBruijnHyp` の discharge) と `fisherInfo_gaussianReal = 1/v` は次月 seed (`fisher-info-gaussian-plan.md` 等) に分離。0 sorry / 0 warning。
 >
+> **実態整合 (2026-05-20): DONE-HONEST-HYPS (V1 publish 済) — ただし headline `fisherInfo_gaussianReal = 1/v` は本 V1 で NOT-PROVABLE (FLAW-VACUOUS)、`deBruijn_identity` は PASS-THROUGH** —
+> `FisherInfo.lean` (現 236 行) は `fisherInfo` (`:58`) / `IsRegularDensity` (`:134`) + `integral_logDeriv_pdf_eq_zero`
+> (`:167`) / `IsRegularDeBruijnHyp` (`:200`) + `deBruijn_identity` (`:223`、本体 `:= h_reg.derivAt_entropy_eq_half_fisher`
+> = hypothesis pass-through) を 0 sorry で publish。**しかし `fisherInfo` (V1) は representative-dependence flaw で
+> Gaussian に対し `= 0` を返す (FLAW-VACUOUS)**: `FisherInfoGaussian.lean:304-327` 判断ログ #2 が
+> 「`fisherInfo (gaussianReal m v) = 1/v` は **not provable** — `rnDeriv` の opaque representative が a.e. 非微分、
+> `logDeriv ((rnDeriv).toReal) = 0` a.e. ⇒ `fisherInfo (gaussianReal) = 0`」と明記。Goal/Status が約束する
+> `fisherInfo_gaussianReal = 1/v` は **V1 には存在しない**。Phase C/D も同 flaw で block (de Bruijn RHS
+> `(1/2)·0 = 0` vs LHS `1/(2(v+t)) > 0` で矛盾)。**正しい discharge は V2 へ移行**: `FisherInfoV2.lean` の
+> `fisherInfoOfDensity` (density-as-input、`:88`) + `fisherInfoOfDensity_gaussianPDFReal = 1/v` (`:296`、0 sorry)、
+> Gaussian de Bruijn は `FisherInfoV2DeBruijn.lean:364` `deBruijn_identity_v2_gaussian` (honest、0 sorry)。
+> 本 plan の Goal は V1 を指しており stale — V2 が事実上の deliverable。
+>
 > **Goal**: 新規ファイル `Common2026/Shannon/FisherInfo.lean` で **Cover-Thomas Ch.17.7 の de Bruijn identity** (`(d/dt) h(X + √t · Z) = (1/2) · J(X + √t · Z)` for `Z ∼ 𝒩(0, 1)`, `X ⟂ Z`) を **`HasDerivAt` 形**で publish。
 >
 > **撤退ライン**: [L-F1] de Bruijn を heat-eq 仮定形で publish / [L-F2] score function 期待値 0 を `IsRegularFamily` predicate 形に hypothesis 抽出 / [L-F3] Tier 0+1 (定義 + score 期待値 0) のみで partial publish、Tier 2 (de Bruijn) を後続 seed に分離 (詳細 §撤退ライン)。

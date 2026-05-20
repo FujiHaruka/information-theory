@@ -23,6 +23,8 @@
 
 ## Status (2026-05-20)
 
+> 実態整合 (2026-05-20): PASS-THROUGH / FLAW-VACUOUS — file `Common2026/Shannon/ArithmeticCoding.lean` は publish 済 (0 sorry) だが headline `arithmetic_coding_expected_length_bounds` (`:249`) の body は **`:= h_bound` の conclusion-as-hypothesis retreat** (結論 `H ≤ E[L] ∧ E[L] ≤ H+2` をそのまま hypothesis `h_bound` で受けて返す)。さらに 3 predicate (`IsCumulativeTruncationPassthrough` `:157`、`IsArithmeticPrefixFreePassthrough` `:176`、`IsArithmeticExpectedLengthPassthrough` `:201`) はすべて **`: Prop := True`**。副次定理も同型 (`arithmetic_coding_prefix_free` `:= h_pf_real` `:265`、`arithmetic_coding_unique_decodable` `:= h_ud` `:276`)。Cover-Thomas 13.3 の数学的内容 (累積分布 truncation + Shannon-Fano-Elias 上界) は一切証明されていない (plan 設計通りの確定 pass-through)。
+
 **Phase 0 起草中** (`arithmetic-coding-mathlib-inventory.md` と並行起草)。**Mathlib 在庫 ZERO** (arithmetic coding / Shannon-Fano-Elias / cumulative-distribution truncation / `Real.toBin` 系は皆無)、既存 `Common2026/Shannon/ShannonCode.lean` の `entropyD`, `expectedLength` 定義のみ黒箱 reuse。撤退ライン 3 本全発動下で seed 規模 ~400 行に着地、1 セッションで完走可能と確定。LZ78 の `h_rate_bound := identity wrap` pattern と完全同型 (LZ78 5 retreats → arithmetic coding 3 retreats の凝縮版)。
 
 ## Approach

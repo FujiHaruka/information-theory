@@ -2,6 +2,14 @@
 
 (E-8' / moonshot-seeds.md、2026-05-14 起草)
 
+> 実態整合 (2026-05-20): 主定理 DONE-UNCOND (別ファイル) — 無条件
+> `shannon_mcmillan_breiman` は `Common2026/Shannon/SMBAlgoetCover.lean:2840` で完成
+> (Algoet–Cover sandwich 経路、0 sorry、標準 `ErgodicProcess μ α` 仮定のみ)。
+> Phase C の Birkhoff a.s. も `BirkhoffErgodic.lean:1031` で done。
+> 例外: Phase E の **i.i.d. 特殊化 `aep_strong_of_smb`** は UNSTARTED
+> (`rg aep_strong_of_smb Common2026/` で 0 件)。主定理は本 plan が想定した
+> 「Birkhoff per-i 分解 + Levy upward」ではなく Algoet–Cover で先に閉じた。
+>
 > **Status (2026-05-14)**: 起草。E-8 Phase A+B (`Stationary.lean` 119 行 +
 > `EntropyRate.lean` 498 行 = 617 行、0 sorry) 完了を前提に、
 > Cover-Thomas 16.8 の **主定理 SMB + i.i.d. 特殊化** までを 3 段で完遂する。
@@ -11,10 +19,10 @@
 
 - [x] Phase A — 定常エルゴード過程 ✅
 - [x] Phase B — Entropy rate 定義 + 存在性 ✅
-- [ ] **Phase 0' — Mathlib 整備度再調査** 📋
-- [ ] **Phase C — Birkhoff a.s. + log-likelihood per-i 分解** 📋 (最大の山場)
-- [ ] **Phase D — SMB 主定理 `-(1/n) log p(X^n) → entropyRate` a.s.** 📋
-- [ ] **Phase E — i.i.d. 特殊化** 📋
+- [x] **Phase 0' — Mathlib 整備度再調査** ✅
+- [x] **Phase C — Birkhoff a.s.** ✅ (`BirkhoffErgodic.lean:1031`)
+- [x] **Phase D — SMB 主定理 `-(1/n) log p(X^n) → entropyRate` a.s.** ✅ (`SMBAlgoetCover.lean:2840`、Algoet–Cover 経路で達成)
+- [ ] **Phase E — i.i.d. 特殊化 `aep_strong_of_smb`** 📋 UNSTARTED (未着手、コードに存在せず)
 
 ## 1. Goal (statement)
 

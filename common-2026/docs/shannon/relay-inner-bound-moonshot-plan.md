@@ -29,6 +29,8 @@
 
 ## Status (2026-05-20)
 
+> 実態整合 (2026-05-20): **PASS-THROUGH (計画通り) — 全 Phase 実装済、plan の「Phase 0 完了予定 (起草中)」表記は STALE**。`Common2026/Shannon/RelayInnerBound.lean` (25699 B, 0 sorry) に両主定理 publish 済。`relay_df_inner_bound` (RelayInnerBound.lean:419) は `_h_in_df_region` + `_h_block_markov : True` `_h_sliding_window : True` + `h_existence : RelayDFInnerBoundExistence ...`、body `:= h_existence`、`relay_cf_inner_bound` (:531) は `_h_in_cf_region` + `_h_wz_binning : True` `_h_si_decode : True` + `h_existence : RelayCFInnerBoundExistence ...`、body `:= h_existence`。L-RI1〜4 全 pass-through (FLAW なし — 計画通り)。Common2026.lean に import 済。
+
 **Phase 0 完了予定 (起草中)** — outer bound (T3-F) + MAC inner bound (T3-B)
 の publish pattern 流用で signature 完全確定。本 plan は MAC achievability
 publish (`mac_capacity_region_inner_bound`) の **単一-rate 縮退 + relay

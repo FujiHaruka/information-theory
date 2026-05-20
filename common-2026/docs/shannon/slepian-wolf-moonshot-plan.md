@@ -3,6 +3,8 @@
 > **Seed**: [`docs/moonshot-seeds.md`](../moonshot-seeds.md) Seed 3
 >
 > **Status (2026-05-10):** 起草。`Common2026/Shannon/{Converse, Bridge, Entropy, CondMutualInfo, DPI}.lean` + `Common2026/Fano/Measure.lean` 完成済を起点に、distributed source coding (Slepian–Wolf) の single-shot converse を分散版として組む。
+>
+> 実態整合 (2026-05-20): **DONE-HONEST-HYPS — Phase A-C 完了表記は CODE と一致 (実装済)**。`Common2026/Shannon/SlepianWolf.lean` (23831 B, 0 sorry) に 3-bound single-shot converse 実装済。`slepian_wolf_converse_single_shot` (SlepianWolf.lean:449) は `slepian_wolf_converse_X`/`_Y`/`_sum` (それぞれ実証明 — side-info Fano + entropy chain rule) を `⟨_, _, _⟩` で束ねた実 converse (X/Y/sum bound、honest hyp `2 ≤ Fintype.card`)。FLAW なし。
 
 ## 進捗
 

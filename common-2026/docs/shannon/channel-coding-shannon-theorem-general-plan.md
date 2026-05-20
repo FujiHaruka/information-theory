@@ -11,11 +11,13 @@
 
 ## 進捗
 
-- [ ] Phase 0 — Mathlib API inventory 📋
-- [ ] Phase A — `Channel.smooth` 定義 + 基本性質 📋
-- [ ] Phase B — `mutualInfoOfChannel` の `W` 連続性 (固定 p₀ 経由) 📋
-- [ ] Phase C — 既存 D-1 を `W_smooth δ₀` に適用 + TV bound で error 差を抑制 📋
-- [ ] Phase D — 主定理 `shannon_noisy_channel_coding_theorem_general` 組み立て 📋
+- [x] Phase 0 — Mathlib API inventory ✅
+- [x] Phase A — `Channel.smooth` 定義 + 基本性質 ✅
+- [x] Phase B — `mutualInfoOfChannel` の `W` 連続性 (固定 p₀ 経由) ✅
+- [x] Phase C — 既存 D-1 を `W_smooth δ₀` に適用 + TV bound で error 差を抑制 ✅
+- [~] Phase D — 主定理は本 file から削除し D-1'' へ移管 (判断ログ 7、smoothing infra として publish)
+
+> 実態整合 (2026-05-20): DONE (smoothing infrastructure scope) — 本 plan は判断ログ 7 のとおり Phase D 主定理を削除し、Phase A-C の smoothing 機構を publish。実体は `Common2026/Shannon/ChannelCodingShannonTheoremGeneral.lean` (`Channel.smooth`、`errorProbAt_smooth_TV:611`、`exists_smooth_capacity_gt:305` 等、0 sorry)。主定理 `shannon_noisy_channel_coding_theorem_general` (`hW_pos` 除去版) は子 plan D-1'' で完全 discharge 済: `shannon_noisy_channel_coding_theorem_general_full` (`Common2026/Shannon/ChannelCodingShannonTheoremFullDischarge.lean:1588`、0 sorry、`hW_pos`/`h_passthrough` なし)。
 
 ## ゴール / Approach
 

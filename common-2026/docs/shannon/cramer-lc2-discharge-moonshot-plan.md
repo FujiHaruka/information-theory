@@ -1,5 +1,13 @@
 # Cramér L-C2 discharge ムーンショット計画 🌙 (T1-C follow-up)
 
+> 実態整合 (2026-05-20): **本 plan は Phase A まで (L-D3 撤退) で正確 — 進捗ブロック記載どおり**。
+> `Common2026/Shannon/CramerLC2Discharge.lean` (0 sorry) に Phase A plumbing 6 補題 publish 済
+> (`cgf_eval_eq_cgf_base`:63 / `iIndepFun_tilted_ambient`:85 / `identDistrib_tilted_ambient`:98 等)。
+> 本 plan の `cramer_lower_discharged` (Phase C 完全 discharge) は**未 publish のまま**だが、後継チェーンで
+> 実質達成: Phase B は `cramer-lc2-ext` (`CramerLC2DischargeExt.lean` tilted LLN)、Phase C change-of-measure は
+> `infinitepi-tilted` (`MeasurePiTiltedFactorization` + `InfinitePiTiltedChangeOfMeasure`)、最終 unconditional 化は
+> `cramer-chernoff-clt-closure` (`CramerCLTClosure.cramer_lower_at_cgfDeriv_unconditional`) で完了済。
+
 <!--
 雛形メモ (moonshot-plan-template.md より):
 - 進捗ブロック: `- [ ] Phase 名 — 短い説明 状態絵文字 (関連ファイルへのリンク)` の形式

@@ -2,6 +2,8 @@
 
 > **Status (2026-05-12)**: **A 形完了 (Phase A〜C すべて 0 sorry)**。`Common2026/Shannon/Sanov.lean` (319 行)。**B-1' (LDP upper bound) 完了** → [docs/shannon/sanov-ldp-b-plan.md](sanov-ldp-b-plan.md) で別 publish。**B-1'' deferred** = LDP equality 形 (`Tendsto` の双方向、`klDivIndex` 連続性 + achievable type sequence)。
 > **撤退ライン**: A 形 (`typeClass_Qn_le` + `.toReal` 形 `typeClass_Qn_le_klDiv`、Cover-Thomas 11.1.4) を 0 sorry で publish ✅。
+>
+> **実態整合 (2026-05-20): DONE-UNCOND** — A 形主定理 `typeClass_Qn_le` は `Common2026/Shannon/Sanov.lean:172`、std binders (full-support `hPpos`/`hQpos` は honest)、0 sorry。なお **B-1'' (LDP equality) は既に完了済**: `Common2026/Shannon/SanovLDPEquality.lean:1243` の `sanov_ldp_equality` (deferred ではない、[sanov-ldp-equality-plan.md](sanov-ldp-equality-plan.md) 参照)。本 Status 行の「B-1'' deferred」は stale。
 
 ## 進捗
 

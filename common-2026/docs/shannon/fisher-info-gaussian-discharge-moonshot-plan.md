@@ -28,6 +28,16 @@
 - 🔄 Phase D — `deBruijn_identity_gaussian` hypothesis なし wrapper publish **L-G3 撤退** (Phase C に依存)
 - [x] Phase V — verify ✅ (`lake env lean Common2026/Shannon/FisherInfoGaussian.lean` clean, 0 sorry, 0 warning)
 
+> **実態整合 (2026-05-20): DONE-HONEST-HYPS (FisherInfoGaussian.lean は本 plan 通り) — B-3/C/D は V1 flaw で本 plan では未達だが、V2 で後続 discharge 済** —
+> 本 plan の進捗は `FisherInfoGaussian.lean` (329 行、0 sorry) の実態と一致: Phase A
+> `isRegularDensity_gaussianReal_of_law` (`:271`) / Phase B-1,B-2 `integral_logDeriv_pdf_eq_zero_gaussian` (`:288`)
+> + `logDeriv_gaussianPDFReal` (`:296`) は完了。Phase B-3/C/D の L-G3 撤退も正しい (`fisherInfo` V1 の
+> representative-dependence flaw、判断ログ #2 `:304-327`)。**ただし撤退分は別系統で達成済**:
+> `fisherInfo_gaussianReal = 1/v` の代替 = `FisherInfoV2.lean:296` `fisherInfoOfDensity_gaussianPDFReal`、
+> Gaussian de Bruijn の代替 = `FisherInfoV2DeBruijn.lean:364` `deBruijn_identity_v2_gaussian`
+> (V2 は density-as-input なので Gaussian が正しく `1/v` に評価される、共に 0 sorry)。本 plan の Goal が約束する
+> `fisherInfo_gaussianReal` / `deBruijn_identity_gaussian` (V1 measure-as-input 形) は依然未着地。
+
 ## ゴール / Approach
 
 ### Goal (最終定理 signature)

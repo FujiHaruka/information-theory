@@ -15,15 +15,17 @@
 
 ## 進捗
 
-- [ ] Phase 0 — `Kernel.pi` / Fekete の Mathlib 在庫再確認 📋 → [`general-dmc-mathlib-inventory.md`](./general-dmc-mathlib-inventory.md)
-- [ ] Phase 1 — skeleton (`BlockwiseChannel.lean` 新規ファイル、全 sorry) 📋
-- [ ] Phase 2 — `Channel.toBlock` (`Kernel.pi` 自前 lift) 📋
-- [ ] Phase 3 — `capacityN` / `capacity_lim` 定義充填 + 基本性質 📋
-- [ ] Phase 4 — `ofMemoryless` 構成 + 主接続補題 `capacity_lim_eq_capacity_of_memoryless` 📋
-  - [ ] Phase 4-α — per-`n` 等式 `capacityN_ofMemoryless_eq` 📋
-  - [ ] Phase 4-β — Fekete (or `Subadditive.tendsto_lim`) で limit 抽出 📋
-- [ ] Phase 5 — verify + regression check (在庫 §D の既存 0-sorry ファイル) 📋
+- [x] Phase 0 — `Kernel.pi` / Fekete の Mathlib 在庫再確認 ✅
+- [x] Phase 1 — skeleton (`BlockwiseChannel.lean` 新規ファイル) ✅
+- [x] Phase 2 — `Channel.toBlock` (`Kernel.pi` 自前 lift) ✅
+- [x] Phase 3 — `capacityN` / `capacity_lim` 定義充填 + 基本性質 ✅
+- [x] Phase 4 — `ofMemoryless` 構成 + 主接続補題 `capacity_lim_eq_capacity_of_memoryless` ✅
+  - [x] Phase 4-α — per-`n` 等式 `capacityN_ofMemoryless_eq` ✅
+  - [x] Phase 4-β — `Subadditive.tendsto_lim` (memoryless は constant 列で Fekete 不要) ✅
+- [x] Phase 5 — verify + regression check ✅
 - [ ] Phase 6 (optional) — 支援補題 `capacityN.mono` / `capacityN.nonneg` 等 📋
+
+> 実態整合 (2026-05-20): DONE-UNCOND — 進捗マーカーが起草時の `[ ]` のまま、判断ログも "Phase 4-α 1 sorry 残" (Session 1/2) で stop していたが、`Common2026/Shannon/BlockwiseChannel.lean` (64 KB) は real-sorry **ゼロ**。`capacityN_ofMemoryless_eq` (`:1165`、両側 `_le:1007` / `_ge:1100` 含め 0 sorry、bridge `toBlock_compProd_pi_factor:149` も完成) + 主接続補題 `capacity_lim_eq_capacity_of_memoryless` (`:1181`、std typeclass binders + `[StandardBorelSpace α/β]` のみ) が完走。`Common2026.lean:64` に import 済。再 export 層 `Common2026/Shannon/GeneralDMC.lean` も 0 sorry。判断ログ Session 2 の `proof-pivot-advisor` エスカレーション (`Channel.toBlock` を `Kernel.mk` 直接定義へ再定義) は実行され bridge が閉じた模様。
 
 ## ゴール / Approach
 

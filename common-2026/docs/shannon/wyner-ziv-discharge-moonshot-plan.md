@@ -1,5 +1,7 @@
 # Wyner–Ziv body discharge — moonshot plan
 
+> 実態整合 (2026-05-20): **DONE-HONEST-HYPS (計画通り、plumbing layer 独立 publish) — plan の「着手中」表記は STALE、実装完了**。`Common2026/Shannon/WynerZivDischarge.lean` (16230 B, 0 sorry) に計画通りの plumbing publish 済: `wynerZivRatePmf_antitone` (WynerZivDischarge.lean:126、D-antitone 実証明)、`WynerZivConstraint_mono_in_D` (:77)、affinity blocks `wzMarginalXY_add`/`_smul` (:157,:165)、`wzExpectedDistortion_add`/`_smul` (:172,:181)、`convex_stdSimplex_wynerZiv` (:199)、bddBelow specialization (:228) 等。L-WZ3 凸性主定理本体は本 plan scope 外 (計画通り、別 plan `wyner-ziv-convexity-discharge` で discharge)。FLAW なし。Common2026.lean に import 済。
+>
 > **Status**: 着手中。target は **L-WZ3 partial discharge** + 関連 plumbing
 > 補題群 (D-antitone / 上界 / Constraint set 構造)。撤退ラインは満たさず、
 > 1 本完全 discharge は目指さず、**plumbing layer の独立 publish** で着地する。

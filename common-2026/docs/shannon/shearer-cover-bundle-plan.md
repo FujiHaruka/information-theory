@@ -11,6 +11,12 @@
 - [x] Phase C — Hypercube edge isoperimetry / Han-Bregman 系の corollary (singleton cover + edge bound) ✅
 - [x] Phase D — LW refactor 判断 (見送り、既存 statement 維持) 🔄
 
+> **実態整合 (2026-05-20): DONE-UNCOND (publish 済、0 sorry、plan は正確)** —
+> `Common2026/Shannon/BrascampLieb.lean` が実在: `projectionSubset` (`:40`)、subset-entropy bound
+> `jointEntropySubset_le_log_projectionSubset_card` (`:52`)、主定理 `brascamp_lieb_finset`
+> (`:90`、`A.card ^ k ≤ ∏ i, (projectionSubset (S i) A).card`) はいずれも genuine `by`-proof
+> (Shearer + `uniformOn` 経由、pass-through なし)、`rg -nw sorry` 空振り。Phase A-D の `[x]` は実態と一致、修正不要。
+
 ## ゴール / Approach
 
 3 件 (LW / Brascamp-Lieb / Hypercube isoperimetry) を **共通 tooling = Shearer + entropy_le_log_image_card** の上に並べる。

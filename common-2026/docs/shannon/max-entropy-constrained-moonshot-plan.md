@@ -1,5 +1,11 @@
 # T3-A Constrained Maximum Entropy ムーンショット計画 🌙
 
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — Tier 2 完了通り。`Common2026/Shannon/MaxEntropyConstrained.lean` (0 sorry)。
+> headline `entropy_le_gibbs_of_constraints` (L248) + `entropy_eq_gibbs_iff_of_constraints` は
+> 実 Gibbs/KL 不等式証明 (`klDivPmf_nonneg` + `klDivPmf_self_eq_zero` + 核 identity `klDivPmf_gibbsPmf_eq` L140)。
+> exponential-family ansatz の `lam` + `h_gibbs_constraints` (ansatz が moment 制約を満たす) は計画通り honest pass-through
+> (`:= True` でない、ψ(λ) 凸性/Lagrange 存在論は不要)。`gibbsPmf` (L79) は実定義。FLAW-VACUOUS なし。
+
 > **Parent**:
 > - [`textbook-roadmap.md`](../textbook-roadmap.md) §「Tier 3 — T3-A. Constrained Maximum Entropy (Lagrange / exponential family)」
 >

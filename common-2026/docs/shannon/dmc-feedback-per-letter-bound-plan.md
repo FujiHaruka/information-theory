@@ -16,6 +16,8 @@ I(Msg; Y_i | Y^{<i}) ≤ I(X_i; Y_i)
 - [x] Phase C — `feedback_per_letter_bound` ✅ (2026-05-14、`mutualInfo_le_of_markov` 1 段 + chain rule + nonneg で完走)
 - [x] Phase D — `channel_coding_feedback_converse_memoryless` ✅ (2026-05-14、既存 E-10 主定理に `h_per_letter` を construct して結論)
 
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — `feedback_per_letter_bound` (`Common2026/Shannon/ChannelCodingFeedbackComplete.lean:116`、0 sorry) は `h_memo : IsMemorylessFeedback μ Msg Xs Ys` (γ-form Markov chain 述語、pass-through Prop でない) から per-letter 不等式を派生。主定理 `channel_coding_feedback_converse_memoryless` (`:171`) が E-10 主定理に `h_per_letter` を construct して完全形を結論。
+
 **完了サマリ (2026-05-14)**: `Common2026/Shannon/ChannelCodingFeedbackComplete.lean` (198 行、4 declarations、0 sorry / 0 warning)。Plan 見積 280-400 行を ~50% 削減。Phase A の RV 順を `(Y^{<i}, Msg)` (chain rule LHS の `(Zc, Xs)` と一致) に揃えたことで Step 3 swap が 0 行に。CondMutualInfo.lean 新規補題 0 行 (既存 `IsMarkovChain` + `mutualInfo_le_of_markov` + `mutualInfo_chain_rule` + `mutualInfo_nonneg` のみ)。Cover-Thomas 7.12 が `h_per_letter` 仮説を剥がした完全形で完走。
 
 ## ゴール / Approach

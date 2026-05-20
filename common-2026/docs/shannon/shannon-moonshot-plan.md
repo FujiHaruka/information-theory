@@ -1,5 +1,7 @@
 # Shannon ムーンショット計画 🌙
 
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — 主定理 `shannon_converse_single_shot` (`Common2026/Shannon/Converse.lean:81`) は 0 sorry で publish。hypothesis は標準 measurability + uniform-message (`hMsg_uniform`) + MI 有限性 (`hMI_finite : mutualInfo μ Msg Yo ≠ ∞`) のみで genuine analytic、pass-through / `Prop := True` 不在。
+
 > **Status (2026-05-10): 🌙 ムーンショット達成 (Phase 4-γ 完了)**。`Common2026/Shannon/Converse.lean` で `shannon_converse_single_shot` が sorry ゼロで通過。Phase 4-M0 〜 γ の全段が活性。インベントリは [`docs/shannon/shannon-mathlib-inventory.md`](shannon-mathlib-inventory.md)、最終振り返りは [Phase 4-γ 結果](#phase-4-γ-結果-2026-05-10) 節を参照。
 > Fano ムーンショット ([fano-moonshot-plan.md](../fano/fano-moonshot-plan.md)) の Phase 3 達成を前提とする後継プロジェクト。
 > ゴールは「Mathlib に既存の `klDiv` を主軸に、mutual information / data processing inequality / Shannon converse を接続する」こと。

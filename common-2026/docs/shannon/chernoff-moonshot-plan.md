@@ -1,5 +1,13 @@
 # Chernoff Information sandwich Tendsto ムーンショット計画 🌙 (T1-B 独立)
 
+> 実態整合 (2026-05-20): **DONE-HONEST-HYPS (L-Ch1+L-Ch2 採用形)** — 計画通り完了。headline
+> `chernoff_lemma_tendsto` は `Common2026/Shannon/ChernoffInformation.lean:124` に存在 (0 sorry)。
+> `h_converse` (limsup ≤ chernoffInfo) + `h_bdd_le` を honest hypothesis として取り、achievability
+> (既存 `chernoff_lemma_achievability`) + bdd-ge internal discharge (`chernoff_rate_isBoundedUnder_ge`)
+> と sandwich (`tendsto_of_le_liminf_of_limsup_le`)。`h_converse` は後継 `chernoff-converse` plan で
+> per-tilt 形まで縮減済 (`chernoff_lemma_tendsto_from_per_tilt`)。`chernoff_dotEq` corollary (Phase 5)
+> も `chernoff_dotEq_tendsto` 名で存在。**進捗 Phase 1-5 が全 [ ] のままだが実態は全完了。**
+
 > **Status (2026-05-19)**: T1-B (Chernoff information, Cover-Thomas Theorem 11.9.1) 独立で
 > **sandwich `Tendsto` 形** を publish するための plan。先行 plan
 > [`chernoff-hoeffding-moonshot-plan.md`](chernoff-hoeffding-moonshot-plan.md) が T1-B/D 合同で

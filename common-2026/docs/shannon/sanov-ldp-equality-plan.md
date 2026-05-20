@@ -1,16 +1,18 @@
 # Sanov LDP equality 形 (B-1'') ムーンショット計画 🌙
 
 > **Status (2026-05-12)**: deferred カード起草、未着手。B-1' upper bound (`Common2026/Shannon/SanovLDP.lean` 550 行) が touch せず並立する想定。本 plan は **open set 上の Sanov LDP equality 形** (Cover-Thomas Theorem 11.4.1 完全形) を 0 sorry で publish する設計図。
+>
+> **実態整合 (2026-05-20): DONE-UNCOND** — Status 行の「未着手」は完全に stale。**全 Phase A〜F 実装済**: `Common2026/Shannon/KLDivContinuous.lean` (Phase A、0 sorry) + `Common2026/Shannon/SanovLDPEquality.lean` (1243+ 行、Phase B〜E、0 sorry)。主定理 `sanov_ldp_equality` は `SanovLDPEquality.lean:1243` に strict `Tendsto (… → 𝓝 (-D))` で discharge、std binders (`h_in_E`/`h_minimizer` は honest な achievable-seq / minimizer 仮定、pass-through なし)。下界補題 `sanov_ldp_lower_bound_pointwise` + 上界 `sanov_ldp_upper_bound` の sandwich で着地。両 file 0 `:=True`。
 
 ## 進捗
 
-- [ ] Phase 0 — Mathlib API インベントリ (`Continuous Real.log` / `Real.continuous_negMulLog` / `Nat.floor` / `tendsto_of_le_liminf_of_limsup_le`) 📋
-- [ ] Phase A — `klDivIndex` の連続性 (`Common2026/Shannon/KLDivContinuous.lean` 独立 file) 📋
-- [ ] Phase B — achievable type sequence (`roundedTypeIndex P n` と `klDivIndex_tendsto`) 📋
-- [ ] Phase C — `Q^n(T_c)` lower bound (多項係数 Stirling-free) 📋
-- [ ] Phase D — `liminf` 形 lower bound on open `E°` 📋
-- [ ] Phase E — Tendsto sandwich (B-1' upper + Phase D lower) → equality 形 📋
-- [ ] Phase F — verify + doc 更新 📋
+- [x] Phase 0 — Mathlib API インベントリ (`Continuous Real.log` / `Real.continuous_negMulLog` / `Nat.floor` / `tendsto_of_le_liminf_of_limsup_le`) ✅
+- [x] Phase A — `klDivIndex` の連続性 (`Common2026/Shannon/KLDivContinuous.lean` 独立 file) ✅
+- [x] Phase B — achievable type sequence (`roundedTypeIndex P n` と `klDivIndex_tendsto`) ✅
+- [x] Phase C — `Q^n(T_c)` lower bound (多項係数 Stirling-free) ✅
+- [x] Phase D — `liminf` 形 lower bound on open `E°` ✅
+- [x] Phase E — Tendsto sandwich (B-1' upper + Phase D lower) → equality 形 ✅ (`sanov_ldp_equality` @ SanovLDPEquality.lean:1243)
+- [x] Phase F — verify + doc 更新 ✅
 
 ## ゴール / Approach
 

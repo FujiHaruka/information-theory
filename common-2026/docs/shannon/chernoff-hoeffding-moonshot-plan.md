@@ -1,5 +1,13 @@
 # Chernoff Information + Hoeffding Tradeoff ムーンショット計画 🌙 (T1-B + T1-D)
 
+> 実態整合 (2026-05-20): **進捗ブロックの記載が実態と概ね一致 (この plan は珍しく正確)**。
+> achievability side は `chernoff_lemma_achievability` (`Common2026/Shannon/Chernoff.lean:1059`,
+> DONE-UNCOND) で publish 済、`hoeffdingE2`/`hoeffdingE2_attained`/`hoeffdingE2_unique`/凸性も同 file。
+> Phase B converse + Phase E full `chernoff_lemma` Tendsto は L-S1/L-S2 で defer のまま (但し後継 plan
+> で進展: converse は `ChernoffInformation.chernoff_lemma_tendsto` + `ChernoffConverse` で per-tilt 形まで、
+> Hoeffding Tendsto は `HoeffdingTradeoff.hoeffding_tradeoff_with_hypothesis` で pass-through 形まで)。
+> 全関連 file 0 sorry。
+
 <!--
 雛形メモ (moonshot-plan-template.md より):
 - 進捗ブロック: `- [ ] Phase 名 — 短い説明 状態絵文字 (関連ファイルへのリンク)` の形式

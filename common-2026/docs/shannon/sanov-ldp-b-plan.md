@@ -1,6 +1,8 @@
 # Sanov LDP B 形 (B-1') ムーンショット計画 🌙
 
 > **Status (2026-05-12)**: **LDP B 形 upper bound 完了 (Phase A〜E すべて 0 sorry)**。`Common2026/Shannon/SanovLDP.lean` (550 行)。lower bound + equality 形は **B-1'' に再 defer** (Mathlib `Continuous klDiv` 不在 + achievable type sequence 構築 + 多項係数 lower bound 合計 ~500-650 行)。既存 `Common2026/Shannon/Sanov.lean` (319 行、A 形完了) は touch せず並立 publish。
+>
+> **実態整合 (2026-05-20): DONE-UNCOND** — upper bound 主定理 `sanov_ldp_upper_bound` は `Common2026/Shannon/SanovLDP.lean:471`、std binders (`hQpos` honest、`hD` は user-supplied D 下界仮定)、0 sorry。なお「B-1'' に再 defer」は stale: **equality 形は完了済** (`SanovLDPEquality.lean:1243` `sanov_ldp_equality`、[sanov-ldp-equality-plan.md](sanov-ldp-equality-plan.md))。
 
 ## 進捗
 

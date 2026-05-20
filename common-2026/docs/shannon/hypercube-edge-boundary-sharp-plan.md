@@ -11,6 +11,11 @@
 
 ## Status / 目標
 
+> **実態整合 (2026-05-20): DONE-UNCOND (publish 済、0 sorry)** —
+> 主結果 `edgeBoundary_entropy_sharp` (`Common2026/Shannon/HypercubeEdgeBoundarySharp.lean:627`) は
+> 下記 signature と完全一致で実在、本体は genuine `by`-proof (pass-through なし)、`rg -nw sorry` 空振り。
+> 条件付きエントロピー bridge 経路 (`condEntropy_coord_eq` 系) で discharge 済。plan 下記 Phase は完了扱い。
+
 deferred `B-2''`. 主結果:
 
 ```lean
