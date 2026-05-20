@@ -378,4 +378,99 @@ theorem cramer_lower_phaseC_residual_discharge
   cramer_lower_phaseC_partial_discharge hY_meas h_bdd a lam hlam h_coboundedBelow
     (isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge hY_meas h_bdd lam hlam h_res)
 
+/-! ## Per-instance window largeness from interior of the tilted mean -/
+
+/-- **Per-instance tilted window mass → 1** (interior case).
+
+The `∀a∀ε` predicate `IsTiltedWindowEventuallyLarge` is *false* in general (for
+`a` far from the tilted mean the window has vanishing mass). The meaningful
+statement is the per-instance one: when the tilted mean
+`m := ∫ Y ∂(μ₀.tilted (lam·Y))` lies strictly inside the window `(a, a+ε)`, the
+tilted infinite-product mass of `{ω | a·n ≤ ∑_{i<n} Y(ω i) < (a+ε)·n}` tends to
+`1`.
+
+Proof: with `δ := min (m − a) (a + ε − m) > 0`, the in-probability LLN
+(`tilted_lln_in_probability_real`) sends the bad-set mass `{|S̄_n − m| ≥ δ}` to
+`0`, so the complement `{|S̄_n − m| < δ}` mass → 1; that complement is contained
+in the window for `n ≥ 1`, and the window mass is ≤ 1, so it is squeezed to 1. -/
+theorem tiltedWindow_eventually_tendsto_one
+    {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
+    {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ)
+    {a ε : ℝ}
+    (h_lo : a < ∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)))
+    (h_hi : ∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)) < a + ε) :
+    Tendsto (fun n : ℕ =>
+        (Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))).real
+          {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)
+            ∧ ∑ i ∈ Finset.range n, Y (ω i) < (a + ε) * n}) atTop (𝓝 1) := by
+  haveI : IsProbabilityMeasure
+      (Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))) :=
+    isProbabilityMeasure_infinitePi_tilted_of_bounded hY h_bdd lam
+  set μ : Measure (ℕ → Ω₀) :=
+    Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω)) with hμ
+  set m : ℝ := ∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)) with hm
+  -- The half-window radius `δ`.
+  set δ : ℝ := min (m - a) (a + ε - m) with hδdef
+  have hδ : 0 < δ := lt_min (by linarith) (by linarith)
+  -- The bad set and the window event, per `n`.
+  set bad : ℕ → Set (ℕ → Ω₀) := fun n =>
+    {ω | δ ≤ |(∑ i ∈ Finset.range n, Y (ω i)) / n - m|} with hbad
+  set window : ℕ → Set (ℕ → Ω₀) := fun n =>
+    {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)
+      ∧ ∑ i ∈ Finset.range n, Y (ω i) < (a + ε) * n} with hwindow
+  -- Measurability of the bad set.
+  have hbad_meas : ∀ n, MeasurableSet (bad n) := fun n =>
+    measurableSet_le measurable_const
+      ((((Finset.measurable_sum _ (fun i _ => hY.comp (measurable_pi_apply i))).div_const
+        (n : ℝ)).sub measurable_const).norm)
+  -- LLN: bad-set mass → 0.
+  have h_bad : Tendsto (fun n : ℕ => μ.real (bad n)) atTop (𝓝 0) :=
+    tilted_lln_in_probability_real hY h_bdd lam hδ
+  -- Complement mass → 1.
+  have h_compl : Tendsto (fun n : ℕ => μ.real (bad n)ᶜ) atTop (𝓝 1) := by
+    have h1 : Tendsto (fun n : ℕ => (1 : ℝ) - μ.real (bad n)) atTop (𝓝 (1 - 0)) :=
+      h_bad.const_sub 1
+    rw [sub_zero] at h1
+    refine h1.congr (fun n => ?_)
+    rw [probReal_compl_eq_one_sub (hbad_meas n)]
+  -- Inclusion: complement of bad ⊆ window, for `n ≥ 1`.
+  have h_sub : ∀ n : ℕ, 1 ≤ n → (bad n)ᶜ ⊆ window n := by
+    intro n hn ω hω
+    simp only [hbad, Set.mem_compl_iff, Set.mem_setOf_eq, not_le] at hω
+    have hnpos : (0 : ℝ) < n := by exact_mod_cast hn
+    rw [abs_lt] at hω
+    -- `m - δ < S̄_n < m + δ`, hence `a < S̄_n < a + ε`.
+    have hδle1 : δ ≤ m - a := min_le_left _ _
+    have hδle2 : δ ≤ a + ε - m := min_le_right _ _
+    set S : ℝ := ∑ i ∈ Finset.range n, Y (ω i) with hS
+    have hlo : a ≤ S / n := by linarith [hω.1]
+    have hhi : S / n < a + ε := by linarith [hω.2]
+    simp only [hwindow, Set.mem_setOf_eq]
+    refine ⟨(le_div_iff₀ hnpos).mp hlo, (div_lt_iff₀ hnpos).mp hhi⟩
+  -- Squeeze the window mass between the complement mass (→1, eventually ≤) and 1.
+  refine tendsto_of_tendsto_of_tendsto_of_le_of_le' h_compl tendsto_const_nhds ?_ ?_
+  · -- eventually `μ.real (bad n)ᶜ ≤ μ.real (window n)`
+    filter_upwards [eventually_ge_atTop 1] with n hn
+    exact measureReal_mono (h_sub n hn) (measure_ne_top _ _)
+  · -- always `μ.real (window n) ≤ 1`
+    exact Eventually.of_forall (fun n => measureReal_le_one)
+
+/-- **Per-instance tilted window mass ≥ 1/2** (interior case, `≥ 1/2` corollary).
+
+Immediate from `tiltedWindow_eventually_tendsto_one` and `1/2 < 1`: the window
+mass is eventually ≥ 1/2. This is the per-instance replacement for the
+(generally false) `∀a∀ε` `IsTiltedWindowEventuallyLarge` predicate. -/
+theorem tiltedWindow_eventually_large_of_interior
+    {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
+    {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ)
+    {a ε : ℝ}
+    (h_lo : a < ∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)))
+    (h_hi : ∫ ω, Y ω ∂(μ₀.tilted (fun ω => lam * Y ω)) < a + ε) :
+    ∀ᶠ n : ℕ in atTop,
+      (1 : ℝ) / 2 ≤ (Measure.infinitePi (fun _ : ℕ => μ₀.tilted (fun ω => lam * Y ω))).real
+          {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)
+            ∧ ∑ i ∈ Finset.range n, Y (ω i) < (a + ε) * n} :=
+  (tiltedWindow_eventually_tendsto_one hY h_bdd lam h_lo h_hi).eventually_const_le
+    (by norm_num)
+
 end InformationTheory.Shannon.Cramer.Discharge
