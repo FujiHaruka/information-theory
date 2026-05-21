@@ -276,4 +276,42 @@ lemma huffmanStep_snd_relabel {γ : Type*} [DecidableEq γ] (e : α ↪ γ)
     exact hp_min z' hz'
   exact min_unique_of_nodup_snd _ hnd_er q (relabelGroup e p) hq_mem hrp_mem hq_min hrp_min
 
+omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- **step-output multiset correspondence**: nodup-probs 下で relabel した multiset の
+`huffmanStep` 出力 (残木 `.val.2.2`) は元の出力の relabel に等しい. step 選択の対応
+(`huffmanStep_fst/snd_relabel`) + merged group の relabel + erase の relabel 可換から. -/
+lemma huffmanStep_step_relabel {γ : Type*} [DecidableEq γ] (e : α ↪ γ)
+    (s : Multiset (Finset α × ℝ)) (hnd : (s.map Prod.snd).Nodup)
+    (hs : 2 ≤ s.card) (hg : HuffmanGrouping s)
+    (hs' : 2 ≤ (relabelMultiset e s).card)
+    (hg' : HuffmanGrouping (relabelMultiset e s)) :
+    (huffmanStep (relabelMultiset e s) hs' hg').val.2.2
+      = relabelMultiset e ((huffmanStep s hs hg).val.2.2) := by
+  -- shapes
+  obtain ⟨_, _, hshape_s, _⟩ := huffmanStep_spec s hs hg
+  obtain ⟨_, _, hshape_rs, _⟩ := huffmanStep_spec (relabelMultiset e s) hs' hg'
+  -- step selections correspond
+  have h1 := huffmanStep_fst_relabel e s hnd hs hg hs' hg'
+  have h2 := huffmanStep_snd_relabel e s hnd hs hg hs' hg'
+  -- rewrite the relabel-side shape, then both step selections by correspondence
+  rw [hshape_rs, h1, h2, hshape_s]
+  -- relabelMultiset of a cons: distribute (relabelMultiset = map (relabelGroup e))
+  show _ = ((((huffmanStep s hs hg).val.1.1 ∪ (huffmanStep s hs hg).val.2.1.1,
+      (huffmanStep s hs hg).val.1.2 + (huffmanStep s hs hg).val.2.1.2) ::ₘ
+      ((s.erase (huffmanStep s hs hg).val.1).erase
+        (huffmanStep s hs hg).val.2.1))).map (relabelGroup e)
+  rw [Multiset.map_cons]
+  congr 1
+  · -- merged group: relabelGroup e of (x1.1 ∪ x2.1, x1.2 + x2.2)
+    unfold relabelGroup
+    simp only [Prod.mk.injEq, and_true]
+    rw [Finset.map_union]
+  · -- erase erase parts: (relabel(s).erase rx1).erase rx2 = relabel(ee)
+    show ((relabelMultiset e s).erase (relabelGroup e (huffmanStep s hs hg).val.1)).erase
+        (relabelGroup e (huffmanStep s hs hg).val.2.1)
+      = ((s.erase (huffmanStep s hs hg).val.1).erase
+          (huffmanStep s hs hg).val.2.1).map (relabelGroup e)
+    rw [← relabelMultiset_erase, ← relabelMultiset_erase]
+    rfl
+
 end InformationTheory.Shannon.Huffman
