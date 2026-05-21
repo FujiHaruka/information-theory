@@ -172,7 +172,7 @@ theorem parallel_gaussian_capacity_formula_PG0_discharged {n : ℕ}
     parallelGaussianCapacity P N h_meas (isParallelGaussianKernelMeasurable N)
       = ∑ i : Fin n, (1/2) * Real.log
           (1 + waterFillingPower ν N i / (N i : ℝ)) :=
-  parallel_gaussian_capacity_formula P hP N hN h_meas
+  parallel_gaussian_capacity_formula_of_perCoordReduction P hP N hN h_meas
     (isParallelGaussianKernelMeasurable N) ν h_kkt h_unique h_per_coord
 
 /-- **Active-set form of the parallel Gaussian capacity formula**
@@ -197,7 +197,7 @@ theorem parallel_gaussian_capacity_active_form_PG0_discharged {n : ℕ}
     parallelGaussianCapacity P N h_meas (isParallelGaussianKernelMeasurable N)
       = ∑ i ∈ waterFillingActiveSet ν N,
           (1/2) * Real.log (ν / (N i : ℝ)) :=
-  parallel_gaussian_capacity_active_form P hP N hN hN_pos h_meas
+  parallel_gaussian_capacity_active_form_of_perCoordReduction P hP N hN hN_pos h_meas
     (isParallelGaussianKernelMeasurable N) ν h_kkt h_unique h_per_coord
 
 end InformationTheory.Shannon.ParallelGaussian

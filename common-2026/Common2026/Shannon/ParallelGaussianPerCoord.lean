@@ -322,13 +322,39 @@ theorem isParallelGaussianPerCoordReduction_discharged {n : ℕ}
       h_Q_eq h_reg
   · exact parallelGaussianCapacity_ge_sum P N h_meas h_parallel_meas Q hQ_sum h_reg
 
-/-! ## Headline re-publish (段 2) -/
+/-! ## Headline (段 2) — genuine de-circularized capacity formula -/
 
-/-- **★ Headline re-publish with L-PG1 discharged.** The pass-through `h_per_coord`
-of `parallel_gaussian_capacity_formula` is replaced by the genuine
-`isParallelGaussianPerCoordReduction_discharged`. L-WF1 is supplied by the genuine
-existence lemma; only the honest per-coord regularity remains. -/
-theorem parallel_gaussian_capacity_formula_discharged {n : ℕ}
+/-- **★ Parallel Gaussian capacity formula** (Cover-Thomas Theorem 9.4.1), the
+genuine, **non-circular** published headline.
+
+For parallel AWGN channels `Y_i = X_i + Z_i`, `Z_i ∼ 𝒩(0, N_i)` (`i : Fin (n+1)`)
+with total power constraint `∑_i E[X_i²] ≤ P`, the information capacity equals the
+water-filling sum
+
+`C = ∑_i (1/2) log(1 + max(0, ν* - N_i) / N_i)`
+
+at the KKT water level `ν*`.
+
+This **replaces** the conclusion-as-hypothesis reduction
+`ParallelGaussian.parallel_gaussian_capacity_formula_of_perCoordReduction`
+(whose body was `:= h_per_coord`). Here the equality is *derived*, via
+`isParallelGaussianPerCoordReduction_discharged` — a genuine **sup-sandwich**
+(`le_antisymm` of `parallelGaussianCapacity_le_sum` / `parallelGaussianCapacity_ge_sum`,
+i.e. `csSup_le` max-entropy upper bound + `le_csSup` achiever lower bound). The
+only hypotheses are the *genuine* honest inputs:
+
+* `h_kkt` (L-WF1): water level uses up the budget `∑ max(0, ν - N_i) = P` (genuine,
+  IVT-dischargeable via `exists_waterFillingKKT_of_pos`);
+* `h_opt` (L-WF2): water-filling is the constrained `∑ (1/2) log(1 + P_i/N_i)`
+  maximizer (genuine, concavity-dischargeable);
+* `h_reg` (🟢ʰ): the residual analytic regularity bundle
+  `IsParallelGaussianPerCoordRegularity` — `bddAbove` + achiever-MI value +
+  correlated-input max-entropy bound — **none of which is the conclusion equality**;
+  they mirror the 1-D `AWGN.awgnCapacity_eq` residuals.
+
+No `h_per_coord : IsParallelGaussianPerCoordReduction` argument (the conclusion) is
+taken; the body is a real `le_antisymm` derivation, never `:= h_per_coord`. -/
+theorem parallel_gaussian_capacity_formula {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N)
@@ -339,6 +365,22 @@ theorem parallel_gaussian_capacity_formula_discharged {n : ℕ}
       = ∑ i : Fin (n + 1), (1/2) *
           Real.log (1 + waterFillingPower ν N i / (N i : ℝ)) :=
   isParallelGaussianPerCoordReduction_discharged P hP N hN h_meas h_parallel_meas
+    ν h_kkt h_opt h_reg
+
+/-- Backward-compatible alias for the genuine headline
+`parallel_gaussian_capacity_formula` (was the `_discharged` re-publish name). -/
+@[deprecated parallel_gaussian_capacity_formula (since := "2026-05-21")]
+theorem parallel_gaussian_capacity_formula_discharged {n : ℕ}
+    (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
+    (h_meas : IsParallelAwgnChannelMeasurable N)
+    (h_parallel_meas : IsParallelGaussianKernelMeasurable N)
+    (ν : ℝ) (h_kkt : IsWaterFillingKKT P N ν) (h_opt : IsWaterFillingOptimal P N ν)
+    (h_reg : IsParallelGaussianPerCoordRegularity P N h_meas h_parallel_meas
+              (fun i => (waterFillingPower ν N i).toNNReal)) :
+    parallelGaussianCapacity P N h_meas h_parallel_meas
+      = ∑ i : Fin (n + 1), (1/2) *
+          Real.log (1 + waterFillingPower ν N i / (N i : ℝ)) :=
+  parallel_gaussian_capacity_formula P hP N hN h_meas h_parallel_meas
     ν h_kkt h_opt h_reg
 
 end InformationTheory.Shannon.ParallelGaussian
