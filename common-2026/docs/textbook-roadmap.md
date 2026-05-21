@@ -37,10 +37,28 @@
 
 「Lean で verified な Cover & Thomas」を名乗るための必要条件:
 
-- **Ch.2–5, 7–12, 15, 17 の主定理が 0 sorry で publish 済み** (詳細は下記章対応表)
+- **Ch.2–5, 7–12, 15, 17 の主定理が 0 sorry で publish 済み** (詳細は下記章対応表) ——
+  ただし下記「検証強度の基準」の意味で **genuine 🟢 / regularity-hyp 🟢ʰ** に到達していること。
+  load-bearing hypothesis を残した 🟢ʰ は本判定では **未完** 扱い。
 - **Typed RV API** が外向き API として揃い、教科書本文の statement が形式化版に直接対応する
 - 各 seed が `docs/<family>/<topic>-moonshot-plan.md` で計画化され、phase 単位で archive 可能
 - 主成果物 3 層 (library / API / 原稿) の各層に index と cross-link がある
+
+### 検証強度の基準 (標準B、2026-05-21 確定)
+
+本プロジェクトの野心は **標準B = 各見出し定理が Mathlib 公理まで無条件に機械検証されている**こと。
+教科書が読者にする約束を「構造の検証」(標準A) でなく「定理そのものの検証」に置く。これにより
+`0 sorry` ≠ 完成 であり、hypothesis の中身で以下を区別する:
+
+- **OK (genuine / regularity-hyp)**: 仮説が *regularity / genericity* 条件 (full-support `hP`、
+  `IsFiniteMeasure`、`IsProbabilityMeasure`、`Var > 0` 等) で、定理本体は真の定理のまま。これは
+  Mathlib の補題でも普通に付く前提で、標準B でも **完成 (🟢 / 🟢ʰ)** とみなす。
+- **NG (load-bearing hyp)**: 仮説が *証明の難所そのもの* (Stam 不等式、achievability の typicality、
+  multi-user Fano、結論と同型の存在述語) を肩代わりしている。これは「還元の検証」でしかなく、標準B
+  では **未完 (🟠 相当の残作業)**。de-circularization sweep で `:= h` の偽装は全廃したが、honest に
+  開示された load-bearing hyp は「正直な未完」であって「完成」ではない。
+
+判定の一言: **仮説を読んで「これは前提条件か、それとも証明の核心か」**。前者は OK、後者は残タスク。
 
 **scope-out (専門性が異なるため別 library 化)**:
 
@@ -86,6 +104,33 @@
 **状態区分** (本監査で導入): 🟢 DONE-UNCOND (無条件) / 🟢ʰ DONE-HONEST-HYPS (honest 解析仮定付き) /
 🟠 PASS-THROUGH (`:= True` / 結論=仮説、数学的核心は未証明) / 🔴 FLAW-VACUOUS (退化定義の悪用) /
 📋 UNSTARTED。
+
+> **標準B での 🟢ʰ の読み替え (2026-05-21)**: 「検証強度の基準」節の通り、🟢ʰ は仮説の中身で
+> 二分される。**regularity-hyp の 🟢ʰ = 完成**、**load-bearing-hyp の 🟢ʰ = 未完 (残タスク)**。
+> 下表で 🟢ʰ と書いた章も、残 honest 仮説が「証明の核心」なら標準B 的には 🟠 寄りの残作業。
+
+### 「Mathlib 壁」の 4 分類 (2026-05-21、用語の曖昧さ解消)
+
+ログ全体で「Mathlib 壁」が**性質の違う 4 種類**を一語に潰していたため、ここで分解する。標準B では
+(d) 以外は原則 **やるべき残タスク**だが、突破困難度と投資規模が大きく異なる。
+
+- **(a) 量の壁 — 難しくない、ただ未構築**: well-understood な確率論・測度論で紙では数行だが Mathlib に
+  該当補題が無く `loogle` 0件 → 一から数百行。**突破困難度: 低**。投下セッション数の問題で、競合する
+  formalizer なら確実に閉じる。該当: multi-user Fano + joint typicality (Ch.15 MAC/BC/Relay)、
+  continuous AEP / typicality (Ch.9 AWGN F-2)、BM slice 上半連続性 (Ch.17、~150行自作)。
+- **(b) 解析の壁 — 定型だが前提インフラごと無い**: 定理を証明する前に**計算体系自体を建てる**型。
+  **突破困難度: 中〜高**。該当: condExp-of-score = Stam Step 1-2 → EPI body (Ch.17)。score function の
+  条件付き期待値分解 + 積分記号下微分 + 部分積分 + L² 理論。Mathlib に微分エントロピー/Fisher 情報の
+  解析体系が無く "PR 級 ~120-300行 upstream" 規模。
+- **(c) 本物の数学的深さ — 行数でなく難易度**: **突破困難度: 高 (真の壁)**。該当: Nyquist 2W-DOF
+  (Ch.9 Shannon-Hartley `h_two_w`)。教科書の「2W サンプル/秒」の厳密版は **prolate-spheroidal
+  (Slepian-Pollak-Landau) による帯域制限信号空間の次元定理** で深い調和解析。**C&T 自身が厳密証明して
+  いない** → 標準B でも「Shannon-Hartley を検証済みの目玉にするか / 次元論法を公理引用するか」の
+  **scope 決断点**。連続 mutualInfo 加法性 `mutualInfo_pi_eq_sum` (Ch.9) は本物の測度論定理だが (c)
+  の中では中難度。
+- **(d) 「壁」が実は選択だったもの**: 過去ログで "ROI 無し" の婉曲表現に "Mathlib 壁" が使われた箇所。
+  de-circularization sweep (2026-05-21) で結論≡仮説の偽装は全廃済。残るのは honest 開示済みのみ。
+  判定基準: **ブロックされている (hard) のか、先送りしている (big) のか**。
 
 | Ch. | headline の真の状態 | 区分 |
 |---|---|---|
@@ -398,7 +443,18 @@ T1-B/C/D の Sanov plumbing 再利用、T2-D の T2-F 再利用、T3-C の T3-B 
 - **構成**: 章は Cover-Thomas の章番号に追従。`scope-out` 章 (Ch.6/13 部分/14/16) は省略。
 - **執筆判断**: 各章は対応する Lean 定理がすべて 0 sorry になった時点で初稿着手。1 章完成 →
   cross-link 整備 → publish の段階管理。
-- **layout**: `docs/textbook/` 下に章別 markdown を生やす想定 (本ロードマップ完成時点では未生成)。
+- **layout**: `docs/textbook/` 下に章別 markdown を生やす想定。
+
+### 現況と次の一手 (2026-05-21)
+
+- **層 3 はまだ一行も着手していない** (`docs/textbook/` 未生成)。波 5〜15 は層 1 (定理証明) に
+  集中してきたが、究極ゴールは *本* であり、そのボトルネックは現状ここ。
+- **今この瞬間 genuine 🟢 で原稿に即着手できる章は 6 つ**: Ch.2, 3, 4, 7, 8, 10。
+- **合意した次の一手 (本セッション)**: A 群の壁なし残証明 (LZ78 Ziv / Chernoff converse port /
+  Huffman 強形) を進めつつ、**完成済み 1 章で原稿層をパイロット起動**する。出発点は Ch.2 か Ch.7 が素直。
+- **狙い**: 原稿を 1 章書くと「本文が *定理 Y は検証済み* と書く → 本当に標準B で検証されているか」
+  という具体的な問いに変わり、どの load-bearing gap が本当に効くかが判明する。gap の優先順位を
+  真空で議論するより、原稿が逆に教えてくれる。
 
 ## 判断ログ
 
@@ -819,3 +875,17 @@ T1-B/C/D の Sanov plumbing 再利用、T2-D の T2-F 再利用、T3-C の T3-B 
     (pmf-level、#14 U5 の `chernoffZSum_pow_eq_sum_prod` が足場) で同型 CLT closure が必要 — 本 closure の構造をそのまま port 可能。**残存 frontier gap**:
     condExp-of-score (Stam Step1-2、一般、PR級)、Chernoff converse の pmf-level CLT closure (Cramér の port)。Ch.11 は Cramér lower が closure 到達で
     一段前進、🟡 維持 (Chernoff converse 残)。所見: Gaussian median (median=mean for symmetric) が Mathlib 不在で唯一の自作、それ以外は CLT/portmanteau の既存組立。
+16. **2026-05-21 標準B 確定 + 「Mathlib 壁」用語の解像度上げ** (対話セッション、コード変更なし・ロードマップ更新のみ):
+    残タスクと vision の関係を整理する対話で 3 点を確定し、ロードマップに反映。
+    - **検証強度 = 標準B に確定**: 「完成判定」節に追加。教科書の約束を「定理そのものの無条件機械検証」に置く。
+      `0 sorry` ≠ 完成。🟢ʰ は仮説の中身で二分 — **regularity-hyp (full-support / IsFiniteMeasure / Var>0 等) = 完成**、
+      **load-bearing-hyp (Stam / typicality / multi-user Fano / 結論同型の存在述語) = 未完**。判定の一言「前提条件か、証明の核心か」。
+    - **「Mathlib 壁」を 4 分類に分解** (監査節に taxonomy 追加): (a) 量の壁 (難しくない・未構築、突破困難度 低 —
+      multi-user typicality / continuous AEP / BM slice u.s.c.) / (b) 解析の壁 (前提インフラごと無い、中〜高 —
+      Stam→EPI) / (c) 本物の数学的深さ (高・真の壁 — Nyquist 2W-DOF prolate-spheroidal、C&T 自身が厳密証明せず → scope 決断点) /
+      (d) 実は選択 (de-circularize 済)。**結論: 残 gap の大半は「数学的に難しい」でなく「未構築の定型量」**で、真の壁は Stam の解析土台と Nyquist のみ。
+    - **層 3 (原稿) 未着手 = 真のボトルネック**: 「教科書原稿」節に現況追加。波 5〜15 は層 1 に集中したが究極ゴールは本。
+      genuine 🟢 で即着手可能な章が 6 つ (Ch.2/3/4/7/8/10)。**合意した次の一手**: A 群壁なし 3 件 (LZ78 Ziv / Chernoff converse port /
+      Huffman 強形) を進めつつ、完成済み 1 章 (Ch.2 or Ch.7) で原稿層をパイロット起動。
+    - **scope 注意点 (標準B との緊張)**: Nyquist 2W-DOF は標準B では「Shannon-Hartley を検証済みの目玉にするか / 次元論法を
+      公理引用するか」の未決断。C&T 自身が厳密証明していない深さなので、標準B でも例外的に scope-out / 開示が妥当という議論あり (要・原稿執筆時に最終判断)。
