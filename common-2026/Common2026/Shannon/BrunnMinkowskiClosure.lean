@@ -850,17 +850,26 @@ theorem bm_scaledMul_of_compact {n : ℕ}
 
 `IsSlicePLReadyHyp` の 7 条件は slice 体積関数 `g(s) := sliceInt (1_S) s` の
 superlevel 集合 `{s | t ≤ g s}` に **compact 性** (条件 1,2) と **有限測度**
-(条件 5) を `∀ t ≥ 0` で要求する。
+(条件 5) を `∀ t > 0` で要求する (量化子は 2026-05-21 に `0 ≤ t` から `0 < t` へ弱化済)。
 
-**重要な構造的発見 (vacuity)**: indicator の slice 体積関数は `g ≥ 0` ゆえ
-`t = 0` で `{s | 0 ≤ g s} = (Set.univ : Set ℝ)`。これは compact でも有限測度でも
-ないので、`IsSlicePLReadyHyp (1_A) (1_B) (1_C) ...` (compact 消費版) は
-**`t = 0` で充足不能**。すなわち `brunn_minkowski_volume_indicator_compact` /
-`bm_scaledMul_of_compact` の honest 仮定は満たせず、これらは latent vacuous。
-真の修正は 1D engine の `t ≥ 0` 量化を `t > 0` に絞ること (layer-cake/tail/additive
-は実際 `t > 0` しか使わない — `superlevel_setIntegral_mono` 参照)。本 §J は
-その前段として、scope 内で genuine に供給可能な **superlevel 可測性** を
-Mathlib `measurable_measure_prodMk_left` から立てる。
+**vacuity は両端で起きる (構造的知見)**: indicator の slice 体積関数は
+`g ≥ 0` かつ有界。
+❶ **低端 (解消済)**: `t = 0` では `{s | 0 ≤ g s} = (Set.univ : Set ℝ)` で
+compact でも有限測度でもない。1D engine 全 chain (`IsPL11DSuperLevelHyp` 定義含む)
+の量化子を `0 ≤ t → 0 < t` に弱化して解消した。engine は
+`superlevel_setIntegral_mono` 経由で `t = 0` slice を実際に捨てているので健全。
+これにより `brunn_minkowski_volume_indicator_compact` / `bm_scaledMul_of_compact`
+は latent vacuous → **honest-open** になった。
+❷ **高端 (未解消、fundamental Mathlib 壁)**: `g` 有界ゆえ大きな `t` で
+`{s | t ≤ g s} = ∅`、よって非空性 (条件 3,4) が `t > 0` でも崩れる。汎用 engine の
+`one_dim_bm_scaled` は非空性必須 (一般 `f, g` で片側のみ空だと additive superlevel BM
+`λμ_f + (1-λ)μ_g ≤ μ_h` は偽) ゆえ落とせず、indicator 専用の case-split lemma が要る。
+加えて compact 性 (条件 1,2) には slice 体積関数 `s ↦ vol((Fin.cons s ·)⁻¹ A)` の
+**上半連続性** が要るが Mathlib 不在 (~150 行の自作解析)。よって `IsSlicePLReadyHyp`
+の indicator discharge は defer、BM は 🟢ʰ が honest landing。
+
+本 §J は ❷ の前段として、scope 内で genuine に供給可能な **superlevel 可測性** を
+Mathlib `measurable_measure_prodMk_left` から立てる:
 
 * `sliceInt_indicator_eq_slice_measure` — `sliceInt (1_S) s = (vol(slice_s)).toReal`
   (`integral_indicator_one`, genuine)。`slice_s := (Fin.cons s ·) ⁻¹' S`。
@@ -868,9 +877,8 @@ Mathlib `measurable_measure_prodMk_left` から立てる。
   (`measurable_measure_prodMk_left` を `piFinSuccAbove` reshape 経由で適用、genuine)。
 * `measurableSet_sliceInt_indicator_superlevel` — `MeasurableSet {s | t ≤ sliceInt (1_S) s}`。
 
-これらは compact 性 (条件 1,2) より弱いが、将来の superlevel **上半連続性**
-(`t > 0` で closed + bounded ⇒ compact) build の足場であり、可測性自体は
-本 chain で初めて genuine 化される (従来は compact 仮定の中に埋もれていた)。 -/
+可測性は将来の superlevel **上半連続性** (`t > 0` で closed + bounded ⇒ compact) build
+の足場であり、本 chain で初めて genuine 化される (従来は compact 仮定の中に埋もれていた)。 -/
 
 /-- **`Fin.cons s ·` の可測性 (genuine helper)**: `w ↦ Fin.cons s w` は可測。
 各座標 `i` を `Fin.cases` で分け、`0` 成分は定数、`succ j` 成分は射影 `w j`。 -/
