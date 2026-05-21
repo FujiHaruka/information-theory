@@ -355,40 +355,39 @@ noncomputable def lz78ZivOverhead
     * Real.log ((Fintype.card α : ℝ) + 1)
 
 /-- **Overhead-aware Ziv combinatorial core (Cover–Thomas Lemma 13.5.4/13.5.5,
-honest hypothesis — mathematically TRUE, defect-fixing).**
+honest hypothesis).**
 
 ```
 c · log c  ≤  -log Pₙ  +  c · log(|α|+1).
 ```
 
-**Why this replaces the clean core.** The clean per-block core
-`c · log c ≤ -log Pₙ` (∀n∀ω) of `IsLZ78ZivCombinatorialCore`
-(`LZ78ZivCombinatorics.lean`) is **mathematically false** — counterexample
-`block = (a,a,b)`: `-log P(aab) ≈ 0.916 < 1.386 = c · log c`. A *false*
-hypothesis is unsatisfiable, so any headline assuming it is **vacuously
-conditioned** (can never be instantiated for a real process). This
-overhead-aware form carries the genuine Cover–Thomas lower-order tree
-overhead `c · log(|α|+1)` and **is satisfiable / true**: the same `(a,a,b)`
-check gives `1.386 ≤ 0.916 + 2·log 3 ≈ 0.916 + 2.197`. ✓ Asymptotically
-`c · log c ∼ -log Pₙ` (LZ optimality), and the overhead `÷ n` vanishes since
-`c/n → 0`.
+**⚠ DEFECT — this per-block `∀ n ∀ ω` form is mathematically FALSE.**
+A genuine, unconditional, machine-checked refutation is published as
+`not_isLZ78ZivCombinatorialCoreOverhead` (`LZ78ZivTreeBridge.lean`). Witness:
+the constant process (`X ≡ a`) on `Unit`, at `n = 16`, has `Pₙ = 1`
+(`-log Pₙ = 0`) and the LZ parse of `a^16` emits `c = 5` distinct phrases, so
+the core asserts `5·log 5 ≤ 0 + 5·log 3`, i.e. `log 5 ≤ log 3` — false. The
+clean core `c·log c ≤ -log Pₙ` is *also* false (`(a,a,b)`), but **adding the
+`O(c)` overhead `c·log(|α|+1)` does NOT repair it**: when `Pₙ → 1` the term
+`-log Pₙ → 0` while `c log c ∼ √n·log√n → ∞`, and an `O(c)` overhead cannot
+close that gap (numerically even the textbook `c·log(n/c)` overhead is
+insufficient as `p → 1`). The single `(a,a,b)` check that previously justified
+"mathematically TRUE" only samples one point of the failing family and is not
+evidence for the universal statement.
 
-**Honesty status.** This is still a **load-bearing honest hypothesis**, NOT a
-discharge. It is the genuine combinatorial heart of the Ziv inequality. The
-genuine tree-node sub-distribution infrastructure of this file (T1
+**Honesty status.** Because the statement is false, it is **unsatisfiable**:
+any headline assuming `hcore : IsLZ78ZivCombinatorialCoreOverhead` is vacuously
+conditioned for the witness process (and the whole `Pₙ ≈ 1` family). The genuine
+Cover–Thomas LZ optimality `c log c ∼ -log Pₙ` is an **a.s.-eventual**
+(ergodic / AEP) statement, not a per-block `∀ n ∀ ω` inequality; the honest
+input that *can* be discharged is the a.s.-eventual rate-bound structure
+`IsLZ78AchievabilityZivUpperBound` (already used downstream), not this per-block
+core. The genuine, sorryAx-free tree-node infrastructure of this file (T1
 `lz78PhraseStringsAux_emit_context_mem`, T2 `nodeExtend_measureReal_sum_eq`,
-T3 `node_logsum_step`) is the sorryAx-free measure-theoretic content of
-Cover–Thomas Lemma 13.5.4; the residual that this hypothesis still carries is
-the connection between the **node-context** conditionals
-`q(phrase | context) = P(phrase)/P(context)` (stationary fresh-coordinate
-ratios, for which T2/T3 give the genuine per-node sub-distribution) and the
-**path block probability** `Pₙ`. That connection is **not** a telescoping of
-the committed path-prefix factorization (the LZ contexts are arbitrary
-already-emitted dictionary nodes, not the running path prefix), and is the
-genuine Cover–Thomas tree-measure vs. true-measure domination — a substantial
-measure-theoretic fact absent from the committed foundation. So this is a
-type `≠` conclusion named `Prop`, documented load-bearing, not `:= h`, not
-`True`. -/
+T3 `node_logsum_step`) is correct and reusable, but it cannot assemble into this
+(false) per-block core. This definition is retained only so the refutation and
+the downstream type-correct (but vacuously conditioned) wiring keep compiling;
+it should be **retired** in favour of an a.s.-eventual formulation. -/
 def IsLZ78ZivCombinatorialCoreOverhead
     (μ : Measure Ω) (p : StationaryProcess μ α) : Prop :=
   ∀ (n : ℕ) (ω : Ω),
@@ -672,25 +671,25 @@ the admissible full-support regularity `hreg`. The genuine Ziv tree overhead
 **Honesty status (read this).** This is **not** an unconditional headline, and
 it does **not** reduce the assumption count to one. Two honest inputs remain:
 
-* `hcore : IsLZ78ZivCombinatorialCoreOverhead` — the load-bearing Cover–Thomas
-  Lemma 13.5.4/13.5.5 combinatorial core, now in the **overhead-aware form**
-  `c·log c ≤ -log Pₙ + c·log(|α|+1)`. **Defect fix:** the previous clean core
-  `c·log c ≤ -log Pₙ` (`IsLZ78ZivCombinatorialCore`,
-  `LZ78ZivCombinatorics.lean`) is *mathematically false / unsatisfiable*
-  (counterexample `(a,a,b)`), so headlines assuming it are vacuously
-  conditioned. This overhead form is **mathematically true**, so the headline
-  is now genuinely instantiable. It is still **load-bearing** (NOT a
-  discharge): the genuine tree-node sub-distribution infrastructure of this
-  file (T1/T2/T3) is the sorryAx-free content of CT Lemma 13.5.4, but the
-  connection between the node-context conditionals `q(phrase|context)` and the
-  path block probability `Pₙ` (the CT tree-measure domination) is genuinely
-  absent from the committed foundation.
+* `hcore : IsLZ78ZivCombinatorialCoreOverhead` — the overhead-aware per-block
+  core `c·log c ≤ -log Pₙ + c·log(|α|+1)`. **⚠ This hypothesis is FALSE**
+  (`not_isLZ78ZivCombinatorialCoreOverhead`, `LZ78ZivTreeBridge.lean`): the
+  constant process witnesses `c log c > -log Pₙ + c log(|α|+1)` at `n = 16`
+  (`Pₙ = 1`, `c = 5`, `5 log 5 > 5 log 3`). The previous clean core
+  `c·log c ≤ -log Pₙ` is also false (`(a,a,b)`), and the `O(c)` overhead does
+  **not** repair it (the gap `c log c` vs `-log Pₙ → 0` is super-`O(c)` when
+  `Pₙ → 1`). So this headline is **vacuously conditioned** for the witness
+  process — it is type-correct but cannot be instantiated there. The genuine
+  T1/T2/T3 tree-node infrastructure is sorryAx-free and reusable, but it cannot
+  assemble into this (false) per-block core; the correct honest input is an
+  a.s.-eventual rate bound, not a per-block universal inequality.
 * `h_lb : IsLZ78ConverseCodingLowerBound` — the converse coding lower bound
   (Core 2, untouched here).
 
-So this **fixes the false-core defect** (the achievability honest input is now
-satisfiable) and supplies the genuine T1/T2/T3 tree-node foundation toward
-eventually discharging it; the assumption count remains two honest inputs. -/
+So this does **not** fix the false-core defect — it relocates it from the clean
+core to the overhead core, which is also false. The genuine T1/T2/T3 tree-node
+foundation stands; the assumption count remains two honest inputs, but `hcore`
+is unsatisfiable as stated and must be reformulated a.s.-eventually. -/
 theorem lz78_two_sided_optimality_distinct_ziv_overhead_core_wired
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
