@@ -1,5 +1,6 @@
 import Common2026.Shannon.HuffmanOptimality
 import Common2026.Shannon.HuffmanSwapNormCompletion
+import Common2026.Shannon.HuffmanMergedIdentBody
 
 /-!
 # T1-A'' — Hyp1 (swap normalization) genuine discharge, strong-precondition core
@@ -143,5 +144,45 @@ theorem swap_normalization_strong
 theorem swap_normalization_proof : SwapNormalizationHypothesis.{u} := by
   intro β _ _ _ _ _ Q _ ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
   exact swap_normalization_strong Q ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
+
+/-! ### 強形主定理 — Hyp1 discharged, Hyp2 を primitive で受ける形
+
+Hyp1 (`SwapNormalizationHypothesis`) は `swap_normalization_proof` で **無条件 genuine
+discharge** 済. Hyp2 (`HuffmanMergedIdentificationHypothesis`) の measure 層は
+`huffmanMergedIdentification_of_aux` で剥離済で、残るのは pure-combinatorics の primitive
+`MergedHuffmanAuxIdentHypothesis` のみ.
+
+下記 `huffmanLength_optimal_modulo_aux_ident` は **Hyp1 を被せ済**で、引数として残るのは
+`MergedHuffmanAuxIdentHypothesis` 一つだけ. この primitive の genuine discharge
+(Part C, `huffmanLengthAux` の carrier-crossing 対応) は本 session で閉じられていない
+残タスク (下記 docstring 参照). -/
+
+/-- **強形主定理 (Hyp1 discharged)** — `MergedHuffmanAuxIdentHypothesis` を **唯一の
+load-bearing hypothesis** として受け、Cover–Thomas Theorem 5.8.1 強形を結論する.
+
+Hyp1 (swap normalization) は `swap_normalization_proof` で無条件に genuine discharge 済.
+よって残る open hypothesis は `h_aux : MergedHuffmanAuxIdentHypothesis` の **1 つだけ**.
+
+**`h_aux` は load-bearing — NOT a discharge / NOT trivial.** 型は
+「`huffmanLengthAux (mergedInitMultiset Q a b) x = (if x.val = a then huffmanLength Q a - 1
+else huffmanLength Q x.val)`」という、Huffman 再帰を 2 carrier (`β` と `{y // y ≠ b}`)
+間で関連付ける genuine な combinatorial 恒等式であり、主定理の結論
+(`expectedLength` 不等式) とは型が異なる. これは `:= h` 循環でも `:True` placeholder でも
+退化定義でもない. その genuine discharge は `huffmanStep` の `Classical.choose` 非決定性
+(min 選択の tie 破り) を carrier 横断で対応付ける必要があり (judgement log #3),
+本 session では未完了の残タスク. -/
+theorem huffmanLength_optimal_modulo_aux_ident
+    {α : Type u} [Fintype α] [DecidableEq α] [Nonempty α]
+    [MeasurableSpace α] [MeasurableSingletonClass α]
+    (h_aux : MergedHuffmanAuxIdentHypothesis.{u})
+    (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})
+    (l : α → ℕ) (hl_pos : ∀ a, 0 < l a)
+    (hl_kraft : ∑ a : α, ((2 : ℝ)) ^ (-(l a : ℤ)) ≤ 1) :
+    InformationTheory.Shannon.ShannonCode.expectedLength P (huffmanLength P)
+      ≤ InformationTheory.Shannon.ShannonCode.expectedLength P l :=
+  huffmanLength_optimal_with_hypotheses
+    swap_normalization_proof
+    (huffmanMergedIdentification_of_aux h_aux)
+    P hP l hl_pos hl_kraft
 
 end InformationTheory.Shannon.Huffman
