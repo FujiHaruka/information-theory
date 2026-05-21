@@ -314,4 +314,105 @@ lemma huffmanStep_step_relabel {γ : Type*} [DecidableEq γ] (e : α ↪ γ)
     rw [← relabelMultiset_erase, ← relabelMultiset_erase]
     rfl
 
+/-! ### Section C — no-ties relabel-invariance of `huffmanLengthAux` (recursion)
+
+step-correspondence (`huffmanStep_step_relabel`) を strong induction で持ち上げ、
+`huffmanLengthAux` の carrier-embedding 越し不変量を得る。
+
+**nodup-probs は huffmanStep で一般に保たれない** (merged group の確率 `x1.2+x2.2` が
+既存と衝突しうる) ため、再帰 invariant として「再帰木の全 descendant で nodup-snd」
+(`NodupChain`) を要求する。これが genuine な C3 (tie-invariance) cornerstone。 -/
+
+/-- **再帰木全体の nodup-probs invariant**: `s` 自身と、`huffmanStep` 反復で到達する
+全 descendant が pairwise distinct probabilities を持つ。`huffmanLengthAux` の relabel
+不変量 (`huffmanLengthAux_relabel`) が要求する仮説。`huffmanStep` で nodup-snd は一般に
+保たれないので明示 invariant が必要 (§Section C docstring)。 -/
+def NodupChain (s : Multiset (Finset α × ℝ)) : Prop := by
+  classical
+  exact
+    (s.map Prod.snd).Nodup ∧
+      (if hg : HuffmanGrouping s then
+        if h : 2 ≤ s.card then
+          have : (huffmanStep s h hg).val.2.2.card < s.card := huffmanStep_card_lt s h hg
+          NodupChain (huffmanStep s h hg).val.2.2
+        else True
+      else True)
+termination_by s.card
+
+omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- `NodupChain` の head (現 level の nodup-snd). -/
+lemma NodupChain.head {s : Multiset (Finset α × ℝ)} (h : NodupChain s) :
+    (s.map Prod.snd).Nodup := by
+  rw [NodupChain] at h; exact h.1
+
+omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- `NodupChain` の tail (step 後の chain). -/
+lemma NodupChain.tail {s : Multiset (Finset α × ℝ)} (h : NodupChain s)
+    (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
+    NodupChain (huffmanStep s hs hg).val.2.2 := by
+  rw [NodupChain] at h
+  obtain ⟨_, h2⟩ := h
+  rw [dif_pos hg, dif_pos hs] at h2
+  exact h2
+
+omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- **C3 core — no-ties relabel-invariance**: 再帰木全体で nodup-probs (`NodupChain s`)
+が成り立つなら、`huffmanLengthAux` は carrier-embedding `e : α ↪ γ` の越しに不変:
+`huffmanLengthAux (relabelMultiset e s) (e a) = huffmanLengthAux s a`.
+
+これが C3 (tie-invariance) cornerstone。step-correspondence (`huffmanStep_step_relabel`)
+を `s.card` の strong induction で持ち上げる。**genuine、unconditional な (NodupChain 下の)
+不変量** だが、`mergedInitMultiset` は一般に `NodupChain` を満たさない (§file docstring)。 -/
+lemma huffmanLengthAux_relabel {γ : Type*} [DecidableEq γ] (e : α ↪ γ)
+    (s : Multiset (Finset α × ℝ)) (hg : HuffmanGrouping s) (hch : NodupChain s) (a : α) :
+    huffmanLengthAux (relabelMultiset e s) (e a) = huffmanLengthAux s a := by
+  induction hn : s.card using Nat.strong_induction_on generalizing s a with
+  | _ n ih =>
+    have hg' : HuffmanGrouping (relabelMultiset e s) := relabelMultiset_grouping e s hg
+    by_cases h2 : 2 ≤ s.card
+    · -- step case
+      have h2' : 2 ≤ (relabelMultiset e s).card := by
+        rw [relabelMultiset_card]; exact h2
+      -- step output correspondence
+      have hstep := huffmanStep_step_relabel e s hch.head h2 hg h2' hg'
+      -- unfold both sides one step
+      rw [huffmanLengthAux_eq_step (relabelMultiset e s) h2' hg',
+        huffmanLengthAux_eq_step s h2 hg]
+      simp only
+      -- membership test correspondence
+      have h1 := huffmanStep_fst_relabel e s hch.head h2 hg h2' hg'
+      have h2sel := huffmanStep_snd_relabel e s hch.head h2 hg h2' hg'
+      -- A' = (huffmanStep relabel).val.1.1 = (relabelGroup e x1).1 = x1.1.map e
+      have hA : (huffmanStep (relabelMultiset e s) h2' hg').val.1.1
+          = (huffmanStep s h2 hg).val.1.1.map e := by
+        rw [h1]; rfl
+      have hB : (huffmanStep (relabelMultiset e s) h2' hg').val.2.1.1
+          = (huffmanStep s h2 hg).val.2.1.1.map e := by
+        rw [h2sel]; rfl
+      -- the membership disjunction corresponds via Finset.mem_map'
+      have hmem : (e a ∈ (huffmanStep (relabelMultiset e s) h2' hg').val.1.1 ∨
+            e a ∈ (huffmanStep (relabelMultiset e s) h2' hg').val.2.1.1)
+          ↔ (a ∈ (huffmanStep s h2 hg).val.1.1 ∨
+            a ∈ (huffmanStep s h2 hg).val.2.1.1) := by
+        rw [hA, hB, Finset.mem_map', Finset.mem_map']
+      -- IH on s'' (smaller card, NodupChain.tail)
+      have hcard'' : (huffmanStep s h2 hg).val.2.2.card < n := by
+        have := huffmanStep_card_lt s h2 hg; omega
+      have hIH : huffmanLengthAux (relabelMultiset e ((huffmanStep s h2 hg).val.2.2)) (e a)
+          = huffmanLengthAux ((huffmanStep s h2 hg).val.2.2) a :=
+        ih _ hcard'' ((huffmanStep s h2 hg).val.2.2)
+          (huffmanStep_grouping s h2 hg) (hch.tail h2 hg) a rfl
+      -- rewrite relabel-side s'' via hstep
+      rw [hstep, hIH]
+      -- now both sides: if (mem disjunction) then g a + 1 else g a, with disjunctions corresponding
+      by_cases hd : a ∈ (huffmanStep s h2 hg).val.1.1 ∨
+          a ∈ (huffmanStep s h2 hg).val.2.1.1
+      · rw [if_pos (hmem.mpr hd), if_pos hd]
+      · rw [if_neg (fun h => hd (hmem.mp h)), if_neg hd]
+    · -- base case: both sides 0
+      have hc1 : s.card ≤ 1 := by omega
+      have hc1' : (relabelMultiset e s).card ≤ 1 := by rw [relabelMultiset_card]; exact hc1
+      rw [huffmanLengthAux_eq_zero (relabelMultiset e s) hc1' hg',
+        huffmanLengthAux_eq_zero s hc1 hg]
+
 end InformationTheory.Shannon.Huffman
