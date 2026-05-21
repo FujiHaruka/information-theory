@@ -2,6 +2,7 @@ import Common2026.Shannon.ChernoffSanovDischarge
 import Common2026.Shannon.ChernoffPerTiltSanov
 import Common2026.Shannon.ChernoffPerTiltDischarge
 import Common2026.Shannon.ChernoffConverse
+import Common2026.Shannon.ChernoffInformation
 import Common2026.Shannon.Chernoff
 import Common2026.Shannon.CramerLC2Discharge
 import Mathlib.Probability.StrongLaw
@@ -545,5 +546,29 @@ theorem chernoff_converse_holds
   refine ChernoffSanovDischarge.chernoff_converse_of_bandMass P₁ P₂ hP₁_pos hP₂_pos ?_
   refine ⟨lam, Set.Ioo_subset_Icc_self hlam_int, h_chern, ?_⟩
   exact isChernoffBandMassToOne_of_interior_optimal P₁ P₂ hP₁_pos hP₂_pos lam hlam_int hlam_min
+
+/-! ## Capstone: full Chernoff information theorem, unconditional (regularity only) -/
+
+/-- **Cover-Thomas Theorem 11.9.1 (full), unconditional (regularity only)**: the
+n-IID minimum Bayes error decays at the exponential rate `chernoffInfo P₁ P₂`,
+i.e. `-(1/n) log (bayesErrorMinPmf P₁ P₂ n) → chernoffInfo P₁ P₂`.
+
+Assembled from the now-discharged converse (`chernoff_converse_holds`, this file),
+the achievability half (`chernoff_lemma_achievability`, `Chernoff.lean`), and the
+two genuine boundedness lemmas. Only regularity hypotheses (full-support pmfs,
+`P₁ ≠ P₂`). -/
+theorem chernoff_lemma_tendsto_holds
+    (P₁ P₂ : α → ℝ) [Nonempty α]
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
+    (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
+    (hne : P₁ ≠ P₂) :
+    Filter.Tendsto
+      (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n))
+      atTop (nhds (chernoffInfo P₁ P₂)) :=
+  InformationTheory.Shannon.ChernoffInformation.chernoff_lemma_tendsto
+    P₁ P₂ hP₁_pos hP₂_pos
+    (chernoff_converse_holds P₁ P₂ hP₁_pos hP₂_pos hP₁_sum hP₂_sum hne)
+    (InformationTheory.Shannon.ChernoffConverse.chernoff_rate_isBoundedUnder_le
+      P₁ P₂ hP₁_pos hP₂_pos)
 
 end InformationTheory.Shannon.ChernoffBandMassDischarge
