@@ -2,3 +2,8 @@
 /.claude/plans/
 /.claude/settings.local.json
 /.claude/handoff.md
+
+# Honesty audit DB — point-in-time audit of the codebase, not tracked
+/docs/audit/*.db
+/docs/audit/*.db-wal
+/docs/audit/*.db-shm

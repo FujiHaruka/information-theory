@@ -6,9 +6,10 @@
 //   deno run -A scripts/extract_statements.ts [paths...] [--out <file>] [--kinds k1,k2]
 //
 // Defaults:
-//   paths  = Common2026
-//   --out  = docs/formalized-statements.md
-//   --kinds= theorem,lemma
+//   paths    = Common2026
+//   --out    = docs/formalized-statements.md
+//   --kinds  = theorem,lemma
+//   --exclude= Common2026/Exam/   (comma-separated path substrings to skip)
 //
 // Approach: a small comment/string/bracket-aware scanner over the *original* source
 // (so signatures are preserved verbatim). For each declaration whose keyword is in
@@ -111,16 +112,19 @@ function cleanDoc(raw: string): string {
   return raw.replace(/[ \t]+$/gm, "").trim();
 }
 
-type Decl = {
+export type Decl = {
   kind: string;
   name: string;
   ns: string;
   signature: string;
   doc: string | null;
   line: number;
+  declStart: number;
+  bodyStart: number;
+  body: string;
 };
 
-function parse(src: string, kinds: Set<string>): Decl[] {
+export function parse(src: string, kinds: Set<string>): Decl[] {
   const decls: Decl[] = [];
   const nsStack: string[] = [];
   let pendingDoc: { text: string; end: number } | null = null;
@@ -183,6 +187,9 @@ function parse(src: string, kinds: Set<string>): Decl[] {
             signature,
             doc,
             line,
+            declStart,
+            bodyStart: sigEnd + 2,
+            body: "",
           });
           pendingDoc = null;
           i = sigEnd + 2;
@@ -192,12 +199,23 @@ function parse(src: string, kinds: Set<string>): Decl[] {
     }
     i++;
   }
+  // Body of each decl spans from just past its `:=` to the start of the next decl
+  // (an over-approximation that may include trailing `end`/section lines; fine for
+  // the cheap honesty heuristics, which are verified authoritatively when flagged).
+  for (let k = 0; k < decls.length; k++) {
+    const end = k + 1 < decls.length ? decls[k + 1].declStart : src.length;
+    decls[k].body = src.slice(decls[k].bodyStart, end);
+  }
   return decls;
 }
 
-async function collectLeanFiles(paths: string[]): Promise<string[]> {
+async function collectLeanFiles(
+  paths: string[],
+  exclude: string[],
+): Promise<string[]> {
   const out: string[] = [];
   const visit = async (p: string) => {
+    if (exclude.some((e) => p.includes(e))) return;
     let info: Deno.FileInfo;
     try { info = await Deno.stat(p); } catch { return; }
     if (info.isFile) {
@@ -222,18 +240,25 @@ async function main() {
   const args = [...Deno.args];
   let out = "docs/formalized-statements.md";
   let kinds = new Set(["theorem", "lemma"]);
+  let exclude = ["Common2026/Exam/"];
+  let noDocs = false;
   const paths: string[] = [];
   for (let k = 0; k < args.length; k++) {
     if (args[k] === "--out") { out = args[++k]; continue; }
+    if (args[k] === "--no-docs") { noDocs = true; continue; }
     if (args[k] === "--kinds") {
       kinds = new Set(args[++k].split(",").map((s) => s.trim()).filter(Boolean));
+      continue;
+    }
+    if (args[k] === "--exclude") {
+      exclude = args[++k].split(",").map((s) => s.trim()).filter(Boolean);
       continue;
     }
     paths.push(args[k]);
   }
   if (paths.length === 0) paths.push("Common2026");
 
-  const files = await collectLeanFiles(paths);
+  const files = await collectLeanFiles(paths, exclude);
   const today = new Date().toISOString().slice(0, 10);
   const lines: string[] = [];
   lines.push("# Formalized statements (auto-generated)");
@@ -265,7 +290,7 @@ async function main() {
       const full = d.ns ? `${d.ns}.${d.name}` : d.name;
       lines.push(`### \`${full}\` _(${d.kind}, L${d.line})_`);
       lines.push("");
-      if (d.doc) {
+      if (d.doc && !noDocs) {
         lines.push(d.doc);
         lines.push("");
       }
