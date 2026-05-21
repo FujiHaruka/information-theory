@@ -234,6 +234,7 @@ import Common2026.Shannon.StationaryKernel
 import Common2026.Shannon.LZ78ConverseKraft
 import Common2026.Shannon.LZ78AchievabilityLimsup
 import Common2026.Shannon.LZ78ZivCombinatorics
+import Common2026.Shannon.LZ78ZivTreeNode
 import Common2026.Shannon.EPIStamDeBruijnConclusion
 import Common2026.Shannon.MACPerEventAEPDecay
 import Common2026.Shannon.MACFanoConverseBody
