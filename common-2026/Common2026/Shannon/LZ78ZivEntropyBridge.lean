@@ -215,4 +215,40 @@ theorem blockProb_neg_log_eq_sum
       condPhraseProb μ p n ω j ≠ 0 := fun j hj => (h.pos n ω j hj).ne'
   rw [h.factor n ω, Real.log_prod hne, ← Finset.sum_neg_distrib]
 
+/-! ## Base-2 (bit) layer — unit correction for the LZ78 headline
+
+The LZ78 encoding length `lz78DistinctEncodingLength` is measured in **bits**
+(`LZ78Phrase.bitLength` uses `Nat.log 2`, the binary code-length), whereas
+`blockLogAvg` / `entropyRate` are **natural-log** quantities (nats). The
+genuine Cover–Thomas Theorem 13.5.3 statement is bit-based:
+
+```
+(lz n x)/n → H₂   where  H₂ = (entropy rate in bits) = entropyRate / log 2.
+```
+
+We therefore introduce the base-2 (bit) versions `blockLogAvg₂` and
+`entropyRate₂` as the natural-log quantities divided by `Real.log 2`. These
+are *unit conversions*, not new content: `blockLogAvg₂ = blockLogAvg / log 2`
+converges to `entropyRate₂ = entropyRate / log 2` directly from SMB. The
+LZ78 achievability / converse bounds, being genuinely bit-based
+(`c·log₂c ≤ -log₂ Pₙ`), are stated against `blockLogAvg₂`. -/
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- `0 < Real.log 2` — the unit-conversion constant between nats and bits. -/
+theorem log_two_pos : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
+
+/-- **Base-2 (bit) per-block empirical entropy estimator**:
+`blockLogAvg₂ μ p n ω = blockLogAvg μ p n ω / Real.log 2`, the per-block
+negative log-likelihood measured in **bits** (`-(1/n) log₂ Pₙ{block}`). This
+is the quantity the bit-based LZ78 rate `(lz n x)/n` is compared against. -/
+noncomputable def blockLogAvg₂
+    (μ : Measure Ω) (p : StationaryProcess μ α) (n : ℕ) : Ω → ℝ :=
+  fun ω => blockLogAvg μ p n ω / Real.log 2
+
+/-- **Base-2 (bit) entropy rate**: `entropyRate₂ μ p = entropyRate μ p / Real.log 2`,
+the entropy rate measured in **bits per symbol**. This is the genuine
+Cover–Thomas Theorem 13.5.3 limit for the bit-based LZ78 per-symbol rate. -/
+noncomputable def entropyRate₂ (μ : Measure Ω) (p : StationaryProcess μ α) : ℝ :=
+  entropyRate μ p / Real.log 2
+
 end InformationTheory.Shannon

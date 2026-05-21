@@ -230,6 +230,7 @@ import Common2026.Shannon.HoeffdingTradeoffExp
 import Common2026.Shannon.LZ78FinalGlue
 import Common2026.Shannon.LZ78DistinctEncoding
 import Common2026.Shannon.LZ78ZivEntropyBridge
+import Common2026.Shannon.StationaryKernel
 import Common2026.Shannon.LZ78ConverseKraft
 import Common2026.Shannon.LZ78AchievabilityLimsup
 import Common2026.Shannon.EPIStamDeBruijnConclusion
