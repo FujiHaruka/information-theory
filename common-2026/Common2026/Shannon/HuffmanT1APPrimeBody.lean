@@ -39,7 +39,7 @@ namespace InformationTheory.Shannon.Huffman
 open MeasureTheory
 open scoped BigOperators ENNReal
 
-variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+variable {α : Type*} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
 universe u
@@ -54,7 +54,7 @@ explicit に与える形.
 実用上は `n = 0` (= 何もしない) と `n = 1` (= 1 swap) を主に使う. 本 file では `n = 0`
 case のみ trivial discharge を publish. -/
 abbrev SwapStepLeChainHypothesis : Prop :=
-  ∀ {β : Type u} [Fintype β] [DecidableEq β]
+  ∀ {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (Q : Measure β) [IsProbabilityMeasure Q]
     (ll : β → ℕ) (_hll_pos : ∀ x, 0 < ll x)
@@ -71,7 +71,7 @@ abbrev SwapStepLeChainHypothesis : Prop :=
 weakened な primitive hypothesis なので discharge 自体は trivial. -/
 theorem swapStepLeChainHypothesis_holds :
     SwapStepLeChainHypothesis.{u} := by
-  intro β _ _ _ _ Q _ ll hll_pos hll_kraft _pair
+  intro β _ _ _ _ _ Q _ ll hll_pos hll_kraft _pair
   refine ⟨ll, hll_pos, hll_kraft, le_refl _⟩
 
 /-! ### Section B — `SwapNormalizationHypothesis` partial discharge via primitive -/
@@ -81,7 +81,7 @@ omit [Nonempty α] [MeasurableSingletonClass α] in
 discharge**: 既存の `SwapNormalizationHypothesis_trivial_when_eq` の universe-polymorphic
 版. Pinpoint で `ll a = ll b` だけ仮定して結論を生成する形. -/
 theorem swapNormalizationHypothesis_at_pair_when_eq_poly
-    {β : Type u} [Fintype β] [DecidableEq β]
+    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (Q : Measure β) [IsProbabilityMeasure Q]
     (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
@@ -100,7 +100,7 @@ theorem swapNormalizationHypothesis_at_pair_when_eq_poly
 入れ替わるが `ll a = ll b` のため `l_norm a = l_norm b` は維持. expectedLength 等式は
 `expectedLength_swap_eq_when_ll_eq` (partial 既存) で押さえる. -/
 theorem swapNormalizationHypothesis_alt_witness_swap
-    {β : Type u} [Fintype β] [DecidableEq β]
+    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (Q : Measure β) [IsProbabilityMeasure Q]
     (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
@@ -154,7 +154,7 @@ omit [Nonempty α] in
 本 lemma は **hypothesis** として外から受け取ったもの (`h_ident`) から `x.val = a` の
 case の値を抽出する extractor. -/
 theorem huffmanMergedIdentification_at_a
-    {β : Type u} [Fintype β] [DecidableEq β] [Nonempty β]
+    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (h_ident : HuffmanMergedIdentificationHypothesis.{u})
     (Q : Measure β) [IsProbabilityMeasure Q] (hQ : ∀ a, 0 < Q.real {a})
@@ -173,7 +173,7 @@ omit [Nonempty α] in
 /-- **identification hypothesis の point-wise extractor (`x.val ≠ a` case)**: `hsib`
 仮定の下で `x.val ≠ a` のとき `huffmanLength (mergedMeasure ...) x = huffmanLength P x.val`. -/
 theorem huffmanMergedIdentification_at_other
-    {β : Type u} [Fintype β] [DecidableEq β] [Nonempty β]
+    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (h_ident : HuffmanMergedIdentificationHypothesis.{u})
     (Q : Measure β) [IsProbabilityMeasure Q] (hQ : ∀ a, 0 < Q.real {a})
@@ -193,7 +193,7 @@ omit [Nonempty α] in
 で 1 式に書いた形. `h_ident` の結論そのまま (alias) だが、後続 client が直接 `if` 形を
 受け取りたいときの reference. -/
 theorem huffmanMergedIdentification_combined
-    {β : Type u} [Fintype β] [DecidableEq β] [Nonempty β]
+    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (h_ident : HuffmanMergedIdentificationHypothesis.{u})
     (Q : Measure β) [IsProbabilityMeasure Q] (hQ : ∀ a, 0 < Q.real {a})
@@ -215,7 +215,7 @@ huffmanLength Q b` から `huffmanLength (mergedMeasure ...) x` を `x.val = b` 
 そもそも domain `{y // y ≠ b}` で除外されているので、`x.val ∈ {a, c (≠ b)}` の case
 分類だけが残る. これを explicit に publish. -/
 theorem huffmanMergedIdentification_dichotomy
-    {β : Type u} [Fintype β] [DecidableEq β] [Nonempty β]
+    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (h_ident : HuffmanMergedIdentificationHypothesis.{u})
     (Q : Measure β) [IsProbabilityMeasure Q] (hQ : ∀ a, 0 < Q.real {a})
@@ -244,7 +244,7 @@ omit [Nonempty α] in
 `huffmanLength Q b = huffmanLength Q a`. trivial だが client で `eq.symm` を毎回書か
 ないための alias. -/
 theorem huffmanLength_sibling_symm
-    {β : Type u} [Fintype β] [DecidableEq β] [Nonempty β]
+    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (Q : Measure β)
     (a b : β) (h_sibling : huffmanLength Q a = huffmanLength Q b) :
@@ -257,7 +257,7 @@ identification が成立する場合の form を作る側で使う sibling prope
 本 lemma は sibling property の symm を `huffmanLength Q b = huffmanLength Q a` 形で再公開
 する命名 alias. -/
 theorem huffmanLength_sibling_eq_iff
-    {β : Type u} [Fintype β] [DecidableEq β] [Nonempty β]
+    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (Q : Measure β) (a b : β) :
     huffmanLength Q a = huffmanLength Q b ↔ huffmanLength Q b = huffmanLength Q a :=
@@ -269,7 +269,7 @@ theorem huffmanLength_sibling_eq_iff
 trivial_when_eq` 経由で `h_swap` を消費した形で `huffmanLength_optimal_with_hypotheses`
 を呼び出すパターン. 仮定で `ll a = ll b` (sibling at `(a, b)`) の場合の直接呼び出し形. -/
 theorem huffmanLength_optimal_via_partial_swap_when_eq
-    {α : Type u} [Fintype α] [DecidableEq α] [Nonempty α]
+    {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
     (h_swap : SwapNormalizationHypothesis.{u})
     (h_ident : HuffmanMergedIdentificationHypothesis.{u})
@@ -284,7 +284,7 @@ theorem huffmanLength_optimal_via_partial_swap_when_eq
 `(a, b)` を explicit に指定し、`l a = l b` 確認後に主定理を呼べる形. ただし `l a = l b`
 は主定理 internal の swap normalization step で生成されるので external 仮定にはしない. -/
 theorem huffmanLength_optimal_wrapper_explicit
-    {α : Type u} [Fintype α] [DecidableEq α] [Nonempty α]
+    {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
     (h_swap : SwapNormalizationHypothesis.{u})
     (h_ident : HuffmanMergedIdentificationHypothesis.{u})
@@ -363,7 +363,7 @@ omit [Nonempty α] [MeasurableSingletonClass α] in
 を抽出する form. tuple の全成分を `obtain` で取り出す client の boilerplate を 1 個に
 まとめた wrapper. -/
 theorem SwapNormalizationHypothesis_apply_witness
-    {β : Type u} [Fintype β] [DecidableEq β] [Nonempty β]
+    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (h_swap : SwapNormalizationHypothesis.{u})
     (Q : Measure β) [IsProbabilityMeasure Q]
@@ -383,7 +383,7 @@ theorem SwapNormalizationHypothesis_apply_witness
 
 /-- **witness positivity extractor**: hypothesis 結論の存在から positivity だけ取り出す. -/
 theorem SwapNormalizationHypothesis_witness_pos
-    {β : Type u} [Fintype β] [DecidableEq β] [Nonempty β]
+    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (h_swap : SwapNormalizationHypothesis.{u})
     (Q : Measure β) [IsProbabilityMeasure Q]
@@ -400,7 +400,7 @@ theorem SwapNormalizationHypothesis_witness_pos
 
 /-- **witness kraft extractor**: hypothesis 結論の存在から Kraft だけ取り出す. -/
 theorem SwapNormalizationHypothesis_witness_kraft
-    {β : Type u} [Fintype β] [DecidableEq β] [Nonempty β]
+    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (h_swap : SwapNormalizationHypothesis.{u})
     (Q : Measure β) [IsProbabilityMeasure Q]
@@ -418,7 +418,7 @@ theorem SwapNormalizationHypothesis_witness_kraft
 /-- **witness sibling equality extractor**: hypothesis 結論から `l_norm a = l_norm b` の
 sibling 等式だけ取り出す. -/
 theorem SwapNormalizationHypothesis_witness_eq
-    {β : Type u} [Fintype β] [DecidableEq β] [Nonempty β]
+    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (h_swap : SwapNormalizationHypothesis.{u})
     (Q : Measure β) [IsProbabilityMeasure Q]
@@ -436,7 +436,7 @@ theorem SwapNormalizationHypothesis_witness_eq
 /-- **witness expected length extractor**: hypothesis 結論から expectedLength `≤` だけ
 取り出す. -/
 theorem SwapNormalizationHypothesis_witness_expL
-    {β : Type u} [Fintype β] [DecidableEq β] [Nonempty β]
+    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (h_swap : SwapNormalizationHypothesis.{u})
     (Q : Measure β) [IsProbabilityMeasure Q]
@@ -509,7 +509,7 @@ theorem huffmanCombinedHypothesis_ident
 
 /-- **combined hypothesis から主定理を 1-arg で呼ぶ wrapper**. -/
 theorem huffmanLength_optimal_with_combined
-    {α : Type u} [Fintype α] [DecidableEq α] [Nonempty α]
+    {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
     (h : HuffmanCombinedHypothesis.{u})
     (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})
@@ -576,7 +576,7 @@ theorem swap_value_le_max
 自身を `l` として主定理に入れた形は trivial に `≤` (= 反射律) で成立. `huffmanLength_pos`
 が `2 ≤ card α` を要求するため、本 wrapper も同条件で公開. -/
 theorem huffmanLength_optimal_self
-    {α : Type u} [Fintype α] [DecidableEq α] [Nonempty α]
+    {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
     (h_swap : SwapNormalizationHypothesis.{u})
     (h_ident : HuffmanMergedIdentificationHypothesis.{u})
@@ -594,7 +594,7 @@ theorem huffmanLength_optimal_self
 1 引数で呼ぶ最も簡潔な form**. T1-A''' 後続 seed で H が定理として成立した瞬間に強形が
 得られる terminal step. -/
 theorem huffmanLength_optimal_terminal
-    {α : Type u} [Fintype α] [DecidableEq α] [Nonempty α]
+    {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
     (H : HuffmanCombinedHypothesis.{u})
     (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})

@@ -48,7 +48,7 @@ namespace InformationTheory.Shannon.Huffman
 open MeasureTheory
 open scoped BigOperators ENNReal
 
-variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+variable {α : Type*} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
 universe u
@@ -121,7 +121,7 @@ theorem expectedLength_perm_chain2_le
 `≤ 1` を維持する形の primitive predicate. `SwapStepLeChainHypothesis` の Kraft 部分を
 分離した sub-predicate. -/
 abbrev PermChainKraftPreserving : Prop :=
-  ∀ {β : Type u} [Fintype β] [DecidableEq β]
+  ∀ {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β]
     (ll : β → ℕ) (σ : β ≃ β),
     (∑ x : β, ((2 : ℝ)) ^ (-(ll x : ℤ)) ≤ 1) →
     (∑ x : β, ((2 : ℝ)) ^ (-((ll ∘ σ) x : ℤ)) ≤ 1)
@@ -140,7 +140,7 @@ theorem permChainKraftPreserving_holds :
 /-- **chain sub-predicate (expectedLength preserving, pointwise-eq)**: permutation `σ` が
 `∀ x, ll (σ x) = ll x` を満たすとき expectedLength を不変に保つ形の primitive predicate. -/
 abbrev PermChainExpectedLengthPreserving : Prop :=
-  ∀ {β : Type u} [Fintype β] [DecidableEq β]
+  ∀ {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (Q : Measure β) [IsProbabilityMeasure Q]
     (ll : β → ℕ) (σ : β ≃ β),
@@ -188,7 +188,7 @@ theorem swapStepLeChainHypothesis_via_subpredicates
 を 1-step chain として挿入しても `SwapStepLeChainHypothesis` の結論が成立する derived
 form. `PermChainExpectedLengthPreserving` を経由して expectedLength 不変を保証. -/
 theorem swapStepLeChain_single_swap_witness
-    {β : Type u} [Fintype β] [DecidableEq β]
+    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (Q : Measure β) [IsProbabilityMeasure Q]
     (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
@@ -278,7 +278,7 @@ theorem swapStepLeChainHypothesis_holds_via_subpredicates :
 得られる `l_chain` の存在を抽出する form. wave6 primitive predicate の application
 boilerplate を 1 個にまとめた wrapper. -/
 theorem swapStepLeChainHypothesis_apply
-    {β : Type u} [Fintype β] [DecidableEq β]
+    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (h_chain : SwapStepLeChainHypothesis.{u})
     (Q : Measure β) [IsProbabilityMeasure Q]
@@ -295,7 +295,7 @@ theorem swapStepLeChainHypothesis_apply
 /-- **chain hypothesis witness の expectedLength 抽出 (poly)**: chain hypothesis 結論から
 expectedLength `≤` 部分だけ取り出す extractor. -/
 theorem swapStepLeChainHypothesis_witness_expL
-    {β : Type u} [Fintype β] [DecidableEq β]
+    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (h_chain : SwapStepLeChainHypothesis.{u})
     (Q : Measure β) [IsProbabilityMeasure Q]
@@ -340,7 +340,7 @@ theorem huffmanChainCombined_iff :
 /-- **triple hypothesis から主定理を呼ぶ wrapper**: 3-way hypothesis を reduce して
 `huffmanLength_optimal_with_combined` を呼ぶ terminal step. -/
 theorem huffmanLength_optimal_with_chain_combined
-    {α : Type u} [Fintype α] [DecidableEq α] [Nonempty α]
+    {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
     (h : HuffmanChainCombinedHypothesis.{u})
     (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})
@@ -354,7 +354,7 @@ theorem huffmanLength_optimal_with_chain_combined
 2-way `HuffmanCombinedHypothesis` を持っているとき chain を補って主定理を呼ぶ form.
 `huffmanLength_optimal_with_combined` と等価だが chain 経路を明示. -/
 theorem huffmanLength_optimal_via_chain_lift
-    {α : Type u} [Fintype α] [DecidableEq α] [Nonempty α]
+    {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
     (h : HuffmanCombinedHypothesis.{u})
     (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})

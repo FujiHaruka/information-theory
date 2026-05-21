@@ -33,7 +33,7 @@ namespace InformationTheory.Shannon.Huffman
 open MeasureTheory
 open scoped BigOperators ENNReal
 
-variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+variable {α : Type*} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
 /-! ### `swap_step_le` の 4 分解 extractor
@@ -170,7 +170,7 @@ expected length 非増加) が pass-through で成立. これは `SwapNormalizat
 を **point-wise** に展開した形で記述. `SwapNormalizationHypothesis.{u}` 全体が成立する
 ことを意味するものではない. -/
 theorem SwapNormalizationHypothesis_trivial_when_eq
-    {β : Type*} [Fintype β] [DecidableEq β]
+    {β : Type*} [Fintype β] [DecidableEq β] [LinearOrder β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (Q : Measure β) [IsProbabilityMeasure Q]
     (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
@@ -230,7 +230,7 @@ omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
 本 lemma は `SwapNormalizationHypothesis_trivial_when_eq` を symm 形に並置するだけで、
 swap pair `(a, b)` の順序を反転した形を提供. -/
 theorem SwapNormalizationHypothesis_trivial_when_eq_symm
-    {β : Type*} [Fintype β] [DecidableEq β]
+    {β : Type*} [Fintype β] [DecidableEq β] [LinearOrder β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (Q : Measure β) [IsProbabilityMeasure Q]
     (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
@@ -442,7 +442,7 @@ omit [Nonempty α] [MeasurableSingletonClass α] in
 そのまま成立する補題. `Equiv.swap a b ∘ Equiv.swap a b = id` の involution を用いて
 `l_norm := ll` を保持する形で discharge. swap を 0 段挿入する場合の identity. -/
 theorem SwapNormalizationHypothesis_trivial_when_eq_via_swap
-    {β : Type*} [Fintype β] [DecidableEq β]
+    {β : Type*} [Fintype β] [DecidableEq β] [LinearOrder β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (Q : Measure β) [IsProbabilityMeasure Q]
     (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
@@ -471,7 +471,7 @@ omit [Nonempty α] [MeasurableSingletonClass α] in
 swap で値が `(a, b)` 間で入れ替わるが `ll a = ll b` の下で `l_norm a = l_norm b` は
 `ll b = ll a` (= `ll a = ll b` の symm) で成立. -/
 theorem SwapNormalizationHypothesis_trivial_via_single_swap
-    {β : Type*} [Fintype β] [DecidableEq β]
+    {β : Type*} [Fintype β] [DecidableEq β] [LinearOrder β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (Q : Measure β) [IsProbabilityMeasure Q]
     (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
@@ -547,7 +547,7 @@ omit [Nonempty α] [MeasurableSingletonClass α] in
 /-- **trivial wrapper at `a = b` (≠ 条件 + `ll a = ll b`)**: `a ≠ b` の入力 + `ll a = ll b`
 で自明 hypothesis を直接 discharge する形. swap pair `(a, b)` の `a ≠ b` 制約を保持. -/
 theorem SwapNormalizationHypothesis_trivial_with_neq
-    {β : Type*} [Fintype β] [DecidableEq β]
+    {β : Type*} [Fintype β] [DecidableEq β] [LinearOrder β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (Q : Measure β) [IsProbabilityMeasure Q]
     (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
@@ -565,7 +565,7 @@ omit [Nonempty α] [MeasurableSingletonClass α] in
 /-- **trivial wrapper packaged tuple form**: 上記 discharge の 4 条件を **structure 風
 tuple** にした形. client が `obtain ⟨l, h1, h2, h3, h4⟩` で取り出せる. -/
 theorem SwapNormalizationHypothesis_trivial_tuple
-    {β : Type*} [Fintype β] [DecidableEq β]
+    {β : Type*} [Fintype β] [DecidableEq β] [LinearOrder β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (Q : Measure β) [IsProbabilityMeasure Q]
     (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
@@ -608,7 +608,7 @@ theorem huffmanLength_optimal_with_hypotheses_at
 /-- **partial wrapper (combined hypothesis tuple form)**: 2 hypothesis を tuple
 形に combine した形の wrapper. client は `⟨h_swap, h_ident⟩` で渡せる. -/
 theorem huffmanLength_optimal_with_combined_hypothesis
-    {α : Type u} [Fintype α] [DecidableEq α] [Nonempty α]
+    {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
     (h : SwapNormalizationHypothesis.{u} ∧ HuffmanMergedIdentificationHypothesis.{u})
     (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})
@@ -625,7 +625,7 @@ theorem huffmanLength_optimal_with_combined_hypothesis
 最小 prob pair に対して `l_norm a = l_norm b` が必要だが、本 partial は **`ll a = ll b`
 を追加仮定** にする形で discharge する弱形. -/
 theorem SwapNormalizationHypothesis_at_pair_when_eq
-    {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
+    {β : Type*} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (Q : Measure β) [IsProbabilityMeasure Q]
     (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
@@ -832,7 +832,7 @@ wrapper) を集める. これらは後続 seed T1-A''' で hypothesis を discha
 /-- **partial wrapper: hypothesis を tuple で **`Σ`-pair** 化**: 2 hypothesis を非依存
 `Σ`-pair で取り出す形. inhabited `PProd` 風. -/
 theorem huffmanLength_optimal_with_pair_hypothesis
-    {α : Type u} [Fintype α] [DecidableEq α] [Nonempty α]
+    {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
     (h : PProd (SwapNormalizationHypothesis.{u}) (HuffmanMergedIdentificationHypothesis.{u}))
     (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})
@@ -845,7 +845,7 @@ theorem huffmanLength_optimal_with_pair_hypothesis
 /-- **partial wrapper: contraposition form**: 結論を否定の対偶形で publish. 後続
 client が strict 不等式から逆向きに矛盾を起こす useful な form. -/
 theorem huffmanLength_optimal_with_hypotheses_contra
-    {α : Type u} [Fintype α] [DecidableEq α] [Nonempty α]
+    {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
     (h_swap : SwapNormalizationHypothesis.{u})
     (h_ident : HuffmanMergedIdentificationHypothesis.{u})
