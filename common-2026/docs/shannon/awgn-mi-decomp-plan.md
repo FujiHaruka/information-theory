@@ -32,6 +32,7 @@
 - [ ] Phase 5 — **mixture 同定 (最重)** (`∫_x [∫_y log f_q dW_x] dp = ∫_y log f_q dq = −h(q)`) 📋
 - [ ] Phase 6 — 結合 (`I = h(q) − ∫ h(W x) dp`) → 一般 body 補題 publish (🟢ʰ honest 仮定付き) 📋
 - [ ] Phase 7 — **AWGN instance discharge** (honest 仮定 7本を Gaussian で全充足、`IsContChannelMIDecompHyp` 仮定なし publish) 📋
+- [ ] Phase 8 — **rnDeriv joint-measurability discharge via measurable PDF proxy** (残 2 honest hyp `h_meas_fibre`/`h_int_fibre_joint` を Route B で除去、AWGN MI bridge 仮定なし化) 📋 → [awgn-rnderiv-measurability-inventory.md](awgn-rnderiv-measurability-inventory.md)
 - [ ] Phase V — verify + 親 plan F-2 退避記録の discharge 反映 📋
 
 ## ゴール / Approach
@@ -424,6 +425,240 @@ output Gaussian fact のみ) で publish。fibre/output density は `gaussianRea
 
 ---
 
+## Phase 8 — rnDeriv joint-measurability discharge via measurable PDF proxy 📋
+
+> **Predecessor (inventory)**: [`awgn-rnderiv-measurability-inventory.md`](awgn-rnderiv-measurability-inventory.md)
+> （feasibility **Route B 採用**、Mathlib gap `0 match`/`Found 0 declarations` で確定、消費側 use-site verbatim）
+
+### スコープ / 確定した障害 (再導出禁止、確定事実)
+
+Phase 7 完了後も `isContChannelMIDecompHyp_awgn` (`ContChannelMIDecomp.lean:421`) / `isAwgnMIDecomp_of_densitySplit`
+(`:496`) には **2 本の honest hyp が残る**:
+
+- `h_meas_fibre : Measurable (fun z : ℝ × ℝ => ((awgnChannel N h_meas) z.1).rnDeriv volume z.2)`
+- `h_int_fibre_joint : Integrable (fun z => Real.log (((awgnChannel N h_meas) z.1).rnDeriv volume z.2).toReal) (p ⊗ₘ W)`
+
+これらは `llr_compProd_prod_split` (`:171`) が消費する `h_meas_fibre : Measurable (fun z => (W z.1).rnDeriv volume z.2)`
+(`:176`) に pin されている。**確定済の障害 (inventory §C/Q3, 本 Phase では再検証不要)**:
+
+1. `(gaussianReal m N).rnDeriv volume` は PDF と **`=ᵐ[volume]` のみ** で一致 (`rnDeriv_gaussianReal`, 結論 `=ₐₛ`、Real.lean:240)、
+   everywhere `=` ではない。⇒ measure-form rnDeriv `fun z => (gaussianReal z.1 N).rnDeriv volume z.2` の everywhere-joint
+   `Measurable` は **構成不能** (rnDeriv は a.e.-determined)。
+2. 消費側 `llr_compProd_prod_split` は (`:195-199`) `Measure.ae_compProd_of_ae_ae` を呼び、その第 1 goal `measurableSet_eq_fun`
+   (両関数 everywhere `Measurable` 要求、`MeasureCompProd.lean:113` / `Constructions.lean:1015`) に `h_meas_fibre` を渡す。
+   **`AEMeasurable` 緩和は不可** (Mathlib に `ae_compProd_of_ae_ae` / `measurableSet_eq_fun` の null-measurable 版なし)。
+3. 一般 kernel ルート (`Kernel.rnDeriv_eq_rnDeriv_measure`) は `[IsFiniteKernel η]` 要求、`Kernel.const ℝ volume` は
+   `IsSFiniteKernel` 止まり ⇒ **適用不可、s-finite 版も Mathlib 不在** ⇒ upstream-PR スケールで却下。
+
+### Approach (Route B: measurable PDF proxy + consumer relaxation)
+
+**戦略の shape**: 「埋まらない measure-form rnDeriv の everywhere measurability」を諦め、消費側の `measurableSet_eq_fun` には
+**閉形式 PDF `g(x,y) := gaussianPDF x N y` (everywhere `Measurable`、自作 ~10 行) を渡す**ように `llr_compProd_prod_split`
+の interface を組み替える。rnDeriv との a.e. 一致は `ae_compProd_of_ae_ae` の **第 2 引数 `∀ᵐ a, ∀ᵐ b` 側で per-fibre に消化**する。
+これが既存 `integrable_log_rnDeriv_gaussianReal` (`:377`) が per-x で既に実証済の経路 (`gaussianReal_absolutelyContinuous` で
+`=ᵐ[vol]` → `=ᵐ[gaussianReal]` 転送)。
+
+**★結論も proxy 形に動かす (当初計画の修正、判断ログ #3)**。当初は「`llr_compProd_prod_split` の結論を rnDeriv 形のまま温存し、
+proxy `g` は内部 (eq-set 構成) 専用に留め、最後に `g`↔rnDeriv を再接続する」設計だったが、**この再接続 (旧 8-7) は循環で構成不能**。
+理由: 結論を rnDeriv 形に戻すには `(fun z => g z) =ᵐ[p⊗ₘW] (fun z => (W z.1).rnDeriv vol z.2)` が要り、これを per-fibre
+`hg_ae` から立てる唯一の Mathlib 経路 `Measure.ae_compProd_of_ae_ae` (`MeasureCompProd.lean:113`) は第 1 goal
+`MeasurableSet {z | g z = (W z.1).rnDeriv vol z.2}` を要求する。eq-set の `measurableSet_eq_fun` (`Constructions.lean:1015`)
+は **両関数の everywhere `Measurable`** を要求し、片方が **まさに埋まらない measure-form rnDeriv の joint measurability**
+⇒ Route B が回避したかった壁に再衝突。`NullMeasurableSet` 緩和も不可 (loogle `Found 0 declarations mentioning
+NullMeasurableSet and Measure.compProd`、`nullMeasurableSet_eq_fun` は存在するが compProd-ae 側に null-measurable 受けが無い)。
+従って `llr_compProd_prod_split` の **結論の fibre 項を `g`(= `gaussianPDF`/`gaussianPDFReal`) 形に変える**。
+
+**blast radius が爆発しない理由 (本 Phase の核心判断)**: 結論を proxy 形にしても上位 `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`
+の body は **`h_llr_split` を `integral_congr_ae` (`:261`) でしか消費しない**。すなわち joint a.e. 等式を「積分の中」でしか使わない。
+fibre 密度項を `g` 形に置けば、body の fibre 項処理 `Measure.integral_compProd … (:270)` → 内側 `∫ y … ∂(W x)` →
+`integral_log_density_fibre` (`:76`) も **per-fibre `∫ y, log (g(x,y)).toReal ∂(W x) = −h(W x)`** に置換でき、これは `hg_ae x`
+(per-fibre `g(x,·) =ᵐ[W x] (W x).rnDeriv vol`) で `integral_congr_ae` 一発、**joint measurability 不要**。同様に
+`h_int_fibre_joint` (joint integrable) も proxy 形 `log (g z).toReal` で立てれば (a-1) brick が AEStronglyMeasurable を供給し、
+per-fibre 積分性は既存 `integrable_log_gaussianPDFReal_gaussianReal` (`:358`) で出る。つまり **fibre 密度項を rnDeriv → proxy
+に置換する作業は全て「積分 / per-fibre」レベルに閉じ、循環の壁 (joint a.e. の MeasurableSet) を一度も踏まない**。波及は
+`mutualInfoOfChannel_toReal_eq_diffEntropy_sub` の `h_llr_split`/`h_int_fibre_joint` 2 引数の fibre 項を proxy 形に書き換える
+だけ (output 項 `Lout`・KL→llr・Fubini split・output marginal 同定・結合は **全て不変**)。output 側は rnDeriv 形のまま温存できる
+(output marginal は per-x 非依存で joint measurability 問題が無いため)。
+
+**(a-1) 自作 brick `measurable_gaussianPDF_uncurry`** (namespace `AWGN`、`integrable_sq_sub_gaussianReal` 群の近傍に置く):
+
+```lean
+/-- 2-variable (joint) measurability of the ENNReal Gaussian pdf (Route B linchpin). -/
+theorem measurable_gaussianPDF_uncurry (N : ℝ≥0) :
+    Measurable (fun z : ℝ × ℝ => gaussianPDF z.1 N z.2)
+```
+
+ℝ版 `measurable_gaussianPDFReal_uncurry` も同時に出すが、**消費側が要求するのは ℝ≥0∞ 版**: 現 proof は
+`(h_meas_fibre.ennreal_toReal.log)` (`:198`) で `Measurable (rnDeriv ...)` (ℝ≥0∞-valued) を受けて `.ennreal_toReal.log` を
+かけている。proxy も同じ `ℝ≥0∞ → toReal → log` チェーンに乗せたいので **`g : ℝ × ℝ → ℝ≥0∞`** を eq-set 構成 (8-5) の主役にする。
+**ℝ版 `measurable_gaussianPDFReal_uncurry` は 8-9 (proxy 形 joint integrable の AEStronglyMeasurable 供給) で実使用**するので
+補助ではなく必須 brick。
+証明: `gaussianPDF` 定義 `= ENNReal.ofReal ∘ gaussianPDFReal`、`gaussianPDFReal` 定義 (`Real.lean:48`)
+`(√(2πN))⁻¹ * rexp(−(y−x)²/(2N))` を `measurable_fst`/`measurable_snd` 合成 + `Measurable.exp` + `ENNReal.measurable_ofReal`。
+`√(2πN)` は定数 (N 固定)。`fun_prop` 一発で落ちる見込み (落ちなければ手動 `const_mul`/`.sub`/`.pow`/`.exp` 合成)。
+
+**(a-2) `llr_compProd_prod_split` の interface 緩和 + 結論 proxy 化** (汎用緩和案 = inventory §自作 2(b))。
+現 signature (`:171-180`) の `h_meas_fibre` 引数を **measurable proxy 三点組**に差し替え、**結論の fibre 項も `g` 形に変える**:
+
+```lean
+theorem llr_compProd_prod_split
+    (q : Measure ℝ) [IsProbabilityMeasure q]
+    (hWx_q : ∀ x, W x ≪ q) (hq_vol : q ≪ volume)
+    (h_joint_ac : (p ⊗ₘ W) ≪ p.prod q)
+    -- ↓ 旧: (h_meas_fibre : Measurable (fun z => (W z.1).rnDeriv volume z.2))
+    (g : ℝ × ℝ → ℝ≥0∞) (hg_meas : Measurable g)
+    (hg_ae : ∀ x, (fun y => (W x).rnDeriv volume y) =ᵐ[W x] fun y => g (x, y)) :
+    (fun z => llr (p ⊗ₘ W) (p.prod q) z)
+      =ᵐ[p ⊗ₘ W]
+    (fun z => Real.log (g z).toReal                       -- ★ proxy 形 (旧: (W z.1).rnDeriv vol z.2)
+                - Real.log (q.rnDeriv volume z.2).toReal) -- output 項は rnDeriv 形のまま温存
+```
+
+**fibre 項を proxy `g` 形に、output 項を rnDeriv 形のまま** にするのが正しい着地。理由: 旧計画の「結論を rnDeriv 形温存し
+最後に `g`↔rnDeriv 再接続」は **循環で不可能** (Approach 冒頭 ★ 参照: 再接続には joint a.e. `g =ᵐ[p⊗ₘW] rnDeriv` が要り、
+`ae_compProd_of_ae_ae` の `MeasurableSet` goal が埋まらない rnDeriv joint measurability に戻る)。**proxy 形に結論を変えても
+blast radius は contain される**: 上位 body は `h_llr_split` を `integral_congr_ae` でしか消費しないため、fibre 項の置換は
+積分レベルに閉じる (Approach 冒頭 ★ 参照)。output 項は per-x 非依存で joint measurability 問題が無いので rnDeriv 形温存でよい。
+
+proof 内部の改修 (現 `h_split` block `:192-209`、循環を踏まない素直な構成):
+- `h_split` の eq-set を **proxy `g` で直接立てる** (rnDeriv 形を経由しない)。`measurableSet_eq_fun` の第 1 関数は
+  `Kernel.measurable_rnDeriv` (`:197`) 既存、第 2 関数を `(hg_meas.ennreal_toReal.log).sub
+  (((Measure.measurable_rnDeriv q vol).comp measurable_snd).ennreal_toReal.log)` (proxy `g` で everywhere `Measurable`、`:198-199`)。
+- `ae_compProd_of_ae_ae` の第 2 引数 (`:200-209`) に `hg_ae a` を追加 `filter_upwards`。既存 `hker` (`:203-207`, kernel
+  rnDeriv → measure rnDeriv `(W a).rnDeriv q`) + `log_rnDeriv_split (hWx_q a) hq_vol` で `log (W a).rnDeriv q b
+  = log (W a).rnDeriv vol b − log (q).rnDeriv vol b` を出し、そこに `hg_ae a` (`(W a).rnDeriv vol =ᵐ[W a] g(a,·)`) を貼って
+  RHS の fibre 項を `log (g(a,b)).toReal` に **per-fibre で**書き換える。joint a.e. の MeasurableSet を一度も踏まない
+  (per-fibre `=ᵐ[W a]` だけ使う)。
+
+**(b) `h_int_fibre_joint` の discharge** (inventory §D/Q5): proxy 同定後、被積分関数を `log (g (z.1, z.2)).toReal` =
+`log (gaussianPDFReal z.1 N z.2)` (everywhere、`toReal_gaussianPDF`) に書換え、per-fibre integrable
+`integrable_log_gaussianPDFReal_gaussianReal` (`:358`) + `Measure.integral_compProd`/`integrable_compProd_iff`
+(`IntegralCompProd.lean:466`) で joint に持ち上げる。joint measurability は (a-1) の proxy で供給。
+per-fibre bound は log PDF = c₀ + c₁(y−x)² (`integrable_sq_sub_gaussianReal` `:341`)。**この joint integrable も結論 proxy 化に
+合わせて proxy 形 `log (g z).toReal` のまま body へ渡す** (rnDeriv 形への 8-9 橋渡しは不要になる、下記参照)。
+
+**(c) 上位 body `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` (`:223`) の fibre 項 proxy 化** (★blast radius の本体)。
+旧計画は「body 不変」と書いていたが **誤り**。body の以下を proxy 形に書き換える:
+- `h_llr_split` 引数 (`:228-232`) の fibre 項 `Real.log ((W z.1).rnDeriv vol z.2).toReal` → `Real.log (g z).toReal`。
+  output 項は据え置き。
+- `h_int_fibre_joint` 引数 (`:234-235`) の被積分関数を `Real.log (g z).toReal` に。
+- proof 内 `Lfib` (`:249`) を `fun z => Real.log (g z).toReal` に、fibre 項処理 `h_fib` (`:268-277`) の内側
+  `integral_log_density_fibre` (`:76`、rnDeriv 形限定) を **proxy 形の per-fibre 補題** `integral_log_proxy_fibre`
+  (新規、`∫ y, log (g(x,y)).toReal ∂(W x) = −h(W x)`、`hg_ae x` + 既存 `integral_log_density_fibre` を `integral_congr_ae` で接続)
+  に差し替え。**この per-fibre 補題が proxy↔rnDeriv の橋を「積分の中」で吸収し、joint measurability を回避する**。
+- KL→llr (`:251-257`)、`h_split` (`:259-262`)、`h_sub` (`:264-266`)、output 項 `h_out` (`:279-307`)、結合 (`:309-310`) は **全て不変**
+  (output 項は rnDeriv 形のまま、fibre 項の `g` 化と独立)。
+
+body には新引数 `g : ℝ×ℝ → ℝ≥0∞` / `hg_meas` / `hg_ae` が増える (fibre 項を proxy 形にするため)。**output 側引数
+(`hq_ac`/`h_int_out_joint`/`h_int_out_marg`) は不変**。
+
+### Phase 詳細 (FINE-GRAINED、各 step = 1 lemma/edit、独立 `lake env lean` 可)
+
+- [ ] **8-1 在庫差分 verify** — `gaussianPDF`/`gaussianPDFReal` の def shape (`Real.lean:48/157`) と `awgnChannel_apply`
+  (`AWGN.lean:78`, `= gaussianReal x N`, `@[simp]`) を Read 再確認。`measurable_gaussianPDF_uncurry` を `fun_prop` で出せるか、
+  `gaussianPDF` def を unfold して `measurable_fst`/`measurable_snd` 合成が要るかだけ確認 (loogle 1-2 query)。**how**: 調査のみ、edit なし。
+- [ ] **8-2 brick `measurable_gaussianPDF_uncurry`** — file `ContChannelMIDecomp.lean` namespace `…AWGN`、
+  `integrable_sq_sub_gaussianReal` (`:341`) の直前/直後。target: `Measurable (fun z : ℝ × ℝ => gaussianPDF z.1 N z.2)`。
+  **how**: `unfold gaussianPDF gaussianPDFReal` → `fun_prop` (or `Measurable.const_mul (((measurable_fst.sub measurable_snd).pow _).neg.div_const _).exp |>.ennreal_ofReal`)。~10 行。
+- [ ] **8-3 brick ℝ版 (補助)** — `measurable_gaussianPDFReal_uncurry : Measurable (fun z => gaussianPDFReal z.1 N z.2)`。
+  **how**: 8-2 から `gaussianPDF = ofReal ∘ gaussianPDFReal` 経由、または同合成。residual #2 の `toReal` 書換で使用。~5 行。
+- [ ] **8-4 `llr_compProd_prod_split` signature 緩和 + 結論 proxy 化** — target: `:171-180`。引数 `h_meas_fibre` を
+  `g`/`hg_meas`/`hg_ae` 三点組に差替え、**結論の fibre 項 `Real.log ((W z.1).rnDeriv vol z.2).toReal` を `Real.log (g z).toReal`
+  に変更** (output 項 `Real.log (q.rnDeriv vol z.2).toReal` は据え置き、上記 (a-2) signature 参照)。**how**: signature だけ差替え、
+  proof body を `:= by sorry` に一時退避し `lake env lean` で statement が通る (型クラス OK) ことを確認。
+- [ ] **8-5 eq-set を proxy `g` で直接構成 (循環を踏まない)** — `llr_compProd_prod_split` proof 内 `h_split` (`:192-209`) を改修。
+  eq-set の RHS を **proxy `g` 形** (`fun z => log (g z).toReal − log (q.rnDeriv vol z.2).toReal`) で立て、`measurableSet_eq_fun`
+  には第 1 関数 `(Kernel.measurable_rnDeriv W (const ℝ q)).ennreal_toReal.log` (`:197` 既存)、第 2 関数
+  `(hg_meas.ennreal_toReal.log).sub (((Measure.measurable_rnDeriv q vol).comp measurable_snd).ennreal_toReal.log)` を渡す。
+  **how**: `:198` の `h_meas_fibre` を `hg_meas` に置換、`h_split` の RHS (`:193-194`) を `g` 形に書換え。
+- [ ] **8-6 per-fibre a.e. を `hg_ae` で消化 (joint MeasurableSet を踏まない)** — `h_split` の `ae_compProd_of_ae_ae` 第 2 引数
+  (`:200-209`) に `hg_ae a` を追加 `filter_upwards`。既存 `hker` (`:203-207`) + `log_rnDeriv_split (hWx_q a) hq_vol` (`:208`) で
+  `log (W a).rnDeriv q b = log (W a).rnDeriv vol b − log (q).rnDeriv vol b` を出し、`hg_ae a` (`(W a).rnDeriv vol =ᵐ[W a] g(a,·)`)
+  で fibre 項を `log (g(a,b)).toReal` に **per-fibre `=ᵐ[W a]`** で置換。最後 `h_llr_eq.trans h_split` (`:217`) で 0 sorry close
+  (旧 8-7 の rnDeriv 再接続は **削除**、循環ゆえ不要)。**how**: `filter_upwards [hker, log_rnDeriv_split …, hg_ae a]`、`rw [hb, hb_split, hg_b]`。
+- [ ] **8-7 body fibre 項を proxy 形に書換え (★blast radius 本体、旧「body 不変」を撤回)** — target
+  `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` (`:223`)。新引数 `(g : ℝ×ℝ → ℝ≥0∞) (hg_meas) (hg_ae)` を追加し、`h_llr_split`
+  (`:228-232`) と `h_int_fibre_joint` (`:234-235`) の fibre 項を `Real.log (g z).toReal` に、proof 内 `Lfib` (`:249`) を
+  `fun z => Real.log (g z).toReal` に。**how**: signature + `Lfib` set の書換え。output 引数・proof の他 step (KL/split/sub/out/結合) は不変。
+- [ ] **8-8 proxy 形の per-fibre 補題 `integral_log_proxy_fibre`** — 新規 (namespace `ChannelCoding`、`integral_log_density_fibre`
+  `:76` 近傍): target `∫ y, Real.log (g (x,y)).toReal ∂(W x) = −differentialEntropy (W x)`、前提 `W x ≪ vol` +
+  `(W x).rnDeriv vol =ᵐ[W x] fun y => g (x,y)`。**how**: `integral_congr_ae` で `log (g(x,y)).toReal =ᵐ[W x] log ((W x).rnDeriv vol y).toReal`
+  (`hg_ae x` から) → 既存 `integral_log_density_fibre x hWx` (`:76`) に帰着。body の `h_fib` (`:268-277`) の `integral_log_density_fibre`
+  をこれに差し替え。**この補題が proxy↔rnDeriv の橋を「積分の中」で吸収する (joint measurability 不要)**。
+- [ ] **8-9 `h_int_fibre_joint` discharge — proxy 形 joint integrable** — 新 lemma `integrable_log_proxy_fibre_compProd`
+  (namespace `AWGN`): target `Integrable (fun z => Real.log (gaussianPDFReal z.1 N z.2)) (p ⊗ₘ W)`。
+  **how**: `Measure.integrable_compProd_iff` (`:466`) で per-fibre `integrable_log_gaussianPDFReal_gaussianReal z.1 hN z.1 N` (`:358`)
+  + joint AEStronglyMeasurable (8-3 の `measurable_gaussianPDFReal_uncurry`) + per-fibre bound `integrable_sq_sub_gaussianReal`。
+  **rnDeriv 形への橋渡し (旧 8-9) は不要** — body が proxy 形 (8-7) を要求するので PDF 形のまま渡す。`toReal_gaussianPDF` で
+  `gaussianPDFReal z.1 N z.2 = (gaussianPDF z.1 N z.2).toReal` だけ整える。
+- [ ] **8-10 `isContChannelMIDecompHyp_awgn` 引数除去** — target `:421-453`。`h_meas_fibre`/`h_int_fibre_joint` 引数を削除し、
+  本体で `g := fun z => gaussianPDF z.1 N z.2`、`hg_meas := measurable_gaussianPDF_uncurry N` (8-2)、`hg_ae := fun x => …`
+  (per-fibre `rnDeriv_gaussianReal` + `gaussianReal_absolutelyContinuous`、`awgnChannel_apply` で `W x = gaussianReal x N`) を構成して
+  `llr_compProd_prod_split` (新 signature) + body (新 signature) に渡す。`h_int_fibre_joint` は 8-9 を inline。**how**: `:452-475`
+  の呼び出しを新 signature に合わせ、`g`/`hg_meas`/`hg_ae` を `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` と
+  `llr_compProd_prod_split` 両方に渡す。
+- [ ] **8-11 `isAwgnMIDecomp_of_densitySplit` 引数除去** — target `:496-509`。同 2 引数削除、`isContChannelMIDecompHyp_awgn`
+  への pass-through (`:508-509`) から 2 引数を落とすだけ。**how**: 機械的な引数削除。
+- [ ] **8-V verify** — `lake env lean Common2026/Shannon/ContChannelMIDecomp.lean` clean (0 sorry / 0 残 honest hyp)。
+
+### Done 条件
+
+- `isContChannelMIDecompHyp_awgn` / `isAwgnMIDecomp_of_densitySplit` が `(P,N,hN,hPN,h_meas,h_out)` のみで成立
+  (`h_meas_fibre`/`h_int_fibre_joint` 引数が消滅)。AWGN MI bridge が **仮定なし**。
+- `llr_compProd_prod_split` の結論は **fibre 項 proxy 形** (`Real.log (g z).toReal`)、output 項は rnDeriv 形のまま。
+  これに合わせ `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` の fibre 項も proxy 形 + 新引数 `g`/`hg_meas`/`hg_ae`
+  (旧計画の「body 不変」は誤りだったため撤回、判断ログ #3)。output 側 interface は不変。
+- `lake env lean ContChannelMIDecomp.lean` clean、各 step 独立検証済。
+
+### Signature が変わる定理と blast radius
+
+| 定理 | 変更 | 波及 |
+|---|---|---|
+| `llr_compProd_prod_split` (`:171`) | 引数 `h_meas_fibre` → `(g)(hg_meas)(hg_ae)` 三点組。**結論の fibre 項を `Real.log (g z).toReal` (proxy 形) に変更**、output 項は rnDeriv 形のまま | 呼び出し元は `isContChannelMIDecompHyp_awgn` (`:452`) **のみ** (project 内 grep 確認済)。汎用 lemma だが現状唯一 caller |
+| `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` (`:223`) | **変更 (旧「不変」を撤回)**。fibre 項を proxy 形に + 新引数 `(g)(hg_meas)(hg_ae)`。proof 内 `Lfib` (`:249`) を `log (g z).toReal` に、fibre 項処理 `h_fib` (`:268-277`) の `integral_log_density_fibre` を 8-8 の `integral_log_proxy_fibre` に差替え。**output 側引数 (`hq_ac`/`h_int_out_joint`/`h_int_out_marg`)・proof の他 step (KL/split/sub/out/結合) は不変** | 呼び出し元は `isContChannelMIDecompHyp_awgn` (`:473`) **のみ**。fibre 項置換は全て積分/per-fibre レベルに閉じ、循環 (joint a.e. の MeasurableSet) を踏まない |
+| `isContChannelMIDecompHyp_awgn` (`:421`) | 引数 `h_meas_fibre`/`h_int_fibre_joint` **削除**。本体で `g`/`hg_meas`/`hg_ae` を Gaussian で構成し両 lemma に渡す | 呼び出し元 `isAwgnMIDecomp_of_densitySplit` (`:508`)。引数 2 本 drop のみ |
+| `isAwgnMIDecomp_of_densitySplit` (`:496`) | 同 2 引数削除 | F-2′ wrapper。**現状 project 内に caller なし** (downstream `awgn_theorem_…`/`awgn_capacity_…` (`AWGNMIDecompBody.lean:194/221`) は `h_chain : IsContChannelMIDecompHyp` を **引数で** 取るので、`isContChannelMIDecompHyp_awgn` で埋める後継 wrapper を Phase 7/V で別途置く想定。Phase 8 はその wrapper を仮定なし化する) |
+
+**循環の確定 (再検証済、再導出禁止)**: 旧計画の「結論 rnDeriv 形温存 + 8-7 で proxy↔rnDeriv 再接続」は **構成不能**。
+proxy↔rnDeriv の joint a.e. を立てる唯一の Mathlib 経路 `Measure.ae_compProd_of_ae_ae` (`MeasureCompProd.lean:113`、第 1 引数
+`MeasurableSet {x | p x}`) は、`Kernel.ae_compProd_of_ae_ae` (`CompProd.lean:257`) → `compProd_null` (`CompProd.lean:238`、
+`MeasurableSet hs` 必須 + `hp.compl`) に帰着し、eq-set `{z | g z = rnDeriv z}` の measurability に `measurableSet_eq_fun`
+(`Constructions.lean:1015`、両関数 everywhere `Measurable`) が要る ⇒ 埋まらない rnDeriv joint measurability に再衝突。
+`NullMeasurableSet` 緩和不可 (`nullMeasurableSet_eq_fun` は `AEMeasurable.lean:197` に存在するが、compProd-ae 側に
+null-measurable 受けの lemma が **無い**: loogle `Found 0 declarations mentioning NullMeasurableSet and Measure.compProd`)。
+**回避策**: 結論を proxy 形にすれば再接続自体が不要になり、proxy↔rnDeriv の橋は全て per-fibre 積分 (8-6 の `=ᵐ[W a]`、
+8-8 の `integral_congr_ae`) で吸収され、joint a.e. を一度も立てなくて済む。
+
+新規追加: `measurable_gaussianPDF_uncurry` / `measurable_gaussianPDFReal_uncurry` (`AWGN` namespace) +
+`integral_log_proxy_fibre` (`ChannelCoding` namespace、proxy 形 per-fibre 同定) + `integrable_log_proxy_fibre_compProd`
+(`AWGN` namespace、proxy 形 joint integrable)。`Common2026.lean` の import は既存行のまま (新ファイルなし)。
+
+### Parallel-Gaussian への波及 (本 Phase スコープ外、note のみ)
+
+[`parallel-gaussian-chain-rule-plan.md`](parallel-gaussian-chain-rule-plan.md) は per-coord fibre density measurability
+`h_meas_fibre` を AWGN #5 residual として参照している。本 Phase の brick `measurable_gaussianPDF_uncurry` +
+`llr_compProd_prod_split` 緩和版は **PG が同一の per-coordinate fibre に再利用できる foundational brick**。
+ただし **PG 側の channel↔RV wiring (per-coordinate compProd の組み立て) は本 Phase の対象外**。本 Phase はあくまで AWGN
+single-channel の 2 honest hyp 除去まで。
+
+### 撤退条件 / residual note
+
+- **[D-4] consumer 緩和 (8-5〜8-8) が plumbing 超過 (>1.5 セッション)**: eq-set を `g` で直接書く `h_split` 改修 (8-5/8-6) や
+  body fibre 項の proxy 化 (8-7/8-8) が `Kernel.rnDeriv` 経路と proxy 経路の a.e. 基底橋渡しで詰まる場合 → inventory §自作 2(a) の
+  **特化版** `llr_compProd_prod_split_gaussian` (`W = awgnChannel`, `g = gaussianPDF` 直書き) に切替え、汎用緩和を諦める。
+  特化版なら `q = gaussianReal 0 (P+N)` も具体形で `outputDistribution` の rnDeriv も PDF 同定でき、measurableSet 構成が単純化。
+- **[D-5] それでも 8-5〜8-9 が closed にできない**: inventory §撤退ライン提案に従い `h_meas_fibre`/`h_int_fibre_joint` を
+  **AWGN 専用 named hypothesis のまま据え置き** (= 現状維持、後退ではない)。本 Phase の brick (8-2/8-3) と緩和 skeleton のみ
+  publish し、残りを follow-up に defer。
+- **residual (honest が残る可能性)**: `h_int_fibre_joint` の joint integrability (8-9) で `integrable_compProd_iff` の
+  AEStronglyMeasurable 前提が proxy で供給しきれない場合のみ #2 が honest に残るが、(a-1) brick (ℝ版 8-3) がそれを供給する設計なので
+  中央予測では **両 hyp とも除去**。**いずれの撤退でも `sorry` は残さない** (named hypothesis signature で抜ける)。
+
+**proof-log**: yes (`proof-log-awgn-mi-decomp-phase8.md`。結論 proxy 化の確定 (8-4)、body fibre 項 proxy 化の blast radius 実測
+(8-7)、`integral_log_proxy_fibre` (8-8) で joint measurability を回避できたか、両 hyp 除去の成否、D-4/D-5 発動有無を記録)
+
+---
+
 ## Phase V — verify + 親 plan F-2 退避記録の discharge 反映 📋
 
 ### スコープ
@@ -445,3 +680,31 @@ discharge 状態に更新する旨を記録 (実装は lean-implementer、本 pl
 
 <!-- 着手後に append。Phase 5 (mixture 同定) の measure-level 周辺化 vs density 陽展開の判断、D-2 (F-2′) 発動有無、
 honest 仮定の最終本数 (#1-#6 + Markov)、Phase 7 の honest #4 discharge 可否がここに記録される見込み。 -->
+
+1. **Phase 7 の `(W x).rnDeriv vol = gaussianPDFReal x N` 同定が楽観的すぎた (inventory `awgn-rnderiv-measurability-inventory.md`
+   による修正)**: 当初 Approach §honest 仮定 AWGN discharge 表は `rnDeriv_gaussianReal` で fibre rnDeriv を PDF に
+   **everywhere 同定**できる前提だったが、`rnDeriv_gaussianReal` の結論は **`=ᵐ[volume]` (=ₐₛ) のみ** で everywhere `=` ではない。
+   結果 Phase 7 完了後も `h_meas_fibre` (measure-form rnDeriv の everywhere-joint `Measurable`) / `h_int_fibre_joint` が
+   **2 本 honest hyp として残った** (現状の `isContChannelMIDecompHyp_awgn` `:425-430`)。measure-form rnDeriv は a.e.-determined ゆえ
+   everywhere-joint `Measurable` を直接作れず、消費側 `llr_compProd_prod_split` (`:195` `ae_compProd_of_ae_ae` →
+   `measurableSet_eq_fun`) は everywhere `Measurable` を要求するため `AEMeasurable` 緩和も不可。一般 kernel ルート
+   (`Kernel.rnDeriv_eq_rnDeriv_measure`) は `[IsFiniteKernel η]` 要求で `Kernel.const ℝ volume` (SFinite 止まり) に不適用、
+   s-finite 版も Mathlib 不在 ⇒ upstream-PR スケールで却下。
+2. **Phase 8 を Route B (measurable PDF proxy + consumer relaxation) で新設**: #1 の残 2 hyp を除去する追加 Phase を立てた。
+   measure-form rnDeriv の everywhere measurability は諦め、消費側の eq-set 構成には閉形式 PDF `g(x,y) := gaussianPDF x N y`
+   (everywhere `Measurable`、自作 ~10 行) を渡し、rnDeriv との a.e. 一致は `ae_compProd_of_ae_ae` の per-fibre 側で消化する。
+   `llr_compProd_prod_split` の **結論は rnDeriv 形のまま温存** (上位 `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` の
+   interface を不変に保ち blast radius を contain)。proxy は eq-set 構成専用。撤退は D-4 (特化版へ縮退) / D-5 (現状維持) で安全。
+3. **#2 の「結論 rnDeriv 形温存 + 旧 8-7 で proxy↔rnDeriv 再接続」は循環で構成不能と判明 → 結論を proxy 形に変更 (soundness fix)**:
+   結論を rnDeriv 形に戻すには joint a.e. `(fun z => g z) =ᵐ[p⊗ₘW] (fun z => (W z.1).rnDeriv vol z.2)` が必要。これを per-fibre
+   `hg_ae` から立てる唯一の Mathlib 経路 `Measure.ae_compProd_of_ae_ae` (`MeasureCompProd.lean:113`) は第 1 引数に
+   `MeasurableSet {z | g z = (W z.1).rnDeriv vol z.2}` を要求し、その `measurableSet_eq_fun` (`Constructions.lean:1015`) は
+   **両関数の everywhere `Measurable`** を要求 ⇒ 埋まらない measure-form rnDeriv の joint measurability (= Route B が回避すべき #1 の壁)
+   に再衝突。`NullMeasurableSet` 緩和も不可 (`nullMeasurableSet_eq_fun` は `AEMeasurable.lean:197` にあるが compProd-ae 側に
+   null-measurable 受けが無い: loogle `Found 0 declarations mentioning NullMeasurableSet and Measure.compProd`)。
+   **修正**: `llr_compProd_prod_split` の結論の fibre 項を `Real.log (g z).toReal` (proxy 形) に変え、再接続 (旧 8-7) を削除。
+   blast radius は **`mutualInfoOfChannel_toReal_eq_diffEntropy_sub` まで伸びる** (#2 の「body 不変」を撤回): body の fibre 項
+   (`h_llr_split`/`h_int_fibre_joint`/`Lfib`) を proxy 形にし、新引数 `g`/`hg_meas`/`hg_ae` を追加。ただし body は `h_llr_split` を
+   `integral_congr_ae` でしか消費せず、fibre 項処理も `Measure.integral_compProd` → 内側 per-fibre 積分なので、proxy↔rnDeriv の橋は
+   全て **per-fibre 積分 (新補題 `integral_log_proxy_fibre`) で「積分の中」に吸収**でき、joint a.e. の MeasurableSet を一度も踏まない。
+   output 項 (KL/split/sub/output marginal/結合) は rnDeriv 形のまま **不変**。Route B は依然 viable (中央予測 ~120-180 行)。
