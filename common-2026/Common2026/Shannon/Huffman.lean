@@ -3,6 +3,9 @@ import Mathlib.MeasureTheory.Measure.Real
 import Mathlib.Data.Multiset.Basic
 import Mathlib.Data.Multiset.Sort
 import Mathlib.Data.Finset.Max
+import Mathlib.Data.Finset.Image
+import Mathlib.Combinatorics.Colex
+import Mathlib.Data.Prod.Lex
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Common2026.Shannon.ShannonCode
@@ -27,8 +30,38 @@ namespace InformationTheory.Shannon.Huffman
 open MeasureTheory
 open scoped BigOperators
 
-variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+variable {α : Type*} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
+
+/-- **決定的比較キー (colex 2 段 lex)** — `huffmanStep` の min 選択を一意化する.
+第 1 キー = 確率 `p.2` (昇順)、tie-break 第 2 キー = `toColex p.1` (colex 順).
+`[LinearOrder α]` から `LinearOrder (Colex (Finset α))` (`Finset.Colex.instLinearOrder`)
+が立ち、`ℝ ×ₗ Colex (Finset α)` の `Prod.Lex` 全順序で min が一意確定する
+(`groupKey` 単射: 確率が等しくても colex で区別). -/
+noncomputable def groupKey (p : Finset α × ℝ) : ℝ ×ₗ Colex (Finset α) :=
+  toLex (p.2, toColex p.1)
+
+omit [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
+    [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- `groupKey` は単射 (確率 + colex tie-break で group を一意に決定). -/
+lemma groupKey_injective : Function.Injective (groupKey (α := α)) := by
+  intro p q h
+  unfold groupKey at h
+  have h1 : p.2 = q.2 := congrArg (fun z => (ofLex z).1) h
+  have h2 : toColex p.1 = toColex q.1 := congrArg (fun z => (ofLex z).2) h
+  rw [toColex_inj] at h2
+  exact Prod.ext h2 h1
+
+omit [Fintype α] [DecidableEq α] [Nonempty α]
+    [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- `groupKey` の min は確率 (`p.2`) の min を含意する (第 1 キー射影). -/
+lemma groupKey_le_imp_snd_le {p q : Finset α × ℝ} (h : groupKey p ≤ groupKey q) :
+    p.2 ≤ q.2 := by
+  unfold groupKey at h
+  rw [Prod.Lex.le_iff] at h
+  rcases h with h | ⟨h1, _⟩
+  · exact le_of_lt h
+  · exact le_of_eq h1
 
 /-! ### 内部実装: Multiset ベースの Huffman 再帰 -/
 
@@ -41,17 +74,17 @@ def HuffmanGrouping (s : Multiset (Finset α × ℝ)) : Prop :=
   (∀ p ∈ s, p.1.Nonempty) ∧
   (∀ p ∈ s, ∀ q ∈ s, p ≠ q → Disjoint p.1 q.1)
 
-omit [Fintype α] [DecidableEq α] [Nonempty α]
+omit [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α] in
 lemma HuffmanGrouping.nodup {s : Multiset (Finset α × ℝ)} (h : HuffmanGrouping s) :
     s.Nodup := h.1
 
-omit [Fintype α] [DecidableEq α] [Nonempty α]
+omit [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α] in
 lemma HuffmanGrouping.nonempty {s : Multiset (Finset α × ℝ)} (h : HuffmanGrouping s)
     {p : Finset α × ℝ} (hp : p ∈ s) : p.1.Nonempty := h.2.1 p hp
 
-omit [Fintype α] [DecidableEq α] [Nonempty α]
+omit [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α] in
 lemma HuffmanGrouping.disjoint {s : Multiset (Finset α × ℝ)} (h : HuffmanGrouping s)
     {p q : Finset α × ℝ} (hp : p ∈ s) (hq : q ∈ s) (hpq : p ≠ q) :
@@ -77,10 +110,12 @@ noncomputable def huffmanStep
   have hs_ne : s ≠ 0 := by
     intro heq; rw [heq, Multiset.card_zero] at hs; omega
   let x1 := Classical.choose (Multiset.exists_min_image (α := Finset α × ℝ)
-    (R := ℝ) (fun p => p.2) hs_ne)
-  have hx1 : x1 ∈ s ∧ ∀ z ∈ s, x1.2 ≤ z.2 :=
+    (R := ℝ ×ₗ Colex (Finset α)) groupKey hs_ne)
+  have hx1k : x1 ∈ s ∧ ∀ z ∈ s, groupKey x1 ≤ groupKey z :=
     Classical.choose_spec (Multiset.exists_min_image (α := Finset α × ℝ)
-      (R := ℝ) (fun p => p.2) hs_ne)
+      (R := ℝ ×ₗ Colex (Finset α)) groupKey hs_ne)
+  have hx1 : x1 ∈ s ∧ ∀ z ∈ s, x1.2 ≤ z.2 :=
+    ⟨hx1k.1, fun z hz => groupKey_le_imp_snd_le (hx1k.2 z hz)⟩
   let s' := s.erase x1
   have hs'_ne : s' ≠ 0 := by
     have hcard_s' : s'.card = s.card - 1 :=
@@ -89,10 +124,12 @@ noncomputable def huffmanStep
     rw [heq, Multiset.card_zero] at hcard_s'
     omega
   let x2 := Classical.choose (Multiset.exists_min_image (α := Finset α × ℝ)
-    (R := ℝ) (fun p => p.2) hs'_ne)
-  have hx2 : x2 ∈ s' ∧ ∀ z ∈ s', x2.2 ≤ z.2 :=
+    (R := ℝ ×ₗ Colex (Finset α)) groupKey hs'_ne)
+  have hx2k : x2 ∈ s' ∧ ∀ z ∈ s', groupKey x2 ≤ groupKey z :=
     Classical.choose_spec (Multiset.exists_min_image (α := Finset α × ℝ)
-      (R := ℝ) (fun p => p.2) hs'_ne)
+      (R := ℝ ×ₗ Colex (Finset α)) groupKey hs'_ne)
+  have hx2 : x2 ∈ s' ∧ ∀ z ∈ s', x2.2 ≤ z.2 :=
+    ⟨hx2k.1, fun z hz => groupKey_le_imp_snd_le (hx2k.2 z hz)⟩
   -- HuffmanGrouping 保存の事実を組み上げる
   have hx1_mem : x1 ∈ s := hx1.1
   have hx2_mem_s' : x2 ∈ s' := hx2.1
@@ -240,42 +277,54 @@ lemma huffmanStep_spec
   (huffmanStep s hs hg).property
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **`huffmanStep` の minimality spec (`.val.1` は `s` 全体の確率最小)**. 定義本体の
-`Classical.choose (exists_min_image ...)` の spec を unfold で取り出す (定義は不変、spec の追加).
-tie-invariance 論法 (carrier 越し対応) で `.val.1` を一意 minimizer と同定するのに必須. -/
-lemma huffmanStep_min_fst
+/-- **`huffmanStep` の groupKey-minimality spec (`.val.1` は `s` 全体の `groupKey` 最小)**.
+決定化の核 — 定義本体の `Classical.choose (exists_min_image groupKey ...)` の spec を
+unfold で取り出す. `groupKey` は単射なので min は一意 (確率 tie は colex で破られる).
+carrier 横断の決定的対応 (Phase H2) に必須. -/
+lemma huffmanStep_key_min_fst
     (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
-    ∀ z ∈ s, (huffmanStep s hs hg).val.1.2 ≤ z.2 := by
+    ∀ z ∈ s, groupKey (huffmanStep s hs hg).val.1 ≤ groupKey z := by
   classical
   have hs_ne : s ≠ 0 := by
     intro heq; rw [heq, Multiset.card_zero] at hs; omega
   have hx1 : (Classical.choose (Multiset.exists_min_image (α := Finset α × ℝ)
-      (R := ℝ) (fun p => p.2) hs_ne)) ∈ s ∧
-      ∀ z ∈ s, (Classical.choose (Multiset.exists_min_image (α := Finset α × ℝ)
-        (R := ℝ) (fun p => p.2) hs_ne)).2 ≤ z.2 :=
+      (R := ℝ ×ₗ Colex (Finset α)) groupKey hs_ne)) ∈ s ∧
+      ∀ z ∈ s, groupKey (Classical.choose (Multiset.exists_min_image (α := Finset α × ℝ)
+        (R := ℝ ×ₗ Colex (Finset α)) groupKey hs_ne)) ≤ groupKey z :=
     Classical.choose_spec (Multiset.exists_min_image (α := Finset α × ℝ)
-      (R := ℝ) (fun p => p.2) hs_ne)
+      (R := ℝ ×ₗ Colex (Finset α)) groupKey hs_ne)
   intro z hz
-  show (huffmanStep s hs hg).val.1.2 ≤ z.2
+  show groupKey (huffmanStep s hs hg).val.1 ≤ groupKey z
   unfold huffmanStep
   exact hx1.2 z hz
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **`huffmanStep` の 2nd minimality spec (`.val.2.1` は `s.erase .val.1` 全体の確率最小)**.
-同じく定義本体の 2 段目 `Classical.choose` の spec を unfold で取り出す. -/
-lemma huffmanStep_min_snd
+/-- **`huffmanStep` の minimality spec (`.val.1` は `s` 全体の確率最小)**.
+`huffmanStep_key_min_fst` (groupKey 最小) の第 1 キー射影 (`groupKey_le_imp_snd_le`)
+から確率 `≤` を導く. statement は決定化前と不変. -/
+lemma huffmanStep_min_fst
+    (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
+    ∀ z ∈ s, (huffmanStep s hs hg).val.1.2 ≤ z.2 := by
+  intro z hz
+  exact groupKey_le_imp_snd_le (huffmanStep_key_min_fst s hs hg z hz)
+
+omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- **`huffmanStep` の 2nd groupKey-minimality spec (`.val.2.1` は `s.erase .val.1` 全体の
+`groupKey` 最小)**. 定義本体の 2 段目 `Classical.choose (exists_min_image groupKey ...)` の
+spec を unfold で取り出す. -/
+lemma huffmanStep_key_min_snd
     (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
     ∀ z ∈ s.erase (huffmanStep s hs hg).val.1,
-      (huffmanStep s hs hg).val.2.1.2 ≤ z.2 := by
+      groupKey (huffmanStep s hs hg).val.2.1 ≤ groupKey z := by
   classical
   have hs_ne : s ≠ 0 := by
     intro heq; rw [heq, Multiset.card_zero] at hs; omega
   -- x1 と s' = s.erase x1 を再構成
   set x1 := Classical.choose (Multiset.exists_min_image (α := Finset α × ℝ)
-    (R := ℝ) (fun p => p.2) hs_ne) with hx1_def
-  have hx1 : x1 ∈ s ∧ ∀ z ∈ s, x1.2 ≤ z.2 :=
+    (R := ℝ ×ₗ Colex (Finset α)) groupKey hs_ne) with hx1_def
+  have hx1 : x1 ∈ s ∧ ∀ z ∈ s, groupKey x1 ≤ groupKey z :=
     Classical.choose_spec (Multiset.exists_min_image (α := Finset α × ℝ)
-      (R := ℝ) (fun p => p.2) hs_ne)
+      (R := ℝ ×ₗ Colex (Finset α)) groupKey hs_ne)
   have hs'_ne : s.erase x1 ≠ 0 := by
     have hcard_s' : (s.erase x1).card = s.card - 1 :=
       Multiset.card_erase_of_mem hx1.1
@@ -283,18 +332,28 @@ lemma huffmanStep_min_snd
     rw [heq, Multiset.card_zero] at hcard_s'
     omega
   have hx2 : (Classical.choose (Multiset.exists_min_image (α := Finset α × ℝ)
-      (R := ℝ) (fun p => p.2) hs'_ne)) ∈ s.erase x1 ∧
-      ∀ z ∈ s.erase x1, (Classical.choose (Multiset.exists_min_image (α := Finset α × ℝ)
-        (R := ℝ) (fun p => p.2) hs'_ne)).2 ≤ z.2 :=
+      (R := ℝ ×ₗ Colex (Finset α)) groupKey hs'_ne)) ∈ s.erase x1 ∧
+      ∀ z ∈ s.erase x1, groupKey (Classical.choose (Multiset.exists_min_image
+        (α := Finset α × ℝ) (R := ℝ ×ₗ Colex (Finset α)) groupKey hs'_ne)) ≤ groupKey z :=
     Classical.choose_spec (Multiset.exists_min_image (α := Finset α × ℝ)
-      (R := ℝ) (fun p => p.2) hs'_ne)
+      (R := ℝ ×ₗ Colex (Finset α)) groupKey hs'_ne)
   -- (huffmanStep s hs hg).val.1 = x1, .val.2.1 = x2, so s.erase .val.1 = s.erase x1
   have hfst : (huffmanStep s hs hg).val.1 = x1 := by unfold huffmanStep; rfl
   intro z hz
   rw [hfst] at hz
-  show (huffmanStep s hs hg).val.2.1.2 ≤ z.2
+  show groupKey (huffmanStep s hs hg).val.2.1 ≤ groupKey z
   unfold huffmanStep
   exact hx2.2 z hz
+
+omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- **`huffmanStep` の 2nd minimality spec (`.val.2.1` は `s.erase .val.1` 全体の確率最小)**.
+`huffmanStep_key_min_snd` の第 1 キー射影から導く. statement は決定化前と不変. -/
+lemma huffmanStep_min_snd
+    (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
+    ∀ z ∈ s.erase (huffmanStep s hs hg).val.1,
+      (huffmanStep s hs hg).val.2.1.2 ≤ z.2 := by
+  intro z hz
+  exact groupKey_le_imp_snd_le (huffmanStep_key_min_snd s hs hg z hz)
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- `huffmanStep` 後の HuffmanGrouping 保存 (アクセサ). -/
@@ -458,7 +517,7 @@ lemma huffmanLengthAux_pos_of_mem
         rw [h_ee_zero] at hp_in_s''
         exact absurd hp_in_s'' (Multiset.notMem_zero _)
 
-omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+omit [DecidableEq α] [LinearOrder α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- `initMultiset` の各要素 `a` は singleton group `({a}, P.real {a})` に属する. -/
 lemma mem_initMultiset (P : Measure α) (a : α) :
     ∃ p ∈ initMultiset P, a ∈ p.1 := by
@@ -468,7 +527,7 @@ lemma mem_initMultiset (P : Measure α) (a : α) :
     simp
   · simp
 
-omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+omit [DecidableEq α] [LinearOrder α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- `initMultiset P` は `HuffmanGrouping` を満たす (Nodup + Nonempty + Disjoint). -/
 lemma initMultiset_huffmanGrouping (P : Measure α) :
     HuffmanGrouping (initMultiset P) := by
