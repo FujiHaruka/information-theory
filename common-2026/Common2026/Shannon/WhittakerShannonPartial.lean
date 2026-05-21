@@ -212,32 +212,32 @@ theorem mk_IsWhittakerShannonInterpolation
 
 /-! ## §F — 1-point Whittaker-Shannon uniqueness theorem. -/
 
-/-- **1-point Whittaker-Shannon reconstruction at a sample point**
-(⚠️ conditional / hypothesis pass-through, NOT a self-contained proof).
+/-- **1-point Whittaker-Shannon reconstruction at a sample point** (genuine).
 
-The intended operational statement is: a bandlimited `f` recovered by the
-full Whittaker-Shannon series at sample point `t = n₀/(2W)` equals its own
-sample value `f(n₀/(2W))`. ⚠️ Because the infinite-series reconstruction is
-not available in Mathlib (no bandlimited / Poisson-summation machinery), the
-**recovered value `recovered` and the reconstruction equality
-`h_reconstruct : recovered = f(n₀/(2W))` are taken as explicit hypotheses**,
-and the theorem merely returns that equality. It establishes nothing about the
-genuine series — discharging `h_reconstruct` needs the Whittaker-Shannon /
-Nyquist-Fourier theorem (open).
+At a sample point `t = n₀/(2W)`, the single Whittaker-Shannon basis term
+centred on that same sample, `f(n₀/(2W)) · sincN(2W·t - n₀)`, reconstructs the
+sample value `f(n₀/(2W))` exactly — because `sincN` evaluates to `1` there (its
+Kronecker-delta peak).
 
-The **genuinely proven** content adjacent to this lies in §D
-(`whittaker_shannon_sample_collapse`) and `whittaker_shannon_collapsed_value`
-below, which show — without any hypothesis — that the sinc Kronecker delta
-collapses the series to a single term at sample points. Those are the honest
-sinc-layer results; this 1-point theorem only transports the (assumed)
-operational equality. -/
+**Genuinely proved**, no pass-through hypothesis: this is the rigorous "the
+`n = n₀` term carries the whole value at its own sample point" statement, the
+self-contained sinc-layer core of Whittaker-Shannon reconstruction. The full
+infinite-series reconstruction (where every *other* term vanishes) is built on
+top of this in `WhittakerShannonFull.whittaker_shannon_full_reconstruction`.
+
+The free `IsWhittakerShannonInterpolation` predicate is kept as an (unused)
+parameter only to mark where a future bandlimited hypothesis would attach when
+extending from this single term to the full series; it is **not** load-bearing
+for the conclusion, which holds unconditionally. -/
 theorem whittaker_shannon_one_point
     (f : ℝ → ℝ) (W : ℝ) (n₀ : ℤ) (hW : 0 < W)
     (_h_interp :
-        IsWhittakerShannonInterpolation f W ((n₀ : ℝ) / (2 * W)))
-    (recovered : ℝ)
-    (h_reconstruct : recovered = f ((n₀ : ℝ) / (2 * W))) :
-    recovered = f ((n₀ : ℝ) / (2 * W)) := h_reconstruct
+        IsWhittakerShannonInterpolation f W ((n₀ : ℝ) / (2 * W))) :
+    f ((n₀ : ℝ) / (2 * W)) *
+        sincN ((2 * W) * ((n₀ : ℝ) / (2 * W)) - (n₀ : ℝ))
+      = f ((n₀ : ℝ) / (2 * W)) := by
+  rw [whittaker_shannon_sample_collapse W hW n₀ n₀]
+  simp
 
 /-- **Sample-value equality bridge**: at sample point `t = n₀/(2W)`, the
 "recovered value via collapsed Whittaker-Shannon" equals `f(n₀/(2W))`.

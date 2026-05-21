@@ -4,6 +4,7 @@ import Common2026.Shannon.AWGNConverse
 import Common2026.Shannon.AWGNMain
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.Analysis.SpecialFunctions.Complex.LogBounds
 import Mathlib.Topology.Algebra.Order.LiminfLimsup
 
 /-!
@@ -240,27 +241,30 @@ theorem shannon_hartley_low_snr_bound
         linarith
     _ = P / (N₀ * W) := by ring
 
-/-- `W → ∞` limit hypothesis: as bandwidth grows, the Shannon-Hartley
-capacity is bounded above by the asymptotic limit `P / N₀` (in nats/sec).
--/
-def IsBandwidthLimitHypothesis (N₀ P : ℝ) : Prop :=
-  ∃ (_h : 0 < N₀ ∧ 0 ≤ P), True
-
-/-- Asymptotic capacity in the wideband limit `W → ∞`:
+/-- **Asymptotic capacity in the wideband limit `W → ∞`** (genuine):
 
     `lim_{W → ∞} W · log(1 + P/(N₀·W)) = P / N₀`
 
 This is the **wideband regime**: as bandwidth increases without bound, the
-capacity saturates at `P / N₀` (nats/sec). Published in hypothesis
-pass-through form via `IsBandwidthLimitHypothesis` (the Mathlib lemma
-`Real.tendsto_mul_log_one_plus_div_atTop` would discharge it directly
-when present; until then we accept it as hypothesis). -/
+Shannon-Hartley capacity saturates at `P / N₀` (nats/sec).
+
+**Genuinely proved.** The Mathlib lemma `Real.tendsto_mul_log_one_add_div_atTop`
+gives `Tendsto (fun W => W · log(1 + (P/N₀)/W)) atTop (𝓝 (P/N₀))`; since
+`(P/N₀)/W = P/(N₀·W)`, the integrand coincides pointwise with
+`bandlimitedAwgnCapacity W N₀ P`, so the same limit holds. (Positivity
+hypotheses are not even needed — the limit is a pure real-calculus fact for
+every `N₀, P`; we keep them for API uniformity with the rest of §F.) -/
 theorem shannon_hartley_wideband_limit
-    (N₀ P : ℝ) (hN₀ : 0 < N₀) (hP : 0 ≤ P)
-    (h_bw : IsBandwidthLimitHypothesis N₀ P)
-    (limit_value : ℝ)
-    (h_limit : limit_value = P / N₀) :
-    limit_value = P / N₀ := h_limit
+    (N₀ P : ℝ) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
+    Filter.Tendsto (fun W => bandlimitedAwgnCapacity W N₀ P)
+      Filter.atTop (𝓝 (P / N₀)) := by
+  -- Mathlib's `Real.tendsto_mul_log_one_add_div_atTop (P/N₀)` :
+  --   `Tendsto (fun W => W · log (1 + (P/N₀)/W)) atTop (𝓝 (P/N₀))`.
+  have h := Real.tendsto_mul_log_one_add_div_atTop (P / N₀)
+  -- The integrand matches `bandlimitedAwgnCapacity` since `(P/N₀)/W = P/(N₀·W)`.
+  refine h.congr (fun W => ?_)
+  unfold bandlimitedAwgnCapacity
+  rw [div_div]
 
 /-! ## §G — Convenience builders for the hypothesis predicates. -/
 
@@ -275,12 +279,6 @@ theorem mk_IsBandlimitedSamplingHypothesis
 
 /-- Build `IsBandlimitedKernel` from `0 < W`. -/
 theorem mk_IsBandlimitedKernel (W : ℝ) (hW : 0 < W) : IsBandlimitedKernel W := hW
-
-/-- Build `IsBandwidthLimitHypothesis` from basic positivity. -/
-theorem mk_IsBandwidthLimitHypothesis
-    (N₀ P : ℝ) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
-    IsBandwidthLimitHypothesis N₀ P :=
-  ⟨⟨hN₀, hP⟩, trivial⟩
 
 /-! ## §H — Reformulations in `log₂` (bits/second). -/
 
