@@ -482,6 +482,12 @@ honest な最前線は引き続き headline `huffmanLength_optimal_modulo_aux_id
 (`HuffmanStrongForm.lean`、Hyp2 = `MergedHuffmanAuxIdentHypothesis` を **明示引数**で取る、
 sorryAx 非依存) である。本 file はその genuine discharge に向けた部品 (C3 cornerstone
 `huffmanLengthAux_relabel` + subtype carrier 解消) を機械検証付きで供給する。残るのは
-上記 1 (first-step identification) + 2 (collapse correspondence) の 2 補題。 -/
+上記 1 (first-step identification) + 2 (collapse correspondence) の 2 補題。
+
+**決定化後の更新 (T1-A'' colex 決定化)**: 上記の no-ties 限定機構 (Section B–D) は
+`huffmanStep` の colex 決定化により **NodupChain 前提を外した無条件版** に置き換えられる
+(`HuffmanColexDeterminism.lean`)。`groupKey` 単射で min は常に一意なので、relabel 不変量は
+無条件に成立する。本 file の Section B–D は genuine だが no-ties 限定であり、
+無条件版が新 file で利用可能。 -/
 
 end InformationTheory.Shannon.Huffman
