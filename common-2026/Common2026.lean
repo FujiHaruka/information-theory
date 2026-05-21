@@ -239,6 +239,7 @@ import Common2026.Shannon.LZ78ZivTreeNode
 import Common2026.Shannon.LZ78ZivTreeBridge
 import Common2026.Shannon.LZ78TreeInducedAEP
 import Common2026.Shannon.LZ78AsEventualAchievability
+import Common2026.Shannon.LZ78ConverseUDObject
 import Common2026.Shannon.EPIStamDeBruijnConclusion
 import Common2026.Shannon.MACPerEventAEPDecay
 import Common2026.Shannon.MACFanoConverseBody

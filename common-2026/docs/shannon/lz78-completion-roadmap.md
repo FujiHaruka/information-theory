@@ -19,6 +19,7 @@
 | path-prefix AEP | `LZ78TreeInducedAEP.lean` | `treeInducedProb_negLogb_div_limsup_le_entropyRate₂` (`Pₙ≤Q_c`+SMB)。**genuine だが achievability に直接効かない** (§2 D4) |
 | achievability frontier | `LZ78AsEventualAchievability.lean` | envelope reduction `lz78DistinctRate_le_countLogRate₂_add_slack` (**FALSE core 非依存**) + satisfiable hyp `IsLZ78ZivAsEventual` + headline `lz78_two_sided_optimality_distinct_aseventual` |
 | converse 期待値層 | `McMillanKraftBridge.lean` | `entropyD_le_expectedLength_of_uniquelyDecodable` (Mathlib `InformationTheory.kraft_mcmillan_inequality` を project Kraft/Gibbs に wire) |
+| **converse UD-object (M1 済)** | `LZ78ConverseUDObject.lean` | 汎用 `uniquelyDecodable_of_constantLength` (定長コード⟹UD、Mathlib 未収録) + 実 LZ78 `(parent,symbol)` token code (fixed-width `K=bitLength c \|α\|`, `(c+1)·\|α\| ≤ 2^K`) の UD 証明 → McMillan で `kraftSum 2 (fun _=>K) ≤ 1` + 期待値 converse `entropyD 2 P ≤ E[L]=K`。`#print axioms` sorryAx 非依存 |
 | 固定深さ k AEP (再利用元) | `SMBAlgoetCover.lean` | `qkSingleton`, `sum_qkSingleton_le_one`, `negLogQk_div_tendsto_condEntropyTail` (`-log qk/n → H_k`); `EntropyRate.lean` `conditionalEntropyTail_tendsto_entropyRate` (`H_k → H`) |
 
 ### honest frontier (= 残る load-bearing 仮説、これらを discharge すれば完遂)
@@ -29,11 +30,16 @@
 
 ## 1. 残る4部品 + 推奨着手順 (tractable 順)
 
-### M1 — converse UD-object 【最優先・最も確実】
+### M1 — converse UD-object 【✅ 済 (2026-05-21)】
 - **内容**: LZ78 符号化 (index, symbol) ストリームを定義し、**uniquely-decodable であることを証明** → Mathlib McMillan (`McMillanKraftBridge`) を**実 LZ78 code に適用** → 実コードの**期待値 converse `H_D ≤ E[lz]`** を genuine に。
 - **注意**: `lz78PhraseStrings` 自体は **prefix-complete で UD でない**。真の UD object は encoded stream (別構造、新規構築要)。`_nodup` は UD の必要条件にすぎず不十分。
-- **deliverable**: 実コードの期待値 converse 定理 (sorryAx 非依存)。`IsLZ78ConverseCodingLowerBound` はまだ閉じない (a.s. lift = M4 が残る) が、converse の期待値層が抽象 hyp でなく実コードに繋がる。
-- **規模**: ~150–300 行。**リスク: 低〜中** (組合せ的)。
+- **deliverable (実装済)**: `Common2026/Shannon/LZ78ConverseUDObject.lean` (sorryAx 非依存、`lake env lean` silent)。
+  - `uniquelyDecodable_of_constantLength` — 定長コード ⟹ UD (汎用、Mathlib 未収録、本 M1 の数学的核)。
+  - `boolEncode`/`finBoolCode` — fixed-width binary code、`m < 2^K` で injective。
+  - `lz78TokenCode c : Fin (c+1) × α → List Bool` (width `K = bitLength c |α|`) の injective + UD + `lz78TokenCode_kraftSum_le_one` + `lz78TokenCode_entropyD_le_expectedLength` (= `entropyD 2 P ≤ E[L] = K`)。
+  - McMillanKraftBridge §3 Residual 1 (「UD object 未構築」) を解消。
+- **残**: `IsLZ78ConverseCodingLowerBound` (block-rate, Cover–Thomas Eq. 13.130) は **未着手のまま** — token-level Kraft → block-rate a.s.-eventual `liminf` は **averaged⟶a.s. lift (= M4)** が必要。M1 は converse の**期待値層を実コードに接続**した段階。
+- **規模 (実績)**: ~270 行。**リスク: 低〜中 (組合せ的)** — 想定通り、初回 skeleton がほぼそのまま通過。
 
 ### M2 — length-grouping Ziv 組合せ核 【確度高】
 - **内容**: tree-node T3 (`∑_v k_v log k_v ≤ -log Q_c^{tree}`) を **長さ別グルーピング**で `c·log c ≤ -log Q_c^{tree} + c·H(length-dist)` に。overhead `c·H(length-dist) ≤ c·log(maxlen)`、`maxlen ≤ log_b n`、`(c·log log n)/n → 0` を `c/n` envelope (`lz78Distinct_count_div_le_envelope`) と合成。
