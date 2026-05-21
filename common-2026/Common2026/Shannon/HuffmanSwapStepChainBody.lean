@@ -130,7 +130,7 @@ abbrev PermChainKraftPreserving : Prop :=
 任意 permutation の sum invariance (`Equiv.sum_comp`) で完全 discharge できる. -/
 theorem permChainKraftPreserving_holds :
     PermChainKraftPreserving.{u} := by
-  intro β _ _ ll σ h_kraft
+  intro β _ _ _ ll σ h_kraft
   have h_eq : (∑ x : β, ((2 : ℝ)) ^ (-((ll ∘ σ) x : ℤ)))
       = ∑ x : β, ((2 : ℝ)) ^ (-(ll x : ℤ)) := by
     show (∑ x : β, ((2 : ℝ)) ^ (-(ll (σ x) : ℤ))) = _
@@ -152,7 +152,7 @@ abbrev PermChainExpectedLengthPreserving : Prop :=
 expectedLength は不変なので `≤` は完全 discharge できる. -/
 theorem permChainExpectedLengthPreserving_holds :
     PermChainExpectedLengthPreserving.{u} := by
-  intro β _ _ _ _ Q _ ll σ h_eq_pt
+  intro β _ _ _ _ _ Q _ ll σ h_eq_pt
   apply le_of_eq
   unfold InformationTheory.Shannon.ShannonCode.expectedLength
   apply Finset.sum_congr rfl
@@ -181,7 +181,7 @@ theorem swapStepLeChainHypothesis_via_subpredicates
     (_h_kraft : PermChainKraftPreserving.{u})
     (_h_exp : PermChainExpectedLengthPreserving.{u}) :
     SwapStepLeChainHypothesis.{u} := by
-  intro β _ _ _ _ Q _ ll hll_pos hll_kraft _pair
+  intro β _ _ _ _ _ Q _ ll hll_pos hll_kraft _pair
   refine ⟨ll, hll_pos, hll_kraft, le_refl _⟩
 
 /-- **single-swap chain witness via sub-predicate**: `ll a = ll b` のとき `Equiv.swap a b`

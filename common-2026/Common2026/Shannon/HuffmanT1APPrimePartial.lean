@@ -594,7 +594,7 @@ universe v
 universe-`u` 形をそのまま呼び出すだけだが、後続 seed で `{α : Type*}` 呼び出しを
 拾う用. -/
 theorem huffmanLength_optimal_with_hypotheses_at
-    {α : Type v} [Fintype α] [DecidableEq α] [Nonempty α]
+    {α : Type v} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
     (h_swap : SwapNormalizationHypothesis.{v})
     (h_ident : HuffmanMergedIdentificationHypothesis.{v})
