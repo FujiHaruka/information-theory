@@ -228,7 +228,7 @@ theorem pl1SuperLevel_pos_of_hyp
     (muF muG muH : ℝ → ℝ) (lam : ℝ)
     (h_sl_meas : IsPL11DSuperLevelHyp muF muG muH lam) :
     ∀ t : ℝ, 0 < t → lam * muF t + (1 - lam) * muG t ≤ muH t :=
-  fun t ht => h_sl_meas t ht.le
+  fun t ht => h_sl_meas t ht
 
 /-- **1 次元 PL (superlevel hypothesis を genuine に discharge した版)**.
 
@@ -251,11 +251,11 @@ theorem prekopa_leindler_1D_superlevel_discharged
     (h0 : 0 ≤ lam) (h1 : lam ≤ 1)
     (intF intG intH : ℝ)
     (hF : 0 ≤ intF) (hG : 0 ≤ intG) (hH : 0 ≤ intH)
-    (hF_compact : ∀ t : ℝ, 0 ≤ t → IsCompact {x : ℝ | t ≤ f x})
-    (hG_compact : ∀ t : ℝ, 0 ≤ t → IsCompact {x : ℝ | t ≤ g x})
-    (hF_ne : ∀ t : ℝ, 0 ≤ t → ({x : ℝ | t ≤ f x}).Nonempty)
-    (hG_ne : ∀ t : ℝ, 0 ≤ t → ({x : ℝ | t ≤ g x}).Nonempty)
-    (hH_fin : ∀ t : ℝ, 0 ≤ t → volume {x : ℝ | t ≤ hfn x} ≠ ∞)
+    (hF_compact : ∀ t : ℝ, 0 < t → IsCompact {x : ℝ | t ≤ f x})
+    (hG_compact : ∀ t : ℝ, 0 < t → IsCompact {x : ℝ | t ≤ g x})
+    (hF_ne : ∀ t : ℝ, 0 < t → ({x : ℝ | t ≤ f x}).Nonempty)
+    (hG_ne : ∀ t : ℝ, 0 < t → ({x : ℝ | t ≤ g x}).Nonempty)
+    (hH_fin : ∀ t : ℝ, 0 < t → volume {x : ℝ | t ≤ hfn x} ≠ ∞)
     (h_pt : ∀ x y : ℝ,
       f x ^ lam * g y ^ (1 - lam) ≤ hfn (lam * x + (1 - lam) * y))
     (h_lc : IsPL1LayerCakeIntegralHyp

@@ -111,7 +111,7 @@ theorem weighted_geom_le_one {a b lam : ℝ}
 を満たす (genuine 1 次元 BM、測度内容)。`muF, muG, muH : ℝ → ℝ` は各
 superlevel 集合 `{φ ≥ t}` の Lebesgue 測度。 -/
 def IsPL11DSuperLevelHyp (muF muG muH : ℝ → ℝ) (lam : ℝ) : Prop :=
-  ∀ t : ℝ, 0 ≤ t → lam * muF t + (1 - lam) * muG t ≤ muH t
+  ∀ t : ℝ, 0 < t → lam * muF t + (1 - lam) * muG t ≤ muH t
 
 /-- **L-PL1b (layer-cake 積分表現)**: `∫φ = ∫₀^∞ μ_φ(t) dt` で、本 file
 では superlevel 測度 `muφ` の "積分" を scalar `intφ` として受け取り、

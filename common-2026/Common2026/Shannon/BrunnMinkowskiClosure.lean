@@ -175,11 +175,11 @@ theorem prekopa_leindler_1Dim
       f x ^ lam * g y ^ (1 - lam) ≤ hfn (lam • x + (1 - lam) • y))
     (heqF : intF = ∫ x, f x) (heqG : intG = ∫ x, g x) (heqH : intH = ∫ x, hfn x)
     (hf_int : Integrable f) (hg_int : Integrable g) (hh_int : Integrable hfn)
-    (hFc : ∀ t : ℝ, 0 ≤ t → IsCompact {a : ℝ | t ≤ f (fun _ => a)})
-    (hGc : ∀ t : ℝ, 0 ≤ t → IsCompact {a : ℝ | t ≤ g (fun _ => a)})
-    (hFne : ∀ t : ℝ, 0 ≤ t → ({a : ℝ | t ≤ f (fun _ => a)}).Nonempty)
-    (hGne : ∀ t : ℝ, 0 ≤ t → ({a : ℝ | t ≤ g (fun _ => a)}).Nonempty)
-    (hHfin : ∀ t : ℝ, 0 ≤ t → volume {a : ℝ | t ≤ hfn (fun _ => a)} ≠ ∞)
+    (hFc : ∀ t : ℝ, 0 < t → IsCompact {a : ℝ | t ≤ f (fun _ => a)})
+    (hGc : ∀ t : ℝ, 0 < t → IsCompact {a : ℝ | t ≤ g (fun _ => a)})
+    (hFne : ∀ t : ℝ, 0 < t → ({a : ℝ | t ≤ f (fun _ => a)}).Nonempty)
+    (hGne : ∀ t : ℝ, 0 < t → ({a : ℝ | t ≤ g (fun _ => a)}).Nonempty)
+    (hHfin : ∀ t : ℝ, 0 < t → volume {a : ℝ | t ≤ hfn (fun _ => a)} ≠ ∞)
     (h_lc : IsPL1LayerCakeIntegralHyp
       (fun t => (volume {a : ℝ | t ≤ f (fun _ => a)}).toReal)
       (fun t => (volume {a : ℝ | t ≤ g (fun _ => a)}).toReal)
@@ -227,11 +227,11 @@ hypothesis。`:= True` ではなく実際の `IsCompact` / `Nonempty` / `≠ ∞
 measure content (本 file scope 外の解析的前提) を honest に外出ししたもの。 -/
 def IsSlicePLReadyHyp {n : ℕ}
     (f g hfn : (Fin (n + 1) → ℝ) → ℝ) (lam intF intG intH : ℝ) : Prop :=
-  (∀ t : ℝ, 0 ≤ t → IsCompact {s : ℝ | t ≤ sliceInt f s}) ∧
-  (∀ t : ℝ, 0 ≤ t → IsCompact {s : ℝ | t ≤ sliceInt g s}) ∧
-  (∀ t : ℝ, 0 ≤ t → ({s : ℝ | t ≤ sliceInt f s}).Nonempty) ∧
-  (∀ t : ℝ, 0 ≤ t → ({s : ℝ | t ≤ sliceInt g s}).Nonempty) ∧
-  (∀ t : ℝ, 0 ≤ t → volume {s : ℝ | t ≤ sliceInt hfn s} ≠ ∞) ∧
+  (∀ t : ℝ, 0 < t → IsCompact {s : ℝ | t ≤ sliceInt f s}) ∧
+  (∀ t : ℝ, 0 < t → IsCompact {s : ℝ | t ≤ sliceInt g s}) ∧
+  (∀ t : ℝ, 0 < t → ({s : ℝ | t ≤ sliceInt f s}).Nonempty) ∧
+  (∀ t : ℝ, 0 < t → ({s : ℝ | t ≤ sliceInt g s}).Nonempty) ∧
+  (∀ t : ℝ, 0 < t → volume {s : ℝ | t ≤ sliceInt hfn s} ≠ ∞) ∧
   IsPL1LayerCakeIntegralHyp
     (fun t => (volume {s : ℝ | t ≤ sliceInt f s}).toReal)
     (fun t => (volume {s : ℝ | t ≤ sliceInt g s}).toReal)

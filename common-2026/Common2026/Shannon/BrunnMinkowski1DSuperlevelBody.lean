@@ -260,11 +260,11 @@ theorem pl1_superlevel_inclusion
 theorem isPL11DSuperLevelHyp_real
     (f g hfn : ℝ → ℝ) (lam : ℝ)
     (h0 : 0 ≤ lam) (h1 : lam ≤ 1)
-    (hF_compact : ∀ t : ℝ, 0 ≤ t → IsCompact {x : ℝ | t ≤ f x})
-    (hG_compact : ∀ t : ℝ, 0 ≤ t → IsCompact {x : ℝ | t ≤ g x})
-    (hF_ne : ∀ t : ℝ, 0 ≤ t → ({x : ℝ | t ≤ f x}).Nonempty)
-    (hG_ne : ∀ t : ℝ, 0 ≤ t → ({x : ℝ | t ≤ g x}).Nonempty)
-    (hH_fin : ∀ t : ℝ, 0 ≤ t → volume {x : ℝ | t ≤ hfn x} ≠ ∞)
+    (hF_compact : ∀ t : ℝ, 0 < t → IsCompact {x : ℝ | t ≤ f x})
+    (hG_compact : ∀ t : ℝ, 0 < t → IsCompact {x : ℝ | t ≤ g x})
+    (hF_ne : ∀ t : ℝ, 0 < t → ({x : ℝ | t ≤ f x}).Nonempty)
+    (hG_ne : ∀ t : ℝ, 0 < t → ({x : ℝ | t ≤ g x}).Nonempty)
+    (hH_fin : ∀ t : ℝ, 0 < t → volume {x : ℝ | t ≤ hfn x} ≠ ∞)
     (h_pt : ∀ x y : ℝ, f x ^ lam * g y ^ (1 - lam) ≤ hfn (lam * x + (1 - lam) * y)) :
     IsPL11DSuperLevelHyp
       (fun t => (volume {x : ℝ | t ≤ f x}).toReal)
@@ -282,7 +282,7 @@ theorem isPL11DSuperLevelHyp_real
       (hF_ne t ht) (hG_ne t ht)
   -- superlevel inclusion ⟹ measure monotonicity (`.toReal`)
   have hsub : lam • A + (1 - lam) • B ⊆ C :=
-    pl1_superlevel_inclusion f g hfn lam h0 h1 t ht h_pt
+    pl1_superlevel_inclusion f g hfn lam h0 h1 t ht.le h_pt
   have hmono : (volume (lam • A + (1 - lam) • B)).toReal ≤ (volume C).toReal :=
     ENNReal.toReal_mono (hH_fin t ht) (measure_mono hsub)
   linarith
@@ -303,11 +303,11 @@ theorem prekopa_leindler_1D_body_discharged
     (h0 : 0 ≤ lam) (h1 : lam ≤ 1)
     (intF intG intH : ℝ)
     (hF : 0 ≤ intF) (hG : 0 ≤ intG) (hH : 0 ≤ intH)
-    (hF_compact : ∀ t : ℝ, 0 ≤ t → IsCompact {x : ℝ | t ≤ f x})
-    (hG_compact : ∀ t : ℝ, 0 ≤ t → IsCompact {x : ℝ | t ≤ g x})
-    (hF_ne : ∀ t : ℝ, 0 ≤ t → ({x : ℝ | t ≤ f x}).Nonempty)
-    (hG_ne : ∀ t : ℝ, 0 ≤ t → ({x : ℝ | t ≤ g x}).Nonempty)
-    (hH_fin : ∀ t : ℝ, 0 ≤ t → volume {x : ℝ | t ≤ hfn x} ≠ ∞)
+    (hF_compact : ∀ t : ℝ, 0 < t → IsCompact {x : ℝ | t ≤ f x})
+    (hG_compact : ∀ t : ℝ, 0 < t → IsCompact {x : ℝ | t ≤ g x})
+    (hF_ne : ∀ t : ℝ, 0 < t → ({x : ℝ | t ≤ f x}).Nonempty)
+    (hG_ne : ∀ t : ℝ, 0 < t → ({x : ℝ | t ≤ g x}).Nonempty)
+    (hH_fin : ∀ t : ℝ, 0 < t → volume {x : ℝ | t ≤ hfn x} ≠ ∞)
     (h_pt : ∀ x y : ℝ, f x ^ lam * g y ^ (1 - lam) ≤ hfn (lam * x + (1 - lam) * y))
     (h_add : IsPL1AdditiveHyp intF intG intH lam) :
     intF ^ lam * intG ^ (1 - lam) ≤ intH := by
