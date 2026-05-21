@@ -243,3 +243,4 @@ import Common2026.Shannon.HuffmanSwapNormProof
 import Common2026.Shannon.HuffmanSwapNormCompletion
 import Common2026.Shannon.HuffmanStrongForm
 import Common2026.Shannon.HuffmanMergedAuxIdent
+import Common2026.Shannon.HuffmanColexDeterminism

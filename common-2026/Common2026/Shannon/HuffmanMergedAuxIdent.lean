@@ -76,7 +76,7 @@ def relabelMultiset {γ : Type*} [DecidableEq γ] (e : α ↪ γ)
     (s : Multiset (Finset α × ℝ)) : Multiset (Finset γ × ℝ) :=
   s.map (relabelGroup e)
 
-omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+omit [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- `relabelGroup e` は injective (embedding `e` の単射性 + `Finset.map` の単射性). -/
 lemma relabelGroup_injective {γ : Type*} [DecidableEq γ] (e : α ↪ γ) :
     Function.Injective (relabelGroup e) := by
@@ -88,7 +88,7 @@ lemma relabelGroup_injective {γ : Type*} [DecidableEq γ] (e : α ↪ γ) :
   · exact Finset.map_injective e h1
   · exact h2
 
-omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+omit [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- relabel は `card` を保つ. -/
 lemma relabelMultiset_card {γ : Type*} [DecidableEq γ] (e : α ↪ γ)
     (s : Multiset (Finset α × ℝ)) :
@@ -96,7 +96,7 @@ lemma relabelMultiset_card {γ : Type*} [DecidableEq γ] (e : α ↪ γ)
   unfold relabelMultiset
   rw [Multiset.card_map]
 
-omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+omit [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- relabel は `HuffmanGrouping` を保つ. -/
 lemma relabelMultiset_grouping {γ : Type*} [DecidableEq γ] (e : α ↪ γ)
     (s : Multiset (Finset α × ℝ)) (hg : HuffmanGrouping s) :
@@ -126,7 +126,7 @@ lemma relabelMultiset_grouping {γ : Type*} [DecidableEq γ] (e : α ↪ γ)
     rw [Finset.disjoint_map]
     exact hg.disjoint hp' hq' hpq'
 
-omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+omit [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- relabel は確率値 multiset (`map Prod.snd`) を保つ. -/
 lemma relabelMultiset_snd {γ : Type*} [DecidableEq γ] (e : α ↪ γ)
     (s : Multiset (Finset α × ℝ)) :
@@ -135,7 +135,7 @@ lemma relabelMultiset_snd {γ : Type*} [DecidableEq γ] (e : α ↪ γ)
   rw [Multiset.map_map]
   rfl
 
-omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+omit [Fintype α] [LinearOrder α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- relabel と `erase` は可換 (`relabelGroup e` の単射性経由). -/
 lemma relabelMultiset_erase {γ : Type*} [DecidableEq γ] (e : α ↪ γ)
     (s : Multiset (Finset α × ℝ)) (p : Finset α × ℝ) :
@@ -143,7 +143,7 @@ lemma relabelMultiset_erase {γ : Type*} [DecidableEq γ] (e : α ↪ γ)
   unfold relabelMultiset
   exact Multiset.map_erase (relabelGroup e) (relabelGroup_injective e) p s
 
-omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+omit [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- relabel は `mem` を反映 (単射性経由). -/
 lemma relabelMultiset_mem {γ : Type*} [DecidableEq γ] (e : α ↪ γ)
     (s : Multiset (Finset α × ℝ)) (p : Finset α × ℝ) :
@@ -161,7 +161,7 @@ lemma relabelMultiset_mem {γ : Type*} [DecidableEq γ] (e : α ↪ γ)
 (`Q{a}+Q{b}` が他 leaf と一致しうる) ため、本 lemma 単独では
 `MergedHuffmanAuxIdentHypothesis` を閉じない (§file docstring の残タスク参照)。 -/
 
-omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+omit [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- **no-ties 下の min 一意性**: `s.map Prod.snd` が Nodup なら、`Multiset.exists_min_image`
 の minimizer は一意 (確率値が distinct なので min を達成する group は唯一). -/
 lemma min_unique_of_nodup_snd
@@ -173,7 +173,7 @@ lemma min_unique_of_nodup_snd
   -- nodup of map Prod.snd: distinct elements have distinct snd, so p.2 = q.2 ⇒ p = q
   exact Multiset.inj_on_of_nodup_map hnd p hp q hq hpq2
 
-omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+omit [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- relabel は nodup-probs を保つ (`relabelMultiset_snd` で確率 multiset 不変). -/
 lemma relabelMultiset_nodup_snd {γ : Type*} [DecidableEq γ] (e : α ↪ γ)
     (s : Multiset (Finset α × ℝ)) (hnd : (s.map Prod.snd).Nodup) :
@@ -221,7 +221,7 @@ lemma huffmanStep_fst_relabel {γ : Type*} [DecidableEq γ] [LinearOrder γ] (e 
   exact min_unique_of_nodup_snd (relabelMultiset e s) hnd' q (relabelGroup e p)
     hq_mem hrp_mem hq_min hrp_min
 
-omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+omit [Fintype α] [LinearOrder α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- nodup-probs は `erase` で保たれる (sub-multiset の Nodup). -/
 lemma nodup_snd_erase
     (s : Multiset (Finset α × ℝ)) (hnd : (s.map Prod.snd).Nodup) (p : Finset α × ℝ) :
