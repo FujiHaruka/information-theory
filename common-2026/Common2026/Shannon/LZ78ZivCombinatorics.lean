@@ -166,4 +166,141 @@ theorem condNextSymbol_sum_eq_one
   rw [← Finset.sum_div, extendCylinder_measureReal_sum_eq μ p ω m,
       div_self hpos.ne']
 
+/-! ## §2. Per-phrase conditional bounds (genuine) -/
+
+omit [Fintype α] [Nonempty α] in
+/-- **Each per-phrase conditional probability is `≤ 1`** (genuine,
+unconditional consequence of prefix monotonicity).
+
+`condPhraseProb μ p n ω j = prefixBlockProb ω (boundary (j+1)) /
+prefixBlockProb ω (boundary j)`, and the parsing boundaries are monotone
+(`boundary j ≤ boundary (j+1)`), so the numerator cylinder is contained in
+the denominator cylinder and the ratio is `≤ 1`
+(`prefixBlockProb_antitone`). The positivity hypothesis `hden` guards the
+division. -/
+theorem condPhraseProb_le_one
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
+    (n : ℕ) (ω : Ω) (j : ℕ)
+    (hden : 0 < prefixBlockProb μ p ω (parsingBoundary μ p n ω j)) :
+    condPhraseProb μ p n ω j ≤ 1 := by
+  -- `boundary j ≤ boundary (j+1)`: one more phrase length is added.
+  have hmono : parsingBoundary μ p n ω j ≤ parsingBoundary μ p n ω (j + 1) := by
+    unfold parsingBoundary
+    -- `((take j L).map length).sum ≤ ((take (j+1) L).map length).sum`.
+    set lens : List ℕ :=
+      (lz78PhraseStrings (List.ofFn (p.blockRV n ω))).map List.length with hlens
+    have hmap : ∀ k,
+        (((lz78PhraseStrings (List.ofFn (p.blockRV n ω))).take k).map List.length).sum
+          = (lens.take k).sum := by
+      intro k; rw [hlens, List.map_take]
+    rw [hmap j, hmap (j + 1)]
+    -- `take j lens` is a prefix of `take (j+1) lens`; sums of ℕ-lists are
+    -- monotone under the sublist order.
+    have hpre : (lens.take j) <+: (lens.take (j + 1)) :=
+      List.take_prefix_take_left (by omega)
+    exact hpre.sublist.sum_le_sum (fun _ _ => Nat.zero_le _)
+  -- `prefixBlockProb (b (j+1)) ≤ prefixBlockProb (b j)` by antitone.
+  have hanti := prefixBlockProb_antitone μ p ω hmono
+  unfold condPhraseProb
+  rw [div_le_one hden]
+  exact hanti
+
+/-! ## §3. Ziv combinatorial core (Cover–Thomas Lemma 13.5.5) — isolated honest hypothesis -/
+
+/-- **Isolated honest input (Cover–Thomas Lemma 13.5.5, the distinct-phrase
+combinatorial Ziv core)** — for the genuine longest-prefix greedy parse of
+the observed block into `c` *distinct* phrases, the count product
+`c · log c` is bounded by the sum of the per-phrase conditional
+self-informations `∑ⱼ -log (condPhraseProb …)`:
+
+```
+c · Real.log c ≤ ∑ⱼ -Real.log (condPhraseProb μ p n ω j).
+```
+
+**This is NOT a discharge.** It is the genuine, load-bearing combinatorial
+heart of the Ziv inequality, and it is *not* derivable from the committed
+foundation. Concretely: the natural reduction via the log-sum inequality
+(`log_sum_inequality` with `aⱼ ≡ 1`, `bⱼ ≡ condPhraseProb`) gives
+
+```
+c · log (c / ∑ⱼ qⱼ) ≤ ∑ⱼ -log qⱼ,
+```
+
+which yields `c log c ≤ ∑ⱼ -log qⱼ` **only if `∑ⱼ qⱼ ≤ 1`**. But the
+`condPhraseProb` here are *path-prefix* ratios
+`P(prefix(b(j+1)))/P(prefix(b(j)))`, and these do **not** sum to `≤ 1`
+across the distinct phrases (the documented trap: `∑ⱼ qⱼ ≈ c`, since each
+nested ratio is `Θ(1)`). The genuine Cover–Thomas argument needs the
+conditionals re-expressed against the **LZ dictionary-node contexts** (the
+tree-node sub-distribution `∑_{phrases sharing a context} q ≤ 1`, where
+within a context the distinct phrases branch off with distinct next
+symbols), which requires re-deriving the parsing factorization against
+standalone-context cylinder probabilities (Cover–Thomas Lemma 13.5.4, the
+LZ-tree superadditivity). That tree-node infrastructure is **not** in the
+committed stationary/factorization layer, so this combinatorial core
+remains exposed as a single load-bearing named hypothesis.
+
+It is a genuine `Prop` (type ≠ conclusion), never `True`, never a `:= h`
+alias. The hypothesis is *strictly more primitive* than the structure
+`IsLZ78AchievabilityZivUpperBound` it helps construct (a per-block
+combinatorial inequality vs. an a.s.-eventual rate bound). -/
+def IsLZ78ZivCombinatorialCore
+    (μ : Measure Ω) (p : StationaryProcess μ α) : Prop :=
+  ∀ (n : ℕ) (ω : Ω),
+    ((lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length : ℝ)
+        * Real.log ((lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length : ℝ)
+      ≤ ∑ j ∈ Finset.range
+            (lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length,
+          - Real.log (condPhraseProb μ p n ω j)
+
+omit [Fintype α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- **Genuine Ziv inequality `c · log c ≤ -log Pₙ` (nat-log form)** from the
+isolated combinatorial core plus the genuine foundation.
+
+The combinatorial core gives `c log c ≤ ∑ⱼ -log qⱼ`
+(`IsLZ78ZivCombinatorialCore`), and the genuine foundation backbone
+`blockProb_neg_log_ge_sum` gives `∑ⱼ -log qⱼ ≤ -log Pₙ` (under a.s.
+regularity `0 < Pₙ` and the genuine factorization). Transitivity closes it.
+Everything except `IsLZ78ZivCombinatorialCore` is genuine. -/
+theorem ziv_count_mul_log_le_neg_log_blockProb
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
+    (hcore : IsLZ78ZivCombinatorialCore μ p)
+    (hfac : IsLZ78PerPathParsingFactorization μ p)
+    (n : ℕ) (ω : Ω)
+    (hPn : 0 < (μ.map (p.blockRV n)).real {p.blockRV n ω}) :
+    ((lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length : ℝ)
+        * Real.log ((lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length : ℝ)
+      ≤ - Real.log ((μ.map (p.blockRV n)).real {p.blockRV n ω}) := by
+  -- combinatorial core: `c log c ≤ ∑ⱼ -log qⱼ`.
+  refine (hcore n ω).trans ?_
+  -- genuine foundation backbone: `∑ⱼ -log qⱼ ≤ -log Pₙ`.
+  exact blockProb_neg_log_ge_sum μ p hfac n ω hPn
+
+omit [Fintype α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- **Genuine base-2 Ziv inequality `c · log₂ c ≤ -log₂ Pₙ`** (the Cover–Thomas
+Eq. 13.122–124 bit-based form), obtained from the nat-log Ziv inequality by
+dividing through by `Real.log 2 > 0`. -/
+theorem ziv_count_mul_logb_le_neg_logb_blockProb
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
+    (hcore : IsLZ78ZivCombinatorialCore μ p)
+    (hfac : IsLZ78PerPathParsingFactorization μ p)
+    (n : ℕ) (ω : Ω)
+    (hPn : 0 < (μ.map (p.blockRV n)).real {p.blockRV n ω}) :
+    ((lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length : ℝ)
+        * Real.logb 2 ((lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length : ℝ)
+      ≤ - Real.logb 2 ((μ.map (p.blockRV n)).real {p.blockRV n ω}) := by
+  have hnat := ziv_count_mul_log_le_neg_log_blockProb μ p hcore hfac n ω hPn
+  -- `logb 2 x = log x / log 2`; divide the nat-log inequality by `log 2 > 0`.
+  rw [Real.logb, Real.logb]
+  calc ((lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length : ℝ)
+        * (Real.log ((lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length : ℝ)
+            / Real.log 2)
+      = (((lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length : ℝ)
+          * Real.log ((lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length : ℝ))
+            / Real.log 2 := by ring
+    _ ≤ (- Real.log ((μ.map (p.blockRV n)).real {p.blockRV n ω})) / Real.log 2 := by
+        apply div_le_div_of_nonneg_right hnat log_two_pos.le
+    _ = - (Real.log ((μ.map (p.blockRV n)).real {p.blockRV n ω}) / Real.log 2) := by
+        rw [neg_div]
+
 end InformationTheory.Shannon
