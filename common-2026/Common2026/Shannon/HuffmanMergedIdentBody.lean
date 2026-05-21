@@ -40,7 +40,7 @@ open scoped BigOperators
 
 universe u
 
-variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+variable {α : Type*} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
 /-! ### Section A — `mergedMeasure` の explicit multiset 表現 -/
@@ -58,7 +58,7 @@ noncomputable def mergedInitMultiset
     (fun x => (({x} : Finset {y : α // y ≠ b}),
       if x.val = a then Q.real {a} + Q.real {b} else Q.real {x.val}))
 
-omit [Nonempty α] in
+omit [LinearOrder α] [Nonempty α] in
 /-- **measure→multiset 簡約 (genuine, 非 no-op)**: `initMultiset (mergedMeasure Q a b hab)`
 は `mergedInitMultiset Q a b` に等しい. 証明は `mergedMeasure_real` (= `Measure.sum_smul_dirac_singleton`
 経由の非自明な等式) を term-wise に適用. -/
@@ -70,7 +70,7 @@ lemma initMultiset_mergedMeasure_eq
   intro x _
   rw [mergedMeasure_real Q a b hab x]
 
-omit [Nonempty α] [MeasurableSingletonClass α] in
+omit [LinearOrder α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- **grouping 不変量**: `mergedInitMultiset Q a b` は `HuffmanGrouping` を満たす
 (各 singleton group が Nodup / Nonempty / 相互 disjoint). `huffmanLengthAux` を
 本 multiset 上で展開する際に必須となる前提. -/
@@ -104,7 +104,7 @@ lemma mergedInitMultiset_huffmanGrouping
       intro heq; apply hpq; rw [← hx, ← hy, heq]
     simp [hxy]
 
-omit [Nonempty α] [MeasurableSingletonClass α] in
+omit [LinearOrder α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- **card**: `mergedInitMultiset Q a b` の cardinality は subtype `{y // y ≠ b}` の
 要素数に等しい (= 各 leaf に 1 group). -/
 lemma mergedInitMultiset_card
@@ -114,7 +114,7 @@ lemma mergedInitMultiset_card
   rw [Multiset.card_map]
   rfl
 
-omit [Nonempty α] [MeasurableSingletonClass α] in
+omit [LinearOrder α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- **card (β-level)**: subtype の要素数を `Fintype.card α - 1` に書き換えた form.
 `3 ≤ Fintype.card α` 前提下では `2 ≤ (mergedInitMultiset ...).card` が従い、
 `huffmanLengthAux` の再帰 step が発火する (base case でない). -/
@@ -133,7 +133,7 @@ lemma mergedInitMultiset_card_eq_sub
 `Measure.real` / `initMultiset` の measure 計算) を完全に剥がした形. 残るのは pure な
 Huffman 木の再帰 content のみ. これが本 seed が discharge を委ねる primitive. -/
 abbrev MergedHuffmanAuxIdentHypothesis : Prop :=
-  ∀ {β : Type u} [Fintype β] [DecidableEq β] [Nonempty β]
+  ∀ {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (Q : Measure β) [IsProbabilityMeasure Q] (_hQ : ∀ a, 0 < Q.real {a})
     (_h_card : 3 ≤ Fintype.card β)
@@ -153,7 +153,7 @@ abbrev MergedHuffmanAuxIdentHypothesis : Prop :=
 theorem huffmanMergedIdentification_of_aux
     (h_aux : MergedHuffmanAuxIdentHypothesis.{u}) :
     HuffmanMergedIdentificationHypothesis.{u} := by
-  intro β _ _ _ _ _ Q _ hQ h_card a b hab h_a_min h_b_min h_sibling x
+  intro β _ _ _ _ _ _ Q _ hQ h_card a b hab h_a_min h_b_min h_sibling x
   -- huffmanLength (mergedMeasure ...) x = huffmanLengthAux (initMultiset (mergedMeasure ...)) x  (defeq)
   -- = huffmanLengthAux (mergedInitMultiset Q a b) x  (by initMultiset_mergedMeasure_eq)
   show huffmanLengthAux (initMultiset (mergedMeasure Q a b hab)) x = _
@@ -166,7 +166,7 @@ theorem huffmanMergedIdentification_of_aux
 primitive `MergedHuffmanAuxIdentHypothesis` で受け取る form. swap normalization 半分
 (`SwapNormalizationHypothesis`) はそのまま残る (本 seed の scope 外). -/
 theorem huffmanLength_optimal_with_swap_and_aux
-    {β : Type u} [Fintype β] [DecidableEq β] [Nonempty β]
+    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (h_swap : SwapNormalizationHypothesis.{u})
     (h_aux : MergedHuffmanAuxIdentHypothesis.{u})

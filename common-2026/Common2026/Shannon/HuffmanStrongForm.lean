@@ -52,7 +52,7 @@ E 非増加 / 正値 の `l_norm` が存在する。
 **load-bearing precondition**: `h_a_min` / `h_b_min` (strong 形)。published weak-form
 `SwapNormalizationHypothesis` の disjunctive `_h_min` より強い。docstring 参照. -/
 theorem swap_normalization_strong
-    {β : Type u} [Fintype β] [DecidableEq β] [Nonempty β]
+    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (Q : Measure β) [IsProbabilityMeasure Q]
     (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
@@ -142,7 +142,7 @@ theorem swap_normalization_strong
 (`:= h` 循環ではない: `swap_normalization_strong` は shorten + keystone + 2-swap の
 実証明). -/
 theorem swap_normalization_proof : SwapNormalizationHypothesis.{u} := by
-  intro β _ _ _ _ _ Q _ ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
+  intro β _ _ _ _ _ _ Q _ ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
   exact swap_normalization_strong Q ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
 
 /-! ### 強形主定理 — Hyp1 discharged, Hyp2 を primitive で受ける形
@@ -172,7 +172,7 @@ else huffmanLength Q x.val)`」という、Huffman 再帰を 2 carrier (`β` と
 (min 選択の tie 破り) を carrier 横断で対応付ける必要があり (judgement log #3),
 本 session では未完了の残タスク. -/
 theorem huffmanLength_optimal_modulo_aux_ident
-    {α : Type u} [Fintype α] [DecidableEq α] [Nonempty α]
+    {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
     (h_aux : MergedHuffmanAuxIdentHypothesis.{u})
     (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})
