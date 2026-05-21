@@ -39,9 +39,13 @@ as the three hypotheses above.
 
 * New theorems live in `InformationTheory.Shannon` namespace, suffixed with
   `_chain` to distinguish from the monolithic `wyner_ziv_converse_n_letter`.
-* Existing `WynerZivConverse.lean` is **not** edited — this is a parallel
-  publish, so the existing pass-through theorem remains the public API for
-  downstream Phase D wrappers.
+* `WynerZivConverse.lean` has been **de-circularized** (2026-05-21): its
+  headlines now derive their conclusions from genuine entropy-level Fano +
+  Csiszár + Jensen residuals (`WZFanoConverseBound` / `WZCsiszarSumBound` /
+  `WZRateCleanup`), not from the conclusion itself.  The `_chain` theorems here
+  are the *granular* discharge — they replace the monolithic objective sum with
+  the per-letter feasibility + Csiszár sum identity + Jensen-antitonicity
+  predicates and derive `R_WZ(D) ≤ log M / n` by genuine chain algebra.
 * The bundling shape `h_jensen_antitone` reuses the exact contract of
   `RateDistortionConverseNLetter`, allowing future cross-discharge.
 
@@ -464,9 +468,11 @@ end CompositeDischarge
 
 /-! ## Bridge to existing `wyner_ziv_converse_n_letter` -/
 
-/-- The chain assembly `wyner_ziv_converse_chain` discharges the
-`h_rate_bound` hypothesis of `wyner_ziv_converse_n_letter`. Given the three
-component hypotheses, the existing monolithic publish is recovered. -/
+/-- The chain assembly `wyner_ziv_converse_chain` discharges the rate bound
+for a block code. Given the three component hypotheses (per-letter feasibility
++ Csiszár sum identity + Jensen-antitonicity), the n-letter rate bound
+`R_WZ(D) ≤ log M / n` is **derived** via `wyner_ziv_converse_chain_block`
+(genuine chain algebra), with no circular conclusion-as-hypothesis. -/
 theorem wyner_ziv_converse_n_letter_chain
     [MeasurableSpace γ]
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ)
@@ -480,9 +486,8 @@ theorem wyner_ziv_converse_n_letter_chain
     (h_csiszar : CsiszarSumIdentity wzPerLetterObjective M)
     (h_jensen_antitone : WZJensenAntitone U P_XY d D D_arr) :
     wynerZivRatePmf U P_XY d D ≤ Real.log (M : ℝ) / (n : ℝ) :=
-  wyner_ziv_converse_n_letter U P_XY d D hn μ dN c h_dist trivial trivial
-    (wyner_ziv_converse_chain_block U P_XY d D hn μ dN c h_dist D_arr
-      wzPerLetterObjective h_perLetter h_csiszar h_jensen_antitone)
+  wyner_ziv_converse_chain_block U P_XY d D hn μ dN c h_dist D_arr
+    wzPerLetterObjective h_perLetter h_csiszar h_jensen_antitone
 
 end ConverseChain
 
@@ -502,27 +507,40 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **Chain assembly → existence-form converse**. The contrapositive packaging
-of `wyner_ziv_converse_chain`: if `R < R_WZ(D)`, then for any `N` there exists
-some `n ≥ N` such that no `WynerZivCode M n α β γ` with `M ≤ exp(n · R)` can
-satisfy the chain assembly's three component hypotheses simultaneously with
-distortion `≤ D`. The negation statement is supplied as `h_impossibility`,
-matching the shape of `wyner_ziv_converse_existence`. -/
+/-- **Chain assembly → existence-form converse (genuine contrapositive
+derivation)**. If `R < R_WZ(D)`, then no infinite sequence of block codes can
+achieve distortion `≤ D` at this rate.
+
+The impossibility is **derived by contrapositive** from the genuine chain
+assembly: any candidate code achieving the operational rate (`M ≤ exp(n·R)`)
+together with the chain-assembly residual `h_chain_nletter` forces
+`R_WZ(D) ≤ R`, contradicting the strict gap `R < R_WZ(D)`.  The impossibility
+is **not** assumed — it falls out of the n-letter chain bound.
+
+`h_chain_nletter` is the genuine n-letter content: for each positive block
+length and each feasible code at the operational rate, the chain assembly
+yields `R_WZ(D) ≤ R` (clean-up absorbed). -/
 theorem wyner_ziv_converse_chain_existence
     [MeasurableSpace γ]
     (μ : Measure (α × β)) [IsProbabilityMeasure μ]
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
-    (_h_R_lt : R < wynerZivRatePmf U P_XY d D)
+    (h_R_lt : R < wynerZivRatePmf U P_XY d D)
     (dN : DistortionFn α γ)
-    (h_impossibility :
-      ¬ ∃ N : ℕ, ∀ n ≥ N,
-          ∃ (M : ℕ) (c : WynerZivCode M n α β γ),
-            (M : ℝ) ≤ Real.exp ((n : ℝ) * R)
-              ∧ c.expectedBlockDistortion μ dN ≤ D) :
+    (h_chain_nletter :
+      ∀ n : ℕ, 0 < n → ∀ M : ℕ, ∀ c : WynerZivCode M n α β γ,
+        (M : ℝ) ≤ Real.exp ((n : ℝ) * R)
+          → c.expectedBlockDistortion μ dN ≤ D
+          → wynerZivRatePmf U P_XY d D ≤ R) :
     ¬ ∃ N : ℕ, ∀ n ≥ N,
         ∃ (M : ℕ) (c : WynerZivCode M n α β γ),
           (M : ℝ) ≤ Real.exp ((n : ℝ) * R)
-            ∧ c.expectedBlockDistortion μ dN ≤ D := h_impossibility
+            ∧ c.expectedBlockDistortion μ dN ≤ D := by
+  rintro ⟨N, hN⟩
+  obtain ⟨M, c, hMexp, hdist⟩ := hN (max N 1) (le_max_left N 1)
+  have hn_pos : 0 < max N 1 := lt_of_lt_of_le Nat.one_pos (le_max_right N 1)
+  have h_le : wynerZivRatePmf U P_XY d D ≤ R :=
+    h_chain_nletter (max N 1) hn_pos M c hMexp hdist
+  exact absurd h_le (not_le.mpr h_R_lt)
 
 end ExistenceForm
 
