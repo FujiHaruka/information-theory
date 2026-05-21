@@ -636,4 +636,67 @@ theorem isLZ78AchievabilityZivUpperBound_distinct
 
 end Assembly
 
+/-! ## §6. Intermediate base-2 headline — achievability core wired (Phase V) -/
+
+section Headline
+
+variable {α : Type*}
+variable [Fintype α] [DecidableEq α] [Nonempty α]
+  [MeasurableSpace α] [MeasurableSingletonClass α]
+variable {Ω : Type*} [MeasurableSpace Ω]
+
+/-- **T4-A base-2 distinct headline with the achievability Ziv upper bound
+genuinely wired from its most primitive form** (Phase V, partial).
+
+This re-derives the genuine Cover–Thomas Theorem 13.5.3 base-2 limit
+`lz78_two_sided_optimality_distinct_genuine` with the **achievability**
+honest input `IsLZ78AchievabilityZivUpperBound` *no longer assumed* — it is
+genuinely constructed (`isLZ78AchievabilityZivUpperBound_distinct`) from the
+strictly-more-primitive isolated combinatorial core
+`IsLZ78ZivCombinatorialCore` plus the admissible full-support regularity
+`hreg`. The slack is the genuine vanishing `lz78AchievSlack`.
+
+**Honesty status (read this).** This is **not** an unconditional headline.
+Two honest inputs remain:
+
+* `hcore : IsLZ78ZivCombinatorialCore` — the load-bearing Cover–Thomas
+  Lemma 13.5.5 distinct-phrase combinatorial core (`c · log c ≤ ∑ⱼ -log qⱼ`).
+  Relative to the structure `IsLZ78AchievabilityZivUpperBound` it replaces,
+  this is *strictly more primitive* (a per-block combinatorial inequality vs.
+  an a.s.-eventual rate bound), but it is **still load-bearing**: it is the
+  genuine combinatorial heart that the committed foundation (which exposes
+  only *path-prefix* phrase conditionals, not the LZ tree-node
+  sub-distribution) cannot bridge. It is **not** a discharge.
+* `h_lb : IsLZ78ConverseCodingLowerBound` — the converse coding lower bound
+  (Core 2, untouched here).
+
+So the achievability honest input is relocated to its most primitive form,
+**not** eliminated; the headline assumption count is unchanged (still two
+honest inputs, now `hcore` + `h_lb`). The regularity `hreg` is an admissible
+full-support hypothesis (the same family as
+`isLZ78PerPathParsingFactorization_of_pos`), not load-bearing. -/
+theorem lz78_two_sided_optimality_distinct_ziv_core_wired
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (p : ErgodicProcess μ α)
+    (slackLow : ℕ → ℝ)
+    (hcore : IsLZ78ZivCombinatorialCore μ p.toStationaryProcess)
+    (hreg : ∀ (n : ℕ) (ω : Ω) (m : ℕ),
+      m ≤ n → 0 < prefixBlockProb μ p.toStationaryProcess ω m)
+    (h_lb : IsLZ78ConverseCodingLowerBound μ p.toStationaryProcess
+              (@lz78DistinctEncodingLength α _ _ _) slackLow) :
+    ∀ᵐ ω ∂μ,
+      Filter.Tendsto
+        (fun n =>
+          (lz78DistinctEncodingLength n
+              (p.toStationaryProcess.blockRV n ω) : ℝ)
+            / (n : ℝ))
+        Filter.atTop
+        (𝓝 (entropyRate₂ μ p.toStationaryProcess)) :=
+  lz78_two_sided_optimality_distinct_genuine μ p
+    (lz78AchievSlack (α := α)) slackLow
+    (isLZ78AchievabilityZivUpperBound_distinct μ p.toStationaryProcess hcore hreg)
+    h_lb
+
+end Headline
+
 end InformationTheory.Shannon
