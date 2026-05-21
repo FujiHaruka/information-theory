@@ -461,9 +461,13 @@ theorem isStamToEPILimitHyp_congr
     IsStamToEPILimitHyp X' Y' P := by
   subst hX; subst hY; exact h
 
-/-- **Scaling hypothesis vacuous-truth route**. If the Stam inequality
-hypothesis is vacuous (e.g. because the Fisher information is `0` for `X`),
-then the scaling hypothesis is trivial. -/
+/-- **Scaling hypothesis from an honest EPI fact** (the Stam input is unused).
+
+NOTE: despite the historical name, this is **not** a vacuous-truth back-door. It
+requires `h_epi : IsEntropyPowerInequalityHypothesis X Y P` as a genuine input
+(established elsewhere by a non-circular route) and merely repackages it as the
+scaling sub-predicate; the `h_stam_triv` argument plays no role. The former buggy
+V1 `fisherInfo = 0` vacuous discharge was removed 2026-05-20. -/
 theorem isStamToEPIScalingHyp_of_fisherInfoReal_zero
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}

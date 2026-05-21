@@ -185,13 +185,12 @@ theorem entropy_power_inequality_normalized
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
-    (h_stam : IsStamInequalityHypothesis X Y P)
-    (h_debruijn : IsDeBruijnIntegrationHypothesis X Y P)
-    (h_epi : IsEntropyPowerInequalityHypothesis X Y P) :
+    (h_stam : IsStamInequalityResidual X Y P)
+    (h_bridge : IsStamToEPIBridge X Y P) :
     entropyPower (P.map (fun ω => X ω + Y ω)) / gaussianEntropyPowerConst
       ≥ entropyPower (P.map X) / gaussianEntropyPowerConst
         + entropyPower (P.map Y) / gaussianEntropyPowerConst := by
-  have h := entropy_power_inequality P X Y hX hY hXY h_stam h_debruijn h_epi
+  have h := entropy_power_inequality P X Y hX hY hXY h_stam h_bridge
   -- Divide both sides by the positive constant `2πe`.
   have hc_pos : 0 < gaussianEntropyPowerConst := gaussianEntropyPowerConst_pos
   have h_sum_div :
@@ -250,14 +249,13 @@ theorem two_differentialEntropy_ge_log_sum
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
-    (h_stam : IsStamInequalityHypothesis X Y P)
-    (h_debruijn : IsDeBruijnIntegrationHypothesis X Y P)
-    (h_epi : IsEntropyPowerInequalityHypothesis X Y P) :
+    (h_stam : IsStamInequalityResidual X Y P)
+    (h_bridge : IsStamToEPIBridge X Y P) :
     2 * Common2026.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
       ≥ Real.log (entropyPower (P.map X) + entropyPower (P.map Y)) := by
   have h_epi' : entropyPower (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
-    entropy_power_inequality P X Y hX hY hXY h_stam h_debruijn h_epi
+    entropy_power_inequality P X Y hX hY hXY h_stam h_bridge
   have h_rhs_pos : 0 < entropyPower (P.map X) + entropyPower (P.map Y) :=
     add_pos (entropyPower_pos _) (entropyPower_pos _)
   have h_log : Real.log (entropyPower (P.map (fun ω => X ω + Y ω)))

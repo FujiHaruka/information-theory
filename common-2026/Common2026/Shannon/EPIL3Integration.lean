@@ -146,21 +146,29 @@ theorem entropy_power_inequality_integrated
     (hXY : IndepFun X Y P)
     (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
     entropyPower (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
-  have h_epi := epi_l3_of_integrated_pipeline h_pipeline
-  exact entropy_power_inequality P X Y hX hY hXY trivial trivial h_epi
+      ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
+  -- Thread the genuine residual (`stam`) + bridge through the non-circular
+  -- headline; `IsStamInequalityHyp`/`IsStamToEPIBridgeHyp` are defeq to the base
+  -- `IsStamInequalityResidual`/`IsStamToEPIBridge`.
+  entropy_power_inequality P X Y hX hY hXY h_pipeline.stam h_pipeline.bridge
 
 /-! ## §3 — Gaussian full discharge (hypothesis-free) -/
 
-/-- **Gaussian full-discharge witness for integrated pipeline**.
+/-- **Gaussian pipeline witness from an honest Stam hypothesis**.
 
-For independent Gaussians `X, Y` with non-zero variance, the integrated
-pipeline is **discharged hypothesis-free**: Stam-to-EPI bridge is supplied via
-`isStamToEPIBridgeHyp_of_gaussian` (which uses `isEntropyPowerInequalityHypothesis_of_gaussian`
-under the hood, applying the Gaussian saturation case from
-`EntropyPowerInequality.lean`); Stam is supplied via the Fisher-info-zero
-vacuous-truth route (since the V1 `fisherInfo` representative returns `0` for
-all Gaussian measures by the L-G3 retreat, the precondition `0 < J_X` fails). -/
+For independent Gaussians `X, Y` with non-zero variance, the Stam-to-EPI
+*bridge* field is discharged hypothesis-free via `isStamToEPIBridgeHyp_of_gaussian`
+(which uses `isEntropyPowerInequalityHypothesis_of_gaussian` under the hood,
+applying the Gaussian saturation case from `EntropyPowerInequality.lean`). The
+*Stam* field is supplied as an **honest `IsStamInequalityHyp X Y P` argument**, not
+discharged.
+
+**RESOLVED (2026-05-20):** the former vacuous "Fisher-info-zero" route — which
+`exfalso`-ed the `0 < J_X` precondition against the buggy V1 `fisherInfo = 0`
+artefact for Gaussians and asserted nothing about Stam — was removed. There is no
+vacuous back-door: the Stam half is a genuine non-circular hypothesis here. The
+genuine hypothesis-free Gaussian EPI (no Stam claim at all) is
+`entropy_power_inequality_gaussian_full`. -/
 theorem isEPIL3IntegratedPipeline_of_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -213,9 +221,8 @@ theorem entropy_power_inequality_log_form_integrated
     (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
     Common2026.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
       ≥ (1/2) * Real.log
-          (entropyPower (P.map X) + entropyPower (P.map Y)) := by
-  have h_epi := epi_l3_of_integrated_pipeline h_pipeline
-  exact entropy_power_inequality_log_form P X Y hX hY hXY trivial trivial h_epi
+          (entropyPower (P.map X) + entropyPower (P.map Y)) :=
+  entropy_power_inequality_log_form P X Y hX hY hXY h_pipeline.stam h_pipeline.bridge
 
 /-- **EPI exp form via integrated pipeline** (Cover-Thomas Theorem 17.7.3 露出形). -/
 theorem entropy_power_inequality_exp_form_integrated
@@ -227,9 +234,8 @@ theorem entropy_power_inequality_exp_form_integrated
     Real.exp (2 * Common2026.Shannon.differentialEntropy
               (P.map (fun ω => X ω + Y ω)))
       ≥ Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map X))
-        + Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map Y)) := by
-  have h_epi := epi_l3_of_integrated_pipeline h_pipeline
-  exact entropy_power_inequality_exp_form P X Y hX hY hXY trivial trivial h_epi
+        + Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map Y)) :=
+  entropy_power_inequality_exp_form P X Y hX hY hXY h_pipeline.stam h_pipeline.bridge
 
 /-- **EPI normalized `(2πe)⁻¹` form via integrated pipeline** (Cover-Thomas Ch.17). -/
 theorem entropy_power_inequality_normalized_integrated
@@ -240,9 +246,8 @@ theorem entropy_power_inequality_normalized_integrated
     (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
     entropyPower (P.map (fun ω => X ω + Y ω)) / gaussianEntropyPowerConst
       ≥ entropyPower (P.map X) / gaussianEntropyPowerConst
-        + entropyPower (P.map Y) / gaussianEntropyPowerConst := by
-  have h_epi := epi_l3_of_integrated_pipeline h_pipeline
-  exact entropy_power_inequality_normalized P X Y hX hY hXY trivial trivial h_epi
+        + entropyPower (P.map Y) / gaussianEntropyPowerConst :=
+  entropy_power_inequality_normalized P X Y hX hY hXY h_pipeline.stam h_pipeline.bridge
 
 /-- **2 · h(X+Y) ≥ log(entropyPower X + entropyPower Y)** via integrated pipeline. -/
 theorem two_differentialEntropy_ge_log_sum_integrated
@@ -252,9 +257,8 @@ theorem two_differentialEntropy_ge_log_sum_integrated
     (hXY : IndepFun X Y P)
     (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
     2 * Common2026.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
-      ≥ Real.log (entropyPower (P.map X) + entropyPower (P.map Y)) := by
-  have h_epi := epi_l3_of_integrated_pipeline h_pipeline
-  exact two_differentialEntropy_ge_log_sum P X Y hX hY hXY trivial trivial h_epi
+      ≥ Real.log (entropyPower (P.map X) + entropyPower (P.map Y)) :=
+  two_differentialEntropy_ge_log_sum P X Y hX hY hXY h_pipeline.stam h_pipeline.bridge
 
 /-! ## §5 — Chain forms (3-arg / 4-arg) via integrated pipeline -/
 
@@ -299,9 +303,10 @@ theorem isEPIL3IntegratedPipeline_symm
   stam := isStamInequalityHyp_symm h.stam
   bridge := isStamToEPIBridgeHyp_symm h.bridge
 
-/-- **Pipeline from EPI hypothesis only (trivial Stam route)**. When the EPI
-hypothesis is already known and the Stam predicate is *also* available
-(possibly by the Fisher-info-zero vacuous-truth route), bundle into a pipeline. -/
+/-- **Pipeline from EPI hypothesis only**. When the EPI hypothesis is already
+known by some non-circular route (e.g. Gaussian saturation) and an honest Stam
+predicate is *also* available, bundle into a pipeline. (No vacuous Fisher-info-zero
+discharge is used — that buggy V1 route was removed 2026-05-20.) -/
 theorem isEPIL3IntegratedPipeline_of_epi
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}

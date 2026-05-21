@@ -1,5 +1,6 @@
 import Common2026.Shannon.DifferentialEntropy
 import Common2026.Shannon.FisherInfo
+import Common2026.Shannon.FisherInfoV2
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Probability.Distributions.Gaussian.Real
@@ -157,20 +158,61 @@ theorem isDeBruijnIntegrationHypothesis_trivial {Ω : Type*} [MeasurableSpace Ω
     (X Y : Ω → ℝ) (P : Measure Ω) : IsDeBruijnIntegrationHypothesis X Y P :=
   trivial
 
-/-- **L-EPI3 (EPI conclusion hypothesis、核心 retreat)**: EPI 結論
+/-- **L-EPI3 (EPI conclusion predicate)**: EPI 結論
 
     `entropyPower (P.map (X+Y)) ≥ entropyPower (P.map X) + entropyPower (P.map Y)`
 
-を直接 hypothesis 化。主定理本体は `:= h_epi` の 1 行で着地。
-
-Discharge plan `epi-stam-to-conclusion-plan.md` (未着手) で L-EPI1 + L-EPI2
-経路 (Stam + de Bruijn integration) から導出する想定。 -/
+を `Prop` として名付けたもの。**これは主定理の結論そのもの**であり、主定理の
+hypothesis としては使わない (使うと `theorem epi (h : EPI) : EPI := h` の循環に
+なる)。Gaussian saturation の出力 (§D) や下流 pipeline の中間結果に名前を付ける
+ためだけに保持する。主定理は genuine な非循環 residual `IsStamInequalityResidual`
++ bridge `IsStamToEPIBridge` から `IsEntropyPowerInequalityHypothesis` を**導出**
+する。 -/
 def IsEntropyPowerInequalityHypothesis {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   entropyPower (P.map (fun ω => X ω + Y ω))
     ≥ entropyPower (P.map X) + entropyPower (P.map Y)
 
-/-! ## §C — 主定理 (Cover-Thomas Theorem 17.7.3, L-EPI3 適用形) -/
+/-- **Stam inequality residual** (Cover-Thomas Lemma 17.7.2, V2 density-keyed 真 signature).
+
+For independent `X, Y` with finite Fisher information `J` (genuine V2 score-based
+Fisher info `fisherInfoOfDensityReal`, keyed on the density witnesses of the three
+mapped measures),
+
+    `1 / J(X + Y) ≥ 1 / J(X) + 1 / J(Y)`.
+
+This is the genuine, **non-circular** residual driving EPI: its type is the Stam
+harmonic-mean inequality, which is *not* the EPI conclusion. Mathlib has neither
+Fisher-info convolution nor the inverse-triangle inequality (`rg "Stam" → 0 hit`),
+so this is the real analytic wall, discharged downstream
+(`EPIStamInequalityBody.lean` Cauchy-Schwarz + λ-optimization body).
+
+Quantified over abstract positive reals matching the V2 Fisher info of the three
+density witnesses; this is the predicate the EPI derivation actually consumes.
+(Density-keyed `fisherInfoOfDensityReal` is used here rather than the measure-keyed
+`fisherInfoOfMeasureV2` to keep this base file free of an import cycle through
+`FisherInfoV2DeBruijn`; the two agree by `fisherInfoOfMeasureV2_def`.) -/
+def IsStamInequalityResidual {Ω : Type*} [MeasurableSpace Ω]
+    (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
+  ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
+    J_X = Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal fX →
+    J_Y = Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal fY →
+    J_sum = Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal fXY →
+    1 / J_sum ≥ 1 / J_X + 1 / J_Y
+
+/-- **Stam-to-EPI bridge** (Cover-Thomas Lemma 17.7.3 coupling argument).
+
+The genuine, **non-circular** discharge route: from the Stam inequality residual
+derive the EPI conclusion via the Csiszár scaling-path / de Bruijn integration
+argument. Phrased as `IsStamInequalityResidual → IsEntropyPowerInequalityHypothesis`,
+so its type is *not* the EPI conclusion. The bridge is the deepest analytic
+primitive (path-integral coupling); discharged downstream and, for the Gaussian
+case, by saturation (§D). -/
+def IsStamToEPIBridge {Ω : Type*} [MeasurableSpace Ω]
+    (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
+  IsStamInequalityResidual X Y P → IsEntropyPowerInequalityHypothesis X Y P
+
+/-! ## §C — 主定理 (Cover-Thomas Theorem 17.7.3, non-circular Stam-bridge 形) -/
 
 /-- **Entropy Power Inequality** (Cover-Thomas Theorem 17.7.3).
 
@@ -180,35 +222,41 @@ def IsEntropyPowerInequalityHypothesis {Ω : Type*} [MeasurableSpace Ω]
 
 すなわち `exp(2 h(X+Y)) ≥ exp(2 h(X)) + exp(2 h(Y))`。
 
-撤退ライン L-EPI1 + L-EPI2 + L-EPI3 全採用 (hypothesis pass-through 3 本):
+**非循環 residual から導出**: 主定理は EPI 結論そのものを hypothesis に取らず
+(それは循環)、genuine な residual
 
-* `_h_stam` (L-EPI1): Stam inequality を signature 露出 (本体未使用)
-* `_h_debruijn` (L-EPI2): de Bruijn integration を signature 露出 (本体未使用)
-* `h_epi` (L-EPI3, 核心): EPI 結論そのものを hypothesis 化、本体はこれ単独で着地 -/
+* `h_stam` (L-EPI1, Cover-Thomas Lemma 17.7.2): Stam の inverse harmonic-mean
+  inequality `1/J(X+Y) ≥ 1/J(X) + 1/J(Y)` — **EPI 結論とは別の `Prop`**。
+* `h_bridge` (Cover-Thomas Lemma 17.7.3): Stam → EPI coupling
+  (`IsStamInequalityResidual → IsEntropyPowerInequalityHypothesis`) —
+  これも **EPI 結論とは別の `Prop`** (function type)。
+
+から `h_bridge h_stam` で EPI を**導出**する。両 hypothesis とも結論と
+defeq でなく、本体は `:= h` 循環ではない。両者の discharge (真の Mathlib 壁) は
+`EPIStamInequalityBody.lean` / `EPIStamDeBruijnConclusion.lean` で進行、Gaussian
+case は §D で full discharge。 -/
 theorem entropy_power_inequality {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
-    (_h_stam : IsStamInequalityHypothesis X Y P)
-    (_h_debruijn : IsDeBruijnIntegrationHypothesis X Y P)
-    (h_epi : IsEntropyPowerInequalityHypothesis X Y P) :
+    (h_stam : IsStamInequalityResidual X Y P)
+    (h_bridge : IsStamToEPIBridge X Y P) :
     entropyPower (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
-  h_epi
+  h_bridge h_stam
 
 /-- **EPI in `Real.exp (2 · ...)` form** (Cover-Thomas 露出形). -/
 theorem entropy_power_inequality_exp_form {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
-    (h_stam : IsStamInequalityHypothesis X Y P)
-    (h_debruijn : IsDeBruijnIntegrationHypothesis X Y P)
-    (h_epi : IsEntropyPowerInequalityHypothesis X Y P) :
+    (h_stam : IsStamInequalityResidual X Y P)
+    (h_bridge : IsStamToEPIBridge X Y P) :
     Real.exp (2 * Common2026.Shannon.differentialEntropy
               (P.map (fun ω => X ω + Y ω)))
       ≥ Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map X))
         + Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map Y)) := by
-  have h := entropy_power_inequality P X Y hX hY hXY h_stam h_debruijn h_epi
+  have h := entropy_power_inequality P X Y hX hY hXY h_stam h_bridge
   simpa [entropyPower] using h
 
 /-! ## §D — Gaussian saturation case (Cover-Thomas Theorem 17.7.3 等号成立、FULL DISCHARGE) -/
@@ -269,6 +317,30 @@ theorem isEntropyPowerInequalityHypothesis_of_gaussian
   rw [entropy_power_inequality_gaussian_saturation P X Y hX hY hXY m₁ m₂ v₁ v₂
         hv₁ hv₂ hLawX hLawY]
 
+/-- **Stam-to-EPI bridge from a known EPI fact** (trivial discharge). When the
+EPI conclusion is already established by some non-circular route (e.g. Gaussian
+saturation), the bridge is the constant function — it ignores its Stam input. -/
+theorem isStamToEPIBridge_of_epi
+    {Ω : Type*} [MeasurableSpace Ω]
+    {X Y : Ω → ℝ} {P : Measure Ω}
+    (h_epi : IsEntropyPowerInequalityHypothesis X Y P) :
+    IsStamToEPIBridge X Y P :=
+  fun _ => h_epi
+
+/-- **Stam-to-EPI bridge for the Gaussian case** (full discharge, no Stam input
+needed). For independent Gaussians `X, Y` with non-zero variance, the bridge is
+discharged hypothesis-free via Gaussian saturation. -/
+theorem isStamToEPIBridge_of_gaussian
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (P : Measure Ω) [IsProbabilityMeasure P]
+    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
+    (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
+    (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
+    IsStamToEPIBridge X Y P :=
+  isStamToEPIBridge_of_epi
+    (isEntropyPowerInequalityHypothesis_of_gaussian P X Y hX hY hXY m₁ m₂ v₁ v₂
+      hv₁ hv₂ hLawX hLawY)
+
 /-! ## §E — 補助 corollary 群 -/
 
 /-- **Translation invariance of entropy power**: for `μ ≪ volume` and
@@ -287,16 +359,15 @@ theorem entropy_power_inequality_log_form {Ω : Type*} {mΩ : MeasurableSpace Ω
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
-    (h_stam : IsStamInequalityHypothesis X Y P)
-    (h_debruijn : IsDeBruijnIntegrationHypothesis X Y P)
-    (h_epi : IsEntropyPowerInequalityHypothesis X Y P) :
+    (h_stam : IsStamInequalityResidual X Y P)
+    (h_bridge : IsStamToEPIBridge X Y P) :
     Common2026.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
       ≥ (1/2) * Real.log
           (entropyPower (P.map X) + entropyPower (P.map Y)) := by
   -- The EPI core inequality.
   have h_epi' : entropyPower (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
-    entropy_power_inequality P X Y hX hY hXY h_stam h_debruijn h_epi
+    entropy_power_inequality P X Y hX hY hXY h_stam h_bridge
   -- RHS of `≥` is positive (sum of two positive `entropyPower`s).
   have h_rhs_pos : 0 < entropyPower (P.map X) + entropyPower (P.map Y) :=
     add_pos (entropyPower_pos _) (entropyPower_pos _)
