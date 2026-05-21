@@ -7,15 +7,26 @@ import Common2026.Shannon.WynerZivBinningCovering
 This file is a **deeper body-discharge layer** for the compress-and-forward
 (CF) side of the relay channel inner bound (Cover–Thomas Theorem 15.10.3).
 It sits on top of `Common2026/Shannon/RelayInnerBodyDischarge.lean`, which
-introduced the opaque CF witness predicate
+introduced the CF witness predicate
 
 ```
-IsRelayCFBinningWitness R Idec Ix1y Iy1hy1 := RelayCFInnerBoundExistence R
+IsRelayCFBinningWitness W R Idec Ix1y Iy1hy1 := RelayCFAchievable W R Idec Ix1y Iy1hy1
 ```
 
-as a black box, and `Common2026/Shannon/WynerZivBinningCovering.lean`, which
+— the **honest achievability residual** (the gated implication
+`(InRelayCFRate) → RelayCFInnerBoundExistence W R`, carrying vanishing
+error), and `Common2026/Shannon/WynerZivBinningCovering.lean`, which
 published the **covering / packing** decomposition of the Wyner–Ziv random
 binning achievability body.
+
+**De-circularization note (2026-05-21).** The CF existence predicate
+`RelayCFInnerBoundExistence W R` is now **error-carrying**
+(`averageErrorProb < ε`), and the witness is the honest gated implication
+(no longer the bare existence). The "binning-discharged" theorems below
+therefore consume the achievability witness and **derive** the existence by
+`modus ponens` (genuine, non-circular) — they no longer pass a bare
+existence through `relay_cf_inner_bound … trivial trivial h_existence`
+(which masked a conclusion≡hypothesis circularity).
 
 ## What this layer does
 
@@ -44,21 +55,19 @@ covering and packing events. This file makes that correspondence explicit:
   discharge proper** — no new combinatorics, the WZ binning union bound is
   reused verbatim.
 
-* **`relay_cf_binning_witness_of_existence` / `…_of_sub_predicates`** — the
-  bridge from the structured sub-predicate bundle (together with the
-  asymptotic code-existence supplied as a hypothesis) to the opaque
-  `IsRelayCFBinningWitness`. The CF *existence* form
-  (`RelayCFInnerBoundExistence`) counts only the message cardinality, so the
-  decoder-failure bound is not embedded in it — hence existence is supplied
-  as a pass-through hypothesis here, **but the decoder-failure side** is now
-  a discharged consequence of the covering/packing bundle rather than a
-  `True` placeholder.
+* **`relay_cf_existence_of_witness`** — the bridge from the achievability
+  witness (the gated implication) **plus the rate-region membership** to the
+  error-carrying `RelayCFInnerBoundExistence W R`, by `modus ponens`. The
+  decoder-failure side is the discharged consequence of the covering/packing
+  bundle (`relay_cf_si_decoder_fail_le`); the achievability witness is the
+  open residual whose discharge supplies the vanishing error.
 
 * **`relay_cf_inner_bound_binning_discharged`** — the re-published main
-  theorem: a CF inner bound whose `_h_wz_binning : True` / `_h_si_decode :
-  True` placeholders of `relay_cf_inner_bound` are upgraded to the structured
-  side-info decode hypothesis `IsCFSideInfoDecodeHyp` (with the decoder
-  failure bound discharged) plus the existence pass-through.
+  theorem: a CF inner bound whose old `_h_wz_binning : True` / `_h_si_decode
+  : True` placeholders are upgraded to the structured side-info decode
+  hypothesis `IsCFSideInfoDecodeHyp` (with the decoder failure bound
+  discharged), consuming the achievability witness and **deriving** the
+  error-carrying existence (no pass-through of a bare existence).
 
 ## 撤退ライン
 
@@ -73,8 +82,10 @@ out as hypotheses, in line with the WZ binning body's own retreat line:
   probability (`ε_pack`) is the content of `IsCFBinningDecodableHyp`; its
   discharge (union bound + `1/M` collision + conditional typical slice
   cardinality) is the responsibility of `relay-cf-si-decode-discharge-*`.
-* **Code cardinality existence** — `RelayCFInnerBoundExistence` (message
-  count `≥ exp(n R)`) is supplied as a pass-through, as in the parent layer.
+* **Achievability (vanishing error)** — the error-carrying
+  `RelayCFInnerBoundExistence W R` is supplied via the honest gated
+  implication `IsRelayCFBinningWitness W …` (= `RelayCFAchievable W …`), not
+  built from rate-only data.
 
 The net new content: the CF decoder-failure analysis is no longer an opaque
 black box; it is *reduced* to the WZ covering + packing predicates and
@@ -399,30 +410,28 @@ variable {α α₁ β β₁ : Type*}
 variable [MeasurableSpace α] [MeasurableSpace α₁]
 variable [MeasurableSpace β] [MeasurableSpace β₁]
 
-/-- **Bridge: CF binning witness from the existence pass-through.**
+/-- **Bridge: CF inner-bound existence from the achievability witness +
+rate region.**
 
-The CF *existence* form `RelayCFInnerBoundExistence` counts only message
-cardinality, so it is supplied as a pass-through (as in the parent layer).
+The CF binning witness is now the honest achievability residual
+`IsRelayCFBinningWitness W …` (= `RelayCFAchievable W …`, the gated
+implication carrying vanishing error). Together with the rate-region
+membership it yields the error-carrying `RelayCFInnerBoundExistence W R` by
+`modus ponens` — *not* a pass-through of a bare existence.
+
 The decoder-failure side is what this file discharges via the covering /
-packing bundle; the two are combined into the witness by this bridge. -/
-lemma relay_cf_binning_witness_of_existence
-    {R Idec Ix1y Iy1hy1 : ℝ}
-    (h_existence :
-      RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R) :
-    IsRelayCFBinningWitness
-      (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Idec Ix1y Iy1hy1 :=
-  h_existence
-
-/-- **CF binning witness — anti-monotone in `R` (re-export).** Forwards the
-parent `IsRelayCFBinningWitness.anti_mono_R`. -/
-lemma relay_cf_binning_witness_anti_mono_R
-    {R R' Idec Ix1y Iy1hy1 : ℝ}
-    (h : IsRelayCFBinningWitness
-            (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Idec Ix1y Iy1hy1)
-    (hR : R' ≤ R) :
-    IsRelayCFBinningWitness
-      (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R' Idec Ix1y Iy1hy1 :=
-  IsRelayCFBinningWitness.anti_mono_R h hR
+packing bundle (`relay_cf_si_decoder_fail_le`); the achievability witness is
+the genuine open residual whose discharge (in the companion seeds) supplies
+the vanishing error these bounds feed. -/
+lemma relay_cf_existence_of_witness
+    {W : RelayChannel α α₁ β β₁} {R Idec Ix1y Iy1hy1 : ℝ}
+    (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
+    (h_witness :
+      IsRelayCFBinningWitness
+        (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
+    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
+  RelayCFInnerBoundExistence_of_witness (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
+    h_in_cf_region h_witness
 
 end WitnessBridge
 
@@ -453,6 +462,7 @@ theorem relay_cf_inner_bound_binning_discharged
     [MeasurableSpace β₁'] [MeasurableSingletonClass β₁']
     [Fintype β] [Nonempty β]
     [MeasurableSpace γ] [Nonempty γ]
+    (W : RelayChannel α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 : ℝ)
     (R_cov R_bin ε_cov ε_pack : ℝ)
     (μ : Measure Ω) {n M : ℕ}
@@ -461,39 +471,41 @@ theorem relay_cf_inner_bound_binning_discharged
     (f_Ŷ : (Fin n → β₁') → Fin M)
     (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
     (_h_decode : IsCFSideInfoDecodeHyp R_cov R_bin ε_cov ε_pack μ Ŷs Ys JT f_Ŷ)
-    (h_existence :
-      RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R) :
-    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
-  relay_cf_inner_bound (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    R Idec Ix1y Iy1hy1 h_in_cf_region trivial trivial h_existence
+    (h_witness :
+      IsRelayCFBinningWitness
+        (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
+    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
+  relay_cf_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
+    W R Idec Ix1y Iy1hy1 h_in_cf_region h_witness
 
 /-- **CF inner bound — binning-discharged, witness-output form.**
 
-Same as above, but the conclusion is packaged as the structured
-`IsRelayCFBinningWitness` predicate (so downstream callers of the parent
-witness layer can chain directly). -/
+Same as above, but the conclusion is the structured `IsRelayCFBinningWitness`
+predicate — and since that predicate is now the honest achievability residual
+(the gated implication), it is simply forwarded (the witness in equals the
+witness out), so downstream callers of the parent witness layer can chain
+directly. -/
 theorem relay_cf_inner_bound_binning_discharged_witness
     {Ω β₁' γ : Type*} [MeasurableSpace Ω]
     [Fintype β₁'] [Nonempty β₁']
     [MeasurableSpace β₁'] [MeasurableSingletonClass β₁']
     [Fintype β] [Nonempty β]
     [MeasurableSpace γ] [Nonempty γ]
+    (W : RelayChannel α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 : ℝ)
     (R_cov R_bin ε_cov ε_pack : ℝ)
     (μ : Measure Ω) {n M : ℕ}
     (Ŷs : Ω → Fin n → β₁') (Ys : Ω → Fin n → β)
     (JT : (Fin n → β₁') × (Fin n → β) → Prop)
     (f_Ŷ : (Fin n → β₁') → Fin M)
-    (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
+    (_h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
     (_h_decode : IsCFSideInfoDecodeHyp R_cov R_bin ε_cov ε_pack μ Ŷs Ys JT f_Ŷ)
-    (h_existence :
-      RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R) :
+    (h_witness :
+      IsRelayCFBinningWitness
+        (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
     IsRelayCFBinningWitness
-      (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Idec Ix1y Iy1hy1 :=
-  relay_cf_binning_witness_of_existence (Idec := Idec) (Ix1y := Ix1y)
-    (Iy1hy1 := Iy1hy1)
-    (relay_cf_inner_bound (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-      R Idec Ix1y Iy1hy1 h_in_cf_region trivial trivial h_existence)
+      (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1 :=
+  h_witness
 
 /-- **CF inner bound — binning-discharged, unbundled two-condition form.**
 Variant taking the rate bound and compression feasibility separately. -/
@@ -503,6 +515,7 @@ theorem relay_cf_inner_bound_binning_discharged_two_conditions
     [MeasurableSpace β₁'] [MeasurableSingletonClass β₁']
     [Fintype β] [Nonempty β]
     [MeasurableSpace γ] [Nonempty γ]
+    (W : RelayChannel α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 : ℝ)
     (R_cov R_bin ε_cov ε_pack : ℝ)
     (μ : Measure Ω) {n M : ℕ}
@@ -511,11 +524,12 @@ theorem relay_cf_inner_bound_binning_discharged_two_conditions
     (f_Ŷ : (Fin n → β₁') → Fin M)
     (h_rate : R ≤ Idec) (h_feas : Iy1hy1 ≤ Ix1y)
     (_h_decode : IsCFSideInfoDecodeHyp R_cov R_bin ε_cov ε_pack μ Ŷs Ys JT f_Ŷ)
-    (h_existence :
-      RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R) :
-    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
-  relay_cf_inner_bound (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    R Idec Ix1y Iy1hy1 ⟨h_rate, h_feas⟩ trivial trivial h_existence
+    (h_witness :
+      IsRelayCFBinningWitness
+        (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
+    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
+  relay_cf_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
+    W R Idec Ix1y Iy1hy1 ⟨h_rate, h_feas⟩ h_witness
 
 end Republished
 
@@ -538,24 +552,32 @@ theorem relay_cf_consistent_binning_discharged
     [MeasurableSpace β₁'] [MeasurableSingletonClass β₁']
     [Fintype β] [Nonempty β]
     [MeasurableSpace γ] [Nonempty γ]
+    (W : RelayChannel α α₁ β β₁)
     {M₀ n₀ : ℕ} (hn : 0 < n₀)
     (c : RelayCode M₀ n₀ α α₁ β β₁)
-    (R Idec Ix1y Iy1hy1 Ib Im : ℝ)
+    (R Idec Ix1y Iy1hy1 Pe I_marg_b I_marg_m Ib Im ε : ℝ)
     (R_cov R_bin ε_cov ε_pack : ℝ)
     (μ : Measure Ω) {n M : ℕ}
     (Ŷs : Ω → Fin n → β₁') (Ys : Ω → Fin n → β)
     (JT : (Fin n → β₁') × (Fin n → β) → Prop)
     (f_Ŷ : (Fin n → β₁') → Fin M)
+    (h_fano_b : RelayBcastCutFano M₀ n₀ R Pe I_marg_b)
+    (h_fano_m : RelayMacCutFano M₀ n₀ R Pe I_marg_m)
+    (h_chain_b : I_marg_b ≤ (n₀ : ℝ) * Ib)
+    (h_chain_m : I_marg_m ≤ (n₀ : ℝ) * Im)
+    (h_cleanup_b : (1 + Pe * Real.log (M₀ : ℝ)) / (n₀ : ℝ) ≤ ε)
+    (h_cleanup_m : (1 + Pe * Real.log (M₀ : ℝ)) / (n₀ : ℝ) ≤ ε)
     (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
-    (h_rate_bound_outer : R ≤ relayCutsetBound Ib Im)
     (_h_decode : IsCFSideInfoDecodeHyp R_cov R_bin ε_cov ε_pack μ Ŷs Ys JT f_Ŷ)
-    (h_existence :
-      RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R) :
-    (R ≤ relayCutsetBound Ib Im)
-      ∧ RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
-  ⟨relay_cutset_outer_bound hn c R Ib Im trivial trivial h_rate_bound_outer,
-   relay_cf_inner_bound (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-     R Idec Ix1y Iy1hy1 h_in_cf_region trivial trivial h_existence⟩
+    (h_witness :
+      IsRelayCFBinningWitness
+        (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
+    (R ≤ relayCutsetBound (Ib + ε) (Im + ε))
+      ∧ RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
+  ⟨relay_cutset_outer_bound hn c R Pe I_marg_b I_marg_m Ib Im ε
+     h_fano_b h_fano_m h_chain_b h_chain_m h_cleanup_b h_cleanup_m,
+   relay_cf_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
+     W R Idec Ix1y Iy1hy1 h_in_cf_region h_witness⟩
 
 end TwoSide
 

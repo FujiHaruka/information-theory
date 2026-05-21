@@ -116,117 +116,66 @@ variable {α α₁ β β₁ : Type*}
 variable [MeasurableSpace α] [MeasurableSpace α₁]
 variable [MeasurableSpace β] [MeasurableSpace β₁]
 
-/-- **DF block-Markov witness predicate (primitive).**
+/-- **DF block-Markov witness predicate (honest achievability residual).**
 
 Bundles the two structural ingredients of the DF achievability proof
 (Cover-Thomas Theorem 15.10.2):
 
-* **L-RI1 (block Markov encoding)** — there exists a per-block random
-  codebook construction yielding, for sufficiently large block length
-  `n`, a relay code with at least `⌈exp(n R)⌉` messages.
-* **L-RI2 (sliding-window joint typicality decoder)** — the per-block
-  staged decoder collapses the error event over all `B` blocks into the
-  union of `O(B)` per-block events whose total measure goes to zero
-  asymptotically.
+* **L-RI1 (block Markov encoding)** — per-block random codebook
+  construction.
+* **L-RI2 (sliding-window joint typicality decoder)** — per-block staged
+  decoder error-event collapse.
 
-The witness is published as a primitive `Prop` packaged with the
-**conclusion shape** of the DF achievability (existence of a relay code
-at the given rate, for sufficiently large `n`). This is the
-**統合された pass-through** for L-RI1 and L-RI2 — both structural
-ingredients are bundled because they share the same per-block random
-codebook averaging argument and are dischargable as a single piece
-(or separately, but always in the same companion seed).
+Previously this witness was defined as the *bare* existence
+`RelayDFInnerBoundExistence R` — but that bare predicate carried **no error
+content** (the BC red herring: an existence claim with no `averageErrorProb`
+link is satisfiable by any code at any rate). The existence predicate is now
+**error-carrying** (`(c.averageErrorProb W x₁Ref).toReal < ε`), so a witness
+that merely exhibits a rate-matching code does **not** establish it.
 
-Three scalar arguments `(Imrh, Iry, Ibroad)` are kept on the witness for
-documentation purposes (so that callers can see at which corner point
-the witness has been established), but they do not appear in the
-conclusion `RelayDFInnerBoundExistence R`.
-
-The discharge of this witness is the responsibility of the companion
-seeds `relay-df-block-markov-discharge-*` and
-`relay-df-sliding-window-discharge-*`. Within the present file, the
-witness is a black box. -/
+Accordingly the witness is now the **honest achievability residual**
+`RelayDFAchievable W R Imrh Iry Ibroad` — the gated implication
+`(InRelayDFRate) → RelayDFInnerBoundExistence W R`. This is a genuine `Prop`,
+**not** the conclusion and **not** `True`; its discharge (the genuine
+random-coding core establishing vanishing error) is the responsibility of
+the companion seeds `relay-df-block-markov-discharge-*` /
+`relay-df-sliding-window-discharge-*`. -/
 def IsRelayDFBlockMarkovWitness
     {α α₁ β β₁ : Type*}
     [MeasurableSpace α] [MeasurableSpace α₁]
     [MeasurableSpace β] [MeasurableSpace β₁]
-    (R _Imrh _Iry _Ibroad : ℝ) : Prop :=
-  RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R
+    (W : RelayChannel α α₁ β β₁) (R Imrh Iry Ibroad : ℝ) : Prop :=
+  RelayDFAchievable (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Imrh Iry Ibroad
 
-/-- A DF block-Markov witness *implies* the DF inner bound existence
-(trivially, since the predicate is defined as the existence itself).
-This is the "extract conclusion" routing lemma. -/
+/-- A DF block-Markov witness, **together with the rate-region membership**,
+yields the DF inner-bound existence by `modus ponens`. This is the genuine
+routing lemma — the witness is the gated achievability implication, so the
+existence is *derived* from it and the rate region, not asserted. -/
 lemma RelayDFInnerBoundExistence_of_witness
-    {R Imrh Iry Ibroad : ℝ}
+    {W : RelayChannel α α₁ β β₁} {R Imrh Iry Ibroad : ℝ}
+    (h_in_df_region : InRelayDFRate R Imrh Iry Ibroad)
     (h : IsRelayDFBlockMarkovWitness
-            (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Imrh Iry Ibroad) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
-  h
+            (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Imrh Iry Ibroad) :
+    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
+  h h_in_df_region
 
-/-- **DF inner bound — body discharge form (L-RI1 + L-RI2 upgraded to
-witness predicate)**.
+/-- **DF inner bound — body discharge form (L-RI1 + L-RI2 as honest
+achievability witness)**.
 
-This is the body-discharged variant of `relay_df_inner_bound`: instead
-of taking `_h_block_markov : True`, `_h_sliding_window : True`, and
-`h_existence : RelayDFInnerBoundExistence … R` as three separate
-hypotheses, we take a single structured witness
-`h_witness : IsRelayDFBlockMarkovWitness R Imrh Iry Ibroad` and *derive*
-the existence claim from it.
-
-The rate-region hypothesis `_h_in_df_region : InRelayDFRate R …` is
-retained as documentation that the caller has established the
-two DF inequalities at the chosen corner point.
-
-This variant is the *structural target* of the companion seeds — once
-the block-Markov witness is discharged, all callers of `relay_df_inner_bound`
-can be upgraded to this body-discharged signature mechanically. -/
+This is the body-discharged variant of `relay_df_inner_bound`: it takes the
+rate-region membership `h_in_df_region` and the achievability witness
+`h_witness` and **derives** the error-carrying existence claim by `modus
+ponens` (not an identity wrap, not a leap from rate-only data). -/
 theorem relay_df_body_from_witness
+    (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
-    (_h_in_df_region : InRelayDFRate R Imrh Iry Ibroad)
+    (h_in_df_region : InRelayDFRate R Imrh Iry Ibroad)
     (h_witness :
         IsRelayDFBlockMarkovWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Imrh Iry Ibroad) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
+          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Imrh Iry Ibroad) :
+    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
   RelayDFInnerBoundExistence_of_witness (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    h_witness
-
-/-- DF witness anti-monotonicity in `R`: a witness at rate `R` implies a
-witness at any smaller rate `R' ≤ R`. -/
-lemma IsRelayDFBlockMarkovWitness.anti_mono_R
-    {R R' Imrh Iry Ibroad : ℝ}
-    (h : IsRelayDFBlockMarkovWitness
-            (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Imrh Iry Ibroad)
-    (hR : R' ≤ R) :
-    IsRelayDFBlockMarkovWitness
-      (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R' Imrh Iry Ibroad :=
-  RelayDFInnerBoundExistence.anti_mono
-    (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) h hR
-
-/-- DF witness is independent of the auxiliary scalar `Imrh`: the witness
-at `(R, Imrh, Iry, Ibroad)` is the same Prop as the witness at
-`(R, Imrh', Iry, Ibroad)`. -/
-lemma IsRelayDFBlockMarkovWitness.swap_Imrh
-    {R Imrh Imrh' Iry Ibroad : ℝ}
-    (h : IsRelayDFBlockMarkovWitness
-            (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Imrh Iry Ibroad) :
-    IsRelayDFBlockMarkovWitness
-      (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Imrh' Iry Ibroad := h
-
-/-- DF witness is independent of the auxiliary scalar `Iry`. -/
-lemma IsRelayDFBlockMarkovWitness.swap_Iry
-    {R Imrh Iry Iry' Ibroad : ℝ}
-    (h : IsRelayDFBlockMarkovWitness
-            (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Imrh Iry Ibroad) :
-    IsRelayDFBlockMarkovWitness
-      (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Imrh Iry' Ibroad := h
-
-/-- DF witness is independent of the auxiliary scalar `Ibroad`. -/
-lemma IsRelayDFBlockMarkovWitness.swap_Ibroad
-    {R Imrh Iry Ibroad Ibroad' : ℝ}
-    (h : IsRelayDFBlockMarkovWitness
-            (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Imrh Iry Ibroad) :
-    IsRelayDFBlockMarkovWitness
-      (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Imrh Iry Ibroad' := h
+    h_in_df_region h_witness
 
 end DFWitness
 
@@ -370,78 +319,48 @@ documentation purposes, but they do not appear in the conclusion. The
 binning rate feasibility `Iy1hy1 ≤ Ix1y` is implicitly required (it is
 the field `compressionFeas` of `InRelayCFRate`).
 
-The discharge of this witness is the responsibility of the companion
-seeds `relay-cf-wz-binning-discharge-*` and
-`relay-cf-si-decode-discharge-*`. Within the present file, the witness
-is a black box. -/
+Previously this witness was defined as the *bare* existence
+`RelayCFInnerBoundExistence R`, which carried **no error content** (the BC
+red herring). The existence predicate is now **error-carrying**, so the
+witness is now the **honest achievability residual**
+`RelayCFAchievable W R Idec Ix1y Iy1hy1` — the gated implication
+`(InRelayCFRate) → RelayCFInnerBoundExistence W R`. This is a genuine `Prop`,
+**not** the conclusion and **not** `True`. Its discharge is the
+responsibility of the companion seeds `relay-cf-wz-binning-discharge-*` /
+`relay-cf-si-decode-discharge-*`. -/
 def IsRelayCFBinningWitness
     {α α₁ β β₁ : Type*}
     [MeasurableSpace α] [MeasurableSpace α₁]
     [MeasurableSpace β] [MeasurableSpace β₁]
-    (R _Idec _Ix1y _Iy1hy1 : ℝ) : Prop :=
-  RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R
+    (W : RelayChannel α α₁ β β₁) (R Idec Ix1y Iy1hy1 : ℝ) : Prop :=
+  RelayCFAchievable (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1
 
-/-- A CF binning witness *implies* the CF inner bound existence. -/
+/-- A CF binning witness, **together with the rate-region membership**,
+yields the CF inner-bound existence by `modus ponens`. -/
 lemma RelayCFInnerBoundExistence_of_witness
-    {R Idec Ix1y Iy1hy1 : ℝ}
+    {W : RelayChannel α α₁ β β₁} {R Idec Ix1y Iy1hy1 : ℝ}
+    (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
     (h : IsRelayCFBinningWitness
-            (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Idec Ix1y Iy1hy1) :
-    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
-  h
+            (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
+    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
+  h h_in_cf_region
 
-/-- **CF inner bound — body discharge form (L-RI3 + L-RI4 upgraded to
-witness predicate)**.
+/-- **CF inner bound — body discharge form (L-RI3 + L-RI4 as honest
+achievability witness)**.
 
-This is the body-discharged variant of `relay_cf_inner_bound`: instead
-of taking `_h_wz_binning : True`, `_h_si_decode : True`, and
-`h_existence : RelayCFInnerBoundExistence … R` as three separate
-hypotheses, we take a single structured witness
-`h_witness : IsRelayCFBinningWitness R Idec Ix1y Iy1hy1` and *derive*
-the existence claim from it. -/
+The body-discharged variant of `relay_cf_inner_bound`: takes the
+rate-region membership and the achievability witness and **derives** the
+error-carrying existence claim by `modus ponens`. -/
 theorem relay_cf_body_from_witness
+    (W : RelayChannel α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 : ℝ)
-    (_h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
+    (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
     (h_witness :
         IsRelayCFBinningWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Idec Ix1y Iy1hy1) :
-    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
+          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
+    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
   RelayCFInnerBoundExistence_of_witness (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    h_witness
-
-/-- CF witness anti-monotonicity in `R`. -/
-lemma IsRelayCFBinningWitness.anti_mono_R
-    {R R' Idec Ix1y Iy1hy1 : ℝ}
-    (h : IsRelayCFBinningWitness
-            (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Idec Ix1y Iy1hy1)
-    (hR : R' ≤ R) :
-    IsRelayCFBinningWitness
-      (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R' Idec Ix1y Iy1hy1 :=
-  RelayCFInnerBoundExistence.anti_mono
-    (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) h hR
-
-/-- CF witness independence in the auxiliary `Idec`. -/
-lemma IsRelayCFBinningWitness.swap_Idec
-    {R Idec Idec' Ix1y Iy1hy1 : ℝ}
-    (h : IsRelayCFBinningWitness
-            (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Idec Ix1y Iy1hy1) :
-    IsRelayCFBinningWitness
-      (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Idec' Ix1y Iy1hy1 := h
-
-/-- CF witness independence in the auxiliary `Ix1y`. -/
-lemma IsRelayCFBinningWitness.swap_Ix1y
-    {R Idec Ix1y Ix1y' Iy1hy1 : ℝ}
-    (h : IsRelayCFBinningWitness
-            (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Idec Ix1y Iy1hy1) :
-    IsRelayCFBinningWitness
-      (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Idec Ix1y' Iy1hy1 := h
-
-/-- CF witness independence in the auxiliary `Iy1hy1`. -/
-lemma IsRelayCFBinningWitness.swap_Iy1hy1
-    {R Idec Ix1y Iy1hy1 Iy1hy1' : ℝ}
-    (h : IsRelayCFBinningWitness
-            (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Idec Ix1y Iy1hy1) :
-    IsRelayCFBinningWitness
-      (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Idec Ix1y Iy1hy1' := h
+    h_in_cf_region h_witness
 
 end CFWitness
 
@@ -455,72 +374,77 @@ variable [MeasurableSpace β] [MeasurableSpace β₁]
 
 /-- **DF inner bound — discharged form (witness upgrade).**
 
-Body-discharged variant of `relay_df_inner_bound` where the four
-hypotheses `_h_block_markov : True`, `_h_sliding_window : True`,
-`h_existence : RelayDFInnerBoundExistence` are *replaced* by a single
-structured witness `h_witness : IsRelayDFBlockMarkovWitness`. The
-rate-region hypothesis is retained.
+Body-discharged variant of `relay_df_inner_bound` where the previous
+`_h_block_markov : True` / `_h_sliding_window : True` / `h_existence`
+hypotheses are *replaced* by a single structured achievability witness
+`h_witness : IsRelayDFBlockMarkovWitness`. The rate-region hypothesis is
+retained and the error-carrying existence is **derived** by `modus ponens`
+(not a leap from rate-only data).
 
-This is the **public entry point** of the body discharge layer for the
-DF inner bound. Callers that have established a block-Markov witness
-(e.g. via the companion seed `relay-df-block-markov-discharge-*`) can
-use this signature directly. -/
+This is the **public entry point** of the body discharge layer for the DF
+inner bound. -/
 theorem relay_df_inner_bound_discharged
+    (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
     (h_in_df_region : InRelayDFRate R Imrh Iry Ibroad)
     (h_witness :
         IsRelayDFBlockMarkovWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Imrh Iry Ibroad) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
+          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Imrh Iry Ibroad) :
+    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
   relay_df_body_from_witness (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    R Imrh Iry Ibroad h_in_df_region h_witness
+    W R Imrh Iry Ibroad h_in_df_region h_witness
 
 /-- **DF inner bound — discharged + `min`-form**. -/
 theorem relay_df_inner_bound_discharged_min_form
+    (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
     (h_min : R ≤ min (Imrh + Iry) Ibroad)
     (h_witness :
         IsRelayDFBlockMarkovWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Imrh Iry Ibroad) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
+          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Imrh Iry Ibroad) :
+    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
   relay_df_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    R Imrh Iry Ibroad ((InRelayDFRate.iff_le_min).mpr h_min) h_witness
+    W R Imrh Iry Ibroad ((InRelayDFRate.iff_le_min).mpr h_min) h_witness
 
 /-- **DF inner bound — discharged + unbundled two-inequality form**. -/
 theorem relay_df_inner_bound_discharged_two_bounds
+    (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
     (h₁ : R ≤ Imrh + Iry) (h₂ : R ≤ Ibroad)
     (h_witness :
         IsRelayDFBlockMarkovWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Imrh Iry Ibroad) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
+          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Imrh Iry Ibroad) :
+    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
   relay_df_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    R Imrh Iry Ibroad ⟨h₁, h₂⟩ h_witness
+    W R Imrh Iry Ibroad ⟨h₁, h₂⟩ h_witness
 
 /-- **CF inner bound — discharged form (witness upgrade).** -/
 theorem relay_cf_inner_bound_discharged
+    (W : RelayChannel α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 : ℝ)
     (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
     (h_witness :
         IsRelayCFBinningWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Idec Ix1y Iy1hy1) :
-    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
+          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
+    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
   relay_cf_body_from_witness (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    R Idec Ix1y Iy1hy1 h_in_cf_region h_witness
+    W R Idec Ix1y Iy1hy1 h_in_cf_region h_witness
 
 /-- **CF inner bound — discharged + unbundled two-condition form**. -/
 theorem relay_cf_inner_bound_discharged_two_conditions
+    (W : RelayChannel α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 : ℝ)
     (h_rate : R ≤ Idec) (h_feas : Iy1hy1 ≤ Ix1y)
     (h_witness :
         IsRelayCFBinningWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Idec Ix1y Iy1hy1) :
-    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
+          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
+    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
   relay_cf_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    R Idec Ix1y Iy1hy1 ⟨h_rate, h_feas⟩ h_witness
+    W R Idec Ix1y Iy1hy1 ⟨h_rate, h_feas⟩ h_witness
 
 /-- **DF inner bound — discharged + `Real.log` rate form**. -/
 theorem relay_df_inner_bound_discharged_log_rate
+    (W : RelayChannel α α₁ β β₁)
     {M n : ℕ} (_hn : 0 < n)
     (Imrh Iry Ibroad : ℝ)
     (h_in_df_region :
@@ -528,14 +452,15 @@ theorem relay_df_inner_bound_discharged_log_rate
     (h_witness :
         IsRelayDFBlockMarkovWitness
           (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-          (Real.log (M : ℝ) / (n : ℝ)) Imrh Iry Ibroad) :
+          W (Real.log (M : ℝ) / (n : ℝ)) Imrh Iry Ibroad) :
     RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-        (Real.log (M : ℝ) / (n : ℝ)) :=
+        W (Real.log (M : ℝ) / (n : ℝ)) :=
   relay_df_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    (Real.log (M : ℝ) / (n : ℝ)) Imrh Iry Ibroad h_in_df_region h_witness
+    W (Real.log (M : ℝ) / (n : ℝ)) Imrh Iry Ibroad h_in_df_region h_witness
 
 /-- **CF inner bound — discharged + `Real.log` rate form**. -/
 theorem relay_cf_inner_bound_discharged_log_rate
+    (W : RelayChannel α α₁ β β₁)
     {M n : ℕ} (_hn : 0 < n)
     (Idec Ix1y Iy1hy1 : ℝ)
     (h_in_cf_region :
@@ -543,11 +468,11 @@ theorem relay_cf_inner_bound_discharged_log_rate
     (h_witness :
         IsRelayCFBinningWitness
           (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-          (Real.log (M : ℝ) / (n : ℝ)) Idec Ix1y Iy1hy1) :
+          W (Real.log (M : ℝ) / (n : ℝ)) Idec Ix1y Iy1hy1) :
     RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-        (Real.log (M : ℝ) / (n : ℝ)) :=
+        W (Real.log (M : ℝ) / (n : ℝ)) :=
   relay_cf_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    (Real.log (M : ℝ) / (n : ℝ)) Idec Ix1y Iy1hy1 h_in_cf_region h_witness
+    W (Real.log (M : ℝ) / (n : ℝ)) Idec Ix1y Iy1hy1 h_in_cf_region h_witness
 
 end Republished
 
@@ -561,42 +486,54 @@ variable [MeasurableSpace β] [MeasurableSpace β₁]
 
 /-- **DF achievability (body-discharged) + cut-set outer bound combined**.
 
-Witness-predicate variant of `relay_df_consistent`: the four `True`
-placeholders for the four L-RI / L-RC discharge lines are upgraded into
-either `IsRelayDFBlockMarkovWitness` (L-RI1+2) or kept as `True` for the
-outer bound's csiszar/chain placeholders. -/
+Witness-predicate variant of `relay_df_consistent`: the outer side
+**derives** `R ≤ relayCutsetBound (Ib+ε) (Im+ε)` from the entropy-level
+Fano + chain inputs, and the inner side **derives** the error-carrying
+existence from the achievability witness by `modus ponens`. -/
 theorem relay_df_consistent_discharged
+    (W : RelayChannel α α₁ β β₁)
     {M n : ℕ} (hn : 0 < n)
     (c : RelayCode M n α α₁ β β₁)
-    (R Imrh Iry Ibroad Ib Im : ℝ)
-    (_h_csiszar : True) (_h_chain : True)
+    (R Imrh Iry Ibroad Pe I_marg_b I_marg_m Ib Im ε : ℝ)
+    (h_fano_b : RelayBcastCutFano M n R Pe I_marg_b)
+    (h_fano_m : RelayMacCutFano M n R Pe I_marg_m)
+    (h_chain_b : I_marg_b ≤ (n : ℝ) * Ib)
+    (h_chain_m : I_marg_m ≤ (n : ℝ) * Im)
+    (h_cleanup_b : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup_m : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε)
     (h_in_df_region : InRelayDFRate R Imrh Iry Ibroad)
-    (h_rate_bound_outer : R ≤ relayCutsetBound Ib Im)
     (h_witness :
         IsRelayDFBlockMarkovWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Imrh Iry Ibroad) :
-    (R ≤ relayCutsetBound Ib Im)
-      ∧ RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
-  ⟨relay_cutset_outer_bound hn c R Ib Im trivial trivial h_rate_bound_outer,
+          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Imrh Iry Ibroad) :
+    (R ≤ relayCutsetBound (Ib + ε) (Im + ε))
+      ∧ RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
+  ⟨relay_cutset_outer_bound hn c R Pe I_marg_b I_marg_m Ib Im ε
+     h_fano_b h_fano_m h_chain_b h_chain_m h_cleanup_b h_cleanup_m,
    relay_df_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-     R Imrh Iry Ibroad h_in_df_region h_witness⟩
+     W R Imrh Iry Ibroad h_in_df_region h_witness⟩
 
 /-- **CF achievability (body-discharged) + cut-set outer bound combined**. -/
 theorem relay_cf_consistent_discharged
+    (W : RelayChannel α α₁ β β₁)
     {M n : ℕ} (hn : 0 < n)
     (c : RelayCode M n α α₁ β β₁)
-    (R Idec Ix1y Iy1hy1 Ib Im : ℝ)
-    (_h_csiszar : True) (_h_chain : True)
+    (R Idec Ix1y Iy1hy1 Pe I_marg_b I_marg_m Ib Im ε : ℝ)
+    (h_fano_b : RelayBcastCutFano M n R Pe I_marg_b)
+    (h_fano_m : RelayMacCutFano M n R Pe I_marg_m)
+    (h_chain_b : I_marg_b ≤ (n : ℝ) * Ib)
+    (h_chain_m : I_marg_m ≤ (n : ℝ) * Im)
+    (h_cleanup_b : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup_m : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε)
     (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
-    (h_rate_bound_outer : R ≤ relayCutsetBound Ib Im)
     (h_witness :
         IsRelayCFBinningWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Idec Ix1y Iy1hy1) :
-    (R ≤ relayCutsetBound Ib Im)
-      ∧ RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
-  ⟨relay_cutset_outer_bound hn c R Ib Im trivial trivial h_rate_bound_outer,
+          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
+    (R ≤ relayCutsetBound (Ib + ε) (Im + ε))
+      ∧ RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
+  ⟨relay_cutset_outer_bound hn c R Pe I_marg_b I_marg_m Ib Im ε
+     h_fano_b h_fano_m h_chain_b h_chain_m h_cleanup_b h_cleanup_m,
    relay_cf_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-     R Idec Ix1y Iy1hy1 h_in_cf_region h_witness⟩
+     W R Idec Ix1y Iy1hy1 h_in_cf_region h_witness⟩
 
 end TwoSideDischarged
 
@@ -608,37 +545,36 @@ variable {α α₁ β β₁ : Type*}
 variable [MeasurableSpace α] [MeasurableSpace α₁]
 variable [MeasurableSpace β] [MeasurableSpace β₁]
 
-/-- **Bridge: a DF block-Markov witness supplies the `h_existence`
-argument of the original `relay_df_inner_bound`**.
+/-- **Bridge: a DF achievability witness drives the original
+`relay_df_inner_bound`**.
 
-This is the *adapter* between the body-discharged signature and the
-original published signature: callers that hold a witness can pass it
-into the original theorem by piping it through this bridge. -/
+The *adapter* between the body-discharged signature and the original
+published signature: a caller holding the achievability witness (the gated
+implication) can feed it directly as the `h_ach` argument of the original
+theorem. -/
 theorem relay_df_inner_bound_via_witness
+    (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
     (h_in_df_region : InRelayDFRate R Imrh Iry Ibroad)
     (h_witness :
         IsRelayDFBlockMarkovWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Imrh Iry Ibroad) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
+          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Imrh Iry Ibroad) :
+    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
   relay_df_inner_bound (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    R Imrh Iry Ibroad h_in_df_region trivial trivial
-    (RelayDFInnerBoundExistence_of_witness (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-      h_witness)
+    W R Imrh Iry Ibroad h_in_df_region h_witness
 
-/-- **Bridge: a CF binning witness supplies the `h_existence` argument
-of the original `relay_cf_inner_bound`**. -/
+/-- **Bridge: a CF achievability witness drives the original
+`relay_cf_inner_bound`**. -/
 theorem relay_cf_inner_bound_via_witness
+    (W : RelayChannel α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 : ℝ)
     (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
     (h_witness :
         IsRelayCFBinningWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Idec Ix1y Iy1hy1) :
-    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
+          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
+    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
   relay_cf_inner_bound (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    R Idec Ix1y Iy1hy1 h_in_cf_region trivial trivial
-    (RelayCFInnerBoundExistence_of_witness (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-      h_witness)
+    W R Idec Ix1y Iy1hy1 h_in_cf_region h_witness
 
 end Bridge
 

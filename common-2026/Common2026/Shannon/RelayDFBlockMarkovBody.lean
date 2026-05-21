@@ -14,9 +14,20 @@ The present file **opens the black box one structural layer**: it
 decomposes the DF block-Markov achievability into three *sub-predicate
 hypotheses*, gives an explicit **block-Markov code structure**
 (`RelayBlockMarkovCode`) flattened into a `RelayCode`, and proves a
-**constructive bridge** that assembles the existence claim from the three
-sub-hypotheses. Finally it re-publishes the DF witness predicate and the
-DF inner bound through this discharged route.
+**constructive bridge** that assembles the **rate-only witness**
+`RelayDFRateWitness` from the three sub-hypotheses.
+
+**De-circularization note (2026-05-21).** Previously this bridge concluded
+the *bare* `RelayDFInnerBoundExistence R`, which carried no error content —
+so a degenerate constant code (`bc.const`) "established" achievability (the
+BC red herring). Now `RelayDFInnerBoundExistence W R` is **error-carrying**
+(`averageErrorProb < ε`), which a constant code cannot satisfy. The
+constructive bridge therefore genuinely establishes only the rate witness
+`RelayDFRateWitness R` (the message-cardinality consequence, the relay
+analogue of `BCRandomCodebookAveraging`), and the rate-only → achievability
+leap has been **excised**: the file no longer concludes the error-carrying
+existence from rate-only data. The vanishing-error step remains the open
+residual `RelayDFAchievable` discharged in companion seeds.
 
 ## What the discharge buys
 
@@ -36,17 +47,16 @@ discharge is the **structural skeleton**:
   `RelayCode` via block-concatenation;
 * the routing of three sub-hypotheses
   (`IsBlockMarkovEncoderHyp`, `IsRelayDecodableHyp`,
-  `IsDestinationJointlyTypicalHyp`) into the existence shape;
-* a **constructive** existence proof: for the existence form
-  `∃ N, ∀ n ≥ N, ∃ M c, exp (n R) ≤ M` (which deliberately does *not*
-  embed error → 0, exactly as the parent `RelayDFInnerBoundExistence`
-  docstring states), we exhibit `M := ⌈exp (n R)⌉₊` together with an
-  explicit block-Markov code, so the existence is built rather than
-  passed through.
+  `IsDestinationJointlyTypicalHyp`) into the **rate witness** shape;
+* a **constructive** rate-witness proof: for the rate-only form
+  `RelayDFRateWitness R := ∃ N, ∀ n ≥ N, ∃ M c, exp (n R) ≤ M` (which
+  deliberately does *not* embed error → 0), we exhibit `M ≥ exp (n R)`
+  together with an explicit block-Markov code, so the rate witness is built
+  rather than passed through.
 
 The error-probability bound (average error `< ε`) is, as in the parent
-file, consumed on the caller side; it is *not* part of the existence
-shape and hence not part of this discharge.
+file, the open achievability residual `RelayDFAchievable`; it is *not* part
+of the rate witness and hence *not* established by this discharge.
 
 ## File layout
 
@@ -55,12 +65,12 @@ shape and hence not part of this discharge.
   `RelayBlockMarkovCode.const` (used to witness existence).
 * **Sec 2 — sub-predicate hypotheses.** The three DF sub-hyps as `Prop`s
   over the relevant scalar rates.
-* **Sec 3 — constructive existence bridge.** From the three sub-hyps,
-  build `RelayDFInnerBoundExistence R` constructively.
-* **Sec 4 — witness reconstruction + re-publish.** The wave6 witness
-  predicate `IsRelayDFBlockMarkovWitness` is recovered from the three
-  sub-hyps; the DF inner bound is re-published through the discharged
-  route.
+* **Sec 3 — constructive rate-witness bridge.** From the three sub-hyps,
+  build the rate-only `RelayDFRateWitness R` constructively.
+* **Sec 4 — rate-witness re-publish.** The DF rate witness is re-published
+  through the discharged route. (The error-carrying achievability witness
+  `IsRelayDFBlockMarkovWitness` = `RelayDFAchievable` is *not* built from
+  rate-only data — that leap is excised.)
 * **Sec 5 — sub-hyp algebra.** Anti-monotonicity / monotonicity and
   scalar-swap lemmas for the three sub-hyps, mirroring the witness algebra
   of the parent file.
@@ -258,7 +268,7 @@ lemma InRelayDFRate.destination_typical
 
 end SubHyps
 
-/-! ## Section 3 — Constructive existence bridge -/
+/-! ## Section 3 — Constructive rate witness bridge -/
 
 section Bridge
 
@@ -266,17 +276,41 @@ variable {α α₁ β β₁ : Type*}
 variable [MeasurableSpace α] [MeasurableSpace α₁]
 variable [MeasurableSpace β] [MeasurableSpace β₁]
 
-/-- **Constructive existence from the block-Markov encoder sub-hyp.**
+/-- **Rate-only DF achievability witness (no error content).**
+
+Carries only the **message-cardinality** consequence of the block-Markov
+encoder construction: for sufficiently large `n` there is a relay code at
+rate `R`. This is what the constructive bridge below genuinely establishes —
+it is the relay analogue of `BCRandomCodebookAveraging` (T3-C BC).
+
+This predicate deliberately **omits** any `averageErrorProb` content. It is
+therefore **not** the error-carrying `RelayDFInnerBoundExistence W R` (the
+DF achievability proper) and **must not be confused with it**: a degenerate
+constant code satisfies this rate witness but has error probability `1`. The
+genuine vanishing-error step (block-Markov random coding) remains the open
+residual `RelayDFAchievable`. -/
+def RelayDFRateWitness
+    {α α₁ β β₁ : Type*}
+    [MeasurableSpace α] [MeasurableSpace α₁]
+    [MeasurableSpace β] [MeasurableSpace β₁]
+    (R : ℝ) : Prop :=
+  ∃ N : ℕ, ∀ n ≥ N,
+    ∃ (M : ℕ) (_c : RelayCode M n α α₁ β β₁),
+      Real.exp ((n : ℝ) * R) ≤ (M : ℝ)
+
+/-- **Constructive rate witness from the block-Markov encoder sub-hyp.**
 
 The encoder sub-hyp `IsBlockMarkovEncoderHyp R` directly carries, for each
 large `n`, a block-Markov code at message count `M ≥ exp (n R)` and total
 length `n`; flattening it via `toRelayCode` gives a `RelayCode M n …`,
-yielding `RelayDFInnerBoundExistence R`. -/
-theorem relayDFExistence_of_encoder_hyp
+yielding `RelayDFRateWitness R` (the **rate-only** witness — *not* the
+error-carrying achievability, since the constant flattening has no error
+control). -/
+theorem relayDFRateWitness_of_encoder_hyp
     [Nonempty α] [Nonempty α₁]
     {R : ℝ}
     (h_enc : IsBlockMarkovEncoderHyp (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R := by
+    RelayDFRateWitness (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R := by
   obtain ⟨N, hN⟩ := h_enc
   refine ⟨N, fun n hn => ?_⟩
   obtain ⟨M, bc, hlen, hM⟩ := hN n hn
@@ -290,26 +324,28 @@ theorem relayDFExistence_of_encoder_hyp
   -- total length to `n`.
   refine ⟨M, hlen ▸ bc.toRelayCode, hM⟩
 
-/-- **Constructive existence from all three DF sub-hyps.**
+/-- **Constructive rate witness from all three DF sub-hyps.**
 
-The decode-and-forward inner-bound existence is assembled from:
+The decode-and-forward **rate witness** is assembled from:
 
 * `IsBlockMarkovEncoderHyp R` — block-Markov code at the right rate;
 * `IsRelayDecodableHyp R Imrh Iry` — relay decode constraint;
 * `IsDestinationJointlyTypicalHyp R Ibroad` — destination decode
   constraint.
 
-The latter two are recorded as the DF rate-region inequalities; the
-existence shape is supplied by the encoder hyp. The result is the
-discharged form of the DF inner bound's existence claim. -/
-theorem relayDFExistence_of_sub_hyps
+The latter two are recorded as the DF rate-region inequalities; the rate
+witness is supplied by the encoder hyp. This is **only** the message-count
+witness — the error-carrying DF achievability needs the genuine
+random-coding discharge (`RelayDFAchievable`), which is *not* established
+here. -/
+theorem relayDFRateWitness_of_sub_hyps
     [Nonempty α] [Nonempty α₁]
     {R Imrh Iry Ibroad : ℝ}
     (h_enc : IsBlockMarkovEncoderHyp (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R)
     (_h_dec : IsRelayDecodableHyp R Imrh Iry)
     (_h_typ : IsDestinationJointlyTypicalHyp R Ibroad) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
-  relayDFExistence_of_encoder_hyp (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) h_enc
+    RelayDFRateWitness (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
+  relayDFRateWitness_of_encoder_hyp (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) h_enc
 
 end Bridge
 
@@ -321,72 +357,59 @@ variable {α α₁ β β₁ : Type*}
 variable [MeasurableSpace α] [MeasurableSpace α₁]
 variable [MeasurableSpace β] [MeasurableSpace β₁]
 
-/-- **The wave6 DF witness predicate is recovered from the three
-sub-hyps.**
+/-- **DF rate witness from the three sub-hyps.**
 
-`IsRelayDFBlockMarkovWitness R Imrh Iry Ibroad` (the wave6 black-box
-predicate, definitionally `RelayDFInnerBoundExistence R`) is *built* from
-the three structural sub-hyps via the constructive bridge. This is the
-key body-discharge result: callers no longer need the witness as a black
-box; they can supply the three sub-hyps and obtain the witness. -/
-theorem isRelayDFBlockMarkovWitness_of_sub_hyps
+The three structural sub-hyps assemble the **rate-only** DF witness
+`RelayDFRateWitness R` via the constructive bridge. This is the genuine
+body-discharge content: it establishes the message-cardinality witness, not
+the error-carrying achievability.
+
+The block-Markov *achievability witness*
+`IsRelayDFBlockMarkovWitness W R Imrh Iry Ibroad`
+(= `RelayDFAchievable W …`, the gated implication carrying vanishing error)
+is **deliberately not** built here from the rate-only sub-hyps: doing so
+would be the rate-only → achievability leap (a degenerate constant code
+satisfies the rate witness but has error `1`). The vanishing-error step
+remains the open residual discharged in the companion seeds. -/
+theorem relayDFRateWitness_of_sub_hyps'
     [Nonempty α] [Nonempty α₁]
     {R Imrh Iry Ibroad : ℝ}
     (h_enc : IsBlockMarkovEncoderHyp (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R)
     (h_dec : IsRelayDecodableHyp R Imrh Iry)
     (h_typ : IsDestinationJointlyTypicalHyp R Ibroad) :
-    IsRelayDFBlockMarkovWitness
-      (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R Imrh Iry Ibroad :=
-  relayDFExistence_of_sub_hyps (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
+    RelayDFRateWitness (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
+  relayDFRateWitness_of_sub_hyps (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
     h_enc h_dec h_typ
 
-/-- **DF inner bound — sub-hyp discharge form.**
+/-- **DF inner bound — sub-hyp rate-witness discharge form.**
 
-The block-Markov-discharged variant of `relay_df_inner_bound`: instead of
-the wave6 witness predicate, take the three structural sub-hyps directly
-and *construct* the DF existence. The rate-region membership is *derived*
-from the two scalar sub-hyps, so it is not requested separately. -/
+The block-Markov-discharged variant: from the three structural sub-hyps,
+*construct* the DF **rate witness** (not the error-carrying existence). The
+rate-region membership is derived from the two scalar sub-hyps internally. -/
 theorem relay_df_inner_bound_block_markov_discharged
     [Nonempty α] [Nonempty α₁]
     (R Imrh Iry Ibroad : ℝ)
     (h_enc : IsBlockMarkovEncoderHyp (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R)
     (h_dec : IsRelayDecodableHyp R Imrh Iry)
     (h_typ : IsDestinationJointlyTypicalHyp R Ibroad) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
-  relayDFExistence_of_sub_hyps (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
+    RelayDFRateWitness (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
+  relayDFRateWitness_of_sub_hyps (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
     h_enc h_dec h_typ
 
-/-- **DF inner bound — sub-hyp discharge + bundled rate region.**
+/-- **DF inner bound — sub-hyp rate-witness discharge + bundled rate
+region.**
 
 Variant taking the DF rate-region membership `InRelayDFRate` bundled
 (splitting it back into the two scalar sub-hyps internally) together with
-the encoder sub-hyp. This is the drop-in upgrade of
-`relay_df_inner_bound`: the two `True` placeholders are replaced by the
-single encoder sub-hyp, and `h_existence` is now *constructed*. -/
+the encoder sub-hyp; **constructs the rate witness**. -/
 theorem relay_df_inner_bound_block_markov_discharged_region
     [Nonempty α] [Nonempty α₁]
     (R Imrh Iry Ibroad : ℝ)
     (h_region : InRelayDFRate R Imrh Iry Ibroad)
     (h_enc : IsBlockMarkovEncoderHyp (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
-  relayDFExistence_of_sub_hyps (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
+    RelayDFRateWitness (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
+  relayDFRateWitness_of_sub_hyps (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
     h_enc h_region.relay_decodable h_region.destination_typical
-
-/-- **Bridge to the wave6 published `relay_df_inner_bound_discharged`.**
-
-Feeds the constructed witness into the wave6 discharged signature, showing
-the two layers compose: the sub-hyp discharge produces the witness, which
-the wave6 layer consumes. -/
-theorem relay_df_inner_bound_discharged_via_sub_hyps
-    [Nonempty α] [Nonempty α₁]
-    (R Imrh Iry Ibroad : ℝ)
-    (h_region : InRelayDFRate R Imrh Iry Ibroad)
-    (h_enc : IsBlockMarkovEncoderHyp (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
-  relay_df_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    R Imrh Iry Ibroad h_region
-    (isRelayDFBlockMarkovWitness_of_sub_hyps (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-      h_enc h_region.relay_decodable h_region.destination_typical)
 
 end Republish
 

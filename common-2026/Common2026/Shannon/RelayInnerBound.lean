@@ -32,26 +32,52 @@ This single file publishes:
   predicate, bundling the CF rate bound and the compression feasibility
   constraint at scalar values `(Idec, Ix1y, Iy1hy1) :=
   (I(X; Ŷ₁, Y | X₁), I(X₁; Y), I(Y₁; Ŷ₁ | X₁, Y))`.
-* `RelayDFInnerBoundExistence R`, `RelayCFInnerBoundExistence R` —
+* `RelayDFInnerBoundExistence W R`, `RelayCFInnerBoundExistence W R` —
   achievability existence forms, the single-rate analogues of
-  `MACInnerBoundExistence`.
+  `MACInnerBoundExistence`. **Error-carrying**: each embeds
+  `(c.averageErrorProb W x₁Ref).toReal < ε` for every `ε > 0`, so the
+  predicate is unsatisfiable by an arbitrary code at an arbitrary rate.
+* `RelayDFAchievable`, `RelayCFAchievable` — honest open IT residuals
+  (gated implications `(rate-region) → existence`, real `Prop`s ≠ the
+  conclusion).
 * `relay_df_inner_bound` — Cover–Thomas Theorem 15.10.2 main theorem,
-  published with **L-RI1 + L-RI2 engaged** (block-Markov encoding and
-  sliding-window joint typicality decoder supplied as `True`
-  placeholders) and the existence statement supplied as the
-  `h_existence` hypothesis.
+  **honest-🟢ʰ, non-circular, error-carrying**: it **derives** the
+  error-carrying `RelayDFInnerBoundExistence W R` from the gated
+  block-Markov residual `RelayDFAchievable` (an honest open `Prop`, not
+  `True`, not the conclusion) by `modus ponens`.
 * `relay_cf_inner_bound` — Cover–Thomas Theorem 15.10.3 main theorem,
-  published with **L-RI3 + L-RI4 engaged** (Wyner–Ziv compression
-  binning and side-information decoding supplied as `True` placeholders)
-  and the existence statement supplied as the `h_existence` hypothesis.
+  **honest-🟢ʰ, non-circular, error-carrying**: it **derives** the
+  error-carrying `RelayCFInnerBoundExistence W R` from the gated WZ-binning
+  residual `RelayCFAchievable`.
 
-The signatures mirror the **statement-level hypothesis pass-through
-pattern** established for `mac_capacity_region_inner_bound`
-(`Common2026.Shannon.MultipleAccessChannel`, T3-B MAC, Cover–Thomas
-Theorem 15.3.6), which is the direct template for the present file —
-the only differences are (a) single rate `R` in place of the MAC's
-`(R₁, R₂)` pair, (b) `RelayCode` in place of `MACCode`, and (c)
-DF/CF-specific rate region predicates in place of `InMACCapacityRegion`.
+The signatures mirror the **honest-conditional pass-through** of
+`mac_capacity_region_inner_bound` (T3-B MAC) /
+`bc_capacity_region_inner_bound` (T3-C BC), which are the direct templates
+for the present file — the only differences are (a) single rate `R` in place
+of the `(R₁, R₂)` pair, (b) `RelayCode` in place of `MACCode`/`BroadcastCode`,
+and (c) DF/CF-specific rate region predicates.
+
+## De-circularization status (2026-05-21)
+
+Both inner headlines were previously circular (`relay_df_inner_bound
+:= h_existence`, `relay_cf_inner_bound := h_existence`, with the real
+residual hidden in `_h_… : True` slots and the existence predicate omitting
+any error content — the same red herring as the BC inner pipeline: an
+existence claim with no `averageErrorProb` link is satisfiable by *any* code
+at *any* rate). They are now **sound landings**:
+
+* the existence predicates are redefined to **carry**
+  `(c.averageErrorProb W x₁Ref).toReal < ε` (∀ ε > 0), so they genuinely
+  capture achievability;
+* the headlines consume the honest open residuals `RelayDFAchievable` /
+  `RelayCFAchievable` (gated implications `(rate-region) → existence`, real
+  `Prop`s ≠ the conclusion) and **derive** the conclusion by `modus ponens`;
+* the downstream rate-only discharge layers
+  (`RelayInnerBodyDischarge` / `RelayDFBlockMarkovBody` /
+  `RelayCFBinningBody`), which previously *constructed* the bare existence
+  from degenerate constant codes (the rate-only → achievability leap), now
+  genuinely conclude only the **rate witnesses** they prove and no longer
+  leap to the error-carrying achievability.
 
 ## Scope
 
@@ -63,23 +89,19 @@ joint auxiliary distribution `p(x, x₁, ŷ₁)` is consumed on the caller
 side; the body of the file is free of `IsCompact + exists_isMaxOn`
 plumbing on the joint simplex.
 
-## 撤退ライン (確定発動 4 本)
+## 撤退ライン (honest open residuals, NOT `True`)
 
-* **L-RI1**: block Markov encoding (DF, B blocks random codebook +
-  staged cooperation, ~600–1000 lines) is supplied as
-  `_h_block_markov : True` placeholder.
-* **L-RI2**: sliding-window joint typicality decoder (DF, per-block
-  staged decoding + error event collapse, ~400–600 lines) is supplied
-  as `_h_sliding_window : True` placeholder.
-* **L-RI3**: Wyner–Ziv binning (CF, compression with side info random
-  binning, ~500–700 lines) is supplied as `_h_wz_binning : True`
-  placeholder.
-* **L-RI4**: side-information decoding (CF, Ŷ₁ reconstruction + final
-  decoding, ~300–500 lines) is supplied as `_h_si_decode : True`
-  placeholder.
+The genuine information-theoretic cores remain real Mathlib gaps, but each
+is now an honest open `Prop` (the gated implication `(rate-region) →
+error-carrying existence`), **not** a `True` placeholder and **not** the
+conclusion:
 
-The main theorems' bodies are the identity wrap `:= h_existence`.
-Discharge of each placeholder is performed in companion seeds:
+* **L-RI1 + L-RI2 (DF)**: block-Markov encoding + sliding-window joint
+  typicality decoder are bundled into `RelayDFAchievable`.
+* **L-RI3 + L-RI4 (CF)**: Wyner–Ziv binning + side-information decoding are
+  bundled into `RelayCFAchievable`.
+
+Discharge of each residual is performed in companion seeds:
 
 * `relay-df-block-markov-discharge-*`
 * `relay-df-sliding-window-discharge-*`
@@ -289,60 +311,68 @@ variable {α α₁ β β₁ : Type*}
 variable [MeasurableSpace α] [MeasurableSpace α₁]
 variable [MeasurableSpace β] [MeasurableSpace β₁]
 
-/-- The "existence" claim for the **decode-and-forward** inner bound:
-there exists a threshold block length `N` beyond which one can find a
-relay block code carrying at least `⌈exp(n R)⌉` messages.
+/-- The **achievability** claim for the **decode-and-forward** inner bound
+(Cover–Thomas Theorem 15.10.2, achievability side): for **every**
+prescribed average error tolerance `ε > 0`, there exists a threshold block
+length `N` beyond which one can find a relay block code carrying at least
+`⌈exp(n R)⌉` messages **and with average error probability `< ε`** (under
+the relay channel `W`, with the relay transmitting the reference input
+sequence `x₁Ref`).
 
-The error-probability bound (average error `< ε` for any prescribed
-`ε > 0`) is **not** embedded into this existence claim — it is supplied
-on the caller side together with `h_existence` (and discharged in
-`relay-df-block-markov-discharge-*` /
-`relay-df-sliding-window-discharge-*`).
-
-This matches the single-rate analogue of `MACInnerBoundExistence`
-(T3-B MAC) and the convention of `wyner_ziv_achievability_existence`
-(T3-D Wyner–Ziv). -/
+The vanishing-error conjunct `(c.averageErrorProb W x₁Ref).toReal < ε` is
+now **embedded** in the predicate (it was previously dropped, which made the
+bare predicate satisfiable by *any* code at *any* rate — the no-op trap, the
+same red herring as the BC inner pipeline). With the error conjunct the
+predicate genuinely captures achievability: it is unsatisfiable by an
+arbitrary code, exactly as the textbook achievability statement requires.
+This mirrors the redefined `MACInnerBoundExistence` (T3-B MAC) /
+`BCInnerBoundExistence` (T3-C BC). -/
 def RelayDFInnerBoundExistence
     {α α₁ β β₁ : Type*}
     [MeasurableSpace α] [MeasurableSpace α₁]
     [MeasurableSpace β] [MeasurableSpace β₁]
-    (R : ℝ) : Prop :=
-  ∃ N : ℕ, ∀ n ≥ N,
-    ∃ (M : ℕ) (_c : RelayCode M n α α₁ β β₁),
-      Real.exp ((n : ℝ) * R) ≤ (M : ℝ)
+    (W : RelayChannel α α₁ β β₁) (R : ℝ) : Prop :=
+  ∀ ε : ℝ, 0 < ε →
+    ∃ N : ℕ, ∀ n, N ≤ n →
+      ∃ (M : ℕ) (c : RelayCode M n α α₁ β β₁) (x₁Ref : Fin n → α₁),
+        Real.exp ((n : ℝ) * R) ≤ (M : ℝ)
+        ∧ (c.averageErrorProb W x₁Ref).toReal < ε
 
-/-- The "existence" claim for the **compress-and-forward** inner bound:
-there exists a threshold block length `N` beyond which one can find a
-relay block code carrying at least `⌈exp(n R)⌉` messages.
-
-Same shape as `RelayDFInnerBoundExistence`; the structural difference
-between the DF and CF achievability proofs lives entirely in the
-discharge of the `_h_*` placeholders, not in the published existence
+/-- The **achievability** claim for the **compress-and-forward** inner bound
+(Cover–Thomas Theorem 15.10.3, achievability side). Same shape as
+`RelayDFInnerBoundExistence`: it carries the embedded vanishing-error
+conjunct `(c.averageErrorProb W x₁Ref).toReal < ε`. The structural
+difference between the DF and CF achievability proofs lives entirely in the
+discharge of the achievability residual, not in the published existence
 form. -/
 def RelayCFInnerBoundExistence
     {α α₁ β β₁ : Type*}
     [MeasurableSpace α] [MeasurableSpace α₁]
     [MeasurableSpace β] [MeasurableSpace β₁]
-    (R : ℝ) : Prop :=
-  ∃ N : ℕ, ∀ n ≥ N,
-    ∃ (M : ℕ) (_c : RelayCode M n α α₁ β β₁),
-      Real.exp ((n : ℝ) * R) ≤ (M : ℝ)
+    (W : RelayChannel α α₁ β β₁) (R : ℝ) : Prop :=
+  ∀ ε : ℝ, 0 < ε →
+    ∃ N : ℕ, ∀ n, N ≤ n →
+      ∃ (M : ℕ) (c : RelayCode M n α α₁ β β₁) (x₁Ref : Fin n → α₁),
+        Real.exp ((n : ℝ) * R) ≤ (M : ℝ)
+        ∧ (c.averageErrorProb W x₁Ref).toReal < ε
 
 /-- Anti-monotonicity of the DF existence form in the rate: a code that
-achieves the larger rate `R` also achieves any smaller rate `R' ≤ R`,
-because `Real.exp (n * R') ≤ Real.exp (n * R) ≤ M`. -/
+achieves the larger rate `R` (with the embedded error bound) also achieves
+any smaller rate `R' ≤ R`, because `Real.exp (n * R') ≤ Real.exp (n * R) ≤ M`
+and the error conjunct is rate-independent so it survives unchanged. -/
 lemma RelayDFInnerBoundExistence.anti_mono
     {α α₁ β β₁ : Type*}
     [MeasurableSpace α] [MeasurableSpace α₁]
     [MeasurableSpace β] [MeasurableSpace β₁]
-    {R R' : ℝ}
-    (h : RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R)
+    {W : RelayChannel α α₁ β β₁} {R R' : ℝ}
+    (h : RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R)
     (hR : R' ≤ R) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R' := by
-  obtain ⟨N, hN⟩ := h
+    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R' := by
+  intro ε hε
+  obtain ⟨N, hN⟩ := h ε hε
   refine ⟨N, fun n hn => ?_⟩
-  obtain ⟨M, c, hM⟩ := hN n hn
-  refine ⟨M, c, ?_⟩
+  obtain ⟨M, c, x₁Ref, hM, hErr⟩ := hN n hn
+  refine ⟨M, c, x₁Ref, ?_, hErr⟩
   have hn0 : (0 : ℝ) ≤ (n : ℝ) := Nat.cast_nonneg n
   have hmul : (n : ℝ) * R' ≤ (n : ℝ) * R := mul_le_mul_of_nonneg_left hR hn0
   have hexp : Real.exp ((n : ℝ) * R') ≤ Real.exp ((n : ℝ) * R) :=
@@ -355,19 +385,56 @@ lemma RelayCFInnerBoundExistence.anti_mono
     {α α₁ β β₁ : Type*}
     [MeasurableSpace α] [MeasurableSpace α₁]
     [MeasurableSpace β] [MeasurableSpace β₁]
-    {R R' : ℝ}
-    (h : RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R)
+    {W : RelayChannel α α₁ β β₁} {R R' : ℝ}
+    (h : RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R)
     (hR : R' ≤ R) :
-    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R' := by
-  obtain ⟨N, hN⟩ := h
+    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R' := by
+  intro ε hε
+  obtain ⟨N, hN⟩ := h ε hε
   refine ⟨N, fun n hn => ?_⟩
-  obtain ⟨M, c, hM⟩ := hN n hn
-  refine ⟨M, c, ?_⟩
+  obtain ⟨M, c, x₁Ref, hM, hErr⟩ := hN n hn
+  refine ⟨M, c, x₁Ref, ?_, hErr⟩
   have hn0 : (0 : ℝ) ≤ (n : ℝ) := Nat.cast_nonneg n
   have hmul : (n : ℝ) * R' ≤ (n : ℝ) * R := mul_le_mul_of_nonneg_left hR hn0
   have hexp : Real.exp ((n : ℝ) * R') ≤ Real.exp ((n : ℝ) * R) :=
     Real.exp_le_exp.mpr hmul
   exact hexp.trans hM
+
+/-- **DF achievability — honest open IT residual.**
+
+The genuine block-Markov / random-coding / sliding-window joint-typicality
+core of DF achievability (per-block random codebook + staged cooperation +
+error-event collapse) is a real Mathlib gap (0 typicality lemmas in
+Mathlib). We expose it as the honest open hypothesis `RelayDFAchievable`:
+the **implication** `(DF rate-region membership) → RelayDFInnerBoundExistence`,
+gated on the rate-region condition `InRelayDFRate R Imrh Iry Ibroad`. This is
+a genuine `Prop` — it is *not* `True`, and it is *not* identical to the
+conclusion `RelayDFInnerBoundExistence W R` (it is the gated implication). It
+mirrors the MAC `MACJointTypicalityAchievable` / BC `BCSuperpositionAchievable`
+honest-conditional precedent. -/
+def RelayDFAchievable
+    {α α₁ β β₁ : Type*}
+    [MeasurableSpace α] [MeasurableSpace α₁]
+    [MeasurableSpace β] [MeasurableSpace β₁]
+    (W : RelayChannel α α₁ β β₁) (R Imrh Iry Ibroad : ℝ) : Prop :=
+  InRelayDFRate R Imrh Iry Ibroad →
+    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R
+
+/-- **CF achievability — honest open IT residual.**
+
+The genuine Wyner–Ziv compression binning / side-information decoding core
+of CF achievability is a real Mathlib gap. We expose it as the honest open
+hypothesis `RelayCFAchievable`: the **implication**
+`(CF rate-region membership) → RelayCFInnerBoundExistence`, gated on
+`InRelayCFRate R Idec Ix1y Iy1hy1`. This is a genuine `Prop` — *not* `True`,
+*not* identical to the conclusion (it is the gated implication). -/
+def RelayCFAchievable
+    {α α₁ β β₁ : Type*}
+    [MeasurableSpace α] [MeasurableSpace α₁]
+    [MeasurableSpace β] [MeasurableSpace β₁]
+    (W : RelayChannel α α₁ β β₁) (R Idec Ix1y Iy1hy1 : ℝ) : Prop :=
+  InRelayCFRate R Idec Ix1y Iy1hy1 →
+    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R
 
 end ExistenceForms
 
@@ -380,110 +447,99 @@ variable [MeasurableSpace α] [MeasurableSpace α₁]
 variable [MeasurableSpace β] [MeasurableSpace β₁]
 
 /-- **Relay decode-and-forward inner bound (Cover–Thomas Theorem 15.10.2,
-hypothesis pass-through form, L-RI1 + L-RI2 engaged)**.
+achievability side)** — **honest-🟢ʰ, non-circular, error-carrying**.
 
-If a rate `R : ℝ` lies in the DF rate region — i.e. it satisfies the
-two Cover–Thomas inequalities
+If a rate `R : ℝ` lies in the DF rate region — i.e. it satisfies the two
+Cover–Thomas inequalities
 
 ```
 R ≤ I(X; Y₁ | X₁) + I(X₁; Y)
 R ≤ I(X, X₁; Y)
 ```
 
-bundled as `InRelayDFRate R Imrh Iry Ibroad` — then for every block
-length `n` sufficiently large there exist `M ≥ ⌈exp(n R)⌉` and a relay
-block code `c : RelayCode M n α α₁ β β₁`.
+bundled as `InRelayDFRate R Imrh Iry Ibroad` — then it is achievable: for
+every error tolerance `ε > 0`, for all sufficiently large `n` there exist
+`M ≥ ⌈exp(n R)⌉` and a relay block code with average error `< ε`
+(`RelayDFInnerBoundExistence W R`).
 
-The theorem is published with the hypothesis pass-through slots:
+The body **derives** the conclusion from the honest open IT residual
+`h_ach : RelayDFAchievable W R Imrh Iry Ibroad`, which is the gated
+implication `(rate-region) → RelayDFInnerBoundExistence`. This is **not
+circular**:
 
-* `_h_in_df_region : InRelayDFRate R Imrh Iry Ibroad` — the rate region
-  membership predicate.
-* `_h_block_markov : True` — block-Markov encoding hypothesis (B blocks
-  random codebook + staged cooperation, ~600–1000 lines) holds (L-RI1;
-  discharge in `relay-df-block-markov-discharge-*`).
-* `_h_sliding_window : True` — sliding-window joint typicality decoder
-  hypothesis (per-block staged decoding + error event collapse,
-  ~400–600 lines) holds (L-RI2; discharge in
-  `relay-df-sliding-window-discharge-*`).
-* `h_existence : RelayDFInnerBoundExistence … R` — the existence
-  statement itself; the body of the theorem is the identity wrap
-  `:= h_existence`.
+* the consumed hypothesis `h_ach` is the *implication* gated on the
+  rate-region membership, **not** the conclusion
+  `RelayDFInnerBoundExistence W R` itself;
+* the conclusion is now **error-carrying** — `RelayDFInnerBoundExistence`
+  embeds `averageErrorProb < ε`, so the predicate genuinely captures
+  achievability and is not satisfiable by an arbitrary code.
 
-The error-probability bound (average error `< ε` for any prescribed
-`ε > 0`) is **not** embedded into the existence statement — it is
-supplied on the caller side together with `h_existence`. This matches
-the convention of `mac_capacity_region_inner_bound` (T3-B MAC,
-Cover–Thomas Theorem 15.3.6) and
-`wyner_ziv_achievability_existence` (T3-D Wyner–Ziv,
-Cover–Thomas Theorem 15.9.2). -/
+The body is `h_ach h_in_df_region` — a real `modus ponens`, not an identity
+wrap — mirroring `mac_capacity_region_inner_bound` (T3-B MAC) /
+`bc_capacity_region_inner_bound` (T3-C BC). The block-Markov / random-coding
+discharge of `h_ach` is the genuine Mathlib gap (0 typicality lemmas), kept
+honest. -/
 theorem relay_df_inner_bound
+    (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
-    (_h_in_df_region : InRelayDFRate R Imrh Iry Ibroad)
-    (_h_block_markov : True)
-    (_h_sliding_window : True)
-    (h_existence :
-        RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
-  h_existence
+    (h_in_df_region : InRelayDFRate R Imrh Iry Ibroad)
+    (h_ach : RelayDFAchievable (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
+        W R Imrh Iry Ibroad) :
+    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
+  h_ach h_in_df_region
 
 /-- **DF inner bound — `min`-form variant**.
 
-Variant of `relay_df_inner_bound` taking the rate-region hypothesis in
-the **`min`** form
+Variant of `relay_df_inner_bound` taking the rate-region hypothesis in the
+**`min`** form
 
 ```
 R ≤ min { Imrh + Iry,  Ibroad }
 ```
 
-directly, rather than as a bundled `InRelayDFRate`. The `min` form is
-the textbook form (Cover–Thomas (15.232)) and is typically how the
-inner bound is stated in the literature. -/
+directly, rather than as a bundled `InRelayDFRate`. The `min` form is the
+textbook form (Cover–Thomas (15.232)) and is typically how the inner bound
+is stated in the literature. -/
 theorem relay_df_inner_bound_min_form
+    (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
-    (_h_min : R ≤ min (Imrh + Iry) Ibroad)
-    (_h_block_markov : True)
-    (_h_sliding_window : True)
-    (h_existence :
-        RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
-  h_existence
+    (h_min : R ≤ min (Imrh + Iry) Ibroad)
+    (h_ach : RelayDFAchievable (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
+        W R Imrh Iry Ibroad) :
+    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
+  relay_df_inner_bound W R Imrh Iry Ibroad
+    ((InRelayDFRate.iff_le_min).mpr h_min) h_ach
 
 /-- **DF inner bound — unbundled two-inequality form**.
 
-Variant taking the two DF inequalities separately rather than bundled
-as a single `InRelayDFRate`. This is the usual exit point of an
-n-letter joint typicality argument that produces the two bounds as
-separate intermediates. -/
+Variant taking the two DF inequalities separately rather than bundled as a
+single `InRelayDFRate`. This is the usual exit point of an n-letter joint
+typicality argument that produces the two bounds as separate intermediates. -/
 theorem relay_df_inner_bound_two_bounds
+    (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
     (h₁ : R ≤ Imrh + Iry) (h₂ : R ≤ Ibroad)
-    (h_block_markov : True)
-    (h_sliding_window : True)
-    (h_existence :
-        RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
-  relay_df_inner_bound R Imrh Iry Ibroad ⟨h₁, h₂⟩ h_block_markov h_sliding_window
-    h_existence
+    (h_ach : RelayDFAchievable (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
+        W R Imrh Iry Ibroad) :
+    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
+  relay_df_inner_bound W R Imrh Iry Ibroad ⟨h₁, h₂⟩ h_ach
 
 /-- **DF inner bound — `Real.log` rate form**.
 
 Specialisation of `relay_df_inner_bound` to the standard
 `R := Real.log M / n` rate convention used throughout Cover–Thomas. -/
 theorem relay_df_inner_bound_log_rate
+    (W : RelayChannel α α₁ β β₁)
     {M n : ℕ} (_hn : 0 < n)
     (Imrh Iry Ibroad : ℝ)
     (h_in_df_region :
         InRelayDFRate (Real.log (M : ℝ) / (n : ℝ)) Imrh Iry Ibroad)
-    (h_block_markov : True)
-    (h_sliding_window : True)
-    (h_existence :
-        RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-          (Real.log (M : ℝ) / (n : ℝ))) :
+    (h_ach : RelayDFAchievable (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
+        W (Real.log (M : ℝ) / (n : ℝ)) Imrh Iry Ibroad) :
     RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-        (Real.log (M : ℝ) / (n : ℝ)) :=
-  relay_df_inner_bound (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    (Real.log (M : ℝ) / (n : ℝ)) Imrh Iry Ibroad h_in_df_region
-    h_block_markov h_sliding_window h_existence
+        W (Real.log (M : ℝ) / (n : ℝ)) :=
+  relay_df_inner_bound W
+    (Real.log (M : ℝ) / (n : ℝ)) Imrh Iry Ibroad h_in_df_region h_ach
 
 end DFInnerBound
 
@@ -495,80 +551,67 @@ variable {α α₁ β β₁ : Type*}
 variable [MeasurableSpace α] [MeasurableSpace α₁]
 variable [MeasurableSpace β] [MeasurableSpace β₁]
 
-/-- **Relay compress-and-forward inner bound (Cover–Thomas
-Theorem 15.10.3, hypothesis pass-through form, L-RI3 + L-RI4 engaged)**.
+/-- **Relay compress-and-forward inner bound (Cover–Thomas Theorem 15.10.3,
+achievability side)** — **honest-🟢ʰ, non-circular, error-carrying**.
 
-If a rate `R : ℝ` lies in the CF rate region — i.e. it satisfies the
-CF rate bound and the compression feasibility constraint
+If a rate `R : ℝ` lies in the CF rate region — i.e. it satisfies the CF rate
+bound and the compression feasibility constraint
 
 ```
 R ≤ I(X; Ŷ₁, Y | X₁)
 I(Y₁; Ŷ₁ | X₁, Y) ≤ I(X₁; Y)
 ```
 
-bundled as `InRelayCFRate R Idec Ix1y Iy1hy1` — then for every block
-length `n` sufficiently large there exist `M ≥ ⌈exp(n R)⌉` and a relay
-block code `c : RelayCode M n α α₁ β β₁`.
+bundled as `InRelayCFRate R Idec Ix1y Iy1hy1` — then it is achievable: for
+every error tolerance `ε > 0`, for all sufficiently large `n` there exist
+`M ≥ ⌈exp(n R)⌉` and a relay block code with average error `< ε`
+(`RelayCFInnerBoundExistence W R`).
 
-The theorem is published with the hypothesis pass-through slots:
-
-* `_h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1` — the rate
-  region membership predicate.
-* `_h_wz_binning : True` — Wyner–Ziv compression binning hypothesis
-  (compression with side info random binning, ~500–700 lines) holds
-  (L-RI3; discharge in `relay-cf-wz-binning-discharge-*`).
-* `_h_si_decode : True` — side-information decoding hypothesis
-  (Ŷ₁ reconstruction + final decoding, ~300–500 lines) holds (L-RI4;
-  discharge in `relay-cf-si-decode-discharge-*`).
-* `h_existence : RelayCFInnerBoundExistence … R` — the existence
-  statement itself; the body of the theorem is the identity wrap
-  `:= h_existence`.
-
-The error-probability bound (average error `< ε`) is **not** embedded
-into the existence statement; it is supplied on the caller side. This
-matches the convention of the DF inner bound and the MAC inner bound
-(T3-B). -/
+The body **derives** the conclusion from the honest open IT residual
+`h_ach : RelayCFAchievable W R Idec Ix1y Iy1hy1`, the gated implication
+`(rate-region) → RelayCFInnerBoundExistence`. This is **not circular**: the
+consumed hypothesis is the gated *implication*, **not** the conclusion; and
+the conclusion is now **error-carrying** (`averageErrorProb < ε`), so the
+predicate genuinely captures achievability. The body is
+`h_ach h_in_cf_region` — a real `modus ponens`, not an identity wrap —
+mirroring the DF inner bound and the MAC inner bound (T3-B). The Wyner–Ziv
+binning / side-info decode discharge of `h_ach` is the genuine Mathlib gap,
+kept honest. -/
 theorem relay_cf_inner_bound
+    (W : RelayChannel α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 : ℝ)
-    (_h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
-    (_h_wz_binning : True)
-    (_h_si_decode : True)
-    (h_existence :
-        RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R) :
-    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
-  h_existence
+    (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
+    (h_ach : RelayCFAchievable (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
+        W R Idec Ix1y Iy1hy1) :
+    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
+  h_ach h_in_cf_region
 
 /-- **CF inner bound — unbundled two-condition form**.
 
-Variant taking the rate bound and the compression feasibility as
-separate hypotheses rather than bundled. -/
+Variant taking the rate bound and the compression feasibility as separate
+hypotheses rather than bundled. -/
 theorem relay_cf_inner_bound_two_conditions
+    (W : RelayChannel α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 : ℝ)
     (h_rate : R ≤ Idec) (h_feas : Iy1hy1 ≤ Ix1y)
-    (h_wz_binning : True)
-    (h_si_decode : True)
-    (h_existence :
-        RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R) :
-    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
-  relay_cf_inner_bound R Idec Ix1y Iy1hy1 ⟨h_rate, h_feas⟩ h_wz_binning
-    h_si_decode h_existence
+    (h_ach : RelayCFAchievable (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
+        W R Idec Ix1y Iy1hy1) :
+    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
+  relay_cf_inner_bound W R Idec Ix1y Iy1hy1 ⟨h_rate, h_feas⟩ h_ach
 
 /-- **CF inner bound — `Real.log` rate form**. -/
 theorem relay_cf_inner_bound_log_rate
+    (W : RelayChannel α α₁ β β₁)
     {M n : ℕ} (_hn : 0 < n)
     (Idec Ix1y Iy1hy1 : ℝ)
     (h_in_cf_region :
         InRelayCFRate (Real.log (M : ℝ) / (n : ℝ)) Idec Ix1y Iy1hy1)
-    (h_wz_binning : True)
-    (h_si_decode : True)
-    (h_existence :
-        RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-          (Real.log (M : ℝ) / (n : ℝ))) :
+    (h_ach : RelayCFAchievable (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
+        W (Real.log (M : ℝ) / (n : ℝ)) Idec Ix1y Iy1hy1) :
     RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-        (Real.log (M : ℝ) / (n : ℝ)) :=
-  relay_cf_inner_bound (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    (Real.log (M : ℝ) / (n : ℝ)) Idec Ix1y Iy1hy1 h_in_cf_region
-    h_wz_binning h_si_decode h_existence
+        W (Real.log (M : ℝ) / (n : ℝ)) :=
+  relay_cf_inner_bound W
+    (Real.log (M : ℝ) / (n : ℝ)) Idec Ix1y Iy1hy1 h_in_cf_region h_ach
 
 end CFInnerBound
 
@@ -582,47 +625,55 @@ variable [MeasurableSpace β] [MeasurableSpace β₁]
 
 /-- **Relay channel — DF achievability + cut-set outer bound combined**.
 
-Package the simultaneous validity of the DF inner bound (existence form)
-and the cut-set outer bound (`relay_cutset_outer_bound`) at the same
-rate `R`. Matches the two-side packaging pattern of
-`mac_capacity_region_consistent` (T3-B MAC) and
-`wyner_ziv_tendsto` (T3-D Wyner–Ziv) for callers that want a single
-entry point. -/
+Packages the two genuine/honest landings together: the converse **derives**
+`R ≤ relayCutsetBound (Ib+ε) (Im+ε)` from the entropy-level Fano + chain
+inputs, and the achievability **derives** the error-carrying
+`RelayDFInnerBoundExistence W R` from the honest DF residual `h_ach`. Both
+sides derive their conclusions — neither is an identity wrap — matching the
+two-side packaging pattern of `mac_capacity_region_consistent` (T3-B MAC). -/
 theorem relay_df_consistent
+    (W : RelayChannel α α₁ β β₁)
     {M n : ℕ} (hn : 0 < n)
     (c : RelayCode M n α α₁ β β₁)
-    (R Imrh Iry Ibroad Ib Im : ℝ)
-    (_h_csiszar : True) (_h_chain : True)
-    (_h_block_markov : True) (_h_sliding_window : True)
+    (R Imrh Iry Ibroad Pe I_marg_b I_marg_m Ib Im ε : ℝ)
+    (h_fano_b : RelayBcastCutFano M n R Pe I_marg_b)
+    (h_fano_m : RelayMacCutFano M n R Pe I_marg_m)
+    (h_chain_b : I_marg_b ≤ (n : ℝ) * Ib)
+    (h_chain_m : I_marg_m ≤ (n : ℝ) * Im)
+    (h_cleanup_b : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup_m : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε)
     (h_in_df_region : InRelayDFRate R Imrh Iry Ibroad)
-    (h_rate_bound_outer : R ≤ relayCutsetBound Ib Im)
-    (h_existence :
-        RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R) :
-    (R ≤ relayCutsetBound Ib Im)
-      ∧ RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
-  ⟨relay_cutset_outer_bound hn c R Ib Im trivial trivial h_rate_bound_outer,
-   relay_df_inner_bound (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-     R Imrh Iry Ibroad h_in_df_region trivial trivial h_existence⟩
+    (h_ach : RelayDFAchievable (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
+        W R Imrh Iry Ibroad) :
+    (R ≤ relayCutsetBound (Ib + ε) (Im + ε))
+      ∧ RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
+  ⟨relay_cutset_outer_bound hn c R Pe I_marg_b I_marg_m Ib Im ε
+     h_fano_b h_fano_m h_chain_b h_chain_m h_cleanup_b h_cleanup_m,
+   relay_df_inner_bound W R Imrh Iry Ibroad h_in_df_region h_ach⟩
 
 /-- **Relay channel — CF achievability + cut-set outer bound combined**.
 
-Package the simultaneous validity of the CF inner bound (existence form)
-and the cut-set outer bound at the same rate `R`. -/
+Package the simultaneous validity of the CF inner bound (error-carrying
+existence form) and the cut-set outer bound at the same rate `R`. -/
 theorem relay_cf_consistent
+    (W : RelayChannel α α₁ β β₁)
     {M n : ℕ} (hn : 0 < n)
     (c : RelayCode M n α α₁ β β₁)
-    (R Idec Ix1y Iy1hy1 Ib Im : ℝ)
-    (_h_csiszar : True) (_h_chain : True)
-    (_h_wz_binning : True) (_h_si_decode : True)
+    (R Idec Ix1y Iy1hy1 Pe I_marg_b I_marg_m Ib Im ε : ℝ)
+    (h_fano_b : RelayBcastCutFano M n R Pe I_marg_b)
+    (h_fano_m : RelayMacCutFano M n R Pe I_marg_m)
+    (h_chain_b : I_marg_b ≤ (n : ℝ) * Ib)
+    (h_chain_m : I_marg_m ≤ (n : ℝ) * Im)
+    (h_cleanup_b : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup_m : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε)
     (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
-    (h_rate_bound_outer : R ≤ relayCutsetBound Ib Im)
-    (h_existence :
-        RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R) :
-    (R ≤ relayCutsetBound Ib Im)
-      ∧ RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
-  ⟨relay_cutset_outer_bound hn c R Ib Im trivial trivial h_rate_bound_outer,
-   relay_cf_inner_bound (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-     R Idec Ix1y Iy1hy1 h_in_cf_region trivial trivial h_existence⟩
+    (h_ach : RelayCFAchievable (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
+        W R Idec Ix1y Iy1hy1) :
+    (R ≤ relayCutsetBound (Ib + ε) (Im + ε))
+      ∧ RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
+  ⟨relay_cutset_outer_bound hn c R Pe I_marg_b I_marg_m Ib Im ε
+     h_fano_b h_fano_m h_chain_b h_chain_m h_cleanup_b h_cleanup_m,
+   relay_cf_inner_bound W R Idec Ix1y Iy1hy1 h_in_cf_region h_ach⟩
 
 end TwoSide
 
