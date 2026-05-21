@@ -182,6 +182,7 @@ import Common2026.Shannon.WynerZivConverseChain
 import Common2026.Shannon.LZ78ConverseAsymptotic
 import Common2026.Shannon.ChernoffPerTiltSanov
 import Common2026.Shannon.ChernoffSanovDischarge
+import Common2026.Shannon.ChernoffBandMassDischarge
 import Common2026.Shannon.HoeffdingInteriorBody
 import Common2026.Shannon.WynerZivBinningCovering
 import Common2026.Shannon.GeneralDMCExtension
