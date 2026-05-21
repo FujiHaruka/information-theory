@@ -244,24 +244,31 @@ theorem bc_random_codebook_markov_of_perEvent
     (bc_bonferroni_ensemble_decay_of_perEvent
       (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ h)
 
-/-- **S15-d' — BC inner bound, AEP per-event decay discharge.**
+/-- **S15-d' — BC random codebook averaging, AEP per-event decay discharge.**
 
 The publish-layer hook closing SEED S15: given the strict rate conditions and the
-primitive per-event AEP-decay predicate `IsBCPerEventAEPDecay`, conclude
-`BCInnerBoundExistence`. Composes the decay bridge (S15-c) with the bridge body's
-`bc_inner_bound_with_ensemble_averaging` (S7-G). -/
+primitive per-event AEP-decay predicate `IsBCPerEventAEPDecay`, **derive** the
+**rate witness** `BCRandomCodebookAveraging`. Composes the decay bridge (S15-c)
+with the bridge body's `bc_inner_bound_with_ensemble_averaging` (S7-G).
+
+It deliberately does **not** claim the error-carrying `BCInnerBoundExistence W`:
+the rate-only post-averaging witness does not establish `averageErrorProb < ε`
+for a specific `W`, so the genuine bridge to achievability is the honest residual
+`BCSuperpositionAchievable`, consumed only by the headline
+`bc_capacity_region_inner_bound`. -/
 theorem bc_inner_bound_with_perEvent_aep
     (R₁ R₂ I_u I_xy : ℝ)
     (h_strict : R₂ < I_u ∧ R₁ < I_xy)
     (h : IsBCPerEventAEPDecay (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂) :
-    BCInnerBoundExistence (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ :=
+    BCRandomCodebookAveraging (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ :=
   bc_inner_bound_with_ensemble_averaging
     (α := α) (β₁ := β₁) (β₂ := β₂)
     R₁ R₂ I_u I_xy h_strict
     (bc_bonferroni_ensemble_decay_of_perEvent
       (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ h)
 
-/-- **S15-d'' — BC inner bound, AEP per-event decay discharge, bundled form.**
+/-- **S15-d'' — BC random codebook averaging, AEP per-event decay discharge,
+bundled form.**
 
 Variant of `bc_inner_bound_with_perEvent_aep` taking the rate conditions bundled
 as the `≤` + `≠` form of `InBCCapacityRegion`, mirroring
@@ -272,7 +279,7 @@ theorem bc_inner_bound_with_perEvent_aep_bundled
     (h_strict₂ : R₂ ≠ I_u)
     (h_strict₁ : R₁ ≠ I_xy)
     (h : IsBCPerEventAEPDecay (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂) :
-    BCInnerBoundExistence (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ :=
+    BCRandomCodebookAveraging (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ :=
   bc_inner_bound_with_ensemble_averaging_bundled
     (α := α) (β₁ := β₁) (β₂ := β₂)
     R₁ R₂ I_u I_xy h_in_region h_strict₂ h_strict₁

@@ -531,23 +531,24 @@ placeholder is now backed *concretely* in this library by:
 * `bcReceiver1ConditionalSliceX`             (SW-style plumbing)
 * `bcSuperpositionCode`                      (2-layer codebook → BroadcastCode)
 
-The body remains an identity wrap to the parent's `h_existence`, matching
-the established statement-level pass-through pattern of
-`mac_capacity_region_inner_bound_with_joint_typ_aep` and
-`wyner_ziv_achievability_existence`.
+The body **derives** the error-carrying `BCInnerBoundExistence W R₁ R₂`
+from the honest superposition residual
+`h_ach : BCSuperpositionAchievable W R₁ R₂ I_u I_xy` via
+`bc_capacity_region_inner_bound` (a `modus ponens`, not an identity wrap),
+matching `mac_capacity_region_inner_bound_with_joint_typ_aep` (T3-B MAC).
 
 The trailing 4-error-event Bonferroni body for each receiver (Cover-Thomas
 eqs. 15.6.18-15.6.30) and the random codebook averaging argument
-(L-BC2-G/H/I) — which together would lift the `h_existence` hypothesis to a
-theorem — are **out of scope** of this file and remain future work. -/
+(L-BC2-G/H/I) — which together would lift the residual `h_ach` from a
+hypothesis to a theorem — are **out of scope** of this file and remain
+future work. -/
 theorem bc_capacity_region_inner_bound_with_superposition_aep
+    (W : BroadcastChannel α β₁ β₂)
     (R₁ R₂ I_u I_xy : ℝ)
-    (_h_strict : R₂ < I_u ∧ R₁ < I_xy)
-    (h_existence : BCInnerBoundExistence (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂) :
-    BCInnerBoundExistence (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ :=
-  bc_capacity_region_inner_bound
-    (α := α) (β₁ := β₁) (β₂ := β₂)
-    R₁ R₂ I_u I_xy _h_strict trivial h_existence
+    (h_strict : R₂ < I_u ∧ R₁ < I_xy)
+    (h_ach : BCSuperpositionAchievable W R₁ R₂ I_u I_xy) :
+    BCInnerBoundExistence W R₁ R₂ :=
+  bc_capacity_region_inner_bound W R₁ R₂ I_u I_xy h_strict h_ach
 
 end BCSuperpositionInnerBoundDischarge
 

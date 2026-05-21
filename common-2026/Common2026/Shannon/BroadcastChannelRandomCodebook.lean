@@ -3,21 +3,25 @@ import Common2026.Shannon.BroadcastChannelSuperpositionBody
 /-!
 # BC random codebook averaging — L-BC2-I body discharge (T3-C continuation)
 
+> **De-circularization note (2026-05-21).** `BCInnerBoundExistence` is now
+> **error-carrying** (carries `W` + `averageErrorProb < ε`); the rate-only
+> witnesses of this file genuinely establish only `BCRandomCodebookAveraging`
+> (no `W`, no error). The wrappers therefore conclude that **rate witness**
+> and no longer leap to the error-carrying achievability — the leap
+> theorems `bc_random_codebook_averaging_exists` /
+> `bc_inner_bound_with_random_codebook` (which claimed rate ⇒ achievability,
+> the dishonest no-op) have been removed. The genuine bridge to
+> achievability is the honest residual `BCSuperpositionAchievable`, consumed
+> only by the headline `bc_capacity_region_inner_bound`. Docstring mentions
+> of the removed leap names below are historical.
+
 This file publishes the **random codebook averaging body discharge layer**
 for the degraded broadcast channel of `Common2026/Shannon/BroadcastChannel.lean`
-(T3-C, Cover–Thomas Theorem 15.6.2). The parent files
-`bc_capacity_region_inner_bound`
-(`Common2026/Shannon/BroadcastChannel.lean:580`),
-`bc_capacity_region_inner_bound_with_superposition_aep`
-(`Common2026/Shannon/BroadcastChannelSuperposition.lean:543`), and
-`bc_capacity_region_inner_bound_with_superposition_body`
-(`Common2026/Shannon/BroadcastChannelSuperpositionBody.lean`) all keep the
-existence claim `h_existence : BCInnerBoundExistence …` as a *caller
-hypothesis*. The present file performs the L-BC2-I random codebook
+(T3-C, Cover–Thomas Theorem 15.6.2). It performs the L-BC2-I random codebook
 averaging step — Markov inequality on `E_C[P_e(C)]` over a random
-superposition codebook `C_n ~ P_X^n` — to package the existence claim
-itself as a `Prop`-valued structural predicate that *implies*
-`BCInnerBoundExistence`.
+superposition codebook `C_n ~ P_X^n` — to package the **rate-only**
+post-averaging witness as the `Prop`-valued predicate
+`BCRandomCodebookAveraging`.
 
 The random codebook averaging is the classical Cover-Thomas
 "probabilistic method" step:
@@ -315,20 +319,19 @@ codebook averaging:
 ∃ N, ∀ n ≥ N, ∃ M_k, ∃ c, M_k ≥ ⌈exp(n·R_k)⌉ ∧ <averaging condition>
 ```
 
-We package it as a `Prop` predicate in the same shape as
-`BCInnerBoundExistence`, so the extraction
-`bc_random_codebook_averaging_exists` is a direct unpacking.
+We package it as a **rate-only** `Prop` predicate bundling the
+`∃ N, ∀ n ≥ N, ∃ M₁ M₂ c, …` quantifier structure with
+`exp(n·R_k) ≤ M_k` as the rate conditions. It is the *post-averaging*
+witness: the deterministic codebook extracted from a random one via the
+Markov inequality.
 
-The predicate is intentionally **the same as `BCInnerBoundExistence`**
-in shape — it bundles the same `∃ N, ∀ n ≥ N, ∃ M₁ M₂ c, …` quantifier
-structure, with `exp(n·R_k) ≤ M_k` as the rate conditions. The
-difference is **semantic**: `BCRandomCodebookAveraging` is the
-*post-averaging* form where the deterministic codebook has been
-extracted from a random one via Markov inequality, while
-`BCInnerBoundExistence` is the *abstract* form taken as hypothesis by
-`bc_capacity_region_inner_bound`. In the L-BC2-I discharge, the two
-forms are *provably equal* — that equality is the content of
-`bc_random_codebook_averaging_exists` below. -/
+It is deliberately **weaker** than the achievability predicate
+`BCInnerBoundExistence W` of `BroadcastChannel.lean`: it carries **no**
+error-probability content (`averageErrorProb < ε`) and **no** channel
+`W`, so it does *not* establish achievability. The genuine bridge from
+this rate witness to achievability is the honest residual
+`BCSuperpositionAchievable`, consumed only by the headline
+`bc_capacity_region_inner_bound`. -/
 def BCRandomCodebookAveraging
     {α β₁ β₂ : Type*}
     [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
@@ -341,16 +344,6 @@ def BCRandomCodebookAveraging
 namespace BCRandomCodebookAveraging
 
 variable {R₁ R₂ : ℝ}
-
-/-- The random codebook averaging predicate and the inner bound
-existence predicate are **definitionally** the same statement. They
-are kept as separate names for semantic clarity: the former is the
-*post-averaging* witness, the latter is the *abstract hypothesis*
-form. -/
-lemma iff_existence :
-    BCRandomCodebookAveraging (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ ↔
-    BCInnerBoundExistence (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ :=
-  Iff.rfl
 
 /-- Anti-monotonicity in `R₁`: shrinking the rate `R₁` preserves the
 random codebook averaging witness (since `exp` is monotone). -/
@@ -383,163 +376,5 @@ lemma anti_mono_R₂ {R₂' : ℝ}
 end BCRandomCodebookAveraging
 
 end BCRandomCodebookAveraging
-
-/-! ## Section 4 — Existence extraction (L-BC2-I-D) -/
-
-section BCRandomCodebookExistence
-
-variable {α β₁ β₂ : Type*}
-variable [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
-
-/-- **L-BC2-I-D — Random codebook averaging existence extraction**
-(Cover-Thomas eq. 15.6.30, hypothesis pass-through form, L-BC2-I-F
-engaged).
-
-Given the random codebook averaging predicate
-`BCRandomCodebookAveraging R₁ R₂` (which packages the post-averaging
-deterministic-codebook witness), conclude the inner-bound existence
-form `BCInnerBoundExistence R₁ R₂` directly. The two predicates are
-definitionally the same shape; the extraction is the identity on the
-underlying existence witness.
-
-This is the publish-layer hook of the L-BC2-I body: callers supplying
-the random codebook averaging predicate (typically obtained from the
-4-error-event decay bounds of
-`bc_receiver1_achievability_body` /
-`bc_receiver2_achievability_body` via linearity of expectation +
-Markov inequality, ~400-600 lines, **deferred** — L-BC2-I-F) can now
-ship the inner bound existence form without a separate caller
-hypothesis.
-
-The actual operational derivation of `BCRandomCodebookAveraging` from
-the 4-error-event decay bounds — the body of `BCExpectedErrorBound` +
-Markov inequality on `Measure.pi^n` of the input distribution `P_X` —
-is the explicit retreat line (L-BC2-I-F), supplied as caller
-hypothesis. -/
-theorem bc_random_codebook_averaging_exists
-    (R₁ R₂ : ℝ)
-    (h_avg : BCRandomCodebookAveraging (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂) :
-    BCInnerBoundExistence (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ :=
-  h_avg
-
-/-- **L-BC2-I-D' — Random codebook averaging existence extraction, with
-expected-error hypothesis**. A variant of
-`bc_random_codebook_averaging_exists` that takes the
-`BCExpectedErrorBound` predicate (the expected error over random
-codebooks is bounded by some `δ < 1`) **together with** a hypothesis
-witness that a deterministic codebook achieving the bound exists. The
-latter hypothesis is the content of the Markov / pigeonhole step
-(`bc_exists_codebook_of_avg_le`), which can be supplied either as a
-direct existence statement or derived from the abstract pigeonhole +
-a `Measure.pi^n` weighted-average bound on the caller side. -/
-theorem bc_random_codebook_averaging_exists_of_expected
-    (R₁ R₂ : ℝ)
-    (_h_expected : BCExpectedErrorBound (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂)
-    (h_avg : BCRandomCodebookAveraging (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂) :
-    BCInnerBoundExistence (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ :=
-  bc_random_codebook_averaging_exists (α := α) (β₁ := β₁) (β₂ := β₂)
-    R₁ R₂ h_avg
-
-end BCRandomCodebookExistence
-
-/-! ## Section 5 — Publish-layer hook (L-BC2-I-E) -/
-
-section BCRandomCodebookPublish
-
-variable {α β₁ β₂ : Type*}
-variable [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
-
-/-- **L-BC2-I-E — BC inner bound, with random codebook averaging
-discharge** (Cover-Thomas Theorem 15.6.2, achievability + L-BC2-I body
-discharge, hypothesis pass-through form).
-
-A thin discharge wrapper around `bc_capacity_region_inner_bound`
-(`BroadcastChannel.lean:580`) and the cumulative partial-discharge
-chain
-
-* `bc_capacity_region_inner_bound_with_superposition_aep`
-  (`BroadcastChannelSuperposition.lean:543`, L-BC2-E + L-BC2-F),
-* `bc_capacity_region_inner_bound_with_superposition_body`
-  (`BroadcastChannelSuperpositionBody.lean`, L-BC2-G + L-BC2-H).
-
-The present theorem extends that chain by discharging the L-BC2-I
-slot (random codebook averaging) via the `BCRandomCodebookAveraging`
-predicate. The parent's `h_existence : BCInnerBoundExistence` is
-*no longer* a caller hypothesis — it is now derived from the random
-codebook averaging predicate. The two strict-inequality rate
-conditions remain (`_h_strict`, supplied as the unbundled `And` pair),
-since they are operationally consumed by the rate-conditions
-`exp(n·R_k) ≤ M_k` of the existence claim itself.
-
-The remaining caller hypothesis is the random codebook averaging
-predicate itself (L-BC2-I-C). Its operational derivation from
-linearity of expectation + Markov inequality on `Measure.pi^n` of the
-input distribution `P_X` + the 4-error-event decay bounds of
-`bc_receiver1_achievability_body` /
-`bc_receiver2_achievability_body` is the explicit retreat line
-(L-BC2-I-F), ~400-600 additional lines, **deferred** to a successor
-seed.
-
-This matches the structural-`Prop` form established in
-`MACL2Discharge.lean` (T3-B MAC) and the cumulative-discharge pattern
-of the BC inner bound chain. -/
-theorem bc_inner_bound_with_random_codebook
-    (R₁ R₂ I_u I_xy : ℝ)
-    (_h_strict : R₂ < I_u ∧ R₁ < I_xy)
-    (h_avg : BCRandomCodebookAveraging (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂) :
-    BCInnerBoundExistence (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ :=
-  bc_capacity_region_inner_bound_with_superposition_body
-    (α := α) (β₁ := β₁) (β₂ := β₂)
-    R₁ R₂ I_u I_xy _h_strict
-    (bc_random_codebook_averaging_exists
-      (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ h_avg)
-
-/-- **L-BC2-I-E' — BC inner bound, with random codebook averaging
-discharge, expected-error variant**. A variant of
-`bc_inner_bound_with_random_codebook` taking both the
-`BCExpectedErrorBound` and the `BCRandomCodebookAveraging` predicates
-as caller hypotheses. The former is structurally present (as
-`_h_expected`) to document the intended proof structure (Markov
-inequality from the expected error bound to the deterministic
-codebook), but operationally only the latter feeds the existence
-extraction. -/
-theorem bc_inner_bound_with_random_codebook_of_expected
-    (R₁ R₂ I_u I_xy : ℝ)
-    (_h_strict : R₂ < I_u ∧ R₁ < I_xy)
-    (_h_expected : BCExpectedErrorBound (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂)
-    (h_avg : BCRandomCodebookAveraging (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂) :
-    BCInnerBoundExistence (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ :=
-  bc_inner_bound_with_random_codebook
-    (α := α) (β₁ := β₁) (β₂ := β₂)
-    R₁ R₂ I_u I_xy _h_strict h_avg
-
-/-- **L-BC2-I-E'' — BC inner bound, fully combined (random codebook
-averaging + corner-point rate condition)**. The most caller-facing
-form: bundle the strict-rate predicate as the `<`-form of
-`InBCCapacityRegion`-shaped pair `(R₂ < I_u, R₁ < I_xy)` together with
-the random codebook averaging predicate, and conclude the inner bound
-existence.
-
-This packages the same content as `bc_inner_bound_with_random_codebook`
-under a slightly different surface; offered for symmetry with the
-analogous bundled forms of `bc_capacity_region_inner_bound_bundled_strict`
-of `BroadcastChannel.lean`. -/
-theorem bc_inner_bound_with_random_codebook_bundled
-    (R₁ R₂ I_u I_xy : ℝ)
-    (h_in_region : InBCCapacityRegion R₁ R₂ I_u I_xy)
-    (h_strict₂ : R₂ ≠ I_u)
-    (h_strict₁ : R₁ ≠ I_xy)
-    (h_avg : BCRandomCodebookAveraging (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂) :
-    BCInnerBoundExistence (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ := by
-  -- Convert the `≤` + `≠` form to `<`.
-  have h_lt₂ : R₂ < I_u :=
-    lt_of_le_of_ne h_in_region.bound_R₂_le_I_u h_strict₂
-  have h_lt₁ : R₁ < I_xy :=
-    lt_of_le_of_ne h_in_region.bound_R₁_le_I_xy h_strict₁
-  exact bc_inner_bound_with_random_codebook
-    (α := α) (β₁ := β₁) (β₂ := β₂)
-    R₁ R₂ I_u I_xy ⟨h_lt₂, h_lt₁⟩ h_avg
-
-end BCRandomCodebookPublish
 
 end InformationTheory.Shannon

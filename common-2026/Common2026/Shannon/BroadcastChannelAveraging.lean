@@ -319,20 +319,6 @@ theorem bc_random_codebook_averaging_of_markov
   obtain ⟨M₁, M₂, _eb, c, hM₁, hM₂, _heb0, _heb1⟩ := hN n hn
   exact ⟨M₁, M₂, c, hM₁, hM₂⟩
 
-/-- **L-BC2-I-K' — Markov-step to inner-bound existence (composed).**
-
-Composes `bc_random_codebook_averaging_of_markov` with the wave7
-existence extraction `bc_random_codebook_averaging_exists`: from the
-random codebook Markov predicate directly to `BCInnerBoundExistence`. -/
-theorem bc_inner_bound_existence_of_markov
-    (R₁ R₂ : ℝ)
-    (h_markov : IsBCRandomCodebookMarkov (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂) :
-    BCInnerBoundExistence (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ :=
-  bc_random_codebook_averaging_exists (α := α) (β₁ := β₁) (β₂ := β₂)
-    R₁ R₂
-    (bc_random_codebook_averaging_of_markov
-      (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ h_markov)
-
 end BCMarkovToAveraging
 
 /-! ## Section 5 — Publish-layer hook (L-BC2-I-L) -/
@@ -342,65 +328,50 @@ section BCAveragingPublish
 variable {α β₁ β₂ : Type*}
 variable [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
 
-/-- **L-BC2-I-L — BC inner bound, with averaging-body discharge**
-(Cover-Thomas Theorem 15.6.2, achievability + L-BC2-I averaging body,
-hypothesis pass-through form).
+/-- **L-BC2-I-L — BC random codebook averaging, with averaging-body
+discharge** (Cover-Thomas Theorem 15.6.2, achievability + L-BC2-I averaging
+body).
 
-A discharge wrapper extending the cumulative chain
+The present theorem discharges the L-BC2-I *averaging body* slot via the
+`IsBCRandomCodebookMarkov` predicate (the deterministic-codebook-with-rate
+witness produced by the random codebook averaging Markov step) and
+**derives** the **rate witness** `BCRandomCodebookAveraging` via the genuine
+bridge `bc_random_codebook_averaging_of_markov` (which drops the
+sub-`1`-error witness).
 
-* `bc_capacity_region_inner_bound`
-  (`BroadcastChannel.lean:580`),
-* `bc_capacity_region_inner_bound_with_superposition_aep`
-  (`BroadcastChannelSuperposition.lean:543`),
-* `bc_capacity_region_inner_bound_with_superposition_body`
-  (`BroadcastChannelSuperpositionBody.lean`),
-* `bc_inner_bound_with_random_codebook`
-  (`BroadcastChannelRandomCodebook.lean`).
-
-The present theorem extends that chain by discharging the L-BC2-I
-*averaging body* slot via the `IsBCRandomCodebookMarkov` predicate
-(the deterministic-codebook-with-rate witness produced by the random
-codebook averaging Markov step). The parent's `h_avg :
-BCRandomCodebookAveraging` is *no longer* a caller hypothesis — it is
-now derived from the Markov predicate via
-`bc_random_codebook_averaging_of_markov`.
-
-The two strict-inequality rate conditions remain (`_h_strict`), since
-they are operationally consumed by the existence claim's rate
-conditions. The remaining caller hypothesis is the random codebook
-Markov predicate itself (L-BC2-I-J). Its operational derivation —
-the `∫⁻`-to-finite-sum reduction on `Measure.pi^n` of `P_X` plus the
-per-event AEP decays of `bc_receiver1_achievability_body` /
+It deliberately does **not** claim the error-carrying
+`BCInnerBoundExistence W`: the rate-only post-averaging witness does not
+establish `averageErrorProb < ε` for a specific `W`, so the genuine bridge
+to achievability is the honest residual `BCSuperpositionAchievable`,
+consumed only by the headline `bc_capacity_region_inner_bound`. The
+operational derivation of `IsBCRandomCodebookMarkov` — the
+`∫⁻`-to-finite-sum reduction on `Measure.pi^n` of `P_X` plus the per-event
+AEP decays of `bc_receiver1_achievability_body` /
 `bc_receiver2_achievability_body` (~400-600 lines) — is the explicit
 retreat line (L-BC2-I-M), **deferred** to a successor seed. -/
 theorem bc_inner_bound_with_averaging
     (R₁ R₂ I_u I_xy : ℝ)
     (_h_strict : R₂ < I_u ∧ R₁ < I_xy)
     (h_markov : IsBCRandomCodebookMarkov (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂) :
-    BCInnerBoundExistence (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ :=
-  bc_inner_bound_with_random_codebook
-    (α := α) (β₁ := β₁) (β₂ := β₂)
-    R₁ R₂ I_u I_xy _h_strict
-    (bc_random_codebook_averaging_of_markov
-      (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ h_markov)
+    BCRandomCodebookAveraging (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ :=
+  bc_random_codebook_averaging_of_markov
+    (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ h_markov
 
-/-- **L-BC2-I-L' — BC inner bound, fully combined (averaging body +
-corner-point rate condition)**. The most caller-facing form: bundle the
-strict-rate predicate as the `≤` + `≠` form of `InBCCapacityRegion`
-together with the random codebook Markov predicate, and conclude the
-inner bound existence.
+/-- **L-BC2-I-L' — BC random codebook averaging, fully combined (averaging
+body + corner-point rate condition)**. The most caller-facing form: bundle
+the strict-rate predicate as the `≤` + `≠` form of `InBCCapacityRegion`
+together with the random codebook Markov predicate, and **derive** the rate
+witness `BCRandomCodebookAveraging`.
 
-This packages the same content as `bc_inner_bound_with_averaging` under
-a `InBCCapacityRegion`-bundled surface, mirroring
-`bc_inner_bound_with_random_codebook_bundled` of
-`BroadcastChannelRandomCodebook.lean`. -/
+This packages the same content as `bc_inner_bound_with_averaging` under a
+`InBCCapacityRegion`-bundled surface. -/
 theorem bc_inner_bound_with_averaging_bundled
     (R₁ R₂ I_u I_xy : ℝ)
     (h_in_region : InBCCapacityRegion R₁ R₂ I_u I_xy)
     (h_strict₂ : R₂ ≠ I_u)
     (h_strict₁ : R₁ ≠ I_xy)
     (h_markov : IsBCRandomCodebookMarkov (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂) :
-    BCInnerBoundExistence (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ := by
+    BCRandomCodebookAveraging (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ := by
   have h_lt₂ : R₂ < I_u :=
     lt_of_le_of_ne h_in_region.bound_R₂_le_I_u h_strict₂
   have h_lt₁ : R₁ < I_xy :=

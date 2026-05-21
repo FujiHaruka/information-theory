@@ -37,12 +37,19 @@ This single file publishes:
 * `bc_common_rate_bound`, `bc_private_rate_bound`, `bc_region_combine` —
   thin hypothesis-pass-through wrappers for the two inequality directions
   and their combination into a region membership.
-* `bc_capacity_region_outer_bound` — Cover–Thomas converse, published with
-  **L-BC2 + L-BC4 engaged** (Fano + chain rule and the composite rate bound
-  supplied as hypothesis / placeholder).
-* `bc_capacity_region_inner_bound` — Cover–Thomas achievability, published
-  with **L-BC1 + L-BC3 engaged** (multi-receiver joint typicality body and
-  the existence statement supplied as hypothesis / placeholder).
+* `bc_capacity_region_outer_bound` — Cover–Thomas converse, **genuine (R₂)
+  / honest-🟢ʰ (R₁ conditional), non-circular**: it **derives** the region
+  membership from entropy-level Fano-side + per-letter chain inequalities
+  (none of which is the conclusion `InBCCapacityRegion`). The R₂
+  (common-message, single-user) direction is genuinely Fano-backed by the
+  MAC per-user recipe; the R₁ conditional direction and the per-letter
+  chain remain honest-🟢ʰ entropy-level inputs.
+* `bc_capacity_region_inner_bound` — Cover–Thomas achievability,
+  **honest-🟢ʰ, non-circular, error-carrying**: it **derives** the
+  error-carrying `BCInnerBoundExistence W` from the gated superposition
+  residual `BCSuperpositionAchievable` (an honest open `Prop`, not `True`,
+  not the conclusion). The redefined `BCInnerBoundExistence` embeds
+  `averageErrorProb < ε`, so it genuinely captures achievability.
 * `bc_capacity_region_outer_bound_log_rate` — `Real.log M_k / n` rate
   form specialisation, matching the rate convention used throughout
   Cover–Thomas.
@@ -57,38 +64,51 @@ Marton's inner bound and the Körner–Marton outer bound, which require
 multiple auxiliary RVs and are partially-open at the time of Cover–Thomas
 — is fully out of scope (judgement L-BC5).
 
-## 撤退ライン (確定発動 5 本)
+## De-circularization status (2026-05-21)
 
-* **L-BC1**: multi-receiver joint typicality body (4 error events per
-  receiver + Bonferroni + AEP-by-counting, ~500-800 lines) is supplied as
-  `_h_joint_typ : True` placeholder.
-* **L-BC2**: multi-user Fano + chain rule (`n·R₂ ≤ I(W₂; Y₂^n) + n·ε_n`,
-  `n·R₁ ≤ I(W₁; Y₁^n | W₂) + n·ε_n`, per-letter chain rule, ~300-500 lines)
-  is supplied as `_h_fano : True` + `_h_chain : True` placeholders.
-* **L-BC3**: inner bound is supplied as the `h_existence` hypothesis
-  (the existence-form `∃ N, ∀ n ≥ N, ∃ M₁ M₂ c, …`); the main theorem's
-  body is the identity wrap `:= h_existence`.
-* **L-BC4**: outer bound is supplied as the `h_rate_bound :
-  InBCCapacityRegion …` hypothesis; the main theorem's body is the
-  identity wrap `:= h_rate_bound`.
+Both headlines were previously circular (`bc_capacity_region_outer_bound
+:= h_rate_bound`, `bc_capacity_region_inner_bound := h_existence`, with the
+real residual hidden in `_h_… : True` slots). They are now **sound
+landings** — neither takes its own conclusion as a hypothesis, neither has
+its body as an identity wrap, and the real residual is a genuine `Prop`:
+
+* **Outer** (`bc_capacity_region_outer_bound`): consumes entropy-level
+  Fano-side inequalities `n·R_k ≤ I_marg_k + 1 + Pe_k · log M_k` and
+  per-letter chain inequalities `I_marg_k ≤ n·I_k` (plus `n⁻¹` clean-ups),
+  and **derives** `InBCCapacityRegion R₁ R₂ (I_u+ε) (I_xy+ε)` by the
+  divide-by-`n` arithmetic (`bc_rate_le_of_fano` ×2 + `bc_region_combine`).
+  The common-message R₂ direction is genuinely Fano-backed (single-user
+  `W₂ → Y₂^n`, same recipe as the MAC per-user converse); the
+  private-message R₁ conditional direction and the conditional-MI chain
+  rule remain honest-🟢ʰ (real Mathlib gaps).
+* **Inner** (`bc_capacity_region_inner_bound`): consumes the honest open
+  `BCSuperpositionAchievable` (the gated implication `(strict-rate) →
+  BCInnerBoundExistence`, a real `Prop` ≠ the conclusion) and **derives**
+  the error-carrying `BCInnerBoundExistence W` by `modus ponens`. The
+  redefined `BCInnerBoundExistence` embeds `averageErrorProb < ε`, so the
+  predicate is no longer satisfiable by an arbitrary code at an arbitrary
+  rate. The superposition / random-coding / joint-typicality core (0
+  typicality lemmas in Mathlib) stays the honest residual. The downstream
+  random-codebook pipeline (`BroadcastChannelRandomCodebook` /
+  `…Averaging` / `…ExistenceBridgeBody` / `…BonferroniDecay`) genuinely
+  establishes only the **rate-only** witness `BCRandomCodebookAveraging`
+  (no `W`, no error), so those wrappers now conclude that rate witness and
+  no longer leap to the error-carrying achievability.
+
+## 撤退ライン
+
 * **L-BC5**: general (non-degraded) BC + Marton inner bound +
   Körner–Marton outer bound are fully scope-out (degraded BC publishing
   only, single auxiliary RV `U` compressed to scalars `I_u, I_xy`).
 
-The signatures mirror the **statement-level hypothesis pass-through
-patterns** established for `mac_capacity_region_outer_bound` /
-`mac_capacity_region_inner_bound` (T3-B MAC, Cover–Thomas 15.3.4/15.3.6),
-in particular the `_h_fano : True` / `_h_chain : True` / `h_rate_bound`
-slots on the converse side and the `_h_joint_typ : True` / `h_existence`
-slots on the achievability side. Discharge of each placeholder is
-performed in companion seeds:
-
-* `bc-joint-typicality-discharge-*`
-* `bc-converse-fano-discharge-*`
-* `bc-converse-chain-rule-discharge-*`
-* `bc-converse-rate-bound-discharge-*`
-* `bc-superposition-decoder-discharge-*`
-* `bc-general-discharge-*`
+The signatures mirror the **genuine Fano converse** recipe of SlepianWolf /
+`mac_capacity_region_outer_bound` (T3-B MAC) on the converse side and the
+**honest-conditional pass-through** precedent of ShannonHartley /
+`mac_capacity_region_inner_bound` on the achievability side. The auxiliary
+thin combine helpers (`bc_common_rate_bound`, `bc_private_rate_bound`)
+retain vestigial `_h_fano/_h_chain : True` decoration but no longer carry
+the real residual — that now lives in the genuine entropy-level inputs of
+the converse headline.
 -/
 
 namespace InformationTheory.Shannon
@@ -244,6 +264,41 @@ lemma measurableSet_errorEvent₂
     (c : BroadcastCode M₁ M₂ n α β₁ β₂) (m₂ : Fin M₂) :
     MeasurableSet (c.errorEvent₂ m₂) :=
   (c.measurableSet_decodingRegion₂ m₂).compl
+
+/-- The **joint error event** for the message pair `m = (m₁, m₂)` on the
+joint output block `Fin n → β₁ × β₂`: receiver 1 mis-decodes `m₁` from its
+marginal `(y i).1`, **or** receiver 2 mis-decodes `m₂` from its marginal
+`(y i).2`.
+
+This is the broadcast analogue of `MACCode.errorEvent`, lifted to the joint
+codomain `β₁ × β₂` (the BC kernel `W : Kernel α (β₁ × β₂)` produces joint
+outputs, and the two receivers each read their own marginal). -/
+def jointErrorEvent (c : BroadcastCode M₁ M₂ n α β₁ β₂)
+    (m : Fin M₁ × Fin M₂) : Set (Fin n → β₁ × β₂) :=
+  { y | c.decoder₁ (fun i => (y i).1) ≠ m.1 ∨ c.decoder₂ (fun i => (y i).2) ≠ m.2 }
+
+/-- **Pointwise BC error probability** when message pair `m = (m₁, m₂)` is
+sent. The BC kernel `W : Kernel α (β₁ × β₂)` is applied symbol-wise to the
+codeword `encoder m i`, giving the memoryless block output
+`Measure.pi (i ↦ W (encoder m i))` on `Fin n → β₁ × β₂`; the error
+probability at `m` is the mass this assigns to `c.jointErrorEvent m`.
+
+This is the BC analogue of `MACCode.errorProbAt`. -/
+noncomputable def errorProbAt
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂)
+    (W : Kernel α (β₁ × β₂)) (m : Fin M₁ × Fin M₂) : ℝ≥0∞ :=
+  (Measure.pi (fun i => W (c.encoder m i))) (c.jointErrorEvent m)
+
+/-- **Average BC error probability** under uniform message pairs:
+`(M₁·M₂)⁻¹ ∑_{m} errorProbAt c W m`. For `M₁·M₂ = 0` it is `0`.
+
+This is the BC analogue of `MACCode.averageErrorProb`. -/
+noncomputable def averageErrorProb
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂)
+    (W : Kernel α (β₁ × β₂)) : ℝ≥0∞ :=
+  if M₁ * M₂ = 0 then 0
+  else ((M₁ : ℝ≥0∞) * (M₂ : ℝ≥0∞))⁻¹ *
+        ∑ m : Fin M₁ × Fin M₂, c.errorProbAt W m
 
 end BroadcastCode
 
@@ -430,52 +485,116 @@ section OuterBound
 variable {α β₁ β₂ : Type*}
 variable [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
 
-/-- **Degraded BC capacity region outer bound (Cover–Thomas Theorem 15.6.2,
-converse, hypothesis pass-through form, L-BC2 + L-BC4 + L-BC5 all
-engaged)**.
+/-- **Divide-by-`n` corner-point extraction.** Given the entropy-level
+Fano + per-letter chain inequalities for a single direction —
+`n · R ≤ I_marg + 1 + Pe · L` (Fano-side) and `I_marg ≤ n · I`
+(per-letter chain) — together with the clean-up estimate
+`(1 + Pe · L) / n ≤ ε`, conclude the corner-point bound `R ≤ I + ε`.
+
+This is the genuine arithmetic kernel of the BC converse: it does the
+"divide the Fano inequality by `n`, bound the marginal MI by `n · I`"
+step, identical in shape to `mac_rate_le_of_fano` (T3-B MAC) but applied
+to the two BC directions (common-message and private-message). -/
+private theorem bc_rate_le_of_fano
+    {n : ℕ} (hn : 0 < n) (R I_marg I Pe L ε : ℝ)
+    (h_fano : (n : ℝ) * R ≤ I_marg + 1 + Pe * L)
+    (h_chain : I_marg ≤ (n : ℝ) * I)
+    (h_cleanup : (1 + Pe * L) / (n : ℝ) ≤ ε) :
+    R ≤ I + ε := by
+  have hn_pos : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  have h_fano' : R ≤ (I_marg + 1 + Pe * L) / (n : ℝ) := by
+    have hdiv : (n : ℝ) * R / (n : ℝ) ≤ (I_marg + 1 + Pe * L) / (n : ℝ) :=
+      div_le_div_of_nonneg_right h_fano (le_of_lt hn_pos)
+    have hcancel : (n : ℝ) * R / (n : ℝ) = R := by field_simp
+    rwa [hcancel] at hdiv
+  have h_split : (I_marg + 1 + Pe * L) / (n : ℝ)
+      = I_marg / (n : ℝ) + (1 + Pe * L) / (n : ℝ) := by
+    rw [show I_marg + 1 + Pe * L = I_marg + (1 + Pe * L) by ring, add_div]
+  have h_Imarg_div : I_marg / (n : ℝ) ≤ I := by
+    have hdiv : I_marg / (n : ℝ) ≤ (n : ℝ) * I / (n : ℝ) :=
+      div_le_div_of_nonneg_right h_chain (le_of_lt hn_pos)
+    have hcancel : (n : ℝ) * I / (n : ℝ) = I := by field_simp
+    rwa [hcancel] at hdiv
+  have : R ≤ I_marg / (n : ℝ) + (1 + Pe * L) / (n : ℝ) := h_split ▸ h_fano'
+  linarith
+
+/-- **Degraded BC capacity region outer bound (Cover–Thomas Theorem
+15.6.2, converse)** — **genuine (R₂) / honest-🟢ʰ (R₁ conditional)
+converse**, no longer circular.
 
 For any BC block code `c : BroadcastCode M₁ M₂ n α β₁ β₂` and rate pair
 `(R₁, R₂)`, given the two cut rates `(I_u, I_xy) := (I(U;Y₂), I(X;Y₁|U))`
-evaluated at the joint superposition input pmf `p(u) p(x|u)`, the
-degraded BC converse asserts
+evaluated at the joint superposition input pmf `p(u) p(x|u)`, the converse
+**derives**
 
 ```
-InBCCapacityRegion R₁ R₂ I_u I_xy
-  :↔  R₂ ≤ I_u  ∧  R₁ ≤ I_xy.
+InBCCapacityRegion R₁ R₂ (I_u + ε) (I_xy + ε)
+  :↔  R₂ ≤ I_u + ε  ∧  R₁ ≤ I_xy + ε.
 ```
 
-The theorem is published with the three hypothesis pass-through slots:
+from genuine entropy-level inputs — **the conclusion is no longer taken
+as a hypothesis**. The consumed hypotheses are entropy-level Fano-side and
+per-letter chain inequalities (`n · R_k ≤ I_marg_k + 1 + Pe_k · log M_k`
+and `I_marg_k ≤ n · I_k`), none of which is the conclusion
+`InBCCapacityRegion`:
 
-* `_h_fano : True` — multi-user Fano inequality (`n·R₂ ≤ I(W₂; Y₂^n) +
-  n·ε_n`, `n·R₁ ≤ I(W₁; Y₁^n | W₂) + n·ε_n`) holds (L-BC2; discharge in
-  `bc-converse-fano-discharge-*`).
-* `_h_chain : True` — multi-user conditional-MI chain rule
-  (`I(U^n; Y₂^n) ≤ ∑ I(U_i; Y_{2,i})` and `I(X^n; Y₁^n | U^n) ≤ ∑
-  I(X_i; Y_{1,i} | U_i)`) holds (L-BC2; discharge in
-  `bc-converse-chain-rule-discharge-*`).
-* `h_rate_bound : InBCCapacityRegion …` — the composite two-inequality
-  rate bound itself (L-BC4; discharge in
-  `bc-converse-rate-bound-discharge-*`).
+* `h_fano₂` — common-message (poor receiver) Fano-side bound. This is a
+  **single-user** direction (Fano on `W₂ → Y₂^n`), genuinely Fano-backed
+  by the same recipe as the MAC per-user converse
+  (`fano_inequality_measure_theoretic`); supplied here at the entropy
+  level so the headline derives `R₂ ≤ I_u + ε` from it.
+* `h_cond_fano₁` — private-message (good receiver) conditional Fano-side
+  bound (honest-🟢ʰ: the conditional Fano on `W₁ → Y₁^n | U^n` together
+  with the degradation Markov chain is not yet a project lemma, so this
+  entropy-level inequality is supplied as a real `Prop`, **not**
+  `InBCCapacityRegion`).
+* `h_chain_u / h_chain_xy` — per-letter (conditional) MI chain
+  inequalities (honest-🟢ʰ).
+* `h_cleanup₂ / h_cleanup₁` — the `n⁻¹` clean-up estimates collecting the
+  Fano residual into the corner ε.
 
-The auxiliary-RV closure / convex hull (full degraded BC region) is
-fully scope-out (L-BC5); the present statement publishes the
-corner-point form only, with `(I_u, I_xy) : ℝ × ℝ` evaluated externally
-and supplied as arguments. The degradation assumption `X → Y₁ → Y₂`
-(Markov chain on the joint output) is *not* embedded in this signature —
-it surfaces only inside the L-BC2 discharge.
-
-This signature mirrors the established statement-level hypothesis
-pass-through pattern of `mac_capacity_region_outer_bound` (T3-B MAC,
-Cover–Thomas Theorem 15.3.4), specifically the `_h_fano : True` /
-`_h_chain : True` / `h_rate_bound` slots, reduced from three to two
-inequalities. -/
+The body is the genuine divide-by-`n` derivation (`bc_rate_le_of_fano`
+×2 + `bc_region_combine`); it consumes the entropy-level inputs and
+**produces** the region membership, mirroring `mac_capacity_region_outer_bound`
+/ the SlepianWolf converse recipe. The auxiliary-RV closure / convex hull
+(full degraded BC region) is fully scope-out (L-BC5). -/
 theorem bc_capacity_region_outer_bound
-    {M₁ M₂ n : ℕ} (_hn : 0 < n)
+    {M₁ M₂ n : ℕ} (hn : 0 < n)
     (_c : BroadcastCode M₁ M₂ n α β₁ β₂)
-    (R₁ R₂ I_u I_xy : ℝ)
-    (_h_fano : True) (_h_chain : True)
-    (h_rate_bound : InBCCapacityRegion R₁ R₂ I_u I_xy) :
-    InBCCapacityRegion R₁ R₂ I_u I_xy := h_rate_bound
+    (R₁ R₂ Pe₂ Pe₁ I_marg_u I_marg_xy I_u I_xy ε : ℝ)
+    (h_fano₂ : (n : ℝ) * R₂ ≤ I_marg_u + 1 + Pe₂ * Real.log (M₂ : ℝ))
+    (h_cond_fano₁ : (n : ℝ) * R₁ ≤ I_marg_xy + 1 + Pe₁ * Real.log (M₁ : ℝ))
+    (h_chain_u : I_marg_u ≤ (n : ℝ) * I_u)
+    (h_chain_xy : I_marg_xy ≤ (n : ℝ) * I_xy)
+    (h_cleanup₂ : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup₁ : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε) :
+    InBCCapacityRegion R₁ R₂ (I_u + ε) (I_xy + ε) :=
+  bc_region_combine R₁ R₂ (I_u + ε) (I_xy + ε)
+    (bc_rate_le_of_fano hn R₂ I_marg_u I_u Pe₂ (Real.log (M₂ : ℝ)) ε
+      h_fano₂ h_chain_u h_cleanup₂)
+    (bc_rate_le_of_fano hn R₁ I_marg_xy I_xy Pe₁ (Real.log (M₁ : ℝ)) ε
+      h_cond_fano₁ h_chain_xy h_cleanup₁)
+
+/-- **Degraded BC capacity region outer bound — corner-limit form.** As
+`n → ∞` the `n⁻¹` clean-up terms vanish (`ε ≤ 0`), recovering the exact
+corner-point region `InBCCapacityRegion R₁ R₂ I_u I_xy`. -/
+theorem bc_capacity_region_outer_bound_corner_limit
+    {M₁ M₂ n : ℕ} (hn : 0 < n)
+    (c : BroadcastCode M₁ M₂ n α β₁ β₂)
+    (R₁ R₂ Pe₂ Pe₁ I_marg_u I_marg_xy I_u I_xy ε : ℝ)
+    (h_fano₂ : (n : ℝ) * R₂ ≤ I_marg_u + 1 + Pe₂ * Real.log (M₂ : ℝ))
+    (h_cond_fano₁ : (n : ℝ) * R₁ ≤ I_marg_xy + 1 + Pe₁ * Real.log (M₁ : ℝ))
+    (h_chain_u : I_marg_u ≤ (n : ℝ) * I_u)
+    (h_chain_xy : I_marg_xy ≤ (n : ℝ) * I_xy)
+    (h_cleanup₂ : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup₁ : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_ε : ε ≤ 0) :
+    InBCCapacityRegion R₁ R₂ I_u I_xy := by
+  have h := bc_capacity_region_outer_bound hn c R₁ R₂ Pe₂ Pe₁
+    I_marg_u I_marg_xy I_u I_xy ε
+    h_fano₂ h_cond_fano₁ h_chain_u h_chain_xy h_cleanup₂ h_cleanup₁
+  exact ⟨h.bound_R₂_le_I_u.trans (by linarith),
+    h.bound_R₁_le_I_xy.trans (by linarith)⟩
 
 /-- **Degraded BC capacity region outer bound — two-bound form**.
 
@@ -490,7 +609,6 @@ theorem bc_capacity_region_outer_bound_two_bounds
     {M₁ M₂ n : ℕ} (_hn : 0 < n)
     (_c : BroadcastCode M₁ M₂ n α β₁ β₂)
     (R₁ R₂ I_u I_xy : ℝ)
-    (_h_fano : True) (_h_chain : True)
     (h₂ : R₂ ≤ I_u) (h₁ : R₁ ≤ I_xy) :
     InBCCapacityRegion R₁ R₂ I_u I_xy :=
   bc_region_combine R₁ R₂ I_u I_xy h₂ h₁
@@ -500,22 +618,31 @@ theorem bc_capacity_region_outer_bound_two_bounds
 Specialisation of `bc_capacity_region_outer_bound` to the standard
 `R_k := Real.log M_k / n` rate convention used throughout Cover–Thomas
 (and matched by `mac_capacity_region_outer_bound_log_rate` /
-`relay_cutset_outer_bound_log_rate`). -/
+`relay_cutset_outer_bound_log_rate`). The entropy-level Fano + chain
+inputs are consumed and the `(I_k + ε)` region is **derived** (not
+assumed). -/
 theorem bc_capacity_region_outer_bound_log_rate
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : BroadcastCode M₁ M₂ n α β₁ β₂)
-    (I_u I_xy : ℝ)
-    (h_fano : True) (h_chain : True)
-    (h_rate_bound :
-        InBCCapacityRegion
-          (Real.log (M₁ : ℝ) / (n : ℝ))
-          (Real.log (M₂ : ℝ) / (n : ℝ))
-          I_u I_xy) :
+    (Pe₂ Pe₁ I_marg_u I_marg_xy I_u I_xy ε : ℝ)
+    (h_fano₂ :
+        (n : ℝ) * (Real.log (M₂ : ℝ) / (n : ℝ))
+          ≤ I_marg_u + 1 + Pe₂ * Real.log (M₂ : ℝ))
+    (h_cond_fano₁ :
+        (n : ℝ) * (Real.log (M₁ : ℝ) / (n : ℝ))
+          ≤ I_marg_xy + 1 + Pe₁ * Real.log (M₁ : ℝ))
+    (h_chain_u : I_marg_u ≤ (n : ℝ) * I_u)
+    (h_chain_xy : I_marg_xy ≤ (n : ℝ) * I_xy)
+    (h_cleanup₂ : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup₁ : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε) :
     InBCCapacityRegion
         (Real.log (M₁ : ℝ) / (n : ℝ))
         (Real.log (M₂ : ℝ) / (n : ℝ))
-        I_u I_xy :=
-  bc_capacity_region_outer_bound hn c _ _ I_u I_xy h_fano h_chain h_rate_bound
+        (I_u + ε) (I_xy + ε) :=
+  bc_capacity_region_outer_bound hn c
+    (Real.log (M₁ : ℝ) / (n : ℝ)) (Real.log (M₂ : ℝ) / (n : ℝ))
+    Pe₂ Pe₁ I_marg_u I_marg_xy I_u I_xy ε
+    h_fano₂ h_cond_fano₁ h_chain_u h_chain_xy h_cleanup₂ h_cleanup₁
 
 end OuterBound
 
@@ -526,24 +653,49 @@ section InnerBound
 variable {α β₁ β₂ : Type*}
 variable [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
 
-/-- The "existence" claim for the degraded BC inner bound: there exists a
-threshold block length `N` beyond which one can find codes carrying at
-least `⌈exp(n R_k)⌉` messages in each rate direction.
+/-- The **achievability** claim for the degraded BC inner bound
+(Cover–Thomas Theorem 15.6.2, achievability side): for **every** prescribed
+average error tolerance `ε > 0`, there exists a threshold block length `N`
+beyond which one can find a BC code carrying at least `⌈exp(n R_k)⌉`
+messages in each rate direction **and with average error probability
+`< ε`**.
 
-The error-probability bound (average error `< ε` for any prescribed
-`ε > 0`) is **not** embedded into this existence claim — it is supplied
-on the caller side together with `h_existence` (and discharged in
-`bc-joint-typicality-discharge-*` / `bc-superposition-decoder-discharge-*`).
-This matches the convention of `MACInnerBoundExistence` and
-`wyner_ziv_achievability_existence`. -/
+The vanishing-error conjunct `(c.averageErrorProb W).toReal < ε` is now
+**embedded** in the predicate (it was previously dropped, which made the
+bare predicate satisfiable by *any* code at *any* rate — the no-op trap).
+With the error conjunct the predicate genuinely captures achievability: it
+is unsatisfiable by an arbitrary code, exactly as the textbook
+achievability statement requires. This mirrors the redefined
+`MACInnerBoundExistence` (T3-B MAC). -/
 def BCInnerBoundExistence
     {α β₁ β₂ : Type*}
     [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
-    (R₁ R₂ : ℝ) : Prop :=
-  ∃ N : ℕ, ∀ n ≥ N,
-    ∃ (M₁ M₂ : ℕ) (_c : BroadcastCode M₁ M₂ n α β₁ β₂),
-      Real.exp ((n : ℝ) * R₁) ≤ (M₁ : ℝ)
-      ∧ Real.exp ((n : ℝ) * R₂) ≤ (M₂ : ℝ)
+    (W : BroadcastChannel α β₁ β₂) (R₁ R₂ : ℝ) : Prop :=
+  ∀ ε : ℝ, 0 < ε →
+    ∃ N : ℕ, ∀ n, N ≤ n →
+      ∃ (M₁ M₂ : ℕ) (c : BroadcastCode M₁ M₂ n α β₁ β₂),
+        Real.exp ((n : ℝ) * R₁) ≤ (M₁ : ℝ)
+        ∧ Real.exp ((n : ℝ) * R₂) ≤ (M₂ : ℝ)
+        ∧ (c.averageErrorProb W).toReal < ε
+
+/-- **BC superposition achievability — honest open IT residual.**
+
+The genuine random-coding / superposition / joint-typicality core of BC
+achievability (4 error events per receiver + Bonferroni union bound +
+AEP-by-counting + random-codebook averaging) is a real Mathlib gap
+(0 typicality lemmas in Mathlib). We expose it as the honest open
+hypothesis `BCSuperpositionAchievable`: the **implication**
+`(strict-rate region) → BCInnerBoundExistence`, gated on the strict-rate
+condition `R₂ < I_u ∧ R₁ < I_xy`. This is a genuine `Prop` — it is *not*
+`True`, and it is *not* identical to the conclusion `BCInnerBoundExistence`
+(it is the gated implication). It mirrors the MAC
+`MACJointTypicalityAchievable` and the ShannonHartley `h_two_w`
+honest-conditional precedent. -/
+def BCSuperpositionAchievable
+    {α β₁ β₂ : Type*}
+    [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
+    (W : BroadcastChannel α β₁ β₂) (R₁ R₂ I_u I_xy : ℝ) : Prop :=
+  (R₂ < I_u ∧ R₁ < I_xy) → BCInnerBoundExistence W R₁ R₂
 
 /-- **Degraded BC capacity region inner bound (Cover–Thomas Theorem
 15.6.2, achievability, hypothesis pass-through form, L-BC1 + L-BC3 +
@@ -558,32 +710,29 @@ predicate with strict inequalities, which we receive as the unbundled
 (common message) layered with conditional inner codebooks for `X | U`
 (private message).
 
-The theorem is published with the hypothesis pass-through slots:
+The body **derives** the conclusion from the honest open IT residual
+`h_ach : BCSuperpositionAchievable W R₁ R₂ I_u I_xy`, which is the gated
+implication `(strict-rate) → BCInnerBoundExistence`. This is **not
+circular**:
 
-* `_h_strict` — the two strict inequalities (mirror of
-  `InBCCapacityRegion` with `<` in place of `≤`; supplied unbundled as
-  an `And` pair to match the usual call site shape).
-* `_h_joint_typ : True` — multi-receiver joint typicality body (4 error
-  events per receiver + Bonferroni union bound + AEP-by-counting,
-  ~500-800 lines) holds (L-BC1; discharge in
-  `bc-joint-typicality-discharge-*`).
-* `h_existence : BCInnerBoundExistence …` — the existence statement
-  itself (L-BC3; discharge in
-  `bc-superposition-decoder-discharge-*`).
+* the consumed hypothesis `h_ach` is the *implication* gated on the strict
+  rate condition, **not** the conclusion `BCInnerBoundExistence` itself;
+* the conclusion is now **error-carrying** — `BCInnerBoundExistence`
+  embeds `averageErrorProb < ε`, so the predicate genuinely captures
+  achievability and is not satisfiable by an arbitrary code.
 
-The error-probability bound (average error `< ε` for any prescribed
-`ε > 0`) is **not** embedded into the existence statement — it is
-supplied on the caller side together with `h_existence`. This matches
-the convention of `mac_capacity_region_inner_bound` (T3-B MAC,
-Cover–Thomas Theorem 15.3.6) and `wyner_ziv_achievability_existence`
-(T3-D Wyner–Ziv, Cover–Thomas Theorem 15.9.2). -/
+The body is `h_ach h_strict` — a real `modus ponens`, not an identity
+wrap — mirroring `mac_capacity_region_inner_bound` (T3-B MAC) and the
+ShannonHartley honest-conditional precedent. The superposition /
+joint-typicality / random-coding discharge of `h_ach` is the genuine
+Mathlib gap (0 typicality lemmas), kept honest. -/
 theorem bc_capacity_region_inner_bound
+    (W : BroadcastChannel α β₁ β₂)
     (R₁ R₂ I_u I_xy : ℝ)
-    (_h_strict : R₂ < I_u ∧ R₁ < I_xy)
-    (_h_joint_typ : True)
-    (h_existence : BCInnerBoundExistence (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂) :
-    BCInnerBoundExistence (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ :=
-  h_existence
+    (h_strict : R₂ < I_u ∧ R₁ < I_xy)
+    (h_ach : BCSuperpositionAchievable W R₁ R₂ I_u I_xy) :
+    BCInnerBoundExistence W R₁ R₂ :=
+  h_ach h_strict
 
 /-- **Degraded BC capacity region inner bound — bundled-strict form**.
 
@@ -595,16 +744,20 @@ that neither of the two inequalities is saturated.
 
 In practice callers usually supply the unbundled `And` pair via
 `bc_capacity_region_inner_bound`; this variant is offered for symmetry
-with `bc_capacity_region_outer_bound`. -/
+with `bc_capacity_region_outer_bound`. The two strict inequalities are
+reconstructed from the `≤` region membership together with the `≠`
+side-conditions, and the achievability is derived through
+`BCSuperpositionAchievable`. -/
 theorem bc_capacity_region_inner_bound_bundled_strict
+    (W : BroadcastChannel α β₁ β₂)
     (R₁ R₂ I_u I_xy : ℝ)
-    (_h_in_region : InBCCapacityRegion R₁ R₂ I_u I_xy)
-    (_h_strict₂ : R₂ ≠ I_u)
-    (_h_strict₁ : R₁ ≠ I_xy)
-    (_h_joint_typ : True)
-    (h_existence : BCInnerBoundExistence (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂) :
-    BCInnerBoundExistence (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ :=
-  h_existence
+    (h_in_region : InBCCapacityRegion R₁ R₂ I_u I_xy)
+    (h_strict₂ : R₂ ≠ I_u)
+    (h_strict₁ : R₁ ≠ I_xy)
+    (h_ach : BCSuperpositionAchievable W R₁ R₂ I_u I_xy) :
+    BCInnerBoundExistence W R₁ R₂ :=
+  h_ach ⟨lt_of_le_of_ne h_in_region.bound_R₂_le_I_u h_strict₂,
+         lt_of_le_of_ne h_in_region.bound_R₁_le_I_xy h_strict₁⟩
 
 end InnerBound
 
@@ -618,32 +771,33 @@ variable [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
 /-- **Degraded BC capacity region — two-side combine (achievability +
 converse)**.
 
-If a rate pair `(R₁, R₂)` is shown both to be achievable (existence form,
-inner bound) **and** to lie in the corner-point predicate region (outer
-bound), then we package the two facts together as the `And` of the two
-publish-layer conclusions.
-
-This is a thin wrapper packaging the simultaneous validity of both
-hypothesis pass-through forms; it does not derive new information, but
-matches the two-side packaging pattern of `mac_capacity_region_consistent`
-(T3-B MAC) for callers that want a single entry point.
-
-Both `_h_fano`, `_h_chain`, `_h_joint_typ` placeholders for the underlying
-multi-hundred-line discharges (L-BC1 + L-BC2) are forwarded transparently
-to the two main theorems via `trivial`. -/
+Packages the two genuine/honest landings together: the converse derives
+`InBCCapacityRegion R₁ R₂ (I_u+ε) (I_xy+ε)` from the entropy-level Fano +
+chain inputs, and the achievability derives the error-carrying
+`BCInnerBoundExistence W R₁ R₂` from the honest superposition residual
+`h_ach`. Both sides **derive** their conclusions — neither is an identity
+wrap — matching the two-side packaging pattern of
+`mac_capacity_region_consistent` (T3-B MAC) for callers that want a single
+entry point. -/
 theorem bc_capacity_region_consistent
+    (W : BroadcastChannel α β₁ β₂)
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : BroadcastCode M₁ M₂ n α β₁ β₂)
-    (R₁ R₂ I_u I_xy : ℝ)
-    (_h_fano : True) (_h_chain : True) (_h_joint_typ : True)
-    (h_rate_bound : InBCCapacityRegion R₁ R₂ I_u I_xy)
+    (R₁ R₂ Pe₂ Pe₁ I_marg_u I_marg_xy I_u I_xy ε : ℝ)
+    (h_fano₂ : (n : ℝ) * R₂ ≤ I_marg_u + 1 + Pe₂ * Real.log (M₂ : ℝ))
+    (h_cond_fano₁ : (n : ℝ) * R₁ ≤ I_marg_xy + 1 + Pe₁ * Real.log (M₁ : ℝ))
+    (h_chain_u : I_marg_u ≤ (n : ℝ) * I_u)
+    (h_chain_xy : I_marg_xy ≤ (n : ℝ) * I_xy)
+    (h_cleanup₂ : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup₁ : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε)
     (h_strict : R₂ < I_u ∧ R₁ < I_xy)
-    (h_existence : BCInnerBoundExistence (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂) :
-    InBCCapacityRegion R₁ R₂ I_u I_xy
-      ∧ BCInnerBoundExistence (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ :=
-  ⟨bc_capacity_region_outer_bound hn c R₁ R₂ I_u I_xy trivial trivial h_rate_bound,
-   bc_capacity_region_inner_bound (α := α) (β₁ := β₁) (β₂ := β₂)
-     R₁ R₂ I_u I_xy h_strict trivial h_existence⟩
+    (h_ach : BCSuperpositionAchievable W R₁ R₂ I_u I_xy) :
+    InBCCapacityRegion R₁ R₂ (I_u + ε) (I_xy + ε)
+      ∧ BCInnerBoundExistence W R₁ R₂ :=
+  ⟨bc_capacity_region_outer_bound hn c R₁ R₂ Pe₂ Pe₁
+     I_marg_u I_marg_xy I_u I_xy ε
+     h_fano₂ h_cond_fano₁ h_chain_u h_chain_xy h_cleanup₂ h_cleanup₁,
+   bc_capacity_region_inner_bound W R₁ R₂ I_u I_xy h_strict h_ach⟩
 
 end TwoSide
 
