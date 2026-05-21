@@ -377,4 +377,106 @@ theorem lz78Distinct_count_div_le_envelope
 
 end Envelope
 
+/-! ## §5. Achievability structure assembly (Phase Z4) -/
+
+section Assembly
+
+variable {α Ω : Type*}
+variable [Fintype α] [DecidableEq α] [Nonempty α]
+  [MeasurableSpace α] [MeasurableSingletonClass α]
+variable [MeasurableSpace Ω]
+
+/-- **Vanishing achievability slack** (ω-independent): the per-phrase
+dictionary-cost overhead, equal to the `1/(n·log 2)` rounding gap of the
+`log₂(c+1)` term plus the count envelope `c/n` times the alphabet bit cost
+`Nat.log 2 |α| + 2`. Both summands vanish, so `lz78AchievSlack → 0`. -/
+noncomputable def lz78AchievSlack (n : ℕ) : ℝ :=
+  1 / ((n : ℝ) * Real.log 2)
+    + (2 * (8 * Real.log (Fintype.card α + 1)) / Real.log (n : ℝ)
+        + 1 / Real.sqrt (n : ℝ))
+      * ((Nat.log 2 (Fintype.card α) : ℝ) + 2)
+
+/-- **Per-block, per-path Ziv upper bound** (Phase Z4 core step): for `n ≥ 2`
+and a fixed observed path whose `n`-block cylinder has positive mass, the
+bit rate of the distinct code is below the base-2 per-block estimator plus
+the vanishing slack. Combines the genuine base-2 Ziv inequality
+(`ziv_count_mul_logb_le_neg_logb_blockProb`, gated on the combinatorial
+core) with the bit-length expansion and the deterministic count envelope. -/
+theorem lz78DistinctRate_le_blockLogAvg₂_add_slack
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
+    (hcore : IsLZ78ZivCombinatorialCore μ p)
+    (hfac : IsLZ78PerPathParsingFactorization μ p)
+    (n : ℕ) (hn : 2 ≤ n) (ω : Ω)
+    (hPn : 0 < (μ.map (p.blockRV n)).real {p.blockRV n ω}) :
+    (lz78DistinctEncodingLength n (p.blockRV n ω) : ℝ) / (n : ℝ)
+      ≤ blockLogAvg₂ μ p n ω + lz78AchievSlack (α := α) n := by
+  sorry
+
+/-- **The achievability slack vanishes**: `lz78AchievSlack n → 0` as
+`n → ∞`. Both terms vanish (`1/(n log 2) → 0`; the envelope `2K/log n + 1/√n
+→ 0` times the constant alphabet cost). -/
+theorem lz78AchievSlack_tendsto_zero :
+    Filter.Tendsto (lz78AchievSlack (α := α)) Filter.atTop (𝓝 (0 : ℝ)) := by
+  unfold lz78AchievSlack
+  -- `(n : ℝ) → ∞`, `Real.log n → ∞`, `Real.sqrt n → ∞`.
+  have hcast : Filter.Tendsto (fun n : ℕ => (n : ℝ)) Filter.atTop Filter.atTop :=
+    tendsto_natCast_atTop_atTop
+  have hlog : Filter.Tendsto (fun n : ℕ => Real.log (n : ℝ)) Filter.atTop Filter.atTop :=
+    Real.tendsto_log_atTop.comp hcast
+  have hsqrt : Filter.Tendsto (fun n : ℕ => Real.sqrt (n : ℝ)) Filter.atTop Filter.atTop :=
+    Real.tendsto_sqrt_atTop.comp hcast
+  -- `(n : ℝ) * log 2 → ∞`.
+  have hnlog2 : Filter.Tendsto (fun n : ℕ => (n : ℝ) * Real.log 2) Filter.atTop Filter.atTop :=
+    Filter.Tendsto.atTop_mul_const log_two_pos hcast
+  -- `1/(n log 2) → 0`, `2K/log n → 0`, `1/√n → 0`.
+  have h1 : Filter.Tendsto (fun n : ℕ => 1 / ((n : ℝ) * Real.log 2))
+      Filter.atTop (𝓝 0) := by
+    simp only [one_div]; exact hnlog2.inv_tendsto_atTop
+  have h2 : Filter.Tendsto
+      (fun n : ℕ => 2 * (8 * Real.log (Fintype.card α + 1)) / Real.log (n : ℝ))
+      Filter.atTop (𝓝 0) :=
+    Filter.Tendsto.div_atTop tendsto_const_nhds hlog
+  have h3 : Filter.Tendsto (fun n : ℕ => 1 / Real.sqrt (n : ℝ))
+      Filter.atTop (𝓝 0) := by
+    simpa using hsqrt.inv_tendsto_atTop
+  -- combine: envelope `(h2 + h3) * const → 0`, plus `h1 → 0`.
+  have henv : Filter.Tendsto
+      (fun n : ℕ => (2 * (8 * Real.log (Fintype.card α + 1)) / Real.log (n : ℝ)
+            + 1 / Real.sqrt (n : ℝ))
+          * ((Nat.log 2 (Fintype.card α) : ℝ) + 2))
+      Filter.atTop (𝓝 0) := by
+    have := (h2.add h3).mul_const ((Nat.log 2 (Fintype.card α) : ℝ) + 2)
+    simpa using this
+  have := h1.add henv
+  simpa using this
+
+/-- **Phase Z4 — genuine construction of `IsLZ78AchievabilityZivUpperBound`
+from the combinatorial core + regularity**.
+
+Given the isolated combinatorial core `IsLZ78ZivCombinatorialCore` (the
+load-bearing Cover–Thomas Lemma 13.5.5 distinct-phrase content) and the
+a.s. full-support regularity hypothesis `hreg`, the distinct LZ78 code
+satisfies the per-path bit-based Ziv upper bound structure with the
+vanishing slack `lz78AchievSlack`. Everything except the combinatorial
+core is genuine (the regularity `hreg` is the same admissible full-support
+family used by `isLZ78PerPathParsingFactorization_of_pos`).
+
+This is the honest *primitive deferral* the plan describes (撤退ライン
+L-Z2): the achievability structure is genuinely *constructed* from a
+strictly-more-primitive named hypothesis (`IsLZ78ZivCombinatorialCore`, a
+per-block combinatorial inequality) than the structure
+`IsLZ78AchievabilityZivUpperBound` it produces. It does **not** reduce the
+headline assumption count by itself, but it relocates the single remaining
+honest input to its most primitive, clearly-load-bearing form. -/
+theorem isLZ78AchievabilityZivUpperBound_distinct
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
+    (hcore : IsLZ78ZivCombinatorialCore μ p)
+    (hreg : ∀ (n : ℕ) (ω : Ω) (m : ℕ),
+      m ≤ n → 0 < prefixBlockProb μ p ω m) :
+    IsLZ78AchievabilityZivUpperBound μ p
+      (@lz78DistinctEncodingLength α _ _ _) (lz78AchievSlack (α := α)) := by
+  sorry
+
+end Assembly
+
 end InformationTheory.Shannon
