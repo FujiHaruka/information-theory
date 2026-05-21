@@ -240,6 +240,63 @@ lemma huffmanStep_spec
   (huffmanStep s hs hg).property
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- **`huffmanStep` の minimality spec (`.val.1` は `s` 全体の確率最小)**. 定義本体の
+`Classical.choose (exists_min_image ...)` の spec を unfold で取り出す (定義は不変、spec の追加).
+tie-invariance 論法 (carrier 越し対応) で `.val.1` を一意 minimizer と同定するのに必須. -/
+lemma huffmanStep_min_fst
+    (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
+    ∀ z ∈ s, (huffmanStep s hs hg).val.1.2 ≤ z.2 := by
+  classical
+  have hs_ne : s ≠ 0 := by
+    intro heq; rw [heq, Multiset.card_zero] at hs; omega
+  have hx1 : (Classical.choose (Multiset.exists_min_image (α := Finset α × ℝ)
+      (R := ℝ) (fun p => p.2) hs_ne)) ∈ s ∧
+      ∀ z ∈ s, (Classical.choose (Multiset.exists_min_image (α := Finset α × ℝ)
+        (R := ℝ) (fun p => p.2) hs_ne)).2 ≤ z.2 :=
+    Classical.choose_spec (Multiset.exists_min_image (α := Finset α × ℝ)
+      (R := ℝ) (fun p => p.2) hs_ne)
+  intro z hz
+  show (huffmanStep s hs hg).val.1.2 ≤ z.2
+  unfold huffmanStep
+  exact hx1.2 z hz
+
+omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- **`huffmanStep` の 2nd minimality spec (`.val.2.1` は `s.erase .val.1` 全体の確率最小)**.
+同じく定義本体の 2 段目 `Classical.choose` の spec を unfold で取り出す. -/
+lemma huffmanStep_min_snd
+    (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
+    ∀ z ∈ s.erase (huffmanStep s hs hg).val.1,
+      (huffmanStep s hs hg).val.2.1.2 ≤ z.2 := by
+  classical
+  have hs_ne : s ≠ 0 := by
+    intro heq; rw [heq, Multiset.card_zero] at hs; omega
+  -- x1 と s' = s.erase x1 を再構成
+  set x1 := Classical.choose (Multiset.exists_min_image (α := Finset α × ℝ)
+    (R := ℝ) (fun p => p.2) hs_ne) with hx1_def
+  have hx1 : x1 ∈ s ∧ ∀ z ∈ s, x1.2 ≤ z.2 :=
+    Classical.choose_spec (Multiset.exists_min_image (α := Finset α × ℝ)
+      (R := ℝ) (fun p => p.2) hs_ne)
+  have hs'_ne : s.erase x1 ≠ 0 := by
+    have hcard_s' : (s.erase x1).card = s.card - 1 :=
+      Multiset.card_erase_of_mem hx1.1
+    intro heq
+    rw [heq, Multiset.card_zero] at hcard_s'
+    omega
+  have hx2 : (Classical.choose (Multiset.exists_min_image (α := Finset α × ℝ)
+      (R := ℝ) (fun p => p.2) hs'_ne)) ∈ s.erase x1 ∧
+      ∀ z ∈ s.erase x1, (Classical.choose (Multiset.exists_min_image (α := Finset α × ℝ)
+        (R := ℝ) (fun p => p.2) hs'_ne)).2 ≤ z.2 :=
+    Classical.choose_spec (Multiset.exists_min_image (α := Finset α × ℝ)
+      (R := ℝ) (fun p => p.2) hs'_ne)
+  -- (huffmanStep s hs hg).val.1 = x1, .val.2.1 = x2, so s.erase .val.1 = s.erase x1
+  have hfst : (huffmanStep s hs hg).val.1 = x1 := by unfold huffmanStep; rfl
+  intro z hz
+  rw [hfst] at hz
+  show (huffmanStep s hs hg).val.2.1.2 ≤ z.2
+  unfold huffmanStep
+  exact hx2.2 z hz
+
+omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- `huffmanStep` 後の HuffmanGrouping 保存 (アクセサ). -/
 lemma huffmanStep_grouping
     (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
