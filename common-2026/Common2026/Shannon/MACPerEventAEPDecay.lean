@@ -400,7 +400,7 @@ theorem mac_inner_bound_with_perEvent_aep
     (R₁ R₂ I₁ I₂ Iboth : ℝ)
     (_h_strict : R₁ < I₁ ∧ R₂ < I₂ ∧ R₁ + R₂ < Iboth)
     (h : IsMACPerEventAEPDecay μ X1s X2s Ys ε W R₁ R₂) :
-    MACInnerBoundExistence (α₁ := α₁) (α₂ := α₂) (β := β) R₁ R₂ :=
+    MACInnerBoundExistence W R₁ R₂ :=
   mac_innerBoundExistence_of_markov W R₁ R₂
     (mac_random_codebook_markov_of_perEvent μ X1s X2s Ys ε W R₁ R₂ h)
 
@@ -414,13 +414,26 @@ theorem mac_capacity_region_consistent_of_perEvent
     (μ : Measure Ω) (X1s : ℕ → Ω → α₁) (X2s : ℕ → Ω → α₂) (Ys : ℕ → Ω → β)
     (ε : ℝ) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
     {M₁ M₂ n : ℕ} (hn : 0 < n) (c : MACCode M₁ M₂ n α₁ α₂ β)
-    (R₁ R₂ I₁ I₂ Iboth : ℝ)
-    (h_rate_bound : InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth)
-    (_h_strict : R₁ < I₁ ∧ R₂ < I₂ ∧ R₁ + R₂ < Iboth)
+    (R₁ R₂ Pe₁ Pe₂ Pe_joint I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth εc : ℝ)
+    (h_fano₁ : (n : ℝ) * R₁ ≤ I_marg₁ + 1 + Pe₁ * Real.log (M₁ : ℝ))
+    (h_fano₂ : (n : ℝ) * R₂ ≤ I_marg₂ + 1 + Pe₂ * Real.log (M₂ : ℝ))
+    (h_fano_joint :
+        (n : ℝ) * (R₁ + R₂)
+          ≤ I_joint + 1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ)))
+    (h_chain₁ : I_marg₁ ≤ (n : ℝ) * I₁)
+    (h_chain₂ : I_marg₂ ≤ (n : ℝ) * I₂)
+    (h_chain_joint : I_joint ≤ (n : ℝ) * Iboth)
+    (h_cleanup₁ : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ εc)
+    (h_cleanup₂ : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ εc)
+    (h_cleanup_joint :
+        (1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ))) / (n : ℝ) ≤ εc)
     (h : IsMACPerEventAEPDecay μ X1s X2s Ys ε W R₁ R₂) :
-    InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth
-      ∧ MACInnerBoundExistence (α₁ := α₁) (α₂ := α₂) (β := β) R₁ R₂ :=
-  ⟨mac_capacity_region_outer_bound hn c R₁ R₂ I₁ I₂ Iboth trivial trivial h_rate_bound,
+    InMACCapacityRegion R₁ R₂ (I₁ + εc) (I₂ + εc) (Iboth + εc)
+      ∧ MACInnerBoundExistence W R₁ R₂ :=
+  ⟨mac_capacity_region_outer_bound hn c R₁ R₂ Pe₁ Pe₂ Pe_joint
+     I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth εc
+     h_fano₁ h_fano₂ h_fano_joint h_chain₁ h_chain₂ h_chain_joint
+     h_cleanup₁ h_cleanup₂ h_cleanup_joint,
    mac_innerBoundExistence_of_markov W R₁ R₂
      (mac_random_codebook_markov_of_perEvent μ X1s X2s Ys ε W R₁ R₂ h)⟩
 

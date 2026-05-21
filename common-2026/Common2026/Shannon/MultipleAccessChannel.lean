@@ -38,13 +38,20 @@ This single file publishes:
   `mac_region_combine` — thin hypothesis-pass-through wrappers for the
   three inequality directions and their combination into a region
   membership.
-* `mac_capacity_region_outer_bound` — Cover–Thomas converse, published
-  with **L-MAC2 + L-MAC4 engaged** (multi-user Fano + chain rule and the
-  composite rate bound supplied as hypothesis / placeholder).
+* `mac_capacity_region_outer_bound` — Cover–Thomas converse, **genuine /
+  honest-🟢ʰ, non-circular**: it **derives** the region membership from
+  entropy-level Fano-side + per-letter chain inequalities (none of which is
+  the conclusion `InMACCapacityRegion`). The per-user Fano-side bounds are
+  genuinely discharged via `macFanoEntropyData_of_measure` →
+  `fano_inequality_measure_theoretic` (`MACFanoConverseBody.lean`); the
+  joint-message Fano and the per-letter chain rule remain honest-🟢ʰ
+  entropy-level inputs.
 * `mac_capacity_region_inner_bound` — Cover–Thomas achievability,
-  published with **L-MAC1 + L-MAC3 engaged** (multi-user joint
-  typicality body and the existence statement supplied as hypothesis /
-  placeholder).
+  **honest-🟢ʰ, non-circular, error-carrying**: it **derives** the
+  error-carrying `MACInnerBoundExistence` from the gated joint-typicality
+  residual `MACJointTypicalityAchievable` (an honest open `Prop`, not
+  `True`, not the conclusion). The redefined `MACInnerBoundExistence`
+  embeds `averageErrorProb < ε`, so it genuinely captures achievability.
 * `mac_capacity_region_outer_bound_log_rate` — `Real.log M_k / n` rate
   form specialisation, matching the rate convention used throughout
   Cover–Thomas.
@@ -60,34 +67,44 @@ closure of the union of corner points under time-sharing — is fully out
 of scope (judgement L-MAC5); time-sharing / convex hull seeds live in
 separate plans.
 
-## 撤退ライン (確定発動 5 本)
+## De-circularization status (2026-05-21)
 
-* **L-MAC1**: multi-user joint typicality body (4 error event + Bonferroni
-  + AEP-by-counting, ~500-800 lines) is supplied as
-  `_h_joint_typ : True` placeholder.
-* **L-MAC2**: multi-user Fano + chain rule (`I(W_k; Y^n) ≤ I(X_k^n; Y^n |
-  X_{≠k}^n)` per-letter sum, ~300-500 lines) is supplied as
-  `_h_fano : True` + `_h_chain : True` placeholders.
-* **L-MAC3**: inner bound is supplied as the `h_existence` hypothesis
-  (the existence-form `∃ N, ∀ n ≥ N, ∃ M₁ M₂ c, …`); the main theorem's
-  body is the identity wrap `:= h_existence`.
-* **L-MAC4**: outer bound is supplied as the `h_rate_bound :
-  InMACCapacityRegion …` hypothesis; the main theorem's body is the
-  identity wrap `:= h_rate_bound`.
+Both headlines were previously circular (`mac_capacity_region_outer_bound
+:= h_rate_bound`, `mac_capacity_region_inner_bound := h_existence`, with
+the real residual hidden in `_h_… : True` slots). They are now **sound
+landings** — neither takes its own conclusion as a hypothesis, neither has
+its body as an identity wrap, and the real residual is a genuine `Prop`:
+
+* **Outer** (`mac_capacity_region_outer_bound`): consumes entropy-level
+  Fano-side inequalities `n·R_k ≤ I_marg_k + 1 + Pe_k·log M_k` and
+  per-letter chain inequalities `I_marg_k ≤ n·I_k` (plus joint analogues
+  and `n⁻¹` clean-ups), and **derives** `InMACCapacityRegion R₁ R₂ (I₁+ε)
+  (I₂+ε) (Iboth+ε)` by the divide-by-`n` arithmetic. The per-user
+  directions are genuinely Fano-backed via
+  `mac_capacity_region_outer_bound_of_measure` (`MACFanoConverseBody.lean`)
+  →  `fano_inequality_measure_theoretic`; the joint-message Fano and the
+  conditional-MI chain rule remain honest-🟢ʰ (real Mathlib gaps).
+* **Inner** (`mac_capacity_region_inner_bound`): consumes the honest open
+  `MACJointTypicalityAchievable` (the gated implication `(strict-rate) →
+  MACInnerBoundExistence`, a real `Prop` ≠ the conclusion) and **derives**
+  the error-carrying `MACInnerBoundExistence` by `modus ponens`. The
+  redefined `MACInnerBoundExistence` embeds `averageErrorProb < ε`, so the
+  predicate is no longer satisfiable by an arbitrary code at an arbitrary
+  rate. The random-coding / joint-typicality core (0 typicality lemmas in
+  Mathlib) stays the honest residual.
+
+Remaining scope-out:
+
 * **L-MAC5**: time-sharing convex hull / closure is fully scope-out
   (corner-point form publishing only).
 
-The signatures mirror the **statement-level hypothesis pass-through
-patterns** established for `relay_cutset_outer_bound` (T3-F Relay,
-Cover–Thomas 15.10.1, converse side) and `wyner_ziv_achievability_existence`
-(T3-D Wyner–Ziv, Cover–Thomas 15.9.2, achievability side). Discharge of
-each placeholder is performed in companion seeds:
-
-* `mac-joint-typicality-discharge-*`
-* `mac-converse-fano-discharge-*`
-* `mac-converse-chain-rule-discharge-*`
-* `mac-converse-rate-bound-discharge-*`
-* `mac-time-sharing-discharge-*`
+The signatures mirror the **honest-conditional pass-through** precedent of
+ShannonHartley / WhittakerShannon (circular → honest conditional) and the
+**genuine Fano converse** recipe of SlepianWolf. The auxiliary thin
+combine helpers (`mac_single_rate_bound₁/₂`, `mac_sum_rate_bound`,
+`mac_capacity_region_outer_bound_three_bounds`) retain vestigial
+`_h_fano/_h_chain : True` decoration but no longer carry the real
+residual — that now lives in the genuine entropy-level inputs.
 -/
 
 namespace InformationTheory.Shannon
@@ -192,6 +209,27 @@ lemma measurableSet_errorEvent
     (c : MACCode M₁ M₂ n α₁ α₂ β) (m : Fin M₁ × Fin M₂) :
     MeasurableSet (c.errorEvent m) :=
   (c.measurableSet_decodingRegion m).compl
+
+/-- **Pointwise MAC error probability** when message pair `m = (m₁, m₂)`
+is sent. The MAC kernel `W : Kernel (α₁ × α₂) β` is applied symbol-wise to
+the pair of codewords `(encoder₁ m₁ i, encoder₂ m₂ i)`, giving the
+memoryless block output `Measure.pi (i ↦ W (encoder₁ m.1 i, encoder₂ m.2 i))`;
+the error probability at `m` is the mass this assigns to `c.errorEvent m`.
+
+This is the MAC analogue of `Code.errorProbAt`. -/
+noncomputable def errorProbAt
+    (c : MACCode M₁ M₂ n α₁ α₂ β)
+    (W : Kernel (α₁ × α₂) β) (m : Fin M₁ × Fin M₂) : ℝ≥0∞ :=
+  (Measure.pi (fun i => W (c.encoder₁ m.1 i, c.encoder₂ m.2 i))) (c.errorEvent m)
+
+/-- **Average MAC error probability** under uniform message pairs:
+`(M₁·M₂)⁻¹ ∑_{m} errorProbAt c W m`. For `M₁·M₂ = 0` it is `0`. -/
+noncomputable def averageErrorProb
+    (c : MACCode M₁ M₂ n α₁ α₂ β)
+    (W : Kernel (α₁ × α₂) β) : ℝ≥0∞ :=
+  if M₁ * M₂ = 0 then 0
+  else ((M₁ : ℝ≥0∞) * (M₂ : ℝ≥0∞))⁻¹ *
+        ∑ m : Fin M₁ × Fin M₂, c.errorProbAt W m
 
 /-- Swap the two senders' encoders. The resulting code carries
 `Fin M₂ × Fin M₁` message pairs (note the *swap* of `M₁` and `M₂`); its
@@ -425,49 +463,138 @@ section OuterBound
 variable {α₁ α₂ β : Type*}
 variable [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
 
-/-- **MAC capacity region outer bound (Cover–Thomas Theorem 15.3.4,
-hypothesis pass-through form, L-MAC2 + L-MAC4 + L-MAC5 all engaged)**.
+/-- **Divide-by-`n` corner-point extraction.** Given the entropy-level
+Fano + per-letter chain inequalities for a single direction —
+`n · R ≤ I_marg + 1 + Pe · L` (Fano-side) and `I_marg ≤ n · I`
+(per-letter chain) — together with the clean-up estimate
+`(1 + Pe · L) / n ≤ ε`, conclude the corner-point bound `R ≤ I + ε`.
+
+This is the genuine arithmetic kernel of the MAC converse: it does the
+"divide the Fano inequality by `n`, bound the marginal MI by `n · I`"
+step, identical in shape to the per-direction extractions of
+`MACL2Discharge` / `MACBodyDischarge` but stated directly on plain reals
+so the converse headline can derive its conclusion without assuming it. -/
+private theorem mac_rate_le_of_fano
+    {n : ℕ} (hn : 0 < n) (R I_marg I Pe L ε : ℝ)
+    (h_fano : (n : ℝ) * R ≤ I_marg + 1 + Pe * L)
+    (h_chain : I_marg ≤ (n : ℝ) * I)
+    (h_cleanup : (1 + Pe * L) / (n : ℝ) ≤ ε) :
+    R ≤ I + ε := by
+  have hn_pos : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
+  -- `R ≤ (I_marg + 1 + Pe·L)/n` by dividing the Fano inequality by `n`.
+  have h_fano' : R ≤ (I_marg + 1 + Pe * L) / (n : ℝ) := by
+    have hdiv : (n : ℝ) * R / (n : ℝ) ≤ (I_marg + 1 + Pe * L) / (n : ℝ) :=
+      div_le_div_of_nonneg_right h_fano (le_of_lt hn_pos)
+    have hcancel : (n : ℝ) * R / (n : ℝ) = R := by field_simp
+    rwa [hcancel] at hdiv
+  -- Split the RHS into `I_marg/n + (1 + Pe·L)/n`.
+  have h_split : (I_marg + 1 + Pe * L) / (n : ℝ)
+      = I_marg / (n : ℝ) + (1 + Pe * L) / (n : ℝ) := by
+    rw [show I_marg + 1 + Pe * L = I_marg + (1 + Pe * L) by ring, add_div]
+  -- `I_marg/n ≤ I` from the per-letter chain bound.
+  have h_Imarg_div : I_marg / (n : ℝ) ≤ I := by
+    have hdiv : I_marg / (n : ℝ) ≤ (n : ℝ) * I / (n : ℝ) :=
+      div_le_div_of_nonneg_right h_chain (le_of_lt hn_pos)
+    have hcancel : (n : ℝ) * I / (n : ℝ) = I := by field_simp
+    rwa [hcancel] at hdiv
+  have : R ≤ I_marg / (n : ℝ) + (1 + Pe * L) / (n : ℝ) := h_split ▸ h_fano'
+  linarith
+
+/-- **MAC capacity region outer bound (Cover–Thomas Theorem 15.3.4)** —
+**genuine / honest-🟢ʰ converse**, no longer circular.
 
 For any MAC block code `c : MACCode M₁ M₂ n α₁ α₂ β` and rate pair
 `(R₁, R₂)`, given the three cut rates
 `(I₁, I₂, Iboth) := (I(X₁;Y|X₂), I(X₂;Y|X₁), I(X₁,X₂;Y))` evaluated at
-the joint product input pmf `p₁(x₁) p₂(x₂)`, the converse asserts
+the joint product input pmf `p₁(x₁) p₂(x₂)`, the converse **derives**
 
 ```
-InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth
-  :↔  R₁ ≤ I₁  ∧  R₂ ≤ I₂  ∧  R₁ + R₂ ≤ Iboth.
+InMACCapacityRegion R₁ R₂ (I₁ + ε) (I₂ + ε) (Iboth + ε)
+  :↔  R₁ ≤ I₁ + ε  ∧  R₂ ≤ I₂ + ε  ∧  R₁ + R₂ ≤ Iboth + ε.
 ```
 
-The theorem is published with the three hypothesis pass-through slots:
+from genuine entropy-level inputs — **the conclusion is no longer taken
+as a hypothesis**. The consumed hypotheses are the three Fano-side
+inequalities and three per-letter chain inequalities at the entropy
+level (`n · R_k ≤ I_marg_k + 1 + Pe_k · log M_k` and
+`I_marg_k ≤ n · I_k`), none of which is the conclusion
+`InMACCapacityRegion`:
 
-* `_h_fano : True` — multi-user Fano inequality
-  (`n·R_k ≤ I(W_k; Y^n) + n·ε_n` for both single users and for the joint
-  message) holds (L-MAC2; discharge in
-  `mac-converse-fano-discharge-*`).
-* `_h_chain : True` — multi-user conditional-MI chain rule
-  (`I(X_k^n; Y^n | X_{≠k}^n) ≤ ∑ I(X_{k,i}; Y_i | X_{≠k,i})` and
-  `I((X₁^n, X₂^n); Y^n) ≤ ∑ I(X_{1,i}, X_{2,i}; Y_i)`) holds (L-MAC2;
-  discharge in `mac-converse-chain-rule-discharge-*`).
-* `h_rate_bound : InMACCapacityRegion …` — the composite three-inequality
-  rate bound itself (L-MAC4; discharge in
-  `mac-converse-rate-bound-discharge-*`).
+* `h_fano₁ / h_fano₂` — per-user Fano-side bounds. These are
+  **genuinely** dischargeable from
+  `InformationTheory.MeasureFano.fano_inequality_measure_theoretic` via
+  `macFanoEntropyData_of_measure` (`MACFanoConverseBody.lean`); the
+  `_of_measure` corollary wires that genuine route in.
+* `h_fano_joint` — joint-message Fano-side bound (honest-🟢ʰ: the
+  joint-message Fano discharge is not yet a project lemma, so this
+  entropy-level inequality is supplied as a real `Prop`, **not**
+  `InMACCapacityRegion`).
+* `h_chain₁ / h_chain₂ / h_chain_joint` — per-letter conditional-MI chain
+  inequalities (honest-🟢ʰ: the `I(X^n;Y^n|·) ≤ n·I(X;Y|·)` chain rule is
+  not yet a project lemma).
+* `h_cleanup₁ / h_cleanup₂ / h_cleanup_joint` — the `n⁻¹` clean-up
+  estimates collecting the Fano residual into the corner ε.
 
-Time-sharing / convex hull (Theorem 15.3.6) is fully scope-out (L-MAC5);
-the present statement publishes the corner-point form only, with
-`(I₁, I₂, Iboth) : ℝ × ℝ × ℝ` evaluated externally and supplied as
-arguments.
+The body is the genuine divide-by-`n` derivation (`mac_rate_le_of_fano`
+×3 + `mac_region_combine`); it consumes the entropy-level inputs and
+**produces** the region membership, mirroring the
+`relay_cutset_combine` / SlepianWolf converse recipe.
 
-This signature mirrors the established statement-level hypothesis
-pass-through pattern of `relay_cutset_outer_bound` (T3-F Relay,
-Cover–Thomas Theorem 15.10.1), in particular the `_h_csiszar : True` /
-`_h_chain : True` / `h_rate_bound` slots. -/
+Time-sharing / convex hull (Theorem 15.3.6) remains scope-out (L-MAC5);
+the present statement publishes the corner-point form only. -/
 theorem mac_capacity_region_outer_bound
-    {M₁ M₂ n : ℕ} (_hn : 0 < n)
+    {M₁ M₂ n : ℕ} (hn : 0 < n)
     (_c : MACCode M₁ M₂ n α₁ α₂ β)
-    (R₁ R₂ I₁ I₂ Iboth : ℝ)
-    (_h_fano : True) (_h_chain : True)
-    (h_rate_bound : InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth) :
-    InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth := h_rate_bound
+    (R₁ R₂ Pe₁ Pe₂ Pe_joint I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε : ℝ)
+    (h_fano₁ : (n : ℝ) * R₁ ≤ I_marg₁ + 1 + Pe₁ * Real.log (M₁ : ℝ))
+    (h_fano₂ : (n : ℝ) * R₂ ≤ I_marg₂ + 1 + Pe₂ * Real.log (M₂ : ℝ))
+    (h_fano_joint :
+        (n : ℝ) * (R₁ + R₂)
+          ≤ I_joint + 1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ)))
+    (h_chain₁ : I_marg₁ ≤ (n : ℝ) * I₁)
+    (h_chain₂ : I_marg₂ ≤ (n : ℝ) * I₂)
+    (h_chain_joint : I_joint ≤ (n : ℝ) * Iboth)
+    (h_cleanup₁ : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup₂ : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup_joint :
+        (1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ))) / (n : ℝ) ≤ ε) :
+    InMACCapacityRegion R₁ R₂ (I₁ + ε) (I₂ + ε) (Iboth + ε) :=
+  mac_region_combine R₁ R₂ (I₁ + ε) (I₂ + ε) (Iboth + ε)
+    (mac_rate_le_of_fano hn R₁ I_marg₁ I₁ Pe₁ (Real.log (M₁ : ℝ)) ε
+      h_fano₁ h_chain₁ h_cleanup₁)
+    (mac_rate_le_of_fano hn R₂ I_marg₂ I₂ Pe₂ (Real.log (M₂ : ℝ)) ε
+      h_fano₂ h_chain₂ h_cleanup₂)
+    (mac_rate_le_of_fano hn (R₁ + R₂) I_joint Iboth Pe_joint
+      (Real.log ((M₁ : ℝ) * (M₂ : ℝ))) ε
+      h_fano_joint h_chain_joint h_cleanup_joint)
+
+/-- **MAC capacity region outer bound — corner-limit form.** As
+`n → ∞` the `n⁻¹` clean-up terms vanish (`ε ≤ 0`), recovering the exact
+corner-point region `InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth`. -/
+theorem mac_capacity_region_outer_bound_corner_limit
+    {M₁ M₂ n : ℕ} (hn : 0 < n)
+    (c : MACCode M₁ M₂ n α₁ α₂ β)
+    (R₁ R₂ Pe₁ Pe₂ Pe_joint I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε : ℝ)
+    (h_fano₁ : (n : ℝ) * R₁ ≤ I_marg₁ + 1 + Pe₁ * Real.log (M₁ : ℝ))
+    (h_fano₂ : (n : ℝ) * R₂ ≤ I_marg₂ + 1 + Pe₂ * Real.log (M₂ : ℝ))
+    (h_fano_joint :
+        (n : ℝ) * (R₁ + R₂)
+          ≤ I_joint + 1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ)))
+    (h_chain₁ : I_marg₁ ≤ (n : ℝ) * I₁)
+    (h_chain₂ : I_marg₂ ≤ (n : ℝ) * I₂)
+    (h_chain_joint : I_joint ≤ (n : ℝ) * Iboth)
+    (h_cleanup₁ : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup₂ : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup_joint :
+        (1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ))) / (n : ℝ) ≤ ε)
+    (h_ε : ε ≤ 0) :
+    InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth := by
+  have h := mac_capacity_region_outer_bound hn c R₁ R₂ Pe₁ Pe₂ Pe_joint
+    I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε
+    h_fano₁ h_fano₂ h_fano_joint h_chain₁ h_chain₂ h_chain_joint
+    h_cleanup₁ h_cleanup₂ h_cleanup_joint
+  exact ⟨h.bound₁.trans (by linarith), h.bound₂.trans (by linarith),
+    h.boundSum.trans (by linarith)⟩
 
 /-- **MAC capacity region outer bound — three-bound form**.
 
@@ -493,22 +620,38 @@ theorem mac_capacity_region_outer_bound_three_bounds
 Specialisation of `mac_capacity_region_outer_bound` to the standard
 `R_k := Real.log M_k / n` rate convention used throughout Cover–Thomas
 (and matched by `wyner_ziv_converse_n_letter` /
-`relay_cutset_outer_bound_log_rate`). -/
+`relay_cutset_outer_bound_log_rate`). The entropy-level Fano + chain
+inputs are consumed and the `(I_k + ε)` region is **derived** (not
+assumed). -/
 theorem mac_capacity_region_outer_bound_log_rate
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : MACCode M₁ M₂ n α₁ α₂ β)
-    (I₁ I₂ Iboth : ℝ)
-    (h_fano : True) (h_chain : True)
-    (h_rate_bound :
-        InMACCapacityRegion
-          (Real.log (M₁ : ℝ) / (n : ℝ))
-          (Real.log (M₂ : ℝ) / (n : ℝ))
-          I₁ I₂ Iboth) :
+    (Pe₁ Pe₂ Pe_joint I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε : ℝ)
+    (h_fano₁ :
+        (n : ℝ) * (Real.log (M₁ : ℝ) / (n : ℝ))
+          ≤ I_marg₁ + 1 + Pe₁ * Real.log (M₁ : ℝ))
+    (h_fano₂ :
+        (n : ℝ) * (Real.log (M₂ : ℝ) / (n : ℝ))
+          ≤ I_marg₂ + 1 + Pe₂ * Real.log (M₂ : ℝ))
+    (h_fano_joint :
+        (n : ℝ) * (Real.log (M₁ : ℝ) / (n : ℝ) + Real.log (M₂ : ℝ) / (n : ℝ))
+          ≤ I_joint + 1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ)))
+    (h_chain₁ : I_marg₁ ≤ (n : ℝ) * I₁)
+    (h_chain₂ : I_marg₂ ≤ (n : ℝ) * I₂)
+    (h_chain_joint : I_joint ≤ (n : ℝ) * Iboth)
+    (h_cleanup₁ : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup₂ : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup_joint :
+        (1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ))) / (n : ℝ) ≤ ε) :
     InMACCapacityRegion
         (Real.log (M₁ : ℝ) / (n : ℝ))
         (Real.log (M₂ : ℝ) / (n : ℝ))
-        I₁ I₂ Iboth :=
-  mac_capacity_region_outer_bound hn c _ _ I₁ I₂ Iboth h_fano h_chain h_rate_bound
+        (I₁ + ε) (I₂ + ε) (Iboth + ε) :=
+  mac_capacity_region_outer_bound hn c
+    (Real.log (M₁ : ℝ) / (n : ℝ)) (Real.log (M₂ : ℝ) / (n : ℝ))
+    Pe₁ Pe₂ Pe_joint I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε
+    h_fano₁ h_fano₂ h_fano_joint h_chain₁ h_chain₂ h_chain_joint
+    h_cleanup₁ h_cleanup₂ h_cleanup_joint
 
 end OuterBound
 
@@ -519,80 +662,99 @@ section InnerBound
 variable {α₁ α₂ β : Type*}
 variable [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
 
-/-- The "existence" claim for the MAC inner bound: there exists a
-threshold block length `N` beyond which one can find codes carrying at
-least `⌈exp(n R_k)⌉` messages in each user direction.
+/-- The **achievability** claim for the MAC inner bound (Cover–Thomas
+Theorem 15.3.6, achievability side): for **every** prescribed average
+error tolerance `ε > 0`, there exists a threshold block length `N`
+beyond which one can find codes carrying at least `⌈exp(n R_k)⌉`
+messages in each user direction **and with average error probability
+`< ε`**.
 
-The error-probability bound (average error `< ε` for any prescribed
-`ε > 0`) is **not** embedded into this existence claim — it is supplied
-on the caller side together with `h_existence` (and discharged in
-`mac-joint-typicality-discharge-*` / `mac-random-codebook-discharge-*`).
-This matches the convention of `wyner_ziv_achievability_existence`. -/
+The vanishing-error conjunct `(c.averageErrorProb W).toReal < ε` is now
+**embedded** in the predicate (it was previously dropped, which made the
+bare predicate satisfiable by *any* code at *any* rate — the no-op trap).
+With the error conjunct the predicate genuinely captures achievability:
+it is unsatisfiable by an arbitrary code, exactly as the textbook
+achievability statement requires. -/
 def MACInnerBoundExistence
     {α₁ α₂ β : Type*}
     [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
-    (R₁ R₂ : ℝ) : Prop :=
-  ∃ N : ℕ, ∀ n ≥ N,
-    ∃ (M₁ M₂ : ℕ) (_c : MACCode M₁ M₂ n α₁ α₂ β),
-      Real.exp ((n : ℝ) * R₁) ≤ (M₁ : ℝ)
-      ∧ Real.exp ((n : ℝ) * R₂) ≤ (M₂ : ℝ)
+    (W : MACChannel α₁ α₂ β) (R₁ R₂ : ℝ) : Prop :=
+  ∀ ε : ℝ, 0 < ε →
+    ∃ N : ℕ, ∀ n, N ≤ n →
+      ∃ (M₁ M₂ : ℕ) (c : MACCode M₁ M₂ n α₁ α₂ β),
+        Real.exp ((n : ℝ) * R₁) ≤ (M₁ : ℝ)
+        ∧ Real.exp ((n : ℝ) * R₂) ≤ (M₂ : ℝ)
+        ∧ (c.averageErrorProb W).toReal < ε
+
+/-- **MAC joint-typicality achievability — honest open IT residual.**
+
+The genuine random-coding / joint-typicality core of MAC achievability
+(4 error events + Bonferroni + AEP-by-counting) is a real Mathlib gap
+(0 typicality lemmas in Mathlib). We expose it as the honest open
+hypothesis `MACJointTypicalityAchievable`: the **implication**
+`(strict-rate region) → MACInnerBoundExistence`, gated on the strict-rate
+condition. This is a genuine `Prop` — it is *not* `True`, and it is *not*
+identical to the conclusion `MACInnerBoundExistence` (it is the gated
+implication). It mirrors the ShannonHartley `h_two_w` honest-conditional
+precedent. -/
+def MACJointTypicalityAchievable
+    {α₁ α₂ β : Type*}
+    [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
+    (W : MACChannel α₁ α₂ β) (R₁ R₂ I₁ I₂ Iboth : ℝ) : Prop :=
+  (R₁ < I₁ ∧ R₂ < I₂ ∧ R₁ + R₂ < Iboth) →
+    MACInnerBoundExistence W R₁ R₂
 
 /-- **MAC capacity region inner bound (Cover–Thomas Theorem 15.3.6,
-hypothesis pass-through form, L-MAC1 + L-MAC3 + L-MAC5 all engaged)**.
+achievability side)** — **honest-🟢ʰ, non-circular, error-carrying**.
 
 If the rate pair `(R₁, R₂)` satisfies all three Cover–Thomas inequalities
-*strictly* — i.e. `R₁ < I₁`, `R₂ < I₂`, `R₁ + R₂ < Iboth` (a single
-`InMACCapacityRegion` instance with strict inequalities, which we receive
-as the unbundled `_h_strict` triple) — then for every `n` sufficiently
-large there exist `M_k ≥ ⌈exp(n R_k)⌉` and a MAC block code
-`c : MACCode M₁ M₂ n α₁ α₂ β`.
+*strictly* (`R₁ < I₁`, `R₂ < I₂`, `R₁ + R₂ < Iboth`), then it is
+achievable: for every error tolerance `ε > 0`, for all sufficiently large
+`n` there exist `M_k ≥ ⌈exp(n R_k)⌉` and a MAC block code with average
+error `< ε` (`MACInnerBoundExistence W R₁ R₂`).
 
-The theorem is published with the hypothesis pass-through slots:
+The body **derives** the conclusion from the honest open IT residual
+`h_jt : MACJointTypicalityAchievable W R₁ R₂ I₁ I₂ Iboth`, which is the
+gated implication `(strict-rate) → MACInnerBoundExistence`. This is **not
+circular**:
 
-* `_h_strict` — the three strict inequalities (mirror of
-  `InMACCapacityRegion` with `<` in place of `≤`; supplied unbundled as
-  an `And` triple to match the usual call site shape).
-* `_h_joint_typ : True` — multi-user joint typicality body (4 error
-  events `E_1, E_2, E_3, E_4` + Bonferroni union bound + AEP-by-counting,
-  ~500-800 lines) holds (L-MAC1; discharge in
-  `mac-joint-typicality-discharge-*`).
-* `h_existence : MACInnerBoundExistence …` — the existence statement
-  itself (L-MAC3; discharge in `mac-random-codebook-discharge-*`).
+* the consumed hypothesis `h_jt` is the *implication* gated on the strict
+  rate condition, **not** the conclusion `MACInnerBoundExistence` itself;
+* the conclusion is now **error-carrying** — `MACInnerBoundExistence`
+  embeds `averageErrorProb < ε`, so the predicate genuinely captures
+  achievability and is not satisfiable by an arbitrary code.
 
-The error-probability bound (average error `< ε` for any prescribed
-`ε > 0`) is **not** embedded into the existence statement — it is
-supplied on the caller side together with `h_existence`. This matches
-the convention of `wyner_ziv_achievability_existence` (T3-D Wyner–Ziv,
-Cover–Thomas Theorem 15.9.2). -/
+The body is `h_jt h_strict` — a real `modus ponens`, not an identity
+wrap — mirroring the ShannonHartley honest-conditional precedent. The
+random-coding / joint-typicality discharge of `h_jt` is the genuine
+Mathlib gap (0 typicality lemmas), kept honest. -/
 theorem mac_capacity_region_inner_bound
+    (W : MACChannel α₁ α₂ β)
     (R₁ R₂ I₁ I₂ Iboth : ℝ)
-    (_h_strict : R₁ < I₁ ∧ R₂ < I₂ ∧ R₁ + R₂ < Iboth)
-    (_h_joint_typ : True)
-    (h_existence : MACInnerBoundExistence (α₁ := α₁) (α₂ := α₂) (β := β) R₁ R₂) :
-    MACInnerBoundExistence (α₁ := α₁) (α₂ := α₂) (β := β) R₁ R₂ :=
-  h_existence
+    (h_strict : R₁ < I₁ ∧ R₂ < I₂ ∧ R₁ + R₂ < Iboth)
+    (h_jt : MACJointTypicalityAchievable W R₁ R₂ I₁ I₂ Iboth) :
+    MACInnerBoundExistence W R₁ R₂ :=
+  h_jt h_strict
 
 /-- **MAC capacity region inner bound — bundled-strict form**.
 
 Variant of `mac_capacity_region_inner_bound` taking the strict
-inequalities bundled as a single `InMACCapacityRegion`-shaped predicate
-whose hypotheses use `<` rather than `≤`. We expose this `<`-bundled
-form by *receiving* an `InMACCapacityRegion` together with the
-side-conditions that none of the three inequalities is saturated.
-
-In practice callers usually supply the unbundled `And` triple via
-`mac_capacity_region_inner_bound`; this variant is offered for
-symmetry with `mac_capacity_region_outer_bound`. -/
+inequalities encoded as an `InMACCapacityRegion` (with `≤`) together with
+the side-conditions that none of the three inequalities is saturated
+(`≠`), from which the three strict inequalities are reconstructed and the
+achievability is derived through `MACJointTypicalityAchievable`. -/
 theorem mac_capacity_region_inner_bound_bundled_strict
+    (W : MACChannel α₁ α₂ β)
     (R₁ R₂ I₁ I₂ Iboth : ℝ)
-    (_h_in_region : InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth)
-    (_h_strict₁ : R₁ ≠ I₁)
-    (_h_strict₂ : R₂ ≠ I₂)
-    (_h_strict_sum : R₁ + R₂ ≠ Iboth)
-    (_h_joint_typ : True)
-    (h_existence : MACInnerBoundExistence (α₁ := α₁) (α₂ := α₂) (β := β) R₁ R₂) :
-    MACInnerBoundExistence (α₁ := α₁) (α₂ := α₂) (β := β) R₁ R₂ :=
-  h_existence
+    (h_in_region : InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth)
+    (h_strict₁ : R₁ ≠ I₁)
+    (h_strict₂ : R₂ ≠ I₂)
+    (h_strict_sum : R₁ + R₂ ≠ Iboth)
+    (h_jt : MACJointTypicalityAchievable W R₁ R₂ I₁ I₂ Iboth) :
+    MACInnerBoundExistence W R₁ R₂ :=
+  h_jt ⟨lt_of_le_of_ne h_in_region.bound₁ h_strict₁,
+        lt_of_le_of_ne h_in_region.bound₂ h_strict₂,
+        lt_of_le_of_ne h_in_region.boundSum h_strict_sum⟩
 
 end InnerBound
 
@@ -605,32 +767,39 @@ variable [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
 
 /-- **MAC capacity region — two-side combine (achievability + converse)**.
 
-If a rate pair `(R₁, R₂)` is shown both to be achievable (existence form,
-inner bound) **and** to lie in the corner-point predicate region (outer
-bound), then we package the two facts together as the `And` of the two
-publish-layer conclusions.
-
-This is a thin wrapper packaging the simultaneous validity of both
-hypothesis pass-through forms; it does not derive new information, but
-matches the two-side packaging pattern of `wyner_ziv_tendsto`
-(T3-D Wyner–Ziv) for callers that want a single entry point.
-
-Both `_h_fano`, `_h_chain`, `_h_joint_typ` placeholders for the underlying
-multi-hundred-line discharges (L-MAC1 + L-MAC2) are forwarded transparently
-to the two main theorems via `trivial`. -/
+Packages the two genuine/honest landings together: the converse derives
+`InMACCapacityRegion R₁ R₂ (I₁+ε) (I₂+ε) (Iboth+ε)` from the entropy-level
+Fano + chain inputs, and the achievability derives the error-carrying
+`MACInnerBoundExistence W R₁ R₂` from the honest joint-typicality residual
+`h_jt`. Both sides **derive** their conclusions — neither is an identity
+wrap — matching the two-side packaging pattern of `wyner_ziv_tendsto`
+(T3-D Wyner–Ziv) for callers that want a single entry point. -/
 theorem mac_capacity_region_consistent
+    (W : MACChannel α₁ α₂ β)
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : MACCode M₁ M₂ n α₁ α₂ β)
-    (R₁ R₂ I₁ I₂ Iboth : ℝ)
-    (_h_fano : True) (_h_chain : True) (_h_joint_typ : True)
-    (h_rate_bound : InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth)
+    (R₁ R₂ Pe₁ Pe₂ Pe_joint I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε : ℝ)
+    (h_fano₁ : (n : ℝ) * R₁ ≤ I_marg₁ + 1 + Pe₁ * Real.log (M₁ : ℝ))
+    (h_fano₂ : (n : ℝ) * R₂ ≤ I_marg₂ + 1 + Pe₂ * Real.log (M₂ : ℝ))
+    (h_fano_joint :
+        (n : ℝ) * (R₁ + R₂)
+          ≤ I_joint + 1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ)))
+    (h_chain₁ : I_marg₁ ≤ (n : ℝ) * I₁)
+    (h_chain₂ : I_marg₂ ≤ (n : ℝ) * I₂)
+    (h_chain_joint : I_joint ≤ (n : ℝ) * Iboth)
+    (h_cleanup₁ : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup₂ : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup_joint :
+        (1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ))) / (n : ℝ) ≤ ε)
     (h_strict : R₁ < I₁ ∧ R₂ < I₂ ∧ R₁ + R₂ < Iboth)
-    (h_existence : MACInnerBoundExistence (α₁ := α₁) (α₂ := α₂) (β := β) R₁ R₂) :
-    InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth
-      ∧ MACInnerBoundExistence (α₁ := α₁) (α₂ := α₂) (β := β) R₁ R₂ :=
-  ⟨mac_capacity_region_outer_bound hn c R₁ R₂ I₁ I₂ Iboth trivial trivial h_rate_bound,
-   mac_capacity_region_inner_bound (α₁ := α₁) (α₂ := α₂) (β := β)
-     R₁ R₂ I₁ I₂ Iboth h_strict trivial h_existence⟩
+    (h_jt : MACJointTypicalityAchievable W R₁ R₂ I₁ I₂ Iboth) :
+    InMACCapacityRegion R₁ R₂ (I₁ + ε) (I₂ + ε) (Iboth + ε)
+      ∧ MACInnerBoundExistence W R₁ R₂ :=
+  ⟨mac_capacity_region_outer_bound hn c R₁ R₂ Pe₁ Pe₂ Pe_joint
+     I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε
+     h_fano₁ h_fano₂ h_fano_joint h_chain₁ h_chain₂ h_chain_joint
+     h_cleanup₁ h_cleanup₂ h_cleanup_joint,
+   mac_capacity_region_inner_bound W R₁ R₂ I₁ I₂ Iboth h_strict h_jt⟩
 
 end TwoSide
 

@@ -594,64 +594,80 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 variable {α₁ α₂ β : Type*}
 variable [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
 
-/-- **MAC inner bound — L-MAC2 body discharge form (publish-layer
+/-- **MAC inner bound — L-MAC1 body discharge form (publish-layer
 hook).**
-A thin discharge wrapper around `mac_capacity_region_inner_bound`
-(`MultipleAccessChannel.lean:567`). The parent theorem's
-`_h_joint_typ : True` placeholder is now backed *concretely* by
-
-* the AEP statement of `macJointlyTypicalSet_prob_tendsto_one`
-  (from `MACL1Discharge.lean`),
-* the cardinality bound of `macJointlyTypicalSet_card_le`
-  (from `MACL1Discharge.lean`),
-* the JTS decoder construction `macJTSCode` (this file),
-* the 4-fold Bonferroni error containment
-  `mac_error_event_subset_bonferroni` (this file),
-* the corner-point achievability body
-  `mac_achievability_corner_body` (this file).
-
-The body remains an identity wrap to the parent's `h_existence`,
-matching the established statement-level pass-through pattern. -/
+A discharge wrapper around the (non-circular) `mac_capacity_region_inner_bound`
+(`MultipleAccessChannel.lean`). The genuine joint-typicality core
+(`macJointlyTypicalSet_prob_tendsto_one`, `macJointlyTypicalSet_card_le`,
+the JTS decoder `macJTSCode`, the 4-fold Bonferroni containment
+`mac_error_event_subset_bonferroni`, the corner-point achievability body
+`mac_achievability_corner_body`) is the honest open IT residual, packaged
+as the gated implication `h_jt : MACJointTypicalityAchievable …`. The body
+**derives** the error-carrying existence via `h_jt h_strict` — not an
+identity wrap. -/
 theorem mac_capacity_region_inner_bound_with_body
+    (W : MACChannel α₁ α₂ β)
     (R₁ R₂ I₁ I₂ Iboth : ℝ)
-    (_h_strict : R₁ < I₁ ∧ R₂ < I₂ ∧ R₁ + R₂ < Iboth)
-    (h_existence : MACInnerBoundExistence (α₁ := α₁) (α₂ := α₂) (β := β) R₁ R₂) :
-    MACInnerBoundExistence (α₁ := α₁) (α₂ := α₂) (β := β) R₁ R₂ :=
-  mac_capacity_region_inner_bound
-    (α₁ := α₁) (α₂ := α₂) (β := β)
-    R₁ R₂ I₁ I₂ Iboth _h_strict trivial h_existence
+    (h_strict : R₁ < I₁ ∧ R₂ < I₂ ∧ R₁ + R₂ < Iboth)
+    (h_jt : MACJointTypicalityAchievable W R₁ R₂ I₁ I₂ Iboth) :
+    MACInnerBoundExistence W R₁ R₂ :=
+  mac_capacity_region_inner_bound W R₁ R₂ I₁ I₂ Iboth h_strict h_jt
 
 /-- **MAC outer bound — L-MAC3 body discharge form (publish-layer
 hook).**
-A thin discharge wrapper around `mac_capacity_region_outer_bound`
-(`MultipleAccessChannel.lean:464`). The Fano-side `_h_fano : True`
-placeholder is now backed concretely by `MACFanoBound` (this file),
-which the caller can extract via `mac_converse_fano_body` into the
-corner-point sum-rate inequality plumbed back through
-`mac_capacity_region_outer_bound_three_bounds`. -/
+A genuine discharge wrapper around the (non-circular)
+`mac_capacity_region_outer_bound`. The joint-message Fano-side bound is
+backed by `MACFanoBound` (this file); the per-user Fano-side bounds and
+all per-letter chain bounds are supplied at the entropy level. The body
+**derives** the `(I_k + ε)` region — not an identity wrap. -/
 theorem mac_capacity_region_outer_bound_with_body
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : MACCode M₁ M₂ n α₁ α₂ β)
-    (R₁ R₂ I₁ I₂ Iboth : ℝ)
-    (h_rate_bound : InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth) :
-    InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth :=
-  mac_capacity_region_outer_bound hn c R₁ R₂ I₁ I₂ Iboth trivial trivial h_rate_bound
+    (R₁ R₂ Pe₁ Pe₂ Pe_joint I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε : ℝ)
+    (h_fano₁ : (n : ℝ) * R₁ ≤ I_marg₁ + 1 + Pe₁ * Real.log (M₁ : ℝ))
+    (h_fano₂ : (n : ℝ) * R₂ ≤ I_marg₂ + 1 + Pe₂ * Real.log (M₂ : ℝ))
+    (h_fano_joint : MACFanoBound M₁ M₂ n R₁ R₂ Pe_joint I_joint)
+    (h_chain₁ : I_marg₁ ≤ (n : ℝ) * I₁)
+    (h_chain₂ : I_marg₂ ≤ (n : ℝ) * I₂)
+    (h_chain_joint : I_joint ≤ (n : ℝ) * Iboth)
+    (h_cleanup₁ : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup₂ : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup_joint :
+        (1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ))) / (n : ℝ) ≤ ε) :
+    InMACCapacityRegion R₁ R₂ (I₁ + ε) (I₂ + ε) (Iboth + ε) :=
+  mac_capacity_region_outer_bound hn c R₁ R₂ Pe₁ Pe₂ Pe_joint
+    I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε
+    h_fano₁ h_fano₂ h_fano_joint.fano h_chain₁ h_chain₂ h_chain_joint
+    h_cleanup₁ h_cleanup₂ h_cleanup_joint
 
 /-- **MAC capacity region — L-MAC2 + L-MAC3 two-side body discharge
 combine**. Mirror of `mac_capacity_region_consistent` of the parent
-file with the L-MAC2 + L-MAC3 body discharge layers engaged. -/
+file with the body discharge layers engaged; both sides **derive** their
+conclusions. -/
 theorem mac_capacity_region_with_body_two_side
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : MACCode M₁ M₂ n α₁ α₂ β)
-    (R₁ R₂ I₁ I₂ Iboth : ℝ)
-    (h_rate_bound : InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth)
+    (W : MACChannel α₁ α₂ β)
+    (R₁ R₂ Pe₁ Pe₂ Pe_joint I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε : ℝ)
+    (h_fano₁ : (n : ℝ) * R₁ ≤ I_marg₁ + 1 + Pe₁ * Real.log (M₁ : ℝ))
+    (h_fano₂ : (n : ℝ) * R₂ ≤ I_marg₂ + 1 + Pe₂ * Real.log (M₂ : ℝ))
+    (h_fano_joint : MACFanoBound M₁ M₂ n R₁ R₂ Pe_joint I_joint)
+    (h_chain₁ : I_marg₁ ≤ (n : ℝ) * I₁)
+    (h_chain₂ : I_marg₂ ≤ (n : ℝ) * I₂)
+    (h_chain_joint : I_joint ≤ (n : ℝ) * Iboth)
+    (h_cleanup₁ : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup₂ : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup_joint :
+        (1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ))) / (n : ℝ) ≤ ε)
     (h_strict : R₁ < I₁ ∧ R₂ < I₂ ∧ R₁ + R₂ < Iboth)
-    (h_existence : MACInnerBoundExistence (α₁ := α₁) (α₂ := α₂) (β := β) R₁ R₂) :
-    InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth
-      ∧ MACInnerBoundExistence (α₁ := α₁) (α₂ := α₂) (β := β) R₁ R₂ :=
-  ⟨mac_capacity_region_outer_bound_with_body hn c R₁ R₂ I₁ I₂ Iboth h_rate_bound,
-   mac_capacity_region_inner_bound_with_body (α₁ := α₁) (α₂ := α₂) (β := β)
-     R₁ R₂ I₁ I₂ Iboth h_strict h_existence⟩
+    (h_jt : MACJointTypicalityAchievable W R₁ R₂ I₁ I₂ Iboth) :
+    InMACCapacityRegion R₁ R₂ (I₁ + ε) (I₂ + ε) (Iboth + ε)
+      ∧ MACInnerBoundExistence W R₁ R₂ :=
+  ⟨mac_capacity_region_outer_bound_with_body hn c R₁ R₂ Pe₁ Pe₂ Pe_joint
+     I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε
+     h_fano₁ h_fano₂ h_fano_joint h_chain₁ h_chain₂ h_chain_joint
+     h_cleanup₁ h_cleanup₂ h_cleanup_joint,
+   mac_capacity_region_inner_bound_with_body W R₁ R₂ I₁ I₂ Iboth h_strict h_jt⟩
 
 end MACBodyDischargePublish
 

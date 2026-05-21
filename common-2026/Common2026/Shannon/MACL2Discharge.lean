@@ -438,48 +438,41 @@ variable [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
 
 /-- **MAC outer bound — L-MAC2 (per-user) + L-MAC3 (joint) body
 discharge form (publish-layer hook).**
-A thin discharge wrapper around `mac_capacity_region_outer_bound`
-(`MultipleAccessChannel.lean:464`). All three rate-bound slots
-(`R₁ ≤ I₁`, `R₂ ≤ I₂`, `R₁ + R₂ ≤ Iboth`) are now backed by
-**body discharge layers**:
+A genuine discharge wrapper around the (now non-circular)
+`mac_capacity_region_outer_bound` (`MultipleAccessChannel.lean`). All
+three rate-bound directions (`R₁ ≤ I₁ + ε`, `R₂ ≤ I₂ + ε`,
+`R₁ + R₂ ≤ Iboth + ε`) are **derived** from the structural body discharge
+layers, unbundled into the headline's entropy-level Fano + chain inputs:
 
 * per-user Fano body for user 1: `MACSingleFanoBound` +
   `MACPerLetterChain₁` (this file),
 * per-user Fano body for user 2: `MACSingleFanoBound` +
   `MACPerLetterChain₂` (this file),
-* joint-message Fano body: `MACFanoBound` (this file's parent
+* joint-message Fano body: `MACFanoBound` (parent
   `MACBodyDischarge.lean`).
 
-The body remains an identity wrap to the parent's
-`h_rate_bound`, matching the established statement-level
-pass-through pattern of the published outer bound. -/
+The body now feeds the genuine derivation in the headline — it is **not**
+an identity wrap to a circular `h_rate_bound`. -/
 theorem mac_capacity_region_outer_bound_with_full_fano_body
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : MACCode M₁ M₂ n α₁ α₂ β)
-    (R₁ R₂ I₁ I₂ Iboth : ℝ)
-    (h_rate_bound : InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth) :
-    InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth :=
-  mac_capacity_region_outer_bound hn c R₁ R₂ I₁ I₂ Iboth trivial trivial h_rate_bound
-
-/-- **MAC outer bound — `Real.log` rate form, L-MAC2 + L-MAC3 body
-discharge.** Specialisation of
-`mac_capacity_region_outer_bound_with_full_fano_body` to the
-standard `R_k := Real.log M_k / n` rate convention used
-throughout Cover-Thomas. -/
-theorem mac_capacity_region_outer_bound_with_full_fano_body_log_rate
-    {M₁ M₂ n : ℕ} (hn : 0 < n)
-    (c : MACCode M₁ M₂ n α₁ α₂ β)
-    (I₁ I₂ Iboth : ℝ)
-    (h_rate_bound :
-        InMACCapacityRegion
-          (Real.log (M₁ : ℝ) / (n : ℝ))
-          (Real.log (M₂ : ℝ) / (n : ℝ))
-          I₁ I₂ Iboth) :
-    InMACCapacityRegion
-        (Real.log (M₁ : ℝ) / (n : ℝ))
-        (Real.log (M₂ : ℝ) / (n : ℝ))
-        I₁ I₂ Iboth :=
-  mac_capacity_region_outer_bound_with_full_fano_body hn c _ _ I₁ I₂ Iboth h_rate_bound
+    (R₁ R₂ Pe₁ Pe₂ Pe_joint I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε : ℝ)
+    (h_fano₁ : MACSingleFanoBound M₁ n R₁ Pe₁ I_marg₁)
+    (h_fano₂ : MACSingleFanoBound M₂ n R₂ Pe₂ I_marg₂)
+    (h_fano_joint : MACFanoBound M₁ M₂ n R₁ R₂ Pe_joint I_joint)
+    (h_chain₁ : MACPerLetterChain₁ n I_marg₁ I₁)
+    (h_chain₂ : MACPerLetterChain₂ n I_marg₂ I₂)
+    (h_chain_joint : I_joint ≤ (n : ℝ) * Iboth)
+    (h_cleanup₁ : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup₂ : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup_joint :
+        (1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ))) / (n : ℝ) ≤ ε) :
+    InMACCapacityRegion R₁ R₂ (I₁ + ε) (I₂ + ε) (Iboth + ε) :=
+  mac_capacity_region_outer_bound hn c R₁ R₂ Pe₁ Pe₂ Pe_joint
+    I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε
+    h_fano₁.fano h_fano₂.fano h_fano_joint.fano
+    h_chain₁.chain h_chain₂.chain h_chain_joint
+    h_cleanup₁ h_cleanup₂ h_cleanup_joint
 
 end MACL2DischargePublish
 

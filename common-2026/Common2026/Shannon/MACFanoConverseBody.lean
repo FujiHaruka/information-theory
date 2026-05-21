@@ -314,6 +314,71 @@ theorem mac_capacity_region_outer_bound_with_per_user_fano
     h_fano_joint h_chain₁ h_chain₂ h_chain_joint
     h_cleanup₁ h_cleanup₂ h_cleanup_joint
 
+/-- **S22-E — MAC outer bound, per-user directions genuinely Fano-backed
+from measure primitives.**
+
+Builds the published `mac_capacity_region_outer_bound` headline with both
+per-user Fano-side inequalities **genuinely discharged** via
+`macFanoEntropyData_of_measure` →
+`InformationTheory.MeasureFano.fano_inequality_measure_theoretic` (applied
+to each user's message random variable `Wk : Ω → W` and the channel output
+`Yo`), rather than supplied as bare hypotheses. The joint-message Fano-side
+bound and all per-letter chain bounds remain the honest-🟢ʰ entropy-level
+inputs (their discharge — joint-message Fano / conditional-MI chain rule —
+is not yet a project lemma). This is the genuine wiring that backs the
+per-user converse directions with real Fano content while keeping the
+headline non-circular. -/
+theorem mac_capacity_region_outer_bound_of_measure
+    {Ω : Type*} [MeasurableSpace Ω]
+    {W₁ : Type*} [Fintype W₁] [DecidableEq W₁] [Nonempty W₁]
+      [MeasurableSpace W₁] [MeasurableSingletonClass W₁]
+    {W₂ : Type*} [Fintype W₂] [DecidableEq W₂] [Nonempty W₂]
+      [MeasurableSpace W₂] [MeasurableSingletonClass W₂]
+    {Y : Type*} [MeasurableSpace Y]
+    {M₁ M₂ n : ℕ} (hn : 0 < n)
+    (c : MACCode M₁ M₂ n α₁ α₂ β)
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Wk₁ : Ω → W₁) (Wk₂ : Ω → W₂) (Yo : Ω → Y)
+    (dec₁ : Y → W₁) (dec₂ : Y → W₂)
+    (hWk₁ : Measurable Wk₁) (hWk₂ : Measurable Wk₂) (hYo : Measurable Yo)
+    (hdec₁ : Measurable dec₁) (hdec₂ : Measurable dec₂)
+    (hcard₁ : 2 ≤ Fintype.card W₁) (hcard₂ : 2 ≤ Fintype.card W₂)
+    (hMcard₁ : Fintype.card W₁ = M₁) (hMcard₂ : Fintype.card W₂ = M₂)
+    (R₁ R₂ Pe_joint I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε
+      H_W₁ H_W₂ : ℝ)
+    (h_uniform₁ : H_W₁ = (n : ℝ) * R₁)
+    (h_decomp₁ : H_W₁ = I_marg₁ + MeasureFano.condEntropy μ Wk₁ Yo)
+    (h_uniform₂ : H_W₂ = (n : ℝ) * R₂)
+    (h_decomp₂ : H_W₂ = I_marg₂ + MeasureFano.condEntropy μ Wk₂ Yo)
+    (h_fano_joint :
+        (n : ℝ) * (R₁ + R₂)
+          ≤ I_joint + 1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ)))
+    (h_chain₁ : I_marg₁ ≤ (n : ℝ) * I₁)
+    (h_chain₂ : I_marg₂ ≤ (n : ℝ) * I₂)
+    (h_chain_joint : I_joint ≤ (n : ℝ) * Iboth)
+    (h_cleanup₁ :
+        (1 + MeasureFano.errorProb μ Wk₁ Yo dec₁
+          * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup₂ :
+        (1 + MeasureFano.errorProb μ Wk₂ Yo dec₂
+          * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup_joint :
+        (1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ))) / (n : ℝ) ≤ ε) :
+    InMACCapacityRegion R₁ R₂ (I₁ + ε) (I₂ + ε) (Iboth + ε) := by
+  -- The per-user Fano-side inequalities are genuinely discharged from the
+  -- measure-theoretic Fano; rewrite `Fintype.card Wₖ` to the code count `Mₖ`.
+  have hf₁ := (macSingleFanoBound_of_measure μ Wk₁ Yo dec₁ hWk₁ hYo hdec₁ hcard₁
+      h_uniform₁ h_decomp₁).fano
+  have hf₂ := (macSingleFanoBound_of_measure μ Wk₂ Yo dec₂ hWk₂ hYo hdec₂ hcard₂
+      h_uniform₂ h_decomp₂).fano
+  rw [hMcard₁] at hf₁
+  rw [hMcard₂] at hf₂
+  exact mac_capacity_region_outer_bound hn c R₁ R₂
+    (MeasureFano.errorProb μ Wk₁ Yo dec₁) (MeasureFano.errorProb μ Wk₂ Yo dec₂)
+    Pe_joint I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε
+    hf₁ hf₂ h_fano_joint h_chain₁ h_chain₂ h_chain_joint
+    h_cleanup₁ h_cleanup₂ h_cleanup_joint
+
 end MACFanoRepublish
 
 end InformationTheory.Shannon

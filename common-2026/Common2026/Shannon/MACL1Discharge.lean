@@ -530,13 +530,12 @@ The trailing 4-error-event Bonferroni body (Cover-Thomas eqs. 15.65-15.84)
 that would lift `h_existence` from hypothesis to theorem is **out of
 scope** of this file and remains future work. -/
 theorem mac_capacity_region_inner_bound_with_joint_typ_aep
+    (W : MACChannel α₁ α₂ β)
     (R₁ R₂ I₁ I₂ Iboth : ℝ)
-    (_h_strict : R₁ < I₁ ∧ R₂ < I₂ ∧ R₁ + R₂ < Iboth)
-    (h_existence : MACInnerBoundExistence (α₁ := α₁) (α₂ := α₂) (β := β) R₁ R₂) :
-    MACInnerBoundExistence (α₁ := α₁) (α₂ := α₂) (β := β) R₁ R₂ :=
-  mac_capacity_region_inner_bound
-    (α₁ := α₁) (α₂ := α₂) (β := β)
-    R₁ R₂ I₁ I₂ Iboth _h_strict trivial h_existence
+    (h_strict : R₁ < I₁ ∧ R₂ < I₂ ∧ R₁ + R₂ < Iboth)
+    (h_jt : MACJointTypicalityAchievable W R₁ R₂ I₁ I₂ Iboth) :
+    MACInnerBoundExistence W R₁ R₂ :=
+  mac_capacity_region_inner_bound W R₁ R₂ I₁ I₂ Iboth h_strict h_jt
 
 end MACInnerBoundDischarge
 

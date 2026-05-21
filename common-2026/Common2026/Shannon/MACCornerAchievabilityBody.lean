@@ -89,27 +89,6 @@ section MACAverageError
 variable {α₁ α₂ β : Type*}
 variable [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
 
-/-- **Pointwise MAC error probability** when message pair `m = (m₁, m₂)`
-is sent. The MAC kernel `W : Kernel (α₁ × α₂) β` is applied symbol-wise to
-the pair of codewords `(encoder₁ m₁ i, encoder₂ m₂ i)`, giving the
-memoryless block output `Measure.pi (i ↦ W (encoder₁ m.1 i, encoder₂ m.2 i))`;
-the error probability at `m` is the mass this assigns to `c.errorEvent m`.
-
-This is the MAC analogue of `Code.errorProbAt`. -/
-noncomputable def MACCode.errorProbAt
-    {M₁ M₂ n : ℕ} (c : MACCode M₁ M₂ n α₁ α₂ β)
-    (W : MACChannel α₁ α₂ β) (m : Fin M₁ × Fin M₂) : ℝ≥0∞ :=
-  (Measure.pi (fun i => W (c.encoder₁ m.1 i, c.encoder₂ m.2 i))) (c.errorEvent m)
-
-/-- **Average MAC error probability** under uniform message pairs:
-`(M₁·M₂)⁻¹ ∑_{m} errorProbAt c W m`. For `M₁·M₂ = 0` it is `0`. -/
-noncomputable def MACCode.averageErrorProb
-    {M₁ M₂ n : ℕ} (c : MACCode M₁ M₂ n α₁ α₂ β)
-    (W : MACChannel α₁ α₂ β) : ℝ≥0∞ :=
-  if M₁ * M₂ = 0 then 0
-  else ((M₁ : ℝ≥0∞) * (M₂ : ℝ≥0∞))⁻¹ *
-        ∑ m : Fin M₁ × Fin M₂, c.errorProbAt W m
-
 /-- Each pointwise MAC error probability is `≤ 1` (Markov kernel output is
 a probability measure). -/
 theorem mac_errorProbAt_le_one
@@ -254,41 +233,27 @@ variable {α₁ α₂ β : Type*}
 variable [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
 
 /-- **MAC corner-point achievability — error-carrying existence
-predicate.** Strictly more primitive than `MACInnerBoundExistence`: it
+predicate.** Now that `MACInnerBoundExistence` itself embeds the
+vanishing-error conjunct, this predicate is a definitional alias for it
+(retained for the existing downstream call sites that name it). It
 asserts, for every target error `ε' > 0`, the existence of a code carrying
-`≥ ⌈exp(n Rₖ)⌉` messages **and** with average error probability `< ε'`.
-
-This is the MAC analogue of the conclusion of `channel_coding_achievability`
-(single-user), carrying the genuine vanishing-error content that the bare
-`MACInnerBoundExistence` drops. -/
+`≥ ⌈exp(n Rₖ)⌉` messages **and** with average error probability `< ε'`. -/
 def MACAchievableWithError
     {α₁ α₂ β : Type*}
     [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
     (W : MACChannel α₁ α₂ β) (R₁ R₂ : ℝ) : Prop :=
-  ∀ ε' : ℝ, 0 < ε' →
-    ∃ N : ℕ, ∀ n, N ≤ n →
-      ∃ (M₁ M₂ : ℕ) (c : MACCode M₁ M₂ n α₁ α₂ β),
-        Real.exp ((n : ℝ) * R₁) ≤ (M₁ : ℝ)
-        ∧ Real.exp ((n : ℝ) * R₂) ≤ (M₂ : ℝ)
-        ∧ (c.averageErrorProb W).toReal < ε'
+  MACInnerBoundExistence W R₁ R₂
 
-/-- **Genuine reduction: error-carrying ⇒ bare existence.** The
-error-carrying achievability predicate implies the bare
-`MACInnerBoundExistence`. This is genuine — it forgets the average-error
-witness and the `ε'` quantifier, extracting the code-count existence at a
-single fixed `ε'` (we use `ε' = 1`). It is **not** defeq to the bare
-predicate: the error-carrying predicate has strictly more content. -/
+/-- **Reduction: error-carrying ⇒ existence.** With the redefined
+error-carrying `MACInnerBoundExistence`, this is the definitional
+unfolding of the alias `MACAchievableWithError`. Both predicates now carry
+the average-error witness, so the reduction is the genuine identity on the
+error-carrying achievability content (no witness is dropped). -/
 theorem mac_innerBoundExistence_of_achievableWithError
     (W : MACChannel α₁ α₂ β) (R₁ R₂ : ℝ)
     (h : MACAchievableWithError W R₁ R₂) :
-    MACInnerBoundExistence (α₁ := α₁) (α₂ := α₂) (β := β) R₁ R₂ := by
-  -- Instantiate the error-carrying predicate at the fixed tolerance `ε' = 1`.
-  obtain ⟨N, hN⟩ := h 1 one_pos
-  refine ⟨N, ?_⟩
-  intro n hn
-  obtain ⟨M₁, M₂, c, hM₁, hM₂, _herr⟩ := hN n hn
-  -- Drop the error-probability witness, keeping the code-count existence.
-  exact ⟨M₁, M₂, c, hM₁, hM₂⟩
+    MACInnerBoundExistence W R₁ R₂ :=
+  h
 
 end AchievableWithError
 
@@ -300,33 +265,44 @@ variable {α₁ α₂ β : Type*}
 variable [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
 
 /-- **MAC inner bound — re-publish from the genuine error-carrying
-predicate.** The parent `mac_capacity_region_inner_bound` consumed the
-*bare* `MACInnerBoundExistence` as a hypothesis. Here we replace that
-hypothesis with the genuine error-carrying `MACAchievableWithError`,
-deriving the bare existence internally via
-`mac_innerBoundExistence_of_achievableWithError`. The strict-rate
-condition is forwarded as before. -/
+predicate.** The achievability hypothesis is the genuine error-carrying
+`MACAchievableWithError` (now defeq to the error-carrying
+`MACInnerBoundExistence`); the existence is derived via
+`mac_innerBoundExistence_of_achievableWithError`. -/
 theorem mac_capacity_region_inner_bound_of_achievableWithError
     (W : MACChannel α₁ α₂ β) (R₁ R₂ I₁ I₂ Iboth : ℝ)
     (_h_strict : R₁ < I₁ ∧ R₂ < I₂ ∧ R₁ + R₂ < Iboth)
     (h_ach : MACAchievableWithError W R₁ R₂) :
-    MACInnerBoundExistence (α₁ := α₁) (α₂ := α₂) (β := β) R₁ R₂ :=
+    MACInnerBoundExistence W R₁ R₂ :=
   mac_innerBoundExistence_of_achievableWithError W R₁ R₂ h_ach
 
 /-- **Two-side combine — error-carrying achievability + converse.**
 Mirror of `mac_capacity_region_consistent` with the achievability side
-backed by the genuine error-carrying predicate rather than the bare
-existence. -/
+backed by the genuine error-carrying predicate and the converse side
+**derived** from the entropy-level Fano + chain inputs. -/
 theorem mac_capacity_region_consistent_of_achievableWithError
     (W : MACChannel α₁ α₂ β)
     {M₁ M₂ n : ℕ} (hn : 0 < n) (c : MACCode M₁ M₂ n α₁ α₂ β)
-    (R₁ R₂ I₁ I₂ Iboth : ℝ)
-    (h_rate_bound : InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth)
-    (_h_strict : R₁ < I₁ ∧ R₂ < I₂ ∧ R₁ + R₂ < Iboth)
+    (R₁ R₂ Pe₁ Pe₂ Pe_joint I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε : ℝ)
+    (h_fano₁ : (n : ℝ) * R₁ ≤ I_marg₁ + 1 + Pe₁ * Real.log (M₁ : ℝ))
+    (h_fano₂ : (n : ℝ) * R₂ ≤ I_marg₂ + 1 + Pe₂ * Real.log (M₂ : ℝ))
+    (h_fano_joint :
+        (n : ℝ) * (R₁ + R₂)
+          ≤ I_joint + 1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ)))
+    (h_chain₁ : I_marg₁ ≤ (n : ℝ) * I₁)
+    (h_chain₂ : I_marg₂ ≤ (n : ℝ) * I₂)
+    (h_chain_joint : I_joint ≤ (n : ℝ) * Iboth)
+    (h_cleanup₁ : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup₂ : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε)
+    (h_cleanup_joint :
+        (1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ))) / (n : ℝ) ≤ ε)
     (h_ach : MACAchievableWithError W R₁ R₂) :
-    InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth
-      ∧ MACInnerBoundExistence (α₁ := α₁) (α₂ := α₂) (β := β) R₁ R₂ :=
-  ⟨mac_capacity_region_outer_bound hn c R₁ R₂ I₁ I₂ Iboth trivial trivial h_rate_bound,
+    InMACCapacityRegion R₁ R₂ (I₁ + ε) (I₂ + ε) (Iboth + ε)
+      ∧ MACInnerBoundExistence W R₁ R₂ :=
+  ⟨mac_capacity_region_outer_bound hn c R₁ R₂ Pe₁ Pe₂ Pe_joint
+     I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε
+     h_fano₁ h_fano₂ h_fano_joint h_chain₁ h_chain₂ h_chain_joint
+     h_cleanup₁ h_cleanup₂ h_cleanup_joint,
    mac_innerBoundExistence_of_achievableWithError W R₁ R₂ h_ach⟩
 
 end Republish
