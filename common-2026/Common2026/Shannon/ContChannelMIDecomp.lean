@@ -616,4 +616,55 @@ theorem isAwgnMIDecomp_of_densitySplit
   awgn_midecomp_of_cont_chain P N h_meas
     (isContChannelMIDecompHyp_awgn P N hN hPN h_meas h_out)
 
+/-- **Closed-form Gaussian MI from `h_out` alone.**
+
+Same as `awgn_mi_gaussian_closed_form_of_primitives` but with the `h_decomp`
+argument removed: `IsAwgnMIDecomp` is now discharged genuinely via Route B
+(`isAwgnMIDecomp_of_densitySplit`), leaving only `h_out` honest. -/
+theorem awgn_mi_gaussian_closed_form_of_out
+    (P : ℝ) (hP_pos : (0 : ℝ) < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
+    (h_meas : IsAwgnChannelMeasurable N)
+    (h_out : IsAwgnOutputGaussian P N h_meas) :
+    (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
+        (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas)).toReal
+      = (1/2) * Real.log (1 + P / (N : ℝ)) := by
+  have hN_NN : N ≠ 0 :=
+    fun h => hN (by exact_mod_cast (congrArg (fun x : ℝ≥0 => (x : ℝ)) h))
+  have hP_toNN_pos : (0 : ℝ≥0) < P.toNNReal := Real.toNNReal_pos.mpr hP_pos
+  have hPN : P.toNNReal + N ≠ 0 :=
+    (add_pos_of_pos_of_nonneg hP_toNN_pos (zero_le' (a := N))).ne'
+  have h_decomp : IsAwgnMIDecomp P N h_meas :=
+    isAwgnMIDecomp_of_densitySplit P N hN_NN hPN h_meas h_out
+  exact awgn_mi_gaussian_closed_form_of_primitives P hP_pos N hN h_meas h_out h_decomp
+
+/-- **AWGN capacity closed form from `h_out` (plus `h_bdd`/`h_max_ent`).**
+
+Same as `awgn_capacity_closed_form_F2_discharged` but with the `h_decomp`
+argument removed: `IsAwgnMIDecomp` is now discharged genuinely via Route B
+(`isAwgnMIDecomp_of_densitySplit`), leaving only `h_out`/`h_bdd`/`h_max_ent`
+honest. -/
+theorem awgn_capacity_closed_form_of_out
+    (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
+    (h_out : IsAwgnOutputGaussian P N (isAwgnChannelMeasurable N))
+    (h_bdd :
+        BddAbove ((fun p : Measure ℝ =>
+            (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
+                p (awgnChannel N (isAwgnChannelMeasurable N))).toReal) ''
+          { p : Measure ℝ | IsProbabilityMeasure p ∧ ∫ x, x^2 ∂p ≤ P }))
+    (h_max_ent :
+        ∀ p ∈ { p : Measure ℝ | IsProbabilityMeasure p ∧ ∫ x, x^2 ∂p ≤ P },
+          (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
+              p (awgnChannel N (isAwgnChannelMeasurable N))).toReal
+            ≤ (1/2) * Real.log (1 + P / (N : ℝ))) :
+    awgnCapacity P N (isAwgnChannelMeasurable N)
+      = (1/2) * Real.log (1 + P / (N : ℝ)) := by
+  have hN_NN : N ≠ 0 :=
+    fun h => hN (by exact_mod_cast (congrArg (fun x : ℝ≥0 => (x : ℝ)) h))
+  have hP_toNN_pos : (0 : ℝ≥0) < P.toNNReal := Real.toNNReal_pos.mpr hP
+  have hPN : P.toNNReal + N ≠ 0 :=
+    (add_pos_of_pos_of_nonneg hP_toNN_pos (zero_le' (a := N))).ne'
+  have h_decomp : IsAwgnMIDecomp P N (isAwgnChannelMeasurable N) :=
+    isAwgnMIDecomp_of_densitySplit P N hN_NN hPN (isAwgnChannelMeasurable N) h_out
+  exact awgn_capacity_closed_form_F2_discharged P hP N hN h_out h_decomp h_bdd h_max_ent
+
 end InformationTheory.Shannon.AWGN
