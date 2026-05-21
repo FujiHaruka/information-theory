@@ -396,6 +396,7 @@ noncomputable def lz78AchievSlack (n : ℕ) : ℝ :=
         + 1 / Real.sqrt (n : ℝ))
       * ((Nat.log 2 (Fintype.card α) : ℝ) + 2)
 
+omit [MeasurableSingletonClass α] in
 /-- **Per-block, per-path Ziv upper bound** (Phase Z4 core step): for `n ≥ 2`
 and a fixed observed path whose `n`-block cylinder has positive mass, the
 bit rate of the distinct code is below the base-2 per-block estimator plus
@@ -557,6 +558,7 @@ theorem lz78DistinctRate_le_blockLogAvg₂_add_slack
       linarith
     convert hgoal using 2
 
+omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- **The achievability slack vanishes**: `lz78AchievSlack n → 0` as
 `n → ∞`. Both terms vanish (`1/(n log 2) → 0`; the envelope `2K/log n + 1/√n
 → 0` times the constant alphabet cost). -/
@@ -620,7 +622,17 @@ theorem isLZ78AchievabilityZivUpperBound_distinct
       m ≤ n → 0 < prefixBlockProb μ p ω m) :
     IsLZ78AchievabilityZivUpperBound μ p
       (@lz78DistinctEncodingLength α _ _ _) (lz78AchievSlack (α := α)) := by
-  sorry
+  -- the genuine factorization from the regularity hypothesis.
+  have hfac : IsLZ78PerPathParsingFactorization μ p :=
+    isLZ78PerPathParsingFactorization_of_pos μ p hreg
+  refine ⟨?_, lz78AchievSlack_tendsto_zero⟩
+  -- the upper bound holds for *every* `ω` (given `hreg`), eventually in `n`.
+  refine Filter.Eventually.of_forall (fun ω => ?_)
+  filter_upwards [Filter.eventually_ge_atTop 2] with n hn
+  -- `Pₙ > 0` is `hreg n ω n` (prefixBlockProb at the full length).
+  have hPn : 0 < (μ.map (p.blockRV n)).real {p.blockRV n ω} :=
+    hreg n ω n (le_refl n)
+  exact lz78DistinctRate_le_blockLogAvg₂_add_slack μ p hcore hfac n hn ω hPn
 
 end Assembly
 
