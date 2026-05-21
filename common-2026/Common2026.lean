@@ -85,6 +85,7 @@ import Common2026.Shannon.ConditionalMethodOfTypes
 import Common2026.Shannon.RateDistortionAchievabilityPhaseEStrongFinal
 import Common2026.Shannon.ShannonCode
 import Common2026.Shannon.ShannonCodeKraftReverse
+import Common2026.Shannon.McMillanKraftBridge
 import Common2026.Shannon.Huffman
 import Common2026.Shannon.HuffmanOptimality
 import Common2026.Shannon.HuffmanT1APPrimePartial
