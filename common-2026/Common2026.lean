@@ -227,6 +227,7 @@ import Common2026.Shannon.HoeffdingSandwichDischarge
 import Common2026.Shannon.HoeffdingTradeoffExp
 import Common2026.Shannon.LZ78FinalGlue
 import Common2026.Shannon.LZ78DistinctEncoding
+import Common2026.Shannon.LZ78ZivEntropyBridge
 import Common2026.Shannon.EPIStamDeBruijnConclusion
 import Common2026.Shannon.MACPerEventAEPDecay
 import Common2026.Shannon.MACFanoConverseBody
