@@ -550,20 +550,16 @@ variable [MeasurableSpace Ω]
 /-- **LZ78 asymptotic optimality — SMB hypothesis discharged**.
 
 Same shape as `lz78_asymptotic_optimality_two_sided`
-(`LempelZiv78.lean` §4), but the L-LZ3 SMB sandwich slot is no longer
-a `True` placeholder argument: the body discharge from
-`shannon_mcmillan_breiman` feeds the parent placeholder
-internally. The caller now supplies only the two remaining
-hypothesis pass-throughs (L-LZ1 Ziv inequality, L-LZ2 LZ78 converse)
-and the four sandwich ingredients on the LZ78 *encoding length*. -/
+(`LempelZiv78.lean` §4). After the headline de-circularization the three
+`True` pass-through predicates (Ziv / converse / SMB) are no longer
+hypotheses of the parent two-sided theorem at all, so this wrapper simply
+forwards the four genuine sandwich ingredients on the LZ78 *encoding
+length*. The body is a genuine application of
+`lz78_asymptotic_optimality_two_sided`. -/
 theorem lz78_asymptotic_optimality_two_sided_smb_discharged
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
     (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (h_ziv : IsZivInequalityPassthrough μ p.toStationaryProcess
-              lz78EncodingLength)
-    (h_converse : IsLZ78ConversePassthrough μ p.toStationaryProcess
-                  lz78EncodingLength)
     (h_lower : ∀ᵐ ω ∂μ,
         entropyRate μ p.toStationaryProcess
         ≤ Filter.liminf
@@ -596,7 +592,6 @@ theorem lz78_asymptotic_optimality_two_sided_smb_discharged
         Filter.atTop
         (𝓝 (entropyRate μ p.toStationaryProcess)) :=
   lz78_asymptotic_optimality_two_sided μ p lz78EncodingLength
-    h_ziv h_converse (IsSMBSandwichPassthrough.ofErgodic μ p)
     h_lower h_upper h_bdd_above h_bdd_below
 
 end FullLZ78SMB

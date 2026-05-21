@@ -28,10 +28,12 @@ This single file publishes:
   — the type-level encoding of an LZ78 dictionary parsing.
 * **§2. Passthrough predicates** (`IsZivInequalityPassthrough`,
   `IsLZ78ConversePassthrough`, `IsSMBSandwichPassthrough`) — `True`
-  placeholders for the four discharged ingredients (Ziv's inequality, SMB
-  sandwich, and the converse), upgraded to a meaningful predicate
-  signature so that downstream discharge plans can replace `True` with the
-  real statement without modifying the main theorem's external signature.
+  placeholders for the discharged ingredients (Ziv's inequality, SMB
+  sandwich, the converse). These are **no longer hypotheses of the §4 main
+  theorem**; they survive only as discharge plumbing consumed by the
+  `.of*` bridge constructors in the downstream LZ78 files. The genuine
+  residual of the headline is the two-sided sandwich on `lz/n`, not any of
+  these predicates.
 * **§3. Cut and intermediate-form theorems** —
   `lz78_achievability_upper_bound`, `lz78_converse_lower_bound`.
 * **§4. Main theorem** — `lz78_asymptotic_optimality` (Cover–Thomas
@@ -64,10 +66,17 @@ strategy as `RelayCutset.lean` (T3-F):
   consumes a generic encoding-length function
   `lz78EncodingLength : ∀ n, (Fin n → α) → ℕ` supplied as a parameter.
   Discharge plan: `lz78-encode-impl-*`.
-* **L-LZ5**: The final composite rate bound itself is supplied as
-  `h_rate_bound` hypothesis; the main theorem's body is the identity wrap
-  `:= h_rate_bound`. Discharge plan:
-  `lz78-asymptotic-optimality-discharge-*`.
+* **L-LZ5**: The main theorem `lz78_asymptotic_optimality` is **not** an
+  identity wrap of its conclusion. It takes the genuine two-sided sandwich
+  on `lz/n` — the liminf lower bound `entropyRate ≤ liminf (lz/n)`, the
+  limsup upper bound `limsup (lz/n) ≤ entropyRate`, and the two
+  boundedness hypotheses — and *derives* the a.s. Tendsto via
+  `tendsto_of_le_liminf_of_limsup_le`. The sandwich residual is distinct
+  from the conclusion (`≤` bounds vs. `Tendsto … (𝓝 entropyRate)`). The
+  maximally-discharged chain-level form (residual = the genuine
+  Cover–Thomas Eq. 13.124 / 13.130 `blockLogAvg` inequalities, SMB
+  sandwich discharged internally) is `lz78_two_sided_optimality_ergodic`
+  in `LZ78FinalGlue.lean` (which imports this file).
 
 Out of scope (separate seeds):
 
@@ -88,10 +97,13 @@ type-level signatures.
 
 ## Pattern source
 
-The 5-retreat-line + main-theorem-body-`:= h_rate_bound` pattern is
-directly modelled on T3-F `relay_cutset_outer_bound`
-(`Common2026/Shannon/RelayCutset.lean`), which in turn descends from T3-D
-`wyner_ziv_converse_n_letter` (`Common2026/Shannon/WynerZivConverse.lean`).
+The §4 main theorem is a genuine two-sided-sandwich derivation via
+`tendsto_of_le_liminf_of_limsup_le` (the same combine pattern as
+`shannon_mcmillan_breiman_of_sandwich` in `ShannonMcMillanBreiman.lean`),
+*not* an identity-wrap pass-through. The L-LZ1–L-LZ4 passthrough
+predicates (§2) survive only as discharge plumbing consumed by the
+`.of*` bridges in the downstream LZ78 files; no published headline takes
+any of them as its residual hypothesis.
 -/
 
 namespace InformationTheory.Shannon
@@ -375,8 +387,7 @@ variable [Fintype α] [DecidableEq α] [Nonempty α]
 variable [MeasurableSpace Ω]
 
 /-- **T4-A. Lempel–Ziv 78 asymptotic optimality (Cover–Thomas Theorem
-13.5.3, hypothesis pass-through form, L-LZ1 + L-LZ2 + L-LZ3 + L-LZ4 +
-L-LZ5 all engaged)**.
+13.5.3, two-sided sandwich form)**.
 
 For a stationary ergodic source `p : ErgodicProcess μ α` on a finite
 alphabet `α`, the per-symbol output length of any LZ78-like encoding
@@ -386,72 +397,39 @@ converges almost surely to the entropy rate:
 lim_{n → ∞} (1/n) · lz78EncodingLength(X^n) = entropyRate μ p   a.s.
 ```
 
-The five passthrough slots:
+This headline is **non-circular**: it does *not* take the conclusion
+(`Tendsto … (𝓝 entropyRate)`) as a hypothesis and wrap it. Instead it
+takes the genuine two-sided sandwich on `lz/n` — the liminf lower bound
+`entropyRate ≤ liminf (lz/n)`, the limsup upper bound
+`limsup (lz/n) ≤ entropyRate`, and the two boundedness hypotheses — and
+*derives* the a.s. Tendsto via `tendsto_of_le_liminf_of_limsup_le`.
 
-* `_h_ziv` — Ziv's inequality (L-LZ1; placeholder is `True`, real
-  statement supplied by `lz78-ziv-inequality-discharge-*`).
-* `_h_converse` — the LZ78 converse direction (L-LZ2).
-* `_h_smb` — SMB sandwich a.s. convergence (L-LZ3).
+The hypothesis slots:
+
 * `lz78EncodingLength` — the encoding-length function is taken as a
   *parameter* (L-LZ4), not implemented in this file. Any function from
-  `(Fin n → α) → ℕ` that is consistent with the LZ78 dictionary
-  construction discharges this slot.
-* `h_rate_bound` — the final composite a.s. Tendsto bound (L-LZ5). The
-  body of the theorem is the identity wrap `:= h_rate_bound`.
+  `(Fin n → α) → ℕ` consistent with the LZ78 dictionary discharges it.
+* `h_lower` — the LZ78 converse direction `entropyRate ≤ liminf (lz/n)`
+  a.s. (L-LZ2). This is *not* the conclusion; it is the genuine lower
+  half of the sandwich, supplied downstream by
+  `lz78_converse_lower_bound_with_chain` composed with the SMB liminf.
+* `h_upper` — the Ziv-inequality achievability bound
+  `limsup (lz/n) ≤ entropyRate` a.s. (L-LZ1). Supplied downstream by
+  `lz78_achievability_upper_bound_ergodic`.
+* `h_bdd_above` / `h_bdd_below` — boundedness of the per-symbol rate.
 
-The signature is the direct LZ78 analogue of
-`relay_cutset_outer_bound` (T3-F) and
-`wyner_ziv_converse_n_letter` (T3-D), with the Csiszár / chain
-placeholders upgraded to meaningful (`IsZivInequalityPassthrough`
-etc.) predicates so that the downstream discharge plans can replace the
-`True` body with the real statement without changing the external
-signature of this theorem. -/
+For the maximally-discharged chain-level form (where the residual is the
+genuine `IsLZ78AchievabilityChainHyp` / `IsLZ78ConverseChainHyp`
+Cover–Thomas Eq. 13.124 / 13.130 inequalities relating `lz/n` to
+`blockLogAvg`, with the SMB sandwich discharged internally), see
+`lz78_two_sided_optimality_ergodic` in `LZ78FinalGlue.lean`. That file
+imports this one, so the chain-level discharge cannot be routed back into
+this headline without a circular import; this file therefore publishes
+the sandwich-level (genuine, non-circular) form. -/
 theorem lz78_asymptotic_optimality
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
     (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (_h_ziv : IsZivInequalityPassthrough μ p.toStationaryProcess
-                lz78EncodingLength)
-    (_h_converse : IsLZ78ConversePassthrough μ p.toStationaryProcess
-                    lz78EncodingLength)
-    (_h_smb : IsSMBSandwichPassthrough μ p.toStationaryProcess)
-    (h_rate_bound : ∀ᵐ ω ∂μ,
-        Filter.Tendsto
-          (fun n =>
-            (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
-              / (n : ℝ))
-          Filter.atTop
-          (𝓝 (entropyRate μ p.toStationaryProcess))) :
-    ∀ᵐ ω ∂μ,
-      Filter.Tendsto
-        (fun n =>
-          (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
-            / (n : ℝ))
-        Filter.atTop
-        (𝓝 (entropyRate μ p.toStationaryProcess)) := h_rate_bound
-
-/-- **LZ78 asymptotic optimality — two-sided combine form**.
-
-Instead of supplying the final a.s. Tendsto `h_rate_bound` directly,
-supply the four sandwich ingredients — the limsup upper bound, the
-liminf lower bound, and the two boundedness hypotheses
-(`Filter.IsBoundedUnder` above and below) — and the theorem assembles
-the Tendsto a.s. via `tendsto_of_le_liminf_of_limsup_le` (the same
-combine pattern as `shannon_mcmillan_breiman_of_sandwich` in
-`ShannonMcMillanBreiman.lean`).
-
-This is the practical entry point when an upstream caller has the upper
-and lower bounds separately (typical exit shape of a Ziv-inequality +
-SMB sandwich pipeline). -/
-theorem lz78_asymptotic_optimality_two_sided
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (p : ErgodicProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (_h_ziv : IsZivInequalityPassthrough μ p.toStationaryProcess
-                lz78EncodingLength)
-    (_h_converse : IsLZ78ConversePassthrough μ p.toStationaryProcess
-                    lz78EncodingLength)
-    (_h_smb : IsSMBSandwichPassthrough μ p.toStationaryProcess)
     (h_lower : ∀ᵐ ω ∂μ,
         entropyRate μ p.toStationaryProcess
         ≤ Filter.liminf
@@ -487,6 +465,59 @@ theorem lz78_asymptotic_optimality_two_sided
     with ω hl hu hba hbb
   exact tendsto_of_le_liminf_of_limsup_le hl hu hba hbb
 
+/-- **LZ78 asymptotic optimality — two-sided combine form**.
+
+Public alias for `lz78_asymptotic_optimality` with the same four genuine
+sandwich ingredients — the liminf lower bound, the limsup upper bound, and
+the two boundedness hypotheses (`Filter.IsBoundedUnder` above and below).
+The Tendsto a.s. is assembled via `tendsto_of_le_liminf_of_limsup_le` (the
+same combine pattern as `shannon_mcmillan_breiman_of_sandwich` in
+`ShannonMcMillanBreiman.lean`). The body is a genuine application, not an
+identity wrap of the conclusion.
+
+This is the practical entry point when an upstream caller has the upper
+and lower bounds separately (typical exit shape of a Ziv-inequality +
+SMB sandwich pipeline). The four hypotheses are non-circular: the
+sandwich bounds relate `lz/n` to `entropyRate` via `≤`, distinct from the
+`Tendsto … (𝓝 entropyRate)` conclusion. -/
+theorem lz78_asymptotic_optimality_two_sided
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (p : ErgodicProcess μ α)
+    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
+    (h_lower : ∀ᵐ ω ∂μ,
+        entropyRate μ p.toStationaryProcess
+        ≤ Filter.liminf
+            (fun n =>
+              (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
+                / (n : ℝ))
+            Filter.atTop)
+    (h_upper : ∀ᵐ ω ∂μ,
+        Filter.limsup
+          (fun n =>
+            (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
+              / (n : ℝ))
+          Filter.atTop
+        ≤ entropyRate μ p.toStationaryProcess)
+    (h_bdd_above : ∀ᵐ ω ∂μ,
+        Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
+          (fun n =>
+            (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
+              / (n : ℝ)))
+    (h_bdd_below : ∀ᵐ ω ∂μ,
+        Filter.IsBoundedUnder (· ≥ ·) Filter.atTop
+          (fun n =>
+            (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
+              / (n : ℝ))) :
+    ∀ᵐ ω ∂μ,
+      Filter.Tendsto
+        (fun n =>
+          (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
+            / (n : ℝ))
+        Filter.atTop
+        (𝓝 (entropyRate μ p.toStationaryProcess)) :=
+  lz78_asymptotic_optimality μ p lz78EncodingLength
+    h_lower h_upper h_bdd_above h_bdd_below
+
 /-- **LZ78 asymptotic optimality — combine from limsup and liminf alone**.
 
 Convenience helper that *does not* require the two `IsBoundedUnder`
@@ -494,16 +525,14 @@ hypotheses, since they can often be obtained from the integer-valued
 nature of `lz78EncodingLength n` (bounded above by `n · log |α|` and
 below by `0`). When the caller can supply both `Filter.IsBoundedUnder`
 hypotheses elsewhere, this form is strictly weaker than
-`lz78_asymptotic_optimality_two_sided`. -/
+`lz78_asymptotic_optimality_two_sided`. The single bundled hypothesis is
+the genuine four-way sandwich conjunction (lower / upper / above / below);
+the body is a genuine application of `lz78_asymptotic_optimality_two_sided`,
+not an identity wrap. -/
 theorem lz78_asymptotic_optimality_of_bounds
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
     (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (h_ziv : IsZivInequalityPassthrough μ p.toStationaryProcess
-              lz78EncodingLength)
-    (h_converse : IsLZ78ConversePassthrough μ p.toStationaryProcess
-                  lz78EncodingLength)
-    (h_smb : IsSMBSandwichPassthrough μ p.toStationaryProcess)
     (h_combined : ∀ᵐ ω ∂μ,
         (entropyRate μ p.toStationaryProcess
           ≤ Filter.liminf
@@ -533,7 +562,7 @@ theorem lz78_asymptotic_optimality_of_bounds
         Filter.atTop
         (𝓝 (entropyRate μ p.toStationaryProcess)) := by
   refine lz78_asymptotic_optimality_two_sided μ p lz78EncodingLength
-    h_ziv h_converse h_smb ?_ ?_ ?_ ?_
+    ?_ ?_ ?_ ?_
   · filter_upwards [h_combined] with ω h
     exact h.1
   · filter_upwards [h_combined] with ω h

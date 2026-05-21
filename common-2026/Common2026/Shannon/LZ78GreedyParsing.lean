@@ -535,25 +535,47 @@ to plug into the parent `lz78_asymptotic_optimality` theorem's
 example :
     (∀ n, (Fin n → α) → ℕ) := @lz78GreedyEncodingLength α _
 
-/-- **Together with the trivial Ziv-inequality and converse pass-throughs,
-the concrete `lz78GreedyEncodingLength` can be threaded into
-`lz78_asymptotic_optimality`'s signature**.
+/-- **The concrete `lz78GreedyEncodingLength` threaded into the genuine
+two-sided `lz78_asymptotic_optimality` headline**.
 
-This composite witness is the entry point for downstream callers that
-want to consume the concrete greedy encoding while still relying on
-the parent theorem's hypothesis pass-through form. The `h_smb` and
-`h_rate_bound` slots remain for the caller to supply. -/
+After the headline de-circularization, `lz78_asymptotic_optimality` no
+longer takes the conclusion (`h_rate_bound`) nor the three `True`
+pass-throughs; it takes the genuine two-sided sandwich on `lz/n` and
+*derives* the a.s. Tendsto. This wrapper instantiates the encoding-length
+parameter to the concrete greedy `lz78GreedyEncodingLength` and forwards
+the four genuine sandwich ingredients. The body is a genuine application,
+not an identity wrap of the conclusion. -/
 theorem lz78_asymptotic_optimality_with_greedy_encoding
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
-    (h_smb : IsSMBSandwichPassthrough μ p.toStationaryProcess)
-    (h_rate_bound : ∀ᵐ ω ∂μ,
-        Filter.Tendsto
+    (h_lower : ∀ᵐ ω ∂μ,
+        entropyRate μ p.toStationaryProcess
+        ≤ Filter.liminf
+            (fun n =>
+              (lz78GreedyEncodingLength n
+                  (p.toStationaryProcess.blockRV n ω) : ℝ)
+                / (n : ℝ))
+            Filter.atTop)
+    (h_upper : ∀ᵐ ω ∂μ,
+        Filter.limsup
           (fun n =>
-            (lz78GreedyEncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
+            (lz78GreedyEncodingLength n
+                (p.toStationaryProcess.blockRV n ω) : ℝ)
               / (n : ℝ))
           Filter.atTop
-          (𝓝 (entropyRate μ p.toStationaryProcess))) :
+        ≤ entropyRate μ p.toStationaryProcess)
+    (h_bdd_above : ∀ᵐ ω ∂μ,
+        Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
+          (fun n =>
+            (lz78GreedyEncodingLength n
+                (p.toStationaryProcess.blockRV n ω) : ℝ)
+              / (n : ℝ)))
+    (h_bdd_below : ∀ᵐ ω ∂μ,
+        Filter.IsBoundedUnder (· ≥ ·) Filter.atTop
+          (fun n =>
+            (lz78GreedyEncodingLength n
+                (p.toStationaryProcess.blockRV n ω) : ℝ)
+              / (n : ℝ))) :
     ∀ᵐ ω ∂μ,
       Filter.Tendsto
         (fun n =>
@@ -562,9 +584,7 @@ theorem lz78_asymptotic_optimality_with_greedy_encoding
         Filter.atTop
         (𝓝 (entropyRate μ p.toStationaryProcess)) :=
   lz78_asymptotic_optimality μ p (@lz78GreedyEncodingLength α _)
-    (lz78GreedyEncodingLength_isZivInequalityPassthrough μ p.toStationaryProcess)
-    (lz78GreedyEncodingLength_isLZ78ConversePassthrough μ p.toStationaryProcess)
-    h_smb h_rate_bound
+    h_lower h_upper h_bdd_above h_bdd_below
 
 end ParentCompat
 
