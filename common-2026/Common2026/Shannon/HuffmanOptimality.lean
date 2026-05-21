@@ -199,21 +199,18 @@ private theorem huffmanStep_initMultiset_sibling
 
 omit [Nonempty α] [MeasurableSingletonClass α] in
 /-- **Helper (Phase 2.5)**: 最小 2 確率ペアが存在し、Huffman 語長が等しいことの bridge.
-`exists_sibling_min_pair` 本体で使用. -/
+`exists_sibling_min_pair` 本体で使用.
+
+**strong 形**: `a` が global-min (`∀ c, P{a} ≤ P{c}`) かつ `b` が残りの min
+(`∀ c, c ≠ a → P{b} ≤ P{c}`). これは `huffmanStep_initMultiset_sibling` が返す情報を
+そのまま伝播する (T1-A'' interface refactor で disjunctive 形から強化). -/
 theorem huffmanLength_eq_of_min_prob_pair
     (P : Measure α) [IsProbabilityMeasure P] (_hP : ∀ a, 0 < P.real {a})
     (h_card : 2 ≤ Fintype.card α) :
     ∃ a b : α, a ≠ b ∧ huffmanLength P a = huffmanLength P b ∧
-      (∀ c, P.real {a} ≤ P.real {c} ∨ P.real {b} ≤ P.real {c}) := by
-  obtain ⟨a, b, hab, heq, hmin_a, hmin_b⟩ :=
-    huffmanStep_initMultiset_sibling P h_card
-  refine ⟨a, b, hab, heq, ?_⟩
-  intro c
-  by_cases hca : c = a
-  · -- c = a: P.real {a} ≤ P.real {a} ✓
-    left; rw [hca]
-  · -- c ≠ a: P.real {b} ≤ P.real {c} by hmin_b
-    right; exact hmin_b c hca
+      (∀ c, P.real {a} ≤ P.real {c}) ∧
+      (∀ c, c ≠ a → P.real {b} ≤ P.real {c}) :=
+  huffmanStep_initMultiset_sibling P h_card
 
 /-! ### Sibling property (Cover-Thomas Lemma 5.8.1) -/
 
@@ -223,12 +220,18 @@ omit [Nonempty α] [MeasurableSingletonClass α] in
 最小 2 確率 element の Huffman 語長が等しい. 最深性条項 `(∀ c, huffmanLength P c ≤
 huffmanLength P a)` は本 signature には含めず、Phase 4 主定理側で `exists_deepest_leaf`
 を別途呼ぶ. Cover-Thomas Lemma 5.8.1 (i) の standard 証明 (`l` 側 swap normalization)
-と整合する形. -/
+と整合する形.
+
+**strong 形** (T1-A'' interface refactor): `a` = global-min, `b` = rest-min を返す.
+旧 disjunctive 形 (`∀ c, P{a} ≤ P{c} ∨ P{b} ≤ P{c}`) は swap 論法を閉じられず
+強形 `huffmanLength_optimal` に到達できないため、call site が実際に供給する情報
+(`huffmanStep_initMultiset_sibling`) をそのまま publish する. -/
 theorem exists_sibling_min_pair
     (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})
     (h_card : 2 ≤ Fintype.card α) :
     ∃ a b : α, a ≠ b ∧ huffmanLength P a = huffmanLength P b ∧
-      (∀ c, P.real {a} ≤ P.real {c} ∨ P.real {b} ≤ P.real {c}) :=
+      (∀ c, P.real {a} ≤ P.real {c}) ∧
+      (∀ c, c ≠ a → P.real {b} ≤ P.real {c}) :=
   huffmanLength_eq_of_min_prob_pair P hP h_card
 
 /-! ### Phase 3 helpers — Subtype `α'` lift bridges -/
@@ -755,7 +758,14 @@ typing 用. -/
 universe u
 
 /-- **Weak form hypothesis 1**: swap normalization — 任意 Kraft-feasible `l` を
-`l_norm a = l_norm b` 形に変換可能 (expected length 非増加 + Kraft 維持). -/
+`l_norm a = l_norm b` 形に変換可能 (expected length 非増加 + Kraft 維持).
+
+**strong precondition** (T1-A'' interface refactor): least-prob 対 `(a, b)` について
+`a` = global-min (`_h_a_min`), `b` = rest-min (`_h_b_min`). 旧 disjunctive 形
+`∀ c, Q{a} ≤ Q{c} ∨ Q{b} ≤ Q{c}` は `a` が global-min なだけで `b` は任意でよく、
+Cover-Thomas swap 論法 (least-2 leaf を最長 2 leaf へ swap) が閉じない。call site
+(`huffmanLength_optimal_aux_with_hypotheses` の step case) は `exists_sibling_min_pair`
+経由で strong 形を実際に供給するため、これは weak 化ではなく mis-statement の修正. -/
 abbrev SwapNormalizationHypothesis : Prop :=
   ∀ {β : Type u} [Fintype β] [DecidableEq β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -763,7 +773,8 @@ abbrev SwapNormalizationHypothesis : Prop :=
     (ll : β → ℕ) (_hll_pos : ∀ x, 0 < ll x)
     (_hll_kraft : ∑ x : β, ((2 : ℝ)) ^ (-(ll x : ℤ)) ≤ 1)
     (a b : β) (_hab : a ≠ b)
-    (_h_min : ∀ c, Q.real {a} ≤ Q.real {c} ∨ Q.real {b} ≤ Q.real {c})
+    (_h_a_min : ∀ c, Q.real {a} ≤ Q.real {c})
+    (_h_b_min : ∀ c, c ≠ a → Q.real {b} ≤ Q.real {c})
     (_h_card : 3 ≤ Fintype.card β),
     ∃ l_norm : β → ℕ,
       (∀ x, 0 < l_norm x) ∧
@@ -915,12 +926,12 @@ private theorem huffmanLength_optimal_aux_with_hypotheses (n : ℕ)
       push Not at h_card
       have h_card_ge_3 : 3 ≤ Fintype.card α := h_card
       have h_card_ge_2 : 2 ≤ Fintype.card α := by omega
-      -- sibling pair (a, b) を取得
-      obtain ⟨a, b, hab, h_sib, h_min⟩ :=
+      -- sibling pair (a, b) を取得 (strong: a = global-min, b = rest-min)
+      obtain ⟨a, b, hab, h_sib, h_a_min, h_b_min⟩ :=
         exists_sibling_min_pair P hP h_card_ge_2
       -- l を normalize: l_swap a = l_swap b  (hypothesis `h_swap` 経由)
       obtain ⟨l_norm, hln_pos, hln_kraft, hln_eq_ab, hln_le⟩ :=
-        h_swap P l hl_pos hl_kraft a b hab h_min h_card_ge_3
+        h_swap P l hl_pos hl_kraft a b hab h_a_min h_b_min h_card_ge_3
       -- l_norm a ≥ 2 (otherwise Kraft > 1 with card ≥ 3)
       have hln_a_ge_2 : 2 ≤ l_norm a := by
         by_contra h_lt

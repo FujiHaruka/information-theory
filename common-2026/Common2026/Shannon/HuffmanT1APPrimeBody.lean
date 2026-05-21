@@ -362,7 +362,8 @@ theorem SwapNormalizationHypothesis_apply_witness
     (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
     (hll_kraft : ∑ x : β, ((2 : ℝ)) ^ (-(ll x : ℤ)) ≤ 1)
     (a b : β) (hab : a ≠ b)
-    (h_min : ∀ c, Q.real {a} ≤ Q.real {c} ∨ Q.real {b} ≤ Q.real {c})
+    (h_a_min : ∀ c, Q.real {a} ≤ Q.real {c})
+    (h_b_min : ∀ c, c ≠ a → Q.real {b} ≤ Q.real {c})
     (h_card : 3 ≤ Fintype.card β) :
     ∃ l_norm : β → ℕ,
       (∀ x, 0 < l_norm x) ∧
@@ -370,7 +371,7 @@ theorem SwapNormalizationHypothesis_apply_witness
       l_norm a = l_norm b ∧
       InformationTheory.Shannon.ShannonCode.expectedLength Q l_norm
         ≤ InformationTheory.Shannon.ShannonCode.expectedLength Q ll :=
-  h_swap Q ll hll_pos hll_kraft a b hab h_min h_card
+  h_swap Q ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
 
 /-- **witness positivity extractor**: hypothesis 結論の存在から positivity だけ取り出す. -/
 theorem SwapNormalizationHypothesis_witness_pos
@@ -381,11 +382,12 @@ theorem SwapNormalizationHypothesis_witness_pos
     (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
     (hll_kraft : ∑ x : β, ((2 : ℝ)) ^ (-(ll x : ℤ)) ≤ 1)
     (a b : β) (hab : a ≠ b)
-    (h_min : ∀ c, Q.real {a} ≤ Q.real {c} ∨ Q.real {b} ≤ Q.real {c})
+    (h_a_min : ∀ c, Q.real {a} ≤ Q.real {c})
+    (h_b_min : ∀ c, c ≠ a → Q.real {b} ≤ Q.real {c})
     (h_card : 3 ≤ Fintype.card β) :
     ∃ l_norm : β → ℕ, ∀ x, 0 < l_norm x := by
   obtain ⟨l_norm, hpos, _, _, _⟩ :=
-    h_swap Q ll hll_pos hll_kraft a b hab h_min h_card
+    h_swap Q ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
   exact ⟨l_norm, hpos⟩
 
 /-- **witness kraft extractor**: hypothesis 結論の存在から Kraft だけ取り出す. -/
@@ -397,11 +399,12 @@ theorem SwapNormalizationHypothesis_witness_kraft
     (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
     (hll_kraft : ∑ x : β, ((2 : ℝ)) ^ (-(ll x : ℤ)) ≤ 1)
     (a b : β) (hab : a ≠ b)
-    (h_min : ∀ c, Q.real {a} ≤ Q.real {c} ∨ Q.real {b} ≤ Q.real {c})
+    (h_a_min : ∀ c, Q.real {a} ≤ Q.real {c})
+    (h_b_min : ∀ c, c ≠ a → Q.real {b} ≤ Q.real {c})
     (h_card : 3 ≤ Fintype.card β) :
     ∃ l_norm : β → ℕ, ∑ x : β, ((2 : ℝ)) ^ (-(l_norm x : ℤ)) ≤ 1 := by
   obtain ⟨l_norm, _, hkraft, _, _⟩ :=
-    h_swap Q ll hll_pos hll_kraft a b hab h_min h_card
+    h_swap Q ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
   exact ⟨l_norm, hkraft⟩
 
 /-- **witness sibling equality extractor**: hypothesis 結論から `l_norm a = l_norm b` の
@@ -414,11 +417,12 @@ theorem SwapNormalizationHypothesis_witness_eq
     (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
     (hll_kraft : ∑ x : β, ((2 : ℝ)) ^ (-(ll x : ℤ)) ≤ 1)
     (a b : β) (hab : a ≠ b)
-    (h_min : ∀ c, Q.real {a} ≤ Q.real {c} ∨ Q.real {b} ≤ Q.real {c})
+    (h_a_min : ∀ c, Q.real {a} ≤ Q.real {c})
+    (h_b_min : ∀ c, c ≠ a → Q.real {b} ≤ Q.real {c})
     (h_card : 3 ≤ Fintype.card β) :
     ∃ l_norm : β → ℕ, l_norm a = l_norm b := by
   obtain ⟨l_norm, _, _, heq, _⟩ :=
-    h_swap Q ll hll_pos hll_kraft a b hab h_min h_card
+    h_swap Q ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
   exact ⟨l_norm, heq⟩
 
 /-- **witness expected length extractor**: hypothesis 結論から expectedLength `≤` だけ
@@ -431,13 +435,14 @@ theorem SwapNormalizationHypothesis_witness_expL
     (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
     (hll_kraft : ∑ x : β, ((2 : ℝ)) ^ (-(ll x : ℤ)) ≤ 1)
     (a b : β) (hab : a ≠ b)
-    (h_min : ∀ c, Q.real {a} ≤ Q.real {c} ∨ Q.real {b} ≤ Q.real {c})
+    (h_a_min : ∀ c, Q.real {a} ≤ Q.real {c})
+    (h_b_min : ∀ c, c ≠ a → Q.real {b} ≤ Q.real {c})
     (h_card : 3 ≤ Fintype.card β) :
     ∃ l_norm : β → ℕ,
       InformationTheory.Shannon.ShannonCode.expectedLength Q l_norm
         ≤ InformationTheory.Shannon.ShannonCode.expectedLength Q ll := by
   obtain ⟨l_norm, _, _, _, hle⟩ :=
-    h_swap Q ll hll_pos hll_kraft a b hab h_min h_card
+    h_swap Q ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
   exact ⟨l_norm, hle⟩
 
 /-! ### Section I — `Equiv.swap` permutation の sum invariance 再公開 -/

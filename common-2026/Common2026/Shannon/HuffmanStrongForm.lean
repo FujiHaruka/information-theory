@@ -132,4 +132,16 @@ theorem swap_normalization_strong
     _ ≤ InformationTheory.Shannon.ShannonCode.expectedLength Q l1 := hlA_E_le
     _ ≤ InformationTheory.Shannon.ShannonCode.expectedLength Q ll := hE_l1_le_ll
 
+/-! ### Hyp1 (SwapNormalizationHypothesis) genuine discharge -/
+
+/-- **Hyp1 discharge (Cover–Thomas Lemma 5.8.1 (i))** — `SwapNormalizationHypothesis`
+を引数 hypothesis なしで証明. predicate の strong precondition
+(`_h_a_min` = `a` global-min, `_h_b_min` = `b` rest-min) が `swap_normalization_strong`
+の `h_a_min` / `h_b_min` にそのまま一致するため、core を直接適用するだけ. genuine
+(`:= h` 循環ではない: `swap_normalization_strong` は shorten + keystone + 2-swap の
+実証明). -/
+theorem swap_normalization_proof : SwapNormalizationHypothesis.{u} := by
+  intro β _ _ _ _ _ Q _ ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
+  exact swap_normalization_strong Q ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
+
 end InformationTheory.Shannon.Huffman

@@ -631,7 +631,8 @@ theorem SwapNormalizationHypothesis_at_pair_when_eq
     (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
     (hll_kraft : ∑ x : β, ((2 : ℝ)) ^ (-(ll x : ℤ)) ≤ 1)
     (a b : β) (_hab : a ≠ b)
-    (_h_min : ∀ c, Q.real {a} ≤ Q.real {c} ∨ Q.real {b} ≤ Q.real {c})
+    (_h_a_min : ∀ c, Q.real {a} ≤ Q.real {c})
+    (_h_b_min : ∀ c, c ≠ a → Q.real {b} ≤ Q.real {c})
     (_h_card : 3 ≤ Fintype.card β)
     (h_eq : ll a = ll b) :
     ∃ l_norm : β → ℕ,

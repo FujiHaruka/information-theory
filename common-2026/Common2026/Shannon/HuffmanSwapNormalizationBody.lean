@@ -131,7 +131,11 @@ abbrev EqualizingPermHypothesis : Prop :=
 theorem swapNormalizationHypothesis_of_equalizingPerm
     (h_eq : EqualizingPermHypothesis.{u}) :
     SwapNormalizationHypothesis.{u} := by
-  intro β _ _ _ _ _ Q _ ll hll_pos hll_kraft a b hab h_min h_card
+  intro β _ _ _ _ _ Q _ ll hll_pos hll_kraft a b hab h_a_min _h_b_min h_card
+  -- strong precondition `h_a_min` (a = global-min) supplies the disjunctive `_h_min`
+  -- required by the (FALSE-chain) EqualizingPermHypothesis predicate.
+  have h_min : ∀ c, Q.real {a} ≤ Q.real {c} ∨ Q.real {b} ≤ Q.real {c} :=
+    fun c => Or.inl (h_a_min c)
   obtain ⟨σ, hσ_eq, hσ_expL⟩ :=
     h_eq Q ll hll_pos hll_kraft a b hab h_min h_card
   refine ⟨ll ∘ σ, ?_, ?_, hσ_eq, hσ_expL⟩
