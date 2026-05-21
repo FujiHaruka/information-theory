@@ -181,6 +181,7 @@ import Common2026.Shannon.BroadcastChannelRandomCodebook
 import Common2026.Shannon.WynerZivConverseChain
 import Common2026.Shannon.LZ78ConverseAsymptotic
 import Common2026.Shannon.ChernoffPerTiltSanov
+import Common2026.Shannon.ChernoffSanovDischarge
 import Common2026.Shannon.HoeffdingInteriorBody
 import Common2026.Shannon.WynerZivBinningCovering
 import Common2026.Shannon.GeneralDMCExtension
@@ -228,6 +229,8 @@ import Common2026.Shannon.HoeffdingTradeoffExp
 import Common2026.Shannon.LZ78FinalGlue
 import Common2026.Shannon.LZ78DistinctEncoding
 import Common2026.Shannon.LZ78ZivEntropyBridge
+import Common2026.Shannon.LZ78ConverseKraft
+import Common2026.Shannon.LZ78AchievabilityLimsup
 import Common2026.Shannon.EPIStamDeBruijnConclusion
 import Common2026.Shannon.MACPerEventAEPDecay
 import Common2026.Shannon.MACFanoConverseBody
