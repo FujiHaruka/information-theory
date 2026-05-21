@@ -7,47 +7,43 @@ import Mathlib.Topology.Order.LiminfLimsup
 import Mathlib.Order.LiminfLimsup
 
 /-!
-# LZ78 converse chain-hypothesis assembly (T4-A, L-LZ2)
+# LZ78 converse base-2 liminf assembly (T4-A, L-LZ2)
 
-This file assembles the **converse-direction chain hypothesis**
-`IsLZ78ConverseChainHyp` for the *distinct* LZ78 code
-(`lz78DistinctEncodingLength`, `LZ78DistinctEncoding.lean`) — the
-`h_converse` argument of the headline
-`lz78_two_sided_optimality_distinct_bdd_free` (`LZ78DistinctEncoding.lean`).
+This file assembles the **base-2 (bit) converse liminf lower bound**
+`lz78_converse_le_liminf₂` for the *distinct* LZ78 code from the named
+per-path honest converse coding lower bound, plus the base-2 SMB
+convergence `shannon_mcmillan_breiman₂`. It targets the genuine
+Cover–Thomas Theorem 13.5.3 limit `entropyRate₂ = entropyRate / log 2`
+(entropy in **bits** per symbol; see the base-2 unit note in
+`LZ78AchievabilityLimsup.lean`).
 
 The converse asserts the a.s. liminf lower bound
 
 ```
-∀ᵐ ω ∂μ, liminf (blockLogAvg μ p n ω) ≤ liminf (fun n => lz/n)
+∀ᵐ ω ∂μ, entropyRate₂ μ p ≤ liminf (fun n => lz/n)
 ```
 
-i.e. the LZ78 per-symbol rate cannot asymptotically beat the per-block
-negative log-likelihood (Cover–Thomas Eq. 13.130).
+i.e. the bit-based LZ78 per-symbol rate cannot asymptotically beat the
+per-block negative log-likelihood in bits (Cover–Thomas Eq. 13.130).
 
 ## Honesty status (read this before reusing)
 
 The genuine content of the converse is the **Cover–Thomas Eq. 13.130
-coding lower bound** `(lz n x)/n ≥ blockLogAvg μ p n ω − o(1)` — that any
+coding lower bound** `(lz n x)/n ≥ blockLogAvg₂ μ p n ω − o(1)` — that any
 prefix-free / uniquely-decodable code cannot beat the negative
-log-likelihood *on average*. This is **not** a pointwise fact: per a fixed
-realization `x`, an LZ78 codeword can be *shorter* than `−log Pₙ{x}` (that
-is exactly the universality of LZ78). It is the expectation-level Kraft /
-converse-coding theorem, lifted to an a.s. eventual lower bound; the
-existing `ShannonCode.lean` pointwise lemma
-`rpow_neg_shannonLength_le_real` is about the *Shannon* code length, and
-`lz(x) ≥ shannonLength(x)` fails pointwise, so it does **not** discharge
-this. (See the report accompanying this file: the `lz78-residual-discharge`
-plan's "pointwise `2^{−lz(x)} ≤ Pₙ{x}` via shannonLength" route in Phase
-C3 is mathematically unsound and is **not** used here.)
+log-likelihood (in bits) *on average*. This is **not** a pointwise fact:
+per a fixed realization `x`, an LZ78 codeword can be *shorter* than
+`−log₂ Pₙ{x}` (that is exactly the universality of LZ78). It is the
+expectation-level Kraft / converse-coding theorem, lifted to an a.s.
+eventual lower bound. The pointwise route "`2^{−lz(x)} ≤ Pₙ{x}` via
+Shannon-code length" is mathematically unsound and is **not** used here.
 
 We therefore expose the Eq. 13.130 lower bound as a single, isolated,
-**named honest hypothesis** `IsLZ78ConverseCodingLowerBound`, which is
-*strictly more primitive* than the `blockLogAvg`-level
-`IsLZ78ConverseChainHyp`: it is a per-realization, per-`n` eventual
-inequality `blockLogAvg n ω − slack n ≤ lz/n` with `slack n → 0`, rather
-than a `liminf`-level statement. From it the `liminf` chain hypothesis is
-derived **genuinely** here (`liminf` monotonicity + slack absorption), and
-chained into a converse-discharged distinct headline.
+**named honest hypothesis** `IsLZ78ConverseCodingLowerBound` (bit-based,
+against `blockLogAvg₂`): a per-realization, per-`n` eventual inequality
+`blockLogAvg₂ n ω − slack n ≤ lz/n` with `slack n → 0`. From it the base-2
+liminf lower bound is derived **genuinely** here (`liminf` monotonicity +
+base-2 SMB + slack absorption).
 
 The hypothesis is a genuine `Prop` (type ≠ conclusion), never `True`,
 never a `:= h` defeq alias, and its docstring marks it load-bearing.
@@ -55,13 +51,11 @@ never a `:= h` defeq alias, and its docstring marks it load-bearing.
 ## File layout
 
 * **§1.** `IsLZ78ConverseCodingLowerBound` — the named honest per-path
-  Eq. 13.130 lower bound (load-bearing).
-* **§2.** `isLZ78ConverseChainHyp_of_codingLowerBound` — genuine
-  `liminf` assembly: the coding lower bound implies `IsLZ78ConverseChainHyp`.
-* **§3.** `isLZ78ConverseChainHyp_distinct` — the distinct-code instance.
-* **§4.** `lz78_two_sided_optimality_distinct_converse_discharged` — the
-  headline with `h_converse` removed (supplied internally from the named
-  hypothesis), carrying only `h_achiev` plus the converse coding bound.
+  bit-based Eq. 13.130 lower bound (load-bearing).
+* **§1b.** `shannon_mcmillan_breiman₂` — base-2 SMB convergence (unit
+  conversion of `shannon_mcmillan_breiman`).
+* **§2.** `lz78_converse_le_liminf₂` — genuine base-2 `liminf` assembly:
+  the coding lower bound + base-2 SMB give `entropyRate₂ ≤ liminf (lz/n)`.
 -/
 
 namespace InformationTheory.Shannon

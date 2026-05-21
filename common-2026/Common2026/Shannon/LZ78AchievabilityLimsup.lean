@@ -7,44 +7,41 @@ import Mathlib.Topology.Order.LiminfLimsup
 import Mathlib.Order.LiminfLimsup
 
 /-!
-# LZ78 achievability chain-hypothesis assembly (T4-A, L-LZ1)
+# LZ78 achievability + base-2 distinct headline (T4-A, L-LZ1)
 
-This file assembles the **achievability-direction chain hypothesis**
-`IsLZ78AchievabilityChainHyp` for the *distinct* LZ78 code
-(`lz78DistinctEncodingLength`, `LZ78DistinctEncoding.lean`) — the
-`h_achiev` argument of the headline
-`lz78_two_sided_optimality_distinct_bdd_free`.
+This file assembles the **base-2 (bit) distinct LZ78 headline**
+`lz78_two_sided_optimality_distinct_genuine` from the two primitive
+per-path honest inputs, targeting the genuine Cover–Thomas Theorem 13.5.3
+limit `entropyRate₂ = entropyRate / log 2` (entropy in **bits** per
+symbol).
 
-The achievability asserts the a.s. limsup upper bound
+## Base-2 unit correction (read this first)
 
-```
-∀ᵐ ω ∂μ, limsup (fun n => lz/n) ≤ limsup (blockLogAvg μ p n ω)
-```
-
-i.e. the LZ78 per-symbol rate cannot asymptotically exceed the per-block
-negative log-likelihood (the Ziv-inequality consequence, Cover–Thomas
-Eq. 13.124).
+The LZ78 code length `lz78DistinctEncodingLength` is measured in **bits**
+(`LZ78Phrase.bitLength` uses `Nat.log 2`), whereas `blockLogAvg` /
+`entropyRate` are **natural-log** (nats). The genuine Cover–Thomas Thm
+13.5.3 limit for the bit-based per-symbol rate is therefore the **base-2**
+entropy rate `entropyRate₂ = entropyRate / log 2`, against which the
+bit-based estimator is `blockLogAvg₂ = blockLogAvg / log 2`
+(`LZ78ZivEntropyBridge.lean`). The earlier `→ entropyRate` (nats) form was
+a *unit bug*; this file states the corrected bit-based theorem.
 
 ## Honesty status (read this before reusing)
 
-The genuine content is the **per-path Ziv inequality** `c·log c ≤
-−log Pₙ{x}` (Cover–Thomas Eq. 13.122–124), whose crux is the per-path
-parsing factorization `Pₙ{x} = ∏ⱼ qⱼ`. As recorded in
-`LZ78ZivEntropyBridge.lean`, the current stationary layer carries no
-kernel / `compProd` / disintegration structure to derive that
-factorization, and the genuine combinatorial Ziv inequality is the
-remaining wall on this side. (Note: the existing genuine counting bound
-`lz78PhraseStrings_mul_log_le` gives `c·log c ≤ K·n`, a bound to a
-*constant* rate `K`, not to `limsup blockLogAvg`; bridging `K·n` to
-`−log Pₙ` is exactly the factorization the layer cannot supply.)
-
-We therefore expose the Eq. 13.124 consequence as a single, isolated,
-**named honest hypothesis** `IsLZ78AchievabilityZivUpperBound`, strictly
-more primitive than the `limsup`-level `IsLZ78AchievabilityChainHyp`: it is
-a per-realization, per-`n` eventual inequality `lz/n ≤ blockLogAvg n ω +
-slack n` with `slack → 0`, rather than a `limsup`-level statement. From it
-the `limsup` chain hypothesis is derived **genuinely** here (`limsup`
-monotonicity + SMB convergence + slack absorption).
+The genuine content is the **bit-based per-path Ziv inequality**
+`c·log₂ c ≤ −log₂ Pₙ{x}` (Cover–Thomas Eq. 13.122–124), whose crux is the
+per-path parsing factorization `Pₙ{x} = ∏ⱼ qⱼ`. The genuine *algebraic
+telescoping* of that factorization is now established
+(`StationaryKernel.lean`, `prod_condPhraseProb_telescope` /
+`factor_of_complete_of_pos`), reducing it to **parse-completeness**
+(`boundary c = n`) + positivity. Parse-completeness is *not*
+unconditionally true for the present greedy parse (it leaves an unfinished
+tail; e.g. the block `(a,a)` parses to `[[a]]`, total length `1 < 2`), so
+the Ziv upper bound `c·log₂ c ≤ −log₂ Pₙ` is still exposed as a single
+isolated **named honest hypothesis** `IsLZ78AchievabilityZivUpperBound`
+(bit-based, against `blockLogAvg₂`). The existing genuine counting bound
+`lz78PhraseStrings_mul_log_le` gives `c·log c ≤ K·n` (constant rate `K`),
+not `−log Pₙ`; bridging the two is exactly that factorization.
 
 The hypothesis is a genuine `Prop` (type ≠ conclusion), never `True`,
 never a `:= h` defeq alias, and its docstring marks it load-bearing.
@@ -52,16 +49,15 @@ never a `:= h` defeq alias, and its docstring marks it load-bearing.
 ## File layout
 
 * **§1.** `IsLZ78AchievabilityZivUpperBound` — the named honest per-path
-  Eq. 13.124 upper bound (load-bearing).
-* **§2.** `isLZ78AchievabilityChainHyp_of_zivUpperBound` — genuine
-  `limsup` assembly: the Ziv upper bound implies
-  `IsLZ78AchievabilityChainHyp`.
-* **§3.** `isLZ78AchievabilityChainHyp_distinct` — the distinct-code
-  instance.
-* **§4.** `lz78_two_sided_optimality_distinct_genuine` — the headline with
-  *both* chain hypotheses removed, supplied internally from the two named
-  primitive honest hypotheses (the Ziv upper bound + the converse coding
-  lower bound). This is the maximally-discharged distinct headline.
+  bit-based Eq. 13.124 upper bound (load-bearing).
+* **§2.** `shannon_mcmillan_breiman₂` is reused from `LZ78ConverseKraft.lean`.
+* **§3.** `lz78_achievability_limsup_le₂` — genuine base-2 `limsup`
+  assembly: the Ziv upper bound + base-2 SMB give `limsup (lz/n) ≤
+  entropyRate₂`.
+* **§4.** `lz78_two_sided_optimality_distinct_genuine` — the base-2
+  distinct headline, both directions assembled internally from the two
+  named primitive honest hypotheses (bit-based Ziv upper bound + converse
+  coding lower bound), converging to `entropyRate₂`.
 -/
 
 namespace InformationTheory.Shannon
