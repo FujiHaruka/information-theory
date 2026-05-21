@@ -303,4 +303,78 @@ theorem ziv_count_mul_logb_le_neg_logb_blockProb
     _ = - (Real.log ((μ.map (p.blockRV n)).real {p.blockRV n ω}) / Real.log 2) := by
         rw [neg_div]
 
+/-! ## §4. Deterministic per-symbol count envelope (genuine, ω-uniform) -/
+
+section Envelope
+
+variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+
+/-- **Deterministic, ω-uniform `c(n)/n` envelope** (genuine): for the
+distinct longest-prefix parse of any length-`n` block, the per-symbol
+distinct-phrase count is bounded by an explicit `n`-only function that
+vanishes:
+
+```
+c(n)/n ≤ 2·K / Real.log n + 1 / Real.sqrt n   (K = 8·log(|α|+1)),  for n ≥ 2.
+```
+
+Proved from the deterministic Cover–Thomas counting bound
+`c·log c ≤ K·n` (`lz78PhraseStrings_mul_log_le`, genuine, distribution-free)
+by a case split on `c ≤ √n` vs `c > √n`. This is the ω-independent
+ingredient that makes the achievability slack vanish (the per-phrase
+dictionary cost `(log₂|α|+2)` is multiplied by `c/n`, which this bounds
+uniformly). -/
+theorem lz78Distinct_count_div_le_envelope
+    (n : ℕ) (hn : 2 ≤ n) (x : Fin n → α) :
+    ((lz78PhraseStrings (List.ofFn x)).length : ℝ) / (n : ℝ)
+      ≤ 2 * (8 * Real.log (Fintype.card α + 1)) / Real.log (n : ℝ)
+          + 1 / Real.sqrt (n : ℝ) := by
+  set c : ℝ := ((lz78PhraseStrings (List.ofFn x)).length : ℝ) with hc
+  set K : ℝ := 8 * Real.log (Fintype.card α + 1) with hK
+  have hnR : (2 : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn
+  have hn_pos : (0 : ℝ) < (n : ℝ) := by linarith
+  have hlogn_pos : (0 : ℝ) < Real.log (n : ℝ) := Real.log_pos (by linarith)
+  have hsqrtn_pos : (0 : ℝ) < Real.sqrt (n : ℝ) := Real.sqrt_pos.mpr hn_pos
+  have hc_nn : (0 : ℝ) ≤ c := by rw [hc]; positivity
+  have hK_nn : (0 : ℝ) ≤ K := by
+    rw [hK]
+    have hcard1 : (1 : ℝ) ≤ (Fintype.card α : ℝ) + 1 := by
+      have : (0 : ℝ) ≤ (Fintype.card α : ℝ) := by positivity
+      linarith
+    have := Real.log_nonneg hcard1
+    linarith
+  -- deterministic counting bound `c·log c ≤ K·n`.
+  have hKn : c * Real.log c ≤ K * (n : ℝ) := by
+    have h := lz78PhraseStrings_mul_log_le (List.ofFn x)
+    rw [List.length_ofFn] at h
+    rw [hc, hK]; exact_mod_cast h
+  -- two nonneg terms.
+  have hterm1_nn : (0 : ℝ) ≤ 2 * K / Real.log (n : ℝ) := by positivity
+  have hterm2_nn : (0 : ℝ) ≤ 1 / Real.sqrt (n : ℝ) := by positivity
+  rcases le_or_gt c (Real.sqrt (n : ℝ)) with hsmall | hlarge
+  · -- small `c`: `c/n ≤ √n/n = 1/√n`.
+    have : c / (n : ℝ) ≤ 1 / Real.sqrt (n : ℝ) := by
+      rw [div_le_div_iff₀ hn_pos hsqrtn_pos]
+      calc c * Real.sqrt (n : ℝ) ≤ Real.sqrt (n : ℝ) * Real.sqrt (n : ℝ) :=
+            mul_le_mul_of_nonneg_right hsmall hsqrtn_pos.le
+        _ = (n : ℝ) := Real.mul_self_sqrt hn_pos.le
+        _ = 1 * (n : ℝ) := (one_mul _).symm
+    linarith
+  · -- large `c > √n`: `log c > (1/2) log n`, so `c < 2Kn/log n`.
+    have hc_pos : (0 : ℝ) < c := lt_trans hsqrtn_pos hlarge
+    have hlogc_lb : Real.log (n : ℝ) / 2 < Real.log c := by
+      have h1 : Real.log (Real.sqrt (n : ℝ)) < Real.log c :=
+        Real.log_lt_log hsqrtn_pos hlarge
+      rwa [Real.log_sqrt hn_pos.le] at h1
+    -- `c·(log n / 2) ≤ c log c ≤ Kn`, hence `c/n ≤ 2K/log n`.
+    have hchain : c * (Real.log (n : ℝ) / 2) ≤ K * (n : ℝ) := by
+      refine le_trans ?_ hKn
+      exact mul_le_mul_of_nonneg_left hlogc_lb.le hc_nn
+    have hcn : c / (n : ℝ) ≤ 2 * K / Real.log (n : ℝ) := by
+      rw [div_le_div_iff₀ hn_pos hlogn_pos]
+      nlinarith [hchain, hlogn_pos, hn_pos]
+    linarith
+
+end Envelope
+
 end InformationTheory.Shannon
