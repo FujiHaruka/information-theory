@@ -889,3 +889,21 @@ T1-B/C/D の Sanov plumbing 再利用、T2-D の T2-F 再利用、T3-C の T3-B 
       Huffman 強形) を進めつつ、完成済み 1 章 (Ch.2 or Ch.7) で原稿層をパイロット起動。
     - **scope 注意点 (標準B との緊張)**: Nyquist 2W-DOF は標準B では「Shannon-Hartley を検証済みの目玉にするか / 次元論法を
       公理引用するか」の未決断。C&T 自身が厳密証明していない深さなので、標準B でも例外的に scope-out / 開示が妥当という議論あり (要・原稿執筆時に最終判断)。
+17. **2026-05-21 A群 (壁なし残証明 3 件) 着手 — 既存 discharge scaffolding が全件「偽 / 循環 / 不健全 predicate」と判明** (orchestrator session、
+    調査(監査3並列)→独立壁再評価(pivot)→計画(planner2)→並列実装(worktree2 + main1) の agent chain)。**ロードマップの「A群 = 壁なし」分類は両方向に誤り**だったことを実装で確定:
+    各件とも「真の数学的壁」ではない (全て構築可能) が「quick win」でもなく、しかも**既存の縮約 predicate が標準Bでは discharge 不能な偽/循環/不健全命題**で組まれていた。最大の収穫は
+    この systematic honesty defect の発見・文書化 (将来の偽 predicate 証明への無駄打ちを防止)。各件:
+    - **T1-A'' Huffman 強形**: ✅ keystone `strict_kraft_one_implies_pairing` (`HuffmanSwapNormProof.lean`, Kraft=1⇒最長 leaf 非一意、parity 論法) を genuine 証明 (commit `4020531`)。
+      ❌ **既存縮約鎖 `Swap←EqualizingPerm←EqualizingSwapTarget` (`HuffmanSwapNormalizationBody.lean`) の中間述語 2 つは数学的に偽** (permutation は語長 multiset 保存 →
+      `ll=![1,2,3]` で等長化不能、反例 `lake env lean` 検証済)。docstring に HONESTY ALERT 追記 (commit `b253d91`)。genuine Hyp1 は permutation を捨て **Kraft 保持の語長 multiset 変更構成** (~550 行 moonshot、
+      ファイル自認)。Hyp2 (Identification) は `huffmanStep` の `Multiset.exists_min_image`+`Classical.choose` (非決定的 min 選択) が relabel 不変性を壊す **定義の問題** → 決定的選択 (`List.argmin` 等) への定義 pivot 要 (~150-250 行、blast radius 中)。
+    - **T1-B Chernoff converse**: ✅ step1 逆 Hölder core (`min_ge_exp_neg_mul_rpow_mul_rpow` 等) + ε-relaxed converse 構造 (`ChernoffSanovDischarge.lean`, 474 行, axiom-clean) を genuine 証明・publish。
+      ❌ **既存 predicate `IsBayesErrorPerTiltLowerBound` (定数 C・base Z(λ*)) は数学的に偽** — `bayesErrorMinPmf ~ poly(n)·Z^n` の sub-exponential prefactor (λ*=1/2 で Θ(1/√n)) で定数 C 不在。
+      CLT-port も不可 (対象不一致)。残 crux = honest load-bearing `IsChernoffBandMassToOne` (λ↦Z(λ) の内点一次最適性 `∑Q(log P₁−log P₂)=0` + Q-LLN で band mass→1、~300-500 行、Mathlib-adjacent 微分可能性)。
+      旧 `chernoff_per_tilt_via_RN := h_RN` (二重命名 name-laundering) は本 ε-relaxed path で迂回・置換 (旧循環は predecessor file に残存、docstring で honest 明示)。
+    - **T4-A LZ78**: ✅ distinct headline を **2 つの per-path primitive 仮説**から genuine 構成 (`LZ78ConverseKraft.lean` + `LZ78AchievabilityLimsup.lean`, 両 silent)。`lz78_two_sided_optimality_distinct_genuine` (最大解消 headline) 達成 —
+      blockLogAvg-level の deferral を per-path eventual 不等式に primitive 化。❌ **計画の converse 経路 `2^{-lz(x)}≤Pₙ{x}` (`rpow_neg_shannonLength_le_real`) は数学的に不健全** (Shannon-code 長の補題、`lz≥shannonLength` は pointwise 偽 = LZ78 universality の核心) → 不採用・フラグ。
+      残 crux = `IsLZ78AchievabilityZivUpperBound` (per-path Ziv `c log c ≤ -log Pₙ`、parsing factorization `Pₙ=∏qⱼ` が **`blockRV` (`Stationary.lean:81`) が単純射影で kernel/compProd 構造を欠く**ため当層で導出不可 = 構造的) + `IsLZ78ConverseCodingLowerBound` (13.130 期待値→a.s. 符号化下界)。
+    <br>**メタ結論 (taxonomy 更新)**: L884 の 4 分類に **(e) scaffolding-was-false** を追加すべき — 「既存の縮約 predicate が偽/循環/不健全で discharge 不能、genuine 構成を一から組み直す要」。A群 3 件は (a)/(b) でなく実態は (e) + 定義/構造の壁
+    (Huffman `huffmanStep` 非決定選択 / LZ78 `blockRV` 射影 / Chernoff 一次最適性の不在)。**「真の壁は Stam と Nyquist のみ」(L886) は撤回**: A群の残 crux は数学的深さでなく定義・構造リファクタ (blast radius 中〜大) が支配。
+    完遂は multi-session moonshot (残 ~1000-1500 行、定義 pivot 2 件含む)。本セッションは genuine 進捗を全件 commit し、偽 scaffolding を全件文書化した段階。
