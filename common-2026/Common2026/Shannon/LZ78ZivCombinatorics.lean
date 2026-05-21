@@ -410,7 +410,152 @@ theorem lz78DistinctRate_le_blockLogAvg₂_add_slack
     (hPn : 0 < (μ.map (p.blockRV n)).real {p.blockRV n ω}) :
     (lz78DistinctEncodingLength n (p.blockRV n ω) : ℝ) / (n : ℝ)
       ≤ blockLogAvg₂ μ p n ω + lz78AchievSlack (α := α) n := by
-  sorry
+  classical
+  set c : ℕ := (lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length with hc
+  set Pn : ℝ := (μ.map (p.blockRV n)).real {p.blockRV n ω} with hPndef
+  have hnR : (2 : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn
+  have hn_pos : (0 : ℝ) < (n : ℝ) := by linarith
+  have hlog2_pos : (0 : ℝ) < Real.log 2 := log_two_pos
+  -- `lz = c · (Nat.log 2 (c+1) + Nat.log 2 |α| + 2)`.
+  have hlz : (lz78DistinctEncodingLength n (p.blockRV n ω) : ℝ)
+      = (c : ℝ) * ((Nat.log 2 (c + 1) : ℝ)
+          + (Nat.log 2 (Fintype.card α) : ℝ) + 2) := by
+    rw [lz78DistinctEncodingLength_eq, LZ78Phrase.bitLength_eq]
+    push_cast
+    ring
+  -- base-2 estimator unfolds to `-log Pn / (n log 2)`.
+  have hblk : blockLogAvg₂ μ p n ω = - Real.log Pn / ((n : ℝ) * Real.log 2) := by
+    unfold blockLogAvg₂ blockLogAvg
+    rw [hPndef]; field_simp
+  -- `c ≥ 1` reduction (c = 0 ⟹ lz = 0, trivial).
+  rcases Nat.eq_zero_or_pos c with hc0 | hcpos
+  · -- `c = 0`: `lz = 0`, slack ≥ 0, estimator ≥ 0.
+    rw [hlz, hc0]
+    simp only [Nat.cast_zero, zero_mul, zero_div]
+    have hslk_nn : (0 : ℝ) ≤ lz78AchievSlack (α := α) n := by
+      unfold lz78AchievSlack
+      have h1 : (0 : ℝ) ≤ 1 / ((n : ℝ) * Real.log 2) := by positivity
+      have hlogn_pos : (0 : ℝ) < Real.log (n : ℝ) := Real.log_pos (by linarith)
+      have henv : (0 : ℝ) ≤ 2 * (8 * Real.log (Fintype.card α + 1)) / Real.log (n : ℝ)
+          + 1 / Real.sqrt (n : ℝ) := by
+        have hcard_nn : (0 : ℝ) ≤ (Fintype.card α : ℝ) := by positivity
+        have hKnn : (0 : ℝ) ≤ Real.log (Fintype.card α + 1) :=
+          Real.log_nonneg (by linarith)
+        positivity
+      have hDnn : (0 : ℝ) ≤ (Nat.log 2 (Fintype.card α) : ℝ) + 2 := by positivity
+      have := mul_nonneg henv hDnn
+      linarith
+    have hblk_nn : (0 : ℝ) ≤ blockLogAvg₂ μ p n ω := by
+      rw [hblk]
+      have hPn1 : Pn ≤ 1 := by
+        rw [hPndef]
+        have : IsProbabilityMeasure (μ.map (p.blockRV n)) :=
+          Measure.isProbabilityMeasure_map (p.measurable_blockRV n).aemeasurable
+        exact measureReal_le_one
+      have hlogPn : Real.log Pn ≤ 0 := Real.log_nonpos hPn.le hPn1
+      have : (0 : ℝ) ≤ - Real.log Pn := by linarith
+      positivity
+    linarith
+  · -- `c ≥ 1`: the genuine chain.
+    have hcR_pos : (0 : ℝ) < (c : ℝ) := by exact_mod_cast hcpos
+    have hlogn_pos : (0 : ℝ) < Real.log (n : ℝ) := Real.log_pos (by linarith)
+    -- Z3 base-2 Ziv: `c · logb 2 c ≤ - logb 2 Pn`.
+    have hziv := ziv_count_mul_logb_le_neg_logb_blockProb μ p hcore hfac n ω hPn
+    rw [← hc, ← hPndef] at hziv
+    -- term A: `c · Nat.log 2 (c+1)/n ≤ blockLogAvg₂ + 1/(n log 2)`.
+    -- `Nat.log 2 (c+1) ≤ logb 2 (c+1) = log (c+1)/log 2`.
+    have hnatlog : (Nat.log 2 (c + 1) : ℝ) ≤ Real.log ((c : ℝ) + 1) / Real.log 2 := by
+      have h := Real.natLog_le_logb (c + 1) 2
+      rw [Real.logb] at h
+      push_cast at h
+      exact h
+    -- `log (c+1) ≤ log c + 1/c`.
+    have hlogc1 : Real.log ((c : ℝ) + 1) ≤ Real.log (c : ℝ) + 1 / (c : ℝ) := by
+      have hratio : Real.log (((c : ℝ) + 1) / (c : ℝ)) ≤ ((c : ℝ) + 1) / (c : ℝ) - 1 :=
+        Real.log_le_sub_one_of_pos (by positivity)
+      rw [Real.log_div (by positivity) hcR_pos.ne'] at hratio
+      have hcne : (c : ℝ) ≠ 0 := hcR_pos.ne'
+      have : ((c : ℝ) + 1) / (c : ℝ) - 1 = 1 / (c : ℝ) := by field_simp; ring
+      rw [this] at hratio
+      linarith
+    -- envelope: `c/n ≤ 2K/log n + 1/√n`.
+    have henv := lz78Distinct_count_div_le_envelope n hn (p.blockRV n ω)
+    rw [← hc] at henv
+    set D : ℝ := (Nat.log 2 (Fintype.card α) : ℝ) + 2 with hD
+    set env : ℝ := 2 * (8 * Real.log (Fintype.card α + 1)) / Real.log (n : ℝ)
+      + 1 / Real.sqrt (n : ℝ) with hEnv
+    have hD_nn : (0 : ℝ) ≤ D := by rw [hD]; positivity
+    -- Term A bound: `c · Nat.log 2 (c+1) / n ≤ blockLogAvg₂ + 1/(n log 2)`.
+    -- From `hziv`: `(c log c)/log 2 ≤ -log Pn / log 2`.
+    have hziv' : (c : ℝ) * Real.log (c : ℝ) ≤ - Real.log Pn := by
+      have h := hziv
+      rw [Real.logb, Real.logb] at h
+      -- `c * (log c / log 2) ≤ -(log Pn / log 2)`; multiply by `log 2`.
+      have h2 : (c : ℝ) * Real.log (c : ℝ) / Real.log 2
+          ≤ - (Real.log Pn / Real.log 2) := by
+        calc (c : ℝ) * Real.log (c : ℝ) / Real.log 2
+            = (c : ℝ) * (Real.log (c : ℝ) / Real.log 2) := by ring
+          _ ≤ - (Real.log Pn / Real.log 2) := h
+      have h3 := mul_le_mul_of_nonneg_right h2 hlog2_pos.le
+      rw [div_mul_cancel₀ _ hlog2_pos.ne', neg_mul,
+        div_mul_cancel₀ _ hlog2_pos.ne'] at h3
+      linarith
+    -- `c · Nat.log 2 (c+1) ≤ (c log c + 1)/log 2`.
+    have htermA_num : (c : ℝ) * (Nat.log 2 (c + 1) : ℝ)
+        ≤ ((c : ℝ) * Real.log (c : ℝ) + 1) / Real.log 2 := by
+      calc (c : ℝ) * (Nat.log 2 (c + 1) : ℝ)
+          ≤ (c : ℝ) * (Real.log ((c : ℝ) + 1) / Real.log 2) :=
+            mul_le_mul_of_nonneg_left hnatlog hcR_pos.le
+        _ ≤ (c : ℝ) * ((Real.log (c : ℝ) + 1 / (c : ℝ)) / Real.log 2) := by
+            apply mul_le_mul_of_nonneg_left _ hcR_pos.le
+            apply div_le_div_of_nonneg_right hlogc1 hlog2_pos.le
+        _ = ((c : ℝ) * Real.log (c : ℝ) + 1) / Real.log 2 := by
+            field_simp
+    -- Assemble the full inequality.
+    rw [hlz, hblk]
+    -- `lz/n = (c·natlog(c+1) + c·D)/n`.
+    have hn_ne : (n : ℝ) ≠ 0 := hn_pos.ne'
+    rw [show (c : ℝ) * ((Nat.log 2 (c + 1) : ℝ)
+            + (Nat.log 2 (Fintype.card α) : ℝ) + 2)
+          = (c : ℝ) * (Nat.log 2 (c + 1) : ℝ) + (c : ℝ) * D by rw [hD]; ring]
+    rw [add_div]
+    -- Term A: `(c·natlog(c+1))/n ≤ (-log Pn)/(n log2) + 1/(n log2)`.
+    have hAterm : ((c : ℝ) * (Nat.log 2 (c + 1) : ℝ)) / (n : ℝ)
+        ≤ (- Real.log Pn) / ((n : ℝ) * Real.log 2)
+            + 1 / ((n : ℝ) * Real.log 2) := by
+      have hnum : (c : ℝ) * (Nat.log 2 (c + 1) : ℝ)
+          ≤ (- Real.log Pn + 1) / Real.log 2 := by
+        calc (c : ℝ) * (Nat.log 2 (c + 1) : ℝ)
+            ≤ ((c : ℝ) * Real.log (c : ℝ) + 1) / Real.log 2 := htermA_num
+          _ ≤ (- Real.log Pn + 1) / Real.log 2 := by
+              apply div_le_div_of_nonneg_right _ hlog2_pos.le
+              linarith [hziv']
+      calc ((c : ℝ) * (Nat.log 2 (c + 1) : ℝ)) / (n : ℝ)
+          ≤ ((- Real.log Pn + 1) / Real.log 2) / (n : ℝ) :=
+            div_le_div_of_nonneg_right hnum hn_pos.le
+        _ = (- Real.log Pn) / ((n : ℝ) * Real.log 2)
+              + 1 / ((n : ℝ) * Real.log 2) := by
+            rw [div_div, add_div]
+            ring_nf
+    -- Term B: `(c·D)/n ≤ env·D`.
+    have hBterm : ((c : ℝ) * D) / (n : ℝ) ≤ env * D := by
+      rw [mul_comm (c : ℝ) D, mul_div_assoc]
+      calc D * ((c : ℝ) / (n : ℝ)) ≤ D * env :=
+            mul_le_mul_of_nonneg_left (by rw [hEnv]; exact henv) hD_nn
+        _ = env * D := by ring
+    -- Combine: `lz/n ≤ blockLogAvg₂ + slack`.
+    -- `slack = 1/(n log2) + env·D`.
+    have hslack_eq : lz78AchievSlack (α := α) n
+        = 1 / ((n : ℝ) * Real.log 2) + env * D := by
+      rw [lz78AchievSlack, hEnv, hD]
+    rw [hslack_eq]
+    have hgoal :
+        ((c : ℝ) * (Nat.log 2 (c + 1) : ℝ)) / (n : ℝ) + ((c : ℝ) * D) / (n : ℝ)
+          ≤ (- Real.log Pn) / ((n : ℝ) * Real.log 2)
+              + (1 / ((n : ℝ) * Real.log 2) + env * D) := by
+      have := add_le_add hAterm hBterm
+      linarith
+    convert hgoal using 2
 
 /-- **The achievability slack vanishes**: `lz78AchievSlack n → 0` as
 `n → ∞`. Both terms vanish (`1/(n log 2) → 0`; the envelope `2K/log n + 1/√n
