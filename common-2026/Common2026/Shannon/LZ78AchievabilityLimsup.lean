@@ -29,19 +29,25 @@ a *unit bug*; this file states the corrected bit-based theorem.
 ## Honesty status (read this before reusing)
 
 The genuine content is the **bit-based per-path Ziv inequality**
-`c·log₂ c ≤ −log₂ Pₙ{x}` (Cover–Thomas Eq. 13.122–124), whose crux is the
-per-path parsing factorization `Pₙ{x} = ∏ⱼ qⱼ`. The genuine *algebraic
-telescoping* of that factorization is now established
-(`StationaryKernel.lean`, `prod_condPhraseProb_telescope` /
-`factor_of_complete_of_pos`), reducing it to **parse-completeness**
-(`boundary c = n`) + positivity. Parse-completeness is *not*
-unconditionally true for the present greedy parse (it leaves an unfinished
-tail; e.g. the block `(a,a)` parses to `[[a]]`, total length `1 < 2`), so
-the Ziv upper bound `c·log₂ c ≤ −log₂ Pₙ` is still exposed as a single
-isolated **named honest hypothesis** `IsLZ78AchievabilityZivUpperBound`
-(bit-based, against `blockLogAvg₂`). The existing genuine counting bound
+`c·log₂ c ≤ −log₂ Pₙ{x}` (Cover–Thomas Eq. 13.122–124). Its parsing
+factorization side is now **genuine** (`StationaryKernel.lean`): the
+algebraic telescoping `prod_condPhraseProb_telescope` plus prefix
+monotonicity gives the unconditional Ziv-direction inequality
+`Pₙ{x} ≤ ∏ⱼ qⱼ` (`blockProb_le_prod_condPhraseProb`), and
+`isLZ78PerPathParsingFactorization_of_pos` constructs the factorization
+from a.s. regularity alone — the earlier *false* parse-completeness
+equality `Pₙ = ∏ⱼ qⱼ` (which leaves an unfinished tail; e.g. the block
+`(a,a)` parses to `[[a]]`, length `1 < 2`) is no longer needed.
+
+What is *still* load-bearing is the **distinct-phrase combinatorial Ziv
+core** `c·log₂ c ≤ ∑ⱼ −log₂ qⱼ` (Cover–Thomas Lemma 13.5.5): the log-sum
+step needs the conditional factors to behave like a (sub-)distribution
+(`∑ qⱼ ≤ 1` per dictionary stratum), which is the genuine Ziv
+combinatorics, not a telescoping. The existing genuine counting bound
 `lz78PhraseStrings_mul_log_le` gives `c·log c ≤ K·n` (constant rate `K`),
-not `−log Pₙ`; bridging the two is exactly that factorization.
+not `−log Pₙ`. The Ziv upper bound `c·log₂ c ≤ −log₂ Pₙ` therefore remains
+exposed as a single isolated **named honest hypothesis**
+`IsLZ78AchievabilityZivUpperBound` (bit-based, against `blockLogAvg₂`).
 
 The hypothesis is a genuine `Prop` (type ≠ conclusion), never `True`,
 never a `:= h` defeq alias, and its docstring marks it load-bearing.

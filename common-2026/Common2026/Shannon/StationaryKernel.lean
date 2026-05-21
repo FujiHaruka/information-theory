@@ -1,4 +1,5 @@
 import Common2026.Shannon.LZ78ZivEntropyBridge
+import Common2026.Shannon.LZ78ZivCountingBody
 import Common2026.Shannon.EntropyRate
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 
@@ -123,5 +124,149 @@ theorem factor_of_complete_of_pos
           condPhraseProb μ p n ω j := by
   rw [prod_condPhraseProb_telescope μ p n ω _ hpos, hcomplete]
   rfl
+
+/-! ## Genuine Ziv-direction factorization (parse-completeness defect fix)
+
+The `factor` field of `IsLZ78PerPathParsingFactorization`
+(`LZ78ZivEntropyBridge.lean`) was originally stated as the **equality**
+`Pₙ{block ω} = ∏ⱼ condPhraseProb …`. That equality is *genuinely false*
+in general: the longest-prefix greedy parse `lz78PhraseStrings` leaves an
+unfinished tail, so the phrase boundaries cover only
+`boundary c ≤ n` symbols (`lz78PhraseStrings_total_length_le` is `≤`, not
+`=`), and the telescoping product equals `prefixBlockProb ω (boundary c)`,
+which exceeds `Pₙ = prefixBlockProb ω n` whenever the parse is incomplete.
+
+The Ziv chain (Cover–Thomas Eq. 13.122–124) does **not** need that false
+equality — it needs only the **inequality** `Pₙ{block ω} ≤ ∏ⱼ qⱼ`
+(equivalently `-log Pₙ ≥ ∑ⱼ -log qⱼ`), which **is** unconditionally true:
+`Pₙ = prefixBlockProb ω n ≤ prefixBlockProb ω (boundary c) = ∏ⱼ qⱼ` by
+*prefix monotonicity* of the cylinder block probability (a shorter prefix
+has larger mass). The two genuine ingredients below establish this, fixing
+the defect: the factorization is recast from a false equality to the true
+Ziv inequality. Positivity of the intermediate prefix block probabilities
+(a.s. regularity of the observed cylinders) is the only side condition. -/
+
+omit [Fintype α] [DecidableEq α] [Nonempty α] in
+/-- **Prefix monotonicity of the block probability** (genuine, unconditional):
+for `m₁ ≤ m₂`, the length-`m₂` cylinder is contained in the length-`m₁`
+cylinder (matching more coordinates is a stronger constraint), so its mass
+is smaller: `prefixBlockProb ω m₂ ≤ prefixBlockProb ω m₁`.
+
+This is the load-bearing measure-theoretic fact that turns the (false)
+factorization *equality* into the (true) Ziv *inequality*. -/
+theorem prefixBlockProb_antitone
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
+    (ω : Ω) {m₁ m₂ : ℕ} (h : m₁ ≤ m₂) :
+    prefixBlockProb μ p ω m₂ ≤ prefixBlockProb μ p ω m₁ := by
+  unfold prefixBlockProb
+  rw [map_measureReal_apply (p.measurable_blockRV m₂) (measurableSet_singleton _),
+      map_measureReal_apply (p.measurable_blockRV m₁) (measurableSet_singleton _)]
+  apply measureReal_mono (h₂ := measure_ne_top μ _)
+  intro ω' hω'
+  simp only [Set.mem_preimage, Set.mem_singleton_iff] at hω' ⊢
+  funext i
+  have := congrFun hω' ⟨i.val, i.isLt.trans_le h⟩
+  simpa [StationaryProcess.blockRV] using this
+
+omit [Nonempty α] [MeasurableSingletonClass α] in
+/-- **The complete-phrase boundary never exceeds `n`** (genuine): the total
+length of the emitted phrase strings is at most the input length
+(`lz78PhraseStrings_total_length_le`), so the parsing boundary at the full
+phrase count is `≤ n`. This is the *unconditional* replacement for the
+false `boundary c = n` parse-completeness claim. -/
+theorem parsingBoundary_complete_le
+    (μ : Measure Ω) (p : StationaryProcess μ α) (n : ℕ) (ω : Ω) :
+    parsingBoundary μ p n ω (lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length ≤ n := by
+  unfold parsingBoundary
+  rw [List.take_length, ← foldr_length_eq_map_sum]
+  have h := lz78PhraseStrings_total_length_le (List.ofFn (p.blockRV n ω))
+  rwa [List.length_ofFn] at h
+
+omit [Nonempty α] in
+/-- **Genuine Ziv-direction factorization inequality** (parse-completeness
+defect fix): the block probability is bounded **above** by the product of
+the per-phrase conditional probabilities over the parse,
+`Pₙ{block ω} ≤ ∏ⱼ condPhraseProb …`. This is the *true* content the Ziv
+chain needs (replacing the false equality `factor`): the telescoping gives
+`∏ⱼ qⱼ = prefixBlockProb ω (boundary c)`
+(`prod_condPhraseProb_telescope`, genuine), and prefix monotonicity
+(`prefixBlockProb_antitone`, genuine) gives
+`Pₙ = prefixBlockProb ω n ≤ prefixBlockProb ω (boundary c)` since
+`boundary c ≤ n` (`parsingBoundary_complete_le`, genuine).
+
+The only side condition is positivity of the intermediate prefix block
+probabilities (a.s. regularity of the observed cylinders) — not the false
+parse-completeness claim. -/
+theorem blockProb_le_prod_condPhraseProb
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
+    (n : ℕ) (ω : Ω)
+    (hpos : ∀ j ≤ (lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length,
+      prefixBlockProb μ p ω (parsingBoundary μ p n ω j) ≠ 0) :
+    (μ.map (p.blockRV n)).real {p.blockRV n ω}
+      ≤ ∏ j ∈ Finset.range
+            (lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length,
+          condPhraseProb μ p n ω j := by
+  rw [prod_condPhraseProb_telescope μ p n ω _ hpos]
+  -- `Pₙ = prefixBlockProb ω n ≤ prefixBlockProb ω (boundary c)` since `boundary c ≤ n`.
+  have hb : parsingBoundary μ p n ω
+      (lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length ≤ n :=
+    parsingBoundary_complete_le μ p n ω
+  have := prefixBlockProb_antitone μ p ω hb
+  -- `prefixBlockProb ω n` is definitionally `Pₙ{block ω}`.
+  simpa [prefixBlockProb] using this
+
+omit [Nonempty α] [MeasurableSingletonClass α] in
+/-- **The parsing boundary never exceeds `n` at any phrase index** (genuine):
+the cumulative length of the first `j` phrases is bounded by the total
+phrase length, which is `≤ n`. (For `j ≥ c` the prefix is the whole phrase
+list, so the boundary is constant `= boundary c ≤ n`.) -/
+theorem parsingBoundary_le_n
+    (μ : Measure Ω) (p : StationaryProcess μ α) (n : ℕ) (ω : Ω) (j : ℕ) :
+    parsingBoundary μ p n ω j ≤ n := by
+  refine le_trans ?_ (parsingBoundary_complete_le μ p n ω)
+  unfold parsingBoundary
+  -- `((take j L).map length).sum ≤ ((L).map length).sum`. Convert `take`/`map`
+  -- and use `sum_take + sum_drop = sum` on the ℕ-valued length list.
+  rw [List.take_length, List.map_take]
+  set lens : List ℕ := (lz78PhraseStrings (List.ofFn (p.blockRV n ω))).map List.length
+    with hlens
+  have hsplit : (lens.take j).sum + (lens.drop j).sum = lens.sum :=
+    List.sum_take_add_sum_drop lens j
+  have hdrop : 0 ≤ (lens.drop j).sum := Nat.zero_le _
+  omega
+
+omit [Nonempty α] in
+/-- **Genuine construction of `IsLZ78PerPathParsingFactorization`** from a
+single a.s.-regularity hypothesis (parse-completeness defect fix).
+
+The hypothesis `hreg` asks that, for every block length and observed path,
+every intermediate parsing-prefix block probability along the parse is
+strictly positive — i.e. the observed cylinders all have positive mass.
+This is genuine **regularity** (a full-support / a.s. condition; *not* a
+proof-core hypothesis, and *not* the false parse-completeness claim). From
+it the genuine `factor` (Ziv inequality, via
+`blockProb_le_prod_condPhraseProb`) and `pos` (each conditional factor
+positive) fields are constructed.
+
+This turns the former *unsatisfiable* `IsLZ78PerPathParsingFactorization`
+(which carried the false equality `Pₙ = ∏ⱼ qⱼ`) into a genuine
+theorem-with-regularity-hypothesis: the factorization the Ziv chain
+consumes is now *constructed*, not merely assumed. -/
+theorem isLZ78PerPathParsingFactorization_of_pos
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
+    (hreg : ∀ (n : ℕ) (ω : Ω) (m : ℕ),
+      m ≤ n → 0 < prefixBlockProb μ p ω m) :
+    IsLZ78PerPathParsingFactorization μ p := by
+  refine ⟨?_, ?_⟩
+  · -- `factor` (Ziv inequality direction).
+    intro n ω
+    refine blockProb_le_prod_condPhraseProb μ p n ω (fun j _ => ?_)
+    exact (hreg n ω (parsingBoundary μ p n ω j) (parsingBoundary_le_n μ p n ω j)).ne'
+  · -- `pos` (each conditional factor positive).
+    intro n ω j _
+    unfold condPhraseProb
+    exact div_pos
+      (hreg n ω _ (parsingBoundary_le_n μ p n ω (j + 1)))
+      (hreg n ω _ (parsingBoundary_le_n μ p n ω j))
 
 end InformationTheory.Shannon
