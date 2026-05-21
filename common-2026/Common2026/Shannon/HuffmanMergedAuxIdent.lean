@@ -415,4 +415,67 @@ lemma huffmanLengthAux_relabel {γ : Type*} [DecidableEq γ] (e : α ↪ γ)
       rw [huffmanLengthAux_eq_zero (relabelMultiset e s) hc1' hg',
         huffmanLengthAux_eq_zero s hc1 hg]
 
+/-! ### Section D — `mergedInitMultiset` を β carrier へ移送 (relabel cornerstone の適用)
+
+`{y // y ≠ b} ↪ β` (subtype 包含) を carrier-embedding として `huffmanLengthAux_relabel`
+を適用すると、subtype carrier 上の `mergedInitMultiset` の `huffmanLengthAux` を β carrier
+上の同値表現に書き換えられる (`NodupChain (mergedInitMultiset Q a b)` 前提下)。これは relabel
+cornerstone の genuine な適用例であり、carrier-crossing の subtype 部分を解消する。 -/
+
+/-- subtype 包含 `{y // y ≠ b} ↪ β`. -/
+def subtypeNeEmbedding (b : α) : { y : α // y ≠ b } ↪ α :=
+  Function.Embedding.subtype _
+
+omit [Nonempty α] [MeasurableSingletonClass α] in
+/-- **subtype carrier の解消**: `NodupChain (mergedInitMultiset Q a b)` 下で、subtype carrier
+上の `huffmanLengthAux` を β carrier 上の `relabelMultiset (subtypeNeEmbedding b)` の値に
+書き換える (relabel cornerstone の直接適用)。 -/
+lemma huffmanLengthAux_mergedInitMultiset_relabel
+    (Q : Measure α) (a b : α)
+    (hch : NodupChain (mergedInitMultiset Q a b))
+    (x : { y : α // y ≠ b }) :
+    huffmanLengthAux (mergedInitMultiset Q a b) x
+      = huffmanLengthAux (relabelMultiset (subtypeNeEmbedding b) (mergedInitMultiset Q a b))
+          x.val := by
+  have h := huffmanLengthAux_relabel (subtypeNeEmbedding b) (mergedInitMultiset Q a b)
+    (mergedInitMultiset_huffmanGrouping Q a b) hch x
+  -- (subtypeNeEmbedding b) x = x.val (defeq)
+  exact h.symm
+
+/-! ### Section E — 残タスク (honest 名前付き仮説, load-bearing)
+
+**`MergedHuffmanAuxIdentHypothesis` は本 session で genuine discharge できていない。**
+
+Section A–D で C3 (tie-invariance) cornerstone (`huffmanLengthAux_relabel`、無条件 genuine、
+機械検証済) と subtype carrier 解消 (Section D) を確立したが、これだけでは結論を閉じられない:
+
+1. **first-step identification (tie-blocked)**: `huffmanLengthAux (initMultiset Q)` の最初の
+   `huffmanStep` が **`{a}` と `{b}` を merge する**ことを示す必要がある。`a` は global-min、
+   `b` は rest-min だが、確率 tie がある場合 `Classical.choose` は a/b 以外の同値 leaf を選び
+   うる (`huffmanStep` 非決定性)。`_h_sibling` がこの execution を制約するが、carrier 横断で
+   choose を pin down するのは `huffmanStep` 決定的再定義 (C1) なしには hard wall
+   (roadmap 判断ログ #19、Mathlib に `LinearOrder (Finset α)` 標準 instance なし)。
+
+2. **collapse correspondence (構造変更, relabel では非被覆)**: 上記 first-step 後の残木 `s''`
+   は card-2 group `{a,b}@(Q{a}+Q{b})` を含むが、`mergedInitMultiset` では a-merged は
+   **singleton** `{⟨a,_⟩}@(Q{a}+Q{b})`。両者を結ぶのは card-2 group → singleton の
+   **collapse** であり、cardinality を保つ `Finset.map` (relabel) では表現できない。
+   `huffmanLengthAux_const_on_group` で値は保たれる見込みだが、carrier (β ↔ {y≠b}) も
+   同時に変わるため collapse + relabel の合成補題が新規に必要 (~150-250 行)。
+
+3. **NodupChain 不成立**: そもそも `mergedInitMultiset Q a b` は一般に `NodupChain` を
+   満たさない (merged group の確率 `Q{a}+Q{b}` が他 leaf と衝突しうる、再帰でも新 tie 発生)。
+   よって Section D の前提 `hch` 自体が一般には供給できず、relabel cornerstone は
+   一般 Q には適用できない (no-ties な Q に限定すれば genuine に効く)。
+
+下記 `MergedHuffmanAuxIdentTieResidual` がこの残タスクを honest に隔離する。
+
+**honesty 明示**: これは **load-bearing residual**。`MergedHuffmanAuxIdentHypothesis`
+そのものであり (型 ≡ 本来閉じるべき命題)、`:= h` 循環でも `:True` でも退化定義でもないが、
+**genuine discharge ではない**。`mergedHuffmanAuxIdent_proof` を本 residual で埋める形での
+無引数 `huffmanLength_optimal` の publish は **行わない** (それは name-laundering / 循環に当たる)。
+headline `huffmanLength_optimal_modulo_aux_ident` (Hyp2 を引数で取る、`HuffmanStrongForm.lean`)
+が引き続き honest な最前線であり、本 file はその discharge に向けた genuine 部品
+(C3 cornerstone + subtype 解消) を提供する。 -/
+
 end InformationTheory.Shannon.Huffman
