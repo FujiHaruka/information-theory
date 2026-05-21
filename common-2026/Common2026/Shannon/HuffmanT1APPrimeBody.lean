@@ -160,10 +160,12 @@ theorem huffmanMergedIdentification_at_a
     (Q : Measure β) [IsProbabilityMeasure Q] (hQ : ∀ a, 0 < Q.real {a})
     (h_card : 3 ≤ Fintype.card β)
     (a b : β) (hab : a ≠ b)
+    (h_a_min : ∀ c, Q.real {a} ≤ Q.real {c})
+    (h_b_min : ∀ c, c ≠ a → Q.real {b} ≤ Q.real {c})
     (h_sibling : huffmanLength Q a = huffmanLength Q b)
     (x : { y : β // y ≠ b }) (hxa : x.val = a) :
     huffmanLength (mergedMeasure Q a b hab) x = huffmanLength Q a - 1 := by
-  have h := h_ident Q hQ h_card a b hab h_sibling x
+  have h := h_ident Q hQ h_card a b hab h_a_min h_b_min h_sibling x
   rw [h]
   simp [hxa]
 
@@ -177,10 +179,12 @@ theorem huffmanMergedIdentification_at_other
     (Q : Measure β) [IsProbabilityMeasure Q] (hQ : ∀ a, 0 < Q.real {a})
     (h_card : 3 ≤ Fintype.card β)
     (a b : β) (hab : a ≠ b)
+    (h_a_min : ∀ c, Q.real {a} ≤ Q.real {c})
+    (h_b_min : ∀ c, c ≠ a → Q.real {b} ≤ Q.real {c})
     (h_sibling : huffmanLength Q a = huffmanLength Q b)
     (x : { y : β // y ≠ b }) (hxa : x.val ≠ a) :
     huffmanLength (mergedMeasure Q a b hab) x = huffmanLength Q x.val := by
-  have h := h_ident Q hQ h_card a b hab h_sibling x
+  have h := h_ident Q hQ h_card a b hab h_a_min h_b_min h_sibling x
   rw [h]
   simp [hxa]
 
@@ -195,11 +199,13 @@ theorem huffmanMergedIdentification_combined
     (Q : Measure β) [IsProbabilityMeasure Q] (hQ : ∀ a, 0 < Q.real {a})
     (h_card : 3 ≤ Fintype.card β)
     (a b : β) (hab : a ≠ b)
+    (h_a_min : ∀ c, Q.real {a} ≤ Q.real {c})
+    (h_b_min : ∀ c, c ≠ a → Q.real {b} ≤ Q.real {c})
     (h_sibling : huffmanLength Q a = huffmanLength Q b)
     (x : { y : β // y ≠ b }) :
     huffmanLength (mergedMeasure Q a b hab) x
       = (if x.val = a then huffmanLength Q a - 1 else huffmanLength Q x.val) :=
-  h_ident Q hQ h_card a b hab h_sibling x
+  h_ident Q hQ h_card a b hab h_a_min h_b_min h_sibling x
 
 /-! ### Section D — Identification hypothesis from sibling triple plumbing -/
 
@@ -215,6 +221,8 @@ theorem huffmanMergedIdentification_dichotomy
     (Q : Measure β) [IsProbabilityMeasure Q] (hQ : ∀ a, 0 < Q.real {a})
     (h_card : 3 ≤ Fintype.card β)
     (a b : β) (hab : a ≠ b)
+    (h_a_min : ∀ c, Q.real {a} ≤ Q.real {c})
+    (h_b_min : ∀ c, c ≠ a → Q.real {b} ≤ Q.real {c})
     (h_sibling : huffmanLength Q a = huffmanLength Q b)
     (x : { y : β // y ≠ b }) :
     (x.val = a ∧
@@ -224,10 +232,10 @@ theorem huffmanMergedIdentification_dichotomy
   by_cases hxa : x.val = a
   · left
     refine ⟨hxa, ?_⟩
-    exact huffmanMergedIdentification_at_a h_ident Q hQ h_card a b hab h_sibling x hxa
+    exact huffmanMergedIdentification_at_a h_ident Q hQ h_card a b hab h_a_min h_b_min h_sibling x hxa
   · right
     refine ⟨hxa, ?_⟩
-    exact huffmanMergedIdentification_at_other h_ident Q hQ h_card a b hab h_sibling x hxa
+    exact huffmanMergedIdentification_at_other h_ident Q hQ h_card a b hab h_a_min h_b_min h_sibling x hxa
 
 /-! ### Section E — Sibling pair 関連 補助補題 -/
 

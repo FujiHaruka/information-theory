@@ -783,13 +783,21 @@ abbrev SwapNormalizationHypothesis : Prop :=
       InformationTheory.Shannon.ShannonCode.expectedLength Q l_norm
         ≤ InformationTheory.Shannon.ShannonCode.expectedLength Q ll
 
-/-- **Weak form hypothesis 2**: `huffmanLength` identification on `mergedMeasure`. -/
+/-- **Weak form hypothesis 2**: `huffmanLength` identification on `mergedMeasure`.
+
+**strong precondition** (T1-A'' interface refactor): `a` = global-min (`_h_a_min`),
+`b` = rest-min (`_h_b_min`). identification は `a, b` が **first-merged (確率最小) 対**
+のときのみ成立する (任意の sibling 対では merged tree が一致しない). call site
+(`huffmanLength_optimal_aux_with_hypotheses` の step case) は `exists_sibling_min_pair`
+経由で strong 形を実際に供給するため、これは weak 化ではなく mis-statement の修正. -/
 abbrev HuffmanMergedIdentificationHypothesis : Prop :=
   ∀ {β : Type u} [Fintype β] [DecidableEq β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (Q : Measure β) [IsProbabilityMeasure Q] (_hQ : ∀ a, 0 < Q.real {a})
     (_h_card : 3 ≤ Fintype.card β)
     (a b : β) (hab : a ≠ b)
+    (_h_a_min : ∀ c, Q.real {a} ≤ Q.real {c})
+    (_h_b_min : ∀ c, c ≠ a → Q.real {b} ≤ Q.real {c})
     (_h_sibling : huffmanLength Q a = huffmanLength Q b)
     (x : { y : β // y ≠ b }),
     huffmanLength (mergedMeasure Q a b hab) x
@@ -1026,7 +1034,7 @@ private theorem huffmanLength_optimal_aux_with_hypotheses (n : ℕ)
           huffmanLength (mergedMeasure P a b hab) x
             = (if x.val = a then huffmanLength P a - 1 else huffmanLength P x.val) := by
         intro x
-        exact h_ident P hP h_card_ge_3 a b hab h_sib x
+        exact h_ident P hP h_card_ge_3 a b hab h_a_min h_b_min h_sib x
       -- Bridge L: E[P, huffmanLength P] = E[merged, huffmanLength merged] + (P{a} + P{b})
       have h_BL := huffmanLength_bridge_L P hP h_card_ge_2 a b hab h_sib
         (huffmanLength (mergedMeasure P a b hab)) h_L'_link

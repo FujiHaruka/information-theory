@@ -138,6 +138,8 @@ abbrev MergedHuffmanAuxIdentHypothesis : Prop :=
     (Q : Measure β) [IsProbabilityMeasure Q] (_hQ : ∀ a, 0 < Q.real {a})
     (_h_card : 3 ≤ Fintype.card β)
     (a b : β) (_hab : a ≠ b)
+    (_h_a_min : ∀ c, Q.real {a} ≤ Q.real {c})
+    (_h_b_min : ∀ c, c ≠ a → Q.real {b} ≤ Q.real {c})
     (_h_sibling : huffmanLength Q a = huffmanLength Q b)
     (x : { y : β // y ≠ b }),
     huffmanLengthAux (mergedInitMultiset Q a b) x
@@ -151,12 +153,12 @@ abbrev MergedHuffmanAuxIdentHypothesis : Prop :=
 theorem huffmanMergedIdentification_of_aux
     (h_aux : MergedHuffmanAuxIdentHypothesis.{u}) :
     HuffmanMergedIdentificationHypothesis.{u} := by
-  intro β _ _ _ _ _ Q _ hQ h_card a b hab h_sibling x
+  intro β _ _ _ _ _ Q _ hQ h_card a b hab h_a_min h_b_min h_sibling x
   -- huffmanLength (mergedMeasure ...) x = huffmanLengthAux (initMultiset (mergedMeasure ...)) x  (defeq)
   -- = huffmanLengthAux (mergedInitMultiset Q a b) x  (by initMultiset_mergedMeasure_eq)
   show huffmanLengthAux (initMultiset (mergedMeasure Q a b hab)) x = _
   rw [initMultiset_mergedMeasure_eq Q a b hab]
-  exact h_aux Q hQ h_card a b hab h_sibling x
+  exact h_aux Q hQ h_card a b hab h_a_min h_b_min h_sibling x
 
 /-! ### Section D — combined wrapper 再公開 (identification 半分を primitive で受ける) -/
 
