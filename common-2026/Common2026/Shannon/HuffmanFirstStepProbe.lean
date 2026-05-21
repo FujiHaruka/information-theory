@@ -37,6 +37,7 @@ variable {α : Type*} [Fintype α] [LinearOrder α] [Nonempty α]
 
 /-! ### colex on singletons -/
 
+omit [Nonempty α] [MeasurableSingletonClass α] in
 /-- `initMultiset Q` の決定的 first 選択は `({a*}, Q{a*})` の形 (singleton)。 -/
 lemma huffmanStep_initMultiset_fst_singleton
     (Q : Measure α) (h_card : 2 ≤ Fintype.card α) :
@@ -53,6 +54,7 @@ lemma huffmanStep_initMultiset_fst_singleton
   obtain ⟨a, _, hae⟩ := hmem
   exact ⟨a, hae.symm⟩
 
+omit [Nonempty α] [MeasurableSingletonClass α] in
 /-- **PROBE 中核**: 決定的 first 選択 `a*` は、`(Q{·}, ·)` を lex-最小化する一意の元。
 すなわち `∀ c, Q{a*} ≤ Q{c}` かつ「`Q{a*} = Q{c}` なら `a* ≤ c`」。 -/
 lemma huffmanStep_initMultiset_fst_isLexMin
@@ -82,6 +84,7 @@ lemma huffmanStep_initMultiset_fst_isLexMin
   · refine Or.inr ⟨h1, ?_⟩
     rwa [Finset.Colex.singleton_le_singleton] at h2
 
+omit [Fintype α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- **PROBE verdict — 取れる最良の含意 (genuine)**: 与えられた prob-global-min `a`
 (`∀ c, Q{a} ≤ Q{c}`) と決定的 first-merge 元 `astar` (lex-min) について、
 **`astar ≤ a` のみ** が従う。`a = astar` は **従わない**:

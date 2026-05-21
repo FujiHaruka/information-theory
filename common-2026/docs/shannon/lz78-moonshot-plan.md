@@ -802,6 +802,7 @@ end InformationTheory.Shannon
 - 兄弟 plan:
   - [LZ78 Ziv inequality discharge (L-LZ1 部分)](lz78-ziv-inequality-discharge-moonshot-plan.md) — counting 層 genuine、entropy/log-sum 層撤退
   - [**LZ78 achievability + converse 組合せ核心 full-closure**](lz78-achievability-converse-plan.md) — **本 plan の残 3 honest 仮定 (Eq.13.124 / Eq.13.130 / h_bdd_above) を連続 Mathlib gap 無しで genuine discharge する後続 plan。greedy 実装差し替え (真の longest-prefix) + distinct counting + Kraft a.s. 化で full closure を狙う**
+  - [**LZ78 完遂 — blockRV/StationaryProcess kernel 層 refactor**](lz78-blockrv-refactor-plan.md) — **distinct headline `lz78_two_sided_optimality_distinct_genuine` (`LZ78AchievabilityLimsup.lean:254`) の残 2 per-path primitive (`IsLZ78AchievabilityZivUpperBound` / `IsLZ78ConverseCodingLowerBound`) を genuine 構成して無仮定 headline を publish する後続 plan。両 primitive の crux = parsing factorization を阻む blockRV 射影性に、kernel 層 additive 注入 (新規 `StationaryKernel.lean`、Ch.4 非破壊) で対処する設計**
   - [Relay cut-set moonshot (T3-F)](relay-cutset-moonshot-plan.md) — **本 plan の直接の雛形** (5 撤退ライン全発動 + 主定理 body `:= h_rate_bound` の pattern 完全踏襲)
   - [Wyner-Ziv moonshot (T3-D)](wyner-ziv-moonshot-plan.md) — statement-level hypothesis pass-through pattern の原型
   - [SMB moonshot](shannon-mcmillan-breiman-plan.md) — 本 plan が黒箱 reuse する SMB infrastructure の origin
