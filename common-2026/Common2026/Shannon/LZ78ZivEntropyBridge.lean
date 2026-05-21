@@ -1,4 +1,5 @@
 import Common2026.Shannon.ShannonMcMillanBreiman
+import Common2026.Shannon.LZ78GreedyLongestPrefix
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import Mathlib.Analysis.Convex.Jensen
 
@@ -18,6 +19,28 @@ already-genuine SMB layer (`blockLogAvg`, `ShannonMcMillanBreiman.lean`).
 * `blockLogAvg_eq_neg_log_blockProb` — the trivial restatement
   `n · blockLogAvg μ p n ω = -log Pₙ{block ω}` for `0 < n`, the form the Ziv
   chain consumes.
+
+## Per-path parsing factorization (L-LZ-Z5 scaffolding)
+
+The true crux of the Ziv bridge — that the pushforward block probability
+`Pₙ{block ω}` factorizes as a product of per-phrase conditional
+probabilities along the LZ78 parse — is *not* dischargeable from the
+current stationary layer (`StationaryProcess` is a measure-preserving shift
+plus a single observable, with no kernel / `compProd` / disintegration).
+We therefore expose it as an **isolated honest hypothesis**, strictly more
+primitive than the `blockLogAvg`-level `h_achiev` / `h_converse`:
+
+* `condPhraseProb` — the per-phrase conditional probability indexed by
+  phrase position `j`, defined concretely as the ratio of successive
+  parsing-prefix block probabilities (telescoping to `Pₙ{block ω}`).
+* `IsLZ78PerPathParsingFactorization` — the named honest `Prop`
+  (`Pₙ{block ω} = ∏ⱼ condPhraseProb …`), carrying a positivity field so
+  `Real.log_prod` applies.
+* `blockProb_neg_log_eq_sum` — a *genuine* proof, from that hypothesis,
+  that `-log Pₙ{block ω} = ∑ⱼ -log (condPhraseProb …)`.
+
+The intricate per-path Ziv inequality and the achievability / converse
+assembly are deferred; this file only lays the clean base.
 -/
 
 namespace InformationTheory.Shannon
@@ -98,5 +121,98 @@ theorem blockLogAvg_eq_neg_log_blockProb
   have hn0 : (n : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr hn.ne'
   unfold blockLogAvg
   field_simp
+
+/-! ## Per-path parsing factorization (L-LZ-Z5 scaffolding) -/
+
+/-- **Cumulative parsing boundary length.**
+
+The number of input symbols consumed by the first `j` emitted LZ78 phrases
+of the observed block `blockRV n ω`, i.e. the sum of the lengths of the
+first `j` distinct phrase strings. Used as a `blockRV` index to read the
+block probability of the corresponding parsing prefix. -/
+def parsingBoundary
+    (μ : Measure Ω) (p : StationaryProcess μ α) (n : ℕ) (ω : Ω) (j : ℕ) : ℕ :=
+  (((lz78PhraseStrings (List.ofFn (p.blockRV n ω))).take j).map List.length).sum
+
+/-- **Prefix block probability.**
+
+The pushforward block probability of the length-`m` parsing prefix of the
+observed path, `Pₘ{blockRV m ω} = (μ.map (blockRV m)).real {blockRV m ω}`. -/
+noncomputable def prefixBlockProb
+    (μ : Measure Ω) (p : StationaryProcess μ α) (ω : Ω) (m : ℕ) : ℝ :=
+  (μ.map (p.blockRV m)).real {p.blockRV m ω}
+
+/-- **Per-phrase conditional probability** (Cover–Thomas §13.5, chain-rule
+per-path form), indexed by phrase position `j`.
+
+Concretely the ratio of the block probabilities of the parsing prefix after
+`j+1` phrases and after `j` phrases:
+`condPhraseProb μ p n ω j = Pₘ₊₁{prefix} / Pₘ{prefix}` where `m`-prefix is the
+prefix ending at the `j`-th phrase boundary. Over the phrase positions of
+the parse this product telescopes to `Pₙ{block ω}` — the content of
+`IsLZ78PerPathParsingFactorization`.
+
+This is `ℝ`-valued so that `Real.log_prod` applies directly in
+`blockProb_neg_log_eq_sum` (Mathlib-shape-driven: the dominant downstream
+lemma is `Real.log_prod`). -/
+noncomputable def condPhraseProb
+    (μ : Measure Ω) (p : StationaryProcess μ α) (n : ℕ) (ω : Ω) (j : ℕ) : ℝ :=
+  prefixBlockProb μ p ω (parsingBoundary μ p n ω (j + 1))
+    / prefixBlockProb μ p ω (parsingBoundary μ p n ω j)
+
+/-- **Isolated honest input (L-LZ-Z5)**: the per-path block probability of a
+stationary process factorizes as the product of the LZ78 parse's per-phrase
+conditional probabilities (Cover–Thomas §13.5, the per-path / per-realization
+form of the entropy chain rule).
+
+This is *strictly more primitive* than the `blockLogAvg`-level chain
+hypotheses `h_achiev` / `h_converse`: it is a single, parsing-level
+measure-theoretic identity. It is **not** the expectation-level
+`jointEntropy_chain_rule`, which is not interchangeable with this per-path
+statement. The current stationary layer carries no kernel / `compProd`
+structure to derive it, so it is exposed as a named honest hypothesis (a
+genuine `Prop`, never `True`).
+
+The `pos` field records strict positivity of each conditional factor over
+the phrase positions; this discharges the side condition of `Real.log_prod`
+in `blockProb_neg_log_eq_sum`. -/
+structure IsLZ78PerPathParsingFactorization
+    (μ : Measure Ω) (p : StationaryProcess μ α) : Prop where
+  /-- The block probability factorizes as the product of per-phrase
+  conditional probabilities over the parse of the observed block. -/
+  factor : ∀ (n : ℕ) (ω : Ω),
+    (μ.map (p.blockRV n)).real {p.blockRV n ω}
+      = ∏ j ∈ Finset.range
+            (lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length,
+          condPhraseProb μ p n ω j
+  /-- Each conditional factor is strictly positive over the phrase positions
+  of the parse (positivity side condition for `Real.log_prod`). -/
+  pos : ∀ (n : ℕ) (ω : Ω) (j : ℕ),
+    j ∈ Finset.range (lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length →
+      0 < condPhraseProb μ p n ω j
+
+omit [Fintype α] [Nonempty α] [MeasurableSingletonClass α] in
+/-- **Genuine backbone (L-LZ-Z3 + factorization → additive log form).**
+
+From the honest factorization hypothesis, the negative log block
+probability is the sum, over the phrase positions of the parse, of the
+negative logs of the per-phrase conditional probabilities:
+`-log Pₙ{block ω} = ∑ⱼ -log (condPhraseProb …)`.
+
+Proved via `Real.log_prod` (positivity of each factor supplied by the
+`pos` field of the hypothesis). This is the additive form the per-path Ziv
+inequality consumes; combined with `blockLogAvg_eq_neg_log_blockProb` it
+expresses `n · blockLogAvg` as the same sum. -/
+theorem blockProb_neg_log_eq_sum
+    (μ : Measure Ω) (p : StationaryProcess μ α)
+    (h : IsLZ78PerPathParsingFactorization μ p) (n : ℕ) (ω : Ω) :
+    - Real.log ((μ.map (p.blockRV n)).real {p.blockRV n ω})
+      = ∑ j ∈ Finset.range
+            (lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length,
+          - Real.log (condPhraseProb μ p n ω j) := by
+  have hne : ∀ j ∈ Finset.range
+      (lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length,
+      condPhraseProb μ p n ω j ≠ 0 := fun j hj => (h.pos n ω j hj).ne'
+  rw [h.factor n ω, Real.log_prod hne, ← Finset.sum_neg_distrib]
 
 end InformationTheory.Shannon
