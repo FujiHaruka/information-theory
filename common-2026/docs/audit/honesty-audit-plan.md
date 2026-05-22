@@ -205,7 +205,7 @@ Sonnet の `ok` には偽陰性（load-bearing 見逃し）が混じりうる（
 3. flip（ok → load-bearing 等）した行のみ verdict で上書き:
      verdict --id <ID> --status suspect|defect --verdict <code> --note "QA-flip: <理由>" --agent qa-opus
    confirmed-ok はそのまま（書き換えない）
-4. 要約だけ返す: 「K=30 中 flip m 件、内訳 <id: 理由>」
+4. 要約だけ返す: 「K=10 中 flip m 件、内訳 <id: 理由>」
 ```
 
 **判定とフィードバック（オーケストレータ）**:
