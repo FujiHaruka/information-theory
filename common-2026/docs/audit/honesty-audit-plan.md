@@ -71,7 +71,32 @@
 
 - **層A — 署名+doc のみ（claim JSON）**: 主張が妥当か／名前が過剰主張(laundering)か／結論に `True` が紛れていないか。これだけで書けるのは、署名段階で明白な `defect`（例: `_unconditional` 名なのに仮定の一つが結論そのもの）と、対象外の `skip` だけ。**`ok` はここでは出さない**。
 - **層B — `file:line` で本体を読む（既定の主戦場）**: 循環 `:= h` / trivial body / `sorry` / true_residual / 仮定が実際に使われているか。大半の `ok`/`defect` はここで決まる。
-- **層C — 定義を追う（最も高コスト）**: verdict が「ある定義が何に展開されるか」に依存する場合。degenerate_def（その def は vacuous か）/ load_bearing_hyp（`IsXxxRegularity` が証明の核心を束ねていないか）。grep/loogle/Read で定義を開き、束ねた仮定が**前提条件か証明の核心か**を判定する。CLAUDE.md の一言判定はこの層C。`load_bearing` はフラグで拾えない（決定#4）ので、未フラグ品でも匂えば層Cへ。
+- **層C — 定義を追う（最も高コスト・狭く必要）**: verdict が「ある自作定義が何に展開されるか」に依存する場合のみ。degenerate_def（その def は vacuous か）/ load_bearing_hyp（`IsXxxRegularity` が証明の核心を束ねていないか）。定義を開き、束ねた仮定が**前提条件か証明の核心か**を判定する。CLAUDE.md の一言判定はこの層C。`#print axioms` では検出不能（load-bearing 仮定は束縛変数であって公理でない＝定理は axiom-free に見える）。起動条件と読み方は下記。
+
+### 層C — 起動条件と定義の bounded read
+
+**起動条件**（条件1が層C入りの必要条件、条件2が深さを決める）:
+
+1. **【必要】自作述語仮定**: 仮定（または結論）の型 head が **Common2026 内で `def/abbrev/structure/class/inductive` 定義された述語**。Mathlib/stdlib のクラス（`IsFiniteMeasure` / `Measurable` / `Fintype` / `0 < _` 等）は対象外 → 層Bで `ok` 終了。判定は locate の rg がそのまま兼ねる（ヒット0件＝自作でない）。
+2. **【深さ】discharge 風 or 自己申告**: その仮定を持つ定理の証明が主張の難度に対し不自然に短い／`by exact h.xxx` 的に当該仮定へ寄りかかる（`body_lines` 小 ＋ `body_head` が `by`/`exact`/仮定名）、または doc が 🟢ʰ / load-bearing を自己申告。
+   - 条件1 のみ（証明が実質的で仮定は補助）→ **軽い層C**: 定義を1回読んで「前提条件である」ことを確認し `ok`。
+   - 条件1＋2 → **深い層C**: 定義を unfold して核心肩代わりを精査。決め切れねば `suspect`。
+
+**定義の読み方（ファイル全体を読まない）**:
+
+```
+# 1. locate（自作述語かの判定も兼ねる、索引不要・即時）
+rg -n --type lean '^\s*(def|abbrev|structure|class|inductive)\s+<TypeHead>\b' Common2026
+#   → file:line。0件＝stdlib述語 → 層C不要。複数ヒットは namespace で選別。
+# 2. その定義本体だけを bounded read（def/abbrev: ~30行 / structure: 次宣言まで）
+Read <file> --offset <line> --limit 30
+#   → `: Prop := <本体>` / structure のフィールド群を読み、前提条件 vs 核心 を判定。
+# 3. 本体がさらに別の自作述語を含めば 1 に戻る（通常1段、まれに2段）。
+```
+
+> 例: `IsParallelGaussianPerCoordRegularity`（structure, L156）は 22 行の bounded read だけで、`bddAbove`(前提条件) に加え `achiever_mi`(達成可能性) と `max_ent`(逆問題=壁) の**両難題を束ねている**ことが判明する。ファイル全体は不要。
+
+DB には `theorem`/`lemma` のみ索引（`def`/`structure` は無い）ので、定義の locate は rg が正。索引化すれば `claim`/`show` で位置を即取得でき `f_custom_pred_hyp` フラグの基盤にもなるが、層Cは flagged 中心（~80–120件）で発火頻度が低く、rg+bounded read で十分（決定#4 を尊重し索引拡張は保留）。
 
 ### 粒度: バッチ claim・直列判定・1件ずつ verdict・context 上限
 
@@ -102,8 +127,9 @@
 2. 各 id について:
      - 層A: 署名+doc で仮説。明白 defect / 対象外 skip ならここで verdict。
      - 層B: file:line を Read（同一ファイルは1回でまとめ読み）。本体で確定 → verdict。
-     - 層C: 定義依存で決まらなければ定義を grep/loogle/Read。
-            前提条件 か 核心 か を判定。決め切れなければ status=suspect。
+     - 層C: 自作述語仮定があるときのみ。rg で定義 locate → Read --offset --limit で
+            定義本体だけ bounded read（ファイル全体は読まない）。前提条件 か 核心 か を
+            判定。決め切れなければ status=suspect。
      - verdict --id <ID> --status ... --verdict <code> --note ...
 3. 全件 verdict 済みを確認 → 残あれば release --agent sonnet-K → exit
 ```
