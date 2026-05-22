@@ -98,6 +98,21 @@ Read <file> --offset <line> --limit 30
 
 DB には `theorem`/`lemma` のみ索引（`def`/`structure` は無い）ので、定義の locate は rg が正。索引化すれば `claim`/`show` で位置を即取得でき `f_custom_pred_hyp` フラグの基盤にもなるが、層Cは flagged 中心（~80–120件）で発火頻度が低く、rg+bounded read で十分（決定#4 を尊重し索引拡張は保留）。
 
+### load-bearing 判定ドクトリン（worker 指示に必須埋め込み）
+
+監査の中核。**これ無しでは Sonnet は `🟢ʰ` load-bearing 定理を `ok` と誤判定する**（calibration run #1 で実証: `isParallelGaussianPerCoordReduction_discharged` を `ok` 誤判定。原因は doc 自己申告の鵜呑み＋仮定束をフィールド単位で見たこと）。worker prompt に必ず以下5ルールを埋める。
+
+1. **doc の自己申告は"検証対象"であって"安心材料"ではない。** 「genuine」「honest hypotheses」「sup-sandwich」「none is the conclusion」で `ok` にしない。むしろ `🟢ʰ`／「absent from Mathlib」／「load-bearing」／「the wall」は **load-bearing の陽性指標**。verdict は statement+body+定義から導き、**doc と矛盾してよい**。
+2. **仮定束は"まとめて"見る（核心再構成テスト）。** 問い: 「これらの仮定を全部認めたら、達成可能性＋逆問題／鍵となる等式・限界＝定理が主張する核心が手に入るか？」YES なら load-bearing。**個々のフィールドが結論と逐語一致しなくても無関係**（今回の構造体は `achiever_mi`=達成 ＋ `max_ent`=逆問題 で、まとめて核心）。
+3. **regularity vs 核心チェックリスト**（一言判定を操作可能化）:
+   - **regularity（前提条件・OK）**: 可測性・可積分性・有限性(`IsFiniteMeasure`)・full-support・正値(`0<P`)・`BddAbove`・summability・補助量の KKT/最適性
+   - **核心（load-bearing・✗）**: 達成可能性の値・逆問題/上界・定理の主張そのものである等式や限界・doc が「壁／Mathlib に無い／hard part」と認めるもの
+   - 灰色 → `suspect`
+4. **「両側が同一仮定から」tell**: `le_antisymm`／サンドイッチの両方向が**同じ自作述語仮定**で埋まっていたら、その仮定は load-bearing（今回まさに `..._le_sum ... h_reg` ＋ `..._ge_sum ... h_reg`）。
+5. **層C深さ分離**: trigger は自作述語仮定で発火、深さは透明な1行 `def:Prop:=式`＝1行読むだけ／`structure`・多連言＝全フィールド。透明さは**読みコストを下げるが判定は同じ**（1行 `def:=（容量=和）` を仮定に持てば load-bearing）。
+
+**verdict ルール**: 上記で核心肩代わりと判定したら **`ok` にしない**。`--verdict load_bearing_hyp`、`--status suspect`（暫定）。note に「honest `🟢ʰ`（残タスク）か / dishonest（name laundering・偽完成）か」を明記。`🟢ʰ` の status を `suspect`/`defect` どちらに寄せるかは verdict 語彙の意味論として別途確定。
+
 ### 粒度: バッチ claim・直列判定・1件ずつ verdict・context 上限
 
 - **claim N**: フラグ波 N=10（散在・深い）／本体波 N=20–30（claim は `module,line` 順なので同一ファイルが連続クラスタ化 → ファイルを1回 Read して数件まとめて見る）。
