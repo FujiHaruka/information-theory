@@ -97,12 +97,12 @@ Report: a table (fqn, status, verdict, the hypothesis that carries the core if a
 
 ```
 ## QA task
-1. deno run -A scripts/audit_db.ts list --status ok --sample 30   # you fetch your own random sample
+1. deno run -A scripts/audit_db.ts list --status ok --sample 10   # you fetch your own random sample
 2. Re-audit each with the doctrine (show → read body → Tier C).
 3. Overwrite ONLY rows you flip (ok → load-bearing etc.):
    deno run -A scripts/audit_db.ts verdict --id <ID> --status suspect|defect --verdict <code> --note "QA-flip: <reason>" --agent qa-opus
    Leave confirmed-ok rows untouched.
-4. Report ONLY a summary: "K=30, flipped m: <id — reason> ...". Do not dump the bodies.
+4. Report ONLY a summary: "K=10, flipped m: <id — reason> ...". Do not dump the bodies.
 ```
 
-オーケストレータの対応: `m=0` 健全（随時継続）／`m≥1` で明白な見逃し → **停止** → flip 事例から doctrine 補強 → calibration 再走（合格まで）→ 影響母集団を `claim --status ok` で再リースし再監査。
+頻度（被覆 ~1%）: 累積 `ok` が 1000 件境界を超えるごとに1回（`--sample 10`）。全工程 ~3回・~30件。オーケストレータの対応: `m=0` 健全（次の境界まで撃たない）／`m≥1` で明白な見逃し → **停止** → flip 事例から doctrine 補強 → calibration 再走（合格まで）→ 影響母集団を `claim --status ok` で再リースし再監査。

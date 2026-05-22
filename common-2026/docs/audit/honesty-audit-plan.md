@@ -192,13 +192,15 @@ deno run -A scripts/audit_db.ts list --status suspect       # 未決（人手 or
 
 ### (c) QA スポットチェック（`ok` の偽陰性率を継続推定）
 
-Sonnet の `ok` には偽陰性（load-bearing 見逃し）が混じりうる（calibration はゼロにしたが本番母集団で再発しないとは限らない）。本番中〜直後に **Opus の QA サブエージェント**が `ok` をランダム再監査し、偽陰性率を推定する。
+Sonnet の `ok` には偽陰性（load-bearing 見逃し）が混じりうる（calibration はゼロにしたが本番母集団で再発しないとは限らない）。**Opus の QA サブエージェント**が `ok` をランダム再監査し、偽陰性率を推定する。
+
+**頻度（被覆 ~1%）**: オーケストレータは `stats` の `ok` 件数を見て、**累積 `ok` が 1000 件境界を超えるごとに1回**、QA Opus を `--sample 10` で起動する。全工程（`ok` ≈ 2942）で計 **~3回・~30件 ≒ 母集団の約1%** の薄いサニティ抽出。**主防御は calibration gate**（本番前に doctrine を保証済み）であって QA ではない — QA は in-flight の異常検知で十分なので 1% に抑える。トリガー判定は件数のみ（ファイル不読の原則を保つ）。
 
 **オーケストレータの動き（ファイルは読まない）**: `Agent(model:"opus", ...)` で QA サブエージェントを起動するだけ。読み戻すのは QA の**要約（チェック件数 K・flip 件数 m・flip した id）**のみ。`list` の生 JSON すら自分で開かない（QA 内で完結させる）。
 
 **QA サブエージェント（Opus）の手順**（完成形プロンプトは `worker-prompts.md`「TASK C」）:
 ```
-1. deno run -A scripts/audit_db.ts list --status ok --sample 30   # ランダム30件を自分で取得
+1. deno run -A scripts/audit_db.ts list --status ok --sample 10   # ランダム10件を自分で取得
 2. 各 id を doctrine で再監査（show → 本体 Read → 層C）
 3. flip（ok → load-bearing 等）した行のみ verdict で上書き:
      verdict --id <ID> --status suspect|defect --verdict <code> --note "QA-flip: <理由>" --agent qa-opus
@@ -208,7 +210,7 @@ Sonnet の `ok` には偽陰性（load-bearing 見逃し）が混じりうる（
 
 **判定とフィードバック（オーケストレータ）**:
 - flip が出たら、それは **doctrine の穴**のサイン（同型の見逃しが母集団に散在しうる）。
-- m=0 → 健全。サンプルを変えて随時継続。
+- m=0 → 健全。次の 1000-件境界まで QA は撃たない（被覆 ~1% を超えない）。
 - m≥1 で **load-bearing の明白な見逃し** → **停止**。flip 事例から doctrine を補強 → calibration gate 再走（合格まで）→ 影響母集団（同じ flag/同種述語の `ok`）を **`claim --status ok` で再リース**して再監査（`reaudit-stale` は src_hash 変化時のみで doctrine 修正には効かないため不可）。
 - flip した行自体は QA が既に修正済み（`ok` プールから抜ける＝self-correcting）。
 - ランダムなので再サンプルは重複しうる（推定値としては許容）。被覆を厳密に追うなら別途 note マーカーを足すが、現状は不要。
