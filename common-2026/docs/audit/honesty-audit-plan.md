@@ -56,15 +56,61 @@
 - `claim` は `BEGIN IMMEDIATE` 内で「未監査 N 件 select → status=claimed に update」を原子実行 → 2エージェントが同じ行を掴まない。
 - crash で取り残された claim は `release --minutes M` で回収。
 
-## エージェント・ワークフロー（1サイクル）
+## 監査ワークフロー詳細設計
+
+### 索引 vs 原典（2つの読み）
+
+- **DB（`claim`/`show`）= ワークリスト＋第一読**。返すのは署名・doc・flags・`file:line`・`body_lines`(行数)・`body_head`(先頭語) のみ。**証明本体テキストは持たない**（`toRow` が本体を行数と先頭語に潰す）。
+- **原典 `file:line` = 本体と周辺定義の ground truth**。verdict 級の証拠は必ずここから取る（原典なら周辺の定義も見え、stale も無い）。
+
+> 注意: `audit_db.ts:17` の docstring と旧記述にあった「show は本体を含む」は**誤り**（本体カラムは無い）。本体は `file:line` Read で取る。
+
+### 判定ツリー（claim → どこまで読むか → verdict）
+
+**「claim → 即 verdict」は原則しない。** claim の JSON（署名+doc+flags）は *仮説を立てる* ためのもので、`ok` を書くには最低でも本体を読む。3層で深さを上げる：
+
+- **層A — 署名+doc のみ（claim JSON）**: 主張が妥当か／名前が過剰主張(laundering)か／結論に `True` が紛れていないか。これだけで書けるのは、署名段階で明白な `defect`（例: `_unconditional` 名なのに仮定の一つが結論そのもの）と、対象外の `skip` だけ。**`ok` はここでは出さない**。
+- **層B — `file:line` で本体を読む（既定の主戦場）**: 循環 `:= h` / trivial body / `sorry` / true_residual / 仮定が実際に使われているか。大半の `ok`/`defect` はここで決まる。
+- **層C — 定義を追う（最も高コスト）**: verdict が「ある定義が何に展開されるか」に依存する場合。degenerate_def（その def は vacuous か）/ load_bearing_hyp（`IsXxxRegularity` が証明の核心を束ねていないか）。grep/loogle/Read で定義を開き、束ねた仮定が**前提条件か証明の核心か**を判定する。CLAUDE.md の一言判定はこの層C。`load_bearing` はフラグで拾えない（決定#4）ので、未フラグ品でも匂えば層Cへ。
+
+### 粒度: バッチ claim・直列判定・1件ずつ verdict・context 上限
+
+- **claim N**: フラグ波 N=10（散在・深い）／本体波 N=20–30（claim は `module,line` 順なので同一ファイルが連続クラスタ化 → ファイルを1回 Read して数件まとめて見る）。
+- **1 サブエージェント = 1 シフト**: `claim → バッチ監査 → 各 verdict → 余りを release → exit`。1 シフトは ~20–40 件（1–2 バッチ）で打ち切り、context を小さく安く保つ。次シフトは fresh sub-agent。
+- **バッチ内は直列判定**（verdict は id 単位、status 混在をまとめて書けない）。ただし *読み* はまとめてよい（本体波は同一モジュールを1回 Read）。
+- **claim した行は exit 前に必ず verdict か release**。`claimed` のまま残すとリースが他をブロックする。
+
+### status 意味論とモデル2段
+
+- `ok` — 本体（層B）を読んで確信。
+- `defect` — 確定。`--verdict <code>` ＋ `--note` に具体的欠陥と位置。
+- `suspect` — 匂うが Sonnet が決め切れない（多くは層Cの load-bearing 判断）。= **エスカレーション待ち行列**。
+- `skip` — honesty 対象外（誤抽出の `def`・記法・足場コード）。
+- **2段モデル**: 全件パスは Sonnet。`suspect` だけ第2波で **Opus**（小 N・定義追跡）。suspect は少数なので安い。
+  - ※ ツールは `status=suspect` の claim を持たない。第2波は単一 Opus エージェントが `SELECT ... WHERE status='suspect'` 相当を引いて直接 Read で処理する（claim 不要）。多数並列で潰すなら `claim --status suspect` フィルタ追加を検討。
+
+### クラッシュ / リース衛生・並列度
+
+- exit 時に未判定行が残れば `release --agent A`（or orchestrator が `release --minutes 30`）。
+- 走行中にコードが変われば `reaudit-stale`。
+- WAL は「多数の読み＋直列の極小書き込み」。verdict/claim の書き込みは sub-ms なので **並列度 N の制約は DB でなく API レート**。N=4–8。各エージェントは固有 `--agent` 名（`sonnet-1`…）で起動（`release --agent`・帰属のため）。
+
+### 1 シフトの具体レシピ（サブエージェントへの指示）
 
 ```
-claim   --agent A --n 20         # 割当を JSON で受け取る (id, signature, doc, flags)
-show    --id <ID>                # 必要なら全文(本体含む) / または file:line を Read
-verdict --id <ID> --status ok|suspect|defect|skip --verdict <code> --note <text>
+1. claim --agent sonnet-K --n 20        # JSON 受領（怪しい順 / 同一モジュール連続）
+2. 各 id について:
+     - 層A: 署名+doc で仮説。明白 defect / 対象外 skip ならここで verdict。
+     - 層B: file:line を Read（同一ファイルは1回でまとめ読み）。本体で確定 → verdict。
+     - 層C: 定義依存で決まらなければ定義を grep/loogle/Read。
+            前提条件 か 核心 か を判定。決め切れなければ status=suspect。
+     - verdict --id <ID> --status ... --verdict <code> --note ...
+3. 全件 verdict 済みを確認 → 残あれば release --agent sonnet-K → exit
 ```
 
 冪等再抽出: `build` はいつでも再実行可。`stats` が stale 件数を表示、`reaudit-stale` で該当だけ `unaudited` に戻す。
+
+> フラグの注意: `body` は「`:=` から次の宣言開始まで」の過大近似（末尾 `end`/section 行を含みうる, `extract_statements.ts:202`）。`f_uses_sorry` 等はこの近似本体上で計算されるので**まれに隣接行由来の誤検出**を含む。フラグは着手優先度であって判定ではないので許容。verdict は必ず `file:line` 原典で。
 
 ## ファイル構成
 
@@ -80,3 +126,4 @@ verdict --id <ID> --status ok|suspect|defect|skip --verdict <code> --note <text>
    `ok` / `load_bearing_hyp` / `degenerate_def` / `circular` / `sorry` / `name_laundering` / `mathlib_wall_misuse` / `true_residual` / **`other`**（上記に当てはまらないもの。`--note` に詳細）。
    ※ `--verdict` は自由記述（強制バリデーションなし）。集計しやすいよう上記語彙を推奨。
 4. **フラグは現状の簡単な5つのみ**、強化しない。load-bearing の高度検出（仮定数・仮定型が結論を含む等）は**入れない**。最終的な load-bearing 判定はエージェントが doc とステートメントを読んで下す。`f_name_laundering` 等が誤検出を含むのは許容（着手優先度であって判定ではない）。
+5. **監査エージェントは Sonnet を使う**（Opus でなく）。判定は「statement+doc+body を読んで固定語彙（`ok`/`load_bearing_hyp`/`circular`/…）に分類」と仕様が明確で、Opus 級の探索は不要。コストが約 1/5（全件で Sonnet ~$50–100 vs Opus ~$250–450）。並列 N=4–8・2波（フラグ117件→残り2825件）で全件 8–28h、最重要117件なら 2–4h／$10–20 が目安。
