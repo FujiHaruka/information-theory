@@ -133,6 +133,6 @@ If the session is ad-hoc — opened with no prior handoff context, scope unrelat
 
 **作る側**: 行き詰まって撤退する場合も honest に — 名前付き仮説 (≠結論)、docstring で「NOT a discharge / load-bearing」を明示、`:True` スロット禁止。これは既存の撤退ライン慣習の延長。
 
-**見つけた側**: 既存コード/依存/計画に defect を見つけたら、現タスクと無関係でも **その場で即フラグ** (任意の気づきに埋めない)。defect の上に黙って積み上げない。
+**見つけた側**: 既存コード/依存/計画に defect を見つけたら、現タスクと無関係でも **その場で即フラグ** (任意の気づきに埋めない)。defect の上に黙って積み上げない。フラグの形式は **当該 docstring 内に `@audit:KIND(SLUG)` タグ** (語彙: `docs/audit/audit-tags.md`) を直書きする。タスクリストや snapshot 文書に分散保管しない (code が SoT)。
 
 判定の一言: **「その仮説は前提条件か、それとも証明の核心か」**。前者 OK、後者は残タスク。詳細 → `docs/textbook-roadmap.md`「完成判定 / 検証強度の基準」「Mathlib 壁の 4 分類」。
