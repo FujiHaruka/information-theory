@@ -40,7 +40,8 @@ load-bearing in the strongest sense: providing it amounts to proving
 the achievability theorem for all valid `R, ε` at once. The genuine
 analytic content (sphere packing + random coding + AEP) is what makes
 this predicate non-vacuous; that derivation is deferred to
-`awgn-achievability-typicality-plan.md` (未着手). -/
+`awgn-achievability-typicality-plan.md` (plan drafted; analytic body
+pending). -/
 def IsAwgnTypicalityHypothesis (P : ℝ) (N : ℝ≥0)
     (h_meas : IsAwgnChannelMeasurable N) : Prop :=
   ∀ {R : ℝ}, 0 < R → R < (1/2) * Real.log (1 + P / (N : ℝ)) →
@@ -73,9 +74,9 @@ Gaussian random codebook, three continuous-AEP bounds, union bound on
 
 Discharging `IsAwgnTypicalityHypothesis` (i.e. constructing the
 hypothesis from first principles rather than assuming it) is the work
-of `awgn-achievability-typicality-plan.md` (未着手). Until that lands,
-this theorem is a **load-bearing hypothesis wrapper**, not a proven
-achievability result.
+of `awgn-achievability-typicality-plan.md` (plan drafted; analytic body
+pending). Until that body lands, this theorem is a **load-bearing
+hypothesis wrapper**, not a proven achievability result.
 
 L-S2 / L-C2 / L-F1+L-F2 と同型の薄い wrapper (同じ honesty 状態)。-/
 theorem awgn_achievability
