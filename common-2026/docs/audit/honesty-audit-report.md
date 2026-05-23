@@ -1,5 +1,15 @@
 # Honesty audit — full-codebase report
 
+> ⚠️ **Historical snapshot** (2026-05-22, post-cleanup update 2026-05-24). 個別の defect/suspect 行は **rename / retract / honest-rebrand を経て陳腐化している**。現状計数は code の `@audit:KIND(SLUG)` タグが SoT で、以下で取れる:
+>
+> ```bash
+> deno run -A scripts/audit_db.ts scan      # kind 別 count + slug histogram
+> rg -nB1 "@audit:defect" Common2026/        # defect 全件の file:line + context
+> rg "@audit:defer\(awgn-achievability-typicality\)" Common2026/  # 特定 plan 配下
+> ```
+>
+> 語彙: `docs/audit/audit-tags.md`。本文書は **「pre-cleanup の defect 101 規模の audit pass で何を学んだか」** という方法論的価値で保存。
+
 Date: 2026-05-22. Scope: all 2942 theorems/lemmas (Exam excluded) across 241 files.
 Bar: CLAUDE.md「検証の誠実性」標準B. Tooling: `scripts/audit_db.ts` (SQLite worklist, `docs/audit/honesty.db`).
 
@@ -171,19 +181,22 @@ Full list: `deno run -A scripts/audit_db.ts list --status suspect`.
 
 ## Update — post-cleanup status (2026-05-24)
 
-cleanup waves (defect-cleanup-plan.md 波 0/1/2) + 後続 retract/rebrand を経た最新 snapshot:
+cleanup waves (defect-cleanup-plan.md 波 0/1/2) + 後続 retract/rebrand を経た **scale 変化**: defect 101 → 3。残 3 件は intentional staged Mathlib 壁案件で、200-500 LoC 規模の analytic discharge plan に切り出し済 ([AWGN](../shannon/awgn-achievability-typicality-plan.md) / [BM](../shannon/brunn-minkowski-from-epi-discharge-plan.md))。
 
-| status | initial (2026-05-22) | current (2026-05-24) |
-|---|---:|---:|
-| ok | 2480 | **2483** |
-| suspect | 361 | **381** |
-| defect | 101 | **3** |
-| unaudited | — | 581 |
-| total | 2942 | 3448 (`theorem + lemma + def`, parser scope を拡張) |
+**現状の counts は本文書ではなく code タグ から取る** (本セクションが書かれた瞬間から陳腐化するため):
 
-defect 101 → 3 まで圧縮。残 3 件 (`awgn_achievability`, `IsAwgnTypicalityHypothesis`, `IsBrunnMinkowskiEntropyHypothesis`) は intentional staged Mathlib 壁案件で、200-500 LoC 規模の analytic discharge plan に切り出し済:
+```bash
+deno run -A scripts/audit_db.ts scan
+# 出力例:
+#   @audit:defect  (8)        ← circular pass-through (declaration 単位)
+#        8  circular
+#   @audit:defer  (8)
+#        2  awgn-achievability-typicality
+#        2  brunn-minkowski-from-epi-discharge
+#        4  pg-legacy-retract
+#   @audit:staged  (2)
+#        1  epi-n-dim
+#        1  n-dim-gaussian-aep
+```
 
-- [`docs/shannon/awgn-achievability-typicality-plan.md`](../shannon/awgn-achievability-typicality-plan.md) — AWGN F-1 Tier-3 plan (Cover-Thomas 9.2, sphere packing + Gaussian random codebook + n-dim continuous AEP + expurgation)
-- [`docs/shannon/brunn-minkowski-from-epi-discharge-plan.md`](../shannon/brunn-minkowski-from-epi-discharge-plan.md) — BM EPI route plan (n-dim EPI 拡張 + Cover-Thomas Theorem 17.7.4 bridge)
-
-詳細な residuals → plan の dispatch は [`defect-cleanup-plan.md`](defect-cleanup-plan.md) §波後の残り residuals 参照。
+`@audit:defect` の declaration count と「実質的な defect 案件数」は別物 — 同一 plan に defer されている declaration はまとめて 1 案件で潰れる。dispatch は [`defect-cleanup-plan.md`](defect-cleanup-plan.md) §波後の残り residuals。
