@@ -34,9 +34,7 @@ This single file publishes:
   `.of*` bridge constructors in the downstream LZ78 files. The genuine
   residual of the headline is the two-sided sandwich on `lz/n`, not any of
   these predicates.
-* **§3. Cut and intermediate-form theorems** —
-  `lz78_achievability_upper_bound`, `lz78_converse_lower_bound`.
-* **§4. Main theorem** — `lz78_asymptotic_optimality` (Cover–Thomas
+* **§3. Main theorem** — `lz78_asymptotic_optimality` (Cover–Thomas
   Theorem 13.5.3), plus the two-sided combine form.
 
 ## Scope (撤退ライン)
@@ -270,86 +268,7 @@ def IsSMBSandwichPassthrough
 
 end PassthroughPredicates
 
-/-! ## §3. Cut and intermediate-form theorems -/
-
-section IntermediateForms
-
-variable {α Ω : Type*}
-variable [Fintype α] [DecidableEq α] [Nonempty α]
-  [MeasurableSpace α] [MeasurableSingletonClass α]
-variable [MeasurableSpace Ω]
-
-/-- **LZ78 achievability — upper bound, hypothesis pass-through form**
-(L-LZ1 + L-LZ3 engaged).
-
-Given the Ziv-inequality passthrough and the SMB sandwich passthrough,
-and supplied with the final scalar upper-bound `h_upper`, conclude
-
-```
-lim sup_n (1/n) · lz78EncodingLength(X^n) ≤ entropyRate   a.s.
-```
-
-The body is the identity wrap `:= h_upper`: the two passthrough
-predicates participate in the *type* of the call but the result is
-supplied directly. This signature is the LZ78 analogue of
-`relay_broadcast_cut` from `RelayCutset.lean`. -/
-theorem lz78_achievability_upper_bound
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (p : ErgodicProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (_h_ziv : IsZivInequalityPassthrough μ p.toStationaryProcess
-                lz78EncodingLength)
-    (_h_smb : IsSMBSandwichPassthrough μ p.toStationaryProcess)
-    (h_upper : ∀ᵐ ω ∂μ,
-        Filter.limsup
-          (fun n =>
-            (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
-              / (n : ℝ))
-          Filter.atTop
-        ≤ entropyRate μ p.toStationaryProcess) :
-    ∀ᵐ ω ∂μ,
-      Filter.limsup
-        (fun n =>
-          (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
-            / (n : ℝ))
-        Filter.atTop
-      ≤ entropyRate μ p.toStationaryProcess := h_upper
-
-/-- **LZ78 converse — lower bound, hypothesis pass-through form**
-(L-LZ2 engaged).
-
-Given the LZ78-converse passthrough and supplied with the final scalar
-lower-bound `h_lower`, conclude
-
-```
-entropyRate ≤ lim inf_n (1/n) · lz78EncodingLength(X^n)   a.s.
-```
-
-Body is the identity wrap `:= h_lower`. Analogue of `relay_mac_cut`. -/
-theorem lz78_converse_lower_bound
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (p : ErgodicProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (_h_converse : IsLZ78ConversePassthrough μ p.toStationaryProcess
-                    lz78EncodingLength)
-    (h_lower : ∀ᵐ ω ∂μ,
-        entropyRate μ p.toStationaryProcess
-        ≤ Filter.liminf
-            (fun n =>
-              (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
-                / (n : ℝ))
-            Filter.atTop) :
-    ∀ᵐ ω ∂μ,
-      entropyRate μ p.toStationaryProcess
-      ≤ Filter.liminf
-          (fun n =>
-            (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
-              / (n : ℝ))
-          Filter.atTop := h_lower
-
-end IntermediateForms
-
-/-! ## §4. Main theorem — LZ78 asymptotic optimality -/
+/-! ## §3. Main theorem — LZ78 asymptotic optimality -/
 
 section MainTheorem
 

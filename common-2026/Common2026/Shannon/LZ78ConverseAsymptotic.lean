@@ -356,8 +356,7 @@ plan, but is *encapsulated* inside `B n` and so does not surface in
 this signature.
 
 Pattern: the same `hypothesis pass-through` style as
-`relay_cutset_outer_bound` (T3-F) and `lz78_converse_lower_bound`
-(`LempelZiv78.lean`). -/
+`relay_cutset_outer_bound` (T3-F). -/
 theorem lz78_phrase_count_asymptotic
     (p : ℕ → LZ78Parsing α) (B : ℕ → ℝ)
     (h_bound : ∀ n, ZivCountingBound (p n) (B n))

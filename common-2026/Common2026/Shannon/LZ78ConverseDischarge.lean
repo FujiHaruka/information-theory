@@ -245,7 +245,7 @@ theorem lz78_converse_lower_bound_of_pointwise
 
 end PmfBasedConverse
 
-/-! ## §5. Wrapper: parent `lz78_converse_lower_bound` discharge -/
+/-! ## §5. Wrapper: chain-rule + SMB sandwich → a.s. liminf bound -/
 
 section ParentWrapper
 
@@ -254,14 +254,11 @@ variable [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 variable [MeasurableSpace Ω]
 
-/-- **Wrapper: parent `lz78_converse_lower_bound` discharge via
-chain-rule + SMB sandwich**.
+/-- **Chain-rule + SMB sandwich → a.s. liminf bound**.
 
 This is the headline export of this file: takes the
 `IsLZ78ConverseChainHyp` predicate together with the SMB lower-bound
-sandwich, and produces a discharge witness for the parent
-`lz78_converse_lower_bound` (and `lz78_asymptotic_optimality_*`)
-slots. The result is the a.s. inequality
+sandwich, and produces the a.s. inequality
 
 ```
 entropyRate ≤ liminf (fun n => lz78EncodingLength n / n)
@@ -290,14 +287,13 @@ theorem lz78_converse_lower_bound_with_chain
   lz78_converse_lower_bound_pmfBased μ p.toStationaryProcess
     lz78EncodingLength h_chain h_smb_lower
 
-/-- **Wrapper feeding directly into `lz78_converse_lower_bound`**.
+/-- **L-LZ2 full discharge wrapper** (alias of
+`lz78_converse_lower_bound_with_chain`, kept for backwards-compatible call
+sites).
 
-Same as `lz78_converse_lower_bound_with_chain` but with the result
-threaded through the parent `lz78_converse_lower_bound` (so the
-parent `IsLZ78ConversePassthrough` slot is also consumed and produced).
-This is the *full* L-LZ2 discharge wrapper: parent placeholder in,
-parent a.s. liminf bound out, via the chain-rule + SMB sandwich
-hypothesis pass-throughs. -/
+Same signature and result as `lz78_converse_lower_bound_with_chain` —
+takes `IsLZ78ConverseChainHyp` + SMB lower-bound sandwich, returns the
+a.s. liminf bound `entropyRate ≤ liminf (lz/n)`. -/
 theorem lz78_converse_lower_bound_discharge
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -316,10 +312,8 @@ theorem lz78_converse_lower_bound_discharge
             (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
               / (n : ℝ))
           Filter.atTop :=
-  lz78_converse_lower_bound μ p lz78EncodingLength
-    True.intro
-    (lz78_converse_lower_bound_with_chain μ p lz78EncodingLength
-      h_chain h_smb_lower)
+  lz78_converse_lower_bound_with_chain μ p lz78EncodingLength
+    h_chain h_smb_lower
 
 end ParentWrapper
 
