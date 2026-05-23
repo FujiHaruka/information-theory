@@ -287,42 +287,4 @@ theorem isPL11DSuperLevelHyp_real
     ENNReal.toReal_mono (hH_fin t ht) (measure_mono hsub)
   linarith
 
-/-! ## §E — PL 本体を superlevel hypothesis なしで再 publish -/
-
-/-- **1 次元 PL 本体 (superlevel hypothesis discharged 版)**:
-`BrunnMinkowskiPLBody.prekopa_leindler_1D_body` は `IsPL11DSuperLevelHyp` を
-hypothesis として要求していたが、本 file の §D でそれを genuine に discharge
-できる。よって superlevel 集合の regularity hypothesis さえあれば、
-1 次元 PL 結論 `intF ^ λ * intG ^ (1 - λ) ≤ intH` を `IsPL11DSuperLevelHyp`
-仮定**なし**で得る。
-
-`f, g, hfn : ℝ → ℝ` は 1 次元 PL の関数。superlevel 測度を内部で構成し、
-§D の `isPL11DSuperLevelHyp_real` で BM hypothesis を供給する。 -/
-theorem prekopa_leindler_1D_body_discharged
-    (f g hfn : ℝ → ℝ) (lam : ℝ)
-    (h0 : 0 ≤ lam) (h1 : lam ≤ 1)
-    (intF intG intH : ℝ)
-    (hF : 0 ≤ intF) (hG : 0 ≤ intG) (hH : 0 ≤ intH)
-    (hF_compact : ∀ t : ℝ, 0 < t → IsCompact {x : ℝ | t ≤ f x})
-    (hG_compact : ∀ t : ℝ, 0 < t → IsCompact {x : ℝ | t ≤ g x})
-    (hF_ne : ∀ t : ℝ, 0 < t → ({x : ℝ | t ≤ f x}).Nonempty)
-    (hG_ne : ∀ t : ℝ, 0 < t → ({x : ℝ | t ≤ g x}).Nonempty)
-    (hH_fin : ∀ t : ℝ, 0 < t → volume {x : ℝ | t ≤ hfn x} ≠ ∞)
-    (h_pt : ∀ x y : ℝ, f x ^ lam * g y ^ (1 - lam) ≤ hfn (lam * x + (1 - lam) * y))
-    (h_add : IsPL1AdditiveHyp intF intG intH lam) :
-    intF ^ lam * intG ^ (1 - lam) ≤ intH := by
-  -- the only nontrivial ingredient — `IsPL11DSuperLevelHyp` — is now discharged.
-  have h_sl :
-      IsPL11DSuperLevelHyp
-        (fun t => (volume {x : ℝ | t ≤ f x}).toReal)
-        (fun t => (volume {x : ℝ | t ≤ g x}).toReal)
-        (fun t => (volume {x : ℝ | t ≤ hfn x}).toReal) lam :=
-    isPL11DSuperLevelHyp_real f g hfn lam h0 h1 hF_compact hG_compact
-      hF_ne hG_ne hH_fin h_pt
-  -- the additive→multiplicative step closes the body (cf. PLBody).
-  unfold IsPL1AdditiveHyp at h_add
-  have hamgm : intF ^ lam * intG ^ (1 - lam) ≤ lam * intF + (1 - lam) * intG :=
-    weighted_amgm_lambda hF hG h0 h1
-  linarith
-
 end InformationTheory.Shannon.BrunnMinkowski

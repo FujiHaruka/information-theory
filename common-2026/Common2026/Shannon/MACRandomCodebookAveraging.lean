@@ -510,36 +510,14 @@ def IsMACRandomCodebookMarkov
         ∧ Real.exp ((n : ℝ) * R₂) ≤ (M₂ : ℝ)
         ∧ (c.averageErrorProb W).toReal < ε'
 
-/-- **Bridge: Markov predicate ⇒ error-carrying achievability.**
-
-The random codebook Markov predicate `IsMACRandomCodebookMarkov` *is*
-definitionally the unfolded `MACAchievableWithError`, but stated through the
-averaging-body lens (the deterministic codebook it produces is the output of
-the Markov pigeonhole). This bridge makes the equality explicit, so the
-averaging body output flows into the genuine error-carrying predicate of
-`MACCornerAchievabilityBody.lean`. -/
-theorem mac_achievableWithError_of_markov
-    (W : MACChannel α₁ α₂ β) (R₁ R₂ : ℝ)
-    (h_markov : IsMACRandomCodebookMarkov W R₁ R₂) :
-    MACAchievableWithError W R₁ R₂ := by
-  intro ε' hε'
-  obtain ⟨N, hN⟩ := h_markov ε' hε'
-  refine ⟨N, fun n hn => ?_⟩
-  obtain ⟨M₁, M₂, c, hM₁, hM₂, herr⟩ := hN n hn
-  exact ⟨M₁, M₂, c, hM₁, hM₂, herr⟩
-
 /-- **Composed: Markov predicate ⇒ bare inner-bound existence.**
 
-Composes `mac_achievableWithError_of_markov` with the genuine reduction
-`mac_innerBoundExistence_of_achievableWithError` of
-`MACCornerAchievabilityBody.lean`: from the random codebook Markov predicate
-directly to `MACInnerBoundExistence`. -/
+`IsMACRandomCodebookMarkov` is definitionally `MACInnerBoundExistence`,
+so the Markov predicate supplies the witness directly. -/
 theorem mac_innerBoundExistence_of_markov
     (W : MACChannel α₁ α₂ β) (R₁ R₂ : ℝ)
     (h_markov : IsMACRandomCodebookMarkov W R₁ R₂) :
-    MACInnerBoundExistence W R₁ R₂ :=
-  mac_innerBoundExistence_of_achievableWithError W R₁ R₂
-    (mac_achievableWithError_of_markov W R₁ R₂ h_markov)
+    MACInnerBoundExistence W R₁ R₂ := h_markov
 
 end MACRandomCodebookMarkov
 
@@ -550,32 +528,6 @@ section MACAveragingPublish
 variable {α₁ α₂ β : Type*}
 variable [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
 
-/-- **MAC inner bound — re-publish with the random-codebook averaging
-discharged.**
-
-The cumulative chain
-`mac_capacity_region_inner_bound`
-(`MultipleAccessChannel.lean`) →
-`mac_capacity_region_inner_bound_with_body` (`MACBodyDischarge.lean`) →
-`mac_capacity_region_inner_bound_of_achievableWithError`
-(`MACCornerAchievabilityBody.lean`) consumed either the *bare*
-`MACInnerBoundExistence` or the error-carrying `MACAchievableWithError` as a
-*caller hypothesis*. The present theorem extends that chain by discharging
-the **averaging body** slot: the achievability is now derived from the
-random codebook Markov predicate `IsMACRandomCodebookMarkov` (the
-deterministic-codebook-pair-with-rate witness produced by the averaging
-argument), via `mac_achievableWithError_of_markov`.
-
-The remaining caller hypothesis is the Markov predicate itself; its
-operational derivation — the `∫⁻`-to-finite-sum reduction on
-`Measure.pi^n P_X` of the codebook-pair ensemble plus the per-event AEP
-decays — is the explicit retreat line (S12-M), deferred. -/
-theorem mac_inner_bound_with_averaging
-    (W : MACChannel α₁ α₂ β) (R₁ R₂ I₁ I₂ Iboth : ℝ)
-    (_h_strict : R₁ < I₁ ∧ R₂ < I₂ ∧ R₁ + R₂ < Iboth)
-    (h_markov : IsMACRandomCodebookMarkov W R₁ R₂) :
-    MACInnerBoundExistence W R₁ R₂ :=
-  mac_innerBoundExistence_of_markov W R₁ R₂ h_markov
 
 /-- **Two-side combine — averaging-body achievability + converse.**
 

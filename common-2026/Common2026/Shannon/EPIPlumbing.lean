@@ -55,10 +55,6 @@ open scoped ENNReal NNReal Topology
 
 /-! ## §1 — Positivity / non-zero / log-form 系 -/
 
-/-- `entropyPower μ` is strictly positive iff `True` (always positive). -/
-theorem entropyPower_pos_iff (μ : Measure ℝ) :
-    0 < entropyPower μ ↔ True := by
-  exact ⟨fun _ => trivial, fun _ => entropyPower_pos μ⟩
 
 /-- `entropyPower μ ≠ 0` (corollary of strict positivity). -/
 theorem entropyPower_ne_zero (μ : Measure ℝ) : entropyPower μ ≠ 0 :=

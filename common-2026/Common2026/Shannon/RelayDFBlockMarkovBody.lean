@@ -381,20 +381,6 @@ theorem relayDFRateWitness_of_sub_hyps'
   relayDFRateWitness_of_sub_hyps (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
     h_enc h_dec h_typ
 
-/-- **DF inner bound — sub-hyp rate-witness discharge form.**
-
-The block-Markov-discharged variant: from the three structural sub-hyps,
-*construct* the DF **rate witness** (not the error-carrying existence). The
-rate-region membership is derived from the two scalar sub-hyps internally. -/
-theorem relay_df_inner_bound_block_markov_discharged
-    [Nonempty α] [Nonempty α₁]
-    (R Imrh Iry Ibroad : ℝ)
-    (h_enc : IsBlockMarkovEncoderHyp (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R)
-    (h_dec : IsRelayDecodableHyp R Imrh Iry)
-    (h_typ : IsDestinationJointlyTypicalHyp R Ibroad) :
-    RelayDFRateWitness (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) R :=
-  relayDFRateWitness_of_sub_hyps (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    h_enc h_dec h_typ
 
 /-- **DF inner bound — sub-hyp rate-witness discharge + bundled rate
 region.**

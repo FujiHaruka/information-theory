@@ -308,27 +308,6 @@ theorem chernoff_lemma_tendsto_via_RN_forall
   exact chernoff_lemma_tendsto_from_predicate P₁ P₂ hP₁_pos hP₂_pos
     ⟨lam, hlam_mem, h_eq, h_pred⟩
 
-/-! ## Phase E — structural lemmas on `IsChernoffNLetterRN` -/
-
-omit [DecidableEq α] in
-/-- **Witness extraction** for the RN-deriv predicate. -/
-lemma isChernoffNLetterRN.exists_witness
-    {P₁ P₂ : α → ℝ} {lam : ℝ}
-    (h_RN : IsChernoffNLetterRN P₁ P₂ lam) :
-    ∃ C : ℝ, 0 < C ∧
-      ∀ᶠ n : ℕ in atTop,
-        C * (chernoffZSum P₁ P₂ lam) ^ n ≤ 2 * bayesErrorMinPmf P₁ P₂ n :=
-  h_RN
-
-omit [DecidableEq α] in
-/-- **Construction** of the RN-deriv predicate from explicit witness data. -/
-lemma isChernoffNLetterRN.of_witness
-    (P₁ P₂ : α → ℝ) (lam : ℝ)
-    (C : ℝ) (hC_pos : 0 < C)
-    (h_lb : ∀ᶠ n : ℕ in atTop,
-        C * (chernoffZSum P₁ P₂ lam) ^ n ≤ 2 * bayesErrorMinPmf P₁ P₂ n) :
-    IsChernoffNLetterRN P₁ P₂ lam :=
-  ⟨C, hC_pos, h_lb⟩
 
 /-- **Monotonicity in `C`**: smaller positive constants still witness the
 predicate. -/

@@ -114,29 +114,6 @@ theorem awgn_output_gaussian_of_bind_eq_conv
 
 /-! ## Phase C — MI decomposition primitive (body decomposition) -/
 
-/-- **MI ↔ KL decomposition (named hypothesis).**
-
-`IsAwgnMIDecomp P N h_meas` says
-
-```
-I(X;Y).toReal = h(Y) − ∫ h(awgnChannel N x) ∂(gaussianReal 0 P.toNNReal)
-```
-
-This is the **continuous chain-rule decomposition** of mutual information,
-the analogue of the discrete `mutualInfo = entropy_X + entropy_Y - entropy_XY`.
-Discharging it requires unfolding `klDiv (p ⊗ₘ W) (p.prod q)` into the
-integral form and applying the conditional-entropy KL identity — Mathlib's
-`klDiv_compProd_*` API + measure-product KL.
-
-We expose this as a single named hypothesis (the predicate itself), to be
-discharged in the dedicated `awgn-mi-decomp-plan.md` follow-up alongside
-the Mathlib `klDiv` continuous-MI chain rule. The combinator
-`awgn_mi_decomp_id` below confirms that `IsAwgnMIDecomp` is itself the right
-shape for the bridge consumer; no body proof is performed here. -/
-theorem awgn_mi_decomp_id
-    (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
-    (h_decomp : IsAwgnMIDecomp P N h_meas) :
-    IsAwgnMIDecomp P N h_meas := h_decomp
 
 /-! ## Phase D — Combined body discharge re-publish -/
 

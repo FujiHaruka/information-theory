@@ -136,16 +136,6 @@ def IsLZ78AchievabilityChainHyp
         ≤ Filter.limsup
             (fun n => blockLogAvg μ p n ω) Filter.atTop := Iff.rfl
 
-/-- **Bridge: `IsLZ78AchievabilityChainHyp` discharges the parent
-`IsZivInequalityPassthrough` placeholder.** Mirror of
-`IsLZ78ConversePassthrough.ofChainHyp`. -/
-theorem IsZivInequalityPassthrough.ofAchievabilityChainHyp
-    (μ : Measure Ω) (p : StationaryProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (_h_chain : IsLZ78AchievabilityChainHyp μ p lz78EncodingLength) :
-    IsZivInequalityPassthrough μ p lz78EncodingLength :=
-  True.intro
-
 end AchievabilityChainHyp
 
 /-! ## §2. Achievability upper bound via discharged SMB limsup -/

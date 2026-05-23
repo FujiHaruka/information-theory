@@ -176,12 +176,6 @@ theorem isStamTotalExpectation_symm {Ω : Type*} [MeasurableSpace Ω]
 
 /-! ## §3 — Step 1 + Step 2 → Step 3 chain -/
 
-/-- **Step 2 → Step 3 (re-export)**: the Wave 7 existential-CS predicate *is* the
-Step-3 output coupling. -/
-theorem isStamFisherCoupling_of_cauchySchwarz {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h : IsStamCauchySchwarz X Y P) :
-    IsStamFisherCoupling X Y P := h
 
 /-- **Total-expectation at the optimal λ → Step 3 coupling**: feeding the
 optimal witness `λ = J_Y / (J_X + J_Y) ∈ [0,1]` into the total-expectation

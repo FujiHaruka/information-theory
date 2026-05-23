@@ -570,23 +570,6 @@ theorem swap_value_le_max
       rw [Equiv.swap_apply_of_ne_of_ne hxa hxm]
       exact le_max_left _ _
 
-/-! ### Section L — Partial discharge composition with `huffmanLength_kraft_eq_one` -/
-
-/-- **huffmanLength の self-comparison via 主定理 (`card α ≥ 2` 仮定形)**: `huffmanLength P`
-自身を `l` として主定理に入れた形は trivial に `≤` (= 反射律) で成立. `huffmanLength_pos`
-が `2 ≤ card α` を要求するため、本 wrapper も同条件で公開. -/
-theorem huffmanLength_optimal_self
-    {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
-    [MeasurableSpace α] [MeasurableSingletonClass α]
-    (h_swap : SwapNormalizationHypothesis.{u})
-    (h_ident : HuffmanMergedIdentificationHypothesis.{u})
-    (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})
-    (h_card : 2 ≤ Fintype.card α) :
-    InformationTheory.Shannon.ShannonCode.expectedLength P (huffmanLength P)
-      ≤ InformationTheory.Shannon.ShannonCode.expectedLength P (huffmanLength P) :=
-  huffmanLength_optimal_with_hypotheses h_swap h_ident P hP
-    (huffmanLength P) (huffmanLength_pos P hP h_card)
-    (huffmanLength_kraft_le_one P hP)
 
 /-! ### Section M — Partial wrapper for client convenience -/
 

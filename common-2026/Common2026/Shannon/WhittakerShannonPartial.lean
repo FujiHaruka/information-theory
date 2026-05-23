@@ -201,14 +201,6 @@ written it is **not** discharged. -/
 def IsWhittakerShannonInterpolation (f : ℝ → ℝ) (W t : ℝ) : Prop :=
   0 < W ∧ ∃ (_S : ℝ), True
 
-/-- Builder for `IsWhittakerShannonInterpolation` from positivity. ⚠️ This
-does **not** discharge L-WS-A: the predicate is a weak `0 < W ∧ ∃ _S, True`
-placeholder, so building it from `0 < W` proves nothing about the
-Whittaker-Shannon reconstruction. -/
-theorem mk_IsWhittakerShannonInterpolation
-    (f : ℝ → ℝ) (W t : ℝ) (hW : 0 < W) :
-    IsWhittakerShannonInterpolation f W t :=
-  ⟨hW, f t, trivial⟩
 
 /-! ## §F — 1-point Whittaker-Shannon uniqueness theorem. -/
 
@@ -262,27 +254,6 @@ theorem whittaker_shannon_off_sample_zero
   rw [if_neg hn]
   ring
 
-/-! ## §G — L-SH1 chaining (link to ShannonHartley). -/
-
-/-- L-SH1 chain: the `IsBandlimitedSamplingHypothesis` predicate from
-`ShannonHartley.lean` can be built from positivity alone (it is a weak
-placeholder predicate). The point of this chain lemma is to expose at
-the type level the L-WS-A → L-SH1 implication — once a future discharge
-strengthens `IsWhittakerShannonInterpolation`, this is the surface area
-the discharge plugs into. -/
-theorem ShannonHartley_IsBandlimitedSamplingHypothesis_of_interp
-    (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
-    InformationTheory.Shannon.ShannonHartley.IsBandlimitedSamplingHypothesis
-      W N₀ P :=
-  InformationTheory.Shannon.ShannonHartley.mk_IsBandlimitedSamplingHypothesis
-    W N₀ P hW hN₀ hP
-
-/-- L-SH2 chain: bandlimited kernel measurability is `0 < W` (weak
-placeholder). -/
-theorem ShannonHartley_IsBandlimitedKernel_of_pos
-    (W : ℝ) (hW : 0 < W) :
-    InformationTheory.Shannon.ShannonHartley.IsBandlimitedKernel W :=
-  InformationTheory.Shannon.ShannonHartley.mk_IsBandlimitedKernel W hW
 
 /-! ## §H — Auxiliary algebraic / measurability corollaries. -/
 

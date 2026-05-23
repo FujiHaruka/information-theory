@@ -41,9 +41,8 @@ witnesses for the converse direction).
   constructors from `algoet_cover_liminf_bound` / `algoet_cover_limsup_bound`
   and derivation from `IsSMBSandwichTendsto`.
 * **§3. Bridge to parent `IsSMBSandwichPassthrough`** —
-  `IsSMBSandwichTendsto` (and either half of the sandwich) discharges the
-  parent `True` placeholder, with constructors `.ofTendsto`, `.ofLiminf`,
-  `.ofLimsup`, and `.ofErgodic`.
+  the parent `IsSMBSandwichPassthrough` is a `True` placeholder; it is
+  discharged directly via `True.intro` in aggregate export theorems.
 * **§4. SMB sandwich → LZ78 converse chain-rule bridge** — feeding the
   liminf half (or the full Tendsto) into `IsLZ78ConverseChainHyp`
   (`LZ78ConverseDischarge.lean`) under a Cover–Thomas Eq. 13.130
@@ -272,57 +271,7 @@ variable [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 variable [MeasurableSpace Ω]
 
-/-- **Bridge: `IsSMBSandwichTendsto` discharges the parent
-`IsSMBSandwichPassthrough` placeholder**.
-
-While the parent placeholder is currently a `True` placeholder
-(`LempelZiv78.lean` §2), this bridge upgrades the discharge to consume
-the substantive sandwich predicate. -/
-theorem IsSMBSandwichPassthrough.ofTendsto
-    (μ : Measure Ω) (p : StationaryProcess μ α)
-    (_h : IsSMBSandwichTendsto μ p) :
-    IsSMBSandwichPassthrough μ p :=
-  True.intro
-
-/-- **Bridge: `IsSMBSandwichLiminf` discharges the parent placeholder**. -/
-theorem IsSMBSandwichPassthrough.ofLiminf
-    (μ : Measure Ω) (p : StationaryProcess μ α)
-    (_h : IsSMBSandwichLiminf μ p) :
-    IsSMBSandwichPassthrough μ p :=
-  True.intro
-
-/-- **Bridge: `IsSMBSandwichLimsup` discharges the parent placeholder**. -/
-theorem IsSMBSandwichPassthrough.ofLimsup
-    (μ : Measure Ω) (p : StationaryProcess μ α)
-    (_h : IsSMBSandwichLimsup μ p) :
-    IsSMBSandwichPassthrough μ p :=
-  True.intro
-
 end ParentBridge
-
-/-! ## §6. Ergodic-process aggregate discharge of the parent placeholder -/
-
-section ErgodicAggregate
-
-variable {α Ω : Type*}
-variable [Fintype α] [DecidableEq α] [Nonempty α]
-  [MeasurableSpace α] [MeasurableSingletonClass α]
-variable [MeasurableSpace Ω]
-
-/-- **Ergodic-process discharge of parent `IsSMBSandwichPassthrough`**.
-
-For an ergodic process on a finite alphabet, the parent SMB sandwich
-placeholder is discharged hypothesis-free via
-`shannon_mcmillan_breiman` (chained through
-`IsSMBSandwichPassthrough.ofTendsto`). -/
-theorem IsSMBSandwichPassthrough.ofErgodic
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (p : ErgodicProcess μ α) :
-    IsSMBSandwichPassthrough μ p.toStationaryProcess :=
-  IsSMBSandwichPassthrough.ofTendsto μ p.toStationaryProcess
-    (IsSMBSandwichTendsto.ofErgodic μ p)
-
-end ErgodicAggregate
 
 /-! ## §7. SMB sandwich → LZ78 converse chain-rule bridge -/
 
@@ -357,15 +306,6 @@ def IsSMBToLZ78ConverseChainBridge
       IsLZ78ConverseChainHyp μ p lz78EncodingLength :=
   Iff.rfl
 
-/-- **Bridge: `IsSMBToLZ78ConverseChainBridge` is exactly
-`IsLZ78ConverseChainHyp`**. -/
-theorem IsLZ78ConverseChainHyp.ofSMBBridge
-    (μ : Measure Ω) (p : StationaryProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (h : IsSMBToLZ78ConverseChainBridge μ p lz78EncodingLength) :
-    IsLZ78ConverseChainHyp μ p lz78EncodingLength :=
-  h
-
 end ConverseChainBridge
 
 /-! ## §8. Headline export: `lz78_smb_sandwich_ergodic` -/
@@ -395,7 +335,7 @@ theorem lz78_smb_sandwich_ergodic
   ⟨IsSMBSandwichTendsto.ofErgodic μ p,
    IsSMBSandwichLiminf.ofErgodic μ p,
    IsSMBSandwichLimsup.ofErgodic μ p,
-   IsSMBSandwichPassthrough.ofErgodic μ p⟩
+   True.intro⟩
 
 /-- **L-LZ3 body discharge — Tendsto component only**. -/
 theorem lz78_smb_sandwich_ergodic_tendsto
@@ -537,63 +477,5 @@ theorem lz78_converse_lower_bound_ergodic_greedy
     (@lz78GreedyEncodingLength α _) h_chain
 
 end GreedyCompat
-
-/-! ## §11. Full LZ78 asymptotic optimality with hypothesis-free SMB -/
-
-section FullLZ78SMB
-
-variable {α Ω : Type*}
-variable [Fintype α] [DecidableEq α] [Nonempty α]
-  [MeasurableSpace α] [MeasurableSingletonClass α]
-variable [MeasurableSpace Ω]
-
-/-- **LZ78 asymptotic optimality — SMB hypothesis discharged**.
-
-Same shape as `lz78_asymptotic_optimality_two_sided`
-(`LempelZiv78.lean` §4). After the headline de-circularization the three
-`True` pass-through predicates (Ziv / converse / SMB) are no longer
-hypotheses of the parent two-sided theorem at all, so this wrapper simply
-forwards the four genuine sandwich ingredients on the LZ78 *encoding
-length*. The body is a genuine application of
-`lz78_asymptotic_optimality_two_sided`. -/
-theorem lz78_asymptotic_optimality_two_sided_smb_discharged
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (p : ErgodicProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (h_lower : ∀ᵐ ω ∂μ,
-        entropyRate μ p.toStationaryProcess
-        ≤ Filter.liminf
-            (fun n =>
-              (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
-                / (n : ℝ))
-            Filter.atTop)
-    (h_upper : ∀ᵐ ω ∂μ,
-        Filter.limsup
-          (fun n =>
-            (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
-              / (n : ℝ))
-          Filter.atTop
-        ≤ entropyRate μ p.toStationaryProcess)
-    (h_bdd_above : ∀ᵐ ω ∂μ,
-        Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
-          (fun n =>
-            (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
-              / (n : ℝ)))
-    (h_bdd_below : ∀ᵐ ω ∂μ,
-        Filter.IsBoundedUnder (· ≥ ·) Filter.atTop
-          (fun n =>
-            (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
-              / (n : ℝ))) :
-    ∀ᵐ ω ∂μ,
-      Filter.Tendsto
-        (fun n =>
-          (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
-            / (n : ℝ))
-        Filter.atTop
-        (𝓝 (entropyRate μ p.toStationaryProcess)) :=
-  lz78_asymptotic_optimality_two_sided μ p lz78EncodingLength
-    h_lower h_upper h_bdd_above h_bdd_below
-
-end FullLZ78SMB
 
 end InformationTheory.Shannon

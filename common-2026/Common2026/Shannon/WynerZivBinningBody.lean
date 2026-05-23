@@ -507,42 +507,6 @@ theorem wzAchievability_random_binning_body
     _ ≤ ε_typ + ε_bin := by
         exact add_le_add h_typ_prob h_bin_prob
 
-/-- **Existence form**: package the above into the existence shape consumed
-by `wyner_ziv_achievability_existence`. Given the two ε bounds plus a code
-construction `c`, the expected block distortion is bounded by a hypothesis
-`h_distortion` (the distortion-concentration ingredient is genuinely
-information-theoretic and deferred to a separate seed; we accept it as a
-hypothesis here).
-
-The result is the **fully-composed statement**: for any ε > 0, a single
-hypothesis bundle suffices to produce a WynerZivCode with both the rate
-side `M ≤ exp(n R)` and the distortion side `expected_distortion ≤ D + ε`. -/
-theorem wzAchievability_existence_body
-    {α : Type*} [Fintype α]
-    [MeasurableSpace α] [MeasurableSingletonClass α]
-    [Nonempty β] [Nonempty γ]
-    (μ : Measure (α × β)) [IsProbabilityMeasure μ]
-    (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
-    (_h_R_gt : R > wynerZivRatePmf U P_XY d D)
-    (dN : DistortionFn α γ)
-    -- The fully-composed existence hypothesis: at every ε, ∃ N, ∀ n ≥ N,
-    -- a code achieving rate ≤ exp(n R) and distortion ≤ D + ε exists. This
-    -- is the precise statement consumed by the public WZ achievability
-    -- main theorem. We re-export it through this body lemma to document
-    -- that the random-binning argument *of this file* delivers this shape.
-    (h_existence :
-      ∀ ε > (0 : ℝ),
-        ∃ N : ℕ, ∀ n ≥ N,
-          ∃ (M : ℕ) (c : WynerZivCode M n α β γ),
-            (M : ℝ) ≤ Real.exp ((n : ℝ) * R)
-              ∧ c.expectedBlockDistortion μ dN ≤ D + ε) :
-    ∀ ε > (0 : ℝ),
-      ∃ N : ℕ, ∀ n ≥ N,
-        ∃ (M : ℕ) (c : WynerZivCode M n α β γ),
-          (M : ℝ) ≤ Real.exp ((n : ℝ) * R)
-            ∧ c.expectedBlockDistortion μ dN ≤ D + ε := by
-  exact h_existence
-
 end AchievabilityBody
 
 /-! ## Section 6 — Slice cardinality plumbing (hypothesis pass-through)
@@ -578,35 +542,6 @@ lemma wzConditionalTypicalSlice_finite
     (JT : (Fin n → U) × (Fin n → β) → Prop)
     (y : Fin n → β) :
     (wzConditionalTypicalSlice (n := n) JT y).Finite := Set.toFinite _
-
-/-- **Expected `E_bin` ≤ slice-size / M (hypothesis pass-through).**
-
-Given a hypothesis bundle:
-* the slice cardinality bound `h_slice_card : |T_{U|Y=y}| ≤ S` for some
-  `S : ℝ`;
-* the random-binning expected error bound supplied as input
-  `h_bin_avg : 𝔼[μ(E_bin)] ≤ S / M`;
-
-this lemma re-exports the bound for downstream consumption. The actual
-content `𝔼[μ(E_bin)] ≤ |slice| / M` follows from union bound over slice
-elements + `1/M` collision per element, with a discharge ~30 lines (deferred
-to a separate seed). -/
-theorem wzBinning_E_bin_expected_le_slice
-    {Ω : Type*} [MeasurableSpace Ω]
-    (μ : Measure Ω) [IsFiniteMeasure μ]
-    {n M : ℕ} [NeZero M]
-    (Us : Ω → Fin n → U) (Ys : Ω → Fin n → β)
-    (JT : (Fin n → U) × (Fin n → β) → Prop)
-    {S : ℝ}
-    (h_bin_avg :
-      ∫ f_U : (Fin n → U) → Fin M,
-          μ.real (wzError_E_bin (n := n) Us Ys JT f_U)
-        ∂(wzBinningMeasure U n M)
-        ≤ S * (M : ℝ)⁻¹) :
-    ∫ f_U : (Fin n → U) → Fin M,
-        μ.real (wzError_E_bin (n := n) Us Ys JT f_U)
-      ∂(wzBinningMeasure U n M)
-      ≤ S * (M : ℝ)⁻¹ := h_bin_avg
 
 end SliceCardinalityPassThrough
 

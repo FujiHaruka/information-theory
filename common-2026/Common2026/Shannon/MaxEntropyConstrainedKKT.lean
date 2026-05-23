@@ -329,13 +329,6 @@ lemma KKT_moment_match_iff_gibbs_moment_match [Nonempty α]
   rw [show expFamilyDist f lam = gibbsPmf f lam
         from expFamilyDist_eq_gibbsPmf f lam]
 
-/-- **KKT optimality witness** — the exponential family `expFamilyDist f λ`
-*itself* is constraint-feasible exactly under the KKT first-order condition. -/
-lemma expFamilyDist_satisfies_constraints_iff [Nonempty α]
-    (f : Fin k → α → ℝ) (c : Fin k → ℝ) (lam : Fin k → ℝ) :
-    (∀ i, ∑ x, expFamilyDist f lam x * f i x = c i)
-      ↔ ∀ i, ∑ x, expFamilyDist f lam x * f i x = c i :=
-  Iff.rfl
 
 /-! ## Section 9 — Stationarity expansion: log-pmf is affine in features -/
 

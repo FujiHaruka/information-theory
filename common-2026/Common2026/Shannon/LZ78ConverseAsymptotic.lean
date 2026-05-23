@@ -217,23 +217,6 @@ section ZivPassthroughBridge
 
 variable {α Ω : Type*} [MeasurableSpace α] [MeasurableSpace Ω]
 
-/-- **Bridge: an asymptotic phrase-count predicate discharges the parent
-`IsZivInequalityPassthrough` placeholder.**
-
-Currently the parent predicate is `True`; the bridge is set up so that
-the *signature* — taking an `IsLZ78PhraseCountAsymptotic` witness — is
-already in place. When the asymptotic-side discharges of L-LZ2-asym-D
-(the concrete `c(n) · log c(n) − n · log b = o(n)` derivation) land,
-the parent predicate body will be upgraded from `True` to a concrete
-asymptotic statement and this bridge will become the substantive
-constructor. For now it is the identity wrap on `True.intro`. -/
-theorem IsZivInequalityPassthrough.ofAsymptotic
-    (μ : Measure Ω) (p : StationaryProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (_q : ℕ → LZ78Parsing α) (_B : ℕ → ℝ)
-    (_h_asym : IsLZ78PhraseCountAsymptotic _q _B) :
-    IsZivInequalityPassthrough μ p lz78EncodingLength :=
-  True.intro
 
 /-- **Trivial reverse**: parent placeholder is `True`, so we may
 construct an asymptotic predicate from *any* parsing family `q` and
@@ -475,40 +458,6 @@ end TwoSidedSandwich
 section SMBSandwichBridge
 
 variable {α Ω : Type*} [MeasurableSpace α] [MeasurableSpace Ω]
-
-/-- **Bridge: an asymptotic phrase-count sandwich discharges the parent
-`IsSMBSandwichPassthrough` placeholder**.
-
-Currently the parent predicate is `True`; the bridge is set up so that
-the *signature* — taking an `IsLZ78PhraseCountSandwich` witness on a
-parsing family extracted from the encoding-length — is already in
-place. When the SMB-side discharges land (Birkhoff + chain rule), the
-parent predicate body will be upgraded from `True` to a concrete
-sandwich statement and this bridge will become substantive.
-
-For now it is the identity wrap on `True.intro`. -/
-theorem IsSMBSandwichPassthrough.ofPhraseCountSandwich
-    (μ : Measure Ω) (p : StationaryProcess μ α)
-    (_q : ℕ → LZ78Parsing α) (_B_lower _B_upper : ℕ → ℝ)
-    (_h_sand : IsLZ78PhraseCountSandwich _q _B_lower _B_upper) :
-    IsSMBSandwichPassthrough μ p :=
-  True.intro
-
-/-- **Combined bridge**: from an asymptotic phrase-count sandwich, both
-the `IsZivInequalityPassthrough` (upper-side) and the
-`IsSMBSandwichPassthrough` (sandwich) parent placeholders can be
-discharged simultaneously. -/
-theorem IsLZ78PhraseCountSandwich.toBothPassthroughs
-    (μ : Measure Ω) (p : StationaryProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (q : ℕ → LZ78Parsing α) (B_lower B_upper : ℕ → ℝ)
-    (h_sand : IsLZ78PhraseCountSandwich q B_lower B_upper) :
-    IsZivInequalityPassthrough μ p lz78EncodingLength ∧
-      IsSMBSandwichPassthrough μ p :=
-  ⟨IsZivInequalityPassthrough.ofAsymptotic μ p lz78EncodingLength q B_upper
-      h_sand.upper,
-   IsSMBSandwichPassthrough.ofPhraseCountSandwich μ p q B_lower B_upper
-      h_sand⟩
 
 end SMBSandwichBridge
 

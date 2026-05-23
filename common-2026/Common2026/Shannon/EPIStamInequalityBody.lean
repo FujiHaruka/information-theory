@@ -107,9 +107,6 @@ def IsStamScoreConvolution {Ω : Type*} [MeasurableSpace Ω]
   -- propositional witness consumed downstream.
   True
 
-/-- The score-convolution predicate is trivially provable (placeholder). -/
-theorem isStamScoreConvolution_trivial {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω) : IsStamScoreConvolution X Y P := trivial
 
 /-- The score-convolution predicate is symmetric in `X, Y`. -/
 theorem isStamScoreConvolution_symm {Ω : Type*} [MeasurableSpace Ω]
@@ -294,15 +291,6 @@ theorem isStamInequalityHyp_via_body
 
 /-! ## §5 — Gaussian saturation discharge -/
 
-/-- **Score-convolution predicate Gaussian discharge** (trivial — predicate is
-`True`). -/
-theorem isStamScoreConvolution_of_gaussian
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
-    (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
-    IsStamScoreConvolution X Y P := trivial
 
 /- **RESOLVED (2026-05-20):** the former `isStamCauchySchwarzOptimal_of_gaussian_fisherInfo_zero`
 and its chain lemmas `isStamInequalityHyp_of_gaussian_via_body` /

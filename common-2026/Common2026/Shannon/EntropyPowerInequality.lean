@@ -139,9 +139,6 @@ Discharge plan `epi-stam-discharge-plan.md` (未着手) で真の Stam inequalit
 def IsStamInequalityHypothesis {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop := True
 
-/-- L-EPI1 placeholder is trivially provable. -/
-theorem isStamInequalityHypothesis_trivial {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω) : IsStamInequalityHypothesis X Y P := trivial
 
 /-- **L-EPI2 (de Bruijn integration hypothesis)**: heat-flow path `Z_t = X+√t G`
 (`G ∼ 𝒩(0,1)`) 上での `(d/dt) h(Z_t) = (1/2) J(Z_t)` integration identity

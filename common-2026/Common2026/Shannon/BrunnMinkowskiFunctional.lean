@@ -63,8 +63,7 @@ T2-C SH と同流儀)。
 * §C — Prékopa-Leindler 主定理 (`prekopa_leindler_inequality`, L-PL1 適用)
 * §D — Specialization: PL → convex body Brunn-Minkowski (L-PL2 経由)
 * §E — Log-concave measure / density framework
-* §F — EPI 橋渡し (entropy ≤ log volume for log-concave, hypothesis pass-through)
-* §G — corollary group: λ → 0 / λ → 1 / 等分点
+* §F — EPI 橋渡し (entropy power upper bound from log-concavity)
 -/
 
 namespace InformationTheory.Shannon.BrunnMinkowski
@@ -126,14 +125,6 @@ theorem isLogConcaveDensity_const {n : ℕ} {c : ℝ} (hc : 0 ≤ c) :
       ring_nf
       exact Real.rpow_one c
     rw [hmul]
-
-/-- **Non-negativity preserved**: if `ρ` is log-concave and `ρ x ≥ 0`
-everywhere, then so is `ρ` on convex combinations. Trivial restatement. -/
-theorem isLogConcaveDensity_nonneg_convex {n : ℕ} {ρ : (Fin n → ℝ) → ℝ}
-    (hρ : IsLogConcaveDensity ρ) (hρ_nn : ∀ x, 0 ≤ ρ x)
-    (x y : Fin n → ℝ) (lam : ℝ) (h0 : 0 ≤ lam) (h1 : lam ≤ 1) :
-    0 ≤ ρ (lam • x + (1 - lam) • y) :=
-  hρ_nn _
 
 /-! ## §B — Hypothesis predicates: L-PL1 / L-PL2 / L-PL3 -/
 
@@ -205,20 +196,6 @@ theorem prekopa_leindler_inequality
     intF ^ lam * intG ^ (1 - lam) ≤ intH :=
   h_pl
 
-/-- **PL form 露出: `≥` 形 (Cover-Thomas 結論そのままの向き)**. -/
-theorem prekopa_leindler_inequality_ge
-    {n : ℕ} (f g hfn : (Fin n → ℝ) → ℝ) (lam : ℝ)
-    (h0 : 0 ≤ lam) (h1 : lam ≤ 1)
-    (intF intG intH : ℝ)
-    (hF_nn : 0 ≤ intF) (hG_nn : 0 ≤ intG) (hH_nn : 0 ≤ intH)
-    (h_pointwise : ∀ x y : Fin n → ℝ,
-      f x ^ lam * g y ^ (1 - lam) ≤ hfn (lam • x + (1 - lam) • y))
-    (h_pl : IsPrekopaLeindlerHyp f g hfn lam intF intG intH) :
-    intH ≥ intF ^ lam * intG ^ (1 - lam) := by
-  have h := prekopa_leindler_inequality f g hfn lam h0 h1 intF intG intH
-    hF_nn hG_nn hH_nn h_pointwise h_pl
-  exact h
-
 /-! ## §D — Specialization: PL → 凸体 Brunn-Minkowski (L-PL2 適用) -/
 
 /-- **From Prékopa-Leindler to convex body Brunn-Minkowski (multiplicative form)**.
@@ -239,24 +216,6 @@ theorem brunn_minkowski_from_prekopa_leindler
     (h_indicator : IsIndicatorToConvexBodyHyp A B volA volB volAB lam) :
     volA ^ lam * volB ^ (1 - lam) ≤ volAB :=
   h_indicator
-
-/-- **Sharp `(1/n)` form via log-exp bridge**: もし
-`volA ^ λ * volB ^ (1 - λ) ≤ volAB` が **全ての `λ`** で成り立つならば、
-`λ = vol(A)^{1/n} / (vol(A)^{1/n} + vol(B)^{1/n})` の選択で
-`vol(A+B)^{1/n} ≥ vol(A)^{1/n} + vol(B)^{1/n}` (Cor 17.9.3) が出る。
-
-本 corollary は **その全 `λ` 仮定** を取る hypothesis pass-through form。 -/
-theorem brunn_minkowski_sharp_from_full_lambda
-    {n : ℕ} (A B : Set (Fin n → ℝ))
-    (volA volB : ℝ) (volAB_lam : ℝ → ℝ)
-    (hvolA : 0 ≤ volA) (hvolB : 0 ≤ volB)
-    (hvolAB : ∀ lam : ℝ, 0 ≤ lam → lam ≤ 1 → 0 ≤ volAB_lam lam)
-    (h_full :
-      ∀ lam : ℝ, 0 ≤ lam → lam ≤ 1 →
-        volA ^ lam * volB ^ (1 - lam) ≤ volAB_lam lam)
-    (lam : ℝ) (h0 : 0 ≤ lam) (h1 : lam ≤ 1) :
-    volA ^ lam * volB ^ (1 - lam) ≤ volAB_lam lam :=
-  h_full lam h0 h1
 
 /-! ## §E — Log-concave measure framework -/
 
@@ -304,37 +263,6 @@ noncomputable def isLogConcaveMeasure_uniform_convex_body
 
 /-! ## §F — EPI 橋渡し: entropy ≤ log volume for log-concave -/
 
-/-- **Entropy upper bound for log-concave measures (Cover-Thomas 17.9.6 系)**.
-
-Log-concave 密度を持つ測度 `μ` の differential entropy は、
-そのサポート凸体 `A` の log volume で **上から押さえられる**。
-EPI / Brunn-Minkowski の表裏で、本 file の頂点に立つ橋渡し。
-
-撤退ライン:
-* `h_le_logVol_hyp` (核心 retreat): entropy ≤ log vol を直接 hypothesis 化、
-  本体は `:= h_le_logVol_hyp` で着地
-
-Discharge plan `log-concave-entropy-bound-plan.md` (未着手): Jensen 不等式
-+ Stam の relative entropy 経由で本格化想定。 -/
-theorem entropy_le_logVolume_of_logConcave
-    {n : ℕ} (μ : Measure (Fin n → ℝ))
-    (h : Measure (Fin n → ℝ) → ℝ)
-    (hμ_lc : IsLogConcaveMeasure μ)
-    (volA : ℝ) (hvolA : 0 < volA)
-    (h_le_logVol_hyp : h μ ≤ Real.log volA) :
-    h μ ≤ Real.log volA :=
-  h_le_logVol_hyp
-
-/-- **Entropy lower bound via volume of support** (mirror form). -/
-theorem entropy_ge_logVolume_of_logConcave
-    {n : ℕ} (μ : Measure (Fin n → ℝ))
-    (h : Measure (Fin n → ℝ) → ℝ)
-    (hμ_lc : IsLogConcaveMeasure μ)
-    (volA : ℝ) (hvolA : 0 < volA)
-    (h_ge_logVol_hyp : Real.log volA ≤ h μ) :
-    Real.log volA ≤ h μ :=
-  h_ge_logVol_hyp
-
 /-- **Entropy power upper bound from log-concavity**: `exp ((2/n) h(μ)) ≤ volA^{2/n}`.
 
 `entropyPower_nDim` で書き換えると `entropyPower_nDim n h μ ≤ volA^{2/n}`. -/
@@ -360,50 +288,6 @@ theorem entropyPower_nDim_le_volume_rpow_of_logConcave
   have hrpow : Real.exp ((2 / n) * Real.log volA) = volA ^ ((2 : ℝ) / n) := by
     rw [Real.rpow_def_of_pos hvolA, mul_comm]
   linarith [hrpow ▸ hexp_le]
-
-/-! ## §G — Corollary group: edge cases (λ → 0, λ → 1, equal split) -/
-
-/-- **PL at `λ = 0`**: 結論は `intH ≥ intG` (`λ = 0` で `f` 因子が消える)。
-
-`intF ^ 0 = 1` を `Real.rpow_zero` で取る形。`intF ≥ 0` 仮定不要 (rpow_zero
-は常に 1)。
-
-ただし `Real.rpow_zero` は `Real.rpow_zero : ∀ x : ℝ, x ^ (0 : ℝ) = 1`。 -/
-theorem prekopa_leindler_lam_zero
-    {n : ℕ} (f g hfn : (Fin n → ℝ) → ℝ)
-    (intF intG intH : ℝ)
-    (hF_nn : 0 ≤ intF) (hG_nn : 0 ≤ intG) (hH_nn : 0 ≤ intH)
-    (h_pl : IsPrekopaLeindlerHyp f g hfn 0 intF intG intH) :
-    intG ≤ intH := by
-  -- `intF ^ 0 * intG ^ (1 - 0) ≤ intH`, simplifies to `intG ≤ intH`.
-  unfold IsPrekopaLeindlerHyp at h_pl
-  simp [Real.rpow_zero, Real.rpow_one, sub_zero] at h_pl
-  exact h_pl
-
-/-- **PL at `λ = 1`**: 結論は `intH ≥ intF` (mirror form)。 -/
-theorem prekopa_leindler_lam_one
-    {n : ℕ} (f g hfn : (Fin n → ℝ) → ℝ)
-    (intF intG intH : ℝ)
-    (hF_nn : 0 ≤ intF) (hG_nn : 0 ≤ intG) (hH_nn : 0 ≤ intH)
-    (h_pl : IsPrekopaLeindlerHyp f g hfn 1 intF intG intH) :
-    intF ≤ intH := by
-  unfold IsPrekopaLeindlerHyp at h_pl
-  -- `intF ^ 1 * intG ^ (1 - 1) ≤ intH`, simplifies to `intF ≤ intH`.
-  simp [Real.rpow_one, sub_self, Real.rpow_zero] at h_pl
-  exact h_pl
-
-/-- **PL at `λ = 1/2`** (equal split, "geometric mean" 形): -/
-theorem prekopa_leindler_lam_half
-    {n : ℕ} (f g hfn : (Fin n → ℝ) → ℝ)
-    (intF intG intH : ℝ)
-    (hF_nn : 0 ≤ intF) (hG_nn : 0 ≤ intG) (hH_nn : 0 ≤ intH)
-    (h_pl : IsPrekopaLeindlerHyp f g hfn (1/2) intF intG intH) :
-    intF ^ ((1 : ℝ) / 2) * intG ^ ((1 : ℝ) / 2) ≤ intH := by
-  unfold IsPrekopaLeindlerHyp at h_pl
-  -- `1 - 1/2 = 1/2`.
-  have : (1 : ℝ) - 1/2 = 1/2 := by norm_num
-  rw [this] at h_pl
-  exact h_pl
 
 /-! ## §H — `Real.rpow` 補助の本 file 局所版 -/
 

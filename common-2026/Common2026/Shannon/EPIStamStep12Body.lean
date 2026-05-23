@@ -132,15 +132,6 @@ theorem stam_jensen_sq_le {lam : ℝ} (hlo : 0 ≤ lam) (hhi : lam ≤ 1) (u v :
     (lam * u + (1 - lam) * v) ^ 2 ≤ lam * u ^ 2 + (1 - lam) * v ^ 2 :=
   stam_convex_cs hlo hhi u v
 
-/-- **Step-3 quadratic bound from the λ-convex CS**: the genuine reduction of the
-conditional-expectation inequality to the Fisher-info convex bound. Given the
-Cauchy-Schwarz squared-mean bound and non-negative Fisher infos, the convex
-λ-combination of squared scores integrates to `λ² J_X + (1-λ)² J_Y`. We discharge
-the algebraic step that bounds the cross-term-free quadratic form. -/
-theorem stam_convex_fisher_bound {lam J_X J_Y J_sum : ℝ}
-    (hlo : 0 ≤ lam) (hhi : lam ≤ 1) (hJX : 0 ≤ J_X) (hJY : 0 ≤ J_Y)
-    (h_step : J_sum ≤ lam ^ 2 * J_X + (1 - lam) ^ 2 * J_Y) :
-    J_sum ≤ lam ^ 2 * J_X + (1 - lam) ^ 2 * J_Y := h_step
 
 /-! ## §2 — Step 1 typed predicate `IsStamScoreConvHyp` (replaces Wave 7 `True`) -/
 
@@ -181,11 +172,6 @@ theorem isStamScoreConvHyp_intro {Ω : Type*} [MeasurableSpace Ω]
   · have hsum : 0 < J_X + J_Y := by linarith
     rw [div_le_one hsum]; linarith
 
-/-- The Step-1 typed predicate implies the Wave 7 `True` placeholder, so callers
-holding the typed form can feed the published `EPIStamInequalityBody` API. -/
-theorem isStamScoreConvolution_of_hyp {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω} (h : IsStamScoreConvHyp X Y P) :
-    IsStamScoreConvolution X Y P := trivial
 
 /-- The Step-1 typed predicate is congruent under function equality. -/
 theorem isStamScoreConvHyp_congr {Ω : Type*} [MeasurableSpace Ω]
@@ -297,7 +283,7 @@ theorem isStamInequalityHyp_of_step12 {Ω : Type*} [MeasurableSpace Ω]
     (h_cs : IsStamCondExpCSHyp X Y P) :
     IsStamInequalityHyp X Y P :=
   isStamInequalityHyp_via_body
-    (isStamScoreConvolution_of_hyp h_conv)
+    trivial
     (stamCauchySchwarzOptimal_of_step12 h_conv h_cs)
 
 /-- **Step 1 + Step 2 ⇒ Wave 7 existential Cauchy-Schwarz** (`IsStamCauchySchwarz`),

@@ -406,37 +406,6 @@ theorem lz78Parsing_encodingLength_le_of_count_log_bound
 
 end CountVsN
 
-/-! ## §7. Bridge to passthrough predicates (L-LZ4 → L-LZ1/L-LZ2) -/
-
-section PassthroughBridge
-
-variable {α : Type*} [MeasurableSpace α] [Fintype α]
-variable {Ω : Type*} [MeasurableSpace Ω]
-
-open MeasureTheory ProbabilityTheory
-
-/-- **The concrete `lz78GreedyEncodingLength` discharges the
-`lz78EncodingLength : ∀ n, (Fin n → α) → ℕ` parameter slot of
-`lz78_asymptotic_optimality` together with the Ziv-inequality
-pass-through**.
-
-Since the parent `IsZivInequalityPassthrough` is a `True`
-placeholder, this constructor is trivial; it is published as a
-**type-level bridge** so that downstream callers can chain
-`lz78GreedyEncodingLength` into the parent theorem's `(_h_ziv : ...)`
-slot with a single named API. -/
-theorem lz78GreedyEncodingLength_isZivInequalityPassthrough
-    (μ : Measure Ω) (p : StationaryProcess μ α) :
-    IsZivInequalityPassthrough μ p (@lz78GreedyEncodingLength α _) :=
-  True.intro
-
-/-- **Same bridge for the converse pass-through**. -/
-theorem lz78GreedyEncodingLength_isLZ78ConversePassthrough
-    (μ : Measure Ω) (p : StationaryProcess μ α) :
-    IsLZ78ConversePassthrough μ p (@lz78GreedyEncodingLength α _) :=
-  True.intro
-
-end PassthroughBridge
 
 /-! ## §8. Extra plumbing: combined `IsLZ78EncodingLengthBoundPassthrough` -/
 

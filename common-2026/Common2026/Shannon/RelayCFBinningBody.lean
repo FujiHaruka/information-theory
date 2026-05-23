@@ -478,34 +478,6 @@ theorem relay_cf_inner_bound_binning_discharged
   relay_cf_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
     W R Idec Ix1y Iy1hy1 h_in_cf_region h_witness
 
-/-- **CF inner bound — binning-discharged, witness-output form.**
-
-Same as above, but the conclusion is the structured `IsRelayCFBinningWitness`
-predicate — and since that predicate is now the honest achievability residual
-(the gated implication), it is simply forwarded (the witness in equals the
-witness out), so downstream callers of the parent witness layer can chain
-directly. -/
-theorem relay_cf_inner_bound_binning_discharged_witness
-    {Ω β₁' γ : Type*} [MeasurableSpace Ω]
-    [Fintype β₁'] [Nonempty β₁']
-    [MeasurableSpace β₁'] [MeasurableSingletonClass β₁']
-    [Fintype β] [Nonempty β]
-    [MeasurableSpace γ] [Nonempty γ]
-    (W : RelayChannel α α₁ β β₁)
-    (R Idec Ix1y Iy1hy1 : ℝ)
-    (R_cov R_bin ε_cov ε_pack : ℝ)
-    (μ : Measure Ω) {n M : ℕ}
-    (Ŷs : Ω → Fin n → β₁') (Ys : Ω → Fin n → β)
-    (JT : (Fin n → β₁') × (Fin n → β) → Prop)
-    (f_Ŷ : (Fin n → β₁') → Fin M)
-    (_h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
-    (_h_decode : IsCFSideInfoDecodeHyp R_cov R_bin ε_cov ε_pack μ Ŷs Ys JT f_Ŷ)
-    (h_witness :
-      IsRelayCFBinningWitness
-        (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
-    IsRelayCFBinningWitness
-      (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1 :=
-  h_witness
 
 /-- **CF inner bound — binning-discharged, unbundled two-condition form.**
 Variant taking the rate bound and compression feasibility separately. -/

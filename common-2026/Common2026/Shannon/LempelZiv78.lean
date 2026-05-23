@@ -234,16 +234,6 @@ def IsZivInequalityPassthrough
     (μ : Measure Ω) (_p : StationaryProcess μ α)
     (_lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) : Prop := True
 
-@[simp] lemma isZivInequalityPassthrough_def
-    (μ : Measure Ω) (p : StationaryProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) :
-    IsZivInequalityPassthrough μ p lz78EncodingLength ↔ True := Iff.rfl
-
-/-- Trivial constructor for the Ziv-inequality passthrough placeholder. -/
-lemma IsZivInequalityPassthrough.trivial
-    (μ : Measure Ω) (p : StationaryProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) :
-    IsZivInequalityPassthrough μ p lz78EncodingLength := True.intro
 
 /-- **LZ78 converse passthrough predicate (Cover–Thomas Theorem 13.5.3
 lower bound, L-LZ2)**.
@@ -261,16 +251,6 @@ def IsLZ78ConversePassthrough
     (μ : Measure Ω) (_p : StationaryProcess μ α)
     (_lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) : Prop := True
 
-@[simp] lemma isLZ78ConversePassthrough_def
-    (μ : Measure Ω) (p : StationaryProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) :
-    IsLZ78ConversePassthrough μ p lz78EncodingLength ↔ True := Iff.rfl
-
-/-- Trivial constructor for the LZ78-converse passthrough placeholder. -/
-lemma IsLZ78ConversePassthrough.trivial
-    (μ : Measure Ω) (p : StationaryProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) :
-    IsLZ78ConversePassthrough μ p lz78EncodingLength := True.intro
 
 /-- **SMB sandwich passthrough predicate (Cover–Thomas Theorem 16.8.1,
 L-LZ3)**.
@@ -287,14 +267,6 @@ of that sandwich combine. Currently a `True` placeholder; discharge in
 def IsSMBSandwichPassthrough
     (μ : Measure Ω) (_p : StationaryProcess μ α) : Prop := True
 
-@[simp] lemma isSMBSandwichPassthrough_def
-    (μ : Measure Ω) (p : StationaryProcess μ α) :
-    IsSMBSandwichPassthrough μ p ↔ True := Iff.rfl
-
-/-- Trivial constructor for the SMB sandwich passthrough placeholder. -/
-lemma IsSMBSandwichPassthrough.trivial
-    (μ : Measure Ω) (p : StationaryProcess μ α) :
-    IsSMBSandwichPassthrough μ p := True.intro
 
 end PassthroughPredicates
 

@@ -118,22 +118,6 @@ theorem epi_l3_of_integrated_pipeline
     IsEntropyPowerInequalityHypothesis X Y P :=
   h.bridge h.stam
 
-/-- **L-EPI1 (placeholder True) from integrated pipeline** (trivial). -/
-theorem epi_l1_of_integrated_pipeline
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (_h : IsEPIL3IntegratedPipeline X Y P) :
-    IsStamInequalityHypothesis X Y P :=
-  trivial
-
-/-- **L-EPI2 (placeholder True) from integrated pipeline** (trivial). -/
-theorem epi_l2_of_integrated_pipeline
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (_h : IsEPIL3IntegratedPipeline X Y P) :
-    IsDeBruijnIntegrationHypothesis X Y P :=
-  trivial
-
 /-! ## §2 — Integrated main theorem (Cover-Thomas Theorem 17.7.3, integrated form) -/
 
 /-- **Integrated EPI main theorem**: the integrated pipeline gives the full
@@ -438,15 +422,6 @@ theorem entropy_power_inequality_gaussian_full
 
 /-! ## §10 — Composability with `FisherInfoV2DeBruijn` (V2 de Bruijn identity) -/
 
-/-- **L-EPI2 wrapper via V2 de Bruijn (hypothesis-free)**. The placeholder
-`IsDeBruijnIntegrationHypothesis` is `Prop := True` so this is trivial; the
-purpose is to document the named handle for downstream citation. -/
-theorem isDeBruijnIntegrationHypothesis_via_v2
-    {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω) :
-    IsDeBruijnIntegrationHypothesis X Y P :=
-  Common2026.Shannon.FisherInfoV2.epi_de_bruijn_integration_v2_discharge X Y P
-
 /-- **Hypothesis-reduced EPI with V2 de Bruijn citation**. Combines integrated
 pipeline + V2 de Bruijn citation; the V2 citation is structurally trivial
 (L-EPI2 is `True`) but documents the chain. -/
@@ -457,9 +432,8 @@ theorem entropy_power_inequality_with_v2_debruijn
     (hXY : IndepFun X Y P)
     (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
     entropyPower (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
-  have _h_db := isDeBruijnIntegrationHypothesis_via_v2 X Y P
-  exact entropy_power_inequality_integrated P X Y hX hY hXY h_pipeline
+      ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
+  entropy_power_inequality_integrated P X Y hX hY hXY h_pipeline
 
 /-! ## §11 — Final sanity-check / regression theorems -/
 
@@ -473,22 +447,6 @@ theorem integrated_pipeline_roundtrip
     let h := isEPIL3IntegratedPipeline_of_stam_bridge h_stam h_bridge
     h.stam = h_stam ∧ h.bridge = h_bridge :=
   ⟨rfl, rfl⟩
-
-/-- **Equivalence with `entropy_power_inequality`**: the integrated pipeline
-form is interderivable with the original three-hypothesis form. -/
-theorem entropy_power_inequality_integrated_iff_original
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
-    (entropyPower (P.map (fun ω => X ω + Y ω))
-        ≥ entropyPower (P.map X) + entropyPower (P.map Y))
-    ↔ True := by
-  constructor
-  · intro _; trivial
-  · intro _
-    exact entropy_power_inequality_integrated P X Y hX hY hXY h_pipeline
 
 /-- **Three forms of EPI are equivalent** (in the presence of the integrated
 pipeline + measurability). -/

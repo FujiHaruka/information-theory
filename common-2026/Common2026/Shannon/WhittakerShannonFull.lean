@@ -302,19 +302,6 @@ theorem. -/
 def IsBandlimitedFull (f : ℝ → ℝ) (W : ℝ) : Prop :=
   0 < W ∧ ∃ (_S : ℝ → ℝ), True
 
-/-- Builder for `IsBandlimitedFull` from positivity alone (the predicate
-is a deliberately weak placeholder ready for future strengthening). -/
-theorem mk_IsBandlimitedFull (f : ℝ → ℝ) (W : ℝ) (hW : 0 < W) :
-    IsBandlimitedFull f W :=
-  ⟨hW, f, trivial⟩
-
-/-- **Bridge: L-WS-A (partial) → L-WS-C-full**. -/
-theorem IsBandlimitedFull_of_partial
-    (f : ℝ → ℝ) (W : ℝ) (hW : 0 < W)
-    (_h_partial :
-        ∀ t, IsWhittakerShannonInterpolation f W t) :
-    IsBandlimitedFull f W :=
-  mk_IsBandlimitedFull f W hW
 
 /-! ## §G — Main pass-through theorem: full Whittaker-Shannon
 reconstruction at sample points. -/
@@ -371,23 +358,6 @@ theorem ShannonHartley_IsBandlimitedKernel_of_full
     InformationTheory.Shannon.ShannonHartley.IsBandlimitedKernel W :=
   InformationTheory.Shannon.ShannonHartley.mk_IsBandlimitedKernel W hW
 
-/-! ## §I — L-SH3 chain (degrees-of-freedom): hypothesis pass-through. -/
-
-/-- **L-SH3 chain**: the `2W` degrees-of-freedom identity for the
-bandlimited AWGN channel is published as a hypothesis pass-through. The
-caller supplies the continuous capacity value `C` along with the
-`C = 2W · perSampleAwgnCapacity` identity; this lemma re-exports the
-identity in the `IsTwoWDegreesOfFreedom` form ready for
-`shannon_hartley_formula`. -/
-theorem ShannonHartley_IsTwoWDegreesOfFreedom_of_full
-    (f : ℝ → ℝ) (W N₀ P C : ℝ)
-    (hW : 0 < W) (_h_full : IsBandlimitedFull f W)
-    (h_id : C =
-        2 * W *
-          InformationTheory.Shannon.ShannonHartley.perSampleAwgnCapacity
-            W N₀ P) :
-    InformationTheory.Shannon.ShannonHartley.IsTwoWDegreesOfFreedom
-      W N₀ P C := h_id
 
 /-! ## §J — End-to-end: `shannon_hartley_formula` via Tier 2 predicates. -/
 
@@ -414,7 +384,7 @@ theorem shannon_hartley_via_full
     (ShannonHartley_IsBandlimitedSamplingHypothesis_of_full
       f W N₀ P hW hN₀ hP h_full)
     (ShannonHartley_IsBandlimitedKernel_of_full f W hW h_full)
-    (ShannonHartley_IsTwoWDegreesOfFreedom_of_full f W N₀ P C hW h_full h_id)
+    h_id
 
 /-- Bits/second variant: `C / log 2 = bandlimitedAwgnCapacityBits W N₀ P`. -/
 theorem shannon_hartley_via_full_bits
@@ -433,7 +403,7 @@ theorem shannon_hartley_via_full_bits
     (ShannonHartley_IsBandlimitedSamplingHypothesis_of_full
       f W N₀ P hW hN₀ hP h_full)
     (ShannonHartley_IsBandlimitedKernel_of_full f W hW h_full)
-    (ShannonHartley_IsTwoWDegreesOfFreedom_of_full f W N₀ P C hW h_full h_id)
+    h_id
 
 /-! ## §K — Extra corollaries. -/
 
@@ -489,32 +459,6 @@ theorem whittakerShannonSeries_zero_window
 
 /-! ## §L — Predicate-side corollaries. -/
 
-/-- `IsBandlimitedFull` is **stable under scaling**: if `f` is
-`W`-bandlimited and `c ∈ ℝ`, then `c · f` is also `W`-bandlimited (since
-the predicate is positivity-only at this tier). -/
-theorem IsBandlimitedFull_smul
-    (c : ℝ) (f : ℝ → ℝ) (W : ℝ) (h_full : IsBandlimitedFull f W) :
-    IsBandlimitedFull (fun x => c * f x) W :=
-  mk_IsBandlimitedFull _ W h_full.1
-
-/-- `IsBandlimitedFull` is **stable under addition**: if `f` and `g` are
-both `W`-bandlimited then `f + g` is too. -/
-theorem IsBandlimitedFull_add
-    (f g : ℝ → ℝ) (W : ℝ) (h_full_f : IsBandlimitedFull f W)
-    (_h_full_g : IsBandlimitedFull g W) :
-    IsBandlimitedFull (fun x => f x + g x) W :=
-  mk_IsBandlimitedFull _ W h_full_f.1
-
-/-- `IsBandlimitedFull` is **stable under negation**. -/
-theorem IsBandlimitedFull_neg
-    (f : ℝ → ℝ) (W : ℝ) (h_full : IsBandlimitedFull f W) :
-    IsBandlimitedFull (fun x => -f x) W :=
-  mk_IsBandlimitedFull _ W h_full.1
-
-/-- The **zero signal** is `W`-bandlimited for every `W > 0`. -/
-theorem IsBandlimitedFull_zero (W : ℝ) (hW : 0 < W) :
-    IsBandlimitedFull (fun _ => (0 : ℝ)) W :=
-  mk_IsBandlimitedFull _ W hW
 
 /-- The bandlimited predicate **extracts the positivity** of `W`. -/
 theorem IsBandlimitedFull_pos

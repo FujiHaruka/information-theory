@@ -273,21 +273,6 @@ theorem IsLZ78ConversePassthrough.ofChainHyp
     IsLZ78ConversePassthrough μ p lz78EncodingLength :=
   True.intro
 
-/-- **Bridge: `IsLZ78EncodingLengthLowerBound` discharges the parent
-`IsLZ78ConversePassthrough` placeholder.**
-
-The lower-bound form of the bridge: any per-`n` real-valued lower
-bound on the encoding length suffices (when wrapped with the SMB
-sandwich and the function-level boundedness) to discharge the
-parent `True` placeholder. -/
-theorem IsLZ78ConversePassthrough.ofLowerBound
-    (μ : Measure Ω) (p : StationaryProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (f : Ω → ℕ → ℝ)
-    (_h_lower : IsLZ78EncodingLengthLowerBound μ p lz78EncodingLength f) :
-    IsLZ78ConversePassthrough μ p lz78EncodingLength :=
-  True.intro
-
 end ParentBridge
 
 /-! ## §5. Wrapper: parent `lz78_converse_lower_bound` discharge -/
@@ -408,50 +393,5 @@ theorem lz78_converse_lower_bound_greedy
     h_chain h_smb_lower
 
 end GreedyCompat
-
-/-! ## §7. Aggregate: full L-LZ2 + L-LZ3 + L-LZ4 chain for the greedy encoding -/
-
-section FullAggregate
-
-variable {α : Type*}
-variable [Fintype α] [DecidableEq α] [Nonempty α]
-  [MeasurableSpace α] [MeasurableSingletonClass α]
-variable {Ω : Type*} [MeasurableSpace Ω]
-
-/-- **Full converse-side discharge for the greedy encoding**.
-
-Composite witness: given the chain-rule hypothesis pass-through, the
-SMB sandwich a.s. convergence and the SMB lower-bound sandwich,
-produce both (a) the discharge of the parent
-`IsLZ78ConversePassthrough` placeholder and (b) the converse a.s.
-liminf bound for `lz78GreedyEncodingLength`. This is the practical
-entry point for downstream callers that want to consume the concrete
-greedy encoding while still relying on the L-LZ2 placeholder of
-`lz78_asymptotic_optimality`. -/
-theorem lz78_converse_lower_bound_greedy_full
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (p : ErgodicProcess μ α)
-    (h_chain : IsLZ78ConverseChainHyp μ p.toStationaryProcess
-                (@lz78GreedyEncodingLength α _))
-    (h_smb_lower : ∀ᵐ ω ∂μ,
-        entropyRate μ p.toStationaryProcess
-        ≤ Filter.liminf
-            (fun n => blockLogAvg μ p.toStationaryProcess n ω)
-            Filter.atTop) :
-    (IsLZ78ConversePassthrough μ p.toStationaryProcess
-        (@lz78GreedyEncodingLength α _))
-    ∧ (∀ᵐ ω ∂μ,
-        entropyRate μ p.toStationaryProcess
-        ≤ Filter.liminf
-            (fun n =>
-              (lz78GreedyEncodingLength n
-                  (p.toStationaryProcess.blockRV n ω) : ℝ)
-                / (n : ℝ))
-            Filter.atTop) :=
-  ⟨IsLZ78ConversePassthrough.ofChainHyp μ p.toStationaryProcess
-      (@lz78GreedyEncodingLength α _) h_chain,
-    lz78_converse_lower_bound_greedy μ p h_chain h_smb_lower⟩
-
-end FullAggregate
 
 end InformationTheory.Shannon

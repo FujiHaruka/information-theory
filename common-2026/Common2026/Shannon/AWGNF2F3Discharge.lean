@@ -195,19 +195,6 @@ def IsAwgnF2DecodingHypothesis (P : ℝ) (N : ℝ≥0)
         ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M) (c : AwgnCode M n P),
           ∀ m, (c.toCode.errorProbAt (awgnChannel N h_meas) m).toReal < ε
 
-/-- **F-2 body: from the continuous joint-typical decoding hypothesis to the
-F-1 `IsAwgnTypicalityHypothesis`.**
-
-`IsAwgnF2DecodingHypothesis` and `IsAwgnTypicalityHypothesis` share the same
-shape; this is the **identity-shaped reduction** that exposes the F-2 layer as
-the body of the F-1 hypothesis (= what the continuous-AEP discharge plan must
-construct). -/
-theorem awgn_achievability_jointly_typical_body
-    (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
-    (h_F2 : IsAwgnF2DecodingHypothesis P N h_meas) :
-    IsAwgnTypicalityHypothesis P N h_meas := by
-  intro R hRpos hRlt ε hε
-  exact h_F2 (R := R) hRpos hRlt (ε := ε) hε
 
 /-! ## Phase C — F-3 body (Per-letter MI Fano converse) -/
 
@@ -259,22 +246,6 @@ def IsAwgnF3ChainHypothesis (P : ℝ) (N : ℝ≥0)
         ≤ (n : ℝ) * ((1 / 2) * Real.log (1 + P / (N : ℝ)))
           + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1)
 
-/-- **F-3 body: from the chain-rule + Fano aggregation hypothesis to the
-`IsAwgnConverseHypothesis`.**
-
-`IsAwgnF3ChainHypothesis` shares its shape with `IsAwgnConverseHypothesis`;
-this reduction expresses the F-3 body layer (= what the converse-aux discharge
-plan must construct) as a single identity-shaped step.
-
-The per-letter primitive hypothesis `IsAwgnF3PerLetterHypothesis` is taken as
-an additional witness — it is consumed inside the chain-rule discharge but is
-not load-bearing in the reduction-shape thin wrapper layer. -/
-theorem awgn_converse_fano_body
-    (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
-    (_h_per_letter : IsAwgnF3PerLetterHypothesis P N h_meas)
-    (h_chain : IsAwgnF3ChainHypothesis P N h_meas) :
-    IsAwgnConverseHypothesis P N h_meas :=
-  fun _hM c Pe hPe => h_chain _hM c Pe hPe
 
 /-! ## Phase D — `awgn_theorem_of_F2F3_hypotheses` re-publish (⚠️ F-2/F-3 OPEN) -/
 
@@ -319,10 +290,9 @@ theorem awgn_theorem_of_F2F3_hypotheses
           ∀ m, (c.toCode.errorProbAt
                   (awgnChannel N (isAwgnChannelMeasurable N)) m).toReal < ε :=
   awgn_theorem_F1_discharged P hP N hN
-    (awgn_achievability_jointly_typical_body P N (isAwgnChannelMeasurable N) h_F2)
+    h_F2
     h_mi_bridge
-    (awgn_converse_fano_body P N (isAwgnChannelMeasurable N)
-      h_F3_per_letter h_F3_chain)
+    h_F3_chain
     hR_pos hR_lt_C hε
 
 /-! ## Phase E — Capacity closed form re-publish (F-1 + F-2-MI-bridge) -/

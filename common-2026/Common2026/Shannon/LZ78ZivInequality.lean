@@ -311,23 +311,6 @@ section ZivPassthroughBridge
 
 variable {α Ω : Type*} [MeasurableSpace α] [MeasurableSpace Ω]
 
-/-- **Bridge: any combinatorial-layer Ziv counting bound discharges the
-parent `IsZivInequalityPassthrough` placeholder.**
-
-While the parent predicate is currently a `True` placeholder
-(`Common2026/Shannon/LempelZiv78.lean` §2), the bridge is set up so that
-the *signature* of the discharge — taking a `ZivCountingBound`-style
-real bound — is already in place. When L-LZ1-C / L-LZ1-D (entropy
-chain rule + log-sum) discharge plans land, the parent predicate body
-will be upgraded from `True` to a concrete `∃ B, ZivCountingBound _ B
-∧ ...` statement, and this bridge will become the *substantive*
-constructor; for now it is the identity wrap on `True.intro`. -/
-theorem IsZivInequalityPassthrough.ofZivCountingBound
-    (μ : Measure Ω) (p : StationaryProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (_h_bound : ∀ (q : LZ78Parsing α), ZivCountingBound q (q.count : ℝ)) :
-    IsZivInequalityPassthrough μ p lz78EncodingLength :=
-  True.intro
 
 /-- **Trivial reverse**: the parent placeholder is `True`, so the
 combinatorial-layer bound is vacuously implied. Retained for symmetric

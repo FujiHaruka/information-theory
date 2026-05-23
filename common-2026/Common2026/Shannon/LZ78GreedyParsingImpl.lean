@@ -406,19 +406,6 @@ right type to plug into the parent `lz78_asymptotic_optimality`
 `lz78EncodingLength : ∀ n, (Fin n → α) → ℕ` parameter slot. -/
 example : (∀ n, (Fin n → α) → ℕ) := @lz78GreedyImplEncodingLength α _ _
 
-/-- **The genuine greedy encoding discharges the Ziv-inequality
-pass-through** (the parent predicate is a `True` placeholder, so this is
-trivial; published as a named bridge). -/
-theorem lz78GreedyImplEncodingLength_isZivInequalityPassthrough
-    (μ : Measure Ω) (p : StationaryProcess μ α) :
-    IsZivInequalityPassthrough μ p (@lz78GreedyImplEncodingLength α _ _) :=
-  True.intro
-
-/-- **Same bridge for the converse pass-through**. -/
-theorem lz78GreedyImplEncodingLength_isLZ78ConversePassthrough
-    (μ : Measure Ω) (p : StationaryProcess μ α) :
-    IsLZ78ConversePassthrough μ p (@lz78GreedyImplEncodingLength α _ _) :=
-  True.intro
 
 /-- **T4-A main theorem with the genuine greedy parsing implementation
 (L-LZ4-E discharged)**.

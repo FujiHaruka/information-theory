@@ -220,16 +220,6 @@ theorem isPrekopaLeindlerHyp_of_layercake
 
 /-! ## §E — superlevel hypothesis を引数から落とした 1 次元 PL -/
 
-/-- **`h_sl_pos` を `IsPL11DSuperLevelHyp` から派生 (`t > 0 ⟹ t ≥ 0`)**:
-`superlevel_setIntegral_mono` が要求する `∀ t > 0, ...` は
-`IsPL11DSuperLevelHyp` (= `∀ t ≥ 0, ...`) の `t > 0` への制限。両者を別個に
-受けていた `prekopa_leindler_1D_layercake` を 1 本に統合するための橋。 -/
-theorem pl1SuperLevel_pos_of_hyp
-    (muF muG muH : ℝ → ℝ) (lam : ℝ)
-    (h_sl_meas : IsPL11DSuperLevelHyp muF muG muH lam) :
-    ∀ t : ℝ, 0 < t → lam * muF t + (1 - lam) * muG t ≤ muH t :=
-  fun t ht => h_sl_meas t ht
-
 /-- **1 次元 PL (superlevel hypothesis を genuine に discharge した版)**.
 
 `prekopa_leindler_1D_layercake` は superlevel-set 測度不等式を **2 本**
@@ -275,8 +265,8 @@ theorem prekopa_leindler_1D_superlevel_discharged
         (fun t => (volume {x : ℝ | t ≤ hfn x}).toReal) lam :=
     isPL11DSuperLevelHyp_real f g hfn lam h0 h1 hF_compact hG_compact
       hF_ne hG_ne hH_fin h_pt
-  -- `t > 0` 版を派生し、layer-cake change-of-variable で加法形 PL に流す.
-  have h_sl_pos := pl1SuperLevel_pos_of_hyp _ _ _ lam h_sl_meas
+  -- `h_sl_meas` は `IsPL11DSuperLevelHyp` (= `∀ t > 0, ...`) なので直接利用できる.
+  have h_sl_pos := h_sl_meas
   have h_add : IsPL1AdditiveHyp intF intG intH lam :=
     pl1_additive_via_layercake _ _ _ intF intG intH lam h0 h1 h_lc h_tail h_sl_pos
   -- 加法形 ⇒ 乗法形 (重み付き AM-GM).
