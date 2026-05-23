@@ -341,17 +341,16 @@ theorem parallel_gaussian_capacity_formula_WFcert_discharged {n : ℕ}
   obtain ⟨ν, hν_kkt⟩ := exists_waterFillingKKT_of_pos P hP N
   refine ⟨ν, hν_kkt, ?_⟩
   -- Optimality certificate from the Lagrange bundle (Phase D body discharge).
+  -- Independently derivable; kept here for posture documentation but not
+  -- consumed by the final chain (the bundle IS the conclusion equality).
   obtain ⟨lam, h_bundle⟩ := h_for_lagrange ν hν_kkt
-  have h_cert : WaterFillingOptimalityCertificate P N ν :=
+  have _h_cert : WaterFillingOptimalityCertificate P N ν :=
     waterFillingCertificate_of_bundle P N ν lam h_bundle
-  have h_opt : IsWaterFillingOptimal P N ν :=
-    isWaterFillingOptimal_of_certificate P N ν h_cert
-  -- Chain rule bundle (L-PG1) → per-coordinate reduction (still load-bearing).
-  have h_perCoordReduction_lbh : IsParallelGaussianPerCoordReduction P N h_meas
-      (isParallelGaussianKernelMeasurable N) ν :=
-    isParallelGaussianPerCoordReduction_of_bundle P N h_meas
-      (isParallelGaussianKernelMeasurable N) ν (h_for_bundle ν hν_kkt)
-  exact parallel_gaussian_capacity_formula_PG0closed_of_perCoordReduction P hP N hN h_meas ν
-    hν_kkt h_opt h_perCoordReduction_lbh
+  have _h_opt : IsWaterFillingOptimal P N ν :=
+    isWaterFillingOptimal_of_certificate P N ν _h_cert
+  -- Chain rule bundle (L-PG1) → conclusion equality (def-unfold of
+  -- `IsParallelGaussianPerCoordReduction`; `_of_bundle` runs `le_antisymm`).
+  exact isParallelGaussianPerCoordReduction_of_bundle P N h_meas
+    (isParallelGaussianKernelMeasurable N) ν (h_for_bundle ν hν_kkt)
 
 end InformationTheory.Shannon.ParallelGaussian

@@ -330,14 +330,17 @@ theorem parallel_gaussian_capacity_formula_KKT_discharged {n : ℕ}
             (1/2) * Real.log (1 + waterFillingPower ν N i / (N i : ℝ)) := by
   obtain ⟨ν, hν_kkt⟩ := exists_waterFillingKKT_of_pos P hP N
   refine ⟨ν, hν_kkt, ?_⟩
-  have h_unique : IsWaterFillingOptimal P N ν :=
+  -- L-WF2 is independently derivable from the certificate (kept here for
+  -- posture documentation), but the body chain does not consume it: the
+  -- bundle yields the conclusion equality directly via `le_antisymm`.
+  have _h_unique : IsWaterFillingOptimal P N ν :=
     isWaterFillingOptimal_of_certificate P N ν (h_for_cert ν hν_kkt)
-  have h_perCoordReduction_lbh : IsParallelGaussianPerCoordReduction P N h_meas
-      (isParallelGaussianKernelMeasurable N) ν :=
-    isParallelGaussianPerCoordReduction_of_bundle P N h_meas
-      (isParallelGaussianKernelMeasurable N) ν (h_for_bundle ν hν_kkt)
-  exact parallel_gaussian_capacity_formula_PG0closed_of_perCoordReduction P hP N hN h_meas ν
-    hν_kkt h_unique h_perCoordReduction_lbh
+  -- Chain rule bundle → conclusion equality (L-PG1 load-bearing-hyp via the
+  -- bundle, which IS `cap ≤ sum ∧ sum ≤ cap`; `_of_bundle` runs `le_antisymm`).
+  -- `IsParallelGaussianPerCoordReduction` def-unfolds to the equality, so the
+  -- predicate is accepted directly as the goal.
+  exact isParallelGaussianPerCoordReduction_of_bundle P N h_meas
+    (isParallelGaussianKernelMeasurable N) ν (h_for_bundle ν hν_kkt)
 
 /-- **Active-set form (L-WF1 discharged + L-WF2/L-PG1 certificate forms)**.
 

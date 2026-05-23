@@ -141,74 +141,19 @@ theorem isParallelGaussianKernelMeasurable {n : ℕ} (N : Fin n → ℝ≥0) :
   rw [h_apply_eq]
   exact measurable_measure_prodMk_left h_set
 
-/-! ## Phase B — `parallel_gaussian_capacity_formula` re-publish (L-PG0 discharge 形) -/
+/-! ## Phase B — legacy PG0-closed wrappers (retracted)
 
-/-- 🟢ʰ **load-bearing hypothesis — NOT a discharge.**
-**Parallel Gaussian capacity formula with L-PG0 closed** (Cover-Thomas
-Theorem 9.4.1, reduction-from-perCoordReduction form).
-
-ONLY L-PG0 (parallel kernel measurability) is mechanically closed here via the
-`isParallelGaussianKernelMeasurable` discharge in this file. The per-coordinate
-water-filling reduction (L-PG1, `h_perCoordReduction_lbh`) remains a load-bearing
-hypothesis — the predicate `IsParallelGaussianPerCoordReduction` IS the conclusion
-equality, so passing it through is intentional pass-through, not a discharge.
-L-WF1 (`h_kkt`) and L-WF2 (`h_unique`) likewise remain hypotheses.
-
-The genuine L-PG1 reduction needs water-filling KKT + per-coord AWGN capacity
-(continuous AEP / sphere-shell volume) machinery absent from Mathlib; the
-hypothesis-free headline is
-`ParallelGaussianPerCoord.parallel_gaussian_capacity_formula`.
-
-親定理 `parallel_gaussian_capacity_formula_of_perCoordReduction`
-(`ParallelGaussian.lean`) の `h_parallel_meas` を本 file の
-`isParallelGaussianKernelMeasurable N` で埋めて再 publish (= L-PG0 closure)。
-signature から `h_parallel_meas` が消える。残りの撤退ライン hypothesis
-(L-PG1 per-coord reduction / L-WF1 KKT / L-WF2 optimality) はそのまま pass-through。
-
-Renamed from `*_PG0_discharged` (laundering: only L-PG0 closed; full discharge
-absent) → `*_PG0closed_of_perCoordReduction` to expose the load-bearing posture.
-
-`@audit:defect(circular)` `@audit:retract-candidate(legacy-passthrough)` `@audit:defer(pg-legacy-retract)` -/
-theorem parallel_gaussian_capacity_formula_PG0closed_of_perCoordReduction {n : ℕ}
-    (P : ℝ) (hP : 0 < P) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
-    (h_meas : IsParallelAwgnChannelMeasurable N)
-    (ν : ℝ)
-    (h_kkt : IsWaterFillingKKT P N ν)
-    (h_unique : IsWaterFillingOptimal P N ν)
-    (h_perCoordReduction_lbh :
-        IsParallelGaussianPerCoordReduction P N h_meas
-          (isParallelGaussianKernelMeasurable N) ν) :
-    parallelGaussianCapacity P N h_meas (isParallelGaussianKernelMeasurable N)
-      = ∑ i : Fin n, (1/2) * Real.log
-          (1 + waterFillingPower ν N i / (N i : ℝ)) :=
-  parallel_gaussian_capacity_formula_of_perCoordReduction P hP N hN h_meas
-    (isParallelGaussianKernelMeasurable N) ν h_kkt h_unique h_perCoordReduction_lbh
-
-/-- **Active-set form of the parallel Gaussian capacity formula**
-(L-PG0 discharge 形, Cover-Thomas Theorem 9.4.1 restated).
-
-⚠️ ONLY L-PG0 (kernel measurability) is discharged; L-PG1 (`h_per_coord`,
-conclusion-as-hypothesis), L-WF1 (`h_kkt`) and L-WF2 (`h_unique`) remain OPEN —
-taken as hypotheses.
-
-親 `parallel_gaussian_capacity_active_form` の `h_parallel_meas` を埋めて
-再 publish。
-
-`@audit:defect(circular)` `@audit:retract-candidate(legacy-passthrough)` `@audit:defer(pg-legacy-retract)` -/
-theorem parallel_gaussian_capacity_active_form_PG0_discharged {n : ℕ}
-    (P : ℝ) (hP : 0 < P) (N : Fin n → ℝ≥0)
-    (hN : ∀ i, (N i : ℝ) ≠ 0) (hN_pos : ∀ i, 0 < (N i : ℝ))
-    (h_meas : IsParallelAwgnChannelMeasurable N)
-    (ν : ℝ)
-    (h_kkt : IsWaterFillingKKT P N ν)
-    (h_unique : IsWaterFillingOptimal P N ν)
-    (h_per_coord :
-        IsParallelGaussianPerCoordReduction P N h_meas
-          (isParallelGaussianKernelMeasurable N) ν) :
-    parallelGaussianCapacity P N h_meas (isParallelGaussianKernelMeasurable N)
-      = ∑ i ∈ waterFillingActiveSet ν N,
-          (1/2) * Real.log (ν / (N i : ℝ)) :=
-  parallel_gaussian_capacity_active_form_of_perCoordReduction P hP N hN hN_pos h_meas
-    (isParallelGaussianKernelMeasurable N) ν h_kkt h_unique h_per_coord
+`parallel_gaussian_capacity_formula_PG0closed_of_perCoordReduction` and
+`parallel_gaussian_capacity_active_form_PG0_discharged` were re-publishes of the
+`*_of_perCoordReduction` reduction wrappers (`ParallelGaussian.lean`) with the
+L-PG0 hypothesis filled by `isParallelGaussianKernelMeasurable N`. They added
+no derivation beyond that fill; the un-active wrapper itself was a `:= h`
+pass-through (`IsParallelGaussianPerCoordReduction` def-unfolds to the goal
+equality). Both wrappers, plus their `_of_perCoordReduction` parents, have been
+retracted. Callers (`ParallelGaussianKKT.lean`, `ParallelGaussianWFCertBody.lean`,
+`ParallelGaussianWFStationarityBody.lean`) now consume
+`IsParallelGaussianPerCoordReduction` directly via def-unfolding of the
+predicate. The honest hypothesis-free headline lives in
+`ParallelGaussianPerCoord.parallel_gaussian_capacity_formula`. -/
 
 end InformationTheory.Shannon.ParallelGaussian
