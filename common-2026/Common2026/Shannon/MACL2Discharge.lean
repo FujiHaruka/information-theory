@@ -345,8 +345,8 @@ theorem mac_single_rate_bound₁_with_body
     (h_chain : MACPerLetterChain₁ n I_marg₁ I₁)
     (h_cleanup : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε) :
     R₁ ≤ I₁ + ε :=
-  mac_single_rate_bound₁ hn c R₁ (I₁ + ε) trivial trivial
-    (mac_converse_fano_body_single₁ hn R₁ Pe₁ I_marg₁ I₁ ε h_fano h_chain h_cleanup)
+  mac_single_rate_bound₁ hn c R₁ Pe₁ I_marg₁ I₁ ε
+    h_fano.fano h_chain.chain h_cleanup
 
 /-- **L-MAC2 — Per-user single rate bound (body discharge route, user 2).**
 Mirror of `mac_single_rate_bound₁_with_body`. -/
@@ -358,8 +358,8 @@ theorem mac_single_rate_bound₂_with_body
     (h_chain : MACPerLetterChain₂ n I_marg₂ I₂)
     (h_cleanup : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε) :
     R₂ ≤ I₂ + ε :=
-  mac_single_rate_bound₂ hn c R₂ (I₂ + ε) trivial trivial
-    (mac_converse_fano_body_single₂ hn R₂ Pe₂ I_marg₂ I₂ ε h_fano h_chain h_cleanup)
+  mac_single_rate_bound₂ hn c R₂ Pe₂ I_marg₂ I₂ ε
+    h_fano.fano h_chain.chain h_cleanup
 
 end MACSingleRateBoundRouting
 
@@ -392,7 +392,7 @@ theorem mac_capacity_region_outer_bound_with_fano_body
         (1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ))) / (n : ℝ) ≤ ε) :
     InMACCapacityRegion R₁ R₂ (I₁ + ε) (I₂ + ε) (Iboth + ε) :=
   mac_capacity_region_outer_bound_three_bounds hn c R₁ R₂
-      (I₁ + ε) (I₂ + ε) (Iboth + ε) trivial trivial
+      (I₁ + ε) (I₂ + ε) (Iboth + ε)
     (mac_converse_fano_body_single₁ hn R₁ Pe₁ I_marg₁ I₁ ε h_fano₁ h_chain₁ h_cleanup₁)
     (mac_converse_fano_body_single₂ hn R₂ Pe₂ I_marg₂ I₂ ε h_fano₂ h_chain₂ h_cleanup₂)
     (mac_converse_fano_body hn R₁ R₂ Pe_joint I_joint Iboth ε
@@ -425,7 +425,7 @@ theorem mac_capacity_region_outer_bound_with_fano_body_limit
   have hs := mac_converse_fano_body_limit hn R₁ R₂ Pe_joint I_joint Iboth ε
     h_fano_joint h_chain_joint h_cleanup_joint h_ε
   exact mac_capacity_region_outer_bound_three_bounds hn c R₁ R₂ I₁ I₂ Iboth
-    trivial trivial h1 h2 hs
+    h1 h2 hs
 
 end MACThreeBoundBodyDischarge
 

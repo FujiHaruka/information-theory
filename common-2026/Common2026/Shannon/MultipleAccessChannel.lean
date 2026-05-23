@@ -100,11 +100,16 @@ Remaining scope-out:
 
 The signatures mirror the **honest-conditional pass-through** precedent of
 ShannonHartley / WhittakerShannon (circular → honest conditional) and the
-**genuine Fano converse** recipe of SlepianWolf. The auxiliary thin
-combine helpers (`mac_single_rate_bound₁/₂`, `mac_sum_rate_bound`,
-`mac_capacity_region_outer_bound_three_bounds`) retain vestigial
-`_h_fano/_h_chain : True` decoration but no longer carry the real
-residual — that now lives in the genuine entropy-level inputs.
+**genuine Fano converse** recipe of SlepianWolf. The single-rate bounds
+`mac_single_rate_bound₁/₂` and `mac_sum_rate_bound` previously used
+`(_h_fano : True) (_h_chain : True)` placeholders together with a circular
+`h_bound : R₁ ≤ I₁` discharging the conclusion. They are now **genuine
+derivations** from entropy-level Fano + per-letter chain + clean-up
+inputs (mirroring `mac_capacity_region_outer_bound`'s per-direction
+arithmetic). The combine helper
+`mac_capacity_region_outer_bound_three_bounds` retains the three cut
+bounds `h₁ / h₂ / hs` as inputs (these are the genuine outputs of the
+per-direction derivations) but the prior `True` placeholders are dropped.
 -/
 
 namespace InformationTheory.Shannon
@@ -368,97 +373,9 @@ end InMACCapacityRegion
 
 end CapacityRegion
 
-/-! ## Single-rate and sum-rate cut bounds (statement-level hypothesis pass-through) -/
+/-! ## Single-rate and sum-rate cut bounds (genuine Fano + chain-rule derivation) -/
 
 section RateBounds
-
-variable {α₁ α₂ β : Type*}
-variable [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
-
-/-- **Single-user rate bound for sender 1 (hypothesis pass-through form,
-L-MAC2 engaged)**.
-
-For any MAC block code `c` and rate `R₁`, the converse asserts
-
-```
-R₁ ≤ I(X₁; Y | X₂)   (= I₁)
-```
-
-after applying Fano's inequality on `(W₁, Y^n)`, the data-processing
-inequality `I(W₁; Y^n) ≤ I(X₁^n; Y^n | X₂^n)` (using the Markov chain
-`W₁ → X₁^n → Y^n` conditioned on `X₂^n`), and the per-letter chain rule
-`I(X₁^n; Y^n | X₂^n) ≤ ∑ I(X_{1,i}; Y_i | X_{2,i}) ≤ n · I(X₁; Y | X₂)`.
-
-The multi-hundred-line ingredients — multi-user Fano (~150 lines) and the
-conditional-MI chain rule (~150 lines), bundled as L-MAC2 — are supplied
-as `True` placeholders. The final scalar inequality is supplied as the
-`h_bound` hypothesis. Discharge plan:
-`mac-converse-single-rate-discharge-*`. -/
-theorem mac_single_rate_bound₁
-    {M₁ M₂ n : ℕ} (_hn : 0 < n)
-    (_c : MACCode M₁ M₂ n α₁ α₂ β)
-    (R₁ I₁ : ℝ)
-    (_h_fano : True)
-    (_h_chain : True)
-    (h_bound : R₁ ≤ I₁) :
-    R₁ ≤ I₁ := h_bound
-
-/-- **Single-user rate bound for sender 2 (hypothesis pass-through form,
-L-MAC2 engaged)**.
-
-Mirror of `mac_single_rate_bound₁` with the two user indices swapped:
-
-```
-R₂ ≤ I(X₂; Y | X₁)   (= I₂)
-```
-
-via Fano on `(W₂, Y^n)`, DPI `I(W₂; Y^n) ≤ I(X₂^n; Y^n | X₁^n)`, and the
-per-letter chain rule. -/
-theorem mac_single_rate_bound₂
-    {M₁ M₂ n : ℕ} (_hn : 0 < n)
-    (_c : MACCode M₁ M₂ n α₁ α₂ β)
-    (R₂ I₂ : ℝ)
-    (_h_fano : True)
-    (_h_chain : True)
-    (h_bound : R₂ ≤ I₂) :
-    R₂ ≤ I₂ := h_bound
-
-/-- **Sum-rate bound (hypothesis pass-through form, L-MAC2 engaged)**.
-
-For any MAC block code `c` and rate pair `(R₁, R₂)`, the converse asserts
-
-```
-R₁ + R₂ ≤ I(X₁, X₂; Y)   (= Iboth)
-```
-
-after Fano applied to the *joint* message `(W₁, W₂)`:
-`n·(R₁+R₂) ≤ I((W₁,W₂); Y^n) + n·ε_n`, DPI
-`I((W₁,W₂); Y^n) ≤ I((X₁^n, X₂^n); Y^n)`, and the per-letter chain rule
-`I((X₁^n, X₂^n); Y^n) ≤ ∑ I(X_{1,i}, X_{2,i}; Y_i) ≤ n · I(X₁, X₂; Y)`. -/
-theorem mac_sum_rate_bound
-    {M₁ M₂ n : ℕ} (_hn : 0 < n)
-    (_c : MACCode M₁ M₂ n α₁ α₂ β)
-    (R₁ R₂ Iboth : ℝ)
-    (_h_fano : True)
-    (_h_chain : True)
-    (h_sum : R₁ + R₂ ≤ Iboth) :
-    R₁ + R₂ ≤ Iboth := h_sum
-
-/-- **Region combine (three-bound to predicate)** — given the three cut
-bounds `R₁ ≤ I₁`, `R₂ ≤ I₂`, `R₁ + R₂ ≤ Iboth`, conclude
-`InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth`.
-
-Proof: direct `⟨_, _, _⟩` introduction of the predicate structure. -/
-lemma mac_region_combine (R₁ R₂ I₁ I₂ Iboth : ℝ)
-    (h₁ : R₁ ≤ I₁) (h₂ : R₂ ≤ I₂) (hs : R₁ + R₂ ≤ Iboth) :
-    InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth :=
-  ⟨h₁, h₂, hs⟩
-
-end RateBounds
-
-/-! ## Outer bound: converse main theorem (Cover–Thomas 15.3.4, hypothesis pass-through) -/
-
-section OuterBound
 
 variable {α₁ α₂ β : Type*}
 variable [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
@@ -473,7 +390,8 @@ This is the genuine arithmetic kernel of the MAC converse: it does the
 "divide the Fano inequality by `n`, bound the marginal MI by `n · I`"
 step, identical in shape to the per-direction extractions of
 `MACL2Discharge` / `MACBodyDischarge` but stated directly on plain reals
-so the converse headline can derive its conclusion without assuming it. -/
+so the rate-bound headlines can derive their conclusions without
+assuming them. -/
 private theorem mac_rate_le_of_fano
     {n : ℕ} (hn : 0 < n) (R I_marg I Pe L ε : ℝ)
     (h_fano : (n : ℝ) * R ≤ I_marg + 1 + Pe * L)
@@ -499,6 +417,112 @@ private theorem mac_rate_le_of_fano
     rwa [hcancel] at hdiv
   have : R ≤ I_marg / (n : ℝ) + (1 + Pe * L) / (n : ℝ) := h_split ▸ h_fano'
   linarith
+
+/-- **Single-user rate bound for sender 1 (genuine Fano + per-letter
+chain-rule derivation)**.
+
+For any MAC block code `c` and rate `R₁`, the converse asserts
+
+```
+R₁ ≤ I(X₁; Y | X₂) + ε   (with I₁ := I(X₁; Y | X₂))
+```
+
+after applying Fano's inequality on `(W₁, Y^n)`, the data-processing
+inequality `I(W₁; Y^n) ≤ I(X₁^n; Y^n | X₂^n)` (using the Markov chain
+`W₁ → X₁^n → Y^n` conditioned on `X₂^n`), and the per-letter chain rule
+`I(X₁^n; Y^n | X₂^n) ≤ ∑ I(X_{1,i}; Y_i | X_{2,i}) ≤ n · I(X₁; Y | X₂)`.
+
+This signature **derives** the corner-point bound from the entropy-level
+Fano inequality `n·R₁ ≤ I_marg₁ + 1 + Pe₁·log M₁`, the per-letter chain
+inequality `I_marg₁ ≤ n·I₁`, and the clean-up estimate
+`(1 + Pe₁·log M₁)/n ≤ ε` — no longer assumes the conclusion via a
+`h_bound`-style circular hypothesis, and the two prior `True` slots are
+replaced by the genuine entropy-level inputs.
+
+The per-user Fano body and conditional-MI chain rule are themselves
+🟢ʰ Mathlib-wall residuals (real Mathlib gaps), discharged structurally
+through `MACSingleFanoBound` / `MACPerLetterChain₁` of
+`MACL2Discharge.lean`; the present theorem accepts them as raw scalar
+inequalities so this file remains structurally minimal. -/
+theorem mac_single_rate_bound₁
+    {M₁ M₂ n : ℕ} (hn : 0 < n)
+    (_c : MACCode M₁ M₂ n α₁ α₂ β)
+    (R₁ Pe₁ I_marg₁ I₁ ε : ℝ)
+    (h_fano : (n : ℝ) * R₁ ≤ I_marg₁ + 1 + Pe₁ * Real.log (M₁ : ℝ))
+    (h_chain : I_marg₁ ≤ (n : ℝ) * I₁)
+    (h_cleanup : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε) :
+    R₁ ≤ I₁ + ε :=
+  mac_rate_le_of_fano hn R₁ I_marg₁ I₁ Pe₁ (Real.log (M₁ : ℝ)) ε
+    h_fano h_chain h_cleanup
+
+/-- **Single-user rate bound for sender 2 (genuine Fano + per-letter
+chain-rule derivation)**.
+
+Mirror of `mac_single_rate_bound₁` with the two user indices swapped:
+
+```
+R₂ ≤ I(X₂; Y | X₁) + ε   (with I₂ := I(X₂; Y | X₁))
+```
+
+via Fano on `(W₂, Y^n)`, DPI `I(W₂; Y^n) ≤ I(X₂^n; Y^n | X₁^n)`, and the
+per-letter chain rule. Derives the conclusion from entropy-level inputs
+— no `True` placeholders, no `h_bound`-style circular hypothesis. -/
+theorem mac_single_rate_bound₂
+    {M₁ M₂ n : ℕ} (hn : 0 < n)
+    (_c : MACCode M₁ M₂ n α₁ α₂ β)
+    (R₂ Pe₂ I_marg₂ I₂ ε : ℝ)
+    (h_fano : (n : ℝ) * R₂ ≤ I_marg₂ + 1 + Pe₂ * Real.log (M₂ : ℝ))
+    (h_chain : I_marg₂ ≤ (n : ℝ) * I₂)
+    (h_cleanup : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε) :
+    R₂ ≤ I₂ + ε :=
+  mac_rate_le_of_fano hn R₂ I_marg₂ I₂ Pe₂ (Real.log (M₂ : ℝ)) ε
+    h_fano h_chain h_cleanup
+
+/-- **Sum-rate bound (genuine Fano + per-letter chain-rule derivation)**.
+
+For any MAC block code `c` and rate pair `(R₁, R₂)`, the converse asserts
+
+```
+R₁ + R₂ ≤ I(X₁, X₂; Y) + ε   (with Iboth := I(X₁, X₂; Y))
+```
+
+after Fano applied to the *joint* message `(W₁, W₂)`:
+`n·(R₁+R₂) ≤ I_joint + 1 + Pe_joint·log(M₁·M₂)`, DPI
+`I((W₁,W₂); Y^n) ≤ I((X₁^n, X₂^n); Y^n)`, and the per-letter chain rule
+`I((X₁^n, X₂^n); Y^n) ≤ ∑ I(X_{1,i}, X_{2,i}; Y_i) ≤ n · I(X₁, X₂; Y)`.
+
+Derives the conclusion from entropy-level inputs — no `True` placeholders,
+no `h_sum`-style circular hypothesis. -/
+theorem mac_sum_rate_bound
+    {M₁ M₂ n : ℕ} (hn : 0 < n)
+    (_c : MACCode M₁ M₂ n α₁ α₂ β)
+    (R₁ R₂ Pe_joint I_joint Iboth ε : ℝ)
+    (h_fano : (n : ℝ) * (R₁ + R₂)
+        ≤ I_joint + 1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ)))
+    (h_chain : I_joint ≤ (n : ℝ) * Iboth)
+    (h_cleanup : (1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ))) / (n : ℝ) ≤ ε) :
+    R₁ + R₂ ≤ Iboth + ε :=
+  mac_rate_le_of_fano hn (R₁ + R₂) I_joint Iboth Pe_joint
+    (Real.log ((M₁ : ℝ) * (M₂ : ℝ))) ε h_fano h_chain h_cleanup
+
+/-- **Region combine (three-bound to predicate)** — given the three cut
+bounds `R₁ ≤ I₁`, `R₂ ≤ I₂`, `R₁ + R₂ ≤ Iboth`, conclude
+`InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth`.
+
+Proof: direct `⟨_, _, _⟩` introduction of the predicate structure. -/
+lemma mac_region_combine (R₁ R₂ I₁ I₂ Iboth : ℝ)
+    (h₁ : R₁ ≤ I₁) (h₂ : R₂ ≤ I₂) (hs : R₁ + R₂ ≤ Iboth) :
+    InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth :=
+  ⟨h₁, h₂, hs⟩
+
+end RateBounds
+
+/-! ## Outer bound: converse main theorem (Cover–Thomas 15.3.4, hypothesis pass-through) -/
+
+section OuterBound
+
+variable {α₁ α₂ β : Type*}
+variable [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
 
 /-- **MAC capacity region outer bound (Cover–Thomas Theorem 15.3.4)** —
 **genuine / honest-🟢ʰ converse**, no longer circular.
@@ -605,12 +629,17 @@ three are combined by `mac_region_combine` to yield the region
 membership.
 
 This form is the usual exit point of an n-letter Fano + chain-rule
-argument that produces the three cut bounds as separate intermediates. -/
+argument that produces the three cut bounds as separate intermediates;
+the per-direction Fano + chain ingredients are produced upstream by
+`mac_single_rate_bound₁/₂` / `mac_sum_rate_bound` (this file) or the
+structural body discharge routes of `MACL2Discharge.lean`. The vestigial
+`_h_fano : True` / `_h_chain : True` placeholders of the prior interface
+are removed — the genuine Fano + chain content is consumed where the
+three cut bounds `h₁`, `h₂`, `hs` are produced. -/
 theorem mac_capacity_region_outer_bound_three_bounds
     {M₁ M₂ n : ℕ} (_hn : 0 < n)
     (_c : MACCode M₁ M₂ n α₁ α₂ β)
     (R₁ R₂ I₁ I₂ Iboth : ℝ)
-    (_h_fano : True) (_h_chain : True)
     (h₁ : R₁ ≤ I₁) (h₂ : R₂ ≤ I₂) (hs : R₁ + R₂ ≤ Iboth) :
     InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth :=
   mac_region_combine R₁ R₂ I₁ I₂ Iboth h₁ h₂ hs

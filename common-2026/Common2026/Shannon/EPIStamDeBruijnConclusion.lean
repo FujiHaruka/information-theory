@@ -300,7 +300,7 @@ theorem isEPIStamDeBruijnPipeline_symm
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h : IsEPIStamDeBruijnPipeline X Y P) :
     IsEPIStamDeBruijnPipeline Y X P where
-  convScore := isStamScoreConvolution_symm h.convScore
+  convScore := trivial
   totalExp := isStamTotalExpectation_symm h.totalExp
   bridge := isStamToEPIBridgeHyp_symm h.bridge
 

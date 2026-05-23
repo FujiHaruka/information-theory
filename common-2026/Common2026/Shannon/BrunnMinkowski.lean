@@ -172,24 +172,29 @@ def IsMinkowskiSumMeasurableHypothesis {n : ℕ} (A B : Set (Fin n → ℝ)) : P
 
 すなわち `exp ((2/n) h(X+Y)) ≥ exp ((2/n) h(X)) + exp ((2/n) h(Y))`。
 
-撤退ライン L-BM1 採用 (hypothesis pass-through 1 本、核心 retreat):
-
-* `h_bm` (L-BM1, 核心): Brunn-Minkowski 結論そのものを hypothesis 化、
-  本体はこれ単独で着地
+🟢ʰ load-bearing hypothesis — NOT a discharge. 本定理本体は
+`h_bm_entropy_assumed` (= `IsBrunnMinkowskiEntropyHypothesis`,
+Brunn-Minkowski entropy 形そのもの) で着地する。L-BM1 retreat:
+Brunn-Minkowski の結論を Mathlib 壁 (Cover-Thomas 17.9.2 / 17.7.4 系の
+`n`-dim 拡張が Mathlib 未整備) のため hypothesis pass-through。
+genuine reduction は `BrunnMinkowskiClosure.lean` の
+`brunn_minkowski_entropy_jointPi` (concrete entropy + sqrt-form geometric
+BM) に分離して provide される。
 
 EPI との関係: EPI (`entropy_power_inequality`, T2-D) は `n = 1` 限定。
 本 `n`-dim 形は EPI の coordinate-wise 拡張 + Cover-Thomas Theorem 17.7.4
-経路で discharge plan に塞ぐ。 -/
+経路で discharge plan `brunn-minkowski-from-epi-discharge-plan.md` (未着手)
+に塞ぐ。 -/
 theorem brunn_minkowski_entropy_inequality
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     {n : ℕ} (h : Measure (Fin n → ℝ) → ℝ)
     (X Y : Ω → (Fin n → ℝ)) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
-    (h_bm : IsBrunnMinkowskiEntropyHypothesis n h X Y P) :
+    (h_bm_entropy_assumed : IsBrunnMinkowskiEntropyHypothesis n h X Y P) :
     entropyPower_nDim n h (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower_nDim n h (P.map X) + entropyPower_nDim n h (P.map Y) :=
-  h_bm
+  h_bm_entropy_assumed
 
 /-! ## §D — Cover-Thomas 露出形 + 凸体 specialization -/
 

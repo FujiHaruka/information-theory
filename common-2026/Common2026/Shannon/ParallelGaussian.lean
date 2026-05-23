@@ -251,7 +251,8 @@ de-circularized headline は `ParallelGaussianPerCoord.parallel_gaussian_capacit
 で導出) に移管した。本 lemma は L-PG1 を *入力に持つ* 下流 re-publish
 (`parallel_gaussian_capacity_formula_PG0_discharged` 等) の足場として残置。 -/
 
-/-- **Parallel Gaussian capacity reduction from the per-coordinate predicate**
+/-- 🟢ʰ **load-bearing hypothesis — NOT a discharge.**
+**Parallel Gaussian capacity reduction from the per-coordinate predicate**
 (Cover-Thomas Theorem 9.4.1, reduction form).
 
 For parallel AWGN channels `Y_i = X_i + Z_i`, `Z_i ∼ 𝒩(0, N_i)` (`i : Fin n`)
@@ -260,27 +261,27 @@ water-filling at level `ν*` satisfying `∑_i max(0, ν* - N_i) = P`:
 
 `C = ∑_i (1/2) log(1 + max(0, ν* - N_i) / N_i)`.
 
-⚠️ **NOT a discharge — NOT the published headline.** The body is `:= h_per_coord`,
-where `h_per_coord : IsParallelGaussianPerCoordReduction` is *defined to be* the
-conclusion equality (conclusion-as-hypothesis). The genuine, non-circular headline
-is `ParallelGaussianPerCoord.parallel_gaussian_capacity_formula`, which derives the
+⚠️ The body is `:= h_perCoordReduction_lbh`, where the predicate
+`IsParallelGaussianPerCoordReduction` is *defined to be* the conclusion equality.
+This pass-through is intentional: the load-bearing hypothesis IS the desired
+equality, packaged as a named predicate so downstream `*_PG0closed` re-publishes
+can chain it through.
+
+The genuine, non-circular headline is
+`ParallelGaussianPerCoord.parallel_gaussian_capacity_formula`, which derives the
 same equality via a sup-sandwich (`le_antisymm` of `le_csSup` achiever lower bound +
 `csSup_le` max-entropy upper bound, mirroring the single-coordinate
 `AWGN.awgnCapacity_eq`) consuming only the *genuine* honest regularity bundle
 `IsParallelGaussianPerCoordRegularity` (≠ the conclusion).
 
-This reduction lemma is retained only as a scaffold for the downstream
-`*_PG0_discharged` re-publishes that still take L-PG1 as an explicit predicate
-hypothesis. The genuine discharge of L-PG1 itself is
-`ParallelGaussianPerCoord.isParallelGaussianPerCoordReduction_discharged`.
-
 撤退ライン採用形 (hypothesis pass-through 3 本):
 * `h_kkt` (L-WF1): water level `ν` が全電力 `P` を使い切る KKT 条件
 * `h_unique` (L-WF2): water-filling が `∑ (1/2) log(1+P_i/N_i)` の最大化解
-* `h_per_coord` (L-PG1): parallel capacity = per-coord water-filling sum
-  (= 結論そのもの)
+* `h_perCoordReduction_lbh` (L-PG1): parallel capacity = per-coord water-filling
+  sum (= 結論そのもの, load-bearing)
 
-L-WF1 + L-WF2 は signature 露出のみで本体では使わない。本体は `h_per_coord` 単独。 -/
+L-WF1 + L-WF2 は signature 露出のみで本体では使わない。本体は load-bearing 仮説
+`h_perCoordReduction_lbh` 単独 (= 結論)。 -/
 theorem parallel_gaussian_capacity_formula_of_perCoordReduction {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -288,11 +289,11 @@ theorem parallel_gaussian_capacity_formula_of_perCoordReduction {n : ℕ}
     (ν : ℝ)
     (h_kkt : IsWaterFillingKKT P N ν)
     (h_unique : IsWaterFillingOptimal P N ν)
-    (h_per_coord :
+    (h_perCoordReduction_lbh :
         IsParallelGaussianPerCoordReduction P N h_meas h_parallel_meas ν) :
     parallelGaussianCapacity P N h_meas h_parallel_meas
       = ∑ i : Fin n, (1/2) * Real.log (1 + waterFillingPower ν N i / (N i : ℝ)) :=
-  h_per_coord
+  h_perCoordReduction_lbh
 
 /-! ## Corollaries (Phase D)
 
@@ -377,13 +378,16 @@ lemma parallel_gaussian_capacity_sum_active {n : ℕ} (ν : ℝ) (N : Fin n → 
     simp [waterFillingActiveSet]
   · intros; rfl
 
-/-- **Active-set form of the parallel Gaussian capacity reduction** (Cover-Thomas
+/-- 🟢ʰ **load-bearing hypothesis — NOT a discharge.**
+**Active-set form of the parallel Gaussian capacity reduction** (Cover-Thomas
 Theorem 9.4.1 restated, reduction form).
 
-⚠️ **NOT a discharge — NOT the published headline.** Same conclusion-as-hypothesis
-caveat as `parallel_gaussian_capacity_formula_of_perCoordReduction`; takes L-PG1
-(`h_per_coord`, the conclusion) as a hypothesis. Combines that reduction with
-`parallel_gaussian_capacity_sum_active`. The genuine headline is
+Same load-bearing-hypothesis posture as
+`parallel_gaussian_capacity_formula_of_perCoordReduction`; takes L-PG1
+(`h_perCoordReduction_lbh`, the per-coord water-filling equality predicate which is
+defined to be the un-active-form conclusion) as a load-bearing hypothesis. Combines
+that reduction with `parallel_gaussian_capacity_sum_active`. The genuine,
+hypothesis-free headline is
 `ParallelGaussianPerCoord.parallel_gaussian_capacity_formula`. -/
 theorem parallel_gaussian_capacity_active_form_of_perCoordReduction {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin n → ℝ≥0)
@@ -393,13 +397,13 @@ theorem parallel_gaussian_capacity_active_form_of_perCoordReduction {n : ℕ}
     (ν : ℝ)
     (h_kkt : IsWaterFillingKKT P N ν)
     (h_unique : IsWaterFillingOptimal P N ν)
-    (h_per_coord :
+    (h_perCoordReduction_lbh :
         IsParallelGaussianPerCoordReduction P N h_meas h_parallel_meas ν) :
     parallelGaussianCapacity P N h_meas h_parallel_meas
       = ∑ i ∈ waterFillingActiveSet ν N,
           (1/2) * Real.log (ν / (N i : ℝ)) := by
   rw [parallel_gaussian_capacity_formula_of_perCoordReduction P hP N hN h_meas
-        h_parallel_meas ν h_kkt h_unique h_per_coord]
+        h_parallel_meas ν h_kkt h_unique h_perCoordReduction_lbh]
   exact parallel_gaussian_capacity_sum_active ν N hN_pos
 
 end InformationTheory.Shannon.ParallelGaussian

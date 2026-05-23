@@ -47,9 +47,11 @@ discharge this in three grounded layers:
    from the expected-error bound (`∑ w·Pe ≤ B ⇒ ∃ C, Pe(C) ≤ B`), lifted
    to the product codebook space `Codebook₁ × Codebook₂`.
 
-These three feed `IsMACRandomCodebookMarkov` → `MACAchievableWithError` →
-`MACInnerBoundExistence`, re-publishing the inner bound with the averaging
-discharged.
+These three feed `IsMACRandomCodebookMarkov`, which (by definitional
+equality with `MACInnerBoundExistence`) directly supplies the inner-bound
+existence — the prior identity-relabel cascade
+(`IsMACRandomCodebookMarkov → MACAchievableWithError →
+MACInnerBoundExistence`) has been retracted (alias chain).
 
 ## Design (finite-sum expectation, matching `BroadcastChannelAveraging`)
 
@@ -76,10 +78,9 @@ on the finite-sum side).
 * `mac_avg_error_exists_codebook` / `_of_decomp` — Markov pigeonhole over
   the (product) codebook space.
 * `IsMACRandomCodebookMarkov` — the random-codebook Markov predicate
-  (deterministic codebook-pair-with-rate witness).
-* `mac_achievableWithError_of_markov` — bridge to `MACAchievableWithError`.
-* `mac_inner_bound_with_averaging` — re-publish of the inner bound with the
-  averaging discharged from the Markov predicate.
+  (deterministic codebook-pair-with-rate witness; definitionally
+  `MACInnerBoundExistence`, used directly by callers without a separate
+  identity-relabel bridge).
 -/
 
 namespace InformationTheory.Shannon
@@ -496,9 +497,9 @@ code over a codebook pair `(c₁, c₂)`) satisfying both rate conditions
 
 This is the operational output of the random codebook averaging body: the
 codebook-ensemble-averaged error is `< ε'`, so the Markov pigeonhole yields
-a single deterministic codebook achieving `< ε'`. The bridge
-`mac_achievableWithError_of_markov` repackages this into
-`MACAchievableWithError`. -/
+a single deterministic codebook achieving `< ε'`. The predicate is
+definitionally `MACInnerBoundExistence`, so callers consume it directly
+to land the inner-bound existence (no identity-relabel bridge). -/
 def IsMACRandomCodebookMarkov
     {α₁ α₂ β : Type*}
     [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
@@ -510,56 +511,6 @@ def IsMACRandomCodebookMarkov
         ∧ Real.exp ((n : ℝ) * R₂) ≤ (M₂ : ℝ)
         ∧ (c.averageErrorProb W).toReal < ε'
 
-/-- **Composed: Markov predicate ⇒ bare inner-bound existence.**
-
-`IsMACRandomCodebookMarkov` is definitionally `MACInnerBoundExistence`,
-so the Markov predicate supplies the witness directly. -/
-theorem mac_innerBoundExistence_of_markov
-    (W : MACChannel α₁ α₂ β) (R₁ R₂ : ℝ)
-    (h_markov : IsMACRandomCodebookMarkov W R₁ R₂) :
-    MACInnerBoundExistence W R₁ R₂ := h_markov
-
 end MACRandomCodebookMarkov
-
-/-! ## Section 5 — Re-publish inner bound with averaging discharged -/
-
-section MACAveragingPublish
-
-variable {α₁ α₂ β : Type*}
-variable [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
-
-
-/-- **Two-side combine — averaging-body achievability + converse.**
-
-Mirror of `mac_capacity_region_consistent_of_achievableWithError` of
-`MACCornerAchievabilityBody.lean`, with the achievability side backed by the
-random codebook averaging Markov predicate rather than a caller-supplied
-`MACAchievableWithError`. -/
-theorem mac_capacity_region_consistent_of_averaging
-    (W : MACChannel α₁ α₂ β)
-    {M₁ M₂ n : ℕ} (hn : 0 < n) (c : MACCode M₁ M₂ n α₁ α₂ β)
-    (R₁ R₂ Pe₁ Pe₂ Pe_joint I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε : ℝ)
-    (h_fano₁ : (n : ℝ) * R₁ ≤ I_marg₁ + 1 + Pe₁ * Real.log (M₁ : ℝ))
-    (h_fano₂ : (n : ℝ) * R₂ ≤ I_marg₂ + 1 + Pe₂ * Real.log (M₂ : ℝ))
-    (h_fano_joint :
-        (n : ℝ) * (R₁ + R₂)
-          ≤ I_joint + 1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ)))
-    (h_chain₁ : I_marg₁ ≤ (n : ℝ) * I₁)
-    (h_chain₂ : I_marg₂ ≤ (n : ℝ) * I₂)
-    (h_chain_joint : I_joint ≤ (n : ℝ) * Iboth)
-    (h_cleanup₁ : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε)
-    (h_cleanup₂ : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε)
-    (h_cleanup_joint :
-        (1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ))) / (n : ℝ) ≤ ε)
-    (h_markov : IsMACRandomCodebookMarkov W R₁ R₂) :
-    InMACCapacityRegion R₁ R₂ (I₁ + ε) (I₂ + ε) (Iboth + ε)
-      ∧ MACInnerBoundExistence W R₁ R₂ :=
-  ⟨mac_capacity_region_outer_bound hn c R₁ R₂ Pe₁ Pe₂ Pe_joint
-     I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε
-     h_fano₁ h_fano₂ h_fano_joint h_chain₁ h_chain₂ h_chain_joint
-     h_cleanup₁ h_cleanup₂ h_cleanup_joint,
-   mac_innerBoundExistence_of_markov W R₁ R₂ h_markov⟩
-
-end MACAveragingPublish
 
 end InformationTheory.Shannon

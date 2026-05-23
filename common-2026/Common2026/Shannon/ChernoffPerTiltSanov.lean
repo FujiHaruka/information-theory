@@ -72,8 +72,9 @@ both are n-letter RN-derivative identifications of an infinite-product tilt.
 
 * `chernoff_lemma_tendsto_via_RN` — `Tendsto rate → chernoffInfo` from
   `IsChernoffNLetterRN`-form `IsChernoffPerTiltDischargeable`. Drop-in
-  alternative to `chernoff_lemma_tendsto_discharged` with the RN-deriv
-  predicate as the *named* Mathlib gap input.
+  alternative to `chernoff_lemma_tendsto_of_per_tilt` (🟢ʰ load-bearing in
+  the per-tilt hypothesis) with the RN-deriv predicate as the *named*
+  Mathlib gap input.
 
 ### Phase E — predicate roundtrip lemmas
 
@@ -99,7 +100,7 @@ both are n-letter RN-derivative identifications of an infinite-product tilt.
   `IsMeasureInfinitePiTiltedEq` and reduces it to the tilted LLN; the
   Chernoff side here names the gap `IsChernoffNLetterRN` and reduces it to
   `IsBayesErrorPerTiltLowerBound` (which downstream feeds the existing
-  `chernoff_lemma_tendsto_discharged` chain).
+  `chernoff_lemma_tendsto_of_per_tilt` chain).
 * The `chernoffMediatorMeasure_pi_*` plumbing is independent of the Sanov
   LDP per-tilt route: it just records standard facts about the finite-product
   Chernoff mediator measure that any future Sanov LDP launch will need.
@@ -347,7 +348,7 @@ theorem chernoff_dotEq_tendsto_via_RN
         IsChernoffNLetterRN P₁ P₂ lam) :
     (fun n : ℕ => bayesErrorMinPmf P₁ P₂ n)
       ≐ (fun n : ℕ => Real.exp (-(n : ℝ) * chernoffInfo P₁ P₂)) := by
-  exact chernoff_dotEq_tendsto_discharged P₁ P₂ hP₁_pos hP₂_pos
+  exact chernoff_dotEq_tendsto_of_per_tilt P₁ P₂ hP₁_pos hP₂_pos
     (isChernoffPerTiltDischargeable_of_RN P₁ P₂ hP₁_pos hP₂_pos h_predicate)
 
 end InformationTheory.Shannon.ChernoffPerTiltSanov

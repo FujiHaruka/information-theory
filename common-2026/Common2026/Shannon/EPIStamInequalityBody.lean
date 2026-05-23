@@ -108,12 +108,6 @@ def IsStamScoreConvolution {Ω : Type*} [MeasurableSpace Ω]
   True
 
 
-/-- The score-convolution predicate is symmetric in `X, Y`. -/
-theorem isStamScoreConvolution_symm {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h : IsStamScoreConvolution X Y P) :
-    IsStamScoreConvolution Y X P := trivial
-
 /-! ## §2 — Cauchy-Schwarz + total expectation predicate (Step 2-3) -/
 
 /-- **Cauchy-Schwarz + total expectation hypothesis** (Stam body).

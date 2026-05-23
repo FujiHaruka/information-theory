@@ -46,10 +46,11 @@ Discharge.lean` for the analogous Cramér L-C2 situation) and is **deferred**.
 * `chernoff_converse_from_per_tilt` — **per-tilt wrapper**: given a per-tilt
   Sanov-style lower bound on `bayesErrorMinPmf` (hypothesis form), derive
   `limsup rate ≤ -log Z(λ)`. This is the main reduction shape.
-* `chernoff_converse_discharged` — **L-Ch1 partial discharge** main theorem:
-  given the per-tilt hypothesis at the optimum `λ*` (with
+* `chernoff_converse_of_per_tilt_existential` — 🟢ʰ load-bearing hypothesis
+  — NOT a discharge. Given the per-tilt hypothesis at the optimum `λ*` (with
   `chernoffInfo = -log Z(λ*)` automatic via `chernoffInfo_attained`), derive
-  `limsup rate ≤ chernoffInfo P₁ P₂`.
+  `limsup rate ≤ chernoffInfo P₁ P₂`. The per-tilt Sanov-style lower bound
+  carries the converse core; this wrapper only repackages it.
 * `chernoff_lemma_tendsto_from_per_tilt` — sandwich `Tendsto` wrapper re-
   publishing `chernoff_lemma_tendsto` with hypothesis count reduced 2 → 1
   (only the per-tilt hypothesis remains; both L-Ch1 and L-Ch2 are derived
@@ -63,8 +64,9 @@ Discharge.lean` for the analogous Cramér L-C2 situation) and is **deferred**.
   equality` discharge of that single remaining hypothesis is **deferred**
   to a follow-up plan.
 * **Not adopted L-CC1** (Phase A scaffolding only): we go past Phase A and
-  publish the per-tilt wrapper + main `chernoff_converse_discharged` +
-  sandwich Tendsto wrapper.
+  publish the per-tilt wrapper + main
+  `chernoff_converse_of_per_tilt_existential` (🟢ʰ load-bearing in the
+  per-tilt hyp) + sandwich Tendsto wrapper.
 
 ## Design notes
 
@@ -374,10 +376,11 @@ theorem chernoff_converse_from_per_tilt
       _ < ε + x := hadd
       _ = b := by rw [hε_def]; ring
 
-/-! ## Phase C — main theorem `chernoff_converse_discharged` (L-Ch1 partial discharge) -/
+/-! ## Phase C — main theorem `chernoff_converse_of_per_tilt_existential`
+    (🟢ʰ load-bearing per-tilt hypothesis) -/
 
-/-- **L-Ch1 partial discharge** main theorem (Cover-Thomas Theorem 11.9.1 converse half,
-per-tilt hypothesis reduced form):
+/-- 🟢ʰ **load-bearing hypothesis — NOT a discharge.** Cover-Thomas
+Theorem 11.9.1 converse half, packaged in the **per-tilt existential** form:
 
 ```
 limsup rate ≤ chernoffInfo
@@ -386,18 +389,23 @@ limsup rate ≤ chernoffInfo
 given a per-tilt Sanov-style lower bound at the optimal tilt `λ*` (where
 `chernoffInfo = -log Z(λ*)` by `chernoffInfo_attained`).
 
-This is the reduced form of the L-Ch1 hypothesis pulled out of
-`Common2026/Shannon/ChernoffInformation.lean`: the user no longer needs to
-supply `h_converse : limsup rate ≤ chernoffInfo`, only the per-tilt
-hypothesis at the optimum.
+**Load-bearing piece**: the hypothesis `h_per_tilt` bundles two pieces of
+work — (a) attaining tilt `λ` with `chernoffInfo = -log Z(λ)` and (b) the
+**Sanov-style per-tilt lower bound** `C · Z(λ)^n ≤ 2 · bayesErrorMinPmf`.
+Piece (b) **is** the converse core (Cover-Thomas 11.9.7–11.9.10, the
+n-letter RN-derivative + tilted LLN on the cylinder); this lemma does not
+discharge it. The body merely rewrites by (a) and forwards (b) through
+`chernoff_converse_from_per_tilt`. Full Sanov-LDP discharge of the per-tilt
+hypothesis is deferred (Mathlib-gap: n-letter RN-derivative identification
+for `chernoffMediator`, cf. `ChernoffPerTiltSanov.lean`).
 
 Note: `chernoffInfo_attained` is invoked internally; the user supplies the
 per-tilt hypothesis for **some** `λ ∈ Icc 0 1` with `chernoffInfo = -log Z(λ)`
 (non-trivially, this must be the attaining `λ*`). The current statement
-quantifies over `∃ λ`, so the caller can either pick `λ*` from `chernoffInfo_
-attained` themselves or supply a stronger per-tilt hypothesis valid for all
-`λ` (∀ form deferred to follow-up plan). -/
-theorem chernoff_converse_discharged
+quantifies over `∃ λ`, so the caller can either pick `λ*` from
+`chernoffInfo_attained` themselves or supply a stronger per-tilt hypothesis
+valid for all `λ` (∀ form deferred to follow-up plan). -/
+theorem chernoff_converse_of_per_tilt_existential
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (h_per_tilt : ∃ lam ∈ Set.Icc (0 : ℝ) 1,
@@ -423,7 +431,8 @@ with hypothesis count reduced 2 → 1):
 `-(1/n) log bayesErrorMinPmf → chernoffInfo P₁ P₂` along `atTop`, given only
 the per-tilt Sanov-style lower bound at the optimum `λ*`. The L-Ch1 and
 L-Ch2 hypotheses of `ChernoffInformation.chernoff_lemma_tendsto` are both
-discharged internally via `chernoff_converse_discharged` and
+discharged internally via `chernoff_converse_of_per_tilt_existential`
+(🟢ʰ load-bearing in the per-tilt hyp) and
 `chernoff_rate_isBoundedUnder_le`.
 
 This is the cleanest publish shape of Cover-Thomas Theorem 11.9.1 given the
@@ -442,7 +451,7 @@ theorem chernoff_lemma_tendsto_from_per_tilt
       atTop (𝓝 (chernoffInfo P₁ P₂)) :=
   InformationTheory.Shannon.ChernoffInformation.chernoff_lemma_tendsto
     P₁ P₂ hP₁_pos hP₂_pos
-    (chernoff_converse_discharged P₁ P₂ hP₁_pos hP₂_pos h_per_tilt)
+    (chernoff_converse_of_per_tilt_existential P₁ P₂ hP₁_pos hP₂_pos h_per_tilt)
     (chernoff_rate_isBoundedUnder_le P₁ P₂ hP₁_pos hP₂_pos)
 
 end InformationTheory.Shannon.ChernoffConverse

@@ -287,17 +287,28 @@ def IsBCBonferroniEnsembleDecay
         ∧ (∑ m : Fin M₁ × Fin M₂, ∑ k : EventIdx, δ k m)
             / (Fintype.card (Fin M₁ × Fin M₂) : ℝ) < 1
 
-/-- **S7-F — Ensemble decay → random-codebook Markov bridge.**
+/-- 🟢ʰ **load-bearing posture — predicate-degenerate downstream.**
+**S7-F — Ensemble decay → random-codebook Markov bridge.**
 
 Given the genuine ensemble decay predicate `IsBCBonferroniEnsembleDecay`,
-extract the random-codebook Markov predicate `IsBCRandomCodebookMarkov` of
-`BroadcastChannelAveraging.lean`: the averaging core (S7-D) produces a
-deterministic codebook whose averaged error is `< 1`, which is exactly the
-`errBound`-witness conjunct of `IsBCRandomCodebookMarkov`.
+produce the random-codebook Markov predicate `IsBCRandomCodebookMarkov` of
+`BroadcastChannelAveraging.lean`.
 
-This is the genuine close: the `errBound` of the Markov predicate is *no
-longer* a free caller hypothesis — it is the averaged decay extracted by the
-double-average swap + pigeonhole. -/
+⚠️ **Honest-rebrand caveat (the produced predicate is operationally degenerate).**
+`IsBCRandomCodebookMarkov` is defined (`BroadcastChannelAveraging.lean:248`) as
+`∃ N, ∀ n ≥ N, ∃ M₁ M₂ errBound (_c : BroadcastCode), exp(nR₁)≤M₁ ∧ exp(nR₂)≤M₂
+∧ 0 ≤ errBound ∧ errBound < 1`. The code witness `_c` is bound with underscore
+and **never referenced**; `errBound` appears only as `0 ≤ errBound < 1`, with
+no conjunct linking it to `_c`'s actual error probability. So the predicate
+is **vacuous w.r.t. operational error**: any code + `errBound := 0` satisfies it.
+
+This body computes a genuine averaged decay `B = (Σ_m Σ_k δ k m)/|Msg|` and the
+ensemble-averaging existence statement `∃ C₀, totalPe C₀ ≤ B` (`h_exists`), but
+then **discards the operational witness** (`obtain ⟨_C₀,_hC₀⟩`) and returns
+`(c, max 0 B)` — the original `c`, not `C₀`. The genuine averaging content does
+**not** survive the predicate's operational gap. Repairing this requires
+strengthening `IsBCRandomCodebookMarkov` upstream so `errBound` actually bounds
+the chosen codebook's error (out of scope here). -/
 theorem bc_random_codebook_markov_of_ensemble
     (R₁ R₂ : ℝ)
     (h_ens : IsBCBonferroniEnsembleDecay (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂) :

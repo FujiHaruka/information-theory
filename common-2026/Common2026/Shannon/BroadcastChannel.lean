@@ -413,8 +413,8 @@ section RateBounds
 variable {α β₁ β₂ : Type*}
 variable [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
 
-/-- **Common-message rate bound (hypothesis pass-through form, L-BC2
-engaged)**.
+/-- 🟢ʰ **load-bearing hypothesis — NOT a discharge.**
+**Common-message rate bound (terminal capstone, L-BC2 load-bearing form)**.
 
 For any BC block code `c` and rate `R₂`, the converse asserts
 
@@ -428,22 +428,25 @@ after applying Fano's inequality on `(W₂, Y₂^n)`
 auxiliary RV in the standard converse), and the per-letter chain rule
 `I(U^n; Y₂^n) ≤ n · I(U; Y₂)`.
 
-The multi-hundred-line ingredients — multi-user Fano (~150 lines) and the
-per-letter chain rule (~150 lines), bundled as L-BC2 — are supplied as
-`True` placeholders. The final scalar inequality is supplied as the
-`h_bound` hypothesis. Discharge plan:
-`bc-converse-fano-discharge-*`, `bc-converse-chain-rule-discharge-*`. -/
+⚠️ The body is `:= h_commonRateBound_lbh`. The multi-hundred-line ingredients
+— multi-user Fano (~150 lines) + per-letter chain rule (~150 lines), bundled
+as L-BC2 — are NOT discharged here. They are subsumed into the single
+load-bearing hypothesis `h_commonRateBound_lbh : R₂ ≤ I_u`, which IS the
+desired scalar conclusion. Previously this used `_h_fano _h_chain : True`
+placeholders alongside `h_bound`; those vacuous `True` slots are removed
+(they hid the obligation behind `True`). The genuine residual is the single
+named load-bearing hypothesis, honest about being a pass-through, with
+discharge plan `bc-converse-fano-discharge-*`,
+`bc-converse-chain-rule-discharge-*`. -/
 theorem bc_common_rate_bound
     {M₁ M₂ n : ℕ} (_hn : 0 < n)
     (_c : BroadcastCode M₁ M₂ n α β₁ β₂)
     (R₂ I_u : ℝ)
-    (_h_fano : True)
-    (_h_chain : True)
-    (h_bound : R₂ ≤ I_u) :
-    R₂ ≤ I_u := h_bound
+    (h_commonRateBound_lbh : R₂ ≤ I_u) :
+    R₂ ≤ I_u := h_commonRateBound_lbh
 
-/-- **Private-message rate bound (hypothesis pass-through form, L-BC2
-engaged)**.
+/-- 🟢ʰ **load-bearing hypothesis — NOT a discharge.**
+**Private-message rate bound (terminal capstone, L-BC2 load-bearing form)**.
 
 For any BC block code `c` and rate `R₁`, the converse asserts
 
@@ -456,15 +459,21 @@ after applying Fano's inequality on `(W₁, Y₁^n) | W₂`
 inequality `I(W₁; Y₁^n | W₂) ≤ I(X^n; Y₁^n | U^n)` (using the Markov
 chain `W₁ → X^n → Y₁^n` conditioned on `U^n := W₂^n`), and the
 per-letter conditional-MI chain rule
-`I(X^n; Y₁^n | U^n) ≤ n · I(X; Y₁ | U)`. -/
+`I(X^n; Y₁^n | U^n) ≤ n · I(X; Y₁ | U)`.
+
+⚠️ The body is `:= h_privateRateBound_lbh`. Multi-user Fano + conditional-MI
+chain rule (~300 lines together, L-BC2) are NOT discharged — they are
+subsumed into the single load-bearing hypothesis
+`h_privateRateBound_lbh : R₁ ≤ I_xy` which IS the desired conclusion.
+Previously this used `_h_fano _h_chain : True` placeholders; those vacuous
+slots are removed. The genuine residual is honestly named as a load-bearing
+pass-through. -/
 theorem bc_private_rate_bound
     {M₁ M₂ n : ℕ} (_hn : 0 < n)
     (_c : BroadcastCode M₁ M₂ n α β₁ β₂)
     (R₁ I_xy : ℝ)
-    (_h_fano : True)
-    (_h_chain : True)
-    (h_bound : R₁ ≤ I_xy) :
-    R₁ ≤ I_xy := h_bound
+    (h_privateRateBound_lbh : R₁ ≤ I_xy) :
+    R₁ ≤ I_xy := h_privateRateBound_lbh
 
 /-- **Region combine (two-bound to predicate)** — given the two cut bounds
 `R₂ ≤ I_u`, `R₁ ≤ I_xy`, conclude

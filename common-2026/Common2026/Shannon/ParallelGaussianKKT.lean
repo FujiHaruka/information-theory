@@ -332,12 +332,12 @@ theorem parallel_gaussian_capacity_formula_KKT_discharged {n : ℕ}
   refine ⟨ν, hν_kkt, ?_⟩
   have h_unique : IsWaterFillingOptimal P N ν :=
     isWaterFillingOptimal_of_certificate P N ν (h_for_cert ν hν_kkt)
-  have h_per_coord : IsParallelGaussianPerCoordReduction P N h_meas
+  have h_perCoordReduction_lbh : IsParallelGaussianPerCoordReduction P N h_meas
       (isParallelGaussianKernelMeasurable N) ν :=
     isParallelGaussianPerCoordReduction_of_bundle P N h_meas
       (isParallelGaussianKernelMeasurable N) ν (h_for_bundle ν hν_kkt)
-  exact parallel_gaussian_capacity_formula_PG0_discharged P hP N hN h_meas ν
-    hν_kkt h_unique h_per_coord
+  exact parallel_gaussian_capacity_formula_PG0closed_of_perCoordReduction P hP N hN h_meas ν
+    hν_kkt h_unique h_perCoordReduction_lbh
 
 /-- **Active-set form (L-WF1 discharged + L-WF2/L-PG1 certificate forms)**.
 

@@ -193,10 +193,10 @@ theorem pl1_additive_to_multiplicative {intF intG intH lam : ℝ}
     (h_add : IsPL1AdditiveHyp intF intG intH lam) :
     IsPrekopaLeindlerHyp (fun _ : Fin 1 → ℝ => intF)
       (fun _ => intG) (fun _ => intH) lam intF intG intH := by
-  unfold IsPrekopaLeindlerHyp IsPL1AdditiveHyp at *
+  unfold IsPL1AdditiveHyp at h_add
   have hamgm : intF ^ lam * intG ^ (1 - lam) ≤ lam * intF + (1 - lam) * intG :=
     weighted_amgm_lambda hF hG h0 h1
-  linarith
+  exact ⟨by linarith⟩
 
 /-! ## §D — 1 次元 Prékopa-Leindler 本体 -/
 
@@ -306,8 +306,8 @@ theorem isPrekopaLeindlerHyp_of_1D_body
     (h_sl : IsPL11DSuperLevelHyp muF muG muH lam)
     (h_add : IsPL1AdditiveHyp intF intG intH lam) :
     IsPrekopaLeindlerHyp f g hfn lam intF intG intH :=
-  prekopa_leindler_1D_body f g hfn lam h0 h1 muF muG muH
-    intF intG intH hF hG hH h_pt h_sl h_add
+  ⟨prekopa_leindler_1D_body f g hfn lam h0 h1 muF muG muH
+    intF intG intH hF hG hH h_pt h_sl h_add⟩
 
 /-- **加法形 BM ⇒ 乗法形 BM (discharged, indicator 特殊化)**: 凸体の
 *加法形* `λ volA + (1 - λ) volB ≤ volAB` から *乗法形*
@@ -336,7 +336,7 @@ theorem indicatorToConvexBody_of_1D_body
     (hvolA : 0 ≤ volA) (hvolB : 0 ≤ volB) (hvolAB : 0 ≤ volAB)
     (h_add : IsPL1AdditiveHyp volA volB volAB lam) :
     IsIndicatorToConvexBodyHyp A B volA volB volAB lam := by
-  unfold IsIndicatorToConvexBodyHyp IsPL1AdditiveHyp at *
-  exact bm_additive_to_multiplicative hvolA hvolB h0 h1 h_add
+  unfold IsPL1AdditiveHyp at h_add
+  exact ⟨bm_additive_to_multiplicative hvolA hvolB h0 h1 h_add⟩
 
 end InformationTheory.Shannon.BrunnMinkowski

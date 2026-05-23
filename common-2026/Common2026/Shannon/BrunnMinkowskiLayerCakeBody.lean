@@ -215,8 +215,8 @@ theorem isPrekopaLeindlerHyp_of_layercake
     (h_tail : IsTailIntegrableHyp muF muG muH)
     (h_sl_pos : ∀ t : ℝ, 0 < t → lam * muF t + (1 - lam) * muG t ≤ muH t) :
     IsPrekopaLeindlerHyp f g hfn lam intF intG intH :=
-  prekopa_leindler_1D_layercake f g hfn lam h0 h1 muF muG muH
-    intF intG intH hF hG hH h_pt h_sl_meas h_lc h_tail h_sl_pos
+  ⟨prekopa_leindler_1D_layercake f g hfn lam h0 h1 muF muG muH
+    intF intG intH hF hG hH h_pt h_sl_meas h_lc h_tail h_sl_pos⟩
 
 /-! ## §E — superlevel hypothesis を引数から落とした 1 次元 PL -/
 

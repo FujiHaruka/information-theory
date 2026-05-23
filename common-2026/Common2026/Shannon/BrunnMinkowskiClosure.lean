@@ -463,22 +463,29 @@ theorem bm_volume_sqrt_to_entropyPower {n : ℕ}
   -- `(volAB^(1/n))^2 ≥ (volA^(1/n) + volB^(1/n))^2 ≥ (volA^(1/n))^2 + (volB^(1/n))^2`.
   exact square_necessary_for_linear hpA hpB h_sqrt
 
-/-- **entropy-power 形 Brunn-Minkowski, `jointDifferentialEntropyPi` 特化 (genuine
-reduction, 🟢ʰ geometric hyp)**.
+/-- **entropy-power 形 Brunn-Minkowski, `jointDifferentialEntropyPi` 特化**.
 
 `h := jointDifferentialEntropyPi` に固定した entropy power 加法形
 
     `entropyPower_nDim n hJoint (P.map (X+Y))
       ≥ entropyPower_nDim n hJoint (P.map X) + entropyPower_nDim n hJoint (P.map Y)`.
 
-uniform=log-vol hypotheses (`IsUniformOnEntropyLogVolHypothesis`) で各 entropy power
-を `vol^(2/n)` に書き換え (`entropyPower_nDim_eq_rpow_of_log`, genuine)、geometric
-sqrt-形 BM (`IsBMEntropyPowerVolumeHyp`, honest) を `bm_volume_sqrt_to_entropyPower`
-で entropy power 加法形に持ち上げて着地。
+🟢ʰ load-bearing hypothesis — NOT a discharge. 本定理の load-bearing 部分は
+`h_geom_bm_assumed : IsBMEntropyPowerVolumeHyp n volA volB volAB`
+(= geometric Brunn-Minkowski sqrt 形 `volAB^(1/n) ≥ volA^(1/n) + volB^(1/n)`)
+で、これが Mathlib 壁 (Mathlib に凸体 Brunn-Minkowski が存在しない) のため
+hypothesis pass-through。
 
-外出しは geometric BM 不等式 (`h_geom`) のみ。entropy↔geometry↔rpow の代数は
-すべて genuine。`hJoint := jointDifferentialEntropyPi` は concrete (抽象 `h` 引数を
-排除)。 -/
+genuine な部分は entropy↔geometry↔rpow の代数のみ:
+uniform=log-vol hypotheses (`IsUniformOnEntropyLogVolHypothesis`) で各 entropy power
+を `vol^(2/n)` に書き換え (`entropyPower_nDim_eq_rpow_of_log`, genuine)、
+sqrt 形 → entropy power 加法形持ち上げ (`bm_volume_sqrt_to_entropyPower`, genuine
+`Real.rpow` 代数)。
+
+`hJoint := jointDifferentialEntropyPi` は concrete (抽象 `h` 引数を排除)。
+Discharge: §H 以降で `IsBMScaledMulHyp` (primitive scalar 形) からの λ-最適化
+chain (`bm_scaledMul_to_sqrt`) + geometric BM image (`bm_geom_to_scaledMul`) が
+provided。完全 discharge は本リポジトリでは凸体 BM (Mathlib 壁) で塞がる。 -/
 theorem brunn_minkowski_entropy_jointPi
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -489,7 +496,7 @@ theorem brunn_minkowski_entropy_jointPi
     (hB_unif : Common2026.Shannon.jointDifferentialEntropyPi (P.map Y) = Real.log volB)
     (hAB_unif : Common2026.Shannon.jointDifferentialEntropyPi
       (P.map (fun ω => X ω + Y ω)) = Real.log volAB)
-    (h_geom : IsBMEntropyPowerVolumeHyp n volA volB volAB) :
+    (h_geom_bm_assumed : IsBMEntropyPowerVolumeHyp n volA volB volAB) :
     entropyPower_nDim n Common2026.Shannon.jointDifferentialEntropyPi
         (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower_nDim n Common2026.Shannon.jointDifferentialEntropyPi (P.map X)
@@ -504,7 +511,8 @@ theorem brunn_minkowski_entropy_jointPi
     rw [entropyPower_nDim_eq_exp, hμ, Real.rpow_def_of_pos hvol, mul_comm]
   rw [hep _ volA hvolA hA_unif, hep _ volB hvolB hB_unif, hep _ volAB hvolAB hAB_unif]
   -- geometric content (`IsBMEntropyPowerVolumeHyp`) lifts to the entropy-power form.
-  exact bm_volume_sqrt_to_entropyPower volA volB volAB hvolA.le hvolB.le hvolAB.le h_geom
+  exact bm_volume_sqrt_to_entropyPower volA volB volAB hvolA.le hvolB.le hvolAB.le
+    h_geom_bm_assumed
 
 /-- **Phase 4 — entropy 形 headline restate (`jointDifferentialEntropyPi` 特化)**.
 

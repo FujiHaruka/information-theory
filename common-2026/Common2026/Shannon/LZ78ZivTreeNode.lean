@@ -626,14 +626,28 @@ theorem lz78AchievSlackOverhead_tendsto_zero :
   simpa using this
 
 omit [MeasurableSingletonClass α] in
-/-- **Overhead-aware genuine construction of `IsLZ78AchievabilityZivUpperBound`**
-from the overhead-aware combinatorial core plus regularity. The honest input
-is now the **mathematically-true** overhead-aware core (defect fix over the
-false clean core), and the genuine tree overhead is absorbed into the
-vanishing slack. -/
+/-- 🟢ʰ **load-bearing hypothesis — NOT a discharge (and the hypothesis is
+mathematically FALSE).**
+**Overhead-aware construction of `IsLZ78AchievabilityZivUpperBound`** from the
+overhead-aware combinatorial core plus regularity.
+
+⚠️ **`hcore_lbh : IsLZ78ZivCombinatorialCoreOverhead` is unsatisfiable.** A
+genuine unconditional refutation is recorded in
+`LZ78ZivTreeBridge.not_isLZ78ZivCombinatorialCoreOverhead` (constant process
+witness at `n = 16`, `Pₙ = 1`, `c = 5`: `5 log 5 > 5 log 3`). So this theorem
+is **vacuously conditioned** — type-correct but the hypothesis cannot be
+discharged for any process. The genuine tree overhead `c·log(|α|+1)` is
+absorbed into the vanishing slack `lz78AchievSlackOverhead`, but that
+absorption itself is not the defect: the gap `c log c` vs `-log Pₙ` is
+super-`O(c)` when `Pₙ → 1`.
+
+The correct honest input is an **a.s.-eventual** rate bound, not a per-block
+universal inequality; see `LZ78AsEventualAchievability.lean` for the
+reformulation track. This lemma stands only as scaffolding marking where the
+genuine a.s.-eventual replacement plugs in. -/
 theorem isLZ78AchievabilityZivUpperBound_distinctOverhead
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
-    (hcore : IsLZ78ZivCombinatorialCoreOverhead μ p)
+    (hcore_lbh : IsLZ78ZivCombinatorialCoreOverhead μ p)
     (hreg : ∀ (n : ℕ) (ω : Ω) (m : ℕ),
       m ≤ n → 0 < prefixBlockProb μ p ω m) :
     IsLZ78AchievabilityZivUpperBound μ p
@@ -644,7 +658,7 @@ theorem isLZ78AchievabilityZivUpperBound_distinctOverhead
   filter_upwards [Filter.eventually_ge_atTop 2] with n hn
   have hPn : 0 < (μ.map (p.blockRV n)).real {p.blockRV n ω} :=
     hreg n ω n (le_refl n)
-  exact lz78DistinctRate_le_blockLogAvg₂_add_slackOverhead μ p hcore n hn ω hPn
+  exact lz78DistinctRate_le_blockLogAvg₂_add_slackOverhead μ p hcore_lbh n hn ω hPn
 
 end OverheadAssembly
 

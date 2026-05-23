@@ -39,10 +39,6 @@ inequalities without changing this file's external signature.
 * **§3. `lz78_converse_lower_bound_pmfBased`** — the main pmf-based
   converse lower bound theorem: given the per-block log-likelihood
   lower bound + the SMB sandwich, conclude the a.s. liminf bound.
-* **§4. Bridge to parent `IsLZ78ConversePassthrough`** —
-  `IsLZ78ConverseChainHyp` (and its trivial constructor) yield the
-  parent placeholder, plus a wrapper `lz78_converse_lower_bound_with_chain`
-  that discharges the parent's L-LZ2 slot.
 * **§5. Compat layer for `lz78GreedyEncodingLength`** — named
   witnesses chaining the concrete greedy encoding (from
   `LZ78GreedyParsing.lean`) through the new converse predicates.
@@ -249,32 +245,6 @@ theorem lz78_converse_lower_bound_of_pointwise
 
 end PmfBasedConverse
 
-/-! ## §4. Bridge to parent `IsLZ78ConversePassthrough` -/
-
-section ParentBridge
-
-variable {α Ω : Type*} [MeasurableSpace α] [MeasurableSpace Ω]
-
-/-- **Bridge: `IsLZ78ConverseChainHyp` discharges the parent
-`IsLZ78ConversePassthrough` placeholder.**
-
-While the parent predicate is currently a `True` placeholder
-(`LempelZiv78.lean` §2), this bridge is set up so that the
-*signature* of the converse discharge — taking a chain-rule
-hypothesis — is already in place. When L-LZ2-D
-(full Cover–Thomas Eq. 13.130 derivation) lands, the parent
-predicate body can be upgraded from `True` to a concrete
-`IsLZ78ConverseChainHyp _ _ _` statement, and this bridge will become
-the *substantive* constructor. -/
-theorem IsLZ78ConversePassthrough.ofChainHyp
-    (μ : Measure Ω) (p : StationaryProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (_h_chain : IsLZ78ConverseChainHyp μ p lz78EncodingLength) :
-    IsLZ78ConversePassthrough μ p lz78EncodingLength :=
-  True.intro
-
-end ParentBridge
-
 /-! ## §5. Wrapper: parent `lz78_converse_lower_bound` discharge -/
 
 section ParentWrapper
@@ -347,8 +317,7 @@ theorem lz78_converse_lower_bound_discharge
               / (n : ℝ))
           Filter.atTop :=
   lz78_converse_lower_bound μ p lz78EncodingLength
-    (IsLZ78ConversePassthrough.ofChainHyp μ p.toStationaryProcess
-      lz78EncodingLength h_chain)
+    True.intro
     (lz78_converse_lower_bound_with_chain μ p lz78EncodingLength
       h_chain h_smb_lower)
 

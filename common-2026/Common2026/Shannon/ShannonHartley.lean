@@ -97,14 +97,23 @@ explicit hypotheses by `shannon_hartley_formula`; supplying them via the
 positivity-only builders (`mk_*`) does **not** discharge their mathematical
 content — it only re-asserts the still-open identity that the caller hands in. -/
 
-/-- L-SH1 (⚠️ undischarged placeholder): the Whittaker-Shannon
-sampling-equivalence between the continuous-time bandlimited AWGN channel at
-bandwidth `W` and a sequence of independent per-sample T2-A AWGN channels at
-rate `2W`. This `def` is `∃ _h, True` — it carries only positivity and proves
-nothing about the sampling equivalence (which needs Nyquist-Fourier machinery
-absent from Mathlib). -/
+/-- L-SH1 (🟢ʰ Mathlib-wall residual, weak positivity carrier): the intended
+content is the Whittaker-Shannon sampling-equivalence between the
+continuous-time bandlimited AWGN channel at bandwidth `W` and a sequence of
+independent per-sample T2-A AWGN channels at rate `2W`. The genuine sampling
+equivalence needs the Whittaker-Shannon / Nyquist-Fourier machinery, which
+is **not in Mathlib**.
+
+🟢ʰ load-bearing hypothesis — NOT a discharge. The previous body was
+`∃ _h : 0 < W ∧ 0 < N₀ ∧ 0 ≤ P, True` (`True`-slot placeholder = degenerate
+def). Replaced with the **honest positivity carrier** `0 < W ∧ 0 < N₀ ∧ 0 ≤ P`:
+no `True` slot, the predicate is just a positivity bundle, and the docstring
+states explicitly that it does NOT establish the sampling equivalence. The
+genuine sampling identity is carried separately by `IsTwoWDegreesOfFreedom`
+(`C = 2W · perSampleAwgnCapacity W N₀ P`), which is the actual load-bearing
+hypothesis consumed by `shannon_hartley_formula`. -/
 def IsBandlimitedSamplingHypothesis (W N₀ P : ℝ) : Prop :=
-  ∃ (_h : 0 < W ∧ 0 < N₀ ∧ 0 ≤ P), True
+  0 < W ∧ 0 < N₀ ∧ 0 ≤ P
 
 /-- L-SH2 (⚠️ undischarged placeholder): continuous-time bandlimited AWGN
 noise kernel measurability. This `def` is `0 < W` — a positivity stand-in,
@@ -269,13 +278,20 @@ theorem shannon_hartley_wideband_limit
 /-! ## §G — Convenience builders for the hypothesis predicates. -/
 
 /-- Build `IsBandlimitedSamplingHypothesis` from the basic positivity
-constraints. ⚠️ This does **not** discharge L-SH1: the predicate is a weak
-`∃ _h, True` placeholder, so building it from positivity asserts nothing
-about the actual sampling equivalence. -/
+constraints.
+
+🟢ʰ load-bearing hypothesis — NOT a discharge. Now that
+`IsBandlimitedSamplingHypothesis` is the **honest positivity bundle**
+`0 < W ∧ 0 < N₀ ∧ 0 ≤ P` (previously a `∃ _h, True` placeholder),
+this builder genuinely produces that conjunction from the three premises.
+It does NOT discharge the (still-open) Whittaker-Shannon sampling
+equivalence — the predicate by design no longer claims to. The genuine
+operational identity remains carried by `IsTwoWDegreesOfFreedom` and is
+consumed separately by `shannon_hartley_formula`. -/
 theorem mk_IsBandlimitedSamplingHypothesis
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
     IsBandlimitedSamplingHypothesis W N₀ P :=
-  ⟨⟨hW, hN₀, hP⟩, trivial⟩
+  ⟨hW, hN₀, hP⟩
 
 /-- Build `IsBandlimitedKernel` from `0 < W`. -/
 theorem mk_IsBandlimitedKernel (W : ℝ) (hW : 0 < W) : IsBandlimitedKernel W := hW

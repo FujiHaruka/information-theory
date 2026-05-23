@@ -36,11 +36,6 @@ retreat) to publish
   `(d/dt) (1/2) log (2π e (v + t))` equals `1/(2(v + t))` (Mathlib `hasDerivAt_log`
   composition); the RHS `(1/2) · J(𝒩(m, v + t)) = (1/2) · (1/(v + t))` matches
   via V2 `fisherInfoOfDensityReal_gaussianPDFReal`.
-* **L-EPI2 discharge wrapper**: the existing `IsDeBruijnIntegrationHypothesis`
-  in `EntropyPowerInequality.lean` is `Prop := True`; we expose a stronger
-  named theorem `epi_de_bruijn_integration_v2_discharge` capturing the de
-  Bruijn integration shape via the V2 `deBruijn_identity_v2`.
-
 ## 主シグネチャ
 
 * `fisherInfoOfMeasureV2` — Phase C measure-keyed V2 Fisher info (density-witness form)
@@ -50,7 +45,6 @@ retreat) to publish
 * `deBruijn_identity_v2` — Phase D de Bruijn identity (L-F1+L-F2 hypothesis pass-through, V2)
 * `deBruijn_identity_v2_gaussian` — Gaussian discharge (hypothesis-free), the canonical
    Stage 2 publish target blocked under V1 by the representative-dependence flaw
-* `epi_de_bruijn_integration_v2_discharge` — L-EPI2 wrapper for EPI Plumbing
 
 ## 撤退ライン
 
@@ -425,28 +419,5 @@ theorem deBruijn_identity_v2_gaussian
     field_simp
   rw [h_eq_rhs]
   exact h_deriv'
-
-/-! ## L-EPI2 wrapper — discharge `IsDeBruijnIntegrationHypothesis`
-
-The placeholder `Common2026.Shannon.IsDeBruijnIntegrationHypothesis` in
-`EntropyPowerInequality.lean:152` is `Prop := True`, so any caller can already
-discharge it trivially. We expose a named theorem that documents the de Bruijn
-integration *shape* through the V2 `deBruijn_identity_v2` predicate, so
-downstream EPI plumbing has a non-trivial named handle to cite.
-
-The Gaussian case is fully proved by `deBruijn_identity_v2_gaussian`. For the
-general case (Cover-Thomas 17.7.2 with non-Gaussian `X`), the de Bruijn
-identity is bundled into `IsRegularDeBruijnHypV2` as L-F1+L-F2 pass-through;
-the integrated form needed for EPI is a t-integral of that identity, which
-remains future work.
--/
-
-/-- **L-EPI2 wrapper for EPI Plumbing**. The de Bruijn integration hypothesis
-of `EntropyPowerInequality.lean` is trivially discharged (since it is
-`Prop := True`); this wrapper exists for downstream citation by name. -/
-theorem epi_de_bruijn_integration_v2_discharge
-    {Ω : Type*} [MeasurableSpace Ω] (X Y : Ω → ℝ) (P : Measure Ω) :
-    InformationTheory.Shannon.EntropyPowerInequality.IsDeBruijnIntegrationHypothesis X Y P :=
-  InformationTheory.Shannon.EntropyPowerInequality.isDeBruijnIntegrationHypothesis_trivial X Y P
 
 end Common2026.Shannon.FisherInfoV2

@@ -9,42 +9,16 @@ This file is the **genuine achievability-body discharge** for the MAC
 corner-point inner bound. It sits above:
 
 * `MultipleAccessChannel.lean` — publishes `MACInnerBoundExistence`
-  (the *bare* existence predicate `∃ N, ∀ n ≥ N, ∃ M₁ M₂ c, exp(nRₖ) ≤ Mₖ`)
-  and the pass-through `mac_capacity_region_inner_bound : … := h_existence`.
+  (the error-carrying existence predicate
+  `∀ ε > 0, ∃ N, ∀ n ≥ N, ∃ M₁ M₂ c, exp(nRₖ) ≤ Mₖ ∧ averageError < ε`,
+  with the vanishing-error conjunct embedded — no longer the bare
+  no-op-satisfiable predicate).
 * `MACBodyDischarge.lean` — the JTS decoder `macJTSCode`, the 4-fold
   Bonferroni decomposition `mac_error_event_subset_bonferroni`, and the
   per-codebook error-probability assembly `mac_achievability_corner_body`
   (`ν(errorEvent) ≤ δ₀ + δ₁ + δ₂ + δ₃`).
 * `MACL1Discharge.lean` — the 3-tuple jointly-typical set + AEP.
 * `AEPRate.lean` — closed-form rate-uniform AEP / exp-decay `∃ N` lemmas.
-
-## The wave9 no-op trap, and what is *genuinely* discharged here
-
-`MACInnerBoundExistence R₁ R₂` carries **no error condition** — it merely
-asserts a code with `exp(nRₖ) ≤ Mₖ` messages exists, which is trivially
-true (take `Mₖ := ⌈exp(nRₖ)⌉` and any code). Discharging *that* predicate
-directly is the no-op trap. The genuine content of MAC achievability is
-the **average error probability → 0**, which the bare predicate drops.
-
-This file lands that genuine content as a *strictly more primitive*
-predicate `MACAchievableWithError`, carrying
-
-```
-∀ ε' > 0, ∃ N, ∀ n ≥ N, ∃ M₁ M₂ ≥ ⌈exp(nRₖ)⌉, ∃ (c : MACCode …),
-   (c.averageErrorProb W).toReal < ε'
-```
-
-and proves the genuine reduction
-
-```
-MACAchievableWithError W R₁ R₂  →  MACInnerBoundExistence R₁ R₂
-```
-
-(genuine: the error-carrying predicate implies the bare one but is not
-defeq to it — it drops the error-probability witness). The error-carrying
-predicate is itself reduced to the genuine JTS error-assembly theorem
-`mac_jts_error_lt_of_bonferroni_lt` (built on `mac_achievability_corner_body`)
-plus the closed-form decay `∃ N` lemmas of `AEPRate.lean`.
 
 ## Main results
 
@@ -55,24 +29,32 @@ plus the closed-form decay `∃ N` lemmas of `AEPRate.lean`.
 * `mac_jts_error_lt_of_bonferroni_lt` — **genuine error-assembly**: a JTS
   code whose four Bonferroni events sum to `< ε'` has pointwise error
   `< ε'` (via `mac_achievability_corner_body`).
-* `MACAchievableWithError` — the error-carrying achievability predicate.
-* `mac_innerBoundExistence_of_achievableWithError` — **genuine reduction**
-  `MACAchievableWithError → MACInnerBoundExistence`.
-* `mac_capacity_region_inner_bound_of_achievableWithError` — re-publish of
-  the inner bound with the existence hypothesis discharged from the genuine
-  error-carrying predicate.
+* `mac_jts_error_eventually_lt` — eventual-form packaging of the
+  per-codebook error assembly over the four `∃ N` decay inputs.
 
 ## 撤退ライン
 
 * The full random-codebook *averaging* over all `(c₁, c₂)` (E₁/E₂/E₃
   expectation bounds via the union over wrong messages, ~500-800 lines —
   the analogue of `random_codebook_average_le` lifted to 3 events) is
-  **out of scope** of one seed. We expose the genuine error-carrying
-  predicate and reduce it to the per-code JTS error-assembly + decay
-  inputs; the predicate itself is consumed as a hypothesis at the
-  re-publish layer (matching the `wyner_ziv_achievability_existence`
-  pattern), but — crucially — it is the *error-carrying* predicate, not
-  the degenerate bare one.
+  staged in `MACRandomCodebookAveraging.lean` (finite-sum-expectation
+  form) and `MACPerEventAEPDecay.lean` (per-event AEP-decay genuine ε-N
+  bridge to `MACInnerBoundExistence`).
+
+## Cluster cleanup (2026-05-23)
+
+The prior `MACAchievableWithError` definitional alias (defeq to
+`MACInnerBoundExistence`), together with the three identity-wrapper
+bridge theorems
+`mac_innerBoundExistence_of_achievableWithError`,
+`mac_capacity_region_inner_bound_of_achievableWithError`, and
+`mac_capacity_region_consistent_of_achievableWithError`, have been
+**retracted**. The alias added no Prop-level content; the bridge body
+`:= h` is a pure identity unfolding. Direct downstream consumers
+(`MACPerEventAEPDecay.lean`) now route through
+`mac_random_codebook_markov_of_perEvent` of
+`MACRandomCodebookAveraging.lean` to land `MACInnerBoundExistence`
+directly, without the identity-relabel cascade.
 -/
 
 namespace InformationTheory.Shannon
@@ -224,87 +206,5 @@ theorem mac_jts_error_eventually_lt
     le_rfl le_rfl le_rfl le_rfl (hN n hn)
 
 end JTSErrorAssembly
-
-/-! ## Section 3 — Error-carrying achievability predicate + genuine reduction -/
-
-section AchievableWithError
-
-variable {α₁ α₂ β : Type*}
-variable [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
-
-/-- **MAC corner-point achievability — error-carrying existence
-predicate.** Now that `MACInnerBoundExistence` itself embeds the
-vanishing-error conjunct, this predicate is a definitional alias for it
-(retained for the existing downstream call sites that name it). It
-asserts, for every target error `ε' > 0`, the existence of a code carrying
-`≥ ⌈exp(n Rₖ)⌉` messages **and** with average error probability `< ε'`. -/
-def MACAchievableWithError
-    {α₁ α₂ β : Type*}
-    [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
-    (W : MACChannel α₁ α₂ β) (R₁ R₂ : ℝ) : Prop :=
-  MACInnerBoundExistence W R₁ R₂
-
-/-- **Reduction: error-carrying ⇒ existence.** With the redefined
-error-carrying `MACInnerBoundExistence`, this is the definitional
-unfolding of the alias `MACAchievableWithError`. Both predicates now carry
-the average-error witness, so the reduction is the genuine identity on the
-error-carrying achievability content (no witness is dropped). -/
-theorem mac_innerBoundExistence_of_achievableWithError
-    (W : MACChannel α₁ α₂ β) (R₁ R₂ : ℝ)
-    (h : MACAchievableWithError W R₁ R₂) :
-    MACInnerBoundExistence W R₁ R₂ :=
-  h
-
-end AchievableWithError
-
-/-! ## Section 4 — Re-publish inner bound with the hypothesis discharged -/
-
-section Republish
-
-variable {α₁ α₂ β : Type*}
-variable [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
-
-/-- **MAC inner bound — re-publish from the genuine error-carrying
-predicate.** The achievability hypothesis is the genuine error-carrying
-`MACAchievableWithError` (now defeq to the error-carrying
-`MACInnerBoundExistence`); the existence is derived via
-`mac_innerBoundExistence_of_achievableWithError`. -/
-theorem mac_capacity_region_inner_bound_of_achievableWithError
-    (W : MACChannel α₁ α₂ β) (R₁ R₂ I₁ I₂ Iboth : ℝ)
-    (_h_strict : R₁ < I₁ ∧ R₂ < I₂ ∧ R₁ + R₂ < Iboth)
-    (h_ach : MACAchievableWithError W R₁ R₂) :
-    MACInnerBoundExistence W R₁ R₂ :=
-  mac_innerBoundExistence_of_achievableWithError W R₁ R₂ h_ach
-
-/-- **Two-side combine — error-carrying achievability + converse.**
-Mirror of `mac_capacity_region_consistent` with the achievability side
-backed by the genuine error-carrying predicate and the converse side
-**derived** from the entropy-level Fano + chain inputs. -/
-theorem mac_capacity_region_consistent_of_achievableWithError
-    (W : MACChannel α₁ α₂ β)
-    {M₁ M₂ n : ℕ} (hn : 0 < n) (c : MACCode M₁ M₂ n α₁ α₂ β)
-    (R₁ R₂ Pe₁ Pe₂ Pe_joint I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε : ℝ)
-    (h_fano₁ : (n : ℝ) * R₁ ≤ I_marg₁ + 1 + Pe₁ * Real.log (M₁ : ℝ))
-    (h_fano₂ : (n : ℝ) * R₂ ≤ I_marg₂ + 1 + Pe₂ * Real.log (M₂ : ℝ))
-    (h_fano_joint :
-        (n : ℝ) * (R₁ + R₂)
-          ≤ I_joint + 1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ)))
-    (h_chain₁ : I_marg₁ ≤ (n : ℝ) * I₁)
-    (h_chain₂ : I_marg₂ ≤ (n : ℝ) * I₂)
-    (h_chain_joint : I_joint ≤ (n : ℝ) * Iboth)
-    (h_cleanup₁ : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε)
-    (h_cleanup₂ : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε)
-    (h_cleanup_joint :
-        (1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ))) / (n : ℝ) ≤ ε)
-    (h_ach : MACAchievableWithError W R₁ R₂) :
-    InMACCapacityRegion R₁ R₂ (I₁ + ε) (I₂ + ε) (Iboth + ε)
-      ∧ MACInnerBoundExistence W R₁ R₂ :=
-  ⟨mac_capacity_region_outer_bound hn c R₁ R₂ Pe₁ Pe₂ Pe_joint
-     I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε
-     h_fano₁ h_fano₂ h_fano_joint h_chain₁ h_chain₂ h_chain_joint
-     h_cleanup₁ h_cleanup₂ h_cleanup_joint,
-   mac_innerBoundExistence_of_achievableWithError W R₁ R₂ h_ach⟩
-
-end Republish
 
 end InformationTheory.Shannon

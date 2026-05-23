@@ -392,8 +392,12 @@ The publish-layer hook closing SEED S21: given the strict rate conditions and
 the primitive per-event AEP-decay predicate `IsMACPerEventAEPDecay` (whose
 analytic `p → 0` content is supplied by `mac_aggregate_decay_tendsto`),
 conclude `MACInnerBoundExistence`. Composes the genuine ε-N bridge (S21-5)
-with `mac_innerBoundExistence_of_markov` of
-`MACRandomCodebookAveraging.lean`. -/
+composing `mac_random_codebook_markov_of_perEvent` of
+`MACRandomCodebookAveraging.lean` directly (the random-codebook Markov
+predicate `IsMACRandomCodebookMarkov` is definitionally
+`MACInnerBoundExistence`, so the witness produced by
+`mac_random_codebook_markov_of_perEvent` lands the inner-bound existence
+without an additional identity-relabel bridge). -/
 theorem mac_inner_bound_with_perEvent_aep
     (μ : Measure Ω) (X1s : ℕ → Ω → α₁) (X2s : ℕ → Ω → α₂) (Ys : ℕ → Ω → β)
     (ε : ℝ) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
@@ -401,15 +405,17 @@ theorem mac_inner_bound_with_perEvent_aep
     (_h_strict : R₁ < I₁ ∧ R₂ < I₂ ∧ R₁ + R₂ < Iboth)
     (h : IsMACPerEventAEPDecay μ X1s X2s Ys ε W R₁ R₂) :
     MACInnerBoundExistence W R₁ R₂ :=
-  mac_innerBoundExistence_of_markov W R₁ R₂
-    (mac_random_codebook_markov_of_perEvent μ X1s X2s Ys ε W R₁ R₂ h)
+  mac_random_codebook_markov_of_perEvent μ X1s X2s Ys ε W R₁ R₂ h
 
 /-- **S21-6' — Two-side combine — per-event-decay achievability + converse.**
 
-Mirror of `mac_capacity_region_consistent_of_averaging` of
-`MACRandomCodebookAveraging.lean`, with the achievability side backed by the
-genuine per-event AEP/rate decay (`IsMACPerEventAEPDecay`) rather than a bare
-Markov predicate. -/
+Two-side combine packaging the genuine MAC outer-bound derivation with the
+per-event AEP/rate-decay-backed inner-bound landing. The achievability
+side is backed by the genuine per-event AEP/rate decay
+(`IsMACPerEventAEPDecay`), routed through
+`mac_random_codebook_markov_of_perEvent` to land
+`MACInnerBoundExistence` (which is definitionally
+`IsMACRandomCodebookMarkov`). -/
 theorem mac_capacity_region_consistent_of_perEvent
     (μ : Measure Ω) (X1s : ℕ → Ω → α₁) (X2s : ℕ → Ω → α₂) (Ys : ℕ → Ω → β)
     (ε : ℝ) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
@@ -434,8 +440,7 @@ theorem mac_capacity_region_consistent_of_perEvent
      I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth εc
      h_fano₁ h_fano₂ h_fano_joint h_chain₁ h_chain₂ h_chain_joint
      h_cleanup₁ h_cleanup₂ h_cleanup_joint,
-   mac_innerBoundExistence_of_markov W R₁ R₂
-     (mac_random_codebook_markov_of_perEvent μ X1s X2s Ys ε W R₁ R₂ h)⟩
+   mac_random_codebook_markov_of_perEvent μ X1s X2s Ys ε W R₁ R₂ h⟩
 
 end MACPerEventPublish
 

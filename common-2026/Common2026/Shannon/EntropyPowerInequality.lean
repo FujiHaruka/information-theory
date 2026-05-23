@@ -150,11 +150,6 @@ def IsStamInequalityHypothesis {Ω : Type*} [MeasurableSpace Ω]
 def IsDeBruijnIntegrationHypothesis {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop := True
 
-/-- L-EPI2 placeholder is trivially provable. -/
-theorem isDeBruijnIntegrationHypothesis_trivial {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω) : IsDeBruijnIntegrationHypothesis X Y P :=
-  trivial
-
 /-- **L-EPI3 (EPI conclusion predicate)**: EPI 結論
 
     `entropyPower (P.map (X+Y)) ≥ entropyPower (P.map X) + entropyPower (P.map Y)`

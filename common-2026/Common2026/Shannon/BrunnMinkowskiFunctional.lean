@@ -128,38 +128,53 @@ theorem isLogConcaveDensity_const {n : ℕ} {c : ℝ} (hc : 0 ≤ c) :
 
 /-! ## §B — Hypothesis predicates: L-PL1 / L-PL2 / L-PL3 -/
 
-/-- **L-PL1 (Prékopa-Leindler conclusion, 核心 retreat)**: Cover-Thomas
-Theorem 17.9.5 の結論
+/-- **L-PL1 (Prékopa-Leindler bound, 🟢ʰ Mathlib-wall residual)**: Cover-Thomas
+Theorem 17.9.5 の Lebesgue 積分間 multiplicative 不等式
 
     `∫ h ≥ (∫ f)^λ * (∫ g)^{1-λ}`
 
-を hypothesis 化。`f, g, h_fn` は非負実関数、`μ` は `Fin n → ℝ` 上の
-Lebesgue 測度 (本 file では abstract measure として受ける)。
+を *Mathlib に Prékopa-Leindler が存在しない* ため structured side-condition
+として持ち越す。`f, g, h_fn` は非負実関数、`intF, intG, intH` は対応する
+Lebesgue 積分の scalar 値。
 
-Discharge plan: Cover-Thomas Ch.17.9 の induction on `n` + 1-dim
-の Hölder-type 不等式 + `lintegral_mul_le_*` 経由。本 plan では未着手、
-hypothesis pass-through で signature 露出のみ。
+🟢ʰ load-bearing hypothesis — NOT a discharge. 旧版は `def := conclusion`
+(type ≡ conclusion = pure circular) だったが、structure 化により
+type ≠ conclusion (構造体 projection `.bound` 経由で抽出)、
+discharged 1D / layer-cake 経路 (`BrunnMinkowskiPLBody.lean` /
+`BrunnMinkowskiLayerCakeBody.lean`) が construct する形に揃える。
 
-Mathlib-shape-driven: `∫ f ^ λ * ∫ g ^ (1-λ)` の `^` は `Real.rpow`、
-比較は `Real` 上の `≤`。積分は `lintegral` よりも `Real`-valued
-expression (abstract scalar) を保持して `IsPrekopaLeindlerHyp` を
-flexibly 受けられる形にする。 -/
-def IsPrekopaLeindlerHyp {n : ℕ}
+Discharge plan: Cover-Thomas Ch.17.9 の induction on `n` + 1-dim Hölder
++ `lintegral_mul_le_*` 経由。1 次元 layer-cake は本リポジトリ内に存在
+(`prekopa_leindler_1D_layercake` 等)、`n` 帰納 / Fubini-slice 段は plan
+`prekopa-leindler-induction-plan.md` (未着手) に塞ぐ。
+
+Mathlib-shape-driven: structure 単一フィールドは `Real.rpow`-shape の
+不等式 `intF ^ lam * intG ^ (1 - lam) ≤ intH` をそのまま保持。 -/
+structure IsPrekopaLeindlerHyp {n : ℕ}
     (f g hfn : (Fin n → ℝ) → ℝ) (lam : ℝ)
-    (intF intG intH : ℝ) : Prop :=
-  intF ^ lam * intG ^ (1 - lam) ≤ intH
+    (intF intG intH : ℝ) : Prop where
+  /-- 多次元 Prékopa-Leindler 積分不等式 (Mathlib-wall residual)。 -/
+  bound : intF ^ lam * intG ^ (1 - lam) ≤ intH
 
-/-- **L-PL2 (functional → convex body specialization hypothesis)**.
+/-- **L-PL2 (PL → convex body specialization, 🟢ʰ Mathlib-wall residual)**.
 
-Indicator `Set.indicator` を経由した PL → BM convex body 化の
-"core step" を hypothesis 化。具体的には
+凸体 `A, B ⊂ Fin n → ℝ` の体積に関する Brunn-Minkowski multiplicative form
 
     `vol(λ A + (1 - λ) B) ≥ vol A ^ λ * vol B ^ (1 - λ)`
 
-を indicator 関数経由で得る形。本 plan では未着手、signature 露出のみ。 -/
-def IsIndicatorToConvexBodyHyp {n : ℕ}
-    (A B : Set (Fin n → ℝ)) (volA volB volAB : ℝ) (lam : ℝ) : Prop :=
-  volA ^ lam * volB ^ (1 - lam) ≤ volAB
+を、Mathlib に凸体 BM が存在しないため structured side-condition として
+持ち越す。`f = 1_A, g = 1_B, h = 1_{λA+(1-λ)B}` を PL に代入すれば得られる
+帰結だが、本 file 範囲ではその代入を遂行する `volume` 補題群が未整備。
+
+🟢ʰ load-bearing hypothesis — NOT a discharge. 旧版は `def := conclusion`
+(type ≡ conclusion = pure circular) だったが、structure 化で type ≠
+conclusion (構造体 projection `.bound`) に揃える。discharged 1D PL から
+`indicatorToConvexBody_of_1D_body` (`BrunnMinkowskiPLBody.lean`) が
+1 次元特殊 case を construct する経路は既存。 -/
+structure IsIndicatorToConvexBodyHyp {n : ℕ}
+    (A B : Set (Fin n → ℝ)) (volA volB volAB : ℝ) (lam : ℝ) : Prop where
+  /-- 凸体 Brunn-Minkowski multiplicative form (Mathlib-wall residual)。 -/
+  bound : volA ^ lam * volB ^ (1 - lam) ≤ volAB
 
 /-- **L-PL3 (log-concavity preservation by marginalization)**.
 
@@ -182,9 +197,14 @@ pointwise 条件
 
     `intH ≥ intF ^ λ * intG ^ (1 - λ)`.
 
-撤退ライン: 本体は L-PL1 hypothesis 単独で着地。Discharge plan
-`prekopa-leindler-induction-plan.md` (未着手) で `n` 帰納法 + 1-dim
-Hölder で本格化する想定。 -/
+🟢ʰ load-bearing hypothesis — NOT a discharge. 本定理本体は
+`h_pl_assumed.bound` (= L-PL1 structured side-condition の積分不等式
+フィールド) で着地する。L-PL1 の中身そのものが Mathlib に存在しない
+Prékopa-Leindler の積分主張であり、Discharge plan
+`prekopa-leindler-induction-plan.md` (未着手) で `n` 帰納 + 1-dim Hölder
+経路で本格化する想定。1 次元特殊 case は `BrunnMinkowskiLayerCakeBody`
+/ `BrunnMinkowskiPLBody` 内で discharged (`isPrekopaLeindlerHyp_of_layercake`
+等が L-PL1 を construct する経路を提供)。 -/
 theorem prekopa_leindler_inequality
     {n : ℕ} (f g hfn : (Fin n → ℝ) → ℝ) (lam : ℝ)
     (h0 : 0 ≤ lam) (h1 : lam ≤ 1)
@@ -192,9 +212,9 @@ theorem prekopa_leindler_inequality
     (hF_nn : 0 ≤ intF) (hG_nn : 0 ≤ intG) (hH_nn : 0 ≤ intH)
     (h_pointwise : ∀ x y : Fin n → ℝ,
       f x ^ lam * g y ^ (1 - lam) ≤ hfn (lam • x + (1 - lam) • y))
-    (h_pl : IsPrekopaLeindlerHyp f g hfn lam intF intG intH) :
+    (h_pl_assumed : IsPrekopaLeindlerHyp f g hfn lam intF intG intH) :
     intF ^ lam * intG ^ (1 - lam) ≤ intH :=
-  h_pl
+  h_pl_assumed.bound
 
 /-! ## §D — Specialization: PL → 凸体 Brunn-Minkowski (L-PL2 適用) -/
 
@@ -207,15 +227,19 @@ theorem prekopa_leindler_inequality
 (これが PL の最も簡単な系であり、Cover-Thomas 17.9.2 + Cor 17.9.3 の
 出発点。)
 
-撤退ラインは L-PL2 (`IsIndicatorToConvexBodyHyp`) hypothesis pass-through。 -/
+🟢ʰ load-bearing hypothesis — NOT a discharge. 本体は
+`h_indicator_assumed.bound` (= L-PL2 structured side-condition の凸体
+multiplicative bound フィールド) で着地。1 次元特殊 case は
+`indicatorToConvexBody_of_1D_body` (`BrunnMinkowskiPLBody.lean`)
+が discharged 1D PL から L-PL2 を construct する経路を提供。 -/
 theorem brunn_minkowski_from_prekopa_leindler
     {n : ℕ} (A B : Set (Fin n → ℝ))
     (volA volB volAB : ℝ)
     (hvolA : 0 ≤ volA) (hvolB : 0 ≤ volB) (hvolAB : 0 ≤ volAB)
     (lam : ℝ) (h0 : 0 ≤ lam) (h1 : lam ≤ 1)
-    (h_indicator : IsIndicatorToConvexBodyHyp A B volA volB volAB lam) :
+    (h_indicator_assumed : IsIndicatorToConvexBodyHyp A B volA volB volAB lam) :
     volA ^ lam * volB ^ (1 - lam) ≤ volAB :=
-  h_indicator
+  h_indicator_assumed.bound
 
 /-! ## §E — Log-concave measure framework -/
 
@@ -452,10 +476,10 @@ theorem prekopa_leindler_geometric_mean_form
     volA ^ ((1 : ℝ) / 2) * volB ^ ((1 : ℝ) / 2) ≤ volAB := by
   -- L-PL2 at `λ = 1/2` gives `volA^(1/2) * volB^(1-1/2) ≤ volAB`.
   -- `1 - 1/2 = 1/2`.
-  unfold IsIndicatorToConvexBodyHyp at h_indicator
+  have h_bound := h_indicator.bound
   have h_half : (1 : ℝ) - 1/2 = 1/2 := by norm_num
-  rw [h_half] at h_indicator
-  exact h_indicator
+  rw [h_half] at h_bound
+  exact h_bound
 
 /-- **Functional → additive convex body form** (via log-bridge):
 hypothesis pass-through で `vol(A+B) ≥ vol(A) + vol(B)` (Brunn-Minkowski

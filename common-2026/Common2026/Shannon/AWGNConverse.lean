@@ -65,22 +65,32 @@ def IsAwgnConverseHypothesis (P : ℝ) (N : ℝ≥0)
 
 /-! ## Converse — `awgn_converse` (F-3 hypothesis pass-through) -/
 
-/-- **AWGN converse theorem (Cover-Thomas 9.1.2)**.
+/-- 🟢ʰ **load-bearing hypothesis — NOT a discharge.**
+**AWGN converse theorem (Cover-Thomas 9.1.2), F-3 hypothesis form**.
 
 For every code with `M ≥ 2` messages, block length `n`, output power constraint
 `P` and average error probability `Pe`, the rate satisfies
 
 `log M ≤ n·(1/2) log(1+P/N) + binEntropy(Pe) + Pe·log(M-1)`.
 
-**F-3 hypothesis pass-through form** (Fano + chain rule + per-letter max-entropy
-+ integrability hypotheses は `IsAwgnConverseHypothesis P N h_meas` predicate に
-集約)。
+⚠️ The body is `h_converseBound_lbh hM c Pe hPe`, where
+`IsAwgnConverseHypothesis` is *defined to be* the universal converse inequality
+itself. The load-bearing hypothesis IS the desired conclusion, packaged as a
+named predicate so the theorem can be re-published once F-3 is genuinely
+discharged.
 
-Discharging the converse predicate is deferred to `awgn-converse-aux-plan.md`. -/
+Load-bearing pieces bundled inside `h_converseBound_lbh`:
+* Fano's inequality (`fano_inequality_measure_theoretic`),
+* Data processing for `I(W; Ŵ) ≤ I(X^n; Y^n)`,
+* Chain rule `I(X^n; Y^n) ≤ ∑ I(X_i; Y_i)` for memoryless channel,
+* Per-letter max-entropy `I(X_i; Y_i) ≤ (1/2) log(1+P/N)` (Gaussian Y_i bound),
+* Per-letter integrability hypotheses (F-3 撤退ライン's main pain point).
+
+Discharging this predicate is deferred to `awgn-converse-aux-plan.md` (Tier 3). -/
 theorem awgn_converse
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
-    (h_converse : IsAwgnConverseHypothesis P N h_meas)
+    (h_converseBound_lbh : IsAwgnConverseHypothesis P N h_meas)
     {M n : ℕ} (hM : 2 ≤ M)
     (c : AwgnCode M n P)
     (Pe : ℝ)
@@ -89,6 +99,6 @@ theorem awgn_converse
     Real.log M
       ≤ (n : ℝ) * ((1 / 2) * Real.log (1 + P / (N : ℝ)))
         + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1) :=
-  h_converse hM c Pe hPe
+  h_converseBound_lbh hM c Pe hPe
 
 end InformationTheory.Shannon.AWGN
