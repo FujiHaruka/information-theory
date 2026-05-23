@@ -41,7 +41,9 @@ the achievability theorem for all valid `R, ε` at once. The genuine
 analytic content (sphere packing + random coding + AEP) is what makes
 this predicate non-vacuous; that derivation is deferred to
 `awgn-achievability-typicality-plan.md` (plan drafted; analytic body
-pending). -/
+pending).
+
+`@audit:defect(circular)` `@audit:defer(awgn-achievability-typicality)` `@audit:staged(n-dim-gaussian-aep)` -/
 def IsAwgnTypicalityHypothesis (P : ℝ) (N : ℝ≥0)
     (h_meas : IsAwgnChannelMeasurable N) : Prop :=
   ∀ {R : ℝ}, 0 < R → R < (1/2) * Real.log (1 + P / (N : ℝ)) →
@@ -78,7 +80,9 @@ of `awgn-achievability-typicality-plan.md` (plan drafted; analytic body
 pending). Until that body lands, this theorem is a **load-bearing
 hypothesis wrapper**, not a proven achievability result.
 
-L-S2 / L-C2 / L-F1+L-F2 と同型の薄い wrapper (同じ honesty 状態)。-/
+L-S2 / L-C2 / L-F1+L-F2 と同型の薄い wrapper (同じ honesty 状態)。
+
+`@audit:defect(circular)` `@audit:defer(awgn-achievability-typicality)` -/
 theorem awgn_achievability
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)

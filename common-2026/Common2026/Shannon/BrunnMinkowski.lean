@@ -128,7 +128,9 @@ Brunn-Minkowski (entropy form, Cover-Thomas Theorem 17.9.2) の結論
 
 Discharge plan `brunn-minkowski-from-epi-discharge-plan.md` (起草済、
 本実装未着手) で EPI (T2-D) の n-dim 拡張 + Cover-Thomas Theorem 17.7.4
-経路から導出する想定。 -/
+経路から導出する想定。
+
+`@audit:defect(circular)` `@audit:defer(brunn-minkowski-from-epi-discharge)` `@audit:staged(epi-n-dim)` -/
 def IsBrunnMinkowskiEntropyHypothesis {Ω : Type*} [MeasurableSpace Ω]
     (n : ℕ) (h : Measure (Fin n → ℝ) → ℝ)
     (X Y : Ω → (Fin n → ℝ)) (P : Measure Ω) : Prop :=
@@ -184,7 +186,9 @@ BM) に分離して provide される。
 EPI との関係: EPI (`entropy_power_inequality`, T2-D) は `n = 1` 限定。
 本 `n`-dim 形は EPI の coordinate-wise 拡張 + Cover-Thomas Theorem 17.7.4
 経路で discharge plan `brunn-minkowski-from-epi-discharge-plan.md`
-(起草済、本実装未着手) に塞ぐ。 -/
+(起草済、本実装未着手) に塞ぐ。
+
+`@audit:defect(circular)` `@audit:defer(brunn-minkowski-from-epi-discharge)` -/
 theorem brunn_minkowski_entropy_inequality
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

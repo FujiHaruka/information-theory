@@ -281,7 +281,9 @@ same equality via a sup-sandwich (`le_antisymm` of `le_csSup` achiever lower bou
   sum (= 結論そのもの, load-bearing)
 
 L-WF1 + L-WF2 は signature 露出のみで本体では使わない。本体は load-bearing 仮説
-`h_perCoordReduction_lbh` 単独 (= 結論)。 -/
+`h_perCoordReduction_lbh` 単独 (= 結論)。
+
+`@audit:defect(circular)` `@audit:retract-candidate(legacy-passthrough)` `@audit:defer(pg-legacy-retract)` -/
 theorem parallel_gaussian_capacity_formula_of_perCoordReduction {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -388,7 +390,9 @@ Same load-bearing-hypothesis posture as
 defined to be the un-active-form conclusion) as a load-bearing hypothesis. Combines
 that reduction with `parallel_gaussian_capacity_sum_active`. The genuine,
 hypothesis-free headline is
-`ParallelGaussianPerCoord.parallel_gaussian_capacity_formula`. -/
+`ParallelGaussianPerCoord.parallel_gaussian_capacity_formula`.
+
+`@audit:defect(circular)` `@audit:retract-candidate(legacy-passthrough)` `@audit:defer(pg-legacy-retract)` -/
 theorem parallel_gaussian_capacity_active_form_of_perCoordReduction {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin n → ℝ≥0)
     (hN : ∀ i, (N i : ℝ) ≠ 0) (hN_pos : ∀ i, 0 < (N i : ℝ))
