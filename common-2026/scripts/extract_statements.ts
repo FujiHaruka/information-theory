@@ -8,7 +8,8 @@
 // Defaults:
 //   paths    = Common2026
 //   --out    = docs/formalized-statements.md
-//   --kinds  = theorem,lemma
+//   --kinds  = theorem,lemma,def   (def included so predicate-level honesty
+//             defects — e.g. `def IsFoo : Prop := True` — land in the audit DB)
 //   --exclude= Common2026/Exam/   (comma-separated path substrings to skip)
 //
 // Approach: a small comment/string/bracket-aware scanner over the *original* source
@@ -111,6 +112,8 @@ function gapIsAttachable(gap: string): boolean {
 function cleanDoc(raw: string): string {
   return raw.replace(/[ \t]+$/gm, "").trim();
 }
+
+export const DEFAULT_KINDS = ["theorem", "lemma", "def"];
 
 export type Decl = {
   kind: string;
@@ -239,7 +242,7 @@ function fence(sig: string): string {
 async function main() {
   const args = [...Deno.args];
   let out = "docs/formalized-statements.md";
-  let kinds = new Set(["theorem", "lemma"]);
+  let kinds = new Set(DEFAULT_KINDS);
   let exclude = ["Common2026/Exam/"];
   let noDocs = false;
   const paths: string[] = [];
