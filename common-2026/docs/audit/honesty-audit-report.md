@@ -168,3 +168,22 @@ Full list: `deno run -A scripts/audit_db.ts list --status suspect`.
 - **Relay `_discharged` family conflict**: two Opus reviewers disagreed (alias-laundering vs honest gated-implication). A third adjudicator read the actual `def`s: `IsRelay*Witness := Relay*Achievable := (InRate → error-carrying Existence)` is a genuine gated implication, NOT a conclusion alias → 6 of 8 are honest `suspect`; only `relay_df_inner_bound_block_markov_discharged` (rate-only conclusion) and `relay_cf_inner_bound_binning_discharged_witness` (identity wrap) are real defects.
 - **QA**: 2 random samples of 10 `ok` rows, 0 flips → first-pass reliability good.
 - DB is gitignored and regenerable (`build`); verdicts persist. Re-run `list --status defect|suspect` for live data.
+
+## Update — post-cleanup status (2026-05-24)
+
+cleanup waves (defect-cleanup-plan.md 波 0/1/2) + 後続 retract/rebrand を経た最新 snapshot:
+
+| status | initial (2026-05-22) | current (2026-05-24) |
+|---|---:|---:|
+| ok | 2480 | **2483** |
+| suspect | 361 | **381** |
+| defect | 101 | **3** |
+| unaudited | — | 581 |
+| total | 2942 | 3448 (`theorem + lemma + def`, parser scope を拡張) |
+
+defect 101 → 3 まで圧縮。残 3 件 (`awgn_achievability`, `IsAwgnTypicalityHypothesis`, `IsBrunnMinkowskiEntropyHypothesis`) は intentional staged Mathlib 壁案件で、200-500 LoC 規模の analytic discharge plan に切り出し済:
+
+- [`docs/shannon/awgn-achievability-typicality-plan.md`](../shannon/awgn-achievability-typicality-plan.md) — AWGN F-1 Tier-3 plan (Cover-Thomas 9.2, sphere packing + Gaussian random codebook + n-dim continuous AEP + expurgation)
+- [`docs/shannon/brunn-minkowski-from-epi-discharge-plan.md`](../shannon/brunn-minkowski-from-epi-discharge-plan.md) — BM EPI route plan (n-dim EPI 拡張 + Cover-Thomas Theorem 17.7.4 bridge)
+
+詳細な residuals → plan の dispatch は [`defect-cleanup-plan.md`](defect-cleanup-plan.md) §波後の残り residuals 参照。
