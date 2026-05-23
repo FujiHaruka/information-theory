@@ -64,7 +64,6 @@ lemma が **完全不在** (`rg "Stam" → 0 hit`、inventory §A.5)。本 file 
 * `isStamInequalityHypothesis_of_stamInequalityHyp` — L-EPI1 bridge
 * `IsDeBruijnRegularityHyp X Z P` (§3) — de Bruijn regularity predicate
 * `IsDeBruijnIntegrationHyp X Z P` (§4) — de Bruijn integration 真 signature
-* `isDeBruijnIntegrationHypothesis_of_deBruijnIntegrationHyp` — L-EPI2 bridge
 * `IsStamToEPIBridgeHyp X Y P` (§6) — Stam + de Bruijn → L-EPI3 bridge hypothesis
 * `epi_via_stam` (§6) — 合成 wrapper, L-EPI3 を導出
 * `epi_via_stam_gaussian` (§7) — Gaussian saturation full discharge corollary
@@ -236,15 +235,11 @@ theorem isDeBruijnIntegrationHyp_at_zero
   rw [hX_def, htarget_def, ← h_boundary]
   ring
 
-/-- **Bridge L-EPI2**: the genuine de Bruijn-integration hypothesis trivially
-implies the `EntropyPowerInequality.lean` placeholder
-`IsDeBruijnIntegrationHypothesis (= True)`. -/
-theorem isDeBruijnIntegrationHypothesis_of_deBruijnIntegrationHyp
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y Z : Ω → ℝ} {P : Measure Ω} {T : ℝ}
-    (h : IsDeBruijnIntegrationHyp X Z P T) :
-    IsDeBruijnIntegrationHypothesis X Y P :=
-  trivial
+-- (retracted) `isDeBruijnIntegrationHypothesis_of_deBruijnIntegrationHyp`
+-- produced `IsDeBruijnIntegrationHypothesis (= True)` via `trivial`; a pure
+-- Prop=True passthrough (degenerate_def) with no callers. Removed as part of
+-- the wave-1 cleanup. The genuine de Bruijn integration predicate is
+-- `IsDeBruijnIntegrationHyp` (§4) above.
 
 /-! ## §5 — Gaussian saturation full discharge of the upstream hypotheses
 
@@ -378,12 +373,10 @@ theorem isStamToEPIBridgeHyp_of_forall
     IsStamToEPIBridgeHyp X Y P :=
   h
 
-/-- de Bruijn integration's bridge is trivially provable (the placeholder is
-`True`). -/
-theorem isDeBruijnIntegrationHypothesis_trivial_of_anything
-    {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω) :
-    IsDeBruijnIntegrationHypothesis X Y P := trivial
+-- (retracted) `isDeBruijnIntegrationHypothesis_trivial_of_anything` produced
+-- `IsDeBruijnIntegrationHypothesis (= True)` via `trivial`; an even more
+-- obviously vacuous Prop=True passthrough (degenerate_def) with no callers.
+-- Removed as part of the wave-1 cleanup.
 
 /-! ## §9 — 3-arg EPI via Stam (chain application) -/
 
