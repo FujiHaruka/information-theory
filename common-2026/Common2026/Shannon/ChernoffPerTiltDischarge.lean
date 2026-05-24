@@ -171,7 +171,7 @@ lower bound predicate at a single tilt `lam ∈ Icc 0 1`, derive
 This is a thin wrapper around `ChernoffConverse.chernoff_converse_from_per_tilt`;
 the predicate unfolds to exactly the per-tilt hypothesis required.
 
-`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
+`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 theorem chernoff_converse_from_predicate
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -191,7 +191,7 @@ This is a thin re-package of
 `ChernoffConverse.chernoff_converse_of_per_tilt_existential` (🟢ʰ
 load-bearing in the per-tilt hyp).
 
-`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
+`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 theorem chernoff_converse_discharged_from_predicate
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -221,7 +221,7 @@ current Mathlib state: only one explicit hypothesis (the per-tilt predicate
 `IsBayesErrorPerTiltLowerBound`, itself the Mathlib-gap abstraction of the
 Sanov LDP per-tilt output).
 
-`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
+`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 theorem chernoff_lemma_tendsto_from_predicate
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -286,7 +286,18 @@ The single-atomic-hypothesis shape is convenient for callers but it is the
 same converse content as the unfolded existential — no progress is made
 here.
 
-`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
+**Plan-Level Finding** (chernoff-converse-sanov-discharge):
+`IsBayesErrorPerTiltLowerBound` (and therefore
+`IsChernoffPerTiltDischargeable`) is **FALSE in general** — the textbook
+constant `C > 0` cannot exist because the Cramér local-limit prefactor is
+`Θ(1/√n)`, not `Θ(1)`. The genuine Chernoff converse is delivered by
+`ChernoffBandMassDischarge.chernoff_converse_holds` /
+`chernoff_lemma_tendsto_holds`, which use the `ε`-relaxed bound
+`bayesErrorMinPmf_ge_exp_neg_mul_Z_pow` and require only the honest band-mass
+hypothesis `IsChernoffBandMassToOne` (≠ the conclusion). Downstream callers
+should route through that headline rather than the per-tilt predicate here.
+
+`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 theorem chernoff_lemma_tendsto_of_per_tilt
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -315,7 +326,15 @@ forward through `chernoff_converse_of_per_tilt_existential_from_predicate`,
 which is also load-bearing in the same per-tilt hypothesis. No new converse
 content is produced here.
 
-`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
+**Plan-Level Finding** (chernoff-converse-sanov-discharge):
+`IsBayesErrorPerTiltLowerBound` is **FALSE in general** (Cramér local-limit
+`Θ(1/√n)` rules out a constant `C > 0`); see
+`ChernoffBandMassDischarge.chernoff_converse_holds` /
+`chernoff_lemma_tendsto_holds` (and the `DotEq` variant
+`chernoff_dotEq_tendsto_holds`) for the genuine route via the `ε`-relaxed
+bound and the honest `IsChernoffBandMassToOne` hypothesis.
+
+`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 theorem chernoff_dotEq_tendsto_of_per_tilt
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)

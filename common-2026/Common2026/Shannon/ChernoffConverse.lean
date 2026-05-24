@@ -270,7 +270,7 @@ Hypothesis shape: a Sanov LDP launch at the tilted measure
 change-of-measure (the `2` factor accounts for the `1/2` prefactor in
 `bayesErrorMinPmf`).
 
-`@audit:suspect(chernoff-converse-moonshot-plan)` -/
+`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 theorem chernoff_converse_from_per_tilt
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -408,7 +408,7 @@ quantifies over `∃ λ`, so the caller can either pick `λ*` from
 `chernoffInfo_attained` themselves or supply a stronger per-tilt hypothesis
 valid for all `λ` (∀ form deferred to follow-up plan).
 
-`@audit:suspect(chernoff-converse-moonshot-plan)` -/
+`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 theorem chernoff_converse_of_per_tilt_existential
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -443,7 +443,7 @@ This is the cleanest publish shape of Cover-Thomas Theorem 11.9.1 given the
 current state: only one explicit hypothesis (the per-tilt lower bound,
 itself derivable from Sanov LDP per-tilt in a follow-up plan).
 
-`@audit:suspect(chernoff-converse-moonshot-plan)` -/
+`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 theorem chernoff_lemma_tendsto_from_per_tilt
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)

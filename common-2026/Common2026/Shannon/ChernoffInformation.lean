@@ -122,6 +122,15 @@ This is the formal **Tendsto** version of Cover-Thomas:
 the discharge of `h_converse` is the responsibility of a follow-up plan
 (`chernoff-converse-moonshot-plan.md`).
 
+**Successor discharge** (chernoff-converse-sanov-discharge): the
+regularity-only headline `ChernoffBandMassDischarge.chernoff_lemma_tendsto_holds`
+already supplies the `h_converse` hypothesis from `[Nonempty α]` +
+`hP₁_pos hP₂_pos` (the per-tilt-predicate route through
+`IsBayesErrorPerTiltLowerBound` is FALSE in general — Cramér `Θ(1/√n)`
+prefactor — and is replaced by the `ε`-relaxed bound; see
+`ChernoffSanovDischarge.bayesErrorMinPmf_ge_exp_neg_mul_Z_pow` and
+`ChernoffBandMassDischarge` for the genuine route).
+
 `@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 theorem chernoff_lemma_tendsto
     (P₁ P₂ : α → ℝ) [Nonempty α]
@@ -193,6 +202,13 @@ error decays at the exponential rate `chernoffInfo P₁ P₂`:
   `bayesErrorMinPmf P₁ P₂ n ≐ exp(-n · chernoffInfo P₁ P₂)`.
 
 Derived from `chernoff_lemma_tendsto` via `dotEq_iff_tendsto_log_div`.
+
+**Successor discharge** (chernoff-converse-sanov-discharge): the
+regularity-only headline `ChernoffBandMassDischarge.chernoff_dotEq_tendsto_holds`
+discharges the `h_converse` hypothesis from `[Nonempty α]` +
+`hP₁_pos hP₂_pos` (via `chernoff_lemma_tendsto_holds`); see the
+`chernoff_lemma_tendsto` docstring for the FALSE per-tilt predicate vs.
+genuine `ε`-relaxed route remark.
 
 `@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 theorem chernoff_dotEq_tendsto

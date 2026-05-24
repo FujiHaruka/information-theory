@@ -359,7 +359,7 @@ lemma bayesErrorMinPmf_ge_exp_neg_mul_Z_pow
 `limsup rate ≤ -log Z(λ)`. (The `exp(-n·ε)` factor contributes `+ε` to the rate,
 which vanishes as `ε → 0`.)
 
-`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
+`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 theorem chernoff_converse_from_eps_relaxed
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -459,7 +459,7 @@ This replaces the false constant-`C` predicate route: it requires only the
 genuine load-bearing `IsChernoffBandMassToOne` (band mass → 1, ≠ the
 conclusion). Step 1 (reverse Hölder) is proved unconditionally inside.
 
-`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
+`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 theorem chernoff_converse_of_bandMass
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)

@@ -188,7 +188,7 @@ lemma chernoff_per_tilt_via_RN
 NLetterRN`. The two predicates are structurally identical in the current
 publish.
 
-`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
+`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 lemma isChernoffNLetterRN_of_isBayesErrorPerTiltLowerBound
     (P₁ P₂ : α → ℝ) (lam : ℝ)
     (h_pred : IsBayesErrorPerTiltLowerBound P₁ P₂ lam) :
@@ -273,7 +273,7 @@ RN-deriv predicate `IsChernoffNLetterRN P₁ P₂ lam` at *some* `lam ∈ Icc 0 
 attaining `chernoffInfo = -log Z(λ)`, derive
 `Tendsto rate → chernoffInfo`.
 
-`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
+`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 theorem chernoff_lemma_tendsto_via_RN
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -291,7 +291,7 @@ theorem chernoff_lemma_tendsto_via_RN
 /-- **`IsChernoffPerTiltDischargeable` from RN-deriv predicate at the
 attaining tilt**.
 
-`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
+`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 lemma isChernoffPerTiltDischargeable_of_RN
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -305,7 +305,7 @@ lemma isChernoffPerTiltDischargeable_of_RN
 /-- **Limsup converse via RN-deriv predicate**: given the RN-deriv predicate
 at *every* `lam ∈ Icc 0 1`, derive `limsup rate ≤ chernoffInfo`.
 
-`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
+`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 theorem chernoff_converse_via_RN_forall
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -322,7 +322,7 @@ theorem chernoff_converse_via_RN_forall
 
 /-- **Tendsto via RN-deriv predicate at every tilt**.
 
-`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
+`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 theorem chernoff_lemma_tendsto_via_RN_forall
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -369,7 +369,7 @@ rate `chernoffInfo P₁ P₂`:
 given only the n-letter RN-deriv predicate `IsChernoffNLetterRN` at the
 attaining tilt `λ*` (with `chernoffInfo = -log Z(λ*)`).
 
-`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
+`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 theorem chernoff_dotEq_tendsto_via_RN
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)

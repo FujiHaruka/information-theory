@@ -625,6 +625,58 @@ honest 名前付き仮説の延長で抜く)。
    multivariate 化。Phase 0 で在庫差分確認、無ければ `h_multivar_decomp` named hypothesis として
    permit。本 plan 完了後の residual は **1 honest piece** (`h_multivar_decomp`) に集約見込み。
 
+### 2026-05-25 Phase 0 在庫差分 (skeleton 着地 + 3 項目 verify)
+
+skeleton `Common2026/Shannon/ParallelGaussianPerCoordRegularity.lean` (~166 行、
+2 statement: `isParallelGaussianPerCoordRegularity_of_pieces` constructor + headline
+`parallel_gaussian_capacity_formula_minimal`、body 共に `:= by sorry`) を着地、
+`lake env lean` で **2 sorry warning のみ** (0 error / 他 warning 0)。
+
+新規 `@audit:staged(...)` predicate **無し** (両 statement は既存 bundle
+`IsParallelGaussianPerCoordRegularity` を consume するのみで、新規 predicate def 0 件)。
+`@audit:suspect(parallel-gaussian-l-pg1-discharge)` タグを 2 statement docstring に付与
+(Phase 4 closure 後に `@audit:ok` 化見込み)。
+
+3 在庫差分項目の verify 結果:
+
+- **項目 1 (multivariate channel↔RV MI decomp)**: **Mathlib 完全不在** + Common2026 にも
+  multivariate 形 **不在**。確認:
+  - Loogle: `"mutualInfo", MeasureTheory.Measure.pi` → `Found 127 declarations mentioning
+    MeasureTheory.Measure.pi. Of these, 0 have a name containing "mutualInfo".`
+  - Common2026: 単 channel `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`
+    (`ContChannelMIDecomp.lean:248`) のみ存在、multivariate 化は `MultivariateDiffEntropy.lean`
+    でも未提供 (`jointDifferentialEntropyPi_le_sum` は subadditivity だけ)。
+  - **判定**: D-3 撤退 (`IsParallelChannelMIDecompHyp` predicate 新規 def) は **回避可能** —
+    skeleton では `h_multivar_decomp` を **predicate ではなく直接 Prop** で構成
+    (`∀ p ∈ feasible, ∃ P', P' ≥ 0 ∧ ∑ P' ≤ P ∧ MI ≤ ∑ (1/2) log(1+P'/N)` の existential 形)、
+    Phase 3 で `parallelGaussian_max_ent_le_of_subadditivity` (`PerCoord.lean:257`) と
+    align、新規 named predicate 不要。本 plan 完了後の honest piece は **1 件**
+    (`h_multivar_decomp`、existential Prop) に集約見込み。
+- **項目 2 (mutualInfo_pi_eq_sum 充足 path)**: 部分確認。`mutualInfo_pi_eq_sum`
+  (`MIChainRule.lean:341`) は **RV 形** signature (`(Ω, μ)` + `Xs Ys : Fin n → Ω → α`)、
+  3 i.i.d. factorization `h_iid_joint` / `h_iid_X` / `h_iid_Y` を要求。`gaussianProductInput Q
+  = Measure.pi (gaussianReal 0 (Q i))` で充足するには **channel form ↔ RV form 変換** が
+  必要 (`mutualInfoOfChannel_eq_mutualInfo_prod`, `ChannelCoding.lean:99`)。各 `i` で
+  `μ.map Xs i = gaussianReal 0 (Q i)` + `μ.map Ys i = (gaussianReal 0 Q ⊗ awgnChannel N) i`
+  の identification は **product 構造から `Measure.pi.map (eval i)` で取れる**
+  (項目 3 の `pi_map_eval` 適用)。Phase 2 の plumbing として実行可能、D-2 撤退は **回避見込み**
+  (詰まった場合は `h_perCoord_bridge_achiever` を constructor で受ける skeleton 形のまま
+  Phase 2 を named hypothesis 形で抜く)。
+- **項目 3 (marginal map lemma)**: **Mathlib `MeasureTheory.Measure.pi_map_eval` (`Mathlib/
+  MeasureTheory/Constructions/Pi.lean:379`) 在庫**。
+  Signature: `lemma pi_map_eval [DecidableEq ι] (i : ι) : (Measure.pi μ).map (Function.eval i)
+  = (∏ j ∈ Finset.univ.erase i, μ j Set.univ) • (μ i)`。
+  `IsProbabilityMeasure (μ j)` の元では `μ j univ = 1` で `∏ ≠ i (1) = 1` に簡約、
+  実質 `(Measure.pi μ).map (· i) = μ i`。Phase 3 max_ent の per-coord plumbing で
+  そのまま利用可能、**自作不要**。
+- **Phase 1-3 経路確定**: Phase 1 (bddAbove) genuine 見込み (P-free 上界、Phase 3 と
+  per-coord 上界を共有)。Phase 2 (achiever_mi) 🟢ʰ genuine 見込み (per-coord bridge は
+  AWGN(#5) と共有、`mutualInfo_pi_eq_sum` plumbing は項目 3 で完備)。Phase 3 (max_ent)
+  🟢ʰ genuine 見込み (subadd は `jointDifferentialEntropyPi_le_sum` で genuine、residual は
+  `h_multivar_decomp` 1 件のみ existential 形で残置 = D-3 不要)。**D-1/D-2/D-3 撤退は
+  いずれも不要見込み**、全 Phase で genuine 着地予定 (本 plan 完了後の honest piece = 1 件
+  = `h_multivar_decomp`、当初予測通り)。
+
 <!-- Phase 着手後 append: 各 Phase の着地 (genuine / D-1/D-2/D-3 撤退発動有無)、Phase 5
 タグ書換結果 (caller 存在の有無)、最終 honest piece 数 (期待値 1: `h_multivar_decomp` のみ)、
 親 plan / docstring 更新の orchestrator 反映状況 がここに記録される見込み。 -->

@@ -245,17 +245,17 @@ Phase 0 loogle で Jensen 積分形 `ConcaveOn.le_map_integral` (`Mathlib/Analys
 
 ---
 
-## Phase V — clean 🚧
+## Phase V — clean ✅ (2026-05-25 wave 3-4 verify + 棚卸し)
 
-`proof-log: no`。
+`proof-log: docs/proof-logs/proof-log-brunn-minkowski-closure-phase-v.md`。
 
-- [ ] `lake env lean Common2026/Shannon/BrunnMinkowskiClosure.lean` silent (0 error / 0 sorry / 最小 warning) — 実装時に確認、本 refine では未走行。
-- [ ] 残存 honest hypothesis 棚卸し:
-  - **§Phase 1 残**: `IsSlicePLReadyHyp` (§D L228、regularity bundle、`@audit:suspect(brunn-minkowski-closure-plan)` L372)。
-  - **§Phase 3 残 (load-bearing 寄り)**: `IsUniformOnEntropyLogVol` 3 本 (`hA_unif/hB_unif/hAB_unif`) を `brunn_minkowski_entropy_jointPi` (§G L493、`@audit:suspect(brunn-minkowski-closure-plan)` L492) の引数として持つ。Jensen 積分形での discharge は別 sub-plan へ deferred。
-  - **§Phase 4 残 (regularity 寄り)**: `IsBMEntropyPowerVolumeHyp` (sqrt 形) は §H で `IsBMScaledMulHyp` (より primitive) からの λ-最適化 discharge `bm_scaledMul_to_sqrt` (genuine) で縮約済。`IsBMScaledMulHyp` は geometric BM の image。
-  各 honest hyp の **`:= True` ではなく実内容** であることを確認、proof-log に列挙。
-- [ ] 親 `brunn-minkowski-moonshot-plan.md` 末尾の closure plan へのポインタ確認 (本 refine 時点で未確認、別 turn 対応)。
+- [x] `lake env lean Common2026/Shannon/BrunnMinkowskiClosure.lean` silent (0 error / 0 sorry / 0 warning) — 2026-05-25 worktree (`.lake` parent symlink reuse) で confirm、exit 0 / 出力 0 行。
+- [x] 残存 honest hypothesis 棚卸し (proof-log §「残存 honest hyp 棚卸し」に verbatim signature 列挙):
+  - **§Phase 1 残**: `IsSlicePLReadyHyp` (§D L228、regularity bundle 7-conjunction、`@audit:suspect(brunn-minkowski-closure-plan)` L372) ×1。consumer: `prekopa_leindler_nDim` (`:263`)。
+  - **§Phase 3 残 (load-bearing)**: uniform=log-vol equality hyp (`hA_unif/hB_unif/hAB_unif : jointDifferentialEntropyPi (P.map ·) = Real.log vol·`)。**実装は standalone `def IsUniformOnEntropyLogVol` ではなく 3 consumer (`brunn_minkowski_entropy_jointPi` L499-502 / `..._inequality_genuine` L538-541 / `..._inequality_scaledMul` L701-704) に equality hyp として inline**。`@audit:suspect(brunn-minkowski-closure-plan)` L492。Jensen 積分形 discharge は別 sub-plan へ deferred。
+  - **§Phase 4 残 (regularity / geometric BM image)**: `IsBMEntropyPowerVolumeHyp` (sqrt 形、§G L440) は §H で `IsBMScaledMulHyp` (より primitive、§H L577) からの λ-最適化 discharge `bm_scaledMul_to_sqrt` (`:589`, genuine) で縮約済。`IsBMScaledMulHyp` は `bm_geom_to_scaledMul` (`:661`) で geometric multiplicative BM の image であることが genuine 接続済。
+  - 全 honest hyp について `rg 'Prop\s*:=\s*True' BrunnMinkowskiClosure.lean` → **0 件**、全て実 Prop。defect 検出 0。
+- [ ] 親 `brunn-minkowski-moonshot-plan.md` 末尾の closure plan へのポインタ確認 (本 turn scope 外、別 turn 対応)。
 
 ---
 
