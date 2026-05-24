@@ -136,3 +136,43 @@ If the session is ad-hoc — opened with no prior handoff context, scope unrelat
 **見つけた側**: 既存コード/依存/計画に defect を見つけたら、現タスクと無関係でも **その場で即フラグ** (任意の気づきに埋めない)。defect の上に黙って積み上げない。フラグの形式は **当該 docstring 内に `@audit:KIND(SLUG)` タグ** (語彙: `docs/audit/audit-tags.md`) を直書きする。タスクリストや snapshot 文書に分散保管しない (code が SoT)。
 
 判定の一言: **「その仮説は前提条件か、それとも証明の核心か」**。前者 OK、後者は残タスク。詳細 → `docs/textbook-roadmap.md`「完成判定 / 検証強度の基準」「Mathlib 壁の 4 分類」。
+
+## Independent honesty audit (orchestrator 必須)
+
+実装サブエージェントが **新たに `@audit:staged(<slug>)` / `@audit:residual(<slug>)` predicate を導入した場合** (既存タグの継承使用ではなく predicate そのものを新規 def したケース)、orchestrator は当該セッション中 (遅くとも `Common2026.lean` 編入 commit 前) に **独立 audit subagent** を 1 件起動する。実装 agent 自身の「honesty 4 条件 確認」自己申告 + `scripts/audit_db.ts scan --check-db` の機械的タグ整合確認だけでは **タグの正確さを誰も独立に検証していない** 状態 (書いた本人 = 申告者)。
+
+### 起動条件
+
+- 新規 `@audit:staged(<slug>)` predicate を 1 件以上含む commit が session 内にある
+- 新規 `@audit:residual(<slug>)` を作って closure 不能と判定した
+- 既存 staged predicate の signature 変更 (引数追加・型変更)
+
+「既存 staged の継承使用」「`@audit:suspect` 散布」のみのケースは不要。
+
+### subagent 選択 + 指示
+
+- 推奨 agent: `general-purpose` (read-only mandate を prompt で明示) または `proof-pivot-advisor` (元々 read-only)
+- **必須条件**: 実装に関与していない fresh subagent (実装 agent の self-audit は不可)
+- prompt 必須項目:
+  1. 対象 predicate ごとに 4 条件 (a)/(b)/(c)/(d) を **コードで** 確認、docstring 主張を疑って読む
+  2. name laundering / vacuous truth / Mathlib 壁分類 (b 解析の壁 vs d 真の壁) の独立判定
+  3. consumer (主定理 body) が staged hyp を **genuinely 消費** しているか (silent leak チェック)
+  4. loogle で Mathlib 不在主張を裏取り (「実は存在する」だと壁分類誤認)
+- 出力: `docs/audit/<plan-slug>-staged-audit.md` 新規
+
+### closure 判定
+
+audit subagent の verdict が:
+
+- **全 OK** → session 完了 OK、`scripts/audit_db.ts` の "ok" として記録するか handoff に明記
+- **questionable** → docstring refine or 追加コメントで対応、必要なら追加 patch
+- **DEFECT** → 当該 predicate を撤回 or 修正、session 中に処理
+
+### 既存「検証の誠実性」inline policy との関係
+
+直前セクション「**専用監査を待たない**」は **inline 検出** の原則 — 実装中に気付いたら即フラグするのを止めない。本独立監査は **実装後の二段目** であって inline の代替ではない。両方走らせる:
+
+- **inline** (実装 agent 自身): 1 行レベルの defect tells を即フラグ
+- **独立監査** (orchestrator が起動した fresh subagent): predicate 全体の構造的 honesty を独立視点で verify
+
+orchestrator が新規 staging を検出していながら独立監査を起動せずに session を closure するのは **honesty workflow 違反**。
