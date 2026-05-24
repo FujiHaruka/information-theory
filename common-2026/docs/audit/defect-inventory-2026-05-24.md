@@ -1,0 +1,212 @@
+# Defect / Suspect Inventory — 2026-05-24
+
+Snapshot of all `@audit:KIND(SLUG)` tags under `Common2026/` as of commit `8e3645f`.
+SoT = code 内 inline タグ (CLAUDE.md「検証の誠実性」/ `docs/audit/audit-tags.md` 準拠)。
+本ファイルは並列 wave を組む前の地図づくり用 snapshot であり、SoT を上書きしない (タグ自体を編集する作業は別 commit)。
+
+## Summary
+
+| KIND | 件数 | unique SLUG |
+|---|---|---|
+| `defect` | 5 | 2 (`circular`, `false-statement`) |
+| `staged` | 15 | 7 predicate slug (重複含む) |
+| `suspect` | 382 | 42 plan slug (うち 3 件は plan ファイル不在) |
+| **合計** | **402** | — |
+
+- 直近 actionable (defect + staged): **20 タグ / 9 unique predicate locus** — closure 可否判定対象。
+- long-term residual (suspect): **382 タグ / 42 plan SoT に分散** — plan 側で管理。本 inventory では plan 別件数のみ。
+- orphan suspect (plan ファイル不在): **3 slug** — plan を作るか、別 plan に振り直すか要判定。
+
+## §1. Defect (5 件)
+
+すべて circular か false-statement。3 ファイルに集中。
+
+| # | file:line | KIND | 補助タグ | 当該宣言 | consumer (files / refs) | 解消ルート |
+|---|---|---|---|---|---|---|
+| 1 | `Common2026/Shannon/BrunnMinkowski.lean:133` | `defect(circular)` | `defer(brunn-minkowski-from-epi-discharge)` + `staged(epi-n-dim)` | `def IsBrunnMinkowskiEntropyHypothesis` (line 134) | 4 files / 20 refs | **Mathlib-gap** (EPI n-dim 経由、`docs/shannon/brunn-minkowski-from-epi-discharge-plan.md`) — long-term staged |
+| 2 | `Common2026/Shannon/BrunnMinkowski.lean:191` | `defect(circular)` | `defer(brunn-minkowski-from-epi-discharge)` | `theorem brunn_minkowski_entropy_inequality` (line 192) | 同上 predicate を hyp 取り | **Mathlib-gap** (#1 と同 plan、predicate 経由で間接) |
+| 3 | `Common2026/Shannon/AWGNAchievability.lean:46` | `defect(circular)` | `defer(awgn-achievability-typicality)` + `staged(n-dim-gaussian-aep)` | `def IsAwgnTypicalityHypothesis` (line 47) | 9 files / 28 refs | **Mathlib-gap** (n-dim Gaussian AEP / continuous SMB、`docs/shannon/awgn-moonshot-plan.md` Phase B-0) |
+| 4 | `Common2026/Shannon/AWGNAchievability.lean:85` | `defect(circular)` | `defer(awgn-achievability-typicality)` | `theorem awgn_achievability` (line 86) | 上記 predicate consumer | **Mathlib-gap** (#3 と同 root) |
+| 5 | `Common2026/Shannon/AWGNAchievabilityDischarge.lean:730` | `defect(false-statement)` | `audit-history: prior staged(awgn-power-constraint-realizable)` | `def IsAwgnPowerConstraintRealizable` (line 731) | 1 file / 2 refs (history only) | **honesty-record (温存)** — AWGN pivot plan 判断ログ #7 (`docs/shannon/awgn-power-constraint-realizable-pivot-plan.md:230`) で「**削除せず orphan 化 / tag・body 完全不変で残置 (honesty record)**」と明示決定済。alias 化を試みたが honest predicate に degenerate instance を作ると依然 unsatisfiable で audit-tags rule に抵触するため放棄、現状の温存が正解。 |
+
+**観察**: defect 5 件中 4 件 (#1–#4) は Mathlib 壁経由の long-term。**#5 は意図的温存** (honesty record、削除不可)。本 inventory 初版で「rewrite-only 削除可」と誤分類していたが、pivot plan judgment を確認の上 2026-05-24 訂正。
+
+## §2. Staged predicate (7 unique / 15 タグ)
+
+| predicate slug | def 位置 | hyp 引き受け箇所 | consumer (files / refs) | Mathlib 壁 種別 | plan SoT |
+|---|---|---|---|---|---|
+| `epi-n-dim` | `BrunnMinkowski.lean:134` (`IsBrunnMinkowskiEntropyHypothesis`) | 同上 def + line 192 + line 215 + 三項 line 299–300 | 4 files / 20 refs | (b) 解析 (EPI n-dim) | `docs/shannon/brunn-minkowski-from-epi-discharge-plan.md` |
+| `n-dim-gaussian-aep` | `AWGNAchievability.lean:47` (`IsAwgnTypicalityHypothesis`) | 同上 def + 9 file consumer | 9 files / 28 refs | (b) 解析 (continuous SMB / n-dim AEP) | `docs/shannon/awgn-moonshot-plan.md` Phase B-0 |
+| `continuous-aep-gaussian` | `AWGNAchievabilityDischarge.lean:140` (`IsContinuousAEPGaussian`) | `awgn_avg_error_union_bound` (line 585) | 1 file / 8 refs | (b) 解析 (continuous SMB Gaussian 化) | `docs/shannon/awgn-moonshot-plan.md` Phase B-0 |
+| `awgn-random-coding-bound` | `AWGNAchievabilityDischarge.lean:543` (`IsAwgnRandomCodingBound`) | `awgn_avg_error_union_bound` (line 586) | 1 file / 6 refs | (b) 解析 (Gaussian random coding 解析) | `docs/shannon/awgn-moonshot-plan.md` (Phase C-3) |
+| `awgn-power-constraint-honest` | `AWGNAchievabilityDischarge.lean:784` (`IsAwgnPowerConstraintHonest`) | line 868 (bundle 内) + 949, 1147 (consumer body) | 1 file / 7 refs | (b) 解析 (LLN 集中) — bundle 経由 | `docs/shannon/awgn-power-constraint-realizable-pivot-plan.md` (pivot 完了済) |
+| `awgn-random-coding-feasible` | `AWGNAchievabilityDischarge.lean:861` (`IsAwgnRandomCodingFeasible`) | line 964 (`isAwgnTypicalityHypothesis` discharger), line 1590, 1621 (`awgn_achievability_F1_via_staged_hyps`) | 1 file / 10 refs | (b) 解析 (3 staged hyp の bundle) | `docs/shannon/awgn-moonshot-plan.md` Phase D (bundle 縮約) |
+| `awgn-power-constraint-realizable` | `AWGNAchievabilityDischarge.lean:731` (= defect #5) | history mention only | 0 active (history のみ) | — | **削除候補** (§1 #5 と同) |
+
+**観察**:
+- AWGNAchievabilityDischarge.lean に **6 / 7 unique** が集中。**1 file = 1 wave** で並列化困難 (同 file 内は直列、merge conflict 必至)。
+- すべて Mathlib 壁分類 (b) 解析。**closure ルートは「Mathlib 進化を待つ」「自分で書く」の 2 択**。short-term closure 対象は §1 #5 (rewrite-only) のみ。
+
+## §3. Suspect — plan 別集計 (42 SLUG, 382 タグ)
+
+降順。「✗」は plan ファイル不在 (= orphan suspect、要対応)。
+
+| 件数 | plan SLUG | plan ファイル |
+|---|---|---|
+| 76 | `epi-moonshot-plan` | `docs/shannon/epi-moonshot-plan.md` |
+| 33 | `relay-inner-bound-moonshot-plan` | `docs/shannon/relay-inner-bound-moonshot-plan.md` |
+| 30 | `brunn-minkowski-closure-plan` | `docs/shannon/brunn-minkowski-closure-plan.md` |
+| 19 | `huffman-t1apprime-partial-moonshot-plan` | `docs/shannon/huffman-t1apprime-partial-moonshot-plan.md` |
+| 17 | `mac-moonshot-plan` | `docs/shannon/mac-moonshot-plan.md` |
+| 17 | `hoeffding-tradeoff-moonshot-plan` | `docs/shannon/hoeffding-tradeoff-moonshot-plan.md` |
+| 16 | `lz78-moonshot-plan` | `docs/shannon/lz78-moonshot-plan.md` |
+| 15 | `chernoff-converse-sanov-discharge-plan` | `docs/shannon/chernoff-converse-sanov-discharge-plan.md` |
+| 13 | `wyner-ziv-discharge-moonshot-plan` | `docs/shannon/wyner-ziv-discharge-moonshot-plan.md` |
+| 11 | `parallel-gaussian-moonshot-plan` | `docs/shannon/parallel-gaussian-moonshot-plan.md` |
+| 11 | `broadcast-channel-moonshot-plan` | `docs/shannon/broadcast-channel-moonshot-plan.md` |
+| 11 | `awgn-moonshot-plan` | `docs/shannon/awgn-moonshot-plan.md` |
+| 9 | `huffman-moonshot-plan` | `docs/shannon/huffman-moonshot-plan.md` |
+| 9 | `awgn-mi-decomp-plan` | `docs/shannon/awgn-mi-decomp-plan.md` |
+| 8 | `lz78-ziv-inequality-discharge-moonshot-plan` | `docs/shannon/lz78-ziv-inequality-discharge-moonshot-plan.md` |
+| 8 | `cramer-moonshot-plan` | `docs/shannon/cramer-moonshot-plan.md` |
+| 6 | `wyner-ziv-moonshot-plan` | `docs/shannon/wyner-ziv-moonshot-plan.md` |
+| 6 | `differential-entropy-plan` | `docs/shannon/differential-entropy-plan.md` |
+| 5 | `wyner-ziv-convexity-discharge-moonshot-plan` | `docs/shannon/wyner-ziv-convexity-discharge-moonshot-plan.md` |
+| 5 | `lz78-residual-discharge-plan` | `docs/shannon/lz78-residual-discharge-plan.md` |
+| 5 | `fisher-info-moonshot-plan` | `docs/shannon/fisher-info-moonshot-plan.md` |
+| 4 | `shannon-moonshot-plan` | `docs/shannon/shannon-moonshot-plan.md` |
+| 4 | `cramer-lc2-discharge-moonshot-plan` | `docs/shannon/cramer-lc2-discharge-moonshot-plan.md` |
+| 4 | `chernoff-converse-moonshot-plan` | `docs/shannon/chernoff-converse-moonshot-plan.md` |
+| 4 | `awgn-f1-discharge-moonshot-plan` | `docs/shannon/awgn-f1-discharge-moonshot-plan.md` |
+| 3 | `relay-cutset-moonshot-plan` | `docs/shannon/relay-cutset-moonshot-plan.md` |
+| 3 | `dmc-feedback-capacity-plan` | `docs/shannon/dmc-feedback-capacity-plan.md` |
+| 3 | `channel-coding-shannon-theorem-full-plan` | `docs/shannon/channel-coding-shannon-theorem-full-plan.md` |
+| 3 | `brunn-minkowski-moonshot-plan` | `docs/shannon/brunn-minkowski-moonshot-plan.md` |
+| 2 | `whittaker-shannon-partial-moonshot-plan` | `docs/shannon/whittaker-shannon-partial-moonshot-plan.md` |
+| 2 | `huffman-optimality-moonshot-plan` | `docs/shannon/huffman-optimality-moonshot-plan.md` |
+| 2 | `hoeffding-tradeoff-sandwich-plan` | `docs/shannon/hoeffding-tradeoff-sandwich-plan.md` |
+| 1 | `separation-theorem-moonshot-plan` | `docs/shannon/separation-theorem-moonshot-plan.md` |
+| 1 | `mac-l1-discharge-moonshot-plan` | `docs/shannon/mac-l1-discharge-moonshot-plan.md` |
+| 1 | `infinitepi-tilted-rn-discharge-moonshot-plan` | `docs/shannon/infinitepi-tilted-rn-discharge-moonshot-plan.md` |
+| 1 | `fisher-info-gaussian-discharge-moonshot-plan` | `docs/shannon/fisher-info-gaussian-discharge-moonshot-plan.md` |
+| 1 | `epi-convolution-density-plan` | `docs/shannon/epi-convolution-density-plan.md` |
+| 1 | `cramer-chernoff-clt-closure-moonshot-plan` | `docs/shannon/cramer-chernoff-clt-closure-moonshot-plan.md` |
+| 1 | `chernoff-moonshot-plan` | `docs/shannon/chernoff-moonshot-plan.md` |
+| 1 | `birkhoff-ergodic-plan` | ✗ **PLAN MISSING** |
+| 1 | `awgn-mi-bridge-plan` | ✗ **PLAN MISSING** |
+| 1 | `awgn-converse-aux-plan` | ✗ **PLAN MISSING** |
+| 1 | `prekopa-leindler-induction-plan` | ✗ **PLAN MISSING** |
+
+### Orphan suspect (3 件 — plan ファイル不在)
+
+| SLUG | 検出箇所 | 対応案 |
+|---|---|---|
+| `awgn-converse-aux-plan` | `Common2026/Shannon/AWGNConverse.lean:91` | 新規 plan stub (docstring で「Tier 3 未着手」と明示済、slug は確保意図) |
+| `awgn-mi-bridge-plan` | `Common2026/Shannon/AWGN.lean:122` | 新規 plan stub (docstring に「`awgn-mi-bridge-plan.md`」と直接言及済) |
+| `prekopa-leindler-induction-plan` | `Common2026/Shannon/BrunnMinkowskiFunctional.lean:209` | 新規 plan stub (docstring に「`prekopa-leindler-induction-plan.md` (未着手) で `n` 帰納 + 1-dim Hölder 経路」と明示済) |
+
+**観察**: orphan 3 件すべてが docstring 内で「将来 plan を書く予定で slug を確保」と明示している。**stub 作成が正規対応** (slug 振り直しは著者意図に反する)。各 stub は 30 行前後の minimal scaffold (motivation + scope + TODO) で、後の `lean-planner` agent が本体起草する SoT を確保。並列 wave の cleanup ジョブとして 1 セッション内で吸収可。
+
+**注記**: 本 inventory 初版で 4 件と書いたが、`birkhoff-ergodic-plan` は既存 (`docs/shannon/birkhoff-ergodic-plan.md`、5/20 作成、198 行)。誤読を 2026-05-24 訂正。
+
+## §4. ファイル別 hotspot (top 20)
+
+並列実装の干渉エリア。同 file 内変更は直列必須。
+
+| tag数 | file |
+|---|---|
+| 20 | `Common2026/Shannon/AWGNAchievabilityDischarge.lean` |
+| 15 | `Common2026/Shannon/RelayInnerBodyDischarge.lean` |
+| 15 | `Common2026/Shannon/HuffmanT1APPrimeBody.lean` |
+| 15 | `Common2026/Shannon/EPIStamDischarge.lean` |
+| 14 | `Common2026/Shannon/EPIStamToBridge.lean` |
+| 14 | `Common2026/Shannon/EPIL3Integration.lean` |
+| 11 | `Common2026/Shannon/BrunnMinkowskiFunctional.lean` |
+| 11 | `Common2026/Shannon/BrunnMinkowskiConcavity.lean` |
+| 9 | `Common2026/Shannon/RelayInnerBound.lean` |
+| 9 | `Common2026/Shannon/EPIStamStep3Body.lean` |
+| 8 | `Common2026/Shannon/MultipleAccessChannel.lean` |
+| 7 | `Common2026/Shannon/ChernoffPerTiltSanov.lean` |
+| 6 | `Common2026/Shannon/WynerZivConverseChain.lean` |
+| 6 | `Common2026/Shannon/HoeffdingInteriorGradientBody.lean` |
+| 6 | `Common2026/Shannon/EPIStamDeBruijnConclusion.lean` |
+| 6 | `Common2026/Shannon/BroadcastChannel.lean` |
+| 5 | `Common2026/Shannon/RelayCFBinningBody.lean` |
+| 5 | `Common2026/Shannon/ParallelGaussianPerCoord.lean` |
+| 5 | `Common2026/Shannon/LZ78ZivCombinatorics.lean` |
+| 5 | `Common2026/Shannon/LZ78FinalGlue.lean` |
+
+**観察**: AWGN / EPI / BrunnMinkowski / Huffman / Relay の 5 大エリアで全 audit tag の **約 70%** を占める。並列 wave はこの 5 エリア単位で切るのが自然。
+
+## §5. 解消ルート分類 (3 軸)
+
+| ルート | 件数 (推定) | 該当 |
+|---|---|---|
+| **rewrite-only** (orphan slug への plan stub 作成) | 3 | orphan suspect 3 件への plan stub (本 session Wave 0 で実施済、§7 参照) |
+| **pivot** (AWGN 型 = predicate 書換 + consumer signature swap + body P→P' threading) | 0 候補 (新規) | 既知の AWGN pivot は完了済。**現時点で同型 pivot 候補なし** (defect はすべて Mathlib-gap)。新規 false-statement defect が再度生えたら再評価 |
+| **honesty-record (温存)** | 1 | §1 #5 (`IsAwgnPowerConstraintRealizable` 残骸 — 削除不可) |
+| **Mathlib-gap** (long-term residual, plan 経由) | ~390 | §1 #1–#4 (4 件); §2 staged 6 unique (6 タグ); §3 suspect 382 件すべて |
+
+**観察**: **short-term actionable は rewrite-only 3 件のみ** (本 session で完了)。残りは Mathlib 進化 / 自前 Mathlib 化を待つ long-term saga。並列化の leverage は (a) ~~rewrite-only cleanup~~ (完了) + (b) Mathlib-gap plan 群の advancement N wave に集約される。
+
+## §6. 並列 wave 計画 draft (最大 5 並列)
+
+ユーザー指定: 並列上限 5。3 wave 構成案。
+
+### Wave 0 (single, 短時間) — rewrite-only cleanup ✅ 完了 (2026-05-24)
+
+- **当初対象**: §5 rewrite-only 8 件 → **実際は 3 件** (再判定で削減)
+- **完了内容**:
+  - §1 #5 `IsAwgnPowerConstraintRealizable` 残骸 def 削除 → **非該当**。pivot plan 判断ログ #7 で「honesty record として削除せず温存」と明示決定済、§1 #5 / §5 を訂正。
+  - orphan suspect plan stub 作成 → **3 件**完了 (本 session):
+    - `docs/shannon/awgn-converse-aux-plan.md` (新規 stub)
+    - `docs/shannon/awgn-mi-bridge-plan.md` (新規 stub)
+    - `docs/shannon/prekopa-leindler-induction-plan.md` (新規 stub)
+    - (`birkhoff-ergodic-plan` は inventory 集計時の誤読、既存 198 行 plan あり)
+  - `docs/audit/audit-tags.md` 整合確認 → **差分なし**、cleanup 不要。
+- **担当**: orchestrator (= 私) 直、worktree 不要、1 commit。
+
+### Wave 1 (parallel ×5) — plan 側 SoT 整合 + 進捗確認 inventory
+
+5 大エリア × `mathlib-inventory` agent で並列実行。各 agent の責務:
+
+- 担当エリアの全 suspect (file:line) を実コードで grep
+- 対応 plan ファイル (`docs/<family>/<slug>.md`) の「残タスク」「未着手 phase」と suspect tag が一致しているか照合
+- 不整合 (plan に書かれてないが suspect が残ってる / 逆) を `docs/audit/wave1-plan-sync-<area>.md` に書き出す
+
+分担:
+
+| Agent | エリア | 対象 plan slug | 推定 suspect 数 |
+|---|---|---|---|
+| W1-A | **AWGN 系** | `awgn-moonshot`, `awgn-mi-decomp`, `awgn-f1-discharge`, `awgn-converse-aux`, `awgn-mi-bridge` (orphan) | ~26 |
+| W1-B | **EPI / BrunnMinkowski / differential-entropy 系** | `epi-moonshot`, `brunn-minkowski-closure`, `brunn-minkowski-moonshot`, `differential-entropy`, `epi-convolution-density`, `fisher-info`, `fisher-info-gaussian-discharge`, `prekopa-leindler` (orphan) | ~123 |
+| W1-C | **Channel coding 系 (Relay/MAC/Broadcast/DMC)** | `relay-inner-bound`, `relay-cutset`, `mac`, `mac-l1-discharge`, `broadcast-channel`, `dmc-feedback-capacity`, `channel-coding-shannon-theorem-full` | ~68 |
+| W1-D | **Source coding 系 (LZ78/Huffman)** | `lz78`, `lz78-ziv-inequality-discharge`, `lz78-residual-discharge`, `huffman`, `huffman-optimality`, `huffman-t1apprime-partial` | ~59 |
+| W1-E | **Tail/concentration 系 (Chernoff/Hoeffding/Cramer/WynerZiv/Parallel Gaussian/Shannon/その他)** | `chernoff-converse-sanov-discharge`, `chernoff-converse`, `chernoff`, `cramer`, `cramer-lc2-discharge`, `cramer-chernoff-clt-closure`, `hoeffding-tradeoff`, `hoeffding-tradeoff-sandwich`, `wyner-ziv`, `wyner-ziv-discharge`, `wyner-ziv-convexity-discharge`, `parallel-gaussian`, `shannon`, `whittaker-shannon-partial`, `separation-theorem`, `infinitepi-tilted-rn-discharge`, `birkhoff-ergodic` (orphan) | ~105 |
+
+**期待成果物**: 5 ファイルの `docs/audit/wave1-plan-sync-<area>.md`。後続 wave で「どの plan の suspect が close 可能か」を判定する地図。
+
+### Wave 2 (planning, 直列または ≤2 並列) — Mathlib-gap closure plan の優先度付け
+
+Wave 1 の sync 結果を読み、最大 leverage の plan を 2-3 件選定:
+
+- candidate 1: `epi-moonshot-plan` (76 件 — 最大) → 進めると BrunnMinkowski 側 30 件も連鎖クローズ可
+- candidate 2: `awgn-moonshot-plan` Phase B-0 (`continuous-aep-gaussian` + `n-dim-gaussian-aep`) → AWGNAchievability 系全 staged が closure
+
+`lean-planner` agent で Phase 設計、その後 Wave 3 (実装並列) に進む。
+
+### Wave 3 以降 (parallel ×5) — Mathlib-gap implementation
+
+Wave 2 で確定した phase を、file 独立性に基づき最大 5 並列で `lean-implementer` 投入。
+Brief には CLAUDE.md「Brief content checklist」必須項目 (sub-bound 引数表 + 継承 audit タグ inline check) を含める。
+
+## §7. 次の一手
+
+Wave 0 ✅ 完了 (本 session、3 stub + inventory 訂正 1 commit)。
+
+ユーザー判断待ち:
+
+1. **Wave 1 を起動するか** (5 並列 `mathlib-inventory`、~30-60 分の wall clock、5 file の plan sync report 産出)
+2. **本 inventory snapshot 自体に追加列・行が必要か** (例: 各 staged predicate の load-bearing 度評価、各 plan の最終更新日、suspect → 主定理 依存深度 など)
+
+推奨: **Wave 1 起動** (plan-side sync で次以降の closure leverage を決める地図ができる)。
