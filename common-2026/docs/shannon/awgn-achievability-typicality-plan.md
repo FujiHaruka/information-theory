@@ -50,13 +50,15 @@
 
 ## 進捗
 
+**完走 (2026-05-24)**: 1485 行、0 sorry、lake env lean silent、3 honest staged hyps (continuous-aep-gaussian / awgn-random-coding-bound / awgn-power-constraint-realizable)。
+
 - [x] Phase 0 — Mathlib + Common2026 在庫 (codebook 測度 / continuous AEP / 結合密度 / expurgation / decoder measurability) ✅ → [`awgn-achievability-typicality-mathlib-inventory.md`](awgn-achievability-typicality-mathlib-inventory.md) + 5 軸別 file (合計 2968 行)。判断 #1 = T-2 採用、判断 #2 = Option A (2 段 `Measure.pi`)、判断 #3 = Option γ (`klDiv` 形) で確定
-- [ ] Phase A — `gaussianCodebook` 測度 + IndepFun + marginal lemma 📋
-- [ ] Phase B — Continuous joint-typical set + AEP 3 bounds (T-2 採用なら hyp 化) 📋
-- [ ] Phase C — Random coding error bound (union bound) 📋
-- [ ] Phase D — Expurgation (avg → exists individual + power constraint bridge) 📋
-- [ ] Phase E — `isAwgnTypicalityHypothesis` 統合 + main wrapper 📋
-- [ ] Phase V — verify (lake env lean clean + honesty 再 audit)
+- [x] Phase A — `gaussianCodebook` 測度 + IndepFun + marginal lemma ✅ (Mathlib 既存 100% / commit `8c1bc4d`)
+- [x] Phase B-0 — `IsContinuousAEPGaussian` predicate (T-2 採用、staged) ✅ (commit `8c1bc4d`、`@audit:staged(continuous-aep-gaussian)`)
+- [x] Phase C — jointTypicalDecoder + `IsAwgnRandomCodingBound` 追加 staging ✅ (commit `83c23ab`、`@audit:staged(awgn-random-coding-bound)`)
+- [x] Phase D — expurgation + `IsAwgnPowerConstraintRealizable` 追加 staging ✅ (commit `ccd503f`、`@audit:staged(awgn-power-constraint-realizable)`)
+- [x] Phase E — `isAwgnTypicalityHypothesis` 統合 (3 staged hyp consume) + wrapper ✅ (commit `e9058ad` + Phase V commit、E-1 body ~580 行 + Kernel.pi 相当 helper ~170 行)
+- [x] Phase V — verify (lake env lean silent / 0 sorry / `Common2026.lean` 編入) ✅
 
 ## ゴール / Approach
 

@@ -314,6 +314,188 @@ theorem jointTypicalDecoder_measurable
   · rw [if_pos h_eq]; exact hNoneAll
   · rw [if_neg h_eq]; exact MeasurableSet.empty
 
+/-! ### Helper plumbing for `hPe_meas` (Phase E-1 residual measurability closure)
+
+Three private helpers used solely to discharge the AE-measurability of
+`c ↦ (Measure.pi (W ∘ c m)) (errorEvent c m)` inside
+`isAwgnTypicalityHypothesis`:
+
+1. `jointTypicalDecoder_joint_measurable` — extends
+   `jointTypicalDecoder_measurable` from "y-only with codebook fixed" to
+   "joint in (codebook, y)". Same Boolean-combination skeleton as the
+   y-only proof, lifted to the product space.
+2. `awgnCodebookKernel` — packages `c ↦ Measure.pi (fun i => awgnChannel
+   N h_meas (c m i))` as a genuine `Kernel (Fin M → Fin n → ℝ) (Fin n → ℝ)`
+   via `Measurable.measure_of_isPiSystem_of_isProbabilityMeasure` on the
+   box π-system; each box evaluates to a finite product of measurable
+   coordinate kernels.
+3. `awgnCodebookKernel_apply_prodMk_measurable` — applies
+   `Kernel.measurable_kernel_prodMk_left` to give measurability of
+   `c ↦ K c (Prod.mk c ⁻¹' T)` for any jointly measurable `T`. -/
+
+/-- Joint measurability in `(codebook, y)` of `jointTypicalDecoder`. The
+proof mirrors `jointTypicalDecoder_measurable` but lifts every step to the
+product measurable space `(Fin M → Fin n → ℝ) × (Fin n → ℝ)`. -/
+private theorem jointTypicalDecoder_joint_measurable
+    {n M : ℕ} [NeZero M]
+    (A : Set ((Fin n → ℝ) × (Fin n → ℝ))) (hA : MeasurableSet A) :
+    Measurable (fun p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) =>
+                  jointTypicalDecoder A p.1 p.2) := by
+  classical
+  refine measurable_to_countable' (fun m => ?_)
+  let m₀ : Fin M := ⟨0, Nat.pos_of_ne_zero (NeZero.ne M)⟩
+  -- Pointwise characterization (identical Boolean shape to y-only version).
+  have hChar : ∀ p : (Fin M → Fin n → ℝ) × (Fin n → ℝ),
+      jointTypicalDecoder A p.1 p.2 = m ↔
+        ((p.1 m, p.2) ∈ A ∧ ∀ j : Fin M, j < m → (p.1 j, p.2) ∉ A)
+        ∨ (m = m₀ ∧ ∀ k : Fin M, (p.1 k, p.2) ∉ A) := by
+    intro p
+    unfold jointTypicalDecoder
+    by_cases h : ∃ k : Fin M, (p.1 k, p.2) ∈ A
+    · haveI : DecidablePred fun k : Fin M => (p.1 k, p.2) ∈ A :=
+        fun _ => Classical.propDecidable _
+      have hsimp :
+          (haveI : Decidable (∃ k : Fin M, (p.1 k, p.2) ∈ A) :=
+              Classical.propDecidable _;
+           haveI : DecidablePred fun m : Fin M => (p.1 m, p.2) ∈ A :=
+              fun _ => Classical.propDecidable _;
+           if h' : ∃ m : Fin M, (p.1 m, p.2) ∈ A then Fin.find _ h' else m₀)
+            = Fin.find _ h := by
+        rw [dif_pos h]; congr 1
+      rw [hsimp]
+      constructor
+      · intro hfind
+        exact Or.inl ((Fin.find_eq_iff (i := m) h).mp hfind)
+      · rintro (⟨hmA, hbelow⟩ | ⟨_, hall⟩)
+        · exact (Fin.find_eq_iff (i := m) h).mpr ⟨hmA, hbelow⟩
+        · exfalso; obtain ⟨k, hk⟩ := h; exact hall k hk
+    · have hsimp :
+          (haveI : Decidable (∃ k : Fin M, (p.1 k, p.2) ∈ A) :=
+              Classical.propDecidable _;
+           haveI : DecidablePred fun m : Fin M => (p.1 m, p.2) ∈ A :=
+              fun _ => Classical.propDecidable _;
+           if h' : ∃ m : Fin M, (p.1 m, p.2) ∈ A then Fin.find _ h' else m₀)
+            = m₀ := by
+        rw [dif_neg h]
+      rw [hsimp]
+      constructor
+      · intro hm
+        exact Or.inr ⟨hm.symm, fun k hk => h ⟨k, hk⟩⟩
+      · rintro (⟨hmA, _⟩ | ⟨hm_eq, _⟩)
+        · exfalso; exact h ⟨m, hmA⟩
+        · exact hm_eq.symm
+  -- Per-codeword measurable sections of `A` in `(c, y)`.
+  have hSec : ∀ k : Fin M,
+      MeasurableSet
+        {p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) | (p.1 k, p.2) ∈ A} := by
+    intro k
+    -- (c, y) ↦ (c k, y) is measurable: each component is a projection.
+    have h_proj : Measurable
+        (fun p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) => p.1 k) :=
+      (measurable_pi_apply k).comp measurable_fst
+    have h_pair :
+        Measurable (fun p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) =>
+                      ((p.1 k, p.2) : (Fin n → ℝ) × (Fin n → ℝ))) :=
+      h_proj.prodMk measurable_snd
+    exact h_pair hA
+  have hNoneBelow : MeasurableSet
+      {p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) |
+          ∀ j : Fin M, j < m → (p.1 j, p.2) ∉ A} := by
+    have hset :
+        {p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) |
+            ∀ j : Fin M, j < m → (p.1 j, p.2) ∉ A}
+          = ⋂ j : Fin M, ⋂ _ : j < m, {p | (p.1 j, p.2) ∉ A} := by
+      ext p; simp
+    rw [hset]
+    exact MeasurableSet.iInter fun j =>
+      MeasurableSet.iInter fun _ => (hSec j).compl
+  have hNoneAll : MeasurableSet
+      {p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) | ∀ k : Fin M, (p.1 k, p.2) ∉ A} := by
+    have hset :
+        {p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) | ∀ k : Fin M, (p.1 k, p.2) ∉ A}
+          = ⋂ k : Fin M, {p | (p.1 k, p.2) ∉ A} := by
+      ext p; simp
+    rw [hset]
+    exact MeasurableSet.iInter (fun k => (hSec k).compl)
+  -- Rewrite fibre and conclude.
+  have hFiber :
+      (fun p : (Fin M → Fin n → ℝ) × (Fin n → ℝ) =>
+          jointTypicalDecoder A p.1 p.2) ⁻¹' {m}
+        = {p | (p.1 m, p.2) ∈ A ∧ ∀ j : Fin M, j < m → (p.1 j, p.2) ∉ A}
+          ∪ (if m = m₀ then {p | ∀ k : Fin M, (p.1 k, p.2) ∉ A} else ∅) := by
+    ext p
+    simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_union,
+      Set.mem_setOf_eq]
+    rw [hChar p]
+    by_cases h_eq : m = m₀
+    · subst h_eq; simp
+    · constructor
+      · rintro (h₁ | ⟨h₂, _⟩)
+        · exact Or.inl h₁
+        · exact absurd h₂ h_eq
+      · intro h
+        rcases h with h₁ | h₂
+        · exact Or.inl h₁
+        · simp [h_eq] at h₂
+  rw [hFiber]
+  refine MeasurableSet.union ((hSec m).inter hNoneBelow) ?_
+  by_cases h_eq : m = m₀
+  · rw [if_pos h_eq]; exact hNoneAll
+  · rw [if_neg h_eq]; exact MeasurableSet.empty
+
+/-- The `Measure (Fin n → ℝ)`-valued map `c ↦ Measure.pi (fun i => awgnChannel
+N h_meas (c m i))` is measurable. Proof via
+`Measurable.measure_of_isPiSystem_of_isProbabilityMeasure` on the standard box
+π-system, where each box reduces to a finite product of measurable coordinate
+applications of `awgnChannel`. -/
+private theorem awgnCodebook_pi_measurable
+    {n M : ℕ} (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) (m : Fin M) :
+    Measurable (fun c : Fin M → Fin n → ℝ =>
+      (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c m i)) :
+        Measure (Fin n → ℝ))) := by
+  -- Each fibre is a probability measure (Markov kernel + pi instance).
+  haveI : IsMarkovKernel (awgnChannel N h_meas) := awgnChannel.instIsMarkovKernel N h_meas
+  haveI : ∀ c : Fin M → Fin n → ℝ,
+      IsProbabilityMeasure
+        (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c m i))) := by
+    intro c; infer_instance
+  refine Measurable.measure_of_isPiSystem_of_isProbabilityMeasure
+    (S := Set.pi Set.univ '' Set.pi Set.univ
+            (fun _ : Fin n => {s : Set ℝ | MeasurableSet s}))
+    (hgen := generateFrom_pi.symm) (hpi := isPiSystem_pi) ?_
+  rintro s ⟨t, ht, rfl⟩
+  -- Box: μ_c (Set.pi univ t) = ∏ i, awgnChannel N h_meas (c m i) (t i).
+  simp_rw [Measure.pi_pi]
+  -- Each factor is measurable in `c`.
+  refine Finset.measurable_prod _ (fun i _ => ?_)
+  -- `c ↦ c m i` is the composition of two pi-projections.
+  have h_proj : Measurable (fun c : Fin M → Fin n → ℝ => c m i) :=
+    (measurable_pi_apply i).comp (measurable_pi_apply m)
+  -- `awgnChannel N h_meas` is a kernel; combine via `Kernel.measurable_coe`.
+  have h_kernel_coe :
+      Measurable (fun x : ℝ => (awgnChannel N h_meas) x (t i)) :=
+    Kernel.measurable_coe _ (ht i (Set.mem_univ _))
+  exact h_kernel_coe.comp h_proj
+
+/-- Bundle `c ↦ Measure.pi (fun i => awgnChannel N h_meas (c m i))` as a
+genuine kernel. Each fibre is a probability measure (so the kernel is Markov,
+hence s-finite), which lets us feed it to
+`Kernel.measurable_kernel_prodMk_left`. -/
+private noncomputable def awgnCodebookKernel
+    {n M : ℕ} (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) (m : Fin M) :
+    Kernel (Fin M → Fin n → ℝ) (Fin n → ℝ) where
+  toFun c := Measure.pi (fun i : Fin n => awgnChannel N h_meas (c m i))
+  measurable' := awgnCodebook_pi_measurable N h_meas m
+
+instance awgnCodebookKernel.instIsMarkovKernel
+    {n M : ℕ} (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) (m : Fin M) :
+    IsMarkovKernel (awgnCodebookKernel (n := n) (M := M) N h_meas m) where
+  isProbabilityMeasure c := by
+    show IsProbabilityMeasure
+      (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c m i)))
+    haveI : IsMarkovKernel (awgnChannel N h_meas) := awgnChannel.instIsMarkovKernel N h_meas
+    infer_instance
+
 /-- **Phase C-3 staged hypothesis**: the random-coding integral bound.
 
 Given the AEP-supplied typical set `A` at parameters `(P, N, ε, n)` and any
@@ -673,17 +855,13 @@ and the 3 already-staged hypotheses.
 * sub-decoder error event ⊆ full-decoder error event at reindex j (順序維持)。
 * D-3 で AwgnCode へ橋渡し、最終誤り確率 `< 5 ε_d2 = ε₁ ≤ ε`。
 
-**HONESTY NOTE — residual measurability gap.** The body contains one
-remaining `sorry` (`hPe_meas`): the AE-measurability of `c ↦ Pe c m` as
-a function of the random codebook. This is a routine but nontrivial
-Mathlib gap requiring (i) `Measure.pi`-of-Markov-kernel-parametrized
-measurability and (ii) joint `(c, y)` measurability of
-`jointTypicalDecoder`. Cover-Thomas 9.2 glosses over both as "Fubini",
-and the staged `IsAwgnRandomCodingBound` predicate implicitly assumes
-this measurability. Closing this gap is genuinely a measurability
-plumbing follow-up (~100 lines), not a load-bearing analytic step.
-
-`@audit:residual(awgn-typicality-E1-pe-measurability)` -/
+**Measurability plumbing (closed in Phase E-1).** The AE-measurability of
+`c ↦ Pe c m` is discharged in-body via three private helpers above:
+`jointTypicalDecoder_joint_measurable` (joint `(c, y)` measurability of
+the decoder), `awgnCodebookKernel` (`c ↦ Measure.pi (fun i => awgnChannel
+N h_meas (c m i))` as a genuine `Kernel`), and Mathlib's
+`Kernel.measurable_kernel_prodMk_left` to close the composition. No
+remaining `sorry`. -/
 theorem isAwgnTypicalityHypothesis
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -861,28 +1039,39 @@ theorem isAwgnTypicalityHypothesis
     exact h_meas_fun measurableSet_Iic
   have hPowComp_meas : MeasurableSet PowSetᶜ := hPowSet_meas.compl
   -- AEMeasurable Pe c m as a function of c (for `lintegral_finsetSum'`).
-  --
-  -- **HONESTY NOTE (residual measurability gap).** This is a routine but
-  -- nontrivial Mathlib gap. The claim is: viewing `Pe c m =
-  -- (Measure.pi (W ∘ c m)) ((jointTypicalDecoder A c)⁻¹ {m} ᶜ)` as a function
-  -- of `c`, it is measurable. The proof requires two infrastructure pieces
-  -- not yet in Mathlib:
-  --   (i) `Measure.pi`-of-Markov-kernel-parametrized-by-c is a measurable
-  --       family of measures (essentially a finite-product `Kernel.pi`
-  --       construction);
-  --   (ii) `jointTypicalDecoder A c y` is jointly measurable in `(c, y)`
-  --       (extends the existing `jointTypicalDecoder_measurable` from
-  --       y-only to both arguments).
-  -- Together these would let us apply `Measurable.lintegral_kernel_prod_right`
-  -- to conclude. Each piece is ~50 lines of measure-theoretic plumbing.
-  --
-  -- Cover-Thomas 9.2 glosses over this as "by Fubini's theorem". The
-  -- well-formedness of `IsAwgnRandomCodingBound` (Phase C-3 staged hyp)
-  -- implicitly assumes this measurability holds.
-  --
-  -- @audit:residual(awgn-typicality-E1-pe-measurability)
+  -- Discharged via the three private helpers `jointTypicalDecoder_joint_measurable`
+  -- + `awgnCodebookKernel` + `Kernel.measurable_kernel_prodMk_left`.
   have hPe_meas : ∀ m, AEMeasurable (fun c => Pe c m)
-      (gaussianCodebook M n P.toNNReal) := by sorry
+      (gaussianCodebook M n P.toNNReal) := by
+    intro m
+    refine Measurable.aemeasurable ?_
+    -- Joint error-event set: {(c, y) | jointTypicalDecoder A c y ≠ m}.
+    set T : Set ((Fin M → Fin n → ℝ) × (Fin n → ℝ)) :=
+      {p | jointTypicalDecoder A p.1 p.2 ≠ m} with hT_def
+    have hT_meas : MeasurableSet T := by
+      -- preimage of the measurable set {m}ᶜ ⊆ Fin M under joint decoder.
+      have h_joint := jointTypicalDecoder_joint_measurable
+        (n := n) (M := M) A hA_meas
+      have h_compl : MeasurableSet ({m}ᶜ : Set (Fin M)) :=
+        (MeasurableSet.singleton m).compl
+      exact h_joint h_compl
+    -- Rewrite Pe via the kernel + prodMk preimage shape required by
+    -- `Kernel.measurable_kernel_prodMk_left`.
+    have hPe_eq : (fun c : Fin M → Fin n → ℝ => Pe c m)
+        = (fun c : Fin M → Fin n → ℝ =>
+            awgnCodebookKernel N h_meas m c (Prod.mk c ⁻¹' T)) := by
+      funext c
+      show Pe c m = awgnCodebookKernel N h_meas m c (Prod.mk c ⁻¹' T)
+      -- LHS: `(Measure.pi (...)) (errorEvent c m)`.
+      -- RHS: same `Measure.pi`, on `{y | (c, y) ∈ T} = {y | decoder c y ≠ m}`.
+      -- Both sides have the same set (errorEvent = preimage of {m}ᶜ under decoder)
+      -- and the same measure (kernel toFun = Measure.pi defn).
+      simp only [hPe_def]
+      -- Same kernel definition; same set up to defeq of errorEvent
+      -- vs `Prod.mk c ⁻¹' T`. Both unfold to `{y | decoder c y ≠ m}`.
+      rfl
+    rw [hPe_eq]
+    exact Kernel.measurable_kernel_prodMk_left hT_meas
   -- Sum integrand AE-measurable.
   have hSum_meas : AEMeasurable (fun c => ∑ m, Pe c m)
       (gaussianCodebook M n P.toNNReal) := by
