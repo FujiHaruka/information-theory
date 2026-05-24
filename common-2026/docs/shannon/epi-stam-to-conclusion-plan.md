@@ -169,16 +169,248 @@ exp(2 h(X+Y)) ≥ exp(2 h(X)) + exp(2 h(Y))
 
 ## 進捗
 
-- [ ] Phase 0 — `EPIPlumbing.lean` 3 件先行 close (high ROI、独立着手可) 📋
-- [ ] Phase A — Stam + de Bruijn 合流 skeleton (sister 待ち) 📋
-- [ ] Phase B — Phase E corollary 各種 genuine 化 📋
+- [ ] Phase 0 — `IsStamToEPIScalingHyp` defect cleanup (prerequisite, sister/A/B 全 block) 📋
+- [ ] Phase 0-Plumbing — `EPIPlumbing.lean` 3 件先行 close (high ROI、独立着手可) 📋
+- [ ] Phase A — Stam + de Bruijn 合流 skeleton (sister 待ち、Phase 0 完了前提) 📋
+- [ ] Phase B — Phase E corollary 各種 genuine 化 (Phase 0 完了前提) 📋
 - [ ] Phase V — verify (`lake env lean ...`) + Common2026.lean 編入 📋
 
 proof-log: yes (各 Phase 完了時に `docs/shannon/proof-log-epi-stam-to-conclusion-phase-*.md`)
 
 ---
 
-## Phase 0 — `EPIPlumbing.lean` 3 件先行 close (high ROI、独立着手可) 📋
+## Phase 0 — `IsStamToEPIScalingHyp` defect cleanup (prerequisite) 📋
+
+> **新規追加 (2026-05-25)**: Wave 3 second batch (`0fe2ad4`) で発見された
+> `IsStamToEPIScalingHyp` の launder 疑いを cleanup する prerequisite Phase。
+> Phase A / B より先に処理する必要 (Phase A の合流定理は本 predicate を `scaling`
+> field として bundle するため、本 phase の signature 確定後でないと Phase A が
+> 着手できない)。Phase 0-Plumbing は本 phase と独立、並列着手可。
+
+### Phase 0.A — Defect analysis
+
+**対象**: `IsStamToEPIScalingHyp` (`Common2026/Shannon/EPIStamToBridge.lean:147-154`)
+
+**現状 body** (audit:suspect(epi-stam-to-conclusion-plan) 付与済、`:138-146`):
+
+```lean
+def IsStamToEPIScalingHyp {Ω : Type*} [MeasurableSpace Ω]
+    (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
+  IsStamInequalityHyp X Y P →
+    ∀ (g0 g1 : ℝ),
+      g0 = entropyPower (P.map (fun ω => X ω + Y ω))
+            - entropyPower (P.map X) - entropyPower (P.map Y) →
+      g1 = 0 →
+      g0 ≥ g1
+```
+
+**Launder 機構** (5-8 行解説):
+
+1. 第 4 引数 `g1 = 0` は equation hypothesis として **固定値 0** が渡される。
+2. 第 3 引数 `g0` は equation hypothesis で gap 式に固定される。
+3. 結論 `g0 ≥ g1` は両 substitution 後に `entropyPower (X+Y) − entropyPower X
+   − entropyPower Y ≥ 0` に reduce。
+4. これは **EPI 結論そのもの** (`IsEntropyPowerInequalityHypothesis` の body と等価)。
+5. `IsStamInequalityHyp X Y P →` のため 厳密には「Stam を仮定したら EPI」だが、
+   それは bridge predicate (`IsStamToEPIBridgeHyp`) と同じ shape — つまり本
+   predicate は **bridge を `(g0, g1)` 経由で wrap した cosmetic alias** に過ぎず、
+   "Csiszár scaling-monotonicity step" を独立に carry していない。
+6. 結果として `isStamToEPIBridgeHyp_of_scaling_limit` (`:196-211`) は `h_scaling`
+   を `(gap, 0) rfl rfl` で 1 度 apply して EPI に到着するが、これは **bridge を
+   bridge から導く循環の cosmetic wrapping**。
+7. 命名 `IsStamToEPIScalingHyp` は Cover-Thomas Lemma 17.7.3 の Csiszár scaling
+   構造 (heat-flow path 上の `g(t)` monotone) の存在を suggest するが、type には
+   その構造が無い (`g1 = 0` 固定で path-endpoint との非自明な接続が消える)。
+
+**Discovery context**: Wave 3 second batch (commit `0fe2ad4`, 2026-05-25)、
+EPI-Stam agent が `@audit:suspect(epi-stam-to-conclusion-plan)` を付与
+(`:138-146` の docstring 内)。
+
+**Consumer 影響範囲** (`Common2026/Shannon/EPIStamToBridge.lean` 内):
+
+| line | 役割 | 性質 |
+|---|---|---|
+| `:147-154` | def 本体 (defect 当該) | refactor 対象 |
+| `:196-211` `isStamToEPIBridgeHyp_of_scaling_limit` | scaling + limit → bridge | signature 連動 |
+| `:222-244` `isStamToEPIScalingHyp_of_gaussian` | Gaussian 退化 discharge | 退化 proof 書き直し |
+| `:278` `IsEPIScalingDecomposedPipeline.scaling` field | pipeline structure field | structure 連動 |
+| `:341-352` `isStamToEPIScalingHyp_symm` | symmetry 補題 | signature 連動 |
+| `:406` `isStamToEPIScalingHyp_*` (匿名で 1 件) | discharge variant | signature 連動 |
+| `:447-465` `entropyPower_add_ge_of_scaling_*` (2 件) | scaling から EPI 抽出 | signature 連動 |
+| `:476-492` `isStamToEPIScalingHyp_cast` (関数引数 cast) | (X', Y') への移送 | signature 連動 |
+| `:504` `isStamToEPIScalingHyp_*` (discharge variant) | discharge variant | signature 連動 |
+| `:553-566` `entropyPower_add_ge_of_pipeline_*` (2 件) | pipeline から EPI 抽出 | signature 連動 |
+| `:650` `IsEPIPipelineBundle` field (anonymous record) | bundle field | bundle 連動 |
+| その他 docstring 言及 (`:31`, `:72`, `:85`, `:165`, `:185`) | doc 5 件 | 説明文更新 |
+
+`Common2026/Shannon/EPIStamDeBruijnConclusion.lean:114` — docstring で
+「`IsStamToEPIScalingHyp` は coarse で gap monotone を smuggle」と既に明記。
+これは defect 発見前から本 file 設計者が気付いていた suggestion (本 Phase で
+genuine 化すれば本 docstring の批判が正当な改善に変わる)。
+
+**合計 consumer**: 関数本体 15+ 件 + docstring 5+ 件 = **20+ 件 ripple**、
+signature 変更は **大規模 ripple**。
+
+### Phase 0.B — Refactor design (両案併記、推奨明示)
+
+**案 1: signature 全面 refactor (Csiszár scaling content 追加) [推奨]**
+
+第 2 引数 `g1` を **path endpoint 値の explicit parameter** に格上げ、または
+heat-flow path `s ∈ [0, 1]` 上の monotonicity を直接 carry する形に書き換える。
+スケッチ (textbook 直訳でなく Mathlib-shape-driven、要 M0 で `Monotone` /
+`MonotoneOn` / `HasDerivAt` の結論形を再確認):
+
+```lean
+-- スケッチ (def の確定は Phase 0.C-2 の M0 在庫調査後)
+def IsStamToEPIScalingHyp {Ω : Type*} [MeasurableSpace Ω]
+    (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
+  ∀ (s : ℝ), 0 ≤ s → s ≤ 1 →
+    let X_s := heatFlowPath s X      -- 新規 def (Phase 0.C-1)
+    let Y_s := heatFlowPath s Y
+    let gap_s := entropyPower (P.map (fun ω => X_s ω + Y_s ω))
+                  - entropyPower (P.map X_s) - entropyPower (P.map Y_s)
+    -- 主張: s ↦ gap_s が non-decreasing (Csiszár scaling)
+    -- もしくは: gap_0 ≥ gap_1 (path endpoint 比較)
+    -- Mathlib `Monotone` / `MonotoneOn` 結論形を採用
+    sorry
+```
+
+- **必要 Mathlib API** (M0 在庫): `Monotone`, `MonotoneOn`, `HasDerivAt`,
+  `MonotoneOn.le_of_le_endpoint` 等
+- **新規定義**: `heatFlowPath : ℝ → (Ω → ℝ) → (Ω → ℝ)` (heat-flow OU semigroup の
+  finite-time evolution、`s ↦ √(1−s) · X + √s · Z` の形で独立 Gaussian Z を mixing)
+- **Csiszár scaling 内容**: `gap'(s) ≥ 0` を Stam (`1/J(X+Y) ≥ 1/J(X) + 1/J(Y)`)
+  + de Bruijn (`d/ds h(X_s) = (1/2) J(X_s)`) から導出 — これが genuine な
+  scaling-monotonicity step
+- **Consumer ripple**: 全 15+ 件で `h_scaling` の使い方が変わる
+  - `isStamToEPIBridgeHyp_of_scaling_limit`: 新 signature では `h_scaling 0 ...`
+    から path-endpoint 経由で EPI を取り出す
+  - Gaussian 退化 `isStamToEPIScalingHyp_of_gaussian`: 退化 monotone (常に `gap ≡ 0`)
+  - `_symm` / `_cast`: 新 signature に従って書き直し
+  - `IsEPIScalingDecomposedPipeline.scaling`: structure 連動更新
+- **規模**: ~300-500 行 (heat-flow path 定義 + monotone 証明 + consumer 全更新 +
+  Phase 0.C で 6 sub-phase 分割)
+- **長所**: defect 真に解消、Phase A 合流定理が genuine な scaling content を
+  受け取れる
+- **短所**: 規模大、M0 在庫調査 + heat-flow path 定義の新規追加が必要
+
+**案 2: signature を bridge 等価 alias と honest 命名する (cosmetic launder の開示)**
+
+`IsStamToEPIScalingHyp` を `IsStamToEPIBridgeAliasViaGapWrap` 等にリネーム、
+docstring に「現状は bridge と equivalent な cosmetic wrap」と honest 明記。
+
+- 機構的修正なし、命名整合 + docstring 補強のみ
+- consumer ripple: 名前変更 only (Edit replace_all 1 発で済む)
+- 規模: ~30 行 (rename + docstring)
+- **長所**: 低リスク、Phase A 着手を block しない
+- **短所**: defect の honest **開示** であって**解消**ではない、Phase A の
+  scaling discharge は依然として bridge 直接証明と等価で、本来の Csiszár scaling
+  argument の構造分解は実現しない
+
+**推奨**: **案 1** (genuine Csiszár scaling 化)。理由:
+
+1. EPI 主定理 `entropy_power_inequality` (`EntropyPowerInequality.lean:188`) の
+   genuine theorem 格上げが本 sub-plan の最終目標であり、`IsStamToEPIScalingHyp`
+   が bridge と等価の launder 状態のままだと **`IsEPIScalingDecomposedPipeline`
+   の structure 分解が cosmetic** にしかならない (`scaling : IsStamToEPIScalingHyp
+   X Y P` field が bridge field と区別不能)。
+2. Phase A の合流定理 (Csiszár scaling argument) は本 predicate を **genuine な
+   monotonicity step** として bundle する設計、案 2 だと Phase A の合流定理自体
+   が cosmetic alias を経由する構造になる。
+3. 案 2 は **暫定 stop-gap** として並走可 (Phase 0 完了前に Phase 0-Plumbing
+   3 件先行 close を進める間、命名 honest 化だけ先に commit する)。
+
+### Phase 0.C — Implementation sub-phases (案 1 採用時)
+
+- [ ] **0.C-1: heat-flow path 定義 (M0 在庫調査 + 新規 def)** 📋
+  - M0: `Mathlib` 内の OU semigroup / heat semigroup / Gaussian convolution
+    既存 API を loogle 調査 (`Mathlib.Probability.ProbabilityMassFunction.Constructions`,
+    `MeasureTheory.Gaussian` 系)
+  - `Common2026/Shannon/HeatFlowPath.lean` 新規 file or 既存
+    `Common2026/Shannon/EPIStamToBridge.lean` 冒頭に追加 (規模次第)
+  - `heatFlowPath s X := √(1-s) · X + √s · Z_X` (Z_X は独立 Gaussian)
+  - 基本性質: `heatFlowPath 0 X = X` (a.e.)、`heatFlowPath 1 X = Z_X` (Gaussian)
+  - 規模: ~80-120 行
+- [ ] **0.C-2: 新 `IsStamToEPIScalingHyp` signature 確定 + 関連 docstring 整備** 📋
+  - Mathlib-shape-driven: `Monotone` / `MonotoneOn` 結論形を 1-3 候補比較
+  - `@audit:suspect(epi-stam-to-conclusion-plan)` → 新 def に伴い再判定
+    (genuine になれば `@audit:ok`、staged ありなら `@audit:staged`)
+  - 規模: ~30-50 行 (def + docstring + 基本性質 lemma 1-2 件)
+- [ ] **0.C-3: Gaussian 退化 `isStamToEPIScalingHyp_of_gaussian` 新 signature 版** 📋
+  - 新 signature では Gaussian case は `gap_s ≡ 0` (退化 monotone)
+  - 既存 `entropy_power_inequality_gaussian_saturation` (`EntropyPowerInequality.lean:226`)
+    を path 各 s で apply
+  - 規模: ~40-60 行 (新規) — 既存 `:222-244` 23 行を置き換え
+- [ ] **0.C-4: 残 14 consumer の sequential update** 📋
+  - 各 consumer (`_symm` / `_cast` / pipeline field / `entropyPower_add_ge_of_*` 等)
+    を新 signature に書き直し
+  - 順序: pure variant (`_symm` / `_cast`) → discharge variant (`_of_*`) →
+    composition (pipeline field / bundle field)
+  - 規模: ~100-150 行 (各 5-15 行 × 14 件)
+- [ ] **0.C-5: `IsEPIScalingDecomposedPipeline` structure update + 全 instance 検証** 📋
+  - structure field 新 signature 連動
+  - 全 instance / construction (`isEPIScalingDecomposedPipeline_of_*` 等) 更新
+  - 規模: ~40-60 行
+- [ ] **0.C-6: 全 file の `lake env lean` silent 検証** 📋
+  - `Common2026/Shannon/EPIStamToBridge.lean` (本体)
+  - `Common2026/Shannon/EPIStamDeBruijnConclusion.lean` (docstring 言及 + 下流)
+  - `Common2026/Shannon/EntropyPowerInequality.lean` (主定理 path、間接)
+  - `Common2026/Shannon/EPIL3Integration.lean` (pipeline bundle 経由)
+  - 必要なら `lake build Common2026.Shannon.EPIStamToBridge` で olean 再生成
+  - `Common2026.lean` import 追加 (HeatFlowPath.lean を新規追加した場合のみ)
+
+### Phase 0.D — Sister plan 影響
+
+- 本 sub-plan の **Phase A / B / V は Phase 0 完了後に restart** (現状 Phase A
+  は sister 待ち state、Phase 0 完了で sister 待ちの shape が確定する)
+- sister sub-plan (`epi-stam-discharge-plan` / `epi-debruijn-integration-plan`)
+  自身は本 Phase 0 と独立 (sister は `IsStamInequalityHyp` / de Bruijn integration
+  hypothesis を扱い、本 defect predicate は touch しない)
+- Phase 0-Plumbing 3 件は本 Phase 0 と独立 (EPIPlumbing は L-EPI3 hypothesis
+  pass-through で `IsStamToEPIScalingHyp` を経由しない)、**並列着手可**
+- `docs/shannon/epi-moonshot-plan.md` の 76 件 closure 計画は変更なし
+  (本 Phase 0 は 1 predicate の signature refactor、closure 数は不変)
+
+### Done 条件
+
+- `IsStamToEPIScalingHyp` の新 signature が genuine な Csiszár scaling 内容を
+  carry (案 1 採用時) — `@audit:suspect(epi-stam-to-conclusion-plan)` → `@audit:ok`
+  に降格 (Phase A 完了で全 chain が genuine になった時点)
+- 20+ consumer 全件 silent `lake env lean`
+- Honest auditor (`subagent_type: "honesty-auditor"`) が新 def を全 OK 判定
+  (新 staged predicate を導入する場合は orchestrator 必須起動)
+- Phase A / B 着手可能な状態 (新 signature 確定 + structure 連動完了)
+
+### 撤退ライン (honest 限定)
+
+- **L-Concl-0Sc-α** (許容、案 1 → 案 2 退避): heat-flow path 定義 / Csiszár
+  scaling discharge が想定外に大規模化 (>800 行) または Mathlib OU semigroup
+  API が不足し新規大量 plumbing が必要と判明した場合、**案 2 (cosmetic alias
+  rename + docstring honest 化)** に退避。docstring で「現状は bridge と
+  equivalent な cosmetic wrap、genuine Csiszár scaling 化は未着手」を明示、
+  `@audit:staged(epi-stam-to-conclusion-plan)` 留め。Phase A は alias 経由で
+  進められるが、Phase B / V の最終 `@audit:ok` 降格は不可、partial publish。
+- **L-Concl-0Sc-β** (許容、heat-flow path Mathlib 壁): Mathlib に OU
+  semigroup / Gaussian convolution の必要 API が皆無で本 sub-plan で plumbing
+  を build するのが本筋を外れる場合、heat-flow path を抽象 hypothesis
+  (`IsHeatFlowPathExistsHyp X Y P : Prop`) として stage、honest 命名 +
+  load-bearing 明示。`@audit:residual(epi-stam-to-conclusion-plan-heatflow)`
+  付与し、Mathlib 上流貢献 task として外出し。
+- **L-Concl-0Sc-γ** (defect 発見時の停止): Phase 0.C-1 の M0 在庫調査中、
+  または consumer update 中に既存コード (sister sub-plan 出力含む) に新たな
+  honesty defect を発見した場合、即座にユーザに defect 報告、本 Phase の進行を
+  停止し orchestrator に honest-auditor 起動を依頼。**defect の上に黙って積み
+  上げない** (CLAUDE.md `検証の誠実性` 規律)。
+
+### proof-log
+
+`docs/shannon/proof-log-epi-stam-to-conclusion-phase-0.md` を Phase 0.C 完了時に
+書き出し (M0 在庫調査結果 + heat-flow path 定義の Mathlib-shape 整合性 +
+consumer update 順序 + 各 consumer の `lake env lean` 出力)。
+
+---
+
+
 
 ### スコープ
 
@@ -233,6 +465,12 @@ output から L-EPI3 を導出すると **`@audit:ok`** に降格。
 ---
 
 ## Phase A — Stam + de Bruijn 合流 skeleton (sister 待ち) 📋
+
+> **Phase 0 完了前提**: 本 Phase の合流定理は `IsStamToEPIScalingHyp` を
+> `IsEPIScalingDecomposedPipeline.scaling` field として bundle するため、Phase 0
+> の signature refactor 完了 (または 0Sc-α 退避での cosmetic alias 確定) が
+> 前提。Phase 0 が L-Concl-0Sc-α に退避した場合、本 Phase A の出力も `@audit:staged`
+> 留めとなる。
 
 ### スコープ
 
@@ -307,6 +545,11 @@ Cover-Thomas Lemma 17.7.3 の Csiszár scaling:
 ---
 
 ## Phase B — Phase E corollary 各種 genuine 化 📋
+
+> **Phase 0 完了前提** (Phase A 経由で): Phase B の `@audit:ok` 降格は Phase A
+> 主定理 genuine 化に依存、Phase A は Phase 0 完了に依存。Phase 0 が
+> L-Concl-0Sc-α 退避の場合、本 Phase の corollary も partial 化 (L-Concl-B-α
+> 経路)。
 
 ### スコープ
 
@@ -387,7 +630,10 @@ Phase E corollary 群は **主定理を hypothesis-free に呼び出して resha
 
 | slug | Phase | 内容 | hypothesis 名 (例) | 解除条件 |
 |---|---|---|---|---|
-| L-Concl-0-α | 0 | EPIPlumbing 3 件に defect 発見時の停止 | (defect report) | orchestrator が honest-auditor 起動 |
+| L-Concl-0Sc-α | 0 | scaling refactor 案 1 → 案 2 退避 (cosmetic alias rename) | (rename only) | Mathlib OU/heat-flow API 整備後 case 1 再着手 |
+| L-Concl-0Sc-β | 0 | heat-flow path Mathlib 壁時の hypothesis 化 | `IsHeatFlowPathExistsHyp X Y P` | Mathlib 上流貢献 task 完了 |
+| L-Concl-0Sc-γ | 0 | M0 / consumer update 中の defect 発見停止 | (defect report) | orchestrator が honest-auditor 起動 |
+| L-Concl-0-α | 0-Plumbing | EPIPlumbing 3 件に defect 発見時の停止 | (defect report) | orchestrator が honest-auditor 起動 |
 | L-Concl-A-α | A | sister 撤退ライン伝播 (smooth density / score Lp) | sister 由来 honest hypothesis | sister の撤退ライン解除 |
 | L-Concl-A-β | A | Gaussian limit `g(∞) = 0` の non-Gaussian 拡張 | `IsEPIGaussianLimitHyp X Y P` | Cover-Thomas Csiszár scaling tail bound 形式化 |
 | L-Concl-B-α | B | A-α 伝播の corollary partial discharge | partial corollary は `@audit:staged` 留め | A-α 解除 |
@@ -420,3 +666,16 @@ Phase E corollary 群は **主定理を hypothesis-free に呼び出して resha
    完了待ち。Phase 0 と Phase B 一部 (EntropyPowerInequality reshape) は独立着手可。
    sister の撤退ライン (L-Stam-D-α / L-DB-D-α/β) は本 plan の Phase A 撤退ライン
    (L-Concl-A-α) として伝播。
+3. **2026-05-25 Phase 0 新規追加 (scaling defect cleanup)**: Wave 3 second batch
+   (commit `0fe2ad4`) で発見された `IsStamToEPIScalingHyp`
+   (`Common2026/Shannon/EPIStamToBridge.lean:147-154`) の launder 疑い defect
+   (`g1 = 0` 固定で predicate が EPI 結論そのものに reduce、"Csiszár scaling-
+   monotonicity step" の構造を carry しない cosmetic wrap) の cleanup を
+   prerequisite Phase 0 として追加。既存 Phase 0 (EPIPlumbing 3 件) は
+   `Phase 0-Plumbing` にリネーム (本文 touch せず)、新 Phase 0 と独立並列着手
+   可。Phase A / B は新 Phase 0 の signature 確定後に restart。推奨案 = **案 1**
+   (genuine Csiszár scaling 化、`s ∈ [0,1]` 上の `Monotone gap_s` で carry、
+   ~300-500 行)、stop-gap 案 = **案 2** (cosmetic alias rename + docstring
+   honest 化、~30 行)。consumer ripple は EPIStamToBridge.lean 内 15+ 件 +
+   `EPIStamDeBruijnConclusion.lean:114` docstring 言及 1 件。撤退ライン
+   L-Concl-0Sc-α/β/γ を新設。
