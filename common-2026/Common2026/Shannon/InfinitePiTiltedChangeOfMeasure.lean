@@ -359,7 +359,7 @@ is replaced by the strictly smaller residual window predicate
 input is the eventual `≥ 1/2` largeness of the tilted-side window mass, which is
 a one-sided LLN/boundary statement (`∫ Y ∂μ₀.tilted ∈ [a, a+ε)`).
 
-`@audit:suspect(infinitepi-tilted-rn-discharge-moonshot-plan)` -/
+`@audit:closed-by-successor(cramer-chernoff-clt-closure-moonshot-plan)` -/
 theorem cramer_lower_phaseC_residual_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)

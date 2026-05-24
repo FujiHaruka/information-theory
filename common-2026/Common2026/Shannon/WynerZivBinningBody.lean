@@ -476,7 +476,7 @@ in separate seeds. The present theorem is the *clean composition* — once
 both hypotheses are available, the bound `Pr[error] ≤ ε_typ + ε_bin` is a
 two-line consequence.
 
-`@audit:suspect(wyner-ziv-discharge-moonshot-plan)` -/
+`@audit:staged(wyner-ziv-load-bearing)` -/
 theorem wzAchievability_random_binning_body
     [Nonempty β] [Nonempty γ]
     (μ : Measure Ω) [IsFiniteMeasure μ]

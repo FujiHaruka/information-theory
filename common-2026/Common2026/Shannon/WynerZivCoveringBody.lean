@@ -408,7 +408,7 @@ hypothesis `h_asymp` of `wyner_ziv_binning_existence_of_covering_packing`. The
 covering side contributes `ε₁ := ε/2` and the packing side `ε₂ ≤ ε/2`, so
 `ε₁ + ε₂ ≤ ε`.
 
-`@audit:suspect(wyner-ziv-discharge-moonshot-plan)` -/
+`@audit:staged(wyner-ziv-load-bearing)` -/
 theorem wzCovering_feed_asymp
     [Nonempty β] [Nonempty γ]
     (μ : Measure Ω) [IsProbabilityMeasure μ]

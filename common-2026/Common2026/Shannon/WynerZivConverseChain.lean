@@ -126,7 +126,7 @@ chain assembly form of `wyner_ziv_converse_n_letter` (whose `h_rate_bound`
 hypothesis can now be discharged by exhibiting `wzPerLetterObjective` and
 proving the three component hypotheses separately).
 
-`@audit:suspect(wyner-ziv-discharge-moonshot-plan)` -/
+`@audit:staged(wyner-ziv-load-bearing)` -/
 theorem wyner_ziv_converse_chain
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {n : ℕ} (hn : 0 < n)
     (M : ℕ)
@@ -159,7 +159,7 @@ theorem wyner_ziv_converse_chain
 distortion `≤ D`, exposing the same `wyner_ziv_converse_n_letter` signature but
 with the monolithic `h_rate_bound` replaced by the three component hypotheses.
 
-`@audit:suspect(wyner-ziv-discharge-moonshot-plan)` -/
+`@audit:staged(wyner-ziv-load-bearing)` -/
 theorem wyner_ziv_converse_chain_block
     [MeasurableSpace γ]
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ)
@@ -449,7 +449,7 @@ assembly. Replaces the bundled `CsiszarSumIdentity` with its three underlying
 ingredients (per-letter ≤ condMI, chain telescope, Fano-side block bound) and
 plugs into `wyner_ziv_converse_chain`.
 
-`@audit:suspect(wyner-ziv-discharge-moonshot-plan)` -/
+`@audit:staged(wyner-ziv-load-bearing)` -/
 theorem wyner_ziv_converse_chain_composite
     (U : Type*) [Fintype U] [MeasurableSpace U]
     (P_XY : α' × β' → ℝ) (d : α' → γ' → ℝ) {n : ℕ} (hn : 0 < n)
@@ -480,7 +480,7 @@ for a block code. Given the three component hypotheses (per-letter feasibility
 `R_WZ(D) ≤ log M / n` is **derived** via `wyner_ziv_converse_chain_block`
 (genuine chain algebra), with no circular conclusion-as-hypothesis.
 
-`@audit:suspect(wyner-ziv-discharge-moonshot-plan)` -/
+`@audit:staged(wyner-ziv-load-bearing)` -/
 theorem wyner_ziv_converse_n_letter_chain
     [MeasurableSpace γ]
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ)
@@ -529,7 +529,7 @@ is **not** assumed — it falls out of the n-letter chain bound.
 length and each feasible code at the operational rate, the chain assembly
 yields `R_WZ(D) ≤ R` (clean-up absorbed).
 
-`@audit:suspect(wyner-ziv-discharge-moonshot-plan)` -/
+`@audit:staged(wyner-ziv-load-bearing)` -/
 theorem wyner_ziv_converse_chain_existence
     [MeasurableSpace γ]
     (μ : Measure (α × β)) [IsProbabilityMeasure μ]
@@ -577,7 +577,7 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 the rate `R` equals `wynerZivRatePmf(D)`. Pure forwarder to
 `wyner_ziv_tendsto`.
 
-`@audit:suspect(wyner-ziv-discharge-moonshot-plan)` -/
+`@audit:staged(wyner-ziv-load-bearing)` -/
 theorem wyner_ziv_tendsto_chain
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
     (h_ach : wynerZivRatePmf U P_XY d D ≤ R)

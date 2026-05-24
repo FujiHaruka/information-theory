@@ -533,7 +533,7 @@ The packing predicate is *not* an input: it is discharged internally from
 existence-pattern consumed downstream by `wyner_ziv_achievability_existence`,
 now with the packing side fully discharged.
 
-`@audit:suspect(wyner-ziv-discharge-moonshot-plan)` -/
+`@audit:staged(wyner-ziv-load-bearing)` -/
 theorem wyner_ziv_packing_existence
     [Nonempty β] [Nonempty γ]
     (μ : Measure Ω) [IsProbabilityMeasure μ]

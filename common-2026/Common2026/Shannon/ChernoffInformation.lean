@@ -122,7 +122,7 @@ This is the formal **Tendsto** version of Cover-Thomas:
 the discharge of `h_converse` is the responsibility of a follow-up plan
 (`chernoff-converse-moonshot-plan.md`).
 
-`@audit:suspect(chernoff-converse-moonshot-plan)` -/
+`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 theorem chernoff_lemma_tendsto
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -194,7 +194,7 @@ error decays at the exponential rate `chernoffInfo P₁ P₂`:
 
 Derived from `chernoff_lemma_tendsto` via `dotEq_iff_tendsto_log_div`.
 
-`@audit:suspect(chernoff-moonshot-plan)` -/
+`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 theorem chernoff_dotEq_tendsto
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)

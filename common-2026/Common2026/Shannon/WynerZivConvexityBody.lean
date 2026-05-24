@@ -441,7 +441,7 @@ The hypothesis `h_obj_convex` is the *minimal* Lemma-15.9-shaped piece
 needed; the rest is the standard "feasibility ⇒ image-level inf bound"
 machinery from `WynerZivDischarge.lean`.
 
-`@audit:suspect(wyner-ziv-convexity-discharge-moonshot-plan)` -/
+`@audit:superseded-by(wynerZivRateFactorizable_convex_in_D_unconditional)` -/
 theorem wynerZivRateFactorizable_convex
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (f : U × β → γ)
     {D₁ D₂ : ℝ}
@@ -537,7 +537,7 @@ condition on `wynerZivRateFactorizable_convex` is discharged via
 the Cover–Thomas Lemma 15.9 convexity-of-objective, plus two feasibility
 witnesses.
 
-`@audit:suspect(wyner-ziv-convexity-discharge-moonshot-plan)` -/
+`@audit:superseded-by(wynerZivRateFactorizable_convex_in_D_unconditional)` -/
 theorem wynerZivRateFactorizable_convex_of_pmf
     [DecidableEq α] [DecidableEq β]
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
@@ -593,7 +593,7 @@ witnesses are supplied by callers (downstream `WynerZivAchievability.lean`
 already publishes the slice-form attainment lemma; the joint-form attainment
 is deferred to a separate plan).
 
-`@audit:suspect(wyner-ziv-convexity-discharge-moonshot-plan)` -/
+`@audit:superseded-by(wynerZivRateFactorizable_convex_in_D_unconditional)` -/
 theorem wynerZivRateFactorizable_convex_in_D
     [DecidableEq α] [DecidableEq β]
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))

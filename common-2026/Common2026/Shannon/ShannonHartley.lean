@@ -136,7 +136,7 @@ normalization)` chosen so that per-sample SNR is `P/(N₀·W)`, T2-A's
 `(1/2) · log(1 + P/(N₀·W))`. The exact normalization between continuous
 `N₀` and discrete `N` is left as the caller's `hN_snr` hypothesis.
 
-`@audit:suspect(shannon-moonshot-plan)` -/
+`@audit:suspect(whittaker-shannon-partial-moonshot-plan)` -/
 theorem perSampleAwgnCapacity_eq_awgn
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P)
     (P_samp : ℝ) (hP_samp : 0 ≤ P_samp)
@@ -206,7 +206,7 @@ caller's already-assumed `2W·perSample` identity into the `log` closed form. A
 self-contained proof remains open pending continuous AEP / Nyquist-Fourier
 support in Mathlib.
 
-`@audit:suspect(shannon-moonshot-plan)`
+`@audit:suspect(whittaker-shannon-partial-moonshot-plan)`
 -/
 theorem shannon_hartley_formula
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P)
@@ -293,7 +293,7 @@ equivalence — the predicate by design no longer claims to. The genuine
 operational identity remains carried by `IsTwoWDegreesOfFreedom` and is
 consumed separately by `shannon_hartley_formula`.
 
-`@audit:suspect(shannon-moonshot-plan)` -/
+`@audit:suspect(whittaker-shannon-partial-moonshot-plan)` -/
 theorem mk_IsBandlimitedSamplingHypothesis
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
     IsBandlimitedSamplingHypothesis W N₀ P :=
@@ -317,7 +317,7 @@ theorem bandlimitedAwgnCapacityBits_eq (W N₀ P : ℝ) :
 
 /-- Shannon-Hartley in bits/sec (Cover-Thomas form `C = W · log₂(1+SNR)`).
 
-`@audit:suspect(shannon-moonshot-plan)` -/
+`@audit:suspect(whittaker-shannon-partial-moonshot-plan)` -/
 theorem shannon_hartley_formula_bits
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P)
     (C : ℝ)
