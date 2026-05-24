@@ -1468,7 +1468,7 @@ theorem isAwgnTypicalityHypothesis
 /-- **`awgn_achievability` F-1 wrapper via 3 staged hyps** — `h_typicality` 引数を
 `isAwgnTypicalityHypothesis` で埋めて再 publish (Phase E-2)。
 
-**Residual hypotheses (NOT a complete discharge — name is mildly misleading)**:
+**Residual hypotheses (NOT a complete discharge)**:
 this wrapper consumes 3 staged hypotheses (`h_aep : IsContinuousAEPGaussian P N`,
 `h_rand : IsAwgnRandomCodingBound P N h_meas`, `h_power : IsAwgnPowerConstraintRealizable P N`)
 and produces the achievability conclusion. It is a **1-for-3 hypothesis swap**
@@ -1476,14 +1476,13 @@ and produces the achievability conclusion. It is a **1-for-3 hypothesis swap**
 "no more residuals". Use this wrapper only when you accept the 3 staged hyps;
 when standard B verification is required, all 3 must be discharged first.
 
-**Independent audit (2026-05-24)**: verdict `name_laundering / suspect` (mild) —
-"_discharged" suffix mildly misleading because 3 staged residuals remain. Body
-itself is honest (chains genuine `isAwgnTypicalityHypothesis` assembly). Rename
-candidate: `awgn_achievability_F1_via_staged_hyps`. Until then, this docstring
-enumerates the 3 residuals to mitigate the laundering.
+**Naming (post-rename 2026-05-24)**: theorem name is `_via_staged_hyps` to make
+the trade explicit. Independent audit flagged prior `_discharged` suffix as mild
+name-laundering; this rename rebrands the wrapper honestly. Body itself is honest
+(chains genuine `isAwgnTypicalityHypothesis` assembly).
 
-`@audit:defect(launder)` `@audit:suspect("")` -/
-theorem awgn_achievability_F1_discharged
+`@audit:suspect("")` -/
+theorem awgn_achievability_F1_via_staged_hyps
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
     (h_aep : IsContinuousAEPGaussian P N)
@@ -1497,7 +1496,7 @@ theorem awgn_achievability_F1_discharged
   awgn_achievability P hP N hN h_meas
     (isAwgnTypicalityHypothesis P hP N hN h_meas h_aep h_rand h_power) hR_pos hR hε
 
-/-- **Main theorem F-1 + F-4 wrapper (F-4 discharged, F-1 via 3 staged hyps)** —
+/-- **Main theorem F-4 discharged, F-1 via 3 staged hyps wrapper** —
 `awgn_channel_coding_theorem` の `h_meas` (F-4 / `isAwgnChannelMeasurable`) を
 **genuinely 埋め**、`h_typicality` (F-1) を `isAwgnTypicalityHypothesis` 経由で
 **3 staged hyp に分解** して再 publish。
@@ -1509,15 +1508,13 @@ theorem awgn_achievability_F1_discharged
 - `h_rand` (`@audit:staged(awgn-random-coding-bound)`、Mathlib 壁 (b))
 - `h_power` (`@audit:staged(awgn-power-constraint-realizable)`、Mathlib 壁 (c) labor)
 
-**Independent audit (2026-05-24)**: verdict `name_laundering / suspect` (mild) —
+**Naming (post-rename 2026-05-24)**: theorem name is `awgn_theorem_F4_discharged_F1_via_staged`.
 F-4 genuinely discharged (`isAwgnChannelMeasurable N` is concrete), but F-1 is
-hyp-mediated via 3 staged. Docstring DOES enumerate residuals (better transparency
-than `awgn_achievability_F1_discharged`), so severity is lower. Rename candidate:
-`awgn_theorem_F4_discharged_F1_via_staged`. Until rename, the explicit "残 hyp"
-enumeration mitigates the laundering.
+hyp-mediated via 3 staged. Independent audit flagged prior `_F1F4_discharged` as
+mild name-laundering; the rename makes F-1's hyp-mediated status explicit.
 
-`@audit:defect(launder)` `@audit:suspect("")` -/
-theorem awgn_theorem_F1F4_discharged
+`@audit:suspect("")` -/
+theorem awgn_theorem_F4_discharged_F1_via_staged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_aep : IsContinuousAEPGaussian P N)
     (h_rand : IsAwgnRandomCodingBound P N (isAwgnChannelMeasurable N))
