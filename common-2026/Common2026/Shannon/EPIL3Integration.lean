@@ -504,39 +504,45 @@ theorem entropy_power_inequality_three_forms_equiv
 
 This section contributes the **family-level de Bruijn lift** (Phase B) and the
 **bounded-T Gaussian FTC application** (Phase C) called for by
-`docs/shannon/epi-debruijn-integration-plan.md`, together with two **honest
-load-bearing predicates** (`IsHeatFlowFamilyHyp`, `IsDeBruijnTailHyp`) that
-externalize the regularity / tail-analysis facts which Mathlib does not provide
-and that the plan does not attempt to discharge here.
+`docs/shannon/epi-debruijn-integration-plan.md`, together with the **honest
+load-bearing predicate** `IsHeatFlowFamilyHyp` that externalizes the
+regularity facts which Mathlib does not provide. A second predicate
+`IsDeBruijnTailHyp` (intended for the `T → ∞` tail-analysis externalization)
+was attempted in the Wave 3 third batch and then **retracted** in the same
+batch by the independent honesty audit
+(`defect(epi-debruijn-tail-vacuous-and-empty)`; see retraction comment in
+the structure-definition area below). Tail-analysis externalization remains
+a pending plan-level task (Phase C-5).
 
 ### Honesty notes (load-bearing) — read before extending this section.
 
 1. The predicate `IsDeBruijnIntegrationHyp X Z P T`
-   (`EPIStamDischarge.lean:177-186`) **quantifies its density witness `fPath`
-   universally**. Because `fisherInfoOfMeasureV2 μ f = fisherInfoOfDensity f`
-   (the `μ` argument is a label only) and `fisherInfoOfDensity (fun _ => 0) = 0`
-   (`FisherInfoV2.lean:100`), the predicate's RHS evaluates to `0` for the
-   `fPath := fun _ _ => 0` instance, so the predicate **forces
-   `h_target = h_X`** in every case. For non-degenerate `(X, T > 0)` this is
-   false (e.g. Gaussian `X` gives `h(N(m, v+T)) ≠ h(N(m, v))`). The predicate
-   as currently stated is therefore **not satisfiable for the non-trivial
-   integration identity** and cannot be discharged honestly without changing
-   its quantifier shape (existential on `fPath`, or `fPath` taken as parameter
-   rather than universal). Since `EPIStamDischarge.lean` is owned by the
-   sister Stam-discharge agent in the same wave, the redefinition is **not
-   performed here**; this section avoids consuming the broken predicate and
-   instead produces *standalone* Gaussian-case statements (cf.
-   `bounded_T_ftc_gaussian` below).
+   (`EPIStamDischarge.lean:198-214`) **was repaired 2026-05-25** (Wave 3 third
+   batch): the former `∀ fPath` quantifier (which collapsed via `fPath := 0`
+   through `fisherInfoOfMeasureV2 μ f = fisherInfoOfDensity f` defeq and
+   `fisherInfoOfDensity 0 = 0` (`FisherInfoV2.lean:100`)) is now
+   `∃ fPath, ∀ h_X h_target, ...`, so the predicate is satisfiable for
+   genuine density witnesses. The audit tag is now
+   `@audit:staged(epi-debruijn-integration)` (load-bearing honest, not a
+   defect). The standalone Gaussian-case statements below
+   (`bounded_T_ftc_gaussian`) still bypass the predicate because the genuine
+   bridge from the bounded-T identity to a `∃ fPath` witness is sister-plan
+   responsibility (`epi-debruijn-integration-plan.md` Phase B/C/D).
 
-2. Similarly, `IsDeBruijnRegularityHyp X Z P` (`EPIStamDischarge.lean:143-158`)
-   carries an `integrable_deriv` field requiring
-   `Integrable (fun t => (1/2)·J(...).toReal) (volume.restrict (Set.Ioi 0))`.
-   For Gaussian `X`, the integrand is `1/(2(v+t))`, whose integral over
-   `(0, ∞)` diverges; the field cannot be discharged for Gaussian `X` either.
-   This section consequently does **not** construct `IsDeBruijnRegularityHyp`
-   even in the Gaussian case; the per-time-point V2 family lift
-   (`isRegularDeBruijnHypV2_family_of_gaussian`) is provided as a standalone
-   honest deliverable instead.
+2. Similarly, `IsDeBruijnRegularityHyp X Z P` (`EPIStamDischarge.lean:152-172`)
+   **was repaired 2026-05-25** (Wave 3 third batch): the former
+   `Integrable (… ) (volume.restrict (Set.Ioi 0))` field (which diverged on
+   Gaussian `1/(2(v+t))`) is now
+   `∀ T : ℝ, 0 < T → IntervalIntegrable (… ) volume 0 T` (bounded-T window),
+   so the field is satisfiable for Gaussian density witnesses. The tail
+   behavior on `(0, ∞)` was intended to be externalized via `IsDeBruijnTailHyp`
+   (§ below), but that predicate was **retracted** in the same batch by
+   independent audit; tail-analysis externalization is now a pending
+   plan-level task (Phase C-5, awaiting `EReal`-lift refactor). This section
+   continues to provide the per-time-point V2 family lift
+   (`isRegularDeBruijnHypV2_family_of_gaussian`) as a standalone deliverable;
+   constructing `IsDeBruijnRegularityHyp` for Gaussian via the repaired
+   signature is sister-plan responsibility.
 
 3. The 14 `@audit:suspect(epi-debruijn-integration-plan)` tags in §1–§11 are
    **not** downgraded by this section. Those tags reflect that the integrated
@@ -586,48 +592,25 @@ structure IsHeatFlowFamilyHyp {Ω : Type*} [MeasurableSpace Ω]
       ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal (fPath t))
       t
 
-/-- **De Bruijn tail-analysis hypothesis** (Phase C-5, honest load-bearing).
-
-`IsDeBruijnTailHyp X Z P` packages, for general `X`, the existence of a limit /
-tail bound needed to extend the bounded-T integration identity to `T → ∞`.
-Specifically it asserts the existence of a value `h_∞` to which the heat-flow
-entropy converges (modulo the Gaussian saturation form) together with an
-integrability witness on `(0, ∞)`.
-
-This is a **load-bearing honest hypothesis** (type ≠ conclusion); Mathlib
-provides no unbounded-interval FTC variant suitable for our use case (`rg
-"intervalIntegral.integral_deriv" → only bounded-interval forms`), so the
-`T → ∞` lift is externalized here.
-
-`@audit:staged(epi-debruijn-tail)` `@audit:defect(degenerate)`
-Honest load-bearing hypothesis, not a discharge.
-
-**Independent audit (2026-05-25)**: the `tail_eq` field is trivially satisfied
-by the degenerate witness `(h_inf := differentialEntropy (P.map X),
-fPath_tail := fun _ _ ↦ 0)`: the LHS is `0`, and the RHS reduces to
-`∫ t in Ioi 0, (1/2) * fisherInfoOfDensityReal 0 ∂volume = 0` because
-`fisherInfoOfDensity 0 = 0` (`FisherInfoV2.lean:100`). This is the same
-`fisherInfoOfDensity 0 = 0` mechanism that drives the upstream
-`IsDeBruijnIntegrationHyp` `∀ fPath` defect (`EPIStamDischarge.lean:177`),
-re-emerging here independently on the existential side. The `h_inf` field is
-therefore **semantically empty**: nothing here forces it to be the genuine
-heat-flow tail limit. Phase D consumers MUST add an external constraint such
-as `Filter.Tendsto (fun T ↦ differentialEntropy (P.map (gaussianConvolution X Z T))) atTop (𝓝 h_inf)`
-(or restructure this predicate with that field) before this hypothesis
-carries useful tail-analysis content. -/
-structure IsDeBruijnTailHyp {Ω : Type*} [MeasurableSpace Ω]
-    (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] : Type where
-  /-- Tail limit of the heat-flow entropy. -/
-  h_inf : ℝ
-  /-- Tail-integrable density witness along the heat-flow path. -/
-  fPath_tail : ℝ → ℝ → ℝ
-  /-- Tail integral identity: the entropy gap to `h_inf` is the tail integral
-  of the V2 Fisher information along the heat-flow path. -/
-  tail_eq :
-    h_inf - Common2026.Shannon.differentialEntropy (P.map X)
-      = ∫ t in Set.Ioi 0, (1/2)
-        * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal (fPath_tail t)
-        ∂volume
+-- (retracted 2026-05-25, Wave 3 third batch independent audit) **De Bruijn
+-- tail-analysis hypothesis** `IsDeBruijnTailHyp X Z P`.
+--
+-- The Wave 3 third batch (`823e150`) attempted to close a `fPath_tail ≡ 0`
+-- vacuous bypass by adding a `tail_limit : Tendsto ... atTop (nhds h_inf)`
+-- field. The independent honesty audit reopened to DEFECT on two grounds:
+--   (1) the structure had no `Z_law : P.map Z = gaussianReal 0 1` field, so
+--       `Z := fun _ ↦ 0` yields `gaussianConvolution X Z T = X` and
+--       `tail_limit` holds trivially with `h_inf := h(P.map X)` by
+--       `tendsto_const_nhds` — the vacuous channel survives;
+--   (2) even after adding `Z_law`, `h_inf : ℝ` cannot hold the genuine
+--       `T → ∞` heat-flow entropy limit which diverges to `+∞` (Gaussian
+--       sub-entropy lower bound `(1/2)log(2πe·T)`), so the predicate is
+--       essentially uninhabited and any consumer is vacuously discharged.
+--
+-- Predicate retracted; consumer count is 0 (Phase D was sister-plan pending).
+-- The honest re-introduction path requires `h_inf : EReal` (or `ℝ≥0∞`) and
+-- a `Z_law` field; tracked under `docs/shannon/epi-debruijn-integration-plan.md`
+-- Phase C-5 with `defect(epi-debruijn-tail-vacuous-and-empty)` rationale.
 
 /-! ### Phase B helpers — `gaussianConvolution` boundary -/
 
@@ -769,8 +752,9 @@ theorem differentialEntropy_gaussianConvolution_of_gaussian
 This is the **honest Gaussian-restricted bounded-T deliverable** of Phase C:
 the de Bruijn integration identity holds for Gaussian `X` on `(0, T)` as a
 direct consequence of Mathlib's bounded FTC and Phase B-4 above. Stated as a
-*standalone* identity (not via `IsDeBruijnIntegrationHyp`, which has the defect
-discussed in §12's honesty notes). -/
+*standalone* identity (not via `IsDeBruijnIntegrationHyp`, which carries the
+honest `∃ fPath` shape post-repair; bridging this standalone equality into a
+predicate witness remains sister-plan responsibility — see §12 honesty note 1). -/
 
 /-- **Heat-flow entropy derivative (Gaussian, on `s > 0` neighbourhood)**.
 
@@ -891,12 +875,17 @@ the bounded interval `(0, T)` equals the path integral of `1/(2(v+t))`:
     = ∫_(0, T) 1/(2(v+t)) dt`,
 
 stated as a direct equality (i.e., bypassing the
-`IsDeBruijnIntegrationHyp X Z P T` predicate which is structurally broken — see
-§12 honesty note 1). The integration uses Mathlib `intervalIntegral` and is
+`IsDeBruijnIntegrationHyp X Z P T` predicate; the predicate now carries the
+honest `∃ fPath` shape post-repair, but bridging from this standalone equality
+into the predicate's existential witness remains sister-plan work — see §12
+honesty note 1). The integration uses Mathlib `intervalIntegral` and is
 converted to `Set.Ioo`-form for downstream consumption.
 
 `@audit:suspect(epi-debruijn-integration-plan)` — honest bounded-T discharge,
-unbounded `T → ∞` lift is externalized via `IsDeBruijnTailHyp`. -/
+unbounded `T → ∞` lift is a pending plan-level task (the previously intended
+`IsDeBruijnTailHyp` externalization was retracted by independent audit; see
+the §12 honesty notes and the retraction comment in the structure-definition
+area). -/
 theorem bounded_T_ftc_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z)

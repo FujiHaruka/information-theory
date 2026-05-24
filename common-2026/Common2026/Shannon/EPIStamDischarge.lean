@@ -8,6 +8,7 @@ import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.Basic
+import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 
 /-!
 # T2-D-S: Entropy Power Inequality — Stam inequality + de Bruijn integration 経路 discharge
@@ -141,30 +142,58 @@ saturation).
 Used as hypothesis pass-through; Mathlib has no machinery for any of these
 ingredients (`rg "deBruijn" → 0 hit`).
 
-`@audit:defect(false-statement)` `@audit:suspect(epi-debruijn-integration-plan)`
-Field `integrable_deriv` is **unsatisfiable even for Gaussian X**: the integrand
-`(1/2)·J(X+√t·Z).toReal = 1/(2(v+t))` over `(0,∞)` diverges, but `Integrable`
-requires `HasFiniteIntegral`. Discovered 2026-05-25 (Wave 3 EPI-DB agent).
-Recommended fix: replace `Integrable ... (volume.restrict (Set.Ioi 0))` with
-`IntervalIntegrable f' volume 0 T` for an arbitrary `T`, or split into
-bounded-T windows. Until fixed, this structure is constructible only via a
-load-bearing escape hatch (no genuine Gaussian instance exists). -/
+`@audit:staged(epi-debruijn-regularity)`
+**Resolved 2026-05-25** (Wave 3 third batch): former
+`Integrable ... (volume.restrict (Set.Ioi 0))` field was unsatisfiable even for
+Gaussian X (the integrand `1/(2(v+t))` over `(0,∞)` diverges, but `Integrable`
+requires `HasFiniteIntegral`). Replaced with bounded-T `IntervalIntegrable`
+window (`∀ T > 0, IntervalIntegrable f' volume 0 T`); for Gaussian
+`density_path t := gaussianPDFReal m (v + ⟨t,_⟩)` the integrand
+`1/(2(v+t))` is continuous and bounded on `[0,T]`, so the field is genuinely
+satisfiable. Tail behavior beyond `T` was originally going to be externalized via a
+separate `IsDeBruijnTailHyp` predicate; that predicate was **retracted** in
+the same Wave 3 third batch by independent audit
+(`defect(epi-debruijn-tail-vacuous-and-empty)`, see `EPIL3Integration.lean`
+retraction comment). Tail-analysis externalization is now a pending plan-level
+task (`docs/shannon/epi-debruijn-integration-plan.md` Phase C-5, awaiting
+`EReal`-lift refactor). Predicate remains load-bearing (carries the
+regularity content) so the audit tag stays at `staged(epi-debruijn-regularity)`
+rather than `ok`.
+
+`@audit:caveat(epi-debruijn-regularity-integrable-deriv-decoupled)`
+**Independent audit 2026-05-25**: the `integrable_deriv` field is *alone*
+trivially dischargeable via `density_path := fun _ _ ↦ 0` (then
+`fisherInfoOfMeasureV2 _ 0 = fisherInfoOfDensity 0 = 0` by `rfl`/`FisherInfoV2.lean:100`,
+and `IntervalIntegrable (fun _ ↦ 0) volume 0 T` holds via
+`intervalIntegrable_const`). The structure stays load-bearing only because
+`reg_at` carries the genuine `HasDerivAt` content (and `reg_at`'s `density_t`
+is *not* tied to `integrable_deriv`'s `density_path` — they are independent
+existentials), but this means `integrable_deriv` contributes zero discharge
+content downstream. The honest refactor is to share a single density witness
+across both fields (e.g., promote `density_path` to a top-level structure
+field, then phrase `reg_at` using the same witness). Recording as a caveat,
+not a defect, because `reg_at` alone keeps the predicate genuine. -/
 structure IsDeBruijnRegularityHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] where
   /-- For each strictly positive `t`, the family is regular in the de Bruijn
   sense (V2 form, RHS keyed on V2 Fisher info; `IsRegularDeBruijnHypV2` carries a
   density witness so this structure is data- rather than `Prop`-valued). -/
   reg_at : ∀ t : ℝ, 0 < t → Common2026.Shannon.FisherInfoV2.IsRegularDeBruijnHypV2 X Z P t
-  /-- The derivative is integrable on `(0, ∞)`, for some smooth density witness
-  `density_path t` along the heat-flow path. Stated using interval integral with
-  the V2 (density-keyed) Fisher info. -/
+  /-- The derivative `(1/2)·J(X+√t·Z).toReal` is interval-integrable on every
+  bounded window `[0, T]` along the heat-flow path, for some smooth density
+  witness `density_path t`. Bounded-T form is genuinely satisfiable for
+  Gaussian X (the integrand `1/(2(v+t))` is continuous and bounded on `[0,T]`);
+  tail behavior beyond `T` is a pending plan-level task (the previously
+  intended `IsDeBruijnTailHyp` externalization was retracted by independent
+  audit; see `EPIL3Integration.lean` retraction comment). -/
   integrable_deriv :
     ∃ density_path : ℝ → ℝ → ℝ,
-      Integrable
-        (fun t : ℝ => (1/2)
-          * (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
-              (P.map (fun ω => X ω + Real.sqrt t * Z ω)) (density_path t)).toReal)
-        (volume.restrict (Set.Ioi 0))
+      ∀ T : ℝ, 0 < T →
+        IntervalIntegrable
+          (fun t : ℝ => (1/2)
+            * (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+                (P.map (fun ω => X ω + Real.sqrt t * Z ω)) (density_path t)).toReal)
+          volume 0 T
 
 /-! ## §4 — de Bruijn integration predicate (Cover-Thomas Lemma 17.7.2 真 signature) -/
 
@@ -184,27 +213,28 @@ identity (T2-F `deBruijn_identity` packaged with the L-DB1 regularity above)
 and the fundamental theorem of calculus along an unbounded interval (`rg
 "intervalIntegral.integral_deriv" → only bounded-interval forms`).
 
-`@audit:defect(false-statement)` `@audit:suspect(epi-debruijn-integration-plan)`
-The `∀ fPath` quantification makes this predicate **structurally unsatisfiable**
-outside the `T=0` boundary case: because `fisherInfoOfMeasureV2 _ f = fisherInfoOfDensity f`
-(the measure argument is a labelling-only device, defeq), instantiating
-`fPath := fun _ _ ↦ 0` collapses the integrand to `0` and so the predicate
-demands `h_target = h_X`, which is false for non-degenerate `(X, T > 0)`.
-The only honest discharge is `isDeBruijnIntegrationHyp_at_zero` (T = 0 trivial
-case where `Set.Ioo 0 0` is empty). Discovered 2026-05-25 (Wave 3 EPI-DB
-agent). Recommended fix: change `fPath` from universal to existential
-(`∃ density_path : ℝ → ℝ → ℝ`, ...) or make it an explicit parameter to the
-predicate. -/
+`@audit:staged(epi-debruijn-integration)`
+**Resolved 2026-05-25** (Wave 3 third batch): former `∀ fPath` quantification
+collapsed via `fPath := fun _ _ ↦ 0` (because
+`fisherInfoOfMeasureV2 _ f = fisherInfoOfDensity f` is defeq, the measure
+argument is a labelling-only device), forcing the integrand to `0` and
+demanding `h_target = h_X` — false for non-degenerate `(X, T > 0)`.
+Refactored to existential `∃ fPath`, selecting the genuine density path
+along the heat-flow trajectory (Gaussian instance:
+`fPath t := gaussianPDFReal m (v + ⟨t,_⟩)`). Predicate remains load-bearing
+(carries the de Bruijn integration identity content) so the audit tag stays
+at `staged(epi-debruijn-integration)` rather than `ok`. -/
 def IsDeBruijnIntegrationHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) (T : ℝ) : Prop :=
-  ∀ (h_X h_target : ℝ) (fPath : ℝ → ℝ → ℝ),
-    h_X = Common2026.Shannon.differentialEntropy (P.map X) →
-    h_target = Common2026.Shannon.differentialEntropy
-                (P.map (fun ω => X ω + Real.sqrt T * Z ω)) →
-    h_target - h_X
-      = ∫ t in Set.Ioo 0 T, (1/2)
-        * (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
-            (P.map (fun ω => X ω + Real.sqrt t * Z ω)) (fPath t)).toReal ∂volume
+  ∃ (fPath : ℝ → ℝ → ℝ),
+    ∀ (h_X h_target : ℝ),
+      h_X = Common2026.Shannon.differentialEntropy (P.map X) →
+      h_target = Common2026.Shannon.differentialEntropy
+                  (P.map (fun ω => X ω + Real.sqrt T * Z ω)) →
+      h_target - h_X
+        = ∫ t in Set.Ioo 0 T, (1/2)
+          * (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+              (P.map (fun ω => X ω + Real.sqrt t * Z ω)) (fPath t)).toReal ∂volume
 
 /-- Trivial degenerate case: when `T ≤ 0` the integration interval `(0, T)` is
 empty, so the identity is `h_target - h_X = 0`. This holds whenever
@@ -217,7 +247,8 @@ theorem isDeBruijnIntegrationHyp_at_zero
         Common2026.Shannon.differentialEntropy
           (P.map (fun ω => X ω + Real.sqrt 0 * Z ω))) :
     IsDeBruijnIntegrationHyp X Z P 0 := by
-  intro h_X h_target fPath hX_def htarget_def
+  refine ⟨fun _ _ => 0, ?_⟩
+  intro h_X h_target hX_def htarget_def
   -- Integral over the empty set `Ioo 0 0` is 0.
   have h_empty : Set.Ioo (0 : ℝ) 0 = ∅ := by
     ext x
