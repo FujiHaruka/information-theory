@@ -132,7 +132,19 @@ This is the canonical Sanov LDP output form for the n-IID Bayes-error sum on
 the tilted ambient `chernoffMediator P₁ P₂ λ`. Establishing it requires the
 n-letter Radon-Nikodym derivative identification for the Chernoff mediating
 pmf `chernoffMediator`, a Mathlib gap (cf. `Common2026/Shannon/CramerLC2-
-PhaseC.lean` for the analogous Cramér gap `IsMeasureInfinitePiTiltedEq`). -/
+PhaseC.lean` for the analogous Cramér gap `IsMeasureInfinitePiTiltedEq`).
+
+**Honesty record**: as stated this predicate is *false* in general — the
+Cramér local-limit prefactor is `Θ(1/√n)` (lattice factor), so
+`bayesErrorMinPmf / Z(λ*)^n → 0` and no constant `C > 0` exists. Verifiable
+on a symmetric 2-point alphabet at `λ* = 1/2`. The Chernoff converse is
+discharged via the **`ε`-relaxed** lower bound `∀ ε>0, ∀ᶠ n, exp(-nε)·Z^n ≤
+2·bayesErrorMinPmf` (see `ChernoffSanovDischarge.lean:30-40` for the full
+analysis and `chernoff_converse_holds` for the genuine `ε`-relaxed
+unconditional headline). This predicate is retained only for backward
+references; new code should not consume it.
+
+`@audit:defect(false-statement)` `@audit:retract-candidate(false-replaced-by-eps-relaxed)` -/
 def IsBayesErrorPerTiltLowerBound
     (P₁ P₂ : α → ℝ) (lam : ℝ) : Prop :=
   ∃ C : ℝ, 0 < C ∧

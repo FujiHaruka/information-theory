@@ -136,7 +136,15 @@ identification on cylinder events; the pass-through conversion `chernoff_per_
 tilt_via_RN` would then become non-trivial.
 
 Cf. `CramerLC2PhaseC.IsMeasureInfinitePiTiltedEq` for the structurally
-identical Cramér gap. -/
+identical Cramér gap.
+
+**Honesty record**: body is identical to `IsBayesErrorPerTiltLowerBound`, so
+this predicate is *false* for the same reason — Cramér local-limit prefactor
+`Θ(1/√n)` rules out a constant `C > 0`. See `ChernoffPerTiltDischarge.lean`
+def for the analysis and `ChernoffSanovDischarge.lean:30-40` for the
+`ε`-relaxed pivot. Retained only for backward references.
+
+`@audit:defect(false-statement)` `@audit:retract-candidate(false-replaced-by-eps-relaxed)` -/
 def IsChernoffNLetterRN (P₁ P₂ : α → ℝ) (lam : ℝ) : Prop :=
   ∃ C : ℝ, 0 < C ∧
     ∀ᶠ n : ℕ in atTop,
@@ -161,7 +169,15 @@ In the current pass-through publish, the conversion is **definitional**
 tilt change-of-measure step (cf. `CramerLC2PhaseC.tilted_lower_from_predicate`
 for the analogous Cramér reduction).
 
-`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
+**Honesty record**: body is `:= h_RN`, with `IsChernoffNLetterRN` and
+`IsBayesErrorPerTiltLowerBound` having identical bodies — this is name
+laundering between two *false* predicates (see their respective docstrings
+for the `Θ(1/√n)` prefactor analysis). The genuine Chernoff converse is
+delivered by `chernoff_converse_holds` / `chernoff_lemma_tendsto_holds` via
+the `ε`-relaxed bound (`ChernoffSanovDischarge.lean` / `ChernoffBandMass-
+Discharge.lean`), which does not consume this lemma.
+
+`@audit:defect(launder)` `@audit:retract-candidate(circular-between-false-predicates)` -/
 lemma chernoff_per_tilt_via_RN
     (P₁ P₂ : α → ℝ) (lam : ℝ)
     (h_RN : IsChernoffNLetterRN P₁ P₂ lam) :

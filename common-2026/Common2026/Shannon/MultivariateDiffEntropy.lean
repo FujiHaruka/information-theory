@@ -86,7 +86,7 @@ theorem integral_log_rnDeriv_self_eq_neg
 hypotheses (absolute continuity + Bayes llr split + integrability) mirror the
 channel手本 `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`.
 
-`@audit:suspect(differential-entropy-plan)` -/
+`@audit:suspect(multivariate-diffentropy-subadditivity-plan)` -/
 theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint
     {μ : Measure (ℝ × ℝ)} [IsProbabilityMeasure μ]
     (h_fst_ac : (μ.map Prod.fst) ≪ volume)
@@ -172,7 +172,7 @@ theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint
 /-- **★ 2-variable differential-entropy subadditivity** `h(X,Y) ≤ h(X) + h(Y)`.
 `KL ≥ 0` (`ENNReal.toReal_nonneg`) + the bridge, closed by `linarith`.
 
-`@audit:suspect(differential-entropy-plan)` -/
+`@audit:suspect(multivariate-diffentropy-subadditivity-plan)` -/
 theorem jointDifferentialEntropy_le_sum
     {μ : Measure (ℝ × ℝ)} [IsProbabilityMeasure μ]
     (h_fst_ac : (μ.map Prod.fst) ≪ volume)
@@ -211,7 +211,7 @@ theorem jointDifferentialEntropy_le_sum
 `(klDiv(joint ‖ ∏ᵢ μᵢ)).toReal = ∑ᵢ h(μᵢ) − h(joint)`, where `μᵢ := μ.map (· i)`.
 The honest llr split absorbs the absent `pi_withDensity` (inventory §D-1a).
 
-`@audit:suspect(differential-entropy-plan)` -/
+`@audit:suspect(multivariate-diffentropy-subadditivity-plan)` -/
 theorem klDiv_pi_marginals_toReal_eq_sum_sub_joint
     {n : ℕ} {μ : Measure (Fin n → ℝ)} [IsProbabilityMeasure μ]
     [∀ i, IsProbabilityMeasure (μ.map (fun z => z i))]
@@ -276,7 +276,7 @@ theorem klDiv_pi_marginals_toReal_eq_sum_sub_joint
 /-- **★ `n`-variable differential-entropy subadditivity** `h(Yⁿ) ≤ ∑ᵢ h(Yᵢ)`
 (the parallel-Gaussian consumer form). `KL ≥ 0` + the bridge, by `linarith`.
 
-`@audit:suspect(differential-entropy-plan)` -/
+`@audit:suspect(multivariate-diffentropy-subadditivity-plan)` -/
 theorem jointDifferentialEntropyPi_le_sum
     {n : ℕ} {μ : Measure (Fin n → ℝ)} [IsProbabilityMeasure μ]
     [∀ i, IsProbabilityMeasure (μ.map (fun z => z i))]
