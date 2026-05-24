@@ -33,9 +33,15 @@
 //             (e.g. adding 'def' to kinds) that shifts body span without
 //             altering audited content. --status filters which subset.
 //   scan    [paths...] [--exclude p1,p2] [--format table|list|json]
+//           [--check-db [--check-kinds defect,suspect] [--db F]]
 //             grep `@audit:KIND(SLUG)` tags from .lean docstrings (code-SoT;
 //             see docs/audit/audit-tags.md). Independent of the SQLite DB —
 //             tags are the live count, DB is the audit-lease cache.
+//             With --check-db, cross-check code tags against DB verdicts;
+//             reports MISSING_DB (code tag, DB lags), MISSING_TAG (DB says
+//             KIND but no code tag), ORPHAN_TAG (tag maps to no declaration).
+//             --check-kinds limits which kinds are checked (default: defect;
+//             suspect/ok would generate hundreds of warnings until tagged).
 //
 // Default DB: docs/audit/honesty.db
 
@@ -414,14 +420,19 @@ async function cmdScan(a: Args) {
   }
 
   const format = str(a, "format", "table");
+  const wantCheck = flag(a, "check-db");
+
   if (format === "json") {
-    console.log(JSON.stringify({ hits, byKind, total: hits.length }, null, 2));
+    const out: Record<string, unknown> = { hits, byKind, total: hits.length };
+    if (wantCheck) out.check = computeCheckDb(a, hits);
+    console.log(JSON.stringify(out, null, 2));
     return;
   }
   if (format === "list") {
     for (const h of hits) {
       console.log(`${h.file}:${h.line}  @audit:${h.kind}${h.slug ? `(${h.slug})` : ""}`);
     }
+    if (wantCheck) { console.log(""); printCheckDb(computeCheckDb(a, hits), a); }
     return;
   }
   // table (default)
@@ -435,6 +446,121 @@ async function cmdScan(a: Args) {
     }
   }
   console.log(`---\ntotal tags: ${hits.length}`);
+
+  if (wantCheck) { console.log(""); printCheckDb(computeCheckDb(a, hits), a); }
+}
+
+type CheckIssue =
+  | { type: "MISSING_DB"; kind: string; file: string; line: number; declFqn: string; declLine: number; declStatus: string }
+  | { type: "MISSING_TAG"; kind: string; file: string; line: number; declFqn: string }
+  | { type: "ORPHAN_TAG"; kind: string; slug: string; file: string; line: number };
+
+type CheckResult = {
+  issues: CheckIssue[];
+  counts: { MISSING_DB: number; MISSING_TAG: number; ORPHAN_TAG: number };
+  checkedKinds: string[];
+};
+
+function computeCheckDb(a: Args, hits: ScanHit[]): CheckResult {
+  const checkKinds = new Set(
+    str(a, "check-kinds", "defect").split(",").map((s) => s.trim()).filter(Boolean),
+  );
+  // Only kinds with a 1:1 DB-status counterpart can be cross-checked.
+  // 'defer', 'staged', 'retract-candidate' are intent tags, not status values.
+  for (const k of checkKinds) {
+    if (!STATUSES.has(k)) {
+      console.error(`check-db: --check-kinds includes '${k}' which has no DB status counterpart (valid: ${[...STATUSES].join("|")})`);
+    }
+  }
+
+  const db = openDb(str(a, "db", DEFAULT_DB));
+  const decls = db.prepare(`
+    SELECT t.id, t.module, t.line, t.fqn, a.status
+    FROM audit a JOIN theorems t ON a.id=t.id
+    ORDER BY t.module, t.line`).all() as { id: string; module: string; line: number; fqn: string; status: string }[];
+  db.close();
+
+  // Group by module, already sorted by (module, line) → in-order per group.
+  const byModule = new Map<string, typeof decls>();
+  for (const d of decls) {
+    const arr = byModule.get(d.module) ?? [];
+    arr.push(d);
+    byModule.set(d.module, arr);
+  }
+
+  // Map each tag → owning decl (smallest decl.line >= tag.line in same module).
+  // Track per-decl tags-by-kind in one pass.
+  const tagsByDecl = new Map<string, Set<string>>();
+  const issues: CheckIssue[] = [];
+
+  for (const h of hits) {
+    const ds = byModule.get(h.file);
+    let owner: typeof decls[0] | undefined;
+    if (ds) {
+      for (const d of ds) {
+        if (d.line >= h.line) { owner = d; break; }
+      }
+    }
+    if (!owner) {
+      issues.push({ type: "ORPHAN_TAG", kind: h.kind, slug: h.slug, file: h.file, line: h.line });
+      continue;
+    }
+    const set = tagsByDecl.get(owner.id) ?? new Set<string>();
+    set.add(h.kind);
+    tagsByDecl.set(owner.id, set);
+
+    if (checkKinds.has(h.kind) && STATUSES.has(h.kind) && owner.status !== h.kind) {
+      issues.push({
+        type: "MISSING_DB", kind: h.kind, file: h.file, line: h.line,
+        declFqn: owner.fqn, declLine: owner.line, declStatus: owner.status,
+      });
+    }
+  }
+
+  // MISSING_TAG: DB has status=KIND but no code @audit:KIND tag.
+  for (const k of checkKinds) {
+    if (!STATUSES.has(k)) continue;
+    for (const d of decls) {
+      if (d.status !== k) continue;
+      const tags = tagsByDecl.get(d.id);
+      if (!tags || !tags.has(k)) {
+        issues.push({ type: "MISSING_TAG", kind: k, file: d.module, line: d.line, declFqn: d.fqn });
+      }
+    }
+  }
+
+  const counts = { MISSING_DB: 0, MISSING_TAG: 0, ORPHAN_TAG: 0 };
+  for (const i of issues) counts[i.type]++;
+  return { issues, counts, checkedKinds: [...checkKinds] };
+}
+
+function printCheckDb(res: CheckResult, _a: Args) {
+  console.log("cross-check (code @audit tags vs DB):");
+  for (const t of ["MISSING_DB", "MISSING_TAG", "ORPHAN_TAG"] as const) {
+    const rows = res.issues.filter((i) => i.type === t);
+    if (!rows.length) continue;
+    const desc = t === "MISSING_DB"
+      ? "code tagged but DB status differs"
+      : t === "MISSING_TAG"
+      ? "DB status set but no matching code tag"
+      : "tag at file:line maps to no declaration";
+    console.log(`${t} (${rows.length}): ${desc}`);
+    for (const r of rows) {
+      if (r.type === "MISSING_DB") {
+        console.log(`  ${r.file}:${r.line}  @audit:${r.kind}  ${r.declFqn} (decl@${r.declLine})  [DB: ${r.declStatus}]`);
+      } else if (r.type === "MISSING_TAG") {
+        console.log(`  ${r.file}:${r.line}  ${r.declFqn}  [expected @audit:${r.kind}]`);
+      } else {
+        console.log(`  ${r.file}:${r.line}  @audit:${r.kind}${r.slug ? `(${r.slug})` : ""}`);
+      }
+    }
+  }
+  const total = res.counts.MISSING_DB + res.counts.MISSING_TAG + res.counts.ORPHAN_TAG;
+  if (total === 0) {
+    console.log(`✓ no mismatches (kinds: ${res.checkedKinds.join(",")})`);
+  } else {
+    console.log(`---\ntotal mismatches: ${total} (kinds: ${res.checkedKinds.join(",")})`);
+  }
 }
 
 function cmdReauditStale(a: Args) {

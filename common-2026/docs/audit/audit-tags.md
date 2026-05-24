@@ -104,7 +104,11 @@ rg "@audit:defer\(awgn-achievability-typicality\)" Common2026/
 
 - **コードタグが master**: `@audit:defect(circular)` 付与済の declaration は DB が `ok` でもコードを信じる。
 - **DB は detail 蓄積**: 1 line タグでは書き切れない長文 note (Mathlib API missing list 等) は DB の `note` 列に。
-- `audit_db.ts scan` (Phase 2 追加予定) で code → DB の cross-check が走り、不一致は警告。
+- `audit_db.ts scan --check-db` で code → DB の cross-check が走り、不一致を 3 種に分類して警告:
+  - `MISSING_DB`: code に `@audit:KIND` あるが DB status が異なる (code-master 原則で DB を更新すべき)
+  - `MISSING_TAG`: DB status=KIND だが code に `@audit:KIND` 無し (タグ付け忘れ、または DB が旧 verdict)
+  - `ORPHAN_TAG`: tag が DB 内のどの declaration にもマップ不能 (大抵 DB stale → `build` で line 更新)
+  - 既定の対象 kind は `defect`。`--check-kinds defect,suspect` で拡張可。suspect/ok は Phase 4 sweep 完了までノイズ多いので opt-in。
 
 ## 既存表現との対応
 
