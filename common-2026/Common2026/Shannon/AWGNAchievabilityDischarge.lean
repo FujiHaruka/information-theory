@@ -578,7 +578,7 @@ thin packaging (~10-line body), `h_rand` carries the integral-bound conclusion;
 `h_aep` contributes only the typical-set shell. Honest 🟢ʰ remaining task until
 both staged predicates are discharged.
 
-`@audit:suspect("")` -/
+`@audit:suspect(awgn-moonshot-plan)` -/
 theorem awgn_avg_error_union_bound
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -957,7 +957,7 @@ degenerate/circular/laundering. Bundle hyp gives primitives + shared `P'`
 witness, body builds the assembly. `h_feasible` is regularity (load-bearing
 analytic hyp, NOT a discharge of the conclusion).
 
-`@audit:suspect("")` -/
+`@audit:suspect(awgn-moonshot-plan)` -/
 theorem isAwgnTypicalityHypothesis
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -1583,7 +1583,7 @@ must be discharged first.
 historical artefact of the pre-pivot 3-hyp form; bundle preserves the
 hyp-mediated semantics so the name still reads honestly).
 
-`@audit:suspect("")` -/
+`@audit:suspect(awgn-moonshot-plan)` -/
 theorem awgn_achievability_F1_via_staged_hyps
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -1615,7 +1615,7 @@ hyp-mediated via 1 bundle staged. Independent audit flagged prior
 status explicit. The `_via_staged` suffix continues to read honestly with the
 bundle hyp (still staged, just collapsed from 3 → 1).
 
-`@audit:suspect("")` -/
+`@audit:suspect(awgn-moonshot-plan)` -/
 theorem awgn_theorem_F4_discharged_F1_via_staged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_feasible : IsAwgnRandomCodingFeasible P N (isAwgnChannelMeasurable N))
