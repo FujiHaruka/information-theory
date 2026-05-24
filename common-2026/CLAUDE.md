@@ -149,16 +149,13 @@ If the session is ad-hoc — opened with no prior handoff context, scope unrelat
 
 「既存 staged の継承使用」「`@audit:suspect` 散布」のみのケースは不要。
 
-### subagent 選択 + 指示
+### subagent
 
-- 推奨 agent: `general-purpose` (read-only mandate を prompt で明示) または `proof-pivot-advisor` (元々 read-only)
+専用 agent: **`honesty-auditor`** (`.claude/agents/honesty-auditor.md`、CORE doctrine 内蔵)。orchestrator は `subagent_type: "honesty-auditor"` で起動するだけで CORE + 3-tier 規律 + DB tool 使用が自動適用される。
+
 - **必須条件**: 実装に関与していない fresh subagent (実装 agent の self-audit は不可)
-- prompt 必須項目:
-  1. 対象 predicate ごとに 4 条件 (a)/(b)/(c)/(d) を **コードで** 確認、docstring 主張を疑って読む
-  2. name laundering / vacuous truth / Mathlib 壁分類 (b 解析の壁 vs d 真の壁) の独立判定
-  3. consumer (主定理 body) が staged hyp を **genuinely 消費** しているか (silent leak チェック)
-  4. loogle で Mathlib 不在主張を裏取り (「実は存在する」だと壁分類誤認)
-- 出力: `docs/audit/<plan-slug>-staged-audit.md` 新規
+- 渡す入力: 対象 file path + 監査対象 predicate 名 + line 番号 + consumer 主定理名 + line + 関連 commit hash + 親 plan path + 出力先 `--agent` 名
+- 出力: `scripts/audit_db.ts` への verdict 書込 (DB が SoT) + orchestrator への 200 行以内サマリ
 
 ### closure 判定
 
