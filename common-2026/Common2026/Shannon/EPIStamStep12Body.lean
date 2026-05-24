@@ -211,7 +211,7 @@ def IsStamCondExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
 /-- The Step-2 typed predicate implies the Wave 7 `IsStamCauchySchwarz`
 (existence form): instantiate the ∀λ bound at the optimal witness.
 
-`@audit:suspect(epi-stam-discharge-plan)` -/
+`@audit:ok` -/
 theorem isStamCauchySchwarz_of_condExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω} (h : IsStamCondExpCSHyp X Y P) :
     IsStamCauchySchwarz X Y P := by
@@ -250,7 +250,7 @@ Given the ∀λ convex Fisher bound (Step 2), instantiate at the optimal
 `J(Z) ≤ J_X J_Y / (J_X + J_Y)`. This is the genuinely-discharged reduction of
 Step 2-3 to the harmonic-mean form.
 
-`@audit:suspect(epi-stam-discharge-plan)` -/
+`@audit:ok` -/
 theorem stamCauchySchwarzOptimal_of_condExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω} (h : IsStamCondExpCSHyp X Y P) :
     IsStamCauchySchwarzOptimal X Y P := by
@@ -270,7 +270,7 @@ together discharge Wave 7's `IsStamCauchySchwarzOptimal`. (Step 1's witness data
 is consumed inside Step 2's instantiation; we keep both arguments to document the
 genuine 2-step dependency.)
 
-`@audit:suspect(epi-stam-discharge-plan)` -/
+`@audit:ok` -/
 theorem stamCauchySchwarzOptimal_of_step12 {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvHyp X Y P)
@@ -284,21 +284,29 @@ Composes the typed Step-1/Step-2 predicates with the Wave 7 body bridge
 `isStamInequalityHyp_via_body`, closing the chain from the conditional-CS body
 to the Cover-Thomas Lemma 17.7.2 真 signature `1/J(Z) ≥ 1/J(X) + 1/J(Y)`.
 
-`@audit:suspect(epi-stam-discharge-plan)` -/
+Note: `isStamInequalityHyp_via_body` still takes the published predicate
+`IsStamScoreConvolution X Y P` as a *cosmetic* argument (after the W9 upgrade
+its body is the optimal-λ-witness existence Prop, **unconditionally
+constructible** by `isStamScoreConvolution_intro`). The chain's genuine
+load-bearing input is the typed `h_cs : IsStamCondExpCSHyp X Y P` (Step 2,
+the ∀λ convex Fisher bound). We pass `isStamScoreConvolution_intro X Y P` for
+the cosmetic slot, replacing the former `trivial`-on-`Prop := True`.
+
+`@audit:ok` -/
 theorem isStamInequalityHyp_of_step12 {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvHyp X Y P)
     (h_cs : IsStamCondExpCSHyp X Y P) :
     IsStamInequalityHyp X Y P :=
   isStamInequalityHyp_via_body
-    trivial
+    (isStamScoreConvolution_intro X Y P)
     (stamCauchySchwarzOptimal_of_step12 h_conv h_cs)
 
 /-- **Step 1 + Step 2 ⇒ Wave 7 existential Cauchy-Schwarz** (`IsStamCauchySchwarz`),
 the weaker witness form. Provided for callers that consume the existential
 predicate directly.
 
-`@audit:suspect(epi-stam-discharge-plan)` -/
+`@audit:ok` -/
 theorem isStamCauchySchwarz_of_step12 {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvHyp X Y P)

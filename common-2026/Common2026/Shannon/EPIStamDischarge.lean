@@ -139,7 +139,16 @@ to `+∞` at finite truncation, with the limit form taking the genuine Gaussian
 saturation).
 
 Used as hypothesis pass-through; Mathlib has no machinery for any of these
-ingredients (`rg "deBruijn" → 0 hit`). -/
+ingredients (`rg "deBruijn" → 0 hit`).
+
+`@audit:defect(false-statement)` `@audit:suspect(epi-debruijn-integration-plan)`
+Field `integrable_deriv` is **unsatisfiable even for Gaussian X**: the integrand
+`(1/2)·J(X+√t·Z).toReal = 1/(2(v+t))` over `(0,∞)` diverges, but `Integrable`
+requires `HasFiniteIntegral`. Discovered 2026-05-25 (Wave 3 EPI-DB agent).
+Recommended fix: replace `Integrable ... (volume.restrict (Set.Ioi 0))` with
+`IntervalIntegrable f' volume 0 T` for an arbitrary `T`, or split into
+bounded-T windows. Until fixed, this structure is constructible only via a
+load-bearing escape hatch (no genuine Gaussian instance exists). -/
 structure IsDeBruijnRegularityHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] where
   /-- For each strictly positive `t`, the family is regular in the de Bruijn
@@ -173,7 +182,19 @@ information.
 Used as hypothesis pass-through; full discharge requires both the de Bruijn
 identity (T2-F `deBruijn_identity` packaged with the L-DB1 regularity above)
 and the fundamental theorem of calculus along an unbounded interval (`rg
-"intervalIntegral.integral_deriv" → only bounded-interval forms`). -/
+"intervalIntegral.integral_deriv" → only bounded-interval forms`).
+
+`@audit:defect(false-statement)` `@audit:suspect(epi-debruijn-integration-plan)`
+The `∀ fPath` quantification makes this predicate **structurally unsatisfiable**
+outside the `T=0` boundary case: because `fisherInfoOfMeasureV2 _ f = fisherInfoOfDensity f`
+(the measure argument is a labelling-only device, defeq), instantiating
+`fPath := fun _ _ ↦ 0` collapses the integrand to `0` and so the predicate
+demands `h_target = h_X`, which is false for non-degenerate `(X, T > 0)`.
+The only honest discharge is `isDeBruijnIntegrationHyp_at_zero` (T = 0 trivial
+case where `Set.Ioo 0 0` is empty). Discovered 2026-05-25 (Wave 3 EPI-DB
+agent). Recommended fix: change `fPath` from universal to existential
+(`∃ density_path : ℝ → ℝ → ℝ`, ...) or make it an explicit parameter to the
+predicate. -/
 def IsDeBruijnIntegrationHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) (T : ℝ) : Prop :=
   ∀ (h_X h_target : ℝ) (fPath : ℝ → ℝ → ℝ),
@@ -268,7 +289,7 @@ theorem isStamToEPIBridgeHyp_of_epi
 + Stam-to-EPI bridge から L-EPI3 (`IsEntropyPowerInequalityHypothesis`) を
 導出する。本 file の主 deliverable。
 
-`@audit:suspect(epi-stam-discharge-plan)` -/
+`@audit:ok` -/
 theorem epi_via_stam
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     {P : Measure Ω}
@@ -281,7 +302,7 @@ theorem epi_via_stam
 /-- **Variant of `epi_via_stam`** routed through the EntropyPowerInequality
 main theorem `entropy_power_inequality`. Returns the EPI directly.
 
-`@audit:suspect(epi-stam-discharge-plan)` -/
+`@audit:ok` -/
 theorem epi_via_stam_main
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -336,7 +357,7 @@ theorem epi_via_stam_gaussian
 
 /-- Symmetric form of `epi_via_stam`.
 
-`@audit:suspect(epi-stam-discharge-plan)` -/
+`@audit:ok` -/
 theorem epi_via_stam_symm
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     {P : Measure Ω}
@@ -365,7 +386,7 @@ theorem isStamToEPIBridgeHyp_of_forall
 /-- **3-arg EPI via Stam pipeline**: chains `epi_via_stam` twice to obtain
 the 3-argument EPI.
 
-`@audit:suspect(epi-stam-discharge-plan)` -/
+`@audit:ok` -/
 theorem epi_via_stam_three_arg
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -470,7 +491,7 @@ symmetric while the bridge picks up `Y + X` vs `X + Y` from the
 `IsEntropyPowerInequalityHypothesis` ordering). The symmetric form
 re-routes through `isEntropyPowerInequalityHypothesis_symm`.
 
-`@audit:suspect(epi-stam-discharge-plan)` -/
+`@audit:ok` -/
 theorem isStamToEPIBridgeHyp_symm
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -483,7 +504,7 @@ theorem isStamToEPIBridgeHyp_symm
 /-- The Stam-to-EPI bridge composes through trivial EPI fact: if EPI is
 already known, the bridge is the constant function.
 
-`@audit:suspect(epi-stam-discharge-plan)` -/
+`@audit:ok` -/
 theorem isStamToEPIBridgeHyp_const
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -528,7 +549,7 @@ theorem entropyPower_gaussian_sum_eq
 /-- **Log-form EPI via Stam pipeline**: combines `epi_via_stam_main` with
 `entropy_power_inequality_log_form` from `EntropyPowerInequality.lean`.
 
-`@audit:suspect(epi-stam-discharge-plan)` -/
+`@audit:ok` -/
 theorem entropy_log_form_via_stam
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -543,7 +564,7 @@ theorem entropy_log_form_via_stam
 
 /-- **Exp-form EPI via Stam pipeline**: Cover-Thomas Theorem 17.7.3 露出形.
 
-`@audit:suspect(epi-stam-discharge-plan)` -/
+`@audit:ok` -/
 theorem entropy_exp_form_via_stam
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -560,7 +581,7 @@ theorem entropy_exp_form_via_stam
 /-- **Normalized `(2πe)⁻¹` form via Stam pipeline**: Cover-Thomas Ch.17 流儀
 `N(X+Y) ≥ N(X) + N(Y)`.
 
-`@audit:suspect(epi-stam-discharge-plan)` -/
+`@audit:ok` -/
 theorem entropy_normalized_form_via_stam
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -577,7 +598,7 @@ theorem entropy_normalized_form_via_stam
 
 /-- **4-arg EPI via Stam pipeline**: chains `epi_via_stam` three times.
 
-`@audit:suspect(epi-stam-discharge-plan)` -/
+`@audit:ok` -/
 theorem epi_via_stam_four_arg
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -601,7 +622,7 @@ theorem epi_via_stam_four_arg
 /-- **Composability witness**: any conjunction `(Stam X Y P) ∧ (StamToEPIBridge X Y P)`
 yields the EPI hypothesis.
 
-`@audit:suspect(epi-stam-discharge-plan)` -/
+`@audit:ok` -/
 theorem isEntropyPowerInequalityHypothesis_of_stam_pair
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -613,7 +634,7 @@ theorem isEntropyPowerInequalityHypothesis_of_stam_pair
 /-- **Pipeline composability**: given the L-EPI3-form already, the Stam pipeline
 trivially returns the same hypothesis.
 
-`@audit:suspect(epi-stam-discharge-plan)` -/
+`@audit:ok` -/
 theorem epi_pipeline_idempotent
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -626,7 +647,7 @@ theorem epi_pipeline_idempotent
 EPI hypotheses)**: shows that the Stam-pipeline 3-arg form composes with
 `entropy_power_inequality_three_arg`.
 
-`@audit:suspect(epi-stam-discharge-plan)` -/
+`@audit:ok` -/
 theorem epi_via_stam_three_arg_normalized
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -658,7 +679,7 @@ theorem epi_via_stam_three_arg_normalized
 /-- **Sanity check**: the Stam pipeline composed with the EntropyPowerInequality
 top-level theorem recovers the exact main statement signature.
 
-`@audit:suspect(epi-stam-discharge-plan)` -/
+`@audit:ok` -/
 theorem epi_via_stam_main_eq
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -674,7 +695,7 @@ theorem epi_via_stam_main_eq
 /-- **Round trip**: if we have the Stam-derived EPI, the EntropyPowerInequality
 predicate is exactly the result of the bridge applied to Stam.
 
-`@audit:suspect(epi-stam-discharge-plan)` -/
+`@audit:ok` -/
 theorem epi_via_stam_recovers_predicate
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}

@@ -29,12 +29,27 @@ bounds (`docs/shannon/multivariate-diffentropy-inventory.md`). Provides:
 
 The subadditivity *structure* (`KL ≥ 0` from `ENNReal.toReal_nonneg` + bridge) is
 genuine. The bridge from `KL` to entropies needs the Bayes density split
-(`llr(joint ‖ ∏ marginals) = ∑ log(marginalᵢ) − log(joint)`) plus integrability,
-carried as named honest hypotheses exactly mirroring the existing channel手本
-`ContChannelMIDecomp.mutualInfoOfChannel_toReal_eq_diffEntropy_sub`. The
-`n`-variable bridge is honest in the same way; `pi_withDensity` (the joint
-density = ∏ marginal density bridge) is **absent from Mathlib**, so it is folded
-into the honest llr-split hypothesis rather than self-built (inventory §D-1a).
+(`llr(joint ‖ ∏ marginals) = ∑ log(marginalᵢ) − log(joint)`) plus integrability.
+
+* **2-variable case (Phase 1 plan, discharged 2026-05-25):** the `h_llr_split`
+  honest hypothesis is fully discharged via Mathlib's `prod_withDensity₀` +
+  `rnDeriv_withDensity₀` + `rnDeriv_mul_rnDeriv` chain — see
+  `llr_split_from_density_factorize` and the `_v2` successors
+  (`klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2`,
+  `jointDifferentialEntropy_le_sum_v2`). The pre-discharge versions are kept
+  for backward compatibility, tagged
+  `@audit:superseded-by(<v2-name>)`.
+
+* **`n`-variable case:** still load-bearing on `h_llr_split` plus integrability,
+  carried as named honest hypotheses mirroring the channel手本
+  `ContChannelMIDecomp.mutualInfoOfChannel_toReal_eq_diffEntropy_sub`.
+  `pi_withDensity` (joint density = ∏ marginal density bridge) is **absent from
+  Mathlib** (inventory §D-1a); the natural discharge is induction of the
+  2-variable bridge via `measurePreserving_piFinSuccAbove`, which requires a
+  change-of-variables for `withDensity` under measurable equivalences (also
+  absent in Mathlib in the generic non-rnDeriv form). Tagged
+  `@audit:suspect(multivariate-diffentropy-subadditivity-plan)` as the
+  residual discharge target.
 -/
 
 namespace Common2026.Shannon
@@ -86,7 +101,11 @@ theorem integral_log_rnDeriv_self_eq_neg
 hypotheses (absolute continuity + Bayes llr split + integrability) mirror the
 channel手本 `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`.
 
-`@audit:suspect(multivariate-diffentropy-subadditivity-plan)` -/
+The `h_llr_split` honest hypothesis is **discharged** by the successor
+`klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2`; this version is retained
+for backward compatibility with prior callers.
+
+`@audit:superseded-by(klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2)` -/
 theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint
     {μ : Measure (ℝ × ℝ)} [IsProbabilityMeasure μ]
     (h_fst_ac : (μ.map Prod.fst) ≪ volume)
@@ -172,7 +191,11 @@ theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint
 /-- **★ 2-variable differential-entropy subadditivity** `h(X,Y) ≤ h(X) + h(Y)`.
 `KL ≥ 0` (`ENNReal.toReal_nonneg`) + the bridge, closed by `linarith`.
 
-`@audit:suspect(multivariate-diffentropy-subadditivity-plan)` -/
+The `h_llr_split` honest hypothesis is **discharged** by the successor
+`jointDifferentialEntropy_le_sum_v2`; this version is retained for backward
+compatibility with prior callers.
+
+`@audit:superseded-by(jointDifferentialEntropy_le_sum_v2)` -/
 theorem jointDifferentialEntropy_le_sum
     {μ : Measure (ℝ × ℝ)} [IsProbabilityMeasure μ]
     (h_fst_ac : (μ.map Prod.fst) ≪ volume)
@@ -303,5 +326,265 @@ theorem jointDifferentialEntropyPi_le_sum
   have h_bridge := klDiv_pi_marginals_toReal_eq_sum_sub_joint
     h_marg_ac hμ_ac h_joint_ac h_llr_split h_int_marg h_int_joint h_marg_id
   linarith [h_nn, h_bridge]
+
+/-! ## Phase 1 — genuine 2-variable Bayes density split (no honest `h_llr_split`)
+
+The `_v2` family below discharges the `h_llr_split` honest hypothesis of the
+original `klDiv_prod_marginals_toReal_eq_sum_sub_joint` and
+`jointDifferentialEntropy_le_sum` via Mathlib's `prod_withDensity` +
+`rnDeriv_mul_rnDeriv`. The original (suspect) statements are kept for
+backward compatibility; the `_v2` versions are the genuine successors. -/
+
+/-- **Density factorization of product marginals (genuine).** For a joint
+probability measure `μ` on `ℝ × ℝ` with marginals `μX, μY` both absolutely
+continuous wrt the Lebesgue measure, the product `μX × μY` factors through the
+Lebesgue measure on `ℝ × ℝ` as
+
+  `(μX).prod (μY) = volume.withDensity (z ↦ μX.rnDeriv volume z.1 * μY.rnDeriv volume z.2)`.
+
+Discharge route: `Measure.withDensity_rnDeriv_eq` rewrites each marginal as
+`volume.withDensity (.rnDeriv volume)`, then `prod_withDensity₀` fuses them, and
+`Measure.volume_eq_prod` (`rfl`) identifies the result. -/
+theorem prod_marginals_eq_volume_withDensity
+    {μ : Measure (ℝ × ℝ)} [IsProbabilityMeasure μ]
+    (h_fst_ac : (μ.map Prod.fst) ≪ volume)
+    (h_snd_ac : (μ.map Prod.snd) ≪ volume) :
+    (μ.map Prod.fst).prod (μ.map Prod.snd)
+      = (volume : Measure (ℝ × ℝ)).withDensity
+          (fun z => (μ.map Prod.fst).rnDeriv volume z.1
+                      * (μ.map Prod.snd).rnDeriv volume z.2) := by
+  haveI : IsProbabilityMeasure (μ.map Prod.fst) :=
+    Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+  haveI : IsProbabilityMeasure (μ.map Prod.snd) :=
+    Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+  -- rewrite each marginal as `volume.withDensity (rnDeriv ·)`
+  conv_lhs =>
+    rw [← Measure.withDensity_rnDeriv_eq _ _ h_fst_ac,
+        ← Measure.withDensity_rnDeriv_eq _ _ h_snd_ac]
+  -- fuse the two `withDensity`s via `prod_withDensity₀`
+  rw [prod_withDensity₀ (Measure.measurable_rnDeriv _ _).aemeasurable
+        (Measure.measurable_rnDeriv _ _).aemeasurable]
+  -- `volume.prod volume = (volume : Measure (ℝ × ℝ))` (definitional)
+  rw [← Measure.volume_eq_prod]
+
+/-- **Genuine Bayes density split for the 2-variable joint (a.e.[μ]).** The
+log-likelihood ratio of `μ` against the product of its marginals equals
+`log(joint density) − log(marginal_X density on z.1) − log(marginal_Y density on z.2)`
+almost-everywhere wrt `μ`, *without* an honest hypothesis. Discharge route:
+`prod_marginals_eq_volume_withDensity` + `rnDeriv_mul_rnDeriv` + `Real.log_mul`
+on the multiplicative chain `μ.rnDeriv ρ · ρ.rnDeriv vol = μ.rnDeriv vol`. -/
+theorem llr_split_from_density_factorize
+    {μ : Measure (ℝ × ℝ)} [IsProbabilityMeasure μ]
+    (h_fst_ac : (μ.map Prod.fst) ≪ volume)
+    (h_snd_ac : (μ.map Prod.snd) ≪ volume)
+    (h_joint_ac : μ ≪ (μ.map Prod.fst).prod (μ.map Prod.snd)) :
+    (fun z => llr μ ((μ.map Prod.fst).prod (μ.map Prod.snd)) z)
+      =ᵐ[μ]
+    (fun z => Real.log ((μ.rnDeriv volume z).toReal)
+                - Real.log (((μ.map Prod.fst).rnDeriv volume z.1).toReal)
+                - Real.log (((μ.map Prod.snd).rnDeriv volume z.2).toReal)) := by
+  classical
+  set μX := μ.map Prod.fst with hμX
+  set μY := μ.map Prod.snd with hμY
+  haveI : IsProbabilityMeasure μX :=
+    Measure.isProbabilityMeasure_map measurable_fst.aemeasurable
+  haveI : IsProbabilityMeasure μY :=
+    Measure.isProbabilityMeasure_map measurable_snd.aemeasurable
+  set ρ := μX.prod μY with hρ
+  -- factorize ρ as `volume.withDensity g`
+  set g : ℝ × ℝ → ℝ≥0∞ :=
+    fun z => μX.rnDeriv volume z.1 * μY.rnDeriv volume z.2 with hg
+  have h_ρ_eq : ρ = (volume : Measure (ℝ × ℝ)).withDensity g := by
+    rw [hρ, hg]; exact prod_marginals_eq_volume_withDensity h_fst_ac h_snd_ac
+  -- μ ≪ volume (via μ ≪ ρ ≪ vol.prod vol = vol)
+  have hμ_vol : μ ≪ (volume : Measure (ℝ × ℝ)) := by
+    refine h_joint_ac.trans ?_
+    rw [Measure.volume_eq_prod]
+    exact h_fst_ac.prod h_snd_ac
+  -- Step A: chain rule `μ.rnDeriv ρ · ρ.rnDeriv vol =ᵐ[vol] μ.rnDeriv vol`
+  have h_chain_vol : (fun z => μ.rnDeriv ρ z * ρ.rnDeriv volume z)
+      =ᵐ[(volume : Measure (ℝ × ℝ))] (fun z => μ.rnDeriv volume z) := by
+    have := Measure.rnDeriv_mul_rnDeriv (μ := μ) (ν := ρ)
+      (κ := (volume : Measure (ℝ × ℝ))) h_joint_ac
+    exact this
+  -- Step B: ρ.rnDeriv vol =ᵐ[vol] g (from h_ρ_eq + rnDeriv_withDensity₀)
+  have h_g_meas : AEMeasurable g (volume : Measure (ℝ × ℝ)) := by
+    refine AEMeasurable.mul ?_ ?_
+    · exact ((Measure.measurable_rnDeriv μX volume).comp measurable_fst).aemeasurable
+    · exact ((Measure.measurable_rnDeriv μY volume).comp measurable_snd).aemeasurable
+  have h_ρ_rnDeriv : ρ.rnDeriv volume =ᵐ[(volume : Measure (ℝ × ℝ))] g := by
+    have := Measure.rnDeriv_withDensity₀ (ν := (volume : Measure (ℝ × ℝ))) h_g_meas
+    rw [h_ρ_eq]
+    exact this
+  -- Step C: combine to get `μ.rnDeriv ρ · g =ᵐ[vol] μ.rnDeriv vol`
+  have h_prod_vol : (fun z => μ.rnDeriv ρ z * g z)
+      =ᵐ[(volume : Measure (ℝ × ℝ))] (fun z => μ.rnDeriv volume z) := by
+    filter_upwards [h_chain_vol, h_ρ_rnDeriv] with z h1 h2
+    rw [← h1, h2]
+  -- Step D: pull `=ᵐ[vol]` to `=ᵐ[μ]` via μ ≪ vol
+  have h_prod_μ : (fun z => μ.rnDeriv ρ z * g z)
+      =ᵐ[μ] (fun z => μ.rnDeriv volume z) := hμ_vol.ae_le h_prod_vol
+  -- a.e. positivity / finiteness conditions a.e.[μ]
+  have h_rnD_ρ_pos : ∀ᵐ z ∂μ, μ.rnDeriv ρ z ≠ 0 := by
+    filter_upwards [Measure.rnDeriv_pos h_joint_ac] with z hz using hz.ne'
+  have h_rnD_ρ_ne_top : ∀ᵐ z ∂μ, μ.rnDeriv ρ z ≠ ∞ :=
+    h_joint_ac.ae_le (Measure.rnDeriv_ne_top μ ρ)
+  have h_rnD_vol_pos : ∀ᵐ z ∂μ, μ.rnDeriv volume z ≠ 0 := by
+    filter_upwards [Measure.rnDeriv_pos hμ_vol] with z hz using hz.ne'
+  have h_rnD_vol_ne_top : ∀ᵐ z ∂μ, μ.rnDeriv volume z ≠ ∞ :=
+    hμ_vol.ae_le (Measure.rnDeriv_ne_top μ volume)
+  -- marginal-side positivity a.e.[μ] via push-forward
+  have h_μX_pos : ∀ᵐ z ∂μ, μX.rnDeriv volume z.1 ≠ 0 := by
+    have h_μX : ∀ᵐ x ∂μX, μX.rnDeriv volume x ≠ 0 := by
+      filter_upwards [Measure.rnDeriv_pos h_fst_ac] with x hx using hx.ne'
+    have := (ae_map_iff measurable_fst.aemeasurable
+      (p := fun x => μX.rnDeriv volume x ≠ 0)
+      (measurableSet_eq_fun (Measure.measurable_rnDeriv _ _) measurable_const).compl).mp h_μX
+    exact this
+  have h_μY_pos : ∀ᵐ z ∂μ, μY.rnDeriv volume z.2 ≠ 0 := by
+    have h_μY : ∀ᵐ y ∂μY, μY.rnDeriv volume y ≠ 0 := by
+      filter_upwards [Measure.rnDeriv_pos h_snd_ac] with y hy using hy.ne'
+    have := (ae_map_iff measurable_snd.aemeasurable
+      (p := fun y => μY.rnDeriv volume y ≠ 0)
+      (measurableSet_eq_fun (Measure.measurable_rnDeriv _ _) measurable_const).compl).mp h_μY
+    exact this
+  have h_μX_ne_top : ∀ᵐ z ∂μ, μX.rnDeriv volume z.1 ≠ ∞ := by
+    have h_μX : ∀ᵐ x ∂μX, μX.rnDeriv volume x ≠ ∞ :=
+      h_fst_ac.ae_le (Measure.rnDeriv_ne_top μX volume)
+    have := (ae_map_iff measurable_fst.aemeasurable
+      (p := fun x => μX.rnDeriv volume x ≠ ∞)
+      (measurableSet_eq_fun (Measure.measurable_rnDeriv _ _) measurable_const).compl).mp h_μX
+    exact this
+  have h_μY_ne_top : ∀ᵐ z ∂μ, μY.rnDeriv volume z.2 ≠ ∞ := by
+    have h_μY : ∀ᵐ y ∂μY, μY.rnDeriv volume y ≠ ∞ :=
+      h_snd_ac.ae_le (Measure.rnDeriv_ne_top μY volume)
+    have := (ae_map_iff measurable_snd.aemeasurable
+      (p := fun y => μY.rnDeriv volume y ≠ ∞)
+      (measurableSet_eq_fun (Measure.measurable_rnDeriv _ _) measurable_const).compl).mp h_μY
+    exact this
+  -- Combine: at z satisfying all the conditions, take toReal + log of `h_prod_μ`.
+  filter_upwards [h_prod_μ, h_rnD_ρ_pos, h_rnD_ρ_ne_top, h_rnD_vol_pos,
+    h_rnD_vol_ne_top, h_μX_pos, h_μY_pos, h_μX_ne_top, h_μY_ne_top]
+    with z h_eq h_ρ_ne0 h_ρ_neT h_vol_ne0 h_vol_neT h_X_ne0 h_Y_ne0 h_X_neT h_Y_neT
+  -- now `μ.rnDeriv ρ z * (μX.rnDeriv vol z.1 * μY.rnDeriv vol z.2) = μ.rnDeriv vol z` in ℝ≥0∞
+  -- take toReal:
+  have h_g_ne_top : μX.rnDeriv volume z.1 * μY.rnDeriv volume z.2 ≠ ∞ :=
+    ENNReal.mul_ne_top h_X_neT h_Y_neT
+  have h_g_ne_zero : μX.rnDeriv volume z.1 * μY.rnDeriv volume z.2 ≠ 0 :=
+    mul_ne_zero h_X_ne0 h_Y_ne0
+  -- toReal on both sides of h_eq
+  have h_eq_real :
+      (μ.rnDeriv ρ z).toReal
+        * (μX.rnDeriv volume z.1 * μY.rnDeriv volume z.2).toReal
+        = (μ.rnDeriv volume z).toReal := by
+    have := congrArg ENNReal.toReal h_eq
+    simp only at this
+    rw [ENNReal.toReal_mul] at this
+    exact this
+  -- the two factors on the LHS are strictly positive as reals
+  have h_ρ_pos_real : 0 < (μ.rnDeriv ρ z).toReal :=
+    ENNReal.toReal_pos h_ρ_ne0 h_ρ_neT
+  have h_g_pos_real : 0 < (μX.rnDeriv volume z.1 * μY.rnDeriv volume z.2).toReal :=
+    ENNReal.toReal_pos h_g_ne_zero h_g_ne_top
+  have h_X_pos_real : 0 < (μX.rnDeriv volume z.1).toReal :=
+    ENNReal.toReal_pos h_X_ne0 h_X_neT
+  have h_Y_pos_real : 0 < (μY.rnDeriv volume z.2).toReal :=
+    ENNReal.toReal_pos h_Y_ne0 h_Y_neT
+  -- take log of `h_eq_real`
+  have h_log : Real.log ((μ.rnDeriv ρ z).toReal)
+        + Real.log ((μX.rnDeriv volume z.1 * μY.rnDeriv volume z.2).toReal)
+        = Real.log ((μ.rnDeriv volume z).toReal) := by
+    rw [← Real.log_mul h_ρ_pos_real.ne' h_g_pos_real.ne', h_eq_real]
+  -- split the second log via toReal_mul + log_mul
+  have h_g_toReal : (μX.rnDeriv volume z.1 * μY.rnDeriv volume z.2).toReal
+      = (μX.rnDeriv volume z.1).toReal * (μY.rnDeriv volume z.2).toReal :=
+    ENNReal.toReal_mul
+  have h_log_g : Real.log ((μX.rnDeriv volume z.1 * μY.rnDeriv volume z.2).toReal)
+      = Real.log ((μX.rnDeriv volume z.1).toReal)
+        + Real.log ((μY.rnDeriv volume z.2).toReal) := by
+    rw [h_g_toReal, Real.log_mul h_X_pos_real.ne' h_Y_pos_real.ne']
+  -- conclude: llr μ ρ z = log(μ.rnDeriv ρ z).toReal = log(μ.rnDeriv vol z).toReal
+  --                       − log(μX.rnDeriv vol z.1).toReal − log(μY.rnDeriv vol z.2).toReal
+  show Real.log ((μ.rnDeriv ρ z).toReal) = _
+  linarith [h_log, h_log_g]
+
+/-- **2-variable subadditivity bridge (genuine, no `h_llr_split`).** Discharged
+version of `klDiv_prod_marginals_toReal_eq_sum_sub_joint`: the Bayes density
+split is produced internally by `llr_split_from_density_factorize`, so the
+honest `h_llr_split` argument is no longer required. The remaining hypotheses
+are regularity (absolute continuity + Bochner integrability of three
+log-density observables). -/
+theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2
+    {μ : Measure (ℝ × ℝ)} [IsProbabilityMeasure μ]
+    (h_fst_ac : (μ.map Prod.fst) ≪ volume)
+    (h_snd_ac : (μ.map Prod.snd) ≪ volume)
+    (h_joint_ac : μ ≪ (μ.map Prod.fst).prod (μ.map Prod.snd))
+    (h_int_fst :
+      Integrable (fun z => Real.log (((μ.map Prod.fst).rnDeriv volume z.1).toReal)) μ)
+    (h_int_snd :
+      Integrable (fun z => Real.log (((μ.map Prod.snd).rnDeriv volume z.2).toReal)) μ)
+    (h_int_joint :
+      Integrable (fun z => Real.log ((μ.rnDeriv volume z).toReal)) μ)
+    (h_int_fst_marg :
+      Integrable (fun x => Real.log (((μ.map Prod.fst).rnDeriv volume x).toReal))
+        (μ.map Prod.fst))
+    (h_int_snd_marg :
+      Integrable (fun y => Real.log (((μ.map Prod.snd).rnDeriv volume y).toReal))
+        (μ.map Prod.snd)) :
+    (klDiv μ ((μ.map Prod.fst).prod (μ.map Prod.snd))).toReal
+      = differentialEntropy (μ.map Prod.fst) + differentialEntropy (μ.map Prod.snd)
+        - jointDifferentialEntropy μ :=
+  klDiv_prod_marginals_toReal_eq_sum_sub_joint
+    h_fst_ac h_snd_ac h_joint_ac
+    (llr_split_from_density_factorize h_fst_ac h_snd_ac h_joint_ac)
+    h_int_fst h_int_snd h_int_joint h_int_fst_marg h_int_snd_marg
+
+/-- **★ 2-variable differential-entropy subadditivity (genuine, no `h_llr_split`).**
+Discharged version of `jointDifferentialEntropy_le_sum`: `h(X,Y) ≤ h(X) + h(Y)`
+with the Bayes density split internalized via `llr_split_from_density_factorize`. -/
+theorem jointDifferentialEntropy_le_sum_v2
+    {μ : Measure (ℝ × ℝ)} [IsProbabilityMeasure μ]
+    (h_fst_ac : (μ.map Prod.fst) ≪ volume)
+    (h_snd_ac : (μ.map Prod.snd) ≪ volume)
+    (h_joint_ac : μ ≪ (μ.map Prod.fst).prod (μ.map Prod.snd))
+    (h_int_fst :
+      Integrable (fun z => Real.log (((μ.map Prod.fst).rnDeriv volume z.1).toReal)) μ)
+    (h_int_snd :
+      Integrable (fun z => Real.log (((μ.map Prod.snd).rnDeriv volume z.2).toReal)) μ)
+    (h_int_joint :
+      Integrable (fun z => Real.log ((μ.rnDeriv volume z).toReal)) μ)
+    (h_int_fst_marg :
+      Integrable (fun x => Real.log (((μ.map Prod.fst).rnDeriv volume x).toReal))
+        (μ.map Prod.fst))
+    (h_int_snd_marg :
+      Integrable (fun y => Real.log (((μ.map Prod.snd).rnDeriv volume y).toReal))
+        (μ.map Prod.snd)) :
+    jointDifferentialEntropy μ
+      ≤ differentialEntropy (μ.map Prod.fst) + differentialEntropy (μ.map Prod.snd) :=
+  jointDifferentialEntropy_le_sum
+    h_fst_ac h_snd_ac h_joint_ac
+    (llr_split_from_density_factorize h_fst_ac h_snd_ac h_joint_ac)
+    h_int_fst h_int_snd h_int_joint h_int_fst_marg h_int_snd_marg
+
+/-! ## Phase 2 — withdrawal note on `n`-variable subadditivity
+
+The `n`-variable subadditivity bridge (`klDiv_pi_marginals_toReal_eq_sum_sub_joint`
++ `jointDifferentialEntropyPi_le_sum` above) keeps the honest `h_llr_split`
+hypothesis. The natural discharge route is by inducting the Phase 1 2-variable
+density factorization (`prod_marginals_eq_volume_withDensity`) through
+`measurePreserving_piFinSuccAbove`, building a `pi_marginals_eq_volume_withDensity`
+counterpart. This induction is non-trivial — it requires a change-of-variables
+for `withDensity` under measurable equivalences (which is not a direct Mathlib
+lemma — only the rnDeriv-specialized `MeasurableEmbedding.map_withDensity_rnDeriv`
+exists), plus reshape of the density between the iterated-prod and `Measure.pi`
+forms. An initial attempt (~250 lines including the `pi_eq` shortcut) ran into
+several reshape frictions (definitional `volume_pi` vs `Measure.pi (fun _ => volume)`,
+`piFinSuccAbove 0` vs `piFinSuccAbove (Fin.last n)` orientation, etc.).
+
+Per plan §"撤退条件 — 案 A / 案 B 双方で行き詰まる → n 変数のみ honest hyp 温存",
+the `n`-variable case is **kept as the existing honest-hyp form**. The
+`@audit:suspect(multivariate-diffentropy-subadditivity-plan)` slug remains valid
+as the SoT for the residual discharge, and the proof-log records the genuine
+direction tried so a future session can continue. -/
 
 end Common2026.Shannon

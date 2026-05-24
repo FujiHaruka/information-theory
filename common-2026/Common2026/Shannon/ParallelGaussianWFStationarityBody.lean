@@ -131,16 +131,18 @@ the Lagrange-bundle hypothesis `h_for_lagrange` is now **eliminated**: the commo
 Lagrange multiplier (KKT stationarity + complementary slackness) is produced
 internally from the KKT water-level structure.
 
-⚠️ NOT a full discharge: L-PG1 (the per-coordinate water-filling reduction)
-remains OPEN — `h_for_bundle` is a conclusion-as-hypothesis (the capacity equality
-split into two inequalities). It is the *only* remaining open hypothesis: L-WF1
-(KKT existence), L-WF2 (water-filling optimality, now from genuine concavity +
-internally-exhibited multiplier) and L-PG0 (kernel measurability) are all
-genuinely closed. The genuine L-PG1 reduction needs the memoryless chain rule +
-per-coord AWGN capacity (continuous AEP / sphere-shell volume) machinery absent
-from Mathlib.
+**Superseded** by `parallel_gaussian_capacity_formula_minimal`
+(`ParallelGaussianPerCoordRegularity.lean`) for the L-PG1 piece: the
+chain-rule bundle hypothesis `h_for_bundle` is replaced by the honest
+pieces of the regularity bundle (multivariate channel↔RV MI decomposition
++ per-coord AWGN bridge + global P-upper bound). Continuous AEP is *not*
+required (the capacity is the information capacity, evaluated by a
+sup-sandwich, see `ParallelGaussianPerCoord.lean:303`). L-WF1 (KKT
+existence), L-WF2 (water-filling optimality, from genuine concavity +
+internally-exhibited multiplier) and L-PG0 (kernel measurability) remain
+genuinely closed. Retained for backward compatibility.
 
-`@audit:suspect(parallel-gaussian-moonshot-plan)` -/
+`@audit:superseded-by(parallel-gaussian-l-pg1-discharge)` -/
 theorem parallel_gaussian_capacity_formula_WFstat_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (hN_pos : ∀ i, 0 < (N i : ℝ))

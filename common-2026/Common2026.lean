@@ -248,6 +248,7 @@ import Common2026.Shannon.WynerZivCondEntDiffConvexBody
 import Common2026.Shannon.EPIConvolutionDensity
 import Common2026.Shannon.MultivariateDiffEntropy
 import Common2026.Shannon.ParallelGaussianPerCoord
+import Common2026.Shannon.ParallelGaussianPerCoordRegularity
 import Common2026.Shannon.HuffmanSwapNormProof
 import Common2026.Shannon.HuffmanSwapNormCompletion
 import Common2026.Shannon.HuffmanStrongForm

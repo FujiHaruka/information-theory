@@ -279,7 +279,13 @@ def ParallelGaussianChainRuleBundle {n : ℕ} (P : ℝ)
 /-- **L-PG1 reduction**: the chain rule bundle yields the
 `IsParallelGaussianPerCoordReduction` predicate, via antisymmetry of `≤`.
 
-`@audit:suspect(parallel-gaussian-moonshot-plan)` -/
+**Superseded** by `parallel_gaussian_capacity_formula_minimal`
+(`ParallelGaussianPerCoordRegularity.lean`), which derives the capacity
+equality from honest pieces (the regularity bundle's 3 fields) instead of
+from a conclusion-as-hypothesis bundle. Retained for backward compatibility
+and history record.
+
+`@audit:superseded-by(parallel-gaussian-l-pg1-discharge)` -/
 theorem isParallelGaussianPerCoordReduction_of_bundle {n : ℕ}
     (P : ℝ) (N : Fin n → ℝ≥0) (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N) (ν : ℝ)
@@ -291,7 +297,13 @@ theorem isParallelGaussianPerCoordReduction_of_bundle {n : ℕ}
 /-- **L-PG1 reverse reduction**: the `IsParallelGaussianPerCoordReduction`
 predicate yields the chain rule bundle.
 
-`@audit:suspect(parallel-gaussian-moonshot-plan)` -/
+**Superseded** by `parallel_gaussian_capacity_formula_minimal`
+(`ParallelGaussianPerCoordRegularity.lean`), which obviates the bundle
+phrasing entirely (no chain-rule bundle is consumed, the capacity equality
+is derived directly from the regularity bundle). Retained for backward
+compatibility.
+
+`@audit:superseded-by(parallel-gaussian-l-pg1-discharge)` -/
 theorem bundle_of_isParallelGaussianPerCoordReduction {n : ℕ}
     (P : ℝ) (N : Fin n → ℝ≥0) (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N) (ν : ℝ)
@@ -312,16 +324,18 @@ chain rule bundle to deliver the full capacity formula. The signature has
 arguments; in particular, the water-level `ν` is now produced internally by
 existence (L-WF1 discharged).
 
-⚠️ NOT a full discharge: L-PG1 (the per-coordinate water-filling reduction)
-remains OPEN — it enters via `h_for_bundle : … → ParallelGaussianChainRuleBundle`,
-a conclusion-as-hypothesis (the capacity equality split into two inequalities).
-The optimality certificate (`h_for_cert`) is also still taken as a hypothesis
-here. Genuinely closed in *this* theorem: L-WF1 (KKT water-level existence, via
-IVT) and L-PG0 (kernel measurability, upstream). The genuine L-PG1 reduction needs
-the memoryless chain rule + per-coord AWGN capacity (continuous AEP / sphere-shell
-volume) machinery absent from Mathlib.
+**Superseded** by `parallel_gaussian_capacity_formula_minimal`
+(`ParallelGaussianPerCoordRegularity.lean`): L-PG1 has been genuinely
+discharged via the regularity-bundle constructor
+`isParallelGaussianPerCoordRegularity_of_pieces`, so the new headline
+consumes only honest pieces (multivariate channel↔RV MI decomposition +
+per-coord AWGN bridge + global P-upper bound) instead of the
+conclusion-as-hypothesis `ParallelGaussianChainRuleBundle`. Continuous AEP
+is *not* required (the capacity is the information capacity, evaluated by
+a sup-sandwich, see `ParallelGaussianPerCoord.lean:303`). This wrapper is
+kept for backward compatibility / history record.
 
-`@audit:suspect(parallel-gaussian-moonshot-plan)` -/
+`@audit:superseded-by(parallel-gaussian-l-pg1-discharge)` -/
 theorem parallel_gaussian_capacity_formula_KKT_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -350,16 +364,17 @@ theorem parallel_gaussian_capacity_formula_KKT_discharged {n : ℕ}
 
 /-- **Active-set form (L-WF1 discharged + L-WF2/L-PG1 certificate forms)**.
 
-⚠️ NOT a full discharge: L-PG1 (per-coordinate reduction) remains OPEN via the
-conclusion-as-hypothesis bundle `h_for_bundle`; L-WF2 (`h_for_cert`) is also a
-hypothesis. Only L-WF1 (KKT existence) and L-PG0 (kernel measurability) are
-genuinely closed.
+**Superseded** by `parallel_gaussian_capacity_formula_minimal`
+(`ParallelGaussianPerCoordRegularity.lean`) for the L-PG1 piece: the
+chain-rule bundle hypothesis is replaced by the honest pieces of the
+regularity bundle (multivariate channel↔RV MI decomposition + per-coord
+AWGN bridge + global P-upper bound). For the active-set rewrite of the sum,
+compose `parallel_gaussian_capacity_formula_minimal` with
+`parallel_gaussian_capacity_sum_active`. Retained for backward compatibility.
 
-Cover-Thomas Ch.9.4 Theorem 9.4.1 alternative form. Combines
-`parallel_gaussian_capacity_formula_KKT_discharged` with
-`parallel_gaussian_capacity_sum_active`.
+Cover-Thomas Ch.9.4 Theorem 9.4.1 alternative form.
 
-`@audit:suspect(parallel-gaussian-moonshot-plan)` -/
+`@audit:superseded-by(parallel-gaussian-l-pg1-discharge)` -/
 theorem parallel_gaussian_capacity_active_form_KKT_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0)
     (hN : ∀ i, (N i : ℝ) ≠ 0) (hN_pos : ∀ i, 0 < (N i : ℝ))

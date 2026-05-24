@@ -9,6 +9,9 @@ import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.Basic
+import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
+import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
+import Mathlib.MeasureTheory.Integral.Bochner.Set
 
 /-!
 # T2-D-I: Entropy Power Inequality — L-EPI3 final integration
@@ -496,5 +499,469 @@ theorem entropy_power_inequality_three_forms_equiv
   ⟨entropy_power_inequality_reduced P X Y hX hY hXY h_pipeline,
    entropy_power_inequality_exp_form_reduced P X Y hX hY hXY h_pipeline,
    entropy_power_inequality_normalized_integrated P X Y hX hY hXY h_pipeline⟩
+
+/-! ## §12 — `epi-debruijn-integration-plan` Phase B/C/D contributions
+
+This section contributes the **family-level de Bruijn lift** (Phase B) and the
+**bounded-T Gaussian FTC application** (Phase C) called for by
+`docs/shannon/epi-debruijn-integration-plan.md`, together with two **honest
+load-bearing predicates** (`IsHeatFlowFamilyHyp`, `IsDeBruijnTailHyp`) that
+externalize the regularity / tail-analysis facts which Mathlib does not provide
+and that the plan does not attempt to discharge here.
+
+### Honesty notes (load-bearing) — read before extending this section.
+
+1. The predicate `IsDeBruijnIntegrationHyp X Z P T`
+   (`EPIStamDischarge.lean:177-186`) **quantifies its density witness `fPath`
+   universally**. Because `fisherInfoOfMeasureV2 μ f = fisherInfoOfDensity f`
+   (the `μ` argument is a label only) and `fisherInfoOfDensity (fun _ => 0) = 0`
+   (`FisherInfoV2.lean:100`), the predicate's RHS evaluates to `0` for the
+   `fPath := fun _ _ => 0` instance, so the predicate **forces
+   `h_target = h_X`** in every case. For non-degenerate `(X, T > 0)` this is
+   false (e.g. Gaussian `X` gives `h(N(m, v+T)) ≠ h(N(m, v))`). The predicate
+   as currently stated is therefore **not satisfiable for the non-trivial
+   integration identity** and cannot be discharged honestly without changing
+   its quantifier shape (existential on `fPath`, or `fPath` taken as parameter
+   rather than universal). Since `EPIStamDischarge.lean` is owned by the
+   sister Stam-discharge agent in the same wave, the redefinition is **not
+   performed here**; this section avoids consuming the broken predicate and
+   instead produces *standalone* Gaussian-case statements (cf.
+   `bounded_T_ftc_gaussian` below).
+
+2. Similarly, `IsDeBruijnRegularityHyp X Z P` (`EPIStamDischarge.lean:143-158`)
+   carries an `integrable_deriv` field requiring
+   `Integrable (fun t => (1/2)·J(...).toReal) (volume.restrict (Set.Ioi 0))`.
+   For Gaussian `X`, the integrand is `1/(2(v+t))`, whose integral over
+   `(0, ∞)` diverges; the field cannot be discharged for Gaussian `X` either.
+   This section consequently does **not** construct `IsDeBruijnRegularityHyp`
+   even in the Gaussian case; the per-time-point V2 family lift
+   (`isRegularDeBruijnHypV2_family_of_gaussian`) is provided as a standalone
+   honest deliverable instead.
+
+3. The 14 `@audit:suspect(epi-debruijn-integration-plan)` tags in §1–§11 are
+   **not** downgraded by this section. Those tags reflect that the integrated
+   pipeline's `bridge : IsStamToEPIBridgeHyp` field is load-bearing (Csiszár
+   scaling argument, Cover-Thomas Lemma 17.7.3), and that bridge is sister-plan
+   responsibility (`epi-stam-to-conclusion-plan.md`). The de Bruijn integration
+   identity is the *input* to Csiszár scaling, not its discharge, so producing
+   genuine de Bruijn machinery (this section) does not retire those tags. The
+   honest downgrade target for the 14 tags is
+   `@audit:closed-by-successor(epi-stam-to-conclusion-plan)` once the bridge is
+   genuine; that downgrade is **not performed here** because the bridge is
+   still load-bearing as of this commit.
+
+`@audit:suspect(epi-debruijn-integration-plan)` — section header carries the same
+plan slug so that grep for the slug surfaces these notes alongside the 14 tags.
+-/
+
+/-- **Family-level heat-flow regularity hypothesis** (Phase B-5, honest
+load-bearing).
+
+`IsHeatFlowFamilyHyp X Z P` packages, for general (non-Gaussian) `X`, the
+per-time-point V2 de Bruijn regularity witness along the heat-flow path
+`s ↦ X + √s · Z`, together with a smooth density path. This is a **load-bearing
+honest hypothesis** (type ≠ conclusion, no circular discharge); the only
+hypothesis-free constructor produced in this file is the Gaussian case
+(`isHeatFlowFamilyHyp_of_gaussian`).
+
+For Gaussian `X` the witness is `fun t => gaussianPDFReal m (v + ⟨t, _⟩)`; for
+general `X` no Mathlib machinery currently produces the required
+`HasDerivAt` family-level statement and so this hypothesis externalizes that
+regularity.
+
+`@audit:staged(epi-heat-flow-family-regularity)` — honest load-bearing
+hypothesis, not a discharge. -/
+structure IsHeatFlowFamilyHyp {Ω : Type*} [MeasurableSpace Ω]
+    (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] : Type where
+  /-- `Z` is the standard normal driving the heat flow. -/
+  Z_law : P.map Z = gaussianReal 0 1
+  /-- Smooth density witness along the heat-flow path (`fPath t` should be the
+  density of `P.map (X + √t · Z)`). -/
+  fPath : ℝ → ℝ → ℝ
+  /-- For each `t > 0` the V2 de Bruijn regularity holds with `density_t = fPath t`. -/
+  reg_at : ∀ t : ℝ, 0 < t →
+    HasDerivAt
+      (fun s => Common2026.Shannon.differentialEntropy
+                  (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z s)))
+      ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal (fPath t))
+      t
+
+/-- **De Bruijn tail-analysis hypothesis** (Phase C-5, honest load-bearing).
+
+`IsDeBruijnTailHyp X Z P` packages, for general `X`, the existence of a limit /
+tail bound needed to extend the bounded-T integration identity to `T → ∞`.
+Specifically it asserts the existence of a value `h_∞` to which the heat-flow
+entropy converges (modulo the Gaussian saturation form) together with an
+integrability witness on `(0, ∞)`.
+
+This is a **load-bearing honest hypothesis** (type ≠ conclusion); Mathlib
+provides no unbounded-interval FTC variant suitable for our use case (`rg
+"intervalIntegral.integral_deriv" → only bounded-interval forms`), so the
+`T → ∞` lift is externalized here.
+
+`@audit:staged(epi-debruijn-tail)` `@audit:defect(degenerate)`
+Honest load-bearing hypothesis, not a discharge.
+
+**Independent audit (2026-05-25)**: the `tail_eq` field is trivially satisfied
+by the degenerate witness `(h_inf := differentialEntropy (P.map X),
+fPath_tail := fun _ _ ↦ 0)`: the LHS is `0`, and the RHS reduces to
+`∫ t in Ioi 0, (1/2) * fisherInfoOfDensityReal 0 ∂volume = 0` because
+`fisherInfoOfDensity 0 = 0` (`FisherInfoV2.lean:100`). This is the same
+`fisherInfoOfDensity 0 = 0` mechanism that drives the upstream
+`IsDeBruijnIntegrationHyp` `∀ fPath` defect (`EPIStamDischarge.lean:177`),
+re-emerging here independently on the existential side. The `h_inf` field is
+therefore **semantically empty**: nothing here forces it to be the genuine
+heat-flow tail limit. Phase D consumers MUST add an external constraint such
+as `Filter.Tendsto (fun T ↦ differentialEntropy (P.map (gaussianConvolution X Z T))) atTop (𝓝 h_inf)`
+(or restructure this predicate with that field) before this hypothesis
+carries useful tail-analysis content. -/
+structure IsDeBruijnTailHyp {Ω : Type*} [MeasurableSpace Ω]
+    (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] : Type where
+  /-- Tail limit of the heat-flow entropy. -/
+  h_inf : ℝ
+  /-- Tail-integrable density witness along the heat-flow path. -/
+  fPath_tail : ℝ → ℝ → ℝ
+  /-- Tail integral identity: the entropy gap to `h_inf` is the tail integral
+  of the V2 Fisher information along the heat-flow path. -/
+  tail_eq :
+    h_inf - Common2026.Shannon.differentialEntropy (P.map X)
+      = ∫ t in Set.Ioi 0, (1/2)
+        * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal (fPath_tail t)
+        ∂volume
+
+/-! ### Phase B helpers — `gaussianConvolution` boundary -/
+
+/-- `gaussianConvolution X Z 0 = X` pointwise (uses `Real.sqrt 0 = 0`). -/
+theorem gaussianConvolution_at_zero {Ω : Type*} (X Z : Ω → ℝ) :
+    Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z 0 = X := by
+  funext ω
+  simp [Common2026.Shannon.FisherInfoV2.gaussianConvolution]
+
+/-- `P.map (gaussianConvolution X Z 0) = P.map X`. -/
+theorem map_gaussianConvolution_at_zero {Ω : Type*} [MeasurableSpace Ω]
+    (X Z : Ω → ℝ) (P : Measure Ω) :
+    P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z 0) = P.map X := by
+  rw [gaussianConvolution_at_zero]
+
+/-- `differentialEntropy (P.map (gaussianConvolution X Z 0)) =
+differentialEntropy (P.map X)`. -/
+theorem differentialEntropy_gaussianConvolution_at_zero
+    {Ω : Type*} [MeasurableSpace Ω] (X Z : Ω → ℝ) (P : Measure Ω) :
+    Common2026.Shannon.differentialEntropy
+      (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z 0))
+      = Common2026.Shannon.differentialEntropy (P.map X) := by
+  rw [map_gaussianConvolution_at_zero]
+
+/-! ### Phase B-4 — Gaussian per-time-point V2 family lift -/
+
+/-- **Gaussian per-time-point V2 family lift** (Phase B-4, honest, Gaussian
+restricted, hypothesis-free).
+
+For independent Gaussian `X ∼ 𝒩(m, v)` (with `v ≠ 0`) and standard normal
+`Z ∼ 𝒩(0, 1)`, the V2 de Bruijn regularity `IsRegularDeBruijnHypV2 X Z P t`
+holds for every `t > 0`, with explicit density witness
+`gaussianPDFReal m (v + ⟨t, ht.le⟩)`.
+
+The witness is constructed by routing
+`FisherInfoV2.deBruijn_identity_v2_gaussian` (which gives the `HasDerivAt`
+directly) into the structure constructor; no Mathlib-side discharge is needed
+because Phase D of `fisher-info-gaussian-discharge-moonshot-plan.md` already
+publishes that derivative.
+
+This is the family-level lift promised by Phase B of
+`epi-debruijn-integration-plan.md`, restricted to the Gaussian case. The
+general non-Gaussian case is externalized via `IsHeatFlowFamilyHyp`.
+
+(Returns `Type`, not `Prop`, because `IsRegularDeBruijnHypV2` carries a
+density witness as data; declared `noncomputable def` accordingly.) -/
+noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
+    {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
+    (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z)
+    (hXZ : IndepFun X Z P)
+    {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0)
+    (hX_law : P.map X = gaussianReal m v)
+    (hZ_law : P.map Z = gaussianReal 0 1) :
+    ∀ t : ℝ, 0 < t →
+      Common2026.Shannon.FisherInfoV2.IsRegularDeBruijnHypV2 X Z P t := by
+  intro t ht
+  refine
+    { Z_law := hZ_law
+      density_t := gaussianPDFReal m (v + ⟨t, ht.le⟩)
+      derivAt_entropy_eq_half_fisher_v2 := ?_ }
+  -- The V2 de Bruijn Gaussian discharge gives the derivative with the V2
+  -- *measure*-keyed Fisher info; convert to the density-keyed shape required
+  -- by `IsRegularDeBruijnHypV2`.
+  have h_deriv := Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2_gaussian
+    X Z hX hZ hXZ hv hX_law hZ_law ht
+  -- `fisherInfoOfMeasureV2Real μ f = fisherInfoOfDensityReal f` by `rfl`.
+  -- (The measure argument is purely a labelling device in the V2 API.)
+  have h_eq :
+      Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2Real
+          (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z t))
+          (gaussianPDFReal m (v + ⟨t, ht.le⟩))
+        = Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+            (gaussianPDFReal m (v + ⟨t, ht.le⟩)) := rfl
+  rw [h_eq] at h_deriv
+  exact h_deriv
+
+/-- **Family-level heat-flow regularity from a Gaussian** (Phase B-5,
+hypothesis-free Gaussian constructor).
+
+For Gaussian `X` and standard normal `Z` with the usual independence,
+`IsHeatFlowFamilyHyp X Z P` admits a hypothesis-free witness, where the
+density path is `fun t x => gaussianPDFReal m (v + ⟨t, _⟩) x`. -/
+noncomputable def isHeatFlowFamilyHyp_of_gaussian
+    {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
+    (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z)
+    (hXZ : IndepFun X Z P)
+    {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0)
+    (hX_law : P.map X = gaussianReal m v)
+    (hZ_law : P.map Z = gaussianReal 0 1) :
+    IsHeatFlowFamilyHyp X Z P where
+  Z_law := hZ_law
+  fPath := fun t => gaussianPDFReal m
+            (v + ⟨max t 0, le_max_right _ _⟩)
+  reg_at t ht := by
+    -- For `t > 0`, `max t 0 = t`.
+    have h_max : max t 0 = t := max_eq_left ht.le
+    -- The V2 de Bruijn Gaussian discharge gives the derivative.
+    have h_deriv := Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2_gaussian
+      X Z hX hZ hXZ hv hX_law hZ_law ht
+    -- `fisherInfoOfMeasureV2Real μ f = fisherInfoOfDensityReal f` by `rfl`.
+    have h_eq :
+        Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2Real
+            (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z t))
+            (gaussianPDFReal m (v + ⟨t, ht.le⟩))
+          = Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              (gaussianPDFReal m (v + ⟨t, ht.le⟩)) := rfl
+    rw [h_eq] at h_deriv
+    -- Massage `⟨max t 0, ...⟩` to `⟨t, ht.le⟩` using `h_max`.
+    have h_subt :
+        gaussianPDFReal m
+            (v + ⟨max t 0, le_max_right _ _⟩)
+        = gaussianPDFReal m (v + ⟨t, ht.le⟩) := by
+      congr 2
+      exact Subtype.ext h_max
+    rw [h_subt]
+    exact h_deriv
+
+/-! ### Phase C-3 — Gaussian closed-form entropy at the heat-flow boundary -/
+
+/-- **Gaussian heat-flow entropy boundary value at `T`** for `T ≥ 0`. -/
+theorem differentialEntropy_gaussianConvolution_of_gaussian
+    {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
+    {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z)
+    (hXZ : IndepFun X Z P)
+    {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0)
+    (hX_law : P.map X = gaussianReal m v)
+    (hZ_law : P.map Z = gaussianReal 0 1)
+    {T : ℝ} (hT : 0 ≤ T) :
+    Common2026.Shannon.differentialEntropy
+      (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z T))
+      = (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + T)) := by
+  rw [Common2026.Shannon.FisherInfoV2.gaussianConvolution_law_of_gaussian
+        hX hZ hXZ hX_law hZ_law hT]
+  exact Common2026.Shannon.FisherInfoV2.differentialEntropy_gaussianReal_heat_path
+    m hv hT
+
+/-! ### Phase C-1/C-4 — Bounded-T FTC application (Gaussian case)
+
+This is the **honest Gaussian-restricted bounded-T deliverable** of Phase C:
+the de Bruijn integration identity holds for Gaussian `X` on `(0, T)` as a
+direct consequence of Mathlib's bounded FTC and Phase B-4 above. Stated as a
+*standalone* identity (not via `IsDeBruijnIntegrationHyp`, which has the defect
+discussed in §12's honesty notes). -/
+
+/-- **Heat-flow entropy derivative (Gaussian, on `s > 0` neighbourhood)**.
+
+For Gaussian `X` and `s > 0`, the derivative of `s' ↦ differentialEntropy(P.map
+(X + √s' · Z))` at `s` equals `1/(2(v+s))`. This is the per-point statement
+from `deBruijn_identity_v2_gaussian` rewritten with the Gaussian closed-form
+Fisher information value `1/(v+t)`. -/
+theorem hasDerivAt_differentialEntropy_heat_flow_gaussian
+    {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
+    {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z)
+    (hXZ : IndepFun X Z P)
+    {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0)
+    (hX_law : P.map X = gaussianReal m v)
+    (hZ_law : P.map Z = gaussianReal 0 1)
+    {s : ℝ} (hs : 0 < s) :
+    HasDerivAt
+      (fun s' => Common2026.Shannon.differentialEntropy
+                  (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z s')))
+      (1 / (2 * ((v : ℝ) + s))) s := by
+  -- Step 1: re-derive the LHS identification (same approach as
+  -- `deBruijn_identity_v2_gaussian`'s proof). We want
+  -- `s' ↦ entropy(...) =ᶠ[nhds s] s' ↦ (1/2) log (2π e (v + s'))` so that
+  -- `hasDerivAt_half_log_gaussian_entropy` transfers the derivative.
+  have hvs_pos : (0 : ℝ) < (v : ℝ) + s := by
+    have hv_pos : (0 : ℝ) < v := by
+      have : (v : ℝ) ≠ 0 := by exact_mod_cast hv
+      exact lt_of_le_of_ne v.coe_nonneg (Ne.symm this)
+    linarith
+  have h_pos_nbhd : ∀ᶠ s' in nhds s, (0 : ℝ) < s' := eventually_gt_nhds hs
+  have h_eventually : (fun s' => Common2026.Shannon.differentialEntropy
+        (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z s')))
+        =ᶠ[nhds s] (fun s' => (1/2 : ℝ) * Real.log
+            (2 * Real.pi * Real.exp 1 * ((v : ℝ) + s'))) := by
+    refine h_pos_nbhd.mono fun s' hs' => ?_
+    exact differentialEntropy_gaussianConvolution_of_gaussian
+      hX hZ hXZ hv hX_law hZ_law hs'.le
+  -- Step 2: derivative of the log form.
+  have h_log_deriv :=
+    Common2026.Shannon.FisherInfoV2.hasDerivAt_half_log_gaussian_entropy
+      (v := v) (s := s) hvs_pos
+  -- Transfer. `congr_of_eventuallyEq` expects `f_entropy =ᶠ f_log`, which is
+  -- our `h_eventually` (no `.symm` needed).
+  exact h_log_deriv.congr_of_eventuallyEq h_eventually
+
+/-- **Continuity of `1/(2(v+t))` on `[0, T]`** for `v > 0`, `T ≥ 0`. -/
+theorem continuousOn_one_div_two_times_v_plus
+    {v : ℝ≥0} (hv : v ≠ 0) (T : ℝ) :
+    ContinuousOn (fun t : ℝ => 1 / (2 * ((v : ℝ) + t))) (Set.Icc 0 T) := by
+  have hv_pos : (0 : ℝ) < v := by
+    have : (v : ℝ) ≠ 0 := by exact_mod_cast hv
+    exact lt_of_le_of_ne v.coe_nonneg (Ne.symm this)
+  have h_pos : ∀ t ∈ Set.Icc (0 : ℝ) T, 2 * ((v : ℝ) + t) ≠ 0 := by
+    intro t ht
+    have ht_nn : (0 : ℝ) ≤ t := ht.1
+    have hvt : (0 : ℝ) < (v : ℝ) + t := by linarith
+    have h2vt : (0 : ℝ) < 2 * ((v : ℝ) + t) := by linarith
+    exact h2vt.ne'
+  -- `1/(2(v + t)) = (2 * (v + t))⁻¹`; the inner expression is continuous and
+  -- non-zero on `[0, T]`, so the reciprocal is continuous.
+  refine ContinuousOn.div continuousOn_const ?_ h_pos
+  exact (continuous_const.mul (continuous_const.add continuous_id)).continuousOn
+
+/-- **Continuity of `s' ↦ differentialEntropy(P.map (X + √s' · Z))` on `[0, T]`
+for Gaussian `X`**. -/
+theorem continuousOn_differentialEntropy_heat_flow_gaussian
+    {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
+    {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z)
+    (hXZ : IndepFun X Z P)
+    {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0)
+    (hX_law : P.map X = gaussianReal m v)
+    (hZ_law : P.map Z = gaussianReal 0 1)
+    {T : ℝ} (hT : 0 ≤ T) :
+    ContinuousOn
+      (fun s' => Common2026.Shannon.differentialEntropy
+                  (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z s')))
+      (Set.Icc 0 T) := by
+  -- For `s' ∈ [0, T]` (so `s' ≥ 0`), the entropy equals the closed form
+  -- `(1/2) log (2π e (v + s'))`, which is continuous.
+  have h_eq_on : Set.EqOn
+      (fun s' => Common2026.Shannon.differentialEntropy
+        (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z s')))
+      (fun s' => (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + s')))
+      (Set.Icc 0 T) := by
+    intro s' hs'
+    exact differentialEntropy_gaussianConvolution_of_gaussian
+      hX hZ hXZ hv hX_law hZ_law hs'.1
+  refine ContinuousOn.congr ?_ h_eq_on
+  -- Continuity of `(1/2) log (2π e (v + s'))` on `[0, T]`.
+  have hv_pos : (0 : ℝ) < v := by
+    have : (v : ℝ) ≠ 0 := by exact_mod_cast hv
+    exact lt_of_le_of_ne v.coe_nonneg (Ne.symm this)
+  have h2πe_pos : (0 : ℝ) < 2 * Real.pi * Real.exp 1 := by positivity
+  have h_arg_pos : ∀ s' ∈ Set.Icc (0 : ℝ) T,
+      0 < 2 * Real.pi * Real.exp 1 * ((v : ℝ) + s') := by
+    intro s' hs'
+    have hs'_nn : 0 ≤ s' := hs'.1
+    have : (0 : ℝ) < (v : ℝ) + s' := by linarith
+    exact mul_pos h2πe_pos this
+  -- `Real.log` is continuous on positives.
+  have h_inner_cont : ContinuousOn
+      (fun s' : ℝ => 2 * Real.pi * Real.exp 1 * ((v : ℝ) + s')) (Set.Icc 0 T) :=
+    (continuous_const.mul (continuous_const.add continuous_id)).continuousOn
+  have h_log_cont : ContinuousOn
+      (fun s' : ℝ => Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + s')))
+      (Set.Icc 0 T) := by
+    refine ContinuousOn.log h_inner_cont ?_
+    intro s' hs'
+    exact (h_arg_pos s' hs').ne'
+  exact continuousOn_const.mul h_log_cont
+
+/-- **Bounded-T FTC application (Gaussian case)** — Phase C-1/C-4 main
+deliverable.
+
+For Gaussian `X ∼ 𝒩(m, v)` with `v ≠ 0`, the heat-flow entropy gap over
+the bounded interval `(0, T)` equals the path integral of `1/(2(v+t))`:
+
+  `h(N(m, v+T)) - h(N(m, v))
+    = ∫_(0, T) 1/(2(v+t)) dt`,
+
+stated as a direct equality (i.e., bypassing the
+`IsDeBruijnIntegrationHyp X Z P T` predicate which is structurally broken — see
+§12 honesty note 1). The integration uses Mathlib `intervalIntegral` and is
+converted to `Set.Ioo`-form for downstream consumption.
+
+`@audit:suspect(epi-debruijn-integration-plan)` — honest bounded-T discharge,
+unbounded `T → ∞` lift is externalized via `IsDeBruijnTailHyp`. -/
+theorem bounded_T_ftc_gaussian
+    {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
+    {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z)
+    (hXZ : IndepFun X Z P)
+    {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0)
+    (hX_law : P.map X = gaussianReal m v)
+    (hZ_law : P.map Z = gaussianReal 0 1)
+    {T : ℝ} (hT : 0 ≤ T) :
+    Common2026.Shannon.differentialEntropy
+        (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z T))
+      - Common2026.Shannon.differentialEntropy (P.map X)
+      = ∫ t in Set.Ioo 0 T, 1 / (2 * ((v : ℝ) + t)) ∂volume := by
+  set f : ℝ → ℝ := fun s => Common2026.Shannon.differentialEntropy
+    (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z s)) with hf_def
+  set f' : ℝ → ℝ := fun s => 1 / (2 * ((v : ℝ) + s)) with hf'_def
+  -- Step 1: continuity of `f` on `[0, T]`.
+  have h_cont : ContinuousOn f (Set.Icc 0 T) :=
+    continuousOn_differentialEntropy_heat_flow_gaussian hX hZ hXZ hv hX_law hZ_law hT
+  -- Step 2: `HasDerivAt f (f' s) s` for `s ∈ Ioo 0 T`.
+  have h_deriv : ∀ s ∈ Set.Ioo (0 : ℝ) T, HasDerivAt f (f' s) s := by
+    intro s hs
+    exact hasDerivAt_differentialEntropy_heat_flow_gaussian
+      hX hZ hXZ hv hX_law hZ_law hs.1
+  -- Step 3: `IntervalIntegrable f' volume 0 T` (continuity on `[0, T]`).
+  have h_cont_f' : ContinuousOn f' (Set.Icc 0 T) :=
+    continuousOn_one_div_two_times_v_plus hv T
+  have h_int : IntervalIntegrable f' volume 0 T := by
+    have h_icc_eq_uicc : Set.Icc (0 : ℝ) T = Set.uIcc 0 T := by
+      rw [Set.uIcc_of_le hT]
+    rw [h_icc_eq_uicc] at h_cont_f'
+    exact h_cont_f'.intervalIntegrable
+  -- Step 4: Mathlib FTC `integral_eq_sub_of_hasDerivAt_of_le`.
+  have h_ftc :
+      ∫ s in (0 : ℝ)..T, f' s = f T - f 0 :=
+    intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le hT h_cont h_deriv h_int
+  -- Step 5: `f 0 = differentialEntropy (P.map X)` (boundary).
+  have h_f0 : f 0 = Common2026.Shannon.differentialEntropy (P.map X) := by
+    simp [hf_def, differentialEntropy_gaussianConvolution_at_zero]
+  -- Step 6: convert `∫ s in 0..T, f' s` → `∫ s in Set.Ioo 0 T, f' s ∂volume`.
+  -- Use `intervalIntegral.integral_of_le` then `integral_Ioc_eq_integral_Ioo`.
+  have h_ioc : ∫ s in (0 : ℝ)..T, f' s = ∫ s in Set.Ioc (0 : ℝ) T, f' s ∂volume :=
+    intervalIntegral.integral_of_le hT
+  have h_ioo_eq_ioc :
+      ∫ s in Set.Ioc (0 : ℝ) T, f' s ∂volume
+        = ∫ s in Set.Ioo (0 : ℝ) T, f' s ∂volume :=
+    MeasureTheory.integral_Ioc_eq_integral_Ioo
+  -- Combine.
+  rw [← h_f0]
+  rw [← h_ftc, h_ioc, h_ioo_eq_ioc]
+
+/-! ### Phase D — Section closure note
+
+As discussed in §12 honesty note 3, the 14 `@audit:suspect(epi-debruijn-integration-plan)`
+tags in §1–§11 cannot be downgraded by this Phase D — the
+`IsStamToEPIBridgeHyp` field of `IsEPIL3IntegratedPipeline` is the sister-plan
+discharge target (Csiszár scaling, Cover-Thomas Lemma 17.7.3). This file's
+contributions (Phase B-4/B-5/C-1/C-4 above) are the de Bruijn-side honest
+inputs to that scaling argument; the bridge itself remains load-bearing as of
+this commit.
+
+Honest downgrade plan once `epi-stam-to-conclusion-plan` lands:
+
+  `@audit:suspect(epi-debruijn-integration-plan)`
+    → `@audit:closed-by-successor(epi-stam-to-conclusion-plan)`
+
+(See `docs/audit/audit-tags.md` for the `closed-by-successor` semantics.) -/
 
 end InformationTheory.Shannon.EPIL3Integration

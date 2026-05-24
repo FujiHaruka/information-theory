@@ -304,13 +304,18 @@ theorem isEPIGapMonotoneHyp_of_density (f : ℝ → ℝ) : IsEPIGapMonotoneHyp f
 /-! ## §7 — Predicate manipulation + sanity checks -/
 
 /-- **Refined pipeline symmetry**: `IsEPIStamDeBruijnPipeline X Y P` implies
-`IsEPIStamDeBruijnPipeline Y X P`. -/
+`IsEPIStamDeBruijnPipeline Y X P`.
+
+Note: the `convScore` field is rebuilt via `isStamScoreConvolution_symm` (no
+longer `trivial`, since `IsStamScoreConvolution` was upgraded from the W7
+`Prop := True` placeholder to the typed optimal-λ-witness Prop in the
+`epi-stam-discharge-plan` Phase B). -/
 theorem isEPIStamDeBruijnPipeline_symm
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h : IsEPIStamDeBruijnPipeline X Y P) :
     IsEPIStamDeBruijnPipeline Y X P where
-  convScore := trivial
+  convScore := isStamScoreConvolution_symm h.convScore
   totalExp := isStamTotalExpectation_symm h.totalExp
   bridge := isStamToEPIBridgeHyp_symm h.bridge
 

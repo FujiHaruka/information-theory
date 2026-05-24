@@ -88,7 +88,7 @@ honest pieces, one per field. Body to be filled by Phase 1-4 of the discharge pl
   **single new honest piece** introduced by the L-PG1 discharge plan; not present
   in Mathlib.
 
-`@audit:suspect(parallel-gaussian-l-pg1-discharge)` -/
+`@audit:ok(parallel-gaussian-l-pg1-discharge)` -/
 theorem isParallelGaussianPerCoordRegularity_of_pieces {n : ℕ}
     (P : ℝ) (N : Fin n → ℝ≥0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -116,7 +116,14 @@ theorem isParallelGaussianPerCoordRegularity_of_pieces {n : ℕ}
           (mutualInfoOfChannel p (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
             ≤ ∑ i : Fin n, (1/2) * Real.log (1 + P' i / (N i : ℝ))) :
     IsParallelGaussianPerCoordRegularity P N h_meas h_parallel_meas Q := by
-  sorry
+  refine
+    { bddAbove := ?_
+      achiever_mi := h_perCoord_bridge_achiever
+      max_ent := h_multivar_decomp }
+  -- Phase 1: the MI image is bounded above by the Q-free global P-upper bound.
+  refine ⟨∑ i : Fin n, (1/2) * Real.log (1 + P / (N i : ℝ)), ?_⟩
+  rintro y ⟨p, hp_mem, rfl⟩
+  exact h_bdd_global p hp_mem
 
 /-! ## Phase 0 — hypothesis-minimal headline skeleton
 
@@ -132,7 +139,7 @@ equals the water-filling sum, with the regularity bundle unfolded into its
 3 honest pieces. Body to be filled by Phase 4 of the discharge plan via the
 constructor `isParallelGaussianPerCoordRegularity_of_pieces` above.
 
-`@audit:suspect(parallel-gaussian-l-pg1-discharge)` -/
+`@audit:ok(parallel-gaussian-l-pg1-discharge)` -/
 theorem parallel_gaussian_capacity_formula_minimal {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -162,6 +169,14 @@ theorem parallel_gaussian_capacity_formula_minimal {n : ℕ}
     parallelGaussianCapacity P N h_meas h_parallel_meas
       = ∑ i : Fin (n + 1), (1/2) *
           Real.log (1 + waterFillingPower ν N i / (N i : ℝ)) := by
-  sorry
+  -- Phase 4: assemble the regularity bundle from the 3 honest pieces via the
+  -- constructor, then invoke the existing genuine `le_antisymm` headline
+  -- `parallel_gaussian_capacity_formula` (`PerCoord.lean:367`).
+  set Q : Fin (n + 1) → ℝ≥0 := fun i => (waterFillingPower ν N i).toNNReal with hQ_def
+  have h_reg : IsParallelGaussianPerCoordRegularity P N h_meas h_parallel_meas Q :=
+    isParallelGaussianPerCoordRegularity_of_pieces P N h_meas h_parallel_meas Q
+      h_bdd_global h_bridge_per_coord h_multivar_decomp
+  exact parallel_gaussian_capacity_formula P hP N hN h_meas h_parallel_meas
+    ν h_kkt h_opt h_reg
 
 end InformationTheory.Shannon.ParallelGaussian

@@ -317,16 +317,16 @@ optimality certificate is now produced *internally* from a Lagrange-multiplier
 bundle (KKT stationarity + complementary slackness) instead of taken as an
 abstract hypothesis.
 
-⚠️ NOT a full discharge: L-PG1 (the per-coordinate water-filling reduction)
-remains OPEN — `h_for_bundle` is a conclusion-as-hypothesis (the capacity equality
-split into two inequalities). The Lagrange-bundle *existence* (`h_for_lagrange`,
-the convex-duality multiplier) is also still taken as a hypothesis (KKT-uniqueness
-wall). Genuinely closed here: the certificate *body* (Lagrange reduction from a
-given bundle, via genuine log-concavity), plus upstream L-WF1 and L-PG0. The
-genuine L-PG1 reduction needs chain rule + per-coord AWGN capacity (continuous
-AEP / sphere-shell volume) machinery absent from Mathlib.
+**Superseded** by `parallel_gaussian_capacity_formula_minimal`
+(`ParallelGaussianPerCoordRegularity.lean`) for the L-PG1 piece: the
+chain-rule bundle hypothesis `h_for_bundle` is replaced by the honest
+pieces of the regularity bundle (multivariate channel↔RV MI decomposition
++ per-coord AWGN bridge + global P-upper bound). Continuous AEP is *not*
+required (the capacity is the information capacity, evaluated by a
+sup-sandwich). The Lagrange-bundle hypothesis `h_for_lagrange` remains
+honest and is independent of L-PG1. Retained for backward compatibility.
 
-`@audit:suspect(parallel-gaussian-moonshot-plan)` -/
+`@audit:superseded-by(parallel-gaussian-l-pg1-discharge)` -/
 theorem parallel_gaussian_capacity_formula_WFcert_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
