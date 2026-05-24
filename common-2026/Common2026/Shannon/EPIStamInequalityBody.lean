@@ -256,7 +256,7 @@ theorem isStamCauchySchwarzOptimal_symm {Ω : Type*} [MeasurableSpace Ω]
 Given the convolution-score predicate + the optimal Cauchy-Schwarz predicate,
 chain through Step 4 closed form to obtain the inverse-form Stam inequality.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-discharge-plan)` -/
 theorem stam_inequality_via_predicate_optimal
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -276,7 +276,7 @@ theorem stam_inequality_via_predicate_optimal
 predicate (Cover-Thomas Lemma 17.7.2 真 signature) follows from the convolution
 + optimal-CS pair. This is the **bridge from body to plumbing**.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-discharge-plan)` -/
 theorem isStamInequalityHyp_via_body
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -406,7 +406,7 @@ theorem stam_harmonic_lower_half_min {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
 /-- **Optimal CS from a λ-witness at the optimum**: given a Cauchy-Schwarz
 witness with `λ = J_Y / (J_X + J_Y)`, the optimal-form predicate is recovered.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-discharge-plan)` -/
 theorem isStamCauchySchwarzOptimal_of_lambda_optimal
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -429,7 +429,7 @@ theorem isStamCauchySchwarzOptimal_of_lambda_optimal
 body discharge predicates with the Wave 6 `EPIL3Integration` integrated
 pipeline.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-discharge-plan)` -/
 theorem isStamInequalityHyp_via_body_to_pipeline
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -442,7 +442,7 @@ theorem isStamInequalityHyp_via_body_to_pipeline
 
 /-- **End-to-end EPI via body discharge** (composes §4 + §6 + EPIL3 pipeline).
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-discharge-plan)` -/
 theorem entropy_power_inequality_via_body
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

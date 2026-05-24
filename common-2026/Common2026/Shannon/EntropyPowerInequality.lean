@@ -228,7 +228,7 @@ defeq でなく、本体は `:= h` 循環ではない。両者の discharge (真
 `EPIStamInequalityBody.lean` / `EPIStamDeBruijnConclusion.lean` で進行、Gaussian
 case は §D で full discharge。
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-to-conclusion-plan)` -/
 theorem entropy_power_inequality {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
@@ -241,7 +241,7 @@ theorem entropy_power_inequality {Ω : Type*} {mΩ : MeasurableSpace Ω}
 
 /-- **EPI in `Real.exp (2 · ...)` form** (Cover-Thomas 露出形).
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-to-conclusion-plan)` -/
 theorem entropy_power_inequality_exp_form {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
@@ -317,7 +317,7 @@ theorem isEntropyPowerInequalityHypothesis_of_gaussian
 EPI conclusion is already established by some non-circular route (e.g. Gaussian
 saturation), the bridge is the constant function — it ignores its Stam input.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-to-conclusion-plan)` -/
 theorem isStamToEPIBridge_of_epi
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -354,7 +354,7 @@ theorem entropyPower_map_add_const {μ : Measure ℝ} (hμ : μ ≪ volume)
 
 For independent `X, Y`, `h(X+Y) ≥ (1/2) · log (exp(2 h(X)) + exp(2 h(Y)))`.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-to-conclusion-plan)` -/
 theorem entropy_power_inequality_log_form {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
@@ -390,7 +390,7 @@ chain することで `exp(2 h(X+Y+Z)) ≥ exp(2 h(X)) + exp(2 h(Y)) + exp(2 h(Z
 撤退ラインは 2-arg 形を 2 回適用するための 2 つの L-EPI3 hypothesis を
 取る形に外出し (X+Y vs Z のペアで 1 回、X vs Y のペアで 1 回)。
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-to-conclusion-plan)` -/
 theorem entropy_power_inequality_three_arg {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y Z : Ω → ℝ)

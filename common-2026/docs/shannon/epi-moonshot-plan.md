@@ -36,6 +36,22 @@
 > ⇒ 全 Phase A-E の `[ ]` は実態として完了 (Phase C/主定理は pass-through、Phase D は honest)。EPI 一般形は
 > 依然 discharge されておらず (L-EPI3 = 結論 hypothesis)、真の discharge は後続 plan へ。
 >
+> **SPLIT-INTO (2026-05-24, Wave 1.5 item #8)**: 本 plan の slug `epi-moonshot-plan` は 76 件
+> の `@audit:suspect` を抱える audit 単位として過大であったため、3 sub-plan に分割した。
+> 本 plan は **history record** として保持し、以後の audit / 起草は sub-plan slug を使う:
+>
+> - [`epi-stam-discharge-plan.md`](./epi-stam-discharge-plan.md) — L-EPI1 (Stam inequality)
+>   genuine discharge 担当 (39 件: `EPIStamDischarge.lean` 15 + `EPIStamToBridge.lean` 14 +
+>   `EPIStamInequalityBody.lean` 5 + `EPIStamStep12Body.lean` 5)
+> - [`epi-debruijn-integration-plan.md`](./epi-debruijn-integration-plan.md) — L-EPI2
+>   (de Bruijn integration) genuine discharge 担当 (14 件: `EPIL3Integration.lean` 14)
+> - [`epi-stam-to-conclusion-plan.md`](./epi-stam-to-conclusion-plan.md) — L-EPI3 合流 +
+>   Phase E corollary 担当 (23 件: `EPIStamStep3Body.lean` 9 + `EPIStamDeBruijnConclusion.lean` 6 +
+>   `EntropyPowerInequality.lean` 5 + `EPIPlumbing.lean` 3)
+>
+> 詳細 → [`docs/audit/wave1-plan-sync-epi-bm.md`](../audit/wave1-plan-sync-epi-bm.md) §`epi-moonshot-plan`、
+> [`docs/audit/defect-inventory-2026-05-24.md`](../audit/defect-inventory-2026-05-24.md) §7.3 item #8。
+>
 > **Goal**: 新規ファイル `Common2026/Shannon/EntropyPowerInequality.lean` で
 > **Cover-Thomas Theorem 17.7.3** (`exp(2 h(X+Y)) ≥ exp(2 h(X)) + exp(2 h(Y))`)
 > を **hypothesis pass-through 形 (L-EPI1 + L-EPI2 + L-EPI3 三本)** で publish。

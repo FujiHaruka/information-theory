@@ -159,7 +159,7 @@ genuinely-irreducible Stam primitives: the Blachman convolution-score identity
 (`IsStamTotalExpectation`, Step 3, the IBP content). Steps 2 and 4 are discharged
 arithmetically (`isStamInequalityHyp_via_step3`).
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-to-conclusion-plan)` -/
 theorem isStamInequalityHyp_of_primitives
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -188,7 +188,7 @@ structure IsEPIStamDeBruijnPipeline {Ω : Type*} [MeasurableSpace Ω]
 
 /-- **Derive the Stam inequality** from the refined pipeline.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-to-conclusion-plan)` -/
 theorem isStamInequalityHyp_of_stamDeBruijn
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -199,7 +199,7 @@ theorem isStamInequalityHyp_of_stamDeBruijn
 /-- **Reduce the refined pipeline to the monolithic `IsEPIL3IntegratedPipeline`**.
 The Stam field is supplied by deriving it from the genuine primitives.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-to-conclusion-plan)` -/
 theorem isEPIL3IntegratedPipeline_of_stamDeBruijn
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -210,7 +210,7 @@ theorem isEPIL3IntegratedPipeline_of_stamDeBruijn
 
 /-- **L-EPI3 from the refined pipeline**.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-to-conclusion-plan)` -/
 theorem epi_l3_of_stamDeBruijn
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -224,7 +224,7 @@ theorem epi_l3_of_stamDeBruijn
 deliverable). Single hypothesis is the refined pipeline, which bundles only the
 genuinely-irreducible primitives.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-to-conclusion-plan)` -/
 theorem entropy_power_inequality_via_stamDeBruijn
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -340,7 +340,7 @@ upgrades to `IsEPIL3IntegratedPipeline`. The reverse direction does **not** hold
 in general — the refined pipeline carries strictly more structure (the two genuine
 Stam primitives, vs the black-box Stam inequality).
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-to-conclusion-plan)` -/
 theorem stamDeBruijn_to_integrated
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}

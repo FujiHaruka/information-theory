@@ -268,7 +268,7 @@ theorem isStamToEPIBridgeHyp_of_epi
 + Stam-to-EPI bridge から L-EPI3 (`IsEntropyPowerInequalityHypothesis`) を
 導出する。本 file の主 deliverable。
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-discharge-plan)` -/
 theorem epi_via_stam
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     {P : Measure Ω}
@@ -281,7 +281,7 @@ theorem epi_via_stam
 /-- **Variant of `epi_via_stam`** routed through the EntropyPowerInequality
 main theorem `entropy_power_inequality`. Returns the EPI directly.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-discharge-plan)` -/
 theorem epi_via_stam_main
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -336,7 +336,7 @@ theorem epi_via_stam_gaussian
 
 /-- Symmetric form of `epi_via_stam`.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-discharge-plan)` -/
 theorem epi_via_stam_symm
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     {P : Measure Ω}
@@ -365,7 +365,7 @@ theorem isStamToEPIBridgeHyp_of_forall
 /-- **3-arg EPI via Stam pipeline**: chains `epi_via_stam` twice to obtain
 the 3-argument EPI.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-discharge-plan)` -/
 theorem epi_via_stam_three_arg
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -470,7 +470,7 @@ symmetric while the bridge picks up `Y + X` vs `X + Y` from the
 `IsEntropyPowerInequalityHypothesis` ordering). The symmetric form
 re-routes through `isEntropyPowerInequalityHypothesis_symm`.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-discharge-plan)` -/
 theorem isStamToEPIBridgeHyp_symm
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -483,7 +483,7 @@ theorem isStamToEPIBridgeHyp_symm
 /-- The Stam-to-EPI bridge composes through trivial EPI fact: if EPI is
 already known, the bridge is the constant function.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-discharge-plan)` -/
 theorem isStamToEPIBridgeHyp_const
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -528,7 +528,7 @@ theorem entropyPower_gaussian_sum_eq
 /-- **Log-form EPI via Stam pipeline**: combines `epi_via_stam_main` with
 `entropy_power_inequality_log_form` from `EntropyPowerInequality.lean`.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-discharge-plan)` -/
 theorem entropy_log_form_via_stam
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -543,7 +543,7 @@ theorem entropy_log_form_via_stam
 
 /-- **Exp-form EPI via Stam pipeline**: Cover-Thomas Theorem 17.7.3 露出形.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-discharge-plan)` -/
 theorem entropy_exp_form_via_stam
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -560,7 +560,7 @@ theorem entropy_exp_form_via_stam
 /-- **Normalized `(2πe)⁻¹` form via Stam pipeline**: Cover-Thomas Ch.17 流儀
 `N(X+Y) ≥ N(X) + N(Y)`.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-discharge-plan)` -/
 theorem entropy_normalized_form_via_stam
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -577,7 +577,7 @@ theorem entropy_normalized_form_via_stam
 
 /-- **4-arg EPI via Stam pipeline**: chains `epi_via_stam` three times.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-discharge-plan)` -/
 theorem epi_via_stam_four_arg
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -601,7 +601,7 @@ theorem epi_via_stam_four_arg
 /-- **Composability witness**: any conjunction `(Stam X Y P) ∧ (StamToEPIBridge X Y P)`
 yields the EPI hypothesis.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-discharge-plan)` -/
 theorem isEntropyPowerInequalityHypothesis_of_stam_pair
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -613,7 +613,7 @@ theorem isEntropyPowerInequalityHypothesis_of_stam_pair
 /-- **Pipeline composability**: given the L-EPI3-form already, the Stam pipeline
 trivially returns the same hypothesis.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-discharge-plan)` -/
 theorem epi_pipeline_idempotent
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -626,7 +626,7 @@ theorem epi_pipeline_idempotent
 EPI hypotheses)**: shows that the Stam-pipeline 3-arg form composes with
 `entropy_power_inequality_three_arg`.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-discharge-plan)` -/
 theorem epi_via_stam_three_arg_normalized
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -658,7 +658,7 @@ theorem epi_via_stam_three_arg_normalized
 /-- **Sanity check**: the Stam pipeline composed with the EntropyPowerInequality
 top-level theorem recovers the exact main statement signature.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-discharge-plan)` -/
 theorem epi_via_stam_main_eq
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -674,7 +674,7 @@ theorem epi_via_stam_main_eq
 /-- **Round trip**: if we have the Stam-derived EPI, the EntropyPowerInequality
 predicate is exactly the result of the bridge applied to Stam.
 
-`@audit:suspect(epi-moonshot-plan)` -/
+`@audit:suspect(epi-stam-discharge-plan)` -/
 theorem epi_via_stam_recovers_predicate
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
