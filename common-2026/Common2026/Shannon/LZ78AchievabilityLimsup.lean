@@ -151,7 +151,7 @@ hence `limsup (lz/n) ≤ entropyRate₂ + ε` (`limsup_le_of_le`, coboundedness
 of the rate), and `ε → 0` closes it. The only non-genuine input is the
 load-bearing `IsLZ78AchievabilityZivUpperBound`.
 
-`@audit:suspect(lz78-moonshot-plan)` -/
+`@audit:suspect(lz78-achievability-converse-plan)` -/
 theorem lz78_achievability_limsup_le₂
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -233,7 +233,7 @@ the per-symbol boundedness (`lz78DistinctEncodingLength_isBoundedUnder_le`
 all genuine. The two remaining inputs are load-bearing: they stand for the
 genuine bit-based Ziv inequality / averaged converse coding theorem.
 
-`@audit:suspect(lz78-moonshot-plan)` -/
+`@audit:suspect(lz78-achievability-converse-plan)` -/
 theorem lz78_two_sided_optimality_distinct_genuine
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)

@@ -419,7 +419,7 @@ de-circularization, this forwards the four genuine sandwich ingredients on
 `lz/n` (liminf lower / limsup upper / two boundedness) — no `True`
 pass-throughs, and the conclusion is *derived*, not wrapped.
 
-`@audit:suspect(lz78-moonshot-plan)` -/
+`@audit:suspect(lz78-blockrv-refactor-plan)` -/
 theorem lz78_asymptotic_optimality_with_greedy_impl
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)

@@ -35,6 +35,8 @@
 
 > 実態整合 (2026-05-20): PASS-THROUGH / FLAW-VACUOUS — file `Common2026/Shannon/LempelZiv78.lean` は publish 済 (0 sorry) だが headline `lz78_asymptotic_optimality` (`:409`) の body は **`:= h_rate_bound` の conclusion-as-hypothesis retreat** (a.s. Tendsto 結論をそのまま hypothesis で受けて返す)。3 predicate (`IsZivInequalityPassthrough` `:221`、`IsLZ78ConversePassthrough` `:248`、`IsSMBSandwichPassthrough` `:275`) はすべて **`: Prop := True`**。Cover-Thomas Thm 13.5.3 の数学的核心 (Ziv's inequality / converse / SMB sandwich) は未証明 (plan 設計通りの確定 pass-through、撤退 5 本全発動)。
 
+> **SUPERSEDED-BY (2026-05-24)**: `lz78-residual-discharge-plan` + `lz78-blockrv-refactor-plan` + `lz78-achievability-converse-plan`。本 plan は当初の pass-through 設計 (`Prop := True` / `:= h_rate_bound`) で archive 化、実装は後続 3 plan で genuine 化済。本 plan slug に残っていた `@audit:suspect(lz78-moonshot-plan)` 16 件は同 2026-05-24 に後続 plan slug へ再分配 (achievability-converse 4 / residual-discharge 9 / blockrv-refactor 3) ([`wave1-plan-sync-source-coding.md`](../audit/wave1-plan-sync-source-coding.md) §Recommendations 3)。
+
 **Phase 0 起草中** (`lz78-mathlib-inventory.md` と並行起草)。**Mathlib 在庫 ZERO**
 (trie / phrase counting / Lempel-Ziv 系は皆無)、既存 Common2026 SMB / EntropyRate
 infrastructure を **完全黒箱 reuse**。撤退ライン 5 本全発動下で seed 規模 ~1500 行に着地、

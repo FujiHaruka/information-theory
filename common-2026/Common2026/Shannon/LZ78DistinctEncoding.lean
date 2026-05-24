@@ -410,7 +410,7 @@ Phase B counting envelope (`lz78DistinctEncodingLength_isBoundedUnder_le`)
 and nonnegativity (`..._ge`). Only the two genuine Cover–Thomas chain
 hypotheses (Eq. 13.124 / 13.130) remain.
 
-`@audit:suspect(lz78-moonshot-plan)` -/
+`@audit:suspect(lz78-blockrv-refactor-plan)` -/
 theorem lz78_two_sided_optimality_distinct_bdd_free
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)

@@ -515,7 +515,7 @@ parameter to the concrete greedy `lz78GreedyEncodingLength` and forwards
 the four genuine sandwich ingredients. The body is a genuine application,
 not an identity wrap of the conclusion.
 
-`@audit:suspect(lz78-moonshot-plan)` -/
+`@audit:suspect(lz78-blockrv-refactor-plan)` -/
 theorem lz78_asymptotic_optimality_with_greedy_encoding
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
