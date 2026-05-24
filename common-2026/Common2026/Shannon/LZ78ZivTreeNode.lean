@@ -648,7 +648,7 @@ universal inequality; see `LZ78AsEventualAchievability.lean` for the
 reformulation track. This lemma stands only as scaffolding marking where the
 genuine a.s.-eventual replacement plugs in.
 
-`@audit:suspect(lz78-ziv-inequality-discharge-moonshot-plan)` -/
+`@audit:defect(degenerate)` `@audit:suspect(lz78-ziv-inequality-discharge-moonshot-plan)` -/
 theorem isLZ78AchievabilityZivUpperBound_distinctOverhead
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (hcore_lbh : IsLZ78ZivCombinatorialCoreOverhead μ p)
@@ -709,7 +709,7 @@ core to the overhead core, which is also false. The genuine T1/T2/T3 tree-node
 foundation stands; the assumption count remains two honest inputs, but `hcore`
 is unsatisfiable as stated and must be reformulated a.s.-eventually.
 
-`@audit:suspect(lz78-ziv-inequality-discharge-moonshot-plan)` -/
+`@audit:defect(degenerate)` `@audit:suspect(lz78-ziv-inequality-discharge-moonshot-plan)` -/
 theorem lz78_two_sided_optimality_distinct_ziv_overhead_core_wired
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)

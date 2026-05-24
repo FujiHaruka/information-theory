@@ -293,7 +293,9 @@ liminf-side bridge*
 This is exactly the body of `IsLZ78ConverseChainHyp` (see
 `LZ78ConverseDischarge.lean`), but exposed here as a *signature* under
 the SMB sandwich naming so the chain-rule plumbing is co-located with
-SMB. The substantive Eq. 13.130 derivation is L-LZ3-D and deferred. -/
+SMB. The substantive Eq. 13.130 derivation is L-LZ3-D and deferred.
+
+`@audit:defect(launder)` `@audit:suspect(lz78-residual-discharge-plan)` -/
 def IsSMBToLZ78ConverseChainBridge
     (μ : Measure Ω) (p : StationaryProcess μ α)
     (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) : Prop :=
