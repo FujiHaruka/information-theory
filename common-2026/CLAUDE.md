@@ -139,7 +139,7 @@ If the session is ad-hoc — opened with no prior handoff context, scope unrelat
 
 ## Independent honesty audit (orchestrator 必須)
 
-実装サブエージェントが **新たに `@audit:staged(<slug>)` / `@audit:residual(<slug>)` predicate を導入した場合** (既存タグの継承使用ではなく predicate そのものを新規 def したケース)、orchestrator は当該セッション中 (遅くとも `Common2026.lean` 編入 commit 前) に **独立 audit subagent** を 1 件起動する。実装 agent 自身の「honesty 4 条件 確認」自己申告 + `scripts/audit_db.ts scan --check-db` の機械的タグ整合確認だけでは **タグの正確さを誰も独立に検証していない** 状態 (書いた本人 = 申告者)。
+実装サブエージェントが **新たに `@audit:staged(<slug>)` / `@audit:residual(<slug>)` predicate を導入した場合** (既存タグの継承使用ではなく predicate そのものを新規 def したケース)、orchestrator は当該セッション中 (遅くとも `Common2026.lean` 編入 commit 前) に **独立 audit subagent** を 1 件起動する。実装 agent 自身の「honesty 4 条件 確認」自己申告だけでは **タグの正確さを誰も独立に検証していない** 状態 (書いた本人 = 申告者)。
 
 ### 起動条件
 
@@ -155,18 +155,14 @@ If the session is ad-hoc — opened with no prior handoff context, scope unrelat
 
 - **必須条件**: 実装に関与していない fresh subagent (実装 agent の self-audit は不可)
 - 渡す入力: 対象 file path + 監査対象 predicate 名 + line 番号 + consumer 主定理名 + line + 関連 commit hash + 親 plan path
-- **書込先 = コード docstring の `@audit:KIND(SLUG)` タグ** (Edit 経由)。**コードタグが SoT** (memory `feedback_audit_tags_source_of_truth.md` / `docs/audit/audit-tags.md` 冒頭)、`scripts/audit_db.ts` は cross-check 用 secondary
-- 書込後: `audit_db.ts build` → `scan --check-db` で SoT-DB 整合確認、orchestrator に 200 行以内サマリ返却
-
-### 注意 (旧 workflow の残骸)
-
-`docs/audit/worker-prompts.md` の `audit_db.ts verdict` 経路は audit プロジェクト初期 (集中監査用) の workflow で、現行 SoT (コードタグ) と矛盾。**新規 honesty-auditor 起動時は本ファイル + `.claude/agents/honesty-auditor.md` のみ参照**、worker-prompts.md は参考用扱い。
+- **書込先 = コード docstring の `@audit:KIND(SLUG)` タグ** (Edit 経由)。**コードタグが SoT** (memory `feedback_audit_tags_source_of_truth.md` / `docs/audit/audit-tags.md` 冒頭)
+- 書込後: orchestrator に 200 行以内サマリ返却
 
 ### closure 判定
 
 audit subagent の verdict が:
 
-- **全 OK** → session 完了 OK、`scripts/audit_db.ts` の "ok" として記録するか handoff に明記
+- **全 OK** → session 完了 OK、handoff に明記
 - **questionable** → docstring refine or 追加コメントで対応、必要なら追加 patch
 - **DEFECT** → 当該 predicate を撤回 or 修正、session 中に処理
 

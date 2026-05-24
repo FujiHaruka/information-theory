@@ -1,11 +1,10 @@
 # Audit tags — code-as-source-of-truth 規約
 
-honesty audit の状態 (defect / suspect / staged / defer) を **コード内 docstring に構造化タグで埋め込む** ことで、grep が単一の source of truth になる。`docs/audit/honesty.db` (SQLite) や snapshot 文書ではなく、コード自身が「現状どうなっているか」を答える。
+honesty audit の状態 (defect / suspect / staged / defer) を **コード内 docstring に構造化タグで埋め込む** ことで、grep が単一の source of truth になる。snapshot 文書ではなく、コード自身が「現状どうなっているか」を答える。
 
 ## 動機
 
 - snapshot 文書 (defect-101 report 等) は **書いた瞬間から陳腐化** する。defect 数が変わっても文書は更新されない。
-- DB は並列 lease のため有用だが、`.gitignored` なので team の他メンバーが触れない / レビューで見えない。
 - 散文表現 (`🟢ʰ`, `(未着手)`, "NOT a discharge", "load-bearing hypothesis") が併存していると **集計不能** + 表現ゆれで grep 信頼度が落ちる。
 - 監査で発見した新規 issue を「次セッションのタスク」に保管するのではなく、**発見した場所 (= 当該 docstring)** に埋め込めば、タスクリストが肥大化しない。
 
@@ -97,18 +96,6 @@ rg "@audit:defer\(awgn-achievability-typicality\)" Common2026/
 - タスクリストは current session 内で消える / ハンドオフは多重化して読み逃す。docstring は declaration とともに永続。
 - 発見場所 = 修正場所なので、置き場が決定論的。
 - レビュー時に diff で見える (DB だと invisible)。
-
-## DB との関係
-
-`docs/audit/honesty.db` (SQLite, gitignored) は引き続き **並列 audit lease 機能 / verdict note** のためのキャッシュ。code タグと DB verdict が二重化するが:
-
-- **コードタグが master**: `@audit:defect(circular)` 付与済の declaration は DB が `ok` でもコードを信じる。
-- **DB は detail 蓄積**: 1 line タグでは書き切れない長文 note (Mathlib API missing list 等) は DB の `note` 列に。
-- `audit_db.ts scan --check-db` で code → DB の cross-check が走り、不一致を 3 種に分類して警告:
-  - `MISSING_DB`: code に `@audit:KIND` あるが DB status が異なる (code-master 原則で DB を更新すべき)
-  - `MISSING_TAG`: DB status=KIND だが code に `@audit:KIND` 無し (タグ付け忘れ、または DB が旧 verdict)
-  - `ORPHAN_TAG`: tag が DB 内のどの declaration にもマップ不能 (大抵 DB stale → `build` で line 更新)
-  - 既定の対象 kind は `defect`。`--check-kinds defect,suspect` で拡張可。suspect/ok は Phase 4 sweep 完了までノイズ多いので opt-in。
 
 ## 既存表現との対応
 
