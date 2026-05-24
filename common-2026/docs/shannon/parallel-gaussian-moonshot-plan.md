@@ -635,8 +635,13 @@ proof-log を最終に append)。
 - **L-PG0 (parallel kernel measurability) → genuine discharge 済**:
   `ParallelGaussianL_PG0Discharge.lean` (`isParallelGaussianKernelMeasurable`)。
 - **L-PG1 (per-coordinate AWGN reduction、情報理論コア、唯一の残 OPEN) →**
-  [`parallel-gaussian-chain-rule-plan.md`](parallel-gaussian-chain-rule-plan.md)。
-  **MI 分解 bridge (`ContChannelMIDecomp.lean`) を per-coord fibre に適用する payoff plan**。
-  情報容量 (`sSup` of MI) ⇒ continuous AEP 不要、4 ステップ (MI 優加法性 ≤ /
-  per-coord 上界 / Gaussian achiever ≥ / water-filling 最適化) で genuine 化。
-  最重リスク = MI 優加法性 (相関入力 `≤`、`mutualInfo_pi_eq_sum` は product 入力 `=` のみ)。
+  [`parallel-gaussian-chain-rule-plan.md`](parallel-gaussian-chain-rule-plan.md)
+  (sup-sandwich + antisymmetry scaffolding、80% 執行済 = `ParallelGaussianPerCoord.lean`
+  で `parallel_gaussian_capacity_formula` を genuine `le_antisymm` 着地、honest residual
+  は `IsParallelGaussianPerCoordRegularity` 3 field に集約)。
+- **L-PG1 closure 後継 (regularity bundle discharge + legacy 6 wrappers の supersede) →**
+  [`parallel-gaussian-l-pg1-discharge-plan.md`](parallel-gaussian-l-pg1-discharge-plan.md)
+  (2026-05-24 起草、新規 `ParallelGaussianPerCoordRegularity.lean` で 3 field を honest
+  pieces のみから constructor 化 + hypothesis-minimal headline 再 publish、Phase 5 で
+  `KKT.lean` / `WFCertBody.lean` / `WFStationarityBody.lean` の 6 件 audit タグを
+  `@audit:superseded-by(parallel-gaussian-l-pg1-discharge)` に移行)。
