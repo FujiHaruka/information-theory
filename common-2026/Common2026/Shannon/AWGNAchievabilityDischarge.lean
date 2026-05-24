@@ -780,7 +780,7 @@ is exposed at the predicate signature.
 (d) ✅ `@audit:staged(awgn-power-constraint-honest)` tag present and slug
     matches docstring.
 
-`@audit:staged(awgn-power-constraint-honest)` `@audit:suspect(awgn-power-constraint-realizable-pivot)` -/
+`@audit:staged(awgn-power-constraint-honest)` -/
 def IsAwgnPowerConstraintHonest (P_cb P_target : ℝ) (N : ℝ≥0) : Prop :=
   ∀ ⦃ε : ℝ⦄, 0 < ε → ∀ ⦃R : ℝ⦄, 0 < R →
       R < (1/2) * Real.log (1 + P_target / (N : ℝ)) →
@@ -857,7 +857,7 @@ filled (no `sorry`); the two consumer wrappers
 `awgn_theorem_F4_discharged_F1_via_staged`) inherit a genuine assembly
 modulo the bundled `h_feasible` hypothesis.
 
-`@audit:staged(awgn-random-coding-feasible)` `@audit:suspect(awgn-power-constraint-realizable-pivot)` -/
+`@audit:staged(awgn-random-coding-feasible)` -/
 def IsAwgnRandomCodingFeasible (P : ℝ) (N : ℝ≥0)
     (h_meas : IsAwgnChannelMeasurable N) : Prop :=
   ∀ ⦃R : ℝ⦄, 0 < R → R < (1/2) * Real.log (1 + P / (N : ℝ)) →
