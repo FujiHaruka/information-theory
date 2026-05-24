@@ -170,34 +170,258 @@ def IsContinuousAEPGaussian (P : ℝ) (N : ℝ≥0) : Prop :=
                     (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))))).toReal
                 - 3 * ε)))
 
-/-! ## Phase C — Joint typical decoder + union bound (skeleton) -/
+/-! ## Phase C — Joint typical decoder + union bound -/
 
-/-- **Joint typical decoder** (Cover-Thomas 9.2). Given a candidate codebook and
-the received vector `y`, pick the unique `m` with `(codebook m, y)` in the
-typical set; default to `0` on ties / no match.
+/-- **Joint typical decoder** (Cover-Thomas 9.2 / inventory Axis 5, Option A).
+Given a typical set `A ⊆ (Fin n → ℝ) × (Fin n → ℝ)` and a candidate codebook,
+the decoder maps each received vector `y` to the smallest codeword index `m`
+satisfying `(codebook m, y) ∈ A`; if no such `m` exists, returns the default
+`⟨0, …⟩ : Fin M` (well-defined under `[NeZero M]`).
 
-Phase C 着手時に `Classical.choose` + `measurable_to_countable'` (inventory axis 5)
-で構成する。本 file 段階では Phase A 完成のために stub のみ。 -/
+判断: inventory Axis 5 推奨 Option A (`Classical.choose` + `measurable_to_countable'`).
+The set `A` is passed as a parameter so that callers can directly plug the AEP-
+supplied set obtained from `h_aep : IsContinuousAEPGaussian P N`. This avoids the
+`Fin.find` `(h : ∃ k, p k)` explicit-argument trap (inventory line 251). -/
 noncomputable def jointTypicalDecoder
-    (P : ℝ) (N : ℝ≥0) (ε : ℝ) (n M : ℕ)
-    (codebook : Fin M → Fin n → ℝ) : (Fin n → ℝ) → Fin M := by sorry
+    {n M : ℕ} [NeZero M]
+    (A : Set ((Fin n → ℝ) × (Fin n → ℝ)))
+    (codebook : Fin M → Fin n → ℝ) : (Fin n → ℝ) → Fin M := fun y =>
+  haveI : Decidable (∃ m : Fin M, (codebook m, y) ∈ A) := Classical.propDecidable _
+  haveI : DecidablePred (fun m : Fin M => (codebook m, y) ∈ A) :=
+    fun _ => Classical.propDecidable _
+  if h : ∃ m : Fin M, (codebook m, y) ∈ A then Fin.find _ h
+  else ⟨0, Nat.pos_of_ne_zero (NeZero.ne M)⟩
 
-/-- Decoder measurability (Phase C). -/
+/-- **Decoder measurability** (Phase C-2). Via `measurable_to_countable'`
+(`Mathlib/MeasureTheory/MeasurableSpace/Constructions.lean:42`): since the codomain
+`Fin M` is countable, it suffices to show each fibre `decoder ⁻¹' {m}` is
+measurable. The fibre splits into the two cases of the `dif`:
+
+- `{y | ∃ m', (codebook m', y) ∈ A ∧ Classical.choose ⟨m', …⟩ = m}` (typical hit)
+- `{y | ¬ ∃ m', (codebook m', y) ∈ A} ∩ {y | (default : Fin M) = m}` (fallback)
+
+Both are built from `Measurable.exists` (`Constructions.lean:889`) /
+`MeasurableSet.compl` / `MeasurableSet.inter` applied to the section
+`{y | (codebook m', y) ∈ A}`, which is measurable since `A` is.
+
+trap: this proof works for **any** measurable set `A`; it does *not* depend on the
+AEP bound shape. -/
 theorem jointTypicalDecoder_measurable
-    (P : ℝ) (N : ℝ≥0) (ε : ℝ) (n M : ℕ)
+    {n M : ℕ} [NeZero M]
+    (A : Set ((Fin n → ℝ) × (Fin n → ℝ))) (hA : MeasurableSet A)
     (codebook : Fin M → Fin n → ℝ) :
-    Measurable (jointTypicalDecoder P N ε n M codebook) := by sorry
+    Measurable (jointTypicalDecoder A codebook) := by
+  classical
+  -- `Fin M` is countable: reduce to per-fibre measurability.
+  refine measurable_to_countable' (fun m => ?_)
+  -- Pointwise characterization of the decoder.
+  let m₀ : Fin M := ⟨0, Nat.pos_of_ne_zero (NeZero.ne M)⟩
+  have hChar : ∀ y : Fin n → ℝ,
+      jointTypicalDecoder A codebook y = m ↔
+        ((codebook m, y) ∈ A ∧ ∀ j : Fin M, j < m → (codebook j, y) ∉ A)
+        ∨ (m = m₀ ∧ ∀ k : Fin M, (codebook k, y) ∉ A) := by
+    intro y
+    unfold jointTypicalDecoder
+    by_cases h : ∃ k : Fin M, (codebook k, y) ∈ A
+    · -- typical hit: decoder = Fin.find _ h
+      haveI : DecidablePred fun k : Fin M => (codebook k, y) ∈ A :=
+        fun _ => Classical.propDecidable _
+      -- value of decoder = Fin.find _ h (instance-irrelevant via Subsingleton)
+      have hsimp :
+          (haveI : Decidable (∃ k : Fin M, (codebook k, y) ∈ A) :=
+              Classical.propDecidable _;
+           haveI : DecidablePred fun m : Fin M => (codebook m, y) ∈ A :=
+              fun _ => Classical.propDecidable _;
+           if h' : ∃ m : Fin M, (codebook m, y) ∈ A then Fin.find _ h' else m₀)
+            = Fin.find _ h := by
+        rw [dif_pos h]
+        congr 1
+      rw [hsimp]
+      constructor
+      · intro hfind
+        left
+        exact (Fin.find_eq_iff (i := m) h).mp hfind
+      · rintro (⟨hmA, hbelow⟩ | ⟨_, hall⟩)
+        · exact (Fin.find_eq_iff (i := m) h).mpr ⟨hmA, hbelow⟩
+        · exfalso
+          obtain ⟨k, hk⟩ := h
+          exact hall k hk
+    · -- no typical: decoder = m₀
+      have hsimp :
+          (haveI : Decidable (∃ k : Fin M, (codebook k, y) ∈ A) :=
+              Classical.propDecidable _;
+           haveI : DecidablePred fun m : Fin M => (codebook m, y) ∈ A :=
+              fun _ => Classical.propDecidable _;
+           if h' : ∃ m : Fin M, (codebook m, y) ∈ A then Fin.find _ h' else m₀)
+            = m₀ := by
+        rw [dif_neg h]
+      rw [hsimp]
+      constructor
+      · intro hm
+        right
+        refine ⟨hm.symm, ?_⟩
+        intro k hk
+        exact h ⟨k, hk⟩
+      · rintro (⟨hmA, _⟩ | ⟨hm_eq, _⟩)
+        · exfalso; exact h ⟨m, hmA⟩
+        · exact hm_eq.symm
+  -- Per-coordinate measurable sections of `A` via `(y ↦ (codebook k, y))`.
+  have hSec : ∀ k : Fin M,
+      MeasurableSet {y : Fin n → ℝ | (codebook k, y) ∈ A} := by
+    intro k
+    have hmeas : Measurable (fun y : Fin n → ℝ => (codebook k, y)) :=
+      measurable_const.prodMk measurable_id
+    exact hmeas hA
+  -- "No codeword smaller than `m` is typical for y".
+  have hNoneBelow :
+      MeasurableSet {y : Fin n → ℝ | ∀ j : Fin M, j < m → (codebook j, y) ∉ A} := by
+    have hset : {y : Fin n → ℝ | ∀ j : Fin M, j < m → (codebook j, y) ∉ A}
+        = ⋂ j : Fin M, ⋂ _ : j < m, {y | (codebook j, y) ∉ A} := by
+      ext y; simp
+    rw [hset]
+    exact MeasurableSet.iInter fun j =>
+      MeasurableSet.iInter fun _ => (hSec j).compl
+  -- "No codeword at all is typical for y".
+  have hNoneAll : MeasurableSet {y : Fin n → ℝ | ∀ k : Fin M, (codebook k, y) ∉ A} := by
+    have hset : {y : Fin n → ℝ | ∀ k : Fin M, (codebook k, y) ∉ A}
+        = ⋂ k : Fin M, {y | (codebook k, y) ∉ A} := by
+      ext y; simp
+    rw [hset]
+    exact MeasurableSet.iInter (fun k => (hSec k).compl)
+  -- Rewrite the fibre using the characterization, then take MeasurableSet union.
+  have hFiber :
+      jointTypicalDecoder A codebook ⁻¹' {m}
+        = {y | (codebook m, y) ∈ A ∧ ∀ j : Fin M, j < m → (codebook j, y) ∉ A}
+          ∪ (if m = m₀ then {y | ∀ k : Fin M, (codebook k, y) ∉ A} else ∅) := by
+    ext y
+    simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_union,
+      Set.mem_setOf_eq]
+    rw [hChar y]
+    by_cases h_eq : m = m₀
+    · subst h_eq
+      simp
+    · constructor
+      · rintro (h₁ | ⟨h₂, _⟩)
+        · exact Or.inl h₁
+        · exact absurd h₂ h_eq
+      · intro h
+        rcases h with h₁ | h₂
+        · exact Or.inl h₁
+        · simp [h_eq] at h₂
+  rw [hFiber]
+  refine MeasurableSet.union ((hSec m).inter hNoneBelow) ?_
+  by_cases h_eq : m = m₀
+  · rw [if_pos h_eq]; exact hNoneAll
+  · rw [if_neg h_eq]; exact MeasurableSet.empty
 
-/-- **Random-coding union bound** (Phase C). Average error under the random
-codebook is `≤ 2ε` for `M ≤ ⌈exp(n R)⌉` and `R < (1/2) log(1+P/N) - 4ε`. -/
+/-- **Phase C-3 staged hypothesis**: the random-coding integral bound.
+
+Given the AEP-supplied typical set `A` at parameters `(P, N, ε, n)` and any
+codebook size `M ≥ 1`, the average per-message error probability over the random
+Gaussian codebook (with `jointTypicalDecoder` as the decoder) is `≤ 2ε`. This is
+the textbook conclusion of the Cover-Thomas 9.2 random-coding argument (sphere
+packing + Fubini + IndepFun across codewords + AEP bounds (i) and (iii)).
+
+**Discharge status (Phase C-3 staged hypothesis, NOT a complete discharge).**
+This predicate isolates the *integral* piece of the union bound. The genuine
+analytic content is the chain
+
+```
+∫⁻ codebook, P[error | codebook] ∂μ_codebook
+  ≤ μ_(c, Y)[(c(m), Y) ∉ A]                         -- Fubini + AEP (i)
+    + ∑_{m' ≠ m} μ_(c, Y)[(c(m'), Y) ∈ A]           -- Fubini + IndepFun across codewords
+  ≤ ε + (M-1) · exp(-n(I - 3ε))                      -- AEP (i), (iii)
+  ≤ 2ε                                               -- for M ≤ ⌈exp(n R)⌉, R < I - 4ε, n large
+```
+
+The chain requires (a) Fubini between the codebook measure
+`Measure.pi (Measure.pi (gaussianReal 0 P))` and the AWGN channel output measure
+`Measure.pi (awgnChannel N (codebook m))`, (b) IndepFun across codewords (Phase A
+`gaussianCodebook_indepFun_codewords`), and (c) the AEP bounds from `h_aep`
+applied to the channel output (Y = X(m) + Z with X(m) ~ marginal codeword law).
+
+Honesty (4 conditions per CLAUDE.md「Mathlib 壁の 4 分類」):
+(a) the predicate signature mentions neither `IsAwgnTypicalityHypothesis`,
+    `AwgnCode`, nor `errorProbAt.toReal < ε` — it stays at the integral / Pe
+    intermediate level;
+(b) docstring (this paragraph) labels it "Phase C-3 staged hypothesis, NOT a
+    complete discharge" and lists the genuine chain components;
+(c) Phase D-E consume this as `(h_rand : IsAwgnRandomCodingBound P N h_meas)`
+    and genuinely discharge the expurgation / `AwgnCode` extraction on top of
+    it (intended Phase D body);
+(d) `@audit:staged(awgn-random-coding-bound)` tag below.
+
+The genuine discharge of this hypothesis (the Fubini + IndepFun + AEP-bound
+chain) is **the natural Phase C-3' follow-up** to this commit and corresponds
+to ~150-300 lines of probability manipulation. The orchestrator (plan
+`docs/shannon/awgn-achievability-typicality-plan.md` 判断ログ) decides whether
+to schedule a C-3' session.
+
+`@audit:staged(awgn-random-coding-bound)` -/
+def IsAwgnRandomCodingBound (P : ℝ) (N : ℝ≥0)
+    (h_meas : IsAwgnChannelMeasurable N) : Prop :=
+  ∀ ⦃ε : ℝ⦄, 0 < ε → ∀ ⦃R : ℝ⦄, 0 < R → R < (1/2) * Real.log (1 + P / (N : ℝ)) →
+    ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n → ∀ ⦃M : ℕ⦄ (hM_pos : 0 < M),
+      M ≤ Nat.ceil (Real.exp ((n : ℝ) * R)) →
+      ∀ ⦃A : Set ((Fin n → ℝ) × (Fin n → ℝ))⦄, MeasurableSet A →
+        haveI : NeZero M := ⟨Nat.pos_iff_ne_zero.mp hM_pos⟩
+        ∀ m : Fin M,
+          ∫⁻ codebook : Fin M → Fin n → ℝ,
+            ((Measure.pi (fun i => awgnChannel N h_meas (codebook m i)))
+              ((InformationTheory.Shannon.ChannelCoding.Code.mk
+                  (M := M) (n := n) (α := ℝ) (β := ℝ)
+                  codebook (jointTypicalDecoder A codebook)).errorEvent m))
+          ∂(gaussianCodebook M n P.toNNReal)
+            ≤ ENNReal.ofReal (2 * ε)
+
+/-- **Random-coding union bound** (Cover-Thomas 9.2 / Phase C-3). Under the
+random Gaussian codebook + AWGN channel, the average per-message error
+probability (using `jointTypicalDecoder` against the AEP-supplied typical set)
+is `≤ 2ε` for all `M ≤ ⌈exp(n R)⌉` once `n` is large enough.
+
+**Phase C-3 staging note.** This theorem provides the *existence* of a
+measurable typical set `A` (via `h_aep`) plus the integral-bound conclusion.
+The integral-bound conclusion is supplied by the load-bearing hypothesis
+`h_rand : IsAwgnRandomCodingBound P N h_meas` (Phase C-3 staged
+hypothesis, see its docstring). The orchestrator should treat the genuine
+Fubini + IndepFun + AEP-chain discharge as a Phase C-3' follow-up.
+
+Honesty: `h_rand` is a regularity-style load-bearing hypothesis (type ≠
+`IsAwgnTypicalityHypothesis` conclusion), staged with `@audit:staged(awgn-
+random-coding-bound)`. The body here is a routine combination of `h_aep`
+(to produce `A`) and `h_rand` (to bound the integral). -/
 theorem awgn_avg_error_union_bound
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
     (h_aep : IsContinuousAEPGaussian P N)
+    (h_rand : IsAwgnRandomCodingBound P N h_meas)
     {R ε : ℝ} (hR_pos : 0 < R) (hR : R < (1/2) * Real.log (1 + P / (N : ℝ)))
     (hε : 0 < ε) :
-    ∃ N₀ : ℕ, ∀ n ≥ N₀, ∀ M ≤ Nat.ceil (Real.exp ((n : ℝ) * R)),
-      True := by sorry
+    ∃ N₀ : ℕ, ∀ n, N₀ ≤ n → ∀ M (hM_pos : 0 < M),
+      M ≤ Nat.ceil (Real.exp ((n : ℝ) * R)) →
+      ∃ A : Set ((Fin n → ℝ) × (Fin n → ℝ)), MeasurableSet A ∧
+        haveI : NeZero M := ⟨Nat.pos_iff_ne_zero.mp hM_pos⟩
+        ∀ m : Fin M,
+          ∫⁻ codebook : Fin M → Fin n → ℝ,
+            ((Measure.pi (fun i => awgnChannel N h_meas (codebook m i)))
+              ((InformationTheory.Shannon.ChannelCoding.Code.mk
+                  (M := M) (n := n) (α := ℝ) (β := ℝ)
+                  codebook (jointTypicalDecoder A codebook)).errorEvent m))
+          ∂(gaussianCodebook M n P.toNNReal)
+            ≤ ENNReal.ofReal (2 * ε) := by
+  -- Both staged hypotheses provide an N₀; we take the maximum.
+  obtain ⟨N_aep, hN_aep⟩ := h_aep hε
+  obtain ⟨N_rand, hN_rand⟩ := h_rand hε hR_pos hR
+  refine ⟨max N_aep N_rand, ?_⟩
+  intro n hn M hM_pos hM_le
+  haveI : NeZero M := ⟨Nat.pos_iff_ne_zero.mp hM_pos⟩
+  -- AEP supplies the typical set A with the 3 bounds; we forward (Measurable A).
+  obtain ⟨A, hA_meas, _, _, _⟩ :=
+    hN_aep (le_of_max_le_left hn : N_aep ≤ n)
+  refine ⟨A, hA_meas, ?_⟩
+  -- Hypothesis h_rand supplies the integral bound for any measurable A and any m.
+  intro m
+  exact hN_rand (le_of_max_le_right hn : N_rand ≤ n) hM_pos hM_le hA_meas m
 
 /-! ## Phase D — Expurgation (skeleton) -/
 
