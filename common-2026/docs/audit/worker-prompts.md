@@ -1,6 +1,12 @@
 # Honesty audit — ワーカー prompt テンプレート（そのまま Agent に渡す）
 
-オーケストレータはこのファイルのブロックを**ほぼ verbatim** で `Agent(prompt: ...)` に渡す（`<...>` だけ置換）。doctrine を取りこぼすと偽陰性が出る（calibration run #1 で実証）ので、CORE は省略・要約しないこと。
+> ⚠️ **STATUS: RETIRED (2026-05-24)**。本テンプレ (`audit_db.ts verdict` 経由 DB 書込) は audit プロジェクト初期の集中監査用 workflow。**現行は code tag SoT、DB verdict は使わない**。新規 honesty audit には **`.claude/agents/honesty-auditor.md` (`subagent_type: "honesty-auditor"`)** を使う (CORE doctrine 内蔵、verdict は code docstring tag として書込)。
+>
+> ただし **CORE doctrine 自体 (LOAD-BEARING JUDGMENT DOCTRINE 5 ルール / verdict 9 codes / 3-tier reading discipline)** は新 agent にも継承されており、本文書はその参照元として保存価値あり。**operational 指示 (TASK A/B/C の `claim`/`verdict`/`release` 実行手順) は無効** — それらを使う設計は CLAUDE.md「Independent honesty audit (orchestrator 必須)」と矛盾。
+>
+> 詳細: memory `feedback_audit_tags_source_of_truth.md`、`docs/audit/audit-tags.md` 冒頭。
+
+オーケストレータはこのファイルのブロックを**ほぼ verbatim** で `Agent(prompt: ...)` に渡す（`<...>` だけ置換）。doctrine を取りこぼすと偽陰性が出る（calibration run #1 で実証）ので、CORE は省略・要約しないこと。**(以下は RETIRED workflow の記述、参考のみ)**
 
 - 全ワーカー: `subagent_type: "general-purpose"`（Read/Bash/Grep が要る。**`lean-implementer` 等のコード編集エージェントは使わない** — 監査は read-only）。
 - DB パス: **本番シフト・QA は既定 DB**（`docs/audit/honesty.db`、`--db` 省略）。**calibration のみ `/tmp/cal.db` コピー**。

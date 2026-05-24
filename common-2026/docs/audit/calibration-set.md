@@ -1,6 +1,10 @@
 # Honesty audit — calibration gate（本番投入前の必須ゲート）
 
-N 並列ワーカーを 2942 件に放つ**前に**、ここに固定したラベル済みセットで Sonnet ワーカー（doctrine 入り）を試走し、**既知の load-bearing を取りこぼさないこと**を確認する。
+> ⚠️ **STATUS: RETIRED (2026-05-24)**。本 calibration gate は DB verdict workflow (`audit_db.ts verdict`) の集中監査用に設計された。**現行は code tag SoT に移行、DB 書込 workflow 自体が retired** のため calibration gate も不要。新規 honesty audit には **`.claude/agents/honesty-auditor.md`** を使う。CORE doctrine は新 agent に継承済み。
+>
+> 本文書は (a) ラベル済み load-bearing 6 件のリスト (regression test 的価値) (b) calibration gate の設計記録 として保存。
+
+N 並列ワーカーを 2942 件に放つ**前に**、ここに固定したラベル済みセットで Sonnet ワーカー（doctrine 入り）を試走し、**既知の load-bearing を取りこぼさないこと**を確認する。 **(以下 RETIRED workflow の記述、参考のみ)**
 
 ## PASS 基準（偽陰性回避を最優先）
 

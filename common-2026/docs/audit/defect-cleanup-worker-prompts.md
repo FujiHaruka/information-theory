@@ -1,5 +1,7 @@
 # Defect cleanup — ワーカー prompt テンプレート（そのまま Agent に渡す）
 
+> ⚠️ **STATUS: RETIRED (2026-05-24)**。本テンプレは `defect-cleanup-plan.md` (retired) と対の worker prompt 集。DB verdict workflow に依存しているため retired。code tag SoT 移行後は使わない。新規 defect 発見・cleanup は CLAUDE.md「検証の誠実性」inline policy + `docs/audit/audit-tags.md` 語彙に従う。**(以下は RETIRED workflow の記述、参考のみ)**
+
 オーケストレータはこのファイルのブロックを **ほぼ verbatim** で `Agent(prompt: ...)` に渡す（`<...>` だけ置換）。設計の根拠と全体像は `defect-cleanup-plan.md`、判定 doctrine は `worker-prompts.md` の CORE を参照。
 
 - 並列起動: 複数ワーカーは **1 メッセージ内に複数 `Agent` 呼び出し** を並べて同時起動。**同時 5 cap**。

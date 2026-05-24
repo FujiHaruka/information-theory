@@ -151,11 +151,16 @@ If the session is ad-hoc — opened with no prior handoff context, scope unrelat
 
 ### subagent
 
-専用 agent: **`honesty-auditor`** (`.claude/agents/honesty-auditor.md`、CORE doctrine 内蔵)。orchestrator は `subagent_type: "honesty-auditor"` で起動するだけで CORE + 3-tier 規律 + DB tool 使用が自動適用される。
+専用 agent: **`honesty-auditor`** (`.claude/agents/honesty-auditor.md`、CORE doctrine 内蔵)。orchestrator は `subagent_type: "honesty-auditor"` で起動するだけで CORE + 3-tier 規律 + audit-tags.md 語彙適用が自動。
 
 - **必須条件**: 実装に関与していない fresh subagent (実装 agent の self-audit は不可)
-- 渡す入力: 対象 file path + 監査対象 predicate 名 + line 番号 + consumer 主定理名 + line + 関連 commit hash + 親 plan path + 出力先 `--agent` 名
-- 出力: `scripts/audit_db.ts` への verdict 書込 (DB が SoT) + orchestrator への 200 行以内サマリ
+- 渡す入力: 対象 file path + 監査対象 predicate 名 + line 番号 + consumer 主定理名 + line + 関連 commit hash + 親 plan path
+- **書込先 = コード docstring の `@audit:KIND(SLUG)` タグ** (Edit 経由)。**コードタグが SoT** (memory `feedback_audit_tags_source_of_truth.md` / `docs/audit/audit-tags.md` 冒頭)、`scripts/audit_db.ts` は cross-check 用 secondary
+- 書込後: `audit_db.ts build` → `scan --check-db` で SoT-DB 整合確認、orchestrator に 200 行以内サマリ返却
+
+### 注意 (旧 workflow の残骸)
+
+`docs/audit/worker-prompts.md` の `audit_db.ts verdict` 経路は audit プロジェクト初期 (集中監査用) の workflow で、現行 SoT (コードタグ) と矛盾。**新規 honesty-auditor 起動時は本ファイル + `.claude/agents/honesty-auditor.md` のみ参照**、worker-prompts.md は参考用扱い。
 
 ### closure 判定
 

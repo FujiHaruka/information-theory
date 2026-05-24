@@ -571,7 +571,14 @@ Fubini + IndepFun + AEP-chain discharge as a Phase C-3' follow-up.
 Honesty: `h_rand` is a regularity-style load-bearing hypothesis (type ≠
 `IsAwgnTypicalityHypothesis` conclusion), staged with `@audit:staged(awgn-
 random-coding-bound)`. The body here is a routine combination of `h_aep`
-(to produce `A`) and `h_rand` (to bound the integral). -/
+(to produce `A`) and `h_rand` (to bound the integral).
+
+**Independent audit (2026-05-24)**: verdict `load_bearing_hyp / suspect` —
+thin packaging (~10-line body), `h_rand` carries the integral-bound conclusion;
+`h_aep` contributes only the typical-set shell. Honest 🟢ʰ remaining task until
+both staged predicates are discharged.
+
+`@audit:suspect("")` -/
 theorem awgn_avg_error_union_bound
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -697,9 +704,16 @@ probability measure), there *exists* a deterministic codebook satisfying this.
 Classically this follows from a continuity / margin argument (Cover-Thomas 9.2
 uses `P' < P` so that the empirical second moment concentrates below `P` with
 high probability for large `n` via SLLN). The full discharge would invoke
-`strong_law_ae_real` coordinate-wise + union bound across `Fin M`, which is the
-**same Mathlib gap** as `IsContinuousAEPGaussian`: n-d Gaussian SLLN bundled with
-the typicality argument is the missing block.
+Mathlib's existing `ProbabilityTheory.strong_law_ae_real` coordinate-wise +
+union bound across `Fin M`, plus an `a.s.→ in-probability` conversion.
+
+**Wall classification (independent honesty audit re-calibration, 2026-05-24)**:
+this is **wall class (c) "labor / assembly"** — Mathlib provides
+`strong_law_ae_real` (loogle 1-hit confirmed) and Phase A `iIndepFun_pi`; the
+missing block is the coordinate-wise + union-bound assembly across `Fin M`,
+not a primitive theorem. **Lower analytic depth than `IsContinuousAEPGaussian`**
+(which IS wall (d), continuous SMB and n-d differentialEntropy absent) — this
+predicate is the lowest-hanging of the 3 staged hyps to discharge first.
 
 **NOT load-bearing for the AWGN achievability core** beyond the analytic gap
 already absorbed by `IsContinuousAEPGaussian`. We expose it as a separate
@@ -710,8 +724,9 @@ Honesty (4 conditions per CLAUDE.md「Mathlib 壁の 4 分類」):
 (a) the predicate type quantifies over `P : ℝ`, `N : ℝ≥0` only — it does **not**
     mention `AwgnCode`, `errorProbAt`, or any of the `IsAwgnTypicalityHypothesis`
     conclusion shape;
-(b) docstring (this paragraph) flags "NOT load-bearing" + lists the explicit
-    Mathlib gap (n-d Gaussian SLLN coordinate-wise + union bound);
+(b) docstring (this paragraph) flags "NOT load-bearing" + lists the wall class
+    accurately: (c) "labor" — `strong_law_ae_real` exists in Mathlib, assembly
+    across `Fin M` is the work;
 (c) Phase D-3 / E-1 consume the predicate to produce a deterministic codebook
     witness, on top of which the Phase D-1/D-2 expurgation runs genuinely;
 (d) `@audit:staged(awgn-power-constraint-realizable)` tag below.
@@ -861,7 +876,19 @@ and the 3 already-staged hypotheses.
 the decoder), `awgnCodebookKernel` (`c ↦ Measure.pi (fun i => awgnChannel
 N h_meas (c m i))` as a genuine `Kernel`), and Mathlib's
 `Kernel.measurable_kernel_prodMk_left` to close the composition. No
-remaining `sorry`. -/
+remaining `sorry`.
+
+**Independent audit (2026-05-24)**: verdict `load_bearing_hyp / suspect` —
+body is GENUINE ~580 line assembly (rate inflation, doubling, barrier
+construction, D-1 extraction, contradiction power-OK proof, D-2 worst-half,
+monotonic reindex, sub⊆full inclusion proof, D-3 bridge). NOT
+degenerate/circular/laundering. Joint core-reconstruction: 3 hyps give
+primitives, body builds the assembly. Honest 🟢ʰ remaining task until the 3
+staged predicates (`@audit:staged(continuous-aep-gaussian)` +
+`@audit:staged(awgn-random-coding-bound)` +
+`@audit:staged(awgn-power-constraint-realizable)`) are all discharged.
+
+`@audit:suspect("")` -/
 theorem isAwgnTypicalityHypothesis
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -1438,8 +1465,24 @@ theorem isAwgnTypicalityHypothesis
     show 5 * (ε₁ / 5) = ε₁; ring
   linarith [h_awg, hε₁_le_ε]
 
-/-- **`awgn_achievability` F-1 discharge wrapper** — `h_typicality` 引数を
-`isAwgnTypicalityHypothesis` で埋めて再 publish (Phase E-2). -/
+/-- **`awgn_achievability` F-1 wrapper via 3 staged hyps** — `h_typicality` 引数を
+`isAwgnTypicalityHypothesis` で埋めて再 publish (Phase E-2)。
+
+**Residual hypotheses (NOT a complete discharge — name is mildly misleading)**:
+this wrapper consumes 3 staged hypotheses (`h_aep : IsContinuousAEPGaussian P N`,
+`h_rand : IsAwgnRandomCodingBound P N h_meas`, `h_power : IsAwgnPowerConstraintRealizable P N`)
+and produces the achievability conclusion. It is a **1-for-3 hypothesis swap**
+(F-1 hypothesis traded for 3 staged ones), NOT a discharge in the sense of
+"no more residuals". Use this wrapper only when you accept the 3 staged hyps;
+when standard B verification is required, all 3 must be discharged first.
+
+**Independent audit (2026-05-24)**: verdict `name_laundering / suspect` (mild) —
+"_discharged" suffix mildly misleading because 3 staged residuals remain. Body
+itself is honest (chains genuine `isAwgnTypicalityHypothesis` assembly). Rename
+candidate: `awgn_achievability_F1_via_staged_hyps`. Until then, this docstring
+enumerates the 3 residuals to mitigate the laundering.
+
+`@audit:defect(launder)` `@audit:suspect("")` -/
 theorem awgn_achievability_F1_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -1454,10 +1497,26 @@ theorem awgn_achievability_F1_discharged
   awgn_achievability P hP N hN h_meas
     (isAwgnTypicalityHypothesis P hP N hN h_meas h_aep h_rand h_power) hR_pos hR hε
 
-/-- **Main theorem F-1 + F-4 discharge wrapper** — `awgn_channel_coding_theorem` の
-`h_meas` (F-4 / `isAwgnChannelMeasurable`) と `h_typicality` (F-1) を埋めて再 publish。
-残 hyp = `h_mi_bridge` (F-2) + `h_converse` (F-3) + `h_aep` + `h_rand` + `h_power`
-(continuous AEP / random-coding / power-constraint の 3 staged hyp). -/
+/-- **Main theorem F-1 + F-4 wrapper (F-4 discharged, F-1 via 3 staged hyps)** —
+`awgn_channel_coding_theorem` の `h_meas` (F-4 / `isAwgnChannelMeasurable`) を
+**genuinely 埋め**、`h_typicality` (F-1) を `isAwgnTypicalityHypothesis` 経由で
+**3 staged hyp に分解** して再 publish。
+
+**残 hyp** (docstring に明示、CORE doctrine 透明性):
+- `h_mi_bridge` (F-2、mutual info bridge、未起草 plan)
+- `h_converse` (F-3、converse aux、未起草 plan)
+- `h_aep` (`@audit:staged(continuous-aep-gaussian)`、Mathlib 壁 (d))
+- `h_rand` (`@audit:staged(awgn-random-coding-bound)`、Mathlib 壁 (b))
+- `h_power` (`@audit:staged(awgn-power-constraint-realizable)`、Mathlib 壁 (c) labor)
+
+**Independent audit (2026-05-24)**: verdict `name_laundering / suspect` (mild) —
+F-4 genuinely discharged (`isAwgnChannelMeasurable N` is concrete), but F-1 is
+hyp-mediated via 3 staged. Docstring DOES enumerate residuals (better transparency
+than `awgn_achievability_F1_discharged`), so severity is lower. Rename candidate:
+`awgn_theorem_F4_discharged_F1_via_staged`. Until rename, the explicit "残 hyp"
+enumeration mitigates the laundering.
+
+`@audit:defect(launder)` `@audit:suspect("")` -/
 theorem awgn_theorem_F1F4_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_aep : IsContinuousAEPGaussian P N)

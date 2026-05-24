@@ -1,8 +1,12 @@
 # Honesty audit — 全定理の並列監査基盤 (設計)
 
-ステータス: **設計確定・実装済み・calibration 合格 → 実行可能**
+> ⚠️ **STATUS: RETIRED (2026-05-24)**。本文書は audit プロジェクト初期の **DB verdict 集中監査基盤** の設計記録。現行 canonical workflow は **code tag SoT** に移行済み (verdict は `@audit:KIND(SLUG)` タグを decl docstring に直書き、語彙: `docs/audit/audit-tags.md`)。**`scripts/audit_db.ts` の `verdict` サブコマンドは使わない** (`build` / `scan --check-db` は code tag → DB の cross-check に残置)。
+>
+> 新規 honesty audit を起動する場合は **`.claude/agents/honesty-auditor.md` (`subagent_type: "honesty-auditor"`)** を使う。CLAUDE.md「Independent honesty audit (orchestrator 必須)」セクション参照。
+>
+> 本文書は (a) 初期 audit pass の方法論的記録 (b) SQLite worklist + WAL claim による並列監査基盤の設計参考 として保存。run-time 操作手順 (calibration gate / sonnet シフト / Opus QA 等) は **適用しない**。
 
-実行 runbook（この plan だけで完結）: ①「オーケストレーション（外側ループ・開始前チェックリスト）」の手順に従う → ② ワーカーは `docs/audit/worker-prompts.md` のテンプレを verbatim で `Agent` に渡す → ③ ゲート基準は `docs/audit/calibration-set.md`。新セッションはこの3ファイルだけ読めば監査を開始できる。
+ステータス: **設計確定・実装済み・calibration 合格 → 実行可能** (← 初期設計時の記述、現在は retired)
 
 ## Context / 目的
 

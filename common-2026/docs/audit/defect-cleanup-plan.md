@@ -1,9 +1,13 @@
 # Defect cleanup — 101 defect の戦略整理 (設計)
 
-ステータス: **設計確定・未実行（波0 から開始可）**
+> ⚠️ **STATUS: RETIRED (2026-05-24)**。本 cleanup plan は audit プロジェクト初期に集中 audit で発見された defect 101 件への対応設計。実際の cleanup は完了済 (現在の `@audit:defect` は code 内で 4 件まで縮退、commit history 参照)。本文書は cleanup プロセスの方法論的記録として保存、**run-time 指示 (`list --status defect`、波 0/1/2 等の DB workflow) は適用しない**。
+>
+> 現行の defect 管理は code 内 `@audit:defect(KIND)` タグ + grep recipe (`docs/audit/audit-tags.md` 末尾) で行う。新規 defect 発見時は CLAUDE.md「検証の誠実性」per inline policy で即タグ付け。
+
+ステータス: **設計確定・未実行（波0 から開始可）** (← 初期設計時、現在は retired)
 
 入力: `docs/audit/honesty-audit-report.md` の defect 101 件、`docs/audit/honesty.db` の `audit` テーブル。
-出力: 波 0/1/2 を経て `list --status defect` が 0 になる（多くは honest-rebrand で suspect 列に合流、一部 retract、一部 actually-fix）。
+出力: 波 0/1/2 を経て `list --status defect` が 0 になる（多くは honest-rebrand で suspect 列に合流、一部 retract、一部 actually-fix）。 **(以下 RETIRED workflow の記述)**
 
 ## Context / 目的
 
