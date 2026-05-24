@@ -16,6 +16,8 @@
 - [x] Phase D.4 — 主定理 + `h_passthrough` discharge ✅
 
 > 実態整合 (2026-05-20): DONE-UNCOND — 進捗マーカーが起草時の `[ ]` のまま stale だった。Phase D は完全閉鎖済。証拠: `shannon_noisy_channel_coding_theorem_general_full` (`Common2026/Shannon/ChannelCodingShannonTheoremFullDischarge.lean:1588`、0 sorry) は `(W : Channel α β) [IsMarkovKernel W] (hR_pos : 0 < R) (hR : R < capacity W) (hε : 0 < ε)` のみで max-error 達成形を結論 — **`hW_pos` も `h_passthrough` も無し** (完全無条件)。内部で `exists_N_for_smooth_achievability_uniform` (two-layer smoothing) + `errorProbAt_smooth_TV` で組立。`Common2026.lean:62` に import 済。なお `ChannelCodingShannonTheoremFull.lean` の `shannon_noisy_channel_coding_theorem_general` は依然 `h_passthrough` 形 MVP として残るが、Discharge file の `_full` 版が無条件最終形。
+>
+> 2026-05-24 Wave 1.5 retag: MVP 形 `shannon_noisy_channel_coding_theorem_general` (`ChannelCodingShannonTheoremFull.lean:53`) を `@audit:retract-candidate(superseded-by-full-discharge)` に再分類。`_full` 版が無条件 publish 済の事実をタグ側に明示。
 
 ---
 

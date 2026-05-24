@@ -166,7 +166,7 @@ I(Msg; Y^n) ≤ ∑ i, I(X_i; Y_i)
 The per-letter inequality is left as hypothesis — its purely-internal proof is **E-10'
 deferred** (judgement log 1).
 
-`@audit:suspect(dmc-feedback-capacity-plan)` -/
+`@audit:retract-candidate(superseded-by-memoryless-form)` -/
 theorem channel_coding_feedback_converse_chain
     {n : ℕ}
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -187,7 +187,7 @@ Per-letter bound + per-letter `I(X_i; Y_i) ≤ C` ⇒ `I(Msg; Y^n) ≤ n • C`.
 
 In `ℝ≥0∞` arithmetic the conclusion is `(n : ℕ) • C` — `nsmul` of `ℝ≥0∞`.
 
-`@audit:suspect(dmc-feedback-capacity-plan)` -/
+`@audit:retract-candidate(superseded-by-memoryless-form)` -/
 theorem channel_coding_feedback_converse_capacity
     {n : ℕ} (C : ℝ≥0∞)
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -246,7 +246,7 @@ Capacity `C` 自体は `C := sup_p I(p; W)` のような大域定義に縛らず
 (Markov 仮定なしの単発形) を `Yo := Y^n` で呼び、per-letter chain rule で `n·C` を直接
 組み立てる。
 
-`@audit:suspect(dmc-feedback-capacity-plan)` -/
+`@audit:retract-candidate(superseded-by-memoryless-form)` -/
 theorem channel_coding_feedback_converse
     {n : ℕ} (C : ℝ≥0∞) (hC_finite : C ≠ ∞)
     (μ : Measure Ω) [IsProbabilityMeasure μ]

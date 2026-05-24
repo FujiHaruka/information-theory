@@ -270,7 +270,7 @@ F-1-discharged theorem. The MI bridge (F-2' layer) is passed through unchanged.
 * F-2 → `awgn-achievability-typicality-plan.md` (Tier 3)
 * F-3 → `awgn-converse-aux-plan.md` (Tier 3)
 
-`@audit:suspect(awgn-f1-discharge-moonshot-plan)` -/
+`@audit:suspect(awgn-achievability-typicality-plan)` -/
 theorem awgn_theorem_of_F2F3_hypotheses
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_F2 : IsAwgnF2DecodingHypothesis P N (isAwgnChannelMeasurable N))
@@ -308,7 +308,7 @@ machinery absent from Mathlib. Only the F-1 layer (kernel measurability) is
 closed here; this re-publishes
 `AWGNF1Discharge.awgn_capacity_closed_form_F1_discharged` unchanged in content.
 
-`@audit:suspect(awgn-f1-discharge-moonshot-plan)` -/
+`@audit:suspect(awgn-converse-aux-plan)` -/
 theorem awgn_capacity_closed_form_of_maxent_hypotheses
     (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_bridge_gauss :

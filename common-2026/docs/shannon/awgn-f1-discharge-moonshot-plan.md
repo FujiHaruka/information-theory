@@ -83,6 +83,7 @@
 - [x] Phase A — `isAwgnChannelMeasurable` 本体補題 publish ✅ (`Common2026/Shannon/AWGNF1Discharge.lean` 148 行)
 - [x] Phase B — `awgn_theorem_F1_discharged` + `awgn_capacity_closed_form_F1_discharged` 再 publish ✅ (同 file 内 wrapper)
 - [x] Phase V — verify ✅ (`lake env lean` silent, exit 0, 0 sorry, 0 warning)
+- 2026-05-24 Wave 1.5 retag: F-1 plan は閉、残 4 wrapper の `@audit:suspect(awgn-f1-discharge-moonshot-plan)` を F-2/F-3 担当 plan slug (`awgn-moonshot-plan` / `awgn-mi-bridge-plan` / `awgn-achievability-typicality-plan` / `awgn-converse-aux-plan`) に張替。
 
 ## ゴール / Approach
 

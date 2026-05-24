@@ -16,6 +16,8 @@ capacity は同じ。converse 段で `I(M; Y^n) ≤ n·C` を chain rule + memor
       `I(M; Y_i | Y^{<i}) ≤ I(X_i; Y_i)`) の純粋証明 ✅ (E-10' で完成、下記参照)
 
 > 実態整合 (2026-05-20): DONE — 本 plan (E-10 MVP, chain-rule + Fano 合成) は `channel_coding_feedback_converse` (`Common2026/Shannon/ChannelCodingFeedback.lean:244`、0 sorry) で完成。`h_per_letter` を pass-through 仮説に取る MVP 形だが、後継 E-10' (`channel-coding-feedback-per-letter-bound-plan.md` の実体 `ChannelCodingFeedbackComplete.lean`) が `feedback_per_letter_bound` (`:116`、`IsMemorylessFeedback` から派生、0 sorry) でこれを剥がし、`channel_coding_feedback_converse_memoryless` (`:171`) が完全形を結論済。
+>
+> 2026-05-24 Wave 1.5 retract: MVP 3 件 (`channel_coding_feedback_converse_chain` / `_capacity` / `_converse`) を `@audit:retract-candidate(superseded-by-memoryless-form)` に再分類。`_memoryless` 完全形が無条件 publish 済の事実をタグ側に明示。
 
 ## ゴール / Approach
 

@@ -50,7 +50,7 @@ Shannon noisy channel coding theorem。
 `errorProbAt(W_smooth δ_n) < ε/2` を満たす、という仮定 (parent surgery で構成される予定)。
 本ファイルは TV bound `errorProbAt_smooth_TV` で `errorProbAt W < ε` を結論する。
 
-`@audit:suspect(channel-coding-shannon-theorem-full-plan)` -/
+`@audit:retract-candidate(superseded-by-full-discharge)` -/
 theorem shannon_noisy_channel_coding_theorem_general
     (W : Channel α β) [IsMarkovKernel W]
     {R : ℝ} (_hR_pos : 0 < R) (_hR : R < capacity W)
