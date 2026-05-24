@@ -15,7 +15,7 @@
 
 - [x] Phase 0 — 既存コード読み込み + consumer body の P-flow 棚卸し ✅ (planner 起草段階で棚卸し済、影響範囲リストとして本 plan の §影響範囲リストに reflect)
 - [x] Phase 1 — predicate signature 確定 = **Option C bundled** ✅ (2026-05-24 user 判断、判断ログ #1)
-- [ ] Phase 2 — skeleton write (predicate 改修 + consumer signature 改修、本体は sorry) 📋
+- [x] Phase 2 — skeleton write (predicate 改修 + consumer signature 改修、本体は sorry) ✅ (2026-05-24、判断ログ #2、独立 audit clean)
 - [ ] Phase 3 — consumer body の P' threading (本体 fill) 📋
 - [ ] Phase 4 — verify + 独立 honesty audit + tag 降格 📋
 
@@ -222,3 +222,15 @@ bundle predicate の結論形は「3 sub-mass bound の ∧」で、consumer の
    理由: (i) consumer signature を 3 hyp → 1 hyp に縮約することで P' 整合性を構造的に保証できる、(ii) consumer body の P→P' 書換は `gaussianCodebook M n P.toNNReal` (20+ use site) の sed 主体に圧縮可、(iii) Option A は 3 hyp 全部の signature lift が必要で全体改修コストが ~200 行と試算され大規模。
    コスト受容: bundle predicate は 3 sub-bound を ∧ で持つ「fat shape」で読みづらい点、3 staged hyp の独立 discharge が将来直交できなくなる点 (兄弟 staged plan が個別に走れない) は受容。Phase 4 の独立 honesty-auditor が 4 条件 (a) 型独立を verify する。
    実装は次 session で Phase 2 skeleton 起こしから着手 (predicate 改修 + consumer signature 改修、body は sorry 暫定)。
+
+2. **2026-05-24 — Phase 2 skeleton write 完了 + 独立 honesty audit clean** (本 session)。
+   実装結果 (`Common2026/Shannon/AWGNAchievabilityDischarge.lean` 989 行、−574 行 vs pivot 前、Phase 3 で body 復元予定):
+   - 新規 `IsAwgnPowerConstraintHonest (P_cb P_target : ℝ) (N : ℝ≥0)` (line 815, `@audit:staged(awgn-power-constraint-honest)`) — codebook 生成 / constraint target 分離形
+   - 新規 `IsAwgnRandomCodingFeasible (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)` (line 860, `@audit:staged(awgn-random-coding-feasible)`) — bundle、`∀ R, ∃ P' ∈ (0, P]` + rate margin + AEP + RandomCodingBound + PowerConstraintHonest
+   - 旧 `IsAwgnPowerConstraintRealizable` (line 735) は **削除せず** orphan 化、`@audit:defect(false-statement)` タグ・body 完全不変で残置 (honesty record)。alias 化を試みたが honest predicate に degenerate instance を作ると依然 unsatisfiable で audit-tags rule に抵触するため放棄
+   - consumer 3 件 signature を 3 hyp → 1 bundle hyp に縮約 (`isAwgnTypicalityHypothesis` @:961 body sorry、wrapper 2 件 term-mode で transitively 継承)
+   - **R quantifier の位置**: bundle 起草時に最初 `∃ P' : ℝ, 0 < P' ∧ P' ≤ P ∧ (3 sub-bound at P')` (R 非依存) を試したが、`IsAwgnRandomCodingBound P' N h_meas` が `R < (1/2) log(1+P'/N)` を内部要求するため bundle 中で R を消費できないと判明。`∀ R, R-conds → ∃ P', R < (1/2)log(1+P'/N) ∧ ...` の R-outer 形に修正
+   - **`P' ≤ P` (non-strict) soft caveat**: 独立 audit が指摘。`P' = P` を選ぶと `IsAwgnPowerConstraintHonest P P N` が v1 と同型に縮退する。Phase 2 closure blocker ではない (docstring が "intended use P_cb < P_target" を明示) が、Phase 3 で discharge する際は strict `<` に upgrade or 別途 warning 検討
+   - 独立 audit (general-purpose fresh subagent、CORE doctrine inline) verdict: 両 predicate とも `load_bearing_hyp / honest 🟢ʰ`、defect なし、name laundering なし。Mathlib gap (continuous SMB / n-d differentialEntropy / chi-square SLLN) loogle 裏取り済。タグ `@audit:suspect(awgn-power-constraint-realizable-pivot)` を `@audit:staged(...)` と併記 (lines 783, 860)
+   - proof-log: `docs/proof-logs/proof-log-awgn-power-constraint-realizable-pivot-phase2.md`
+   - **Phase 3 着手準備**: bundle destructure `obtain ⟨P', hP'_pos, hP'_lt_P, hR_lt_P'C, h_aep', h_rand', h_power'⟩ := h_feasible hR_pos hR` を body 先頭に置き、580 行 assembly の `gaussianCodebook M n P.toNNReal` → `gaussianCodebook M n P'.toNNReal` を 15+ 箇所 sed、`PowSet` の `n · P` constraint target は不変
