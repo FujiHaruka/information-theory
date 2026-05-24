@@ -693,45 +693,45 @@ theorem awgn_expurgate_worst_half
   · intro m hm
     exact (Finset.mem_filter.mp hm).2
 
-/-- **Power-constraint realizability** (Mathlib gap staged predicate).
+/-- **Power-constraint realizability** — *originally staged*, now **DEFECT
+(false-statement)** as flagged 2026-05-24 post-rename session.
 
-This packages the assertion that the random Gaussian codebook
-`gaussianCodebook M n P.toNNReal` puts positive mass on the set of codebooks
-satisfying the deterministic per-message power constraint
-`∀ m, ∑ i (c m i)^2 ≤ n · P`. Equivalently (by `gaussianCodebook` being a
-probability measure), there *exists* a deterministic codebook satisfying this.
+This predicate asserts that under the random Gaussian codebook
+`gaussianCodebook M n P.toNNReal` (i.i.d. `N(0, P)` per coordinate), the set of
+codebooks satisfying the deterministic per-message power constraint
+`∀ m, ∑ i (c m i)^2 ≤ n · P` has mass `≥ 1 − ε` for all `ε > 0` (with `n, M`
+in appropriate ranges).
 
-Classically this follows from a continuity / margin argument (Cover-Thomas 9.2
-uses `P' < P` so that the empirical second moment concentrates below `P` with
-high probability for large `n` via SLLN). The full discharge would invoke
-Mathlib's existing `ProbabilityTheory.strong_law_ae_real` coordinate-wise +
-union bound across `Fin M`, plus an `a.s.→ in-probability` conversion.
+**HONESTY DEFECT (false-statement)**: this is **unsatisfiable**. For each `m`,
+`X_i := c m i ~ N(0, P)` i.i.d., so `S_m := ∑ᵢ X_i² / P ~ χ²(n)`. The chi-square
+distribution on `n` degrees of freedom has `mean = n` and `median ≈ n − 2/3 +
+O(1/n)` (right-skewed), so `P(∑ᵢ X_i² ≤ nP) = P(S_m ≤ n) → 1/2⁺` from above by
+CLT. Across `Fin M` codewords (independent under `gaussianCodebook`), the joint
+mass is `≤ (1/2 + o(1))^M`. Therefore the predicate's required bound
+`mass ≥ 1 − ε` fails for any `ε < 1 − (1/2)^M`, which for `M ≥ 1` excludes most
+`ε ∈ (0, 1)`. **No witness `N₀, n, M` discharges the conclusion.**
 
-**Wall classification (independent honesty audit re-calibration, 2026-05-24)**:
-this is **wall class (c) "labor / assembly"** — Mathlib provides
-`strong_law_ae_real` (loogle 1-hit confirmed) and Phase A `iIndepFun_pi`; the
-missing block is the coordinate-wise + union-bound assembly across `Fin M`,
-not a primitive theorem. **Lower analytic depth than `IsContinuousAEPGaussian`**
-(which IS wall (d), continuous SMB and n-d differentialEntropy absent) — this
-predicate is the lowest-hanging of the 3 staged hyps to discharge first.
+**Standard remedy (Cover-Thomas 9.2)**: generate codewords with variance
+`P' < P` instead of `P`. Then SLLN gives `(1/n) ∑ᵢ X_i² → P' < P` a.s., so
+`P(∑ᵢ X_i² ≤ nP) → 1` (n → ∞). The fix requires re-parameterising this
+predicate (and/or `gaussianCodebook`) to expose a `P' < P` slack variable, then
+threading `P'` through `awgn_extract_AwgnCode` / `isAwgnTypicalityHypothesis`.
+**Pending separate session — predicate left as-is to keep the defect surfaced.**
 
-**NOT load-bearing for the AWGN achievability core** beyond the analytic gap
-already absorbed by `IsContinuousAEPGaussian`. We expose it as a separate
-predicate so that Phase D-3 (`awgn_extract_AwgnCode`) consumes a deterministic
-power-constraint witness without re-quantifying the SLLN argument.
+**Downstream consequence**: callers
+`awgn_achievability_F1_via_staged_hyps` /
+`awgn_theorem_F4_discharged_F1_via_staged` /
+`isAwgnTypicalityHypothesis` are syntactically valid functions but consume a
+**false hypothesis**. They are unusable in standard-B chains — they admit no
+discharge route and only fire vacuously via `ex falso`.
 
-Honesty (4 conditions per CLAUDE.md「Mathlib 壁の 4 分類」):
-(a) the predicate type quantifies over `P : ℝ`, `N : ℝ≥0` only — it does **not**
-    mention `AwgnCode`, `errorProbAt`, or any of the `IsAwgnTypicalityHypothesis`
-    conclusion shape;
-(b) docstring (this paragraph) flags "NOT load-bearing" + lists the wall class
-    accurately: (c) "labor" — `strong_law_ae_real` exists in Mathlib, assembly
-    across `Fin M` is the work;
-(c) Phase D-3 / E-1 consume the predicate to produce a deterministic codebook
-    witness, on top of which the Phase D-1/D-2 expurgation runs genuinely;
-(d) `@audit:staged(awgn-power-constraint-realizable)` tag below.
+**Audit history**: prior staging tag `@audit:staged(awgn-power-constraint-realizable)`
+(removed 2026-05-24) wrongly classified this as Mathlib wall (c) labor; the
+independent honesty audit also missed the false-statement issue (verdict said
+"non-trivial fact requiring SLLN"). Defect surfaced when planning the discharge
+session: chi-square median analysis showed P(`∑X² ≤ nP`) → 0.5⁺ from above, not → 1.
 
-`@audit:staged(awgn-power-constraint-realizable)` -/
+`@audit:defect(false-statement)` -/
 def IsAwgnPowerConstraintRealizable (P : ℝ) (N : ℝ≥0) : Prop :=
   ∀ ⦃ε : ℝ⦄, 0 < ε → ∀ ⦃R : ℝ⦄, 0 < R → R < (1/2) * Real.log (1 + P / (N : ℝ)) →
     ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n → ∀ ⦃M : ℕ⦄ (_hM_pos : 0 < M),
@@ -883,10 +883,22 @@ body is GENUINE ~580 line assembly (rate inflation, doubling, barrier
 construction, D-1 extraction, contradiction power-OK proof, D-2 worst-half,
 monotonic reindex, sub⊆full inclusion proof, D-3 bridge). NOT
 degenerate/circular/laundering. Joint core-reconstruction: 3 hyps give
-primitives, body builds the assembly. Honest 🟢ʰ remaining task until the 3
-staged predicates (`@audit:staged(continuous-aep-gaussian)` +
-`@audit:staged(awgn-random-coding-bound)` +
-`@audit:staged(awgn-power-constraint-realizable)`) are all discharged.
+primitives, body builds the assembly.
+
+**UPSTREAM DEFECT (2026-05-24, post-rename session)**: one of the 3 staged hyps,
+`IsAwgnPowerConstraintRealizable`, was found to be **false-statement defect**
+(see its docstring above). Concretely, `gaussianCodebook M n P.toNNReal`
+generates i.i.d. `N(0, P)`, so `P(∑ᵢ X_i² ≤ nP) → 1/2⁺` rather than → 1, making
+the `≥ 1 − ε` bound unsatisfiable for `ε < 1 − (1/2)^M`. This theorem's body is
+still honest (genuine plumbing), but **`h_power` is unreachable** — the theorem
+is vacuously typed but offers no path to standard-B closure via this hypothesis.
+A separate session must reshape the predicate (Cover-Thomas `P' < P` remedy) and
+thread `P'` through the body's `h_power_mass` / `h_int_barrier` derivations.
+
+Honest 🟢ʰ remaining task until the 2 still-staged predicates
+(staging tags `continuous-aep-gaussian` + `awgn-random-coding-bound`) are
+discharged AND the **false-statement defect** on
+`IsAwgnPowerConstraintRealizable` is resolved by predicate pivot.
 
 `@audit:suspect("")` -/
 theorem isAwgnTypicalityHypothesis
@@ -1481,6 +1493,11 @@ the trade explicit. Independent audit flagged prior `_discharged` suffix as mild
 name-laundering; this rename rebrands the wrapper honestly. Body itself is honest
 (chains genuine `isAwgnTypicalityHypothesis` assembly).
 
+**UPSTREAM DEFECT (2026-05-24)**: `h_power : IsAwgnPowerConstraintRealizable P N`
+is a **false-statement** hypothesis (chi-square mass analysis, see predicate
+docstring). This wrapper is therefore unusable for standard-B closure until the
+predicate is pivoted (Cover-Thomas `P' < P`).
+
 `@audit:suspect("")` -/
 theorem awgn_achievability_F1_via_staged_hyps
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -1506,12 +1523,17 @@ theorem awgn_achievability_F1_via_staged_hyps
 - `h_converse` (F-3、converse aux、未起草 plan)
 - `h_aep` (`@audit:staged(continuous-aep-gaussian)`、Mathlib 壁 (d))
 - `h_rand` (`@audit:staged(awgn-random-coding-bound)`、Mathlib 壁 (b))
-- `h_power` (`@audit:staged(awgn-power-constraint-realizable)`、Mathlib 壁 (c) labor)
+- `h_power` (**false-statement defect** on `IsAwgnPowerConstraintRealizable`、chi-square mass の unsatisfiable bound — predicate pivot 必要)
 
 **Naming (post-rename 2026-05-24)**: theorem name is `awgn_theorem_F4_discharged_F1_via_staged`.
 F-4 genuinely discharged (`isAwgnChannelMeasurable N` is concrete), but F-1 is
 hyp-mediated via 3 staged. Independent audit flagged prior `_F1F4_discharged` as
 mild name-laundering; the rename makes F-1's hyp-mediated status explicit.
+
+**UPSTREAM DEFECT (2026-05-24)**: `h_power : IsAwgnPowerConstraintRealizable P N`
+is a **false-statement** hypothesis (chi-square mass analysis, see predicate
+docstring). This wrapper is therefore unusable for standard-B closure until the
+predicate is pivoted (Cover-Thomas `P' < P`).
 
 `@audit:suspect("")` -/
 theorem awgn_theorem_F4_discharged_F1_via_staged
