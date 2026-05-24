@@ -200,13 +200,69 @@ Wave 1 の sync 結果を読み、最大 leverage の plan を 2-3 件選定:
 Wave 2 で確定した phase を、file 独立性に基づき最大 5 並列で `lean-implementer` 投入。
 Brief には CLAUDE.md「Brief content checklist」必須項目 (sub-bound 引数表 + 継承 audit タグ inline check) を含める。
 
-## §7. 次の一手
+## §7. Wave 1 結果統合 (5 並列 plan sync 完了, 2026-05-24)
 
-Wave 0 ✅ 完了 (本 session、3 stub + inventory 訂正 1 commit)。
+5 大エリアを general-purpose agent 5 並列で audit。各 report は `docs/audit/wave1-plan-sync-<area>.md` に存置。本節は cross-area サマリ。
+
+### 7.1 件数集約
+
+| Wave | エリア | 実測 suspect | in-plan orphan | drop 漏れ | ROI high | ROI medium | ROI low | report |
+|---|---|---|---|---|---|---|---|---|
+| W1-A | AWGN | 26 | 5 | 0 | 0 | 11 | 15 | [`wave1-plan-sync-awgn.md`](./wave1-plan-sync-awgn.md) |
+| W1-B | EPI / BrunnMinkowski / diff-entropy | 123 | 96 | 0 | 22 | 35 | 66 | [`wave1-plan-sync-epi-bm.md`](./wave1-plan-sync-epi-bm.md) |
+| W1-C | Channel coding (Relay/MAC/BC/DMC) | 71 | 5 | 0 | 8 | 17 | 46 | [`wave1-plan-sync-channel-coding.md`](./wave1-plan-sync-channel-coding.md) |
+| W1-D | Source coding (LZ78/Huffman) | 59 | 0 | 51 | 9 | 6 | 44 | [`wave1-plan-sync-source-coding.md`](./wave1-plan-sync-source-coding.md) |
+| W1-E | Tail/concentration | 96 | 0 | 2 | 1 | 4 | 91 | [`wave1-plan-sync-tail-concentration.md`](./wave1-plan-sync-tail-concentration.md) |
+| **合計** | **5** | **375** | **106** | **53** | **40** | **73** | **262** | — |
+
+(snapshot §1 の生 grep 382 件との差は、生 grep が同一 declaration 上の複数 tag を別カウントするのに対し、agent は declaration 単位で集約しているため。)
+
+### 7.2 横断 themes (5 area で観測された共通パターン)
+
+1. **plan-side stale が常態化** (W1-A `awgn-mi-decomp` / W1-D Huffman・LZ78 / W1-E DONE 表記 + suspect 残置): code 実装が plan を追い越し、plan 進捗欄が初版のまま。audit visibility は code SoT を信じれば失われないが、レビュー時に「何が新規 wave で増えたか」追跡不能。
+2. **rewrite-only second wave が大規模に発見**: 即 retract 候補 (DONE 表記済 suspect 残置, completed wrapper 上の suspect 遺存) + re-tag 候補 (slug mismatch, SUPERSEDED 化) で計 **80-120 件相当**。Wave 0 で潰した orphan stub 3 件とは別系。
+3. **honesty inline alert 2 件** (W1-D LZ78 系、CLAUDE.md「専用監査を待たない」inline 即フラグ規律該当):
+   - `Common2026/Shannon/LZ78ZivTreeNode.lean:651, :712` — predicate `IsLZ78ZivCombinatorialCoreOverhead` が docstring 内で **「FALSE で vacuously conditioned」**と self-flag 済。現状 `@audit:suspect` だが、規約上は `@audit:defect(degenerate)` or `@audit:residual` 格上げ候補。
+   - `Common2026/Shannon/LZ78SMBSandwich.lean:362` `IsLZ78ConverseChainHyp.ofSMBBridge` — body `:= h` の defeq 別名 (circular)、`lz78-residual-discharge-plan` 判断ログ #6 で defect として記録済だが **本 line には audit tag 未付与**。`@audit:defect(circular)` 付与必要。
+4. **連鎖クローズ最大 leverage 3 経路** (Wave 3 候補):
+   - **Chernoff family** (W1-E `chernoff-converse-sanov-discharge-plan` Phase 5): 単一 discharge で 21 件一斉 close (Chernoff family 全 21 件)。Mathlib gap ~150-300 行、既存 `Stein.lean` + `SanovLDPEquality.lean` plumbing 再利用。
+   - **BM 縦串** (W1-B `multivariate-diffentropy-subadditivity` → `brunn-minkowski-closure` Phase 4 → BM 33): 単一上流 close で 37 件連鎖閉。Mathlib 壁 (b) 中、半年内現実的。
+   - **Relay** (W1-C `relay-inner-bound-moonshot` L-RI1 + L-RI3): 2 body discharge で 24 件 (Relay-inner-bound 33 件中 24 件) transitive close。
+5. **slug 粒度問題** (W1-B `epi-moonshot-plan` 76 件 / W1-D Huffman 3-plan で 2-3 hyp に集約可能 / W1-D LZ78-moonshot SUPERSEDED 化): 1 slug あたり 30+ 件は audit 単位として過大、後継 sub-plan slug への分割 / merge / 再分配で visibility が大幅改善。
+
+### 7.3 Wave 1.5 (rewrite-only 拡張 cleanup) 候補リスト
+
+5 area report を統合した「single-commit で消化可能な audit visibility 改善 item」:
+
+| # | エリア | item | 対象件数 | 形式 |
+|---|---|---|---|---|
+| 1 | W1-D inline | LZ78 honesty 2 件 (LZ78ZivTreeNode degenerate / LZ78SMBSandwich circular) tag 付与 | 2 | docstring Edit |
+| 2 | W1-A | `awgn-f1-discharge-moonshot-plan` 4 件 retag (F-1 genuine 済の wrapper 遺存 tag) | 4 | tag Edit |
+| 3 | W1-C | `dmc-feedback-capacity-plan` 3 件 retract (`_memoryless` 完全形 publish 済) | 3 | tag drop |
+| 4 | W1-C | `channel-coding-shannon-theorem-full-plan` 1 件 retract-candidate 化 | 1 | tag Edit |
+| 5 | W1-E | DONE 表記済 plan の suspect 残置 re-tag (audit-tags 語彙 `staged` / `completed` 拡張要検討) | ~25 | tag Edit + audit-tags.md 拡張 |
+| 6 | W1-D | Huffman 3-plan merge → `huffman-2hyp-vertical-reduction-plan` 新規 + 30 件再分配 | 30 | plan stub + tag mass-edit |
+| 7 | W1-D | LZ78-moonshot SUPERSEDED 化 + 16 件再分配 (residual-discharge / blockrv-refactor / achievability-converse) | 16 | plan status + tag mass-edit |
+| 8 | W1-B | epi-moonshot 76 件 slug 分割 (`epi-stam-discharge` / `epi-debruijn-integration` / `epi-stam-to-conclusion`) | 76 | plan split + tag mass-edit |
+| 9 | W1-A / W1-D | plan 進捗欄追記 (awgn-moonshot Phase Pivot / awgn-mi-decomp 段 1+2 / Huffman code follow-up) | 数 plan | plan Edit |
+
+**合計**: 120-160 件相当の visibility 改善 (重複あり)。**inline 2 件 (item #1) は CLAUDE.md「専用監査を待たない」inline 即フラグ規律該当**、最優先で潰すべき。残りは並列実行可。
+
+### 7.4 Wave 2 (planning) 候補 — Mathlib-gap closure plan の優先度
+
+Wave 1 結果に基づき、leverage 順:
+
+1. **`chernoff-converse-sanov-discharge-plan` Phase 5** (W1-E、ROI medium、21 件一斉 close) — 最も投資対効果が高い。`lean-planner` で Phase 5 詳細設計 → `lean-implementer` 並列実装。
+2. **`brunn-minkowski-closure-plan` Phase 4 + `multivariate-diffentropy-subadditivity` 新規** (W1-B、ROI medium、37 件縦串) — 計画整理が必要。
+3. **`parallel-gaussian-moonshot-plan` Phase C** (W1-E、ROI medium、11 件 + AWGN family 連鎖) — AWGN B-0 と独立に進められる第二経路。
+4. **`epi-moonshot-plan` slug 分割後の Phase 起草** (W1-B、76 件、Wave 1.5 item #8 完了後): 分割後 sub-plan それぞれの Phase 設計。
+
+## §8. 次の一手
 
 ユーザー判断待ち:
 
-1. **Wave 1 を起動するか** (5 並列 `mathlib-inventory`、~30-60 分の wall clock、5 file の plan sync report 産出)
-2. **本 inventory snapshot 自体に追加列・行が必要か** (例: 各 staged predicate の load-bearing 度評価、各 plan の最終更新日、suspect → 主定理 依存深度 など)
+1. **Wave 1.5 (rewrite-only 拡張)** を 5 並列で起動するか — §7.3 item の独立性で並列分担可能 (例: inline alert + retag は 1 agent, plan split は別 agent, ...)。inline alert 2 件のみ即潰してから残りを並列、もあり。
+2. **Wave 2 (planning) を Wave 1.5 と並列で起動するか** — Chernoff Phase 5 設計を `lean-planner` に独立投入可。Wave 1.5 と非干渉。
+3. **次セッションに送る** (handoff) — 本 session で Wave 0 / Wave 1 が完了したので一区切り。
 
-推奨: **Wave 1 起動** (plan-side sync で次以降の closure leverage を決める地図ができる)。
+推奨: **inline alert 2 件 (item #1) のみ本 session で即潰す → 残りは handoff** (CLAUDE.md「専用監査を待たない」inline 規律遵守 + session 規模が膨らみすぎないよう sane stopping point)。
