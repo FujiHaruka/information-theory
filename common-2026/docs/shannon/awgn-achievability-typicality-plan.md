@@ -50,7 +50,7 @@
 
 ## 進捗
 
-**完走 (2026-05-24)**: 1485 行、0 sorry、lake env lean silent、3 honest staged hyps (continuous-aep-gaussian / awgn-random-coding-bound / awgn-power-constraint-realizable)。
+**完走 (2026-05-24)**: 1641 行、0 sorry、lake env lean silent、2 honest staged hyps (continuous-aep-gaussian / awgn-random-coding-feasible bundle — 旧 `awgn-power-constraint-realizable` は false-statement defect 発覚で sibling pivot により bundle 形に統合、判断ログ #7 参照)。
 
 - [x] Phase 0 — Mathlib + Common2026 在庫 (codebook 測度 / continuous AEP / 結合密度 / expurgation / decoder measurability) ✅ → [`awgn-achievability-typicality-mathlib-inventory.md`](awgn-achievability-typicality-mathlib-inventory.md) + 5 軸別 file (合計 2968 行)。判断 #1 = T-2 採用、判断 #2 = Option A (2 段 `Measure.pi`)、判断 #3 = Option γ (`klDiv` 形) で確定
 - [x] Phase A — `gaussianCodebook` 測度 + IndepFun + marginal lemma ✅ (Mathlib 既存 100% / commit `8c1bc4d`)
@@ -59,6 +59,7 @@
 - [x] Phase D — expurgation + `IsAwgnPowerConstraintRealizable` 追加 staging ✅ (commit `ccd503f`、`@audit:staged(awgn-power-constraint-realizable)`)
 - [x] Phase E — `isAwgnTypicalityHypothesis` 統合 (3 staged hyp consume) + wrapper ✅ (commit `e9058ad` + Phase V commit、E-1 body ~580 行 + Kernel.pi 相当 helper ~170 行)
 - [x] Phase V — verify (lake env lean silent / 0 sorry / `Common2026.lean` 編入) ✅
+- [x] **Phase Pivot** — `IsAwgnPowerConstraintRealizable` false-statement defect → bundle pivot ✅ (commits `9dcef00` Phase 2 skeleton / `2ace40b` Phase 3 body fill 1641 行 / `c02304c` Phase 4 closure、sibling plan [`awgn-power-constraint-realizable-pivot-plan.md`]、判断ログ #7)
 
 ## ゴール / Approach
 
