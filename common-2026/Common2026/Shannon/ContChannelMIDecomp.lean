@@ -242,7 +242,9 @@ theorem llr_compProd_prod_split
 /-- **★ Continuous-channel MI chain rule body** (AWGN-independent, 🟢ʰ honest).
 
 `(mutualInfoOfChannel p W).toReal = h(Y) − ∫ h(Y|X=x) dp(x)`, the density-level
-analogue of the discrete `mutualInfo_eq_entropy_add_entropy_sub_jointEntropy`. -/
+analogue of the discrete `mutualInfo_eq_entropy_add_entropy_sub_jointEntropy`.
+
+`@audit:suspect(awgn-mi-decomp-plan)` -/
 theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub
     (hW_ac : ∀ x, W x ≪ volume)
     (hq_ac : outputDistribution p W ≪ volume)
@@ -642,7 +644,9 @@ theorem awgn_mi_gaussian_closed_form_of_out
 Same as `awgn_capacity_closed_form_F2_discharged` but with the `h_decomp`
 argument removed: `IsAwgnMIDecomp` is now discharged genuinely via Route B
 (`isAwgnMIDecomp_of_densitySplit`), leaving only `h_out`/`h_bdd`/`h_max_ent`
-honest. -/
+honest.
+
+`@audit:suspect(awgn-mi-decomp-plan)` -/
 theorem awgn_capacity_closed_form_of_out
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_out : IsAwgnOutputGaussian P N (isAwgnChannelMeasurable N))

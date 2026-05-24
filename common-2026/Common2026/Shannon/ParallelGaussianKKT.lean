@@ -277,7 +277,9 @@ def ParallelGaussianChainRuleBundle {n : ℕ} (P : ℝ)
       ≤ parallelGaussianCapacity P N h_meas h_parallel_meas)
 
 /-- **L-PG1 reduction**: the chain rule bundle yields the
-`IsParallelGaussianPerCoordReduction` predicate, via antisymmetry of `≤`. -/
+`IsParallelGaussianPerCoordReduction` predicate, via antisymmetry of `≤`.
+
+`@audit:suspect(parallel-gaussian-moonshot-plan)` -/
 theorem isParallelGaussianPerCoordReduction_of_bundle {n : ℕ}
     (P : ℝ) (N : Fin n → ℝ≥0) (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N) (ν : ℝ)
@@ -287,7 +289,9 @@ theorem isParallelGaussianPerCoordReduction_of_bundle {n : ℕ}
   le_antisymm h_bundle.1 h_bundle.2
 
 /-- **L-PG1 reverse reduction**: the `IsParallelGaussianPerCoordReduction`
-predicate yields the chain rule bundle. -/
+predicate yields the chain rule bundle.
+
+`@audit:suspect(parallel-gaussian-moonshot-plan)` -/
 theorem bundle_of_isParallelGaussianPerCoordReduction {n : ℕ}
     (P : ℝ) (N : Fin n → ℝ≥0) (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N) (ν : ℝ)
@@ -315,7 +319,9 @@ The optimality certificate (`h_for_cert`) is also still taken as a hypothesis
 here. Genuinely closed in *this* theorem: L-WF1 (KKT water-level existence, via
 IVT) and L-PG0 (kernel measurability, upstream). The genuine L-PG1 reduction needs
 the memoryless chain rule + per-coord AWGN capacity (continuous AEP / sphere-shell
-volume) machinery absent from Mathlib. -/
+volume) machinery absent from Mathlib.
+
+`@audit:suspect(parallel-gaussian-moonshot-plan)` -/
 theorem parallel_gaussian_capacity_formula_KKT_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -351,7 +357,9 @@ genuinely closed.
 
 Cover-Thomas Ch.9.4 Theorem 9.4.1 alternative form. Combines
 `parallel_gaussian_capacity_formula_KKT_discharged` with
-`parallel_gaussian_capacity_sum_active`. -/
+`parallel_gaussian_capacity_sum_active`.
+
+`@audit:suspect(parallel-gaussian-moonshot-plan)` -/
 theorem parallel_gaussian_capacity_active_form_KKT_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0)
     (hN : ∀ i, (N i : ℝ) ≠ 0) (hN_pos : ∀ i, 0 < (N i : ℝ))

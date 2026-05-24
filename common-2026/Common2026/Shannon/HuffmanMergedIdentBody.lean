@@ -149,7 +149,9 @@ abbrev MergedHuffmanAuxIdentHypothesis : Prop :=
 
 /-- **vertical reduction の publish**: primitive predicate `MergedHuffmanAuxIdentHypothesis`
 から原 `HuffmanMergedIdentificationHypothesis` を完全証明で導く. measure 層は
-`initMultiset_mergedMeasure_eq` + `huffmanLength` の defeq 展開で完全に discharge. -/
+`initMultiset_mergedMeasure_eq` + `huffmanLength` の defeq 展開で完全に discharge.
+
+`@audit:suspect(huffman-moonshot-plan)` -/
 theorem huffmanMergedIdentification_of_aux
     (h_aux : MergedHuffmanAuxIdentHypothesis.{u}) :
     HuffmanMergedIdentificationHypothesis.{u} := by
@@ -164,7 +166,9 @@ theorem huffmanMergedIdentification_of_aux
 
 /-- **`huffmanLength_optimal_with_hypotheses` の再公開**: identification hypothesis を
 primitive `MergedHuffmanAuxIdentHypothesis` で受け取る form. swap normalization 半分
-(`SwapNormalizationHypothesis`) はそのまま残る (本 seed の scope 外). -/
+(`SwapNormalizationHypothesis`) はそのまま残る (本 seed の scope 外).
+
+`@audit:suspect(huffman-moonshot-plan)` -/
 theorem huffmanLength_optimal_with_swap_and_aux
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]

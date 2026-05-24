@@ -175,7 +175,9 @@ Defining `N(μ) := entropyPower μ / (2πe)`, the EPI
 
     `N(X + Y) ≥ N(X) + N(Y)`
 
-is equivalent to the un-normalized form. L-EPI3 hypothesis pass-through. -/
+is equivalent to the un-normalized form. L-EPI3 hypothesis pass-through.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem entropy_power_inequality_normalized
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -204,7 +206,9 @@ theorem entropy_power_inequality_normalized
 L-EPI3 hypotheses, `entropyPower (X+Y+Z+W) ≥ Σ entropyPower (·)`.
 
 Chains three applications of L-EPI3 (the 2-arg `IsEntropyPowerInequalityHypothesis`
-predicate): once on `((X+Y)+Z) vs W`, once on `(X+Y) vs Z`, once on `X vs Y`. -/
+predicate): once on `((X+Y)+Z) vs W`, once on `(X+Y) vs Z`, once on `X vs Y`.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem entropy_power_inequality_four_arg {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y Z W : Ω → ℝ)
@@ -239,7 +243,9 @@ theorem entropy_power_inequality_four_arg {Ω : Type*} {mΩ : MeasurableSpace Ω
 /-- Log-form of EPI: `2 h(X+Y) ≥ log (entropyPower X + entropyPower Y)`.
 
 Derived from `entropy_power_inequality` by applying `Real.log` (the inequality
-direction is preserved since `Real.log` is monotone on `(0, ∞)`). -/
+direction is preserved since `Real.log` is monotone on `(0, ∞)`).
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem two_differentialEntropy_ge_log_sum
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

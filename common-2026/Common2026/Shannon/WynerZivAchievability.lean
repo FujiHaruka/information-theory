@@ -55,7 +55,9 @@ the Phase D wrapper `wyner_ziv_tendsto`.
 
 The hypothesis itself is the content of Cover–Thomas 15.9 achievability;
 the present theorem is a trivial unwrapping that documents the consumption
-shape. Discharge is performed in `docs/shannon/wyner-ziv-achievability-discharge-*`. -/
+shape. Discharge is performed in `docs/shannon/wyner-ziv-achievability-discharge-*`.
+
+`@audit:suspect(wyner-ziv-moonshot-plan)` -/
 theorem wyner_ziv_achievability_rate
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
     (h_ach : wynerZivRatePmf U P_XY d D ≤ R) :
@@ -74,7 +76,9 @@ proof (random binning on `U^n` + three-way jointly typical decoder + AEP
 The hypothesis `h_ach_existence` packages the existence claim in its raw
 form so that the present file can publish the statement without depending
 on the (large) Phase B implementation. Callers who *have* discharged Phase B
-can supply this hypothesis directly; the theorem then re-exports it. -/
+can supply this hypothesis directly; the theorem then re-exports it.
+
+`@audit:suspect(wyner-ziv-moonshot-plan)` -/
 theorem wyner_ziv_achievability_existence
     (μ : Measure (α × β)) [IsProbabilityMeasure μ]
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)

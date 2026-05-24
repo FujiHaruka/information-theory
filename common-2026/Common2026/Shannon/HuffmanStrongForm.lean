@@ -170,7 +170,9 @@ else huffmanLength Q x.val)`」という、Huffman 再帰を 2 carrier (`β` と
 (`expectedLength` 不等式) とは型が異なる. これは `:= h` 循環でも `:True` placeholder でも
 退化定義でもない. その genuine discharge は `huffmanStep` の `Classical.choose` 非決定性
 (min 選択の tie 破り) を carrier 横断で対応付ける必要があり (judgement log #3),
-本 session では未完了の残タスク. -/
+本 session では未完了の残タスク.
+
+`@audit:suspect(huffman-moonshot-plan)` -/
 theorem huffmanLength_optimal_modulo_aux_ident
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]

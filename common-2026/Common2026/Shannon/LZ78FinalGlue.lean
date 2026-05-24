@@ -161,7 +161,9 @@ conclude
 This is the Ziv-side mirror of `lz78_converse_lower_bound_with_chain`
 (`LZ78ConverseDischarge.lean`), with the SMB upper-bound sandwich
 discharged from the ergodic-process side rather than supplied as a
-hypothesis. -/
+hypothesis.
+
+`@audit:suspect(lz78-moonshot-plan)` -/
 theorem lz78_achievability_upper_bound_ergodic
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -207,7 +209,9 @@ sandwich (`algoet_cover_liminf_bound` / `algoet_cover_limsup_bound`).
 
 The two `IsBoundedUnder` hypotheses remain — they are the genuine
 boundedness of the per-symbol rate sequence, required by
-`tendsto_of_le_liminf_of_limsup_le`. -/
+`tendsto_of_le_liminf_of_limsup_le`.
+
+`@audit:suspect(lz78-moonshot-plan)` -/
 theorem lz78_two_sided_optimality_ergodic
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -249,7 +253,9 @@ theorem lz78_two_sided_optimality_ergodic
 
 Same as `lz78_two_sided_optimality_ergodic`, but the two
 `IsBoundedUnder` hypotheses are bundled into a single conjunction, mirroring
-`lz78_asymptotic_optimality_of_bounds` (`LempelZiv78.lean` §4). -/
+`lz78_asymptotic_optimality_of_bounds` (`LempelZiv78.lean` §4).
+
+`@audit:suspect(lz78-moonshot-plan)` -/
 theorem lz78_two_sided_optimality_ergodic_of_bounds
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -321,7 +327,9 @@ sandwich is discharged internally (L-LZ3), and only the two genuine
 Cover–Thomas chain hypotheses (Eq. 13.124 / 13.130) plus the boundedness
 of the per-symbol rate remain. This is the maximally-discharged form of
 Cover–Thomas Theorem 13.5.3 achievable from the current wave's
-ingredients. -/
+ingredients.
+
+`@audit:suspect(lz78-moonshot-plan)` -/
 theorem lz78_two_sided_optimality_greedy_impl
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -371,7 +379,9 @@ carries only **three** honest hypotheses:
   `tendsto_of_le_liminf_of_limsup_le`.
 
 The two SMB-side sandwich bounds and all three `True` pass-throughs
-remain discharged internally (as in the parent headline). -/
+remain discharged internally (as in the parent headline).
+
+`@audit:suspect(lz78-moonshot-plan)` -/
 theorem lz78_two_sided_optimality_greedy_impl_bdd_below_free
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)

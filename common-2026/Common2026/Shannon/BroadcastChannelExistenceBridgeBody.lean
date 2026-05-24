@@ -308,7 +308,9 @@ then **discards the operational witness** (`obtain ⟨_C₀,_hC₀⟩`) and retu
 `(c, max 0 B)` — the original `c`, not `C₀`. The genuine averaging content does
 **not** survive the predicate's operational gap. Repairing this requires
 strengthening `IsBCRandomCodebookMarkov` upstream so `errBound` actually bounds
-the chosen codebook's error (out of scope here). -/
+the chosen codebook's error (out of scope here).
+
+`@audit:suspect(broadcast-channel-moonshot-plan)` -/
 theorem bc_random_codebook_markov_of_ensemble
     (R₁ R₂ : ℝ)
     (h_ens : IsBCBonferroniEnsembleDecay (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂) :
@@ -364,7 +366,9 @@ achievability is the honest residual `BCSuperpositionAchievable`, consumed
 only by the headline `bc_capacity_region_inner_bound`.
 
 Composes `bc_random_codebook_markov_of_ensemble` (S7-F) with the predecessor
-`bc_inner_bound_with_averaging` (`BroadcastChannelAveraging.lean`). -/
+`bc_inner_bound_with_averaging` (`BroadcastChannelAveraging.lean`).
+
+`@audit:suspect(broadcast-channel-moonshot-plan)` -/
 theorem bc_inner_bound_with_ensemble_averaging
     (R₁ R₂ I_u I_xy : ℝ)
     (h_strict : R₂ < I_u ∧ R₁ < I_xy)
@@ -381,7 +385,9 @@ bundled form.**
 
 Variant of `bc_inner_bound_with_ensemble_averaging` taking the rate
 conditions bundled as the `≤` + `≠` form of `InBCCapacityRegion`, mirroring
-`bc_inner_bound_with_averaging_bundled` of `BroadcastChannelAveraging.lean`. -/
+`bc_inner_bound_with_averaging_bundled` of `BroadcastChannelAveraging.lean`.
+
+`@audit:suspect(broadcast-channel-moonshot-plan)` -/
 theorem bc_inner_bound_with_ensemble_averaging_bundled
     (R₁ R₂ I_u I_xy : ℝ)
     (h_in_region : InBCCapacityRegion R₁ R₂ I_u I_xy)

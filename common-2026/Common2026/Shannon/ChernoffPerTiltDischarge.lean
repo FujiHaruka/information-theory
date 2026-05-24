@@ -157,7 +157,9 @@ lower bound predicate at a single tilt `lam ∈ Icc 0 1`, derive
 `limsup rate ≤ -log Z(λ)`.
 
 This is a thin wrapper around `ChernoffConverse.chernoff_converse_from_per_tilt`;
-the predicate unfolds to exactly the per-tilt hypothesis required. -/
+the predicate unfolds to exactly the per-tilt hypothesis required.
+
+`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
 theorem chernoff_converse_from_predicate
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -175,7 +177,9 @@ bound predicate at `λ*`, derive `limsup rate ≤ chernoffInfo P₁ P₂`.
 
 This is a thin re-package of
 `ChernoffConverse.chernoff_converse_of_per_tilt_existential` (🟢ʰ
-load-bearing in the per-tilt hyp). -/
+load-bearing in the per-tilt hyp).
+
+`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
 theorem chernoff_converse_discharged_from_predicate
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -203,7 +207,9 @@ internally.
 This is the cleanest publish shape of Cover-Thomas Theorem 11.9.1 given the
 current Mathlib state: only one explicit hypothesis (the per-tilt predicate
 `IsBayesErrorPerTiltLowerBound`, itself the Mathlib-gap abstraction of the
-Sanov LDP per-tilt output). -/
+Sanov LDP per-tilt output).
+
+`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
 theorem chernoff_lemma_tendsto_from_predicate
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -266,7 +272,9 @@ merely forwards the predicate through `chernoff_lemma_tendsto_from_predicate`.
 
 The single-atomic-hypothesis shape is convenient for callers but it is the
 same converse content as the unfolded existential — no progress is made
-here. -/
+here.
+
+`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
 theorem chernoff_lemma_tendsto_of_per_tilt
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -293,7 +301,9 @@ body derives `h_converse` and `h_bdd_le` (the two hypotheses of
 `chernoff_dotEq_tendsto`) — but the `h_converse` derivation is itself a
 forward through `chernoff_converse_of_per_tilt_existential_from_predicate`,
 which is also load-bearing in the same per-tilt hypothesis. No new converse
-content is produced here. -/
+content is produced here.
+
+`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
 theorem chernoff_dotEq_tendsto_of_per_tilt
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)

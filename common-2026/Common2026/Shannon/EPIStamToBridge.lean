@@ -180,7 +180,9 @@ applied to `(g0, g1) := (gap, 0)` we obtain `gap ≥ 0`, which unfolds to
 the EPI conclusion. The limit hypothesis is used to *enforce* the
 endpoint identification, ensuring the `g1 = 0` argument supplied to the
 scaling hypothesis is canonical (in the present `Prop`-level phrasing this
-is structurally automatic). -/
+is structurally automatic).
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isStamToEPIBridgeHyp_of_scaling_limit
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -278,7 +280,9 @@ theorem isEPIL3IntegratedPipeline_of_scaling_decomposed
   bridge := isStamToEPIBridgeHyp_of_scaling_limit h.scaling h.limit
 
 /-- **Main theorem (scaling-decomposed EPI)**. The scaling-decomposed
-pipeline yields the EPI conclusion through the monolithic pipeline. -/
+pipeline yields the EPI conclusion through the monolithic pipeline.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem entropy_power_inequality_via_scaling_decomposition
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -290,7 +294,9 @@ theorem entropy_power_inequality_via_scaling_decomposition
   have h_integrated := isEPIL3IntegratedPipeline_of_scaling_decomposed h_pipeline
   exact entropy_power_inequality_integrated P X Y hX hY hXY h_integrated
 
-/-- **Gaussian full discharge of scaling-decomposed pipeline**. -/
+/-- **Gaussian full discharge of scaling-decomposed pipeline**.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isEPIScalingDecomposedPipeline_of_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -380,7 +386,9 @@ theorem isEPIScalingDecomposedPipeline_symm
 
 /-- **Scaling hypothesis from EPI hypothesis**. When the EPI conclusion is
 already known (e.g. through a different route), the scaling sub-predicate
-trivially follows. -/
+trivially follows.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isStamToEPIScalingHyp_of_epi
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -391,7 +399,9 @@ theorem isStamToEPIScalingHyp_of_epi
   rw [hg0, hg1]
   linarith
 
-/-- **Limit hypothesis from EPI hypothesis**. -/
+/-- **Limit hypothesis from EPI hypothesis**.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isStamToEPILimitHyp_of_epi
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -400,7 +410,9 @@ theorem isStamToEPILimitHyp_of_epi
   refine ⟨0, rfl, Or.inr ?_⟩
   exact h_epi
 
-/-- **Decomposed pipeline from EPI + Stam**. -/
+/-- **Decomposed pipeline from EPI + Stam**.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isEPIScalingDecomposedPipeline_of_epi
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -416,7 +428,9 @@ This is a structural shortcut that bypasses the limit witness construction:
 since `IsStamToEPILimitHyp` always admits the witness `⟨0, rfl, Or.inl _⟩`
 when the structural inequality `gap ≥ 0` is already available, and since
 `gap ≥ 0` is exactly what the scaling predicate provides via the Stam
-inequality, the scaling predicate alone is sufficient. -/
+inequality, the scaling predicate alone is sufficient.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isStamToEPIBridgeHyp_of_scaling
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -432,7 +446,9 @@ theorem isStamToEPIBridgeHyp_of_scaling
   linarith
 
 /-- **Decomposition `(stam, scaling) → bridge` direct**, mirroring the
-shortcut above but at the `IsEPIScalingDecomposedPipeline` packaging level. -/
+shortcut above but at the `IsEPIScalingDecomposedPipeline` packaging level.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isStamToEPIBridgeHyp_of_stam_scaling
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -467,7 +483,9 @@ NOTE: despite the historical name, this is **not** a vacuous-truth back-door. It
 requires `h_epi : IsEntropyPowerInequalityHypothesis X Y P` as a genuine input
 (established elsewhere by a non-circular route) and merely repackages it as the
 scaling sub-predicate; the `h_stam_triv` argument plays no role. The former buggy
-V1 `fisherInfo = 0` vacuous discharge was removed 2026-05-20. -/
+V1 `fisherInfo = 0` vacuous discharge was removed 2026-05-20.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isStamToEPIScalingHyp_of_fisherInfoReal_zero
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -479,7 +497,9 @@ theorem isStamToEPIScalingHyp_of_fisherInfoReal_zero
 /-! ## §6 — Chain forms (3-arg / 4-arg) via scaling decomposition -/
 
 /-- **3-arg EPI via scaling-decomposed pipeline**. Chains two scaling-
-decomposed pipelines (one for `(X, Y)`, one for `(X+Y, Z)`). -/
+decomposed pipelines (one for `(X, Y)`, one for `(X+Y, Z)`).
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem entropy_power_inequality_three_arg_via_scaling
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -492,7 +512,9 @@ theorem entropy_power_inequality_three_arg_via_scaling
   have h_xyz_int := isEPIL3IntegratedPipeline_of_scaling_decomposed h_xyz
   exact entropy_power_inequality_three_arg_integrated P X Y Z h_xy_int h_xyz_int
 
-/-- **4-arg EPI via scaling-decomposed pipeline**. Chains three pipelines. -/
+/-- **4-arg EPI via scaling-decomposed pipeline**. Chains three pipelines.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem entropy_power_inequality_four_arg_via_scaling
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -525,7 +547,9 @@ theorem scaling_decomposed_pipeline_roundtrip
     h.stam = h_stam ∧ h.scaling = h_scaling ∧ h.limit = h_limit :=
   ⟨rfl, rfl, rfl⟩
 
-/-- **Bridge body discharge implies original `IsStamToEPIBridgeHyp`**. -/
+/-- **Bridge body discharge implies original `IsStamToEPIBridgeHyp`**.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isStamToEPIBridgeHyp_of_scaling_limit_equiv
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -538,7 +562,9 @@ theorem isStamToEPIBridgeHyp_of_scaling_limit_equiv
   exact h_bridge h_stam
 
 /-- **Scaling-decomposed pipeline yields the same EPI conclusion as the
-integrated pipeline**, in extensionally-equivalent form. -/
+integrated pipeline**, in extensionally-equivalent form.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem entropy_power_inequality_scaling_decomposition_equiv
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -551,7 +577,9 @@ theorem entropy_power_inequality_scaling_decomposition_equiv
     P X Y hX hY hXY h_scaling_dec
 
 /-- **Three forms of EPI via scaling decomposition** (linear, exp, normalized
-log). -/
+log).
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem entropy_power_inequality_three_forms_via_scaling
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

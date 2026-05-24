@@ -138,7 +138,9 @@ split into two inequalities). It is the *only* remaining open hypothesis: L-WF1
 internally-exhibited multiplier) and L-PG0 (kernel measurability) are all
 genuinely closed. The genuine L-PG1 reduction needs the memoryless chain rule +
 per-coord AWGN capacity (continuous AEP / sphere-shell volume) machinery absent
-from Mathlib. -/
+from Mathlib.
+
+`@audit:suspect(parallel-gaussian-moonshot-plan)` -/
 theorem parallel_gaussian_capacity_formula_WFstat_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (hN_pos : ∀ i, 0 < (N i : ℝ))

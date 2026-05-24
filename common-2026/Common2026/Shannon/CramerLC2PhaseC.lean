@@ -92,7 +92,9 @@ def IsMeasureInfinitePiTiltedEq (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam
 
 /-- **`h_tilted_lower` reduction**: given the n-letter RN-deriv predicate, the
 parent `h_tilted_lower` hypothesis of `Cramer.cramer_lower` follows in the
-canonical i.i.d. product-measure setting `X i ω := Y (ω i)`. -/
+canonical i.i.d. product-measure setting `X i ω := Y (ω i)`.
+
+`@audit:suspect(cramer-lc2-discharge-moonshot-plan)` -/
 lemma tilted_lower_from_predicate
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ}
@@ -138,7 +140,9 @@ For the canonical i.i.d. product-measure setting `X i ω := Y (ω i)` with
 `IsMeasureInfinitePiTiltedEq μ₀ Y lam`.
 
 The other ambient hypotheses (`iIndepFun`, `IdentDistrib`, bounded family) are
-discharged using the Phase A plumbing from `CramerLC2Discharge`. -/
+discharged using the Phase A plumbing from `CramerLC2Discharge`.
+
+`@audit:suspect(cramer-lc2-discharge-moonshot-plan)` -/
 theorem cramer_lower_phaseC_partial_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
@@ -176,7 +180,9 @@ theorem cramer_lower_phaseC_partial_discharge
   exact cramer_lower (μ := Measure.infinitePi (fun _ : ℕ => μ₀))
     h_indep h_meas h_ident h_bdd_eval a lam hlam h_coboundedBelow h_tilted_lower
 
-/-- **Cramér lower bound (Legendre form), Phase C partial discharge**. -/
+/-- **Cramér lower bound (Legendre form), Phase C partial discharge**.
+
+`@audit:suspect(cramer-lc2-discharge-moonshot-plan)` -/
 theorem cramer_lower_legendre_phaseC_partial_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
@@ -207,7 +213,9 @@ theorem cramer_lower_legendre_phaseC_partial_discharge
 
 The asymptotic exponential rate of the upper-tail probability of the i.i.d.
 sample sum equals the negative Cramér rate. Discharged from `cramer_tendsto`
-with `h_tilted_lower` replaced by the n-letter RN-deriv predicate. -/
+with `h_tilted_lower` replaced by the n-letter RN-deriv predicate.
+
+`@audit:suspect(cramer-lc2-discharge-moonshot-plan)` -/
 theorem cramer_tendsto_phaseC_partial_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)

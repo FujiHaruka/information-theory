@@ -478,7 +478,9 @@ The body is `h_ach h_in_df_region` — a real `modus ponens`, not an identity
 wrap — mirroring `mac_capacity_region_inner_bound` (T3-B MAC) /
 `bc_capacity_region_inner_bound` (T3-C BC). The block-Markov / random-coding
 discharge of `h_ach` is the genuine Mathlib gap (0 typicality lemmas), kept
-honest. -/
+honest.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_df_inner_bound
     (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
@@ -499,7 +501,9 @@ R ≤ min { Imrh + Iry,  Ibroad }
 
 directly, rather than as a bundled `InRelayDFRate`. The `min` form is the
 textbook form (Cover–Thomas (15.232)) and is typically how the inner bound
-is stated in the literature. -/
+is stated in the literature.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_df_inner_bound_min_form
     (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
@@ -514,7 +518,9 @@ theorem relay_df_inner_bound_min_form
 
 Variant taking the two DF inequalities separately rather than bundled as a
 single `InRelayDFRate`. This is the usual exit point of an n-letter joint
-typicality argument that produces the two bounds as separate intermediates. -/
+typicality argument that produces the two bounds as separate intermediates.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_df_inner_bound_two_bounds
     (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
@@ -527,7 +533,9 @@ theorem relay_df_inner_bound_two_bounds
 /-- **DF inner bound — `Real.log` rate form**.
 
 Specialisation of `relay_df_inner_bound` to the standard
-`R := Real.log M / n` rate convention used throughout Cover–Thomas. -/
+`R := Real.log M / n` rate convention used throughout Cover–Thomas.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_df_inner_bound_log_rate
     (W : RelayChannel α α₁ β β₁)
     {M n : ℕ} (_hn : 0 < n)
@@ -576,7 +584,9 @@ predicate genuinely captures achievability. The body is
 `h_ach h_in_cf_region` — a real `modus ponens`, not an identity wrap —
 mirroring the DF inner bound and the MAC inner bound (T3-B). The Wyner–Ziv
 binning / side-info decode discharge of `h_ach` is the genuine Mathlib gap,
-kept honest. -/
+kept honest.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_inner_bound
     (W : RelayChannel α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 : ℝ)
@@ -589,7 +599,9 @@ theorem relay_cf_inner_bound
 /-- **CF inner bound — unbundled two-condition form**.
 
 Variant taking the rate bound and the compression feasibility as separate
-hypotheses rather than bundled. -/
+hypotheses rather than bundled.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_inner_bound_two_conditions
     (W : RelayChannel α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 : ℝ)
@@ -599,7 +611,9 @@ theorem relay_cf_inner_bound_two_conditions
     RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
   relay_cf_inner_bound W R Idec Ix1y Iy1hy1 ⟨h_rate, h_feas⟩ h_ach
 
-/-- **CF inner bound — `Real.log` rate form**. -/
+/-- **CF inner bound — `Real.log` rate form**.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_inner_bound_log_rate
     (W : RelayChannel α α₁ β β₁)
     {M n : ℕ} (_hn : 0 < n)
@@ -630,7 +644,9 @@ Packages the two genuine/honest landings together: the converse **derives**
 inputs, and the achievability **derives** the error-carrying
 `RelayDFInnerBoundExistence W R` from the honest DF residual `h_ach`. Both
 sides derive their conclusions — neither is an identity wrap — matching the
-two-side packaging pattern of `mac_capacity_region_consistent` (T3-B MAC). -/
+two-side packaging pattern of `mac_capacity_region_consistent` (T3-B MAC).
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_df_consistent
     (W : RelayChannel α α₁ β β₁)
     {M n : ℕ} (hn : 0 < n)
@@ -654,7 +670,9 @@ theorem relay_df_consistent
 /-- **Relay channel — CF achievability + cut-set outer bound combined**.
 
 Package the simultaneous validity of the CF inner bound (error-carrying
-existence form) and the cut-set outer bound at the same rate `R`. -/
+existence form) and the cut-set outer bound at the same rate `R`.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_consistent
     (W : RelayChannel α α₁ β β₁)
     {M n : ℕ} (hn : 0 < n)

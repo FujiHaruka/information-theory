@@ -208,7 +208,9 @@ pass-through) は
 
     `(1/n) log volAB ≥ log (exp ((1/n) log volA) + exp ((1/n) log volB))`
 
-を取り出す。`Real.exp_log` を通せば左辺は `log (volAB^{1/n})` に等価 -/
+を取り出す。`Real.exp_log` を通せば左辺は `log (volAB^{1/n})` に等価
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem brunn_minkowski_convex_body_log_form
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -236,7 +238,9 @@ theorem brunn_minkowski_convex_body_log_form
   exact square_to_linear_bridge_log h_main
 
 /-- **`exp_log` form**: 同 wrapper を `volAB^{1/n} ≥ volA^{1/n} + volB^{1/n}`
-**そのまま** の形で取り出す版。`Real.exp_log` を通すだけ。 -/
+**そのまま** の形で取り出す版。`Real.exp_log` を通すだけ。
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem brunn_minkowski_convex_body_exp_log_form
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -266,7 +270,9 @@ theorem brunn_minkowski_convex_body_exp_log_form
 /-- **Main entropy form, log-bridged**: `brunn_minkowski_entropy_inequality_exp_form`
 を本 file の bridge で log 側に上げる版。
 
-    `(2/n) h(X+Y) ≥ log (exp ((2/n) h(X)) + exp ((2/n) h(Y)))`. -/
+    `(2/n) h(X+Y) ≥ log (exp ((2/n) h(X)) + exp ((2/n) h(Y)))`.
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem brunn_minkowski_entropy_log_form
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -420,7 +426,9 @@ theorem log_exp_add_exp_comm (a b : ℝ) :
 /-! ## §H — concavity-of-log direct entropy form の brand-new wrappers -/
 
 /-- **Concavity-of-log composition for Brunn-Minkowski main form**: 主形を
-`(2/n)` 係数で log 側に持ち上げた状態に名前を付ける統合 wrapper。 -/
+`(2/n)` 係数で log 側に持ち上げた状態に名前を付ける統合 wrapper。
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem brunn_minkowski_concavity_of_log_wrapper
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -435,7 +443,9 @@ theorem brunn_minkowski_concavity_of_log_wrapper
   brunn_minkowski_entropy_log_form P h X Y hX hY hXY h_bm
 
 /-- **Concavity wrapper, max lower bound form**: 主形を `max` で挟む形に
-specialize したもの (`max_le_log_exp_add_exp` を経由)。 -/
+specialize したもの (`max_le_log_exp_add_exp` を経由)。
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem brunn_minkowski_concavity_max_lower_bound
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -451,7 +461,9 @@ theorem brunn_minkowski_concavity_max_lower_bound
   linarith
 
 /-- **Concavity wrapper, max + log 2 upper bound** (Brunn-Minkowski の右辺
-を最大値 + log 2 で押さえる形 — `log_exp_add_exp_le_max_add_log_two` 経由). -/
+を最大値 + log 2 で押さえる形 — `log_exp_add_exp_le_max_add_log_two` 経由).
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem brunn_minkowski_concavity_max_log_two_upper_bound
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -551,7 +563,9 @@ theorem log_exp_form_always_holds (a b c : ℝ) :
 の **(non-negative shift) Brunn-Minkowski corollary**:
 `(2/n) h(X+Y) ≥ (2/n) h(X)` の trivially-true form when `h(Y) ≥ -∞`.
 
-L-BM1 hypothesis から導出される 1-side corollary。 -/
+L-BM1 hypothesis から導出される 1-side corollary。
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem brunn_minkowski_entropy_ge_one_side
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -566,7 +580,9 @@ theorem brunn_minkowski_entropy_ge_one_side
     entropyPower_nDim_nonneg n h _
   linarith
 
-/-- **Symmetric one-side form**: 同 corollary, `Y` 側を取り出す版。 -/
+/-- **Symmetric one-side form**: 同 corollary, `Y` 側を取り出す版。
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem brunn_minkowski_entropy_ge_other_side
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -583,7 +599,9 @@ theorem brunn_minkowski_entropy_ge_other_side
 
 /-- **Brunn-Minkowski one-side weaker form via `max`**: 主形 →
 `entropyPower_nDim n h (P.map (X+Y)) ≥ max (entropyPower_nDim n h (P.map X))
-(entropyPower_nDim n h (P.map Y))`. -/
+(entropyPower_nDim n h (P.map Y))`.
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem brunn_minkowski_entropy_ge_max
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -601,7 +619,9 @@ theorem brunn_minkowski_entropy_ge_max
 /-! ## §L — 凸体系 (`brunn_minkowski_convex_body`) と本 file の最終接続 -/
 
 /-- **`rpow` 形での凸体系**: `volAB^{1/n} ≥ volA^{1/n} + volB^{1/n}`.
-`exp_inv_n_log_eq_rpow` で `exp_log_form` を `rpow` に書き換える。 -/
+`exp_inv_n_log_eq_rpow` で `exp_log_form` を `rpow` に書き換える。
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem brunn_minkowski_convex_body_rpow_form
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -630,7 +650,9 @@ theorem brunn_minkowski_convex_body_rpow_form
   exact h_main
 
 /-- **`vol > 0` 直接形** (positivity tag): 凸体の volume が正であることを
-hypothesis として要求するときの統合 specialization. -/
+hypothesis として要求するときの統合 specialization.
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem brunn_minkowski_convex_body_rpow_pos
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

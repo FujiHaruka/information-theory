@@ -261,7 +261,9 @@ The combinatorial core gives `c log c ≤ ∑ⱼ -log qⱼ`
 (`IsLZ78ZivCombinatorialCore`), and the genuine foundation backbone
 `blockProb_neg_log_ge_sum` gives `∑ⱼ -log qⱼ ≤ -log Pₙ` (under a.s.
 regularity `0 < Pₙ` and the genuine factorization). Transitivity closes it.
-Everything except `IsLZ78ZivCombinatorialCore` is genuine. -/
+Everything except `IsLZ78ZivCombinatorialCore` is genuine.
+
+`@audit:suspect(lz78-ziv-inequality-discharge-moonshot-plan)` -/
 theorem ziv_count_mul_log_le_neg_log_blockProb
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (hcore : IsLZ78ZivCombinatorialCore μ p)
@@ -279,7 +281,9 @@ theorem ziv_count_mul_log_le_neg_log_blockProb
 omit [Fintype α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- **Genuine base-2 Ziv inequality `c · log₂ c ≤ -log₂ Pₙ`** (the Cover–Thomas
 Eq. 13.122–124 bit-based form), obtained from the nat-log Ziv inequality by
-dividing through by `Real.log 2 > 0`. -/
+dividing through by `Real.log 2 > 0`.
+
+`@audit:suspect(lz78-ziv-inequality-discharge-moonshot-plan)` -/
 theorem ziv_count_mul_logb_le_neg_logb_blockProb
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (hcore : IsLZ78ZivCombinatorialCore μ p)
@@ -402,7 +406,9 @@ and a fixed observed path whose `n`-block cylinder has positive mass, the
 bit rate of the distinct code is below the base-2 per-block estimator plus
 the vanishing slack. Combines the genuine base-2 Ziv inequality
 (`ziv_count_mul_logb_le_neg_logb_blockProb`, gated on the combinatorial
-core) with the bit-length expansion and the deterministic count envelope. -/
+core) with the bit-length expansion and the deterministic count envelope.
+
+`@audit:suspect(lz78-ziv-inequality-discharge-moonshot-plan)` -/
 theorem lz78DistinctRate_le_blockLogAvg₂_add_slack
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (hcore : IsLZ78ZivCombinatorialCore μ p)
@@ -614,7 +620,9 @@ strictly-more-primitive named hypothesis (`IsLZ78ZivCombinatorialCore`, a
 per-block combinatorial inequality) than the structure
 `IsLZ78AchievabilityZivUpperBound` it produces. It does **not** reduce the
 headline assumption count by itself, but it relocates the single remaining
-honest input to its most primitive, clearly-load-bearing form. -/
+honest input to its most primitive, clearly-load-bearing form.
+
+`@audit:suspect(lz78-ziv-inequality-discharge-moonshot-plan)` -/
 theorem isLZ78AchievabilityZivUpperBound_distinct
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (hcore : IsLZ78ZivCombinatorialCore μ p)
@@ -674,7 +682,9 @@ So the achievability honest input is relocated to its most primitive form,
 **not** eliminated; the headline assumption count is unchanged (still two
 honest inputs, now `hcore` + `h_lb`). The regularity `hreg` is an admissible
 full-support hypothesis (the same family as
-`isLZ78PerPathParsingFactorization_of_pos`), not load-bearing. -/
+`isLZ78PerPathParsingFactorization_of_pos`), not load-bearing.
+
+`@audit:suspect(lz78-ziv-inequality-discharge-moonshot-plan)` -/
 theorem lz78_two_sided_optimality_distinct_ziv_core_wired
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)

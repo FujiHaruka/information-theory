@@ -110,7 +110,9 @@ structure IsEPIL3IntegratedPipeline {Ω : Type*} [MeasurableSpace Ω]
   bridge : IsStamToEPIBridgeHyp X Y P
 
 /-- **L-EPI3 from integrated pipeline**. The integrated pipeline discharges
-`IsEntropyPowerInequalityHypothesis X Y P` via `epi_via_stam`. -/
+`IsEntropyPowerInequalityHypothesis X Y P` via `epi_via_stam`.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem epi_l3_of_integrated_pipeline
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -122,7 +124,9 @@ theorem epi_l3_of_integrated_pipeline
 
 /-- **Integrated EPI main theorem**: the integrated pipeline gives the full
 EPI conclusion in one shot (no need for callers to thread through L-EPI1,
-L-EPI2, L-EPI3 separately). -/
+L-EPI2, L-EPI3 separately).
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem entropy_power_inequality_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -196,7 +200,9 @@ theorem entropy_power_inequality_gaussian_saturation_integrated
 
 /-! ## §4 — Variants (log / exp / normalized form via integrated pipeline) -/
 
-/-- **EPI log form via integrated pipeline**. -/
+/-- **EPI log form via integrated pipeline**.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem entropy_power_inequality_log_form_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -208,7 +214,9 @@ theorem entropy_power_inequality_log_form_integrated
           (entropyPower (P.map X) + entropyPower (P.map Y)) :=
   entropy_power_inequality_log_form P X Y hX hY hXY h_pipeline.stam h_pipeline.bridge
 
-/-- **EPI exp form via integrated pipeline** (Cover-Thomas Theorem 17.7.3 露出形). -/
+/-- **EPI exp form via integrated pipeline** (Cover-Thomas Theorem 17.7.3 露出形).
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem entropy_power_inequality_exp_form_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -221,7 +229,9 @@ theorem entropy_power_inequality_exp_form_integrated
         + Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map Y)) :=
   entropy_power_inequality_exp_form P X Y hX hY hXY h_pipeline.stam h_pipeline.bridge
 
-/-- **EPI normalized `(2πe)⁻¹` form via integrated pipeline** (Cover-Thomas Ch.17). -/
+/-- **EPI normalized `(2πe)⁻¹` form via integrated pipeline** (Cover-Thomas Ch.17).
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem entropy_power_inequality_normalized_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -233,7 +243,9 @@ theorem entropy_power_inequality_normalized_integrated
         + entropyPower (P.map Y) / gaussianEntropyPowerConst :=
   entropy_power_inequality_normalized P X Y hX hY hXY h_pipeline.stam h_pipeline.bridge
 
-/-- **2 · h(X+Y) ≥ log(entropyPower X + entropyPower Y)** via integrated pipeline. -/
+/-- **2 · h(X+Y) ≥ log(entropyPower X + entropyPower Y)** via integrated pipeline.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem two_differentialEntropy_ge_log_sum_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -246,7 +258,9 @@ theorem two_differentialEntropy_ge_log_sum_integrated
 
 /-! ## §5 — Chain forms (3-arg / 4-arg) via integrated pipeline -/
 
-/-- **3-arg EPI via integrated pipeline**. Chains two integrated pipelines. -/
+/-- **3-arg EPI via integrated pipeline**. Chains two integrated pipelines.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem entropy_power_inequality_three_arg_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -259,7 +273,9 @@ theorem entropy_power_inequality_three_arg_integrated
   have h_xy_z_epi := epi_l3_of_integrated_pipeline h_xy_z
   exact entropy_power_inequality_three_arg P X Y Z h_xy_z_epi h_xy_epi
 
-/-- **4-arg EPI via integrated pipeline**. Chains three integrated pipelines. -/
+/-- **4-arg EPI via integrated pipeline**. Chains three integrated pipelines.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem entropy_power_inequality_four_arg_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -290,7 +306,9 @@ theorem isEPIL3IntegratedPipeline_symm
 /-- **Pipeline from EPI hypothesis only**. When the EPI hypothesis is already
 known by some non-circular route (e.g. Gaussian saturation) and an honest Stam
 predicate is *also* available, bundle into a pipeline. (No vacuous Fisher-info-zero
-discharge is used — that buggy V1 route was removed 2026-05-20.) -/
+discharge is used — that buggy V1 route was removed 2026-05-20.)
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isEPIL3IntegratedPipeline_of_epi
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -337,7 +355,9 @@ is the "hypothesis-reduced form" promised in the parent plan. -/
 /-- **Hypothesis-reduced EPI** (Cover-Thomas Theorem 17.7.3, integrated form).
 
 Single non-trivial hypothesis `IsEPIL3IntegratedPipeline X Y P` (vs the
-three-hypothesis form in `EntropyPowerInequality.entropy_power_inequality`). -/
+three-hypothesis form in `EntropyPowerInequality.entropy_power_inequality`).
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem entropy_power_inequality_reduced
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -348,7 +368,9 @@ theorem entropy_power_inequality_reduced
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
   entropy_power_inequality_integrated P X Y hX hY hXY h_pipeline
 
-/-- **Hypothesis-reduced EPI exp form**. Single integrated hypothesis. -/
+/-- **Hypothesis-reduced EPI exp form**. Single integrated hypothesis.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem entropy_power_inequality_exp_form_reduced
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -369,7 +391,9 @@ If `X, Y` satisfy the integrated pipeline (i.e. Stam + Stam-to-EPI bridge),
 and the relevant measures are absolutely continuous, then `X + a, Y + b` also
 satisfy the integrated pipeline — provided the Fisher information is shown
 to be translation-invariant (the predicate-level statement; the Fisher info
-invariance itself is downstream). -/
+invariance itself is downstream).
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isEPIL3IntegratedPipeline_of_translates
     {Ω : Type*} [MeasurableSpace Ω]
     {P : Measure Ω}
@@ -424,7 +448,9 @@ theorem entropy_power_inequality_gaussian_full
 
 /-- **Hypothesis-reduced EPI with V2 de Bruijn citation**. Combines integrated
 pipeline + V2 de Bruijn citation; the V2 citation is structurally trivial
-(L-EPI2 is `True`) but documents the chain. -/
+(L-EPI2 is `True`) but documents the chain.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem entropy_power_inequality_with_v2_debruijn
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -449,7 +475,9 @@ theorem integrated_pipeline_roundtrip
   ⟨rfl, rfl⟩
 
 /-- **Three forms of EPI are equivalent** (in the presence of the integrated
-pipeline + measurability). -/
+pipeline + measurability).
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem entropy_power_inequality_three_forms_equiv
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

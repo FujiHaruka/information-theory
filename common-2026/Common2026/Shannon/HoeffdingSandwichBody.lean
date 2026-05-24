@@ -276,7 +276,9 @@ This wrapper makes explicit how the `IsHoeffdingMinimizerFullSupport` predicate
 participates in the final sandwich; in particular, it documents that the
 sandwich `Tendsto` proof itself does **not** consume `hQs_full` directly (the
 boundedness internal discharge in `HoeffdingSandwich.lean` is independent of
-the minimizer), but downstream variational discharges (Phase C/D) will. -/
+the minimizer), but downstream variational discharges (Phase C/D) will.
+
+`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
 theorem hoeffding_tradeoff_sandwich_via_predicate
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
@@ -308,7 +310,9 @@ upper bound), the boundary full-support discharge `Qstar = P₂` plugs into
 hypotheses are still inputs (deferred to Phase C/D).
 
 This packages the L-H4-FB-2 boundary discharge so that downstream callers do
-not need to thread the witness extraction by hand. -/
+not need to thread the witness extraction by hand.
+
+`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
 theorem hoeffding_tradeoff_sandwich_at_boundary_alpha_ge_kl
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)

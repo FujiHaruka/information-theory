@@ -541,7 +541,9 @@ The trailing 4-error-event Bonferroni body for each receiver (Cover-Thomas
 eqs. 15.6.18-15.6.30) and the random codebook averaging argument
 (L-BC2-G/H/I) — which together would lift the residual `h_ach` from a
 hypothesis to a theorem — are **out of scope** of this file and remain
-future work. -/
+future work.
+
+`@audit:suspect(broadcast-channel-moonshot-plan)` -/
 theorem bc_capacity_region_inner_bound_with_superposition_aep
     (W : BroadcastChannel α β₁ β₂)
     (R₁ R₂ I_u I_xy : ℝ)

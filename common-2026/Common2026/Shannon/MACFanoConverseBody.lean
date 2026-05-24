@@ -260,7 +260,9 @@ variable [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
 /-- **S22-E — User-1 cut bound with the Fano body discharged.**
 Mirror of `mac_single_rate_bound₁_with_body` (`MACL2Discharge.lean`), but
 the per-user Fano body is now built from `MACFanoEntropyData` via
-`MACSingleFanoBound.of_entropy_data` rather than supplied structurally. -/
+`MACSingleFanoBound.of_entropy_data` rather than supplied structurally.
+
+`@audit:suspect(mac-moonshot-plan)` -/
 theorem mac_single_rate_bound₁_with_fano
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -273,7 +275,9 @@ theorem mac_single_rate_bound₁_with_fano
     (MACSingleFanoBound.of_entropy_data d₁) h_chain h_cleanup
 
 /-- **S22-E — User-2 cut bound with the Fano body discharged.**
-Mirror of `mac_single_rate_bound₁_with_fano`. -/
+Mirror of `mac_single_rate_bound₁_with_fano`.
+
+`@audit:suspect(mac-moonshot-plan)` -/
 theorem mac_single_rate_bound₂_with_fano
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -290,7 +294,9 @@ Specialisation of
 `mac_capacity_region_outer_bound_with_fano_body`
 (`MACL2Discharge.lean`) in which both per-user Fano-side predicates are
 built from `MACFanoEntropyData` (genuine Fano content), while the
-joint-message side keeps the structural `MACFanoBound` plus chain rule. -/
+joint-message side keeps the structural `MACFanoBound` plus chain rule.
+
+`@audit:suspect(mac-moonshot-plan)` -/
 theorem mac_capacity_region_outer_bound_with_per_user_fano
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -327,7 +333,9 @@ bound and all per-letter chain bounds remain the honest-🟢ʰ entropy-level
 inputs (their discharge — joint-message Fano / conditional-MI chain rule —
 is not yet a project lemma). This is the genuine wiring that backs the
 per-user converse directions with real Fano content while keeping the
-headline non-circular. -/
+headline non-circular.
+
+`@audit:suspect(mac-moonshot-plan)` -/
 theorem mac_capacity_region_outer_bound_of_measure
     {Ω : Type*} [MeasurableSpace Ω]
     {W₁ : Type*} [Fintype W₁] [DecidableEq W₁] [Nonempty W₁]

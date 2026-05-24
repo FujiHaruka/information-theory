@@ -232,7 +232,9 @@ signature-file `deBruijn_identity_v2` shape. -/
 Given a heat-flow density family `p` satisfying the heat equation
 (`IsHeatFlowDensity`) and the IBP hypothesis at time `t > 0`
 (`IsIBPHypothesis`), the de Bruijn identity holds with the V2 Fisher
-information of `p t` on the RHS. -/
+information of `p t` on the RHS.
+
+`@audit:suspect(fisher-info-moonshot-plan)` -/
 theorem deBruijn_identity_v2_of_heat_flow
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (_hX : Measurable X) (_hZ : Measurable Z)

@@ -157,7 +157,9 @@ Replaces the black-box `IsStamInequalityHyp` assumption by the two
 genuinely-irreducible Stam primitives: the Blachman convolution-score identity
 (`IsStamScoreConvolution`, Step 1) and the total-expectation cross-term-drop
 (`IsStamTotalExpectation`, Step 3, the IBP content). Steps 2 and 4 are discharged
-arithmetically (`isStamInequalityHyp_via_step3`). -/
+arithmetically (`isStamInequalityHyp_via_step3`).
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isStamInequalityHyp_of_primitives
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -184,7 +186,9 @@ structure IsEPIStamDeBruijnPipeline {Ω : Type*} [MeasurableSpace Ω]
   /-- Stam-to-EPI bridge (Csiszár coupling, Cover-Thomas Lemma 17.7.3). -/
   bridge : IsStamToEPIBridgeHyp X Y P
 
-/-- **Derive the Stam inequality** from the refined pipeline. -/
+/-- **Derive the Stam inequality** from the refined pipeline.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isStamInequalityHyp_of_stamDeBruijn
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -193,7 +197,9 @@ theorem isStamInequalityHyp_of_stamDeBruijn
   isStamInequalityHyp_of_primitives h.convScore h.totalExp
 
 /-- **Reduce the refined pipeline to the monolithic `IsEPIL3IntegratedPipeline`**.
-The Stam field is supplied by deriving it from the genuine primitives. -/
+The Stam field is supplied by deriving it from the genuine primitives.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isEPIL3IntegratedPipeline_of_stamDeBruijn
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -202,7 +208,9 @@ theorem isEPIL3IntegratedPipeline_of_stamDeBruijn
   stam := isStamInequalityHyp_of_stamDeBruijn h
   bridge := h.bridge
 
-/-- **L-EPI3 from the refined pipeline**. -/
+/-- **L-EPI3 from the refined pipeline**.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem epi_l3_of_stamDeBruijn
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -214,7 +222,9 @@ theorem epi_l3_of_stamDeBruijn
 
 /-- **EPI conclusion via the refined Stam + de Bruijn pipeline** (the main
 deliverable). Single hypothesis is the refined pipeline, which bundles only the
-genuinely-irreducible primitives. -/
+genuinely-irreducible primitives.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem entropy_power_inequality_via_stamDeBruijn
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -328,7 +338,9 @@ theorem stamDeBruijn_pipeline_roundtrip
 /-- **Equivalence with the monolithic pipeline (forward)**: the refined pipeline
 upgrades to `IsEPIL3IntegratedPipeline`. The reverse direction does **not** hold
 in general — the refined pipeline carries strictly more structure (the two genuine
-Stam primitives, vs the black-box Stam inequality). -/
+Stam primitives, vs the black-box Stam inequality).
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem stamDeBruijn_to_integrated
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}

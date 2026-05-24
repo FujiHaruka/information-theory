@@ -441,7 +441,9 @@ as a hypothesis), THEN `entropy μ (Xs 0) ≤ capacity W`.
 
 The channel-side hypothesis `hM_ch_rate` + `hR_ch_le_C` is the published black-box from
 a future channel converse plan; here we provide the **composition glue** that joins it
-to `source_coding_converse`. -/
+to `source_coding_converse`.
+
+`@audit:suspect(separation-theorem-moonshot-plan)` -/
 theorem separation_converse_iid
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α_src) (hXs : ∀ i, Measurable (Xs i))

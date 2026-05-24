@@ -256,7 +256,9 @@ For `X ⊥ Z` with `Z ∼ 𝒩(0, 1)`,
 
 stated with **V2 Fisher information** (`fisherInfoOfDensityReal`) on the RHS.
 Unlike the V1 statement, the Gaussian case here can be fully discharged
-(`deBruijn_identity_v2_gaussian` below). -/
+(`deBruijn_identity_v2_gaussian` below).
+
+`@audit:suspect(fisher-info-moonshot-plan)` -/
 theorem deBruijn_identity_v2
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (_hX : Measurable X) (_hZ : Measurable Z)

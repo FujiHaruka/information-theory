@@ -158,7 +158,9 @@ def IsStamTotalExpectation {Ω : Type*} [MeasurableSpace Ω]
               (P.map (fun ω => X ω + Y ω)) fXY).toReal →
     J_sum ≤ lam ^ 2 * J_X + (1 - lam) ^ 2 * J_Y
 
-/-- The total-expectation predicate is symmetric in `X, Y` (swap `λ ↦ 1 - λ`). -/
+/-- The total-expectation predicate is symmetric in `X, Y` (swap `λ ↦ 1 - λ`).
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isStamTotalExpectation_symm {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h : IsStamTotalExpectation X Y P) :
@@ -179,7 +181,9 @@ theorem isStamTotalExpectation_symm {Ω : Type*} [MeasurableSpace Ω]
 
 /-- **Total-expectation at the optimal λ → Step 3 coupling**: feeding the
 optimal witness `λ = J_Y / (J_X + J_Y) ∈ [0,1]` into the total-expectation
-sub-step produces the existential Step-3 coupling. -/
+sub-step produces the existential Step-3 coupling.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isStamFisherCoupling_of_totalExpectation {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h : IsStamTotalExpectation X Y P) :
@@ -198,7 +202,9 @@ Combines the convolution-score representation (Step 1) with the total-expectatio
 sub-step (the genuine Step 3 analytic ingredient) to produce the symmetric
 Fisher coupling. Step 1 supplies the score identity that makes the cross term
 in the total expectation vanish; Step 3's `IsStamTotalExpectation` carries the
-integrated bound. -/
+integrated bound.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem stam_step3_of_step1_step2 {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvolution X Y P)
@@ -215,7 +221,9 @@ theorem stam_step3_of_step1_step2 {Ω : Type*} [MeasurableSpace Ω]
 This is the genuine Step 3 → Step 4 transition: the existential coupling, when
 its witness is forced to the optimum, collapses to the harmonic-mean bound via
 the Wave 7 closed form `stam_lambda_min`. We require the coupling to hold at the
-optimum (the strongest λ-witness), which the total-expectation sub-step provides. -/
+optimum (the strongest λ-witness), which the total-expectation sub-step provides.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isStamCauchySchwarzOptimal_of_coupling {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_te : IsStamTotalExpectation X Y P) :
@@ -233,7 +241,9 @@ theorem isStamCauchySchwarzOptimal_of_coupling {Ω : Type*} [MeasurableSpace Ω]
 
 /-- **Step 3 → Step 4 chain to the harmonic mean**: the optimal-λ coupling
 chains through Step 4 (`stam_lambda_min`) to the harmonic-mean upper bound
-`J_sum ≤ J_X J_Y / (J_X + J_Y)`. -/
+`J_sum ≤ J_X J_Y / (J_X + J_Y)`.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem stam_step3_to_step4_optimal {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_te : IsStamTotalExpectation X Y P) :
@@ -249,7 +259,9 @@ theorem stam_step3_to_step4_optimal {Ω : Type*} [MeasurableSpace Ω]
 
 Combines Step 1 (score-convolution) + Step 3 (total-expectation) to produce the
 genuine `IsStamInequalityHyp` (Cover-Thomas Lemma 17.7.2 真 signature). This is
-the Step-3-centred entry point into the Wave 5 plumbing. -/
+the Step-3-centred entry point into the Wave 5 plumbing.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isStamInequalityHyp_via_step3 {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvolution X Y P)
@@ -302,7 +314,9 @@ theorem epi_via_stam_step3_gaussian
 
 /-- **End-to-end EPI via Step 3 body discharge** (composes §4 + EPIStamDischarge
 bridge). For independent `X, Y` with the Step 1 + Step 3 predicates and a
-Stam-to-EPI bridge, EPI holds. -/
+Stam-to-EPI bridge, EPI holds.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem entropy_power_inequality_via_step3
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -351,7 +365,9 @@ theorem stam_coupling_rhs_endpoints (a b : ℝ) :
 
 /-- **Total-expectation strengthens the existential coupling**: the
 total-expectation predicate (which holds at *every* λ ∈ [0,1]) is strictly
-stronger than the existential coupling (which needs only *one* λ). -/
+stronger than the existential coupling (which needs only *one* λ).
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isStamFisherCoupling_of_totalExpectation' {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h : IsStamTotalExpectation X Y P) :
@@ -362,7 +378,9 @@ theorem isStamFisherCoupling_of_totalExpectation' {Ω : Type*} [MeasurableSpace 
 
 /-- **Sanity check**: the full Step-3 chain reproduces the Wave 7
 `isStamInequalityHyp_via_body` result exactly when fed the optimal CS predicate
-derived from the total expectation. -/
+derived from the total expectation.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem step3_chain_eq_body_chain {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvolution X Y P)

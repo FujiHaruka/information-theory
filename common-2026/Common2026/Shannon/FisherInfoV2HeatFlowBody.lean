@@ -234,7 +234,9 @@ theorem heatSemigroup_compose_law
 Given the convolution + time-derivative sub-predicates (which re-assemble into a
 wave-7 `IsHeatFlowDensity`) and the IBP hypothesis at time `t`, the de Bruijn
 identity holds. Re-publishes `deBruijn_identity_v2_of_heat_flow` from the finer
-decomposition. -/
+decomposition.
+
+`@audit:suspect(fisher-info-moonshot-plan)` -/
 theorem deBruijn_identity_v2_of_heat_subhyp
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z)

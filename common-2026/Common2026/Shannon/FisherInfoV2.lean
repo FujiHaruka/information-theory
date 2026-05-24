@@ -151,7 +151,9 @@ For a regular density `f`,
 
 This is the V2 analogue of `Common2026.Shannon.integral_logDeriv_pdf_eq_zero`
 from `FisherInfo.lean` — the proof structure is identical, but stated cleanly
-on the explicit density `f`. -/
+on the explicit density `f`.
+
+`@audit:suspect(fisher-info-moonshot-plan)` -/
 theorem integral_logDeriv_density_eq_zero {f : ℝ → ℝ} (h_reg : IsRegularDensityV2 f) :
     ∫ x, logDeriv f x * f x ∂volume = 0 := by
   -- Pointwise: `logDeriv f x * f x = (deriv f x / f x) * f x = deriv f x` since `f x > 0`.

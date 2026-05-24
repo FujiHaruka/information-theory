@@ -367,7 +367,9 @@ theorem integral_indicator_one_eq_volume {n : ℕ}
 
 を得る。これが Phase 1 段階着地点: **体積版 BM が n 次元 PL の indicator
 特殊化として閉じる** (点ごと PL は genuine `indicator_pointwise_pl`、積分↔体積は
-genuine `integral_indicator_one`)。 -/
+genuine `integral_indicator_one`)。
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem brunn_minkowski_volume_indicator {n : ℕ}
     (A B : Set (Fin n → ℝ)) (lam : ℝ)
     (hA : MeasurableSet A) (hB : MeasurableSet B)
@@ -485,7 +487,9 @@ sqrt 形 → entropy power 加法形持ち上げ (`bm_volume_sqrt_to_entropyPowe
 `hJoint := jointDifferentialEntropyPi` は concrete (抽象 `h` 引数を排除)。
 Discharge: §H 以降で `IsBMScaledMulHyp` (primitive scalar 形) からの λ-最適化
 chain (`bm_scaledMul_to_sqrt`) + geometric BM image (`bm_geom_to_scaledMul`) が
-provided。完全 discharge は本リポジトリでは凸体 BM (Mathlib 壁) で塞がる。 -/
+provided。完全 discharge は本リポジトリでは凸体 BM (Mathlib 壁) で塞がる。
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem brunn_minkowski_entropy_jointPi
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

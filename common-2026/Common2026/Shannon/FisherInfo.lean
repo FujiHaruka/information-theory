@@ -121,7 +121,9 @@ We expose this in **L-F2 form**: the smoothness + positivity + tail conditions a
 bundled into `IsRegularDensity`, which is to be discharged by the caller (Gaussian
 densities satisfy it; general densities may not). Stated on the smooth
 representative `h_reg.density`; combine with `h_reg.pdf_ae_eq` if needed to
-re-cast in terms of `(pdf X P volume).toReal` via an a.e.-integral congruence. -/
+re-cast in terms of `(pdf X P volume).toReal` via an a.e.-integral congruence.
+
+`@audit:suspect(fisher-info-moonshot-plan)` -/
 theorem integral_logDeriv_pdf_eq_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X : Ω → ℝ) [HasPDF X P volume]

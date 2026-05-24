@@ -233,7 +233,9 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 Given `WynerZivCondEntDiffConvex` (the Lemma-15.9 core), the Wyner–Ziv
 objective `I(X;U) − I(Y;U)` is convex along factorisable convex
 combinations — i.e. exactly the `h_obj_convex` hypothesis consumed by
-`WynerZivConvexityBody.lean`. -/
+`WynerZivConvexityBody.lean`.
+
+`@audit:suspect(wyner-ziv-convexity-discharge-moonshot-plan)` -/
 theorem wzObjective_convex_of_condEntDiff
     (P_XY : α × β → ℝ)
     (h_core : WynerZivCondEntDiffConvex U P_XY)
@@ -285,7 +287,9 @@ core `WynerZivCondEntDiffConvex`.**  Re-publication of
 `wynerZivRateFactorizable_convex_in_D` where the deep objective-convexity
 hypothesis is now the strictly more primitive conditional-entropy-difference
 convexity predicate, which the assembly `wzObjective_convex_of_condEntDiff`
-discharges into `h_obj_convex`. -/
+discharges into `h_obj_convex`.
+
+`@audit:suspect(wyner-ziv-convexity-discharge-moonshot-plan)` -/
 theorem wynerZivRateFactorizable_convex_in_D_of_condEntDiff
     [DecidableEq α] [DecidableEq β]
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))

@@ -357,7 +357,9 @@ is replaced by the strictly smaller residual window predicate
 `IsTiltedWindowEventuallyLarge`. The full change-of-measure machinery (Phases
 1–3 of `infinitepi-tilted-rn-discharge`) is discharged here; the only remaining
 input is the eventual `≥ 1/2` largeness of the tilted-side window mass, which is
-a one-sided LLN/boundary statement (`∫ Y ∂μ₀.tilted ∈ [a, a+ε)`). -/
+a one-sided LLN/boundary statement (`∫ Y ∂μ₀.tilted ∈ [a, a+ε)`).
+
+`@audit:suspect(infinitepi-tilted-rn-discharge-moonshot-plan)` -/
 theorem cramer_lower_phaseC_residual_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)

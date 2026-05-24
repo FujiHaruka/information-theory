@@ -338,7 +338,9 @@ theorem huffmanChainCombined_iff :
   ⟨huffmanChainCombined_reduce, huffmanChainCombined_lift⟩
 
 /-- **triple hypothesis から主定理を呼ぶ wrapper**: 3-way hypothesis を reduce して
-`huffmanLength_optimal_with_combined` を呼ぶ terminal step. -/
+`huffmanLength_optimal_with_combined` を呼ぶ terminal step.
+
+`@audit:suspect(huffman-moonshot-plan)` -/
 theorem huffmanLength_optimal_with_chain_combined
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -352,7 +354,9 @@ theorem huffmanLength_optimal_with_chain_combined
 
 /-- **2-way hypothesis から chain-combined 経由で主定理を呼ぶ wrapper**: client が
 2-way `HuffmanCombinedHypothesis` を持っているとき chain を補って主定理を呼ぶ form.
-`huffmanLength_optimal_with_combined` と等価だが chain 経路を明示. -/
+`huffmanLength_optimal_with_combined` と等価だが chain 経路を明示.
+
+`@audit:suspect(huffman-moonshot-plan)` -/
 theorem huffmanLength_optimal_via_chain_lift
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]

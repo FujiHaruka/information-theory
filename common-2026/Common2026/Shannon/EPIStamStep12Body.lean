@@ -209,7 +209,9 @@ def IsStamCondExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
       J_sum ≤ lam ^ 2 * J_X + (1 - lam) ^ 2 * J_Y
 
 /-- The Step-2 typed predicate implies the Wave 7 `IsStamCauchySchwarz`
-(existence form): instantiate the ∀λ bound at the optimal witness. -/
+(existence form): instantiate the ∀λ bound at the optimal witness.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isStamCauchySchwarz_of_condExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω} (h : IsStamCondExpCSHyp X Y P) :
     IsStamCauchySchwarz X Y P := by
@@ -246,7 +248,9 @@ Given the ∀λ convex Fisher bound (Step 2), instantiate at the optimal
 `λ* = J_Y / (J_X + J_Y)` and apply the Wave 7 closed form `stam_lambda_min`
 (`λ*² J_X + (1-λ*)² J_Y = J_X J_Y / (J_X + J_Y)`) to obtain the optimal bound
 `J(Z) ≤ J_X J_Y / (J_X + J_Y)`. This is the genuinely-discharged reduction of
-Step 2-3 to the harmonic-mean form. -/
+Step 2-3 to the harmonic-mean form.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem stamCauchySchwarzOptimal_of_condExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω} (h : IsStamCondExpCSHyp X Y P) :
     IsStamCauchySchwarzOptimal X Y P := by
@@ -264,7 +268,9 @@ theorem stamCauchySchwarzOptimal_of_condExpCSHyp {Ω : Type*} [MeasurableSpace �
 the typed Step-1 (score-convolution) and Step-2 (conditional CS) predicates
 together discharge Wave 7's `IsStamCauchySchwarzOptimal`. (Step 1's witness data
 is consumed inside Step 2's instantiation; we keep both arguments to document the
-genuine 2-step dependency.) -/
+genuine 2-step dependency.)
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem stamCauchySchwarzOptimal_of_step12 {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvHyp X Y P)
@@ -276,7 +282,9 @@ theorem stamCauchySchwarzOptimal_of_step12 {Ω : Type*} [MeasurableSpace Ω]
 
 Composes the typed Step-1/Step-2 predicates with the Wave 7 body bridge
 `isStamInequalityHyp_via_body`, closing the chain from the conditional-CS body
-to the Cover-Thomas Lemma 17.7.2 真 signature `1/J(Z) ≥ 1/J(X) + 1/J(Y)`. -/
+to the Cover-Thomas Lemma 17.7.2 真 signature `1/J(Z) ≥ 1/J(X) + 1/J(Y)`.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isStamInequalityHyp_of_step12 {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvHyp X Y P)
@@ -288,7 +296,9 @@ theorem isStamInequalityHyp_of_step12 {Ω : Type*} [MeasurableSpace Ω]
 
 /-- **Step 1 + Step 2 ⇒ Wave 7 existential Cauchy-Schwarz** (`IsStamCauchySchwarz`),
 the weaker witness form. Provided for callers that consume the existential
-predicate directly. -/
+predicate directly.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isStamCauchySchwarz_of_step12 {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvHyp X Y P)

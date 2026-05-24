@@ -188,7 +188,9 @@ entropy-level residuals (via `wyner_ziv_converse_n_letter`) and combining with
 the operational-vs-information ordering `R ≤ log M / n + ε ≤ R_WZ(D)`.
 
 The genuine n-letter bound is computed inline (not assumed), so the conclusion
-`R ≤ R_WZ(D)` is **not** taken as a hypothesis. -/
+`R ≤ R_WZ(D)` is **not** taken as a hypothesis.
+
+`@audit:suspect(wyner-ziv-moonshot-plan)` -/
 theorem wyner_ziv_converse_rate
     [MeasurableSpace γ]
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
@@ -231,7 +233,9 @@ strict-rate gap and the n-letter bound.
 `h_nletter` is the genuine n-letter content: for each block length `n ≥ N` and
 each code achieving the operational rate (`M ≤ exp(n·R)`), the entropy-level
 converse yields `R_WZ(D) ≤ log M / n` (clean-up already absorbed, `ε = 0` in
-the limit form), which the operational rate forces `≤ R`. -/
+the limit form), which the operational rate forces `≤ R`.
+
+`@audit:suspect(wyner-ziv-moonshot-plan)` -/
 theorem wyner_ziv_converse_existence
     [MeasurableSpace γ]
     (μ : Measure (α × β)) [IsProbabilityMeasure μ]

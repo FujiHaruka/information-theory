@@ -213,7 +213,9 @@ superlevel 集合測度 `muF, muG, muH` とその積分 `intF, intG, intH`、
 
 本体は `pl1_additive_to_multiplicative` (内部 discharge) で着地。
 superlevel hypothesis は 1 次元 BM の存在を signature に保持するための
-追加情報 (`pl1_superlevel_pointwise` がその点ごと根拠を与える)。 -/
+追加情報 (`pl1_superlevel_pointwise` がその点ごと根拠を与える)。
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem prekopa_leindler_1D_body
     (f g hfn : (Fin 1 → ℝ) → ℝ) (lam : ℝ)
     (h0 : 0 ≤ lam) (h1 : lam ≤ 1)
@@ -260,7 +262,9 @@ def IsPL2SliceStepHyp
 
 本体は Fubini 整合性で `intφ` を `reduceφ` に書き換えるだけの
 scalar 結合 (純 rewrite)。1 次元 PL 部分は `prekopa_leindler_1D_body`
-が供給。 -/
+が供給。
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem pl2_induction_scalar_combine
     (sliceIntF sliceIntG sliceIntH : ℝ → ℝ)
     (intF intG intH reduceF reduceG reduceH lam : ℝ)
@@ -277,7 +281,9 @@ theorem pl2_induction_scalar_combine
 を受け、Fubini 整合性経由で全体 PL を publish。
 
 撤退ライン: slice ごとの 1 次元 PL 結論 (`h_reduce_pl`) と Fubini 整合性を
-hypothesis として受け、`pl2_induction_scalar_combine` で着地。 -/
+hypothesis として受け、`pl2_induction_scalar_combine` で着地。
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem prekopa_leindler_induction_step
     (sliceIntF sliceIntG sliceIntH : ℝ → ℝ)
     (intF intG intH reduceF reduceG reduceH lam : ℝ)
@@ -294,7 +300,9 @@ theorem prekopa_leindler_induction_step
 /-- **1 次元 PL ⇒ `IsPrekopaLeindlerHyp` (再 publish)**: 本 file で
 discharge した `prekopa_leindler_1D_body` の結論を wave7 の
 `IsPrekopaLeindlerHyp` predicate に詰め直し、wave7 の
-`prekopa_leindler_inequality` に流せる形で再 publish。 -/
+`prekopa_leindler_inequality` に流せる形で再 publish。
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem isPrekopaLeindlerHyp_of_1D_body
     (f g hfn : (Fin 1 → ℝ) → ℝ) (lam : ℝ)
     (h0 : 0 ≤ lam) (h1 : lam ≤ 1)
@@ -328,7 +336,9 @@ indicator `f = 1_A, g = 1_B, h = 1_{λA+(1-λ)B}` に適用した結果を
 
 撤退ライン: indicator の積分が `vol` に等しい事実 (`h_volF` 等) と、
 indicator に対する加法形 PL (`h_add`) を hypothesis として受け、
-1 次元 PL 本体で着地。 -/
+1 次元 PL 本体で着地。
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem indicatorToConvexBody_of_1D_body
     (A B : Set (Fin 1 → ℝ))
     (volA volB volAB : ℝ) (lam : ℝ)

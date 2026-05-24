@@ -132,7 +132,9 @@ which is **Cover-Thomas 2.7.2** (joint convexity of relative entropy in
 
 We package the convexity-of-`klDiv` step as an explicit hypothesis (`h_klDiv_conv`)
 to keep this lemma standalone; specializations (e.g. finite-alphabet pmf form) can
-discharge that hypothesis via log-sum inequality at the per-atom level. -/
+discharge that hypothesis via log-sum inequality at the per-atom level.
+
+`@audit:suspect()` -/
 theorem rateDistortionFunction_convexOn
     (d : α → β → ℝ) (P : Measure α) [IsProbabilityMeasure P]
     {lam : ℝ} (hlam₀ : 0 ≤ lam) (hlam₁ : lam ≤ 1) (D₁ D₂ : ℝ)

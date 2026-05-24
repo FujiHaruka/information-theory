@@ -356,7 +356,9 @@ Existence-form version of `relay_cf_si_decoder_fail_le`: from an asymptotic
 covering + decodable bundle (failure tolerances summing below any prescribed
 `ε`), the side-info decoder failure probability is eventually `≤ ε`. This is
 the exact shape feeding the CF achievability existence argument; it forwards
-`wyner_ziv_binning_existence_of_covering_packing`. -/
+`wyner_ziv_binning_existence_of_covering_packing`.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_si_decoder_fail_tendsto
     [Nonempty β] [Nonempty γ]
     {R_cov R_bin : ℝ}
@@ -422,7 +424,9 @@ membership it yields the error-carrying `RelayCFInnerBoundExistence W R` by
 The decoder-failure side is what this file discharges via the covering /
 packing bundle (`relay_cf_si_decoder_fail_le`); the achievability witness is
 the genuine open residual whose discharge (in the companion seeds) supplies
-the vanishing error these bounds feed. -/
+the vanishing error these bounds feed.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 lemma relay_cf_existence_of_witness
     {W : RelayChannel α α₁ β β₁} {R Idec Ix1y Iy1hy1 : ℝ}
     (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
@@ -455,7 +459,9 @@ pass-through are retained.
 This is the public entry point of the W9-G3 CF binning body discharge: a
 caller holding the WZ covering/packing predicates for the relay's compression
 scheme can produce the CF inner bound directly, with the decoder-failure
-analysis already reduced to the WZ binning union bound. -/
+analysis already reduced to the WZ binning union bound.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_inner_bound_binning_discharged
     {Ω β₁' γ : Type*} [MeasurableSpace Ω]
     [Fintype β₁'] [Nonempty β₁']
@@ -480,7 +486,9 @@ theorem relay_cf_inner_bound_binning_discharged
 
 
 /-- **CF inner bound — binning-discharged, unbundled two-condition form.**
-Variant taking the rate bound and compression feasibility separately. -/
+Variant taking the rate bound and compression feasibility separately.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_inner_bound_binning_discharged_two_conditions
     {Ω β₁' γ : Type*} [MeasurableSpace Ω]
     [Fintype β₁'] [Nonempty β₁']
@@ -517,7 +525,9 @@ variable [MeasurableSpace β] [MeasurableSpace β₁]
 
 Witness-bundle variant of `relay_cf_consistent_discharged`: the CF inner
 side is supplied through the structured side-info decode bundle, and the
-outer side is the cut-set bound. -/
+outer side is the cut-set bound.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_consistent_binning_discharged
     {Ω β₁' γ : Type*} [MeasurableSpace Ω]
     [Fintype β₁'] [Nonempty β₁']

@@ -329,7 +329,9 @@ theorem countLogRate₂_isBoundedUnder_le
 `limsup (countLogRate₂) + ε` (definition of limsup, given coboundedness),
 and the LZ code rate is `≤ countLogRate₂ + slack` (envelope reduction), so
 `limsup (lz/n) ≤ limsup (countLogRate₂)`. Combined with the satisfiable
-`IsLZ78ZivAsEventual` this gives `limsup (lz/n) ≤ entropyRate₂`. -/
+`IsLZ78ZivAsEventual` this gives `limsup (lz/n) ≤ entropyRate₂`.
+
+`@audit:suspect(lz78-moonshot-plan)` -/
 theorem lz78_achievability_limsup_le₂_aseventual
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -410,7 +412,9 @@ Honesty: the achievability input is now a **true** statement
 combinatorial core, so the headline is conditioned on a satisfiable
 hypothesis — a genuine honesty improvement (no longer vacuously
 conditioned). The achievability content is localized to the single
-load-bearing `IsLZ78ZivAsEventual`. -/
+load-bearing `IsLZ78ZivAsEventual`.
+
+`@audit:suspect(lz78-moonshot-plan)` -/
 theorem lz78_two_sided_optimality_distinct_aseventual
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)

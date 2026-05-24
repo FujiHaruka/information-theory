@@ -81,7 +81,9 @@ is within `ε'` of `D`.
 This is the witness-form variant of Cover-Thomas Theorem 10.2.1
 (achievability half of the rate-distortion theorem). The full
 `R > R(D) ⟹ achievability` form requires the entropy-pmf bridge and
-ambient construction infrastructure, deferred to a later session. -/
+ambient construction infrastructure, deferred to a later session.
+
+`@audit:suspect()` -/
 theorem rate_distortion_achievability_witness_form
     -- Source distribution and witness on the pmf side.
     (P_X_pmf : α → ℝ) (d : DistortionFn α β) {D : ℝ}

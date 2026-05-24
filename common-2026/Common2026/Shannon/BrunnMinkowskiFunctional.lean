@@ -204,7 +204,9 @@ Prékopa-Leindler の積分主張であり、Discharge plan
 `prekopa-leindler-induction-plan.md` (未着手) で `n` 帰納 + 1-dim Hölder
 経路で本格化する想定。1 次元特殊 case は `BrunnMinkowskiLayerCakeBody`
 / `BrunnMinkowskiPLBody` 内で discharged (`isPrekopaLeindlerHyp_of_layercake`
-等が L-PL1 を construct する経路を提供)。 -/
+等が L-PL1 を construct する経路を提供)。
+
+`@audit:suspect(prekopa-leindler-induction-plan)` -/
 theorem prekopa_leindler_inequality
     {n : ℕ} (f g hfn : (Fin n → ℝ) → ℝ) (lam : ℝ)
     (h0 : 0 ≤ lam) (h1 : lam ≤ 1)
@@ -231,7 +233,9 @@ theorem prekopa_leindler_inequality
 `h_indicator_assumed.bound` (= L-PL2 structured side-condition の凸体
 multiplicative bound フィールド) で着地。1 次元特殊 case は
 `indicatorToConvexBody_of_1D_body` (`BrunnMinkowskiPLBody.lean`)
-が discharged 1D PL から L-PL2 を construct する経路を提供。 -/
+が discharged 1D PL から L-PL2 を construct する経路を提供。
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem brunn_minkowski_from_prekopa_leindler
     {n : ℕ} (A B : Set (Fin n → ℝ))
     (volA volB volAB : ℝ)
@@ -289,7 +293,9 @@ noncomputable def isLogConcaveMeasure_uniform_convex_body
 
 /-- **Entropy power upper bound from log-concavity**: `exp ((2/n) h(μ)) ≤ volA^{2/n}`.
 
-`entropyPower_nDim` で書き換えると `entropyPower_nDim n h μ ≤ volA^{2/n}`. -/
+`entropyPower_nDim` で書き換えると `entropyPower_nDim n h μ ≤ volA^{2/n}`.
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem entropyPower_nDim_le_volume_rpow_of_logConcave
     {n : ℕ} (hn : 0 < (n : ℝ))
     (μ : Measure (Fin n → ℝ))
@@ -420,7 +426,9 @@ theorem isLogConcaveDensity_mul {n : ℕ} {ρ₁ ρ₂ : (Fin n → ℝ) → ℝ
 これは EPI (`exp (2h(X+Y)) ≥ exp(2h(X)) + exp(2h(Y))`) の "convex
 combination" 形 (Cover-Thomas Theorem 17.9.5 corollary)。
 
-撤退ライン: 結論そのものを hypothesis として取り、本体は pass-through。 -/
+撤退ライン: 結論そのものを hypothesis として取り、本体は pass-through。
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem entropy_power_lambda_mixing
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -444,7 +452,9 @@ theorem entropy_power_lambda_mixing
 
 すなわち `h(λX + (1-λ)Y) ≥ λ h(X) + (1-λ) h(Y)` (with `(2/n)` 係数).
 これは entropy が "concave under convex combination" であることの形式化
-(Cover-Thomas 17.5)。-/
+(Cover-Thomas 17.5).
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem entropy_concave_lambda_mixing
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -466,7 +476,9 @@ theorem entropy_concave_lambda_mixing
 
 本 corollary は **AM-GM-like** lower bound: `λ = 1/2` で
 `√(volA · volB) ≤ volAB^{1/2}` という形が出る (Cauchy-Schwarz-like, weaker
-than additive). -/
+than additive).
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem prekopa_leindler_geometric_mean_form
     {n : ℕ} (A B : Set (Fin n → ℝ))
     (volA volB volAB : ℝ)
@@ -485,7 +497,9 @@ theorem prekopa_leindler_geometric_mean_form
 hypothesis pass-through で `vol(A+B) ≥ vol(A) + vol(B)` (Brunn-Minkowski
 linear form). 主形ではなく weaker form。
 
-撤退ライン: 結論を直接 hypothesis として取る。 -/
+撤退ライン: 結論を直接 hypothesis として取る。
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem brunn_minkowski_linear_from_prekopa_leindler
     {n : ℕ} (A B : Set (Fin n → ℝ))
     (volA volB volAB : ℝ)
@@ -503,7 +517,9 @@ L-PL1 (PL hypothesis) + L-BM1 (BM entropy hypothesis) を組み合わせて
     `entropyPower_nDim n h (P.map (X+Y))
       ≥ entropyPower_nDim n h (P.map X) + entropyPower_nDim n h (P.map Y)`
 
-を `IsLogConcaveMeasure (P.map X)` の追加情報の下で publish する。 -/
+を `IsLogConcaveMeasure (P.map X)` の追加情報の下で publish する。
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem entropyPower_nDim_logConcave_brunn_minkowski
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -518,7 +534,9 @@ theorem entropyPower_nDim_logConcave_brunn_minkowski
   brunn_minkowski_entropy_inequality P h X Y hX hY hXY h_bm
 
 /-- **Final convex body form with log-concavity**: Cover-Thomas 17.9.3 +
-17.9.4 の統合形 (uniform on convex body is log-concave, BM holds). -/
+17.9.4 の統合形 (uniform on convex body is log-concave, BM holds).
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem brunn_minkowski_convex_body_logConcave
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -562,7 +580,9 @@ theorem entropyPower_nDim_eq_rpow_of_log
 **characterization-of-equality** direction. Cover-Thomas 17.9.4 で
 "uniform achieves max entropy on convex body" の formal 形。
 
-撤退ライン: equality 自体を hypothesis として取る pass-through。 -/
+撤退ライン: equality 自体を hypothesis として取る pass-through。
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem entropy_eq_logVolume_iff_uniform
     {n : ℕ} (μ : Measure (Fin n → ℝ))
     (h : Measure (Fin n → ℝ) → ℝ)
@@ -601,7 +621,9 @@ structure CoverThomas17_9_Bundle {n : ℕ}
   lc_entropy : ∀ (μ : Measure (Fin n → ℝ)) (volA : ℝ),
     h μ ≤ Real.log volA
 
-/-- **Bundle extraction: BM entropy main from bundle**. -/
+/-- **Bundle extraction: BM entropy main from bundle**.
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem coverThomas17_9_bundle_entropy
     {n : ℕ} {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

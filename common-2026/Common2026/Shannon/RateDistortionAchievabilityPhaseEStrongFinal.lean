@@ -731,7 +731,9 @@ Hypotheses:
 
 * Slack parameters `ε_X, ε_join, δ_kl` and slack-budget hypotheses
   `h_rate_gap` (strict rate over mutualInfoPmf + slacks) and the bridge slacks
-  for `jointStronglyTypicalSet ⊆ distortionTypicalSet`. -/
+  for `jointStronglyTypicalSet ⊆ distortionTypicalSet`.
+
+`@audit:suspect()` -/
 theorem codebookAvgFailureStrong_tendsto_zero
     (qStar : α × β → ℝ) (hqStar_simp : qStar ∈ stdSimplex ℝ (α × β))
     (hqStar_pos : ∀ p : α × β, 0 < qStar p)
@@ -1631,7 +1633,9 @@ theorem rate_distortion_achievability_strong
 /-- **Rate-distortion achievability** — public alias for the
 strong-typicality form. The unconditional (no `hqStar_pos`) form requires a
 perturbation argument that is out of scope here; the conditional form below
-discharges the entire random-coding chain (0 `sorry`, 0 user-axiom). -/
+discharges the entire random-coding chain (0 `sorry`, 0 user-axiom).
+
+`@audit:suspect()` -/
 theorem rate_distortion_achievability
     (P_X_pmf : α → ℝ) (d : DistortionFn α β) {D : ℝ}
     (qStar : α × β → ℝ) (hqStar_mem : qStar ∈ RDConstraint P_X_pmf d D)

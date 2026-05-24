@@ -120,7 +120,9 @@ This is the formal **Tendsto** version of Cover-Thomas:
 `P_e^{(n)} ≐ exp(-n · C(P₁, P₂))`. Downstream code (e.g. the DotEq corollary
 `chernoff_dotEq_tendsto` below) can rely on this Tendsto form right now;
 the discharge of `h_converse` is the responsibility of a follow-up plan
-(`chernoff-converse-moonshot-plan.md`). -/
+(`chernoff-converse-moonshot-plan.md`).
+
+`@audit:suspect(chernoff-converse-moonshot-plan)` -/
 theorem chernoff_lemma_tendsto
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -190,7 +192,9 @@ error decays at the exponential rate `chernoffInfo P₁ P₂`:
 
   `bayesErrorMinPmf P₁ P₂ n ≐ exp(-n · chernoffInfo P₁ P₂)`.
 
-Derived from `chernoff_lemma_tendsto` via `dotEq_iff_tendsto_log_div`. -/
+Derived from `chernoff_lemma_tendsto` via `dotEq_iff_tendsto_log_div`.
+
+`@audit:suspect(chernoff-moonshot-plan)` -/
 theorem chernoff_dotEq_tendsto
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)

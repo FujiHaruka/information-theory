@@ -159,7 +159,9 @@ In the current pass-through publish, the conversion is **definitional**
 (both predicates share the same body). A future structural refinement of
 `IsChernoffNLetterRN` would discharge this conversion via the Sanov LDP per-
 tilt change-of-measure step (cf. `CramerLC2PhaseC.tilted_lower_from_predicate`
-for the analogous Cramér reduction). -/
+for the analogous Cramér reduction).
+
+`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
 lemma chernoff_per_tilt_via_RN
     (P₁ P₂ : α → ℝ) (lam : ℝ)
     (h_RN : IsChernoffNLetterRN P₁ P₂ lam) :
@@ -168,7 +170,9 @@ lemma chernoff_per_tilt_via_RN
 
 /-- **Reverse pass-through**: `IsBayesErrorPerTiltLowerBound → IsChernoff-
 NLetterRN`. The two predicates are structurally identical in the current
-publish. -/
+publish.
+
+`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
 lemma isChernoffNLetterRN_of_isBayesErrorPerTiltLowerBound
     (P₁ P₂ : α → ℝ) (lam : ℝ)
     (h_pred : IsBayesErrorPerTiltLowerBound P₁ P₂ lam) :
@@ -251,7 +255,9 @@ instance chernoffMediatorMeasure_pi_isProbability
 /-- **Tendsto wrapper via RN-deriv predicate** at a single tilt. Given the
 RN-deriv predicate `IsChernoffNLetterRN P₁ P₂ lam` at *some* `lam ∈ Icc 0 1`
 attaining `chernoffInfo = -log Z(λ)`, derive
-`Tendsto rate → chernoffInfo`. -/
+`Tendsto rate → chernoffInfo`.
+
+`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
 theorem chernoff_lemma_tendsto_via_RN
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -267,7 +273,9 @@ theorem chernoff_lemma_tendsto_via_RN
     ⟨lam, hlam_mem, h_eq, h_pred⟩
 
 /-- **`IsChernoffPerTiltDischargeable` from RN-deriv predicate at the
-attaining tilt**. -/
+attaining tilt**.
+
+`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
 lemma isChernoffPerTiltDischargeable_of_RN
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -279,7 +287,9 @@ lemma isChernoffPerTiltDischargeable_of_RN
   exact ⟨lam, hlam_mem, h_eq, chernoff_per_tilt_via_RN P₁ P₂ lam h_RN⟩
 
 /-- **Limsup converse via RN-deriv predicate**: given the RN-deriv predicate
-at *every* `lam ∈ Icc 0 1`, derive `limsup rate ≤ chernoffInfo`. -/
+at *every* `lam ∈ Icc 0 1`, derive `limsup rate ≤ chernoffInfo`.
+
+`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
 theorem chernoff_converse_via_RN_forall
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -294,7 +304,9 @@ theorem chernoff_converse_via_RN_forall
   exact chernoff_converse_discharged_from_predicate P₁ P₂ hP₁_pos hP₂_pos
     ⟨lam, hlam_mem, h_eq, h_pred⟩
 
-/-- **Tendsto via RN-deriv predicate at every tilt**. -/
+/-- **Tendsto via RN-deriv predicate at every tilt**.
+
+`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
 theorem chernoff_lemma_tendsto_via_RN_forall
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -339,7 +351,9 @@ rate `chernoffInfo P₁ P₂`:
   `bayesErrorMinPmf P₁ P₂ n ≐ exp(-n · chernoffInfo P₁ P₂)`
 
 given only the n-letter RN-deriv predicate `IsChernoffNLetterRN` at the
-attaining tilt `λ*` (with `chernoffInfo = -log Z(λ*)`). -/
+attaining tilt `λ*` (with `chernoffInfo = -log Z(λ*)`).
+
+`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
 theorem chernoff_dotEq_tendsto_via_RN
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)

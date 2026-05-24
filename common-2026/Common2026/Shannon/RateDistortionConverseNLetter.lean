@@ -256,7 +256,9 @@ The proof composes:
 4. **`h_jensen_antitone` hypothesis**: combined Jensen + antitonicity on toReal:
    `(R(P_X, D)).toReal ≤ (1/n) ∑ (R(P_X, Dt)).toReal`. Bundles n-way Jensen
    (via R(D) convexity) with antitonicity (via `c.expectedBlockDistortion ≤ D`).
-   Hypothesis pass-through. -/
+   Hypothesis pass-through.
+
+`@audit:suspect()` -/
 theorem rate_distortion_converse_n_letter_singleLetter
     [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
     [Fintype β] [MeasurableSingletonClass β]

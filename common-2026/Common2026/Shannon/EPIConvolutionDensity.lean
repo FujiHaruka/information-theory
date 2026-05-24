@@ -62,7 +62,9 @@ theorem convDensityReal_def (f g : ℝ → ℝ) (z : ℝ) :
     convDensityReal f g z = ∫ y, f (z - y) * g y ∂volume := rfl
 
 /-- Positivity of `convDensityReal` carried directly from a positivity assumption
-on the underlying integral (honest hypothesis; not proved for general densities). -/
+on the underlying integral (honest hypothesis; not proved for general densities).
+
+`@audit:suspect(epi-convolution-density-plan)` -/
 theorem convDensityReal_pos {f g : ℝ → ℝ} (z : ℝ)
     (h_pos : 0 < ∫ y, f (z - y) * g y ∂volume) :
     0 < convDensityReal f g z := by

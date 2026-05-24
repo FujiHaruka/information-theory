@@ -305,7 +305,9 @@ large `n`, a block-Markov code at message count `M ≥ exp (n R)` and total
 length `n`; flattening it via `toRelayCode` gives a `RelayCode M n …`,
 yielding `RelayDFRateWitness R` (the **rate-only** witness — *not* the
 error-carrying achievability, since the constant flattening has no error
-control). -/
+control).
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relayDFRateWitness_of_encoder_hyp
     [Nonempty α] [Nonempty α₁]
     {R : ℝ}
@@ -337,7 +339,9 @@ The latter two are recorded as the DF rate-region inequalities; the rate
 witness is supplied by the encoder hyp. This is **only** the message-count
 witness — the error-carrying DF achievability needs the genuine
 random-coding discharge (`RelayDFAchievable`), which is *not* established
-here. -/
+here.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relayDFRateWitness_of_sub_hyps
     [Nonempty α] [Nonempty α₁]
     {R Imrh Iry Ibroad : ℝ}
@@ -370,7 +374,9 @@ The block-Markov *achievability witness*
 is **deliberately not** built here from the rate-only sub-hyps: doing so
 would be the rate-only → achievability leap (a degenerate constant code
 satisfies the rate witness but has error `1`). The vanishing-error step
-remains the open residual discharged in the companion seeds. -/
+remains the open residual discharged in the companion seeds.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relayDFRateWitness_of_sub_hyps'
     [Nonempty α] [Nonempty α₁]
     {R Imrh Iry Ibroad : ℝ}
@@ -387,7 +393,9 @@ region.**
 
 Variant taking the DF rate-region membership `InRelayDFRate` bundled
 (splitting it back into the two scalar sub-hyps internally) together with
-the encoder sub-hyp; **constructs the rate witness**. -/
+the encoder sub-hyp; **constructs the rate witness**.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_df_inner_bound_block_markov_discharged_region
     [Nonempty α] [Nonempty α₁]
     (R Imrh Iry Ibroad : ℝ)

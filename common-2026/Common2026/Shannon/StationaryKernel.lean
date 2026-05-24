@@ -110,7 +110,9 @@ conditional probabilities — exactly the `factor` field of
 The telescoping is genuine (`prod_condPhraseProb_telescope`); the two
 hypotheses are the honest, strictly-localized residual content of the
 factorization (positivity is regularity; parse-completeness is the genuine
-Cover–Thomas last-phrase fact). -/
+Cover–Thomas last-phrase fact).
+
+`@audit:suspect()` -/
 theorem factor_of_complete_of_pos
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (n : ℕ) (ω : Ω)

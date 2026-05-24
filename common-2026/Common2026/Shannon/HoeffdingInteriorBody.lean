@@ -189,7 +189,9 @@ predicate, the standard attained-minimum witness
 
 This combines `hoeffdingE2_attained` with the gradient predicate to produce
 the existence of an `IsHoeffdingInteriorMinimizer` witness without requiring
-the caller to supply a Lagrangian-tilt construction. -/
+the caller to supply a Lagrangian-tilt construction.
+
+`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
 theorem isHoeffdingInteriorMinimizer_of_gradient
     (P₁ P₂ : α → ℝ)
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -268,7 +270,9 @@ by an `IsHoeffdingInteriorMinimizer` rather than the more general
 
 This is the most ergonomic interior entry point for callers: supply the
 interior minimizer record + the two variational hypotheses, get the sandwich
-`Tendsto`. -/
+`Tendsto`.
+
+`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
 theorem hoeffding_tradeoff_sandwich_at_interior_via_predicate
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
@@ -299,7 +303,9 @@ where the caller supplies `IsHoeffdingInteriorGradient` instead of a full
 `hoeffdingE2_attained`.
 
 The witness `Qstar` is existentially quantified in the conclusion to match
-the existential interior-discharge interface. -/
+the existential interior-discharge interface.
+
+`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
 theorem hoeffding_tradeoff_sandwich_at_interior_via_gradient
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
@@ -332,7 +338,9 @@ full-support `Qstar` lying in `K(α)`.
 
 This packages the existence and full-support consequences as a single witness
 extraction, mirroring `hoeffdingE2_minimizer_at_boundary_alpha_ge_kl`
-(`HoeffdingSandwichBody.lean` Phase 2). -/
+(`HoeffdingSandwichBody.lean` Phase 2).
+
+`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
 theorem hoeffdingE2_interior_minimizer_via_predicates
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1)

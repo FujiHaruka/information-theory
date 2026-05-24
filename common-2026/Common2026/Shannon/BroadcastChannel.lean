@@ -437,7 +437,9 @@ placeholders alongside `h_bound`; those vacuous `True` slots are removed
 (they hid the obligation behind `True`). The genuine residual is the single
 named load-bearing hypothesis, honest about being a pass-through, with
 discharge plan `bc-converse-fano-discharge-*`,
-`bc-converse-chain-rule-discharge-*`. -/
+`bc-converse-chain-rule-discharge-*`.
+
+`@audit:suspect(broadcast-channel-moonshot-plan)` -/
 theorem bc_common_rate_bound
     {M₁ M₂ n : ℕ} (_hn : 0 < n)
     (_c : BroadcastCode M₁ M₂ n α β₁ β₂)
@@ -467,7 +469,9 @@ subsumed into the single load-bearing hypothesis
 `h_privateRateBound_lbh : R₁ ≤ I_xy` which IS the desired conclusion.
 Previously this used `_h_fano _h_chain : True` placeholders; those vacuous
 slots are removed. The genuine residual is honestly named as a load-bearing
-pass-through. -/
+pass-through.
+
+`@audit:suspect(broadcast-channel-moonshot-plan)` -/
 theorem bc_private_rate_bound
     {M₁ M₂ n : ℕ} (_hn : 0 < n)
     (_c : BroadcastCode M₁ M₂ n α β₁ β₂)
@@ -586,7 +590,9 @@ theorem bc_capacity_region_outer_bound
 
 /-- **Degraded BC capacity region outer bound — corner-limit form.** As
 `n → ∞` the `n⁻¹` clean-up terms vanish (`ε ≤ 0`), recovering the exact
-corner-point region `InBCCapacityRegion R₁ R₂ I_u I_xy`. -/
+corner-point region `InBCCapacityRegion R₁ R₂ I_u I_xy`.
+
+`@audit:suspect(broadcast-channel-moonshot-plan)` -/
 theorem bc_capacity_region_outer_bound_corner_limit
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : BroadcastCode M₁ M₂ n α β₁ β₂)
@@ -734,7 +740,9 @@ The body is `h_ach h_strict` — a real `modus ponens`, not an identity
 wrap — mirroring `mac_capacity_region_inner_bound` (T3-B MAC) and the
 ShannonHartley honest-conditional precedent. The superposition /
 joint-typicality / random-coding discharge of `h_ach` is the genuine
-Mathlib gap (0 typicality lemmas), kept honest. -/
+Mathlib gap (0 typicality lemmas), kept honest.
+
+`@audit:suspect(broadcast-channel-moonshot-plan)` -/
 theorem bc_capacity_region_inner_bound
     (W : BroadcastChannel α β₁ β₂)
     (R₁ R₂ I_u I_xy : ℝ)
@@ -756,7 +764,9 @@ In practice callers usually supply the unbundled `And` pair via
 with `bc_capacity_region_outer_bound`. The two strict inequalities are
 reconstructed from the `≤` region membership together with the `≠`
 side-conditions, and the achievability is derived through
-`BCSuperpositionAchievable`. -/
+`BCSuperpositionAchievable`.
+
+`@audit:suspect(broadcast-channel-moonshot-plan)` -/
 theorem bc_capacity_region_inner_bound_bundled_strict
     (W : BroadcastChannel α β₁ β₂)
     (R₁ R₂ I_u I_xy : ℝ)
@@ -787,7 +797,9 @@ chain inputs, and the achievability derives the error-carrying
 `h_ach`. Both sides **derive** their conclusions — neither is an identity
 wrap — matching the two-side packaging pattern of
 `mac_capacity_region_consistent` (T3-B MAC) for callers that want a single
-entry point. -/
+entry point.
+
+`@audit:suspect(broadcast-channel-moonshot-plan)` -/
 theorem bc_capacity_region_consistent
     (W : BroadcastChannel α β₁ β₂)
     {M₁ M₂ n : ℕ} (hn : 0 < n)

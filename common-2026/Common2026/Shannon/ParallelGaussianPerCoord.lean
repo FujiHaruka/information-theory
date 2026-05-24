@@ -182,7 +182,9 @@ structure IsParallelGaussianPerCoordRegularity {n : ℕ} (P : ℝ)
 
 /-- **Lower bound (≥, achiever).** The independent Gaussian product input is
 feasible and achieves the per-coord sum, so the capacity is at least that sum.
-Genuine, modulo the honest `bddAbove` + `achiever_mi`. -/
+Genuine, modulo the honest `bddAbove` + `achiever_mi`.
+
+`@audit:suspect(parallel-gaussian-moonshot-plan)` -/
 theorem parallelGaussianCapacity_ge_sum {n : ℕ} (P : ℝ)
     (N : Fin n → ℝ≥0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -200,7 +202,9 @@ theorem parallelGaussianCapacity_ge_sum {n : ℕ} (P : ℝ)
 
 /-- **Upper bound (≤, max-entropy + water-filling).** Every constrained input has MI
 bounded by the water-filling sum, via the honest per-coord max-entropy bound followed
-by the genuine L-WF2 optimality. Genuine sup-evaluation modulo the honest `max_ent`. -/
+by the genuine L-WF2 optimality. Genuine sup-evaluation modulo the honest `max_ent`.
+
+`@audit:suspect(parallel-gaussian-moonshot-plan)` -/
 theorem parallelGaussianCapacity_le_sum {n : ℕ} (P : ℝ)
     (N : Fin n → ℝ≥0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -247,7 +251,9 @@ decomposition, supplied as `h_decomp`). If subadditivity's honest hypotheses hol
 `μ_Y` and the per-coord pieces meet the water-filling allocation bound `h_perCoord`,
 then the channel MI is bounded by `∑ᵢ (1/2) log(1 + P'ᵢ/Nᵢ)`. The output-entropy
 subadditivity step is `jointDifferentialEntropyPi_le_sum` (genuine); only the
-decomposition and per-coord bound stay honest. -/
+decomposition and per-coord bound stay honest.
+
+`@audit:suspect(parallel-gaussian-moonshot-plan)` -/
 theorem parallelGaussian_max_ent_le_of_subadditivity {n : ℕ}
     (μY : Measure (Fin n → ℝ)) [IsProbabilityMeasure μY]
     [∀ i, IsProbabilityMeasure (μY.map (fun z => z i))]
@@ -291,7 +297,9 @@ theorem parallelGaussian_max_ent_le_of_subadditivity {n : ℕ}
 
 /-- **★ L-PG1 genuine discharge.** The information capacity equals the per-coord
 water-filling sum (honest analytic hypotheses bundled in
-`IsParallelGaussianPerCoordRegularity`, 🟢ʰ). Genuine sup-sandwich. -/
+`IsParallelGaussianPerCoordRegularity`, 🟢ʰ). Genuine sup-sandwich.
+
+`@audit:suspect(parallel-gaussian-moonshot-plan)` -/
 theorem isParallelGaussianPerCoordReduction_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -353,7 +361,9 @@ only hypotheses are the *genuine* honest inputs:
   they mirror the 1-D `AWGN.awgnCapacity_eq` residuals.
 
 No `h_per_coord : IsParallelGaussianPerCoordReduction` argument (the conclusion) is
-taken; the body is a real `le_antisymm` derivation, never `:= h_per_coord`. -/
+taken; the body is a real `le_antisymm` derivation, never `:= h_per_coord`.
+
+`@audit:suspect(parallel-gaussian-moonshot-plan)` -/
 theorem parallel_gaussian_capacity_formula {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)

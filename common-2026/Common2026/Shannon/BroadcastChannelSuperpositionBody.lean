@@ -831,7 +831,9 @@ The random codebook averaging argument that *derives* the per-event
 decay bounds (Cover-Thomas eqs. 15.6.18-15.6.30, ~400-600 additional
 lines, L-BC2-I) — which together with the publish-layer hook would lift
 the residual `h_ach` from a hypothesis to a theorem — is **out of scope**
-of this file and remains future work. -/
+of this file and remains future work.
+
+`@audit:suspect(broadcast-channel-moonshot-plan)` -/
 theorem bc_capacity_region_inner_bound_with_superposition_body
     (W : BroadcastChannel α β₁ β₂)
     (R₁ R₂ I_u I_xy : ℝ)

@@ -458,7 +458,9 @@ lower bound. -/
 A single-`a` variant of `cramer_lower_phaseC_partial_discharge`: instead of the
 full `IsMeasureInfinitePiTiltedEq` predicate it consumes only the `a`-slice (the
 `h_tilted_lower` shape), routing directly through the parent `cramer_lower`.
-Existing wrappers are untouched. -/
+Existing wrappers are untouched.
+
+`@audit:suspect(cramer-chernoff-clt-closure-moonshot-plan)` -/
 theorem cramer_lower_at
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)

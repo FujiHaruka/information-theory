@@ -165,7 +165,9 @@ entropyRate₂ − ε ≤ blockLogAvg₂ n ω − slack n ≤ (lz n x)/n   event
 
 hence `entropyRate₂ − ε ≤ liminf (lz/n)` (`le_liminf_of_le`, coboundedness
 of the rate), and `ε → 0` closes it. The only non-genuine input is the
-load-bearing `IsLZ78ConverseCodingLowerBound`. -/
+load-bearing `IsLZ78ConverseCodingLowerBound`.
+
+`@audit:suspect(lz78-moonshot-plan)` -/
 theorem lz78_converse_le_liminf₂
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)

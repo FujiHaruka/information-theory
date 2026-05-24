@@ -149,7 +149,9 @@ Ziv upper bound `lz/n ≤ blockLogAvg₂ + slack`,
 
 hence `limsup (lz/n) ≤ entropyRate₂ + ε` (`limsup_le_of_le`, coboundedness
 of the rate), and `ε → 0` closes it. The only non-genuine input is the
-load-bearing `IsLZ78AchievabilityZivUpperBound`. -/
+load-bearing `IsLZ78AchievabilityZivUpperBound`.
+
+`@audit:suspect(lz78-moonshot-plan)` -/
 theorem lz78_achievability_limsup_le₂
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -229,7 +231,9 @@ half-bounds (`lz78_achievability_limsup_le₂` / `lz78_converse_le_liminf₂`),
 the per-symbol boundedness (`lz78DistinctEncodingLength_isBoundedUnder_le`
 / `_ge`), and the final sandwich (`tendsto_of_le_liminf_of_limsup_le`) are
 all genuine. The two remaining inputs are load-bearing: they stand for the
-genuine bit-based Ziv inequality / averaged converse coding theorem. -/
+genuine bit-based Ziv inequality / averaged converse coding theorem.
+
+`@audit:suspect(lz78-moonshot-plan)` -/
 theorem lz78_two_sided_optimality_distinct_genuine
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)

@@ -254,7 +254,9 @@ theorem isStamCauchySchwarzOptimal_symm {Ω : Type*} [MeasurableSpace Ω]
 /-- **Stam inequality via predicate chain (optimal form)** — actual deliverable.
 
 Given the convolution-score predicate + the optimal Cauchy-Schwarz predicate,
-chain through Step 4 closed form to obtain the inverse-form Stam inequality. -/
+chain through Step 4 closed form to obtain the inverse-form Stam inequality.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem stam_inequality_via_predicate_optimal
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -272,7 +274,9 @@ theorem stam_inequality_via_predicate_optimal
 
 /-- **`IsStamInequalityHyp` from body predicates**. The genuine Stam-inequality
 predicate (Cover-Thomas Lemma 17.7.2 真 signature) follows from the convolution
-+ optimal-CS pair. This is the **bridge from body to plumbing**. -/
++ optimal-CS pair. This is the **bridge from body to plumbing**.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isStamInequalityHyp_via_body
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -400,7 +404,9 @@ theorem stam_harmonic_lower_half_min {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
 /-! ## §9 — Direct optimal-CS construction from λ-witness -/
 
 /-- **Optimal CS from a λ-witness at the optimum**: given a Cauchy-Schwarz
-witness with `λ = J_Y / (J_X + J_Y)`, the optimal-form predicate is recovered. -/
+witness with `λ = J_Y / (J_X + J_Y)`, the optimal-form predicate is recovered.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isStamCauchySchwarzOptimal_of_lambda_optimal
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -421,7 +427,9 @@ theorem isStamCauchySchwarzOptimal_of_lambda_optimal
 
 /-- **Body-discharged Stam inequality via Integrated Pipeline**: composes the
 body discharge predicates with the Wave 6 `EPIL3Integration` integrated
-pipeline. -/
+pipeline.
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem isStamInequalityHyp_via_body_to_pipeline
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -432,7 +440,9 @@ theorem isStamInequalityHyp_via_body_to_pipeline
   { stam := isStamInequalityHyp_via_body h_conv h_cs_opt
     bridge := h_bridge }
 
-/-- **End-to-end EPI via body discharge** (composes §4 + §6 + EPIL3 pipeline). -/
+/-- **End-to-end EPI via body discharge** (composes §4 + §6 + EPIL3 pipeline).
+
+`@audit:suspect(epi-moonshot-plan)` -/
 theorem entropy_power_inequality_via_body
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

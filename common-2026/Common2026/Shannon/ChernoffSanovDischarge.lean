@@ -283,7 +283,9 @@ lemma geomMean_eq_Z_pow_mul_prod_mediator
 
 /-- **`ε`-relaxed per-tilt lower bound** (genuine, modulo the honest band-mass
 hypothesis): for every `ε > 0`, eventually
-`exp(-n·ε) · Z(λ)^n ≤ 4 · bayesErrorMinPmf P₁ P₂ n`. -/
+`exp(-n·ε) · Z(λ)^n ≤ 4 · bayesErrorMinPmf P₁ P₂ n`.
+
+`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
 lemma bayesErrorMinPmf_ge_exp_neg_mul_Z_pow
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -355,7 +357,9 @@ lemma bayesErrorMinPmf_ge_exp_neg_mul_Z_pow
 /-- **`ε`-relaxed per-tilt converse**: if for every `ε > 0` the bound
 `exp(-n·ε)·Z(λ)^n ≤ 4·bayesErrorMinPmf` holds eventually, then
 `limsup rate ≤ -log Z(λ)`. (The `exp(-n·ε)` factor contributes `+ε` to the rate,
-which vanishes as `ε → 0`.) -/
+which vanishes as `ε → 0`.)
+
+`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
 theorem chernoff_converse_from_eps_relaxed
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -453,7 +457,9 @@ given the honest band-mass hypothesis at that tilt.
 
 This replaces the false constant-`C` predicate route: it requires only the
 genuine load-bearing `IsChernoffBandMassToOne` (band mass → 1, ≠ the
-conclusion). Step 1 (reverse Hölder) is proved unconditionally inside. -/
+conclusion). Step 1 (reverse Hölder) is proved unconditionally inside.
+
+`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
 theorem chernoff_converse_of_bandMass
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)

@@ -528,7 +528,9 @@ of this library, not external hypotheses.
 
 The trailing 4-error-event Bonferroni body (Cover-Thomas eqs. 15.65-15.84)
 that would lift `h_existence` from hypothesis to theorem is **out of
-scope** of this file and remains future work. -/
+scope** of this file and remains future work.
+
+`@audit:suspect(mac-l1-discharge-moonshot-plan)` -/
 theorem mac_capacity_region_inner_bound_with_joint_typ_aep
     (W : MACChannel α₁ α₂ β)
     (R₁ R₂ I₁ I₂ Iboth : ℝ)

@@ -367,7 +367,9 @@ Given the Tier 2 bandlimited predicate and the `2W` DoF identity
 `C = 2W · perSampleAwgnCapacity W N₀ P`, the Shannon-Hartley closed form
 `C = W · log(1 + P/(N₀·W))` follows. This is the discharge of
 `shannon_hartley_formula`'s hypothesis pass-through via the Tier 2
-predicate alone (positivity-only flow). -/
+predicate alone (positivity-only flow).
+
+`@audit:suspect(whittaker-shannon-partial-moonshot-plan)` -/
 theorem shannon_hartley_via_full
     (f : ℝ → ℝ) (W N₀ P C : ℝ)
     (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P)
@@ -386,7 +388,9 @@ theorem shannon_hartley_via_full
     (ShannonHartley_IsBandlimitedKernel_of_full f W hW h_full)
     h_id
 
-/-- Bits/second variant: `C / log 2 = bandlimitedAwgnCapacityBits W N₀ P`. -/
+/-- Bits/second variant: `C / log 2 = bandlimitedAwgnCapacityBits W N₀ P`.
+
+`@audit:suspect(whittaker-shannon-partial-moonshot-plan)` -/
 theorem shannon_hartley_via_full_bits
     (f : ℝ → ℝ) (W N₀ P C : ℝ)
     (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P)

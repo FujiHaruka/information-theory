@@ -150,7 +150,9 @@ def IsRelayDFBlockMarkovWitness
 /-- A DF block-Markov witness, **together with the rate-region membership**,
 yields the DF inner-bound existence by `modus ponens`. This is the genuine
 routing lemma — the witness is the gated achievability implication, so the
-existence is *derived* from it and the rate region, not asserted. -/
+existence is *derived* from it and the rate region, not asserted.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 lemma RelayDFInnerBoundExistence_of_witness
     {W : RelayChannel α α₁ β β₁} {R Imrh Iry Ibroad : ℝ}
     (h_in_df_region : InRelayDFRate R Imrh Iry Ibroad)
@@ -165,7 +167,9 @@ achievability witness)**.
 This is the body-discharged variant of `relay_df_inner_bound`: it takes the
 rate-region membership `h_in_df_region` and the achievability witness
 `h_witness` and **derives** the error-carrying existence claim by `modus
-ponens` (not an identity wrap, not a leap from rate-only data). -/
+ponens` (not an identity wrap, not a leap from rate-only data).
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_df_body_from_witness
     (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
@@ -336,7 +340,9 @@ def IsRelayCFBinningWitness
   RelayCFAchievable (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1
 
 /-- A CF binning witness, **together with the rate-region membership**,
-yields the CF inner-bound existence by `modus ponens`. -/
+yields the CF inner-bound existence by `modus ponens`.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 lemma RelayCFInnerBoundExistence_of_witness
     {W : RelayChannel α α₁ β β₁} {R Idec Ix1y Iy1hy1 : ℝ}
     (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
@@ -350,7 +356,9 @@ achievability witness)**.
 
 The body-discharged variant of `relay_cf_inner_bound`: takes the
 rate-region membership and the achievability witness and **derives** the
-error-carrying existence claim by `modus ponens`. -/
+error-carrying existence claim by `modus ponens`.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_body_from_witness
     (W : RelayChannel α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 : ℝ)
@@ -382,7 +390,9 @@ retained and the error-carrying existence is **derived** by `modus ponens`
 (not a leap from rate-only data).
 
 This is the **public entry point** of the body discharge layer for the DF
-inner bound. -/
+inner bound.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_df_inner_bound_discharged
     (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
@@ -394,7 +404,9 @@ theorem relay_df_inner_bound_discharged
   relay_df_body_from_witness (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
     W R Imrh Iry Ibroad h_in_df_region h_witness
 
-/-- **DF inner bound — discharged + `min`-form**. -/
+/-- **DF inner bound — discharged + `min`-form**.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_df_inner_bound_discharged_min_form
     (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
@@ -406,7 +418,9 @@ theorem relay_df_inner_bound_discharged_min_form
   relay_df_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
     W R Imrh Iry Ibroad ((InRelayDFRate.iff_le_min).mpr h_min) h_witness
 
-/-- **DF inner bound — discharged + unbundled two-inequality form**. -/
+/-- **DF inner bound — discharged + unbundled two-inequality form**.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_df_inner_bound_discharged_two_bounds
     (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
@@ -418,7 +432,9 @@ theorem relay_df_inner_bound_discharged_two_bounds
   relay_df_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
     W R Imrh Iry Ibroad ⟨h₁, h₂⟩ h_witness
 
-/-- **CF inner bound — discharged form (witness upgrade).** -/
+/-- **CF inner bound — discharged form (witness upgrade).**
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_inner_bound_discharged
     (W : RelayChannel α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 : ℝ)
@@ -430,7 +446,9 @@ theorem relay_cf_inner_bound_discharged
   relay_cf_body_from_witness (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
     W R Idec Ix1y Iy1hy1 h_in_cf_region h_witness
 
-/-- **CF inner bound — discharged + unbundled two-condition form**. -/
+/-- **CF inner bound — discharged + unbundled two-condition form**.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_inner_bound_discharged_two_conditions
     (W : RelayChannel α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 : ℝ)
@@ -442,7 +460,9 @@ theorem relay_cf_inner_bound_discharged_two_conditions
   relay_cf_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
     W R Idec Ix1y Iy1hy1 ⟨h_rate, h_feas⟩ h_witness
 
-/-- **DF inner bound — discharged + `Real.log` rate form**. -/
+/-- **DF inner bound — discharged + `Real.log` rate form**.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_df_inner_bound_discharged_log_rate
     (W : RelayChannel α α₁ β β₁)
     {M n : ℕ} (_hn : 0 < n)
@@ -458,7 +478,9 @@ theorem relay_df_inner_bound_discharged_log_rate
   relay_df_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
     W (Real.log (M : ℝ) / (n : ℝ)) Imrh Iry Ibroad h_in_df_region h_witness
 
-/-- **CF inner bound — discharged + `Real.log` rate form**. -/
+/-- **CF inner bound — discharged + `Real.log` rate form**.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_inner_bound_discharged_log_rate
     (W : RelayChannel α α₁ β β₁)
     {M n : ℕ} (_hn : 0 < n)
@@ -489,7 +511,9 @@ variable [MeasurableSpace β] [MeasurableSpace β₁]
 Witness-predicate variant of `relay_df_consistent`: the outer side
 **derives** `R ≤ relayCutsetBound (Ib+ε) (Im+ε)` from the entropy-level
 Fano + chain inputs, and the inner side **derives** the error-carrying
-existence from the achievability witness by `modus ponens`. -/
+existence from the achievability witness by `modus ponens`.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_df_consistent_discharged
     (W : RelayChannel α α₁ β β₁)
     {M n : ℕ} (hn : 0 < n)
@@ -512,7 +536,9 @@ theorem relay_df_consistent_discharged
    relay_df_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
      W R Imrh Iry Ibroad h_in_df_region h_witness⟩
 
-/-- **CF achievability (body-discharged) + cut-set outer bound combined**. -/
+/-- **CF achievability (body-discharged) + cut-set outer bound combined**.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_consistent_discharged
     (W : RelayChannel α α₁ β β₁)
     {M n : ℕ} (hn : 0 < n)
@@ -551,7 +577,9 @@ variable [MeasurableSpace β] [MeasurableSpace β₁]
 The *adapter* between the body-discharged signature and the original
 published signature: a caller holding the achievability witness (the gated
 implication) can feed it directly as the `h_ach` argument of the original
-theorem. -/
+theorem.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_df_inner_bound_via_witness
     (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
@@ -564,7 +592,9 @@ theorem relay_df_inner_bound_via_witness
     W R Imrh Iry Ibroad h_in_df_region h_witness
 
 /-- **Bridge: a CF achievability witness drives the original
-`relay_cf_inner_bound`**. -/
+`relay_cf_inner_bound`**.
+
+`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_inner_bound_via_witness
     (W : RelayChannel α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 : ℝ)

@@ -997,7 +997,9 @@ Given:
 * the hypotheses that `gInf` is a.e. strongly measurable, T-invariant,
   and matches `f` in integral,
 
-we conclude that the Birkhoff averages converge a.e. to `∫ f dμ`. -/
+we conclude that the Birkhoff averages converge a.e. to `∫ f dμ`.
+
+`@audit:suspect(birkhoff-ergodic-plan)` -/
 theorem birkhoff_ergodic_ae_of_limit
     {μ : Measure Ω} [IsProbabilityMeasure μ]
     {T : Ω → Ω} (_hT : MeasurePreserving T μ μ) (hT_erg : Ergodic T μ)

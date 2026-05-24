@@ -152,7 +152,9 @@ omit [Nonempty α] in
 /-- **identification hypothesis の point-wise extractor (`x.val = a` case)**: `hsib`
 仮定の下で `x.val = a` のとき `huffmanLength (mergedMeasure ...) x = huffmanLength P a - 1`.
 本 lemma は **hypothesis** として外から受け取ったもの (`h_ident`) から `x.val = a` の
-case の値を抽出する extractor. -/
+case の値を抽出する extractor.
+
+`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
 theorem huffmanMergedIdentification_at_a
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -171,7 +173,9 @@ theorem huffmanMergedIdentification_at_a
 
 omit [Nonempty α] in
 /-- **identification hypothesis の point-wise extractor (`x.val ≠ a` case)**: `hsib`
-仮定の下で `x.val ≠ a` のとき `huffmanLength (mergedMeasure ...) x = huffmanLength P x.val`. -/
+仮定の下で `x.val ≠ a` のとき `huffmanLength (mergedMeasure ...) x = huffmanLength P x.val`.
+
+`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
 theorem huffmanMergedIdentification_at_other
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -191,7 +195,9 @@ theorem huffmanMergedIdentification_at_other
 omit [Nonempty α] in
 /-- **identification hypothesis combined formula**: `x.val = a` / `≠ a` の case を `if`
 で 1 式に書いた形. `h_ident` の結論そのまま (alias) だが、後続 client が直接 `if` 形を
-受け取りたいときの reference. -/
+受け取りたいときの reference.
+
+`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
 theorem huffmanMergedIdentification_combined
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -213,7 +219,9 @@ omit [Nonempty α] in
 /-- **identification hypothesis の sibling 対 a/b 双方向**: `huffmanLength Q a =
 huffmanLength Q b` から `huffmanLength (mergedMeasure ...) x` を `x.val = b` 形は
 そもそも domain `{y // y ≠ b}` で除外されているので、`x.val ∈ {a, c (≠ b)}` の case
-分類だけが残る. これを explicit に publish. -/
+分類だけが残る. これを explicit に publish.
+
+`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
 theorem huffmanMergedIdentification_dichotomy
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -267,7 +275,9 @@ theorem huffmanLength_sibling_eq_iff
 
 /-- **combined hypothesis: trivial form when `ll a = ll b`**: 既存の `SwapNormalizationHypothesis_
 trivial_when_eq` 経由で `h_swap` を消費した形で `huffmanLength_optimal_with_hypotheses`
-を呼び出すパターン. 仮定で `ll a = ll b` (sibling at `(a, b)`) の場合の直接呼び出し形. -/
+を呼び出すパターン. 仮定で `ll a = ll b` (sibling at `(a, b)`) の場合の直接呼び出し形.
+
+`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
 theorem huffmanLength_optimal_via_partial_swap_when_eq
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -282,7 +292,9 @@ theorem huffmanLength_optimal_via_partial_swap_when_eq
 
 /-- **combined hypothesis: discharge wrapper with explicit pair**: 主定理を呼ぶ側で
 `(a, b)` を explicit に指定し、`l a = l b` 確認後に主定理を呼べる形. ただし `l a = l b`
-は主定理 internal の swap normalization step で生成されるので external 仮定にはしない. -/
+は主定理 internal の swap normalization step で生成されるので external 仮定にはしない.
+
+`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
 theorem huffmanLength_optimal_wrapper_explicit
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -361,7 +373,9 @@ theorem swap_chain_step_two
 omit [Nonempty α] [MeasurableSingletonClass α] in
 /-- **witness extraction**: `SwapNormalizationHypothesis` を適用したとき得られる `l_norm`
 を抽出する form. tuple の全成分を `obtain` で取り出す client の boilerplate を 1 個に
-まとめた wrapper. -/
+まとめた wrapper.
+
+`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
 theorem SwapNormalizationHypothesis_apply_witness
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -381,7 +395,9 @@ theorem SwapNormalizationHypothesis_apply_witness
         ≤ InformationTheory.Shannon.ShannonCode.expectedLength Q ll :=
   h_swap Q ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
 
-/-- **witness positivity extractor**: hypothesis 結論の存在から positivity だけ取り出す. -/
+/-- **witness positivity extractor**: hypothesis 結論の存在から positivity だけ取り出す.
+
+`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
 theorem SwapNormalizationHypothesis_witness_pos
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -398,7 +414,9 @@ theorem SwapNormalizationHypothesis_witness_pos
     h_swap Q ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
   exact ⟨l_norm, hpos⟩
 
-/-- **witness kraft extractor**: hypothesis 結論の存在から Kraft だけ取り出す. -/
+/-- **witness kraft extractor**: hypothesis 結論の存在から Kraft だけ取り出す.
+
+`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
 theorem SwapNormalizationHypothesis_witness_kraft
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -416,7 +434,9 @@ theorem SwapNormalizationHypothesis_witness_kraft
   exact ⟨l_norm, hkraft⟩
 
 /-- **witness sibling equality extractor**: hypothesis 結論から `l_norm a = l_norm b` の
-sibling 等式だけ取り出す. -/
+sibling 等式だけ取り出す.
+
+`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
 theorem SwapNormalizationHypothesis_witness_eq
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -434,7 +454,9 @@ theorem SwapNormalizationHypothesis_witness_eq
   exact ⟨l_norm, heq⟩
 
 /-- **witness expected length extractor**: hypothesis 結論から expectedLength `≤` だけ
-取り出す. -/
+取り出す.
+
+`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
 theorem SwapNormalizationHypothesis_witness_expL
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -497,17 +519,23 @@ theorem expectedLength_perm_invariant_when_l_eq
 abbrev HuffmanCombinedHypothesis : Prop :=
   SwapNormalizationHypothesis.{u} ∧ HuffmanMergedIdentificationHypothesis.{u}
 
-/-- **combined hypothesis 投影 left**. -/
+/-- **combined hypothesis 投影 left**.
+
+`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
 theorem huffmanCombinedHypothesis_swap
     (h : HuffmanCombinedHypothesis.{u}) :
     SwapNormalizationHypothesis.{u} := h.1
 
-/-- **combined hypothesis 投影 right**. -/
+/-- **combined hypothesis 投影 right**.
+
+`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
 theorem huffmanCombinedHypothesis_ident
     (h : HuffmanCombinedHypothesis.{u}) :
     HuffmanMergedIdentificationHypothesis.{u} := h.2
 
-/-- **combined hypothesis から主定理を 1-arg で呼ぶ wrapper**. -/
+/-- **combined hypothesis から主定理を 1-arg で呼ぶ wrapper**.
+
+`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
 theorem huffmanLength_optimal_with_combined
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -575,7 +603,9 @@ theorem swap_value_le_max
 
 /-- **client wrapper - `huffmanLength_optimal_with_hypotheses` を `H : HuffmanCombinedHypothesis`
 1 引数で呼ぶ最も簡潔な form**. T1-A''' 後続 seed で H が定理として成立した瞬間に強形が
-得られる terminal step. -/
+得られる terminal step.
+
+`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
 theorem huffmanLength_optimal_terminal
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]

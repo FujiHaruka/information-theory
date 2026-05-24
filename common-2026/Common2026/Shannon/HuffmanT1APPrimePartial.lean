@@ -592,7 +592,9 @@ universe v
 /-- **partial wrapper (weak form, level-polymorphic)**: T1-A' weak form
 `huffmanLength_optimal_with_hypotheses` を `{α : Type v}` universe で wrap. 既存の
 universe-`u` 形をそのまま呼び出すだけだが、後続 seed で `{α : Type*}` 呼び出しを
-拾う用. -/
+拾う用.
+
+`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
 theorem huffmanLength_optimal_with_hypotheses_at
     {α : Type v} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -606,7 +608,9 @@ theorem huffmanLength_optimal_with_hypotheses_at
   huffmanLength_optimal_with_hypotheses h_swap h_ident P hP l hl_pos hl_kraft
 
 /-- **partial wrapper (combined hypothesis tuple form)**: 2 hypothesis を tuple
-形に combine した形の wrapper. client は `⟨h_swap, h_ident⟩` で渡せる. -/
+形に combine した形の wrapper. client は `⟨h_swap, h_ident⟩` で渡せる.
+
+`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
 theorem huffmanLength_optimal_with_combined_hypothesis
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -830,7 +834,9 @@ wrapper) を集める. これらは後続 seed T1-A''' で hypothesis を discha
 強形を一発で生成する terminal step として使える. -/
 
 /-- **partial wrapper: hypothesis を tuple で **`Σ`-pair** 化**: 2 hypothesis を非依存
-`Σ`-pair で取り出す形. inhabited `PProd` 風. -/
+`Σ`-pair で取り出す形. inhabited `PProd` 風.
+
+`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
 theorem huffmanLength_optimal_with_pair_hypothesis
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -843,7 +849,9 @@ theorem huffmanLength_optimal_with_pair_hypothesis
   huffmanLength_optimal_with_hypotheses h.fst h.snd P hP l hl_pos hl_kraft
 
 /-- **partial wrapper: contraposition form**: 結論を否定の対偶形で publish. 後続
-client が strict 不等式から逆向きに矛盾を起こす useful な form. -/
+client が strict 不等式から逆向きに矛盾を起こす useful な form.
+
+`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
 theorem huffmanLength_optimal_with_hypotheses_contra
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]

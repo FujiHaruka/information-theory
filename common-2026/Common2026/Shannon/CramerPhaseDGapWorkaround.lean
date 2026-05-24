@@ -131,7 +131,9 @@ exponential lower bound.
 
 This is the **main bridge** of wave7 Phase D: cylinder-level density (the
 primitive Mathlib gap) + Carathéodory extension hypothesis → the Phase C
-asymptotic predicate. -/
+asymptotic predicate.
+
+`@audit:suspect(cramer-moonshot-plan)` -/
 lemma isMeasureInfinitePiTiltedEq_of_cylinder_density
     (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam : ℝ)
     (h_cyl : IsCramerNLetterRNCylinder μ₀ Y lam)
@@ -153,7 +155,9 @@ lemma isMeasureInfinitePiTiltedEq_of_cylinder_density
 Routes the Phase C partial discharge through the cylinder-form predicate +
 Carathéodory pass-through: this is the cleanest "primitive" form of the
 Mathlib gap, in which the Carathéodory extension is explicitly abstracted as
-a hypothesis. -/
+a hypothesis.
+
+`@audit:suspect(cramer-moonshot-plan)` -/
 theorem cramer_lower_phase_d_via_cylinder
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
@@ -177,7 +181,9 @@ theorem cramer_lower_phase_d_via_cylinder
     (μ₀ := μ₀) hY_meas h_bdd a lam hlam h_coboundedBelow h_pred
 
 /-- **Cramér tendsto form, Phase D via cylinder density**. The full `Tendsto`
-form, routed through the cylinder-form predicate + Carathéodory pass-through. -/
+form, routed through the cylinder-form predicate + Carathéodory pass-through.
+
+`@audit:suspect(cramer-moonshot-plan)` -/
 theorem cramer_tendsto_phase_d_via_cylinder
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
@@ -248,7 +254,9 @@ structure IsCramerChernoffNLetterRNUnified
   /-- The Chernoff-side per-tilt lower-bound predicate. -/
   chernoff : IsBayesErrorPerTiltLowerBound P₁ P₂ lamCh
 
-/-- **Cramér projection** from the unified predicate. -/
+/-- **Cramér projection** from the unified predicate.
+
+`@audit:suspect(cramer-moonshot-plan)` -/
 lemma IsCramerChernoffNLetterRNUnified.cramerPhaseC
     {α : Type*} [Fintype α] [DecidableEq α]
     {μ₀ : Measure Ω₀} {Y : Ω₀ → ℝ} {lam : ℝ}

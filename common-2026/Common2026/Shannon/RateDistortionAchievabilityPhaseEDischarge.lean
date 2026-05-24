@@ -279,7 +279,9 @@ i.i.d. ambient / probability-measure / distortion-bridge hypotheses **internally
 discharged** via `iidAmbientJointMeasure (pmfToMeasure qStar)`. The only
 remaining external hypothesis is the codebook-averaged failure sequence
 (`h_codebook_avg_failure` + `h_failure_tendsto_zero`), which currently requires
-strong typicality machinery beyond Phase B's weak typicality scope. -/
+strong typicality machinery beyond Phase B's weak typicality scope.
+
+`@audit:suspect()` -/
 theorem rate_distortion_achievability_partial_discharge
     (P_X_pmf : α → ℝ) (d : DistortionFn α β) {D : ℝ}
     (qStar : α × β → ℝ) (hqStar_mem : qStar ∈ RDConstraint P_X_pmf d D)

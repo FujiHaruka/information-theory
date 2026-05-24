@@ -233,7 +233,9 @@ parameter `lam` yields the wave7 `IsHoeffdingInteriorMinimizer` for the tilt
 witness, with full support supplied by the closed form.
 
 This is the principal hand-off: the constructive Lagrange tilt feeds directly
-into the wave7 interior layer, which plugs into the sandwich pipeline. -/
+into the wave7 interior layer, which plugs into the sandwich pipeline.
+
+`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
 theorem isHoeffdingInteriorMinimizer_of_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     {alpha lam : ℝ} (h_lag : IsHoeffdingLagrangeHyp P₁ P₂ alpha lam) :
@@ -243,7 +245,9 @@ theorem isHoeffdingInteriorMinimizer_of_lagrange
     full_support := hoeffdingTilt_pos P₁ P₂ hP₁_pos hP₂_pos lam }
 
 /-- **Existence form**: from a Lagrange hypothesis, there exists an interior
-minimizer (the tilt witness). -/
+minimizer (the tilt witness).
+
+`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
 theorem isHoeffdingInteriorMinimizer_exists_of_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     {alpha lam : ℝ} (h_lag : IsHoeffdingLagrangeHyp P₁ P₂ alpha lam) :
@@ -254,7 +258,9 @@ theorem isHoeffdingInteriorMinimizer_exists_of_lagrange
 /-! ## Phase 6 — Full-support flag via Lagrange tilt -/
 
 /-- **Lagrange ⇒ full-support flag**: the tilt minimizer satisfies the wave6
-`IsHoeffdingMinimizerFullSupport` predicate, routed through the wave7 bridge. -/
+`IsHoeffdingMinimizerFullSupport` predicate, routed through the wave7 bridge.
+
+`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
 theorem isHoeffdingMinimizerFullSupport_of_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     {alpha lam : ℝ} (h_lag : IsHoeffdingLagrangeHyp P₁ P₂ alpha lam) :
@@ -268,7 +274,9 @@ theorem isHoeffdingMinimizerFullSupport_of_lagrange
 infimum `hoeffdingE2 P₁ P₂ alpha` is realised at the full-support tilt witness
 lying in `K(α)`. Mirrors `hoeffdingE2_interior_minimizer_via_predicates`
 (wave7) but with the constructive tilt witness in place of the abstract
-gradient predicate. -/
+gradient predicate.
+
+`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
 theorem hoeffdingE2_interior_minimizer_via_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     {alpha lam : ℝ} (h_lag : IsHoeffdingLagrangeHyp P₁ P₂ alpha lam) :
@@ -282,7 +290,9 @@ theorem hoeffdingE2_interior_minimizer_via_lagrange
 
 /-- **Pythagoras at the Lagrange tilt**: at the tilt minimizer, the Pythagorean
 inequality holds against any other full-support `P ∈ K(α)`, re-routed through
-the wave7 `csiszar_pythagoras_at_interior`. -/
+the wave7 `csiszar_pythagoras_at_interior`.
+
+`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
 theorem csiszar_pythagoras_at_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₂_sum : ∑ a, P₂ a = 1)
@@ -301,7 +311,9 @@ theorem csiszar_pythagoras_at_lagrange
 /-- **Sandwich at the Lagrange tilt**: the most ergonomic constructive interior
 entry point. Supply the Lagrange constraint-match record plus the two
 variational hypotheses; get the sandwich `Tendsto`. Routed through the wave7
-`hoeffding_tradeoff_sandwich_at_interior_via_predicate`. -/
+`hoeffding_tradeoff_sandwich_at_interior_via_predicate`.
+
+`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
 theorem hoeffding_tradeoff_sandwich_at_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)

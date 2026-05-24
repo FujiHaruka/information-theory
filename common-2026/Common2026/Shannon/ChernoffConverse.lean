@@ -268,7 +268,9 @@ conclusion `limsup rate ≤ chernoffInfo`.
 Hypothesis shape: a Sanov LDP launch at the tilted measure
 `Measure.pi (chernoffMediator ...)` would produce exactly this bound after
 change-of-measure (the `2` factor accounts for the `1/2` prefactor in
-`bayesErrorMinPmf`). -/
+`bayesErrorMinPmf`).
+
+`@audit:suspect(chernoff-converse-moonshot-plan)` -/
 theorem chernoff_converse_from_per_tilt
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -404,7 +406,9 @@ per-tilt hypothesis for **some** `λ ∈ Icc 0 1` with `chernoffInfo = -log Z(λ
 (non-trivially, this must be the attaining `λ*`). The current statement
 quantifies over `∃ λ`, so the caller can either pick `λ*` from
 `chernoffInfo_attained` themselves or supply a stronger per-tilt hypothesis
-valid for all `λ` (∀ form deferred to follow-up plan). -/
+valid for all `λ` (∀ form deferred to follow-up plan).
+
+`@audit:suspect(chernoff-converse-moonshot-plan)` -/
 theorem chernoff_converse_of_per_tilt_existential
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -437,7 +441,9 @@ discharged internally via `chernoff_converse_of_per_tilt_existential`
 
 This is the cleanest publish shape of Cover-Thomas Theorem 11.9.1 given the
 current state: only one explicit hypothesis (the per-tilt lower bound,
-itself derivable from Sanov LDP per-tilt in a follow-up plan). -/
+itself derivable from Sanov LDP per-tilt in a follow-up plan).
+
+`@audit:suspect(chernoff-converse-moonshot-plan)` -/
 theorem chernoff_lemma_tendsto_from_per_tilt
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)

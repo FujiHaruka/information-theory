@@ -134,7 +134,9 @@ The genuine proofs need continuous AEP / sphere-shell volume (typicality), the
 density-level continuous MI chain rule (MI-decomp) and chain rule + Fano +
 Gaussian max-entropy (converse), absent from Mathlib. What is genuinely closed
 here (beyond F-1): the output-Gaussian fact via the now-proved bind/conv bridge
-`isAwgnBindEqConv_discharged`, so `IsAwgnBindEqConv` is dispatched automatically. -/
+`isAwgnBindEqConv_discharged`, so `IsAwgnBindEqConv` is dispatched automatically.
+
+`@audit:suspect(awgn-moonshot-plan)` -/
 theorem awgn_theorem_of_typicality_converse_bindconv_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_typicality : IsAwgnTypicalityHypothesis P N (isAwgnChannelMeasurable N))
@@ -159,7 +161,9 @@ MI-decomp/bddAbove/max-entropy taken as hypotheses.**
 max-entropy bound (`h_max_ent`) remain OPEN — taken as hypotheses (max-entropy /
 continuous MI chain rule machinery absent from Mathlib). Only the output-Gaussian
 fact is genuinely closed via the now-proved bind/conv bridge, so `IsAwgnBindEqConv`
-is dispatched automatically. -/
+is dispatched automatically.
+
+`@audit:suspect(awgn-moonshot-plan)` -/
 theorem awgn_capacity_closed_form_of_maxent_bindconv_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_decomp : IsAwgnMIDecomp P N (isAwgnChannelMeasurable N))

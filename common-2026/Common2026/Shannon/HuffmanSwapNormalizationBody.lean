@@ -127,7 +127,9 @@ abbrev EqualizingPermHypothesis : Prop :=
 `SwapNormalizationHypothesis` も成立する。permutation `σ` を hypothesis から取り出し,
 `l_norm := ll ∘ σ` を witness にすると positivity / Kraft は generic discharge
 (`perm_length_pos` / `perm_length_kraft`), equalization と expected length は σ の性質
-からそのまま得られる。 -/
+からそのまま得られる。
+
+`@audit:suspect(huffman-moonshot-plan)` -/
 theorem swapNormalizationHypothesis_of_equalizingPerm
     (h_eq : EqualizingPermHypothesis.{u}) :
     SwapNormalizationHypothesis.{u} := by
@@ -201,7 +203,9 @@ abbrev EqualizingSwapTargetHypothesis : Prop :=
 swap target `m` から `σ := Equiv.swap b m` を構成する。`swap_step_le` (= `swap_step_le`
 の `(b, m)` 適用) が expected length 非増加 + 全 safety を保証, `m ≠ a` から
 `(ll ∘ σ) a = ll a = ll m = (ll ∘ σ) b` の等長化が従う。expected length 非増加の核を
-完全 discharge し, 残余を swap target の存在のみに縮約する。 -/
+完全 discharge し, 残余を swap target の存在のみに縮約する。
+
+`@audit:suspect(huffman-moonshot-plan)` -/
 theorem equalizingPerm_of_swapTarget
     (h_tgt : EqualizingSwapTargetHypothesis.{u}) :
     EqualizingPermHypothesis.{u} := by
@@ -229,7 +233,9 @@ theorem equalizingPerm_of_swapTarget
     rw [h_lhs, h_rhs, h_am]
 
 /-- **swap target 経由 vertical reduction (alias)**: `EqualizingSwapTargetHypothesis` から
-直接 `SwapNormalizationHypothesis` を得る合成 form。 -/
+直接 `SwapNormalizationHypothesis` を得る合成 form。
+
+`@audit:suspect(huffman-moonshot-plan)` -/
 theorem swapNormalizationHypothesis_of_swapTarget
     (h_tgt : EqualizingSwapTargetHypothesis.{u}) :
     SwapNormalizationHypothesis.{u} :=
@@ -240,7 +246,9 @@ theorem swapNormalizationHypothesis_of_swapTarget
 
 /-- **`huffmanLength_optimal` の `EqualizingPermHypothesis` 経由 weak form**: swap
 normalization hypothesis を strictly-more-primitive な `EqualizingPermHypothesis` に
-置き換えて再公開。identification hypothesis は本 seed scope-out のため据え置き。 -/
+置き換えて再公開。identification hypothesis は本 seed scope-out のため据え置き。
+
+`@audit:suspect(huffman-moonshot-plan)` -/
 theorem huffmanLength_optimal_via_equalizing_perm
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]

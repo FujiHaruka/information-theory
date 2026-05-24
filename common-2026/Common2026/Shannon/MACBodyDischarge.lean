@@ -604,7 +604,9 @@ the JTS decoder `macJTSCode`, the 4-fold Bonferroni containment
 `mac_achievability_corner_body`) is the honest open IT residual, packaged
 as the gated implication `h_jt : MACJointTypicalityAchievable …`. The body
 **derives** the error-carrying existence via `h_jt h_strict` — not an
-identity wrap. -/
+identity wrap.
+
+`@audit:suspect(mac-moonshot-plan)` -/
 theorem mac_capacity_region_inner_bound_with_body
     (W : MACChannel α₁ α₂ β)
     (R₁ R₂ I₁ I₂ Iboth : ℝ)
@@ -643,7 +645,9 @@ theorem mac_capacity_region_outer_bound_with_body
 /-- **MAC capacity region — L-MAC2 + L-MAC3 two-side body discharge
 combine**. Mirror of `mac_capacity_region_consistent` of the parent
 file with the body discharge layers engaged; both sides **derive** their
-conclusions. -/
+conclusions.
+
+`@audit:suspect(mac-moonshot-plan)` -/
 theorem mac_capacity_region_with_body_two_side
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : MACCode M₁ M₂ n α₁ α₂ β)

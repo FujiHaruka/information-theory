@@ -390,7 +390,9 @@ hypothesis-free SMB ergodic sandwich for the lower bound, conclude
 
 This is the `lz78_converse_lower_bound_with_chain` of
 `LZ78ConverseDischarge.lean` with the SMB lower-bound hypothesis
-discharged from the ergodic-process side. -/
+discharged from the ergodic-process side.
+
+`@audit:suspect(lz78-moonshot-plan)` -/
 theorem lz78_converse_lower_bound_ergodic
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -410,7 +412,9 @@ theorem lz78_converse_lower_bound_ergodic
 /-- **LZ78 converse lower bound — `IsSMBToLZ78ConverseChainBridge` form**.
 
 Same as `lz78_converse_lower_bound_ergodic`, but consumes the chain
-hypothesis through the SMB-side named bridge predicate. -/
+hypothesis through the SMB-side named bridge predicate.
+
+`@audit:suspect(lz78-moonshot-plan)` -/
 theorem lz78_converse_lower_bound_ergodic_of_bridge
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -459,7 +463,9 @@ theorem lz78_smb_sandwich_ergodic_greedy
 
 Conclusion specialized to `lz78GreedyEncodingLength` from
 `LZ78GreedyParsing.lean`. The chain-rule hypothesis remains a
-pass-through (L-LZ2-A: Cover–Thomas Eq. 13.130 pmf-level inequality). -/
+pass-through (L-LZ2-A: Cover–Thomas Eq. 13.130 pmf-level inequality).
+
+`@audit:suspect(lz78-moonshot-plan)` -/
 theorem lz78_converse_lower_bound_ergodic_greedy
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)

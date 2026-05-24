@@ -193,7 +193,9 @@ conclude
 ```
 
 The proof is one-line transitivity:
-`entropyRate ≤ liminf blockLogAvg ≤ liminf (lz78EncodingLength / n)`. -/
+`entropyRate ≤ liminf blockLogAvg ≤ liminf (lz78EncodingLength / n)`.
+
+`@audit:suspect(lz78-residual-discharge-plan)` -/
 theorem lz78_converse_lower_bound_pmfBased
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : StationaryProcess μ α)
@@ -216,7 +218,9 @@ theorem lz78_converse_lower_bound_pmfBased
 Same conclusion as `lz78_converse_lower_bound_pmfBased`, but consumes
 the lower bound at the *function-level* (`f ω n ≤ (lz/n)`) rather
 than at the liminf level. The proof routes through
-`Filter.liminf_le_liminf`. -/
+`Filter.liminf_le_liminf`.
+
+`@audit:suspect(lz78-residual-discharge-plan)` -/
 theorem lz78_converse_lower_bound_of_pointwise
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : StationaryProcess μ α)
@@ -265,7 +269,9 @@ entropyRate ≤ liminf (fun n => lz78EncodingLength n / n)
 ```
 
 usable as the `h_lower` argument of
-`lz78_asymptotic_optimality_two_sided`. -/
+`lz78_asymptotic_optimality_two_sided`.
+
+`@audit:suspect(lz78-residual-discharge-plan)` -/
 theorem lz78_converse_lower_bound_with_chain
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -293,7 +299,9 @@ sites).
 
 Same signature and result as `lz78_converse_lower_bound_with_chain` —
 takes `IsLZ78ConverseChainHyp` + SMB lower-bound sandwich, returns the
-a.s. liminf bound `entropyRate ≤ liminf (lz/n)`. -/
+a.s. liminf bound `entropyRate ≤ liminf (lz/n)`.
+
+`@audit:suspect(lz78-residual-discharge-plan)` -/
 theorem lz78_converse_lower_bound_discharge
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -334,7 +342,9 @@ Threading the parent's L-LZ2 placeholder through the concrete greedy
 encoding: given the chain-rule + SMB lower-bound hypothesis pass-
 throughs (both unchanged from the abstract `lz78EncodingLength`
 case), produce the converse a.s. liminf bound for
-`lz78GreedyEncodingLength`. -/
+`lz78GreedyEncodingLength`.
+
+`@audit:suspect(lz78-residual-discharge-plan)` -/
 theorem lz78_converse_lower_bound_greedy
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)

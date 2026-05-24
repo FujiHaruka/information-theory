@@ -367,7 +367,9 @@ requires Markov-chain left post-processing infrastructure not yet in `CondMutual
 
 Because the Markov-chain manipulations (left post-processing, middle augmentation) and
 the `condMutualInfo` reshape lemma are not yet in `CondMutualInfo.lean`, this lemma
-takes them as hypotheses. Phase D's wiring is independent of how these are obtained. -/
+takes them as hypotheses. Phase D's wiring is independent of how these are obtained.
+
+`@audit:suspect(channel-coding-shannon-theorem-full-plan)` -/
 theorem memoryless_per_summand_bound
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
@@ -470,7 +472,9 @@ The Phase C lemma in its current form takes three derived facts as hypotheses
 2. Apply `memoryless_per_summand_bound` (Phase C) to reduce each summand to
    `I(X_i; Y_i)` — as an `ENNReal` inequality first, then take `.toReal` with
    finite-sum monotonicity.
-3. `linarith` to finish (Fano terms identical on both sides). -/
+3. `linarith` to finish (Fano terms identical on both sides).
+
+`@audit:suspect(channel-coding-shannon-theorem-full-plan)` -/
 theorem channel_coding_converse_general_memoryless
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Msg : Ω → M) (encoder : M → Fin n → α)

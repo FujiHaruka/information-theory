@@ -86,7 +86,9 @@ Load-bearing pieces bundled inside `h_converseBound_lbh`:
 * Per-letter max-entropy `I(X_i; Y_i) ≤ (1/2) log(1+P/N)` (Gaussian Y_i bound),
 * Per-letter integrability hypotheses (F-3 撤退ライン's main pain point).
 
-Discharging this predicate is deferred to `awgn-converse-aux-plan.md` (Tier 3). -/
+Discharging this predicate is deferred to `awgn-converse-aux-plan.md` (Tier 3).
+
+`@audit:suspect(awgn-converse-aux-plan)` -/
 theorem awgn_converse
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)

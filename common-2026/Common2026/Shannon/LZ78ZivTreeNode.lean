@@ -423,7 +423,9 @@ omit [MeasurableSingletonClass α] in
 /-- **Per-block, per-path overhead-aware Ziv upper bound**: from the
 overhead-aware combinatorial core, the bit rate is below the base-2
 per-block estimator plus the overhead-aware slack. The genuine Ziv tree
-overhead is absorbed by the ω-uniform vanishing envelope. -/
+overhead is absorbed by the ω-uniform vanishing envelope.
+
+`@audit:suspect(lz78-ziv-inequality-discharge-moonshot-plan)` -/
 theorem lz78DistinctRate_le_blockLogAvg₂_add_slackOverhead
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (hcore : IsLZ78ZivCombinatorialCoreOverhead μ p)
@@ -644,7 +646,9 @@ super-`O(c)` when `Pₙ → 1`.
 The correct honest input is an **a.s.-eventual** rate bound, not a per-block
 universal inequality; see `LZ78AsEventualAchievability.lean` for the
 reformulation track. This lemma stands only as scaffolding marking where the
-genuine a.s.-eventual replacement plugs in. -/
+genuine a.s.-eventual replacement plugs in.
+
+`@audit:suspect(lz78-ziv-inequality-discharge-moonshot-plan)` -/
 theorem isLZ78AchievabilityZivUpperBound_distinctOverhead
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (hcore_lbh : IsLZ78ZivCombinatorialCoreOverhead μ p)
@@ -703,7 +707,9 @@ it does **not** reduce the assumption count to one. Two honest inputs remain:
 So this does **not** fix the false-core defect — it relocates it from the clean
 core to the overhead core, which is also false. The genuine T1/T2/T3 tree-node
 foundation stands; the assumption count remains two honest inputs, but `hcore`
-is unsatisfiable as stated and must be reformulated a.s.-eventually. -/
+is unsatisfiable as stated and must be reformulated a.s.-eventually.
+
+`@audit:suspect(lz78-ziv-inequality-discharge-moonshot-plan)` -/
 theorem lz78_two_sided_optimality_distinct_ziv_overhead_core_wired
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)

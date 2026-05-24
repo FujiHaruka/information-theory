@@ -233,7 +233,9 @@ matter for this lemma).
 
 The proof: covering ⇒ `μ.real(E_typ) ≤ ε₁`, packing ⇒ `μ.real(E_bin) ≤ ε₂`,
 then apply `wzAchievability_random_binning_body` for the union bound.
-This is precisely the standard "covering + packing" pattern. -/
+This is precisely the standard "covering + packing" pattern.
+
+`@audit:suspect(wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_binning_via_covering_packing
     [Nonempty β] [Nonempty γ]
     {R₁ R₂ ε₁ ε₂ : ℝ}
@@ -263,7 +265,9 @@ theorem wyner_ziv_binning_via_covering_packing
 
 /-- **Bridge to `WynerZivBinningBody`** — same statement re-exported with the
 implicit bookkeeping that `R = R₁ − R₂` is the Wyner–Ziv binning rate. This
-is the form consumed by downstream achievability composition. -/
+is the form consumed by downstream achievability composition.
+
+`@audit:suspect(wyner-ziv-discharge-moonshot-plan)` -/
 theorem wynerZivBinningBody_of_covering_packing
     [Nonempty β] [Nonempty γ]
     {R₁ R₂ ε₁ ε₂ : ℝ}
@@ -313,7 +317,9 @@ variable [MeasurableSpace γ]
 Given an existence-form covering and packing hypothesis (a sequence `n ↦
 (Us_n, Ys_n, f_U_n, ε_n)` together with measurability and predicate
 guarantees), produce the existence-form decoder failure bound. This is
-exactly the shape consumed by `wyner_ziv_achievability_existence`. -/
+exactly the shape consumed by `wyner_ziv_achievability_existence`.
+
+`@audit:suspect(wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_binning_existence_of_covering_packing
     [Nonempty β] [Nonempty γ]
     {R₁ R₂ : ℝ}
@@ -450,7 +456,9 @@ variable [MeasurableSpace γ]
 
 /-- **Joint covering + packing predicate ⇒ decoder failure bound.** Same
 content as `wyner_ziv_binning_via_covering_packing` but consuming the
-single joint predicate `IsWynerZivBinningAchievable`. -/
+single joint predicate `IsWynerZivBinningAchievable`.
+
+`@audit:suspect(wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_binning_decoder_fail_of_achievable
     [Nonempty β] [Nonempty γ]
     {R₁ R₂ ε₁ ε₂ : ℝ}

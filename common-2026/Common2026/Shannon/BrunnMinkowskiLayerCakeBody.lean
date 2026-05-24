@@ -177,7 +177,9 @@ theorem pl1_additive_via_layercake
 
 `BrunnMinkowskiPLBody.lean` の `prekopa_leindler_1D_body` は
 `IsPL1AdditiveHyp` を hypothesis として要求していたが、本定理は
-それを layer-cake change-of-variable から discharge して除去する。 -/
+それを layer-cake change-of-variable から discharge して除去する。
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem prekopa_leindler_1D_layercake
     (f g hfn : (Fin 1 → ℝ) → ℝ) (lam : ℝ)
     (h0 : 0 ≤ lam) (h1 : lam ≤ 1)
@@ -201,7 +203,9 @@ theorem prekopa_leindler_1D_layercake
 `prekopa_leindler_1D_layercake` の結論を wave7 の `IsPrekopaLeindlerHyp`
 predicate に詰め直し、`prekopa_leindler_inequality` に流せる形で再 publish。
 `IsPL1AdditiveHyp` を layer-cake から discharge した分、hypothesis が
-1 本軽い。 -/
+1 本軽い。
+
+`@audit:suspect(brunn-minkowski-closure-plan)` -/
 theorem isPrekopaLeindlerHyp_of_layercake
     (f g hfn : (Fin 1 → ℝ) → ℝ) (lam : ℝ)
     (h0 : 0 ≤ lam) (h1 : lam ≤ 1)

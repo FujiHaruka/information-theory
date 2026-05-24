@@ -286,7 +286,9 @@ the optimal Type II rate `-(1/n) log steinTypeII_at_level_pmf` converges to
 This is the **slim form** of `hoeffding_tradeoff_with_hypothesis` (4 hypothesis form
 in `HoeffdingTradeoff.lean`), with the two boundedness slots discharged. The two
 remaining variational hypotheses `h_liminf` / `h_limsup` are deferred to the follow-up
-plan `hoeffding-tradeoff-sandwich-plan.md`. -/
+plan `hoeffding-tradeoff-sandwich-plan.md`.
+
+`@audit:suspect(hoeffding-tradeoff-sandwich-plan)` -/
 theorem hoeffding_tradeoff_sandwich
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)

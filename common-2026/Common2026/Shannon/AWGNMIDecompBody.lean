@@ -156,7 +156,9 @@ At the AWGN instance `p := gaussianReal 0 P.toNNReal`, `W := awgnChannel N h_mea
 the abstract predicate `IsContChannelMIDecompHyp` is *definitionally* the AWGN
 predicate `IsAwgnMIDecomp` (both unfold to the same `mutualInfoOfChannel … =
 differentialEntropy (outputDistribution …) − ∫ …`). The discharge is therefore an
-`exact`. -/
+`exact`.
+
+`@audit:suspect(awgn-mi-decomp-plan)` -/
 theorem awgn_midecomp_of_cont_chain
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
     (h_chain : IsContChannelMIDecompHyp

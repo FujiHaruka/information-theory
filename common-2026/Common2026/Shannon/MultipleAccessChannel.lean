@@ -443,7 +443,9 @@ The per-user Fano body and conditional-MI chain rule are themselves
 🟢ʰ Mathlib-wall residuals (real Mathlib gaps), discharged structurally
 through `MACSingleFanoBound` / `MACPerLetterChain₁` of
 `MACL2Discharge.lean`; the present theorem accepts them as raw scalar
-inequalities so this file remains structurally minimal. -/
+inequalities so this file remains structurally minimal.
+
+`@audit:suspect(mac-moonshot-plan)` -/
 theorem mac_single_rate_bound₁
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (_c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -466,7 +468,9 @@ R₂ ≤ I(X₂; Y | X₁) + ε   (with I₂ := I(X₂; Y | X₁))
 
 via Fano on `(W₂, Y^n)`, DPI `I(W₂; Y^n) ≤ I(X₂^n; Y^n | X₁^n)`, and the
 per-letter chain rule. Derives the conclusion from entropy-level inputs
-— no `True` placeholders, no `h_bound`-style circular hypothesis. -/
+— no `True` placeholders, no `h_bound`-style circular hypothesis.
+
+`@audit:suspect(mac-moonshot-plan)` -/
 theorem mac_single_rate_bound₂
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (_c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -492,7 +496,9 @@ after Fano applied to the *joint* message `(W₁, W₂)`:
 `I((X₁^n, X₂^n); Y^n) ≤ ∑ I(X_{1,i}, X_{2,i}; Y_i) ≤ n · I(X₁, X₂; Y)`.
 
 Derives the conclusion from entropy-level inputs — no `True` placeholders,
-no `h_sum`-style circular hypothesis. -/
+no `h_sum`-style circular hypothesis.
+
+`@audit:suspect(mac-moonshot-plan)` -/
 theorem mac_sum_rate_bound
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (_c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -565,7 +571,9 @@ The body is the genuine divide-by-`n` derivation (`mac_rate_le_of_fano`
 `relay_cutset_combine` / SlepianWolf converse recipe.
 
 Time-sharing / convex hull (Theorem 15.3.6) remains scope-out (L-MAC5);
-the present statement publishes the corner-point form only. -/
+the present statement publishes the corner-point form only.
+
+`@audit:suspect(mac-moonshot-plan)` -/
 theorem mac_capacity_region_outer_bound
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (_c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -635,7 +643,9 @@ the per-direction Fano + chain ingredients are produced upstream by
 structural body discharge routes of `MACL2Discharge.lean`. The vestigial
 `_h_fano : True` / `_h_chain : True` placeholders of the prior interface
 are removed — the genuine Fano + chain content is consumed where the
-three cut bounds `h₁`, `h₂`, `hs` are produced. -/
+three cut bounds `h₁`, `h₂`, `hs` are produced.
+
+`@audit:suspect(mac-moonshot-plan)` -/
 theorem mac_capacity_region_outer_bound_three_bounds
     {M₁ M₂ n : ℕ} (_hn : 0 < n)
     (_c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -756,7 +766,9 @@ circular**:
 The body is `h_jt h_strict` — a real `modus ponens`, not an identity
 wrap — mirroring the ShannonHartley honest-conditional precedent. The
 random-coding / joint-typicality discharge of `h_jt` is the genuine
-Mathlib gap (0 typicality lemmas), kept honest. -/
+Mathlib gap (0 typicality lemmas), kept honest.
+
+`@audit:suspect(mac-moonshot-plan)` -/
 theorem mac_capacity_region_inner_bound
     (W : MACChannel α₁ α₂ β)
     (R₁ R₂ I₁ I₂ Iboth : ℝ)
@@ -771,7 +783,9 @@ Variant of `mac_capacity_region_inner_bound` taking the strict
 inequalities encoded as an `InMACCapacityRegion` (with `≤`) together with
 the side-conditions that none of the three inequalities is saturated
 (`≠`), from which the three strict inequalities are reconstructed and the
-achievability is derived through `MACJointTypicalityAchievable`. -/
+achievability is derived through `MACJointTypicalityAchievable`.
+
+`@audit:suspect(mac-moonshot-plan)` -/
 theorem mac_capacity_region_inner_bound_bundled_strict
     (W : MACChannel α₁ α₂ β)
     (R₁ R₂ I₁ I₂ Iboth : ℝ)
@@ -802,7 +816,9 @@ Fano + chain inputs, and the achievability derives the error-carrying
 `MACInnerBoundExistence W R₁ R₂` from the honest joint-typicality residual
 `h_jt`. Both sides **derive** their conclusions — neither is an identity
 wrap — matching the two-side packaging pattern of `wyner_ziv_tendsto`
-(T3-D Wyner–Ziv) for callers that want a single entry point. -/
+(T3-D Wyner–Ziv) for callers that want a single entry point.
+
+`@audit:suspect(mac-moonshot-plan)` -/
 theorem mac_capacity_region_consistent
     (W : MACChannel α₁ α₂ β)
     {M₁ M₂ n : ℕ} (hn : 0 < n)

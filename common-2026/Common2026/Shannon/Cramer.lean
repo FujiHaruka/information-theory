@@ -306,7 +306,9 @@ non-negative `lam` (`hlam_opt`), then
 The achievement hypothesis `hlam_opt` is the textbook condition `a ≥ 𝔼[X]`
 (combined with the convexity / continuity of `Λ`); we leave its discharge as a
 Tier 3 follow-up so that this main statement can be shipped now with the
-cleanest possible signature. -/
+cleanest possible signature.
+
+`@audit:suspect(cramer-moonshot-plan)` -/
 theorem cramer_upper_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
     (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
@@ -444,7 +446,9 @@ The hypothesis `h_tilted_lln` says that under the tilted `n`-IID measure (whose
 construction is deferred to follow-up work), the event
 `{ω | a·n ≤ ∑ X_i ω ≤ (a + ε)·n}` has probability bounded below by some `δ > 0`
 for `n` large enough. This is exactly the conclusion of the in-probability LLN
-under the tilted measure. -/
+under the tilted measure.
+
+`@audit:suspect(cramer-moonshot-plan)` -/
 theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (_h_indep : iIndepFun X μ) (_h_meas : ∀ i, Measurable (X i))
     (_h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
@@ -553,7 +557,9 @@ theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
 /-- **Cramér lower bound, Legendre form**.
 
 If the Legendre transform of `Λ = cgf (X 0) μ` at `a` is attained by some
-`lam ≥ 0`, the asymptotic lower bound recovers `-cramerRate (X 0) μ a`. -/
+`lam ≥ 0`, the asymptotic lower bound recovers `-cramerRate (X 0) μ a`.
+
+`@audit:suspect(cramer-moonshot-plan)` -/
 theorem cramer_lower_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
     (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
@@ -585,7 +591,9 @@ bounded-RV sample sum equals the negative Legendre transform of the
 log-MGF, i.e. minus the Cramér rate function. The result is obtained as the
 sandwich of `cramer_upper_legendre` (Phase B) and `cramer_lower_legendre`
 (Phase C); the latter is currently in hypothesis form awaiting the tilted-LLN
-plumbing (plan L-C2 fallback). -/
+plumbing (plan L-C2 fallback).
+
+`@audit:suspect(cramer-moonshot-plan)` -/
 theorem cramer_tendsto [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
     (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)

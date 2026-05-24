@@ -323,7 +323,9 @@ below by the canonical lower bound `-Real.log (Fintype.card U)` (since
 `I(X;U) ≥ 0` and `I(Y;U) ≤ Real.log (Fintype.card U)` for any pmf with
 `U`-marginal on a finite alphabet). For the present file we record the
 existence of *some* lower bound conditionally on a hypothesis; the explicit
-bound is supplied by callers when needed. -/
+bound is supplied by callers when needed.
+
+`@audit:suspect(wyner-ziv-moonshot-plan)` -/
 theorem wynerZivRatePmf_image_bddBelow_of_objective
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ)
     (B : ℝ)
@@ -353,7 +355,9 @@ have been established, `R = wynerZivRatePmf(D)`.
 
 The two-sided hypotheses are discharged in `WynerZivAchievability.lean`
 (`wyner_ziv_achievability`) and `WynerZivConverse.lean`
-(`wyner_ziv_converse`) respectively. -/
+(`wyner_ziv_converse`) respectively.
+
+`@audit:suspect(wyner-ziv-moonshot-plan)` -/
 theorem wyner_ziv_tendsto
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
     (h_ach : wynerZivRatePmf U P_XY d D ≤ R)

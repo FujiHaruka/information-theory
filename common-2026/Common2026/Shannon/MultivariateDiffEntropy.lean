@@ -84,7 +84,9 @@ theorem integral_log_rnDeriv_self_eq_neg
 /-- **2-variable subadditivity bridge (genuine structure, honest density split).**
 `(klDiv(joint ‖ μ_X ⊗ μ_Y)).toReal = h(μ_X) + h(μ_Y) − h(joint)`. The honest
 hypotheses (absolute continuity + Bayes llr split + integrability) mirror the
-channel手本 `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`. -/
+channel手本 `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`.
+
+`@audit:suspect(differential-entropy-plan)` -/
 theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint
     {μ : Measure (ℝ × ℝ)} [IsProbabilityMeasure μ]
     (h_fst_ac : (μ.map Prod.fst) ≪ volume)
@@ -168,7 +170,9 @@ theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint
   ring
 
 /-- **★ 2-variable differential-entropy subadditivity** `h(X,Y) ≤ h(X) + h(Y)`.
-`KL ≥ 0` (`ENNReal.toReal_nonneg`) + the bridge, closed by `linarith`. -/
+`KL ≥ 0` (`ENNReal.toReal_nonneg`) + the bridge, closed by `linarith`.
+
+`@audit:suspect(differential-entropy-plan)` -/
 theorem jointDifferentialEntropy_le_sum
     {μ : Measure (ℝ × ℝ)} [IsProbabilityMeasure μ]
     (h_fst_ac : (μ.map Prod.fst) ≪ volume)
@@ -205,7 +209,9 @@ theorem jointDifferentialEntropy_le_sum
 
 /-- **`n`-variable subadditivity bridge (genuine structure, honest density split).**
 `(klDiv(joint ‖ ∏ᵢ μᵢ)).toReal = ∑ᵢ h(μᵢ) − h(joint)`, where `μᵢ := μ.map (· i)`.
-The honest llr split absorbs the absent `pi_withDensity` (inventory §D-1a). -/
+The honest llr split absorbs the absent `pi_withDensity` (inventory §D-1a).
+
+`@audit:suspect(differential-entropy-plan)` -/
 theorem klDiv_pi_marginals_toReal_eq_sum_sub_joint
     {n : ℕ} {μ : Measure (Fin n → ℝ)} [IsProbabilityMeasure μ]
     [∀ i, IsProbabilityMeasure (μ.map (fun z => z i))]
@@ -268,7 +274,9 @@ theorem klDiv_pi_marginals_toReal_eq_sum_sub_joint
   ring
 
 /-- **★ `n`-variable differential-entropy subadditivity** `h(Yⁿ) ≤ ∑ᵢ h(Yᵢ)`
-(the parallel-Gaussian consumer form). `KL ≥ 0` + the bridge, by `linarith`. -/
+(the parallel-Gaussian consumer form). `KL ≥ 0` + the bridge, by `linarith`.
+
+`@audit:suspect(differential-entropy-plan)` -/
 theorem jointDifferentialEntropyPi_le_sum
     {n : ℕ} {μ : Measure (Fin n → ℝ)} [IsProbabilityMeasure μ]
     [∀ i, IsProbabilityMeasure (μ.map (fun z => z i))]

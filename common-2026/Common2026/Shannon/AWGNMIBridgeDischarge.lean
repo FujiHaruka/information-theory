@@ -128,7 +128,9 @@ sphere-shell volume (typicality), the density-level continuous MI chain rule
 from Mathlib. What IS genuinely closed: the output-Gaussian fact, reduced to the
 smaller bind/conv bridge primitive `IsAwgnBindEqConv` (itself discharged in
 `AWGNBindConvBody.lean`), and the conditional-entropy primitive (dispatched by the
-underlying `awgn_theorem_F2_discharged`). -/
+underlying `awgn_theorem_F2_discharged`).
+
+`@audit:suspect(awgn-mi-decomp-plan)` -/
 theorem awgn_theorem_of_typicality_converse_bindconv
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_typicality : IsAwgnTypicalityHypothesis P N (isAwgnChannelMeasurable N))
@@ -154,7 +156,9 @@ MI-decomp/bddAbove/max-entropy taken as hypotheses.**
 max-entropy bound (`h_max_ent`) remain OPEN — taken as hypotheses. The genuine
 max-entropy / continuous MI chain rule machinery is absent from Mathlib. Only the
 output-Gaussian fact is closed (reduced to the bind/conv bridge primitive
-`IsAwgnBindEqConv`). -/
+`IsAwgnBindEqConv`).
+
+`@audit:suspect(awgn-mi-decomp-plan)` -/
 theorem awgn_capacity_closed_form_of_maxent_bindconv
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_bridge : IsAwgnBindEqConv P N (isAwgnChannelMeasurable N))

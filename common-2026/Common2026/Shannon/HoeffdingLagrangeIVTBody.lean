@@ -197,7 +197,9 @@ def IsHoeffdingTiltMinimal (P₁ P₂ : α → ℝ) (alpha lam : ℝ) : Prop :=
 
 /-- **Bridge (minimal ⇒ realises)**: when the tilt at `lam` lies in `K(α)` and
 minimises `klDivPmf · P₂` on `K(α)`, it realises the infimum
-`hoeffdingE2 P₁ P₂ alpha`. Discharged via the `sInf` characterisation. -/
+`hoeffdingE2 P₁ P₂ alpha`. Discharged via the `sInf` characterisation.
+
+`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
 theorem isHoeffdingTiltMinimal_realises
     (P₁ P₂ : α → ℝ) (hP₂_pos : ∀ a, 0 < P₂ a)
     {alpha lam : ℝ}
@@ -232,7 +234,9 @@ theorem isHoeffdingTiltMinimal_realises
 /-- **Assemble Lagrange hypothesis**: from an IVT constraint-match (`mem`,
 `klDivPmf tilt P₁ = alpha`) and the minimality primitive, build a full
 `IsHoeffdingLagrangeHyp`. The `mem` half is constructive; only minimality is
-carried. -/
+carried.
+
+`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
 theorem isHoeffdingLagrangeHyp_of_minimal
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     {alpha lam : ℝ}
@@ -248,7 +252,9 @@ theorem isHoeffdingLagrangeHyp_of_minimal
 /-- **Existence form**: IVT supplies a `lam ∈ [0,1]` matching the constraint;
 together with the minimality primitive at that `lam`, a full
 `IsHoeffdingLagrangeHyp` exists. The minimality hypothesis is quantified over
-the (otherwise unknown) IVT witness. -/
+the (otherwise unknown) IVT witness.
+
+`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
 theorem exists_isHoeffdingLagrangeHyp_of_minimal
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
@@ -270,7 +276,9 @@ theorem exists_isHoeffdingLagrangeHyp_of_minimal
 /-- **Interior minimizer with constructive `mem`**: from an IVT constraint-match
 and the minimality primitive, the tilt is a wave7 `IsHoeffdingInteriorMinimizer`.
 Re-publishes `isHoeffdingInteriorMinimizer_of_lagrange` with `mem` now supplied
-by IVT rather than assumed. -/
+by IVT rather than assumed.
+
+`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
 theorem isHoeffdingInteriorMinimizer_of_ivt
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     {alpha lam : ℝ}

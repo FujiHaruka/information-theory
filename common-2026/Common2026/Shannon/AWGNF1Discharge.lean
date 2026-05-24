@@ -96,7 +96,9 @@ theorem isAwgnChannelMeasurable (N : ℝ≥0) : IsAwgnChannelMeasurable N := by
 再 publish。signature から `h_meas` が消える。
 
 残りの撤退ライン hypothesis (F-2 MI bridge / F-3 converse / F-4… これは元の F-1
-typicality) はそのまま pass-through。 -/
+typicality) はそのまま pass-through。
+
+`@audit:suspect(awgn-f1-discharge-moonshot-plan)` -/
 theorem awgn_theorem_F1_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_typicality : IsAwgnTypicalityHypothesis P N (isAwgnChannelMeasurable N))
@@ -122,7 +124,9 @@ theorem awgn_theorem_F1_discharged
 
 親 corollary `awgn_capacity_closed_form` の `h_meas` を `isAwgnChannelMeasurable N` で
 埋めて再 publish。残りの F-2 系 hypothesis (`h_bridge_gauss` / `h_bdd` / `h_max_ent`)
-はそのまま。 -/
+はそのまま。
+
+`@audit:suspect(awgn-f1-discharge-moonshot-plan)` -/
 theorem awgn_capacity_closed_form_F1_discharged
     (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_bridge_gauss :

@@ -128,7 +128,9 @@ The heat-flow-density side of the de Bruijn combinator
 (`deBruijn_identity_v2_of_heat_subhyp`) is **fully discharged**: positivity,
 measurability, and the time derivative are all supplied by proven lemmas (the
 spatial second derivative is likewise internally proven, see
-`heatKernel_heat_equation`). No spatial/time derivative hypothesis remains. -/
+`heatKernel_heat_equation`). No spatial/time derivative hypothesis remains.
+
+`@audit:suspect(fisher-info-gaussian-discharge-moonshot-plan)` -/
 theorem deBruijn_gaussian_heatFlow_witness
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z)

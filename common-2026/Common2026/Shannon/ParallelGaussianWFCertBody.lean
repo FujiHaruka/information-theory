@@ -324,7 +324,9 @@ the convex-duality multiplier) is also still taken as a hypothesis (KKT-uniquene
 wall). Genuinely closed here: the certificate *body* (Lagrange reduction from a
 given bundle, via genuine log-concavity), plus upstream L-WF1 and L-PG0. The
 genuine L-PG1 reduction needs chain rule + per-coord AWGN capacity (continuous
-AEP / sphere-shell volume) machinery absent from Mathlib. -/
+AEP / sphere-shell volume) machinery absent from Mathlib.
+
+`@audit:suspect(parallel-gaussian-moonshot-plan)` -/
 theorem parallel_gaussian_capacity_formula_WFcert_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)

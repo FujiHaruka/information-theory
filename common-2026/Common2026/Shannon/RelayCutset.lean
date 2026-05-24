@@ -419,7 +419,9 @@ real Fano + chain + clean-up `Prop`s:
   Fano residual into the corner `ε`.
 
 Body is the genuine divide-by-`n` arithmetic of `relay_cut_rate_le_of_fano`:
-no part of the conclusion `R ≤ Ib + ε` is taken as a hypothesis. -/
+no part of the conclusion `R ≤ Ib + ε` is taken as a hypothesis.
+
+`@audit:suspect(relay-cutset-moonshot-plan)` -/
 theorem relay_broadcast_cut
     {M n : ℕ} (hn : 0 < n)
     (_c : RelayCode M n α α₁ β β₁)
@@ -457,7 +459,9 @@ Fano + chain + clean-up `Prop`s:
 * `h_cleanup : (1 + Pe · log M) / n ≤ ε` — clean-up estimate.
 
 Body is the genuine divide-by-`n` arithmetic of `relay_cut_rate_le_of_fano`:
-no part of the conclusion `R ≤ Im + ε` is taken as a hypothesis. -/
+no part of the conclusion `R ≤ Im + ε` is taken as a hypothesis.
+
+`@audit:suspect(relay-cutset-moonshot-plan)` -/
 theorem relay_mac_cut
     {M n : ℕ} (hn : 0 < n)
     (_c : RelayCode M n α α₁ β β₁)
@@ -526,7 +530,9 @@ The body is the genuine divide-by-`n` derivation (`relay_cut_rate_le_of_fano`
 **produces** the cut-set bound, mirroring `mac_capacity_region_outer_bound`
 / `bc_capacity_region_outer_bound` / the SlepianWolf converse recipe. The
 joint-input maximisation (L-RC4) remains scope-out; the statement consumes
-only scalar values. -/
+only scalar values.
+
+`@audit:suspect(relay-cutset-moonshot-plan)` -/
 theorem relay_cutset_outer_bound
     {M n : ℕ} (hn : 0 < n)
     (_c : RelayCode M n α α₁ β β₁)

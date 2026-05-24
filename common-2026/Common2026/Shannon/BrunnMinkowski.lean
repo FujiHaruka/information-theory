@@ -203,7 +203,9 @@ theorem brunn_minkowski_entropy_inequality
 /-! ## §D — Cover-Thomas 露出形 + 凸体 specialization -/
 
 /-- **Brunn-Minkowski in `Real.exp ((2/n) · ...)` form** (Cover-Thomas
-Theorem 17.9.2 露出形). -/
+Theorem 17.9.2 露出形).
+
+`@audit:suspect(brunn-minkowski-moonshot-plan)` -/
 theorem brunn_minkowski_entropy_inequality_exp_form
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -239,7 +241,9 @@ Brunn-Minkowski** (= **L-BM1'**, sharper sqrt 版) を別 hypothesis として
 * `hA_unif`, `hB_unif`, `hAB_unif` (L-BM2): uniform の entropy = log vol
   hypothesis (3 本: `Uniform A`, `Uniform B`, `Uniform (A+B)`)
 * `_h_sum_meas` (L-BM3): Minkowski sum の可測性 hypothesis (signature
-  露出のみ) -/
+  露出のみ)
+
+`@audit:suspect(brunn-minkowski-moonshot-plan)` -/
 theorem brunn_minkowski_convex_body
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -283,7 +287,9 @@ Brunn-Minkowski を chain することで
 
 撤退ラインは 2-arg 形を 2 回適用するための 2 つの L-BM1 hypothesis を取る
 形に外出し (X+Y vs Z のペアで 1 回、X vs Y のペアで 1 回)。EPI
-`entropy_power_inequality_three_arg` と同パターン。 -/
+`entropy_power_inequality_three_arg` と同パターン。
+
+`@audit:suspect(brunn-minkowski-moonshot-plan)` -/
 theorem brunn_minkowski_entropy_inequality_three_arg
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
