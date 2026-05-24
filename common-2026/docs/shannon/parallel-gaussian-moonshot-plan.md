@@ -1,13 +1,25 @@
 # Parallel Gaussian Channels + Water-filling ムーンショット計画 🌙 (T2-B)
 
-> 実態整合 (2026-05-20): PASS-THROUGH (headline) — `parallel_gaussian_capacity_formula`
-> (`Common2026/Shannon/ParallelGaussian.lean:263`) は body が `:= h_per_coord`、その
-> `IsParallelGaussianPerCoordReduction` (`ParallelGaussian.lean:230`) は **結論そのもの**
-> (`parallelGaussianCapacity ... = ∑ ...`) を Prop 化した hyp → `:= h_concl` retreat。0 sorry だが容量公式の実体は未証明。
-> L-WF1 (`IsWaterFillingKKT`) は honest non-trivial Prop で `exists_waterFillingKKT_of_pos`
-> (`ParallelGaussianKKT.lean:141`) が IVT で**実 discharge 済**。L-WF2/L-PG1 の "discharge"
-> (`ParallelGaussianKKT.lean:235,276`) は定義的同一 alias/antisymmetry で実体なし。
-> L-PG0 kernel measurability は `ParallelGaussianL_PG0Discharge.lean:98` で完全 discharge 済。
+> 実態整合 (2026-05-25, Wave 3-2 commit `0fe2ad4`): **L-PG1 は子 plan
+> `parallel-gaussian-l-pg1-discharge-plan.md` で genuine discharge 完了 (全 Phase 完遂、
+> 11 件 closure)**。新 headline `parallel_gaussian_capacity_formula_minimal`
+> (`Common2026/Shannon/ParallelGaussianPerCoordRegularity.lean`) は **hypothesis-minimal
+> 形** で publish 済 (residual honest piece = `h_multivar_decomp` 1 件、multivariate
+> channel↔RV MI decomposition、Mathlib 不在で別 plan 領域)。`parallel_gaussian_capacity_formula`
+> (`PerCoord.lean:367`) も chain-rule plan で genuine `le_antisymm` に着地済 (旧
+> `:= h_per_coord` pass-through は retracted)。L-WF1 (`IsWaterFillingKKT`) は
+> `exists_waterFillingKKT_of_pos` (`ParallelGaussianKKT.lean:141`) で IVT 経由 genuine
+> discharge 済。L-WF2 は `ParallelGaussianWFStationarityBody.lean:waterFillingCertificate_of_KKT`
+> + `isWaterFillingOptimal_of_certificate` で log-concavity + Lagrange certificate 経由
+> genuine discharge 済。L-PG0 kernel measurability は `ParallelGaussianL_PG0Discharge.lean:98`
+> で完全 discharge 済。legacy 6 wrappers (`KKT.lean` 4 件 + `WFCertBody.lean` 1 件 +
+> `WFStationarityBody.lean` 1 件) は `@audit:superseded-by(parallel-gaussian-l-pg1-discharge)`
+> へ移行 (本体保持、backward-compatibility)。
+>
+> 旧記述 (2026-05-20、PASS-THROUGH 期): `parallel_gaussian_capacity_formula` body が
+> `:= h_per_coord`、`IsParallelGaussianPerCoordReduction` が結論そのものを Prop 化した hyp、
+> L-WF2/L-PG1 "discharge" は定義的同一 alias/antisymmetry。**chain-rule plan + 本 plan の
+> L-PG1 discharge で全て解消済 (履歴記録)**。
 
 <!--
 雛形メモ (moonshot-plan-template.md より):
@@ -639,9 +651,14 @@ proof-log を最終に append)。
   (sup-sandwich + antisymmetry scaffolding、80% 執行済 = `ParallelGaussianPerCoord.lean`
   で `parallel_gaussian_capacity_formula` を genuine `le_antisymm` 着地、honest residual
   は `IsParallelGaussianPerCoordRegularity` 3 field に集約)。
-- **L-PG1 closure 後継 (regularity bundle discharge + legacy 6 wrappers の supersede) →**
+- **L-PG1 closure 後継 (regularity bundle discharge + legacy 6 wrappers の supersede) → ✅ 完了**:
   [`parallel-gaussian-l-pg1-discharge-plan.md`](parallel-gaussian-l-pg1-discharge-plan.md)
-  (2026-05-24 起草、新規 `ParallelGaussianPerCoordRegularity.lean` で 3 field を honest
-  pieces のみから constructor 化 + hypothesis-minimal headline 再 publish、Phase 5 で
-  `KKT.lean` / `WFCertBody.lean` / `WFStationarityBody.lean` の 6 件 audit タグを
-  `@audit:superseded-by(parallel-gaussian-l-pg1-discharge)` に移行)。
+  (2026-05-24 起草、2026-05-25 commit `0fe2ad4` で全 Phase genuine 着地、11 件 closure)。
+  新規 `ParallelGaussianPerCoordRegularity.lean` で 3 field を honest pieces のみから
+  constructor 化 (`isParallelGaussianPerCoordRegularity_of_pieces`) + hypothesis-minimal
+  headline (`parallel_gaussian_capacity_formula_minimal`) 再 publish 済。
+  `KKT.lean` 4 件 / `WFCertBody.lean` 1 件 / `WFStationarityBody.lean` 1 件の audit タグは
+  `@audit:superseded-by(parallel-gaussian-l-pg1-discharge)` に移行済 (本体保持)。
+  PerCoord.lean 5 件 (genuine residual) は `@audit:closed-by-successor(parallel-gaussian-l-pg1-discharge)`
+  に書換済。residual honest piece = `h_multivar_decomp` 1 件 (multivariate channel↔RV MI
+  decomposition、Mathlib 不在、別 plan 領域)。
