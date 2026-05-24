@@ -1,10 +1,15 @@
 # EPI de Bruijn integration — discharge plan
 
-> **Status**: 未着手 (Phase 設計済、2026-05-24 Wave 2 planner 起草)。本 plan は実装未着手だが
-> Phase A–V の設計レベル shape が確定済。
+> **Status**: Tier 0 + Tier 1 (Gaussian-only) 着地 (2026-05-25 Wave 3 second batch,
+> commit `0fe2ad4`)。Phase A inventory + Phase B/C の Gaussian 枝が landing 済、Phase D
+> (`IsStamToEPIBridgeHyp` 入口) + 一般 `X` への拡張は未着手。**同 session で upstream
+> defect 3 件発見** → §「Upstream defects (2026-05-25)」参照。Tier 2 着手は defect
+> 修正完了後に restart。
 > **Created**: 2026-05-24 (Wave 1.5 item #8、`epi-moonshot-plan` 76 件 slug 分割)。
 > **Parent (history)**: [`epi-moonshot-plan.md`](./epi-moonshot-plan.md) (PASS-THROUGH publish 済、
 > 撤退ライン L-EPI2 = de Bruijn integration の genuine discharge を本 sub-plan が担当)。
+> **Mathlib inventory**: [`epi-debruijn-integration-mathlib-inventory.md`](./epi-debruijn-integration-mathlib-inventory.md)
+> (Wave 3 first batch 起草、Phase A 在庫 ~294 行、Phase B-C 自作必須範囲明示)。
 
 ## Position
 
@@ -165,13 +170,21 @@ Fisher information の半分の積分。これを `T → ∞` で取ることで
 
 ## 進捗
 
-- [ ] Phase A — heat-flow density + IBP inventory 📋
-- [ ] Phase B — time-derivative of entropy (V2 deBruijn family-level lift) 📋
-- [ ] Phase C — integration over `(0, T)` → `(0, ∞)` 📋
-- [ ] Phase D — reduction to L-EPI3 form 📋
-- [ ] Phase V — verify (`lake env lean ...`) + Common2026.lean 編入 📋
+- [x] Phase A — heat-flow density + IBP inventory ✅ (Wave 3 first batch, inventory file `epi-debruijn-integration-mathlib-inventory.md` 起草、~294 行)
+- [x] Phase B — time-derivative of entropy (V2 deBruijn family-level lift) ✅ Gaussian 限定 (Wave 3 second batch, commit `0fe2ad4`、`EPIL3Integration.lean` +467 行) — 一般 `X` 拡張は load-bearing hypothesis `IsHeatFlowFamilyHyp` (`@audit:staged(epi-heat-flow-family-regularity)`, `EPIL3Integration.lean:572`) 経由で外出し
+- [x] Phase C — integration over `(0, T)` ✅ Gaussian 限定 bounded-T (Wave 3 second batch); `(0, T) → (0, ∞)` tail lift は load-bearing hypothesis `IsDeBruijnTailHyp` (`@audit:staged(epi-debruijn-tail)` + `@audit:defect(degenerate)`, `EPIL3Integration.lean:589`) 経由で外出し、**defect 修正後 restart 必要** (§「Upstream defects」)
+- [ ] Phase D — reduction to L-EPI3 form 📋 (defect 修正完了後に着手)
+- [ ] Phase V — verify (`lake env lean ...`) + Common2026.lean 編入 🚧 (`Common2026.lean` 編入は完了、14 件 `@audit:suspect` 降格は Phase D 完了待ち)
 
 proof-log: yes (各 Phase 完了時に `docs/shannon/proof-log-epi-debruijn-integration-phase-*.md` を残す)
+
+### Tier 0/1 着地サマリ (2026-05-25 Wave 3 second batch, commit `0fe2ad4`)
+
+- **Tier 0** (V2 sub-predicate wrap + de Bruijn identity の family-level lift): 達成
+- **Tier 1** (bounded `T` integration identity, Gaussian 限定): 達成
+- **Tier 2** (unbounded `(0, ∞)` + L-EPI3 form 出口、14 件全 closure): 未達 (defect 修正後 restart)
+- **新規 staged predicate 2 件**: `IsHeatFlowFamilyHyp` / `IsDeBruijnTailHyp`
+  - 後者は同 session 独立 audit で `@audit:defect(degenerate)` 認定、修正方針確定済 → Wave 3 third batch (Agent A2) 対応中
 
 ---
 
@@ -450,6 +463,100 @@ integration 部の出口 (`IsDeBruijnIntegrationHyp` を genuine 化 → `IsStam
 
 ---
 
+## Upstream defects discovered 2026-05-25 (Wave 3 second batch)
+
+実装 session (commit `0fe2ad4`) と直後の独立 audit で、本 plan の核心 hypothesis 3 件が
+**predicate signature レベルで偽** (degenerate witness で trivially 満たされる) と判明。
+すべて `@audit:defect(false-statement)` / `@audit:defect(degenerate)` 付与済、修正は
+Wave 3 third batch で並行進行中。Phase B/C の Gaussian 着地は影響を受けないが、
+**Tier 2 (一般 `X` への拡張) は本 defect 修正完了が前提**。
+
+### Defect #1 — `IsDeBruijnIntegrationHyp` (Phase C の核心 predicate)
+
+- **File:line**: `Common2026/Shannon/EPIStamDischarge.lean:177`
+- **タグ**: `@audit:defect(false-statement)` `@audit:suspect(epi-debruijn-integration-plan)`
+- **旧 signature** (要約):
+  ```
+  ∀ (h_X h_target : ℝ) (fPath : ℝ → ℝ → ℝ), ...
+  ```
+  (`∀ fPath` で任意の path family に対し integration identity を主張)
+- **退化機構**: `fisherInfoOfMeasureV2 _ f = fisherInfoOfDensity f` は labelling
+  arg `μ` を無視する **defeq** (`FisherInfoV2.lean:100`)。さらに `fisherInfoOfDensity 0 = 0`
+  なので `fPath := fun _ _ ↦ 0` を選ぶと RHS integrand が恒等 0、LHS も自明な
+  Gaussian saturation で trivially 成立 → predicate 偽。
+- **修正方針**: `∀ fPath` → `∃ fPath` (存在量化)。これにより heat-flow path が
+  存在することの主張に変わり、退化 path での trivial 成立を排除。
+- **修正主体**: Wave 3 third batch、Agent A1 (進行中)
+
+### Defect #2 — `IsDeBruijnRegularityHyp.integrable_deriv` (Phase B の出力)
+
+- **File:line**: `Common2026/Shannon/EPIStamDischarge.lean:143`
+- **タグ**: `@audit:defect(false-statement)` `@audit:suspect(epi-debruijn-integration-plan)`
+- **旧 field**:
+  ```
+  Integrable f' (volume.restrict (Set.Ioi 0))
+  ```
+- **退化機構**: Gaussian でも heat-flow Fisher info derivative は `f'(t) = 1/(2(v+t))`
+  形を持ち、これを `Set.Ioi 0` (unbounded) で integrate すると logarithmically 発散 →
+  `HasFiniteIntegral` 条件が **Gaussian でも満たされない**。すなわち predicate が要求する
+  field が「Gaussian も含めて誰も供給できない」状態、形式上は偽でなくとも witness 不在で
+  load-bearing として無効。
+- **修正方針**: `IntervalIntegrable f' volume 0 T` (bounded-T window)。Phase C bounded-T
+  FTC と整合し、Gaussian で実際に充足可能になる。
+- **修正主体**: Wave 3 third batch、Agent A1 (進行中)
+
+### Defect #3 — `IsDeBruijnTailHyp` (Phase C-5 honest hypothesis)
+
+- **File:line**: `Common2026/Shannon/EPIL3Integration.lean:589`
+- **タグ**: `@audit:staged(epi-debruijn-tail)` `@audit:defect(degenerate)`
+- **退化機構** (独立 audit 2026-05-25 認定): 旧 field 構成では
+  `h_inf := h_X` + `fPath_tail := fun _ _ ↦ 0` で trivially 充足。LHS は `0`、
+  RHS は `fisherInfoOfDensity 0 = 0` (`FisherInfoV2.lean:100`) により `0` となるため
+  `tail_eq` が自明成立 → load-bearing として無効。
+- **修正方針**: `Filter.Tendsto (fun T => h(X+√T·Z)) atTop (𝓝 h_inf)` field を追加。
+  これにより `h_inf` が path の真の極限であることを predicate レベルで強制し、
+  退化 (`h_X` 流用) を排除。
+- **修正主体**: Wave 3 third batch、Agent A2 (進行中)
+
+### 共通機構 — defect 根源
+
+3 件すべてが **`fisherInfoOfDensity 0 = 0`** (`FisherInfoV2.lean:100`) を退化機構として
+利用している。**同 session 内で 2 件独立 defect (#1 と #3) がこの 1 機構から生まれた**
+→ 設計レベルの脆弱性。Phase D / Tier 2 restart 時の新規 predicate 設計では下記
+checklist を必ず適用する。
+
+---
+
+## Defect prevention checklist (本 plan 専用)
+
+V2 Fisher info 経路を消費する predicate を本 plan で **新規導入** / **signature
+更新** する際、以下を必ず手元で検算してから commit:
+
+1. **`fisherInfoOfDensity 0 = 0` 退化 instance 検算**
+   - 新規 predicate の RHS / integrand に `fisherInfoOfMeasureV2 _ f` または
+     `fisherInfoOfDensity f` が出現する場合、`f := 0` (恒等 0 density) と退化 path
+     (`fPath := fun _ _ ↦ 0` 等) を代入して predicate が trivially 成立しないか
+     紙の上で確認。trivially 成立する場合は predicate 偽 → signature 変更必須。
+2. **V2 API の defeq cosmetic illusion 警告**
+   - `fisherInfoOfMeasureV2 μ f` は `μ` arg を **無視する defeq** (`FisherInfoV2.lean:100`、
+     EPI-DB agent Wave 3 second batch 気づき)。「measure-keyed」claim は cosmetic、
+     `μ` を変えても結論は変わらない。`∀ μ` 量化や `μ` 依存 RHS の設計は意味を持たないので
+     `μ` を arg から除くか、V2 ではなく measure-aware な別 API を選ぶ。
+3. **`∀ vs ∃` パリティ確認**
+   - integration identity 系 predicate で `∀ fPath, ... fPath ...` 形 (path-universal)
+     を採用する場合、退化 path で trivially 成立しないか必ず確認。退化耐性のない場合は
+     `∃ fPath` (path-existential) に切替。
+4. **限界条件の Mathlib 充足可能性チェック**
+   - `Integrable` / `HasFiniteIntegral` を field に置く場合、Gaussian instance でも
+     実際に充足できるか紙で確認 (defect #2 のように Gaussian でも発散するなら predicate
+     witness 不在で load-bearing 無効)。bounded-T 形に逃げる選択肢を常に検討。
+
+これら 4 項目を満たさない predicate を本 plan が commit した場合、
+**独立 audit subagent が catch する** が、設計段階で防げるなら防ぐ (audit は二段目、
+inline 防御が一段目、CLAUDE.md 「検証の誠実性」)。
+
+---
+
 ## 撤退ライン総覧 (honest 限定)
 
 | slug | Phase | 内容 | hypothesis 名 (例) | 解除条件 |
@@ -489,3 +596,27 @@ integration 部の出口 (`IsDeBruijnIntegrationHyp` を genuine 化 → `IsStam
    する設計と確定。これは「Stam → EPI bridge は de Bruijn integration で構成される」という
    Cover-Thomas Lemma 17.7.3 の Csiszár scaling argument のスコープ整合であり、slug 設計は維持
    (Phase D で `IsStamToEPIBridgeHyp` の de Bruijn 部入口を担当)。
+3. **2026-05-25 Wave 3 first batch — Phase A inventory 完了**: `mathlib-inventory` agent
+   起動で `epi-debruijn-integration-mathlib-inventory.md` (~294 行) 起草。Phase A の Done 条件
+   (`intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le` の verbatim signature、V2
+   sub-predicate decomp の本 plan re-export 経路、Mathlib `Convolution` API 在庫) を満たす。
+   Phase B/C 着手の前提整備完了。
+4. **2026-05-25 Wave 3 second batch — Tier 0/1 (Gaussian-only) landing** (commit `0fe2ad4`):
+   `EPIL3Integration.lean` に +467 行、Phase B (V2 deBruijn の family-level lift) + Phase C
+   (bounded-T FTC) の Gaussian 枝を着地。一般 `X` 拡張は load-bearing hypothesis
+   `IsHeatFlowFamilyHyp` (`@audit:staged(epi-heat-flow-family-regularity)`) で外出し、
+   `T → ∞` lift は honest hypothesis `IsDeBruijnTailHyp` (`@audit:staged(epi-debruijn-tail)`)
+   で外出し。**新規 staged predicate 2 件**は session 内に独立 audit subagent
+   (`honesty-auditor`) で検証 → 後者は `@audit:defect(degenerate)` 認定 (退化機構: `h_inf := h_X`
+   + `fPath_tail := 0` で trivial 成立)。
+5. **2026-05-25 同 session — upstream defect 3 件発見** (§「Upstream defects」詳細):
+   `IsDeBruijnIntegrationHyp` (Phase C 核心) + `IsDeBruijnRegularityHyp.integrable_deriv`
+   (Phase B 出力) + `IsDeBruijnTailHyp` (Phase C-5) の 3 件が **predicate signature レベルで
+   false / degenerate**。共通根源: `fisherInfoOfDensity 0 = 0` 退化機構。修正は Wave 3
+   third batch で並行進行 (Agent A1 = #1+#2、Agent A2 = #3)。**Phase D 着手 + Tier 2 restart
+   は本 defect 修正完了が前提** — 修正完了 commit を待って Phase B/C を真の体で再起動する。
+6. **2026-05-25 V2 API 設計上の注記**: EPI-DB agent が同 session で
+   `fisherInfoOfMeasureV2 _μ f = fisherInfoOfDensity f` (`μ` arg を無視する **defeq**) を
+   再確認。V2 API の「measure-keyed」claim は **cosmetic illusion**。将来 V2 → V3
+   refactor 候補として記録 (本 plan のスコープ外、`fisher-info-moonshot-plan` 側の判断
+   ログに転記推奨)。Defect prevention checklist 項目 2 で本 plan 内の予防策化済。
