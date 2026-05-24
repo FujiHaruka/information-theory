@@ -16,7 +16,7 @@
 - [x] Phase 0 — 既存コード読み込み + consumer body の P-flow 棚卸し ✅ (planner 起草段階で棚卸し済、影響範囲リストとして本 plan の §影響範囲リストに reflect)
 - [x] Phase 1 — predicate signature 確定 = **Option C bundled** ✅ (2026-05-24 user 判断、判断ログ #1)
 - [x] Phase 2 — skeleton write (predicate 改修 + consumer signature 改修、本体は sorry) ✅ (2026-05-24、判断ログ #2、独立 audit clean)
-- [ ] Phase 3 — consumer body の P' threading (本体 fill) 📋
+- [x] Phase 3 — consumer body の P' threading (本体 fill) ✅ (2026-05-24、判断ログ #3、`2ace40b` 1641 行 / 0 sorry / silent)
 - [ ] Phase 4 — verify + 独立 honesty audit + tag 降格 📋
 
 ## ゴール / Approach
@@ -234,3 +234,14 @@ bundle predicate の結論形は「3 sub-mass bound の ∧」で、consumer の
    - 独立 audit (general-purpose fresh subagent、CORE doctrine inline) verdict: 両 predicate とも `load_bearing_hyp / honest 🟢ʰ`、defect なし、name laundering なし。Mathlib gap (continuous SMB / n-d differentialEntropy / chi-square SLLN) loogle 裏取り済。タグ `@audit:suspect(awgn-power-constraint-realizable-pivot)` を `@audit:staged(...)` と併記 (lines 783, 860)
    - proof-log: `docs/proof-logs/proof-log-awgn-power-constraint-realizable-pivot-phase2.md`
    - **Phase 3 着手準備**: bundle destructure `obtain ⟨P', hP'_pos, hP'_lt_P, hR_lt_P'C, h_aep', h_rand', h_power'⟩ := h_feasible hR_pos hR` を body 先頭に置き、580 行 assembly の `gaussianCodebook M n P.toNNReal` → `gaussianCodebook M n P'.toNNReal` を 15+ 箇所 sed、`PowSet` の `n · P` constraint target は不変
+
+3. **2026-05-24 — Phase 3 body fill 完了** (本 session, lean-implementer worktree isolation)。
+   実装結果 (`Common2026/Shannon/AWGNAchievabilityDischarge.lean` 1641 行 / 0 sorry / silent, commit `2ace40b`):
+   - 旧 body (`4d7e67e^:892-1483`) を git history から抽出、bundle 形に 4 変換を施して復元: (a) `obtain ⟨P', hP'_pos, hP'_lt_P, hR_lt_P'C, h_aep', h_rand', h_power'⟩ := h_feasible hR_pos hR` を `classical` 直後に挿入、(b) `set C := (1/2) log(1 + P/N)` → `P'` 側、(c) hyp 名 `h_aep` / `h_rand` / `h_power` → `h_*'`、(d) `gaussianCodebook M n P.toNNReal` → `P'.toNNReal` 14 箇所 + `awgn_exists_codebook_le_avg (σsq := P.toNNReal)` 呼出 1 箇所 = 計 15 sed
+   - `PowSet := {c | ∀ m, ∑(c m i)² ≤ n · P}` の `n · P` constraint target、`awgn_extract_AwgnCode (P := P)` 呼出、`AwgnCode M_target n P` 型はすべて P 不変 (codebook 生成側のみ P' に切替、SLLN slack `P − P'` が constraint mass bound に乗る形)
+   - **計画外の派生 (1 turn)**: `IsAwgnPowerConstraintHonest P' P N` (`:784`) の rate-bound 行 (`:786`) が `R < (1/2) log(1 + P_target/N)` (= P 側 capacity) を要求するが、bundle destructure で得られる `hR_lt_P'C` (= `hR_lt_C` after `set C`) は P' 側 capacity。`P' ≤ P` (bundle 自身が供給) + `Real.log_le_log` (もしくは `Real.log_le_log_iff`) で `(1/2) log(1+P'/N) ≤ (1/2) log(1+P/N)` を派生 → `hR''_lt_PC := lt_of_lt_of_le hR''_lt_C h_log_le` を作って `h_power' hε_pow_pos hR''_pos hR''_lt_PC` に渡す 20 行の追加。計画書 §Phase 3 詳細は mechanical 4 変換のみ列挙、本派生は LSP 第 1 戻りで即発覚
+   - **honest plumbing 判定**: 上記 20 行は新規 staged predicate ではなく既存 `hP'_lt_P` (bundle) + `Real.log_le_log` (Mathlib) からの bridge。独立 honesty audit 起動条件 (新規 staged / 既存 staged signature 変更) いずれにも非該当
+   - **proof-log 主要観察**: (1) bundle predicate は body 復元時の sed-friendliness にも効く (3 hyp 名 → 3 hyp' 名の 1 文字置換のみ) — Cover-Thomas 9.x 系の他の load-bearing hyp 候補に応用可、(2) 「P_cb / P_target 分離」型 predicate は consumer 側で sub-bound 毎の rate-bound 引数の P_cb 側 / P_target 側を追跡する必要、pivot plan に「sub-bound 引数表」を 1 枚追加すると本件のような型 mismatch を事前検出可能
+   - proof-log: `docs/proof-logs/proof-log-awgn-power-constraint-realizable-pivot-phase3.md`
+   - **soft caveat 再掲**: `P' ≤ P` (non-strict) のため `P' = P` 退化を許容、その場合 `IsAwgnPowerConstraintHonest P P N` が v1 unsatisfiable に戻る。本 Phase 3 body 自体は `P' < P` を必要としない (`P'.toNNReal` variance + `n · P` target は `P' = P` でも形式的に通る) ため defect ではないが、bundle の discharger 側 (Phase 4 以降の genuine fill or Mathlib PR) で `P' < P` を必ず選ばせる責務が残る
+   - **Phase 4 着手準備**: 0 sorry 達成。Phase 4 は (i) 独立 `honesty-auditor` subagent 起動 (bundle predicate `IsAwgnRandomCodingFeasible` + `IsAwgnPowerConstraintHonest` を 4 条件 verify、Phase 2 で 1 度 audit 済だが Phase 3 body fill 後に再 audit すべきか judge)、(ii) 親 plan `awgn-achievability-typicality-plan.md` 判断ログ #7 append、(iii) audit-tag `@audit:suspect(awgn-power-constraint-realizable-pivot)` の closure (Phase 2 で並記したが Phase 3 完了で pivot 完成のため `suspect` → 解除)
