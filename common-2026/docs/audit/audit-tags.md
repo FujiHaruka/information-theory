@@ -20,6 +20,8 @@ honesty audit の状態 (defect / suspect / staged / defer) を **コード内 d
 | `@audit:defer(PLAN)` | 該当 def/theorem の discharge を別 plan に切り出した | PLAN filename stem (no `.md`) | `@audit:defer(awgn-achievability-typicality)` |
 | `@audit:staged(WALL)` | Mathlib 壁で intentionally staged。長期残課題 | WALL ∈ `{stam, csiszar, n-dim-gaussian-aep, sphere-volume, fourier, ...}` (extensible) | `@audit:staged(n-dim-gaussian-aep)` |
 | `@audit:retract-candidate(REASON)` | 削除候補。circular passthrough で honest 経路が他にあるケース等 | REASON 短文 (kebab-case) | `@audit:retract-candidate(circular-passthrough)` |
+| `@audit:closed-by-successor(SLUG)` | 当該 plan は計画通り完成、ただし load-bearing hyp の discharge を**後続 plan** に明示的に切り出して委譲している。`suspect` の「要再検査」ニュアンスは外れたが、後続 plan が closure する前提で残っている honest hyp 持ち wrapper | 後続 plan filename stem | `@audit:closed-by-successor(chernoff-converse-sanov-discharge)` |
+| `@audit:superseded-by(SLUG)` | 当該 declaration は**後続版に置き換え済**で残置されている (`_unconditional` 版が併存している `_of_condEntDiff` conditional 版等)。retract-candidate に近いが、history record / API 後方互換のため削除しない判断付き | 後続 declaration / plan filename stem | `@audit:superseded-by(wyner-ziv-convexity-unconditional)` |
 
 ### 複数タグの併用
 
@@ -37,6 +39,14 @@ def IsAwgnTypicalityHypothesis ...
 ### 解除
 
 状態が変わったら **タグ自体を編集する** (`defect(circular)` → `suspect(awgn-typicality)` 等)。書き換え忘れを防ぐため、タグは 1 declaration につき可能な限り 1 行にまとめて、`rg -A1` で前後文脈付きレビューしやすくする。
+
+### `suspect` と `closed-by-successor` / `superseded-by` の区別
+
+- **`suspect(<slug>)`**: 当該 declaration の honest hyp が plan の主たる discharge 対象である。plan が完了するまで「要再検査」状態。
+- **`closed-by-successor(<successor-slug>)`**: 当該 declaration が属する plan は完成 (plan body Status が DONE-HONEST-HYPS 等)。残存している load-bearing hyp の discharge は別の後続 plan に分離されており、本 declaration は計画通りの完成 wrapper。後続 plan の完成で hyp が hyp pass-through 経由で genuine 化される見込みあり。
+- **`superseded-by(<replacement>)`**: 後続版 (typically `_unconditional` 版) が既に存在している旧 declaration の残置。typically `_of_condEntDiff` 等の conditional 版が unconditional 版に置き換えられた後の history record。
+
+判定基準: 「**親 plan が DONE 表記済か否か**」 + 「**後続 plan / 後続 declaration を URL/slug で名指しできるか否か**」。両方 Yes なら `closed-by-successor` または `superseded-by`。片方でも No なら `suspect` のまま据え置き。
 
 ## 配置ルール
 
@@ -83,6 +93,12 @@ rg -nB1 "@audit:staged\(stam\)" Common2026/
 ```bash
 # AWGN typicality plan は何件を抱えるか
 rg "@audit:defer\(awgn-achievability-typicality\)" Common2026/
+
+# 後続 plan が closure 引き受ける declaration 件数
+rg "@audit:closed-by-successor\(chernoff-converse-sanov-discharge\)" Common2026/
+
+# 後続版に置き換え済の旧 declaration
+rg "@audit:superseded-by\(" Common2026/
 ```
 
 ## 運用ルール (発見時即時タグ付け)
