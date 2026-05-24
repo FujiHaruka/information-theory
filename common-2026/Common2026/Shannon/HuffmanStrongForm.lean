@@ -172,7 +172,7 @@ else huffmanLength Q x.val)`」という、Huffman 再帰を 2 carrier (`β` と
 (min 選択の tie 破り) を carrier 横断で対応付ける必要があり (judgement log #3),
 本 session では未完了の残タスク.
 
-`@audit:suspect(huffman-moonshot-plan)` -/
+`@audit:staged(huffman-aux-ident)` -/
 theorem huffmanLength_optimal_modulo_aux_ident
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]

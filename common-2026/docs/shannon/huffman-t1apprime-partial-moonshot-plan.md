@@ -13,6 +13,8 @@
 >
 > 実態整合 (2026-05-20): DONE-HONEST-HYPS (partial、scope 通り) — `Common2026/Shannon/HuffmanT1APPrimePartial.lean` (0 sorry) に plan 記載の補題群を publish 済: `swap_step_le_pos` `:47` / `_kraft` `:58` / `_expectedLength_le` `:69` / `_values` `:81`、`swap_step_le_self` `:106`、`swap_compose_self_eq` `:147`、`SwapNormalizationHypothesis_trivial_when_eq` `:172` (`ll a = ll b` の trivial case のみ — `l_norm := ll` で自己 discharge)。これらは plumbing 補題で、`SwapNormalizationHypothesis` の **非自明 case は discharge されていない** (plan scope-out 通り)。pass-through (`Prop := True`) 不在。本 plan の縮小 scope DoD は達成。
 
+> **2026-05-24 Wave 1.5-c (集約)**: 本 plan slug の suspect 19 件 (`HuffmanT1APPrimeBody.lean` 15 件 + `HuffmanT1APPrimePartial.lean` 4 件 — Section C / D / F / H / J / M + Wave 4-H/J/K/P の extractor / wrapper 群) は **plan scope を大幅に超えた publish** であり、Huffman 3-plan の **2 hypothesis 共有部分** を [`huffman-2hyp-vertical-reduction-plan.md`](./huffman-2hyp-vertical-reduction-plan.md) に集約済 (新 slug: 19 件 → `staged(huffman-2hyp)`)。本 plan は plumbing 補題 publish 完了の SoT として archive 化せず継続。詳細 → [`docs/audit/wave1-plan-sync-source-coding.md`](../audit/wave1-plan-sync-source-coding.md) §Recommendations 1+2。
+
 ## Goal (縮小)
 
 `Common2026/Shannon/HuffmanT1APPrimePartial.lean` を **新規 publish** (~150-300 行).

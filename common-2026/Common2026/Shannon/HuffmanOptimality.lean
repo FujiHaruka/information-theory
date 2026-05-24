@@ -775,7 +775,7 @@ explicit, allowing `Nat.strong_induction_on` on `n` with `generalizing α P l`.
 
 **Weak form**: 2 hypothesis (`h_swap` / `h_ident`) を hypothesis として外から受け取る.
 
-`@audit:suspect(huffman-optimality-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` `@audit:closed-by-successor(huffman-2hyp-vertical-reduction)` -/
 private theorem huffmanLength_optimal_aux_with_hypotheses (n : ℕ)
     (h_swap : SwapNormalizationHypothesis.{u})
     (h_ident : HuffmanMergedIdentificationHypothesis.{u})
@@ -1025,7 +1025,7 @@ Kraft-feasible 語長関数より expected length が小さい. **Weak form** �
 swap normalization と identification の 2 hypothesis を引数で受け取る. 完全な
 discharge は後継 seed `T1-A''` で予定.
 
-`@audit:suspect(huffman-optimality-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` `@audit:closed-by-successor(huffman-2hyp-vertical-reduction)` -/
 theorem huffmanLength_optimal_with_hypotheses
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]

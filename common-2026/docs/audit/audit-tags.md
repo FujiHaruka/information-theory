@@ -20,7 +20,7 @@ honesty audit の状態 (defect / suspect / staged / defer) を **コード内 d
 | `@audit:defer(PLAN)` | 該当 def/theorem の discharge を別 plan に切り出した | PLAN filename stem (no `.md`) | `@audit:defer(awgn-achievability-typicality)` |
 | `@audit:staged(WALL)` | Mathlib 壁で intentionally staged。長期残課題 | WALL ∈ `{stam, csiszar, n-dim-gaussian-aep, sphere-volume, fourier, ...}` (extensible) | `@audit:staged(n-dim-gaussian-aep)` |
 | `@audit:retract-candidate(REASON)` | 削除候補。circular passthrough で honest 経路が他にあるケース等 | REASON 短文 (kebab-case) | `@audit:retract-candidate(circular-passthrough)` |
-| `@audit:closed-by-successor(SLUG)` | 当該 plan は計画通り完成、ただし load-bearing hyp の discharge を**後続 plan** に明示的に切り出して委譲している。`suspect` の「要再検査」ニュアンスは外れたが、後続 plan が closure する前提で残っている honest hyp 持ち wrapper | 後続 plan filename stem | `@audit:closed-by-successor(chernoff-converse-sanov-discharge)` |
+| `@audit:closed-by-successor(SLUG)` | 当該 plan は計画通り完成、ただし load-bearing hyp の discharge を**後続 plan** に明示的に切り出して委譲している。`suspect` の「要再検査」ニュアンスは外れたが、後続 plan が closure する前提で残っている honest hyp 持ち wrapper。`staged(<predicate-slug>)` との併用可 (例: Huffman 2-hyp 連鎖) | 後続 plan filename stem | `@audit:closed-by-successor(chernoff-converse-sanov-discharge)` |
 | `@audit:superseded-by(SLUG)` | 当該 declaration は**後続版に置き換え済**で残置されている (`_unconditional` 版が併存している `_of_condEntDiff` conditional 版等)。retract-candidate に近いが、history record / API 後方互換のため削除しない判断付き | 後続 declaration / plan filename stem | `@audit:superseded-by(wyner-ziv-convexity-unconditional)` |
 
 ### 複数タグの併用

@@ -129,7 +129,7 @@ abbrev EqualizingPermHypothesis : Prop :=
 (`perm_length_pos` / `perm_length_kraft`), equalization と expected length は σ の性質
 からそのまま得られる。
 
-`@audit:suspect(huffman-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` -/
 theorem swapNormalizationHypothesis_of_equalizingPerm
     (h_eq : EqualizingPermHypothesis.{u}) :
     SwapNormalizationHypothesis.{u} := by
@@ -205,7 +205,7 @@ swap target `m` から `σ := Equiv.swap b m` を構成する。`swap_step_le` (
 `(ll ∘ σ) a = ll a = ll m = (ll ∘ σ) b` の等長化が従う。expected length 非増加の核を
 完全 discharge し, 残余を swap target の存在のみに縮約する。
 
-`@audit:suspect(huffman-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` -/
 theorem equalizingPerm_of_swapTarget
     (h_tgt : EqualizingSwapTargetHypothesis.{u}) :
     EqualizingPermHypothesis.{u} := by
@@ -235,7 +235,7 @@ theorem equalizingPerm_of_swapTarget
 /-- **swap target 経由 vertical reduction (alias)**: `EqualizingSwapTargetHypothesis` から
 直接 `SwapNormalizationHypothesis` を得る合成 form。
 
-`@audit:suspect(huffman-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` -/
 theorem swapNormalizationHypothesis_of_swapTarget
     (h_tgt : EqualizingSwapTargetHypothesis.{u}) :
     SwapNormalizationHypothesis.{u} :=
@@ -248,7 +248,7 @@ theorem swapNormalizationHypothesis_of_swapTarget
 normalization hypothesis を strictly-more-primitive な `EqualizingPermHypothesis` に
 置き換えて再公開。identification hypothesis は本 seed scope-out のため据え置き。
 
-`@audit:suspect(huffman-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` -/
 theorem huffmanLength_optimal_via_equalizing_perm
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]

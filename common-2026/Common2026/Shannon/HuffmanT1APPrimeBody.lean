@@ -154,7 +154,7 @@ omit [Nonempty α] in
 本 lemma は **hypothesis** として外から受け取ったもの (`h_ident`) から `x.val = a` の
 case の値を抽出する extractor.
 
-`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` -/
 theorem huffmanMergedIdentification_at_a
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -175,7 +175,7 @@ omit [Nonempty α] in
 /-- **identification hypothesis の point-wise extractor (`x.val ≠ a` case)**: `hsib`
 仮定の下で `x.val ≠ a` のとき `huffmanLength (mergedMeasure ...) x = huffmanLength P x.val`.
 
-`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` -/
 theorem huffmanMergedIdentification_at_other
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -197,7 +197,7 @@ omit [Nonempty α] in
 で 1 式に書いた形. `h_ident` の結論そのまま (alias) だが、後続 client が直接 `if` 形を
 受け取りたいときの reference.
 
-`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` -/
 theorem huffmanMergedIdentification_combined
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -221,7 +221,7 @@ huffmanLength Q b` から `huffmanLength (mergedMeasure ...) x` を `x.val = b` 
 そもそも domain `{y // y ≠ b}` で除外されているので、`x.val ∈ {a, c (≠ b)}` の case
 分類だけが残る. これを explicit に publish.
 
-`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` -/
 theorem huffmanMergedIdentification_dichotomy
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -277,7 +277,7 @@ theorem huffmanLength_sibling_eq_iff
 trivial_when_eq` 経由で `h_swap` を消費した形で `huffmanLength_optimal_with_hypotheses`
 を呼び出すパターン. 仮定で `ll a = ll b` (sibling at `(a, b)`) の場合の直接呼び出し形.
 
-`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` -/
 theorem huffmanLength_optimal_via_partial_swap_when_eq
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -294,7 +294,7 @@ theorem huffmanLength_optimal_via_partial_swap_when_eq
 `(a, b)` を explicit に指定し、`l a = l b` 確認後に主定理を呼べる形. ただし `l a = l b`
 は主定理 internal の swap normalization step で生成されるので external 仮定にはしない.
 
-`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` -/
 theorem huffmanLength_optimal_wrapper_explicit
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -375,7 +375,7 @@ omit [Nonempty α] [MeasurableSingletonClass α] in
 を抽出する form. tuple の全成分を `obtain` で取り出す client の boilerplate を 1 個に
 まとめた wrapper.
 
-`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` -/
 theorem SwapNormalizationHypothesis_apply_witness
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -397,7 +397,7 @@ theorem SwapNormalizationHypothesis_apply_witness
 
 /-- **witness positivity extractor**: hypothesis 結論の存在から positivity だけ取り出す.
 
-`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` -/
 theorem SwapNormalizationHypothesis_witness_pos
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -416,7 +416,7 @@ theorem SwapNormalizationHypothesis_witness_pos
 
 /-- **witness kraft extractor**: hypothesis 結論の存在から Kraft だけ取り出す.
 
-`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` -/
 theorem SwapNormalizationHypothesis_witness_kraft
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -436,7 +436,7 @@ theorem SwapNormalizationHypothesis_witness_kraft
 /-- **witness sibling equality extractor**: hypothesis 結論から `l_norm a = l_norm b` の
 sibling 等式だけ取り出す.
 
-`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` -/
 theorem SwapNormalizationHypothesis_witness_eq
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -456,7 +456,7 @@ theorem SwapNormalizationHypothesis_witness_eq
 /-- **witness expected length extractor**: hypothesis 結論から expectedLength `≤` だけ
 取り出す.
 
-`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` -/
 theorem SwapNormalizationHypothesis_witness_expL
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -521,21 +521,21 @@ abbrev HuffmanCombinedHypothesis : Prop :=
 
 /-- **combined hypothesis 投影 left**.
 
-`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` -/
 theorem huffmanCombinedHypothesis_swap
     (h : HuffmanCombinedHypothesis.{u}) :
     SwapNormalizationHypothesis.{u} := h.1
 
 /-- **combined hypothesis 投影 right**.
 
-`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` -/
 theorem huffmanCombinedHypothesis_ident
     (h : HuffmanCombinedHypothesis.{u}) :
     HuffmanMergedIdentificationHypothesis.{u} := h.2
 
 /-- **combined hypothesis から主定理を 1-arg で呼ぶ wrapper**.
 
-`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` -/
 theorem huffmanLength_optimal_with_combined
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -605,7 +605,7 @@ theorem swap_value_le_max
 1 引数で呼ぶ最も簡潔な form**. T1-A''' 後続 seed で H が定理として成立した瞬間に強形が
 得られる terminal step.
 
-`@audit:suspect(huffman-t1apprime-partial-moonshot-plan)` -/
+`@audit:staged(huffman-2hyp)` -/
 theorem huffmanLength_optimal_terminal
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
