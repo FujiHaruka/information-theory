@@ -82,6 +82,8 @@ Do **not** write a whole proof file in one shot. Instead:
 
 Trigger: user explicitly asks for parallel execution (「並列で」「N seed 並列」「並列実行」). Use `Agent` with `isolation: "worktree"` to launch independent seeds concurrently. Each agent prompt MUST include the boilerplate below — past sessions hit two operational failures without it: (a) disk full from per-worktree 5 GB Mathlib clones, (b) branch drift from agents creating `feat/...` branches and stealing HEAD.
 
+**Exception — planner / docs-only agents**: `lean-planner` / `mathlib-inventory` / 監査系 agent は `docs/<family>/*.md` への書込みのみで Lean compile しないため worktree 隔離は不要 (むしろ harness 側で worktree dir が不完全に作られ agent が main に直書きする failure mode が観察されている、2026-05-24 Wave 2)。docs-only 並列は `isolation` 省略 + brief で「触る file の所有権 (Agent N は file F のみ編集)」を明示するだけでよい。file 競合は brief 設計で防ぐ。実装系 (`lean-implementer`) のみ worktree 隔離 + 上記 boilerplate 必要。
+
 ### Standard agent prompt boilerplate
 
 ```
