@@ -285,7 +285,13 @@ lemma geomMean_eq_Z_pow_mul_prod_mediator
 hypothesis): for every `ε > 0`, eventually
 `exp(-n·ε) · Z(λ)^n ≤ 4 · bayesErrorMinPmf P₁ P₂ n`.
 
-`@audit:suspect(chernoff-converse-sanov-discharge-plan)` -/
+The load-bearing residual `IsChernoffBandMassToOne` is genuinely discharged in
+the successor file by `ChernoffBandMassDischarge.isChernoffBandMassToOne_of_interior_optimal`
+(Q-LLN at the first-order-optimal interior tilt), so the outermost regularity-only
+theorem `ChernoffBandMassDischarge.chernoff_converse_holds` consumes this lemma
+without leaking the band-mass hypothesis.
+
+`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
 lemma bayesErrorMinPmf_ge_exp_neg_mul_Z_pow
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
