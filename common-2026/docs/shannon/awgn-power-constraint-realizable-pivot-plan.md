@@ -17,7 +17,7 @@
 - [x] Phase 1 — predicate signature 確定 = **Option C bundled** ✅ (2026-05-24 user 判断、判断ログ #1)
 - [x] Phase 2 — skeleton write (predicate 改修 + consumer signature 改修、本体は sorry) ✅ (2026-05-24、判断ログ #2、独立 audit clean)
 - [x] Phase 3 — consumer body の P' threading (本体 fill) ✅ (2026-05-24、判断ログ #3、`2ace40b` 1641 行 / 0 sorry / silent)
-- [ ] Phase 4 — verify + 独立 honesty audit + tag 降格 📋
+- [x] Phase 4 — verify + 独立 honesty audit + tag 降格 ✅ (2026-05-24、判断ログ #4、`c02304c` `@audit:suspect(...)` 解除 + 親 plan 判断ログ #7 append、再 audit は Phase 2 で済 + Phase 3 が「既存 staged の継承使用」のため CLAUDE.md 起動条件非該当)
 
 ## ゴール / Approach
 
@@ -245,3 +245,12 @@ bundle predicate の結論形は「3 sub-mass bound の ∧」で、consumer の
    - proof-log: `docs/proof-logs/proof-log-awgn-power-constraint-realizable-pivot-phase3.md`
    - **soft caveat 再掲**: `P' ≤ P` (non-strict) のため `P' = P` 退化を許容、その場合 `IsAwgnPowerConstraintHonest P P N` が v1 unsatisfiable に戻る。本 Phase 3 body 自体は `P' < P` を必要としない (`P'.toNNReal` variance + `n · P` target は `P' = P` でも形式的に通る) ため defect ではないが、bundle の discharger 側 (Phase 4 以降の genuine fill or Mathlib PR) で `P' < P` を必ず選ばせる責務が残る
    - **Phase 4 着手準備**: 0 sorry 達成。Phase 4 は (i) 独立 `honesty-auditor` subagent 起動 (bundle predicate `IsAwgnRandomCodingFeasible` + `IsAwgnPowerConstraintHonest` を 4 条件 verify、Phase 2 で 1 度 audit 済だが Phase 3 body fill 後に再 audit すべきか judge)、(ii) 親 plan `awgn-achievability-typicality-plan.md` 判断ログ #7 append、(iii) audit-tag `@audit:suspect(awgn-power-constraint-realizable-pivot)` の closure (Phase 2 で並記したが Phase 3 完了で pivot 完成のため `suspect` → 解除)
+
+4. **2026-05-24 — Phase 4 closure 完了** (本 session, commit `c02304c`)。
+   実装結果:
+   - **`@audit:suspect(awgn-power-constraint-realizable-pivot)` 2 箇所 (`:783` / `:860`) 解除**。Phase 3 commit `2ace40b` で pivot が genuine に完成 (1641 行 / 0 sorry / silent) したため、`suspect` 並記の暫定タグを撤去、`@audit:staged(...)` 単独に降格
+   - **親 plan `awgn-achievability-typicality-plan.md` 判断ログ #7 append**: false-statement defect 発覚 → bundle pivot 採用 → Phase 2-3 実装 → 完了状態を 1 entry で総括、sibling plan へのリンク併記
+   - **独立 honesty audit 起動判断**: skip。CLAUDE.md `Independent honesty audit` の起動条件は「(1) 新規 staged predicate 1 件以上の commit / (2) 新規 residual 作成 / (3) 既存 staged signature 変更」の 3 つ。Phase 3 は「既存 staged の継承使用」(Phase 2 で導入済の 2 predicate を body 内で消費するだけ) で 3 条件いずれにも非該当。Phase 2 で 1 度 fresh subagent が CORE doctrine inline で audit 済 (bundle predicate 2 件とも `load_bearing_hyp / honest 🟢ʰ` verdict)、Phase 3 body fill は consumer 側の mechanical 復元 + 1 turn 派生 (`Real.log_le_log` bridge) のみで新規 staging を作っていないため、Phase 2 audit verdict が継承維持される。本 Phase 3 body の inline honesty check (orchestrator 自身): bundle 3 sub-bound (`h_aep'` / `h_rand'` / `h_power'`) はすべて非自明に消費される (`hN_aep` / `hN_rand` / `hN_pow` の N₀ extract → `max` で `N₀_max` 構成 → 各 bound を `n ≥ N₀_max` で同時 invoke)、circular / degenerate / laundering なし
+   - **`scripts/audit_db.ts` 整合確認**: 旧 audit-DB workflow は 2026-05-24 commit `e15db02` で `RETIRED`、code 内 `@audit:KIND(SLUG)` タグが唯一の SoT。本 Phase 4 では code タグ 2 件解除を直接 Edit、DB 操作は不要 (SoT-DB 整合は workflow 廃止により自動)
+   - **`Common2026.lean` import 増減なし**: pivot は 1 file 内 self-contained で完結、import 更新不要 (`grep "AWGNAchievabilityDischarge" Common2026.lean` で既存 1 行確認済)
+   - **Pivot plan 全体 closure**: 本 sibling plan `awgn-power-constraint-realizable-pivot-plan.md` は Phase 0-4 全完了、進捗ブロック全 `[x]` 化。親 plan の判断ログ #7 が本 pivot 結果を内包、以後親 plan 単独で AWGN F-1 plumbing の状態を追跡可能
