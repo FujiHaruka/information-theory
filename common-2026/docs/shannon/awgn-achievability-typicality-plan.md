@@ -713,10 +713,68 @@ Axis 3 inventory ([`awgn-achievability-typicality-mathlib-inventory-axis3-densit
 - `multivariateGaussian` の `PosSemidef` 要件 (Axis 3 隠れた前提) も T-2 採用で
   Phase B 内完結により回避
 
-### #4 (TBD) Phase A 完了時、`gaussianCodebook` 詳細
+### #4 (2026-05-24) Phase A + B-0 完了、`gaussianCodebook` + `IsContinuousAEPGaussian` 確定
 
-Phase A 実装 agent が採用 type 確定 + Mathlib lemma 名 (`iIndepFun_pi` /
-`measurePreserving_eval`) 確定後 append 予定。
+`Common2026/Shannon/AWGNAchievabilityDischarge.lean` (新規, ~270 行) を Phase A
+本体 + B-0 predicate 完成 + Phase C/D/E skeleton sorry で publish。
+
+**Phase A 採用 type (判断 #2 そのまま)**:
+
+```lean
+noncomputable def gaussianCodebook (M n : ℕ) (σsq : ℝ≥0) :
+    Measure (Fin M → Fin n → ℝ) :=
+  Measure.pi (fun _ : Fin M => Measure.pi (fun _ : Fin n => gaussianReal 0 σsq))
+```
+
+注: パラメータ名は MD 上の `σ²` を Lean 4 識別子規約に合わせて `σsq` に変更
+(`²` superscript は Lean 4 で identifier の一部として parse されない)。意味は同じ。
+
+**Phase A の Mathlib lemma 名 (両 trap 警告そのまま)**:
+
+- A-2 (`gaussianCodebook_isProbabilityMeasure`): `infer_instance` 1 行 — `Measure.pi.instIsProbabilityMeasure` + `instIsProbabilityMeasureGaussianReal` 自動推論
+- A-3 (`gaussianCodebook_codeword_law`): `MeasureTheory.measurePreserving_eval` (`Mathlib/MeasureTheory/Constructions/Pi.lean:407`、prob 専用版、trap 2 厳守) + `.map_eq`
+- A-4 (`gaussianCodebook_indepFun_codewords`): `iIndepFun_pi` (`Mathlib/Probability/Independence/Basic.lean:784`、trap 1 厳守) + `iIndepFun.indepFun`
+
+**Phase B-0 採用 predicate 形 (判断 #3 Option γ `klDiv` 形)**:
+
+```lean
+def IsContinuousAEPGaussian (P : ℝ) (N : ℝ≥0) : Prop :=
+  ∀ ⦃ε : ℝ⦄, 0 < ε → ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n →
+    ∃ A : Set ((Fin n → ℝ) × (Fin n → ℝ)),
+      MeasurableSet A
+      ∧ -- (i) joint codebook+noise prob ≥ 1 - ε  (map of prod via X + Z)
+        ...
+      ∧ -- (ii) typical-set volume bound (klDiv against Lebesgue)
+        ...
+      ∧ -- (iii) independent-pair upper bound (klDiv against indep product)
+        ...
+```
+
+honesty 4 条件全て遵守:
+
+- (a) 型 ≠ `IsAwgnTypicalityHypothesis` の結論 (`AwgnCode` / `errorProbAt` / `IsAwgnChannelMeasurable` を一切含まない、`P : ℝ` + `N : ℝ≥0` のみで quantify)
+- (b) docstring に "NOT load-bearing for the AWGN achievability core" + Mathlib gap (continuous SMB / n-d differentialEntropy) を明記
+- (c) Phase C-D の `awgn_avg_error_union_bound` (skeleton sorry) が `(h_aep : IsContinuousAEPGaussian P N)` を仮定して union bound + expurgation 本物 discharge 予定
+- (d) docstring 末尾に `@audit:staged(continuous-aep-gaussian)` タグ付与
+
+**検証**: `lake env lean Common2026/Shannon/AWGNAchievabilityDischarge.lean` clean、
+Phase A + B-0 本体 0 sorry、Phase C/D/E placeholder = 9 sorry warning (`jointTypicalDecoder`
+/ `jointTypicalDecoder_measurable` / `awgn_avg_error_union_bound` / `awgn_exists_codebook_le_avg`
+/ `awgn_expurgate_worst_half` / `awgn_extract_AwgnCode` / `isAwgnTypicalityHypothesis`
+/ `awgn_achievability_F1_discharged` / `awgn_theorem_F1F4_discharged`).
+
+**trap warning の実装影響**:
+
+- trap 2 (`pi_map_eval` vs `measurePreserving_eval`): A-3 で `measurePreserving_eval` 即採用、`pi_map_eval` の scalar `(∏ μ j univ) • μ i` 経路を回避 (1 行 fire)
+- trap 1 (`iIndepFun_pi` の ambient `[IsProbabilityMeasure]`): A-4 で `gaussianReal 0 σsq` の prob instance が自動推論で `Measure.pi.instIsProbabilityMeasure` を起動、ambient prerequisite を満たす形に維持
+- trap 4 (`ℝ≥0∞` 値 Pe): Phase A 本体には影響なし、Phase C-D 着手時に再確認
+- trap 3 (decoder = `Classical.choose` + `measurable_to_countable'`): Phase C 着手時に効く、A-0 skeleton では stub 配置のみ
+- trap 5 (`multivariateGaussian` 回避): predicate を `Measure.pi` + `Measure.prod` の組合せで構成、`PosSemidef` 経路に触れない
+
+**Phase C 着手前の新規 pivot 案 (任意検討)**:
+
+`IsContinuousAEPGaussian` の bound (ii) は現在「`klDiv (gaussianReal 0 (P+N) の pi) volume`」で typical-set volume を bound しているが、Phase C で実際に union bound に組み込む際に `Real.exp (n * (kl + ε))` 形が扱いにくい場合、bound (ii) を `differentialEntropy_gaussianReal` の closed form `(1/2) log (2πe(P+N))` に書き換える pivot が考えられる。
+Option β に逆戻りすると `@audit:suspect(differential-entropy-plan)` 負債継承になるが、bound (ii) 単独なら `differentialEntropy_gaussianReal` (1-d 単独補題) だけ touch するので Phase C-D 着手時に再評価可。
 
 ### #5 (TBD) Phase B 完了時、`IsContinuousAEPGaussian` predicate 確定形
 
