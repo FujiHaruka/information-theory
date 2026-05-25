@@ -48,8 +48,8 @@ orchestrator (main agent) が以下を観測したとき:
 ```
 Tier 1: @audit:ok                                          ← 最高 honest (proof done + audited)
 Tier 2: sorry + @residual(<class>:<slug>)                  ← 新規実装の唯一の正規撤退口
-Tier 3: @audit:defer / closed-by-successor / superseded-by / retract-candidate  ← honest bookkeeping
-Tier 4: legacy @audit:suspect / @audit:staged / 散文 🟢ʰ   ← 旧方針で許容、新方針で defect 寄り
+Tier 3: @audit:superseded-by / @audit:retract-candidate    ← honest bookkeeping (履歴 / 削除候補)
+Tier 4: legacy @audit:suspect / @audit:staged / @audit:defer / @audit:closed-by-successor / 散文 🟢ʰ ← 旧方針で許容、新方針で defect 寄り
 Tier 5: @audit:defect / 循環 := h / :True slot / 退化定義悪用 / name laundering ← 真の defect
 ```
 
@@ -115,7 +115,12 @@ legacy tier-4 declarations encountered are flagged for incidental migration.
 
 3. Regularity vs core checklist:
    - regularity (precondition, OK): measurability, integrability, finiteness (IsFiniteMeasure),
-     full-support, positivity (0<P), BddAbove, summability, KKT/optimality of auxiliary qty.
+     full-support, positivity (0<P), summability.
+   - context-dependent (=needs judgment, NOT auto-OK): BddAbove, KKT / optimality of
+     auxiliary quantity. These ARE regularity for an auxiliary qty, but ARE core when
+     the qty IS (part of) the theorem's claim (e.g., ParallelGaussian's BddAbove of
+     `mutualInfo` is a genuine wall, not precondition). Read the consumer: if the hyp is
+     consumed to extract the theorem's stated value, treat as core.
    - core (load-bearing, FORBIDDEN): an asserted achievability VALUE, a converse/upper bound,
      an asserted equality/inequality that IS (part of) the theorem's claim, anything the doc
      admits is "a wall / absent from Mathlib / the hard part / a hypothesis pass-through".
