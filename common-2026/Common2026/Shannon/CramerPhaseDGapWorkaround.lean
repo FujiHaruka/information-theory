@@ -177,16 +177,23 @@ theorem cramer_lower_phase_d_via_cylinder
   sorry
 
 /-- **Cramér tendsto form, Phase D via cylinder density**. The full `Tendsto`
-form. Transitive `sorry` via `cramer_tendsto_phaseC_partial_discharge`; the
-Legendre-attainment condition, the cylinder-form n-letter RN-deriv identification
-and the Carathéodory pass-through are all load-bearing gaps deferred to
-`cramer-moonshot-plan` (Phase D).
+form.
 
-`@residual(plan:cramer-moonshot-plan)` -/
+L-MIG-1: `hlam_opt` restored as regularity precondition (audit-2 verdict).
+Sandwich of `cramer_upper_legendre` (constructive) and
+`cramer_lower_phase_d_via_cylinder` (transitive sorry via
+`cramer_lower_phaseC_partial_discharge`, cylinder + Carathéodory Mathlib
+gaps deferred to `cramer-moonshot-plan` Phase D). -/
 theorem cramer_tendsto_phase_d_via_cylinder
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
     (a lam : ℝ) (hlam : 0 ≤ lam)
+    (hlam_opt :
+      lam * a
+          - cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
+              (Measure.infinitePi (fun _ : ℕ => μ₀)) lam
+        = cramerRate (fun ω : ℕ → Ω₀ => Y (ω 0))
+            (Measure.infinitePi (fun _ : ℕ => μ₀)) a)
     (h_pos : ∀ᶠ n : ℕ in atTop,
       0 < (Measure.infinitePi (fun _ : ℕ => μ₀)).real
             {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})
@@ -216,7 +223,51 @@ theorem cramer_tendsto_phase_d_via_cylinder
             {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop
       (𝓝 (-cramerRate (fun ω : ℕ → Ω₀ => Y (ω 0))
             (Measure.infinitePi (fun _ : ℕ => μ₀)) a)) := by
-  sorry
+  -- Phase A plumbing: infinite-product i.i.d. structure for the upper bound.
+  have h_indep : iIndepFun (fun i : ℕ => fun ω : ℕ → Ω₀ => Y (ω i))
+      (Measure.infinitePi (fun _ : ℕ => μ₀)) :=
+    iIndepFun_eval_under_infinitePi (μ₀ := μ₀) hY_meas
+  have h_meas : ∀ i, Measurable (fun ω : ℕ → Ω₀ => Y (ω i)) :=
+    fun i => hY_meas.comp (measurable_pi_apply i)
+  have h_ident : ∀ i, IdentDistrib
+      (fun ω : ℕ → Ω₀ => Y (ω i)) (fun ω : ℕ → Ω₀ => Y (ω 0))
+      (Measure.infinitePi (fun _ : ℕ => μ₀))
+      (Measure.infinitePi (fun _ : ℕ => μ₀)) :=
+    fun i => identDistrib_eval_under_infinitePi hY_meas i
+  have h_bdd_eval : ∃ M, ∀ i ω, |(fun (ω : ℕ → Ω₀) => Y (ω i)) ω| ≤ M := by
+    obtain ⟨M, hM⟩ := bounded_eval_family h_bdd
+    exact ⟨M, hM⟩
+  -- Upper bound (constructive, through Cramer.cramer_upper_legendre).
+  have h_upper :
+      limsup (fun n : ℕ =>
+          (1 / (n : ℝ)) * Real.log
+            ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
+              {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop
+        ≤ -cramerRate (fun ω : ℕ → Ω₀ => Y (ω 0))
+            (Measure.infinitePi (fun _ : ℕ => μ₀)) a :=
+    cramer_upper_legendre (μ := Measure.infinitePi (fun _ : ℕ => μ₀))
+      h_indep h_meas h_ident h_bdd_eval a lam hlam hlam_opt h_pos h_cobdd
+  -- Lower bound (transitive sorry via cramer_lower_phase_d_via_cylinder, rate
+  -- form), Legendre-rewrite using hlam_opt.
+  have h_lower_rate :
+      -(lam * a
+          - cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
+              (Measure.infinitePi (fun _ : ℕ => μ₀)) lam)
+        ≤ liminf (fun n : ℕ =>
+            (1 / (n : ℝ)) * Real.log
+              ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
+                {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop :=
+    cramer_lower_phase_d_via_cylinder
+      (μ₀ := μ₀) hY_meas h_bdd a lam hlam h_coboundedBelow
+  have h_lower :
+      -cramerRate (fun ω : ℕ → Ω₀ => Y (ω 0))
+          (Measure.infinitePi (fun _ : ℕ => μ₀)) a
+        ≤ liminf (fun n : ℕ =>
+            (1 / (n : ℝ)) * Real.log
+              ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
+                {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop := by
+    rw [← hlam_opt]; exact h_lower_rate
+  exact tendsto_of_le_liminf_of_limsup_le h_lower h_upper h_bdd_above h_bdd_below
 
 /-! ## Phase D-5 — Cramér × Chernoff unification predicate
 

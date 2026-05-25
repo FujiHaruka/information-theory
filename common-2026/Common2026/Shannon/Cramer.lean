@@ -299,21 +299,19 @@ theorem cramer_upper [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
 asymptotic statement).
 
 If the Legendre transform of `Λ = cgf (X 0) μ` at `a` is attained by some
-non-negative `lam`, then
+non-negative `lam` (`hlam_opt`), then
 
 `limsup_n (1/n) log P[a·n ≤ Sₙ] ≤ -cramerRate (X 0) μ a`.
 
-The Legendre-attainment condition is the textbook hypothesis `a ≥ 𝔼[X]`
-(combined with the convexity / continuity of `Λ`); discharging it cleanly is a
-Tier 3 follow-up of the parent `cramer-moonshot-plan` (Phase B / Legendre
-attainment).
-
-`@residual(plan:cramer-moonshot-plan)` -/
+L-MIG-1: `hlam_opt` restored as regularity precondition (audit-2 verdict —
+Legendre 凸性 + `a ≥ 𝔼[X]` で textbook discharge 可能、load-bearing でなく
+precondition)、self-contained constructive proof through `cramer_upper`. -/
 theorem cramer_upper_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
     (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
     (h_bdd : ∃ M, ∀ i ω, |X i ω| ≤ M)
     (a : ℝ) (lam : ℝ) (hlam : 0 ≤ lam)
+    (hlam_opt : lam * a - cgf (X 0) μ lam = cramerRate (X 0) μ a)
     (h_pos : ∀ᶠ n : ℕ in atTop,
       0 < μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})
     (h_cobdd : Filter.IsCoboundedUnder (· ≤ ·) atTop
@@ -324,7 +322,8 @@ theorem cramer_upper_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
         (1 / (n : ℝ)) * Real.log
           (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop
       ≤ -cramerRate (X 0) μ a := by
-  sorry
+  have h := cramer_upper (μ := μ) h_indep h_meas h_ident h_bdd a lam hlam h_pos h_cobdd
+  rw [← hlam_opt]; exact h
 
 /-! ## Tier 2 (Phase C) — Cramér lower bound (tilted change-of-measure)
 
@@ -466,17 +465,19 @@ theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
 /-- **Cramér lower bound, Legendre form**.
 
 If the Legendre transform of `Λ = cgf (X 0) μ` at `a` is attained by some
-`lam ≥ 0`, the asymptotic lower bound recovers `-cramerRate (X 0) μ a`.
+`lam ≥ 0` (`hlam_opt`), the asymptotic lower bound recovers
+`-cramerRate (X 0) μ a`.
 
-The Legendre-attainment condition and the underlying tilted-LLN concentration
-are both deferred to `cramer-moonshot-plan` (Phase B / Phase C).
-
-`@residual(plan:cramer-moonshot-plan)` -/
+L-MIG-1: `hlam_opt` restored as regularity precondition (audit-2 verdict).
+本 declaration の P-3 部分 (Legendre 書換) は precondition、ただし transitive
+sorry via `cramer_lower` (P-1 撤退、tilted-LLN plumbing pending in
+`cramer-moonshot-plan` Phase C). -/
 theorem cramer_lower_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
     (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
     (h_bdd : ∃ M, ∀ i ω, |X i ω| ≤ M)
     (a : ℝ) (lam : ℝ) (hlam : 0 ≤ lam)
+    (hlam_opt : lam * a - cgf (X 0) μ lam = cramerRate (X 0) μ a)
     (h_coboundedBelow : Filter.IsCoboundedUnder (· ≥ ·) atTop
       (fun n : ℕ =>
         (1 / (n : ℝ)) * Real.log
@@ -485,7 +486,9 @@ theorem cramer_lower_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
       ≤ liminf (fun n : ℕ =>
           (1 / (n : ℝ)) * Real.log
             (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop := by
-  sorry
+  have h := cramer_lower (μ := μ) h_indep h_meas h_ident h_bdd a lam hlam
+    h_coboundedBelow
+  rw [← hlam_opt]; exact h
 
 /-! ## Phase D — Main `Tendsto` theorem (sandwich) -/
 
@@ -495,15 +498,17 @@ The asymptotic exponential rate of the upper-tail probability of an i.i.d.
 bounded-RV sample sum equals the negative Legendre transform of the
 log-MGF, i.e. minus the Cramér rate function. The result is obtained as the
 sandwich of `cramer_upper_legendre` (Phase B) and `cramer_lower_legendre`
-(Phase C); the lower bound still awaits the tilted-LLN plumbing (plan L-C2
-fallback) and the Legendre attainment hypothesis.
+(Phase C).
 
-`@residual(plan:cramer-moonshot-plan)` -/
+L-MIG-1: `hlam_opt` restored as regularity precondition (audit-2 verdict).
+Transitive sorry via `cramer_lower` (P-1 撤退、tilted-LLN plumbing pending in
+`cramer-moonshot-plan` Phase C). -/
 theorem cramer_tendsto [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
     (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
     (h_bdd : ∃ M, ∀ i ω, |X i ω| ≤ M)
     (a : ℝ) (lam : ℝ) (hlam : 0 ≤ lam)
+    (hlam_opt : lam * a - cgf (X 0) μ lam = cramerRate (X 0) μ a)
     (h_pos : ∀ᶠ n : ℕ in atTop,
       0 < μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})
     (h_cobdd : Filter.IsCoboundedUnder (· ≤ ·) atTop
@@ -526,6 +531,20 @@ theorem cramer_tendsto [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
         (1 / (n : ℝ)) * Real.log
           (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop
       (𝓝 (-cramerRate (X 0) μ a)) := by
-  sorry
+  have h_upper :
+      limsup (fun n : ℕ =>
+          (1 / (n : ℝ)) * Real.log
+            (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop
+        ≤ -cramerRate (X 0) μ a :=
+    cramer_upper_legendre (μ := μ) h_indep h_meas h_ident h_bdd a lam hlam hlam_opt
+      h_pos h_cobdd
+  have h_lower :
+      -cramerRate (X 0) μ a
+        ≤ liminf (fun n : ℕ =>
+            (1 / (n : ℝ)) * Real.log
+              (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop :=
+    cramer_lower_legendre (μ := μ) h_indep h_meas h_ident h_bdd a lam hlam hlam_opt
+      h_coboundedBelow
+  exact tendsto_of_le_liminf_of_limsup_le h_lower h_upper h_bdd_above h_bdd_below
 
 end InformationTheory.Shannon.Cramer

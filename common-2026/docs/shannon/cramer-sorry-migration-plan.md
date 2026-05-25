@@ -574,4 +574,17 @@ docstring + 直後 `theorem` signature + body 1-3 行を実コードから読込
    word として match する。期待値 13 と実測 28 は本質的に乖離していない (実 body 部
    は 13 件、`lake env lean` の "uses sorry" warning 数とも一致)。次 sweep の brief では
    「sorry 集計は警告ベース (`grep -c 'uses .sorry.'`) の方が確実」と note 推奨。
+
+6. **2026-05-25 L-MIG-1 適用 (audit-2 verdict 反映)**: audit-2 で「`hlam_opt` は
+   Legendre 凸性 + `a ≥ 𝔼[X]` で textbook discharge 可能な regularity precondition、
+   load-bearing でなく `@residual` 不要」と判定されたため、P-3 該当 6 declaration
+   (`cramer_upper_legendre` / `cramer_lower_legendre` / `cramer_tendsto` /
+   `cramer_lower_legendre_phaseC_partial_discharge` /
+   `cramer_tendsto_phaseC_partial_discharge` / `cramer_tendsto_phase_d_via_cylinder`)
+   で `hlam_opt` を signature に **戻し**、`@residual(plan:...)` を **削除**。
+   `cramer_upper_legendre` は constructive 経路 (`cramer_upper` 経由) で完全
+   **proof done** 化、他 5 件は transitive sorry pass-through (上流 `cramer_lower`
+   / `cramer_lower_phaseC_partial_discharge` / `cramer_lower_phase_d_via_cylinder`
+   の P-1/P-2 sorry に依存)。net residual: 13 → 7 件。
 -->
+

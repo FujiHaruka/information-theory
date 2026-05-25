@@ -11,6 +11,11 @@
 > 3 つの load-bearing predicate (`IsMeasureInfinitePiTiltedEq` / `IsCramerNLetterRNCylinder`
 > / `IsCaratheodoryExtensionHyp`) には `@audit:retract-candidate(load-bearing-predicate)`
 > 付与。`IsCramerChernoffNLetterRNUnified` structure は Chernoff family 依存のため保留 (L-MIG-2)。
+>
+> **L-MIG-1 適用済 (2026-05-25)** — audit-2 verdict (「`hlam_opt` は Legendre 凸性 + `a ≥ 𝔼[X]`
+> で textbook discharge 可能な regularity precondition、`@residual` 不要」) に基づき P-3 該当
+> 6 declaration で `hlam_opt` を signature に **戻し**、`cramer_upper_legendre` は constructive
+> 経路で完全 **proof done** 化。net residual: 13 → 7 件 (本 plan 側 residual は 8 → 5 件)。
 
 > 実態整合 (2026-05-20): **進捗ブロック記載どおり (この plan は正確)**。`Common2026/Shannon/Cramer.lean`
 > (0 sorry) に `cramer_upper` (:272, DONE-HONEST-HYPS: h_pos+h_cobdd)、`cramer_lower` (:448,
