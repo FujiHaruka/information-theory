@@ -428,6 +428,9 @@ hypotheses (`h_cov : IsCoveringTypicalityHyp μ JT` /
 `h_pack : IsPackingExistenceHyp (γ := γ) μ JT`) are removed from the
 signature.  Body remains `sorry` and the same `@residual` tag applies.
 
+Phase 2.x.4 honesty audit verdict (2026-05-25): tier 2 **honest_residual**
+verified — `(μ)[IsProbabilityMeasure μ](JT)` only.
+
 `@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wzCovering_feed_asymp
     [Nonempty β] [Nonempty γ]

@@ -475,7 +475,21 @@ requires the AEP / typical-slice cardinality machinery which are tracked
 in separate seeds. The present theorem is the *clean composition* — once
 both hypotheses are available, the bound `Pr[error] ≤ ε_typ + ε_bin` is a
 4-line `calc` via the union-bound decomposition
-`wzAchievability_decoder_fail_le` followed by `add_le_add`. -/
+`wzAchievability_decoder_fail_le` followed by `add_le_add`.
+
+Phase 2.x.4 honesty audit verdict (2026-05-25): scope-out demoted from
+Phase 2.x to **`@audit:ok`** (tier 1). `h_typ_prob` / `h_bin_prob` are
+**regularity-style** per-set probability preconditions (`μ.real(E_typ) ≤ ε_typ`
+/ `μ.real(E_bin) ≤ ε_bin`) with `ε_typ`, `ε_bin` arbitrary free variables;
+the body's substance is the union-bound transformation `decoder_fail ⊆
+E_typ ∪ E_bin` plus subadditivity `μ(E_typ ∪ E_bin) ≤ μ(E_typ) + μ(E_bin)`,
+which is genuine measure-theoretic work in `wzAchievability_decoder_fail_le`
+(this file lines 425-463). The hyps do not bundle the conclusion — they
+supply the per-set bounds that get added; the lemma's content is the
+subadditivity composition. No `sorry`, no `@residual`. Genuine 0/0 proof
+done.
+
+@audit:ok -/
 theorem wzAchievability_random_binning_body
     [Nonempty β] [Nonempty γ]
     (μ : Measure Ω) [IsFiniteMeasure μ]

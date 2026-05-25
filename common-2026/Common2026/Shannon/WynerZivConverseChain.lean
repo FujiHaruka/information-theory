@@ -169,6 +169,12 @@ also been removed from the signature.  The signature is honest tier 2:
 `sorry` body + `@residual(plan:wyner-ziv-discharge-moonshot-plan)`, with no
 load-bearing predicate residue on the input side.
 
+Phase 2.x.4 honesty audit verdict (2026-05-25): tier 2 **honest_residual**
+verified — remaining params `(P_XY)(d){n}(hn)(M)(D)` are all regularity /
+precondition data; conclusion `wynerZivRatePmf U P_XY d D ≤ Real.log M / n`
+contains no hyp equivalent.  Classification `plan:wyner-ziv-discharge-moonshot-plan`
+correct.
+
 `@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_converse_chain
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {n : ℕ} (hn : 0 < n)
@@ -193,6 +199,10 @@ Phase 2.x.1 (predicate-removal sweep): in lockstep with
 they fed (`wzPerLetterObjective`, `D_arr`) are now removed from the
 signature.  Block-code precondition data (`μ`, `dN`, `c`, `_h_dist`) is
 retained as regularity-style context.
+
+Phase 2.x.4 honesty audit verdict (2026-05-25): tier 2 **honest_residual**
+verified — block-code data is genuine regularity / precondition (no bundling
+of the conclusion).
 
 `@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_converse_chain_block
@@ -496,6 +506,15 @@ genuinely derivable Mathlib bridge (Csiszár sum identity / chain rule for
 conditional MI) — that re-evaluation is the auditor's responsibility (Plan
 未決事項 1).
 
+Phase 2.x.4 honesty audit verdict (2026-05-25): tier 2 **honest_residual**
+verified — full 5-ingredient bundle removed; `(U)(P_XY)(d){n}(hn)(M)(D)` is
+all regularity.  Auditor concurs that the 5 ingredients (`h_perLetter`,
+`h_perLetter_le_condMI`, `h_chain`, `h_fano`, `h_jensen_antitone`) were
+collectively load-bearing of the rate bound and their removal is the
+correct honesty fix; whether any of them is independently a derivable
+Mathlib bridge is a discharge-plan question, not a Phase 2.x retreat
+question.
+
 `@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_converse_chain_composite
     (U : Type*) [Fintype U] [MeasurableSpace U]
@@ -523,6 +542,9 @@ Phase 2.x.1 (predicate-removal sweep): same hypothesis pruning as
 hypotheses and the explicit params they uniquely fed are removed from the
 signature.  Block-code precondition data (`μ`, `dN`, `c`, `h_dist`) stays
 as regularity-style context.
+
+Phase 2.x.4 honesty audit verdict (2026-05-25): tier 2 **honest_residual**
+verified (lockstep with `wyner_ziv_converse_chain_block`).
 
 `@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_converse_n_letter_chain
@@ -580,6 +602,10 @@ Phase 2.x.1 (predicate-removal sweep): the load-bearing
 the conclusion contradicts, not a bundling of the conclusion itself).
 Tier 2 honest: `sorry` body + the same `@residual` tag.
 
+Phase 2.x.4 honesty audit verdict (2026-05-25): tier 2 **honest_residual**
+verified — `h_R_lt` is the genuine precondition of the impossibility
+statement (strict-gap antecedent), not a load-bearing bundling.
+
 `@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_converse_chain_existence
     [MeasurableSpace γ]
@@ -615,7 +641,18 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 * `h_chain_conv`: converse rate inequality `R ≤ wynerZivRatePmf(D)` produced
   by the chain assembly (cf. `wyner_ziv_converse_chain`),
 
-the rate `R` equals `wynerZivRatePmf(D)`. Pure `le_antisymm` forwarder. -/
+the rate `R` equals `wynerZivRatePmf(D)`. Pure `le_antisymm` forwarder.
+
+Phase 2.x.4 honesty audit verdict (2026-05-25): scope-out demoted from
+Phase 2.x to **`@audit:ok`** (tier 1). Body is `le_antisymm h_chain_conv h_ach`
+— a genuine antisymmetry composition, not a load-bearing predicate consumer:
+the conclusion `R = wynerZivRatePmf U P_XY d D` is an equality that neither
+hyp equals (both hyps are `≤`-form inequalities), so the construction
+substance lives in `le_antisymm` itself. The two hyps are operational
+preconditions (achievability + converse), not load-bearing bundlings of the
+conclusion. No `sorry`, no `@residual`. Genuine 0/0 proof done.
+
+@audit:ok -/
 theorem wyner_ziv_tendsto_chain
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
     (h_ach : wynerZivRatePmf U P_XY d D ≤ R)

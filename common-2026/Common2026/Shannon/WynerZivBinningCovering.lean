@@ -277,6 +277,18 @@ non-existent (no other in-family file calls this declaration directly);
 the cross-family caller `RelayCFBinningBody.lean:348` is handled by the
 Relay sweep agent, not by this plan.
 
+Phase 2.x.4 honesty audit verdict (2026-05-25): tier 2 **honest_residual**
+verified — remaining params are all measurability / regularity / concrete
+data.  **Cross-family drift observed** (Pattern G S3): `lake env lean
+Common2026/Shannon/RelayCFBinningBody.lean` currently reports
+`Invalid argument name `R₁` for function `wyner_ziv_binning_via_covering_packing``
+at line 349 (Relay still passes `(R₁ := R_cov) (R₂ := R_bin)` plus
+`h_decode.compression` / `h_decode.decodable` — both removed in
+Phase 2.x.1.b).  Per Option A scope, this is the Relay sweep agent's
+responsibility, not this plan's; the WynerZiv-side honesty fix is
+correct and the Relay caller fix is parked for the Relay Round 2 sweep
+already in flight (Wave 3).
+
 `@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_binning_via_covering_packing
     [Nonempty β] [Nonempty γ]
@@ -309,6 +321,9 @@ forwarder, the two predicate-form hypotheses (`h_cov` / `h_pack`) are
 removed from the signature and the body is retreated to `sorry`.  The
 predicate definitions are preserved for cross-family use; cross-family
 caller handling is the Relay sweep agent's responsibility.
+
+Phase 2.x.4 honesty audit verdict (2026-05-25): tier 2 **honest_residual**
+verified (lockstep with `wyner_ziv_binning_via_covering_packing`).
 
 `@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wynerZivBinningBody_of_covering_packing
@@ -370,6 +385,10 @@ Phase 2.x.1 (predicate-removal sweep): the load-bearing `h_asymp` bundle
 existence at every block length) is now removed from the signature.  Body
 remains `sorry` and the same `@residual` tag applies.  The predicate
 definitions themselves are preserved for cross-family use.
+
+Phase 2.x.4 honesty audit verdict (2026-05-25): tier 2 **honest_residual**
+verified — signature `(μ)[IsFiniteMeasure μ](JT)` only; no load-bearing
+residue.
 
 `@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_binning_existence_of_covering_packing
@@ -499,6 +518,9 @@ hypothesis `h_ach : IsWynerZivBinningAchievable ...` is removed from the
 signature and the body is retreated to `sorry`.  Tier 2 honest.  The
 `IsWynerZivBinningAchievable` predicate definition is preserved because
 cross-family Relay CF code re-namespaces it as `Iff.rfl`.
+
+Phase 2.x.4 honesty audit verdict (2026-05-25): tier 2 **honest_residual**
+verified — measurability + concrete data only.
 
 `@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_binning_decoder_fail_of_achievable
