@@ -1,7 +1,8 @@
 /.lake
 /.claude/plans/
 /.claude/settings.local.json
-/.claude/handoff.md
+/.claude/handoff*.md
+/.claude/scheduled_tasks.lock
 
 # Honesty audit DB — point-in-time audit of the codebase, not tracked
 /docs/audit/*.db
