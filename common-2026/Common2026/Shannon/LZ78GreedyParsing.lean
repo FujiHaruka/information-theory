@@ -513,9 +513,12 @@ pass-throughs; it takes the genuine two-sided sandwich on `lz/n` and
 *derives* the a.s. Tendsto. This wrapper instantiates the encoding-length
 parameter to the concrete greedy `lz78GreedyEncodingLength` and forwards
 the four genuine sandwich ingredients. The body is a genuine application,
-not an identity wrap of the conclusion.
-
-`@audit:suspect(lz78-blockrv-refactor-plan)` -/
+not an identity wrap of the conclusion. This wrapper is **pure variational
+pass-through** (Pilot Pattern V): the four sandwich ingredients (h_lower /
+h_upper / h_bdd_above / h_bdd_below) are regularity / boundedness hypotheses,
+not load-bearing predicate consumers, and the body simply forwards to
+`lz78_asymptotic_optimality` whose own body is the genuine 1-step combine
+`tendsto_of_le_liminf_of_limsup_le`. No `@residual` tag is attached. -/
 theorem lz78_asymptotic_optimality_with_greedy_encoding
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)

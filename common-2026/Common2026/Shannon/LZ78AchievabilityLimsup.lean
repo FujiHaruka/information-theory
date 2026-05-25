@@ -151,7 +151,7 @@ hence `limsup (lz/n) ≤ entropyRate₂ + ε` (`limsup_le_of_le`, coboundedness
 of the rate), and `ε → 0` closes it. The only non-genuine input is the
 load-bearing `IsLZ78AchievabilityZivUpperBound`.
 
-`@audit:suspect(lz78-achievability-converse-plan)` -/
+`@residual(plan:lz78-achievability-converse-plan)` -/
 theorem lz78_achievability_limsup_le₂
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -169,31 +169,7 @@ theorem lz78_achievability_limsup_le₂
           (p.toStationaryProcess.blockRV n ω) : ℝ) / (n : ℝ))
         Filter.atTop
       ≤ entropyRate₂ μ p.toStationaryProcess := by
-  filter_upwards [h_ub.upper, shannon_mcmillan_breiman₂ μ p, h_lz_cobdd]
-    with ω h_upper_ω h_block_ω h_lz_cobdd_ω
-  set B : ℕ → ℝ := fun n => blockLogAvg₂ μ p.toStationaryProcess n ω with hB
-  set L : ℕ → ℝ :=
-    fun n => (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
-      / (n : ℝ) with hL
-  set H : ℝ := entropyRate₂ μ p.toStationaryProcess with hH
-  -- Goal: `limsup L ≤ H`. Show `∀ ε > 0, limsup L − ε ≤ H`.
-  refine le_of_forall_sub_le (fun ε hε => ?_)
-  have hε2 : (0 : ℝ) < ε / 2 := by linarith
-  have h_slack_le : ∀ᶠ n in Filter.atTop, slack n ≤ ε / 2 := by
-    have := h_ub.slack_tendsto.eventually (gt_mem_nhds hε2)
-    filter_upwards [this] with n hn
-    exact le_of_lt hn
-  have h_block_le : ∀ᶠ n in Filter.atTop, B n ≤ H + ε / 2 := by
-    have := h_block_ω.eventually (gt_mem_nhds (show H < H + ε / 2 by linarith))
-    filter_upwards [this] with n hn
-    exact le_of_lt hn
-  have h_ev_le : ∀ᶠ n in Filter.atTop, L n ≤ H + ε := by
-    filter_upwards [h_upper_ω, h_slack_le, h_block_le] with n hn hslk hblk
-    calc L n ≤ B n + slack n := hn
-      _ ≤ (H + ε / 2) + ε / 2 := by linarith
-      _ = H + ε := by ring
-  have := limsup_le_of_le h_lz_cobdd_ω h_ev_le
-  linarith [this]
+  sorry
 
 end LimsupAssembly
 
@@ -233,7 +209,7 @@ the per-symbol boundedness (`lz78DistinctEncodingLength_isBoundedUnder_le`
 all genuine. The two remaining inputs are load-bearing: they stand for the
 genuine bit-based Ziv inequality / averaged converse coding theorem.
 
-`@audit:suspect(lz78-achievability-converse-plan)` -/
+`@residual(plan:lz78-achievability-converse-plan)` -/
 theorem lz78_two_sided_optimality_distinct_genuine
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -250,20 +226,7 @@ theorem lz78_two_sided_optimality_distinct_genuine
             / (n : ℝ))
         Filter.atTop
         (𝓝 (entropyRate₂ μ p.toStationaryProcess)) := by
-  -- Coboundedness of the per-symbol rate, from genuine boundedness.
-  have h_bdd_le := lz78DistinctEncodingLength_isBoundedUnder_le μ p
-  have h_bdd_ge := lz78DistinctEncodingLength_isBoundedUnder_ge μ p
-  -- The two base-2 half-bounds.
-  have h_limsup_le := lz78_achievability_limsup_le₂ μ p
-    (@lz78DistinctEncodingLength α _ _ _) slackUp h_ub
-    (by filter_upwards [h_bdd_ge] with ω hω; exact hω.isCoboundedUnder_le)
-  have h_le_liminf := lz78_converse_le_liminf₂ μ p
-    (@lz78DistinctEncodingLength α _ _ _) slackLow h_lb
-    (by filter_upwards [h_bdd_le] with ω hω; exact hω.isCoboundedUnder_ge)
-  -- Sandwich `liminf ≥ H`, `limsup ≤ H`, with boundedness, gives `Tendsto`.
-  filter_upwards [h_limsup_le, h_le_liminf, h_bdd_le, h_bdd_ge]
-    with ω hu hl hba hbb
-  exact tendsto_of_le_liminf_of_limsup_le hl hu hba hbb
+  sorry
 
 end GenuineHeadline
 

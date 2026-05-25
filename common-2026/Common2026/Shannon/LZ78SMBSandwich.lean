@@ -295,12 +295,28 @@ This is exactly the body of `IsLZ78ConverseChainHyp` (see
 the SMB sandwich naming so the chain-rule plumbing is co-located with
 SMB. The substantive Eq. 13.130 derivation is L-LZ3-D and deferred.
 
-`@audit:defect(launder)` `@audit:suspect(lz78-residual-discharge-plan)` -/
+Phase 1.5.6 sweep (lz78-sorry-migration-plan): this alias is a literal
+re-export of `IsLZ78ConverseChainHyp` (`def X := Y`), which is the canonical
+`name-laundering-alias` defect. The unique in-tree consumer
+`lz78_converse_lower_bound_ergodic_of_bridge` (`§9` below) has been rewired
+to take `IsLZ78ConverseChainHyp` directly, so this alias has 0 consumers
+remaining. The alias body itself is kept (rather than deleted) only as a
+history record for the API-compat naming, and is marked for removal in a
+future sweep.
+
+`@audit:defect(launder)` `@audit:retract-candidate(name-laundering-alias)` -/
 def IsSMBToLZ78ConverseChainBridge
     (μ : Measure Ω) (p : StationaryProcess μ α)
     (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) : Prop :=
   IsLZ78ConverseChainHyp μ p lz78EncodingLength
 
+/-- Definitional unfolding of `IsSMBToLZ78ConverseChainBridge`.
+
+Phase 1.5.6 sweep: companion `@simp` lemma for the alias above. With the
+alias retract-candidate, this lemma has no remaining consumers (the unique
+former call site uses the underlying predicate directly).
+
+`@audit:retract-candidate(name-laundering-alias)` -/
 @[simp] lemma isSMBToLZ78ConverseChainBridge_def
     (μ : Measure Ω) (p : StationaryProcess μ α)
     (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) :
@@ -411,17 +427,20 @@ theorem lz78_converse_lower_bound_ergodic
   lz78_converse_lower_bound_with_chain μ p lz78EncodingLength h_chain
     (lz78_smb_sandwich_ergodic_liminf μ p)
 
-/-- **LZ78 converse lower bound — `IsSMBToLZ78ConverseChainBridge` form**.
+/-- **LZ78 converse lower bound — `IsLZ78ConverseChainHyp` direct form**.
 
-Same as `lz78_converse_lower_bound_ergodic`, but consumes the chain
-hypothesis through the SMB-side named bridge predicate.
+Same as `lz78_converse_lower_bound_ergodic`. Previously consumed the chain
+hypothesis through the `IsSMBToLZ78ConverseChainBridge` SMB-side named
+alias, which has been retract-candidate-d (Phase 1.5.6 sweep, alias is a
+`name-laundering-alias` defect). The argument is now `IsLZ78ConverseChainHyp`
+directly.
 
-`@audit:suspect(lz78-residual-discharge-plan)` -/
+`@residual(plan:lz78-residual-discharge-plan)` -/
 theorem lz78_converse_lower_bound_ergodic_of_bridge
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
     (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (h_bridge : IsSMBToLZ78ConverseChainBridge μ p.toStationaryProcess
+    (h_chain : IsLZ78ConverseChainHyp μ p.toStationaryProcess
                 lz78EncodingLength) :
     ∀ᵐ ω ∂μ,
       entropyRate μ p.toStationaryProcess
@@ -429,8 +448,8 @@ theorem lz78_converse_lower_bound_ergodic_of_bridge
           (fun n =>
             (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
               / (n : ℝ))
-          Filter.atTop :=
-  lz78_converse_lower_bound_ergodic μ p lz78EncodingLength h_bridge
+          Filter.atTop := by
+  sorry
 
 end ConverseSMBChain
 

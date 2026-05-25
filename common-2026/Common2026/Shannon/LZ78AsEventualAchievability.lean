@@ -331,7 +331,7 @@ and the LZ code rate is `≤ countLogRate₂ + slack` (envelope reduction), so
 `limsup (lz/n) ≤ limsup (countLogRate₂)`. Combined with the satisfiable
 `IsLZ78ZivAsEventual` this gives `limsup (lz/n) ≤ entropyRate₂`.
 
-`@audit:suspect(lz78-achievability-converse-plan)` -/
+`@residual(plan:lz78-achievability-converse-plan)` -/
 theorem lz78_achievability_limsup_le₂_aseventual
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -346,43 +346,7 @@ theorem lz78_achievability_limsup_le₂_aseventual
           (p.toStationaryProcess.blockRV n ω) : ℝ) / (n : ℝ))
         Filter.atTop
       ≤ entropyRate₂ μ p.toStationaryProcess := by
-  filter_upwards [h_ase, h_lz_cobdd] with ω h_ase_ω h_lz_cobdd_ω
-  set L : ℕ → ℝ :=
-    fun n => (lz78DistinctEncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
-      / (n : ℝ) with hL
-  set C : ℕ → ℝ := fun n => countLogRate₂ μ p.toStationaryProcess n ω with hC
-  set H : ℝ := entropyRate₂ μ p.toStationaryProcess with hH
-  -- `C` is bounded above (ω-uniform counting envelope).
-  have hC_bdd : Filter.IsBoundedUnder (· ≤ ·) Filter.atTop C :=
-    countLogRate₂_isBoundedUnder_le μ p.toStationaryProcess ω
-  -- `limsup C ≤ H` from the satisfiable hypothesis.
-  have h_limsupC : Filter.limsup C Filter.atTop ≤ H := h_ase_ω
-  -- Goal: `limsup L ≤ H`. Show `∀ ε > 0, limsup L − ε ≤ H`.
-  refine le_of_forall_sub_le (fun ε hε => ?_)
-  have hε2 : (0 : ℝ) < ε / 2 := by linarith
-  -- `slack ≤ ε/2` eventually.
-  have h_slack_le : ∀ᶠ n in Filter.atTop, lz78AchievSlack (α := α) n ≤ ε / 2 := by
-    have := (lz78AchievSlack_tendsto_zero (α := α)).eventually (gt_mem_nhds hε2)
-    filter_upwards [this] with n hn
-    exact le_of_lt hn
-  -- `C n ≤ H + ε/2` eventually, from `limsup C ≤ H < H + ε/2` + boundedness.
-  have h_count_le : ∀ᶠ n in Filter.atTop, C n ≤ H + ε / 2 := by
-    have hlt : Filter.limsup C Filter.atTop < H + ε / 2 := by linarith
-    have := Filter.eventually_lt_of_limsup_lt hlt hC_bdd
-    filter_upwards [this] with n hn
-    exact le_of_lt hn
-  -- `L n ≤ C n + slack n` eventually (envelope reduction, n ≥ 2).
-  have h_env_le : ∀ᶠ n in Filter.atTop, L n ≤ C n + lz78AchievSlack (α := α) n := by
-    filter_upwards [Filter.eventually_ge_atTop 2] with n hn
-    exact lz78DistinctRate_le_countLogRate₂_add_slack μ p.toStationaryProcess n hn ω
-  -- Combine: `L n ≤ H + ε` eventually.
-  have h_ev_le : ∀ᶠ n in Filter.atTop, L n ≤ H + ε := by
-    filter_upwards [h_env_le, h_count_le, h_slack_le] with n hLn hCn hslk
-    calc L n ≤ C n + lz78AchievSlack (α := α) n := hLn
-      _ ≤ (H + ε / 2) + ε / 2 := by linarith
-      _ = H + ε := by ring
-  have := Filter.limsup_le_of_le h_lz_cobdd_ω h_ev_le
-  linarith [this]
+  sorry
 
 end LimsupAssembly
 
@@ -414,7 +378,7 @@ hypothesis — a genuine honesty improvement (no longer vacuously
 conditioned). The achievability content is localized to the single
 load-bearing `IsLZ78ZivAsEventual`.
 
-`@audit:suspect(lz78-achievability-converse-plan)` -/
+`@residual(plan:lz78-achievability-converse-plan)` -/
 theorem lz78_two_sided_optimality_distinct_aseventual
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -430,20 +394,7 @@ theorem lz78_two_sided_optimality_distinct_aseventual
             / (n : ℝ))
         Filter.atTop
         (𝓝 (entropyRate₂ μ p.toStationaryProcess)) := by
-  -- Boundedness of the per-symbol rate (genuine, both directions).
-  have h_bdd_le := lz78DistinctEncodingLength_isBoundedUnder_le μ p
-  have h_bdd_ge := lz78DistinctEncodingLength_isBoundedUnder_ge μ p
-  -- The limsup half-bound from the satisfiable a.s.-eventual hypothesis.
-  have h_limsup_le := lz78_achievability_limsup_le₂_aseventual μ p h_ase
-    (by filter_upwards [h_bdd_ge] with ω hω; exact hω.isCoboundedUnder_le)
-  -- The liminf half-bound from the converse coding lower bound (genuine).
-  have h_le_liminf := lz78_converse_le_liminf₂ μ p
-    (@lz78DistinctEncodingLength α _ _ _) slackLow h_lb
-    (by filter_upwards [h_bdd_le] with ω hω; exact hω.isCoboundedUnder_ge)
-  -- Sandwich `liminf ≥ H`, `limsup ≤ H`, with boundedness, gives `Tendsto`.
-  filter_upwards [h_limsup_le, h_le_liminf, h_bdd_le, h_bdd_ge]
-    with ω hu hl hba hbb
-  exact tendsto_of_le_liminf_of_limsup_le hl hu hba hbb
+  sorry
 
 end Headline
 

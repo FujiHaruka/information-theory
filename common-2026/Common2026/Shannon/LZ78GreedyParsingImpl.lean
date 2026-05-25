@@ -417,9 +417,13 @@ the worst-case one-symbol form of
 `lz78_asymptotic_optimality_with_greedy_encoding`). After the headline
 de-circularization, this forwards the four genuine sandwich ingredients on
 `lz/n` (liminf lower / limsup upper / two boundedness) — no `True`
-pass-throughs, and the conclusion is *derived*, not wrapped.
-
-`@audit:suspect(lz78-blockrv-refactor-plan)` -/
+pass-throughs, and the conclusion is *derived*, not wrapped. This wrapper
+is **pure variational pass-through** (Pilot Pattern V): the four sandwich
+ingredients (h_lower / h_upper / h_bdd_above / h_bdd_below) are regularity /
+boundedness hypotheses, not load-bearing predicate consumers, and the body
+simply forwards to `lz78_asymptotic_optimality` whose own body is the genuine
+1-step combine `tendsto_of_le_liminf_of_limsup_le`. No `@residual` tag is
+attached. -/
 theorem lz78_asymptotic_optimality_with_greedy_impl
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
