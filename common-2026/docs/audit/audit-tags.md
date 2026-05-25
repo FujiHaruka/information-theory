@@ -10,6 +10,25 @@ honesty audit の状態 (genuine 完成 / 残課題 / 移行履歴) を **コー
 
 実装中に詰まったら **`sorry` + `@residual` で抜ける**。仮説束 (`*Hypothesis` predicate で結論型と同等の核を抱えさせる) や `:True` slot で `sorry` を回避するのは禁止 → CLAUDE.md「検証の誠実性」。
 
+## Honesty 階層 (high → low)
+
+honesty audit が評価する「正直さ」の階層。auditor の verdict 序列 + 実装側の選好順位はこの順で決まる。**一番 honest なのは `sorry`** — コンパイラ可視 + 「ごめんね」と明示している、隠蔽しようがない正直な未完成マーカー。
+
+| Tier | 形態 | 含意 |
+|---|---|---|
+| **1** | `@audit:ok` (0 sorry / 0 @residual、auditor pass) | proof done、最高 honest |
+| **2** | `sorry` + `@residual(<class>:<slug>)` | type-check done、新規実装の唯一の honest 撤退口 |
+| **3** | bookkeeping (`@audit:defer(plan)` / `@audit:closed-by-successor(slug)` / `@audit:superseded-by(slug)` / `@audit:retract-candidate(reason)`) | honest だが当該 file の外に処理が逃げている。tier 2 の sorry を別 file に持っている場合 + 削除候補等 |
+| **4** ⚠ | **legacy** `@audit:suspect(plan)` / `@audit:staged(wall)` / 散文 `🟢ʰ` | 旧方針で「honest 残課題」として許容されていた load-bearing hypothesis / predicate bundling 形態。**新方針では defect 寄り** — tier 2 に書換待ち ([[sorry-based-migration]])。auditor は発見しても即時 alert せず、incidental migration を推奨する程度の severity |
+| **5** | `@audit:defect(*)` / 仮説型 ≡ 結論 (`:= h` 循環) / `:True` slot / 退化定義悪用 / name laundering / mathlib wall misuse | 真の honesty defect、即修正必要 |
+
+**重要な含意**:
+
+- **tier 2 (sorry + @residual) は tier 4 (suspect/staged) より strictly honest**。旧方針で「honest 名前付き仮説で抜く」と書かれていた撤退口は tier 4 で、新方針ではより上位の tier 2 に置き換える。
+- **tier 4 (legacy) は無期限放置を意味しない**。新規実装で tier 4 declarations を touch するときに incidental に tier 2 へ migrate する (移行レシピ → 本ファイル下部 + [[sorry-based-migration]])。
+- **auditor の verdict**: tier 5 を見つけたら即 rewrite recommend (commit revert)。tier 4 を見つけたら incidental migration recommend (緊急性低)。tier 2 の `@residual` 分類検証が主たる仕事。
+- **実装側の選好**: 詰まったら必ず tier 2 を選ぶ。tier 4 を新規作成するのは禁止 (CLAUDE.md「検証の誠実性」)。
+
 ## 動機
 
 - snapshot 文書 (defect-101 report 等) は **書いた瞬間から陳腐化** する。defect 数が変わっても文書は更新されない。

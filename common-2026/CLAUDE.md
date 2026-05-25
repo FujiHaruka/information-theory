@@ -171,6 +171,18 @@ If the session is ad-hoc — opened with no prior handoff context, scope unrelat
 
 **判定の一言**: 「その仮説は前提条件 (regularity) か、それとも証明の核心 (load-bearing) か」。前者 OK、後者は **書いてはいけない** — sorry に置き換える。詳細 → `docs/textbook-roadmap.md`「完成判定 / 検証強度の基準」「Mathlib 壁の 4 分類」。
 
+**honesty 階層** (`docs/audit/audit-tags.md`「Honesty 階層」が SoT):
+
+```
+Tier 1: @audit:ok                                                 ← 最高 honest
+Tier 2: sorry + @residual(<class>:<slug>)                         ← 新規実装の唯一の正規撤退口
+Tier 3: @audit:defer / closed-by-successor / superseded-by / retract-candidate  ← bookkeeping
+Tier 4: legacy @audit:suspect / @audit:staged / 散文 🟢ʰ          ← 旧方針で許容、新方針で defect 寄り
+Tier 5: @audit:defect / 循環 := h / :True slot / 退化定義悪用 / name laundering  ← 真の defect
+```
+
+**一番 honest なのは `sorry`** — コンパイラ可視 + 「ごめんね」と明示する隠蔽不能なマーカー。旧方針で許容されていた load-bearing hypothesis (`@audit:suspect`、🟢ʰ) は tier 4 = sorry-based より strictly less honest なので、新規導入禁止 + legacy 発見は incidental migration 推奨。
+
 ## Independent honesty audit (orchestrator 必須)
 
 実装サブエージェントが新規に `sorry` + `@residual(<class>:<slug>)` を含む commit を作った場合、orchestrator は当該セッション中 (遅くとも `Common2026.lean` 編入 commit 前) に **独立 audit subagent** を 1 件起動する。実装 agent の self-申告だけでは **classification (`<class>:<slug>` の正しさ)** + **signature の honesty** を誰も独立に検証していない状態 (書いた本人 = 申告者)。
