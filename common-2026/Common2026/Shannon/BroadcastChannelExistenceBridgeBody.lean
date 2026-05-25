@@ -287,7 +287,7 @@ def IsBCBonferroniEnsembleDecay
         ∧ (∑ m : Fin M₁ × Fin M₂, ∑ k : EventIdx, δ k m)
             / (Fintype.card (Fin M₁ × Fin M₂) : ℝ) < 1
 
-/-- 🟢ʰ **load-bearing posture — predicate-degenerate downstream.**
+/-- **load-bearing posture — predicate-degenerate downstream.**
 **S7-F — Ensemble decay → random-codebook Markov bridge.**
 
 Given the genuine ensemble decay predicate `IsBCBonferroniEnsembleDecay`,

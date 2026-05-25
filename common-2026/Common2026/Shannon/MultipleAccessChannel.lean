@@ -38,20 +38,20 @@ This single file publishes:
   `mac_region_combine` — thin hypothesis-pass-through wrappers for the
   three inequality directions and their combination into a region
   membership.
-* `mac_capacity_region_outer_bound` — Cover–Thomas converse, **genuine /
-  honest-🟢ʰ, non-circular**: it **derives** the region membership from
-  entropy-level Fano-side + per-letter chain inequalities (none of which is
-  the conclusion `InMACCapacityRegion`). The per-user Fano-side bounds are
-  genuinely discharged via `macFanoEntropyData_of_measure` →
+* `mac_capacity_region_outer_bound` — Cover–Thomas converse, **genuine,
+  non-circular**: it **derives** the region membership from entropy-level
+  Fano-side + per-letter chain inequalities (none of which is the conclusion
+  `InMACCapacityRegion`). The per-user Fano-side bounds are genuinely
+  discharged via `macFanoEntropyData_of_measure` →
   `fano_inequality_measure_theoretic` (`MACFanoConverseBody.lean`); the
-  joint-message Fano and the per-letter chain rule remain honest-🟢ʰ
-  entropy-level inputs.
+  joint-message Fano and the per-letter chain rule remain real Mathlib gaps
+  (joint-typicality-multi wall) supplied as entropy-level inputs.
 * `mac_capacity_region_inner_bound` — Cover–Thomas achievability,
-  **honest-🟢ʰ, non-circular, error-carrying**: it **derives** the
-  error-carrying `MACInnerBoundExistence` from the gated joint-typicality
-  residual `MACJointTypicalityAchievable` (an honest open `Prop`, not
-  `True`, not the conclusion). The redefined `MACInnerBoundExistence`
-  embeds `averageErrorProb < ε`, so it genuinely captures achievability.
+  **non-circular, error-carrying**: it **derives** the error-carrying
+  `MACInnerBoundExistence` from the gated joint-typicality residual
+  `MACJointTypicalityAchievable` (a real open `Prop`, not `True`, not the
+  conclusion). The redefined `MACInnerBoundExistence` embeds
+  `averageErrorProb < ε`, so it genuinely captures achievability.
 * `mac_capacity_region_outer_bound_log_rate` — `Real.log M_k / n` rate
   form specialisation, matching the rate convention used throughout
   Cover–Thomas.
@@ -83,7 +83,8 @@ its body as an identity wrap, and the real residual is a genuine `Prop`:
   directions are genuinely Fano-backed via
   `mac_capacity_region_outer_bound_of_measure` (`MACFanoConverseBody.lean`)
   →  `fano_inequality_measure_theoretic`; the joint-message Fano and the
-  conditional-MI chain rule remain honest-🟢ʰ (real Mathlib gaps).
+  conditional-MI chain rule remain real Mathlib gaps (joint-typicality-multi
+  wall).
 * **Inner** (`mac_capacity_region_inner_bound`): consumes the honest open
   `MACJointTypicalityAchievable` (the gated implication `(strict-rate) →
   MACInnerBoundExistence`, a real `Prop` ≠ the conclusion) and **derives**
@@ -440,9 +441,9 @@ inequality `I_marg₁ ≤ n·I₁`, and the clean-up estimate
 replaced by the genuine entropy-level inputs.
 
 The per-user Fano body and conditional-MI chain rule are themselves
-🟢ʰ Mathlib-wall residuals (real Mathlib gaps), discharged structurally
-through `MACSingleFanoBound` / `MACPerLetterChain₁` of
-`MACL2Discharge.lean`; the present theorem accepts them as raw scalar
+Mathlib-wall residuals (joint-typicality-multi wall — real Mathlib gaps),
+discharged structurally through `MACSingleFanoBound` / `MACPerLetterChain₁`
+of `MACL2Discharge.lean`; the present theorem accepts them as raw scalar
 inequalities so this file remains structurally minimal.
 
 `@audit:suspect(mac-moonshot-plan)` -/
@@ -531,7 +532,7 @@ variable {α₁ α₂ β : Type*}
 variable [MeasurableSpace α₁] [MeasurableSpace α₂] [MeasurableSpace β]
 
 /-- **MAC capacity region outer bound (Cover–Thomas Theorem 15.3.4)** —
-**genuine / honest-🟢ʰ converse**, no longer circular.
+**genuine converse**, no longer circular.
 
 For any MAC block code `c : MACCode M₁ M₂ n α₁ α₂ β` and rate pair
 `(R₁, R₂)`, given the three cut rates
@@ -555,13 +556,13 @@ level (`n · R_k ≤ I_marg_k + 1 + Pe_k · log M_k` and
   `InformationTheory.MeasureFano.fano_inequality_measure_theoretic` via
   `macFanoEntropyData_of_measure` (`MACFanoConverseBody.lean`); the
   `_of_measure` corollary wires that genuine route in.
-* `h_fano_joint` — joint-message Fano-side bound (honest-🟢ʰ: the
-  joint-message Fano discharge is not yet a project lemma, so this
-  entropy-level inequality is supplied as a real `Prop`, **not**
-  `InMACCapacityRegion`).
+* `h_fano_joint` — joint-message Fano-side bound (real Mathlib gap
+  (joint-typicality-multi wall): the joint-message Fano discharge is not
+  yet a project lemma, so this entropy-level inequality is supplied as a
+  real `Prop`, **not** `InMACCapacityRegion`).
 * `h_chain₁ / h_chain₂ / h_chain_joint` — per-letter conditional-MI chain
-  inequalities (honest-🟢ʰ: the `I(X^n;Y^n|·) ≤ n·I(X;Y|·)` chain rule is
-  not yet a project lemma).
+  inequalities (real Mathlib gap (joint-typicality-multi wall): the
+  `I(X^n;Y^n|·) ≤ n·I(X;Y|·)` chain rule is not yet a project lemma).
 * `h_cleanup₁ / h_cleanup₂ / h_cleanup_joint` — the `n⁻¹` clean-up
   estimates collecting the Fano residual into the corner ε.
 
@@ -744,7 +745,7 @@ def MACJointTypicalityAchievable
     MACInnerBoundExistence W R₁ R₂
 
 /-- **MAC capacity region inner bound (Cover–Thomas Theorem 15.3.6,
-achievability side)** — **honest-🟢ʰ, non-circular, error-carrying**.
+achievability side)** — **non-circular, error-carrying**.
 
 If the rate pair `(R₁, R₂)` satisfies all three Cover–Thomas inequalities
 *strictly* (`R₁ < I₁`, `R₂ < I₂`, `R₁ + R₂ < Iboth`), then it is

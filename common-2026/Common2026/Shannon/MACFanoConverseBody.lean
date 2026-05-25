@@ -329,11 +329,11 @@ per-user Fano-side inequalities **genuinely discharged** via
 `InformationTheory.MeasureFano.fano_inequality_measure_theoretic` (applied
 to each user's message random variable `Wk : Ω → W` and the channel output
 `Yo`), rather than supplied as bare hypotheses. The joint-message Fano-side
-bound and all per-letter chain bounds remain the honest-🟢ʰ entropy-level
-inputs (their discharge — joint-message Fano / conditional-MI chain rule —
-is not yet a project lemma). This is the genuine wiring that backs the
-per-user converse directions with real Fano content while keeping the
-headline non-circular.
+bound and all per-letter chain bounds remain real Mathlib gaps
+(joint-typicality-multi wall) supplied as entropy-level inputs (their
+discharge — joint-message Fano / conditional-MI chain rule — is not yet a
+project lemma). This is the genuine wiring that backs the per-user converse
+directions with real Fano content while keeping the headline non-circular.
 
 `@audit:suspect(mac-moonshot-plan)` -/
 theorem mac_capacity_region_outer_bound_of_measure

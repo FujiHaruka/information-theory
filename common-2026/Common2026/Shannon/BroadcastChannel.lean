@@ -38,17 +38,18 @@ This single file publishes:
   thin hypothesis-pass-through wrappers for the two inequality directions
   and their combination into a region membership.
 * `bc_capacity_region_outer_bound` — Cover–Thomas converse, **genuine (R₂)
-  / honest-🟢ʰ (R₁ conditional), non-circular**: it **derives** the region
+  on the common direction, non-circular**: it **derives** the region
   membership from entropy-level Fano-side + per-letter chain inequalities
   (none of which is the conclusion `InBCCapacityRegion`). The R₂
   (common-message, single-user) direction is genuinely Fano-backed by the
   MAC per-user recipe; the R₁ conditional direction and the per-letter
-  chain remain honest-🟢ʰ entropy-level inputs.
+  chain remain real Mathlib gaps (joint-typicality-multi wall) supplied as
+  entropy-level inputs.
 * `bc_capacity_region_inner_bound` — Cover–Thomas achievability,
-  **honest-🟢ʰ, non-circular, error-carrying**: it **derives** the
-  error-carrying `BCInnerBoundExistence W` from the gated superposition
-  residual `BCSuperpositionAchievable` (an honest open `Prop`, not `True`,
-  not the conclusion). The redefined `BCInnerBoundExistence` embeds
+  **non-circular, error-carrying**: it **derives** the error-carrying
+  `BCInnerBoundExistence W` from the gated superposition residual
+  `BCSuperpositionAchievable` (a real open `Prop`, not `True`, not the
+  conclusion). The redefined `BCInnerBoundExistence` embeds
   `averageErrorProb < ε`, so it genuinely captures achievability.
 * `bc_capacity_region_outer_bound_log_rate` — `Real.log M_k / n` rate
   form specialisation, matching the rate convention used throughout
@@ -80,7 +81,7 @@ its body as an identity wrap, and the real residual is a genuine `Prop`:
   The common-message R₂ direction is genuinely Fano-backed (single-user
   `W₂ → Y₂^n`, same recipe as the MAC per-user converse); the
   private-message R₁ conditional direction and the conditional-MI chain
-  rule remain honest-🟢ʰ (real Mathlib gaps).
+  rule remain real Mathlib gaps (joint-typicality-multi wall).
 * **Inner** (`bc_capacity_region_inner_bound`): consumes the honest open
   `BCSuperpositionAchievable` (the gated implication `(strict-rate) →
   BCInnerBoundExistence`, a real `Prop` ≠ the conclusion) and **derives**
@@ -413,7 +414,7 @@ section RateBounds
 variable {α β₁ β₂ : Type*}
 variable [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
 
-/-- 🟢ʰ **load-bearing hypothesis — NOT a discharge.**
+/-- **load-bearing hypothesis — NOT a discharge.**
 **Common-message rate bound (terminal capstone, L-BC2 load-bearing form)**.
 
 For any BC block code `c` and rate `R₂`, the converse asserts
@@ -447,7 +448,7 @@ theorem bc_common_rate_bound
     (h_commonRateBound_lbh : R₂ ≤ I_u) :
     R₂ ≤ I_u := h_commonRateBound_lbh
 
-/-- 🟢ʰ **load-bearing hypothesis — NOT a discharge.**
+/-- **load-bearing hypothesis — NOT a discharge.**
 **Private-message rate bound (terminal capstone, L-BC2 load-bearing form)**.
 
 For any BC block code `c` and rate `R₁`, the converse asserts
@@ -532,8 +533,8 @@ private theorem bc_rate_le_of_fano
   linarith
 
 /-- **Degraded BC capacity region outer bound (Cover–Thomas Theorem
-15.6.2, converse)** — **genuine (R₂) / honest-🟢ʰ (R₁ conditional)
-converse**, no longer circular.
+15.6.2, converse)** — **genuine (R₂) converse on the common direction**,
+no longer circular.
 
 For any BC block code `c : BroadcastCode M₁ M₂ n α β₁ β₂` and rate pair
 `(R₁, R₂)`, given the two cut rates `(I_u, I_xy) := (I(U;Y₂), I(X;Y₁|U))`
@@ -557,12 +558,12 @@ and `I_marg_k ≤ n · I_k`), none of which is the conclusion
   (`fano_inequality_measure_theoretic`); supplied here at the entropy
   level so the headline derives `R₂ ≤ I_u + ε` from it.
 * `h_cond_fano₁` — private-message (good receiver) conditional Fano-side
-  bound (honest-🟢ʰ: the conditional Fano on `W₁ → Y₁^n | U^n` together
-  with the degradation Markov chain is not yet a project lemma, so this
-  entropy-level inequality is supplied as a real `Prop`, **not**
-  `InBCCapacityRegion`).
+  bound (real Mathlib gap (joint-typicality-multi wall): the conditional
+  Fano on `W₁ → Y₁^n | U^n` together with the degradation Markov chain is
+  not yet a project lemma, so this entropy-level inequality is supplied as
+  a real `Prop`, **not** `InBCCapacityRegion`).
 * `h_chain_u / h_chain_xy` — per-letter (conditional) MI chain
-  inequalities (honest-🟢ʰ).
+  inequalities (real Mathlib gaps, joint-typicality-multi wall).
 * `h_cleanup₂ / h_cleanup₁` — the `n⁻¹` clean-up estimates collecting the
   Fano residual into the corner ε.
 
