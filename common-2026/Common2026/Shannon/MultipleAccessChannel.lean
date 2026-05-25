@@ -593,7 +593,12 @@ theorem mac_capacity_region_outer_bound
 
 /-- **MAC capacity region outer bound — corner-limit form.** As
 `n → ∞` the `n⁻¹` clean-up terms vanish (`ε ≤ 0`), recovering the exact
-corner-point region `InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth`. -/
+corner-point region `InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth`.
+
+Transitive `sorry` via `mac_capacity_region_outer_bound`
+(`@residual(plan:mac-bc-sorry-migration-plan)`, mac-bc Phase 2.1 retreat).
+No additional `@residual` tag attached — closure responsibility is shared
+with the upstream declaration's `@residual`. -/
 theorem mac_capacity_region_outer_bound_corner_limit
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -652,7 +657,12 @@ Specialisation of `mac_capacity_region_outer_bound` to the standard
 (and matched by `wyner_ziv_converse_n_letter` /
 `relay_cutset_outer_bound_log_rate`). The entropy-level Fano + chain
 inputs are consumed and the `(I_k + ε)` region is **derived** (not
-assumed). -/
+assumed).
+
+Transitive `sorry` via `mac_capacity_region_outer_bound`
+(`@residual(plan:mac-bc-sorry-migration-plan)`, mac-bc Phase 2.1 retreat).
+No additional `@residual` tag attached — closure responsibility is shared
+with the upstream declaration's `@residual`. -/
 theorem mac_capacity_region_outer_bound_log_rate
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : MACCode M₁ M₂ n α₁ α₂ β)

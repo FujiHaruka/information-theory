@@ -336,7 +336,12 @@ this layer **derives** the corner-point scalar inequality
 on the caller side, then ships it through the parent's
 `h_bound : R₁ ≤ I₁` slot (with `I₁` replaced by `I₁ + ε` to
 accommodate the residual ε term — the parent's `I₁` is the
-external scalar argument and admits any rate value). -/
+external scalar argument and admits any rate value).
+
+Transitive `sorry` via `mac_single_rate_bound₁`
+(`@residual(plan:mac-bc-sorry-migration-plan)`, mac-bc Phase 2.1 retreat).
+No additional `@residual` tag attached — closure responsibility is shared
+with the upstream declaration's `@residual`. -/
 theorem mac_single_rate_bound₁_with_body
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -349,7 +354,12 @@ theorem mac_single_rate_bound₁_with_body
     h_fano.fano h_chain.chain h_cleanup
 
 /-- **L-MAC2 — Per-user single rate bound (body discharge route, user 2).**
-Mirror of `mac_single_rate_bound₁_with_body`. -/
+Mirror of `mac_single_rate_bound₁_with_body`.
+
+Transitive `sorry` via `mac_single_rate_bound₂`
+(`@residual(plan:mac-bc-sorry-migration-plan)`, mac-bc Phase 2.1 retreat).
+No additional `@residual` tag attached — closure responsibility is shared
+with the upstream declaration's `@residual`. -/
 theorem mac_single_rate_bound₂_with_body
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -375,7 +385,12 @@ Combine the per-user Fano body for both users (this file) with
 the joint-message Fano body (`MACBodyDischarge.lean`
 `mac_converse_fano_body`) into a single `InMACCapacityRegion`
 body discharge entry point. Plumbs through the parent's
-`mac_capacity_region_outer_bound_three_bounds`. -/
+`mac_capacity_region_outer_bound_three_bounds`.
+
+Transitive `sorry` via `mac_capacity_region_outer_bound_three_bounds`
+(`@residual(plan:mac-bc-sorry-migration-plan)`, mac-bc Phase 2.1 retreat).
+No additional `@residual` tag attached — closure responsibility is shared
+with the upstream declaration's `@residual`. -/
 theorem mac_capacity_region_outer_bound_with_fano_body
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -401,7 +416,12 @@ theorem mac_capacity_region_outer_bound_with_fano_body
 /-- **L-MAC2 + L-MAC3 — Outer bound three-bound body discharge,
 limit form.** As `n → ∞`, the per-letter `n⁻¹` cleanup terms
 vanish, recovering the corner-point `InMACCapacityRegion R₁ R₂ I₁
-I₂ Iboth`. -/
+I₂ Iboth`.
+
+Transitive `sorry` via `mac_capacity_region_outer_bound_three_bounds`
+(`@residual(plan:mac-bc-sorry-migration-plan)`, mac-bc Phase 2.1 retreat).
+No additional `@residual` tag attached — closure responsibility is shared
+with the upstream declaration's `@residual`. -/
 theorem mac_capacity_region_outer_bound_with_fano_body_limit
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -452,7 +472,12 @@ layers, unbundled into the headline's entropy-level Fano + chain inputs:
   `MACBodyDischarge.lean`).
 
 The body now feeds the genuine derivation in the headline — it is **not**
-an identity wrap to a circular `h_rate_bound`. -/
+an identity wrap to a circular `h_rate_bound`.
+
+Transitive `sorry` via `mac_capacity_region_outer_bound`
+(`@residual(plan:mac-bc-sorry-migration-plan)`, mac-bc Phase 2.1 retreat).
+No additional `@residual` tag attached — closure responsibility is shared
+with the upstream declaration's `@residual`. -/
 theorem mac_capacity_region_outer_bound_with_full_fano_body
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : MACCode M₁ M₂ n α₁ α₂ β)

@@ -234,7 +234,12 @@ variable [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
 Composes the genuine decay bridge (S15-c) with the bridge body's
 `bc_random_codebook_markov_of_ensemble` (S7-F): the AEP per-event decay produces
 `IsBCRandomCodebookMarkov` with its `errBound` *derived* (no longer a free caller
-hypothesis). -/
+hypothesis).
+
+Transitive `sorry` via `bc_random_codebook_markov_of_ensemble`
+(`@residual(defect:degenerate)`, mac-bc Phase 2.3 retreat). No additional
+`@residual` tag attached — closure responsibility is shared with the upstream
+declaration's defect marker. -/
 theorem bc_random_codebook_markov_of_perEvent
     (R₁ R₂ : ℝ)
     (h : IsBCPerEventAEPDecay (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂) :
@@ -255,7 +260,12 @@ It deliberately does **not** claim the error-carrying `BCInnerBoundExistence W`:
 the rate-only post-averaging witness does not establish `averageErrorProb < ε`
 for a specific `W`, so the genuine bridge to achievability is the honest residual
 `BCSuperpositionAchievable`, consumed only by the headline
-`bc_capacity_region_inner_bound`. -/
+`bc_capacity_region_inner_bound`.
+
+Transitive `sorry` via `bc_inner_bound_with_ensemble_averaging`
+(`@residual(plan:mac-bc-sorry-migration-plan)`, Phase 2.2 retreat). No additional
+`@residual` tag attached — closure responsibility is shared with the upstream
+declaration's `@residual`. -/
 theorem bc_inner_bound_with_perEvent_aep
     (R₁ R₂ I_u I_xy : ℝ)
     (h_strict : R₂ < I_u ∧ R₁ < I_xy)
@@ -272,7 +282,12 @@ bundled form.**
 
 Variant of `bc_inner_bound_with_perEvent_aep` taking the rate conditions bundled
 as the `≤` + `≠` form of `InBCCapacityRegion`, mirroring
-`bc_inner_bound_with_ensemble_averaging_bundled` (S7-G'). -/
+`bc_inner_bound_with_ensemble_averaging_bundled` (S7-G').
+
+Transitive `sorry` via `bc_inner_bound_with_ensemble_averaging_bundled`
+(`@residual(plan:mac-bc-sorry-migration-plan)`, Phase 2.2 retreat). No additional
+`@residual` tag attached — closure responsibility is shared with the upstream
+declaration's `@residual`. -/
 theorem bc_inner_bound_with_perEvent_aep_bundled
     (R₁ R₂ I_u I_xy : ℝ)
     (h_in_region : InBCCapacityRegion R₁ R₂ I_u I_xy)

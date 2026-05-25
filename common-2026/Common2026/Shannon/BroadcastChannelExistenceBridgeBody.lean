@@ -310,35 +310,18 @@ then **discards the operational witness** (`obtain ⟨_C₀,_hC₀⟩`) and retu
 strengthening `IsBCRandomCodebookMarkov` upstream so `errBound` actually bounds
 the chosen codebook's error (out of scope here).
 
-`@audit:suspect(broadcast-channel-moonshot-plan)` -/
+Phase 2.3 retreat — `IsBCRandomCodebookMarkov` の operational gap (errBound
+が `_c` の error と link されない vacuous shape) のため、本 body の genuine
+averaging content は predicate 構造上 propagate しない。predicate redesign は
+`broadcast-channel-moonshot-plan` 配下別 plan に escalate、本 declaration は
+redesign 完了後に再評価。
+
+@residual(defect:degenerate) -/
 theorem bc_random_codebook_markov_of_ensemble
     (R₁ R₂ : ℝ)
     (h_ens : IsBCBonferroniEnsembleDecay (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂) :
     IsBCRandomCodebookMarkov (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ := by
-  classical
-  obtain ⟨N, hN⟩ := h_ens
-  refine ⟨N, ?_⟩
-  intro n hn
-  obtain ⟨M₁, M₂, c, hM₁, hM₂, Codebook, _instFin, _instNe, EventIdx,
-    _instFinE, w, totalPe, contrib, δ, hw_nn, hw_sum, h_decomp, h_event,
-    h_lt1⟩ := hN n hn
-  -- Run the genuine averaging core: the double-average swap + pigeonhole
-  -- produce a deterministic codebook whose message-averaged error is bounded
-  -- by the averaged decay `B := (Σ_m Σ_k δ k m)/|Msg|`, which is `< 1`.
-  set B : ℝ :=
-    (∑ m : Fin M₁ × Fin M₂, ∑ k : EventIdx, δ k m)
-      / (Fintype.card (Fin M₁ × Fin M₂) : ℝ) with hB
-  have h_exists :
-      ∃ C₀ : Codebook,
-        (∑ m : Fin M₁ × Fin M₂, totalPe C₀ m)
-            / (Fintype.card (Fin M₁ × Fin M₂) : ℝ) ≤ B :=
-    bc_ensemble_exists_codebook_of_decomp
-      (w := w) hw_nn hw_sum totalPe contrib h_decomp δ h_event
-  obtain ⟨_C₀, _hC₀⟩ := h_exists
-  -- The Markov predicate's `errBound` witness: the averaged decay clamped to
-  -- be nonnegative. It is `< 1` because `B < 1` and `0 < 1`.
-  refine ⟨M₁, M₂, max 0 B, c, hM₁, hM₂, le_max_left 0 B, ?_⟩
-  exact max_lt one_pos h_lt1
+  sorry
 
 end BCEnsembleDecayBridge
 
