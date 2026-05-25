@@ -109,6 +109,23 @@ symlink reuse。5 GB Mathlib clone は disk 破綻。
   で著者が既に false-hypothesis 等を明示済かを検出。検出時は別行で flag、
   本 sweep scope 外として別 plan 化候補
 
+## Phase 0 inventory grep scope の expansion guideline
+
+単に `@audit:suspect\(|@audit:staged\(` を grep するだけでは **不十分**。
+**`@residual(plan:<該当 family slug>)` 持ち file も scope に含める**
+(genuine sorry-based migrated file が plan / inventory に登場する
+predicate の consumer になっている場合があり、signature 改変で破綻する)。
+canonical grep one-liner:
+
+    rg -l '@audit:suspect\(|@audit:staged\(|@audit:closed-by-successor\(|@residual\(plan:<family-slug>' Common2026/
+
+Round 4 AWGN Phase 1A 事案 (`ContChannelMIDecomp.lean` が 14 file scope
+から漏れて `IsContChannelMIDecompHyp` 削除予定 → 581 行破綻判定で停止
+フラグ) を典型例として記載。`@residual(plan:awgn-mi-decomp-plan)` 持ち
+genuine sorry-based migrated 済 file だったが、`@audit:suspect/staged`
+は持たないため bareword grep で漏れた。inventory step は **plan slug
+を明示的に grep に含める** ことで上記漏れを構造的に防ぐ。
+
 ## 構成済 family の参考
 
 Hoeffding (pilot, 19 suspect → 0 + 8 sorry+@residual)
@@ -517,11 +534,8 @@ Pilot 由来の vocabulary gap。本 runbook は **暫定的に docstring 散文
 
 1. **`@residual(<class>:<slug>[:transitive])` の transitive suffix**:
    上流 sorry 依存の transitive sorry を tag 上で正式に表現できるよう
-   EBNF 拡張。本 pilot では「タグ付与せず散文で明示」で回避。
-2. **`@audit:retract-candidate(<reason>)` の reason variant 拡充**:
-   - `load-bearing-predicate-empty-consumers` (consumer 0 件)
-   - `load-bearing-predicate-extract-only` (extract-only consumer 残存)
-   現状は単一 `load-bearing-predicate` で docstring 補足に頼っている。
+   EBNF 拡張。現状 audit-tags.md に未統合、Round 2 残課題として継続中。
+   本 pilot では「タグ付与せず散文で明示」(Pattern C) で回避している。
 
 ## 並列実行候補 family (2026-05-25 集計、Round 3 完了反映済)
 
