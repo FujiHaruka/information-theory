@@ -399,18 +399,24 @@ lemma RelayCFInnerBoundExistence.anti_mono
     Real.exp_le_exp.mpr hmul
   exact hexp.trans hM
 
-/-- **DF achievability — honest open IT residual.**
+/-- **DF achievability — load-bearing predicate (retract candidate).**
 
 The genuine block-Markov / random-coding / sliding-window joint-typicality
 core of DF achievability (per-block random codebook + staged cooperation +
 error-event collapse) is a real Mathlib gap (0 typicality lemmas in
-Mathlib). We expose it as the honest open hypothesis `RelayDFAchievable`:
-the **implication** `(DF rate-region membership) → RelayDFInnerBoundExistence`,
-gated on the rate-region condition `InRelayDFRate R Imrh Iry Ibroad`. This is
-a genuine `Prop` — it is *not* `True`, and it is *not* identical to the
-conclusion `RelayDFInnerBoundExistence W R` (it is the gated implication). It
-mirrors the MAC `MACJointTypicalityAchievable` / BC `BCSuperpositionAchievable`
-honest-conditional precedent. -/
+Mathlib). Originally exposed as the honest open hypothesis
+`RelayDFAchievable`: the **implication**
+`(DF rate-region membership) → RelayDFInnerBoundExistence`, gated on
+`InRelayDFRate R Imrh Iry Ibroad`.
+
+All hypothesis-form consumers in this family have been sorry-migrated
+(Phase 2.2 + 2.3 + 2.5). The predicate itself is retained for
+documentation + for the alias `IsRelayDFBlockMarkovWitness`
+(`RelayInnerBodyDischarge.lean:143`); both are deprecation candidates
+once the L-RI1 + L-RI2 walls are closed by the companion seeds
+`relay-df-block-markov-discharge-*` / `relay-df-sliding-window-discharge-*`.
+
+`@audit:retract-candidate(load-bearing-predicate)` -/
 def RelayDFAchievable
     {α α₁ β β₁ : Type*}
     [MeasurableSpace α] [MeasurableSpace α₁]
@@ -419,14 +425,22 @@ def RelayDFAchievable
   InRelayDFRate R Imrh Iry Ibroad →
     RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R
 
-/-- **CF achievability — honest open IT residual.**
+/-- **CF achievability — load-bearing predicate (retract candidate).**
 
 The genuine Wyner–Ziv compression binning / side-information decoding core
-of CF achievability is a real Mathlib gap. We expose it as the honest open
-hypothesis `RelayCFAchievable`: the **implication**
+of CF achievability is a real Mathlib gap. Originally exposed as the
+honest open hypothesis `RelayCFAchievable`: the **implication**
 `(CF rate-region membership) → RelayCFInnerBoundExistence`, gated on
-`InRelayCFRate R Idec Ix1y Iy1hy1`. This is a genuine `Prop` — *not* `True`,
-*not* identical to the conclusion (it is the gated implication). -/
+`InRelayCFRate R Idec Ix1y Iy1hy1`.
+
+All hypothesis-form consumers in this family have been sorry-migrated
+(Phase 2.2 + 2.3 + 2.5). The predicate itself is retained for
+documentation + for the alias `IsRelayCFBinningWitness`
+(`RelayInnerBodyDischarge.lean:333`); both are deprecation candidates
+once the L-RI3 + L-RI4 walls are closed by the companion seeds
+`relay-cf-wz-binning-discharge-*` / `relay-cf-si-decode-discharge-*`.
+
+`@audit:retract-candidate(load-bearing-predicate)` -/
 def RelayCFAchievable
     {α α₁ β β₁ : Type*}
     [MeasurableSpace α] [MeasurableSpace α₁]

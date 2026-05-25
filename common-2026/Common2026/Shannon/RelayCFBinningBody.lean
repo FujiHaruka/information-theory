@@ -257,9 +257,28 @@ variable [Fintype β₁] [Nonempty β₁]
 variable [Fintype β] [MeasurableSpace β]
 variable [MeasurableSpace γ]
 
-/-- **CF side-info decode hypothesis bundle.** The conjunction of the CF
-compression covering hypothesis (L-RI3) and the binning decodable hypothesis
-(L-RI4). Re-namespacing of `IsWynerZivBinningAchievable`. -/
+/-- **CF side-info decode hypothesis bundle (retract candidate, cross-family
+alias of `IsWynerZivBinningAchievable`).**
+
+The conjunction of the CF compression covering hypothesis (L-RI3) and the
+binning decodable hypothesis (L-RI4). Definitionally a re-namespacing of
+the WynerZiv-side `IsWynerZivBinningAchievable` (covering ∧ packing), via
+the field-level building blocks `IsCFCompressionHyp` (= `IsWynerZivBinningCovering`
+re-namespaced) and `IsCFBinningDecodableHyp` (= `IsWynerZivBinningPacking`
+re-namespaced).
+
+Cross-family note (Pattern G, `audit-tags.md` Cross-family detection
+S3): this predicate is **bundle / re-namespacing infrastructure** on top
+of three WynerZiv-family predicates (`IsWynerZivBinningCovering` /
+`IsWynerZivBinningPacking` / `IsWynerZivBinningAchievable`,
+`WynerZivBinningCovering.lean:106/180/416`). Its retract-candidate
+status is synchronised with the WynerZiv side: deprecation requires
+joint planning across the two families (tracked under
+`relay-sorry-migration-plan` 未決事項 #2). Until then the predicate is
+retained for the extract-only `_h_decode` parameter of
+`relay_cf_inner_bound_binning_discharged` etc.
+
+`@audit:retract-candidate(load-bearing-predicate)` -/
 def IsCFSideInfoDecodeHyp
     (R_cov R_bin ε_cov ε_pack : ℝ)
     (μ : Measure Ω) {n M : ℕ}

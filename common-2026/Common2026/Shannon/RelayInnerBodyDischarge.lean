@@ -116,30 +116,22 @@ variable {α α₁ β β₁ : Type*}
 variable [MeasurableSpace α] [MeasurableSpace α₁]
 variable [MeasurableSpace β] [MeasurableSpace β₁]
 
-/-- **DF block-Markov witness predicate (honest achievability residual).**
+/-- **DF block-Markov witness predicate (alias of `RelayDFAchievable`,
+retract candidate).**
 
-Bundles the two structural ingredients of the DF achievability proof
-(Cover-Thomas Theorem 15.10.2):
+Pure rename of `RelayDFAchievable` (`RelayInnerBound.lean:414`): the body
+is `:= RelayDFAchievable W R Imrh Iry Ibroad`. Originally introduced to
+bundle the two structural ingredients of the DF achievability proof
+(Cover-Thomas Theorem 15.10.2): L-RI1 (block Markov encoding) + L-RI2
+(sliding-window joint typicality decoder).
 
-* **L-RI1 (block Markov encoding)** — per-block random codebook
-  construction.
-* **L-RI2 (sliding-window joint typicality decoder)** — per-block staged
-  decoder error-event collapse.
+All hypothesis-form consumers have been sorry-migrated (Phase 2.3). The
+alias itself is retained for historical naming consistency (textbook
+"witness" usage ↔ Mathlib-style "achievable" usage) but is a tier-5
+borderline (`def := …` literal rename); deprecation candidate, tracked
+under `relay-sorry-migration-plan` 未決事項 #1 (alias defect judgement).
 
-Previously this witness was defined as the *bare* existence
-`RelayDFInnerBoundExistence R` — but that bare predicate carried **no error
-content** (the BC red herring: an existence claim with no `averageErrorProb`
-link is satisfiable by any code at any rate). The existence predicate is now
-**error-carrying** (`(c.averageErrorProb W x₁Ref).toReal < ε`), so a witness
-that merely exhibits a rate-matching code does **not** establish it.
-
-Accordingly the witness is now the **honest achievability residual**
-`RelayDFAchievable W R Imrh Iry Ibroad` — the gated implication
-`(InRelayDFRate) → RelayDFInnerBoundExistence W R`. This is a genuine `Prop`,
-**not** the conclusion and **not** `True`; its discharge (the genuine
-random-coding core establishing vanishing error) is the responsibility of
-the companion seeds `relay-df-block-markov-discharge-*` /
-`relay-df-sliding-window-discharge-*`. -/
+`@audit:retract-candidate(load-bearing-predicate)` -/
 def IsRelayDFBlockMarkovWitness
     {α α₁ β β₁ : Type*}
     [MeasurableSpace α] [MeasurableSpace α₁]
@@ -296,40 +288,21 @@ variable {α α₁ β β₁ : Type*}
 variable [MeasurableSpace α] [MeasurableSpace α₁]
 variable [MeasurableSpace β] [MeasurableSpace β₁]
 
-/-- **CF binning witness predicate (primitive).**
+/-- **CF binning witness predicate (alias of `RelayCFAchievable`,
+retract candidate).**
 
-Bundles the two structural ingredients of the CF achievability proof
-(Cover-Thomas Theorem 15.10.3):
+Pure rename of `RelayCFAchievable` (`RelayInnerBound.lean:430`): the body
+is `:= RelayCFAchievable W R Idec Ix1y Iy1hy1`. Originally introduced to
+bundle the two structural ingredients of the CF achievability proof
+(Cover-Thomas Theorem 15.10.3): L-RI3 (Wyner–Ziv compression binning) +
+L-RI4 (side-info joint typicality decoder).
 
-* **L-RI3 (Wyner–Ziv compression binning at the relay)** — random
-  binning of `Y₁^n` over `Fin M_bin` bins, with rate parameter chosen
-  so that the compression-feasibility condition holds.
-* **L-RI4 (side-information joint typicality decoder at destination)** —
-  per-block decoder using `(X₁^n, Y^n)` as side info to recover `Ŷ₁^n`
-  and then `W` via joint typicality with the channel output.
+All hypothesis-form consumers have been sorry-migrated (Phase 2.3 +
+2.5). The alias itself is retained for historical naming consistency
+but is a tier-5 borderline (`def := …` literal rename); deprecation
+candidate, tracked under `relay-sorry-migration-plan` 未決事項 #1.
 
-The witness is published as a primitive `Prop` packaged with the
-**conclusion shape** of the CF achievability (existence of a relay code
-at the given rate, for sufficiently large `n`). This is the
-**統合された pass-through** for L-RI3 and L-RI4 — both structural
-ingredients are bundled because they share the same combined error
-event union argument (the bin collision event `E_bin` from
-`WynerZivBinningBody.lean` + the decoder typicality event `E_typ`).
-
-Four scalar arguments `(Idec, Ix1y, Iy1hy1)` are kept on the witness for
-documentation purposes, but they do not appear in the conclusion. The
-binning rate feasibility `Iy1hy1 ≤ Ix1y` is implicitly required (it is
-the field `compressionFeas` of `InRelayCFRate`).
-
-Previously this witness was defined as the *bare* existence
-`RelayCFInnerBoundExistence R`, which carried **no error content** (the BC
-red herring). The existence predicate is now **error-carrying**, so the
-witness is now the **honest achievability residual**
-`RelayCFAchievable W R Idec Ix1y Iy1hy1` — the gated implication
-`(InRelayCFRate) → RelayCFInnerBoundExistence W R`. This is a genuine `Prop`,
-**not** the conclusion and **not** `True`. Its discharge is the
-responsibility of the companion seeds `relay-cf-wz-binning-discharge-*` /
-`relay-cf-si-decode-discharge-*`. -/
+`@audit:retract-candidate(load-bearing-predicate)` -/
 def IsRelayCFBinningWitness
     {α α₁ β β₁ : Type*}
     [MeasurableSpace α] [MeasurableSpace α₁]
