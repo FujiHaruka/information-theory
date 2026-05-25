@@ -290,10 +290,13 @@ theorem parallelGaussian_max_ent_le_of_subadditivity {n : ℕ}
         ≤ ∑ i, (1/2) * Real.log (1 + P' i / (N i : ℝ))) :
     miReal ≤ ∑ i, (1/2) * Real.log (1 + P' i / (N i : ℝ)) := by
   -- ★ genuine output-entropy subadditivity: h(Yⁿ) ≤ ∑ᵢ h(Yᵢ)
+  -- subadditivity is now genuine; the bundled honest hypotheses
+  -- (h_llr_split / h_int_marg / h_int_joint / h_marg_id) are retained on the
+  -- wrapper signature for future discharge of the residual but no longer
+  -- consumed at this call site (signature shrunk in Round 3 sorry-migration).
   have h_subadd : jointDifferentialEntropyPi μY
       ≤ ∑ i, differentialEntropy (μY.map (fun z => z i)) :=
-    jointDifferentialEntropyPi_le_sum h_marg_ac hμ_ac h_joint_ac h_llr_split
-      h_int_marg h_int_joint h_marg_id
+    jointDifferentialEntropyPi_le_sum h_marg_ac hμ_ac h_joint_ac
   -- I = h(Yⁿ) − condTerm ≤ ∑ h(Yᵢ) − condTerm ≤ ∑ (1/2) log(1 + P'ᵢ/Nᵢ)
   rw [h_decomp]
   refine le_trans ?_ h_perCoord
