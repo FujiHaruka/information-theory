@@ -169,8 +169,8 @@ exp(2 h(X+Y)) ≥ exp(2 h(X)) + exp(2 h(Y))
 
 ## 進捗
 
-- [ ] Phase 0 — `IsStamToEPIScalingHyp` defect cleanup (prerequisite, sister/A/B 全 block) 📋
-- [ ] Phase 0-Plumbing — `EPIPlumbing.lean` 3 件先行 close (high ROI、独立着手可) 📋
+- [x] Phase 0 — `IsStamToEPIScalingHyp` defect cleanup (prerequisite, sister/A/B 全 block) ✅ 2026-05-25 (commits `0d54e89` / `78cf2ec` / `2809168`)
+- [x] Phase 0-Plumbing — `EPIPlumbing.lean` 3 件先行 close (high ROI、独立着手可) ✅ 2026-05-25 (prior commit `f150cdc` + `5f923e4`)
 - [ ] Phase A — Stam + de Bruijn 合流 skeleton (sister 待ち、Phase 0 完了前提) 📋
 - [ ] Phase B — Phase E corollary 各種 genuine 化 (Phase 0 完了前提) 📋
 - [ ] Phase V — verify (`lake env lean ...`) + Common2026.lean 編入 📋
@@ -679,3 +679,11 @@ Phase E corollary 群は **主定理を hypothesis-free に呼び出して resha
    honest 化、~30 行)。consumer ripple は EPIStamToBridge.lean 内 15+ 件 +
    `EPIStamDeBruijnConclusion.lean:114` docstring 言及 1 件。撤退ライン
    L-Concl-0Sc-α/β/γ を新設。
+4. **2026-05-25 Phase 0 closure (案 1 完遂、AntitoneOn 確定)**: orchestrator
+   pattern で 4 stage 並列実行 → Phase 0 完了。実装内訳:
+   - Stage 1 並列: heat-flow inventory (`docs/shannon/epi-stam-to-conclusion-heatflow-inventory.md`、撤退ライン 3 件全非該当、案 1 確定) + Phase 0-Plumbing 確認 (prior commit `f150cdc`/`5f923e4` で実質完了済)
+   - Stage 2 (Phase 0.C-1, commit `0d54e89`): `HeatFlowPath.lean` 新規 6 lemma 132 行 (F.1 全件)、既存 `gaussianConvolution` 1-source 形を 2-source 拡張
+   - Stage 2-bis (Phase 0.C-2~5, commit `78cf2ec`): `IsStamToEPIScalingHyp` signature を `∃ Z_X Z_Y, ... ∧ AntitoneOn gap (Set.Icc 0 1)` に refactor + 6 件 retract + 6 件 body rewrite (+252/-163 行)。**`AntitoneOn`** が正しい符号 (inventory §G(b) の `MonotoneOn` 推奨は sign error、Csiszár scaling は gap monotone decreasing で `gap_0 ≥ gap_1 = 0`)。retract 一覧: `isStamToEPIScalingHyp_of_gaussian` / `_of_epi` / `_of_fisherInfoReal_zero` / `isEPIScalingDecomposedPipeline_of_epi` / `_of_gaussian` / `entropy_power_inequality_gaussian_via_scaling_decomposition` (新 signature 下で genuine discharge 不可、consumer 0 件で retract 安全)
+   - Stage 4 (commit `2809168`): Independent honesty audit (fresh `general-purpose` subagent、CORE doctrine inline) → Tier 1/2 PASS、Tier 3 questionable で tag `staged(<plan-slug>)` → `suspect(<plan-slug>)` に refine (`audit-tags.md` 語彙: SLUG は plan slug、`staged(WALL)` ではない)。最終 verdict **PASS**。`IsStamToEPILimitHyp` の launder は scaling refactor 効果を **打ち消さない** (consumer で `_h_limit` discard / `_of_scaling` direct path) → Phase 0' 緊急度 **LOW**。
+   - **規模実績**: 自作 ~580 行 (見積もり ~265-460 中央 ~350 の +66%、heat-flow path skeleton + signature refactor + 6 file silent verify + audit docstring)、撤退ライン発動 0 件
+   - **次段**: Phase A (Stam + de Bruijn 合流 skeleton) は sister 両方 (`epi-stam-discharge-plan` Phase D + `epi-debruijn-integration-plan` Phase D) の出力待ち、Phase 0' (limit launder cleanup) は LOW priority で後日

@@ -4,6 +4,8 @@
 > 本ファイルは Phase 0.C-2 (signature 確定) 着手前の M0 在庫調査。
 >
 > **Status (2026-05-25, fresh inventory): heat-flow path 定義は Mathlib では裸 (OU semigroup / heat semigroup ともに `Found 0 declarations`)。一方、Common2026 プロジェクト内に既存の `gaussianConvolution X Z t := X + √t · Z` (FisherInfoV2DeBruijn.lean:154) と Gaussian heat kernel + `IsHeatFlowDensity` 構造が完備されており、これを Phase 0.C-1 の出発点として再利用すべき。**
+>
+> **⚠️ Sign correction (2026-05-25 Phase 0 closure post-mortem)**: 以下 §B' / §G(b) の `MonotoneOn` 推奨は **sign error**。実装で確定した正しい符号は **`AntitoneOn (fun s => gap_s) (Set.Icc 0 1)`** (Csiszár scaling は gap が時間進行で 0 へ decreasing、`gap_0 ≥ gap_1 = 0` で EPI 結論)。`MonotoneOn` 採用 → `gap_0 ≤ gap_1 = 0` ⇒ `-EPI` で逆向き。`monotoneOn_of_deriv_nonneg` も `antitoneOn_of_deriv_nonpos` に読み替え。Phase 0 実装の最終形は `EPIStamToBridge.lean:170-188` 参照。
 
 ## 一行サマリ
 
