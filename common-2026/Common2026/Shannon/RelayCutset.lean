@@ -34,17 +34,17 @@ This single file publishes:
   `MACCode.averageErrorProb`); used by the inner-bound existence predicates.
 * `RelayBcastCutFano`, `RelayMacCutFano` — entropy-level Fano-side
   inequalities for the two cut directions (non-circular named `Prop`s).
-* `relay_broadcast_cut`, `relay_mac_cut` — 🟢ʰ honest per-cut bounds
-  `R ≤ Ib + ε` / `R ≤ Im + ε` **derived** from entropy-level Fano + per-
-  letter chain + clean-up inputs (no longer circular pass-through; the
-  conclusion is no longer a hypothesis).
+* `relay_broadcast_cut`, `relay_mac_cut` — per-cut bounds
+  `R ≤ Ib + ε` / `R ≤ Im + ε`. Currently `sorry` under the sorry-based
+  migration: the previous public signature bundled a load-bearing
+  per-letter chain hypothesis (Csiszár sum identity wall, L-RC1/L-RC2)
+  which has been removed; closure tracked on
+  `relay-cutset-moonshot-plan`.
 * `relay_cutset_combine` — combines the two cut bounds into the cut-set
   bound via `le_min`.
-* `relay_cutset_outer_bound` — Cover–Thomas Theorem 15.10.1 main theorem,
-  **genuine (broadcast cut) / honest-🟢ʰ (MAC cut), non-circular**: it
-  **derives** `R ≤ relayCutsetBound (Ib+ε) (Im+ε)` from entropy-level
-  Fano-side + per-letter chain inequalities (none of which is the conclusion
-  `R ≤ relayCutsetBound …`).
+* `relay_cutset_outer_bound` — Cover–Thomas Theorem 15.10.1 main theorem.
+  Currently `sorry` (two load-bearing chain hypotheses removed); closure
+  tracked on `relay-cutset-moonshot-plan`.
 
 ## Scope
 
@@ -53,27 +53,23 @@ forward / compress-and-forward, Cover–Thomas Theorems 15.10.2 / 15.10.3) is
 fully out of scope (judgement L-RC5); inner-bound seeds live in separate
 plans.
 
-## De-circularization status (2026-05-21)
+## De-circularization status (2026-05-21) + sorry-based migration (2026-05-25)
 
 The headline `relay_cutset_outer_bound` was previously circular
 (`:= h_rate_bound`, with the real residual hidden in `_h_csiszar : True` /
-`_h_chain : True` slots). It is now a **sound landing** — it does not take
-its own conclusion as a hypothesis, its body is not an identity wrap, and
-the real residual is a genuine `Prop`:
+`_h_chain : True` slots). The 2026-05-21 de-circularisation removed the
+circular hypothesis and replaced the `True` slots with genuine
+entropy-level `Prop`s (Fano-side, per-letter chain, clean-up). The
+broadcast-cut Fano direction (single-user `W → Y^n`) is genuinely
+Fano-backed; the MAC-cut chain direction relies on the conditional
+Csiszár sum identity (Mathlib wall, L-RC1/L-RC2) and was the
+load-bearing piece.
 
-* **Broadcast cut** (`h_fano_b : RelayBcastCutFano …`): a **single-user**
-  Fano direction (message `W → Y^n`), genuinely Fano-backed by the same
-  recipe as the MAC per-user converse (`fano_inequality_measure_theoretic`);
-  supplied at the entropy level so the headline derives `R ≤ Ib + ε` from
-  it.
-* **MAC cut** (`h_fano_m : RelayMacCutFano …`): the per-letter reduction of
-  the conditional MI `I(W; Y^n, Y₁^n | X₁^n)` requires Csiszár's sum
-  identity (not yet a project lemma) → honest-🟢ʰ, supplied as a real
-  entropy-level `Prop`, **not** `R ≤ relayCutsetBound …`.
-
-The body is the genuine divide-by-`n` derivation (`relay_cut_rate_le_of_fano`
-×2 + `relay_cutset_combine`); it consumes the entropy-level Fano + chain
-inputs and **produces** the cut-set bound.
+The 2026-05-25 sorry-based migration retreats the headline + two cut
+wrappers to `sorry`: the load-bearing chain hypotheses have been removed
+from the public signatures (so honest open issues are tracked by `sorry`
+rather than by `*Hypothesis`-style predicate consumption). Closure
+responsibility is `@residual(plan:relay-cutset-moonshot-plan)`.
 
 ## 撤退ライン
 
@@ -85,13 +81,13 @@ inputs and **produces** the cut-set bound.
 The converse signature mirrors the **genuine Fano converse** recipe of
 SlepianWolf / `mac_capacity_region_outer_bound` (T3-B MAC) /
 `bc_capacity_region_outer_bound` (T3-C BC). The `relay_broadcast_cut` /
-`relay_mac_cut` helpers have been **de-circularised** (2026-05-23): the
-former `(_h_csiszar _h_chain : True) (h_bcast : R ≤ Ib) : R ≤ Ib` shape was
-a pure pass-through (defect: circular + true_residual); they now take the
-genuine entropy-level Fano + chain + clean-up inputs and **derive**
-`R ≤ Ib + ε` / `R ≤ Im + ε` via the shared `relay_cut_rate_le_of_fano`
-kernel. The `h_chain` hypothesis remains 🟢ʰ load-bearing pending project-
-side Csiszár / per-letter-chain discharge (L-RC1 / L-RC2 Mathlib walls).
+`relay_mac_cut` helpers were de-circularised (2026-05-23) and then
+sorry-migrated (2026-05-25): both signatures previously took a chain
+hypothesis `h_chain : I_marg ≤ n · I` which bundled the (conditional)
+Csiszár sum identity (L-RC1) + per-letter chain expansion (L-RC2)
+Mathlib walls. Those load-bearing hypotheses have been removed and the
+wrappers now carry `sorry` + `@residual(plan:relay-cutset-moonshot-plan)`
+until L-RC1 / L-RC2 are discharged.
 -/
 
 namespace InformationTheory.Shannon
@@ -319,7 +315,7 @@ def RelayBcastCutFano (M n : ℕ) (R Pe I_marg : ℝ) : Prop :=
     RelayBcastCutFano M n R Pe I_marg ↔
       (n : ℝ) * R ≤ I_marg + 1 + Pe * Real.log (M : ℝ) := Iff.rfl
 
-/-- **MAC-cut Fano-side bound (entropy-level, honest-🟢ʰ, non-circular).**
+/-- **MAC-cut Fano-side bound (entropy-level, non-circular).**
 
 The entropy-level inequality produced by Fano's inequality applied to the
 MAC cut `W → (Y^n, Y₁^n) | X₁^n` of the relay channel:
@@ -331,9 +327,10 @@ n · R ≤ I_marg + 1 + Pe · log M
 where `I_marg = I(W; Y^n, Y₁^n | X₁^n)` is the conditional message–output
 mutual information. Unlike the broadcast cut, the per-letter reduction of
 this conditional MI requires **Csiszár's sum identity** (not yet a project
-lemma), so this direction lands honest-🟢ʰ: the entropy-level inequality is
-supplied as a real `Prop`, **not** the conclusion `R ≤ relayCutsetBound …`,
-and the headline body consumes it and divides by `n`. -/
+lemma); the consumers of this entropy-level `Prop` (`relay_mac_cut` etc.)
+now bundle that wall via `sorry` rather than via a load-bearing
+`h_chain : I_marg ≤ n · Im` hypothesis. The named `Prop` itself remains an
+honest entropy-level statement, **not** `R ≤ relayCutsetBound …`. -/
 def RelayMacCutFano (M n : ℕ) (R Pe I_marg : ℝ) : Prop :=
   (n : ℝ) * R ≤ I_marg + 1 + Pe * Real.log (M : ℝ)
 
@@ -390,87 +387,73 @@ variable {α α₁ β β₁ : Type*}
 variable [MeasurableSpace α] [MeasurableSpace α₁]
 variable [MeasurableSpace β] [MeasurableSpace β₁]
 
-/-- 🟢ʰ **broadcast cut — load-bearing hypothesis form (Fano + per-letter
-chain, NOT a discharge)**.
+/-- **Broadcast cut — `R ≤ Ib + ε`** (load-bearing Csiszár chain wall, sorry).
 
 For any relay block code `c` and rate `R`, the broadcast direction of the
-cut-set bound derives
+cut-set bound asserts
 
 ```
 R ≤ Ib + ε
 ```
 
-from genuine entropy-level inputs — **the conclusion is no longer taken as
-a hypothesis**, and the previous `True` placeholders are replaced by the
-real Fano + chain + clean-up `Prop`s:
+from the entropy-level Fano-side input + clean-up estimate:
 
 * `h_fano : RelayBcastCutFano M n R Pe I_marg` — Fano-side bound
-  `n · R ≤ I_marg + 1 + Pe · log M` for the broadcast cut `W → Y^n`. This is
-  a single-user Fano direction, genuinely Fano-backed by the same recipe as
-  the MAC per-user converse (`fano_inequality_measure_theoretic`).
-* `h_chain : I_marg ≤ n · Ib` — per-letter chain bound
-  `I(W; Y^n) ≤ n · I(X, X₁; Y)`. **Load-bearing piece** (Mathlib-wall):
-  Csiszár's sum identity (L-RC1, ~300 lines) and the per-letter chain
-  expansion (L-RC2, ~150 lines) jointly produce this entropy-level estimate;
-  no project-side discharge yet. The hypothesis is supplied as the
-  entropy-level *result* of those two steps, **not** the conclusion
-  `R ≤ Ib + ε`.
+  `n · R ≤ I_marg + 1 + Pe · log M` for the broadcast cut `W → Y^n`.
 * `h_cleanup : (1 + Pe · log M) / n ≤ ε` — clean-up estimate collecting the
   Fano residual into the corner `ε`.
 
-Body is the genuine divide-by-`n` arithmetic of `relay_cut_rate_le_of_fano`:
-no part of the conclusion `R ≤ Ib + ε` is taken as a hypothesis.
+The previous public signature also took a load-bearing chain hypothesis
+`h_chain : I_marg ≤ n · Ib` (the per-letter chain bound
+`I(W; Y^n) ≤ n · I(X, X₁; Y)`); that piece bundled the Mathlib-wall
+Csiszár sum identity (L-RC1) and per-letter chain expansion (L-RC2) into
+the wrapper as a hypothesis. Under the sorry-based migration that
+load-bearing predicate has been removed: the wrapper now retreats to
+`sorry`, with closure responsibility tracked on the parent moonshot plan.
 
-`@audit:suspect(relay-cutset-moonshot-plan)` -/
+`@residual(plan:relay-cutset-moonshot-plan)` -/
 theorem relay_broadcast_cut
     {M n : ℕ} (hn : 0 < n)
     (_c : RelayCode M n α α₁ β β₁)
     (R Pe I_marg Ib ε : ℝ)
     (h_fano : RelayBcastCutFano M n R Pe I_marg)
-    (h_chain : I_marg ≤ (n : ℝ) * Ib)
     (h_cleanup : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε) :
-    R ≤ Ib + ε :=
-  relay_cut_rate_le_of_fano hn R Pe I_marg Ib ε h_fano h_chain h_cleanup
+    R ≤ Ib + ε := by
+  sorry
 
-/-- 🟢ʰ **MAC cut — load-bearing hypothesis form (Fano + conditional
-per-letter chain, NOT a discharge)**.
+/-- **MAC cut — `R ≤ Im + ε`** (load-bearing conditional Csiszár chain wall, sorry).
 
 For any relay block code `c` and rate `R`, the MAC direction of the cut-set
-bound derives
+bound asserts
 
 ```
 R ≤ Im + ε
 ```
 
-from genuine entropy-level inputs — **the conclusion is no longer taken as
-a hypothesis**, and the previous `True` placeholders are replaced by real
-Fano + chain + clean-up `Prop`s:
+from the entropy-level Fano-side input + clean-up estimate:
 
 * `h_fano : RelayMacCutFano M n R Pe I_marg` — Fano-side bound
   `n · R ≤ I_marg + 1 + Pe · log M` for the MAC cut
   `W → (Y^n, Y₁^n) | X₁^n`.
-* `h_chain : I_marg ≤ n · Im` — conditional per-letter chain bound
-  `I(W; Y^n, Y₁^n | X₁^n) ≤ n · I(X; Y, Y₁ | X₁)`. **Load-bearing piece**
-  (Mathlib-wall): the conditional Csiszár sum identity (L-RC1) and the
-  conditional chain-rule expansion (L-RC2) jointly produce this entropy-
-  level estimate; no project-side discharge yet. The hypothesis is supplied
-  as the entropy-level *result* of those two steps, **not** the conclusion
-  `R ≤ Im + ε`.
 * `h_cleanup : (1 + Pe · log M) / n ≤ ε` — clean-up estimate.
 
-Body is the genuine divide-by-`n` arithmetic of `relay_cut_rate_le_of_fano`:
-no part of the conclusion `R ≤ Im + ε` is taken as a hypothesis.
+The previous public signature also took a load-bearing chain hypothesis
+`h_chain : I_marg ≤ n · Im` (the conditional per-letter chain bound
+`I(W; Y^n, Y₁^n | X₁^n) ≤ n · I(X; Y, Y₁ | X₁)`); that piece bundled the
+conditional Csiszár sum identity (L-RC1) + conditional chain-rule
+expansion (L-RC2) into the wrapper. Under the sorry-based migration that
+load-bearing predicate has been removed; closure responsibility is parked
+on the parent moonshot plan.
 
-`@audit:suspect(relay-cutset-moonshot-plan)` -/
+`@residual(plan:relay-cutset-moonshot-plan)` -/
 theorem relay_mac_cut
     {M n : ℕ} (hn : 0 < n)
     (_c : RelayCode M n α α₁ β β₁)
     (R Pe I_marg Im ε : ℝ)
     (h_fano : RelayMacCutFano M n R Pe I_marg)
-    (h_chain : I_marg ≤ (n : ℝ) * Im)
     (h_cleanup : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε) :
-    R ≤ Im + ε :=
-  relay_cut_rate_le_of_fano hn R Pe I_marg Im ε h_fano h_chain h_cleanup
+    R ≤ Im + ε := by
+  sorry
 
 /-- **Cut-set combination (two-rate `min`)** — given the two cut bounds
 `R ≤ Ib` and `R ≤ Im`, conclude `R ≤ relayCutsetBound Ib Im`.
@@ -493,78 +476,69 @@ variable [MeasurableSpace α] [MeasurableSpace α₁]
 variable [MeasurableSpace β] [MeasurableSpace β₁]
 
 /-- **Relay cut-set outer bound (Cover–Thomas Theorem 15.10.1)** —
-**genuine (broadcast cut) / honest-🟢ʰ (MAC cut) converse**, no longer
-circular.
+load-bearing Csiszár chain walls (broadcast + conditional), sorry.
 
 For any relay block code `c : RelayCode M n α α₁ β β₁` and rate `R`, given
 the broadcast-cut rate `Ib = I(X, X₁; Y)` and MAC-cut rate
 `Im = I(X; Y, Y₁ | X₁)` evaluated at an optimal joint input pmf, the
-converse **derives**
+converse asserts
 
 ```
 R ≤ relayCutsetBound (Ib + ε) (Im + ε) = min { Ib + ε, Im + ε }
 ```
 
-from genuine entropy-level inputs — **the conclusion is no longer taken as
-a hypothesis**. The consumed hypotheses are entropy-level Fano-side and
-per-letter chain inequalities for each cut, none of which is the conclusion
-`R ≤ relayCutsetBound …`:
+from the entropy-level Fano-side inputs and the two clean-up estimates:
 
 * `h_fano_b : RelayBcastCutFano M n R Pe I_marg_b` — broadcast-cut Fano-side
-  bound. This is a **single-user** direction (Fano on `W → Y^n`), genuinely
-  Fano-backed by the same recipe as the MAC per-user converse
-  (`fano_inequality_measure_theoretic`); supplied here at the entropy level
-  so the headline derives `R ≤ Ib + ε` from it.
-* `h_fano_m : RelayMacCutFano M n R Pe I_marg_m` — MAC-cut Fano-side bound
-  (honest-🟢ʰ: the per-letter reduction of the conditional MI
-  `I(W; Y^n, Y₁^n | X₁^n)` requires Csiszár's sum identity, not yet a
-  project lemma, so this entropy-level inequality is supplied as a real
-  `Prop`, **not** `R ≤ relayCutsetBound …`).
-* `h_chain_b / h_chain_m` — per-letter (conditional) MI chain inequalities
-  (honest-🟢ʰ).
-* `h_cleanup_b / h_cleanup_m` — the `n⁻¹` clean-up estimates collecting the
-  Fano residual into the corner ε.
+  bound (single-user, Fano on `W → Y^n`).
+* `h_fano_m : RelayMacCutFano M n R Pe I_marg_m` — MAC-cut Fano-side bound.
+* `h_cleanup_b / h_cleanup_m` — the `n⁻¹` clean-up estimates.
 
-The body is the genuine divide-by-`n` derivation (`relay_cut_rate_le_of_fano`
-×2 + `relay_cutset_combine`); it consumes the entropy-level inputs and
-**produces** the cut-set bound, mirroring `mac_capacity_region_outer_bound`
-/ `bc_capacity_region_outer_bound` / the SlepianWolf converse recipe. The
-joint-input maximisation (L-RC4) remains scope-out; the statement consumes
-only scalar values.
+The previous public signature also took two load-bearing chain hypotheses
+`h_chain_b : I_marg_b ≤ n · Ib` and `h_chain_m : I_marg_m ≤ n · Im`;
+together those bundled the (conditional) Csiszár sum identity (L-RC1) +
+per-letter chain expansion (L-RC2) into the wrapper. Under the
+sorry-based migration both load-bearing predicates have been removed;
+closure responsibility is parked on the parent moonshot plan. The
+joint-input maximisation (L-RC4) remains scope-out.
 
-`@audit:suspect(relay-cutset-moonshot-plan)` -/
+`@residual(plan:relay-cutset-moonshot-plan)` -/
 theorem relay_cutset_outer_bound
     {M n : ℕ} (hn : 0 < n)
     (_c : RelayCode M n α α₁ β β₁)
     (R Pe I_marg_b I_marg_m Ib Im ε : ℝ)
     (h_fano_b : RelayBcastCutFano M n R Pe I_marg_b)
     (h_fano_m : RelayMacCutFano M n R Pe I_marg_m)
-    (h_chain_b : I_marg_b ≤ (n : ℝ) * Ib)
-    (h_chain_m : I_marg_m ≤ (n : ℝ) * Im)
     (h_cleanup_b : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε)
     (h_cleanup_m : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε) :
-    R ≤ relayCutsetBound (Ib + ε) (Im + ε) :=
-  relay_cutset_combine R (Ib + ε) (Im + ε)
-    (relay_cut_rate_le_of_fano hn R Pe I_marg_b Ib ε h_fano_b h_chain_b h_cleanup_b)
-    (relay_cut_rate_le_of_fano hn R Pe I_marg_m Im ε h_fano_m h_chain_m h_cleanup_m)
+    R ≤ relayCutsetBound (Ib + ε) (Im + ε) := by
+  sorry
 
 /-- **Relay cut-set outer bound — corner-limit form.** As `n → ∞` the `n⁻¹`
 clean-up terms vanish (`ε ≤ 0`), recovering the exact cut-set bound
-`R ≤ relayCutsetBound Ib Im`. -/
+`R ≤ relayCutsetBound Ib Im`.
+
+Transitive `sorry` via `relay_cutset_outer_bound` (Phase 2.1 retreat). No
+`@residual` tag is attached — the closure responsibility belongs to the
+upstream declaration's `@residual(plan:relay-cutset-moonshot-plan)`. The
+unused `_h_chain_b` / `_h_chain_m` parameters are kept as underscore
+placeholders so that callers built against the previous public signature
+continue to type-check (extract-only consumer parameterisation; the chain
+hypotheses are no longer fed into the upstream body). -/
 theorem relay_cutset_outer_bound_corner_limit
     {M n : ℕ} (hn : 0 < n)
     (c : RelayCode M n α α₁ β β₁)
     (R Pe I_marg_b I_marg_m Ib Im ε : ℝ)
     (h_fano_b : RelayBcastCutFano M n R Pe I_marg_b)
     (h_fano_m : RelayMacCutFano M n R Pe I_marg_m)
-    (h_chain_b : I_marg_b ≤ (n : ℝ) * Ib)
-    (h_chain_m : I_marg_m ≤ (n : ℝ) * Im)
+    (_h_chain_b : I_marg_b ≤ (n : ℝ) * Ib)
+    (_h_chain_m : I_marg_m ≤ (n : ℝ) * Im)
     (h_cleanup_b : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε)
     (h_cleanup_m : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε)
     (h_ε : ε ≤ 0) :
     R ≤ relayCutsetBound Ib Im := by
   have h := relay_cutset_outer_bound hn c R Pe I_marg_b I_marg_m Ib Im ε
-    h_fano_b h_fano_m h_chain_b h_chain_m h_cleanup_b h_cleanup_m
+    h_fano_b h_fano_m h_cleanup_b h_cleanup_m
   refine le_min ?_ ?_
   · exact h.trans ((relayCutsetBound_le_left _ _).trans (by linarith))
   · exact h.trans ((relayCutsetBound_le_right _ _).trans (by linarith))
@@ -591,9 +565,14 @@ theorem relay_cutset_outer_bound_two_cuts
 Specialisation of `relay_cutset_outer_bound` to the standard
 `R := Real.log M / n` rate convention used throughout Cover–Thomas (and
 matched by `wyner_ziv_converse_n_letter` /
-`mac_capacity_region_outer_bound_log_rate`). The entropy-level Fano + chain
-inputs are consumed and the `(I + ε)` cut-set bound is **derived** (not
-assumed). -/
+`mac_capacity_region_outer_bound_log_rate`).
+
+Transitive `sorry` via `relay_cutset_outer_bound` (Phase 2.1 retreat). No
+`@residual` tag is attached — the closure responsibility belongs to the
+upstream declaration's `@residual(plan:relay-cutset-moonshot-plan)`. The
+unused `_h_chain_b` / `_h_chain_m` parameters are kept as underscore
+placeholders so that callers built against the previous public signature
+continue to type-check. -/
 theorem relay_cutset_outer_bound_log_rate
     {M n : ℕ} (hn : 0 < n)
     (c : RelayCode M n α α₁ β β₁)
@@ -602,14 +581,14 @@ theorem relay_cutset_outer_bound_log_rate
         RelayBcastCutFano M n (Real.log (M : ℝ) / (n : ℝ)) Pe I_marg_b)
     (h_fano_m :
         RelayMacCutFano M n (Real.log (M : ℝ) / (n : ℝ)) Pe I_marg_m)
-    (h_chain_b : I_marg_b ≤ (n : ℝ) * Ib)
-    (h_chain_m : I_marg_m ≤ (n : ℝ) * Im)
+    (_h_chain_b : I_marg_b ≤ (n : ℝ) * Ib)
+    (_h_chain_m : I_marg_m ≤ (n : ℝ) * Im)
     (h_cleanup_b : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε)
     (h_cleanup_m : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε) :
     Real.log (M : ℝ) / (n : ℝ) ≤ relayCutsetBound (Ib + ε) (Im + ε) :=
   relay_cutset_outer_bound hn c (Real.log (M : ℝ) / (n : ℝ)) Pe
     I_marg_b I_marg_m Ib Im ε
-    h_fano_b h_fano_m h_chain_b h_chain_m h_cleanup_b h_cleanup_m
+    h_fano_b h_fano_m h_cleanup_b h_cleanup_m
 
 end MainTheorem
 
