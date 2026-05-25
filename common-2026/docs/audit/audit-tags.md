@@ -156,7 +156,8 @@ theorem foo : ... := by
 | `load-bearing-predicate-empty-consumers` | `load-bearing-predicate` の中でも consumer **0 件** であるもの (純粋削除可能) | (runbook 提案、現在使用 0 件) |
 | `load-bearing-predicate-extract-only` | `load-bearing-predicate` の中でも `.field` 抽出 / bridge 経由の extract-only consumer (pass-through、load-bearing claim を inject しない) が残存しているもの | (runbook 提案、現在使用 0 件) |
 | `single-line-wrapper` | 1-line `def` で他 declaration を wrapping するだけの shim | WynerZivPackingBody |
-| `name-laundering-alias` | `def X := Y` 形の literal alias で、`X` という名前にすることで discharge を偽装している (`launder` defect の def 版) | LZ78 `IsSMBToLZ78ConverseChainBridge := IsLZ78ConverseChainHyp` (planned) |
+| `name-laundering-alias` | `def X := Y` 形の literal alias で、`X` という名前にすることで discharge を偽装している (`launder` defect の def 版) | LZ78 `IsSMBToLZ78ConverseChainBridge := IsLZ78ConverseChainHyp` (`LZ78SMBSandwich.lean:307/319`) |
+| `false-hypothesis` | `def` / `Prop` 自身が機械検証可能に FALSE (CLAUDE.md「sorry を書けない箇所での対処順序」第二選択)。`@audit:closed-by-successor` と併用して後継 plan を指す | LZ78 `def IsLZ78ZivCombinatorialCoreOverhead` (`LZ78ZivTreeNode.lean:403`、`not_isLZ78ZivCombinatorialCoreOverhead` で refutation 済) |
 | `superseded-by-memoryless-form` | MVP/pre-discharge 形が後続 memoryless 形に置換済 | ChannelCodingFeedback (3 件) |
 | `superseded-by-full-discharge` | 完全 discharge 形が別 file で publish 済 | ChannelCodingShannonTheoremFull |
 

@@ -487,25 +487,22 @@ strictly-more-primitive isolated combinatorial core
 `IsLZ78ZivCombinatorialCore` plus the admissible full-support regularity
 `hreg`. The slack is the genuine vanishing `lz78AchievSlack`.
 
-**Honesty status (read this).** This is **not** an unconditional headline.
-Two honest inputs remain:
+**Honesty status (read this).** After the Phase 2.3 sweep
+(`lz78-sorry-migration-plan`), the `hcore : IsLZ78ZivCombinatorialCore`
+hypothesis has been removed from the signature and the body retreated to
+`sorry`. Closure is tracked by `lz78-ziv-inequality-discharge-moonshot-plan`,
+which owns the Cover–Thomas Lemma 13.5.5 distinct-phrase combinatorial core
+(`c · log c ≤ ∑ⱼ -log qⱼ`) — the load-bearing per-block combinatorial heart
+that the committed foundation (which exposes only *path-prefix* phrase
+conditionals, not the LZ tree-node sub-distribution) cannot bridge.
 
-* `hcore : IsLZ78ZivCombinatorialCore` — the load-bearing Cover–Thomas
-  Lemma 13.5.5 distinct-phrase combinatorial core (`c · log c ≤ ∑ⱼ -log qⱼ`).
-  Relative to the structure `IsLZ78AchievabilityZivUpperBound` it replaces,
-  this is *strictly more primitive* (a per-block combinatorial inequality vs.
-  an a.s.-eventual rate bound), but it is **still load-bearing**: it is the
-  genuine combinatorial heart that the committed foundation (which exposes
-  only *path-prefix* phrase conditionals, not the LZ tree-node
-  sub-distribution) cannot bridge. It is **not** a discharge.
+The remaining honest inputs at the signature level are:
+
 * `h_lb : IsLZ78ConverseCodingLowerBound` — the converse coding lower bound
-  (Core 2, untouched here).
-
-So the achievability honest input is relocated to its most primitive form,
-**not** eliminated; the headline assumption count is unchanged (still two
-honest inputs, now `hcore` + `h_lb`). The regularity `hreg` is an admissible
-full-support hypothesis (the same family as
-`isLZ78PerPathParsingFactorization_of_pos`), not load-bearing.
+  (Core 2, untouched here; separate `lz78-residual-discharge-plan` track for
+  the predicate-retract decision).
+* `hreg` — admissible full-support regularity (same family as
+  `isLZ78PerPathParsingFactorization_of_pos`), not load-bearing.
 
 `@residual(plan:lz78-ziv-inequality-discharge-moonshot-plan)` -/
 theorem lz78_two_sided_optimality_distinct_ziv_core_wired
