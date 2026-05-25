@@ -186,7 +186,11 @@ hypothesis** consumed by `awgn_achievability_jointly_typical_body` to produce
 the F-1 `IsAwgnTypicalityHypothesis`.
 
 Discharging this primitive (i.e. the continuous AEP + sphere-packing
-union-bound chain) is deferred to `awgn-achievability-typicality-plan.md` Tier 3. -/
+union-bound chain) is deferred to `awgn-achievability-typicality-plan.md` Tier 3.
+
+`@audit:retract-candidate(name-laundering-alias)` — `IsAwgnTypicalityHypothesis`
+(`AWGNAchievability.lean:47`) と verbatim 同型 alias、signature 改変は別 PR 候補
+(auditor 委任で正式付与判定)。 -/
 def IsAwgnF2DecodingHypothesis (P : ℝ) (N : ℝ≥0)
     (h_meas : IsAwgnChannelMeasurable N) : Prop :=
   ∀ {R : ℝ}, 0 < R → R < (1/2) * Real.log (1 + P / (N : ℝ)) →
@@ -241,7 +245,11 @@ full `IsAwgnConverseHypothesis` via:
 Like `IsAwgnConverseHypothesis`, but exposed as a separate name to signal the
 **F-3 body reduction layer**. The discharge will use `fano_inequality_measure_theoretic`
 (`Common2026/Fano/Measure.lean`) + chain rule + per-letter max-entropy from
-`differentialEntropy_le_gaussian_of_variance_le`. -/
+`differentialEntropy_le_gaussian_of_variance_le`.
+
+`@audit:retract-candidate(name-laundering-alias)` — `IsAwgnConverseHypothesis`
+(`AWGNConverse.lean:56`) と verbatim 同型 alias、signature 改変は別 PR 候補
+(auditor 委任で正式付与判定)。 -/
 def IsAwgnF3ChainHypothesis (P : ℝ) (N : ℝ≥0)
     (h_meas : IsAwgnChannelMeasurable N) : Prop :=
   ∀ {M n : ℕ} (_hM : 2 ≤ M) (c : AwgnCode M n P),
@@ -276,7 +284,7 @@ F-1-discharged theorem. The MI bridge (F-2' layer) is passed through unchanged.
 * F-2 → `awgn-achievability-typicality-plan.md` (Tier 3)
 * F-3 → `awgn-converse-aux-plan.md` (Tier 3)
 
-`@audit:suspect(awgn-achievability-typicality-plan)` -/
+`@audit:closed-by-successor(awgn-achievability-typicality-plan)` -/
 theorem awgn_theorem_of_F2F3_hypotheses
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_F2 : IsAwgnF2DecodingHypothesis P N (isAwgnChannelMeasurable N))
@@ -314,7 +322,7 @@ machinery absent from Mathlib. Only the F-1 layer (kernel measurability) is
 closed here; this re-publishes
 `AWGNF1Discharge.awgn_capacity_closed_form_F1_discharged` unchanged in content.
 
-`@audit:suspect(awgn-converse-aux-plan)` -/
+`@audit:closed-by-successor(awgn-converse-aux-plan)` -/
 theorem awgn_capacity_closed_form_of_maxent_hypotheses
     (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_bridge_gauss :

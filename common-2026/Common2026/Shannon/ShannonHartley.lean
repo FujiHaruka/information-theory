@@ -97,14 +97,14 @@ explicit hypotheses by `shannon_hartley_formula`; supplying them via the
 positivity-only builders (`mk_*`) does **not** discharge their mathematical
 content — it only re-asserts the still-open identity that the caller hands in. -/
 
-/-- L-SH1 (🟢ʰ Mathlib-wall residual, weak positivity carrier): the intended
+/-- L-SH1 (Mathlib-wall residual, weak positivity carrier): the intended
 content is the Whittaker-Shannon sampling-equivalence between the
 continuous-time bandlimited AWGN channel at bandwidth `W` and a sequence of
 independent per-sample T2-A AWGN channels at rate `2W`. The genuine sampling
 equivalence needs the Whittaker-Shannon / Nyquist-Fourier machinery, which
 is **not in Mathlib**.
 
-🟢ʰ load-bearing hypothesis — NOT a discharge. The previous body was
+**load-bearing hypothesis — NOT a discharge.** The previous body was
 `∃ _h : 0 < W ∧ 0 < N₀ ∧ 0 ≤ P, True` (`True`-slot placeholder = degenerate
 def). Replaced with the **honest positivity carrier** `0 < W ∧ 0 < N₀ ∧ 0 ≤ P`:
 no `True` slot, the predicate is just a positivity bundle, and the docstring
@@ -136,7 +136,7 @@ normalization)` chosen so that per-sample SNR is `P/(N₀·W)`, T2-A's
 `(1/2) · log(1 + P/(N₀·W))`. The exact normalization between continuous
 `N₀` and discrete `N` is left as the caller's `hN_snr` hypothesis.
 
-`@audit:suspect(whittaker-shannon-partial-moonshot-plan)` -/
+`@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
 theorem perSampleAwgnCapacity_eq_awgn
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P)
     (P_samp : ℝ) (hP_samp : 0 ≤ P_samp)
@@ -206,7 +206,7 @@ caller's already-assumed `2W·perSample` identity into the `log` closed form. A
 self-contained proof remains open pending continuous AEP / Nyquist-Fourier
 support in Mathlib.
 
-`@audit:suspect(whittaker-shannon-partial-moonshot-plan)`
+`@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` `@residual(plan:whittaker-shannon-partial-moonshot-plan)`
 -/
 theorem shannon_hartley_formula
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P)
@@ -284,7 +284,7 @@ theorem shannon_hartley_wideband_limit
 /-- Build `IsBandlimitedSamplingHypothesis` from the basic positivity
 constraints.
 
-🟢ʰ load-bearing hypothesis — NOT a discharge. Now that
+**load-bearing hypothesis — NOT a discharge.** Now that
 `IsBandlimitedSamplingHypothesis` is the **honest positivity bundle**
 `0 < W ∧ 0 < N₀ ∧ 0 ≤ P` (previously a `∃ _h, True` placeholder),
 this builder genuinely produces that conjunction from the three premises.
@@ -293,7 +293,7 @@ equivalence — the predicate by design no longer claims to. The genuine
 operational identity remains carried by `IsTwoWDegreesOfFreedom` and is
 consumed separately by `shannon_hartley_formula`.
 
-`@audit:suspect(whittaker-shannon-partial-moonshot-plan)` -/
+`@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
 theorem mk_IsBandlimitedSamplingHypothesis
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
     IsBandlimitedSamplingHypothesis W N₀ P :=
@@ -317,7 +317,7 @@ theorem bandlimitedAwgnCapacityBits_eq (W N₀ P : ℝ) :
 
 /-- Shannon-Hartley in bits/sec (Cover-Thomas form `C = W · log₂(1+SNR)`).
 
-`@audit:suspect(whittaker-shannon-partial-moonshot-plan)` -/
+`@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
 theorem shannon_hartley_formula_bits
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P)
     (C : ℝ)

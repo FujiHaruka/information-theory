@@ -588,3 +588,219 @@ docstring + 直後 `theorem` signature + body 1-3 行を実コードから読込
    の P-1/P-2 sorry に依存)。net residual: 13 → 7 件。
 -->
 
+## Round 4 残作業 (2026-05-26 verbatim 再集計)
+
+> **位置付け**: Round 1 (2026-05-25) sweep は上記 Phase 0-V + 判断ログ #1-#6 で
+> **完遂済** (`@audit:suspect` 13 → 0、`sorry + @residual(plan:...)` 7 件、
+> `@audit:retract-candidate(load-bearing-predicate)` 3 件)。本 Round 4 section は
+> **新規 sorry 化作業ではなく**、Round 3 escalate (#2/#4/#5/#7) で挙がった
+> 横断改善が Cramér family に該当するかの判定 + 該当する場合の minor 追加処置を計画する。
+> handoff-sorry-migration.md L111 の「Cramer (suspect=12 in 3 file): Round 1 で
+> 部分着手済、後続予定」は **stale 情報** — 本 Round 4 で archival 状態を確定する。
+
+### Round 1 完了状況 (verbatim 再確認、2026-05-26)
+
+実コード grep 結果 (`rg -c '@audit:suspect\(' Common2026/Shannon/Cramer*.lean
+Common2026/Shannon/MeasurePiTiltedFactorization.lean`):
+
+| file | suspect | residual(plan) | retract-candidate | sorry body |
+|---|---:|---:|---:|---:|
+| `Common2026/Shannon/Cramer.lean` | 0 | 1 | 0 | 1 (`cramer_lower:463`) |
+| `Common2026/Shannon/CramerCLTClosure.lean` | 0 | 1 | 0 | 1 (`cramer_lower_at:482`) |
+| `Common2026/Shannon/CramerLC2Discharge.lean` | 0 | 0 | 0 | 0 |
+| `Common2026/Shannon/CramerLC2DischargeExt.lean` | 0 | 0 | 0 | 0 |
+| `Common2026/Shannon/CramerLC2PhaseC.lean` | 0 | 3 | 1 | 2 (`tilted_lower_from_predicate:130` + `cramer_lower_phaseC_partial_discharge:165`) |
+| `Common2026/Shannon/CramerPhaseDGapWorkaround.lean` | 0 | 3 | 2 | 3 (`isMeasureInfinitePiTiltedEq_of_cylinder_density:148` + `cramer_lower_phase_d_via_cylinder:177` + `IsCramerChernoffNLetterRNUnified.cramerPhaseC:319`) |
+| `Common2026/Shannon/MeasurePiTiltedFactorization.lean` | 0 | 0 | 0 | 0 |
+| **合計** | **0** | **8** | **3** | **7** |
+
+(`residual=8` vs `sorry=7` の 1 差は CramerLC2PhaseC.lean:94 の docstring **散文** mention
+"sorry'd unconditional producer (`@residual(plan:cramer-moonshot-plan)`)" による false positive
+hit、Pattern D 発展形類似。判断ログ #5 の「sorry 集計の docstring 散文混入」と同型。)
+
+判断ログ #6 では「net residual: 13 → 7 件」と書かれており、実 sorry body 数 = 7 と一致。
+plan slug 別内訳:
+
+- `@residual(plan:cramer-moonshot-plan)`: 4 件 (Cramer.lean `cramer_lower` + PhaseDGap 3 件
+  `isMeasureInfinitePiTiltedEq_of_cylinder_density` / `cramer_lower_phase_d_via_cylinder` /
+  `IsCramerChernoffNLetterRNUnified.cramerPhaseC`)
+- `@residual(plan:cramer-lc2-discharge-moonshot-plan)`: 2 件 (LC2PhaseC `tilted_lower_from_predicate`
+  + `cramer_lower_phaseC_partial_discharge`)
+- `@residual(plan:cramer-chernoff-clt-closure-moonshot-plan)`: 1 件 (CLTClosure `cramer_lower_at`)
+
+`@audit:retract-candidate(load-bearing-predicate)` 付与済 (3 件):
+
+- `IsMeasureInfinitePiTiltedEq` (CramerLC2PhaseC.lean:85 docstring + line 116 definition)
+- `IsCramerNLetterRNCylinder` (CramerPhaseDGapWorkaround.lean:96 docstring)
+- `IsCaratheodoryExtensionHyp` (CramerPhaseDGapWorkaround.lean:123 docstring)
+
+`IsCramerChernoffNLetterRNUnified` structure (PhaseDGapWorkaround.lean:245) は判断ログ #2
+通り **未付与** (Chernoff family sweep との順序依存、L-MIG-2)。
+
+`MeasurePiTiltedFactorization.lean` は Round 1 で **touch せず** (Phase A plumbing、tag 0 件、
+`namespace InformationTheory.Shannon.Cramer.Discharge`、本 sweep の Approach「3 file 中心」
+内には含まれていたが、suspect 0 件で実作業ゼロ)。Round 4 でも touch 不要。
+
+### Round 4 Approach
+
+Round 1 sweep の DoD (type-check done + suspect 0) は達成済。Round 4 は **3 件の minor
+横断改善** を行うが、いずれも **任意 (optional)** + **本 plan 単独完結不可** な特性を持つため、
+escalate 先 / 判断委任先 / 後続 plan の発火条件を明示し、Cramér family 単独では archival
+状態に persist させる。
+
+### Phase R4 — Round 3 escalate 起源の横断改善判定 📋
+
+#### Phase R4.1 — `@audit:retract-candidate(closure-plan-completed)` semantic 検討 📋
+
+- [ ] **R4.1.1** Round 3 escalate #2 (handoff L70-78、BMClosure 起源) で議論中の
+  `closure-plan-completed` semantic 拡張が Cramér family にも適用可能か判定する。
+  BMClosure の使用例:「active consumer ありの load-bearing wall を closure plan で
+  acknowledged 済として bookkeeping」。Cramér 3 predicate (現
+  `@audit:retract-candidate(load-bearing-predicate)`) の状態を verbatim 確認:
+  - `IsMeasureInfinitePiTiltedEq`: hypothesis-form consumer 0 件、producer-side 構成子
+    1 件 (`InfinitePiTiltedChangeOfMeasure.isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge`)
+    + Cramér 内 producer 1 件 (`isMeasureInfinitePiTiltedEq_of_cylinder_density`、sorry'd) +
+    Cramér 内 projection 1 件 (`IsCramerChernoffNLetterRNUnified.cramerPhaseC`、sorry'd)
+  - `IsCramerNLetterRNCylinder`: hypothesis-form consumer 0 件、producer-side
+    `IsCramerChernoffNLetterRNUnified.cramer` (structure projection) のみ
+  - `IsCaratheodoryExtensionHyp`: hypothesis-form consumer 0 件、producer-side
+    `IsCramerChernoffNLetterRNUnified.cara` (structure projection) のみ
+  → 3 predicate とも **active consumer なし** (transitively sorry 化されたものを除けば)。
+  BMClosure と異なり「active consumer あり」のケースではない → `closure-plan-completed`
+  ではなく現状の `load-bearing-predicate` が **正しい reason**。
+- [ ] **R4.1.2** R4.1.1 の判定 (Cramér 3 件は `load-bearing-predicate` を維持、
+  `closure-plan-completed` への書換不要) を escalate #2 への入力 fact として handoff に
+  記録 (本 plan としては action ゼロ、Cramér family 観点での semantic 拡張 demand 無し)。
+
+**Phase R4.1 DoD**: 判断のみ、コード edit ゼロ。escalate #2 の参考資料として整理。
+
+**proof-log**: no。
+
+#### Phase R4.2 — `cramer_lower_at_cgfDeriv_unconditional` honesty downgrade の rewrite recovery 検討 📋
+
+判断ログ #4 で「`cramer_lower_at_cgfDeriv_unconditional` の body を `cramer_lower_at` を
+呼ぶ 1 行に縮退、constructive 経路 (boundary CLT + Phase 5 + tiltedHalfLine change-of-measure)
+は transitive `sorry` を経由する状態に降格」と記録。Round 3 escalate #5
+(`rateDistortionFunction_convexOn_pmf` rewrite recovery) と同パターン。
+
+- [ ] **R4.2.1** 当該 declaration の旧 body (commit 履歴) を verbatim 確認:
+  ```bash
+  git log --oneline -- Common2026/Shannon/CramerCLTClosure.lean | head -10
+  git show <pre-sweep-commit>:Common2026/Shannon/CramerCLTClosure.lean | sed -n '500,560p'
+  ```
+  旧 body は `hmean` + `tiltedHalfLine_chernoff_lower_at_boundary` 経由の constructive
+  構成 (判断ログ #4 verbatim)。`cramer_lower_at` の `h_slice` を本体内部で **自前構成**
+  していた可能性が高い (= L-MIG-3 想定の「downstream genuine proof が upstream load-bearing
+  hyp を discharge する」inverted dependency パターン、Round 3 Pattern J)。
+- [ ] **R4.2.2** Pattern J recovery 可能性判定:
+  - 旧 body が `h_slice` を自前構成していたなら、`cramer_lower_at` を呼ばずに直接
+    `cramer_lower` を呼ぶ rewrite で proof done 復元可能 — Round 3 Pattern J 回避策と同型
+    (downstream の genuine proof を保持しつつ upstream P retreat を別経路で吸収)
+  - ただし `cramer_lower` も sorry 化済 (`cramer_lower:463`) のため、`cramer_lower` 経由
+    でも transitive sorry は不可避 — **rewrite recovery 不可** と結論付ける可能性高
+  - 旧 body が `tiltedHalfLine_chernoff_lower_at_boundary` を載せていれば、当該 boundary
+    lemma が `cramer_lower` の hypothesis form ではなく直接 measure-theoretic に書かれて
+    いるかを確認 (CLTClosure.lean:421 周辺を Read)。直接形なら recovery 可能
+- [ ] **R4.2.3** R4.2.2 で recovery 可能と判明したら R4.2 を「rewrite による proof done
+  復元 plan」として独立 plan 化候補に escalate (本 plan の scope を超える、別 plan)。
+  recovery 不可と判明したら docstring に「rewrite recoverable not feasible (`cramer_lower`
+  も sorry 化のため transitive 不可避)」note 追記のみ + escalate #5 への入力 fact として
+  記録。
+- [ ] **R4.2.4** `hVar` unused-variable 警告 (判断ログ #4) を解消するため body を `_` で
+  ignore 或いは `:=` を消して `(_hVar : ...)` underscore 化検討 — ただし signature に
+  影響あるため、R4.2.2 の rewrite 判定と一括で扱う (R4.2.2 で recovery 不可と確定したら
+  underscore 化のみ実施、recovery 可能なら rewrite が unused を解消)。
+
+**Phase R4.2 DoD**: 旧 body verbatim 確認 + rewrite 可能性判定 1 件。実装 (rewrite) は
+別 plan に分離。
+
+**proof-log**: no。
+
+#### Phase R4.3 — `wall:infinite-pi-tilted-rn` promote 判定 (escalate #4 類似) 📋
+
+未決事項 #5 (本 plan 内) で「Wall register 拡張 PR の検討」と記載済。Round 3 escalate
+#4 (`wall:bm-convex-body-sqrt` promote 待機) と同型の「2+ family 参照」trigger 条件あり。
+
+- [ ] **R4.3.1** 3 predicate の壁性質を verbatim 確認:
+  - `IsMeasureInfinitePiTiltedEq`: n-letter RN-deriv identification of infinite-pi tilt
+    (Mathlib 未整備、`Measure.infinitePi` + `Measure.tilted` の compositional shape)
+  - `IsCramerNLetterRNCylinder`: cylinder density product over n letters
+  - `IsCaratheodoryExtensionHyp`: Carathéodory cylinder extension
+  → 共通核は **「n 次元 product measure 上の RN-deriv identification + extension」**。
+  単一 wall に統合できれば `wall:infinite-pi-tilted-rn` が register 候補。
+- [ ] **R4.3.2** promote trigger 条件 (audit-tags.md「提案中 wall」§) の確認:
+  - (1) 該当 declaration が shared sorry 補題として 2+ family で再利用される
+  - (2) `plan:<slug>` 集約より wall 化のほうが closure 計画と整合する
+  - Cramér family 内: 3 predicate consumer すべて Cramér file 内に閉じている (R4.1.1
+    で確認済)。**他 family で参照無し** → (1) は **不満足**。
+  - ただし Chernoff family の `IsCramerChernoffNLetterRNUnified` structure
+    (PhaseDGap:245) が 3 predicate のうち 2 つ (`IsCramerNLetterRNCylinder` + `IsCaratheodoryExtensionHyp`)
+    を field として保持 → Chernoff family の closure plan が Cramér wall を参照する
+    可能性あり (L-MIG-2 で保留中の `IsCramerChernoffNLetterRNUnified` deprecate 判断と
+    連動)。
+- [ ] **R4.3.3** 判定: 現時点では promote 見送り、`plan:cramer-moonshot-plan` /
+  `plan:cramer-lc2-discharge-moonshot-plan` 集約のまま維持。Chernoff family sweep
+  (handoff Next step A の AWGN cluster と独立) 時 + escalate #7 (AWGNMIDecompBody) と
+  まとめて再判定。本 plan としては action ゼロ。
+
+**Phase R4.3 DoD**: 判断ログに promote 見送り記録、`audit-tags.md`「提案中 wall」§ への
+追記なし (escalate 経由で扱う)。
+
+**proof-log**: no。
+
+### Phase R4 完了の condition
+
+- R4.1 + R4.2 + R4.3 のいずれも **判断のみ + コード edit ゼロ** (本 plan 内 scope では)
+- R4.2 で rewrite recovery が可能と判明した場合のみ別 plan 起票が必要 — その場合は
+  `docs/shannon/cramer-cltclosure-rewrite-recovery-plan.md` を新規作成 (本 plan には
+  scope 外、orchestrator 判断)
+- 完了後本 plan は **archival** に移行 — Cramér family の `@audit:suspect` migration は
+  Round 1 で完遂、Round 4 は escalate 起源の横断判定のみで close
+
+### Round 4 撤退ライン
+
+- **L-R4-1 (R4.1 で `closure-plan-completed` 必要と判明)**: Cramér 3 predicate のうち
+  hypothesis-form consumer 復活 (= 別 sweep で誰かが再導入) があった場合、現
+  `load-bearing-predicate` → `closure-plan-completed` 書換が妥当に転じる。本 plan
+  R4.1.1 は「現時点で hypothesis-form consumer 0 件」を前提とするため、Phase R4 開始時
+  に再 grep で前提崩れ確認 必須。崩れていたら escalate #2 の決定 (3 案 a/b/c) を待ち
+  本 plan は R4.1 を skip。
+- **L-R4-2 (R4.2 で rewrite recovery が genuine な constructive proof を毀損)**:
+  旧 body の boundary CLT + Phase 5 + tiltedHalfLine 経路を rewrite で復元する場合、
+  `cramer_lower` の sorry を経由しない別経路を引かないと意味なし。R4.2.2 で「`cramer_lower`
+  経由でも transitive sorry 不可避」と判明した時点で R4.2 は実装段階に進めない (escalate
+  #5 の rewrite plan に委ねる)、本 plan R4.2 は docstring note 追記のみで close。
+- **L-R4-3 (R4.3 で Chernoff family sweep の優先度を逆転させない)**: `wall:infinite-pi-tilted-rn`
+  promote には Chernoff family の `IsCramerChernoffNLetterRNUnified` deprecate 判断
+  (handoff Next step A) が前提。Chernoff sweep 未着手の状態で Cramér 単独 promote すると
+  wall register が drift。本 plan R4.3 は **見送り** を default に置く理由。
+
+### Round 4 未決事項 (auditor 委任 / user 判断)
+
+7. **R4.2 rewrite recovery 別 plan 起票判断**: R4.2.2 で旧 body が `cramer_lower` を
+   経由しない構成 (= `tiltedHalfLine_chernoff_lower_at_boundary` 直接形) と判明した
+   場合、別 plan `cramer-cltclosure-rewrite-recovery-plan` 起票を user に escalate。
+   recovery 不可なら docstring note 追記のみで close。
+8. **R4.3 `wall:infinite-pi-tilted-rn` promote 待機の handoff 反映**: 本 plan 内では
+   見送りとするが、Chernoff family sweep + escalate #7 (AWGNMIDecompBody) と一括判定
+   する旨を `.claude/handoff-sorry-migration.md` Next step A に注記する必要あり (本 plan
+   からの handoff 反映 task)。
+9. **handoff-sorry-migration.md L111 の stale 修正**: 「Cramer (suspect=12 in 3 file):
+   Round 1 で部分着手済、後続予定」を「Cramer (suspect=0, sorry=7 in 4 file): Round 1
+   完了、Round 4 minor 横断判定済」に書換える、Round 4 完了後の bookkeeping action。
+   handoff edit 権限は orchestrator 側 (本 plan の sub-action ではない)。
+
+## Round 4 判断ログ
+
+書く頻度: Round 4 中の方針変更 / 撤退ライン発動 / 当初仮定の修正があったとき。append-only。
+
+7. **2026-05-26 Round 4 scope 確定**: handoff-sorry-migration.md L111 の stale
+   「suspect=12 in 3 file」表記に反し、実コード verbatim 確認で `@audit:suspect` 0 件
+   / `sorry + @residual(plan:...)` 7 件 / `@audit:retract-candidate(load-bearing-predicate)`
+   3 件 = Round 1 sweep 完遂済と判明。Round 4 は新規 sorry 化なし、Round 3 escalate
+   #2/#4/#5 のうち Cramér family に該当する横断改善 3 件 (R4.1 closure-plan-completed
+   semantic / R4.2 cltClosure rewrite recovery / R4.3 wall:infinite-pi-tilted-rn
+   promote) を判定する scope に確定。本 plan は archival に移行 + handoff stale 修正
+   (未決事項 #9) を依頼。
+
+

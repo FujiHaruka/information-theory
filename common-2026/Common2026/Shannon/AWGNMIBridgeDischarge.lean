@@ -130,7 +130,7 @@ smaller bind/conv bridge primitive `IsAwgnBindEqConv` (itself discharged in
 `AWGNBindConvBody.lean`), and the conditional-entropy primitive (dispatched by the
 underlying `awgn_theorem_F2_discharged`).
 
-`@audit:suspect(awgn-mi-decomp-plan)` -/
+`@audit:closed-by-successor(awgn-mi-decomp-plan)` -/
 theorem awgn_theorem_of_typicality_converse_bindconv
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_typicality : IsAwgnTypicalityHypothesis P N (isAwgnChannelMeasurable N))
@@ -158,7 +158,7 @@ max-entropy / continuous MI chain rule machinery is absent from Mathlib. Only th
 output-Gaussian fact is closed (reduced to the bind/conv bridge primitive
 `IsAwgnBindEqConv`).
 
-`@audit:suspect(awgn-mi-decomp-plan)` -/
+`@audit:closed-by-successor(awgn-mi-decomp-plan)` -/
 theorem awgn_capacity_closed_form_of_maxent_bindconv
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_bridge : IsAwgnBindEqConv P N (isAwgnChannelMeasurable N))

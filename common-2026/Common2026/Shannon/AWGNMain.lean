@@ -56,7 +56,7 @@ expose the F-1 / F-2 / F-3 / F-4 撤退ライン structure.
 * F-2 (`h_mi_bridge`) → `awgn-mi-bridge-plan.md`
 * F-3 (`h_converse`) → `awgn-converse-aux-plan.md`
 
-`@audit:suspect(awgn-moonshot-plan)` -/
+`@audit:closed-by-successor(awgn-moonshot-plan)` -/
 theorem awgn_channel_coding_theorem
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -85,7 +85,7 @@ The four hypotheses (`h_bridge_gauss`, `h_bdd`, `h_max_ent`) are the F-2 撤退
 ライン pass-throughs (Gaussian-input closed form + bounded-above of MI image +
 max-entropy upper bound). See `AWGN.awgnCapacity_eq` for the underlying sandwich.
 
-`@audit:suspect(awgn-moonshot-plan)` -/
+`@audit:closed-by-successor(awgn-moonshot-plan)` -/
 theorem awgn_capacity_closed_form
     (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)

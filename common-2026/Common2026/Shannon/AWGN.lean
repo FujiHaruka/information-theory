@@ -119,7 +119,7 @@ Discharging `h_bridge` (= "`mutualInfoOfChannel` (KL form) = `h(Y) - h(Y|X)`"
 for AWGN) is deferred to the follow-up plan
 `docs/shannon/awgn-mi-bridge-plan.md`.
 
-`@audit:suspect(awgn-mi-bridge-plan)` -/
+`@audit:closed-by-successor(awgn-mi-bridge-plan)` -/
 theorem mutualInfoOfChannel_gaussianInput_closed_form
     (P N : ℝ≥0) (hP : (P : ℝ) ≠ 0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -209,7 +209,7 @@ theorem gaussianInput_mem_constraintSet (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) :
 /-- The AWGN capacity is bounded below by `(1/2) log(1 + P/N)` — achieved by the
 Gaussian input, using the F-2 hypothesis form of the closed-form MI.
 
-`@audit:suspect(awgn-moonshot-plan)` -/
+`@audit:closed-by-successor(awgn-moonshot-plan)` -/
 theorem awgnCapacity_ge_gaussian
     (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -233,7 +233,7 @@ theorem awgnCapacity_ge_gaussian
 satisfying the second-moment constraint gives MI ≤ `(1/2) log(1+P/N)` via the
 Gaussian max-entropy bound. Pass-through via hypothesis `h_max_ent`.
 
-`@audit:suspect(awgn-moonshot-plan)` -/
+`@audit:closed-by-successor(awgn-moonshot-plan)` -/
 theorem awgnCapacity_le_gaussian
     (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -257,7 +257,7 @@ power-constrained inputs equals `(1/2) log(1 + P/N)`.
 `h_bridge_gauss`, `h_max_ent`, `h_bdd` are the F-2 撤退ライン hypotheses; their
 discharge is deferred to follow-up plans.
 
-`@audit:suspect(awgn-moonshot-plan)` -/
+`@audit:closed-by-successor(awgn-moonshot-plan)` -/
 theorem awgnCapacity_eq
     (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)

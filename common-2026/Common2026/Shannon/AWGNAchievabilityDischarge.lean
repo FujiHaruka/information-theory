@@ -575,10 +575,10 @@ random-coding-bound)`. The body here is a routine combination of `h_aep`
 
 **Independent audit (2026-05-24)**: verdict `load_bearing_hyp / suspect` —
 thin packaging (~10-line body), `h_rand` carries the integral-bound conclusion;
-`h_aep` contributes only the typical-set shell. Honest 🟢ʰ remaining task until
+`h_aep` contributes only the typical-set shell. Honest remaining task until
 both staged predicates are discharged.
 
-`@audit:suspect(awgn-moonshot-plan)` -/
+`@audit:closed-by-successor(awgn-moonshot-plan)` -/
 theorem awgn_avg_error_union_bound
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -727,7 +727,15 @@ independent honesty audit also missed the false-statement issue. Defect surfaced
 when planning the discharge session: chi-square median analysis showed
 `P(∑X² ≤ nP) → 0.5⁺` from above, not → 1.
 
-`@audit:defect(false-statement)` -/
+**Phase 1D audit (2026-05-26)**: ORPHAN status verified — `IsAwgnPowerConstraintHonest`
+(line 784) is the canonical ε-relaxed successor (P_cb < P_target slack). Adding
+`@audit:retract-candidate(false-replaced-by-eps-relaxed)` per audit-tags.md reason
+vocabulary (Round 2 commit `d83e45b` precedent). `@audit:defect(false-statement)`
+remains as honesty record per CLAUDE.md「sorry を書けない箇所での対処順序」第二選択
+(definition rewrite blocked: predicate kept as historical record, signature defect
+form intentional).
+
+`@audit:defect(false-statement)` `@audit:retract-candidate(false-replaced-by-eps-relaxed)` -/
 def IsAwgnPowerConstraintRealizable (P : ℝ) (N : ℝ≥0) : Prop :=
   ∀ ⦃ε : ℝ⦄, 0 < ε → ∀ ⦃R : ℝ⦄, 0 < R → R < (1/2) * Real.log (1 + P / (N : ℝ)) →
     ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n → ∀ ⦃M : ℕ⦄ (_hM_pos : 0 < M),
@@ -957,7 +965,7 @@ degenerate/circular/laundering. Bundle hyp gives primitives + shared `P'`
 witness, body builds the assembly. `h_feasible` is regularity (load-bearing
 analytic hyp, NOT a discharge of the conclusion).
 
-`@audit:suspect(awgn-moonshot-plan)` -/
+`@audit:closed-by-successor(awgn-achievability-typicality-plan)` -/
 theorem isAwgnTypicalityHypothesis
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -1583,7 +1591,7 @@ must be discharged first.
 historical artefact of the pre-pivot 3-hyp form; bundle preserves the
 hyp-mediated semantics so the name still reads honestly).
 
-`@audit:suspect(awgn-moonshot-plan)` -/
+`@audit:closed-by-successor(awgn-moonshot-plan)` -/
 theorem awgn_achievability_F1_via_staged_hyps
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -1615,7 +1623,7 @@ hyp-mediated via 1 bundle staged. Independent audit flagged prior
 status explicit. The `_via_staged` suffix continues to read honestly with the
 bundle hyp (still staged, just collapsed from 3 → 1).
 
-`@audit:suspect(awgn-moonshot-plan)` -/
+`@audit:closed-by-successor(awgn-moonshot-plan)` -/
 theorem awgn_theorem_F4_discharged_F1_via_staged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_feasible : IsAwgnRandomCodingFeasible P N (isAwgnChannelMeasurable N))

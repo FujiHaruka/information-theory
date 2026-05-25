@@ -52,7 +52,20 @@ This bundles in one predicate:
   (F-3 撤退ライン's main pain point).
 
 Discharging this predicate (for the canonical AWGN code construction) is deferred
-to `awgn-converse-aux-plan.md` (Tier 3 plan). -/
+to `awgn-converse-aux-plan.md` (Tier 3 plan).
+
+**inline alert (planner 2026-05-26)**: predicate signature が universal-quantified
+converse 結論 form (`∀ M n hM c Pe hPe, log M ≤ ...`)、`IsAwgnTypicalityHypothesis`
+(`AWGNAchievability.lean:47`) と同型 circular def。
+
+**independent honesty audit (2026-05-26)**: peer `IsAwgnTypicalityHypothesis`
+(`AWGNAchievability.lean:46`) と同様 tier 5 circular で、core-reconstruction test
+(hyp grant → converse 結論 verbatim 同型) に該当。CLAUDE.md「sorry を書けない箇所
+での対処順序」第二選択 = signature 改変は本 plan scope 外 (`awgn-converse-aux-plan`
+の analytic body 完成で discharge 予定)、暫定 tier 5 marker として
+`@audit:defect(circular)` + `@audit:closed-by-successor(...)` を付与。
+
+`@audit:defect(circular)` `@audit:closed-by-successor(awgn-converse-aux-plan)` -/
 def IsAwgnConverseHypothesis (P : ℝ) (N : ℝ≥0)
     (h_meas : IsAwgnChannelMeasurable N) : Prop :=
   ∀ {M n : ℕ} (_hM : 2 ≤ M) (c : AwgnCode M n P),
@@ -65,7 +78,7 @@ def IsAwgnConverseHypothesis (P : ℝ) (N : ℝ≥0)
 
 /-! ## Converse — `awgn_converse` (F-3 hypothesis pass-through) -/
 
-/-- 🟢ʰ **load-bearing hypothesis — NOT a discharge.**
+/-- **load-bearing hypothesis — NOT a discharge.**
 **AWGN converse theorem (Cover-Thomas 9.1.2), F-3 hypothesis form**.
 
 For every code with `M ≥ 2` messages, block length `n`, output power constraint
@@ -88,7 +101,7 @@ Load-bearing pieces bundled inside `h_converseBound_lbh`:
 
 Discharging this predicate is deferred to `awgn-converse-aux-plan.md` (Tier 3).
 
-`@audit:suspect(awgn-converse-aux-plan)` -/
+`@audit:closed-by-successor(awgn-converse-aux-plan)` `@residual(plan:awgn-converse-aux-plan)` -/
 theorem awgn_converse
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)

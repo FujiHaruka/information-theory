@@ -158,7 +158,11 @@ predicate `IsAwgnMIDecomp` (both unfold to the same `mutualInfoOfChannel … =
 differentialEntropy (outputDistribution …) − ∫ …`). The discharge is therefore an
 `exact`.
 
-`@audit:suspect(awgn-mi-decomp-plan)` -/
+`@audit:closed-by-successor(awgn-mi-decomp-plan)`
+(The successor predicate `IsContChannelMIDecompHyp` above is the genuine sorry-based
+discharge target — see `ContChannelMIDecomp.lean` where `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`
+carries `@residual(plan:awgn-mi-decomp-plan)`. This wrapper is now a pure
+`unfold + exact` shim and not itself a load-bearing claim.) -/
 theorem awgn_midecomp_of_cont_chain
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
     (h_chain : IsContChannelMIDecompHyp

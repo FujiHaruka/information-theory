@@ -188,7 +188,7 @@ I.toReal = h(out) − h(Y|X)                    [IsAwgnMIDecomp]
          = h(𝒩(0, P+N)) − h(𝒩(0, N))           [IsAwgnCondEntropyEqNoise]
 ```
 
-`@audit:suspect(awgn-mi-decomp-plan)` -/
+`@audit:closed-by-successor(awgn-mi-decomp-plan)` -/
 theorem awgn_mi_bridge_of_primitives
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
     (h_out : IsAwgnOutputGaussian P N h_meas)
@@ -220,7 +220,7 @@ theorem awgn_mi_bridge_of_primitives
 残りの撤退ライン hypothesis (F-1 typicality / F-3 converse) はそのまま
 pass-through。
 
-`@audit:suspect(awgn-mi-decomp-plan)` -/
+`@audit:closed-by-successor(awgn-mi-decomp-plan)` -/
 theorem awgn_theorem_F2_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_typicality : IsAwgnTypicalityHypothesis P N (isAwgnChannelMeasurable N))
@@ -253,7 +253,7 @@ Combines the 3 primitives into the bridge, then runs the Gaussian closed-form
 algebra (`mutualInfoOfChannel_gaussianInput_closed_form` from `AWGN.lean`) to
 produce the `(1/2) log(1 + P/N)` value used by `awgnCapacity_eq`.
 
-`@audit:suspect(awgn-mi-decomp-plan)` -/
+`@audit:closed-by-successor(awgn-mi-decomp-plan)` -/
 theorem awgn_mi_gaussian_closed_form_of_primitives
     (P : ℝ) (hP_pos : (0 : ℝ) < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -287,7 +287,7 @@ theorem awgn_mi_gaussian_closed_form_of_primitives
 引数を、本 file の 2 primitives (`IsAwgnOutputGaussian` + `IsAwgnMIDecomp`)
 に縮減した形で再 publish。残りの hypothesis (`h_bdd`, `h_max_ent`) はそのまま.
 
-`@audit:suspect(awgn-mi-decomp-plan)` -/
+`@audit:closed-by-successor(awgn-mi-decomp-plan)` -/
 theorem awgn_capacity_closed_form_F2_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_out : IsAwgnOutputGaussian P N (isAwgnChannelMeasurable N))
