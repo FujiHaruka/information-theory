@@ -593,27 +593,13 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 * `h_chain_conv`: converse rate inequality `R ≤ wynerZivRatePmf(D)` produced
   by the chain assembly (cf. `wyner_ziv_converse_chain`),
 
-the rate `R` equals `wynerZivRatePmf(D)`. Pure forwarder to
-`wyner_ziv_tendsto`.
-
-Phase 1.5 (sorry-migration): this declaration was a pure forwarder to
-`wyner_ziv_tendsto` (which is constructive `le_antisymm` and has had its
-suspect tag removed in Phase 1). The original `@audit:staged(...)` tag was
-inherited from the chain-side context, but the wrapper body itself
-(`wyner_ziv_tendsto U P_XY d D R h_ach h_chain_conv`) is purely
-non-load-bearing: it takes the two ordering hypotheses and combines them
-with `le_antisymm`. Body retreated to `sorry` provisionally per the
-sorry-migration plan; the closure decision (pure pass-through tag-removal
-vs. `@residual` retention) is delegated to the Phase 1.6 audit-1
-boundary judgment.
-
-`@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
+the rate `R` equals `wynerZivRatePmf(D)`. Pure `le_antisymm` forwarder. -/
 theorem wyner_ziv_tendsto_chain
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
     (h_ach : wynerZivRatePmf U P_XY d D ≤ R)
     (h_chain_conv : R ≤ wynerZivRatePmf U P_XY d D) :
-    R = wynerZivRatePmf U P_XY d D := by
-  sorry
+    R = wynerZivRatePmf U P_XY d D :=
+  le_antisymm h_chain_conv h_ach
 
 end TendstoWrapper
 

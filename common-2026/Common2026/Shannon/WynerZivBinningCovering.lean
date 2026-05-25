@@ -251,20 +251,9 @@ matter for this lemma).
 
 The proof: covering ⇒ `μ.real(E_typ) ≤ ε₁`, packing ⇒ `μ.real(E_bin) ≤ ε₂`,
 then apply `wzAchievability_random_binning_body` for the union bound.
-This is precisely the standard "covering + packing" pattern.
-
-Phase 1.5 (sorry-migration): body retreated to `sorry`. The previous body
-reduced (via `IsWynerZivBinningCovering_def` / `..._Packing_def` defequal
-unfolds) to a call into `wzAchievability_random_binning_body` (itself
-load-bearing on `h_typ_prob` / `h_bin_prob`, sorry-migrated below in the
-same Phase). Closure responsibility is parked on the discharge plan.
-
-Cross-family consumer note: `RelayCFBinningBody.lean:348` calls this
-declaration directly, so it now picks up a transitive `sorry`. The Relay
-file is **out of scope** for this Wyner–Ziv sweep — the Relay family's
-own sorry-migration sweep will handle the docstring annotation.
-
-`@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
+This is precisely the standard "covering + packing" pattern; the predicate
+unfolds (`IsWynerZivBinningCovering_def` / `..._Packing_def`) are
+`Iff.rfl`, so `h_cov` / `h_pack` feed in by defeq. -/
 theorem wyner_ziv_binning_via_covering_packing
     [Nonempty β] [Nonempty γ]
     {R₁ R₂ ε₁ ε₂ : ℝ}
@@ -285,18 +274,14 @@ theorem wyner_ziv_binning_via_covering_packing
     μ.real { ω : Ω |
         wzJointlyTypicalDecoderBody f_U JT f (f_U (Us ω), Ys ω)
           ≠ fun i => f (Us ω i, Ys ω i) }
-      ≤ ε₁ + ε₂ := by
-  sorry
+      ≤ ε₁ + ε₂ :=
+  wzAchievability_random_binning_body μ Us Ys JT f_U f
+    h_meas_typ h_meas_bin h_meas_fail h_cov h_pack
 
 /-- **Bridge to `WynerZivBinningBody`** — same statement re-exported with the
 implicit bookkeeping that `R = R₁ − R₂` is the Wyner–Ziv binning rate. This
-is the form consumed by downstream achievability composition.
-
-Phase 1.5 (sorry-migration): pure re-export forwarder to
-`wyner_ziv_binning_via_covering_packing` (now `sorry`). Body retreated to
-`sorry`; closure responsibility lives on the same plan slug.
-
-`@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
+is the form consumed by downstream achievability composition. Pure
+forwarder to `wyner_ziv_binning_via_covering_packing`. -/
 theorem wynerZivBinningBody_of_covering_packing
     [Nonempty β] [Nonempty γ]
     {R₁ R₂ ε₁ ε₂ : ℝ}
@@ -317,8 +302,9 @@ theorem wynerZivBinningBody_of_covering_packing
     μ.real { ω : Ω |
         wzJointlyTypicalDecoderBody f_U JT f (f_U (Us ω), Ys ω)
           ≠ fun i => f (Us ω i, Ys ω i) }
-      ≤ ε₁ + ε₂ := by
-  sorry
+      ≤ ε₁ + ε₂ :=
+  wyner_ziv_binning_via_covering_packing μ Us Ys JT f_U f
+    h_meas_typ h_meas_bin h_meas_fail h_cov h_pack
 
 end Bridge
 
@@ -484,20 +470,8 @@ variable [MeasurableSpace γ]
 
 /-- **Joint covering + packing predicate ⇒ decoder failure bound.** Same
 content as `wyner_ziv_binning_via_covering_packing` but consuming the
-single joint predicate `IsWynerZivBinningAchievable`.
-
-Phase 1.5 (sorry-migration): body retreated to `sorry`. Pure re-export of
-`wyner_ziv_binning_via_covering_packing` (now `sorry`) through the joint
-predicate destructure (`h_ach.covering` / `h_ach.packing`); closure
-responsibility lives on the same plan slug.
-
-Cross-family consumer note: `IsWynerZivBinningAchievable` is re-namespaced
-by `RelayCFBinningBody.lean:262`, but this particular wrapper theorem is
-in-family only. Predicate retract-candidate marker on the predicate
-itself remains blocked by Relay (see the predicate definition's
-docstring).
-
-`@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
+single joint predicate `IsWynerZivBinningAchievable`. Pure forwarder
+through the destructure `h_ach.covering` / `h_ach.packing`. -/
 theorem wyner_ziv_binning_decoder_fail_of_achievable
     [Nonempty β] [Nonempty γ]
     {R₁ R₂ ε₁ ε₂ : ℝ}
@@ -517,8 +491,9 @@ theorem wyner_ziv_binning_decoder_fail_of_achievable
     μ.real { ω : Ω |
         wzJointlyTypicalDecoderBody f_U JT f (f_U (Us ω), Ys ω)
           ≠ fun i => f (Us ω i, Ys ω i) }
-      ≤ ε₁ + ε₂ := by
-  sorry
+      ≤ ε₁ + ε₂ :=
+  wyner_ziv_binning_via_covering_packing μ Us Ys JT f_U f
+    h_meas_typ h_meas_bin h_meas_fail h_ach.covering h_ach.packing
 
 end JointBridge
 

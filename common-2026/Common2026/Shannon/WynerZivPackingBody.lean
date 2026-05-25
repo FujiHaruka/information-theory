@@ -116,10 +116,13 @@ the per-`ω` union bound into the averaged `E_bin` bound.
 Automatic in the concrete finite-`Ω` / decidable-`JT` instantiation; carried
 abstractly here to keep the body alphabet-agnostic.
 
-`@audit:retract-candidate(load-bearing-predicate)` — load-bearing
-hypothesis-form predicate marked for eventual deletion once the in-family
-discharge plan (`wyner-ziv-discharge-moonshot-plan`) closes its in-family
-consumers; no cross-family consumer. -/
+`@audit:retract-candidate(single-line-wrapper)` — 1-line `def` wrapping
+`MeasurableSet (wzError_E_bin …)`. This is a regularity-style precondition
+(measurability), not a load-bearing information-theoretic claim; the
+wrapper exists only to give the measurability hypothesis a memorable name
+in the packing body's argument list. Eligible for inlining once downstream
+consumers settle on either the named form or the raw `MeasurableSet`
+spelling. -/
 def IsPackingCollisionBoundHyp
     {n M : ℕ}
     (Us : Ω → Fin n → U) (Ys : Ω → Fin n → β)
