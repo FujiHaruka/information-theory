@@ -81,6 +81,8 @@ Plan / inventory で具体的な **数値・型値** (例: `differentialEntropy 
 
 「常識的にこの値だろう」「-∞ になるはず」のような直感は信用しない。Mathlib / Common2026 の境界 case 定義は `Real` / `EReal` / `ℝ≥0∞` で慣行が異なり、Dirac / 退化 measure の値は特に直感と乖離しやすい。
 
+同じ verbatim 確認義務は **依存方向 / Phase 順序 / wrapper 呼出方向 / import cycle** にも適用される (orchestrator brief で in-mind 仮定したそれらを subagent が verbatim 検証で逆順修正することがある — その提案は accept がデフォルト)。
+
 ## Skeleton-driven Development
 
 Do **not** write a whole proof file in one shot. Instead:
