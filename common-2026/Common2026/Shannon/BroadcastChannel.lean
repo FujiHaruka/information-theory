@@ -433,7 +433,23 @@ per-letter chain rule (~150 lines), bundled as L-BC2 — are the real
 Mathlib gap (joint-typicality-multi wall); discharge plans
 `bc-converse-fano-discharge-*` / `bc-converse-chain-rule-discharge-*`.
 
-@residual(defect:circular) -/
+Audit reclassification (independent honesty audit, 2026-05-25): the
+Phase 2.3 retreat applied the `defect:circular` → sorry migration recipe
+mechanically, but because the load-bearing hypothesis WAS the only
+constraint, removing it leaves the signature `(R₂ I_u : ℝ) : R₂ ≤ I_u`
+**universally false** (counterexample: `R₂ := 1, I_u := 0`). The current
+defect kind is therefore **`false-statement`** rather than `circular`
+(circular requires hyp ≡ concl, which no longer holds since the hyp was
+removed). Genuine redesign — re-introducing entropy-level Fano + chain +
+cleanup preconditions mirroring the MAC analogue `mac_single_rate_bound₁`
+(`MultipleAccessChannel.lean:450`) routed through the existing
+`bc_rate_le_of_fano` (`BroadcastChannel.lean:511`, currently `private`,
+visibility-relaxable to `theorem`) — is deferred to
+`broadcast-channel-moonshot-plan` (Phase 2.3.b in
+`mac-bc-sorry-migration-plan`'s optional successor step).
+
+@residual(defect:false-statement)
+@audit:closed-by-successor(broadcast-channel-moonshot-plan) -/
 theorem bc_common_rate_bound
     {M₁ M₂ n : ℕ} (_hn : 0 < n)
     (_c : BroadcastCode M₁ M₂ n α β₁ β₂)
@@ -459,7 +475,20 @@ per-letter conditional-MI chain rule
 Multi-user Fano + conditional-MI chain rule (~300 lines together, L-BC2)
 are the real Mathlib gap (joint-typicality-multi wall).
 
-@residual(defect:circular) -/
+Audit reclassification (independent honesty audit, 2026-05-25): the
+Phase 2.3 retreat applied the `defect:circular` → sorry migration recipe
+mechanically, but because the load-bearing hypothesis WAS the only
+constraint, removing it leaves the signature `(R₁ I_xy : ℝ) : R₁ ≤ I_xy`
+**universally false** (counterexample: `R₁ := 1, I_xy := 0`). The current
+defect kind is therefore **`false-statement`** rather than `circular`.
+Genuine redesign — re-introducing conditional Fano + conditional-MI chain
+preconditions routed through `bc_rate_le_of_fano`
+(`BroadcastChannel.lean:511`) mirroring the MAC analogue
+`mac_single_rate_bound₂` (`MultipleAccessChannel.lean:474`) — is deferred
+to `broadcast-channel-moonshot-plan` (Phase 2.3.b).
+
+@residual(defect:false-statement)
+@audit:closed-by-successor(broadcast-channel-moonshot-plan) -/
 theorem bc_private_rate_bound
     {M₁ M₂ n : ℕ} (_hn : 0 < n)
     (_c : BroadcastCode M₁ M₂ n α β₁ β₂)
