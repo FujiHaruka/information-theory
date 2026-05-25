@@ -89,6 +89,33 @@ promote 判定基準: (1) 該当 declaration が shared sorry 補題として 2+
 満たされたタイミングで上記行を Wall name register 本表に移し、当該 declaration の
 `@residual` を `@residual(plan:<slug>)` から `@residual(wall:<name>)` に書換。
 
+**Round 3 escalate #4 — `bm-convex-body-sqrt` promote 再判定 (2026-05-26)**: BM Wave 6
+で隣接 wall 2 件 (`uniform-max-entropy-on-convex-body` + `bm-additive-convex-body`、
+commit `fe28966`) を正式 register 入りさせた折に本候補も再評価したが、現状 consumer
+は `BrunnMinkowskiClosure.lean` 1 file 内 docstring 言及 4 件のみ
+(`rg 'bm-convex-body-sqrt' Common2026/` で in-file 限定)、active
+`@residual(wall:bm-convex-body-sqrt)` は **0 件** (load-bearing
+`IsBMEntropyPowerVolumeHyp` predicate が closure plan §G で honest hyp として保持中、
+sqrt 形 sorry はまだ書かれていない)。`cramer-sorry-migration-plan.md:722` での言及も
+「同型の trigger 条件あり」という meta 比較で、Cramer family が sqrt 形を直接参照する
+構造ではない。trigger 条件 (2+ family 参照 or 1 family 複数 file 参照) **不達**、Round 4
+持ち越し。次回 trigger 候補: EPI route (`brunn-minkowski-from-epi-discharge-plan`) または
+n-dim PL route (`prekopa-leindler-induction-plan`) で sqrt 形 sorry を新規導入したとき
+(closure plan が委任先として両 plan を明示、`BrunnMinkowskiClosure.lean:548`)。
+
+**隣接 wall との semantic 区別** (Wave 6 で正式 register 入りした 2 件 vs 本候補):
+
+- `bm-additive-convex-body` (Wave 6 promote): 凸体の Brunn-Minkowski **加法形**
+  `vol(A) + vol(B) ≤ vol(A + B)` — 体積の plain な和形、1 次元類比。
+- `uniform-max-entropy-on-convex-body` (Wave 6 promote): 凸体上 **uniform 分布 = max
+  entropy** の characterization (n-dim) — uniform measure の microstate count
+  特徴づけ、entropy 側の statement。
+- `bm-convex-body-sqrt` (本候補、保留): 凸体 BM の **sqrt 形**
+  `volAB^(1/n) ≥ volA^(1/n) + volB^(1/n)` — Cover-Thomas 17.9.4 で entropy power
+  Brunn-Minkowski に持ち上げる橋。加法形より strong (additive form は sqrt form の
+  弱形)、entropy power lifting に直接乗る形。3 件は **互いに非重複**: 加法形 ⇐ sqrt 形
+  (Minkowski 不等式 / Hölder 経由)、uniform max entropy は分布特徴づけで対象が違う。
+
 #### Defect kind 語彙
 
 `@residual(defect:<kind>)` の `<kind>`:
