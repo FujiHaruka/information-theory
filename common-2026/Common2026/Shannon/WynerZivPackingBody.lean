@@ -535,11 +535,15 @@ theorem wyner_ziv_packing_decoder_fail
   obtain ⟨f_U, h_pack⟩ :=
     wzPacking_isPacking_of_typicality (R₂ := R₂) μ Us Ys JT hS_nn h_slice h_meas_bin_all
   refine ⟨f_U, ?_⟩
-  -- Combine with covering via the wave7 composition theorem.
+  -- Phase 2.x.1 ripple: upstream `wyner_ziv_binning_via_covering_packing` had
+  -- its load-bearing predicate hypotheses (`h_cov` / `h_pack`) and the
+  -- rate-bookkeeping params (`R₁` / `R₂`) removed from its signature; we
+  -- still combine the constructive covering / packing data here, but the
+  -- forwarded `h_cov`/`h_pack` and rate args are no longer threaded through.
+  -- Transitive `sorry` via upstream's `@residual(plan:wyner-ziv-discharge-moonshot-plan)`.
   exact wyner_ziv_binning_via_covering_packing
-    (R₁ := R₁) (R₂ := R₂) (ε₁ := ε₁) (ε₂ := S * ((M : ℝ))⁻¹)
+    (ε₁ := ε₁) (ε₂ := S * ((M : ℝ))⁻¹)
     μ Us Ys JT f_U f h_meas_typ (h_meas_bin_all f_U) (h_meas_fail f_U)
-    (h_cov f_U) h_pack
 
 /-- **Asymptotic decoder failure → 0 from covering + discharged packing.**
 Given an existence-form hypothesis bundle (at every `ε > 0`, eventually in

@@ -249,14 +249,28 @@ rate is `R = R₁ − R₂`; the rate parameters themselves are encoded only as
 bookkeeping in the predicates (the underlying probability bounds are what
 matter for this lemma).
 
-The proof: covering ⇒ `μ.real(E_typ) ≤ ε₁`, packing ⇒ `μ.real(E_bin) ≤ ε₂`,
-then apply `wzAchievability_random_binning_body` for the union bound.
-This is precisely the standard "covering + packing" pattern; the predicate
-unfolds (`IsWynerZivBinningCovering_def` / `..._Packing_def`) are
-`Iff.rfl`, so `h_cov` / `h_pack` feed in by defeq. -/
+The proof was: covering ⇒ `μ.real(E_typ) ≤ ε₁`, packing ⇒
+`μ.real(E_bin) ≤ ε₂`, then apply `wzAchievability_random_binning_body` for
+the union bound (the predicate unfolds `IsWynerZivBinningCovering_def` /
+`..._Packing_def` are `Iff.rfl`, so `h_cov` / `h_pack` fed in by defeq).
+
+Phase 2.x.1 (predicate-removal sweep): the two predicate-form hypotheses
+(`h_cov` / `h_pack`) — which were the load-bearing inputs by virtue of
+bundling the AEP covering and random-binning packing content — are removed
+from the signature.  Body is retreated to `sorry` so the closure
+responsibility lives on the discharge plan rather than on the upstream
+load-bearing predicates.  The predicate definitions themselves
+(`IsWynerZivBinningCovering` / `IsWynerZivBinningPacking`) are *preserved*
+because cross-family Relay CF code (`RelayCFBinningBody.lean:127`/`:195`)
+re-namespaces them as `Iff.rfl` aliases.  In-family caller drift is
+non-existent (no other in-family file calls this declaration directly);
+the cross-family caller `RelayCFBinningBody.lean:348` is handled by the
+Relay sweep agent, not by this plan.
+
+`@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_binning_via_covering_packing
     [Nonempty β] [Nonempty γ]
-    {R₁ R₂ ε₁ ε₂ : ℝ}
+    {ε₁ ε₂ : ℝ}
     (μ : Measure Ω) [IsFiniteMeasure μ]
     {n M : ℕ}
     (Us : Ω → Fin n → U) (Ys : Ω → Fin n → β)
@@ -268,23 +282,28 @@ theorem wyner_ziv_binning_via_covering_packing
     (h_meas_fail :
       MeasurableSet { ω : Ω |
         wzJointlyTypicalDecoderBody f_U JT f (f_U (Us ω), Ys ω)
-          ≠ fun i => f (Us ω i, Ys ω i) })
-    (h_cov : IsWynerZivBinningCovering R₁ ε₁ μ Us Ys JT)
-    (h_pack : IsWynerZivBinningPacking R₂ ε₂ μ Us Ys JT f_U) :
+          ≠ fun i => f (Us ω i, Ys ω i) }) :
     μ.real { ω : Ω |
         wzJointlyTypicalDecoderBody f_U JT f (f_U (Us ω), Ys ω)
           ≠ fun i => f (Us ω i, Ys ω i) }
-      ≤ ε₁ + ε₂ :=
-  wzAchievability_random_binning_body μ Us Ys JT f_U f
-    h_meas_typ h_meas_bin h_meas_fail h_cov h_pack
+      ≤ ε₁ + ε₂ := by
+  sorry
 
 /-- **Bridge to `WynerZivBinningBody`** — same statement re-exported with the
 implicit bookkeeping that `R = R₁ − R₂` is the Wyner–Ziv binning rate. This
-is the form consumed by downstream achievability composition. Pure
-forwarder to `wyner_ziv_binning_via_covering_packing`. -/
+is the form consumed by downstream achievability composition.  Was a pure
+forwarder to `wyner_ziv_binning_via_covering_packing`.
+
+Phase 2.x.1 (predicate-removal sweep): in lockstep with the upstream
+forwarder, the two predicate-form hypotheses (`h_cov` / `h_pack`) are
+removed from the signature and the body is retreated to `sorry`.  The
+predicate definitions are preserved for cross-family use; cross-family
+caller handling is the Relay sweep agent's responsibility.
+
+`@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wynerZivBinningBody_of_covering_packing
     [Nonempty β] [Nonempty γ]
-    {R₁ R₂ ε₁ ε₂ : ℝ}
+    {ε₁ ε₂ : ℝ}
     (μ : Measure Ω) [IsFiniteMeasure μ]
     {n M : ℕ}
     (Us : Ω → Fin n → U) (Ys : Ω → Fin n → β)
@@ -296,15 +315,12 @@ theorem wynerZivBinningBody_of_covering_packing
     (h_meas_fail :
       MeasurableSet { ω : Ω |
         wzJointlyTypicalDecoderBody f_U JT f (f_U (Us ω), Ys ω)
-          ≠ fun i => f (Us ω i, Ys ω i) })
-    (h_cov : IsWynerZivBinningCovering R₁ ε₁ μ Us Ys JT)
-    (h_pack : IsWynerZivBinningPacking R₂ ε₂ μ Us Ys JT f_U) :
+          ≠ fun i => f (Us ω i, Ys ω i) }) :
     μ.real { ω : Ω |
         wzJointlyTypicalDecoderBody f_U JT f (f_U (Us ω), Ys ω)
           ≠ fun i => f (Us ω i, Ys ω i) }
-      ≤ ε₁ + ε₂ :=
-  wyner_ziv_binning_via_covering_packing μ Us Ys JT f_U f
-    h_meas_typ h_meas_bin h_meas_fail h_cov h_pack
+      ≤ ε₁ + ε₂ := by
+  sorry
 
 end Bridge
 
@@ -339,27 +355,17 @@ block length — load-bearing. The previous body wrapped
 existence quantifier; closure responsibility is parked on the discharge
 plan.
 
+Phase 2.x.1 (predicate-removal sweep): the load-bearing `h_asymp` bundle
+(which embedded `IsWynerZivBinningCovering` / `IsWynerZivBinningPacking`
+existence at every block length) is now removed from the signature.  Body
+remains `sorry` and the same `@residual` tag applies.  The predicate
+definitions themselves are preserved for cross-family use.
+
 `@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_binning_existence_of_covering_packing
     [Nonempty β] [Nonempty γ]
-    {R₁ R₂ : ℝ}
     (μ : Measure Ω) [IsFiniteMeasure μ]
-    (JT : ∀ n : ℕ, (Fin n → U) × (Fin n → β) → Prop)
-    (h_asymp :
-      ∀ ε > (0 : ℝ),
-        ∃ N : ℕ, ∀ n ≥ N,
-          ∃ (M : ℕ)
-            (Us : Ω → Fin n → U) (Ys : Ω → Fin n → β)
-            (f_U : (Fin n → U) → Fin M) (f : U × β → γ)
-            (ε₁ ε₂ : ℝ),
-            ε₁ + ε₂ ≤ ε
-              ∧ MeasurableSet (wzError_E_typ (n := n) Us Ys (JT n))
-              ∧ MeasurableSet (wzError_E_bin (n := n) Us Ys (JT n) f_U)
-              ∧ MeasurableSet { ω : Ω |
-                  wzJointlyTypicalDecoderBody f_U (JT n) f (f_U (Us ω), Ys ω)
-                    ≠ fun i => f (Us ω i, Ys ω i) }
-              ∧ IsWynerZivBinningCovering R₁ ε₁ μ Us Ys (JT n)
-              ∧ IsWynerZivBinningPacking R₂ ε₂ μ Us Ys (JT n) f_U) :
+    (JT : ∀ n : ℕ, (Fin n → U) × (Fin n → β) → Prop) :
     ∀ ε > (0 : ℝ),
       ∃ N : ℕ, ∀ n ≥ N,
         ∃ (M : ℕ)
@@ -469,12 +475,20 @@ variable [Fintype β] [MeasurableSpace β]
 variable [MeasurableSpace γ]
 
 /-- **Joint covering + packing predicate ⇒ decoder failure bound.** Same
-content as `wyner_ziv_binning_via_covering_packing` but consuming the
-single joint predicate `IsWynerZivBinningAchievable`. Pure forwarder
-through the destructure `h_ach.covering` / `h_ach.packing`. -/
+content as `wyner_ziv_binning_via_covering_packing` but was a pure
+forwarder consuming the single joint predicate `IsWynerZivBinningAchievable`
+via the destructure `h_ach.covering` / `h_ach.packing`.
+
+Phase 2.x.1 (predicate-removal sweep): the joint load-bearing predicate
+hypothesis `h_ach : IsWynerZivBinningAchievable ...` is removed from the
+signature and the body is retreated to `sorry`.  Tier 2 honest.  The
+`IsWynerZivBinningAchievable` predicate definition is preserved because
+cross-family Relay CF code re-namespaces it as `Iff.rfl`.
+
+`@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_binning_decoder_fail_of_achievable
     [Nonempty β] [Nonempty γ]
-    {R₁ R₂ ε₁ ε₂ : ℝ}
+    {ε₁ ε₂ : ℝ}
     (μ : Measure Ω) [IsFiniteMeasure μ]
     {n M : ℕ}
     (Us : Ω → Fin n → U) (Ys : Ω → Fin n → β)
@@ -486,14 +500,12 @@ theorem wyner_ziv_binning_decoder_fail_of_achievable
     (h_meas_fail :
       MeasurableSet { ω : Ω |
         wzJointlyTypicalDecoderBody f_U JT f (f_U (Us ω), Ys ω)
-          ≠ fun i => f (Us ω i, Ys ω i) })
-    (h_ach : IsWynerZivBinningAchievable R₁ R₂ ε₁ ε₂ μ Us Ys JT f_U) :
+          ≠ fun i => f (Us ω i, Ys ω i) }) :
     μ.real { ω : Ω |
         wzJointlyTypicalDecoderBody f_U JT f (f_U (Us ω), Ys ω)
           ≠ fun i => f (Us ω i, Ys ω i) }
-      ≤ ε₁ + ε₂ :=
-  wyner_ziv_binning_via_covering_packing μ Us Ys JT f_U f
-    h_meas_typ h_meas_bin h_meas_fail h_ach.covering h_ach.packing
+      ≤ ε₁ + ε₂ := by
+  sorry
 
 end JointBridge
 

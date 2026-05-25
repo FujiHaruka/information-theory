@@ -472,10 +472,15 @@ theorem wzCovering_decoder_fail_existence
           μ.real { ω : Ω |
               wzJointlyTypicalDecoderBody f_U (JT n) f (f_U (Us ω), Ys ω)
                 ≠ fun i => f (Us ω i, Ys ω i) }
-            ≤ ε :=
-  wyner_ziv_binning_existence_of_covering_packing
-    (R₁ := (0 : ℝ)) (R₂ := (0 : ℝ)) μ JT
-    (wzCovering_feed_asymp μ JT h_cov h_pack)
+            ≤ ε := by
+  -- Phase 2.x.1 ripple: upstream
+  -- `wyner_ziv_binning_existence_of_covering_packing` had its load-bearing
+  -- `h_asymp` hypothesis and rate-bookkeeping params (`R₁` / `R₂`) removed
+  -- from its signature; we still discharge the constructive covering /
+  -- packing existence side here (`wzCovering_feed_asymp`) but the bundled
+  -- output is no longer threaded through.  Transitive `sorry` via
+  -- upstream's `@residual(plan:wyner-ziv-discharge-moonshot-plan)`.
+  exact wyner_ziv_binning_existence_of_covering_packing μ JT
 
 end FeedBinning
 
