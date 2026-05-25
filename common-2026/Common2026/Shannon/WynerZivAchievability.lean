@@ -80,7 +80,30 @@ matching the existence-form precondition.  The conclusion
 constructively from `le_of_lt h_R_gt`, so the body is **proof done**
 (constructive recovery, Pilot Pattern B).  The `@residual` tag is
 removed; this is a Tier 1 `@audit:ok` candidate awaiting independent
-honesty-auditor verdict. -/
+honesty-auditor verdict.
+
+Independent honesty audit (2026-05-26, Wave 13 follow-up) — verdict:
+**degenerate_def + name_laundering (Tier 5)**.  Joint core-reconstruction
+test: granting `h_R_gt : R > R_WZ(D)` hands the conclusion
+`R_WZ(D) ≤ R` directly via a 1-step `le_of_lt` lift; the hypothesis
+is strictly stronger than the conclusion.  This collapses the
+declaration to a pure ordered-field micro-lemma `< → ≤` specialised to
+`R_WZ(D)` and `R`, with **zero** operational achievability content
+(random binning + AEP + Markov / Cover–Thomas 15.9.1).  The operational
+content lives entirely in `wyner_ziv_achievability_existence` below
+(body `sorry`).  The name prefix `wyner_ziv_achievability_*` claims
+operational achievability, but the body only delivers an ordering lift.
+Furthermore the declaration has **zero Lean consumers** (`rg` confirms
+only self-docstring references), so the API-piece justification in the
+docstring above ("supplier for Phase D wrapper `wyner_ziv_tendsto`")
+is hypothetical — the wrapper takes `h_ach` as a free hypothesis and
+is not plugged into `_rate`.  Orchestrator escalation: rename to
+`wyner_ziv_rate_le_of_gt` (Tier 1 candidate) OR delete `_rate` and
+inline `le_of_lt` at the moonshot wrapper consumer OR restore an
+operational signature (e.g. internalise the existence form to publish
+an asymptotic rate-ordering).  Suspending Tier 1 `@audit:ok`
+candidacy.
+`@audit:defect(degenerate)` `@audit:retract-candidate(name-laundering-alias)` -/
 theorem wyner_ziv_achievability_rate
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
     (h_R_gt : R > wynerZivRatePmf U P_XY d D) :
