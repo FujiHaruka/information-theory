@@ -566,30 +566,20 @@ called `wyner_ziv_packing_decoder_fail`, which itself depends on the
 upstream sorry-migrated `wyner_ziv_binning_via_covering_packing`. Closure
 responsibility is parked on the discharge plan.
 
+Phase 2.x.1 (predicate-removal sweep): the load-bearing `h_asymp` bundle
+(which combined `IsPackingTypicalityHyp` + `IsPackingCollisionBoundHyp`
++ `IsWynerZivBinningCovering` predicates plus existence-form measurability
+data) is now removed from the signature.  The rate-bookkeeping params
+`{R₁ R₂ : ℝ}` appeared only inside `h_asymp` via the embedded
+`IsWynerZivBinningCovering R₁ ε₁ μ Us Ys (JT n)`; with `h_asymp` gone they
+are unused and are also removed.  Body remains `sorry` and the same
+`@residual` tag applies.
+
 `@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_packing_existence
     [Nonempty β] [Nonempty γ]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
-    {R₁ R₂ : ℝ}
-    (JT : ∀ n : ℕ, (Fin n → U) × (Fin n → β) → Prop)
-    (h_asymp :
-      ∀ ε > (0 : ℝ),
-        ∃ N : ℕ, ∀ n ≥ N,
-          ∃ (M : ℕ) (_ : NeZero M)
-            (Us : Ω → Fin n → U) (Ys : Ω → Fin n → β)
-            (f : U × β → γ) (S ε₁ : ℝ),
-            ε₁ + S * ((M : ℝ))⁻¹ ≤ ε
-              ∧ 0 ≤ S
-              ∧ IsPackingTypicalityHyp (n := n) S (JT n)
-              ∧ (∀ f_U : (Fin n → U) → Fin M,
-                  IsPackingCollisionBoundHyp (n := n) Us Ys (JT n) f_U)
-              ∧ MeasurableSet (wzError_E_typ (n := n) Us Ys (JT n))
-              ∧ (∀ _f_U : (Fin n → U) → Fin M,
-                  IsWynerZivBinningCovering R₁ ε₁ μ Us Ys (JT n))
-              ∧ (∀ f_U : (Fin n → U) → Fin M,
-                  MeasurableSet { ω : Ω |
-                    wzJointlyTypicalDecoderBody f_U (JT n) f (f_U (Us ω), Ys ω)
-                      ≠ fun i => f (Us ω i, Ys ω i) })) :
+    (JT : ∀ n : ℕ, (Fin n → U) × (Fin n → β) → Prop) :
     ∀ ε > (0 : ℝ),
       ∃ N : ℕ, ∀ n ≥ N,
         ∃ (M : ℕ)

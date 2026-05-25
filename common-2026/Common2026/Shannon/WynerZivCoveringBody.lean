@@ -420,13 +420,16 @@ into the joint `h_asymp` shape via `wzCovering_existence_with_measurability`
 plus an ε-bisection trick; closure responsibility is parked on the
 discharge plan rather than on the load-bearing predicates.
 
+Phase 2.x.1 (predicate-removal sweep): the two load-bearing predicate
+hypotheses (`h_cov : IsCoveringTypicalityHyp μ JT` /
+`h_pack : IsPackingExistenceHyp (γ := γ) μ JT`) are removed from the
+signature.  Body remains `sorry` and the same `@residual` tag applies.
+
 `@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wzCovering_feed_asymp
     [Nonempty β] [Nonempty γ]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (JT : ∀ n : ℕ, (Fin n → U) × (Fin n → β) → Prop)
-    (h_cov : IsCoveringTypicalityHyp μ JT)
-    (h_pack : IsPackingExistenceHyp (γ := γ) μ JT) :
+    (JT : ∀ n : ℕ, (Fin n → U) × (Fin n → β) → Prop) :
     ∀ ε > (0 : ℝ),
       ∃ N : ℕ, ∀ n ≥ N,
         ∃ (M : ℕ)
