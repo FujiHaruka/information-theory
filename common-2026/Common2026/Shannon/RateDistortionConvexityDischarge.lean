@@ -688,7 +688,11 @@ set_option linter.unusedSectionVars false in
 /-- Helper: Fintype 由来 integrability for any joint with `Prod.fst` marginal = P.
 `d : α → β → ℝ` is bounded on the finite product alphabet, so it is integrable
 on any finite measure (in particular any feasible joint, which is a probability
-measure since its X-marginal is P). -/
+measure since its X-marginal is P).
+
+Wave 13 audit 2026-05-26 pass: regularity hypothesis (`h_marg`) のみ、結論
+`Integrable d ν` を Fintype `sup'` 経由で導出、load-bearing なし。proof done。
+@audit:ok -/
 private lemma integrable_d_of_marg_eq
     (d : α → β → ℝ) (P : Measure α) [IsProbabilityMeasure P]
     (ν : Measure (α × β)) (h_marg : ν.map Prod.fst = P) :
@@ -715,7 +719,13 @@ For any two feasible joints `ν₁, ν₂` (`Prod.fst`-marginal = `P`, distortio
 bounds `D₁, D₂`), the rate-distortion function at the mixed threshold
 `lam * D₁ + (1 - lam) * D₂` is bounded by the convex combination of the per-
 witness `klDiv` values. AC of `νᵢ` to its product marginal is extracted by
-case-splitting on `klDiv νᵢ marg(νᵢ) = ∞` (top side trivializes the bound). -/
+case-splitting on `klDiv νᵢ marg(νᵢ) = ∞` (top side trivializes the bound).
+
+Wave 13 audit 2026-05-26 pass: `h_marg/h_dist` は feasibility precondition、
+結論の核 (convex combination bound) を bundling せず。body は klDiv top
+case-split + Step D `klDiv_mixture_joint_convex` 適用、`klDiv_ne_top_iff` で
+AC 抽出。proof done。
+@audit:ok -/
 private lemma rateDistortionFunction_le_convex_combo_of_pair
     (d : α → β → ℝ) (P : Measure α) [IsProbabilityMeasure P]
     {lam : ℝ} (hlam₀ : 0 ≤ lam) (hlam₁ : lam ≤ 1) (D₁ D₂ : ℝ)
@@ -816,7 +826,15 @@ interior `0 < lam < 1`) and direct case-split at the boundary.
 This bypasses the parent's transitive `sorry` (load-bearing `h_klDiv_conv`
 retreat) by reusing only the genuine pieces: Step D (`klDiv_mixture_joint_convex`,
 unchanged) and basic feasibility / `iInf` bookkeeping. Result: proof done
-(0 sorry, 0 @residual). -/
+(0 sorry, 0 @residual).
+
+Wave 13 audit 2026-05-26 pass: hypothesis bundle は `d, P, lam, D₁, D₂` +
+`0 ≤ lam ≤ 1` の最小 regularity のみ。parent `rateDistortionFunction_convexOn`
+(現 sorry-bodied, `@residual(plan:rate-distortion-convexity-plan)`) を bypass
+し transitive sorry 引きなし。Mathlib API (`ENNReal.mul_iInf_of_ne`,
+`ENNReal.le_iInf_add_iInf`, `iInf_pos`, `iInf_neg`) は loogle 裏取り済。
+proof done (本 session 累計 8 declaration Tier 1 honesty 到達)。
+@audit:ok -/
 theorem rateDistortionFunction_convexOn_pmf
     (d : α → β → ℝ) (P : Measure α) [IsProbabilityMeasure P]
     {lam : ℝ} (hlam₀ : 0 ≤ lam) (hlam₁ : lam ≤ 1) (D₁ D₂ : ℝ) :
