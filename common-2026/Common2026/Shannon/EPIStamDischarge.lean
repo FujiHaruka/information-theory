@@ -160,40 +160,71 @@ task (`docs/shannon/epi-debruijn-integration-plan.md` Phase C-5, awaiting
 regularity content) so the audit tag stays at `staged(epi-debruijn-regularity)`
 rather than `ok`.
 
-`@audit:caveat(epi-debruijn-regularity-integrable-deriv-decoupled)`
-**Independent audit 2026-05-25**: the `integrable_deriv` field is *alone*
-trivially dischargeable via `density_path := fun _ _ ↦ 0` (then
-`fisherInfoOfMeasureV2 _ 0 = fisherInfoOfDensity 0 = 0` by `rfl`/`FisherInfoV2.lean:100`,
-and `IntervalIntegrable (fun _ ↦ 0) volume 0 T` holds via
-`intervalIntegrable_const`). The structure stays load-bearing only because
-`reg_at` carries the genuine `HasDerivAt` content (and `reg_at`'s `density_t`
-is *not* tied to `integrable_deriv`'s `density_path` — they are independent
-existentials), but this means `integrable_deriv` contributes zero discharge
-content downstream. The honest refactor is to share a single density witness
-across both fields (e.g., promote `density_path` to a top-level structure
-field, then phrase `reg_at` using the same witness). Recording as a caveat,
-not a defect, because `reg_at` alone keeps the predicate genuine. -/
+**Honest refactor 2026-05-25+α** (sub-plan
+`docs/shannon/epi-debruijn-regularity-refactor-plan.md`): former
+`integrable_deriv : ∃ density_path, ...` had an inner existential decoupled
+from `reg_at`'s internal `density_t`, allowing trivial discharge of
+`integrable_deriv` *alone* via `density_path := fun _ _ ↦ 0` (an independent
+audit caveat on 2026-05-25). The structure has been refactored: `density_path`
+is now a top-level structure field, and the new `density_t_eq` field pins it
+to `(reg_at t ht).density_t`. Consequently, picking `density_path := 0`
+forces `(reg_at t ht).density_t = 0` via `density_t_eq`, which forces the
+RHS of `(reg_at t ht).derivAt_entropy_eq_half_fisher_v2` to
+`(1/2) * fisherInfoOfDensityReal 0 = 0`; for the Gaussian instance the LHS
+is `HasDerivAt (fun s => h(𝒩(m, v+s))) (1/(2(v+t))) t` with
+`1/(2(v+t)) ≠ 0`, contradicting the pinned `0`. Thus the degenerate witness
+is now structurally infeasible — the trivial-zero bypass is closed at the
+type level. The previous caveat tag (slug
+`epi-debruijn-regularity-integrable-deriv-decoupled`, kind `caveat`) has been
+removed; the predicate remains load-bearing (carries the genuine `HasDerivAt`
+content) so the staged-audit tag stays.
+
+audit:PASS 2026-05-25 by honesty-auditor (independent, Track B):
+Tier 1 (caveat structurally resolved — inner existential gone, `density_path`
+top-level + `density_t_eq` pin present, `integrable_deriv` shares witness),
+Tier 2 (`density_path := 0` infeasible: `density_t_eq` forces V2 `density_t = 0`,
+RHS `(1/2) * fisherInfoOfDensityReal 0 = 0` contradicts Gaussian
+`1/(2(v+t))` derivative via `HasDerivAt.unique`),
+Tier 3 (`density_t_eq` is load-bearing not decorative — removing it
+restores the decoupled-existential bypass; `reg_at` keeps genuine
+`HasDerivAt` content; `staged(epi-debruijn-regularity)` retained because no
+general non-Gaussian discharge yet and tail-beyond-T externalization still
+pending). -/
 structure IsDeBruijnRegularityHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] where
+  /-- Shared density witness. `density_path t` is intended to be the density
+  of `P.map (X + √t · Z)`. The same witness drives both `reg_at` (via
+  `density_t_eq` below) and `integrable_deriv`, structurally closing the
+  trivial-zero bypass that the previous independent existentials allowed. -/
+  density_path : ℝ → ℝ → ℝ
   /-- For each strictly positive `t`, the family is regular in the de Bruijn
-  sense (V2 form, RHS keyed on V2 Fisher info; `IsRegularDeBruijnHypV2` carries a
-  density witness so this structure is data- rather than `Prop`-valued). -/
+  sense (V2 form, RHS keyed on V2 Fisher info; `IsRegularDeBruijnHypV2` carries
+  its own internal `density_t` witness — that internal witness is pinned to
+  the top-level `density_path t` by `density_t_eq` below). -/
   reg_at : ∀ t : ℝ, 0 < t → Common2026.Shannon.FisherInfoV2.IsRegularDeBruijnHypV2 X Z P t
+  /-- Pin the V2-internal `density_t` of `reg_at t ht` to the top-level
+  `density_path t`. Without this pin, the previous structure had two
+  independent existentials and `density_path := fun _ _ ↦ 0` trivially
+  discharged `integrable_deriv` alone (the resolved caveat). With this pin,
+  `density_path = 0` forces `(reg_at t ht).density_t = 0` and hence
+  `(reg_at t ht).derivAt_entropy_eq_half_fisher_v2`'s RHS to `0`, which
+  contradicts the true Gaussian derivative `1/(2(v+t)) ≠ 0`. -/
+  density_t_eq : ∀ t : ℝ, ∀ ht : 0 < t,
+    (reg_at t ht).density_t = density_path t
   /-- The derivative `(1/2)·J(X+√t·Z).toReal` is interval-integrable on every
-  bounded window `[0, T]` along the heat-flow path, for some smooth density
-  witness `density_path t`. Bounded-T form is genuinely satisfiable for
-  Gaussian X (the integrand `1/(2(v+t))` is continuous and bounded on `[0,T]`);
-  tail behavior beyond `T` is a pending plan-level task (the previously
-  intended `IsDeBruijnTailHyp` externalization was retracted by independent
-  audit; see `EPIL3Integration.lean` retraction comment). -/
+  bounded window `[0, T]` along the heat-flow path, using the shared
+  `density_path`. Bounded-T form is genuinely satisfiable for Gaussian X (the
+  integrand `1/(2(v+t))` is continuous and bounded on `[0,T]`); tail behavior
+  beyond `T` is a pending plan-level task (the previously intended
+  `IsDeBruijnTailHyp` externalization was retracted by independent audit;
+  see `EPIL3Integration.lean` retraction comment). -/
   integrable_deriv :
-    ∃ density_path : ℝ → ℝ → ℝ,
-      ∀ T : ℝ, 0 < T →
-        IntervalIntegrable
-          (fun t : ℝ => (1/2)
-            * (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
-                (P.map (fun ω => X ω + Real.sqrt t * Z ω)) (density_path t)).toReal)
-          volume 0 T
+    ∀ T : ℝ, 0 < T →
+      IntervalIntegrable
+        (fun t : ℝ => (1/2)
+          * (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+              (P.map (fun ω => X ω + Real.sqrt t * Z ω)) (density_path t)).toReal)
+        volume 0 T
 
 /-! ## §4 — de Bruijn integration predicate (Cover-Thomas Lemma 17.7.2 真 signature) -/
 
