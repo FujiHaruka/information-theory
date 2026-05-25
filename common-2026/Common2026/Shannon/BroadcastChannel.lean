@@ -475,12 +475,12 @@ derives the corner-point bound
 R₂ ≤ I_u + ε        (where I_u = I(U; Y₂) and ε ≥ 0 is the clean-up slack)
 ```
 
-via `bc_rate_le_of_fano` (`BroadcastChannel.lean:528`, same file, private).
+via `bc_rate_le_of_fano` (`BroadcastChannel.lean:431`, same file, private).
 Mirror of the MAC analogue `mac_single_rate_bound₁`
-(`MultipleAccessChannel.lean:450`); the BC version is **proof done**
-because the divide-by-`n` arithmetic kernel `bc_rate_le_of_fano` is in
-scope (the MAC analogue cannot do the same yet because
-`mac_rate_le_of_fano` is not present).
+(`MultipleAccessChannel.lean:450`); both BC and MAC versions are now
+**proof done**, sharing the same arithmetic-kernel pattern — the MAC peer
+uses `mac_rate_le_of_fano` (`MultipleAccessChannel.lean:396`,
+`mac-rate-bound-proof-done-plan` Wave 8).
 
 The entropy-level inputs (`h_fano`, `h_chain`) are genuine real Mathlib
 gaps (joint-typicality-multi wall) discharged structurally by upstream
@@ -529,10 +529,10 @@ the `n⁻¹` clean-up estimate, the converse derives the corner-point bound
 R₁ ≤ I_xy + ε       (where I_xy = I(X; Y₁ | U) and ε ≥ 0 is the clean-up slack)
 ```
 
-via `bc_rate_le_of_fano` (`BroadcastChannel.lean:528`, same file, private).
-Mirror of `mac_single_rate_bound₂` (`MultipleAccessChannel.lean:474`); BC
-version is **proof done** because `bc_rate_le_of_fano` is in scope (see
-`bc_common_rate_bound` for the analogous asymmetry note).
+via `bc_rate_le_of_fano` (`BroadcastChannel.lean:431`, same file, private).
+Mirror of `mac_single_rate_bound₂` (`MultipleAccessChannel.lean:474`);
+both BC and MAC peers are now **proof done** with the shared arithmetic
+kernel pattern (the MAC peer uses `mac_rate_le_of_fano`).
 
 The entropy-level inputs (`h_fano`, `h_chain`) are real Mathlib gaps
 (joint-typicality-multi wall) — the conditional Fano on `W₁ → Y₁^n | U^n`
@@ -636,7 +636,12 @@ theorem bc_capacity_region_outer_bound
 `n → ∞` the `n⁻¹` clean-up terms vanish (`ε ≤ 0`), recovering the exact
 corner-point region `InBCCapacityRegion R₁ R₂ I_u I_xy`.
 
-@residual(plan:mac-bc-sorry-migration-plan) -/
+**Proof done via `bc_capacity_region_outer_bound`** + `ε ≤ 0` transitive
+shrink (Pattern B constructive recovery,
+`mac-bc-pattern-b-constructive-recovery-plan`). The MAC peer
+`mac_capacity_region_outer_bound_corner_limit`
+(`MultipleAccessChannel.lean:602`) uses the same body shape (3 cut bounds
+there, 2 cut bounds here). -/
 theorem bc_capacity_region_outer_bound_corner_limit
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : BroadcastCode M₁ M₂ n α β₁ β₂)
@@ -649,7 +654,11 @@ theorem bc_capacity_region_outer_bound_corner_limit
     (h_cleanup₁ : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε)
     (h_ε : ε ≤ 0) :
     InBCCapacityRegion R₁ R₂ I_u I_xy := by
-  sorry
+  have h := bc_capacity_region_outer_bound hn c R₁ R₂ Pe₂ Pe₁
+    I_marg_u I_marg_xy I_u I_xy ε
+    h_fano₂ h_cond_fano₁ h_chain_u h_chain_xy h_cleanup₂ h_cleanup₁
+  exact ⟨h.bound_R₂_le_I_u.trans (by linarith),
+    h.bound_R₁_le_I_xy.trans (by linarith)⟩
 
 /-- **Degraded BC capacity region outer bound — two-bound form**.
 

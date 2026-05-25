@@ -446,7 +446,12 @@ discharged structurally through `MACSingleFanoBound` / `MACPerLetterChain₁`
 of `MACL2Discharge.lean`; the present theorem accepts them as raw scalar
 inequalities so this file remains structurally minimal.
 
-@residual(plan:mac-bc-sorry-migration-plan) -/
+**Proof done via `mac_rate_le_of_fano`** (`MultipleAccessChannel.lean:396`,
+same file, private). The divide-by-`n` arithmetic kernel consumes the three
+entropy-level inputs (`h_fano` / `h_chain` / `h_cleanup`) and produces the
+corner-point bound `R₁ ≤ I₁ + ε` directly — no `True` placeholder, no
+load-bearing hypothesis bundling. Mirror of BC peer `bc_common_rate_bound`
+(`BroadcastChannel.lean:496`, also proof done via `bc_rate_le_of_fano`). -/
 theorem mac_single_rate_bound₁
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (_c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -454,8 +459,9 @@ theorem mac_single_rate_bound₁
     (h_fano : (n : ℝ) * R₁ ≤ I_marg₁ + 1 + Pe₁ * Real.log (M₁ : ℝ))
     (h_chain : I_marg₁ ≤ (n : ℝ) * I₁)
     (h_cleanup : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε) :
-    R₁ ≤ I₁ + ε := by
-  sorry
+    R₁ ≤ I₁ + ε :=
+  mac_rate_le_of_fano hn R₁ I_marg₁ I₁ Pe₁ (Real.log (M₁ : ℝ)) ε
+    h_fano h_chain h_cleanup
 
 /-- **Single-user rate bound for sender 2 (genuine Fano + per-letter
 chain-rule derivation)**.
@@ -470,7 +476,9 @@ via Fano on `(W₂, Y^n)`, DPI `I(W₂; Y^n) ≤ I(X₂^n; Y^n | X₁^n)`, and t
 per-letter chain rule. Derives the conclusion from entropy-level inputs
 — no `True` placeholders, no `h_bound`-style circular hypothesis.
 
-@residual(plan:mac-bc-sorry-migration-plan) -/
+**Proof done via `mac_rate_le_of_fano`** (`MultipleAccessChannel.lean:396`,
+same file, private). Mirror of `mac_single_rate_bound₁` with the user
+indices swapped (`R₁ ↔ R₂`, `I₁ ↔ I₂`, `Pe₁ ↔ Pe₂`, `M₁ ↔ M₂`). -/
 theorem mac_single_rate_bound₂
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (_c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -478,8 +486,9 @@ theorem mac_single_rate_bound₂
     (h_fano : (n : ℝ) * R₂ ≤ I_marg₂ + 1 + Pe₂ * Real.log (M₂ : ℝ))
     (h_chain : I_marg₂ ≤ (n : ℝ) * I₂)
     (h_cleanup : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε) :
-    R₂ ≤ I₂ + ε := by
-  sorry
+    R₂ ≤ I₂ + ε :=
+  mac_rate_le_of_fano hn R₂ I_marg₂ I₂ Pe₂ (Real.log (M₂ : ℝ)) ε
+    h_fano h_chain h_cleanup
 
 /-- **Sum-rate bound (genuine Fano + per-letter chain-rule derivation)**.
 
@@ -497,7 +506,12 @@ after Fano applied to the *joint* message `(W₁, W₂)`:
 Derives the conclusion from entropy-level inputs — no `True` placeholders,
 no `h_sum`-style circular hypothesis.
 
-@residual(plan:mac-bc-sorry-migration-plan) -/
+**Proof done via `mac_rate_le_of_fano`** (`MultipleAccessChannel.lean:396`,
+same file, private). The kernel's generic scalar signature
+`(R I_marg I Pe L ε : ℝ)` accepts the sum rate directly by binding
+`R := R₁ + R₂`, `L := Real.log (M₁ * M₂)`; no two-stage application or
+`add_le_add` combination is needed — the kernel is shape-compatible with
+the joint Fano-side inequality as-is. -/
 theorem mac_sum_rate_bound
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (_c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -506,8 +520,10 @@ theorem mac_sum_rate_bound
         ≤ I_joint + 1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ)))
     (h_chain : I_joint ≤ (n : ℝ) * Iboth)
     (h_cleanup : (1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ))) / (n : ℝ) ≤ ε) :
-    R₁ + R₂ ≤ Iboth + ε := by
-  sorry
+    R₁ + R₂ ≤ Iboth + ε :=
+  mac_rate_le_of_fano hn (R₁ + R₂) I_joint Iboth Pe_joint
+    (Real.log ((M₁ : ℝ) * (M₂ : ℝ))) ε
+    h_fano h_chain h_cleanup
 
 /-- **Region combine (three-bound to predicate)** — given the three cut
 bounds `R₁ ≤ I₁`, `R₂ ≤ I₂`, `R₁ + R₂ ≤ Iboth`, conclude
@@ -641,14 +657,18 @@ structural body discharge routes of `MACL2Discharge.lean`. The vestigial
 are removed — the genuine Fano + chain content is consumed where the
 three cut bounds `h₁`, `h₂`, `hs` are produced.
 
-@residual(plan:mac-bc-sorry-migration-plan) -/
+**Proof done via `mac_region_combine`** (`MultipleAccessChannel.lean:517`,
+Pattern B constructive recovery, `mac-bc-pattern-b-constructive-recovery-plan`).
+The three cut bounds are the constituents of the `InMACCapacityRegion`
+structure constructor — no `True` placeholder, no load-bearing claim
+inversion. -/
 theorem mac_capacity_region_outer_bound_three_bounds
     {M₁ M₂ n : ℕ} (_hn : 0 < n)
     (_c : MACCode M₁ M₂ n α₁ α₂ β)
     (R₁ R₂ I₁ I₂ Iboth : ℝ)
     (h₁ : R₁ ≤ I₁) (h₂ : R₂ ≤ I₂) (hs : R₁ + R₂ ≤ Iboth) :
-    InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth := by
-  sorry
+    InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth :=
+  mac_region_combine R₁ R₂ I₁ I₂ Iboth h₁ h₂ hs
 
 /-- **MAC capacity region outer bound — `Real.log` rate form**.
 
