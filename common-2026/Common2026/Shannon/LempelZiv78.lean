@@ -227,7 +227,13 @@ Currently a `True` placeholder; the real Ziv-inequality discharge happens
 in the companion seed `lz78-ziv-inequality-discharge-*`. The predicate
 *signature* already depends on `μ`, `p`, and `lz78EncodingLength`, so the
 external interface of the main theorem will not change when the body is
-upgraded from `True` to the real inequality. -/
+upgraded from `True` to the real inequality.
+
+`@audit:defect(prop-true)` `@audit:closed-by-successor(lz78-residual-discharge-plan)`
+— signature 露出を保ったまま body だけ `True` placeholder で導入したのは
+main theorem の external interface を凍結するため (上記)、当該セッションでは
+tier 5 暫定マーカーとして残置、successor plan で第一選択 (定義書換 → body sorry)
+に migrate 予定。 -/
 def IsZivInequalityPassthrough
     (μ : Measure Ω) (_p : StationaryProcess μ α)
     (_lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) : Prop := True
@@ -244,7 +250,12 @@ lim inf (1/n) · lz78EncodingLength(X^n) ≥ H   a.s.
 
 This is the harder direction (uses SMB lower bound + arbitrary prefix
 code Kraft inequality + finite-alphabet bookkeeping). Currently a `True`
-placeholder; discharge in `lz78-converse-discharge-*`. -/
+placeholder; discharge in `lz78-converse-discharge-*`.
+
+`@audit:defect(prop-true)` `@audit:closed-by-successor(lz78-residual-discharge-plan)`
+— external interface 凍結のため signature 露出 + body `True` で導入、当該
+セッションでは tier 5 暫定マーカーとして残置、successor plan で第一選択
+(定義書換 → body sorry) に migrate 予定。 -/
 def IsLZ78ConversePassthrough
     (μ : Measure Ω) (_p : StationaryProcess μ α)
     (_lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) : Prop := True
@@ -261,7 +272,12 @@ is *Shannon–McMillan–Breiman in its a.s. form*; the existing publish
 inequalities (`liminf ≥ H`, `limsup ≤ H`) and the two boundedness
 hypotheses as input, and the present predicate stands in for the *output*
 of that sandwich combine. Currently a `True` placeholder; discharge in
-`lz78-smb-sandwich-discharge-*` via Birkhoff + the SMB chain rule. -/
+`lz78-smb-sandwich-discharge-*` via Birkhoff + the SMB chain rule.
+
+`@audit:defect(prop-true)` `@audit:closed-by-successor(lz78-residual-discharge-plan)`
+— external interface 凍結のため signature 露出 + body `True` で導入、当該
+セッションでは tier 5 暫定マーカーとして残置、successor plan で第一選択
+(定義書換 → body sorry) に migrate 予定。 -/
 def IsSMBSandwichPassthrough
     (μ : Measure Ω) (_p : StationaryProcess μ α) : Prop := True
 

@@ -135,7 +135,12 @@ theorem entropyPower_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
 主定理 signature 露出のみ、本体未使用。Cover-Thomas Lemma 17.7.2 (Stam)
 の textbook signature を保持するため、placeholder `Prop := True` で導入。
 Discharge plan `epi-stam-discharge-plan.md` (未着手) で真の Stam inequality
-形に置換する想定。 -/
+形に置換する想定。
+
+`@audit:defect(prop-true)` `@audit:closed-by-successor(epi-stam-discharge-plan)`
+— signature 改変は consumer 群 (Stam→EPI bridge / heat-flow integration) の
+広範な書換を要するため当該セッションでは tier 5 暫定マーカーとして残置、
+discharge plan で第一選択 (定義書換 → body sorry) に migrate 予定。 -/
 def IsStamInequalityHypothesis {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop := True
 
@@ -146,7 +151,12 @@ def IsStamInequalityHypothesis {Ω : Type*} [MeasurableSpace Ω]
 
 主定理 signature 露出のみ、本体未使用。T2-F `Common2026.Shannon.IsRegularDeBruijnHyp`
 を `t ∈ [0, ∞)` 上で積分する形の discharge plan `epi-debruijn-integration-plan.md`
-(未着手) で真の積分恒等式 predicate に置換する想定。 -/
+(未着手) で真の積分恒等式 predicate に置換する想定。
+
+`@audit:defect(prop-true)` `@audit:closed-by-successor(epi-debruijn-integration-plan)`
+— signature 改変は heat-flow path 上の積分恒等式定義の再設計を要するため
+当該セッションでは tier 5 暫定マーカーとして残置、discharge plan で第一選択
+(定義書換 → body sorry) に migrate 予定。 -/
 def IsDeBruijnIntegrationHypothesis {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop := True
 

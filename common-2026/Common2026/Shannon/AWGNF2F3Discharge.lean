@@ -216,7 +216,13 @@ discharge. The genuine per-letter MI bound needs continuous differential-entropy
 / Gaussian extremality machinery absent from Mathlib (deferred to
 `awgn-converse-aux-plan.md`). Following the F-3 撤退ライン convention from
 `AWGNConverse.lean`, the per-letter integrability hypotheses (`h_ent_int`) are
-bundled in here (the discharge layer will assemble them per-`(c, i)`). -/
+bundled in here (the discharge layer will assemble them per-`(c, i)`).
+
+`@audit:defect(prop-true)` `@audit:closed-by-successor(awgn-converse-aux-plan)`
+— continuous differential-entropy / Gaussian extremality 機構が Mathlib 不在で
+signature を本体形に書換えると下流 F-3 chain hypothesis の構造再設計が必要、
+当該セッションでは tier 5 暫定マーカーとして残置、successor plan で第一選択
+(定義書換 → body sorry) に migrate 予定。 -/
 def IsAwgnF3PerLetterHypothesis (P : ℝ) (N : ℝ≥0)
     (h_meas : IsAwgnChannelMeasurable N) : Prop :=
   ∀ {M n : ℕ} (_hM : 2 ≤ M) (_c : AwgnCode M n P) (_i : Fin n),
