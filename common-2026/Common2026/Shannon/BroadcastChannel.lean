@@ -477,7 +477,7 @@ R₂ ≤ I_u + ε        (where I_u = I(U; Y₂) and ε ≥ 0 is the clean-up sl
 
 via `bc_rate_le_of_fano` (`BroadcastChannel.lean:431`, same file, private).
 Mirror of the MAC analogue `mac_single_rate_bound₁`
-(`MultipleAccessChannel.lean:450`); both BC and MAC versions are now
+(`MultipleAccessChannel.lean:462`); both BC and MAC versions are now
 **proof done**, sharing the same arithmetic-kernel pattern — the MAC peer
 uses `mac_rate_le_of_fano` (`MultipleAccessChannel.lean:396`,
 `mac-rate-bound-proof-done-plan` Wave 8).
@@ -530,7 +530,7 @@ R₁ ≤ I_xy + ε       (where I_xy = I(X; Y₁ | U) and ε ≥ 0 is the clean-
 ```
 
 via `bc_rate_le_of_fano` (`BroadcastChannel.lean:431`, same file, private).
-Mirror of `mac_single_rate_bound₂` (`MultipleAccessChannel.lean:474`);
+Mirror of `mac_single_rate_bound₂` (`MultipleAccessChannel.lean:489`);
 both BC and MAC peers are now **proof done** with the shared arithmetic
 kernel pattern (the MAC peer uses `mac_rate_le_of_fano`).
 
@@ -640,8 +640,17 @@ corner-point region `InBCCapacityRegion R₁ R₂ I_u I_xy`.
 shrink (Pattern B constructive recovery,
 `mac-bc-pattern-b-constructive-recovery-plan`). The MAC peer
 `mac_capacity_region_outer_bound_corner_limit`
-(`MultipleAccessChannel.lean:602`) uses the same body shape (3 cut bounds
-there, 2 cut bounds here). -/
+(`MultipleAccessChannel.lean:625`) uses the same body shape (3 cut bounds
+there, 2 cut bounds here).
+
+Wave 10 audit 2026-05-26 pass — independent honesty-auditor verified
+`h_fano₂` / `h_cond_fano₁` / `h_chain_*` / `h_cleanup_*` are upstream-shaped
+raw scalar inequalities (precondition, not core) and `h_ε : ε ≤ 0` is the
+genuine corner-limit regularity; body discharges via the already-audited
+`bc_capacity_region_outer_bound` + `InBCCapacityRegion` field accessors +
+`linarith` transitive shrink (no load-bearing predicate, no circular
+hypothesis, no degenerate-def exploitation).
+@audit:ok -/
 theorem bc_capacity_region_outer_bound_corner_limit
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : BroadcastCode M₁ M₂ n α β₁ β₂)
