@@ -69,6 +69,18 @@ The textbook-equivalent form can be re-derived as a separate equivalence lemma l
 
 A red flag that you skipped this step: you find yourself searching for "the lemma that turns `f (compProd ...)` into `∫⁻ ... ∂ ...`" or any analogous re-shaping bridge. If that bridge is not already in Mathlib, the cheapest fix is almost always to redefine, not to write the bridge.
 
+### 具体的数値・型予測の verbatim 確認 (plan / inventory 共通)
+
+Plan / inventory で具体的な **数値・型値** (例: `differentialEntropy (Dirac 0) = ?`、`entropyPower (Measure.dirac 0) = ?`、`gaussianReal 0 0 = ?`、ある関数の `.toReal` 値、境界 case の `≠ 0` / `= 0`) を**予測**する箇所は、plan / inventory に書き出す前に **実コード verbatim 確認** (Mathlib lemma + Common2026 file の該当行を Read で照合) を必ず行う。
+
+予測値が誤りだと、それを前提に組まれた撤退ライン / 退化境界 / 戦略選択がすべて drift する。2026-05-25 Phase D mini-plan は `entropyPower (Dirac 0) = 0` (`differentialEntropy (Dirac 0) = -∞` 想定) と予測し、戦略 β の `Y := 0` 退化境界処理を設計したが、実コード `DifferentialEntropy.lean:147` `differentialEntropy_dirac = 0` (= `entropyPower (Dirac 0) = 1`) で予測が外れ、退化 gap = `-1` 定数 → trivially `AntitoneOn` → degenerate-definition exploitation 直撃で L-DBD-2-α 発火、戦略 γ 降格となった。実コード verbatim 確認していれば設計段階で防げた drift。
+
+確認方法:
+- Mathlib API → `loogle` で完全 namespace 検索後、該当 file の verbatim signature を Read
+- Common2026 内定義 → `rg` で grep → 該当行 Read (`Common2026/Shannon/DifferentialEntropy.lean:147` 等)
+
+「常識的にこの値だろう」「-∞ になるはず」のような直感は信用しない。Mathlib / Common2026 の境界 case 定義は `Real` / `EReal` / `ℝ≥0∞` で慣行が異なり、Dirac / 退化 measure の値は特に直感と乖離しやすい。
+
 ## Skeleton-driven Development
 
 Do **not** write a whole proof file in one shot. Instead:
