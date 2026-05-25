@@ -128,7 +128,7 @@ theorem isLogConcaveDensity_const {n : ℕ} {c : ℝ} (hc : 0 ≤ c) :
 
 /-! ## §B — Hypothesis predicates: L-PL1 / L-PL2 / L-PL3 -/
 
-/-- **L-PL1 (Prékopa-Leindler bound, 🟢ʰ Mathlib-wall residual)**: Cover-Thomas
+/-- **L-PL1 (Prékopa-Leindler bound, load-bearing structure)**: Cover-Thomas
 Theorem 17.9.5 の Lebesgue 積分間 multiplicative 不等式
 
     `∫ h ≥ (∫ f)^λ * (∫ g)^{1-λ}`
@@ -137,26 +137,29 @@ Theorem 17.9.5 の Lebesgue 積分間 multiplicative 不等式
 として持ち越す。`f, g, h_fn` は非負実関数、`intF, intG, intH` は対応する
 Lebesgue 積分の scalar 値。
 
-🟢ʰ load-bearing hypothesis — NOT a discharge. 旧版は `def := conclusion`
-(type ≡ conclusion = pure circular) だったが、structure 化により
-type ≠ conclusion (構造体 projection `.bound` 経由で抽出)、
-discharged 1D / layer-cake 経路 (`BrunnMinkowskiPLBody.lean` /
-`BrunnMinkowskiLayerCakeBody.lean`) が construct する形に揃える。
-
-Discharge plan: Cover-Thomas Ch.17.9 の induction on `n` + 1-dim Hölder
-+ `lintegral_mul_le_*` 経由。1 次元 layer-cake は本リポジトリ内に存在
-(`prekopa_leindler_1D_layercake` 等)、`n` 帰納 / Fubini-slice 段は plan
-`prekopa-leindler-induction-plan.md` (未着手) に塞ぐ。
+structure 化により type ≠ conclusion (構造体 projection `.bound` 経由で
+抽出) だが、`bound` field の型が結論型そのままなので機能的には
+load-bearing predicate と等価。sorry-migration Phase 3.1 (2026-05-25) で
+hypothesis-form consumer (`prekopa_leindler_inequality` /
+`brunn_minkowski_from_prekopa_leindler` / `prekopa_leindler_geometric_mean_form`)
+は signature から structure 引数を削除し body sorry 化 (`@residual(plan:...)`)。
+本 structure 自体は constructor (`isPrekopaLeindlerHyp_of_1D_body` 等) が
+依然依存するため削除せず暫定残置 (CLAUDE.md「sorry を書けない箇所での対処
+順序」第二選択)。後続 plan `prekopa-leindler-induction-plan.md` (未着手) で
+`n` 帰納 + 1-dim Hölder で本格 discharge して structure 自体を obsolete 化する
+想定。
 
 Mathlib-shape-driven: structure 単一フィールドは `Real.rpow`-shape の
-不等式 `intF ^ lam * intG ^ (1 - lam) ≤ intH` をそのまま保持。 -/
+不等式 `intF ^ lam * intG ^ (1 - lam) ≤ intH` をそのまま保持。
+
+@audit:retract-candidate(load-bearing-predicate) -/
 structure IsPrekopaLeindlerHyp {n : ℕ}
     (f g hfn : (Fin n → ℝ) → ℝ) (lam : ℝ)
     (intF intG intH : ℝ) : Prop where
   /-- 多次元 Prékopa-Leindler 積分不等式 (Mathlib-wall residual)。 -/
   bound : intF ^ lam * intG ^ (1 - lam) ≤ intH
 
-/-- **L-PL2 (PL → convex body specialization, 🟢ʰ Mathlib-wall residual)**.
+/-- **L-PL2 (PL → convex body specialization, load-bearing structure)**.
 
 凸体 `A, B ⊂ Fin n → ℝ` の体積に関する Brunn-Minkowski multiplicative form
 
@@ -166,11 +169,13 @@ structure IsPrekopaLeindlerHyp {n : ℕ}
 持ち越す。`f = 1_A, g = 1_B, h = 1_{λA+(1-λ)B}` を PL に代入すれば得られる
 帰結だが、本 file 範囲ではその代入を遂行する `volume` 補題群が未整備。
 
-🟢ʰ load-bearing hypothesis — NOT a discharge. 旧版は `def := conclusion`
-(type ≡ conclusion = pure circular) だったが、structure 化で type ≠
-conclusion (構造体 projection `.bound`) に揃える。discharged 1D PL から
-`indicatorToConvexBody_of_1D_body` (`BrunnMinkowskiPLBody.lean`) が
-1 次元特殊 case を construct する経路は既存。 -/
+structure 化により type ≠ conclusion だが、`bound` field の型が結論型と等価
+なので機能的には load-bearing predicate と等価。sorry-migration Phase 3.1
+(2026-05-25) で hypothesis-form consumer は signature から削除して body sorry
+化済。constructor (`indicatorToConvexBody_of_1D_body`) 維持のため structure
+自体は暫定残置。
+
+@audit:retract-candidate(load-bearing-predicate) -/
 structure IsIndicatorToConvexBodyHyp {n : ℕ}
     (A B : Set (Fin n → ℝ)) (volA volB volAB : ℝ) (lam : ℝ) : Prop where
   /-- 凸体 Brunn-Minkowski multiplicative form (Mathlib-wall residual)。 -/
@@ -197,26 +202,24 @@ pointwise 条件
 
     `intH ≥ intF ^ λ * intG ^ (1 - λ)`.
 
-🟢ʰ load-bearing hypothesis — NOT a discharge. 本定理本体は
-`h_pl_assumed.bound` (= L-PL1 structured side-condition の積分不等式
-フィールド) で着地する。L-PL1 の中身そのものが Mathlib に存在しない
-Prékopa-Leindler の積分主張であり、Discharge plan
-`prekopa-leindler-induction-plan.md` (未着手) で `n` 帰納 + 1-dim Hölder
-経路で本格化する想定。1 次元特殊 case は `BrunnMinkowskiLayerCakeBody`
-/ `BrunnMinkowskiPLBody` 内で discharged (`isPrekopaLeindlerHyp_of_layercake`
-等が L-PL1 を construct する経路を提供)。
+sorry-migration Phase 2.3 (2026-05-25): hypothesis
+`h_pl_assumed : IsPrekopaLeindlerHyp f g hfn lam intF intG intH` (= structure
+で `.bound` field が結論型と等価な load-bearing predicate consumer) を削除し
+body を sorry 化。pointwise PL 条件 (`h_pointwise`) と非負性は precondition
+として保持。1 次元特殊 case は `BrunnMinkowskiLayerCakeBody` /
+`BrunnMinkowskiPLBody` 内で discharged。`n` 帰納 + 1-dim Hölder の本格的な
+discharge は `prekopa-leindler-induction-plan.md` (未着手) で塞ぐ。
 
-`@audit:suspect(prekopa-leindler-induction-plan)` -/
+@residual(plan:brunn-minkowski-sorry-migration-plan) -/
 theorem prekopa_leindler_inequality
     {n : ℕ} (f g hfn : (Fin n → ℝ) → ℝ) (lam : ℝ)
     (h0 : 0 ≤ lam) (h1 : lam ≤ 1)
     (intF intG intH : ℝ)
     (hF_nn : 0 ≤ intF) (hG_nn : 0 ≤ intG) (hH_nn : 0 ≤ intH)
     (h_pointwise : ∀ x y : Fin n → ℝ,
-      f x ^ lam * g y ^ (1 - lam) ≤ hfn (lam • x + (1 - lam) • y))
-    (h_pl_assumed : IsPrekopaLeindlerHyp f g hfn lam intF intG intH) :
-    intF ^ lam * intG ^ (1 - lam) ≤ intH :=
-  h_pl_assumed.bound
+      f x ^ lam * g y ^ (1 - lam) ≤ hfn (lam • x + (1 - lam) • y)) :
+    intF ^ lam * intG ^ (1 - lam) ≤ intH := by
+  sorry
 
 /-! ## §D — Specialization: PL → 凸体 Brunn-Minkowski (L-PL2 適用) -/
 
@@ -229,21 +232,21 @@ theorem prekopa_leindler_inequality
 (これが PL の最も簡単な系であり、Cover-Thomas 17.9.2 + Cor 17.9.3 の
 出発点。)
 
-🟢ʰ load-bearing hypothesis — NOT a discharge. 本体は
-`h_indicator_assumed.bound` (= L-PL2 structured side-condition の凸体
-multiplicative bound フィールド) で着地。1 次元特殊 case は
-`indicatorToConvexBody_of_1D_body` (`BrunnMinkowskiPLBody.lean`)
-が discharged 1D PL から L-PL2 を construct する経路を提供。
+sorry-migration Phase 2.3 (2026-05-25): hypothesis
+`h_indicator_assumed : IsIndicatorToConvexBodyHyp A B volA volB volAB lam`
+(= load-bearing structure consumer、`.bound` field が結論型と等価) を削除し
+body を sorry 化。1 次元特殊 case は `indicatorToConvexBody_of_1D_body`
+(`BrunnMinkowskiPLBody.lean`) が discharged 1D PL から L-PL2 を construct
+する経路を提供。
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+@residual(plan:brunn-minkowski-sorry-migration-plan) -/
 theorem brunn_minkowski_from_prekopa_leindler
     {n : ℕ} (A B : Set (Fin n → ℝ))
     (volA volB volAB : ℝ)
     (hvolA : 0 ≤ volA) (hvolB : 0 ≤ volB) (hvolAB : 0 ≤ volAB)
-    (lam : ℝ) (h0 : 0 ≤ lam) (h1 : lam ≤ 1)
-    (h_indicator_assumed : IsIndicatorToConvexBodyHyp A B volA volB volAB lam) :
-    volA ^ lam * volB ^ (1 - lam) ≤ volAB :=
-  h_indicator_assumed.bound
+    (lam : ℝ) (h0 : 0 ≤ lam) (h1 : lam ≤ 1) :
+    volA ^ lam * volB ^ (1 - lam) ≤ volAB := by
+  sorry
 
 /-! ## §E — Log-concave measure framework -/
 
@@ -295,29 +298,21 @@ noncomputable def isLogConcaveMeasure_uniform_convex_body
 
 `entropyPower_nDim` で書き換えると `entropyPower_nDim n h μ ≤ volA^{2/n}`.
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+sorry-migration Phase 2.3 (2026-05-25): hypothesis `h_le_logVol_hyp : h μ ≤
+Real.log volA` (= log-concave entropy が log vol で bounded される core claim、
+Cover-Thomas Cor.17.9.4 の uniform max entropy on convex body) を削除し body
+を sorry 化。log-concave regularity (`hμ_lc`) と volA 正値性は precondition
+として保持。
+
+@residual(plan:brunn-minkowski-sorry-migration-plan) -/
 theorem entropyPower_nDim_le_volume_rpow_of_logConcave
     {n : ℕ} (hn : 0 < (n : ℝ))
     (μ : Measure (Fin n → ℝ))
     (h : Measure (Fin n → ℝ) → ℝ)
     (hμ_lc : IsLogConcaveMeasure μ)
-    (volA : ℝ) (hvolA : 0 < volA)
-    (h_le_logVol_hyp : h μ ≤ Real.log volA) :
+    (volA : ℝ) (hvolA : 0 < volA) :
     entropyPower_nDim n h μ ≤ volA ^ ((2 : ℝ) / n) := by
-  unfold entropyPower_nDim
-  -- `Real.exp ((2/n) h μ) ≤ Real.exp ((2/n) log volA) = volA ^ (2/n)`.
-  have hcoeff_nn : 0 ≤ (2 : ℝ) / n := by
-    apply div_nonneg
-    · norm_num
-    · exact le_of_lt hn
-  have hle : (2 / n) * h μ ≤ (2 / n) * Real.log volA :=
-    mul_le_mul_of_nonneg_left h_le_logVol_hyp hcoeff_nn
-  have hexp_le : Real.exp ((2 / n) * h μ) ≤ Real.exp ((2 / n) * Real.log volA) :=
-    Real.exp_le_exp.mpr hle
-  -- `Real.exp ((2/n) log volA) = volA ^ (2/n)`.
-  have hrpow : Real.exp ((2 / n) * Real.log volA) = volA ^ ((2 : ℝ) / n) := by
-    rw [Real.rpow_def_of_pos hvolA, mul_comm]
-  linarith [hrpow ▸ hexp_le]
+  sorry
 
 /-! ## §H — `Real.rpow` 補助の本 file 局所版 -/
 
@@ -426,25 +421,23 @@ theorem isLogConcaveDensity_mul {n : ℕ} {ρ₁ ρ₂ : (Fin n → ℝ) → ℝ
 これは EPI (`exp (2h(X+Y)) ≥ exp(2h(X)) + exp(2h(Y))`) の "convex
 combination" 形 (Cover-Thomas Theorem 17.9.5 corollary)。
 
-撤退ライン: 結論そのものを hypothesis として取り、本体は pass-through。
+sorry-migration Phase 2.3 (2026-05-25): hypothesis `h_pl_entropy` は結論型
+と verbatim 同型で body が `:= h_pl_entropy` の純循環 (旧 `@audit:suspect`
+で legacy 計数されていたが実態は tier 5 boundary circular defect)。hypothesis
+を削除し body を sorry 化、`@residual(defect:circular)` で defect 種別を明示。
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+@residual(defect:circular) -/
 theorem entropy_power_lambda_mixing
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     {n : ℕ} (h : Measure (Fin n → ℝ) → ℝ)
     (X Y : Ω → (Fin n → ℝ)) (hX : Measurable X) (hY : Measurable Y)
-    (lam : ℝ) (h0 : 0 ≤ lam) (h1 : lam ≤ 1)
-    (h_pl_entropy :
-      entropyPower_nDim n h (P.map X) ^ lam
-        * entropyPower_nDim n h (P.map Y) ^ (1 - lam)
-        ≤ entropyPower_nDim n h
-            (P.map (fun ω => lam • X ω + (1 - lam) • Y ω))) :
+    (lam : ℝ) (h0 : 0 ≤ lam) (h1 : lam ≤ 1) :
     entropyPower_nDim n h (P.map X) ^ lam
       * entropyPower_nDim n h (P.map Y) ^ (1 - lam)
       ≤ entropyPower_nDim n h
-          (P.map (fun ω => lam • X ω + (1 - lam) • Y ω)) :=
-  h_pl_entropy
+          (P.map (fun ω => lam • X ω + (1 - lam) • Y ω)) := by
+  sorry
 
 /-- **λ-mixing entropy form via log**: log 側で展開した形
 
@@ -454,19 +447,20 @@ theorem entropy_power_lambda_mixing
 これは entropy が "concave under convex combination" であることの形式化
 (Cover-Thomas 17.5).
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+sorry-migration Phase 2.3 (2026-05-25): hypothesis `h_concave_hyp` は結論型
+と verbatim 同型で body `:= h_concave_hyp` の純循環 (boundary tier 5 defect、
+旧 `@audit:suspect` で legacy 計数)。hypothesis を削除し body を sorry 化。
+
+@residual(defect:circular) -/
 theorem entropy_concave_lambda_mixing
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     {n : ℕ} (h : Measure (Fin n → ℝ) → ℝ)
     (X Y : Ω → (Fin n → ℝ)) (hX : Measurable X) (hY : Measurable Y)
-    (lam : ℝ) (h0 : 0 ≤ lam) (h1 : lam ≤ 1)
-    (h_concave_hyp :
-      lam * h (P.map X) + (1 - lam) * h (P.map Y)
-        ≤ h (P.map (fun ω => lam • X ω + (1 - lam) • Y ω))) :
+    (lam : ℝ) (h0 : 0 ≤ lam) (h1 : lam ≤ 1) :
     lam * h (P.map X) + (1 - lam) * h (P.map Y)
-      ≤ h (P.map (fun ω => lam • X ω + (1 - lam) • Y ω)) :=
-  h_concave_hyp
+      ≤ h (P.map (fun ω => lam • X ω + (1 - lam) • Y ω)) := by
+  sorry
 
 /-! ## §K — Brunn-Minkowski functional ↔ multiplicative ↔ additive forms -/
 
@@ -478,35 +472,34 @@ theorem entropy_concave_lambda_mixing
 `√(volA · volB) ≤ volAB^{1/2}` という形が出る (Cauchy-Schwarz-like, weaker
 than additive).
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+sorry-migration Phase 2.3 (2026-05-25): hypothesis
+`h_indicator : IsIndicatorToConvexBodyHyp A B volA volB volAB (1/2)`
+(= load-bearing structure consumer) を削除し body を sorry 化。
+
+@residual(plan:brunn-minkowski-sorry-migration-plan) -/
 theorem prekopa_leindler_geometric_mean_form
     {n : ℕ} (A B : Set (Fin n → ℝ))
     (volA volB volAB : ℝ)
-    (hvolA : 0 ≤ volA) (hvolB : 0 ≤ volB) (hvolAB : 0 ≤ volAB)
-    (h_indicator :
-      IsIndicatorToConvexBodyHyp A B volA volB volAB (1/2)) :
+    (hvolA : 0 ≤ volA) (hvolB : 0 ≤ volB) (hvolAB : 0 ≤ volAB) :
     volA ^ ((1 : ℝ) / 2) * volB ^ ((1 : ℝ) / 2) ≤ volAB := by
-  -- L-PL2 at `λ = 1/2` gives `volA^(1/2) * volB^(1-1/2) ≤ volAB`.
-  -- `1 - 1/2 = 1/2`.
-  have h_bound := h_indicator.bound
-  have h_half : (1 : ℝ) - 1/2 = 1/2 := by norm_num
-  rw [h_half] at h_bound
-  exact h_bound
+  sorry
 
 /-- **Functional → additive convex body form** (via log-bridge):
 hypothesis pass-through で `vol(A+B) ≥ vol(A) + vol(B)` (Brunn-Minkowski
 linear form). 主形ではなく weaker form。
 
-撤退ライン: 結論を直接 hypothesis として取る。
+sorry-migration Phase 2.3 (2026-05-25): hypothesis `h_linear_hyp` は結論型と
+verbatim 同型 (`volA + volB ≤ volAB`) で body `:= h_linear_hyp` の純循環
+(boundary tier 5 defect、旧 `@audit:suspect`)。hypothesis を削除し body を
+sorry 化。
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+@residual(defect:circular) -/
 theorem brunn_minkowski_linear_from_prekopa_leindler
     {n : ℕ} (A B : Set (Fin n → ℝ))
     (volA volB volAB : ℝ)
-    (hvolA : 0 ≤ volA) (hvolB : 0 ≤ volB) (hvolAB : 0 ≤ volAB)
-    (h_linear_hyp : volA + volB ≤ volAB) :
-    volA + volB ≤ volAB :=
-  h_linear_hyp
+    (hvolA : 0 ≤ volA) (hvolB : 0 ≤ volB) (hvolAB : 0 ≤ volAB) :
+    volA + volB ≤ volAB := by
+  sorry
 
 /-! ## §L — Log-concave + Brunn-Minkowski 統合 wrapper -/
 
@@ -519,7 +512,12 @@ L-PL1 (PL hypothesis) + L-BM1 (BM entropy hypothesis) を組み合わせて
 
 を `IsLogConcaveMeasure (P.map X)` の追加情報の下で publish する。
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+sorry-migration Phase 2.3 (2026-05-25): hypothesis
+`h_bm : IsBrunnMinkowskiEntropyHypothesis n h X Y P` (= load-bearing P-1
+predicate consumer) を削除し body を sorry 化。log-concave regularity
+(`h_lc_X`, `h_lc_Y`) は precondition として保持。
+
+@residual(plan:brunn-minkowski-sorry-migration-plan) -/
 theorem entropyPower_nDim_logConcave_brunn_minkowski
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -527,16 +525,21 @@ theorem entropyPower_nDim_logConcave_brunn_minkowski
     (X Y : Ω → (Fin n → ℝ)) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
     (h_lc_X : IsLogConcaveMeasure (P.map X))
-    (h_lc_Y : IsLogConcaveMeasure (P.map Y))
-    (h_bm : IsBrunnMinkowskiEntropyHypothesis n h X Y P) :
+    (h_lc_Y : IsLogConcaveMeasure (P.map Y)) :
     entropyPower_nDim n h (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower_nDim n h (P.map X) + entropyPower_nDim n h (P.map Y) :=
-  brunn_minkowski_entropy_inequality P h X Y hX hY hXY h_bm
+      ≥ entropyPower_nDim n h (P.map X) + entropyPower_nDim n h (P.map Y) := by
+  sorry
 
 /-- **Final convex body form with log-concavity**: Cover-Thomas 17.9.3 +
 17.9.4 の統合形 (uniform on convex body is log-concave, BM holds).
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+sorry-migration Phase 2.3 (2026-05-25): hypothesis
+`h_sum_meas : IsMinkowskiSumMeasurableHypothesis A B` + `h_bm_sharp`
+(= load-bearing sharper `(1/n)` 形 BM、conclusion-as-hypothesis 境界) を削除
+し body を sorry 化。log-concave regularity + uniform=log vol regularity は
+precondition として保持。
+
+@residual(plan:brunn-minkowski-sorry-migration-plan) -/
 theorem brunn_minkowski_convex_body_logConcave
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -551,17 +554,11 @@ theorem brunn_minkowski_convex_body_logConcave
     (hA_unif : IsUniformOnEntropyLogVolHypothesis n h (P.map X) volA)
     (hB_unif : IsUniformOnEntropyLogVolHypothesis n h (P.map Y) volB)
     (hAB_unif : IsUniformOnEntropyLogVolHypothesis n h
-      (P.map (fun ω => X ω + Y ω)) volAB)
-    (h_sum_meas : IsMinkowskiSumMeasurableHypothesis A B)
-    (h_bm_sharp :
-      Real.exp ((1 / n) * h (P.map (fun ω => X ω + Y ω)))
-        ≥ Real.exp ((1 / n) * h (P.map X))
-          + Real.exp ((1 / n) * h (P.map Y))) :
+      (P.map (fun ω => X ω + Y ω)) volAB) :
     Real.exp ((1 / n) * Real.log volAB)
       ≥ Real.exp ((1 / n) * Real.log volA)
-        + Real.exp ((1 / n) * Real.log volB) :=
-  brunn_minkowski_convex_body P h X Y hX hY hXY A B volA volB volAB
-    hvolA hvolB hvolAB hA_unif hB_unif hAB_unif h_sum_meas h_bm_sharp
+        + Real.exp ((1 / n) * Real.log volB) := by
+  sorry
 
 /-! ## §M — `rpow` ↔ entropy power 換算 (`exp ((2/n)·)` ↔ `vol^(2/n)`) -/
 
@@ -580,16 +577,18 @@ theorem entropyPower_nDim_eq_rpow_of_log
 **characterization-of-equality** direction. Cover-Thomas 17.9.4 で
 "uniform achieves max entropy on convex body" の formal 形。
 
-撤退ライン: equality 自体を hypothesis として取る pass-through。
+sorry-migration Phase 2.3 (2026-05-25): hypothesis `h_eq_hyp` は結論型と
+verbatim 同型 (`h μ = Real.log vol`) で body `:= h_eq_hyp` の純循環
+(boundary tier 5 defect、旧 `@audit:suspect`)。hypothesis を削除し body を
+sorry 化。
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+@residual(defect:circular) -/
 theorem entropy_eq_logVolume_iff_uniform
     {n : ℕ} (μ : Measure (Fin n → ℝ))
     (h : Measure (Fin n → ℝ) → ℝ)
-    (vol : ℝ) (hvol : 0 < vol)
-    (h_eq_hyp : h μ = Real.log vol) :
-    h μ = Real.log vol :=
-  h_eq_hyp
+    (vol : ℝ) (hvol : 0 < vol) :
+    h μ = Real.log vol := by
+  sorry
 
 /-! ## §N — Final summary: Cover-Thomas Ch.17.9 全体の hypothesis pass-through 露出 -/
 
@@ -623,16 +622,22 @@ structure CoverThomas17_9_Bundle {n : ℕ}
 
 /-- **Bundle extraction: BM entropy main from bundle**.
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+sorry-migration Phase 2.3 (2026-05-25): hypothesis `bundle.bm_entropy` 経由
+の P-1 consumer。bundle 自体 (`CoverThomas17_9_Bundle`) は load-bearing
+predicate を field として持つ structure (Phase 3 で `@audit:retract-candidate`
+付与候補)。本 wrapper は `bundle` を receive せず upstream
+`brunn_minkowski_entropy_inequality` (sorry 化済) の transitive call にする
+ことで body を sorry 化。
+
+@residual(plan:brunn-minkowski-sorry-migration-plan) -/
 theorem coverThomas17_9_bundle_entropy
     {n : ℕ} {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (h : Measure (Fin n → ℝ) → ℝ)
-    (bundle : CoverThomas17_9_Bundle P h)
     (X Y : Ω → (Fin n → ℝ)) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P) :
     entropyPower_nDim n h (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower_nDim n h (P.map X) + entropyPower_nDim n h (P.map Y) :=
-  brunn_minkowski_entropy_inequality P h X Y hX hY hXY (bundle.bm_entropy X Y)
+      ≥ entropyPower_nDim n h (P.map X) + entropyPower_nDim n h (P.map Y) := by
+  sorry
 
 end InformationTheory.Shannon.BrunnMinkowski

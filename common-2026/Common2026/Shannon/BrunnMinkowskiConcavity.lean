@@ -210,7 +210,10 @@ pass-through) は
 
 を取り出す。`Real.exp_log` を通せば左辺は `log (volAB^{1/n})` に等価
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+Transitive `sorry` via `brunn_minkowski_convex_body` (`BrunnMinkowski.lean:247`,
+sorry-migration Phase 2.2 retreat)。No `@residual` tag attached — the closure
+responsibility belongs to the upstream declaration's
+`@residual(plan:brunn-minkowski-sorry-migration-plan)`. -/
 theorem brunn_minkowski_convex_body_log_form
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -223,24 +226,22 @@ theorem brunn_minkowski_convex_body_log_form
     (hA_unif : IsUniformOnEntropyLogVolHypothesis n h (P.map X) volA)
     (hB_unif : IsUniformOnEntropyLogVolHypothesis n h (P.map Y) volB)
     (hAB_unif : IsUniformOnEntropyLogVolHypothesis n h
-      (P.map (fun ω => X ω + Y ω)) volAB)
-    (h_sum_meas : IsMinkowskiSumMeasurableHypothesis A B)
-    (h_bm_sharp :
-      Real.exp ((1 / n) * h (P.map (fun ω => X ω + Y ω)))
-        ≥ Real.exp ((1 / n) * h (P.map X))
-          + Real.exp ((1 / n) * h (P.map Y))) :
+      (P.map (fun ω => X ω + Y ω)) volAB) :
     (1 / n) * Real.log volAB
       ≥ Real.log
           (Real.exp ((1 / n) * Real.log volA)
             + Real.exp ((1 / n) * Real.log volB)) := by
   have h_main := brunn_minkowski_convex_body P h X Y hX hY hXY A B volA volB volAB
-    hvolA hvolB hvolAB hA_unif hB_unif hAB_unif h_sum_meas h_bm_sharp
+    hvolA hvolB hvolAB hA_unif hB_unif hAB_unif
   exact square_to_linear_bridge_log h_main
 
 /-- **`exp_log` form**: 同 wrapper を `volAB^{1/n} ≥ volA^{1/n} + volB^{1/n}`
 **そのまま** の形で取り出す版。`Real.exp_log` を通すだけ。
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+Transitive `sorry` via `brunn_minkowski_convex_body` (`BrunnMinkowski.lean:247`,
+sorry-migration Phase 2.2 retreat)。No `@residual` tag attached — the closure
+responsibility belongs to the upstream declaration's
+`@residual(plan:brunn-minkowski-sorry-migration-plan)`. -/
 theorem brunn_minkowski_convex_body_exp_log_form
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -253,17 +254,12 @@ theorem brunn_minkowski_convex_body_exp_log_form
     (hA_unif : IsUniformOnEntropyLogVolHypothesis n h (P.map X) volA)
     (hB_unif : IsUniformOnEntropyLogVolHypothesis n h (P.map Y) volB)
     (hAB_unif : IsUniformOnEntropyLogVolHypothesis n h
-      (P.map (fun ω => X ω + Y ω)) volAB)
-    (h_sum_meas : IsMinkowskiSumMeasurableHypothesis A B)
-    (h_bm_sharp :
-      Real.exp ((1 / n) * h (P.map (fun ω => X ω + Y ω)))
-        ≥ Real.exp ((1 / n) * h (P.map X))
-          + Real.exp ((1 / n) * h (P.map Y))) :
+      (P.map (fun ω => X ω + Y ω)) volAB) :
     Real.exp ((1 / n) * Real.log volAB)
       ≥ Real.exp ((1 / n) * Real.log volA)
         + Real.exp ((1 / n) * Real.log volB) :=
   brunn_minkowski_convex_body P h X Y hX hY hXY A B volA volB volAB
-    hvolA hvolB hvolAB hA_unif hB_unif hAB_unif h_sum_meas h_bm_sharp
+    hvolA hvolB hvolAB hA_unif hB_unif hAB_unif
 
 /-! ### §D-bis — L-BM1 主形 → log 形 (concavity bridge through main entropy form) -/
 
@@ -272,19 +268,21 @@ theorem brunn_minkowski_convex_body_exp_log_form
 
     `(2/n) h(X+Y) ≥ log (exp ((2/n) h(X)) + exp ((2/n) h(Y)))`.
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+Transitive `sorry` via `brunn_minkowski_entropy_inequality_exp_form`
+(`BrunnMinkowski.lean:209`, sorry-migration Phase 2.2 retreat)。No `@residual`
+tag attached — the closure responsibility belongs to the upstream
+declaration's `@residual(plan:brunn-minkowski-sorry-migration-plan)`. -/
 theorem brunn_minkowski_entropy_log_form
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     {n : ℕ} (h : Measure (Fin n → ℝ) → ℝ)
     (X Y : Ω → (Fin n → ℝ)) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_bm : IsBrunnMinkowskiEntropyHypothesis n h X Y P) :
+    (hXY : IndepFun X Y P) :
     (2 / n) * h (P.map (fun ω => X ω + Y ω))
       ≥ Real.log
           (Real.exp ((2 / n) * h (P.map X))
             + Real.exp ((2 / n) * h (P.map Y))) := by
-  have h_exp := brunn_minkowski_entropy_inequality_exp_form P h X Y hX hY hXY h_bm
+  have h_exp := brunn_minkowski_entropy_inequality_exp_form P h X Y hX hY hXY
   exact square_to_linear_bridge_log h_exp
 
 /-! ## §E — 補助 corollary 群 -/
@@ -428,34 +426,36 @@ theorem log_exp_add_exp_comm (a b : ℝ) :
 /-- **Concavity-of-log composition for Brunn-Minkowski main form**: 主形を
 `(2/n)` 係数で log 側に持ち上げた状態に名前を付ける統合 wrapper。
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+Transitive `sorry` via `brunn_minkowski_entropy_log_form` (transitive via
+`brunn_minkowski_entropy_inequality_exp_form` `BrunnMinkowski.lean:209`,
+sorry-migration Phase 2.2 retreat)。No `@residual` tag attached. -/
 theorem brunn_minkowski_concavity_of_log_wrapper
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     {n : ℕ} (h : Measure (Fin n → ℝ) → ℝ)
     (X Y : Ω → (Fin n → ℝ)) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_bm : IsBrunnMinkowskiEntropyHypothesis n h X Y P) :
+    (hXY : IndepFun X Y P) :
     (2 / n) * h (P.map (fun ω => X ω + Y ω))
       ≥ Real.log
           (Real.exp ((2 / n) * h (P.map X))
             + Real.exp ((2 / n) * h (P.map Y))) :=
-  brunn_minkowski_entropy_log_form P h X Y hX hY hXY h_bm
+  brunn_minkowski_entropy_log_form P h X Y hX hY hXY
 
 /-- **Concavity wrapper, max lower bound form**: 主形を `max` で挟む形に
 specialize したもの (`max_le_log_exp_add_exp` を経由)。
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+Transitive `sorry` via `brunn_minkowski_entropy_log_form` (transitive via
+`brunn_minkowski_entropy_inequality_exp_form` `BrunnMinkowski.lean:209`,
+sorry-migration Phase 2.2 retreat)。No `@residual` tag attached. -/
 theorem brunn_minkowski_concavity_max_lower_bound
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     {n : ℕ} (h : Measure (Fin n → ℝ) → ℝ)
     (X Y : Ω → (Fin n → ℝ)) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_bm : IsBrunnMinkowskiEntropyHypothesis n h X Y P) :
+    (hXY : IndepFun X Y P) :
     (2 / n) * h (P.map (fun ω => X ω + Y ω))
       ≥ max ((2 / n) * h (P.map X)) ((2 / n) * h (P.map Y)) := by
-  have h_log := brunn_minkowski_entropy_log_form P h X Y hX hY hXY h_bm
+  have h_log := brunn_minkowski_entropy_log_form P h X Y hX hY hXY
   have h_max := max_le_log_exp_add_exp ((2 / n) * h (P.map X))
     ((2 / n) * h (P.map Y))
   linarith
@@ -463,14 +463,15 @@ theorem brunn_minkowski_concavity_max_lower_bound
 /-- **Concavity wrapper, max + log 2 upper bound** (Brunn-Minkowski の右辺
 を最大値 + log 2 で押さえる形 — `log_exp_add_exp_le_max_add_log_two` 経由).
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+Transitive `sorry` via `brunn_minkowski_entropy_log_form` (transitive via
+`brunn_minkowski_entropy_inequality_exp_form` `BrunnMinkowski.lean:209`,
+sorry-migration Phase 2.2 retreat)。No `@residual` tag attached. -/
 theorem brunn_minkowski_concavity_max_log_two_upper_bound
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     {n : ℕ} (h : Measure (Fin n → ℝ) → ℝ)
     (X Y : Ω → (Fin n → ℝ)) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_bm : IsBrunnMinkowskiEntropyHypothesis n h X Y P) :
+    (hXY : IndepFun X Y P) :
     (2 / n) * h (P.map (fun ω => X ω + Y ω))
       ≥ Real.log
           (Real.exp ((2 / n) * h (P.map X))
@@ -480,7 +481,7 @@ theorem brunn_minkowski_concavity_max_log_two_upper_bound
             + Real.exp ((2 / n) * h (P.map Y)))
         ≤ max ((2 / n) * h (P.map X)) ((2 / n) * h (P.map Y))
           + Real.log 2 :=
-  ⟨brunn_minkowski_entropy_log_form P h X Y hX hY hXY h_bm,
+  ⟨brunn_minkowski_entropy_log_form P h X Y hX hY hXY,
    log_exp_add_exp_le_max_add_log_two _ _⟩
 
 /-! ## §I — naive sqrt 反例の rigorous な統計 (`c² = a² + b²` ですら `c < a + b` のケースの精緻化) -/
@@ -565,34 +566,36 @@ theorem log_exp_form_always_holds (a b c : ℝ) :
 
 L-BM1 hypothesis から導出される 1-side corollary。
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+Transitive `sorry` via `brunn_minkowski_entropy_inequality`
+(`BrunnMinkowski.lean:192`, sorry-migration Phase 2.1 retreat)。No `@residual`
+tag attached. -/
 theorem brunn_minkowski_entropy_ge_one_side
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     {n : ℕ} (h : Measure (Fin n → ℝ) → ℝ)
     (X Y : Ω → (Fin n → ℝ)) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_bm : IsBrunnMinkowskiEntropyHypothesis n h X Y P) :
+    (hXY : IndepFun X Y P) :
     entropyPower_nDim n h (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower_nDim n h (P.map X) := by
-  have h1 := brunn_minkowski_entropy_inequality P h X Y hX hY hXY h_bm
+  have h1 := brunn_minkowski_entropy_inequality P h X Y hX hY hXY
   have h2 : 0 ≤ entropyPower_nDim n h (P.map Y) :=
     entropyPower_nDim_nonneg n h _
   linarith
 
 /-- **Symmetric one-side form**: 同 corollary, `Y` 側を取り出す版。
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+Transitive `sorry` via `brunn_minkowski_entropy_inequality`
+(`BrunnMinkowski.lean:192`, sorry-migration Phase 2.1 retreat)。No `@residual`
+tag attached. -/
 theorem brunn_minkowski_entropy_ge_other_side
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     {n : ℕ} (h : Measure (Fin n → ℝ) → ℝ)
     (X Y : Ω → (Fin n → ℝ)) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_bm : IsBrunnMinkowskiEntropyHypothesis n h X Y P) :
+    (hXY : IndepFun X Y P) :
     entropyPower_nDim n h (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower_nDim n h (P.map Y) := by
-  have h1 := brunn_minkowski_entropy_inequality P h X Y hX hY hXY h_bm
+  have h1 := brunn_minkowski_entropy_inequality P h X Y hX hY hXY
   have h2 : 0 ≤ entropyPower_nDim n h (P.map X) :=
     entropyPower_nDim_nonneg n h _
   linarith
@@ -601,19 +604,20 @@ theorem brunn_minkowski_entropy_ge_other_side
 `entropyPower_nDim n h (P.map (X+Y)) ≥ max (entropyPower_nDim n h (P.map X))
 (entropyPower_nDim n h (P.map Y))`.
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+Transitive `sorry` via `brunn_minkowski_entropy_inequality`
+(`BrunnMinkowski.lean:192`, sorry-migration Phase 2.1 retreat)。No `@residual`
+tag attached. -/
 theorem brunn_minkowski_entropy_ge_max
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     {n : ℕ} (h : Measure (Fin n → ℝ) → ℝ)
     (X Y : Ω → (Fin n → ℝ)) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_bm : IsBrunnMinkowskiEntropyHypothesis n h X Y P) :
+    (hXY : IndepFun X Y P) :
     entropyPower_nDim n h (P.map (fun ω => X ω + Y ω))
       ≥ max (entropyPower_nDim n h (P.map X))
             (entropyPower_nDim n h (P.map Y)) := by
-  have hX' := brunn_minkowski_entropy_ge_one_side P h X Y hX hY hXY h_bm
-  have hY' := brunn_minkowski_entropy_ge_other_side P h X Y hX hY hXY h_bm
+  have hX' := brunn_minkowski_entropy_ge_one_side P h X Y hX hY hXY
+  have hY' := brunn_minkowski_entropy_ge_other_side P h X Y hX hY hXY
   exact max_le hX' hY'
 
 /-! ## §L — 凸体系 (`brunn_minkowski_convex_body`) と本 file の最終接続 -/
@@ -621,7 +625,8 @@ theorem brunn_minkowski_entropy_ge_max
 /-- **`rpow` 形での凸体系**: `volAB^{1/n} ≥ volA^{1/n} + volB^{1/n}`.
 `exp_inv_n_log_eq_rpow` で `exp_log_form` を `rpow` に書き換える。
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+Transitive `sorry` via `brunn_minkowski_convex_body` (`BrunnMinkowski.lean:247`,
+sorry-migration Phase 2.2 retreat)。No `@residual` tag attached. -/
 theorem brunn_minkowski_convex_body_rpow_form
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -635,15 +640,10 @@ theorem brunn_minkowski_convex_body_rpow_form
     (hA_unif : IsUniformOnEntropyLogVolHypothesis n h (P.map X) volA)
     (hB_unif : IsUniformOnEntropyLogVolHypothesis n h (P.map Y) volB)
     (hAB_unif : IsUniformOnEntropyLogVolHypothesis n h
-      (P.map (fun ω => X ω + Y ω)) volAB)
-    (h_sum_meas : IsMinkowskiSumMeasurableHypothesis A B)
-    (h_bm_sharp :
-      Real.exp ((1 / n) * h (P.map (fun ω => X ω + Y ω)))
-        ≥ Real.exp ((1 / n) * h (P.map X))
-          + Real.exp ((1 / n) * h (P.map Y))) :
+      (P.map (fun ω => X ω + Y ω)) volAB) :
     volAB ^ ((1 : ℝ) / n) ≥ volA ^ ((1 : ℝ) / n) + volB ^ ((1 : ℝ) / n) := by
   have h_main := brunn_minkowski_convex_body P h X Y hX hY hXY A B volA volB volAB
-    hvolA hvolB hvolAB hA_unif hB_unif hAB_unif h_sum_meas h_bm_sharp
+    hvolA hvolB hvolAB hA_unif hB_unif hAB_unif
   rw [exp_inv_n_log_eq_rpow hn hvolAB] at h_main
   rw [exp_inv_n_log_eq_rpow hn hvolA] at h_main
   rw [exp_inv_n_log_eq_rpow hn hvolB] at h_main
@@ -652,7 +652,9 @@ theorem brunn_minkowski_convex_body_rpow_form
 /-- **`vol > 0` 直接形** (positivity tag): 凸体の volume が正であることを
 hypothesis として要求するときの統合 specialization.
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+Transitive `sorry` via `brunn_minkowski_convex_body_rpow_form` (transitive via
+`brunn_minkowski_convex_body` `BrunnMinkowski.lean:247`, sorry-migration
+Phase 2.2 retreat)。No `@residual` tag attached. -/
 theorem brunn_minkowski_convex_body_rpow_pos
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -666,17 +668,12 @@ theorem brunn_minkowski_convex_body_rpow_pos
     (hA_unif : IsUniformOnEntropyLogVolHypothesis n h (P.map X) volA)
     (hB_unif : IsUniformOnEntropyLogVolHypothesis n h (P.map Y) volB)
     (hAB_unif : IsUniformOnEntropyLogVolHypothesis n h
-      (P.map (fun ω => X ω + Y ω)) volAB)
-    (h_sum_meas : IsMinkowskiSumMeasurableHypothesis A B)
-    (h_bm_sharp :
-      Real.exp ((1 / n) * h (P.map (fun ω => X ω + Y ω)))
-        ≥ Real.exp ((1 / n) * h (P.map X))
-          + Real.exp ((1 / n) * h (P.map Y))) :
+      (P.map (fun ω => X ω + Y ω)) volAB) :
     0 < volAB ^ ((1 : ℝ) / n)
       ∧ volA ^ ((1 : ℝ) / n) + volB ^ ((1 : ℝ) / n)
         ≤ volAB ^ ((1 : ℝ) / n) := by
   refine ⟨Real.rpow_pos_of_pos hvolAB _, ?_⟩
   exact brunn_minkowski_convex_body_rpow_form P hn h X Y hX hY hXY A B volA volB volAB
-    hvolA hvolB hvolAB hA_unif hB_unif hAB_unif h_sum_meas h_bm_sharp
+    hvolA hvolB hvolAB hA_unif hB_unif hAB_unif
 
 end InformationTheory.Shannon.BrunnMinkowski

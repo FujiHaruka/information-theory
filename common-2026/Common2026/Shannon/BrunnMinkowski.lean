@@ -130,7 +130,16 @@ Discharge plan `brunn-minkowski-from-epi-discharge-plan.md` (起草済、
 本実装未着手) で EPI (T2-D) の n-dim 拡張 + Cover-Thomas Theorem 17.7.4
 経路から導出する想定。
 
-`@audit:defect(circular)` `@audit:defer(brunn-minkowski-from-epi-discharge)` `@audit:staged(epi-n-dim)` -/
+sorry-migration Phase 2.1 (2026-05-25): conclusion-as-hypothesis 循環の
+解消で primary consumer `brunn_minkowski_entropy_inequality` (`:192`) は
+本 predicate を hypothesis として取らなくなった (body sorry 化)。但し
+remaining consumer (`brunn_minkowski_entropy_inequality_exp_form` `:209` /
+`brunn_minkowski_entropy_inequality_three_arg` `:293` /
+`BrunnMinkowskiFunctional.lean` 6 件) が引数として残るため predicate 定義は
+削除せず、後続 plan で predicate-free 形に置換するまで暫定残置 (CLAUDE.md
+「sorry を書けない箇所での対処順序」第二選択)。
+
+@audit:retract-candidate(load-bearing-predicate) -/
 def IsBrunnMinkowskiEntropyHypothesis {Ω : Type*} [MeasurableSpace Ω]
     (n : ℕ) (h : Measure (Fin n → ℝ) → ℝ)
     (X Y : Ω → (Fin n → ℝ)) (P : Measure Ω) : Prop :=
@@ -174,50 +183,50 @@ def IsMinkowskiSumMeasurableHypothesis {n : ℕ} (A B : Set (Fin n → ℝ)) : P
 
 すなわち `exp ((2/n) h(X+Y)) ≥ exp ((2/n) h(X)) + exp ((2/n) h(Y))`。
 
-🟢ʰ load-bearing hypothesis — NOT a discharge. 本定理本体は
-`h_bm_entropy_assumed` (= `IsBrunnMinkowskiEntropyHypothesis`,
-Brunn-Minkowski entropy 形そのもの) で着地する。L-BM1 retreat:
-Brunn-Minkowski の結論を Mathlib 壁 (Cover-Thomas 17.9.2 / 17.7.4 系の
-`n`-dim 拡張が Mathlib 未整備) のため hypothesis pass-through。
-genuine reduction は `BrunnMinkowskiClosure.lean` の
-`brunn_minkowski_entropy_jointPi` (concrete entropy + sqrt-form geometric
-BM) に分離して provide される。
+L-BM1 retreat: Brunn-Minkowski の結論を Mathlib 壁 (Cover-Thomas 17.9.2 /
+17.7.4 系の `n`-dim 拡張が Mathlib 未整備) のため genuine discharge 未着手、
+signature に hypothesis 形で抱えていた `h_bm_entropy_assumed`
+(= `IsBrunnMinkowskiEntropyHypothesis`, 結論そのもの) を削除し、body を sorry
+化した (sorry-migration Phase 2.1、conclusion-as-hypothesis 循環の解消)。
 
 EPI との関係: EPI (`entropy_power_inequality`, T2-D) は `n = 1` 限定。
 本 `n`-dim 形は EPI の coordinate-wise 拡張 + Cover-Thomas Theorem 17.7.4
 経路で discharge plan `brunn-minkowski-from-epi-discharge-plan.md`
-(起草済、本実装未着手) に塞ぐ。
+(起草済、本実装未着手) に塞ぐ。genuine reduction は
+`BrunnMinkowskiClosure.lean` の `brunn_minkowski_entropy_jointPi`
+(concrete entropy + sqrt-form geometric BM) に分離して provide 済。
 
-`@audit:defect(circular)` `@audit:defer(brunn-minkowski-from-epi-discharge)` -/
+@residual(plan:brunn-minkowski-sorry-migration-plan) -/
 theorem brunn_minkowski_entropy_inequality
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     {n : ℕ} (h : Measure (Fin n → ℝ) → ℝ)
     (X Y : Ω → (Fin n → ℝ)) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_bm_entropy_assumed : IsBrunnMinkowskiEntropyHypothesis n h X Y P) :
+    (hXY : IndepFun X Y P) :
     entropyPower_nDim n h (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower_nDim n h (P.map X) + entropyPower_nDim n h (P.map Y) :=
-  h_bm_entropy_assumed
+      ≥ entropyPower_nDim n h (P.map X) + entropyPower_nDim n h (P.map Y) := by
+  sorry
 
 /-! ## §D — Cover-Thomas 露出形 + 凸体 specialization -/
 
 /-- **Brunn-Minkowski in `Real.exp ((2/n) · ...)` form** (Cover-Thomas
 Theorem 17.9.2 露出形).
 
-`@audit:suspect(brunn-minkowski-moonshot-plan)` -/
+sorry-migration Phase 2.2 (2026-05-25): hypothesis
+`h_bm : IsBrunnMinkowskiEntropyHypothesis n h X Y P` を削除し body を sorry
+化 (P-1 pattern: 結論 unfold predicate consumer の signature 改変)。
+
+@residual(plan:brunn-minkowski-sorry-migration-plan) -/
 theorem brunn_minkowski_entropy_inequality_exp_form
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     {n : ℕ} (h : Measure (Fin n → ℝ) → ℝ)
     (X Y : Ω → (Fin n → ℝ)) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_bm : IsBrunnMinkowskiEntropyHypothesis n h X Y P) :
+    (hXY : IndepFun X Y P) :
     Real.exp ((2 / n) * h (P.map (fun ω => X ω + Y ω)))
       ≥ Real.exp ((2 / n) * h (P.map X))
         + Real.exp ((2 / n) * h (P.map Y)) := by
-  have hh := brunn_minkowski_entropy_inequality P h X Y hX hY hXY h_bm
-  simpa [entropyPower_nDim] using hh
+  sorry
 
 /-- **Brunn-Minkowski for convex bodies (Cover-Thomas Cor. 17.9.3)**: 凸体
 `A, B ⊂ Fin n → ℝ` (正の体積) について
@@ -234,16 +243,14 @@ Cover-Thomas Cor. 17.9.3 の `vol^{1/n}` 形を得るには **`(1/n)·h` 形の
 Brunn-Minkowski** (= **L-BM1'**, sharper sqrt 版) を別 hypothesis として
 追加 pass-through する。
 
-撤退ライン採用:
+sorry-migration Phase 2.2 (2026-05-25): hypothesis
+`_h_sum_meas : IsMinkowskiSumMeasurableHypothesis A B` + `h_bm_sharp`
+(= L-BM1' sharper `(1/n)` 形 BM、conclusion を uniform で書き換えた形なので
+load-bearing claim そのもの = 境界 tier 5 conclusion-as-hypothesis) を削除し
+body を sorry 化。uniform=log vol regularity (`hA_unif/hB_unif/hAB_unif`) は
+precondition として保持。
 
-* `h_bm_sharp` (L-BM1' = sharper `(1/n)` 形 Brunn-Minkowski): `vol^{1/n}`
-  に直結する `(1/n)·h` 形を直接 hypothesis 化
-* `hA_unif`, `hB_unif`, `hAB_unif` (L-BM2): uniform の entropy = log vol
-  hypothesis (3 本: `Uniform A`, `Uniform B`, `Uniform (A+B)`)
-* `_h_sum_meas` (L-BM3): Minkowski sum の可測性 hypothesis (signature
-  露出のみ)
-
-`@audit:suspect(brunn-minkowski-moonshot-plan)` -/
+@residual(plan:brunn-minkowski-sorry-migration-plan) -/
 theorem brunn_minkowski_convex_body
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -256,19 +263,11 @@ theorem brunn_minkowski_convex_body
     (hA_unif : IsUniformOnEntropyLogVolHypothesis n h (P.map X) volA)
     (hB_unif : IsUniformOnEntropyLogVolHypothesis n h (P.map Y) volB)
     (hAB_unif : IsUniformOnEntropyLogVolHypothesis n h
-      (P.map (fun ω => X ω + Y ω)) volAB)
-    (_h_sum_meas : IsMinkowskiSumMeasurableHypothesis A B)
-    (h_bm_sharp :
-      Real.exp ((1 / n) * h (P.map (fun ω => X ω + Y ω)))
-        ≥ Real.exp ((1 / n) * h (P.map X))
-          + Real.exp ((1 / n) * h (P.map Y))) :
+      (P.map (fun ω => X ω + Y ω)) volAB) :
     Real.exp ((1 / n) * Real.log volAB)
       ≥ Real.exp ((1 / n) * Real.log volA)
         + Real.exp ((1 / n) * Real.log volB) := by
-  -- L-BM2 で h(P.map X) = log volA 等に置換し、L-BM1' に流し込む。
-  unfold IsUniformOnEntropyLogVolHypothesis at hA_unif hB_unif hAB_unif
-  rw [hA_unif, hB_unif, hAB_unif] at h_bm_sharp
-  exact h_bm_sharp
+  sorry
 
 /-! ## §E — 補助 corollary 群 -/
 
@@ -289,37 +288,19 @@ Brunn-Minkowski を chain することで
 形に外出し (X+Y vs Z のペアで 1 回、X vs Y のペアで 1 回)。EPI
 `entropy_power_inequality_three_arg` と同パターン。
 
-`@audit:suspect(brunn-minkowski-moonshot-plan)` -/
+sorry-migration Phase 2.2 (2026-05-25): 2 本の hypothesis
+`h_xy_z_bm` / `h_x_y_bm` (`IsBrunnMinkowskiEntropyHypothesis` consumer、
+P-1 pattern) を削除し body を sorry 化。
+
+@residual(plan:brunn-minkowski-sorry-migration-plan) -/
 theorem brunn_minkowski_entropy_inequality_three_arg
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     {n : ℕ} (h : Measure (Fin n → ℝ) → ℝ)
-    (X Y Z : Ω → (Fin n → ℝ))
-    (h_xy_z_bm :
-      IsBrunnMinkowskiEntropyHypothesis n h (fun ω => X ω + Y ω) Z P)
-    (h_x_y_bm : IsBrunnMinkowskiEntropyHypothesis n h X Y P) :
+    (X Y Z : Ω → (Fin n → ℝ)) :
     entropyPower_nDim n h (P.map (fun ω => X ω + Y ω + Z ω))
       ≥ entropyPower_nDim n h (P.map X) + entropyPower_nDim n h (P.map Y)
         + entropyPower_nDim n h (P.map Z) := by
-  -- Step 1: from `h_xy_z_bm`, we get
-  --   `entropyPower_nDim ((X+Y)+Z) ≥ entropyPower_nDim (X+Y) + entropyPower_nDim Z`.
-  have h1 : entropyPower_nDim n h (P.map (fun ω => X ω + Y ω + Z ω))
-      ≥ entropyPower_nDim n h (P.map (fun ω => X ω + Y ω))
-        + entropyPower_nDim n h (P.map Z) := by
-    -- `fun ω => (X ω + Y ω) + Z ω` is `fun ω => X ω + Y ω + Z ω` (assoc).
-    have h_assoc : (fun ω : Ω => (X ω + Y ω) + Z ω)
-        = (fun ω : Ω => X ω + Y ω + Z ω) := by
-      funext ω; ring
-    have h := h_xy_z_bm
-    unfold IsBrunnMinkowskiEntropyHypothesis at h
-    rw [h_assoc] at h
-    exact h
-  -- Step 2: from `h_x_y_bm`, we get
-  --   `entropyPower_nDim (X+Y) ≥ entropyPower_nDim X + entropyPower_nDim Y`.
-  have h2 : entropyPower_nDim n h (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower_nDim n h (P.map X)
-        + entropyPower_nDim n h (P.map Y) := h_x_y_bm
-  -- Combine via transitivity.
-  linarith
+  sorry
 
 end InformationTheory.Shannon.BrunnMinkowski
