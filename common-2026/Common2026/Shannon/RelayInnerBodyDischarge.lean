@@ -147,39 +147,37 @@ def IsRelayDFBlockMarkovWitness
     (W : RelayChannel α α₁ β β₁) (R Imrh Iry Ibroad : ℝ) : Prop :=
   RelayDFAchievable (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Imrh Iry Ibroad
 
-/-- A DF block-Markov witness, **together with the rate-region membership**,
-yields the DF inner-bound existence by `modus ponens`. This is the genuine
-routing lemma — the witness is the gated achievability implication, so the
-existence is *derived* from it and the rate region, not asserted.
+/-- DF inner-bound existence from rate-region membership — load-bearing
+block-Markov / sliding-window witness removed, sorry.
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+The previous public signature took a load-bearing achievability witness
+`h : IsRelayDFBlockMarkovWitness …` (= `RelayDFAchievable …`, the gated
+implication bundling L-RI1 + L-RI2 walls). Under the sorry-based
+migration that load-bearing predicate has been removed; closure
+responsibility is parked on the parent moonshot plan.
+
+`@residual(plan:relay-inner-bound-moonshot-plan)` -/
 lemma RelayDFInnerBoundExistence_of_witness
     {W : RelayChannel α α₁ β β₁} {R Imrh Iry Ibroad : ℝ}
-    (h_in_df_region : InRelayDFRate R Imrh Iry Ibroad)
-    (h : IsRelayDFBlockMarkovWitness
-            (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Imrh Iry Ibroad) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
-  h h_in_df_region
+    (h_in_df_region : InRelayDFRate R Imrh Iry Ibroad) :
+    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R := by
+  sorry
 
-/-- **DF inner bound — body discharge form (L-RI1 + L-RI2 as honest
-achievability witness)**.
+/-- **DF inner bound — body-discharge form** (load-bearing witness removed, sorry).
 
-This is the body-discharged variant of `relay_df_inner_bound`: it takes the
-rate-region membership `h_in_df_region` and the achievability witness
-`h_witness` and **derives** the error-carrying existence claim by `modus
-ponens` (not an identity wrap, not a leap from rate-only data).
+The previous public signature took the load-bearing achievability
+witness `h_witness : IsRelayDFBlockMarkovWitness …` and derived the
+error-carrying existence by `modus ponens`. Under the sorry-based
+migration the load-bearing predicate has been removed; closure
+responsibility is parked on the parent moonshot plan.
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+`@residual(plan:relay-inner-bound-moonshot-plan)` -/
 theorem relay_df_body_from_witness
     (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
-    (h_in_df_region : InRelayDFRate R Imrh Iry Ibroad)
-    (h_witness :
-        IsRelayDFBlockMarkovWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Imrh Iry Ibroad) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
-  RelayDFInnerBoundExistence_of_witness (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    h_in_df_region h_witness
+    (h_in_df_region : InRelayDFRate R Imrh Iry Ibroad) :
+    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R := by
+  sorry
 
 end DFWitness
 
@@ -339,36 +337,37 @@ def IsRelayCFBinningWitness
     (W : RelayChannel α α₁ β β₁) (R Idec Ix1y Iy1hy1 : ℝ) : Prop :=
   RelayCFAchievable (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1
 
-/-- A CF binning witness, **together with the rate-region membership**,
-yields the CF inner-bound existence by `modus ponens`.
+/-- CF inner-bound existence from rate-region membership — load-bearing
+WZ-binning / SI-decode witness removed, sorry.
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+The previous public signature took a load-bearing achievability witness
+`h : IsRelayCFBinningWitness …` (= `RelayCFAchievable …`, the gated
+implication bundling L-RI3 + L-RI4 walls). Under the sorry-based
+migration that load-bearing predicate has been removed; closure
+responsibility is parked on the parent moonshot plan.
+
+`@residual(plan:relay-inner-bound-moonshot-plan)` -/
 lemma RelayCFInnerBoundExistence_of_witness
     {W : RelayChannel α α₁ β β₁} {R Idec Ix1y Iy1hy1 : ℝ}
-    (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
-    (h : IsRelayCFBinningWitness
-            (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
-    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
-  h h_in_cf_region
+    (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1) :
+    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R := by
+  sorry
 
-/-- **CF inner bound — body discharge form (L-RI3 + L-RI4 as honest
-achievability witness)**.
+/-- **CF inner bound — body-discharge form** (load-bearing witness removed, sorry).
 
-The body-discharged variant of `relay_cf_inner_bound`: takes the
-rate-region membership and the achievability witness and **derives** the
-error-carrying existence claim by `modus ponens`.
+The previous public signature took the load-bearing achievability
+witness `h_witness : IsRelayCFBinningWitness …` and derived the
+error-carrying existence by `modus ponens`. Under the sorry-based
+migration the load-bearing predicate has been removed; closure
+responsibility is parked on the parent moonshot plan.
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+`@residual(plan:relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_body_from_witness
     (W : RelayChannel α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 : ℝ)
-    (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
-    (h_witness :
-        IsRelayCFBinningWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
-    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
-  RelayCFInnerBoundExistence_of_witness (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    h_in_cf_region h_witness
+    (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1) :
+    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R := by
+  sorry
 
 end CFWitness
 
@@ -392,109 +391,79 @@ retained and the error-carrying existence is **derived** by `modus ponens`
 This is the **public entry point** of the body discharge layer for the DF
 inner bound.
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+`@residual(plan:relay-inner-bound-moonshot-plan)` -/
 theorem relay_df_inner_bound_discharged
     (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
-    (h_in_df_region : InRelayDFRate R Imrh Iry Ibroad)
-    (h_witness :
-        IsRelayDFBlockMarkovWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Imrh Iry Ibroad) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
-  relay_df_body_from_witness (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    W R Imrh Iry Ibroad h_in_df_region h_witness
+    (h_in_df_region : InRelayDFRate R Imrh Iry Ibroad) :
+    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R := by
+  sorry
 
 /-- **DF inner bound — discharged + `min`-form**.
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+`@residual(plan:relay-inner-bound-moonshot-plan)` -/
 theorem relay_df_inner_bound_discharged_min_form
     (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
-    (h_min : R ≤ min (Imrh + Iry) Ibroad)
-    (h_witness :
-        IsRelayDFBlockMarkovWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Imrh Iry Ibroad) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
-  relay_df_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    W R Imrh Iry Ibroad ((InRelayDFRate.iff_le_min).mpr h_min) h_witness
+    (h_min : R ≤ min (Imrh + Iry) Ibroad) :
+    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R := by
+  sorry
 
 /-- **DF inner bound — discharged + unbundled two-inequality form**.
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+`@residual(plan:relay-inner-bound-moonshot-plan)` -/
 theorem relay_df_inner_bound_discharged_two_bounds
     (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
-    (h₁ : R ≤ Imrh + Iry) (h₂ : R ≤ Ibroad)
-    (h_witness :
-        IsRelayDFBlockMarkovWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Imrh Iry Ibroad) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
-  relay_df_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    W R Imrh Iry Ibroad ⟨h₁, h₂⟩ h_witness
+    (h₁ : R ≤ Imrh + Iry) (h₂ : R ≤ Ibroad) :
+    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R := by
+  sorry
 
 /-- **CF inner bound — discharged form (witness upgrade).**
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+`@residual(plan:relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_inner_bound_discharged
     (W : RelayChannel α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 : ℝ)
-    (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
-    (h_witness :
-        IsRelayCFBinningWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
-    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
-  relay_cf_body_from_witness (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    W R Idec Ix1y Iy1hy1 h_in_cf_region h_witness
+    (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1) :
+    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R := by
+  sorry
 
 /-- **CF inner bound — discharged + unbundled two-condition form**.
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+`@residual(plan:relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_inner_bound_discharged_two_conditions
     (W : RelayChannel α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 : ℝ)
-    (h_rate : R ≤ Idec) (h_feas : Iy1hy1 ≤ Ix1y)
-    (h_witness :
-        IsRelayCFBinningWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
-    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
-  relay_cf_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    W R Idec Ix1y Iy1hy1 ⟨h_rate, h_feas⟩ h_witness
+    (h_rate : R ≤ Idec) (h_feas : Iy1hy1 ≤ Ix1y) :
+    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R := by
+  sorry
 
 /-- **DF inner bound — discharged + `Real.log` rate form**.
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+`@residual(plan:relay-inner-bound-moonshot-plan)` -/
 theorem relay_df_inner_bound_discharged_log_rate
     (W : RelayChannel α α₁ β β₁)
     {M n : ℕ} (_hn : 0 < n)
     (Imrh Iry Ibroad : ℝ)
     (h_in_df_region :
-        InRelayDFRate (Real.log (M : ℝ) / (n : ℝ)) Imrh Iry Ibroad)
-    (h_witness :
-        IsRelayDFBlockMarkovWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-          W (Real.log (M : ℝ) / (n : ℝ)) Imrh Iry Ibroad) :
+        InRelayDFRate (Real.log (M : ℝ) / (n : ℝ)) Imrh Iry Ibroad) :
     RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-        W (Real.log (M : ℝ) / (n : ℝ)) :=
-  relay_df_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    W (Real.log (M : ℝ) / (n : ℝ)) Imrh Iry Ibroad h_in_df_region h_witness
+        W (Real.log (M : ℝ) / (n : ℝ)) := by
+  sorry
 
 /-- **CF inner bound — discharged + `Real.log` rate form**.
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+`@residual(plan:relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_inner_bound_discharged_log_rate
     (W : RelayChannel α α₁ β β₁)
     {M n : ℕ} (_hn : 0 < n)
     (Idec Ix1y Iy1hy1 : ℝ)
     (h_in_cf_region :
-        InRelayCFRate (Real.log (M : ℝ) / (n : ℝ)) Idec Ix1y Iy1hy1)
-    (h_witness :
-        IsRelayCFBinningWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-          W (Real.log (M : ℝ) / (n : ℝ)) Idec Ix1y Iy1hy1) :
+        InRelayCFRate (Real.log (M : ℝ) / (n : ℝ)) Idec Ix1y Iy1hy1) :
     RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-        W (Real.log (M : ℝ) / (n : ℝ)) :=
-  relay_cf_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    W (Real.log (M : ℝ) / (n : ℝ)) Idec Ix1y Iy1hy1 h_in_cf_region h_witness
+        W (Real.log (M : ℝ) / (n : ℝ)) := by
+  sorry
 
 end Republished
 
@@ -506,60 +475,58 @@ variable {α α₁ β β₁ : Type*}
 variable [MeasurableSpace α] [MeasurableSpace α₁]
 variable [MeasurableSpace β] [MeasurableSpace β₁]
 
-/-- **DF achievability (body-discharged) + cut-set outer bound combined**.
+/-- **DF achievability (body-discharged) + cut-set outer bound combined** —
+load-bearing Csiszár chain + DF achievability witnesses removed, sorry.
 
-Witness-predicate variant of `relay_df_consistent`: the outer side
-**derives** `R ≤ relayCutsetBound (Ib+ε) (Im+ε)` from the entropy-level
-Fano + chain inputs, and the inner side **derives** the error-carrying
-existence from the achievability witness by `modus ponens`.
+The previous public signature took two load-bearing chain hypotheses
+(`h_chain_b` / `h_chain_m` bundling L-RC1/L-RC2) and a load-bearing
+achievability witness (`h_witness : IsRelayDFBlockMarkovWitness …`
+bundling L-RI1/L-RI2). Under the sorry-based migration all three
+load-bearing predicates have been removed.
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+The compound conclusion is closed jointly by **two** moonshot plans
+(`relay-cutset-moonshot-plan` for the outer-bound conjunct and
+`relay-inner-bound-moonshot-plan` for the achievability conjunct); the
+single `@residual` tag names the inner-bound plan as the primary
+closure target.
+
+`@residual(plan:relay-inner-bound-moonshot-plan)` -/
 theorem relay_df_consistent_discharged
     (W : RelayChannel α α₁ β β₁)
-    {M n : ℕ} (hn : 0 < n)
-    (c : RelayCode M n α α₁ β β₁)
+    {M n : ℕ} (_hn : 0 < n)
+    (_c : RelayCode M n α α₁ β β₁)
     (R Imrh Iry Ibroad Pe I_marg_b I_marg_m Ib Im ε : ℝ)
-    (h_fano_b : RelayBcastCutFano M n R Pe I_marg_b)
-    (h_fano_m : RelayMacCutFano M n R Pe I_marg_m)
-    (h_chain_b : I_marg_b ≤ (n : ℝ) * Ib)
-    (h_chain_m : I_marg_m ≤ (n : ℝ) * Im)
-    (h_cleanup_b : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε)
-    (h_cleanup_m : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε)
-    (h_in_df_region : InRelayDFRate R Imrh Iry Ibroad)
-    (h_witness :
-        IsRelayDFBlockMarkovWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Imrh Iry Ibroad) :
+    (_h_fano_b : RelayBcastCutFano M n R Pe I_marg_b)
+    (_h_fano_m : RelayMacCutFano M n R Pe I_marg_m)
+    (_h_cleanup_b : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε)
+    (_h_cleanup_m : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε)
+    (_h_in_df_region : InRelayDFRate R Imrh Iry Ibroad) :
     (R ≤ relayCutsetBound (Ib + ε) (Im + ε))
-      ∧ RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
-  ⟨relay_cutset_outer_bound hn c R Pe I_marg_b I_marg_m Ib Im ε
-     h_fano_b h_fano_m h_chain_b h_chain_m h_cleanup_b h_cleanup_m,
-   relay_df_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-     W R Imrh Iry Ibroad h_in_df_region h_witness⟩
+      ∧ RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R := by
+  sorry
 
-/-- **CF achievability (body-discharged) + cut-set outer bound combined**.
+/-- **CF achievability (body-discharged) + cut-set outer bound combined** —
+load-bearing Csiszár chain + CF achievability witnesses removed, sorry.
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+Same structural retreat as `relay_df_consistent_discharged`. The
+compound conclusion is closed jointly by **two** moonshot plans; the
+single `@residual` tag names the inner-bound plan as the primary
+closure target.
+
+`@residual(plan:relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_consistent_discharged
     (W : RelayChannel α α₁ β β₁)
-    {M n : ℕ} (hn : 0 < n)
-    (c : RelayCode M n α α₁ β β₁)
+    {M n : ℕ} (_hn : 0 < n)
+    (_c : RelayCode M n α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 Pe I_marg_b I_marg_m Ib Im ε : ℝ)
-    (h_fano_b : RelayBcastCutFano M n R Pe I_marg_b)
-    (h_fano_m : RelayMacCutFano M n R Pe I_marg_m)
-    (h_chain_b : I_marg_b ≤ (n : ℝ) * Ib)
-    (h_chain_m : I_marg_m ≤ (n : ℝ) * Im)
-    (h_cleanup_b : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε)
-    (h_cleanup_m : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε)
-    (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
-    (h_witness :
-        IsRelayCFBinningWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
+    (_h_fano_b : RelayBcastCutFano M n R Pe I_marg_b)
+    (_h_fano_m : RelayMacCutFano M n R Pe I_marg_m)
+    (_h_cleanup_b : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε)
+    (_h_cleanup_m : (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε)
+    (_h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1) :
     (R ≤ relayCutsetBound (Ib + ε) (Im + ε))
-      ∧ RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
-  ⟨relay_cutset_outer_bound hn c R Pe I_marg_b I_marg_m Ib Im ε
-     h_fano_b h_fano_m h_chain_b h_chain_m h_cleanup_b h_cleanup_m,
-   relay_cf_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-     W R Idec Ix1y Iy1hy1 h_in_cf_region h_witness⟩
+      ∧ RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R := by
+  sorry
 
 end TwoSideDischarged
 
@@ -579,32 +546,24 @@ published signature: a caller holding the achievability witness (the gated
 implication) can feed it directly as the `h_ach` argument of the original
 theorem.
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+`@residual(plan:relay-inner-bound-moonshot-plan)` -/
 theorem relay_df_inner_bound_via_witness
     (W : RelayChannel α α₁ β β₁)
     (R Imrh Iry Ibroad : ℝ)
-    (h_in_df_region : InRelayDFRate R Imrh Iry Ibroad)
-    (h_witness :
-        IsRelayDFBlockMarkovWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Imrh Iry Ibroad) :
-    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
-  relay_df_inner_bound (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    W R Imrh Iry Ibroad h_in_df_region h_witness
+    (h_in_df_region : InRelayDFRate R Imrh Iry Ibroad) :
+    RelayDFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R := by
+  sorry
 
 /-- **Bridge: a CF achievability witness drives the original
 `relay_cf_inner_bound`**.
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+`@residual(plan:relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_inner_bound_via_witness
     (W : RelayChannel α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 : ℝ)
-    (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
-    (h_witness :
-        IsRelayCFBinningWitness
-          (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
-    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
-  relay_cf_inner_bound (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    W R Idec Ix1y Iy1hy1 h_in_cf_region h_witness
+    (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1) :
+    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R := by
+  sorry
 
 end Bridge
 
