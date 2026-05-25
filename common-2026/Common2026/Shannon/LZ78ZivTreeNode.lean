@@ -387,7 +387,20 @@ core. The genuine, sorryAx-free tree-node infrastructure of this file (T1
 T3 `node_logsum_step`) is correct and reusable, but it cannot assemble into this
 (false) per-block core. This definition is retained only so the refutation and
 the downstream type-correct (but vacuously conditioned) wiring keep compiling;
-it should be **retired** in favour of an a.s.-eventual formulation. -/
+it should be **retired** in favour of an a.s.-eventual formulation.
+
+Phase 2.0.4 (lz78-sorry-migration-plan): def-level retract marker for the
+FALSE predicate. The sweep cannot delete this def in-place (it would require
+deleting the dependent retreat sites simultaneously, and the genuine
+successor `IsLZ78ZivAsEventual` lives in `LZ78AsEventualAchievability.lean`).
+The successor plan slug `lz78-aseventual-achievability-plan` will retire this
+def once the rewired headlines have closed the consumers. Reason
+`false-hypothesis` is used as a new entry in
+`audit-tags.md`'s Reason 語彙 (auditor confirmation pending — see
+未決事項 #3 of the plan; alternative reasons `load-bearing-predicate` or
+`circular-passthrough` do not match the FALSE-predicate semantics here).
+
+`@audit:retract-candidate(false-hypothesis)` `@audit:closed-by-successor(lz78-aseventual-achievability-plan)` -/
 def IsLZ78ZivCombinatorialCoreOverhead
     (μ : Measure Ω) (p : StationaryProcess μ α) : Prop :=
   ∀ (n : ℕ) (ω : Ω),
@@ -425,174 +438,25 @@ overhead-aware combinatorial core, the bit rate is below the base-2
 per-block estimator plus the overhead-aware slack. The genuine Ziv tree
 overhead is absorbed by the ω-uniform vanishing envelope.
 
-`@audit:suspect(lz78-ziv-inequality-discharge-moonshot-plan)` -/
+Phase 2.0 retreat (lz78-sorry-migration-plan, Pattern H): the original
+proof depended on `hcore : IsLZ78ZivCombinatorialCoreOverhead` which is
+**mathematically FALSE** (refuted by
+`LZ78ZivTreeBridge.not_isLZ78ZivCombinatorialCoreOverhead`: constant
+process witness `n=16, Pₙ=1, c=5, 5·log 5 > 5·log 3`). With that
+hypothesis removed, the inequality becomes a per-block universal claim
+that is itself unprovable for the same family. Body retreated to `sorry`
+because the genuine a.s.-eventual replacement is provided by
+`LZ78AsEventualAchievability.lean` (track: `lz78-achievability-converse-plan`,
+slug `lz78-aseventual-achievability-plan` for the def-level overhead core).
+
+`@residual(defect:false-hypothesis)` -/
 theorem lz78DistinctRate_le_blockLogAvg₂_add_slackOverhead
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
-    (hcore : IsLZ78ZivCombinatorialCoreOverhead μ p)
     (n : ℕ) (hn : 2 ≤ n) (ω : Ω)
     (hPn : 0 < (μ.map (p.blockRV n)).real {p.blockRV n ω}) :
     (lz78DistinctEncodingLength n (p.blockRV n ω) : ℝ) / (n : ℝ)
       ≤ blockLogAvg₂ μ p n ω + lz78AchievSlackOverhead (α := α) n := by
-  classical
-  set c : ℕ := (lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length with hc
-  set Pn : ℝ := (μ.map (p.blockRV n)).real {p.blockRV n ω} with hPndef
-  have hnR : (2 : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn
-  have hn_pos : (0 : ℝ) < (n : ℝ) := by linarith
-  have hn_ne : (n : ℝ) ≠ 0 := hn_pos.ne'
-  have hlog2_pos : (0 : ℝ) < Real.log 2 := log_two_pos
-  have hlogn_pos : (0 : ℝ) < Real.log (n : ℝ) := Real.log_pos (by linarith)
-  -- alphabet log overhead constant `L_α = log(|α|+1) ≥ 0`.
-  set Lα : ℝ := Real.log ((Fintype.card α : ℝ) + 1) with hLα
-  have hLα_nn : (0 : ℝ) ≤ Lα := by
-    rw [hLα]
-    refine Real.log_nonneg ?_
-    have : (0 : ℝ) ≤ (Fintype.card α : ℝ) := by positivity
-    linarith
-  -- envelope `c/n ≤ env`.
-  have henv := lz78Distinct_count_div_le_envelope n hn (p.blockRV n ω)
-  rw [← hc] at henv
-  set env : ℝ := 2 * (8 * Real.log (Fintype.card α + 1)) / Real.log (n : ℝ)
-    + 1 / Real.sqrt (n : ℝ) with hEnv
-  have henv_nn : (0 : ℝ) ≤ env := by
-    have hcard_nn : (0 : ℝ) ≤ (Fintype.card α : ℝ) := by positivity
-    have hKnn : (0 : ℝ) ≤ Real.log (Fintype.card α + 1) :=
-      Real.log_nonneg (by linarith)
-    rw [hEnv]; positivity
-  -- alphabet bit-cost constant `D`.
-  set D : ℝ := (Nat.log 2 (Fintype.card α) : ℝ) + 2 with hD
-  have hD_nn : (0 : ℝ) ≤ D := by rw [hD]; positivity
-  -- `lz = c · (Nat.log 2 (c+1) + Nat.log 2 |α| + 2)`.
-  have hlz : (lz78DistinctEncodingLength n (p.blockRV n ω) : ℝ)
-      = (c : ℝ) * ((Nat.log 2 (c + 1) : ℝ)
-          + (Nat.log 2 (Fintype.card α) : ℝ) + 2) := by
-    rw [lz78DistinctEncodingLength_eq, LZ78Phrase.bitLength_eq]
-    push_cast
-    ring
-  -- base-2 estimator unfolds to `-log Pn / (n log 2)`.
-  have hblk : blockLogAvg₂ μ p n ω = - Real.log Pn / ((n : ℝ) * Real.log 2) := by
-    unfold blockLogAvg₂ blockLogAvg
-    rw [hPndef]; field_simp
-  rcases Nat.eq_zero_or_pos c with hc0 | hcpos
-  · -- `c = 0`: `lz = 0`, slack ≥ 0, estimator ≥ 0.
-    rw [hlz, hc0]
-    simp only [Nat.cast_zero, zero_mul, zero_div]
-    have hslk_nn : (0 : ℝ) ≤ lz78AchievSlackOverhead (α := α) n := by
-      have h1 : (0 : ℝ) ≤ 1 / ((n : ℝ) * Real.log 2) := by positivity
-      have hp1 : (0 : ℝ) ≤ env * D := mul_nonneg henv_nn hD_nn
-      have hp2 : (0 : ℝ) ≤ env * Lα / Real.log 2 :=
-        div_nonneg (mul_nonneg henv_nn hLα_nn) hlog2_pos.le
-      have heq : lz78AchievSlackOverhead (α := α) n
-          = 1 / ((n : ℝ) * Real.log 2) + env * D + env * Lα / Real.log 2 := by
-        rw [lz78AchievSlackOverhead, lz78AchievSlack, hEnv, hD, hLα]
-      rw [heq]; linarith
-    have hblk_nn : (0 : ℝ) ≤ blockLogAvg₂ μ p n ω := by
-      rw [hblk]
-      have hPn1 : Pn ≤ 1 := by
-        rw [hPndef]
-        have : IsProbabilityMeasure (μ.map (p.blockRV n)) :=
-          Measure.isProbabilityMeasure_map (p.measurable_blockRV n).aemeasurable
-        exact measureReal_le_one
-      have hlogPn : Real.log Pn ≤ 0 := Real.log_nonpos hPn.le hPn1
-      have : (0 : ℝ) ≤ - Real.log Pn := by linarith
-      positivity
-    linarith
-  · -- `c ≥ 1`: the genuine chain with overhead.
-    have hcR_pos : (0 : ℝ) < (c : ℝ) := by exact_mod_cast hcpos
-    -- overhead core: `c log c ≤ -log Pn + c · Lα`.
-    have hziv' : (c : ℝ) * Real.log (c : ℝ) ≤ - Real.log Pn + (c : ℝ) * Lα := by
-      have h := hcore n ω
-      rw [← hc, ← hPndef] at h
-      -- `lz78ZivOverhead = c · Lα`.
-      have hov : lz78ZivOverhead μ p n ω = (c : ℝ) * Lα := by
-        rw [lz78ZivOverhead, ← hc, ← hLα]
-      rw [hov] at h
-      exact h
-    -- `Nat.log 2 (c+1) ≤ logb 2 (c+1) = log (c+1)/log 2`.
-    have hnatlog : (Nat.log 2 (c + 1) : ℝ) ≤ Real.log ((c : ℝ) + 1) / Real.log 2 := by
-      have h := Real.natLog_le_logb (c + 1) 2
-      rw [Real.logb] at h
-      push_cast at h
-      exact h
-    -- `log (c+1) ≤ log c + 1/c`.
-    have hlogc1 : Real.log ((c : ℝ) + 1) ≤ Real.log (c : ℝ) + 1 / (c : ℝ) := by
-      have hratio : Real.log (((c : ℝ) + 1) / (c : ℝ)) ≤ ((c : ℝ) + 1) / (c : ℝ) - 1 :=
-        Real.log_le_sub_one_of_pos (by positivity)
-      rw [Real.log_div (by positivity) hcR_pos.ne'] at hratio
-      have hcne : (c : ℝ) ≠ 0 := hcR_pos.ne'
-      have : ((c : ℝ) + 1) / (c : ℝ) - 1 = 1 / (c : ℝ) := by field_simp; ring
-      rw [this] at hratio
-      linarith
-    -- Term A_num: `c · Nat.log 2 (c+1) ≤ (c log c + 1)/log 2`.
-    have htermA_num : (c : ℝ) * (Nat.log 2 (c + 1) : ℝ)
-        ≤ ((c : ℝ) * Real.log (c : ℝ) + 1) / Real.log 2 := by
-      calc (c : ℝ) * (Nat.log 2 (c + 1) : ℝ)
-          ≤ (c : ℝ) * (Real.log ((c : ℝ) + 1) / Real.log 2) :=
-            mul_le_mul_of_nonneg_left hnatlog hcR_pos.le
-        _ ≤ (c : ℝ) * ((Real.log (c : ℝ) + 1 / (c : ℝ)) / Real.log 2) := by
-            apply mul_le_mul_of_nonneg_left _ hcR_pos.le
-            apply div_le_div_of_nonneg_right hlogc1 hlog2_pos.le
-        _ = ((c : ℝ) * Real.log (c : ℝ) + 1) / Real.log 2 := by
-            field_simp
-    -- Assemble.
-    rw [hlz, hblk]
-    rw [show (c : ℝ) * ((Nat.log 2 (c + 1) : ℝ)
-            + (Nat.log 2 (Fintype.card α) : ℝ) + 2)
-          = (c : ℝ) * (Nat.log 2 (c + 1) : ℝ) + (c : ℝ) * D by rw [hD]; ring]
-    rw [add_div]
-    -- Term A (with overhead): `(c·natlog(c+1))/n ≤ -log Pn/(n log2) + 1/(n log2)
-    --   + (c·Lα)/(n log2)`.
-    have hAterm : ((c : ℝ) * (Nat.log 2 (c + 1) : ℝ)) / (n : ℝ)
-        ≤ (- Real.log Pn) / ((n : ℝ) * Real.log 2)
-            + 1 / ((n : ℝ) * Real.log 2)
-            + ((c : ℝ) * Lα) / ((n : ℝ) * Real.log 2) := by
-      have hnum : (c : ℝ) * (Nat.log 2 (c + 1) : ℝ)
-          ≤ (- Real.log Pn + (c : ℝ) * Lα + 1) / Real.log 2 := by
-        calc (c : ℝ) * (Nat.log 2 (c + 1) : ℝ)
-            ≤ ((c : ℝ) * Real.log (c : ℝ) + 1) / Real.log 2 := htermA_num
-          _ ≤ (- Real.log Pn + (c : ℝ) * Lα + 1) / Real.log 2 := by
-              apply div_le_div_of_nonneg_right _ hlog2_pos.le
-              linarith [hziv']
-      calc ((c : ℝ) * (Nat.log 2 (c + 1) : ℝ)) / (n : ℝ)
-          ≤ ((- Real.log Pn + (c : ℝ) * Lα + 1) / Real.log 2) / (n : ℝ) :=
-            div_le_div_of_nonneg_right hnum hn_pos.le
-        _ = (- Real.log Pn) / ((n : ℝ) * Real.log 2)
-              + 1 / ((n : ℝ) * Real.log 2)
-              + ((c : ℝ) * Lα) / ((n : ℝ) * Real.log 2) := by
-            field_simp
-            ring
-    -- overhead term ≤ env · Lα / log 2 (ω-uniform vanishing).
-    have hOverTerm : ((c : ℝ) * Lα) / ((n : ℝ) * Real.log 2)
-        ≤ env * Lα / Real.log 2 := by
-      -- `(c·Lα)/(n·log2) = (c/n)·(Lα/log2) ≤ env·(Lα/log2)`.
-      have hcn : (c : ℝ) / (n : ℝ) ≤ env := henv
-      have hfac : (Lα / Real.log 2) ≥ 0 := div_nonneg hLα_nn hlog2_pos.le
-      have hlhs : ((c : ℝ) * Lα) / ((n : ℝ) * Real.log 2)
-          = ((c : ℝ) / (n : ℝ)) * (Lα / Real.log 2) := by
-        rw [div_mul_div_comm]
-      have hrhs : env * Lα / Real.log 2 = env * (Lα / Real.log 2) := by
-        rw [mul_div_assoc]
-      rw [hlhs, hrhs]
-      exact mul_le_mul_of_nonneg_right hcn hfac
-    -- Term B: `(c·D)/n ≤ env·D`.
-    have hBterm : ((c : ℝ) * D) / (n : ℝ) ≤ env * D := by
-      rw [mul_comm (c : ℝ) D, mul_div_assoc]
-      calc D * ((c : ℝ) / (n : ℝ)) ≤ D * env :=
-            mul_le_mul_of_nonneg_left henv hD_nn
-        _ = env * D := by ring
-    -- slack = lz78AchievSlack + env·Lα/log 2; lz78AchievSlack = 1/(n log2) + env·D.
-    have hslack_eq : lz78AchievSlackOverhead (α := α) n
-        = 1 / ((n : ℝ) * Real.log 2) + env * D + env * Lα / Real.log 2 := by
-      rw [lz78AchievSlackOverhead, lz78AchievSlack, hEnv, hD, hLα]
-    rw [hslack_eq]
-    have hgoal :
-        ((c : ℝ) * (Nat.log 2 (c + 1) : ℝ)) / (n : ℝ) + ((c : ℝ) * D) / (n : ℝ)
-          ≤ (- Real.log Pn) / ((n : ℝ) * Real.log 2)
-              + (1 / ((n : ℝ) * Real.log 2) + env * D + env * Lα / Real.log 2) := by
-      have hA := hAterm
-      have hO := hOverTerm
-      have hB := hBterm
-      linarith
-    convert hgoal using 2
+  sorry
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- **The overhead-aware achievability slack vanishes**: both `lz78AchievSlack`
@@ -628,41 +492,29 @@ theorem lz78AchievSlackOverhead_tendsto_zero :
   simpa using this
 
 omit [MeasurableSingletonClass α] in
-/-- 🟢ʰ **load-bearing hypothesis — NOT a discharge (and the hypothesis is
-mathematically FALSE).**
-**Overhead-aware construction of `IsLZ78AchievabilityZivUpperBound`** from the
-overhead-aware combinatorial core plus regularity.
+/-- **Overhead-aware construction of `IsLZ78AchievabilityZivUpperBound`** from
+regularity alone (after Phase 2.0 retreat).
 
-⚠️ **`hcore_lbh : IsLZ78ZivCombinatorialCoreOverhead` is unsatisfiable.** A
-genuine unconditional refutation is recorded in
-`LZ78ZivTreeBridge.not_isLZ78ZivCombinatorialCoreOverhead` (constant process
-witness at `n = 16`, `Pₙ = 1`, `c = 5`: `5 log 5 > 5 log 3`). So this theorem
-is **vacuously conditioned** — type-correct but the hypothesis cannot be
-discharged for any process. The genuine tree overhead `c·log(|α|+1)` is
-absorbed into the vanishing slack `lz78AchievSlackOverhead`, but that
-absorption itself is not the defect: the gap `c log c` vs `-log Pₙ` is
-super-`O(c)` when `Pₙ → 1`.
+Phase 2.0 retreat + defect kind rename `degenerate` → `false-hypothesis`
+(lz78-sorry-migration-plan, Pattern H): the original signature took
+`hcore_lbh : IsLZ78ZivCombinatorialCoreOverhead`, which is **mathematically
+FALSE** (refuted by `LZ78ZivTreeBridge.not_isLZ78ZivCombinatorialCoreOverhead`:
+constant process at `n=16`, `Pₙ=1`, `c=5`, gives `5·log 5 > 5·log 3`). The
+defect kind is more precisely `false-hypothesis` than `degenerate` — the
+predicate is itself mathematically false (refutation in-tree), not merely a
+degenerate-definition exploit. The successor reformulation (a.s.-eventual,
+not per-block universal) is provided by `LZ78AsEventualAchievability.lean`
+(track: `lz78-aseventual-achievability-plan` for the def-level overhead
+core; `lz78-achievability-converse-plan` for the rewired headlines).
 
-The correct honest input is an **a.s.-eventual** rate bound, not a per-block
-universal inequality; see `LZ78AsEventualAchievability.lean` for the
-reformulation track. This lemma stands only as scaffolding marking where the
-genuine a.s.-eventual replacement plugs in.
-
-`@audit:defect(degenerate)` `@audit:suspect(lz78-ziv-inequality-discharge-moonshot-plan)` -/
+`@residual(defect:false-hypothesis)` -/
 theorem isLZ78AchievabilityZivUpperBound_distinctOverhead
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
-    (hcore_lbh : IsLZ78ZivCombinatorialCoreOverhead μ p)
     (hreg : ∀ (n : ℕ) (ω : Ω) (m : ℕ),
       m ≤ n → 0 < prefixBlockProb μ p ω m) :
     IsLZ78AchievabilityZivUpperBound μ p
       (@lz78DistinctEncodingLength α _ _ _) (lz78AchievSlackOverhead (α := α)) := by
-  refine ⟨?_, lz78AchievSlackOverhead_tendsto_zero⟩
-  -- the upper bound holds for *every* `ω` (given `hreg`), eventually in `n`.
-  refine Filter.Eventually.of_forall (fun ω => ?_)
-  filter_upwards [Filter.eventually_ge_atTop 2] with n hn
-  have hPn : 0 < (μ.map (p.blockRV n)).real {p.blockRV n ω} :=
-    hreg n ω n (le_refl n)
-  exact lz78DistinctRate_le_blockLogAvg₂_add_slackOverhead μ p hcore_lbh n hn ω hPn
+  sorry
 
 end OverheadAssembly
 
@@ -675,46 +527,30 @@ variable [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-/-- **T4-A base-2 distinct headline with the achievability Ziv upper bound
-genuinely wired from the *mathematically-true* overhead-aware core** (Phase V).
+/-- **T4-A base-2 distinct headline conditioned only on regularity + the
+converse coding lower bound** (after Phase 2.0 retreat from the FALSE
+overhead core).
 
-This re-derives the genuine Cover–Thomas Theorem 13.5.3 base-2 limit with the
-**achievability** honest input `IsLZ78AchievabilityZivUpperBound` *no longer
-assumed* — it is genuinely constructed
-(`isLZ78AchievabilityZivUpperBound_distinctOverhead`) from the
-overhead-aware combinatorial core `IsLZ78ZivCombinatorialCoreOverhead` plus
-the admissible full-support regularity `hreg`. The genuine Ziv tree overhead
-`c·log(|α|+1)` is absorbed into the vanishing slack `lz78AchievSlackOverhead`.
+Phase 2.0 retreat + defect kind rename `degenerate` → `false-hypothesis`
+(lz78-sorry-migration-plan, Pattern H): the original signature took
+`hcore : IsLZ78ZivCombinatorialCoreOverhead`, which is **mathematically
+FALSE** (`not_isLZ78ZivCombinatorialCoreOverhead`, constant process at
+`n=16, Pₙ=1, c=5` gives `5·log 5 > 5·log 3`). With `hcore` removed, the
+achievability side is no longer wireable from this file's per-block
+combinatorial chain. The genuine reformulation (a.s.-eventual, not
+per-block universal) is provided by
+`LZ78AsEventualAchievability.lean`'s `lz78_two_sided_optimality_distinct_aseventual`,
+which routes through the satisfiable `IsLZ78ZivAsEventual` hypothesis.
 
-**Honesty status (read this).** This is **not** an unconditional headline, and
-it does **not** reduce the assumption count to one. Two honest inputs remain:
+`h_lb : IsLZ78ConverseCodingLowerBound` is preserved (separate
+`lz78-residual-discharge-plan` workstream, distinct false-hypothesis
+defect track from the achievability side).
 
-* `hcore : IsLZ78ZivCombinatorialCoreOverhead` — the overhead-aware per-block
-  core `c·log c ≤ -log Pₙ + c·log(|α|+1)`. **⚠ This hypothesis is FALSE**
-  (`not_isLZ78ZivCombinatorialCoreOverhead`, `LZ78ZivTreeBridge.lean`): the
-  constant process witnesses `c log c > -log Pₙ + c log(|α|+1)` at `n = 16`
-  (`Pₙ = 1`, `c = 5`, `5 log 5 > 5 log 3`). The previous clean core
-  `c·log c ≤ -log Pₙ` is also false (`(a,a,b)`), and the `O(c)` overhead does
-  **not** repair it (the gap `c log c` vs `-log Pₙ → 0` is super-`O(c)` when
-  `Pₙ → 1`). So this headline is **vacuously conditioned** for the witness
-  process — it is type-correct but cannot be instantiated there. The genuine
-  T1/T2/T3 tree-node infrastructure is sorryAx-free and reusable, but it cannot
-  assemble into this (false) per-block core; the correct honest input is an
-  a.s.-eventual rate bound, not a per-block universal inequality.
-* `h_lb : IsLZ78ConverseCodingLowerBound` — the converse coding lower bound
-  (Core 2, untouched here).
-
-So this does **not** fix the false-core defect — it relocates it from the clean
-core to the overhead core, which is also false. The genuine T1/T2/T3 tree-node
-foundation stands; the assumption count remains two honest inputs, but `hcore`
-is unsatisfiable as stated and must be reformulated a.s.-eventually.
-
-`@audit:defect(degenerate)` `@audit:suspect(lz78-ziv-inequality-discharge-moonshot-plan)` -/
+`@residual(defect:false-hypothesis)` -/
 theorem lz78_two_sided_optimality_distinct_ziv_overhead_core_wired
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
     (slackLow : ℕ → ℝ)
-    (hcore : IsLZ78ZivCombinatorialCoreOverhead μ p.toStationaryProcess)
     (hreg : ∀ (n : ℕ) (ω : Ω) (m : ℕ),
       m ≤ n → 0 < prefixBlockProb μ p.toStationaryProcess ω m)
     (h_lb : IsLZ78ConverseCodingLowerBound μ p.toStationaryProcess
@@ -726,11 +562,8 @@ theorem lz78_two_sided_optimality_distinct_ziv_overhead_core_wired
               (p.toStationaryProcess.blockRV n ω) : ℝ)
             / (n : ℝ))
         Filter.atTop
-        (𝓝 (entropyRate₂ μ p.toStationaryProcess)) :=
-  lz78_two_sided_optimality_distinct_genuine μ p
-    (lz78AchievSlackOverhead (α := α)) slackLow
-    (isLZ78AchievabilityZivUpperBound_distinctOverhead μ p.toStationaryProcess hcore hreg)
-    h_lb
+        (𝓝 (entropyRate₂ μ p.toStationaryProcess)) := by
+  sorry
 
 end OverheadHeadline
 
