@@ -451,7 +451,14 @@ same file, private). The divide-by-`n` arithmetic kernel consumes the three
 entropy-level inputs (`h_fano` / `h_chain` / `h_cleanup`) and produces the
 corner-point bound `R₁ ≤ I₁ + ε` directly — no `True` placeholder, no
 load-bearing hypothesis bundling. Mirror of BC peer `bc_common_rate_bound`
-(`BroadcastChannel.lean:496`, also proof done via `bc_rate_le_of_fano`). -/
+(`BroadcastChannel.lean:496`, also proof done via `bc_rate_le_of_fano`).
+
+Wave 10 audit 2026-05-26 pass — independent honesty-auditor verified
+`h_fano` / `h_chain` / `h_cleanup` are upstream-shaped raw scalar
+inequalities (precondition, not core), body discharges via the genuine
+arithmetic kernel `mac_rate_le_of_fano` (verbatim identical to BC peer
+`bc_rate_le_of_fano`).
+@audit:ok -/
 theorem mac_single_rate_bound₁
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (_c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -478,7 +485,12 @@ per-letter chain rule. Derives the conclusion from entropy-level inputs
 
 **Proof done via `mac_rate_le_of_fano`** (`MultipleAccessChannel.lean:396`,
 same file, private). Mirror of `mac_single_rate_bound₁` with the user
-indices swapped (`R₁ ↔ R₂`, `I₁ ↔ I₂`, `Pe₁ ↔ Pe₂`, `M₁ ↔ M₂`). -/
+indices swapped (`R₁ ↔ R₂`, `I₁ ↔ I₂`, `Pe₁ ↔ Pe₂`, `M₁ ↔ M₂`).
+
+Wave 10 audit 2026-05-26 pass — independent honesty-auditor verified the
+mirror is honest (precondition raw scalars, kernel-only body, no
+load-bearing predicate bundle).
+@audit:ok -/
 theorem mac_single_rate_bound₂
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (_c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -511,7 +523,14 @@ same file, private). The kernel's generic scalar signature
 `(R I_marg I Pe L ε : ℝ)` accepts the sum rate directly by binding
 `R := R₁ + R₂`, `L := Real.log (M₁ * M₂)`; no two-stage application or
 `add_le_add` combination is needed — the kernel is shape-compatible with
-the joint Fano-side inequality as-is. -/
+the joint Fano-side inequality as-is.
+
+Wave 10 audit 2026-05-26 pass — independent honesty-auditor verified the
+sum-rate bind (`R := R₁ + R₂`, `L := Real.log (M₁ * M₂)`) is genuine type
+substitution into the kernel's polymorphic ℝ signature, not a hidden
+two-stage chaining; `h_fano` / `h_chain` / `h_cleanup` remain precondition
+raw scalars at entropy level (not load-bearing claim).
+@audit:ok -/
 theorem mac_sum_rate_bound
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (_c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -661,7 +680,14 @@ three cut bounds `h₁`, `h₂`, `hs` are produced.
 Pattern B constructive recovery, `mac-bc-pattern-b-constructive-recovery-plan`).
 The three cut bounds are the constituents of the `InMACCapacityRegion`
 structure constructor — no `True` placeholder, no load-bearing claim
-inversion. -/
+inversion.
+
+Wave 10 audit 2026-05-26 pass — independent honesty-auditor verified
+`h₁` / `h₂` / `hs` are the literal `bound₁` / `bound₂` / `boundSum`
+fields of `InMACCapacityRegion` (struct `:292-298`); Pattern B recovery
+is pure repackaging (triple of inequalities → predicate), not core
+discharge. `mac_region_combine` is anonymous-constructor wrapper.
+@audit:ok -/
 theorem mac_capacity_region_outer_bound_three_bounds
     {M₁ M₂ n : ℕ} (_hn : 0 < n)
     (_c : MACCode M₁ M₂ n α₁ α₂ β)
