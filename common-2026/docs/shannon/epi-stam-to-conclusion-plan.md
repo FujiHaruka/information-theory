@@ -690,3 +690,8 @@ Phase E corollary 群は **主定理を hypothesis-free に呼び出して resha
    - Stage 4 (commit `2809168`): Independent honesty audit (fresh `general-purpose` subagent、CORE doctrine inline) → Tier 1/2 PASS、Tier 3 questionable で tag `staged(<plan-slug>)` → `suspect(<plan-slug>)` に refine (`audit-tags.md` 語彙: SLUG は plan slug、`staged(WALL)` ではない)。最終 verdict **PASS**。`IsStamToEPILimitHyp` の launder は scaling refactor 効果を **打ち消さない** (consumer で `_h_limit` discard / `_of_scaling` direct path) → Phase 0' 緊急度 **LOW**。
    - **規模実績**: 自作 ~580 行 (見積もり ~265-460 中央 ~350 の +66%、heat-flow path skeleton + signature refactor + 6 file silent verify + audit docstring)、撤退ライン発動 0 件
    - **次段**: Phase A (Stam + de Bruijn 合流 skeleton) は sister 両方 (`epi-stam-discharge-plan` Phase D + `epi-debruijn-integration-plan` Phase D) の出力待ち、Phase 0' (limit launder cleanup) は LOW priority で後日
+5. **2026-05-25 Phase A line drift 修正メモ (mini-plan 起草時に発見)**: 親 plan Phase A Done 条件の line 番号 2 件に drift:
+   - line 509 `IsStamToEPIBridgeHyp` の location は `EPIStamDischarge.lean:304` ではなく **`:337`** (実コード verbatim、`def IsStamToEPIBridgeHyp ...`)
+   - line 513 主定理 `entropy_power_inequality` の location は `EntropyPowerInequality.lean:188` ではなく **`:232`** (`theorem entropy_power_inequality ...`)
+
+   修正は mini-plan `docs/shannon/epi-stam-to-conclusion-phaseA-plan.md` 内の「重要前提 verbatim 照合」表で正しい line で扱い済。親 plan 本文は post-hoc メモのみ (mini-plan が source of truth として動く)。原因は前回 commit batch 後の append が line 番号を更新せず drift したもの。今後 line 番号を plan に書くときは作業前に `rg -n` で verbatim 照合する規律 (CLAUDE.md `具体的数値・型予測の verbatim 確認` の line 番号版)。

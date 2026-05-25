@@ -312,6 +312,137 @@ theorem isStamToEPIBridgeHyp_of_scaling_limit
   unfold IsEntropyPowerInequalityHypothesis
   linarith
 
+/-! ## §2' — Phase A staged predicate: standard normal pair witness on `(Ω, P)` -/
+
+/-- **Standard normal pair witness on an arbitrary probability space**
+(Phase A A-1 staged honest predicate, sister sub-plan
+`epi-stam-to-conclusion-phaseA-plan`).
+
+Cover-Thomas Ch.17 Csiszár scaling argument requires two standard normal
+random variables `Z_X, Z_Y : Ω → ℝ` defined on the *same* probability space
+`(Ω, P)` as the original `X, Y`, with:
+
+* `P.map Z_X = P.map Z_Y = gaussianReal 0 1` (each is standard normal),
+* `IndepFun X Z_X P`, `IndepFun Y Z_Y P` (each `Z_*` is independent of
+  its paired original variable — needed to apply `heatFlowPath2_law`),
+* `IndepFun Z_X Z_Y P` (the noise pair is jointly independent — needed
+  for the Gaussian saturation endpoint at `s = 1`, where the path-end
+  reduces to a sum of two independent standard normals).
+
+**Mathlib status (loogle, 2026-05-25)**: there is **no** existing
+Mathlib API to extend an arbitrary probability measure `(Ω, P)` with two
+fresh independent standard-normal random variables jointly independent
+of a pre-existing pair `(X, Y)`. Search results:
+
+* `MeasureTheory.AtomlessProbability` → `unknown identifier`
+* `ProbabilityTheory.IsAtomless` → `unknown identifier`
+* `ProbabilityTheory.exists_iIndepFun` → `unknown identifier`
+* `exists_measurable_indepFun` → `unknown identifier`
+* `MeasureTheory.NoAtoms` exists as a class
+  (`Mathlib/MeasureTheory/Measure/Typeclasses/NoAtoms.lean:34`) but the
+  noise extension constructor is absent.
+* The Central Limit Theorem use of `gaussianReal` in
+  `Mathlib/Probability/CentralLimitTheorem.lean:79` works on a *different*
+  ambient probability space `P'` and assumes an i.i.d. sequence on `P`,
+  so it cannot be specialized to construct fresh Gaussians on the original
+  `P`.
+
+Common2026 internal search (`rg "exists_indep|standard_normal_pair|
+noiseExtension|extendByGaussian"`) likewise returns 0 hits.
+
+**Phase 0 retraction precedent** (`EPIStamToBridge.lean:317-327`):
+`isStamToEPIScalingHyp_of_gaussian` was retracted in Phase 0 (2026-05-25)
+because the new `IsStamToEPIScalingHyp` signature (existential
+`∃ Z_X Z_Y, ...`) could not be honestly discharged from "X, Y are
+Gaussian" alone — the construction of two such fresh standard-normal
+witnesses on the same probability space requires a richness assumption
+on `(Ω, P)` that is outside Phase 0 / Phase A scope. The same wall
+applies here at the Phase A level.
+
+**Honesty classification**: this predicate is a **load-bearing richness
+hypothesis** (Cover-Thomas Ch.17 暗黙仮定, "probability space carries
+enough auxiliary randomness"), **NOT a discharge**. Phase A's main
+output `isStamToEPIScalingHyp_of_stam_debruijn` (when completed) will
+take this predicate as a caller-supplied input. The predicate is not
+vacuous: it is a 7-conjunction `∃ Z_X Z_Y, Measurable Z_X ∧ Measurable Z_Y
+∧ P.map Z_X = 𝒩(0,1) ∧ P.map Z_Y = 𝒩(0,1) ∧ IndepFun X Z_X P ∧
+IndepFun Y Z_Y P ∧ IndepFun Z_X Z_Y P`, and the degenerate `Z_X := 0` /
+`Z_Y := 0` choice fails immediately because `P.map (fun _ => 0)
+= Measure.dirac 0 ≠ gaussianReal 0 1` (Dirac is not standard normal —
+their RN derivatives differ).
+
+**Retreat-line slug** (parent plan `epi-stam-to-conclusion-phaseA-plan`
+§"撤退ライン総覧"): **L-Concl-A-γ** ("Mathlib 壁 (b) 解析 — standard
+noise extension on arbitrary probability space"). Discharge route
+(future): a Mathlib upstream contribution adding the noise extension
+constructor, or an independent richness-instance-driven plan
+(`isStamScalingNoiseHyp_of_atomless`) once `MeasureTheory.IsAtomless`
+or equivalent lands upstream.
+
+**Independent honesty audit (2026-05-25, fresh subagent)**: Tier 1
+(degenerate-definition exploitation) PASS — the 7-conjunction body
+`∃ Z_X Z_Y, Measurable ∧ Measurable ∧ P.map = 𝒩(0,1) ∧ P.map = 𝒩(0,1)
+∧ IndepFun X Z_X ∧ IndepFun Y Z_Y ∧ IndepFun Z_X Z_Y` resists trivial
+discharge: the `P.map _ = gaussianReal 0 1` conjunct rules out the
+`Z_* := 0` collapse (since `P.map (fun _ => 0) = Measure.dirac 0`,
+and `dirac 0 ≠ gaussianReal 0 1` — their Radon-Nikodym derivatives
+w.r.t. Lebesgue differ, the former has none). No vacuous-truth path
+through the conclusion. Tier 2 (load-bearing classification) PASS —
+this is a genuine richness hypothesis on the probability space `(Ω, P)`
+("carries enough auxiliary randomness to extend by two jointly
+independent standard normals"), the standard Cover-Thomas Ch.17
+implicit assumption. It is NOT the EPI conclusion in disguise: the
+predicate concerns the *existence* of noise variables, while the EPI
+conclusion (`csiszarGap ≥ 0` or `entropyPower (X+Y) ≥ entropyPower X
++ entropyPower Y`) concerns an inequality among entropy powers of
+`(X, Y, X+Y)` — no syntactic or semantic overlap with the
+`IsStamScalingNoiseHyp` body. The accompanying `isStamScalingNoiseHyp_symm`
+helper is a trivial existential repackage (`@audit:ok`), no
+circularity. Tier 3 (Mathlib-wall justification) PASS — loogle
+independent verify (2026-05-25, this audit): `ProbabilityTheory
+.exists_iIndepFun` returns "unknown identifier", `MeasureTheory.Measure
+.IsAtomless` returns "unknown identifier", the 2 declarations matching
+`gaussianReal, iIndepFun` are CLT i.i.d.-sequence lemmas
+(`tendstoInDistribution_inv_sqrt_mul_sum{,_sub}`) which assume a
+pre-existing i.i.d. sequence on `P` (not a constructor that produces
+fresh independent gaussians); `MeasureTheory.NoAtoms` class exists
+(120 declarations) but no noise-extension constructor is among them.
+Common2026 internal `rg` returns 0 hits for `exists_indep |
+standard_normal_pair | noiseExtension | extendByGaussian`. Wall
+classification "(b) analytic" is correct — this is not an ergonomic
+renaming gap (the API simply does not exist), so it cannot be
+discharged by a `rename`-style detour. SLUG `epi-stam-to-conclusion-plan`
+follows the project-local convention already established by
+`EPIPlumbing.lean:180/211/248` (3 prior `@audit:staged(epi-stam-to-
+conclusion-plan)` occurrences) — although `docs/audit/audit-tags.md`
+line 21 cites Mathlib-wall names as the canonical SLUG example
+(`stam`, `csiszar`, `n-dim-gaussian-aep`), the vocabulary is marked
+extensible and the plan-slug usage here matches established
+project-internal practice.
+
+`@audit:staged(epi-stam-to-conclusion-plan)` -/
+def IsStamScalingNoiseHyp {Ω : Type*} [MeasurableSpace Ω]
+    (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
+  ∃ (Z_X Z_Y : Ω → ℝ),
+    Measurable Z_X ∧ Measurable Z_Y ∧
+    P.map Z_X = gaussianReal 0 1 ∧ P.map Z_Y = gaussianReal 0 1 ∧
+    IndepFun X Z_X P ∧ IndepFun Y Z_Y P ∧ IndepFun Z_X Z_Y P
+
+/-- **Symmetry of the standard-normal-pair predicate**: if `(Z_X, Z_Y)`
+witnesses `IsStamScalingNoiseHyp X Y P`, then `(Z_Y, Z_X)` witnesses
+`IsStamScalingNoiseHyp Y X P` (swap the roles).
+
+`@audit:ok` (trivial existential repackage; no analytic content). -/
+theorem isStamScalingNoiseHyp_symm
+    {Ω : Type*} [MeasurableSpace Ω]
+    {X Y : Ω → ℝ} {P : Measure Ω}
+    (h : IsStamScalingNoiseHyp X Y P) :
+    IsStamScalingNoiseHyp Y X P := by
+  obtain ⟨Z_X, Z_Y, hZX_meas, hZY_meas, hZX_law, hZY_law,
+          hXZX, hYZY, hZXZY⟩ := h
+  exact ⟨Z_Y, Z_X, hZY_meas, hZX_meas, hZY_law, hZX_law, hYZY, hXZX,
+         hZXZY.symm⟩
+
 /-! ## §3 — Gaussian saturation full discharge of sub-predicates -/
 
 -- `isStamToEPIScalingHyp_of_gaussian` was retracted in Phase 0 (2026-05-25)
