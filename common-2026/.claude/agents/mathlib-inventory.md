@@ -38,8 +38,9 @@ model: opus
 3. **API 在庫テーブル（カテゴリごと）** — `| 概念 | Mathlib API | file:line | 状態 | Phase X での扱い |`。テーブル各行のフィールド要件は CLAUDE.md「Subagent Inventory of Mathlib Lemmas」に従う
 4. **主要前提条件ボックス** — Bochner Jensen / disintegration / chain rule のような前提事故の起きやすい lemma について bullet list で前提を列挙
 5. **自作が必要な要素** — 優先度順、推奨実装、工数感、落とし穴
-6. **撤退ラインへの距離** — 親計画の撤退ラインに触れるか、発動する / しないを明示。発動する場合は縮退案を新規撤退ラインとして提案
-7. **着手 skeleton** — `Common2026/<family>/<file>.lean` の出だし（imports + namespace + 主定理 sorry）20〜30 行
+6. **Mathlib 壁の列挙** — 真に Mathlib 不在 (`@residual(wall:<name>)` 対象) のものを列挙。共有 sorry 補題化候補があれば「shared sorry 補題に集約推奨」を明記 (詳細 → `docs/audit/audit-tags.md`「共有 Mathlib 壁: shared sorry 補題パターン」)。各 wall に loogle 確認結果 (`Found 0 declarations`) を添える
+7. **撤退ラインへの距離** — 親計画の撤退ラインに触れるか、発動する / しないを明示。発動する場合は縮退案を新規撤退ラインとして提案 (撤退口は sorry + `@residual`、仮説束化禁止)
+8. **着手 skeleton** — `Common2026/<family>/<file>.lean` の出だし（imports + namespace + 主定理 sorry）20〜30 行
 
 ## 検索の優先順
 

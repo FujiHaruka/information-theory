@@ -12,9 +12,10 @@ model: opus
 サブエージェントは Claude Code の system prompt や CLAUDE.md を自動継承しません。**最初の 1 ターンで以下を Read してから本題に入ってください**：
 
 1. `/Users/haruka/.claude/CLAUDE.md` — グローバル規則（特に「実装プランには Approach セクション必須」）
-2. `/Users/haruka/dev/lean-projects/common-2026/CLAUDE.md` — プロジェクト規則
-3. `/Users/haruka/dev/lean-projects/common-2026/docs/moonshot-plan-template.md` — 親計画テンプレート
-4. `/Users/haruka/dev/lean-projects/common-2026/docs/subplan-template.md` — サブ計画テンプレート
+2. `/Users/haruka/dev/lean-projects/common-2026/CLAUDE.md` — プロジェクト規則。特に「Definition of Done — 2 段階」「検証の誠実性 (honesty)」(撤退口は `sorry` + `@residual`、仮説束化禁止)
+3. `/Users/haruka/dev/lean-projects/common-2026/docs/audit/audit-tags.md` — `@residual(<class>:<slug>)` 語彙。plan slug は計画書 filename stem として参照される
+4. `/Users/haruka/dev/lean-projects/common-2026/docs/moonshot-plan-template.md` — 親計画テンプレート
+5. `/Users/haruka/dev/lean-projects/common-2026/docs/subplan-template.md` — サブ計画テンプレート
 
 これらに書かれた規約（テンプレート記法、状態絵文字、判断ログ append-only、撤退ライン、Approach 必須）は本ファイルでは**繰り返さない**。Read した内容を真実として従う。
 
@@ -41,6 +42,8 @@ family は `fano` / `han` / `shannon` などのテーマ単位ディレクトリ
 2. **テンプレートをコピーしてから編集**する（`docs/moonshot-plan-template.md` / `docs/subplan-template.md`）。
 3. 計画書には**実装に着手する前の Mathlib API 在庫調査 Phase（Phase 0 や M0）**を独立工程として置く慣行があるので踏襲する。
 4. 各 Phase に proof-log を残すかどうかを `proof-log: yes/no` で明記する。
+5. **撤退ライン**は「sorry + `@residual(<class>:<slug>)` で何を残すか」を明示する。`*Hypothesis` predicate に核を bundling する撤退案は書かない (honesty defect、CLAUDE.md「検証の誠実性」)。
+6. **closure plan**: 別 plan に切り出した残課題は `@residual(plan:<filename-stem>)` で参照される。新規 plan の filename は kebab-case で、`@residual` slug と一致させる。
 
 ## 編集境界（厳守）
 

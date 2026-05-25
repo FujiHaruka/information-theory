@@ -35,30 +35,51 @@
 
 ## 完成判定
 
+> **2026-05-25 改訂**: Definition of Done が **type-check done / proof done の 2 段階** に変更
+> (CLAUDE.md「Definition of Done — 2 段階」)。「proof done = 0 `sorry` ∧ 0 `@residual`」が新バー。
+> 撤退口は **`sorry` + `@residual(<class>:<slug>)`** のみ — 仮説に核を bundling する `*Hypothesis`
+> predicate 形式 (旧 🟢ʰ load-bearing-hyp regime) は honesty defect として **禁止**。本ファイルの
+> 既存記述 (`🟢ʰ` 表記、`@audit:suspect/staged`、`load-bearing-hyp 🟢ʰ = 未完` の文言等) は
+> **legacy 状態の記録** であり、コード側の sorry-based 移行は別セッションに分割実施
+> ([[sorry-based-migration]] メモ参照、`docs/audit/audit-tags.md`「Deprecated / 移行レシピ」)。
+
 「Lean で verified な Cover & Thomas」を名乗るための必要条件:
 
-- **Ch.2–5, 7–12, 15, 17 の主定理が 0 sorry で publish 済み** (詳細は下記章対応表) ——
-  ただし下記「検証強度の基準」の意味で **genuine 🟢 / regularity-hyp 🟢ʰ** に到達していること。
-  load-bearing hypothesis を残した 🟢ʰ は本判定では **未完** 扱い。
+- **Ch.2–5, 7–12, 15, 17 の主定理が proof done で publish 済み** (詳細は下記章対応表) ——
+  proof done = `lake env lean <file>` 0 errors ∧ 0 `sorry` ∧ 0 `@residual`。
+  regularity hypothesis (full-support / `IsFiniteMeasure` 等) は precondition なので proof done と両立する
+  (下記「検証強度の基準」)。load-bearing hypothesis (証明の核心を抱える predicate) は **書いてはいけない** —
+  該当箇所は `sorry` + `@residual(<class>:<slug>)` に書換 (移行作業)。
 - **Typed RV API** が外向き API として揃い、教科書本文の statement が形式化版に直接対応する
 - 各 seed が `docs/<family>/<topic>-moonshot-plan.md` で計画化され、phase 単位で archive 可能
 - 主成果物 3 層 (library / API / 原稿) の各層に index と cross-link がある
 
-### 検証強度の基準 (標準B、2026-05-21 確定)
+### 検証強度の基準 (標準B、2026-05-25 改訂)
 
 本プロジェクトの野心は **標準B = 各見出し定理が Mathlib 公理まで無条件に機械検証されている**こと。
-教科書が読者にする約束を「構造の検証」(標準A) でなく「定理そのものの検証」に置く。これにより
-`0 sorry` ≠ 完成 であり、hypothesis の中身で以下を区別する:
+教科書が読者にする約束を「構造の検証」(標準A) でなく「定理そのものの検証」に置く。
 
-- **OK (genuine / regularity-hyp)**: 仮説が *regularity / genericity* 条件 (full-support `hP`、
-  `IsFiniteMeasure`、`IsProbabilityMeasure`、`Var > 0` 等) で、定理本体は真の定理のまま。これは
-  Mathlib の補題でも普通に付く前提で、標準B でも **完成 (🟢 / 🟢ʰ)** とみなす。
-- **NG (load-bearing hyp)**: 仮説が *証明の難所そのもの* (Stam 不等式、achievability の typicality、
-  multi-user Fano、結論と同型の存在述語) を肩代わりしている。これは「還元の検証」でしかなく、標準B
-  では **未完 (🟠 相当の残作業)**。de-circularization sweep で `:= h` の偽装は全廃したが、honest に
-  開示された load-bearing hyp は「正直な未完」であって「完成」ではない。
+DoD は 2 段階 (CLAUDE.md「Definition of Done — 2 段階」):
 
-判定の一言: **仮説を読んで「これは前提条件か、それとも証明の核心か」**。前者は OK、後者は残タスク。
+- **type-check done** (commit OK): 0 errors、`sorry` warning は `@residual(<class>:<slug>)` 付き
+- **proof done** (完成 = 標準B): 上記 + 0 `sorry` + 0 `@residual`
+
+hypothesis の中身は以下で区別する:
+
+- **OK (regularity-hyp)**: 仮説が *regularity / genericity* 条件 (full-support `hP`、
+  `IsFiniteMeasure`、`IsProbabilityMeasure`、`Var > 0`、measurability 等) で、定理本体は真の定理のまま。
+  これは Mathlib の補題でも普通に付く前提で、標準B でも **proof done と両立** する (🟢 / 🟢 regularity)。
+- **禁止 (load-bearing hyp)**: 仮説が *証明の難所そのもの* (Stam 不等式、achievability の typicality、
+  multi-user Fano、結論と同型の存在述語) を肩代わりする `*Hypothesis` / `*Reduction` / `IsXxxClaim`
+  predicate。**書いてはいけない** — 該当残作業は `sorry` + `@residual(<class>:<slug>)` で表現する
+  (CLAUDE.md「検証の誠実性」、`docs/audit/audit-tags.md`)。
+
+判定の一言: **仮説を読んで「これは前提条件か、それとも証明の核心か」**。前者は OK、後者は禁止
+(sorry+@residual で表現)。
+
+> **legacy 注**: 本ファイルの 2026-05-21 以前の記述には「load-bearing-hyp 🟢ʰ = 未完 (残タスク)」
+> という表現があるが、新方針では「load-bearing-hyp 状態は存在してはならない、該当箇所は sorry に
+> 書換」というより強い制約に変わった。コード側の移行は [[sorry-based-migration]] で追跡。
 
 **scope-out (専門性が異なるため別 library 化)**:
 

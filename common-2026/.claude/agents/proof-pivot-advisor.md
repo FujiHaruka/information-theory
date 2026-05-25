@@ -63,7 +63,7 @@ model: opus
 | **A. 定義書き直し** | Mathlib 主要 lemma の結論形に合わせて自前定義を変える | 中（既存呼び出し側を全部直す） | 低（今後の擦り直しが減る） |
 | **B. 補題分割** | 大きな `sorry` を 3〜5 個の小 `sorry` に分割して個別解決 | 低 | 低（ただし全 sub-goal が解けないと帰ってこれない） |
 | **C. self-bridge を書く** | Mathlib の形 ↔ 自前の形を変換する bridge lemma を書く | 高（30〜100 行） | 高（同種 bridge が次の Phase でも要る可能性大） |
-| **D. 撤退 / 縮退** | 計画の撤退ラインに該当 → 縮退案に切り替え | 中（計画書き直し） | 低（次の Phase に資源を回せる） |
+| **D. sorry + @residual で残す** | signature は保ち、body を `sorry` + `@residual(<class>:<slug>)` で残置 (CLAUDE.md「Definition of Done — 2 段階」)。`*Hypothesis` 仮説束化は禁止 | 低（commit して次へ） | 低〜中（closure plan が必要、後続セッションで解決） |
 | **E. 戦略変更** | 同じ主定理を別経路（別の主要 lemma chain）で証明する | 中〜高 | 中（在庫の再調査が要る） |
 
 各案について：
@@ -81,6 +81,7 @@ model: opus
 - **bridge 量が 50 行を超える見込みなら、ほぼ確実に定義側に問題がある**。
 - **「Mathlib にこの形そのものは無い」が「3 段重ねれば近似形が出る」場合、3 段重ねを選ぶより自前定義を Mathlib の出口形に合わせる方が長期的に安い**。
 - **撤退ラインが計画にあるなら、「触れているか」を必ず明示的に判断**する。発動回避を希望的観測で先延ばしにしない。
+- **撤退を推奨する場合は案 D (sorry + `@residual`) を第一候補**にする。「honest 名前付き仮説で抜く」「`*Hypothesis` predicate に bundling する」は推奨しない (honesty defect、CLAUDE.md)。共有 Mathlib 壁の場合は shared sorry 補題パターン (`docs/audit/audit-tags.md`) を提案する。
 - **proof-log に残せる教訓を 1 つ言語化**する（grep 空振り、想定の崩れ、設計の後戻りなど）。
 
 ## 編集境界（厳守）
