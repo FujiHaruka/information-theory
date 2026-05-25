@@ -324,7 +324,17 @@ compression alphabet `β₁`.
 
 This is the genuine new content of the file: the CF decoder failure event
 that was bundled opaquely inside `IsRelayCFBinningWitness` is now reduced to
-the WZ covering/packing predicates and discharged. -/
+the WZ covering/packing predicates and discharged.
+
+Cross-family note (S3, `audit-tags.md` Pattern G): this declaration
+forwards directly to `wyner_ziv_binning_via_covering_packing`
+(`WynerZivBinningCovering.lean:257`); its own status tracks the WynerZiv
+side of the migration. As of this commit `wyner_ziv_binning_via_covering_packing`
+is constructive (body `wzAchievability_random_binning_body …`), so the
+present wrapper is genuinely closed at type-check (no `sorry`). If a
+later WynerZiv migration retreats `wyner_ziv_binning_via_covering_packing`
+to `sorry`, the present wrapper will inherit a transitive `sorry`
+without needing its own `@residual` tag (Pattern C). -/
 theorem relay_cf_si_decoder_fail_le
     [Nonempty β] [Nonempty γ]
     {R_cov R_bin ε_cov ε_pack : ℝ}
@@ -350,34 +360,22 @@ theorem relay_cf_si_decoder_fail_le
     μ Ŷs Ys JT f_Ŷ f h_meas_typ h_meas_bin h_meas_fail
     h_decode.compression h_decode.decodable
 
-/-- **CF side-info decoder failure → 0 (asymptotic form).**
+/-- **CF side-info decoder failure → 0 (asymptotic form)** —
+load-bearing existence-form bundle removed, sorry.
 
-Existence-form version of `relay_cf_si_decoder_fail_le`: from an asymptotic
-covering + decodable bundle (failure tolerances summing below any prescribed
-`ε`), the side-info decoder failure probability is eventually `≤ ε`. This is
-the exact shape feeding the CF achievability existence argument; it forwards
-`wyner_ziv_binning_existence_of_covering_packing`.
+Existence-form version of `relay_cf_si_decoder_fail_le`. The previous
+public signature took a load-bearing existence-form bundle
+`h_asymp : ∀ ε > 0, ∃ N, …` carrying covering / packing predicates +
+measurability + the structured CF side-info decode hypothesis at every
+block length. Under the sorry-based migration that load-bearing bundle
+has been removed; closure responsibility is parked on the parent
+moonshot plan.
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+`@residual(plan:relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_si_decoder_fail_tendsto
     [Nonempty β] [Nonempty γ]
-    {R_cov R_bin : ℝ}
     (μ : Measure Ω) [IsFiniteMeasure μ]
-    (JT : ∀ n : ℕ, (Fin n → β₁) × (Fin n → β) → Prop)
-    (h_asymp :
-      ∀ ε > (0 : ℝ),
-        ∃ N : ℕ, ∀ n ≥ N,
-          ∃ (M : ℕ)
-            (Ŷs : Ω → Fin n → β₁) (Ys : Ω → Fin n → β)
-            (f_Ŷ : (Fin n → β₁) → Fin M) (f : β₁ × β → γ)
-            (ε_cov ε_pack : ℝ),
-            ε_cov + ε_pack ≤ ε
-              ∧ MeasurableSet (wzError_E_typ (n := n) Ŷs Ys (JT n))
-              ∧ MeasurableSet (wzError_E_bin (n := n) Ŷs Ys (JT n) f_Ŷ)
-              ∧ MeasurableSet { ω : Ω |
-                  wzJointlyTypicalDecoderBody f_Ŷ (JT n) f (f_Ŷ (Ŷs ω), Ys ω)
-                    ≠ fun i => f (Ŷs ω i, Ys ω i) }
-              ∧ IsCFSideInfoDecodeHyp R_cov R_bin ε_cov ε_pack μ Ŷs Ys (JT n) f_Ŷ) :
+    (JT : ∀ n : ℕ, (Fin n → β₁) × (Fin n → β) → Prop) :
     ∀ ε > (0 : ℝ),
       ∃ N : ℕ, ∀ n ≥ N,
         ∃ (M : ℕ)
@@ -387,20 +385,7 @@ theorem relay_cf_si_decoder_fail_tendsto
               wzJointlyTypicalDecoderBody f_Ŷ (JT n) f (f_Ŷ (Ŷs ω), Ys ω)
                 ≠ fun i => f (Ŷs ω i, Ys ω i) }
             ≤ ε := by
-  intro ε hε
-  obtain ⟨N, hN⟩ := h_asymp ε hε
-  refine ⟨N, fun n hn => ?_⟩
-  obtain ⟨M, Ŷs, Ys, f_Ŷ, f, ε_cov, ε_pack, h_sum,
-          h_meas_typ, h_meas_bin, h_meas_fail, h_decode⟩ := hN n hn
-  refine ⟨M, Ŷs, Ys, f_Ŷ, f, ?_⟩
-  have h_step :
-      μ.real { ω : Ω |
-          wzJointlyTypicalDecoderBody f_Ŷ (JT n) f (f_Ŷ (Ŷs ω), Ys ω)
-            ≠ fun i => f (Ŷs ω i, Ys ω i) }
-        ≤ ε_cov + ε_pack :=
-    relay_cf_si_decoder_fail_le (γ := γ) μ Ŷs Ys (JT n) f_Ŷ f
-      h_meas_typ h_meas_bin h_meas_fail h_decode
-  exact le_trans h_step h_sum
+  sorry
 
 end CFSideInfoDecode
 
@@ -412,30 +397,21 @@ variable {α α₁ β β₁ : Type*}
 variable [MeasurableSpace α] [MeasurableSpace α₁]
 variable [MeasurableSpace β] [MeasurableSpace β₁]
 
-/-- **Bridge: CF inner-bound existence from the achievability witness +
-rate region.**
+/-- **Bridge: CF inner-bound existence from the rate region** —
+load-bearing achievability witness removed, sorry.
 
-The CF binning witness is now the honest achievability residual
-`IsRelayCFBinningWitness W …` (= `RelayCFAchievable W …`, the gated
-implication carrying vanishing error). Together with the rate-region
-membership it yields the error-carrying `RelayCFInnerBoundExistence W R` by
-`modus ponens` — *not* a pass-through of a bare existence.
+The previous public signature took an honest achievability residual
+`h_witness : IsRelayCFBinningWitness …` (= `RelayCFAchievable …`, the
+gated implication bundling L-RI3 + L-RI4 walls). Under the sorry-based
+migration that load-bearing predicate has been removed; closure
+responsibility is parked on the parent moonshot plan.
 
-The decoder-failure side is what this file discharges via the covering /
-packing bundle (`relay_cf_si_decoder_fail_le`); the achievability witness is
-the genuine open residual whose discharge (in the companion seeds) supplies
-the vanishing error these bounds feed.
-
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+`@residual(plan:relay-inner-bound-moonshot-plan)` -/
 lemma relay_cf_existence_of_witness
     {W : RelayChannel α α₁ β β₁} {R Idec Ix1y Iy1hy1 : ℝ}
-    (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
-    (h_witness :
-      IsRelayCFBinningWitness
-        (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
-    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
-  RelayCFInnerBoundExistence_of_witness (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    h_in_cf_region h_witness
+    (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1) :
+    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R := by
+  sorry
 
 end WitnessBridge
 
@@ -447,21 +423,21 @@ variable {α α₁ β β₁ : Type*}
 variable [MeasurableSpace α] [MeasurableSpace α₁]
 variable [MeasurableSpace β] [MeasurableSpace β₁]
 
-/-- **CF inner bound — binning-discharged form.**
+/-- **CF inner bound — binning-discharged form** (load-bearing achievability
+witness removed, sorry).
 
-The body-discharged variant of `relay_cf_inner_bound` where the two `True`
-placeholders `_h_wz_binning` / `_h_si_decode` are *upgraded* to the
-structured CF side-info decode bundle `IsCFSideInfoDecodeHyp` (the covering /
-packing predicates whose decoder-failure consequence is discharged in
-`relay_cf_si_decoder_fail_le`). The rate-region membership and the existence
-pass-through are retained.
+The previous public signature took the structured CF side-info decode
+bundle `_h_decode : IsCFSideInfoDecodeHyp …` together with the
+load-bearing achievability witness `h_witness : IsRelayCFBinningWitness`.
+Under the sorry-based migration the load-bearing achievability witness
+has been removed; the `_h_decode` parameter is retained as an
+extract-only consumer-side parameterisation (Pattern E, `audit-tags.md`):
+the structured bundle remains an honest documentation of which
+covering / packing predicates the binning discharge relies on (its own
+load-bearing-ness is tracked via the cross-family WynerZiv predicates,
+see `IsCFSideInfoDecodeHyp` retract-candidate in Phase 2.6).
 
-This is the public entry point of the W9-G3 CF binning body discharge: a
-caller holding the WZ covering/packing predicates for the relay's compression
-scheme can produce the CF inner bound directly, with the decoder-failure
-analysis already reduced to the WZ binning union bound.
-
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+`@residual(plan:relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_inner_bound_binning_discharged
     {Ω β₁' γ : Type*} [MeasurableSpace Ω]
     [Fintype β₁'] [Nonempty β₁']
@@ -476,19 +452,18 @@ theorem relay_cf_inner_bound_binning_discharged
     (JT : (Fin n → β₁') × (Fin n → β) → Prop)
     (f_Ŷ : (Fin n → β₁') → Fin M)
     (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
-    (_h_decode : IsCFSideInfoDecodeHyp R_cov R_bin ε_cov ε_pack μ Ŷs Ys JT f_Ŷ)
-    (h_witness :
-      IsRelayCFBinningWitness
-        (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
-    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
-  relay_cf_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    W R Idec Ix1y Iy1hy1 h_in_cf_region h_witness
+    (_h_decode : IsCFSideInfoDecodeHyp R_cov R_bin ε_cov ε_pack μ Ŷs Ys JT f_Ŷ) :
+    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R := by
+  sorry
 
 
-/-- **CF inner bound — binning-discharged, unbundled two-condition form.**
-Variant taking the rate bound and compression feasibility separately.
+/-- **CF inner bound — binning-discharged, unbundled two-condition form**
+(load-bearing achievability witness removed, sorry).
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+Same structural retreat as `relay_cf_inner_bound_binning_discharged`; the
+`_h_decode` parameter is retained as extract-only documentation.
+
+`@residual(plan:relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_inner_bound_binning_discharged_two_conditions
     {Ω β₁' γ : Type*} [MeasurableSpace Ω]
     [Fintype β₁'] [Nonempty β₁']
@@ -503,13 +478,9 @@ theorem relay_cf_inner_bound_binning_discharged_two_conditions
     (JT : (Fin n → β₁') × (Fin n → β) → Prop)
     (f_Ŷ : (Fin n → β₁') → Fin M)
     (h_rate : R ≤ Idec) (h_feas : Iy1hy1 ≤ Ix1y)
-    (_h_decode : IsCFSideInfoDecodeHyp R_cov R_bin ε_cov ε_pack μ Ŷs Ys JT f_Ŷ)
-    (h_witness :
-      IsRelayCFBinningWitness
-        (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
-    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
-  relay_cf_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-    W R Idec Ix1y Iy1hy1 ⟨h_rate, h_feas⟩ h_witness
+    (_h_decode : IsCFSideInfoDecodeHyp R_cov R_bin ε_cov ε_pack μ Ŷs Ys JT f_Ŷ) :
+    RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R := by
+  sorry
 
 end Republished
 
@@ -521,13 +492,19 @@ variable {α α₁ β β₁ : Type*}
 variable [MeasurableSpace α] [MeasurableSpace α₁]
 variable [MeasurableSpace β] [MeasurableSpace β₁]
 
-/-- **CF achievability (binning-discharged) + cut-set outer bound combined.**
+/-- **CF achievability (binning-discharged) + cut-set outer bound
+combined** — load-bearing Csiszár chain + CF achievability witnesses
+removed, sorry.
 
-Witness-bundle variant of `relay_cf_consistent_discharged`: the CF inner
-side is supplied through the structured side-info decode bundle, and the
-outer side is the cut-set bound.
+Same structural retreat as `relay_cf_consistent_discharged` with the
+extract-only `_h_decode` parameter retained. The compound conclusion is
+closed jointly by **two** moonshot plans
+(`relay-cutset-moonshot-plan` for the outer-bound conjunct and
+`relay-inner-bound-moonshot-plan` for the achievability conjunct); the
+single `@residual` tag names the inner-bound plan as the primary
+closure target.
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+`@residual(plan:relay-inner-bound-moonshot-plan)` -/
 theorem relay_cf_consistent_binning_discharged
     {Ω β₁' γ : Type*} [MeasurableSpace Ω]
     [Fintype β₁'] [Nonempty β₁']
@@ -535,31 +512,23 @@ theorem relay_cf_consistent_binning_discharged
     [Fintype β] [Nonempty β]
     [MeasurableSpace γ] [Nonempty γ]
     (W : RelayChannel α α₁ β β₁)
-    {M₀ n₀ : ℕ} (hn : 0 < n₀)
-    (c : RelayCode M₀ n₀ α α₁ β β₁)
+    {M₀ n₀ : ℕ} (_hn : 0 < n₀)
+    (_c : RelayCode M₀ n₀ α α₁ β β₁)
     (R Idec Ix1y Iy1hy1 Pe I_marg_b I_marg_m Ib Im ε : ℝ)
     (R_cov R_bin ε_cov ε_pack : ℝ)
     (μ : Measure Ω) {n M : ℕ}
     (Ŷs : Ω → Fin n → β₁') (Ys : Ω → Fin n → β)
     (JT : (Fin n → β₁') × (Fin n → β) → Prop)
     (f_Ŷ : (Fin n → β₁') → Fin M)
-    (h_fano_b : RelayBcastCutFano M₀ n₀ R Pe I_marg_b)
-    (h_fano_m : RelayMacCutFano M₀ n₀ R Pe I_marg_m)
-    (h_chain_b : I_marg_b ≤ (n₀ : ℝ) * Ib)
-    (h_chain_m : I_marg_m ≤ (n₀ : ℝ) * Im)
-    (h_cleanup_b : (1 + Pe * Real.log (M₀ : ℝ)) / (n₀ : ℝ) ≤ ε)
-    (h_cleanup_m : (1 + Pe * Real.log (M₀ : ℝ)) / (n₀ : ℝ) ≤ ε)
-    (h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
-    (_h_decode : IsCFSideInfoDecodeHyp R_cov R_bin ε_cov ε_pack μ Ŷs Ys JT f_Ŷ)
-    (h_witness :
-      IsRelayCFBinningWitness
-        (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R Idec Ix1y Iy1hy1) :
+    (_h_fano_b : RelayBcastCutFano M₀ n₀ R Pe I_marg_b)
+    (_h_fano_m : RelayMacCutFano M₀ n₀ R Pe I_marg_m)
+    (_h_cleanup_b : (1 + Pe * Real.log (M₀ : ℝ)) / (n₀ : ℝ) ≤ ε)
+    (_h_cleanup_m : (1 + Pe * Real.log (M₀ : ℝ)) / (n₀ : ℝ) ≤ ε)
+    (_h_in_cf_region : InRelayCFRate R Idec Ix1y Iy1hy1)
+    (_h_decode : IsCFSideInfoDecodeHyp R_cov R_bin ε_cov ε_pack μ Ŷs Ys JT f_Ŷ) :
     (R ≤ relayCutsetBound (Ib + ε) (Im + ε))
-      ∧ RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R :=
-  ⟨relay_cutset_outer_bound hn c R Pe I_marg_b I_marg_m Ib Im ε
-     h_fano_b h_fano_m h_chain_b h_chain_m h_cleanup_b h_cleanup_m,
-   relay_cf_inner_bound_discharged (α := α) (α₁ := α₁) (β := β) (β₁ := β₁)
-     W R Idec Ix1y Iy1hy1 h_in_cf_region h_witness⟩
+      ∧ RelayCFInnerBoundExistence (α := α) (α₁ := α₁) (β := β) (β₁ := β₁) W R := by
+  sorry
 
 end TwoSide
 
