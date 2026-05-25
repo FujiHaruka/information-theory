@@ -347,13 +347,16 @@ the WZ covering/packing predicates and discharged.
 
 Cross-family note (S3, `audit-tags.md` Pattern G): this declaration
 forwards directly to `wyner_ziv_binning_via_covering_packing`
-(`WynerZivBinningCovering.lean:257`); its own status tracks the WynerZiv
-side of the migration. As of this commit `wyner_ziv_binning_via_covering_packing`
-is constructive (body `wzAchievability_random_binning_body …`), so the
-present wrapper is genuinely closed at type-check (no `sorry`). If a
-later WynerZiv migration retreats `wyner_ziv_binning_via_covering_packing`
-to `sorry`, the present wrapper will inherit a transitive `sorry`
-without needing its own `@residual` tag (Pattern C). -/
+(`WynerZivBinningCovering.lean:293`). WynerZiv Phase 2.x.1.b (Wave 2,
+2026-05-26 main commit `fcf80d1`) dropped `R₁`/`R₂`/`h_cov`/`h_pack`
+from upstream's signature and retreated its body to `sorry`; the
+present wrapper accordingly drops those args from the call site and
+inherits a transitive `sorry` without its own `@residual` tag (Pattern C
+散文 — closure responsibility belongs to upstream's
+`@residual(plan:wyner-ziv-discharge-moonshot-plan)`). The `h_decode`
+hypothesis remains in the wrapper signature for API stability but is
+no longer consumed; it stays in scope as bookkeeping (single-line
+wrapper). -/
 theorem relay_cf_si_decoder_fail_le
     [Nonempty β] [Nonempty γ]
     {R_cov R_bin ε_cov ε_pack : ℝ}
@@ -369,15 +372,14 @@ theorem relay_cf_si_decoder_fail_le
       MeasurableSet { ω : Ω |
         wzJointlyTypicalDecoderBody f_Ŷ JT f (f_Ŷ (Ŷs ω), Ys ω)
           ≠ fun i => f (Ŷs ω i, Ys ω i) })
-    (h_decode : IsCFSideInfoDecodeHyp R_cov R_bin ε_cov ε_pack μ Ŷs Ys JT f_Ŷ) :
+    (_h_decode : IsCFSideInfoDecodeHyp R_cov R_bin ε_cov ε_pack μ Ŷs Ys JT f_Ŷ) :
     μ.real { ω : Ω |
         wzJointlyTypicalDecoderBody f_Ŷ JT f (f_Ŷ (Ŷs ω), Ys ω)
           ≠ fun i => f (Ŷs ω i, Ys ω i) }
       ≤ ε_cov + ε_pack :=
   wyner_ziv_binning_via_covering_packing
-    (R₁ := R_cov) (R₂ := R_bin) (ε₁ := ε_cov) (ε₂ := ε_pack)
+    (ε₁ := ε_cov) (ε₂ := ε_pack)
     μ Ŷs Ys JT f_Ŷ f h_meas_typ h_meas_bin h_meas_fail
-    h_decode.compression h_decode.decodable
 
 /-- **CF side-info decoder failure → 0 (asymptotic form)** —
 load-bearing existence-form bundle removed, sorry.
