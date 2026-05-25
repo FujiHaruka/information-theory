@@ -60,7 +60,25 @@ prefix laundered a pure `< → ≤` lift as operational content
 (`defect:degenerate` + `name-laundering-alias`).  Wave 14 orchestrator
 escalation resolution: **rename to `wyner_ziv_rate_le_of_gt`** preserving
 the constructive recovery body (Tier 1 candidate), zero Lean consumers
-unaffected. -/
+unaffected.
+
+Wave 14 independent honesty audit (2026-05-26, fresh subagent verdict)
+— **pass (Tier 1)**.  Doctrine check:
+* Signature: hypothesis `R > wynerZivRatePmf …` is strictly stronger than
+  conclusion `wynerZivRatePmf … ≤ R`, consumed via `le_of_lt` (not
+  circular identity `:= h`).
+* Body: 1-step `le_of_lt h_R_gt` is a genuine ordered-field lift, no
+  hidden sorry / residual / `@audit:*`.
+* Name + docstring: new prefix `_rate_le_of_gt` literally describes the
+  `< → ≤` form; docstring verbatim renounces operational content
+  ("no operational achievability claim").  Wave 13 root causes
+  (`_achievability_*` prefix + operational name laundering) are
+  eliminated.
+* Joint core-reconstruction test: granting `h_R_gt` hands exactly the
+  micro-lemma the theorem claims (and no more); load-bearing in the
+  trivial sense that any 1-step lift is, but the lemma's name +
+  docstring acknowledge this scope, so honest by design.
+`@audit:ok` -/
 theorem wyner_ziv_rate_le_of_gt
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
     (h_R_gt : R > wynerZivRatePmf U P_XY d D) :
