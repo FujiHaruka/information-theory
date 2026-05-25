@@ -34,6 +34,31 @@
 
 > 実態整合 (2026-05-20): **PASS-THROUGH (計画通り) — 全 Phase 実装済、plan の「Phase 0 起草中」表記は STALE**。3 file publish 済 (全 0 sorry)。`wyner_ziv_achievability_existence` (WynerZivAchievability.lean:78) は `_h_R_gt` + `h_ach_existence : ∀ε>0, ∃N...` を取り body `:= h_ach_existence` (pass-through)。converse `wyner_ziv_converse_n_letter` (WynerZivConverse.lean:86) は `_h_csiszar : True` `_h_jensen : True` + `h_rate_bound`、body `:= h_rate_bound`。Phase D wrapper `wyner_ziv_tendsto` (WynerZiv.lean:357) は `le_antisymm h_conv h_ach` (両 rate 不等式を hyp で受ける)。L-WZ1/2/3 全 pass-through (FLAW なし — 計画通り)。**注: L-WZ3 (R_WZ(D) 凸性) は別 plan `wyner-ziv-convexity-discharge` で full discharge 済 (`wynerZivCondEntDiffConvex_holds`)**。下流 discharge body 多数実在 (WynerZivBinningBody / ConverseChain / CoveringBody 等、全 0 sorry)。
 
+> **更新 (2026-05-26 Wave 11)**: **Phase 2.x predicate hyp removal: 完了** —
+> sub-plan [`wynerziv-phase2-predicate-removal-plan.md`](wynerziv-phase2-predicate-removal-plan.md)
+> で Phase 2.x.1.a-e の 11 declaration signature 改変 + Phase 2.x.2 ripple +
+> Phase 2.x.3 deprecation 注記 + Phase 2.x.4 honesty audit を完遂 (commit
+> `c63fc5f` / `fcf80d1` / `cdc53f4` / `974038c` / `aaa1ffa` / `7ed0de7`)。
+> Round 1 で sorry 化済の 13 declaration 中、明確改変対象 11 件は load-bearing
+> predicate hypothesis を signature から構造的に除去、境界判定 2 件
+> (`wyner_ziv_tendsto_chain` + `wzAchievability_random_binning_body`) は Round
+> 4 closure で proof done 到達 (Tier 1 `@audit:ok`)。Phase 0-D の pass-through
+> 設計は変更なし、cross-family Relay 利用 3 predicate
+> (`IsWynerZivBinning{Covering,Packing,Achievable}`) の definition 自体は維持。
+>
+> **WynerZiv family sorry-based migration status summary** (2026-05-26):
+> - **proof done 到達 (Tier 1 `@audit:ok`、0 sorry / 0 @residual)**: 2 件
+>   (`wyner_ziv_tendsto_chain` / `wzAchievability_random_binning_body`、境界
+>   判定で constructive 復元)
+> - **Tier 2 sorry-based (sorry + @residual(plan:wyner-ziv-discharge-moonshot-plan))**:
+>   11 件 (Phase 2.x.1 で signature honesty 強化済、明確改変対象)
+> - **Tier 5 defect scope 外 (本 family の主目的ではなく discharge plan
+>   委譲対象)**: 3 件 — `WynerZivAchievability.lean:76` +
+>   `WynerZivConverse.lean:243` の `@residual(defect:false-statement)` 2 件 +
+>   `WynerZivAchievability.lean:103` `wyner_ziv_achievability_existence` の
+>   `@residual(defect:circular)` 1 件 (本 family の sorry-migration scope 外、
+>   discharge plan 委譲)。
+
 **Phase 0 起草中** (`wyner-ziv-mathlib-inventory.md`)。在庫から既存率 ~65%、自作必要 8 件、
 撤退ライン 3 本全発動下で seed 規模 (1000-1500 行) 内に収まると確定。最大の novel 構造構築は
 (a) `wynerZivRatePmf` 定義 + 連続性 + 達成性 (~280-350 行) と (b) auxiliary RV
@@ -47,7 +72,7 @@
 - [x] Phase B — Achievability (statement-level publish via L-WP-statement-pass; full random binning は別 plan で discharge) (99 行, 0 sorry)
 - [x] Phase C — Converse (statement-level publish via L-WP-statement-pass + L-WZ2 + L-WZ3 全発動; n-letter Csiszár+Jensen 内訳は別 plan で discharge) (132 行, 0 sorry)
 - [x] Phase D — 主定理 wrapper `wyner_ziv_tendsto` (`WynerZiv.lean` 内、`le_antisymm` 2 hypothesis 形)
-- [ ] Phase V — `Common2026.lean` 編入 (オーケストレータ実施待ち)
+- [x] Phase V — `Common2026.lean` 編入 (オーケストレータ実施済、`Common2026.lean:120-209` で WynerZiv* 全 file import 済)
 
 ## ゴール / Approach
 
