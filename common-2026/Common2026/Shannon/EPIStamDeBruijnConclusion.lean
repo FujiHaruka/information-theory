@@ -111,9 +111,11 @@ it is non-negative because Fisher information is non-negative.
 
 This `Prop`-level predicate records the **non-negativity of the de Bruijn
 derivative for the density witness `f`** — the genuine analytic content that makes
-the gap monotone. Unlike the coarse `IsStamToEPIScalingHyp` (which smuggles the
-EPI conclusion via the Stam hypothesis), this isolates the *derivative-sign* step
-of the Csiszár scaling argument and discharges it outright (§1, below). -/
+the gap monotone. It complements `IsStamToEPIScalingHyp` (which, after the
+Phase 0 (2026-05-25) refactor, carries the global `AntitoneOn` `gap_s` witness
+on `s ∈ [0, 1]` via independent standard-normal witnesses); the present predicate
+isolates the *derivative-sign* step of the Csiszár scaling argument and
+discharges it outright (§1, below). -/
 def IsEPIGapMonotoneHyp (f : ℝ → ℝ) : Prop :=
   0 ≤ (1 / 2 : ℝ) * fisherInfoOfDensityReal f
 

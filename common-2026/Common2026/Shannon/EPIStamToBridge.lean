@@ -3,12 +3,14 @@ import Common2026.Shannon.EPIStamDischarge
 import Common2026.Shannon.EPIL3Integration
 import Common2026.Shannon.EPIPlumbing
 import Common2026.Shannon.DifferentialEntropy
+import Common2026.Shannon.HeatFlowPath
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Analysis.SpecialFunctions.Pow.NNReal
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.Basic
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
+import Mathlib.Order.Monotone.Basic
 
 /-!
 # T2-D Wave 7: Stam → EPI bridge — Csiszár scaling-path body discharge
@@ -101,6 +103,8 @@ open scoped ENNReal NNReal Topology
 open InformationTheory.Shannon.EntropyPowerInequality
 open InformationTheory.Shannon.EPIStamDischarge
 open InformationTheory.Shannon.EPIL3Integration
+open Common2026.Shannon (heatFlowPath2 heatFlowPath2_zero heatFlowPath2_one
+  measurable_heatFlowPath2)
 
 /-! ## §1 — Sub-predicates: scaling path + path limit -/
 
@@ -135,23 +139,49 @@ phrasing is structurally equivalent to the bridge itself, but conceptually
 isolates the *scaling-monotonicity step* from the *path-endpoint
 identification step* (§1, `IsStamToEPILimitHyp`).
 
-`@audit:suspect(epi-stam-to-conclusion-plan)`
-Defect candidate (`launder`): the body fixes `g1 = 0`, so the predicate
-reduces to `entropyPower (X+Y) − entropyPower X − entropyPower Y ≥ 0`,
-i.e., the EPI conclusion itself with no Csiszár-scaling content. The
-"scaling-monotonicity step" naming suggests structural decomposition that
-the type does not actually carry. Discovered 2026-05-25 (Wave 3 EPI-Stam
-agent). To be discharged or refactored in the sister sub-plan
-`epi-stam-to-conclusion-plan` (introduce a real `g1` parameter from the
-path endpoint, or split into a monotonicity premise + endpoint identification). -/
+`@audit:staged(epi-stam-to-conclusion-plan)`
+Phase 0 (2026-05-25) refactor: the previous body fixed `g1 = 0` and reduced
+to the EPI conclusion itself (a cosmetic alias of the bridge, the `launder`
+defect originally flagged by the Wave 3 EPI-Stam agent). The new body
+makes the Csiszár scaling structure explicit:
+
+* `Z_X, Z_Y` are independent standard-normal witnesses, jointly independent
+  of `X, Y` and of each other.
+* Along the heat-flow path `s ↦ heatFlowPath2 · · s = √(1 − s) · · + √s · ·`
+  (`Common2026.Shannon.HeatFlowPath`), the EPI gap
+  `gap_s := entropyPower (P.map (heatFlowPath2 X Z_X s + heatFlowPath2 Y Z_Y s))
+            − entropyPower (P.map (heatFlowPath2 X Z_X s))
+            − entropyPower (P.map (heatFlowPath2 Y Z_Y s))`
+  is **antitone** on `[0, 1]` (Cover-Thomas Lemma 17.7.3 inner loop: Stam +
+  de Bruijn imply `d gap_s / d s ≤ 0`).
+* At `s = 1`, `heatFlowPath2 _ Z _ 1 = Z` is Gaussian, so `gap_1 = 0` by
+  Gaussian saturation; combined with antitonicity this yields `gap_0 ≥ 0`,
+  i.e., the EPI conclusion at `s = 0` where `heatFlowPath2 X Z_X 0 = X` and
+  `heatFlowPath2 Y Z_Y 0 = Y`.
+
+The Stam inequality input is the load-bearing premise (it powers the
+`d gap_s / d s ≤ 0` step). This predicate is `staged` (not `ok`) because
+the **interior** of the predicate — the `AntitoneOn` conclusion — is the
+real Csiszár scaling content that is itself the analytic core of EPI; the
+predicate's role is to carry that hypothesis as a sub-bound until a
+sister discharge (Phase A / B of `epi-stam-to-conclusion-plan`) supplies
+a genuine `AntitoneOn` proof from Stam + de Bruijn FTC. Until then the
+predicate's truth is exactly the gap of the proof. -/
 def IsStamToEPIScalingHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   IsStamInequalityHyp X Y P →
-    ∀ (g0 g1 : ℝ),
-      g0 = entropyPower (P.map (fun ω => X ω + Y ω))
-            - entropyPower (P.map X) - entropyPower (P.map Y) →
-      g1 = 0 →
-      g0 ≥ g1
+    ∃ (Z_X Z_Y : Ω → ℝ),
+      Measurable Z_X ∧ Measurable Z_Y ∧
+      P.map Z_X = gaussianReal 0 1 ∧ P.map Z_Y = gaussianReal 0 1 ∧
+      IndepFun X Z_X P ∧ IndepFun Y Z_Y P ∧
+      IndepFun Z_X Z_Y P ∧
+      AntitoneOn
+        (fun s : ℝ =>
+          entropyPower
+              (P.map (heatFlowPath2 X Z_X s + heatFlowPath2 Y Z_Y s))
+            - entropyPower (P.map (heatFlowPath2 X Z_X s))
+            - entropyPower (P.map (heatFlowPath2 Y Z_Y s)))
+        (Set.Icc (0 : ℝ) 1)
 
 /-- **Stam-to-EPI limit hypothesis** (Cover-Thomas Lemma 17.7.3
 path-endpoint).
@@ -168,7 +198,15 @@ this gives `g(0) ≥ g(1) = 0`, hence the original EPI.
 In our `Prop`-level phrasing the limit hypothesis is the assertion that
 the path-endpoint Gaussian-saturation value (`g1 = 0`) is realizable as a
 witness — which is a structurally trivial fact (we always set `g1 := 0`
-in the scaling hypothesis). -/
+in the scaling hypothesis).
+
+`@audit:suspect(epi-stam-to-conclusion-plan)` Same `launder` pattern
+(`g1 = 0` fixed) as the pre-Phase-0 scaling hypothesis. The refactored
+sister `IsStamToEPIScalingHyp` (Phase 0, 2026-05-25) now carries genuine
+Csiszár scaling content via an `AntitoneOn` witness over `Set.Icc 0 1`;
+this limit hypothesis is still launder-shaped (its disjunctive body is
+implied by the scaling result alone in the new pipeline). To be refactored
+in Phase 0' future work (companion mini-Phase). -/
 def IsStamToEPILimitHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∃ (g1 : ℝ), g1 = 0 ∧
@@ -195,44 +233,66 @@ is structurally automatic).
 `@audit:ok` -/
 theorem isStamToEPIBridgeHyp_of_scaling_limit
     {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
+    {X Y : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]
     (h_scaling : IsStamToEPIScalingHyp X Y P)
     (_h_limit : IsStamToEPILimitHyp X Y P) :
     IsStamToEPIBridgeHyp X Y P := by
   intro h_stam
-  -- Apply the scaling hypothesis with `(g0, g1) := (gap, 0)`.
-  have h_gap_nonneg :=
-    h_scaling h_stam
-      (entropyPower (P.map (fun ω => X ω + Y ω))
-        - entropyPower (P.map X) - entropyPower (P.map Y))
-      0 rfl rfl
-  -- `gap ≥ 0` is precisely the EPI conclusion.
+  -- Extract the genuine Csiszár scaling witnesses from the new signature.
+  obtain ⟨Z_X, Z_Y, hZX_meas, hZY_meas, hZX_law, hZY_law,
+          _hXZX, _hYZY, hZXZY, h_anti⟩ := h_scaling h_stam
+  -- Antitonicity at endpoints: gap(1) ≤ gap(0).
+  have h0_mem : (0 : ℝ) ∈ Set.Icc (0:ℝ) 1 :=
+    Set.left_mem_Icc.mpr zero_le_one
+  have h1_mem : (1 : ℝ) ∈ Set.Icc (0:ℝ) 1 :=
+    Set.right_mem_Icc.mpr zero_le_one
+  have h_endpoint_le : _ ≤ _ := h_anti h0_mem h1_mem zero_le_one
+  -- Beta-reduce the lambda in `h_endpoint_le` to expose `heatFlowPath2 _ _ 0/1`.
+  simp only at h_endpoint_le
+  -- Endpoint reductions:
+  --  * gap(0) reduces to the EPI gap for X, Y (heatFlowPath2 _ _ 0 = X / Y).
+  --  * gap(1) reduces to the EPI gap for Z_X, Z_Y, which vanishes by
+  --    Gaussian saturation (both standard normal, independent).
+  have h_endpoint0_funext :
+      (heatFlowPath2 X Z_X 0 + heatFlowPath2 Y Z_Y 0)
+        = fun ω => X ω + Y ω := by
+    funext ω
+    simp [heatFlowPath2_zero]
+  have h_endpoint1_funext :
+      (heatFlowPath2 X Z_X 1 + heatFlowPath2 Y Z_Y 1)
+        = fun ω => Z_X ω + Z_Y ω := by
+    funext ω
+    simp [heatFlowPath2_one]
+  -- Gaussian saturation at s = 1: both endpoints are standard normal, indep.
+  have h_gap1_zero :
+      entropyPower (P.map (fun ω => Z_X ω + Z_Y ω))
+        - entropyPower (P.map Z_X) - entropyPower (P.map Z_Y) = 0 := by
+    have h_sat := entropy_power_inequality_gaussian_saturation
+      P Z_X Z_Y hZX_meas hZY_meas hZXZY 0 0 1 1
+      (by norm_num : (1 : ℝ≥0) ≠ 0) (by norm_num : (1 : ℝ≥0) ≠ 0)
+      hZX_law hZY_law
+    linarith
+  -- Rewrite h_endpoint_le to expose the two endpoint values.
+  rw [h_endpoint0_funext, h_endpoint1_funext,
+      heatFlowPath2_zero, heatFlowPath2_zero,
+      heatFlowPath2_one, heatFlowPath2_one] at h_endpoint_le
+  -- gap(0) ≥ 0 follows from gap(1) = 0 and gap(1) ≤ gap(0).
   unfold IsEntropyPowerInequalityHypothesis
   linarith
 
 /-! ## §3 — Gaussian saturation full discharge of sub-predicates -/
 
-/-- **Gaussian scaling discharge**. For independent Gaussians `X, Y` with
-non-zero variance, the scaling hypothesis is **discharged hypothesis-free**:
-the EPI gap is identically `0` (by `entropy_power_inequality_gaussian_saturation`),
-so the implication `Stam → gap ≥ 0` holds trivially.
-
-This is the canonical Gaussian saturation route: we reuse the equality
-already established for Gaussian sums of independent Gaussians. -/
-theorem isStamToEPIScalingHyp_of_gaussian
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
-    (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
-    IsStamToEPIScalingHyp X Y P := by
-  intro _h_stam g0 g1 hg0 hg1
-  -- Gap = 0 from Gaussian saturation.
-  have h_eq := entropy_power_inequality_gaussian_saturation
-    P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
-  -- Compute `g0 = 0` from `h_eq` and `hg0`, and `g1 = 0` from `hg1`.
-  rw [hg0, hg1]
-  linarith
+-- `isStamToEPIScalingHyp_of_gaussian` was retracted in Phase 0 (2026-05-25)
+-- because the new `IsStamToEPIScalingHyp` signature (which now requires an
+-- existential witness `(Z_X, Z_Y)` of two independent standard normals jointly
+-- independent of `X, Y`) cannot be honestly discharged from "X, Y are Gaussian"
+-- alone: the construction of two such fresh standard-normal witnesses on the
+-- same probability space requires a richness assumption on `(Ω, P)` that is
+-- outside Phase 0 scope (would need a new staged predicate
+-- `IsGaussianStandardizationHyp`). The Gaussian saturation EPI is still
+-- discharged hypothesis-free via the direct path in
+-- `isStamToEPIBridgeHyp_of_gaussian_via_scaling` below, which skips the
+-- scaling predicate entirely.
 
 /-- **Gaussian limit discharge**. Same setup; the limit hypothesis is
 trivial in the Gaussian saturation case (gap is identically `0`). -/
@@ -249,9 +309,21 @@ theorem isStamToEPILimitHyp_of_gaussian
   refine ⟨0, rfl, Or.inr ?_⟩
   exact h_eq.ge
 
-/-- **Gaussian bridge full discharge via scaling decomposition**. Both
-sub-predicates discharge hypothesis-free for the Gaussian saturation case,
-so the bridge itself does too — through `isStamToEPIBridgeHyp_of_scaling_limit`. -/
+/-- **Gaussian bridge full discharge (direct Gaussian saturation route)**.
+For independent Gaussians `X, Y` with non-zero variance, the bridge holds
+hypothesis-free: the EPI gap is identically `0` by
+`entropy_power_inequality_gaussian_saturation`, so the Stam-conditional
+implication is trivial.
+
+Phase 0 (2026-05-25): previously routed via
+`isStamToEPIScalingHyp_of_gaussian` → `isStamToEPIBridgeHyp_of_scaling_limit`.
+With the new `IsStamToEPIScalingHyp` signature carrying genuine
+Csiszár-scaling content (`AntitoneOn` witness), that scaling-discharge
+becomes inapplicable in the pure-Gaussian setting (no fresh standard-normal
+witness construction in scope); we route directly through Gaussian
+saturation instead.
+
+`@audit:ok` -/
 theorem isStamToEPIBridgeHyp_of_gaussian_via_scaling
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -259,11 +331,11 @@ theorem isStamToEPIBridgeHyp_of_gaussian_via_scaling
     (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
     (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
     IsStamToEPIBridgeHyp X Y P := by
-  have h_scaling := isStamToEPIScalingHyp_of_gaussian
+  intro _h_stam
+  have h_eq := entropy_power_inequality_gaussian_saturation
     P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
-  have h_limit := isStamToEPILimitHyp_of_gaussian
-    P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
-  exact isStamToEPIBridgeHyp_of_scaling_limit h_scaling h_limit
+  unfold IsEntropyPowerInequalityHypothesis
+  exact h_eq.ge
 
 /-! ## §4 — Decomposed pipeline structure + main theorem -/
 
@@ -280,10 +352,16 @@ structure IsEPIScalingDecomposedPipeline {Ω : Type*} [MeasurableSpace Ω]
   limit : IsStamToEPILimitHyp X Y P
 
 /-- **Upgrade**: a decomposed pipeline yields the original (monolithic)
-`IsEPIL3IntegratedPipeline`. -/
+`IsEPIL3IntegratedPipeline`.
+
+Phase 0 (2026-05-25): the `[IsProbabilityMeasure P]` instance is now
+required by `isStamToEPIBridgeHyp_of_scaling_limit` (it uses
+Gaussian saturation at the heat-flow path endpoint `s = 1` to discharge
+the limit). This is a regularity hypothesis, satisfied in every concrete
+caller (the EPI pipeline always works under `IsProbabilityMeasure P`). -/
 theorem isEPIL3IntegratedPipeline_of_scaling_decomposed
     {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
+    {X Y : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]
     (h : IsEPIScalingDecomposedPipeline X Y P) :
     IsEPIL3IntegratedPipeline X Y P where
   stam := h.stam
@@ -304,67 +382,66 @@ theorem entropy_power_inequality_via_scaling_decomposition
   have h_integrated := isEPIL3IntegratedPipeline_of_scaling_decomposed h_pipeline
   exact entropy_power_inequality_integrated P X Y hX hY hXY h_integrated
 
-/-- **Gaussian full discharge of scaling-decomposed pipeline**.
-
-`@audit:ok` -/
-theorem isEPIScalingDecomposedPipeline_of_gaussian
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
-    (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂)
-    (h_stam : IsStamInequalityHyp X Y P) :
-    IsEPIScalingDecomposedPipeline X Y P where
-  stam := h_stam
-  scaling := isStamToEPIScalingHyp_of_gaussian
-    P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
-  limit := isStamToEPILimitHyp_of_gaussian
-    P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
-
-/-- **Gaussian EPI via scaling decomposition**. -/
-theorem entropy_power_inequality_gaussian_via_scaling_decomposition
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
-    (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂)
-    (h_stam : IsStamInequalityHyp X Y P) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
-  have h_pipeline := isEPIScalingDecomposedPipeline_of_gaussian
-    P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY h_stam
-  exact entropy_power_inequality_via_scaling_decomposition
-    P X Y hX hY hXY h_pipeline
+-- `isEPIScalingDecomposedPipeline_of_gaussian` was retracted in Phase 0
+-- (2026-05-25) because it depended on the now-retracted
+-- `isStamToEPIScalingHyp_of_gaussian` (same root cause: the new scaling
+-- signature requires an existential standard-normal witness construction
+-- that is out of Phase 0 scope). The Gaussian EPI route is still complete
+-- through `isStamToEPIBridgeHyp_of_gaussian_via_scaling`, which goes
+-- directly via Gaussian saturation without traversing the scaling
+-- predicate.
+--
+-- `entropy_power_inequality_gaussian_via_scaling_decomposition` was
+-- retracted for the same reason (it composed the two retracted Gaussian
+-- discharges). The Gaussian EPI fact itself is available as the equality
+-- `entropy_power_inequality_scaling_decomposition_gaussian_eq` at the end
+-- of §7 (which reduces directly to
+-- `entropy_power_inequality_gaussian_saturation`).
 
 /-! ## §5 — Predicate manipulation: symmetry, congruence, pass-through -/
 
 /-- **Scaling hypothesis symmetry**: `IsStamToEPIScalingHyp X Y P` implies
-`IsStamToEPIScalingHyp Y X P`. -/
+`IsStamToEPIScalingHyp Y X P`.
+
+Phase 0 (2026-05-25): the proof now constructs the new existential witness
+explicitly by swapping the roles of the standard-normal witnesses
+(`Z_X' := Z_Y, Z_Y' := Z_X`); the `AntitoneOn` conclusion transfers
+through pointwise `add_comm` of the heat-flow path functions. -/
 theorem isStamToEPIScalingHyp_symm
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h : IsStamToEPIScalingHyp X Y P) :
     IsStamToEPIScalingHyp Y X P := by
-  intro h_stam g0 g1 hg0 hg1
-  -- Convert `Y + X` to `X + Y` via commutativity for `P.map`.
-  have h_comm_fun : (fun ω => Y ω + X ω) = fun ω => X ω + Y ω := by
-    funext ω; ring
-  -- Symmetrize the Stam hypothesis.
+  intro h_stam
+  -- Symmetrize the Stam hypothesis to apply `h`.
   have h_stam' : IsStamInequalityHyp X Y P := isStamInequalityHyp_symm h_stam
-  -- Use `h` on `(g0', 0)` where `g0'` is the gap in `(X, Y)` order.
-  have h_g0' :
-      entropyPower (P.map (fun ω => Y ω + X ω))
-        - entropyPower (P.map Y) - entropyPower (P.map X)
-      = entropyPower (P.map (fun ω => X ω + Y ω))
-        - entropyPower (P.map X) - entropyPower (P.map Y) := by
-    rw [h_comm_fun]
+  obtain ⟨Z_X, Z_Y, hZX_meas, hZY_meas, hZX_law, hZY_law,
+          hXZX, hYZY, hZXZY, h_anti⟩ := h h_stam'
+  -- Swap: use Z_Y in the X-slot and Z_X in the Y-slot of the (Y, X) ordering.
+  refine ⟨Z_Y, Z_X, hZY_meas, hZX_meas, hZY_law, hZX_law,
+          hYZY, hXZX, hZXZY.symm, ?_⟩
+  -- The new gap function (with Y, X, Z_Y, Z_X) equals the old gap function
+  -- (with X, Y, Z_X, Z_Y) pointwise in `s` via `add_comm`.
+  have h_gap_eq :
+      (fun s : ℝ =>
+        entropyPower
+            (P.map (heatFlowPath2 Y Z_Y s + heatFlowPath2 X Z_X s))
+          - entropyPower (P.map (heatFlowPath2 Y Z_Y s))
+          - entropyPower (P.map (heatFlowPath2 X Z_X s)))
+      = (fun s : ℝ =>
+        entropyPower
+            (P.map (heatFlowPath2 X Z_X s + heatFlowPath2 Y Z_Y s))
+          - entropyPower (P.map (heatFlowPath2 X Z_X s))
+          - entropyPower (P.map (heatFlowPath2 Y Z_Y s))) := by
+    funext s
+    have h_add :
+        (heatFlowPath2 Y Z_Y s + heatFlowPath2 X Z_X s)
+          = (heatFlowPath2 X Z_X s + heatFlowPath2 Y Z_Y s) := by
+      funext ω; simp [add_comm]
+    rw [h_add]
     ring
-  have h_main := h h_stam'
-    (entropyPower (P.map (fun ω => X ω + Y ω))
-      - entropyPower (P.map X) - entropyPower (P.map Y))
-    0 rfl rfl
-  rw [hg0, hg1]
-  linarith [h_main, h_g0'.symm]
+  rw [h_gap_eq]
+  exact h_anti
 
 /-- **Limit hypothesis symmetry**. -/
 theorem isStamToEPILimitHyp_symm
@@ -394,20 +471,12 @@ theorem isEPIScalingDecomposedPipeline_symm
   scaling := isStamToEPIScalingHyp_symm h.scaling
   limit := isStamToEPILimitHyp_symm h.limit
 
-/-- **Scaling hypothesis from EPI hypothesis**. When the EPI conclusion is
-already known (e.g. through a different route), the scaling sub-predicate
-trivially follows.
-
-`@audit:ok` -/
-theorem isStamToEPIScalingHyp_of_epi
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h_epi : IsEntropyPowerInequalityHypothesis X Y P) :
-    IsStamToEPIScalingHyp X Y P := by
-  intro _h_stam g0 g1 hg0 hg1
-  unfold IsEntropyPowerInequalityHypothesis at h_epi
-  rw [hg0, hg1]
-  linarith
+-- `isStamToEPIScalingHyp_of_epi` was retracted in Phase 0 (2026-05-25):
+-- the new scaling signature requires constructing two independent
+-- standard-normal witnesses `(Z_X, Z_Y)` jointly independent of `X, Y`,
+-- which cannot be derived from "EPI holds" alone (no Gaussian witness in
+-- the EPI hypothesis). This shortcut (EPI → scaling) is structurally
+-- unavailable under the genuine Csiszár-scaling signature.
 
 /-- **Limit hypothesis from EPI hypothesis**.
 
@@ -420,38 +489,58 @@ theorem isStamToEPILimitHyp_of_epi
   refine ⟨0, rfl, Or.inr ?_⟩
   exact h_epi
 
-/-- **Decomposed pipeline from EPI + Stam**.
-
-`@audit:ok` -/
-theorem isEPIScalingDecomposedPipeline_of_epi
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h_stam : IsStamInequalityHyp X Y P)
-    (h_epi : IsEntropyPowerInequalityHypothesis X Y P) :
-    IsEPIScalingDecomposedPipeline X Y P where
-  stam := h_stam
-  scaling := isStamToEPIScalingHyp_of_epi h_epi
-  limit := isStamToEPILimitHyp_of_epi h_epi
+-- `isEPIScalingDecomposedPipeline_of_epi` was retracted in Phase 0
+-- (2026-05-25): it depended on the retracted `isStamToEPIScalingHyp_of_epi`
+-- (no honest construction of a fresh standard-normal witness from EPI
+-- alone). Callers that already have an EPI proof do not need this
+-- back-channel: they can use the EPI conclusion directly.
 
 /-- **Bridge from scaling alone (when the limit branch is taken trivially)**.
-This is a structural shortcut that bypasses the limit witness construction:
-since `IsStamToEPILimitHyp` always admits the witness `⟨0, rfl, Or.inl _⟩`
-when the structural inequality `gap ≥ 0` is already available, and since
-`gap ≥ 0` is exactly what the scaling predicate provides via the Stam
-inequality, the scaling predicate alone is sufficient.
+
+Phase 0 (2026-05-25): under the new `IsStamToEPIScalingHyp` signature
+(Csiszár `AntitoneOn` witness), the scaling predicate alone determines the
+bridge — the limit predicate's witness is not load-bearing. The body
+reproduces the endpoint reduction inline (analogous to
+`isStamToEPIBridgeHyp_of_scaling_limit`, but without referencing the
+limit predicate at all). `[IsProbabilityMeasure P]` is required for the
+Gaussian-saturation step at the heat-flow path endpoint `s = 1`.
 
 `@audit:ok` -/
 theorem isStamToEPIBridgeHyp_of_scaling
     {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
+    {X Y : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]
     (h_scaling : IsStamToEPIScalingHyp X Y P) :
     IsStamToEPIBridgeHyp X Y P := by
   intro h_stam
-  have h_gap_nonneg :=
-    h_scaling h_stam
-      (entropyPower (P.map (fun ω => X ω + Y ω))
-        - entropyPower (P.map X) - entropyPower (P.map Y))
-      0 rfl rfl
+  obtain ⟨Z_X, Z_Y, hZX_meas, hZY_meas, hZX_law, hZY_law,
+          _hXZX, _hYZY, hZXZY, h_anti⟩ := h_scaling h_stam
+  have h0_mem : (0 : ℝ) ∈ Set.Icc (0:ℝ) 1 :=
+    Set.left_mem_Icc.mpr zero_le_one
+  have h1_mem : (1 : ℝ) ∈ Set.Icc (0:ℝ) 1 :=
+    Set.right_mem_Icc.mpr zero_le_one
+  have h_endpoint_le : _ ≤ _ := h_anti h0_mem h1_mem zero_le_one
+  simp only at h_endpoint_le
+  have h_endpoint0_funext :
+      (heatFlowPath2 X Z_X 0 + heatFlowPath2 Y Z_Y 0)
+        = fun ω => X ω + Y ω := by
+    funext ω
+    simp [heatFlowPath2_zero]
+  have h_endpoint1_funext :
+      (heatFlowPath2 X Z_X 1 + heatFlowPath2 Y Z_Y 1)
+        = fun ω => Z_X ω + Z_Y ω := by
+    funext ω
+    simp [heatFlowPath2_one]
+  have h_gap1_zero :
+      entropyPower (P.map (fun ω => Z_X ω + Z_Y ω))
+        - entropyPower (P.map Z_X) - entropyPower (P.map Z_Y) = 0 := by
+    have h_sat := entropy_power_inequality_gaussian_saturation
+      P Z_X Z_Y hZX_meas hZY_meas hZXZY 0 0 1 1
+      (by norm_num : (1 : ℝ≥0) ≠ 0) (by norm_num : (1 : ℝ≥0) ≠ 0)
+      hZX_law hZY_law
+    linarith
+  rw [h_endpoint0_funext, h_endpoint1_funext,
+      heatFlowPath2_zero, heatFlowPath2_zero,
+      heatFlowPath2_one, heatFlowPath2_one] at h_endpoint_le
   unfold IsEntropyPowerInequalityHypothesis
   linarith
 
@@ -461,7 +550,7 @@ shortcut above but at the `IsEPIScalingDecomposedPipeline` packaging level.
 `@audit:ok` -/
 theorem isStamToEPIBridgeHyp_of_stam_scaling
     {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
+    {X Y : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]
     (_h_stam : IsStamInequalityHyp X Y P)
     (h_scaling : IsStamToEPIScalingHyp X Y P) :
     IsStamToEPIBridgeHyp X Y P :=
@@ -487,22 +576,13 @@ theorem isStamToEPILimitHyp_congr
     IsStamToEPILimitHyp X' Y' P := by
   subst hX; subst hY; exact h
 
-/-- **Scaling hypothesis from an honest EPI fact** (the Stam input is unused).
-
-NOTE: despite the historical name, this is **not** a vacuous-truth back-door. It
-requires `h_epi : IsEntropyPowerInequalityHypothesis X Y P` as a genuine input
-(established elsewhere by a non-circular route) and merely repackages it as the
-scaling sub-predicate; the `h_stam_triv` argument plays no role. The former buggy
-V1 `fisherInfo = 0` vacuous discharge was removed 2026-05-20.
-
-`@audit:ok` -/
-theorem isStamToEPIScalingHyp_of_fisherInfoReal_zero
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h_stam_triv : IsStamInequalityHyp X Y P)
-    (h_epi : IsEntropyPowerInequalityHypothesis X Y P) :
-    IsStamToEPIScalingHyp X Y P :=
-  isStamToEPIScalingHyp_of_epi h_epi
+-- `isStamToEPIScalingHyp_of_fisherInfoReal_zero` was retracted in Phase 0
+-- (2026-05-25): it was a thin alias of the retracted
+-- `isStamToEPIScalingHyp_of_epi` (same root cause: no honest construction
+-- of a fresh standard-normal witness from EPI alone). Historical note: the
+-- former V1 `fisherInfo = 0` vacuous discharge was removed 2026-05-20; the
+-- present retraction is independent (driven by the Phase 0 scaling
+-- signature refactor rather than by V1 honesty issues).
 
 /-! ## §6 — Chain forms (3-arg / 4-arg) via scaling decomposition -/
 
@@ -559,10 +639,14 @@ theorem scaling_decomposed_pipeline_roundtrip
 
 /-- **Bridge body discharge implies original `IsStamToEPIBridgeHyp`**.
 
+Phase 0 (2026-05-25): `[IsProbabilityMeasure P]` propagated from
+`isStamToEPIBridgeHyp_of_scaling_limit` (regularity hypothesis required by
+the Gaussian-saturation endpoint reduction).
+
 `@audit:ok` -/
 theorem isStamToEPIBridgeHyp_of_scaling_limit_equiv
     {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
+    {X Y : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]
     (h_scaling : IsStamToEPIScalingHyp X Y P)
     (h_limit : IsStamToEPILimitHyp X Y P) :
     ∀ (h_stam : IsStamInequalityHyp X Y P),
@@ -632,10 +716,13 @@ theorem isStamToEPIBridgeHyp_iff_implication
   Iff.rfl
 
 /-- **Scaling-decomposed pipeline → monolithic pipeline round-trip
-through `isEPIL3IntegratedPipeline_of_scaling_decomposed`**. -/
+through `isEPIL3IntegratedPipeline_of_scaling_decomposed`**.
+
+Phase 0 (2026-05-25): `[IsProbabilityMeasure P]` propagated from
+`isEPIL3IntegratedPipeline_of_scaling_decomposed`. -/
 theorem decomposed_to_integrated_roundtrip
     {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
+    {X Y : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]
     (h : IsEPIScalingDecomposedPipeline X Y P) :
     (isEPIL3IntegratedPipeline_of_scaling_decomposed h).stam = h.stam := rfl
 
