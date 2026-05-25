@@ -69,6 +69,8 @@ The textbook-equivalent form can be re-derived as a separate equivalence lemma l
 
 A red flag that you skipped this step: you find yourself searching for "the lemma that turns `f (compProd ...)` into `∫⁻ ... ∂ ...`" or any analogous re-shaping bridge. If that bridge is not already in Mathlib, the cheapest fix is almost always to redefine, not to write the bridge.
 
+This rewrite is also the **第一選択 mitigation** when a definition / `Prop` RHS / `inductive` constructor can't accept `sorry` directly (`sorry` lives in proof body only). Convert the def's core into a separate `theorem` whose body is `sorry` + `@residual(<class>:<slug>)`, and have the def call that theorem (or a shared sorry lemma — `docs/audit/audit-tags.md`「共有 Mathlib 壁」). The fallback when rewrite isn't feasible in the current session — keep the signature as a defect-marked tier-5 placeholder — is documented under 「検証の誠実性 → sorry を書けない箇所での対処順序」.
+
 ### 具体的数値・型予測の verbatim 確認 (plan / inventory 共通)
 
 Plan / inventory で具体的な **数値・型値** (例: `differentialEntropy (Dirac 0) = ?`、`entropyPower (Measure.dirac 0) = ?`、`gaussianReal 0 0 = ?`、ある関数の `.toReal` 値、境界 case の `≠ 0` / `= 0`) を**予測**する箇所は、plan / inventory に書き出す前に **実コード verbatim 確認** (Mathlib lemma + Common2026 file の該当行を Read で照合) を必ず行う。
@@ -179,6 +181,18 @@ If the session is ad-hoc — opened with no prior handoff context, scope unrelat
 - **tier 4 legacy** (`@audit:suspect/staged`、散文 `🟢ʰ`): tier 5 ほど urgent ではない。当該 file を current task で touch するなら incidental に sorry-based に migrate、touch しないなら触らない。
 
 タスクリストや snapshot 文書に分散保管しない (code が SoT)。語彙詳細 → `docs/audit/audit-tags.md`。
+
+### sorry を書けない箇所 (def / Prop RHS / inductive constructor) での対処順序
+
+`sorry` は proof body にしか書けない。`def` / `abbrev` / `Prop := ...` の RHS / `inductive` constructor 等が詰まったときの対処は以下の順:
+
+1. **第一選択 — 定義書換で `sorry` を proof body に逃がす** (→ 「Mathlib-shape-driven Definitions」)。
+   textbook の formulation を直接 def 化せず、結論型を Mathlib 結論形に合わせて再定義 → 性質を別 `theorem` で述べる → body `sorry` + `@residual(<class>:<slug>)` に持ち込む。これが基本ルート。例: `IsXxxHypothesis : Prop` を補題 `xxxInequality : ... := by sorry` に分割し、原 def は補題呼び出しに置き換える / shared sorry 補題化 (audit-tags.md「共有 Mathlib 壁」)。
+
+2. **第二選択 (暫定) — `@audit:defect(<kind>)` でマークして tier 5 のまま残す**。
+   第一選択が当該セッションで無理 (循環構造解消に上流再設計必要 / signature 改変の影響範囲が大 / vacuously-true wrapper として acknowledged 等) な場合は signature を defect 形のまま残し、docstring に `@audit:defect(<kind>)` (`circular` / `prop-true` / `launder` / `degenerate` / `false-statement` / `false-hypothesis` から選択、語彙 → `docs/audit/audit-tags.md`「Defect kind 語彙」) + `@audit:retract-candidate(<reason>)` または `@audit:closed-by-successor(<plan-slug>)` を併記する。これは **後の (1) を待つ暫定マーカー** であり stable な resting state ではない (tier 5)。残す場合は (a) なぜ (1) が無理だったか 1 行散文、(b) 後続 plan slug、の 2 点を docstring に書く。
+
+**禁止** (= 上記 tells 再掲、マーカー無しでの導入は tier 5 silent defect): `Prop := True` placeholder / 仮説型≡結論の `:= h` 循環 / load-bearing `*Hypothesis` predicate に核を bundle / 退化定義悪用。
 
 **判定の一言**: 「その仮説は前提条件 (regularity) か、それとも証明の核心 (load-bearing) か」。前者 OK、後者は **書いてはいけない** — sorry に置き換える。詳細 → `docs/textbook-roadmap.md`「完成判定 / 検証強度の基準」「Mathlib 壁の 4 分類」。
 
