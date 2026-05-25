@@ -154,10 +154,13 @@ theorem foo : ... := by
 | `circular-passthrough` | 仮説型 ≡ 結論型の循環で、honest な代替経路が他に存在 | (新規 registration、現在使用 0 件) |
 | `load-bearing-predicate` | predicate を hypothesis 形に取る load-bearing wrapper。hypothesis-form consumer 全削除済 | WynerZivBinningCovering / WynerZivPackingBody / HuffmanOptimality |
 | `load-bearing-predicate-empty-consumers` | `load-bearing-predicate` の中でも consumer **0 件** であるもの (純粋削除可能) | (runbook 提案、現在使用 0 件) |
-| `load-bearing-predicate-extract-only` | `load-bearing-predicate` の中でも `.field` 抽出 / bridge 経由の extract-only consumer (pass-through、load-bearing claim を inject しない) が残存しているもの | (runbook 提案、現在使用 0 件) |
+| `load-bearing-predicate-extract-only` | `load-bearing-predicate` の中でも `.field` 抽出 / bridge 経由の extract-only consumer (pass-through、load-bearing claim を inject しない) が残存しているもの | Round 3 Wave 3-D Audit-A で initial use 達成 (ChernoffPerTiltDischarge:252)、複数 family 横断 use の集計は今後継続 |
 | `single-line-wrapper` | 1-line `def` で他 declaration を wrapping するだけの shim | WynerZivPackingBody |
 | `name-laundering-alias` | `def X := Y` 形の literal alias で、`X` という名前にすることで discharge を偽装している (`launder` defect の def 版) | LZ78 `IsSMBToLZ78ConverseChainBridge := IsLZ78ConverseChainHyp` (`LZ78SMBSandwich.lean:307/319`) |
 | `false-hypothesis` | `def` / `Prop` 自身が機械検証可能に FALSE (CLAUDE.md「sorry を書けない箇所での対処順序」第二選択)。`@audit:closed-by-successor` と併用して後継 plan を指す | LZ78 `def IsLZ78ZivCombinatorialCoreOverhead` (`LZ78ZivTreeNode.lean:403`、`not_isLZ78ZivCombinatorialCoreOverhead` で refutation 済) |
+| `false-replaced-by-eps-relaxed` | false predicate を ε-relaxed 形に置き換えた場合の旧 declaration retract マーカー | ChernoffPerTiltDischarge:147 + ChernoffPerTiltSanov:148 (Round 2 commit `d83e45b`、Round 3 で usage 検出) |
+| `circular-between-false-predicates` | 2 つ以上の false predicate の循環的 self-reference を解消する一方向だけを残し他方を retract | ChernoffPerTiltSanov:181 (Round 2 commit `d83e45b`) |
+| `closure-plan-completed` | load-bearing wall を closure plan で acknowledged 済として bookkeeping (active consumer あり、削除候補ではない例外的用法)。tier 4 retract-candidate の semantic 拡張、後発の同パターン (LZ78 / Huffman / EPI 等) でも適用可 | BMClosure.lean L379 + L514 の active consumer 例 (escalate #2 採用判断、Round 3) |
 | `superseded-by-memoryless-form` | MVP/pre-discharge 形が後続 memoryless 形に置換済 | ChannelCodingFeedback (3 件) |
 | `superseded-by-full-discharge` | 完全 discharge 形が別 file で publish 済 | ChannelCodingShannonTheoremFull |
 
@@ -242,6 +245,39 @@ rg "@audit:superseded-by\(" Common2026/
 # 削除候補
 rg "@audit:retract-candidate\(" Common2026/
 ```
+
+### declaration-direct タグ検索の canonical pattern (Pattern D 発展形)
+
+`@audit:suspect` / `@audit:staged` / `@audit:closed-by-successor` を **bareword** で
+grep すると docstring sign-off note の **文字列リテラル参照** (例: "...の旧
+`@audit:suspect` 解消...") を false positive ヒットする。declaration-direct タグの
+件数集計には **必ずパーレン付き pattern** を使う:
+
+```bash
+# canonical per-family 件数集計 (推奨 one-liner)
+rg -c '@audit:suspect\(|@audit:staged\(|@audit:closed-by-successor\(' Common2026/<family pattern>
+
+# 個別タグの canonical pattern
+rg '@audit:suspect\('             Common2026/
+rg '@audit:staged\('              Common2026/
+rg '@audit:closed-by-successor\(' Common2026/
+rg '@audit:retract-candidate\('   Common2026/
+```
+
+**Pattern D 発展形の実例 4 件** (Round 3 Wave 3-A、各 planner が独立に発見):
+
+| family / file | bareword grep ヒット | パーレン付き (実 declaration) |
+|---|---:|---:|
+| BMFunctional | 4 | 0 |
+| WynerZiv | 2 | 0 |
+| EPIL3Integration | 2 | 0 |
+| InfinitePiTiltedChangeOfMeasure | 1 | 0 |
+
+**影響範囲**: orchestrator brief の per-family 計数 drift の根本原因。
+planner / inventory に渡す前段の per-family 件数集計で必ず canonical pattern
+(パーレン付き) を使う。Round 3 では全 4 planner が verbatim 確認で false positive
+を独立に検出したため誤伝播は防がれたが、計数のみで判断する設計だと sweep
+スコープが drift する。
 
 ## 運用ルール
 
