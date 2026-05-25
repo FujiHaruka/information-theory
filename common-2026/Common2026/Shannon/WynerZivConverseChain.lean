@@ -146,19 +146,20 @@ type-checking by consuming three load-bearing predicates
 (`WZPerLetterBound` / `CsiszarSumIdentity` / `WZJensenAntitone`) which are
 hypothesis-form bundlings of the deep information-theoretic content (per-letter
 feasibility, Csiszár's n-letter chain rule on conditional MI, R_WZ convexity).
-The signature is preserved; only the body is retreated to `sorry` so that
-closure responsibility lies on the discharge plan rather than on inert
-predicate consumers.
+The body was first retreated to `sorry` so that closure responsibility lies
+on the discharge plan rather than on inert predicate consumers.
+
+Phase 2.x.1 (predicate-removal sweep): the three load-bearing predicate
+hypotheses (`h_perLetter` / `h_csiszar` / `h_jensen_antitone`) plus the
+explicit params they uniquely fed (`wzPerLetterObjective`, `D_arr`) have now
+also been removed from the signature.  The signature is honest tier 2:
+`sorry` body + `@residual(plan:wyner-ziv-discharge-moonshot-plan)`, with no
+load-bearing predicate residue on the input side.
 
 `@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_converse_chain
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {n : ℕ} (hn : 0 < n)
-    (M : ℕ)
-    (D : ℝ) (D_arr : Fin n → ℝ)
-    (wzPerLetterObjective : Fin n → ℝ)
-    (h_perLetter : WZPerLetterBound U P_XY d D_arr wzPerLetterObjective)
-    (h_csiszar : CsiszarSumIdentity wzPerLetterObjective M)
-    (h_jensen_antitone : WZJensenAntitone U P_XY d D D_arr) :
+    (M : ℕ) (D : ℝ) :
     wynerZivRatePmf U P_XY d D ≤ Real.log (M : ℝ) / (n : ℝ) := by
   sorry
 
@@ -173,6 +174,13 @@ as well to avoid `:= ... wyner_ziv_converse_chain ...` propagating into a
 type-check error via stale `.field` access. Closure responsibility lives on
 the same plan slug as the upstream chain assembly.
 
+Phase 2.x.1 (predicate-removal sweep): in lockstep with
+`wyner_ziv_converse_chain`, the three load-bearing predicate hypotheses
+(`h_perLetter` / `h_csiszar` / `h_jensen_antitone`) and the explicit params
+they fed (`wzPerLetterObjective`, `D_arr`) are now removed from the
+signature.  Block-code precondition data (`μ`, `dN`, `c`, `_h_dist`) is
+retained as regularity-style context.
+
 `@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_converse_chain_block
     [MeasurableSpace γ]
@@ -180,12 +188,7 @@ theorem wyner_ziv_converse_chain_block
     {M n : ℕ} (hn : 0 < n)
     (μ : Measure (α × β)) [IsProbabilityMeasure μ]
     (dN : DistortionFn α γ) (c : WynerZivCode M n α β γ)
-    (_h_dist : c.expectedBlockDistortion μ dN ≤ D)
-    (D_arr : Fin n → ℝ)
-    (wzPerLetterObjective : Fin n → ℝ)
-    (h_perLetter : WZPerLetterBound U P_XY d D_arr wzPerLetterObjective)
-    (h_csiszar : CsiszarSumIdentity wzPerLetterObjective M)
-    (h_jensen_antitone : WZJensenAntitone U P_XY d D D_arr) :
+    (_h_dist : c.expectedBlockDistortion μ dN ≤ D) :
     wynerZivRatePmf U P_XY d D ≤ Real.log (M : ℝ) / (n : ℝ) := by
   sorry
 
@@ -465,23 +468,26 @@ plugs into `wyner_ziv_converse_chain`.
 Phase 1.5 (sorry-migration): body would call into the upstream
 `wyner_ziv_converse_chain` (now `sorry`); retreated to `sorry` so the closure
 responsibility lives on the same plan slug. The 5-way decomposed hypothesis
-shape (per-letter, chain telescope, Fano, Jensen, antitonicity) is preserved
-as the signature for the eventual discharge.
+shape (per-letter, chain telescope, Fano, Jensen, antitonicity) was previously
+preserved as the signature for the eventual discharge.
+
+Phase 2.x.1 (predicate-removal sweep): the full 5-ingredient signature
+(`h_perLetter`, `h_perLetter_le_condMI`, `h_chain`, `h_fano`,
+`h_jensen_antitone`) is itself a load-bearing decomposition of the deep
+information-theoretic content (each ingredient is a non-trivial sum-and-log
+inequality), so all five hypotheses plus the explicit params they uniquely
+fed (`wzPerLetterObjective`, `D_arr`, `condMI`, `block`) are now removed
+from the signature.  Tier 2 honest: `sorry` body + the same `@residual` tag
+on the discharge plan.  The ingredient `h_chain` may turn out to be a
+genuinely derivable Mathlib bridge (Csiszár sum identity / chain rule for
+conditional MI) — that re-evaluation is the auditor's responsibility (Plan
+未決事項 1).
 
 `@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_converse_chain_composite
     (U : Type*) [Fintype U] [MeasurableSpace U]
     (P_XY : α' × β' → ℝ) (d : α' → γ' → ℝ) {n : ℕ} (hn : 0 < n)
-    (M : ℕ)
-    (D : ℝ) (D_arr : Fin n → ℝ)
-    (wzPerLetterObjective : Fin n → ℝ)
-    (h_perLetter : WZPerLetterBound U P_XY d D_arr wzPerLetterObjective)
-    (condMI : Fin n → ℝ) (block : ℝ)
-    (h_perLetter_le_condMI :
-      ∀ i, wzPerLetterObjective i ≤ condMI i)
-    (h_chain : ∑ i : Fin n, condMI i ≤ block)
-    (h_fano : block ≤ Real.log (M : ℝ))
-    (h_jensen_antitone : WZJensenAntitone U P_XY d D D_arr) :
+    (M : ℕ) (D : ℝ) :
     wynerZivRatePmf U P_XY d D ≤ Real.log (M : ℝ) / (n : ℝ) := by
   sorry
 
@@ -499,6 +505,12 @@ Phase 1.5 (sorry-migration): pure re-export of
 `wyner_ziv_converse_chain_block`, which is now `sorry`; retreated to `sorry`
 here as well.
 
+Phase 2.x.1 (predicate-removal sweep): same hypothesis pruning as
+`wyner_ziv_converse_chain_block` — the three load-bearing predicate
+hypotheses and the explicit params they uniquely fed are removed from the
+signature.  Block-code precondition data (`μ`, `dN`, `c`, `h_dist`) stays
+as regularity-style context.
+
 `@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_converse_n_letter_chain
     [MeasurableSpace γ]
@@ -506,12 +518,7 @@ theorem wyner_ziv_converse_n_letter_chain
     {M n : ℕ} (hn : 0 < n)
     (μ : Measure (α × β)) [IsProbabilityMeasure μ]
     (dN : DistortionFn α γ) (c : WynerZivCode M n α β γ)
-    (h_dist : c.expectedBlockDistortion μ dN ≤ D)
-    (D_arr : Fin n → ℝ)
-    (wzPerLetterObjective : Fin n → ℝ)
-    (h_perLetter : WZPerLetterBound U P_XY d D_arr wzPerLetterObjective)
-    (h_csiszar : CsiszarSumIdentity wzPerLetterObjective M)
-    (h_jensen_antitone : WZJensenAntitone U P_XY d D D_arr) :
+    (h_dist : c.expectedBlockDistortion μ dN ≤ D) :
     wynerZivRatePmf U P_XY d D ≤ Real.log (M : ℝ) / (n : ℝ) := by
   sorry
 
@@ -553,18 +560,20 @@ quantified bundling of the conclusion at every `(n, M, c)`. Body retreated
 to `sorry` so closure responsibility lives on the discharge plan rather than
 on the load-bearing hypothesis.
 
+Phase 2.x.1 (predicate-removal sweep): the load-bearing
+`h_chain_nletter` hypothesis is now also removed from the signature.
+`h_R_lt : R < wynerZivRatePmf U P_XY d D` is retained as a precondition
+(it appears in the impossibility-form conclusion as the strict gap that
+the conclusion contradicts, not a bundling of the conclusion itself).
+Tier 2 honest: `sorry` body + the same `@residual` tag.
+
 `@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_converse_chain_existence
     [MeasurableSpace γ]
     (μ : Measure (α × β)) [IsProbabilityMeasure μ]
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
     (h_R_lt : R < wynerZivRatePmf U P_XY d D)
-    (dN : DistortionFn α γ)
-    (h_chain_nletter :
-      ∀ n : ℕ, 0 < n → ∀ M : ℕ, ∀ c : WynerZivCode M n α β γ,
-        (M : ℝ) ≤ Real.exp ((n : ℝ) * R)
-          → c.expectedBlockDistortion μ dN ≤ D
-          → wynerZivRatePmf U P_XY d D ≤ R) :
+    (dN : DistortionFn α γ) :
     ¬ ∃ N : ℕ, ∀ n ≥ N,
         ∃ (M : ℕ) (c : WynerZivCode M n α β γ),
           (M : ℝ) ≤ Real.exp ((n : ℝ) * R)
