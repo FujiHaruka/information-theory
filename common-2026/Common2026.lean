@@ -151,6 +151,7 @@ import Common2026.Shannon.WynerZivBinningBody
 import Common2026.Shannon.BroadcastChannelSuperposition
 import Common2026.Shannon.LZ78GreedyParsing
 import Common2026.Shannon.FisherInfoV2DeBruijn
+import Common2026.Shannon.HeatFlowPath
 import Common2026.Shannon.MACBodyDischarge
 import Common2026.Shannon.AWGNF2F3Discharge
 -- Wave5 gap-close
