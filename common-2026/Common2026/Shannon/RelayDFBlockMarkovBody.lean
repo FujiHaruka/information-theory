@@ -307,7 +307,10 @@ yielding `RelayDFRateWitness R` (the **rate-only** witness — *not* the
 error-carrying achievability, since the constant flattening has no error
 control).
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+The wrapper itself is purely constructive (`obtain` + `refine`); only the
+load-bearing-ness of the consumed predicate `IsBlockMarkovEncoderHyp`
+remains tracked separately (Phase 2.6 retract-candidate, parent plan
+`relay-inner-bound-moonshot-plan`). No `sorry` is introduced here. -/
 theorem relayDFRateWitness_of_encoder_hyp
     [Nonempty α] [Nonempty α₁]
     {R : ℝ}
@@ -341,7 +344,8 @@ witness — the error-carrying DF achievability needs the genuine
 random-coding discharge (`RelayDFAchievable`), which is *not* established
 here.
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+Constructive consumer of `IsBlockMarkovEncoderHyp` (1-line forward via
+`relayDFRateWitness_of_encoder_hyp`); no `sorry` is introduced. -/
 theorem relayDFRateWitness_of_sub_hyps
     [Nonempty α] [Nonempty α₁]
     {R Imrh Iry Ibroad : ℝ}
@@ -376,7 +380,7 @@ would be the rate-only → achievability leap (a degenerate constant code
 satisfies the rate witness but has error `1`). The vanishing-error step
 remains the open residual discharged in the companion seeds.
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+Pure re-publish wrapper, constructive; no `sorry` is introduced. -/
 theorem relayDFRateWitness_of_sub_hyps'
     [Nonempty α] [Nonempty α₁]
     {R Imrh Iry Ibroad : ℝ}
@@ -395,7 +399,8 @@ Variant taking the DF rate-region membership `InRelayDFRate` bundled
 (splitting it back into the two scalar sub-hyps internally) together with
 the encoder sub-hyp; **constructs the rate witness**.
 
-`@audit:suspect(relay-inner-bound-moonshot-plan)` -/
+Constructive forwarding through `relayDFRateWitness_of_sub_hyps`; no
+`sorry` is introduced. -/
 theorem relay_df_inner_bound_block_markov_discharged_region
     [Nonempty α] [Nonempty α₁]
     (R Imrh Iry Ibroad : ℝ)
