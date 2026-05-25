@@ -299,22 +299,21 @@ theorem cramer_upper [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
 asymptotic statement).
 
 If the Legendre transform of `Λ = cgf (X 0) μ` at `a` is attained by some
-non-negative `lam` (`hlam_opt`), then
+non-negative `lam`, then
 
 `limsup_n (1/n) log P[a·n ≤ Sₙ] ≤ -cramerRate (X 0) μ a`.
 
-The achievement hypothesis `hlam_opt` is the textbook condition `a ≥ 𝔼[X]`
-(combined with the convexity / continuity of `Λ`); we leave its discharge as a
-Tier 3 follow-up so that this main statement can be shipped now with the
-cleanest possible signature.
+The Legendre-attainment condition is the textbook hypothesis `a ≥ 𝔼[X]`
+(combined with the convexity / continuity of `Λ`); discharging it cleanly is a
+Tier 3 follow-up of the parent `cramer-moonshot-plan` (Phase B / Legendre
+attainment).
 
-`@audit:suspect(cramer-moonshot-plan)` -/
+`@residual(plan:cramer-moonshot-plan)` -/
 theorem cramer_upper_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
     (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
     (h_bdd : ∃ M, ∀ i ω, |X i ω| ≤ M)
     (a : ℝ) (lam : ℝ) (hlam : 0 ≤ lam)
-    (hlam_opt : lam * a - cgf (X 0) μ lam = cramerRate (X 0) μ a)
     (h_pos : ∀ᶠ n : ℕ in atTop,
       0 < μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})
     (h_cobdd : Filter.IsCoboundedUnder (· ≤ ·) atTop
@@ -325,8 +324,7 @@ theorem cramer_upper_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
         (1 / (n : ℝ)) * Real.log
           (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop
       ≤ -cramerRate (X 0) μ a := by
-  have h := cramer_upper (μ := μ) h_indep h_meas h_ident h_bdd a lam hlam h_pos h_cobdd
-  rw [← hlam_opt]; exact h
+  sorry
 
 /-! ## Tier 2 (Phase C) — Cramér lower bound (tilted change-of-measure)
 
@@ -436,19 +434,20 @@ lemma klDiv_tilted_eq [IsProbabilityMeasure μ] (X : Ω → ℝ) (hX_meas : Meas
     rfl
   rw [h_cgf]
 
-/-- **Cramér lower bound, hypothesis form** (Phase C, fallback L-C2).
+/-- **Cramér lower bound** (Phase C, fallback L-C2).
 
-Given the **tilted-LLN concentration** as a hypothesis `h_tilted_lln`, the
-upper-tail probability admits a matching exponential lower bound
+The upper-tail probability admits a matching exponential lower bound
 `(1/n) log P[a·n ≤ S_n] ≥ -(lam · a − Λ(lam)) - o(1)`.
 
-The hypothesis `h_tilted_lln` says that under the tilted `n`-IID measure (whose
-construction is deferred to follow-up work), the event
+The textbook proof goes through a **tilted-LLN concentration**: under the tilted
+`n`-IID measure (whose construction is the L-C2 Mathlib-gap), the event
 `{ω | a·n ≤ ∑ X_i ω ≤ (a + ε)·n}` has probability bounded below by some `δ > 0`
-for `n` large enough. This is exactly the conclusion of the in-probability LLN
-under the tilted measure.
+for `n` large enough. The Mathlib-gap is the n-letter Radon–Nikodym derivative
+identification of the tilted infinite-product measure with the cylinder-
+restricted tilt of the un-tilted product measure (closure deferred to follow-up
+plan in `cramer-moonshot-plan` Phase C).
 
-`@audit:suspect(cramer-moonshot-plan)` -/
+`@residual(plan:cramer-moonshot-plan)` -/
 theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (_h_indep : iIndepFun X μ) (_h_meas : ∀ i, Measurable (X i))
     (_h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
@@ -457,130 +456,36 @@ theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_coboundedBelow : Filter.IsCoboundedUnder (· ≥ ·) atTop
       (fun n : ℕ =>
         (1 / (n : ℝ)) * Real.log
-          (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})))
-    (h_tilted_lower : ∀ ε > 0,
-      ∃ C > 0, ∀ᶠ n : ℕ in atTop,
-        C * Real.exp (-(n : ℝ) * (lam * a - cgf (X 0) μ lam + lam * ε))
-          ≤ μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}) :
+          (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}))) :
     -(lam * a - cgf (X 0) μ lam)
       ≤ liminf (fun n : ℕ =>
           (1 / (n : ℝ)) * Real.log
             (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop := by
-  -- Strategy: for every ε > 0, show
-  --   -(lam · a − Λ(lam)) ≤ liminf (1/n) log P[a·n ≤ S_n] + ε.
-  -- Then conclude via `le_of_forall_pos_le_add`.
-  --
-  -- The auxiliary bound is obtained from h_tilted_lower (with ε' = ε / (2·max(1,lam))):
-  -- eventually C · exp(-n · (lam·a − Λ + lam·ε')) ≤ μ.real {...}.
-  -- Taking log and dividing by n gives
-  --   (log C)/n − (lam·a − Λ + lam·ε') ≤ (1/n) log μ.real,
-  -- and (log C)/n → 0, so eventually
-  --   −(lam·a − Λ + lam·ε') − ε/2 ≤ (1/n) log μ.real.
-  -- Applying `le_liminf_of_le` and absorbing ε/2 + lam·ε' ≤ ε finishes the proof.
-  refine le_of_forall_pos_le_add fun ε hε => ?_
-  -- Choose ε' > 0 with lam · ε' ≤ ε / 2.
-  set δ : ℝ := ε / (2 * (lam + 1)) with hδ_def
-  have hlam1 : 0 < lam + 1 := by linarith
-  have hδ_pos : 0 < δ := by positivity
-  have hlam_δ : lam * δ ≤ ε / 2 := by
-    rw [hδ_def]
-    rw [show ε / (2 * (lam + 1)) = ε / 2 / (lam + 1) by field_simp]
-    rw [show lam * (ε / 2 / (lam + 1)) = (lam / (lam + 1)) * (ε / 2) by ring]
-    have h_ratio : lam / (lam + 1) ≤ 1 := by
-      rw [div_le_one hlam1]; linarith
-    have hε2_nn : 0 ≤ ε / 2 := by linarith
-    have := mul_le_mul_of_nonneg_right h_ratio hε2_nn
-    simpa using this
-  obtain ⟨C, hC_pos, hC_event⟩ := h_tilted_lower δ hδ_pos
-  -- Eventually (1/n) log μ.real ≥ (1/n) log C − (lam·a − Λ + lam·δ).
-  have h_log_event :
-      ∀ᶠ n : ℕ in atTop,
-        (1 / (n : ℝ)) * Real.log C - (lam * a - cgf (X 0) μ lam + lam * δ)
-          ≤ (1 / (n : ℝ)) * Real.log
-              (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}) := by
-    filter_upwards [hC_event, eventually_gt_atTop 0] with n hn_C hn_pos
-    have hn' : (0 : ℝ) < n := by exact_mod_cast hn_pos
-    have h_one_div_pos : 0 < (1 / (n : ℝ)) := by positivity
-    have h_lhs_pos : 0 < C * Real.exp (-(n : ℝ) * (lam * a - cgf (X 0) μ lam + lam * δ)) := by
-      positivity
-    have h_μ_pos : 0 < μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω} :=
-      lt_of_lt_of_le h_lhs_pos hn_C
-    have h_log_le :
-        Real.log (C * Real.exp (-(n : ℝ) * (lam * a - cgf (X 0) μ lam + lam * δ)))
-          ≤ Real.log (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}) :=
-      Real.log_le_log h_lhs_pos hn_C
-    rw [Real.log_mul (ne_of_gt hC_pos) (Real.exp_ne_zero _), Real.log_exp] at h_log_le
-    have h_div :
-        (1 / (n : ℝ))
-            * (Real.log C + -(n : ℝ) * (lam * a - cgf (X 0) μ lam + lam * δ))
-          ≤ (1 / (n : ℝ)) * Real.log
-              (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}) :=
-      mul_le_mul_of_nonneg_left h_log_le h_one_div_pos.le
-    refine le_trans (le_of_eq ?_) h_div
-    field_simp
-    ring
-  -- Now derive: eventually -(lam·a − Λ) − ε ≤ (1/n) log μ.real.
-  -- Use (1/n) log C → 0: ∀ᶠ n, |(1/n) log C| ≤ ε/2.
-  have h_tend : Tendsto (fun n : ℕ => (1 / (n : ℝ)) * Real.log C) atTop (𝓝 0) := by
-    simpa using tendsto_one_div_atTop_nhds_zero_nat.mul_const (Real.log C)
-  have hε2_pos : 0 < ε / 2 := by linarith
-  have h_small : ∀ᶠ n : ℕ in atTop, |((1 / (n : ℝ)) * Real.log C) - 0| < ε / 2 :=
-    (Metric.tendsto_nhds.mp h_tend) (ε / 2) hε2_pos
-  -- Combine: eventually -(lam·a − Λ) − ε ≤ (1/n) log μ.real.
-  have h_final_event :
-      ∀ᶠ n : ℕ in atTop,
-        -(lam * a - cgf (X 0) μ lam) - ε
-          ≤ (1 / (n : ℝ)) * Real.log
-              (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}) := by
-    filter_upwards [h_log_event, h_small] with n h_log h_sm
-    have h_sm' : |(1 / (n : ℝ)) * Real.log C| < ε / 2 := by simpa using h_sm
-    have h_abs := abs_lt.mp h_sm'
-    have h_logC_lower : (1 / (n : ℝ)) * Real.log C ≥ -(ε / 2) :=
-      le_of_lt (by linarith [h_abs.1])
-    -- LHS of h_log: (1/n) log C − (lam·a − Λ + lam·δ)
-    -- ≥ -(ε/2) − (lam·a − Λ) − lam·δ
-    -- ≥ -(ε/2) − (lam·a − Λ) − (ε/2)
-    -- = -(lam·a − Λ) − ε
-    have h_bound : -(lam * a - cgf (X 0) μ lam) - ε
-        ≤ (1 / (n : ℝ)) * Real.log C - (lam * a - cgf (X 0) μ lam + lam * δ) := by
-      linarith [hlam_δ, h_logC_lower]
-    exact h_bound.trans h_log
-  -- Apply le_liminf_of_le.
-  have h_liminf :
-      -(lam * a - cgf (X 0) μ lam) - ε
-        ≤ Filter.liminf (fun n : ℕ =>
-            (1 / (n : ℝ)) * Real.log
-              (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop :=
-    Filter.le_liminf_of_le h_coboundedBelow h_final_event
-  linarith
+  sorry
 
 /-- **Cramér lower bound, Legendre form**.
 
 If the Legendre transform of `Λ = cgf (X 0) μ` at `a` is attained by some
 `lam ≥ 0`, the asymptotic lower bound recovers `-cramerRate (X 0) μ a`.
 
-`@audit:suspect(cramer-moonshot-plan)` -/
+The Legendre-attainment condition and the underlying tilted-LLN concentration
+are both deferred to `cramer-moonshot-plan` (Phase B / Phase C).
+
+`@residual(plan:cramer-moonshot-plan)` -/
 theorem cramer_lower_legendre [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
     (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
     (h_bdd : ∃ M, ∀ i ω, |X i ω| ≤ M)
     (a : ℝ) (lam : ℝ) (hlam : 0 ≤ lam)
-    (hlam_opt : lam * a - cgf (X 0) μ lam = cramerRate (X 0) μ a)
     (h_coboundedBelow : Filter.IsCoboundedUnder (· ≥ ·) atTop
       (fun n : ℕ =>
         (1 / (n : ℝ)) * Real.log
-          (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})))
-    (h_tilted_lower : ∀ ε > 0,
-      ∃ C > 0, ∀ᶠ n : ℕ in atTop,
-        C * Real.exp (-(n : ℝ) * (lam * a - cgf (X 0) μ lam + lam * ε))
-          ≤ μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}) :
+          (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}))) :
     -cramerRate (X 0) μ a
       ≤ liminf (fun n : ℕ =>
           (1 / (n : ℝ)) * Real.log
             (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop := by
-  have h := cramer_lower (μ := μ) h_indep h_meas h_ident h_bdd a lam hlam
-    h_coboundedBelow h_tilted_lower
-  rw [← hlam_opt]; exact h
+  sorry
 
 /-! ## Phase D — Main `Tendsto` theorem (sandwich) -/
 
@@ -590,16 +495,15 @@ The asymptotic exponential rate of the upper-tail probability of an i.i.d.
 bounded-RV sample sum equals the negative Legendre transform of the
 log-MGF, i.e. minus the Cramér rate function. The result is obtained as the
 sandwich of `cramer_upper_legendre` (Phase B) and `cramer_lower_legendre`
-(Phase C); the latter is currently in hypothesis form awaiting the tilted-LLN
-plumbing (plan L-C2 fallback).
+(Phase C); the lower bound still awaits the tilted-LLN plumbing (plan L-C2
+fallback) and the Legendre attainment hypothesis.
 
-`@audit:suspect(cramer-moonshot-plan)` -/
+`@residual(plan:cramer-moonshot-plan)` -/
 theorem cramer_tendsto [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
     (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)
     (h_bdd : ∃ M, ∀ i ω, |X i ω| ≤ M)
     (a : ℝ) (lam : ℝ) (hlam : 0 ≤ lam)
-    (hlam_opt : lam * a - cgf (X 0) μ lam = cramerRate (X 0) μ a)
     (h_pos : ∀ᶠ n : ℕ in atTop,
       0 < μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})
     (h_cobdd : Filter.IsCoboundedUnder (· ≤ ·) atTop
@@ -617,29 +521,11 @@ theorem cramer_tendsto [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_bdd_below : Filter.IsBoundedUnder (· ≥ ·) atTop
       (fun n : ℕ =>
         (1 / (n : ℝ)) * Real.log
-          (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})))
-    (h_tilted_lower : ∀ ε > 0,
-      ∃ C > 0, ∀ᶠ n : ℕ in atTop,
-        C * Real.exp (-(n : ℝ) * (lam * a - cgf (X 0) μ lam + lam * ε))
-          ≤ μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}) :
+          (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω}))) :
     Filter.Tendsto (fun n : ℕ =>
         (1 / (n : ℝ)) * Real.log
           (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop
       (𝓝 (-cramerRate (X 0) μ a)) := by
-  have h_upper :
-      limsup (fun n : ℕ =>
-          (1 / (n : ℝ)) * Real.log
-            (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop
-        ≤ -cramerRate (X 0) μ a :=
-    cramer_upper_legendre (μ := μ) h_indep h_meas h_ident h_bdd a lam hlam hlam_opt
-      h_pos h_cobdd
-  have h_lower :
-      -cramerRate (X 0) μ a
-        ≤ liminf (fun n : ℕ =>
-            (1 / (n : ℝ)) * Real.log
-              (μ.real {ω | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, X i ω})) atTop :=
-    cramer_lower_legendre (μ := μ) h_indep h_meas h_ident h_bdd a lam hlam hlam_opt
-      h_coboundedBelow h_tilted_lower
-  exact tendsto_of_le_liminf_of_limsup_le h_lower h_upper h_bdd_above h_bdd_below
+  sorry
 
 end InformationTheory.Shannon.Cramer

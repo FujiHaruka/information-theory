@@ -1,5 +1,17 @@
 # Cramér / Chernoff CLT-boundary closure ムーンショット計画 🌙
 
+> **sorry-based 移行完了 (2026-05-25、partial)** — `docs/shannon/cramer-sorry-migration-plan.md`
+> に従い、本 plan に属する 1 件の `@audit:suspect(cramer-chernoff-clt-closure-moonshot-plan)`
+> を `sorry + @residual(plan:cramer-chernoff-clt-closure-moonshot-plan)` に書換: 対象は
+> `Common2026/Shannon/CramerCLTClosure.cramer_lower_at` (load-bearing `h_slice` 仮説を削除、
+> body は `sorry` 1 行)。**unconditional headline `cramer_lower_at_cgfDeriv_unconditional`**
+> (CramerCLTClosure.lean:523, suspect なし) は signature を維持しつつ body が
+> `cramer_lower_at` を呼ぶ 1 行に縮退 — constructive 経路 (boundary CLT + Phase 5 + tiltedHalfLine
+> change-of-measure) は **transitive `sorry` を経由する状態に降格** (上流 `cramer_lower_at` の
+> `sorry` を継承)。signature 上は依然 `hVar + h_coboundedBelow` 以外の residual largeness 仮定なし。
+> `hVar` は dead-code 由来の unused 警告状態 (旧 body の `tiltedHalfLine_chernoff_lower_at_boundary`
+> 経由で消費されていたが、新 body では `cramer_lower_at` が `h_slice` を取らないため。判断ログ参照)。
+
 > 実態整合 (2026-05-20): **DONE-HONEST-HYPS — full closure 達成 (計画完遂)**。新 file
 > `Common2026/Shannon/CramerCLTClosure.lean` (0 sorry) に全 Phase publish 済:
 > Phase 1 `gaussianReal_Ici_eq_half` (:45)、Phase 2-3 `tendsto_measure_Ici_of_tendsto_gaussian` (:90)

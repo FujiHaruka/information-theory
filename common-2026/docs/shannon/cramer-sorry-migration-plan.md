@@ -532,6 +532,46 @@ docstring + 直後 `theorem` signature + body 1-3 行を実コードから読込
 
 書く頻度: 方針変更 / 撤退ライン発動 / 当初仮定の修正があったとき。append-only。
 
-<!-- implementer / auditor が以下に append:
-1. **YYYY-MM-DD <要点>**: <変更理由 + 撤退ラインへの紐付け>。
+1. **2026-05-25 Phase 1 skip 確定**: 在庫 13 件は全て pattern P (load-bearing
+   hypothesis / predicate consumer)。V (variational pass-through) / C (constructive
+   recovery) 該当 declaration ゼロのため Phase 1 は空処理で記録のみ。Phase 2 で 13 件
+   全件を sorry 化 (デフォルト sweep、user 承認済)。
+
+2. **2026-05-25 Phase 2.5 `IsCramerChernoffNLetterRNUnified` 保留 (L-MIG-2 対応)**:
+   sibling projection `chernoffPerTilt` (本 sweep 対象外) は依然 `h : IsCramerChernoffNLetterRNUnified`
+   を hypothesis として取り `h.chernoff` を返す。Cramér side だけで structure 自身に
+   `@audit:retract-candidate` 付与すると Chernoff family sweep 時の判定と衝突する
+   可能性があるため、本 plan では structure 自身は touch せず、3 predicate
+   (`IsMeasureInfinitePiTiltedEq` / `IsCramerNLetterRNCylinder` / `IsCaratheodoryExtensionHyp`)
+   のみに retract-candidate 付与。
+
+3. **2026-05-25 InfinitePiTiltedChangeOfMeasure.lean drift incidental fix**: Phase 2.2.5
+   で `cramer_lower_phaseC_partial_discharge` の signature 改変により、touch 対象外の
+   `Common2026/Shannon/InfinitePiTiltedChangeOfMeasure.lean:380 cramer_lower_phaseC_residual_discharge`
+   が caller drift で type-check error。Plan は当該 file の再 verify を予期していたが
+   修正方法は明示なし。実施: 該当呼び出しから
+   `(isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge ...)` 引数を削除する 1 行修正。
+   `h_res` が unused に降格 (unused-variable warning 1 件)。本 declaration は
+   `@audit:closed-by-successor` 付き (本 sweep 対象外) のため tier 4 legacy 状態のまま
+   触らない方針を維持。
+
+4. **2026-05-25 Phase 2.4.1 L-MIG-3 デフォルト sweep 適用**: orchestrator が user 承認済の
+   「13 件全件 sweep」を確定。`cramer_lower_at` を sorry 化したことで上流の
+   `cramer_lower_at_cgfDeriv_unconditional` (本 sweep の touch 対象外) も signature drift
+   (Function expected at ...)。constructive 経路を保ったまま 0 errors を実現するため、
+   `cramer_lower_at_cgfDeriv_unconditional` の body を「`cramer_lower_at hY_meas h_bdd
+   (deriv (cgf Y μ₀) lam) lam hlam h_coboundedBelow`」の 1 行に縮退 — 旧 body の
+   `hmean` + `tiltedHalfLine_chernoff_lower_at_boundary` 経由の constructive 構成は削除
+   (transitive sorry に降格)。`hVar` が unused-variable に降格 (unused-variable warning 1 件)。
+   signature 上は依然 `unconditional` 名のまま (load-bearing residual hypothesis なし)
+   だが、proof done ではなく type-check done で commit (DONE-HONEST-HYPS banner は
+   `cramer-chernoff-clt-closure-moonshot-plan.md` 冒頭で更新済)。
+
+5. **2026-05-25 sorry 集計の docstring 散文混入**: `rg -nw 'sorry' Common2026/Shannon/Cramer*.lean`
+   は **28 hits** を返したが、内訳は実コード `sorry` body **13 件** (期待通り) + docstring
+   散文「Transitive `sorry` via ...」「`sorry + @residual(...)` migration」等の説明文 15 件。
+   `rg -nw 'sorry'` は word-boundary を取るが backtick で囲まれた docstring 内の `sorry` も
+   word として match する。期待値 13 と実測 28 は本質的に乖離していない (実 body 部
+   は 13 件、`lake env lean` の "uses sorry" warning 数とも一致)。次 sweep の brief では
+   「sorry 集計は警告ベース (`grep -c 'uses .sorry.'`) の方が確実」と note 推奨。
 -->

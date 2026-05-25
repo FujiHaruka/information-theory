@@ -1,5 +1,15 @@
 # Cramér L-C2 discharge ムーンショット計画 🌙 (T1-C follow-up)
 
+> **sorry-based 移行完了 (2026-05-25)** — `docs/shannon/cramer-sorry-migration-plan.md`
+> に従い、本 plan に属する 4 件の `@audit:suspect(cramer-lc2-discharge-moonshot-plan)` を
+> `sorry + @residual(plan:cramer-lc2-discharge-moonshot-plan)` に書換。対象:
+> `Common2026/Shannon/CramerLC2PhaseC.lean` の 4 件 (`tilted_lower_from_predicate`
+> / `cramer_lower_phaseC_partial_discharge` / `cramer_lower_legendre_phaseC_partial_discharge`
+> / `cramer_tendsto_phaseC_partial_discharge`)。load-bearing predicate
+> `IsMeasureInfinitePiTiltedEq` (defined here) には
+> `@audit:retract-candidate(load-bearing-predicate)` 付与 — 1 件の producer-side 構成子
+> (`InfinitePiTiltedChangeOfMeasure.isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge`) のみ残存。
+
 > 実態整合 (2026-05-20): **本 plan は Phase A まで (L-D3 撤退) で正確 — 進捗ブロック記載どおり**。
 > `Common2026/Shannon/CramerLC2Discharge.lean` (0 sorry) に Phase A plumbing 6 補題 publish 済
 > (`cgf_eval_eq_cgf_base`:63 / `iIndepFun_tilted_ambient`:85 / `identDistrib_tilted_ambient`:98 等)。

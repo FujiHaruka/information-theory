@@ -91,7 +91,13 @@ identification: the upper-tail event
 `{ω | a·n ≤ ∑ i ∈ Finset.range n, Y (ω i)}` is in fact a `MeasureTheory.cylinder
 (Finset.range n) _` (it only depends on coordinates `0, …, n-1`). The
 cylinder form records the exponential lower bound on the un-tilted product
-measure restricted to such cylinders. -/
+measure restricted to such cylinders.
+
+`@audit:retract-candidate(load-bearing-predicate)` — all *hypothesis-form
+load-bearing* consumers were retreated in the 2026-05-25 Cramér sorry-migration
+sweep (Phase 2.3). The predicate now only appears as a structure field of
+`IsCramerChernoffNLetterRNUnified` (producer-side bundling, retained for the
+Chernoff family sweep). -/
 def IsCramerNLetterRNCylinder (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam : ℝ) : Prop :=
   ∀ a ε : ℝ, 0 < ε →
     ∃ C > 0, ∀ᶠ n : ℕ in atTop,
@@ -112,7 +118,13 @@ cylinder σ-algebra at width `n`, i.e. is presentable as
 `cylinder (Finset.range n) S` for some measurable `S`. This is true in
 principle (the event depends only on the first `n` coordinates), but Mathlib
 does not yet have the corresponding `cylinderClosure` / `cylinderOfDependsOn`
-lemma in the form we need. We abstract it as a pass-through. -/
+lemma in the form we need. We abstract it as a pass-through.
+
+`@audit:retract-candidate(load-bearing-predicate)` — all *hypothesis-form
+load-bearing* consumers were retreated in the 2026-05-25 Cramér sorry-migration
+sweep (Phase 2.3). The predicate now only appears as a structure field of
+`IsCramerChernoffNLetterRNUnified` (producer-side bundling, retained for the
+Chernoff family sweep). -/
 def IsCaratheodoryExtensionHyp (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam : ℝ) : Prop :=
   ∀ a : ℝ, ∀ n : ℕ,
     ∃ (S : Set ((i : Finset.range n) → Ω₀)), MeasurableSet S ∧
@@ -123,41 +135,29 @@ def IsCaratheodoryExtensionHyp (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam 
 
 /-- **Cylinder ↦ Phase C predicate bridge** (Mathlib-gap workaround).
 
-Given the cylinder-form predicate `IsCramerNLetterRNCylinder` together with
-the Carathéodory pass-through `IsCaratheodoryExtensionHyp`, the Phase C
-predicate `IsMeasureInfinitePiTiltedEq` follows: the upper-tail event is
-cylinder-realisable by Carathéodory, and the cylinder form supplies the
-exponential lower bound.
+The Phase C predicate `IsMeasureInfinitePiTiltedEq` is the cylinder-level
+density (the primitive Mathlib gap: cylinder-form n-letter Radon–Nikodym
+derivative identification) wrapped together with a Carathéodory extension. The
+cylinder + Carathéodory hypotheses are themselves Mathlib gaps, so this bridge
+remains a load-bearing residual deferred to `cramer-moonshot-plan` (Phase D).
 
-This is the **main bridge** of wave7 Phase D: cylinder-level density (the
-primitive Mathlib gap) + Carathéodory extension hypothesis → the Phase C
-asymptotic predicate.
-
-`@audit:suspect(cramer-moonshot-plan)` -/
+`@residual(plan:cramer-moonshot-plan)` -/
 lemma isMeasureInfinitePiTiltedEq_of_cylinder_density
-    (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam : ℝ)
-    (h_cyl : IsCramerNLetterRNCylinder μ₀ Y lam)
-    (h_cara : IsCaratheodoryExtensionHyp μ₀ Y lam) :
+    (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam : ℝ) :
     IsMeasureInfinitePiTiltedEq μ₀ Y lam := by
-  intro a ε hε
-  obtain ⟨C, hC_pos, hC_event⟩ := h_cyl a ε hε
-  refine ⟨C, hC_pos, ?_⟩
-  filter_upwards [hC_event] with n hn
-  obtain ⟨S, hS_meas, hS_eq⟩ := h_cara a n
-  have h_bound := hn S hS_meas hS_eq
-  rw [hS_eq] at h_bound
-  exact h_bound
+  sorry
 
 /-! ## Phase D-4 — discharged wrappers (Phase D = cylinder-form Phase C) -/
 
 /-- **Cramér lower bound, Phase D via cylinder density**.
 
-Routes the Phase C partial discharge through the cylinder-form predicate +
-Carathéodory pass-through: this is the cleanest "primitive" form of the
-Mathlib gap, in which the Carathéodory extension is explicitly abstracted as
-a hypothesis.
+Routes the Phase C partial discharge through the cylinder-form n-letter RN-deriv
+identification + Carathéodory pass-through. Both are Mathlib gaps abstracted as
+hypotheses upstream; closure deferred to `cramer-moonshot-plan` (Phase D).
+Transitive `sorry` via `cramer_lower_phaseC_partial_discharge` (Phase 2.2 of
+the Cramér sorry-migration sweep).
 
-`@audit:suspect(cramer-moonshot-plan)` -/
+`@residual(plan:cramer-moonshot-plan)` -/
 theorem cramer_lower_phase_d_via_cylinder
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
@@ -166,9 +166,7 @@ theorem cramer_lower_phase_d_via_cylinder
       (fun n : ℕ =>
         (1 / (n : ℝ)) * Real.log
           ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
-            {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})))
-    (h_cyl : IsCramerNLetterRNCylinder μ₀ Y lam)
-    (h_cara : IsCaratheodoryExtensionHyp μ₀ Y lam) :
+            {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)}))) :
     -(lam * a
         - cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
             (Measure.infinitePi (fun _ : ℕ => μ₀)) lam)
@@ -176,24 +174,19 @@ theorem cramer_lower_phase_d_via_cylinder
           (1 / (n : ℝ)) * Real.log
             ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
               {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop := by
-  have h_pred := isMeasureInfinitePiTiltedEq_of_cylinder_density μ₀ Y lam h_cyl h_cara
-  exact cramer_lower_phaseC_partial_discharge
-    (μ₀ := μ₀) hY_meas h_bdd a lam hlam h_coboundedBelow h_pred
+  sorry
 
 /-- **Cramér tendsto form, Phase D via cylinder density**. The full `Tendsto`
-form, routed through the cylinder-form predicate + Carathéodory pass-through.
+form. Transitive `sorry` via `cramer_tendsto_phaseC_partial_discharge`; the
+Legendre-attainment condition, the cylinder-form n-letter RN-deriv identification
+and the Carathéodory pass-through are all load-bearing gaps deferred to
+`cramer-moonshot-plan` (Phase D).
 
-`@audit:suspect(cramer-moonshot-plan)` -/
+`@residual(plan:cramer-moonshot-plan)` -/
 theorem cramer_tendsto_phase_d_via_cylinder
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
     (a lam : ℝ) (hlam : 0 ≤ lam)
-    (hlam_opt :
-      lam * a
-          - cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
-              (Measure.infinitePi (fun _ : ℕ => μ₀)) lam
-        = cramerRate (fun ω : ℕ → Ω₀ => Y (ω 0))
-            (Measure.infinitePi (fun _ : ℕ => μ₀)) a)
     (h_pos : ∀ᶠ n : ℕ in atTop,
       0 < (Measure.infinitePi (fun _ : ℕ => μ₀)).real
             {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})
@@ -216,19 +209,14 @@ theorem cramer_tendsto_phase_d_via_cylinder
       (fun n : ℕ =>
         (1 / (n : ℝ)) * Real.log
           ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
-            {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})))
-    (h_cyl : IsCramerNLetterRNCylinder μ₀ Y lam)
-    (h_cara : IsCaratheodoryExtensionHyp μ₀ Y lam) :
+            {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)}))) :
     Filter.Tendsto (fun n : ℕ =>
         (1 / (n : ℝ)) * Real.log
           ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
             {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop
       (𝓝 (-cramerRate (fun ω : ℕ → Ω₀ => Y (ω 0))
             (Measure.infinitePi (fun _ : ℕ => μ₀)) a)) := by
-  have h_pred := isMeasureInfinitePiTiltedEq_of_cylinder_density μ₀ Y lam h_cyl h_cara
-  exact cramer_tendsto_phaseC_partial_discharge
-    (μ₀ := μ₀) hY_meas h_bdd a lam hlam hlam_opt h_pos
-    h_cobdd h_coboundedBelow h_bdd_above h_bdd_below h_pred
+  sorry
 
 /-! ## Phase D-5 — Cramér × Chernoff unification predicate
 
@@ -254,16 +242,30 @@ structure IsCramerChernoffNLetterRNUnified
   /-- The Chernoff-side per-tilt lower-bound predicate. -/
   chernoff : IsBayesErrorPerTiltLowerBound P₁ P₂ lamCh
 
-/-- **Cramér projection** from the unified predicate.
+/-- **Cramér projection** from the unified predicate. Transitive `sorry` via
+`isMeasureInfinitePiTiltedEq_of_cylinder_density`; the unified predicate
+bundles cylinder + Carathéodory Mathlib gaps deferred to
+`cramer-moonshot-plan` (Phase D).
 
-`@audit:suspect(cramer-moonshot-plan)` -/
+NOTE (2026-05-25 sorry-migration sweep): the load-bearing
+`h : IsCramerChernoffNLetterRNUnified ...` argument was removed from the
+signature in Phase 2.3.4. After removal, the implicit parameters
+`{α : Type*} [Fintype α] [DecidableEq α] {P₁ P₂ : α → ℝ} {lamCh : ℝ}` are
+**vestigial** — they no longer appear in the conclusion `IsMeasureInfinitePiTiltedEq μ₀ Y lam`
+and there is no `h.cramer`/`h.cara` extraction in the body. The lemma is now
+claim-equivalent to `isMeasureInfinitePiTiltedEq_of_cylinder_density` modulo
+the `IsCramerChernoffNLetterRNUnified.` namespace prefix (kept as a structure
+projection name, but no longer a true projection). Future cleanup may either
+restore the `h` argument (paired with a constructive body using `h.cramer` +
+`h.cara`) or fold this declaration into `_of_cylinder_density` directly.
+
+`@residual(plan:cramer-moonshot-plan)` -/
 lemma IsCramerChernoffNLetterRNUnified.cramerPhaseC
     {α : Type*} [Fintype α] [DecidableEq α]
     {μ₀ : Measure Ω₀} {Y : Ω₀ → ℝ} {lam : ℝ}
-    {P₁ P₂ : α → ℝ} {lamCh : ℝ}
-    (h : IsCramerChernoffNLetterRNUnified μ₀ Y lam P₁ P₂ lamCh) :
-    IsMeasureInfinitePiTiltedEq μ₀ Y lam :=
-  isMeasureInfinitePiTiltedEq_of_cylinder_density μ₀ Y lam h.cramer h.cara
+    {P₁ P₂ : α → ℝ} {lamCh : ℝ} :
+    IsMeasureInfinitePiTiltedEq μ₀ Y lam := by
+  sorry
 
 /-- **Chernoff projection** from the unified predicate. -/
 lemma IsCramerChernoffNLetterRNUnified.chernoffPerTilt

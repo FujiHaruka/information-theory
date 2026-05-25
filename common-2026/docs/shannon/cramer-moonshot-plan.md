@@ -1,5 +1,17 @@
 # Cramér's Theorem ムーンショット計画 🌙 (T1-C)
 
+> **sorry-based 移行完了 (2026-05-25)** — `docs/shannon/cramer-sorry-migration-plan.md`
+> に従い、本 plan に属する 8 件の `@audit:suspect(cramer-moonshot-plan)` を
+> `sorry + @residual(plan:cramer-moonshot-plan)` に書換 (load-bearing hypothesis を
+> signature から削除、body は `sorry` 1 行)。対象: `Common2026/Shannon/Cramer.lean` の
+> 4 件 (`cramer_upper_legendre` / `cramer_lower` / `cramer_lower_legendre` / `cramer_tendsto`)
+> + `Common2026/Shannon/CramerPhaseDGapWorkaround.lean` の 4 件
+> (`isMeasureInfinitePiTiltedEq_of_cylinder_density` / `cramer_lower_phase_d_via_cylinder`
+> / `cramer_tendsto_phase_d_via_cylinder` / `IsCramerChernoffNLetterRNUnified.cramerPhaseC`)。
+> 3 つの load-bearing predicate (`IsMeasureInfinitePiTiltedEq` / `IsCramerNLetterRNCylinder`
+> / `IsCaratheodoryExtensionHyp`) には `@audit:retract-candidate(load-bearing-predicate)`
+> 付与。`IsCramerChernoffNLetterRNUnified` structure は Chernoff family 依存のため保留 (L-MIG-2)。
+
 > 実態整合 (2026-05-20): **進捗ブロック記載どおり (この plan は正確)**。`Common2026/Shannon/Cramer.lean`
 > (0 sorry) に `cramer_upper` (:272, DONE-HONEST-HYPS: h_pos+h_cobdd)、`cramer_lower` (:448,
 > DONE-HONEST-HYPS: `h_tilted_lower` 残置形 L-C2)、`cramer_lower_legendre` (:557)、`cramer_tendsto`

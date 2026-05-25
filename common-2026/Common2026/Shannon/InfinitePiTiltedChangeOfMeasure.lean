@@ -359,6 +359,19 @@ is replaced by the strictly smaller residual window predicate
 input is the eventual `≥ 1/2` largeness of the tilted-side window mass, which is
 a one-sided LLN/boundary statement (`∫ Y ∂μ₀.tilted ∈ [a, a+ε)`).
 
+NOTE (2026-05-25 sorry-migration sweep): `cramer_lower_phaseC_partial_discharge`
+no longer accepts the `h_pred : IsMeasureInfinitePiTiltedEq` hypothesis (it was
+removed in Phase 2.2 to retreat to `sorry + @residual(...)`). Consequently the
+producer call into `isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge` that
+previously consumed `h_res` was removed. **The `h_res` parameter is now
+load-bearing in name only** (signature retained for caller-API stability and
+future re-discharge once the upstream `sorry` is closed). The body collapses to
+a single transitive-`sorry` pass-through. The legacy
+`@audit:closed-by-successor` tag is retained for history but, strictly speaking,
+this wrapper no longer "closes" anything constructively — closure responsibility
+now belongs entirely to the upstream `cramer_lower_phaseC_partial_discharge`
+(`@residual(plan:cramer-lc2-discharge-moonshot-plan)`).
+
 `@audit:closed-by-successor(cramer-chernoff-clt-closure-moonshot-plan)` -/
 theorem cramer_lower_phaseC_residual_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
@@ -377,8 +390,10 @@ theorem cramer_lower_phaseC_residual_discharge
           (1 / (n : ℝ)) * Real.log
             ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
               {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})) atTop :=
+  -- Sorry-migration sweep (2026-05-25): `cramer_lower_phaseC_partial_discharge`
+  -- no longer takes the `h_pred` hypothesis; the call now collapses to a
+  -- transitive `sorry` carried by the upstream wrapper.
   cramer_lower_phaseC_partial_discharge hY_meas h_bdd a lam hlam h_coboundedBelow
-    (isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge hY_meas h_bdd lam hlam h_res)
 
 /-! ## Per-instance window largeness from interior of the tilted mean -/
 
