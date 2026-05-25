@@ -137,6 +137,53 @@ theorem foo : ... := by
   ...
 ```
 
+#### Compound syntax (Round 2 残課題 → Round 4 正式提案)
+
+1 つの `sorry` が **複数の独立した closure 担当** (例: 別 plan + 別 wall、または 2 つの上流 plan の合流点) を持つときは、`@residual(...)` の引数に **comma-separated** で列挙してよい。Round 2 sweep で Chernoff L-MIG-4 / Cramer CLT closure 系で必要性が浮上し、Round 4 で正式登録。
+
+**EBNF 拡張** (既存 single 形と後方互換):
+
+```ebnf
+residual-tag    = "@residual(" residual-list ")"
+residual-list   = residual-item { "," residual-item }    (* NEW: comma list, 1 以上 *)
+residual-item   = class ":" slug
+class           = "plan" | "wall" | "defect"
+slug            = kebab-identifier
+```
+
+例:
+
+```lean
+-- 単一 (既存、変更なし)
+@residual(plan:awgn-mi-bridge-plan)
+
+-- compound (NEW): 2 つの plan を AND 結合
+@residual(plan:awgn-mi-bridge-plan,plan:awgn-mi-decomp-plan)
+
+-- compound: plan + wall を AND 結合
+@residual(plan:cramer-cltclosure-rewrite-recovery-plan,wall:characteristic-fn-clt)
+```
+
+**semantic (AND 限定)**: compound `@residual` は **論理 AND**。**両方** の plan / wall が closure されない限り、当該 `sorry` は解消不能。
+
+**OR semantic は未予約**: 「どちらか一方の plan で closure 可能」を表現する `@residual-or(...)` のような alternation syntax は **現状未予約 + unsupported**。OR が必要になったタイミングで別 syntax として議題化する (本 syntax を流用しない)。
+
+**適用シナリオ**:
+
+1. **transitive sorry の正式表現** (Round 3 Wave 3-B Chernoff L-MIG-4 expansion で発見) — downstream wrapper が upstream の sorry + 別 plan の壁を両方 thread する場合。従来は runbook L518-521 の「タグ付与せず散文で明示」(Pattern C) で回避していたが、家族間で再帰使用が増えると散文 divergence の懸念。compound `@residual` で構造化。
+2. **cross-family plumbing** — 例: Cramer の CLT closure 系で characteristic function + Stam 不等式の両方が壁、`@residual(plan:cramer-cltclosure-rewrite-recovery-plan,wall:stam)`。
+3. **active consumer の bookkeeping 代替** — Round 3 BMClosure 系 escalate #2 が `closure-plan-completed` という新 reason vocab で対処したが、compound `@residual` で代替できれば retract-candidate semantic 拡張は不要だった可能性。後発の同パターン (load-bearing wall + active consumer) では compound `@residual` を先に検討すること推奨。
+
+**transitive suffix `:transitive` との関係** (runbook L518-521): runbook 旧提案は `@residual(<class>:<slug>:transitive)` という suffix 形だったが、本 compound syntax で意図を吸収可能 (transitive 上流 sorry を closure する plan / wall を直接列挙すれば良い、suffix で「上流依存」を明示する必要は機械的には無い)。Pattern C の散文明示も引き続き許容 — `@residual` タグ無し + docstring 散文で transitive 性を表す形式は当面残す。
+
+**registry / migration**:
+
+- 既存 single `@residual(<class>:<slug>)` declarations はそのまま (本拡張は **strict superset**、backward-compatible)。
+- 新規 compound 適用は本 vocab register 後に発生したタイミングで採用 (Round 5 以降の sweep で出現を想定)。
+- 既存 sweep で散文 transitive (runbook Pattern C) として書かれているものを compound に書換える retroactive migration は **任意** (運用上の利得 = grep 集計の精度向上が見えてから判断)。
+
+**grep recipe との整合**: compound `@residual` は既存「class 別ヒストグラム」recipe (`rg -o "@residual\([a-z]+:" ...`) では先頭 item のみカウントされる。compound 件数集計は別 pattern で行う (下記 grep recipe section 末尾 canonical pattern 追記参照)。
+
 ### `@audit:*` — bookkeeping (audit pass / 履歴 / 削除候補)
 
 `@audit:*` は **残課題マーカーではない** (残課題は `sorry` + `@residual`)。audit 結果 + history record + 削除候補のみ。
@@ -199,8 +246,10 @@ rg "@residual" Common2026/ | wc -l
 # class 別ヒストグラム
 rg -o "@residual\([a-z]+:" Common2026/ | sort | uniq -c | sort -rn
 
+# compound @residual (comma-separated 2 件以上) の件数集計 (Round 4 正式提案)
+rg '@residual\([^)]*,[^)]*\)' Common2026/ | wc -l
+
 # 特定壁の影響範囲
-rg -nB1 "@residual\(wall:stam\)" Common2026/
 
 # 特定 plan の closure 待ち件数
 rg "@residual\(plan:epi-stam-closure\)" Common2026/
