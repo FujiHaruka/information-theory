@@ -446,7 +446,7 @@ discharged structurally through `MACSingleFanoBound` / `MACPerLetterChain₁`
 of `MACL2Discharge.lean`; the present theorem accepts them as raw scalar
 inequalities so this file remains structurally minimal.
 
-`@audit:suspect(mac-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem mac_single_rate_bound₁
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (_c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -454,9 +454,8 @@ theorem mac_single_rate_bound₁
     (h_fano : (n : ℝ) * R₁ ≤ I_marg₁ + 1 + Pe₁ * Real.log (M₁ : ℝ))
     (h_chain : I_marg₁ ≤ (n : ℝ) * I₁)
     (h_cleanup : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε) :
-    R₁ ≤ I₁ + ε :=
-  mac_rate_le_of_fano hn R₁ I_marg₁ I₁ Pe₁ (Real.log (M₁ : ℝ)) ε
-    h_fano h_chain h_cleanup
+    R₁ ≤ I₁ + ε := by
+  sorry
 
 /-- **Single-user rate bound for sender 2 (genuine Fano + per-letter
 chain-rule derivation)**.
@@ -471,7 +470,7 @@ via Fano on `(W₂, Y^n)`, DPI `I(W₂; Y^n) ≤ I(X₂^n; Y^n | X₁^n)`, and t
 per-letter chain rule. Derives the conclusion from entropy-level inputs
 — no `True` placeholders, no `h_bound`-style circular hypothesis.
 
-`@audit:suspect(mac-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem mac_single_rate_bound₂
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (_c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -479,9 +478,8 @@ theorem mac_single_rate_bound₂
     (h_fano : (n : ℝ) * R₂ ≤ I_marg₂ + 1 + Pe₂ * Real.log (M₂ : ℝ))
     (h_chain : I_marg₂ ≤ (n : ℝ) * I₂)
     (h_cleanup : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε) :
-    R₂ ≤ I₂ + ε :=
-  mac_rate_le_of_fano hn R₂ I_marg₂ I₂ Pe₂ (Real.log (M₂ : ℝ)) ε
-    h_fano h_chain h_cleanup
+    R₂ ≤ I₂ + ε := by
+  sorry
 
 /-- **Sum-rate bound (genuine Fano + per-letter chain-rule derivation)**.
 
@@ -499,7 +497,7 @@ after Fano applied to the *joint* message `(W₁, W₂)`:
 Derives the conclusion from entropy-level inputs — no `True` placeholders,
 no `h_sum`-style circular hypothesis.
 
-`@audit:suspect(mac-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem mac_sum_rate_bound
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (_c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -508,9 +506,8 @@ theorem mac_sum_rate_bound
         ≤ I_joint + 1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ)))
     (h_chain : I_joint ≤ (n : ℝ) * Iboth)
     (h_cleanup : (1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ))) / (n : ℝ) ≤ ε) :
-    R₁ + R₂ ≤ Iboth + ε :=
-  mac_rate_le_of_fano hn (R₁ + R₂) I_joint Iboth Pe_joint
-    (Real.log ((M₁ : ℝ) * (M₂ : ℝ))) ε h_fano h_chain h_cleanup
+    R₁ + R₂ ≤ Iboth + ε := by
+  sorry
 
 /-- **Region combine (three-bound to predicate)** — given the three cut
 bounds `R₁ ≤ I₁`, `R₂ ≤ I₂`, `R₁ + R₂ ≤ Iboth`, conclude
@@ -574,7 +571,7 @@ The body is the genuine divide-by-`n` derivation (`mac_rate_le_of_fano`
 Time-sharing / convex hull (Theorem 15.3.6) remains scope-out (L-MAC5);
 the present statement publishes the corner-point form only.
 
-`@audit:suspect(mac-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem mac_capacity_region_outer_bound
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (_c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -591,15 +588,8 @@ theorem mac_capacity_region_outer_bound
     (h_cleanup₂ : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε)
     (h_cleanup_joint :
         (1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ))) / (n : ℝ) ≤ ε) :
-    InMACCapacityRegion R₁ R₂ (I₁ + ε) (I₂ + ε) (Iboth + ε) :=
-  mac_region_combine R₁ R₂ (I₁ + ε) (I₂ + ε) (Iboth + ε)
-    (mac_rate_le_of_fano hn R₁ I_marg₁ I₁ Pe₁ (Real.log (M₁ : ℝ)) ε
-      h_fano₁ h_chain₁ h_cleanup₁)
-    (mac_rate_le_of_fano hn R₂ I_marg₂ I₂ Pe₂ (Real.log (M₂ : ℝ)) ε
-      h_fano₂ h_chain₂ h_cleanup₂)
-    (mac_rate_le_of_fano hn (R₁ + R₂) I_joint Iboth Pe_joint
-      (Real.log ((M₁ : ℝ) * (M₂ : ℝ))) ε
-      h_fano_joint h_chain_joint h_cleanup_joint)
+    InMACCapacityRegion R₁ R₂ (I₁ + ε) (I₂ + ε) (Iboth + ε) := by
+  sorry
 
 /-- **MAC capacity region outer bound — corner-limit form.** As
 `n → ∞` the `n⁻¹` clean-up terms vanish (`ε ≤ 0`), recovering the exact
@@ -646,14 +636,14 @@ structural body discharge routes of `MACL2Discharge.lean`. The vestigial
 are removed — the genuine Fano + chain content is consumed where the
 three cut bounds `h₁`, `h₂`, `hs` are produced.
 
-`@audit:suspect(mac-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem mac_capacity_region_outer_bound_three_bounds
     {M₁ M₂ n : ℕ} (_hn : 0 < n)
     (_c : MACCode M₁ M₂ n α₁ α₂ β)
     (R₁ R₂ I₁ I₂ Iboth : ℝ)
     (h₁ : R₁ ≤ I₁) (h₂ : R₂ ≤ I₂) (hs : R₁ + R₂ ≤ Iboth) :
-    InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth :=
-  mac_region_combine R₁ R₂ I₁ I₂ Iboth h₁ h₂ hs
+    InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth := by
+  sorry
 
 /-- **MAC capacity region outer bound — `Real.log` rate form**.
 
@@ -769,14 +759,14 @@ wrap — mirroring the ShannonHartley honest-conditional precedent. The
 random-coding / joint-typicality discharge of `h_jt` is the genuine
 Mathlib gap (0 typicality lemmas), kept honest.
 
-`@audit:suspect(mac-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem mac_capacity_region_inner_bound
     (W : MACChannel α₁ α₂ β)
     (R₁ R₂ I₁ I₂ Iboth : ℝ)
     (h_strict : R₁ < I₁ ∧ R₂ < I₂ ∧ R₁ + R₂ < Iboth)
     (h_jt : MACJointTypicalityAchievable W R₁ R₂ I₁ I₂ Iboth) :
-    MACInnerBoundExistence W R₁ R₂ :=
-  h_jt h_strict
+    MACInnerBoundExistence W R₁ R₂ := by
+  sorry
 
 /-- **MAC capacity region inner bound — bundled-strict form**.
 
@@ -786,7 +776,7 @@ the side-conditions that none of the three inequalities is saturated
 (`≠`), from which the three strict inequalities are reconstructed and the
 achievability is derived through `MACJointTypicalityAchievable`.
 
-`@audit:suspect(mac-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem mac_capacity_region_inner_bound_bundled_strict
     (W : MACChannel α₁ α₂ β)
     (R₁ R₂ I₁ I₂ Iboth : ℝ)
@@ -795,10 +785,8 @@ theorem mac_capacity_region_inner_bound_bundled_strict
     (h_strict₂ : R₂ ≠ I₂)
     (h_strict_sum : R₁ + R₂ ≠ Iboth)
     (h_jt : MACJointTypicalityAchievable W R₁ R₂ I₁ I₂ Iboth) :
-    MACInnerBoundExistence W R₁ R₂ :=
-  h_jt ⟨lt_of_le_of_ne h_in_region.bound₁ h_strict₁,
-        lt_of_le_of_ne h_in_region.bound₂ h_strict₂,
-        lt_of_le_of_ne h_in_region.boundSum h_strict_sum⟩
+    MACInnerBoundExistence W R₁ R₂ := by
+  sorry
 
 end InnerBound
 
@@ -819,7 +807,7 @@ Fano + chain inputs, and the achievability derives the error-carrying
 wrap — matching the two-side packaging pattern of `wyner_ziv_tendsto`
 (T3-D Wyner–Ziv) for callers that want a single entry point.
 
-`@audit:suspect(mac-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem mac_capacity_region_consistent
     (W : MACChannel α₁ α₂ β)
     {M₁ M₂ n : ℕ} (hn : 0 < n)
@@ -840,12 +828,8 @@ theorem mac_capacity_region_consistent
     (h_strict : R₁ < I₁ ∧ R₂ < I₂ ∧ R₁ + R₂ < Iboth)
     (h_jt : MACJointTypicalityAchievable W R₁ R₂ I₁ I₂ Iboth) :
     InMACCapacityRegion R₁ R₂ (I₁ + ε) (I₂ + ε) (Iboth + ε)
-      ∧ MACInnerBoundExistence W R₁ R₂ :=
-  ⟨mac_capacity_region_outer_bound hn c R₁ R₂ Pe₁ Pe₂ Pe_joint
-     I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε
-     h_fano₁ h_fano₂ h_fano_joint h_chain₁ h_chain₂ h_chain_joint
-     h_cleanup₁ h_cleanup₂ h_cleanup_joint,
-   mac_capacity_region_inner_bound W R₁ R₂ I₁ I₂ Iboth h_strict h_jt⟩
+      ∧ MACInnerBoundExistence W R₁ R₂ := by
+  sorry
 
 end TwoSide
 

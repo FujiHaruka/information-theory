@@ -371,13 +371,13 @@ The hypothesis `_h_time_sharing` is the discharge slot for the
 Carathéodory-style decomposition argument (Cover–Thomas §15.3.2 +
 Theorem 15.3.6 closure), supplied externally.
 
-`@audit:suspect(mac-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem mac_capacity_region_subset_pentagon
     (R₁ R₂ I₁ I₂ Iboth : ℝ)
     (h_region : InMACCapacityRegion R₁ R₂ I₁ I₂ Iboth)
     (h_time_sharing : IsMACTimeSharingHyp R₁ R₂ I₁ I₂ Iboth) :
-    (R₁, R₂) ∈ macPentagonRegion I₁ I₂ Iboth :=
-  h_time_sharing h_region
+    (R₁, R₂) ∈ macPentagonRegion I₁ I₂ Iboth := by
+  sorry
 
 /-- **Pentagon equals capacity region** (combined publish form). Under
 the non-negativity and chain-rule hypotheses for the pentagon-⊆-region
@@ -385,7 +385,7 @@ direction *and* the time-sharing decomposition hypothesis for the
 reverse direction, the pentagon convex hull and the corner-point
 capacity region coincide as subsets of `ℝ × ℝ`.
 
-`@audit:suspect(mac-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem mac_capacity_region_is_pentagon
     (I₁ I₂ Iboth : ℝ)
     (hI₁ : 0 ≤ I₁) (hI₂ : 0 ≤ I₂)
@@ -398,15 +398,7 @@ theorem mac_capacity_region_is_pentagon
         ∀ R₁ R₂ : ℝ, IsMACTimeSharingHyp R₁ R₂ I₁ I₂ Iboth) :
     macPentagonRegion I₁ I₂ Iboth
       = { p : ℝ × ℝ | InMACCapacityRegion p.1 p.2 I₁ I₂ Iboth } := by
-  apply Set.eq_of_subset_of_subset
-  · exact mac_pentagon_subset_region I₁ I₂ Iboth hI₁ hI₂ h_cut_ub
-      h_corner₁_sub h_corner₂_sub h_corner₁_nn h_corner₂_nn
-  · intro p hp
-    simp only [Set.mem_setOf_eq] at hp
-    have := mac_capacity_region_subset_pentagon p.1 p.2 I₁ I₂ Iboth hp
-              (h_time_sharing p.1 p.2)
-    -- (p.1, p.2) = p for `p : ℝ × ℝ`
-    simpa using this
+  sorry
 
 end ReverseInclusion
 

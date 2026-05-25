@@ -417,7 +417,7 @@ side is backed by the genuine per-event AEP/rate decay
 `MACInnerBoundExistence` (which is definitionally
 `IsMACRandomCodebookMarkov`).
 
-`@audit:suspect(mac-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem mac_capacity_region_consistent_of_perEvent
     (μ : Measure Ω) (X1s : ℕ → Ω → α₁) (X2s : ℕ → Ω → α₂) (Ys : ℕ → Ω → β)
     (ε : ℝ) (W : MACChannel α₁ α₂ β) [IsMarkovKernel W]
@@ -437,12 +437,8 @@ theorem mac_capacity_region_consistent_of_perEvent
         (1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ))) / (n : ℝ) ≤ εc)
     (h : IsMACPerEventAEPDecay μ X1s X2s Ys ε W R₁ R₂) :
     InMACCapacityRegion R₁ R₂ (I₁ + εc) (I₂ + εc) (Iboth + εc)
-      ∧ MACInnerBoundExistence W R₁ R₂ :=
-  ⟨mac_capacity_region_outer_bound hn c R₁ R₂ Pe₁ Pe₂ Pe_joint
-     I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth εc
-     h_fano₁ h_fano₂ h_fano_joint h_chain₁ h_chain₂ h_chain_joint
-     h_cleanup₁ h_cleanup₂ h_cleanup_joint,
-   mac_random_codebook_markov_of_perEvent μ X1s X2s Ys ε W R₁ R₂ h⟩
+      ∧ MACInnerBoundExistence W R₁ R₂ := by
+  sorry
 
 end MACPerEventPublish
 

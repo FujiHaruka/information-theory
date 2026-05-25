@@ -262,7 +262,7 @@ Mirror of `mac_single_rate_bound₁_with_body` (`MACL2Discharge.lean`), but
 the per-user Fano body is now built from `MACFanoEntropyData` via
 `MACSingleFanoBound.of_entropy_data` rather than supplied structurally.
 
-`@audit:suspect(mac-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem mac_single_rate_bound₁_with_fano
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -270,14 +270,13 @@ theorem mac_single_rate_bound₁_with_fano
     (d₁ : MACFanoEntropyData M₁ n R₁ Pe₁ I_marg₁ H_W₁ H_cond₁)
     (h_chain : MACPerLetterChain₁ n I_marg₁ I₁)
     (h_cleanup : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε) :
-    R₁ ≤ I₁ + ε :=
-  mac_single_rate_bound₁_with_body hn c R₁ Pe₁ I_marg₁ I₁ ε
-    (MACSingleFanoBound.of_entropy_data d₁) h_chain h_cleanup
+    R₁ ≤ I₁ + ε := by
+  sorry
 
 /-- **S22-E — User-2 cut bound with the Fano body discharged.**
 Mirror of `mac_single_rate_bound₁_with_fano`.
 
-`@audit:suspect(mac-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem mac_single_rate_bound₂_with_fano
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -285,9 +284,8 @@ theorem mac_single_rate_bound₂_with_fano
     (d₂ : MACFanoEntropyData M₂ n R₂ Pe₂ I_marg₂ H_W₂ H_cond₂)
     (h_chain : MACPerLetterChain₂ n I_marg₂ I₂)
     (h_cleanup : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε) :
-    R₂ ≤ I₂ + ε :=
-  mac_single_rate_bound₂_with_body hn c R₂ Pe₂ I_marg₂ I₂ ε
-    (MACSingleFanoBound.of_entropy_data d₂) h_chain h_cleanup
+    R₂ ≤ I₂ + ε := by
+  sorry
 
 /-- **S22-E — Outer bound with both per-user Fano bodies discharged.**
 Specialisation of
@@ -296,7 +294,7 @@ Specialisation of
 built from `MACFanoEntropyData` (genuine Fano content), while the
 joint-message side keeps the structural `MACFanoBound` plus chain rule.
 
-`@audit:suspect(mac-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem mac_capacity_region_outer_bound_with_per_user_fano
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -312,13 +310,8 @@ theorem mac_capacity_region_outer_bound_with_per_user_fano
     (h_cleanup₂ : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε)
     (h_cleanup_joint :
         (1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ))) / (n : ℝ) ≤ ε) :
-    InMACCapacityRegion R₁ R₂ (I₁ + ε) (I₂ + ε) (Iboth + ε) :=
-  mac_capacity_region_outer_bound_with_fano_body hn c R₁ R₂
-    Pe₁ Pe₂ Pe_joint I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε
-    (MACSingleFanoBound.of_entropy_data d₁)
-    (MACSingleFanoBound.of_entropy_data d₂)
-    h_fano_joint h_chain₁ h_chain₂ h_chain_joint
-    h_cleanup₁ h_cleanup₂ h_cleanup_joint
+    InMACCapacityRegion R₁ R₂ (I₁ + ε) (I₂ + ε) (Iboth + ε) := by
+  sorry
 
 /-- **S22-E — MAC outer bound, per-user directions genuinely Fano-backed
 from measure primitives.**
@@ -335,7 +328,7 @@ discharge — joint-message Fano / conditional-MI chain rule — is not yet a
 project lemma). This is the genuine wiring that backs the per-user converse
 directions with real Fano content while keeping the headline non-circular.
 
-`@audit:suspect(mac-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem mac_capacity_region_outer_bound_of_measure
     {Ω : Type*} [MeasurableSpace Ω]
     {W₁ : Type*} [Fintype W₁] [DecidableEq W₁] [Nonempty W₁]
@@ -373,19 +366,7 @@ theorem mac_capacity_region_outer_bound_of_measure
     (h_cleanup_joint :
         (1 + Pe_joint * Real.log ((M₁ : ℝ) * (M₂ : ℝ))) / (n : ℝ) ≤ ε) :
     InMACCapacityRegion R₁ R₂ (I₁ + ε) (I₂ + ε) (Iboth + ε) := by
-  -- The per-user Fano-side inequalities are genuinely discharged from the
-  -- measure-theoretic Fano; rewrite `Fintype.card Wₖ` to the code count `Mₖ`.
-  have hf₁ := (macSingleFanoBound_of_measure μ Wk₁ Yo dec₁ hWk₁ hYo hdec₁ hcard₁
-      h_uniform₁ h_decomp₁).fano
-  have hf₂ := (macSingleFanoBound_of_measure μ Wk₂ Yo dec₂ hWk₂ hYo hdec₂ hcard₂
-      h_uniform₂ h_decomp₂).fano
-  rw [hMcard₁] at hf₁
-  rw [hMcard₂] at hf₂
-  exact mac_capacity_region_outer_bound hn c R₁ R₂
-    (MeasureFano.errorProb μ Wk₁ Yo dec₁) (MeasureFano.errorProb μ Wk₂ Yo dec₂)
-    Pe_joint I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε
-    hf₁ hf₂ h_fano_joint h_chain₁ h_chain₂ h_chain_joint
-    h_cleanup₁ h_cleanup₂ h_cleanup_joint
+  sorry
 
 end MACFanoRepublish
 

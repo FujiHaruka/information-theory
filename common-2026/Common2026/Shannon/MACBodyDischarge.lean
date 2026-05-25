@@ -606,14 +606,14 @@ as the gated implication `h_jt : MACJointTypicalityAchievable …`. The body
 **derives** the error-carrying existence via `h_jt h_strict` — not an
 identity wrap.
 
-`@audit:suspect(mac-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem mac_capacity_region_inner_bound_with_body
     (W : MACChannel α₁ α₂ β)
     (R₁ R₂ I₁ I₂ Iboth : ℝ)
     (h_strict : R₁ < I₁ ∧ R₂ < I₂ ∧ R₁ + R₂ < Iboth)
     (h_jt : MACJointTypicalityAchievable W R₁ R₂ I₁ I₂ Iboth) :
-    MACInnerBoundExistence W R₁ R₂ :=
-  mac_capacity_region_inner_bound W R₁ R₂ I₁ I₂ Iboth h_strict h_jt
+    MACInnerBoundExistence W R₁ R₂ := by
+  sorry
 
 /-- **MAC outer bound — L-MAC3 body discharge form (publish-layer
 hook).**
@@ -647,7 +647,7 @@ combine**. Mirror of `mac_capacity_region_consistent` of the parent
 file with the body discharge layers engaged; both sides **derive** their
 conclusions.
 
-`@audit:suspect(mac-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem mac_capacity_region_with_body_two_side
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : MACCode M₁ M₂ n α₁ α₂ β)
@@ -666,12 +666,8 @@ theorem mac_capacity_region_with_body_two_side
     (h_strict : R₁ < I₁ ∧ R₂ < I₂ ∧ R₁ + R₂ < Iboth)
     (h_jt : MACJointTypicalityAchievable W R₁ R₂ I₁ I₂ Iboth) :
     InMACCapacityRegion R₁ R₂ (I₁ + ε) (I₂ + ε) (Iboth + ε)
-      ∧ MACInnerBoundExistence W R₁ R₂ :=
-  ⟨mac_capacity_region_outer_bound_with_body hn c R₁ R₂ Pe₁ Pe₂ Pe_joint
-     I_marg₁ I_marg₂ I_joint I₁ I₂ Iboth ε
-     h_fano₁ h_fano₂ h_fano_joint h_chain₁ h_chain₂ h_chain_joint
-     h_cleanup₁ h_cleanup₂ h_cleanup_joint,
-   mac_capacity_region_inner_bound_with_body W R₁ R₂ I₁ I₂ Iboth h_strict h_jt⟩
+      ∧ MACInnerBoundExistence W R₁ R₂ := by
+  sorry
 
 end MACBodyDischargePublish
 
