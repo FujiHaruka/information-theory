@@ -485,32 +485,34 @@ theorem prekopa_leindler_geometric_mean_form
   sorry
 
 /-- **Functional → additive convex body form** (via log-bridge):
-hypothesis pass-through で `vol(A+B) ≥ vol(A) + vol(B)` (Brunn-Minkowski
-linear form). 主形ではなく weaker form。
+`vol(A) + vol(B) ≤ vol(A + B)` (Brunn-Minkowski linear / additive form),
+主形ではなく weaker form。
 
-sorry-migration Phase 2.3 (2026-05-25): hypothesis `h_linear_hyp` は結論型と
-verbatim 同型 (`volA + volB ≤ volAB`) で body `:= h_linear_hyp` の純循環
-(boundary tier 5 defect、旧 `@audit:suspect`)。hypothesis を削除し body を
-sorry 化。
+signature-rewrite (2026-05-26, `brunn-minkowski-signature-rewrite-plan.md`):
+旧 signature の `(volA volB volAB : ℝ)` 自由 scalar 引数群を削除し、Mathlib
+`MeasureTheory.volume` で identification する `(volume A).toReal` convention
+(`BrunnMinkowskiClosure.lean:373 brunn_minkowski_volume_indicator` と整合)
+に書換。Round 3 時点の `@residual(defect:false-statement)` (universally false
+statement、`volA=volB=1, volAB=1` で反証可能) は本書換で解消し、conclusion は
+Mathlib `volume` 経由で linkage hypothesis 不在のまま意味のある statement に
+昇格 (BM 加法形 = 標準的 Mathlib 不在の壁)。
 
-honesty-auditor (2026-05-25 Round 2 follow-up): 旧 circular hyp 削除後の
-signature には `volA, volB, volAB` が actual volumes (`= volume A` 等) で
-あることを保証する linkage hypothesis が一切なく、`(A, B, volA, volB, volAB)`
-は free real numbers として universally false statement となる (例:
-`volA = volB = 1, volAB = 1` で `2 ≤ 1` 不成立)。但し本 sweep は他の P-1/P-2
-convex-body 系 (`prekopa_leindler_geometric_mean_form` `:480`,
-`brunn_minkowski_convex_body` `BrunnMinkowski.lean:254` 等) も同様に abstract
-vol convention で `@residual(plan:...)` を採用しており、本 declaration の
-分類のみ `defect:circular` から `plan:...` に変更しても一貫性が崩れる。
-代わりに `@residual(defect:false-statement)` に修正し、project 全体の
-abstract-vol convention 自体の honest 検討 (orchestrator follow-up) を促す。
+linkage hypothesis: `Convex ℝ A`, `Convex ℝ B`, `MeasurableSet A`,
+`MeasurableSet B`, `MeasurableSet (A + B)` はいずれも regularity (precondition)
+であり結論型 (`(volume A).toReal + (volume B).toReal ≤ (volume (A + B)).toReal`)
+とは全く異なる shape — load-bearing bundling ではない。
 
-@residual(defect:false-statement) -/
+Mathlib 壁: convex body の体積に対する Brunn-Minkowski additive form
+(`vol(A) + vol(B) ≤ vol(A + B)`) は Mathlib **完全不在** (Prékopa-Leindler /
+凸体 BM が本リポジトリで未本格化)。`wall:bm-additive-convex-body` で promote。
+
+@residual(wall:bm-additive-convex-body) -/
 theorem brunn_minkowski_linear_from_prekopa_leindler
     {n : ℕ} (A B : Set (Fin n → ℝ))
-    (volA volB volAB : ℝ)
-    (hvolA : 0 ≤ volA) (hvolB : 0 ≤ volB) (hvolAB : 0 ≤ volAB) :
-    volA + volB ≤ volAB := by
+    (hA_conv : Convex ℝ A) (hB_conv : Convex ℝ B)
+    (hA_meas : MeasurableSet A) (hB_meas : MeasurableSet B)
+    (hAB_meas : MeasurableSet (A + B)) :
+    (volume A).toReal + (volume B).toReal ≤ (volume (A + B)).toReal := by
   sorry
 
 /-! ## §L — Log-concave + Brunn-Minkowski 統合 wrapper -/
@@ -585,31 +587,39 @@ theorem entropyPower_nDim_eq_rpow_of_log
   rw [h_unif]
   rw [Real.rpow_def_of_pos hvol, mul_comm]
 
-/-- **Log-concave entropy = log volume only if uniform**: this is the
-**characterization-of-equality** direction. Cover-Thomas 17.9.4 で
-"uniform achieves max entropy on convex body" の formal 形。
+/-- **Log-concave entropy = log volume only if uniform** — Cover-Thomas 17.9.4
+の "uniform achieves max entropy on convex body" の formal 形を `↔`
+characterization 形で表現。
 
-sorry-migration Phase 2.3 (2026-05-25): hypothesis `h_eq_hyp` は結論型と
-verbatim 同型 (`h μ = Real.log vol`) で body `:= h_eq_hyp` の純循環
-(boundary tier 5 defect、旧 `@audit:suspect`)。hypothesis を削除し body を
-sorry 化。
+signature-rewrite (2026-05-26, `brunn-minkowski-signature-rewrite-plan.md`):
+旧 signature は free `(μ, h, vol)` で universally false statement
+(任意 μ/h/vol で `h μ = Real.log vol` 不成立、Round 3 `defect:false-statement`)。
+本書換で結論を `↔` characterization 形に昇格、linkage は actual convex body
+`A : Set (Fin n → ℝ)` 経由で `μ` の uniformity を **measure identification
+hypothesis (`∀ s, μ s = volume (s ∩ A) / volume A`)** で表現する。
 
-honesty-auditor (2026-05-25 Round 2 follow-up): 旧 circular hyp 削除後の
-signature は precondition (`hvol : 0 < vol` のみ) が μ / h / vol を全く
-constrain しないため universally false statement (任意の μ, h, vol で
-`h μ = Real.log vol` は成立しない)。`defect:circular` は historical defect の
-record として誤り (audit-tags.md `defect` 行: "signature は honest 化済、body
-だけ sorry" 前提に反する)。`defect:false-statement` (tier 5 真の defect) に
-書換。signature 改変 (`μ` と `vol` の linkage hypothesis 追加 or 結論を
-characterization 形 `μ = uniform on convex body of volume vol ↔ h μ = log vol`
-に書換) は orchestrator 委任。
+**circular trap 回避**: 既存 `IsUniformOnEntropyLogVolHypothesis n h μ vol :=
+h μ = Real.log vol` (`BrunnMinkowski.lean:159`、現状 load-bearing predicate
+として `@audit:retract-candidate`) を linkage hyp に採るとそれは結論型 verbatim
+と同一 = circular `:= h_unif` 再発。本書換では `IsUniformOnEntropyLogVolHypothesis`
+を **採用せず**、Mathlib `MeasureTheory.volume` ベースの measure identification
+を採る。LHS の linkage `(∀ s, μ s = volume (s ∩ A) / volume A)` は μ の structure
+を fully 決めるが結論 (entropy 値 `h μ = Real.log (volume A).toReal`) とは shape
+が全く異なる (measure-set 等式 vs scalar 等式) — load-bearing bundling ではない。
 
-@residual(defect:false-statement) -/
+Mathlib 壁: convex body 上 uniform measure の max-entropy characterization の n-dim
+形は Mathlib **完全不在** (Cover-Thomas 17.9.4)。`wall:uniform-max-entropy-on-convex-body`
+で promote。
+
+@residual(wall:uniform-max-entropy-on-convex-body) -/
 theorem entropy_eq_logVolume_iff_uniform
-    {n : ℕ} (μ : Measure (Fin n → ℝ))
+    {n : ℕ} (μ : Measure (Fin n → ℝ)) [IsProbabilityMeasure μ]
     (h : Measure (Fin n → ℝ) → ℝ)
-    (vol : ℝ) (hvol : 0 < vol) :
-    h μ = Real.log vol := by
+    (A : Set (Fin n → ℝ)) (hA_conv : Convex ℝ A)
+    (hA_meas : MeasurableSet A)
+    (hA_vol : 0 < (volume A).toReal) :
+    (∀ s, μ s = volume (s ∩ A) / volume A) ↔
+      h μ = Real.log (volume A).toReal := by
   sorry
 
 /-! ## §N — Final summary: Cover-Thomas Ch.17.9 全体の hypothesis pass-through 露出 -/
