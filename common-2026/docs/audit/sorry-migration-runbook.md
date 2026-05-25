@@ -88,7 +88,16 @@ symlink reuse。5 GB Mathlib clone は disk 破綻。
 ## 出力
 
 各 declaration 1 行で:
-| file:line | decl 名 | 現タグ | 削除/置換予定タグ | パターン (P/V/C) | suspect の核 (verbatim docstring 1 行) |
+| file:line | decl 名 | 現タグ | 削除/置換予定タグ | パターン (P/V/C/S/H) | suspect の核 (verbatim docstring 1 行) | **circular?** | **cross-family?** |
+
+- **circular?** — 仮説型 ≡ 結論型 で body が `:= h` (or 同等の name laundering
+  `_rate` / `_existence` / `_full` 化) になっていないか。✅ なら tier 5 defect
+  (Pattern F)。`@residual(defect:circular)` 付き sorry 化扱いを Phase 2 に
+  含めることを inventory 段階で flag
+- **cross-family?** — declaration が他 family の namespace の predicate / lemma
+  を bundling / re-export していないか (`rg` で当該 file 外の use site を
+  検索、複数 family namespace に跨るなら ✅)。✅ なら Pattern G (cross-family
+  unified predicate) で planner 段階の判断材料
 
 ## 計数規則
 
@@ -96,6 +105,9 @@ symlink reuse。5 GB Mathlib clone は disk 破綻。
   `@audit:closed-by-successor` 別に件数集計
 - 既存 `sorry` 件数は **必ず `rg -nw 'sorry'` (word-boundary)** で計数。
   docstring 内文字列リテラル (``sorry``、`0-sorry`) を排除 (Pattern D)
+- **既存 HONESTY ALERT / `⚠` の検出** (Pattern H): `rg '⚠|HONESTY ALERT|FALSE'`
+  で著者が既に false-hypothesis 等を明示済かを検出。検出時は別行で flag、
+  本 sweep scope 外として別 plan 化候補
 
 ## 構成済 family の参考
 
@@ -129,6 +141,16 @@ CLAUDE.md global rule に従い Approach section を最初に。決定事項:
   事前に flag、planner inventory step で取りこぼさない — Pilot Pattern B)
 - transitive sorry の handling 方針 (タグ付与せず docstring 散文 — Pilot
   Pattern C)
+- **tier 5 defect の inline 扱い** (Pattern F): inventory で circular?=✅ と
+  flag された declaration は Phase 2 で `@residual(defect:circular)` 付き
+  sorry 化を明示。silent fix しない (CLAUDE.md「検証の誠実性」)
+- **cross-family unified predicate の identify** (Pattern G): inventory で
+  cross-family?=✅ と flag された declaration は当該 family 単独で deprecate
+  判断不可。Phase 2.3 で **predicate 削除禁止**、関係 family の planner / sweep
+  完了を待って統合 plan 化候補として未決事項に escalate
+- **既存 HONESTY ALERT の扱い** (Pattern H): inventory で `⚠` / `HONESTY ALERT`
+  flag された declaration は本 sweep scope 外。別 plan 化候補として未決事項
+  に分離
 
 ## 在庫表 (verbatim 必須)
 
@@ -307,6 +329,83 @@ constructors <列挙> remain but their bodies depend transitively on
 
 「all in-tree consumers were retreated」と書いてしまうと字義的に false で
 audit-2 で questionable。
+
+### Pattern F — tier 5 defect (循環 := h / name laundering) を suspect 計数で見落とし
+
+`@audit:suspect` の rg 計数だけで「全件同質」扱いすると、その中に紛れた
+**tier 5 defect (循環 `:= h` / `:True` slot / 退化定義悪用 / name laundering)**
+の上に sorry 化を積み上げる。Round 1 WynerZiv で 2 件発見:
+
+- `wyner_ziv_achievability_rate (h_ach : ≤) : ≤ := h_ach` — 仮説型 ≡ 結論型
+  の典型循環、name laundering で `_rate` suffix
+- `wyner_ziv_achievability_existence (h_ach_existence : ∀ε∃N...) : ∀ε∃N... := h_ach_existence`
+  — 同上 + `_existence` name laundering
+
+両者は `@audit:suspect(wyner-ziv-moonshot-plan)` で `wyner_ziv_tendsto`
+(constructive な `le_antisymm h_conv h_ach` 純合成、非 defect) と同一タグ。
+signature を verbatim 読まないと判別不可能。
+
+**回避策**:
+- Inventory step の出力フォーマットに **circular? 列** を必須化 (本 runbook
+  Step 1 ゴール参照)。各 declaration で「仮説型 ≡ 結論型?」を 1 行 check
+- planner Approach に「tier 5 defect の inline 扱い」決定事項を明示。
+  detected 行を Phase 2 で `@residual(defect:circular)` 付き sorry 化に分配
+- implementer step でも signature を verbatim 読み、planner の指示通り
+  `@residual(plan:...)` を貼ろうとしているが circular だった場合は
+  `@residual(defect:circular)` に補正 (inline detection、Pattern B と同様の
+  honesty 優先)
+- silent fix 禁止 (CLAUDE.md tier 5 defect の扱い)。発見した turn で必ず
+  signature 改変 + sorry 化のため Phase 2 plan を refine
+
+### Pattern G — cross-family unified predicate の単独 deprecate 不可
+
+declaration が他 family の namespace の predicate / lemma を bundling /
+re-export している場合、当該 family 単独 sweep で predicate を deprecate
+すると他 family の use site が broken state に陥る。Round 1 Cramer で
+発見:
+
+- `IsCramerChernoffNLetterRNUnified` — Cramér 側 `IsCramerNLetterRNCylinder`
+  + `IsCaratheodoryExtensionHyp` + Chernoff 側 `IsBayesErrorPerTiltLowerBound`
+  を 1 structure に bundling。Cramer sweep 単独で Phase 2.3 retract 判断
+  不可
+
+別事例 (Round 1 WynerZiv): `RelayCFBinningBody` が `IsWynerZivBinning*` 3
+predicate を re-namespacing 利用 (`:127/195/262`)。Phase 2.3 で WynerZiv
+側が predicate 削除すると Relay 側 broken。
+
+**回避策**:
+- Inventory step の出力フォーマットに **cross-family? 列** を必須化。各
+  declaration で当該 file 外の use site を `rg` で検索、複数 family
+  namespace に跨るなら ✅
+- planner Approach に「cross-family unified predicate の identify」決定
+  事項を明示
+- 該当 predicate の Phase 2.3 では **削除禁止**、`@audit:retract-candidate`
+  付与のみ + docstring 散文に「<列挙> family の <列挙> file が consumer」
+  を明記
+- 関係 family の planner / sweep 完了を待って統合 plan 化候補として
+  planner 未決事項に escalate (実 sweep は別 session)
+
+### Pattern H — 既存 HONESTY ALERT / FALSE predicate の重畳
+
+著者が既に `⚠ HONESTY ALERT` / `FALSE predicate` を docstring に明記済の
+declaration を本 sweep で機械的に sorry 化すると、既存の honesty 表明が
+失われる + scope 外の defect を本 plan に巻き込む。Round 1 Huffman で
+発見:
+
+- `HuffmanSwapNormalizationBody.lean:91/:181` — `EqualizingPermHypothesis` /
+  `EqualizingSwapTargetHypothesis` は機械検証済の FALSE predicate、
+  docstring に `⚠ HONESTY ALERT — この述語は FALSE であり discharge 不能`
+  と明記。これらを hypothesis に取る 4 wrapper は vacuously-true 含意
+
+**回避策**:
+- Inventory step で `rg '⚠|HONESTY ALERT|FALSE'` を必須化 (本 runbook
+  Step 1 計数規則参照)。検出時は別行で flag
+- planner Approach で「既存 HONESTY ALERT の扱い」決定事項を明示。本 sweep
+  scope 外として未決事項に分離 (別 plan 化候補)、本 sweep の Phase 2 では
+  touch しない
+- 別 plan は `audit-tags.md` の「Deprecated」表に **false-hypothesis 由来
+  の vacuously-true 含意 wrapper の扱い** を別行追加する PR とセットで
+  検討 (tier 4 staged と tier 5 defect の境界例)
 
 ## audit-tags.md 拡張提案 (次の sweep 前に PR 化検討)
 
