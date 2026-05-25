@@ -102,7 +102,11 @@ by a separate typical-slice seed. The bound is `y`-independent, so a single
 `@audit:retract-candidate(load-bearing-predicate)` — load-bearing
 hypothesis-form predicate marked for eventual deletion once the in-family
 discharge plan (`wyner-ziv-discharge-moonshot-plan`) closes its in-family
-consumers; no cross-family consumer. -/
+consumers; no cross-family consumer.  Phase 2.x.1 (predicate-removal
+sweep) status: not in the Phase 2.x.1 scope; still consumed by several
+in-family theorems outside the Phase 2.x.1 13-declaration list (e.g.
+`WynerZivPackingBody.lean:511` `wyner_ziv_packing_decoder_fail`,
+`WynerZivDecoderFailureAssembly.lean:102`), so deletion remains blocked. -/
 def IsPackingTypicalityHyp
     {n : ℕ} (S : ℝ)
     (JT : (Fin n → U) × (Fin n → β) → Prop) : Prop :=

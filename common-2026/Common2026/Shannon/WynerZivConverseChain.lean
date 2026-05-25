@@ -92,7 +92,12 @@ serving as the per-letter upper bound on `R_WZ(D_i)`.
 `@audit:retract-candidate(load-bearing-predicate)` — load-bearing
 hypothesis-form predicate marked for eventual deletion once
 `wyner-ziv-discharge-moonshot-plan` closes its in-family consumers; no
-`RelayCFBinningBody` cross-family consumer. -/
+`RelayCFBinningBody` cross-family consumer.  Phase 2.x.1 (predicate-removal
+sweep) status: no remaining in-family consumer at the theorem level (Phase
+2.x.1 removed the four ConverseChain consumers); only derivation helper
+lemmas (`wzPerLetterBound_mono` / `wzPerLetterBound_const` etc.) still
+reference the structure name.  Deletion is therefore unblocked from the
+Wyner–Ziv family side once those helpers are removed alongside. -/
 structure WZPerLetterBound
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {n : ℕ}
     (D_arr : Fin n → ℝ) (wzPerLetterObjective : Fin n → ℝ) : Prop where
@@ -112,7 +117,11 @@ manipulation + Fano) is deferred.
 `@audit:retract-candidate(load-bearing-predicate)` — load-bearing
 hypothesis-form predicate marked for eventual deletion once
 `wyner-ziv-discharge-moonshot-plan` closes its in-family consumers; no
-`RelayCFBinningBody` cross-family consumer. -/
+`RelayCFBinningBody` cross-family consumer.  Phase 2.x.1 (predicate-removal
+sweep) status: no remaining theorem-level in-family consumer (Phase 2.x.1
+removed the four ConverseChain consumers); only derivation helper lemmas
+reference the name.  Deletion is unblocked from the Wyner–Ziv family
+side. -/
 def CsiszarSumIdentity
     {n : ℕ} (wzPerLetterObjective : Fin n → ℝ) (M : ℕ) : Prop :=
   ∑ i : Fin n, wzPerLetterObjective i ≤ Real.log (M : ℝ)
@@ -124,7 +133,11 @@ def CsiszarSumIdentity
 `@audit:retract-candidate(load-bearing-predicate)` — load-bearing
 hypothesis-form predicate marked for eventual deletion once
 `wyner-ziv-discharge-moonshot-plan` closes its in-family consumers; no
-`RelayCFBinningBody` cross-family consumer. -/
+`RelayCFBinningBody` cross-family consumer.  Phase 2.x.1 (predicate-removal
+sweep) status: no remaining theorem-level in-family consumer (Phase 2.x.1
+removed the four ConverseChain consumers); only derivation helper lemmas
+reference the name.  Deletion is unblocked from the Wyner–Ziv family
+side. -/
 def WZJensenAntitone
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {n : ℕ}
     (D : ℝ) (D_arr : Fin n → ℝ) : Prop :=

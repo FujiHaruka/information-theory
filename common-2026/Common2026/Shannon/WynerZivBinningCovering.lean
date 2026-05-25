@@ -102,7 +102,14 @@ consumers.  **Cross-family consumer present**:
 `RelayCFBinningBody.lean:127` re-namespaces this predicate for the Relay
 CF (compress-and-forward) family. Predicate deletion is therefore blocked
 until the Relay family runs its own sorry-migration sweep; the candidate
-marker stays as bookkeeping. -/
+marker stays as bookkeeping.  Phase 2.x.1 (predicate-removal sweep) status:
+in-family theorem consumers within the Phase 2.x.1 scope have been
+removed; lingering in-family uses are confined to the
+`wyner_ziv_packing_*` family (`WynerZivPackingBody.lean:511, 566`,
+`WynerZivCoveringBody.lean:442`) which embed this predicate inside larger
+hypothesis bundles outside Phase 2.x.1's 13-declaration scope.  The
+cross-family `RelayCFBinningBody.lean:127/348` re-namespacing keeps the
+predicate definition itself live regardless. -/
 def IsWynerZivBinningCovering
     (_R₁ : ℝ) (ε₁ : ℝ)
     (μ : Measure Ω) {n : ℕ}
@@ -176,7 +183,10 @@ consumers.  **Cross-family consumer present**:
 `RelayCFBinningBody.lean:195` re-namespaces this predicate for the Relay
 CF (compress-and-forward) family. Predicate deletion is therefore blocked
 until the Relay family runs its own sorry-migration sweep; the candidate
-marker stays as bookkeeping. -/
+marker stays as bookkeeping.  Phase 2.x.1 (predicate-removal sweep)
+status: in-family theorem consumers within the Phase 2.x.1 scope have
+been removed; the cross-family `RelayCFBinningBody.lean:195/348`
+re-namespacing keeps the predicate definition itself live regardless. -/
 def IsWynerZivBinningPacking
     (_R₂ : ℝ) (ε₂ : ℝ)
     (μ : Measure Ω) {n M : ℕ}
@@ -404,7 +414,12 @@ in-family consumers.  **Cross-family consumer present**:
 `RelayCFBinningBody.lean:262` re-namespaces this predicate for the Relay
 CF (compress-and-forward) family. Predicate deletion is therefore blocked
 until the Relay family runs its own sorry-migration sweep; the candidate
-marker stays as bookkeeping. -/
+marker stays as bookkeeping.  Phase 2.x.1 (predicate-removal sweep)
+status: the sole in-family theorem consumer
+(`wyner_ziv_binning_decoder_fail_of_achievable`) had its
+`h_ach` hypothesis removed in Phase 2.x.1.b; the cross-family
+`RelayCFBinningBody.lean:262` re-namespacing keeps the predicate
+definition itself live. -/
 def IsWynerZivBinningAchievable
     (R₁ R₂ ε₁ ε₂ : ℝ)
     (μ : Measure Ω) {n M : ℕ}

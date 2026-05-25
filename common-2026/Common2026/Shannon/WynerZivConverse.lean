@@ -91,7 +91,11 @@ consumers (Phase 1.5 sorry-migration).
 `@audit:retract-candidate(load-bearing-predicate)` — load-bearing
 hypothesis-form predicate marked for eventual deletion once the discharge
 plan closes its consumers; no `RelayCFBinningBody` cross-family consumer for
-this predicate (Wyner–Ziv family closed). -/
+this predicate (Wyner–Ziv family closed).  Phase 2.x.1 (predicate-removal
+sweep) status: the 13 declarations in the Phase 2.x scope no longer consume
+this predicate, but the constructive `wyner_ziv_converse_n_letter`
+(`WynerZivConverse.lean:193`) — which is outside Phase 2.x scope — still
+consumes it, so predicate deletion remains blocked at this point. -/
 def WZFanoConverseBound
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ)
     (wzObjectiveSum Pe : ℝ) (M n : ℕ) : Prop :=
@@ -117,7 +121,9 @@ predicate's consumers (Phase 1.5 sorry-migration).
 `@audit:retract-candidate(load-bearing-predicate)` — load-bearing
 hypothesis-form predicate marked for eventual deletion once the discharge
 plan closes its consumers; no `RelayCFBinningBody` cross-family consumer for
-this predicate (Wyner–Ziv family closed). -/
+this predicate (Wyner–Ziv family closed).  Phase 2.x.1 (predicate-removal
+sweep) status: still consumed by `wyner_ziv_converse_n_letter`
+(`WynerZivConverse.lean:202`), outside the Phase 2.x scope. -/
 def WZCsiszarSumBound (wzObjectiveSum : ℝ) (M : ℕ) : Prop :=
   wzObjectiveSum ≤ Real.log (M : ℝ)
 
@@ -127,7 +133,10 @@ def WZCsiszarSumBound (wzObjectiveSum : ℝ) (M : ℕ) : Prop :=
 `@audit:retract-candidate(load-bearing-predicate)` — load-bearing
 arithmetic-residual predicate marked for eventual deletion once the
 discharge plan closes its consumers; no `RelayCFBinningBody` cross-family
-consumer for this predicate (Wyner–Ziv family closed). -/
+consumer for this predicate (Wyner–Ziv family closed).  Phase 2.x.1
+(predicate-removal sweep) status: still consumed by
+`wyner_ziv_converse_n_letter` (`WynerZivConverse.lean:203`), outside the
+Phase 2.x scope. -/
 def WZRateCleanup (Pe : ℝ) (M n : ℕ) (ε : ℝ) : Prop :=
   (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε
 

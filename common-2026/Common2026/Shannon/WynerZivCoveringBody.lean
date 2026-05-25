@@ -256,7 +256,10 @@ abstract joint-typicality predicate `JT`.
 `@audit:retract-candidate(load-bearing-predicate)` — load-bearing
 hypothesis-form predicate marked for eventual deletion once the in-family
 discharge plan (`wyner-ziv-discharge-moonshot-plan`) closes its in-family
-consumers; no cross-family consumer. -/
+consumers; no cross-family consumer.  Phase 2.x.1 (predicate-removal
+sweep) status: no remaining in-family consumer (Phase 2.x.1.c removed it
+from `wzCovering_feed_asymp`); deletion is unblocked from the Wyner–Ziv
+family side. -/
 def IsCoveringTypicalityHyp
     (μ : Measure Ω)
     (JT : ∀ n : ℕ, (Fin n → U) × (Fin n → β) → Prop) : Prop :=
