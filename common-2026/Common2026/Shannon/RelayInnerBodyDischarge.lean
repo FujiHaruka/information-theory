@@ -131,7 +131,15 @@ alias itself is retained for historical naming consistency (textbook
 borderline (`def := …` literal rename); deprecation candidate, tracked
 under `relay-sorry-migration-plan` 未決事項 #1 (alias defect judgement).
 
-`@audit:retract-candidate(load-bearing-predicate)` -/
+Honesty audit 2026-05-26: re-classified from `load-bearing-predicate` to
+`name-laundering-alias` (audit-tags.md Reason vocabulary): the body is a
+literal `def := RelayDFAchievable W R Imrh Iry Ibroad` rename with **0
+hypothesis-form consumers** in-tree (post Phase 2.3 sorry migration);
+this exactly matches the LZ78 `IsSMBToLZ78ConverseChainBridge` precedent
+(`LZ78SMBSandwich.lean:307`). The underlying load-bearing predicate
+status lives on `RelayDFAchievable` itself.
+
+`@audit:retract-candidate(name-laundering-alias)` -/
 def IsRelayDFBlockMarkovWitness
     {α α₁ β β₁ : Type*}
     [MeasurableSpace α] [MeasurableSpace α₁]
@@ -302,7 +310,15 @@ All hypothesis-form consumers have been sorry-migrated (Phase 2.3 +
 but is a tier-5 borderline (`def := …` literal rename); deprecation
 candidate, tracked under `relay-sorry-migration-plan` 未決事項 #1.
 
-`@audit:retract-candidate(load-bearing-predicate)` -/
+Honesty audit 2026-05-26: re-classified from `load-bearing-predicate` to
+`name-laundering-alias` (audit-tags.md Reason vocabulary): the body is a
+literal `def := RelayCFAchievable W R Idec Ix1y Iy1hy1` rename with **0
+hypothesis-form consumers** in-tree (post Phase 2.3 + 2.5 sorry
+migration); this exactly matches the LZ78 `IsSMBToLZ78ConverseChainBridge`
+precedent (`LZ78SMBSandwich.lean:307`). The underlying load-bearing
+predicate status lives on `RelayCFAchievable` itself.
+
+`@audit:retract-candidate(name-laundering-alias)` -/
 def IsRelayCFBinningWitness
     {α α₁ β β₁ : Type*}
     [MeasurableSpace α] [MeasurableSpace α₁]
