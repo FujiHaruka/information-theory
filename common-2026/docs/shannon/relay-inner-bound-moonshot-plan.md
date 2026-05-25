@@ -26,6 +26,27 @@
 > → `_h_sliding_window : True` placeholder / [L-RI3] Wyner-Ziv binning (CF)
 > → `_h_wz_binning : True` placeholder / [L-RI4] side-information decoding
 > (CF) → `_h_si_decode : True` placeholder。主定理 body は `:= h_existence`。
+>
+> **Sorry-based migration banner (2026-05-26)**: `relay-sorry-migration-plan.md`
+> Phase 2.2 + 2.3 + 2.5 で `RelayInnerBound.lean` (9 wrappers) +
+> `RelayInnerBodyDischarge.lean` (15 wrappers) + `RelayCFBinningBody.lean`
+> (5 wrappers) を load-bearing achievability hypothesis
+> (`h_ach : Relay{DF,CF}Achievable` ≡ `IsRelay{DF,CF}{BlockMarkov,Binning}Witness`,
+> alias of `Relay{DF,CF}Achievable`) 削除 + body `sorry` +
+> `@residual(plan:relay-inner-bound-moonshot-plan)` に移行済 (合計 29 件)。
+> 本 moonshot の L-RI1〜RI4 pass-through 設計は **変更なし** (companion seeds
+> `relay-df-block-markov-discharge-*` / `relay-df-sliding-window-discharge-*` /
+> `relay-cf-wz-binning-discharge-*` / `relay-cf-si-decode-discharge-*` での
+> closure responsibility は不変)、wrapper の honesty 形式が tier 4 → tier 2 に
+> 昇格。5 載荷 predicate (`RelayDFAchievable` / `RelayCFAchievable` /
+> `IsRelayDFBlockMarkovWitness` / `IsRelayCFBinningWitness` /
+> `IsCFSideInfoDecodeHyp`) に `@audit:retract-candidate(load-bearing-predicate)`
+> 付与。`IsCFSideInfoDecodeHyp` は WynerZiv-family の
+> `IsWynerZivBinningAchievable` の re-namespacing alias で、deprecation は
+> 両 family の合同 plan に escalate (`relay-sorry-migration-plan` 未決事項 #2)。
+> `RelayDFBlockMarkovBody.lean` の 4 wrapper は constructive 性が verbatim
+> 確認されたため、`@audit:suspect` タグ削除のみで `@residual` 不要 (Pattern B
+> inline recovery、Hoeffding pilot 類似)。
 
 ## Status (2026-05-20)
 

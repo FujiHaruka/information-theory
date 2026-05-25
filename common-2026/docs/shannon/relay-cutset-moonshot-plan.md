@@ -26,6 +26,17 @@
 > pass-through / [L-RC3] composite rate bound を `h_rate_bound` hypothesis pass-through /
 > [L-RC4] relay channel measurability bundle を別 plan へ defer。
 > 加えて scope 縮減 [L-RC5] inner bound (DF/CF) を完全 scope-out。
+>
+> **Sorry-based migration banner (2026-05-26)**: `relay-sorry-migration-plan.md`
+> Phase 2.1 で `RelayCutset.lean` の 3 wrappers (`relay_broadcast_cut` /
+> `relay_mac_cut` / `relay_cutset_outer_bound`) を load-bearing chain hypothesis
+> (`h_chain` ≡ L-RC1 + L-RC2 wall bundling) 削除 + body `sorry` +
+> `@residual(plan:relay-cutset-moonshot-plan)` に移行済。本 moonshot の
+> L-RC1/RC2 pass-through 設計は **変更なし** (companion seed `relay-cutset-csiszar-discharge-*`
+> 等での closure responsibility は不変)、ただし wrapper の honesty 形式が
+> tier 4 (`@audit:suspect` + load-bearing hyp) から tier 2 (`sorry + @residual`) に
+> 昇格した。downstream `_corner_limit` / `_log_rate` は signature 改変なし
+> (chain hyp は underscore 化のみ、transitive sorry を Pattern C 散文で明示)。
 
 ## Status (2026-05-19)
 
