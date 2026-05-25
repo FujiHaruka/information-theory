@@ -34,9 +34,12 @@ This single file publishes:
 * `InBCCapacityRegion R₁ R₂ I_u I_xy` — corner-point form predicate bundling
   the two Cover–Thomas inequalities at given cut rates
   `(I_u, I_xy) := (I(U;Y₂), I(X;Y₁|U))`.
-* `bc_common_rate_bound`, `bc_private_rate_bound`, `bc_region_combine` —
-  thin hypothesis-pass-through wrappers for the two inequality directions
-  and their combination into a region membership.
+* `bc_common_rate_bound`, `bc_private_rate_bound` — single-direction
+  corner-point bounds (`R ≤ I + ε`) derived from entropy-level Fano +
+  per-letter chain + clean-up inputs via `bc_rate_le_of_fano` (genuine,
+  proof done; mirror of MAC `mac_single_rate_bound₁/₂`).
+* `bc_region_combine` — combine the two cut bounds into
+  `InBCCapacityRegion` membership.
 * `bc_capacity_region_outer_bound` — Cover–Thomas converse, **genuine (R₂)
   on the common direction, non-circular**: it **derives** the region
   membership from entropy-level Fano-side + per-letter chain inequalities
@@ -105,11 +108,12 @@ its body as an identity wrap, and the real residual is a genuine `Prop`:
 The signatures mirror the **genuine Fano converse** recipe of SlepianWolf /
 `mac_capacity_region_outer_bound` (T3-B MAC) on the converse side and the
 **honest-conditional pass-through** precedent of ShannonHartley /
-`mac_capacity_region_inner_bound` on the achievability side. The auxiliary
-thin combine helpers (`bc_common_rate_bound`, `bc_private_rate_bound`)
-retain vestigial `_h_fano/_h_chain : True` decoration but no longer carry
-the real residual — that now lives in the genuine entropy-level inputs of
-the converse headline.
+`mac_capacity_region_inner_bound` on the achievability side. The single-
+direction corner-point bounds `bc_common_rate_bound` /
+`bc_private_rate_bound` are themselves genuinely derived (proof done) via
+the `bc_rate_le_of_fano` arithmetic kernel — entropy-level Fano + chain +
+clean-up inputs in, scalar `R ≤ I + ε` out — so the real residual lives
+solely in the entropy-level inputs of the converse headline.
 -/
 
 namespace InformationTheory.Shannon
@@ -414,107 +418,6 @@ section RateBounds
 variable {α β₁ β₂ : Type*}
 variable [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
 
-/-- **Common-message rate bound (terminal capstone, L-BC2 form)**.
-
-For any BC block code `c` and rate `R₂`, the converse asserts
-
-```
-R₂ ≤ I(U; Y₂)        (= I_u)
-```
-
-after applying Fano's inequality on `(W₂, Y₂^n)`
-(`n·R₂ ≤ I(W₂; Y₂^n) + n·ε_n`), the data-processing inequality
-`I(W₂; Y₂^n) ≤ I(U^n; Y₂^n)` (after identifying `U := W₂` as the
-auxiliary RV in the standard converse), and the per-letter chain rule
-`I(U^n; Y₂^n) ≤ n · I(U; Y₂)`.
-
-The multi-hundred-line ingredients — multi-user Fano (~150 lines) +
-per-letter chain rule (~150 lines), bundled as L-BC2 — are the real
-Mathlib gap (joint-typicality-multi wall); discharge plans
-`bc-converse-fano-discharge-*` / `bc-converse-chain-rule-discharge-*`.
-
-Audit reclassification (independent honesty audit, 2026-05-25): the
-Phase 2.3 retreat applied the `defect:circular` → sorry migration recipe
-mechanically, but because the load-bearing hypothesis WAS the only
-constraint, removing it leaves the signature `(R₂ I_u : ℝ) : R₂ ≤ I_u`
-**universally false** (counterexample: `R₂ := 1, I_u := 0`). The current
-defect kind is therefore **`false-statement`** rather than `circular`
-(circular requires hyp ≡ concl, which no longer holds since the hyp was
-removed). Genuine redesign — re-introducing entropy-level Fano + chain +
-cleanup preconditions mirroring the MAC analogue `mac_single_rate_bound₁`
-(`MultipleAccessChannel.lean:450`) routed through the existing
-`bc_rate_le_of_fano` (`BroadcastChannel.lean:511`, currently `private`,
-visibility-relaxable to `theorem`) — is deferred to
-`broadcast-channel-moonshot-plan` (Phase 2.3.b in
-`mac-bc-sorry-migration-plan`'s optional successor step).
-
-@residual(defect:false-statement)
-@audit:closed-by-successor(broadcast-channel-moonshot-plan) -/
-theorem bc_common_rate_bound
-    {M₁ M₂ n : ℕ} (_hn : 0 < n)
-    (_c : BroadcastCode M₁ M₂ n α β₁ β₂)
-    (R₂ I_u : ℝ) :
-    R₂ ≤ I_u := by
-  sorry
-
-/-- **Private-message rate bound (terminal capstone, L-BC2 form)**.
-
-For any BC block code `c` and rate `R₁`, the converse asserts
-
-```
-R₁ ≤ I(X; Y₁ | U)    (= I_xy)
-```
-
-after applying Fano's inequality on `(W₁, Y₁^n) | W₂`
-(`n·R₁ ≤ I(W₁; Y₁^n | W₂) + n·ε_n`), the conditional data-processing
-inequality `I(W₁; Y₁^n | W₂) ≤ I(X^n; Y₁^n | U^n)` (using the Markov
-chain `W₁ → X^n → Y₁^n` conditioned on `U^n := W₂^n`), and the
-per-letter conditional-MI chain rule
-`I(X^n; Y₁^n | U^n) ≤ n · I(X; Y₁ | U)`.
-
-Multi-user Fano + conditional-MI chain rule (~300 lines together, L-BC2)
-are the real Mathlib gap (joint-typicality-multi wall).
-
-Audit reclassification (independent honesty audit, 2026-05-25): the
-Phase 2.3 retreat applied the `defect:circular` → sorry migration recipe
-mechanically, but because the load-bearing hypothesis WAS the only
-constraint, removing it leaves the signature `(R₁ I_xy : ℝ) : R₁ ≤ I_xy`
-**universally false** (counterexample: `R₁ := 1, I_xy := 0`). The current
-defect kind is therefore **`false-statement`** rather than `circular`.
-Genuine redesign — re-introducing conditional Fano + conditional-MI chain
-preconditions routed through `bc_rate_le_of_fano`
-(`BroadcastChannel.lean:511`) mirroring the MAC analogue
-`mac_single_rate_bound₂` (`MultipleAccessChannel.lean:474`) — is deferred
-to `broadcast-channel-moonshot-plan` (Phase 2.3.b).
-
-@residual(defect:false-statement)
-@audit:closed-by-successor(broadcast-channel-moonshot-plan) -/
-theorem bc_private_rate_bound
-    {M₁ M₂ n : ℕ} (_hn : 0 < n)
-    (_c : BroadcastCode M₁ M₂ n α β₁ β₂)
-    (R₁ I_xy : ℝ) :
-    R₁ ≤ I_xy := by
-  sorry
-
-/-- **Region combine (two-bound to predicate)** — given the two cut bounds
-`R₂ ≤ I_u`, `R₁ ≤ I_xy`, conclude
-`InBCCapacityRegion R₁ R₂ I_u I_xy`.
-
-Proof: direct `⟨_, _⟩` introduction of the predicate structure. -/
-lemma bc_region_combine (R₁ R₂ I_u I_xy : ℝ)
-    (h₂ : R₂ ≤ I_u) (h₁ : R₁ ≤ I_xy) :
-    InBCCapacityRegion R₁ R₂ I_u I_xy :=
-  ⟨h₂, h₁⟩
-
-end RateBounds
-
-/-! ## Outer bound: converse main theorem (Cover–Thomas 15.6.2, hypothesis pass-through) -/
-
-section OuterBound
-
-variable {α β₁ β₂ : Type*}
-variable [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
-
 /-- **Divide-by-`n` corner-point extraction.** Given the entropy-level
 Fano + per-letter chain inequalities for a single direction —
 `n · R ≤ I_marg + 1 + Pe · L` (Fano-side) and `I_marg ≤ n · I`
@@ -547,6 +450,118 @@ private theorem bc_rate_le_of_fano
     rwa [hcancel] at hdiv
   have : R ≤ I_marg / (n : ℝ) + (1 + Pe * L) / (n : ℝ) := h_split ▸ h_fano'
   linarith
+
+/-- **Common-message rate bound (terminal capstone, L-BC2 form)**.
+
+For any BC block code `c` and rate `R₂`, the converse asserts
+
+```
+R₂ ≤ I(U; Y₂)        (= I_u)
+```
+
+after applying Fano's inequality on `(W₂, Y₂^n)`
+(`n·R₂ ≤ I(W₂; Y₂^n) + n·ε_n`), the data-processing inequality
+`I(W₂; Y₂^n) ≤ I(U^n; Y₂^n)` (after identifying `U := W₂` as the
+auxiliary RV in the standard converse), and the per-letter chain rule
+`I(U^n; Y₂^n) ≤ n · I(U; Y₂)`.
+
+**Genuine entropy-level Fano + chain derivation** (Phase 2.3.b,
+`broadcast-channel-signature-rewrite-plan`). Given the entropy-level
+Fano-side bound on `(W₂, Y₂^n)`, the per-letter chain inequality
+`I_marg_u ≤ n · I_u`, and the `n⁻¹` clean-up estimate, the converse
+derives the corner-point bound
+
+```
+R₂ ≤ I_u + ε        (where I_u = I(U; Y₂) and ε ≥ 0 is the clean-up slack)
+```
+
+via `bc_rate_le_of_fano` (`BroadcastChannel.lean:528`, same file, private).
+Mirror of the MAC analogue `mac_single_rate_bound₁`
+(`MultipleAccessChannel.lean:450`); the BC version is **proof done**
+because the divide-by-`n` arithmetic kernel `bc_rate_le_of_fano` is in
+scope (the MAC analogue cannot do the same yet because
+`mac_rate_le_of_fano` is not present).
+
+The entropy-level inputs (`h_fano`, `h_chain`) are genuine real Mathlib
+gaps (joint-typicality-multi wall) discharged structurally by upstream
+plans `bc-converse-fano-discharge-*` / `bc-converse-chain-rule-discharge-*`;
+the present theorem accepts them as raw scalar inequalities so this file
+remains structurally minimal. -/
+theorem bc_common_rate_bound
+    {M₁ M₂ n : ℕ} (hn : 0 < n)
+    (_c : BroadcastCode M₁ M₂ n α β₁ β₂)
+    (R₂ Pe₂ I_marg_u I_u ε : ℝ)
+    (h_fano : (n : ℝ) * R₂ ≤ I_marg_u + 1 + Pe₂ * Real.log (M₂ : ℝ))
+    (h_chain : I_marg_u ≤ (n : ℝ) * I_u)
+    (h_cleanup : (1 + Pe₂ * Real.log (M₂ : ℝ)) / (n : ℝ) ≤ ε) :
+    R₂ ≤ I_u + ε :=
+  bc_rate_le_of_fano hn R₂ I_marg_u I_u Pe₂ (Real.log (M₂ : ℝ)) ε
+    h_fano h_chain h_cleanup
+
+/-- **Private-message rate bound (terminal capstone, L-BC2 form)**.
+
+For any BC block code `c` and rate `R₁`, the converse asserts
+
+```
+R₁ ≤ I(X; Y₁ | U)    (= I_xy)
+```
+
+after applying Fano's inequality on `(W₁, Y₁^n) | W₂`
+(`n·R₁ ≤ I(W₁; Y₁^n | W₂) + n·ε_n`), the conditional data-processing
+inequality `I(W₁; Y₁^n | W₂) ≤ I(X^n; Y₁^n | U^n)` (using the Markov
+chain `W₁ → X^n → Y₁^n` conditioned on `U^n := W₂^n`), and the
+per-letter conditional-MI chain rule
+`I(X^n; Y₁^n | U^n) ≤ n · I(X; Y₁ | U)`.
+
+**Genuine conditional Fano + conditional-MI chain derivation**
+(Phase 2.3.b, `broadcast-channel-signature-rewrite-plan`). Given the
+entropy-level conditional Fano-side bound on `(W₁, Y₁^n) | W₂`, the
+per-letter conditional-MI chain inequality `I_marg_xy ≤ n · I_xy`, and
+the `n⁻¹` clean-up estimate, the converse derives the corner-point bound
+
+```
+R₁ ≤ I_xy + ε       (where I_xy = I(X; Y₁ | U) and ε ≥ 0 is the clean-up slack)
+```
+
+via `bc_rate_le_of_fano` (`BroadcastChannel.lean:528`, same file, private).
+Mirror of `mac_single_rate_bound₂` (`MultipleAccessChannel.lean:474`); BC
+version is **proof done** because `bc_rate_le_of_fano` is in scope (see
+`bc_common_rate_bound` for the analogous asymmetry note).
+
+The entropy-level inputs (`h_fano`, `h_chain`) are real Mathlib gaps
+(joint-typicality-multi wall) — the conditional Fano on `W₁ → Y₁^n | U^n`
+together with the degradation Markov chain is not yet a project lemma —
+discharged structurally by upstream plans
+`bc-converse-fano-discharge-*` / `bc-converse-chain-rule-discharge-*`. -/
+theorem bc_private_rate_bound
+    {M₁ M₂ n : ℕ} (hn : 0 < n)
+    (_c : BroadcastCode M₁ M₂ n α β₁ β₂)
+    (R₁ Pe₁ I_marg_xy I_xy ε : ℝ)
+    (h_fano : (n : ℝ) * R₁ ≤ I_marg_xy + 1 + Pe₁ * Real.log (M₁ : ℝ))
+    (h_chain : I_marg_xy ≤ (n : ℝ) * I_xy)
+    (h_cleanup : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε) :
+    R₁ ≤ I_xy + ε :=
+  bc_rate_le_of_fano hn R₁ I_marg_xy I_xy Pe₁ (Real.log (M₁ : ℝ)) ε
+    h_fano h_chain h_cleanup
+
+/-- **Region combine (two-bound to predicate)** — given the two cut bounds
+`R₂ ≤ I_u`, `R₁ ≤ I_xy`, conclude
+`InBCCapacityRegion R₁ R₂ I_u I_xy`.
+
+Proof: direct `⟨_, _⟩` introduction of the predicate structure. -/
+lemma bc_region_combine (R₁ R₂ I_u I_xy : ℝ)
+    (h₂ : R₂ ≤ I_u) (h₁ : R₁ ≤ I_xy) :
+    InBCCapacityRegion R₁ R₂ I_u I_xy :=
+  ⟨h₂, h₁⟩
+
+end RateBounds
+
+/-! ## Outer bound: converse main theorem (Cover–Thomas 15.6.2, hypothesis pass-through) -/
+
+section OuterBound
+
+variable {α β₁ β₂ : Type*}
+variable [MeasurableSpace α] [MeasurableSpace β₁] [MeasurableSpace β₂]
 
 /-- **Degraded BC capacity region outer bound (Cover–Thomas Theorem
 15.6.2, converse)** — **genuine (R₂) converse on the common direction**,
