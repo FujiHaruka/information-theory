@@ -131,7 +131,15 @@ lemma mergedInitMultiset_card_eq_sub
 
 原 `HuffmanMergedIdentificationHypothesis` から measure-theory 層 (`mergedMeasure` /
 `Measure.real` / `initMultiset` の measure 計算) を完全に剥がした形. 残るのは pure な
-Huffman 木の再帰 content のみ. これが本 seed が discharge を委ねる primitive. -/
+Huffman 木の再帰 content のみ. これが本 seed が discharge を委ねる primitive.
+
+@audit:retract-candidate(load-bearing-predicate) — `HuffmanWalls.merged_huffman_aux_ident_hypothesis_holds`
+が wall lemma として未 discharge (`@residual(plan:huffman-strong-form-completion)`)。本
+predicate を hypothesis に取る wrapper 群 (`huffmanLength_optimal_with_swap_and_aux` /
+`huffmanLength_optimal_modulo_aux_ident`) は import cycle 回避のため signature 不変
+(`huffman-sorry-migration-plan.md` 判断ログ #3)。後続 plan `huffman-strong-form-completion-plan`
+完遂時に wall lemma を constructive に置換 + wrapper を signature 改変すれば本 predicate
+は完全に削除可能。 -/
 abbrev MergedHuffmanAuxIdentHypothesis : Prop :=
   ∀ {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -151,7 +159,12 @@ abbrev MergedHuffmanAuxIdentHypothesis : Prop :=
 から原 `HuffmanMergedIdentificationHypothesis` を完全証明で導く. measure 層は
 `initMultiset_mergedMeasure_eq` + `huffmanLength` の defeq 展開で完全に discharge.
 
-`@audit:staged(huffman-2hyp)` -/
+注: `h_aux` は load-bearing hypothesis として消費されるが、body は constructive (`rw +
+exact`)。本含意自体は genuine な reduction で sorry なし。consumer 側で
+`HuffmanWalls.merged_huffman_aux_ident_hypothesis_holds` を渡せば
+`HuffmanMergedIdentificationHypothesis` が transitive に得られる。closure 責任は
+`HuffmanWalls.merged_huffman_aux_ident_hypothesis_holds` の
+`@residual(plan:huffman-strong-form-completion)` が保有。 -/
 theorem huffmanMergedIdentification_of_aux
     (h_aux : MergedHuffmanAuxIdentHypothesis.{u}) :
     HuffmanMergedIdentificationHypothesis.{u} := by
@@ -168,7 +181,14 @@ theorem huffmanMergedIdentification_of_aux
 primitive `MergedHuffmanAuxIdentHypothesis` で受け取る form. swap normalization 半分
 (`SwapNormalizationHypothesis`) はそのまま残る (本 seed の scope 外).
 
-`@audit:staged(huffman-2hyp)` -/
+注: `h_swap` / `h_aux` は load-bearing hypothesis。本来は
+`HuffmanWalls.swap_normalization_hypothesis_holds` /
+`merged_huffman_aux_ident_hypothesis_holds` を呼ぶ形に書換べきだが、
+`HuffmanWalls.lean → HuffmanStrongForm.lean → HuffmanMergedIdentBody.lean` の import chain
+で循環するため signature 不変 (`huffman-sorry-migration-plan.md` 判断ログ #3 L-MIG-4 拡張)。
+consumer 側で wall lemma を渡せば transitive に閉じる。
+
+@residual(plan:huffman-strong-form-completion) -/
 theorem huffmanLength_optimal_with_swap_and_aux
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]

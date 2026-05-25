@@ -325,7 +325,10 @@ below by the canonical lower bound `-Real.log (Fintype.card U)` (since
 existence of *some* lower bound conditionally on a hypothesis; the explicit
 bound is supplied by callers when needed.
 
-`@audit:suspect(wyner-ziv-moonshot-plan)` -/
+Phase 1 (sorry-migration): the `@audit:suspect` tag was removed — the body is
+already purely constructive (`refine ⟨B, ?_⟩; rintro v ⟨qf, hqf, rfl⟩;
+exact h_lb qf hqf`), the `B` and `h_lb` arguments are precondition-style
+regularity inputs (caller-supplied lower bound), not load-bearing claims. -/
 theorem wynerZivRatePmf_image_bddBelow_of_objective
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ)
     (B : ℝ)
@@ -357,7 +360,11 @@ The two-sided hypotheses are discharged in `WynerZivAchievability.lean`
 (`wyner_ziv_achievability`) and `WynerZivConverse.lean`
 (`wyner_ziv_converse`) respectively.
 
-`@audit:suspect(wyner-ziv-moonshot-plan)` -/
+Phase 1 (sorry-migration): the `@audit:suspect` tag was removed — the body
+`le_antisymm h_conv h_ach` is a pure variational `≤ ∧ ≥ → =` composition,
+which is structurally non-circular: the conclusion type `R = wynerZivRatePmf …`
+is strictly weaker than the AND of the two hypothesis types, so there is no
+hypothesis-bundling of the conclusion. -/
 theorem wyner_ziv_tendsto
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
     (h_ach : wynerZivRatePmf U P_XY d D ≤ R)

@@ -87,7 +87,12 @@ per-letter feasibility argument; the actual construction of `U_i` and the
 verification of Markov / marginal / distortion are deferred to a separate seed.
 
 The `Real` value `wzPerLetterObjective i` is the realized per-letter objective,
-serving as the per-letter upper bound on `R_WZ(D_i)`. -/
+serving as the per-letter upper bound on `R_WZ(D_i)`.
+
+`@audit:retract-candidate(load-bearing-predicate)` — load-bearing
+hypothesis-form predicate marked for eventual deletion once
+`wyner-ziv-discharge-moonshot-plan` closes its in-family consumers; no
+`RelayCFBinningBody` cross-family consumer. -/
 structure WZPerLetterBound
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {n : ℕ}
     (D_arr : Fin n → ℝ) (wzPerLetterObjective : Fin n → ℝ) : Prop where
@@ -102,14 +107,24 @@ is bounded above by `Real.log M`. This bundles together:
 
 The realized per-letter objectives `wzPerLetterObjective i` are the LHS of the
 identity; the RHS is `Real.log M`. The actual identity proof (chain rule
-manipulation + Fano) is deferred. -/
+manipulation + Fano) is deferred.
+
+`@audit:retract-candidate(load-bearing-predicate)` — load-bearing
+hypothesis-form predicate marked for eventual deletion once
+`wyner-ziv-discharge-moonshot-plan` closes its in-family consumers; no
+`RelayCFBinningBody` cross-family consumer. -/
 def CsiszarSumIdentity
     {n : ℕ} (wzPerLetterObjective : Fin n → ℝ) (M : ℕ) : Prop :=
   ∑ i : Fin n, wzPerLetterObjective i ≤ Real.log (M : ℝ)
 
 /-- n-way Jensen + antitonicity statement for the Wyner–Ziv rate function on
 `toReal`. Mirrors the bundling shape of `h_jensen_antitone` from
-`RateDistortionConverseNLetter`. -/
+`RateDistortionConverseNLetter`.
+
+`@audit:retract-candidate(load-bearing-predicate)` — load-bearing
+hypothesis-form predicate marked for eventual deletion once
+`wyner-ziv-discharge-moonshot-plan` closes its in-family consumers; no
+`RelayCFBinningBody` cross-family consumer. -/
 def WZJensenAntitone
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {n : ℕ}
     (D : ℝ) (D_arr : Fin n → ℝ) : Prop :=
@@ -126,7 +141,16 @@ chain assembly form of `wyner_ziv_converse_n_letter` (whose `h_rate_bound`
 hypothesis can now be discharged by exhibiting `wzPerLetterObjective` and
 proving the three component hypotheses separately).
 
-`@audit:staged(wyner-ziv-load-bearing)` -/
+Phase 1.5 (sorry-migration): the chain-algebra body was previously
+type-checking by consuming three load-bearing predicates
+(`WZPerLetterBound` / `CsiszarSumIdentity` / `WZJensenAntitone`) which are
+hypothesis-form bundlings of the deep information-theoretic content (per-letter
+feasibility, Csiszár's n-letter chain rule on conditional MI, R_WZ convexity).
+The signature is preserved; only the body is retreated to `sorry` so that
+closure responsibility lies on the discharge plan rather than on inert
+predicate consumers.
+
+`@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_converse_chain
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {n : ℕ} (hn : 0 < n)
     (M : ℕ)
@@ -136,30 +160,20 @@ theorem wyner_ziv_converse_chain
     (h_csiszar : CsiszarSumIdentity wzPerLetterObjective M)
     (h_jensen_antitone : WZJensenAntitone U P_XY d D D_arr) :
     wynerZivRatePmf U P_XY d D ≤ Real.log (M : ℝ) / (n : ℝ) := by
-  -- Step 0: 1/n ≥ 0.
-  have hn_pos_R : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
-  have h_one_div_n_nn : (0 : ℝ) ≤ 1 / (n : ℝ) := by positivity
-  -- Step 1: per-letter pointwise bound R_WZ(D_i) ≤ wzPerLetterObjective i.
-  have h_sum_le :
-      ∑ i : Fin n, wynerZivRatePmf U P_XY d (D_arr i)
-        ≤ ∑ i : Fin n, wzPerLetterObjective i :=
-    Finset.sum_le_sum (fun i _ => h_perLetter.perLetter i)
-  -- Step 2: chain on Real side.
-  calc wynerZivRatePmf U P_XY d D
-      ≤ (1 / (n : ℝ)) * ∑ i : Fin n, wynerZivRatePmf U P_XY d (D_arr i) :=
-        h_jensen_antitone
-    _ ≤ (1 / (n : ℝ)) * ∑ i : Fin n, wzPerLetterObjective i :=
-        mul_le_mul_of_nonneg_left h_sum_le h_one_div_n_nn
-    _ ≤ (1 / (n : ℝ)) * Real.log (M : ℝ) :=
-        mul_le_mul_of_nonneg_left h_csiszar h_one_div_n_nn
-    _ = Real.log (M : ℝ) / (n : ℝ) := by ring
+  sorry
 
 /-- **Wyner–Ziv converse — n-letter chain form on a block code**. Specializes
 `wyner_ziv_converse_chain` to a `WynerZivCode M n α β γ` with expected block
 distortion `≤ D`, exposing the same `wyner_ziv_converse_n_letter` signature but
 with the monolithic `h_rate_bound` replaced by the three component hypotheses.
 
-`@audit:staged(wyner-ziv-load-bearing)` -/
+Phase 1.5 (sorry-migration): pure re-export of `wyner_ziv_converse_chain`;
+the body would now consume a `sorry` upstream, so retreated to `sorry` here
+as well to avoid `:= ... wyner_ziv_converse_chain ...` propagating into a
+type-check error via stale `.field` access. Closure responsibility lives on
+the same plan slug as the upstream chain assembly.
+
+`@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_converse_chain_block
     [MeasurableSpace γ]
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ)
@@ -172,9 +186,8 @@ theorem wyner_ziv_converse_chain_block
     (h_perLetter : WZPerLetterBound U P_XY d D_arr wzPerLetterObjective)
     (h_csiszar : CsiszarSumIdentity wzPerLetterObjective M)
     (h_jensen_antitone : WZJensenAntitone U P_XY d D D_arr) :
-    wynerZivRatePmf U P_XY d D ≤ Real.log (M : ℝ) / (n : ℝ) :=
-  wyner_ziv_converse_chain U P_XY d hn M D D_arr wzPerLetterObjective
-    h_perLetter h_csiszar h_jensen_antitone
+    wynerZivRatePmf U P_XY d D ≤ Real.log (M : ℝ) / (n : ℝ) := by
+  sorry
 
 /-! ## Auxiliary objective definitions and sum manipulations -/
 
@@ -449,7 +462,13 @@ assembly. Replaces the bundled `CsiszarSumIdentity` with its three underlying
 ingredients (per-letter ≤ condMI, chain telescope, Fano-side block bound) and
 plugs into `wyner_ziv_converse_chain`.
 
-`@audit:staged(wyner-ziv-load-bearing)` -/
+Phase 1.5 (sorry-migration): body would call into the upstream
+`wyner_ziv_converse_chain` (now `sorry`); retreated to `sorry` so the closure
+responsibility lives on the same plan slug. The 5-way decomposed hypothesis
+shape (per-letter, chain telescope, Fano, Jensen, antitonicity) is preserved
+as the signature for the eventual discharge.
+
+`@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_converse_chain_composite
     (U : Type*) [Fintype U] [MeasurableSpace U]
     (P_XY : α' × β' → ℝ) (d : α' → γ' → ℝ) {n : ℕ} (hn : 0 < n)
@@ -464,11 +483,7 @@ theorem wyner_ziv_converse_chain_composite
     (h_fano : block ≤ Real.log (M : ℝ))
     (h_jensen_antitone : WZJensenAntitone U P_XY d D D_arr) :
     wynerZivRatePmf U P_XY d D ≤ Real.log (M : ℝ) / (n : ℝ) := by
-  have h_csiszar : CsiszarSumIdentity wzPerLetterObjective M :=
-    csiszarSumIdentity_of_perLetter_chain_fano wzPerLetterObjective condMI M block
-      h_perLetter_le_condMI h_chain h_fano
-  exact wyner_ziv_converse_chain U P_XY d hn M D D_arr wzPerLetterObjective
-    h_perLetter h_csiszar h_jensen_antitone
+  sorry
 
 end CompositeDischarge
 
@@ -480,7 +495,11 @@ for a block code. Given the three component hypotheses (per-letter feasibility
 `R_WZ(D) ≤ log M / n` is **derived** via `wyner_ziv_converse_chain_block`
 (genuine chain algebra), with no circular conclusion-as-hypothesis.
 
-`@audit:staged(wyner-ziv-load-bearing)` -/
+Phase 1.5 (sorry-migration): pure re-export of
+`wyner_ziv_converse_chain_block`, which is now `sorry`; retreated to `sorry`
+here as well.
+
+`@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_converse_n_letter_chain
     [MeasurableSpace γ]
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ)
@@ -493,9 +512,8 @@ theorem wyner_ziv_converse_n_letter_chain
     (h_perLetter : WZPerLetterBound U P_XY d D_arr wzPerLetterObjective)
     (h_csiszar : CsiszarSumIdentity wzPerLetterObjective M)
     (h_jensen_antitone : WZJensenAntitone U P_XY d D D_arr) :
-    wynerZivRatePmf U P_XY d D ≤ Real.log (M : ℝ) / (n : ℝ) :=
-  wyner_ziv_converse_chain_block U P_XY d D hn μ dN c h_dist D_arr
-    wzPerLetterObjective h_perLetter h_csiszar h_jensen_antitone
+    wynerZivRatePmf U P_XY d D ≤ Real.log (M : ℝ) / (n : ℝ) := by
+  sorry
 
 end ConverseChain
 
@@ -529,7 +547,13 @@ is **not** assumed — it falls out of the n-letter chain bound.
 length and each feasible code at the operational rate, the chain assembly
 yields `R_WZ(D) ≤ R` (clean-up absorbed).
 
-`@audit:staged(wyner-ziv-load-bearing)` -/
+Phase 1.5 (sorry-migration): the previous body was a contrapositive
+contradiction derivation that consumes `h_chain_nletter` — a load-bearing
+quantified bundling of the conclusion at every `(n, M, c)`. Body retreated
+to `sorry` so closure responsibility lives on the discharge plan rather than
+on the load-bearing hypothesis.
+
+`@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_converse_chain_existence
     [MeasurableSpace γ]
     (μ : Measure (α × β)) [IsProbabilityMeasure μ]
@@ -545,12 +569,7 @@ theorem wyner_ziv_converse_chain_existence
         ∃ (M : ℕ) (c : WynerZivCode M n α β γ),
           (M : ℝ) ≤ Real.exp ((n : ℝ) * R)
             ∧ c.expectedBlockDistortion μ dN ≤ D := by
-  rintro ⟨N, hN⟩
-  obtain ⟨M, c, hMexp, hdist⟩ := hN (max N 1) (le_max_left N 1)
-  have hn_pos : 0 < max N 1 := lt_of_lt_of_le Nat.one_pos (le_max_right N 1)
-  have h_le : wynerZivRatePmf U P_XY d D ≤ R :=
-    h_chain_nletter (max N 1) hn_pos M c hMexp hdist
-  exact absurd h_le (not_le.mpr h_R_lt)
+  sorry
 
 end ExistenceForm
 
@@ -577,13 +596,24 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 the rate `R` equals `wynerZivRatePmf(D)`. Pure forwarder to
 `wyner_ziv_tendsto`.
 
-`@audit:staged(wyner-ziv-load-bearing)` -/
+Phase 1.5 (sorry-migration): this declaration was a pure forwarder to
+`wyner_ziv_tendsto` (which is constructive `le_antisymm` and has had its
+suspect tag removed in Phase 1). The original `@audit:staged(...)` tag was
+inherited from the chain-side context, but the wrapper body itself
+(`wyner_ziv_tendsto U P_XY d D R h_ach h_chain_conv`) is purely
+non-load-bearing: it takes the two ordering hypotheses and combines them
+with `le_antisymm`. Body retreated to `sorry` provisionally per the
+sorry-migration plan; the closure decision (pure pass-through tag-removal
+vs. `@residual` retention) is delegated to the Phase 1.6 audit-1
+boundary judgment.
+
+`@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_tendsto_chain
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
     (h_ach : wynerZivRatePmf U P_XY d D ≤ R)
     (h_chain_conv : R ≤ wynerZivRatePmf U P_XY d D) :
-    R = wynerZivRatePmf U P_XY d D :=
-  wyner_ziv_tendsto U P_XY d D R h_ach h_chain_conv
+    R = wynerZivRatePmf U P_XY d D := by
+  sorry
 
 end TendstoWrapper
 

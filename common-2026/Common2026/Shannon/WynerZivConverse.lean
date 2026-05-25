@@ -27,8 +27,12 @@ is the conclusion:
 * `WZFanoConverseBound` — the **Fano + chain inequality** content of
   Cover–Thomas 15.9.2: `n · R_WZ(D) ≤ wzObjectiveSum + 1 + Pe · log M`, where
   `wzObjectiveSum := ∑ᵢ (I(Xᵢ; Uᵢ) − I(Yᵢ; Uᵢ))` is the per-letter
-  Wyner–Ziv objective sum.  Honest-🟢ʰ: the discrete-Fano / DPI / per-letter
-  Jensen plumbing that produces this scalar inequality is a real Mathlib gap.
+  Wyner–Ziv objective sum.  Load-bearing predicate (residual): the
+  discrete-Fano / DPI / per-letter Jensen plumbing that produces this scalar
+  inequality is a real Mathlib gap; closure is tracked by
+  `@residual(plan:wyner-ziv-discharge-moonshot-plan)` on the predicate's
+  consumers, and the predicate itself carries
+  `@audit:retract-candidate(load-bearing-predicate)`.
 * `WZCsiszarSumBound` — **Csiszár's sum identity**: `wzObjectiveSum ≤ log M`.
   An honest, non-circular named `Prop` (a real Mathlib gap — the n-letter
   conditional-MI chain rule on the side-information chain), **NOT** `:= True`,
@@ -65,7 +69,8 @@ These are the real Cover–Thomas 15.9.2 ingredients. Each is a genuine `Prop`
 distinct from the conclusion `wynerZivRatePmf ≤ log M / n`.
 -/
 
-/-- **Wyner–Ziv Fano + chain bound** (honest-🟢ʰ entropy-level input).
+/-- **Wyner–Ziv Fano + chain bound** (load-bearing entropy-level residual
+predicate).
 
 The Fano-side inequality of Cover–Thomas 15.9.2: after applying Fano's
 inequality to the message `M` given the side information `Yⁿ`, the
@@ -79,14 +84,22 @@ where `wzObjectiveSum = ∑ᵢ (I(Xᵢ; Uᵢ) − I(Yᵢ; Uᵢ))` is the per-let
 Wyner–Ziv objective sum and `Pe` is the block error probability.  This is the
 genuine residual content — **not** the conclusion, **not** `True`.  The
 discrete-Fano / DPI / per-letter Jensen plumbing producing this scalar
-inequality is a real Mathlib gap, kept as an honest hypothesis. -/
+inequality is a real Mathlib gap; closure is tracked by
+`@residual(plan:wyner-ziv-discharge-moonshot-plan)` on the predicate's
+consumers (Phase 1.5 sorry-migration).
+
+`@audit:retract-candidate(load-bearing-predicate)` — load-bearing
+hypothesis-form predicate marked for eventual deletion once the discharge
+plan closes its consumers; no `RelayCFBinningBody` cross-family consumer for
+this predicate (Wyner–Ziv family closed). -/
 def WZFanoConverseBound
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ)
     (wzObjectiveSum Pe : ℝ) (M n : ℕ) : Prop :=
   (n : ℝ) * wynerZivRatePmf U P_XY d D
     ≤ wzObjectiveSum + 1 + Pe * Real.log (M : ℝ)
 
-/-- **Wyner–Ziv Csiszár sum identity bound** (honest-🟢ʰ entropy-level input).
+/-- **Wyner–Ziv Csiszár sum identity bound** (load-bearing entropy-level
+residual predicate).
 
 Csiszár's sum identity bounds the per-letter Wyner–Ziv objective sum by the
 block log-cardinality:
@@ -97,12 +110,24 @@ wzObjectiveSum ≤ log M.
 
 A genuine, non-circular `Prop` (≠ conclusion, ≠ `True`).  The n-letter
 conditional mutual-information chain rule on the side-information chain
-`Uᵢ − Xᵢ − Yᵢ` that proves this identity is a real Mathlib gap. -/
+`Uᵢ − Xᵢ − Yᵢ` that proves this identity is a real Mathlib gap; closure is
+tracked by `@residual(plan:wyner-ziv-discharge-moonshot-plan)` on this
+predicate's consumers (Phase 1.5 sorry-migration).
+
+`@audit:retract-candidate(load-bearing-predicate)` — load-bearing
+hypothesis-form predicate marked for eventual deletion once the discharge
+plan closes its consumers; no `RelayCFBinningBody` cross-family consumer for
+this predicate (Wyner–Ziv family closed). -/
 def WZCsiszarSumBound (wzObjectiveSum : ℝ) (M : ℕ) : Prop :=
   wzObjectiveSum ≤ Real.log (M : ℝ)
 
 /-- **Wyner–Ziv `n⁻¹` clean-up estimate** — folds the Fano residual
-`(1 + Pe · log M)/n` into the published slack `ε`. -/
+`(1 + Pe · log M)/n` into the published slack `ε`.
+
+`@audit:retract-candidate(load-bearing-predicate)` — load-bearing
+arithmetic-residual predicate marked for eventual deletion once the
+discharge plan closes its consumers; no `RelayCFBinningBody` cross-family
+consumer for this predicate (Wyner–Ziv family closed). -/
 def WZRateCleanup (Pe : ℝ) (M n : ℕ) (ε : ℝ) : Prop :=
   (1 + Pe * Real.log (M : ℝ)) / (n : ℝ) ≤ ε
 
@@ -180,86 +205,82 @@ theorem wyner_ziv_converse_n_letter
   wz_rate_le_of_fano hn (wynerZivRatePmf U P_XY d D) wzObjectiveSum Pe ε M
     h_fano h_csiszar h_cleanup
 
-/-- **Wyner–Ziv converse — rate-side form (genuine derivation)**.
+/-- **Wyner–Ziv converse — rate-side form**.
 
-A target achievable rate `R` is shown to satisfy `R ≤ R_WZ(D)` by **deriving**
-the per-letter operational bound `R_WZ(D) ≤ log M / n + ε` from the genuine
-entropy-level residuals (via `wyner_ziv_converse_n_letter`) and combining with
-the operational-vs-information ordering `R ≤ log M / n + ε ≤ R_WZ(D)`.
+A target achievable rate `R` lies at or below the Wyner–Ziv rate function
+`R_WZ(D)`. This is the *rate-side* statement of Cover–Thomas 15.9.2
+consumed by the Phase D wrapper `wyner_ziv_tendsto`.
 
-The genuine n-letter bound is computed inline (not assumed), so the conclusion
-`R ≤ R_WZ(D)` is **not** taken as a hypothesis.
+Phase 2.2 retreat — the previous signature exposed five
+`Prop`-valued hypotheses
+(`h_fano : WZFanoConverseBound …`, `h_csiszar : WZCsiszarSumBound …`,
+`h_cleanup : WZRateCleanup …`, `h_R_le : R ≤ log M / n + ε`,
+`h_op_le : log M / n + ε ≤ wynerZivRatePmf …`) and combined them via
+`wyner_ziv_converse_n_letter U … h_fano h_csiszar h_cleanup` plus
+`le_trans h_R_le h_op_le` to produce the conclusion `R ≤ wynerZivRatePmf …`.
+The three predicates are load-bearing (their definitions are the genuine
+Cover–Thomas 15.9.2 residual content). The two scalar inequalities
+`h_R_le` / `h_op_le` carry the operational-vs-information rate ordering —
+also load-bearing. All five load-bearing hypotheses are removed; the
+conclusion is preserved as the Phase C closure target. Closure is the
+responsibility of `wyner-ziv-discharge-moonshot-plan`.
 
-`@audit:suspect(wyner-ziv-moonshot-plan)` -/
+The de-circularized derivation kernel `wyner_ziv_converse_n_letter` (above)
+is left untouched as the genuine entropy-level scaffold the discharge plan
+will plug into.
+
+Audit verdict (2026-05-25): the post-retreat signature lacks any precondition
+binding `R` to `M / n` (e.g., `R ≤ Real.log M / n`), so for an arbitrary `R`
+the conclusion `R ≤ wynerZivRatePmf U P_XY d D` is **universally false**
+(counterexample: `R := wynerZivRatePmf U P_XY d D + 1`).  Reclassified from
+`plan:wyner-ziv-discharge-moonshot-plan` to `defect:false-statement`:
+closure requires either adding the operational rate bound
+`(h_M_le : (M : ℝ) ≤ Real.exp ((n : ℝ) * R))` (linking `R` to the code
+size) or deleting this `_rate` declaration in favor of
+`wyner_ziv_converse_existence` / `wyner_ziv_converse_n_letter`.  Decision
+deferred to `wyner-ziv-discharge-moonshot-plan`.
+
+`@residual(defect:false-statement)` -/
 theorem wyner_ziv_converse_rate
     [MeasurableSpace γ]
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
     {M n : ℕ} (hn : 0 < n)
     (μ : Measure (α × β)) [IsProbabilityMeasure μ]
     (dN : DistortionFn α γ) (c : WynerZivCode M n α β γ)
-    (h_dist : c.expectedBlockDistortion μ dN ≤ D)
-    (wzObjectiveSum Pe ε : ℝ)
-    (h_fano : WZFanoConverseBound U P_XY d D wzObjectiveSum Pe M n)
-    (h_csiszar : WZCsiszarSumBound wzObjectiveSum M)
-    (h_cleanup : WZRateCleanup Pe M n ε)
-    -- the achievable rate `R` is dominated by the per-letter operational rate
-    (h_R_le : R ≤ Real.log (M : ℝ) / (n : ℝ) + ε)
-    -- and the per-letter operational rate is below the published `R_WZ(D)` slack
-    (h_op_le : Real.log (M : ℝ) / (n : ℝ) + ε ≤ wynerZivRatePmf U P_XY d D) :
+    (h_dist : c.expectedBlockDistortion μ dN ≤ D) :
     R ≤ wynerZivRatePmf U P_XY d D := by
-  -- derive the genuine n-letter operational bound `R_WZ(D) ≤ log M / n + ε`.
-  have h_nletter : wynerZivRatePmf U P_XY d D ≤ Real.log (M : ℝ) / (n : ℝ) + ε :=
-    wyner_ziv_converse_n_letter U P_XY d D hn μ dN c h_dist
-      wzObjectiveSum Pe ε h_fano h_csiszar h_cleanup
-  -- combine: `R ≤ log M / n + ε ≤ R_WZ(D)`, and `R_WZ(D) ≤ log M / n + ε`.
-  -- Together `h_R_le` and `h_op_le` give `R ≤ R_WZ(D)` directly; the n-letter
-  -- bound `h_nletter` certifies the operational rate is genuinely realized.
-  have := h_nletter
-  exact le_trans h_R_le h_op_le
+  sorry
 
-/-- **Wyner–Ziv converse — `R < R_WZ` impossibility form (genuine
-contrapositive derivation)**.
+/-- **Wyner–Ziv converse — `R < R_WZ` impossibility form**.
 
-If a rate `R` is strictly less than `wynerZivRatePmf U P_XY d D`, then no
-infinite sequence of block codes can achieve distortion ≤ `D` at this rate.
+Cover–Thomas 15.9.2 impossibility: if a rate `R` is strictly less than
+`wynerZivRatePmf U P_XY d D`, then no infinite sequence of block codes can
+achieve distortion ≤ `D` at this rate.
 
-The impossibility is **derived by contrapositive** from the genuine n-letter
-rate bound: from any candidate code achieving the rate we obtain (via the
-entropy-level Fano + Csiszár + cleanup residuals supplied as a *uniform*
-family `h_nletter`) `R_WZ(D) ≤ log M / n + ε ≤ R`, contradicting
-`R < R_WZ(D)`.  The impossibility is **not** assumed — it falls out of the
-strict-rate gap and the n-letter bound.
+Phase 2.2 retreat — the previous signature took a hypothesis
+`h_nletter : ∀ n M c, M ≤ exp(n·R) → c.expectedBlockDistortion ≤ D →
+wynerZivRatePmf U P_XY d D ≤ R` which **quantifies the conclusion of
+the converse over every block length / code / operational rate**, then
+derived the impossibility by contradiction with `h_R_lt`. The
+`h_nletter` hypothesis bundles the entire chain-converse content
+(Fano + Csiszár + Jensen, asymptotically uniform) into a single
+`Prop`-valued hypothesis whose conclusion clause is the load-bearing
+half of Cover–Thomas 15.9.2. That hypothesis is removed; the
+conclusion (the impossibility statement) is preserved as the closure
+target for `wyner-ziv-discharge-moonshot-plan`.
 
-`h_nletter` is the genuine n-letter content: for each block length `n ≥ N` and
-each code achieving the operational rate (`M ≤ exp(n·R)`), the entropy-level
-converse yields `R_WZ(D) ≤ log M / n` (clean-up already absorbed, `ε = 0` in
-the limit form), which the operational rate forces `≤ R`.
-
-`@audit:suspect(wyner-ziv-moonshot-plan)` -/
+`@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_converse_existence
     [MeasurableSpace γ]
     (μ : Measure (α × β)) [IsProbabilityMeasure μ]
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
     (h_R_lt : R < wynerZivRatePmf U P_XY d D)
-    (dN : DistortionFn α γ)
-    -- genuine n-letter residual: any feasible code forces `R_WZ(D) ≤ R`.
-    (h_nletter :
-      ∀ n : ℕ, 0 < n → ∀ M : ℕ, ∀ c : WynerZivCode M n α β γ,
-        (M : ℝ) ≤ Real.exp ((n : ℝ) * R)
-          → c.expectedBlockDistortion μ dN ≤ D
-          → wynerZivRatePmf U P_XY d D ≤ R) :
+    (dN : DistortionFn α γ) :
     ¬ ∃ N : ℕ, ∀ n ≥ N,
         ∃ (M : ℕ) (c : WynerZivCode M n α β γ),
           (M : ℝ) ≤ Real.exp ((n : ℝ) * R)
             ∧ c.expectedBlockDistortion μ dN ≤ D := by
-  rintro ⟨N, hN⟩
-  -- pick a positive block length `n ≥ max N 1`.
-  obtain ⟨M, c, hMexp, hdist⟩ := hN (max N 1) (le_max_left N 1)
-  have hn_pos : 0 < max N 1 := lt_of_lt_of_le Nat.one_pos (le_max_right N 1)
-  -- the genuine n-letter bound forces `R_WZ(D) ≤ R`, contradicting `R < R_WZ(D)`.
-  have h_le : wynerZivRatePmf U P_XY d D ≤ R :=
-    h_nletter (max N 1) hn_pos M c hMexp hdist
-  exact absurd h_le (not_le.mpr h_R_lt)
+  sorry
 
 end Converse
 

@@ -329,17 +329,25 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
 /-- **Wyner–Ziv achievability — existence form, bridged.**
 
-This re-publishes `wyner_ziv_achievability_existence` with its opaque
-achievability-existence hypothesis *discharged* by the decoder-failure → 0
-bridge: instead of receiving the existence claim ready-made, it receives the
-strictly-more-primitive pair
+This re-publishes the achievability-existence conclusion `∀ ε > 0, ∃ N,
+∀ n ≥ N, ∃ M' c, (M' : ℝ) ≤ exp(n·R) ∧ c.expectedBlockDistortion ≤ D + ε`
+discharged by the decoder-failure → 0 bridge: instead of receiving the
+existence claim ready-made, it receives the strictly-more-primitive pair
 
 * a per-`n` code with success-event distortion `≤ Edδ ≤ D` and rate `≤ R`, plus
 * the decoder-failure probability tending to `0` (`h_failProb`, the
   `wzDecoderFail_aep_assembled` provenance),
 
 and *produces* the achievability-existence conclusion via
-`wynerZivAchievabilityExistence_of_failProb`. -/
+`wynerZivAchievabilityExistence_of_failProb`.
+
+Phase 2.x ripple note: `wzDecoderFail_aep_assembled` itself is now a
+transitive `sorry`-consumer (Phase 1.5 / 2.1 / 2.2 sorry-migration of
+the Wyner–Ziv binning / covering / packing chain). This declaration's
+body is non-load-bearing (pure assembly of `h_failProb`), so no
+`@residual` is attached here — the closure responsibility belongs to the
+upstream declarations'
+`@residual(plan:wyner-ziv-discharge-moonshot-plan)` tags. -/
 theorem wyner_ziv_achievability_existence_bridged
     (P_XY : Measure (α × β)) [IsProbabilityMeasure P_XY]
     (P_XY_pmf : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)

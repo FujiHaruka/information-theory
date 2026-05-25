@@ -594,7 +594,7 @@ universe v
 universe-`u` 形をそのまま呼び出すだけだが、後続 seed で `{α : Type*}` 呼び出しを
 拾う用.
 
-`@audit:staged(huffman-2hyp)` -/
+@residual(plan:huffman-2hyp-vertical-reduction) -/
 theorem huffmanLength_optimal_with_hypotheses_at
     {α : Type v} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -610,7 +610,7 @@ theorem huffmanLength_optimal_with_hypotheses_at
 /-- **partial wrapper (combined hypothesis tuple form)**: 2 hypothesis を tuple
 形に combine した形の wrapper. client は `⟨h_swap, h_ident⟩` で渡せる.
 
-`@audit:staged(huffman-2hyp)` -/
+@residual(plan:huffman-2hyp-vertical-reduction) -/
 theorem huffmanLength_optimal_with_combined_hypothesis
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -836,7 +836,7 @@ wrapper) を集める. これらは後続 seed T1-A''' で hypothesis を discha
 /-- **partial wrapper: hypothesis を tuple で **`Σ`-pair** 化**: 2 hypothesis を非依存
 `Σ`-pair で取り出す形. inhabited `PProd` 風.
 
-`@audit:staged(huffman-2hyp)` -/
+@residual(plan:huffman-2hyp-vertical-reduction) -/
 theorem huffmanLength_optimal_with_pair_hypothesis
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -851,7 +851,7 @@ theorem huffmanLength_optimal_with_pair_hypothesis
 /-- **partial wrapper: contraposition form**: 結論を否定の対偶形で publish. 後続
 client が strict 不等式から逆向きに矛盾を起こす useful な form.
 
-`@audit:staged(huffman-2hyp)` -/
+@residual(plan:huffman-2hyp-vertical-reduction) -/
 theorem huffmanLength_optimal_with_hypotheses_contra
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]

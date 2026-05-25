@@ -476,7 +476,19 @@ in separate seeds. The present theorem is the *clean composition* — once
 both hypotheses are available, the bound `Pr[error] ≤ ε_typ + ε_bin` is a
 two-line consequence.
 
-`@audit:staged(wyner-ziv-load-bearing)` -/
+Phase 1.5 (sorry-migration, boundary case): body retreated to `sorry`
+provisionally. `h_typ_prob` / `h_bin_prob` are `μ.real (E_typ) ≤ ε_typ`-form
+probability bounds — these are likely regularity-style preconditions
+(probability bounds on measurable error sets), not load-bearing
+information-theoretic claims, but the original `@audit:staged` tag
+upstream-grouped this with the chain-style load-bearing layer. The
+boundary determination (regularity vs. load-bearing) is delegated to
+Phase 1.6 audit-1. The body was a 4-line `calc` over the union-bound
+decomposition `wzAchievability_decoder_fail_le` followed by `add_le_add`;
+auditor may rule that this should revert to constructive (tag-removal
+only) rather than carry a `@residual`.
+
+`@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wzAchievability_random_binning_body
     [Nonempty β] [Nonempty γ]
     (μ : Measure Ω) [IsFiniteMeasure μ]
@@ -498,16 +510,7 @@ theorem wzAchievability_random_binning_body
         wzJointlyTypicalDecoderBody f_U JT f (f_U (Us ω), Ys ω)
           ≠ fun i => f (Us ω i, Ys ω i) }
       ≤ ε_typ + ε_bin := by
-  have h_step :=
-    wzAchievability_decoder_fail_le μ Us Ys JT f_U f
-      h_meas_typ h_meas_bin h_meas_fail
-  calc μ.real { ω : Ω |
-              wzJointlyTypicalDecoderBody f_U JT f (f_U (Us ω), Ys ω)
-                ≠ fun i => f (Us ω i, Ys ω i) }
-      ≤ μ.real (wzError_E_typ (n := n) Us Ys JT)
-          + μ.real (wzError_E_bin (n := n) Us Ys JT f_U) := h_step
-    _ ≤ ε_typ + ε_bin := by
-        exact add_le_add h_typ_prob h_bin_prob
+  sorry
 
 end AchievabilityBody
 

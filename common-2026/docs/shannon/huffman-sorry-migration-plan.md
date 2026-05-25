@@ -503,6 +503,31 @@ Hoeffding pilot (L-MIG-4 同条件) と異なり、Huffman は **30 件 + 5 pred
    - `@audit:closed-by-successor` との重畳は `@residual(plan:<slug>)` 1 件に統合 (`audit-tags.md`「Deprecated」表に従う)。
    - `EqualizingPermHypothesis` / `EqualizingSwapTargetHypothesis` の false-hypothesis defect は **本 plan scope 外**として handoff、未決事項 #4 で別 plan に分離。
 
+2. **2026-05-25 L-MIG-4 発動 (Phase 2.1.1 / 2.1.2 skip, `HuffmanOptimality.lean:778/:1028` body・signature 不変)**: lean-implementer agent が Phase 0 verbatim 確認中に発見した import cycle:
+   - `HuffmanOptimality.lean` (`huffmanLength_optimal_with_hypotheses` 等定義) ← `HuffmanStrongForm.lean` (`swap_normalization_proof` constructive proof) ← `HuffmanSwapNormCompletion.lean` ← ...
+   - 計画 Phase 2.1.1/2.1.2 は `HuffmanOptimality.lean:778/:1028` body から `HuffmanWalls.swap_normalization_hypothesis_holds` を呼ぶことを要求するが、`HuffmanWalls.lean` を新規 file として作る場合 (案 A) は `HuffmanWalls.lean` が `HuffmanStrongForm.lean` (constructive Hyp1 source) を import する必要があり、それを `HuffmanOptimality.lean` から import すると **循環**。
+   - 案 B per-file augmentation で `HuffmanOptimality.lean` 内に直接 `swap_normalization_hypothesis_holds` を sorry-base で追加する解は循環なしだが、既存 constructive proof `swap_normalization_proof` (`HuffmanStrongForm.lean:144`) を **未使用**にする = Pattern B (不要 sorry の作成) defect。
+   - 判断: **L-MIG-4 発動**。`HuffmanOptimality.lean:778/:1028` は body・signature 完全不変、docstring タグだけ `@audit:staged(huffman-2hyp) @audit:closed-by-successor(huffman-2hyp-vertical-reduction)` → `@residual(plan:huffman-2hyp-vertical-reduction)` に置換。**hypothesis 引数 `h_swap` / `h_ident` は残る** (= load-bearing predicate hypothesis として tier 4 寄りの残置)。これらの consumer は Phase 2.2 で wall 経由に書換、最後に `HuffmanOptimality.lean` 自身は plan slug が closure 担当を示す bookkeeping marker として hypothesis 残置を許容。
+   - 効果: 下流 wrapper 22 件はすべて wall 経由 (hypothesis 引数削除) になる一方、top-most public weak-form API (`huffmanLength_optimal_with_hypotheses`) は引き続き hypothesis を引数で受け取る形になる。完全 honest 化 (`HuffmanOptimality.lean:1028` の hypothesis 引数削除) は **後続 plan `huffman-2hyp-vertical-reduction-plan` 完遂時に wall lemma 内の sorry を constructive に置換する patch と同時に行う** (= interface 変更を伴うが wall closure と同タイミングなので weak form API 自体が用済み、後方互換は不要)。
+   - `HuffmanWalls.lean` 案 A は採用、ただし設計を refine: Hyp1 wall = `swap_normalization_proof` を直接 alias (constructive、sorry なし)、Hyp2 / Hyp_aux のみ sorry。combined / chain combined は constructive composition。direct sorry = 2 件 (Hyp2 + Hyp_aux)、constructive composition = 3 件 (Hyp1 alias + combined + chain combined)。
+
+3. **2026-05-25 L-MIG-4 拡張発動 (Phase 2.1.3 / 2.1.4 も skip, `HuffmanStrongForm.lean:175` / `HuffmanMergedIdentBody.lean:171` signature 不変)**: 判断ログ #2 と同じ import cycle 問題が `HuffmanStrongForm.lean` / `HuffmanMergedIdentBody.lean` にも該当することを実装中に発見:
+   - `HuffmanWalls.lean → HuffmanStrongForm.lean` の import chain、および `HuffmanStrongForm.lean → HuffmanMergedIdentBody.lean → HuffmanOptimality.lean` の chain で、`HuffmanWalls.lean` を `HuffmanStrongForm.lean` / `HuffmanMergedIdentBody.lean` から import すると循環。
+   - 判断: Phase 2.1.3 (`HuffmanStrongForm.lean:175`) と Phase 2.1.4 (`HuffmanMergedIdentBody.lean:171`) も skip。両 wrapper は signature 不変・body 不変、タグだけ更新 (`@audit:staged(huffman-2hyp)` / `@audit:staged(huffman-aux-ident)` → `@residual(plan:huffman-strong-form-completion)` or `@residual(plan:huffman-2hyp-vertical-reduction)`)。`h_aux` / `h_swap` load-bearing hypothesis 引数は残置。
+   - 結果: Phase 2.1 は **完全 skip** (上流 4 件 = `HuffmanOptimality.lean:778/:1028` + `HuffmanStrongForm.lean:175` + `HuffmanMergedIdentBody.lean:171` 全て signature 不変)、Phase 2.2 で下流 wrapper 22 件のみ wall 経由化。
+   - 完全 honest 化: Phase 2.1 上流 4 件は後続 plan 完遂時に wall closure と同時に signature 改変 (= weak form API 自体が用済みになるタイミング、後方互換不要)。本 plan scope では DoD = type-check done を維持しつつ load-bearing hypothesis を 4 件残置することを許容 (= proof done を本 plan で目指さない方針 `未決事項 #3` の整合的帰結)。
+   - Phase V 期待値修正: `@residual(plan:huffman-2hyp-vertical-reduction)` 件数は plan 推定より少なくなる (下流 22 件 + 上流 3 件 = 25 件、`HuffmanMergedIdentBody.lean:171` は `plan:huffman-strong-form-completion` 側で集計)。`@residual(plan:huffman-strong-form-completion)` は wall + `HuffmanStrongForm.lean:175` + `HuffmanMergedIdentBody.lean:171` = 3 件。
+
+4. **2026-05-25 L-MIG-4 さらに拡張 (Phase 2.2 も実質「タグ更新のみ」、`HuffmanT1APPrimeBody` / `HuffmanT1APPrimePartial` 17 件 signature 不変)**: Phase 2.2 着手時に import graph を再 verify:
+   - `HuffmanWalls.lean` の deps: `HuffmanStrongForm` + `HuffmanSwapStepChainBody` (chain combined wall を constructive composition で組むため `SwapStepLeChainHypothesis_holds` が必要)
+   - `HuffmanSwapStepChainBody.lean` の deps: `HuffmanOptimality` + `HuffmanT1APPrimePartial` + `HuffmanT1APPrimeBody`
+   - したがって `HuffmanT1APPrimeBody.lean` / `HuffmanT1APPrimePartial.lean` / `HuffmanSwapStepChainBody.lean` から `HuffmanWalls.lean` を import すると **循環**。これらの file の consumer wrapper は wall 経由化 (hypothesis 引数削除) できない。
+   - Wall 経由化が可能な file は **`HuffmanSwapNormalizationBody.lean` のみ** (downstream of `HuffmanSwapStepChainBody`)。ただし当該 file の Phase 2.2 対象 = `huffmanLength_optimal_via_equalizing_perm` のみで、これは既に Phase 1 で C 処理 (`@audit:staged` 削除 + transitive 散文) 済。
+   - 判断: **Phase 2.2 は実質「タグ更新のみ」に降格**。`HuffmanT1APPrimeBody.lean` 13 件 + `HuffmanT1APPrimePartial.lean` 4 件は signature 不変・body 不変、`@audit:staged(huffman-2hyp)` → `@residual(plan:huffman-2hyp-vertical-reduction)` 化のみ。load-bearing hypothesis 引数 (`h_swap` / `h_ident`) は残置。
+   - 結果: 本 plan の **すべての load-bearing wrapper (上流 + 下流 17 件 = 21 件) で hypothesis 引数が残る**。新規 sorry は `HuffmanWalls.lean` 2 件のみ (Hyp2 + Hyp_aux)。Hyp1 wall は `swap_normalization_proof` の constructive alias で sorry なし (= 既存 constructive proof の活用)。
+   - これは「load-bearing predicate hypothesis を残す」tier 4 寄りの形が family-wide に残ることを意味するが、本 plan の DoD は type-check done (合意済) であり、proof done (`@audit:ok`) は本 plan scope 外 (`未決事項 #3`)。代わりに本 plan は **slug 統一** (`@audit:staged(huffman-2hyp)` / `@audit:closed-by-successor` / 散文「load-bearing — NOT a discharge」を一律 `@residual(plan:huffman-2hyp-vertical-reduction)` に置換) を達成し、grep 集計可能性 + closure 担当 plan の明示を実現する。
+   - 完全 honest 化 (hypothesis 引数削除) は後続 plan `huffman-2hyp-vertical-reduction-plan` 完遂時に file-by-file の signature 改変として段階的に。本 plan ではその「statement of intent」を `@residual(plan:huffman-2hyp-vertical-reduction)` タグで表現する。
+
 <!-- 後続セッションで判断変更があれば下記に追記 (append-only):
-2. **YYYY-MM-DD <要点>**: <変更理由 + 撤退ラインへの紐付け>。
+5. **YYYY-MM-DD <要点>**: <変更理由 + 撤退ラインへの紐付け>。
 -->

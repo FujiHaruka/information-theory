@@ -251,7 +251,12 @@ for all `n ≥ N`, a codebook / side-info pair `(Us, Ys)` with measurable
 "good" event exists whose joint-typicality probability is at least `1 - ε`.
 This is *exactly* the conclusion shape of
 `AEPRate.jointlyTypicalSet_prob_ge_of_rate` (with `η := ε`), recast for the
-abstract joint-typicality predicate `JT`. -/
+abstract joint-typicality predicate `JT`.
+
+`@audit:retract-candidate(load-bearing-predicate)` — load-bearing
+hypothesis-form predicate marked for eventual deletion once the in-family
+discharge plan (`wyner-ziv-discharge-moonshot-plan`) closes its in-family
+consumers; no cross-family consumer. -/
 def IsCoveringTypicalityHyp
     (μ : Measure Ω)
     (JT : ∀ n : ℕ, (Fin n → U) × (Fin n → β) → Prop) : Prop :=
@@ -408,7 +413,14 @@ hypothesis `h_asymp` of `wyner_ziv_binning_existence_of_covering_packing`. The
 covering side contributes `ε₁ := ε/2` and the packing side `ε₂ ≤ ε/2`, so
 `ε₁ + ε₂ ≤ ε`.
 
-`@audit:staged(wyner-ziv-load-bearing)` -/
+Phase 1.5 (sorry-migration): body retreated to `sorry`. The two hypotheses
+`h_cov` / `h_pack` are load-bearing predicate bundles (AEP-side covering
+typicality + external packing existence). The previous body assembled them
+into the joint `h_asymp` shape via `wzCovering_existence_with_measurability`
+plus an ε-bisection trick; closure responsibility is parked on the
+discharge plan rather than on the load-bearing predicates.
+
+`@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wzCovering_feed_asymp
     [Nonempty β] [Nonempty γ]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -429,21 +441,7 @@ theorem wzCovering_feed_asymp
                   ≠ fun i => f (Us ω i, Ys ω i) }
             ∧ IsWynerZivBinningCovering (0 : ℝ) ε₁ μ Us Ys (JT n)
             ∧ IsWynerZivBinningPacking (0 : ℝ) ε₂ μ Us Ys (JT n) f_U := by
-  intro ε hε
-  have hε2 : (0 : ℝ) < ε / 2 := by linarith
-  obtain ⟨N_cov, hN_cov⟩ :=
-    wzCovering_existence_with_measurability (R₁ := (0 : ℝ)) μ JT h_cov (ε / 2) hε2
-  obtain ⟨N_pack, hN_pack⟩ := h_pack (ε / 2) hε2
-  refine ⟨max N_cov N_pack, ?_⟩
-  intro n hn
-  have hn_cov : N_cov ≤ n := le_trans (le_max_left _ _) hn
-  have hn_pack : N_pack ≤ n := le_trans (le_max_right _ _) hn
-  obtain ⟨Us, Ys, h_meas_typ, h_cov_pred⟩ := hN_cov n hn_cov
-  obtain ⟨M, f_U, f, ε₂, hε₂_le, h_meas_bin, h_meas_fail, h_pack_pred⟩ :=
-    hN_pack n hn_pack Us Ys
-  refine ⟨M, Us, Ys, f_U, f, ε / 2, ε₂, ?_, h_meas_typ, h_meas_bin, h_meas_fail,
-    h_cov_pred, h_pack_pred⟩
-  linarith
+  sorry
 
 /-- **Covering + packing existence ⇒ decoder-failure → 0.**
 
@@ -452,7 +450,14 @@ The end-to-end composition for this file: feed the assembled `h_asymp` bundle
 `wyner_ziv_binning_existence_of_covering_packing` to conclude that, under the
 AEP covering hypothesis and the external packing hypothesis, the decoder failure
 probability tends to `0`. This is the covering-side contribution to the
-Wyner–Ziv achievability body. -/
+Wyner–Ziv achievability body.
+
+Phase 2.x ripple note: this declaration depends transitively on both
+`wzCovering_feed_asymp` and `wyner_ziv_binning_existence_of_covering_packing`,
+both of which are now `sorry`
+(`@residual(plan:wyner-ziv-discharge-moonshot-plan)`). No `@residual` tag
+is attached here — the closure responsibility belongs to the upstream
+declarations' `@residual` tags. -/
 theorem wzCovering_decoder_fail_existence
     [Nonempty β] [Nonempty γ]
     (μ : Measure Ω) [IsProbabilityMeasure μ]

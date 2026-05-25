@@ -157,7 +157,15 @@ The combined decoder-failure bound, with BOTH halves instantiated at the same
 
 The conclusion is `wzCovering_decoder_fail_aep`'s decoder-failure → 0, but with
 its external packing hypothesis `IsPackingExistenceHyp` *eliminated* in favour of
-the strictly-more-primitive packing primitives. -/
+the strictly-more-primitive packing primitives.
+
+Phase 2.x ripple note: this declaration depends transitively on
+`wzCovering_decoder_fail_aep`, which transitively depends on the
+sorry-migrated `wzCovering_feed_asymp` /
+`wyner_ziv_binning_existence_of_covering_packing` /
+`wyner_ziv_binning_via_covering_packing`. No `@residual` tag is attached
+here — the closure responsibility belongs to the upstream declarations'
+`@residual(plan:wyner-ziv-discharge-moonshot-plan)` tags. -/
 theorem wzDecoderFail_aep_assembled
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → U) (Ys : ℕ → Ω → β)

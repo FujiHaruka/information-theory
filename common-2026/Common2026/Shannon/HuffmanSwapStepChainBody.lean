@@ -313,7 +313,12 @@ theorem swapStepLeChainHypothesis_witness_expL
 /-- **combined hypothesis に chain hypothesis を付加した triple**: 既存の 2 hypothesis
 (`SwapNormalizationHypothesis` / `HuffmanMergedIdentificationHypothesis`) に
 `SwapStepLeChainHypothesis` を加えた 3-way conjunction. chain hypothesis は常に成立
-するので、triple は 2-way `HuffmanCombinedHypothesis` と同値. -/
+するので、triple は 2-way `HuffmanCombinedHypothesis` と同値.
+
+@audit:retract-candidate(load-bearing-predicate) — `HuffmanWalls.huffman_chain_combined_hypothesis_holds`
+が constructive composition で discharge 済 (chain は trivial discharge、core は Hyp2 wall sorry
+の transitive)。consumer wrapper (`huffmanLength_optimal_with_chain_combined` / `_via_chain_lift`)
+が hypothesis 形のまま残るため predicate も併存。 -/
 abbrev HuffmanChainCombinedHypothesis : Prop :=
   SwapNormalizationHypothesis.{u} ∧ HuffmanMergedIdentificationHypothesis.{u}
     ∧ SwapStepLeChainHypothesis.{u}
@@ -340,7 +345,11 @@ theorem huffmanChainCombined_iff :
 /-- **triple hypothesis から主定理を呼ぶ wrapper**: 3-way hypothesis を reduce して
 `huffmanLength_optimal_with_combined` を呼ぶ terminal step.
 
-`@audit:staged(huffman-2hyp)` -/
+Transitive `sorry` via `huffmanLength_optimal_with_hypotheses` (Phase 2 wall 経由
+書換時、本 wrapper は `HuffmanCombinedHypothesis` consumer に reduce してから呼ぶ chain)。
+本 wrapper には `@residual` タグを付与しない — closure 責任は
+`HuffmanWalls.huffman_merged_identification_hypothesis_holds`
+(`@residual(plan:huffman-2hyp-vertical-reduction)`) が保有。 -/
 theorem huffmanLength_optimal_with_chain_combined
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -356,7 +365,11 @@ theorem huffmanLength_optimal_with_chain_combined
 2-way `HuffmanCombinedHypothesis` を持っているとき chain を補って主定理を呼ぶ form.
 `huffmanLength_optimal_with_combined` と等価だが chain 経路を明示.
 
-`@audit:staged(huffman-2hyp)` -/
+Transitive `sorry` via `huffmanLength_optimal_with_hypotheses` (chain hypothesis は常成立
+`swapStepLeChainHypothesis_holds` で trivial に補完できるため、本 wrapper の core residual は
+`HuffmanCombinedHypothesis` consumer の transitive)。本 wrapper には `@residual` タグを付与
+しない — closure 責任は `HuffmanWalls.huffman_merged_identification_hypothesis_holds`
+(`@residual(plan:huffman-2hyp-vertical-reduction)`) が保有。 -/
 theorem huffmanLength_optimal_via_chain_lift
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]

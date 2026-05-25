@@ -45,58 +45,74 @@ variable [Fintype α] [Fintype β]
   [MeasurableSpace α] [MeasurableSpace β]
 variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
-/-- **Wyner–Ziv achievability — rate-inequality form (hypothesis pass-through)**.
+/-- **Wyner–Ziv achievability — rate-inequality form**.
 
-If a rate `R` is achievable for distortion `D` (i.e. there exists a sequence
-of block codes with vanishing exceedance probability) — captured by the
-hypothesis `h_ach : wynerZivRatePmf U P_XY d D ≤ R` — then `R` lies above
-the Wyner–Ziv rate function. This is the *rate-side* statement consumed by
-the Phase D wrapper `wyner_ziv_tendsto`.
+Cover–Thomas 15.9 achievability: if a rate `R` is achievable for distortion
+`D` (i.e. there exists a sequence of block codes with vanishing exceedance
+probability), then `R` lies above the Wyner–Ziv rate function. This is the
+*rate-side* statement consumed by the Phase D wrapper `wyner_ziv_tendsto`.
 
-The hypothesis itself is the content of Cover–Thomas 15.9 achievability;
-the present theorem is a trivial unwrapping that documents the consumption
-shape. Discharge is performed in `docs/shannon/wyner-ziv-achievability-discharge-*`.
+Phase 2.1 retreat — the previous signature
+`(h_ach : wynerZivRatePmf U P_XY d D ≤ R) : wynerZivRatePmf U P_XY d D ≤ R`
+with body `:= h_ach` was a **tier 5 defect**: hypothesis type ≡ conclusion
+type (`defect:circular`), and the `_rate` suffix laundered the trivial
+identity wrap as a "rate-side" theorem (`defect:launder`).  The
+load-bearing `h_ach` hypothesis is removed; the conclusion is preserved as
+the Phase B closure target.  Closure (random binning on `U^n` + three-way
+jointly typical decoder + AEP + distortion concentration) is the
+responsibility of the discharge plan `wyner-ziv-discharge-moonshot-plan`,
+not of this declaration's hypotheses.
 
-`@audit:suspect(wyner-ziv-moonshot-plan)` -/
+Audit verdict (2026-05-25): the post-retreat signature
+`(D R : ℝ) : wynerZivRatePmf U P_XY d D ≤ R` lacks any precondition
+constraining `R`, hence is **universally false** (counterexample:
+`R := wynerZivRatePmf U P_XY d D - 1`).  Defect kind reclassified from
+`circular` to `false-statement`: closure requires either adding a
+precondition (e.g., `R > wynerZivRatePmf U P_XY d D` matching the
+existence form below) or deleting this `_rate` declaration in favor of
+`wyner_ziv_achievability_existence`.  Decision deferred to
+`wyner-ziv-discharge-moonshot-plan`.
+
+`@residual(defect:false-statement)` -/
 theorem wyner_ziv_achievability_rate
-    (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
-    (h_ach : wynerZivRatePmf U P_XY d D ≤ R) :
-    wynerZivRatePmf U P_XY d D ≤ R := h_ach
+    (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ) :
+    wynerZivRatePmf U P_XY d D ≤ R := by
+  sorry
 
-/-- **Wyner–Ziv achievability — existence form (hypothesis pass-through)**.
+/-- **Wyner–Ziv achievability — existence form**.
 
-For any `R > wynerZivRatePmf(D)`, there exists a sequence of Wyner–Ziv
-block codes whose expected block distortion tends to a value ≤ `D` while
-the rate `Real.log M_n / n` tends to a value ≤ `R`.
+Cover–Thomas 15.9 achievability: for any `R > wynerZivRatePmf(D)`, there
+exists a sequence of Wyner–Ziv block codes whose expected block distortion
+tends to a value ≤ `D` while the rate `Real.log M_n / n` tends to a value
+≤ `R`.
 
-This is the public statement of Cover–Thomas 15.9 achievability. The full
-proof (random binning on `U^n` + three-way jointly typical decoder + AEP
-+ distortion concentration) is deferred to a separate discharge plan.
+Phase 2.1 retreat — the previous signature took a hypothesis
+`h_ach_existence : ∀ ε > 0, ∃ N, ∀ n ≥ N, ∃ M c, (M : ℝ) ≤ Real.exp(n·R) ∧
+c.expectedBlockDistortion ≤ D + ε` (the conclusion of Phase B, verbatim)
+and returned it via `:= h_ach_existence`.  This was a **tier 5 defect**:
+hypothesis type ≡ conclusion type (`defect:circular`), and the
+`_existence` suffix laundered the trivial identity wrap as an "existence
+form" theorem (`defect:launder`).  The entirety of Phase B (random
+codebook + binning + three-way jointly typical decoder + AEP) was bundled
+into the hypothesis. The load-bearing `h_ach_existence` hypothesis is
+removed; the conclusion is preserved as the Phase B closure target.
+Closure is the responsibility of the discharge plan
+`wyner-ziv-discharge-moonshot-plan`, not of this declaration's
+hypotheses.
 
-The hypothesis `h_ach_existence` packages the existence claim in its raw
-form so that the present file can publish the statement without depending
-on the (large) Phase B implementation. Callers who *have* discharged Phase B
-can supply this hypothesis directly; the theorem then re-exports it.
-
-`@audit:suspect(wyner-ziv-moonshot-plan)` -/
+`@residual(defect:circular)` -/
 theorem wyner_ziv_achievability_existence
     (μ : Measure (α × β)) [IsProbabilityMeasure μ]
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
     (_h_R_gt : R > wynerZivRatePmf U P_XY d D)
     [MeasurableSpace γ]
-    (dN : DistortionFn α γ)
-    (h_ach_existence :
-      ∀ ε > (0 : ℝ),
-        ∃ N : ℕ, ∀ n ≥ N,
-          ∃ (M : ℕ) (c : WynerZivCode M n α β γ),
-            (M : ℝ) ≤ Real.exp ((n : ℝ) * R)
-              ∧ c.expectedBlockDistortion μ dN ≤ D + ε) :
+    (dN : DistortionFn α γ) :
     ∀ ε > (0 : ℝ),
       ∃ N : ℕ, ∀ n ≥ N,
         ∃ (M : ℕ) (c : WynerZivCode M n α β γ),
           (M : ℝ) ≤ Real.exp ((n : ℝ) * R)
             ∧ c.expectedBlockDistortion μ dN ≤ D + ε := by
-  exact h_ach_existence
+  sorry
 
 end Achievability
 

@@ -251,7 +251,14 @@ The end-to-end composition for the covering side: with the covering hypothesis
 discharged by the AEP bound (`isCoveringTypicalityHyp_of_aep`) and an external
 packing existence hypothesis, the WZ decoder failure probability tends to `0`.
 This is `wzCovering_decoder_fail_existence` with `IsCoveringTypicalityHyp`
-eliminated in favour of the i.i.d. random-codebook setup. -/
+eliminated in favour of the i.i.d. random-codebook setup.
+
+Phase 2.x ripple note: this declaration depends transitively on
+`wzCovering_decoder_fail_existence` (which itself depends on the
+sorry-migrated `wyner_ziv_binning_existence_of_covering_packing` /
+`wzCovering_feed_asymp`). No `@residual` tag is attached here — the
+closure responsibility belongs to the upstream declarations'
+`@residual(plan:wyner-ziv-discharge-moonshot-plan)` tags. -/
 theorem wzCovering_decoder_fail_aep
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → U) (Ys : ℕ → Ω → β)

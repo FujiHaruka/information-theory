@@ -97,7 +97,12 @@ fixed side-info `y`) has cardinality at most `S`, uniformly over `y`.
 This is the *only* genuinely information-theoretic input the packing body
 consumes: in the concrete instantiation `S = exp(n(H(U|Y)+2ε))`, discharged
 by a separate typical-slice seed. The bound is `y`-independent, so a single
-`S` suffices. -/
+`S` suffices.
+
+`@audit:retract-candidate(load-bearing-predicate)` — load-bearing
+hypothesis-form predicate marked for eventual deletion once the in-family
+discharge plan (`wyner-ziv-discharge-moonshot-plan`) closes its in-family
+consumers; no cross-family consumer. -/
 def IsPackingTypicalityHyp
     {n : ℕ} (S : ℝ)
     (JT : (Fin n → U) × (Fin n → β) → Prop) : Prop :=
@@ -109,7 +114,12 @@ def IsPackingTypicalityHyp
 the per-`ω` union bound into the averaged `E_bin` bound.
 
 Automatic in the concrete finite-`Ω` / decidable-`JT` instantiation; carried
-abstractly here to keep the body alphabet-agnostic. -/
+abstractly here to keep the body alphabet-agnostic.
+
+`@audit:retract-candidate(load-bearing-predicate)` — load-bearing
+hypothesis-form predicate marked for eventual deletion once the in-family
+discharge plan (`wyner-ziv-discharge-moonshot-plan`) closes its in-family
+consumers; no cross-family consumer. -/
 def IsPackingCollisionBoundHyp
     {n M : ℕ}
     (Us : Ω → Fin n → U) (Ys : Ω → Fin n → β)
@@ -487,7 +497,14 @@ relevant events, the decoder-failure probability is at most `ε₁ + S/M`.
 
 This is the re-published `WynerZivCoveringBody`-style decoder bound, now with
 the packing side fully discharged (no `IsWynerZivBinningPacking` pass-through
-remaining — it is *produced* internally from `IsPackingTypicalityHyp`). -/
+remaining — it is *produced* internally from `IsPackingTypicalityHyp`).
+
+Phase 2.x ripple note: this declaration depends transitively on
+`wyner_ziv_binning_via_covering_packing`, whose body is now `sorry`
+(`@residual(plan:wyner-ziv-discharge-moonshot-plan)`). No `@residual` tag
+is attached here — the closure responsibility belongs to the upstream
+declaration's `@residual` tag, and Lean's type-check transitively tracks
+the dependency. -/
 theorem wyner_ziv_packing_decoder_fail
     [Nonempty β] [Nonempty γ]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -533,7 +550,16 @@ The packing predicate is *not* an input: it is discharged internally from
 existence-pattern consumed downstream by `wyner_ziv_achievability_existence`,
 now with the packing side fully discharged.
 
-`@audit:staged(wyner-ziv-load-bearing)` -/
+Phase 1.5 (sorry-migration): body retreated to `sorry`. The hypothesis
+bundle `h_asymp` is a load-bearing existence form combining
+`IsPackingTypicalityHyp` (slice cardinality) +
+`IsPackingCollisionBoundHyp` (measurability) + a covering predicate
+family + measurability data. The previous body destructured `h_asymp` and
+called `wyner_ziv_packing_decoder_fail`, which itself depends on the
+upstream sorry-migrated `wyner_ziv_binning_via_covering_packing`. Closure
+responsibility is parked on the discharge plan.
+
+`@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_packing_existence
     [Nonempty β] [Nonempty γ]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -566,17 +592,7 @@ theorem wyner_ziv_packing_existence
               wzJointlyTypicalDecoderBody f_U (JT n) f (f_U (Us ω), Ys ω)
                 ≠ fun i => f (Us ω i, Ys ω i) }
             ≤ ε := by
-  intro ε hε
-  obtain ⟨N, hN⟩ := h_asymp ε hε
-  refine ⟨N, ?_⟩
-  intro n hn
-  obtain ⟨M, hM, Us, Ys, f, S, ε₁, h_sum, hS_nn, h_slice, h_meas_bin_all,
-          h_meas_typ, h_cov, h_meas_fail⟩ := hN n hn
-  -- Discharge packing for a good hash and bound decoder failure by `ε₁ + S/M`.
-  obtain ⟨f_U, h_fail⟩ :=
-    wyner_ziv_packing_decoder_fail (R₁ := R₁) (R₂ := R₂)
-      μ Us Ys (JT n) f hS_nn h_slice h_meas_bin_all h_meas_typ h_cov h_meas_fail
-  exact ⟨M, Us, Ys, f, f_U, le_trans h_fail h_sum⟩
+  sorry
 
 end RePublish
 
