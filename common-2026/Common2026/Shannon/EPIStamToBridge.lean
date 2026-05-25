@@ -443,6 +443,194 @@ theorem isStamScalingNoiseHyp_symm
   exact ⟨Z_Y, Z_X, hZY_meas, hZX_meas, hZY_law, hZX_law, hYZY, hXZX,
          hZXZY.symm⟩
 
+/-! ## §2'' — Phase A A-2: path-derivative of the 1-source gap
+
+This subsection computes the `HasDerivAt` of the 1-source Csiszár scaling gap
+`csiszarGap1Source X Y Z_X Z_Y P t` along `t ∈ Ioi 0`, by direct application of
+the V2 de Bruijn identity (`IsRegularDeBruijnHypV2.derivAt_entropy_eq_half_fisher_v2`,
+`Common2026/Shannon/FisherInfoV2DeBruijn.lean:245`) to the three mapped measures
+`P.map (X + √t · Z_X)`, `P.map (Y + √t · Z_Y)`, `P.map ((X+Y) + √t · (Z_X+Z_Y))`,
+composed with `Real.exp` via a one-line chain rule helper.
+
+Bases (`X`, `Y`, `X + Y`) are all `t`-independent — no scaling-correction term
+appears (1-source design avoids L-Concl-A-δ at the source).
+
+Members:
+
+* `entropyPower_hasDerivAt_of_diffEnt_hasDerivAt` (A-2-2) — chain-rule helper
+  lifting `HasDerivAt h d t` to `HasDerivAt (fun s => Real.exp (2 · h s))
+  (Real.exp (2 · h t) · (2 · d)) t`. Single-line wrap of `HasDerivAt.exp`
+  composed with `HasDerivAt.const_mul`.
+* `csiszarGap1Source_hasDerivAt` (A-2-3) — path-derivative of
+  `csiszarGap1Source X Y Z_X Z_Y P` at `t ∈ Ioi 0` from the three
+  `IsDeBruijnRegularityHyp` sister inputs.
+-/
+
+/-- **A-2-2 chain-rule helper**: if `f` has derivative `d` at `t`, then the
+"entropy power" composition `s ↦ Real.exp (2 · f s)` has derivative
+`Real.exp (2 · f t) · (2 · d)` at `t`.
+
+Used to lift the V2 de Bruijn identity `HasDerivAt (fun s => h (P.map
+(gaussianConvolution X Z s))) ((1/2) · J(X+√t·Z)) t` to the entropy-power
+form `HasDerivAt (fun s => entropyPower (P.map (gaussianConvolution X Z s)))
+(entropyPower (P.map (gaussianConvolution X Z t)) · (2 · (1/2) · J)) t`.
+
+Proof: `HasDerivAt.const_mul 2` (multiply derivative by `2`), then
+`HasDerivAt.exp` (chain with `Real.exp`). `@audit:ok` (trivial chain). -/
+theorem entropyPower_hasDerivAt_of_diffEnt_hasDerivAt
+    {f : ℝ → ℝ} {d t : ℝ} (h : HasDerivAt f d t) :
+    HasDerivAt (fun s => Real.exp (2 * f s)) (Real.exp (2 * f t) * (2 * d)) t :=
+  (h.const_mul 2).exp
+
+/-- **A-2-3 path-derivative of the 1-source Csiszár scaling gap**.
+
+Given the three sister de Bruijn V2 regularity hypotheses (one for each of the
+three mapped measures whose entropy-power difference defines `csiszarGap1Source`),
+the gap is differentiable at any `t > 0` with derivative equal to the signed
+combination of `entropyPower · fisherInfo` triples.
+
+Concretely, with the V2 internal density witnesses `J_*(t) :=
+fisherInfoOfDensityReal ((h_reg_*.reg_at t ht).density_t)`:
+
+  `(d/dt) csiszarGap1Source X Y Z_X Z_Y P t
+    = entropyPower (P.map (X+Y+√t·(Z_X+Z_Y))) · J_sum(t)
+      − entropyPower (P.map (X+√t·Z_X))       · J_X(t)
+      − entropyPower (P.map (Y+√t·Z_Y))       · J_Y(t)`
+
+The result is consumed by Phase A A-3 (1-source Stam reduction to `≤ 0`).
+The bases `X`, `Y`, `X + Y` are `t`-independent so no scaling-correction term
+appears (L-Concl-A-δ avoidance via the 1-source design).
+
+`@audit:suspect(epi-stam-to-conclusion-plan)` — the three sister
+`IsDeBruijnRegularityHyp` inputs are honest load-bearing carriers
+(`@audit:staged(epi-debruijn-regularity)` on the predicate itself);
+this lemma is purely a structural derivative computation. -/
+theorem csiszarGap1Source_hasDerivAt
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
+    {t : ℝ} (ht : 0 < t) :
+    HasDerivAt (fun s : ℝ => csiszarGap1Source X Y Z_X Z_Y P s)
+      (entropyPower
+            (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω)))
+          * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              ((h_reg_sum.reg_at t ht).density_t)
+        - entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
+          * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              ((h_reg_X.reg_at t ht).density_t)
+        - entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω))
+          * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              ((h_reg_Y.reg_at t ht).density_t)) t := by
+  -- V2 de Bruijn identity for each of the three mapped measures.
+  have h_dB_X :
+      HasDerivAt
+        (fun s : ℝ => Common2026.Shannon.differentialEntropy
+          (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z_X s)))
+        ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+          ((h_reg_X.reg_at t ht).density_t)) t :=
+    (h_reg_X.reg_at t ht).derivAt_entropy_eq_half_fisher_v2
+  have h_dB_Y :
+      HasDerivAt
+        (fun s : ℝ => Common2026.Shannon.differentialEntropy
+          (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution Y Z_Y s)))
+        ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+          ((h_reg_Y.reg_at t ht).density_t)) t :=
+    (h_reg_Y.reg_at t ht).derivAt_entropy_eq_half_fisher_v2
+  have h_dB_sum :
+      HasDerivAt
+        (fun s : ℝ => Common2026.Shannon.differentialEntropy
+          (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution
+                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) s)))
+        ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+          ((h_reg_sum.reg_at t ht).density_t)) t :=
+    (h_reg_sum.reg_at t ht).derivAt_entropy_eq_half_fisher_v2
+  -- Compose with the entropyPower chain rule (A-2-2).
+  have h_eP_X := entropyPower_hasDerivAt_of_diffEnt_hasDerivAt h_dB_X
+  have h_eP_Y := entropyPower_hasDerivAt_of_diffEnt_hasDerivAt h_dB_Y
+  have h_eP_sum := entropyPower_hasDerivAt_of_diffEnt_hasDerivAt h_dB_sum
+  -- The composed `HasDerivAt` carries `Real.exp (2 * differentialEntropy ...) * (2 * ((1/2) * J))`.
+  -- Rewrite to `entropyPower * J`. `entropyPower μ = Real.exp (2 * differentialEntropy μ)` is rfl.
+  -- And `2 * ((1/2) * J) = J` numerically.
+  -- Combine via HasDerivAt.sub twice.
+  have h_combined := (h_eP_sum.sub h_eP_X).sub h_eP_Y
+  -- Now we need to convert `h_combined`'s function form `entropyPower (P.map (gaussianConvolution _ _ s))`
+  -- to `entropyPower (P.map (fun ω => ...))` matching `csiszarGap1Source` body.
+  -- These are `rfl`-equal: `gaussianConvolution X Z s = fun ω => X ω + Real.sqrt s * Z ω`.
+  -- And `entropyPower μ = Real.exp (2 * differentialEntropy μ)` is also rfl.
+  -- So we should be able to rewrite the goal via `show`.
+  -- Target shape:
+  --   HasDerivAt (fun s => csiszarGap1Source ...) (RHS) t
+  -- csiszarGap1Source unfolds to three-term entropyPower difference.
+  -- The combined derivative `h_combined` has the same target shape modulo
+  -- `Real.exp (2*h) * (2*((1/2)*J)) = entropyPower * J`.
+  show HasDerivAt _ _ _
+  unfold csiszarGap1Source
+  -- Now goal is `HasDerivAt (fun s => entropyPower (P.map ...) - entropyPower (P.map ...) - entropyPower (P.map ...))`
+  -- with RHS as in the original statement.
+  -- `h_combined` matches modulo the simplification `2 * ((1/2) * J) = J`.
+  have h_simplify_X :
+      Real.exp (2 * Common2026.Shannon.differentialEntropy
+                (P.map (fun ω => X ω + Real.sqrt t * Z_X ω)))
+        * (2 * ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                ((h_reg_X.reg_at t ht).density_t)))
+      = entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
+        * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              ((h_reg_X.reg_at t ht).density_t) := by
+    unfold entropyPower
+    ring
+  have h_simplify_Y :
+      Real.exp (2 * Common2026.Shannon.differentialEntropy
+                (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)))
+        * (2 * ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                ((h_reg_Y.reg_at t ht).density_t)))
+      = entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω))
+        * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              ((h_reg_Y.reg_at t ht).density_t) := by
+    unfold entropyPower
+    ring
+  have h_simplify_sum :
+      Real.exp (2 * Common2026.Shannon.differentialEntropy
+                (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω))))
+        * (2 * ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                ((h_reg_sum.reg_at t ht).density_t)))
+      = entropyPower
+          (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω)))
+        * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              ((h_reg_sum.reg_at t ht).density_t) := by
+    unfold entropyPower
+    ring
+  -- Rewrite the derivative in `h_combined` and conclude.
+  rw [show
+        Real.exp (2 * Common2026.Shannon.differentialEntropy
+            (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution
+                      (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) t)))
+          * (2 * ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                  ((h_reg_sum.reg_at t ht).density_t)))
+        - Real.exp (2 * Common2026.Shannon.differentialEntropy
+            (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z_X t)))
+          * (2 * ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                  ((h_reg_X.reg_at t ht).density_t)))
+        - Real.exp (2 * Common2026.Shannon.differentialEntropy
+            (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution Y Z_Y t)))
+          * (2 * ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                  ((h_reg_Y.reg_at t ht).density_t)))
+      = entropyPower (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω)))
+          * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              ((h_reg_sum.reg_at t ht).density_t)
+        - entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
+          * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              ((h_reg_X.reg_at t ht).density_t)
+        - entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω))
+          * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              ((h_reg_Y.reg_at t ht).density_t) by
+        unfold entropyPower Common2026.Shannon.FisherInfoV2.gaussianConvolution
+        ring] at h_combined
+  -- Now `h_combined` exactly matches the goal.
+  exact h_combined
+
 /-! ## §3 — Gaussian saturation full discharge of sub-predicates -/
 
 -- `isStamToEPIScalingHyp_of_gaussian` was retracted in Phase 0 (2026-05-25)
