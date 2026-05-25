@@ -999,7 +999,16 @@ Given:
 
 we conclude that the Birkhoff averages converge a.e. to `∫ f dμ`.
 
-`@audit:suspect(birkhoff-ergodic-plan)` -/
+`@audit:retract-candidate(load-bearing-predicate-empty-consumers)` —
+small-cluster sorry-migration Phase 2.7: the successor `birkhoff_ergodic_ae`
+(this file, immediately below) discharges the same conclusion
+**unconditionally** via Mathlib's `Ergodic.ae_eq_const_of_ae_eq_comp_ae`
+together with the rational-`ε` sandwich
+`birkhoff_eventually_lt_integral_add` / `birkhoff_eventually_gt_integral_sub`.
+The 4-hypothesis pack `(hg_meas / hg_inv / hg_int / hg_lim)` carried here is a
+historical pass-through form (load-bearing on the a.e. limit data); it has
+**0 in-tree consumers** (`rg -n 'birkhoff_ergodic_ae_of_limit\b' Common2026/`
+yields only the self-definition). -/
 theorem birkhoff_ergodic_ae_of_limit
     {μ : Measure Ω} [IsProbabilityMeasure μ]
     {T : Ω → Ω} (_hT : MeasurePreserving T μ μ) (hT_erg : Ergodic T μ)

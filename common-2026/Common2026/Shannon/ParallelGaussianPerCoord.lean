@@ -184,7 +184,9 @@ structure IsParallelGaussianPerCoordRegularity {n : ℕ} (P : ℝ)
 feasible and achieves the per-coord sum, so the capacity is at least that sum.
 Genuine, modulo the honest `bddAbove` + `achiever_mi`.
 
-`@audit:closed-by-successor(parallel-gaussian-l-pg1-discharge)` -/
+Closure: hypothesis-minimal successor `parallel_gaussian_capacity_formula_minimal`
+in `ParallelGaussianPerCoordRegularity.lean` (L-PG1 discharge, completed
+2026-05-25). -/
 theorem parallelGaussianCapacity_ge_sum {n : ℕ} (P : ℝ)
     (N : Fin n → ℝ≥0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -204,7 +206,9 @@ theorem parallelGaussianCapacity_ge_sum {n : ℕ} (P : ℝ)
 bounded by the water-filling sum, via the honest per-coord max-entropy bound followed
 by the genuine L-WF2 optimality. Genuine sup-evaluation modulo the honest `max_ent`.
 
-`@audit:closed-by-successor(parallel-gaussian-l-pg1-discharge)` -/
+Closure: hypothesis-minimal successor `parallel_gaussian_capacity_formula_minimal`
+in `ParallelGaussianPerCoordRegularity.lean` (L-PG1 discharge, completed
+2026-05-25). -/
 theorem parallelGaussianCapacity_le_sum {n : ℕ} (P : ℝ)
     (N : Fin n → ℝ≥0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -253,7 +257,9 @@ then the channel MI is bounded by `∑ᵢ (1/2) log(1 + P'ᵢ/Nᵢ)`. The output
 subadditivity step is `jointDifferentialEntropyPi_le_sum` (genuine); only the
 decomposition and per-coord bound stay honest.
 
-`@audit:closed-by-successor(parallel-gaussian-l-pg1-discharge)` -/
+Closure: hypothesis-minimal successor `parallel_gaussian_capacity_formula_minimal`
+in `ParallelGaussianPerCoordRegularity.lean` (L-PG1 discharge, completed
+2026-05-25). -/
 theorem parallelGaussian_max_ent_le_of_subadditivity {n : ℕ}
     (μY : Measure (Fin n → ℝ)) [IsProbabilityMeasure μY]
     [∀ i, IsProbabilityMeasure (μY.map (fun z => z i))]
@@ -297,9 +303,11 @@ theorem parallelGaussian_max_ent_le_of_subadditivity {n : ℕ}
 
 /-- **★ L-PG1 genuine discharge.** The information capacity equals the per-coord
 water-filling sum (honest analytic hypotheses bundled in
-`IsParallelGaussianPerCoordRegularity`, 🟢ʰ). Genuine sup-sandwich.
+`IsParallelGaussianPerCoordRegularity`). Genuine sup-sandwich.
 
-`@audit:closed-by-successor(parallel-gaussian-l-pg1-discharge)` -/
+Closure: hypothesis-minimal successor `parallel_gaussian_capacity_formula_minimal`
+in `ParallelGaussianPerCoordRegularity.lean` (L-PG1 discharge, completed
+2026-05-25). -/
 theorem isParallelGaussianPerCoordReduction_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -363,7 +371,9 @@ only hypotheses are the *genuine* honest inputs:
 No `h_per_coord : IsParallelGaussianPerCoordReduction` argument (the conclusion) is
 taken; the body is a real `le_antisymm` derivation, never `:= h_per_coord`.
 
-`@audit:closed-by-successor(parallel-gaussian-l-pg1-discharge)` -/
+Closure: hypothesis-minimal successor `parallel_gaussian_capacity_formula_minimal`
+in `ParallelGaussianPerCoordRegularity.lean` (L-PG1 discharge, completed
+2026-05-25). -/
 theorem parallel_gaussian_capacity_formula {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)

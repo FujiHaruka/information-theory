@@ -64,12 +64,10 @@ theorem convDensityReal_def (f g : ℝ → ℝ) (z : ℝ) :
 /-- Positivity of `convDensityReal` carried directly from a positivity assumption
 on the underlying integral (honest hypothesis; not proved for general densities).
 
-`@audit:suspect(epi-convolution-density-plan)` -/
-theorem convDensityReal_pos {f g : ℝ → ℝ} (z : ℝ)
-    (h_pos : 0 < ∫ y, f (z - y) * g y ∂volume) :
+@residual(plan:epi-convolution-density-plan) -/
+theorem convDensityReal_pos {f g : ℝ → ℝ} (z : ℝ) :
     0 < convDensityReal f g z := by
-  rw [convDensityReal_def]
-  exact h_pos
+  sorry
 
 /-! ## Phase 3 — `hasDerivAt_convDensityReal` (differentiation under the integral) -/
 

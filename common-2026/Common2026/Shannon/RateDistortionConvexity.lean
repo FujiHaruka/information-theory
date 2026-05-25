@@ -134,125 +134,23 @@ We package the convexity-of-`klDiv` step as an explicit hypothesis (`h_klDiv_con
 to keep this lemma standalone; specializations (e.g. finite-alphabet pmf form) can
 discharge that hypothesis via log-sum inequality at the per-atom level.
 
-`@audit:suspect()` -/
+Migration note (Phase 2.RD.2 of `ratedistortion-pgpc-sorry-migration-plan`):
+The load-bearing hypothesis `h_klDiv_conv` (joint convexity of `klDiv`,
+Cover–Thomas 2.7.2) has been removed; it is Mathlib-gap content that must be
+closed by the convexity plan, not absorbed as a precondition. The regularity
+hypothesis `h_int_witness` (integrability of `d` on every feasible witness)
+is retained as a passive regularity hyp. Body retreated to `sorry`.
+
+`@residual(plan:rate-distortion-convexity-plan)` -/
 theorem rateDistortionFunction_convexOn
     (d : α → β → ℝ) (P : Measure α) [IsProbabilityMeasure P]
     {lam : ℝ} (hlam₀ : 0 ≤ lam) (hlam₁ : lam ≤ 1) (D₁ D₂ : ℝ)
-    (h_klDiv_conv :
-      ∀ (ν₁ ν₂ : Measure (α × β)),
-        ν₁.map Prod.fst = P → ν₂.map Prod.fst = P →
-        Integrable (fun p => d p.1 p.2) ν₁ →
-        Integrable (fun p => d p.1 p.2) ν₂ →
-        expectedDistortion d ν₁ ≤ D₁ → expectedDistortion d ν₂ ≤ D₂ →
-        klDiv (mixtureMeasure lam ν₁ ν₂)
-            (((mixtureMeasure lam ν₁ ν₂).map Prod.fst).prod
-              ((mixtureMeasure lam ν₁ ν₂).map Prod.snd))
-          ≤ ENNReal.ofReal lam
-              * klDiv ν₁ ((ν₁.map Prod.fst).prod (ν₁.map Prod.snd))
-            + ENNReal.ofReal (1 - lam)
-              * klDiv ν₂ ((ν₂.map Prod.fst).prod (ν₂.map Prod.snd)))
     (h_int_witness :
       ∀ (ν : Measure (α × β)), ν.map Prod.fst = P →
         Integrable (fun p => d p.1 p.2) ν) :
     rateDistortionFunction d P (lam * D₁ + (1 - lam) * D₂)
       ≤ ENNReal.ofReal lam * rateDistortionFunction d P D₁
         + ENNReal.ofReal (1 - lam) * rateDistortionFunction d P D₂ := by
-  -- ## Per-pair bound: for any feasible (ν₁, ν₂), R(λD₁+(1-λ)D₂) is bounded by
-  -- the convex combination of joint klDiv at the witnesses.
-  have h_per_pair : ∀ (ν₁ ν₂ : Measure (α × β)),
-      ν₁.map Prod.fst = P → ν₂.map Prod.fst = P →
-      expectedDistortion d ν₁ ≤ D₁ → expectedDistortion d ν₂ ≤ D₂ →
-      rateDistortionFunction d P (lam * D₁ + (1 - lam) * D₂)
-        ≤ ENNReal.ofReal lam * klDiv ν₁ ((ν₁.map Prod.fst).prod (ν₁.map Prod.snd))
-          + ENNReal.ofReal (1 - lam)
-            * klDiv ν₂ ((ν₂.map Prod.fst).prod (ν₂.map Prod.snd)) := by
-    intro ν₁ ν₂ h_marg₁ h_marg₂ h_dist₁ h_dist₂
-    have h_int₁ : Integrable (fun p : α × β => d p.1 p.2) ν₁ := h_int_witness ν₁ h_marg₁
-    have h_int₂ : Integrable (fun p : α × β => d p.1 p.2) ν₂ := h_int_witness ν₂ h_marg₂
-    obtain ⟨h_mix_marg, h_mix_dist⟩ :=
-      mixtureMeasure_feasible hlam₀ hlam₁ P d ν₁ ν₂ h_marg₁ h_marg₂
-        h_dist₁ h_dist₂ h_int₁ h_int₂
-    have h_feas :
-        rateDistortionFunction d P (lam * D₁ + (1 - lam) * D₂)
-          ≤ klDiv (mixtureMeasure lam ν₁ ν₂)
-              (((mixtureMeasure lam ν₁ ν₂).map Prod.fst).prod
-                ((mixtureMeasure lam ν₁ ν₂).map Prod.snd)) :=
-      rateDistortionFunction_le_of_feasible d P (lam * D₁ + (1 - lam) * D₂)
-        (mixtureMeasure lam ν₁ ν₂) h_mix_marg h_mix_dist
-    exact le_trans h_feas
-      (h_klDiv_conv ν₁ ν₂ h_marg₁ h_marg₂ h_int₁ h_int₂ h_dist₁ h_dist₂)
-  -- ## RHS factorization: rewrite λ R(D₁) + (1-λ) R(D₂)
-  -- as ⨅ ν₁ feas, ⨅ ν₂ feas, [λ klDiv ν₁ + (1-λ) klDiv ν₂] using mul_iInf + iInf_add + add_iInf.
-  -- We handle boundary cases (lam = 0 or lam = 1) separately to avoid the mul_iInf side conditions.
-  set a : ℝ≥0∞ := ENNReal.ofReal lam with ha_def
-  set b : ℝ≥0∞ := ENNReal.ofReal (1 - lam) with hb_def
-  have h1lam : 0 ≤ 1 - lam := by linarith
-  -- Case split on lam = 0 / lam = 1 / 0 < lam < 1.
-  by_cases hlam_eq0 : lam = 0
-  · -- lam = 0: a = 0, b = 1, λD₁+(1-λ)D₂ = D₂.
-    subst hlam_eq0
-    have ha0 : a = 0 := by simp [ha_def]
-    have hb1 : b = 1 := by simp [hb_def]
-    have h_arg : (0 : ℝ) * D₁ + (1 - 0) * D₂ = D₂ := by ring
-    rw [h_arg, ha0, hb1, zero_mul, zero_add, one_mul]
-  by_cases hlam_eq1 : lam = 1
-  · -- lam = 1: a = 1, b = 0, λD₁+(1-λ)D₂ = D₁.
-    subst hlam_eq1
-    have ha1 : a = 1 := by simp [ha_def]
-    have hb0 : b = 0 := by simp [hb_def]
-    have h_arg : (1 : ℝ) * D₁ + (1 - 1) * D₂ = D₁ := by ring
-    rw [h_arg, ha1, hb0, zero_mul, add_zero, one_mul]
-  -- Strict interior: 0 < lam < 1.
-  have hlam_pos : 0 < lam := lt_of_le_of_ne hlam₀ (Ne.symm hlam_eq0)
-  have hlam_lt1 : lam < 1 := lt_of_le_of_ne hlam₁ hlam_eq1
-  have h1lam_pos : 0 < 1 - lam := by linarith
-  have ha_pos : 0 < a := by simp [ha_def, ENNReal.ofReal_pos, hlam_pos]
-  have hb_pos : 0 < b := by simp [hb_def, ENNReal.ofReal_pos, h1lam_pos]
-  have ha_ne_zero : a ≠ 0 := ha_pos.ne'
-  have hb_ne_zero : b ≠ 0 := hb_pos.ne'
-  have ha_ne_top : a ≠ ∞ := ENNReal.ofReal_ne_top
-  have hb_ne_top : b ≠ ∞ := ENNReal.ofReal_ne_top
-  -- Push a/b inside the nested iInfs for R(D₁) and R(D₂).
-  -- R(D₁) = ⨅ ν₁, ⨅ (_ : marg), ⨅ (_ : dist), klDiv ν₁ ...
-  -- a * R(D₁) = ⨅ ν₁, ⨅ (_ : marg), ⨅ (_ : dist), a * klDiv ν₁ ...
-  have h_aR1 :
-      a * rateDistortionFunction d P D₁
-        = ⨅ (ν₁ : Measure (α × β)) (_ : ν₁.map Prod.fst = P)
-            (_ : expectedDistortion d ν₁ ≤ D₁),
-            a * klDiv ν₁ ((ν₁.map Prod.fst).prod (ν₁.map Prod.snd)) := by
-    unfold rateDistortionFunction
-    rw [ENNReal.mul_iInf_of_ne ha_ne_zero ha_ne_top]
-    refine iInf_congr fun ν₁ => ?_
-    rw [ENNReal.mul_iInf_of_ne ha_ne_zero ha_ne_top]
-    refine iInf_congr fun _ => ?_
-    rw [ENNReal.mul_iInf_of_ne ha_ne_zero ha_ne_top]
-  have h_bR2 :
-      b * rateDistortionFunction d P D₂
-        = ⨅ (ν₂ : Measure (α × β)) (_ : ν₂.map Prod.fst = P)
-            (_ : expectedDistortion d ν₂ ≤ D₂),
-            b * klDiv ν₂ ((ν₂.map Prod.fst).prod (ν₂.map Prod.snd)) := by
-    unfold rateDistortionFunction
-    rw [ENNReal.mul_iInf_of_ne hb_ne_zero hb_ne_top]
-    refine iInf_congr fun ν₂ => ?_
-    rw [ENNReal.mul_iInf_of_ne hb_ne_zero hb_ne_top]
-    refine iInf_congr fun _ => ?_
-    rw [ENNReal.mul_iInf_of_ne hb_ne_zero hb_ne_top]
-  rw [h_aR1, h_bR2]
-  -- Now use iInf_add then add_iInf to factor in the sum.
-  -- (⨅ ν₁, f ν₁) + (⨅ ν₂, g ν₂) = ⨅ ν₁, [f ν₁ + ⨅ ν₂, g ν₂] = ⨅ ν₁, ⨅ ν₂, [f ν₁ + g ν₂]
-  rw [ENNReal.iInf_add]
-  refine le_iInf fun ν₁ => ?_
-  rw [ENNReal.iInf_add]
-  refine le_iInf fun h_marg₁ => ?_
-  rw [ENNReal.iInf_add]
-  refine le_iInf fun h_dist₁ => ?_
-  rw [ENNReal.add_iInf]
-  refine le_iInf fun ν₂ => ?_
-  rw [ENNReal.add_iInf]
-  refine le_iInf fun h_marg₂ => ?_
-  rw [ENNReal.add_iInf]
-  refine le_iInf fun h_dist₂ => ?_
-  -- Goal: rateDistortionFunction d P (lam*D₁+(1-lam)*D₂) ≤ a * klDiv ν₁ ... + b * klDiv ν₂ ...
-  exact h_per_pair ν₁ ν₂ h_marg₁ h_marg₂ h_dist₁ h_dist₂
+  sorry
 
 end InformationTheory.Shannon

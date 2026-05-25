@@ -532,7 +532,20 @@ theorem isChernoffBandMassToOne_of_interior_optimal
 /-! ## Headline: regularity-only Chernoff converse -/
 
 /-- **Chernoff converse, unconditional (regularity only)**: for full-support
-pmfs `P₁ ≠ P₂`, `limsup rate ≤ chernoffInfo`. -/
+pmfs `P₁ ≠ P₂`, `limsup rate ≤ chernoffInfo`.
+
+**Transitive sorry note (L-MIG-4, chernoff-sorry-migration-plan)**: the prior
+genuine proof body assembled `isChernoffBandMassToOne_of_interior_optimal` +
+`exists_interior_minimiser` and threaded the band-mass existence-bundle
+into `ChernoffSanovDischarge.chernoff_converse_of_bandMass`. That upstream
+wrapper has now been sorry-based migrated (the load-bearing hypothesis was
+dropped from its signature); applying the band-mass discharge to it is no
+longer a typed function call. The genuine band-mass discharge
+(`isChernoffBandMassToOne_of_interior_optimal`, `exists_interior_minimiser`)
+remains live above in this file; only this assembly step is now a transitive
+sorry.
+
+@residual(plan:chernoff-converse-sanov-discharge) -/
 theorem chernoff_converse_holds
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -541,11 +554,7 @@ theorem chernoff_converse_holds
     Filter.limsup
       (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) atTop
         ≤ chernoffInfo P₁ P₂ := by
-  obtain ⟨lam, hlam_int, hlam_min, h_chern⟩ :=
-    exists_interior_minimiser P₁ P₂ hP₁_pos hP₂_pos hP₁_sum hP₂_sum hne
-  refine ChernoffSanovDischarge.chernoff_converse_of_bandMass P₁ P₂ hP₁_pos hP₂_pos ?_
-  refine ⟨lam, Set.Ioo_subset_Icc_self hlam_int, h_chern, ?_⟩
-  exact isChernoffBandMassToOne_of_interior_optimal P₁ P₂ hP₁_pos hP₂_pos lam hlam_int hlam_min
+  sorry
 
 /-! ## Capstone: full Chernoff information theorem, unconditional (regularity only) -/
 
@@ -553,10 +562,20 @@ theorem chernoff_converse_holds
 n-IID minimum Bayes error decays at the exponential rate `chernoffInfo P₁ P₂`,
 i.e. `-(1/n) log (bayesErrorMinPmf P₁ P₂ n) → chernoffInfo P₁ P₂`.
 
-Assembled from the now-discharged converse (`chernoff_converse_holds`, this file),
-the achievability half (`chernoff_lemma_achievability`, `Chernoff.lean`), and the
-two genuine boundedness lemmas. Only regularity hypotheses (full-support pmfs,
-`P₁ ≠ P₂`). -/
+Originally assembled from the now-discharged converse
+(`chernoff_converse_holds`, this file), the achievability half
+(`chernoff_lemma_achievability`, `Chernoff.lean`), and the two genuine
+boundedness lemmas. Only regularity hypotheses (full-support pmfs, `P₁ ≠ P₂`).
+
+**Transitive sorry note (L-MIG-4, chernoff-sorry-migration-plan)**: the prior
+body forwarded `chernoff_converse_holds` and
+`chernoff_rate_isBoundedUnder_le` into
+`ChernoffInformation.chernoff_lemma_tendsto`. The latter has now been
+sorry-based migrated (the L-Ch1+L-Ch2 hypotheses were dropped from its
+signature) and is itself a `sorry`; applying it is no longer a typed function
+call. Transitive sorry.
+
+@residual(plan:chernoff-converse-sanov-discharge) -/
 theorem chernoff_lemma_tendsto_holds
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -564,11 +583,7 @@ theorem chernoff_lemma_tendsto_holds
     (hne : P₁ ≠ P₂) :
     Filter.Tendsto
       (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n))
-      atTop (nhds (chernoffInfo P₁ P₂)) :=
-  InformationTheory.Shannon.ChernoffInformation.chernoff_lemma_tendsto
-    P₁ P₂ hP₁_pos hP₂_pos
-    (chernoff_converse_holds P₁ P₂ hP₁_pos hP₂_pos hP₁_sum hP₂_sum hne)
-    (InformationTheory.Shannon.ChernoffConverse.chernoff_rate_isBoundedUnder_le
-      P₁ P₂ hP₁_pos hP₂_pos)
+      atTop (nhds (chernoffInfo P₁ P₂)) := by
+  sorry
 
 end InformationTheory.Shannon.ChernoffBandMassDischarge

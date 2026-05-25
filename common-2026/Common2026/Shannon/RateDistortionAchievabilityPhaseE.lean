@@ -83,7 +83,15 @@ This is the witness-form variant of Cover-Thomas Theorem 10.2.1
 `R > R(D) ⟹ achievability` form requires the entropy-pmf bridge and
 ambient construction infrastructure, deferred to a later session.
 
-`@audit:suspect()` -/
+Migration note (Phase 2.RD.3 of `ratedistortion-pgpc-sorry-migration-plan`):
+The load-bearing hypotheses `h_codebook_avg_failure` (Phase C-style Fubini
+bridge) and the random-coding failure sequence bundle (`failure_seq` +
+`h_failure_nn` + `h_failure_tendsto_zero`) have been removed; they are the
+mathematical core of random-coding achievability and must be closed by the
+Phase E strong plan, not absorbed as preconditions. The passive ambient /
+distortion-compatibility / slack hypotheses remain. Body retreated to `sorry`.
+
+`@residual(plan:rate-distortion-achievability-phase-e-strong-plan)` -/
 theorem rate_distortion_achievability_witness_form
     -- Source distribution and witness on the pmf side.
     (P_X_pmf : α → ℝ) (d : DistortionFn α β) {D : ℝ}
@@ -100,32 +108,22 @@ theorem rate_distortion_achievability_witness_form
     -- Distortion compatibility (pmf form ↔ measure form).
     (h_dist_eq : expectedJointDistortion μ (Xs 0) (Ys 0) d
                   = expectedDistortionPmf d qStar)
-    -- Pass-through hypothesis on the random-coding failure sequence.
-    -- For each `n`, the codebook-averaged source-averaged probability that the
-    -- joint-typical encoder fails (i.e. its chosen codeword is not in
-    -- `distortionTypicalSet`) sequences to zero.
     (ε : ℝ) (δ_typ : ℝ) (hδ_typ : 0 ≤ δ_typ)
-    (failure_seq : ℕ → ℝ)
-    (h_failure_nn : ∀ n, 0 ≤ failure_seq n)
-    (h_failure_tendsto_zero : Filter.Tendsto failure_seq Filter.atTop (𝓝 0))
-    -- For each `n`, the codebook-averaged source-failure at the specific
-    -- codebook size `Mn := ⌈exp(n·R)⌉` is `≤ failure_seq n`. This is the
-    -- Fubini bridge step delivered by Phase C-style arguments.
-    (h_codebook_avg_failure : ∀ {n : ℕ} (hn : 0 < n),
-        ∑ c : Codebook (Nat.ceil (Real.exp ((n : ℝ) * R))) n β,
-            (codebookMeasure (μ.map (Ys 0))
-                (Nat.ceil (Real.exp ((n : ℝ) * R))) n).real {c}
-              * (Measure.pi (fun _ : Fin n => μ.map (Xs 0))).real
-                  { x | (x, c (jointTypicalLossyEncoder μ Xs Ys
-                                  (Nat.ceil_pos.mpr (Real.exp_pos _)) ε c x))
-                          ∉ distortionTypicalSet μ Xs Ys d n ε δ_typ }
-          ≤ failure_seq n)
     -- Distortion slack: `δ_typ + expectedDistortionPmf d qStar ≤ D + ε' / 2`.
     (h_slack : expectedDistortionPmf d qStar + δ_typ ≤ D + ε' / 2) :
     ∃ N : ℕ, ∀ n, N ≤ n →
       ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
         (c : LossyCode M n α β),
         c.expectedBlockDistortion (μ.map (Xs 0)) d ≤ D + ε' := by
+  sorry
+
+/-
+Original body (before Phase 2.RD.3 retreat) preserved for reference by the
+closure plan `rate-distortion-achievability-phase-e-strong-plan`. The two
+load-bearing hypotheses now retreated to `sorry` were:
+  * `failure_seq` + `h_failure_nn` + `h_failure_tendsto_zero`
+  * `h_codebook_avg_failure` (Phase C-style Fubini bridge)
+
   classical
   -- Notation.
   set dMax : ℝ := distortionMax d with hdMax_def
@@ -294,5 +292,6 @@ theorem rate_distortion_achievability_witness_form
     _ ≤ (D + ε' / 2) + ε' / 2 :=
         add_le_add h_slack h_failure_bound
     _ = D + ε' := by ring
+-/
 
 end InformationTheory.Shannon

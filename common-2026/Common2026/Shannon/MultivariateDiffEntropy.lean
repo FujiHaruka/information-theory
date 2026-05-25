@@ -47,9 +47,12 @@ genuine. The bridge from `KL` to entropies needs the Bayes density split
   Mathlib** (inventory §D-1a); the natural discharge is induction of the
   2-variable bridge via `measurePreserving_piFinSuccAbove`, which requires a
   change-of-variables for `withDensity` under measurable equivalences (also
-  absent in Mathlib in the generic non-rnDeriv form). Tagged
-  `@audit:suspect(multivariate-diffentropy-subadditivity-plan)` as the
-  residual discharge target.
+  absent in Mathlib in the generic non-rnDeriv form). Routed via sorry +
+  `@residual(plan:multivariate-diffentropy-subadditivity-plan)` on
+  `klDiv_pi_marginals_toReal_eq_sum_sub_joint` and
+  `jointDifferentialEntropyPi_le_sum` as the residual discharge target
+  (small-cluster sorry-migration Phase 2.1, replacing legacy
+  `@audit:suspect(...)` form).
 -/
 
 namespace Common2026.Shannon
@@ -234,98 +237,30 @@ theorem jointDifferentialEntropy_le_sum
 `(klDiv(joint ‖ ∏ᵢ μᵢ)).toReal = ∑ᵢ h(μᵢ) − h(joint)`, where `μᵢ := μ.map (· i)`.
 The honest llr split absorbs the absent `pi_withDensity` (inventory §D-1a).
 
-`@audit:suspect(multivariate-diffentropy-subadditivity-plan)` -/
+@residual(plan:multivariate-diffentropy-subadditivity-plan) -/
 theorem klDiv_pi_marginals_toReal_eq_sum_sub_joint
     {n : ℕ} {μ : Measure (Fin n → ℝ)} [IsProbabilityMeasure μ]
     [∀ i, IsProbabilityMeasure (μ.map (fun z => z i))]
-    (h_marg_ac : ∀ i, (μ.map (fun z => z i)) ≪ volume)
-    (hμ_ac : μ ≪ (volume : Measure (Fin n → ℝ)))
-    (h_joint_ac : μ ≪ Measure.pi (fun i => μ.map (fun z => z i)))
-    -- honest Bayes density split: `llr(joint ‖ ∏ marg) = log(joint) − ∑ log(margᵢ)`.
-    (h_llr_split :
-      (fun z => llr μ (Measure.pi (fun i => μ.map (fun z => z i))) z)
-        =ᵐ[μ]
-      (fun z => Real.log ((μ.rnDeriv volume z).toReal)
-                  - (∑ i, Real.log (((μ.map (fun z => z i)).rnDeriv volume (z i)).toReal))))
-    (h_int_marg : ∀ i,
-      Integrable (fun z => Real.log (((μ.map (fun z => z i)).rnDeriv volume (z i)).toReal)) μ)
-    (h_int_joint :
-      Integrable (fun z => Real.log ((μ.rnDeriv volume z).toReal)) μ)
-    -- marginal identification: ∫ (g ∘ eval i) ∂μ = ∫ g ∂(μ.map eval i)
-    (h_marg_id : ∀ i,
-      (∫ z, Real.log (((μ.map (fun z => z i)).rnDeriv volume (z i)).toReal) ∂μ)
-        = ∫ x, Real.log (((μ.map (fun z => z i)).rnDeriv volume x).toReal)
-            ∂(μ.map (fun z => z i))) :
+    (_h_marg_ac : ∀ i, (μ.map (fun z => z i)) ≪ volume)
+    (_hμ_ac : μ ≪ (volume : Measure (Fin n → ℝ)))
+    (_h_joint_ac : μ ≪ Measure.pi (fun i => μ.map (fun z => z i))) :
     (klDiv μ (Measure.pi (fun i => μ.map (fun z => z i)))).toReal
       = (∑ i, differentialEntropy (μ.map (fun z => z i))) - jointDifferentialEntropyPi μ := by
-  classical
-  set ν := Measure.pi (fun i => μ.map (fun z => z i)) with hν
-  haveI : IsProbabilityMeasure ν := by rw [hν]; infer_instance
-  -- abbreviations
-  set Ljoint : (Fin n → ℝ) → ℝ := fun z => Real.log ((μ.rnDeriv volume z).toReal) with hLjoint
-  set Lmarg : Fin n → (Fin n → ℝ) → ℝ :=
-    fun i z => Real.log (((μ.map (fun z => z i)).rnDeriv volume (z i)).toReal) with hLmarg
-  -- step 1 : KL → llr integral (univ = 1 both sides)
-  have h_univ : μ Set.univ = ν Set.univ := by rw [measure_univ, measure_univ]
-  have h_kl : (klDiv μ ν).toReal = ∫ z, llr μ ν z ∂μ :=
-    toReal_klDiv_of_measure_eq h_joint_ac h_univ
-  -- step 2 : Bayes density split
-  have h_split : ∫ z, llr μ ν z ∂μ
-      = ∫ z, (Ljoint z - (∑ i, Lmarg i z)) ∂μ := by
-    refine integral_congr_ae ?_
-    filter_upwards [h_llr_split] with z hz using hz
-  -- step 3 : split into joint integral minus sum of marginal integrals
-  have h_sub : ∫ z, (Ljoint z - (∑ i, Lmarg i z)) ∂μ
-      = (∫ z, Ljoint z ∂μ) - ∑ i, (∫ z, Lmarg i z ∂μ) := by
-    have h_int_sum : Integrable (fun z => ∑ i, Lmarg i z) μ :=
-      integrable_finsetSum _ (fun i _ => h_int_marg i)
-    rw [integral_sub h_int_joint h_int_sum,
-      integral_finsetSum Finset.univ (fun i _ => h_int_marg i)]
-  -- step 4 : joint term = − h(joint)
-  have h_jt : ∫ z, Ljoint z ∂μ = -jointDifferentialEntropyPi μ := by
-    rw [jointDifferentialEntropyPi, integral_log_rnDeriv_self_eq_neg
-      (μ := μ) (ν := (volume : Measure (Fin n → ℝ))) hμ_ac]
-  -- step 5 : each marginal term = − h(margᵢ)  (marginal id + generic helper)
-  have h_mg : ∀ i, ∫ z, Lmarg i z ∂μ = -differentialEntropy (μ.map (fun z => z i)) := by
-    intro i
-    rw [hLmarg]
-    rw [h_marg_id i, integral_log_rnDeriv_self_eq_neg (h_marg_ac i), differentialEntropy]
-  -- combine
-  rw [h_kl, h_split, h_sub, h_jt]
-  rw [Finset.sum_congr rfl (fun i _ => h_mg i)]
-  rw [Finset.sum_neg_distrib]
-  ring
+  sorry
 
 /-- **★ `n`-variable differential-entropy subadditivity** `h(Yⁿ) ≤ ∑ᵢ h(Yᵢ)`
 (the parallel-Gaussian consumer form). `KL ≥ 0` + the bridge, by `linarith`.
 
-`@audit:suspect(multivariate-diffentropy-subadditivity-plan)` -/
+@residual(plan:multivariate-diffentropy-subadditivity-plan) -/
 theorem jointDifferentialEntropyPi_le_sum
     {n : ℕ} {μ : Measure (Fin n → ℝ)} [IsProbabilityMeasure μ]
     [∀ i, IsProbabilityMeasure (μ.map (fun z => z i))]
-    (h_marg_ac : ∀ i, (μ.map (fun z => z i)) ≪ volume)
-    (hμ_ac : μ ≪ (volume : Measure (Fin n → ℝ)))
-    (h_joint_ac : μ ≪ Measure.pi (fun i => μ.map (fun z => z i)))
-    (h_llr_split :
-      (fun z => llr μ (Measure.pi (fun i => μ.map (fun z => z i))) z)
-        =ᵐ[μ]
-      (fun z => Real.log ((μ.rnDeriv volume z).toReal)
-                  - (∑ i, Real.log (((μ.map (fun z => z i)).rnDeriv volume (z i)).toReal))))
-    (h_int_marg : ∀ i,
-      Integrable (fun z => Real.log (((μ.map (fun z => z i)).rnDeriv volume (z i)).toReal)) μ)
-    (h_int_joint :
-      Integrable (fun z => Real.log ((μ.rnDeriv volume z).toReal)) μ)
-    (h_marg_id : ∀ i,
-      (∫ z, Real.log (((μ.map (fun z => z i)).rnDeriv volume (z i)).toReal) ∂μ)
-        = ∫ x, Real.log (((μ.map (fun z => z i)).rnDeriv volume x).toReal)
-            ∂(μ.map (fun z => z i))) :
+    (_h_marg_ac : ∀ i, (μ.map (fun z => z i)) ≪ volume)
+    (_hμ_ac : μ ≪ (volume : Measure (Fin n → ℝ)))
+    (_h_joint_ac : μ ≪ Measure.pi (fun i => μ.map (fun z => z i))) :
     jointDifferentialEntropyPi μ
       ≤ ∑ i, differentialEntropy (μ.map (fun z => z i)) := by
-  have h_nn : (0 : ℝ) ≤ (klDiv μ (Measure.pi (fun i => μ.map (fun z => z i)))).toReal :=
-    ENNReal.toReal_nonneg
-  have h_bridge := klDiv_pi_marginals_toReal_eq_sum_sub_joint
-    h_marg_ac hμ_ac h_joint_ac h_llr_split h_int_marg h_int_joint h_marg_id
-  linarith [h_nn, h_bridge]
+  sorry
 
 /-! ## Phase 1 — genuine 2-variable Bayes density split (no honest `h_llr_split`)
 
@@ -581,10 +516,11 @@ forms. An initial attempt (~250 lines including the `pi_eq` shortcut) ran into
 several reshape frictions (definitional `volume_pi` vs `Measure.pi (fun _ => volume)`,
 `piFinSuccAbove 0` vs `piFinSuccAbove (Fin.last n)` orientation, etc.).
 
-Per plan §"撤退条件 — 案 A / 案 B 双方で行き詰まる → n 変数のみ honest hyp 温存",
-the `n`-variable case is **kept as the existing honest-hyp form**. The
-`@audit:suspect(multivariate-diffentropy-subadditivity-plan)` slug remains valid
-as the SoT for the residual discharge, and the proof-log records the genuine
-direction tried so a future session can continue. -/
+Per plan §"撤退条件 — 案 A / 案 B 双方で行き詰まる → n 変数のみ sorry-routed",
+the `n`-variable case is now **sorry-routed** (small-cluster sorry-migration
+Phase 2.1). The honest-hyp form has been retired; the body is `sorry` with
+`@residual(plan:multivariate-diffentropy-subadditivity-plan)` as the SoT
+for the residual discharge, and the proof-log records the genuine direction
+tried so a future session can continue. -/
 
 end Common2026.Shannon

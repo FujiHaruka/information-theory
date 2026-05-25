@@ -112,7 +112,22 @@ hypotheses are the honest, strictly-localized residual content of the
 factorization (positivity is regularity; parse-completeness is the genuine
 Cover–Thomas last-phrase fact).
 
-`@audit:suspect()` -/
+`@audit:retract-candidate(load-bearing-predicate-empty-consumers)` —
+small-cluster sorry-migration Phase 2.5: the successor
+`isLZ78PerPathParsingFactorization_of_pos` (this file, below) discharges the
+same `IsLZ78PerPathParsingFactorization μ p` field genuinely from a single
+a.s.-regularity hypothesis (every intermediate prefix block probability is
+strictly positive), via `blockProb_le_prod_condPhraseProb` + `parsingBoundary_le_n`
++ `prefixBlockProb_antitone`. The Cover–Thomas equality form `Pₙ = ∏ⱼ qⱼ` that
+this wrapper carries is **genuinely false** in general (the greedy parse
+`lz78PhraseStrings` only guarantees `boundary c ≤ n`, never `= n`, see
+`lz78PhraseStrings_total_length_le`); the Ziv chain only needs the inequality
+form, which the successor provides. The LZ78 Round 2 sweep
+(`docs/shannon/lz78-sorry-migration-plan.md`) is closed, and this wrapper has
+**0 in-tree consumers** (`rg -n 'factor_of_complete_of_pos\b' Common2026/`
+yields only the self-definition). Slug formerly recorded as `@audit:suspect()`
+(empty slug, audit-tags.md規約違反); retract-candidate covers both the slug
+defect and the closed-by-successor disposition. -/
 theorem factor_of_complete_of_pos
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (n : ℕ) (ω : Ω)

@@ -164,78 +164,60 @@ lemma isBayesErrorPerTiltLowerBound_iff
 
 /-! ## Phase C — main discharged wrappers -/
 
-/-- **Per-tilt converse from predicate**: given the Sanov-style per-tilt
-lower bound predicate at a single tilt `lam ∈ Icc 0 1`, derive
-`limsup rate ≤ -log Z(λ)`.
+/-- **Per-tilt converse** (unconditional headline): `limsup rate ≤ -log Z(λ)`
+for any tilt `λ`.
 
-This is a thin wrapper around `ChernoffConverse.chernoff_converse_from_per_tilt`;
-the predicate unfolds to exactly the per-tilt hypothesis required.
+**Sorry-based migration note**: this theorem previously consumed
+`h_pred : IsBayesErrorPerTiltLowerBound P₁ P₂ lam`, a FALSE-in-general
+predicate (`@audit:defect(false-statement)` at the def at `:148`). Hypothesis
+dropped so the declaration states the unconditional claim; successor
+`ChernoffBandMassDischarge` discharges via the `ε`-relaxed route.
 
-`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
+@residual(plan:chernoff-converse-sanov-discharge) -/
 theorem chernoff_converse_from_predicate
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (lam : ℝ)
-    (h_pred : IsBayesErrorPerTiltLowerBound P₁ P₂ lam) :
+    (lam : ℝ) :
     Filter.limsup
       (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) atTop
         ≤ -Real.log (chernoffZSum P₁ P₂ lam) := by
-  obtain ⟨C, hC_pos, h_lb⟩ := h_pred
-  exact chernoff_converse_from_per_tilt P₁ P₂ hP₁_pos hP₂_pos lam C hC_pos h_lb
+  sorry
 
-/-- **L-Ch1 partial discharge from predicate**: given an attaining tilt `λ*`
-(from `chernoffInfo_attained`) together with the Sanov-style per-tilt lower
-bound predicate at `λ*`, derive `limsup rate ≤ chernoffInfo P₁ P₂`.
+/-- **L-Ch1 discharge** (unconditional headline): `limsup rate ≤ chernoffInfo`.
 
-This is a thin re-package of
-`ChernoffConverse.chernoff_converse_of_per_tilt_existential` (🟢ʰ
-load-bearing in the per-tilt hyp).
+**Sorry-based migration note**: this theorem previously consumed an
+existence-bundle `h_predicate : ∃ lam ∈ Icc 0 1, chernoffInfo = -log Z(λ) ∧
+IsBayesErrorPerTiltLowerBound P₁ P₂ lam` that wraps the FALSE-in-general
+per-tilt predicate. Hypothesis dropped; successor
+`ChernoffBandMassDischarge.chernoff_converse_holds` provides the genuine
+proof via the `ε`-relaxed route.
 
-`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
+@residual(plan:chernoff-converse-sanov-discharge) -/
 theorem chernoff_converse_discharged_from_predicate
     (P₁ P₂ : α → ℝ) [Nonempty α]
-    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (h_predicate : ∃ lam ∈ Set.Icc (0 : ℝ) 1,
-        chernoffInfo P₁ P₂ = -Real.log (chernoffZSum P₁ P₂ lam) ∧
-        IsBayesErrorPerTiltLowerBound P₁ P₂ lam) :
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
     Filter.limsup
       (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) atTop
         ≤ chernoffInfo P₁ P₂ := by
-  -- Unfold the predicate; the structure `∃ C, 0 < C ∧ ∀ᶠ n, ...` then
-  -- matches the per-tilt hypothesis shape of
-  -- `chernoff_converse_of_per_tilt_existential` exactly.
-  obtain ⟨lam, hlam_mem, h_eq, C, hC_pos, h_lb⟩ := h_predicate
-  exact chernoff_converse_of_per_tilt_existential P₁ P₂ hP₁_pos hP₂_pos
-    ⟨lam, hlam_mem, h_eq, C, hC_pos, h_lb⟩
+  sorry
 
-/-- **Sandwich `Tendsto` from predicate** (Cover-Thomas Theorem 11.9.1).
+/-- **Sandwich `Tendsto`** (Cover-Thomas Theorem 11.9.1, unconditional
+headline): `Tendsto rate atTop (𝓝 chernoffInfo)`.
 
-The optimal Bayesian error rate converges to `chernoffInfo P₁ P₂` along
-`atTop`, given the Sanov-style per-tilt lower bound predicate at the
-attaining tilt `λ*`. Both the L-Ch1 converse and L-Ch2 boundedness
-hypotheses of `ChernoffInformation.chernoff_lemma_tendsto` are discharged
-internally.
+**Sorry-based migration note**: this theorem previously consumed the same
+load-bearing FALSE per-tilt existence-bundle as
+`chernoff_converse_discharged_from_predicate`. Hypothesis dropped; successor
+`ChernoffBandMassDischarge.chernoff_lemma_tendsto_holds` provides the genuine
+proof via the `ε`-relaxed route.
 
-This is the cleanest publish shape of Cover-Thomas Theorem 11.9.1 given the
-current Mathlib state: only one explicit hypothesis (the per-tilt predicate
-`IsBayesErrorPerTiltLowerBound`, itself the Mathlib-gap abstraction of the
-Sanov LDP per-tilt output).
-
-`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
+@residual(plan:chernoff-converse-sanov-discharge) -/
 theorem chernoff_lemma_tendsto_from_predicate
     (P₁ P₂ : α → ℝ) [Nonempty α]
-    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (h_predicate : ∃ lam ∈ Set.Icc (0 : ℝ) 1,
-        chernoffInfo P₁ P₂ = -Real.log (chernoffZSum P₁ P₂ lam) ∧
-        IsBayesErrorPerTiltLowerBound P₁ P₂ lam) :
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
     Tendsto
       (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n))
       atTop (𝓝 (chernoffInfo P₁ P₂)) := by
-  -- The predicate unfolds to the per-tilt hypothesis of
-  -- `chernoff_lemma_tendsto_from_per_tilt` definitionally.
-  obtain ⟨lam, hlam_mem, h_eq, C, hC_pos, h_lb⟩ := h_predicate
-  exact chernoff_lemma_tendsto_from_per_tilt P₁ P₂ hP₁_pos hP₂_pos
-    ⟨lam, hlam_mem, h_eq, C, hC_pos, h_lb⟩
+  sorry
 
 /-! ## Phase D — predicate ↔ per-tilt hypothesis -/
 
@@ -256,7 +238,20 @@ lemma isBayesErrorPerTiltLowerBound_iff_per_tilt_hypothesis
 /-- **Predicate-form of the full per-tilt hypothesis** (combining the
 attaining `λ*` with the predicate). This is the cleanest "single-hypothesis"
 form for callers: package `chernoffInfo_attained` together with the predicate
-into a single existential. -/
+into a single existential.
+
+**Note**: FALSE bundle of `IsBayesErrorPerTiltLowerBound`
+(`@audit:defect(false-statement)` at `:148`). The sorry-based migration of
+this predicate's consumers (`chernoff_lemma_tendsto_of_per_tilt`,
+`chernoff_dotEq_tendsto_of_per_tilt`, `chernoff_lemma_tendsto_via_RN`,
+`isChernoffPerTiltDischargeable_of_RN` etc.) has fully removed live
+load-bearing uses; the only remaining hypothesis-form consumer is
+`per_tilt_hypothesis_of_isChernoffPerTiltDischargeable` (extract-only
+pass-through to the equivalent existential, no load-bearing claim
+injected). The genuine route ignores this predicate entirely and goes
+through `ChernoffBandMassDischarge` via the `ε`-relaxed bound.
+
+@audit:retract-candidate(load-bearing-predicate-extract-only) -/
 def IsChernoffPerTiltDischargeable
     (P₁ P₂ : α → ℝ) : Prop :=
   ∃ lam ∈ Set.Icc (0 : ℝ) 1,
@@ -271,84 +266,51 @@ lemma isChernoffPerTiltDischargeable_iff (P₁ P₂ : α → ℝ) :
         IsBayesErrorPerTiltLowerBound P₁ P₂ lam :=
   Iff.rfl
 
-/-- 🟢ʰ **load-bearing hypothesis — NOT a discharge.** Cover-Thomas
-Theorem 11.9.1 `Tendsto` form, packaged via the
-`IsChernoffPerTiltDischargeable` predicate.
+/-- **Cover-Thomas Theorem 11.9.1 `Tendsto`** (unconditional headline):
+`Tendsto rate atTop (𝓝 chernoffInfo)`.
 
-**Load-bearing piece**: `h_per_tilt : IsChernoffPerTiltDischargeable P₁ P₂`
-unfolds to `∃ lam, chernoffInfo = -log Z(lam) ∧ IsBayesErrorPerTiltLowerBound`.
-The `IsBayesErrorPerTiltLowerBound` factor **is** the Sanov-style per-tilt
-converse core (Mathlib-gap n-letter RN-derivative identification, cf.
-`ChernoffPerTiltSanov.lean`); this lemma does not discharge it. The body
-merely forwards the predicate through `chernoff_lemma_tendsto_from_predicate`.
+**Sorry-based migration note**: this theorem previously consumed the
+load-bearing FALSE-bundle predicate
+`h_per_tilt : IsChernoffPerTiltDischargeable P₁ P₂`
+(now `@audit:retract-candidate(load-bearing-predicate)`, FALSE bundle of
+`IsBayesErrorPerTiltLowerBound`). The Cramér `Θ(1/√n)` prefactor rules out
+the constant `C > 0`; the genuine Chernoff converse is delivered by
+`ChernoffBandMassDischarge.chernoff_lemma_tendsto_holds` via the
+`ε`-relaxed bound `bayesErrorMinPmf_ge_exp_neg_mul_Z_pow` together with the
+honest band-mass hypothesis `IsChernoffBandMassToOne` (discharged at the
+interior optimum). Downstream callers should route through that headline.
+Hypothesis dropped here; sorry pins the residual to the successor.
 
-The single-atomic-hypothesis shape is convenient for callers but it is the
-same converse content as the unfolded existential — no progress is made
-here.
-
-**Plan-Level Finding** (chernoff-converse-sanov-discharge):
-`IsBayesErrorPerTiltLowerBound` (and therefore
-`IsChernoffPerTiltDischargeable`) is **FALSE in general** — the textbook
-constant `C > 0` cannot exist because the Cramér local-limit prefactor is
-`Θ(1/√n)`, not `Θ(1)`. The genuine Chernoff converse is delivered by
-`ChernoffBandMassDischarge.chernoff_converse_holds` /
-`chernoff_lemma_tendsto_holds`, which use the `ε`-relaxed bound
-`bayesErrorMinPmf_ge_exp_neg_mul_Z_pow` and require only the honest band-mass
-hypothesis `IsChernoffBandMassToOne` (≠ the conclusion). Downstream callers
-should route through that headline rather than the per-tilt predicate here.
-
-`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
+@residual(plan:chernoff-converse-sanov-discharge) -/
 theorem chernoff_lemma_tendsto_of_per_tilt
     (P₁ P₂ : α → ℝ) [Nonempty α]
-    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (h_per_tilt : IsChernoffPerTiltDischargeable P₁ P₂) :
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
     Tendsto
       (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n))
-      atTop (𝓝 (chernoffInfo P₁ P₂)) :=
-  chernoff_lemma_tendsto_from_predicate P₁ P₂ hP₁_pos hP₂_pos h_per_tilt
+      atTop (𝓝 (chernoffInfo P₁ P₂)) := by
+  sorry
 
 /-! ## Phase F — `DotEq` form of the discharged Chernoff lemma -/
 
 open scoped InformationTheory.Asymptotic in
-/-- 🟢ʰ **load-bearing hypothesis — NOT a discharge.** Cover-Thomas
-Theorem 11.9.1 in `DotEq` form, packaged via the
-`IsChernoffPerTiltDischargeable` predicate:
+/-- **Cover-Thomas Theorem 11.9.1 in `DotEq` form** (unconditional headline):
 
-  `bayesErrorMinPmf P₁ P₂ n ≐ exp(-n · chernoffInfo P₁ P₂)`
+  `bayesErrorMinPmf P₁ P₂ n ≐ exp(-n · chernoffInfo P₁ P₂)`.
 
-given only the per-tilt predicate `IsChernoffPerTiltDischargeable P₁ P₂`.
+**Sorry-based migration note**: this theorem previously consumed the
+load-bearing FALSE-bundle predicate `IsChernoffPerTiltDischargeable P₁ P₂`
+(`@audit:retract-candidate(load-bearing-predicate)`). The genuine Chernoff
+converse `DotEq` form is delivered by
+`ChernoffBandMassDischarge.chernoff_dotEq_tendsto_holds` via the `ε`-relaxed
+bound + honest `IsChernoffBandMassToOne` hypothesis. Hypothesis dropped here.
 
-**Load-bearing piece**: `h_per_tilt` bundles the Sanov-style per-tilt lower
-bound `IsBayesErrorPerTiltLowerBound`, which **is** the converse core. The
-body derives `h_converse` and `h_bdd_le` (the two hypotheses of
-`chernoff_dotEq_tendsto`) — but the `h_converse` derivation is itself a
-forward through `chernoff_converse_of_per_tilt_existential_from_predicate`,
-which is also load-bearing in the same per-tilt hypothesis. No new converse
-content is produced here.
-
-**Plan-Level Finding** (chernoff-converse-sanov-discharge):
-`IsBayesErrorPerTiltLowerBound` is **FALSE in general** (Cramér local-limit
-`Θ(1/√n)` rules out a constant `C > 0`); see
-`ChernoffBandMassDischarge.chernoff_converse_holds` /
-`chernoff_lemma_tendsto_holds` (and the `DotEq` variant
-`chernoff_dotEq_tendsto_holds`) for the genuine route via the `ε`-relaxed
-bound and the honest `IsChernoffBandMassToOne` hypothesis.
-
-`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
+@residual(plan:chernoff-converse-sanov-discharge) -/
 theorem chernoff_dotEq_tendsto_of_per_tilt
     (P₁ P₂ : α → ℝ) [Nonempty α]
-    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (h_per_tilt : IsChernoffPerTiltDischargeable P₁ P₂) :
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
     (fun n : ℕ => bayesErrorMinPmf P₁ P₂ n)
       ≐ (fun n : ℕ => Real.exp (-(n : ℝ) * chernoffInfo P₁ P₂)) := by
-  -- Forward h_converse and h_bdd_le into `chernoff_dotEq_tendsto`.
-  -- (h_converse is itself a load-bearing forward; see docstring.)
-  have h_converse :=
-    chernoff_converse_discharged_from_predicate P₁ P₂ hP₁_pos hP₂_pos h_per_tilt
-  have h_bdd_le :=
-    chernoff_rate_isBoundedUnder_le P₁ P₂ hP₁_pos hP₂_pos
-  exact InformationTheory.Shannon.ChernoffInformation.chernoff_dotEq_tendsto
-    P₁ P₂ hP₁_pos hP₂_pos h_converse h_bdd_le
+  sorry
 
 /-! ## Phase G — structural lemmas on the predicate -/
 

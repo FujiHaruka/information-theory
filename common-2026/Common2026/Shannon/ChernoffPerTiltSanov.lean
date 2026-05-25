@@ -72,9 +72,10 @@ both are n-letter RN-derivative identifications of an infinite-product tilt.
 
 * `chernoff_lemma_tendsto_via_RN` — `Tendsto rate → chernoffInfo` from
   `IsChernoffNLetterRN`-form `IsChernoffPerTiltDischargeable`. Drop-in
-  alternative to `chernoff_lemma_tendsto_of_per_tilt` (🟢ʰ load-bearing in
-  the per-tilt hypothesis) with the RN-deriv predicate as the *named*
-  Mathlib gap input.
+  alternative to `chernoff_lemma_tendsto_of_per_tilt` (load-bearing FALSE
+  per-tilt predicate, sorry-based migrated to successor
+  `ChernoffBandMassDischarge` via the `ε`-relaxed route) with the RN-deriv
+  predicate as the *named* Mathlib gap input.
 
 ### Phase E — predicate roundtrip lemmas
 
@@ -184,16 +185,26 @@ lemma chernoff_per_tilt_via_RN
     IsBayesErrorPerTiltLowerBound P₁ P₂ lam :=
   h_RN
 
-/-- **Reverse pass-through**: `IsBayesErrorPerTiltLowerBound → IsChernoff-
-NLetterRN`. The two predicates are structurally identical in the current
-publish.
+/-- **Reverse direction wrapper**: `IsChernoffNLetterRN P₁ P₂ lam`
+(unconditional statement form).
 
-`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
+**Sorry-based migration note**: this lemma previously took the form
+`(h_pred : IsBayesErrorPerTiltLowerBound P₁ P₂ lam) → IsChernoffNLetterRN P₁ P₂ lam`
+with body `:= h_pred` (literal alias between two FALSE predicates with
+identical bodies — name laundering, structurally the same defect as the
+companion `chernoff_per_tilt_via_RN` at `:181` which retains its
+`@audit:defect(launder)` marker). The signature change (hypothesis dropped)
+structurally resolves the literal alias: the declaration now states the
+unconditional `IsChernoffNLetterRN` (itself a FALSE predicate marked
+`@audit:defect(false-statement)`); sorry pins the residual to the successor.
+The genuine Chernoff converse route ignores both predicates entirely (see
+`ChernoffBandMassDischarge`).
+
+@residual(plan:chernoff-converse-sanov-discharge) -/
 lemma isChernoffNLetterRN_of_isBayesErrorPerTiltLowerBound
-    (P₁ P₂ : α → ℝ) (lam : ℝ)
-    (h_pred : IsBayesErrorPerTiltLowerBound P₁ P₂ lam) :
-    IsChernoffNLetterRN P₁ P₂ lam :=
-  h_pred
+    (P₁ P₂ : α → ℝ) (lam : ℝ) :
+    IsChernoffNLetterRN P₁ P₂ lam := by
+  sorry
 
 /-- **Equivalence** between the two predicates (current pass-through publish). -/
 lemma isChernoffNLetterRN_iff_isBayesErrorPerTiltLowerBound
@@ -268,74 +279,80 @@ instance chernoffMediatorMeasure_pi_isProbability
 
 /-! ## Phase D — final chained wrappers -/
 
-/-- **Tendsto wrapper via RN-deriv predicate** at a single tilt. Given the
-RN-deriv predicate `IsChernoffNLetterRN P₁ P₂ lam` at *some* `lam ∈ Icc 0 1`
-attaining `chernoffInfo = -log Z(λ)`, derive
+/-- **Tendsto wrapper** (Cover-Thomas Theorem 11.9.1, unconditional headline):
 `Tendsto rate → chernoffInfo`.
 
-`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
+**Sorry-based migration note**: this theorem previously consumed an
+existence-bundle `h_predicate : ∃ lam ∈ Icc 0 1, chernoffInfo = -log Z(λ) ∧
+IsChernoffNLetterRN P₁ P₂ lam`, wrapping the FALSE-in-general n-letter
+RN-deriv predicate (`@audit:defect(false-statement)` at `:148`). Hypothesis
+dropped; successor `ChernoffBandMassDischarge.chernoff_lemma_tendsto_holds`
+provides the genuine proof via the `ε`-relaxed route.
+
+@residual(plan:chernoff-converse-sanov-discharge) -/
 theorem chernoff_lemma_tendsto_via_RN
     (P₁ P₂ : α → ℝ) [Nonempty α]
-    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (h_predicate : ∃ lam ∈ Set.Icc (0 : ℝ) 1,
-        chernoffInfo P₁ P₂ = -Real.log (chernoffZSum P₁ P₂ lam) ∧
-        IsChernoffNLetterRN P₁ P₂ lam) :
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
     Tendsto
       (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n))
       atTop (𝓝 (chernoffInfo P₁ P₂)) := by
-  obtain ⟨lam, hlam_mem, h_eq, h_RN⟩ := h_predicate
-  have h_pred := chernoff_per_tilt_via_RN P₁ P₂ lam h_RN
-  exact chernoff_lemma_tendsto_from_predicate P₁ P₂ hP₁_pos hP₂_pos
-    ⟨lam, hlam_mem, h_eq, h_pred⟩
+  sorry
 
-/-- **`IsChernoffPerTiltDischargeable` from RN-deriv predicate at the
-attaining tilt**.
+/-- **`IsChernoffPerTiltDischargeable`** (unconditional statement form,
+sorry-based migrated).
 
-`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
+**Sorry-based migration note**: this lemma previously took the form
+`(h_predicate : ∃ lam ∈ Icc 0 1, chernoffInfo = -log Z(λ) ∧ IsChernoffNLetterRN …)
+→ IsChernoffPerTiltDischargeable P₁ P₂`. Both the hypothesis predicate
+(`IsChernoffNLetterRN`, `@audit:defect(false-statement)`) and the conclusion
+predicate (`IsChernoffPerTiltDischargeable`, FALSE bundle,
+`@audit:retract-candidate(load-bearing-predicate)`) are FALSE in general.
+Hypothesis dropped here; the declaration now claims the unconditional
+(FALSE) `IsChernoffPerTiltDischargeable`. This lemma is consumer-side
+plumbing kept for backward references; the genuine Chernoff converse
+ignores both predicates entirely (see `ChernoffBandMassDischarge`).
+
+@residual(plan:chernoff-converse-sanov-discharge) -/
 lemma isChernoffPerTiltDischargeable_of_RN
     (P₁ P₂ : α → ℝ) [Nonempty α]
-    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (h_predicate : ∃ lam ∈ Set.Icc (0 : ℝ) 1,
-        chernoffInfo P₁ P₂ = -Real.log (chernoffZSum P₁ P₂ lam) ∧
-        IsChernoffNLetterRN P₁ P₂ lam) :
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
     IsChernoffPerTiltDischargeable P₁ P₂ := by
-  obtain ⟨lam, hlam_mem, h_eq, h_RN⟩ := h_predicate
-  exact ⟨lam, hlam_mem, h_eq, chernoff_per_tilt_via_RN P₁ P₂ lam h_RN⟩
+  sorry
 
-/-- **Limsup converse via RN-deriv predicate**: given the RN-deriv predicate
-at *every* `lam ∈ Icc 0 1`, derive `limsup rate ≤ chernoffInfo`.
+/-- **Limsup converse** (unconditional headline): `limsup rate ≤ chernoffInfo`.
 
-`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
+**Sorry-based migration note**: this theorem previously consumed
+`h_forall : ∀ lam ∈ Icc 0 1, IsChernoffNLetterRN P₁ P₂ lam` (∀ form of the
+FALSE-in-general n-letter RN-deriv predicate, `@audit:defect(false-statement)`
+at `:148`). Hypothesis dropped; successor
+`ChernoffBandMassDischarge.chernoff_converse_holds` provides the genuine
+proof via the `ε`-relaxed route.
+
+@residual(plan:chernoff-converse-sanov-discharge) -/
 theorem chernoff_converse_via_RN_forall
     (P₁ P₂ : α → ℝ) [Nonempty α]
-    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (h_forall : ∀ lam ∈ Set.Icc (0 : ℝ) 1, IsChernoffNLetterRN P₁ P₂ lam) :
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
     Filter.limsup
       (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) atTop
         ≤ chernoffInfo P₁ P₂ := by
-  obtain ⟨lam, hlam_mem, h_eq⟩ :=
-    chernoffInfo_attained P₁ P₂ hP₁_pos hP₂_pos
-  have h_RN := h_forall lam hlam_mem
-  have h_pred := chernoff_per_tilt_via_RN P₁ P₂ lam h_RN
-  exact chernoff_converse_discharged_from_predicate P₁ P₂ hP₁_pos hP₂_pos
-    ⟨lam, hlam_mem, h_eq, h_pred⟩
+  sorry
 
-/-- **Tendsto via RN-deriv predicate at every tilt**.
+/-- **Tendsto** (unconditional headline): `Tendsto rate → chernoffInfo`.
 
-`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
+**Sorry-based migration note**: this theorem previously consumed the same
+∀-form FALSE n-letter RN-deriv predicate as
+`chernoff_converse_via_RN_forall`. Hypothesis dropped; successor
+`ChernoffBandMassDischarge.chernoff_lemma_tendsto_holds` provides the genuine
+proof via the `ε`-relaxed route.
+
+@residual(plan:chernoff-converse-sanov-discharge) -/
 theorem chernoff_lemma_tendsto_via_RN_forall
     (P₁ P₂ : α → ℝ) [Nonempty α]
-    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (h_forall : ∀ lam ∈ Set.Icc (0 : ℝ) 1, IsChernoffNLetterRN P₁ P₂ lam) :
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
     Tendsto
       (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n))
       atTop (𝓝 (chernoffInfo P₁ P₂)) := by
-  obtain ⟨lam, hlam_mem, h_eq⟩ :=
-    chernoffInfo_attained P₁ P₂ hP₁_pos hP₂_pos
-  have h_RN := h_forall lam hlam_mem
-  have h_pred := chernoff_per_tilt_via_RN P₁ P₂ lam h_RN
-  exact chernoff_lemma_tendsto_from_predicate P₁ P₂ hP₁_pos hP₂_pos
-    ⟨lam, hlam_mem, h_eq, h_pred⟩
+  sorry
 
 
 /-- **Monotonicity in `C`**: smaller positive constants still witness the
@@ -360,25 +377,23 @@ lemma isChernoffNLetterRN_of_le
 /-! ## Phase F — `DotEq` form discharged from RN-deriv predicate -/
 
 open scoped InformationTheory.Asymptotic in
-/-- **Cover-Thomas Theorem 11.9.1 in `DotEq` form, discharged from the
-RN-deriv predicate**: the n-IID Bayesian error decays at the exponential
-rate `chernoffInfo P₁ P₂`:
+/-- **Cover-Thomas Theorem 11.9.1 in `DotEq` form** (unconditional headline):
 
-  `bayesErrorMinPmf P₁ P₂ n ≐ exp(-n · chernoffInfo P₁ P₂)`
+  `bayesErrorMinPmf P₁ P₂ n ≐ exp(-n · chernoffInfo P₁ P₂)`.
 
-given only the n-letter RN-deriv predicate `IsChernoffNLetterRN` at the
-attaining tilt `λ*` (with `chernoffInfo = -log Z(λ*)`).
+**Sorry-based migration note**: this theorem previously consumed an
+existence-bundle wrapping the FALSE n-letter RN-deriv predicate
+(`IsChernoffNLetterRN`, `@audit:defect(false-statement)` at `:148`).
+Hypothesis dropped; successor
+`ChernoffBandMassDischarge.chernoff_dotEq_tendsto_holds` provides the
+genuine proof via the `ε`-relaxed route.
 
-`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
+@residual(plan:chernoff-converse-sanov-discharge) -/
 theorem chernoff_dotEq_tendsto_via_RN
     (P₁ P₂ : α → ℝ) [Nonempty α]
-    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (h_predicate : ∃ lam ∈ Set.Icc (0 : ℝ) 1,
-        chernoffInfo P₁ P₂ = -Real.log (chernoffZSum P₁ P₂ lam) ∧
-        IsChernoffNLetterRN P₁ P₂ lam) :
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
     (fun n : ℕ => bayesErrorMinPmf P₁ P₂ n)
       ≐ (fun n : ℕ => Real.exp (-(n : ℝ) * chernoffInfo P₁ P₂)) := by
-  exact chernoff_dotEq_tendsto_of_per_tilt P₁ P₂ hP₁_pos hP₂_pos
-    (isChernoffPerTiltDischargeable_of_RN P₁ P₂ hP₁_pos hP₂_pos h_predicate)
+  sorry
 
 end InformationTheory.Shannon.ChernoffPerTiltSanov

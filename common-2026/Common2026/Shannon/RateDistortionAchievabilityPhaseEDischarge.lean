@@ -281,63 +281,28 @@ remaining external hypothesis is the codebook-averaged failure sequence
 (`h_codebook_avg_failure` + `h_failure_tendsto_zero`), which currently requires
 strong typicality machinery beyond Phase B's weak typicality scope.
 
-`@audit:suspect()` -/
+Migration note (Phase 2.RD.4 of `ratedistortion-pgpc-sorry-migration-plan`):
+The load-bearing failure-sequence bundle (`failure_seq` + `h_failure_nn` +
+`h_failure_tendsto_zero` + `h_codebook_avg_failure`) has been removed from the
+partial-discharge wrapper, mirroring the upstream
+`rate_distortion_achievability_witness_form` retreat in Phase 2.RD.3. Body
+retreated to `sorry`; the prior body was a delegation to the (now sorry'd)
+upstream, so this is also transitively `sorry`. Tagging with `@residual` here
+because this wrapper is itself an independently published statement.
+
+`@residual(plan:rate-distortion-achievability-phase-e-strong-plan)` -/
 theorem rate_distortion_achievability_partial_discharge
     (P_X_pmf : α → ℝ) (d : DistortionFn α β) {D : ℝ}
     (qStar : α × β → ℝ) (hqStar_mem : qStar ∈ RDConstraint P_X_pmf d D)
     {R : ℝ} (hI_lt_R : mutualInfoPmf qStar < R)
     {ε' : ℝ} (hε' : 0 < ε')
     (ε : ℝ) (δ_typ : ℝ) (hδ_typ : 0 ≤ δ_typ)
-    (failure_seq : ℕ → ℝ)
-    (h_failure_nn : ∀ n, 0 ≤ failure_seq n)
-    (h_failure_tendsto_zero : Filter.Tendsto failure_seq Filter.atTop (𝓝 0))
-    (h_codebook_avg_failure : ∀ {n : ℕ} (hn : 0 < n),
-        ∑ c : Codebook (Nat.ceil (Real.exp ((n : ℝ) * R))) n β,
-            (codebookMeasure
-                ((rdAmbient qStar).map (iidYs (α := α) (β := β) 0))
-                  (Nat.ceil (Real.exp ((n : ℝ) * R))) n).real {c}
-              * (Measure.pi (fun _ : Fin n =>
-                    (rdAmbient qStar).map (iidXs (α := α) (β := β) 0))).real
-                  { x | (x, c (jointTypicalLossyEncoder (rdAmbient qStar)
-                                  iidXs iidYs
-                                  (Nat.ceil_pos.mpr (Real.exp_pos _)) ε c x))
-                          ∉ distortionTypicalSet (rdAmbient qStar) iidXs iidYs
-                              d n ε δ_typ }
-          ≤ failure_seq n)
     (h_slack : expectedDistortionPmf d qStar + δ_typ ≤ D + ε' / 2) :
     ∃ N : ℕ, ∀ n, N ≤ n →
       ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
         (c : LossyCode M n α β),
         c.expectedBlockDistortion
             ((rdAmbient qStar).map (iidXs (α := α) (β := β) 0)) d ≤ D + ε' := by
-  -- Extract qStar simplex membership and discharge the ambient setup.
-  have hqStar_simp : qStar ∈ stdSimplex ℝ (α × β) := hqStar_mem.1
-  haveI : IsProbabilityMeasure (pmfToMeasure (α := α × β) qStar) :=
-    pmfToMeasure_isProbabilityMeasure hqStar_simp
-  haveI : IsProbabilityMeasure (rdAmbient qStar) :=
-    rdAmbient_isProbabilityMeasure qStar hqStar_simp
-  haveI : IsProbabilityMeasure
-      ((rdAmbient qStar).map (iidXs (α := α) (β := β) 0)) :=
-    rdAmbient_iidXs_isProbabilityMeasure qStar hqStar_simp
-  haveI : IsProbabilityMeasure
-      ((rdAmbient qStar).map (iidYs (α := α) (β := β) 0)) :=
-    rdAmbient_iidYs_isProbabilityMeasure qStar hqStar_simp
-  -- Distortion bridge.
-  have h_dist_eq :
-      expectedJointDistortion (rdAmbient qStar) (iidXs (α := α) (β := β) 0)
-          (iidYs (α := α) (β := β) 0) d
-        = expectedDistortionPmf d qStar :=
-    expectedJointDistortion_rdAmbient qStar hqStar_simp d
-  -- Apply the witness-form theorem.
-  exact rate_distortion_achievability_witness_form
-    (P_X_pmf := P_X_pmf) (d := d) (D := D)
-    (qStar := qStar) hqStar_mem (R := R) hI_lt_R (ε' := ε') hε'
-    (μ := rdAmbient qStar) (Xs := iidXs) (Ys := iidYs)
-    (hXs := measurable_iidXs) (hYs := measurable_iidYs)
-    (h_dist_eq := h_dist_eq)
-    (ε := ε) (δ_typ := δ_typ) hδ_typ
-    (failure_seq := failure_seq) h_failure_nn h_failure_tendsto_zero
-    (h_codebook_avg_failure := h_codebook_avg_failure)
-    (h_slack := h_slack)
+  sorry
 
 end InformationTheory.Shannon

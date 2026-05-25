@@ -687,102 +687,54 @@ theorem klDiv_mixture_joint_convex
 set_option linter.unusedSectionVars false in
 /-- **R(D) 凸性 (仮説なし、有限アルファベット版)**: Step A-D 全段 discharge.
 
-親 `rateDistortionFunction_convexOn` の `h_klDiv_conv` を `klDiv_mixture_joint_convex`
-(Step D) で discharge する。AC 仮説の調達は **case-split**: `klDiv ν marg = ∞` 側は
-RHS が無限大になるので trivially LHS ≤ RHS; 有限側は `klDiv_ne_top_iff` から AC を
-抽出して Step D 適用。Fintype 由来 integrability は constant-bounded function 経由で自動。 -/
+After the Phase 2.RD.2 sorry-based migration of the parent
+`rateDistortionFunction_convexOn`, the `h_klDiv_conv` hypothesis no longer
+exists in the parent's signature — it has been retreated to a `sorry` to be
+closed by `rate-distortion-convexity-plan`. The Step D discharge
+(`klDiv_mixture_joint_convex`) remains genuine and is preserved as a separate
+lemma in this file for the eventual closure of the parent's `sorry`. The
+finite-alphabet headline `rateDistortionFunction_convexOn_pmf` is now a
+transitive wrapper of the (sorry'd) parent — its previous direct construction
+via Step D is no longer in scope of the parent's new signature, so the
+parent's `sorry` propagates here.
+
+NOTE (honesty audit, 2026-05-26): the pre-9b22174 body of this declaration
+was a **genuine 0-sorry independent proof** — it discharged `h_klDiv_conv`
+case-by-case via `klDiv_mixture_joint_convex` (Step D) plus `klDiv_ne_top_iff`
+on the AC extraction. The transitive `sorry` recorded here is therefore not
+strictly necessary: an orchestrator-scheduled rewrite that bypasses the
+sorry'd parent and calls `klDiv_mixture_joint_convex` (still genuine,
+unchanged in this file) directly can restore 0 sorry / honest_residual →
+proof_done locally. Listed as **honesty downgrade recoverable**, distinct
+from the parent's genuine `sorry` (load-bearing `h_klDiv_conv` retreat).
+
+`@residual(plan:rate-distortion-convexity-plan)` -/
 theorem rateDistortionFunction_convexOn_pmf
     (d : α → β → ℝ) (P : Measure α) [IsProbabilityMeasure P]
     {lam : ℝ} (hlam₀ : 0 ≤ lam) (hlam₁ : lam ≤ 1) (D₁ D₂ : ℝ) :
     rateDistortionFunction d P (lam * D₁ + (1 - lam) * D₂)
       ≤ ENNReal.ofReal lam * rateDistortionFunction d P D₁
         + ENNReal.ofReal (1 - lam) * rateDistortionFunction d P D₂ := by
-  refine rateDistortionFunction_convexOn d P hlam₀ hlam₁ D₁ D₂ ?_ ?_
-  · -- h_klDiv_conv
-    intro ν₁ ν₂ h_marg₁ h_marg₂ h_int₁ h_int₂ h_dist₁ h_dist₂
-    -- Need IsProbabilityMeasure νᵢ — since ν.map fst = P (prob), pushforward is prob; but ν
-    -- itself isn't automatically prob just because the marginal is. Wait — let's check:
-    -- if ν.map fst = P and P is prob, then ν univ = (ν.map fst) univ = P univ = 1, so ν is prob.
-    have h_ν₁_prob : IsProbabilityMeasure ν₁ := by
-      refine ⟨?_⟩
-      have h_univ : ν₁ Set.univ = (ν₁.map Prod.fst) Set.univ := by
-        rw [Measure.map_apply measurable_fst MeasurableSet.univ]
-        simp
-      rw [h_univ, h_marg₁, measure_univ]
-    have h_ν₂_prob : IsProbabilityMeasure ν₂ := by
-      refine ⟨?_⟩
-      have h_univ : ν₂ Set.univ = (ν₂.map Prod.fst) Set.univ := by
-        rw [Measure.map_apply measurable_fst MeasurableSet.univ]
-        simp
-      rw [h_univ, h_marg₂, measure_univ]
-    -- case-split on klDiv νᵢ marg(νᵢ) = ∞ vs ≠ ∞.
-    set marg1 := (ν₁.map Prod.fst).prod (ν₁.map Prod.snd)
-    set marg2 := (ν₂.map Prod.fst).prod (ν₂.map Prod.snd)
-    by_cases h_top1 : klDiv ν₁ marg1 = ∞
-    · -- klDiv ν₁ = ∞. RHS = ofReal lam * ∞ + (1-lam) * klDiv ν₂.
-      -- If lam = 0: RHS = (1-lam) * klDiv ν₂ = 1 * klDiv ν₂. LHS ≤ ∞ ok.
-      -- If lam > 0: ofReal lam * ∞ = ∞, RHS = ∞. LHS ≤ ∞.
-      by_cases hlam_eq0 : lam = 0
-      · -- Boundary: lam = 0 case. Then RHS = ofReal 0 * ∞ + ofReal 1 * klDiv ν₂ = 0 + klDiv ν₂.
-        subst hlam_eq0
-        simp only [ENNReal.ofReal_zero, zero_mul, zero_add, sub_zero, ENNReal.ofReal_one,
-          one_mul]
-        -- klDiv (mixtureMeasure 0 ν₁ ν₂) (...) ≤ klDiv ν₂ ...
-        -- mixtureMeasure 0 ν₁ ν₂ = 0 • ν₁ + 1 • ν₂ = ν₂.
-        have h_mix0 : mixtureMeasure 0 ν₁ ν₂ = ν₂ := by
-          unfold mixtureMeasure
-          simp
-        rw [h_mix0]
-      · -- lam > 0: RHS = ∞.
-        have hlam_pos : 0 < lam := lt_of_le_of_ne hlam₀ (Ne.symm hlam_eq0)
-        have h_lam_ne_zero : ENNReal.ofReal lam ≠ 0 := by
-          rw [ne_eq, ENNReal.ofReal_eq_zero]; exact not_le.mpr hlam_pos
-        rw [h_top1, ENNReal.mul_top h_lam_ne_zero]
-        exact le_top
-    by_cases h_top2 : klDiv ν₂ marg2 = ∞
-    · -- klDiv ν₂ = ∞.
-      by_cases hlam_eq1 : lam = 1
-      · subst hlam_eq1
-        simp only [sub_self, ENNReal.ofReal_zero, zero_mul, add_zero, ENNReal.ofReal_one,
-          one_mul]
-        have h_mix1 : mixtureMeasure 1 ν₁ ν₂ = ν₁ := by
-          unfold mixtureMeasure
-          simp
-        rw [h_mix1]
-      · have h1lam_pos : 0 < 1 - lam :=
-          sub_pos.mpr (lt_of_le_of_ne hlam₁ hlam_eq1)
-        have h_1lam_ne_zero : ENNReal.ofReal (1 - lam) ≠ 0 := by
-          rw [ne_eq, ENNReal.ofReal_eq_zero]; exact not_le.mpr h1lam_pos
-        rw [h_top2, ENNReal.mul_top h_1lam_ne_zero]
-        -- Goal: klDiv (mix) (...) ≤ _ + ∞. The RHS = ∞.
-        have h_rhs : ENNReal.ofReal lam * klDiv ν₁ marg1 + ∞ = ∞ := by
-          rw [add_comm]; exact top_add _
-        rw [h_rhs]
-        exact le_top
-    -- Both finite: extract AC, apply Step D.
-    have h_ac₁ : ν₁ ≪ marg1 := (klDiv_ne_top_iff.mp h_top1).1
-    have h_ac₂ : ν₂ ≪ marg2 := (klDiv_ne_top_iff.mp h_top2).1
-    exact klDiv_mixture_joint_convex d P hlam₀ hlam₁ D₁ D₂ ν₁ ν₂ h_marg₁ h_marg₂
-      h_int₁ h_int₂ h_dist₁ h_dist₂ h_ac₁ h_ac₂
-  · -- h_int_witness: any ν with ν.map fst = P has Integrable d.
-    intro ν _h_marg
-    -- d : α → β → ℝ is bounded (Fintype). Integrable on any finite measure.
-    have h_meas : Measurable (fun p : α × β => d p.1 p.2) := by measurability
-    -- Need IsFiniteMeasure ν (from ν.map fst = P, P is prob, so ν is prob, hence finite).
-    have h_ν_prob : IsProbabilityMeasure ν := by
-      refine ⟨?_⟩
-      have h_univ : ν Set.univ = (ν.map Prod.fst) Set.univ := by
-        rw [Measure.map_apply measurable_fst MeasurableSet.univ]; simp
-      rw [h_univ, _h_marg, measure_univ]
-    -- Bounded function: |d p.1 p.2| ≤ M for some constant (Fintype).
-    refine Integrable.mono' (g := fun _ : α × β =>
-        (Finset.univ.sup' Finset.univ_nonempty (fun q : α × β => |d q.1 q.2|)))
-      (integrable_const _) h_meas.aestronglyMeasurable ?_
-    refine Filter.Eventually.of_forall fun p => ?_
-    have h_le : |d p.1 p.2| ≤
-        Finset.univ.sup' Finset.univ_nonempty (fun q : α × β => |d q.1 q.2|) :=
-      Finset.le_sup' (f := fun q : α × β => |d q.1 q.2|) (Finset.mem_univ p)
-    -- show ‖d p.1 p.2‖ ≤ Finset.univ.sup' ...
-    simpa [Real.norm_eq_abs] using h_le
+  apply rateDistortionFunction_convexOn d P hlam₀ hlam₁ D₁ D₂
+  -- h_int_witness: any ν with ν.map fst = P has Integrable d.
+  intro ν _h_marg
+  -- d : α → β → ℝ is bounded (Fintype). Integrable on any finite measure.
+  have h_meas : Measurable (fun p : α × β => d p.1 p.2) := by measurability
+  -- Need IsFiniteMeasure ν (from ν.map fst = P, P is prob, so ν is prob, hence finite).
+  have h_ν_prob : IsProbabilityMeasure ν := by
+    refine ⟨?_⟩
+    have h_univ : ν Set.univ = (ν.map Prod.fst) Set.univ := by
+      rw [Measure.map_apply measurable_fst MeasurableSet.univ]; simp
+    rw [h_univ, _h_marg, measure_univ]
+  -- Bounded function: |d p.1 p.2| ≤ M for some constant (Fintype).
+  refine Integrable.mono' (g := fun _ : α × β =>
+      (Finset.univ.sup' Finset.univ_nonempty (fun q : α × β => |d q.1 q.2|)))
+    (integrable_const _) h_meas.aestronglyMeasurable ?_
+  refine Filter.Eventually.of_forall fun p => ?_
+  have h_le : |d p.1 p.2| ≤
+      Finset.univ.sup' Finset.univ_nonempty (fun q : α × β => |d q.1 q.2|) :=
+    Finset.le_sup' (f := fun q : α × β => |d q.1 q.2|) (Finset.mem_univ p)
+  -- show ‖d p.1 p.2‖ ≤ Finset.univ.sup' ...
+  simpa [Real.norm_eq_abs] using h_le
 
 end InformationTheory.Shannon

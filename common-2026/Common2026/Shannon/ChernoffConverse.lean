@@ -46,11 +46,14 @@ Discharge.lean` for the analogous Cramér L-C2 situation) and is **deferred**.
 * `chernoff_converse_from_per_tilt` — **per-tilt wrapper**: given a per-tilt
   Sanov-style lower bound on `bayesErrorMinPmf` (hypothesis form), derive
   `limsup rate ≤ -log Z(λ)`. This is the main reduction shape.
-* `chernoff_converse_of_per_tilt_existential` — 🟢ʰ load-bearing hypothesis
-  — NOT a discharge. Given the per-tilt hypothesis at the optimum `λ*` (with
-  `chernoffInfo = -log Z(λ*)` automatic via `chernoffInfo_attained`), derive
-  `limsup rate ≤ chernoffInfo P₁ P₂`. The per-tilt Sanov-style lower bound
-  carries the converse core; this wrapper only repackages it.
+* `chernoff_converse_of_per_tilt_existential` — load-bearing FALSE per-tilt
+  hypothesis wrapper (sorry-based migrated). The per-tilt Sanov-style lower
+  bound `IsBayesErrorPerTiltLowerBound` is FALSE in general (Cramér
+  `Θ(1/√n)` prefactor); successor `ChernoffBandMassDischarge` discharges the
+  converse via the `ε`-relaxed route. The previous wrapper repackaged the
+  load-bearing FALSE hypothesis; it now states the unconditional headline
+  `limsup rate ≤ chernoffInfo P₁ P₂` with a sorry pinning the residual to
+  the successor.
 * `chernoff_lemma_tendsto_from_per_tilt` — sandwich `Tendsto` wrapper re-
   publishing `chernoff_lemma_tendsto` with hypothesis count reduced 2 → 1
   (only the per-tilt hypothesis remains; both L-Ch1 and L-Ch2 are derived
@@ -65,8 +68,9 @@ Discharge.lean` for the analogous Cramér L-C2 situation) and is **deferred**.
   to a follow-up plan.
 * **Not adopted L-CC1** (Phase A scaffolding only): we go past Phase A and
   publish the per-tilt wrapper + main
-  `chernoff_converse_of_per_tilt_existential` (🟢ʰ load-bearing in the
-  per-tilt hyp) + sandwich Tendsto wrapper.
+  `chernoff_converse_of_per_tilt_existential` (load-bearing FALSE per-tilt
+  hypothesis, sorry-based migrated to successor `ChernoffBandMassDischarge`
+  via the `ε`-relaxed route) + sandwich Tendsto wrapper.
 
 ## Design notes
 
@@ -256,208 +260,83 @@ lemma chernoff_rate_isBoundedUnder_le
 
 /-! ## Phase B — per-tilt converse wrapper -/
 
-/-- **Per-tilt converse wrapper** (Phase B): given a per-tilt
-Sanov-style lower bound `C · Z(λ)^n ≤ 2 · bayesErrorMinPmf P₁ P₂ n` (eventually
-in `n`), derive `limsup rate ≤ -log Z(λ)`.
+/-- **Per-tilt converse wrapper** (Phase B, unconditional headline):
+`limsup rate ≤ -log Z(λ)` for any tilt `λ ∈ ℝ`.
 
 This is the rate-side conclusion of the Cover-Thomas Theorem 11.9 converse
 restricted to a single tilt `λ`. Combining with `chernoffInfo_attained` at
 the optimum `λ*` (where `chernoffInfo = -log Z(λ*)`) yields the L-Ch1 main
 conclusion `limsup rate ≤ chernoffInfo`.
 
-Hypothesis shape: a Sanov LDP launch at the tilted measure
-`Measure.pi (chernoffMediator ...)` would produce exactly this bound after
-change-of-measure (the `2` factor accounts for the `1/2` prefactor in
-`bayesErrorMinPmf`).
+**Sorry-based migration note**: this theorem previously consumed three
+load-bearing arguments (`C : ℝ`, `hC_pos : 0 < C`, `h_lb : ∀ᶠ n, C·Z(λ)^n ≤
+2·bayesErrorMinPmf`) that destructure the FALSE-in-general predicate
+`IsBayesErrorPerTiltLowerBound` (`ChernoffPerTiltDischarge.lean:148`,
+`@audit:defect(false-statement)`). The Cramér `Θ(1/√n)` prefactor rules out
+a constant `C > 0`; the genuine route lives at the successor
+`ChernoffBandMassDischarge` via the `ε`-relaxed bound. Hypotheses dropped
+so the declaration states the unconditional `λ`-indexed claim.
 
-`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
+@residual(plan:chernoff-converse-sanov-discharge) -/
 theorem chernoff_converse_from_per_tilt
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (lam : ℝ)
-    (C : ℝ) (hC_pos : 0 < C)
-    (h_lb : ∀ᶠ n : ℕ in atTop,
-        C * (chernoffZSum P₁ P₂ lam) ^ n ≤ 2 * bayesErrorMinPmf P₁ P₂ n) :
+    (lam : ℝ) :
     Filter.limsup
       (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) atTop
         ≤ -Real.log (chernoffZSum P₁ P₂ lam) := by
-  -- Step 1: from the per-tilt lower bound on bayesErrorMinPmf, derive
-  --   rate n ≤ -log Z(λ) - log(C/2)/n
-  -- which → -log Z(λ) as n → ∞.
-  have hZ_pos : 0 < chernoffZSum P₁ P₂ lam :=
-    chernoffZSum_pos P₁ P₂ hP₁_pos hP₂_pos lam
-  -- For each ε > 0, eventually rate n ≤ -log Z(λ) + ε.
-  -- Cobounded ≤ from `IsBoundedUnder (· ≥ ·)` (rate is bounded below by chernoffInfo via
-  -- the achievability side; we use the existing `chernoff_rate_isBoundedUnder_ge` lemma).
-  -- Bounded ≤ from the L-Ch2 internal discharge `chernoff_rate_isBoundedUnder_le`.
-  have h_bdd_ge : Filter.IsBoundedUnder (· ≥ ·) atTop
-      (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) :=
-    InformationTheory.Shannon.ChernoffInformation.chernoff_rate_isBoundedUnder_ge
-      P₁ P₂ hP₁_pos hP₂_pos
-  have h_bdd_le : Filter.IsBoundedUnder (· ≤ ·) atTop
-      (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) :=
-    chernoff_rate_isBoundedUnder_le P₁ P₂ hP₁_pos hP₂_pos
-  -- Goal: ∀ b > -log Z(λ), ∀ᶠ n, rate n < b.
-  rw [Filter.limsup_le_iff h_bdd_ge.isCoboundedUnder_le h_bdd_le]
-  · intro b hb
-    -- hb : ∀ᶠ a, -log Z(λ) < a, want: ∃ᶠ n, rate n < b... no, signature different.
-    -- Re-read limsup_le_iff: `(∀ b, x < b → ∀ᶠ a, u a < b) ↔ limsup u ≤ x`
-    -- Actually we need: x < b → ∀ᶠ a, u a < b.
-    -- Here x := -log Z(λ), so given x < b, want eventually rate n < b.
-    -- From h_lb: C · Z(λ)^n ≤ 2 · bayesErrorMinPmf
-    --   ⇒ bayesErrorMinPmf ≥ (C/2) · Z(λ)^n
-    --   ⇒ log bayesErrorMinPmf ≥ log(C/2) + n log Z(λ)
-    --   ⇒ -(1/n) log bayesErrorMinPmf ≤ -log(C/2)/n - log Z(λ)
-    -- We want this ≤ -log Z(λ) + ε for ε := b - (-log Z(λ)).
-    -- -log(C/2)/n → 0, so eventually ≤ ε.
-    set x := -Real.log (chernoffZSum P₁ P₂ lam)
-    set ε := b - x with hε_def
-    have hε_pos : 0 < ε := by simp [hε_def]; linarith
-    -- Need: eventually rate n < b = x + ε.
-    -- From h_lb (eventually): bayesErrorMinPmf ≥ (C/2) · Z(λ)^n.
-    -- For large n: -log(C/2)/n < ε (since → 0).
-    have h_log_const_div : Tendsto (fun n : ℕ => -Real.log (C/2) / (n : ℝ)) atTop (𝓝 0) := by
-      have h_inv : Tendsto (fun n : ℕ => ((n : ℝ))⁻¹) atTop (𝓝 0) :=
-        tendsto_inv_atTop_nhds_zero_nat
-      have h_eq : (fun n : ℕ => -Real.log (C/2) / (n : ℝ))
-          = (fun n : ℕ => -Real.log (C/2) * ((n : ℝ))⁻¹) := by
-        funext n
-        rw [div_eq_mul_inv]
-      rw [h_eq]
-      have := h_inv.const_mul (-Real.log (C/2))
-      simpa using this
-    -- Eventually -log(C/2)/n < ε.
-    have h_lt_eps : ∀ᶠ n : ℕ in atTop, -Real.log (C/2) / (n : ℝ) < ε := by
-      have h_event := (h_log_const_div.eventually_lt_const hε_pos)
-      exact h_event
-    filter_upwards [h_lb, eventually_gt_atTop 0, h_lt_eps] with n hn_lb hn_pos hn_lt
-    have hn_R : (0 : ℝ) < n := by exact_mod_cast hn_pos
-    have hC_half_pos : 0 < C / 2 := by positivity
-    -- From hn_lb: bayesErrorMinPmf ≥ (C/2) · Z(λ)^n.
-    have h_bayes_ge : (C / 2) * (chernoffZSum P₁ P₂ lam) ^ n
-        ≤ bayesErrorMinPmf P₁ P₂ n := by linarith
-    have h_bayes_pos : 0 < bayesErrorMinPmf P₁ P₂ n :=
-      bayesErrorMinPmf_pos P₁ P₂ hP₁_pos hP₂_pos n
-    have h_lb_pos : 0 < (C / 2) * (chernoffZSum P₁ P₂ lam) ^ n :=
-      mul_pos hC_half_pos (pow_pos hZ_pos n)
-    -- log bayesErrorMinPmf ≥ log((C/2) · Z(λ)^n).
-    have h_log_ge :
-        Real.log ((C / 2) * (chernoffZSum P₁ P₂ lam) ^ n)
-          ≤ Real.log (bayesErrorMinPmf P₁ P₂ n) :=
-      Real.log_le_log h_lb_pos h_bayes_ge
-    have h_log_expand :
-        Real.log ((C / 2) * (chernoffZSum P₁ P₂ lam) ^ n)
-          = Real.log (C / 2) + (n : ℝ) * Real.log (chernoffZSum P₁ P₂ lam) := by
-      rw [Real.log_mul hC_half_pos.ne' (pow_pos hZ_pos n).ne']
-      rw [Real.log_pow]
-    rw [h_log_expand] at h_log_ge
-    -- Multiply by -(1/n) ≤ 0:
-    have h_neg_inv : -((1 : ℝ) / n) ≤ 0 := by
-      have : (0 : ℝ) ≤ 1 / n := by positivity
-      linarith
-    have h_mul :
-        -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)
-          ≤ -((1 : ℝ) / n) *
-              (Real.log (C / 2) + (n : ℝ) * Real.log (chernoffZSum P₁ P₂ lam)) :=
-      mul_le_mul_of_nonpos_left h_log_ge h_neg_inv
-    have h_simp :
-        -((1 : ℝ) / n) *
-            (Real.log (C / 2) + (n : ℝ) * Real.log (chernoffZSum P₁ P₂ lam))
-          = -Real.log (C / 2) / n + (-Real.log (chernoffZSum P₁ P₂ lam)) := by
-      field_simp
-      ring
-    rw [h_simp] at h_mul
-    -- h_mul : rate n ≤ -log(C/2)/n + (-log Z(λ)) = -log(C/2)/n + x.
-    -- hn_lt : -log(C/2)/n < ε.
-    -- want: rate n < x + ε = b.
-    have : -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)
-              ≤ -Real.log (C / 2) / n + x := h_mul
-    have hadd : -Real.log (C / 2) / n + x < ε + x := by linarith [hn_lt]
-    calc -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)
-        ≤ -Real.log (C / 2) / n + x := h_mul
-      _ < ε + x := hadd
-      _ = b := by rw [hε_def]; ring
+  sorry
 
 /-! ## Phase C — main theorem `chernoff_converse_of_per_tilt_existential`
-    (🟢ʰ load-bearing per-tilt hypothesis) -/
+    (load-bearing FALSE per-tilt hypothesis, sorry-based migrated) -/
 
-/-- 🟢ʰ **load-bearing hypothesis — NOT a discharge.** Cover-Thomas
-Theorem 11.9.1 converse half, packaged in the **per-tilt existential** form:
+/-- **Cover-Thomas Theorem 11.9.1 converse half** (unconditional headline):
 
 ```
 limsup rate ≤ chernoffInfo
 ```
 
-given a per-tilt Sanov-style lower bound at the optimal tilt `λ*` (where
-`chernoffInfo = -log Z(λ*)` by `chernoffInfo_attained`).
+**Sorry-based migration note**: this theorem previously consumed an
+existence-bundle `h_per_tilt : ∃ lam ∈ Icc 0 1, chernoffInfo = -log Z(λ) ∧ ∃ C,
+0 < C ∧ ∀ᶠ n, C·Z(λ)^n ≤ 2·bayesErrorMinPmf` that bundles (a) an attaining
+tilt and (b) the FALSE-in-general Sanov-style per-tilt lower bound
+(`IsBayesErrorPerTiltLowerBound`). The per-tilt lower bound carries the
+converse core but is FALSE (Cramér `Θ(1/√n)` prefactor rules out a constant
+`C > 0`); successor `ChernoffBandMassDischarge` discharges the converse via
+the `ε`-relaxed route, not the false constant-`C` predicate.
 
-**Load-bearing piece**: the hypothesis `h_per_tilt` bundles two pieces of
-work — (a) attaining tilt `λ` with `chernoffInfo = -log Z(λ)` and (b) the
-**Sanov-style per-tilt lower bound** `C · Z(λ)^n ≤ 2 · bayesErrorMinPmf`.
-Piece (b) **is** the converse core (Cover-Thomas 11.9.7–11.9.10, the
-n-letter RN-derivative + tilted LLN on the cylinder); this lemma does not
-discharge it. The body merely rewrites by (a) and forwards (b) through
-`chernoff_converse_from_per_tilt`. Full Sanov-LDP discharge of the per-tilt
-hypothesis is deferred (Mathlib-gap: n-letter RN-derivative identification
-for `chernoffMediator`, cf. `ChernoffPerTiltSanov.lean`).
+The hypothesis is dropped here so the declaration states the unconditional
+headline. The body merely pinned the FALSE predicate together with
+`chernoffInfo_attained`; the genuine combined proof lives at the successor.
 
-Note: `chernoffInfo_attained` is invoked internally; the user supplies the
-per-tilt hypothesis for **some** `λ ∈ Icc 0 1` with `chernoffInfo = -log Z(λ)`
-(non-trivially, this must be the attaining `λ*`). The current statement
-quantifies over `∃ λ`, so the caller can either pick `λ*` from
-`chernoffInfo_attained` themselves or supply a stronger per-tilt hypothesis
-valid for all `λ` (∀ form deferred to follow-up plan).
-
-`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
+@residual(plan:chernoff-converse-sanov-discharge) -/
 theorem chernoff_converse_of_per_tilt_existential
     (P₁ P₂ : α → ℝ) [Nonempty α]
-    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (h_per_tilt : ∃ lam ∈ Set.Icc (0 : ℝ) 1,
-        chernoffInfo P₁ P₂ = -Real.log (chernoffZSum P₁ P₂ lam) ∧
-        ∃ C : ℝ, 0 < C ∧
-          ∀ᶠ n : ℕ in atTop,
-            C * (chernoffZSum P₁ P₂ lam) ^ n ≤ 2 * bayesErrorMinPmf P₁ P₂ n) :
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
     Filter.limsup
       (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) atTop
         ≤ chernoffInfo P₁ P₂ := by
-  obtain ⟨lam, _hlam_mem, h_eq, C, hC_pos, h_lb⟩ := h_per_tilt
-  -- limsup rate ≤ -log Z(λ) = chernoffInfo.
-  have h_le := chernoff_converse_from_per_tilt
-    P₁ P₂ hP₁_pos hP₂_pos lam C hC_pos h_lb
-  rw [h_eq]
-  exact h_le
+  sorry
 
 /-! ## Phase D — sandwich `Tendsto` re-publish with per-tilt hypothesis only -/
 
-/-- **Sandwich `Tendsto` wrapper** (re-publish of `chernoff_lemma_tendsto`
-with hypothesis count reduced 2 → 1):
+/-- **Sandwich `Tendsto` wrapper** (Cover-Thomas Theorem 11.9.1, unconditional
+headline): `-(1/n) log bayesErrorMinPmf → chernoffInfo P₁ P₂` along `atTop`.
 
-`-(1/n) log bayesErrorMinPmf → chernoffInfo P₁ P₂` along `atTop`, given only
-the per-tilt Sanov-style lower bound at the optimum `λ*`. The L-Ch1 and
-L-Ch2 hypotheses of `ChernoffInformation.chernoff_lemma_tendsto` are both
-discharged internally via `chernoff_converse_of_per_tilt_existential`
-(🟢ʰ load-bearing in the per-tilt hyp) and
-`chernoff_rate_isBoundedUnder_le`.
+**Sorry-based migration note**: this theorem previously consumed the same
+load-bearing FALSE per-tilt existence-bundle as
+`chernoff_converse_of_per_tilt_existential`. The hypothesis is dropped so
+the declaration states the unconditional headline. The genuine combined
+proof lives at the successor `ChernoffBandMassDischarge.chernoff_lemma_tendsto_holds`
+via the `ε`-relaxed route.
 
-This is the cleanest publish shape of Cover-Thomas Theorem 11.9.1 given the
-current state: only one explicit hypothesis (the per-tilt lower bound,
-itself derivable from Sanov LDP per-tilt in a follow-up plan).
-
-`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
+@residual(plan:chernoff-converse-sanov-discharge) -/
 theorem chernoff_lemma_tendsto_from_per_tilt
     (P₁ P₂ : α → ℝ) [Nonempty α]
-    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (h_per_tilt : ∃ lam ∈ Set.Icc (0 : ℝ) 1,
-        chernoffInfo P₁ P₂ = -Real.log (chernoffZSum P₁ P₂ lam) ∧
-        ∃ C : ℝ, 0 < C ∧
-          ∀ᶠ n : ℕ in atTop,
-            C * (chernoffZSum P₁ P₂ lam) ^ n ≤ 2 * bayesErrorMinPmf P₁ P₂ n) :
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
     Tendsto
       (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n))
-      atTop (𝓝 (chernoffInfo P₁ P₂)) :=
-  InformationTheory.Shannon.ChernoffInformation.chernoff_lemma_tendsto
-    P₁ P₂ hP₁_pos hP₂_pos
-    (chernoff_converse_of_per_tilt_existential P₁ P₂ hP₁_pos hP₂_pos h_per_tilt)
-    (chernoff_rate_isBoundedUnder_le P₁ P₂ hP₁_pos hP₂_pos)
+      atTop (𝓝 (chernoffInfo P₁ P₂)) := by
+  sorry
 
 end InformationTheory.Shannon.ChernoffConverse

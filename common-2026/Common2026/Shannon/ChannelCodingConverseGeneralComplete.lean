@@ -369,75 +369,17 @@ Because the Markov-chain manipulations (left post-processing, middle augmentatio
 the `condMutualInfo` reshape lemma are not yet in `CondMutualInfo.lean`, this lemma
 takes them as hypotheses. Phase D's wiring is independent of how these are obtained.
 
-`@audit:suspect(channel-coding-shannon-theorem-full-plan)` -/
+@residual(plan:channel-coding-shannon-theorem-full-plan) -/
 theorem memoryless_per_summand_bound
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
-    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (_h_memo : IsMemorylessChannel μ Xs Ys)
-    -- The Yother term vanishes (Step 2 hypothesis, derivable from h_memo).
-    (h_yother_zero : ∀ i : Fin n,
-      Shannon.condMutualInfo μ (Xs i)
-          (fun ω (j : {j : Fin n // j ≠ i}) => Ys j.val ω)
-          (fun ω => (
-            (fun (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω),
-            Ys i ω)) = 0)
-    -- Y-axis 2-var conditional chain rule split (Step 1 hypothesis, derivable
-    -- from Phase B Lemma 2 + `condMutualInfo_map_right_measurableEquiv`).
-    (h_split : ∀ i : Fin n,
-      Shannon.condMutualInfo μ (Xs i) (fun ω j => Ys j ω)
-          (fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)
-        = Shannon.condMutualInfo μ (Xs i) (Ys i)
-            (fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)
-          + Shannon.condMutualInfo μ (Xs i)
-              (fun ω (j : {j : Fin n // j ≠ i}) => Ys j.val ω)
-              (fun ω => (
-                (fun (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω),
-                Ys i ω)))
-    -- Augmented Markov chain `(X^{<i}, X_i) → X_i → Y_i` (Step 3 Markov, derivable
-    -- from `h_memo` by left post-processing of memoryless `(X^{≠i}, Y^{≠i}) → X_i → Y_i`
-    -- followed by left-augmentation with the middle RV `X_i`).
-    (h_markov_xprefix : ∀ i : Fin n,
-      Shannon.IsMarkovChain μ
-        (fun ω => (
-          (fun (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω),
-          Xs i ω))
-        (Xs i) (Ys i)) :
+    (_hXs : ∀ i, Measurable (Xs i)) (_hYs : ∀ i, Measurable (Ys i))
+    (_h_memo : IsMemorylessChannel μ Xs Ys) :
     ∀ i : Fin n,
       Shannon.condMutualInfo μ (Xs i) (fun ω j => Ys j ω)
           (fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)
         ≤ Shannon.mutualInfo μ (Xs i) (Ys i) := by
-  intro i
-  -- Step 1+2: rewrite via h_split, drop Yother term using h_yother_zero.
-  rw [h_split i, h_yother_zero i, add_zero]
-  -- Now goal: condMI X_i Y_i Xprefix ≤ mutualInfo X_i Y_i.
-  -- Step 3: chain rule + augmented Markov + nonneg.
-  set Xprefix : Ω → (Fin i.val → α) :=
-    fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω with hXprefix_def
-  have hXprefix : Measurable Xprefix :=
-    measurable_pi_iff.mpr (fun j => hXs ⟨j.val, j.isLt.trans i.isLt⟩)
-  have hPair : Measurable (fun ω => (Xprefix ω, (Xs i) ω)) :=
-    hXprefix.prodMk (hXs i)
-  -- chain rule: I((Xprefix, X_i); Y_i) = I(Xprefix; Y_i) + condMI(X_i; Y_i; Xprefix).
-  have h_chain :
-      Shannon.mutualInfo μ (fun ω => (Xprefix ω, (Xs i) ω)) (Ys i)
-        = Shannon.mutualInfo μ Xprefix (Ys i)
-          + Shannon.condMutualInfo μ (Xs i) (Ys i) Xprefix :=
-    Shannon.mutualInfo_chain_rule μ (Xs i) (Ys i) Xprefix
-      (hXs i) (hYs i) hXprefix
-  -- Augmented Markov (Xprefix, X_i) → X_i → Y_i ⇒ I((Xprefix, X_i); Y_i) ≤ I(X_i; Y_i).
-  have h_aug_le :
-      Shannon.mutualInfo μ (fun ω => (Xprefix ω, (Xs i) ω)) (Ys i)
-        ≤ Shannon.mutualInfo μ (Xs i) (Ys i) :=
-    Shannon.mutualInfo_le_of_markov μ
-      (fun ω => (Xprefix ω, (Xs i) ω)) (Xs i) (Ys i)
-      hPair (hXs i) (hYs i) (h_markov_xprefix i)
-  -- condMI(X_i; Y_i; Xprefix) ≤ I((Xprefix, X_i); Y_i) via chain rule (nonneg I(Xprefix; Y_i)).
-  have h_condMI_le_aug :
-      Shannon.condMutualInfo μ (Xs i) (Ys i) Xprefix
-        ≤ Shannon.mutualInfo μ (fun ω => (Xprefix ω, (Xs i) ω)) (Ys i) := by
-    rw [h_chain]; exact le_add_left le_rfl
-  exact h_condMI_le_aug.trans h_aug_le
+  sorry
 
 end PerSummand
 
@@ -474,46 +416,20 @@ The Phase C lemma in its current form takes three derived facts as hypotheses
    finite-sum monotonicity.
 3. `linarith` to finish (Fano terms identical on both sides).
 
-`@audit:suspect(channel-coding-shannon-theorem-full-plan)` -/
+@residual(plan:channel-coding-shannon-theorem-full-plan) -/
 theorem channel_coding_converse_general_memoryless
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Msg : Ω → M) (encoder : M → Fin n → α)
     (Ys : Fin n → Ω → β) (decoder : (Fin n → β) → M)
-    (hMsg : Measurable Msg) (hYs : ∀ i, Measurable (Ys i))
-    (hdecoder : Measurable decoder)
-    (hmarkov : Shannon.IsMarkovChain μ Msg
+    (_hMsg : Measurable Msg) (_hYs : ∀ i, Measurable (Ys i))
+    (_hdecoder : Measurable decoder)
+    (_hmarkov : Shannon.IsMarkovChain μ Msg
       (fun ω => encoder (Msg ω)) (fun ω i => Ys i ω))
-    (h_memo : IsMemorylessChannel μ (fun i ω => encoder (Msg ω) i) Ys)
-    (h_yother_zero : ∀ i : Fin n,
-      Shannon.condMutualInfo μ (fun ω => encoder (Msg ω) i)
-          (fun ω (j : {j : Fin n // j ≠ i}) => Ys j.val ω)
-          (fun ω => (
-            (fun (j : Fin i.val) => encoder (Msg ω) ⟨j.val, j.isLt.trans i.isLt⟩),
-            Ys i ω)) = 0)
-    (h_split : ∀ i : Fin n,
-      Shannon.condMutualInfo μ (fun ω => encoder (Msg ω) i) (fun ω j => Ys j ω)
-          (fun ω (j : Fin i.val) =>
-            encoder (Msg ω) ⟨j.val, j.isLt.trans i.isLt⟩)
-        = Shannon.condMutualInfo μ (fun ω => encoder (Msg ω) i) (Ys i)
-            (fun ω (j : Fin i.val) =>
-              encoder (Msg ω) ⟨j.val, j.isLt.trans i.isLt⟩)
-          + Shannon.condMutualInfo μ (fun ω => encoder (Msg ω) i)
-              (fun ω (j : {j : Fin n // j ≠ i}) => Ys j.val ω)
-              (fun ω => (
-                (fun (j : Fin i.val) =>
-                  encoder (Msg ω) ⟨j.val, j.isLt.trans i.isLt⟩),
-                Ys i ω)))
-    (h_markov_xprefix : ∀ i : Fin n,
-      Shannon.IsMarkovChain μ
-        (fun ω => (
-          (fun (j : Fin i.val) =>
-            encoder (Msg ω) ⟨j.val, j.isLt.trans i.isLt⟩),
-          encoder (Msg ω) i))
-        (fun ω => encoder (Msg ω) i) (Ys i))
-    (hMsg_uniform :
+    (_h_memo : IsMemorylessChannel μ (fun i ω => encoder (Msg ω) i) Ys)
+    (_hMsg_uniform :
       μ.map Msg = (Fintype.card M : ℝ≥0∞)⁻¹ • Measure.count)
-    (hcard : 2 ≤ Fintype.card M)
-    (hMI_finite : Shannon.mutualInfo μ
+    (_hcard : 2 ≤ Fintype.card M)
+    (_hMI_finite : Shannon.mutualInfo μ
       (fun ω => encoder (Msg ω)) (fun ω i => Ys i ω) ≠ ∞) :
     Real.log (Fintype.card M) ≤
       (∑ i : Fin n,
@@ -525,57 +441,7 @@ theorem channel_coding_converse_general_memoryless
         InformationTheory.MeasureFano.errorProb μ Msg
           (fun ω i => Ys i ω) decoder *
           Real.log ((Fintype.card M : ℝ) - 1) := by
-  -- Step 1: invoke D-2 chain rule converse.
-  have h_chainRule :=
-    Shannon.channel_coding_converse_general_chainRule
-      μ Msg encoder Ys decoder
-      hMsg hYs hdecoder hmarkov hMsg_uniform hcard hMI_finite
-  -- Step 2: apply Phase C per-summand bound.
-  set Xs : Fin n → Ω → α := fun i ω => encoder (Msg ω) i with hXs_def
-  have h_encoder : Measurable encoder := measurable_of_countable _
-  have hXs_meas : ∀ i, Measurable (Xs i) := fun i =>
-    (measurable_pi_apply i).comp (h_encoder.comp hMsg)
-  have h_per_summand :=
-    memoryless_per_summand_bound μ Xs Ys hXs_meas hYs h_memo
-      h_yother_zero h_split h_markov_xprefix
-  -- Step 3: bound each summand by I(X_i; Y_i), take .toReal, sum.
-  -- Each per-i condMI is finite (finite alphabets).
-  have h_each_ne_top : ∀ i : Fin n,
-      Shannon.condMutualInfo μ (Xs i) (fun ω j => Ys j ω)
-        (fun ω (j : Fin i.val) =>
-          Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) ≠ ∞ := by
-    intro i
-    have h_prefix_meas :
-        Measurable (fun ω (j : Fin i.val) =>
-          Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) :=
-      measurable_pi_iff.mpr fun j => hXs_meas ⟨j.val, j.isLt.trans i.isLt⟩
-    have h_Yo : Measurable (fun ω (j : Fin n) => Ys j ω) :=
-      measurable_pi_iff.mpr hYs
-    exact Shannon.condMutualInfo_ne_top (X := α) (Y := Fin n → β) (Z := Fin i.val → α)
-      μ (Xs i) (fun ω j => Ys j ω)
-      (fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)
-      (hXs_meas i) h_Yo h_prefix_meas
-  -- Each I(X_i; Y_i) is finite.
-  have h_MI_ne_top : ∀ i : Fin n,
-      Shannon.mutualInfo μ (Xs i) (Ys i) ≠ ∞ := fun i =>
-    Shannon.mutualInfo_ne_top μ (Xs i) (Ys i) (hXs_meas i) (hYs i)
-  -- toReal monotonicity per i.
-  have h_each_toReal_le : ∀ i : Fin n,
-      (Shannon.condMutualInfo μ (Xs i) (fun ω j => Ys j ω)
-          (fun ω (j : Fin i.val) =>
-            Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)).toReal
-        ≤ (Shannon.mutualInfo μ (Xs i) (Ys i)).toReal := fun i =>
-    ENNReal.toReal_mono (h_MI_ne_top i) (h_per_summand i)
-  -- Sum monotonicity.
-  have h_sum_le :
-      (∑ i : Fin n,
-        (Shannon.condMutualInfo μ (Xs i) (fun ω j => Ys j ω)
-          (fun ω (j : Fin i.val) =>
-            Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)).toReal)
-        ≤ ∑ i : Fin n, (Shannon.mutualInfo μ (Xs i) (Ys i)).toReal :=
-    Finset.sum_le_sum (fun i _ => h_each_toReal_le i)
-  -- Combine.
-  linarith
+  sorry
 
 end MainConverse
 

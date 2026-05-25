@@ -369,45 +369,33 @@ Given the Tier 2 bandlimited predicate and the `2W` DoF identity
 `shannon_hartley_formula`'s hypothesis pass-through via the Tier 2
 predicate alone (positivity-only flow).
 
-`@audit:suspect(whittaker-shannon-partial-moonshot-plan)` -/
+@residual(plan:whittaker-shannon-partial-moonshot-plan) -/
 theorem shannon_hartley_via_full
-    (f : ℝ → ℝ) (W N₀ P C : ℝ)
-    (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P)
-    (h_full : IsBandlimitedFull f W)
-    (h_id : C =
+    (_f : ℝ → ℝ) (W N₀ P C : ℝ)
+    (_hW : 0 < W) (_hN₀ : 0 < N₀) (_hP : 0 ≤ P)
+    (_h_id : C =
         2 * W *
           InformationTheory.Shannon.ShannonHartley.perSampleAwgnCapacity
             W N₀ P) :
     C =
       InformationTheory.Shannon.ShannonHartley.bandlimitedAwgnCapacity
-        W N₀ P :=
-  InformationTheory.Shannon.ShannonHartley.shannon_hartley_formula
-    W N₀ P hW hN₀ hP C
-    (ShannonHartley_IsBandlimitedSamplingHypothesis_of_full
-      f W N₀ P hW hN₀ hP h_full)
-    (ShannonHartley_IsBandlimitedKernel_of_full f W hW h_full)
-    h_id
+        W N₀ P := by
+  sorry
 
 /-- Bits/second variant: `C / log 2 = bandlimitedAwgnCapacityBits W N₀ P`.
 
-`@audit:suspect(whittaker-shannon-partial-moonshot-plan)` -/
+@residual(plan:whittaker-shannon-partial-moonshot-plan) -/
 theorem shannon_hartley_via_full_bits
-    (f : ℝ → ℝ) (W N₀ P C : ℝ)
-    (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P)
-    (h_full : IsBandlimitedFull f W)
-    (h_id : C =
+    (_f : ℝ → ℝ) (W N₀ P C : ℝ)
+    (_hW : 0 < W) (_hN₀ : 0 < N₀) (_hP : 0 ≤ P)
+    (_h_id : C =
         2 * W *
           InformationTheory.Shannon.ShannonHartley.perSampleAwgnCapacity
             W N₀ P) :
     C / Real.log 2 =
       InformationTheory.Shannon.ShannonHartley.bandlimitedAwgnCapacityBits
-        W N₀ P :=
-  InformationTheory.Shannon.ShannonHartley.shannon_hartley_formula_bits
-    W N₀ P hW hN₀ hP C
-    (ShannonHartley_IsBandlimitedSamplingHypothesis_of_full
-      f W N₀ P hW hN₀ hP h_full)
-    (ShannonHartley_IsBandlimitedKernel_of_full f W hW h_full)
-    h_id
+        W N₀ P := by
+  sorry
 
 /-! ## §K — Extra corollaries. -/
 

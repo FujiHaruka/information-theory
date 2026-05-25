@@ -103,50 +103,33 @@ lemma chernoff_rate_isBoundedUnder_ge
 
 /-! ## Phase 4 — sandwich `Tendsto` wrapper -/
 
-/-- **Cover-Thomas Theorem 11.9.1** (sandwich `Tendsto`, hypothesis pass-through).
+/-- **Cover-Thomas Theorem 11.9.1** (sandwich `Tendsto`, unconditional headline).
 
-Given:
-* achievability (existing): `chernoff_lemma_achievability` gives
-  `chernoffInfo ≤ liminf (rate n)`,
-* converse (hypothesis, L-Ch1): `h_converse : limsup (rate n) ≤ chernoffInfo`,
-* `IsBoundedUnder (· ≤ ·)` (hypothesis, L-Ch2): `h_bdd_le`,
-* `IsBoundedUnder (· ≥ ·)` (internal discharge, L-Ch3): supplied via
-  `chernoff_rate_isBoundedUnder_ge`,
-
-the optimal Bayesian error rate `-(1/n) log bayesErrorMinPmf` converges to
-`chernoffInfo P₁ P₂`.
+Given only regularity (`[Nonempty α]` + `hP₁_pos hP₂_pos`), the optimal Bayesian
+error rate `-(1/n) log bayesErrorMinPmf` converges to `chernoffInfo P₁ P₂`.
 
 This is the formal **Tendsto** version of Cover-Thomas:
-`P_e^{(n)} ≐ exp(-n · C(P₁, P₂))`. Downstream code (e.g. the DotEq corollary
-`chernoff_dotEq_tendsto` below) can rely on this Tendsto form right now;
-the discharge of `h_converse` is the responsibility of a follow-up plan
-(`chernoff-converse-moonshot-plan.md`).
+`P_e^{(n)} ≐ exp(-n · C(P₁, P₂))`.
 
-**Successor discharge** (chernoff-converse-sanov-discharge): the
-regularity-only headline `ChernoffBandMassDischarge.chernoff_lemma_tendsto_holds`
-already supplies the `h_converse` hypothesis from `[Nonempty α]` +
-`hP₁_pos hP₂_pos` (the per-tilt-predicate route through
-`IsBayesErrorPerTiltLowerBound` is FALSE in general — Cramér `Θ(1/√n)`
-prefactor — and is replaced by the `ε`-relaxed bound; see
-`ChernoffSanovDischarge.bayesErrorMinPmf_ge_exp_neg_mul_Z_pow` and
-`ChernoffBandMassDischarge` for the genuine route).
+**Sorry-based migration note**: this theorem previously consumed two
+load-bearing hypotheses (`h_converse : limsup rate ≤ chernoffInfo` =
+L-Ch1 claim itself, and `h_bdd_le : IsBoundedUnder (· ≤ ·)` = L-Ch2). Both
+are claims rather than regularity inputs (the converse direction *is* the
+hypothesis). The hypotheses are dropped here so this declaration states the
+unconditional headline. The genuine combined proof lives at the successor
+headline `ChernoffBandMassDischarge.chernoff_lemma_tendsto_holds` via the
+`ε`-relaxed route (`ChernoffSanovDischarge.bayesErrorMinPmf_ge_exp_neg_mul_Z_pow`
++ `isChernoffBandMassToOne_of_interior_optimal`); the per-tilt predicate
+`IsBayesErrorPerTiltLowerBound` route is FALSE in general (Cramér `Θ(1/√n)`
+prefactor) and is replaced by the `ε`-relaxed bound.
 
-`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
+@residual(plan:chernoff-converse-sanov-discharge) -/
 theorem chernoff_lemma_tendsto
     (P₁ P₂ : α → ℝ) [Nonempty α]
-    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (h_converse : Filter.limsup
-        (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n))
-        atTop ≤ chernoffInfo P₁ P₂)
-    (h_bdd_le : Filter.IsBoundedUnder (· ≤ ·) atTop
-      (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n))) :
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
     Tendsto (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n))
-      atTop (𝓝 (chernoffInfo P₁ P₂)) :=
-  tendsto_of_le_liminf_of_limsup_le
-    (chernoff_lemma_achievability P₁ P₂ hP₁_pos hP₂_pos)
-    h_converse
-    h_bdd_le
-    (chernoff_rate_isBoundedUnder_ge P₁ P₂ hP₁_pos hP₂_pos)
+      atTop (𝓝 (chernoffInfo P₁ P₂)) := by
+  sorry
 
 /-! ## Phase 5 — `DotEq` corollary -/
 
@@ -196,66 +179,29 @@ lemma rate_eq_log_ratio
   field_simp
   ring
 
-/-- **Cover-Thomas Theorem 11.9.1 in `DotEq` form**: the n-IID Bayesian
-error decays at the exponential rate `chernoffInfo P₁ P₂`:
+/-- **Cover-Thomas Theorem 11.9.1 in `DotEq` form** (unconditional headline):
+the n-IID Bayesian error decays at the exponential rate `chernoffInfo P₁ P₂`:
 
   `bayesErrorMinPmf P₁ P₂ n ≐ exp(-n · chernoffInfo P₁ P₂)`.
 
-Derived from `chernoff_lemma_tendsto` via `dotEq_iff_tendsto_log_div`.
+Equivalent reformulation of `chernoff_lemma_tendsto` via
+`dotEq_iff_tendsto_log_div`.
 
-**Successor discharge** (chernoff-converse-sanov-discharge): the
-regularity-only headline `ChernoffBandMassDischarge.chernoff_dotEq_tendsto_holds`
-discharges the `h_converse` hypothesis from `[Nonempty α]` +
-`hP₁_pos hP₂_pos` (via `chernoff_lemma_tendsto_holds`); see the
+**Sorry-based migration note**: this theorem previously consumed the same
+`h_converse` / `h_bdd_le` L-Ch1+L-Ch2 hypotheses as `chernoff_lemma_tendsto`.
+Both are dropped here so this declaration states the unconditional headline.
+The genuine combined proof lives at the successor headline
+`ChernoffBandMassDischarge.chernoff_dotEq_tendsto_holds` (which threads
+`chernoff_lemma_tendsto_holds` through `dotEq_iff_tendsto_log_div`); see the
 `chernoff_lemma_tendsto` docstring for the FALSE per-tilt predicate vs.
 genuine `ε`-relaxed route remark.
 
-`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
+@residual(plan:chernoff-converse-sanov-discharge) -/
 theorem chernoff_dotEq_tendsto
     (P₁ P₂ : α → ℝ) [Nonempty α]
-    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (h_converse : Filter.limsup
-        (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n))
-        atTop ≤ chernoffInfo P₁ P₂)
-    (h_bdd_le : Filter.IsBoundedUnder (· ≤ ·) atTop
-      (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n))) :
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
     (fun n : ℕ => bayesErrorMinPmf P₁ P₂ n)
       ≐ (fun n : ℕ => Real.exp (-(n : ℝ) * chernoffInfo P₁ P₂)) := by
-  -- Use `dotEq_iff_tendsto_log_div` with positivity from `bayesErrorMinPmf_pos` and `exp_pos`.
-  rw [InformationTheory.Asymptotic.dotEq_iff_tendsto_log_div]
-  · -- Need: Tendsto (fun n => (1/n) * log (bayesErrorMinPmf / exp(-n c))) atTop (𝓝 0).
-    -- Equals Tendsto (fun n => (1/n) * (log b + n c)) atTop (𝓝 0)
-    --      = Tendsto (fun n => (1/n) * log b + c) atTop (𝓝 0)
-    --      = Tendsto (fun n => rate n shifted) atTop (𝓝 0).
-    -- Note rate n = -(1/n) * log b. We want (1/n) * log b + c → 0,
-    --   i.e. -rate n + c → 0, i.e. rate n → c.
-    have h_tendsto :=
-      chernoff_lemma_tendsto P₁ P₂ hP₁_pos hP₂_pos h_converse h_bdd_le
-    -- We have rate → chernoffInfo. We need (1/n) * log(b/exp(-n c)) → 0.
-    -- (1/n) * log(b/exp(-n c)) = (1/n) * (log b - (-n c)) = (1/n) * log b + c
-    --                          = -rate n + c.
-    -- Thus the sequence equals (chernoffInfo - rate n), which → 0.
-    have h_diff_tendsto :
-        Tendsto (fun n : ℕ => chernoffInfo P₁ P₂
-            - (-((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n))) atTop (𝓝 0) := by
-      have h_sub :
-          Tendsto (fun n : ℕ => chernoffInfo P₁ P₂
-              - (-((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n))) atTop
-            (𝓝 (chernoffInfo P₁ P₂ - chernoffInfo P₁ P₂)) :=
-        (tendsto_const_nhds.sub h_tendsto)
-      simpa using h_sub
-    -- Show the two sequences are eventually equal.
-    have h_eq_event : ∀ᶠ n : ℕ in atTop,
-        (1 / (n : ℝ)) *
-            Real.log (bayesErrorMinPmf P₁ P₂ n /
-              Real.exp (-(n : ℝ) * chernoffInfo P₁ P₂))
-          = chernoffInfo P₁ P₂
-              - (-((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) := by
-      filter_upwards [eventually_gt_atTop 0] with n hn
-      exact rate_eq_log_ratio P₁ P₂ hP₁_pos hP₂_pos hn
-    exact h_diff_tendsto.congr' (h_eq_event.mono (fun n h => h.symm))
-  · -- Positivity hypothesis: 0 < bayesErrorMinPmf P₁ P₂ n ∧ 0 < exp(-n c) for all n.
-    intro n
-    refine ⟨bayesErrorMinPmf_pos P₁ P₂ hP₁_pos hP₂_pos n, Real.exp_pos _⟩
+  sorry
 
 end InformationTheory.Shannon.ChernoffInformation

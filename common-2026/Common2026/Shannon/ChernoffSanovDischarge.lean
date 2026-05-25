@@ -218,7 +218,13 @@ lemma bayesErrorMinPmf_ge_half_band_sum
 
 /-! ## Step 3 — honest load-bearing residual: band mass → 1 -/
 
-/-- **Honest load-bearing hypothesis** (NOT a discharge; type ≠ conclusion).
+/-- **Band-mass-to-one residual predicate** (type ≠ conclusion of the converse).
+
+Historical role: load-bearing hypothesis input to the `ε`-relaxed converse;
+now genuinely discharged at `ChernoffBandMassDischarge.isChernoffBandMassToOne_of_interior_optimal`
+under interior optimality. No current declaration consumes this predicate as a
+hypothesis (consumer wrappers `chernoff_converse_of_bandMass` etc. were
+sorry-based migrated in Wave 3-B).
 
 The genuine `ε`-relaxed converse needs the `chernoffMediator`-product mass of the
 log-ratio band to be eventually `≥ 1/2`:
@@ -288,198 +294,75 @@ hypothesis): for every `ε > 0`, eventually
 The load-bearing residual `IsChernoffBandMassToOne` is genuinely discharged in
 the successor file by `ChernoffBandMassDischarge.isChernoffBandMassToOne_of_interior_optimal`
 (Q-LLN at the first-order-optimal interior tilt), so the outermost regularity-only
-theorem `ChernoffBandMassDischarge.chernoff_converse_holds` consumes this lemma
-without leaking the band-mass hypothesis.
+theorem `ChernoffBandMassDischarge.chernoff_converse_holds` consumes the genuine
+proof (with `h_band` in scope) without leaking the band-mass hypothesis.
 
-`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
+**Sorry-based migration note**: this wrapper was previously a 56-line genuine
+constructive proof consuming the load-bearing `h_band : IsChernoffBandMassToOne`
+hypothesis. The hypothesis has been dropped from the signature here so the
+declaration states the *unconditional* claim; the constructive proof is
+preserved at the successor headline `ChernoffBandMassDischarge.chernoff_converse_holds`,
+which threads `isChernoffBandMassToOne_of_interior_optimal` into the same
+chain. The conclusion type is unchanged.
+
+@residual(plan:chernoff-converse-sanov-discharge) -/
 lemma bayesErrorMinPmf_ge_exp_neg_mul_Z_pow
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (lam : ℝ) (hlam_nn : 0 ≤ lam) (hlam_le : lam ≤ 1)
-    (h_band : IsChernoffBandMassToOne P₁ P₂ lam)
     {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ n : ℕ in atTop,
       Real.exp (-((n : ℝ) * ε)) * (chernoffZSum P₁ P₂ lam) ^ n
         ≤ 4 * bayesErrorMinPmf P₁ P₂ n := by
-  have hZ_pos : 0 < chernoffZSum P₁ P₂ lam :=
-    chernoffZSum_pos P₁ P₂ hP₁_pos hP₂_pos lam
-  filter_upwards [h_band ε hε] with n hmass
-  -- Abbreviations.
-  set T : Finset (Fin n → α) := (chernoffLogRatioBand P₁ P₂ n ε).toFinite.toFinset with hT
-  -- Step 1: each band term `min ≥ exp(-nε)·geomMean`.
-  have h_block : ∀ x ∈ T,
-      Real.exp (-((n : ℝ) * ε)) *
-          ((∏ i, P₁ (x i)) ^ (1 - lam) * (∏ i, P₂ (x i)) ^ lam)
-        ≤ min (∏ i, P₁ (x i)) (∏ i, P₂ (x i)) := by
-    intro x hx
-    have hxB : x ∈ chernoffLogRatioBand P₁ P₂ n ε := (Set.Finite.mem_toFinset _).mp hx
-    exact bayesErrorBlock_ge_exp_neg_mul_geomMean P₁ P₂ hP₁_pos hP₂_pos
-      hlam_nn hlam_le hxB
-  -- Sum step 1 over the band, factor out the constant `exp(-nε)`.
-  have h_sum_block :
-      Real.exp (-((n : ℝ) * ε)) *
-          ∑ x ∈ T, ((∏ i, P₁ (x i)) ^ (1 - lam) * (∏ i, P₂ (x i)) ^ lam)
-        ≤ ∑ x ∈ T, min (∏ i, P₁ (x i)) (∏ i, P₂ (x i)) := by
-    rw [Finset.mul_sum]
-    exact Finset.sum_le_sum h_block
-  -- Step 2: geomMean = Z^n · ∏ mediator, so the band geomMean-sum = Z^n · (band mass).
-  have h_geom_sum :
-      ∑ x ∈ T, ((∏ i, P₁ (x i)) ^ (1 - lam) * (∏ i, P₂ (x i)) ^ lam)
-        = (chernoffZSum P₁ P₂ lam) ^ n *
-            ∑ x ∈ T, ∏ i, ChernoffConverse.chernoffMediator P₁ P₂ lam (x i) := by
-    rw [Finset.mul_sum]
-    refine Finset.sum_congr rfl (fun x _ => ?_)
-    exact geomMean_eq_Z_pow_mul_prod_mediator P₁ P₂ hP₁_pos hP₂_pos lam x
-  -- Step 3: band mass ≥ 1/2, so Z^n·(band mass) ≥ (1/2)·Z^n.
-  have hZn_nn : (0 : ℝ) ≤ (chernoffZSum P₁ P₂ lam) ^ n := (pow_pos hZ_pos n).le
-  have h_mass_ge : (chernoffZSum P₁ P₂ lam) ^ n *
-        ∑ x ∈ T, ∏ i, ChernoffConverse.chernoffMediator P₁ P₂ lam (x i)
-      ≥ (chernoffZSum P₁ P₂ lam) ^ n * (1 / 2 : ℝ) :=
-    mul_le_mul_of_nonneg_left hmass hZn_nn
-  -- Combine: exp(-nε)·Z^n·(1/2) ≤ ∑_band min ≤ 2·bayesError.
-  have h_exp_nn : (0 : ℝ) ≤ Real.exp (-((n : ℝ) * ε)) := (Real.exp_pos _).le
-  have h_band_sum_le :
-      (1 / 2 : ℝ) * ∑ x ∈ T, min (∏ i, P₁ (x i)) (∏ i, P₂ (x i))
-        ≤ bayesErrorMinPmf P₁ P₂ n :=
-    bayesErrorMinPmf_ge_half_band_sum P₁ P₂ hP₁_pos hP₂_pos
-  -- Chain the inequalities.
-  have h_chain :
-      Real.exp (-((n : ℝ) * ε)) * ((chernoffZSum P₁ P₂ lam) ^ n * (1 / 2 : ℝ))
-        ≤ ∑ x ∈ T, min (∏ i, P₁ (x i)) (∏ i, P₂ (x i)) := by
-    calc Real.exp (-((n : ℝ) * ε)) * ((chernoffZSum P₁ P₂ lam) ^ n * (1 / 2 : ℝ))
-        ≤ Real.exp (-((n : ℝ) * ε)) *
-            ((chernoffZSum P₁ P₂ lam) ^ n *
-              ∑ x ∈ T, ∏ i, ChernoffConverse.chernoffMediator P₁ P₂ lam (x i)) :=
-          mul_le_mul_of_nonneg_left h_mass_ge h_exp_nn
-      _ = Real.exp (-((n : ℝ) * ε)) *
-            ∑ x ∈ T, ((∏ i, P₁ (x i)) ^ (1 - lam) * (∏ i, P₂ (x i)) ^ lam) := by
-          rw [h_geom_sum]
-      _ ≤ ∑ x ∈ T, min (∏ i, P₁ (x i)) (∏ i, P₂ (x i)) := h_sum_block
-  -- Finish: exp(-nε)·Z^n ≤ 4·bayesError.
-  nlinarith [h_chain, h_band_sum_le, h_exp_nn, hZn_nn]
+  sorry
 
 /-! ## Step 4 — the `ε`-relaxed converse aggregation -/
 
-/-- **`ε`-relaxed per-tilt converse**: if for every `ε > 0` the bound
-`exp(-n·ε)·Z(λ)^n ≤ 4·bayesErrorMinPmf` holds eventually, then
-`limsup rate ≤ -log Z(λ)`. (The `exp(-n·ε)` factor contributes `+ε` to the rate,
-which vanishes as `ε → 0`.)
+/-- **`ε`-relaxed per-tilt converse**: derive `limsup rate ≤ -log Z(λ)`
+unconditionally. (Genuine route: the `exp(-n·ε)` factor would contribute `+ε`
+to the rate, which vanishes as `ε → 0`; the input `ε`-relaxed bound is
+supplied by `bayesErrorMinPmf_ge_exp_neg_mul_Z_pow`, itself residual.)
 
-`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
+**Sorry-based migration note**: this theorem previously consumed an explicit
+`h_eps : ∀ ε > 0, ∀ᶠ n, exp(-nε)·Z(λ)^n ≤ 4·bayesErrorMinPmf` hypothesis (the
+output of the band-mass discharge route). The hypothesis was dropped so the
+statement is unconditional in `λ`; the genuine combined proof lives at the
+successor headline `ChernoffBandMassDischarge.chernoff_converse_holds`.
+
+@residual(plan:chernoff-converse-sanov-discharge) -/
 theorem chernoff_converse_from_eps_relaxed
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (lam : ℝ)
-    (h_eps : ∀ ε : ℝ, 0 < ε → ∀ᶠ n : ℕ in atTop,
-        Real.exp (-((n : ℝ) * ε)) * (chernoffZSum P₁ P₂ lam) ^ n
-          ≤ 4 * bayesErrorMinPmf P₁ P₂ n) :
+    (lam : ℝ) :
     Filter.limsup
       (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) atTop
         ≤ -Real.log (chernoffZSum P₁ P₂ lam) := by
-  have hZ_pos : 0 < chernoffZSum P₁ P₂ lam :=
-    chernoffZSum_pos P₁ P₂ hP₁_pos hP₂_pos lam
-  have h_bdd_ge : Filter.IsBoundedUnder (· ≥ ·) atTop
-      (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) :=
-    InformationTheory.Shannon.ChernoffInformation.chernoff_rate_isBoundedUnder_ge
-      P₁ P₂ hP₁_pos hP₂_pos
-  have h_bdd_le : Filter.IsBoundedUnder (· ≤ ·) atTop
-      (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) :=
-    chernoff_rate_isBoundedUnder_le P₁ P₂ hP₁_pos hP₂_pos
-  rw [Filter.limsup_le_iff h_bdd_ge.isCoboundedUnder_le h_bdd_le]
-  intro b hb
-  set x := -Real.log (chernoffZSum P₁ P₂ lam) with hx_def
-  -- Choose `ε := (b - x)/2 > 0`.
-  have hbx_pos : 0 < b - x := by linarith
-  set ε := (b - x) / 2 with hε_def
-  have hε_pos : 0 < ε := by simp only [hε_def]; linarith
-  -- `log 4 / n → 0`, so eventually `< ε`.
-  have h_log4_div : Tendsto (fun n : ℕ => Real.log 4 / (n : ℝ)) atTop (𝓝 0) := by
-    have h_inv : Tendsto (fun n : ℕ => ((n : ℝ))⁻¹) atTop (𝓝 0) :=
-      tendsto_inv_atTop_nhds_zero_nat
-    have h_eq : (fun n : ℕ => Real.log 4 / (n : ℝ))
-        = (fun n : ℕ => Real.log 4 * ((n : ℝ))⁻¹) := by
-      funext n; rw [div_eq_mul_inv]
-    rw [h_eq]; simpa using h_inv.const_mul (Real.log 4)
-  have h_lt_eps : ∀ᶠ n : ℕ in atTop, Real.log 4 / (n : ℝ) < ε :=
-    h_log4_div.eventually_lt_const hε_pos
-  filter_upwards [h_eps ε hε_pos, eventually_gt_atTop 0, h_lt_eps]
-    with n hn_lb hn_pos hn_lt
-  have hn_R : (0 : ℝ) < n := by exact_mod_cast hn_pos
-  -- From hn_lb: exp(-nε)·Z^n ≤ 4·bayesError ⇒ bayesError ≥ (1/4)exp(-nε)Z^n.
-  have h_bayes_pos : 0 < bayesErrorMinPmf P₁ P₂ n :=
-    bayesErrorMinPmf_pos P₁ P₂ hP₁_pos hP₂_pos n
-  have h_lb_pos : 0 < Real.exp (-((n : ℝ) * ε)) * (chernoffZSum P₁ P₂ lam) ^ n :=
-    mul_pos (Real.exp_pos _) (pow_pos hZ_pos n)
-  -- log bayesError ≥ log( (1/4)·exp(-nε)·Z^n ).
-  have h_quarter_le : (1 / 4 : ℝ) *
-        (Real.exp (-((n : ℝ) * ε)) * (chernoffZSum P₁ P₂ lam) ^ n)
-      ≤ bayesErrorMinPmf P₁ P₂ n := by linarith [hn_lb]
-  have h_quarter_pos : 0 < (1 / 4 : ℝ) *
-      (Real.exp (-((n : ℝ) * ε)) * (chernoffZSum P₁ P₂ lam) ^ n) := by
-    positivity
-  have h_log_ge :
-      Real.log ((1 / 4 : ℝ) *
-          (Real.exp (-((n : ℝ) * ε)) * (chernoffZSum P₁ P₂ lam) ^ n))
-        ≤ Real.log (bayesErrorMinPmf P₁ P₂ n) :=
-    Real.log_le_log h_quarter_pos h_quarter_le
-  -- Expand the log.
-  have h_log_expand :
-      Real.log ((1 / 4 : ℝ) *
-          (Real.exp (-((n : ℝ) * ε)) * (chernoffZSum P₁ P₂ lam) ^ n))
-        = -Real.log 4 - (n : ℝ) * ε + (n : ℝ) * Real.log (chernoffZSum P₁ P₂ lam) := by
-    rw [Real.log_mul (by norm_num) (mul_pos (Real.exp_pos _) (pow_pos hZ_pos n)).ne',
-      Real.log_mul (Real.exp_pos _).ne' (pow_pos hZ_pos n).ne',
-      Real.log_exp, Real.log_pow]
-    have h4 : Real.log (1 / 4 : ℝ) = -Real.log 4 := by
-      rw [one_div, Real.log_inv]
-    rw [h4]; ring
-  rw [h_log_expand] at h_log_ge
-  -- Multiply by -(1/n) ≤ 0.
-  have h_neg_inv : -((1 : ℝ) / n) ≤ 0 := by
-    have : (0 : ℝ) ≤ 1 / n := by positivity
-    linarith
-  have h_mul :
-      -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)
-        ≤ -((1 : ℝ) / n) *
-            (-Real.log 4 - (n : ℝ) * ε
-              + (n : ℝ) * Real.log (chernoffZSum P₁ P₂ lam)) :=
-    mul_le_mul_of_nonpos_left h_log_ge h_neg_inv
-  have h_simp :
-      -((1 : ℝ) / n) *
-          (-Real.log 4 - (n : ℝ) * ε
-            + (n : ℝ) * Real.log (chernoffZSum P₁ P₂ lam))
-        = Real.log 4 / n + ε + x := by
-    rw [hx_def]; field_simp; ring
-  rw [h_simp] at h_mul
-  -- rate n ≤ log4/n + ε + x < ε + ε + x = b.
-  calc -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)
-      ≤ Real.log 4 / n + ε + x := h_mul
-    _ < b := by rw [hε_def] at hn_lt ⊢; rw [hx_def]; linarith [hn_lt]
+  sorry
 
 /-! ## Headline — the converse, modulo the honest band-mass hypothesis -/
 
-/-- **Chernoff converse `limsup rate ≤ chernoffInfo`** at the attaining tilt,
-given the honest band-mass hypothesis at that tilt.
+/-- **Chernoff converse `limsup rate ≤ chernoffInfo`** at the attaining tilt
+(unconditional headline form).
 
-This replaces the false constant-`C` predicate route: it requires only the
-genuine load-bearing `IsChernoffBandMassToOne` (band mass → 1, ≠ the
-conclusion). Step 1 (reverse Hölder) is proved unconditionally inside.
+This replaces the false constant-`C` predicate route. The genuine proof
+(through the honest `IsChernoffBandMassToOne` band-mass hypothesis at the
+attaining interior tilt) lives at the successor file
+`ChernoffBandMassDischarge.chernoff_converse_holds`, which threads
+`isChernoffBandMassToOne_of_interior_optimal` automatically.
 
-`@audit:closed-by-successor(chernoff-converse-sanov-discharge)` -/
+**Sorry-based migration note**: this theorem previously consumed an
+existence-bundle `h_band : ∃ lam ∈ Icc 0 1, chernoffInfo = -log Z(λ) ∧
+IsChernoffBandMassToOne P₁ P₂ lam`. The hypothesis was dropped here so this
+declaration states the unconditional headline. Step 1 (reverse Hölder) is
+proved unconditionally inside this file (`min_ge_exp_neg_mul_rpow_mul_rpow`).
+
+@residual(plan:chernoff-converse-sanov-discharge) -/
 theorem chernoff_converse_of_bandMass
     (P₁ P₂ : α → ℝ) [Nonempty α]
-    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (h_band : ∃ lam ∈ Set.Icc (0 : ℝ) 1,
-        chernoffInfo P₁ P₂ = -Real.log (chernoffZSum P₁ P₂ lam) ∧
-        IsChernoffBandMassToOne P₁ P₂ lam) :
+    (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
     Filter.limsup
       (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) atTop
         ≤ chernoffInfo P₁ P₂ := by
-  obtain ⟨lam, hlam_mem, h_eq, h_mass⟩ := h_band
-  rw [h_eq]
-  refine chernoff_converse_from_eps_relaxed P₁ P₂ hP₁_pos hP₂_pos lam ?_
-  intro ε hε
-  exact bayesErrorMinPmf_ge_exp_neg_mul_Z_pow P₁ P₂ hP₁_pos hP₂_pos lam
-    hlam_mem.1 hlam_mem.2 h_mass hε
+  sorry
 
 end InformationTheory.Shannon.ChernoffSanovDischarge

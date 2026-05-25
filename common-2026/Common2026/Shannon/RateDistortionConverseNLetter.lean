@@ -258,7 +258,14 @@ The proof composes:
    (via R(D) convexity) with antitonicity (via `c.expectedBlockDistortion ≤ D`).
    Hypothesis pass-through.
 
-`@audit:suspect()` -/
+Migration note (Phase 2.RD.1 of `ratedistortion-pgpc-sorry-migration-plan`):
+The two load-bearing hypotheses `h_super` (MI tensorization for the block) and
+`h_jensen_antitone` (combined n-way Jensen + antitonicity + block-distortion
+identity, on toReal) have been removed; both are mathematically substantial
+Mathlib-gap content that must be closed by the converse plan, not absorbed
+into a precondition. Body retreated to `sorry`.
+
+`@residual(plan:rate-distortion-converse-plan)` -/
 theorem rate_distortion_converse_n_letter_singleLetter
     [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
     [Fintype β] [MeasurableSingletonClass β]
@@ -277,119 +284,9 @@ theorem rate_distortion_converse_n_letter_singleLetter
     (h_MI_perletter_finite :
       ∀ i, mutualInfo μ (Xs i)
         (fun ω => c.decoder (c.encoder (fun j => Xs j ω)) i) ≠ ∞)
-    -- MI tensorization hypothesis: ∑ I(X_i; X̂_i) ≤ I(X^n; X̂^n) (ENNReal).
-    (h_super :
-      ∑ i, mutualInfo μ (Xs i)
-          (fun ω => c.decoder (c.encoder (fun j => Xs j ω)) i)
-        ≤ mutualInfo μ (fun ω i => Xs i ω)
-            (fun ω i => c.decoder (c.encoder (fun j => Xs j ω)) i))
-    -- Combined antitonicity + n-way Jensen + block-distortion identity, on toReal.
-    -- This single hypothesis bundles:
-    --   * antitonicity (R(D) ≤ R(c.expectedBlockDistortion)),
-    --   * block-distortion Fubini (c.expectedBlockDistortion = (1/n) ∑ Dt),
-    --   * n-way Jensen ((R((1/n)∑Dt)).toReal ≤ (1/n) ∑ (R(Dt)).toReal).
-    -- All three are independently dischargeable but factored together to avoid
-    -- propagating ENNReal-side `≠ ∞` plumbing through Stage 2's body.
-    {D : ℝ}
-    (h_jensen_antitone :
-      (rateDistortionFunction (fun a b => ((d a b : NNReal) : ℝ)) P_X D).toReal
-        ≤ (1 / (n : ℝ)) * ∑ i,
-            (rateDistortionFunction (fun a b => ((d a b : NNReal) : ℝ)) P_X
-              (∫ ω, ((d (Xs i ω)
-                (c.decoder (c.encoder (fun j => Xs j ω)) i) : NNReal) : ℝ) ∂μ)).toReal) :
+    {D : ℝ} :
     (rateDistortionFunction (fun a b => ((d a b : NNReal) : ℝ)) P_X D).toReal
       ≤ (1 / (n : ℝ)) * Real.log (Fintype.card (Fin M)) := by
-  -- Abbreviations.
-  set Xs_block : Ω → (Fin n → α) := fun ω i => Xs i ω with hXs_block_def
-  set Xh : Fin n → Ω → β := fun i ω =>
-    c.decoder (c.encoder (fun j => Xs j ω)) i with hXh_def
-  set Xh_block : Ω → (Fin n → β) := fun ω i =>
-    c.decoder (c.encoder (fun j => Xs j ω)) i with hXh_block_def
-  set d_R : α → β → ℝ := fun a b => ((d a b : NNReal) : ℝ) with hd_R_def
-  -- Per-letter Dt := ∫ d_R(X_i, X̂_i) ∂μ.
-  set Dt : Fin n → ℝ := fun i => ∫ ω, d_R (Xs i ω) (Xh i ω) ∂μ with hDt_def
-  -- d_R is measurable on α × β (α, β Fintype + MeasurableSingletonClass).
-  have hd_R_meas : Measurable (fun p : α × β => d_R p.1 p.2) := by
-    refine measurable_coe_nnreal_real.comp ?_
-    exact measurable_from_prod_countable_left (fun _ => measurable_of_countable _)
-  -- Step 1: per-letter R(P_X, Dt) ≤ I(X_i; X̂_i).
-  have hXh_meas : ∀ i, Measurable (Xh i) := by
-    intro i
-    show Measurable (fun ω => c.decoder (c.encoder (fun j => Xs j ω)) i)
-    have h_block_meas : Measurable (fun ω j => Xs j ω) :=
-      measurable_pi_iff.mpr hXs
-    exact (measurable_pi_apply i).comp (hdecoder.comp (hencoder.comp h_block_meas))
-  have h_step1 : ∀ i,
-      rateDistortionFunction d_R P_X (Dt i)
-        ≤ mutualInfo μ (Xs i) (Xh i) := by
-    intro i
-    have h_lem := rateDistortionFunction_le_mutualInfo_perLetter
-      (α' := α) (β' := β) μ (Xs i) (Xh i) (hXs i) (hXh_meas i) d_R hd_R_meas
-    rw [hXs_law i] at h_lem
-    exact h_lem
-  -- Step 2: per-letter R(P_X, Dt).toReal ≤ I(X_i; X̂_i).toReal.
-  have h_step2 : ∀ i,
-      (rateDistortionFunction d_R P_X (Dt i)).toReal
-        ≤ (mutualInfo μ (Xs i) (Xh i)).toReal := fun i =>
-    ENNReal.toReal_mono (h_MI_perletter_finite i) (h_step1 i)
-  -- Step 3: ∑ R(P_X, Dt).toReal ≤ ∑ I(X_i; X̂_i).toReal.
-  have h_step3 :
-      ∑ i, (rateDistortionFunction d_R P_X (Dt i)).toReal
-        ≤ ∑ i, (mutualInfo μ (Xs i) (Xh i)).toReal :=
-    Finset.sum_le_sum (fun i _ => h_step2 i)
-  -- Step 4: ∑ I(X_i; X̂_i).toReal = (∑ I(X_i; X̂_i)).toReal (each term finite).
-  have h_step4 :
-      ∑ i, (mutualInfo μ (Xs i) (Xh i)).toReal
-        = (∑ i, mutualInfo μ (Xs i) (Xh i)).toReal := by
-    rw [ENNReal.toReal_sum (fun i _ => h_MI_perletter_finite i)]
-  -- Step 5: I(X^n; X̂^n) ≠ ∞. The block MI is on Xs_block, Xh_block.
-  -- h_MI_block_finite is stated for (X^n, W := encoder ∘ X^n), but DPI takes W → Xh_block.
-  -- We need block MI ≠ ∞ on (X^n, X̂^n). Use DPI + h_MI_block_finite.
-  have hXs_block_meas : Measurable Xs_block := measurable_pi_iff.mpr hXs
-  have hXh_block_meas : Measurable Xh_block := by
-    show Measurable (fun ω i => c.decoder (c.encoder (fun j => Xs j ω)) i)
-    exact hdecoder.comp (hencoder.comp hXs_block_meas)
-  have hW_meas : Measurable (fun ω => c.encoder (fun j => Xs j ω)) :=
-    hencoder.comp hXs_block_meas
-  have h_dpi_block :
-      mutualInfo μ Xs_block Xh_block
-        ≤ mutualInfo μ Xs_block (fun ω => c.encoder (fun j => Xs j ω)) := by
-    have h_eq : Xh_block = c.decoder ∘ (fun ω => c.encoder (fun j => Xs j ω)) := rfl
-    rw [h_eq]
-    exact mutualInfo_le_of_postprocess μ Xs_block
-      (fun ω => c.encoder (fun j => Xs j ω)) hXs_block_meas hW_meas hdecoder
-  have h_MI_block_Xh_finite : mutualInfo μ Xs_block Xh_block ≠ ∞ :=
-    ne_top_of_le_ne_top h_MI_block_finite h_dpi_block
-  -- Step 6: (∑ I).toReal ≤ I(X^n; X̂^n).toReal via h_super and toReal_mono.
-  have h_step6 :
-      (∑ i, mutualInfo μ (Xs i) (Xh i)).toReal
-        ≤ (mutualInfo μ Xs_block Xh_block).toReal :=
-    ENNReal.toReal_mono h_MI_block_Xh_finite h_super
-  -- Step 7: I(X^n; X̂^n).toReal ≤ log M.
-  have h_step7 :
-      (mutualInfo μ Xs_block Xh_block).toReal
-        ≤ Real.log (Fintype.card (Fin M)) :=
-    mutualInfo_block_le_log_card c hencoder hdecoder μ Xs_block hXs_block_meas
-      h_MI_block_finite
-  -- Step 8: 1/n ≥ 0 (n > 0).
-  have hn_pos_R : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn
-  have h_one_div_n_nn : (0 : ℝ) ≤ 1 / (n : ℝ) := by positivity
-  -- Step 9: chain on Real side.
-  -- (R(P_X, D)).toReal ≤ (1/n) ∑ R(P_X, Dt).toReal     -- h_jensen_antitone
-  --                  ≤ (1/n) ∑ I(X_i; X̂_i).toReal       -- h_step3 + mul_le_mul
-  --                  = (1/n) (∑ I).toReal               -- h_step4
-  --                  ≤ (1/n) I(X^n; X̂^n).toReal         -- h_step6
-  --                  ≤ (1/n) log M                      -- h_step7
-  calc (rateDistortionFunction d_R P_X D).toReal
-      ≤ (1 / (n : ℝ)) * ∑ i, (rateDistortionFunction d_R P_X (Dt i)).toReal :=
-        h_jensen_antitone
-    _ ≤ (1 / (n : ℝ)) * ∑ i, (mutualInfo μ (Xs i) (Xh i)).toReal :=
-        mul_le_mul_of_nonneg_left h_step3 h_one_div_n_nn
-    _ = (1 / (n : ℝ)) * (∑ i, mutualInfo μ (Xs i) (Xh i)).toReal := by
-        rw [h_step4]
-    _ ≤ (1 / (n : ℝ)) * (mutualInfo μ Xs_block Xh_block).toReal :=
-        mul_le_mul_of_nonneg_left h_step6 h_one_div_n_nn
-    _ ≤ (1 / (n : ℝ)) * Real.log (Fintype.card (Fin M)) :=
-        mul_le_mul_of_nonneg_left h_step7 h_one_div_n_nn
+  sorry
 
 end InformationTheory.Shannon

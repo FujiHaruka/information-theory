@@ -443,85 +443,23 @@ The channel-side hypothesis `hM_ch_rate` + `hR_ch_le_C` is the published black-b
 a future channel converse plan; here we provide the **composition glue** that joins it
 to `source_coding_converse`.
 
-`@audit:suspect(separation-theorem-moonshot-plan)` -/
+@residual(plan:separation-theorem-moonshot-plan) -/
 theorem separation_converse_iid
     (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : ℕ → Ω → α_src) (hXs : ∀ i, Measurable (Xs i))
-    (hindep_full : iIndepFun (fun i => Xs i) μ)
-    (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
-    (hcard : 2 ≤ Fintype.card α_src)
-    (M_src M_ch : ℕ → ℕ) [hM_src_pos : ∀ n, NeZero (M_src n)]
-    (c_src : ∀ n, (Fin n → α_src) → Fin (M_src n))
-    (d_src : ∀ n, Fin (M_src n) → (Fin n → α_src))
+    (Xs : ℕ → Ω → α_src) (_hXs : ∀ i, Measurable (Xs i))
+    (_hindep_full : iIndepFun (fun i => Xs i) μ)
+    (_hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
+    (_hcard : 2 ≤ Fintype.card α_src)
+    (M_src M_ch : ℕ → ℕ) [_hM_src_pos : ∀ n, NeZero (M_src n)]
+    (_c_src : ∀ n, (Fin n → α_src) → Fin (M_src n))
+    (_d_src : ∀ n, Fin (M_src n) → (Fin n → α_src))
     (h_le : ∀ n, M_src n ≤ M_ch n)
     (W : ChannelCoding.Channel α_ch β)
-    (c_ch : ∀ n, ChannelCoding.Code (M_ch n) n α_ch β)
-    (hPe_to_zero : Tendsto (fun n =>
-        composedErrorProb μ Xs (c_src n) (d_src n) (h_le n) W (c_ch n)) atTop (𝓝 0))
-    (hM_src_bdd : ∃ R, ∀ n, Real.log (M_src n : ℝ) / n ≤ R)
-    {R_ch : ℝ}
-    -- Channel-side per-n rate upper bound, passed through from a channel converse step.
-    (hM_ch_bdd : ∀ n, Real.log (M_ch n : ℝ) / n ≤ R_ch)
-    (hR_ch_le_C : R_ch ≤ ChannelCoding.capacity W) :
+    (_c_ch : ∀ n, ChannelCoding.Code (M_ch n) n α_ch β)
+    (_hPe_to_zero : Tendsto (fun n =>
+        composedErrorProb μ Xs (_c_src n) (_d_src n) (h_le n) W (_c_ch n)) atTop (𝓝 0))
+    (_hM_src_bdd : ∃ R, ∀ n, Real.log (M_src n : ℝ) / n ≤ R) :
     entropy μ (Xs 0) ≤ ChannelCoding.capacity W := by
-  -- Step 1: source error → 0 (from composed error → 0).
-  have h_src_err : Tendsto (fun n => InformationTheory.MeasureFano.errorProb μ
-                  (jointRV Xs n) (fun ω => c_src n (jointRV Xs n ω)) (d_src n))
-                atTop (𝓝 0) :=
-    sourceError_tendsto_zero_of_composed (h_le := h_le) (W := W) (c_ch := c_ch) hPe_to_zero
-  -- Step 2: source converse.
-  have h_src_converse :
-      entropy μ (Xs 0) ≤ Filter.liminf (fun n => Real.log (M_src n : ℝ) / n) atTop :=
-    source_coding_converse μ Xs hXs hindep_full hident hcard M_src c_src d_src
-      h_src_err hM_src_bdd
-  -- Step 3: liminf log M_src / n ≤ liminf log M_ch / n  (via h_le).
-  have h_per_n : ∀ᶠ n in atTop, Real.log (M_src n : ℝ) / n ≤ Real.log (M_ch n : ℝ) / n := by
-    refine Filter.eventually_atTop.mpr ⟨1, fun n hn => ?_⟩
-    have hn_pos : 0 < (n : ℝ) := by exact_mod_cast hn
-    have hMs_pos : 0 < (M_src n : ℝ) := by exact_mod_cast Nat.pos_of_ne_zero (NeZero.ne (M_src n))
-    have h_le_real : (M_src n : ℝ) ≤ (M_ch n : ℝ) := by exact_mod_cast h_le n
-    have h_log_le : Real.log (M_src n : ℝ) ≤ Real.log (M_ch n : ℝ) :=
-      Real.log_le_log hMs_pos h_le_real
-    exact div_le_div_of_nonneg_right h_log_le hn_pos.le
-  -- IsBoundedUnder (·≥·) for log M_src / n  (lower bound 0 via M_src n ≥ 1).
-  have h_bdd_src_ge : Filter.IsBoundedUnder (· ≥ ·) atTop
-      (fun n => Real.log (M_src n : ℝ) / n) := by
-    refine ⟨0, Filter.eventually_atTop.mpr ⟨1, fun n hn => ?_⟩⟩
-    have hMs_pos : 0 < M_src n := Nat.pos_of_ne_zero (NeZero.ne (M_src n))
-    have hMs_ge_one : (1 : ℝ) ≤ (M_src n : ℝ) := by exact_mod_cast hMs_pos
-    have h_log_nn : 0 ≤ Real.log (M_src n : ℝ) := Real.log_nonneg hMs_ge_one
-    have hn_nn : 0 ≤ (n : ℝ) := Nat.cast_nonneg _
-    exact div_nonneg h_log_nn hn_nn
-  -- IsCoboundedUnder (·≥·) for log M_ch / n  (frequent upper bound R_ch via hM_ch_bdd).
-  have h_cobdd_ch : Filter.IsCoboundedUnder (· ≥ ·) atTop
-      (fun n => Real.log (M_ch n : ℝ) / n) :=
-    Filter.IsCoboundedUnder.of_frequently_le (a := R_ch)
-      (Filter.Eventually.frequently (Filter.Eventually.of_forall hM_ch_bdd))
-  -- liminf monotone via liminf_le_liminf.
-  have h_liminf_le :
-      Filter.liminf (fun n => Real.log (M_src n : ℝ) / n) atTop ≤
-        Filter.liminf (fun n => Real.log (M_ch n : ℝ) / n) atTop :=
-    Filter.liminf_le_liminf h_per_n h_bdd_src_ge h_cobdd_ch
-  -- IsBoundedUnder (·≥·) for log M_ch / n  (lower bound 0 via M_ch ≥ 1).
-  have h_bdd_ch_ge : Filter.IsBoundedUnder (· ≥ ·) atTop
-      (fun n => Real.log (M_ch n : ℝ) / n) := by
-    refine ⟨0, Filter.eventually_atTop.mpr ⟨1, fun n hn => ?_⟩⟩
-    have hMc_pos : 0 < M_ch n :=
-      lt_of_lt_of_le (Nat.pos_of_ne_zero (NeZero.ne (M_src n))) (h_le n)
-    have hMc_ge_one : (1 : ℝ) ≤ (M_ch n : ℝ) := by exact_mod_cast hMc_pos
-    have h_log_nn : 0 ≤ Real.log (M_ch n : ℝ) := Real.log_nonneg hMc_ge_one
-    have hn_nn : 0 ≤ (n : ℝ) := Nat.cast_nonneg _
-    exact div_nonneg h_log_nn hn_nn
-  -- liminf log M_ch n / n ≤ R_ch  (from per-n upper bound).
-  have h_liminf_ch_le : Filter.liminf (fun n => Real.log (M_ch n : ℝ) / n) atTop ≤ R_ch :=
-    Filter.liminf_le_of_frequently_le
-      (Filter.Eventually.frequently (Filter.Eventually.of_forall hM_ch_bdd))
-      h_bdd_ch_ge
-  -- Now chain: entropy ≤ liminf src ≤ liminf ch ≤ R_ch ≤ capacity.
-  calc entropy μ (Xs 0)
-      ≤ Filter.liminf (fun n => Real.log (M_src n : ℝ) / n) atTop := h_src_converse
-    _ ≤ Filter.liminf (fun n => Real.log (M_ch n : ℝ) / n) atTop := h_liminf_le
-    _ ≤ R_ch := h_liminf_ch_le
-    _ ≤ ChannelCoding.capacity W := hR_ch_le_C
+  sorry
 
 end InformationTheory.Shannon.SeparationTheorem

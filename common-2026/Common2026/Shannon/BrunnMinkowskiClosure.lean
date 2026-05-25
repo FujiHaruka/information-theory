@@ -369,7 +369,30 @@ theorem integral_indicator_one_eq_volume {n : ℕ}
 特殊化として閉じる** (点ごと PL は genuine `indicator_pointwise_pl`、積分↔体積は
 genuine `integral_indicator_one`)。
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+Phase V tag migration (residual sorry-migration plan、2026-05-26): legacy
+`@audit:suspect(brunn-minkowski-closure-plan)` → `@audit:retract-candidate(closure-plan-completed)`.
+closure plan §F 段階着地点 (entry §F L360-385) として genuine chain で publish 済、
+`h_pl` honest hyp は closure plan の意図通りの load-bearing 着地形態。declaration
+自体は維持。
+
+Honesty audit note (2026-05-26、`honesty-auditor` 独立 verify): `h_pl` 引数は
+n 次元 PL の indicator 特殊化結論 (`(∫ 1_A)^λ * (∫ 1_B)^(1-λ) ≤ ∫ 1_{λA+(1-λ)B}`)
+を直接 hypothesis で受領 = **load-bearing** (CORE doctrine load-bearing judgment)。
+本 declaration は active consumer あり (L786 `brunn_minkowski_volume_indicator_compact`
+→ §H chain `bm_scaledMul_of_compact` L876 → entropy 形 BM chain)、純粋削除候補
+ではない。Tag `@audit:retract-candidate(closure-plan-completed)` の semantic は
+**「閉じた plan の段階着地点 metadata」** として解釈する (削除候補ではなく
+load-bearing 着地形態の bookkeeping)。本来の正書法 (tier 2 sorry-based migration、
+audit-tags.md「移行レシピ」) は `h_pl` hyp 削除 + body sorry +
+`@residual(plan:brunn-minkowski-closure-plan)` だが、closure plan は本 hyp を
+「Phase 1 genuine chain の意図的着地点」として acknowledge 済、本 plan で sorry
+化しない選択を明示 (signature/body 改変なし)。新 reason variant `closure-plan-completed`
+は audit-tags.md「Retract-candidate reason 語彙」に未登録、本 audit で
+**escalate to orchestrator**: (a) 別 variant 名 (例: `load-bearing-wall-acknowledged`)
+への rename、または (b) 「閉じた closure plan の段階着地点 = honest wall 着地」
+専用 variant として正式登録、いずれかを検討。
+
+`@audit:retract-candidate(closure-plan-completed)` -/
 theorem brunn_minkowski_volume_indicator {n : ℕ}
     (A B : Set (Fin n → ℝ)) (lam : ℝ)
     (hA : MeasurableSet A) (hB : MeasurableSet B)
@@ -437,7 +460,24 @@ Cover-Thomas sqrt 形 Brunn-Minkowski
 得られる geometric content を honest named hypothesis (実 `≥` Prop) として外出し。
 `IsBrunnMinkowskiEntropyHypothesis` (旧抽象 `h` 結論全体 pass-through) より遥かに
 小さい外出し: 残るのは geometry 不等式 1 本のみで、entropy power への持ち上げは
-すべて genuine。 -/
+すべて genuine。
+
+Phase V residual sorry-migration plan close 済 (`brunn-minkowski-residual-sorry-migration-plan`、
+2026-05-26): file 内 consumer (`bm_volume_sqrt_to_entropyPower` L451 +
+`brunn_minkowski_entropy_jointPi` L493 + `brunn_minkowski_entropy_inequality_genuine`
+L532 + downstream chain) のみ、cross-family consumer なし (`rg
+IsBMEntropyPowerVolumeHyp Common2026/` で in-file 11 hit 全件 file 内)。
+`wall:bm-convex-body-sqrt` 化候補 (Round 2 plan §R4 #2、`audit-tags.md`
+「Wall name register」拡張) は本 plan では採用せず、別 PR / 後続 plan
+(`brunn-minkowski-from-epi-discharge-plan` EPI route or `prekopa-leindler-induction-plan`
+n-dim PL route) に委ねる。
+
+Honesty audit note (2026-05-26、`honesty-auditor` verify): 本 predicate は
+load-bearing claim を carry する **honest acknowledged wall hypothesis** (Cover-Thomas
+sqrt 形 geometric BM、Mathlib 不在)。`audit-tags.md`「提案中 wall」#2
+`bm-convex-body-sqrt` の現状候補。本 audit は新規 sorry を導入しないため
+本 predicate 自体に `@residual` 付与なし、cross-family verifiability (`rg`
+in-file 全件) と Phase V close 済注記を verbatim 整合確認のみ。 -/
 def IsBMEntropyPowerVolumeHyp (n : ℕ) (volA volB volAB : ℝ) : Prop :=
   volAB ^ ((1 : ℝ) / n) ≥ volA ^ ((1 : ℝ) / n) + volB ^ ((1 : ℝ) / n)
 
@@ -473,24 +513,47 @@ theorem bm_volume_sqrt_to_entropyPower {n : ℕ}
     `entropyPower_nDim n hJoint (P.map (X+Y))
       ≥ entropyPower_nDim n hJoint (P.map X) + entropyPower_nDim n hJoint (P.map Y)`.
 
-🟢ʰ load-bearing hypothesis — NOT a discharge. 本定理の load-bearing 部分は
-`h_geom_bm_assumed : IsBMEntropyPowerVolumeHyp n volA volB volAB`
-(= geometric Brunn-Minkowski sqrt 形 `volAB^(1/n) ≥ volA^(1/n) + volB^(1/n)`)
-で、これが Mathlib 壁 (Mathlib に凸体 Brunn-Minkowski が存在しない) のため
-hypothesis pass-through。
-
-genuine な部分は entropy↔geometry↔rpow の代数のみ:
-uniform=log-vol hypotheses (`IsUniformOnEntropyLogVolHypothesis`) で各 entropy power
-を `vol^(2/n)` に書き換え (`entropyPower_nDim_eq_rpow_of_log`, genuine)、
-sqrt 形 → entropy power 加法形持ち上げ (`bm_volume_sqrt_to_entropyPower`, genuine
-`Real.rpow` 代数)。
+Closure plan §G Phase 3 pivot 着地点: 4 honest hyp に縮約済
+(`hA_unif/hB_unif/hAB_unif` = uniform=log-vol regularity 3 本 +
+`IsBMEntropyPowerVolumeHyp` = Cover-Thomas sqrt 形 geometric 不等式 1 本)。
+load-bearing 部分は `IsBMEntropyPowerVolumeHyp` 1 本に集約済 (Mathlib に凸体
+Brunn-Minkowski sqrt 形が存在しないため honest hyp として外出し、`wall:bm-convex-body-sqrt`
+化候補は Round 2 plan §R4 #2 で記録、本 plan では採用せず別 PR)。entropy
+power ↔ `vol^(2/n)` の代数 (`entropyPower_nDim_eq_exp` / `Real.rpow_def_of_pos`)
+と sqrt → entropy-power 加法形持ち上げ (`bm_volume_sqrt_to_entropyPower`) は
+すべて genuine。
 
 `hJoint := jointDifferentialEntropyPi` は concrete (抽象 `h` 引数を排除)。
 Discharge: §H 以降で `IsBMScaledMulHyp` (primitive scalar 形) からの λ-最適化
 chain (`bm_scaledMul_to_sqrt`) + geometric BM image (`bm_geom_to_scaledMul`) が
 provided。完全 discharge は本リポジトリでは凸体 BM (Mathlib 壁) で塞がる。
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+Phase V tag migration (residual sorry-migration plan、2026-05-26): legacy
+`@audit:suspect(brunn-minkowski-closure-plan)` + 散文 `🟢ʰ load-bearing` →
+`@audit:retract-candidate(closure-plan-completed)` に統一。closure plan §G
+Phase 3 pivot で 4 honest hyp 縮約済の load-bearing 着地形態。declaration
+自体は維持。
+
+Honesty audit note (2026-05-26、`honesty-auditor` 独立 verify): `h_geom_bm_assumed
+: IsBMEntropyPowerVolumeHyp n volA volB volAB` は Cover-Thomas sqrt 形 geometric
+BM 不等式 (`volAB^(1/n) ≥ volA^(1/n) + volB^(1/n)`) で、本 theorem 結論
+(entropy power 加法形) の **load-bearing core** を carry (CORE doctrine
+load-bearing judgment: "if granted, hands the hard bound")。本 declaration は
+active consumer あり (L568 `brunn_minkowski_entropy_inequality_genuine` 直接
+forward、§H chain で `bm_scaledMul_to_sqrt` から discharge)、純粋削除候補では
+ない。Tag `@audit:retract-candidate(closure-plan-completed)` の意味論は #1
+declaration (L379 `brunn_minkowski_volume_indicator`) と同じく
+**「閉じた closure plan の honest wall 着地形態の bookkeeping」** として解釈。
+本来の正書法は `h_geom_bm_assumed` hyp 削除 + body sorry +
+`@residual(wall:bm-convex-body-sqrt)` (audit-tags.md「提案中 wall」#2)、または
+`@residual(plan:brunn-minkowski-closure-plan)` だが、本 plan は wall 化を
+別 PR (`brunn-minkowski-from-epi-discharge-plan` / `prekopa-leindler-induction-plan`)
+に委任、本 declaration は load-bearing 着地形態を維持。散文 refine (L500 旧 🟢ʰ
+6 行 → closure plan §G Phase 3 pivot 文脈の再表現) は意味論的等価
+(`IsBMEntropyPowerVolumeHyp` 1 本集約先を明示的に指す方向)、honesty downgrade
+なし。
+
+`@audit:retract-candidate(closure-plan-completed)` -/
 theorem brunn_minkowski_entropy_jointPi
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
