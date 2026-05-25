@@ -31,6 +31,17 @@ Phase C / D / E は `sorry` skeleton で頭出しする。
 * 判断 #3: **Option γ** (`klDiv` 形) — Common2026 既存 `klDiv_*` 資産で完備、
   Option β `differentialEntropy` の `@audit:suspect(differential-entropy-plan)`
   負債継承を回避
+
+## Retraction log
+
+* `IsAwgnPowerConstraintRealizable` (formerly defined just above
+  `IsAwgnPowerConstraintHonest`) was a `false-statement` ORPHAN predicate
+  retracted on 2026-05-26 (Round 4 escalate #2, sibling plan
+  `awgn-power-constraint-realizable-pivot-plan.md` Phase 5). The chi-square
+  median analysis (`P(∑ X² ≤ nP) → 0.5⁺` for `X ∼ N(0, P)` i.i.d.) shows the
+  v1 statement is unsatisfiable; the ε-relaxed successor
+  `IsAwgnPowerConstraintHonest P_cb P_target N` (below) with `P_cb < P_target`
+  slack is canonical.
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -692,59 +703,6 @@ theorem awgn_expurgate_worst_half
     nlinarith [h_two_card_lb, h_sum_bad_lb, h_sub_le, h_avg, hε]
   · intro m hm
     exact (Finset.mem_filter.mp hm).2
-
-/-- **Power-constraint realizability v1** — **DEFECT (false-statement)**, kept
-as honesty record. **ORPHAN** as of Phase 2 pivot (2026-05-24): no consumer
-references this predicate; the achievability pipeline now flows through
-`IsAwgnRandomCodingFeasible` (bundle) and `IsAwgnPowerConstraintHonest` (split
-codebook variance / constraint target). Retained here so the defect tells stay
-visible in the file history.
-
-This predicate asserts that under the random Gaussian codebook
-`gaussianCodebook M n P.toNNReal` (i.i.d. `N(0, P)` per coordinate), the set of
-codebooks satisfying the deterministic per-message power constraint
-`∀ m, ∑ i (c m i)^2 ≤ n · P` has mass `≥ 1 − ε` for all `ε > 0` (with `n, M`
-in appropriate ranges).
-
-**HONESTY DEFECT (false-statement)**: this is **unsatisfiable**. For each `m`,
-`X_i := c m i ~ N(0, P)` i.i.d., so `S_m := ∑ᵢ X_i² / P ~ χ²(n)`. The chi-square
-distribution on `n` degrees of freedom has `mean = n` and `median ≈ n − 2/3 +
-O(1/n)` (right-skewed), so `P(∑ᵢ X_i² ≤ nP) = P(S_m ≤ n) → 1/2⁺` from above by
-CLT. Across `Fin M` codewords (independent under `gaussianCodebook`), the joint
-mass is `≤ (1/2 + o(1))^M`. Therefore the predicate's required bound
-`mass ≥ 1 − ε` fails for any `ε < 1 − (1/2)^M`, which for `M ≥ 1` excludes most
-`ε ∈ (0, 1)`. **No witness `N₀, n, M` discharges the conclusion.**
-
-**Standard remedy (Cover-Thomas 9.2)**: generate codewords with variance
-`P' < P` instead of `P`. Then SLLN gives `(1/n) ∑ᵢ X_i² → P' < P` a.s., so
-`P(∑ᵢ X_i² ≤ nP) → 1` (n → ∞). This is now captured by
-`IsAwgnPowerConstraintHonest P_cb P_target N` (the bundle picks
-`P_cb = P' < P_target = P`).
-
-**Audit history**: prior staging tag `@audit:staged(awgn-power-constraint-realizable)`
-(removed 2026-05-24) wrongly classified this as Mathlib wall (c) labor; the
-independent honesty audit also missed the false-statement issue. Defect surfaced
-when planning the discharge session: chi-square median analysis showed
-`P(∑X² ≤ nP) → 0.5⁺` from above, not → 1.
-
-**Phase 1D audit (2026-05-26)**: ORPHAN status verified — `IsAwgnPowerConstraintHonest`
-(line 784) is the canonical ε-relaxed successor (P_cb < P_target slack). Adding
-`@audit:retract-candidate(false-replaced-by-eps-relaxed)` per audit-tags.md reason
-vocabulary (Round 2 commit `d83e45b` precedent). `@audit:defect(false-statement)`
-remains as honesty record per CLAUDE.md「sorry を書けない箇所での対処順序」第二選択
-(definition rewrite blocked: predicate kept as historical record, signature defect
-form intentional).
-
-`@audit:defect(false-statement)` `@audit:retract-candidate(false-replaced-by-eps-relaxed)` -/
-def IsAwgnPowerConstraintRealizable (P : ℝ) (N : ℝ≥0) : Prop :=
-  ∀ ⦃ε : ℝ⦄, 0 < ε → ∀ ⦃R : ℝ⦄, 0 < R → R < (1/2) * Real.log (1 + P / (N : ℝ)) →
-    ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n → ∀ ⦃M : ℕ⦄ (_hM_pos : 0 < M),
-      M ≤ Nat.ceil (Real.exp ((n : ℝ) * R)) →
-      -- The set of codebooks satisfying the deterministic power constraint has
-      -- mass ≥ 1 - ε under the random Gaussian codebook law.
-      (gaussianCodebook M n P.toNNReal)
-          {c : Fin M → Fin n → ℝ | ∀ m, (∑ i, (c m i)^2) ≤ (n : ℝ) * P}
-        ≥ ENNReal.ofReal (1 - ε)
 
 /-- **Power-constraint realizability v2 — honest split form** (Phase 2 pivot
 2026-05-24, sibling plan `awgn-power-constraint-realizable-pivot-plan.md`).
