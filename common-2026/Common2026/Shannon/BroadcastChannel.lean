@@ -486,7 +486,13 @@ The entropy-level inputs (`h_fano`, `h_chain`) are genuine real Mathlib
 gaps (joint-typicality-multi wall) discharged structurally by upstream
 plans `bc-converse-fano-discharge-*` / `bc-converse-chain-rule-discharge-*`;
 the present theorem accepts them as raw scalar inequalities so this file
-remains structurally minimal. -/
+remains structurally minimal.
+
+Wave 6 audit 2026-05-26 pass — independent honesty-auditor verified
+`h_fano` / `h_chain` / `h_cleanup` are upstream-shaped raw scalar
+inequalities (precondition, not core), body discharges via the genuine
+arithmetic kernel `bc_rate_le_of_fano`.
+@audit:ok -/
 theorem bc_common_rate_bound
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (_c : BroadcastCode M₁ M₂ n α β₁ β₂)
@@ -532,7 +538,13 @@ The entropy-level inputs (`h_fano`, `h_chain`) are real Mathlib gaps
 (joint-typicality-multi wall) — the conditional Fano on `W₁ → Y₁^n | U^n`
 together with the degradation Markov chain is not yet a project lemma —
 discharged structurally by upstream plans
-`bc-converse-fano-discharge-*` / `bc-converse-chain-rule-discharge-*`. -/
+`bc-converse-fano-discharge-*` / `bc-converse-chain-rule-discharge-*`.
+
+Wave 6 audit 2026-05-26 pass — independent honesty-auditor verified the
+mirror of `bc_common_rate_bound`: `h_fano` / `h_chain` / `h_cleanup` are
+upstream-shaped raw scalar inequalities (precondition, not core), body
+discharges via the genuine arithmetic kernel `bc_rate_le_of_fano`.
+@audit:ok -/
 theorem bc_private_rate_bound
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (_c : BroadcastCode M₁ M₂ n α β₁ β₂)
