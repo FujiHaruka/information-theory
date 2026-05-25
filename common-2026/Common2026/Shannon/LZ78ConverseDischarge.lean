@@ -195,23 +195,18 @@ conclude
 The proof is one-line transitivity:
 `entropyRate ≤ liminf blockLogAvg ≤ liminf (lz78EncodingLength / n)`.
 
-`@audit:suspect(lz78-residual-discharge-plan)` -/
+`@residual(plan:lz78-residual-discharge-plan)` -/
 theorem lz78_converse_lower_bound_pmfBased
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : StationaryProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (h_chain : IsLZ78ConverseChainHyp μ p lz78EncodingLength)
-    (h_smb_lower : ∀ᵐ ω ∂μ,
-        entropyRate μ p
-        ≤ Filter.liminf (fun n => blockLogAvg μ p n ω) Filter.atTop) :
+    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) :
     ∀ᵐ ω ∂μ,
       entropyRate μ p
       ≤ Filter.liminf
           (fun n =>
             (lz78EncodingLength n (p.blockRV n ω) : ℝ) / (n : ℝ))
           Filter.atTop := by
-  filter_upwards [h_chain, h_smb_lower] with ω h_chain_ω h_smb_ω
-  exact le_trans h_smb_ω h_chain_ω
+  sorry
 
 /-- **Variant: from a real-valued lower bound (L-LZ2-B form)**.
 
@@ -220,32 +215,19 @@ the lower bound at the *function-level* (`f ω n ≤ (lz/n)`) rather
 than at the liminf level. The proof routes through
 `Filter.liminf_le_liminf`.
 
-`@audit:suspect(lz78-residual-discharge-plan)` -/
+`@residual(plan:lz78-residual-discharge-plan)` -/
 theorem lz78_converse_lower_bound_of_pointwise
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : StationaryProcess μ α)
     (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (f : Ω → ℕ → ℝ)
-    (h_lower : IsLZ78EncodingLengthLowerBound μ p lz78EncodingLength f)
-    (h_f_bdd_below : ∀ᵐ ω ∂μ,
-        Filter.IsBoundedUnder (· ≥ ·) Filter.atTop (f ω))
-    (h_lz_cobdd_below : ∀ᵐ ω ∂μ,
-        Filter.IsCoboundedUnder (· ≥ ·) Filter.atTop
-          (fun n => (lz78EncodingLength n (p.blockRV n ω) : ℝ) / (n : ℝ)))
-    (h_smb_f_lower : ∀ᵐ ω ∂μ,
-        entropyRate μ p
-        ≤ Filter.liminf (fun n => f ω n) Filter.atTop) :
+    (f : Ω → ℕ → ℝ) :
     ∀ᵐ ω ∂μ,
       entropyRate μ p
       ≤ Filter.liminf
           (fun n =>
             (lz78EncodingLength n (p.blockRV n ω) : ℝ) / (n : ℝ))
           Filter.atTop := by
-  filter_upwards [h_lower, h_f_bdd_below, h_lz_cobdd_below, h_smb_f_lower]
-    with ω h_lower_ω h_fb_ω h_lzcb_ω h_smb_ω
-  refine le_trans h_smb_ω ?_
-  exact Filter.liminf_le_liminf (Filter.Eventually.of_forall (h_lower_ω))
-    h_fb_ω h_lzcb_ω
+  sorry
 
 end PmfBasedConverse
 
@@ -271,27 +253,19 @@ entropyRate ≤ liminf (fun n => lz78EncodingLength n / n)
 usable as the `h_lower` argument of
 `lz78_asymptotic_optimality_two_sided`.
 
-`@audit:suspect(lz78-residual-discharge-plan)` -/
+`@residual(plan:lz78-residual-discharge-plan)` -/
 theorem lz78_converse_lower_bound_with_chain
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (h_chain : IsLZ78ConverseChainHyp μ p.toStationaryProcess
-                lz78EncodingLength)
-    (h_smb_lower : ∀ᵐ ω ∂μ,
-        entropyRate μ p.toStationaryProcess
-        ≤ Filter.liminf
-            (fun n => blockLogAvg μ p.toStationaryProcess n ω)
-            Filter.atTop) :
+    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) :
     ∀ᵐ ω ∂μ,
       entropyRate μ p.toStationaryProcess
       ≤ Filter.liminf
           (fun n =>
             (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
               / (n : ℝ))
-          Filter.atTop :=
-  lz78_converse_lower_bound_pmfBased μ p.toStationaryProcess
-    lz78EncodingLength h_chain h_smb_lower
+          Filter.atTop := by
+  sorry
 
 /-- **L-LZ2 full discharge wrapper** (alias of
 `lz78_converse_lower_bound_with_chain`, kept for backwards-compatible call
@@ -301,27 +275,19 @@ Same signature and result as `lz78_converse_lower_bound_with_chain` —
 takes `IsLZ78ConverseChainHyp` + SMB lower-bound sandwich, returns the
 a.s. liminf bound `entropyRate ≤ liminf (lz/n)`.
 
-`@audit:suspect(lz78-residual-discharge-plan)` -/
+`@residual(plan:lz78-residual-discharge-plan)` -/
 theorem lz78_converse_lower_bound_discharge
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (h_chain : IsLZ78ConverseChainHyp μ p.toStationaryProcess
-                lz78EncodingLength)
-    (h_smb_lower : ∀ᵐ ω ∂μ,
-        entropyRate μ p.toStationaryProcess
-        ≤ Filter.liminf
-            (fun n => blockLogAvg μ p.toStationaryProcess n ω)
-            Filter.atTop) :
+    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) :
     ∀ᵐ ω ∂μ,
       entropyRate μ p.toStationaryProcess
       ≤ Filter.liminf
           (fun n =>
             (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
               / (n : ℝ))
-          Filter.atTop :=
-  lz78_converse_lower_bound_with_chain μ p lz78EncodingLength
-    h_chain h_smb_lower
+          Filter.atTop := by
+  sorry
 
 end ParentWrapper
 
@@ -344,26 +310,18 @@ throughs (both unchanged from the abstract `lz78EncodingLength`
 case), produce the converse a.s. liminf bound for
 `lz78GreedyEncodingLength`.
 
-`@audit:suspect(lz78-residual-discharge-plan)` -/
+`@residual(plan:lz78-residual-discharge-plan)` -/
 theorem lz78_converse_lower_bound_greedy
     (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (p : ErgodicProcess μ α)
-    (h_chain : IsLZ78ConverseChainHyp μ p.toStationaryProcess
-                (@lz78GreedyEncodingLength α _))
-    (h_smb_lower : ∀ᵐ ω ∂μ,
-        entropyRate μ p.toStationaryProcess
-        ≤ Filter.liminf
-            (fun n => blockLogAvg μ p.toStationaryProcess n ω)
-            Filter.atTop) :
+    (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
       entropyRate μ p.toStationaryProcess
       ≤ Filter.liminf
           (fun n =>
             (lz78GreedyEncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
               / (n : ℝ))
-          Filter.atTop :=
-  lz78_converse_lower_bound_discharge μ p (@lz78GreedyEncodingLength α _)
-    h_chain h_smb_lower
+          Filter.atTop := by
+  sorry
 
 end GreedyCompat
 

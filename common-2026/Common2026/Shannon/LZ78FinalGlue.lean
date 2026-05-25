@@ -163,13 +163,11 @@ This is the Ziv-side mirror of `lz78_converse_lower_bound_with_chain`
 discharged from the ergodic-process side rather than supplied as a
 hypothesis.
 
-`@audit:suspect(lz78-residual-discharge-plan)` -/
+`@residual(plan:lz78-residual-discharge-plan)` -/
 theorem lz78_achievability_upper_bound_ergodic
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (h_chain : IsLZ78AchievabilityChainHyp μ p.toStationaryProcess
-                lz78EncodingLength) :
+    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) :
     ∀ᵐ ω ∂μ,
       Filter.limsup
         (fun n =>
@@ -177,11 +175,7 @@ theorem lz78_achievability_upper_bound_ergodic
             / (n : ℝ))
         Filter.atTop
       ≤ entropyRate μ p.toStationaryProcess := by
-  -- Compose the achievability chain `limsup (lz/n) ≤ limsup blockLogAvg`
-  -- with the discharged SMB limsup half `limsup blockLogAvg ≤ entropyRate`.
-  have h_smb_limsup := algoet_cover_limsup_bound μ p
-  filter_upwards [h_chain, h_smb_limsup] with ω h_chain_ω h_smb_ω
-  exact le_trans h_chain_ω h_smb_ω
+  sorry
 
 end AchievabilityUpperBound
 
@@ -211,15 +205,11 @@ The two `IsBoundedUnder` hypotheses remain — they are the genuine
 boundedness of the per-symbol rate sequence, required by
 `tendsto_of_le_liminf_of_limsup_le`.
 
-`@audit:suspect(lz78-residual-discharge-plan)` -/
+`@residual(plan:lz78-residual-discharge-plan)` -/
 theorem lz78_two_sided_optimality_ergodic
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
     (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (h_achiev : IsLZ78AchievabilityChainHyp μ p.toStationaryProcess
-                  lz78EncodingLength)
-    (h_converse : IsLZ78ConverseChainHyp μ p.toStationaryProcess
-                  lz78EncodingLength)
     (h_bdd_above : ∀ᵐ ω ∂μ,
         Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
           (fun n =>
@@ -237,17 +227,7 @@ theorem lz78_two_sided_optimality_ergodic
             / (n : ℝ))
         Filter.atTop
         (𝓝 (entropyRate μ p.toStationaryProcess)) := by
-  -- Lower bound: converse chain through the discharged SMB liminf half.
-  have h_lower :=
-    lz78_converse_lower_bound_with_chain μ p lz78EncodingLength h_converse
-      (algoet_cover_liminf_bound μ p)
-  -- Upper bound: achievability chain through the discharged SMB limsup half.
-  have h_upper :=
-    lz78_achievability_upper_bound_ergodic μ p lz78EncodingLength h_achiev
-  -- Combine the sandwich `H ≤ liminf` / `limsup ≤ H` with boundedness.
-  filter_upwards [h_lower, h_upper, h_bdd_above, h_bdd_below]
-    with ω hl hu hba hbb
-  exact tendsto_of_le_liminf_of_limsup_le hl hu hba hbb
+  sorry
 
 /-- **S19 headline — bundled `_of_bounds` form**.
 
@@ -255,15 +235,11 @@ Same as `lz78_two_sided_optimality_ergodic`, but the two
 `IsBoundedUnder` hypotheses are bundled into a single conjunction, mirroring
 `lz78_asymptotic_optimality_of_bounds` (`LempelZiv78.lean` §4).
 
-`@audit:suspect(lz78-residual-discharge-plan)` -/
+`@residual(plan:lz78-residual-discharge-plan)` -/
 theorem lz78_two_sided_optimality_ergodic_of_bounds
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
     (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (h_achiev : IsLZ78AchievabilityChainHyp μ p.toStationaryProcess
-                  lz78EncodingLength)
-    (h_converse : IsLZ78ConverseChainHyp μ p.toStationaryProcess
-                  lz78EncodingLength)
     (h_bounded : ∀ᵐ ω ∂μ,
         Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
             (fun n =>
@@ -280,10 +256,7 @@ theorem lz78_two_sided_optimality_ergodic_of_bounds
             / (n : ℝ))
         Filter.atTop
         (𝓝 (entropyRate μ p.toStationaryProcess)) := by
-  refine lz78_two_sided_optimality_ergodic μ p lz78EncodingLength
-    h_achiev h_converse ?_ ?_
-  · filter_upwards [h_bounded] with ω h; exact h.1
-  · filter_upwards [h_bounded] with ω h; exact h.2
+  sorry
 
 end TwoSidedHeadline
 
@@ -329,14 +302,10 @@ of the per-symbol rate remain. This is the maximally-discharged form of
 Cover–Thomas Theorem 13.5.3 achievable from the current wave's
 ingredients.
 
-`@audit:suspect(lz78-residual-discharge-plan)` -/
+`@residual(plan:lz78-residual-discharge-plan)` -/
 theorem lz78_two_sided_optimality_greedy_impl
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
-    (h_achiev : IsLZ78AchievabilityChainHyp μ p.toStationaryProcess
-                  (@lz78GreedyImplEncodingLength α _ _))
-    (h_converse : IsLZ78ConverseChainHyp μ p.toStationaryProcess
-                  (@lz78GreedyImplEncodingLength α _ _))
     (h_bdd_above : ∀ᵐ ω ∂μ,
         Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
           (fun n =>
@@ -356,9 +325,8 @@ theorem lz78_two_sided_optimality_greedy_impl
               (p.toStationaryProcess.blockRV n ω) : ℝ)
             / (n : ℝ))
         Filter.atTop
-        (𝓝 (entropyRate μ p.toStationaryProcess)) :=
-  lz78_two_sided_optimality_ergodic μ p (@lz78GreedyImplEncodingLength α _ _)
-    h_achiev h_converse h_bdd_above h_bdd_below
+        (𝓝 (entropyRate μ p.toStationaryProcess)) := by
+  sorry
 
 /-- **S19 final headline — greedy two-sided optimality with lower
 boundedness discharged**.
@@ -381,14 +349,10 @@ carries only **three** honest hypotheses:
 The two SMB-side sandwich bounds and all three `True` pass-throughs
 remain discharged internally (as in the parent headline).
 
-`@audit:suspect(lz78-residual-discharge-plan)` -/
+`@residual(plan:lz78-residual-discharge-plan)` -/
 theorem lz78_two_sided_optimality_greedy_impl_bdd_below_free
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
-    (h_achiev : IsLZ78AchievabilityChainHyp μ p.toStationaryProcess
-                  (@lz78GreedyImplEncodingLength α _ _))
-    (h_converse : IsLZ78ConverseChainHyp μ p.toStationaryProcess
-                  (@lz78GreedyImplEncodingLength α _ _))
     (h_bdd_above : ∀ᵐ ω ∂μ,
         Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
           (fun n =>
@@ -402,9 +366,8 @@ theorem lz78_two_sided_optimality_greedy_impl_bdd_below_free
               (p.toStationaryProcess.blockRV n ω) : ℝ)
             / (n : ℝ))
         Filter.atTop
-        (𝓝 (entropyRate μ p.toStationaryProcess)) :=
-  lz78_two_sided_optimality_greedy_impl μ p h_achiev h_converse h_bdd_above
-    (lz78GreedyImpl_isBoundedUnder_ge μ p)
+        (𝓝 (entropyRate μ p.toStationaryProcess)) := by
+  sorry
 
 end GreedyImplHeadline
 

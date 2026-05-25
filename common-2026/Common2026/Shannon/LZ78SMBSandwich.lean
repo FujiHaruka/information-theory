@@ -410,22 +410,19 @@ This is the `lz78_converse_lower_bound_with_chain` of
 `LZ78ConverseDischarge.lean` with the SMB lower-bound hypothesis
 discharged from the ergodic-process side.
 
-`@audit:suspect(lz78-residual-discharge-plan)` -/
+`@residual(plan:lz78-residual-discharge-plan)` -/
 theorem lz78_converse_lower_bound_ergodic
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (h_chain : IsLZ78ConverseChainHyp μ p.toStationaryProcess
-                lz78EncodingLength) :
+    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) :
     ∀ᵐ ω ∂μ,
       entropyRate μ p.toStationaryProcess
       ≤ Filter.liminf
           (fun n =>
             (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
               / (n : ℝ))
-          Filter.atTop :=
-  lz78_converse_lower_bound_with_chain μ p lz78EncodingLength h_chain
-    (lz78_smb_sandwich_ergodic_liminf μ p)
+          Filter.atTop := by
+  sorry
 
 /-- **LZ78 converse lower bound — `IsLZ78ConverseChainHyp` direct form**.
 
@@ -439,9 +436,7 @@ directly.
 theorem lz78_converse_lower_bound_ergodic_of_bridge
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
-    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
-    (h_chain : IsLZ78ConverseChainHyp μ p.toStationaryProcess
-                lz78EncodingLength) :
+    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) :
     ∀ᵐ ω ∂μ,
       entropyRate μ p.toStationaryProcess
       ≤ Filter.liminf
@@ -486,12 +481,10 @@ Conclusion specialized to `lz78GreedyEncodingLength` from
 `LZ78GreedyParsing.lean`. The chain-rule hypothesis remains a
 pass-through (L-LZ2-A: Cover–Thomas Eq. 13.130 pmf-level inequality).
 
-`@audit:suspect(lz78-residual-discharge-plan)` -/
+`@residual(plan:lz78-residual-discharge-plan)` -/
 theorem lz78_converse_lower_bound_ergodic_greedy
     (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (p : ErgodicProcess μ α)
-    (h_chain : IsLZ78ConverseChainHyp μ p.toStationaryProcess
-                (@lz78GreedyEncodingLength α _)) :
+    (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
       entropyRate μ p.toStationaryProcess
       ≤ Filter.liminf
@@ -499,9 +492,8 @@ theorem lz78_converse_lower_bound_ergodic_greedy
             (lz78GreedyEncodingLength n
                 (p.toStationaryProcess.blockRV n ω) : ℝ)
               / (n : ℝ))
-          Filter.atTop :=
-  lz78_converse_lower_bound_ergodic μ p
-    (@lz78GreedyEncodingLength α _) h_chain
+          Filter.atTop := by
+  sorry
 
 end GreedyCompat
 

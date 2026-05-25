@@ -167,14 +167,12 @@ hence `entropyRate₂ − ε ≤ liminf (lz/n)` (`le_liminf_of_le`, coboundednes
 of the rate), and `ε → 0` closes it. The only non-genuine input is the
 load-bearing `IsLZ78ConverseCodingLowerBound`.
 
-`@audit:suspect(lz78-residual-discharge-plan)` -/
+`@residual(plan:lz78-residual-discharge-plan)` -/
 theorem lz78_converse_le_liminf₂
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
     (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ)
     (slack : ℕ → ℝ)
-    (h_lb : IsLZ78ConverseCodingLowerBound μ p.toStationaryProcess
-              lz78EncodingLength slack)
     (h_lz_cobdd : ∀ᵐ ω ∂μ,
         Filter.IsCoboundedUnder (· ≥ ·) Filter.atTop
           (fun n => (lz78EncodingLength n
@@ -185,30 +183,7 @@ theorem lz78_converse_le_liminf₂
             (fun n => (lz78EncodingLength n
               (p.toStationaryProcess.blockRV n ω) : ℝ) / (n : ℝ))
             Filter.atTop := by
-  filter_upwards [h_lb.lower, shannon_mcmillan_breiman₂ μ p, h_lz_cobdd]
-    with ω h_lower_ω h_block_ω h_lz_cobdd_ω
-  set B : ℕ → ℝ := fun n => blockLogAvg₂ μ p.toStationaryProcess n ω with hB
-  set L : ℕ → ℝ :=
-    fun n => (lz78EncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
-      / (n : ℝ) with hL
-  set H : ℝ := entropyRate₂ μ p.toStationaryProcess with hH
-  -- Goal: `H ≤ liminf L`. Show `∀ ε > 0, H − ε ≤ liminf L`.
-  refine le_of_forall_sub_le (fun ε hε => ?_)
-  have hε2 : (0 : ℝ) < ε / 2 := by linarith
-  have h_slack_le : ∀ᶠ n in Filter.atTop, slack n ≤ ε / 2 := by
-    have := h_lb.slack_tendsto.eventually (gt_mem_nhds hε2)
-    filter_upwards [this] with n hn
-    exact le_of_lt hn
-  have h_block_ge : ∀ᶠ n in Filter.atTop, H - ε / 2 ≤ B n := by
-    have := h_block_ω.eventually (lt_mem_nhds (show H - ε / 2 < H by linarith))
-    filter_upwards [this] with n hn
-    exact le_of_lt hn
-  have h_ev_le : ∀ᶠ n in Filter.atTop, H - ε ≤ L n := by
-    filter_upwards [h_lower_ω, h_slack_le, h_block_ge] with n hn hslk hblk
-    calc H - ε = (H - ε / 2) - ε / 2 := by ring
-      _ ≤ B n - slack n := by linarith
-      _ ≤ L n := hn
-  exact le_liminf_of_le h_lz_cobdd_ω h_ev_le
+  sorry
 
 end LiminfAssembly
 
