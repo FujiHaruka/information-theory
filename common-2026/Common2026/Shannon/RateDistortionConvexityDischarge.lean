@@ -685,48 +685,20 @@ theorem klDiv_mixture_joint_convex
 /-! ## Step E — 仮説なし R(D) 凸性主定理 -/
 
 set_option linter.unusedSectionVars false in
-/-- **R(D) 凸性 (仮説なし、有限アルファベット版)**: Step A-D 全段 discharge.
-
-After the Phase 2.RD.2 sorry-based migration of the parent
-`rateDistortionFunction_convexOn`, the `h_klDiv_conv` hypothesis no longer
-exists in the parent's signature — it has been retreated to a `sorry` to be
-closed by `rate-distortion-convexity-plan`. The Step D discharge
-(`klDiv_mixture_joint_convex`) remains genuine and is preserved as a separate
-lemma in this file for the eventual closure of the parent's `sorry`. The
-finite-alphabet headline `rateDistortionFunction_convexOn_pmf` is now a
-transitive wrapper of the (sorry'd) parent — its previous direct construction
-via Step D is no longer in scope of the parent's new signature, so the
-parent's `sorry` propagates here.
-
-NOTE (honesty audit, 2026-05-26): the pre-9b22174 body of this declaration
-was a **genuine 0-sorry independent proof** — it discharged `h_klDiv_conv`
-case-by-case via `klDiv_mixture_joint_convex` (Step D) plus `klDiv_ne_top_iff`
-on the AC extraction. The transitive `sorry` recorded here is therefore not
-strictly necessary: an orchestrator-scheduled rewrite that bypasses the
-sorry'd parent and calls `klDiv_mixture_joint_convex` (still genuine,
-unchanged in this file) directly can restore 0 sorry / honest_residual →
-proof_done locally. Listed as **honesty downgrade recoverable**, distinct
-from the parent's genuine `sorry` (load-bearing `h_klDiv_conv` retreat).
-
-`@residual(plan:rate-distortion-convexity-plan)` -/
-theorem rateDistortionFunction_convexOn_pmf
+/-- Helper: Fintype 由来 integrability for any joint with `Prod.fst` marginal = P.
+`d : α → β → ℝ` is bounded on the finite product alphabet, so it is integrable
+on any finite measure (in particular any feasible joint, which is a probability
+measure since its X-marginal is P). -/
+private lemma integrable_d_of_marg_eq
     (d : α → β → ℝ) (P : Measure α) [IsProbabilityMeasure P]
-    {lam : ℝ} (hlam₀ : 0 ≤ lam) (hlam₁ : lam ≤ 1) (D₁ D₂ : ℝ) :
-    rateDistortionFunction d P (lam * D₁ + (1 - lam) * D₂)
-      ≤ ENNReal.ofReal lam * rateDistortionFunction d P D₁
-        + ENNReal.ofReal (1 - lam) * rateDistortionFunction d P D₂ := by
-  apply rateDistortionFunction_convexOn d P hlam₀ hlam₁ D₁ D₂
-  -- h_int_witness: any ν with ν.map fst = P has Integrable d.
-  intro ν _h_marg
-  -- d : α → β → ℝ is bounded (Fintype). Integrable on any finite measure.
+    (ν : Measure (α × β)) (h_marg : ν.map Prod.fst = P) :
+    Integrable (fun p => d p.1 p.2) ν := by
   have h_meas : Measurable (fun p : α × β => d p.1 p.2) := by measurability
-  -- Need IsFiniteMeasure ν (from ν.map fst = P, P is prob, so ν is prob, hence finite).
   have h_ν_prob : IsProbabilityMeasure ν := by
     refine ⟨?_⟩
     have h_univ : ν Set.univ = (ν.map Prod.fst) Set.univ := by
       rw [Measure.map_apply measurable_fst MeasurableSet.univ]; simp
-    rw [h_univ, _h_marg, measure_univ]
-  -- Bounded function: |d p.1 p.2| ≤ M for some constant (Fintype).
+    rw [h_univ, h_marg, measure_univ]
   refine Integrable.mono' (g := fun _ : α × β =>
       (Finset.univ.sup' Finset.univ_nonempty (fun q : α × β => |d q.1 q.2|)))
     (integrable_const _) h_meas.aestronglyMeasurable ?_
@@ -734,7 +706,214 @@ theorem rateDistortionFunction_convexOn_pmf
   have h_le : |d p.1 p.2| ≤
       Finset.univ.sup' Finset.univ_nonempty (fun q : α × β => |d q.1 q.2|) :=
     Finset.le_sup' (f := fun q : α × β => |d q.1 q.2|) (Finset.mem_univ p)
-  -- show ‖d p.1 p.2‖ ≤ Finset.univ.sup' ...
   simpa [Real.norm_eq_abs] using h_le
+
+set_option linter.unusedSectionVars false in
+/-- Helper: per-pair convexity bound at the `klDiv` level.
+
+For any two feasible joints `ν₁, ν₂` (`Prod.fst`-marginal = `P`, distortion
+bounds `D₁, D₂`), the rate-distortion function at the mixed threshold
+`lam * D₁ + (1 - lam) * D₂` is bounded by the convex combination of the per-
+witness `klDiv` values. AC of `νᵢ` to its product marginal is extracted by
+case-splitting on `klDiv νᵢ marg(νᵢ) = ∞` (top side trivializes the bound). -/
+private lemma rateDistortionFunction_le_convex_combo_of_pair
+    (d : α → β → ℝ) (P : Measure α) [IsProbabilityMeasure P]
+    {lam : ℝ} (hlam₀ : 0 ≤ lam) (hlam₁ : lam ≤ 1) (D₁ D₂ : ℝ)
+    (ν₁ ν₂ : Measure (α × β))
+    (h_marg₁ : ν₁.map Prod.fst = P) (h_marg₂ : ν₂.map Prod.fst = P)
+    (h_dist₁ : expectedDistortion d ν₁ ≤ D₁)
+    (h_dist₂ : expectedDistortion d ν₂ ≤ D₂) :
+    rateDistortionFunction d P (lam * D₁ + (1 - lam) * D₂)
+      ≤ ENNReal.ofReal lam
+          * klDiv ν₁ ((ν₁.map Prod.fst).prod (ν₁.map Prod.snd))
+        + ENNReal.ofReal (1 - lam)
+          * klDiv ν₂ ((ν₂.map Prod.fst).prod (ν₂.map Prod.snd)) := by
+  -- ν₁, ν₂ are probability measures (X-marginal = P, P is prob).
+  have h_ν₁_prob : IsProbabilityMeasure ν₁ := by
+    refine ⟨?_⟩
+    have h_univ : ν₁ Set.univ = (ν₁.map Prod.fst) Set.univ := by
+      rw [Measure.map_apply measurable_fst MeasurableSet.univ]; simp
+    rw [h_univ, h_marg₁, measure_univ]
+  have h_ν₂_prob : IsProbabilityMeasure ν₂ := by
+    refine ⟨?_⟩
+    have h_univ : ν₂ Set.univ = (ν₂.map Prod.fst) Set.univ := by
+      rw [Measure.map_apply measurable_fst MeasurableSet.univ]; simp
+    rw [h_univ, h_marg₂, measure_univ]
+  -- Integrability of d under νᵢ.
+  have h_int₁ : Integrable (fun p => d p.1 p.2) ν₁ :=
+    integrable_d_of_marg_eq d P ν₁ h_marg₁
+  have h_int₂ : Integrable (fun p => d p.1 p.2) ν₂ :=
+    integrable_d_of_marg_eq d P ν₂ h_marg₂
+  set marg1 := (ν₁.map Prod.fst).prod (ν₁.map Prod.snd)
+  set marg2 := (ν₂.map Prod.fst).prod (ν₂.map Prod.snd)
+  -- Case-split on klDiv νᵢ margᵢ = ∞.
+  by_cases h_top1 : klDiv ν₁ marg1 = ∞
+  · -- klDiv ν₁ = ∞. If ofReal lam ≠ 0 the RHS is ∞.
+    by_cases hlam_eq0 : lam = 0
+    · -- lam = 0 boundary: RHS = ofReal 0 * ∞ + ofReal 1 * klDiv ν₂ = klDiv ν₂.
+      subst hlam_eq0
+      have h_lhs_eq : (0 : ℝ) * D₁ + (1 - 0) * D₂ = D₂ := by ring
+      rw [h_lhs_eq]
+      simp only [ENNReal.ofReal_zero, zero_mul, zero_add, sub_zero, ENNReal.ofReal_one,
+        one_mul]
+      exact rateDistortionFunction_le_of_feasible d P D₂ ν₂ h_marg₂ h_dist₂
+    · -- lam > 0: RHS = ∞.
+      have hlam_pos : 0 < lam := lt_of_le_of_ne hlam₀ (Ne.symm hlam_eq0)
+      have h_lam_ne_zero : ENNReal.ofReal lam ≠ 0 := by
+        rw [ne_eq, ENNReal.ofReal_eq_zero]; exact not_le.mpr hlam_pos
+      rw [h_top1, ENNReal.mul_top h_lam_ne_zero]
+      exact le_top
+  by_cases h_top2 : klDiv ν₂ marg2 = ∞
+  · -- klDiv ν₂ = ∞. If ofReal (1-lam) ≠ 0 the RHS is ∞.
+    by_cases hlam_eq1 : lam = 1
+    · subst hlam_eq1
+      have h_lhs_eq : (1 : ℝ) * D₁ + (1 - 1) * D₂ = D₁ := by ring
+      rw [h_lhs_eq]
+      simp only [sub_self, ENNReal.ofReal_zero, zero_mul, add_zero, ENNReal.ofReal_one,
+        one_mul]
+      exact rateDistortionFunction_le_of_feasible d P D₁ ν₁ h_marg₁ h_dist₁
+    · have h1lam_pos : 0 < 1 - lam :=
+        sub_pos.mpr (lt_of_le_of_ne hlam₁ hlam_eq1)
+      have h_1lam_ne_zero : ENNReal.ofReal (1 - lam) ≠ 0 := by
+        rw [ne_eq, ENNReal.ofReal_eq_zero]; exact not_le.mpr h1lam_pos
+      rw [h_top2, ENNReal.mul_top h_1lam_ne_zero]
+      have h_rhs : ENNReal.ofReal lam * klDiv ν₁ marg1 + ∞ = ∞ := by
+        rw [add_comm]; exact top_add _
+      rw [h_rhs]
+      exact le_top
+  -- Both finite: extract AC and apply Step D via the mixture witness.
+  have h_ac₁ : ν₁ ≪ marg1 := (klDiv_ne_top_iff.mp h_top1).1
+  have h_ac₂ : ν₂ ≪ marg2 := (klDiv_ne_top_iff.mp h_top2).1
+  -- Mixture is feasible at the mixed threshold.
+  obtain ⟨h_mix_marg, h_mix_dist⟩ :=
+    mixtureMeasure_feasible hlam₀ hlam₁ P d ν₁ ν₂ h_marg₁ h_marg₂
+      h_dist₁ h_dist₂ h_int₁ h_int₂
+  -- LHS ≤ klDiv (mix) marg(mix).
+  have h_feas := rateDistortionFunction_le_of_feasible d P
+    (lam * D₁ + (1 - lam) * D₂) (mixtureMeasure lam ν₁ ν₂) h_mix_marg h_mix_dist
+  -- Convexity from Step D.
+  have h_conv := klDiv_mixture_joint_convex d P hlam₀ hlam₁ D₁ D₂ ν₁ ν₂
+    h_marg₁ h_marg₂ h_int₁ h_int₂ h_dist₁ h_dist₂ h_ac₁ h_ac₂
+  exact h_feas.trans h_conv
+
+set_option linter.unusedSectionVars false in
+/-- **R(D) 凸性 (仮説なし、有限アルファベット版)**: Step A-D 全段 discharge.
+
+Recovered direct proof (2026-05-26, post-Round 3 rewrite recovery): rather
+than going through the now-`sorry`'d parent `rateDistortionFunction_convexOn`,
+this declaration discharges convexity directly at the `iInf` level. For any
+pair of feasible witnesses `ν₁, ν₂` (at `D₁, D₂`), the mixture
+`mixtureMeasure lam ν₁ ν₂` is feasible at `lam D₁ + (1-lam) D₂`
+(`mixtureMeasure_feasible`), and `klDiv` of the mixture is bounded by the
+convex combination of per-witness `klDiv` values via the local Step D
+discharge `klDiv_mixture_joint_convex`. AC of `νᵢ` to its product-marginal is
+extracted by case-splitting on `klDiv νᵢ margᵢ = ∞` (`klDiv_ne_top_iff`);
+boundary cases `lam = 0` and `lam = 1` reduce to `rateDistortionFunction_le_of_feasible`
+applied to one of the witnesses. The `iInf` push-through is handled by
+`le_iInf_add_iInf` together with `ENNReal.mul_iInf_of_ne` (for the strict
+interior `0 < lam < 1`) and direct case-split at the boundary.
+
+This bypasses the parent's transitive `sorry` (load-bearing `h_klDiv_conv`
+retreat) by reusing only the genuine pieces: Step D (`klDiv_mixture_joint_convex`,
+unchanged) and basic feasibility / `iInf` bookkeeping. Result: proof done
+(0 sorry, 0 @residual). -/
+theorem rateDistortionFunction_convexOn_pmf
+    (d : α → β → ℝ) (P : Measure α) [IsProbabilityMeasure P]
+    {lam : ℝ} (hlam₀ : 0 ≤ lam) (hlam₁ : lam ≤ 1) (D₁ D₂ : ℝ) :
+    rateDistortionFunction d P (lam * D₁ + (1 - lam) * D₂)
+      ≤ ENNReal.ofReal lam * rateDistortionFunction d P D₁
+        + ENNReal.ofReal (1 - lam) * rateDistortionFunction d P D₂ := by
+  -- Strategy: case-split on lam ∈ {0, 1} (boundary) vs strict interior. On the
+  -- interior, push the scalars inside ALL iInf binders via repeated
+  -- `ENNReal.mul_iInf_of_ne`, then apply `ENNReal.le_iInf_add_iInf` plus inner
+  -- `le_iInf` peels, and finish with the pair helper.
+  rcases eq_or_lt_of_le hlam₀ with hlam_eq0 | hlam_pos
+  · -- lam = 0 boundary: substitute and reduce both sides to R(P, D₂).
+    rw [← hlam_eq0]
+    have h_eq : (0 : ℝ) * D₁ + (1 - 0) * D₂ = D₂ := by ring
+    rw [h_eq]
+    simp [ENNReal.ofReal_zero, ENNReal.ofReal_one]
+  rcases eq_or_lt_of_le hlam₁ with hlam_eq1 | hlam_lt1
+  · -- lam = 1 boundary.
+    subst hlam_eq1
+    have h_eq : (1 : ℝ) * D₁ + (1 - 1) * D₂ = D₁ := by ring
+    rw [h_eq]
+    simp [ENNReal.ofReal_one, ENNReal.ofReal_zero]
+  -- Strict interior 0 < lam < 1.
+  have h1lam_pos : (0 : ℝ) < 1 - lam := sub_pos.mpr hlam_lt1
+  have h_lam_ne0 : ENNReal.ofReal lam ≠ 0 := by
+    rw [ne_eq, ENNReal.ofReal_eq_zero]; exact not_le.mpr hlam_pos
+  have h_lam_ne_top : ENNReal.ofReal lam ≠ ∞ := ENNReal.ofReal_ne_top
+  have h_1lam_ne0 : ENNReal.ofReal (1 - lam) ≠ 0 := by
+    rw [ne_eq, ENNReal.ofReal_eq_zero]; exact not_le.mpr h1lam_pos
+  have h_1lam_ne_top : ENNReal.ofReal (1 - lam) ≠ ∞ := ENNReal.ofReal_ne_top
+  -- Unfold R(P, Dᵢ) and push scalars through the iInf binders on RHS.
+  unfold rateDistortionFunction
+  -- LHS: ⨅ ν (_ : ν.map fst = P) (_ : ED d ν ≤ lam*D₁+(1-lam)*D₂), klDiv ν m
+  -- RHS: ofReal lam * (⨅ ν h h', klDiv ν m₁) + ofReal(1-lam) * (⨅ ν h h', klDiv ν m₂).
+  -- Apply `le_iInf_add_iInf` first: for each (ν₁, ν₂), prove LHS ≤
+  -- ofReal lam * (⨅ h h', klDiv ν₁ m₁) + ofReal(1-lam) * (⨅ h h', klDiv ν₂ m₂).
+  rw [ENNReal.mul_iInf_of_ne h_lam_ne0 h_lam_ne_top,
+      ENNReal.mul_iInf_of_ne h_1lam_ne0 h_1lam_ne_top]
+  refine ENNReal.le_iInf_add_iInf ?_
+  intro ν₁ ν₂
+  -- Per pair (ν₁, ν₂): bound by case-splitting on whether they are feasible.
+  -- For feasible ν₁ (with h_marg₁ : ν₁.map fst = P, h_dist₁ : ED d ν₁ ≤ D₁),
+  -- the inner iInf collapses to klDiv ν₁ m₁ (no functional binders).
+  -- For non-feasible ν₁, the inner iInf is ⊤ since no witnesses exist.
+  by_cases hf₁ : ν₁.map Prod.fst = P ∧ expectedDistortion d ν₁ ≤ D₁
+  · by_cases hf₂ : ν₂.map Prod.fst = P ∧ expectedDistortion d ν₂ ≤ D₂
+    · obtain ⟨h_marg₁, h_dist₁⟩ := hf₁
+      obtain ⟨h_marg₂, h_dist₂⟩ := hf₂
+      -- Collapse inner iInf via `iInf_pos`.
+      have h_inner₁ :
+          (⨅ (_ : ν₁.map Prod.fst = P) (_ : expectedDistortion d ν₁ ≤ D₁),
+              klDiv ν₁ ((ν₁.map Prod.fst).prod (ν₁.map Prod.snd)))
+            = klDiv ν₁ ((ν₁.map Prod.fst).prod (ν₁.map Prod.snd)) := by
+        rw [iInf_pos h_marg₁, iInf_pos h_dist₁]
+      have h_inner₂ :
+          (⨅ (_ : ν₂.map Prod.fst = P) (_ : expectedDistortion d ν₂ ≤ D₂),
+              klDiv ν₂ ((ν₂.map Prod.fst).prod (ν₂.map Prod.snd)))
+            = klDiv ν₂ ((ν₂.map Prod.fst).prod (ν₂.map Prod.snd)) := by
+        rw [iInf_pos h_marg₂, iInf_pos h_dist₂]
+      rw [h_inner₁, h_inner₂]
+      exact rateDistortionFunction_le_convex_combo_of_pair d P hlam₀ hlam₁ D₁ D₂
+        ν₁ ν₂ h_marg₁ h_marg₂ h_dist₁ h_dist₂
+    · -- ν₂ not feasible: the right iInf = ⊤, so RHS-side = ⊤.
+      have h_inner₂ :
+          (⨅ (_ : ν₂.map Prod.fst = P) (_ : expectedDistortion d ν₂ ≤ D₂),
+              klDiv ν₂ ((ν₂.map Prod.fst).prod (ν₂.map Prod.snd)))
+            = ⊤ := by
+        by_cases h_marg₂ : ν₂.map Prod.fst = P
+        · have h_dist_neg : ¬ expectedDistortion d ν₂ ≤ D₂ := fun h => hf₂ ⟨h_marg₂, h⟩
+          rw [iInf_pos h_marg₂, iInf_neg h_dist_neg]
+        · rw [iInf_neg h_marg₂]
+      rw [h_inner₂]
+      have h_top_mul : ENNReal.ofReal (1 - lam) * ⊤ = ⊤ :=
+        ENNReal.mul_top h_1lam_ne0
+      rw [h_top_mul]
+      rw [show (ENNReal.ofReal lam *
+          (⨅ (_ : ν₁.map Prod.fst = P) (_ : expectedDistortion d ν₁ ≤ D₁),
+              klDiv ν₁ ((ν₁.map Prod.fst).prod (ν₁.map Prod.snd)))) + (⊤ : ℝ≥0∞) = ⊤
+        from by rw [add_comm]; exact top_add _]
+      exact le_top
+  · -- ν₁ not feasible: left iInf = ⊤.
+    have h_inner₁ :
+        (⨅ (_ : ν₁.map Prod.fst = P) (_ : expectedDistortion d ν₁ ≤ D₁),
+            klDiv ν₁ ((ν₁.map Prod.fst).prod (ν₁.map Prod.snd)))
+          = ⊤ := by
+      by_cases h_marg₁ : ν₁.map Prod.fst = P
+      · have h_dist_neg : ¬ expectedDistortion d ν₁ ≤ D₁ := fun h => hf₁ ⟨h_marg₁, h⟩
+        rw [iInf_pos h_marg₁, iInf_neg h_dist_neg]
+      · rw [iInf_neg h_marg₁]
+    rw [h_inner₁]
+    have h_top_mul : ENNReal.ofReal lam * ⊤ = ⊤ :=
+      ENNReal.mul_top h_lam_ne0
+    rw [h_top_mul]
+    rw [show (⊤ : ℝ≥0∞) + ENNReal.ofReal (1 - lam) *
+        (⨅ (_ : ν₂.map Prod.fst = P) (_ : expectedDistortion d ν₂ ≤ D₂),
+            klDiv ν₂ ((ν₂.map Prod.fst).prod (ν₂.map Prod.snd))) = ⊤ from
+      top_add _]
+    exact le_top
 
 end InformationTheory.Shannon
