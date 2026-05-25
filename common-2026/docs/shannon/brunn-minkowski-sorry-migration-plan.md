@@ -579,12 +579,13 @@ mechanical な tag 整理が一気に走るため)。
    Phase 2.3 で `@residual(defect:circular)` を付与するか `@residual(plan:brunn-minkowski-sorry-migration-plan)`
    で済ませるか、implementer の verbatim 確認 + auditor verdict 待ち。
 
-8. **declaration 数 (本 plan 40 件 vs spec 46 件)**: 本 plan の inventory は declaration-level の
-   verbatim 抽出で 40 件、spec の 46 件と差分。spec は散文 `🟢ʰ` の docstring 内出現を独立に計数した
-   可能性 (例: `BrunnMinkowski.lean:177` の theorem docstring 中の `🟢ʰ` + `:140`, `:169`, `:200`,
-   `:232` の structure docstring 中の `🟢ʰ` 等)。本 plan は **declaration を単位** とするため、
-   docstring 内の散文 `🟢ʰ` は declaration と pair で対応するものを 1 件として計数。差分の 6 件は
-   declaration を共有する複数散文 marker の重複計数と判定。Phase 1.5 auditor で再確認。
+8. **declaration 数 (本 plan 40 件 vs spec 46 件)** — **closed 2026-05-25 (Round 2 closure F5)**:
+   `rg -c "@audit:suspect|@audit:staged|@audit:defer|@audit:defect|🟢ʰ" Common2026/Shannon/BrunnMinkowski*.lean`
+   合計 = **46 marker 行** (suspect 34 + staged 1 + defer 2 + defect 2 + 🟢ʰ 10、ただし一部行は
+   複数 marker overlap)。本 plan の 40 件は **distinct declaration count** で集計したもの。差分 6 件は
+   同一 declaration 内の docstring + コメントに複数 marker 行を持つケース (例: docstring に suspect、
+   sorry 直前コメントに 🟢ʰ 等)。spec 46 件は raw marker line count、本 plan 40 件は per-declaration
+   集計で、両者整合 (集計粒度の違い)。Phase 1.5 auditor 再確認不要。
 
 ## 判断ログ
 

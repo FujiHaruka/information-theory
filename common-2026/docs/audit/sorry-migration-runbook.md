@@ -385,6 +385,31 @@ predicate を re-namespacing 利用 (`:127/195/262`)。Phase 2.3 で WynerZiv
 - 関係 family の planner / sweep 完了を待って統合 plan 化候補として
   planner 未決事項に escalate (実 sweep は別 session)
 
+#### Cross-family 検出 3 段階判定 (Round 2 補強、2026-05-25)
+
+cross-family ✅/❌ の二値判定だけでは Round 2 plans (Relay / MAC-BC / LZ78 /
+BrunnMinkowski / WynerZiv Phase 2.x) で過剰検出 + 過剰回避を起こした実例があり、
+inventory step では **3 段階で severity を分けて記録** する:
+
+| Stage | 検出条件 | sweep 影響 | 対処 |
+|---|---|---|---|
+| **S1 散文 reference** | 他 family の declaration / file 名を docstring / コメントに mention するが `import` 無し | sweep 単独実施 OK。当該 declaration touch 時は散文を更新するのみ | inventory 表で `cross-family?` 欄に「S1: docstring mention only」と注記、Phase 2.3 で予防的処置なし |
+| **S2 import 実依存** | `import Common2026.Shannon.<他 family>` あり + 当該 family の lemma / def を本体で使用 | sweep 単独実施 OK。下流 (consumer) として transitive sorry を引き継ぐが、Phase 2.x ripple で散文化対応可能 (Pattern C) | inventory 表で「S2: import + use of <decl>」と注記。Pattern C 散文 transitive 適用、predicate 自身の削除は不要 |
+| **S3 infrastructure construction** | 他 family の predicate / structure を **本 family の declaration の field / constructor / type alias として bundling / re-namespacing**、または他 family 側 use site が本 family の predicate を hypothesis 形で消費する | **単独 sweep で predicate 削除すると他 family broken**。`@audit:retract-candidate(load-bearing-predicate)` 付与のみ + docstring 散文で consumer 列挙 + 統合 plan 化候補として escalate | inventory 表で「S3: <bundle 形> via <field / namespace> from <他 family>」と明記、planner 未決事項に必ず escalate |
+
+**判定例** (Round 1/2 sweep 実観測):
+
+| 例 | Stage | 根拠 |
+|---|---|---|
+| `LZ78ConverseDischarge.lean:67` の WynerZiv 言及 | S1 | docstring 散文のみ、`import` 無し (verbatim 確認済) |
+| MAC/BC → Relay 名前言及 | S1 | mac-bc-sorry-migration-plan で確認、prose mention のみ |
+| `BroadcastChannelSuperposition` → `MACL1Discharge` | S2 | mac-bc plan で観測、import + 経由の transitive sorry を Pattern C 散文化 |
+| `IsCramerChernoffNLetterRNUnified` | S3 | Cramér + Chernoff 2 family の predicate を 1 structure に bundling、単独 deprecate 不可 (Round 1) |
+| `RelayCFBinningBody` の `IsWynerZivBinning*` 3 predicate re-namespacing | S3 | Relay 側 `:127/195/262` で WynerZiv predicate を re-namespacing 利用、WynerZiv 単独 sweep で predicate 削除すると Relay broken (Round 1 WynerZiv) |
+
+**inventory step で必須**: cross-family? 列を S1/S2/S3 のいずれかでラベル化し、planner step で
+S3 のみを Phase 2.3 retract-candidate 化 + 未決事項に escalate。S1/S2 は本 sweep 内で完結可能。
+
 ### Pattern H — 既存 HONESTY ALERT / FALSE predicate の重畳
 
 著者が既に `⚠ HONESTY ALERT` / `FALSE predicate` を docstring に明記済の
@@ -404,14 +429,14 @@ declaration を本 sweep で機械的に sorry 化すると、既存の honesty 
   scope 外として未決事項に分離 (別 plan 化候補)、本 sweep の Phase 2 では
   touch しない
 - 別 plan は `audit-tags.md` の「Deprecated」表に **false-hypothesis 由来
-  の vacuously-true 含意 wrapper の扱い** を別行追加する PR とセットで
+  の vacuously-true 含意 wrapper の扱い** を別行追加するコミットとセットで
   検討 (tier 4 staged と tier 5 defect の境界例)
 
-## audit-tags.md 拡張提案 (次の sweep 前に PR 化検討)
+## audit-tags.md 拡張提案 (次の sweep 前に検討)
 
 Pilot 由来の vocabulary gap。本 runbook は **暫定的に docstring 散文で
 対応する方針** を取るが、後続 family が増えると divergence の懸念があり、
-別 PR で formal 拡張を検討:
+別コミットで formal 拡張を検討:
 
 1. **`@residual(<class>:<slug>[:transitive])` の transitive suffix**:
    上流 sorry 依存の transitive sorry を tag 上で正式に表現できるよう

@@ -62,9 +62,12 @@ model: opus
 |---|---|---|---|
 | **A. 定義書き直し** | Mathlib 主要 lemma の結論形に合わせて自前定義を変える | 中（既存呼び出し側を全部直す） | 低（今後の擦り直しが減る） |
 | **B. 補題分割** | 大きな `sorry` を 3〜5 個の小 `sorry` に分割して個別解決 | 低 | 低（ただし全 sub-goal が解けないと帰ってこれない） |
-| **C. self-bridge を書く** | Mathlib の形 ↔ 自前の形を変換する bridge lemma を書く | 高（30〜100 行） | 高（同種 bridge が次の Phase でも要る可能性大） |
-| **D. sorry + @residual で残す** | signature は保ち、body を `sorry` + `@residual(<class>:<slug>)` で残置 (CLAUDE.md「Definition of Done — 2 段階」)。`*Hypothesis` 仮説束化は禁止 | 低（commit して次へ） | 低〜中（closure plan が必要、後続セッションで解決） |
+| **C. self-bridge を書く** | Mathlib の形 ↔ 自前の形を変換する bridge lemma を書く | 高（30〜100 行） | 高（同種 bridge が次の Phase でも要る可能性大、bridge > 50 行は A を疑え） |
+| **D. ★ sorry + @residual で残す (撤退時の正規ルート)** | signature は保ち、body を `sorry` + `@residual(<class>:<slug>)` で残置 (CLAUDE.md「Definition of Done — 2 段階」)。**新ドクトリン下で sorry は最も honest な未完成マーカー** — 詰まったらまずこれを検討。`*Hypothesis` / `*Reduction` predicate に証明の核を bundle する撤退は禁止 (load-bearing hyp、tier 5 defect) | 低（commit して次へ） | 低〜中（closure plan が必要、後続セッションで解決） |
 | **E. 戦略変更** | 同じ主定理を別経路（別の主要 lemma chain）で証明する | 中〜高 | 中（在庫の再調査が要る） |
+| **F. regularity precondition 追加** | `IsFiniteMeasure μ` / `0 < P` / `full-support hP` / `Measurable f` 等の **regularity 仮定**を 1 本足して通す | 低 | 低（precondition は honest、proof done と両立） |
+
+**F の判定軸**: 追加しようとしている hypothesis が **regularity (precondition)** か **load-bearing (証明の核)** か。前者なら F は構成的解決で OK、後者は **書いてはいけない** (CLAUDE.md「検証の誠実性」、honesty-auditor-core.md「regularity vs core checklist」)。判定の一言:「**その仮説は前提条件か、それとも証明の核心か**」。例: `IsFiniteMeasure μ` は前者で F、`IsXxxAchievabilityHypothesis` は後者で D に倒す。
 
 各案について：
 - **着手コスト**（行数 / ターン数の概算）
@@ -81,7 +84,7 @@ model: opus
 - **bridge 量が 50 行を超える見込みなら、ほぼ確実に定義側に問題がある**。
 - **「Mathlib にこの形そのものは無い」が「3 段重ねれば近似形が出る」場合、3 段重ねを選ぶより自前定義を Mathlib の出口形に合わせる方が長期的に安い**。
 - **撤退ラインが計画にあるなら、「触れているか」を必ず明示的に判断**する。発動回避を希望的観測で先延ばしにしない。
-- **撤退を推奨する場合は案 D (sorry + `@residual`) を第一候補**にする。「honest 名前付き仮説で抜く」「`*Hypothesis` predicate に bundling する」は推奨しない (honesty defect、CLAUDE.md)。共有 Mathlib 壁の場合は shared sorry 補題パターン (`docs/audit/audit-tags.md`) を提案する。
+- **撤退を推奨する場合は案 D (sorry + `@residual`) を第一候補**にする。sorry は新ドクトリン下で最も honest な未完成マーカー (コンパイラ可視・隠蔽不能、CLAUDE.md「Honesty 階層」)。**`*Hypothesis` / `*Reduction` / `IsXxxClaim` predicate に証明の核を bundle して抜く撤退は禁止** (load-bearing hyp、tier 5 defect、honesty-auditor-core.md「LOAD-BEARING JUDGMENT DOCTRINE」)。ただし **regularity precondition (`IsFiniteMeasure` / `0 < P` / measurability 等) を 1 本足して通すのは別物** (案 F) で、これは構成的解決として推奨可。判定軸:「その仮説は前提条件か、証明の核心か」。共有 Mathlib 壁の場合は shared sorry 補題パターン (`docs/audit/audit-tags.md`) を提案する。
 - **proof-log に残せる教訓を 1 つ言語化**する（grep 空振り、想定の崩れ、設計の後戻りなど）。
 
 ## 編集境界（厳守）
