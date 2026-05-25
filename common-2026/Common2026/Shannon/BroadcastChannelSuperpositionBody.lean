@@ -833,15 +833,14 @@ lines, L-BC2-I) — which together with the publish-layer hook would lift
 the residual `h_ach` from a hypothesis to a theorem — is **out of scope**
 of this file and remains future work.
 
-`@audit:suspect(broadcast-channel-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem bc_capacity_region_inner_bound_with_superposition_body
     (W : BroadcastChannel α β₁ β₂)
     (R₁ R₂ I_u I_xy : ℝ)
     (h_strict : R₂ < I_u ∧ R₁ < I_xy)
     (h_ach : BCSuperpositionAchievable W R₁ R₂ I_u I_xy) :
-    BCInnerBoundExistence W R₁ R₂ :=
-  bc_capacity_region_inner_bound_with_superposition_aep
-    W R₁ R₂ I_u I_xy h_strict h_ach
+    BCInnerBoundExistence W R₁ R₂ := by
+  sorry
 
 end BCBodyDischargePublish
 

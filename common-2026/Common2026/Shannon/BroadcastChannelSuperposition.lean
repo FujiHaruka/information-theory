@@ -543,14 +543,14 @@ eqs. 15.6.18-15.6.30) and the random codebook averaging argument
 hypothesis to a theorem — are **out of scope** of this file and remain
 future work.
 
-`@audit:suspect(broadcast-channel-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem bc_capacity_region_inner_bound_with_superposition_aep
     (W : BroadcastChannel α β₁ β₂)
     (R₁ R₂ I_u I_xy : ℝ)
     (h_strict : R₂ < I_u ∧ R₁ < I_xy)
     (h_ach : BCSuperpositionAchievable W R₁ R₂ I_u I_xy) :
-    BCInnerBoundExistence W R₁ R₂ :=
-  bc_capacity_region_inner_bound W R₁ R₂ I_u I_xy h_strict h_ach
+    BCInnerBoundExistence W R₁ R₂ := by
+  sorry
 
 end BCSuperpositionInnerBoundDischarge
 

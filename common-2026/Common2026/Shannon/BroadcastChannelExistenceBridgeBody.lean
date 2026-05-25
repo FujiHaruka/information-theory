@@ -368,17 +368,13 @@ only by the headline `bc_capacity_region_inner_bound`.
 Composes `bc_random_codebook_markov_of_ensemble` (S7-F) with the predecessor
 `bc_inner_bound_with_averaging` (`BroadcastChannelAveraging.lean`).
 
-`@audit:suspect(broadcast-channel-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem bc_inner_bound_with_ensemble_averaging
     (R₁ R₂ I_u I_xy : ℝ)
     (h_strict : R₂ < I_u ∧ R₁ < I_xy)
     (h_ens : IsBCBonferroniEnsembleDecay (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂) :
-    BCRandomCodebookAveraging (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ :=
-  bc_inner_bound_with_averaging
-    (α := α) (β₁ := β₁) (β₂ := β₂)
-    R₁ R₂ I_u I_xy h_strict
-    (bc_random_codebook_markov_of_ensemble
-      (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ h_ens)
+    BCRandomCodebookAveraging (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ := by
+  sorry
 
 /-- **S7-G' — BC random codebook averaging, ensemble-averaging discharge,
 bundled form.**
@@ -387,7 +383,7 @@ Variant of `bc_inner_bound_with_ensemble_averaging` taking the rate
 conditions bundled as the `≤` + `≠` form of `InBCCapacityRegion`, mirroring
 `bc_inner_bound_with_averaging_bundled` of `BroadcastChannelAveraging.lean`.
 
-`@audit:suspect(broadcast-channel-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem bc_inner_bound_with_ensemble_averaging_bundled
     (R₁ R₂ I_u I_xy : ℝ)
     (h_in_region : InBCCapacityRegion R₁ R₂ I_u I_xy)
@@ -395,13 +391,7 @@ theorem bc_inner_bound_with_ensemble_averaging_bundled
     (h_strict₁ : R₁ ≠ I_xy)
     (h_ens : IsBCBonferroniEnsembleDecay (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂) :
     BCRandomCodebookAveraging (α := α) (β₁ := β₁) (β₂ := β₂) R₁ R₂ := by
-  have h_lt₂ : R₂ < I_u :=
-    lt_of_le_of_ne h_in_region.bound_R₂_le_I_u h_strict₂
-  have h_lt₁ : R₁ < I_xy :=
-    lt_of_le_of_ne h_in_region.bound_R₁_le_I_xy h_strict₁
-  exact bc_inner_bound_with_ensemble_averaging
-    (α := α) (β₁ := β₁) (β₂ := β₂)
-    R₁ R₂ I_u I_xy ⟨h_lt₂, h_lt₁⟩ h_ens
+  sorry
 
 end BCEnsemblePublish
 

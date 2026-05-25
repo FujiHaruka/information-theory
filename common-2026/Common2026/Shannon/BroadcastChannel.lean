@@ -593,7 +593,7 @@ theorem bc_capacity_region_outer_bound
 `n → ∞` the `n⁻¹` clean-up terms vanish (`ε ≤ 0`), recovering the exact
 corner-point region `InBCCapacityRegion R₁ R₂ I_u I_xy`.
 
-`@audit:suspect(broadcast-channel-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem bc_capacity_region_outer_bound_corner_limit
     {M₁ M₂ n : ℕ} (hn : 0 < n)
     (c : BroadcastCode M₁ M₂ n α β₁ β₂)
@@ -606,11 +606,7 @@ theorem bc_capacity_region_outer_bound_corner_limit
     (h_cleanup₁ : (1 + Pe₁ * Real.log (M₁ : ℝ)) / (n : ℝ) ≤ ε)
     (h_ε : ε ≤ 0) :
     InBCCapacityRegion R₁ R₂ I_u I_xy := by
-  have h := bc_capacity_region_outer_bound hn c R₁ R₂ Pe₂ Pe₁
-    I_marg_u I_marg_xy I_u I_xy ε
-    h_fano₂ h_cond_fano₁ h_chain_u h_chain_xy h_cleanup₂ h_cleanup₁
-  exact ⟨h.bound_R₂_le_I_u.trans (by linarith),
-    h.bound_R₁_le_I_xy.trans (by linarith)⟩
+  sorry
 
 /-- **Degraded BC capacity region outer bound — two-bound form**.
 
@@ -743,14 +739,14 @@ ShannonHartley honest-conditional precedent. The superposition /
 joint-typicality / random-coding discharge of `h_ach` is the genuine
 Mathlib gap (0 typicality lemmas), kept honest.
 
-`@audit:suspect(broadcast-channel-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem bc_capacity_region_inner_bound
     (W : BroadcastChannel α β₁ β₂)
     (R₁ R₂ I_u I_xy : ℝ)
     (h_strict : R₂ < I_u ∧ R₁ < I_xy)
     (h_ach : BCSuperpositionAchievable W R₁ R₂ I_u I_xy) :
-    BCInnerBoundExistence W R₁ R₂ :=
-  h_ach h_strict
+    BCInnerBoundExistence W R₁ R₂ := by
+  sorry
 
 /-- **Degraded BC capacity region inner bound — bundled-strict form**.
 
@@ -767,7 +763,7 @@ reconstructed from the `≤` region membership together with the `≠`
 side-conditions, and the achievability is derived through
 `BCSuperpositionAchievable`.
 
-`@audit:suspect(broadcast-channel-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem bc_capacity_region_inner_bound_bundled_strict
     (W : BroadcastChannel α β₁ β₂)
     (R₁ R₂ I_u I_xy : ℝ)
@@ -775,9 +771,8 @@ theorem bc_capacity_region_inner_bound_bundled_strict
     (h_strict₂ : R₂ ≠ I_u)
     (h_strict₁ : R₁ ≠ I_xy)
     (h_ach : BCSuperpositionAchievable W R₁ R₂ I_u I_xy) :
-    BCInnerBoundExistence W R₁ R₂ :=
-  h_ach ⟨lt_of_le_of_ne h_in_region.bound_R₂_le_I_u h_strict₂,
-         lt_of_le_of_ne h_in_region.bound_R₁_le_I_xy h_strict₁⟩
+    BCInnerBoundExistence W R₁ R₂ := by
+  sorry
 
 end InnerBound
 
@@ -800,7 +795,7 @@ wrap — matching the two-side packaging pattern of
 `mac_capacity_region_consistent` (T3-B MAC) for callers that want a single
 entry point.
 
-`@audit:suspect(broadcast-channel-moonshot-plan)` -/
+@residual(plan:mac-bc-sorry-migration-plan) -/
 theorem bc_capacity_region_consistent
     (W : BroadcastChannel α β₁ β₂)
     {M₁ M₂ n : ℕ} (hn : 0 < n)
@@ -815,11 +810,8 @@ theorem bc_capacity_region_consistent
     (h_strict : R₂ < I_u ∧ R₁ < I_xy)
     (h_ach : BCSuperpositionAchievable W R₁ R₂ I_u I_xy) :
     InBCCapacityRegion R₁ R₂ (I_u + ε) (I_xy + ε)
-      ∧ BCInnerBoundExistence W R₁ R₂ :=
-  ⟨bc_capacity_region_outer_bound hn c R₁ R₂ Pe₂ Pe₁
-     I_marg_u I_marg_xy I_u I_xy ε
-     h_fano₂ h_cond_fano₁ h_chain_u h_chain_xy h_cleanup₂ h_cleanup₁,
-   bc_capacity_region_inner_bound W R₁ R₂ I_u I_xy h_strict h_ach⟩
+      ∧ BCInnerBoundExistence W R₁ R₂ := by
+  sorry
 
 end TwoSide
 
