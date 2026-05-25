@@ -514,6 +514,9 @@ Cover-Thomas Lemma 17.7.3 の Csiszár scaling:
   なしに `theorem` 格上げ
 - `EPIStamDeBruijnConclusion.lean` 6 件 + `EPIStamStep3Body.lean` 9 件 + `EntropyPowerInequality.lean`
   5 件のうち main theorem を含む 1 件を `@audit:ok` 降格
+- **Phase A 完了後 post-merge cleanup** (sister sub-plan `epi-debruijn-integration-phaseD-plan.md` 由来の責務委譲): `EPIL3Integration.lean` の 14 件 `@audit:suspect(epi-debruijn-integration-plan)` を `@audit:closed-by-successor(epi-stam-to-conclusion-plan)` に一括書換 (位置: line 120 / 134 / 210 / 224 / 239 / 253 / 268 / 283 / 316 / 365 / 378 / 401 / 458 / 485)、slug 末尾 `-plan` 有無は `docs/audit/audit-tags.md` 語彙に合わせる。`lake env lean Common2026/Shannon/EPIL3Integration.lean` silent 確認。
+- **Phase A 設計時の重要前提** (sister sub-plan `epi-debruijn-integration-phaseD-plan.md` D-0 inventory より): `entropyPower (Measure.dirac 0) = 1` (`Real.exp 0 = 1`、`differentialEntropy_dirac = 0` 経由)。2-source 退化境界 (`Y := 0`、`Z_Y := 0` 等) の取扱いで重要。Phase D で `Y := 0` 退化を戦略 β として使おうとして L-DBD-2-α 発火 (constant `-1` で trivially `AntitoneOn`) → 戦略 γ (sister 委譲、docs-only stub) に降格、本 Phase A で同じ退化を使う場合は degenerate-definition exploitation defect class 直撃に注意。
+- **Phase D 出力 contract**: Phase D で publish された `csiszarGap` / `csiszarGap_at_zero` / `csiszarGap_at_one_eq_zero_of_gaussian_pair` / `csiszarGap_shape_for_sister` (`EPIL3Integration.lean` §13) を Phase A `A-1` の `g(t)` 定義として再利用 (`g(t) := csiszarGap X Y Z_X Z_Y P t`)、shape verbatim 一致は `csiszarGap_shape_for_sister` `rfl` lemma が保証。
 
 ### ステップ
 

@@ -292,3 +292,178 @@ Both are **load-bearing honest hypotheses**, type ≠ conclusion, docstring stat
 "NOT a discharge / load-bearing". Used to externalize regularity facts that
 Mathlib does not yet provide and that this plan does not attempt to discharge
 (Gaussian-case results are unconditional via Phase B-4 / C-4).
+
+---
+
+## Phase D shape inventory (mini-plan `epi-debruijn-integration-phaseD-plan.md`)
+
+Added 2026-05-25 by Phase D D-0. Verbatim per CLAUDE.md
+"Subagent Inventory of Mathlib Lemmas" — full signature with `[...]`
+typeclass prerequisites and conclusion form copied verbatim.
+
+### D-0-1 — `entropyPower` definition + Gaussian closed form
+
+* `Common2026/Shannon/EntropyPowerInequality.lean:93`
+
+  ```lean
+  noncomputable def entropyPower (μ : Measure ℝ) : ℝ :=
+    Real.exp (2 * Common2026.Shannon.differentialEntropy μ)
+  ```
+
+  Namespace: `InformationTheory.Shannon.EntropyPowerInequality.entropyPower`.
+  No typeclass prerequisites. Conclusion form: `ℝ`. **`Real.exp` produces a
+  positive real for any argument**, so `entropyPower` of any measure is
+  always `> 0`; never `-∞` / `0` even for singular `μ` (`Real.exp` is on
+  `ℝ → ℝ`, not `EReal`).
+
+* `Common2026/Shannon/EntropyPowerInequality.lean:97`
+
+  ```lean
+  theorem entropyPower_pos (μ : Measure ℝ) : 0 < entropyPower μ :=
+    Real.exp_pos _
+  ```
+
+* `Common2026/Shannon/EntropyPowerInequality.lean:270-277`
+
+  ```lean
+  theorem entropy_power_inequality_gaussian_saturation
+      {Ω : Type*} {mΩ : MeasurableSpace Ω}
+      (P : Measure Ω) [IsProbabilityMeasure P]
+      (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
+      (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
+      (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
+      entropyPower (P.map (fun ω => X ω + Y ω))
+        = entropyPower (P.map X) + entropyPower (P.map Y)
+  ```
+
+  **Signature requirements verbatim**: `[IsProbabilityMeasure P]` on `P`;
+  both variances `v₁ v₂ : ℝ≥0` must be `≠ 0`; both laws must be
+  `gaussianReal` (not merely `IsGaussian`); `hXY : IndepFun X Y P`. Used
+  by D-1-3 for `gap_1 = 0` discharge with `m₁ = m₂ = 0`, `v₁ = v₂ = 1`.
+
+### D-0-2 — `AntitoneOn` Mathlib verbatim
+
+* `Mathlib/Order/Monotone/Basic.lean` (re-exported widely)
+
+  ```lean
+  def AntitoneOn (f : α → β) (s : Set α) : Prop :=
+    ∀ ⦃a⦄, a ∈ s → ∀ ⦃b⦄, b ∈ s → a ≤ b → f b ≤ f a
+  ```
+
+  Conclusion form: `f b ≤ f a` when `a ≤ b`. Consumer pattern at sister
+  `EPIStamToBridge.lean:281`:
+
+  ```lean
+  have h_endpoint_le : _ ≤ _ := h_anti h0_mem h1_mem zero_le_one
+  -- yields  f 1 ≤ f 0
+  ```
+
+  i.e. with `a = 0`, `b = 1`, the application returns `gap(1) ≤ gap(0)`.
+  This is the **sign convention** locked by sister (Csiszár gap decreases
+  along heat-flow path, so `AntitoneOn` not `MonotoneOn`).
+
+### D-0-3 — `heatFlowPath2` + endpoint lemmas (`Common2026/Shannon/HeatFlowPath.lean`)
+
+* `Common2026/Shannon/HeatFlowPath.lean:35`
+
+  ```lean
+  noncomputable def heatFlowPath2 {α : Type*} (X Z : α → ℝ) (s : ℝ) : α → ℝ :=
+    fun ω => Real.sqrt (1 - s) * X ω + Real.sqrt s * Z ω
+  ```
+
+  Namespace: `Common2026.Shannon.heatFlowPath2`. Used by D-1
+  `csiszarGap` verbatim (same module exposes it; we re-`open
+  Common2026.Shannon (heatFlowPath2 heatFlowPath2_zero heatFlowPath2_one)`
+  in EPIL3Integration §13 to match sister's existing usage pattern at
+  `EPIStamToBridge.lean:106-107`).
+
+* `Common2026/Shannon/HeatFlowPath.lean:49`
+
+  ```lean
+  theorem heatFlowPath2_zero {α : Type*} (X Z : α → ℝ) :
+      heatFlowPath2 X Z 0 = X
+  ```
+
+* `Common2026/Shannon/HeatFlowPath.lean:55`
+
+  ```lean
+  theorem heatFlowPath2_one {α : Type*} (X Z : α → ℝ) :
+      heatFlowPath2 X Z 1 = Z
+  ```
+
+* `Common2026/Shannon/HeatFlowPath.lean:42`
+
+  ```lean
+  theorem measurable_heatFlowPath2 {Ω : Type*} [MeasurableSpace Ω]
+      {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z) (s : ℝ) :
+      Measurable (heatFlowPath2 X Z s)
+  ```
+
+### D-0-4 — Verbatim sister `AntitoneOn` lambda body (D-1 `csiszarGap` shape target)
+
+From `Common2026/Shannon/EPIStamToBridge.lean:210-216`:
+
+```lean
+AntitoneOn
+  (fun s : ℝ =>
+    entropyPower
+        (P.map (heatFlowPath2 X Z_X s + heatFlowPath2 Y Z_Y s))
+      - entropyPower (P.map (heatFlowPath2 X Z_X s))
+      - entropyPower (P.map (heatFlowPath2 Y Z_Y s)))
+  (Set.Icc (0 : ℝ) 1)
+```
+
+This is the verbatim shape target for D-1 `csiszarGap`. D-4
+`csiszarGap_shape_for_sister` `rfl` lemma verifies the match.
+**Critical**: inside `P.map (...)` the term `heatFlowPath2 X Z_X s +
+heatFlowPath2 Y Z_Y s` is **pointwise function addition** (`Pi.add_apply`
+defeq to `fun ω => heatFlowPath2 X Z_X s ω + heatFlowPath2 Y Z_Y s ω`),
+not a curried `fun ω => ... ω + ...`. The verbatim shape in `csiszarGap`
+body must use `+` between two functions (not the eta-expanded form) so
+`rfl` succeeds in D-4.
+
+### D-0-5 — Honesty check on `Y := 0`, `Z_Y := 0` degeneration (D-2 strategy β feasibility)
+
+`Common2026/Shannon/DifferentialEntropy.lean:147-159`:
+
+```lean
+theorem differentialEntropy_dirac (m : ℝ) :
+    differentialEntropy (Measure.dirac m) = 0
+```
+
+**Consequence for D-2 strategy β**: when `Y := 0` and `Z_Y := 0`, both
+are identically-zero functions, so `P.map 0 = Measure.dirac 0` (pushforward
+of a probability measure by a constant). Thus:
+
+* `entropyPower (P.map 0) = Real.exp (2 * differentialEntropy (Measure.dirac 0))
+  = Real.exp (2 * 0) = Real.exp 0 = 1`. **Not `0`** as initially conjectured
+  in the Phase D mini-plan §D-2-2 sketch.
+
+Furthermore, with `Y = 0` and `Z_Y = 0`:
+
+* `heatFlowPath2 0 0 s = fun ω => √(1-s) * 0 + √s * 0 = 0` pointwise (zero
+  function).
+* `heatFlowPath2 X Z_X s + heatFlowPath2 0 0 s = heatFlowPath2 X Z_X s + 0
+  = heatFlowPath2 X Z_X s` (pointwise function addition with zero).
+
+So the gap reduces to:
+
+```
+csiszarGap X 0 Z_X 0 P s
+  = entropyPower (P.map (heatFlowPath2 X Z_X s))
+    - entropyPower (P.map (heatFlowPath2 X Z_X s))
+    - entropyPower (P.map 0)
+  = 0 - 0 - 1
+  = -1   (constant in s)
+```
+
+A **constant function is trivially `AntitoneOn`** (and also `MonotoneOn`)
+on any set. This means the `Y := 0`, `Z_Y := 0` evaluation point of
+`csiszarGap` carries **no information about the heat-flow path** —
+strategy β degenerates to a vacuous statement.
+
+**Verdict — L-DBD-2-α fires**: strategy β (`Y := 0` evaluation point
+bridge to `bounded_T_ftc_gaussian`) is dishonest (degenerate-definition
+exploitation, CLAUDE.md "退化定義の悪用"). Phase D D-2 must downgrade
+to strategy γ (statement-only handoff to sister). See `csiszarGap_at_zero`
+docstring in `EPIL3Integration.lean` §13 for the honesty record.

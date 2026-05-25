@@ -5,6 +5,7 @@ import Common2026.Shannon.FisherInfoV2DeBruijn
 import Common2026.Shannon.FisherInfoV2
 import Common2026.Shannon.FisherInfoGaussian
 import Common2026.Shannon.DifferentialEntropy
+import Common2026.Shannon.HeatFlowPath
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Probability.Distributions.Gaussian.Real
@@ -1100,5 +1101,189 @@ Honest downgrade plan once `epi-stam-to-conclusion-plan` lands:
     → `@audit:closed-by-successor(epi-stam-to-conclusion-plan)`
 
 (See `docs/audit/audit-tags.md` for the `closed-by-successor` semantics.) -/
+
+/-! ## §13 — Phase D: `csiszarGap` function + sister entry point
+
+Phase D of `epi-debruijn-integration-phaseD-plan.md`. Defines the
+Csiszár scaling gap function `csiszarGap` whose shape verbatim matches
+the `AntitoneOn` argument lambda body in
+`EPIStamToBridge.IsStamToEPIScalingHyp` (sister
+`epi-stam-to-conclusion-plan` Phase A consumer). The `rfl` lemma
+`csiszarGap_shape_for_sister` confirms the verbatim shape match.
+
+Scope (per the Phase D mini-plan):
+
+* D-1-1 `csiszarGap` — definition (shape verbatim from sister
+  `EPIStamToBridge.lean:210-216`).
+* D-1-2 `csiszarGap_at_zero` — endpoint at `s = 0`
+  (`heatFlowPath2 _ _ 0 = X`, so gap reduces to the EPI gap of the
+  original `X, Y`).
+* D-1-3 `csiszarGap_at_one_eq_zero_of_gaussian_pair` — endpoint at
+  `s = 1` is zero by Gaussian saturation (`Z_X, Z_Y` independent
+  standard normals).
+* D-2 (downgraded to strategy γ statement-only after L-DBD-2-α fired
+  during D-0 honesty check; see
+  `csiszarGap_bounded_T_ftc_bridge_note` below).
+* D-4 `csiszarGap_shape_for_sister` — `rfl` lemma exposing
+  `csiszarGap` shape for sister consumption.
+-/
+
+open Common2026.Shannon (heatFlowPath2 heatFlowPath2_zero heatFlowPath2_one
+  measurable_heatFlowPath2)
+
+/-- **Csiszár scaling gap function** (Phase D D-1-1 of
+`epi-debruijn-integration-phaseD-plan.md`).
+
+`csiszarGap X Y Z_X Z_Y P s` is the EPI gap at heat-flow path parameter
+`s ∈ [0, 1]` along the path `Common2026.Shannon.heatFlowPath2`:
+
+  `gap_s := entropyPower (P.map (heatFlowPath2 X Z_X s + heatFlowPath2 Y Z_Y s))
+            − entropyPower (P.map (heatFlowPath2 X Z_X s))
+            − entropyPower (P.map (heatFlowPath2 Y Z_Y s))`
+
+**Shape contract**: the body matches verbatim the lambda body of
+`Common2026.Shannon.IsStamToEPIScalingHyp`'s `AntitoneOn` argument
+(`Common2026/Shannon/EPIStamToBridge.lean:210-216`); the `rfl` lemma
+`csiszarGap_shape_for_sister` (D-4) confirms this. Sister
+`epi-stam-to-conclusion-plan` Phase A consumes this shape directly
+to discharge `IsStamToEPIScalingHyp` honestly.
+
+This is a `noncomputable def` (standard Lean output, not a `Prop`-level
+predicate). It is **not** a staged predicate — no honesty audit
+required at the predicate level. The `@audit:suspect` tag below tracks
+the sister-plan completion dependency for the consumer
+`csiszarGap_shape_for_sister`.
+
+`@audit:suspect(epi-debruijn-integration-phaseD-plan)` — sister Phase A
+of `epi-stam-to-conclusion-plan` consumes this shape; until that lands,
+the gap function exists as a type-level handoff only. -/
+noncomputable def csiszarGap {Ω : Type*} [MeasurableSpace Ω]
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) (s : ℝ) : ℝ :=
+  entropyPower (P.map (heatFlowPath2 X Z_X s + heatFlowPath2 Y Z_Y s))
+    - entropyPower (P.map (heatFlowPath2 X Z_X s))
+    - entropyPower (P.map (heatFlowPath2 Y Z_Y s))
+
+/-- **Endpoint at `s = 0`** (Phase D D-1-2). The Csiszár gap at the path
+start reduces to the EPI gap for the original `X, Y` (since
+`heatFlowPath2 X Z_X 0 = X` and `heatFlowPath2 Y Z_Y 0 = Y` by
+`Common2026.Shannon.heatFlowPath2_zero`).
+
+`@audit:suspect(epi-debruijn-integration-phaseD-plan)` — endpoint
+identification used by sister Phase A. -/
+theorem csiszarGap_at_zero {Ω : Type*} [MeasurableSpace Ω]
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) :
+    csiszarGap X Y Z_X Z_Y P 0
+      = entropyPower (P.map (fun ω => X ω + Y ω))
+        - entropyPower (P.map X) - entropyPower (P.map Y) := by
+  unfold csiszarGap
+  have h_sum_funext :
+      (heatFlowPath2 X Z_X 0 + heatFlowPath2 Y Z_Y 0)
+        = fun ω => X ω + Y ω := by
+    funext ω
+    simp [heatFlowPath2_zero]
+  rw [h_sum_funext, heatFlowPath2_zero, heatFlowPath2_zero]
+
+/-- **Endpoint at `s = 1` is zero (Gaussian saturation case)** (Phase D
+D-1-3). When `Z_X, Z_Y` are independent standard normals, the path-end
+gap is zero by `entropy_power_inequality_gaussian_saturation` (both
+endpoints are standard normal, so the EPI holds with equality).
+
+`@audit:suspect(epi-debruijn-integration-phaseD-plan)` — Gaussian
+saturation endpoint identification used by sister Phase A to combine
+with the `AntitoneOn` conclusion to derive `gap_0 ≥ 0`. -/
+theorem csiszarGap_at_one_eq_zero_of_gaussian_pair
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    {X Y Z_X Z_Y : Ω → ℝ} (P : Measure Ω) [IsProbabilityMeasure P]
+    (hZX : Measurable Z_X) (hZY : Measurable Z_Y)
+    (hZXZY : IndepFun Z_X Z_Y P)
+    (hZX_law : P.map Z_X = gaussianReal 0 1)
+    (hZY_law : P.map Z_Y = gaussianReal 0 1) :
+    csiszarGap X Y Z_X Z_Y P 1 = 0 := by
+  unfold csiszarGap
+  -- `heatFlowPath2 _ Z _ 1 = Z` for both endpoints.
+  have h_sum_funext :
+      (heatFlowPath2 X Z_X 1 + heatFlowPath2 Y Z_Y 1)
+        = fun ω => Z_X ω + Z_Y ω := by
+    funext ω
+    simp [heatFlowPath2_one]
+  rw [h_sum_funext, heatFlowPath2_one, heatFlowPath2_one]
+  -- Gaussian saturation: independent standard normals saturate EPI.
+  have h_sat := entropy_power_inequality_gaussian_saturation
+    P Z_X Z_Y hZX hZY hZXZY 0 0 1 1
+    (by norm_num : (1 : ℝ≥0) ≠ 0) (by norm_num : (1 : ℝ≥0) ≠ 0)
+    hZX_law hZY_law
+  linarith
+
+/-!
+### Phase D D-2 — strategy-γ note (statement-only handoff, no Lean theorem)
+
+The original Phase D mini-plan proposed strategy β: an evaluation-point
+bridge from `bounded_T_ftc_gaussian` (1-source `gaussianConvolution`
+heat-flow path) to `csiszarGap` (2-source `heatFlowPath2` heat-flow path)
+via the degeneration `Y := 0`, `Z_Y := 0`. The D-0 honesty check
+(`docs/shannon/epi-debruijn-integration-mathlib-inventory.md` §D-0-5)
+**rejected strategy β**:
+
+* `Y = 0, Z_Y = 0` makes `heatFlowPath2 0 0 s = 0` pointwise.
+* `P.map 0 = Measure.dirac 0`, and
+  `entropyPower (Measure.dirac 0) = Real.exp (2 · 0) = 1` (via
+  `Common2026/Shannon/DifferentialEntropy.lean:147` `differentialEntropy_dirac`).
+* So `csiszarGap X 0 Z_X 0 P s
+    = entropyPower (P.map (heatFlowPath2 X Z_X s))
+      − entropyPower (P.map (heatFlowPath2 X Z_X s)) − 1
+    = -1` (constant in `s`).
+* A constant function is **trivially `AntitoneOn`**, so the
+  `Y := 0`, `Z_Y := 0` evaluation point of `csiszarGap` carries no
+  information about the heat-flow path. This is precisely the
+  degenerate-definition-exploitation defect class (CLAUDE.md
+  "退化定義の悪用").
+
+Phase D D-2 is therefore downgraded to **strategy γ** (statement-only
+handoff): the Phase C-1 output `bounded_T_ftc_gaussian` (1-source
+`gaussianConvolution` FTC) is not bridged into the 2-source `csiszarGap`
+in this mini-plan. Sister `epi-stam-to-conclusion-plan` Phase A is
+expected to construct the 2-source de Bruijn FTC directly along the
+`heatFlowPath2` path (using `bounded_T_ftc_gaussian` as a 1-source
+reference but not as a literal substitution input). This is a **load-
+bearing absence**, not a discharge — recorded as the L-DBD-2-α
+retreat-line firing per the mini-plan §"撤退ライン総覧" table.
+
+No Lean theorem is published in this section; this module note is the
+entire D-2 deliverable (per the mini-plan §D-2 撤退ライン L-DBD-2-α:
+"D-2 statement only"). The D-V verification check confirms no `sorry`
+and no `Prop := True` placeholder are introduced (this note is a `/-!
+... -/` module-doc block, not a declaration).
+
+`@audit:suspect(epi-debruijn-integration-phaseD-plan)` — sister Phase A
+will close this gap by constructing the 2-source FTC directly.
+-/
+
+/-- **Sister export — Csiszár gap shape contract for `epi-stam-to-conclusion-plan` Phase A**
+(Phase D D-4).
+
+The `csiszarGap` (D-1-1) body matches verbatim the lambda body of the
+`AntitoneOn` argument of
+`Common2026.Shannon.IsStamToEPIScalingHyp`
+(`Common2026/Shannon/EPIStamToBridge.lean:210-216`). This `rfl` lemma
+exposes that verbatim match so that sister Phase A can `simp` or
+`rw [← csiszarGap_shape_for_sister]` to re-express the sister predicate's
+internal `AntitoneOn` argument as `csiszarGap`, enabling structural
+reasoning about the gap function as a single named entity.
+
+This is a **shape contract only** (`rfl` body); no analytic content. The
+sister Phase A is responsible for the actual `AntitoneOn` proof using
+Stam + de Bruijn FTC along the heat-flow path.
+
+`@audit:suspect(epi-debruijn-integration-phaseD-plan)` — sister Phase A
+consumes this shape contract. -/
+theorem csiszarGap_shape_for_sister
+    {Ω : Type*} [MeasurableSpace Ω]
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) :
+    (fun s : ℝ => csiszarGap X Y Z_X Z_Y P s)
+      = (fun s : ℝ =>
+          entropyPower (P.map (heatFlowPath2 X Z_X s + heatFlowPath2 Y Z_Y s))
+            - entropyPower (P.map (heatFlowPath2 X Z_X s))
+            - entropyPower (P.map (heatFlowPath2 Y Z_Y s))) :=
+  rfl
 
 end InformationTheory.Shannon.EPIL3Integration

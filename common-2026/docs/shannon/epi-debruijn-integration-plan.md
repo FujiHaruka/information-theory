@@ -173,8 +173,8 @@ Fisher information の半分の積分。これを `T → ∞` で取ることで
 - [x] Phase A — heat-flow density + IBP inventory ✅ (Wave 3 first batch, inventory file `epi-debruijn-integration-mathlib-inventory.md` 起草、~294 行)
 - [x] Phase B — time-derivative of entropy (V2 deBruijn family-level lift) ✅ Gaussian 限定 (Wave 3 second batch, commit `0fe2ad4`、`EPIL3Integration.lean` +467 行) — 一般 `X` 拡張は load-bearing hypothesis `IsHeatFlowFamilyHyp` (`@audit:staged(epi-heat-flow-family-regularity)`, `EPIL3Integration.lean:572`) 経由で外出し
 - [x] Phase C — integration over `(0, T)` ✅ Gaussian 限定 bounded-T (Wave 3 second batch); `(0, T) → (0, ∞)` tail lift は Wave 3 third batch で `IsDeBruijnTailHyp` 導入を試みたが、同 session 独立 audit が DEFECT verdict (`defect(epi-debruijn-tail-vacuous-and-empty)`) を出し **retract** → **2026-05-25 honest 再導入完了** (sub-plan `epi-debruijn-tail-reintroduction-plan.md`、EReal lift + `Z_law` field、Gaussian discharge 5 段 compose、独立 audit PASS、`@audit:suspect(epi-debruijn-tail-reintroduction-plan)`)
-- [ ] Phase D — reduction to L-EPI3 form 📋 (Phase C-5 closure 完了、着手可能)
-- [ ] Phase V — verify (`lake env lean ...`) + Common2026.lean 編入 🚧 (`Common2026.lean` 編入は完了、14 件 `@audit:suspect` 降格は Phase D 完了待ち)
+- [x] Phase D — reduction to L-EPI3 form ✅ 2026-05-25 ([`epi-debruijn-integration-phaseD-plan.md`](epi-debruijn-integration-phaseD-plan.md) mini-plan、D-0/D-1/D-4/D-V completed、D-2 戦略 β は **L-DBD-2-α 発火** (`Y := 0` 退化が `csiszarGap = -1` 定数 trivially `AntitoneOn` で degenerate-definition exploitation 直撃) で戦略 γ (sister 委譲、docs-only stub) に honest 降格、commit `15684b0`)
+- [ ] Phase V — verify (`lake env lean ...`) + Common2026.lean 編入 🚧 (`Common2026.lean` 編入は完了、14 件 `@audit:suspect` 降格は sister Phase A 完了後 post-merge cleanup task に移管 — 本 plan 責務外)
 
 proof-log: yes (各 Phase 完了時に `docs/shannon/proof-log-epi-debruijn-integration-phase-*.md` を残す)
 
@@ -392,65 +392,37 @@ Step-by-step:
 
 ## Phase D — reduction to L-EPI3 form (`IsStamToEPIBridgeHyp` 入口) 📋
 
-### スコープ
+> **2026-05-25 mini-plan へ委任**: 詳細実装手順は
+> [`epi-debruijn-integration-phaseD-plan.md`](epi-debruijn-integration-phaseD-plan.md) に分割。
+> Phase D 暫定記述 (旧 D-1/D-2/D-3/D-4) は mini-plan で再構成された (D-0 / D-1 / D-2 / D-4 / D-V
+> の 5 step 構成、中央予測 ~130 行)。**Phase D-3 (14 件降格) は本 plan からも mini-plan からも
+> 削除**: §12 honesty note 3 (`EPIL3Integration.lean:547-557`) が「14 件降格は sister
+> `epi-stam-to-conclusion-plan` Phase A 完了後の `@audit:closed-by-successor(...)` 付与で
+> 本 plan 責務外」と code 内 SoT で明示済のため、sister plan Phase A の post-merge cleanup
+> task に外出し。
+>
+> 本 sub-plan の Phase D は mini-plan 完了時点で `[x]` に降格、その時点では 14 件 suspect は
+> 残るが本 sub-plan の closure 条件は満たす (sister 完了の影響範囲は別 plan で追跡)。
 
-Phase C の出力 (`IsDeBruijnIntegrationHyp` bounded T discharge) を **`IsStamToEPIBridgeHyp`**
-(`EPIStamDischarge.lean:304`、`IsStamInequalityHyp → IsEntropyPowerInequalityHypothesis`、
-Csiszár scaling) **の入口**として整形。これが `EPIL3Integration.lean` の
-`IsEPIL3IntegratedPipeline` (`:105`) が要求する形。
+### スコープ (要約)
 
-### Approach
+Phase C の出力 (`IsDeBruijnIntegrationHyp` bounded T discharge + `IsDeBruijnTailHyp` honest
+再導入) を **`IsStamToEPIBridgeHyp`** (`EPIStamDischarge.lean:337`、`IsStamInequalityHyp →
+IsEntropyPowerInequalityHypothesis`、Csiszár scaling) **の入口**として整形。具体的な step /
+撤退ラインは mini-plan 参照。
 
-`IsStamToEPIBridgeHyp` の中身 (Csiszár scaling argument):
-```
-Given Stam: 1/J(X+Y) ≥ 1/J(X) + 1/J(Y)
-Apply de Bruijn integration along heat-flow path,
-Use scaling X → λ·X, Y → (1-λ)·Y, integrate λ ∈ [0,1],
-=> exp(2 h(X+Y)) ≥ exp(2 h(X)) + exp(2 h(Y)) = EPI
-```
+### Done 条件 (本 sub-plan レベル)
 
-具体的には:
-1. `g(t) := entropyPower (P.map (X+Y+√t·Z)) - entropyPower (P.map (X+√t·Z)) - entropyPower (P.map (Y+√t·Z))`
-2. de Bruijn integration で `g'(t) = -(1/2) · scaling factor` を計算 (`g'(t) ≤ 0` を Stam から)
-3. `g(∞) = 0` (Gaussian limit、`exp(2 h(N_∞)) = 2πe · σ²_∞` の scaling)
-4. `g(0) ≤ g(∞) = 0` → EPI gap ≤ 0 → EPI 結論
+- mini-plan `epi-debruijn-integration-phaseD-plan.md` D-0〜D-V 全 step 完了
+- sister `epi-stam-to-conclusion-plan` Phase A 入口に渡せる shape contract (D-4 export lemma)
+  が `@audit:suspect(epi-debruijn-integration-phaseD-plan)` 付与で publish
+- **14 件 `@audit:suspect` 降格は本 sub-plan の Done 条件に含めない** (sister Phase A 完了後の
+  post-merge cleanup task として sister plan に明文化)
 
-これは `epi-stam-to-conclusion-plan` (sister) の Phase A と密接、本 sub-plan は **de Bruijn
-integration 部の出口 (`IsDeBruijnIntegrationHyp` を genuine 化 → `IsStamToEPIBridgeHyp` に渡す
-形式に整形)** に集中、Csiszár scaling 全体は sister 担当。
+### 規模見積もり (mini-plan 中央予測)
 
-### Done 条件
-
-- `IsDeBruijnIntegrationHypothesis` (`EntropyPowerInequality.lean:152`、`Prop := True`
-  placeholder) を本 plan の `IsDeBruijnIntegrationHyp` で完全置換、または bridge
-  `isDeBruijnIntegrationHypothesis_of_deBruijnIntegrationHyp` を publish
-- `EPIL3Integration.lean` 14 件全て `@audit:ok` 降格
-- `IsStamToEPIBridgeHyp` への入口形式が整い、sister sub-plan `epi-stam-to-conclusion-plan`
-  の Phase A 入口に渡せる
-
-### ステップ
-
-- [ ] **D-1**: `gap` 関数 `g(t)` の定義 + 基本性質:
-  ~30-50 行
-- [ ] **D-2**: Phase C 出力 (`IsDeBruijnIntegrationHyp` bounded T) を `g(t)` の積分表現に
-      reshape:
-  ~20-30 行
-- [ ] **D-3**: `EPIL3Integration.lean` 14 件の `@audit:suspect` を `@audit:ok` に降格:
-  ~10-20 行 (主に rewrite + bridge 適用)
-- [ ] **D-4**: `IsStamToEPIBridgeHyp` への入口 lemma を sister sub-plan に export:
-  ~10-20 行
-
-### 撤退ライン
-
-- **L-DB-D-α** (許容、Phase C/B 撤退ライン依存): Phase C-β (tail analysis) が発動した場合、
-  `g(∞) = 0` の証明は元 `IsDeBruijnTailHyp` honest hypothesis 経由を想定していたが、
-  当該 predicate は Wave 3 third batch closure audit で retract 済 — 再導入 (EReal lift +
-  Z_law) 完了まで `g(∞) = 0` は Gaussian 限定 closure or Cover-Thomas tail bound 経由
-  で迂回する必要。Csiszár scaling 全体の closure は依然 `epi-stam-to-conclusion-plan`
-  の Phase A 撤退ラインに依存。
-- **L-DB-D-β** (許容): `g'(t) ≤ 0` の証明 (Stam → 単調性) は sister sub-plan
-  (`epi-stam-discharge-plan`) の Phase D 出力に依存。並行作業の場合は本 plan の Phase D は
-  Stam discharge plan 完了待ち。
+合計 ~130 行 (D-0 ~25 行 docs + D-1 ~55 行 + D-2 ~25 行 + D-4 ~15 行 + D-V ~7 行)。
+詳細 → mini-plan §「規模見積もり」テーブル。
 
 ---
 
@@ -670,3 +642,17 @@ inline 防御が一段目、CLAUDE.md 「検証の誠実性」)。
    field 間の独立 existential / `Z` 自体の制約 / 型の表現力 (ℝ vs EReal) の 3 軸を
    同時にチェックする必要。Defect prevention checklist に項目 5 (Z 自体の制約) +
    項目 6 (`h : ℝ` vs `EReal` 表現力) 追記を将来 Wave で検討。
+8. **2026-05-25 Phase D mini-plan 起草 + Phase D-3 (14 件降格) 削除**: Phase D 詳細実装手順を
+   [`epi-debruijn-integration-phaseD-plan.md`](epi-debruijn-integration-phaseD-plan.md) に
+   分割 (option 2 = mini-plan 化、同 family の 4 件 mini-plan 前例 (Phase 0 /
+   tail-reintroduction / regularity-refactor / 親 plan 自身) との整合性)。**Phase D-3
+   (14 件 `@audit:suspect` 降格) は本 plan + mini-plan 双方から削除**: `EPIL3Integration.lean:547-557`
+   §12 honesty note 3 が「14 件降格は sister `epi-stam-to-conclusion-plan` Phase A 完了後の
+   `@audit:closed-by-successor(...)` 付与で本 plan 責務外」と code 内 SoT で明示しているため、
+   sister plan Phase A の post-merge cleanup task として外出し (本 sub-plan の closure 基準は
+   14 件残置のまま満たす設計)。Phase D の D-1 `csiszarGap` shape は sister
+   `IsStamToEPIScalingHyp` の `heatFlowPath2` 形 (Phase 0 で landing) を採用 — Mathlib-shape-driven
+   で下流 sister の `AntitoneOn` 引数と type-level に一致させる方針。L-DB-D-α / L-DB-D-β は
+   sister 2 unblock 完了 + Phase C-5 tail honest 再導入完了で **解除済**、新たな撤退ラインは
+   mini-plan 内 L-DBD-1-α/β / L-DBD-2-α/β / L-DBD-4-α (すべて sister Phase A 統合 / sister
+   委譲方向の honest 降格、`Prop := True` placeholder ではない)。
