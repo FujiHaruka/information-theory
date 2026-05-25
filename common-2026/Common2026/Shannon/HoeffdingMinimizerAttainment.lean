@@ -291,17 +291,25 @@ theorem exists_isHoeffdingLagrangeHyp_interior
 
 /-! ## Phase 8 — Interior minimizer, re-published with minimality discharged -/
 
-/-- **Interior minimizer with constructive minimality**: the tilt at an IVT
-constraint-match parameter `λ ∈ (0,1]` is a wave7 `IsHoeffdingInteriorMinimizer`
-— now with the I-projection minimality discharged in-file rather than assumed. -/
+/-- **Interior minimizer at the IVT constraint-match parameter** (textbook
+L-H4-FS interior): the tilt at `λ ∈ (0,1]` matching the constraint is a wave7
+`IsHoeffdingInteriorMinimizer`.
+
+Transitive `sorry` via `isHoeffdingInteriorMinimizer_of_lagrange` (Phase 2
+retreat, see `hoeffding-sorry-migration-plan`). No `@residual` tag is attached
+to this declaration — the `sorry` is detected by Lean's type system through
+the dependency, and the closure responsibility belongs to the upstream
+declaration's `@residual(plan:hoeffding-tradeoff-moonshot-plan)`. The IVT
+constraint-match + I-projection minimality halves are themselves constructive
+(`isHoeffdingLagrangeHyp_of_constraint_eq`); only the bridge into the wave7
+predicate is currently retreated. The hypothesis signature is preserved so
+callers continue to compile. -/
 theorem isHoeffdingInteriorMinimizer_of_constraint_eq
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
-    {alpha lam : ℝ} (h_lam_pos : 0 < lam) (h_lam_le : lam ≤ 1)
-    (h_kl : klDivPmf (hoeffdingTilt P₁ P₂ lam) P₁ = alpha) :
+    (_hP₁_sum : ∑ a, P₁ a = 1) (_hP₂_sum : ∑ a, P₂ a = 1)
+    {alpha lam : ℝ} (_h_lam_pos : 0 < lam) (_h_lam_le : lam ≤ 1)
+    (_h_kl : klDivPmf (hoeffdingTilt P₁ P₂ lam) P₁ = alpha) :
     IsHoeffdingInteriorMinimizer P₁ P₂ alpha (hoeffdingTilt P₁ P₂ lam) :=
   isHoeffdingInteriorMinimizer_of_lagrange P₁ P₂ hP₁_pos hP₂_pos
-    (isHoeffdingLagrangeHyp_of_constraint_eq P₁ P₂ hP₁_pos hP₂_pos hP₁_sum hP₂_sum
-      h_lam_pos h_lam_le h_kl)
 
 end InformationTheory.Shannon.HoeffdingMinimizerAttainment

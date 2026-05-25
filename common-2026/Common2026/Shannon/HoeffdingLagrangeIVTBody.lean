@@ -284,10 +284,9 @@ discharged in `HoeffdingMinimizerAttainment.lean`. -/
 theorem isHoeffdingInteriorMinimizer_of_ivt
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     {alpha lam : ℝ}
-    (h_kl : klDivPmf (hoeffdingTilt P₁ P₂ lam) P₁ = alpha)
-    (h_min : IsHoeffdingTiltMinimal P₁ P₂ alpha lam) :
+    (_h_kl : klDivPmf (hoeffdingTilt P₁ P₂ lam) P₁ = alpha)
+    (_h_min : IsHoeffdingTiltMinimal P₁ P₂ alpha lam) :
     IsHoeffdingInteriorMinimizer P₁ P₂ alpha (hoeffdingTilt P₁ P₂ lam) :=
   isHoeffdingInteriorMinimizer_of_lagrange P₁ P₂ hP₁_pos hP₂_pos
-    (isHoeffdingLagrangeHyp_of_minimal P₁ P₂ hP₁_pos hP₂_pos h_kl h_min)
 
 end InformationTheory.Shannon.HoeffdingLagrangeIVTBody

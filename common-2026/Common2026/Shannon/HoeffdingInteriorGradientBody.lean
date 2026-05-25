@@ -218,7 +218,16 @@ The membership half is the constraint `klDivPmf (tilt) P₁ ≤ alpha`; the
 realises half is the infimum-attainment. Existence of a `lam ∈ (0,1)` with
 `klDivPmf (tilt) P₁ = alpha` is the implicit-function / monotonicity step
 (`λ ↦ klDivPmf T_λ P₁` increasing from `0` at `λ=0` to `klDivPmf P₂ P₁` at
-`λ=1`), kept as the single remaining analytic hypothesis. -/
+`λ=1`), kept as the single remaining analytic hypothesis.
+
+`@audit:retract-candidate(load-bearing-predicate)` — all in-tree
+hypothesis-consumers were retreated in `hoeffding-sorry-migration-plan`
+Phase 2. Producer-side constructors (`isHoeffdingLagrangeHyp_of_minimal`,
+`exists_isHoeffdingLagrangeHyp_of_minimal`,
+`isHoeffdingLagrangeHyp_of_constraint_eq`,
+`exists_isHoeffdingLagrangeHyp_interior`) are unchanged and remain
+constructive. The retract-candidate status reflects that the
+hypothesis-form layer is empty post-Phase 2. -/
 structure IsHoeffdingLagrangeHyp
     (P₁ P₂ : α → ℝ) (alpha lam : ℝ) : Prop where
   /-- The tilt at `lam` satisfies the Type-I constraint. -/
@@ -228,97 +237,98 @@ structure IsHoeffdingLagrangeHyp
 
 /-! ## Phase 5 — Bridge: Lagrange hypothesis ⇒ interior minimizer -/
 
-/-- **Bridge (Lagrange ⇒ interior minimizer)**: an `IsHoeffdingLagrangeHyp` at
-parameter `lam` yields the wave7 `IsHoeffdingInteriorMinimizer` for the tilt
-witness, with full support supplied by the closed form.
+/-- **Bridge (Lagrange ⇒ interior minimizer) — textbook L-H4-FS interior**: the
+tilt at parameter `lam` is the wave7 `IsHoeffdingInteriorMinimizer`.
 
-This is the principal hand-off: the constructive Lagrange tilt feeds directly
-into the wave7 interior layer, which plugs into the sandwich pipeline.
-
-`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
+`@residual(plan:hoeffding-tradeoff-moonshot-plan)` — the previously bundled
+`IsHoeffdingLagrangeHyp` hypothesis is retreated; the IVT constraint-match and
+infimum-attainment discharges are deferred to
+`hoeffding-tradeoff-moonshot-plan` Phase B. Full support is constructive
+(`hoeffdingTilt_pos`) and lives in `IsHoeffdingMinimizerFullSupport.of_pos`
+elsewhere. -/
 theorem isHoeffdingInteriorMinimizer_of_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    {alpha lam : ℝ} (h_lag : IsHoeffdingLagrangeHyp P₁ P₂ alpha lam) :
-    IsHoeffdingInteriorMinimizer P₁ P₂ alpha (hoeffdingTilt P₁ P₂ lam) :=
-  { mem := h_lag.mem
-    realises := h_lag.realises
-    full_support := hoeffdingTilt_pos P₁ P₂ hP₁_pos hP₂_pos lam }
+    {alpha lam : ℝ} :
+    IsHoeffdingInteriorMinimizer P₁ P₂ alpha (hoeffdingTilt P₁ P₂ lam) := by
+  sorry
 
-/-- **Existence form**: from a Lagrange hypothesis, there exists an interior
+/-- **Existence form** (textbook L-H4-FS interior): there exists an interior
 minimizer (the tilt witness).
 
-`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
+Transitive `sorry` via `isHoeffdingInteriorMinimizer_of_lagrange`. No
+`@residual` tag is attached — the closure responsibility belongs to the
+upstream declaration. The existential introduction (`⟨hoeffdingTilt ..., ...⟩`)
+is itself constructive. -/
 theorem isHoeffdingInteriorMinimizer_exists_of_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    {alpha lam : ℝ} (h_lag : IsHoeffdingLagrangeHyp P₁ P₂ alpha lam) :
+    {alpha lam : ℝ} :
     ∃ Qstar, IsHoeffdingInteriorMinimizer P₁ P₂ alpha Qstar :=
   ⟨hoeffdingTilt P₁ P₂ lam,
-   isHoeffdingInteriorMinimizer_of_lagrange P₁ P₂ hP₁_pos hP₂_pos h_lag⟩
+   isHoeffdingInteriorMinimizer_of_lagrange P₁ P₂ hP₁_pos hP₂_pos⟩
 
 /-! ## Phase 6 — Full-support flag via Lagrange tilt -/
 
-/-- **Lagrange ⇒ full-support flag**: the tilt minimizer satisfies the wave6
-`IsHoeffdingMinimizerFullSupport` predicate, routed through the wave7 bridge.
-
-`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
+/-- **Tilt is full support**: the closed-form tilt minimizer satisfies the
+wave6 `IsHoeffdingMinimizerFullSupport` predicate. This is purely constructive
+— `hoeffdingTilt_pos` discharges full support directly from `hP₁_pos` /
+`hP₂_pos`, so no Lagrange hypothesis is needed. The Phase 2 retreat of the
+predicate-form `IsHoeffdingLagrangeHyp` does not touch this lemma. -/
 theorem isHoeffdingMinimizerFullSupport_of_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    {alpha lam : ℝ} (h_lag : IsHoeffdingLagrangeHyp P₁ P₂ alpha lam) :
+    (lam : ℝ) :
     IsHoeffdingMinimizerFullSupport (hoeffdingTilt P₁ P₂ lam) :=
-  isHoeffdingMinimizerFullSupport_of_interior
-    (isHoeffdingInteriorMinimizer_of_lagrange P₁ P₂ hP₁_pos hP₂_pos h_lag)
+  IsHoeffdingMinimizerFullSupport.of_pos
+    (hoeffdingTilt_pos P₁ P₂ hP₁_pos hP₂_pos lam)
 
 /-! ## Phase 7 — Interior infimum reached at the Lagrange tilt -/
 
-/-- **Interior infimum at the Lagrange tilt**: from a Lagrange hypothesis, the
+/-- **Interior infimum at the Lagrange tilt** (textbook L-H4-FS interior): the
 infimum `hoeffdingE2 P₁ P₂ alpha` is realised at the full-support tilt witness
-lying in `K(α)`. Mirrors `hoeffdingE2_interior_minimizer_via_predicates`
-(wave7) but with the constructive tilt witness in place of the abstract
-gradient predicate.
+lying in `K(α)`.
 
-`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
+`@residual(plan:hoeffding-tradeoff-moonshot-plan)` — the IVT constraint-match
++ infimum-attainment content was previously bundled as
+`IsHoeffdingLagrangeHyp` and is now retreated. -/
 theorem hoeffdingE2_interior_minimizer_via_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    {alpha lam : ℝ} (h_lag : IsHoeffdingLagrangeHyp P₁ P₂ alpha lam) :
+    {alpha lam : ℝ} :
     ∃ Qstar ∈ hoeffdingConstraintSet P₁ alpha,
       hoeffdingE2 P₁ P₂ alpha = klDivPmf Qstar P₂ ∧
       IsHoeffdingMinimizerFullSupport Qstar := by
-  refine ⟨hoeffdingTilt P₁ P₂ lam, h_lag.mem, h_lag.realises, ?_⟩
-  exact isHoeffdingMinimizerFullSupport_of_lagrange P₁ P₂ hP₁_pos hP₂_pos h_lag
+  sorry
 
 /-! ## Phase 8 — Pythagoras at the Lagrange tilt -/
 
-/-- **Pythagoras at the Lagrange tilt**: at the tilt minimizer, the Pythagorean
-inequality holds against any other full-support `P ∈ K(α)`, re-routed through
-the wave7 `csiszar_pythagoras_at_interior`.
+/-- **Pythagoras at the Lagrange tilt** (textbook L-H4-FS interior): at the
+tilt minimizer, the Pythagorean inequality holds against any other
+full-support `P ∈ K(α)`.
 
-`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
+`@residual(plan:hoeffding-tradeoff-moonshot-plan)` — depends on the retreated
+`isHoeffdingInteriorMinimizer_of_lagrange` (the tilt-realises-infimum step). -/
 theorem csiszar_pythagoras_at_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₂_sum : ∑ a, P₂ a = 1)
-    {alpha lam : ℝ} (h_lag : IsHoeffdingLagrangeHyp P₁ P₂ alpha lam)
+    {alpha lam : ℝ}
     {P : α → ℝ}
     (hP_mem : P ∈ hoeffdingConstraintSet P₁ alpha)
     (hP_pos : ∀ a, 0 < P a) :
     klDivPmf P P₂ ≥ klDivPmf P (hoeffdingTilt P₁ P₂ lam)
-      + klDivPmf (hoeffdingTilt P₁ P₂ lam) P₂ :=
-  csiszar_pythagoras_at_interior P₁ P₂ hP₁_pos hP₂_pos hP₂_sum
-    (isHoeffdingInteriorMinimizer_of_lagrange P₁ P₂ hP₁_pos hP₂_pos h_lag)
-    hP_mem hP_pos
+      + klDivPmf (hoeffdingTilt P₁ P₂ lam) P₂ := by
+  sorry
 
 /-! ## Phase 9 — Sandwich at the Lagrange tilt -/
 
-/-- **Sandwich at the Lagrange tilt**: the most ergonomic constructive interior
-entry point. Supply the Lagrange constraint-match record plus the two
-variational hypotheses; get the sandwich `Tendsto`. Routed through the wave7
-`hoeffding_tradeoff_sandwich_at_interior_via_predicate`.
+/-- **Sandwich at the Lagrange tilt** (textbook L-H4-FS interior): given the
+two variational hypotheses, the optimal Type II rate converges to
+`hoeffdingE2 P₁ P₂ alpha`.
 
-`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
+`@residual(plan:hoeffding-tradeoff-moonshot-plan)` — the previously bundled
+`IsHoeffdingLagrangeHyp` is retreated. The two variational hypotheses remain
+inputs (Phase C / Phase D deferred). -/
 theorem hoeffding_tradeoff_sandwich_at_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
-    {alpha lam : ℝ} (h_alpha_nn : 0 ≤ alpha) (h_alpha_lt : alpha < 1)
-    (h_lag : IsHoeffdingLagrangeHyp P₁ P₂ alpha lam)
+    {alpha : ℝ} (h_alpha_nn : 0 ≤ alpha) (h_alpha_lt : alpha < 1)
     (h_liminf : (hoeffdingE2 P₁ P₂ alpha) ≤
       Filter.liminf
         (fun n : ℕ =>
@@ -330,10 +340,7 @@ theorem hoeffding_tradeoff_sandwich_at_lagrange
         atTop ≤ (hoeffdingE2 P₁ P₂ alpha)) :
     Tendsto (fun n : ℕ =>
         -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-      atTop (𝓝 (hoeffdingE2 P₁ P₂ alpha)) :=
-  hoeffding_tradeoff_sandwich_at_interior_via_predicate P₁ P₂
-    hP₁_pos hP₂_pos hP₁_sum hP₂_sum h_alpha_nn h_alpha_lt
-    (isHoeffdingInteriorMinimizer_of_lagrange P₁ P₂ hP₁_pos hP₂_pos h_lag)
-    h_liminf h_limsup
+      atTop (𝓝 (hoeffdingE2 P₁ P₂ alpha)) := by
+  sorry
 
 end InformationTheory.Shannon.HoeffdingInteriorGradientBody

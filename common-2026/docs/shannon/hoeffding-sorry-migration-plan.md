@@ -206,6 +206,20 @@ verbatim 確認方法: `Common2026/Shannon/Hoeffding*.lean` を Read で
 
 1. **2026-05-25 plan 起草**: lean-planner agent (本セッション) が `Common2026/Shannon/Hoeffding*.lean` 9 file の `@audit:suspect` 19 件を verbatim 読込で per-declaration 分類。「既存 sorry 3 件」(handoff の brief 記述) は誤計数で **実数 0 件** であることを `rg -nw 'sorry'` で確認 (3 ヒットは docstring 内の文字列 ``sorry`` / `0-sorry`)。pilot 戦略を「file 単位 sweep + shared wall 集約なし (該当 wall 不在)」に確定。Approach の 2 軸決定根拠を在庫表で示した。
 
+2. **2026-05-25 Phase 1 完了**: 9 件タグ削除 + lake env lean 0 errors。honesty-auditor verdict `defect 0 / ok 8 / questionable 1` (#9 `isHoeffdingInteriorMinimizer_of_ivt`)、結論型が load-bearing predicate を返す唯一の declaration のため docstring に Phase 2 連動の retract-candidate note を追記して closure。L-MIG-1 (variational hyp の load-bearing 化) は発動せず。
+
+3. **2026-05-25 Phase 2.1 / 2.2 完了 + constructive recovery**: 13 declarations のうち 8 件で signature 改変 (predicate hypothesis 削除) + body `sorry` + `@residual(plan:hoeffding-tradeoff-moonshot-plan)`、1 件 (`isHoeffdingMinimizerFullSupport_of_lagrange`) は **planner 指示と異なり constructive recovery** に切替 — 結論型 `IsHoeffdingMinimizerFullSupport (hoeffdingTilt P₁ P₂ lam)` (= `∀ a, 0 < hoeffdingTilt P₁ P₂ lam a`) が `hoeffdingTilt_pos` で `h_lag` 不要に純構成的 closure 可能と inline 判定、不要 sorry を作らない原則を優先。残り 4 件 (`isHoeffdingInteriorMinimizer_exists_of_lagrange` + ... 含む) は transitive sorry / 直接 sorry。
+
+4. **2026-05-25 Phase 2 派生波及 (2 件)**: Phase 2.2 `isHoeffdingInteriorMinimizer_of_lagrange` の signature 改変で既存 caller 2 件が type error。同 family 内なので Phase 2 incidental 修正:
+   - `HoeffdingMinimizerAttainment.lean:298` `isHoeffdingInteriorMinimizer_of_constraint_eq` — caller signature 保持のため 5 引数を underscore 化 + body から余分引数削除。本来 in-tree constructive な closure だったが transitive sorry に降格、docstring で明示。
+   - `HoeffdingLagrangeIVTBody.lean:284` `isHoeffdingInteriorMinimizer_of_ivt` — 同様に `_h_kl` / `_h_min` underscore 化。Phase 1 で `@audit:suspect` を削除した declaration の body が transitive sorry に変わった。
+   両件とも `@residual` タグは付与せず、docstring 散文で transitive 性を明示 (Lean 型システムで sorry は伝播するため、上流の `@residual` が closure 責任を保有)。
+
+5. **2026-05-25 Phase 2.3 + 2.4 audit**: 3 predicate (`IsHoeffdingInteriorGradient` / `IsHoeffdingInteriorMinimizer` / `IsHoeffdingLagrangeHyp`) に `@audit:retract-candidate(load-bearing-predicate)` を付与。Phase 2.4 honesty-auditor 起動、verdict `defect 0 / ok 10 / questionable 6` (slug 細分化未実施 / docstring 文言 / transitive vocabulary 未整備)。questionable のうち docstring 文言 refine 2 件 + transitive vocabulary 散文化 3 件を即時適用、slug 細分化は未対応 (`plan:hoeffding-tradeoff-moonshot-plan/phase-b` vs `/phase-c-d` の候補は後続 family または別 patch)。L-MIG-2 (predicate 削除時の波及大量化) は発動せず。
+
+6. **2026-05-25 pilot finding (audit-tags.md 拡張提案)**: 本 pilot で **transitive sorry の表現語彙** が未整備であることが発覚。即興で `(plan:hoeffding-tradeoff-moonshot-plan, transitive)` 形式を検討したが docstring 散文に降ろし、vocabulary divergence を回避。後続 family sweep 前に `audit-tags.md` の `@residual(<class>:<slug>)` EBNF 拡張 (例: `@residual(<class>:<slug>[:transitive])`) を別 PR で検討する。本 finding は handoff-sorry-migration.md に明記。
+
+7. **2026-05-25 Phase V verify 完了**: 全 9 file (+ `HoeffdingMinimizerAttainment.lean`) で `lake env lean` 0 errors。`@audit:suspect` 0 件、`@residual(plan:hoeffding-tradeoff-moonshot-plan)` 8 件 (直接 sorry)、`@audit:retract-candidate(load-bearing-predicate)` 3 件 (3 predicate)。`rg -nw 'sorry'` の word-boundary 計数で実 sorry 8 件 (4 in HoeffdingInteriorBody + 4 in HoeffdingInteriorGradientBody) を確定。
 <!-- 後続セッションで判断変更があれば下記に追記 (append-only):
-2. **YYYY-MM-DD <要点>**: <変更理由 + 撤退ラインへの紐付け>。
+8. **YYYY-MM-DD <要点>**: <変更理由 + 撤退ラインへの紐付け>。
 -->
