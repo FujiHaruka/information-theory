@@ -249,14 +249,25 @@ size) or deleting this `_rate` declaration in favor of
 `wyner_ziv_converse_existence` / `wyner_ziv_converse_n_letter`.  Decision
 deferred to `wyner-ziv-discharge-moonshot-plan`.
 
-`@residual(defect:false-statement)` -/
+Phase D-3 tier5-defect-discharge (2026-05-26) — signature rewrite with
+the operational-rate linkage hypothesis
+`(h_M_le : (M : ℝ) ≤ Real.exp ((n : ℝ) * R))` added (matching the
+existence-form precondition and the `_converse_n_letter` convention).
+This dissolves the universally-false defect by linking `R` to the
+code size `M / n`.  Closure (genuine derivation through
+`wyner_ziv_converse_n_letter` plus the n → ∞ asymptotic argument) is
+delegated to the converse body in `wyner-ziv-discharge-moonshot-plan`;
+body `sorry` preserved, Tier 5 → Tier 2 2-step promotion.
+
+`@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_converse_rate
     [MeasurableSpace γ]
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
     {M n : ℕ} (hn : 0 < n)
     (μ : Measure (α × β)) [IsProbabilityMeasure μ]
     (dN : DistortionFn α γ) (c : WynerZivCode M n α β γ)
-    (h_dist : c.expectedBlockDistortion μ dN ≤ D) :
+    (h_dist : c.expectedBlockDistortion μ dN ≤ D)
+    (h_M_le : (M : ℝ) ≤ Real.exp ((n : ℝ) * R)) :
     R ≤ wynerZivRatePmf U P_XY d D := by
   sorry
 

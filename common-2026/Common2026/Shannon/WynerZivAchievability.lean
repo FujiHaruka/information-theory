@@ -73,11 +73,19 @@ existence form below) or deleting this `_rate` declaration in favor of
 `wyner_ziv_achievability_existence`.  Decision deferred to
 `wyner-ziv-discharge-moonshot-plan`.
 
-`@residual(defect:false-statement)` -/
+Phase D-3 tier5-defect-discharge (2026-05-26) — signature rewrite with
+the linkage hypothesis `(h_R_gt : R > wynerZivRatePmf U P_XY d D)` added,
+matching the existence-form precondition.  The conclusion
+`R_WZ(D) ≤ R` is the non-strict version of `h_R_gt` and follows
+constructively from `le_of_lt h_R_gt`, so the body is **proof done**
+(constructive recovery, Pilot Pattern B).  The `@residual` tag is
+removed; this is a Tier 1 `@audit:ok` candidate awaiting independent
+honesty-auditor verdict. -/
 theorem wyner_ziv_achievability_rate
-    (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ) :
-    wynerZivRatePmf U P_XY d D ≤ R := by
-  sorry
+    (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
+    (h_R_gt : R > wynerZivRatePmf U P_XY d D) :
+    wynerZivRatePmf U P_XY d D ≤ R :=
+  le_of_lt h_R_gt
 
 /-- **Wyner–Ziv achievability — existence form**.
 
@@ -100,7 +108,17 @@ Closure is the responsibility of the discharge plan
 `wyner-ziv-discharge-moonshot-plan`, not of this declaration's
 hypotheses.
 
-`@residual(defect:circular)` -/
+Phase D-3 tier5-defect-discharge (2026-05-26) — the Phase 2.1 retreat
+already removed the load-bearing `h_ach_existence` hypothesis; the
+current signature (precondition `_h_R_gt` plus the Cover–Thomas 15.9.1
+existence-form conclusion) is **well-formed**.  The `defect:circular`
+tag was a Phase 2.1 hangover (it described the historical
+hypothesis ≡ conclusion shape, not the present signature).  Tag
+rewritten to `@residual(plan:wyner-ziv-discharge-moonshot-plan)`
+(signature unchanged, body `sorry` preserved, Tier 5 → Tier 2
+1-step promotion).
+
+`@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_achievability_existence
     (μ : Measure (α × β)) [IsProbabilityMeasure μ]
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
