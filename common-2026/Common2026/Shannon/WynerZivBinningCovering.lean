@@ -279,15 +279,14 @@ Relay sweep agent, not by this plan.
 
 Phase 2.x.4 honesty audit verdict (2026-05-25): tier 2 **honest_residual**
 verified — remaining params are all measurability / regularity / concrete
-data.  **Cross-family drift observed** (Pattern G S3): `lake env lean
-Common2026/Shannon/RelayCFBinningBody.lean` currently reports
-`Invalid argument name `R₁` for function `wyner_ziv_binning_via_covering_packing``
-at line 349 (Relay still passes `(R₁ := R_cov) (R₂ := R_bin)` plus
-`h_decode.compression` / `h_decode.decodable` — both removed in
-Phase 2.x.1.b).  Per Option A scope, this is the Relay sweep agent's
-responsibility, not this plan's; the WynerZiv-side honesty fix is
-correct and the Relay caller fix is parked for the Relay Round 2 sweep
-already in flight (Wave 3).
+data.  Cross-family ripple (Pattern G S3) **resolved in Wave 3
+(2026-05-26)**: `RelayCFBinningBody.lean`
+(`relay_cf_si_decoder_fail_le` line 360 area) was updated by the Relay
+sweep agent to drop `(R₁ := R_cov) (R₂ := R_bin)` plus the
+`h_decode.compression` / `h_decode.decodable` arguments to match this
+declaration's Phase 2.x.1.b signature, and now type-checks cleanly with
+a transitive `sorry` carrying Pattern C 散文 (closure responsibility on
+this declaration's `@residual` tag).
 
 `@residual(plan:wyner-ziv-discharge-moonshot-plan)` -/
 theorem wyner_ziv_binning_via_covering_packing

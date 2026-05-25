@@ -524,7 +524,7 @@ theorem wyner_ziv_packing_decoder_fail
     (h_meas_bin_all : ∀ f_U : (Fin n → U) → Fin M,
       IsPackingCollisionBoundHyp (n := n) Us Ys JT f_U)
     (h_meas_typ : MeasurableSet (wzError_E_typ (n := n) Us Ys JT))
-    (h_cov : ∀ _f_U : (Fin n → U) → Fin M,
+    (_h_cov : ∀ _f_U : (Fin n → U) → Fin M,
       IsWynerZivBinningCovering R₁ ε₁ μ Us Ys JT)
     (h_meas_fail : ∀ f_U : (Fin n → U) → Fin M,
       MeasurableSet { ω : Ω |

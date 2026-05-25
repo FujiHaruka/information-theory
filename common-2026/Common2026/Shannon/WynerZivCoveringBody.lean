@@ -471,8 +471,8 @@ theorem wzCovering_decoder_fail_existence
     [Nonempty β] [Nonempty γ]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (JT : ∀ n : ℕ, (Fin n → U) × (Fin n → β) → Prop)
-    (h_cov : IsCoveringTypicalityHyp μ JT)
-    (h_pack : IsPackingExistenceHyp (γ := γ) μ JT) :
+    (_h_cov : IsCoveringTypicalityHyp μ JT)
+    (_h_pack : IsPackingExistenceHyp (γ := γ) μ JT) :
     ∀ ε > (0 : ℝ),
       ∃ N : ℕ, ∀ n ≥ N,
         ∃ (M : ℕ)
