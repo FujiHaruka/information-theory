@@ -139,7 +139,7 @@ phrasing is structurally equivalent to the bridge itself, but conceptually
 isolates the *scaling-monotonicity step* from the *path-endpoint
 identification step* (§1, `IsStamToEPILimitHyp`).
 
-`@audit:staged(epi-stam-to-conclusion-plan)`
+`@audit:suspect(epi-stam-to-conclusion-plan)`
 Phase 0 (2026-05-25) refactor: the previous body fixed `g1 = 0` and reduced
 to the EPI conclusion itself (a cosmetic alias of the bridge, the `launder`
 defect originally flagged by the Wave 3 EPI-Stam agent). The new body
@@ -160,13 +160,45 @@ makes the Csiszár scaling structure explicit:
   `heatFlowPath2 Y Z_Y 0 = Y`.
 
 The Stam inequality input is the load-bearing premise (it powers the
-`d gap_s / d s ≤ 0` step). This predicate is `staged` (not `ok`) because
+`d gap_s / d s ≤ 0` step). This predicate is `suspect` (not `ok`) because
 the **interior** of the predicate — the `AntitoneOn` conclusion — is the
 real Csiszár scaling content that is itself the analytic core of EPI; the
 predicate's role is to carry that hypothesis as a sub-bound until a
 sister discharge (Phase A / B of `epi-stam-to-conclusion-plan`) supplies
 a genuine `AntitoneOn` proof from Stam + de Bruijn FTC. Until then the
-predicate's truth is exactly the gap of the proof. -/
+predicate's truth is exactly the gap of the proof.
+
+**Sign convention (`AntitoneOn` vs. inventory's `MonotoneOn`)**: the
+Phase 0 inventory (`docs/shannon/epi-stam-to-conclusion-heatflow-inventory.md`
+§B') initially recommended `MonotoneOn` based on a sign-flipped reading of
+the gap's evolution. The correct physics: as `s → 1` the heat-flow path
+endpoints reach independent standard normals, so the EPI gap **decreases**
+to `0` (Gaussian saturation) — hence `AntitoneOn` is the correct shape.
+The consumer body uses `h_anti h0_mem h1_mem zero_le_one : gap_1 ≤ gap_0`
+combined with `gap_1 = 0` to derive `gap_0 ≥ 0` (the EPI conclusion at
+`s = 0`).
+
+**Independent honesty audit (2026-05-25, fresh subagent)**: Tier 1
+(degenerate-definition exploitation) PASS — no vacuous-truth path: the
+`∃ Z_X Z_Y` standard-normal witness construction with joint independence
+is a non-trivial richness constraint, and the `AntitoneOn` conclusion is
+not satisfiable trivially in a probability measure setting. Tier 2
+(launder / cosmetic wrap) PASS — the new signature carries genuine
+Csiszár-scaling structure (standard-normal witnesses + heat-flow path
++ interior monotonicity over `Set.Icc 0 1`), not a cosmetic alias of the
+bridge; the Phase 0 retraction of three `_of_*` discharges
+(`_of_gaussian`, `_of_epi`, `_of_fisherInfoReal_zero`) confirms the new
+signature is strictly stronger than the previous launder. Tier 3
+(label accuracy) PASS-after-fix — tag refined from `staged(<plan>)` to
+`suspect(<plan>)` per `docs/audit/audit-tags.md` vocabulary (SLUG is a
+plan slug, not a Mathlib-wall name; `suspect` matches the
+"plan-completion-discharges" lifecycle). Sister predicate
+`IsStamToEPILimitHyp` retains a launder shape but is **not load-bearing**
+in the current pipeline (`isStamToEPIBridgeHyp_of_scaling_limit`
+discards `_h_limit` with an `_` binder; the alternative path
+`isStamToEPIBridgeHyp_of_scaling` skips it entirely), so the residual
+launder does not damage this predicate's effect; Phase 0' (companion
+mini-Phase) cleanup priority is LOW (cosmetic). -/
 def IsStamToEPIScalingHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   IsStamInequalityHyp X Y P →
