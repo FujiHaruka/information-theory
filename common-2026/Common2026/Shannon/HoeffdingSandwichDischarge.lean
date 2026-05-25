@@ -182,9 +182,7 @@ This is the genuine landing point: achievability holds for all `alpha`
 `alpha = 0` (Stein's lemma), so the *general*-`alpha` Tendsto is exposed with the
 converse inequality as an explicit premise rather than discharged. See the
 judgement log above for why the fixed-`alpha` headline is mathematically
-inequivalent to the Hoeffding tradeoff curve.
-
-`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
+inequivalent to the Hoeffding tradeoff curve. -/
 theorem hoeffding_tradeoff_of_asymptotics
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)

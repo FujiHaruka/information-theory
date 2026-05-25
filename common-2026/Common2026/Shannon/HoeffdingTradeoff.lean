@@ -292,9 +292,7 @@ The achievability and converse hypotheses correspond to:
 * Phase D (converse): `∀ᶠ n, ∀ s ∈ Finset (Fin n → α) with Type I ≤ α, -(1/n) log P₂^n s ≤ E_2(α) + δ`
 
 Both are deferred to a follow-up plan (`hoeffding-tradeoff-sandwich-plan.md`). This wrapper
-publishes the **sandwich** structure so downstream code can already rely on the Tendsto form.
-
-`@audit:suspect(hoeffding-tradeoff-sandwich-plan)` -/
+publishes the **sandwich** structure so downstream code can already rely on the Tendsto form. -/
 theorem hoeffding_tradeoff_with_hypothesis
     (P₁ P₂ : α → ℝ) (_hP₁_sum : ∑ a, P₁ a = 1) (_hP₂_sum : ∑ a, P₂ a = 1)
     (_hP₂_nn : ∀ a, 0 ≤ P₂ a)

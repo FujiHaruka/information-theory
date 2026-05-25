@@ -197,9 +197,7 @@ def IsHoeffdingTiltMinimal (P₁ P₂ : α → ℝ) (alpha lam : ℝ) : Prop :=
 
 /-- **Bridge (minimal ⇒ realises)**: when the tilt at `lam` lies in `K(α)` and
 minimises `klDivPmf · P₂` on `K(α)`, it realises the infimum
-`hoeffdingE2 P₁ P₂ alpha`. Discharged via the `sInf` characterisation.
-
-`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
+`hoeffdingE2 P₁ P₂ alpha`. Discharged via the `sInf` characterisation. -/
 theorem isHoeffdingTiltMinimal_realises
     (P₁ P₂ : α → ℝ) (hP₂_pos : ∀ a, 0 < P₂ a)
     {alpha lam : ℝ}
@@ -234,9 +232,7 @@ theorem isHoeffdingTiltMinimal_realises
 /-- **Assemble Lagrange hypothesis**: from an IVT constraint-match (`mem`,
 `klDivPmf tilt P₁ = alpha`) and the minimality primitive, build a full
 `IsHoeffdingLagrangeHyp`. The `mem` half is constructive; only minimality is
-carried.
-
-`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
+carried. -/
 theorem isHoeffdingLagrangeHyp_of_minimal
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     {alpha lam : ℝ}
@@ -252,9 +248,7 @@ theorem isHoeffdingLagrangeHyp_of_minimal
 /-- **Existence form**: IVT supplies a `lam ∈ [0,1]` matching the constraint;
 together with the minimality primitive at that `lam`, a full
 `IsHoeffdingLagrangeHyp` exists. The minimality hypothesis is quantified over
-the (otherwise unknown) IVT witness.
-
-`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
+the (otherwise unknown) IVT witness. -/
 theorem exists_isHoeffdingLagrangeHyp_of_minimal
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
@@ -278,7 +272,15 @@ and the minimality primitive, the tilt is a wave7 `IsHoeffdingInteriorMinimizer`
 Re-publishes `isHoeffdingInteriorMinimizer_of_lagrange` with `mem` now supplied
 by IVT rather than assumed.
 
-`@audit:suspect(hoeffding-tradeoff-moonshot-plan)` -/
+Note: the conclusion type `IsHoeffdingInteriorMinimizer` is itself slated for
+`@audit:retract-candidate(load-bearing-predicate)` in Phase 2 of the
+`hoeffding-sorry-migration-plan`. Once Phase 2 lands, this wrapper becomes a
+"returns a retract-candidate predicate" function and should be reviewed for
+whether (a) it is still needed by a constructive caller, or (b) it can be
+inlined / removed alongside the predicate. The two `IsHoeffdingTiltMinimal`
+sub-bridges (`isHoeffdingTiltMinimal_realises` /
+`isHoeffdingLagrangeHyp_of_minimal`) are unaffected — they target a primitive
+discharged in `HoeffdingMinimizerAttainment.lean`. -/
 theorem isHoeffdingInteriorMinimizer_of_ivt
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     {alpha lam : ℝ}
