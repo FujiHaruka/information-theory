@@ -418,7 +418,8 @@ theorem brunn_minkowski_volume_mul {n : ℕ}
 * **headline 特化が前進点**: 旧 `brunn_minkowski_entropy_inequality` は抽象
   `h` + `:= h_bm` で **結論全体** を pass-through していた。本 §G は `h` を concrete
   `jointDifferentialEntropyPi` に固定し、entropy↔geometry↔rpow 代数を **genuine** に
-  し、外出しを「geometric BM 不等式のみ」に縮小する (🟢ʰ honest 副条件付き)。 -/
+  し、外出しを「geometric BM 不等式のみ」に縮小する (honest 副条件
+  `IsBMEntropyPowerVolumeHyp` 1 本のみ)。 -/
 
 /-- **n-dim measure scaling** `vol(r • A) = r^n · vol(A)` (`0 ≤ r`) on
 `Fin n → ℝ`. `Measure.addHaar_smul_of_nonneg` + `Module.finrank_fin_fun`
@@ -878,7 +879,9 @@ compact でも有限測度でもない。1D engine 全 chain (`IsPL11DSuperLevel
 `λμ_f + (1-λ)μ_g ≤ μ_h` は偽) ゆえ落とせず、indicator 専用の case-split lemma が要る。
 加えて compact 性 (条件 1,2) には slice 体積関数 `s ↦ vol((Fin.cons s ·)⁻¹ A)` の
 **上半連続性** が要るが Mathlib 不在 (~150 行の自作解析)。よって `IsSlicePLReadyHyp`
-の indicator discharge は defer、BM は 🟢ʰ が honest landing。
+の indicator discharge は defer、entropy 形 BM は `IsBMEntropyPowerVolumeHyp` honest
+hypothesis 1 本に縮約済 (closure plan Phase 3 pivot, `BrunnMinkowskiClosure.lean:493`
+`brunn_minkowski_entropy_jointPi`)。
 
 本 §J は ❷ の前段として、scope 内で genuine に供給可能な **superlevel 可測性** を
 Mathlib `measurable_measure_prodMk_left` から立てる:

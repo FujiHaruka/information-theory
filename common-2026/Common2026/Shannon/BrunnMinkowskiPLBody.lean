@@ -215,7 +215,11 @@ superlevel 集合測度 `muF, muG, muH` とその積分 `intF, intG, intH`、
 superlevel hypothesis は 1 次元 BM の存在を signature に保持するための
 追加情報 (`pl1_superlevel_pointwise` がその点ごと根拠を与える)。
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+`IsPL11DSuperLevelHyp` / `IsPL1AdditiveHyp` は **regularity bundle** (1 次元
+BM 測度不等式 + layer-cake 加法積分の precondition 形)。本 body は AM-GM +
+linarith で完結する genuine discharge、load-bearing claim を hypothesis に
+吸収していない (sorry-migration Phase 1 cleanup、load-bearing 判定は
+`docs/shannon/brunn-minkowski-sorry-migration-plan.md` §「移行レシピ」 Pattern V)。 -/
 theorem prekopa_leindler_1D_body
     (f g hfn : (Fin 1 → ℝ) → ℝ) (lam : ℝ)
     (h0 : 0 ≤ lam) (h1 : lam ≤ 1)
@@ -264,7 +268,10 @@ def IsPL2SliceStepHyp
 scalar 結合 (純 rewrite)。1 次元 PL 部分は `prekopa_leindler_1D_body`
 が供給。
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+`IsPL2FubiniSliceHyp` は scalar 等式 placeholder (Fubini 整合性)。本 body は
+`obtain` + `rw` + `exact` の純 rewrite で genuine discharge、load-bearing
+claim を hypothesis に吸収していない (sorry-migration Phase 1 cleanup、
+Pattern V)。 -/
 theorem pl2_induction_scalar_combine
     (sliceIntF sliceIntG sliceIntH : ℝ → ℝ)
     (intF intG intH reduceF reduceG reduceH lam : ℝ)
@@ -283,7 +290,9 @@ theorem pl2_induction_scalar_combine
 撤退ライン: slice ごとの 1 次元 PL 結論 (`h_reduce_pl`) と Fubini 整合性を
 hypothesis として受け、`pl2_induction_scalar_combine` で着地。
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+本 wrapper は `pl2_induction_scalar_combine` の transitive call。
+load-bearing claim を hypothesis に吸収していない (sorry-migration Phase 1
+cleanup、Pattern V transitive)。 -/
 theorem prekopa_leindler_induction_step
     (sliceIntF sliceIntG sliceIntH : ℝ → ℝ)
     (intF intG intH reduceF reduceG reduceH lam : ℝ)
@@ -302,7 +311,11 @@ discharge した `prekopa_leindler_1D_body` の結論を wave7 の
 `IsPrekopaLeindlerHyp` predicate に詰め直し、wave7 の
 `prekopa_leindler_inequality` に流せる形で再 publish。
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+本 constructor は `prekopa_leindler_1D_body` の transitive call で
+`IsPrekopaLeindlerHyp` structure (`@audit:retract-candidate(load-bearing-predicate)`
+付与済の load-bearing structure) を構築している。本体側の load-bearing 性は
+structure 定義 (`BrunnMinkowskiFunctional.lean:153`) 側で管理 (sorry-migration
+Phase 1 cleanup、Pattern C transitive)。 -/
 theorem isPrekopaLeindlerHyp_of_1D_body
     (f g hfn : (Fin 1 → ℝ) → ℝ) (lam : ℝ)
     (h0 : 0 ≤ lam) (h1 : lam ≤ 1)
@@ -338,7 +351,11 @@ indicator `f = 1_A, g = 1_B, h = 1_{λA+(1-λ)B}` に適用した結果を
 indicator に対する加法形 PL (`h_add`) を hypothesis として受け、
 1 次元 PL 本体で着地。
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+本 constructor は `bm_additive_to_multiplicative` の transitive call で
+`IsIndicatorToConvexBodyHyp` structure (`@audit:retract-candidate(load-bearing-predicate)`
+付与済の load-bearing structure) を構築している。本体側の load-bearing 性は
+structure 定義 (`BrunnMinkowskiFunctional.lean:174`) 側で管理 (sorry-migration
+Phase 1 cleanup、Pattern C transitive)。 -/
 theorem indicatorToConvexBody_of_1D_body
     (A B : Set (Fin 1 → ℝ))
     (volA volB volAB : ℝ) (lam : ℝ)

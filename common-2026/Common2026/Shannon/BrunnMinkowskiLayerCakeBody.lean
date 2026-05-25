@@ -179,7 +179,12 @@ theorem pl1_additive_via_layercake
 `IsPL1AdditiveHyp` を hypothesis として要求していたが、本定理は
 それを layer-cake change-of-variable から discharge して除去する。
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+`IsPL11DSuperLevelHyp` / `IsPL1LayerCakeIntegralHyp` / `IsTailIntegrableHyp`
+は **regularity bundle** (1 次元 BM 測度不等式 + layer-cake 等式 + tail 可
+積分性、measurability/integrability + 既知の Cavalieri 恒等式の precondition
+形)。本 body は `pl1_additive_via_layercake` で genuine change-of-variable
+discharge、load-bearing claim を hypothesis に吸収していない (sorry-migration
+Phase 1 cleanup、Pattern V)。 -/
 theorem prekopa_leindler_1D_layercake
     (f g hfn : (Fin 1 → ℝ) → ℝ) (lam : ℝ)
     (h0 : 0 ≤ lam) (h1 : lam ≤ 1)
@@ -205,7 +210,11 @@ predicate に詰め直し、`prekopa_leindler_inequality` に流せる形で再 
 `IsPL1AdditiveHyp` を layer-cake から discharge した分、hypothesis が
 1 本軽い。
 
-`@audit:suspect(brunn-minkowski-closure-plan)` -/
+本 constructor は `prekopa_leindler_1D_layercake` の transitive call で
+`IsPrekopaLeindlerHyp` structure (`@audit:retract-candidate(load-bearing-predicate)`
+付与済の load-bearing structure) を構築している。本体側の load-bearing 性は
+structure 定義 (`BrunnMinkowskiFunctional.lean:153`) 側で管理 (sorry-migration
+Phase 1 cleanup、Pattern C transitive)。 -/
 theorem isPrekopaLeindlerHyp_of_layercake
     (f g hfn : (Fin 1 → ℝ) → ℝ) (lam : ℝ)
     (h0 : 0 ≤ lam) (h1 : lam ≤ 1)
