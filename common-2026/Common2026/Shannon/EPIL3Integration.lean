@@ -1286,4 +1286,377 @@ theorem csiszarGap_shape_for_sister
             - entropyPower (P.map (heatFlowPath2 Y Z_Y s))) :=
   rfl
 
+/-! ### §13.A-0' — 1-source form alias for `epi-stam-to-conclusion-plan` Phase A
+
+The Phase D 2-source `csiszarGap` body is keyed to `heatFlowPath2 X Z s`
+(`s ∈ [0, 1]`, base `√(1-s)·X` is `s`-dependent), which does not align with the
+1-source form of de Bruijn V2 `derivAt_entropy_eq_half_fisher_v2`
+(`Common2026/Shannon/FisherInfoV2DeBruijn.lean:245`, keyed to
+`gaussianConvolution X Z t = X + √t·Z`, base `X` is `t`-independent).
+Reparametrizing the 2-source form by `t := s/(1-s)` and pulling out the
+scale factor `√(1-s)` yields a 1-source equivalent form whose base is
+`t`-independent — the sister Phase A consumes this 1-source form to apply
+de Bruijn V2 directly without scaling-correction-term cancellation problems
+(L-Concl-A-δ avoided at the source).
+
+This subsection is **additive** on top of the Phase D D-1..D-4 deliverables —
+none of the existing definitions or theorems above are modified.
+
+Members:
+
+* A-0'-1 `csiszarGap1Source` — 1-source form alias `noncomputable def`,
+  body `entropyPower (P.map (X + Y + √t·(Z_X + Z_Y))) − ... − ...`.
+* A-0'-2 `csiszarGap_eq_one_source_via_rescale` — equivalence
+  `csiszarGap _ s = (1-s) · csiszarGap1Source _ (s/(1-s))` for `s ∈ Set.Ico 0 1`,
+  using `entropyPower_map_mul_const` (Phase B-2 lift,
+  `Common2026/Shannon/EPIPlumbing.lean:130`). Caller-side absolute continuity
+  and entropy-integrand integrability hypotheses are passed as direct lemma
+  arguments (honest pass-through, option (b) per the dispatch brief).
+* A-0'-3 `csiszarGap1Source_at_zero` — endpoint at `t = 0` reduces to the EPI
+  gap for the original `(X, Y)`.
+* A-0'-4 `csiszarGap1Source_tendsto_zero_at_infinity_of_gaussian_pair` —
+  Gaussian saturation at `t → ∞` (statement-only handoff per mini-plan,
+  proof externalized via the named honest hypothesis predicate
+  `IsCsiszarGap1SourceTendsToZeroAtInfinity` below; Phase A's closure path
+  does not require this lemma in its proof form — the 2-source endpoint
+  `s = 1` is discharged by the existing `csiszarGap_at_one_eq_zero_of_gaussian_pair`).
+* A-0'-5 `csiszarGap1Source_shape_for_sister` — `rfl` lemma exposing the
+  1-source `csiszarGap1Source` body to sister Phase A for structural
+  reasoning.
+-/
+
+/-- **1-source form alias of the Csiszár scaling gap** (Phase D §13 A-0'-1,
+sister `epi-stam-to-conclusion-plan` Phase A consumer).
+
+`csiszarGap1Source X Y Z_X Z_Y P t` is the EPI gap along the 1-source
+heat-flow path `Common2026.Shannon.FisherInfoV2.gaussianConvolution _ _ t`
+(`= _ + √t · _`, `t ∈ [0, ∞)`):
+
+  `gap_t := entropyPower (P.map (X + Y + √t · (Z_X + Z_Y)))
+            − entropyPower (P.map (X + √t · Z_X))
+            − entropyPower (P.map (Y + √t · Z_Y))`
+
+The base of each `entropyPower` term is `t`-independent (`X + Y`, `X`, `Y`
+respectively), unlike the 2-source `csiszarGap` whose base `√(1-s) · X`
+is `s`-dependent. This shape directly matches the conclusion form of
+de Bruijn V2 `derivAt_entropy_eq_half_fisher_v2` keyed to
+`gaussianConvolution`, enabling sister Phase A to compute `d/dt gap_t`
+without scaling-correction-term cancellation problems (L-Concl-A-δ
+avoidance).
+
+**Shape contract**: the body matches the conclusion of
+`csiszarGap1Source_shape_for_sister` (A-0'-5) verbatim, exposed via `rfl`.
+
+This is a `noncomputable def`, **not** a `Prop`-level staged predicate —
+no honesty audit at the predicate level. The `@audit:suspect` tag tracks
+the sister-plan completion dependency.
+
+`@audit:suspect(epi-stam-to-conclusion-plan)` — sister Phase A consumes
+this alias to discharge `IsStamToEPIScalingHyp` honestly via the rescale
+equivalence (A-0'-2). -/
+noncomputable def csiszarGap1Source {Ω : Type*} [MeasurableSpace Ω]
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) (t : ℝ) : ℝ :=
+  entropyPower (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω)))
+    - entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
+    - entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω))
+
+/-- **Rescale equivalence: 2-source `csiszarGap` ↔ 1-source `csiszarGap1Source`**
+(Phase D §13 A-0'-2).
+
+For `s ∈ Set.Ico 0 1`, the 2-source heat-flow path
+`heatFlowPath2 X Z s = √(1-s) · X + √s · Z` factors as
+`√(1-s) · (X + √(s/(1-s)) · Z) = √(1-s) · gaussianConvolution X Z (s/(1-s))`.
+Pulling out the scalar factor `√(1-s)` via `entropyPower_map_mul_const`
+(Phase B-2 lift, `Common2026/Shannon/EPIPlumbing.lean:130`,
+`entropyPower (μ.map (· * c)) = c² · entropyPower μ`) yields the rescale
+equivalence `gap(s) = (1-s) · gap1Source(s/(1-s))`.
+
+**Caller integrability hypothesis (honest pass-through, option (b))**.
+`entropyPower_map_mul_const` requires for each `μ ∈ {P.map(X+Y+√t·(Z_X+Z_Y)),
+P.map(X+√t·Z_X), P.map(Y+√t·Z_Y)}` (where `t = s/(1-s)`) both
+`μ ≪ volume` and `Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume`.
+We pass these 6 conditions as direct lemma arguments — honest carrier
+hypotheses, no new staged predicate is introduced (per the dispatch brief
+A-0'-2 integrability bridge resolution: option (b)).
+
+`@audit:suspect(epi-stam-to-conclusion-plan)` — sister Phase A uses this
+equivalence in step A-4 to lift the 1-source `AntitoneOn` (proved via
+de Bruijn V2 + Stam in steps A-2/A-3) to the 2-source `AntitoneOn`
+required by `IsStamToEPIScalingHyp`. -/
+theorem csiszarGap_eq_one_source_via_rescale
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hX : Measurable X) (hY : Measurable Y)
+    (hZX : Measurable Z_X) (hZY : Measurable Z_Y)
+    {s : ℝ} (hs : s ∈ Set.Ico (0 : ℝ) 1)
+    (h_ac_sum :
+      (P.map (fun ω => X ω + Y ω + Real.sqrt (s / (1 - s)) * (Z_X ω + Z_Y ω)))
+        ≪ (volume : Measure ℝ))
+    (h_ac_X :
+      (P.map (fun ω => X ω + Real.sqrt (s / (1 - s)) * Z_X ω))
+        ≪ (volume : Measure ℝ))
+    (h_ac_Y :
+      (P.map (fun ω => Y ω + Real.sqrt (s / (1 - s)) * Z_Y ω))
+        ≪ (volume : Measure ℝ))
+    (h_int_sum :
+      Integrable
+        (fun x : ℝ => Real.negMulLog
+          (((P.map (fun ω => X ω + Y ω
+                + Real.sqrt (s / (1 - s)) * (Z_X ω + Z_Y ω))).rnDeriv volume x).toReal))
+        (volume : Measure ℝ))
+    (h_int_X :
+      Integrable
+        (fun x : ℝ => Real.negMulLog
+          (((P.map (fun ω => X ω + Real.sqrt (s / (1 - s)) * Z_X ω)).rnDeriv volume x).toReal))
+        (volume : Measure ℝ))
+    (h_int_Y :
+      Integrable
+        (fun x : ℝ => Real.negMulLog
+          (((P.map (fun ω => Y ω + Real.sqrt (s / (1 - s)) * Z_Y ω)).rnDeriv volume x).toReal))
+        (volume : Measure ℝ)) :
+    csiszarGap X Y Z_X Z_Y P s
+      = (1 - s) * csiszarGap1Source X Y Z_X Z_Y P (s / (1 - s)) := by
+  -- Set up the rescale parameter `t = s / (1 - s)` and preliminary facts.
+  set t : ℝ := s / (1 - s) with ht_def
+  have hs0 : (0 : ℝ) ≤ s := hs.1
+  have hs1 : s < 1 := hs.2
+  have h_one_sub_s_pos : (0 : ℝ) < 1 - s := by linarith
+  have h_one_sub_s_nn : (0 : ℝ) ≤ 1 - s := le_of_lt h_one_sub_s_pos
+  have h_one_sub_s_ne : (1 - s : ℝ) ≠ 0 := ne_of_gt h_one_sub_s_pos
+  have h_sqrt_pos : (0 : ℝ) < Real.sqrt (1 - s) := Real.sqrt_pos.mpr h_one_sub_s_pos
+  have h_sqrt_ne : Real.sqrt (1 - s) ≠ 0 := ne_of_gt h_sqrt_pos
+  have h_sqrt_sq : (Real.sqrt (1 - s)) ^ 2 = 1 - s := Real.sq_sqrt h_one_sub_s_nn
+  -- The key algebraic identity: `√(1-s) · √t = √s`.
+  have ht_nn : (0 : ℝ) ≤ t := by
+    rw [ht_def]; exact div_nonneg hs0 h_one_sub_s_nn
+  have h_sqrt_mul_t : Real.sqrt (1 - s) * Real.sqrt t = Real.sqrt s := by
+    rw [← Real.sqrt_mul h_one_sub_s_nn]
+    congr 1
+    rw [ht_def]
+    field_simp
+  -- Helper: for each base function `F : Ω → ℝ` (measurable, X+Y, X, Y),
+  -- and noise `N : Ω → ℝ` (measurable, Z_X+Z_Y, Z_X, Z_Y), the rescale identity
+  -- `√(1-s)·F + √s·N = √(1-s) · (F + √t·N)` lifts to entropyPower scaling.
+  -- We instantiate this 3 times: (X+Y, Z_X+Z_Y), (X, Z_X), (Y, Z_Y).
+  have h_meas_XY : Measurable (fun ω => X ω + Y ω) := hX.add hY
+  have h_meas_ZXY : Measurable (fun ω => Z_X ω + Z_Y ω) := hZX.add hZY
+  have h_meas_fXY : Measurable (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω)) :=
+    h_meas_XY.add ((measurable_const).mul h_meas_ZXY)
+  have h_meas_fX : Measurable (fun ω => X ω + Real.sqrt t * Z_X ω) :=
+    hX.add ((measurable_const).mul hZX)
+  have h_meas_fY : Measurable (fun ω => Y ω + Real.sqrt t * Z_Y ω) :=
+    hY.add ((measurable_const).mul hZY)
+  -- The funext rewrites: `heatFlowPath2 _ _ s ω` equals `√(1-s) * (_ + √t * _ ω)`.
+  -- Sum branch (the sum-of-paths under `entropyPower`).
+  have h_funext_sum :
+      (heatFlowPath2 X Z_X s + heatFlowPath2 Y Z_Y s)
+        = (fun ω => Real.sqrt (1 - s) *
+              (X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω))) := by
+    funext ω
+    simp only [Pi.add_apply, Common2026.Shannon.heatFlowPath2_apply]
+    have h_assoc : Real.sqrt (1 - s) * (Real.sqrt t * (Z_X ω + Z_Y ω))
+        = Real.sqrt s * Z_X ω + Real.sqrt s * Z_Y ω := by
+      rw [← mul_assoc, h_sqrt_mul_t]; ring
+    have h_rhs_expand : Real.sqrt (1 - s) *
+            (X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω))
+          = Real.sqrt (1 - s) * X ω + Real.sqrt (1 - s) * Y ω
+              + Real.sqrt (1 - s) * (Real.sqrt t * (Z_X ω + Z_Y ω)) := by ring
+    rw [h_rhs_expand, h_assoc]
+    ring
+  have h_funext_X :
+      heatFlowPath2 X Z_X s
+        = (fun ω => Real.sqrt (1 - s) * (X ω + Real.sqrt t * Z_X ω)) := by
+    funext ω
+    simp only [Common2026.Shannon.heatFlowPath2_apply]
+    have h_assoc : Real.sqrt (1 - s) * (Real.sqrt t * Z_X ω) = Real.sqrt s * Z_X ω := by
+      rw [← mul_assoc, h_sqrt_mul_t]
+    have h_rhs_expand : Real.sqrt (1 - s) * (X ω + Real.sqrt t * Z_X ω)
+          = Real.sqrt (1 - s) * X ω + Real.sqrt (1 - s) * (Real.sqrt t * Z_X ω) := by ring
+    rw [h_rhs_expand, h_assoc]
+  have h_funext_Y :
+      heatFlowPath2 Y Z_Y s
+        = (fun ω => Real.sqrt (1 - s) * (Y ω + Real.sqrt t * Z_Y ω)) := by
+    funext ω
+    simp only [Common2026.Shannon.heatFlowPath2_apply]
+    have h_assoc : Real.sqrt (1 - s) * (Real.sqrt t * Z_Y ω) = Real.sqrt s * Z_Y ω := by
+      rw [← mul_assoc, h_sqrt_mul_t]
+    have h_rhs_expand : Real.sqrt (1 - s) * (Y ω + Real.sqrt t * Z_Y ω)
+          = Real.sqrt (1 - s) * Y ω + Real.sqrt (1 - s) * (Real.sqrt t * Z_Y ω) := by ring
+    rw [h_rhs_expand, h_assoc]
+  -- Lift each `entropyPower (P.map (heatFlowPath2 _ _ s))` to the 1-source form via
+  -- `Measure.map_map` + `entropyPower_map_mul_const`.
+  -- The map decomposition: `P.map (fun ω => √(1-s) * f ω) = (P.map f).map (· * √(1-s))`.
+  have h_meas_scale : Measurable (fun y : ℝ => y * Real.sqrt (1 - s)) :=
+    measurable_id.mul measurable_const
+  -- IsProbabilityMeasure instances for the 1-source mapped measures.
+  have h_prob_fXY : IsProbabilityMeasure
+      (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω))) :=
+    Measure.isProbabilityMeasure_map h_meas_fXY.aemeasurable
+  have h_prob_fX : IsProbabilityMeasure
+      (P.map (fun ω => X ω + Real.sqrt t * Z_X ω)) :=
+    Measure.isProbabilityMeasure_map h_meas_fX.aemeasurable
+  have h_prob_fY : IsProbabilityMeasure
+      (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)) :=
+    Measure.isProbabilityMeasure_map h_meas_fY.aemeasurable
+  -- The key identity per branch: entropyPower scaling.
+  -- `P.map (fun ω => √(1-s) * f ω) = (P.map f).map (· * √(1-s))`.
+  have h_map_decomp_sum :
+      P.map (fun ω => Real.sqrt (1 - s) *
+            (X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω)))
+        = (P.map (fun ω => X ω + Y ω
+            + Real.sqrt t * (Z_X ω + Z_Y ω))).map (fun y => y * Real.sqrt (1 - s)) := by
+    have h_comp_eq :
+        (fun ω => Real.sqrt (1 - s) *
+              (X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω)))
+          = (fun y : ℝ => y * Real.sqrt (1 - s)) ∘
+              (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω)) := by
+      funext ω; simp [mul_comm]
+    rw [h_comp_eq, ← Measure.map_map h_meas_scale h_meas_fXY]
+  have h_map_decomp_X :
+      P.map (fun ω => Real.sqrt (1 - s) * (X ω + Real.sqrt t * Z_X ω))
+        = (P.map (fun ω => X ω + Real.sqrt t * Z_X ω)).map
+            (fun y => y * Real.sqrt (1 - s)) := by
+    have h_comp_eq :
+        (fun ω => Real.sqrt (1 - s) * (X ω + Real.sqrt t * Z_X ω))
+          = (fun y : ℝ => y * Real.sqrt (1 - s)) ∘
+              (fun ω => X ω + Real.sqrt t * Z_X ω) := by
+      funext ω; simp [mul_comm]
+    rw [h_comp_eq, ← Measure.map_map h_meas_scale h_meas_fX]
+  have h_map_decomp_Y :
+      P.map (fun ω => Real.sqrt (1 - s) * (Y ω + Real.sqrt t * Z_Y ω))
+        = (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)).map
+            (fun y => y * Real.sqrt (1 - s)) := by
+    have h_comp_eq :
+        (fun ω => Real.sqrt (1 - s) * (Y ω + Real.sqrt t * Z_Y ω))
+          = (fun y : ℝ => y * Real.sqrt (1 - s)) ∘
+              (fun ω => Y ω + Real.sqrt t * Z_Y ω) := by
+      funext ω; simp [mul_comm]
+    rw [h_comp_eq, ← Measure.map_map h_meas_scale h_meas_fY]
+  -- Apply `entropyPower_map_mul_const` per branch (`c^2 = (√(1-s))^2 = 1 - s`).
+  have h_ep_sum :
+      entropyPower (P.map (heatFlowPath2 X Z_X s + heatFlowPath2 Y Z_Y s))
+        = (1 - s) * entropyPower
+            (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω))) := by
+    rw [h_funext_sum, h_map_decomp_sum,
+        entropyPower_map_mul_const h_ac_sum h_sqrt_ne h_int_sum, h_sqrt_sq]
+  have h_ep_X :
+      entropyPower (P.map (heatFlowPath2 X Z_X s))
+        = (1 - s) * entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω)) := by
+    rw [h_funext_X, h_map_decomp_X,
+        entropyPower_map_mul_const h_ac_X h_sqrt_ne h_int_X, h_sqrt_sq]
+  have h_ep_Y :
+      entropyPower (P.map (heatFlowPath2 Y Z_Y s))
+        = (1 - s) * entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)) := by
+    rw [h_funext_Y, h_map_decomp_Y,
+        entropyPower_map_mul_const h_ac_Y h_sqrt_ne h_int_Y, h_sqrt_sq]
+  -- Combine.
+  unfold csiszarGap csiszarGap1Source
+  rw [h_ep_sum, h_ep_X, h_ep_Y]
+  ring
+
+/-- **Endpoint at `t = 0`** (Phase D §13 A-0'-3). The 1-source Csiszár gap
+at the path start reduces to the EPI gap for the original `(X, Y)` (since
+`√0 · _ = 0` and `X + 0 = X`).
+
+`@audit:suspect(epi-stam-to-conclusion-plan)` — sister Phase A uses this
+endpoint identification (corresponds to `csiszarGap_at_zero` for the
+2-source form) to derive `gap1Source(0) ≥ 0` from `AntitoneOn`. -/
+theorem csiszarGap1Source_at_zero {Ω : Type*} [MeasurableSpace Ω]
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) :
+    csiszarGap1Source X Y Z_X Z_Y P 0
+      = entropyPower (P.map (fun ω => X ω + Y ω))
+        - entropyPower (P.map X) - entropyPower (P.map Y) := by
+  unfold csiszarGap1Source
+  have h_sum_funext :
+      (fun ω => X ω + Y ω + Real.sqrt 0 * (Z_X ω + Z_Y ω))
+        = fun ω => X ω + Y ω := by
+    funext ω
+    simp [Real.sqrt_zero]
+  have h_X_funext :
+      (fun ω => X ω + Real.sqrt 0 * Z_X ω) = X := by
+    funext ω
+    simp [Real.sqrt_zero]
+  have h_Y_funext :
+      (fun ω => Y ω + Real.sqrt 0 * Z_Y ω) = Y := by
+    funext ω
+    simp [Real.sqrt_zero]
+  rw [h_sum_funext, h_X_funext, h_Y_funext]
+
+/-- **Honest hypothesis predicate: tendsto-zero at infinity of the 1-source
+Csiszár gap with Gaussian noise pair** (Phase D §13 A-0'-4 statement-only
+handoff).
+
+The genuine assertion `Tendsto (csiszarGap1Source X Y Z_X Z_Y P) atTop (𝓝 0)`
+(when `Z_X, Z_Y` are independent standard normals) is the 1-source analogue
+of `csiszarGap_at_one_eq_zero_of_gaussian_pair` (`:1194`) at the boundary
+`t → ∞` (which corresponds to `s → 1` under the rescale `t = s/(1-s)`).
+Cover-Thomas Csiszár scaling tail bound (Theorem 17.7.3 limit step) formalizes
+this in ~50+ lines, exceeding the A-0' scope cap. We externalize the assertion
+as a named honest hypothesis predicate.
+
+**NOT a discharge / load-bearing**: this `Prop` is the genuine `Tendsto`
+assertion — type ≠ conclusion is *not* applicable because the predicate is
+the assertion itself (Mathlib `Filter.Tendsto`). The mini-plan §A-0'-β
+retreat line establishes that sister Phase A's closure path does **not**
+require this lemma in proof form: the 2-source `AntitoneOn` is lifted from
+the 1-source `AntitoneOn (Set.Ici 0)` via the rescale equivalence
+(A-0'-2), and the 2-source endpoint `s = 1` discharge uses the already-
+proven `csiszarGap_at_one_eq_zero_of_gaussian_pair`. This handoff predicate
+exists for completeness of the 1-source form's documentation; sister Phase
+A may carry it as a caller hypothesis only if it elects the alternative
+direct-1-source-endpoint path (namely: proving `AntitoneOn (Set.Ici 0)` for
+`csiszarGap1Source` directly and pinching the upper endpoint via this
+`Tendsto … atTop (𝓝 0)` predicate, instead of the rescale route through
+the 2-source `csiszarGap` and `csiszarGap_at_one_eq_zero_of_gaussian_pair`
+selected by mini-plan §A-0'-β).
+
+**Honesty audit (`csiszar` WALL, 2026-05-25)**: Tier 1 PASS (no
+circularity / `:True` slot / vacuous-`Z_X = 0` path — Gaussian-law
+hypotheses exclude the dirac collapse). Tier 2 PASS (genuinely staged
+Cover-Thomas tail bound, not an orphan: predicate is honest documentation
+of the 1-source form's `t → ∞` endpoint; Phase A's chosen rescale path
+does not consume it, alternative direct-endpoint path would). Tier 3 PASS
+(`csiszar` is a pre-declared WALL slug in `docs/audit/audit-tags.md`;
+this is its first concrete site). Tier 4 PASS post-clarification (the
+"alternative direct-1-source-endpoint path" is now named explicitly).
+No `*_discharged` / `*_full` name-laundering; the predicate name announces
+the assumption.
+
+`@audit:staged(csiszar)` — Cover-Thomas Csiszár
+scaling tail bound formalization, externalized to a future plan
+(target: `epi-stam-to-conclusion-plan` Phase B or a dedicated Csiszár
+tail-bound mini-plan). -/
+def IsCsiszarGap1SourceTendsToZeroAtInfinity {Ω : Type*} [MeasurableSpace Ω]
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) : Prop :=
+  Measurable Z_X → Measurable Z_Y → IndepFun Z_X Z_Y P →
+    P.map Z_X = gaussianReal 0 1 → P.map Z_Y = gaussianReal 0 1 →
+    Filter.Tendsto (fun t : ℝ => csiszarGap1Source X Y Z_X Z_Y P t)
+      Filter.atTop (nhds (0 : ℝ))
+
+/-- **1-source Csiszár gap shape contract for `epi-stam-to-conclusion-plan` Phase A**
+(Phase D §13 A-0'-5).
+
+The `csiszarGap1Source` (A-0'-1) body matches verbatim the shape used by
+sister Phase A's 1-source derivative computation (sister A-2/A-3). This
+`rfl` lemma exposes the verbatim match so that sister Phase A can
+`simp only [← csiszarGap1Source_shape_for_sister]` to re-express its
+local working term as the named `csiszarGap1Source`.
+
+This is a **shape contract only** (`rfl` body); no analytic content. Sister
+Phase A is responsible for the actual `AntitoneOn` proof on the 1-source
+form using de Bruijn V2 + Stam inequality, then lifts to the 2-source form
+via `csiszarGap_eq_one_source_via_rescale` (A-0'-2).
+
+`@audit:suspect(epi-stam-to-conclusion-plan)` — sister Phase A consumes
+this shape contract. -/
+theorem csiszarGap1Source_shape_for_sister
+    {Ω : Type*} [MeasurableSpace Ω]
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) :
+    (fun t : ℝ => csiszarGap1Source X Y Z_X Z_Y P t)
+      = (fun t : ℝ =>
+          entropyPower (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω)))
+            - entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
+            - entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω))) :=
+  rfl
+
 end InformationTheory.Shannon.EPIL3Integration

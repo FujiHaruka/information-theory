@@ -473,3 +473,41 @@ theorem isStamToEPIScalingHyp_of_stam_debruijn
 
 paraphrase / drop bracket 0 件、推測 signature 0 件、loogle 出力だけでの記録 0 件
 (全て該当 file Read で verbatim 照合)。
+
+---
+
+## A-0' 補強 inventory (2026-05-25 L-Concl-A-δ 撤退判定 (c) 後追記)
+
+mini-plan §A-0' (line 211-298) で flag された Mathlib 候補の verbatim 確認結果。
+
+### §A-0'-1: `entropyPower_const_mul` (補題 1 csiszarGap_eq_one_source_via_rescale 用)
+
+- **状態**: **HIT** (Common2026 内既存)
+- **`file:line`**: `Common2026/Shannon/EPIPlumbing.lean:130-147`
+- **完全 signature (verbatim)**:
+  ```lean
+  theorem entropyPower_map_mul_const
+      {μ : Measure ℝ} (hμ : μ ≪ volume) [IsProbabilityMeasure μ] {c : ℝ} (hc : c ≠ 0)
+      (h_ent_int : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
+      entropyPower (μ.map (· * c)) = c^2 * entropyPower μ
+  ```
+- **type-class 前提**: `[IsProbabilityMeasure μ]`
+- **引数型**: `hμ : μ ≪ volume`, `{c : ℝ}` (implicit), `hc : c ≠ 0`, `h_ent_int : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume`
+- **結論 form**: `entropyPower (μ.map (· * c)) = c^2 * entropyPower μ`
+- **caller 要件**: `h_ent_int` (integrability of `negMulLog ∘ rnDeriv`) が caller 要件として残る → A-0'-2 の rescale 等式適用時 `IsStamScalingNoiseHyp` の伸長 or `IsStamScalingIntegrabilityHyp` 等別 honest hyp で外部化判定 (実装時)
+- **L-Concl-A-η 判定**: **不発** (既存 HIT、自作不要、scope 内 detour 不要)
+
+### §A-0'-2: `Real.sqrt_mul` / `Real.sqrt_div` (rescale 等式 algebra 用)
+
+- **状態**: **HIT** (Mathlib 既存)
+- **`Real.sqrt_mul`**: `Mathlib/Data/Real/Sqrt.lean` (loogle 確認、1 declaration)
+- **`Real.sqrt_div`** / **`Real.sqrt_div'`**: `Mathlib/Data/Real/Sqrt.lean` (loogle 確認、`Real.sqrt (?a / ?b)` 形 15 matches、`Real.sqrt_div` + `Real.sqrt_div'` の 2 件が rescale 用 primary)
+
+### A-0' 撤退ライン判定
+
+| slug | 旧状態 | 補強後 |
+|---|---|---|
+| L-Concl-A-η (A-0'-2 `entropyPower_const_mul` 不在時) | 発火条件 設定済 | **不発確定** (`EPIPlumbing.lean:130` HIT) |
+| L-Concl-A-β (A-0'-4 tendsto 証明 >50 行時) | 設定済 (statement-only handoff 経路) | 未判定 (実装時 statement-only に留まる方針なら不発) |
+
+A-0' 着手準備完了、`lean-implementer` dispatch 可。
