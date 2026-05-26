@@ -103,6 +103,7 @@ def IsWynerZivFactorizable
     ∧ (∀ x y u, q (x, y, u) = κ x u * P_XY (x, y))
 
 /-- Membership unfold for `IsWynerZivFactorizable`. -/
+@[entry_point]
 lemma IsWynerZivFactorizable_iff
     (P_XY : α × β → ℝ) (q : α × β × U → ℝ) :
     IsWynerZivFactorizable U P_XY q ↔
@@ -301,6 +302,7 @@ def WynerZivFactorizableConstraint
         ∧ wzExpectedDistortion U d qf.1 qf.2 ≤ D}
 
 /-- Membership unfold for `WynerZivFactorizableConstraint`. -/
+@[entry_point]
 lemma mem_WynerZivFactorizableConstraint_iff
     {P_XY : α × β → ℝ} {d : α → γ → ℝ} {D : ℝ}
     {qf : (α × β × U → ℝ) × (U × β → γ)} :

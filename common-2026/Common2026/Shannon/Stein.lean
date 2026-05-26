@@ -65,6 +65,7 @@ noncomputable def logLikelihoodRatio
 
 omit [MeasurableSpace Ω] [Fintype α] [DecidableEq α] [Nonempty α]
     [MeasurableSingletonClass α] in
+@[entry_point]
 lemma logLikelihoodRatio_eq_comp
     (P Q : Measure α) (Xs : ℕ → Ω → α) (i : ℕ) :
     logLikelihoodRatio P Q Xs i = llrPmf P Q ∘ Xs i := rfl
@@ -1148,6 +1149,7 @@ noncomputable def steinBetaSet
         β = ((Measure.pi (fun _ : Fin n => Q)) s).toReal }
 
 /-- The optimal type-II error subject to type-I ≤ ε. -/
+@[entry_point]
 noncomputable def steinOptimalBeta
     (P Q : Measure α) (n : ℕ) (ε : ℝ) : ℝ :=
   sInf (steinBetaSet P Q n ε)
@@ -1178,6 +1180,7 @@ lemma steinBetaSet_bddBelow
   rintro β ⟨s, _, _, rfl⟩
   exact ENNReal.toReal_nonneg
 
+@[entry_point]
 lemma steinOptimalBeta_nonneg
     (P Q : Measure α) (n : ℕ) (ε : ℝ) :
     0 ≤ steinOptimalBeta P Q n ε := by
@@ -1185,6 +1188,7 @@ lemma steinOptimalBeta_nonneg
   · exact le_csInf h fun _ ⟨_, _, _, hβ⟩ => hβ ▸ ENNReal.toReal_nonneg
   · simp [steinOptimalBeta, Set.not_nonempty_iff_eq_empty.mp h, Real.sInf_empty]
 
+@[entry_point]
 lemma steinOptimalBeta_le_one
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (n : ℕ) (ε : ℝ) (hε : 0 ≤ ε) :

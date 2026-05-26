@@ -279,6 +279,7 @@ theorem lz78GreedyParse_count (input : List α) :
   simp
 
 /-- **Count bound**: the greedy parse has at most `input.length` phrases. -/
+@[entry_point]
 theorem lz78GreedyParse_count_le (input : List α) :
     (lz78GreedyParse input).count ≤ input.length :=
   le_of_eq (lz78GreedyParse_count input)
@@ -350,6 +351,7 @@ theorem lz78_impl_encoding_length_per_symbol_le (n : ℕ) (hn : 0 < n)
 divided by `n` is `≥ 0` for every `n` (including `n = 0`, where the
 division is `0/0 = 0`). The numerator is a `ℕ` cast and the denominator a
 `ℕ` cast, so the quotient is a nonnegative real. -/
+@[entry_point]
 theorem lz78_impl_encoding_length_per_symbol_nonneg (n : ℕ) (x : Fin n → α) :
     (0 : ℝ) ≤ (lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ) :=
   div_nonneg (by positivity) (by positivity)
@@ -375,6 +377,7 @@ def IsLZ78ImplEncodingLengthBoundPassthrough (B : ℕ → ℕ) : Prop :=
 
 /-- **Cover–Thomas Lemma 13.5.2 form discharges the impl bound
 pass-through** with the canonical bound `n · (log(n+1) + log|α| + 2)`. -/
+@[entry_point]
 theorem IsLZ78ImplEncodingLengthBoundPassthrough.canonical :
     IsLZ78ImplEncodingLengthBoundPassthrough α
       (fun n => n * (Nat.log 2 (n + 1) + Nat.log 2 (Fintype.card α) + 2)) := by
@@ -382,6 +385,7 @@ theorem IsLZ78ImplEncodingLengthBoundPassthrough.canonical :
   exact lz78_impl_encoding_length_le_n_log_n_plus_const n x
 
 /-- **Monotonicity** of the impl bound pass-through. -/
+@[entry_point]
 theorem IsLZ78ImplEncodingLengthBoundPassthrough.mono {B₁ B₂ : ℕ → ℕ}
     (h : IsLZ78ImplEncodingLengthBoundPassthrough α B₁) (hB : ∀ n, B₁ n ≤ B₂ n) :
     IsLZ78ImplEncodingLengthBoundPassthrough α B₂ := by

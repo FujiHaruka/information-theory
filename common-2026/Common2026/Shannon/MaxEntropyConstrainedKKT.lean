@@ -106,6 +106,7 @@ lemma expFamilyDist_eq_gibbsPmf [Nonempty α]
 /-! ## Section 2 — Basic positivity / pmf properties transported from `gibbsPmf` -/
 
 /-- `expFamilyDist` is pointwise strictly positive. -/
+@[entry_point]
 lemma expFamilyDist_pos [Nonempty α]
     (f : Fin k → α → ℝ) (lam : Fin k → ℝ) (x : α) :
     0 < expFamilyDist f lam x := by
@@ -113,6 +114,7 @@ lemma expFamilyDist_pos [Nonempty α]
   exact gibbsPmf_pos f lam x
 
 /-- `expFamilyDist λ f ∈ stdSimplex ℝ α`. -/
+@[entry_point]
 lemma expFamilyDist_mem_stdSimplex [Nonempty α]
     (f : Fin k → α → ℝ) (lam : Fin k → ℝ) :
     expFamilyDist f lam ∈ stdSimplex ℝ α := by
@@ -309,6 +311,7 @@ theorem entropy_le_logPartition_sub_inner_of_KKT [Nonempty α]
 `𝔼_{p*}[f] = c` (the gradient-of-ψ condition `∇ψ(λ) = c`) is *equivalent* to
 the gibbs ansatz satisfying the same constraint as `P`. This is the formal
 content of "KKT stationarity in `λ`". -/
+@[entry_point]
 lemma KKT_moment_match_iff_gibbs_moment_match [Nonempty α]
     (f : Fin k → α → ℝ) (c : Fin k → ℝ) (lam : Fin k → ℝ) :
     (∀ i, ∑ x, expFamilyDist f lam x * f i x = c i)
@@ -324,6 +327,7 @@ lemma KKT_moment_match_iff_gibbs_moment_match [Nonempty α]
 /-- **KKT zero-multiplier reduction**: `expFamilyDist f 0 = expFamilyDist g 0`
 for any features `f`, `g` (both equal to the uniform pmf). This is the
 unconstrained-Lagrangian degenerate case `λ = 0`. -/
+@[entry_point]
 lemma expFamilyDist_lam_zero_eq [Nonempty α]
     (f : Fin k → α → ℝ) :
     expFamilyDist f (fun _ => (0 : ℝ)) = fun _ => (1 : ℝ) / Fintype.card α := by

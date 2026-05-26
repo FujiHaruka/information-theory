@@ -206,6 +206,7 @@ noncomputable def averageErrorProb
 omit [Fintype α] [MeasurableSingletonClass α] [Fintype β] [MeasurableSingletonClass β] in
 /-- The average error probability is bounded above by `1` (each `errorProbAt ≤ 1` for a
 Markov kernel; summing over `M` terms and dividing by `M` keeps the bound). -/
+@[entry_point]
 theorem averageErrorProb_le_one
     [Nonempty β]
     (c : Code M n α β) (W : Channel α β) [IsMarkovKernel W] :
@@ -291,6 +292,7 @@ noncomputable def jointlyTypicalSet
         InformationTheory.Shannon.typicalSet μ (jointSequence Xs Ys) n ε }
 
 omit [MeasurableSingletonClass α] [MeasurableSingletonClass β] in
+@[entry_point]
 lemma mem_jointlyTypicalSet_iff
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (n : ℕ) (ε : ℝ) (x : Fin n → α) (y : Fin n → β) :

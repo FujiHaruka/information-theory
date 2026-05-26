@@ -51,6 +51,7 @@ variable {α β : Type*}
 /-- **Phase D.0** (δ-uniform 化形): `R < capacity W` から `p₀ ∈ stdSimplex`、
 `δ_B ∈ (0, 1]`、`R₁ > R` を抽出。`∀ δ ∈ (0, δ_B]` で
 `R₁ < I(p₀; W_smooth δ).toReal` が成立。 -/
+@[entry_point]
 theorem exists_smooth_capacity_gt_uniform
     (W : Channel α β) [IsMarkovKernel W]
     {R : ℝ} (hR : R < capacity W) :

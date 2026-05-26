@@ -107,6 +107,7 @@ in full here — these are the lemmas the Stam λ-optimization actually consumes
 The discrete (n = 2) Cauchy-Schwarz inequality, the algebraic skeleton of the
 conditional `(E[g | G])² ≤ E[g² | G]` step. Discharged by the SOS identity
 `(a² + b²)(c² + d²) - (a c + b d)² = (a d - b c)² ≥ 0`. -/
+@[entry_point]
 theorem stam_two_point_cs (a b c d : ℝ) :
     (a * c + b * d) ^ 2 ≤ (a ^ 2 + b ^ 2) * (c ^ 2 + d ^ 2) := by
   nlinarith [sq_nonneg (a * d - b * c)]
@@ -119,6 +120,7 @@ For `λ ∈ [0,1]` and scores `sX, sY`, the squared λ-mixture is bounded by the
 This is the pointwise inequality whose conditional-expectation integral yields
 Step 3's `J(Z) ≤ λ² J(X) + (1-λ)² J(Y)`. Discharged via
 `(λ sX + (1-λ) sY)² ≤ λ sX² + (1-λ) sY² ⇔ λ(1-λ)(sX - sY)² ≥ 0`. -/
+@[entry_point]
 theorem stam_convex_cs {lam : ℝ} (hlo : 0 ≤ lam) (hhi : lam ≤ 1) (sX sY : ℝ) :
     (lam * sX + (1 - lam) * sY) ^ 2 ≤ lam * sX ^ 2 + (1 - lam) * sY ^ 2 := by
   nlinarith [mul_nonneg (mul_nonneg hlo (by linarith : (0:ℝ) ≤ 1 - lam))
@@ -129,6 +131,7 @@ theorem stam_convex_cs {lam : ℝ} (hlo : 0 ≤ lam) (hhi : lam ≤ 1) (sX sY : 
 For weights `λ, 1-λ ≥ 0` summing to `1` and values `u, v`,
 `(λ u + (1-λ) v)² ≤ λ u² + (1-λ) v²`. Identical content to `stam_convex_cs` but
 phrased as the conditional-Jensen squared-mean inequality consumed in Step 2. -/
+@[entry_point]
 theorem stam_jensen_sq_le {lam : ℝ} (hlo : 0 ≤ lam) (hhi : lam ≤ 1) (u v : ℝ) :
     (lam * u + (1 - lam) * v) ^ 2 ≤ lam * u ^ 2 + (1 - lam) * v ^ 2 :=
   stam_convex_cs hlo hhi u v
@@ -208,6 +211,7 @@ def IsStamCondExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
 (existence form): instantiate the ∀λ bound at the optimal witness.
 
 `@audit:ok` -/
+@[entry_point]
 theorem isStamCauchySchwarz_of_condExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω} (h : IsStamCondExpCSHyp X Y P) :
     IsStamCauchySchwarz X Y P := by
@@ -219,12 +223,14 @@ theorem isStamCauchySchwarz_of_condExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
       (J_Y / (J_X + J_Y)) (by positivity) (by rw [div_le_one hsum]; linarith)
 
 /-- The Step-2 typed predicate is congruent under function equality. -/
+@[entry_point]
 theorem isStamCondExpCSHyp_congr {Ω : Type*} [MeasurableSpace Ω]
     {X Y X' Y' : Ω → ℝ} {P : Measure Ω}
     (hX : X = X') (hY : Y = Y') (h : IsStamCondExpCSHyp X Y P) :
     IsStamCondExpCSHyp X' Y' P := by subst hX; subst hY; exact h
 
 /-- The Step-2 typed predicate is symmetric in `X, Y` (swap `λ ↦ 1 - λ`). -/
+@[entry_point]
 theorem isStamCondExpCSHyp_symm {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω} (h : IsStamCondExpCSHyp X Y P) :
     IsStamCondExpCSHyp Y X P := by
@@ -247,6 +253,7 @@ Given the ∀λ convex Fisher bound (Step 2), instantiate at the optimal
 Step 2-3 to the harmonic-mean form.
 
 `@audit:ok` -/
+@[entry_point]
 theorem stamCauchySchwarzOptimal_of_condExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω} (h : IsStamCondExpCSHyp X Y P) :
     IsStamCauchySchwarzOptimal X Y P := by
@@ -267,6 +274,7 @@ is consumed inside Step 2's instantiation; we keep both arguments to document th
 genuine 2-step dependency.)
 
 `@audit:ok` -/
+@[entry_point]
 theorem stamCauchySchwarzOptimal_of_step12 {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvHyp X Y P)
@@ -289,6 +297,7 @@ the ∀λ convex Fisher bound). We pass `isStamScoreConvolution_intro X Y P` for
 the cosmetic slot, replacing the former `trivial`-on-`Prop := True`.
 
 `@audit:ok` -/
+@[entry_point]
 theorem isStamInequalityHyp_of_step12 {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvHyp X Y P)
@@ -303,6 +312,7 @@ the weaker witness form. Provided for callers that consume the existential
 predicate directly.
 
 `@audit:ok` -/
+@[entry_point]
 theorem isStamCauchySchwarz_of_step12 {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvHyp X Y P)
@@ -327,6 +337,7 @@ unconditionally — kept below.
 -/
 
 /-- **Step-1 Gaussian discharge** — the typed predicate holds unconditionally. -/
+@[entry_point]
 theorem isStamScoreConvHyp_of_gaussian {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : IsStamScoreConvHyp X Y P :=
   isStamScoreConvHyp_intro X Y P
@@ -335,24 +346,28 @@ theorem isStamScoreConvHyp_of_gaussian {Ω : Type*} [MeasurableSpace Ω]
 
 /-- **Sanity**: the two-point CS is tight when `(a, b) ∥ (c, d)`, e.g. equality
 at `a = c, b = d` gives `(a² + b²)² ≤ (a² + b²)²`. -/
+@[entry_point]
 theorem stam_two_point_cs_diag (a b : ℝ) :
     (a * a + b * b) ^ 2 ≤ (a ^ 2 + b ^ 2) * (a ^ 2 + b ^ 2) := by
   have := stam_two_point_cs a b a b
   nlinarith [this]
 
 /-- **Sanity**: λ-convex CS at `λ = 0` reduces to `sY² ≤ sY²`. -/
+@[entry_point]
 theorem stam_convex_cs_at_zero (sX sY : ℝ) :
     ((0 : ℝ) * sX + (1 - 0) * sY) ^ 2 ≤ (0 : ℝ) * sX ^ 2 + (1 - 0) * sY ^ 2 := by
   have := stam_convex_cs (lam := 0) le_rfl (by norm_num) sX sY
   linarith [this]
 
 /-- **Sanity**: λ-convex CS at `λ = 1` reduces to `sX² ≤ sX²`. -/
+@[entry_point]
 theorem stam_convex_cs_at_one (sX sY : ℝ) :
     ((1 : ℝ) * sX + (1 - 1) * sY) ^ 2 ≤ (1 : ℝ) * sX ^ 2 + (1 - 1) * sY ^ 2 := by
   have := stam_convex_cs (lam := 1) (by norm_num) le_rfl sX sY
   linarith [this]
 
 /-- **Sanity**: the convex Jensen gap is exactly `λ(1-λ)(u - v)²`. -/
+@[entry_point]
 theorem stam_jensen_gap {lam : ℝ} (u v : ℝ) :
     lam * u ^ 2 + (1 - lam) * v ^ 2 - (lam * u + (1 - lam) * v) ^ 2
       = lam * (1 - lam) * (u - v) ^ 2 := by ring

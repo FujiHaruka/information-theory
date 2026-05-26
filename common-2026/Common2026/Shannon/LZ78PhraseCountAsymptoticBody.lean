@@ -227,6 +227,7 @@ theorem lz78_phrase_count_asymptotic_of_mul_log
 
 /-- **Sandwich upgrade**: combine the genuine upper envelope with the
 reflexive lower envelope into a phrase-count sandwich. -/
+@[entry_point]
 theorem IsLZ78PhraseCountSandwich.of_mul_log_bound
     (p : ℕ → LZ78Parsing α) {K : ℝ} (hK : 0 ≤ K)
     (h : IsZivCountingMulLogBound p K) :

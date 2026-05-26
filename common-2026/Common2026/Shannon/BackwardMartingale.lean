@@ -84,6 +84,7 @@ section BasicAPI
 variable {f : ℕᵒᵈ → Ω → ℝ} {ℋ : Filtration ℕᵒᵈ m₀}
 
 /-- For a backward martingale `f` indexed by `ℕᵒᵈ`, every level is integrable. -/
+@[entry_point]
 theorem BackwardMartingale.integrable (hf : Martingale f ℋ μ) (n : ℕᵒᵈ) :
     Integrable (f n) μ :=
   hf.integrable n

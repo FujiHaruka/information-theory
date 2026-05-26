@@ -56,6 +56,7 @@ variable [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass �
 /-- **Joint-typical lossy encoder.** Given a codebook `c : Codebook M n β`,
 returns the first (any) message index `m` whose codeword is jointly typical with the
 source word `x`. Falls back to `⟨0, hM⟩` if no such `m` exists. -/
+@[entry_point]
 noncomputable def jointTypicalLossyEncoder
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     {M n : ℕ} (hM : 0 < M) (ε : ℝ) (c : Codebook M n β) :
@@ -68,6 +69,7 @@ noncomputable def jointTypicalLossyEncoder
 
 /-- Bundle a codebook + joint-typical lossy encoder into a `LossyCode`. The codebook
 itself serves as the decoder. -/
+@[entry_point]
 noncomputable def lossyCodeOfCodebook
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     {M n : ℕ} (hM : 0 < M) (ε : ℝ) (c : Codebook M n β) :
@@ -251,6 +253,7 @@ private theorem jointlyTypicalSet_card_ge
 The probability under the product measure `μX^n × μY^n` that `(X̃, Ỹ)` lies in
 the jointly typical set is bounded **below** by `(1 - η) · exp(-n · (I + 3ε))`,
 which is Cover-Thomas (10.85). Mirror of `jointlyTypicalSet_indep_prob_le`. -/
+@[entry_point]
 theorem jointlyTypicalSet_indep_prob_ge
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)

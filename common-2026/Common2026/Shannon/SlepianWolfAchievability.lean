@@ -71,11 +71,13 @@ noncomputable def swTrivialEncoderX (n : ℕ) :
 
 /-- The "trivial" SW encoder pair: identity on each side, using the Fintype index
 of `Fin n → β`. -/
+@[entry_point]
 noncomputable def swTrivialEncoderY (n : ℕ) :
     (Fin n → β) → Fin (Fintype.card (Fin n → β)) :=
   (Fintype.equivFin (Fin n → β)).toFun
 
 /-- The trivial SW joint decoder: apply each axis-equivalence inverse. -/
+@[entry_point]
 noncomputable def swTrivialDecoder (n : ℕ) :
     Fin (Fintype.card (Fin n → α)) × Fin (Fintype.card (Fin n → β)) →
       (Fin n → α) × (Fin n → β) :=

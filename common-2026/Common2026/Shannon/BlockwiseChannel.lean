@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ChannelCoding
 import Common2026.Shannon.ChannelCodingShannonTheorem
 import Common2026.Shannon.MIChainRule
@@ -121,16 +122,19 @@ instance BlockwiseChannel.ofMemoryless.instIsMarkovKernel
 
 /-- Per-block capacity: `sup_{p : prob measure on (Fin n → α)} I(p; W_n)`.
 Type is `ℝ≥0∞` to match `mutualInfoOfChannel`. -/
+@[entry_point]
 noncomputable def BlockwiseChannel.capacityN
     (W : BlockwiseChannel α β) (n : ℕ) : ℝ≥0∞ :=
   sSup ((fun p : Measure (Fin n → α) => mutualInfoOfChannel p (W n)) ''
         { p : Measure (Fin n → α) | IsProbabilityMeasure p })
 
+@[entry_point]
 theorem BlockwiseChannel.capacityN_nonneg (W : BlockwiseChannel α β) (n : ℕ) :
     0 ≤ W.capacityN n := bot_le
 
 /-- The asymptotic per-letter capacity:
 `capacity_lim W := lim_{n → ∞} (capacityN W n).toReal / n`. -/
+@[entry_point]
 noncomputable def BlockwiseChannel.capacity_lim (W : BlockwiseChannel α β) : ℝ :=
   Filter.atTop.limUnder (fun n : ℕ => (W.capacityN n).toReal / n)
 
@@ -1162,6 +1166,7 @@ route used in the ≤ direction (`mutualInfo_le_sum_per_letter_of_memoryless_str
 Both are auto-derived on `[Fintype α] [MeasurableSingletonClass α]` via the
 `MeasurableSingletonClass + Countable → DiscreteMeasurableSpace → StandardBorelSpace`
 instance chain. -/
+@[entry_point]
 theorem capacityN_ofMemoryless_eq
     {α β : Type*}
     [Fintype α] [DecidableEq α] [Nonempty α]
@@ -1178,6 +1183,7 @@ theorem capacityN_ofMemoryless_eq
 /-- Phase 4-β: limit form matches the single-letter `capacity W` in the
 memoryless case. Direct from Phase 4-α (the sequence is eventually the constant
 `capacity W`). -/
+@[entry_point]
 theorem capacity_lim_eq_capacity_of_memoryless
     {α β : Type*}
     [Fintype α] [DecidableEq α] [Nonempty α]

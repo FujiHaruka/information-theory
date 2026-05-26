@@ -82,9 +82,11 @@ noncomputable def fisherInfoOfMeasureV2Real (_μ : Measure ℝ) (f : ℝ → ℝ
   fisherInfoOfDensityReal f
 
 /-- Unfold lemma. -/
+@[entry_point]
 theorem fisherInfoOfMeasureV2_def (μ : Measure ℝ) (f : ℝ → ℝ) :
     fisherInfoOfMeasureV2 μ f = fisherInfoOfDensity f := rfl
 
+@[entry_point]
 theorem fisherInfoOfMeasureV2Real_def (μ : Measure ℝ) (f : ℝ → ℝ) :
     fisherInfoOfMeasureV2Real μ f = fisherInfoOfDensityReal f := rfl
 
@@ -101,6 +103,7 @@ theorem fisherInfoOfMeasureV2_gaussianReal
   exact fisherInfoOfDensity_gaussianPDFReal m hv
 
 /-- Real-valued Gaussian Fisher info via V2. -/
+@[entry_point]
 theorem fisherInfoOfMeasureV2Real_gaussianReal
     (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     fisherInfoOfMeasureV2Real (gaussianReal m v) (gaussianPDFReal m v) = 1 / (v : ℝ) := by

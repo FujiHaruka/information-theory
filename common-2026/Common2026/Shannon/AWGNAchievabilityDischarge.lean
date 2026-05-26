@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.AWGN
 import Common2026.Shannon.AWGNAchievability
 import Common2026.Shannon.AWGNMain
@@ -590,6 +591,7 @@ thin packaging (~10-line body), `h_rand` carries the integral-bound conclusion;
 both staged predicates are discharged.
 
 `@audit:closed-by-successor(awgn-moonshot-plan)` -/
+@[entry_point]
 theorem awgn_avg_error_union_bound
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -924,6 +926,7 @@ witness, body builds the assembly. `h_feasible` is regularity (load-bearing
 analytic hyp, NOT a discharge of the conclusion).
 
 `@audit:closed-by-successor(awgn-achievability-typicality-plan)` -/
+@[entry_point]
 theorem isAwgnTypicalityHypothesis
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -1550,6 +1553,7 @@ historical artefact of the pre-pivot 3-hyp form; bundle preserves the
 hyp-mediated semantics so the name still reads honestly).
 
 `@audit:closed-by-successor(awgn-moonshot-plan)` -/
+@[entry_point]
 theorem awgn_achievability_F1_via_staged_hyps
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -1582,6 +1586,7 @@ status explicit. The `_via_staged` suffix continues to read honestly with the
 bundle hyp (still staged, just collapsed from 3 → 1).
 
 `@audit:closed-by-successor(awgn-moonshot-plan)` -/
+@[entry_point]
 theorem awgn_theorem_F4_discharged_F1_via_staged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_feasible : IsAwgnRandomCodingFeasible P N (isAwgnChannelMeasurable N))

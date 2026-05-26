@@ -72,6 +72,7 @@ def IsZivCountingAsymptoticBound (p : ℕ → LZ78Parsing α) (B : ℕ → ℝ) 
   fun _ => le_refl _
 
 /-- **Monotonicity** in the bound function. -/
+@[entry_point]
 theorem IsZivCountingAsymptoticBound.mono
     {p : ℕ → LZ78Parsing α} {B B' : ℕ → ℝ}
     (h : IsZivCountingAsymptoticBound p B)
@@ -81,6 +82,7 @@ theorem IsZivCountingAsymptoticBound.mono
 
 /-- **Slack addition**: if `B` bounds `count`, so does `B + ε` for any
 non-negative slack `ε`. -/
+@[entry_point]
 theorem IsZivCountingAsymptoticBound.add_nonneg
     {p : ℕ → LZ78Parsing α} {B ε : ℕ → ℝ}
     (h : IsZivCountingAsymptoticBound p B)
@@ -93,6 +95,7 @@ theorem IsZivCountingAsymptoticBound.add_nonneg
 /-- **Lift a pointwise `ZivCountingBound` to the asymptotic family**:
 if for every `n` the per-`n` parsing `p n` satisfies
 `ZivCountingBound (p n) (B n)`, then the asymptotic predicate holds. -/
+@[entry_point]
 theorem IsZivCountingAsymptoticBound.of_pointwise_count
     {p : ℕ → LZ78Parsing α} {B : ℕ → ℝ}
     (h : ∀ n, ZivCountingBound (p n) (B n)) :
@@ -164,6 +167,7 @@ variable {α Ω : Type*} [MeasurableSpace α] [MeasurableSpace Ω]
 /-- **Trivial reverse**: parent placeholder is `True`, so we may
 construct an asymptotic predicate from *any* parsing family `q` and
 envelope `B = q.count` reflexively, regardless of the passthrough. -/
+@[entry_point]
 theorem IsLZ78PhraseCountAsymptotic.of_passthrough
     (_h : ∀ (μ : Measure Ω) (p : StationaryProcess μ α)
             (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ),
@@ -330,18 +334,21 @@ count. -/
   ⟨IsLZ78PhraseCountAsymptotic.refl p, isBigO_refl _ _⟩
 
 /-- **Sandwich destructor: upper bound**. -/
+@[entry_point]
 theorem IsLZ78PhraseCountSandwich.upper
     {p : ℕ → LZ78Parsing α} {B_lower B_upper : ℕ → ℝ}
     (h : IsLZ78PhraseCountSandwich p B_lower B_upper) :
     IsLZ78PhraseCountAsymptotic p B_upper := h.1
 
 /-- **Sandwich destructor: lower bound**. -/
+@[entry_point]
 theorem IsLZ78PhraseCountSandwich.lower
     {p : ℕ → LZ78Parsing α} {B_lower B_upper : ℕ → ℝ}
     (h : IsLZ78PhraseCountSandwich p B_lower B_upper) :
     B_lower =O[atTop] (fun n => ((p n).count : ℝ)) := h.2
 
 /-- **Sandwich constructor from two asymptotic ingredients**. -/
+@[entry_point]
 theorem IsLZ78PhraseCountSandwich.mk
     {p : ℕ → LZ78Parsing α} {B_lower B_upper : ℕ → ℝ}
     (h_upper : IsLZ78PhraseCountAsymptotic p B_upper)

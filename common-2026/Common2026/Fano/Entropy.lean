@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import Mathlib.Analysis.Convex.Jensen
 import Mathlib.Data.Fintype.BigOperators
@@ -28,6 +29,7 @@ def entropyOfFn {α : Type*} [Fintype α] (μ : α → ℝ) : ℝ :=
   ∑ a, (μ a).negMulLog
 
 /-- Shannon entropy is non-negative whenever each mass lies in `[0, 1]`. -/
+@[entry_point]
 lemma entropyOfFn_nonneg {α : Type*} [Fintype α]
     (μ : α → ℝ) (h0 : ∀ a, 0 ≤ μ a) (h1 : ∀ a, μ a ≤ 1) :
     0 ≤ entropyOfFn μ :=
@@ -84,6 +86,7 @@ lemma entropyOfFn_le_log_supportCard {α : Type*} [Fintype α]
 
 /-- The maximum-entropy bound: a probability mass function on a finite type
 of cardinality `n` has Shannon entropy at most `log n`. -/
+@[entry_point]
 lemma entropyOfFn_le_log_card {α : Type*} [Fintype α]
     (μ : α → ℝ) (hμ : ∀ a, 0 ≤ μ a) (hsum : ∑ a, μ a = 1) :
     entropyOfFn μ ≤ Real.log (Fintype.card α) := by
@@ -92,6 +95,7 @@ lemma entropyOfFn_le_log_card {α : Type*} [Fintype α]
   rwa [Finset.card_univ] at h
 
 /-- A Dirac mass at `a₀` has zero Shannon entropy. -/
+@[entry_point]
 lemma entropyOfFn_eq_zero_of_isDirac {α : Type*} [Fintype α] [DecidableEq α]
     (μ : α → ℝ) (a₀ : α) (h : ∀ a, μ a = if a = a₀ then 1 else 0) :
     entropyOfFn μ = 0 := by

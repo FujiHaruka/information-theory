@@ -157,6 +157,7 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
 /-- `wzMarginalXY` is **additive** in `q`. Build block for the (deferred)
 L-WZ3 full convexity proof: marginalization is a linear operation. -/
+@[entry_point]
 lemma wzMarginalXY_add (q₁ q₂ : α × β × U → ℝ) :
     wzMarginalXY U (q₁ + q₂) = wzMarginalXY U q₁ + wzMarginalXY U q₂ := by
   funext p
@@ -165,6 +166,7 @@ lemma wzMarginalXY_add (q₁ q₂ : α × β × U → ℝ) :
 
 /-- `wzMarginalXY` is **homogeneous** in `q`. Build block for the (deferred)
 L-WZ3 full convexity proof. -/
+@[entry_point]
 lemma wzMarginalXY_smul (c : ℝ) (q : α × β × U → ℝ) :
     wzMarginalXY U (c • q) = c • wzMarginalXY U q := by
   funext p
@@ -199,6 +201,7 @@ variable (U : Type*) [Fintype U]
 /-- `convex_stdSimplex` re-exported for the Wyner–Ziv ambient simplex
 `stdSimplex ℝ (α × β × U)`. Build block for the (deferred) full convexity
 proof — the joint pmf lives in this simplex. -/
+@[entry_point]
 lemma convex_stdSimplex_wynerZiv :
     Convex ℝ (stdSimplex ℝ (α × β × U)) :=
   convex_stdSimplex ℝ _
@@ -215,6 +218,7 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 /-- The first projection of the Wyner–Ziv constraint set is contained in
 the standard simplex on `α × β × U`. This is the natural pmf-level
 containment for the joint pmf component. -/
+@[entry_point]
 lemma wynerZivConstraint_fst_subset_stdSimplex
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) :
     (fun qf : (α × β × U → ℝ) × (U × β → γ) => qf.1)
@@ -329,6 +333,7 @@ specialization of `convex_stdSimplex` to two-point combinations on the
 Wyner–Ziv ambient simplex `α × β × U`. Build block for the (deferred)
 full L-WZ3 convexity proof, exposing the membership form Lean tactics can
 chain into. -/
+@[entry_point]
 lemma stdSimplex_convex_combination_mem
     {q₁ q₂ : α × β × U → ℝ}
     (hq₁ : q₁ ∈ stdSimplex ℝ (α × β × U))
@@ -340,6 +345,7 @@ lemma stdSimplex_convex_combination_mem
 /-- `wzMarginalXY` is preserved under convex combinations: if both
 `q₁, q₂` have `wzMarginalXY = P_XY`, then so does any convex combination.
 Affinity build block for the (deferred) L-WZ3 convexity proof. -/
+@[entry_point]
 lemma wzMarginalXY_convex_combination
     (P_XY : α × β → ℝ) {q₁ q₂ : α × β × U → ℝ}
     (h1 : wzMarginalXY U q₁ = P_XY) (h2 : wzMarginalXY U q₂ = P_XY)

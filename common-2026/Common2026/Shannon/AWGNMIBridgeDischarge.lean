@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.AWGNMIBridge
 
 /-!
@@ -95,6 +96,7 @@ Given the bind/conv bridge `IsAwgnBindEqConv P N h_meas` (Phase A), the
 4. `(gaussianReal 0 P.toNNReal) ∗ (gaussianReal 0 N) = gaussianReal 0 (P.toNNReal + N)`
    (Mathlib `gaussianReal_conv_gaussianReal`).
 -/
+@[entry_point]
 theorem awgn_output_gaussian_of_bind_eq_conv
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
     (h_bridge : IsAwgnBindEqConv P N h_meas) :
@@ -131,6 +133,7 @@ smaller bind/conv bridge primitive `IsAwgnBindEqConv` (itself discharged in
 underlying `awgn_theorem_F2_discharged`).
 
 `@audit:closed-by-successor(awgn-mi-decomp-plan)` -/
+@[entry_point]
 theorem awgn_theorem_of_typicality_converse_bindconv
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_typicality : IsAwgnTypicalityHypothesis P N (isAwgnChannelMeasurable N))
@@ -159,6 +162,7 @@ output-Gaussian fact is closed (reduced to the bind/conv bridge primitive
 `IsAwgnBindEqConv`).
 
 `@audit:closed-by-successor(awgn-mi-decomp-plan)` -/
+@[entry_point]
 theorem awgn_capacity_closed_form_of_maxent_bindconv
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_bridge : IsAwgnBindEqConv P N (isAwgnChannelMeasurable N))

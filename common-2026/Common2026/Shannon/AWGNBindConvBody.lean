@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.AWGNMIBridgeDischarge
 import Mathlib.MeasureTheory.Group.Convolution
 
@@ -73,6 +74,7 @@ theorem gaussianReal_eq_map_const_add (N : ℝ≥0) (x : ℝ) :
 For any kernel `κ : Kernel ℝ ℝ` whose every fibre is the translation map of a fixed
 finite measure `ν` (`κ x = ν.map (x + ·)`), the Giry-monad composition with an
 s-finite input `p` coincides with the additive convolution `p ∗ ν`. -/
+@[entry_point]
 theorem bind_eq_conv_of_translation_kernel
     (κ : Kernel ℝ ℝ) (p ν : Measure ℝ) [SFinite p] [SFinite ν]
     (hκ : ∀ x, κ x = ν.map (x + ·)) :
@@ -97,6 +99,7 @@ with the noise law:
 
 Specialization of `bind_eq_conv_of_translation_kernel` with `ν := gaussianReal 0 N`
 and the fibre identity `gaussianReal_eq_map_const_add`. -/
+@[entry_point]
 theorem isAwgnBindEqConv_discharged
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) :
     IsAwgnBindEqConv P N h_meas := by
@@ -119,6 +122,7 @@ here (beyond F-1): the output-Gaussian fact via the now-proved bind/conv bridge
 `isAwgnBindEqConv_discharged`, so `IsAwgnBindEqConv` is dispatched automatically.
 
 `@audit:closed-by-successor(awgn-moonshot-plan)` -/
+@[entry_point]
 theorem awgn_theorem_of_typicality_converse_bindconv_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_typicality : IsAwgnTypicalityHypothesis P N (isAwgnChannelMeasurable N))
@@ -146,6 +150,7 @@ fact is genuinely closed via the now-proved bind/conv bridge, so `IsAwgnBindEqCo
 is dispatched automatically.
 
 `@audit:closed-by-successor(awgn-moonshot-plan)` -/
+@[entry_point]
 theorem awgn_capacity_closed_form_of_maxent_bindconv_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_decomp : IsAwgnMIDecomp P N (isAwgnChannelMeasurable N))

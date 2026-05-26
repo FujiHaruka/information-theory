@@ -137,6 +137,7 @@ theorem capacity_bddAbove (W : Channel α β) [IsMarkovKernel W] :
   linarith
 
 /-- `capacity W ≥ 0`. -/
+@[entry_point]
 theorem capacity_nonneg (W : Channel α β) [IsMarkovKernel W] : 0 ≤ capacity W := by
   unfold capacity
   -- Each `.toReal` value in the image is ≥ 0.
@@ -315,6 +316,7 @@ theorem continuous_mutualInfoOfChannel_left (W : Channel α β) [IsMarkovKernel 
 /-- **Phase A.3 (documentation)**: `IsCompact.exists_isMaxOn` 経由で
 capacity 達成元 `p* ∈ stdSimplex` の存在。主定理 (Phase D) は `capacity_lt_implies_exists_pmf`
 だけで通るので documentation 用。 -/
+@[entry_point]
 theorem exists_capacity_achiever (W : Channel α β) [IsMarkovKernel W] :
     ∃ p ∈ stdSimplex ℝ α, IsMaxOn
       (fun p : α → ℝ => (mutualInfoOfChannel (pmfToMeasure p) W).toReal)
@@ -815,6 +817,7 @@ private lemma map_comap_subtype_support_eq_self
 
 omit [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β]
   [MeasurableSingletonClass β] in
+@[entry_point]
 theorem mutualInfoOfChannel_restrict_to_support
     (p : Measure α) [IsProbabilityMeasure p]
     (W : Channel α β) [IsMarkovKernel W] :
@@ -899,6 +902,7 @@ theorem mutualInfoOfChannel_restrict_to_support
 /-- **Phase C.2**: `Code` の subtype lift。`Code M n {a // 0 < p.real {a}} β` から
 `Code M n α β` への injection。encoder の codomain を `Subtype → α` で expansion、`errorProbAt`
 は不変 (`Code_lift_errorProbAt_eq` 参照)。 -/
+@[entry_point]
 noncomputable def Code_lift_from_subtype
     {M n : ℕ} (p : Measure α)
     (c : Code M n {a : α // 0 < p.real {a}} β) : Code M n α β :=

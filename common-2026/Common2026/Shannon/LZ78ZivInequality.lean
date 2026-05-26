@@ -139,6 +139,7 @@ variable {α : Type*}
 
 /-- **`LZ78Parsing.count` is the list length.** Restatement of
 `LZ78Parsing.count_eq_length` for direct citation in counting proofs. -/
+@[entry_point]
 theorem LZ78Parsing.count_eq_length' (p : LZ78Parsing α) :
     p.count = p.phrases.length :=
   rfl
@@ -261,12 +262,14 @@ def ZivCountingBound (p : LZ78Parsing α) (B : ℝ) : Prop :=
     ZivCountingBound p (p.count : ℝ) := le_refl _
 
 /-- **Monotonicity** in the real bound. -/
+@[entry_point]
 theorem ZivCountingBound.mono {p : LZ78Parsing α} {B B' : ℝ}
     (h : ZivCountingBound p B) (hB : B ≤ B') :
     ZivCountingBound p B' :=
   le_trans h hB
 
 /-- **Adding a positive slack preserves the bound** (`B` ≤ `B + ε`). -/
+@[entry_point]
 theorem ZivCountingBound.add_nonneg {p : LZ78Parsing α} {B ε : ℝ}
     (h : ZivCountingBound p B) (hε : 0 ≤ ε) :
     ZivCountingBound p (B + ε) := by
@@ -284,6 +287,7 @@ variable {α Ω : Type*} [MeasurableSpace α] [MeasurableSpace Ω]
 /-- **Trivial reverse**: the parent placeholder is `True`, so the
 combinatorial-layer bound is vacuously implied. Retained for symmetric
 API ergonomics. -/
+@[entry_point]
 theorem ZivCountingBound.of_passthrough
     (_h : ∀ (μ : Measure Ω) (p : StationaryProcess μ α)
             (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ),

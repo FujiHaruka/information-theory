@@ -59,6 +59,7 @@ noncomputable def blockLogAvg
 
 omit [DecidableEq α] [Nonempty α] in
 /-- Measurability of `blockLogAvg μ p n`. -/
+@[entry_point]
 lemma measurable_blockLogAvg
     (μ : Measure Ω) (p : StationaryProcess μ α) (n : ℕ) :
     Measurable (blockLogAvg μ p n) := by

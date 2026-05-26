@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.AWGNMain
 
 /-!
@@ -57,6 +58,7 @@ lemma gaussianReal_eq_zero_map (x : ℝ) (N : ℝ≥0) :
 
 `IsAwgnChannelMeasurable N` 述語の Mathlib 直接 discharge を与え、
 `awgn_channel_coding_theorem` の `h_meas` 引数を本補題で埋められるようにする。 -/
+@[entry_point]
 theorem isAwgnChannelMeasurable (N : ℝ≥0) : IsAwgnChannelMeasurable N := by
   unfold IsAwgnChannelMeasurable
   -- 関数等式 `fun x => gaussianReal x N = fun x => (gaussianReal 0 N).map (x + ·)`
@@ -99,6 +101,7 @@ theorem isAwgnChannelMeasurable (N : ℝ≥0) : IsAwgnChannelMeasurable N := by
 typicality) はそのまま pass-through。
 
 `@audit:closed-by-successor(awgn-moonshot-plan)` -/
+@[entry_point]
 theorem awgn_theorem_F1_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_typicality : IsAwgnTypicalityHypothesis P N (isAwgnChannelMeasurable N))
@@ -127,6 +130,7 @@ theorem awgn_theorem_F1_discharged
 はそのまま。
 
 `@audit:closed-by-successor(awgn-mi-bridge-plan)` -/
+@[entry_point]
 theorem awgn_capacity_closed_form_F1_discharged
     (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_bridge_gauss :

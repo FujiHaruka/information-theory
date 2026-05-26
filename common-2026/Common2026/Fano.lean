@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Mathlib.Analysis.SpecialFunctions.BinaryEntropy
 import Mathlib.Data.Fintype.BigOperators
 
@@ -38,6 +39,7 @@ theorem qaryEntropy_eq_fanoBoundRHS (q : ℕ) (Pe : ℝ) :
   simp [fanoBoundRHS, Real.qaryEntropy, add_comm]
 
 /-- The reverse rewrite, sometimes more convenient for `rw`. -/
+@[entry_point]
 theorem fanoBoundRHS_eq_qaryEntropy (q : ℕ) (Pe : ℝ) :
     fanoBoundRHS q Pe = Real.qaryEntropy q Pe :=
   (qaryEntropy_eq_fanoBoundRHS q Pe).symm
@@ -69,6 +71,7 @@ def fanoBoundRHSOfAlphabet (X : Type*) [Fintype X] (Pe : ℝ) : ℝ :=
   fanoBoundRHS (Fintype.card X) Pe
 
 /-- Fano's inequality for a finite alphabet, packaged with `Fintype.card`. -/
+@[entry_point]
 theorem fano_inequality_of_alphabet
     {X : Type*} [Fintype X] {Pe Hxy : ℝ}
     (h : Hxy ≤ Real.qaryEntropy (Fintype.card X) Pe) :
@@ -106,6 +109,7 @@ theorem fano_error_lower_bound_of_lt_qaryEntropy
     exact (not_lt_of_ge hlt.le) hlt'
 
 /-- Same inverse form, but stated with the textbook Fano right-hand side. -/
+@[entry_point]
 theorem fano_error_lower_bound_of_lt_fanoBoundRHS
     {q : ℕ} (hq : 2 ≤ q) {a Pe Hxy : ℝ}
     (ha0 : 0 ≤ a) (ha1 : a ≤ 1 - 1 / (q : ℝ))
@@ -119,6 +123,7 @@ theorem fano_error_lower_bound_of_lt_fanoBoundRHS
   · rwa [qaryEntropy_eq_fanoBoundRHS]
 
 /-- Alphabet-indexed inverse form of Fano's inequality. -/
+@[entry_point]
 theorem fano_error_lower_bound_of_alphabet
     {X : Type*} [Fintype X]
     (hcard : 2 ≤ Fintype.card X) {a Pe Hxy : ℝ}

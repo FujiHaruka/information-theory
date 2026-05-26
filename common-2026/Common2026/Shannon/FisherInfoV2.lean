@@ -90,9 +90,11 @@ noncomputable def fisherInfoOfDensity (f : ℝ → ℝ) : ℝ≥0∞ :=
   ∫⁻ x, ENNReal.ofReal ((logDeriv f x) ^ 2) * ENNReal.ofReal (f x) ∂volume
 
 /-- Fisher information of a density is non-negative (trivially, as `ℝ≥0∞`). -/
+@[entry_point]
 theorem fisherInfoOfDensity_nonneg (f : ℝ → ℝ) : 0 ≤ fisherInfoOfDensity f := bot_le
 
 /-- **Constant zero density**: `J(0) = 0`. -/
+@[entry_point]
 theorem fisherInfoOfDensity_zero : fisherInfoOfDensity (fun _ : ℝ => (0 : ℝ)) = 0 := by
   unfold fisherInfoOfDensity
   simp
@@ -100,6 +102,7 @@ theorem fisherInfoOfDensity_zero : fisherInfoOfDensity (fun _ : ℝ => (0 : ℝ)
 /-- Real-valued projection of `fisherInfoOfDensity`. -/
 noncomputable def fisherInfoOfDensityReal (f : ℝ → ℝ) : ℝ := (fisherInfoOfDensity f).toReal
 
+@[entry_point]
 theorem fisherInfoOfDensityReal_nonneg (f : ℝ → ℝ) : 0 ≤ fisherInfoOfDensityReal f :=
   ENNReal.toReal_nonneg
 

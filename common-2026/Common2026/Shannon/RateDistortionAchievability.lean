@@ -98,6 +98,7 @@ noncomputable def expectedBlockDistortion
     ∂(Measure.pi (fun _ : Fin n => P_X))
 
 /-- Expected block distortion is non-negative. -/
+@[entry_point]
 theorem expectedBlockDistortion_nonneg
     (c : LossyCode M n α β) (P_X : Measure α) (d : DistortionFn α β) :
     0 ≤ c.expectedBlockDistortion P_X d := by
@@ -229,6 +230,7 @@ since `RDConstraint` is compact and `mutualInfoPmf` is continuous.
 We use `sInf` of the image (rather than predicate-`⨅`) to avoid the
 `ConditionallyCompleteLattice` `BddBelow` side conditions that plague
 `⨅ q ∈ S, f q` reasoning over `ℝ`. -/
+@[entry_point]
 noncomputable def rateDistortionFunctionPmf
     (P_X : α → ℝ) (d : DistortionFn α β) (D : ℝ) : ℝ :=
   sInf (mutualInfoPmf '' RDConstraint P_X d D)

@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Mathlib.Analysis.Asymptotics.Defs
 import Mathlib.Analysis.Asymptotics.Lemmas
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
@@ -40,12 +41,14 @@ open Asymptotics Filter Topology Real
   positivity hypothesis は述語自体には組み込まれない (Mathlib `Real.log` は
   `x ≤ 0` で `0` を返すため `DotEq` 自体は any `ℕ → ℝ` で well-defined)。
   positivity は use site で要求する。 -/
+@[entry_point]
 def DotEq (a b : ℕ → ℝ) : Prop :=
   (fun n : ℕ => Real.log (a n) - Real.log (b n)) =o[atTop] (fun n : ℕ => (n : ℝ))
 
 @[inherit_doc] scoped notation:50 a:51 " ≐ " b:51 => DotEq a b
 
 /-- `DotEq` is reflexive: `Real.log (a n) - Real.log (a n) = 0 = o(n)`. -/
+@[entry_point]
 lemma DotEq.refl (a : ℕ → ℝ) : a ≐ a := by
   show (fun n : ℕ => Real.log (a n) - Real.log (a n)) =o[atTop] (fun n : ℕ => (n : ℝ))
   have h0 : (fun n : ℕ => Real.log (a n) - Real.log (a n)) = (fun _ : ℕ => (0 : ℝ)) := by
@@ -54,6 +57,7 @@ lemma DotEq.refl (a : ℕ → ℝ) : a ≐ a := by
   exact Asymptotics.isLittleO_zero _ _
 
 /-- `DotEq` is symmetric: swap `a` / `b` and negate the inside. -/
+@[entry_point]
 lemma DotEq.symm {a b : ℕ → ℝ} (h : a ≐ b) : b ≐ a := by
   show (fun n : ℕ => Real.log (b n) - Real.log (a n)) =o[atTop] (fun n : ℕ => (n : ℝ))
   have h_eq : (fun n : ℕ => Real.log (b n) - Real.log (a n))
@@ -63,6 +67,7 @@ lemma DotEq.symm {a b : ℕ → ℝ} (h : a ≐ b) : b ≐ a := by
   exact h.neg_left
 
 /-- `DotEq` is transitive: `(log a - log b) + (log b - log c) = (log a - log c)`. -/
+@[entry_point]
 lemma DotEq.trans {a b c : ℕ → ℝ} (hab : a ≐ b) (hbc : b ≐ c) : a ≐ c := by
   show (fun n : ℕ => Real.log (a n) - Real.log (c n)) =o[atTop] (fun n : ℕ => (n : ℝ))
   have h_eq : (fun n : ℕ => Real.log (a n) - Real.log (c n))
@@ -75,6 +80,7 @@ lemma DotEq.trans {a b c : ℕ → ℝ} (hab : a ≐ b) (hbc : b ≐ c) : a ≐ 
 /-- Multiplicative compatibility: `a₁ * a₂ ≐ b₁ * b₂` if `a_i ≐ b_i` (under positivity).
 
   Proof: `log(a₁·a₂) - log(b₁·b₂) = (log a₁ - log b₁) + (log a₂ - log b₂)` via `Real.log_mul`. -/
+@[entry_point]
 lemma DotEq.mul {a₁ a₂ b₁ b₂ : ℕ → ℝ}
     (hPos₁ : ∀ n, 0 < a₁ n ∧ 0 < b₁ n) (hPos₂ : ∀ n, 0 < a₂ n ∧ 0 < b₂ n)
     (h₁ : a₁ ≐ b₁) (h₂ : a₂ ≐ b₂) :
@@ -97,6 +103,7 @@ lemma DotEq.mul {a₁ a₂ b₁ b₂ : ℕ → ℝ}
 /-- Inverse compatibility: `(a n)⁻¹ ≐ (b n)⁻¹` if `a ≐ b`.
 
   Proof: `log a⁻¹ - log b⁻¹ = -(log a - log b)` via `Real.log_inv` (unconditional in Mathlib). -/
+@[entry_point]
 lemma DotEq.inv {a b : ℕ → ℝ} (h : a ≐ b) :
     (fun n => (a n)⁻¹) ≐ (fun n => (b n)⁻¹) := by
   show (fun n : ℕ => Real.log ((a n)⁻¹) - Real.log ((b n)⁻¹))
@@ -113,6 +120,7 @@ lemma DotEq.inv {a b : ℕ → ℝ} (h : a ≐ b) :
 
   両辺の `(1/n) * log (a n / b n)` と `(log (a n) - log (b n)) / (n : ℝ)` は
   positivity の下で `Real.log_div` + 可換性で同形。 -/
+@[entry_point]
 lemma dotEq_iff_tendsto_log_div (a b : ℕ → ℝ) (hPos : ∀ n, 0 < a n ∧ 0 < b n) :
     a ≐ b ↔
     Tendsto (fun n : ℕ => (1 / (n : ℝ)) * Real.log (a n / b n)) atTop (𝓝 0) := by
@@ -145,6 +153,7 @@ lemma dotEq_iff_tendsto_log_div (a b : ℕ → ℝ) (hPos : ∀ n, 0 < a n ∧ 0
   既存 `Common2026/Shannon/AEPRate.lean:323` の `exp_neg_mul_lt_of_rate` の
   family-agnostic 版。本 I-3 では abstract wrapper のみ publish、既存 callsite
   migration は本タスク範囲外。 -/
+@[entry_point]
 theorem exp_decay_N_of_pos {g ε' : ℝ} (hg : 0 < g) (hε' : 0 < ε') :
     ∃ N : ℕ, ∀ n ≥ N, Real.exp (-(n : ℝ) * g) < ε' := by
   -- Witness: `N := ⌈max 0 (-log ε' / g)⌉ + 1`.

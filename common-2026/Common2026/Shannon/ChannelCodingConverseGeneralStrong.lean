@@ -111,6 +111,7 @@ The augmented Markov chain `(X^{<i}, X_i) → X_i → Y_i` is obtained from `per
 (`(fun ω j => Xs j ω) → Xs i → Ys i`) by left post-processing with
 `f := fun (x : Fin n → α) => ((fun j : Fin i.val => x ⟨j.val, j.isLt.trans i.isLt⟩), x i)`,
 applying `isMarkovChain_map_left`. -/
+@[entry_point]
 lemma h_markov_xprefix_of_strong
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
@@ -147,6 +148,7 @@ condMI X_i Y^n Xprefix
 2. `condMutualInfo_chain_rule_Y_2var` で `(Y_i, Y^{≠i})` を分解。
 
 `I(Xprefix; X_i) ≠ ∞` の有限性は finite-alphabet 仮定から `mutualInfo_ne_top` で得る。 -/
+@[entry_point]
 lemma h_split_of_strong
     [Fintype α] [MeasurableSingletonClass α] [DecidableEq α]
     [Fintype β] [MeasurableSingletonClass β]

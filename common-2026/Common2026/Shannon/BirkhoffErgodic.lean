@@ -152,6 +152,7 @@ lemma birkhoffPartialSum_le_maxPartialSum (T : Ω → Ω) (f : Ω → ℝ)
 /-! ## §2 Integral preservation -/
 
 /-- Each term `f ∘ T^[i]` has the same integral as `f`. -/
+@[entry_point]
 lemma integral_comp_iterate_eq (μ : Measure Ω)
     {T : Ω → Ω} (hT : MeasurePreserving T μ μ)
     {f : Ω → ℝ} (hf : Integrable f μ) (i : ℕ) :
@@ -167,6 +168,7 @@ lemma integral_comp_iterate_eq (μ : Measure Ω)
   exact h_int_map.symm
 
 /-- Integral of the `(n+1)`-term Birkhoff average equals `∫ f`. -/
+@[entry_point]
 lemma integral_birkhoffAverageReal_eq (μ : Measure Ω) [IsFiniteMeasure μ]
     {T : Ω → Ω} (hT : MeasurePreserving T μ μ)
     {f : Ω → ℝ} (hf : Integrable f μ) (n : ℕ) :

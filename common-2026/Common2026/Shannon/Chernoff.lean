@@ -215,6 +215,7 @@ theorem chernoffInfo_nonneg
 omit [DecidableEq α] in
 /-- **Symmetry of `chernoffZSum`** in `λ ↔ 1 - λ`:
 `Z_{P₁,P₂}(λ) = Z_{P₂,P₁}(1 - λ)` (just swap the exponents). -/
+@[entry_point]
 lemma chernoffZSum_swap (P₁ P₂ : α → ℝ) (lam : ℝ) :
     chernoffZSum P₁ P₂ lam = chernoffZSum P₂ P₁ (1 - lam) := by
   unfold chernoffZSum

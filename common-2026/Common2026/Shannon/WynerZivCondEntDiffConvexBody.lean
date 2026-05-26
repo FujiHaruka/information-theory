@@ -45,6 +45,7 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 /-! ## Step A — affine translation of the marginals -/
 
 /-- `wzMarginalXU` is affine in `q`: marginal of the mix = mix of marginals. -/
+@[entry_point]
 lemma wzMarginalXU_smul_add (a b : ℝ) (q₁ q₂ : α × β × U → ℝ) :
     wzMarginalXU U (a • q₁ + b • q₂)
       = a • wzMarginalXU U q₁ + b • wzMarginalXU U q₂ := by

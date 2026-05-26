@@ -190,6 +190,7 @@ the encoder's choice; Phase E will bound the existence-form failure separately).
 
 `hδ : 0 ≤ δ` is used to ensure `Edδ := 𝔼[d] + δ ≥ 0`, simplifying the
 decomposition `dMax ≤ Edδ + dMax * 1`. -/
+@[entry_point]
 theorem source_avg_distortion_le_simpler
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (d : DistortionFn α β) {M n : ℕ} (hM : 0 < M) (ε : ℝ) {δ : ℝ} (hδ : 0 ≤ δ)

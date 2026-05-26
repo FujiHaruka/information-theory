@@ -39,6 +39,7 @@ noncomputable def heatFlowPath2 {α : Type*} (X Z : α → ℝ) (s : ℝ) : α �
     heatFlowPath2 X Z s ω = Real.sqrt (1 - s) * X ω + Real.sqrt s * Z ω := rfl
 
 /-- Measurability of `heatFlowPath2`. -/
+@[entry_point]
 theorem measurable_heatFlowPath2 {Ω : Type*} [MeasurableSpace Ω]
     {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z) (s : ℝ) :
     Measurable (heatFlowPath2 X Z s) := by
@@ -46,12 +47,14 @@ theorem measurable_heatFlowPath2 {Ω : Type*} [MeasurableSpace Ω]
   exact (measurable_const.mul hX).add (measurable_const.mul hZ)
 
 /-- Endpoint at `s = 0`: `heatFlowPath2 X Z 0 = X`. -/
+@[entry_point]
 theorem heatFlowPath2_zero {α : Type*} (X Z : α → ℝ) :
     heatFlowPath2 X Z 0 = X := by
   funext ω
   simp [heatFlowPath2, Real.sqrt_one, Real.sqrt_zero]
 
 /-- Endpoint at `s = 1`: `heatFlowPath2 X Z 1 = Z`. -/
+@[entry_point]
 theorem heatFlowPath2_one {α : Type*} (X Z : α → ℝ) :
     heatFlowPath2 X Z 1 = Z := by
   funext ω

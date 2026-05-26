@@ -65,6 +65,7 @@ lemma one_sub_pow_le_exp_neg_mul (M : ℕ) {t : ℝ} (_h0 : 0 ≤ t) (h1 : t ≤
 
 /-- **Exponentialization** of the source-averaged failure-pow bound.
 Pointwise `(1 - p_typ x)^M ≤ exp(-M · p_typ x)`, then integrate. -/
+@[entry_point]
 theorem encoder_failure_prob_le_exp_neg_M_avg
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     {M n : ℕ} (ε : ℝ)

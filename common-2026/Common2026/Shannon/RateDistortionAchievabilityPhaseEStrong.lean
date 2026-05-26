@@ -91,6 +91,7 @@ lemma mem_jointStronglyTypicalSet_iff
 
 omit [MeasurableSingletonClass α] [MeasurableSingletonClass β] in
 /-- The joint strongly typical set is finite. -/
+@[entry_point]
 lemma jointStronglyTypicalSet_finite
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) (n : ℕ) (ε : ℝ) :
     (jointStronglyTypicalSet μ Xs Ys n ε).Finite := Set.toFinite _
@@ -109,6 +110,7 @@ lemma jointStronglyTypicalSet_finite
 omit [Fintype α] [MeasurableSingletonClass α] [MeasurableSingletonClass β] in
 /-- **Marginalising the joint type-count over `β` recovers the X type-count**:
 `∑_b typeCount (fun i => (x i, y i)) (a, b) = typeCount x a`. -/
+@[entry_point]
 lemma typeCount_joint_sum_snd
     {n : ℕ} (x : Fin n → α) (y : Fin n → β) (a : α) :
     ∑ b : β, typeCount (fun i => (x i, y i)) (a, b) = typeCount x a := by
@@ -141,6 +143,7 @@ lemma typeCount_joint_sum_snd
 
 omit [Fintype β] [MeasurableSingletonClass α] [MeasurableSingletonClass β] in
 /-- **Marginalising the joint type-count over `α` recovers the Y type-count**. -/
+@[entry_point]
 lemma typeCount_joint_sum_fst
     {n : ℕ} (x : Fin n → α) (y : Fin n → β) (b : β) :
     ∑ a : α, typeCount (fun i => (x i, y i)) (a, b) = typeCount y b := by
@@ -173,6 +176,7 @@ lemma typeCount_joint_sum_fst
 Given `(fun i => (x i, y i)) ∈ stronglyTypicalSet μ (jointSequence Xs Ys) n ε` and
 `(μ.map (jointSequence Xs Ys 0)).map Prod.fst = μ.map (Xs 0)`, we have
 `x ∈ stronglyTypicalSet μ Xs n (Fintype.card β · ε)`. -/
+@[entry_point]
 lemma jointStronglyTypicalSet_implies_X_stronglyTypical
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
@@ -256,6 +260,7 @@ lemma jointStronglyTypicalSet_implies_X_stronglyTypical
         rw [Finset.sum_const, nsmul_eq_mul, Finset.card_univ]
 
 /-- **Strong joint typicality ⟹ Strong Y-typicality (slack widened by `|α|`)**. -/
+@[entry_point]
 lemma jointStronglyTypicalSet_implies_Y_stronglyTypical
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
@@ -351,6 +356,7 @@ Compared to the weak version's `3ε` slack, the strong version has slack
 `(Fintype.card β · L_X + Fintype.card α · L_Y + L_Z) · ε + 3 δ` because converting from the
 strong joint typicality (slack `ε`) to weak X/Y/joint typicality (slack `< ε'`)
 through `stronglyTypicalSet_subset_typicalSet` amplifies `ε` by the Lipschitz constant. -/
+@[entry_point]
 theorem jointStronglyTypicalSet_indep_prob_ge
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)

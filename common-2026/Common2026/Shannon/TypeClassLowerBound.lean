@@ -35,6 +35,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
 /-- Empirical entropy of the count vector `c` at length `n`:
 `H(c/n) := -∑ a, (c(a)/n) · log(c(a)/n)`. -/
+@[entry_point]
 noncomputable def entropyByCount (c : α → ℕ) (n : ℕ) : ℝ :=
   -∑ a : α, ((c a : ℝ) / n) * Real.log ((c a : ℝ) / n)
 
@@ -52,6 +53,7 @@ private lemma cnt_mul_log_div
 
 /-- **Bridge identity**: `(n^n) / ∏ a, (c a)^{c a} = exp (n · H(c/n))` for
 `∑ c = n`. Holds for all `n` including `n = 0` (both sides equal 1). -/
+@[entry_point]
 lemma pow_div_prod_pow_eq_exp_n_entropyByCount
     {n : ℕ} (c : α → ℕ) (hc_sum : (∑ a, c a) = n) :
     (n : ℝ) ^ n / ∏ a : α, ((c a : ℝ) ^ (c a))

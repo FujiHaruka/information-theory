@@ -173,6 +173,7 @@ lemma steinTypeII_at_level_pmf_le_one
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- The Hoeffding constraint set is **convex**: intersection of the convex simplex with
 the convex sublevel set of the convex functional `Q ↦ klDivPmf Q P₁`. -/
+@[entry_point]
 lemma hoeffdingConstraintSet_convex
     (P₁ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (alpha : ℝ) :
     Convex ℝ (hoeffdingConstraintSet P₁ alpha) := by
@@ -216,6 +217,7 @@ the Qstar-minimizer of `klDivPmf · P₂` on K satisfies for any pmf `P ∈ K` (
 **戦略**: csiszar_pythagoras_inequality を直接適用:
 `klDivPmf P P₂ ≥ klDivPmf P Qstar + klDivPmf Qstar P₂ ≥ klDivPmf Qstar P₂`
 (since `klDivPmf P Qstar ≥ 0`). -/
+@[entry_point]
 lemma hoeffding_minimizer_ge
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (_hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)

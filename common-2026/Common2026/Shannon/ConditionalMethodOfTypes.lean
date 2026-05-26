@@ -97,6 +97,7 @@ lemma mem_conditionalTypeClass_iff_joint {n : ℕ} (x : Fin n → α) (c : α ×
 
 /-- **X-marginal recovery.** If `y ∈ conditionalTypeClass x c`, then for each `a`,
 `∑ b, c (a, b) = typeCount x a`. -/
+@[entry_point]
 lemma conditionalTypeClass_xMarginal {n : ℕ} (x : Fin n → α) (c : α × β → ℕ)
     {y : Fin n → β} (hy : y ∈ conditionalTypeClass x c) (a : α) :
     (∑ b : β, c (a, b)) = typeCount x a := by

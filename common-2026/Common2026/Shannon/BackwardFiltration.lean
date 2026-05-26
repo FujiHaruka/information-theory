@@ -87,6 +87,7 @@ def backwardFiltration (T : Ω → Ω) (hT : Measurable T) : Filtration ℕᵒ�
   ⨅ n : ℕ, (backwardFiltration T hT) (OrderDual.toDual n)
 
 /-- `tailSigma` is bounded above by every level of the backward filtration. -/
+@[entry_point]
 lemma tailSigma_le_comap_iterate (T : Ω → Ω) (hT : Measurable T) (n : ℕ) :
     tailSigma T hT ≤ MeasurableSpace.comap (T^[n]) m₀ := by
   simpa [tailSigma, backwardFiltration_apply] using
@@ -94,6 +95,7 @@ lemma tailSigma_le_comap_iterate (T : Ω → Ω) (hT : Measurable T) (n : ℕ) :
       MeasurableSpace.comap (T^[OrderDual.ofDual (OrderDual.toDual k)]) m₀) n)
 
 /-- `tailSigma` is contained in `m₀`: it is a sub-σ-algebra of the ambient space. -/
+@[entry_point]
 lemma tailSigma_le (T : Ω → Ω) (hT : Measurable T) :
     tailSigma T hT ≤ m₀ := by
   -- Use the `n = 0` level: `comap (T^[0]) m₀ = comap id m₀ = m₀`.
@@ -107,6 +109,7 @@ lemma tailSigma_le (T : Ω → Ω) (hT : Measurable T) :
 /-- One half of T-invariance: pulling the tail σ-algebra back through `T` lands
 again inside the tail. The reverse inclusion requires additional structure
 (e.g. measure preservation) and is deferred. -/
+@[entry_point]
 lemma comap_T_tailSigma_le (T : Ω → Ω) (hT : Measurable T) :
     MeasurableSpace.comap T (tailSigma T hT) ≤ tailSigma T hT := by
   -- For every `n`, `tailSigma ≤ comap (T^[n+1]) m₀ = comap T (comap (T^[n]) m₀)`.

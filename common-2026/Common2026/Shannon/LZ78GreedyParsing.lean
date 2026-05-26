@@ -155,6 +155,7 @@ variable {α : Type*}
 (each phrase is `(parent := none, symbol := s)`). This is the
 worst-case but always-valid LZ78 parsing where no dictionary lookups
 occur. -/
+@[entry_point]
 def lz78RootPhrases (input : List α) : List (LZ78Phrase α) :=
   input.map (fun s => { parent := none, symbol := s })
 
@@ -251,6 +252,7 @@ lemma lz78GreedyEncodingLength_eq (n : ℕ) (x : Fin n → α) :
 
 /-- **Phrase count of greedy parsing on `n`-tuple is at most `n`**. The
 worst-case one-symbol parsing achieves the equality `count = n`. -/
+@[entry_point]
 lemma lz78GreedyPhraseCount_ofFn_le (n : ℕ) (x : Fin n → α) :
     (lz78OneSymbolParsing (List.ofFn x)).count ≤ n := by
   rw [lz78OneSymbolParsing_count, List.length_ofFn]
@@ -281,6 +283,7 @@ theorem lz78_encoding_length_le_n_log_n_plus_const (n : ℕ) (x : Fin n → α) 
   rw [lz78GreedyEncodingLength_eq, LZ78Phrase.bitLength_eq]
 
 /-- **Variant: bound expressed via `LZ78Phrase.bitLength` directly**. -/
+@[entry_point]
 theorem lz78_encoding_length_le_n_mul_bitLength (n : ℕ) (x : Fin n → α) :
     lz78GreedyEncodingLength n x ≤ n * LZ78Phrase.bitLength n (Fintype.card α) := by
   rw [lz78GreedyEncodingLength_eq]
@@ -328,6 +331,7 @@ def IsLZ78CountBoundPassthrough (B : ℕ → ℕ) : Prop :=
 
 /-- **Trivial constructor**: the identity bound `B(n) = n` always
 holds (the one-symbol parsing has `count = n`). -/
+@[entry_point]
 theorem IsLZ78CountBoundPassthrough.id :
     IsLZ78CountBoundPassthrough α (fun n => n) := by
   intro n x
@@ -335,6 +339,7 @@ theorem IsLZ78CountBoundPassthrough.id :
 
 /-- **Monotonicity**: if `B₁ ≤ B₂` pointwise, an
 `IsLZ78CountBoundPassthrough` with bound `B₁` upgrades to bound `B₂`. -/
+@[entry_point]
 theorem IsLZ78CountBoundPassthrough.mono {B₁ B₂ : ℕ → ℕ}
     (h : IsLZ78CountBoundPassthrough α B₁) (hB : ∀ n, B₁ n ≤ B₂ n) :
     IsLZ78CountBoundPassthrough α B₂ := by
@@ -409,6 +414,7 @@ def IsLZ78EncodingLengthBoundPassthrough (B : ℕ → ℕ) : Prop :=
 /-- **Cover–Thomas Lemma 13.5.2 form discharges
 `IsLZ78EncodingLengthBoundPassthrough`** with the canonical bound
 `n · (log(n+1) + log|α| + 2)`. -/
+@[entry_point]
 theorem IsLZ78EncodingLengthBoundPassthrough.canonical :
     IsLZ78EncodingLengthBoundPassthrough α
       (fun n => n * (Nat.log 2 (n + 1) + Nat.log 2 (Fintype.card α) + 2)) := by
@@ -418,6 +424,7 @@ theorem IsLZ78EncodingLengthBoundPassthrough.canonical :
 /-- **Monotonicity**: if `B₁ ≤ B₂` pointwise, an
 `IsLZ78EncodingLengthBoundPassthrough` with bound `B₁` upgrades to
 bound `B₂`. -/
+@[entry_point]
 theorem IsLZ78EncodingLengthBoundPassthrough.mono {B₁ B₂ : ℕ → ℕ}
     (h : IsLZ78EncodingLengthBoundPassthrough α B₁) (hB : ∀ n, B₁ n ≤ B₂ n) :
     IsLZ78EncodingLengthBoundPassthrough α B₂ := by
@@ -437,6 +444,7 @@ variable {α : Type*} [Fintype α]
 The per-symbol encoding-length cost is at most
 `Nat.log 2 (n + 1) + Nat.log 2 |α| + 2`. Stated on `ℕ` for ease of
 combinatorial use, before lifting to `ℝ` for the asymptotic Tendsto. -/
+@[entry_point]
 theorem lz78_encoding_length_div_n_le (n : ℕ) (x : Fin n → α) :
     lz78GreedyEncodingLength n x ≤
       n * (Nat.log 2 (n + 1) + Nat.log 2 (Fintype.card α) + 2) :=
@@ -445,6 +453,7 @@ theorem lz78_encoding_length_div_n_le (n : ℕ) (x : Fin n → α) :
 /-- **The `n`-scaled bit-rate form**: dividing both sides by `n`, the
 per-symbol encoding-length cost is at most
 `log(n+1) + log|α| + 2`. On `ℝ`. -/
+@[entry_point]
 theorem lz78_encoding_length_real_per_symbol_le (n : ℕ) (hn : 0 < n)
     (x : Fin n → α) :
     (lz78GreedyEncodingLength n x : ℝ) / (n : ℝ)

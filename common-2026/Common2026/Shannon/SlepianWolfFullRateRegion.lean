@@ -1040,6 +1040,7 @@ private def swError_EXY_strict
 events `swError_EX`, `swError_EY` and the strict `swError_EXY_strict`. The loose
 cases (only one coordinate of the alias `p` agrees with the truth) are absorbed
 into `E_X` or `E_Y` respectively. -/
+@[entry_point]
 lemma swError_EXY_subset_union
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     {n M_X M_Y : ℕ} (ε : ℝ)

@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ParallelGaussian
 import Common2026.Shannon.ParallelGaussianL_PG0Discharge
 import Mathlib.Topology.Order.IntermediateValue
@@ -133,6 +134,7 @@ and monotone in `ν`. At `ν₀ = min_i N_i` (or any value below), `g(ν₀) = 0
 At `ν₁ = Nmax + P` (or any value sufficiently large), `g(ν₁) ≥ (n+1)·P ≥ P`.
 Intermediate value theorem (`intermediate_value_Icc`) gives `ν ∈ [ν₀, ν₁]` with
 `g(ν) = P`. -/
+@[entry_point]
 theorem exists_waterFillingKKT_of_pos {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) :
     ∃ ν : ℝ, IsWaterFillingKKT P N ν := by

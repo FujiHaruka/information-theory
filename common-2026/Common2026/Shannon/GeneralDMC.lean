@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.BlockwiseChannel
 import Mathlib.Analysis.Subadditive
 
@@ -76,6 +77,7 @@ namespace as plain abbreviations, so downstream code can write
 -/
 
 /-- A general DMC at the `BlockwiseChannel` abstraction layer. -/
+@[entry_point]
 abbrev Channel (α β : Type*) [MeasurableSpace α] [MeasurableSpace β] : Type _ :=
   BlockwiseChannel α β
 
@@ -84,11 +86,13 @@ variable {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
 /-- General DMC capacity, **limit form**:
 `lim_{n → ∞} (1/n) · sup_{p} I(p; W_n)`. Re-export of
 `BlockwiseChannel.capacity_lim`. -/
+@[entry_point]
 noncomputable def capacity_lim (W : BlockwiseChannel α β) : ℝ :=
   BlockwiseChannel.capacity_lim W
 
 /-- The per-block capacity sequence, in `ℝ`-valued per-letter normalization.
 This is the sequence whose `lim_{n→∞}` defines `capacity_lim`. -/
+@[entry_point]
 noncomputable def capacityRate (W : BlockwiseChannel α β) (n : ℕ) : ℝ :=
   (W.capacityN n).toReal / n
 
@@ -109,6 +113,7 @@ variable
 /-- For memoryless `W`, the per-letter capacity sequence is **eventually
 constant** equal to `capacity W`. This is the workhorse used by all three
 memoryless-flavour corollaries below. -/
+@[entry_point]
 theorem capacityRate_ofMemoryless_eventually_const
     (W : ChannelCoding.Channel α β) [IsMarkovKernel W] :
     ∀ᶠ n : ℕ in Filter.atTop,
@@ -126,6 +131,7 @@ theorem capacityRate_ofMemoryless_eventually_const
 
 /-- Memoryless concrete L-GD1 (Tendsto-form): the per-letter capacity sequence
 of `ofMemoryless W` converges to `capacity W`. -/
+@[entry_point]
 theorem capacity_lim_tendsto_of_memoryless
     (W : ChannelCoding.Channel α β) [IsMarkovKernel W] :
     Filter.Tendsto (capacityRate (BlockwiseChannel.ofMemoryless W))
@@ -136,6 +142,7 @@ theorem capacity_lim_tendsto_of_memoryless
 /-- **Main bridge** (I-2 target): for memoryless `W`, the general DMC
 limit-form capacity coincides with the single-letter capacity. Alias of
 `BlockwiseChannel.capacity_lim_eq_capacity_of_memoryless`. -/
+@[entry_point]
 theorem capacity_lim_eq_capacity_of_memoryless
     (W : ChannelCoding.Channel α β) [IsMarkovKernel W] :
     capacity_lim (BlockwiseChannel.ofMemoryless W) = capacity W :=
@@ -159,6 +166,7 @@ variable (W : BlockwiseChannel α β)
 /-- Pass-through monotonicity: if the per-letter capacity rate is eventually
 equal to a constant `c`, then `capacity_lim W = c`. Allows downstream code to
 state monotonicity hypotheses (`L-GD2`) and feed them through. -/
+@[entry_point]
 theorem capacity_lim_pass_through_of_eventually_const
     {c : ℝ}
     (h_const : ∀ᶠ n : ℕ in Filter.atTop, capacityRate W n = c) :

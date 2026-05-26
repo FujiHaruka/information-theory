@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.AWGNMIBridgeDischarge
 
 /-!
@@ -108,6 +109,7 @@ theorem awgnChannel_apply_absolutelyContinuous
 the output-Gaussian fact `IsAwgnOutputGaussian` (discharged by
 `AWGNMIBridgeDischarge.awgn_output_gaussian_of_bind_eq_conv`). The output is then
 `gaussianReal 0 (P.toNNReal + N) ≪ volume`. -/
+@[entry_point]
 theorem awgn_output_absolutelyContinuous_of_outputGaussian
     (P : ℝ) (N : ℝ≥0) (hPN : P.toNNReal + N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     (h_out : IsAwgnOutputGaussian P N h_meas) :
@@ -163,6 +165,7 @@ differentialEntropy (outputDistribution …) − ∫ …`). The discharge is the
 discharge target — see `ContChannelMIDecomp.lean` where `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`
 carries `@residual(plan:awgn-mi-decomp-plan)`. This wrapper is now a pure
 `unfold + exact` shim and not itself a load-bearing claim.) -/
+@[entry_point]
 theorem awgn_midecomp_of_cont_chain
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
     (h_chain : IsContChannelMIDecompHyp

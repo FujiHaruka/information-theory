@@ -73,6 +73,7 @@ def edgeBoundaryCount {n : ℕ} (A : Finset (Fin n → Bool)) : ℕ :=
 
 /-- `(x, i)` 対で `x ∈ A`, `flipCoord i x ∈ A` を満たすものの数。
 unordered internal edge を両端で 2 度 counts。 -/
+@[entry_point]
 def internalEdgePairCount {n : ℕ} (A : Finset (Fin n → Bool)) : ℕ :=
   (Finset.univ.filter
     (fun p : (Fin n → Bool) × Fin n => p.1 ∈ A ∧ flipCoord p.2 p.1 ∈ A)).card
@@ -81,6 +82,7 @@ def internalEdgePairCount {n : ℕ} (A : Finset (Fin n → Bool)) : ℕ :=
 
 /-- `(x, i)` 対全体のうち `x ∈ A` のものは `n * A.card` 個。
 さらに `flipCoord i x ∈ A` か否かで disjoint 分割される。 -/
+@[entry_point]
 theorem edge_total_count {n : ℕ} (A : Finset (Fin n → Bool)) :
     edgeBoundaryCount A + internalEdgePairCount A = n * A.card := by
   classical
@@ -133,6 +135,7 @@ direction `i` での `internalEdgePairCount` への寄与は `2 D_i`
 
 /-- 各 `(x, i)` 対 (`x ∈ A`) について `flipCoord i x ∈ A ↔ x.update i (!x i) ∈ A`。
 これは `flipCoord` の def-unfold だが counts の中で再利用するため明示。 -/
+@[entry_point]
 lemma flipCoord_mem_iff {n : ℕ} (A : Finset (Fin n → Bool)) (x : Fin n → Bool)
     (i : Fin n) :
     flipCoord i x ∈ A ↔ Function.update x i (!x i) ∈ A := Iff.rfl
@@ -569,6 +572,7 @@ theorem two_sum_projection_eq {n : ℕ} (A : Finset (Fin n → Bool)) :
 `internalEdgePairCount A + 2 * Σ_i (projectionExcept i A).card = 2 * (n * A.card)`
 
 の形で publish。 -/
+@[entry_point]
 theorem internal_pair_count_eq_projection_sum {n : ℕ}
     (A : Finset (Fin n → Bool)) :
     internalEdgePairCount A + 2 * ∑ i : Fin n, (projectionExcept i A).card

@@ -45,6 +45,7 @@ noncomputable def differentialEntropy (μ : Measure ℝ) : ℝ :=
 
 /-- For `μ = volume.withDensity f` with measurable `f`, the differential entropy is the
 integral of `negMulLog (f x).toReal` over the Lebesgue measure. -/
+@[entry_point]
 theorem differentialEntropy_eq_integral_withDensity
     {f : ℝ → ℝ≥0∞} (hf : Measurable f) :
     differentialEntropy (volume.withDensity f)
@@ -58,6 +59,7 @@ theorem differentialEntropy_eq_integral_withDensity
 /-- For `μ ≪ volume` with a measurable Real-valued density `f` such that
 `μ = volume.withDensity (fun x => ENNReal.ofReal (f x))` (and `0 ≤ f`),
 `differentialEntropy μ = -∫ x, f x * Real.log (f x) ∂volume`. -/
+@[entry_point]
 theorem differentialEntropy_eq_integral_density
     {f : ℝ → ℝ} (hf : Measurable f) (hf_nn : ∀ x, 0 ≤ f x)
     (μ : Measure ℝ)
@@ -147,6 +149,7 @@ theorem integrable_density_log_density_of_gaussian
 
 /-- (Phase A-3) For a Dirac measure `Measure.dirac m`, the differential entropy is `0`:
 the rnDeriv vs. Lebesgue is `=ᵐ 0` (mutual singularity), and `Real.negMulLog 0 = 0`. -/
+@[entry_point]
 theorem differentialEntropy_dirac (m : ℝ) :
     differentialEntropy (Measure.dirac m) = 0 := by
   unfold differentialEntropy
@@ -493,6 +496,7 @@ theorem differentialEntropy_gaussianReal
   ring
 
 /-- (Phase C-4) `h(𝒩(0,1)) = (1/2) log (2πe)`. -/
+@[entry_point]
 theorem differentialEntropy_gaussianReal_std :
     differentialEntropy (gaussianReal 0 1)
       = (1/2) * Real.log (2 * Real.pi * Real.exp 1) := by

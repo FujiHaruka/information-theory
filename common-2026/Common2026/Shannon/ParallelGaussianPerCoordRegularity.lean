@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ParallelGaussian
 import Common2026.Draft.Shannon.ParallelGaussianPerCoord
 import Common2026.Shannon.AWGN
@@ -89,6 +90,7 @@ honest pieces, one per field. Body to be filled by Phase 1-4 of the discharge pl
   in Mathlib.
 
 `@audit:ok(parallel-gaussian-l-pg1-discharge)` -/
+@[entry_point]
 theorem isParallelGaussianPerCoordRegularity_of_pieces {n : ℕ}
     (P : ℝ) (N : Fin n → ℝ≥0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -140,6 +142,7 @@ equals the water-filling sum, with the regularity bundle unfolded into its
 constructor `isParallelGaussianPerCoordRegularity_of_pieces` above.
 
 `@audit:ok(parallel-gaussian-l-pg1-discharge)` -/
+@[entry_point]
 theorem parallel_gaussian_capacity_formula_minimal {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
