@@ -1,4 +1,3 @@
-import Common2026.Shannon.Stein
 import Mathlib.InformationTheory.KullbackLeibler.Basic
 
 /-!

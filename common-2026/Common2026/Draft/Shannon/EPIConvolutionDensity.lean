@@ -4,7 +4,6 @@ import Mathlib.Analysis.LConvolution
 import Mathlib.Analysis.Calculus.ParametricIntegral
 import Mathlib.Analysis.Calculus.LogDeriv
 import Mathlib.MeasureTheory.Measure.Haar.Unique
-import Common2026.Shannon.FisherInfoV2
 
 /-!
 # EPI convolution-density foundational brick

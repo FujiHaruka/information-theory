@@ -5,11 +5,7 @@ import Mathlib.Analysis.Calculus.LogDeriv
 import Mathlib.Analysis.SpecialFunctions.Log.Deriv
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.MeasureTheory.Measure.Decomposition.Lebesgue
-import Common2026.Shannon.FisherInfo
-import Common2026.Shannon.FisherInfoGaussian
 import Common2026.Shannon.FisherInfoV2
-import Common2026.Shannon.DifferentialEntropy
-import Common2026.Shannon.EntropyPowerInequality
 
 /-!
 # Fisher information V2 — Phase C bridge + Phase D de Bruijn identity (T2-F follow-up)

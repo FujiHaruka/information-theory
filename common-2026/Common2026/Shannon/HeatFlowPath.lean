@@ -4,7 +4,6 @@ import Mathlib.MeasureTheory.MeasurableSpace.Basic
 import Mathlib.MeasureTheory.Group.Convolution
 import Mathlib.Analysis.SpecialFunctions.Sqrt
 import Mathlib.Analysis.SpecialFunctions.Pow.NNReal
-import Common2026.Shannon.FisherInfoV2DeBruijn
 
 /-!
 # Heat-flow path (2-source) for EPI-Stam Csiszár scaling
