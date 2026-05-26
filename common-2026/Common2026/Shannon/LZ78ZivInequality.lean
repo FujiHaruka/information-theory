@@ -284,9 +284,16 @@ section ZivPassthroughBridge
 variable {α Ω : Type*} [MeasurableSpace α] [MeasurableSpace Ω]
 
 
-/-- **Trivial reverse**: the parent placeholder is `True`, so the
-combinatorial-layer bound is vacuously implied. Retained for symmetric
-API ergonomics. -/
+/-- **Trivial reverse**: the combinatorial-layer bound
+`ZivCountingBound q (q.count : ℝ)` is the reflexive bound `q.count ≤
+q.count` (`ZivCountingBound.refl`), which holds unconditionally. The
+hypothesis `_h : ∀ μ p lz, IsZivInequalityPassthrough μ p lz` is therefore
+*not consumed*; the bridge is retained for symmetric API ergonomics
+between the parent passthrough predicate and the combinatorial-layer
+bound. (After the 2026-05-27 prop-true → genuine a.s. statement
+rewrite of `IsZivInequalityPassthrough`, `_h` now carries the genuine
+a.s. limsup upper bound but is still discarded here; the
+information-bearing direction lives downstream.) -/
 @[entry_point]
 theorem ZivCountingBound.of_passthrough
     (_h : ∀ (μ : Measure Ω) (p : StationaryProcess μ α)

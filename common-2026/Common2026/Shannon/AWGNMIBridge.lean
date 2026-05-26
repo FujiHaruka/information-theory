@@ -227,10 +227,8 @@ pass-through。
 @[entry_point]
 theorem awgn_theorem_F2_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
-    (h_typicality : IsAwgnTypicalityHypothesis P N (isAwgnChannelMeasurable N))
     (h_out : IsAwgnOutputGaussian P N (isAwgnChannelMeasurable N))
     (h_decomp : IsAwgnMIDecomp P N (isAwgnChannelMeasurable N))
-    (h_converse : IsAwgnConverseHypothesis P N (isAwgnChannelMeasurable N))
     {R : ℝ} (hR_pos : 0 < R) (hR_lt_C : R < (1/2) * Real.log (1 + P / (N : ℝ)))
     {ε : ℝ} (hε : 0 < ε) :
     ∃ N₀ : ℕ, ∀ n, N₀ ≤ n →
@@ -247,7 +245,7 @@ theorem awgn_theorem_F2_discharged
     awgn_mi_bridge_of_primitives P N (isAwgnChannelMeasurable N) h_out h_decomp h_cond
   -- Hand off to AWGNF1Discharge.
   exact awgn_theorem_F1_discharged P hP N hN
-    h_typicality h_mi_bridge h_converse hR_pos hR_lt_C hε
+    h_mi_bridge hR_pos hR_lt_C hε
 
 /-! ## Phase F — Capacity closed form (3-primitive form) -/
 

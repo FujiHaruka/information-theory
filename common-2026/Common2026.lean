@@ -178,7 +178,6 @@ import Common2026.Shannon.HuffmanMergedIdentBody
 import Common2026.Shannon.WynerZivObjectiveConvexityBody
 import Common2026.Shannon.GaussianPDFVarianceDerivBody
 import Common2026.Shannon.FisherDeBruijnGaussianWitness
-import Common2026.Shannon.HuffmanSwapNormalizationBody
 import Common2026.Draft.Shannon.HoeffdingMinimizerAttainment
 import Common2026.Shannon.HoeffdingSandwichDischarge
 import Common2026.Shannon.HoeffdingTradeoffExp

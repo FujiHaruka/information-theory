@@ -1,10 +1,9 @@
 import Common2026.Shannon.AWGN
 
 /-!
-# T2-A Phase C: AWGN channel coding theorem — converse (F-3 hypothesis form)
+# T2-A Phase C: AWGN channel coding theorem — converse (Tier 2 sorry form)
 
-Cover-Thomas Ch.9.1.2 (converse) を **撤退ライン F-3 hypothesis pass-through 形**
-で publish。
+Cover-Thomas Ch.9.1.2 (converse) を **Tier 2 (`sorry + @residual`) 形** で publish。
 
 Converse 経路は標準的に:
 1. Fano: `log M ≤ I(W; Ŵ) + binEntropy(Pe) + Pe·log(M-1)` を `fano_inequality_measure_theoretic`
@@ -15,16 +14,14 @@ Converse 経路は標準的に:
    4-hypothesis 形): `I(X_i; Y_i) ≤ (1/2) log(1+P/N)`.
 5. 合計: `log M ≤ n·(1/2) log(1+P/N) + binEntropy(Pe) + Pe·log(M-1)`.
 
-撤退ライン **F-3 採用前提**: per-letter `differentialEntropy_le_gaussian_of_variance_le`
-の `h_ent_int` (Integrable `negMulLog (rnDeriv μ vol)`) は input law `μ_i` 個別 で
-discharge できない可能性が高いため、converse 全体の hypothesis `IsAwgnConverseHypothesis`
-に集約 (per-letter integrability + chain rule + Fano data processing + MI bridge を
-全部まとめて hypothesis pass-through)。
-
 実体 (Fano + chain rule + per-letter max-entropy 連鎖) は別 plan
 `docs/shannon/awgn-converse-aux-plan.md` (Tier 3) に defer。
 
-L-S2 / L-C2 / L-F1+L-F2 と同型 pattern。
+**2026-05-27 F-1/F-3 peer migration**: previously `IsAwgnConverseHypothesis`
+load-bearing predicate (circular passthrough) を Tier 5 として保持していたが、
+peer F-1 と同時に第一選択 migration (predicate 削除 + body `sorry` +
+`@residual(plan:awgn-converse-aux-plan)`、Tier 5 → Tier 2)。analytic body 完成
+は successor plan に委ね、本 file の signature は genuine conclusion を直接 statement に。
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -34,78 +31,34 @@ set_option linter.unusedVariables false
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal BigOperators Topology
 
-/-! ## F-3 hypothesis predicate -/
+/-! ## Converse — `awgn_converse` (Tier 2 sorry + @residual) -/
 
-/-- **AWGN converse hypothesis** (Cover-Thomas 9.1.2 schema).
-
-For every block length `n`, message count `M ≥ 2`, AWGN code `c : AwgnCode M n P`,
-the converse inequality
-`log M ≤ n·(1/2) log(1+P/N) + binEntropy(Pe) + Pe·log(M-1)`
-holds, where `Pe` is the average error probability.
-
-This bundles in one predicate:
-* Fano's inequality (`fano_inequality_measure_theoretic`),
-* Data processing for `I(W; Ŵ) ≤ I(X^n; Y^n)`,
-* Chain rule `I(X^n; Y^n) ≤ ∑ I(X_i; Y_i)` for memoryless channel,
-* Per-letter max-entropy `I(X_i; Y_i) ≤ (1/2) log(1+P/N)` (Gaussian Y_i bound),
-* Per-letter integrability hypotheses for `differentialEntropy_le_gaussian_of_variance_le`
-  (F-3 撤退ライン's main pain point).
-
-Discharging this predicate (for the canonical AWGN code construction) is deferred
-to `awgn-converse-aux-plan.md` (Tier 3 plan).
-
-**inline alert (planner 2026-05-26)**: predicate signature が universal-quantified
-converse 結論 form (`∀ M n hM c Pe hPe, log M ≤ ...`)、`IsAwgnTypicalityHypothesis`
-(`AWGNAchievability.lean:47`) と同型 circular def。
-
-**independent honesty audit (2026-05-26)**: peer `IsAwgnTypicalityHypothesis`
-(`AWGNAchievability.lean:46`) と同様 tier 5 circular で、core-reconstruction test
-(hyp grant → converse 結論 verbatim 同型) に該当。CLAUDE.md「sorry を書けない箇所
-での対処順序」第二選択 = signature 改変は本 plan scope 外 (`awgn-converse-aux-plan`
-の analytic body 完成で discharge 予定)、暫定 tier 5 marker として
-`@audit:defect(circular)` + `@audit:closed-by-successor(...)` を付与。
-
-`@audit:defect(circular)` `@audit:closed-by-successor(awgn-converse-aux-plan)` -/
-def IsAwgnConverseHypothesis (P : ℝ) (N : ℝ≥0)
-    (h_meas : IsAwgnChannelMeasurable N) : Prop :=
-  ∀ {M n : ℕ} (_hM : 2 ≤ M) (c : AwgnCode M n P),
-    ∀ (Pe : ℝ)
-      (_hPe : Pe = ((1 / M : ℝ) * ∑ m : Fin M,
-          (c.toCode.errorProbAt (awgnChannel N h_meas) m).toReal)),
-      Real.log M
-        ≤ (n : ℝ) * ((1 / 2) * Real.log (1 + P / (N : ℝ)))
-          + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1)
-
-/-! ## Converse — `awgn_converse` (F-3 hypothesis pass-through) -/
-
-/-- **load-bearing hypothesis — NOT a discharge.**
-**AWGN converse theorem (Cover-Thomas 9.1.2), F-3 hypothesis form**.
+/-- **AWGN converse theorem (Cover-Thomas 9.1.2)**.
 
 For every code with `M ≥ 2` messages, block length `n`, output power constraint
 `P` and average error probability `Pe`, the rate satisfies
 
 `log M ≤ n·(1/2) log(1+P/N) + binEntropy(Pe) + Pe·log(M-1)`.
 
-⚠️ The body is `h_converseBound_lbh hM c Pe hPe`, where
-`IsAwgnConverseHypothesis` is *defined to be* the universal converse inequality
-itself. The load-bearing hypothesis IS the desired conclusion, packaged as a
-named predicate so the theorem can be re-published once F-3 is genuinely
-discharged.
+**2026-05-27 F-1/F-3 peer migration**: previously a load-bearing hypothesis
+wrapper consuming `h_converseBound_lbh : IsAwgnConverseHypothesis P N h_meas`
+(itself a circular passthrough of this very conclusion). The predicate
+`IsAwgnConverseHypothesis` is now removed and the body is honestly marked
+`sorry` with `@residual(plan:awgn-converse-aux-plan)`. The genuine analytic
+content (Fano data processing + chain rule + per-letter Gaussian max-entropy
++ integrability) is the work of `awgn-converse-aux-plan.md`.
 
-Load-bearing pieces bundled inside `h_converseBound_lbh`:
+Load-bearing pieces awaited from the successor plan:
 * Fano's inequality (`fano_inequality_measure_theoretic`),
 * Data processing for `I(W; Ŵ) ≤ I(X^n; Y^n)`,
 * Chain rule `I(X^n; Y^n) ≤ ∑ I(X_i; Y_i)` for memoryless channel,
 * Per-letter max-entropy `I(X_i; Y_i) ≤ (1/2) log(1+P/N)` (Gaussian Y_i bound),
-* Per-letter integrability hypotheses (F-3 撤退ライン's main pain point).
-
-Discharging this predicate is deferred to `awgn-converse-aux-plan.md` (Tier 3).
+* Per-letter integrability hypotheses for `differentialEntropy_le_gaussian_of_variance_le`.
 
 `@audit:closed-by-successor(awgn-converse-aux-plan)` `@residual(plan:awgn-converse-aux-plan)` -/
 theorem awgn_converse
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
-    (h_converseBound_lbh : IsAwgnConverseHypothesis P N h_meas)
     {M n : ℕ} (hM : 2 ≤ M)
     (c : AwgnCode M n P)
     (Pe : ℝ)
@@ -113,7 +66,7 @@ theorem awgn_converse
         (c.toCode.errorProbAt (awgnChannel N h_meas) m).toReal)) :
     Real.log M
       ≤ (n : ℝ) * ((1 / 2) * Real.log (1 + P / (N : ℝ)))
-        + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1) :=
-  h_converseBound_lbh hM c Pe hPe
+        + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1) := by
+  sorry
 
 end InformationTheory.Shannon.AWGN

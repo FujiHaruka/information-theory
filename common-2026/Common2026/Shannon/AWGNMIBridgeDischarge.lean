@@ -136,10 +136,8 @@ underlying `awgn_theorem_F2_discharged`).
 @[entry_point]
 theorem awgn_theorem_of_typicality_converse_bindconv
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
-    (h_typicality : IsAwgnTypicalityHypothesis P N (isAwgnChannelMeasurable N))
     (h_bridge : IsAwgnBindEqConv P N (isAwgnChannelMeasurable N))
     (h_decomp : IsAwgnMIDecomp P N (isAwgnChannelMeasurable N))
-    (h_converse : IsAwgnConverseHypothesis P N (isAwgnChannelMeasurable N))
     {R : ℝ} (hR_pos : 0 < R) (hR_lt_C : R < (1/2) * Real.log (1 + P / (N : ℝ)))
     {ε : ℝ} (hε : 0 < ε) :
     ∃ N₀ : ℕ, ∀ n, N₀ ≤ n →
@@ -149,8 +147,8 @@ theorem awgn_theorem_of_typicality_converse_bindconv
                   (awgnChannel N (isAwgnChannelMeasurable N)) m).toReal < ε := by
   have h_out : IsAwgnOutputGaussian P N (isAwgnChannelMeasurable N) :=
     awgn_output_gaussian_of_bind_eq_conv P N (isAwgnChannelMeasurable N) h_bridge
-  exact awgn_theorem_F2_discharged P hP N hN h_typicality
-    h_out h_decomp h_converse hR_pos hR_lt_C hε
+  exact awgn_theorem_F2_discharged P hP N hN
+    h_out h_decomp hR_pos hR_lt_C hε
 
 /-- **AWGN capacity closed form — output-Gaussian reduced to bind/conv,
 MI-decomp/bddAbove/max-entropy taken as hypotheses.**

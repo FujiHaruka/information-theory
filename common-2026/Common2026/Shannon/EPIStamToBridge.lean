@@ -633,6 +633,128 @@ theorem csiszarGap1Source_hasDerivAt
   -- Now `h_combined` exactly matches the goal.
   exact h_combined
 
+/-! ## §2''' — Phase A A-3: 1-source Stam reduction `g'(t) ≤ 0`
+
+This subsection reduces the A-2-3 derivative expression to `≤ 0` using the
+1-source Stam inequality applied to the three convolved random variables
+`X + √t · Z_X`, `Y + √t · Z_Y`, `(X+Y) + √t · (Z_X+Z_Y)`.
+
+Concretely we consume `IsStamInequalityHyp (X + √t·Z_X) (Y + √t·Z_Y) P` at the
+specific `t > 0` and produce `g'(t) ≤ 0` where `g'(t)` is the right-hand side
+delivered by `csiszarGap1Source_hasDerivAt` (A-2-3).
+
+`Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 _ f` is defined as
+`fisherInfoOfDensity f` (a `ℝ≥0∞` value), and `fisherInfoOfDensityReal f`
+equals `(fisherInfoOfDensity f).toReal`. The two forms therefore connect:
+`(fisherInfoOfMeasureV2 _ f).toReal = fisherInfoOfDensityReal f` (`rfl`).
+This is what lets the A-2-3 output (which carries `fisherInfoOfDensityReal`)
+plug into the `IsStamInequalityHyp` slot (which requires
+`(fisherInfoOfMeasureV2 _ _).toReal`).
+
+Members:
+
+* `csiszarGap1Source_deriv_le_zero` (A-3) — `g'(t) ≤ 0` from
+  `IsStamInequalityHyp` applied at the convolved variables.
+-/
+
+/-- **A-3 — `g'(t) ≤ 0` from 1-source Stam**.
+
+The A-2-3 right-hand side `g'(t) = entropyPower_sum · J_sum − entropyPower_X · J_X
+− entropyPower_Y · J_Y` (using the sister-density Fisher info witnesses
+`density_t` carried in each `IsDeBruijnRegularityHyp.reg_at t ht`) is `≤ 0`,
+assuming the 1-source Stam inequality
+`1 / J(X+G_X+Y+G_Y) ≥ 1 / J(X+G_X) + 1 / J(Y+G_Y)` (where `G_* := √t · Z_*`)
+holds at this specific `t`, and the three Fisher infos are strictly positive
+at this `t`.
+
+The Stam predicate is consumed at the **convolved** variables
+`X+√t·Z_X` and `Y+√t·Z_Y`. Their sum agrees pointwise with the sister
+A-2-3 base `X+Y+√t·(Z_X+Z_Y)` (by `ring`), letting the Fisher-info witnesses
+of the three sister `IsDeBruijnRegularityHyp` lift through to the Stam
+inequality on the corresponding mapped measures.
+
+**Cover-Thomas Lemma 17.7.3 (1-source form)**. The algebraic discharge from
+`1/J_sum ≥ 1/J_X + 1/J_Y` to `eP_sum · J_sum ≤ eP_X · J_X + eP_Y · J_Y`
+is the weight-bearing step. In the 1-source design the base measures are
+`t`-independent, so the chain-rule weight on `entropyPower` is single
+(`exp(2 · h)` ↦ `exp(2 · h) · 2 · (1/2) · J = entropyPower · J`), and the
+weighted Cauchy-Schwarz of Cover-Thomas eq.(17.43) may compress to
+`linarith` + `Real.exp` monotonicity. If that compression fails, the
+retreat line **L-Concl-A-ζ** (downgraded) externalises the weighted
+inequality as a 1-source predicate `IsCsiszarScalingWeightHyp1Source`.
+
+audit:PASS 2026-05-27 by honesty-auditor (independent):
+- Signature non-circular: conclusion `eP_sum · J_sum - eP_X · J_X - eP_Y · J_Y ≤ 0`
+  differs from every hypothesis form (`IsStamInequalityHyp` outputs
+  `1/J_sum ≥ 1/J_X + 1/J_Y`; `IsDeBruijnRegularityHyp` is a regularity
+  structure carrying density / derivative witnesses; positivity hyps are
+  strict `0 <` Fisher info). No `:= h` shortcut available.
+- No `*Hypothesis` core-bundling: load-bearing content (algebraic discharge
+  from harmonic-mean Stam to weighted form) lives in the proof body
+  (`sorry`), not in a fresh hypothesis predicate.
+- Residual class `plan:epi-stam-to-conclusion-phaseA-A3` correct: plan file
+  `docs/shannon/epi-stam-to-conclusion-phaseA-plan.md` §A-3 (line 405) +
+  Sub-bound table line 740 describe the genuine discharge route + L-Concl-A-ζ
+  retreat. Class is `plan:*` (in-house algebraic step), not `wall:*`
+  (Mathlib gap) — both Stam inequality and `entropyPower` weighting are
+  in-house content, no Mathlib gap is being papered over.
+
+Signature stable; body deferred as `sorry` with
+`@residual(plan:epi-stam-to-conclusion-phaseA-A3)` (see body comment). -/
+theorem csiszarGap1Source_deriv_le_zero
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
+    {t : ℝ} (ht : 0 < t)
+    (hJX_pos : 0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                      ((h_reg_X.reg_at t ht).density_t))
+    (hJY_pos : 0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                      ((h_reg_Y.reg_at t ht).density_t))
+    (hJsum_pos : 0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                        ((h_reg_sum.reg_at t ht).density_t))
+    (h_stam : InformationTheory.Shannon.EPIStamDischarge.IsStamInequalityHyp
+                (fun ω => X ω + Real.sqrt t * Z_X ω)
+                (fun ω => Y ω + Real.sqrt t * Z_Y ω) P) :
+    entropyPower
+          (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω)))
+        * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+            ((h_reg_sum.reg_at t ht).density_t)
+      - entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
+        * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+            ((h_reg_X.reg_at t ht).density_t)
+      - entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω))
+        * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+            ((h_reg_Y.reg_at t ht).density_t)
+      ≤ 0 := by
+  -- Derive `1/J_sum ≥ 1/J_X + 1/J_Y` from `h_stam`, applied at the three
+  -- convolved variables, with the sister-density Fisher info witnesses.
+  -- The connection `(fisherInfoOfMeasureV2 _ f).toReal = fisherInfoOfDensityReal f`
+  -- is `rfl` (both unfold to `(fisherInfoOfDensity f).toReal`).
+  -- The pointwise identity
+  --   (fun ω => (X ω + √t·Z_X ω) + (Y ω + √t·Z_Y ω))
+  --     = fun ω => X ω + Y ω + √t · (Z_X ω + Z_Y ω)
+  -- is `funext + ring`, so the `P.map` of either form agrees.
+  --
+  -- From the Stam harmonic-mean inequality and positivity, derive
+  --   J(X+Y+G) · (J(X+G_X) + J(Y+G_Y)) ≤ J(X+G_X) · J(Y+G_Y)
+  -- equivalently
+  --   J_sum ≤ (J_X · J_Y) / (J_X + J_Y)
+  -- (harmonic-mean ≤ each).
+  -- Combined with the Cover-Thomas Lemma 17.7.3 weighting argument
+  --   eP_sum · J_sum ≤ eP_X · J_X + eP_Y · J_Y
+  -- this gives the desired `≤ 0`.
+  --
+  -- The algebraic discharge from `1/J_sum ≥ 1/J_X + 1/J_Y` to the
+  -- weighted form is the Cover-Thomas eq.(17.43) Cauchy-Schwarz step;
+  -- in the 1-source design it may compress to `linarith` + `Real.exp`
+  -- monotonicity, but in the worst case factors out as a separate
+  -- staged predicate (L-Concl-A-ζ).
+  sorry
+  -- @residual(plan:epi-stam-to-conclusion-phaseA-A3)
+
 /-! ## §3 — Gaussian saturation full discharge of sub-predicates -/
 
 -- `isStamToEPIScalingHyp_of_gaussian` was retracted in Phase 0 (2026-05-25)

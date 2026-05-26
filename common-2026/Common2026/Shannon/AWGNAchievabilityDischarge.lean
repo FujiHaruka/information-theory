@@ -898,9 +898,12 @@ theorem awgn_extract_AwgnCode
 
 /-! ## Phase E — `isAwgnTypicalityHypothesis` 統合 + main wrapper -/
 
-/-- **F-1 撤退ライン discharge** — `IsAwgnTypicalityHypothesis` を Phase A-D の
-組合せで本物に discharge (Phase 2 pivot 2026-05-24: 3 staged hyp を 1 bundle
-hyp `IsAwgnRandomCodingFeasible P N h_meas` に縮約)。
+/-- **F-1 撤退ライン discharge** — previously returned the now-removed predicate
+`IsAwgnTypicalityHypothesis P N h_meas`; the return type is inline-expanded
+by the 2026-05-27 F-1/F-3 peer migration (Tier 5 → Tier 2 simultaneous sweep),
+the 580-line body is preserved verbatim. Phase A-D の組合せで本物に discharge
+(Phase 2 pivot 2026-05-24: 3 staged hyp を 1 bundle hyp
+`IsAwgnRandomCodingFeasible P N h_meas` に縮約)。
 
 **Bundle hypothesis** (1 本、honest 4 条件、Mathlib 壁 analytic 系):
 
@@ -937,7 +940,12 @@ theorem isAwgnTypicalityHypothesis
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
     (h_feasible : IsAwgnRandomCodingFeasible P N h_meas) :
-    IsAwgnTypicalityHypothesis P N h_meas := by
+    ∀ {R : ℝ}, 0 < R → R < (1/2) * Real.log (1 + P / (N : ℝ)) →
+      ∀ {ε : ℝ}, 0 < ε →
+        ∃ N₀ : ℕ, ∀ n, N₀ ≤ n →
+          ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
+            (c : AwgnCode M n P),
+              ∀ m, (c.toCode.errorProbAt (awgnChannel N h_meas) m).toReal < ε := by
   intro R hR_pos hR ε hε
   classical
   -- Destructure the bundled feasibility hypothesis at rate `R` to obtain the
@@ -1541,9 +1549,12 @@ theorem isAwgnTypicalityHypothesis
     show 5 * (ε₁ / 5) = ε₁; ring
   linarith [h_awg, hε₁_le_ε]
 
-/-- **`awgn_achievability` F-1 wrapper via 1 bundled hyp** — `h_typicality` 引数を
-`isAwgnTypicalityHypothesis` で埋めて再 publish (Phase E-2、Phase 2 pivot
-2026-05-24: 3 staged hyp を 1 bundle hyp に縮約)。
+/-- **`awgn_achievability` F-1 wrapper via 1 bundled hyp** — `isAwgnTypicalityHypothesis`
+(580-line genuine assembly) を直接呼出し、`IsAwgnRandomCodingFeasible` bundle
+hyp を経由した F-1 discharge wrapper として再 publish (Phase E-2、Phase 2 pivot
+2026-05-24: 3 staged hyp を 1 bundle hyp に縮約 / 2026-05-27 F-1/F-3 peer
+migration: `awgn_achievability` body が `sorry` 化されたため、本 wrapper は
+`awgn_achievability` を経由せず `isAwgnTypicalityHypothesis` を直接呼ぶ形に書換)。
 
 **Residual hypothesis (NOT a complete discharge)**:
 this wrapper consumes 1 bundled hypothesis `h_feasible :
@@ -1569,20 +1580,27 @@ theorem awgn_achievability_F1_via_staged_hyps
     ∃ N₀ : ℕ, ∀ n, N₀ ≤ n →
       ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M) (c : AwgnCode M n P),
         ∀ m, (c.toCode.errorProbAt (awgnChannel N h_meas) m).toReal < ε :=
-  awgn_achievability P hP N hN h_meas
-    (isAwgnTypicalityHypothesis P hP N hN h_meas h_feasible) hR_pos hR hε
+  isAwgnTypicalityHypothesis P hP N hN h_meas h_feasible hR_pos hR hε
 
 /-- **Main theorem F-4 discharged, F-1 via 1 bundled hyp wrapper** —
 `awgn_channel_coding_theorem` の `h_meas` (F-4 / `isAwgnChannelMeasurable`) を
-**genuinely 埋め**、`h_typicality` (F-1) を `isAwgnTypicalityHypothesis` 経由で
-**1 bundle staged hyp に分解** して再 publish (Phase 2 pivot 2026-05-24)。
+**genuinely 埋め**、F-1 achievability を `isAwgnTypicalityHypothesis` (580-line
+genuine assembly) 経由で再 publish (Phase 2 pivot 2026-05-24 / 2026-05-27
+F-1/F-3 peer migration: `IsAwgnTypicalityHypothesis` / `IsAwgnConverseHypothesis`
+predicate 削除に伴い、F-1 は本 wrapper 内で `isAwgnTypicalityHypothesis` を
+直接呼ぶ形を維持 [genuine discharge]、F-3 hyp は signature から消失 [body は
+`awgn_converse` の `sorry` に defer])。
 
 **残 hyp** (docstring に明示、CORE doctrine 透明性):
 - `h_mi_bridge` (F-2、mutual info bridge、未起草 plan)
-- `h_converse` (F-3、converse aux、未起草 plan)
 - `h_feasible` (`@audit:staged(awgn-random-coding-feasible)`、Mathlib 壁
   analytic 系: continuous SMB + n-d `differentialEntropy` + chi-square SLLN
   をまとめた bundle)
+
+F-3 converse は `awgn_converse` 内の `sorry + @residual(plan:awgn-converse-aux-plan)`
+に defer。本 wrapper の signature には現れないが、`awgn_channel_coding_theorem`
+は achievability half のみを述べるため converse 側は別経路 (`awgn_converse`) で
+独立に publish される構造に変更なし。
 
 **Naming (post-rename 2026-05-24)**: theorem name is `awgn_theorem_F4_discharged_F1_via_staged`.
 F-4 genuinely discharged (`isAwgnChannelMeasurable N` is concrete), but F-1 is
@@ -1603,7 +1621,6 @@ theorem awgn_theorem_F4_discharged_F1_via_staged
           = Common2026.Shannon.differentialEntropy
               (gaussianReal 0 (P.toNNReal + N))
             - Common2026.Shannon.differentialEntropy (gaussianReal 0 N))
-    (h_converse : IsAwgnConverseHypothesis P N (isAwgnChannelMeasurable N))
     {R : ℝ} (hR_pos : 0 < R) (hR_lt_C : R < (1/2) * Real.log (1 + P / (N : ℝ)))
     {ε : ℝ} (hε : 0 < ε) :
     ∃ N₀ : ℕ, ∀ n, N₀ ≤ n →
@@ -1611,8 +1628,7 @@ theorem awgn_theorem_F4_discharged_F1_via_staged
         (c : AwgnCode M n P),
           ∀ m, (c.toCode.errorProbAt
                   (awgnChannel N (isAwgnChannelMeasurable N)) m).toReal < ε :=
-  awgn_channel_coding_theorem P hP N hN (isAwgnChannelMeasurable N)
-    (isAwgnTypicalityHypothesis P hP N hN (isAwgnChannelMeasurable N)
-      h_feasible) h_mi_bridge h_converse hR_pos hR_lt_C hε
+  isAwgnTypicalityHypothesis P hP N hN (isAwgnChannelMeasurable N)
+    h_feasible hR_pos hR_lt_C hε
 
 end InformationTheory.Shannon.AWGN

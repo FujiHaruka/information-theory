@@ -28,13 +28,16 @@ This single file publishes:
 * **§1. LZ78 phrase data structures** (`LZ78Phrase α`, `LZ78Parsing α`)
   — the type-level encoding of an LZ78 dictionary parsing.
 * **§2. Passthrough predicates** (`IsZivInequalityPassthrough`,
-  `IsLZ78ConversePassthrough`, `IsSMBSandwichPassthrough`) — `True`
-  placeholders for the discharged ingredients (Ziv's inequality, SMB
-  sandwich, the converse). These are **no longer hypotheses of the §4 main
-  theorem**; they survive only as discharge plumbing consumed by the
-  `.of*` bridge constructors in the downstream LZ78 files. The genuine
-  residual of the headline is the two-sided sandwich on `lz/n`, not any of
-  these predicates.
+  `IsLZ78ConversePassthrough`, `IsSMBSandwichPassthrough`) — **genuine
+  statements** for the discharged ingredients (Ziv's inequality, SMB
+  sandwich, the converse). Each body is the real a.s. statement
+  (`limsup ≤ entropyRate` / `entropyRate ≤ liminf` / `Tendsto … (𝓝 entropyRate)`)
+  rather than a `True` placeholder; their proofs are routed through the
+  `lz78-residual-discharge-plan` successor. These are **not hypotheses of
+  the §4 main theorem**; they survive only as discharge plumbing consumed
+  by the `.of*` bridge constructors in the downstream LZ78 files. The
+  genuine residual of the headline is the two-sided sandwich on `lz/n`,
+  not any of these predicates.
 * **§3. Main theorem** — `lz78_asymptotic_optimality` (Cover–Thomas
   Theorem 13.5.3), plus the two-sided combine form.
 
@@ -44,22 +47,26 @@ This file publishes the **statement-level hypothesis pass-through** form
 of the asymptotic optimality theorem, with the same 5-retreat-line
 strategy as `RelayCutset.lean` (T3-F):
 
-* **L-LZ1**: Ziv's inequality (Cover–Thomas Lemma 13.5.5) is supplied as
-  `IsZivInequalityPassthrough μ p lz78EncodingLength : Prop := True`
-  placeholder. Discharge plan:
-  [`lz78-ziv-inequality-discharge-*`](../../docs/shannon/lz78-moonshot-plan.md#l-lz1).
+* **L-LZ1**: Ziv's inequality (Cover–Thomas Lemma 13.5.5) is published as
+  `IsZivInequalityPassthrough μ p lz78EncodingLength : Prop :=
+   ∀ᵐ ω, limsup (lz/n) ≤ entropyRate μ p` — the genuine achievability
+  upper bound a.s. Discharge plan:
+  [`lz78-residual-discharge-plan`](../../docs/shannon/lz78-residual-discharge-plan.md)
+  Phase Z (`isLZ78AchievabilityChainHyp_distinct`).
 * **L-LZ2**: The LZ78 converse (Cover–Thomas Theorem 13.5.3 lower bound)
-  is supplied as
-  `IsLZ78ConversePassthrough μ p lz78EncodingLength : Prop := True`.
-  Discharge plan: `lz78-converse-discharge-*`.
+  is published as
+  `IsLZ78ConversePassthrough μ p lz78EncodingLength : Prop :=
+   ∀ᵐ ω, entropyRate μ p ≤ liminf (lz/n)` — the genuine converse lower
+  bound a.s. Discharge plan: `lz78-residual-discharge-plan` Phase C.
 * **L-LZ3**: The SMB sandwich (a.s. convergence of the per-block negative
-  log-likelihood to the entropy rate) is supplied as
-  `IsSMBSandwichPassthrough μ p : Prop := True`. This is the bridge to
-  `Common2026/Shannon/ShannonMcMillanBreiman.lean`'s
+  log-likelihood to the entropy rate) is published as
+  `IsSMBSandwichPassthrough μ p : Prop :=
+   ∀ᵐ ω, Tendsto (blockLogAvg μ p n) atTop (𝓝 (entropyRate μ p))`. This is
+  the bridge to `Common2026/Shannon/ShannonMcMillanBreiman.lean`'s
   `shannon_mcmillan_breiman_of_sandwich`, which itself takes the two
   sandwich inequalities as hypotheses (those in turn are discharged by
   Birkhoff + the SMB chain rule). Discharge plan:
-  `lz78-smb-sandwich-discharge-*`.
+  `lz78-residual-discharge-plan`.
 * **L-LZ4**: The concrete `lz78Encode : List α → LZ78Parsing α` greedy
   parsing implementation is **scope-out**; instead the main theorem
   consumes a generic encoding-length function
@@ -208,7 +215,10 @@ end LZ78Structures
 
 section PassthroughPredicates
 
-variable {α Ω : Type*} [MeasurableSpace α] [MeasurableSpace Ω]
+variable {α Ω : Type*}
+variable [Fintype α] [DecidableEq α] [Nonempty α]
+  [MeasurableSpace α] [MeasurableSingletonClass α]
+variable [MeasurableSpace Ω]
 
 /-- **Ziv's inequality passthrough predicate (Cover–Thomas Lemma 13.5.5,
 L-LZ1)**.
@@ -224,20 +234,30 @@ c(n) · log c(n) ≤ - ∑_{i=1}^{c(n)} log P(phrase_i)
 in its asymptotic per-sample form, which (when combined with SMB) gives
 the upper bound `lim sup (1/n) lz78EncodingLength ≤ H` almost surely.
 
-Currently a `True` placeholder; the real Ziv-inequality discharge happens
-in the companion seed `lz78-ziv-inequality-discharge-*`. The predicate
-*signature* already depends on `μ`, `p`, and `lz78EncodingLength`, so the
-external interface of the main theorem will not change when the body is
-upgraded from `True` to the real inequality.
+The body is now the genuine a.s. limsup upper bound
+`∀ᵐ ω, limsup (lz n / n) ≤ entropyRate μ p` (no longer a `True`
+placeholder). The proof of this a.s. statement is delegated to the
+companion seed `lz78-ziv-inequality-discharge-*` and the residual
+discharge plan; the present file publishes the *statement* only. The
+predicate *signature* depends on `μ`, `p`, and `lz78EncodingLength`, and
+the main theorem `lz78_asymptotic_optimality` does **not** take this
+predicate as a hypothesis, so its external interface is unaffected.
 
-`@audit:defect(prop-true)` `@audit:closed-by-successor(lz78-residual-discharge-plan)`
-— signature 露出を保ったまま body だけ `True` placeholder で導入したのは
-main theorem の external interface を凍結するため (上記)、当該セッションでは
-tier 5 暫定マーカーとして残置、successor plan で第一選択 (定義書換 → body sorry)
-に migrate 予定。 -/
+`@audit:closed-by-successor(lz78-residual-discharge-plan)`
+— body は実 statement (`limsup (lz n / n) ≤ entropyRate` a.s.) に書換、tier 5
+`prop-true` placeholder を解消。signature (`μ`, `p`, `lz78EncodingLength`) は不変、
+main theorem `lz78_asymptotic_optimality` は本述語を hypothesis に取らないため
+external interface も不変。本 def の証明 (a.s. limsup 上界) は successor plan
+`lz78-residual-discharge-plan` の Phase Z6 (`isLZ78AchievabilityChainHyp_distinct` 系)
+が genuine 構成。 -/
 def IsZivInequalityPassthrough
-    (μ : Measure Ω) (_p : StationaryProcess μ α)
-    (_lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) : Prop := True
+    (μ : Measure Ω) (p : StationaryProcess μ α)
+    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) : Prop :=
+  ∀ᵐ ω ∂μ,
+    Filter.limsup
+      (fun n => (lz78EncodingLength n (p.blockRV n ω) : ℝ) / (n : ℝ))
+      Filter.atTop
+    ≤ entropyRate μ p
 
 
 /-- **LZ78 converse passthrough predicate (Cover–Thomas Theorem 13.5.3
@@ -250,16 +270,26 @@ lim inf (1/n) · lz78EncodingLength(X^n) ≥ H   a.s.
 ```
 
 This is the harder direction (uses SMB lower bound + arbitrary prefix
-code Kraft inequality + finite-alphabet bookkeeping). Currently a `True`
-placeholder; discharge in `lz78-converse-discharge-*`.
+code Kraft inequality + finite-alphabet bookkeeping). The body is now
+the genuine a.s. liminf lower bound
+`∀ᵐ ω, entropyRate μ p ≤ liminf (lz n / n)` (no longer a `True`
+placeholder); the proof of this a.s. statement is delegated to
+`lz78-converse-discharge-*` and the residual discharge plan.
 
-`@audit:defect(prop-true)` `@audit:closed-by-successor(lz78-residual-discharge-plan)`
-— external interface 凍結のため signature 露出 + body `True` で導入、当該
-セッションでは tier 5 暫定マーカーとして残置、successor plan で第一選択
-(定義書換 → body sorry) に migrate 予定。 -/
+`@audit:closed-by-successor(lz78-residual-discharge-plan)`
+— body は実 statement (`entropyRate ≤ liminf (lz n / n)` a.s.) に書換、tier 5
+`prop-true` placeholder を解消。signature 不変、main theorem `lz78_asymptotic_optimality`
+は本述語を hypothesis に取らないため external interface も不変。本 def の証明
+(a.s. liminf 下界) は successor plan `lz78-residual-discharge-plan` の Phase C4
+(`isLZ78ConverseChainHyp_distinct` 系) が Kraft / shannonLength 経路で genuine 構成。 -/
 def IsLZ78ConversePassthrough
-    (μ : Measure Ω) (_p : StationaryProcess μ α)
-    (_lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) : Prop := True
+    (μ : Measure Ω) (p : StationaryProcess μ α)
+    (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) : Prop :=
+  ∀ᵐ ω ∂μ,
+    entropyRate μ p
+    ≤ Filter.liminf
+        (fun n => (lz78EncodingLength n (p.blockRV n ω) : ℝ) / (n : ℝ))
+        Filter.atTop
 
 
 /-- **SMB sandwich passthrough predicate (Cover–Thomas Theorem 16.8.1,
@@ -272,15 +302,24 @@ is *Shannon–McMillan–Breiman in its a.s. form*; the existing publish
 `Common2026/Shannon/ShannonMcMillanBreiman.lean` takes the two sandwich
 inequalities (`liminf ≥ H`, `limsup ≤ H`) and the two boundedness
 hypotheses as input, and the present predicate stands in for the *output*
-of that sandwich combine. Currently a `True` placeholder; discharge in
-`lz78-smb-sandwich-discharge-*` via Birkhoff + the SMB chain rule.
+of that sandwich combine. The body is now the genuine a.s. Tendsto
+statement `∀ᵐ ω, Tendsto (blockLogAvg μ p n) atTop (𝓝 (entropyRate μ p))`
+(no longer a `True` placeholder); the proof of this a.s. statement is
+delegated to `lz78-smb-sandwich-discharge-*` via Birkhoff + the SMB
+chain rule.
 
-`@audit:defect(prop-true)` `@audit:closed-by-successor(lz78-residual-discharge-plan)`
-— external interface 凍結のため signature 露出 + body `True` で導入、当該
-セッションでは tier 5 暫定マーカーとして残置、successor plan で第一選択
-(定義書換 → body sorry) に migrate 予定。 -/
+`@audit:closed-by-successor(lz78-residual-discharge-plan)`
+— body は実 statement (a.s. `Tendsto (blockLogAvg μ p n) atTop (𝓝 (entropyRate μ p))`)
+に書換、tier 5 `prop-true` placeholder を解消。signature 不変、main theorem
+`lz78_asymptotic_optimality` は本述語を hypothesis に取らないため external interface
+も不変。本 def の証明 (SMB a.s. 形) は `shannon_mcmillan_breiman_of_sandwich` の
+sandwich 入力を Birkhoff + chain rule で discharge する successor plan
+`lz78-residual-discharge-plan` の Phase C/Z 経路に集約される。 -/
 def IsSMBSandwichPassthrough
-    (μ : Measure Ω) (_p : StationaryProcess μ α) : Prop := True
+    (μ : Measure Ω) (p : StationaryProcess μ α) : Prop :=
+  ∀ᵐ ω ∂μ,
+    Filter.Tendsto (fun n => blockLogAvg μ p n ω) Filter.atTop
+      (𝓝 (entropyRate μ p))
 
 
 end PassthroughPredicates

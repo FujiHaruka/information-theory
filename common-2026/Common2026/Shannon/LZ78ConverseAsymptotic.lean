@@ -164,9 +164,16 @@ section ZivPassthroughBridge
 variable {α Ω : Type*} [MeasurableSpace α] [MeasurableSpace Ω]
 
 
-/-- **Trivial reverse**: parent placeholder is `True`, so we may
-construct an asymptotic predicate from *any* parsing family `q` and
-envelope `B = q.count` reflexively, regardless of the passthrough. -/
+/-- **Trivial reverse**: the asymptotic predicate
+`IsLZ78PhraseCountAsymptotic q (fun n => (q n).count : ℝ)` is reflexive
+(`IsLZ78PhraseCountAsymptotic.refl`), so any parsing family `q` and
+envelope `B = q.count` satisfies it unconditionally. The hypothesis
+`_h : ∀ μ p lz, IsZivInequalityPassthrough μ p lz` is therefore *not
+consumed*; the bridge is retained for API symmetry. (After the
+2026-05-27 prop-true → genuine a.s. statement rewrite of
+`IsZivInequalityPassthrough`, `_h` now carries a non-trivial a.s.
+limsup upper bound but is still discarded here; downstream consumers
+plug `_h` into the genuine information path.) -/
 @[entry_point]
 theorem IsLZ78PhraseCountAsymptotic.of_passthrough
     (_h : ∀ (μ : Measure Ω) (p : StationaryProcess μ α)

@@ -50,8 +50,8 @@ parent `lz78EncodingLength` parameter slot of
   count bound `B(n)` as a hypothesis; the elementary `count ≤ n`
   bound is supplied as `.id`.
 * **§7. Bridge to `IsZivInequalityPassthrough` (L-LZ4 → L-LZ1)** —
-  the concrete `lz78GreedyEncodingLength` plugs into the
-  `True`-placeholder parent `IsZivInequalityPassthrough`.
+  the concrete `lz78GreedyEncodingLength` plugs into the parent
+  `IsZivInequalityPassthrough` (a.s. `limsup (lz/n) ≤ entropyRate`).
 
 ## 撤退ライン
 

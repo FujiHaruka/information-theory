@@ -172,35 +172,13 @@ lemma AWGNJointlyTypicalSet_measurable (n : ℕ) (P N ε : ℝ) :
   rw [h_eq]
   exact (h1.inter h2).inter h3
 
-/-! ## Phase B — F-2 body (Continuous jointly typical decoding) -/
+/-! ## Phase B — F-2 body (Continuous jointly typical decoding)
 
-/-- **F-2 body hypothesis: AWGN continuous joint-typical decoding bound.**
-
-For any `R < (1/2) log(1+P/N)` and `ε > 0`, there exists `N₀` such that for
-every `n ≥ N₀`, there is an `AwgnCode` with `M ≥ ⌈exp(nR)⌉` messages whose
-per-message error probability is below `ε`, **under a random Gaussian codebook
-+ joint typical decoder construction**.
-
-This is the same shape as `IsAwgnTypicalityHypothesis`, exposed under a separate
-name in the F-2 body discharge: the discharge layer of F-2 will construct the
-random Gaussian codebook + joint typical decoder + 3-bound continuous AEP +
-union bound. Until then, `IsAwgnF2DecodingHypothesis` is the **primitive
-hypothesis** consumed by `awgn_achievability_jointly_typical_body` to produce
-the F-1 `IsAwgnTypicalityHypothesis`.
-
-Discharging this primitive (i.e. the continuous AEP + sphere-packing
-union-bound chain) is deferred to `awgn-achievability-typicality-plan.md` Tier 3.
-
-`@audit:retract-candidate(name-laundering-alias)` — `IsAwgnTypicalityHypothesis`
-(`AWGNAchievability.lean:47`) と verbatim 同型 alias、signature 改変は別 PR 候補
-(auditor 委任で正式付与判定)。 -/
-def IsAwgnF2DecodingHypothesis (P : ℝ) (N : ℝ≥0)
-    (h_meas : IsAwgnChannelMeasurable N) : Prop :=
-  ∀ {R : ℝ}, 0 < R → R < (1/2) * Real.log (1 + P / (N : ℝ)) →
-    ∀ {ε : ℝ}, 0 < ε →
-      ∃ N₀ : ℕ, ∀ n, N₀ ≤ n →
-        ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M) (c : AwgnCode M n P),
-          ∀ m, (c.toCode.errorProbAt (awgnChannel N h_meas) m).toReal < ε
+2026-05-27 F-1/F-3 peer migration: the verbatim-equivalent alias
+`IsAwgnF2DecodingHypothesis` (a `name-laundering-alias` retract-candidate)
+was removed together with its underlying `IsAwgnTypicalityHypothesis`
+predicate. Phase B is intentionally empty now; F-2 body discharge lives in
+the analytic `awgn-achievability-typicality-plan.md` successor. -/
 
 
 /-! ## Phase C — F-3 body (Per-letter MI Fano converse) -/
@@ -235,64 +213,40 @@ def IsAwgnF3PerLetterHypothesis (P : ℝ) (N : ℝ≥0)
   ∀ {M n : ℕ} (_hM : 2 ≤ M) (_c : AwgnCode M n P) (_i : Fin n),
     True  -- OPEN placeholder (`True`): abstract per-letter ≤ bound, not yet discharged
 
-/-- **F-3 body hypothesis 2: chain rule + Fano data processing aggregation.**
-
-Aggregates the per-letter bound (from `IsAwgnF3PerLetterHypothesis`) into the
-full `IsAwgnConverseHypothesis` via:
-
-1. Fano: `log M ≤ I(W; Ŵ) + h₂(Pe) + Pe·log(M-1)`,
-2. Data processing: `I(W; Ŵ) ≤ I(X^n; Y^n)`,
-3. Chain rule: `I(X^n; Y^n) ≤ ∑ I(X_i; Y_i)`,
-4. Per-letter Gaussian max-entropy: `I(X_i; Y_i) ≤ (1/2) log(1+P/N)`.
-
-Like `IsAwgnConverseHypothesis`, but exposed as a separate name to signal the
-**F-3 body reduction layer**. The discharge will use `fano_inequality_measure_theoretic`
-(`Common2026/Fano/Measure.lean`) + chain rule + per-letter max-entropy from
-`differentialEntropy_le_gaussian_of_variance_le`.
-
-`@audit:retract-candidate(name-laundering-alias)` — `IsAwgnConverseHypothesis`
-(`AWGNConverse.lean:56`) と verbatim 同型 alias、signature 改変は別 PR 候補
-(auditor 委任で正式付与判定)。 -/
-def IsAwgnF3ChainHypothesis (P : ℝ) (N : ℝ≥0)
-    (h_meas : IsAwgnChannelMeasurable N) : Prop :=
-  ∀ {M n : ℕ} (_hM : 2 ≤ M) (c : AwgnCode M n P),
-    ∀ (Pe : ℝ)
-      (_hPe : Pe = ((1 / M : ℝ) * ∑ m : Fin M,
-          (c.toCode.errorProbAt (awgnChannel N h_meas) m).toReal)),
-      Real.log M
-        ≤ (n : ℝ) * ((1 / 2) * Real.log (1 + P / (N : ℝ)))
-          + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1)
+/- **F-3 body hypothesis 2 (REMOVED)**: the verbatim-equivalent alias
+`IsAwgnF3ChainHypothesis` (a `name-laundering-alias` retract-candidate) was
+removed together with its underlying `IsAwgnConverseHypothesis` predicate
+(2026-05-27 F-1/F-3 peer migration). The chain rule + Fano data processing
+aggregation lives inside the analytic `awgn-converse-aux-plan.md` successor. -/
 
 
 /-! ## Phase D — `awgn_theorem_of_F2F3_hypotheses` re-publish (⚠️ F-2/F-3 OPEN) -/
 
-/-- **AWGN channel coding theorem — F-1 discharged, F-2/F-3 taken as hypotheses.**
+/-- **AWGN channel coding theorem — F-2/F-3 hypotheses removed (2026-05-27 peer migration).**
 
-⚠️ NOT a full discharge: F-2 (continuous jointly-typical decoding) and F-3
-(per-letter MI Fano converse) remain OPEN — they are *taken as hypotheses*
-(`h_F2 : IsAwgnF2DecodingHypothesis`, `h_F3_per_letter`, `h_F3_chain`). Note
-`IsAwgnF3PerLetterHypothesis := True` is an OPEN placeholder, not a discharge.
-A genuine discharge needs continuous AEP / sphere-shell volume (F-2) and chain
-rule + Fano data processing + Gaussian max-entropy (F-3) machinery absent from
-Mathlib. Only F-1 (kernel measurability, via
-`AWGNF1Discharge.awgn_theorem_F1_discharged`) is genuinely closed here.
+2026-05-27 F-1/F-3 peer migration: previously this wrapper consumed two
+load-bearing aliases (`IsAwgnF2DecodingHypothesis` ≡ `IsAwgnTypicalityHypothesis`
+and `IsAwgnF3ChainHypothesis` ≡ `IsAwgnConverseHypothesis`) which have been
+deleted. The remaining placeholder `IsAwgnF3PerLetterHypothesis := True` is
+retained as-is (tier-5 `defect(prop-true)` flagged elsewhere, scope-out of
+the current migration). The wrapper now matches `awgn_theorem_F1_discharged`
+exactly (F-1 / F-3 are absent as predicate hyps; their bodies live as
+`sorry + @residual` inside `awgn_achievability` / `awgn_converse`).
 
-This wrapper threads the F-2 hypothesis through
-`awgn_achievability_jointly_typical_body` (an identity-shaped reduction) and the
-F-3 hypotheses through `awgn_converse_fano_body` (likewise), then hands off to the
-F-1-discharged theorem. The MI bridge (F-2' layer) is passed through unchanged.
+⚠️ NOT a full discharge: F-1 achievability body, F-3 converse body and the
+`h_F3_per_letter` placeholder remain OPEN. Only F-4 (kernel measurability)
++ F-2 MI bridge (via `awgn_theorem_F1_discharged` ⟶ `awgn_channel_coding_theorem`)
+are exposed as concrete hypotheses.
 
 実体 discharge は別 plan へ:
 
-* F-2 → `awgn-achievability-typicality-plan.md` (Tier 3)
-* F-3 → `awgn-converse-aux-plan.md` (Tier 3)
+* F-1 (achievability) → `awgn-achievability-typicality-plan.md`
+* F-3 (converse)     → `awgn-converse-aux-plan.md`
 
 `@audit:closed-by-successor(awgn-achievability-typicality-plan)` -/
 theorem awgn_theorem_of_F2F3_hypotheses
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
-    (h_F2 : IsAwgnF2DecodingHypothesis P N (isAwgnChannelMeasurable N))
     (h_F3_per_letter : IsAwgnF3PerLetterHypothesis P N (isAwgnChannelMeasurable N))
-    (h_F3_chain : IsAwgnF3ChainHypothesis P N (isAwgnChannelMeasurable N))
     (h_mi_bridge :
         (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
             (gaussianReal 0 P.toNNReal)
@@ -308,9 +262,7 @@ theorem awgn_theorem_of_F2F3_hypotheses
           ∀ m, (c.toCode.errorProbAt
                   (awgnChannel N (isAwgnChannelMeasurable N)) m).toReal < ε :=
   awgn_theorem_F1_discharged P hP N hN
-    h_F2
     h_mi_bridge
-    h_F3_chain
     hR_pos hR_lt_C hε
 
 /-! ## Phase E — Capacity closed form re-publish (F-1 + F-2-MI-bridge) -/

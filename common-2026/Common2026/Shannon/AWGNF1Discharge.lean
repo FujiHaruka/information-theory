@@ -97,14 +97,17 @@ theorem isAwgnChannelMeasurable (N : ℝ≥0) : IsAwgnChannelMeasurable N := by
 (= `IsAwgnChannelMeasurable N`) を本 file の `isAwgnChannelMeasurable N` で埋めて
 再 publish。signature から `h_meas` が消える。
 
-残りの撤退ライン hypothesis (F-2 MI bridge / F-3 converse / F-4… これは元の F-1
-typicality) はそのまま pass-through。
+残りの撤退ライン hypothesis (F-2 MI bridge) はそのまま pass-through。
+2026-05-27 F-1/F-3 peer migration: 旧 `h_typicality` / `h_converse` 引数は、
+`IsAwgnTypicalityHypothesis` / `IsAwgnConverseHypothesis` predicate 削除に
+伴い削除済 (F-1 / F-3 body は `awgn_achievability` / `awgn_converse` の sorry
+として `awgn-achievability-typicality-plan` / `awgn-converse-aux-plan` に
+defer)。
 
 `@audit:closed-by-successor(awgn-moonshot-plan)` -/
 @[entry_point]
 theorem awgn_theorem_F1_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
-    (h_typicality : IsAwgnTypicalityHypothesis P N (isAwgnChannelMeasurable N))
     (h_mi_bridge :
         (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
             (gaussianReal 0 P.toNNReal)
@@ -112,7 +115,6 @@ theorem awgn_theorem_F1_discharged
           = Common2026.Shannon.differentialEntropy
               (gaussianReal 0 (P.toNNReal + N))
             - Common2026.Shannon.differentialEntropy (gaussianReal 0 N))
-    (h_converse : IsAwgnConverseHypothesis P N (isAwgnChannelMeasurable N))
     {R : ℝ} (hR_pos : 0 < R) (hR_lt_C : R < (1/2) * Real.log (1 + P / (N : ℝ)))
     {ε : ℝ} (hε : 0 < ε) :
     ∃ N₀ : ℕ, ∀ n, N₀ ≤ n →
@@ -121,7 +123,7 @@ theorem awgn_theorem_F1_discharged
           ∀ m, (c.toCode.errorProbAt
                   (awgnChannel N (isAwgnChannelMeasurable N)) m).toReal < ε :=
   awgn_channel_coding_theorem P hP N hN (isAwgnChannelMeasurable N)
-    h_typicality h_mi_bridge h_converse hR_pos hR_lt_C hε
+    h_mi_bridge hR_pos hR_lt_C hε
 
 /-- **AWGN capacity closed form** (F-1 discharge 形).
 
