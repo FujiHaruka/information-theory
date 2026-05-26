@@ -3,6 +3,9 @@
 -- 入試系 (Common2026/Exam/) は完成済みのため列挙から外している。
 -- 個別検証は `lake env lean Common2026/Exam/...` または `lake build Common2026.Exam.<...>` で行う。
 
+-- Meta: orphan-detection 用 @[entry_point] attribute
+import Common2026.Meta.EntryPoint
+
 -- Fano 不等式
 import Common2026.Fano
 import Common2026.Fano.Entropy
