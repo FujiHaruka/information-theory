@@ -1,7 +1,5 @@
 -- This module serves as the root of the `Common2026` library.
 -- Import modules here that should be built as part of `lake build`.
--- 入試系 (Common2026/Exam/) は完成済みのため列挙から外している。
--- 個別検証は `lake env lean Common2026/Exam/...` または `lake build Common2026.Exam.<...>` で行う。
 
 -- Meta: orphan-detection 用 @[entry_point] attribute
 import Common2026.Meta.EntryPoint

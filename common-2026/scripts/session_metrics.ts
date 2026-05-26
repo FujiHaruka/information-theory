@@ -8,14 +8,14 @@
 //
 // Manifest schema (JSON):
 //   {
-//     "problem": "東大 2026 第1問",
-//     "proof_log": "docs/proof-log-todai-2026-q1.md",
+//     "problem": "Shannon Ch.7 channel coding theorem",
+//     "proof_log": "docs/proof-logs/proof-log-channel-coding.md",
 //     "sessions": [{
 //       "id": "1e57b25f-...",
 //       "prompt_ids": ["444dfbd8", "e386bbf9"],   // optional, prefix match supported
 //       "note": "作成セッション"
 //     }],
-//     "filters": { "file_prefix": "Common2026/T_Q1" },
+//     "filters": { "file_prefix": "Common2026/Shannon/ChannelCoding" },
 //     "idle_gap_minutes": 5,
 //     "logs_dir": "/Users/.../-Users-..."  // optional override
 //   }
