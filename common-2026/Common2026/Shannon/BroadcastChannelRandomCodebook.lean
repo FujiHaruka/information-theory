@@ -1,4 +1,4 @@
-import Common2026.Shannon.BroadcastChannelSuperpositionBody
+import Common2026.Draft.Shannon.BroadcastChannelSuperpositionBody
 
 /-!
 # BC random codebook averaging — L-BC2-I body discharge (T3-C continuation)

@@ -1,8 +1,8 @@
 import Common2026.Shannon.BrunnMinkowskiLayerCakeBody
 import Common2026.Shannon.BrunnMinkowskiPLBody
 import Common2026.Shannon.BrunnMinkowski1DSuperlevelBody
-import Common2026.Shannon.BrunnMinkowskiConcavity
-import Common2026.Shannon.MultivariateDiffEntropy
+import Common2026.Draft.Shannon.BrunnMinkowskiConcavity
+import Common2026.Draft.Shannon.MultivariateDiffEntropy
 import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.MeasureTheory.Integral.Prod
 import Mathlib.MeasureTheory.Integral.Pi

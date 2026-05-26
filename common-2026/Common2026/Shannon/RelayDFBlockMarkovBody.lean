@@ -1,4 +1,4 @@
-import Common2026.Shannon.RelayInnerBodyDischarge
+import Common2026.Draft.Shannon.RelayInnerBodyDischarge
 
 /-!
 # Relay DF block-Markov witness — body discharge layer (W9-S9, T3-F)

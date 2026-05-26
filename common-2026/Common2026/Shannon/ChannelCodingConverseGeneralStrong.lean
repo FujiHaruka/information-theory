@@ -1,4 +1,4 @@
-import Common2026.Shannon.ChannelCodingConverseGeneralComplete
+import Common2026.Draft.Shannon.ChannelCodingConverseGeneralComplete
 import Common2026.Shannon.CondEntropyMemoryless
 import Mathlib.MeasureTheory.MeasurableSpace.Embedding
 

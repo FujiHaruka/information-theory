@@ -1,7 +1,7 @@
 import Common2026.Shannon.RateDistortionAchievabilityPhaseB
 import Common2026.Shannon.StrongTypicality
 import Common2026.Shannon.IIDProductInputJoint
-import Common2026.Shannon.RateDistortionAchievabilityPhaseEDischarge
+import Common2026.Draft.Shannon.RateDistortionAchievabilityPhaseEDischarge
 
 /-!
 # Rate-distortion achievability — Phase E (strong-typicality variant), Phases α–γ

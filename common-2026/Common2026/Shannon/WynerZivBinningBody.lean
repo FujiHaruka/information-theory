@@ -1,5 +1,5 @@
 import Common2026.Shannon.WynerZiv
-import Common2026.Shannon.WynerZivAchievability
+import Common2026.Draft.Shannon.WynerZivAchievability
 import Common2026.Shannon.SlepianWolfBinning
 import Common2026.Shannon.SlepianWolfFullRateRegion
 

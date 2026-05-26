@@ -1,5 +1,5 @@
-import Common2026.Shannon.BrunnMinkowski
-import Common2026.Shannon.BrunnMinkowskiFunctional
+import Common2026.Draft.Shannon.BrunnMinkowski
+import Common2026.Draft.Shannon.BrunnMinkowskiFunctional
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Analysis.MeanInequalities
 

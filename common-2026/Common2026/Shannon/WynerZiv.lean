@@ -1,5 +1,5 @@
 import Common2026.Shannon.RateDistortionAchievability
-import Common2026.Shannon.RateDistortionConverseNLetter
+import Common2026.Draft.Shannon.RateDistortionConverseNLetter
 
 /-!
 # Wyner–Ziv lossy distributed coding (T3-D Phase A — definitions)

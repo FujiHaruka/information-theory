@@ -1,5 +1,5 @@
-import Common2026.Shannon.MACBodyDischarge
-import Common2026.Shannon.MACL1Discharge
+import Common2026.Draft.Shannon.MACBodyDischarge
+import Common2026.Draft.Shannon.MACL1Discharge
 import Common2026.Shannon.AEPRate
 
 /-!

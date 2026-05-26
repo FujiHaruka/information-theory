@@ -1,4 +1,4 @@
-import Common2026.Shannon.MACCornerPoint
+import Common2026.Draft.Shannon.MACCornerPoint
 
 /-!
 # MAC time-sharing convex-hull body discharge (W9-S6, T3-B)

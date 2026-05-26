@@ -1,4 +1,4 @@
-import Common2026.Shannon.RateDistortionConvexity
+import Common2026.Draft.Shannon.RateDistortionConvexity
 import Common2026.Shannon.Sanov
 import Mathlib.InformationTheory.KullbackLeibler.KLFun
 

@@ -1,7 +1,7 @@
 import Common2026.Shannon.WynerZiv
-import Common2026.Shannon.WynerZivAchievability
+import Common2026.Draft.Shannon.WynerZivAchievability
 import Common2026.Shannon.RateDistortionAchievabilityPhaseD
-import Common2026.Shannon.WynerZivDecoderFailureAssembly
+import Common2026.Draft.Shannon.WynerZivDecoderFailureAssembly
 
 /-!
 # Wyner–Ziv decoder-failure → distortion achievability bridge (T3-D wave10 S17)

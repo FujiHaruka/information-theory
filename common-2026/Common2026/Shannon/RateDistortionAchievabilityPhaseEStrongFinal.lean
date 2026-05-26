@@ -1,6 +1,6 @@
 import Common2026.Shannon.RateDistortionAchievabilityPhaseEStrong
-import Common2026.Shannon.RateDistortionAchievabilityPhaseEDischarge
-import Common2026.Shannon.RateDistortionAchievabilityPhaseE
+import Common2026.Draft.Shannon.RateDistortionAchievabilityPhaseEDischarge
+import Common2026.Draft.Shannon.RateDistortionAchievabilityPhaseE
 import Common2026.Shannon.RateDistortionAchievabilityPhaseD
 import Common2026.Shannon.RateDistortionAchievabilityPhaseC
 import Common2026.Shannon.ConditionalMethodOfTypes

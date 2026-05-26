@@ -1,4 +1,4 @@
-import Common2026.Shannon.Cramer
+import Common2026.Draft.Shannon.Cramer
 import Mathlib.Probability.StrongLaw
 import Mathlib.Probability.Independence.InfinitePi
 import Mathlib.Probability.ProductMeasure

@@ -1,9 +1,9 @@
 import Common2026.Shannon.HoeffdingTradeoff
 import Common2026.Shannon.HoeffdingSandwich
 import Common2026.Shannon.HoeffdingSandwichBody
-import Common2026.Shannon.HoeffdingInteriorBody
-import Common2026.Shannon.HoeffdingInteriorGradientBody
-import Common2026.Shannon.HoeffdingMinimizerAttainment
+import Common2026.Draft.Shannon.HoeffdingInteriorBody
+import Common2026.Draft.Shannon.HoeffdingInteriorGradientBody
+import Common2026.Draft.Shannon.HoeffdingMinimizerAttainment
 import Common2026.Shannon.Chernoff
 import Common2026.Shannon.CsiszarProjection
 import Common2026.Shannon.SanovLDPEquality

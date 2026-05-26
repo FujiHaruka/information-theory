@@ -1,10 +1,10 @@
 import Common2026.Shannon.ParallelGaussian
-import Common2026.Shannon.ParallelGaussianPerCoord
+import Common2026.Draft.Shannon.ParallelGaussianPerCoord
 import Common2026.Shannon.AWGN
 import Common2026.Shannon.AWGNMIBridge
-import Common2026.Shannon.ContChannelMIDecomp
+import Common2026.Draft.Shannon.ContChannelMIDecomp
 import Common2026.Shannon.DifferentialEntropy
-import Common2026.Shannon.MultivariateDiffEntropy
+import Common2026.Draft.Shannon.MultivariateDiffEntropy
 import Common2026.Shannon.MIChainRule
 import Common2026.Shannon.ChannelCoding
 import Mathlib.MeasureTheory.Constructions.Pi
