@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ShannonCode
 import Mathlib.InformationTheory.Coding.KraftMcMillan
 import Mathlib.InformationTheory.Coding.UniquelyDecodable
@@ -107,6 +108,7 @@ per-symbol Kraft sum `kraftSum |β| (|c ·|) ≤ 1`.
 codewords; McMillan's `kraft_mcmillan_inequality` gives
 `∑_{w ∈ image} (1/|β|)^{|w|} ≤ 1`, and reindexing by the injective `c`
 recovers the per-symbol sum. -/
+@[entry_point]
 theorem kraftSum_le_one_of_uniquelyDecodable
     (c : α → List β) (hc : Function.Injective c)
     (hUD : UniquelyDecodable ((Finset.univ.image c : Finset (List β)) : Set (List β))) :
@@ -141,6 +143,7 @@ load-bearing discharge.
 **Note on `D > 1`.** The Gibbs lemma needs `1 < D = |β|`, i.e. at least a
 binary alphabet. With a unary alphabet (`|β| = 1`) no uniquely-decodable code
 of more than one nonempty word exists, so the hypothesis is the natural one. -/
+@[entry_point]
 theorem entropyD_le_expectedLength_of_uniquelyDecodable
     (hD : 1 < (Fintype.card β : ℝ))
     (P : Measure α) [IsProbabilityMeasure P]

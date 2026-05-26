@@ -8,6 +8,7 @@ import Mathlib.Combinatorics.Colex
 import Mathlib.Data.Prod.Lex
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ShannonCode
 import Common2026.Shannon.ShannonCodeKraftReverse
 
@@ -1003,6 +1004,7 @@ lemma kraftPerGroup_initMultiset_eq_kraft (P : Measure α) :
 omit [MeasurableSingletonClass α] in
 /-- Huffman 語長は Kraft 不等式 (D = 2) を **等号** で充足: `∑ 2^(-huffmanLength) = 1`.
 これは `kraftPerGroup` が `HuffmanGrouping` 上常に `1` であることから従う. -/
+@[entry_point]
 theorem huffmanLength_kraft_eq_one (P : Measure α) [IsProbabilityMeasure P]
     (_hP : ∀ a, 0 < P.real {a}) :
     ∑ a : α, ((2 : ℝ)) ^ (-(huffmanLength P a : ℤ)) = 1 := by
@@ -1017,6 +1019,7 @@ theorem huffmanLength_kraft_eq_one (P : Measure α) [IsProbabilityMeasure P]
 
 omit [MeasurableSingletonClass α] in
 /-- Huffman 語長は Kraft 不等式 (D = 2) を充足 (実は等号). -/
+@[entry_point]
 theorem huffmanLength_kraft_le_one (P : Measure α) [IsProbabilityMeasure P]
     (hP : ∀ a, 0 < P.real {a}) :
     ∑ a : α, ((2 : ℝ)) ^ (-(huffmanLength P a : ℤ)) ≤ 1 := by
@@ -1025,6 +1028,7 @@ theorem huffmanLength_kraft_le_one (P : Measure α) [IsProbabilityMeasure P]
 omit [MeasurableSingletonClass α] in
 /-- **副系**: Huffman 語長から prefix code が構成できる
 (`ShannonCodeKraftReverse.exists_prefix_code_of_kraft` 経由). -/
+@[entry_point]
 theorem exists_huffman_prefix_code
     (P : Measure α) [IsProbabilityMeasure P]
     (hP : ∀ a, 0 < P.real {a}) (h_card : 2 ≤ Fintype.card α) :

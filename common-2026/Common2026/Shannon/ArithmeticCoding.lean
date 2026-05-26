@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ShannonCode
 import Common2026.Shannon.ShannonCodeKraftReverse
 import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
@@ -90,6 +91,7 @@ lemma sfeLength_kraft_le_one
   omega
 
 /-- **Expected-length sandwich** (full discharge): `H₂(P) ≤ E[L] ≤ H₂(P) + 2`. -/
+@[entry_point]
 theorem arithmeticCode_expected_length_bounds
     (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a : α, 0 < P.real {a}) :
     entropyD 2 P ≤ expectedLength P (sfeLength P) ∧
@@ -121,6 +123,7 @@ theorem arithmeticCode_expected_length_bounds
 
 /-- **Prefix-free construction** (full discharge): there is a binary code of
 length `sfeLength P` that is injective and prefix-free. -/
+@[entry_point]
 theorem arithmeticCode_prefix_free
     (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a : α, 0 < P.real {a}) :
     ∃ c : α → List Bool,
@@ -188,6 +191,7 @@ code constructed in `arithmeticCode_prefix_free` (prefix-freeness is returned
 there; nonemptiness follows from `sfeLength_pos`), not pass-throughs of the
 conclusion. Injectivity of `c` is not even needed — prefix-freeness alone yields
 unique decodability. -/
+@[entry_point]
 theorem arithmeticCode_unique_decodable
     (c : α → List Bool)
     (h_pf : ∀ a b : α, a ≠ b → ¬ c a <+: c b)

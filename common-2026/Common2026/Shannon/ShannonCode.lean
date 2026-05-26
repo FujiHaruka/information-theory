@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Mathlib.Analysis.SpecialFunctions.Log.Base
 import Mathlib.MeasureTheory.Measure.Real
 import Mathlib.Probability.ProbabilityMassFunction.Basic
@@ -126,6 +127,7 @@ omit [DecidableEq α] [Nonempty α] in
 support 外の項は `(if P.real{a} > 0 then ... else 0)` 形で消す版を主定理にする。
 
 ここでは **full support 仮定** で main 形を述べる。 -/
+@[entry_point]
 theorem shannonLength_kraft_le_one
     {D : ℝ} (hD : 1 < D) (P : Measure α) [IsProbabilityMeasure P]
     (hP : ∀ a : α, 0 < P.real {a}) :
@@ -161,6 +163,7 @@ omit [DecidableEq α] [Nonempty α] in
 
 full support 仮定: support 外で `P(a) = 0` のとき `P(a) · logb D P(a) = 0` だが、
 proof 中で `logb` の `>0` 引数性を使うため。 -/
+@[entry_point]
 theorem entropyD_le_expectedLength_of_kraft
     {D : ℝ} (hD : 1 < D) (P : Measure α) [IsProbabilityMeasure P]
     (hP : ∀ a : α, 0 < P.real {a})
@@ -258,6 +261,7 @@ theorem entropyD_le_expectedLength_of_kraft
 omit [DecidableEq α] in
 /-- **Shannon code 上界**: `D > 1`, `P` proba (full support) ⟹
 `E[L_Shannon] < H_D(P) + 1`. -/
+@[entry_point]
 theorem expectedLength_shannon_lt_entropyD_add_one
     {D : ℝ} (hD : 1 < D) (P : Measure α) [IsProbabilityMeasure P]
     (hP : ∀ a : α, 0 < P.real {a}) :
@@ -342,6 +346,7 @@ Shannon 語長 `l(a) := ⌈-logb D P(a)⌉₊` は
   `H_D(P) ≤ E[L] < H_D(P) + 1`
 
 を達成する (Cover-Thomas 5.4 + 5.8.1). -/
+@[entry_point]
 theorem shannonCode_expected_length_bounds
     {D : ℝ} (hD : 1 < D) (P : Measure α) [IsProbabilityMeasure P]
     (hP : ∀ a : α, 0 < P.real {a}) :

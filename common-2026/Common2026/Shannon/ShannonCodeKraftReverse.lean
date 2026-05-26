@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Mathlib.Data.List.OfFn
 import Mathlib.Data.List.Sort
 import Mathlib.Data.Finset.Dedup
@@ -469,6 +470,7 @@ lemma le_commonDepth (l : α → ℕ) (a : α) : l a ≤ commonDepth l :=
   Finset.le_sup (Finset.mem_univ a)
 
 /-- **主定理**: Kraft 充足 ⟹ prefix code 存在. -/
+@[entry_point]
 theorem exists_prefix_code_of_kraft
     {D : ℕ} (hD : 2 ≤ D)
     (l : α → ℕ) (hl : ∀ a, 0 < l a)
