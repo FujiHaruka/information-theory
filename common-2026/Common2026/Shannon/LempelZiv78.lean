@@ -243,13 +243,15 @@ predicate *signature* depends on `μ`, `p`, and `lz78EncodingLength`, and
 the main theorem `lz78_asymptotic_optimality` does **not** take this
 predicate as a hypothesis, so its external interface is unaffected.
 
-`@audit:closed-by-successor(lz78-residual-discharge-plan)`
+`@audit:closed-by-successor(textbook-roadmap-m3-m4-scope-out)`
 — body は実 statement (`limsup (lz n / n) ≤ entropyRate` a.s.) に書換、tier 5
 `prop-true` placeholder を解消。signature (`μ`, `p`, `lz78EncodingLength`) は不変、
 main theorem `lz78_asymptotic_optimality` は本述語を hypothesis に取らないため
-external interface も不変。本 def の証明 (a.s. limsup 上界) は successor plan
-`lz78-residual-discharge-plan` の Phase Z6 (`isLZ78AchievabilityChainHyp_distinct` 系)
-が genuine 構成。 -/
+external interface も不変。本 def の証明 (a.s. limsup 上界) は **textbook-roadmap で
+M3 (variable-depth tree AEP) / M4 (Barron a.s. lift) として research-level upstream
+に scope-out 済** (Mathlib 測度論基盤の新規研究貢献を要する)。
+`lz78-residual-discharge-plan` (旧 successor 計画) は archive 化、本 def は
+statement-only publish 形式を維持する。 -/
 def IsZivInequalityPassthrough
     (μ : Measure Ω) (p : StationaryProcess μ α)
     (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) : Prop :=
@@ -276,12 +278,14 @@ the genuine a.s. liminf lower bound
 placeholder); the proof of this a.s. statement is delegated to
 `lz78-converse-discharge-*` and the residual discharge plan.
 
-`@audit:closed-by-successor(lz78-residual-discharge-plan)`
+`@audit:closed-by-successor(textbook-roadmap-m3-m4-scope-out)`
 — body は実 statement (`entropyRate ≤ liminf (lz n / n)` a.s.) に書換、tier 5
 `prop-true` placeholder を解消。signature 不変、main theorem `lz78_asymptotic_optimality`
 は本述語を hypothesis に取らないため external interface も不変。本 def の証明
-(a.s. liminf 下界) は successor plan `lz78-residual-discharge-plan` の Phase C4
-(`isLZ78ConverseChainHyp_distinct` 系) が Kraft / shannonLength 経路で genuine 構成。 -/
+(a.s. liminf 下界) は **textbook-roadmap で M3 (variable-depth tree AEP) / M4
+(Barron a.s. lift) として research-level upstream に scope-out 済** (Mathlib 測度論
+基盤の新規研究貢献を要する)。`lz78-residual-discharge-plan` (旧 successor 計画) は
+archive 化、本 def は statement-only publish 形式を維持する。 -/
 def IsLZ78ConversePassthrough
     (μ : Measure Ω) (p : StationaryProcess μ α)
     (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) : Prop :=
@@ -308,13 +312,14 @@ statement `∀ᵐ ω, Tendsto (blockLogAvg μ p n) atTop (𝓝 (entropyRate μ p
 delegated to `lz78-smb-sandwich-discharge-*` via Birkhoff + the SMB
 chain rule.
 
-`@audit:closed-by-successor(lz78-residual-discharge-plan)`
+`@audit:closed-by-successor(textbook-roadmap-m3-m4-scope-out)`
 — body は実 statement (a.s. `Tendsto (blockLogAvg μ p n) atTop (𝓝 (entropyRate μ p))`)
 に書換、tier 5 `prop-true` placeholder を解消。signature 不変、main theorem
 `lz78_asymptotic_optimality` は本述語を hypothesis に取らないため external interface
-も不変。本 def の証明 (SMB a.s. 形) は `shannon_mcmillan_breiman_of_sandwich` の
-sandwich 入力を Birkhoff + chain rule で discharge する successor plan
-`lz78-residual-discharge-plan` の Phase C/Z 経路に集約される。 -/
+も不変。本 def の証明 (SMB a.s. 形) は **textbook-roadmap で M3 (variable-depth tree
+AEP) / M4 (Barron a.s. lift) として research-level upstream に scope-out 済**
+(Mathlib 測度論基盤の新規研究貢献を要する)。`lz78-residual-discharge-plan` (旧
+successor 計画) は archive 化、本 def は statement-only publish 形式を維持する。 -/
 def IsSMBSandwichPassthrough
     (μ : Measure Ω) (p : StationaryProcess μ α) : Prop :=
   ∀ᵐ ω ∂μ,

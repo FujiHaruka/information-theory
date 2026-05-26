@@ -1,5 +1,23 @@
 # T4-A LZ78 漸近最適性 — 残 chain-hyp discharge 実装サブ計画 🌙
 
+> **🗄️ ARCHIVED 2026-05-27** (textbook-roadmap M3/M4 scope-out 反映)
+>
+> 本 plan が参照する `LZ78FinalGlue.lean` / `LZ78ConverseDischarge.lean` /
+> `LZ78DistinctEncoding.lean` / `LZ78SMBSandwich.lean` はすべて commit `f67ec8a`
+> (2026-05-26「scope-out 60 ファイル削除」) で削除済。textbook-roadmap は LZ78 M3
+> (variable-depth tree AEP) / M4 (Barron a.s. lift) を **research-level upstream
+> として scope-out** している (`docs/textbook-roadmap.md` 章 13 行 / line 48 / line 97)。
+> 本 plan の Phase C2/C3/C4/Z4/Z5/Z6 は M3/M4 と実質同等で、本 plan は scope-out
+> 範囲外。**以下の Phase 設計は記録として保持** (将来 M3/M4 を再開する場合の
+> prior として参照可) するが、現状では着手不可。
+>
+> **Status 訂正**: 後続実装を期待していた `LempelZiv78.lean` §2 3 def の docstring
+> 内 `@audit:closed-by-successor(lz78-residual-discharge-plan)` は successor 不在化、
+> docstring は本 archive 反映で `@audit:closed-by-successor(textbook-roadmap-m3-m4-scope-out)`
+> に書き換え (本 plan の Read で確認)。
+
+---
+
 > **Parent**:
 > - [`lz78-moonshot-plan.md`](./lz78-moonshot-plan.md) §「撤退ライン L-LZ1 (Ziv inequality) / L-LZ2 (converse)」
 > - [`textbook-roadmap.md`](../textbook-roadmap.md) §「Tier 4 — T4-A. LZ78 漸近最適性」(Cover–Thomas Ch.13.5, Thm 13.5.3)
