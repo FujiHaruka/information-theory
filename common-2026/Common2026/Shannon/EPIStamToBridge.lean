@@ -755,6 +755,222 @@ theorem csiszarGap1Source_deriv_le_zero
   sorry
   -- @residual(plan:epi-stam-to-conclusion-phaseA-A3)
 
+/-! ## §2'''' — Phase A A-4: `AntitoneOn` lift + `IsStamToEPIScalingHyp` constructor
+
+This subsection lifts A-2-3 (`HasDerivAt`) + A-3 (`deriv ≤ 0`) to
+`AntitoneOn (fun t => csiszarGap1Source _ t) (Set.Ici 0)` via
+`antitoneOn_of_deriv_nonpos`, then rescales the 1-source `AntitoneOn` to the
+2-source `AntitoneOn (Set.Icc 0 1)` required by `IsStamToEPIScalingHyp`, and
+finally bundles with the noise witness from `IsStamScalingNoiseHyp` to publish
+the `IsStamToEPIScalingHyp X Y P` constructor.
+
+Members:
+
+* `csiszarGap1Source_continuousOn` (A-4-1) — `ContinuousOn` on `Set.Ici 0`,
+  combining `HasDerivAt.continuousAt` (interior `t > 0`) with the closed-form
+  endpoint at `t = 0` (`csiszarGap1Source_at_zero`).
+* `csiszarGap1Source_differentiableOn_interior` (A-4-2) — `DifferentiableOn`
+  on `interior (Set.Ici 0) = Set.Ioi 0` via `HasDerivAt.differentiableAt`.
+* `csiszarGap1Source_antitoneOn_Ici_zero` (A-4-3) —
+  `AntitoneOn (...) (Set.Ici 0)` by `antitoneOn_of_deriv_nonpos`.
+* `csiszarGap_antitoneOn_Icc_zero_one` (A-4-4) — rescale lift to
+  `AntitoneOn (...) (Set.Icc 0 1)` via `csiszarGap_eq_one_source_via_rescale`
+  + `csiszarGap_at_one_eq_zero_of_gaussian_pair`.
+* `isStamToEPIScalingHyp_of_stam_debruijn` (A-4-5) — final constructor
+  combining `IsStamScalingNoiseHyp` witness extraction + A-4-4.
+-/
+
+/-- **A-4-1**: `csiszarGap1Source X Y Z_X Z_Y P` is continuous on `Set.Ici 0`.
+
+For `t > 0`, continuity follows from `csiszarGap1Source_hasDerivAt`
+(A-2-3) via `HasDerivAt.continuousAt`. The endpoint `t = 0` is connected
+by the closed-form `csiszarGap1Source_at_zero` (A-0'-3) together with
+the fact that the three `entropyPower (P.map ...)` terms vary continuously
+as `√t → 0` (this last continuity is the analytic content; we package it
+behind `sorry` because the per-`t` continuity of `entropyPower ∘ P.map`
+along the heat-flow path requires Lebesgue-dominated-convergence machinery
+that is **not** carried by the current `IsDeBruijnRegularityHyp` bundle,
+and exceeds A-4's 25-40 line budget to build inline). A future sub-plan
+will close this either via a `ContinuousOn entropyPower_heatflow` Common2026
+lemma or by tightening `IsDeBruijnRegularityHyp` to include path-continuity
+of the density derivative.
+
+Signature stable; body deferred as `sorry` with
+`@residual(plan:epi-stam-to-conclusion-phaseA-A4-continuity)`. -/
+theorem csiszarGap1Source_continuousOn
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P) :
+    ContinuousOn (fun t : ℝ => csiszarGap1Source X Y Z_X Z_Y P t) (Set.Ici (0 : ℝ)) := by
+  sorry
+  -- @residual(plan:epi-stam-to-conclusion-phaseA-A4-continuity)
+
+/-- **A-4-2**: `csiszarGap1Source X Y Z_X Z_Y P` is differentiable on the
+interior `Set.Ioi 0 = interior (Set.Ici 0)`, via A-2-3 + `HasDerivAt.differentiableAt`. -/
+theorem csiszarGap1Source_differentiableOn_interior
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P) :
+    DifferentiableOn ℝ (fun t : ℝ => csiszarGap1Source X Y Z_X Z_Y P t)
+      (interior (Set.Ici (0 : ℝ))) := by
+  rw [interior_Ici]
+  intro t ht
+  -- `ht : t ∈ Set.Ioi 0` gives `0 < t`.
+  have ht_pos : (0 : ℝ) < t := ht
+  exact ((csiszarGap1Source_hasDerivAt X Y Z_X Z_Y P
+    h_reg_sum h_reg_X h_reg_Y ht_pos).differentiableAt).differentiableWithinAt
+
+/-- **A-4-3**: `AntitoneOn (fun t => csiszarGap1Source X Y Z_X Z_Y P t) (Set.Ici 0)`,
+the 1-source EPI gap is antitone on the heat-flow ray `[0, ∞)`.
+
+Applies `antitoneOn_of_deriv_nonpos` with the convex domain `Set.Ici 0`
+(`convex_Ici`), the continuity from A-4-1, the differentiability from A-4-2,
+and the per-`t` `deriv ≤ 0` derived by combining A-2-3 (`HasDerivAt`) +
+A-3 (the RHS is `≤ 0` under per-`t` positivity + Stam hypotheses).
+
+The caller-side per-`t` hypotheses (`∀ t > 0, hJX_pos ∧ hJY_pos ∧ hJsum_pos
+∧ h_stam`) are required because A-3 (`csiszarGap1Source_deriv_le_zero`)
+operates pointwise in `t`. They are honest regularity / Stam hypotheses
+not bundled in the `IsDeBruijnRegularityHyp` structure. -/
+theorem csiszarGap1Source_antitoneOn_Ici_zero
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
+    (h_pos_stam : ∀ (t : ℝ) (ht : 0 < t),
+      (0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              ((h_reg_X.reg_at t ht).density_t)) ∧
+      (0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              ((h_reg_Y.reg_at t ht).density_t)) ∧
+      (0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              ((h_reg_sum.reg_at t ht).density_t)) ∧
+      InformationTheory.Shannon.EPIStamDischarge.IsStamInequalityHyp
+        (fun ω => X ω + Real.sqrt t * Z_X ω)
+        (fun ω => Y ω + Real.sqrt t * Z_Y ω) P) :
+    AntitoneOn (fun t : ℝ => csiszarGap1Source X Y Z_X Z_Y P t)
+      (Set.Ici (0 : ℝ)) := by
+  refine antitoneOn_of_deriv_nonpos (convex_Ici 0)
+    (csiszarGap1Source_continuousOn X Y Z_X Z_Y P h_reg_sum h_reg_X h_reg_Y)
+    (csiszarGap1Source_differentiableOn_interior X Y Z_X Z_Y P
+      h_reg_sum h_reg_X h_reg_Y) ?_
+  intro t ht
+  rw [interior_Ici] at ht
+  have ht_pos : (0 : ℝ) < t := ht
+  obtain ⟨hJX_pos, hJY_pos, hJsum_pos, h_stam⟩ := h_pos_stam t ht_pos
+  -- A-2-3 gives `HasDerivAt (csiszarGap1Source ...) (RHS) t`.
+  have h_deriv := csiszarGap1Source_hasDerivAt X Y Z_X Z_Y P
+    h_reg_sum h_reg_X h_reg_Y ht_pos
+  -- A-3 gives `RHS ≤ 0`.
+  have h_le := csiszarGap1Source_deriv_le_zero X Y Z_X Z_Y P
+    h_reg_sum h_reg_X h_reg_Y ht_pos hJX_pos hJY_pos hJsum_pos h_stam
+  -- Combine: `deriv (csiszarGap1Source ...) t = RHS ≤ 0`.
+  rw [h_deriv.deriv]
+  exact h_le
+
+/-- **A-4-4** (撤退 A-4-β 発火): rescale lift `AntitoneOn (... csiszarGap)
+(Set.Icc 0 1)` from the 1-source `AntitoneOn (Set.Ici 0)` via
+`csiszarGap_eq_one_source_via_rescale`.
+
+撤退 A-4-β fired: the rescale lift requires 6 caller-side absolute-continuity
++ integrability hypotheses per `s ∈ Set.Ico 0 1` (carried by
+`csiszarGap_eq_one_source_via_rescale`'s arguments
+`h_ac_sum / h_ac_X / h_ac_Y / h_int_sum / h_int_X / h_int_Y`), plus the
+`s = 1` endpoint connection through `csiszarGap_at_one_eq_zero_of_gaussian_pair`
++ continuity. Materializing these as a uniform `∀ s ∈ Set.Ico 0 1, ...`
+hypothesis in this constructor's signature would balloon the file scope
+beyond A-4's ~25-40 line budget. We retreat to `sorry` with
+`@residual(plan:epi-stam-to-conclusion-phaseA-A4-rescale)`.
+
+Signature stable; body deferred. -/
+theorem csiszarGap_antitoneOn_Icc_zero_one
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hX : Measurable X) (hY : Measurable Y)
+    (hZX : Measurable Z_X) (hZY : Measurable Z_Y)
+    (hZXZY : IndepFun Z_X Z_Y P)
+    (hZX_law : P.map Z_X = gaussianReal 0 1)
+    (hZY_law : P.map Z_Y = gaussianReal 0 1)
+    (_h_1source_anti : AntitoneOn (fun t : ℝ => csiszarGap1Source X Y Z_X Z_Y P t)
+      (Set.Ici (0 : ℝ))) :
+    AntitoneOn
+      (fun s : ℝ =>
+        entropyPower
+            (P.map (heatFlowPath2 X Z_X s + heatFlowPath2 Y Z_Y s))
+          - entropyPower (P.map (heatFlowPath2 X Z_X s))
+          - entropyPower (P.map (heatFlowPath2 Y Z_Y s)))
+      (Set.Icc (0 : ℝ) 1) := by
+  sorry
+  -- @residual(plan:epi-stam-to-conclusion-phaseA-A4-rescale)
+
+/-- **A-4-5**: `IsStamToEPIScalingHyp X Y P` constructor from
+`IsStamScalingNoiseHyp` (A-1 staged honest witness) + the three sister
+de Bruijn V2 regularity hypotheses + per-`t > 0` positivity + Stam.
+
+Extracts the `(Z_X, Z_Y)` witnesses via `obtain` from `h_noise`, then
+chains A-4-3 (1-source `AntitoneOn (Set.Ici 0)`) → A-4-4 (rescale lift to
+2-source `AntitoneOn (Set.Icc 0 1)`) → bundles with the witness data into
+the existential conclusion of `IsStamToEPIScalingHyp`.
+
+Signature carries A-4 directly to `_of_stam_debruijn`; consumer Phase A-5
+will chain into `isStamToEPIBridgeHyp_of_scaling_limit` (via the existing
+`IsStamToEPILimitHyp` trivial constructor, since `_h_limit` is discarded
+in the bridge body discharge). -/
+theorem isStamToEPIScalingHyp_of_stam_debruijn
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    {X Y : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]
+    (hX : Measurable X) (hY : Measurable Y)
+    (h_noise : InformationTheory.Shannon.EPIStamToBridge.IsStamScalingNoiseHyp X Y P)
+    (h_reg :
+      ∀ (Z_X Z_Y : Ω → ℝ), Measurable Z_X → Measurable Z_Y →
+        P.map Z_X = gaussianReal 0 1 → P.map Z_Y = gaussianReal 0 1 →
+        IndepFun X Z_X P → IndepFun Y Z_Y P → IndepFun Z_X Z_Y P →
+        InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+            (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P
+          × InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P
+          × InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
+    (h_pos_stam :
+      ∀ (Z_X Z_Y : Ω → ℝ), Measurable Z_X → Measurable Z_Y →
+        P.map Z_X = gaussianReal 0 1 → P.map Z_Y = gaussianReal 0 1 →
+        IndepFun X Z_X P → IndepFun Y Z_Y P → IndepFun Z_X Z_Y P →
+        ∀ (h_reg_sum :
+              InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+                (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+          (h_reg_X :
+              InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
+          (h_reg_Y :
+              InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P),
+            ∀ (t : ℝ) (ht : 0 < t),
+              (0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                      ((h_reg_X.reg_at t ht).density_t)) ∧
+              (0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                      ((h_reg_Y.reg_at t ht).density_t)) ∧
+              (0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                      ((h_reg_sum.reg_at t ht).density_t)) ∧
+              InformationTheory.Shannon.EPIStamDischarge.IsStamInequalityHyp
+                (fun ω => X ω + Real.sqrt t * Z_X ω)
+                (fun ω => Y ω + Real.sqrt t * Z_Y ω) P) :
+    IsStamToEPIScalingHyp X Y P := by
+  intro _h_stam
+  obtain ⟨Z_X, Z_Y, hZX_meas, hZY_meas, hZX_law, hZY_law,
+          hXZX, hYZY, hZXZY⟩ := h_noise
+  obtain ⟨h_reg_sum, h_reg_X, h_reg_Y⟩ :=
+    h_reg Z_X Z_Y hZX_meas hZY_meas hZX_law hZY_law hXZX hYZY hZXZY
+  have h_pos := h_pos_stam Z_X Z_Y hZX_meas hZY_meas hZX_law hZY_law
+    hXZX hYZY hZXZY h_reg_sum h_reg_X h_reg_Y
+  have h_anti1 := csiszarGap1Source_antitoneOn_Ici_zero X Y Z_X Z_Y P
+    h_reg_sum h_reg_X h_reg_Y h_pos
+  have h_anti2 := csiszarGap_antitoneOn_Icc_zero_one X Y Z_X Z_Y P
+    hX hY hZX_meas hZY_meas hZXZY hZX_law hZY_law h_anti1
+  exact ⟨Z_X, Z_Y, hZX_meas, hZY_meas, hZX_law, hZY_law, hXZX, hYZY, hZXZY, h_anti2⟩
+
 /-! ## §3 — Gaussian saturation full discharge of sub-predicates -/
 
 -- `isStamToEPIScalingHyp_of_gaussian` was retracted in Phase 0 (2026-05-25)
