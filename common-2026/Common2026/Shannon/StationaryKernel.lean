@@ -99,49 +99,6 @@ genuine longest-prefix greedy parse `lz78PhraseStrings` leaves an
 `boundary c = n` is **not** unconditionally true for the present parse — it
 is the Cover–Thomas "last partial phrase" content. -/
 
-omit [Fintype α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Factorization from parse-completeness + positivity**: if, for the
-observed block, the parse consumes all `n` symbols (`boundary c = n`, where
-`c` is the phrase count) and every intermediate prefix block probability is
-nonzero, then the block probability factorizes as the product of per-phrase
-conditional probabilities — exactly the `factor` field of
-`IsLZ78PerPathParsingFactorization`.
-
-The telescoping is genuine (`prod_condPhraseProb_telescope`); the two
-hypotheses are the honest, strictly-localized residual content of the
-factorization (positivity is regularity; parse-completeness is the genuine
-Cover–Thomas last-phrase fact).
-
-`@audit:retract-candidate(load-bearing-predicate-empty-consumers)` —
-small-cluster sorry-migration Phase 2.5: the successor
-`isLZ78PerPathParsingFactorization_of_pos` (this file, below) discharges the
-same `IsLZ78PerPathParsingFactorization μ p` field genuinely from a single
-a.s.-regularity hypothesis (every intermediate prefix block probability is
-strictly positive), via `blockProb_le_prod_condPhraseProb` + `parsingBoundary_le_n`
-+ `prefixBlockProb_antitone`. The Cover–Thomas equality form `Pₙ = ∏ⱼ qⱼ` that
-this wrapper carries is **genuinely false** in general (the greedy parse
-`lz78PhraseStrings` only guarantees `boundary c ≤ n`, never `= n`, see
-`lz78PhraseStrings_total_length_le`); the Ziv chain only needs the inequality
-form, which the successor provides. The LZ78 Round 2 sweep
-(`docs/shannon/lz78-sorry-migration-plan.md`) is closed, and this wrapper has
-**0 in-tree consumers** (`rg -n 'factor_of_complete_of_pos\b' Common2026/`
-yields only the self-definition). Slug formerly recorded as `@audit:suspect()`
-(empty slug, audit-tags.md規約違反); retract-candidate covers both the slug
-defect and the closed-by-successor disposition. -/
-theorem factor_of_complete_of_pos
-    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
-    (n : ℕ) (ω : Ω)
-    (hcomplete :
-      parsingBoundary μ p n ω (lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length = n)
-    (hpos : ∀ j ≤ (lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length,
-      prefixBlockProb μ p ω (parsingBoundary μ p n ω j) ≠ 0) :
-    (μ.map (p.blockRV n)).real {p.blockRV n ω}
-      = ∏ j ∈ Finset.range
-            (lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length,
-          condPhraseProb μ p n ω j := by
-  rw [prod_condPhraseProb_telescope μ p n ω _ hpos, hcomplete]
-  rfl
-
 /-! ## Genuine Ziv-direction factorization (parse-completeness defect fix)
 
 The `factor` field of `IsLZ78PerPathParsingFactorization`
@@ -251,39 +208,5 @@ theorem parsingBoundary_le_n
     List.sum_take_add_sum_drop lens j
   have hdrop : 0 ≤ (lens.drop j).sum := Nat.zero_le _
   omega
-
-omit [Nonempty α] in
-/-- **Genuine construction of `IsLZ78PerPathParsingFactorization`** from a
-single a.s.-regularity hypothesis (parse-completeness defect fix).
-
-The hypothesis `hreg` asks that, for every block length and observed path,
-every intermediate parsing-prefix block probability along the parse is
-strictly positive — i.e. the observed cylinders all have positive mass.
-This is genuine **regularity** (a full-support / a.s. condition; *not* a
-proof-core hypothesis, and *not* the false parse-completeness claim). From
-it the genuine `factor` (Ziv inequality, via
-`blockProb_le_prod_condPhraseProb`) and `pos` (each conditional factor
-positive) fields are constructed.
-
-This turns the former *unsatisfiable* `IsLZ78PerPathParsingFactorization`
-(which carried the false equality `Pₙ = ∏ⱼ qⱼ`) into a genuine
-theorem-with-regularity-hypothesis: the factorization the Ziv chain
-consumes is now *constructed*, not merely assumed. -/
-theorem isLZ78PerPathParsingFactorization_of_pos
-    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
-    (hreg : ∀ (n : ℕ) (ω : Ω) (m : ℕ),
-      m ≤ n → 0 < prefixBlockProb μ p ω m) :
-    IsLZ78PerPathParsingFactorization μ p := by
-  refine ⟨?_, ?_⟩
-  · -- `factor` (Ziv inequality direction).
-    intro n ω
-    refine blockProb_le_prod_condPhraseProb μ p n ω (fun j _ => ?_)
-    exact (hreg n ω (parsingBoundary μ p n ω j) (parsingBoundary_le_n μ p n ω j)).ne'
-  · -- `pos` (each conditional factor positive).
-    intro n ω j _
-    unfold condPhraseProb
-    exact div_pos
-      (hreg n ω _ (parsingBoundary_le_n μ p n ω (j + 1)))
-      (hreg n ω _ (parsingBoundary_le_n μ p n ω j))
 
 end InformationTheory.Shannon

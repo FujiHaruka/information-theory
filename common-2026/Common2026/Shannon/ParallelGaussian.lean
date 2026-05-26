@@ -136,9 +136,6 @@ noncomputable def waterFillingPower {n : ℕ} (ν : ℝ) (N : Fin n → ℝ≥0)
 lemma waterFillingPower_nonneg {n : ℕ} (ν : ℝ) (N : Fin n → ℝ≥0) (i : Fin n) :
     0 ≤ waterFillingPower ν N i := le_max_left _ _
 
-lemma waterFillingPower_sum_nonneg {n : ℕ} (ν : ℝ) (N : Fin n → ℝ≥0) :
-    0 ≤ ∑ i, waterFillingPower ν N i :=
-  Finset.sum_nonneg (fun i _ => waterFillingPower_nonneg ν N i)
 
 /-- For an **inactive** coordinate (`N_i ≥ ν`), the water-filling allocation
 gives zero power. -/
@@ -148,20 +145,6 @@ lemma waterFillingPower_eq_zero_of_inactive {n : ℕ} (ν : ℝ) (N : Fin n → 
   unfold waterFillingPower
   exact max_eq_left (by linarith)
 
-/-- For an **active** coordinate (`N_i < ν`), the water-filling allocation
-equals `ν - N_i`. -/
-lemma waterFillingPower_eq_diff_of_active {n : ℕ} (ν : ℝ) (N : Fin n → ℝ≥0)
-    (i : Fin n) (h : (N i : ℝ) < ν) :
-    waterFillingPower ν N i = ν - (N i : ℝ) := by
-  unfold waterFillingPower
-  exact max_eq_right (by linarith)
-
-/-- Water-filling allocation is monotone in the water level `ν`. -/
-lemma waterFillingPower_mono_in_ν {n : ℕ} (N : Fin n → ℝ≥0) (i : Fin n)
-    {ν₁ ν₂ : ℝ} (h : ν₁ ≤ ν₂) :
-    waterFillingPower ν₁ N i ≤ waterFillingPower ν₂ N i := by
-  unfold waterFillingPower
-  exact max_le_max le_rfl (by linarith)
 
 /-! ## D.3 — Parallel Gaussian capacity definition
 
@@ -272,71 +255,6 @@ noncomputable def waterFillingActiveSet {n : ℕ} (ν : ℝ) (N : Fin n → ℝ�
   unfold waterFillingActiveSet
   simp
 
-/-- For an **inactive** coordinate (`N_i ≥ ν`), the per-coordinate capacity
-contribution `(1/2) log(1 + waterFilling/N_i)` is zero (since `log 1 = 0`). -/
-lemma waterFilling_log_eq_zero_of_inactive {n : ℕ} (ν : ℝ) (N : Fin n → ℝ≥0)
-    (i : Fin n) (h : ν ≤ (N i : ℝ)) :
-    (1/2 : ℝ) * Real.log (1 + waterFillingPower ν N i / (N i : ℝ)) = 0 := by
-  rw [waterFillingPower_eq_zero_of_inactive ν N i h]
-  simp
-
-/-- For an **active** coordinate (`N_i < ν`), the per-coordinate capacity
-contribution simplifies to `(1/2) log(ν/N_i)`. -/
-lemma waterFilling_log_eq_active {n : ℕ} (ν : ℝ) (N : Fin n → ℝ≥0)
-    (i : Fin n) (hN_pos : 0 < (N i : ℝ)) (h : (N i : ℝ) < ν) :
-    (1/2 : ℝ) * Real.log (1 + waterFillingPower ν N i / (N i : ℝ))
-      = (1/2) * Real.log (ν / (N i : ℝ)) := by
-  rw [waterFillingPower_eq_diff_of_active ν N i h]
-  congr 1
-  have h_eq : (1 : ℝ) + (ν - (N i : ℝ)) / (N i : ℝ) = ν / (N i : ℝ) := by
-    rw [eq_div_iff (ne_of_gt hN_pos)]
-    field_simp; ring
-  rw [h_eq]
-
-/-- Water-filling sum decomposes as a sum over the active set
-`∑ i, waterFilling = ∑ i ∈ active, (ν - N_i)`. -/
-lemma waterFillingPower_sum_eq_active {n : ℕ} (ν : ℝ) (N : Fin n → ℝ≥0) :
-    ∑ i : Fin n, waterFillingPower ν N i
-      = ∑ i ∈ waterFillingActiveSet ν N, (ν - (N i : ℝ)) := by
-  -- Rewrite each summand using if-then-else based on active/inactive
-  rw [show (∑ i : Fin n, waterFillingPower ν N i)
-        = ∑ i : Fin n, if (N i : ℝ) < ν then (ν - (N i : ℝ)) else 0 from
-        Finset.sum_congr rfl (fun i _ => by
-          by_cases h : (N i : ℝ) < ν
-          · rw [if_pos h, waterFillingPower_eq_diff_of_active ν N i h]
-          · simp only [not_lt] at h
-            rw [if_neg (not_lt.mpr h), waterFillingPower_eq_zero_of_inactive ν N i h])]
-  -- Now rewrite the if-sum as a sum over the active set
-  rw [Finset.sum_ite, Finset.sum_const_zero, add_zero]
-  apply Finset.sum_congr
-  · ext i
-    simp [waterFillingActiveSet]
-  · intros; rfl
-
-/-- The capacity formula restated as a sum only over the **active** coordinates:
-`C = ∑_{i ∈ active} (1/2) log(ν/N_i)`. (Cover-Thomas Theorem 9.4.1 alternative
-form.) -/
-lemma parallel_gaussian_capacity_sum_active {n : ℕ} (ν : ℝ) (N : Fin n → ℝ≥0)
-    (hN_pos : ∀ i, 0 < (N i : ℝ)) :
-    ∑ i : Fin n, (1/2) * Real.log (1 + waterFillingPower ν N i / (N i : ℝ))
-      = ∑ i ∈ waterFillingActiveSet ν N,
-          (1/2) * Real.log (ν / (N i : ℝ)) := by
-  -- Rewrite each summand using if-then-else based on active/inactive
-  rw [show (∑ i : Fin n, (1/2 : ℝ) * Real.log (1 + waterFillingPower ν N i / (N i : ℝ)))
-        = ∑ i : Fin n, if (N i : ℝ) < ν
-            then (1/2) * Real.log (ν / (N i : ℝ))
-            else 0 from
-        Finset.sum_congr rfl (fun i _ => by
-          by_cases h : (N i : ℝ) < ν
-          · rw [if_pos h, waterFilling_log_eq_active ν N i (hN_pos i) h]
-          · simp only [not_lt] at h
-            rw [if_neg (not_lt.mpr h),
-                waterFilling_log_eq_zero_of_inactive ν N i h])]
-  rw [Finset.sum_ite, Finset.sum_const_zero, add_zero]
-  apply Finset.sum_congr
-  · ext i
-    simp [waterFillingActiveSet]
-  · intros; rfl
 
 /-! ## Active-set reduction lemma (retracted)
 

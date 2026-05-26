@@ -75,14 +75,6 @@ lemma mem_E_r_iff (P₁ : α → ℝ) (hP₁_nn : ∀ a, 0 ≤ P₁ a) (hP₁_su
   unfold E_r
   simp only [Finset.mem_filter, Finset.mem_univ, true_and]
 
-lemma steinTypeII_exp_nonneg (P₁ P₂ : α → ℝ)
-    (hP₁_nn : ∀ a, 0 ≤ P₁ a) (hP₁_sum : ∑ a, P₁ a = 1)
-    (hP₂_nn : ∀ a, 0 ≤ P₂ a) (hP₂_sum : ∑ a, P₂ a = 1)
-    (n : ℕ) (r : ℝ) :
-    0 ≤ steinTypeII_exp P₁ P₂ hP₁_nn hP₁_sum hP₂_nn hP₂_sum n r := by
-  unfold steinTypeII_exp
-  exact ENNReal.toReal_nonneg
-
 /-! ## Phase 2 — KL bridges (count-0-tolerant) -/
 
 /-- **`klDivPmf` log-diff form tolerant of count-0 atoms in `P`**: requires only

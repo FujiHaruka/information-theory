@@ -238,54 +238,6 @@ lemma cond_singleton_pos_ae
       rw [← h]; ring
     linarith
 
-/-! ## Log identity: chain rule decomposition -/
-
-omit [DecidableEq α] in
-/-- **SMB chain rule** (a.s. log identity).
-
-For a stationary process over a finite alphabet, the negative log-likelihood
-of the observed block decomposes as a sum of per-step conditional negative
-log-likelihoods:
-
-  `-log P_n({block_n ω}) = ∑_{i<n} pmfLogCond μ p i ω`
-
-almost surely. This is Cover–Thomas equation (16.107) in measure-theoretic
-form. Proof: induction on `n`, using `block_measure_succ_singleton_real_eq`
-and `Real.log_mul` (positive factors a.s.). -/
-theorem log_block_eq_sum_pmfLogCond
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (p : StationaryProcess μ α) (n : ℕ) :
-    ∀ᵐ ω ∂μ,
-      -Real.log ((μ.map (p.blockRV n)).real {p.blockRV n ω})
-        = ∑ i ∈ Finset.range n, pmfLogCond μ p i ω := by
-  classical
-  induction n with
-  | zero =>
-    -- Base case: `blockRV 0` returns the unique map of empty type, mass 1.
-    refine Filter.Eventually.of_forall fun ω => ?_
-    simp only [Finset.range_zero, Finset.sum_empty]
-    have h_const : (μ.map (p.blockRV 0)).real {p.blockRV 0 ω} = 1 := by
-      have h_meas : Measurable (p.blockRV 0) := p.measurable_blockRV 0
-      rw [Measure.real, Measure.map_apply h_meas (measurableSet_singleton _)]
-      have h_univ : (p.blockRV 0) ⁻¹' {p.blockRV 0 ω} = Set.univ := by
-        ext ω'
-        simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_univ, iff_true]
-        funext i
-        exact i.elim0
-      rw [h_univ, measure_univ]
-      rfl
-    rw [h_const, Real.log_one, neg_zero]
-  | succ n ih =>
-    -- Step: combine `ih` with the multiplicative chain rule and `Real.log_mul`.
-    filter_upwards [ih, block_singleton_pos_ae_upTo μ p n, cond_singleton_pos_ae μ p n]
-      with ω h_ih h_pos h_cond_pos
-    have h_chain := block_measure_succ_singleton_real_eq μ p n ω
-    have h_Pn_pos : 0 < (μ.map (p.blockRV n)).real {p.blockRV n ω} :=
-      h_pos n (le_refl n)
-    rw [h_chain, Real.log_mul (ne_of_gt h_Pn_pos) (ne_of_gt h_cond_pos), neg_add]
-    rw [Finset.sum_range_succ, ← h_ih]
-    rfl
-
 /-! ## Integrability and integral identity
 
 `pmfLogCond μ p l` is integrable, and its integral equals

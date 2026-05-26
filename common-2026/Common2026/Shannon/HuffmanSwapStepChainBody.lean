@@ -70,23 +70,6 @@ theorem kraft_sum_perm_chain2_eq
   rw [h1]
   exact kraft_sum_perm_eq l σ
 
-omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **permutation chain の Kraft 不変性 (trans 形)**: `Equiv.trans` で合成した permutation
-でも Kraft 和は不変. -/
-theorem kraft_sum_perm_trans_eq
-    (l : α → ℕ) (σ τ : α ≃ α) :
-    (∑ x : α, ((2 : ℝ)) ^ (-((l ∘ (σ.trans τ)) x : ℤ)))
-      = ∑ x : α, ((2 : ℝ)) ^ (-(l x : ℤ)) :=
-  kraft_sum_perm_eq l (σ.trans τ)
-
-omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **permutation chain の Kraft `≤ 1` 形 (2-step)**: 上記等式から従う `≤ 1` 形. -/
-theorem kraft_sum_perm_chain2_le_one
-    (l : α → ℕ) (σ τ : α ≃ α)
-    (h_kraft : ∑ x : α, ((2 : ℝ)) ^ (-(l x : ℤ)) ≤ 1) :
-    (∑ x : α, ((2 : ℝ)) ^ (-((l ∘ σ ∘ τ) x : ℤ))) ≤ 1 := by
-  rw [kraft_sum_perm_chain2_eq l σ τ]; exact h_kraft
-
 /-! ### Section B — permutation chain の expectedLength 不変性 (pointwise-eq) -/
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
@@ -184,26 +167,6 @@ theorem swapStepLeChainHypothesis_via_subpredicates
   intro β _ _ _ _ _ Q _ ll hll_pos hll_kraft _pair
   refine ⟨ll, hll_pos, hll_kraft, le_refl _⟩
 
-/-- **single-swap chain witness via sub-predicate**: `ll a = ll b` のとき `Equiv.swap a b`
-を 1-step chain として挿入しても `SwapStepLeChainHypothesis` の結論が成立する derived
-form. `PermChainExpectedLengthPreserving` を経由して expectedLength 不変を保証. -/
-theorem swapStepLeChain_single_swap_witness
-    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β]
-    [MeasurableSpace β] [MeasurableSingletonClass β]
-    (Q : Measure β) [IsProbabilityMeasure Q]
-    (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
-    (hll_kraft : ∑ x : β, ((2 : ℝ)) ^ (-(ll x : ℤ)) ≤ 1)
-    (a b : β) (h_eq : ll a = ll b) :
-    ∃ l_chain : β → ℕ,
-      (∀ x, 0 < l_chain x) ∧
-      (∑ x : β, ((2 : ℝ)) ^ (-(l_chain x : ℤ)) ≤ 1) ∧
-      InformationTheory.Shannon.ShannonCode.expectedLength Q l_chain
-        ≤ InformationTheory.Shannon.ShannonCode.expectedLength Q ll := by
-  refine ⟨ll ∘ Equiv.swap a b, ?_, ?_, ?_⟩
-  · intro x; exact hll_pos _
-  · exact kraft_sum_swap_le_one ll a b hll_kraft
-  · exact expectedLength_swap_le_when_ll_eq Q ll a b h_eq
-
 /-! ### Section E — n-step swap normalization lift -/
 
 omit [Nonempty α] [MeasurableSingletonClass α] in
@@ -273,40 +236,6 @@ theorem swapStepLeChainHypothesis_holds_via_subpredicates :
     SwapStepLeChainHypothesis.{u} :=
   swapStepLeChainHypothesis_via_subpredicates
     permChainKraftPreserving_holds permChainExpectedLengthPreserving_holds
-
-/-- **chain hypothesis から single witness 抽出 (poly)**: chain hypothesis を適用したとき
-得られる `l_chain` の存在を抽出する form. wave6 primitive predicate の application
-boilerplate を 1 個にまとめた wrapper. -/
-theorem swapStepLeChainHypothesis_apply
-    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β]
-    [MeasurableSpace β] [MeasurableSingletonClass β]
-    (h_chain : SwapStepLeChainHypothesis.{u})
-    (Q : Measure β) [IsProbabilityMeasure Q]
-    (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
-    (hll_kraft : ∑ x : β, ((2 : ℝ)) ^ (-(ll x : ℤ)) ≤ 1)
-    (pair : β × β) :
-    ∃ l_chain : β → ℕ,
-      (∀ x, 0 < l_chain x) ∧
-      (∑ x : β, ((2 : ℝ)) ^ (-(l_chain x : ℤ)) ≤ 1) ∧
-      InformationTheory.Shannon.ShannonCode.expectedLength Q l_chain
-        ≤ InformationTheory.Shannon.ShannonCode.expectedLength Q ll :=
-  h_chain Q ll hll_pos hll_kraft pair
-
-/-- **chain hypothesis witness の expectedLength 抽出 (poly)**: chain hypothesis 結論から
-expectedLength `≤` 部分だけ取り出す extractor. -/
-theorem swapStepLeChainHypothesis_witness_expL
-    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β]
-    [MeasurableSpace β] [MeasurableSingletonClass β]
-    (h_chain : SwapStepLeChainHypothesis.{u})
-    (Q : Measure β) [IsProbabilityMeasure Q]
-    (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
-    (hll_kraft : ∑ x : β, ((2 : ℝ)) ^ (-(ll x : ℤ)) ≤ 1)
-    (pair : β × β) :
-    ∃ l_chain : β → ℕ,
-      InformationTheory.Shannon.ShannonCode.expectedLength Q l_chain
-        ≤ InformationTheory.Shannon.ShannonCode.expectedLength Q ll := by
-  obtain ⟨l_chain, _, _, hle⟩ := h_chain Q ll hll_pos hll_kraft pair
-  exact ⟨l_chain, hle⟩
 
 /-! ### Section G — `HuffmanCombinedHypothesis` reduce 形 re-publish -/
 
@@ -382,23 +311,6 @@ theorem huffmanLength_optimal_via_chain_lift
   huffmanLength_optimal_with_chain_combined (huffmanChainCombined_lift h) P hP l hl_pos hl_kraft
 
 /-! ### Section H — chain hypothesis 単独の trivial sanity wrappers -/
-
-/-- **chain hypothesis 投影 (triple → chain)**: triple から chain hypothesis を取り出す. -/
-theorem huffmanChainCombined_chain
-    (h : HuffmanChainCombinedHypothesis.{u}) :
-    SwapStepLeChainHypothesis.{u} := h.2.2
-
-/-- **chain hypothesis 投影 (triple → swap)**: triple から swap normalization hypothesis を
-取り出す. -/
-theorem huffmanChainCombined_swap
-    (h : HuffmanChainCombinedHypothesis.{u}) :
-    SwapNormalizationHypothesis.{u} := h.1
-
-/-- **chain hypothesis 投影 (triple → ident)**: triple から identification hypothesis を
-取り出す. -/
-theorem huffmanChainCombined_ident
-    (h : HuffmanChainCombinedHypothesis.{u}) :
-    HuffmanMergedIdentificationHypothesis.{u} := h.2.1
 
 /-- **triple hypothesis を成立 chain で 2 引数化**: 2 hypothesis から triple を作って
 そのまま reduce する round-trip が identity になることの sanity. client が triple ↔ 2-way

@@ -89,12 +89,6 @@ lemma pmfToMeasure_real_singleton
   rw [pmfToMeasure_apply_singleton P hP_nn hP_sum a]
   exact ENNReal.toReal_ofReal (hP_nn a)
 
-lemma pmfToMeasure_pos
-    (P : α → ℝ) (hP_pos : ∀ a, 0 < P a) (hP_sum : ∑ a, P a = 1) (a : α) :
-    0 < (pmfToMeasure P (fun a => (hP_pos a).le) hP_sum).real {a} := by
-  rw [pmfToMeasure_real_singleton P (fun a => (hP_pos a).le) hP_sum a]
-  exact hP_pos a
-
 /-! ## Phase B — `steinTypeII_at_level_pmf` 定義 + 基本性質 -/
 
 /-- n-IID Type II error set (pmf 形).
@@ -146,17 +140,6 @@ lemma one_mem_steinBetaSet_pmf
       have h := sum_prod_pi_eq_pow_sum (α := α) P₂ n
       rw [h, hP₂_sum, one_pow]
     rw [h_sum_full]
-
-omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- `steinBetaSet_pmf` is bounded below by 0. -/
-lemma steinBetaSet_pmf_bddBelow
-    (P₁ P₂ : α → ℝ) (hP₂_nn : ∀ a, 0 ≤ P₂ a) (n : ℕ) (alpha : ℝ) :
-    BddBelow (steinBetaSet_pmf P₁ P₂ n alpha) := by
-  refine ⟨0, ?_⟩
-  rintro β ⟨s, _, rfl⟩
-  refine Finset.sum_nonneg ?_
-  intro x _
-  exact Finset.prod_nonneg (fun i _ => hP₂_nn (x i))
 
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- `steinTypeII_at_level_pmf P₁ P₂ n alpha ≥ 0`. -/

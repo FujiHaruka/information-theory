@@ -78,16 +78,6 @@ lemma conditionalTypicalSlice_finite
 
 omit [DecidableEq α] [DecidableEq β] [Nonempty α] [Nonempty β]
   [MeasurableSingletonClass α] [MeasurableSingletonClass β] in
-/-- Every element of the slice lies in the X-axis typical set. -/
-lemma conditionalTypicalSlice_subset_X_typicalSet
-    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
-    (n : ℕ) (ε : ℝ) (y : Fin n → β) :
-    conditionalTypicalSlice μ Xs Ys n ε y ⊆ typicalSet μ Xs n ε := by
-  intro x hx
-  exact hx.1
-
-omit [DecidableEq α] [DecidableEq β] [Nonempty α] [Nonempty β]
-  [MeasurableSingletonClass α] [MeasurableSingletonClass β] in
 /-- The slice is empty when `y` is not Y-typical. -/
 lemma conditionalTypicalSlice_empty_of_y_not_typical
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)

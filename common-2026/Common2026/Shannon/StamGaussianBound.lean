@@ -61,15 +61,6 @@ theorem stam_fisher_arith (a b lam : ℝ) (ha : 0 < a) (hb : 0 < b)
   nlinarith [sq_nonneg (a - lam * (a + b)), mul_pos ha hb, mul_pos (mul_pos ha hb) hab,
     mul_pos ha hab, mul_pos hb hab]
 
-/-- **Saturation of the Stam kernel.** At the optimum `λ* = a/(a+b)` the bound
-`stam_fisher_arith` holds with equality. -/
-theorem stam_fisher_arith_eq_at_opt (a b : ℝ) (ha : 0 < a) (hb : 0 < b) :
-    1 / (a + b)
-      = (a / (a + b)) ^ 2 / a + (1 - a / (a + b)) ^ 2 / b := by
-  have hab : 0 < a + b := by linarith
-  field_simp
-  ring
-
 /-! ## §2 — Gaussian convex Fisher bound (V2-keyed, non-vacuous) -/
 
 /-- **Gaussian Stam convex Fisher bound.** For Gaussian laws `𝒩(m₁,v₁)`, `𝒩(m₂,v₂)`
@@ -102,26 +93,5 @@ theorem stam_convex_fisher_bound_gaussian
   have := stam_fisher_arith (v₁ : ℝ) (v₂ : ℝ) lam hv₁pos hv₂pos hlo hhi
   rw [mul_one_div, mul_one_div]
   exact this
-
-/-! ## §3 — Independent-RV form -/
-
-/-- **Gaussian Stam convex Fisher bound, independent-RV form.** If `X, Y` are
-independent with Gaussian laws `𝒩(m₁,v₁)`, `𝒩(m₂,v₂)` (`v₁, v₂ ≠ 0`), then the
-law of `X + Y` is `𝒩(m₁+m₂, v₁+v₂)`
-(`gaussianReal_add_gaussianReal_of_indepFun`) and the convex Fisher bound holds. -/
-theorem stam_convex_fisher_bound_gaussian_indep
-    {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
-    {X Y : Ω → ℝ} (hXY : IndepFun X Y P)
-    {m₁ m₂ : ℝ} {v₁ v₂ : ℝ≥0} (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
-    (hX : P.map X = gaussianReal m₁ v₁) (hY : P.map Y = gaussianReal m₂ v₂)
-    (lam : ℝ) (hlo : 0 ≤ lam) (hhi : lam ≤ 1) :
-    (fisherInfoOfMeasureV2 (P.map (X + Y))
-        (gaussianPDFReal (m₁ + m₂) (v₁ + v₂))).toReal
-      ≤ lam ^ 2 *
-          (fisherInfoOfMeasureV2 (gaussianReal m₁ v₁) (gaussianPDFReal m₁ v₁)).toReal
-        + (1 - lam) ^ 2 *
-          (fisherInfoOfMeasureV2 (gaussianReal m₂ v₂) (gaussianPDFReal m₂ v₂)).toReal := by
-  rw [gaussianReal_add_gaussianReal_of_indepFun hXY hX hY]
-  exact stam_convex_fisher_bound_gaussian m₁ m₂ hv₁ hv₂ lam hlo hhi
 
 end Common2026.Shannon.FisherInfoV2

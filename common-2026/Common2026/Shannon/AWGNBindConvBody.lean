@@ -66,14 +66,6 @@ theorem gaussianReal_eq_map_const_add (N : ℝ≥0) (x : ℝ) :
     gaussianReal x N = (gaussianReal 0 N).map (x + ·) := by
   rw [gaussianReal_map_const_add (μ := 0) (v := N) x, zero_add]
 
-/-- Per-fibre lintegral identity:
-`∫⁻ y, f y ∂(gaussianReal x N) = ∫⁻ y, f (x + y) ∂(gaussianReal 0 N)`. -/
-theorem lintegral_gaussianReal_eq_lintegral_const_add
-    (N : ℝ≥0) (x : ℝ) {f : ℝ → ℝ≥0∞} (hf : Measurable f) :
-    ∫⁻ y, f y ∂(gaussianReal x N) = ∫⁻ y, f (x + y) ∂(gaussianReal 0 N) := by
-  rw [gaussianReal_eq_map_const_add N x,
-    lintegral_map hf (measurable_const_add x)]
-
 /-! ## Phase B — generic translation-kernel ↔ convolution bridge -/
 
 /-- **Translation-kernel ↔ additive-convolution bridge (generic).**
@@ -114,16 +106,6 @@ theorem isAwgnBindEqConv_discharged
   intro x
   rw [awgnChannel_apply]
   exact gaussianReal_eq_map_const_add N x
-
-/-! ## Phase D — re-publish layer: `IsAwgnOutputGaussian` fully discharged -/
-
-/-- **Output Gaussian fully discharged.** With `IsAwgnBindEqConv` now proved,
-`IsAwgnOutputGaussian` follows hypothesis-free from
-`awgn_output_gaussian_of_bind_eq_conv`. -/
-theorem isAwgnOutputGaussian_discharged
-    (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) :
-    IsAwgnOutputGaussian P N h_meas :=
-  awgn_output_gaussian_of_bind_eq_conv P N h_meas (isAwgnBindEqConv_discharged P N h_meas)
 
 /-- **AWGN channel coding theorem — output-Gaussian (bind/conv) genuinely closed,
 typicality/MI-decomp/converse taken as hypotheses.**

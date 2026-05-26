@@ -157,14 +157,6 @@ noncomputable def LZ78Parsing.phraseSet (p : LZ78Parsing α) :
   (Finset.univ : Finset (Fin p.phrases.length)).image
     (fun i => p.phrases.get i)
 
-/-- **Cardinality of the phrase set is at most the count.** -/
-theorem LZ78Parsing.card_phraseSet_le_count (p : LZ78Parsing α) :
-    p.phraseSet.card ≤ p.count := by
-  classical
-  unfold LZ78Parsing.phraseSet
-  refine (Finset.card_image_le).trans ?_
-  simp [LZ78Parsing.count]
-
 /-- **Every phrase in the parsing has bounded parent.** Direct consequence
 of the `inRange` invariant: phrase at index `i < count` has parent
 in `Option (Fin count)`. -/
@@ -173,16 +165,6 @@ theorem LZ78Parsing.parent_bounded (p : LZ78Parsing α)
     ∀ k, (p.phrases.get ⟨i, hi⟩).parent = some k → k < p.phrases.length := by
   intro k hk
   exact lt_trans (p.inRange i hi k hk) hi
-
-/-- **`phrases.get i ∈ image` of the bounded-parent ambient.** Each phrase
-of a parsing embeds into `LZ78Phrase.parentBounded count α` via
-`toParentBounded`, with bound `count`. -/
-theorem LZ78Parsing.phrase_in_parentBounded (p : LZ78Parsing α)
-    (i : ℕ) (hi : i < p.phrases.length) :
-    ∃ pb : LZ78Phrase.parentBounded p.phrases.length α,
-      LZ78Phrase.ofParentBounded α pb = p.phrases.get ⟨i, hi⟩ :=
-  ⟨(p.phrases.get ⟨i, hi⟩).toParentBounded (p.parent_bounded i hi),
-    LZ78Phrase.ofParentBounded_toParentBounded _ _⟩
 
 /-- **The phrase-index map factors through `parentBounded`.** Map each
 `Fin p.count` index to its corresponding bounded-parent phrase, then
@@ -230,14 +212,6 @@ theorem LZ78Parsing.card_phraseSet_le_pow [Fintype α]
             rw [Finset.card_univ]
   rw [LZ78Phrase.card_parentBounded] at hcard
   simpa [LZ78Parsing.count_eq_length'] using hcard
-
-/-- **Variant: same bound expressed via `count` directly.** A convenient
-restatement for downstream Ziv-inequality discharge. -/
-theorem LZ78Parsing.card_phraseSet_le_succ_mul_card [Fintype α]
-    (p : LZ78Parsing α) :
-    p.phraseSet.card ≤ Fintype.card α * (p.count + 1) := by
-  rw [Nat.mul_comm]
-  exact p.card_phraseSet_le_pow
 
 /-- **Trivial monotonicity: count ≥ 0.** A useful base hypothesis for
 Ziv-style real-valued bounds (avoids `pos`/`nonneg` re-derivation
@@ -289,13 +263,6 @@ theorem ZivCountingBound.mono {p : LZ78Parsing α} {B B' : ℝ}
     (h : ZivCountingBound p B) (hB : B ≤ B') :
     ZivCountingBound p B' :=
   le_trans h hB
-
-/-- **Trivial constructor from a Nat-level bound**: any Nat bound on
-`count` lifts to a `ZivCountingBound` after casting to `ℝ`. -/
-theorem ZivCountingBound.of_nat_le (p : LZ78Parsing α) {N : ℕ}
-    (h : p.count ≤ N) : ZivCountingBound p (N : ℝ) := by
-  unfold ZivCountingBound
-  exact_mod_cast h
 
 /-- **Adding a positive slack preserves the bound** (`B` ≤ `B + ε`). -/
 theorem ZivCountingBound.add_nonneg {p : LZ78Parsing α} {B ε : ℝ}

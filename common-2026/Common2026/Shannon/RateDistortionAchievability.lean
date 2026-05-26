@@ -125,14 +125,6 @@ noncomputable def marginalFst (q : α × β → ℝ) : α → ℝ :=
 noncomputable def marginalSnd (q : α × β → ℝ) : β → ℝ :=
   fun b => ∑ a, q (a, b)
 
-/-- `expectedDistortionPmf` is linear in `q`: 線形 functional `∑ q(a,b) c(a,b)`. -/
-lemma expectedDistortionPmf_nonneg
-    (d : DistortionFn α β) (q : α × β → ℝ)
-    (hq : q ∈ stdSimplex ℝ (α × β)) :
-    0 ≤ expectedDistortionPmf d q := by
-  unfold expectedDistortionPmf
-  refine Finset.sum_nonneg fun a _ => Finset.sum_nonneg fun b _ => ?_
-  exact mul_nonneg (hq.1 (a, b)) (NNReal.coe_nonneg _)
 
 /-- Continuity of `expectedDistortionPmf` in `q` (linear in finite sum). -/
 lemma continuous_expectedDistortionPmf (d : DistortionFn α β) :
@@ -158,17 +150,6 @@ lemma continuous_marginalSnd :
   refine continuous_finsetSum _ fun a _ => ?_
   exact continuous_apply (a, b)
 
-/-- Marginal-fst is non-negative on the simplex. -/
-lemma marginalFst_nonneg {q : α × β → ℝ} (hq : q ∈ stdSimplex ℝ (α × β)) (a : α) :
-    0 ≤ marginalFst q a := by
-  unfold marginalFst
-  exact Finset.sum_nonneg fun b _ => hq.1 (a, b)
-
-/-- Marginal-snd is non-negative on the simplex. -/
-lemma marginalSnd_nonneg {q : α × β → ℝ} (hq : q ∈ stdSimplex ℝ (α × β)) (b : β) :
-    0 ≤ marginalSnd q b := by
-  unfold marginalSnd
-  exact Finset.sum_nonneg fun a _ => hq.1 (a, b)
 
 /-- **`RDConstraint`** — feasible joint pmf set `{q ∈ stdSimplex | marginalFst q = P_X ∧
 expectedDistortionPmf d q ≤ D}`. -/
@@ -176,11 +157,6 @@ def RDConstraint
     (P_X : α → ℝ) (d : DistortionFn α β) (D : ℝ) : Set (α × β → ℝ) :=
   {q | q ∈ stdSimplex ℝ (α × β) ∧ marginalFst q = P_X ∧ expectedDistortionPmf d q ≤ D}
 
-lemma mem_RDConstraint_iff {P_X : α → ℝ} {d : DistortionFn α β} {D : ℝ}
-    {q : α × β → ℝ} :
-    q ∈ RDConstraint P_X d D ↔
-      q ∈ stdSimplex ℝ (α × β) ∧ marginalFst q = P_X ∧
-        expectedDistortionPmf d q ≤ D := Iff.rfl
 
 /-- `RDConstraint ⊆ stdSimplex ℝ (α × β)`. -/
 lemma RDConstraint_subset_stdSimplex (P_X : α → ℝ) (d : DistortionFn α β) (D : ℝ) :
@@ -213,44 +189,6 @@ lemma RDConstraint_isCompact (P_X : α → ℝ) (d : DistortionFn α β) (D : �
     (RDConstraint_isClosed P_X d D)
     (RDConstraint_subset_stdSimplex P_X d D)
 
-/-- `RDConstraint` is convex (intersection of convex sets). -/
-lemma RDConstraint_convex (P_X : α → ℝ) (d : DistortionFn α β) (D : ℝ) :
-    Convex ℝ (RDConstraint P_X d D) := by
-  intro q₁ hq₁ q₂ hq₂ s t hs ht hst
-  obtain ⟨hq₁_simp, hq₁_marg, hq₁_dist⟩ := hq₁
-  obtain ⟨hq₂_simp, hq₂_marg, hq₂_dist⟩ := hq₂
-  refine ⟨?_, ?_, ?_⟩
-  · -- stdSimplex is convex
-    exact convex_stdSimplex ℝ (α × β) hq₁_simp hq₂_simp hs ht hst
-  · -- marginalFst linear ⟹ marginal of mix = mix of marginals = P_X
-    funext a
-    simp only [marginalFst, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-    have : ∑ b, (s * q₁ (a, b) + t * q₂ (a, b))
-        = s * (∑ b, q₁ (a, b)) + t * (∑ b, q₂ (a, b)) := by
-      rw [Finset.mul_sum, Finset.mul_sum, ← Finset.sum_add_distrib]
-    rw [this]
-    have h1' : (∑ b, q₁ (a, b)) = marginalFst q₁ a := rfl
-    have h2' : (∑ b, q₂ (a, b)) = marginalFst q₂ a := rfl
-    rw [h1', h2', hq₁_marg, hq₂_marg]
-    -- Now: s * P_X a + t * P_X a = P_X a (using hst : s + t = 1)
-    have : s * P_X a + t * P_X a = (s + t) * P_X a := by ring
-    rw [this, hst, one_mul]
-  · -- expectedDistortionPmf linear ⟹ mix ≤ s * D + t * D = D
-    have h_lin : expectedDistortionPmf d (s • q₁ + t • q₂)
-        = s * expectedDistortionPmf d q₁ + t * expectedDistortionPmf d q₂ := by
-      unfold expectedDistortionPmf
-      simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
-      -- LHS: ∑ a, ∑ b, (s * q₁ (a,b) + t * q₂ (a,b)) * d(a,b)
-      -- RHS: s * ∑ a, ∑ b, q₁ (a,b) * d(a,b) + t * ∑ a, ∑ b, q₂ (a,b) * d(a,b)
-      simp_rw [add_mul, Finset.sum_add_distrib, mul_assoc,
-        ← Finset.mul_sum]
-    rw [h_lin]
-    calc s * expectedDistortionPmf d q₁ + t * expectedDistortionPmf d q₂
-        ≤ s * D + t * D :=
-          add_le_add (mul_le_mul_of_nonneg_left hq₁_dist hs)
-            (mul_le_mul_of_nonneg_left hq₂_dist ht)
-      _ = (s + t) * D := by ring
-      _ = D := by rw [hst, one_mul]
 
 /-! ## pmf 形 mutual information (entropy 形、`negMulLog` 経由連続) -/
 
@@ -307,28 +245,6 @@ theorem rateDistortionFunctionPmf_attained
   have h_cont : Continuous (fun q : α × β → ℝ => mutualInfoPmf q) := continuous_mutualInfoPmf
   exact h_compact.exists_isMinOn h_ne h_cont.continuousOn
 
-/-- **Achievability — value form**: when the constraint set is non-empty, the
-infimum value `rateDistortionFunctionPmf P_X d D` equals `mutualInfoPmf qStar` at
-the minimizer. -/
-theorem rateDistortionFunctionPmf_eq_min
-    (P_X : α → ℝ) (d : DistortionFn α β) (D : ℝ)
-    (h_ne : (RDConstraint P_X d D).Nonempty) :
-    ∃ qStar ∈ RDConstraint P_X d D,
-      rateDistortionFunctionPmf P_X d D = mutualInfoPmf qStar := by
-  obtain ⟨qStar, hqStar_mem, hqStar_min⟩ :=
-    rateDistortionFunctionPmf_attained P_X d D h_ne
-  refine ⟨qStar, hqStar_mem, ?_⟩
-  -- sInf (image f S) = f qStar where qStar attains min on S.
-  unfold rateDistortionFunctionPmf
-  have h_bdd : BddBelow (Set.image mutualInfoPmf (RDConstraint P_X d D)) :=
-    ((RDConstraint_isCompact P_X d D).image continuous_mutualInfoPmf).bddBelow
-  apply le_antisymm
-  · -- sInf ≤ f qStar (qStar in image)
-    exact csInf_le h_bdd ⟨qStar, hqStar_mem, rfl⟩
-  · -- f qStar ≤ sInf: f qStar is a lower bound on the image.
-    refine le_csInf (h_ne.image _) ?_
-    rintro v ⟨q, hq, rfl⟩
-    exact hqStar_min hq
 
 /-! ## Witness for non-emptyness: 単純 reconstruction `q(a,b) = P_X(a) · 𝟙[b = b₀]` -/
 
@@ -336,125 +252,11 @@ section Witness
 
 variable [DecidableEq β]
 
-/-- For a chosen reconstruction symbol `b₀ : β` and `P_X ∈ stdSimplex ℝ α`,
-the **deterministic-reconstruction witness** `wit P_X b₀ (a, b) := if b = b₀ then P_X a else 0`
-is in the stdSimplex `α × β`, has `marginalFst = P_X`, and yields
-`expectedDistortionPmf d wit = ∑ a, P_X a · d(a, b₀)`. -/
-noncomputable def detReconstructionWitness
-    (P_X : α → ℝ) (b₀ : β) : α × β → ℝ :=
-  fun p => if p.2 = b₀ then P_X p.1 else 0
-
-/-- `detReconstructionWitness` is in the standard simplex on `α × β`
-(provided `P_X ∈ stdSimplex ℝ α`). -/
-lemma detReconstructionWitness_mem_stdSimplex
-    (P_X : α → ℝ) (hP_X : P_X ∈ stdSimplex ℝ α) (b₀ : β) :
-    detReconstructionWitness P_X b₀ ∈ stdSimplex ℝ (α × β) := by
-  refine ⟨?_, ?_⟩
-  · intro p
-    unfold detReconstructionWitness
-    split_ifs with h
-    · exact hP_X.1 p.1
-    · exact le_refl 0
-  · -- ∑ p, witness p = ∑ a, ∑ b, witness (a, b) = ∑ a, P_X a = 1
-    rw [Fintype.sum_prod_type]
-    have h_inner : ∀ a, ∑ b, detReconstructionWitness P_X b₀ (a, b) = P_X a := by
-      intro a
-      unfold detReconstructionWitness
-      simp only
-      rw [Finset.sum_ite_eq' Finset.univ b₀ (fun _ => P_X a)]
-      simp
-    simp_rw [h_inner]
-    exact hP_X.2
-
-/-- `marginalFst` of the deterministic-reconstruction witness is `P_X`. -/
-lemma marginalFst_detReconstructionWitness
-    (P_X : α → ℝ) (b₀ : β) :
-    marginalFst (detReconstructionWitness P_X b₀) = P_X := by
-  funext a
-  unfold marginalFst detReconstructionWitness
-  simp only
-  rw [Finset.sum_ite_eq' Finset.univ b₀ (fun _ => P_X a)]
-  simp
-
-/-- Expected distortion of the deterministic-reconstruction witness is
-`∑ a, P_X a · d(a, b₀)`. -/
-lemma expectedDistortionPmf_detReconstructionWitness
-    (P_X : α → ℝ) (d : DistortionFn α β) (b₀ : β) :
-    expectedDistortionPmf d (detReconstructionWitness P_X b₀)
-      = ∑ a, P_X a * ((d a b₀ : NNReal) : ℝ) := by
-  unfold expectedDistortionPmf detReconstructionWitness
-  simp only
-  refine Finset.sum_congr rfl fun a _ => ?_
-  -- ∑ b, (if b = b₀ then P_X a else 0) * d(a,b) = P_X a * d(a, b₀)
-  have h_inner : ∀ b, (if b = b₀ then P_X a else (0 : ℝ)) * ((d a b : NNReal) : ℝ)
-        = if b = b₀ then P_X a * ((d a b : NNReal) : ℝ) else 0 := by
-    intro b
-    split_ifs with hb
-    · rfl
-    · ring
-  rw [Finset.sum_congr rfl (fun b _ => h_inner b)]
-  rw [Finset.sum_ite_eq' Finset.univ b₀
-    (fun b => P_X a * ((d a b : NNReal) : ℝ))]
-  simp
-
-/-- **Non-emptyness of `RDConstraint`** via deterministic-reconstruction witness:
-if `P_X ∈ stdSimplex` and some `b₀ : β` satisfies
-`∑ a, P_X a · d(a, b₀) ≤ D`, then `RDConstraint P_X d D` is non-empty. -/
-lemma RDConstraint_nonempty_of_witness
-    (P_X : α → ℝ) (hP_X : P_X ∈ stdSimplex ℝ α) (d : DistortionFn α β)
-    (D : ℝ) (b₀ : β)
-    (h_bound : ∑ a, P_X a * ((d a b₀ : NNReal) : ℝ) ≤ D) :
-    (RDConstraint P_X d D).Nonempty :=
-  ⟨detReconstructionWitness P_X b₀,
-    detReconstructionWitness_mem_stdSimplex P_X hP_X b₀,
-    marginalFst_detReconstructionWitness P_X b₀,
-    by
-      rw [expectedDistortionPmf_detReconstructionWitness]
-      exact h_bound⟩
 
 end Witness
 
 /-! ## Phase A 単調性 (antitone in `D`) -/
 
-/-- `RDConstraint` is monotone in `D`: enlarging the distortion budget gives
-a larger feasible set. -/
-lemma RDConstraint_mono (P_X : α → ℝ) (d : DistortionFn α β)
-    {D₁ D₂ : ℝ} (h : D₁ ≤ D₂) :
-    RDConstraint P_X d D₁ ⊆ RDConstraint P_X d D₂ := by
-  intro q hq
-  refine ⟨hq.1, hq.2.1, ?_⟩
-  exact le_trans hq.2.2 h
-
-/-- **Antitonicity** of `rateDistortionFunctionPmf` in `D` (no boundedness side
-condition required: when `RDConstraint P_X d D₁` is non-empty, all subsequent iInfs
-over the larger feasible set are bounded by the same `mutualInfoPmf` evaluations).
-
-We package this in the standard `D₁ ≤ D₂ ⟹ R(D₂) ≤ R(D₁)` form. -/
-lemma rateDistortionFunctionPmf_antitone
-    (P_X : α → ℝ) (d : DistortionFn α β)
-    {D₁ D₂ : ℝ} (h : D₁ ≤ D₂)
-    (h_ne₁ : (RDConstraint P_X d D₁).Nonempty) :
-    rateDistortionFunctionPmf P_X d D₂ ≤ rateDistortionFunctionPmf P_X d D₁ := by
-  -- For the conditionally-complete-lattice iInf, antitone in the index set needs
-  -- BddBelow of the larger iInf set. We bound below by 0 via mutualInfo nonneg
-  -- (no nonneg lemma yet, but for the inequality we use the direct argument:
-  --  every q ∈ RDConstraint D₁ is in RDConstraint D₂, so iInf over D₂ ≤ value at
-  --  that q, hence ≤ iInf over D₁).
-  -- With `rateDistortionFunctionPmf := sInf (mutualInfoPmf '' RDConstraint)`,
-  -- antitonicity is direct via `csInf_le_csInf`.
-  unfold rateDistortionFunctionPmf
-  have hS₁_sub_S₂ : RDConstraint P_X d D₁ ⊆ RDConstraint P_X d D₂ :=
-    RDConstraint_mono P_X d h
-  have h_image_sub :
-      Set.image mutualInfoPmf (RDConstraint P_X d D₁)
-        ⊆ Set.image mutualInfoPmf (RDConstraint P_X d D₂) :=
-    Set.image_mono hS₁_sub_S₂
-  have h_image₁_ne : (Set.image mutualInfoPmf (RDConstraint P_X d D₁)).Nonempty :=
-    h_ne₁.image _
-  have h_bdd_below_image₂ :
-      BddBelow (Set.image mutualInfoPmf (RDConstraint P_X d D₂)) :=
-    ((RDConstraint_isCompact P_X d D₂).image continuous_mutualInfoPmf).bddBelow
-  exact csInf_le_csInf h_bdd_below_image₂ h_image₁_ne h_image_sub
 
 end PmfForm
 
@@ -467,41 +269,6 @@ end PmfForm
 
 section MeasureToPmf
 
-/-- A probability measure on a finite alphabet `α` yields a pmf `α → ℝ`. -/
-noncomputable def measureToPmf {α : Type*} [Fintype α] [MeasurableSpace α]
-    [MeasurableSingletonClass α] (P : Measure α) : α → ℝ :=
-  fun a => P.real {a}
-
-/-- `measureToPmf P a = P.real {a}` by definition. -/
-lemma measureToPmf_apply {α : Type*} [Fintype α] [MeasurableSpace α]
-    [MeasurableSingletonClass α] (P : Measure α) (a : α) :
-    measureToPmf P a = P.real {a} := rfl
-
-/-- Every component of `measureToPmf P` is non-negative. -/
-lemma measureToPmf_nonneg {α : Type*} [Fintype α] [MeasurableSpace α]
-    [MeasurableSingletonClass α] (P : Measure α) (a : α) :
-    0 ≤ measureToPmf P a := by
-  exact measureReal_nonneg
-
-/-- The components of `measureToPmf P` sum to one when `P` is a probability measure. -/
-lemma measureToPmf_sum_eq_one {α : Type*} [Fintype α] [MeasurableSpace α]
-    [MeasurableSingletonClass α] (P : Measure α) [IsProbabilityMeasure P] :
-    ∑ a, measureToPmf P a = 1 := by
-  unfold measureToPmf
-  rw [sum_measureReal_singleton (μ := P) (s := (Finset.univ : Finset α))]
-  simp [probReal_univ]
-
-/-- `measureToPmf P` lies in the standard simplex on `α`. -/
-lemma measureToPmf_mem_stdSimplex {α : Type*} [Fintype α] [MeasurableSpace α]
-    [MeasurableSingletonClass α] (P : Measure α) [IsProbabilityMeasure P] :
-    measureToPmf P ∈ stdSimplex ℝ α :=
-  ⟨fun a => measureToPmf_nonneg P a, measureToPmf_sum_eq_one P⟩
-
-/-- If every singleton has positive measure, every component of `measureToPmf P` is positive. -/
-lemma measureToPmf_pos {α : Type*} [Fintype α] [MeasurableSpace α]
-    [MeasurableSingletonClass α] (P : Measure α) [IsProbabilityMeasure P]
-    (hpos : ∀ a, 0 < P.real {a}) (a : α) :
-    0 < measureToPmf P a := hpos a
 
 end MeasureToPmf
 
@@ -522,138 +289,6 @@ exponent) と同一視するための鍵。
 
 section EntropyBridge
 
-/-- **(1) Entropy as a `negMulLog` sum over `measureToPmf`.**
-`entropy μ Xs = ∑ a, negMulLog (measureToPmf (μ.map Xs) a)`. Both sides unfold to
-the same expression, so this is definitional (`rfl`). -/
-lemma entropy_eq_negMulLog_sum_measureToPmf
-    {Ω X : Type*} [MeasurableSpace Ω] [Fintype X] [MeasurableSpace X]
-    [MeasurableSingletonClass X] (μ : Measure Ω) (Xs : Ω → X) :
-    entropy μ Xs = ∑ a, Real.negMulLog (measureToPmf (μ.map Xs) a) := rfl
-
-/-- **(2) First-marginal identity for joint pmf.**
-`marginalFst (measureToPmf (μ.map (Xs, Ys))) = measureToPmf (μ.map Xs)`. Proved
-via the disjoint-union decomposition `Prod.fst ⁻¹' {a} = ⋃ b, {(a, b)}` plus
-`Measure.map_apply` / `map_map`. -/
-lemma marginalFst_measureToPmf_eq
-    {Ω α β : Type*} [MeasurableSpace Ω]
-    [Fintype α] [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
-    [Fintype β] [DecidableEq β] [MeasurableSpace β] [MeasurableSingletonClass β]
-    (μ : Measure Ω) [IsFiniteMeasure μ] (Xs : Ω → α) (Ys : Ω → β)
-    (hXs : Measurable Xs) (hYs : Measurable Ys) :
-    marginalFst (measureToPmf (μ.map (fun ω => (Xs ω, Ys ω))))
-      = measureToPmf (μ.map Xs) := by
-  funext a
-  -- LHS = ∑ b, (μ.map joint).real {(a, b)}; RHS = (μ.map Xs).real {a}.
-  simp only [marginalFst, measureToPmf]
-  set joint : Ω → α × β := fun ω => (Xs ω, Ys ω) with hjoint
-  have hjointMeas : Measurable joint := hXs.prodMk hYs
-  -- `μ.map joint` is finite (instance via `Measure.isFiniteMeasure_map`).
-  -- Step 1: rewrite RHS through `map_map` so both sides live on `μ.map joint`.
-  have hXs_eq : Xs = Prod.fst ∘ joint := by funext ω; rfl
-  have h_mapXs :
-      (μ.map Xs).real {a} = (μ.map joint).real (Prod.fst ⁻¹' {a}) := by
-    rw [hXs_eq, ← Measure.map_map measurable_fst hjointMeas]
-    exact map_measureReal_apply measurable_fst (MeasurableSet.singleton a)
-  rw [h_mapXs]
-  -- Step 2: decompose `Prod.fst ⁻¹' {a} = ⋃ b ∈ univ, {(a, b)}` and use
-  -- `measureReal_biUnion_finset`.
-  have h_preimage_eq :
-      (Prod.fst ⁻¹' {a} : Set (α × β))
-        = ⋃ b ∈ (Finset.univ : Finset β), ({(a, b)} : Set (α × β)) := by
-    ext p
-    constructor
-    · intro hp
-      have hp' : p.1 = a := hp
-      refine Set.mem_iUnion.mpr ⟨p.2, Set.mem_iUnion.mpr ⟨Finset.mem_univ _, ?_⟩⟩
-      simp only [Set.mem_singleton_iff]
-      ext
-      · exact hp'
-      · rfl
-    · intro hp
-      rcases Set.mem_iUnion.mp hp with ⟨b, hb⟩
-      rcases Set.mem_iUnion.mp hb with ⟨_, hb'⟩
-      simp only [Set.mem_singleton_iff] at hb'
-      simp [Set.mem_preimage, hb']
-  rw [h_preimage_eq]
-  have h_disj : (↑(Finset.univ : Finset β) : Set β).PairwiseDisjoint
-      (fun b => ({(a, b)} : Set (α × β))) := by
-    intro b₁ _ b₂ _ hb s hs1 hs2 p hp
-    have hp1 := hs1 hp
-    have hp2 := hs2 hp
-    simp only [Set.mem_singleton_iff] at hp1 hp2
-    have heq : (a, b₁) = (a, b₂) := hp1.symm.trans hp2
-    exact (hb (Prod.mk.injEq _ _ _ _ |>.mp heq).2).elim
-  have h_meas : ∀ b ∈ (Finset.univ : Finset β),
-      MeasurableSet ({(a, b)} : Set (α × β)) := fun b _ => measurableSet_singleton _
-  rw [measureReal_biUnion_finset h_disj h_meas]
-
-/-- **(2') Second-marginal identity for joint pmf.** Symmetric to
-`marginalFst_measureToPmf_eq`. -/
-lemma marginalSnd_measureToPmf_eq
-    {Ω α β : Type*} [MeasurableSpace Ω]
-    [Fintype α] [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
-    [Fintype β] [DecidableEq β] [MeasurableSpace β] [MeasurableSingletonClass β]
-    (μ : Measure Ω) [IsFiniteMeasure μ] (Xs : Ω → α) (Ys : Ω → β)
-    (hXs : Measurable Xs) (hYs : Measurable Ys) :
-    marginalSnd (measureToPmf (μ.map (fun ω => (Xs ω, Ys ω))))
-      = measureToPmf (μ.map Ys) := by
-  funext b
-  simp only [marginalSnd, measureToPmf]
-  set joint : Ω → α × β := fun ω => (Xs ω, Ys ω) with hjoint
-  have hjointMeas : Measurable joint := hXs.prodMk hYs
-  have hYs_eq : Ys = Prod.snd ∘ joint := by funext ω; rfl
-  have h_mapYs :
-      (μ.map Ys).real {b} = (μ.map joint).real (Prod.snd ⁻¹' {b}) := by
-    rw [hYs_eq, ← Measure.map_map measurable_snd hjointMeas]
-    exact map_measureReal_apply measurable_snd (MeasurableSet.singleton b)
-  rw [h_mapYs]
-  have h_preimage_eq :
-      (Prod.snd ⁻¹' {b} : Set (α × β))
-        = ⋃ a ∈ (Finset.univ : Finset α), ({(a, b)} : Set (α × β)) := by
-    ext p
-    constructor
-    · intro hp
-      have hp' : p.2 = b := hp
-      refine Set.mem_iUnion.mpr ⟨p.1, Set.mem_iUnion.mpr ⟨Finset.mem_univ _, ?_⟩⟩
-      simp only [Set.mem_singleton_iff]
-      ext
-      · rfl
-      · exact hp'
-    · intro hp
-      rcases Set.mem_iUnion.mp hp with ⟨a, ha⟩
-      rcases Set.mem_iUnion.mp ha with ⟨_, ha'⟩
-      simp only [Set.mem_singleton_iff] at ha'
-      simp [Set.mem_preimage, ha']
-  rw [h_preimage_eq]
-  have h_disj : (↑(Finset.univ : Finset α) : Set α).PairwiseDisjoint
-      (fun a => ({(a, b)} : Set (α × β))) := by
-    intro a₁ _ a₂ _ ha s hs1 hs2 p hp
-    have hp1 := hs1 hp
-    have hp2 := hs2 hp
-    simp only [Set.mem_singleton_iff] at hp1 hp2
-    have heq : (a₁, b) = (a₂, b) := hp1.symm.trans hp2
-    exact (ha (Prod.mk.injEq _ _ _ _ |>.mp heq).1).elim
-  have h_meas : ∀ a ∈ (Finset.univ : Finset α),
-      MeasurableSet ({(a, b)} : Set (α × β)) := fun a _ => measurableSet_singleton _
-  rw [measureReal_biUnion_finset h_disj h_meas]
-
-/-- **(3) Main bridge: `mutualInfoPmf` of joint pmf = entropy difference.**
-`I(X; Y) = H(X) + H(Y) − H(X, Y)`. Used in Phase E to rewrite the Phase B
-exponent `H(Z) − H(X) − H(Y) − 3ε` into `−I(X; Y) − 3ε`. -/
-lemma mutualInfoPmf_eq_entropy_diff
-    {Ω α β : Type*} [MeasurableSpace Ω]
-    [Fintype α] [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
-    [Fintype β] [DecidableEq β] [MeasurableSpace β] [MeasurableSingletonClass β]
-    (μ : Measure Ω) [IsFiniteMeasure μ] (Xs : Ω → α) (Ys : Ω → β)
-    (hXs : Measurable Xs) (hYs : Measurable Ys) :
-    mutualInfoPmf (measureToPmf (μ.map (fun ω => (Xs ω, Ys ω))))
-      = entropy μ Xs + entropy μ Ys - entropy μ (fun ω => (Xs ω, Ys ω)) := by
-  unfold mutualInfoPmf
-  rw [marginalFst_measureToPmf_eq μ Xs Ys hXs hYs,
-      marginalSnd_measureToPmf_eq μ Xs Ys hXs hYs,
-      ← entropy_eq_negMulLog_sum_measureToPmf μ Xs,
-      ← entropy_eq_negMulLog_sum_measureToPmf μ Ys,
-      ← entropy_eq_negMulLog_sum_measureToPmf μ (fun ω => (Xs ω, Ys ω))]
 
 end EntropyBridge
 

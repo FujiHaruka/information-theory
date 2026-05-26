@@ -191,20 +191,6 @@ theorem entropy_power_inequality_gaussian_via_pipeline
     P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY h_stam
   exact entropy_power_inequality_integrated P X Y hX hY hXY h_pipeline
 
-/-- **Gaussian saturation in integrated pipeline form, with equality**.
-
-Reuses `entropy_power_inequality_gaussian_saturation` from `EntropyPowerInequality.lean`. -/
-theorem entropy_power_inequality_gaussian_saturation_integrated
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
-    (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
-      = entropyPower (P.map X) + entropyPower (P.map Y) :=
-  entropy_power_inequality_gaussian_saturation
-    P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
-
 /-! ## §4 — Variants (log / exp / normalized form via integrated pipeline) -/
 
 /-- **EPI log form via integrated pipeline**.
@@ -249,19 +235,6 @@ theorem entropy_power_inequality_normalized_integrated
       ≥ entropyPower (P.map X) / gaussianEntropyPowerConst
         + entropyPower (P.map Y) / gaussianEntropyPowerConst :=
   entropy_power_inequality_normalized P X Y hX hY hXY h_pipeline.stam
-
-/-- **2 · h(X+Y) ≥ log(entropyPower X + entropyPower Y)** via integrated pipeline.
-
-`@audit:suspect(epi-debruijn-integration-plan)` -/
-theorem two_differentialEntropy_ge_log_sum_integrated
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
-    2 * Common2026.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
-      ≥ Real.log (entropyPower (P.map X) + entropyPower (P.map Y)) :=
-  two_differentialEntropy_ge_log_sum P X Y hX hY hXY h_pipeline.stam
 
 /-! ## §5 — Chain forms (3-arg / 4-arg) via integrated pipeline -/
 
@@ -310,21 +283,6 @@ theorem isEPIL3IntegratedPipeline_symm
   stam := isStamInequalityHyp_symm h.stam
   bridge := isStamToEPIBridgeHyp_symm h.bridge
 
-/-- **Pipeline from EPI hypothesis only**. When the EPI hypothesis is already
-known by some non-circular route (e.g. Gaussian saturation) and an honest Stam
-predicate is *also* available, bundle into a pipeline. (No vacuous Fisher-info-zero
-discharge is used — that buggy V1 route was removed 2026-05-20.)
-
-`@audit:suspect(epi-debruijn-integration-plan)` -/
-theorem isEPIL3IntegratedPipeline_of_epi
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h_stam : IsStamInequalityHyp X Y P)
-    (h_epi : IsEntropyPowerInequalityHypothesis X Y P) :
-    IsEPIL3IntegratedPipeline X Y P where
-  stam := h_stam
-  bridge := isStamToEPIBridgeHyp_of_epi h_epi
-
 /-- **Pipeline from Stam + bridge directly** (mirrors `epi_via_stam`). -/
 theorem isEPIL3IntegratedPipeline_of_stam_bridge
     {Ω : Type*} [MeasurableSpace Ω]
@@ -334,22 +292,6 @@ theorem isEPIL3IntegratedPipeline_of_stam_bridge
     IsEPIL3IntegratedPipeline X Y P where
   stam := h_stam
   bridge := h_bridge
-
-/-- **Pipeline destruction**: extract the `IsStamInequalityHyp` part. -/
-theorem isStamInequalityHyp_of_integrated_pipeline
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h : IsEPIL3IntegratedPipeline X Y P) :
-    IsStamInequalityHyp X Y P :=
-  h.stam
-
-/-- **Pipeline destruction**: extract the `IsStamToEPIBridgeHyp` part. -/
-theorem isStamToEPIBridgeHyp_of_integrated_pipeline
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h : IsEPIL3IntegratedPipeline X Y P) :
-    IsStamToEPIBridgeHyp X Y P :=
-  h.bridge
 
 /-! ## §7 — Hypothesis-reduced re-publish of `entropy_power_inequality`
 
@@ -392,40 +334,6 @@ theorem entropy_power_inequality_exp_form_reduced
 
 /-! ## §8 — Composability with `EPIPlumbing` translation invariance -/
 
-/-- **Integrated pipeline preserved under translation**.
-
-If `X, Y` satisfy the integrated pipeline (i.e. Stam + Stam-to-EPI bridge),
-and the relevant measures are absolutely continuous, then `X + a, Y + b` also
-satisfy the integrated pipeline — provided the Fisher information is shown
-to be translation-invariant (the predicate-level statement; the Fisher info
-invariance itself is downstream).
-
-`@audit:suspect(epi-debruijn-integration-plan)` -/
-theorem isEPIL3IntegratedPipeline_of_translates
-    {Ω : Type*} [MeasurableSpace Ω]
-    {P : Measure Ω}
-    {X Y : Ω → ℝ}
-    (hJX : ∀ a : ℝ, ∀ f : ℝ → ℝ,
-        Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map (fun ω => X ω + a)) f
-          = Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) f)
-    (hJY : ∀ b : ℝ, ∀ f : ℝ → ℝ,
-        Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map (fun ω => Y ω + b)) f
-          = Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) f)
-    (hJsum : ∀ a b : ℝ, ∀ f : ℝ → ℝ,
-        Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
-          (P.map (fun ω => (X ω + a) + (Y ω + b))) f
-        = Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
-            (P.map (fun ω => X ω + Y ω)) f)
-    (h_bridge_t : ∀ a b : ℝ,
-        IsStamToEPIBridgeHyp (fun ω => X ω + a) (fun ω => Y ω + b) P)
-    (a b : ℝ)
-    (h : IsEPIL3IntegratedPipeline X Y P) :
-    IsEPIL3IntegratedPipeline (fun ω => X ω + a) (fun ω => Y ω + b) P where
-  stam :=
-    isStamInequalityHyp_of_fisherInfo_eq
-      (fun f => (hJX a f).symm) (fun f => (hJY b f).symm) (fun f => (hJsum a b f).symm) h.stam
-  bridge := h_bridge_t a b
-
 /-! ## §9 — Concrete Gaussian EPI (genuine, via saturation)
 
 **RESOLVED (2026-05-20):** the former `isStamInequalityHyp_of_gaussian_v1_zero`
@@ -452,21 +360,6 @@ theorem entropy_power_inequality_gaussian_full
   exact h_eq.ge
 
 /-! ## §10 — Composability with `FisherInfoV2DeBruijn` (V2 de Bruijn identity) -/
-
-/-- **Hypothesis-reduced EPI with V2 de Bruijn citation**. Combines integrated
-pipeline + V2 de Bruijn citation; the V2 citation is structurally trivial
-(L-EPI2 is `True`) but documents the chain.
-
-`@audit:suspect(epi-debruijn-integration-plan)` -/
-theorem entropy_power_inequality_with_v2_debruijn
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
-  entropy_power_inequality_integrated P X Y hX hY hXY h_pipeline
 
 /-! ## §11 — Final sanity-check / regression theorems -/
 

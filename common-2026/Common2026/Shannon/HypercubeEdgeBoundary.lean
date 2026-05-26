@@ -166,15 +166,6 @@ lemma extension_apply_ne {n : ℕ} (i : Fin n) (b : Bool)
 lemma projectionExcept_eq_image {n : ℕ} (i : Fin n) (A : Finset (Fin n → Bool)) :
     projectionExcept i A = A.image (projMap i) := rfl
 
-/-- `x : Fin n → Bool` は `projMap i x` の `x i` 拡張に等しい。 -/
-lemma extension_projMap_self {n : ℕ} (i : Fin n) (x : Fin n → Bool) :
-    extension i (x i) (projMap i x) = x := by
-  funext j
-  by_cases h : j = i
-  · subst h; simp
-  · rw [extension_apply_ne i (x i) (projMap i x) h]
-    rfl
-
 /-- `flipCoord i x` は `projMap i x` の `!x i` 拡張に等しい。 -/
 lemma extension_projMap_flip {n : ℕ} (i : Fin n) (x : Fin n → Bool) :
     extension i (!x i) (projMap i x) = flipCoord i x := by

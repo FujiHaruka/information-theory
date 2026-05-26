@@ -112,9 +112,6 @@ noncomputable def roundedTypeIndex (P : α → ℝ) (n : ℕ) :
     TypeCountIndex α n := fun a =>
   ⟨roundedTypeIndexNat P n a, Nat.lt_succ_of_le (roundedTypeIndexNat_le P n a)⟩
 
-omit [MeasurableSpace α] [MeasurableSingletonClass α] in
-private lemma roundedTypeIndex_val (P : α → ℝ) (n : ℕ) (a : α) :
-    ((roundedTypeIndex P n a : ℕ) : ℝ) = (roundedTypeIndexNat P n a : ℝ) := rfl
 
 omit [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- **Sum constraint**: `∑ a, roundedTypeIndex P n a = n`. -/
@@ -353,15 +350,6 @@ lemma typeClassByCount_nonempty_of_sum
       rw [Equiv.symm_apply_apply]
   rw [h_filter_eq, Finset.card_map, Finset.card_univ, Fintype.card_fin]
 
-omit [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **`T_{c_n}.Nonempty`** (Phase D で union ⊇ T_{c_n} の経路に使用):
-`∑ a, c a = n` を満たす rounded type に対して、対応する type class は非空。 -/
-lemma roundedTypeIndex_typeClass_nonempty
-    (P : α → ℝ) (hP : (∑ a, P a) = 1) (hP_nn : ∀ a, 0 ≤ P a)
-    (n : ℕ) (hn : 0 < n) :
-    (typeClassByCount (α := α) (n := n)
-      (fun a => (roundedTypeIndex P n a : ℕ))).Nonempty :=
-  typeClassByCount_nonempty_of_sum _ (roundedTypeIndex_sum P hP hP_nn n hn)
 
 omit [MeasurableSingletonClass α] in
 /-- **KL convergence via Phase A continuity**:

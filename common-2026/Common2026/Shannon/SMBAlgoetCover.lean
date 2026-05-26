@@ -1255,19 +1255,6 @@ private lemma firstBlockZ_singleton_pos_ae
   simp only [Set.mem_preimage, Set.mem_setOf_eq, S]
   exact le_antisymm hx measureReal_nonneg
 
-omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **Pointwise factorization of `exp(negLogQInftyZ (n+1))`**:
-splits off the new contribution `exp(pmfLogCondInfty(shift^n x))`. -/
-private lemma exp_negLogQInftyZ_succ
-    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ)
-    (x : ∀ _ : ℤ, α) :
-    Real.exp (negLogQInftyZ μ p (n + 1) x)
-      = Real.exp (negLogQInftyZ μ p n x)
-        * Real.exp (pmfLogCondInfty μ p (shiftZ^[n] x)) := by
-  unfold negLogQInftyZ
-  rw [Finset.sum_range_succ]
-  rw [Real.exp_add]
-
 omit [DecidableEq α] [Nonempty α] in
 /-- **Pointwise factorization of `MRatioLowerZ (n+1)` on the a.s. positive set**.
 
@@ -2829,24 +2816,5 @@ theorem algoet_cover_liminf_bound
   rw [show eN (forwardEmbed (μ := μ) p.toStationaryProcess ω)
       = fun i : ℤ => p.obs i.toNat ω from rfl]
   exact (blockLogAvgZ_natExt_eq μ p.toStationaryProcess n ω).symm
-
-/-! ## D.7 — Main theorem (hypothesis-free) -/
-
-/-- **Shannon–McMillan–Breiman theorem** (Cover–Thomas 16.8.1).
-
-For a stationary ergodic process with finite alphabet, the per-symbol
-negative log-likelihood `blockLogAvg μ p n` converges almost surely to the
-entropy rate `entropyRate μ p`. -/
-theorem shannon_mcmillan_breiman
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (p : ErgodicProcess μ α) :
-    ∀ᵐ ω ∂μ, Filter.Tendsto
-      (fun n => blockLogAvg μ p.toStationaryProcess n ω)
-      Filter.atTop (𝓝 (entropyRate μ p.toStationaryProcess)) :=
-  shannon_mcmillan_breiman_of_sandwich μ p
-    (algoet_cover_liminf_bound μ p)
-    (algoet_cover_limsup_bound μ p)
-    (blockLogAvg_bddAbove_ae μ p)
-    (blockLogAvg_bddBelow_ae μ p)
 
 end InformationTheory.Shannon

@@ -104,26 +104,6 @@ lemma mergedInitMultiset_huffmanGrouping
       intro heq; apply hpq; rw [← hx, ← hy, heq]
     simp [hxy]
 
-omit [LinearOrder α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **card**: `mergedInitMultiset Q a b` の cardinality は subtype `{y // y ≠ b}` の
-要素数に等しい (= 各 leaf に 1 group). -/
-lemma mergedInitMultiset_card
-    (Q : Measure α) (a b : α) :
-    (mergedInitMultiset Q a b).card = Fintype.card {y : α // y ≠ b} := by
-  unfold mergedInitMultiset
-  rw [Multiset.card_map]
-  rfl
-
-omit [LinearOrder α] [Nonempty α] [MeasurableSingletonClass α] in
-/-- **card (β-level)**: subtype の要素数を `Fintype.card α - 1` に書き換えた form.
-`3 ≤ Fintype.card α` 前提下では `2 ≤ (mergedInitMultiset ...).card` が従い、
-`huffmanLengthAux` の再帰 step が発火する (base case でない). -/
-lemma mergedInitMultiset_card_eq_sub
-    (Q : Measure α) (a b : α) :
-    (mergedInitMultiset Q a b).card = Fintype.card α - 1 := by
-  rw [mergedInitMultiset_card Q a b, Fintype.card_subtype_compl]
-  simp
-
 /-! ### Section B — primitive predicate -/
 
 /-- **strictly-more-primitive genuine predicate**: `huffmanLengthAux` (= Huffman 再帰)
@@ -176,30 +156,5 @@ theorem huffmanMergedIdentification_of_aux
   exact h_aux Q hQ h_card a b hab h_a_min h_b_min h_sibling x
 
 /-! ### Section D — combined wrapper 再公開 (identification 半分を primitive で受ける) -/
-
-/-- **`huffmanLength_optimal_with_hypotheses` の再公開**: identification hypothesis を
-primitive `MergedHuffmanAuxIdentHypothesis` で受け取る form. swap normalization 半分
-(`SwapNormalizationHypothesis`) はそのまま残る (本 seed の scope 外).
-
-注: `h_swap` / `h_aux` は load-bearing hypothesis。本来は
-`HuffmanWalls.swap_normalization_hypothesis_holds` /
-`merged_huffman_aux_ident_hypothesis_holds` を呼ぶ形に書換べきだが、
-`HuffmanWalls.lean → HuffmanStrongForm.lean → HuffmanMergedIdentBody.lean` の import chain
-で循環するため signature 不変 (`huffman-sorry-migration-plan.md` 判断ログ #3 L-MIG-4 拡張)。
-consumer 側で wall lemma を渡せば transitive に閉じる。
-
-@residual(plan:huffman-strong-form-completion) -/
-theorem huffmanLength_optimal_with_swap_and_aux
-    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
-    [MeasurableSpace β] [MeasurableSingletonClass β]
-    (h_swap : SwapNormalizationHypothesis.{u})
-    (h_aux : MergedHuffmanAuxIdentHypothesis.{u})
-    (P : Measure β) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})
-    (l : β → ℕ) (hl_pos : ∀ a, 0 < l a)
-    (hl_kraft : ∑ a : β, ((2 : ℝ)) ^ (-(l a : ℤ)) ≤ 1) :
-    InformationTheory.Shannon.ShannonCode.expectedLength P (huffmanLength P)
-      ≤ InformationTheory.Shannon.ShannonCode.expectedLength P l :=
-  huffmanLength_optimal_with_hypotheses h_swap
-    (huffmanMergedIdentification_of_aux h_aux) P hP l hl_pos hl_kraft
 
 end InformationTheory.Shannon.Huffman

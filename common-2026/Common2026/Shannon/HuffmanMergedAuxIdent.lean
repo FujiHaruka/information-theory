@@ -429,22 +429,6 @@ cornerstone の genuine な適用例であり、carrier-crossing の subtype 部
 def subtypeNeEmbedding (b : α) : { y : α // y ≠ b } ↪ α :=
   Function.Embedding.subtype _
 
-omit [Nonempty α] [MeasurableSingletonClass α] in
-/-- **subtype carrier の解消**: `NodupChain (mergedInitMultiset Q a b)` 下で、subtype carrier
-上の `huffmanLengthAux` を β carrier 上の `relabelMultiset (subtypeNeEmbedding b)` の値に
-書き換える (relabel cornerstone の直接適用)。 -/
-lemma huffmanLengthAux_mergedInitMultiset_relabel
-    (Q : Measure α) (a b : α)
-    (hch : NodupChain (mergedInitMultiset Q a b))
-    (x : { y : α // y ≠ b }) :
-    huffmanLengthAux (mergedInitMultiset Q a b) x
-      = huffmanLengthAux (relabelMultiset (subtypeNeEmbedding b) (mergedInitMultiset Q a b))
-          x.val := by
-  have h := huffmanLengthAux_relabel (subtypeNeEmbedding b) (mergedInitMultiset Q a b)
-    (mergedInitMultiset_huffmanGrouping Q a b) hch x
-  -- (subtypeNeEmbedding b) x = x.val (defeq)
-  exact h.symm
-
 /-! ### Section E — 残タスク (honest 名前付き仮説, load-bearing)
 
 **`MergedHuffmanAuxIdentHypothesis` は本 session で genuine discharge できていない。**

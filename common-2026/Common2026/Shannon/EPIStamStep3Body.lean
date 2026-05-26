@@ -112,19 +112,6 @@ def IsStamFisherCoupling {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   IsStamCauchySchwarz X Y P
 
-/-- The Step-3 coupling predicate is *defeq* to the Wave 7 existential-CS
-predicate. -/
-theorem isStamFisherCoupling_iff_cauchySchwarz {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω) :
-    IsStamFisherCoupling X Y P ↔ IsStamCauchySchwarz X Y P := Iff.rfl
-
-/-- The Step-3 coupling is symmetric in `X, Y` (inherited from Wave 7). -/
-theorem isStamFisherCoupling_symm {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h : IsStamFisherCoupling X Y P) :
-    IsStamFisherCoupling Y X P :=
-  isStamCauchySchwarz_symm h
-
 /-- **Optimal λ membership** (used throughout): the optimal λ `J_Y / (J_X + J_Y)`
 selected in Step 4 lies in the unit interval `[0, 1]` whenever `J_X, J_Y > 0`. -/
 theorem stam_optimal_lambda_mem_unit {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
@@ -312,67 +299,7 @@ theorem epi_via_stam_step3_gaussian
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
   epi_via_stam_gaussian P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
 
-/-- **End-to-end EPI via Step 3 body discharge** (composes §4 + EPIStamDischarge
-bridge). For independent `X, Y` with the Step 1 + Step 3 predicates and a
-Stam-to-EPI bridge, EPI holds.
-
-`@audit:suspect(epi-stam-to-conclusion-plan)` -/
-theorem entropy_power_inequality_via_step3
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (h_conv : IsStamScoreConvolution X Y P)
-    (h_te : IsStamTotalExpectation X Y P)
-    (h_bridge : IsStamToEPIBridgeHyp X Y P) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
-  have h_stam := isStamInequalityHyp_via_step3 h_conv h_te
-  exact epi_via_stam_main P X Y X hX hY hXY h_stam h_bridge
-
 /-! ## §7 — Step 3 manipulation lemmas + intermediate calc -/
-
-/-- The total-expectation predicate is congruent under function equality. -/
-theorem isStamTotalExpectation_congr {Ω : Type*} [MeasurableSpace Ω]
-    {X Y X' Y' : Ω → ℝ} {P : Measure Ω}
-    (hX : X = X') (hY : Y = Y')
-    (h : IsStamTotalExpectation X Y P) :
-    IsStamTotalExpectation X' Y' P := by
-  subst hX; subst hY; exact h
-
-/-- The Step-3 coupling predicate is congruent under function equality. -/
-theorem isStamFisherCoupling_congr {Ω : Type*} [MeasurableSpace Ω]
-    {X Y X' Y' : Ω → ℝ} {P : Measure Ω}
-    (hX : X = X') (hY : Y = Y')
-    (h : IsStamFisherCoupling X Y P) :
-    IsStamFisherCoupling X' Y' P := by
-  subst hX; subst hY; exact h
-
-/-- **Intermediate calc helper**: at any `λ ∈ [0,1]`, the coupling RHS is a
-convex combination bounded below by the harmonic mean (Wave 7
-`stam_lambda_lower_bound`). This is the arithmetic certificate that Step 4's
-optimization is *sound* (the coupling RHS never undercuts the harmonic mean). -/
-theorem stam_coupling_rhs_ge_harmonic {a b lam : ℝ} (ha : 0 < a) (hb : 0 < b) :
-    a * b / (a + b) ≤ lam ^ 2 * a + (1 - lam) ^ 2 * b :=
-  stam_lambda_lower_bound ha hb lam
-
-/-- **Coupling RHS endpoints**: at `λ = 0` the coupling RHS is `J_Y`, at `λ = 1`
-it is `J_X` — the two trivial single-variable bounds the optimization
-interpolates between. -/
-theorem stam_coupling_rhs_endpoints (a b : ℝ) :
-    ((0 : ℝ) ^ 2 * a + (1 - 0) ^ 2 * b = b)
-      ∧ ((1 : ℝ) ^ 2 * a + (1 - 1) ^ 2 * b = a) :=
-  ⟨by ring, by ring⟩
-
-/-- **Total-expectation strengthens the existential coupling**: the
-total-expectation predicate (which holds at *every* λ ∈ [0,1]) is strictly
-stronger than the existential coupling (which needs only *one* λ).
-
-`@audit:suspect(epi-stam-to-conclusion-plan)` -/
-theorem isStamFisherCoupling_of_totalExpectation' {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h : IsStamTotalExpectation X Y P) :
-    IsStamFisherCoupling X Y P :=
-  isStamFisherCoupling_of_totalExpectation h
 
 /-! ## §8 — Sanity check / regression theorems -/
 

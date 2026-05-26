@@ -91,11 +91,6 @@ noncomputable def fisherInfoOfDensity (f : ℝ → ℝ) : ℝ≥0∞ :=
 /-- Fisher information of a density is non-negative (trivially, as `ℝ≥0∞`). -/
 theorem fisherInfoOfDensity_nonneg (f : ℝ → ℝ) : 0 ≤ fisherInfoOfDensity f := bot_le
 
-/-- Unfold lemma for `fisherInfoOfDensity`. -/
-theorem fisherInfoOfDensity_eq_lintegral_logDeriv_sq (f : ℝ → ℝ) :
-    fisherInfoOfDensity f
-      = ∫⁻ x, ENNReal.ofReal ((logDeriv f x) ^ 2) * ENNReal.ofReal (f x) ∂volume := rfl
-
 /-- **Constant zero density**: `J(0) = 0`. -/
 theorem fisherInfoOfDensity_zero : fisherInfoOfDensity (fun _ : ℝ => (0 : ℝ)) = 0 := by
   unfold fisherInfoOfDensity
@@ -106,12 +101,6 @@ noncomputable def fisherInfoOfDensityReal (f : ℝ → ℝ) : ℝ := (fisherInfo
 
 theorem fisherInfoOfDensityReal_nonneg (f : ℝ → ℝ) : 0 ≤ fisherInfoOfDensityReal f :=
   ENNReal.toReal_nonneg
-
-@[simp] theorem fisherInfoOfDensityReal_zero :
-    fisherInfoOfDensityReal (fun _ : ℝ => (0 : ℝ)) = 0 := by
-  unfold fisherInfoOfDensityReal
-  rw [fisherInfoOfDensity_zero]
-  simp
 
 /-! ## Phase B-1 — `IsRegularDensityV2` predicate (density-as-input form) -/
 
@@ -172,33 +161,6 @@ theorem integral_logDeriv_density_eq_zero {f : ℝ → ℝ} (h_reg : IsRegularDe
 **The deliverable that the V1 definition could not provide** (cf.
 `FisherInfoGaussian.lean` L-G3 retreat).
 -/
-
-/-- **Gaussian regular density instance** (V2 form). The Gaussian PDF
-`gaussianPDFReal m v` satisfies the V2 regularity predicate. Reuses
-the discharge already done in `FisherInfoGaussian.lean` Phase A. -/
-theorem isRegularDensityV2_gaussianPDFReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
-    IsRegularDensityV2 (gaussianPDFReal m v) where
-  diff := Common2026.Shannon.differentiable_gaussianPDFReal m v
-  pos := fun x => gaussianPDFReal_pos m v x hv
-  tail_bot := Common2026.Shannon.tendsto_gaussianPDFReal_atBot m hv
-  tail_top := Common2026.Shannon.tendsto_gaussianPDFReal_atTop m hv
-  integrable_deriv := Common2026.Shannon.integrable_deriv_gaussianPDFReal m hv
-  integral_deriv_eq_zero := Common2026.Shannon.integral_deriv_gaussianPDFReal_eq_zero m hv
-
-/-- **Score expectation vanishes for the Gaussian density** (V2 wrapper). -/
-theorem integral_logDeriv_gaussianPDFReal_eq_zero (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
-    ∫ x, logDeriv (gaussianPDFReal m v) x * gaussianPDFReal m v x ∂volume = 0 :=
-  integral_logDeriv_density_eq_zero (isRegularDensityV2_gaussianPDFReal m hv)
-
-/-- The squared score against the Gaussian density, in closed pointwise form:
-`(logDeriv (gaussianPDFReal m v) x)² · gaussianPDFReal m v x
-  = ((x - m) / v)² · gaussianPDFReal m v x`. Uses
-`Common2026.Shannon.logDeriv_gaussianPDFReal`. -/
-private lemma logDeriv_sq_mul_gaussianPDFReal_eq {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) (x : ℝ) :
-    (logDeriv (gaussianPDFReal m v) x) ^ 2 * gaussianPDFReal m v x
-      = ((x - m) / (v : ℝ)) ^ 2 * gaussianPDFReal m v x := by
-  rw [Common2026.Shannon.logDeriv_gaussianPDFReal hv]
-  ring
 
 /-- `((x - m) / v)² · gaussianPDFReal m v x` is Lebesgue-integrable for `v ≠ 0`.
 
@@ -347,30 +309,5 @@ function. This lets callers that have already discharged V1 (notably Gaussian
 via `Common2026.Shannon.isRegularDensity_gaussianReal_of_law`) lift to V2 for
 free and obtain the Fisher info closed form.
 -/
-
-/-- **V1 → V2 bridge**. -/
-theorem isRegularDensityV2_of_v1
-    {Ω : Type*} [MeasurableSpace Ω] {X : Ω → ℝ} {P : Measure Ω}
-    [MeasureTheory.HasPDF X P MeasureTheory.volume]
-    (h_v1 : Common2026.Shannon.IsRegularDensity X P) :
-    IsRegularDensityV2 h_v1.density where
-  diff := h_v1.diff
-  pos := h_v1.pos
-  tail_bot := h_v1.tail_bot
-  tail_top := h_v1.tail_top
-  integrable_deriv := h_v1.integrable_deriv
-  integral_deriv_eq_zero := h_v1.integral_deriv_eq_zero
-
-/-- **Gaussian Fisher info from `P.map X = gaussianReal m v`** (random-variable
-form). Combines the V1 Gaussian discharge with the V2 closed form, so callers
-in possession of `hX_law : P.map X = gaussianReal m v` directly obtain
-`fisherInfoOfDensity (gaussianPDFReal m v) = ENNReal.ofReal (1/v)`. -/
-theorem fisherInfoOfDensity_gaussianPDFReal_of_law
-    {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω}
-    [IsProbabilityMeasure P] (X : Ω → ℝ) [MeasureTheory.HasPDF X P MeasureTheory.volume]
-    {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0)
-    (_hX_law : P.map X = gaussianReal m v) :
-    fisherInfoOfDensity (gaussianPDFReal m v) = ENNReal.ofReal (1 / (v : ℝ)) :=
-  fisherInfoOfDensity_gaussianPDFReal m hv
 
 end Common2026.Shannon.FisherInfoV2

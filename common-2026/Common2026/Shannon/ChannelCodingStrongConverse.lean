@@ -346,35 +346,4 @@ theorem channelCoding_average_success_le
 
 /-! ### Phase C — 主形 (with `threshold := log M + γ`) -/
 
-omit [Fintype α] [DecidableEq α] [MeasurableSingletonClass α] [Nonempty β] in
-/-- **Verdú-Han strong-converse single-shot lower bound** (main form).
-For any code, any reference probability measure `Q`, any `γ`, with
-`threshold := log M + γ`:
-
-```
-1 - avgPe ≤ exp γ + (1 / M) · ∑_m P_m^n(highLLR_m)
-```
-
-This is the cleanest single-shot strong-converse inequality (Wolfowitz-style),
-obtained from the general bound by choosing `threshold := log M + γ` so that
-`exp(threshold)/M = exp(γ)`. -/
-theorem channelCoding_strong_converse_singleShot
-    {M : ℕ} (hM : 0 < M) {n : ℕ}
-    (W : Channel α β) [IsMarkovKernel W] (c : Code M n α β)
-    (Q : Measure (Fin n → β)) [IsProbabilityMeasure Q]
-    (γ : ℝ) :
-    (1 - (c.averageErrorProb W).toReal)
-      ≤ Real.exp γ + (1 / M : ℝ) *
-          ∑ m : Fin M, (Measure.pi (fun i => W (c.encoder m i))).real
-            (highLLRSet W c Q (Real.log M + γ) m) := by
-  have h_main := channelCoding_average_success_le hM W c Q (Real.log M + γ)
-  have hM_R_pos : (0 : ℝ) < M := by exact_mod_cast hM
-  have h_exp_split : Real.exp (Real.log M + γ) = M * Real.exp γ := by
-    rw [Real.exp_add, Real.exp_log hM_R_pos]
-  have h_div_eq : Real.exp (Real.log M + γ) / M = Real.exp γ := by
-    rw [h_exp_split]
-    field_simp
-  rw [h_div_eq] at h_main
-  exact h_main
-
 end InformationTheory.Shannon.ChannelCoding

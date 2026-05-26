@@ -152,13 +152,6 @@ lemma chernoffLogZ_continuous
 
 /-! ### A-4 `chernoffInfo` 達成性 + 非負性 -/
 
-omit [DecidableEq α] in
-/-- The image set `(log ∘ Z) '' Icc 0 1` is nonempty (since `Icc 0 1` is). -/
-lemma chernoffLogZ_image_nonempty
-    (P₁ P₂ : α → ℝ) :
-    ((fun lam : ℝ => Real.log (chernoffZSum P₁ P₂ lam)) '' Set.Icc (0:ℝ) 1).Nonempty :=
-  Set.Nonempty.image _ ⟨0, by norm_num⟩
-
 /-- Chernoff information is attained: `∃ λ* ∈ Icc 0 1, chernoffInfo = -log Z(λ*)`. -/
 theorem chernoffInfo_attained
     (P₁ P₂ : α → ℝ) [Nonempty α]
@@ -226,26 +219,6 @@ lemma chernoffZSum_swap (P₁ P₂ : α → ℝ) (lam : ℝ) :
   -- (P₁ a)^(1-λ) * (P₂ a)^λ vs (P₂ a)^(1-(1-λ)) * (P₁ a)^(1-λ) = (P₂ a)^λ * (P₁ a)^(1-λ)
   rw [show (1 : ℝ) - (1 - lam) = lam by ring]
   ring
-
-/-- **Chernoff information is symmetric**: `chernoffInfo P₁ P₂ = chernoffInfo P₂ P₁`.
-
-Proof: the image `(log ∘ Z_{P₁,P₂}) '' Icc 0 1` equals `(log ∘ Z_{P₂,P₁}) '' Icc 0 1`
-via the change of variable `λ ↔ 1 - λ` (which is a self-bijection on `Icc 0 1`). -/
-theorem chernoffInfo_symm (P₁ P₂ : α → ℝ) :
-    chernoffInfo P₁ P₂ = chernoffInfo P₂ P₁ := by
-  unfold chernoffInfo
-  congr 1
-  -- Show the two images are equal (under the same sInf).
-  refine congrArg sInf ?_
-  apply Set.eq_of_subset_of_subset
-  · rintro y ⟨lam, hlam, rfl⟩
-    refine ⟨1 - lam, ⟨by linarith [hlam.2], by linarith [hlam.1]⟩, ?_⟩
-    simp only
-    rw [← chernoffZSum_swap P₁ P₂ lam]
-  · rintro y ⟨lam, hlam, rfl⟩
-    refine ⟨1 - lam, ⟨by linarith [hlam.2], by linarith [hlam.1]⟩, ?_⟩
-    simp only
-    rw [← chernoffZSum_swap P₂ P₁ lam]
 
 /-! ## Phase D — Hoeffding tradeoff exponent (Tier 0: 定義 + min 達成性) -/
 

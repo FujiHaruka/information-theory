@@ -103,10 +103,6 @@ omit [DecidableEq α] [MeasurableSingletonClass α] in
 noncomputable def tvNorm (P Q : Measure α) : ℝ :=
   (1/2) * ∑ x : α, |P.real {x} - Q.real {x}|
 
-omit [DecidableEq α] [MeasurableSingletonClass α] in
-lemma tvNorm_nonneg (P Q : Measure α) : 0 ≤ tvNorm P Q := by
-  unfold tvNorm
-  positivity
 
 omit [DecidableEq α] in
 /-- **Pinsker 不等式 (弱形)**: 有限 alphabet 上の `P ≪ Q` 確率測度について

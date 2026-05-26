@@ -88,11 +88,6 @@ lemma waterFillingPower_sum_continuous {n : ℕ} (N : Fin n → ℝ≥0) :
   intro i _
   exact waterFillingPower_continuous_in_ν N i
 
-/-- The water-filling total sum is monotone in `ν`. -/
-lemma waterFillingPower_sum_mono {n : ℕ} (N : Fin n → ℝ≥0) {ν₁ ν₂ : ℝ}
-    (h : ν₁ ≤ ν₂) :
-    ∑ i : Fin n, waterFillingPower ν₁ N i ≤ ∑ i : Fin n, waterFillingPower ν₂ N i :=
-  Finset.sum_le_sum (fun i _ => waterFillingPower_mono_in_ν N i h)
 
 /-- At `ν ≤ min_i N_i`, every coordinate is inactive, so the sum is `0`. -/
 lemma waterFillingPower_sum_eq_zero_of_le_min {n : ℕ} (N : Fin n → ℝ≥0)
@@ -229,170 +224,12 @@ def WaterFillingOptimalityCertificate {n : ℕ} (P : ℝ) (N : Fin n → ℝ≥0
     ∑ i : Fin n, (1/2) * Real.log (1 + P' i / (N i : ℝ))
       ≤ ∑ i : Fin n, (1/2) * Real.log (1 + waterFillingPower ν N i / (N i : ℝ))
 
-/-- **L-WF2 reduction**: an optimality certificate yields the
-`IsWaterFillingOptimal` predicate. (The certificate is *defined* as the
-predicate, so the reduction is by definitional unfolding.) -/
-theorem isWaterFillingOptimal_of_certificate {n : ℕ}
-    (P : ℝ) (N : Fin n → ℝ≥0) (ν : ℝ)
-    (h_cert : WaterFillingOptimalityCertificate P N ν) :
-    IsWaterFillingOptimal P N ν :=
-  h_cert
-
-/-- **L-WF2 reverse reduction**: the `IsWaterFillingOptimal` predicate yields
-an optimality certificate. (Both are the same proposition.) -/
-theorem certificate_of_isWaterFillingOptimal {n : ℕ}
-    (P : ℝ) (N : Fin n → ℝ≥0) (ν : ℝ)
-    (h_opt : IsWaterFillingOptimal P N ν) :
-    WaterFillingOptimalityCertificate P N ν :=
-  h_opt
 
 /-! ## Phase D — `ParallelGaussianChainRuleBundle` (L-PG1 retreat) -/
 
-/-- **L-PG1 chain rule bundle** (chain-rule retreat line).
-
-The per-coordinate AWGN reduction is decomposed into three abstract
-hypotheses that together yield the parallel-capacity = water-filling-sum
-equality:
-
-* `h_capacity_le` — parallel capacity is bounded above by the per-coordinate
-  water-filling sum (memoryless chain rule + per-coord AWGN converse).
-* `h_capacity_ge` — parallel capacity is bounded below by the per-coordinate
-  water-filling sum (water-filling product Gaussian as input law).
-* `h_certificate` — antisymmetry closure (`a ≤ b ∧ b ≤ a → a = b`).
-
-⚠️ OPEN — conclusion-as-hypothesis: the bundle is just the capacity-formula
-equality split into its two inequalities (`cap ≤ sum ∧ sum ≤ cap`), so satisfying
-it is equivalent to assuming the L-PG1 per-coordinate reduction outright. Neither
-inequality is proved here; `isParallelGaussianPerCoordReduction_of_bundle` only
-re-assembles them via `le_antisymm`. The genuine bound needs the memoryless chain
-rule + per-coord AWGN converse/achievability (continuous AEP / sphere-shell
-volume) machinery absent from Mathlib. Deferred to
-`parallel-gaussian-chain-rule-plan.md`. -/
-def ParallelGaussianChainRuleBundle {n : ℕ} (P : ℝ)
-    (N : Fin n → ℝ≥0) (h_meas : IsParallelAwgnChannelMeasurable N)
-    (h_parallel_meas : IsParallelGaussianKernelMeasurable N) (ν : ℝ) : Prop :=
-  (parallelGaussianCapacity P N h_meas h_parallel_meas
-      ≤ ∑ i : Fin n, (1/2) * Real.log (1 + waterFillingPower ν N i / (N i : ℝ))) ∧
-  (∑ i : Fin n, (1/2) * Real.log (1 + waterFillingPower ν N i / (N i : ℝ))
-      ≤ parallelGaussianCapacity P N h_meas h_parallel_meas)
-
-/-- **L-PG1 reduction**: the chain rule bundle yields the
-`IsParallelGaussianPerCoordReduction` predicate, via antisymmetry of `≤`.
-
-**Superseded** by `parallel_gaussian_capacity_formula_minimal`
-(`ParallelGaussianPerCoordRegularity.lean`), which derives the capacity
-equality from honest pieces (the regularity bundle's 3 fields) instead of
-from a conclusion-as-hypothesis bundle. Retained for backward compatibility
-and history record.
-
-`@audit:superseded-by(parallel-gaussian-l-pg1-discharge)` -/
-theorem isParallelGaussianPerCoordReduction_of_bundle {n : ℕ}
-    (P : ℝ) (N : Fin n → ℝ≥0) (h_meas : IsParallelAwgnChannelMeasurable N)
-    (h_parallel_meas : IsParallelGaussianKernelMeasurable N) (ν : ℝ)
-    (h_bundle :
-        ParallelGaussianChainRuleBundle P N h_meas h_parallel_meas ν) :
-    IsParallelGaussianPerCoordReduction P N h_meas h_parallel_meas ν :=
-  le_antisymm h_bundle.1 h_bundle.2
-
-/-- **L-PG1 reverse reduction**: the `IsParallelGaussianPerCoordReduction`
-predicate yields the chain rule bundle.
-
-**Superseded** by `parallel_gaussian_capacity_formula_minimal`
-(`ParallelGaussianPerCoordRegularity.lean`), which obviates the bundle
-phrasing entirely (no chain-rule bundle is consumed, the capacity equality
-is derived directly from the regularity bundle). Retained for backward
-compatibility.
-
-`@audit:superseded-by(parallel-gaussian-l-pg1-discharge)` -/
-theorem bundle_of_isParallelGaussianPerCoordReduction {n : ℕ}
-    (P : ℝ) (N : Fin n → ℝ≥0) (h_meas : IsParallelAwgnChannelMeasurable N)
-    (h_parallel_meas : IsParallelGaussianKernelMeasurable N) (ν : ℝ)
-    (h_red :
-        IsParallelGaussianPerCoordReduction P N h_meas h_parallel_meas ν) :
-    ParallelGaussianChainRuleBundle P N h_meas h_parallel_meas ν :=
-  ⟨h_red.le, h_red.ge⟩
 
 /-! ## Phase E — Combined capacity formula (L-WF1 discharged + L-WF2/L-PG1
 certificates) -/
 
-/-- **Parallel Gaussian capacity formula (L-WF1 discharged + L-WF2/L-PG1
-certificate forms)**.
-
-Combines `exists_waterFillingKKT_of_pos` with the optimality certificate +
-chain rule bundle to deliver the full capacity formula. The signature has
-*two* abstract hypotheses (certificate + bundle) instead of three predicate
-arguments; in particular, the water-level `ν` is now produced internally by
-existence (L-WF1 discharged).
-
-**Superseded** by `parallel_gaussian_capacity_formula_minimal`
-(`ParallelGaussianPerCoordRegularity.lean`): L-PG1 has been genuinely
-discharged via the regularity-bundle constructor
-`isParallelGaussianPerCoordRegularity_of_pieces`, so the new headline
-consumes only honest pieces (multivariate channel↔RV MI decomposition +
-per-coord AWGN bridge + global P-upper bound) instead of the
-conclusion-as-hypothesis `ParallelGaussianChainRuleBundle`. Continuous AEP
-is *not* required (the capacity is the information capacity, evaluated by
-a sup-sandwich, see `ParallelGaussianPerCoord.lean:303`). This wrapper is
-kept for backward compatibility / history record.
-
-`@audit:superseded-by(parallel-gaussian-l-pg1-discharge)` -/
-theorem parallel_gaussian_capacity_formula_KKT_discharged {n : ℕ}
-    (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
-    (h_meas : IsParallelAwgnChannelMeasurable N)
-    (h_for_cert : ∀ ν : ℝ, IsWaterFillingKKT P N ν →
-        WaterFillingOptimalityCertificate P N ν)
-    (h_for_bundle : ∀ ν : ℝ, IsWaterFillingKKT P N ν →
-        ParallelGaussianChainRuleBundle P N h_meas
-          (isParallelGaussianKernelMeasurable N) ν) :
-    ∃ ν : ℝ, IsWaterFillingKKT P N ν ∧
-      parallelGaussianCapacity P N h_meas (isParallelGaussianKernelMeasurable N)
-        = ∑ i : Fin (n + 1),
-            (1/2) * Real.log (1 + waterFillingPower ν N i / (N i : ℝ)) := by
-  obtain ⟨ν, hν_kkt⟩ := exists_waterFillingKKT_of_pos P hP N
-  refine ⟨ν, hν_kkt, ?_⟩
-  -- L-WF2 is independently derivable from the certificate (kept here for
-  -- posture documentation), but the body chain does not consume it: the
-  -- bundle yields the conclusion equality directly via `le_antisymm`.
-  have _h_unique : IsWaterFillingOptimal P N ν :=
-    isWaterFillingOptimal_of_certificate P N ν (h_for_cert ν hν_kkt)
-  -- Chain rule bundle → conclusion equality (L-PG1 load-bearing-hyp via the
-  -- bundle, which IS `cap ≤ sum ∧ sum ≤ cap`; `_of_bundle` runs `le_antisymm`).
-  -- `IsParallelGaussianPerCoordReduction` def-unfolds to the equality, so the
-  -- predicate is accepted directly as the goal.
-  exact isParallelGaussianPerCoordReduction_of_bundle P N h_meas
-    (isParallelGaussianKernelMeasurable N) ν (h_for_bundle ν hν_kkt)
-
-/-- **Active-set form (L-WF1 discharged + L-WF2/L-PG1 certificate forms)**.
-
-**Superseded** by `parallel_gaussian_capacity_formula_minimal`
-(`ParallelGaussianPerCoordRegularity.lean`) for the L-PG1 piece: the
-chain-rule bundle hypothesis is replaced by the honest pieces of the
-regularity bundle (multivariate channel↔RV MI decomposition + per-coord
-AWGN bridge + global P-upper bound). For the active-set rewrite of the sum,
-compose `parallel_gaussian_capacity_formula_minimal` with
-`parallel_gaussian_capacity_sum_active`. Retained for backward compatibility.
-
-Cover-Thomas Ch.9.4 Theorem 9.4.1 alternative form.
-
-`@audit:superseded-by(parallel-gaussian-l-pg1-discharge)` -/
-theorem parallel_gaussian_capacity_active_form_KKT_discharged {n : ℕ}
-    (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0)
-    (hN : ∀ i, (N i : ℝ) ≠ 0) (hN_pos : ∀ i, 0 < (N i : ℝ))
-    (h_meas : IsParallelAwgnChannelMeasurable N)
-    (h_for_cert : ∀ ν : ℝ, IsWaterFillingKKT P N ν →
-        WaterFillingOptimalityCertificate P N ν)
-    (h_for_bundle : ∀ ν : ℝ, IsWaterFillingKKT P N ν →
-        ParallelGaussianChainRuleBundle P N h_meas
-          (isParallelGaussianKernelMeasurable N) ν) :
-    ∃ ν : ℝ, IsWaterFillingKKT P N ν ∧
-      parallelGaussianCapacity P N h_meas (isParallelGaussianKernelMeasurable N)
-        = ∑ i ∈ waterFillingActiveSet ν N,
-            (1/2) * Real.log (ν / (N i : ℝ)) := by
-  obtain ⟨ν, hν_kkt, h_eq⟩ :=
-    parallel_gaussian_capacity_formula_KKT_discharged P hP N hN h_meas
-      h_for_cert h_for_bundle
-  refine ⟨ν, hν_kkt, ?_⟩
-  rw [h_eq]
-  exact parallel_gaussian_capacity_sum_active ν N hN_pos
 
 end InformationTheory.Shannon.ParallelGaussian

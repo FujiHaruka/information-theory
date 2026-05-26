@@ -85,13 +85,6 @@ noncomputable def differentialEntropyRV
     (μ : Measure Ω) (X : Ω → ℝ) : ℝ :=
   Common2026.Shannon.differentialEntropy (μ.map X)
 
-/-- `differentialEntropyRV` は定義通り `differentialEntropy (μ.map X)` に展開できる。 -/
-lemma differentialEntropyRV_def
-    {Ω : Type*} [MeasurableSpace Ω]
-    (μ : Measure Ω) (X : Ω → ℝ) :
-    differentialEntropyRV μ X = Common2026.Shannon.differentialEntropy (μ.map X) :=
-  rfl
-
 /-! ## Notation
 
 教科書 (Cover & Thomas) の `H(X)`, `H(X | Y)`, `I(X ; Y)`, `I(X ; Y | Z)`,
@@ -204,27 +197,7 @@ theorem entropy_nonneg_rv
     0 ≤ entropy μ X :=
   entropy_nonneg μ X hX
 
-/-- `H(X) ≤ log |α|` (typed RV form): `entropy_le_log_card` の RV-form alias.
-
-Cover-Thomas (2.6.4) "Maximum entropy of a discrete random variable on a finite
-alphabet is attained by the uniform distribution." -/
-theorem entropy_le_log_card_rv
-    {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
-    [MeasurableSpace α] [MeasurableSingletonClass α]
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (X : Ω → α) (hX : Measurable X) :
-    entropy μ X ≤ Real.log (Fintype.card α) :=
-  entropy_le_log_card μ X hX
-
 /-! ### Mutual information -/
-
-/-- `I(X; Y) ≥ 0` (typed RV form): `mutualInfo_nonneg` の RV-form alias. -/
-theorem mutualInfo_nonneg_rv
-    {α : Type*} [MeasurableSpace α]
-    {β : Type*} [MeasurableSpace β]
-    (μ : Measure Ω) (X : Ω → α) (Y : Ω → β) :
-    0 ≤ mutualInfo μ X Y :=
-  mutualInfo_nonneg μ X Y
 
 /-- `I(X; Y) = I(Y; X)` (typed RV form): `mutualInfo_comm` の RV-form alias.
 
@@ -237,56 +210,6 @@ theorem mutualInfo_comm_rv
     (hX : Measurable X) (hY : Measurable Y) :
     mutualInfo μ X Y = mutualInfo μ Y X :=
   mutualInfo_comm μ X Y hX hY
-
-/-- `I(X; Y) = 0 ↔ X ⟂ Y` (typed RV form). -/
-theorem mutualInfo_eq_zero_iff_indep_rv
-    {α : Type*} [MeasurableSpace α]
-    {β : Type*} [MeasurableSpace β]
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (X : Ω → α) (Y : Ω → β)
-    (hX : Measurable X) (hY : Measurable Y) :
-    mutualInfo μ X Y = 0 ↔ IndepFun X Y μ :=
-  mutualInfo_eq_zero_iff_indep μ X Y hX hY
-
-/-! ### Conditional mutual information -/
-
-/-- `I(X; Y | Z) ≥ 0` (typed RV form): `condMutualInfo_nonneg` の RV-form alias. -/
-theorem condMutualInfo_nonneg_rv
-    {α : Type*} [MeasurableSpace α] [StandardBorelSpace α] [Nonempty α]
-    {β : Type*} [MeasurableSpace β] [StandardBorelSpace β] [Nonempty β]
-    {γ : Type*} [MeasurableSpace γ]
-    (μ : Measure Ω) [IsFiniteMeasure μ]
-    (X : Ω → α) (Y : Ω → β) (Z : Ω → γ) :
-    0 ≤ condMutualInfo μ X Y Z :=
-  condMutualInfo_nonneg μ X Y Z
-
-/-- `I(X; Y | Z) = I(Y; X | Z)` (typed RV form). -/
-theorem condMutualInfo_comm_rv
-    {α : Type*} [MeasurableSpace α] [StandardBorelSpace α] [Nonempty α]
-    {β : Type*} [MeasurableSpace β] [StandardBorelSpace β] [Nonempty β]
-    {γ : Type*} [MeasurableSpace γ]
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (X : Ω → α) (Y : Ω → β) (Z : Ω → γ)
-    (hX : Measurable X) (hY : Measurable Y) (hZ : Measurable Z) :
-    condMutualInfo μ X Y Z = condMutualInfo μ Y X Z :=
-  condMutualInfo_comm μ X Y Z hX hY hZ
-
-/-! ### Chain rule -/
-
-/-- Chain rule (typed RV form):
-`I((Z, X); Y) = I(Z; Y) + I(X; Y | Z)`.
-
-Cover-Thomas (2.5.2) "Chain rule for mutual information." -/
-theorem mutualInfo_chain_rule_rv
-    {α : Type*} [MeasurableSpace α] [StandardBorelSpace α] [Nonempty α]
-    {β : Type*} [MeasurableSpace β] [StandardBorelSpace β] [Nonempty β]
-    {γ : Type*} [MeasurableSpace γ]
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (X : Ω → α) (Y : Ω → β) (Z : Ω → γ)
-    (hX : Measurable X) (hY : Measurable Y) (hZ : Measurable Z) :
-    mutualInfo μ (fun ω => (Z ω, X ω)) Y
-      = mutualInfo μ Z Y + condMutualInfo μ X Y Z :=
-  mutualInfo_chain_rule μ X Y Z hX hY hZ
 
 /-! ### Data processing inequality -/
 
@@ -303,25 +226,6 @@ theorem mutualInfo_le_of_postprocess_rv
     {f : β → γ} (hf : Measurable f) :
     mutualInfo μ X (f ∘ Y) ≤ mutualInfo μ X Y :=
   mutualInfo_le_of_postprocess μ X Y hX hY hf
-
-/-! ### KL divergence (typed RV form) -/
-
-/-- `D(X ‖ X) = 0` (typed RV form): KL of a measure with itself is zero.
-
-`[IsFiniteMeasure μ]` で `μ.map X` も finite (→ SigmaFinite) を経由。 -/
-@[simp] theorem klDivRV_self
-    {α : Type*} [MeasurableSpace α]
-    (μ : Measure Ω) [IsFiniteMeasure μ]
-    (X : Ω → α) :
-    klDivRV μ X X = 0 := by
-  unfold klDivRV
-  exact klDiv_self _
-
-/-- `D(X ‖ Y) ≥ 0` (typed RV form): signature 上自明 (`ℝ≥0∞` 値) だが教科書対応のため publish. -/
-theorem klDivRV_nonneg
-    {α : Type*} [MeasurableSpace α]
-    (μ : Measure Ω) (X Y : Ω → α) :
-    0 ≤ klDivRV μ X Y := bot_le
 
 end MainLemmasRV
 

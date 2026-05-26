@@ -111,33 +111,12 @@ lemma expFamilyDist_pos [Nonempty α]
   rw [show expFamilyDist f lam = gibbsPmf f lam from expFamilyDist_eq_gibbsPmf f lam]
   exact gibbsPmf_pos f lam x
 
-/-- `expFamilyDist` is pointwise non-negative. -/
-lemma expFamilyDist_nonneg [Nonempty α]
-    (f : Fin k → α → ℝ) (lam : Fin k → ℝ) (x : α) :
-    0 ≤ expFamilyDist f lam x :=
-  (expFamilyDist_pos f lam x).le
-
-/-- The total mass of `expFamilyDist` is `1`. -/
-lemma expFamilyDist_sum_eq_one [Nonempty α]
-    (f : Fin k → α → ℝ) (lam : Fin k → ℝ) :
-    ∑ x, expFamilyDist f lam x = 1 := by
-  rw [show expFamilyDist f lam = gibbsPmf f lam from expFamilyDist_eq_gibbsPmf f lam]
-  exact gibbsPmf_sum_eq_one f lam
-
 /-- `expFamilyDist λ f ∈ stdSimplex ℝ α`. -/
 lemma expFamilyDist_mem_stdSimplex [Nonempty α]
     (f : Fin k → α → ℝ) (lam : Fin k → ℝ) :
     expFamilyDist f lam ∈ stdSimplex ℝ α := by
   rw [show expFamilyDist f lam = gibbsPmf f lam from expFamilyDist_eq_gibbsPmf f lam]
   exact gibbsPmf_mem_stdSimplex f lam
-
-/-- Closed form for `log (expFamilyDist λ f x)`: the canonical-form exponent. -/
-lemma log_expFamilyDist [Nonempty α]
-    (f : Fin k → α → ℝ) (lam : Fin k → ℝ) (x : α) :
-    Real.log (expFamilyDist f lam x)
-      = (∑ i, lam i * f i x) - logPartitionψ f lam := by
-  unfold expFamilyDist
-  rw [Real.log_exp]
 
 /-! ## Section 3 — KKT solution packaging -/
 
@@ -332,32 +311,6 @@ lemma KKT_moment_match_iff_gibbs_moment_match [Nonempty α]
 
 /-! ## Section 9 — Stationarity expansion: log-pmf is affine in features -/
 
-/-- **Stationarity / log-linearity of the exponential family**.
-The log of `expFamilyDist f λ x` is an affine function of `λ`'s inner product
-with `f x`:
-
-  log p*(x) = ⟨λ, f x⟩ - ψ(λ).
-
-This is the KKT *stationarity equation* in `p`: it says the Lagrangian gradient
-`∂L/∂p(x) = -log p(x) - 1 + ⟨λ, f x⟩ - β = 0` is satisfied (the normalization
-constant `1 + β` shows up as `ψ(λ)`). The lemma is restating `log_expFamilyDist`
-in textbook-canonical form. -/
-theorem log_expFamilyDist_eq_affine [Nonempty α]
-    (f : Fin k → α → ℝ) (lam : Fin k → ℝ) (x : α) :
-    Real.log (expFamilyDist f lam x)
-      = (∑ i, lam i * f i x) - logPartitionψ f lam :=
-  log_expFamilyDist f lam x
-
-/-- The KKT stationarity equation, rewritten with `ψ(λ)` moved to the right:
-
-  log p*(x) + ψ(λ) = ⟨λ, f x⟩. -/
-theorem log_expFamilyDist_add_logPartitionψ [Nonempty α]
-    (f : Fin k → α → ℝ) (lam : Fin k → ℝ) (x : α) :
-    Real.log (expFamilyDist f lam x) + logPartitionψ f lam
-      = ∑ i, lam i * f i x := by
-  rw [log_expFamilyDist f lam x]
-  ring
-
 /-! ## Section 10 — Tier 3 stretch: zero-multiplier reduction = uniform -/
 
 /-- **KKT zero-multiplier reduction**: `expFamilyDist f 0 = expFamilyDist g 0`
@@ -382,18 +335,5 @@ lemma expFamilyDist_lam_zero_eq [Nonempty α]
   -- Goal: exp (0 - log (Fintype.card α : ℝ)) = 1 / Fintype.card α
   have hN_pos : 0 < (Fintype.card α : ℝ) := by exact_mod_cast Fintype.card_pos
   rw [zero_sub, Real.exp_neg, Real.exp_log hN_pos, one_div]
-
-/-- **`logPartitionψ` at `λ = 0`** is `log (Fintype.card α)` (the uniform-case
-degenerate ψ value). -/
-lemma logPartitionψ_lam_zero [Nonempty α] (f : Fin k → α → ℝ) :
-    logPartitionψ f (fun _ => (0 : ℝ)) = Real.log (Fintype.card α) := by
-  unfold logPartitionψ gibbsZ
-  have h_each : ∀ y : α,
-      Real.exp (∑ i, (fun _ : Fin k => (0 : ℝ)) i * f i y) = 1 := by
-    intro y
-    have h_sum : (∑ i, (fun _ : Fin k => (0 : ℝ)) i * f i y) = 0 := by simp
-    rw [h_sum, Real.exp_zero]
-  rw [Finset.sum_congr rfl (fun y _ => h_each y)]
-  rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, mul_one]
 
 end InformationTheory.Shannon.MaxEntropyConstrainedKKT

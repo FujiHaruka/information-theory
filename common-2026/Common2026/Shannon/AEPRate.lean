@@ -33,14 +33,6 @@ noncomputable def pmfLogBound (μ : Measure Ω) (Xs : ℕ → Ω → α) : ℝ :
   Finset.univ.sup' Finset.univ_nonempty (fun a : α => |pmfLog μ Xs a|)
 
 omit [DecidableEq α] [MeasurableSingletonClass α] in
-lemma pmfLogBound_nonneg (μ : Measure Ω) (Xs : ℕ → Ω → α) :
-    0 ≤ pmfLogBound μ Xs := by
-  unfold pmfLogBound
-  obtain ⟨a₀⟩ := (inferInstance : Nonempty α)
-  refine le_trans (abs_nonneg (pmfLog μ Xs a₀)) ?_
-  exact Finset.le_sup' (f := fun a : α => |pmfLog μ Xs a|) (Finset.mem_univ a₀)
-
-omit [DecidableEq α] [MeasurableSingletonClass α] in
 lemma abs_pmfLog_le_bound (μ : Measure Ω) (Xs : ℕ → Ω → α) (a : α) :
     |pmfLog μ Xs a| ≤ pmfLogBound μ Xs := by
   unfold pmfLogBound
@@ -565,10 +557,6 @@ that the existential is collapsed to the explicit `def`. -/
 proof of `typicalSet_prob_ge_of_rate`. -/
 noncomputable def typicalSetMinN (V η ε : ℝ) : ℕ :=
   max 1 (Nat.ceil (V / (η * ε ^ 2)) + 1)
-
-lemma typicalSetMinN_pos (V η ε : ℝ) : 0 < typicalSetMinN V η ε := by
-  unfold typicalSetMinN
-  exact lt_of_lt_of_le Nat.zero_lt_one (le_max_left _ _)
 
 /-- Monotonicity in `V` (with `η, ε > 0`): a larger variance upper bound only
 makes `N` larger. -/

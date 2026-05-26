@@ -88,11 +88,6 @@ lemma mem_jointStronglyTypicalSet_iff
       (fun i => (x i, y i)) ∈
         stronglyTypicalSet μ (jointSequence Xs Ys) n ε := Iff.rfl
 
-/-- The joint strongly typical set is measurable (finite ambient). -/
-theorem measurableSet_jointStronglyTypicalSet
-    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) (n : ℕ) (ε : ℝ) :
-    MeasurableSet (jointStronglyTypicalSet μ Xs Ys n ε) :=
-  (Set.toFinite _).measurableSet
 
 omit [MeasurableSingletonClass α] [MeasurableSingletonClass β] in
 /-- The joint strongly typical set is finite. -/
@@ -100,207 +95,12 @@ lemma jointStronglyTypicalSet_finite
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) (n : ℕ) (ε : ℝ) :
     (jointStronglyTypicalSet μ Xs Ys n ε).Finite := Set.toFinite _
 
-/-- **Strong ⟹ weak joint typicality (joint axis only).** If
-`(x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε` and `ε · logSumAbs ≤ ε'`,
-then the joint condition of `jointlyTypicalSet` (third conjunct) holds.
-
-NOTE: `jointlyTypicalSet` requires *all three* of X-, Y-, and joint-axis
-typicality. The strongly-typical-joint axis implies the joint axis only;
-to get full `jointlyTypicalSet` membership one additionally needs the X-axis
-and Y-axis weak typicality, which can be derived from the joint strong
-typicality via marginalisation but is deferred. The conclusion here is the
-single joint-axis condition. -/
-lemma jointStronglyTypicalSet_joint_axis_subset
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
-    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    {n : ℕ} (hn : 0 < n) {ε ε' : ℝ}
-    (h_bound : ε * logSumAbs μ (jointSequence Xs Ys) < ε') :
-    ∀ p ∈ jointStronglyTypicalSet μ Xs Ys n ε,
-      (fun i => (p.1 i, p.2 i)) ∈
-        typicalSet μ (jointSequence Xs Ys) n ε' := by
-  intro p hp
-  have hZ : ∀ i, Measurable (jointSequence Xs Ys i) := fun i =>
-    measurable_jointSequence Xs Ys hXs hYs i
-  exact stronglyTypicalSet_subset_typicalSet μ
-    (jointSequence Xs Ys) hZ hn h_bound hp
 
 /-! ## Phase β — Joint strong typicality probability tends to one -/
 
-/-- **Joint strong typicality, AEP form.** For an i.i.d. joint sequence
-`jointSequence Xs Ys` over the product alphabet `α × β`, the probability
-that the block pair `(jointRV Xs n, jointRV Ys n)` lies in
-`jointStronglyTypicalSet μ Xs Ys n ε` tends to `1`. -/
-theorem jointStronglyTypicalSet_prob_tendsto_one
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
-    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hindepZ : Pairwise fun i j =>
-      jointSequence Xs Ys i ⟂ᵢ[μ] jointSequence Xs Ys j)
-    (hidentZ : ∀ i, IdentDistrib (jointSequence Xs Ys i)
-      (jointSequence Xs Ys 0) μ μ)
-    {ε : ℝ} (hε : 0 < ε) :
-    Tendsto
-      (fun n : ℕ => μ {ω | (jointRV Xs n ω, jointRV Ys n ω) ∈
-                            jointStronglyTypicalSet μ Xs Ys n ε})
-      atTop (𝓝 1) := by
-  classical
-  -- Apply stronglyTypicalSet_prob_tendsto_one to the joint sequence.
-  have hZmeas : ∀ i, Measurable (jointSequence Xs Ys i) := fun i =>
-    measurable_jointSequence Xs Ys hXs hYs i
-  have h := stronglyTypicalSet_prob_tendsto_one μ (jointSequence Xs Ys)
-    hZmeas hindepZ hidentZ hε
-  -- h : Tendsto (fun n => μ {ω | jointRV (jointSequence Xs Ys) n ω
-  --                              ∈ stronglyTypicalSet μ (jointSequence Xs Ys) n ε}) atTop (𝓝 1)
-  -- Rewrite events to the (jointRV Xs n ω, jointRV Ys n ω) ∈ jointStronglyTypicalSet form.
-  refine Tendsto.congr (fun n => ?_) h
-  apply congrArg μ
-  ext ω
-  -- The two events coincide because
-  --   jointRV (jointSequence Xs Ys) n ω i = (Xs i ω, Ys i ω) = (jointRV Xs n ω i, jointRV Ys n ω i).
-  show jointRV (jointSequence Xs Ys) n ω ∈ stronglyTypicalSet μ (jointSequence Xs Ys) n ε
-      ↔ (jointRV Xs n ω, jointRV Ys n ω) ∈ jointStronglyTypicalSet μ Xs Ys n ε
-  rw [mem_jointStronglyTypicalSet_iff]
-  -- Both sides are `(fun i => (Xs i ω, Ys i ω)) ∈ stronglyTypicalSet ...`.
-  -- jointRV (jointSequence Xs Ys) n ω i = jointSequence Xs Ys i ω = (Xs i ω, Ys i ω)
-  -- (fun i => (jointRV Xs n ω i, jointRV Ys n ω i)) i = (Xs i ω, Ys i ω)
-  rfl
 
 /-! ## Phase γ — Distortion bridge -/
 
-/-- **Block distortion as a type-count sum.** For any pair `(x, y)`,
-`blockDistortion d n x y = ∑_{a,b} (typeCount (fun i => (x i, y i)) (a, b) / n) · d(a, b)`.
-
-This is the discrete change-of-variables identity: replace the sum over indices
-`i : Fin n` by a sum over alphabet pairs `(a, b)` weighted by the empirical count
-of that pair, using `Finset.sum_fiberwise_of_maps_to'`. -/
-lemma blockDistortion_eq_typeCount_sum
-    (d : DistortionFn α β) {n : ℕ} (x : Fin n → α) (y : Fin n → β) :
-    blockDistortion d n x y
-      = ∑ p : α × β,
-          ((typeCount (fun i => (x i, y i)) p : ℝ) / n)
-            * ((d p.1 p.2 : NNReal) : ℝ) := by
-  classical
-  unfold blockDistortion
-  -- LHS = (1/n) · ∑ i : Fin n, d(x i, y i)
-  -- RHS = ∑ p, (typeCount z p / n) · d(p.1, p.2) where z i = (x i, y i)
-  set z : Fin n → α × β := fun i => (x i, y i) with hz_def
-  set f : α × β → ℝ := fun p => ((d p.1 p.2 : NNReal) : ℝ) with hf_def
-  -- Step 1: ∑ i, d(x i, y i) = ∑ i, f (z i)
-  have h_eq1 : (∑ i : Fin n, ((d (x i) (y i) : NNReal) : ℝ)) = ∑ i : Fin n, f (z i) := rfl
-  rw [h_eq1]
-  -- Step 2: aggregate via fiberwise: ∑ i, f (z i) = ∑ p, (typeCount z p) · f p
-  have h_maps : ∀ i ∈ (Finset.univ : Finset (Fin n)),
-      z i ∈ (Finset.univ : Finset (α × β)) := fun i _ => Finset.mem_univ _
-  have h_fiber := Finset.sum_fiberwise_of_maps_to' (s := (Finset.univ : Finset (Fin n)))
-    (t := (Finset.univ : Finset (α × β))) h_maps f
-  -- h_fiber : ∑ p ∈ univ, ∑ i ∈ univ.filter (z · = p), f p = ∑ i ∈ univ, f (z i)
-  have h_agg : (∑ i : Fin n, f (z i))
-      = ∑ p : α × β, (typeCount z p : ℝ) * f p := by
-    rw [← h_fiber]
-    refine Finset.sum_congr rfl fun p _ => ?_
-    rw [Finset.sum_const, nsmul_eq_mul]
-    rfl
-  rw [h_agg]
-  -- Step 3: (1/n) · ∑ p, (typeCount z p : ℝ) * f p = ∑ p, (typeCount z p / n) * f p
-  rw [Finset.mul_sum]
-  refine Finset.sum_congr rfl fun p _ => ?_
-  ring
-
-/-- **Distortion bridge.** Let `qStar := fun p => (μ.map (jointSequence Xs Ys 0)).real {p}`
-(the law of the joint sequence at index 0). If `(x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε`,
-then the empirical block distortion is `ε · (∑_{p} d(p))`-close to
-`expectedDistortionPmf d qStar`:
-
-  `|blockDistortion d n x y - expectedDistortionPmf d qStar| ≤ ε · ∑_{p} d(p.1, p.2)`. -/
-theorem jointStronglyTypicalSet_implies_distortion_close
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
-    (d : DistortionFn α β) {n : ℕ} {ε : ℝ}
-    (x : Fin n → α) (y : Fin n → β)
-    (hxy : (x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε) :
-    |blockDistortion d n x y
-        - expectedDistortionPmf d
-            (fun p => (μ.map (jointSequence Xs Ys 0)).real {p})|
-      ≤ ε * ∑ p : α × β, ((d p.1 p.2 : NNReal) : ℝ) := by
-  classical
-  set qStar : α × β → ℝ := fun p => (μ.map (jointSequence Xs Ys 0)).real {p} with hqStar_def
-  set z : Fin n → α × β := fun i => (x i, y i) with hz_def
-  -- Rewrite both sides as sums over α × β.
-  rw [blockDistortion_eq_typeCount_sum d x y]
-  -- expectedDistortionPmf d qStar = ∑ a, ∑ b, qStar (a, b) · d(a, b)
-  --                              = ∑ p : α × β, qStar p · d(p.1, p.2)
-  have h_exp_eq : expectedDistortionPmf d qStar
-      = ∑ p : α × β, qStar p * ((d p.1 p.2 : NNReal) : ℝ) := by
-    unfold expectedDistortionPmf
-    rw [← Finset.sum_product']
-    rfl
-  rw [h_exp_eq]
-  -- Combine into a single sum:
-  --   ∑ p, ((typeCount z p / n) - qStar p) · d(p.1, p.2)
-  rw [← Finset.sum_sub_distrib]
-  -- Apply abs ∑ ≤ ∑ abs, then bound each term by ε · |d(p)|.
-  calc |∑ p : α × β,
-          ((typeCount z p : ℝ) / n * ((d p.1 p.2 : NNReal) : ℝ)
-            - qStar p * ((d p.1 p.2 : NNReal) : ℝ))|
-      ≤ ∑ p : α × β,
-          |(typeCount z p : ℝ) / n * ((d p.1 p.2 : NNReal) : ℝ)
-            - qStar p * ((d p.1 p.2 : NNReal) : ℝ)| :=
-        Finset.abs_sum_le_sum_abs _ _
-    _ = ∑ p : α × β,
-          |(typeCount z p : ℝ) / n - qStar p| * ((d p.1 p.2 : NNReal) : ℝ) := by
-          refine Finset.sum_congr rfl fun p _ => ?_
-          rw [← sub_mul, abs_mul, abs_of_nonneg (NNReal.coe_nonneg _)]
-    _ ≤ ∑ p : α × β, ε * ((d p.1 p.2 : NNReal) : ℝ) := by
-          refine Finset.sum_le_sum fun p _ => ?_
-          -- |typeCount z p / n - qStar p| ≤ ε from hxy
-          have h_strong : ∀ a : α × β,
-              |(typeCount z a : ℝ) / n - qStar a| ≤ ε := by
-            rw [mem_jointStronglyTypicalSet_iff] at hxy
-            rw [mem_stronglyTypicalSet_iff] at hxy
-            intro a
-            exact hxy a
-          exact mul_le_mul_of_nonneg_right (h_strong p) (NNReal.coe_nonneg _)
-    _ = ε * ∑ p : α × β, ((d p.1 p.2 : NNReal) : ℝ) := by
-          rw [← Finset.mul_sum]
-
-/-- **Strongly typical ⊆ distortion typical** (under appropriate slack).
-If `(x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε` and the joint-distortion
-expectation under `μ` equals the pmf-form expectation, then
-`(x, y) ∈ distortionTypicalSet μ Xs Ys d n ε' δ` provided
-`ε · (∑_{p} d(p)) ≤ δ` and the joint axis weak-typicality follows.
-
-This is the "γ.4" wrap-up. We need TWO inclusions:
-
-1. the joint-axis weak typicality (from `jointStronglyTypicalSet_joint_axis_subset`);
-2. the X-axis and Y-axis weak typicality (deferred — strong-marginal implication);
-3. the distortion bound (`jointStronglyTypicalSet_implies_distortion_close`).
-
-For Phase γ MVP we provide ONLY the distortion bound conclusion. The
-inclusion into `distortionTypicalSet` (which packages it with `jointlyTypicalSet`
-membership) is deferred to Phase δ, where we will state the result in the
-strong-typicality form directly (skipping the weak `jointlyTypicalSet`
-intermediate). -/
-theorem jointStronglyTypicalSet_implies_distortion_le
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
-    (d : DistortionFn α β) {n : ℕ} {ε δ : ℝ}
-    (hε : 0 ≤ ε)
-    (h_slack : ε * ∑ p : α × β, ((d p.1 p.2 : NNReal) : ℝ) ≤ δ)
-    (x : Fin n → α) (y : Fin n → β)
-    (hxy : (x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε) :
-    blockDistortion d n x y
-      ≤ expectedDistortionPmf d
-          (fun p => (μ.map (jointSequence Xs Ys 0)).real {p}) + δ := by
-  have h_bound := jointStronglyTypicalSet_implies_distortion_close
-    μ Xs Ys d x y hxy
-  -- |A - B| ≤ ε · S ≤ δ ⟹ A ≤ B + δ
-  have h_abs : blockDistortion d n x y
-        - expectedDistortionPmf d
-            (fun p => (μ.map (jointSequence Xs Ys 0)).real {p})
-      ≤ ε * ∑ p : α × β, ((d p.1 p.2 : NNReal) : ℝ) :=
-    le_trans (le_abs_self _) h_bound
-  linarith
 
 /-! ## Phase δ — Strong-typical independent probability lower bound -/
 
@@ -800,89 +600,9 @@ theorem jointStronglyTypicalLossyEncoder_spec_of_exists
   rw [dif_pos h]
   exact Classical.choose_spec h
 
-/-- If no strong-JTS match exists for `x`, the strong encoder returns the fallback `⟨0, hM⟩`. -/
-theorem jointStronglyTypicalLossyEncoder_spec_of_not_exists
-    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
-    {M n : ℕ} (hM : 0 < M) (ε : ℝ) (c : Codebook M n β)
-    (x : Fin n → α)
-    (h : ¬ ∃ m : Fin M, (x, c m) ∈ jointStronglyTypicalSet μ Xs Ys n ε) :
-    jointStronglyTypicalLossyEncoder μ Xs Ys hM ε c x = ⟨0, hM⟩ := by
-  unfold jointStronglyTypicalLossyEncoder
-  exact dif_neg h
 
 /-! ## Phase S3 — `jointStronglyTypicalSet ⊆ jointlyTypicalSet (widened)` and bridge -/
 
-/-- **Strong JTS ⊆ Weak JTS (with widened slack)**. If `(x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε`
-and the widening factors `(Fintype.card β)·ε · L_X < ε'`,
-`(Fintype.card α)·ε · L_Y < ε'`, and `ε · L_Z < ε'` hold, then
-`(x, y) ∈ jointlyTypicalSet μ Xs Ys n ε'`. -/
-lemma jointStronglyTypicalSet_subset_jointlyTypicalSet
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
-    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hmarg_X : (μ.map (jointSequence Xs Ys 0)).map Prod.fst = μ.map (Xs 0))
-    (hmarg_Y : (μ.map (jointSequence Xs Ys 0)).map Prod.snd = μ.map (Ys 0))
-    {n : ℕ} (hn : 0 < n) {ε ε' : ℝ} (hε_nn : 0 ≤ ε)
-    (h_boundX : (Fintype.card β : ℝ) * ε * logSumAbs μ Xs < ε')
-    (h_boundY : (Fintype.card α : ℝ) * ε * logSumAbs μ Ys < ε')
-    (h_boundZ : ε * logSumAbs μ (jointSequence Xs Ys) < ε')
-    (x : Fin n → α) (y : Fin n → β)
-    (hxy : (x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε) :
-    (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε' := by
-  -- Strong joint ⟹ Strong X (slack |β|·ε) ⟹ Weak X (slack < ε').
-  have hxX_strong : x ∈ stronglyTypicalSet μ Xs n ((Fintype.card β : ℝ) * ε) :=
-    jointStronglyTypicalSet_implies_X_stronglyTypical μ Xs Ys hXs hYs hmarg_X
-      hn hε_nn x y hxy
-  have hxX_weak : x ∈ typicalSet μ Xs n ε' := by
-    have h_b : (Fintype.card β : ℝ) * ε * logSumAbs μ Xs < ε' := h_boundX
-    exact stronglyTypicalSet_subset_typicalSet μ Xs hXs hn h_b hxX_strong
-  -- Strong joint ⟹ Strong Y (slack |α|·ε) ⟹ Weak Y (slack < ε').
-  have hyY_strong : y ∈ stronglyTypicalSet μ Ys n ((Fintype.card α : ℝ) * ε) :=
-    jointStronglyTypicalSet_implies_Y_stronglyTypical μ Xs Ys hXs hYs hmarg_Y
-      hn hε_nn x y hxy
-  have hyY_weak : y ∈ typicalSet μ Ys n ε' :=
-    stronglyTypicalSet_subset_typicalSet μ Ys hYs hn h_boundY hyY_strong
-  -- Strong joint ⟹ Weak joint axis (existing `jointStronglyTypicalSet_joint_axis_subset`).
-  have hxy_joint_weak : (fun i => (x i, y i)) ∈ typicalSet μ (jointSequence Xs Ys) n ε' :=
-    jointStronglyTypicalSet_joint_axis_subset μ Xs Ys hXs hYs hn h_boundZ (x, y) hxy
-  -- Combine all three.
-  rw [InformationTheory.Shannon.ChannelCoding.mem_jointlyTypicalSet_iff]
-  exact ⟨hxX_weak, hyY_weak, hxy_joint_weak⟩
-
-/-- **Strong JTS ⟹ distortionTypicalSet (widened)** — Phase S3 main bridge.
-Combines Phase γ (distortion close) with Phase B (`distortionTypicalSet` definition).
-The slack `ε'` widens to `max(|β|·ε·L_X, |α|·ε·L_Y, ε·L_Z) + tiny` to cross
-the strong↔weak boundary; `δ_typ ≥ ε · D_max` ensures the distortion constraint
-slot is filled by Phase γ. -/
-theorem jointStronglyTypicalSet_subset_distortionTypicalSet
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
-    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (hmarg_X : (μ.map (jointSequence Xs Ys 0)).map Prod.fst = μ.map (Xs 0))
-    (hmarg_Y : (μ.map (jointSequence Xs Ys 0)).map Prod.snd = μ.map (Ys 0))
-    (d : DistortionFn α β) {n : ℕ} (hn : 0 < n) {ε ε' δ_typ : ℝ} (hε_nn : 0 ≤ ε)
-    (h_boundX : (Fintype.card β : ℝ) * ε * logSumAbs μ Xs < ε')
-    (h_boundY : (Fintype.card α : ℝ) * ε * logSumAbs μ Ys < ε')
-    (h_boundZ : ε * logSumAbs μ (jointSequence Xs Ys) < ε')
-    (h_slack : ε * ∑ p : α × β, ((d p.1 p.2 : NNReal) : ℝ) ≤ δ_typ)
-    (h_dist_eq : expectedDistortionPmf d
-        (fun p => (μ.map (jointSequence Xs Ys 0)).real {p})
-      = expectedJointDistortion μ (Xs 0) (Ys 0) d)
-    (x : Fin n → α) (y : Fin n → β)
-    (hxy : (x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε) :
-    (x, y) ∈ distortionTypicalSet μ Xs Ys d n ε' δ_typ := by
-  rw [mem_distortionTypicalSet_iff]
-  refine ⟨?_, ?_⟩
-  · -- Joint weak typicality via the previous lemma.
-    exact jointStronglyTypicalSet_subset_jointlyTypicalSet μ Xs Ys hXs hYs
-      hmarg_X hmarg_Y hn hε_nn h_boundX h_boundY h_boundZ x y hxy
-  · -- Distortion via Phase γ + h_dist_eq.
-    have h_dist : blockDistortion d n x y
-        ≤ expectedDistortionPmf d
-            (fun p => (μ.map (jointSequence Xs Ys 0)).real {p}) + δ_typ :=
-      jointStronglyTypicalSet_implies_distortion_le μ Xs Ys d hε_nn h_slack x y hxy
-    rw [h_dist_eq] at h_dist
-    exact h_dist
 
 /-! ## Phase S1 — Conditional strong-typical slice + size lower bound
 
@@ -926,19 +646,6 @@ lemma mem_conditionalStronglyTypicalSlice_iff
     y ∈ conditionalStronglyTypicalSlice μ Xs Ys n ε x ↔
       (x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε := Iff.rfl
 
-omit [MeasurableSingletonClass α] [MeasurableSingletonClass β] in
-/-- The slice is finite (subset of the finite ambient `Fin n → β`). -/
-lemma conditionalStronglyTypicalSlice_finite
-    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
-    (n : ℕ) (ε : ℝ) (x : Fin n → α) :
-    (conditionalStronglyTypicalSlice μ Xs Ys n ε x).Finite := Set.toFinite _
-
-/-- The slice is measurable. -/
-lemma measurableSet_conditionalStronglyTypicalSlice
-    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
-    (n : ℕ) (ε : ℝ) (x : Fin n → α) :
-    MeasurableSet (conditionalStronglyTypicalSlice μ Xs Ys n ε x) :=
-  (Set.toFinite _).measurableSet
 
 /-! ## Phase ε — Codebook-averaged source-failure sequence
 
@@ -955,30 +662,6 @@ with the per-source-typical-word match-probability exponential decay via
 machinery from Phases C/D — the wiring is left as a single isolated `sorry`
 inside `codebookAvgFailure_tendsto_zero` (see comment in the proof). -/
 
-/-- The codebook-averaged source-failure probability for the joint-typical
-lossy encoder, at the canonical codebook size `M_n := ⌈exp(n·R)⌉`. This is
-exactly the LHS of `h_codebook_avg_failure` in
-`rate_distortion_achievability_partial_discharge`. -/
-noncomputable def codebookAvgFailure
-    (qStar : α × β → ℝ) (d : DistortionFn α β)
-    (R : ℝ) (n : ℕ) (ε δ_typ : ℝ) : ℝ :=
-  ∑ c : Codebook (Nat.ceil (Real.exp ((n : ℝ) * R))) n β,
-    (codebookMeasure ((rdAmbient qStar).map (iidYs (α := α) (β := β) 0))
-        (Nat.ceil (Real.exp ((n : ℝ) * R))) n).real {c}
-      * (Measure.pi (fun _ : Fin n =>
-            (rdAmbient qStar).map (iidXs (α := α) (β := β) 0))).real
-          { x | (x, c (jointTypicalLossyEncoder (rdAmbient qStar) iidXs iidYs
-                          (Nat.ceil_pos.mpr (Real.exp_pos _)) ε c x))
-                  ∉ distortionTypicalSet (rdAmbient qStar) iidXs iidYs d n ε δ_typ }
-
-/-- `codebookAvgFailure` is non-negative (sum of non-negative summands). -/
-lemma codebookAvgFailure_nonneg
-    (qStar : α × β → ℝ) (d : DistortionFn α β)
-    (R : ℝ) (n : ℕ) (ε δ_typ : ℝ) :
-    0 ≤ codebookAvgFailure qStar d R n ε δ_typ := by
-  unfold codebookAvgFailure
-  refine Finset.sum_nonneg fun c _ => ?_
-  exact mul_nonneg measureReal_nonneg measureReal_nonneg
 
 /-! The weak-encoder `codebookAvgFailure_tendsto_zero` is mathematically blocked
 without the conditional-strong-typicality slice mass bound (Cover–Thomas 10.6.1).

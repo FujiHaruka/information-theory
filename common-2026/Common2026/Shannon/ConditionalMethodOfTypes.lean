@@ -57,12 +57,6 @@ def conditionalTypeClass {n : ℕ} (x : Fin n → α) (c : α × β → ℕ) :
     Set (Fin n → β) :=
   { y | ∀ a b, (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card = c (a, b) }
 
-lemma mem_conditionalTypeClass_iff {n : ℕ} (x : Fin n → α) (c : α × β → ℕ)
-    (y : Fin n → β) :
-    y ∈ conditionalTypeClass x c ↔
-      ∀ a b, (Finset.univ.filter (fun i : Fin n => x i = a ∧ y i = b)).card = c (a, b) :=
-  Iff.rfl
-
 lemma conditionalTypeClass_finite {n : ℕ} (x : Fin n → α) (c : α × β → ℕ) :
     (conditionalTypeClass (β := β) x c).Finite :=
   Set.toFinite _
@@ -135,47 +129,6 @@ lemma conditionalTypeClass_xMarginal {n : ℕ} (x : Fin n → α) (c : α × β 
   rw [h_sum]
   rfl
 
-/-- **Total count recovery.** If `y ∈ conditionalTypeClass x c`, then `∑ p, c p = n`. -/
-lemma conditionalTypeClass_total {n : ℕ} (x : Fin n → α) (c : α × β → ℕ)
-    {y : Fin n → β} (hy : y ∈ conditionalTypeClass x c) :
-    (∑ p : α × β, c p) = n := by
-  classical
-  -- ∑ p, c p = ∑ a, ∑ b, c (a, b) = ∑ a, typeCount x a = n.
-  have h_prod : (∑ p : α × β, c p) = ∑ a : α, ∑ b : β, c (a, b) := by
-    rw [← Finset.sum_product']
-    rfl
-  rw [h_prod]
-  have h_per_a : ∀ a, (∑ b : β, c (a, b)) = typeCount x a :=
-    fun a => conditionalTypeClass_xMarginal x c hy a
-  rw [Finset.sum_congr rfl fun a _ => h_per_a a]
-  -- ∑ a, typeCount x a = n.
-  unfold typeCount
-  have h_maps : ∀ i ∈ (Finset.univ : Finset (Fin n)),
-      x i ∈ (Finset.univ : Finset α) := fun i _ => Finset.mem_univ _
-  have h_fiber := Finset.sum_fiberwise_of_maps_to (s := (Finset.univ : Finset (Fin n)))
-    (t := (Finset.univ : Finset α)) h_maps (fun _ : Fin n => (1 : ℕ))
-  have h_card : ∀ a : α,
-      ((Finset.univ : Finset (Fin n)).filter fun i => x i = a).card
-        = ∑ i ∈ ((Finset.univ : Finset (Fin n)).filter fun i => x i = a), (1 : ℕ) := by
-    intro a
-    rw [Finset.sum_const, Nat.smul_one_eq_cast]
-    rfl
-  rw [show (∑ a : α, ((Finset.univ : Finset (Fin n)).filter fun i => x i = a).card)
-        = ∑ a : α, ∑ i ∈ ((Finset.univ : Finset (Fin n)).filter fun i => x i = a), (1 : ℕ)
-      from Finset.sum_congr rfl fun a _ => h_card a]
-  rw [h_fiber]
-  simp
-
-/-- **Empty for inconsistent X-marginal.** -/
-lemma conditionalTypeClass_empty_of_xMarginal_ne {n : ℕ} (x : Fin n → α) (c : α × β → ℕ)
-    (a : α) (h : (∑ b : β, c (a, b)) ≠ typeCount x a) :
-    conditionalTypeClass (β := β) x c = ∅ := by
-  classical
-  ext y
-  simp only [Set.mem_empty_iff_false, iff_false]
-  intro hy
-  exact h (conditionalTypeClass_xMarginal x c hy a)
-
 /-! ## Phase C — Slice partition by joint type -/
 
 /-- **Slice partition indices.** Count vectors `c : α × β → Fin (n+1)` whose
@@ -232,27 +185,6 @@ lemma conditionalStronglyTypicalSlice_eq_biUnion
     exact hc_close p
 
 /-! ## Phase D — Slice cardinality (polynomial number of joint types) -/
-
-/-- The polynomial bound `|sliceTypeIndices| ≤ (n+1)^{|α|·|β|}`. -/
-lemma sliceTypeIndices_card_le (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
-    (n : ℕ) (ε : ℝ) :
-    ((sliceTypeIndices μ Xs Ys n ε).card : ℝ)
-      ≤ ((n : ℝ) + 1) ^ (Fintype.card α * Fintype.card β) := by
-  classical
-  have h1 : (sliceTypeIndices μ Xs Ys n ε).card
-      ≤ Fintype.card (TypeCountIndex (α × β) n) := by
-    unfold sliceTypeIndices
-    refine (Finset.card_filter_le _ _).trans ?_
-    rw [Finset.card_univ]
-  have h2 : Fintype.card (TypeCountIndex (α × β) n) = (n + 1) ^ Fintype.card (α × β) :=
-    typeCountIndex_card n
-  have h3 : Fintype.card (α × β) = Fintype.card α * Fintype.card β :=
-    Fintype.card_prod α β
-  calc ((sliceTypeIndices μ Xs Ys n ε).card : ℝ)
-      ≤ (Fintype.card (TypeCountIndex (α × β) n) : ℝ) := by exact_mod_cast h1
-    _ = ((n + 1) ^ Fintype.card (α × β) : ℝ) := by exact_mod_cast h2
-    _ = ((n + 1) ^ (Fintype.card α * Fintype.card β) : ℝ) := by rw [h3]
-    _ = ((n : ℝ) + 1) ^ (Fintype.card α * Fintype.card β) := by norm_cast
 
 /-! ## Phase E — Per-fiber slice mass lower bound (main theorem)
 

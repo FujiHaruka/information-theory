@@ -176,24 +176,6 @@ theorem isStamCauchySchwarz_symm {Ω : Type*} [MeasurableSpace Ω]
   have : (1 - (1 - lam)) ^ 2 = lam ^ 2 := by ring
   linarith [this]
 
-/-- Trivial Cauchy-Schwarz witness via `lam = 1` and `J_sum ≤ J_X` — this almost
-never holds in practice, but the predicate is preserved by the natural Gaussian
-saturation. -/
-theorem isStamCauchySchwarz_of_lambda_one {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h_bd : ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
-      J_X = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
-      J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
-      J_sum = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
-                (P.map (fun ω => X ω + Y ω)) fXY).toReal →
-      J_sum ≤ J_X) :
-    IsStamCauchySchwarz X Y P := by
-  intro J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
-  refine ⟨1, by norm_num, by norm_num, ?_⟩
-  have hbd := h_bd J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
-  have hJY_nn : 0 ≤ J_Y := hJY.le
-  nlinarith [sq_nonneg ((1 : ℝ) - 1), sq_nonneg (1 - (1 : ℝ))]
-
 /-! ## §3 — λ-optimization closed form (Step 4): pure arithmetic, no predicate -/
 
 /-- **λ-optimization closed form** (Stam Step 4).
@@ -263,21 +245,6 @@ def IsStamCauchySchwarzOptimal {Ω : Type*} [MeasurableSpace Ω]
     J_sum = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
               (P.map (fun ω => X ω + Y ω)) fXY).toReal →
     J_sum ≤ J_X * J_Y / (J_X + J_Y)
-
-/-- The optimal Cauchy-Schwarz predicate is symmetric in `X, Y`. -/
-theorem isStamCauchySchwarzOptimal_symm {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h : IsStamCauchySchwarzOptimal X Y P) :
-    IsStamCauchySchwarzOptimal Y X P := by
-  intro J_Y J_X J_sum fY fX fXY hJY hJX hJsum hJY_def hJX_def hJsum_def
-  have h_comm : (fun ω => Y ω + X ω) = fun ω => X ω + Y ω := by
-    funext ω; ring
-  rw [h_comm] at hJsum_def
-  have h_inst := h J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
-  -- `J_X J_Y / (J_X + J_Y) = J_Y J_X / (J_Y + J_X)` — same value.
-  have h_eq : J_X * J_Y / (J_X + J_Y) = J_Y * J_X / (J_Y + J_X) := by
-    congr 1 <;> ring
-  linarith [h_eq]
 
 /-- **Stam inequality via predicate chain (optimal form)** — actual deliverable.
 
@@ -378,24 +345,6 @@ theorem isStamCauchySchwarz_of_optimal
                   + (1 - J_Y / (J_X + J_Y)) ^ 2 * J_Y
     linarith [h_min]
 
-/-- The optimal CS predicate is congruent under function equality. -/
-theorem isStamCauchySchwarzOptimal_congr
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y X' Y' : Ω → ℝ} {P : Measure Ω}
-    (hX : X = X') (hY : Y = Y')
-    (h : IsStamCauchySchwarzOptimal X Y P) :
-    IsStamCauchySchwarzOptimal X' Y' P := by
-  subst hX; subst hY; exact h
-
-/-- The score-convolution predicate is congruent under function equality. -/
-theorem isStamScoreConvolution_congr
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y X' Y' : Ω → ℝ} {P : Measure Ω}
-    (hX : X = X') (hY : Y = Y')
-    (h : IsStamScoreConvolution X Y P) :
-    IsStamScoreConvolution X' Y' P := by
-  subst hX; subst hY; exact h
-
 /-- The score-convolution predicate is symmetric in `X, Y` — *unconditionally*
 provable since the W9 typed body is a pure existence Prop on the optimal λ
 witness (which is constructed from `J_X, J_Y` only, no asymmetry in the
@@ -409,37 +358,6 @@ theorem isStamScoreConvolution_symm
   isStamScoreConvolution_intro Y X P
 
 /-! ## §8 — λ-optimization: independent algebraic corollaries -/
-
-/-- **Harmonic mean ≤ arithmetic mean**. For positive `a, b`,
-`ab / (a + b) ≤ (a + b) / 4` (with equality iff `a = b`). Useful as a sanity
-check on Step 4's λ-optimization. -/
-theorem stam_harmonic_arith_mean {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
-    a * b / (a + b) ≤ (a + b) / 4 := by
-  have hab : 0 < a + b := by linarith
-  have h_nn : 0 ≤ (a - b) ^ 2 := sq_nonneg _
-  -- `(a + b) ^ 2 ≥ 4ab` ⇒ `ab / (a+b) ≤ (a+b)/4`.
-  have h_quad : 4 * (a * b) ≤ (a + b) ^ 2 := by nlinarith
-  have h_target : 4 * (a * b / (a + b)) ≤ a + b := by
-    rw [mul_div_assoc']
-    rw [div_le_iff₀ hab]
-    nlinarith
-  linarith
-
-/-- **Lower bound on the harmonic mean**: `ab / (a + b) ≥ min a b / 2`. -/
-theorem stam_harmonic_lower_half_min {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
-    min a b / 2 ≤ a * b / (a + b) := by
-  have hab : 0 < a + b := by linarith
-  -- `min a b / 2 ≤ ab / (a+b)` ⇔ `min a b · (a+b) ≤ 2ab`. WLOG `a ≤ b`,
-  -- so `min = a`, target `a(a+b) ≤ 2ab` ⇔ `a² + ab ≤ 2ab` ⇔ `a² ≤ ab` ⇔ `a ≤ b`.
-  rcases le_total a b with hab' | hab'
-  · have hmin : min a b = a := min_eq_left hab'
-    rw [hmin]
-    rw [div_le_div_iff₀ (by norm_num : (0:ℝ) < 2) hab]
-    nlinarith
-  · have hmin : min a b = b := min_eq_right hab'
-    rw [hmin]
-    rw [div_le_div_iff₀ (by norm_num : (0:ℝ) < 2) hab]
-    nlinarith
 
 /-! ## §9 — Direct optimal-CS construction from λ-witness -/
 

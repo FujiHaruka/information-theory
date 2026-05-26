@@ -169,3 +169,4 @@ lemma InformationTheory.Shannon.Cramer.Discharge.bounded_eval_family
     ∃ M, ∀ i : ℕ, ∀ ω : ℕ → Ω₀, |Y (ω i)| ≤ M := by
   obtain ⟨M, hM⟩ := h_bdd
   exact ⟨M, fun i ω => hM (ω i)⟩
+

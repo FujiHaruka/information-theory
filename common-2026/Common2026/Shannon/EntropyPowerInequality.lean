@@ -101,10 +101,6 @@ theorem entropyPower_pos (μ : Measure ℝ) : 0 < entropyPower μ :=
 theorem entropyPower_nonneg (μ : Measure ℝ) : 0 ≤ entropyPower μ :=
   (entropyPower_pos μ).le
 
-/-- Unfold lemma for `entropyPower`. -/
-theorem entropyPower_eq_exp_two_differentialEntropy (μ : Measure ℝ) :
-    entropyPower μ = Real.exp (2 * Common2026.Shannon.differentialEntropy μ) := rfl
-
 /-- **Closed form for Gaussian entropy power**: `entropyPower (gaussianReal m v) =
 2πe v`. This is the Gaussian saturation reference value that drives the
 saturating case of EPI.
@@ -347,23 +343,6 @@ theorem isStamToEPIBridge_of_epi
     (h_epi : IsEntropyPowerInequalityHypothesis X Y P) :
     IsStamToEPIBridge X Y P :=
   fun _ => h_epi
-
-/-- **Stam-to-EPI bridge for the Gaussian case** (full discharge, no Stam input
-needed). For independent Gaussians `X, Y` with non-zero variance, the bridge is
-discharged hypothesis-free via Gaussian saturation.
-
-`@audit:retract-candidate(load-bearing-predicate)`
-`@audit:closed-by-successor(epi-stam-to-conclusion-plan)` -/
-theorem isStamToEPIBridge_of_gaussian
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
-    (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
-    IsStamToEPIBridge X Y P :=
-  isStamToEPIBridge_of_epi
-    (isEntropyPowerInequalityHypothesis_of_gaussian P X Y hX hY hXY m₁ m₂ v₁ v₂
-      hv₁ hv₂ hLawX hLawY)
 
 /-! ## §E — 補助 corollary 群 -/
 

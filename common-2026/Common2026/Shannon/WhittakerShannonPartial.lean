@@ -1,4 +1,3 @@
-import Common2026.Shannon.ShannonHartley
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Sinc
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Sinc
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
@@ -85,13 +84,6 @@ noncomputable def sincN (x : ℝ) : ℝ := Real.sinc (Real.pi * x)
 @[simp] theorem sincN_zero : sincN 0 = 1 := by
   unfold sincN; simp
 
-theorem sincN_neg (x : ℝ) : sincN (-x) = sincN x := by
-  unfold sincN
-  rw [show Real.pi * (-x) = -(Real.pi * x) by ring, Real.sinc_neg]
-
-theorem abs_sincN_le_one (x : ℝ) : |sincN x| ≤ 1 := by
-  unfold sincN; exact Real.abs_sinc_le_one _
-
 theorem sincN_le_one (x : ℝ) : sincN x ≤ 1 := by
   unfold sincN; exact Real.sinc_le_one _
 
@@ -115,13 +107,6 @@ theorem sincN_of_ne_zero (x : ℝ) (hx : x ≠ 0) :
     mul_ne_zero Real.pi_ne_zero hx
   exact Real.sinc_of_ne_zero hπx
 
-/-- Bridge: `sincN (n : ℝ)` for integer `n` equals `Real.sinc (n · π)`
-modulo the commutativity of multiplication. -/
-theorem sincN_int_eq_sinc_int_mul_pi (n : ℤ) :
-    sincN (n : ℝ) = Real.sinc ((n : ℝ) * Real.pi) := by
-  unfold sincN
-  rw [mul_comm]
-
 /-! ## §C — Integer-zero identity (sincN Kronecker delta). -/
 
 /-- The normalized sinc vanishes at all non-zero integers.
@@ -142,16 +127,6 @@ theorem sincN_int_eq_kronecker (n : ℤ) :
   by_cases hn : n = 0
   · simp [hn]
   · rw [if_neg hn]; exact sincN_int_eq_zero n hn
-
-/-- Equivalent form: `sincN n = 0 ↔ n ≠ 0` for integer `n`. -/
-theorem sincN_int_eq_zero_iff (n : ℤ) :
-    sincN (n : ℝ) = 0 ↔ n ≠ 0 := by
-  constructor
-  · intro hzero hn
-    rw [hn] at hzero
-    simp [sincN_zero] at hzero
-  · intro hn
-    exact sincN_int_eq_zero n hn
 
 /-! ## §D — Sample-point collapse identity. -/
 
@@ -181,108 +156,7 @@ theorem whittaker_shannon_sample_collapse
       exact hn (by omega)
     simp [hn, hne]
 
-/-! ## §E — L-WS-A retreat predicate (Whittaker-Shannon interpolation). -/
-
-/-- **L-WS-A retreat (⚠️ undischarged placeholder)**: the Whittaker-Shannon
-interpolation series converges pointwise to `f` at `t`, given sample-rate
-`2W`.
-
-The intended (operational) content is
-
-  `f(t) = Σ_{n ∈ ℤ} f(n/(2W)) · sincN(2W·t - n)`
-
-but ⚠️ this `def` is `0 < W ∧ ∃ _S, True` — a **weak positivity placeholder
-that asserts nothing about convergence or the reconstruction equality**. The
-genuine statement needs bandlimited-function machinery + Poisson summation /
-Nyquist-Fourier theory, **not shipped by Mathlib**. It is exposed as a
-predicate so that a future discharge can strengthen this definition (to carry
-the real series-convergence proof) without rewriting downstream consumers. As
-written it is **not** discharged. -/
-def IsWhittakerShannonInterpolation (f : ℝ → ℝ) (W t : ℝ) : Prop :=
-  0 < W ∧ ∃ (_S : ℝ), True
-
-
-/-! ## §F — 1-point Whittaker-Shannon uniqueness theorem. -/
-
-/-- **1-point Whittaker-Shannon reconstruction at a sample point** (genuine).
-
-At a sample point `t = n₀/(2W)`, the single Whittaker-Shannon basis term
-centred on that same sample, `f(n₀/(2W)) · sincN(2W·t - n₀)`, reconstructs the
-sample value `f(n₀/(2W))` exactly — because `sincN` evaluates to `1` there (its
-Kronecker-delta peak).
-
-**Genuinely proved**, no pass-through hypothesis: this is the rigorous "the
-`n = n₀` term carries the whole value at its own sample point" statement, the
-self-contained sinc-layer core of Whittaker-Shannon reconstruction. The full
-infinite-series reconstruction (where every *other* term vanishes) is built on
-top of this in `WhittakerShannonFull.whittaker_shannon_full_reconstruction`.
-
-The free `IsWhittakerShannonInterpolation` predicate is kept as an (unused)
-parameter only to mark where a future bandlimited hypothesis would attach when
-extending from this single term to the full series; it is **not** load-bearing
-for the conclusion, which holds unconditionally. -/
-theorem whittaker_shannon_one_point
-    (f : ℝ → ℝ) (W : ℝ) (n₀ : ℤ) (hW : 0 < W)
-    (_h_interp :
-        IsWhittakerShannonInterpolation f W ((n₀ : ℝ) / (2 * W))) :
-    f ((n₀ : ℝ) / (2 * W)) *
-        sincN ((2 * W) * ((n₀ : ℝ) / (2 * W)) - (n₀ : ℝ))
-      = f ((n₀ : ℝ) / (2 * W)) := by
-  rw [whittaker_shannon_sample_collapse W hW n₀ n₀]
-  simp
-
-/-- **Sample-value equality bridge**: at sample point `t = n₀/(2W)`, the
-"recovered value via collapsed Whittaker-Shannon" equals `f(n₀/(2W))`.
-
-Concretely the collapsed series at `t = n₀/(2W)` reduces to the single
-term `f(n₀/(2W)) · sincN(0) = f(n₀/(2W))`. -/
-theorem whittaker_shannon_collapsed_value
-    (f : ℝ → ℝ) (W : ℝ) (n₀ : ℤ) (hW : 0 < W) :
-    f ((n₀ : ℝ) / (2 * W)) *
-        sincN ((2 * W) * ((n₀ : ℝ) / (2 * W)) - (n₀ : ℝ))
-      = f ((n₀ : ℝ) / (2 * W)) := by
-  rw [whittaker_shannon_sample_collapse W hW n₀ n₀]
-  simp
-
-/-- Companion: at sample point `t = n₀/(2W)`, every **off-sample** term
-`n ≠ n₀` vanishes. -/
-theorem whittaker_shannon_off_sample_zero
-    (f : ℝ → ℝ) (W : ℝ) (n n₀ : ℤ) (hW : 0 < W) (hn : n ≠ n₀) :
-    f ((n : ℝ) / (2 * W)) *
-        sincN ((2 * W) * ((n₀ : ℝ) / (2 * W)) - (n : ℝ)) = 0 := by
-  rw [whittaker_shannon_sample_collapse W hW n n₀]
-  rw [if_neg hn]
-  ring
-
-
 /-! ## §H — Auxiliary algebraic / measurability corollaries. -/
-
-/-- Bridge: `sincN (π · x)` is **not** `Real.sinc (π · x)` — `sincN` is
-already the normalized version, so `sincN (π · x) = Real.sinc (π² · x)`.
-This lemma exists to prevent confusion in downstream use. -/
-theorem sincN_pi_mul_eq (x : ℝ) :
-    sincN (Real.pi * x) = Real.sinc (Real.pi * (Real.pi * x)) := by
-  unfold sincN
-  rfl
-
-/-- `sincN` agrees with `Real.sinc` (up to the `π` normalization) at the
-argument `x / π` — a useful conversion when interfacing with the
-unnormalized Mathlib lemmas. -/
-theorem sincN_div_pi_eq_sinc (x : ℝ) :
-    sincN (x / Real.pi) = Real.sinc x := by
-  unfold sincN
-  rw [mul_div_assoc', mul_div_cancel_left₀ x Real.pi_ne_zero]
-
-/-- `sincN` is `0` precisely at the non-zero integers (the bidirectional
-form of `sincN_int_eq_zero`). -/
-theorem sincN_eq_zero_of_int_ne_zero (n : ℤ) (hn : n ≠ 0) :
-    sincN (n : ℝ) = 0 := sincN_int_eq_zero n hn
-
-/-- `sincN` is bounded between `-1` and `1` (combination of
-`abs_sincN_le_one`). -/
-theorem sincN_mem_unit_interval (x : ℝ) :
-    sincN x ∈ Set.Icc (-1 : ℝ) 1 :=
-  ⟨neg_one_le_sincN x, sincN_le_one x⟩
 
 /-- Composition: `sincN ∘ f` is measurable if `f` is. -/
 @[fun_prop]
@@ -306,34 +180,5 @@ for any fixed integer `n` and positive `W`. -/
 theorem continuous_sincN_sample_term (W : ℝ) (n : ℤ) :
     Continuous (fun t : ℝ => sincN ((2 * W) * t - (n : ℝ))) := by
   fun_prop
-
-/-- The sample-rate-scaled sinc `sincN (2W·t - n)` is **measurable in `t`**. -/
-@[fun_prop]
-theorem measurable_sincN_sample_term (W : ℝ) (n : ℤ) :
-    Measurable (fun t : ℝ => sincN ((2 * W) * t - (n : ℝ))) :=
-  (continuous_sincN_sample_term W n).measurable
-
-/-- The sample-rate-scaled sinc is bounded by `1` in absolute value. -/
-theorem abs_sincN_sample_term_le_one (W t : ℝ) (n : ℤ) :
-    |sincN ((2 * W) * t - (n : ℝ))| ≤ 1 :=
-  abs_sincN_le_one _
-
-/-! ## §J — Sign / non-negativity carve-outs. -/
-
-/-- `sincN 0 = 1` (re-export of the `@[simp]` lemma as a named theorem). -/
-theorem sincN_zero_eq_one : sincN 0 = 1 := sincN_zero
-
-/-- `sincN` at a non-zero integer equals zero (re-export). -/
-theorem sincN_apply_int_ne_zero (n : ℤ) (hn : n ≠ 0) :
-    sincN (n : ℝ) = 0 := sincN_int_eq_zero n hn
-
-/-- For integer arguments, `|sincN n|` is either `0` (when `n ≠ 0`) or
-`1` (when `n = 0`). Crisp Kronecker form. -/
-theorem abs_sincN_int (n : ℤ) :
-    |sincN (n : ℝ)| = if n = 0 then 1 else 0 := by
-  rw [sincN_int_eq_kronecker n]
-  by_cases hn : n = 0
-  · simp [hn]
-  · simp [hn]
 
 end InformationTheory.Shannon.WhittakerShannonPartial

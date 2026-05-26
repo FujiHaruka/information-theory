@@ -448,56 +448,6 @@ lemma stronglyTypicalSet_subset_typicalSet
 
 /-! ### Phase 4 — Size sandwich -/
 
-/-- **Size upper bound**: `|A^*_ε^n| ≤ exp(n · (H + ε·L + δ))` for any `δ > 0`.
-
-We need a small slack `δ > 0` because the bridge to weak typicality is non-strict
-(`≤ ε · L`) but the weak-typical card bound uses strict `< ε'`. Taking
-`ε' := ε · L + δ` recovers the desired form. -/
-theorem stronglyTypicalSet_card_le
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (hpos : ∀ a : α, 0 < (μ.map (Xs 0)).real {a})
-    {n : ℕ} (hn : 0 < n) {ε δ : ℝ} (hε : 0 ≤ ε) (hδ : 0 < δ) :
-    ((stronglyTypicalSet μ Xs n ε).toFinite.toFinset.card : ℝ)
-      ≤ Real.exp ((n : ℝ) * (entropy μ (Xs 0) + ε * logSumAbs μ Xs + δ)) := by
-  classical
-  set ε' : ℝ := ε * logSumAbs μ Xs + δ with hε'_def
-  have hL_nn : 0 ≤ logSumAbs μ Xs := logSumAbs_nonneg μ Xs
-  have hε_L_nn : 0 ≤ ε * logSumAbs μ Xs := mul_nonneg hε hL_nn
-  have hε'_pos : 0 < ε' := by
-    show 0 < ε * logSumAbs μ Xs + δ
-    linarith
-  -- Subset bound: A^*_ε ⊆ T_{ε'}.
-  have h_subset : stronglyTypicalSet μ Xs n ε ⊆ typicalSet μ Xs n ε' := by
-    apply stronglyTypicalSet_subset_typicalSet μ Xs hXs hn
-    show ε * logSumAbs μ Xs < ε * logSumAbs μ Xs + δ
-    linarith
-  -- Card monotonicity.
-  have h_card_mono :
-      ((stronglyTypicalSet μ Xs n ε).toFinite.toFinset.card : ℝ)
-        ≤ ((typicalSet μ Xs n ε').toFinite.toFinset.card : ℝ) := by
-    have h_finset_sub :
-        (stronglyTypicalSet μ Xs n ε).toFinite.toFinset
-          ⊆ (typicalSet μ Xs n ε').toFinite.toFinset := by
-      intro x hx
-      have : x ∈ stronglyTypicalSet μ Xs n ε :=
-        (Set.Finite.mem_toFinset _).mp hx
-      exact (Set.Finite.mem_toFinset _).mpr (h_subset this)
-    exact_mod_cast Finset.card_le_card h_finset_sub
-  -- Apply typicalSet_card_le with ε'.
-  refine h_card_mono.trans ?_
-  have h := typicalSet_card_le μ Xs hXs hpos n hε'_pos
-  -- h : |T_{ε'}| ≤ exp(n · (H + ε'))
-  -- Goal: |T_{ε'}| ≤ exp(n · (H + ε · L + δ))
-  -- Since ε' = ε · L + δ, these are equal.
-  have h_eq : (n : ℝ) * (entropy μ (Xs 0) + ε * logSumAbs μ Xs + δ)
-      = (n : ℝ) * (entropy μ (Xs 0) + ε') := by
-    show (n : ℝ) * (entropy μ (Xs 0) + ε * logSumAbs μ Xs + δ)
-        = (n : ℝ) * (entropy μ (Xs 0) + (ε * logSumAbs μ Xs + δ))
-    ring
-  rw [h_eq]
-  exact h
-
 /-- **Size lower bound (eventually-N form)**: for any `η > 0`,
 eventually `|A^*_ε^n| ≥ (1-η) · exp(n · (H - ε·L - δ))`. -/
 theorem stronglyTypicalSet_card_ge_eventually

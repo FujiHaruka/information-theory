@@ -62,9 +62,6 @@ variable {μ : Measure Ω}
 def obs (p : StationaryProcess μ α) (i : ℕ) : Ω → α :=
   p.X ∘ p.T^[i]
 
-/-- `obs 0 = X`. -/
-@[simp] lemma obs_zero (p : StationaryProcess μ α) : p.obs 0 = p.X := rfl
-
 /-- The shift map is measurable (it preserves `μ`, in particular it is measurable). -/
 lemma measurable_T (p : StationaryProcess μ α) : Measurable p.T :=
   p.measurePreserving.measurable
@@ -86,26 +83,6 @@ lemma measurable_blockRV (p : StationaryProcess μ α) (n : ℕ) :
     Measurable (p.blockRV n) := by
   refine measurable_pi_iff.mpr (fun i => ?_)
   exact p.measurable_obs i
-
-/-- Stationarity: every time-`i` observation has the same distribution as `obs 0 = X`.
-
-Direct consequence of `MeasurePreserving.iterate`: the pushforward of `μ` by
-`T^[i]` equals `μ`, hence `(X ∘ T^[i])_* μ = X_* (T^[i])_* μ = X_* μ`. -/
-theorem identDistrib_obs_zero (p : StationaryProcess μ α) (i : ℕ) :
-    IdentDistrib (p.obs i) (p.obs 0) μ μ := by
-  refine
-    { aemeasurable_fst := (p.measurable_obs i).aemeasurable
-      aemeasurable_snd := (p.measurable_obs 0).aemeasurable
-      map_eq := ?_ }
-  -- `obs i = X ∘ T^[i]`, so `μ.map (obs i) = (μ.map (T^[i])).map X = μ.map X = μ.map (obs 0)`.
-  have h_iter : Measure.map (p.T^[i]) μ = μ := (p.measurePreserving.iterate i).map_eq
-  have h_pull :
-      Measure.map (p.obs i) μ
-        = Measure.map p.X (Measure.map (p.T^[i]) μ) := by
-    show Measure.map (p.X ∘ p.T^[i]) μ = Measure.map p.X (Measure.map (p.T^[i]) μ)
-    rw [Measure.map_map p.measurable_X (p.measurable_iterate i)]
-  rw [h_pull, h_iter]
-  rfl
 
 end StationaryProcess
 

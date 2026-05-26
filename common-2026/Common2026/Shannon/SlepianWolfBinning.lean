@@ -258,16 +258,4 @@ theorem binning_collision_prob
   rw [hN_eq, mul_inv, mul_comm ((M : ℝ) ^ (N - 1))⁻¹ _, mul_assoc]
   rw [inv_mul_cancel₀ (pow_ne_zero _ hM_ne), mul_one]
 
-/-- **Self-collision (`x = x'`).** Trivially probability `1`. -/
-theorem binning_collision_prob_eq_self
-    {n M : ℕ} [NeZero M] {x : Fin n → α} :
-    (binningMeasure α n M).real {f | f x = f x} = 1 := by
-  -- {f | f x = f x} = Set.univ.
-  have h_univ : ({f : (Fin n → α) → Fin M | f x = f x} : Set _) = Set.univ := by
-    ext f; simp
-  rw [h_univ]
-  rw [measureReal_def]
-  rw [measure_univ]
-  rfl
-
 end InformationTheory.Shannon

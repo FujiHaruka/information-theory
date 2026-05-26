@@ -87,26 +87,6 @@ theorem fisherInfoOfMeasureV2_def (μ : Measure ℝ) (f : ℝ → ℝ) :
 theorem fisherInfoOfMeasureV2Real_def (μ : Measure ℝ) (f : ℝ → ℝ) :
     fisherInfoOfMeasureV2Real μ f = fisherInfoOfDensityReal f := rfl
 
-/-- The V2 Fisher information depends only on the density `f`, not on `μ` (the
-measure parameter is purely a labelling device). -/
-theorem fisherInfoOfMeasureV2_congr_measure (μ μ' : Measure ℝ) (f : ℝ → ℝ) :
-    fisherInfoOfMeasureV2 μ f = fisherInfoOfMeasureV2 μ' f := rfl
-
-/-- **V1 → V2 fisher info bridge** at the measure level.
-
-For a random variable `X` with a V1 `IsRegularDensity X P` witness, the V2 Fisher
-information of `P.map X` using the V1's chosen smooth representative
-`h_v1.density` equals the V2 density-form Fisher information directly. This is
-the statement-shape mediator between `fisherInfo (P.map X)` (V1, flawed for
-generic measures) and `fisherInfoOfDensity h_v1.density` (V2, evaluates
-correctly for Gaussian). -/
-theorem fisherInfoOfMeasureV2_of_isRegularDensity_v1
-    {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω}
-    (X : Ω → ℝ) [MeasureTheory.HasPDF X P MeasureTheory.volume]
-    (h_v1 : Common2026.Shannon.IsRegularDensity X P) :
-    fisherInfoOfMeasureV2 (P.map X) h_v1.density
-      = fisherInfoOfDensity h_v1.density := rfl
-
 /-- **Gaussian Fisher info — V2 measure-keyed closed form** `1/v`.
 
 The deliverable that was blocked under V1 by the representative-dependence flaw
@@ -125,18 +105,6 @@ theorem fisherInfoOfMeasureV2Real_gaussianReal
   unfold fisherInfoOfMeasureV2Real
   exact fisherInfoOfDensityReal_gaussianPDFReal m hv
 
-/-- **V1 → V2 fisher info bridge for Gaussian X**. Combines
-`isRegularDensity_gaussianReal_of_law` (V1 discharge) with V2 closed form. -/
-theorem fisherInfoOfMeasureV2_gaussianReal_of_law
-    {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
-    (X : Ω → ℝ) [MeasureTheory.HasPDF X P MeasureTheory.volume]
-    {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0)
-    (hX_law : P.map X = gaussianReal m v) :
-    fisherInfoOfMeasureV2 (P.map X) (gaussianPDFReal m v)
-      = ENNReal.ofReal (1 / (v : ℝ)) := by
-  rw [hX_law]
-  exact fisherInfoOfMeasureV2_gaussianReal m hv
-
 /-! ## Phase D — Heat-flow path (gaussianConvolution) abbrev -/
 
 /-- **Heat-flow convolution path** `X + √t · Z`. The `t`-parametrised family of
@@ -149,17 +117,6 @@ Defined as a plain abbreviation rather than a wrapper structure so that callers
 can use existing `Measure.map` API without an additional layer. -/
 noncomputable def gaussianConvolution {α : Type*} (X Z : α → ℝ) (t : ℝ) : α → ℝ :=
   fun ω => X ω + Real.sqrt t * Z ω
-
-/-- Unfold lemma for `gaussianConvolution`. -/
-@[simp] theorem gaussianConvolution_apply {α : Type*} (X Z : α → ℝ) (t : ℝ) (ω : α) :
-    gaussianConvolution X Z t ω = X ω + Real.sqrt t * Z ω := rfl
-
-/-- **`gaussianConvolution` measurability**. -/
-theorem measurable_gaussianConvolution {Ω : Type*} [MeasurableSpace Ω]
-    {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z) (t : ℝ) :
-    Measurable (gaussianConvolution X Z t) := by
-  unfold gaussianConvolution
-  exact hX.add (measurable_const.mul hZ)
 
 /-- **Law of `X + √t · Z`** when `X` is Gaussian `𝒩(m, v)`, `Z` is standard normal,
 and `X ⊥ Z`: the result is `𝒩(m, v + t.toNNReal)`. The key Mathlib facts used

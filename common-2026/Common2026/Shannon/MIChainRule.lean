@@ -70,33 +70,6 @@ theorem mutualInfo_map_left_measurableEquiv
     rw [h_eProd_eq, ← h_step, h_e_Xs, h_id]
   rw [← h_joint, ← h_marg, klDiv_map_measurableEquiv]
 
-/-- Mutual information is invariant under a `MeasurableEquiv` reshape of the right
-random variable: `I(X; e ∘ Y) = I(X; Y)`. -/
-theorem mutualInfo_map_right_measurableEquiv
-    {Y' : Type*} [MeasurableSpace Y']
-    (μ : Measure Ω) [IsFiniteMeasure μ]
-    (Xs : Ω → X) (Yo : Ω → Y) (hXs : Measurable Xs) (hYo : Measurable Yo)
-    (e : Y ≃ᵐ Y') :
-    mutualInfo μ Xs (fun ω => e (Yo ω)) = mutualInfo μ Xs Yo := by
-  unfold mutualInfo
-  let eProd : X × Y ≃ᵐ X × Y' := MeasurableEquiv.prodCongr (.refl X) e
-  have h_joint :
-      (μ.map (fun ω => (Xs ω, Yo ω))).map eProd
-        = μ.map (fun ω => (Xs ω, e (Yo ω))) := by
-    rw [Measure.map_map eProd.measurable (hXs.prodMk hYo)]
-    rfl
-  have h_marg :
-      ((μ.map Xs).prod (μ.map Yo)).map eProd
-        = (μ.map Xs).prod (μ.map (fun ω => e (Yo ω))) := by
-    have h_e_Yo : (μ.map Yo).map e = μ.map (fun ω => e (Yo ω)) := by
-      rw [Measure.map_map e.measurable hYo]; rfl
-    have h_id : (μ.map Xs).map (id : X → X) = μ.map Xs := Measure.map_id
-    have h_step : ((μ.map Xs).map (id : X → X)).prod ((μ.map Yo).map e)
-        = ((μ.map Xs).prod (μ.map Yo)).map (Prod.map id e) :=
-      Measure.map_prod_map (μ.map Xs) (μ.map Yo) measurable_id e.measurable
-    have h_eProd_eq : (eProd : X × Y → X × Y') = Prod.map id e := rfl
-    rw [h_eProd_eq, ← h_step, h_e_Yo, h_id]
-  rw [← h_joint, ← h_marg, klDiv_map_measurableEquiv]
 
 /-! ## Phase B — n 変数 chain rule -/
 

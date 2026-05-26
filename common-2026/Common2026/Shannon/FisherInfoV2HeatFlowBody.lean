@@ -149,12 +149,6 @@ theorem heatKernel_spatial_laplacian {t : ℝ} (ht : 0 < t) (x : ℝ) :
 
 /-! ## Heat-equation right-hand side check (Gaussian, internal) -/
 
-/-- The half-Laplacian `(1/2) Δ_x g_t` in closed form. -/
-theorem half_spatialLaplacian_heatKernel {t : ℝ} (_ht : 0 < t) (x : ℝ) :
-    (1 / 2 : ℝ) * spatialLaplacianHeatKernel t x
-      = (1 / 2 : ℝ) * (x ^ 2 / t ^ 2 - 1 / t) * heatKernel t x := by
-  unfold spatialLaplacianHeatKernel; ring
-
 /-! ## Sub-predicate decomposition of L-FV2DB-A -/
 
 /-- **Spatial-derivative sub-predicate** (L-FV2HF-A).
@@ -206,26 +200,6 @@ def IsHeatFlowDensity_of_sub_predicates {Ω : Type*} [MeasurableSpace Ω]
   heat_equation := ⟨Δp, h_time⟩
 
 /-! ## Measure-level Gaussian heat semigroup composition -/
-
-/-- **Gaussian heat semigroup composition (measure level).**
-
-For independent `Y₁ ∼ 𝒩(0, t₁)` and `Y₂ ∼ 𝒩(0, t₂)`, the law of `Y₁ + Y₂` is
-`𝒩(0, t₁ + t₂)`. This is the kernel composition `g_{t₁} ⋆ g_{t₂} = g_{t₁+t₂}`
-underpinning the heat semigroup. **(internal discharge, measure level)** -/
-theorem heatSemigroup_compose_law
-    {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
-    {Y₁ Y₂ : Ω → ℝ} (hindep : IndepFun Y₁ Y₂ P)
-    {t₁ t₂ : ℝ} (ht₁ : 0 ≤ t₁) (ht₂ : 0 ≤ t₂)
-    (hY₁ : P.map Y₁ = gaussianReal 0 ⟨t₁, ht₁⟩)
-    (hY₂ : P.map Y₂ = gaussianReal 0 ⟨t₂, ht₂⟩) :
-    P.map (Y₁ + Y₂) = gaussianReal 0 ⟨t₁ + t₂, add_nonneg ht₁ ht₂⟩ := by
-  have h_sum := gaussianReal_add_gaussianReal_of_indepFun (P := P)
-    (X := Y₁) (Y := Y₂) (m₁ := 0) (m₂ := 0) (v₁ := ⟨t₁, ht₁⟩) (v₂ := ⟨t₂, ht₂⟩)
-    hindep hY₁ hY₂
-  rw [h_sum]
-  have hm : (0 : ℝ) + 0 = 0 := by ring
-  have hv : (⟨t₁, ht₁⟩ + ⟨t₂, ht₂⟩ : ℝ≥0) = ⟨t₁ + t₂, add_nonneg ht₁ ht₂⟩ := rfl
-  rw [hm, hv]
 
 /-! ## de Bruijn body bridge re-publish (from sub-predicates) -/
 

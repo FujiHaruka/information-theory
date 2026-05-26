@@ -106,33 +106,12 @@ theorem heatKernel_nonneg (t x : ℝ) : 0 ≤ heatKernel t x := by
   · exact gaussianPDFReal_nonneg _ _ x
   · exact le_refl 0
 
-/-- The heat kernel is strictly positive for `t > 0`. -/
-theorem heatKernel_pos {t : ℝ} (ht : 0 < t) (x : ℝ) : 0 < heatKernel t x := by
-  rw [heatKernel_def_gaussianPDFReal ht]
-  apply gaussianPDFReal_pos 0 ⟨t, ht.le⟩ x
-  -- need `(⟨t, ht.le⟩ : ℝ≥0) ≠ 0`
-  intro h
-  have : (t : ℝ) = 0 := by
-    have h' : ((⟨t, ht.le⟩ : ℝ≥0) : ℝ) = 0 := by rw [h]; simp
-    simpa using h'
-  linarith
-
 /-- The heat kernel is measurable. -/
 theorem measurable_heatKernel (t : ℝ) : Measurable (fun x => heatKernel t x) := by
   unfold heatKernel
   split_ifs with h
   · exact measurable_gaussianPDFReal 0 ⟨t, h.le⟩
   · exact measurable_const
-
-/-- Symmetry of the heat kernel: `g_t(-x) = g_t(x)`. -/
-theorem heatKernel_neg {t : ℝ} (ht : 0 < t) (x : ℝ) :
-    heatKernel t (-x) = heatKernel t x := by
-  rw [heatKernel_def_gaussianPDFReal ht, heatKernel_def_gaussianPDFReal ht]
-  -- `gaussianPDFReal 0 v (-x) = gaussianPDFReal 0 v x`.
-  -- Direct from `gaussianPDFReal_def`: the kernel only depends on `(x - 0)² = x²`.
-  unfold gaussianPDFReal
-  -- `(- x - 0)² = (x - 0)²` and `2 * v` is identical.
-  ring_nf
 
 /-! ## Heat-flow density predicate (L-FV2DB-A pass-through)
 
@@ -209,16 +188,6 @@ def IsIBPHypothesis {Ω : Type*} [MeasurableSpace Ω]
     ((1/2) * fisherInfoOfDensityReal (p t))
     t
 
-/-- Unfold lemma for `IsIBPHypothesis`. -/
-theorem isIBPHypothesis_iff {Ω : Type*} [MeasurableSpace Ω]
-    (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
-    (p : ℝ → ℝ → ℝ) (t : ℝ) :
-    IsIBPHypothesis X Z P p t ↔
-      HasDerivAt
-        (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
-        ((1/2) * fisherInfoOfDensityReal (p t))
-        t := Iff.rfl
-
 /-! ## Body discharge — `deBruijn_identity_v2_of_heat_flow` (L-FV2DB-C)
 
 Given the heat-flow density predicate (L-FV2DB-A) plus the IBP-predicate
@@ -273,21 +242,6 @@ These corollaries restate the de Bruijn identity from the heat-flow + IBP
 predicates *directly* in terms of `deBruijn_identity_v2`, so downstream callers
 can pick either pathway. -/
 
-/-- The body-discharge form chains through the signature-file
-`deBruijn_identity_v2`: applying `deBruijn_identity_v2` to the constructor
-result reproduces the body conclusion verbatim. -/
-theorem deBruijn_identity_v2_of_heat_flow_eq_signature
-    {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
-    (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z)
-    (hXZ : IndepFun X Z P)
-    {t : ℝ} (ht : 0 < t)
-    {p : ℝ → ℝ → ℝ}
-    (h_heat : IsHeatFlowDensity X Z P p)
-    (h_ibp : IsIBPHypothesis X Z P p t) :
-    deBruijn_identity_v2 X Z hX hZ hXZ ht
-        (IsRegularDeBruijnHypV2.ofHeatFlow hX hZ hXZ ht h_heat h_ibp)
-      = deBruijn_identity_v2_of_heat_flow X Z hX hZ hXZ ht h_heat h_ibp := rfl
-
 /-! ## Documentation — Gaussian instance for L-FV2DB-A/B predicates
 
 The Gaussian case in the signature file (`deBruijn_identity_v2_gaussian`)
@@ -308,54 +262,5 @@ or (b) running it as a separate lemma file. Since the signature-file
 discharge of the Gaussian de Bruijn identity is already complete, we expose
 the Gaussian IBP instance via the conclusion of `deBruijn_identity_v2_gaussian`
 directly. -/
-
-/-- **Gaussian `IsIBPHypothesis` instance**, derived from the signature-file
-`deBruijn_identity_v2_gaussian`. This shows the L-FV2DB-B predicate has a
-non-trivial instantiation. -/
-theorem isIBPHypothesis_gaussian
-    {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
-    (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z)
-    (hXZ : IndepFun X Z P)
-    {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0)
-    (hX_law : P.map X = gaussianReal m v)
-    (hZ_law : P.map Z = gaussianReal 0 1)
-    {t : ℝ} (ht : 0 < t) :
-    IsIBPHypothesis X Z P
-      (fun s _x =>
-        if hs : 0 < s
-        then gaussianPDFReal m (v + ⟨s, hs.le⟩) _x else 0)
-      t := by
-  unfold IsIBPHypothesis
-  -- The body of `deBruijn_identity_v2_gaussian` gives exactly:
-  -- `HasDerivAt (fun s => entropy (P.map (X + √s Z)))
-  --   ((1/2) * fisherInfoOfMeasureV2Real ... (gaussianPDFReal m (v + ⟨t, _⟩))) t`.
-  -- We need to identify `fisherInfoOfDensityReal (p t · ?x)` with that RHS.
-  -- Since `p t x` doesn't depend on `x` (we wrote `_x` above? no, it does:
-  -- `p t x = gaussianPDFReal m (v + ⟨t, _⟩) x`). Wait, our `p s x` returns
-  -- `gaussianPDFReal m (v + ⟨s, hs.le⟩) x`, which is the correct density.
-  -- `fisherInfoOfDensityReal (p t) = fisherInfoOfDensityReal (fun x => gaussianPDFReal m (v + ⟨t, ht.le⟩) x)`.
-  -- The signature-file RHS uses `gaussianPDFReal m (v + ⟨t, ht.le⟩)` and
-  -- `fisherInfoOfMeasureV2Real ... (gaussianPDFReal m (v + ⟨t, ht.le⟩))`, which
-  -- by `fisherInfoOfMeasureV2Real_def` equals `fisherInfoOfDensityReal ...`.
-  have h_sig := deBruijn_identity_v2_gaussian X Z hX hZ hXZ hv hX_law hZ_law ht
-  -- Rewrite the RHS: `fisherInfoOfMeasureV2Real μ f = fisherInfoOfDensityReal f`.
-  rw [fisherInfoOfMeasureV2Real_def] at h_sig
-  -- Beta-reduce `(fun s _x => ...) t` to `fun _x => ...` on the goal side.
-  show HasDerivAt
-    (fun s => differentialEntropy (Measure.map (gaussianConvolution X Z s) P))
-    ((1/2) * fisherInfoOfDensityReal
-      (fun (_x : ℝ) => if hs : 0 < t
-        then gaussianPDFReal m (v + ⟨t, hs.le⟩) _x else 0))
-    t
-  -- The `p t x` shape with the `if dif_pos` reduces to `gaussianPDFReal m (v + ⟨t, ht.le⟩) x`.
-  have h_p_eq : (fun (_x : ℝ) => if hs : 0 < t
-      then gaussianPDFReal m (v + ⟨t, hs.le⟩) _x else 0)
-      = (fun x => gaussianPDFReal m (v + ⟨t, ht.le⟩) x) := by
-    funext x
-    rw [dif_pos ht]
-  rw [h_p_eq]
-  -- Now `fisherInfoOfDensityReal (fun x => gaussianPDFReal m (v + ⟨t, ht.le⟩) x)`
-  -- equals `fisherInfoOfDensityReal (gaussianPDFReal m (v + ⟨t, ht.le⟩))` definitionally.
-  exact h_sig
 
 end Common2026.Shannon.FisherInfoV2

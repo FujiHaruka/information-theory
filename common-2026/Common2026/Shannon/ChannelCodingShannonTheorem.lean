@@ -903,29 +903,11 @@ noncomputable def Code_lift_from_subtype
   { encoder := fun m i => (c.encoder m i).val
     decoder := c.decoder }
 
-omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
-  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
-/-- `Code_lift_from_subtype` で得た code の `errorProbAt` は元の subtype 上 code の
-`errorProbAt` (under `W.comap Subtype.val`) と一致。`Kernel.comap_apply` で
-`W.comap Subtype.val a' = W a'.val` なので両辺は同じ `Measure.pi` を測る。 -/
-theorem Code_lift_from_subtype_errorProbAt
-    {M n : ℕ} (p : Measure α) (W : Channel α β)
-    (c : Code M n {a : α // 0 < p.real {a}} β) (m : Fin M) :
-    (Code_lift_from_subtype p c).errorProbAt W m
-      = c.errorProbAt (W.comap (Subtype.val : {a : α // 0 < p.real {a}} → α)
-          (Measurable.subtype_val measurable_id)) m := by
-  -- `errorEvent` depends only on the decoder, identical between the two codes (`rfl`).
-  -- `Measure.pi` factors agree pointwise by `Kernel.comap_apply`:
-  -- `(W.comap Subtype.val _) (c.encoder m i) = W (c.encoder m i).val`.
-  unfold Code.errorProbAt
-  rfl
-
 /-! ## Phase D — 主定理 -/
 
 /-- Uniform input distribution `unif a := 1/|α|`, used as a smoothing target. -/
 noncomputable def uniformInput (α : Type*) [Fintype α] : α → ℝ :=
   fun _ => (Fintype.card α : ℝ)⁻¹
-
 omit [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β]
   [MeasurableSingletonClass β] in

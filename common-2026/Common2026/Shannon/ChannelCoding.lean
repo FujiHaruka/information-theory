@@ -88,10 +88,6 @@ noncomputable def mutualInfoOfChannel (p : Measure α) (W : Channel α β) : ℝ
     mutualInfoOfChannel p W
       = klDiv (jointDistribution p W) (p.prod (outputDistribution p W)) := rfl
 
-/-- `mutualInfoOfChannel` is non-negative (vacuous since `klDiv : ℝ≥0∞`). -/
-theorem mutualInfoOfChannel_nonneg (p : Measure α) (W : Channel α β) :
-    0 ≤ mutualInfoOfChannel p W := bot_le
-
 /-- **`mutualInfoOfChannel` equals MI of the joint coordinates.** Unfolds the
 `klDiv`-defined `mutualInfoOfChannel p W` into the canonical
 `mutualInfo (jointDistribution p W) Prod.fst Prod.snd`. Used as the bridge from
@@ -180,12 +176,6 @@ def errorEvent (c : Code M n α β) (m : Fin M) : Set (Fin n → β) :=
     y ∈ c.errorEvent m ↔ c.decoder y ≠ m := by
   simp [errorEvent, decodingRegion]
 
-lemma measurableSet_errorEvent
-    [Fintype β] [MeasurableSingletonClass β]
-    (c : Code M n α β) (m : Fin M) :
-    MeasurableSet (c.errorEvent m) :=
-  (c.measurableSet_decodingRegion m).compl
-
 end Code
 
 /-! ## Block-code error probability -/
@@ -244,14 +234,6 @@ theorem averageErrorProb_le_one
     calc ((M : ℝ≥0∞)⁻¹ * ∑ m : Fin M, c.errorProbAt W m)
         ≤ (M : ℝ≥0∞)⁻¹ * (M : ℝ≥0∞) := mul_le_mul_of_nonneg_left h_sum_le bot_le
       _ = 1 := ENNReal.inv_mul_cancel hM_pos.ne' hM_ne_top
-
-omit [Fintype α] [MeasurableSingletonClass α] [Fintype β] [MeasurableSingletonClass β] in
-/-- The average error probability is finite (≤ 1 < ∞). -/
-theorem averageErrorProb_ne_top
-    [Nonempty β]
-    (c : Code M n α β) (W : Channel α β) [IsMarkovKernel W] :
-    c.averageErrorProb W ≠ ∞ :=
-  (c.averageErrorProb_le_one W).trans_lt ENNReal.one_lt_top |>.ne
 
 end Code
 

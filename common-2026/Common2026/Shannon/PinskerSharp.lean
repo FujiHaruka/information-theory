@@ -121,11 +121,6 @@ private lemma H_one : H 1 = 0 := by
   rw [klFun_one]
   ring
 
-/-- `H(0) = 1 ≥ 0`. -/
-private lemma H_zero : H 0 = 1 := by
-  unfold H
-  rw [klFun_zero]
-  ring
 
 /-- `Hderiv` は `(0, ∞)` 上 monotone (`H'' ≥ 0` から)。 -/
 private lemma Hderiv_monotoneOn : MonotoneOn Hderiv (Set.Ioi (0 : ℝ)) := by

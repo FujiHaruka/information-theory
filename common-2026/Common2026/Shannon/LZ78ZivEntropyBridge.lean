@@ -260,18 +260,4 @@ omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] i
 /-- `0 < Real.log 2` — the unit-conversion constant between nats and bits. -/
 theorem log_two_pos : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
 
-/-- **Base-2 (bit) per-block empirical entropy estimator**:
-`blockLogAvg₂ μ p n ω = blockLogAvg μ p n ω / Real.log 2`, the per-block
-negative log-likelihood measured in **bits** (`-(1/n) log₂ Pₙ{block}`). This
-is the quantity the bit-based LZ78 rate `(lz n x)/n` is compared against. -/
-noncomputable def blockLogAvg₂
-    (μ : Measure Ω) (p : StationaryProcess μ α) (n : ℕ) : Ω → ℝ :=
-  fun ω => blockLogAvg μ p n ω / Real.log 2
-
-/-- **Base-2 (bit) entropy rate**: `entropyRate₂ μ p = entropyRate μ p / Real.log 2`,
-the entropy rate measured in **bits per symbol**. This is the genuine
-Cover–Thomas Theorem 13.5.3 limit for the bit-based LZ78 per-symbol rate. -/
-noncomputable def entropyRate₂ (μ : Measure Ω) (p : StationaryProcess μ α) : ℝ :=
-  entropyRate μ p / Real.log 2
-
 end InformationTheory.Shannon

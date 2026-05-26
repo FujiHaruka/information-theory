@@ -59,115 +59,17 @@ open scoped ENNReal NNReal BigOperators Topology
 
 /-! ## Phase A — Positivity of the KKT water level -/
 
-/-- **KKT water level is positive**: if the water-filling allocation uses up a
-*positive* total power `P`, the water level `ν` must be strictly positive.
-
-If `ν ≤ 0`, then for every coordinate `ν − N_i ≤ 0` (since `N_i ≥ 0`), so the
-allocation `max(0, ν − N_i)` is zero everywhere and the total is `0`, which
-contradicts `∑_i P_i^* = P > 0`. -/
-theorem waterFillingKKT_pos {n : ℕ} (P : ℝ) (hP : 0 < P) (N : Fin n → ℝ≥0)
-    {ν : ℝ} (h_kkt : IsWaterFillingKKT P N ν) :
-    0 < ν := by
-  by_contra h
-  rw [not_lt] at h
-  -- ν ≤ 0 ⇒ every coordinate inactive ⇒ sum = 0 ≠ P.
-  have h_each : ∀ i : Fin n, waterFillingPower ν N i = 0 := by
-    intro i
-    have hNi : (0 : ℝ) ≤ (N i : ℝ) := NNReal.coe_nonneg _
-    exact waterFillingPower_eq_zero_of_inactive ν N i (le_trans h hNi)
-  have h_sum0 : ∑ i : Fin n, waterFillingPower ν N i = 0 :=
-    Finset.sum_eq_zero (fun i _ => h_each i)
-  -- IsWaterFillingKKT : ∑ ... = P, contradicting 0 = P > 0.
-  rw [h_kkt] at h_sum0
-  linarith
 
 /-! ## Phase B — Complementary slackness from the KKT predicate -/
 
-/-- **Complementary slackness from KKT**: at the common multiplier
-`lam = 1/(2ν)` with positive water level, the slackness pair
-`0 ≤ lam ∧ ∑ P_i^* = P` holds. The budget equality is exactly the KKT
-predicate; nonnegativity of `lam` follows from `ν > 0`. -/
-theorem isWFComplementarySlacknessHyp_of_KKT {n : ℕ} (P : ℝ) (N : Fin n → ℝ≥0)
-    {ν : ℝ} (hν : 0 < ν) (h_kkt : IsWaterFillingKKT P N ν) :
-    IsWFComplementarySlacknessHyp P N ν (1 / (2 * ν)) := by
-  refine ⟨?_, h_kkt⟩
-  -- 0 ≤ 1/(2ν) since ν > 0.
-  positivity
 
 /-! ## Phase C — Internal Lagrange bundle -/
 
-/-- **Lagrange bundle from KKT** (common-multiplier discharge): a KKT water
-level (with positive total power and positive noise floors) admits the Lagrange
-bundle `IsWFLagrangeBundle P N ν (1/(2ν))`, i.e. stationarity (the genuine
-per-coordinate tangent inequality at the *single shared* multiplier) plus
-complementary slackness — both produced internally, neither assumed. -/
-theorem isWFLagrangeBundle_of_KKT {n : ℕ} (P : ℝ) (hP : 0 < P)
-    (N : Fin n → ℝ≥0) (hN_pos : ∀ i, 0 < (N i : ℝ))
-    {ν : ℝ} (h_kkt : IsWaterFillingKKT P N ν) :
-    IsWFLagrangeBundle P N ν (1 / (2 * ν)) := by
-  have hν : 0 < ν := waterFillingKKT_pos P hP N h_kkt
-  exact ⟨isWFStationarityHyp_of_pos N hν hN_pos,
-    isWFComplementarySlacknessHyp_of_KKT P N hν h_kkt⟩
 
 /-! ## Phase D — Optimality certificate from KKT -/
 
-/-- **Optimality certificate from KKT**: the water-filling allocation at a KKT
-water level is optimality-certified — the per-coordinate cost sum is maximized
-there over all feasible allocations. This composes the internal Lagrange bundle
-with the Phase D Lagrange reduction (`waterFillingCertificate_of_bundle`). -/
-theorem waterFillingCertificate_of_KKT {n : ℕ} (P : ℝ) (hP : 0 < P)
-    (N : Fin n → ℝ≥0) (hN_pos : ∀ i, 0 < (N i : ℝ))
-    {ν : ℝ} (h_kkt : IsWaterFillingKKT P N ν) :
-    WaterFillingOptimalityCertificate P N ν :=
-  waterFillingCertificate_of_bundle P N ν (1 / (2 * ν))
-    (isWFLagrangeBundle_of_KKT P hP N hN_pos h_kkt)
 
 /-! ## Phase E — Re-publish capacity formula (stationarity discharged) -/
 
-/-- **Parallel Gaussian capacity formula (WF stationarity discharged)**.
-
-Same conclusion as `parallel_gaussian_capacity_formula_WFcert_discharged`, but
-the Lagrange-bundle hypothesis `h_for_lagrange` is now **eliminated**: the common
-Lagrange multiplier (KKT stationarity + complementary slackness) is produced
-internally from the KKT water-level structure.
-
-**Superseded** by `parallel_gaussian_capacity_formula_minimal`
-(`ParallelGaussianPerCoordRegularity.lean`) for the L-PG1 piece: the
-chain-rule bundle hypothesis `h_for_bundle` is replaced by the honest
-pieces of the regularity bundle (multivariate channel↔RV MI decomposition
-+ per-coord AWGN bridge + global P-upper bound). Continuous AEP is *not*
-required (the capacity is the information capacity, evaluated by a
-sup-sandwich, see `ParallelGaussianPerCoord.lean:303`). L-WF1 (KKT
-existence), L-WF2 (water-filling optimality, from genuine concavity +
-internally-exhibited multiplier) and L-PG0 (kernel measurability) remain
-genuinely closed. Retained for backward compatibility.
-
-`@audit:superseded-by(parallel-gaussian-l-pg1-discharge)` -/
-theorem parallel_gaussian_capacity_formula_WFstat_discharged {n : ℕ}
-    (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
-    (hN_pos : ∀ i, 0 < (N i : ℝ))
-    (h_meas : IsParallelAwgnChannelMeasurable N)
-    (h_for_bundle : ∀ ν : ℝ, IsWaterFillingKKT P N ν →
-        ParallelGaussianChainRuleBundle P N h_meas
-          (isParallelGaussianKernelMeasurable N) ν) :
-    ∃ ν : ℝ, IsWaterFillingKKT P N ν ∧
-      parallelGaussianCapacity P N h_meas (isParallelGaussianKernelMeasurable N)
-        = ∑ i : Fin (n + 1),
-            (1/2) * Real.log (1 + waterFillingPower ν N i / (N i : ℝ)) := by
-  -- L-WF1 fully discharged: a KKT water level exists.
-  obtain ⟨ν, hν_kkt⟩ := exists_waterFillingKKT_of_pos P hP N
-  refine ⟨ν, hν_kkt, ?_⟩
-  -- Optimality certificate produced internally from the KKT structure
-  -- (common Lagrange multiplier lam = 1/(2ν)). Independently derivable;
-  -- kept here for posture documentation but not consumed by the final
-  -- chain (the bundle IS the conclusion equality).
-  have _h_cert : WaterFillingOptimalityCertificate P N ν :=
-    waterFillingCertificate_of_KKT P hP N hN_pos hν_kkt
-  have _h_opt : IsWaterFillingOptimal P N ν :=
-    isWaterFillingOptimal_of_certificate P N ν _h_cert
-  -- Chain rule bundle (L-PG1) → conclusion equality (def-unfold of
-  -- `IsParallelGaussianPerCoordReduction`; `_of_bundle` runs `le_antisymm`).
-  exact isParallelGaussianPerCoordReduction_of_bundle P N h_meas
-    (isParallelGaussianKernelMeasurable N) ν (h_for_bundle ν hν_kkt)
 
 end InformationTheory.Shannon.ParallelGaussian

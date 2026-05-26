@@ -68,13 +68,6 @@ lemma typeCountIndex_card (n : ℕ) :
   convert h using 2
   exact (Fintype.card_fin _).symm
 
-omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **Real cast** of polynomial cardinality bound, for use with `log`/`exp` calculus. -/
-lemma typeCountIndex_card_real (n : ℕ) :
-    (Fintype.card (TypeCountIndex α n) : ℝ) = ((n : ℝ) + 1) ^ Fintype.card α := by
-  rw [typeCountIndex_card]
-  push_cast
-  rfl
 
 /-! ### Phase B — index 形 type class + Sanov A 形 reuse -/
 
@@ -82,15 +75,6 @@ lemma typeCountIndex_card_real (n : ℕ) :
 def typeClassByCount {n : ℕ} (c : α → ℕ) : Set (Fin n → α) :=
   { x | ∀ a, typeCount x a = c a }
 
-omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-lemma mem_typeClassByCount_iff {n : ℕ} (c : α → ℕ) (x : Fin n → α) :
-    x ∈ typeClassByCount c ↔ ∀ a, typeCount x a = c a := Iff.rfl
-
-omit [Nonempty α] in
-/-- `typeClassByCount c` は有限集合 `Fin n → α` の subset、自動的に measurable。 -/
-theorem measurableSet_typeClassByCount {n : ℕ} (c : α → ℕ) :
-    MeasurableSet (typeClassByCount (α := α) (n := n) c) :=
-  (Set.toFinite _).measurableSet
 
 /-- **KL divergence at an empirical type** (rational form):
 `klDivIndex c n Q := ∑ a, (c a / n) · (log (c a / n) - log Q.real{a})`. -/

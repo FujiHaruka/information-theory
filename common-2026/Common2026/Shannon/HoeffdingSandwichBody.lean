@@ -163,23 +163,6 @@ lemma hoeffdingConstraintSet_eq_singleton_at_alpha_zero
     -- klDivPmf Q P₁ = 0 ↔ Q = P₁.
     exact (klDivPmf_eq_zero_iff_pmf hQ_simplex hP₁_simplex hP₁_pos).mp hQ_kl_eq
 
-/-- **L-H4-FB part 1 (predicate form)**: at `α = 0`, every `Qstar ∈ K` is
-full-support. -/
-lemma hoeffdingE2_minimizer_at_boundary_alpha_zero
-    (P₁ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₁_sum : ∑ a, P₁ a = 1)
-    {Qstar : α → ℝ} (hQs_mem : Qstar ∈ hoeffdingConstraintSet P₁ (0 : ℝ)) :
-    IsHoeffdingMinimizerFullSupport Qstar := by
-  -- Qstar = P₁ by the singleton characterisation.
-  have h_singleton :
-      hoeffdingConstraintSet P₁ (0 : ℝ) = {P₁} :=
-    hoeffdingConstraintSet_eq_singleton_at_alpha_zero P₁ hP₁_pos hP₁_sum
-  have hQs_eq : Qstar = P₁ := by
-    rw [h_singleton] at hQs_mem
-    exact hQs_mem
-  intro a
-  rw [hQs_eq]
-  exact hP₁_pos a
-
 /-- **L-H4-FB part 2** (boundary `α ≥ klDivPmf P₂ P₁` full discharge): when
 `α` is at least `klDivPmf P₂ P₁`, then `P₂ ∈ hoeffdingConstraintSet P₁ alpha`. -/
 lemma P₂_mem_hoeffdingConstraintSet

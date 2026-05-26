@@ -53,15 +53,6 @@ noncomputable def typeCount {n : ℕ} (x : Fin n → α) (a : α) : ℕ :=
 noncomputable def typeClass (P : Measure α) (n : ℕ) : Set (Fin n → α) :=
   { x | ∀ a : α, (typeCount x a : ℝ) = (n : ℝ) * P.real {a} }
 
-omit [Fintype α] [Nonempty α] [MeasurableSingletonClass α] in
-lemma mem_typeClass_iff (P : Measure α) (n : ℕ) (x : Fin n → α) :
-    x ∈ typeClass P n ↔ ∀ a : α, (typeCount x a : ℝ) = (n : ℝ) * P.real {a} := Iff.rfl
-
-omit [Nonempty α] in
-/-- `typeClass P n` は `Fin n → α` (有限) の subset、自動的に measurable。 -/
-theorem measurableSet_typeClass (P : Measure α) (n : ℕ) :
-    MeasurableSet (typeClass P n) :=
-  (Set.toFinite _).measurableSet
 
 /-- **Finite-alphabet KL sum form**:
 `klDivSumForm P Q := ∑ a, P(a) · (log P(a) − log Q(a))`。

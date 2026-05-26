@@ -152,28 +152,4 @@ theorem expected_blockLogAvg_eq
     ring
   rw [h_sum_eq, one_div, ← div_eq_inv_mul]
 
-/-- **Expected-value Shannon–McMillan–Breiman**.
-
-The expected per-block log-likelihood `𝔼[-(1/n) log P_n(block n)]` converges
-to the entropy rate as `n → ∞`. This is the result that needs **only**
-existence of the entropy rate (B.3) and the integral bridge above — it does
-**not** need Birkhoff. The a.s. version (lifting `∫` to a.e. ω) is delivered
-by `shannon_mcmillan_breiman_of_sandwich` plus the Phase C sandwich bounds. -/
-theorem tendsto_expected_blockLogAvg
-    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) :
-    Filter.Tendsto (fun n : ℕ => ∫ ω, blockLogAvg μ p n ω ∂μ) Filter.atTop
-      (𝓝 (entropyRate μ p)) := by
-  -- Step 1: extract the limit of `blockEntropy μ p n / n` from (B.3).
-  obtain ⟨H, hH⟩ := entropyRate_exists_of_stationary μ p
-  -- The `entropyRate` is precisely this limit (by `Tendsto.limUnder_eq`).
-  have h_entropyRate : entropyRate μ p = H := hH.limUnder_eq
-  rw [h_entropyRate]
-  -- Step 2: rewrite `∫ blockLogAvg` as `blockEntropy / n` eventually
-  -- (for all `n ≥ 1`), then use `congr` to inherit the limit from `hH`.
-  refine hH.congr' ?_
-  -- Build an `EventuallyEq` from the `n > 0` identity.
-  rw [Filter.EventuallyEq, Filter.eventually_atTop]
-  refine ⟨1, fun n hn => ?_⟩
-  exact (expected_blockLogAvg_eq μ p hn).symm
-
 end InformationTheory.Shannon

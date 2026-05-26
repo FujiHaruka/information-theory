@@ -120,24 +120,11 @@ lemma LZ78Phrase.bitLength_mono_left {c c' a : ℕ} (h : c ≤ c') :
     Nat.log_mono_right (by omega)
   omega
 
-/-- The per-phrase bit length is monotone in the alphabet size. -/
-lemma LZ78Phrase.bitLength_mono_right {c a a' : ℕ} (h : a ≤ a') :
-    LZ78Phrase.bitLength c a ≤ LZ78Phrase.bitLength c a' := by
-  unfold LZ78Phrase.bitLength
-  have hlog : Nat.log 2 a ≤ Nat.log 2 a' := Nat.log_mono_right h
-  omega
-
 /-- The per-phrase bit length is positive. -/
 @[simp] lemma LZ78Phrase.bitLength_pos (c a : ℕ) :
     0 < LZ78Phrase.bitLength c a := by
   unfold LZ78Phrase.bitLength
   omega
-
-/-- The per-phrase bit length at `c = 0` is `Nat.log 2 a + 2`. -/
-lemma LZ78Phrase.bitLength_zero (a : ℕ) :
-    LZ78Phrase.bitLength 0 a = Nat.log 2 a + 2 := by
-  rw [LZ78Phrase.bitLength_eq]
-  simp
 
 end PhraseBitLength
 
@@ -154,21 +141,6 @@ bits (the uniform upper bound from the largest dictionary size). The
 total is `c · bitLength c a`. -/
 def LZ78Parsing.encodingLength (p : LZ78Parsing α) (a : ℕ) : ℕ :=
   p.count * LZ78Phrase.bitLength p.count a
-
-@[simp] lemma LZ78Parsing.encodingLength_eq (p : LZ78Parsing α) (a : ℕ) :
-    p.encodingLength a = p.count * LZ78Phrase.bitLength p.count a := rfl
-
-/-- Empty parsing has zero encoding length. -/
-@[simp] lemma LZ78Parsing.encodingLength_empty (a : ℕ) :
-    (LZ78Parsing.empty α).encodingLength a = 0 := by
-  unfold LZ78Parsing.encodingLength
-  simp
-
-/-- Monotone in the alphabet size argument. -/
-lemma LZ78Parsing.encodingLength_mono_alphabet (p : LZ78Parsing α) {a a' : ℕ}
-    (h : a ≤ a') : p.encodingLength a ≤ p.encodingLength a' := by
-  unfold LZ78Parsing.encodingLength
-  exact Nat.mul_le_mul_left _ (LZ78Phrase.bitLength_mono_right h)
 
 end ParsingEncodingLength
 
@@ -224,12 +196,6 @@ def lz78OneSymbolParsing (input : List α) : LZ78Parsing α :=
     (lz78OneSymbolParsing ([] : List α)).phrases = [] := by
   unfold lz78OneSymbolParsing
   simp [lz78RootPhrases]
-
-/-- **Phrase count of the one-symbol-per-phrase parsing equals input
-length**. Useful for the worst-case L-LZ4-D pass-through. -/
-lemma lz78OneSymbolParsing_count_eq (input : List α) :
-    (lz78OneSymbolParsing input).count = input.length :=
-  lz78OneSymbolParsing_count input
 
 /-- **Encoding length of the one-symbol parsing**. -/
 def lz78OneSymbolEncodingLength (input : List α) (a : ℕ) : ℕ :=

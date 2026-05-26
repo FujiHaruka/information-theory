@@ -233,14 +233,6 @@ theorem uniquelyDecodable_lz78TokenCode (c : ℕ) :
         Set (List Bool)) :=
   uniquelyDecodable_finBoolCode (LZ78Phrase.bitLength_pos c (Fintype.card α))
 
-/-- **McMillan/Kraft for the real LZ78 token code**: the per-phrase Kraft sum
-of the fixed-width `(parent, symbol)` code is `≤ 1`. -/
-theorem lz78TokenCode_kraftSum_le_one (c : ℕ) :
-    ShannonCode.kraftSum (Fintype.card Bool : ℝ)
-        (fun t : Fin (c + 1) × α => (lz78TokenCode c t).length) ≤ 1 :=
-  ShannonCode.kraftSum_le_one_of_uniquelyDecodable (lz78TokenCode c)
-    (injective_lz78TokenCode c) (uniquelyDecodable_lz78TokenCode c)
-
 /-- **Expectation-level source-coding converse for the real LZ78 token code**
 (genuine, sorry-free). For any probability measure `P` (full support) on the
 LZ78 token alphabet, the binary entropy is bounded by the (constant) token

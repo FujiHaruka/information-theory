@@ -94,80 +94,6 @@ lemma exp_neg_tendsto_zero_of_tendsto_atTop
     Filter.tendsto_neg_atTop_atBot.comp hf
   exact Real.tendsto_exp_atBot.comp h_neg
 
-/-- **D.4' — Source-averaged failure → 0** (simplified MVP form).
-
-Given that the source-averaged failure sequence `failure_seq n` is non-negative
-and dominated by `exp(-M_n · (1-η) · exp(-nθ))` with `R > θ ≥ 0`, `M_n ≥
-⌈exp(nR)⌉`, and `η ∈ (0,1)`, the sequence tends to `0`. -/
-theorem source_averaged_failure_tendsto_zero
-    (θ R η : ℝ) (hRθ : θ < R) (hη_pos : 0 < η) (hη_lt : η < 1) (hθ_nn : 0 ≤ θ)
-    (M : ℕ → ℕ) (hM_lb : ∀ n : ℕ, Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M n)
-    (failure_seq : ℕ → ℝ)
-    (h_failure_le : ∀ n : ℕ,
-        failure_seq n ≤ Real.exp (-(M n : ℝ) * ((1 - η) * Real.exp (-(n : ℝ) * θ))))
-    (h_failure_nn : ∀ n : ℕ, 0 ≤ failure_seq n) :
-    Filter.Tendsto failure_seq Filter.atTop (𝓝 0) := by
-  -- Define `g n := (M n : ℝ) * ((1 - η) * exp(-nθ))`. Show `g n → ∞`.
-  have h_one_sub_η_pos : 0 < 1 - η := by linarith
-  -- Step 1: `(⌈exp(nR)⌉ : ℝ) * exp(-nθ) → ∞`.
-  have h_ceil_tendsto :
-      Filter.Tendsto (fun n : ℕ =>
-        (Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) * Real.exp (-(n : ℝ) * θ))
-        Filter.atTop Filter.atTop :=
-    ceil_exp_mul_exp_neg_tendsto_atTop hRθ
-  -- Step 2: multiply by `(1 - η) > 0` constant.
-  have h_ceil_const_tendsto :
-      Filter.Tendsto (fun n : ℕ =>
-        (Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) * Real.exp (-(n : ℝ) * θ) * (1 - η))
-        Filter.atTop Filter.atTop :=
-    h_ceil_tendsto.atTop_mul_const h_one_sub_η_pos
-  -- Step 3: `(M n : ℝ) * ((1 - η) * exp(-nθ)) ≥ that`.
-  have h_g_tendsto :
-      Filter.Tendsto (fun n : ℕ => (M n : ℝ) * ((1 - η) * Real.exp (-(n : ℝ) * θ)))
-        Filter.atTop Filter.atTop := by
-    refine Filter.tendsto_atTop_mono (fun n => ?_) h_ceil_const_tendsto
-    have h_exp_neg_nn : 0 ≤ Real.exp (-(n : ℝ) * θ) := (Real.exp_pos _).le
-    have hM_real : (Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) ≤ (M n : ℝ) := by
-      exact_mod_cast hM_lb n
-    have h_step :
-        (Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) * Real.exp (-(n : ℝ) * θ) * (1 - η)
-          ≤ (M n : ℝ) * Real.exp (-(n : ℝ) * θ) * (1 - η) := by
-      have h_factor_nn :
-          0 ≤ Real.exp (-(n : ℝ) * θ) * (1 - η) :=
-        mul_nonneg h_exp_neg_nn h_one_sub_η_pos.le
-      have := mul_le_mul_of_nonneg_right hM_real h_factor_nn
-      -- rearrange `* exp * (1-η)` ↔ `* (exp * (1-η))`.
-      have h_lhs_eq :
-          (Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) * (Real.exp (-(n : ℝ) * θ) * (1 - η))
-            = (Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ)
-                * Real.exp (-(n : ℝ) * θ) * (1 - η) := by ring
-      have h_rhs_eq :
-          (M n : ℝ) * (Real.exp (-(n : ℝ) * θ) * (1 - η))
-            = (M n : ℝ) * Real.exp (-(n : ℝ) * θ) * (1 - η) := by ring
-      rw [h_lhs_eq, h_rhs_eq] at this
-      exact this
-    -- Final shape: `(M n) * ((1-η) * exp(-nθ))` = the rhs above.
-    have h_target_eq :
-        (M n : ℝ) * ((1 - η) * Real.exp (-(n : ℝ) * θ))
-          = (M n : ℝ) * Real.exp (-(n : ℝ) * θ) * (1 - η) := by ring
-    rw [h_target_eq]
-    exact h_step
-  -- Step 4: `exp(-g n) → 0`.
-  have h_exp_neg_tendsto :
-      Filter.Tendsto (fun n : ℕ =>
-        Real.exp (-((M n : ℝ) * ((1 - η) * Real.exp (-(n : ℝ) * θ)))))
-        Filter.atTop (𝓝 0) :=
-    exp_neg_tendsto_zero_of_tendsto_atTop h_g_tendsto
-  -- Step 5: squeeze `0 ≤ failure_seq ≤ exp(-g)`.
-  refine squeeze_zero h_failure_nn ?_ h_exp_neg_tendsto
-  intro n
-  have h := h_failure_le n
-  -- Rewrite `Real.exp (-(M n) * (...))` as `Real.exp (-((M n) * (...)))`.
-  have h_arg_eq :
-      -(M n : ℝ) * ((1 - η) * Real.exp (-(n : ℝ) * θ))
-        = -((M n : ℝ) * ((1 - η) * Real.exp (-(n : ℝ) * θ))) := by ring
-  rw [h_arg_eq] at h
-  exact h
 
 /-! ## Phase D.5 — distortion decomposition -/
 
@@ -242,25 +168,6 @@ lemma expectedJointDistortion_nonneg
   unfold expectedJointDistortion
   exact integral_nonneg (fun _ => NNReal.coe_nonneg _)
 
-/-- **D.5.2 — distortion decomposition for a single `(x, y)` pair.** Case split on
-membership in `distortionTypicalSet`: on the typical event the within-`δ` bound
-applies, off it the worst-case `distortionMax` does. -/
-lemma blockDistortion_decompose
-    (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
-    (d : DistortionFn α β) (n : ℕ) (ε δ : ℝ)
-    (x : Fin n → α) (y : Fin n → β) :
-    blockDistortion d n x y
-      ≤ (haveI : Decidable ((x, y) ∈ distortionTypicalSet μ Xs Ys d n ε δ) :=
-            Classical.propDecidable _
-          if (x, y) ∈ distortionTypicalSet μ Xs Ys d n ε δ
-           then expectedJointDistortion μ (Xs 0) (Ys 0) d + δ
-           else distortionMax d) := by
-  classical
-  by_cases h : (x, y) ∈ distortionTypicalSet μ Xs Ys d n ε δ
-  · rw [if_pos h]
-    exact blockDistortion_le_of_mem_distortionTypicalSet μ Xs Ys d n ε δ h
-  · rw [if_neg h]
-    exact blockDistortion_le_distortionMax d n x y
 
 /-- **D.5.3 (simplified form) — codebook-fixed average distortion decomposition.**
 

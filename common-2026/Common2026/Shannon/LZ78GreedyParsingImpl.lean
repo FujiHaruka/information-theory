@@ -118,10 +118,6 @@ def LZ78Parsing.ofWellFormed {l : List (LZ78Phrase α)}
     (hl : IsWellFormedPhrases l) :
     (LZ78Parsing.ofWellFormed hl).phrases = l := rfl
 
-@[simp] lemma LZ78Parsing.ofWellFormed_count {l : List (LZ78Phrase α)}
-    (hl : IsWellFormedPhrases l) :
-    (LZ78Parsing.ofWellFormed hl).count = l.length := rfl
-
 end WellFormed
 
 /-! ## §2. Dictionary longest-prefix search -/

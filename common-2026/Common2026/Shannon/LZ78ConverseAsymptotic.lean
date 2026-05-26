@@ -143,18 +143,6 @@ theorem IsLZ78PhraseCountAsymptotic.of_eventual_le
   rw [h1, h2, one_mul]
   exact hle
 
-/-- **Lift a pointwise count bound (with non-negative envelope) to the
-asymptotic predicate**. This is the direct bridge from `ZivCountingBound`
-to `IsLZ78PhraseCountAsymptotic`. -/
-theorem IsLZ78PhraseCountAsymptotic.of_pointwise_bound
-    {p : ℕ → LZ78Parsing α} {B : ℕ → ℝ}
-    (h_bound : IsZivCountingAsymptoticBound p B)
-    (h_nonneg : ∀ n, 0 ≤ B n) :
-    IsLZ78PhraseCountAsymptotic p B := by
-  refine IsLZ78PhraseCountAsymptotic.of_eventual_le ?_ ?_
-  · exact Filter.Eventually.of_forall h_nonneg
-  · exact Filter.Eventually.of_forall h_bound
-
 end PhraseCountAsymptotic
 
 /-! ## §3. Pure asymptotic algebra layer (L-LZ2-asym-C) -/
@@ -162,52 +150,6 @@ end PhraseCountAsymptotic
 section AsymptoticAlgebra
 
 variable {α : Type*}
-
-/-- **Transitivity** of the phrase-count asymptotic predicate through
-an `IsBigO`-style domination of the envelope. If
-`IsLZ78PhraseCountAsymptotic p B` and `B =O[atTop] B'`, then
-`IsLZ78PhraseCountAsymptotic p B'`. -/
-theorem IsLZ78PhraseCountAsymptotic.transBigO
-    {p : ℕ → LZ78Parsing α} {B B' : ℕ → ℝ}
-    (h : IsLZ78PhraseCountAsymptotic p B)
-    (hB : B =O[atTop] B') :
-    IsLZ78PhraseCountAsymptotic p B' :=
-  h.trans hB
-
-/-- **Envelope swap via reflexive trans**: if both the original
-envelope `B` and an alternative envelope `B'` are mutually
-`IsBigO`-related, the predicate transfers across. (Convenience
-wrapper for `.transBigO`.) -/
-theorem IsLZ78PhraseCountAsymptotic.congr_envelope
-    {p : ℕ → LZ78Parsing α} {B B' : ℕ → ℝ}
-    (h : IsLZ78PhraseCountAsymptotic p B)
-    (hBB' : B =ᶠ[atTop] B') :
-    IsLZ78PhraseCountAsymptotic p B' := by
-  -- `IsBigO` is preserved by eventual equality on the right-hand side.
-  unfold IsLZ78PhraseCountAsymptotic at h ⊢
-  exact h.congr' (Filter.EventuallyEq.refl _ _) hBB'
-
-/-- **`IsLittleO` chain**: if the phrase-count is `O[atTop] B` and `B`
-is in turn `o[atTop] g`, then the phrase-count is `o[atTop] g`. This is
-the typical chain used when the textbook bound
-`c(n) ≤ n / log_b n + lower-order` is combined with the fact that
-`n / log_b n = o(n)`. -/
-theorem IsLZ78PhraseCountAsymptotic.transIsLittleO
-    {p : ℕ → LZ78Parsing α} {B g : ℕ → ℝ}
-    (h : IsLZ78PhraseCountAsymptotic p B)
-    (hBg : B =o[atTop] g) :
-    (fun n => ((p n).count : ℝ)) =o[atTop] g :=
-  h.trans_isLittleO hBg
-
-/-- **Reflexive scaling**: multiplying the envelope by a non-zero
-constant preserves the `IsBigO` relation, hence the asymptotic
-predicate. -/
-theorem IsLZ78PhraseCountAsymptotic.const_mul_envelope
-    {p : ℕ → LZ78Parsing α} {B : ℕ → ℝ} (c : ℝ) (hc : c ≠ 0)
-    (h : IsLZ78PhraseCountAsymptotic p B) :
-    IsLZ78PhraseCountAsymptotic p (fun n => c * B n) := by
-  unfold IsLZ78PhraseCountAsymptotic at h ⊢
-  exact h.trans (isBigO_self_const_mul hc B atTop)
 
 end AsymptoticAlgebra
 
@@ -267,26 +209,6 @@ theorem IsLZ78PhraseCountAsymptotic.of_ZivCountingBound
   intro n
   exact h_bound n
 
-/-- **Composite envelope: `(p n).count ≤ B n + ε n` with `ε ≥ 0`** still
-gives `O[atTop] B` *provided* `ε =O[atTop] B`. Helper combine for the
-Ziv-counting slack `(1 + o(1))` factor in Cover–Thomas Eq. 13.124. -/
-theorem IsLZ78PhraseCountAsymptotic.of_sum_envelope
-    {p : ℕ → LZ78Parsing α} {B ε : ℕ → ℝ}
-    (h_bound : ∀ n, ((p n).count : ℝ) ≤ B n + ε n)
-    (h_B_nonneg : ∀ᶠ n in atTop, 0 ≤ B n)
-    (h_ε_nonneg : ∀ᶠ n in atTop, 0 ≤ ε n)
-    (h_ε_bigO_B : ε =O[atTop] B) :
-    IsLZ78PhraseCountAsymptotic p B := by
-  -- First show `c(n) =O[atTop] (B + ε)`, then collapse `B + ε =O[atTop] B`.
-  have h_asym_sum : IsLZ78PhraseCountAsymptotic p (fun n => B n + ε n) := by
-    refine IsLZ78PhraseCountAsymptotic.of_eventual_le ?_ ?_
-    · filter_upwards [h_B_nonneg, h_ε_nonneg] with n hB hε using by linarith
-    · exact Filter.Eventually.of_forall h_bound
-  -- `B + ε =O[atTop] B` is the sum of `B =O[atTop] B` (reflexive) and
-  -- `ε =O[atTop] B`.
-  refine h_asym_sum.transBigO ?_
-  exact (isBigO_refl B atTop).add h_ε_bigO_B
-
 end TrivialNEnvelope
 
 /-! ## §6. `Real.log`-style envelopes -/
@@ -294,15 +216,6 @@ end TrivialNEnvelope
 section LogEnvelopes
 
 variable {α : Type*}
-
-/-- **`Real.log (n : ℝ)` is eventually non-negative on `atTop`**.
-A trivial Mathlib-shape helper used as the non-negativity prerequisite
-of `IsLZ78PhraseCountAsymptotic.of_eventual_le`. -/
-theorem real_log_natCast_eventually_nonneg :
-    ∀ᶠ n : ℕ in atTop, 0 ≤ Real.log (n : ℝ) := by
-  refine Filter.Eventually.of_forall ?_
-  intro n
-  exact Real.log_natCast_nonneg n
 
 /-- **`n / Real.log n` envelope is eventually non-negative**.
 Cover–Thomas Eq. 13.124 envelope sanity. -/
@@ -431,24 +344,6 @@ theorem IsLZ78PhraseCountSandwich.mk
     (h_lower : B_lower =O[atTop] (fun n => ((p n).count : ℝ))) :
     IsLZ78PhraseCountSandwich p B_lower B_upper :=
   ⟨h_upper, h_lower⟩
-
-/-- **Transitive chain: sandwich + envelope swap**. If the count
-sandwich holds with upper envelope `B_upper` and `B_upper =O[atTop] B'`,
-then the sandwich holds with upper envelope `B'`. -/
-theorem IsLZ78PhraseCountSandwich.transUpper
-    {p : ℕ → LZ78Parsing α} {B_lower B_upper B' : ℕ → ℝ}
-    (h : IsLZ78PhraseCountSandwich p B_lower B_upper)
-    (hBO : B_upper =O[atTop] B') :
-    IsLZ78PhraseCountSandwich p B_lower B' :=
-  ⟨h.1.transBigO hBO, h.2⟩
-
-/-- **Transitive chain: sandwich + lower-envelope swap**. -/
-theorem IsLZ78PhraseCountSandwich.transLower
-    {p : ℕ → LZ78Parsing α} {B_lower B_upper B' : ℕ → ℝ}
-    (h : IsLZ78PhraseCountSandwich p B_lower B_upper)
-    (hBO : B' =O[atTop] B_lower) :
-    IsLZ78PhraseCountSandwich p B' B_upper :=
-  ⟨h.1, hBO.trans h.2⟩
 
 end TwoSidedSandwich
 

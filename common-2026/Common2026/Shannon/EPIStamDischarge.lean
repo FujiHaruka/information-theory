@@ -511,19 +511,6 @@ theorem isStamInequalityHyp_of_fisherInfo_eq
 
 /-! ## §11 — de Bruijn regularity manipulation -/
 
-/-- The de Bruijn integration hypothesis at `T = 0` is the trivial empty-
-integral case (boundary). -/
-theorem isDeBruijnIntegrationHyp_boundary
-    {Ω : Type*} [MeasurableSpace Ω]
-    (X Z : Ω → ℝ) (P : Measure Ω)
-    (h_boundary :
-      Common2026.Shannon.differentialEntropy
-        (P.map (fun ω => X ω + Real.sqrt 0 * Z ω))
-      = Common2026.Shannon.differentialEntropy (P.map X)) :
-    IsDeBruijnIntegrationHyp X Z P 0 := by
-  refine isDeBruijnIntegrationHyp_at_zero X Z P ?_
-  exact h_boundary.symm
-
 /-- de Bruijn integration `T = 0` always holds in the **structurally trivial**
 case where `X + √0 · Z = X` pointwise. -/
 theorem isDeBruijnIntegrationHyp_at_zero_pointwise
@@ -540,13 +527,6 @@ theorem heat_flow_path_at_zero {Ω : Type*} (X Z : Ω → ℝ) :
     (fun ω => X ω + Real.sqrt 0 * Z ω) = X := by
   funext ω
   rw [Real.sqrt_zero, zero_mul, add_zero]
-
-/-- Concrete de Bruijn-integration at `T = 0` with no side conditions. -/
-theorem isDeBruijnIntegrationHyp_zero_trivial
-    {Ω : Type*} [MeasurableSpace Ω]
-    (X Z : Ω → ℝ) (P : Measure Ω) :
-    IsDeBruijnIntegrationHyp X Z P 0 :=
-  isDeBruijnIntegrationHyp_at_zero_pointwise X Z P (heat_flow_path_at_zero X Z)
 
 /-! ## §12 — Stam-to-EPI bridge: symmetry / composability -/
 

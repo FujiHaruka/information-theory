@@ -131,17 +131,4 @@ lemma pow_div_prod_pow_eq_exp_n_entropyByCount
     rw [hsum_R]
     ring
 
-/-- **E-2 main theorem**: `|T_c| ≥ (n+1)^{-|α|} · exp(n · H(c/n))`.
-
-Cover-Thomas 11.1.3 size lower bound for type classes. Combines the existing
-`typeClassByCount_card_ge` (raw `n^n / ∏ c^c` form) with the bridge identity
-`pow_div_prod_pow_eq_exp_n_entropyByCount`. -/
-theorem typeClassByCount_card_ge_entropy
-    {n : ℕ} (c : α → ℕ) (hc_sum : (∑ a, c a) = n) :
-    (((n : ℝ) + 1) ^ (Fintype.card α : ℕ))⁻¹
-        * Real.exp ((n : ℝ) * entropyByCount c n)
-      ≤ ((typeClassByCount (α := α) (n := n) c).toFinite.toFinset.card : ℝ) := by
-  have h_raw := typeClassByCount_card_ge (α := α) c hc_sum
-  rwa [pow_div_prod_pow_eq_exp_n_entropyByCount c hc_sum] at h_raw
-
 end InformationTheory.Shannon

@@ -104,10 +104,6 @@ noncomputable def gaussianEntropyPowerConst : ℝ := 2 * Real.pi * Real.exp 1
 theorem gaussianEntropyPowerConst_pos : 0 < gaussianEntropyPowerConst := by
   unfold gaussianEntropyPowerConst; positivity
 
-/-- `gaussianEntropyPowerConst ≠ 0`. -/
-theorem gaussianEntropyPowerConst_ne_zero : gaussianEntropyPowerConst ≠ 0 :=
-  gaussianEntropyPowerConst_pos.ne'
-
 /-- **`(2πe)⁻¹`-normalized form for Gaussian**: under the Cover-Thomas
 `N(μ) := (2πe)⁻¹ · entropyPower μ` normalization, the Gaussian saturating
 case takes the closed form `N(gaussianReal m v) = v`. -/
@@ -270,44 +266,6 @@ theorem isEntropyPowerInequalityHypothesis_symm
   have h_comm : (fun ω => Y ω + X ω) = fun ω => X ω + Y ω := by
     funext ω; ring
   rw [h_comm, add_comm (entropyPower (P.map Y))]
-  exact h
-
-/-- L-EPI3 hypothesis is preserved under translating both `X` and `Y` by
-constants — entropyPower is translation-invariant.
-
-Specifically, if `X` and `Y` satisfy L-EPI3 (and both `P.map X`, `P.map Y`,
-`P.map (X+Y)` are absolutely continuous + σ-finite), then so do `X + a` and
-`Y + b`. The shifted sum is `(X+a) + (Y+b) = (X+Y) + (a+b)`. -/
-theorem isEntropyPowerInequalityHypothesis_of_translates
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    {P : Measure Ω} {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y)
-    (h_acX : P.map X ≪ volume) (h_acY : P.map Y ≪ volume)
-    (h_acXY : P.map (fun ω => X ω + Y ω) ≪ volume)
-    [SigmaFinite (P.map X)] [SigmaFinite (P.map Y)]
-    [SigmaFinite (P.map (fun ω => X ω + Y ω))]
-    (a b : ℝ)
-    (h : IsEntropyPowerInequalityHypothesis X Y P) :
-    IsEntropyPowerInequalityHypothesis (fun ω => X ω + a) (fun ω => Y ω + b) P := by
-  unfold IsEntropyPowerInequalityHypothesis at h ⊢
-  -- Rewrite each `P.map (· + const)` as `(P.map ·).map (· + const)` to apply
-  -- `entropyPower_map_add_const`.
-  have h_map_X : P.map (fun ω => X ω + a) = (P.map X).map (· + a) := by
-    rw [Measure.map_map (measurable_add_const a) hX]
-    rfl
-  have h_map_Y : P.map (fun ω => Y ω + b) = (P.map Y).map (· + b) := by
-    rw [Measure.map_map (measurable_add_const b) hY]
-    rfl
-  have h_map_sum : P.map (fun ω => (X ω + a) + (Y ω + b))
-      = (P.map (fun ω => X ω + Y ω)).map (· + (a + b)) := by
-    have h_meas_sum : Measurable (fun ω => X ω + Y ω) := hX.add hY
-    have h_funext : (fun ω : Ω => (X ω + a) + (Y ω + b))
-        = (fun x : ℝ => x + (a + b)) ∘ (fun ω => X ω + Y ω) := by
-      funext ω; show (X ω + a) + (Y ω + b) = (X ω + Y ω) + (a + b); ring
-    rw [h_funext]
-    rw [← Measure.map_map (measurable_add_const (a + b)) h_meas_sum]
-  rw [h_map_X, h_map_Y, h_map_sum]
-  rw [entropyPower_map_add_const h_acX, entropyPower_map_add_const h_acY,
-      entropyPower_map_add_const h_acXY]
   exact h
 
 end InformationTheory.Shannon.EntropyPowerInequality

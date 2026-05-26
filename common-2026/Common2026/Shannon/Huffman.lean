@@ -439,14 +439,6 @@ lemma huffmanLengthAux_eq_zero (s : Multiset (Finset α × ℝ)) (h : s.card ≤
   rw [huffmanLengthAux]
   simp only [dif_pos hg, dif_neg h']
 
-omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- `huffmanLengthAux` の base case (HuffmanGrouping でない場合). -/
-lemma huffmanLengthAux_eq_zero_of_not_grouping (s : Multiset (Finset α × ℝ))
-    (hg : ¬ HuffmanGrouping s) :
-    huffmanLengthAux s = fun _ => 0 := by
-  rw [huffmanLengthAux]
-  simp only [dif_neg hg]
-
 /-! ### 主役定義 -/
 
 /-- **Huffman 語長関数** (binary, D = 2). -/
@@ -657,32 +649,6 @@ lemma huffmanLengthAux_const_on_group
 noncomputable def kraftPerGroup (s : Multiset (Finset α × ℝ)) : ℝ :=
   (s.map (fun p =>
     (∑ a ∈ p.1, (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ))) / (p.1.card : ℝ))).sum
-
-omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- 各 group の Kraft 寄与は `2^(-d_p)` (constancy 経由). -/
-lemma kraftPerGroup_term_eq
-    (s : Multiset (Finset α × ℝ)) (hg : HuffmanGrouping s)
-    (p : Finset α × ℝ) (hp : p ∈ s)
-    {a : α} (ha : a ∈ p.1) :
-    (∑ x ∈ p.1, (2 : ℝ) ^ (-(huffmanLengthAux s x : ℤ))) / (p.1.card : ℝ)
-      = (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ)) := by
-  have hconst : ∀ b ∈ p.1, huffmanLengthAux s b = huffmanLengthAux s a := by
-    intro b hb
-    exact huffmanLengthAux_const_on_group s hg p hp b a hb ha
-  have hsum : ∑ x ∈ p.1, (2 : ℝ) ^ (-(huffmanLengthAux s x : ℤ))
-      = (p.1.card : ℝ) * (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ)) := by
-    rw [show (p.1.card : ℝ) * (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ))
-        = ∑ _x ∈ p.1, (2 : ℝ) ^ (-(huffmanLengthAux s a : ℤ)) by
-      rw [Finset.sum_const, nsmul_eq_mul]]
-    apply Finset.sum_congr rfl
-    intro x hx
-    rw [hconst x hx]
-  rw [hsum]
-  have hcard_pos : (p.1.card : ℝ) ≠ 0 := by
-    have hp_ne : p.1.Nonempty := hg.nonempty hp
-    have : 0 < p.1.card := Finset.card_pos.mpr hp_ne
-    exact_mod_cast this.ne'
-  field_simp
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- `kraftPerGroup` の base 値: `s.card ≤ 1` で `s.card` に等しい (各 group の depth = 0). -/

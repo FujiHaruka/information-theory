@@ -58,22 +58,6 @@ Gaussians), with the measure-keyed wrapper
 `Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2` in `FisherInfoV2DeBruijn.lean`.
 The EPI/Stam scaffolding predicates were migrated to `fisherInfoOfMeasureV2`. -/
 
-/-- **Bridge**: `differentialEntropy (P.map Y) = -∫ p(x) · log p(x) dx` where
-`p := pdf Y P volume` is the PDF of `Y`. Combines `pdf_def`-style `P.map Y = volume.withDensity p`
-(`MeasureTheory.map_eq_withDensity_pdf`) with `differentialEntropy_eq_integral_withDensity`. -/
-theorem differentialEntropy_map_eq_integral_pdf_log_pdf
-    {Ω : Type*} {mΩ : MeasurableSpace Ω} (Y : Ω → ℝ) (P : Measure Ω) [HasPDF Y P volume] :
-    differentialEntropy (P.map Y)
-      = -∫ x, (pdf Y P volume x).toReal * Real.log (pdf Y P volume x).toReal ∂volume := by
-  -- Step 1: `P.map Y = volume.withDensity (pdf Y P volume)`
-  rw [map_eq_withDensity_pdf Y P volume]
-  -- Step 2: `differentialEntropy (volume.withDensity f) = ∫ negMulLog (f x).toReal dx`
-  rw [differentialEntropy_eq_integral_withDensity (measurable_pdf Y P volume)]
-  -- Step 3: `negMulLog y = -(y * log y)`
-  rw [← integral_neg]
-  refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
-  simp [Real.negMulLog_def]
-
 /-! ## Phase B — Score function 期待値 0 (Tier 1, L-F2 適用形) -/
 
 /-- **Regular density predicate** (Cover-Thomas 17.7 仮定の集約). Bundles the

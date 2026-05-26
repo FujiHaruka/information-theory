@@ -87,14 +87,6 @@ lemma iidAmbientJoint_identDistrib_iidXs
   aemeasurable_snd := (measurable_iidXs 0).aemeasurable
   map_eq := by rw [iidAmbientJoint_map_iidXs, iidAmbientJoint_map_iidXs]
 
-lemma iidAmbientJoint_identDistrib_iidYs
-    (joint : Measure (α × β)) [IsProbabilityMeasure joint] (i : ℕ) :
-    IdentDistrib (iidYs (α := α) (β := β) i) (iidYs 0)
-      (iidAmbientJointMeasure joint) (iidAmbientJointMeasure joint) where
-  aemeasurable_fst := (measurable_iidYs i).aemeasurable
-  aemeasurable_snd := (measurable_iidYs 0).aemeasurable
-  map_eq := by rw [iidAmbientJoint_map_iidYs, iidAmbientJoint_map_iidYs]
-
 lemma iidAmbientJoint_identDistrib_joint
     (joint : Measure (α × β)) [IsProbabilityMeasure joint] (i : ℕ) :
     IdentDistrib (jointSequence (α := α) (β := β) iidXs iidYs i)
@@ -115,14 +107,6 @@ lemma iidAmbientJoint_iIndepFun_iidXs
     (P := fun _ : ℕ => joint)
     (X := fun _ : ℕ => Prod.fst (α := α) (β := β))
     (fun _ => measurable_fst)
-
-lemma iidAmbientJoint_iIndepFun_iidYs
-    (joint : Measure (α × β)) [IsProbabilityMeasure joint] :
-    iIndepFun (fun i : ℕ => iidYs (α := α) (β := β) i) (iidAmbientJointMeasure joint) := by
-  exact iIndepFun_infinitePi
-    (P := fun _ : ℕ => joint)
-    (X := fun _ : ℕ => Prod.snd (α := α) (β := β))
-    (fun _ => measurable_snd)
 
 lemma iidAmbientJoint_iIndepFun_joint
     (joint : Measure (α × β)) [IsProbabilityMeasure joint] :

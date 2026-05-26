@@ -173,12 +173,6 @@ theorem isStamScoreConvHyp_intro {Ω : Type*} [MeasurableSpace Ω]
     rw [div_le_one hsum]; linarith
 
 
-/-- The Step-1 typed predicate is congruent under function equality. -/
-theorem isStamScoreConvHyp_congr {Ω : Type*} [MeasurableSpace Ω]
-    {X Y X' Y' : Ω → ℝ} {P : Measure Ω}
-    (hX : X = X') (hY : Y = Y') (h : IsStamScoreConvHyp X Y P) :
-    IsStamScoreConvHyp X' Y' P := by subst hX; subst hY; exact h
-
 /-! ## §3 — Step 2 typed predicate `IsStamCondExpCSHyp` (replaces Wave 7 `True`) -/
 
 /-- **Conditional Cauchy-Schwarz hypothesis** (Step 2, typed).

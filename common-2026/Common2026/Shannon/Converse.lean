@@ -136,58 +136,6 @@ I(Msg; Yo) = I(Yo; Msg)                              -- mutualInfo_comm
 ```
 -/
 
-/-- Single-shot Shannon converse, encoder 付き版 (injective encoder の系):
-`encoder : M → X` が injective なら、`log |M| ≤ I(encoder ∘ Msg; Yo) + h(Pe) + Pe · log(|M| - 1)`. -/
-theorem shannon_converse_single_shot_injective_encoder
-    {X : Type*} [Fintype X] [MeasurableSpace X] [MeasurableSingletonClass X]
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Msg : Ω → M) (encoder : M → X) (Yo : Ω → Y) (decoder : Y → M)
-    (hMsg : Measurable Msg) (hYo : Measurable Yo)
-    (hencoder : Measurable encoder) (hdecoder : Measurable decoder)
-    (hencoder_inj : Function.Injective encoder)
-    (hMsg_uniform :
-      μ.map Msg = (Fintype.card M : ℝ≥0∞)⁻¹ • Measure.count)
-    (hcard : 2 ≤ Fintype.card M)
-    (hMI_finite : mutualInfo μ (encoder ∘ Msg) Yo ≠ ∞) :
-    Real.log (Fintype.card M) ≤
-      (mutualInfo μ (encoder ∘ Msg) Yo).toReal +
-        Real.binEntropy
-          (InformationTheory.MeasureFano.errorProb μ Msg Yo decoder) +
-        InformationTheory.MeasureFano.errorProb μ Msg Yo decoder *
-          Real.log ((Fintype.card M : ℝ) - 1) := by
-  -- 左逆 decoder' : X → M を Function.invFun で構成
-  let decoder' : X → M := Function.invFun encoder
-  have hdecoder'_left : Function.LeftInverse decoder' encoder :=
-    Function.leftInverse_invFun hencoder_inj
-  have hMsg_eq : decoder' ∘ (encoder ∘ Msg) = Msg := by
-    funext ω; exact hdecoder'_left (Msg ω)
-  -- decoder' は X が Fintype + MeasurableSingletonClass なので自動 measurable
-  have hdecoder' : Measurable decoder' := measurable_of_countable _
-  have h_enc_Msg : Measurable (encoder ∘ Msg) := hencoder.comp hMsg
-  -- DPI: I(Yo; decoder' ∘ (encoder ∘ Msg)) ≤ I(Yo; encoder ∘ Msg)
-  have h_dpi_yo :
-      mutualInfo μ Yo (decoder' ∘ (encoder ∘ Msg))
-        ≤ mutualInfo μ Yo (encoder ∘ Msg) :=
-    mutualInfo_le_of_postprocess μ Yo (encoder ∘ Msg) hYo h_enc_Msg hdecoder'
-  rw [hMsg_eq] at h_dpi_yo
-  -- 対称化: I(Msg; Yo) ≤ I(encoder ∘ Msg; Yo)
-  have h_le_ennreal :
-      mutualInfo μ Msg Yo ≤ mutualInfo μ (encoder ∘ Msg) Yo := by
-    rw [mutualInfo_comm μ Msg Yo hMsg hYo,
-        ← mutualInfo_comm μ (encoder ∘ Msg) Yo h_enc_Msg hYo] at *
-    exact h_dpi_yo
-  -- I(Msg; Yo) も有限
-  have hMI_Msg_finite : mutualInfo μ Msg Yo ≠ ∞ :=
-    ne_top_of_le_ne_top hMI_finite h_le_ennreal
-  -- toReal レベルでの単調性
-  have h_le_real :
-      (mutualInfo μ Msg Yo).toReal ≤ (mutualInfo μ (encoder ∘ Msg) Yo).toReal :=
-    ENNReal.toReal_mono hMI_finite h_le_ennreal
-  -- 既存 single-shot に bridge
-  have h_base := shannon_converse_single_shot
-    μ Msg Yo decoder hMsg hYo hdecoder hMsg_uniform hcard hMI_Msg_finite
-  linarith
-
 /-! ## Phase 4-δ-(b): Markov encoder の系
 
 Markov chain `Msg → encoder ∘ Msg → Yo` (β-form: `Yo` の (encoder∘Msg, Msg) 条件付き分布が

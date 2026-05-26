@@ -139,11 +139,6 @@ lemma sortedByLen_length (l : α → ℕ) :
   rw [List.length_mergeSort, Finset.length_toList]
   exact Finset.card_univ
 
-omit [DecidableEq α] in
-lemma sortedByLen_nodup (l : α → ℕ) : (sortedByLen l).Nodup := by
-  unfold sortedByLen
-  rw [(List.mergeSort_perm _ _).nodup_iff]
-  exact Finset.nodup_toList _
 
 omit [DecidableEq α] in
 lemma mem_sortedByLen (l : α → ℕ) (a : α) : a ∈ sortedByLen l := by
@@ -172,11 +167,6 @@ lemma sortedByLen_pairwise_le (l : α → ℕ) :
 noncomputable def slotStart (D : ℕ) (l : α → ℕ) (L : ℕ) (k : ℕ) : ℕ :=
   ((sortedByLen l).take k).map (fun a => D ^ (L - l a)) |>.sum
 
-omit [DecidableEq α] in
-lemma slotStart_zero (D : ℕ) (l : α → ℕ) (L : ℕ) :
-    slotStart D l L 0 = 0 := by
-  unfold slotStart
-  simp
 
 omit [DecidableEq α] in
 /-- 単調性. -/

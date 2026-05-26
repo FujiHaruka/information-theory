@@ -284,14 +284,6 @@ noncomputable def isRegularDensity_gaussianReal_of_law
 
 /-! ## Phase B — Gaussian Fisher info + score expectation wrapper -/
 
-/-- **Gaussian score function expectation vanishes** (L-F2 hypothesis discharge form). -/
-theorem integral_logDeriv_pdf_eq_zero_gaussian
-    {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
-    (X : Ω → ℝ) [HasPDF X P volume] {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0)
-    (hX_law : P.map X = gaussianReal m v) :
-    ∫ x, logDeriv (gaussianPDFReal m v) x * gaussianPDFReal m v x ∂volume = 0 :=
-  integral_logDeriv_pdf_eq_zero X (isRegularDensity_gaussianReal_of_law X hv hX_law)
-
 /-- `logDeriv (gaussianPDFReal m v) x = -(x - m) / v`. -/
 lemma logDeriv_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) (x : ℝ) :
     logDeriv (gaussianPDFReal m v) x = -(x - m) / v := by

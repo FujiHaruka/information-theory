@@ -1,11 +1,4 @@
-import Common2026.Shannon.AWGN
-import Common2026.Shannon.AWGNAchievability
-import Common2026.Shannon.AWGNConverse
-import Common2026.Shannon.AWGNMain
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
-import Mathlib.Analysis.SpecialFunctions.Pow.Real
-import Mathlib.Analysis.SpecialFunctions.Complex.LogBounds
-import Mathlib.Topology.Algebra.Order.LiminfLimsup
 
 /-!
 # T2-C: Bandlimited Channel / Shannon-Hartley formula
@@ -61,9 +54,7 @@ namespace InformationTheory.Shannon.ShannonHartley
 
 set_option linter.unusedVariables false
 
-open InformationTheory.Shannon.AWGN
-open MeasureTheory ProbabilityTheory
-open scoped ENNReal NNReal BigOperators Topology
+open scoped Topology
 
 /-! ## §A — Bandlimited capacity definition + closed form. -/
 
@@ -134,45 +125,6 @@ Mathlib); here it is taken as the caller's hypothesis, never discharged.
 def IsTwoWDegreesOfFreedom (W N₀ P C : ℝ) : Prop :=
   C = 2 * W * perSampleAwgnCapacity W N₀ P
 
-/-! ## §C — Per-sample reduction via T2-A AWGN. -/
-
-/-- Per-sample identity: with per-sample noise variance `N := N₀/2 · (some
-normalization)` chosen so that per-sample SNR is `P/(N₀·W)`, T2-A's
-`awgn_capacity_closed_form` yields the per-sample capacity
-`(1/2) · log(1 + P/(N₀·W))`. The exact normalization between continuous
-`N₀` and discrete `N` is left as the caller's `hN_snr` hypothesis.
-
-`@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
-theorem perSampleAwgnCapacity_eq_awgn
-    (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P)
-    (P_samp : ℝ) (hP_samp : 0 ≤ P_samp)
-    (N : ℝ≥0) (hN_ne : (N : ℝ) ≠ 0)
-    (hN_snr : P_samp / (N : ℝ) = P / (N₀ * W))
-    (h_meas : IsAwgnChannelMeasurable N)
-    (h_bridge_gauss :
-        (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
-            (gaussianReal 0 P_samp.toNNReal) (awgnChannel N h_meas)).toReal
-          = (1/2) * Real.log (1 + P_samp / (N : ℝ)))
-    (h_bdd :
-        BddAbove ((fun p : Measure ℝ =>
-            (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
-                p (awgnChannel N h_meas)).toReal) ''
-          { p : Measure ℝ | IsProbabilityMeasure p ∧ ∫ x, x^2 ∂p ≤ P_samp }))
-    (h_max_ent :
-        ∀ p ∈ { p : Measure ℝ | IsProbabilityMeasure p ∧
-                ∫ x, x^2 ∂p ≤ P_samp },
-          (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
-              p (awgnChannel N h_meas)).toReal
-            ≤ (1/2) * Real.log (1 + P_samp / (N : ℝ))) :
-    awgnCapacity P_samp N h_meas = perSampleAwgnCapacity W N₀ P := by
-  -- T2-A's main closed form on per-sample budget `P_samp` and noise `N`.
-  have h := awgn_capacity_closed_form P_samp hP_samp N hN_ne h_meas
-    h_bridge_gauss h_bdd h_max_ent
-  rw [h]
-  -- Substitute the SNR-bridge to get the continuous form.
-  unfold perSampleAwgnCapacity
-  rw [hN_snr]
-
 /-! ## §D — Sampling-rate scale-up: continuous capacity = `2W · per-sample`. -/
 
 /-- L-SH3 identity: `2W · perSample = W · log(1 + P/(N₀·W))`, the
@@ -227,165 +179,5 @@ theorem shannon_hartley_formula
   rw [h_two_w]
   -- Residual algebra: `2W · perSample = W · log(1 + P/(N₀·W))` (genuine).
   exact twoW_perSample_eq_shannonHartley W N₀ P hW hN₀ hP
-
-/-! ## §F — Corollaries: high-SNR / low-SNR / `W → ∞` limit. -/
-
-/-- High-SNR corollary: when `P / (N₀ · W) ≥ 1`, the Shannon-Hartley
-capacity is bounded below by `W · log 2` (one bit per sample per second,
-since `log(1 + x) ≥ log 2` when `x ≥ 1`). -/
-theorem shannon_hartley_high_snr_bound
-    (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P)
-    (h_snr : 1 ≤ P / (N₀ * W)) :
-    W * Real.log 2 ≤ bandlimitedAwgnCapacity W N₀ P := by
-  unfold bandlimitedAwgnCapacity
-  apply mul_le_mul_of_nonneg_left _ (le_of_lt hW)
-  apply Real.log_le_log (by norm_num : (0 : ℝ) < 2)
-  linarith
-
-/-- Low-SNR linearization: when `P / (N₀ · W) ≤ 1`, the Shannon-Hartley
-capacity is bounded above by `W · (P / (N₀ · W))`, i.e. it scales linearly
-with SNR. (Uses `log(1 + x) ≤ x`.) -/
-theorem shannon_hartley_low_snr_bound
-    (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
-    bandlimitedAwgnCapacity W N₀ P ≤ W * (P / (N₀ * W)) := by
-  unfold bandlimitedAwgnCapacity
-  apply mul_le_mul_of_nonneg_left _ (le_of_lt hW)
-  have hNW : 0 < N₀ * W := by positivity
-  have hx : 0 ≤ P / (N₀ * W) := div_nonneg hP (le_of_lt hNW)
-  -- `log(1 + x) ≤ x` for `x ≥ 0` is `Real.log_one_add_le`.
-  have h1 : (1 : ℝ) + P / (N₀ * W) > 0 := by linarith
-  calc Real.log (1 + P / (N₀ * W))
-      ≤ (1 + P / (N₀ * W)) - 1 := by
-        have := Real.log_le_sub_one_of_pos h1
-        linarith
-    _ = P / (N₀ * W) := by ring
-
-/-- **Asymptotic capacity in the wideband limit `W → ∞`** (genuine):
-
-    `lim_{W → ∞} W · log(1 + P/(N₀·W)) = P / N₀`
-
-This is the **wideband regime**: as bandwidth increases without bound, the
-Shannon-Hartley capacity saturates at `P / N₀` (nats/sec).
-
-**Genuinely proved.** The Mathlib lemma `Real.tendsto_mul_log_one_add_div_atTop`
-gives `Tendsto (fun W => W · log(1 + (P/N₀)/W)) atTop (𝓝 (P/N₀))`; since
-`(P/N₀)/W = P/(N₀·W)`, the integrand coincides pointwise with
-`bandlimitedAwgnCapacity W N₀ P`, so the same limit holds. (Positivity
-hypotheses are not even needed — the limit is a pure real-calculus fact for
-every `N₀, P`; we keep them for API uniformity with the rest of §F.) -/
-theorem shannon_hartley_wideband_limit
-    (N₀ P : ℝ) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
-    Filter.Tendsto (fun W => bandlimitedAwgnCapacity W N₀ P)
-      Filter.atTop (𝓝 (P / N₀)) := by
-  -- Mathlib's `Real.tendsto_mul_log_one_add_div_atTop (P/N₀)` :
-  --   `Tendsto (fun W => W · log (1 + (P/N₀)/W)) atTop (𝓝 (P/N₀))`.
-  have h := Real.tendsto_mul_log_one_add_div_atTop (P / N₀)
-  -- The integrand matches `bandlimitedAwgnCapacity` since `(P/N₀)/W = P/(N₀·W)`.
-  refine h.congr (fun W => ?_)
-  unfold bandlimitedAwgnCapacity
-  rw [div_div]
-
-/-! ## §G — Convenience builders for the hypothesis predicates. -/
-
-/-- Build `IsBandlimitedSamplingHypothesis` from the basic positivity
-constraints.
-
-**load-bearing hypothesis — NOT a discharge.** Now that
-`IsBandlimitedSamplingHypothesis` is the **honest positivity bundle**
-`0 < W ∧ 0 < N₀ ∧ 0 ≤ P` (previously a `∃ _h, True` placeholder),
-this builder genuinely produces that conjunction from the three premises.
-It does NOT discharge the (still-open) Whittaker-Shannon sampling
-equivalence — the predicate by design no longer claims to. The genuine
-operational identity remains carried by `IsTwoWDegreesOfFreedom` and is
-consumed separately by `shannon_hartley_formula`.
-
-`@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
-theorem mk_IsBandlimitedSamplingHypothesis
-    (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
-    IsBandlimitedSamplingHypothesis W N₀ P :=
-  ⟨hW, hN₀, hP⟩
-
-/-- Build `IsBandlimitedKernel` from `0 < W`.
-
-`@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
-theorem mk_IsBandlimitedKernel (W : ℝ) (hW : 0 < W) : IsBandlimitedKernel W := hW
-
-/-! ## §H — Reformulations in `log₂` (bits/second). -/
-
-/-- `bandlimitedAwgnCapacity` in bits/second (i.e. divided by `log 2`). -/
-noncomputable def bandlimitedAwgnCapacityBits (W N₀ P : ℝ) : ℝ :=
-  bandlimitedAwgnCapacity W N₀ P / Real.log 2
-
-/-- Equivalence between the nats/sec and bits/sec forms. -/
-theorem bandlimitedAwgnCapacityBits_eq (W N₀ P : ℝ) :
-    bandlimitedAwgnCapacityBits W N₀ P
-      = W * (Real.log (1 + P / (N₀ * W)) / Real.log 2) := by
-  unfold bandlimitedAwgnCapacityBits bandlimitedAwgnCapacity
-  ring
-
-/-- Shannon-Hartley in bits/sec (Cover-Thomas form `C = W · log₂(1+SNR)`).
-
-`@audit:retract-candidate(load-bearing-predicate) @audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
-theorem shannon_hartley_formula_bits
-    (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P)
-    (C : ℝ)
-    (h_sampling : IsBandlimitedSamplingHypothesis W N₀ P)
-    (h_kernel : IsBandlimitedKernel W)
-    (h_two_w : IsTwoWDegreesOfFreedom W N₀ P C) :
-    C / Real.log 2 = bandlimitedAwgnCapacityBits W N₀ P := by
-  unfold bandlimitedAwgnCapacityBits
-  rw [shannon_hartley_formula W N₀ P hW hN₀ hP C h_sampling h_kernel h_two_w]
-
-/-! ## §I — Monotonicity properties. -/
-
-/-- Capacity is monotone in signal power `P`. -/
-theorem bandlimitedAwgnCapacity_mono_P
-    (W N₀ : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀)
-    {P P' : ℝ} (hP : 0 ≤ P) (hPP' : P ≤ P') :
-    bandlimitedAwgnCapacity W N₀ P ≤ bandlimitedAwgnCapacity W N₀ P' := by
-  unfold bandlimitedAwgnCapacity
-  apply mul_le_mul_of_nonneg_left _ (le_of_lt hW)
-  have hNW : 0 < N₀ * W := by positivity
-  have hx : (0 : ℝ) ≤ P / (N₀ * W) := div_nonneg hP (le_of_lt hNW)
-  have hx' : P / (N₀ * W) ≤ P' / (N₀ * W) :=
-    div_le_div_of_nonneg_right hPP' (le_of_lt hNW)
-  apply Real.log_le_log (by linarith)
-  linarith
-
-/-- Capacity is anti-monotone in noise PSD `N₀`. -/
-theorem bandlimitedAwgnCapacity_anti_N₀
-    (W P : ℝ) (hW : 0 < W) (hP : 0 ≤ P)
-    {N₀ N₀' : ℝ} (hN₀ : 0 < N₀) (hN₀' : 0 < N₀') (hNN' : N₀ ≤ N₀') :
-    bandlimitedAwgnCapacity W N₀' P ≤ bandlimitedAwgnCapacity W N₀ P := by
-  unfold bandlimitedAwgnCapacity
-  apply mul_le_mul_of_nonneg_left _ (le_of_lt hW)
-  have hNW : 0 < N₀ * W := by positivity
-  have hNW' : 0 < N₀' * W := by positivity
-  have hx' : (0 : ℝ) ≤ P / (N₀' * W) := div_nonneg hP (le_of_lt hNW')
-  have hmul : N₀ * W ≤ N₀' * W := mul_le_mul_of_nonneg_right hNN' (le_of_lt hW)
-  have hdiv : P / (N₀' * W) ≤ P / (N₀ * W) :=
-    div_le_div_of_nonneg_left hP hNW hmul
-  apply Real.log_le_log (by linarith)
-  linarith
-
-/-! ## §J — Zero / boundary cases. -/
-
-/-- Zero signal power gives zero capacity. -/
-theorem bandlimitedAwgnCapacity_zero_P
-    (W N₀ : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) :
-    bandlimitedAwgnCapacity W N₀ 0 = 0 := by
-  unfold bandlimitedAwgnCapacity
-  simp [Real.log_one]
-
-/-- Capacity is non-negative. -/
-theorem bandlimitedAwgnCapacity_nonneg
-    (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P) :
-    0 ≤ bandlimitedAwgnCapacity W N₀ P := by
-  unfold bandlimitedAwgnCapacity
-  apply mul_nonneg (le_of_lt hW)
-  apply Real.log_nonneg
-  have hNW : 0 < N₀ * W := by positivity
-  have hx : (0 : ℝ) ≤ P / (N₀ * W) := div_nonneg hP (le_of_lt hNW)
-  linarith
 
 end InformationTheory.Shannon.ShannonHartley

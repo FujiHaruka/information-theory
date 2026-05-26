@@ -141,16 +141,6 @@ theorem isEPIGapMonotoneHyp_of_deBruijnV2
     IsEPIGapMonotoneHyp h_reg.density_t :=
   isEPIGapMonotoneHyp_discharge h_reg.density_t
 
-/-- **de Bruijn derivative value is non-negative through the identity**. The
-derivative produced by `deBruijn_identity_v2` is `(1/2) · J(density_t) ≥ 0`. -/
-theorem deBruijn_identity_v2_deriv_nonneg
-    {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
-    (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
-    {t : ℝ} (ht : 0 < t)
-    (h_reg : IsRegularDeBruijnHypV2 X Z P t) :
-    0 ≤ (1 / 2 : ℝ) * fisherInfoOfDensityReal h_reg.density_t :=
-  deBruijn_deriv_nonneg h_reg.density_t
-
 /-! ## §2 — Stam inequality from genuine primitives (Step 1 + Step 3) -/
 
 /-- **Stam inequality from the two genuine primitives** (Step 1 + Step 3).
@@ -209,16 +199,6 @@ theorem isEPIL3IntegratedPipeline_of_stamDeBruijn
     IsEPIL3IntegratedPipeline X Y P where
   stam := isStamInequalityHyp_of_stamDeBruijn h
   bridge := h.bridge
-
-/-- **L-EPI3 from the refined pipeline**.
-
-`@audit:suspect(epi-stam-to-conclusion-plan)` -/
-theorem epi_l3_of_stamDeBruijn
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h : IsEPIStamDeBruijnPipeline X Y P) :
-    IsEntropyPowerInequalityHypothesis X Y P :=
-  epi_l3_of_integrated_pipeline (isEPIL3IntegratedPipeline_of_stamDeBruijn h)
 
 /-! ## §4 — Main EPI via the refined pipeline -/
 
@@ -341,44 +321,5 @@ theorem stamDeBruijn_pipeline_roundtrip
     let h := isEPIStamDeBruijnPipeline_of_primitives h_conv h_te h_bridge
     h.convScore = h_conv ∧ h.totalExp = h_te ∧ h.bridge = h_bridge :=
   ⟨rfl, rfl, rfl⟩
-
-/-- **Equivalence with the monolithic pipeline (forward)**: the refined pipeline
-upgrades to `IsEPIL3IntegratedPipeline`. The reverse direction does **not** hold
-in general — the refined pipeline carries strictly more structure (the two genuine
-Stam primitives, vs the black-box Stam inequality).
-
-`@audit:suspect(epi-stam-to-conclusion-plan)` -/
-theorem stamDeBruijn_to_integrated
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h : IsEPIStamDeBruijnPipeline X Y P) :
-    IsEPIL3IntegratedPipeline X Y P :=
-  isEPIL3IntegratedPipeline_of_stamDeBruijn h
-
-/-- **The refined pipeline yields the same EPI conclusion** as the monolithic
-pipeline (extensional equivalence at the conclusion level). -/
-theorem entropy_power_inequality_stamDeBruijn_equiv
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h : IsEPIStamDeBruijnPipeline X Y P) :
-    entropy_power_inequality_via_stamDeBruijn P X Y hX hY hXY h
-      = entropy_power_inequality_integrated P X Y hX hY hXY
-          (isEPIL3IntegratedPipeline_of_stamDeBruijn h) :=
-  rfl
-
-/-- **Final regression**: the Gaussian saturation equality is recovered through
-the refined-pipeline route. -/
-theorem entropy_power_inequality_stamDeBruijn_gaussian_eq
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
-    (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
-      = entropyPower (P.map X) + entropyPower (P.map Y) :=
-  entropy_power_inequality_gaussian_saturation
-    P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
 
 end InformationTheory.Shannon.EPIStamDeBruijnConclusion

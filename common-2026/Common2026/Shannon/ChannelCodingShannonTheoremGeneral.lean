@@ -87,13 +87,6 @@ lemma uniformMeasureβ_real_singleton (b : β) :
   rw [Finset.sum_ite_eq' Finset.univ b (fun _ => (1 : ℝ≥0∞)), if_pos (Finset.mem_univ b)]
   rw [smul_eq_mul, mul_one, ENNReal.toReal_inv, ENNReal.toReal_natCast]
 
-/-- `(uniformMeasureβ).real {b} > 0` for any `b` (since `β` is nonempty). -/
-lemma uniformMeasureβ_real_singleton_pos (b : β) :
-    0 < (uniformMeasureβ β).real ({b} : Set β) := by
-  rw [uniformMeasureβ_real_singleton]
-  refine inv_pos.mpr ?_
-  exact_mod_cast Fintype.card_pos_iff.mpr inferInstance
-
 /-- **Smoothed channel** `W_smooth δ a := (1-δ) W a + δ · uniformMeasureβ`. -/
 noncomputable def Channel.smooth (W : Channel α β) (δ : ℝ) : Channel α β :=
   { toFun := fun a => ENNReal.ofReal (1 - δ) • W a + ENNReal.ofReal δ • uniformMeasureβ β
