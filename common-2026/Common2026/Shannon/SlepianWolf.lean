@@ -1,9 +1,10 @@
+import Common2026.Fano.Measure
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.Bridge
 import Common2026.Shannon.CondMutualInfo
 import Common2026.Shannon.DPI
 import Common2026.Shannon.Entropy
 import Common2026.Shannon.Pi
-import Common2026.Fano.Measure
 import Mathlib.Analysis.SpecialFunctions.BinaryEntropy
 
 /-!
@@ -42,6 +43,7 @@ Jensen 不等式 (`negMulLog` の凹性) を Fintype の全 univ 上で適用す
 -/
 
 /-- 任意 `μ` 上の `H(W) ≤ log |α|`. Jensen on `negMulLog` over `Fintype.univ`. -/
+@[entry_point]
 theorem entropy_le_log_card
     {Ω : Type*} [MeasurableSpace Ω]
     {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
@@ -135,6 +137,7 @@ theorem entropy_le_log_card
 
 /-- Side-info 入り Fano: `condEntropy μ Xs (Yo, Si) ≤ binEntropy(Pe) + Pe · log(|X|-1)`.
 既存 `fano_inequality_measure_theoretic` を paired conditioner で呼ぶ thin wrapper。 -/
+@[entry_point]
 theorem fano_inequality_with_side_info
     {Ω : Type*} [MeasurableSpace Ω]
     {X : Type*} [Fintype X] [DecidableEq X] [Nonempty X]
@@ -161,6 +164,7 @@ theorem fano_inequality_with_side_info
 
 /-- Conditioning never increases entropy: `H(W) ≥ H(W | Y)`.
 `mutualInfo_eq_entropy_sub_condEntropy` + `mutualInfo` 非負から導出。 -/
+@[entry_point]
 theorem entropy_ge_condEntropy
     {Ω : Type*} [MeasurableSpace Ω]
     {W : Type*} [Fintype W] [DecidableEq W] [Nonempty W]
@@ -214,6 +218,7 @@ variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
 `log Mx ≥ H(X | Y) - h(Pe_X) - Pe_X · log(|α| - 1)`,
 ただし `Pe_X = μ {ω | Xs ω ≠ decX (Ys ω, eX (Xs ω))}` は X の marginal error。
 ここで `decX : β × Fin Mx → α` は joint decoder の X 成分: `decX(y, m) := (dec(m, eY y)).1`。 -/
+@[entry_point]
 theorem slepian_wolf_converse_X
     {Mx My : ℕ} [NeZero Mx] [NeZero My]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -290,6 +295,7 @@ theorem slepian_wolf_converse_X
 
 /-- Slepian–Wolf converse, **Y bound** (X / Y 対称形):
 `log My ≥ H(Y | X) - h(Pe_Y) - Pe_Y · log(|β| - 1)`. -/
+@[entry_point]
 theorem slepian_wolf_converse_Y
     {Mx My : ℕ} [NeZero Mx] [NeZero My]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -358,6 +364,7 @@ theorem slepian_wolf_converse_Y
 /-- Slepian–Wolf converse, **sum bound**:
 `log Mx + log My ≥ H(X, Y) - h(Pe) - Pe · log(|α × β| - 1)`,
 `Pe = μ {ω | (Xs ω, Ys ω) ≠ dec (eX (Xs ω), eY (Ys ω))}` joint error。 -/
+@[entry_point]
 theorem slepian_wolf_converse_sum
     {Mx My : ℕ} [NeZero Mx] [NeZero My]
     (μ : Measure Ω) [IsProbabilityMeasure μ]

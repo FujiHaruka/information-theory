@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.RateDistortionConverse
 
 /-!
@@ -34,6 +35,7 @@ infimum.
 Proof: any joint feasible at `D₁` (i.e. `expectedDistortion d ν ≤ D₁`) is also
 feasible at `D₂` (since `D₁ ≤ D₂`), so the `iInf` at `D₂` is over a *larger*
 set and hence smaller. -/
+@[entry_point]
 theorem rateDistortionFunction_antitone
     (d : α → β → ℝ) (P : Measure α)
     {D₁ D₂ : ℝ} (hD : D₁ ≤ D₂) :
@@ -62,6 +64,7 @@ This is the form most commonly seen in textbooks (`R(D) ≤ rate`) and is the
 specified-distortion lift of `rate_distortion_converse_single_shot` via R(D)
 monotonicity. The `n`-letter form requires `R(D)` convexity (Jensen) and is
 deferred (E-4''). -/
+@[entry_point]
 theorem rate_distortion_converse_single_shot_specified
     [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
     [MeasurableSingletonClass β]

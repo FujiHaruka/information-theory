@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.WynerZivConvexityBody
 
 /-!
@@ -236,6 +237,7 @@ combinations — i.e. exactly the `h_obj_convex` hypothesis consumed by
 `WynerZivConvexityBody.lean`.
 
 `@audit:superseded-by(wynerZivCondEntDiffConvex_holds)` -/
+@[entry_point]
 theorem wzObjective_convex_of_condEntDiff
     (P_XY : α × β → ℝ)
     (h_core : WynerZivCondEntDiffConvex U P_XY)
@@ -290,6 +292,7 @@ convexity predicate, which the assembly `wzObjective_convex_of_condEntDiff`
 discharges into `h_obj_convex`.
 
 `@audit:superseded-by(wynerZivRateFactorizable_convex_in_D_unconditional)` -/
+@[entry_point]
 theorem wynerZivRateFactorizable_convex_in_D_of_condEntDiff
     [DecidableEq α] [DecidableEq β]
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))

@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.LempelZiv78
 import Common2026.Shannon.LZ78ZivInequality
 import Common2026.Shannon.LZ78ConverseAsymptotic
@@ -104,6 +105,7 @@ section Inversion
 hypotheses are all *eventual*: `f n ≥ 0` and the primitive product
 bound. The `IsBigO` constant is `max (2K) 2`, so the result holds for
 *any* real `K` (the negative-`K` case is vacuously stronger). -/
+@[entry_point]
 theorem isBigO_natCast_div_log_of_mul_log_le
     {f : ℕ → ℝ} {K : ℝ}
     (h_nonneg : ∀ᶠ n in atTop, 0 ≤ f n)
@@ -216,6 +218,7 @@ variable {α : Type*}
 `O(n / log n)` whenever the primitive product bound holds. Mirrors the
 shape of `lz78_phrase_count_asymptotic_n_div_log` but with the genuine
 `IsBigO` content supplied (no eventual-`≤` hypothesis needed). -/
+@[entry_point]
 theorem lz78_phrase_count_asymptotic_of_mul_log
     (p : ℕ → LZ78Parsing α) {K : ℝ} (hK : 0 ≤ K)
     (h : IsZivCountingMulLogBound p K) :

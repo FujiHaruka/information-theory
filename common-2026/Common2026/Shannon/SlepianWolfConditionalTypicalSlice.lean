@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.AEP
 import Common2026.Shannon.ChannelCoding
 
@@ -104,6 +105,7 @@ each fiber sample `(x, y)` has joint probability at least
 and the total probability of the slice is at most `Pr[Y^n = y]`
 which is at most `exp(-n(H(Y)-ε))` by `typicalSet_prob_le` on the
 Y-axis. -/
+@[entry_point]
 theorem conditionalTypicalSlice_card_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)

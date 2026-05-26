@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.Stein
 import Mathlib.Topology.Order.LiminfLimsup
 
@@ -263,6 +264,7 @@ For any `δ > 0`, eventually `-(1/n) log β*(n, ε) ≤ K + δ + (1/n) log [1/(P
 The last term tends to 0 since `P^n(T_n^δ) → 1 > ε`.
 
 This is the strong-converse counterpart to `steinOptimalBeta_log_ge_of_achievability`. -/
+@[entry_point]
 theorem steinOptimalBeta_log_le_of_strong_converse
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]

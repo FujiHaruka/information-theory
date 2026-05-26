@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.SanovLDP
 import Common2026.Shannon.KLDivContinuous
 import Mathlib.Algebra.Order.Floor.Semiring
@@ -1228,6 +1229,7 @@ theorem sanov_ldp_lower_bound_pointwise
 
 証明 sketch: B-1' upper bound (`sanov_ldp_upper_bound`) で `limsup ≤ -D + ε` (∀ ε > 0)
 ⇒ `limsup ≤ -D`. Phase D で `liminf ≥ -D`. `tendsto_of_le_liminf_of_limsup_le` で sandwich. -/
+@[entry_point]
 theorem sanov_ldp_equality
     (Q : Measure α) [IsProbabilityMeasure Q]
     (hQpos : ∀ a : α, 0 < Q.real {a})

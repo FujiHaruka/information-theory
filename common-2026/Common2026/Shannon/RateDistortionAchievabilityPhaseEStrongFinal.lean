@@ -1,9 +1,10 @@
-import Common2026.Shannon.RateDistortionAchievabilityPhaseEStrong
-import Common2026.Draft.Shannon.RateDistortionAchievabilityPhaseEDischarge
 import Common2026.Draft.Shannon.RateDistortionAchievabilityPhaseE
-import Common2026.Shannon.RateDistortionAchievabilityPhaseD
-import Common2026.Shannon.RateDistortionAchievabilityPhaseC
+import Common2026.Draft.Shannon.RateDistortionAchievabilityPhaseEDischarge
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ConditionalMethodOfTypes
+import Common2026.Shannon.RateDistortionAchievabilityPhaseC
+import Common2026.Shannon.RateDistortionAchievabilityPhaseD
+import Common2026.Shannon.RateDistortionAchievabilityPhaseEStrong
 
 /-!
 # Rate-distortion achievability — final discharge of `codebookAvgFailure_tendsto_zero`
@@ -1559,6 +1560,7 @@ caller can choose them in any consistent way.
 requires a perturbation argument (passing through `qStar_τ := (1-τ)·qStar + τ·uniform`,
 exploiting continuity of `mutualInfoPmf` and `expectedDistortionPmf`) — left
 for a separate round. -/
+@[entry_point]
 theorem rate_distortion_achievability_strong
     (P_X_pmf : α → ℝ) (d : DistortionFn α β) {D : ℝ}
     (qStar : α × β → ℝ) (hqStar_mem : qStar ∈ RDConstraint P_X_pmf d D)
@@ -1647,6 +1649,7 @@ discharges the entire random-coding chain (0 `sorry`, 0 user-axiom).
 Wrapper alias: body delegates verbatim to `rate_distortion_achievability_strong`
 (genuine, 0 `sorry`). All hypotheses are pass-through, none are load-bearing;
 honesty status is inherited from `_strong`. -/
+@[entry_point]
 theorem rate_distortion_achievability
     (P_X_pmf : α → ℝ) (d : DistortionFn α β) {D : ℝ}
     (qStar : α × β → ℝ) (hqStar_mem : qStar ∈ RDConstraint P_X_pmf d D)

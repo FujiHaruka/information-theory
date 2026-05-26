@@ -1,6 +1,7 @@
-import Common2026.Shannon.WynerZivObjectiveConvexityBody
-import Common2026.Fano.DPI          -- log_sum_inequality_negMulLog
 import Common2026.Fano.BinaryJensen -- mul_negMulLog_div
+import Common2026.Fano.DPI          -- log_sum_inequality_negMulLog
+import Common2026.Meta.EntryPoint
+import Common2026.Shannon.WynerZivObjectiveConvexityBody
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import Mathlib.Analysis.Convex.Jensen
 import Mathlib.Algebra.BigOperators.Field
@@ -351,6 +352,7 @@ lemma wzCondEntDiff_blockSum_eq_jointEntDiff (q : α × β × U → ℝ) :
 
 /-- **Lemma-15.9 core, discharged.**  `WynerZivCondEntDiffConvex` holds for
 every non-negative `P_XY`. -/
+@[entry_point]
 theorem wynerZivCondEntDiffConvex_holds
     (P_XY : α × β → ℝ) (h_pmf_nn : ∀ p, 0 ≤ P_XY p) :
     WynerZivCondEntDiffConvex U P_XY := by
@@ -369,6 +371,7 @@ theorem wynerZivCondEntDiffConvex_holds
 
 /-- **L-WZ3 full convexity, unconditional.**  The rate-level Wyner–Ziv
 convexity with the deep objective-convexity hypothesis fully discharged. -/
+@[entry_point]
 theorem wynerZivRateFactorizable_convex_in_D_unconditional
     {γ : Type*}
     [DecidableEq α] [DecidableEq β]

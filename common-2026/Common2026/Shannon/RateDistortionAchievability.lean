@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.RateDistortionConverse
 import Mathlib.Analysis.Convex.StdSimplex
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
@@ -236,6 +237,7 @@ noncomputable def rateDistortionFunctionPmf
 
 /-- **Achievability** of `rateDistortionFunctionPmf`: when the constraint set
 `RDConstraint P_X d D` is non-empty, the infimum is attained by some `q* ∈ RDConstraint`. -/
+@[entry_point]
 theorem rateDistortionFunctionPmf_attained
     (P_X : α → ℝ) (d : DistortionFn α β) (D : ℝ)
     (h_ne : (RDConstraint P_X d D).Nonempty) :

@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.LempelZiv78
 import Common2026.Shannon.LZ78ZivInequality
 import Mathlib.Data.Nat.Log
@@ -273,6 +274,7 @@ n · (Nat.log 2 (n + 1) + Nat.log 2 |α| + 2)
 
 since each phrase costs at most `bitLength n |α|` bits and the phrase
 count is at most `n`. -/
+@[entry_point]
 theorem lz78_encoding_length_le_n_log_n_plus_const (n : ℕ) (x : Fin n → α) :
     lz78GreedyEncodingLength n x ≤
       n * (Nat.log 2 (n + 1) + Nat.log 2 (Fintype.card α) + 2) := by
@@ -285,6 +287,7 @@ theorem lz78_encoding_length_le_n_mul_bitLength (n : ℕ) (x : Fin n → α) :
 
 /-- **Asymptotic form**: encoding length divided by `n` is at most
 `Nat.log 2 (n + 1) + Nat.log 2 |α| + 2`. -/
+@[entry_point]
 theorem lz78_encoding_length_per_symbol_le (n : ℕ) (hn : 0 < n) (x : Fin n → α) :
     (lz78GreedyEncodingLength n x : ℝ) / (n : ℝ)
       ≤ (Nat.log 2 (n + 1) + Nat.log 2 (Fintype.card α) + 2 : ℝ) := by
@@ -485,6 +488,7 @@ h_upper / h_bdd_above / h_bdd_below) are regularity / boundedness hypotheses,
 not load-bearing predicate consumers, and the body simply forwards to
 `lz78_asymptotic_optimality` whose own body is the genuine 1-step combine
 `tendsto_of_le_liminf_of_limsup_le`. No `@residual` tag is attached. -/
+@[entry_point]
 theorem lz78_asymptotic_optimality_with_greedy_encoding
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)

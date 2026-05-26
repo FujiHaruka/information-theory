@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.Stationary
 import Common2026.Shannon.EntropyRate
 import Common2026.Shannon.ShannonMcMillanBreiman
@@ -333,6 +334,7 @@ Cover–Thomas Eq. 13.124 / 13.130 inequalities relating `lz/n` to
 imports this one, so the chain-level discharge cannot be routed back into
 this headline without a circular import; this file therefore publishes
 the sandwich-level (genuine, non-circular) form. -/
+@[entry_point]
 theorem lz78_asymptotic_optimality
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -387,6 +389,7 @@ and lower bounds separately (typical exit shape of a Ziv-inequality +
 SMB sandwich pipeline). The four hypotheses are non-circular: the
 sandwich bounds relate `lz/n` to `entropyRate` via `≤`, distinct from the
 `Tendsto … (𝓝 entropyRate)` conclusion. -/
+@[entry_point]
 theorem lz78_asymptotic_optimality_two_sided
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -436,6 +439,7 @@ hypotheses elsewhere, this form is strictly weaker than
 the genuine four-way sandwich conjunction (lower / upper / above / below);
 the body is a genuine application of `lz78_asymptotic_optimality_two_sided`,
 not an identity wrap. -/
+@[entry_point]
 theorem lz78_asymptotic_optimality_of_bounds
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)

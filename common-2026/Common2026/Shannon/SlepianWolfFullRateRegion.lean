@@ -1,6 +1,7 @@
+import Common2026.Meta.EntryPoint
+import Common2026.Shannon.SlepianWolfAchievability
 import Common2026.Shannon.SlepianWolfBinning
 import Common2026.Shannon.SlepianWolfConditionalTypicalSlice
-import Common2026.Shannon.SlepianWolfAchievability
 
 /-!
 # Slepian–Wolf full rate region — Phase D (error event decomposition)
@@ -135,6 +136,7 @@ error events `E_0`, `E_X`, `E_Y`, `E_{XY}`.
 `hXs` / `hYs` are kept in the signature as part of the public API (downstream
 random-binning average bounds need them) even though this pointwise subset
 argument does not consume them. -/
+@[entry_point]
 theorem swErrorProb_le_E0_plus_EX_plus_EY_plus_EXY
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
@@ -287,6 +289,7 @@ by the joint AEP (`jointlyTypicalSet_prob_tendsto_one`). This is the simplest of
 four error-event bounds, and the only one that does **not** depend on the random
 binning measure: it is a pure statement about the underlying source process. -/
 
+@[entry_point]
 theorem swError_E0_prob_tendsto_zero
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
@@ -458,6 +461,7 @@ the `conditionalTypicalSlice_card_le` shape and is consumed by downstream
 final-rate-region theorems) even though this proof does not branch on it. -/
 
 set_option linter.unusedVariables false in
+@[entry_point]
 theorem swError_EX_expectation_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
@@ -857,6 +861,7 @@ private theorem conditionalTypicalSliceY_card_le
 /-! ### Main statement — `E_Y` expectation bound. -/
 
 set_option linter.unusedVariables false in
+@[entry_point]
 theorem swError_EY_expectation_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
@@ -1196,6 +1201,7 @@ applied to `S := JTS.toFinite.toFinset` (which is `ω`-independent), and
 closing with `jointlyTypicalSet_card_le`. -/
 
 set_option linter.unusedVariables false in
+@[entry_point]
 theorem swError_EXY_strict_expectation_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)

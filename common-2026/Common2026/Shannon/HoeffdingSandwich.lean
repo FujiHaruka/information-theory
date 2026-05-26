@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.HoeffdingTradeoff
 import Common2026.Shannon.Chernoff
 import Mathlib.Topology.Order.LiminfLimsup
@@ -295,6 +296,7 @@ the fixed-`alpha` rate does not target `E₂(alpha)` in general, so `h_liminf` /
 `h_limsup` cannot both hold (see `HoeffdingSandwichDischarge.lean` judgement log #1).
 Acknowledged tier-5 placeholder; closure requires either restricting to the boundary
 regime or pivoting to the exponential-level formulation. -/
+@[entry_point]
 theorem hoeffding_tradeoff_sandwich
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)

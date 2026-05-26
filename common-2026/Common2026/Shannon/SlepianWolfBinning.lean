@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.SlepianWolfAchievability
 import Mathlib.Probability.UniformOn
 import Mathlib.MeasureTheory.Constructions.Pi
@@ -75,6 +76,7 @@ instance binningMeasure.instIsProbabilityMeasure
 /-- **Singleton mass.** For any hash function `f : (Fin n → α) → Fin M`,
 its `binningMeasure`-mass is `(1/M)^{|α|^n}` (each of the `|α|^n` input
 sequences independently picks one of `M` bins). -/
+@[entry_point]
 lemma binningMeasure_singleton_real
     (n M : ℕ) [NeZero M] (f : (Fin n → α) → Fin M) :
     (binningMeasure α n M).real {f}
@@ -121,6 +123,7 @@ random-binning achievability argument (Cover-Thomas Theorem 15.4.1):
   out of scope here), this gives `E[|alias x'| · 1_{f x' = f x}] ≤
   |fiber| / M_X`.
 * The rate condition `R_X > H(X|Y)` then forces this expectation to `0`. -/
+@[entry_point]
 theorem binning_collision_prob
     {n M : ℕ} [NeZero M]
     {x x' : Fin n → α} (h : x ≠ x') :

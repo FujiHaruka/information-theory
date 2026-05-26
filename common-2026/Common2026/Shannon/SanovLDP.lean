@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.Sanov
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Analysis.Asymptotics.Lemmas
@@ -200,6 +201,7 @@ set_option linter.unusedSectionVars false in
 `Q^n(typeClassByCount c) ≤ exp(-n · klDivIndex c n Q)`.
 
 A 形 `typeClass_Qn_le` (`Sanov.lean:172`) と同じ Stein 経路、`P` を `c/n` の有理分布で読む形。 -/
+@[entry_point]
 theorem typeClassByCount_Qn_le
     (Q : Measure α) [IsProbabilityMeasure Q]
     (hQpos : ∀ a : α, 0 < Q.real {a})
@@ -377,6 +379,7 @@ theorem typeClassByCount_union_Qn_le
 /-- **inf-form upper bound** (Phase C 中核): 各 `c ∈ F` で
 `klDivIndex c n Q ≥ D*` が成り立つとき
 `Q^n(⋃ c ∈ F, typeClassByCount c) ≤ |F| · exp(-n · D*)`。 -/
+@[entry_point]
 theorem typeClassByCount_union_Qn_le_inf
     (Q : Measure α) [IsProbabilityMeasure Q]
     (hQpos : ∀ a : α, 0 < Q.real {a})
@@ -452,6 +455,7 @@ provided every `c ∈ E n` satisfies `klDivIndex c n Q ≥ D*`.
 
 形は `polynomial type 数 · exp(-n D*)` の `(1/n) log` を取り、polynomial の `log` 部分が
 `o(n)` で消えるという standard LDP plumbing。 -/
+@[entry_point]
 theorem sanov_ldp_upper_bound
     (Q : Measure α) [IsProbabilityMeasure Q]
     (hQpos : ∀ a : α, 0 < Q.real {a})

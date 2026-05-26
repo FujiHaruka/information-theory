@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.InformationTheory.KullbackLeibler.Basic
 import Mathlib.MeasureTheory.Measure.Decomposition.Lebesgue
@@ -341,6 +342,7 @@ theorem differentialEntropy_map_mul_const
 /-- **Affine** corollary (Phase B-3): `h(aX + b) = h(X) + log |a|`.
 
 Requires integrability of the entropy integrand on `μ` (inherited from Phase B-2). -/
+@[entry_point]
 theorem differentialEntropy_map_affine
     {μ : Measure ℝ} (hμ : μ ≪ volume) [IsProbabilityMeasure μ] {a : ℝ} (ha : a ≠ 0) (b : ℝ)
     (h_ent_int : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
@@ -403,6 +405,7 @@ theorem log_gaussianPDFReal_eq
   ring
 
 /-- (Phase C-3, **主定理**) `h(𝒩(m, v)) = (1/2) log (2πe v)`. -/
+@[entry_point]
 theorem differentialEntropy_gaussianReal
     (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     differentialEntropy (gaussianReal m v)
@@ -507,6 +510,7 @@ theorem differentialEntropy_gaussianReal_std :
   排除されるはず) を保証するために必要。
 * `h_var_int` — 2 次モーメントの可積分性。これがないと `h_var` 仮説自体が
   `0 ≤ v` に縮退する。 -/
+@[entry_point]
 theorem differentialEntropy_le_gaussian_of_variance_le
     {μ : Measure ℝ} [IsProbabilityMeasure μ]
     (hμ : μ ≪ volume) (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0)
@@ -658,6 +662,7 @@ theorem differentialEntropy_le_gaussian_of_variance_le
 /-! ## Phase E — KL bridge / corollaries -/
 
 /-- (Phase E-1) Closed-form KL between two Gaussians. -/
+@[entry_point]
 theorem klDiv_gaussianReal_gaussianReal_eq
     (m₁ m₂ : ℝ) {v₁ v₂ : ℝ≥0} (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0) :
     (klDiv (gaussianReal m₁ v₁) (gaussianReal m₂ v₂)).toReal

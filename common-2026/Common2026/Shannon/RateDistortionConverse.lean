@@ -1,9 +1,10 @@
-import Common2026.Shannon.MutualInfo
-import Common2026.Shannon.DPI
-import Common2026.Shannon.Bridge
-import Common2026.Shannon.MaxEntropy
-import Common2026.Shannon.Pi
 import Common2026.Fano.Measure
+import Common2026.Meta.EntryPoint
+import Common2026.Shannon.Bridge
+import Common2026.Shannon.DPI
+import Common2026.Shannon.MaxEntropy
+import Common2026.Shannon.MutualInfo
+import Common2026.Shannon.Pi
 
 /-!
 # Rate-distortion converse (single-shot, E-4)
@@ -130,6 +131,7 @@ the achieved distortion `D̃ := 𝔼 d(X, decoder(encoder X))` is bounded above 
 ```
 This is the single-shot form of Cover-Thomas 10.4. The `n`-letter form
 `rate ≥ R(D)` requires `R(D)` convexity (Jensen) and is deferred. -/
+@[entry_point]
 theorem rate_distortion_converse_single_shot
     [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
     [MeasurableSingletonClass β]

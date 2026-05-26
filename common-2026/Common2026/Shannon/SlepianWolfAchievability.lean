@@ -1,5 +1,6 @@
-import Common2026.Shannon.SlepianWolf
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.AEP
+import Common2026.Shannon.SlepianWolf
 
 /-!
 # Slepian–Wolf achievability (E-5 MVP — sum bound 退化点)
@@ -104,6 +105,7 @@ This is the **退化点 MVP** of Slepian–Wolf achievability: rate `(log|α|, R
 a non-trivial part of the SW rate region (specifically the segment along the
 `R_X = log|α|` boundary).
 -/
+@[entry_point]
 theorem slepian_wolf_achievability_via_Y_aep
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)

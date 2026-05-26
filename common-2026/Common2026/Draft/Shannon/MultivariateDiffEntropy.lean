@@ -5,6 +5,7 @@ import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import Mathlib.InformationTheory.KullbackLeibler.Basic
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.DifferentialEntropy
 import Common2026.Shannon.MutualInfo
 import Common2026.Shannon.MIChainRule
@@ -252,6 +253,7 @@ theorem klDiv_pi_marginals_toReal_eq_sum_sub_joint
 (the parallel-Gaussian consumer form). `KL ≥ 0` + the bridge, by `linarith`.
 
 @residual(plan:multivariate-diffentropy-subadditivity-plan) -/
+@[entry_point]
 theorem jointDifferentialEntropyPi_le_sum
     {n : ℕ} {μ : Measure (Fin n → ℝ)} [IsProbabilityMeasure μ]
     [∀ i, IsProbabilityMeasure (μ.map (fun z => z i))]
@@ -477,6 +479,7 @@ theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2
 /-- **★ 2-variable differential-entropy subadditivity (genuine, no `h_llr_split`).**
 Discharged version of `jointDifferentialEntropy_le_sum`: `h(X,Y) ≤ h(X) + h(Y)`
 with the Bayes density split internalized via `llr_split_from_density_factorize`. -/
+@[entry_point]
 theorem jointDifferentialEntropy_le_sum_v2
     {μ : Measure (ℝ × ℝ)} [IsProbabilityMeasure μ]
     (h_fst_ac : (μ.map Prod.fst) ≪ volume)

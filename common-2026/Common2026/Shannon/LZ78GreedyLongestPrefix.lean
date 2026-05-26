@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.LempelZiv78
 import Common2026.Shannon.LZ78GreedyParsing
 import Common2026.Shannon.LZ78GreedyParsingImpl
@@ -123,6 +124,7 @@ theorem lz78PhraseStringsAux_nodup :
 
 /-- **Phase A core — distinct phrase invariant**: the list of emitted
 phrase strings of the genuine longest-prefix greedy parse is `Nodup`. -/
+@[entry_point]
 theorem lz78PhraseStrings_nodup (input : List α) :
     (lz78PhraseStrings input).Nodup :=
   lz78PhraseStringsAux_nodup _ [] [] input List.nodup_nil
@@ -189,6 +191,7 @@ theorem lz78PhraseStringsAux_total_length :
 all emitted phrase strings is at most the input length. (Each emitted
 phrase consumes input symbols; the unfinished tail accounts for the slack,
 so this is `≤`, not `=`.) -/
+@[entry_point]
 theorem lz78PhraseStrings_total_length_le (input : List α) :
     (lz78PhraseStrings input).foldr (fun w acc => w.length + acc) 0
       ≤ input.length := by
@@ -257,6 +260,7 @@ phrases emitted by the genuine longest-prefix greedy parse is at most the
 input length. Combined with `lz78PhraseStrings_nodup` (the strings are
 distinct), this is the count `c(n) ≤ n` feeding the Cover–Thomas
 counting bound `c(n) · log c(n) ≤ K·n`. -/
+@[entry_point]
 theorem lz78PhraseStrings_count_le (input : List α) :
     (lz78PhraseStrings input).length ≤ input.length :=
   (length_le_foldr_length_of_ne_nil _ (lz78PhraseStrings_forall_ne_nil input)).trans

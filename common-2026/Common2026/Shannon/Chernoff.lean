@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.CsiszarProjection
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Analysis.SpecialFunctions.Pow.Continuity
@@ -153,6 +154,7 @@ lemma chernoffLogZ_continuous
 /-! ### A-4 `chernoffInfo` 達成性 + 非負性 -/
 
 /-- Chernoff information is attained: `∃ λ* ∈ Icc 0 1, chernoffInfo = -log Z(λ*)`. -/
+@[entry_point]
 theorem chernoffInfo_attained
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
@@ -173,6 +175,7 @@ theorem chernoffInfo_attained
 `chernoffInfo := -sInf (log Z '' Icc 0 1)`. At `λ = 0`, `log Z(0) = log 1 = 0`, so
 `sInf (log Z '' Icc 0 1) ≤ 0` (compact + continuous gives `sInf` attained, and `0` is in
 the image). Hence `chernoffInfo ≥ 0`. -/
+@[entry_point]
 theorem chernoffInfo_nonneg
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -280,6 +283,7 @@ lemma hoeffdingConstraintSet_isClosed
 Strategy: the constraint set `K` is compact (closed subset of the simplex). The functional
 `Q ↦ klDivPmf Q P₂` is continuous in `Q` (`continuous_klDivPmf_left`). Apply
 `IsCompact.exists_sInf_image_eq` directly. -/
+@[entry_point]
 theorem hoeffdingE2_attained
     (P₁ P₂ : α → ℝ)
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -309,6 +313,7 @@ theorem hoeffdingE2_attained
 
 `hoeffdingE2 := sInf (klDivPmf · P₂ '' K)`. Since `K` is nonempty and every element in
 the image is `≥ 0` (`klDivPmf_nonneg`), the infimum is `≥ 0` by `le_csInf`. -/
+@[entry_point]
 theorem hoeffdingE2_nonneg
     (P₁ P₂ : α → ℝ)
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -447,6 +452,7 @@ lemma chernoffZSum_holder_mul
 /-- **`log Z(λ)` is convex on `Icc 0 1`**.
 
 Mediator of `chernoffInfo` 達成性 + 凸性 (Cover-Thomas 11.9.1 setup). -/
+@[entry_point]
 theorem convexOn_chernoffLogZ
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :
@@ -555,6 +561,7 @@ lemma chernoffMediator_lam_one
 sub-simplex の preimage of convex sublevel under convex `klDivPmf · P₁` is closed +
 convex), `klDivPmf · P₂` は `K` 上で strictly convex (full-support `P₂` から `stdSimplex` 上
 で strictly convex)、よって最小値達成点は一意。 -/
+@[entry_point]
 theorem hoeffdingE2_unique
     (P₁ P₂ : α → ℝ)
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -749,6 +756,7 @@ lemma sum_prod_rpow_eq_Z_pow
 
 Cover-Thomas 11.9.1 の core inequality. Per-point `min(a, b) ≤ a^{1-λ} · b^λ` を
 `a := ∏ P₁(x_i)`, `b := ∏ P₂(x_i)` で起動 → sum over x → `Z(λ)^n`. -/
+@[entry_point]
 theorem bayesErrorMinPmf_le_half_Z_pow
     (P₁ P₂ : α → ℝ) (hP₁_nn : ∀ a, 0 ≤ P₁ a) (hP₂_nn : ∀ a, 0 ≤ P₂ a)
     (n : ℕ) {lam : ℝ} (hlam_nn : 0 ≤ lam) (hlam_le : lam ≤ 1) :
@@ -1029,6 +1037,7 @@ liminf -(1/n) log bayesErrorMinPmf ≥ chernoffInfo P₁ P₂
 `bayesErrorMinPmf` の指数収束 rate は少なくとも `chernoffInfo P₁ P₂` 以上.
 
 撤退ライン L-S2: converse side (`limsup ≤`) は本セッションでは未着手. -/
+@[entry_point]
 theorem chernoff_lemma_achievability
     (P₁ P₂ : α → ℝ) [Nonempty α]
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) :

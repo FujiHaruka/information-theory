@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.LempelZiv78
 import Mathlib.Data.Finset.Card
 import Mathlib.Data.Finset.Image
@@ -183,6 +184,7 @@ theorem LZ78Parsing.ofParentBounded_indexToBounded (p : LZ78Parsing α)
 For any LZ78 parsing on a finite alphabet, the number of *distinct*
 phrases is at most `(count + 1) · |α|`: every phrase is a pair
 `(parent ∈ Option (Fin count), symbol ∈ α)`. -/
+@[entry_point]
 theorem LZ78Parsing.card_phraseSet_le_pow [Fintype α]
     (p : LZ78Parsing α) :
     p.phraseSet.card ≤ (p.count + 1) * Fintype.card α := by

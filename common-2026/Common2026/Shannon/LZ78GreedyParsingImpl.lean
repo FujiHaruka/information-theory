@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.LempelZiv78
 import Common2026.Shannon.LZ78GreedyParsing
 import Mathlib.Data.Nat.Log
@@ -319,6 +320,7 @@ The genuine greedy encoding length for `x : Fin n → α` is bounded by
 each costing at most `bitLength n |α|` bits. This re-uses the generic
 `lz78Parsing_encodingLength_le_of_count_log_bound` (valid for *any*
 `LZ78Parsing`) from `LZ78GreedyParsing.lean`. -/
+@[entry_point]
 theorem lz78_impl_encoding_length_le_n_log_n_plus_const (n : ℕ) (x : Fin n → α) :
     lz78GreedyImplEncodingLength n x ≤
       n * (Nat.log 2 (n + 1) + Nat.log 2 (Fintype.card α) + 2) := by
@@ -329,6 +331,7 @@ theorem lz78_impl_encoding_length_le_n_log_n_plus_const (n : ℕ) (x : Fin n →
 
 /-- **Per-symbol asymptotic bit-rate bound on `ℝ`** for the genuine
 greedy parse: dividing by `n` gives `≤ log(n+1) + log|α| + 2`. -/
+@[entry_point]
 theorem lz78_impl_encoding_length_per_symbol_le (n : ℕ) (hn : 0 < n)
     (x : Fin n → α) :
     (lz78GreedyImplEncodingLength n x : ℝ) / (n : ℝ)
@@ -420,6 +423,7 @@ boundedness hypotheses, not load-bearing predicate consumers, and the body
 simply forwards to `lz78_asymptotic_optimality` whose own body is the genuine
 1-step combine `tendsto_of_le_liminf_of_limsup_le`. No `@residual` tag is
 attached. -/
+@[entry_point]
 theorem lz78_asymptotic_optimality_with_greedy_impl
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)

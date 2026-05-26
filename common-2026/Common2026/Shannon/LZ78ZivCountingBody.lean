@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.LZ78GreedyLongestPrefix
 import Common2026.Shannon.LZ78PhraseCountAsymptoticBody
 import Mathlib.Data.Nat.Log
@@ -350,6 +351,7 @@ satisfies `c · log c ≤ 8·log(|α|+1) · input.length`. This is the genuine
 Cover–Thomas `(★)` for the longest-prefix greedy parse, combining the
 Phase A invariants `lz78PhraseStrings_nodup` / `lz78PhraseStrings_forall_ne_nil`
 / `lz78PhraseStrings_total_length_le` with the §3 packing core. -/
+@[entry_point]
 theorem lz78PhraseStrings_mul_log_le [Nonempty α] (input : List α) :
     ((lz78PhraseStrings input).length : ℝ)
         * Real.log ((lz78PhraseStrings input).length : ℝ)
@@ -402,6 +404,7 @@ theorem lz78PhraseStrings_mul_log_le_of_length
 greedy* distinct phrase count is `O(n / log n)`. This connects the
 Phase A distinct invariant to the Cover–Thomas Eq. 13.124 envelope with
 no honest hypothesis. -/
+@[entry_point]
 theorem lz78PhraseStrings_count_isBigO
     (input : ℕ → List α) (hlen : ∀ n, (input n).length = n) :
     (fun n => ((lz78PhraseStrings (input n)).length : ℝ))

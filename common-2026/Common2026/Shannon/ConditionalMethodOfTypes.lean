@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.StrongTypicality
 import Common2026.Shannon.SanovLDPEquality
 import Common2026.Shannon.TypeClassLowerBound
@@ -2131,6 +2132,7 @@ The eventual quantification (`∃ N, ∀ n ≥ N`) parallels
 `jointStronglyTypicalSet_indep_prob_ge`. The auxiliary slack is the same shape:
 each of `ε`-times-`logSumAbs` terms (Lipschitz amplification through
 strong⇒weak), and an extra free `δ > 0` to absorb polynomial corrections. -/
+@[entry_point]
 theorem conditionalStronglyTypicalSlice_mass_ge
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)

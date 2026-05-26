@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.WynerZivDischarge
 
 /-!
@@ -334,6 +335,7 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 
 /-- **Factorisable constraint set is monotone in `D`.** Mirror of
 `WynerZivConstraint_mono_in_D`. -/
+@[entry_point]
 theorem WynerZivFactorizableConstraint_mono_in_D
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {D D' : ℝ} (hD : D ≤ D') :
     WynerZivFactorizableConstraint U P_XY d D
@@ -360,6 +362,7 @@ This is the structural step that turns L-WZ3 convexity into a one-liner on
 factorisable joints: feasibility *survives* convex combinations on the
 factorised manifold (unlike the raw constraint set where the Markov
 cross-product fails to be preserved). -/
+@[entry_point]
 theorem WynerZivFactorizableConstraint_convex_combination
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (f : U × β → γ) {D₁ D₂ : ℝ}
     {q₁ q₂ : α × β × U → ℝ}
@@ -404,6 +407,7 @@ noncomputable def wynerZivRateFactorizable
 
 /-- **Factorisable rate is antitone in `D`** (mirror of the raw
 `wynerZivRatePmf_antitone`). -/
+@[entry_point]
 theorem wynerZivRateFactorizable_antitone
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {D D' : ℝ} (hD : D ≤ D')
     (h_ne : ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>

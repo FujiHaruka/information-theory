@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.AEP
 import Common2026.Shannon.DPI
 import Common2026.Shannon.MutualInfo
@@ -182,6 +183,7 @@ omit [DecidableEq α] [Nonempty α] in
 /-- **Stein 強法則** (Cover-Thomas LR-side): the empirical mean of the per-symbol
 log-likelihood ratio converges almost surely to `(klDiv P Q).toReal`. AEP `aep_ae`
 の 2 分布化。 -/
+@[entry_point]
 theorem stein_strong_law
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
@@ -210,6 +212,7 @@ theorem stein_strong_law
 omit [DecidableEq α] [Nonempty α] in
 /-- **Stein convergence in probability**: the empirical mean of the LR converges
 to `(klDiv P Q).toReal` in probability. -/
+@[entry_point]
 theorem stein_inProbability
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
@@ -485,6 +488,7 @@ whose type-II error decays as `exp(-n · (klDiv P Q - δ))`.
 Statement is in pi-measure form (the lifting from RV-form requires
 `iIndepFun` → `Measure.pi` translation, which is recorded as the hypothesis
 `hMapJoint : μ.map (jointRV Xs n) = Measure.pi (fun _ : Fin n => P)`). -/
+@[entry_point]
 theorem stein_achievability
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
@@ -972,6 +976,7 @@ omit [DecidableEq α] [Nonempty α] in
 
 Proof: Bool sum-form bound `S ≤ n · klDiv P Q` combined with the algebraic inequality
 `S ≥ -log 2 + (1-ε)(-log Q^n s)` (uses α-level + `binEntropy ≤ log 2` + sign of `log Q^n sᶜ`). -/
+@[entry_point]
 theorem stein_converse_finite_n
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (_hPpos : ∀ x : α, 0 < P.real {x})
@@ -1283,6 +1288,7 @@ lemma steinOptimalBeta_pos
 
 /-- Converse-side upper bound on the rate:
 `-(1/n) log steinOptimalBeta ≤ K/(1-ε) + log 2/(n(1-ε))`. -/
+@[entry_point]
 theorem steinOptimalBeta_log_le_of_converse
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (hPpos : ∀ x : α, 0 < P.real {x})
@@ -1311,6 +1317,7 @@ theorem steinOptimalBeta_log_le_of_converse
 
 /-- Achievability-side lower bound on the rate: eventually
 `K - δ ≤ -(1/n) log steinOptimalBeta`. -/
+@[entry_point]
 theorem steinOptimalBeta_log_ge_of_achievability
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]

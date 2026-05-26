@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.SanovLDP
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import Mathlib.Topology.Algebra.Monoid
@@ -42,6 +43,7 @@ omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonCla
 証明 sketch: 各 `a` で `p a · log p a = -negMulLog (p a)` を `Real.negMulLog_def` で取り
 `Real.continuous_negMulLog.comp (continuous_apply a)`。`p ↦ -p a · log q a` は定数倍で連続。
 合計 `p a · (log p a - log q a)` の連続性、`continuous_finset_sum` で plumbing。 -/
+@[entry_point]
 theorem klDivSumForm_ofVec_continuous
     (q : α → ℝ) (_hq_pos : ∀ a, 0 < q a) :
     Continuous (fun p : α → ℝ => klDivSumForm_ofVec p q) := by

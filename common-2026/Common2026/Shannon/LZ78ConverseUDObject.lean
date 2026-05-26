@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.McMillanKraftBridge
 import Common2026.Shannon.LZ78GreedyParsing
 import Mathlib.Data.Nat.Bitwise
@@ -72,6 +73,7 @@ yield distinct strings.
 Proof: equal flattens force equal codeword *counts* (length is
 `K · count`), and `List.append_inj` peels off equal-length heads one at a
 time. -/
+@[entry_point]
 theorem uniquelyDecodable_of_constantLength {S : Set (List β)} {K : ℕ}
     (hK : 0 < K) (hlen : ∀ w ∈ S, w.length = K) :
     UniquelyDecodable S := by
@@ -227,6 +229,7 @@ theorem injective_lz78TokenCode (c : ℕ) : Function.Injective (lz78TokenCode (�
 
 /-- **The LZ78 token codeword set is uniquely decodable** (constant length
 `K > 0`) — the genuine UD-object McMillanKraftBridge §3 Residual 1 lacked. -/
+@[entry_point]
 theorem uniquelyDecodable_lz78TokenCode (c : ℕ) :
     UniquelyDecodable
       ((Finset.univ.image (lz78TokenCode (α := α) c) : Finset (List Bool)) :
@@ -246,6 +249,7 @@ This is the genuine Cover–Thomas 5.4 converse, instantiated at the *real*
 LZ78 `(parent, symbol)` token code via the McMillan bridge. The block-rate
 form (Cover–Thomas Eq. 13.130, `IsLZ78ConverseCodingLowerBound`) needs the
 averaged⟶a.s. lift (roadmap M4) and is **not** addressed here. -/
+@[entry_point]
 theorem lz78TokenCode_entropyD_le_expectedLength (c : ℕ)
     (P : Measure (Fin (c + 1) × α)) [IsProbabilityMeasure P]
     (hP : ∀ t : Fin (c + 1) × α, 0 < P.real {t}) :

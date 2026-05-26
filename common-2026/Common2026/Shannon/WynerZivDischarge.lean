@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.WynerZiv
 
 /-!
@@ -74,6 +75,7 @@ variable (U : Type*) [Fintype U] [MeasurableSpace U]
 /-- **Constraint set is monotone in `D`.** Increasing the distortion budget
 can only enlarge the set of feasible `(q, f)`-pairs: every point feasible at
 the lower threshold `D` is *also* feasible at the higher threshold `D'`. -/
+@[entry_point]
 theorem WynerZivConstraint_mono_in_D
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {D D' : ℝ} (hD : D ≤ D') :
     WynerZivConstraint U P_XY d D ⊆ WynerZivConstraint U P_XY d D' := by
@@ -123,6 +125,7 @@ empty and the larger one is non-empty with a negative infimum.
 This is the *monotone* (D-antitone) fragment of L-WZ3 (convexity in `D`).
 The full convexity statement is blocked by the non-affine Markov
 cross-product constraint and is deferred. -/
+@[entry_point]
 theorem wynerZivRatePmf_antitone
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {D D' : ℝ} (hD : D ≤ D')
     (h_ne : ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
@@ -302,6 +305,7 @@ This is the user-facing form for downstream applications: callers supply
 only a feasibility witness, and both the non-emptiness and the `BddBelow`
 side conditions are discharged internally (via the simplex-projection
 route). -/
+@[entry_point]
 theorem wynerZivRatePmf_antitone_of_feasible
     [DecidableEq α] [DecidableEq β]
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {D D' : ℝ} (hD : D ≤ D')

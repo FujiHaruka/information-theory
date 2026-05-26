@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.LempelZiv78
 import Common2026.Shannon.LZ78ZivInequality
 import Mathlib.Analysis.Asymptotics.Defs
@@ -270,6 +271,7 @@ this signature.
 
 Pattern: the same `hypothesis pass-through` style as
 `relay_cutset_outer_bound` (T3-F). -/
+@[entry_point]
 theorem lz78_phrase_count_asymptotic
     (p : ℕ → LZ78Parsing α) (B : ℕ → ℝ)
     (h_bound : ∀ n, ZivCountingBound (p n) (B n))
@@ -279,6 +281,7 @@ theorem lz78_phrase_count_asymptotic
 
 /-- **Specialized to the `n / Real.log n` envelope** (Cover–Thomas
 13.124). -/
+@[entry_point]
 theorem lz78_phrase_count_asymptotic_n_div_log
     (p : ℕ → LZ78Parsing α)
     (h_bound : ∀ᶠ n : ℕ in atTop,
@@ -287,6 +290,7 @@ theorem lz78_phrase_count_asymptotic_n_div_log
   IsLZ78PhraseCountAsymptotic.of_n_div_log h_bound
 
 /-- **Specialized to the linear `n` envelope** (the trivial bound). -/
+@[entry_point]
 theorem lz78_phrase_count_asymptotic_linear
     (p : ℕ → LZ78Parsing α)
     (h_le : ∀ n, (p n).count ≤ n) :

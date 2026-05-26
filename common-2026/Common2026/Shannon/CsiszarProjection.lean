@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Mathlib.InformationTheory.KullbackLeibler.KLFun
 import Mathlib.Analysis.Convex.StdSimplex
 import Mathlib.Analysis.Calculus.MeanValue
@@ -169,6 +170,7 @@ lemma isCompact_of_subset_stdSimplex {K : Set (α → ℝ)}
 
 /-- **存在** (Cover-Thomas 11.6.1 a): 閉凸非空 `K ⊆ stdSimplex ℝ α` と full-support
 reference Q について `klDivPmf · Q` を最小化する `Q* ∈ K` が存在する。 -/
+@[entry_point]
 theorem csiszar_projection_exists {K : Set (α → ℝ)} {Q : α → ℝ}
     (hK_closed : IsClosed K)
     (hK_sub : K ⊆ stdSimplex ℝ α)
@@ -183,6 +185,7 @@ theorem csiszar_projection_exists {K : Set (α → ℝ)} {Q : α → ℝ}
 /-! ## Phase C — 一意性 (strict convexity) -/
 
 /-- **一意性** (Cover-Thomas 11.6.1 b): 凸閉非空 `K ⊆ stdSimplex ℝ α` 上の最小化元は一意。 -/
+@[entry_point]
 theorem csiszar_projection_unique {K : Set (α → ℝ)} {Q : α → ℝ}
     (hK_conv : Convex ℝ K)
     (hK_sub : K ⊆ stdSimplex ℝ α)
@@ -446,6 +449,7 @@ lemma csiszar_first_order_condition
 戦略: 代数恒等式 `klDivPmf P Q = klDivPmf P Q* + ∑ P a · log(Q*/Q)` +
 `klDivPmf Q* Q = ∑ Q* a · log(Q*/Q)` + 1 次条件
 `∑ (P - Q*) log(Q*/Q) ≥ 0` の 3 つを合成。 -/
+@[entry_point]
 theorem csiszar_pythagoras_inequality
     {K : Set (α → ℝ)} {Q : α → ℝ}
     (hK_conv : Convex ℝ K)
