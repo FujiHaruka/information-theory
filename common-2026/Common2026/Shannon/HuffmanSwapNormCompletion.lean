@@ -8,7 +8,6 @@ import Mathlib.Tactic.Positivity
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.Linarith
 import Common2026.Meta.EntryPoint
-import Common2026.Shannon.HuffmanSwapNormProof
 
 /-!
 # T1-A'' — Kraft completion (shorten-to-Kraft=1)
