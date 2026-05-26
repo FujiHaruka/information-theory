@@ -1,7 +1,7 @@
 # T1-A'' Huffman 強形 完遂 — full-B 構造定理で Hyp2 (collapse) を閉じる 🌙
 
 > **Parent**:
-> - [`textbook-roadmap.md`](../textbook-roadmap.md) §「Tier 1 — T1-A''. Huffman 最適性」 判断ログ #19 追記3/追記4 (pivot 選択肢 **B = depth-from-prob-multiset 構造定理**)
+> - [`textbook-roadmap.md`](../textbook-roadmap.md) 章対応進捗 Ch.5 行 + frontier 節 (Huffman 強形) + 判断ログ #6 (pivot 選択肢 **B = depth-from-prob-multiset 構造定理** の経緯は `git log -- docs/textbook-roadmap.md` の 2026-05-26 整理前 commit 旧 #19 追記3/追記4)
 > - 直前 (colex 決定化 + 無条件 cornerstone genuine 済): [`huffman-colex-determinism-plan.md`](./huffman-colex-determinism-plan.md)
 > - measure 層剥離 + Hyp2 正確 statement: [`HuffmanMergedIdentBody.lean`](../../Common2026/Shannon/HuffmanMergedIdentBody.lean)
 >

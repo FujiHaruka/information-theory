@@ -1,10 +1,10 @@
 # T1-A'' Huffman 強形 完遂 — `huffmanStep` colex 決定化で Hyp2 discharge 🌙
 
 > **Parent**:
-> - [`textbook-roadmap.md`](../textbook-roadmap.md) §「Tier 1 — T1-A''. Huffman 最適性」+ 判断ログ #17/#19
+> - [`textbook-roadmap.md`](../textbook-roadmap.md) 章対応進捗 Ch.5 行 + frontier 節 (Huffman 強形) + 判断ログ #4/#6 (詳細経緯は `git log -- docs/textbook-roadmap.md` の 2026-05-26 整理前 commit 旧 #17/#19)
 > - 前任 (Hyp1 genuine discharge 済): [`huffman-strong-form-completion-plan.md`](./huffman-strong-form-completion-plan.md)
 >
-> **Supersedes (真壁判定の撤回)**: 判断ログ #19 + `HuffmanMergedAuxIdent.lean` Section E が
+> **Supersedes (真壁判定の撤回)**: 旧 textbook-roadmap 判断ログ #19 (現 #6 に統合、詳細は git log) + `HuffmanMergedAuxIdent.lean` Section E が
 > Hyp2 (`MergedHuffmanAuxIdentHypothesis`) の確率 tie 一般ケースを「定義 artifact の真壁」と
 > 判定したが、これは **早計** だった。判定根拠「決定的 huffmanStep に必要な
 > `LinearOrder (Finset α)` が Mathlib に無い」は `Fintype.equivFin` (任意順序、subtype に
