@@ -74,6 +74,7 @@ instance gaussianCodebook_isProbabilityMeasure (M n : ℕ) (σsq : ℝ≥0) :
 gives back the inner i.i.d. Gaussian product measure on `Fin n → ℝ`.
 
 Single-call to `measurePreserving_eval` (Pi.lean:407, prob-measure flavour). -/
+@[entry_point]
 theorem gaussianCodebook_codeword_law (M n : ℕ) (σsq : ℝ≥0) (m : Fin M) :
     (gaussianCodebook M n σsq).map (fun c : Fin M → Fin n → ℝ => c m)
       = Measure.pi (fun _ : Fin n => gaussianReal 0 σsq) := by
@@ -88,6 +89,7 @@ codewords `c m`, `c m'` are independent random variables. Derived from
 trap 1 (inventory axis 1): `iIndepFun_pi` requires the inner `Measure.pi
 (gaussianReal 0 σsq)` to be a probability measure — this is provided by the
 `gaussianCodebook_isProbabilityMeasure`-style autoinference. -/
+@[entry_point]
 theorem gaussianCodebook_indepFun_codewords (M n : ℕ) (σsq : ℝ≥0)
     {m m' : Fin M} (hmm' : m ≠ m') :
     IndepFun (fun c : Fin M → Fin n → ℝ => c m)
@@ -218,6 +220,7 @@ Both are built from `Measurable.exists` (`Constructions.lean:889`) /
 
 trap: this proof works for **any** measurable set `A`; it does *not* depend on the
 AEP bound shape. -/
+@[entry_point]
 theorem jointTypicalDecoder_measurable
     {n M : ℕ} [NeZero M]
     (A : Set ((Fin n → ℝ) × (Fin n → ℝ))) (hA : MeasurableSet A)
@@ -632,6 +635,7 @@ theorem awgn_avg_error_union_bound
 Direct 1-line firing of `MeasureTheory.exists_le_lintegral` (Average.lean:738,
 inventory Axis 4.1.1) — `gaussianCodebook M n σsq` is a probability measure
 (Phase A instance) so the lemma applies, then `le_trans`. -/
+@[entry_point]
 theorem awgn_exists_codebook_le_avg
     {M n : ℕ} (σsq : ℝ≥0)
     (Pe : (Fin M → Fin n → ℝ) → ℝ≥0∞)
@@ -648,6 +652,7 @@ bounded by `M * (2ε)`, at least `M/2` indices `m` have `Pe m ≤ 4ε`.
 Pure `Finset` / arithmetic contraposition (inventory Axis 4.2). Pe is taken in
 `ℝ` here because the resulting bound is then handed to `Code.errorProbAt.toReal`
 slack reasoning in D-3. -/
+@[entry_point]
 theorem awgn_expurgate_worst_half
     {M : ℕ} (hM : 2 ≤ M)
     (Pe : Fin M → ℝ) (hPe_nn : ∀ m, 0 ≤ Pe m) {ε : ℝ} (hε : 0 < ε)
@@ -839,6 +844,7 @@ def IsAwgnRandomCodingFeasible (P : ℝ) (N : ℝ≥0)
 codebook satisfying both the per-message error bound and the per-message power
 constraint. Uses `jointTypicalDecoder` for the decoder and converts the
 `ℝ≥0∞`-valued error bound to `< 5ε` real-valued slack. -/
+@[entry_point]
 theorem awgn_extract_AwgnCode
     {P : ℝ} {N : ℝ≥0}
     (h_meas : IsAwgnChannelMeasurable N) {n : ℕ}

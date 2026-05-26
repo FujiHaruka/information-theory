@@ -1,6 +1,7 @@
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Sinc
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Sinc
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
+import Common2026.Meta.EntryPoint
 
 /-!
 # T2-C-WS: Whittaker-Shannon sampling partial publish
@@ -113,6 +114,7 @@ theorem sincN_of_ne_zero (x : ℝ) (hx : x ≠ 0) :
 
 This is the **algebraic reason** the Whittaker-Shannon series collapses
 to a single term at a sample point: `sincN(n - n₀) = δ_{n,n₀}`. -/
+@[entry_point]
 theorem sincN_int_eq_zero (n : ℤ) (hn : n ≠ 0) : sincN (n : ℝ) = 0 := by
   have hnR : (n : ℝ) ≠ 0 := by exact_mod_cast hn
   rw [sincN_of_ne_zero (n : ℝ) hnR]
@@ -122,6 +124,7 @@ theorem sincN_int_eq_zero (n : ℤ) (hn : n ≠ 0) : sincN (n : ℝ) = 0 := by
   simp
 
 /-- Kronecker-delta form of `sincN` at integers. -/
+@[entry_point]
 theorem sincN_int_eq_kronecker (n : ℤ) :
     sincN (n : ℝ) = if n = 0 then 1 else 0 := by
   by_cases hn : n = 0

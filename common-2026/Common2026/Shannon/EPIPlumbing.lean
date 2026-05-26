@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.EntropyPowerInequality
 import Common2026.Shannon.DifferentialEntropy
 import Mathlib.Analysis.SpecialFunctions.Exp
@@ -57,10 +58,12 @@ open scoped ENNReal NNReal Topology
 
 
 /-- `entropyPower μ ≠ 0` (corollary of strict positivity). -/
+@[entry_point]
 theorem entropyPower_ne_zero (μ : Measure ℝ) : entropyPower μ ≠ 0 :=
   (entropyPower_pos μ).ne'
 
 /-- `Real.log (entropyPower μ) = 2 · h(μ)`. -/
+@[entry_point]
 theorem log_entropyPower (μ : Measure ℝ) :
     Real.log (entropyPower μ) = 2 * Common2026.Shannon.differentialEntropy μ := by
   unfold entropyPower
@@ -70,6 +73,7 @@ theorem log_entropyPower (μ : Measure ℝ) :
 
 /-- If two measures share the same differential entropy, their entropy powers
 coincide. -/
+@[entry_point]
 theorem entropyPower_eq_of_differentialEntropy_eq {μ ν : Measure ℝ}
     (h : Common2026.Shannon.differentialEntropy μ
           = Common2026.Shannon.differentialEntropy ν) :
@@ -78,6 +82,7 @@ theorem entropyPower_eq_of_differentialEntropy_eq {μ ν : Measure ℝ}
   rw [h]
 
 /-- Monotonicity (≤): `h(μ) ≤ h(ν) ⟹ entropyPower μ ≤ entropyPower ν`. -/
+@[entry_point]
 theorem entropyPower_le_of_differentialEntropy_le {μ ν : Measure ℝ}
     (h : Common2026.Shannon.differentialEntropy μ
           ≤ Common2026.Shannon.differentialEntropy ν) :
@@ -87,6 +92,7 @@ theorem entropyPower_le_of_differentialEntropy_le {μ ν : Measure ℝ}
   linarith
 
 /-- Strict monotonicity (<): `h(μ) < h(ν) ⟹ entropyPower μ < entropyPower ν`. -/
+@[entry_point]
 theorem entropyPower_lt_of_differentialEntropy_lt {μ ν : Measure ℝ}
     (h : Common2026.Shannon.differentialEntropy μ
           < Common2026.Shannon.differentialEntropy ν) :
@@ -101,12 +107,14 @@ theorem entropyPower_lt_of_differentialEntropy_lt {μ ν : Measure ℝ}
 noncomputable def gaussianEntropyPowerConst : ℝ := 2 * Real.pi * Real.exp 1
 
 /-- `gaussianEntropyPowerConst > 0`. -/
+@[entry_point]
 theorem gaussianEntropyPowerConst_pos : 0 < gaussianEntropyPowerConst := by
   unfold gaussianEntropyPowerConst; positivity
 
 /-- **`(2πe)⁻¹`-normalized form for Gaussian**: under the Cover-Thomas
 `N(μ) := (2πe)⁻¹ · entropyPower μ` normalization, the Gaussian saturating
 case takes the closed form `N(gaussianReal m v) = v`. -/
+@[entry_point]
 theorem entropyPower_div_two_pi_e_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     entropyPower (gaussianReal m v) / gaussianEntropyPowerConst = (v : ℝ) := by
   rw [entropyPower_gaussianReal m hv]
@@ -117,12 +125,14 @@ theorem entropyPower_div_two_pi_e_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v �
 
 /-- Phase B-1 lift: `entropyPower (μ.map (· + a)) = entropyPower μ`. This is the
 `entropyPower` companion to `Common2026.Shannon.differentialEntropy_map_add_const`. -/
+@[entry_point]
 theorem entropyPower_map_add_const_eq_self
     {μ : Measure ℝ} (hμ : μ ≪ volume) [SigmaFinite μ] (a : ℝ) :
     entropyPower (μ.map (· + a)) = entropyPower μ :=
   entropyPower_map_add_const hμ a
 
 /-- Phase B-2 lift: `entropyPower (μ.map (· * c)) = |c|² · entropyPower μ`. -/
+@[entry_point]
 theorem entropyPower_map_mul_const
     {μ : Measure ℝ} (hμ : μ ≪ volume) [IsProbabilityMeasure μ] {c : ℝ} (hc : c ≠ 0)
     (h_ent_int : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
@@ -146,6 +156,7 @@ theorem entropyPower_map_mul_const
 
 The translation term `+ b` is absorbed (entropy power is translation-invariant),
 leaving only the scaling factor `a²`. -/
+@[entry_point]
 theorem entropyPower_map_affine
     {μ : Measure ℝ} (hμ : μ ≪ volume) [IsProbabilityMeasure μ] {a : ℝ} (ha : a ≠ 0) (b : ℝ)
     (h_ent_int : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
@@ -172,6 +183,7 @@ Defining `N(μ) := entropyPower μ / (2πe)`, the EPI
     `N(X + Y) ≥ N(X) + N(Y)`
 
 is equivalent to the un-normalized form. L-EPI3 hypothesis pass-through. -/
+@[entry_point]
 theorem entropy_power_inequality_normalized
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -237,6 +249,7 @@ theorem entropy_power_inequality_four_arg {Ω : Type*} {mΩ : MeasurableSpace Ω
 
 Derived from `entropy_power_inequality` by applying `Real.log` (the inequality
 direction is preserved since `Real.log` is monotone on `(0, ∞)`). -/
+@[entry_point]
 theorem two_differentialEntropy_ge_log_sum
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

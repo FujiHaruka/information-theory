@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Density
 import Mathlib.Probability.Independence.Basic
@@ -47,6 +48,7 @@ open scoped ENNReal NNReal Real
 
 /-- `(pdf X P volume).toReal =ᵐ[volume] gaussianPDFReal m v` for a Gaussian `X`.
 Bridges `MeasureTheory.pdf_def` → `rnDeriv_gaussianReal` → `toReal_gaussianPDF`. -/
+@[entry_point]
 lemma pdf_toReal_ae_eq_gaussianPDFReal
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω}
     (X : Ω → ℝ) [HasPDF X P volume] {m : ℝ} {v : ℝ≥0}
@@ -62,12 +64,14 @@ lemma pdf_toReal_ae_eq_gaussianPDFReal
   rw [h_pdf_eq, hx, toReal_gaussianPDF]
 
 /-- `Differentiable ℝ (gaussianPDFReal m v)` — the Gaussian pdf is smooth on all of `ℝ`. -/
+@[entry_point]
 lemma differentiable_gaussianPDFReal (m : ℝ) (v : ℝ≥0) :
     Differentiable ℝ (gaussianPDFReal m v) := by
   show Differentiable ℝ (fun x => (Real.sqrt (2 * Real.pi * v))⁻¹ * Real.exp (-(x - m)^2 / (2 * v)))
   fun_prop
 
 /-- `deriv (gaussianPDFReal m v) x = -(x - m)/v * gaussianPDFReal m v x`. -/
+@[entry_point]
 lemma deriv_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) (x : ℝ) :
     deriv (gaussianPDFReal m v) x = -(x - m) / v * gaussianPDFReal m v x := by
   have hv_pos : (0 : ℝ) < v := by
@@ -119,6 +123,7 @@ private lemma tendsto_quadratic_div_atTop (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0)
   exact Filter.Tendsto.atTop_div_const h2v_pos h_sq
 
 /-- `gaussianPDFReal m v x → 0` as `x → -∞`. -/
+@[entry_point]
 lemma tendsto_gaussianPDFReal_atBot (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     Filter.Tendsto (gaussianPDFReal m v) Filter.atBot (nhds 0) := by
   -- Equate `gaussianPDFReal` with `c * exp(-(x-m)^2 / (2v))`.
@@ -145,6 +150,7 @@ lemma tendsto_gaussianPDFReal_atBot (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     simpa using h_exp.const_mul (Real.sqrt (2 * Real.pi * v))⁻¹
   exact h_final.congr (fun x => by rw [gaussianPDFReal_def])
 
+@[entry_point]
 lemma tendsto_gaussianPDFReal_atTop (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     Filter.Tendsto (gaussianPDFReal m v) Filter.atTop (nhds 0) := by
   have h_abs : Filter.Tendsto (fun x : ℝ => |x - m|) Filter.atTop Filter.atTop := by
@@ -200,6 +206,7 @@ private lemma integrable_sub_mul_gaussianPDFReal (m : ℝ) {v : ℝ≥0} (hv : v
   ring
 
 /-- `deriv (gaussianPDFReal m v)` is Lebesgue-integrable. -/
+@[entry_point]
 lemma integrable_deriv_gaussianPDFReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     Integrable (deriv (gaussianPDFReal m v)) volume := by
   have hv_pos : (0 : ℝ) < v := by
@@ -220,6 +227,7 @@ lemma integrable_deriv_gaussianPDFReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
 /-- `∫ deriv (gaussianPDFReal m v) x ∂volume = 0`.
 Using `deriv f = -(x-m)/v * f`, this equals `-(1/v) · ∫ (x - m) · f`, and the
 latter is `m - m = 0` because `∫ x · f = m` (Gaussian mean) and `∫ f = 1`. -/
+@[entry_point]
 lemma integral_deriv_gaussianPDFReal_eq_zero (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     ∫ x, deriv (gaussianPDFReal m v) x ∂volume = 0 := by
   have hv_pos : (0 : ℝ) < v := by
@@ -268,6 +276,7 @@ lemma integral_deriv_gaussianPDFReal_eq_zero (m : ℝ) {v : ℝ≥0} (hv : v ≠
     mul_zero]
 
 /-- **`IsRegularDensity` instance for Gaussian densities** (L-F2 hypothesis discharge). -/
+@[entry_point]
 noncomputable def isRegularDensity_gaussianReal_of_law
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X : Ω → ℝ) [HasPDF X P volume] {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0)
@@ -285,6 +294,7 @@ noncomputable def isRegularDensity_gaussianReal_of_law
 /-! ## Phase B — Gaussian Fisher info + score expectation wrapper -/
 
 /-- `logDeriv (gaussianPDFReal m v) x = -(x - m) / v`. -/
+@[entry_point]
 lemma logDeriv_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) (x : ℝ) :
     logDeriv (gaussianPDFReal m v) x = -(x - m) / v := by
   rw [logDeriv_apply, deriv_gaussianPDFReal hv]

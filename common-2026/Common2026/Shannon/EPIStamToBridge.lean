@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.EntropyPowerInequality
 import Common2026.Shannon.EPIStamDischarge
 import Common2026.Shannon.EPIL3Integration
@@ -477,6 +478,7 @@ form `HasDerivAt (fun s => entropyPower (P.map (gaussianConvolution X Z s)))
 
 Proof: `HasDerivAt.const_mul 2` (multiply derivative by `2`), then
 `HasDerivAt.exp` (chain with `Real.exp`). `@audit:ok` (trivial chain). -/
+@[entry_point]
 theorem entropyPower_hasDerivAt_of_diffEnt_hasDerivAt
     {f : ℝ → ℝ} {d t : ℝ} (h : HasDerivAt f d t) :
     HasDerivAt (fun s => Real.exp (2 * f s)) (Real.exp (2 * f t) * (2 * d)) t :=

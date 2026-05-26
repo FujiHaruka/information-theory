@@ -218,6 +218,7 @@ Unlike the V1 statement, the Gaussian case here can be fully discharged
 (`deBruijn_identity_v2_gaussian` below).
 
 `@audit:suspect(fisher-info-moonshot-plan)` -/
+@[entry_point]
 theorem deBruijn_identity_v2
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (_hX : Measurable X) (_hZ : Measurable Z)
@@ -246,6 +247,7 @@ The two sides match by `field_simp` / `ring`. -/
 
 /-- Helper: `(1/2) * Real.log (2π e (v + s))` has derivative `1/(2(v + s))` at any
 `s ≥ 0` (when `v + s > 0`). -/
+@[entry_point]
 theorem hasDerivAt_half_log_gaussian_entropy
     {v : ℝ≥0} (s : ℝ) (hvs : 0 < (v : ℝ) + s) :
     HasDerivAt
@@ -288,6 +290,7 @@ theorem hasDerivAt_half_log_gaussian_entropy
 /-- **Differential entropy of `gaussianReal m (v + s.toNNReal)`** along the heat-flow
 path, simplified to `(1/2) log (2π e (v + s))` for `s ≥ 0` (so `v + s` matches as
 a real number with `(v + s.toNNReal : ℝ) = v + s`). -/
+@[entry_point]
 theorem differentialEntropy_gaussianReal_heat_path
     (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) {s : ℝ} (hs : 0 ≤ s) :
     differentialEntropy (gaussianReal m (v + ⟨s, hs⟩))

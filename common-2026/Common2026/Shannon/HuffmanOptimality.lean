@@ -5,6 +5,7 @@ import Mathlib.Data.Finset.Image
 import Mathlib.Data.Fintype.EquivFin
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.MeasureTheory.Measure.Real
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.Huffman
 
 /-!
@@ -191,6 +192,7 @@ huffmanLength P a)` は本 signature には含めず、Phase 4 主定理側で `
 旧 disjunctive 形 (`∀ c, P{a} ≤ P{c} ∨ P{b} ≤ P{c}`) は swap 論法を閉じられず
 強形 `huffmanLength_optimal` に到達できないため、call site が実際に供給する情報
 (`huffmanStep_initMultiset_sibling`) をそのまま publish する. -/
+@[entry_point]
 theorem exists_sibling_min_pair
     (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})
     (h_card : 2 ≤ Fintype.card α) :

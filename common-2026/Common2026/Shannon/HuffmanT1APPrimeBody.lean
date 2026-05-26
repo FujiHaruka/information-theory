@@ -1,4 +1,5 @@
 import Mathlib.Logic.Equiv.Basic
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.HuffmanOptimality
 import Common2026.Shannon.HuffmanT1APPrimePartial
 
@@ -141,6 +142,7 @@ theorem huffmanLength_optimal_wrapper_explicit
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- **Kraft sum の任意 permutation 不変性**: `Equiv.swap` 経由でなく任意 permutation で
 Kraft sum が不変. -/
+@[entry_point]
 theorem kraft_sum_perm_eq
     (l : α → ℕ) (σ : α ≃ α) :
     (∑ x : α, ((2 : ℝ)) ^ (-((l ∘ σ) x : ℤ)))
@@ -152,6 +154,7 @@ omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- **expectedLength の permutation 不変性 (`l a = l (σ a)` 条件)**: 任意 permutation `σ`
 で `∀ x, l (σ x) = l x` ⇒ expectedLength は不変. `σ` が恒等 (= 値 nontrivial) でない場合
 にも、すべての pair で `l` が等しいときに使える. -/
+@[entry_point]
 theorem expectedLength_perm_invariant_when_l_eq
     (P : Measure α) [IsProbabilityMeasure P]
     (l : α → ℕ) (σ : α ≃ α)

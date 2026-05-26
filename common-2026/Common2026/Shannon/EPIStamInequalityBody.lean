@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.EntropyPowerInequality
 import Common2026.Shannon.EPIPlumbing
 import Common2026.Shannon.EPIStamDischarge
@@ -127,6 +128,7 @@ with a real construction; the witness it produces is exactly the one the
 λ-optimization (Step 4 `stam_lambda_min`) consumes.
 
 `@audit:ok` -/
+@[entry_point]
 theorem isStamScoreConvolution_intro {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : IsStamScoreConvolution X Y P := by
   intro J_X J_Y fX fY hJX hJY _hJX_def _hJY_def
@@ -184,6 +186,7 @@ For positive `a, b > 0`, the function `λ ↦ λ² a + (1 - λ)² b` is minimize
 `λ* = b / (a + b)` with minimum value `a b / (a + b)`. Combined with Step 3,
 this gives `J(Z) ≤ J(X) J(Y) / (J(X) + J(Y))`, equivalently
 `1 / J(Z) ≥ 1 / J(X) + 1 / J(Y)`. -/
+@[entry_point]
 theorem stam_lambda_min {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
     let lam := b / (a + b)
     lam ^ 2 * a + (1 - lam) ^ 2 * b = a * b / (a + b) := by
@@ -195,6 +198,7 @@ theorem stam_lambda_min {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
 
 /-- **λ optimum upper bound**: for any `λ ∈ ℝ`, `λ² a + (1-λ)² b ≥ ab / (a+b)`.
 Cauchy-Schwarz / AM-GM direct consequence. -/
+@[entry_point]
 theorem stam_lambda_lower_bound {a b : ℝ} (ha : 0 < a) (hb : 0 < b) (lam : ℝ) :
     a * b / (a + b) ≤ lam ^ 2 * a + (1 - lam) ^ 2 * b := by
   have hab : 0 < a + b := by linarith
@@ -213,6 +217,7 @@ theorem stam_lambda_lower_bound {a b : ℝ} (ha : 0 < a) (hb : 0 < b) (lam : ℝ
 
 /-- **Inverse-form Stam algebraic identity**: for `a, b, c > 0` with
 `c ≤ ab/(a+b)`, the inverse relation `1/c ≥ 1/a + 1/b` holds. -/
+@[entry_point]
 theorem stam_inverse_form_of_harmonic_mean
     {a b c : ℝ} (ha : 0 < a) (hb : 0 < b) (hc : 0 < c)
     (h_le : c ≤ a * b / (a + b)) :
@@ -252,6 +257,7 @@ Given the convolution-score predicate + the optimal Cauchy-Schwarz predicate,
 chain through Step 4 closed form to obtain the inverse-form Stam inequality.
 
 `@audit:ok` -/
+@[entry_point]
 theorem stam_inequality_via_predicate_optimal
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -272,6 +278,7 @@ predicate (Cover-Thomas Lemma 17.7.2 真 signature) follows from the convolution
 + optimal-CS pair. This is the **bridge from body to plumbing**.
 
 `@audit:ok` -/
+@[entry_point]
 theorem isStamInequalityHyp_via_body
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -311,6 +318,7 @@ theorem isStamToEPIBridgeHyp_via_body_gaussian
 /-- **EPI via Stam body discharge (Gaussian case)**: full deliverable end-to-end.
 For Gaussian `X, Y` with non-zero variance, EPI follows through the body
 discharge + Gaussian saturation bridge — no upstream hypothesis required. -/
+@[entry_point]
 theorem epi_via_stam_body_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -401,6 +409,7 @@ theorem isStamInequalityHyp_via_body_to_pipeline
 /-- **End-to-end EPI via body discharge** (composes §4 + §6 + EPIL3 pipeline).
 
 `@audit:ok` -/
+@[entry_point]
 theorem entropy_power_inequality_via_body
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

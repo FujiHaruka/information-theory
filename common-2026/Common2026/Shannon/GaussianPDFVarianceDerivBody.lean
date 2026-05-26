@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Analysis.SpecialFunctions.Sqrt
 import Mathlib.Analysis.SpecialFunctions.ExpDeriv
@@ -68,6 +69,7 @@ noncomputable def gaussianPDFRealVar (m v x : ℝ) : ℝ :=
   (Real.sqrt (2 * Real.pi * v))⁻¹ * Real.exp (-(x - m) ^ 2 / (2 * v))
 
 /-- For `v > 0`, `gaussianPDFRealVar` agrees with `gaussianPDFReal m ⟨v, _⟩`. -/
+@[entry_point]
 theorem gaussianPDFRealVar_eq_gaussianPDFReal (m : ℝ) {v : ℝ} (hv : 0 < v) (x : ℝ) :
     gaussianPDFRealVar m v x = gaussianPDFReal m ⟨v, hv.le⟩ x := by
   rw [gaussianPDFReal]
@@ -79,6 +81,7 @@ theorem gaussianPDFRealVar_eq_gaussianPDFReal (m : ℝ) {v : ℝ} (hv : 0 < v) (
 
 `∂_v (√(2πv))⁻¹ = -(1/(2v)) · (√(2πv))⁻¹`. The `√` cancels: the log-derivative
 of `(√(2πv))⁻¹` is rational. -/
+@[entry_point]
 theorem hasDerivAt_gaussianNorm_variance {v : ℝ} (hv : 0 < v) :
     HasDerivAt (fun v => (Real.sqrt (2 * Real.pi * v))⁻¹)
       (-(1 / (2 * v)) * (Real.sqrt (2 * Real.pi * v))⁻¹) v := by
@@ -105,6 +108,7 @@ theorem hasDerivAt_gaussianNorm_variance {v : ℝ} (hv : 0 < v) :
 /-- **Variance-derivative of the exponential factor.**
 
 `∂_v exp(−(x−m)²/(2v)) = ((x−m)²/(2v²)) · exp(−(x−m)²/(2v))`. -/
+@[entry_point]
 theorem hasDerivAt_gaussianExp_variance (m x : ℝ) {v : ℝ} (hv : 0 < v) :
     HasDerivAt (fun v => Real.exp (-(x - m) ^ 2 / (2 * v)))
       (((x - m) ^ 2 / (2 * v ^ 2)) * Real.exp (-(x - m) ^ 2 / (2 * v))) v := by
@@ -132,6 +136,7 @@ theorem hasDerivAt_gaussianExp_variance (m x : ℝ) {v : ℝ} (hv : 0 < v) :
    = ((x−m)²/(2v²) − 1/(2v)) · gaussianPDFRealVar m v x`,
 
 for `v > 0`. Proven from scratch via the `Real.exp` / `Real.sqrt` chain rule. -/
+@[entry_point]
 theorem hasDerivAt_gaussianPDFRealVar_variance (m x : ℝ) {v : ℝ} (hv : 0 < v) :
     HasDerivAt (fun v => gaussianPDFRealVar m v x)
       (((x - m) ^ 2 / (2 * v ^ 2) - 1 / (2 * v)) * gaussianPDFRealVar m v x) v := by
@@ -158,6 +163,7 @@ theorem hasDerivAt_gaussianPDFRealVar_variance (m x : ℝ) {v : ℝ} (hv : 0 < v
 heat equation `∂_t p = (1/2) Δ_x p`. This is the `m = 0` specialization of
 `hasDerivAt_gaussianPDFRealVar_variance`, re-expressed against `heatKernel` and
 the wave-9 `spatialLaplacianHeatKernel`. -/
+@[entry_point]
 theorem hasDerivAt_heatKernel_time {t : ℝ} (ht : 0 < t) (x : ℝ) :
     HasDerivAt (fun s => Common2026.Shannon.FisherInfoV2.heatKernel s x)
       ((1 / 2) * Common2026.Shannon.FisherInfoV2.spatialLaplacianHeatKernel t x) t := by
@@ -186,6 +192,7 @@ With `Δp t x := spatialLaplacianHeatKernel t x`, the heat kernel discharges
 `IsHeatTimeDerivHyp` internally. This is the **L-FV2HF-B discharge** — the
 time-derivative half of the de Bruijn machinery, closing the wave-9
 pass-through. -/
+@[entry_point]
 theorem isHeatTimeDerivHyp_gaussian :
     Common2026.Shannon.FisherInfoV2.IsHeatTimeDerivHyp
       (fun t x => Common2026.Shannon.FisherInfoV2.heatKernel t x)

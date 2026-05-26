@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.HoeffdingTradeoff
 import Common2026.Shannon.HoeffdingSandwich
 import Common2026.Shannon.HoeffdingSandwichBody
@@ -102,6 +103,7 @@ boundary it is *not* generally true — see the judgement log in Phase 3 (it fai
 /-- **achievability at the boundary** (`klDivPmf P₂ P₁ ≤ alpha`, fully
 unconditional): there `hoeffdingE2 = 0 ≤ liminf rate`, since the rate is
 non-negative. -/
+@[entry_point]
 theorem hoeffding_tradeoff_achievability_at_boundary
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)

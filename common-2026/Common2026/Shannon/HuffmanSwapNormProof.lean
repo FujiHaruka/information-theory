@@ -8,6 +8,7 @@ import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Algebra.Ring.Parity
 import Mathlib.Tactic.Push
 import Mathlib.Tactic.Ring
+import Common2026.Meta.EntryPoint
 
 /-!
 # T1-A'' — `strict_kraft_one_implies_pairing` keystone (genuine combinatorial heart)
@@ -31,6 +32,7 @@ open scoped BigOperators
 /-- **Natural-number form of the Kraft equality.** If `l` is positive, `M` bounds every
 `l c` (`∀ c, l c ≤ M`), and the real binary Kraft sum equals `1`, then the rescaled
 natural-number sum `∑ c, 2^(M - l c)` equals `2^M`. -/
+@[entry_point]
 theorem kraft_one_nat_sum
     {β : Type*} [Fintype β]
     (l : β → ℕ) (M : ℕ) (hM : ∀ c, l c ≤ M)
@@ -64,6 +66,7 @@ theorem kraft_one_nat_sum
 `Fintype` and the binary Kraft sum is exactly `1`, then for every `b` there exists a
 distinct `c ≠ b` with `l b ≤ l c`. In particular the maximum length is attained by at
 least two symbols. -/
+@[entry_point]
 theorem strict_kraft_one_implies_pairing
     {β : Type*} [Fintype β] [DecidableEq β]
     (l : β → ℕ) (hl_pos : ∀ c, 0 < l c)
@@ -107,6 +110,7 @@ theorem strict_kraft_one_implies_pairing
 For a positive length function whose binary Kraft sum is exactly `1`, the maximum codeword
 length is attained by **two distinct** symbols. This is the structural fact Cover–Thomas
 uses to argue that the two longest leaves of an optimal binary code are siblings. -/
+@[entry_point]
 theorem exists_two_equal_longest
     {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
     (l : β → ℕ) (hl_pos : ∀ c, 0 < l c)

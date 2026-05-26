@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.EntropyPowerInequality
 import Common2026.Shannon.EPIStamDischarge
 import Common2026.Shannon.EPIL3Integration
@@ -122,18 +123,21 @@ def IsEPIGapMonotoneHyp (f : ℝ → ℝ) : Prop :=
 /-- **de Bruijn derivative is non-negative**: `(1/2) · J(f) ≥ 0` for any density
 `f`, because the V2 Fisher information is non-negative. This is the
 monotonicity engine of the heat-flow EPI gap. -/
+@[entry_point]
 theorem deBruijn_deriv_nonneg (f : ℝ → ℝ) :
     0 ≤ (1 / 2 : ℝ) * fisherInfoOfDensityReal f :=
   mul_nonneg (by norm_num) (fisherInfoOfDensityReal_nonneg f)
 
 /-- The gap-monotonicity hypothesis is **discharged outright** for any density
 `f`. -/
+@[entry_point]
 theorem isEPIGapMonotoneHyp_discharge (f : ℝ → ℝ) : IsEPIGapMonotoneHyp f :=
   deBruijn_deriv_nonneg f
 
 /-- **Gap-monotonicity from a de Bruijn V2 regularity witness**. Given the
 de Bruijn V2 witness, its derivative value `(1/2) · J(density_t)` is the EPI
 gap derivative along the heat-flow path, and it is non-negative. -/
+@[entry_point]
 theorem isEPIGapMonotoneHyp_of_deBruijnV2
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     {X Z : Ω → ℝ} {t : ℝ}
@@ -152,6 +156,7 @@ genuinely-irreducible Stam primitives: the Blachman convolution-score identity
 arithmetically (`isStamInequalityHyp_via_step3`).
 
 `@audit:suspect(epi-stam-to-conclusion-plan)` -/
+@[entry_point]
 theorem isStamInequalityHyp_of_primitives
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -245,6 +250,7 @@ entirely from Gaussian saturation. The genuine Gaussian EPI is
 /-- **Gaussian EPI fully hypothesis-free** (re-verification + extension of
 `EPIL3Integration.entropy_power_inequality_gaussian_full`). The saturation case
 gives equality, hence `≥`; *no* pipeline hypothesis at all is required. -/
+@[entry_point]
 theorem entropy_power_inequality_gaussian_full'
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -263,6 +269,7 @@ standard-normal `Z`, `X ⊥ Z`, the de Bruijn derivative along the heat-flow pat
 at `t > 0` is `(1/2) · J(𝒩(m, v + t)) = 1/(2(v + t)) ≥ 0`. This composes the
 Gaussian de Bruijn identity with the derivative-sign engine: the EPI gap is
 monotone non-decreasing along the heat path. -/
+@[entry_point]
 theorem deBruijn_gap_deriv_nonneg_gaussian
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)

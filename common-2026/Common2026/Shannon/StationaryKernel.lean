@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.LZ78ZivEntropyBridge
 import Common2026.Shannon.LZ78ZivCountingBody
 import Common2026.Shannon.EntropyRate
@@ -70,6 +71,7 @@ probabilities over `range c` telescopes to
 Proved by induction on `c` (a `ℝ` field telescoping, where the `prod_range_div`
 group lemma does not apply): each step cancels the denominator ratio against
 the previous prefix probability, which is nonzero by `hpos`. -/
+@[entry_point]
 theorem prod_condPhraseProb_telescope
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (n : ℕ) (ω : Ω) (c : ℕ)
@@ -128,6 +130,7 @@ is smaller: `prefixBlockProb ω m₂ ≤ prefixBlockProb ω m₁`.
 
 This is the load-bearing measure-theoretic fact that turns the (false)
 factorization *equality* into the (true) Ziv *inequality*. -/
+@[entry_point]
 theorem prefixBlockProb_antitone
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (ω : Ω) {m₁ m₂ : ℕ} (h : m₁ ≤ m₂) :
@@ -148,6 +151,7 @@ length of the emitted phrase strings is at most the input length
 (`lz78PhraseStrings_total_length_le`), so the parsing boundary at the full
 phrase count is `≤ n`. This is the *unconditional* replacement for the
 false `boundary c = n` parse-completeness claim. -/
+@[entry_point]
 theorem parsingBoundary_complete_le
     (μ : Measure Ω) (p : StationaryProcess μ α) (n : ℕ) (ω : Ω) :
     parsingBoundary μ p n ω (lz78PhraseStrings (List.ofFn (p.blockRV n ω))).length ≤ n := by
@@ -171,6 +175,7 @@ chain needs (replacing the false equality `factor`): the telescoping gives
 The only side condition is positivity of the intermediate prefix block
 probabilities (a.s. regularity of the observed cylinders) — not the false
 parse-completeness claim. -/
+@[entry_point]
 theorem blockProb_le_prod_condPhraseProb
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     (n : ℕ) (ω : Ω)
@@ -194,6 +199,7 @@ omit [Nonempty α] [MeasurableSingletonClass α] in
 the cumulative length of the first `j` phrases is bounded by the total
 phrase length, which is `≤ n`. (For `j ≥ c` the prefix is the whole phrase
 list, so the boundary is constant `= boundary c ≤ n`.) -/
+@[entry_point]
 theorem parsingBoundary_le_n
     (μ : Measure Ω) (p : StationaryProcess μ α) (n : ℕ) (ω : Ω) (j : ℕ) :
     parsingBoundary μ p n ω j ≤ n := by

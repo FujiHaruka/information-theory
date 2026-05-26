@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
 import Mathlib.Analysis.SpecialFunctions.Log.Deriv
@@ -91,6 +92,7 @@ theorem heatKernel_variance_ne_zero {t : ℝ} (ht : 0 < t) :
 
 `∂_x g_t(x) = -(x / t) · g_t(x)`, the `m = 0` specialization of
 `Common2026.Shannon.deriv_gaussianPDFReal`. -/
+@[entry_point]
 theorem heatKernel_spatial_deriv {t : ℝ} (ht : 0 < t) (x : ℝ) :
     deriv (fun y => heatKernel t y) x = -(x / t) * heatKernel t x := by
   have hfun : (fun y => heatKernel t y) = gaussianPDFReal 0 ⟨t, ht.le⟩ := by
@@ -102,6 +104,7 @@ theorem heatKernel_spatial_deriv {t : ℝ} (ht : 0 < t) (x : ℝ) :
   ring
 
 /-- **`HasDerivAt` form** of the first spatial derivative of the heat kernel. -/
+@[entry_point]
 theorem heatKernel_hasDerivAt_spatial {t : ℝ} (ht : 0 < t) (x : ℝ) :
     HasDerivAt (fun y => heatKernel t y) (-(x / t) * heatKernel t x) x := by
   have hfun : (fun y => heatKernel t y) = gaussianPDFReal 0 ⟨t, ht.le⟩ := by
@@ -127,6 +130,7 @@ noncomputable def spatialLaplacianHeatKernel (t : ℝ) (x : ℝ) : ℝ :=
 differentiate `heatKernel_spatial_deriv` once more (product rule).
 
 `∂²_x g_t(x) = (x²/t² - 1/t) · g_t(x)`. -/
+@[entry_point]
 theorem heatKernel_spatial_laplacian {t : ℝ} (ht : 0 < t) (x : ℝ) :
     deriv (fun y => deriv (fun z => heatKernel t z) y) x
       = spatialLaplacianHeatKernel t x := by
@@ -179,6 +183,7 @@ def IsHeatFlowConvolutionHyp {Ω : Type*} [MeasurableSpace Ω]
 
 With `Δp t x := spatialLaplacianHeatKernel t x`, the heat kernel discharges
 `IsHeatSpatialDerivHyp` internally. This is the L-FV2HF-A discharge. -/
+@[entry_point]
 theorem isHeatSpatialDerivHyp_gaussian :
     IsHeatSpatialDerivHyp (fun t x => heatKernel t x)
       (fun t x => spatialLaplacianHeatKernel t x) := by
@@ -188,6 +193,7 @@ theorem isHeatSpatialDerivHyp_gaussian :
 /-! ## Re-assembly into wave-7 `IsHeatFlowDensity` -/
 
 /-- **Re-assembly**: the sub-predicates re-build a wave-7 `IsHeatFlowDensity`. -/
+@[entry_point]
 def IsHeatFlowDensity_of_sub_predicates {Ω : Type*} [MeasurableSpace Ω]
     {X Z : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]
     {p : ℝ → ℝ → ℝ} {Δp : ℝ → ℝ → ℝ}
@@ -211,6 +217,7 @@ identity holds. Re-publishes `deBruijn_identity_v2_of_heat_flow` from the finer
 decomposition.
 
 `@audit:suspect(fisher-info-moonshot-plan)` -/
+@[entry_point]
 theorem deBruijn_identity_v2_of_heat_subhyp
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z)
@@ -228,6 +235,7 @@ theorem deBruijn_identity_v2_of_heat_subhyp
     (IsHeatFlowDensity_of_sub_predicates h_conv h_time) h_ibp
 
 /-- **`IsRegularDeBruijnHypV2` constructor from sub-predicates.** -/
+@[entry_point]
 def IsRegularDeBruijnHypV2.ofHeatSubhyp
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z)

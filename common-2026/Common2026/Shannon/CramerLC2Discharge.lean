@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Draft.Shannon.Cramer
 import Mathlib.Probability.StrongLaw
 import Mathlib.Probability.Independence.InfinitePi
@@ -60,6 +61,7 @@ variable {Ω₀ : Type*} [MeasurableSpace Ω₀]
 /-- **CGF bridge**: `cgf (Y ∘ eval i) (infinitePi (fun _ => μ₀)) = cgf Y μ₀`.
 This is the key identification used to align the Cramér exponent across the
 infinitePi-side and the per-coordinate `μ₀`-side. -/
+@[entry_point]
 lemma cgf_eval_eq_cgf_base
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (i : ℕ) (t : ℝ) :

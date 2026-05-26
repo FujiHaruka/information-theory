@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.EntropyPowerInequality
 import Common2026.Shannon.EPIPlumbing
 import Common2026.Shannon.FisherInfoV2
@@ -352,6 +353,7 @@ theorem isStamToEPIBridgeHyp_of_epi
 導出する。本 file の主 deliverable。
 
 `@audit:ok` -/
+@[entry_point]
 theorem epi_via_stam
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     {P : Measure Ω}
@@ -365,6 +367,7 @@ theorem epi_via_stam
 main theorem `entropy_power_inequality`. Returns the EPI directly.
 
 `@audit:ok` -/
+@[entry_point]
 theorem epi_via_stam_main
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -403,6 +406,7 @@ theorem isStamToEPIBridgeHyp_of_gaussian
 with equality via the Gaussian saturation discharge — no upstream hypothesis
 required. Routes through the §6 wrapper to demonstrate the Stam-bridge
 pipeline structure. -/
+@[entry_point]
 theorem epi_via_stam_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -451,6 +455,7 @@ theorem isStamToEPIBridgeHyp_of_forall
 the 3-argument EPI.
 
 `@audit:ok` -/
+@[entry_point]
 theorem epi_via_stam_three_arg
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -561,6 +566,7 @@ theorem isStamToEPIBridgeHyp_const
 /-- **Gaussian saturation via Stam pipeline**: when both `P.map X` and
 `P.map Y` are Gaussian with non-zero variance, the EPI follows through the
 §6 wrapper (`epi_via_stam_main`) via the Gaussian-discharged bridge. -/
+@[entry_point]
 theorem entropy_power_inequality_via_stam_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -577,6 +583,7 @@ theorem entropy_power_inequality_via_stam_gaussian
 /-- **Variance-additive form of Gaussian saturation**: the entropy power of
 the Gaussian sum equals `2πe (v₁ + v₂) = 2πe v₁ + 2πe v₂`, matching the
 EPI inequality with equality. -/
+@[entry_point]
 theorem entropyPower_gaussian_sum_eq
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -594,6 +601,7 @@ theorem entropyPower_gaussian_sum_eq
 `entropy_power_inequality_log_form` from `EntropyPowerInequality.lean`.
 
 `@audit:ok` -/
+@[entry_point]
 theorem entropy_log_form_via_stam
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -609,6 +617,7 @@ theorem entropy_log_form_via_stam
 /-- **Exp-form EPI via Stam pipeline**: Cover-Thomas Theorem 17.7.3 露出形.
 
 `@audit:ok` -/
+@[entry_point]
 theorem entropy_exp_form_via_stam
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -626,6 +635,7 @@ theorem entropy_exp_form_via_stam
 `N(X+Y) ≥ N(X) + N(Y)`.
 
 `@audit:ok` -/
+@[entry_point]
 theorem entropy_normalized_form_via_stam
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -643,6 +653,7 @@ theorem entropy_normalized_form_via_stam
 /-- **4-arg EPI via Stam pipeline**: chains `epi_via_stam` three times.
 
 `@audit:ok` -/
+@[entry_point]
 theorem epi_via_stam_four_arg
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

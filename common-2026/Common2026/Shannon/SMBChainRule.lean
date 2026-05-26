@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.Stationary
 import Common2026.Shannon.EntropyRate
 import Common2026.Shannon.BirkhoffErgodic
@@ -47,6 +48,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
 For `i = 0`, `blockRV 0` is the unique map to `Fin 0 → α`, so the conditional
 kernel reduces to the marginal `μ.map (p.X)`. -/
+@[entry_point]
 noncomputable def pmfLogCond
     (μ : Measure Ω) [IsFiniteMeasure μ] (p : StationaryProcess μ α) (i : ℕ) : Ω → ℝ :=
   fun ω => -Real.log
@@ -74,6 +76,7 @@ omit [DecidableEq α] in
 Pushforward of `μ` by `blockRV (n+1)` factors at any singleton via the
 conditional kernel `condDistrib (obs n) (blockRV n) μ`:
 `P_{n+1}({block_{n+1} ω}) = P_n({block_n ω}) · c_n(block_n ω){obs n ω}`. -/
+@[entry_point]
 theorem block_measure_succ_singleton_eq
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : StationaryProcess μ α) (n : ℕ) (ω : Ω) :
@@ -148,6 +151,7 @@ theorem block_measure_succ_singleton_eq
 
 omit [DecidableEq α] in
 /-- Real-valued multiplicative chain rule at singletons. -/
+@[entry_point]
 theorem block_measure_succ_singleton_real_eq
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : StationaryProcess μ α) (n : ℕ) (ω : Ω) :
@@ -163,6 +167,7 @@ omit [DecidableEq α] [Nonempty α] in
 /-- For any finite alphabet pushforward and `n`, the singleton mass at the
 observed block `block_n ω` is a.s. positive (the trajectory lies in the support).
 -/
+@[entry_point]
 lemma block_singleton_pos_ae_at
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : StationaryProcess μ α) (n : ℕ) :
@@ -253,6 +258,7 @@ Proof: push forward through `(blockRV l, obs l)`, disintegrate via
 `compProd_map_condDistrib`, apply Fubini, evaluate the inner integral over the
 finite alphabet via `integral_fintype`, and recognize the result as the
 definition of `conditionalEntropyTail`. -/
+@[entry_point]
 theorem integral_pmfLogCond_eq_conditionalEntropyTail
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : StationaryProcess μ α) (l : ℕ) :
@@ -350,6 +356,7 @@ The proof composes:
   convergence;
 * `integrable_pmfLogCond` for integrability;
 * `integral_pmfLogCond_eq_conditionalEntropyTail` for the integral identity. -/
+@[entry_point]
 theorem birkhoffAverage_pmfLogCond_tendsto
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α) (l : ℕ) :

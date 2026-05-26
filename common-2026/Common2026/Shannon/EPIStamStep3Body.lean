@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.EntropyPowerInequality
 import Common2026.Shannon.EPIPlumbing
 import Common2026.Shannon.EPIStamDischarge
@@ -114,6 +115,7 @@ def IsStamFisherCoupling {Ω : Type*} [MeasurableSpace Ω]
 
 /-- **Optimal λ membership** (used throughout): the optimal λ `J_Y / (J_X + J_Y)`
 selected in Step 4 lies in the unit interval `[0, 1]` whenever `J_X, J_Y > 0`. -/
+@[entry_point]
 theorem stam_optimal_lambda_mem_unit {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
     0 ≤ b / (a + b) ∧ b / (a + b) ≤ 1 := by
   have hab : 0 < a + b := by linarith
@@ -249,6 +251,7 @@ genuine `IsStamInequalityHyp` (Cover-Thomas Lemma 17.7.2 真 signature). This is
 the Step-3-centred entry point into the Wave 5 plumbing.
 
 `@audit:suspect(epi-stam-to-conclusion-plan)` -/
+@[entry_point]
 theorem isStamInequalityHyp_via_step3 {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvolution X Y P)
@@ -277,6 +280,7 @@ For Gaussian `X, Y`, the Stam inequality saturates: `J(X+Y) = J(X) J(Y) /
 optimal λ, the coupling RHS `λ² J_X + (1-λ)² J_Y` equals the harmonic mean
 exactly (Wave 7 `stam_lambda_min`), so equality in the coupling is equivalent to
 equality in the harmonic-mean bound. -/
+@[entry_point]
 theorem stam_coupling_saturates {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
     (b / (a + b)) ^ 2 * a + (1 - b / (a + b)) ^ 2 * b = a * b / (a + b) := by
   have hab : 0 < a + b := by linarith
@@ -289,6 +293,7 @@ theorem stam_coupling_saturates {a b : ℝ} (ha : 0 < a) (hb : 0 < b) :
 /-- **EPI via Stam Step 3 (Gaussian case)**: full deliverable end-to-end. For
 Gaussian `X, Y` with non-zero variance, EPI follows through the Step-3 body
 discharge + Gaussian saturation bridge. -/
+@[entry_point]
 theorem epi_via_stam_step3_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

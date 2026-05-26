@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ParallelGaussianKKT
 import Mathlib.Analysis.Convex.Deriv
 import Mathlib.Analysis.Convex.SpecificFunctions.Basic
@@ -75,6 +76,7 @@ open scoped ENNReal NNReal BigOperators Topology
 This is the affine-bound restatement of Mathlib's slope inequalities
 (`ConcaveOn.slope_le_of_hasDerivAt` / `ConcaveOn.le_slope_of_hasDerivAt`),
 obtained by an `x = y / x < y / y < x` trichotomy. -/
+@[entry_point]
 theorem ConcaveOn.le_tangent_of_hasDerivAt {S : Set ℝ} {f : ℝ → ℝ} {x f' : ℝ}
     (hfc : ConcaveOn ℝ S f) (hx : x ∈ S) {y : ℝ} (hy : y ∈ S)
     (hf' : HasDerivAt f f' x) :

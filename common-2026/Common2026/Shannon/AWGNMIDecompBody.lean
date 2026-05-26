@@ -99,6 +99,7 @@ open scoped ENNReal NNReal BigOperators Topology
 `W x = gaussianReal x N ≪ volume` for `N ≠ 0`. Direct from Mathlib
 `gaussianReal_absolutelyContinuous`. This is one of the side conditions the
 continuous MI chain rule consumes (every fibre must have a density). -/
+@[entry_point]
 theorem awgnChannel_apply_absolutelyContinuous
     (N : ℝ≥0) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N) (x : ℝ) :
     (awgnChannel N h_meas) x ≪ volume := by
@@ -178,6 +179,7 @@ theorem awgn_midecomp_of_cont_chain
 /-- The reverse direction also holds definitionally — the AWGN predicate is just
 the abstract chain rule at the AWGN instance. Confirms the two predicates carry
 identical content (no information lost in the abstraction). -/
+@[entry_point]
 theorem cont_chain_of_awgn_midecomp
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
     (h_decomp : IsAwgnMIDecomp P N h_meas) :

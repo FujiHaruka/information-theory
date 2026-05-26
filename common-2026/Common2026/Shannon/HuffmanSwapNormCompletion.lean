@@ -7,6 +7,7 @@ import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Tactic.Positivity
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.Linarith
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.HuffmanSwapNormProof
 
 /-!
@@ -218,6 +219,7 @@ private theorem shorten_to_kraft_one_aux
 
 /-- **shorten-to-Kraft=1 (主結果)**: 正値 feasible 符号は、各点でより短い正値完全符号
 (Kraft = 1) に縮められる。 -/
+@[entry_point]
 theorem shorten_to_kraft_one
     [Nonempty β]
     (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)

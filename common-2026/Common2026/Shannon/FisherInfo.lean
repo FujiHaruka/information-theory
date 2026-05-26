@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Density
 import Mathlib.Analysis.Calculus.LogDeriv
@@ -108,6 +109,7 @@ representative `h_reg.density`; combine with `h_reg.pdf_ae_eq` if needed to
 re-cast in terms of `(pdf X P volume).toReal` via an a.e.-integral congruence.
 
 `@audit:suspect(fisher-info-moonshot-plan)` -/
+@[entry_point]
 theorem integral_logDeriv_pdf_eq_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X : Ω → ℝ) [HasPDF X P volume]

@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.SMBChainRule
 import Common2026.Shannon.ShannonMcMillanBreiman
 import Common2026.Probability.TwoSidedExtension
@@ -216,6 +217,7 @@ noncomputable def negLogQk
 
 omit [DecidableEq α] in
 /-- `negLogQk μ p k n / n → conditionalEntropyTail μ p k` a.s. as `n → ∞`. -/
+@[entry_point]
 theorem negLogQk_div_tendsto_condEntropyTail
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) (k : ℕ) :
     ∀ᵐ ω ∂μ, Filter.Tendsto
@@ -855,6 +857,7 @@ theorem blockLogAvg_le_negLogQk_plus_error
 omit [DecidableEq α] in
 /-- Taking `limsup` in `blockLogAvg_le_negLogQk_plus_error` and using
 Birkhoff for the `k`-Markov approximation gives the per-`k` limsup bound. -/
+@[entry_point]
 theorem limsup_blockLogAvg_le_condEntropyTail
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) (k : ℕ) :
     ∀ᵐ ω ∂μ,
@@ -914,6 +917,7 @@ theorem limsup_blockLogAvg_le_condEntropyTail
 /-- Letting `k → ∞` in the per-`k` bound and using
 `entropyRate_eq_lim_condEntropy` discharges the `limsup` hypothesis of
 `shannon_mcmillan_breiman_of_sandwich`. -/
+@[entry_point]
 theorem algoet_cover_limsup_bound
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,
@@ -941,6 +945,7 @@ A.s., `blockLogAvg ≤ negLogQk(k=0)/n + 2·log n / n` (from
 `blockLogAvg_le_negLogQk_plus_error`), and the RHS converges a.s. to
 `conditionalEntropyTail μ p 0` (finite), hence the RHS is eventually bounded
 above and so is `blockLogAvg`. -/
+@[entry_point]
 theorem blockLogAvg_bddAbove_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ, Filter.IsBoundedUnder (· ≤ ·) Filter.atTop
@@ -975,6 +980,7 @@ theorem blockLogAvg_bddAbove_ae
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- A.s. boundedness below for `blockLogAvg`. -/
+@[entry_point]
 theorem blockLogAvg_bddBelow_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ, Filter.IsBoundedUnder (· ≥ ·) Filter.atTop
@@ -2490,6 +2496,7 @@ theorem blockLogAvgZ_ge_negLogQInftyZ_minus_error
 /-- **Birkhoff for `pmfLogCondInfty` on the 2-sided side**: applying Birkhoff to
 `(μZ, shiftZ, pmfLogCondInfty)`, using `ergodic_shiftZ`, `measurePreserving_shiftZ`,
 `integrable_pmfLogCondInfty`, and `integral_pmfLogCondInfty_eq_entropyRate`. -/
+@[entry_point]
 theorem birkhoffAverage_pmfLogCondInfty_tendsto
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ x ∂(μZ μ p.toStationaryProcess),
@@ -2687,6 +2694,7 @@ theorem blockLogAvgZ_bddAbove_ae
   rw [h_eq]; exact hx
 
 /-- **Z-side liminf bound**: μZ-a.s., `liminf blockLogAvgZ n x ≥ entropyRate`. -/
+@[entry_point]
 theorem liminf_blockLogAvgZ_ge_entropyRate
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ x ∂(μZ μ p.toStationaryProcess),
@@ -2735,6 +2743,7 @@ Z-side a.s. liminf bound through `natProj`-`forwardEmbed` measure preservation
 to the Ω-side, using `μZ_nat_proj_eq` (= `μ.map forwardEmbed`) and the fact
 that `blockLogAvgZ n (eN (forwardEmbed ω)) = blockLogAvg n ω` where
 `eN y i := y i.toNat` is the trivial extension on ℤ. -/
+@[entry_point]
 theorem algoet_cover_liminf_bound
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ,

@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.DifferentialEntropy
 import Common2026.Shannon.FisherInfo
 import Common2026.Shannon.FisherInfoV2
@@ -94,10 +95,12 @@ noncomputable def entropyPower (μ : Measure ℝ) : ℝ :=
   Real.exp (2 * Common2026.Shannon.differentialEntropy μ)
 
 /-- Entropy power is strictly positive. -/
+@[entry_point]
 theorem entropyPower_pos (μ : Measure ℝ) : 0 < entropyPower μ :=
   Real.exp_pos _
 
 /-- Entropy power is non-negative. -/
+@[entry_point]
 theorem entropyPower_nonneg (μ : Measure ℝ) : 0 ≤ entropyPower μ :=
   (entropyPower_pos μ).le
 
@@ -107,6 +110,7 @@ saturating case of EPI.
 
 Computation: by `differentialEntropy_gaussianReal`, `h(𝒩(m,v)) = (1/2) log(2πe v)`,
 so `entropyPower (𝒩(m,v)) = exp(2 · (1/2) log(2πe v)) = exp(log(2πe v)) = 2πe v`. -/
+@[entry_point]
 theorem entropyPower_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     entropyPower (gaussianReal m v) = 2 * Real.pi * Real.exp 1 * v := by
   unfold entropyPower
@@ -251,6 +255,7 @@ theorem stamToEPIBridge_holds {Ω : Type*} [MeasurableSpace Ω]
 結論と defeq でない genuine residual、本体は `:= h` 循環ではない。bridge の
 discharge (真の Mathlib 壁) は shared sorry 補題で集中管理、closure plan
 `epi-stam-to-conclusion-plan.md` で進行、Gaussian case は §D で full discharge。 -/
+@[entry_point]
 theorem entropy_power_inequality {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
@@ -261,6 +266,7 @@ theorem entropy_power_inequality {Ω : Type*} {mΩ : MeasurableSpace Ω}
   stamToEPIBridge_holds X Y P h_stam
 
 /-- **EPI in `Real.exp (2 · ...)` form** (Cover-Thomas 露出形). -/
+@[entry_point]
 theorem entropy_power_inequality_exp_form {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
@@ -285,6 +291,7 @@ theorem entropy_power_inequality_exp_form {Ω : Type*} {mΩ : MeasurableSpace Ω
 これにより L-EPI3 hypothesis は **Gaussian の場合 trivially provable**
 (同 hypothesis を `_ge_of_eq` の形で得る、§E corollary
 `isEntropyPowerInequalityHypothesis_of_gaussian` 参照)。 -/
+@[entry_point]
 theorem entropy_power_inequality_gaussian_saturation
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -320,6 +327,7 @@ theorem entropy_power_inequality_gaussian_saturation
 
 /-- L-EPI3 hypothesis is satisfied (with equality) whenever both `X` and `Y` are
 independent Gaussians. -/
+@[entry_point]
 theorem isEntropyPowerInequalityHypothesis_of_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -349,6 +357,7 @@ theorem isStamToEPIBridge_of_epi
 /-- **Translation invariance of entropy power**: for `μ ≪ volume` and
 σ-finite `μ`, `entropyPower (μ.map (· + a)) = entropyPower μ`. The hypothesis
 matches `Common2026.Shannon.differentialEntropy_map_add_const`. -/
+@[entry_point]
 theorem entropyPower_map_add_const {μ : Measure ℝ} (hμ : μ ≪ volume)
     [SigmaFinite μ] (a : ℝ) :
     entropyPower (μ.map (· + a)) = entropyPower μ := by
@@ -358,6 +367,7 @@ theorem entropyPower_map_add_const {μ : Measure ℝ} (hμ : μ ≪ volume)
 /-- **EPI in log form** (Cover-Thomas Ch.17 alternative signature).
 
 For independent `X, Y`, `h(X+Y) ≥ (1/2) · log (exp(2 h(X)) + exp(2 h(Y)))`. -/
+@[entry_point]
 theorem entropy_power_inequality_log_form {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)

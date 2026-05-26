@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.RateDistortionAchievability
 import Common2026.Draft.Shannon.RateDistortionConverseNLetter
 
@@ -73,6 +74,7 @@ noncomputable def expectedBlockDistortion
 
 /-- Expected block distortion is non-negative (the integrand is a non-negative
 real-valued function). -/
+@[entry_point]
 theorem expectedBlockDistortion_nonneg
     (c : WynerZivCode M n α β γ) (P_XY : Measure (α × β))
     (d : DistortionFn α γ) :
@@ -147,6 +149,7 @@ lemma continuous_wzMutualInfoYU :
   continuous_mutualInfoPmf.comp (continuous_wzMarginalYU U)
 
 /-- The Wyner–Ziv objective `I(X ; U) − I(Y ; U)` is continuous in the joint pmf. -/
+@[entry_point]
 lemma continuous_wzObjective :
     Continuous (fun q : α × β × U → ℝ => wzMutualInfoXU U q - wzMutualInfoYU U q) :=
   (continuous_wzMutualInfoXU U).sub (continuous_wzMutualInfoYU U)
@@ -232,6 +235,7 @@ noncomputable def wynerZivRatePmf
 /-- Upper bound from any feasible point: if `(q, f) ∈ WynerZivConstraint`
 and the image is bounded below (which it always is on the simplex), then
 `wynerZivRatePmf ≤ I(X;U)(q) − I(Y;U)(q)`. -/
+@[entry_point]
 theorem wynerZivRatePmf_le_of_feasible
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ)
     (qf : (α × β × U → ℝ) × (U × β → γ))
@@ -250,6 +254,7 @@ non-empty. Then there exists a `qStar ∈ K f₀` minimizing the Wyner–Ziv
 objective `I(X;U) − I(Y;U)` over `K f₀`. This is the structural ingredient
 that the achievability/converse proofs rely on; the full *joint* attainment
 over `(q, f)` requires further hypotheses on `(γ, U, β)` and is deferred. -/
+@[entry_point]
 theorem wynerZivRatePmf_attained_slice
     [DecidableEq α] [DecidableEq β]
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ)
@@ -329,6 +334,7 @@ Phase 1 (sorry-migration): the `@audit:suspect` tag was removed — the body is
 already purely constructive (`refine ⟨B, ?_⟩; rintro v ⟨qf, hqf, rfl⟩;
 exact h_lb qf hqf`), the `B` and `h_lb` arguments are precondition-style
 regularity inputs (caller-supplied lower bound), not load-bearing claims. -/
+@[entry_point]
 theorem wynerZivRatePmf_image_bddBelow_of_objective
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ)
     (B : ℝ)
@@ -365,6 +371,7 @@ Phase 1 (sorry-migration): the `@audit:suspect` tag was removed — the body
 which is structurally non-circular: the conclusion type `R = wynerZivRatePmf …`
 is strictly weaker than the AND of the two hypothesis types, so there is no
 hypothesis-bundling of the conclusion. -/
+@[entry_point]
 theorem wyner_ziv_tendsto
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D R : ℝ)
     (h_ach : wynerZivRatePmf U P_XY d D ≤ R)

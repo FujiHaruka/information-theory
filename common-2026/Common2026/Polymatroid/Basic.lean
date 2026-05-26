@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Mathlib.Data.Finset.Empty
 import Mathlib.Data.Finset.Lattice.Basic
 import Mathlib.Order.Monotone.Basic
@@ -31,6 +32,7 @@ rank function on `Finset ι` satisfying:
 
 The ground set type `ι` only needs `[DecidableEq ι]` (for `Finset` union /
 intersection); finiteness of `ι` itself is not required. -/
+@[entry_point]
 structure Polymatroid (ι : Type*) [DecidableEq ι] where
   /-- The real-valued rank function on subsets of the ground set. -/
   rank : Finset ι → ℝ

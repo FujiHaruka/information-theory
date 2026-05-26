@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ShannonMcMillanBreiman
 import Common2026.Shannon.LZ78GreedyLongestPrefix
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
@@ -66,6 +67,7 @@ For nonnegative `aᵢ` and strictly positive `bᵢ` over a finite index set `s`,
 
 Proved from convexity of `x ↦ x·log x` (`Real.convexOn_mul_log`) via finite
 Jensen (`ConvexOn.map_sum_le`) with weights `bᵢ/(∑ b)` and points `aᵢ/bᵢ`. -/
+@[entry_point]
 theorem log_sum_inequality
     {ι : Type*} (s : Finset ι) (a b : ι → ℝ)
     (ha : ∀ i ∈ s, 0 ≤ a i) (hb : ∀ i ∈ s, 0 < b i) :
@@ -120,6 +122,7 @@ omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] i
 For `0 < n`, `n · blockLogAvg μ p n ω = -log Pₙ{block ω}` where
 `Pₙ = μ.map (blockRV n)`. Trivial unfolding of the `blockLogAvg` definition;
 this is the form the per-path Ziv inequality consumes. -/
+@[entry_point]
 theorem blockLogAvg_eq_neg_log_blockProb
     (μ : Measure Ω) (p : StationaryProcess μ α) {n : ℕ} (hn : 0 < n) (ω : Ω) :
     (n : ℝ) * blockLogAvg μ p n ω
@@ -222,6 +225,7 @@ and monotonicity of `Real.log` (positivity of `Pₙ` is the a.s. regularity
 hypothesis `hPn` — the observed block has positive mass). Combined with
 `blockLogAvg_eq_neg_log_blockProb` it bounds the per-phrase sum by
 `n · blockLogAvg`. -/
+@[entry_point]
 theorem blockProb_neg_log_ge_sum
     (μ : Measure Ω) (p : StationaryProcess μ α)
     (h : IsLZ78PerPathParsingFactorization μ p) (n : ℕ) (ω : Ω)

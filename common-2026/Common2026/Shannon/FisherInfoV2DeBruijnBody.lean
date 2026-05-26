@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
 import Mathlib.Analysis.SpecialFunctions.Log.Deriv
@@ -204,6 +205,7 @@ Given a heat-flow density family `p` satisfying the heat equation
 information of `p t` on the RHS.
 
 `@audit:suspect(fisher-info-moonshot-plan)` -/
+@[entry_point]
 theorem deBruijn_identity_v2_of_heat_flow
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (_hX : Measurable X) (_hZ : Measurable Z)
@@ -223,6 +225,7 @@ theorem deBruijn_identity_v2_of_heat_flow
 Composes the L-FV2DB-A heat-flow density predicate with the L-FV2DB-B IBP
 predicate to obtain a `IsRegularDeBruijnHypV2` witness, closing the loop with
 the signature file. -/
+@[entry_point]
 def IsRegularDeBruijnHypV2.ofHeatFlow
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     {X Z : Ω → ℝ} (_hX : Measurable X) (_hZ : Measurable Z)

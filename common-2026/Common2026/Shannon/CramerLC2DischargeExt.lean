@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.CramerLC2Discharge
 import Mathlib.Probability.StrongLaw
 import Mathlib.Probability.Independence.InfinitePi
@@ -82,6 +83,7 @@ stuck on the β-redex inside the `(fun _ => ...) i` head; the standard
 `Measure.infinitePi` instance is registered for `[hμ : ∀ i, IsProbabilityMeasure
 (μ i)]`, but the unifier does not β-reduce the per-coordinate factor through
 the `fun _ : ℕ => ...` wrapper consistently across downstream lemmas. -/
+@[entry_point]
 lemma isProbabilityMeasure_infinitePi_tilted_of_bounded
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) :
@@ -162,6 +164,7 @@ lemma integral_eval_under_infinitePi_tilted
 /-- **Tilted-side strong law of large numbers** (Phase B-1). Under the tilted
 infinite product measure, the empirical mean of the coordinate-eval family
 converges almost surely to the base-tilted expectation of `Y`. -/
+@[entry_point]
 theorem tilted_lln_ae
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) :
@@ -202,6 +205,7 @@ theorem tilted_lln_ae
 /-- **Tilted-side in-probability LLN** (Phase B-3). The almost-sure convergence
 from `tilted_lln_ae` upgrades to convergence in measure (= in probability on a
 probability space). -/
+@[entry_point]
 theorem tilted_lln_in_probability
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) :
@@ -233,6 +237,7 @@ theorem tilted_lln_in_probability
 /-- **Tilted-side in-probability LLN, `.real`-form** (Phase B-3 corollary). For
 every `ε > 0`, the measure of the bad set `{ω | ε ≤ |S̄_n - 𝔼[Y]|}` tends to
 zero. -/
+@[entry_point]
 theorem tilted_lln_in_probability_real
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ)

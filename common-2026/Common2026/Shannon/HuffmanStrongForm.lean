@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.HuffmanOptimality
 import Common2026.Shannon.HuffmanSwapNormCompletion
 import Common2026.Shannon.HuffmanMergedIdentBody
@@ -56,6 +57,7 @@ E 非増加 / 正値 の `l_norm` が存在する。
 
 **load-bearing precondition**: `h_a_min` / `h_b_min` (strong 形)。published weak-form
 `SwapNormalizationHypothesis` の disjunctive `_h_min` より強い。docstring 参照. -/
+@[entry_point]
 theorem swap_normalization_strong
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -146,6 +148,7 @@ theorem swap_normalization_strong
 の `h_a_min` / `h_b_min` にそのまま一致するため、core を直接適用するだけ. genuine
 (`:= h` 循環ではない: `swap_normalization_strong` は shorten + keystone + 2-swap の
 実証明). -/
+@[entry_point]
 theorem swap_normalization_proof : SwapNormalizationHypothesis.{u} := by
   intro β _ _ _ _ _ _ Q _ ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
   exact swap_normalization_strong Q ll hll_pos hll_kraft a b hab h_a_min h_b_min h_card
@@ -180,6 +183,7 @@ genuine discharge は後続 plan `huffman-strong-form-completion-plan` で予定
 `Classical.choose` 非決定性 / min 選択の tie 破り / carrier 横断対応の judgement log #3)。
 
 @residual(plan:huffman-strong-form-completion) -/
+@[entry_point]
 theorem huffmanLength_optimal_modulo_aux_ident
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]

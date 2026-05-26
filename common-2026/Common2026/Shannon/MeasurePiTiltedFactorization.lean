@@ -3,6 +3,7 @@ import Mathlib.MeasureTheory.Integral.Pi
 import Mathlib.MeasureTheory.Measure.Tilted
 import Mathlib.MeasureTheory.Measure.WithDensity
 import Mathlib.Probability.Moments.Basic
+import Common2026.Meta.EntryPoint
 
 /-!
 # Finite `Measure.pi` tilt factorization (Cramér Phase C, Phase 1)
@@ -45,6 +46,7 @@ variable {Ω₀ : Type*} [MeasurableSpace Ω₀]
 /-- **Unrestricted lintegral Fubini** for `Measure.pi` of a per-coordinate
 product of nonnegative measurable functions. The lintegral analogue of
 `MeasureTheory.integral_fin_nat_prod_eq_prod`; not present in Mathlib. -/
+@[entry_point]
 theorem lintegral_pi_prod {n : ℕ} {E : Fin n → Type*}
     {mE : ∀ i, MeasurableSpace (E i)} {μ : (i : Fin n) → Measure (E i)}
     [∀ i, SigmaFinite (μ i)]
@@ -73,6 +75,7 @@ theorem lintegral_pi_prod {n : ℕ} {E : Fin n → Type*}
 /-- **1-C (box-restricted Tonelli)**: the lintegral over the box `pi univ s` of a
 per-coordinate product factors as the product of the per-coordinate
 box-restricted lintegrals. -/
+@[entry_point]
 theorem setLIntegral_pi_prod_factor {n : ℕ} {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {g : Ω₀ → ℝ≥0∞} (hg : Measurable g) (s : Fin n → Set Ω₀)
     (hs : ∀ i, MeasurableSet (s i)) :
@@ -105,6 +108,7 @@ theorem setLIntegral_pi_prod_factor {n : ℕ} {μ₀ : Measure Ω₀} [IsProbabi
 
 /-- **1-B**: the partition function of the sum exponent on the finite product is
 the `n`-th power of the single-coordinate partition function. -/
+@[entry_point]
 theorem integral_exp_sum_pi_eq_pow {n : ℕ} {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (lam : ℝ) :
     ∫ x, Real.exp (∑ i, lam * Y (x i)) ∂(Measure.pi (fun _ : Fin n => μ₀))
@@ -118,6 +122,7 @@ theorem integral_exp_sum_pi_eq_pow {n : ℕ} {μ₀ : Measure Ω₀} [IsProbabil
 sum exponent factors as the product of the per-coordinate tilts.
 
 `(Measure.pi (fun _ => μ₀)).tilted (∑ i, lam · Y (· i)) = Measure.pi (fun _ => μ₀.tilted (lam · Y))`. -/
+@[entry_point]
 theorem pi_tilted_sum_eq_pi_tilted {n : ℕ} {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (lam : ℝ) :
     (Measure.pi (fun _ : Fin n => μ₀)).tilted (fun ω => ∑ i, lam * Y (ω i))

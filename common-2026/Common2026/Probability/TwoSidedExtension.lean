@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.Stationary
 import Common2026.Shannon.EntropyRate
 import Mathlib.MeasureTheory.Constructions.Projective
@@ -186,6 +187,7 @@ omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [IsProbabilityMeasure μ] in
 /-- The shifted marginal coincides with the pushforward of `obsZ` for any valid shift,
 not just the canonical `shiftAmount J`. -/
+@[entry_point]
 theorem shiftedMarginal_eq_of_shift (J : Finset ℤ) (N : ℕ)
     (hN : ∀ j ∈ J, (0 : ℤ) ≤ j + N) :
     shiftedMarginal μ p J = μ.map (obsZ μ p N J) := by
@@ -203,6 +205,7 @@ omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [IsProbabilityMeasure μ] in
 /-- **Projective consistency**: for `J ⊆ I`, restricting `shiftedMarginal μ p I` along
 the inclusion gives `shiftedMarginal μ p J`. -/
+@[entry_point]
 theorem isProjectiveMeasureFamily_shiftedMarginal :
     IsProjectiveMeasureFamily
       (α := fun _ : ℤ => α) (shiftedMarginal μ p) := by
@@ -345,6 +348,7 @@ variable (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ �
 
 /-- The two-sided extension `μ_ℤ : Measure (ℤ → α)` obtained from the stationary
 process `(Ω, T, μ, X)` by Carathéodory extension of the `stationaryContent`. -/
+@[entry_point]
 noncomputable def μZ : Measure (∀ _ : ℤ, α) :=
   (stationaryContent μ p).measure
     isSetSemiring_measurableCylinders
@@ -353,6 +357,7 @@ noncomputable def μZ : Measure (∀ _ : ℤ, α) :=
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- On measurable cylinders, `μZ` agrees with `shiftedMarginal`. -/
+@[entry_point]
 theorem μZ_cylinder {I : Finset ℤ} {S : Set (∀ _ : I, α)} (hS : MeasurableSet S) :
     μZ μ p (cylinder I S) = shiftedMarginal μ p I S := by
   -- μZ on a cylinder = stationaryContent on that cylinder
@@ -365,6 +370,7 @@ theorem μZ_cylinder {I : Finset ℤ} {S : Set (∀ _ : I, α)} (hS : Measurable
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- `μZ` is the projective limit of the shifted marginals. -/
+@[entry_point]
 theorem isProjectiveLimit_μZ :
     IsProjectiveLimit (μZ μ p) (shiftedMarginal μ p) := by
   intro I
@@ -390,6 +396,7 @@ section Shift
 variable (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
 
 /-- The two-sided shift `σ : (ℤ → α) → (ℤ → α)`, `σ x i := x (i + 1)`. -/
+@[entry_point]
 def shiftZ : (∀ _ : ℤ, α) → (∀ _ : ℤ, α) := fun x i => x (i + 1)
 
 /-- The inverse shift, `σ⁻¹ x i := x (i - 1)`. -/
@@ -414,6 +421,7 @@ the family `shiftedMarginal μ p` of finite-dimensional marginals. By
 pushforward reduces to the *shift-invariance of the marginals*: for any
 `I : Finset ℤ`, the marginal at `I + 1` (relabeled through the bijection `· + 1`)
 equals the marginal at `I`, which is exactly `shiftedMarginal_eq_of_shift`. -/
+@[entry_point]
 theorem measurePreserving_shiftZ :
     MeasurePreserving (shiftZ : (∀ _ : ℤ, α) → _) (μZ μ p) (μZ μ p) := by
   classical
@@ -502,6 +510,7 @@ section Coupling
 variable (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
 
 /-- The forward (one-sided) embedding `Ω → (ℕ → α)`, `ω ↦ (X (T^[i] ω))_i`. -/
+@[entry_point]
 def forwardEmbed : Ω → (∀ _ : ℕ, α) := fun ω i => p.obs i ω
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
@@ -519,6 +528,7 @@ Both sides are probability measures on `ℕ → α`. We verify equality on the
 then compute each cylinder's measure: on the LHS via `μZ_cylinder` after
 rewriting the preimage as a ℤ-cylinder, and on the RHS via the definition
 of `forwardEmbed` together with `shiftedMarginal_eq_of_shift` at shift `0`. -/
+@[entry_point]
 theorem μZ_nat_proj_eq :
     Measure.map (fun x : (∀ _ : ℤ, α) => fun i : ℕ => x (i : ℤ)) (μZ μ p)
       = Measure.map (forwardEmbed (μ := μ) p) μ := by
@@ -589,6 +599,7 @@ theorem μZ_nat_proj_eq :
 
 omit [DecidableEq α] [Nonempty α] in
 /-- Block cylinder under `μZ` equals the block-law on the one-sided side. -/
+@[entry_point]
 theorem μZ_block_cylinder_eq (n : ℕ) (s : Fin n → α) :
     μZ μ p { x | ∀ i : Fin n, x ((i : ℕ) : ℤ) = s i }
       = (μ.map (p.blockRV n)) {s} := by
@@ -732,6 +743,7 @@ theorem measurePreserving_natProj :
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [IsProbabilityMeasure μ] in
 /-- `forwardEmbed` is measure-preserving from `μ` to its pushforward. -/
+@[entry_point]
 theorem measurePreserving_forwardEmbed :
     MeasurePreserving (forwardEmbed (μ := μ) p) μ (μ.map (forwardEmbed (μ := μ) p)) :=
   ⟨measurable_forwardEmbed (μ := μ) p, rfl⟩
@@ -741,6 +753,7 @@ omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
 /-- The forward shift on `(ℕ → α, μ.map forwardEmbed)` is ergodic when the underlying
 process is ergodic. Direct application of `ergodic_of_ergodic_semiconj` with
 `forwardEmbed` as the measure-preserving semiconjugacy from `(Ω, T, μ)`. -/
+@[entry_point]
 theorem ergodic_shiftN (p : ErgodicProcess μ α) :
     Ergodic (shiftN : (∀ _ : ℕ, α) → _) (μ.map (forwardEmbed (μ := μ) p.toStationaryProcess)) :=
   (measurePreserving_forwardEmbed μ p.toStationaryProcess).ergodic_of_ergodic_semiconj
@@ -953,6 +966,7 @@ measurable cylinder, then shift to move the index set into the nonnegative
 half-line. This yields a `posSigma`-measurable approximation, so `A` is μZ-a.e.
 equal to a `posSigma`-measurable set `A' = natProj⁻¹ B`. By ergodicity of
 `shiftN` on `μ.map forwardEmbed`, `B` is either null or co-null, hence so is `A`. -/
+@[entry_point]
 theorem ergodic_shiftZ :
     Ergodic (shiftZ : (∀ _ : ℤ, α) → _) (μZ μ p.toStationaryProcess) := by
   classical
@@ -1230,6 +1244,7 @@ lemma pastSigma_mono : Monotone (pastSigma (α := α)) := by
 
 /-- The forward past filtration on `ℕ`: `pastFiltration k` is `pastSigma k`,
 the σ-algebra of events depending on the finite past `{coord_i : -k ≤ i ≤ -1}`. -/
+@[entry_point]
 def pastFiltration : Filtration ℕ
     (MeasurableSpace.pi : MeasurableSpace (∀ _ : ℤ, α)) where
   seq k := pastSigma (α := α) k
@@ -1331,6 +1346,7 @@ lemma integrable_indicator_coord0_eq (a : α) :
 
 /-- The real-valued forward conditional probability of `{coord0 = a}` given
 the finite past `pastFiltration k`, viewed as a function on `ℤ → α`. -/
+@[entry_point]
 noncomputable def condProbPast (a : α) (k : ℕ) : (∀ _ : ℤ, α) → ℝ :=
   (μZ μ p)[((coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ)))
     | (pastFiltration (α := α)) k]
@@ -1338,6 +1354,7 @@ noncomputable def condProbPast (a : α) (k : ℕ) : (∀ _ : ℤ, α) → ℝ :=
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- For each `a : α`, `condProbPast a` is a (forward) martingale w.r.t. the past
 filtration. -/
+@[entry_point]
 lemma martingale_condProbPast (a : α) :
     Martingale (fun k : ℕ => (μZ μ p)[((coord0 ⁻¹' {a}).indicator
         (fun _ => (1 : ℝ))) | (pastFiltration (α := α)) k])
@@ -1346,6 +1363,7 @@ lemma martingale_condProbPast (a : α) :
 
 /-- The infinite-past conditional probability of `{coord0 = a}` given
 `⨆ k, pastFiltration k`. -/
+@[entry_point]
 noncomputable def condProbInfty (a : α) : (∀ _ : ℤ, α) → ℝ :=
   (μZ μ p)[((coord0 ⁻¹' {a}).indicator (fun _ => (1 : ℝ)))
     | ⨆ k : ℕ, (pastFiltration (α := α)) k]
@@ -1354,6 +1372,7 @@ omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- **Forward Lévy upward convergence**: `condProbPast a k → condProbInfty a` a.s.
 as `k → ∞`. Direct application of
 `MeasureTheory.Integrable.tendsto_ae_condExp` (Lévy's upward theorem). -/
+@[entry_point]
 lemma condProbPast_tendsto_condProbInfty (a : α) :
     ∀ᵐ x ∂(μZ μ p),
       Tendsto (fun k : ℕ => condProbPast μ p a k x) atTop
@@ -1450,11 +1469,13 @@ lemma condProbInfty_eq_condExp_tail (a : α) :
 Defined as `-log (∑ a, indicator(coord0 = a) * condProbPast a k)`. On the
 full-measure set where the conditional probability of the actual `coord0` value
 is positive, this is `-log condProbPast (coord0 x) k x`. -/
+@[entry_point]
 noncomputable def pmfLogCondPast (k : ℕ) : (∀ _ : ℤ, α) → ℝ := fun x =>
   -Real.log (∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ)) x
     * condProbPast μ p a k x)
 
 /-- Limit log-likelihood (conditional on the full backward tail). -/
+@[entry_point]
 noncomputable def pmfLogCondInfty : (∀ _ : ℤ, α) → ℝ := fun x =>
   -Real.log (∑ a, Set.indicator (coord0 ⁻¹' {a}) (fun _ => (1 : ℝ)) x
     * condProbInfty μ p a x)
@@ -1755,6 +1776,7 @@ The integrand `-log(condProbPast (coord0 x) k x)` decomposes as `∑_a 1_{coord0
 `integrable_indicator_mul_negLog_of_condExp` applied at `m := pastFiltration k`,
 using the defining identity `condProbPast a k = μZ[1_{coord0=a} | pastFiltration k]`
 and the `[0,1]` bound. The sum of finitely many integrable functions is integrable. -/
+@[entry_point]
 theorem integrable_pmfLogCondPast (k : ℕ) :
     Integrable (pmfLogCondPast μ p k) (μZ μ p) := by
   classical
@@ -1779,6 +1801,7 @@ omit [DecidableEq α] [Nonempty α] in
 Same argument as `integrable_pmfLogCondPast`, but applied to the infinite-past
 limit `condProbInfty a`, which is by definition the condExp of the indicator
 w.r.t. the σ-algebra `⨆ k, pastFiltration k` of the infinite past. -/
+@[entry_point]
 theorem integrable_pmfLogCondInfty :
     Integrable (pmfLogCondInfty μ p) (μZ μ p) := by
   classical
@@ -1896,6 +1919,7 @@ by continuity of `-log` and the inner-sum identity
 on the null set where the conditional probability of the realized coord0
 value is `0`, `Real.log` is discontinuous, and we report
 `pmfLogCondPast/pmfLogCondInfty` as `0` by convention (`Real.log 0 = 0`). -/
+@[entry_point]
 theorem pmfLogCondPast_tendsto_pmfLogCondInfty :
     ∀ᵐ x ∂(μZ μ p),
       Tendsto (fun k => pmfLogCondPast μ p k x) atTop
@@ -2144,6 +2168,7 @@ The LHS rectangle reduces, via stationarity (shift by `k`), to the marginal at
 the index set `{0, 1, …, k}`, which by Phase F equals the ℕ-side block.
 The RHS rectangle is exactly the singleton mass of `μ.map (p.blockRV (k+1))`
 at the corresponding `Fin (k+1) → α`. -/
+@[entry_point]
 theorem joint_pastBlock_coord0_eq (k : ℕ) :
     (μZ μ p).map (fun x : (∀ _ : ℤ, α) => (coord0 x, pastBlock k x))
       = μ.map (fun ω : Ω => (p.obs k ω, p.blockRV k ω)) := by
@@ -2460,6 +2485,7 @@ The proof structure:
    and the definition of `MeasureFano.condEntropy`.
 4. Transport to the `μ`-side via `condEntropy_μZ_eq_condEntropy_μ` (joint-law
    equality + `condEntropy_eq_pushforward`). -/
+@[entry_point]
 theorem integral_pmfLogCondPast_eq_conditionalEntropyTail (k : ℕ) :
     ∫ x, pmfLogCondPast μ p k x ∂(μZ μ p) = conditionalEntropyTail μ p k := by
   classical
@@ -2622,6 +2648,7 @@ Combines:
 * DCT (forward Lévy a.s. limit + `Real.exp (-1)` uniform bound on `negMulLog`)
   applied per atom — `∫ negMulLog(condProbPast a k) → ∫ negMulLog(condProbInfty a)`;
 * `entropyRate_eq_lim_condEntropy` — `conditionalEntropyTail μ p k → entropyRate`. -/
+@[entry_point]
 theorem integral_pmfLogCondInfty_eq_entropyRate :
     ∫ x, pmfLogCondInfty μ p x ∂(μZ μ p) = entropyRate μ p := by
   classical

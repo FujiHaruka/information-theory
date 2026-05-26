@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.Bridge
 import Common2026.Shannon.MutualInfo
 import Common2026.Shannon.CondMutualInfo
@@ -47,7 +48,7 @@ open scoped ENNReal NNReal
 /-- Re-export `InformationTheory.MeasureFano.condEntropy` into the
 `InformationTheory.Shannon` namespace, so the notation `H(X | Y)` resolves here.
 Internal definition is unchanged. -/
-@[reducible] noncomputable def condEntropy
+@[entry_point, reducible] noncomputable def condEntropy
     {Ω : Type*} [MeasurableSpace Ω]
     {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -63,6 +64,7 @@ Internal definition is unchanged. -/
 
 教科書 `D(X‖Y)` の 1 測度版。2 測度版 (`klDiv (μ.map X) (ν.map Y)`) は採用しない
 (`docs/api/typed-rv-plan.md` §C-1)。 -/
+@[entry_point]
 noncomputable def klDivRV
     {Ω : Type*} [MeasurableSpace Ω]
     {α : Type*} [MeasurableSpace α]
@@ -70,6 +72,7 @@ noncomputable def klDivRV
   klDiv (μ.map X) (μ.map Y)
 
 /-- `klDivRV` は定義通り `klDiv (μ.map X) (μ.map Y)` に展開できる。 -/
+@[entry_point]
 lemma klDivRV_def
     {Ω : Type*} [MeasurableSpace Ω]
     {α : Type*} [MeasurableSpace α]
@@ -80,6 +83,7 @@ lemma klDivRV_def
 
 /-- Differential entropy of a real-valued random variable on ambient `(Ω, μ)`:
 `differentialEntropyRV μ X := differentialEntropy (μ.map X)`. -/
+@[entry_point]
 noncomputable def differentialEntropyRV
     {Ω : Type*} [MeasurableSpace Ω]
     (μ : Measure Ω) (X : Ω → ℝ) : ℝ :=
@@ -189,6 +193,7 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 /-! ### Entropy -/
 
 /-- `H(X) ≥ 0` (typed RV form): `entropy_nonneg` の RV-form alias. -/
+@[entry_point]
 theorem entropy_nonneg_rv
     {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -202,6 +207,7 @@ theorem entropy_nonneg_rv
 /-- `I(X; Y) = I(Y; X)` (typed RV form): `mutualInfo_comm` の RV-form alias.
 
 Cover-Thomas (2.4.1) "Mutual information is symmetric." -/
+@[entry_point]
 theorem mutualInfo_comm_rv
     {α : Type*} [MeasurableSpace α]
     {β : Type*} [MeasurableSpace β]
@@ -217,6 +223,7 @@ theorem mutualInfo_comm_rv
 post-processing `Y ↦ f(Y)` cannot increase mutual information.
 
 `I(X; f(Y)) ≤ I(X; Y)` — Cover-Thomas (2.8.1). -/
+@[entry_point]
 theorem mutualInfo_le_of_postprocess_rv
     {α : Type*} [MeasurableSpace α]
     {β : Type*} [MeasurableSpace β]

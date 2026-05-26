@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.AWGNF1Discharge
 
 /-!
@@ -124,6 +125,7 @@ lemma AWGNJointlyTypicalSet_zero (P N ε : ℝ) :
   simp [AWGNJointlyTypicalSet]
 
 /-- Monotonicity in the slack `ε`: a larger slack admits more pairs. -/
+@[entry_point]
 lemma AWGNJointlyTypicalSet_subset_of_le_ε (n : ℕ) (P N : ℝ)
     {ε₁ ε₂ : ℝ} (hε : ε₁ ≤ ε₂) (hn : 0 ≤ (n : ℝ)) :
     AWGNJointlyTypicalSet n P N ε₁ ⊆ AWGNJointlyTypicalSet n P N ε₂ := by
@@ -136,6 +138,7 @@ lemma AWGNJointlyTypicalSet_subset_of_le_ε (n : ℕ) (P N : ℝ)
 
 /-- Measurability of the AWGN jointly typical set (Borel measurable as a
 finite intersection of polynomial sub-level sets on the product space). -/
+@[entry_point]
 lemma AWGNJointlyTypicalSet_measurable (n : ℕ) (P N ε : ℝ) :
     MeasurableSet (AWGNJointlyTypicalSet n P N ε) := by
   -- Three polynomial inequalities, each measurable as a sub-level set of a

@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.EntropyPowerInequality
 import Common2026.Shannon.EPIPlumbing
 import Common2026.Shannon.EPIStamDischarge
@@ -347,6 +348,7 @@ a real `IsStamInequalityHyp` argument (`entropy_power_inequality_gaussian_via_pi
 /-- **Gaussian EPI hypothesis-free**: combine the Gaussian saturation case
 directly (no Stam predicate needed for the inequality itself; the predicate
 is only needed for the integrated pipeline form). -/
+@[entry_point]
 theorem entropy_power_inequality_gaussian_full
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -588,6 +590,7 @@ structure IsDeBruijnTailHyp {Ω : Type*} [MeasurableSpace Ω]
 /-! ### Phase B helpers — `gaussianConvolution` boundary -/
 
 /-- `gaussianConvolution X Z 0 = X` pointwise (uses `Real.sqrt 0 = 0`). -/
+@[entry_point]
 theorem gaussianConvolution_at_zero {Ω : Type*} (X Z : Ω → ℝ) :
     Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z 0 = X := by
   funext ω
@@ -704,6 +707,7 @@ noncomputable def isHeatFlowFamilyHyp_of_gaussian
 /-! ### Phase C-3 — Gaussian closed-form entropy at the heat-flow boundary -/
 
 /-- **Gaussian heat-flow entropy boundary value at `T`** for `T ≥ 0`. -/
+@[entry_point]
 theorem differentialEntropy_gaussianConvolution_of_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z)
@@ -805,6 +809,7 @@ For Gaussian `X` and `s > 0`, the derivative of `s' ↦ differentialEntropy(P.ma
 (X + √s' · Z))` at `s` equals `1/(2(v+s))`. This is the per-point statement
 from `deBruijn_identity_v2_gaussian` rewritten with the Gaussian closed-form
 Fisher information value `1/(v+t)`. -/
+@[entry_point]
 theorem hasDerivAt_differentialEntropy_heat_flow_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z)
@@ -929,6 +934,7 @@ unbounded `T → ∞` lift is a pending plan-level task (the previously intended
 `IsDeBruijnTailHyp` externalization was retracted by independent audit; see
 the §12 honesty notes and the retraction comment in the structure-definition
 area). -/
+@[entry_point]
 theorem bounded_T_ftc_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z)

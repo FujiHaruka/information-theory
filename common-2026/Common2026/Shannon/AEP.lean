@@ -530,6 +530,7 @@ private lemma indepFun_Xs_prefix_of_iIndepFun
 `condEntropy μ (X_i) prefix_i` を `condEntropy_eq_entropy_of_indepFun` で `entropy μ (X_i)`
 に潰し、`entropy_eq_of_identDistrib` で `entropy μ (X_0)` に統一、`Finset.sum_const` で
 `n · H(X_0)` を出す。 -/
+@[entry_point]
 theorem entropy_jointRV_eq_n_smul
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -583,6 +584,7 @@ theorem entropy_jointRV_eq_n_smul
 Slepian-Wolf converse 流儀の 4-step (entropy_le_log_card + bridge + DPI + Fano) を
 `X^n := jointRV Xs n` 上で再演し、Phase A の `entropy_jointRV_eq_n_smul` で LHS を
 `n · H(X_0)` に換算する。 -/
+@[entry_point]
 theorem source_coding_per_n_bound
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -1212,6 +1214,7 @@ noncomputable def achievableRates
         Filter.liminf (fun n : ℕ => Real.log (M n : ℝ) / n) atTop = r }
 
 /-- (Phase D lifted) Every achievable rate is at least the entropy. -/
+@[entry_point]
 theorem entropy_le_of_mem_achievableRates
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -1227,6 +1230,7 @@ theorem entropy_le_of_mem_achievableRates
     hAch.hPe_to_zero hAch.hM_bdd
 
 /-- (Phase E lifted) Any rate strictly above the entropy is achievable. -/
+@[entry_point]
 theorem mem_achievableRates_of_gt_entropy
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
