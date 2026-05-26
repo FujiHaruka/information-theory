@@ -971,6 +971,86 @@ theorem isStamToEPIScalingHyp_of_stam_debruijn
     hX hY hZX_meas hZY_meas hZXZY hZX_law hZY_law h_anti1
   exact ⟨Z_X, Z_Y, hZX_meas, hZY_meas, hZX_law, hZY_law, hXZX, hYZY, hZXZY, h_anti2⟩
 
+/-- **A-5**: `IsStamToEPIBridgeHyp X Y P` constructor from `IsStamScalingNoiseHyp`
++ sister de Bruijn V2 regularity + per-`t > 0` positivity & Stam witnesses +
+`IsStamToEPILimitHyp` caller-propagated.
+
+Chains A-4-5 (`isStamToEPIScalingHyp_of_stam_debruijn`, producing
+`IsStamToEPIScalingHyp X Y P`) into the existing `@audit:ok` bridge constructor
+`isStamToEPIBridgeHyp_of_scaling_limit` (`EPIStamToBridge.lean:267`).
+
+`IsStamToEPILimitHyp` is carried through unchanged from the caller. The
+existing bridge body discards `_h_limit` with an `_` binder
+(`EPIStamToBridge.lean:271-314`: only `h_scaling`'s `AntitoneOn` witness is
+used, the Gaussian saturation endpoint at `s = 1` is discharged internally via
+`entropy_power_inequality_gaussian_saturation` on the extracted `Z_X, Z_Y`),
+so the `_limit` argument is non-load-bearing here in practice but stays in
+the signature for compatibility with the established `_of_scaling_limit`
+shape — this Phase A does not refactor the limit predicate away (that is
+Phase 0' future work, see `IsStamToEPILimitHyp` docstring
+`EPIStamToBridge.lean:236-242`).
+
+Note on the constructor name: handoff / mini-plan A-5 sketch references
+`isStamToEPIBridgeHyp_of_scaling` (without `_limit`); the actual published
+constructor in this file is `_of_scaling_limit`. The `_limit` argument is
+discarded internally, so the chain semantics match the plan exactly — only
+the caller-visible signature carries the extra `_h_limit` slot.
+
+Honesty notes:
+- **Not name-laundering** — `_of_stam_debruijn` honestly advertises the
+  input shape (`IsStamScalingNoiseHyp` + sister `IsDeBruijnRegularityHyp`
+  triple), not a discharge claim.
+- **Non-circular** — `IsStamToEPIBridgeHyp` (Stam-conditional EPI conclusion)
+  differs from every argument: `IsStamScalingNoiseHyp` is a noise-extension
+  richness hypothesis, the three `IsDeBruijnRegularityHyp` carry density /
+  derivative regularity, `IsStamToEPILimitHyp` is a launder-shape boundary
+  fact (acknowledged at the predicate definition site, `@audit:suspect`).
+- **No new staged predicate introduced** — all arguments are pre-existing
+  staged hypotheses inherited from A-1 (`IsStamScalingNoiseHyp`),
+  sister Phase D (`IsDeBruijnRegularityHyp`), and Phase 0
+  (`IsStamToEPILimitHyp`); A-5 only chains them.
+
+`@audit:ok` (genuine constructor, no fresh `sorry`). -/
+theorem isStamToEPIBridgeHyp_of_stam_debruijn
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    {X Y : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]
+    (hX : Measurable X) (hY : Measurable Y)
+    (h_noise : InformationTheory.Shannon.EPIStamToBridge.IsStamScalingNoiseHyp X Y P)
+    (h_reg :
+      ∀ (Z_X Z_Y : Ω → ℝ), Measurable Z_X → Measurable Z_Y →
+        P.map Z_X = gaussianReal 0 1 → P.map Z_Y = gaussianReal 0 1 →
+        IndepFun X Z_X P → IndepFun Y Z_Y P → IndepFun Z_X Z_Y P →
+        InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+            (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P
+          × InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P
+          × InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
+    (h_pos_stam :
+      ∀ (Z_X Z_Y : Ω → ℝ), Measurable Z_X → Measurable Z_Y →
+        P.map Z_X = gaussianReal 0 1 → P.map Z_Y = gaussianReal 0 1 →
+        IndepFun X Z_X P → IndepFun Y Z_Y P → IndepFun Z_X Z_Y P →
+        ∀ (h_reg_sum :
+              InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+                (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+          (h_reg_X :
+              InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
+          (h_reg_Y :
+              InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P),
+            ∀ (t : ℝ) (ht : 0 < t),
+              (0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                      ((h_reg_X.reg_at t ht).density_t)) ∧
+              (0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                      ((h_reg_Y.reg_at t ht).density_t)) ∧
+              (0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                      ((h_reg_sum.reg_at t ht).density_t)) ∧
+              InformationTheory.Shannon.EPIStamDischarge.IsStamInequalityHyp
+                (fun ω => X ω + Real.sqrt t * Z_X ω)
+                (fun ω => Y ω + Real.sqrt t * Z_Y ω) P)
+    (h_limit : IsStamToEPILimitHyp X Y P) :
+    IsStamToEPIBridgeHyp X Y P := by
+  have h_scaling := isStamToEPIScalingHyp_of_stam_debruijn
+    hX hY h_noise h_reg h_pos_stam
+  exact isStamToEPIBridgeHyp_of_scaling_limit h_scaling h_limit
+
 /-! ## §3 — Gaussian saturation full discharge of sub-predicates -/
 
 -- `isStamToEPIScalingHyp_of_gaussian` was retracted in Phase 0 (2026-05-25)

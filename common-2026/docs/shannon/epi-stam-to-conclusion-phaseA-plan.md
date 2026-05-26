@@ -470,19 +470,22 @@ proof-log: yes (`docs/shannon/proof-log-epi-stam-to-conclusion-phaseA.md` を A-
 - **手順**:
   - [ ] **A-4-1**: `csiszarGap1Source_continuousOn` 補題 (`Set.Ici 0` 上の continuity)、
     A-2-3 の `HasDerivAt` から `ContinuousOn` (interior) + A-0'-3 closed form で `t = 0` 端点。~10-15 行
-  - [ ] **A-4-2**: `csiszarGap1Source_differentiableOn_interior` 補題、A-2-3 の `HasDerivAt` から
-    直接、~5 行
-  - [ ] **A-4-3**: `antitoneOn_of_deriv_nonpos` 適用 → `AntitoneOn (fun t => csiszarGap1Source _ t)
-    (Set.Ici 0)`、~10 行
+    (2026-05-27 撤退発火、`@residual(plan:epi-stam-to-conclusion-phaseA-A4-continuity)` 残置、
+    L-Concl-A-θ 採番、後続 sub-plan で closure)
+  - [x] **A-4-2**: `csiszarGap1Source_differentiableOn_interior` 補題、A-2-3 の `HasDerivAt` から
+    直接、~5 行 (2026-05-27 完了、genuine)
+  - [x] **A-4-3**: `antitoneOn_of_deriv_nonpos` 適用 → `AntitoneOn (fun t => csiszarGap1Source _ t)
+    (Set.Ici 0)`、~10 行 (2026-05-27 完了、genuine)
   - [ ] **A-4-4** (NEW、rescale 持ち上げ): A-0' 補題 1 `csiszarGap_eq_one_source_via_rescale`
     で 1-source `AntitoneOn` を 2-source `AntitoneOn (Set.Ico 0 1)` に変換、`s = 1` 端点は
     既存 `csiszarGap_at_one_eq_zero_of_gaussian_pair` で discharge、`Set.Icc 0 1` に拡張。
+    (2026-05-27 撤退発火 L-Concl-A-β、`@residual(plan:epi-stam-to-conclusion-phaseA-A4-rescale)` 残置)
     `AntitoneOn.comp` + `AntitoneOn.congr` + `s ↦ s/(1-s)` の monotone 性 (`Real.div_lt_div_iff_of_pos`
     等) 経由。~15-25 行 (rescale 持ち上げの新規 plumbing)
-  - [ ] **A-4-5**: existential witness `(Z_X, Z_Y)` を A-1 の `IsStamScalingNoiseHyp` から
+  - [x] **A-4-5**: existential witness `(Z_X, Z_Y)` を A-1 の `IsStamScalingNoiseHyp` から
     `obtain ⟨Z_X, Z_Y, ...⟩` で抽出、`AntitoneOn` と bundle して
     `IsStamToEPIScalingHyp X Y P` 完成。`isStamToEPIScalingHyp_of_stam_debruijn` constructor
-    として publish。~10-15 行
+    として publish。~10-15 行 (2026-05-27 完了、genuine constructor)
 - **撤退条件 (A-4-α)**: `antitoneOn_of_deriv_nonpos` が Mathlib に存在せず (`monotoneOn_of_deriv_nonneg`
   しかない場合)、`antitone_iff_monotone_neg` 経由で `MonotoneOn (fun t => − csiszarGap1Source _ t)`
   に reduce する変換 plumbing が必要 (~20-30 行)。撤退ラインではなく detour、scope 内で対処。
@@ -610,7 +613,7 @@ proof-log: yes (`docs/shannon/proof-log-epi-stam-to-conclusion-phaseA.md` を A-
   すべて吸収済)
 - **規模**: 0-10 行 (sed 14 件 + verify command 4 件 + audit subagent dispatch + proof-log)
 
-## 撤退ライン (honest 限定、2026-05-25 L-Concl-A-δ 撤退判定 (c) 後の改訂版、3 件 active + 1 件 resolved + 1 件 格下げ + 親 plan 継承 2 件)
+## 撤退ライン (honest 限定、2026-05-27 L-Concl-A-θ 採番後、4 件 active + 1 件 resolved + 1 件 格下げ + 親 plan 継承 2 件)
 
 | slug | Phase | 内容 | hypothesis 名 (例) | 解除条件 | 状態 |
 |---|---|---|---|---|---|
@@ -621,6 +624,7 @@ proof-log: yes (`docs/shannon/proof-log-epi-stam-to-conclusion-phaseA.md` を A-
 | **L-Concl-A-ε** (本 plan A-2-2、解釈変更) | A-2-2 | `entropyPower_hasDerivAt_of_diffEnt_hasDerivAt` (旧 `differentialEntropy_const_mul`) が Mathlib にも Common2026 にも不在で新規補題 large 化 (>30 行) | `IsEntropyPowerChainRuleHyp` 等 (新規 staged 又は別 file 外出し) | Common2026 `EntropyPowerInequality.lean` / `DifferentialEntropy.lean` 拡張で吸収 (scope 内 detour) | active (1-source 化で発火確率減、当初 50% → 30%) |
 | **L-Concl-A-ζ** (本 plan A-3、格下げ) | A-3-2 | 1-source 形でも Cauchy-Schwarz weight 不等式が必要 + Mathlib 直接形なく自前 plumbing >50 行 (1-source 化で閾値 100→50 格下げ、`linarith` 吸収可能性検証で更に解消可能) | `IsCsiszarScalingWeightHyp1Source X Y P` (新規 staged) | Mathlib 上流貢献 / 別 plan で外出し、A-3-2 実装で `linarith` 吸収確認したら撤退ライン削除 | **格下げ** 2026-05-25 (発火確率 50% → 15%、当初 >100 行閾値 → 1-source 化で >50 行に) |
 | **L-Concl-A-η** (新規追加、本 plan A-0') | A-0'-2 | `entropyPower_const_mul` (`entropyPower (P.map (c·X)) = c² · entropyPower (P.map X)`) が Mathlib / Common2026 不在で A-0'-2 (rescale 等式補題) の証明が large 化 | `IsEntropyPowerScaleHyp` (新規 staged 又は別 file 外出し) | Common2026 `EntropyPowerInequality.lean` 拡張で吸収 (scope 内 detour) | active (新規、発火確率 30%) |
+| **L-Concl-A-θ** (新規追加、本 plan A-4-1、2026-05-27) | A-4-1 | `csiszarGap1Source_continuousOn` の `t = 0` 端点接続が現行 `IsDeBruijnRegularityHyp` bundle で carry されない (`entropyPower ∘ P.map` の `√t → 0` continuity が Lebesgue-dominated-convergence machinery を要求、A-4 の ~25-40 行 budget 超え) | (signature 内 `sorry` のみ、新規 staged predicate 化なし) | `ContinuousOn entropyPower_heatflow` Common2026 lemma 化 or `IsDeBruijnRegularityHyp` bundle 拡張で path-continuity 内包 (後続 sub-plan) | active (発火確定、`@residual(plan:epi-stam-to-conclusion-phaseA-A4-continuity)` `EPIStamToBridge.lean:809` 残置) |
 
 **全撤退ライン共通規律** (親 plan §line 644-654 継承):
 - **`Prop := True` placeholder 禁止** (A-1 の `IsStamScalingNoiseHyp` は実 Prop、`∃ Z_X Z_Y, ...
