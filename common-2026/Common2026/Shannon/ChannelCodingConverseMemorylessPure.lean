@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ChannelCodingConverseGeneralStrong
 
 /-!
@@ -647,6 +648,7 @@ variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
 
 D-2' hypothesis-form の `h_yother_zero` は encoder 任意で偽のため本定理は経由しない
 (Strong 経路は encoder-agnostic な entropy subadditivity に基づく)。 -/
+@[entry_point]
 theorem channel_coding_converse_general_memoryless_pure
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Msg : Ω → M) (encoder : M → Fin n → α)

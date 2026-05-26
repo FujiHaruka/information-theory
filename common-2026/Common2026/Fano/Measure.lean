@@ -1,4 +1,5 @@
 import Common2026.Fano.Core
+import Common2026.Meta.EntryPoint
 import Mathlib.Probability.Kernel.CondDistrib
 import Mathlib.Probability.Kernel.Composition.MeasureCompProd
 import Mathlib.Probability.ProbabilityMassFunction.Basic
@@ -221,6 +222,7 @@ lemma pointwise_fano (Q : Measure X) [IsProbabilityMeasure Q] (xh : X)
 -/
 
 /-- Fano's inequality, measure-theoretic form (deterministic decoder). -/
+@[entry_point]
 theorem fano_inequality_measure_theoretic
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y) (decoder : Y → X)

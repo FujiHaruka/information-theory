@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.Bridge
 import Common2026.Shannon.Han
 import Common2026.Shannon.Pi
@@ -154,6 +155,7 @@ lemma indepFun_logLikelihood
 /-- **Probability AEP — almost sure version**: for an i.i.d. discrete sequence
 `Xs : ℕ → Ω → α` with finite alphabet `α`, the empirical entropy estimator
 `(1/n) ∑ i, (−log P(Xs i ω))` converges almost surely to the entropy `H(Xs 0)`. -/
+@[entry_point]
 theorem aep_ae
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -181,6 +183,7 @@ theorem aep_ae
 
 /-- **Probability AEP — convergence in probability**: the empirical entropy estimator
 converges to `entropy μ (Xs 0)` in probability. -/
+@[entry_point]
 theorem aep_inProbability
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -237,6 +240,7 @@ lemma mem_typicalSet_iff
       |(∑ i : Fin n, pmfLog μ Xs (x i)) / n - entropy μ (Xs 0)| < ε := Iff.rfl
 
 /-- Measurability of the typical set. -/
+@[entry_point]
 theorem measurableSet_typicalSet
     (μ : Measure Ω)
     (Xs : ℕ → Ω → α) (n : ℕ) (ε : ℝ) :
@@ -254,6 +258,7 @@ form follows by re-basing the logarithm.
 サポート外点を含む typical block の card は和で評価できないため (`pmfLog x i = 0`
 for `P(x_i) = 0` ⇒ $\exp(-\sum \text{pmfLog})$ が $P^n(x) = 0$ より厳密に大きくなり
 下界として使えない)、`[∀ x, P(x) > 0]` を追加で受ける。 -/
+@[entry_point]
 theorem typicalSet_card_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -372,6 +377,7 @@ theorem typicalSet_card_le
 The event `{ω | jointRV Xs n ω ∈ typicalSet μ Xs n ε}` is the complement of
 `{ω | ε ≤ |...|}` from `aep_inProbability`, so the probability tends to
 `1 − 0 = 1`. -/
+@[entry_point]
 theorem typicalSet_prob_tendsto_one
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -701,6 +707,7 @@ setting: it rules out the pathological case `M n` growing super-exponentially in
 `n` (where `liminf log M_n / n` would collapse to junk in the conditionally
 complete real lattice). For rate-bounded codes `M n = 2^⌈n R⌉` this is automatic
 with `R'` any constant `> R`. -/
+@[entry_point]
 theorem source_coding_converse
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -1135,6 +1142,7 @@ lemma codebookSize_log_div_tendsto
 /-- **Source coding theorem, achievability**:
 For any rate `R > entropy μ (Xs 0)`, there exists a block code with rate `R` and
 vanishing error. -/
+@[entry_point]
 theorem source_coding_achievability
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -1237,6 +1245,7 @@ theorem mem_achievableRates_of_gt_entropy
 /-- **Source coding theorem (両側等号)**:
 The infimum of asymptotic rates of achievable block source codes equals the
 entropy of the source. -/
+@[entry_point]
 theorem source_coding_theorem
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -1276,6 +1285,7 @@ via `iIndepFun_iff_map_fun_eq_pi_map` after restricting indices `ℕ → Fin n` 
 
 /-- **Point-wise upper bound on typical-set mass**: `(μ.map (jointRV Xs n)).real {x}
 ≤ exp(- n · (H - ε))` for any `x ∈ T_ε^n`. -/
+@[entry_point]
 theorem typicalSet_prob_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -1400,6 +1410,7 @@ theorem typicalSet_prob_le
 /-- **Point-wise lower bound on typical-set mass**: for `x ∈ T_ε^n`,
 `exp(-n · (H + ε)) ≤ (μ.map (jointRV Xs n)).real {x}`. Dual of
 `typicalSet_prob_le`. -/
+@[entry_point]
 theorem typicalSet_prob_ge
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -1489,6 +1500,7 @@ theorem typicalSet_prob_ge
 /-- **Size lower bound on typical set**: if `μ(T_ε^n) ≥ 1 - η`, then
 `(1-η) · exp(n · (H - ε)) ≤ |T_ε^n|`. Combined with `typicalSet_prob_tendsto_one`
 this yields the eventually-large-n form of Cover-Thomas 3.1.2 (b)(4). -/
+@[entry_point]
 theorem typicalSet_card_ge
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))

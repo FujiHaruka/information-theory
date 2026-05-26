@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.Han
 import Common2026.Shannon.SlepianWolf
 
@@ -60,6 +61,7 @@ memoryless or independence assumption. Cover-Thomas Thm 2.6.6.
 Proof: combine the n-variable chain rule `H(Y^n) = ∑ H(Y_i | Y^{<i})`
 (`jointEntropy_chain_rule`) with `H(Y_i | Y^{<i}) ≤ H(Y_i)`
 (`entropy_ge_condEntropy`, conditioning reduces entropy), summed over `i`. -/
+@[entry_point]
 lemma entropy_pi_le_sum_entropy
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Ys : Fin n → Ω → β) (hYs : ∀ i, Measurable (Ys i)) :
@@ -243,6 +245,7 @@ lemma condEntropy_pi_chain_rule_aux
 /-- **Conditional joint entropy chain rule on `Fin n`** (specialization of
 `condEntropy_pi_chain_rule_aux` with conditioner `Xs : Ω → (Fin n → α)`).
 `H(Y^n | X^n) = ∑ i, H(Y_i | X^n, Y^{<i})`. Building Block 2 of Cover-Thomas Thm 7.9. -/
+@[entry_point]
 lemma condEntropy_pi_chain_rule
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → (Fin n → α)) (Ys : Fin n → Ω → β)
@@ -274,6 +277,7 @@ omit [StandardBorelSpace α] in
 Direct consequence of `condMutualInfo_eq_zero_of_markov` via
 `condMutualInfo_eq_condEntropy_sub_condEntropy`: the Markov hypothesis forces
 `I(Yo; Wc | Zc) = 0`, and the bridge expresses this as the desired equality. -/
+@[entry_point]
 lemma condEntropy_drop_irrelevant_of_markov
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Yo : Ω → β) (Zc : Ω → α) (Wc : Ω → γ)
@@ -395,6 +399,7 @@ structure):
   `X^{≠i}` from conditioner.
 
 Each collapse is one application of `condEntropy_drop_irrelevant_of_markov`. -/
+@[entry_point]
 lemma condEntropy_pi_eq_sum_of_memoryless_strong
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
@@ -543,6 +548,7 @@ I(X^n; Y^n) = H(Y^n) - H(Y^n | X^n)
 This avoids the false-statement `h_yother_zero` route used in D-2'
 `channel_coding_converse_general_memoryless`. The two Markov axioms of
 `IsMemorylessChannelStrong` are taken as hypotheses (caller unpacks the structure). -/
+@[entry_point]
 theorem mutualInfo_le_sum_per_letter_of_memoryless_strong
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)

@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.Converse
 import Common2026.Shannon.MIChainRule
 
@@ -70,6 +71,7 @@ log |M| ≤ ∑ i, I(X_i; Y^n | X^{<i}).toReal + h(Pe) + Pe · log(|M| − 1)
 iid 仮定を要しない (既存 `channel_coding_converse_iid` との違い)。memoryless channel property に
 基づく per-summand bound `I(X_i; Y^n | X^{<i}) ≤ I(X_i; Y_i)` は deferred、本定理 RHS は
 chain rule で分解した形を残す。 -/
+@[entry_point]
 theorem channel_coding_converse_general_chainRule
     {n : ℕ}
     (μ : Measure Ω) [IsProbabilityMeasure μ]

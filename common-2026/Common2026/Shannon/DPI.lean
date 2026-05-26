@@ -8,6 +8,7 @@ import Mathlib.Probability.Kernel.Composition.MeasureCompProd
 import Mathlib.Probability.Kernel.Composition.MeasureComp
 import Mathlib.Probability.Kernel.Composition.Lemmas
 import Mathlib.MeasureTheory.Measure.Prod
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.MutualInfo
 
 /-!
@@ -49,6 +50,7 @@ Mathlib に直接補題は **完全不在** (Phase 4-M0 在庫調査 B 節で確
 
 予算: 50〜100 行。条件付き期待値の積分・絶対連続性の `f`-pushforward への伝播・klFun
 の連続性 / 強可測性が plumbing の主体。-/
+@[entry_point]
 theorem klDiv_map_le {α β : Type*}
     [MeasurableSpace α] [MeasurableSpace β]
     {f : α → β} (hf : Measurable f)
@@ -136,6 +138,7 @@ theorem klDiv_map_le {α β : Type*}
 
 の 2 つの書き換えで `mutualInfo μ Xs (f∘Yo) = klDiv ((μ.map (Xs,Yo)).map g) (((μ.map Xs).prod (μ.map Yo)).map g)`
 にし、`klDiv_map_le` を直接適用。 -/
+@[entry_point]
 theorem mutualInfo_le_of_postprocess
     (μ : Measure Ω) [IsFiniteMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y) (hXs : Measurable Xs) (hYo : Measurable Yo)

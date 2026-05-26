@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ChannelCoding
 import Common2026.Shannon.IIDProductInput
 import Common2026.Shannon.AEPRate
@@ -1604,6 +1605,7 @@ on the concrete i.i.d. ambient `Ω := ℕ → α × β`,
 single codebook from the codebook average bound. The rate slack
 `ε := (I - R)/6` ensures both the E1 term (joint AEP) and the E2 term
 `(M-1)·exp(-n(I - 3ε))` tend to 0 as `n → ∞`. -/
+@[entry_point]
 theorem channel_coding_achievability
     (W : Channel α β) [IsMarkovKernel W]
     (p : Measure α) [IsProbabilityMeasure p]

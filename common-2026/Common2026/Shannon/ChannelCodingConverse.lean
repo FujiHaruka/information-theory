@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.Converse
 import Common2026.Shannon.MIChainRule
 
@@ -53,6 +54,7 @@ log |M| ≤ n · I(X_0; Y_0).toReal + h(Pe) + Pe · log(|M| − 1)
 `X^n := encoder ∘ Msg`、`Y^n := fun ω i => Ys i ω`、
 `X_0 ω := encoder (Msg ω) 0`、`Y_0 := Ys 0`、
 `Pe := errorProb μ Msg Y^n decoder`。-/
+@[entry_point]
 theorem channel_coding_converse_iid
     {n : ℕ} (hn : 0 < n)
     (μ : Measure Ω) [IsProbabilityMeasure μ]

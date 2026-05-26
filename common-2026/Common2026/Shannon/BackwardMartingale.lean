@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Mathlib.Probability.Martingale.Basic
 import Mathlib.Probability.Martingale.Convergence
 import Mathlib.Probability.Martingale.Upcrossing
@@ -107,6 +108,7 @@ variable {f : ℕᵒᵈ → Ω → ℝ} {ℋ : Filtration ℕᵒᵈ m₀}
 
 Proof: `f n = 𝔼[f (toDual 0) | ℋ n]` a.e. (β.1), then apply
 `eLpNorm_one_condExp_le_eLpNorm`. -/
+@[entry_point]
 theorem BackwardMartingale.eLpNorm_one_le
     (hf : Martingale f ℋ μ) (n : ℕᵒᵈ) :
     eLpNorm (f n) 1 μ ≤ eLpNorm (f (OrderDual.toDual 0)) 1 μ := by
@@ -558,6 +560,7 @@ upcrossings), and (ii) the `revPath` upcrossing inequality
 (`upcrossingsBefore_le_revPath_succ`) transporting that bound to the
 backward-viewed sequence with O(1) slack. Then monotone convergence on `N`
 yields finiteness of the supremum, hence finiteness of `MeasureTheory.upcrossings`. -/
+@[entry_point]
 theorem BackwardMartingale.upcrossings_ae_lt_top
     [IsProbabilityMeasure μ] (hf : Martingale f ℋ μ)
     (hf_int : Integrable (f (OrderDual.toDual 0)) μ)
@@ -741,6 +744,7 @@ constructs the `⨅ n, ℋ (toDual n)`-measurable limit via the standard
 argument. The tail measurability step (which `Submartingale.ae_tendsto_limitProcess`
 handles via `measurableSet_exists_tendsto` over `⨆ n, ℱ n`) is here a direct
 mirror over `⨅ n, ℋ (toDual n)`. -/
+@[entry_point]
 theorem BackwardMartingale.ae_tendsto
     [IsProbabilityMeasure μ] (hf : Martingale f ℋ μ)
     (hf_int : Integrable (f (OrderDual.toDual 0)) μ) :

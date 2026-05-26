@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.MutualInfo
 import Common2026.Shannon.CondMutualInfo
 import Common2026.Shannon.Entropy
@@ -40,6 +41,7 @@ variable {X Y : Type*} [MeasurableSpace X] [MeasurableSpace Y]
 /-- Mutual information is invariant under a `MeasurableEquiv` reshape of the left
 random variable: `I(e ∘ X; Y) = I(X; Y)`. Reduces to `klDiv_map_measurableEquiv`
 applied to the product equivalence `e × id`. -/
+@[entry_point]
 theorem mutualInfo_map_left_measurableEquiv
     {X' : Type*} [MeasurableSpace X']
     (μ : Measure Ω) [IsFiniteMeasure μ]
@@ -87,6 +89,7 @@ which is independent of anything ⇒ 0; RHS is the empty sum. step `n+1`: split 
 then `prodComm` so we land on `(prefix, last)`, apply Phase A reshape, then the
 2-variable `mutualInfo_chain_rule` (`CondMutualInfo.lean:219`) with `Zc := prefix`,
 `Xs_arg := last`, then IH on the `Fin n` prefix, then `Fin.sum_univ_castSucc`. -/
+@[entry_point]
 theorem mutualInfo_chain_rule_fin
     {n : ℕ}
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -311,6 +314,7 @@ and the marginals factor similarly, then `I(X^n; Y^n) = ∑ I(X_i; Y_i)`.
 Strategy: reshape via `MeasurableEquiv.arrowProdEquivProdArrow` so that both joint and
 product-of-marginals (defining `mutualInfo`) become `Measure.pi`-shaped, then apply
 `klDiv_pi_eq_sum` to get the sum. -/
+@[entry_point]
 theorem mutualInfo_pi_eq_sum
     {n : ℕ}
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -362,6 +366,7 @@ theorem mutualInfo_pi_eq_sum
 /-- i.i.d. corollary (B-3 用): all `(X_i, Y_i)` jointly i.i.d. with common law
 implies `I(X^n; Y^n) = n · I(X_0; Y_0)`. n copies of the same RV pair under product
 distribution. -/
+@[entry_point]
 theorem mutualInfo_iid_eq_nsmul
     {n : ℕ} (hn : 0 < n)
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -419,6 +424,7 @@ Strategy: `mutualInfo_comm` to put `Prod.snd` first, then Bridge
 `mutualInfo_eq_entropy_sub_condEntropy` to convert MI to entropy minus conditional
 entropy; finally `entropy_pair_eq_entropy_add_condEntropy` applied to the identity
 pair `(z.1, z.2) = z` to expand the joint entropy. -/
+@[entry_point]
 theorem mutualInfo_eq_entropy_add_entropy_sub_jointEntropy
     (joint : Measure (α × β)) [IsProbabilityMeasure joint] :
     (mutualInfo joint Prod.fst Prod.snd).toReal

@@ -1,4 +1,5 @@
 import Common2026.Draft.Shannon.ChannelCodingConverseGeneralComplete
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.CondEntropyMemoryless
 import Mathlib.MeasureTheory.MeasurableSpace.Embedding
 
@@ -269,6 +270,7 @@ D-2' hypothesis-form (`channel_coding_converse_general_memoryless`) は 3 仮説
 
 引数 `h_memo : IsMemorylessChannel` は historical reasons (D-2' 互換) で残しているが、
 新しい証明経路では使われない。 -/
+@[entry_point]
 theorem channel_coding_converse_general_memoryless_strong
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Msg : Ω → M) (encoder : M → Fin n → α)

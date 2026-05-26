@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.Bridge
 import Mathlib.Probability.UniformOn
 
@@ -120,6 +121,7 @@ private lemma klDiv_map_uniformOn_univ_ne_top
 /-! ## Phase A — identity -/
 
 /-- `klDiv (μ.map X) (uniformOn univ) = log |α| - entropy μ X` (Real 形)。 -/
+@[entry_point]
 theorem klDiv_uniformOn_univ_toReal_eq
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (X : Ω → α) (hX : Measurable X) :
@@ -226,6 +228,7 @@ theorem klDiv_uniformOn_univ_toReal_eq
 
 /-- **最大エントロピー (Gibbs 不等式)**: 有限アルファベット上の確率変数の Shannon
 エントロピーは `log |α|` を超えない。 -/
+@[entry_point]
 theorem entropy_le_log_card
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (X : Ω → α) (hX : Measurable X) :
@@ -238,6 +241,7 @@ theorem entropy_le_log_card
 /-! ## Phase C — 等号条件 -/
 
 /-- 等号条件: エントロピー = `log |α|` ⟺ 像分布 `μ.map X` が一様。 -/
+@[entry_point]
 theorem entropy_eq_log_card_iff
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (X : Ω → α) (hX : Measurable X) :

@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Mathlib.InformationTheory.KullbackLeibler.Basic
 import Mathlib.InformationTheory.KullbackLeibler.ChainRule
 import Mathlib.Probability.Independence.Basic
@@ -39,6 +40,7 @@ noncomputable def mutualInfo
         ((μ.map Xs).prod (μ.map Yo))
 
 /-- 相互情報量は非負。`klDiv` が `ℝ≥0∞` 値なので signature 上自明。 -/
+@[entry_point]
 theorem mutualInfo_nonneg (μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y) :
     0 ≤ mutualInfo μ Xs Yo := bot_le
 
@@ -90,6 +92,7 @@ theorem klDiv_prod_const_left
 
 /-- 相互情報量の対称性: `I(X; Y) = I(Y; X)`。
 `MeasurableEquiv.prodComm` 経由で `klDiv_map_measurableEquiv` を適用。 -/
+@[entry_point]
 theorem mutualInfo_comm
     (μ : Measure Ω) [IsFiniteMeasure μ] (Xs : Ω → X) (Yo : Ω → Y)
     (hXs : Measurable Xs) (hYo : Measurable Yo) :
@@ -106,6 +109,7 @@ theorem mutualInfo_comm
 /-- 相互情報量がゼロ ↔ 独立。
 `indepFun_iff_map_prod_eq_prod_map_map` (`Independence/Basic.lean:701`) と
 `klDiv_eq_zero_iff` (`KullbackLeibler/Basic.lean:377`) の合成で示す。 -/
+@[entry_point]
 theorem mutualInfo_eq_zero_iff_indep
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y)
@@ -189,6 +193,7 @@ private lemma integrable_llr_map_pair_prod_marginals
 /-- 有限アルファベットでは相互情報量は有限。AC + integrable から `klDiv_ne_top`。
 Phase A の `condMutualInfo_eq_condEntropy_sub_condEntropy` で chain rule の
 `ENNReal.toReal_add` を有効化するために必要。 -/
+@[entry_point]
 theorem mutualInfo_ne_top
     [Fintype X] [MeasurableSingletonClass X]
     [Fintype Y] [MeasurableSingletonClass Y]

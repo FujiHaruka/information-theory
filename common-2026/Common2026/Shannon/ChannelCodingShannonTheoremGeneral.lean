@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ChannelCoding
 import Common2026.Shannon.ChannelCodingShannonTheorem
 import Mathlib.Analysis.Convex.StdSimplex
@@ -601,6 +602,7 @@ private lemma Measure_pi_real_event_diff_le
 omit [DecidableEq α] [Nonempty α] in
 /-- **C.2.3**: For `δ ∈ [0,1]`, the difference between `errorProbAt` under `W` and `W_smooth δ`
 is bounded by `2 n δ`. -/
+@[entry_point]
 lemma errorProbAt_smooth_TV
     {M n : ℕ} (c : Code M n α β) (W : Channel α β) [IsMarkovKernel W]
     {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ ≤ 1) (m : Fin M) :

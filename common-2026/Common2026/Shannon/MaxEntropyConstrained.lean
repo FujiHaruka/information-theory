@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.CsiszarProjection
 import Common2026.Shannon.Chernoff
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
@@ -245,6 +246,7 @@ distribution:
 The Lagrange parameter `lam` is **passed in as a hypothesis** (with the matching
 constraint witness `h_gibbs_constraints`), so the proof does not need ψ(λ) convexity
 or any Lagrange-multiplier existence theory. -/
+@[entry_point]
 theorem entropy_le_gibbs_of_constraints [Nonempty α]
     (f : Fin k → α → ℝ) (c : Fin k → ℝ)
     (P : α → ℝ) (hP : P ∈ stdSimplex ℝ α)
@@ -319,6 +321,7 @@ lemma klDivPmf_eq_zero_iff_pmf
 
 /-- **T3-A uniqueness (Tier 2)** — entropy equality `H(P) = H(gibbsPmf f λ)` is achieved
 *if and only if* `P = gibbsPmf f λ` pointwise. -/
+@[entry_point]
 theorem entropy_eq_gibbs_iff_of_constraints [Nonempty α]
     (f : Fin k → α → ℝ) (c : Fin k → ℝ)
     (P : α → ℝ) (hP : P ∈ stdSimplex ℝ α)
@@ -412,6 +415,7 @@ lemma entropy_uniform_pmf [Nonempty α] :
 /-- **E-1 (Tier 3 特例)** — エントロピーの uniform pmf 評価値:
 `∑ x, negMulLog (gibbsPmf 0 lam x) = log (Fintype.card α)`. これは
 `MaxEntropy.entropy_le_log_card` の pmf 形 (sup) と一致する。 -/
+@[entry_point]
 theorem entropy_gibbsPmf_zero_eq_log_card [Nonempty α] (lam : Fin k → ℝ) :
     ∑ x : α, Real.negMulLog (gibbsPmf (0 : Fin k → α → ℝ) lam x)
       = Real.log (Fintype.card α) := by
@@ -465,6 +469,7 @@ lemma gibbsPmf_bool_false_eq_of_mean
 /-- **E-2 (Tier 3 特例)** — Bernoulli ansatz: under mean constraint `μ`, the gibbs
 entropy on `Bool` is exactly the binary entropy `Real.binEntropy μ` (= textbook
 `-μ log μ - (1-μ) log (1-μ)`, Ex. 12.1). -/
+@[entry_point]
 theorem entropy_gibbsPmf_bool_eq_binEntropy
     (lam : Fin 1 → ℝ) (μ : ℝ)
     (h_mean : ∑ b : Bool, gibbsPmf boolFeature lam b * boolFeature 0 b = μ) :
@@ -490,6 +495,7 @@ noncomputable def linearFeature {N : ℕ} : Fin 1 → Fin (N + 1) → ℝ :=
 the Gibbs distribution with the linear feature is the geometric ratio
 `x ↦ q^x.val / ∑ y, q^y.val` on `Fin (N+1)`. Lagrange parameter `λ` is left as an
 ansatz; choosing `λ 0 = log q` then yields the geometric distribution with ratio `q`. -/
+@[entry_point]
 theorem gibbsPmf_linearFeature_eq_geometric {N : ℕ} (lam : Fin 1 → ℝ) :
     gibbsPmf (linearFeature (N := N)) lam
       = fun x : Fin (N + 1) =>

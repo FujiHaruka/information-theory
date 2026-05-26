@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.Stationary
 import Common2026.Shannon.EntropyRate
 import Common2026.Shannon.Bridge
@@ -82,6 +83,7 @@ and is a.s. bounded, then it converges to the entropy rate a.s.
 This is the "Phase D" wrapper: once Birkhoff (Phase C) supplies the two
 sandwich inequalities a.s., the conclusion follows immediately from
 `tendsto_of_le_liminf_of_limsup_le`. -/
+@[entry_point]
 theorem shannon_mcmillan_breiman_of_sandwich
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : ErgodicProcess μ α)
@@ -113,6 +115,7 @@ This is the discrete-alphabet analogue of `integral_logLikelihood_zero` in
 `AEP.lean`: push forward via `blockRV n`, collapse the integral over a
 finite alphabet to a sum, and recognize the resulting sum as the entropy
 times `-(1/n)`. -/
+@[entry_point]
 theorem expected_blockLogAvg_eq
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α)
     {n : ℕ} (hn : 0 < n) :

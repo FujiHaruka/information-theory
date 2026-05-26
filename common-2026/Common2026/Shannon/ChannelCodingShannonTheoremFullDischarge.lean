@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ChannelCodingShannonTheorem
 import Common2026.Shannon.ChannelCodingShannonTheoremGeneral
 import Common2026.Shannon.IIDProductInput
@@ -1550,6 +1551,7 @@ theorem exists_N_for_smooth_achievability_uniform
 /-- **D-1'' Phase D 主定理 (full discharge)**: `R < capacity W` で任意 `ε > 0` に対し
 十分大きい `n` で max-error < ε を達成する `M ≥ ⌈exp(nR)⌉` 個の符号が存在。
 `hW_pos` 完全除去版。 -/
+@[entry_point]
 theorem shannon_noisy_channel_coding_theorem_general_full
     (W : Channel α β) [IsMarkovKernel W]
     {R : ℝ} (hR_pos : 0 < R) (hR : R < capacity W)

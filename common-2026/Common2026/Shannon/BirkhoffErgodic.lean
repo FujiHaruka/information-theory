@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Mathlib.Dynamics.Ergodic.Ergodic
 import Mathlib.Dynamics.Ergodic.Function
 import Mathlib.Dynamics.Ergodic.MeasurePreserving
@@ -334,6 +335,7 @@ integrable, for every `n : ℕ`,
 Proof: integrate the Garsia pointwise inequality
 `M_n(ω) - M_n(T ω) ≤ 1_{M_n > 0}(ω) · f(ω)` over `μ`, and use
 `∫ M_n ∘ T dμ = ∫ M_n dμ` (measure preservation). -/
+@[entry_point]
 theorem maximal_ergodic_inequality {μ : Measure Ω} [IsFiniteMeasure μ]
     {T : Ω → Ω} (hT : MeasurePreserving T μ μ)
     {f : Ω → ℝ} (hf : Measurable f) (hf_int : Integrable f μ) (n : ℕ) :
@@ -1039,6 +1041,7 @@ integrable observable `f : Ω → ℝ`, the Birkhoff time averages
     A_n ω := (∑_{i=0}^{n} f (T^[i] ω)) / (n + 1)
 
 converge almost everywhere to the spatial mean `∫ f dμ`. -/
+@[entry_point]
 theorem birkhoff_ergodic_ae {μ : Measure Ω} [IsProbabilityMeasure μ]
     {T : Ω → Ω} (hT : MeasurePreserving T μ μ) (hT_erg : Ergodic T μ)
     {f : Ω → ℝ} (hf : Integrable f μ) :

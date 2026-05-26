@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Mathlib.Probability.Process.Filtration
 import Mathlib.MeasureTheory.MeasurableSpace.Basic
 import Mathlib.Dynamics.Ergodic.MeasurePreserving
@@ -44,6 +45,7 @@ variable {Ω : Type*} [m₀ : MeasurableSpace Ω]
 In `ℕᵒᵈ`, `n ≤ m` corresponds to `m ≤ n` in `ℕ`, so the underlying ℕ-indexed
 family `n ↦ comap (T^[n]) m₀` is antitone — exactly the backward-filtration
 shape needed for reverse-time martingale arguments. -/
+@[entry_point]
 def backwardFiltration (T : Ω → Ω) (hT : Measurable T) : Filtration ℕᵒᵈ m₀ where
   seq n := MeasurableSpace.comap (T^[OrderDual.ofDual n]) m₀
   mono' i j hij := by
@@ -81,7 +83,7 @@ def backwardFiltration (T : Ω → Ω) (hT : Measurable T) : Filtration ℕᵒ�
       = MeasurableSpace.comap (T^[OrderDual.ofDual n]) m₀ := rfl
 
 /-- Tail σ-algebra `ℋ_∞ := ⋂_n ℋ_n = ⨅_n comap (T^[n]) m₀`. -/
-@[reducible] def tailSigma (T : Ω → Ω) (hT : Measurable T) : MeasurableSpace Ω :=
+@[entry_point, reducible] def tailSigma (T : Ω → Ω) (hT : Measurable T) : MeasurableSpace Ω :=
   ⨅ n : ℕ, (backwardFiltration T hT) (OrderDual.toDual n)
 
 /-- `tailSigma` is bounded above by every level of the backward filtration. -/

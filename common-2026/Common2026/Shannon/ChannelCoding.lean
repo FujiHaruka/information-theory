@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.MutualInfo
 import Common2026.Shannon.MIChainRule
 import Common2026.Shannon.AEP
@@ -319,6 +320,7 @@ We bound `|A_ε^n|` by the cardinality of the joint typical set, which is a stri
 weaker (larger) bound than `2^{n(H(X,Y)+ε)}` but suffices for the channel coding
 argument. The textbook bound `|A_ε^n| ≤ 2^{n(H(X,Y)+ε)}` (in `Real.exp` base) follows
 by intersecting with the joint condition. -/
+@[entry_point]
 theorem jointlyTypicalSet_card_le
     [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -381,6 +383,7 @@ theorem jointlyTypicalSet_card_le
 Strategy: the event "(X^n, Y^n) jointly typical" is the intersection of three single-axis
 typical events; its complement is contained in the union of three single-axis complements,
 each of which has measure tending to `0` by the single-axis `typicalSet_prob_tendsto_one`. -/
+@[entry_point]
 theorem jointlyTypicalSet_prob_tendsto_one
     [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -552,6 +555,7 @@ Mutual independence (`iIndepFun`) along **each** of the `X` and `Y` axes is requ
 to factorise the block laws `μ.map (jointRV Xs n) = Measure.pi (μ.map (Xs ·))`. The
 joint axis identification (`hidentZ`) is **not** required for this bound (it would
 be required only for Phase C / D, downstream of this lemma). -/
+@[entry_point]
 theorem jointlyTypicalSet_indep_prob_le
     [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β]
     (μ : Measure Ω) [IsProbabilityMeasure μ]

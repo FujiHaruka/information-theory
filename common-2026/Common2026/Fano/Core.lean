@@ -2,6 +2,7 @@ import Common2026.Fano
 import Common2026.Fano.Entropy
 import Common2026.Fano.BinaryJensen
 import Common2026.Fano.CondEntropy
+import Common2026.Meta.EntryPoint
 import Mathlib.Algebra.BigOperators.Field
 
 /-!
@@ -376,6 +377,7 @@ theorem withErr_condX_EY_le
 
 /-- Fano's core inequality (Markov form):
 `H(X | Xh) ≤ qaryEntropy |X| P.errorProb`. -/
+@[entry_point]
 theorem fano_core (hcard : 2 ≤ Fintype.card X) :
     P.condEntropy ≤ Real.qaryEntropy (Fintype.card X) P.errorProb := by
   rw [← P.withErr_condX_Y]
@@ -421,6 +423,7 @@ lemma errorProb_nonneg : 0 ≤ P.errorProb := by
 
 /-- Fano's inequality (Markov form) in the textbook `fanoBoundRHS` form,
 with no external `hcore` hypothesis. -/
+@[entry_point]
 theorem fano_inequality (hcard : 2 ≤ Fintype.card X) :
     P.condEntropy ≤ fanoBoundRHSOfAlphabet X P.errorProb :=
   fano_inequality_of_core P (P.fano_core hcard)
@@ -428,6 +431,7 @@ theorem fano_inequality (hcard : 2 ≤ Fintype.card X) :
 /-- Strict inverse form of Fano's inequality on the increasing branch
 (Markov form), with no external `hcore` hypothesis (and `errorProb`
 non-negativity absorbed into the proof). -/
+@[entry_point]
 theorem error_lower_bound (hcard : 2 ≤ Fintype.card X) {a : ℝ}
     (ha0 : 0 ≤ a) (ha1 : a ≤ 1 - 1 / (Fintype.card X : ℝ))
     (hPe1 : P.errorProb ≤ 1 - 1 / (Fintype.card X : ℝ))

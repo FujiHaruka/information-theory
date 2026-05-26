@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.AEP
 import Common2026.Shannon.ChannelCoding
 import Mathlib.Probability.Moments.Variance
@@ -222,6 +223,7 @@ for all `n ≥ N`, the typical-set has μ-measure ≥ `1 - η`.
 
 The explicit bound is `N := ⌈pmfLogVariance / (η · ε²)⌉ + 1`, so `n ≥ N ⇒
 pmfLogVariance / (n · ε²) ≤ η`. -/
+@[entry_point]
 theorem typicalSet_prob_ge_of_rate
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -312,6 +314,7 @@ theorem typicalSet_prob_ge_of_rate
 /-- **Step 2 / part 1**: closed-form `N(g, ε')` for exponential decay.
 For any `g, ε' > 0`, there is `N` such that for all `n ≥ N`,
 `exp(- n · g) < ε'`. Concretely `N := ⌈max 0 (-log ε' / g)⌉ + 1`. -/
+@[entry_point]
 theorem exp_neg_mul_lt_of_rate {g ε' : ℝ} (hg : 0 < g) (hε' : 0 < ε') :
     ∃ N : ℕ, ∀ n ≥ N, Real.exp (- (n : ℝ) * g) < ε' := by
   set t : ℝ := max 0 (-Real.log ε' / g) with ht_def
@@ -350,6 +353,7 @@ for all `n ≥ N`,
 
 Closed form follows from `exp_neg_mul_lt_of_rate` plus the squeeze
 `(⌈exp(nR)⌉ - 1) · exp(n·(-I+3ε)) ≤ exp(-n · g)`. -/
+@[entry_point]
 theorem channelCoding_E2_lt_of_rate
     {I R ε ε' : ℝ} (hgap : 0 < I - R - 3 * ε) (hε' : 0 < ε') :
     ∃ N : ℕ, ∀ n ≥ N,
@@ -384,6 +388,7 @@ theorem channelCoding_E2_lt_of_rate
 `n ≥ N`, the jointly typical set has μ-measure ≥ `1 - η`. The bound `N` is built from three
 independent applications of `typicalSet_prob_ge_of_rate` (X, Y, Z = X × Y), with `η / 3` each
 plus a union bound (Bonferroni). -/
+@[entry_point]
 theorem jointlyTypicalSet_prob_ge_of_rate
     {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
       [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -570,6 +575,7 @@ lemma typicalSetMinN_mono_V {V V' η ε : ℝ} (hηε : 0 < η * ε ^ 2)
   exact div_le_div_of_nonneg_right hVV' hηε.le
 
 /-- **D.AEP.1**: closed-form `N` version of `typicalSet_prob_ge_of_rate`. -/
+@[entry_point]
 theorem typicalSet_prob_ge_at_N
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -654,6 +660,7 @@ theorem typicalSet_prob_ge_at_N
 Caller provides an upper bound `V_upper ≥ pmfLogVariance μ Xs`, and the
 closed-form `N` is `typicalSetMinN V_upper η ε` (independent of the true
 variance). -/
+@[entry_point]
 theorem typicalSet_prob_ge_at_N_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -676,6 +683,7 @@ noncomputable def expNegMulMinN (g ε' : ℝ) : ℕ :=
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
   [MeasurableSingletonClass α] in
 /-- **D.AEP.3**: closed-form `N` version of `exp_neg_mul_lt_of_rate`. -/
+@[entry_point]
 theorem exp_neg_mul_lt_at_N {g ε' : ℝ} (hg : 0 < g) (hε' : 0 < ε') :
     ∀ n, expNegMulMinN g ε' ≤ n → Real.exp (- (n : ℝ) * g) < ε' := by
   intro n hn_ge
@@ -707,6 +715,7 @@ omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
   [MeasurableSingletonClass α] in
 /-- **D.AEP.4**: closed-form `N` version of `channelCoding_E2_lt_of_rate`.
 The `N` is `expNegMulMinN (I - R - 3ε) ε'`. -/
+@[entry_point]
 theorem channelCoding_E2_lt_at_N
     {I R ε ε' : ℝ} (hgap : 0 < I - R - 3 * ε) (hε' : 0 < ε') :
     ∀ n, expNegMulMinN (I - R - 3 * ε) ε' ≤ n →
@@ -745,6 +754,7 @@ noncomputable def jointlyTypicalSetMinN
 /-- **D.AEP.5**: variance-upper-bound version of joint AEP. The caller
 provides axis-wise variance upper bounds `V_X, V_Y, V_Z`, and the closed-form
 `N` is `jointlyTypicalSetMinN V_X V_Y V_Z η ε`. -/
+@[entry_point]
 theorem jointlyTypicalSet_prob_ge_at_N_le
     {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
       [MeasurableSpace β] [MeasurableSingletonClass β]

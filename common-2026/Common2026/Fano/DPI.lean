@@ -1,6 +1,7 @@
 import Common2026.Fano
 import Common2026.Fano.BinaryJensen
 import Common2026.Fano.Core
+import Common2026.Meta.EntryPoint
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import Mathlib.Analysis.Convex.Jensen
 import Mathlib.Algebra.BigOperators.Field
@@ -181,6 +182,7 @@ lemma pushforward_marginalY (P : FiniteJointPMF X Y) (f : Y → X) (xh : X) :
 /-- Data processing inequality (deterministic post-processing form):
 the conditional entropy of `X` given `Y` does not exceed the conditional
 entropy of `X` given `f(Y)`. -/
+@[entry_point]
 theorem condEntropy_le_pushforward_condEntropy
     (P : FiniteJointPMF X Y) (f : Y → X) :
     P.condEntropy ≤ (P.pushforward f).condEntropy := by
@@ -352,6 +354,7 @@ lemma pushforward_errorProb (P : FiniteJointPMF X Y) (f : Y → X) :
 with `Pe = ∑ {(x, y) : x ≠ decode y}, P.mass x y`. Derived from the
 Markov-form Fano (`fano_inequality` on the pushforward) and the data
 processing inequality (`condEntropy_le_pushforward_condEntropy`). -/
+@[entry_point]
 theorem fano_inequality_decode
     (P : FiniteJointPMF X Y) (decode : Y → X)
     (hcard : 2 ≤ Fintype.card X) :
@@ -362,6 +365,7 @@ theorem fano_inequality_decode
 
 /-- Phase 0 form of Fano's inequality, with the error probability written
 in the Phase 0 explicit double-sum form `∑ x, ∑ y, if x = decode y then 0 else P.mass x y`. -/
+@[entry_point]
 theorem fano_inequality_decode'
     (P : FiniteJointPMF X Y) (decode : Y → X)
     (hcard : 2 ≤ Fintype.card X) :
@@ -372,6 +376,7 @@ theorem fano_inequality_decode'
 
 /-- Phase 0 form of the strict inverse Fano bound (`error_lower_bound`)
 recovered for a deterministic decoder via DPI. -/
+@[entry_point]
 theorem error_lower_bound_decode
     (P : FiniteJointPMF X Y) (decode : Y → X)
     (hcard : 2 ≤ Fintype.card X) {a : ℝ}

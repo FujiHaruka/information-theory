@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.Bridge
 import Common2026.Shannon.CondMutualInfo
 
@@ -38,6 +39,7 @@ variable {Z : Type*} [Fintype Z] [DecidableEq Z] [Nonempty Z]
   [MeasurableSpace Z] [MeasurableSingletonClass Z]
 
 /-- Chain rule for Shannon entropy: `H(X, Y) = H(X) + H(Y | X)`. -/
+@[entry_point]
 theorem entropy_pair_eq_entropy_add_condEntropy
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y)
@@ -141,6 +143,7 @@ The inner expression `Σ x, negMulLog (condDistrib X (Y,Z) μ (y,z) {x})` is the
 Shannon entropy of `X` conditioned on the simultaneous value of `Y` and `Z`. The two
 outer integrals build back up to `H(X | Y, Z)`. Required as a lemma for the middle
 result `condMutualInfo_eq_condEntropy_sub_condEntropy`. -/
+@[entry_point]
 theorem condEntropy_tower
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y) (Zo : Ω → Z)
@@ -205,6 +208,7 @@ Bridge `mutualInfo_eq_entropy_sub_condEntropy` を 2 回当て entropy μ Xs を
 `ENNReal.toReal_add` の有限性は `mutualInfo_ne_top` (MutualInfo.lean) と
 `condMutualInfo_ne_top` (CondMutualInfo.lean、chain rule 経由で `mutualInfo_ne_top`
 に帰着) で確保。 -/
+@[entry_point]
 theorem condMutualInfo_eq_condEntropy_sub_condEntropy
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y) (Zo : Ω → Z)
@@ -237,6 +241,7 @@ theorem condMutualInfo_eq_condEntropy_sub_condEntropy
 the middle lemma `condMutualInfo_eq_condEntropy_sub_condEntropy` and
 `condMutualInfo_nonneg`. Phase B (n-variable Han) reduces to iterating this on
 prefixes of `Fin n`. -/
+@[entry_point]
 theorem condEntropy_le_condEntropy_of_pair
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y) (Zo : Ω → Z)

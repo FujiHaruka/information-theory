@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ChannelCodingShannonTheorem
 import Common2026.Shannon.ChannelCodingShannonTheoremGeneral
 import Common2026.Shannon.AEPRate
@@ -51,6 +52,7 @@ Shannon noisy channel coding theorem。
 本ファイルは TV bound `errorProbAt_smooth_TV` で `errorProbAt W < ε` を結論する。
 
 `@audit:retract-candidate(superseded-by-full-discharge)` -/
+@[entry_point]
 theorem shannon_noisy_channel_coding_theorem_general
     (W : Channel α β) [IsMarkovKernel W]
     {R : ℝ} (_hR_pos : 0 < R) (_hR : R < capacity W)

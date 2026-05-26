@@ -4,6 +4,7 @@ import Mathlib.Probability.Kernel.CondDistrib
 import Mathlib.Probability.Kernel.Composition.MeasureCompProd
 import Mathlib.Probability.Kernel.Composition.CompProd
 import Mathlib.Probability.Kernel.Composition.MapComap
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.MutualInfo
 import Common2026.Shannon.DPI
 
@@ -52,6 +53,7 @@ noncomputable def condMutualInfo
         ((μ.map Zc) ⊗ₘ ((condDistrib Xs Zc μ) ×ₖ (condDistrib Yo Zc μ)))
 
 /-- Conditional mutual information is non-negative (signature 上自明、`klDiv` が `ℝ≥0∞` 値)。 -/
+@[entry_point]
 theorem condMutualInfo_nonneg
     (μ : Measure Ω) [IsFiniteMeasure μ]
     [StandardBorelSpace X] [Nonempty X]
@@ -216,6 +218,7 @@ private lemma factored_map_perm_eq_compProd_prod
    - 第2項 = `klDiv ((μ.map (Zc, Yo)) ⊗ₘ K) ((μ.map (Zc, Yo)) ⊗ₘ K')` (両 base 同一)
 3. 第2項を `permZYX_Z_XY` で `Z × (X × Y)` 上に再度押し出して `condMutualInfo` 形に対応
    (`factored_map_perm_eq_compProd_prod` + `compProd_map_condDistrib`) -/
+@[entry_point]
 theorem mutualInfo_chain_rule
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     [StandardBorelSpace X] [Nonempty X]
@@ -292,6 +295,7 @@ theorem mutualInfo_chain_rule
 `klDiv_map_measurableEquiv` で値不変。joint 側は `compProd_map_condDistrib` を 2 回挟んで
 `μ.map (Zc, Xs, Yo)` を経由、factored 側は `Measure.compProd_map` + `Kernel.prodComm_prod`
 で kernel の swap として処理。 -/
+@[entry_point]
 theorem condMutualInfo_comm
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     [StandardBorelSpace X] [Nonempty X]
@@ -328,6 +332,7 @@ theorem condMutualInfo_comm
 /-- 有限アルファベットでは条件付き相互情報量は有限。chain rule
 `mutualInfo μ (Zc, Xs) Yo = mutualInfo μ Zc Yo + condMutualInfo μ Xs Yo Zc` から
 `condMutualInfo ≤ mutualInfo (Zc, Xs) Yo` で押さえる。後者は `mutualInfo_ne_top` で有限。 -/
+@[entry_point]
 theorem condMutualInfo_ne_top
     [Fintype X] [MeasurableSingletonClass X]
     [Fintype Y] [MeasurableSingletonClass Y]
@@ -350,6 +355,7 @@ theorem condMutualInfo_ne_top
 γ-form 採用により直接的な証明: condMutualInfo の第1引数 `(μ.map Zc) ⊗ₘ condDistrib (Xs, Yo) Zc μ`
 は `compProd_map_condDistrib` で `μ.map (Zc, Xs, Yo)` と一致し、γ-form Markov の RHS が第2引数
 そのものなので、両者が等しく `klDiv_self` で 0。 -/
+@[entry_point]
 theorem condMutualInfo_eq_zero_of_markov
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     [StandardBorelSpace X] [Nonempty X]
@@ -375,6 +381,7 @@ theorem condMutualInfo_eq_zero_of_markov
 4. 1+2+3 を合成
 
 主応用: `shannon_converse_single_shot_markov_encoder` (Converse.lean 末尾)。 -/
+@[entry_point]
 theorem mutualInfo_le_of_markov
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     [StandardBorelSpace X] [Nonempty X]
@@ -425,6 +432,7 @@ pushforward。
 - factored 側: `Kernel.map_prod_eq` で `(condDistrib (e∘X) Z μ ×ₖ condDistrib Y Z μ)
   = ((condDistrib X Z μ).map e ×ₖ condDistrib Y Z μ).map (Prod.map id (id))` 形を経由、
   `condDistrib_comp` で `condDistrib (e∘X) Z μ =ᵐ (condDistrib X Z μ).map e`。 -/
+@[entry_point]
 theorem condMutualInfo_map_left_measurableEquiv
     {X' : Type*} [MeasurableSpace X'] [StandardBorelSpace X'] [Nonempty X']
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -486,6 +494,7 @@ theorem condMutualInfo_map_left_measurableEquiv
 
 `condMutualInfo_comm` で第 1, 2 引数を swap し `condMutualInfo_map_left_measurableEquiv` に
 帰着。 -/
+@[entry_point]
 theorem condMutualInfo_map_middle_measurableEquiv
     {Y' : Type*} [MeasurableSpace Y'] [StandardBorelSpace Y'] [Nonempty Y']
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -543,6 +552,7 @@ private lemma compProd_map_left_prodMap
 - `condDistrib_comp` で `condDistrib (f∘X) Z μ =ᵐ K_X.map f` を吸収。
 
 用途: D-2'' Phase B Step 1 (`X^{≠i} → X_i → Y_i` から `X^{<i} → X_i → Y_i` を `Prod.fst` で抽出). -/
+@[entry_point]
 theorem isMarkovChain_map_left
     {X' : Type*} [MeasurableSpace X'] [StandardBorelSpace X'] [Nonempty X']
     (μ : Measure Ω) [IsProbabilityMeasure μ]

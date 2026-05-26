@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ChannelCoding
 import Common2026.Shannon.ChannelCodingConverse
 import Common2026.Shannon.Converse
@@ -114,6 +115,7 @@ I(Msg; Y_0, …, Y_{n-1}) = ∑ i, I(Msg; Y_i | (Y_0, …, Y_{i-1}))
 Derived from `mutualInfo_chain_rule_fin` (X-axis form
 `I(X_0,…,X_{n-1}; Yo) = ∑ I(X_i; Yo | X^{<i})`) by symmetry: swap left/right with
 `mutualInfo_comm` and `condMutualInfo_comm`. -/
+@[entry_point]
 theorem mutualInfo_chain_rule_Y_axis_fin
     {n : ℕ}
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -247,6 +249,7 @@ Capacity `C` 自体は `C := sup_p I(p; W)` のような大域定義に縛らず
 組み立てる。
 
 `@audit:retract-candidate(superseded-by-memoryless-form)` -/
+@[entry_point]
 theorem channel_coding_feedback_converse
     {n : ℕ} (C : ℝ≥0∞) (hC_finite : C ≠ ∞)
     (μ : Measure Ω) [IsProbabilityMeasure μ]

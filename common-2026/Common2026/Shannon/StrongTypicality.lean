@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.AEP
 import Common2026.Shannon.Sanov
 import Mathlib.MeasureTheory.Order.Group.Lattice
@@ -58,6 +59,7 @@ lemma mem_stronglyTypicalSet_iff
       ∀ a : α, |(typeCount x a : ℝ) / n - (μ.map (Xs 0)).real {a}| ≤ ε := Iff.rfl
 
 /-- Measurability of the strongly typical set (finite ambient). -/
+@[entry_point]
 theorem measurableSet_stronglyTypicalSet
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (n : ℕ) (ε : ℝ) :
     MeasurableSet (stronglyTypicalSet μ Xs n ε) :=
@@ -209,6 +211,7 @@ lemma letterIndicator_inProbability
 
 /-- **Strong typicality probability tendsto one**: for `Xs` i.i.d. with finite alphabet,
 `μ {ω | jointRV Xs n ω ∈ A^*_ε^n} → 1`. -/
+@[entry_point]
 theorem stronglyTypicalSet_prob_tendsto_one
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -450,6 +453,7 @@ lemma stronglyTypicalSet_subset_typicalSet
 
 /-- **Size lower bound (eventually-N form)**: for any `η > 0`,
 eventually `|A^*_ε^n| ≥ (1-η) · exp(n · (H - ε·L - δ))`. -/
+@[entry_point]
 theorem stronglyTypicalSet_card_ge_eventually
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))

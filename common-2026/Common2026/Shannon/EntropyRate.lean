@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.Stationary
 import Common2026.Shannon.Bridge
 import Common2026.Shannon.CondMutualInfo
@@ -66,6 +67,7 @@ noncomputable def conditionalEntropyTail
 
 /-- Entropy rate `lim H(X_0, …, X_{n-1}) / n` (Cover-Thomas 4.2.1). Existence
 proven by `entropyRate_exists_of_stationary`. -/
+@[entry_point]
 noncomputable def entropyRate (μ : Measure Ω) (p : StationaryProcess μ α) : ℝ :=
   Filter.atTop.limUnder (fun n : ℕ => blockEntropy μ p n / n)
 
@@ -429,6 +431,7 @@ exists, i.e. `blockEntropy μ p n / n` converges.
 Strategy: the chain rule + (B.2) say `tail n` is antitone and nonneg, hence
 converges to some `L`. By Cesàro, `(1/n) ∑_{i<n} tail i → L`. By the chain rule,
 this equals `blockEntropy μ p n / n`. -/
+@[entry_point]
 theorem entropyRate_exists_of_stationary
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) :
     ∃ H : ℝ, Tendsto (fun n : ℕ => blockEntropy μ p n / n) atTop (𝓝 H) := by
@@ -463,6 +466,7 @@ theorem entropyRate_exists_of_stationary
 Strategy: the chain rule + Cesàro gives `blockEntropy / n → L = lim tail`. The
 `entropyRate` is the limit of `blockEntropy / n` (Filter.limUnder of a convergent
 sequence equals the limit). The two limits agree by uniqueness. -/
+@[entry_point]
 theorem entropyRate_eq_lim_condEntropy
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) :
     Tendsto (conditionalEntropyTail μ p) atTop (𝓝 (entropyRate μ p)) := by

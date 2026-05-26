@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.MaxEntropyConstrained
 
 /-!
@@ -157,6 +158,7 @@ exponential-family optimum has the closed form
 
 This is the KKT duality: at the saddle point of the Lagrangian, the primal value
 equals the dual value `ψ(λ) - ⟨λ, c⟩`. -/
+@[entry_point]
 theorem entropy_expFamilyDist_eq_legendre [Nonempty α]
     (f : Fin k → α → ℝ) (c : Fin k → ℝ) (S : KKTSolution f c) :
     ∑ x, Real.negMulLog (expFamilyDist f S.lam x)
@@ -191,6 +193,7 @@ bounded above by the entropy of the exponential-family solution
 (KKT first-order condition).
 
 This is `entropy_le_gibbs_of_constraints` repackaged in the KKT language. -/
+@[entry_point]
 theorem expFamily_maximizes_entropy [Nonempty α]
     (f : Fin k → α → ℝ) (c : Fin k → ℝ)
     (P : α → ℝ) (hP : P ∈ stdSimplex ℝ α)
@@ -213,6 +216,7 @@ theorem expFamily_maximizes_entropy [Nonempty α]
 
 /-- **KKT-packaged Cover–Thomas Theorem 12.1.1**: a constraint-feasible `P` cannot
 exceed the entropy of the exponential-family solution attached to a KKT witness. -/
+@[entry_point]
 theorem expFamily_maximizes_entropy_of_KKT [Nonempty α]
     (f : Fin k → α → ℝ) (c : Fin k → ℝ)
     (P : α → ℝ) (hP : P ∈ stdSimplex ℝ α)
@@ -230,6 +234,7 @@ entropy equality `H(P) = H(expFamilyDist f λ)` holds *if and only if*
 `P = expFamilyDist f λ` pointwise.
 
 This is `entropy_eq_gibbs_iff_of_constraints` repackaged. -/
+@[entry_point]
 theorem expFamily_unique [Nonempty α]
     (f : Fin k → α → ℝ) (c : Fin k → ℝ)
     (P : α → ℝ) (hP : P ∈ stdSimplex ℝ α)
@@ -249,6 +254,7 @@ theorem expFamily_unique [Nonempty α]
   exact entropy_eq_gibbs_iff_of_constraints f c P hP hP_constraints lam h_gibbs_KKT
 
 /-- KKT-packaged uniqueness companion of `expFamily_maximizes_entropy_of_KKT`. -/
+@[entry_point]
 theorem expFamily_unique_of_KKT [Nonempty α]
     (f : Fin k → α → ℝ) (c : Fin k → ℝ)
     (P : α → ℝ) (hP : P ∈ stdSimplex ℝ α)
@@ -268,6 +274,7 @@ theorem expFamily_unique_of_KKT [Nonempty α]
 for *every* `λ` whose exponential-family solution satisfies the same moments.
 This is the variational characterization of `logPartitionψ` as the Legendre
 transform of `-H` restricted to the feasibility set. -/
+@[entry_point]
 theorem entropy_le_logPartition_sub_inner [Nonempty α]
     (f : Fin k → α → ℝ) (c : Fin k → ℝ)
     (P : α → ℝ) (hP : P ∈ stdSimplex ℝ α)
@@ -286,6 +293,7 @@ theorem entropy_le_logPartition_sub_inner [Nonempty α]
   linarith
 
 /-- KKT-packaged variational form. -/
+@[entry_point]
 theorem entropy_le_logPartition_sub_inner_of_KKT [Nonempty α]
     (f : Fin k → α → ℝ) (c : Fin k → ℝ)
     (P : α → ℝ) (hP : P ∈ stdSimplex ℝ α)

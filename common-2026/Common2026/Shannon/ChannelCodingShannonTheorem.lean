@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ChannelCoding
 import Common2026.Shannon.ChannelCodingAchievability
 import Common2026.Shannon.MaxEntropy
@@ -575,6 +576,7 @@ lemma exists_N_two_ceil_exp_le
   exact_mod_cast h_combined
 
 /-- **Phase B.4**: Average error achievability → max error achievability。 -/
+@[entry_point]
 theorem channel_coding_achievability_max_error
     (W : Channel α β) [IsMarkovKernel W]
     (p : Measure α) [IsProbabilityMeasure p]
@@ -990,6 +992,7 @@ Proof shape:
 
 `hW_pos`: 本 MVP では `W` の full-support を追加仮定として要求。完全形 (sub-channel 切り出し
 での除去) は Phase C.1/C.2 deferred を参照。 -/
+@[entry_point]
 theorem shannon_noisy_channel_coding_theorem
     (W : Channel α β) [IsMarkovKernel W]
     (hW_pos : ∀ a : α, ∀ b : β, 0 < (W a).real {b})

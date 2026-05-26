@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ChannelCodingFeedback
 import Common2026.Shannon.CondMutualInfo
 import Common2026.Shannon.MIChainRule
@@ -168,6 +169,7 @@ variable {β : Type*} [Fintype β] [Nonempty β]
 Variant of `channel_coding_feedback_converse` with `h_per_letter` replaced by the
 **memoryless feedback assumption** `IsMemorylessFeedback`. The per-letter inequality
 is derived internally via `feedback_per_letter_bound` (Phase C). -/
+@[entry_point]
 theorem channel_coding_feedback_converse_memoryless
     {n : ℕ} (C : ℝ≥0∞) (hC_finite : C ≠ ∞)
     (μ : Measure Ω) [IsProbabilityMeasure μ]

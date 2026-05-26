@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ChannelCoding
 import Common2026.Shannon.StrongStein
 import Mathlib.MeasureTheory.Constructions.Pi
@@ -124,6 +125,7 @@ P_m^n(s) ≤ exp(threshold) · Q(s) + P_m^n(highLLR_m)
 The "good" (low-LLR) part is absorbed into the Q-mass term; the "bad" (high-LLR)
 part is the explicit tail term. Channel-coding analogue of
 `steinTypicalSet_Q_prob_ge`. -/
+@[entry_point]
 theorem channelCoding_per_codeword_decomposition
     {M n : ℕ} (W : Channel α β) [IsMarkovKernel W] (c : Code M n α β)
     (Q : Measure (Fin n → β)) [IsFiniteMeasure Q]
@@ -182,6 +184,7 @@ to get the strong-converse-style lower bound on success probability `1 - avgPe`:
 The decoding regions form a measurable partition of `Fin n → β`, so summing
 `Q.real (decodingRegion m)` gives `Q.real univ ≤ 1` (since `Q` is a probability
 measure), and the first term collapses to `exp(threshold)/M`. -/
+@[entry_point]
 theorem channelCoding_average_success_le
     {M : ℕ} (hM : 0 < M) {n : ℕ}
     (W : Channel α β) [IsMarkovKernel W] (c : Code M n α β)
