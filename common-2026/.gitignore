@@ -8,3 +8,6 @@
 /docs/audit/*.db
 /docs/audit/*.db-wal
 /docs/audit/*.db-shm
+
+# Orphan detector report — regenerated each run by scripts/FindOrphans.lean
+/scripts/orphans-report.txt
