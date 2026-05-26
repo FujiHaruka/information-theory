@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.HanD
 
 /-!
@@ -38,6 +39,7 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 /-- Shearer の不等式 (整数 covering 形)。
 `S : ι → Finset (Fin n)` が各 `i : Fin n` を少なくとも `k` 回被覆するとき:
 $k \cdot H(X_{[n]}) \le \sum_j H(X_{S_j})$。 -/
+@[entry_point]
 theorem shearer_inequality
     {ι : Type*} [Fintype ι]
     (μ : Measure Ω) [IsProbabilityMeasure μ]

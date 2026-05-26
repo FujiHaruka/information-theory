@@ -1,11 +1,12 @@
-import Mathlib.Probability.Distributions.Gaussian.Real
-import Mathlib.Probability.Density
-import Mathlib.Probability.Independence.Basic
+import Common2026.Meta.EntryPoint
+import Common2026.Shannon.FisherInfoV2
 import Mathlib.Analysis.Calculus.LogDeriv
 import Mathlib.Analysis.SpecialFunctions.Log.Deriv
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.MeasureTheory.Measure.Decomposition.Lebesgue
-import Common2026.Shannon.FisherInfoV2
+import Mathlib.Probability.Density
+import Mathlib.Probability.Distributions.Gaussian.Real
+import Mathlib.Probability.Independence.Basic
 
 /-!
 # Fisher information V2 — Phase C bridge + Phase D de Bruijn identity (T2-F follow-up)
@@ -91,6 +92,7 @@ theorem fisherInfoOfMeasureV2Real_def (μ : Measure ℝ) (f : ℝ → ℝ) :
 
 The deliverable that was blocked under V1 by the representative-dependence flaw
 (`FisherInfoGaussian.lean` L-G3 retreat). -/
+@[entry_point]
 theorem fisherInfoOfMeasureV2_gaussianReal
     (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     fisherInfoOfMeasureV2 (gaussianReal m v) (gaussianPDFReal m v)
@@ -122,6 +124,7 @@ noncomputable def gaussianConvolution {α : Type*} (X Z : α → ℝ) (t : ℝ) 
 and `X ⊥ Z`: the result is `𝒩(m, v + t.toNNReal)`. The key Mathlib facts used
 are `gaussianReal_map_const_mul` (law of `√t · Z` is `𝒩(0, t)`) and
 `gaussianReal_add_gaussianReal_of_indepFun` (sum of independent Gaussians). -/
+@[entry_point]
 theorem gaussianConvolution_law_of_gaussian
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z)
@@ -310,6 +313,7 @@ For `X ∼ 𝒩(m, v)`, `Z ∼ 𝒩(0, 1)`, `X ⊥ Z`, and `t > 0`,
 This is the Stage 2 publish point of `fisher-info-gaussian-discharge-moonshot-plan.md`
 Phase D — the deliverable blocked under V1 by the representative-dependence flaw,
 now provable through V2 redefinition (cf. `FisherInfoV2.lean:296`). -/
+@[entry_point]
 theorem deBruijn_identity_v2_gaussian
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z)

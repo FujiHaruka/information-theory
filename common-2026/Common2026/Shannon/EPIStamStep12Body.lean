@@ -1,9 +1,10 @@
-import Common2026.Shannon.EPIStamInequalityBody
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.EPIStamDischarge
+import Common2026.Shannon.EPIStamInequalityBody
 import Common2026.Shannon.FisherInfoV2
 import Common2026.Shannon.FisherInfoV2DeBruijn
-import Mathlib.Tactic.Positivity
 import Mathlib.Tactic.Linarith
+import Mathlib.Tactic.Positivity
 import Mathlib.Tactic.Ring
 
 /-!
@@ -164,6 +165,7 @@ def IsStamScoreConvHyp {Ω : Type*} [MeasurableSpace Ω]
 λ-witness `J_Y / (J_X + J_Y)` always lies in `[0,1]` for positive Fisher infos.
 This replaces the Wave 7 `trivial` discharge of the `True` placeholder with a
 real construction. -/
+@[entry_point]
 theorem isStamScoreConvHyp_intro {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : IsStamScoreConvHyp X Y P := by
   intro J_X J_Y fX fY hJX hJY hJX_def hJY_def

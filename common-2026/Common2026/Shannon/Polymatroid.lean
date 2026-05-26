@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Polymatroid.Basic
 import Common2026.Shannon.HanD
 
@@ -43,6 +44,7 @@ omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 
 `(↥(∅ : Finset (Fin n)) → α)` is `Unique` via `Pi.uniqueOfIsEmpty`, so the
 push-forward measure is concentrated on `default` and `Real.negMulLog 1 = 0`. -/
+@[entry_point]
 theorem jointEntropySubset_empty
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) :
@@ -70,6 +72,7 @@ theorem jointEntropySubset_empty
 
 `T = S ⊔ (T \ S)` reshape via `MeasurableEquiv.piFinsetUnion` followed by the
 pair chain rule and `condEntropy ≥ 0`. -/
+@[entry_point]
 theorem jointEntropySubset_mono
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -189,6 +192,7 @@ theorem condEntropy_reshape_disjoint_union
 3-piece disjoint decomposition `S ∪ T = I ⊔ A ⊔ B` with `I := S ∩ T`,
 `A := S \ T`, `B := T \ S`. Expand each side via chain rule and apply
 `condEntropy_le_condEntropy_of_pair` once. -/
+@[entry_point]
 theorem jointEntropySubset_submodular
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -265,6 +269,7 @@ into the `Polymatroid` structure introduced in
 `Common2026/Polymatroid/Basic.lean`. -/
 
 /-- Joint entropy as a polymatroid rank function. -/
+@[entry_point]
 noncomputable def entropyPolymatroid
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i)) :

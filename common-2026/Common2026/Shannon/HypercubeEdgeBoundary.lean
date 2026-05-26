@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.LoomisWhitney
 
 /-!
@@ -588,6 +589,7 @@ theorem edgeBoundary_count_eq {n : ℕ} (A : Finset (Fin n → Bool)) :
 /-- AM-GM on positive reals: `(∏ x_i)^(1/n) ≤ (Σ x_i)/n` ⟹ `n · (∏)^(1/n) ≤ Σ x_i`。
 ここでは `x_i := (projectionExcept i A).card : ℝ`、`∏ x_i ≥ |A|^{n-1}` (LW) を組み合わせ,
 `Σ x_i ≥ n · |A|^{(n-1)/n}` を出す。 -/
+@[entry_point]
 theorem sum_projection_card_ge_amgm {n : ℕ} {α : Type*}
     [Fintype α] [DecidableEq α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -659,6 +661,7 @@ nonempty `A ⊆ Fin n → Bool` で:
 等価形: `|∂_e A| ≥ 2n · |A|^{(n-1)/n} - n · |A|`。
 
 証明: `edgeBoundary_count_eq` + `sum_projection_card_ge_amgm`. -/
+@[entry_point]
 theorem edgeBoundary_ge_AMGM {n : ℕ} {A : Finset (Fin n → Bool)} (hA : A.Nonempty) :
     2 * (n : ℝ) * ((A.card : ℝ) ^ (n - 1 : ℕ)) ^ ((n : ℝ)⁻¹)
       ≤ (edgeBoundaryCount A : ℝ) + n * A.card := by

@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.LoomisWhitney
 
 /-!
@@ -87,6 +88,7 @@ $$|A|^k \le \prod_{i : \iota} |\pi_{S_i}(A)|.$$
 ここで `\pi_{S_i}(A) = projectionSubset (S i) A`。
 Loomis–Whitney は `S i := univ.filter (· ≠ i)` (各 `j` を `n-1` 回 cover) の特殊形。
 Hypercube product projection bound は `S i := {i}` (各 `j` を 1 回 cover) の特殊形。 -/
+@[entry_point]
 theorem brascamp_lieb_finset
     {n k : ℕ} {ι : Type*} [Fintype ι]
     {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
@@ -172,6 +174,7 @@ $$|A| \le \prod_{i : \text{Fin}\,n} |\pi_{\{i\}}(A)|.$$
 これは Brascamp–Lieb で `S i := {i}`, `k := 1` を取った特殊形。
 `α = Bool` を渡せば Boolean cube 上で `|π_{{i}}(A)| ≤ 2` から `|A| ≤ 2^n` を回復。
 Han-Bregman 流の hypercube isoperimetric inequality の基本形。 -/
+@[entry_point]
 theorem hypercube_product_projection_bound
     {n : ℕ} {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]

@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.Pinsker
 import Mathlib.Analysis.Calculus.Deriv.MeanValue
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
@@ -199,6 +200,7 @@ private lemma H_nonneg_of_pos {t : ℝ} (ht : 0 < t) : 0 ≤ H t := by
     exact h
 
 /-- **点別 sharp Pinsker 不等式**: `3·(t-1)² ≤ 2·(t+2)·klFun(t)` for `t ≥ 0`. -/
+@[entry_point]
 lemma klFun_sharp_lower (t : ℝ) (ht : 0 ≤ t) :
     3 * (t - 1) ^ 2 ≤ 2 * (t + 2) * klFun t := by
   rcases eq_or_lt_of_le ht with h_eq | h_pos
@@ -298,6 +300,7 @@ private lemma per_element_sharp
 
 /-- **シャープ Pinsker 不等式**: 有限 alphabet 上の `P ≪ Q` 確率測度について
 `tvNorm P Q ≤ √((klDiv P Q).toReal / 2)`. -/
+@[entry_point]
 theorem tvNorm_le_sqrt_klDiv_div_two
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (hPQ : P ≪ Q) :

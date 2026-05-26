@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.HanDShearer
 import Mathlib.Probability.UniformOn
 
@@ -43,6 +44,7 @@ open scoped ENNReal NNReal
 `μ = uniformOn (A : Set β)` で `A` が空でないとき、恒等写像 `id : β → β` の entropy は
 `log #A`。証明は per-singleton mass `1/#A` を `uniformOn_apply_finset` から取り出し、
 `negMulLog (1/N) = (log N) / N` の代数で和を `#A · (log N)/N = log N` に潰す。 -/
+@[entry_point]
 theorem entropy_uniformOn_eq_log_card
     {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -122,6 +124,7 @@ theorem entropy_uniformOn_eq_log_card
 `negMulLog p ≤ -p · log (1 / #support)` (Gibbs) を 1 段適用、続いて
 `log (1/N) = -log N` で整形、`∑ p = 1` で潰す。
 -/
+@[entry_point]
 theorem entropy_le_log_image_card
     {β γ : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -348,6 +351,7 @@ theorem jointEntropySubset_le_log_projectionExcept_card
 $$|A|^{n-1} \le \prod_{i : \text{Fin}\,n} |\pi_i(A)|.$$
 
 ここで `\pi_i(A) := \{x \restriction \{j \ne i\} \mid x \in A\} = projectionExcept i A`。 -/
+@[entry_point]
 theorem loomis_whitney
     {n : ℕ} {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]

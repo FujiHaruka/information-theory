@@ -1,7 +1,8 @@
+import Common2026.Meta.EntryPoint
+import Common2026.Shannon.FisherInfoV2DeBruijn
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.Basic
 import Mathlib.Tactic.Positivity
-import Common2026.Shannon.FisherInfoV2DeBruijn
 
 /-!
 # Stam convex Fisher bound — non-vacuous Gaussian instance (L-S12-C′)
@@ -53,6 +54,7 @@ Fisher bound after substituting the Gaussian closed form `J(𝒩(m,v)) = 1/v`.
 
 The difference `λ²(a+b)b + (1-λ)²(a+b)a − ab` equals `(a − λ(a+b))²`, hence is
 `≥ 0`; equality holds exactly at `λ = a/(a+b)`. -/
+@[entry_point]
 theorem stam_fisher_arith (a b lam : ℝ) (ha : 0 < a) (hb : 0 < b)
     (hlo : 0 ≤ lam) (hhi : lam ≤ 1) :
     1 / (a + b) ≤ lam ^ 2 / a + (1 - lam) ^ 2 / b := by
@@ -71,6 +73,7 @@ for every `λ ∈ [0,1]`. Each Fisher info evaluates to the true closed form `1/
 (via `fisherInfoOfMeasureV2_gaussianReal`), so this is the **non-vacuous** Gaussian
 instance — contrast `isStamCondExpCSHyp_of_gaussian_fisherInfo_zero` which is
 vacuous under the V1 `0` artefact. -/
+@[entry_point]
 theorem stam_convex_fisher_bound_gaussian
     (m₁ m₂ : ℝ) {v₁ v₂ : ℝ≥0} (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
     (lam : ℝ) (hlo : 0 ≤ lam) (hhi : lam ≤ 1) :

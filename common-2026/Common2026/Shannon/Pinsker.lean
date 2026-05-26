@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.Bridge
 import Mathlib.Data.Real.Sqrt
 import Mathlib.Algebra.Order.BigOperators.Ring.Finset
@@ -83,6 +84,7 @@ private lemma klFun_eq_sub_sqrt_sq_add (t : ℝ) (ht : 0 ≤ t) :
 /-- 点別 Bretagnolle-Huber 下界: `(√t - 1)^2 ≤ klFun t` for `t ≥ 0`.
 
 (`(√t - 1)^2 = (1 - √t)^2` で、`(√t)^2 = t` から `(√t - 1)^2 = (t-1)^2/(√t+1)^2`。) -/
+@[entry_point]
 lemma klFun_ge_sub_sqrt_sq (t : ℝ) (ht : 0 ≤ t) :
     (Real.sqrt t - 1) ^ 2 ≤ klFun t := by
   have h_id := klFun_eq_sub_sqrt_sq_add t ht
@@ -111,6 +113,7 @@ omit [DecidableEq α] in
 シャープな `TV ≤ √(KL/2)` (Cover-Thomas 11.6 strict) ではなく、定数 1
 (本来の Pinsker 定数 1/√2 の √2 倍ゆるい) 版。`klFun(t) ≥ (√t - 1)^2` (Bretagnolle-
 Huber) + Cauchy-Schwarz on `|p - q| = |√p - √q| * (√p + √q)` 経由。 -/
+@[entry_point]
 theorem tvNorm_le_sqrt_klDiv
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (hPQ : P ≪ Q) :

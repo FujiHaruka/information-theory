@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.Entropy
 import Common2026.Shannon.Pi
 
@@ -53,6 +54,7 @@ noncomputable def jointEntropyExcept
 
 Phase A の `entropy_pair_eq_entropy_add_condEntropy` を `n` についての帰納で
 反復適用して証明する。 -/
+@[entry_point]
 theorem jointEntropy_chain_rule
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i)) :
@@ -327,6 +329,7 @@ set_option linter.unusedSectionVars false in
 Phase A の `entropy_pair_eq_entropy_add_condEntropy` と
 `condEntropy_le_condEntropy_of_pair`、Phase B の `jointEntropy_chain_rule` を
 組み合わせて証明する。`n = 0, 1` の退化ケース (両辺 0) も含めて成立する。 -/
+@[entry_point]
 theorem han_inequality
     {n : ℕ}
     (μ : Measure Ω) [IsProbabilityMeasure μ]

@@ -1,14 +1,15 @@
-import Mathlib.Probability.Distributions.Gaussian.Real
-import Mathlib.Probability.Density
-import Mathlib.Probability.Moments.Variance
-import Mathlib.Analysis.Calculus.LogDeriv
-import Mathlib.Analysis.SpecialFunctions.Log.Deriv
-import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
-import Mathlib.MeasureTheory.Measure.Decomposition.Lebesgue
-import Mathlib.MeasureTheory.Measure.Dirac
+import Common2026.Meta.EntryPoint
+import Common2026.Shannon.DifferentialEntropy
 import Common2026.Shannon.FisherInfo
 import Common2026.Shannon.FisherInfoGaussian
-import Common2026.Shannon.DifferentialEntropy
+import Mathlib.Analysis.Calculus.LogDeriv
+import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
+import Mathlib.Analysis.SpecialFunctions.Log.Deriv
+import Mathlib.MeasureTheory.Measure.Decomposition.Lebesgue
+import Mathlib.MeasureTheory.Measure.Dirac
+import Mathlib.Probability.Density
+import Mathlib.Probability.Distributions.Gaussian.Real
+import Mathlib.Probability.Moments.Variance
 
 /-!
 # Fisher information V2 — density-as-input re-definition (T2-F follow-up, Stage 2)
@@ -143,6 +144,7 @@ from `FisherInfo.lean` — the proof structure is identical, but stated cleanly
 on the explicit density `f`.
 
 `@audit:suspect(fisher-info-moonshot-plan)` -/
+@[entry_point]
 theorem integral_logDeriv_density_eq_zero {f : ℝ → ℝ} (h_reg : IsRegularDensityV2 f) :
     ∫ x, logDeriv f x * f x ∂volume = 0 := by
   -- Pointwise: `logDeriv f x * f x = (deriv f x / f x) * f x = deriv f x` since `f x > 0`.
@@ -257,6 +259,7 @@ This is the deliverable that was blocked by the V1 representative-dependence
 flaw (`FisherInfoGaussian.lean` L-G3 retreat). With the V2 density-as-input
 definition, the Gaussian PDF is supplied directly to `fisherInfoOfDensity` and
 the integral computes to `1/v` via the variance identity. -/
+@[entry_point]
 theorem fisherInfoOfDensity_gaussianPDFReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     fisherInfoOfDensity (gaussianPDFReal m v) = ENNReal.ofReal (1 / (v : ℝ)) := by
   have hv_pos : (0 : ℝ) < v := by

@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.HypercubeEdgeBoundary
 import Common2026.Shannon.HanD
 import Mathlib.Analysis.SpecialFunctions.Log.Base
@@ -624,6 +625,7 @@ nonempty `A ⊆ Fin n → Bool` で `|A| · (n - log₂ |A|) ≤ |∂_e A|`。
 Σ を `log|A|` で押さえ、B-2' の counting identity `edgeBoundary_count_eq`
 (`2 Σ_i |π_{≠i}(A)| = n|A| + |∂_e A|`) を ℝ にキャストして代入、
 `Real.logb 2 |A| = log |A| / log 2` の bridge で `log₂` 形に整える。 -/
+@[entry_point]
 theorem edgeBoundary_entropy_sharp {n : ℕ} {A : Finset (Fin n → Bool)}
     (hA : A.Nonempty) :
     (A.card : ℝ) * ((n : ℝ) - Real.logb 2 A.card) ≤ (edgeBoundaryCount A : ℝ) := by

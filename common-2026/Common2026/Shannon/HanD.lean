@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.Han
 
 /-!
@@ -188,6 +189,7 @@ private lemma condEntropy_chainSummand_bridge
 
 Phase B の n-変数 chain rule を `Xs ∘ orderEmbOfFin S` に適用し、
 両辺を `jointEntropySubset` 形に reshape する。 -/
+@[entry_point]
 theorem jointEntropySubset_chain_rule
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -259,6 +261,7 @@ theorem jointEntropySubset_chain_rule
 
 Phase A の `condEntropy_le_condEntropy_of_pair` を `T₂ \ T₁` の要素を
 1 つずつ `T₁` に加える induction で繰り返す。 -/
+@[entry_point]
 theorem condEntropy_subset_anti
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -384,6 +387,7 @@ private lemma jointEntropyExcept_orderEmb_eq
 `Finset.orderEmbOfFin S rfl : Fin S.card ↪o Fin n` で `S` を `Fin S.card` から
 の埋め込みとみなし、`Xs' k ω := Xs (S.orderEmbOfFin rfl k) ω` に対して既存
 `han_inequality` を適用、両辺を `jointEntropySubset` 形に reshape する。 -/
+@[entry_point]
 theorem han_inequality_subset
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))

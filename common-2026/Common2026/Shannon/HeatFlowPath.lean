@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.Basic
 import Mathlib.MeasureTheory.MeasurableSpace.Basic
@@ -59,6 +60,7 @@ theorem heatFlowPath2_one {α : Type*} (X Z : α → ℝ) :
 /-- Law of `heatFlowPath2 X Z s` when `Z ∼ 𝒩(0, 1)` and `X ⊥ Z`:
     `P.map (heatFlowPath2 X Z s)` is the convolution of
     `P.map (√(1-s) · X)` with `𝒩(0, s)`. -/
+@[entry_point]
 theorem heatFlowPath2_law {Ω : Type*} {_mΩ : MeasurableSpace Ω}
     {P : Measure Ω} [IsProbabilityMeasure P] {X Z : Ω → ℝ}
     (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
