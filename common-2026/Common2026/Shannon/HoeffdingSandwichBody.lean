@@ -276,7 +276,16 @@ This wrapper makes explicit how the `IsHoeffdingMinimizerFullSupport` predicate
 participates in the final sandwich; in particular, it documents that the
 sandwich `Tendsto` proof itself does **not** consume `hQs_full` directly (the
 boundedness internal discharge in `HoeffdingSandwich.lean` is independent of
-the minimizer), but downstream variational discharges (Phase C/D) will. -/
+the minimizer), but downstream variational discharges (Phase C/D) will.
+
+`@audit:defect(false-hypothesis) @audit:retract-candidate(general-alpha-rate-≠-E₂)`
+
+Inherits the load-bearing-false defect from `hoeffding_tradeoff_sandwich`:
+`h_liminf` / `h_limsup` are mathematically false in the general fixed-`alpha`
+regime (see `HoeffdingSandwichDischarge.lean` judgement log #1). The
+predicate-bundled `Qstar` triple does not change this — the variational
+premises remain the load-bearing defect carriers. Acknowledged tier-5
+placeholder pending boundary restriction or exponential-level pivot. -/
 theorem hoeffding_tradeoff_sandwich_via_predicate
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
@@ -308,7 +317,18 @@ upper bound), the boundary full-support discharge `Qstar = P₂` plugs into
 hypotheses are still inputs (deferred to Phase C/D).
 
 This packages the L-H4-FB-2 boundary discharge so that downstream callers do
-not need to thread the witness extraction by hand. -/
+not need to thread the witness extraction by hand.
+
+`@audit:defect(false-hypothesis) @audit:retract-candidate(general-alpha-rate-≠-E₂)`
+
+The boundary hypothesis `klDivPmf P₂ P₁ ≤ alpha` discharges the minimizer
+witness triple (Qstar = P₂) but does **not** rescue the variational premises:
+achievability `E₂(α) = 0 ≤ liminf rate` becomes unconditional, yet the
+converse `limsup rate ≤ E₂(α) = 0` remains load-bearing false because
+`limsup rate = D(P₁‖P₂) > 0` whenever `P₁ ≠ P₂` (Stein's lemma applied on
+the boundary, judgement log #1). Acknowledged tier-5 placeholder; closure
+requires the exponential-level pivot or restriction to the degenerate
+`P₁ = P₂` case. -/
 theorem hoeffding_tradeoff_sandwich_at_boundary_alpha_ge_kl
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)

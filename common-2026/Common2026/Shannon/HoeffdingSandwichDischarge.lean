@@ -182,7 +182,16 @@ This is the genuine landing point: achievability holds for all `alpha`
 `alpha = 0` (Stein's lemma), so the *general*-`alpha` Tendsto is exposed with the
 converse inequality as an explicit premise rather than discharged. See the
 judgement log above for why the fixed-`alpha` headline is mathematically
-inequivalent to the Hoeffding tradeoff curve. -/
+inequivalent to the Hoeffding tradeoff curve.
+
+`@audit:defect(false-hypothesis) @audit:retract-candidate(general-alpha-rate-≠-E₂)`
+
+Inherits the load-bearing-false defect: both `h_liminf` and `h_limsup` are
+mathematically false in the general fixed-`alpha` regime per judgement log #1
+above. Acknowledged tier-5 placeholder; the wrapper is currently not
+instantiable except where both premises happen to coincide (e.g. degenerate
+P₁ = P₂), so it survives as a structural pass-through pending pivot to the
+exponential-level Hoeffding statement. -/
 theorem hoeffding_tradeoff_of_asymptotics
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)

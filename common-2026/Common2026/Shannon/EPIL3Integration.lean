@@ -141,10 +141,11 @@ theorem entropy_power_inequality_integrated
     (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
     entropyPower (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
-  -- Thread the genuine residual (`stam`) + bridge through the non-circular
-  -- headline; `IsStamInequalityHyp`/`IsStamToEPIBridgeHyp` are defeq to the base
-  -- `IsStamInequalityResidual`/`IsStamToEPIBridge`.
-  entropy_power_inequality P X Y hX hY hXY h_pipeline.stam h_pipeline.bridge
+  -- Thread the genuine residual (`stam`) through the non-circular headline;
+  -- `IsStamInequalityHyp` is reducibly defeq to `IsStamInequalityResidual`. The
+  -- Stam→EPI bridge field `h_pipeline.bridge` is now internally discharged via
+  -- the shared sorry lemma `stamToEPIBridge_holds`, so it is no longer threaded.
+  entropy_power_inequality P X Y hX hY hXY h_pipeline.stam
 
 /-! ## §3 — Gaussian full discharge (hypothesis-free) -/
 
@@ -218,7 +219,7 @@ theorem entropy_power_inequality_log_form_integrated
     Common2026.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
       ≥ (1/2) * Real.log
           (entropyPower (P.map X) + entropyPower (P.map Y)) :=
-  entropy_power_inequality_log_form P X Y hX hY hXY h_pipeline.stam h_pipeline.bridge
+  entropy_power_inequality_log_form P X Y hX hY hXY h_pipeline.stam
 
 /-- **EPI exp form via integrated pipeline** (Cover-Thomas Theorem 17.7.3 露出形).
 
@@ -233,7 +234,7 @@ theorem entropy_power_inequality_exp_form_integrated
               (P.map (fun ω => X ω + Y ω)))
       ≥ Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map X))
         + Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map Y)) :=
-  entropy_power_inequality_exp_form P X Y hX hY hXY h_pipeline.stam h_pipeline.bridge
+  entropy_power_inequality_exp_form P X Y hX hY hXY h_pipeline.stam
 
 /-- **EPI normalized `(2πe)⁻¹` form via integrated pipeline** (Cover-Thomas Ch.17).
 
@@ -247,7 +248,7 @@ theorem entropy_power_inequality_normalized_integrated
     entropyPower (P.map (fun ω => X ω + Y ω)) / gaussianEntropyPowerConst
       ≥ entropyPower (P.map X) / gaussianEntropyPowerConst
         + entropyPower (P.map Y) / gaussianEntropyPowerConst :=
-  entropy_power_inequality_normalized P X Y hX hY hXY h_pipeline.stam h_pipeline.bridge
+  entropy_power_inequality_normalized P X Y hX hY hXY h_pipeline.stam
 
 /-- **2 · h(X+Y) ≥ log(entropyPower X + entropyPower Y)** via integrated pipeline.
 
@@ -260,7 +261,7 @@ theorem two_differentialEntropy_ge_log_sum_integrated
     (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
     2 * Common2026.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
       ≥ Real.log (entropyPower (P.map X) + entropyPower (P.map Y)) :=
-  two_differentialEntropy_ge_log_sum P X Y hX hY hXY h_pipeline.stam h_pipeline.bridge
+  two_differentialEntropy_ge_log_sum P X Y hX hY hXY h_pipeline.stam
 
 /-! ## §5 — Chain forms (3-arg / 4-arg) via integrated pipeline -/
 

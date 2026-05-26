@@ -111,20 +111,26 @@ no `True` slot, the predicate is just a positivity bundle, and the docstring
 states explicitly that it does NOT establish the sampling equivalence. The
 genuine sampling identity is carried separately by `IsTwoWDegreesOfFreedom`
 (`C = 2W · perSampleAwgnCapacity W N₀ P`), which is the actual load-bearing
-hypothesis consumed by `shannon_hartley_formula`. -/
+hypothesis consumed by `shannon_hartley_formula`.
+
+`@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
 def IsBandlimitedSamplingHypothesis (W N₀ P : ℝ) : Prop :=
   0 < W ∧ 0 < N₀ ∧ 0 ≤ P
 
 /-- L-SH2 (⚠️ undischarged placeholder): continuous-time bandlimited AWGN
 noise kernel measurability. This `def` is `0 < W` — a positivity stand-in,
-not the genuine measurability statement. -/
+not the genuine measurability statement.
+
+`@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
 def IsBandlimitedKernel (W : ℝ) : Prop := 0 < W
 
 /-- L-SH3 (⚠️ open operational identity): the `2W` degrees-of-freedom per
 second identity, i.e. the continuous-time operational capacity `C` equals
 `2W` times the per-sample T2-A capacity. This is the genuine bridge whose
 proof needs the Whittaker-Shannon sampling theorem + continuous AEP (not in
-Mathlib); here it is taken as the caller's hypothesis, never discharged. -/
+Mathlib); here it is taken as the caller's hypothesis, never discharged.
+
+`@audit:retract-candidate(load-bearing-predicate) @audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
 def IsTwoWDegreesOfFreedom (W N₀ P C : ℝ) : Prop :=
   C = 2 * W * perSampleAwgnCapacity W N₀ P
 
@@ -206,7 +212,7 @@ caller's already-assumed `2W·perSample` identity into the `log` closed form. A
 self-contained proof remains open pending continuous AEP / Nyquist-Fourier
 support in Mathlib.
 
-`@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` `@residual(plan:whittaker-shannon-partial-moonshot-plan)`
+`@audit:retract-candidate(load-bearing-predicate) @audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan) @residual(plan:whittaker-shannon-partial-moonshot-plan)`
 -/
 theorem shannon_hartley_formula
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P)
@@ -299,7 +305,9 @@ theorem mk_IsBandlimitedSamplingHypothesis
     IsBandlimitedSamplingHypothesis W N₀ P :=
   ⟨hW, hN₀, hP⟩
 
-/-- Build `IsBandlimitedKernel` from `0 < W`. -/
+/-- Build `IsBandlimitedKernel` from `0 < W`.
+
+`@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
 theorem mk_IsBandlimitedKernel (W : ℝ) (hW : 0 < W) : IsBandlimitedKernel W := hW
 
 /-! ## §H — Reformulations in `log₂` (bits/second). -/
@@ -317,7 +325,7 @@ theorem bandlimitedAwgnCapacityBits_eq (W N₀ P : ℝ) :
 
 /-- Shannon-Hartley in bits/sec (Cover-Thomas form `C = W · log₂(1+SNR)`).
 
-`@audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
+`@audit:retract-candidate(load-bearing-predicate) @audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan)` -/
 theorem shannon_hartley_formula_bits
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P)
     (C : ℝ)

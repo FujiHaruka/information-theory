@@ -292,7 +292,17 @@ The achievability and converse hypotheses correspond to:
 * Phase D (converse): `∀ᶠ n, ∀ s ∈ Finset (Fin n → α) with Type I ≤ α, -(1/n) log P₂^n s ≤ E_2(α) + δ`
 
 Both are deferred to a follow-up plan (`hoeffding-tradeoff-sandwich-plan.md`). This wrapper
-publishes the **sandwich** structure so downstream code can already rely on the Tendsto form. -/
+publishes the **sandwich** structure so downstream code can already rely on the Tendsto form.
+
+`@audit:defect(false-hypothesis) @audit:retract-candidate(general-alpha-rate-≠-E₂)`
+
+The two variational premises `h_liminf` / `h_limsup` are mathematically false in the
+general fixed-`alpha` regime (see `HoeffdingSandwichDischarge.lean` judgement log #1):
+at `alpha = 0` the rate is identically `0` while `E₂(0) = D(P₁‖P₂) > 0` (achievability
+false); for `0 < alpha < 1` Stein's lemma gives `rate → D > E₂(alpha)` (converse
+false). Acknowledged tier-5 placeholder until the wrapper is either restricted to
+the boundary regime where both premises collapse, or replaced by the exponential-
+level formulation `alpha_n = exp(-n r)` that actually realises the Hoeffding curve. -/
 theorem hoeffding_tradeoff_with_hypothesis
     (P₁ P₂ : α → ℝ) (_hP₁_sum : ∑ a, P₁ a = 1) (_hP₂_sum : ∑ a, P₂ a = 1)
     (_hP₂_nn : ∀ a, 0 ≤ P₂ a)

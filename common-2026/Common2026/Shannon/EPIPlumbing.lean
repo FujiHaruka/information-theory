@@ -175,20 +175,17 @@ Defining `N(μ) := entropyPower μ / (2πe)`, the EPI
 
     `N(X + Y) ≥ N(X) + N(Y)`
 
-is equivalent to the un-normalized form. L-EPI3 hypothesis pass-through.
-
-`@audit:staged(epi-stam-to-conclusion-plan)` -/
+is equivalent to the un-normalized form. L-EPI3 hypothesis pass-through. -/
 theorem entropy_power_inequality_normalized
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
-    (h_stam : IsStamInequalityResidual X Y P)
-    (h_bridge : IsStamToEPIBridge X Y P) :
+    (h_stam : IsStamInequalityResidual X Y P) :
     entropyPower (P.map (fun ω => X ω + Y ω)) / gaussianEntropyPowerConst
       ≥ entropyPower (P.map X) / gaussianEntropyPowerConst
         + entropyPower (P.map Y) / gaussianEntropyPowerConst := by
-  have h := entropy_power_inequality P X Y hX hY hXY h_stam h_bridge
+  have h := entropy_power_inequality P X Y hX hY hXY h_stam
   -- Divide both sides by the positive constant `2πe`.
   have hc_pos : 0 < gaussianEntropyPowerConst := gaussianEntropyPowerConst_pos
   have h_sum_div :
@@ -243,21 +240,18 @@ theorem entropy_power_inequality_four_arg {Ω : Type*} {mΩ : MeasurableSpace Ω
 /-- Log-form of EPI: `2 h(X+Y) ≥ log (entropyPower X + entropyPower Y)`.
 
 Derived from `entropy_power_inequality` by applying `Real.log` (the inequality
-direction is preserved since `Real.log` is monotone on `(0, ∞)`).
-
-`@audit:staged(epi-stam-to-conclusion-plan)` -/
+direction is preserved since `Real.log` is monotone on `(0, ∞)`). -/
 theorem two_differentialEntropy_ge_log_sum
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
-    (h_stam : IsStamInequalityResidual X Y P)
-    (h_bridge : IsStamToEPIBridge X Y P) :
+    (h_stam : IsStamInequalityResidual X Y P) :
     2 * Common2026.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
       ≥ Real.log (entropyPower (P.map X) + entropyPower (P.map Y)) := by
   have h_epi' : entropyPower (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
-    entropy_power_inequality P X Y hX hY hXY h_stam h_bridge
+    entropy_power_inequality P X Y hX hY hXY h_stam
   have h_rhs_pos : 0 < entropyPower (P.map X) + entropyPower (P.map Y) :=
     add_pos (entropyPower_pos _) (entropyPower_pos _)
   have h_log : Real.log (entropyPower (P.map (fun ω => X ω + Y ω)))

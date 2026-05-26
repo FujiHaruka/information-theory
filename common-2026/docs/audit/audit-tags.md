@@ -239,6 +239,7 @@ slug            = kebab-identifier
 | `closure-plan-completed` | load-bearing wall を closure plan で acknowledged 済として bookkeeping (active consumer あり、削除候補ではない例外的用法)。tier 4 retract-candidate の semantic 拡張、後発の同パターン (LZ78 / Huffman / EPI 等) でも適用可 | BMClosure.lean L379 + L514 の active consumer 例 (escalate #2 採用判断、Round 3) |
 | `superseded-by-memoryless-form` | MVP/pre-discharge 形が後続 memoryless 形に置換済 | ChannelCodingFeedback (3 件) |
 | `superseded-by-full-discharge` | 完全 discharge 形が別 file で publish 済 | ChannelCodingShannonTheoremFull |
+| `general-alpha-rate-≠-E₂` | 固定 `alpha` の rate 列 (`-(1/n) log steinTypeII_at_level_pmf`) が Hoeffding tradeoff curve `E₂(alpha)` を一般に target しない (Stein's lemma の反例: `alpha = 0` で `rate ≡ 0 ≠ E₂(0) = D(P₁‖P₂) > 0`、`0 < alpha < 1` で `rate → D(P₁‖P₂) > E₂(α)`)。wrapper は exponential-level pivot 待ちの structural pass-through として残置 | HoeffdingTradeoff / HoeffdingSandwich / HoeffdingSandwichDischarge / HoeffdingSandwichBody (5 declarations、2026-05-26 sorry-based migration) |
 
 新規 reason を追加する時は本表に直接追記してコミット (divergence 防止: 「superseded」と「superseded-by」が併存しないように)。kebab-case で短く (3-4 単語以内推奨)。
 

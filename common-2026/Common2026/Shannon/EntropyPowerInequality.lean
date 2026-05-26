@@ -214,6 +214,24 @@ def IsStamToEPIBridge {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   IsStamInequalityResidual X Y P → IsEntropyPowerInequalityHypothesis X Y P
 
+/-- **Stam → EPI bridge — shared sorry 補題**.
+
+`IsStamInequalityResidual → IsEntropyPowerInequalityHypothesis` の coupling 引数
+(Cover-Thomas Lemma 17.7.3 path-integral coupling, Csiszár scaling-path / de Bruijn
+integration) は Mathlib 未収録の解析的 primitive。closure plan
+`epi-stam-to-conclusion-plan` で discharge 予定。
+
+migration 前は consumer (`entropy_power_inequality` 等) が `(h_bridge : IsStamToEPIBridge X Y P)`
+を load-bearing hypothesis として取っていたが、これは tier 5 honesty defect (核を仮説束に
+押し付け)。本補題に `sorry` を集約し、consumer は `stamToEPIBridge_holds X Y P h_stam` で
+discharge する。
+
+`@residual(plan:epi-stam-to-conclusion-plan)` -/
+theorem stamToEPIBridge_holds {Ω : Type*} [MeasurableSpace Ω]
+    (X Y : Ω → ℝ) (P : Measure Ω) :
+    IsStamToEPIBridge X Y P := by
+  sorry
+
 /-! ## §C — 主定理 (Cover-Thomas Theorem 17.7.3, non-circular Stam-bridge 形) -/
 
 /-- **Entropy Power Inequality** (Cover-Thomas Theorem 17.7.3).
@@ -229,40 +247,34 @@ def IsStamToEPIBridge {Ω : Type*} [MeasurableSpace Ω]
 
 * `h_stam` (L-EPI1, Cover-Thomas Lemma 17.7.2): Stam の inverse harmonic-mean
   inequality `1/J(X+Y) ≥ 1/J(X) + 1/J(Y)` — **EPI 結論とは別の `Prop`**。
-* `h_bridge` (Cover-Thomas Lemma 17.7.3): Stam → EPI coupling
-  (`IsStamInequalityResidual → IsEntropyPowerInequalityHypothesis`) —
-  これも **EPI 結論とは別の `Prop`** (function type)。
+* (旧) `h_bridge` (Cover-Thomas Lemma 17.7.3): Stam → EPI coupling — load-bearing
+  hypothesis として渡していた tier 5 defect 形は廃止。bridge は shared sorry 補題
+  `stamToEPIBridge_holds` 内部 discharge に集約され、consumer に露出しない。
 
-から `h_bridge h_stam` で EPI を**導出**する。両 hypothesis とも結論と
-defeq でなく、本体は `:= h` 循環ではない。両者の discharge (真の Mathlib 壁) は
-`EPIStamInequalityBody.lean` / `EPIStamDeBruijnConclusion.lean` で進行、Gaussian
-case は §D で full discharge。
-
-`@audit:suspect(epi-stam-to-conclusion-plan)` -/
+から `stamToEPIBridge_holds X Y P h_stam` で EPI を**導出**する。`h_stam` は
+結論と defeq でない genuine residual、本体は `:= h` 循環ではない。bridge の
+discharge (真の Mathlib 壁) は shared sorry 補題で集中管理、closure plan
+`epi-stam-to-conclusion-plan.md` で進行、Gaussian case は §D で full discharge。 -/
 theorem entropy_power_inequality {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
-    (h_stam : IsStamInequalityResidual X Y P)
-    (h_bridge : IsStamToEPIBridge X Y P) :
+    (h_stam : IsStamInequalityResidual X Y P) :
     entropyPower (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
-  h_bridge h_stam
+  stamToEPIBridge_holds X Y P h_stam
 
-/-- **EPI in `Real.exp (2 · ...)` form** (Cover-Thomas 露出形).
-
-`@audit:suspect(epi-stam-to-conclusion-plan)` -/
+/-- **EPI in `Real.exp (2 · ...)` form** (Cover-Thomas 露出形). -/
 theorem entropy_power_inequality_exp_form {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
-    (h_stam : IsStamInequalityResidual X Y P)
-    (h_bridge : IsStamToEPIBridge X Y P) :
+    (h_stam : IsStamInequalityResidual X Y P) :
     Real.exp (2 * Common2026.Shannon.differentialEntropy
               (P.map (fun ω => X ω + Y ω)))
       ≥ Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map X))
         + Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map Y)) := by
-  have h := entropy_power_inequality P X Y hX hY hXY h_stam h_bridge
+  have h := entropy_power_inequality P X Y hX hY hXY h_stam
   simpa [entropyPower] using h
 
 /-! ## §D — Gaussian saturation case (Cover-Thomas Theorem 17.7.3 等号成立、FULL DISCHARGE) -/
@@ -327,7 +339,8 @@ theorem isEntropyPowerInequalityHypothesis_of_gaussian
 EPI conclusion is already established by some non-circular route (e.g. Gaussian
 saturation), the bridge is the constant function — it ignores its Stam input.
 
-`@audit:suspect(epi-stam-to-conclusion-plan)` -/
+`@audit:retract-candidate(load-bearing-predicate)`
+`@audit:closed-by-successor(epi-stam-to-conclusion-plan)` -/
 theorem isStamToEPIBridge_of_epi
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -337,7 +350,10 @@ theorem isStamToEPIBridge_of_epi
 
 /-- **Stam-to-EPI bridge for the Gaussian case** (full discharge, no Stam input
 needed). For independent Gaussians `X, Y` with non-zero variance, the bridge is
-discharged hypothesis-free via Gaussian saturation. -/
+discharged hypothesis-free via Gaussian saturation.
+
+`@audit:retract-candidate(load-bearing-predicate)`
+`@audit:closed-by-successor(epi-stam-to-conclusion-plan)` -/
 theorem isStamToEPIBridge_of_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -362,22 +378,19 @@ theorem entropyPower_map_add_const {μ : Measure ℝ} (hμ : μ ≪ volume)
 
 /-- **EPI in log form** (Cover-Thomas Ch.17 alternative signature).
 
-For independent `X, Y`, `h(X+Y) ≥ (1/2) · log (exp(2 h(X)) + exp(2 h(Y)))`.
-
-`@audit:suspect(epi-stam-to-conclusion-plan)` -/
+For independent `X, Y`, `h(X+Y) ≥ (1/2) · log (exp(2 h(X)) + exp(2 h(Y)))`. -/
 theorem entropy_power_inequality_log_form {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
-    (h_stam : IsStamInequalityResidual X Y P)
-    (h_bridge : IsStamToEPIBridge X Y P) :
+    (h_stam : IsStamInequalityResidual X Y P) :
     Common2026.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
       ≥ (1/2) * Real.log
           (entropyPower (P.map X) + entropyPower (P.map Y)) := by
   -- The EPI core inequality.
   have h_epi' : entropyPower (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
-    entropy_power_inequality P X Y hX hY hXY h_stam h_bridge
+    entropy_power_inequality P X Y hX hY hXY h_stam
   -- RHS of `≥` is positive (sum of two positive `entropyPower`s).
   have h_rhs_pos : 0 < entropyPower (P.map X) + entropyPower (P.map Y) :=
     add_pos (entropyPower_pos _) (entropyPower_pos _)

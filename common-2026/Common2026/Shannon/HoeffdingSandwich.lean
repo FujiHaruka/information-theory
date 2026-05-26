@@ -286,7 +286,15 @@ the optimal Type II rate `-(1/n) log steinTypeII_at_level_pmf` converges to
 This is the **slim form** of `hoeffding_tradeoff_with_hypothesis` (4 hypothesis form
 in `HoeffdingTradeoff.lean`), with the two boundedness slots discharged. The two
 remaining variational hypotheses `h_liminf` / `h_limsup` are deferred to the follow-up
-plan `hoeffding-tradeoff-sandwich-plan.md`. -/
+plan `hoeffding-tradeoff-sandwich-plan.md`.
+
+`@audit:defect(false-hypothesis) @audit:retract-candidate(general-alpha-rate-≠-E₂)`
+
+Inherits the load-bearing-false hypothesis defect from `hoeffding_tradeoff_with_hypothesis`:
+the fixed-`alpha` rate does not target `E₂(alpha)` in general, so `h_liminf` /
+`h_limsup` cannot both hold (see `HoeffdingSandwichDischarge.lean` judgement log #1).
+Acknowledged tier-5 placeholder; closure requires either restricting to the boundary
+regime or pivoting to the exponential-level formulation. -/
 theorem hoeffding_tradeoff_sandwich
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)

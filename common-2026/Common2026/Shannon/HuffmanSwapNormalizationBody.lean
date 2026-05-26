@@ -134,7 +134,9 @@ abbrev EqualizingPermHypothesis : Prop :=
 注: 前提 `h_eq : EqualizingPermHypothesis` は **false predicate** (`@audit:defect(false-hypothesis)`)
 であるが、本含意は vacuously-true な genuine 定理であり構造的に閉じる (= 偽前提 → 結論 の
 正しい含意、`:= h` 循環でも `:True` でもない)。`Hyp1` の genuine discharge は
-`HuffmanStrongForm.lean:144` `swap_normalization_proof` が独立に閉じている。 -/
+`HuffmanStrongForm.lean:144` `swap_normalization_proof` が独立に閉じている。
+
+`@audit:retract-candidate(false-hypothesis) @audit:closed-by-successor(huffman-2hyp-vertical-reduction)` -/
 theorem swapNormalizationHypothesis_of_equalizingPerm
     (h_eq : EqualizingPermHypothesis.{u}) :
     SwapNormalizationHypothesis.{u} := by
@@ -214,7 +216,9 @@ swap target `m` から `σ := Equiv.swap b m` を構成する。`swap_step_le` (
 
 注: 含意元 `h_tgt : EqualizingSwapTargetHypothesis` は **false predicate**
 (`@audit:defect(false-hypothesis)`) であるが、本含意は vacuously-true な genuine 定理であり
-構造的に閉じる。 -/
+構造的に閉じる。
+
+`@audit:retract-candidate(false-hypothesis) @audit:closed-by-successor(huffman-2hyp-vertical-reduction)` -/
 theorem equalizingPerm_of_swapTarget
     (h_tgt : EqualizingSwapTargetHypothesis.{u}) :
     EqualizingPermHypothesis.{u} := by
@@ -245,7 +249,9 @@ theorem equalizingPerm_of_swapTarget
 直接 `SwapNormalizationHypothesis` を得る合成 form。
 
 注: 含意元 `h_tgt : EqualizingSwapTargetHypothesis` は **false predicate**
-(`@audit:defect(false-hypothesis)`) — 上 2 補題と同様 vacuously-true な含意。 -/
+(`@audit:defect(false-hypothesis)`) — 上 2 補題と同様 vacuously-true な含意。
+
+`@audit:retract-candidate(false-hypothesis) @audit:closed-by-successor(huffman-2hyp-vertical-reduction)` -/
 theorem swapNormalizationHypothesis_of_swapTarget
     (h_tgt : EqualizingSwapTargetHypothesis.{u}) :
     SwapNormalizationHypothesis.{u} :=
@@ -263,7 +269,9 @@ Transitive `sorry` via `huffmanLength_optimal_with_hypotheses` (本 plan
 load-bearing hypothesis 引数を残す top-most weak-form API)。本 wrapper には `@residual`
 タグを付与しない — closure 責任は `HuffmanWalls.huffman_merged_identification_hypothesis_holds`
 が保有 (`@residual(plan:huffman-2hyp-vertical-reduction)`)。`h_eqperm` は
-**false predicate** (`@audit:defect(false-hypothesis)`)、本含意自体は vacuously-true。 -/
+**false predicate** (`@audit:defect(false-hypothesis)`)、本含意自体は vacuously-true。
+
+`@audit:retract-candidate(false-hypothesis) @audit:closed-by-successor(huffman-2hyp-vertical-reduction)` -/
 theorem huffmanLength_optimal_via_equalizing_perm
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]

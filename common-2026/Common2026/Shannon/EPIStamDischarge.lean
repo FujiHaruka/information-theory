@@ -371,13 +371,15 @@ theorem epi_via_stam_main
     (X Y Z : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
     (h_stam : IsStamInequalityHyp X Y P)
-    (h_bridge : IsStamToEPIBridgeHyp X Y P) :
+    (_h_bridge : IsStamToEPIBridgeHyp X Y P) :
     entropyPower (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
-  -- `IsStamInequalityHyp`/`IsStamToEPIBridgeHyp` are defeq to the base genuine
-  -- residual/bridge predicates, so they thread directly into the non-circular
-  -- headline.
-  entropy_power_inequality P X Y hX hY hXY h_stam h_bridge
+  -- `IsStamInequalityHyp` is reducibly defeq to `IsStamInequalityResidual` (both
+  -- are Fisher-info inverse-triangle predicates), so it threads into the
+  -- non-circular `entropy_power_inequality` headline directly. The Stam→EPI
+  -- bridge `_h_bridge` is now internally discharged via the shared sorry lemma
+  -- `stamToEPIBridge_holds`, so the argument is unused at this wrapper.
+  entropy_power_inequality P X Y hX hY hXY h_stam
 
 /-! ## §7 — Gaussian full discharge (`epi_via_stam_gaussian`) -/
 
@@ -618,11 +620,11 @@ theorem entropy_log_form_via_stam
     (X Y Z : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
     (h_stam : IsStamInequalityHyp X Y P)
-    (h_bridge : IsStamToEPIBridgeHyp X Y P) :
+    (_h_bridge : IsStamToEPIBridgeHyp X Y P) :
     Common2026.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
       ≥ (1/2) * Real.log
           (entropyPower (P.map X) + entropyPower (P.map Y)) :=
-  entropy_power_inequality_log_form P X Y hX hY hXY h_stam h_bridge
+  entropy_power_inequality_log_form P X Y hX hY hXY h_stam
 
 /-- **Exp-form EPI via Stam pipeline**: Cover-Thomas Theorem 17.7.3 露出形.
 
@@ -633,12 +635,12 @@ theorem entropy_exp_form_via_stam
     (X Y Z : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
     (h_stam : IsStamInequalityHyp X Y P)
-    (h_bridge : IsStamToEPIBridgeHyp X Y P) :
+    (_h_bridge : IsStamToEPIBridgeHyp X Y P) :
     Real.exp (2 * Common2026.Shannon.differentialEntropy
               (P.map (fun ω => X ω + Y ω)))
       ≥ Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map X))
         + Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map Y)) :=
-  entropy_power_inequality_exp_form P X Y hX hY hXY h_stam h_bridge
+  entropy_power_inequality_exp_form P X Y hX hY hXY h_stam
 
 /-- **Normalized `(2πe)⁻¹` form via Stam pipeline**: Cover-Thomas Ch.17 流儀
 `N(X+Y) ≥ N(X) + N(Y)`.
@@ -650,11 +652,11 @@ theorem entropy_normalized_form_via_stam
     (X Y Z : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
     (h_stam : IsStamInequalityHyp X Y P)
-    (h_bridge : IsStamToEPIBridgeHyp X Y P) :
+    (_h_bridge : IsStamToEPIBridgeHyp X Y P) :
     entropyPower (P.map (fun ω => X ω + Y ω)) / gaussianEntropyPowerConst
       ≥ entropyPower (P.map X) / gaussianEntropyPowerConst
         + entropyPower (P.map Y) / gaussianEntropyPowerConst :=
-  entropy_power_inequality_normalized P X Y hX hY hXY h_stam h_bridge
+  entropy_power_inequality_normalized P X Y hX hY hXY h_stam
 
 /-! ## §15 — 4-arg EPI chain via Stam pipeline -/
 
@@ -748,11 +750,11 @@ theorem epi_via_stam_main_eq
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
     (h_stam : IsStamInequalityHyp X Y P)
-    (h_bridge : IsStamToEPIBridgeHyp X Y P)
+    (_h_bridge : IsStamToEPIBridgeHyp X Y P)
     (_h_db : IsDeBruijnIntegrationHypothesis X Y P) :
     entropyPower (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
-  entropy_power_inequality P X Y hX hY hXY h_stam h_bridge
+  entropy_power_inequality P X Y hX hY hXY h_stam
 
 /-- **Round trip**: if we have the Stam-derived EPI, the EntropyPowerInequality
 predicate is exactly the result of the bridge applied to Stam.
