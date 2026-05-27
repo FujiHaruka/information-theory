@@ -811,53 +811,118 @@ yes (`proof-log-awgn-converse-aux-phaseB-gaussian.md`)。
 
 ---
 
-## Phase C — `isAwgnConverseFeasible_discharger` 統合 + wrapper 📋
+## Phase C — `isAwgnConverseFeasible_discharger` 統合 + wrapper (Phase B audit 反映で再設計) 📋
 
-### スコープ
+### スコープ (Phase B 完了後 audit verdict 反映、2026-05-27 更新)
 
-Phase B-Fano + B-DPI/chain + B-Gaussian を組み立てて主定理 publish。
+Phase B-Gaussian の **tier 5 false-statement defect** (per-letter `E[X_i²] ≤ P` が AWGN
+`power_constraint` per-message block 形から genuine 化不能) により、起草時の
+per-letter `awgn_per_letter_mi_le_capacity` 経由 chain は **構造的に組めない**。
+Phase B audit verdict (5 件要件) に従い、Phase C で **sum-form + Jensen** 構造で
+直接 publish する。`awgn_per_letter_mi_le_capacity` は本 Phase C 完了時に **撤回**。
 
-- C-1 `isAwgnConverseFeasible_discharger` 本体: `shannon_converse_single_shot` 出口
-  からの bound chain
+- **C-1a** `awgn_per_letter_input_power_avg` 新規補題:
+  `(1/n) * ∑ᵢ E[X_i² over uniform W] ≤ P` を `AwgnCode.power_constraint`
+  (`AWGN.lean:98`、`∀ m, ∑ᵢ (encoder m i)² ≤ n·P`) から Fubini swap で genuine 化。
+  内訳: `∑ᵢ ∑ₘ (encoder m i)² = ∑ₘ ∑ᵢ (encoder m i)² ≤ M · n · P` ⇒
+  `(1/n) ∑ᵢ ((1/M) ∑ₘ (encoder m i)²) = (1/n)(1/M)(M n P) = P`。**~10-20 行**。
+- **C-1b** `awgn_per_letter_mi_le_log_var` 新規補題:
+  `∀ i, (perLetterMI h_meas c i).toReal ≤ (1/2) * Real.log (1 + (perLetterInputVar c i) / N)`
+  (per-letter capacity を per-letter input variance で立てる Gaussian max-entropy)。
+  `differentialEntropy_le_gaussian_of_variance_le` の 4 hyp を per-letter で組む。
+  内訳 — 4 hyp 充足:
+  * `hμ : perLetterYLaw ≪ volume` ← Gaussian convolution mixture absolute continuity
+  * `h_mean : ∫ y, y ∂(perLetterYLaw) = E[Y_i]` ← X_i mean + Z_i mean=0
+  * `h_var : ∫ y, (y - E[Y_i])² ∂(perLetterYLaw) ≤ Var(X_i) + N` ← B-Gauss-3
+  * `h_var_int : Integrable (fun y => (y - E[Y_i])²) (perLetterYLaw)` ← genuine moment
+  * `h_ent_int` ← bundle `PerLetterIntegrabilityForConverse` destructure (T-FFC-2 staged)
+  + F-2 bridge `h_mi_bridge_per_letter` per-letter 形 (本 plan hyp、姉妹
+  `awgn-mi-decomp` 完了で genuine 化候補)。**~80-150 行**。
+- **C-1c** `sum_log_one_add_le_n_log_one_add_avg` 新規補題:
+  `∑ᵢ (1/2) log(1 + xᵢ / N) ≤ n · (1/2) log(1 + (∑ᵢ xᵢ / n) / N)` for `xᵢ ≥ 0`。
+  Jensen / concavity of `Real.log` (Mathlib `Real.strictConcaveOn_log_Ioi` か
+  `Real.add_pow_le_pow_mul_pow_of_sq` 系) を per-letter `xᵢ := perLetterInputVar c i`
+  に適用。`(∑ᵢ xᵢ / n) ≤ P` (C-1a 由来) で `≤ n · (1/2) log(1+P/N)` に集約。
+  **~30-60 行**。
+- **C-2** `awgn_sum_per_letter_mi_le_n_capacity` 新規補題 (C-1a + C-1b + C-1c 合成):
+  `∑ᵢ (perLetterMI h_meas c i).toReal ≤ (n : ℝ) * ((1/2) * Real.log (1 + P / N))`。
+  本補題が Phase B-chain の `awgn_chain_rule` 出力 `(jointMIXnYn).toReal ≤ ∑ᵢ ...`
+  の RHS を吸収する正しい接続点 (姉妹 E-1 の `expurgation_argument` と類似の集約形)。
+  **~20-40 行**。
+- **C-3** `isAwgnConverseFeasible_discharger` 本体: bound chain
   ```
   log M ≤ I(W; Y^n).toReal + binEntropy(Pe) + Pe · log(M-1)    -- B-Fano (awgn_converse_single_shot_call)
         ≤ I(X^n; Y^n).toReal + binEntropy(Pe) + Pe · log(M-1)  -- B-DPI-1 (Markov genuine)
         ≤ ∑ I(X_i; Y_i).toReal + binEntropy(Pe) + Pe · log(M-1) -- B-chain-1 (staged)
-        ≤ n · (1/2) log(1+P/N) + binEntropy(Pe) + Pe · log(M-1) -- B-Gauss-7 (sum)
+        ≤ n · (1/2) log(1+P/N) + binEntropy(Pe) + Pe · log(M-1) -- C-2 (sum form)
   ```
-- C-2 `awgn_converse_F3_discharged` wrapper: `awgn_converse` の `sorry` を
-  `isAwgnConverseFeasible_discharger` 呼出に置換するための薄い wrapper
-- C-3 `AWGNConverse.lean:70` の body 置換 (本 plan 完了時に orchestrator が実施 or
-  本 file 内で本 plan の wrapper を import 経路で `awgn_converse` 自身を 1 行
-  passthrough に書換 — 判断 #6 候補)
+  bundle `IsAwgnConverseFeasible` を destructure (3 sub-bound:
+  `h_per_letter` / `h_chain` / `h_markov`)、各 Phase B 主定理に渡す。**~30-60 行**。
+- **C-4** **`awgn_per_letter_mi_le_capacity` 撤回**: false-statement defect 残置中
+  declaration を本 commit で削除 (`@audit:closed-by-successor(awgn-converse-aux-plan)`
+  通り)。C-1b `awgn_per_letter_mi_le_log_var` が代替 (per-letter variance を引数化
+  する形)。
+- **C-5** `awgn_dpi` inline sorry + Fano-side `awgnConverseJoint_mutualInfo_ne_top`
+  helper sorry の **transitive closure**: Phase C 統合 chain 内で per-letter MI bound
+  (C-1b の `(1/2) log(1+Var/N) < ∞`) + chain rule (B-chain `≤ ∑ ...`) + DPI
+  (`mutualInfo_le_of_markov` ENNReal 形) で `mutualInfo W Y^n ≠ ∞` と
+  `mutualInfo X^n Y^n ≠ ∞` を両方 transitively 確立。`awgn_dpi` の inline sorry +
+  Fano 側 helper sorry 両方 0 sorry へ。**~20-40 行 (両方共通 helper
+  `awgnConverseJoint_mutualInfo_ne_top_via_chain` 1 件)**。
+- **C-6** `awgn_converse_F3_discharged` wrapper: `awgn_converse` の `sorry` を
+  `isAwgnConverseFeasible_discharger` 呼出に置換するための薄い wrapper。
+  `haveI : NeZero M := ⟨by omega⟩` (from `hM : 2 ≤ M`) 1 行を含む。**~10-20 行**。
+- **C-7** `AWGNConverse.lean:70` の body 置換: 本 plan 完了時に orchestrator が
+  実施 (`AWGNConverse.lean:69-70` の `sorry` を `awgn_converse_F3_discharged` 呼出に
+  書換、判断 #6 で route 確定)。
 
 ### Done 条件
 
-- [ ] C-1 ~ C-3 publish
+- [ ] C-1a〜C-7 publish (Phase C ~210-410 行 = 起草時 +180 行)
+- [ ] `awgn_per_letter_mi_le_capacity` 撤回 (本 commit で削除、tag は除去)
 - [ ] `lake env lean Common2026/Shannon/AWGNConverseDischarge.lean` clean
-      (0 sorry / 1 staged bundle hyp `IsAwgnConverseFeasible`)
+      (0 errors、sorry のみ残: bundle `IsAwgnConverseFeasible` の 2 staged hyp
+      `PerLetterIntegrabilityForConverse` + `ContinuousMIChainRuleForConverse`、
+      他はすべて genuine。`awgn_dpi` inline sorry + Fano-side helper sorry は両方 0 へ)
 - [ ] `lake env lean Common2026/Shannon/AWGNConverse.lean` clean
-      (body `sorry` 解消、`isAwgnConverseFeasible_discharger` 呼出に置換)
+      (body `sorry` 解消、`awgn_converse_F3_discharged` 呼出に置換)
 - [ ] `Common2026.lean` に 1 行 import 追加 (Phase V でオーケストレータ実施)
+- [ ] 判断 #6 append (本 plan の `AWGNConverse.lean:70` 置換 route 確定)
+- [ ] 独立 honesty audit subagent 起動 (新規 sorry 解消 + signature 改変 + 新規補題
+      4 件導入 commit のため必須)
 
 ### proof-log
 
-no (skeleton 整地のため)。
+yes (`proof-log-awgn-converse-aux-phaseC.md`、Phase B audit 由来 signature 再設計 +
+Jensen 化 + transitive MI 有限性確立を記録)。
 
 ### 工数感
 
-~30-80 行、0.5-1 session。
+**~210-410 行、1-2 session** (起草時 ~30-80 行 から大幅増。Phase B audit verdict
+反映で C-1a〜C-1c 3 新規補題 + C-2 集約 + C-5 共通 helper が必須化、+180 行)。
 
 ### 失敗時 fallback
 
-- 統合時に bundle destructure pattern が complex (姉妹 1641 行 E-1 body の `obtain` pattern 参考)
-  → bundle field を `.fano` / `.dpi` / `.chain` / `.per_letter` の dot accessor 形に
-  rename (`structure` 化)、destructure を簡潔化。
-- `AWGNConverse.lean:70` の body 置換で signature mismatch (引数順序 / namespace
-  解決) → wrapper 経由でなく本 file `AWGNConverseDischarge.lean` 内で
-  `awgn_converse` を本物呼出に書換、`AWGNConverse.lean` 自身は無変更
-  (orchestrator が `AWGNConverseDischarge.lean` を `Common2026.lean` に import 追加
-  + 主定理 wrapper `AWGNMain.lean` の signature 更新)。
+- C-1c Jensen 適用が Mathlib `Real.strictConcaveOn_log_Ioi` で発火しない → `Real.log`
+  concavity を `log(1+x/N) = log((N+x)/N) = log(N+x) - log(N)` で分離、`Real.log`
+  concavity (`Real.strictConcaveOn_log_Ioi` Mathlib 既存) を直接適用。判断ログ #6 で記録。
+- C-1b per-letter Gaussian max-entropy の 4 hyp 充足で `h_var_int` / mixture
+  density absolute continuity が想定外 hard → 本補題を **staged hyp** 化して bundle
+  `IsAwgnConverseFeasible` に 4 番目 sub-bound 追加 (起草時 3 field → 4 field
+  pivot)、Phase B-Gaussian の流れに戻る (但し per-letter variance 形は維持)。
+- C-3 bundle destructure pattern が complex → bundle field を `.per_letter` /
+  `.chain` / `.markov` dot accessor 形に rename (`structure` 化)、destructure を
+  簡潔化 (姉妹 1641 行 E-1 body の `obtain` pattern 参考)。
+- C-5 共通 helper `awgnConverseJoint_mutualInfo_ne_top_via_chain` が想定より hard
+  (continuous output 上 MI 有限性 Mathlib 壁) → 本 helper を sorry 残置 + 別 plan
+  `awgn-mi-finite-cont-plan.md` (新規未起草) に委ね、Phase C 完成度を「Mathlib 壁
+  staged 2 件 → 3 件」に縮める。確率低 (Jensen 経由で `(1/2) log(1+P/N) < ∞`
+  transitive で済む見込み)。
+- `AWGNConverse.lean:70` の body 置換で signature mismatch → wrapper 経由でなく本
+  file `AWGNConverseDischarge.lean` 内で `awgn_converse` を本物呼出に書換、
+  `AWGNConverse.lean` 自身は無変更 (orchestrator が `AWGNConverseDischarge.lean`
+  を `Common2026.lean` に import 追加 + 主定理 wrapper `AWGNMain.lean` の signature
+  更新)。
 
 ---
 
