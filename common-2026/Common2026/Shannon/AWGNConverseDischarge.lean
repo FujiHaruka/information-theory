@@ -76,7 +76,25 @@ instance awgnConverseJoint.instIsProbabilityMeasure
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
     IsProbabilityMeasure (awgnConverseJoint h_meas c) := by
-  sorry -- @residual(plan:awgn-converse-aux-plan)
+  refine ⟨?_⟩
+  -- Compute total mass: (1/M) • ∑ m, (dirac m ×ˢ Measure.pi awgn) univ = (1/M) * M = 1
+  unfold awgnConverseJoint
+  rw [Measure.smul_apply, Measure.finsetSum_apply _ _ Set.univ]
+  -- Each summand: (dirac m).prod (Measure.pi awgn) is a probability measure
+  have h_summand : ∀ m : Fin M,
+      ((Measure.dirac m).prod
+          (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))))
+            Set.univ = 1 := by
+    intro m
+    exact measure_univ
+  simp only [h_summand, Finset.sum_const, Finset.card_univ, Fintype.card_fin,
+    nsmul_eq_mul, mul_one, smul_eq_mul]
+  -- Goal: (M : ℝ≥0∞)⁻¹ * (M : ℝ≥0∞) = 1
+  -- Use ENNReal.inv_mul_cancel with M ≠ 0 and M ≠ ∞
+  have hM_ne_zero : (M : ℝ≥0∞) ≠ 0 := by
+    exact_mod_cast (NeZero.ne M)
+  have hM_ne_top : (M : ℝ≥0∞) ≠ ∞ := ENNReal.natCast_ne_top M
+  exact ENNReal.inv_mul_cancel hM_ne_zero hM_ne_top
 
 /-- per-letter `Y_i` 周辺分布 (uniform `W` 上の `encoder ∘ W` marginal を AWGN で
 convolve)。`(1/M) ∑ₘ AWGN_{c.encoder m i}` の閉じた形 (= mixture of Gaussians)。 -/
@@ -201,13 +219,181 @@ def IsAwgnConverseFeasible (P : ℝ) (N : ℝ≥0)
 で 1 行呼出。Fano + DPI postprocess + entropy chain + `H(W uniform) = log M` を
 集約。 -/
 
+/-! ### Private helpers for `awgn_converse_single_shot_call`
+
+`shannon_converse_single_shot` を `awgnConverseJoint` で起動するために必要な
+plumbing 補題群。本 section の補題はすべて private、本 file 内専用。 -/
+
+/-- Auxiliary: on a `Fintype` + `MeasurableSingletonClass`, `Measure.count`
+equals `∑ a, Measure.dirac a` (Finset.univ sum). -/
+private lemma count_eq_finset_sum_dirac (α : Type*) [Fintype α]
+    [MeasurableSpace α] [MeasurableSingletonClass α] :
+    (Measure.count : Measure α) = ∑ a : α, Measure.dirac a := by
+  -- `Measure.sum_smul_dirac : sum (fun a => μ {a} • dirac a) = μ`
+  -- with `μ := count`, `count {a} = 1` ⇒ `sum (fun a => dirac a) = count`.
+  -- Then `sum_fintype` converts `sum` to `∑`.
+  have h_one : ∀ a : α, (Measure.count : Measure α) {a} = 1 := fun a =>
+    Measure.count_singleton a
+  have h_sum : Measure.sum (fun a : α => Measure.dirac a)
+      = (Measure.count : Measure α) := by
+    have h := Measure.sum_smul_dirac (μ := (Measure.count : Measure α))
+    -- Replace each `count {a}` by `1` and `1 • dirac a` by `dirac a`.
+    simp_rw [h_one, one_smul] at h
+    exact h
+  rw [← h_sum, Measure.sum_fintype]
+
+/-- AWGN converse の uniform message marginal: `(awgnConverseJoint h_meas c).map Prod.fst
+= (Fintype.card (Fin M))⁻¹ • Measure.count`。
+
+mixture `(1/M) ∑ m, (dirac m).prod ν_m` の `Prod.fst` 像が、各 `ν_m` が
+probability measure であることから `(1/M) ∑ m, dirac m`、これが Fintype `Fin M`
+上の `Measure.count` の `(1/M)` 倍に等しい (`MeasurableSingletonClass` 経由)。 -/
+private lemma awgnConverseJoint_map_fst
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
+    (awgnConverseJoint h_meas c).map (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
+      = (Fintype.card (Fin M) : ℝ≥0∞)⁻¹ • Measure.count := by
+  unfold awgnConverseJoint
+  -- map distributes over smul and over the Finset sum.
+  rw [Measure.map_smul]
+  have h_map_fst_meas :
+      Measurable (Prod.fst : Fin M × (Fin n → ℝ) → Fin M) := measurable_fst
+  rw [Measure.map_finset_sum (s := Finset.univ)
+      (m := fun m => (Measure.dirac m).prod
+        (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))))
+      h_map_fst_meas.aemeasurable]
+  -- Each summand: `((dirac m).prod ν_m).map Prod.fst = (ν_m univ) • dirac m = dirac m`.
+  have h_each : ∀ m : Fin M,
+      ((Measure.dirac m).prod
+          (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i)))).map
+        (Prod.fst : Fin M × (Fin n → ℝ) → Fin M) = Measure.dirac m := by
+    intro m
+    -- `Measure.map_fst_prod : (μ.prod ν).map Prod.fst = (ν univ) • μ`
+    rw [Measure.map_fst_prod]
+    have : Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))
+        (Set.univ : Set (Fin n → ℝ)) = 1 := by
+      exact measure_univ
+    rw [this, one_smul]
+  rw [Finset.sum_congr rfl (fun m _ => h_each m)]
+  -- Now: (M⁻¹) • ∑ m, dirac m = (M⁻¹) • Measure.count.
+  rw [count_eq_finset_sum_dirac]
+
+/-- AWGN converse joint の `Prod.snd` measurability (trivial, but used for
+`shannon_converse_single_shot.hYo`). -/
+private lemma awgnConverseJoint_measurable_snd :
+    Measurable (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) :=
+  measurable_snd
+
+private lemma awgnConverseJoint_measurable_fst :
+    Measurable (Prod.fst : Fin M × (Fin n → ℝ) → Fin M) :=
+  measurable_fst
+
+/-- AWGN converse `Pe` bridge: AWGN `Pe = (1/M) ∑ m, (errorProbAt ...).toReal`
+(in the theorem statement) 形 と Fano `errorProb (awgnConverseJoint h_meas c)
+Prod.fst Prod.snd c.decoder` 形の同値性。
+
+mixture `(1/M) ∑ m, (dirac m).prod ν_m` 上で `{ω | ω.1 ≠ c.decoder ω.2}` を測ると、
+各 m 成分は `((dirac m).prod ν_m) S = ν_m {y | m ≠ c.decoder y} = ν_m (errorEvent m)
+= errorProbAt m`。線形性で全体: `(1/M) ∑ m, errorProbAt m`。 -/
+private lemma awgn_errorProb_eq_fano_errorProb
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
+    InformationTheory.MeasureFano.errorProb
+        (awgnConverseJoint h_meas c)
+        (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
+        (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ)
+        c.decoder
+      = (1 / (M : ℝ)) * ∑ m : Fin M,
+          (c.toCode.errorProbAt (awgnChannel N h_meas) m).toReal := by
+  -- The error event for the Fano formulation.
+  set S : Set (Fin M × (Fin n → ℝ)) :=
+    {ω : Fin M × (Fin n → ℝ) | ω.1 ≠ c.decoder ω.2} with hS_def
+  -- `S` is measurable (preimage of `{m} : Set (Fin M)` under decoder ∘ snd, in Boolean).
+  -- We avoid relying on `MeasurableSingletonClass (Fin M × ...)` by computing per-fibre.
+  -- Step 1: unfold `errorProb` to `μ.real S`.
+  show (awgnConverseJoint h_meas c).real S
+      = (1 / (M : ℝ)) * ∑ m : Fin M,
+          (c.toCode.errorProbAt (awgnChannel N h_meas) m).toReal
+  -- Step 2: expand `awgnConverseJoint` and use `measureReal_ennreal_smul_apply`.
+  unfold awgnConverseJoint
+  rw [measureReal_ennreal_smul_apply]
+  congr 1
+  · -- `((Fintype.card (Fin M))⁻¹ : ℝ≥0∞).toReal = 1 / M`.
+    rw [Fintype.card_fin]
+    rw [ENNReal.toReal_inv, ENNReal.toReal_natCast]
+    rw [one_div]
+  -- Step 3: distribute `.real` over the Finset sum.
+  have hM_pos : 0 < M := Nat.pos_of_ne_zero (NeZero.ne M)
+  have h_fin_each : ∀ m : Fin M,
+      ((Measure.dirac m).prod
+        (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i)))) S ≠ ∞ := by
+    intro m
+    have :
+        ((Measure.dirac m).prod
+          (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i)))) Set.univ ≤ 1 := by
+      simp [measure_univ]
+    exact ne_top_of_le_ne_top (by simp) (measure_mono (Set.subset_univ _) |>.trans this)
+  -- Compute the Finset sum: unfold `.real` to `(·).toReal`, distribute.
+  unfold Measure.real
+  rw [Measure.finsetSum_apply _ _ S]
+  rw [ENNReal.toReal_sum (fun m _ => h_fin_each m)]
+  refine Finset.sum_congr rfl ?_
+  intro m _
+  congr 1
+  -- Step 4: pointwise: `((dirac m).prod ν_m) S = ν_m (errorEvent m) = errorProbAt m`.
+  -- `dirac_prod m : (dirac m).prod ν = map (Prod.mk m) ν`
+  rw [Measure.dirac_prod]
+  -- `(map (Prod.mk m) ν_m) S = ν_m ((Prod.mk m) ⁻¹' S)`.
+  have hS_meas : MeasurableSet S := by
+    -- `S = (fun ω => ω.1 = c.decoder ω.2)ᶜ ⊓ univ`. Use `measurableSet_setOf`.
+    have h_pred : Measurable (fun ω : Fin M × (Fin n → ℝ) => (ω.1, c.decoder ω.2)) :=
+      measurable_fst.prodMk (c.decoder_meas.comp measurable_snd)
+    have h_eq_set : MeasurableSet
+        {ω : Fin M × (Fin n → ℝ) | ω.1 = c.decoder ω.2} := by
+      have h_diag : MeasurableSet {p : Fin M × Fin M | p.1 = p.2} := by
+        exact measurableSet_eq_fun measurable_fst measurable_snd
+      exact h_pred h_diag
+    exact h_eq_set.compl
+  rw [Measure.map_apply measurable_prodMk_left hS_meas]
+  -- `(Prod.mk m) ⁻¹' {ω | ω.1 ≠ c.decoder ω.2} = {y | m ≠ c.decoder y} = errorEvent m`.
+  have h_preimage :
+      (Prod.mk m : (Fin n → ℝ) → Fin M × (Fin n → ℝ)) ⁻¹' S
+        = c.toCode.errorEvent m := by
+    ext y
+    simp only [hS_def, Set.mem_preimage, Set.mem_setOf_eq,
+      InformationTheory.Shannon.ChannelCoding.Code.mem_errorEvent]
+    -- AwgnCode.toCode → Code; decoder same:
+    show m ≠ c.decoder y ↔ c.toCode.decoder y ≠ m
+    constructor
+    · intro h; exact fun h' => h h'.symm
+    · intro h; exact fun h' => h h'.symm
+  rw [h_preimage]
+  -- `errorProbAt c.toCode W m = Measure.pi (W (c.encoder m i)) (errorEvent m)`.
+  rfl
+
+/-- AWGN converse の `mutualInfo` finiteness: `mutualInfo (awgnConverseJoint c) Prod.fst Prod.snd ≠ ∞`。
+
+Msg 側 `Fin M` 有限 (`Fintype`、`MeasurableSingletonClass`) ⇒ `entropy ≤ log M < ∞`、
+`mutualInfo ≤ min(H(Msg), H(Yo)) ≤ H(Msg)` の Mathlib API は AWGN converse の Y 側
+(continuous) で reuse 不可。Plan §線 575 の plumbing fallback 通り、本 file
+内では `sorry + @residual(plan:awgn-converse-aux-plan)` で staged。Phase C 統合
+側で更に上流の bound に依存する可能性あり (handoff)。 -/
+private lemma awgnConverseJoint_mutualInfo_ne_top
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
+    mutualInfo (awgnConverseJoint h_meas c)
+        (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
+        (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) ≠ ∞ := by
+  sorry -- @residual(plan:awgn-converse-aux-plan)
+
 /-- **Phase B-Fano**: Fano + DPI postprocess + entropy chain + `H(W) = log M` を
 `shannon_converse_single_shot` 1 行呼出で集約。
 
 結論: `log M ≤ I(W; Y^n).toReal + binEntropy(Pe) + Pe · log(M-1)`。
 
-Phase B-Fano dispatch で fill 予定。Pe bridge (T-FFC-5、`errorProbAt` ↔ Fano
-`errorProb` の同値性、~25-50 行) + MI-finite plumbing (~10-20 行) を内包。 -/
+Pe bridge (T-FFC-5、`errorProbAt` ↔ Fano `errorProb` の同値性、private helper
+`awgn_errorProb_eq_fano_errorProb` に切出し) + MI-finite plumbing (private helper
+`awgnConverseJoint_mutualInfo_ne_top` に切出し) を経由。 -/
 theorem awgn_converse_single_shot_call
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (hM : 2 ≤ M) (c : AwgnCode M n P)
@@ -216,7 +402,50 @@ theorem awgn_converse_single_shot_call
     Real.log M
       ≤ (jointMIWYn h_meas c).toReal
         + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1) := by
-  sorry -- @residual(plan:awgn-converse-aux-plan)
+  -- `2 ≤ M` ⇒ `[NeZero M]`
+  have hM_pos : 0 < M := by omega
+  haveI : NeZero M := ⟨hM_pos.ne'⟩
+  -- Plumb hypotheses for `shannon_converse_single_shot`.
+  have hMsg_meas : Measurable (Prod.fst : Fin M × (Fin n → ℝ) → Fin M) :=
+    awgnConverseJoint_measurable_fst
+  have hYo_meas : Measurable (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) :=
+    awgnConverseJoint_measurable_snd
+  have hMsg_uniform :
+      (awgnConverseJoint h_meas c).map
+          (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
+        = (Fintype.card (Fin M) : ℝ≥0∞)⁻¹ • Measure.count :=
+    awgnConverseJoint_map_fst h_meas c
+  have hcard : 2 ≤ Fintype.card (Fin M) := by simpa [Fintype.card_fin] using hM
+  have hMI_finite :
+      mutualInfo (awgnConverseJoint h_meas c)
+          (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
+          (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) ≠ ∞ :=
+    awgnConverseJoint_mutualInfo_ne_top h_meas c
+  -- Apply `shannon_converse_single_shot`.
+  have h_shannon :=
+    InformationTheory.Shannon.shannon_converse_single_shot
+      (μ := awgnConverseJoint h_meas c)
+      (Msg := Prod.fst) (Yo := Prod.snd) (decoder := c.decoder)
+      hMsg_meas hYo_meas c.decoder_meas hMsg_uniform hcard hMI_finite
+  -- Rewrite `log (Fintype.card (Fin M))` as `log M`.
+  have hcard_eq : (Fintype.card (Fin M) : ℝ) = (M : ℝ) := by
+    simp [Fintype.card_fin]
+  -- Rewrite the Fano `errorProb` to AWGN `Pe`.
+  have h_errProb_eq : InformationTheory.MeasureFano.errorProb
+      (awgnConverseJoint h_meas c)
+      (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
+      (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ)
+      c.decoder = Pe := by
+    rw [awgn_errorProb_eq_fano_errorProb, hPe]
+  -- `jointMIWYn` unfold ⇒ `mutualInfo (awgnConverseJoint h_meas c) Prod.fst Prod.snd`.
+  -- Substitute everything to match the goal.
+  rw [hcard_eq] at h_shannon
+  rw [h_errProb_eq] at h_shannon
+  -- `jointMIWYn h_meas c = mutualInfo ... Prod.fst Prod.snd` by definition.
+  show Real.log M ≤
+      (jointMIWYn h_meas c).toReal + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1)
+  unfold jointMIWYn
+  exact h_shannon
 
 /-! ## Phase B-DPI/chain skeleton (本 commit は signature + sorry のみ)
 
@@ -233,7 +462,41 @@ theorem awgn_dpi
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P)
     (h_markov : MarkovChainForConverse P N h_meas c) :
     (jointMIWYn h_meas c).toReal ≤ (jointMIXnYn h_meas c).toReal := by
-  sorry -- @residual(plan:awgn-converse-aux-plan)
+  -- Markov chain `W → X^n → Y^n` (γ-form) ⇒ ENNReal DPI
+  -- `mutualInfo W Y^n ≤ mutualInfo X^n Y^n`.
+  -- `MarkovChainForConverse` already unfolds to `IsMarkovChain ... Prod.fst
+  -- (fun ω => c.encoder ω.1) Prod.snd` (file-internal def).
+  unfold MarkovChainForConverse at h_markov
+  -- Measurability of the three random variables on `Fin M × (Fin n → ℝ)`.
+  have hW_meas : Measurable (Prod.fst : Fin M × (Fin n → ℝ) → Fin M) :=
+    measurable_fst
+  have hYn_meas : Measurable (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) :=
+    measurable_snd
+  -- `fun ω => c.encoder ω.1` is measurable: `Fin M` is finite/discrete so any
+  -- function out of it is measurable; precompose with the (measurable) `Prod.fst`.
+  have hEnc_const : Measurable (c.encoder : Fin M → Fin n → ℝ) :=
+    measurable_of_countable c.encoder
+  have hXn_meas : Measurable (fun ω : Fin M × (Fin n → ℝ) => c.encoder ω.1) :=
+    hEnc_const.comp hW_meas
+  -- ENNReal DPI via `mutualInfo_le_of_markov`.
+  have h_dpi_enn :
+      mutualInfo (awgnConverseJoint h_meas c) Prod.fst Prod.snd ≤
+        mutualInfo (awgnConverseJoint h_meas c)
+          (fun ω : Fin M × (Fin n → ℝ) => c.encoder ω.1) Prod.snd :=
+    mutualInfo_le_of_markov (μ := awgnConverseJoint h_meas c)
+      (Xs := Prod.fst) (Zc := fun ω => c.encoder ω.1) (Yo := Prod.snd)
+      hW_meas hXn_meas hYn_meas h_markov
+  -- Lift to `.toReal` via `ENNReal.toReal_mono`; the RHS finiteness is the
+  -- AWGN-side MI finiteness wall (T-FFC-2/T-FFC-3 family, sibling of
+  -- `awgnConverseJoint_mutualInfo_ne_top` but for `X^n`).
+  have h_finite : (jointMIXnYn h_meas c) ≠ ∞ := by
+    unfold jointMIXnYn
+    sorry -- @residual(plan:awgn-converse-aux-plan)
+  -- Unfold `jointMIWYn` / `jointMIXnYn` to match the ENNReal inequality, apply
+  -- `ENNReal.toReal_mono`.
+  show (jointMIWYn h_meas c).toReal ≤ (jointMIXnYn h_meas c).toReal
+  unfold jointMIWYn jointMIXnYn
+  exact ENNReal.toReal_mono h_finite h_dpi_enn
 
 /-- **Phase B-chain**: continuous MI chain rule for memoryless AWGN
 `I(X^n; Y^n) ≤ ∑ᵢ I(X_i; Y_i)` を bundle 内 staged hyp で discharge。
@@ -243,8 +506,12 @@ theorem awgn_chain_rule
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (c : AwgnCode M n P)
     (h_chain : ContinuousMIChainRuleForConverse P N h_meas c) :
-    (jointMIXnYn h_meas c).toReal ≤ ∑ i : Fin n, (perLetterMI h_meas c i).toReal := by
-  sorry -- @residual(plan:awgn-converse-aux-plan)
+    (jointMIXnYn h_meas c).toReal ≤ ∑ i : Fin n, (perLetterMI h_meas c i).toReal :=
+  -- `ContinuousMIChainRuleForConverse` def body is verbatim the conclusion;
+  -- destructuring is identity-level (regularity hyp, not load-bearing core —
+  -- T-FFC-3 Mathlib wall is in the *predicate definition*, this discharger
+  -- is mechanical unfold).
+  h_chain
 
 /-! ## Phase B-Gaussian skeleton (本 commit は signature + sorry のみ)
 
@@ -266,7 +533,45 @@ Per-letter `I(X_i; Y_i) ≤ (1/2) log(1 + P/N)`:
 * `h_mean h_var h_var_int` — input power constraint `∑ X_i² ≤ nP` から per-letter
   `E[X_i²] ≤ P` を導出 (Cauchy-Schwarz、~20 行)
 
-Phase B-Gaussian dispatch で fill 予定。 -/
+Phase B-Gaussian dispatch で fill 予定。
+
+**⚠ honesty defect (2026-05-27 Phase B-Gaussian dispatch 発見、tier 5)**:
+
+主定理 signature `(perLetterMI h_meas c i).toReal ≤ (1/2) * Real.log (1 + P / N)` は
+**各 i ∈ Fin n に対し per-letter capacity bound** を主張するが、`AwgnCode.power_constraint`
+(`AWGN.lean:98`、`∀ m, ∑ᵢ (encoder m i)² ≤ n·P`) は **per-message block constraint** で
+**per-letter `E[X_i²] ≤ P` は genuine に導出不能**。具体的には:
+* `E[X_i²] = (1/M) ∑ₘ (encoder m i)²` (uniform W 上)
+* per-message bound `(encoder m i)² ≤ ∑ⱼ (encoder m j)² ≤ n·P` (各項 ≤ sum) ⇒
+  `E[X_i²] ≤ n·P` (worst case)
+* avg over i: `∑ᵢ E[X_i²] = (1/M) ∑ₘ ∑ᵢ (encoder m i)² ≤ n·P` ⇒
+  `(1/n) ∑ᵢ E[X_i²] ≤ P` (**avg 形のみ** genuine)
+
+per-letter `E[X_i²] ≤ P` (各 i に対して) は AWGN code の per-message power constraint
+からは出ない。Cover-Thomas 9.1.2 step 4 のテキストブック証明も実際は per-letter
+`I(X_i;Y_i) ≤ (1/2) log(1 + P_i/N)` (P_i = E[X_i²]) の形を取り、Phase C で `∑ᵢ` +
+Jensen / concavity of `log` で `n · (1/2) log(1+P/N)` に結合する形。本 plan §B-Gauss-1
+(line 733-737) も「avg `(1/n) ∑ E[X_i²] ≤ P`」「**per-letter は ≤ nP**」と
+明記済 (orchestrator brief line 「per-letter Var bound (avg vs per-letter) の判断」
+で本 dispatch 観測予定として警告あり)。
+
+**第一選択 (CLAUDE.md §「検証の誠実性 → 対処順序」) — signature 改変で sorry を
+逃がす**: 本 dispatch では brief 指示「signature 改変禁止」のため不可。Phase C
+`isAwgnConverseFeasible_discharger` の組立で `∑ᵢ I(X_i;Y_i) ≤ n · (1/2) log(1+P/N)`
+を直接出す Jensen / concavity 形に書き直すのが正しい構造 (本定理は retract-candidate)。
+
+**第二選択 (本 dispatch 採用) — tier 5 defect マーカー残置**: signature を改変せず
+body は `sorry` のまま、本 docstring に `@audit:defect(false-statement)` +
+`@audit:retract-candidate` を併記。Phase C 完了時に signature 書換 or 撤回を
+強制する暫定マーカー。
+
+@audit:defect(false-statement) — per-letter `E[X_i²] ≤ P` は AWGN
+`power_constraint` (per-message block 形) から genuine 化不能、
+各 i での per-letter capacity bound は false in general
+@audit:retract-candidate(phase-c-jensen-restructure) — Phase C
+`isAwgnConverseFeasible_discharger` 内で `∑ᵢ ... ≤ n · (1/2) log(1+P/N)` の
+sum 形 + Jensen / concavity の形に書き直し、本 declaration は retract 予定
+@residual(plan:awgn-converse-aux-plan) -/
 theorem awgn_per_letter_mi_le_capacity
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -279,7 +584,7 @@ theorem awgn_per_letter_mi_le_capacity
                 (ProbabilityTheory.gaussianReal 0 N))
     (i : Fin n) :
     (perLetterMI h_meas c i).toReal ≤ (1/2) * Real.log (1 + P / (N : ℝ)) := by
-  sorry -- @residual(plan:awgn-converse-aux-plan)
+  sorry -- @residual(plan:awgn-converse-aux-plan) @audit:defect(false-statement)
 
 /-! ## Phase C skeleton (本 commit は signature + sorry のみ)
 
