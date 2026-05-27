@@ -159,6 +159,8 @@ The `handoff` skill writes session state to `.claude/handoff.md` so the next ses
 
 If the session is ad-hoc — opened with no prior handoff context, scope unrelated to any in-flight work — do not autonomously hand off; wait for explicit instruction.
 
+**Single file 規約**: handoff は `.claude/handoff.md` **1 本のみ**。`handoff-<slug>.md` の named slot は作らない。複数 active line を並行管理する場合は 1 ファイル内をセクションで分割 (例: `## Line A — AWGN`, `## Line B — EPI/Stam`)。完全 closed なラインは handoff から削除し (履歴は git に残る)、必要なら `## Closure summary` セクションで参照のみ残す。session 終了時の handoff 書き出しは既存 line を上書きせず、追記 (セクション追加) で merge する。
+
 ## Definition of Done — 2 段階
 
 検証バーは 2 段階。commit 可否と「証明完成」を分離することで、未完成を `sorry` で正直に残せるようにする (`sorry` を消すための仮説束 / `:True` slot / 退化定義悪用が起きないよう、撤退口を構造的に確保する)。
