@@ -1106,10 +1106,40 @@ Phase B-Fano `~100 → ~60` + Phase B-DPI/chain `~150 → ~70 (DPI) + ~40 (chain
 Pe bridge plumbing (~25-50 行) が 50+ 行に膨張した場合の独立補題化。
 inventory §「新規撤退ライン提案」。
 
-### #2 (TBD、Phase A 完了時) bundle predicate `IsAwgnConverseFeasible` 確定形
+### #2 (2026-05-27、Phase A 完了) bundle predicate `IsAwgnConverseFeasible` 確定形
 
-Phase 0 判断 #1 を受けて bundle 確定形を append、独立 honesty audit subagent verdict
-(`load_bearing_hyp / honest` 期待) を併記。
+`Common2026/Shannon/AWGNConverseDischarge.lean` 新規 318 行で skeleton publish。
+
+- **bundle 確定形**:
+  ```
+  IsAwgnConverseFeasible (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) : Prop :=
+    ∀ ⦃M n : ℕ⦄ [NeZero M], 2 ≤ M → ∀ (c : AwgnCode M n P),
+      PerLetterIntegrabilityForConverse P N h_meas c ∧
+      ContinuousMIChainRuleForConverse P N h_meas c ∧
+      MarkovChainForConverse P N h_meas c
+  ```
+- 起草時設計 (`2 ≤ M`) に加えて **`[NeZero M]` typeclass binder を追加**。理由:
+  `MarkovChainForConverse` 展開で `IsMarkovChain` (`CondMutualInfo.lean:73`) の
+  typeclass 義務 `[IsFiniteMeasure μ]` が要求され、`awgnConverseJoint h_meas c` の
+  `IsProbabilityMeasure` instance を `[NeZero M]` 下で provide (mixture total mass
+  = M · (1/M) = 1)。`2 ≤ M ⇒ NeZero M` は Phase C consumer 側 `haveI : NeZero M
+  := ⟨by omega⟩` 1 行で導出可。
+- **Local def 4/5 件 genuine 化 (closed form)**: `awgnConverseJoint` (mixture
+  `(1/M) • ∑ m, δ_m ⊗ Pi.awgn(encoder m)`) / `perLetterYLaw` / `perLetterMI` /
+  `jointMIWYn` / `jointMIXnYn` 全て 1-3 行の閉じた式。1 件のみ def-level sorry
+  残置 = `awgnConverseJoint.instIsProbabilityMeasure` (total mass = 1 算術、Phase
+  B-DPI で fill 予定、~10-20 行)。
+- **独立 honesty audit subagent verdict (本 session 起動)**: **PASS-WITH-REMARKS**。
+  - (a) signature ≠ `awgn_converse` 結論: OK (3 sub-bound 連言、各々中間 quantity bound)
+  - (b) Mathlib 壁明示 4 条件 docstring: OK (姉妹 `IsAwgnRandomCodingFeasible` 対称)
+  - (c) discharger 結論型 == `awgn_converse` 結論型: OK (verbatim 一致、Phase C wiring 可能)
+  - (d) `@residual(plan:awgn-converse-aux-plan)` classification: OK (6 件全件)
+  - (e) `@audit:staged(awgn-converse-feasible)` tag tier 判定: KEEP-AS-LEGACY (姉妹継承 + plan 明示指示、AWGN family sweep で別途 migrate 推奨)
+  - (f) `instIsProbabilityMeasure` sorry: OK (`-- @residual` line comment 配置、circular 化リスクなし)
+  - Per-declaration table: 15 件、defect 0、tier 5 honesty defect 検出なし
+- **後続セッション対応 (REMARKS)**:
+  - `@audit:staged(awgn-random-coding-feasible)` + `@audit:staged(awgn-converse-feasible)` を AWGN family sweep で同時 `@residual(wall:...)` migrate (本 session スコープ外)
+  - 姉妹 `awgn-mi-decomp-plan.md` Phase 6 closure 後に `ContinuousMIChainRuleForConverse` を staged → genuine 書換候補
 
 ### #3 (TBD、Phase B-Fano 完了時) Fano application 完了 + Type class 整合確認
 
