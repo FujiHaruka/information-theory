@@ -140,7 +140,20 @@ phrasing is structurally equivalent to the bridge itself, but conceptually
 isolates the *scaling-monotonicity step* from the *path-endpoint
 identification step* (§1, `IsStamToEPILimitHyp`).
 
-`@audit:suspect(epi-stam-to-conclusion-plan)`
+`@audit:retract-candidate(load-bearing-predicate)`
+(migrated 2026-05-28 from legacy `@audit:suspect(epi-stam-to-conclusion-plan)`:
+this `def := IsStamInequalityHyp → ∃ Z_X Z_Y, ... ∧ AntitoneOn ...` is
+load-bearing — the `AntitoneOn` existential is the genuine Csiszár
+scaling content, which cannot be reduced to `sorry` in a def body.
+Closure plan: `docs/shannon/epi-stam-to-conclusion-phaseA-plan.md`
+(Phase A internals carry `@residual(plan:epi-stam-to-conclusion-phaseA-plan)`
+on `csiszarGap1Source_deriv_le_zero`, `csiszarGap1Source_continuousOn`,
+`csiszarGap_antitoneOn_Icc_zero_one`). Active consumer
+`isStamToEPIScalingHyp_of_stam_debruijn` (`@audit:ok`) builds this
+predicate from caller-supplied de Bruijn regularity + per-`t` Stam;
+the predicate itself stays as the bundle until consumers can supply
+`AntitoneOn` directly.)
+
 据置理由 (2026-05-27 A-V audit): Phase A 内部 antitonicity 構築
 (`csiszarGap_antitoneOn_Icc_zero_one` + `csiszarGap1Source_deriv_le_zero`
 + `csiszarGap1Source_continuousOn`) に sorry 3 件残置
@@ -430,14 +443,19 @@ line 21 cites Mathlib-wall names as the canonical SLUG example
 extensible and the plan-slug usage here matches established
 project-internal practice.
 
-`@audit:suspect(epi-stam-to-conclusion-plan)`
-(Phase 1.C audit 2026-05-27, fresh-eye sweep): tag migrated `staged` → `suspect`
-to match the slug's plan-slug nature (per `docs/audit/audit-tags.md` line 22 +
-413: wall slug ↔ `staged`, plan slug ↔ `suspect`). The docstring already noted
-this refinement (Tier 3 PASS-after-fix above) but the marker itself had not
-been updated — fixed here as a forgotten-sweep / vocabulary-integrity patch.
-Load-bearing classification unchanged (richness hypothesis, Cover-Thomas
-Ch.17 暗黙仮定); no body / signature change. -/
+`@audit:retract-candidate(load-bearing-predicate)`
+(migrated 2026-05-28 from legacy `@audit:suspect(epi-stam-to-conclusion-plan)`,
+which itself replaced `@audit:staged(...)` in Phase 1.C 2026-05-27.
+This `def := ∃ Z_X Z_Y, Measurable ∧ ... ∧ IndepFun Z_X Z_Y P` is a
+load-bearing **richness hypothesis** on `(Ω, P)` — the existential
+construction of two fresh jointly independent standard normals cannot be
+reduced to `sorry` in a def body. Closure plan:
+`docs/shannon/epi-stam-to-conclusion-phaseA-plan.md` retreat line
+**L-Concl-A-γ** (Mathlib wall: noise extension on arbitrary probability
+space, `MeasureTheory.IsAtomless`-style extension not yet upstream).
+Active consumer `isStamToEPIScalingHyp_of_stam_debruijn` takes this
+predicate as caller input; the predicate stays until a Mathlib upstream
+constructor or in-house richness lemma supplies the witness.) -/
 def IsStamScalingNoiseHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∃ (Z_X Z_Y : Ω → ℝ),
@@ -464,8 +482,11 @@ theorem isStamScalingNoiseHyp_symm
 
 This subsection computes the `HasDerivAt` of the 1-source Csiszár scaling gap
 `csiszarGap1Source X Y Z_X Z_Y P t` along `t ∈ Ioi 0`, by direct application of
-the V2 de Bruijn identity (`IsRegularDeBruijnHypV2.derivAt_entropy_eq_half_fisher_v2`,
-`Common2026/Shannon/FisherInfoV2DeBruijn.lean:245`) to the three mapped measures
+the V2 de Bruijn identity (`deBruijn_identity_v2`,
+`Common2026/Shannon/FisherInfoV2DeBruijn.lean:272`; Phase 2.B foundation
+removed the inline `IsRegularDeBruijnHypV2.derivAt_entropy_eq_half_fisher_v2`
+field, the identity is now delivered by shared lemma `debruijnIdentityV2_holds`
+carrying `@residual(wall:debruijn-integration)`) to the three mapped measures
 `P.map (X + √t · Z_X)`, `P.map (Y + √t · Z_Y)`, `P.map ((X+Y) + √t · (Z_X+Z_Y))`,
 composed with `Real.exp` via a one-line chain rule helper.
 

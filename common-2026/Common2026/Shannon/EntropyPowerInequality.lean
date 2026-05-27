@@ -347,18 +347,16 @@ theorem isEntropyPowerInequalityHypothesis_of_gaussian
   rw [entropy_power_inequality_gaussian_saturation P X Y hX hY hXY m₁ m₂ v₁ v₂
         hv₁ hv₂ hLawX hLawY]
 
-/-- **Stam-to-EPI bridge from a known EPI fact** (trivial discharge). When the
-EPI conclusion is already established by some non-circular route (e.g. Gaussian
-saturation), the bridge is the constant function — it ignores its Stam input.
-
-`@audit:retract-candidate(load-bearing-predicate)`
-`@audit:closed-by-successor(epi-stam-to-conclusion-plan)` -/
-theorem isStamToEPIBridge_of_epi
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h_epi : IsEntropyPowerInequalityHypothesis X Y P) :
-    IsStamToEPIBridge X Y P :=
-  fun _ => h_epi
+-- (retracted 2026-05-28, EPI-Stam Cluster C+D sweep) `isStamToEPIBridge_of_epi`
+-- was a trivial pass-through `IsEntropyPowerInequalityHypothesis X Y P →
+-- IsStamToEPIBridge X Y P := fun _ => h_epi` with **0 consumers** (verified
+-- via `rg -n 'isStamToEPIBridge_of_epi' Common2026/` returning only the
+-- declaration line). It carried `@audit:retract-candidate(load-bearing-predicate)`
+-- + `@audit:closed-by-successor(epi-stam-to-conclusion-plan)`; the discharge
+-- path it provided (Gaussian-saturation → bridge) is now publicly available
+-- via `EPIStamDischarge.isStamToEPIBridgeHyp_of_gaussian` and
+-- `EPIStamToBridge.isStamToEPIBridgeHyp_of_gaussian_via_scaling`, so this
+-- in-file `IsStamToEPIBridge` wrapper is redundant.
 
 /-! ## §E — 補助 corollary 群 -/
 

@@ -140,7 +140,17 @@ saturation).
 Used as hypothesis pass-through; Mathlib has no machinery for any of these
 ingredients (`rg "deBruijn" → 0 hit`).
 
-`@audit:staged(epi-debruijn-regularity)`
+`@audit:retract-candidate(load-bearing-predicate)`
+(migrated 2026-05-28 from legacy `@audit:staged(epi-debruijn-regularity)`:
+this `structure` carries genuine `HasDerivAt` content via `reg_at` +
+`density_t_eq` pin, so it cannot be reduced to `sorry` in its body. Closure
+plan: `docs/shannon/epi-debruijn-integration-plan.md`. Active consumers
+exist across `EPIStamDischarge` / `EPIStamToBridge` / `EPIL3Integration`,
+so this is **not** a candidate for outright deletion — the tag flags it
+for eventual decomposition into a regularity precondition + shared
+`@residual(wall:debruijn-integration)` lemma once consumers can carry
+caller-supplied density data directly.)
+
 **Resolved 2026-05-25** (Wave 3 third batch): former
 `Integrable ... (volume.restrict (Set.Ioi 0))` field was unsatisfiable even for
 Gaussian X (the integrand `1/(2(v+t))` over `(0,∞)` diverges, but `Integrable`
@@ -167,7 +177,10 @@ audit caveat on 2026-05-25). The structure has been refactored: `density_path`
 is now a top-level structure field, and the new `density_t_eq` field pins it
 to `(reg_at t ht).density_t`. Consequently, picking `density_path := 0`
 forces `(reg_at t ht).density_t = 0` via `density_t_eq`, which forces the
-RHS of `(reg_at t ht).derivAt_entropy_eq_half_fisher_v2` to
+RHS of `deBruijn_identity_v2 X Z ht (reg_at t ht)` (Phase 2.B foundation
+removed the `derivAt_entropy_eq_half_fisher_v2` field; the V2 de Bruijn
+identity is now delivered by the shared lemma
+`debruijnIdentityV2_holds`, `@residual(wall:debruijn-integration)`) to
 `(1/2) * fisherInfoOfDensityReal 0 = 0`; for the Gaussian instance the LHS
 is `HasDerivAt (fun s => h(𝒩(m, v+s))) (1/(2(v+t))) t` with
 `1/(2(v+t)) ≠ 0`, contradicting the pinned `0`. Thus the degenerate witness
@@ -185,9 +198,11 @@ RHS `(1/2) * fisherInfoOfDensityReal 0 = 0` contradicts Gaussian
 `1/(2(v+t))` derivative via `HasDerivAt.unique`),
 Tier 3 (`density_t_eq` is load-bearing not decorative — removing it
 restores the decoupled-existential bypass; `reg_at` keeps genuine
-`HasDerivAt` content; `staged(epi-debruijn-regularity)` retained because no
-general non-Gaussian discharge yet and tail-beyond-T externalization still
-pending). -/
+`HasDerivAt` content; legacy `staged(epi-debruijn-regularity)` retained
+in 2026-05-25 audit because no general non-Gaussian discharge yet and
+tail-beyond-T externalization still pending. 2026-05-28 migration moved
+the tag to `retract-candidate(load-bearing-predicate)` per the current
+sorry-based honesty workflow — see top of docstring). -/
 structure IsDeBruijnRegularityHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] where
   /-- Shared density witness. `density_path t` is intended to be the density
@@ -205,8 +220,11 @@ structure IsDeBruijnRegularityHyp {Ω : Type*} [MeasurableSpace Ω]
   independent existentials and `density_path := fun _ _ ↦ 0` trivially
   discharged `integrable_deriv` alone (the resolved caveat). With this pin,
   `density_path = 0` forces `(reg_at t ht).density_t = 0` and hence
-  `(reg_at t ht).derivAt_entropy_eq_half_fisher_v2`'s RHS to `0`, which
-  contradicts the true Gaussian derivative `1/(2(v+t)) ≠ 0`. -/
+  `deBruijn_identity_v2 X Z ht (reg_at t ht)`'s RHS to `0` (Phase 2.B
+  foundation removed the `derivAt_entropy_eq_half_fisher_v2` field; V2
+  de Bruijn is now delivered by shared lemma `debruijnIdentityV2_holds`,
+  `@residual(wall:debruijn-integration)`), which contradicts the true
+  Gaussian derivative `1/(2(v+t)) ≠ 0`. -/
   density_t_eq : ∀ t : ℝ, ∀ ht : 0 < t,
     (reg_at t ht).density_t = density_path t
   /-- The derivative `(1/2)·J(X+√t·Z).toReal` is interval-integrable on every
@@ -242,7 +260,17 @@ identity (T2-F `deBruijn_identity` packaged with the L-DB1 regularity above)
 and the fundamental theorem of calculus along an unbounded interval (`rg
 "intervalIntegral.integral_deriv" → only bounded-interval forms`).
 
-`@audit:staged(epi-debruijn-integration)`
+`@audit:retract-candidate(load-bearing-predicate)`
+(migrated 2026-05-28 from legacy `@audit:staged(epi-debruijn-integration)`:
+this `def : Prop` is load-bearing — the body is the existential identity
+`∃ fPath, ∀ ..., h_target - h_X = ∫ ... ∂volume`, the Cover-Thomas
+17.7.2 integration form itself, which cannot be reduced to `sorry` in a
+def body. Closure plan: `docs/shannon/epi-debruijn-integration-plan.md`.
+Active consumers exist across the file + `EntropyPowerInequality` +
+`EPIL3Integration`; tag flags eventual decomposition into a shared sorry
+lemma `@residual(wall:debruijn-integration)` once consumers can supply
+density paths directly.)
+
 **Resolved 2026-05-25** (Wave 3 third batch): former `∀ fPath` quantification
 collapsed via `fPath := fun _ _ ↦ 0` (because
 `fisherInfoOfMeasureV2 _ f = fisherInfoOfDensity f` is defeq, the measure
@@ -251,8 +279,10 @@ demanding `h_target = h_X` — false for non-degenerate `(X, T > 0)`.
 Refactored to existential `∃ fPath`, selecting the genuine density path
 along the heat-flow trajectory (Gaussian instance:
 `fPath t := gaussianPDFReal m (v + ⟨t,_⟩)`). Predicate remains load-bearing
-(carries the de Bruijn integration identity content) so the audit tag stays
-at `staged(epi-debruijn-integration)` rather than `ok`. -/
+(carries the de Bruijn integration identity content); 2026-05-28 migration
+moved the tag from legacy `staged(epi-debruijn-integration)` to
+`retract-candidate(load-bearing-predicate)` (see top of docstring) per
+the current sorry-based honesty workflow. -/
 def IsDeBruijnIntegrationHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) (T : ℝ) : Prop :=
   ∃ (fPath : ℝ → ℝ → ℝ),

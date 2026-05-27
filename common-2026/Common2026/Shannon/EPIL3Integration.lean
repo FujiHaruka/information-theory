@@ -493,8 +493,17 @@ general `X` no Mathlib machinery currently produces the required
 `HasDerivAt` family-level statement and so this hypothesis externalizes that
 regularity.
 
-`@audit:staged(epi-heat-flow-family-regularity)` — honest load-bearing
-hypothesis, not a discharge. -/
+`@audit:retract-candidate(load-bearing-predicate)`
+(migrated 2026-05-28 from legacy
+`@audit:staged(epi-heat-flow-family-regularity)`: this `structure` is a
+load-bearing regularity bundle carrying a smooth density path + per-`t`
+V2 de Bruijn `HasDerivAt` witness. Cannot be reduced to `sorry` in its
+body. Closure plan: future `epi-heat-flow-family-regularity-plan` or
+absorption into `wall:debruijn-integration` (once consumers can supply
+the density path directly). Only consumer is the Gaussian constructor
+`isHeatFlowFamilyHyp_of_gaussian` (hypothesis-free); the structure
+stays as a documented load-bearing predicate for non-Gaussian
+extensions.) -/
 structure IsHeatFlowFamilyHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] : Type where
   /-- `Z` is the standard normal driving the heat flow. -/
@@ -1241,8 +1250,12 @@ The Phase D 2-source `csiszarGap` body is keyed to `heatFlowPath2 X Z s`
 Reparametrizing the 2-source form by `t := s/(1-s)` and pulling out the
 scale factor `√(1-s)` yields a 1-source equivalent form whose base is
 `t`-independent — the sister Phase A consumes this 1-source form to apply
-de Bruijn V2 directly without scaling-correction-term cancellation problems
-(L-Concl-A-δ avoided at the source).
+de Bruijn V2 directly (the per-`t` derivative is now delivered by the
+shared lemma `debruijnIdentityV2_holds` carrying
+`@residual(wall:debruijn-integration)`; Phase 2.B foundation removed the
+inline `derivAt_entropy_eq_half_fisher_v2` field from
+`IsRegularDeBruijnHypV2`) without scaling-correction-term cancellation
+problems (L-Concl-A-δ avoided at the source).
 
 This subsection is **additive** on top of the Phase D D-1..D-4 deliverables —
 none of the existing definitions or theorems above are modified.
@@ -1284,10 +1297,12 @@ heat-flow path `Common2026.Shannon.FisherInfoV2.gaussianConvolution _ _ t`
 The base of each `entropyPower` term is `t`-independent (`X + Y`, `X`, `Y`
 respectively), unlike the 2-source `csiszarGap` whose base `√(1-s) · X`
 is `s`-dependent. This shape directly matches the conclusion form of
-de Bruijn V2 `derivAt_entropy_eq_half_fisher_v2` keyed to
-`gaussianConvolution`, enabling sister Phase A to compute `d/dt gap_t`
-without scaling-correction-term cancellation problems (L-Concl-A-δ
-avoidance).
+the V2 de Bruijn identity `deBruijn_identity_v2` (Phase 2.B foundation
+removed the inline `derivAt_entropy_eq_half_fisher_v2` field, the
+identity is now delivered by shared lemma `debruijnIdentityV2_holds`,
+`@residual(wall:debruijn-integration)`) keyed to `gaussianConvolution`,
+enabling sister Phase A to compute `d/dt gap_t` without
+scaling-correction-term cancellation problems (L-Concl-A-δ avoidance).
 
 **Shape contract**: the body matches the conclusion of
 `csiszarGap1Source_shape_for_sister` (A-0'-5) verbatim, exposed via `rfl`.
@@ -1570,10 +1585,20 @@ this is its first concrete site). Tier 4 PASS post-clarification (the
 No `*_discharged` / `*_full` name-laundering; the predicate name announces
 the assumption.
 
-`@audit:staged(csiszar)` — Cover-Thomas Csiszár
-scaling tail bound formalization, externalized to a future plan
-(target: `epi-stam-to-conclusion-plan` Phase B or a dedicated Csiszár
-tail-bound mini-plan). -/
+`@audit:retract-candidate(load-bearing-predicate-empty-consumers)`
+(migrated 2026-05-28 from legacy `@audit:staged(csiszar)`: this
+`def := ... → Filter.Tendsto ...` is a load-bearing assertion of the
+genuine Cover-Thomas Csiszár scaling tail bound, but it has **zero
+active consumers** (`rg "IsCsiszarGap1SourceTendsToZeroAtInfinity"`
+returns only this declaration + a docstring mention). The sister
+Phase A closure path uses the rescale route through
+`csiszarGap_at_one_eq_zero_of_gaussian_pair`, not this `Tendsto … atTop`
+assertion. Predicate retained for completeness of the 1-source form's
+documentation; safe to retract outright if the alternative
+direct-1-source-endpoint path is never adopted. Closure plan (if
+adopted): `epi-stam-to-conclusion-plan` Phase B or a dedicated Csiszár
+tail-bound mini-plan, would land as a shared sorry lemma
+`@residual(wall:csiszar)`.) -/
 def IsCsiszarGap1SourceTendsToZeroAtInfinity {Ω : Type*} [MeasurableSpace Ω]
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   Measurable Z_X → Measurable Z_Y → IndepFun Z_X Z_Y P →
