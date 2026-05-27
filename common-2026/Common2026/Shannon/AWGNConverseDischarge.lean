@@ -376,23 +376,53 @@ private lemma awgn_errorProb_eq_fano_errorProb
   -- `errorProbAt c.toCode W m = Measure.pi (W (c.encoder m i)) (errorEvent m)`.
   rfl
 
+/-- **Shared wall: AWGN converse MI finiteness** (`wall:multivariate-mi`).
+
+`I(W; Y^n) ≠ ∞` ∧ `I(X^n; Y^n) ≠ ∞` on the AWGN converse canonical joint.
+
+Both require the analytic content of (a) joint AC w.r.t. product of marginals
+when `Y = Fin n → ℝ` is continuous, and (b) llr integrability at n-dim — which is
+the classical Mathlib wall for continuous-Y mutual information finiteness.
+Common2026 既存 `mutualInfo_ne_top` (`MutualInfo.lean:197`) は **両側 `[Fintype]`
+要求** で AWGN converse `Y := Fin n → ℝ` (continuous) で reuse 不可。
+
+The per-letter `klDiv_ne_top` (`Mathlib InformationTheory.klDiv_ne_top`) route via
+`mutualInfo` def unfold requires per-letter joint AC + integrable llr at AWGN 1-d
+(joint X_i Y_i 上の log-likelihood ratio integrability) which is substantial
+analytic plumbing beyond this mini-plan's scope. The ENNReal-form chain rule
+needed for `jointMIXnYn` propagation cannot be derived from the existing Real-form
+`ContinuousMIChainRuleForConverse` (`toReal_le_toReal` requires both sides
+ne_top → circular argument, plan §M2 観察 verbatim 確認).
+
+Concentrated here per `audit-tags.md`「共有 Mathlib 壁」pattern (T-MIF-fallback,
+mini-plan `awgn-converse-c5-mi-finite-bridge`): the 3 downstream sites
+(`awgnConverseJoint_mutualInfo_ne_top`, `awgn_dpi` inline `h_finite`,
+`awgnConverseJoint_mutualInfo_ne_top_via_chain`) become 0-sorry / 0-@residual
+themselves by delegating to this shared lemma. The single residual `sorry` is
+correctly classified as `wall:multivariate-mi` (reclassified from
+`plan:awgn-converse-aux-plan`).
+
+@residual(wall:multivariate-mi) -/
+private lemma awgnConverseJoint_pair_mi_ne_top
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
+    mutualInfo (awgnConverseJoint h_meas c)
+        (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
+        (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) ≠ ∞
+      ∧ jointMIXnYn h_meas c ≠ ∞ := by
+  sorry -- @residual(wall:multivariate-mi)
+
 /-- AWGN converse の `mutualInfo` finiteness: `mutualInfo (awgnConverseJoint c) Prod.fst Prod.snd ≠ ∞`。
 
-Msg 側 `Fin M` 有限 (`Fintype`、`MeasurableSingletonClass`) ⇒ `entropy ≤ log M < ∞`、
-`mutualInfo ≤ min(H(Msg), H(Yo)) ≤ H(Msg)` 系の Common2026 既存補題
-(`MutualInfo.lean:197 mutualInfo_ne_top`) は **両側 `[Fintype]` 要求** で AWGN
-converse `Y := Fin n → ℝ` (continuous) で reuse 不可 — Phase B-Fano dispatch 後の
-独立 audit (`@residual(wall:multivariate-mi)` reclassify 推奨) で確定。
-Phase C 統合内で `mutualInfo_le_of_markov` + X^n side 有限性 (Gaussian
-max-entropy `(1/2) log(1+P/N) < ∞` 経由) で transitively 確立する route が clean。
-plan §線 575 「~10-20 行 plumbing」想定は Mathlib 壁発火で drift。 -/
+`awgnConverseJoint_pair_mi_ne_top` 経由 (共有 wall lemma の `.1`)。本 declaration
+は **0-sorry / 0-@residual**、wall 自体は shared lemma に集約。 -/
 private lemma awgnConverseJoint_mutualInfo_ne_top
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
     mutualInfo (awgnConverseJoint h_meas c)
         (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
-        (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) ≠ ∞ := by
-  sorry -- @residual(plan:awgn-converse-aux-plan)
+        (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) ≠ ∞ :=
+  (awgnConverseJoint_pair_mi_ne_top h_meas c).1
 
 /-- **Phase B-Fano**: Fano + DPI postprocess + entropy chain + `H(W) = log M` を
 `shannon_converse_single_shot` 1 行呼出で集約。
@@ -497,9 +527,8 @@ theorem awgn_dpi
   -- Lift to `.toReal` via `ENNReal.toReal_mono`; the RHS finiteness is the
   -- AWGN-side MI finiteness wall (T-FFC-2/T-FFC-3 family, sibling of
   -- `awgnConverseJoint_mutualInfo_ne_top` but for `X^n`).
-  have h_finite : (jointMIXnYn h_meas c) ≠ ∞ := by
-    unfold jointMIXnYn
-    sorry -- @residual(plan:awgn-converse-aux-plan)
+  have h_finite : (jointMIXnYn h_meas c) ≠ ∞ :=
+    (awgnConverseJoint_pair_mi_ne_top h_meas c).2
   -- Unfold `jointMIWYn` / `jointMIXnYn` to match the ENNReal inequality, apply
   -- `ENNReal.toReal_mono`.
   show (jointMIWYn h_meas c).toReal ≤ (jointMIXnYn h_meas c).toReal
@@ -1171,8 +1200,8 @@ theorem awgnConverseJoint_mutualInfo_ne_top_via_chain
     mutualInfo (awgnConverseJoint h_meas c)
         (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
         (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) ≠ ∞
-      ∧ jointMIXnYn h_meas c ≠ ∞ := by
-  sorry -- @residual(plan:awgn-converse-aux-plan)
+      ∧ jointMIXnYn h_meas c ≠ ∞ :=
+  awgnConverseJoint_pair_mi_ne_top h_meas c
 
 /-! ## Phase C — `IsAwgnConverseFeasible` discharger + `awgn_converse_F3_discharged` wrapper -/
 
