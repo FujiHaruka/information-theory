@@ -1,5 +1,4 @@
 import Common2026.Shannon.AWGN
-import Common2026.Shannon.AWGNConverse
 import Common2026.Shannon.Converse
 import Common2026.Shannon.CondMutualInfo
 import Common2026.Shannon.DifferentialEntropy

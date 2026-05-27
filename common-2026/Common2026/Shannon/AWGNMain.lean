@@ -16,8 +16,13 @@ migration 後):
 * `h_mi_bridge` — F-2: MI closed-form bridge
 
 F-1 / F-3 は `IsAwgnTypicalityHypothesis` / `IsAwgnConverseHypothesis` predicate
-削除に伴い signature から除去。両者の analytic body は `awgn_achievability` /
-`awgn_converse` の `sorry + @residual(plan:...)` として独立 publish。
+削除に伴い signature から除去。F-1 (achievability) は `awgn_achievability` の
+`sorry + @residual(plan:awgn-achievability-typicality-plan)` として独立 publish。
+F-3 (converse) は `awgn_converse` body を `awgn_converse_F3_discharged` への
+1 行 `exact` wrapper として discharge 済 (2026-05-27 `awgn-main-converse-wiring`
+mini-plan)、file scope では 0 sorry、transitive Mathlib 壁
+`@residual(wall:multivariate-mi)` のみが `AWGNConverseDischarge.lean:405` の
+private lemma `awgnConverseJoint_pair_mi_ne_top` に集約残置。
 
 それぞれの discharge は別 plan に defer:
 * F-4 → `awgn-kernel-measurability-plan.md`
@@ -50,8 +55,9 @@ output power constraint `E[X²] ≤ P`:
   with `M ≥ ⌈exp(nR)⌉` messages and per-message error probability < ε.
 
 This is the **achievability half** statement, with converse available
-separately via `awgn_converse`. The remaining 撤退ライン hypotheses
-(`h_meas`, `h_mi_bridge`) expose the F-2 / F-4 撤退ライン structure;
+separately via `awgn_converse` (now wired to `awgn_converse_F3_discharged`,
+2026-05-27 `awgn-main-converse-wiring` mini-plan). The remaining 撤退ライン
+hypotheses (`h_meas`, `h_mi_bridge`) expose the F-2 / F-4 撤退ライン structure;
 F-1 / F-3 are no longer signaled by predicate hyps (2026-05-27 F-1/F-3
 peer migration removed `IsAwgnTypicalityHypothesis` /
 `IsAwgnConverseHypothesis`).
@@ -61,8 +67,9 @@ peer migration removed `IsAwgnTypicalityHypothesis` /
 * F-1 (achievability body) → `awgn-achievability-typicality-plan.md`
   (`awgn_achievability` body は `sorry` + `@residual(plan:...)`)
 * F-2 (`h_mi_bridge`) → `awgn-mi-bridge-plan.md`
-* F-3 (converse body) → `awgn-converse-aux-plan.md`
-  (`awgn_converse` body は `sorry` + `@residual(plan:...)`)
+* F-3 (converse body) → `awgn-converse-aux-plan.md` (`awgn_converse` body は
+  `awgn_converse_F3_discharged` 経由で discharge 済、wall residual のみ
+  upstream に残置 — `awgn-main-converse-wiring` mini-plan で完了)
 
 `@audit:closed-by-successor(awgn-moonshot-plan)` -/
 @[entry_point]
