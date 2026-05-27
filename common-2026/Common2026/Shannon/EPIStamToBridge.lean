@@ -141,6 +141,12 @@ isolates the *scaling-monotonicity step* from the *path-endpoint
 identification step* (§1, `IsStamToEPILimitHyp`).
 
 `@audit:suspect(epi-stam-to-conclusion-plan)`
+据置理由 (2026-05-27 A-V audit): Phase A 内部 antitonicity 構築
+(`csiszarGap_antitoneOn_Icc_zero_one` + `csiszarGap1Source_deriv_le_zero`
++ `csiszarGap1Source_continuousOn`) に sorry 3 件残置
+(`@residual(plan:epi-stam-to-conclusion-phaseA-plan)`)、Phase A 完了で
+`@audit:ok` 格上げ予定。
+
 Phase 0 (2026-05-25) refactor: the previous body fixed `g1 = 0` and reduced
 to the EPI conclusion itself (a cosmetic alias of the bridge, the `launder`
 defect originally flagged by the Wave 3 EPI-Stam agent). The new body
@@ -705,7 +711,9 @@ audit:PASS 2026-05-27 by honesty-auditor (independent):
   in-house content, no Mathlib gap is being papered over.
 
 Signature stable; body deferred as `sorry` with
-`@residual(plan:epi-stam-to-conclusion-phaseA-A3)` (see body comment). -/
+`@residual(plan:epi-stam-to-conclusion-phaseA-plan)` — sub-step A-3
+(weighted-form algebraic discharge from Stam harmonic-mean to
+`eP_sum · J_sum ≤ eP_X · J_X + eP_Y · J_Y`, see body comment). -/
 theorem csiszarGap1Source_deriv_le_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -758,7 +766,7 @@ theorem csiszarGap1Source_deriv_le_zero
   -- monotonicity, but in the worst case factors out as a separate
   -- staged predicate (L-Concl-A-ζ).
   sorry
-  -- @residual(plan:epi-stam-to-conclusion-phaseA-A3)
+  -- @residual(plan:epi-stam-to-conclusion-phaseA-plan) -- sub-step A-3
 
 /-! ## §2'''' — Phase A A-4: `AntitoneOn` lift + `IsStamToEPIScalingHyp` constructor
 
@@ -801,7 +809,10 @@ lemma or by tightening `IsDeBruijnRegularityHyp` to include path-continuity
 of the density derivative.
 
 Signature stable; body deferred as `sorry` with
-`@residual(plan:epi-stam-to-conclusion-phaseA-A4-continuity)`. -/
+`@residual(plan:epi-stam-to-conclusion-phaseA-plan)` — sub-step
+A-4-continuity (per-`t` continuity of `entropyPower ∘ P.map` along the
+heat-flow path, requires Lebesgue-dominated-convergence machinery beyond
+the current `IsDeBruijnRegularityHyp` bundle). -/
 theorem csiszarGap1Source_continuousOn
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -811,7 +822,7 @@ theorem csiszarGap1Source_continuousOn
     (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P) :
     ContinuousOn (fun t : ℝ => csiszarGap1Source X Y Z_X Z_Y P t) (Set.Ici (0 : ℝ)) := by
   sorry
-  -- @residual(plan:epi-stam-to-conclusion-phaseA-A4-continuity)
+  -- @residual(plan:epi-stam-to-conclusion-phaseA-plan) -- sub-step A-4-continuity
 
 /-- **A-4-2**: `csiszarGap1Source X Y Z_X Z_Y P` is differentiable on the
 interior `Set.Ioi 0 = interior (Set.Ici 0)`, via A-2-3 + `HasDerivAt.differentiableAt`. -/
@@ -892,7 +903,10 @@ theorem csiszarGap1Source_antitoneOn_Ici_zero
 + continuity. Materializing these as a uniform `∀ s ∈ Set.Ico 0 1, ...`
 hypothesis in this constructor's signature would balloon the file scope
 beyond A-4's ~25-40 line budget. We retreat to `sorry` with
-`@residual(plan:epi-stam-to-conclusion-phaseA-A4-rescale)`.
+`@residual(plan:epi-stam-to-conclusion-phaseA-plan)` — sub-step
+A-4-rescale (lift 1-source `AntitoneOn (Set.Ici 0)` to 2-source
+`AntitoneOn (Set.Icc 0 1)` via `csiszarGap_eq_one_source_via_rescale`
++ `csiszarGap_at_one_eq_zero_of_gaussian_pair`).
 
 Signature stable; body deferred. -/
 theorem csiszarGap_antitoneOn_Icc_zero_one
@@ -913,7 +927,7 @@ theorem csiszarGap_antitoneOn_Icc_zero_one
           - entropyPower (P.map (heatFlowPath2 Y Z_Y s)))
       (Set.Icc (0 : ℝ) 1) := by
   sorry
-  -- @residual(plan:epi-stam-to-conclusion-phaseA-A4-rescale)
+  -- @residual(plan:epi-stam-to-conclusion-phaseA-plan) -- sub-step A-4-rescale
 
 /-- **A-4-5**: `IsStamToEPIScalingHyp X Y P` constructor from
 `IsStamScalingNoiseHyp` (A-1 staged honest witness) + the three sister
@@ -1009,7 +1023,11 @@ Honesty notes:
   differs from every argument: `IsStamScalingNoiseHyp` is a noise-extension
   richness hypothesis, the three `IsDeBruijnRegularityHyp` carry density /
   derivative regularity, `IsStamToEPILimitHyp` is a launder-shape boundary
-  fact (acknowledged at the predicate definition site, `@audit:suspect`).
+  fact (acknowledged at the predicate definition site,
+  `@audit:retract-candidate(load-bearing-predicate)`; the A-V cleanup
+  confirmed the limit predicate is non-load-bearing in the active pipeline
+  since `_h_limit` is discarded via an `_` binder in
+  `isStamToEPIBridgeHyp_of_scaling_limit`).
 - **No new staged predicate introduced** — all arguments are pre-existing
   staged hypotheses inherited from A-1 (`IsStamScalingNoiseHyp`),
   sister Phase D (`IsDeBruijnRegularityHyp`), and Phase 0
@@ -1117,9 +1135,16 @@ structure IsEPIScalingDecomposedPipeline {Ω : Type*} [MeasurableSpace Ω]
 Hypothesis-shape-converted form of `EntropyPowerInequality.entropy_power_inequality`:
 where the base theorem internally relies on the shared sorry lemma
 `stamToEPIBridge_holds` to discharge the Stam → EPI bridge, this wrapper
-**bypasses that sorry** by constructing the bridge through the A-5 chain
-(`isStamToEPIBridgeHyp_of_stam_debruijn`). The remaining residual is purely the
-Stam inequality body (`IsStamInequalityResidual`, Cover-Thomas Lemma 17.7.2).
+**routes around that single shared sorry** by constructing the bridge
+through the A-5 chain (`isStamToEPIBridgeHyp_of_stam_debruijn`). It does
+**not** eliminate all residuals — the wrapper transitively depends on the
+Phase A internal sorries inside the A-5 chain
+(`csiszarGap1Source_deriv_le_zero` — sub-step A-3,
+`csiszarGap1Source_continuousOn` — sub-step A-4-continuity, and
+`csiszarGap_antitoneOn_Icc_zero_one` — sub-step A-4-rescale, all carrying
+`@residual(plan:epi-stam-to-conclusion-phaseA-plan)`), in addition to the
+caller-supplied Stam inequality residual (`IsStamInequalityResidual`,
+Cover-Thomas Lemma 17.7.2).
 
 This is the Phase A "案 a (案 a, new wrapper publish)" deliverable: the base
 theorem signature stays unchanged for downstream protection, while this wrapper
@@ -1135,8 +1160,11 @@ They are defeq via `fisherInfoOfMeasureV2_def`
 `(fisherInfoOfMeasureV2 μ f).toReal = fisherInfoOfDensityReal f` by definition
 of `fisherInfoOfDensityReal`).
 
-`@audit:ok` (genuine chained wrapper, no fresh `sorry`; remaining `h_stam`
-is the honest Stam wall consumed by the caller). -/
+`@audit:ok` (genuine chained wrapper, no fresh `sorry` introduced in this
+declaration; the transitive Phase A residuals listed above remain in their
+respective declarations under
+`@residual(plan:epi-stam-to-conclusion-phaseA-plan)`, and the caller-
+supplied `h_stam` is the honest Stam wall). -/
 theorem entropy_power_inequality_unconditional
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
