@@ -1002,21 +1002,66 @@ theorem awgn_per_letter_mi_le_log_var
 
 `Real.log` is concave on `Ioi 0` (`Mathlib.Analysis.Convex.SpecificFunctions.Basic.
 strictConcaveOn_log_Ioi`) ⇒ `fun x => Real.log (1 + x/N)` concave on `Ici 0` (composition
-with affine increasing map). Apply `ConcaveOn.le_map_sum` with uniform weights `wᵢ := 1/n`. -/
+with affine increasing map, packaged as `concaveOn_log_one_add_div` in
+`DifferentialEntropy.lean`). Apply `ConcaveOn.le_map_sum` with uniform weights
+`wᵢ := 1/n`. -/
 theorem sum_log_one_add_le_n_log_one_add_avg
     {n : ℕ} (hn_pos : 0 < n)
     (N : ℝ) (hN_pos : 0 < N)
     (xs : Fin n → ℝ) (hxs_nn : ∀ i, 0 ≤ xs i) :
     ∑ i : Fin n, (1 / 2) * Real.log (1 + xs i / N)
       ≤ (n : ℝ) * ((1 / 2) * Real.log (1 + ((1 / (n : ℝ)) * ∑ i : Fin n, xs i) / N)) := by
-  -- Strategy (plan §C-1c, failure-fallback judgement #6 — sorry retreat採用):
-  -- `f x := log(1 + x/N)` is concave on `Ici 0` (composition of
-  -- `strictConcaveOn_log_Ioi` with affine `x ↦ 1 + x/N`). Apply `ConcaveOn.le_map_sum`
-  -- with uniform weights `wᵢ := 1/n`. The full Jensen + scaling plumbing is
-  -- ~30-60 lines but the affine-substitution step ran into `smul`/`mul`
-  -- normalization friction in the current session — deferred per plan §C
-  -- failure-fallback (line 906-908).
-  sorry -- @residual(plan:awgn-converse-aux-plan)
+  -- `f x := log(1 + x/N)` is concave on `Ici 0`.
+  set f : ℝ → ℝ := fun x => Real.log (1 + x / N) with hf_def
+  have hf_concave : ConcaveOn ℝ (Set.Ici (0 : ℝ)) f :=
+    Common2026.Shannon.concaveOn_log_one_add_div hN_pos
+  have hn_real_pos : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn_pos
+  have hn_ne : (n : ℝ) ≠ 0 := ne_of_gt hn_real_pos
+  -- Uniform weights `wᵢ := 1/n`.
+  set w : Fin n → ℝ := fun _ => (1 : ℝ) / (n : ℝ) with hw_def
+  have hw_nn : ∀ i ∈ (Finset.univ : Finset (Fin n)), 0 ≤ w i := by
+    intro i _; simp only [hw_def]; positivity
+  have hw_sum : ∑ i ∈ (Finset.univ : Finset (Fin n)), w i = 1 := by
+    simp [hw_def, Finset.sum_const, Finset.card_univ, Fintype.card_fin]
+    field_simp
+  have hxs_mem : ∀ i ∈ (Finset.univ : Finset (Fin n)), xs i ∈ Set.Ici (0 : ℝ) := by
+    intro i _; exact hxs_nn i
+  -- Apply Jensen.
+  have h_jensen :
+      (∑ i ∈ (Finset.univ : Finset (Fin n)), w i • f (xs i))
+        ≤ f (∑ i ∈ (Finset.univ : Finset (Fin n)), w i • xs i) :=
+    hf_concave.le_map_sum hw_nn hw_sum hxs_mem
+  -- Convert `smul` to `mul` on `ℝ`.
+  simp only [smul_eq_mul, hw_def] at h_jensen
+  -- `h_jensen : ∑ i, (1/n) * log(1 + xs i / N) ≤ log(1 + ((1/n) * ∑ i, xs i)/N)`
+  -- after factoring `(1/n)` out of `∑ i, (1/n) * xs i`.
+  rw [show (∑ i : Fin n, (1 : ℝ) / (n : ℝ) * xs i) = (1 / (n : ℝ)) * ∑ i : Fin n, xs i from
+    (Finset.mul_sum Finset.univ xs ((1 : ℝ) / (n : ℝ))).symm] at h_jensen
+  -- Multiply both sides by `(n : ℝ) > 0` and then by `(1/2) ≥ 0`.
+  -- LHS goal: ∑ (1/2) * log(1 + xᵢ/N) = (n : ℝ) * (1/2) * ((1/n) * ∑ log(1 + xᵢ/N)).
+  have h_lhs_rewrite :
+      ∑ i : Fin n, (1 / 2 : ℝ) * Real.log (1 + xs i / N)
+        = (n : ℝ) * ((1 / 2) * ((1 / (n : ℝ)) *
+            ∑ i : Fin n, Real.log (1 + xs i / N))) := by
+    rw [show (∑ i : Fin n, (1 / 2 : ℝ) * Real.log (1 + xs i / N))
+      = (1 / 2 : ℝ) * ∑ i : Fin n, Real.log (1 + xs i / N) from
+      (Finset.mul_sum Finset.univ (fun i => Real.log (1 + xs i / N)) (1 / 2 : ℝ)).symm]
+    field_simp
+  rw [h_lhs_rewrite]
+  -- Now goal: (n) * ((1/2) * ((1/n) * ∑ log(1+xᵢ/N))) ≤ (n) * ((1/2) * log(1+avg/N)).
+  -- Apply monotonicity twice (factor (n) ≥ 0, then (1/2) ≥ 0).
+  have h_half_nn : (0 : ℝ) ≤ 1 / 2 := by norm_num
+  apply mul_le_mul_of_nonneg_left _ hn_real_pos.le
+  apply mul_le_mul_of_nonneg_left _ h_half_nn
+  -- Goal: (1/n) * ∑ log(1+xᵢ/N) ≤ log(1 + ((1/n) * ∑ xᵢ)/N).
+  -- This is exactly `h_jensen` after rewriting `∑ (1/n) * log(...) = (1/n) * ∑ log(...)`.
+  have h_sum_factor :
+      ∑ i : Fin n, (1 / (n : ℝ)) * Real.log (1 + xs i / N)
+        = (1 / (n : ℝ)) * ∑ i : Fin n, Real.log (1 + xs i / N) :=
+    (Finset.mul_sum Finset.univ (fun i => Real.log (1 + xs i / N)) (1 / (n : ℝ))).symm
+  rw [← h_sum_factor]
+  -- `f (xs i) = log(1 + xs i / N)` and `f (∑ ...) = log(1 + (...)/N)`.
+  exact h_jensen
 
 /-- **C-2** Sum of per-letter MIs is bounded by `n · (1/2) log(1 + P/N)`.
 

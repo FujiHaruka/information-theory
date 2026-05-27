@@ -3,6 +3,8 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.InformationTheory.KullbackLeibler.Basic
 import Mathlib.MeasureTheory.Measure.Decomposition.Lebesgue
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
+import Mathlib.Analysis.Convex.SpecificFunctions.Basic
+import Mathlib.Analysis.Convex.Function
 
 /-!
 # Differential entropy + Gaussian max-entropy (E-9)
@@ -875,5 +877,47 @@ theorem klDiv_gaussianReal_gaussianReal_eq
   have hv₂_ne : (v₂ : ℝ) ≠ 0 := hv₂_pos.ne'
   field_simp
   ring
+
+/-! ## Helper — concavity of `x ↦ log(1 + x/N)` on `Ici 0`
+
+Affine-substitution concavity used by AWGN converse C-1c
+(`AWGNConverseDischarge.sum_log_one_add_le_n_log_one_add_avg`).
+
+Built by composing `Real.strictConcaveOn_log_Ioi.concaveOn` (concavity of `Real.log`
+on `Ioi 0`) with the affine map `x ↦ 1 + x/N`, then restricting via `ConcaveOn.subset`
+to `Ici 0` (since `1 + x/N ≥ 1 > 0` for `x ≥ 0`). -/
+theorem concaveOn_log_one_add_div {N : ℝ} (hN_pos : 0 < N) :
+    ConcaveOn ℝ (Set.Ici (0 : ℝ)) (fun x => Real.log (1 + x / N)) := by
+  -- Direct proof from the definition of `ConcaveOn`.
+  refine ⟨convex_Ici 0, ?_⟩
+  intro x hx y hy a b ha hb hab
+  -- We need: a • log(1 + x/N) + b • log(1 + y/N) ≤ log(1 + (a•x + b•y)/N)
+  -- = a * log(1 + x/N) + b * log(1 + y/N) ≤ log(a*(1+x/N) + b*(1+y/N))
+  -- since a + b = 1 and 1 + (ax+by)/N = a(1+x/N) + b(1+y/N).
+  have hx_pos : (0 : ℝ) < 1 + x / N := by
+    have hxN : 0 ≤ x / N := div_nonneg hx hN_pos.le
+    linarith
+  have hy_pos : (0 : ℝ) < 1 + y / N := by
+    have hyN : 0 ≤ y / N := div_nonneg hy hN_pos.le
+    linarith
+  -- Use `strictConcaveOn_log_Ioi.concaveOn` at points `1 + x/N` and `1 + y/N`.
+  have h_log_conc : ConcaveOn ℝ (Set.Ioi (0 : ℝ)) Real.log :=
+    strictConcaveOn_log_Ioi.concaveOn
+  have h_jensen :
+      a • Real.log (1 + x / N) + b • Real.log (1 + y / N)
+        ≤ Real.log (a • (1 + x / N) + b • (1 + y / N)) :=
+    h_log_conc.2 hx_pos hy_pos ha hb hab
+  -- Rewrite the RHS: a*(1+x/N) + b*(1+y/N) = 1 + (a*x + b*y)/N (using a + b = 1).
+  have hN_ne : N ≠ 0 := hN_pos.ne'
+  have h_combo : a • (1 + x / N) + b • (1 + y / N)
+      = 1 + (a • x + b • y) / N := by
+    simp only [smul_eq_mul]
+    have h_expand : a * (1 + x / N) + b * (1 + y / N)
+        = (a + b) + (a * x + b * y) / N := by
+      field_simp
+      ring
+    rw [h_expand, hab]
+  rw [h_combo] at h_jensen
+  exact h_jensen
 
 end Common2026.Shannon
