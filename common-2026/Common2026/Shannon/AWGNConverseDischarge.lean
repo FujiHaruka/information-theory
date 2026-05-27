@@ -29,8 +29,11 @@ continuous MI chain rule / Markov-side regularity) を packing しつつ、Phase
 * Phase A (本 commit) — bundle predicate + sub-bound + Phase B/C skeleton
 * Phase B-Fano — `awgn_converse_single_shot_call` (Phase B-Fano dispatch)
 * Phase B-DPI/chain — `awgn_dpi` / `awgn_chain_rule` (Phase B-DPI/chain dispatch)
-* Phase B-Gaussian — `awgn_per_letter_mi_le_capacity` (Phase B-Gaussian dispatch)
-* Phase C — `isAwgnConverseFeasible_discharger` 統合 + `awgn_converse` body 置換
+* Phase B-Gaussian — 起草時 `awgn_per_letter_mi_le_capacity` 想定だったが
+  per-message `power_constraint` から per-letter `E[X_i²] ≤ P` が genuine 化不能
+  (false-statement defect) のため **撤回**。代替は Phase C の sum-form chain
+  (`awgn_per_letter_input_power_avg` + `awgn_per_letter_mi_le_log_var` + Jensen)。
+* Phase C — `isAwgnConverseFeasible_discharger` 統合 + `awgn_converse_F3_discharged` wrapper
 
 ## 設計指針 (Phase B 各 dispatch 向け)
 
@@ -135,7 +138,9 @@ Per-letter `Y_i` の `negMulLog (rnDeriv μ_{Y_i} volume)` Lebesgue 可積分性
 **Honesty 4 条件** (姉妹 `IsAwgnRandomCodingFeasible` と同型):
 (a) signature ≠ `awgn_converse` 結論 (`Integrable (negMulLog ...) volume` の per-letter ∀ 形)
 (b) Mathlib 壁明示 — T-FFC-2 continuous SMB / n-d differentialEntropy 系
-(c) Phase B-Gaussian で `awgn_per_letter_mi_le_capacity` 経由で genuine assembly
+(c) Phase C で sum-form chain (C-1a + C-1b + C-1c) 経由で genuine assembly
+    (起草時の per-letter `awgn_per_letter_mi_le_capacity` 経路は false-statement
+    defect で撤回、sum-form + Jensen に差替)
 (d) `@audit:staged(awgn-converse-feasible)` 付与
 
 `@audit:staged(awgn-converse-feasible)` -/
@@ -516,71 +521,89 @@ theorem awgn_chain_rule
   -- is mechanical unfold).
   h_chain
 
-/-! ## Phase B-Gaussian skeleton (本 commit は signature + sorry のみ)
+/-! ## Phase C — Per-letter input second moment / Jensen / sum-form chain
+(Phase B-Gaussian 撤回後の再設計、`awgn-converse-aux-plan.md` Phase C 反映)。
 
-Per-letter `I(X_i; Y_i) ≤ (1/2) log(1 + P/N)`:
-* `I(X_i; Y_i) = h(Y_i) - h(Y_i | X_i) = h(Y_i) - h(N)` (Gaussian noise factor、F-2 共有)
-* `h(Y_i) ≤ (1/2) log(2πe(P+N))` (Gaussian max-entropy、Y_i variance ≤ P+N)
-* `h(N) = (1/2) log(2πeN)` (Gaussian closed form)
-* 合成: `(1/2) log(1 + P/N)` -/
+旧 `awgn_per_letter_mi_le_capacity` (per-letter `E[X_i²] ≤ P` 形、`power_constraint`
+per-message 形からは genuine 化不能の false-statement defect) は本 commit で撤回し、
+代わりに **sum-form + Jensen** で `∑ᵢ I(X_i; Y_i) ≤ n · (1/2) log(1+P/N)` を直接立てる。 -/
 
-/-- **Phase B-Gaussian**: per-letter `I(X_i; Y_i) ≤ (1/2) log(1 + P/N)`。
+/-- Per-letter input second moment `E[X_i² | W ∼ Uniform(Fin M)]
+= (1/M) ∑_m (c.encoder m i)²`。Uniform message 上で input letter `X_i = c.encoder W i`
+の 2 次モーメント。`power_constraint` (per-message block 形) と `1/n ∑_i` avg で
+`(1/n) ∑_i perLetterInputSecondMoment c i ≤ P` が genuine に出る (`awgn_per_letter_input_power_avg`)。 -/
+noncomputable def perLetterInputSecondMoment
+    {M n : ℕ} {P : ℝ} (c : AwgnCode M n P) (i : Fin n) : ℝ :=
+  (1 / (M : ℝ)) * ∑ m : Fin M, (c.encoder m i) ^ 2
 
-* `h_per_letter : PerLetterIntegrabilityForConverse` bundle field (T-FFC-2 staged)
-* `h_mi_bridge_per_letter` : F-2 (`awgn-mi-bridge` / `awgn-mi-decomp`) と共有の MI 分解
-  bridge (per-letter)
+/-- **C-1a** Average of per-letter input second moments is bounded by `P`.
 
-3-of-4 Gaussian max-entropy hypothesis (`hμ ≪ vol`, `h_mean`, `h_var`, `h_var_int`) は
-本 dispatch 内で genuine 化:
-* `hμ ≪ vol` — Gaussian noise convolve から自動 (`gaussianReal_absolutelyContinuous`)
-* `h_mean h_var h_var_int` — input power constraint `∑ X_i² ≤ nP` から per-letter
-  `E[X_i²] ≤ P` を導出 (Cauchy-Schwarz、~20 行)
+`(1/n) ∑ᵢ E[X_i²] ≤ P` を `power_constraint` (per-message form `∑ᵢ (encoder m i)² ≤ n·P`)
+から Fubini swap (∑ᵢ ∑ₘ = ∑ₘ ∑ᵢ) で genuine 化。 -/
+theorem awgn_per_letter_input_power_avg
+    {M n : ℕ} (hM_pos : 0 < M) (hn_pos : 0 < n) {P : ℝ}
+    (c : AwgnCode M n P) :
+    (1 / (n : ℝ)) * ∑ i : Fin n, perLetterInputSecondMoment c i ≤ P := by
+  -- Unfold the per-letter second-moment definition.
+  unfold perLetterInputSecondMoment
+  -- Bring the `(1/M)` constant out of `∑ i`.
+  have h_pull_M :
+      (∑ i : Fin n, (1 / (M : ℝ)) * ∑ m : Fin M, (c.encoder m i) ^ 2)
+        = (1 / (M : ℝ)) * ∑ i : Fin n, ∑ m : Fin M, (c.encoder m i) ^ 2 := by
+    rw [← Finset.mul_sum]
+  rw [h_pull_M]
+  -- Fubini swap: `∑ i ∑ m = ∑ m ∑ i`.
+  rw [Finset.sum_comm]
+  -- Apply `power_constraint` term-by-term inside the inner sum.
+  have h_power_each : ∀ m : Fin M, (∑ i : Fin n, (c.encoder m i) ^ 2) ≤ (n : ℝ) * P :=
+    c.power_constraint
+  -- Bound the inner double sum by `M · (n · P)`.
+  have h_sum_bound :
+      (∑ m : Fin M, ∑ i : Fin n, (c.encoder m i) ^ 2)
+        ≤ ∑ _m : Fin M, (n : ℝ) * P := by
+    apply Finset.sum_le_sum
+    intro m _
+    exact h_power_each m
+  have h_const_sum :
+      (∑ _m : Fin M, (n : ℝ) * P) = (M : ℝ) * ((n : ℝ) * P) := by
+    rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin]
+    ring
+  rw [h_const_sum] at h_sum_bound
+  -- Now: (1/n) * ((1/M) * (something ≤ M·n·P)) ≤ P.
+  have hM_real : (0 : ℝ) < (M : ℝ) := by exact_mod_cast hM_pos
+  have hn_real : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn_pos
+  -- Step: pull `(1/n)` past `(1/M) * ...`.
+  have h_combine :
+      (1 / (n : ℝ)) * ((1 / (M : ℝ)) *
+          (∑ m : Fin M, ∑ i : Fin n, (c.encoder m i) ^ 2))
+        ≤ (1 / (n : ℝ)) * ((1 / (M : ℝ)) * ((M : ℝ) * ((n : ℝ) * P))) := by
+    have h_inner : (1 / (M : ℝ)) *
+          (∑ m : Fin M, ∑ i : Fin n, (c.encoder m i) ^ 2)
+        ≤ (1 / (M : ℝ)) * ((M : ℝ) * ((n : ℝ) * P)) := by
+      apply mul_le_mul_of_nonneg_left h_sum_bound
+      positivity
+    apply mul_le_mul_of_nonneg_left h_inner
+    positivity
+  -- Simplify the RHS to `P`.
+  have h_rhs : (1 / (n : ℝ)) * ((1 / (M : ℝ)) * ((M : ℝ) * ((n : ℝ) * P))) = P := by
+    field_simp
+  rw [h_rhs] at h_combine
+  exact h_combine
 
-Phase B-Gaussian dispatch で fill 予定。
+/-- **C-1b** Per-letter MI bound via per-letter input variance.
 
-**⚠ honesty defect (2026-05-27 Phase B-Gaussian dispatch 発見、tier 5)**:
+Per-letter `I(X_i; Y_i) ≤ (1/2) log(1 + perLetterInputSecondMoment c i / N)`
+を `differentialEntropy_le_gaussian_of_variance_le` (4 hyp 形、`DifferentialEntropy.lean:518`)
+で導出。`Y_i` の分散 ≤ `E[X_i²] + N` (input ⊥⊥ noise) で Gaussian max-entropy。
 
-主定理 signature `(perLetterMI h_meas c i).toReal ≤ (1/2) * Real.log (1 + P / N)` は
-**各 i ∈ Fin n に対し per-letter capacity bound** を主張するが、`AwgnCode.power_constraint`
-(`AWGN.lean:98`、`∀ m, ∑ᵢ (encoder m i)² ≤ n·P`) は **per-message block constraint** で
-**per-letter `E[X_i²] ≤ P` は genuine に導出不能**。具体的には:
-* `E[X_i²] = (1/M) ∑ₘ (encoder m i)²` (uniform W 上)
-* per-message bound `(encoder m i)² ≤ ∑ⱼ (encoder m j)² ≤ n·P` (各項 ≤ sum) ⇒
-  `E[X_i²] ≤ n·P` (worst case)
-* avg over i: `∑ᵢ E[X_i²] = (1/M) ∑ₘ ∑ᵢ (encoder m i)² ≤ n·P` ⇒
-  `(1/n) ∑ᵢ E[X_i²] ≤ P` (**avg 形のみ** genuine)
-
-per-letter `E[X_i²] ≤ P` (各 i に対して) は AWGN code の per-message power constraint
-からは出ない。Cover-Thomas 9.1.2 step 4 のテキストブック証明も実際は per-letter
-`I(X_i;Y_i) ≤ (1/2) log(1 + P_i/N)` (P_i = E[X_i²]) の形を取り、Phase C で `∑ᵢ` +
-Jensen / concavity of `log` で `n · (1/2) log(1+P/N)` に結合する形。本 plan §B-Gauss-1
-(line 733-737) も「avg `(1/n) ∑ E[X_i²] ≤ P`」「**per-letter は ≤ nP**」と
-明記済 (orchestrator brief line 「per-letter Var bound (avg vs per-letter) の判断」
-で本 dispatch 観測予定として警告あり)。
-
-**第一選択 (CLAUDE.md §「検証の誠実性 → 対処順序」) — signature 改変で sorry を
-逃がす**: 本 dispatch では brief 指示「signature 改変禁止」のため不可。Phase C
-`isAwgnConverseFeasible_discharger` の組立で `∑ᵢ I(X_i;Y_i) ≤ n · (1/2) log(1+P/N)`
-を直接出す Jensen / concavity 形に書き直すのが正しい構造 (本定理は retract-candidate)。
-
-**第二選択 (本 dispatch 採用) — tier 5 defect マーカー残置**: signature を改変せず
-body は `sorry` のまま、本 docstring に `@audit:defect(false-statement)` +
-`@audit:retract-candidate` を併記。Phase C 完了時に signature 書換 or 撤回を
-強制する暫定マーカー。
-
-@audit:defect(false-statement) — per-letter `E[X_i²] ≤ P` は AWGN
-`power_constraint` (per-message block 形) から genuine 化不能、
-各 i での per-letter capacity bound は false in general
-@audit:closed-by-successor(awgn-converse-aux-plan) — Phase C
-`isAwgnConverseFeasible_discharger` 内で sum 形 `∑ᵢ ... ≤ n · (1/2) log(1+P/N)`
-+ Jensen / concavity (`log(1+x/N)` concave) で書き直し、本 declaration は撤回
-予定 (Phase C 完了時 commit で削除、後続補題 `awgn_sum_per_letter_mi_le_n_capacity`
-が代替)
-@residual(defect:false-statement,plan:awgn-converse-aux-plan) -/
-theorem awgn_per_letter_mi_le_capacity
+`@residual(plan:awgn-converse-aux-plan)` — per-letter Gaussian max-entropy 4 hyp 充足
+(`hμ ≪ vol` Gaussian convolution + `h_mean` / `h_var` / `h_var_int` per-letter 形 +
+`h_ent_int` から bundle `PerLetterIntegrabilityForConverse` 経由) は本 dispatch では
+~80-150 行の analytic work で、撤退口採用 (plan §C 失敗時 fallback の sorry retreat)。 -/
+theorem awgn_per_letter_mi_le_log_var
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
-    {M n : ℕ} (c : AwgnCode M n P)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P)
     (h_per_letter : PerLetterIntegrabilityForConverse P N h_meas c)
     (h_mi_bridge_per_letter :
         ∀ i : Fin n, (perLetterMI h_meas c i).toReal
@@ -588,22 +611,152 @@ theorem awgn_per_letter_mi_le_capacity
             - Common2026.Shannon.differentialEntropy
                 (ProbabilityTheory.gaussianReal 0 N))
     (i : Fin n) :
-    (perLetterMI h_meas c i).toReal ≤ (1/2) * Real.log (1 + P / (N : ℝ)) := by
-  sorry -- @residual(plan:awgn-converse-aux-plan) @audit:defect(false-statement)
+    (perLetterMI h_meas c i).toReal
+      ≤ (1 / 2) * Real.log (1 + perLetterInputSecondMoment c i / (N : ℝ)) := by
+  sorry -- @residual(plan:awgn-converse-aux-plan)
 
-/-! ## Phase C skeleton (本 commit は signature + sorry のみ)
+/-- **C-1c** Jensen / concavity of `log(1+·/N)`:
+`∑ᵢ (1/2) log(1 + xᵢ/N) ≤ n · (1/2) log(1 + (∑ᵢ xᵢ / n) / N)` for `xᵢ ≥ 0`.
 
-Phase B-Fano + B-DPI + B-chain + B-Gaussian を連鎖して
-`log M ≤ n · (1/2) log(1+P/N) + binEntropy(Pe) + Pe·log(M-1)` を assemble。 -/
+`Real.log` is concave on `Ioi 0` (`Mathlib.Analysis.Convex.SpecificFunctions.Basic.
+strictConcaveOn_log_Ioi`) ⇒ `fun x => Real.log (1 + x/N)` concave on `Ici 0` (composition
+with affine increasing map). Apply `ConcaveOn.le_map_sum` with uniform weights `wᵢ := 1/n`. -/
+theorem sum_log_one_add_le_n_log_one_add_avg
+    {n : ℕ} (hn_pos : 0 < n)
+    (N : ℝ) (hN_pos : 0 < N)
+    (xs : Fin n → ℝ) (hxs_nn : ∀ i, 0 ≤ xs i) :
+    ∑ i : Fin n, (1 / 2) * Real.log (1 + xs i / N)
+      ≤ (n : ℝ) * ((1 / 2) * Real.log (1 + ((1 / (n : ℝ)) * ∑ i : Fin n, xs i) / N)) := by
+  -- Strategy (plan §C-1c, failure-fallback judgement #6 — sorry retreat採用):
+  -- `f x := log(1 + x/N)` is concave on `Ici 0` (composition of
+  -- `strictConcaveOn_log_Ioi` with affine `x ↦ 1 + x/N`). Apply `ConcaveOn.le_map_sum`
+  -- with uniform weights `wᵢ := 1/n`. The full Jensen + scaling plumbing is
+  -- ~30-60 lines but the affine-substitution step ran into `smul`/`mul`
+  -- normalization friction in the current session — deferred per plan §C
+  -- failure-fallback (line 906-908).
+  sorry -- @residual(plan:awgn-converse-aux-plan)
 
-/-- **Phase C — `IsAwgnConverseFeasible` discharger**.
+/-- **C-2** Sum of per-letter MIs is bounded by `n · (1/2) log(1 + P/N)`.
 
-Phase B-Fano + B-DPI + B-chain + B-Gaussian を連鎖:
+C-1a + C-1b + C-1c の合成: per-letter MI bound (variance 形) + per-letter variance
+average ≤ P + Jensen for log(1+x/N) concavity. -/
+theorem awgn_sum_per_letter_mi_le_n_capacity
+    (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
+    (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (hn_pos : 0 < n) (c : AwgnCode M n P)
+    (h_per_letter : PerLetterIntegrabilityForConverse P N h_meas c)
+    (h_mi_bridge_per_letter :
+        ∀ i : Fin n, (perLetterMI h_meas c i).toReal
+          = Common2026.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
+            - Common2026.Shannon.differentialEntropy
+                (ProbabilityTheory.gaussianReal 0 N)) :
+    ∑ i : Fin n, (perLetterMI h_meas c i).toReal
+      ≤ (n : ℝ) * ((1 / 2) * Real.log (1 + P / (N : ℝ))) := by
+  -- Step 1: per-letter bound via `awgn_per_letter_mi_le_log_var` for each `i`.
+  have hM_pos : 0 < M := Nat.pos_of_ne_zero (NeZero.ne M)
+  have h_per_letter_bound : ∀ i : Fin n, (perLetterMI h_meas c i).toReal
+      ≤ (1 / 2) * Real.log (1 + perLetterInputSecondMoment c i / (N : ℝ)) := by
+    intro i
+    exact awgn_per_letter_mi_le_log_var P hP N hN h_meas c h_per_letter
+      h_mi_bridge_per_letter i
+  -- Step 2: sum the per-letter bound.
+  have h_sum_le_sum :
+      (∑ i : Fin n, (perLetterMI h_meas c i).toReal)
+        ≤ ∑ i : Fin n, (1 / 2) * Real.log (1 + perLetterInputSecondMoment c i / (N : ℝ)) :=
+    Finset.sum_le_sum (fun i _ => h_per_letter_bound i)
+  -- Step 3: non-negativity of `perLetterInputSecondMoment c i` (squares are ≥ 0).
+  have h_nn : ∀ i : Fin n, 0 ≤ perLetterInputSecondMoment c i := by
+    intro i
+    unfold perLetterInputSecondMoment
+    apply mul_nonneg
+    · positivity
+    · apply Finset.sum_nonneg
+      intros m _
+      positivity
+  -- Step 4: Jensen / concavity bound (C-1c) yields
+  --   `∑ᵢ (1/2) log(1 + xᵢ/N) ≤ n · (1/2) log(1 + (∑ᵢ xᵢ / n) / N)`.
+  have hN_pos : (0 : ℝ) < (N : ℝ) := by
+    refine lt_of_le_of_ne N.coe_nonneg ?_
+    exact (Ne.symm hN)
+  have h_jensen := sum_log_one_add_le_n_log_one_add_avg (n := n) hn_pos
+    (N : ℝ) hN_pos (fun i => perLetterInputSecondMoment c i) h_nn
+  -- Step 5: monotonicity of `log` to push down `avg ≤ P` (C-1a) into the RHS.
+  -- `avg := (1/n) ∑ᵢ perLetterInputSecondMoment c i ≤ P` (awgn_per_letter_input_power_avg).
+  have h_avg_le : (1 / (n : ℝ)) * ∑ i : Fin n, perLetterInputSecondMoment c i ≤ P :=
+    awgn_per_letter_input_power_avg hM_pos hn_pos c
+  -- `1 + avg / N ≤ 1 + P / N`.
+  have h_one_add_mono :
+      1 + ((1 / (n : ℝ)) * ∑ i : Fin n, perLetterInputSecondMoment c i) / (N : ℝ)
+        ≤ 1 + P / (N : ℝ) := by
+    have : ((1 / (n : ℝ)) * ∑ i : Fin n, perLetterInputSecondMoment c i) / (N : ℝ)
+        ≤ P / (N : ℝ) := by
+      apply div_le_div_of_nonneg_right h_avg_le hN_pos.le
+    linarith
+  -- `log` monotone on positives.
+  have h_pos_avg :
+      0 < 1 + ((1 / (n : ℝ)) * ∑ i : Fin n, perLetterInputSecondMoment c i) / (N : ℝ) := by
+    have h_avg_nn :
+        (0 : ℝ) ≤ (1 / (n : ℝ)) * ∑ i : Fin n, perLetterInputSecondMoment c i := by
+      apply mul_nonneg
+      · positivity
+      · exact Finset.sum_nonneg (fun i _ => h_nn i)
+    have : (0 : ℝ) ≤ ((1 / (n : ℝ)) * ∑ i : Fin n, perLetterInputSecondMoment c i) / (N : ℝ) := by
+      exact div_nonneg h_avg_nn hN_pos.le
+    linarith
+  have h_log_mono :
+      Real.log
+          (1 + ((1 / (n : ℝ)) * ∑ i : Fin n, perLetterInputSecondMoment c i) / (N : ℝ))
+        ≤ Real.log (1 + P / (N : ℝ)) :=
+    Real.log_le_log h_pos_avg h_one_add_mono
+  -- Multiply by `n · (1/2) > 0` and chain.
+  have hn_real : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn_pos
+  have h_jensen_chained :
+      (n : ℝ) * ((1 / 2) * Real.log
+          (1 + ((1 / (n : ℝ)) * ∑ i : Fin n, perLetterInputSecondMoment c i) / (N : ℝ)))
+        ≤ (n : ℝ) * ((1 / 2) * Real.log (1 + P / (N : ℝ))) := by
+    have h_scaled : (1 / 2) * Real.log
+          (1 + ((1 / (n : ℝ)) * ∑ i : Fin n, perLetterInputSecondMoment c i) / (N : ℝ))
+        ≤ (1 / 2) * Real.log (1 + P / (N : ℝ)) := by
+      apply mul_le_mul_of_nonneg_left h_log_mono
+      norm_num
+    apply mul_le_mul_of_nonneg_left h_scaled
+    exact le_of_lt hn_real
+  -- Chain: sum ≤ ∑ log ≤ n · log_avg ≤ n · log_P.
+  exact h_sum_le_sum.trans (h_jensen.trans h_jensen_chained)
+
+/-- **C-5** Joint MI finiteness on the AWGN converse joint (transitive closure).
+
+`I(W; Y^n) ≤ I(X^n; Y^n) ≤ ∑ᵢ I(X_i; Y_i) ≤ n · (1/2) log(1+P/N) < ∞` で両 MI が ≠ ∞。
+sibling helpers `awgnConverseJoint_mutualInfo_ne_top` / `awgn_dpi` 内 `(jointMIXnYn).≠ ∞`
+の二つ共通の MI-finiteness wall を一括 discharge。 -/
+theorem awgnConverseJoint_mutualInfo_ne_top_via_chain
+    (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
+    (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (hn_pos : 0 < n) (c : AwgnCode M n P)
+    (h_per_letter : PerLetterIntegrabilityForConverse P N h_meas c)
+    (h_chain : ContinuousMIChainRuleForConverse P N h_meas c)
+    (h_markov : MarkovChainForConverse P N h_meas c)
+    (h_mi_bridge_per_letter :
+        ∀ i : Fin n, (perLetterMI h_meas c i).toReal
+          = Common2026.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
+            - Common2026.Shannon.differentialEntropy
+                (ProbabilityTheory.gaussianReal 0 N)) :
+    mutualInfo (awgnConverseJoint h_meas c)
+        (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
+        (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) ≠ ∞
+      ∧ jointMIXnYn h_meas c ≠ ∞ := by
+  sorry -- @residual(plan:awgn-converse-aux-plan)
+
+/-! ## Phase C — `IsAwgnConverseFeasible` discharger + `awgn_converse_F3_discharged` wrapper -/
+
+/-- **Phase C-3 — `IsAwgnConverseFeasible` discharger** (genuine assembly of the chain).
+
+Phase B-Fano + B-DPI + B-chain + C-2 (sum form) を連鎖:
 ```
 log M ≤ I(W; Y^n).toReal + binEntropy(Pe) + Pe·log(M-1)     (Phase B-Fano)
       ≤ I(X^n; Y^n).toReal + binEntropy(Pe) + Pe·log(M-1)   (Phase B-DPI, Markov)
       ≤ ∑ I(X_i; Y_i).toReal + binEntropy(Pe) + Pe·log(M-1) (Phase B-chain)
-      ≤ n · (1/2) log(1+P/N) + binEntropy(Pe) + Pe·log(M-1) (Phase B-Gaussian)
+      ≤ n · (1/2) log(1+P/N) + binEntropy(Pe) + Pe·log(M-1) (Phase C-2, sum form)
 ```
 
 `@audit:staged(awgn-converse-feasible)` -/
@@ -617,12 +770,54 @@ theorem isAwgnConverseFeasible_discharger
             = Common2026.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
               - Common2026.Shannon.differentialEntropy
                   (ProbabilityTheory.gaussianReal 0 N))
-    {M n : ℕ} [NeZero M] (hM : 2 ≤ M) (c : AwgnCode M n P)
+    {M n : ℕ} [NeZero M] (hM : 2 ≤ M) (hn_pos : 0 < n) (c : AwgnCode M n P)
     (Pe : ℝ) (hPe : Pe = ((1 / M : ℝ) * ∑ m : Fin M,
         (c.toCode.errorProbAt (awgnChannel N h_meas) m).toReal)) :
     Real.log M
       ≤ (n : ℝ) * ((1 / 2) * Real.log (1 + P / (N : ℝ)))
         + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1) := by
-  sorry -- @residual(plan:awgn-converse-aux-plan)
+  -- Destructure the bundle for `c`.
+  obtain ⟨h_per_letter, h_chain, h_markov⟩ := h_feasible hM c
+  -- Step (a)+(b)+(e) — B-Fano: `log M ≤ I(W; Y^n).toReal + binEntropy(Pe) + Pe · log(M-1)`.
+  have h_fano := awgn_converse_single_shot_call P N h_meas hM c Pe hPe
+  -- Step (c-DPI) — B-DPI: `I(W; Y^n).toReal ≤ I(X^n; Y^n).toReal`.
+  have h_dpi := awgn_dpi P N h_meas c h_markov
+  -- Step (c-chain) — B-chain: `I(X^n; Y^n).toReal ≤ ∑ᵢ I(X_i; Y_i).toReal`.
+  have h_chain_le := awgn_chain_rule P N h_meas c h_chain
+  -- Step (d) — C-2: `∑ᵢ I(X_i; Y_i).toReal ≤ n · (1/2) log(1+P/N)`.
+  have h_sum := awgn_sum_per_letter_mi_le_n_capacity P hP N hN h_meas hn_pos c
+    h_per_letter (h_mi_bridge_per_letter (M := M) (n := n) hM c)
+  -- Assemble: transitive `≤` chain on the first summand.
+  have h_lhs_chain : (jointMIWYn h_meas c).toReal
+      ≤ (n : ℝ) * ((1 / 2) * Real.log (1 + P / (N : ℝ))) :=
+    (h_dpi.trans h_chain_le).trans h_sum
+  -- Add `binEntropy(Pe) + Pe · log(M-1)` (constants on both sides).
+  linarith [h_fano, h_lhs_chain]
+
+/-- **Phase C-6 — `awgn_converse_F3_discharged` wrapper**.
+
+`awgn_converse` の `sorry` body を埋めるための薄い wrapper。`2 ≤ M` から `NeZero M`
+typeclass を導出し、`isAwgnConverseFeasible_discharger` に委譲。
+
+`@audit:staged(awgn-converse-feasible)` -/
+theorem awgn_converse_F3_discharged
+    (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
+    (h_meas : IsAwgnChannelMeasurable N)
+    (h_feasible : IsAwgnConverseFeasible P N h_meas)
+    (h_mi_bridge_per_letter :
+        ∀ {M n : ℕ} [NeZero M] (_hM : 2 ≤ M) (c : AwgnCode M n P), ∀ i : Fin n,
+          (perLetterMI h_meas c i).toReal
+            = Common2026.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
+              - Common2026.Shannon.differentialEntropy
+                  (ProbabilityTheory.gaussianReal 0 N))
+    {M n : ℕ} (hM : 2 ≤ M) (hn_pos : 0 < n) (c : AwgnCode M n P)
+    (Pe : ℝ) (hPe : Pe = ((1 / M : ℝ) * ∑ m : Fin M,
+        (c.toCode.errorProbAt (awgnChannel N h_meas) m).toReal)) :
+    Real.log M
+      ≤ (n : ℝ) * ((1 / 2) * Real.log (1 + P / (N : ℝ)))
+        + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1) := by
+  haveI : NeZero M := ⟨by omega⟩
+  exact isAwgnConverseFeasible_discharger P hP N hN h_meas h_feasible
+    h_mi_bridge_per_letter hM hn_pos c Pe hPe
 
 end InformationTheory.Shannon.AWGN
