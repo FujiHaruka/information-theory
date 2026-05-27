@@ -551,14 +551,14 @@ theorem csiszarGap1Source_hasDerivAt
           (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z_X s)))
         ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
           ((h_reg_X.reg_at t ht).density_t)) t :=
-    (h_reg_X.reg_at t ht).derivAt_entropy_eq_half_fisher_v2
+    Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2 X Z_X ht (h_reg_X.reg_at t ht)
   have h_dB_Y :
       HasDerivAt
         (fun s : ℝ => Common2026.Shannon.differentialEntropy
           (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution Y Z_Y s)))
         ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
           ((h_reg_Y.reg_at t ht).density_t)) t :=
-    (h_reg_Y.reg_at t ht).derivAt_entropy_eq_half_fisher_v2
+    Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2 Y Z_Y ht (h_reg_Y.reg_at t ht)
   have h_dB_sum :
       HasDerivAt
         (fun s : ℝ => Common2026.Shannon.differentialEntropy
@@ -566,7 +566,8 @@ theorem csiszarGap1Source_hasDerivAt
                     (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) s)))
         ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
           ((h_reg_sum.reg_at t ht).density_t)) t :=
-    (h_reg_sum.reg_at t ht).derivAt_entropy_eq_half_fisher_v2
+    Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2
+      (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) ht (h_reg_sum.reg_at t ht)
   -- Compose with the entropyPower chain rule (A-2-2).
   have h_eP_X := entropyPower_hasDerivAt_of_diffEnt_hasDerivAt h_dB_X
   have h_eP_Y := entropyPower_hasDerivAt_of_diffEnt_hasDerivAt h_dB_Y

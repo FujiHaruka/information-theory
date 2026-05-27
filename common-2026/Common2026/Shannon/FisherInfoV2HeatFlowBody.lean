@@ -234,7 +234,12 @@ theorem deBruijn_identity_v2_of_heat_subhyp
   deBruijn_identity_v2_of_heat_flow X Z hX hZ hXZ ht
     (IsHeatFlowDensity_of_sub_predicates h_conv h_time) h_ibp
 
-/-- **`IsRegularDeBruijnHypV2` constructor from sub-predicates.** -/
+/-- **`IsRegularDeBruijnHypV2` constructor from sub-predicates.**
+
+Phase 2.B 段 1 (foundation) で `IsRegularDeBruijnHypV2` が 2-field 化された
+ため、本 constructor の `_h_ibp` 引数は constructor 本体で未使用化した
+(L4 `IsRegularDeBruijnHypV2.ofHeatFlow` から `h_ibp` 引数が削除されたため)。
+signature の formal 縮小 (引数自体の削除) は段 2 scope。 -/
 @[entry_point]
 def IsRegularDeBruijnHypV2.ofHeatSubhyp
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
@@ -244,9 +249,9 @@ def IsRegularDeBruijnHypV2.ofHeatSubhyp
     {p : ℝ → ℝ → ℝ} {Δp : ℝ → ℝ → ℝ}
     (h_conv : IsHeatFlowConvolutionHyp X Z P p)
     (h_time : IsHeatTimeDerivHyp p Δp)
-    (h_ibp : IsIBPHypothesis X Z P p t) :
+    (_h_ibp : IsIBPHypothesis X Z P p t) :
     IsRegularDeBruijnHypV2 X Z P t :=
   IsRegularDeBruijnHypV2.ofHeatFlow hX hZ hXZ ht
-    (IsHeatFlowDensity_of_sub_predicates h_conv h_time) h_ibp
+    (IsHeatFlowDensity_of_sub_predicates h_conv h_time)
 
 end Common2026.Shannon.FisherInfoV2

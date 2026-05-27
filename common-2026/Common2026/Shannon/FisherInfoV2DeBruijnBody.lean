@@ -220,11 +220,13 @@ theorem deBruijn_identity_v2_of_heat_flow
       t :=
   h_ibp
 
-/-- **Constructor for `IsRegularDeBruijnHypV2`** from heat-flow + IBP predicates.
+/-- **Constructor for `IsRegularDeBruijnHypV2`** from a heat-flow density.
 
-Composes the L-FV2DB-A heat-flow density predicate with the L-FV2DB-B IBP
-predicate to obtain a `IsRegularDeBruijnHypV2` witness, closing the loop with
-the signature file. -/
+Phase 2.B 段 1 (foundation): `IsRegularDeBruijnHypV2` is now 2-field
+(`Z_law` + `density_t`), so the constructor only needs the heat-flow
+density predicate. The IBP hypothesis is no longer carried here — it is
+discharged downstream by the shared wall lemma
+`debruijnIdentityV2_holds` (`wall:debruijn-integration`). -/
 @[entry_point]
 def IsRegularDeBruijnHypV2.ofHeatFlow
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
@@ -232,12 +234,10 @@ def IsRegularDeBruijnHypV2.ofHeatFlow
     (_hXZ : IndepFun X Z P)
     {t : ℝ} (_ht : 0 < t)
     {p : ℝ → ℝ → ℝ}
-    (h_heat : IsHeatFlowDensity X Z P p)
-    (h_ibp : IsIBPHypothesis X Z P p t) :
+    (h_heat : IsHeatFlowDensity X Z P p) :
     IsRegularDeBruijnHypV2 X Z P t where
   Z_law := h_heat.Z_law
   density_t := p t
-  derivAt_entropy_eq_half_fisher_v2 := h_ibp
 
 /-! ## Convenience corollaries
 

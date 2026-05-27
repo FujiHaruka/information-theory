@@ -664,33 +664,21 @@ general non-Gaussian case is externalized via `IsHeatFlowFamilyHyp`.
 density witness as data; declared `noncomputable def` accordingly.) -/
 noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
-    (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z)
-    (hXZ : IndepFun X Z P)
-    {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0)
-    (hX_law : P.map X = gaussianReal m v)
+    (X Z : Ω → ℝ) (_hX : Measurable X) (_hZ : Measurable Z)
+    (_hXZ : IndepFun X Z P)
+    {m : ℝ} {v : ℝ≥0} (_hv : v ≠ 0)
+    (_hX_law : P.map X = gaussianReal m v)
     (hZ_law : P.map Z = gaussianReal 0 1) :
     ∀ t : ℝ, 0 < t →
       Common2026.Shannon.FisherInfoV2.IsRegularDeBruijnHypV2 X Z P t := by
   intro t ht
-  refine
+  -- Phase 2.B 段 1 (foundation): `IsRegularDeBruijnHypV2` is now 2-field
+  -- (regularity only). The `derivAt_entropy_eq_half_fisher_v2` field used to
+  -- be filled here via `deBruijn_identity_v2_gaussian`; that discharge is
+  -- now downstream (via `debruijnIdentityV2_holds` / shared wall lemma).
+  exact
     { Z_law := hZ_law
-      density_t := gaussianPDFReal m (v + ⟨t, ht.le⟩)
-      derivAt_entropy_eq_half_fisher_v2 := ?_ }
-  -- The V2 de Bruijn Gaussian discharge gives the derivative with the V2
-  -- *measure*-keyed Fisher info; convert to the density-keyed shape required
-  -- by `IsRegularDeBruijnHypV2`.
-  have h_deriv := Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2_gaussian
-    X Z hX hZ hXZ hv hX_law hZ_law ht
-  -- `fisherInfoOfMeasureV2Real μ f = fisherInfoOfDensityReal f` by `rfl`.
-  -- (The measure argument is purely a labelling device in the V2 API.)
-  have h_eq :
-      Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2Real
-          (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z t))
-          (gaussianPDFReal m (v + ⟨t, ht.le⟩))
-        = Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
-            (gaussianPDFReal m (v + ⟨t, ht.le⟩)) := rfl
-  rw [h_eq] at h_deriv
-  exact h_deriv
+      density_t := gaussianPDFReal m (v + ⟨t, ht.le⟩) }
 
 /-- **Family-level heat-flow regularity from a Gaussian** (Phase B-5,
 hypothesis-free Gaussian constructor).

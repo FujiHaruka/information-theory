@@ -188,10 +188,15 @@ explicit density witness), so the Gaussian case actually evaluates to `1/v`
 rather than the V1 ghost `0`. Bundles a density witness `density_t : ℝ → ℝ`
 for the law of `X + √t Z`.
 
-**L-F1 + L-F2 適用形**: heat-equation / dominated-bound / IBP machinery is bundled
-into the `derivAt_entropy_eq_half_fisher_v2` field as a hypothesis to be
-discharged downstream. The Gaussian case is fully discharged here (cf.
-`deBruijn_identity_v2_gaussian`); general families defer to follow-up work. -/
+**Phase 2.B foundation step (2026-05-27)**: 2 fields only — regularity
+preconditions (`Z_law` + `density_t`). The de Bruijn identity itself
+(`HasDerivAt ... ((1/2) * fisherInfoOfDensityReal density_t) t`) used to
+be bundled here as a third load-bearing field, but Phase 2.A audit
+(commit `a6ae83b`) flagged that arrangement as load-bearing hypothesis
+bundling (the field was `wall:debruijn-integration` smuggled into a
+regularity predicate). The de Bruijn identity core proof is now
+集約 (consolidated) into `debruijnIdentityV2_holds`
+(`wall:debruijn-integration`) as a genuine wall closure point. -/
 structure IsRegularDeBruijnHypV2 {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω)
     [IsProbabilityMeasure P]
@@ -200,65 +205,34 @@ structure IsRegularDeBruijnHypV2 {Ω : Type*} [MeasurableSpace Ω]
   Z_law : P.map Z = gaussianReal 0 1
   /-- Smooth density witness for `P.map (X + √t · Z)`. -/
   density_t : ℝ → ℝ
-  /-- The de Bruijn identity itself, V2 form (RHS uses V2 fisher info). -/
-  derivAt_entropy_eq_half_fisher_v2 :
-    HasDerivAt
-      (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
-      ((1/2) * fisherInfoOfDensityReal density_t)
-      t
 
-/-! ### Shared sorry 補題 — `debruijnIdentityV2_holds` (Phase 2.A)
+/-! ### Shared sorry 補題 — `debruijnIdentityV2_holds` (genuine wall closure point)
 
-Phase 2.A (`docs/shannon/epi-stam-fisher-epi-integrated-sweep-plan.md` §Phase 2.A)
-の foundation step として publish。`deBruijn_identity_v2` body の load-bearing
-field 抽出 (`h_reg.derivAt_entropy_eq_half_fisher_v2`) を解消するため、共有 sorry
-補題に **wall:debruijn-integration** (新規 wall promote、`docs/audit/audit-tags.md`
-Wall name register に追記予定) として集約する。
+Phase 2.B foundation step (`docs/shannon/epi-stam-fisher-epi-integrated-sweep-plan.md`
+§Phase 2.B) で `IsRegularDeBruijnHypV2` から `derivAt_entropy_eq_half_fisher_v2`
+field が削除され、本 lemma が `wall:debruijn-integration` (heat equation +
+dominated-bound + IBP の Mathlib 不在部) に対する **genuine wall closure point**
+に昇格した。Phase 2.A の no-op launder verdict (commit `a6ae83b`) を受けた
+field 削除 foundation の完了点。
 
-`IsRegularDeBruijnHypV2` structure 自体は honest precondition (regularity =
-`Z_law` / `density_t` / `derivAt_entropy_eq_half_fisher_v2` の 3 field、heat
-equation + dominated-bound + IBP の Mathlib 不在部を carry) として保持し、
-本 wrapper theorem の body は本 shared sorry 補題経由で closure する。Phase 2.B
-で defect 2 (`deBruijn_identity_v2_of_heat_flow` literal alias) / defect 4
-(本 declaration の field 抽出) を sequentially 解消する際の共通 closure point。
+`deBruijn_identity_v2` / `deBruijn_identity_v2_of_heat_flow` /
+`deBruijn_identity_v2_of_heat_subhyp` すべての common closure point。
+集約 target は **wall:debruijn-integration**。
 -/
 
 /-- **de Bruijn identity body — shared sorry 補題 (wall:debruijn-integration)**.
 
-`docs/shannon/epi-stam-fisher-epi-integrated-sweep-plan.md` Phase 2.A foundation
-step。`deBruijn_identity_v2` / Phase 2.B defect 2 / defect 4 / defect 5 すべての
-common closure point となる shared sorry 補題。集約 target は
-**wall:debruijn-integration** (Mathlib 未整備の heat equation + dominated-bound
-+ IBP 機構)。
+Phase 2.B foundation step で `IsRegularDeBruijnHypV2.derivAt_entropy_eq_half_fisher_v2`
+field 削除完了 (commit chain 上、本 lemma の上に乗っていた 1 段 indirection が
+解消された) → 本 lemma が genuine wall closure point に昇格。`h_reg` は
+regularity-only (2 field: `Z_law` + `density_t`) なので、body は
+「regularity から HasDerivAt 結論を導く」 heat eq + dominated bound + IBP の
+Mathlib 不在部に **直接突き当たる**。
 
-signature は `deBruijn_identity_v2` と verbatim 一致 (引数順 / type / 戻り値) なので
-consumer wrapper は機械的に `debruijnIdentityV2_holds X Z hX hZ hXZ ht h_reg` で
-closure できる。
-
-`@residual(wall:debruijn-integration)`
-
-`@audit:defect(launder)` — **honesty audit (2026-05-27, fresh-eye)**: 本 sorry の
-結論型は `h_reg.derivAt_entropy_eq_half_fisher_v2` field の型と verbatim 一致
-(`density_t` を `h_reg.density_t` に置換しただけ) であり、body は
-`exact h_reg.derivAt_entropy_eq_half_fisher_v2` で trivially 閉じる。よって
-本 lemma は **`wall:debruijn-integration` には突き当たっていない** —
-load-bearing 負荷は依然 `IsRegularDeBruijnHypV2.derivAt_entropy_eq_half_fisher_v2`
-field に bundle されたままで、Phase 2.A refactor は field 抽出を 1 段 indirection
-で隠しただけ。Wall classification 誤指定 + 既存 load-bearing field の launder。
-
-**追跡先 (Phase 2.B / closure plan で対応)**:
-1. `IsRegularDeBruijnHypV2` から `derivAt_entropy_eq_half_fisher_v2` field を
-   削除 (regularity 2 field `Z_law` / `density_t` のみ保持) → 当該 field が
-   genuine Mathlib wall (heat eq + dominated bound + IBP) として本 shared sorry
-   補題の正当な closure target になる、または
-2. 本 shared sorry 補題を撤回し、structure field の load-bearing 性を `@audit:defect`
-   としてマーク (Phase 2.A は no-op refactor だった旨を plan に反映)。
-
-現状: tier 5 launder marker 付き暫定残置 (`@audit:defect(launder)`)。 -/
+`@residual(wall:debruijn-integration)` -/
 theorem debruijnIdentityV2_holds
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
-    (X Z : Ω → ℝ) (_hX : Measurable X) (_hZ : Measurable Z)
-    (_hXZ : IndepFun X Z P)
+    (X Z : Ω → ℝ)
     {t : ℝ} (_ht : 0 < t)
     (h_reg : IsRegularDeBruijnHypV2 X Z P t) :
     HasDerivAt
@@ -267,7 +241,7 @@ theorem debruijnIdentityV2_holds
       t := by
   sorry -- @residual(wall:debruijn-integration)
 
-/-- **de Bruijn identity (V2 form)**, L-F1+L-F2 hypothesis pass-through.
+/-- **de Bruijn identity (V2 form)**, honest pass-through to shared wall lemma.
 
 For `X ⊥ Z` with `Z ∼ 𝒩(0, 1)`,
 
@@ -277,29 +251,22 @@ stated with **V2 Fisher information** (`fisherInfoOfDensityReal`) on the RHS.
 Unlike the V1 statement, the Gaussian case here can be fully discharged
 (`deBruijn_identity_v2_gaussian` below).
 
-**Phase 2.A refactor (2026-05-27、`epi-stam-fisher-epi-integrated-sweep-plan`
-§Phase 2.A)**: body の load-bearing field 抽出
-(`h_reg.derivAt_entropy_eq_half_fisher_v2`) を shared sorry 補題
-`debruijnIdentityV2_holds` (wall:debruijn-integration) 経由に書換。
-
-**honesty audit verdict (2026-05-27, fresh-eye)**: 本 refactor は no-op launder
-(`debruijnIdentityV2_holds` の `@audit:defect(launder)` 注記参照)。`h_reg`
-structure の `derivAt_entropy_eq_half_fisher_v2` field 自体が依然 load-bearing
-で、Phase 2.A の sorry は当該 field の 1 段 indirection 隠蔽に過ぎない。
-Phase 2.B で `IsRegularDeBruijnHypV2` から `derivAt_entropy_eq_half_fisher_v2`
-field を削除して genuine wall closure に持ち込む計画は維持する。 -/
+**Phase 2.B 段 1 (2026-05-27、`epi-stam-fisher-epi-integrated-sweep-plan`
+§Phase 2.B)**: F1 field 削除完了 (`IsRegularDeBruijnHypV2` から
+`derivAt_entropy_eq_half_fisher_v2` field を削除) により、本 wrapper は
+honest pass-through (regularity hyp `h_reg` → shared wall lemma
+`debruijnIdentityV2_holds` (`wall:debruijn-integration`) 経由) に昇格。 -/
 @[entry_point]
 theorem deBruijn_identity_v2
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
-    (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z)
-    (hXZ : IndepFun X Z P)
+    (X Z : Ω → ℝ)
     {t : ℝ} (ht : 0 < t)
     (h_reg : IsRegularDeBruijnHypV2 X Z P t) :
     HasDerivAt
       (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
       ((1/2) * fisherInfoOfDensityReal h_reg.density_t)
       t :=
-  debruijnIdentityV2_holds X Z hX hZ hXZ ht h_reg
+  debruijnIdentityV2_holds X Z ht h_reg
 
 /-! ## Gaussian discharge — `deBruijn_identity_v2_gaussian` (hypothesis-free)
 
