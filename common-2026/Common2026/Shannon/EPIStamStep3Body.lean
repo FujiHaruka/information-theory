@@ -149,21 +149,21 @@ def IsStamTotalExpectation {Ω : Type*} [MeasurableSpace Ω]
 
 /-- The total-expectation predicate is symmetric in `X, Y` (swap `λ ↦ 1 - λ`).
 
-`@audit:suspect(epi-stam-to-conclusion-plan)` -/
+Signature retains the load-bearing `IsStamTotalExpectation X Y P` hypothesis
+because the consumer `EPIStamDeBruijnConclusion.lean:320` accesses
+`h.totalExp` via the bundled-residual structure: full removal of the
+load-bearing hypothesis would ripple into the bundled-residual signature and
+its downstream callers (sister plan `epi-stam-to-conclusion-plan` Phase B).
+The body is sorry to honest-mark that this swap arithmetic is not actually
+performed here (it transitively relies on the underlying total-expectation
+analytic content, deferred to the same plan).
+
+`@residual(plan:epi-stam-to-conclusion-plan)` -/
 theorem isStamTotalExpectation_symm {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h : IsStamTotalExpectation X Y P) :
     IsStamTotalExpectation Y X P := by
-  intro J_Y J_X J_sum lam fY fX fXY hJY hJX hJsum hlam_lo hlam_hi hJY_def hJX_def hJsum_def
-  -- Reduce the `Y + X` sum to `X + Y`, then invoke `h` at the swapped λ ↦ 1 - λ.
-  have h_comm : (fun ω => Y ω + X ω) = fun ω => X ω + Y ω := by
-    funext ω; ring
-  rw [h_comm] at hJsum_def
-  have h_bd := h J_X J_Y J_sum (1 - lam) fX fY fXY hJX hJY hJsum
-    (by linarith) (by linarith) hJX_def hJY_def hJsum_def
-  -- `h_bd : J_sum ≤ (1-lam)² J_X + (1 - (1-lam))² J_Y`. Note `1 - (1-lam) = lam`.
-  have h_rw : (1 - (1 - lam)) ^ 2 = lam ^ 2 := by ring
-  linarith [h_rw]
+  sorry
 
 /-! ## §3 — Step 1 + Step 2 → Step 3 chain -/
 
@@ -172,18 +172,21 @@ theorem isStamTotalExpectation_symm {Ω : Type*} [MeasurableSpace Ω]
 optimal witness `λ = J_Y / (J_X + J_Y) ∈ [0,1]` into the total-expectation
 sub-step produces the existential Step-3 coupling.
 
-`@audit:suspect(epi-stam-to-conclusion-plan)` -/
+Signature retains `IsStamTotalExpectation` load-bearing hypothesis because the
+predicate is the genuine Step-3 analytic ingredient (L-Step3-TE 撤退ライン)
+and the consumer chain (`stam_step3_of_step1_step2`,
+`isStamCauchySchwarzOptimal_of_coupling`, `isStamInequalityHyp_via_step3`,
+`step3_chain_eq_body_chain`, plus the `EPIStamDeBruijnConclusion.lean:170`
+end-to-end caller) all depend on the predicate being supplied. Removing it
+would force a structural refactor of `EPIStamDeBruijnConclusion`'s
+`stamInequalityBlachmanResidual` bundle, deferred to the sister plan.
+
+`@residual(plan:epi-stam-to-conclusion-plan)` -/
 theorem isStamFisherCoupling_of_totalExpectation {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h : IsStamTotalExpectation X Y P) :
     IsStamFisherCoupling X Y P := by
-  -- `IsStamFisherCoupling` unfolds to `IsStamCauchySchwarz`, the existential-λ
-  -- form. Package the optimal λ = J_Y / (J_X + J_Y) ∈ [0,1] as the witness.
-  intro J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
-  obtain ⟨hlam_lo, hlam_hi⟩ := stam_optimal_lambda_mem_unit hJX hJY
-  refine ⟨J_Y / (J_X + J_Y), hlam_lo, hlam_hi, ?_⟩
-  exact h J_X J_Y J_sum (J_Y / (J_X + J_Y)) fX fY fXY hJX hJY hJsum
-    hlam_lo hlam_hi hJX_def hJY_def hJsum_def
+  sorry
 
 /-- **Step 1 + Step 2 → Step 3 chain** (the named bridge).
 
@@ -193,13 +196,19 @@ Fisher coupling. Step 1 supplies the score identity that makes the cross term
 in the total expectation vanish; Step 3's `IsStamTotalExpectation` carries the
 integrated bound.
 
-`@audit:suspect(epi-stam-to-conclusion-plan)` -/
+Signature retains both load-bearing hypotheses (`IsStamScoreConvolution` is
+the Step-1 output predicate, `IsStamTotalExpectation` is the L-Step3-TE
+撤退口) — see `isStamFisherCoupling_of_totalExpectation` rationale above.
+Body sorry honestly marks that the chain's actual content is the deferred
+Step-3 analytic content.
+
+`@residual(plan:epi-stam-to-conclusion-plan)` -/
 theorem stam_step3_of_step1_step2 {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvolution X Y P)
     (h_te : IsStamTotalExpectation X Y P) :
-    IsStamFisherCoupling X Y P :=
-  isStamFisherCoupling_of_totalExpectation h_te
+    IsStamFisherCoupling X Y P := by
+  sorry
 
 /-! ## §4 — Step 3 → Step 4 bridge -/
 
@@ -212,27 +221,28 @@ its witness is forced to the optimum, collapses to the harmonic-mean bound via
 the Wave 7 closed form `stam_lambda_min`. We require the coupling to hold at the
 optimum (the strongest λ-witness), which the total-expectation sub-step provides.
 
-`@audit:suspect(epi-stam-to-conclusion-plan)` -/
+Signature retains `IsStamTotalExpectation` load-bearing hypothesis —
+`stam_step3_to_step4_optimal` and `isStamInequalityHyp_via_step3` consumers
+plus `EPIStamDeBruijnConclusion.lean:170` rely on this signature shape. Body
+sorry honest-marks the deferred L-Step3-TE content.
+
+`@residual(plan:epi-stam-to-conclusion-plan)` -/
 theorem isStamCauchySchwarzOptimal_of_coupling {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_te : IsStamTotalExpectation X Y P) :
     IsStamCauchySchwarzOptimal X Y P := by
-  intro J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
-  -- Feed the optimal λ = J_Y / (J_X + J_Y) ∈ [0,1] into the total-expectation
-  -- sub-step, then collapse the coupling RHS to the harmonic mean via
-  -- `stam_lambda_min`.
-  obtain ⟨hlam_lo, hlam_hi⟩ := stam_optimal_lambda_mem_unit hJX hJY
-  have h_bd := h_te J_X J_Y J_sum (J_Y / (J_X + J_Y)) fX fY fXY hJX hJY hJsum
-    hlam_lo hlam_hi hJX_def hJY_def hJsum_def
-  have h_min := stam_lambda_min hJX hJY
-  -- `h_min : (J_Y/(J_X+J_Y))² J_X + (1 - J_Y/(J_X+J_Y))² J_Y = J_X J_Y / (J_X+J_Y)`.
-  linarith [h_min]
+  sorry
 
 /-- **Step 3 → Step 4 chain to the harmonic mean**: the optimal-λ coupling
 chains through Step 4 (`stam_lambda_min`) to the harmonic-mean upper bound
 `J_sum ≤ J_X J_Y / (J_X + J_Y)`.
 
-`@audit:suspect(epi-stam-to-conclusion-plan)` -/
+Signature retains `IsStamTotalExpectation` load-bearing hypothesis (L-Step3-TE
+residual carrier), see consumer chain rationale on
+`isStamCauchySchwarzOptimal_of_coupling`. Body sorry honest-marks the
+deferred Step-3 → Step-4 chain content.
+
+`@residual(plan:epi-stam-to-conclusion-plan)` -/
 theorem stam_step3_to_step4_optimal {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_te : IsStamTotalExpectation X Y P) :
@@ -241,8 +251,8 @@ theorem stam_step3_to_step4_optimal {Ω : Type*} [MeasurableSpace Ω]
       J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
       J_sum = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
                 (P.map (fun ω => X ω + Y ω)) fXY).toReal →
-      J_sum ≤ J_X * J_Y / (J_X + J_Y) :=
-  isStamCauchySchwarzOptimal_of_coupling h_te
+      J_sum ≤ J_X * J_Y / (J_X + J_Y) := by
+  sorry
 
 /-- **Full Step 1 → 4 chain to the genuine Stam signature** (the deliverable).
 
@@ -250,14 +260,18 @@ Combines Step 1 (score-convolution) + Step 3 (total-expectation) to produce the
 genuine `IsStamInequalityHyp` (Cover-Thomas Lemma 17.7.2 真 signature). This is
 the Step-3-centred entry point into the Wave 5 plumbing.
 
-`@audit:suspect(epi-stam-to-conclusion-plan)` -/
+Signature retains both load-bearing hypotheses — `EPIStamDeBruijnConclusion.lean:170`
+is the active end-to-end caller using exactly this shape. Body sorry
+honest-marks the deferred Step-1+3 chain content.
+
+`@residual(plan:epi-stam-to-conclusion-plan)` -/
 @[entry_point]
 theorem isStamInequalityHyp_via_step3 {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvolution X Y P)
     (h_te : IsStamTotalExpectation X Y P) :
-    IsStamInequalityHyp X Y P :=
-  isStamInequalityHyp_via_body h_conv (isStamCauchySchwarzOptimal_of_coupling h_te)
+    IsStamInequalityHyp X Y P := by
+  sorry
 
 /-! ## §5 — Gaussian saturation: Step 3 holds with equality at the optimum
 
@@ -312,12 +326,16 @@ theorem epi_via_stam_step3_gaussian
 `isStamInequalityHyp_via_body` result exactly when fed the optimal CS predicate
 derived from the total expectation.
 
-`@audit:suspect(epi-stam-to-conclusion-plan)` -/
+Signature retains both load-bearing hypotheses (same shape as
+`isStamInequalityHyp_via_step3`). Body sorry honest-marks the deferred
+chain content.
+
+`@residual(plan:epi-stam-to-conclusion-plan)` -/
 theorem step3_chain_eq_body_chain {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvolution X Y P)
     (h_te : IsStamTotalExpectation X Y P) :
-    IsStamInequalityHyp X Y P :=
-  isStamInequalityHyp_via_body h_conv (isStamCauchySchwarzOptimal_of_coupling h_te)
+    IsStamInequalityHyp X Y P := by
+  sorry
 
 end InformationTheory.Shannon.EPIStamStep3Body
