@@ -374,10 +374,13 @@ private lemma awgn_errorProb_eq_fano_errorProb
 /-- AWGN converse の `mutualInfo` finiteness: `mutualInfo (awgnConverseJoint c) Prod.fst Prod.snd ≠ ∞`。
 
 Msg 側 `Fin M` 有限 (`Fintype`、`MeasurableSingletonClass`) ⇒ `entropy ≤ log M < ∞`、
-`mutualInfo ≤ min(H(Msg), H(Yo)) ≤ H(Msg)` の Mathlib API は AWGN converse の Y 側
-(continuous) で reuse 不可。Plan §線 575 の plumbing fallback 通り、本 file
-内では `sorry + @residual(plan:awgn-converse-aux-plan)` で staged。Phase C 統合
-側で更に上流の bound に依存する可能性あり (handoff)。 -/
+`mutualInfo ≤ min(H(Msg), H(Yo)) ≤ H(Msg)` 系の Common2026 既存補題
+(`MutualInfo.lean:197 mutualInfo_ne_top`) は **両側 `[Fintype]` 要求** で AWGN
+converse `Y := Fin n → ℝ` (continuous) で reuse 不可 — Phase B-Fano dispatch 後の
+独立 audit (`@residual(wall:multivariate-mi)` reclassify 推奨) で確定。
+Phase C 統合内で `mutualInfo_le_of_markov` + X^n side 有限性 (Gaussian
+max-entropy `(1/2) log(1+P/N) < ∞` 経由) で transitively 確立する route が clean。
+plan §線 575 「~10-20 行 plumbing」想定は Mathlib 壁発火で drift。 -/
 private lemma awgnConverseJoint_mutualInfo_ne_top
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
@@ -568,10 +571,12 @@ body は `sorry` のまま、本 docstring に `@audit:defect(false-statement)` 
 @audit:defect(false-statement) — per-letter `E[X_i²] ≤ P` は AWGN
 `power_constraint` (per-message block 形) から genuine 化不能、
 各 i での per-letter capacity bound は false in general
-@audit:retract-candidate(phase-c-jensen-restructure) — Phase C
-`isAwgnConverseFeasible_discharger` 内で `∑ᵢ ... ≤ n · (1/2) log(1+P/N)` の
-sum 形 + Jensen / concavity の形に書き直し、本 declaration は retract 予定
-@residual(plan:awgn-converse-aux-plan) -/
+@audit:closed-by-successor(awgn-converse-aux-plan) — Phase C
+`isAwgnConverseFeasible_discharger` 内で sum 形 `∑ᵢ ... ≤ n · (1/2) log(1+P/N)`
++ Jensen / concavity (`log(1+x/N)` concave) で書き直し、本 declaration は撤回
+予定 (Phase C 完了時 commit で削除、後続補題 `awgn_sum_per_letter_mi_le_n_capacity`
+が代替)
+@residual(defect:false-statement,plan:awgn-converse-aux-plan) -/
 theorem awgn_per_letter_mi_le_capacity
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
