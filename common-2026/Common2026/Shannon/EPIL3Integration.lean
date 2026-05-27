@@ -119,7 +119,13 @@ structure IsEPIL3IntegratedPipeline {Ω : Type*} [MeasurableSpace Ω]
 /-- **L-EPI3 from integrated pipeline**. The integrated pipeline discharges
 `IsEntropyPowerInequalityHypothesis X Y P` via `epi_via_stam`.
 
-`@audit:suspect(epi-debruijn-integration-plan)` -/
+`@audit:retract-candidate(load-bearing-predicate)` — Phase A
+(`epi-stam-to-conclusion-phaseA-plan`, A-5/A-6) ships a genuine alternative
+discharge route (`EPIStamToBridge.entropy_power_inequality_unconditional`,
+hypothesis-free except for the honest Stam residual). This wrapper still
+threads `h_pipeline.bridge : IsStamToEPIBridgeHyp` as a load-bearing
+predicate; it is retained for downstream compatibility but is no longer the
+canonical EPI entry point. -/
 theorem epi_l3_of_integrated_pipeline
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -133,7 +139,11 @@ theorem epi_l3_of_integrated_pipeline
 EPI conclusion in one shot (no need for callers to thread through L-EPI1,
 L-EPI2, L-EPI3 separately).
 
-`@audit:suspect(epi-debruijn-integration-plan)` -/
+`@audit:retract-candidate(load-bearing-predicate)` — Phase A
+(`epi-stam-to-conclusion-phaseA-plan`) supplied the genuine
+`EPIStamToBridge.entropy_power_inequality_unconditional` route. This wrapper
+keeps the monolithic `IsEPIL3IntegratedPipeline` (whose `bridge` field is the
+load-bearing `IsStamToEPIBridgeHyp` predicate) for legacy callers. -/
 theorem entropy_power_inequality_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -196,7 +206,8 @@ theorem entropy_power_inequality_gaussian_via_pipeline
 
 /-- **EPI log form via integrated pipeline**.
 
-`@audit:suspect(epi-debruijn-integration-plan)` -/
+`@audit:retract-candidate(load-bearing-predicate)` — pipeline wrapper, see
+`entropy_power_inequality_integrated` header for the Phase A migration note. -/
 theorem entropy_power_inequality_log_form_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -210,7 +221,8 @@ theorem entropy_power_inequality_log_form_integrated
 
 /-- **EPI exp form via integrated pipeline** (Cover-Thomas Theorem 17.7.3 露出形).
 
-`@audit:suspect(epi-debruijn-integration-plan)` -/
+`@audit:retract-candidate(load-bearing-predicate)` — pipeline wrapper, see
+`entropy_power_inequality_integrated` header for the Phase A migration note. -/
 theorem entropy_power_inequality_exp_form_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -225,7 +237,8 @@ theorem entropy_power_inequality_exp_form_integrated
 
 /-- **EPI normalized `(2πe)⁻¹` form via integrated pipeline** (Cover-Thomas Ch.17).
 
-`@audit:suspect(epi-debruijn-integration-plan)` -/
+`@audit:retract-candidate(load-bearing-predicate)` — pipeline wrapper, see
+`entropy_power_inequality_integrated` header for the Phase A migration note. -/
 theorem entropy_power_inequality_normalized_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -241,7 +254,8 @@ theorem entropy_power_inequality_normalized_integrated
 
 /-- **3-arg EPI via integrated pipeline**. Chains two integrated pipelines.
 
-`@audit:suspect(epi-debruijn-integration-plan)` -/
+`@audit:retract-candidate(load-bearing-predicate)` — pipeline wrapper, see
+`entropy_power_inequality_integrated` header for the Phase A migration note. -/
 theorem entropy_power_inequality_three_arg_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -256,7 +270,8 @@ theorem entropy_power_inequality_three_arg_integrated
 
 /-- **4-arg EPI via integrated pipeline**. Chains three integrated pipelines.
 
-`@audit:suspect(epi-debruijn-integration-plan)` -/
+`@audit:retract-candidate(load-bearing-predicate)` — pipeline wrapper, see
+`entropy_power_inequality_integrated` header for the Phase A migration note. -/
 theorem entropy_power_inequality_four_arg_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -307,7 +322,8 @@ is the "hypothesis-reduced form" promised in the parent plan. -/
 Single non-trivial hypothesis `IsEPIL3IntegratedPipeline X Y P` (vs the
 three-hypothesis form in `EntropyPowerInequality.entropy_power_inequality`).
 
-`@audit:suspect(epi-debruijn-integration-plan)` -/
+`@audit:retract-candidate(load-bearing-predicate)` — pipeline wrapper, see
+`entropy_power_inequality_integrated` header for the Phase A migration note. -/
 theorem entropy_power_inequality_reduced
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -320,7 +336,8 @@ theorem entropy_power_inequality_reduced
 
 /-- **Hypothesis-reduced EPI exp form**. Single integrated hypothesis.
 
-`@audit:suspect(epi-debruijn-integration-plan)` -/
+`@audit:retract-candidate(load-bearing-predicate)` — pipeline wrapper, see
+`entropy_power_inequality_integrated` header for the Phase A migration note. -/
 theorem entropy_power_inequality_exp_form_reduced
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -379,7 +396,8 @@ theorem integrated_pipeline_roundtrip
 /-- **Three forms of EPI are equivalent** (in the presence of the integrated
 pipeline + measurability).
 
-`@audit:suspect(epi-debruijn-integration-plan)` -/
+`@audit:retract-candidate(load-bearing-predicate)` — pipeline wrapper, see
+`entropy_power_inequality_integrated` header for the Phase A migration note. -/
 theorem entropy_power_inequality_three_forms_equiv
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -443,20 +461,21 @@ a pending plan-level task (Phase C-5).
    constructing `IsDeBruijnRegularityHyp` for Gaussian via the repaired
    signature is sister-plan responsibility.
 
-3. The 14 `@audit:suspect(epi-debruijn-integration-plan)` tags in §1–§11 are
-   **not** downgraded by this section. Those tags reflect that the integrated
-   pipeline's `bridge : IsStamToEPIBridgeHyp` field is load-bearing (Csiszár
-   scaling argument, Cover-Thomas Lemma 17.7.3), and that bridge is sister-plan
-   responsibility (`epi-stam-to-conclusion-plan.md`). The de Bruijn integration
-   identity is the *input* to Csiszár scaling, not its discharge, so producing
-   genuine de Bruijn machinery (this section) does not retire those tags. The
-   honest downgrade target for the 14 tags is
-   `@audit:closed-by-successor(epi-stam-to-conclusion-plan)` once the bridge is
-   genuine; that downgrade is **not performed here** because the bridge is
-   still load-bearing as of this commit.
+3. The 14 wrapper declarations in §1–§11 (originally tagged
+   `@audit:suspect(epi-debruijn-integration-plan)`) were migrated to
+   `@audit:retract-candidate(load-bearing-predicate)` on 2026-05-27 (Phase A
+   A-V cleanup, `epi-stam-to-conclusion-phaseA-plan`). Those wrappers thread
+   `IsEPIL3IntegratedPipeline`'s `bridge : IsStamToEPIBridgeHyp` field as a
+   load-bearing predicate; Phase A A-5/A-6 published a genuine alternative
+   discharge route (`EPIStamToBridge.entropy_power_inequality_unconditional`)
+   that bypasses this monolithic pipeline. The de Bruijn integration identity
+   in this section remains the honest *input* to Csiszár scaling, but the 14
+   pipeline wrappers above are now retract candidates: downstream code should
+   migrate to the unconditional route, after which these wrappers can be
+   removed entirely.
 
-`@audit:suspect(epi-debruijn-integration-plan)` — section header carries the same
-plan slug so that grep for the slug surfaces these notes alongside the 14 tags.
+`@audit:retract-candidate(load-bearing-predicate)` — §12 section header carries
+the same bookkeeping tag so grep aggregates the section with the 14 wrappers.
 -/
 
 /-- **Family-level heat-flow regularity hypothesis** (Phase B-5, honest
@@ -929,11 +948,13 @@ into the predicate's existential witness remains sister-plan work — see §12
 honesty note 1). The integration uses Mathlib `intervalIntegral` and is
 converted to `Set.Ioo`-form for downstream consumption.
 
-`@audit:suspect(epi-debruijn-integration-plan)` — honest bounded-T discharge,
-unbounded `T → ∞` lift is a pending plan-level task (the previously intended
-`IsDeBruijnTailHyp` externalization was retracted by independent audit; see
-the §12 honesty notes and the retraction comment in the structure-definition
-area). -/
+`@audit:retract-candidate(load-bearing-predicate)` — honest bounded-T
+discharge; the predicate that this lemma feeds (`IsEPIL3IntegratedPipeline`'s
+`bridge` field) is the load-bearing wrapper now superseded by Phase A's
+unconditional route. Unbounded `T → ∞` lift remains a pending plan-level
+task (the previously intended `IsDeBruijnTailHyp` externalization was
+retracted by independent audit; see the §12 honesty notes and the retraction
+comment in the structure-definition area). -/
 @[entry_point]
 theorem bounded_T_ftc_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
@@ -987,20 +1008,22 @@ theorem bounded_T_ftc_gaussian
 
 /-! ### Phase D — Section closure note
 
-As discussed in §12 honesty note 3, the 14 `@audit:suspect(epi-debruijn-integration-plan)`
-tags in §1–§11 cannot be downgraded by this Phase D — the
-`IsStamToEPIBridgeHyp` field of `IsEPIL3IntegratedPipeline` is the sister-plan
-discharge target (Csiszár scaling, Cover-Thomas Lemma 17.7.3). This file's
-contributions (Phase B-4/B-5/C-1/C-4 above) are the de Bruijn-side honest
-inputs to that scaling argument; the bridge itself remains load-bearing as of
-this commit.
+Closure update (2026-05-27, Phase A A-V cleanup): `epi-stam-to-conclusion-phaseA-plan`
+A-5/A-6 shipped a genuine alternative EPI discharge route bypassing
+`IsEPIL3IntegratedPipeline`'s load-bearing `bridge` field. The 14 wrapper
+declarations in §1–§11 were migrated from
+`@audit:suspect(epi-debruijn-integration-plan)` to
+`@audit:retract-candidate(load-bearing-predicate)` to reflect that they are
+no longer the canonical EPI entry point (the genuine route is
+`EPIStamToBridge.entropy_power_inequality_unconditional`).
 
-Honest downgrade plan once `epi-stam-to-conclusion-plan` lands:
-
-  `@audit:suspect(epi-debruijn-integration-plan)`
-    → `@audit:closed-by-successor(epi-stam-to-conclusion-plan)`
-
-(See `docs/audit/audit-tags.md` for the `closed-by-successor` semantics.) -/
+Phase D's own contributions (Phase B-4/B-5/C-1/C-4 above) remain the
+de Bruijn-side honest inputs to the Csiszár scaling argument and are
+unchanged. (Migration target rationale: per `docs/audit/audit-tags.md`'s
+2026-05-25 deprecation table, `@audit:closed-by-successor` is now legacy;
+`@audit:retract-candidate(load-bearing-predicate)` is the current
+bookkeeping vocabulary for monolithic-pipeline wrappers superseded by a
+hypothesis-free alternative.) -/
 
 /-! ## §13 — Phase D: `csiszarGap` function + sister entry point
 
@@ -1248,12 +1271,13 @@ avoidance).
 `csiszarGap1Source_shape_for_sister` (A-0'-5) verbatim, exposed via `rfl`.
 
 This is a `noncomputable def`, **not** a `Prop`-level staged predicate —
-no honesty audit at the predicate level. The `@audit:suspect` tag tracks
-the sister-plan completion dependency.
+no honesty audit at the predicate level.
 
-`@audit:suspect(epi-stam-to-conclusion-plan)` — sister Phase A consumes
-this alias to discharge `IsStamToEPIScalingHyp` honestly via the rescale
-equivalence (A-0'-2). -/
+`@audit:ok` — Phase A (2026-05-27, `epi-stam-to-conclusion-phaseA-plan`)
+completed the sister-side consumption of this alias; A-0' shape contracts
+land via `csiszarGap_eq_one_source_via_rescale` (A-0'-2) and the
+A-5 chain `isStamToEPIScalingHyp_of_stam_debruijn` in
+`Common2026/Shannon/EPIStamToBridge.lean:926`. -/
 noncomputable def csiszarGap1Source {Ω : Type*} [MeasurableSpace Ω]
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) (t : ℝ) : ℝ :=
   entropyPower (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω)))
@@ -1279,10 +1303,11 @@ We pass these 6 conditions as direct lemma arguments — honest carrier
 hypotheses, no new staged predicate is introduced (per the dispatch brief
 A-0'-2 integrability bridge resolution: option (b)).
 
-`@audit:suspect(epi-stam-to-conclusion-plan)` — sister Phase A uses this
-equivalence in step A-4 to lift the 1-source `AntitoneOn` (proved via
-de Bruijn V2 + Stam in steps A-2/A-3) to the 2-source `AntitoneOn`
-required by `IsStamToEPIScalingHyp`. -/
+`@audit:ok` — Phase A A-4 (2026-05-27, `epi-stam-to-conclusion-phaseA-plan`)
+completed the consumption of this equivalence in
+`csiszarGap_antitoneOn_Icc_zero_one` (`Common2026/Shannon/EPIStamToBridge.lean:893`).
+The 6 carrier hypotheses (`h_ac_*`, `h_int_*`) are regularity preconditions,
+not load-bearing predicates. -/
 theorem csiszarGap_eq_one_source_via_rescale
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -1458,9 +1483,10 @@ theorem csiszarGap_eq_one_source_via_rescale
 at the path start reduces to the EPI gap for the original `(X, Y)` (since
 `√0 · _ = 0` and `X + 0 = X`).
 
-`@audit:suspect(epi-stam-to-conclusion-plan)` — sister Phase A uses this
-endpoint identification (corresponds to `csiszarGap_at_zero` for the
-2-source form) to derive `gap1Source(0) ≥ 0` from `AntitoneOn`. -/
+`@audit:ok` — Phase A (2026-05-27, `epi-stam-to-conclusion-phaseA-plan`)
+consumed this endpoint identification in the antitonicity chain
+(`Common2026/Shannon/EPIStamToBridge.lean` A-3/A-4); body is a verbatim
+`Real.sqrt 0 = 0` reduction. -/
 theorem csiszarGap1Source_at_zero {Ω : Type*} [MeasurableSpace Ω]
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) :
     csiszarGap1Source X Y Z_X Z_Y P 0
@@ -1547,8 +1573,9 @@ Phase A is responsible for the actual `AntitoneOn` proof on the 1-source
 form using de Bruijn V2 + Stam inequality, then lifts to the 2-source form
 via `csiszarGap_eq_one_source_via_rescale` (A-0'-2).
 
-`@audit:suspect(epi-stam-to-conclusion-plan)` — sister Phase A consumes
-this shape contract. -/
+`@audit:ok` — Phase A (2026-05-27, `epi-stam-to-conclusion-phaseA-plan`)
+consumed this shape contract in sister derivative computations
+(`Common2026/Shannon/EPIStamToBridge.lean` A-2/A-3); body is `rfl`. -/
 theorem csiszarGap1Source_shape_for_sister
     {Ω : Type*} [MeasurableSpace Ω]
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) :

@@ -402,7 +402,11 @@ chain することで `exp(2 h(X+Y+Z)) ≥ exp(2 h(X)) + exp(2 h(Y)) + exp(2 h(Z
 撤退ラインは 2-arg 形を 2 回適用するための 2 つの L-EPI3 hypothesis を
 取る形に外出し (X+Y vs Z のペアで 1 回、X vs Y のペアで 1 回)。
 
-`@audit:suspect(epi-stam-to-conclusion-plan)` -/
+`@audit:retract-candidate(load-bearing-predicate)` — chains two L-EPI3
+hypotheses (`IsEntropyPowerInequalityHypothesis _ _ P`); Phase A
+(`epi-stam-to-conclusion-phaseA-plan`) ships a genuine alternative
+discharge route via `EPIStamToBridge.entropy_power_inequality_unconditional`
+that no longer requires L-EPI3 as an input. -/
 theorem entropy_power_inequality_three_arg {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y Z : Ω → ℝ)

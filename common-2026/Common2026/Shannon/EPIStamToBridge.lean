@@ -233,13 +233,16 @@ the path-endpoint Gaussian-saturation value (`g1 = 0`) is realizable as a
 witness — which is a structurally trivial fact (we always set `g1 := 0`
 in the scaling hypothesis).
 
-`@audit:suspect(epi-stam-to-conclusion-plan)` Same `launder` pattern
-(`g1 = 0` fixed) as the pre-Phase-0 scaling hypothesis. The refactored
-sister `IsStamToEPIScalingHyp` (Phase 0, 2026-05-25) now carries genuine
-Csiszár scaling content via an `AntitoneOn` witness over `Set.Icc 0 1`;
-this limit hypothesis is still launder-shaped (its disjunctive body is
-implied by the scaling result alone in the new pipeline). To be refactored
-in Phase 0' future work (companion mini-Phase). -/
+`@audit:retract-candidate(load-bearing-predicate)` — Phase A
+(2026-05-27, `epi-stam-to-conclusion-phaseA-plan`) confirmed this predicate
+is non-load-bearing in the active pipeline: the A-5 chain
+`isStamToEPIBridgeHyp_of_stam_debruijn` carries `h_limit` through
+`isStamToEPIBridgeHyp_of_scaling_limit` where the limit argument is
+discarded via an `_` binder (the Gaussian saturation endpoint at `s = 1` is
+proved internally from the extracted `Z_X, Z_Y` standard-normal pair, not
+from this predicate). Predicate retained for backward signature
+compatibility with the `_of_scaling_limit` constructor; ready for retraction
+once that constructor's `_limit` slot is removed (Phase 0' future work). -/
 def IsStamToEPILimitHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∃ (g1 : ℝ), g1 = 0 ∧
@@ -503,10 +506,12 @@ The result is consumed by Phase A A-3 (1-source Stam reduction to `≤ 0`).
 The bases `X`, `Y`, `X + Y` are `t`-independent so no scaling-correction term
 appears (L-Concl-A-δ avoidance via the 1-source design).
 
-`@audit:suspect(epi-stam-to-conclusion-plan)` — the three sister
-`IsDeBruijnRegularityHyp` inputs are honest load-bearing carriers
-(`@audit:staged(epi-debruijn-regularity)` on the predicate itself);
-this lemma is purely a structural derivative computation. -/
+`@audit:ok` — Phase A A-2 (2026-05-27, `epi-stam-to-conclusion-phaseA-plan`)
+completed the genuine derivative computation. The three sister
+`IsDeBruijnRegularityHyp` inputs are regularity preconditions (not
+load-bearing predicates); the proof is a structural composition of
+the V2 de Bruijn identity with the `entropyPower_hasDerivAt_of_diffEnt_hasDerivAt`
+chain-rule helper (A-2-2). -/
 theorem csiszarGap1Source_hasDerivAt
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]

@@ -155,7 +155,11 @@ genuinely-irreducible Stam primitives: the Blachman convolution-score identity
 (`IsStamTotalExpectation`, Step 3, the IBP content). Steps 2 and 4 are discharged
 arithmetically (`isStamInequalityHyp_via_step3`).
 
-`@audit:suspect(epi-stam-to-conclusion-plan)` -/
+`@audit:retract-candidate(load-bearing-predicate)` — chains two Stam-wall
+predicates (`IsStamScoreConvolution`, `IsStamTotalExpectation`) into the
+`IsStamInequalityHyp` predicate. The Stam wall itself is the closure target
+of separate `wall:stam` discharge plans (`EPIStamStep3Body.lean` chain); this
+wrapper is a load-bearing pass-through for that chain. -/
 @[entry_point]
 theorem isStamInequalityHyp_of_primitives
     {Ω : Type*} [MeasurableSpace Ω]
@@ -185,7 +189,11 @@ structure IsEPIStamDeBruijnPipeline {Ω : Type*} [MeasurableSpace Ω]
 
 /-- **Derive the Stam inequality** from the refined pipeline.
 
-`@audit:suspect(epi-stam-to-conclusion-plan)` -/
+`@audit:retract-candidate(load-bearing-predicate)` — `IsEPIStamDeBruijnPipeline`
+is a refined pipeline whose `convScore`/`totalExp` fields are Stam-wall
+predicates; this extraction is a pass-through. The genuine alternative
+(Phase A `entropy_power_inequality_unconditional`) bypasses the pipeline
+entirely. -/
 theorem isStamInequalityHyp_of_stamDeBruijn
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -196,7 +204,9 @@ theorem isStamInequalityHyp_of_stamDeBruijn
 /-- **Reduce the refined pipeline to the monolithic `IsEPIL3IntegratedPipeline`**.
 The Stam field is supplied by deriving it from the genuine primitives.
 
-`@audit:suspect(epi-stam-to-conclusion-plan)` -/
+`@audit:retract-candidate(load-bearing-predicate)` — pipeline-to-pipeline
+adapter that propagates the load-bearing `bridge` field; downstream code
+should switch to Phase A's `entropy_power_inequality_unconditional`. -/
 theorem isEPIL3IntegratedPipeline_of_stamDeBruijn
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -211,7 +221,9 @@ theorem isEPIL3IntegratedPipeline_of_stamDeBruijn
 deliverable). Single hypothesis is the refined pipeline, which bundles only the
 genuinely-irreducible primitives.
 
-`@audit:suspect(epi-stam-to-conclusion-plan)` -/
+`@audit:retract-candidate(load-bearing-predicate)` — load-bearing pipeline
+wrapper superseded by Phase A's hypothesis-free alternative
+`EPIStamToBridge.entropy_power_inequality_unconditional`. -/
 theorem entropy_power_inequality_via_stamDeBruijn
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

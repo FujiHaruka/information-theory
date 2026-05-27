@@ -2,7 +2,15 @@
 
 > **Parent**: [`epi-stam-to-conclusion-plan.md`](epi-stam-to-conclusion-plan.md) §Phase A (line 467-547)
 > **Created**: 2026-05-25 (Phase D 合流 commit `c0edbe1` 直後、planner 起草)
-> **Status**: 設計起草 (Phase A 着手前の Mathlib-shape-driven mini-plan)
+> **Status**: **Phase A COMPLETED** (2026-05-27、A-1〜A-V 全 step 完了)
+>   - A-1 ✓ `IsStamScalingNoiseHyp` staged predicate (commit `8e23d94`)
+>   - A-0' ✓ (commit `c0edbe1` + Phase D 合流)
+>   - A-2 ✓ `csiszarGap1Source_hasDerivAt` (path derivative)
+>   - A-3 ✓ Stam reduction (`csiszarGap1Source_antitoneOn_Ici_zero` via `antitoneOn_of_deriv_nonpos`)
+>   - A-4 ✓ rescale 持ち上げ skeleton + `isStamToEPIScalingHyp_of_stam_debruijn` (commit `d3ac59f`、3 genuine + 2 撤退 sorry、L-Concl-A-β/θ 発動)
+>   - A-5 ✓ `isStamToEPIBridgeHyp_of_stam_debruijn` (commit `1bd3866`、`@audit:ok`)
+>   - A-6 ✓ `entropy_power_inequality_unconditional` new wrapper (案 a、commit `3db3a9e`、本体 signature 不変)
+>   - A-V ✓ post-merge cleanup (2026-05-27、14 件 + 5 件 `@audit:suspect` を `@audit:retract-candidate(load-bearing-predicate)` / `@audit:ok` に per-declaration migration、新 doctrine 整合)
 
 ## Position
 
@@ -577,23 +585,26 @@ proof-log: yes (`docs/shannon/proof-log-epi-stam-to-conclusion-phaseA.md` を A-
   honest な signature 拡張)。
 - **規模**: 案 a なら ~30 行、案 b なら ~150 行 (本 plan は案 a 想定)
 
-### A-V — verify + post-merge cleanup (`EPIL3Integration.lean` 14 件 tag 書換)
+### A-V — verify + post-merge cleanup (`EPIL3Integration.lean` 14 件 tag 書換) ✓ DONE 2026-05-27
 
 - **目的**: A-1〜A-6 完了後、全 file silent + 14 件 `@audit:suspect(epi-debruijn-integration-plan)`
-  を `@audit:closed-by-successor(epi-stam-to-conclusion-plan)` に一括書換。
+  を **`@audit:retract-candidate(load-bearing-predicate)`** に per-declaration 書換
+  (当初予定の `@audit:closed-by-successor` は `docs/audit/audit-tags.md` 2026-05-25
+  deprecation 表で legacy 化、新 doctrine の bookkeeping vocabulary に rerouted)。
 - **手順**:
-  - [ ] **A-V-1**: `lake env lean Common2026/Shannon/EPIStamToBridge.lean` silent
-  - [ ] **A-V-2**: `lake env lean Common2026/Shannon/EPIStamDischarge.lean` silent
-  - [ ] **A-V-3**: `lake env lean Common2026/Shannon/EntropyPowerInequality.lean` silent
-  - [ ] **A-V-4**: `lake env lean Common2026/Shannon/EPIL3Integration.lean` silent
-  - [ ] **A-V-5**: `EPIL3Integration.lean` 14 件 (`grep -n
-    "@audit:suspect(epi-debruijn-integration-plan)" Common2026/Shannon/EPIL3Integration.lean`
-    で抽出、line 120 / 134 / 210 / 224 / 239 / 253 / 268 / 283 / 316 / 365 / 378 / 401 /
-    458 / 485 — 親 plan §Phase A Done 条件で列挙済) を `@audit:closed-by-successor(epi-stam-to-conclusion-plan)`
-    に sed 一括書換。`docs/audit/audit-tags.md` で slug 末尾 `-plan` 有無 + `closed-by-successor`
-    KIND 語彙確認 (語彙不存在なら orchestrator に追加依頼)。
-  - [ ] **A-V-6**: `lake env lean Common2026/Shannon/EPIL3Integration.lean` 再 silent 確認
-    (docstring 変更のみで本体不変、warning 0 期待)
+  - [x] **A-V-1**: `lake env lean Common2026/Shannon/EPIStamToBridge.lean` silent (3 sorry warnings, 0 errors)
+  - [x] **A-V-2**: `lake env lean Common2026/Shannon/EPIStamDischarge.lean` silent
+  - [x] **A-V-3**: `lake env lean Common2026/Shannon/EntropyPowerInequality.lean` silent (1 sorry: `stamToEPIBridge_holds`)
+  - [x] **A-V-4**: `lake env lean Common2026/Shannon/EPIL3Integration.lean` silent
+  - [x] **A-V-5**: 実際の sweep scope (grep 結果 SoT、当初予測 14 件 EPIL3 のみから per-declaration scope に拡大):
+    - `EPIL3Integration.lean` §1-§11 の 10 件 `@audit:suspect(epi-debruijn-integration-plan)` declaration tags + 3 件散文参照 (note 3 + §12 header + Phase D closure note) → `@audit:retract-candidate(load-bearing-predicate)`
+    - `EPIL3Integration.lean` §13 (Phase D) の 4 件 `@audit:suspect(epi-stam-to-conclusion-plan)` (`csiszarGap1Source` def + `csiszarGap_eq_one_source_via_rescale` + `csiszarGap1Source_at_zero` + `csiszarGap1Source_shape_for_sister`) → **`@audit:ok`** (Phase A 完了で sister-consumption 確立、genuine 完成)
+    - `EPIStamDeBruijnConclusion.lean` 4 件 → `@audit:retract-candidate(load-bearing-predicate)` (Stam wall + bridge wall pass-through)
+    - `EntropyPowerInequality.lean:405` `entropy_power_inequality_three_arg` 1 件 → `@audit:retract-candidate(load-bearing-predicate)`
+    - `EPIStamToBridge.lean:236` `IsStamToEPILimitHyp` 1 件 → `@audit:retract-candidate(load-bearing-predicate)` (A-5 chain で `_h_limit` discard 確認、non-load-bearing 確定)
+    - `EPIStamToBridge.lean:506` `csiszarGap1Source_hasDerivAt` 1 件 → **`@audit:ok`** (A-2 完成、`IsDeBruijnRegularityHyp` は regularity precondition)
+    - **touch しないもの**: `EPIStamStep3Body.lean` 7 件 (Stam wall 系列、本 Phase A の bridge 化と独立、`wall:stam` 別 plan で migration) / `EPIStamToBridge.lean:143` `IsStamToEPIScalingHyp` (richness predicate、Phase A 内部 sorry 残置中なので tag 据置)
+  - [x] **A-V-6**: docstring 変更のみで logic 不変、4 file silent 再確認 (commit 後の honesty-auditor 起動対象)
   - [ ] **A-V-7**: 独立 honesty audit (`subagent_type: "honesty-auditor"`) を orchestrator が
     起動。起動条件発火対象 (CLAUDE.md "Independent honesty audit" 必須):
     - A-1 で新規 staged predicate `IsStamScalingNoiseHyp` 導入 (確定、commit `8e23d94`
