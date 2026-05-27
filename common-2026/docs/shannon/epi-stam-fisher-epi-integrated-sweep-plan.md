@@ -363,34 +363,69 @@ proof-log: yes (各 Phase 完了時に `docs/shannon/proof-log-epi-stam-fisher-e
 
 **Phase 2.A Done 条件**: shared sorry 補題 `debruijnIdentityV2_holds` を `FisherInfoV2DeBruijn.lean` 内 (または新規 `Common2026/Shannon/FisherInfoV2Walls.lean`) に publish、`@residual(wall:debruijn-integration)` 付与 (新規 wall promote 判断 → audit-tags.md Wall name register に追記)。
 
-#### Phase 2.B — tier 5 defect 5 件 sequential 処理
+#### Phase 2.B — foundation step (field 削除) + 4 launder declaration cleanup + tier 5 defect 連鎖解消 (強化版、2026-05-27)
 
-順序 (literal alias chain を逆方向に解消):
+> **本 Phase 2.B は Phase 2.A の no-op launder verdict (DEFECT、commit `a6ae83b`) を受けた強化版**。Phase 2.A は candidate 1 (structure 保持 + shared sorry 補題経由) を default 採用したが、独立 audit verdict で「結論型 ≡ `derivAt_entropy_eq_half_fisher_v2` field、`exact h_reg.derivAt_entropy_eq_half_fisher_v2` で trivially 閉じる → field 抽出を 1 段 indirection で隠しただけ、`wall:debruijn-integration` に突き当たっていない」と判定された (`FisherInfoV2DeBruijn.lean:240-256` audit docstring verbatim)。
+> ユーザー決定 (2026-05-27): Phase 2.A は **defect marker `a6ae83b` で acknowledge して現状維持**、Phase 2.B で **(a) `IsRegularDeBruijnHypV2.derivAt_entropy_eq_half_fisher_v2` field 削除 + (b) 4 launder declaration cleanup + (c) tier 5 defect 連鎖解消 を同時実施** する強化方針に pivot。
 
-1. **defect 1 (`IsIBPHypothesis` def)**: `FisherInfoV2DeBruijnBody.lean:184-190`
-   - 現状: `def IsIBPHypothesis ... : Prop := HasDerivAt ... ((1/2) * fisherInfoOfDensityReal (p t)) t`
-   - 書換: `IsIBPHypothesis` def は **削除候補** (`@audit:retract-candidate(name-laundering-alias)`)、consumer (`deBruijn_identity_v2_of_heat_flow` `:215`) で literal alias 抽出している分は別 shared sorry 補題経由に書換
-   - **判定**: `IsIBPHypothesis` を retract できるかは consumer 数 (現状 `FisherInfoV2DeBruijnBody.lean:215` + `FisherInfoV2HeatFlowBody.lean:229/247` の計 3 件) を verbatim 確認、3 件全件で sorry-based 経路に書換可能なら retract 断行
-   - sorry 化補助: 削除しない場合は def 自身は `HasDerivAt` 結論形そのもの (Mathlib-shape integrity)、Phase 2.A の `debruijnIdentityV2_holds` shared sorry 補題で transitive 解消
+##### 強化版スコープ表 (verbatim、本 plan update 前に Read で line/body 確認済 2026-05-27)
 
-2. **defect 2 (`deBruijn_identity_v2_of_heat_flow` body `:= h_ibp`)**: `FisherInfoV2DeBruijnBody.lean:209-221`
-   - 書換: body `:= h_ibp` (literal alias unfold) → `debruijnIdentityV2_holds X Z P t _h_reg` 経由
-   - `h_ibp : IsIBPHypothesis ...` 引数を delete (load-bearing hypothesis、defect 1 の literal alias を運ぶだけ)
-   - `IsRegularDeBruijnHypV2` を引数に取る形に書換 (regularity precondition は honest)
-   - body は `debruijnIdentityV2_holds X Z P t h_reg` で shared sorry 補題経由 closure
-   - `@residual(wall:debruijn-integration)` 付与 (shared sorry 補題から transitive)、または `@audit:ok` (shared sorry 補題が active で本 wrapper は genuine theorem)
+| # | declaration | file:line | 現状 body | pattern 分類 | foundation で同時解消? |
+|---|---|---|---:|---|:---:|
+| F1 | `IsRegularDeBruijnHypV2.derivAt_entropy_eq_half_fisher_v2` (structure field) | `FisherInfoV2DeBruijn.lean:204-208` | `HasDerivAt (...) ((1/2) * fisherInfoOfDensityReal density_t) t` (field = 結論型 verbatim) | **load-bearing field bundling** (foundation step、structure 改変) | **本 step 自身** |
+| L1 | `debruijnIdentityV2_holds` (Phase 2.A shared sorry 補題) | `FisherInfoV2DeBruijn.lean:258-268` | body `sorry`、結論型 ≡ F1 field 型 verbatim | **no-op launder** (Phase 2.A 産物、`@audit:defect(launder)`) | **yes** — F1 削除後は本 lemma が genuine wall closure point に昇格、または retract |
+| L2 | `deBruijn_identity_v2` (sweep の主定理) | `FisherInfoV2DeBruijn.lean:292-302` | `debruijnIdentityV2_holds X Z hX hZ hXZ ht h_reg` (L1 経由、Phase 2.A 産物) | **1 段 indirection 経由 launder** (Phase 2.A 産物) | **yes** — L1 が genuine 化すれば本 wrapper は honest pass-through |
+| L3 | `deBruijn_identity_v2_of_heat_flow` (body bridge) | `FisherInfoV2DeBruijnBody.lean:209-221` | `h_ibp` (literal alias unfold、`IsIBPHypothesis := HasDerivAt ...`) | **literal alias `:= h_ibp` 循環** (元 tier 5 defect 2) | **yes** — F1 削除と同時に shared sorry 補題経由に書換 |
+| L4 | `IsRegularDeBruijnHypV2.ofHeatFlow` (constructor、auditor 追加発見) | `FisherInfoV2DeBruijnBody.lean:229-240` | `derivAt_entropy_eq_half_fisher_v2 := h_ibp` (constructor 内 literal alias、field 設定 spot) | **constructor 内 literal alias** (F1 削除で field 自体消失) | **yes** — F1 削除で本 field 設定 line が消失、constructor signature 縮小 |
+| D1 | `IsIBPHypothesis` (def) | `FisherInfoV2DeBruijnBody.lean:184-190` | `:= HasDerivAt (...) ((1/2) * fisherInfoOfDensityReal (p t)) t` (def 自身が結論型 = literal alias) | **predicate-form literal alias** (元 tier 5 defect 1) | **partial** — L3 / L4 consumer が削除されれば retract 可、ただし `FisherDeBruijnGaussianWitness.lean:43/51` 残存 consumer 注意 |
+| D5 | `deBruijn_identity_v2_of_heat_subhyp` (transitive bridge) | `FisherInfoV2HeatFlowBody.lean:221-234` | `deBruijn_identity_v2_of_heat_flow X Z hX hZ hXZ ht (... h_ibp) ...` (transitive literal alias 経由) | **transitive literal alias** (元 tier 5 defect 5) | **yes** — L3 解消で transitive 解消 |
+| D5' | `IsRegularDeBruijnHypV2.ofHeatSubhyp` (constructor、D5 と対) | `FisherInfoV2HeatFlowBody.lean:239-250` | `IsRegularDeBruijnHypV2.ofHeatFlow ... h_ibp` (L4 経由 transitive、auditor 追加発見) | **transitive constructor literal alias** | **yes** — L4 縮小 (field 消失) で signature 自動修正 |
 
-3. **defect 3 (`IsRegularDeBruijnHypV2.derivAt_entropy_eq_half_fisher_v2` field)**: `FisherInfoV2DeBruijn.lean:227+`
-   - Phase 2.A の候補 1 (structure 保持) を選んだ場合、field は honest precondition として残す (本 sweep で touch せず)
-   - Phase 2.A 候補 2 を選んだ場合のみ field 削除
+合計 8 declaration に touch (F1 1 + L1-L4 = 4 launder + D1 1 + D5 + D5' = 2 transitive)。元 plan §Phase 2.B の 5 件 (defect 1-5) は本表で D1 / L3 / F1 / L2 / D5 に対応、4 launder cleanup (L1-L4) のうち L1-L2 は Phase 2.A 産物の重複処理、L3-L4 は元 defect 2 + 追加発見の合流。
 
-4. **defect 4 (`deBruijn_identity_v2` body `:= h_reg.derivAt_entropy_eq_half_fisher_v2`)**: `FisherInfoV2DeBruijn.lean:227+`
-   - 書換: body を shared sorry 補題 `debruijnIdentityV2_holds` 経由に
-   - load-bearing field 抽出を解消、`@audit:ok` 昇格候補
+#### Approach 強化版 (3 段、sequential、foundation を最初に置く)
 
-5. **defect 5 (`deBruijn_identity_v2_of_heat_subhyp` transitive literal alias)**: `FisherInfoV2HeatFlowBody.lean:240-249`
-   - 書換: body forward to `deBruijn_identity_v2_of_heat_flow` (defect 2 解消後の新 body 経由)
-   - transitive 解消、`@audit:ok` 昇格候補
+##### 段 1 — foundation: F1 field 削除 + L4 constructor 縮小 + L1 retract
+
+**F1 削除**: `IsRegularDeBruijnHypV2` structure を以下に縮小 — `Z_law : P.map Z = gaussianReal 0 1` + `density_t : ℝ → ℝ`。`derivAt_entropy_eq_half_fisher_v2` field は **削除**。L-INT-2-α (元 plan の「candidate 2 (field 削除) → candidate 1 retreat」) は Phase 2.A no-op launder verdict で **方向逆転**: candidate 2 (field 削除) を default、retreat 先は「field 削除困難時に complete sorry-based migration で 8 declaration を残置」。
+
+**L4 縮小**: `IsRegularDeBruijnHypV2.ofHeatFlow` constructor から `derivAt_entropy_eq_half_fisher_v2 := h_ibp` 行を削除 (field 自体消失で自動的に). `(h_ibp : IsIBPHypothesis X Z P p t)` 引数も削除候補 (constructor の他 field 設定で `h_ibp` を使わないなら、L3 と L4 が別関数になる)。
+
+**L1 retract**: `debruijnIdentityV2_holds` は Phase 2.A audit verdict で no-op launder と判定済。F1 field 削除後は、本 shared sorry 補題が genuine wall closure point (heat eq + IBP + dominated bound の Mathlib 不在) に昇格。**選択肢 A** (default): L1 を残置 + body `sorry` + `@residual(wall:debruijn-integration)` を維持 (audit docstring の `@audit:defect(launder)` は削除、genuine wall に昇格)、L2 / L3 / D5 / D5' の closure point として共有。**選択肢 B**: L1 を削除し L2 body を直接 `sorry` + `@residual(wall:debruijn-integration)` (shared 集約しない)、L3 / D5 / D5' も個別 sorry。集約効率上 default は A。
+
+##### 段 2 — launder declaration cleanup (L2 / L3 / D5 / D5')
+
+F1 削除 + L1 status 固定後の sequential 順序:
+
+1. **L2** (`deBruijn_identity_v2` body): F1 削除で signature は `HasDerivAt ... ((1/2) * fisherInfoOfDensityReal h_reg.density_t) t` (RHS は `density_t` field 経由のみ残存)。body は `debruijnIdentityV2_holds X Z hX hZ hXZ ht h_reg` (選択肢 A) — honest pass-through に昇格 (`@audit:ok` 候補)。
+2. **L3** (`deBruijn_identity_v2_of_heat_flow` body): 現 `h_ibp` literal alias を、F1 削除版 `IsRegularDeBruijnHypV2` を構成 + `debruijnIdentityV2_holds` 呼出に書換。signature は `... (h_heat : IsHeatFlowDensity X Z P p) (h_ibp : IsIBPHypothesis X Z P p t) : HasDerivAt (...) ((1/2) * fisherInfoOfDensityReal (p t)) t`、body は `h_ibp` の literal alias (D1 def による) を解消して `IsIBPHypothesis` def を unfold + `debruijnIdentityV2_holds` 呼出。**選択肢 (i)** literal alias を維持しつつ `IsIBPHypothesis` を **retract candidate** にする (D1 への対処へ pivot)、**選択肢 (ii)** L3 を完全削除 (consumer は `FisherDeBruijnGaussianWitness` 経由のみ、L1/L2 path に統合)。Phase 2.B では選択肢 (i) を default。
+3. **D5** (`deBruijn_identity_v2_of_heat_subhyp`): L3 解消後の新 signature 経由に書換。transitive、機械的。
+4. **D5'** (`IsRegularDeBruijnHypV2.ofHeatSubhyp`): L4 (constructor 縮小) と signature 整合確認、`h_ibp` 引数の扱いを統一。
+
+##### 段 3 — D1 (`IsIBPHypothesis` def) 処遇判定
+
+D1 は `def IsIBPHypothesis ... := HasDerivAt ... ((1/2) * fisherInfoOfDensityReal (p t)) t` の literal alias predicate。L3 / D5 / D5' / `FisherDeBruijnGaussianWitness.lean:43/51` の 4 consumer が残る (前 3 件は段 2 で書換、後者は touch せず該当 file の Phase 2 処遇は「touch せず」)。
+
+- 全 consumer が段 2 で書換完了かつ `FisherDeBruijnGaussianWitness` を touch しないなら、**`@audit:retract-candidate(name-laundering-alias)` を付与し alias 維持** (本 sweep では retract 断行しない、後続 plan に委譲)。
+- 完全 retract は Phase 2.B scope 外 (Gaussian witness file への ripple が Cluster B/C 境界を越え本 sweep 規模超過)、L-INT-2-β に該当。
+
+#### wall residual 付与先の移動 — F1 削除後の正しい closure point
+
+Phase 2.A audit verdict (`FisherInfoV2DeBruijn.lean:243-247` audit docstring verbatim): 「load-bearing 負荷は依然 `IsRegularDeBruijnHypV2.derivAt_entropy_eq_half_fisher_v2` field に bundle されたまま」。**F1 削除によって、`wall:debruijn-integration` 残余は L1 `debruijnIdentityV2_holds` body の `sorry` に genuine 集約される** (no-op launder から genuine wall closure に昇格)。
+
+- **移動前** (Phase 2.A): `@residual(wall:debruijn-integration)` は L1 body 内、ただし audit verdict で「no-op launder」判定 (= wall に届いていない)
+- **移動後** (Phase 2.B foundation step 完了時): `@residual(wall:debruijn-integration)` は L1 body 内のまま、ただし F1 field 削除によって **genuine wall closure point に昇格** (audit docstring の `@audit:defect(launder)` 部分は削除、`@residual(wall:debruijn-integration)` のみ残る)
+- audit-tags.md Wall name register の `debruijn-integration` 登録 (commit `23dae39`) は **維持** (本 update でも問題なし、wall 自体は genuine Mathlib 壁として正当)
+
+> **1 階層下 (`IsIBPHypothesis` direct) ではなく、L1 (`debruijnIdentityV2_holds`) が closure point**。理由: F1 field 削除後の `IsRegularDeBruijnHypV2` は regularity-only (Z_law + density_t) になり、`debruijnIdentityV2_holds` body が「regularity から HasDerivAt 結論を導く」genuine heat-eq + IBP wall に直接突き当たる。`IsIBPHypothesis` direct (D1) は literal alias predicate にすぎず、wall closure point として使うと再び launder の risk (Phase 2.A と同型の no-op pattern)。
+
+### Phase 2 並列 dispatch 設計 (強化版) — **sequential 厳守**
+
+- **Wave 2-A (foundation 段 1)**: F1 削除 + L4 縮小 + L1 status 固定 (audit docstring 整理 + `@audit:defect(launder)` 削除) = **single dispatch** (`lean-implementer` 1 件、worktree 省略可、`Common2026/Shannon/FisherInfoV2DeBruijn.lean` + `FisherInfoV2DeBruijnBody.lean` 2 file 連動 touch)。
+- **Wave 2-B (cleanup 段 2)**: L2 → L3 → D5 → D5' を **sequential** 1 declaration = 1 dispatch + 1 commit (literal alias chain 逆順、4 dispatch)。並列禁止理由: L3 signature が L2 / D5 / D5' すべてに ripple、間に LSP 同期境界を入れないと型 mismatch 連鎖。
+- **Wave 2-C (段 3 + Cluster B 残)**: D1 処遇判定 (alias 維持 + `@audit:retract-candidate` 付与、本 sweep では retract せず) は L2-D5' commit と合流して 1 dispatch + Phase 2.C (`FisherInfo.lean:127` / `FisherInfoV2.lean:157` `integral_logDeriv` 2 件) と並列可 (file 別)。
+
+> **foundation 段 1 を最初に sequential**: F1 削除が L1-L4 signature の prerequisite。並列にすると olean refresh round-trip が L1-L4 dispatch 毎に発生 (`lake build Common2026.Shannon.FisherInfoV2DeBruijn` 4 回)。foundation 1 dispatch で signature が確定すれば後続段は signature 安定下で進行。
 
 #### Phase 2.C — `FisherInfo.lean:127` / `FisherInfoV2.lean:157` `integral_logDeriv` 2 件 sweep
 
@@ -398,26 +433,60 @@ proof-log: yes (各 Phase 完了時に `docs/shannon/proof-log-epi-stam-fisher-e
 - 書換: shared sorry 補題 `integral_logDeriv_pdf_eq_zero_holds` を `FisherInfo.lean` (または新規 `Common2026/Shannon/FisherInfoWalls.lean`) に publish、`@residual(wall:fisher-info-score-zero)` 付与 (新規 wall promote 判断)
 - consumer (`FisherInfo.lean:127` / `FisherInfoV2.lean:157` の 2 件) を shared sorry 補題経由に書換
 - `IsRegularDensity` structure の `integral_deriv_eq_zero` field は load-bearing なので、Phase 2.A と同じ judgement (default: structure 保持 + shared sorry 補題経由)
+- **Phase 2.B foundation 段 1 と並列不可** (`FisherInfo.lean` は `FisherInfoV2.lean` 経由で `FisherInfoV2DeBruijn.lean` を import しないが、honesty-auditor から見た「同種パターン」として段 2 と並列可能)。Wave 2-C で fold。
 
-### Phase 2 並列 dispatch 設計 — **sequential 必須**
+### 判定基準 update — Phase 2.A 教訓を反映した先制検出ルール
 
-- **Wave 2-A**: Phase 2.A (`IsRegularDeBruijnHypV2` structure refactor + shared sorry 補題 publish) = **single dispatch** (`lean-implementer` 1 件、worktree 省略可)。
-- **Wave 2-B**: Phase 2.B defect 1 → 2 → 4 → 5 を **sequential** に処理 (literal alias chain 逆順)、1 declaration = 1 dispatch + 1 commit。defect 3 は Phase 2.A で処理済 or 保持判定済。
-- **Wave 2-C**: Phase 2.C 2 件 (`FisherInfo.lean` + `FisherInfoV2.lean`) は互いに独立、**並列 2 dispatch 可** (worktree + .lake symlink、`lean-implementer` × 2)。
+**Phase 2.A audit verdict から学んだ「結論型 ≡ field 型」launder の先制検出**:
 
-### Done 条件
+shared sorry 補題化を行う **前** に、以下を必ず verbatim check:
 
-- `IsRegularDeBruijnHypV2` structure refactor 完了 (candidate 1 採用、shared sorry 補題 `debruijnIdentityV2_holds` publish 済)
-- tier 5 defect 5 件すべて sorry-based migration / shared sorry 補題経由 closure
-- Cluster B 7 file 全 `lake env lean` 0 errors
-- Cluster C consumer (EPIStamDeBruijnConclusion / EPIL3Integration / EPIStamToBridge / FisherDeBruijnGaussianWitness) で signature ripple が closure (`lake build Common2026.Shannon.FisherInfoV2DeBruijn` で olean refresh + dependents verify)
-- honesty-auditor 新規 sorry / shared 補題 / structure refactor を独立 audit、verdict PASS
+1. shared sorry 補題の **結論型** (`HasDerivAt ... t`) を verbatim 取得
+2. 該当 structure field の **field 型** を verbatim 取得
+3. 両者が **engine substitution** (`density_t` → `h_reg.density_t` 等の trivial 置換) のみで一致するなら、shared 補題化は **no-op launder** (load-bearing field の indirection 隠蔽) と判定 → shared 補題化禁止、第一選択 (定義書換 = field 削除) を選ぶ
 
-### 撤退ライン
+Phase 2.A はこの check を怠った結果 no-op launder を生成。Phase 2.B foundation 段 1 では verbatim 確認段階で `IsRegularDeBruijnHypV2.derivAt_entropy_eq_half_fisher_v2` field の型と `debruijnIdentityV2_holds` 結論型が verbatim 一致と確認済 (本 update の Read で再確認、`FisherInfoV2DeBruijn.lean:204-208` vs `:264-267`) → **field 削除のみが genuine refactor** と確定。
 
-- **L-INT-2-α** (許容、構造保持に retreat): Phase 2.A candidate 2 (structure field 削除) を選んで実行中、Phase A の `density_t_eq` pin との不整合 / Gaussian witness path への ripple が判明 → candidate 1 (structure 保持 + shared sorry 補題経由) に retreat。Phase 2 全体の規模は減少 (structure 触らないので consumer ripple なし)、shared sorry 補題集約のみで終了。
-- **L-INT-2-β** (許容、tier 5 defect 5 件のうち N 件のみ closure): defect 1-5 のうち、consumer ripple が大きすぎる declaration (例: defect 3 = `derivAt_entropy_eq_half_fisher_v2` field) を残置、structure 保持 (candidate 1) に倒れる。残置分は `@audit:defect(launder)` / `@audit:retract-candidate(load-bearing-predicate)` で明示 (tier 5 暫定マーカー)、後続 plan に委譲。
-- **L-INT-2-γ** (撤退、`wall:debruijn-integration` 新規 promote 留保): Phase 2.A の shared sorry 補題を `wall:stam` に集約することで wall 名増殖を回避できると判明 → `wall:debruijn-integration` 新規 promote を **postpone**、shared sorry 補題は `@residual(wall:stam)` 付与。audit-tags.md Wall name register への新規追記なし。
+### 撤退ライン (Phase 2、強化版で update)
+
+- **L-INT-2-α update** (許容、方向逆転): 元 plan は「candidate 2 (field 削除) → candidate 1 (structure 保持) retreat」だったが、Phase 2.A no-op launder verdict で **candidate 2 (field 削除) を default 採用** に逆転。retreat 方向も逆転 → **L-INT-2-α 新方向**: F1 field 削除中に Phase A `density_t_eq` pin との不整合 (削除予定 file が `EPIStamDischarge.lean:163-193` `density_t_eq` pin docstring と矛盾) または Cluster C consumer ripple が許容外 (5 件 `(h_reg.reg_at t ht).derivAt_entropy_eq_half_fisher_v2` 直接抽出 + 1 件 Gaussian witness lift constructor、計 6+ 件で signature 連鎖修正) → **field 削除中止、tier 5 marker 付与で 8 declaration 全件残置**。L1 audit docstring の `@audit:defect(launder)` + `@audit:retract-candidate(launder)` を維持、後続 plan に委譲。本 sweep の Done 条件は「F1 field 削除完了」ではなく「8 declaration の honesty 状態が tier 5 暫定マーカーで明示済」に retreat。
+- **L-INT-2-β update** (許容、partial closure): L2 / L3 / D5 / D5' のうち N 件のみ closure、残置分は `@audit:defect(launder)` / `@audit:retract-candidate(name-laundering-alias)` で明示。元 L-INT-2-β と同趣旨だが defect 番号を 8 declaration に拡張。
+- **L-INT-2-γ** (撤退、`wall:debruijn-integration` 新規 promote 留保): **本 update では発火しない** — wall は既に commit `23dae39` で register 済。Phase 2.B では wall promote judgment は確定済として進行、本 ライン は historical reference として残置。
+- **L-INT-2-δ** (新規、許容): foundation 段 1 で field 削除を断行したが、Cluster C `EPIStamToBridge.lean:554/561/569` の 3 件 (`(h_reg_*.reg_at t ht).derivAt_entropy_eq_half_fisher_v2`) を `deBruijn_identity_v2` 呼出 (L2 経由) に書換中、Phase 1 anchor (Cluster C suspect/sorry 整理) と signature 衝突 → Phase 1 anchor を先に固定済前提で進行、衝突発生時は Phase 1 への一時 revert + 再 anchor 設定。
+
+### Done 条件 (Phase 2、強化版)
+
+- **段 1**: F1 field 削除 + L4 constructor 縮小 + L1 status 固定 (audit docstring の `@audit:defect(launder)` 削除、`@residual(wall:debruijn-integration)` のみ残す) 完了
+- **段 2**: L2 / L3 / D5 / D5' 4 件で launder pattern (`exact h_reg.field` / `:= h_ibp` / 1 段 indirection alias) **0 件** (`rg -n ':= h_ibp\|:= h_reg\.derivAt\|debruijnIdentityV2_holds.*h_reg$' Common2026/Shannon/Fisher*.lean` で 0 hit)
+- **段 3**: D1 (`IsIBPHypothesis`) に `@audit:retract-candidate(name-laundering-alias)` 付与済 (本 sweep では retract せず、alias 維持)
+- **Cluster B 5 file 全 `lake env lean` 0 errors** (FisherInfo / FisherInfoV2 / FisherInfoV2DeBruijn / FisherInfoV2DeBruijnBody / FisherInfoV2HeatFlowBody)
+- **Cluster C consumer ripple 確認**: `lake build Common2026.Shannon.FisherInfoV2DeBruijn` で olean refresh → `EPIStamToBridge.lean` (3 件 `(h_reg.reg_at t ht).derivAt_entropy_eq_half_fisher_v2` 抽出 → `deBruijn_identity_v2` 呼出に書換) + `EPIStamDeBruijnConclusion.lean:144` (density_t access のみ、ripple なし確認) + `EPIL3Integration.lean:678` (Gaussian witness lift constructor、F1 field 削除で `derivAt_entropy_eq_half_fisher_v2 := ?_` 行削除 → `h_deriv` 由来の代替 closure path に書換) + `FisherDeBruijnGaussianWitness.lean` (touch せずに済むか確認、必要なら incidental 追記) で 0 errors
+- **honesty-auditor 独立 audit**: 新規 sorry / signature 改変 / structure refactor を fresh dispatch で audit、verdict PASS。特に L1 が **no-op launder から genuine wall closure point に昇格したか** を verbatim check 必須 (F1 field 削除で結論型 ≡ field 型の冗長性が消えた、と confirm)
+
+### 検証手順 (Phase 2、強化版)
+
+```bash
+# 段 1 完了時
+lake env lean Common2026/Shannon/FisherInfoV2DeBruijn.lean
+lake env lean Common2026/Shannon/FisherInfoV2DeBruijnBody.lean
+lake build Common2026.Shannon.FisherInfoV2DeBruijn  # olean refresh
+
+# 段 2 完了時 (各 declaration commit 後に逐次)
+lake env lean Common2026/Shannon/FisherInfoV2DeBruijn.lean
+lake env lean Common2026/Shannon/FisherInfoV2DeBruijnBody.lean
+lake env lean Common2026/Shannon/FisherInfoV2HeatFlowBody.lean
+
+# Cluster C ripple
+lake env lean Common2026/Shannon/EPIStamToBridge.lean
+lake env lean Common2026/Shannon/EPIStamDeBruijnConclusion.lean
+lake env lean Common2026/Shannon/EPIL3Integration.lean
+lake env lean Common2026/Shannon/FisherDeBruijnGaussianWitness.lean
+
+# launder pattern 撲滅確認 (段 2 + 段 3 完了時)
+rg -n ':= h_ibp' Common2026/Shannon/Fisher*.lean
+rg -n ':= h_reg\.derivAt_entropy_eq_half_fisher_v2' Common2026/Shannon/
+# 両方とも 0 hit が Done 条件
+```
 
 ---
 
@@ -629,6 +698,17 @@ rg '@audit:suspect\(|@audit:staged\(|@audit:defer\(|@audit:closed-by-successor\(
 ## 判断ログ
 
 書く頻度: Phase 中の方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
+
+2. **2026-05-27 — Phase 2.B 強化版へ pivot (Phase 2.A no-op launder verdict 反映)**:
+   - Phase 2.A 実装 (commit `c0edc35`、candidate 1 default: structure 保持 + shared sorry 補題 `debruijnIdentityV2_holds` 経由) の独立 honesty audit verdict (commit `a6ae83b`) = **DEFECT (no-op launder)**: `debruijnIdentityV2_holds` 結論型 ≡ `IsRegularDeBruijnHypV2.derivAt_entropy_eq_half_fisher_v2` field 型 verbatim、`exact h_reg.derivAt_entropy_eq_half_fisher_v2` で trivially 閉じる → field 抽出を 1 段 indirection で隠しただけ、`wall:debruijn-integration` には突き当たっていない、wall classification 誤指定 (`FisherInfoV2DeBruijn.lean:240-256` audit docstring verbatim)
+   - ユーザー決定 (本 update セッション): 選択肢 A 採用 = Phase 2.A 現状維持 (defect marker `a6ae83b` で acknowledge) + Phase 2.B を強化版に pivot
+   - **L-INT-2-α 方向逆転**: 元 plan は「candidate 2 (field 削除) → candidate 1 (structure 保持) retreat」だったが、Phase 2.A 実証で candidate 1 が no-op launder と判明 → Phase 2.B foundation step では **candidate 2 (F1 field 削除) を default 採用**、retreat 方向は「field 削除困難時に 8 declaration 全件残置 + tier 5 暫定マーカー」に逆転
+   - **強化スコープ**: 元 tier 5 defect 5 件 (defect 1-5 = D1 / L3 / F1 / L2 / D5) に加え、Phase 2.A 産物 (L1 `debruijnIdentityV2_holds` + L2 `deBruijn_identity_v2`) + auditor 追加発見 2 件 (L4 `IsRegularDeBruijnHypV2.ofHeatFlow:240` constructor 内 `derivAt_entropy_eq_half_fisher_v2 := h_ibp` + D5' `IsRegularDeBruijnHypV2.ofHeatSubhyp:239+` transitive) を合流、合計 **8 declaration に touch**
+   - **3 段 sequential**: foundation 段 1 (F1 削除 + L4 縮小 + L1 status 固定) → 段 2 cleanup (L2 → L3 → D5 → D5' sequential) → 段 3 (D1 `@audit:retract-candidate` 付与で alias 維持、本 sweep では retract せず)
+   - **wall residual 付与先**: F1 field 削除によって L1 `debruijnIdentityV2_holds` body の `@residual(wall:debruijn-integration)` が **no-op launder から genuine wall closure point に昇格** (1 階層下 `IsIBPHypothesis` direct ではなく、L1 が新 closure point)。audit-tags.md Wall name register の `debruijn-integration` 登録 (commit `23dae39`) は維持
+   - **判定基準 update**: Phase 2.A no-op launder 教訓から「shared sorry 補題化前に **結論型 ≡ field 型 verbatim check** で先制検出」ルールを Approach 内に追加。Phase 2.B foundation 段 1 では本 update 起草時に Read で `FisherInfoV2DeBruijn.lean:204-208` (field 型) vs `:264-267` (L1 結論型) を verbatim 一致確認済 → field 削除のみが genuine refactor と確定
+   - **Cluster C ripple 評価**: F1 field 削除で `EPIStamToBridge.lean:554/561/569` 3 件 + `EPIL3Integration.lean:678` Gaussian witness lift constructor 1 件 + `FisherInfoV2DeBruijnBody.lean:240` constructor 内 field 設定 1 件 = 計 5 件で signature 連鎖修正、各 consumer は `deBruijn_identity_v2` (L2 経由) 呼出で吸収可。`EPIStamDeBruijnConclusion.lean:144` は `density_t` access のみで ripple なし確認済
+   - **規模見積もり update**: Phase 2 は元 ~400-700 行 / 2-4 session から、強化版で **~500-900 行 / 3-5 session** に上方修正 (8 declaration touch + Cluster C 5 consumer ripple + L1 audit docstring 整理)
 
 1. **2026-05-27 — 本 plan 起草 (Phase 0 完了)**:
    - 起動契機: Phase A 完了 (`20ee48b`、`stamToEPIBridge_holds` shared sorry 補題 + `entropy_power_inequality_unconditional` hypothesis-free wrapper publish 済) によって、`fisher-info-sorry-migration-plan` が Phase 0 で「Case α (全降格)」と判定して保留していた FisherInfo cluster の sorry-based migration が起動可能な状態になった
