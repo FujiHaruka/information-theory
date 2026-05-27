@@ -99,12 +99,16 @@ scaling corollary で扱える。 -/
 noncomputable def entropyPower (μ : Measure ℝ) : ℝ :=
   Real.exp (2 * Common2026.Shannon.differentialEntropy μ)
 
-/-- Entropy power is strictly positive. -/
+/-- Entropy power is strictly positive.
+
+@audit:ok -/
 @[entry_point]
 theorem entropyPower_pos (μ : Measure ℝ) : 0 < entropyPower μ :=
   Real.exp_pos _
 
-/-- Entropy power is non-negative. -/
+/-- Entropy power is non-negative.
+
+@audit:ok -/
 @[entry_point]
 theorem entropyPower_nonneg (μ : Measure ℝ) : 0 ≤ entropyPower μ :=
   (entropyPower_pos μ).le
@@ -114,7 +118,9 @@ theorem entropyPower_nonneg (μ : Measure ℝ) : 0 ≤ entropyPower μ :=
 saturating case of EPI.
 
 Computation: by `differentialEntropy_gaussianReal`, `h(𝒩(m,v)) = (1/2) log(2πe v)`,
-so `entropyPower (𝒩(m,v)) = exp(2 · (1/2) log(2πe v)) = exp(log(2πe v)) = 2πe v`. -/
+so `entropyPower (𝒩(m,v)) = exp(2 · (1/2) log(2πe v)) = exp(log(2πe v)) = 2πe v`.
+
+@audit:ok -/
 @[entry_point]
 theorem entropyPower_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     entropyPower (gaussianReal m v) = 2 * Real.pi * Real.exp 1 * v := by
@@ -241,7 +247,12 @@ theorem stamToEPIBridge_holds {Ω : Type*} [MeasurableSpace Ω]
 から `stamToEPIBridge_holds X Y P h_stam` で EPI を**導出**する。`h_stam` は
 結論と defeq でない genuine residual、本体は `:= h` 循環ではない。bridge の
 discharge (真の Mathlib 壁) は shared sorry 補題で集中管理、closure plan
-`epi-stam-to-conclusion-plan.md` で進行、Gaussian case は §D で full discharge。 -/
+`epi-stam-to-conclusion-plan.md` で進行、Gaussian case は §D で full discharge。
+
+shared sorry 補題 (`stamToEPIBridge_holds`) の consumer であり、当該 wrapper
+自身は 0 sorry / 0 residual (audit-tags.md「共有 Mathlib 壁」pattern)。
+
+@audit:ok -/
 @[entry_point]
 theorem entropy_power_inequality {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -252,7 +263,9 @@ theorem entropy_power_inequality {Ω : Type*} {mΩ : MeasurableSpace Ω}
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
   stamToEPIBridge_holds X Y P h_stam
 
-/-- **EPI in `Real.exp (2 · ...)` form** (Cover-Thomas 露出形). -/
+/-- **EPI in `Real.exp (2 · ...)` form** (Cover-Thomas 露出形).
+
+@audit:ok -/
 @[entry_point]
 theorem entropy_power_inequality_exp_form {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -281,7 +294,9 @@ theorem entropy_power_inequality_exp_form {Ω : Type*} {mΩ : MeasurableSpace Ω
 
 -- Rename pending: `entropyPower_gaussian_additivity` (Cover-Thomas Ch.17
 -- 用語整合、`docs/textbook-roadmap.md` Ch.17 frontier sweep で実施。
--- Phase 3 Wave 2 では 8 件の call site + 15+ 件 docstring 言及の更新コスト回避のため延期)。 -/
+-- Phase 3 Wave 2 では 8 件の call site + 15+ 件 docstring 言及の更新コスト回避のため延期)。
+
+@audit:ok -/
 @[entry_point]
 theorem entropy_power_inequality_gaussian_saturation
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -317,7 +332,9 @@ theorem entropy_power_inequality_gaussian_saturation
   ring
 
 /-- L-EPI3 hypothesis is satisfied (with equality) whenever both `X` and `Y` are
-independent Gaussians. -/
+independent Gaussians.
+
+@audit:ok -/
 @[entry_point]
 theorem isEntropyPowerInequalityHypothesis_of_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -347,7 +364,9 @@ theorem isStamToEPIBridge_of_epi
 
 /-- **Translation invariance of entropy power**: for `μ ≪ volume` and
 σ-finite `μ`, `entropyPower (μ.map (· + a)) = entropyPower μ`. The hypothesis
-matches `Common2026.Shannon.differentialEntropy_map_add_const`. -/
+matches `Common2026.Shannon.differentialEntropy_map_add_const`.
+
+@audit:ok -/
 @[entry_point]
 theorem entropyPower_map_add_const {μ : Measure ℝ} (hμ : μ ≪ volume)
     [SigmaFinite μ] (a : ℝ) :
@@ -357,7 +376,9 @@ theorem entropyPower_map_add_const {μ : Measure ℝ} (hμ : μ ≪ volume)
 
 /-- **EPI in log form** (Cover-Thomas Ch.17 alternative signature).
 
-For independent `X, Y`, `h(X+Y) ≥ (1/2) · log (exp(2 h(X)) + exp(2 h(Y)))`. -/
+For independent `X, Y`, `h(X+Y) ≥ (1/2) · log (exp(2 h(X)) + exp(2 h(Y)))`.
+
+@audit:ok -/
 @[entry_point]
 theorem entropy_power_inequality_log_form {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

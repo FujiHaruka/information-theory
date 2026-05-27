@@ -379,6 +379,19 @@ rg '@audit:suspect\(|@audit:staged\(|@audit:defer\(|@audit:closed-by-successor\(
 
 書く頻度: Phase 中の方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
 
+4. **2026-05-27 — Phase 3 + Phase V closure (Cluster B/C/D 独立 audit 全 PASS、統合 sweep 終了)**:
+   - Phase 3 Wave 2 (commit `8eaa0fb`): Cluster D `:= True` 2 件 retract (D1 `IsStamInequalityHypothesis` + D2 `IsDeBruijnIntegrationHypothesis`) + 3.C rename 延期 (consumer 23+ occurrence、`entropyPower_gaussian_additivity` への rename は Ch.17 frontier sweep 別 plan に切出、plain Lean コメント明示)。`@audit:defect(prop-true)` 2 件 tier 5 解消
+   - Phase V audit (3 cluster 並列、`honesty-auditor` × 3、touch file 独立):
+     - **Cluster B** (7 file): defect 0、書込 0、Phase 2.B foundation 段 1 (a)-(d) 全 verdict OK (F1 field 削除 + `debruijnIdentityV2_holds` genuine wall closure + `deBruijn_identity_v2` honest pass-through Pattern C 許容 + `IsIBPHypothesis` retract-candidate 妥当)、Phase 2.C `integral_logDeriv` 2 件 `@audit:ok` 維持妥当
+     - **Cluster C** (9 file): defect 0、書込 0、Phase 3 Wave 2 retract verdict OK (`epi_via_stam_main_eq` 引数削除 + bridge wrapper 削除 + type-check pass)、§Phase 1 sweep verdict = **打ち切り推奨** (incidental migration で suspect 17→4 縮減済、残 tier 4 legacy 10 declarations は別 family sweep target)
+     - **Cluster D** (1 file): defect 0、書込 **9 件 `@audit:ok` 昇格** (`entropyPower_pos` / `_nonneg` / `_gaussianReal` / `entropy_power_inequality` + `_exp_form` + `_log_form` / `entropy_power_inequality_gaussian_saturation` / `isEntropyPowerInequalityHypothesis_of_gaussian` / `entropyPower_map_add_const`)、Phase 3 Wave 2 Done 条件達成
+   - 全 17 file `lake env lean` 0 errors (sorry warning は既存 `@residual` 付き、新規 sorry 0)
+   - **統合 sweep 終了**: tier 5 defect 全解消 (Cluster B/C/D 全件 0)、§Phase V Done 条件達成。残 frontier:
+     - Phase 1 残置 tier 4 legacy 10 declarations (Cluster C、緊急性 LOW、別 family sweep target)
+     - 3.C R rename (Ch.17 frontier sweep 別 plan)
+     - Cluster A (`ParallelGaussianPerCoord`) は独立 candidate のまま (default skip 維持、L-INT-0-α 未発火)
+     - incidental: `isStamToEPIBridge_of_epi` (consumer 0 件) は Phase A 完了時に retract、`IsStamInequalityResidual` Stam wall hyp 漏れ構造は closure plan 対応、stale doc reference 4 件 (`FisherInfoV2DeBruijn.lean:245` 旧 field 名参照 in Cluster C 4 file) は後続 doc-sweep backlog
+
 3. **2026-05-27 — Phase 2.C を A3 pivot (`@audit:suspect` → `@audit:ok` 直接昇格)**:
    - 当初設計 (shared sorry 補題化) を proof-pivot-advisor + honesty-auditor verdict で reject。`integral_logDeriv` 2 件は body 12-13 行 genuine + field 側は regularity 帰結 (Phase 2.A engine substitution と非同型) → 直接 `@audit:ok` 昇格で対応、structure refactor / wall promote / Cluster C ripple すべて不要
 
