@@ -3,7 +3,7 @@
 > **Parent**: [`awgn-moonshot-plan.md`](awgn-moonshot-plan.md) §「撤退ライン F-3」。
 > **Sibling plans**: F-1 [`awgn-achievability-typicality-plan.md`](awgn-achievability-typicality-plan.md) / F-2 [`awgn-mi-bridge-plan.md`](awgn-mi-bridge-plan.md) / F-2 deeper [`awgn-mi-decomp-plan.md`](awgn-mi-decomp-plan.md) / peer migration [`awgn-f1-f3-peer-simultaneous-migration-plan.md`](awgn-f1-f3-peer-simultaneous-migration-plan.md) / F-4 [`awgn-f1-discharge-moonshot-plan.md`](awgn-f1-discharge-moonshot-plan.md) (DONE 148 行)。
 >
-> **Status (2026-05-27)**: peer migration により `IsAwgnConverseHypothesis` 削除済、`Common2026/Shannon/AWGNConverse.lean:59-70` の `awgn_converse` body は `sorry + @residual(plan:awgn-converse-aux-plan) + @audit:closed-by-successor` の Tier 2 状態。本 plan の責務はその `sorry` の analytic discharge に絞られる。
+> **Status (2026-05-27)**: peer migration により `IsAwgnConverseHypothesis` 削除済、Phase C 完了 + 後続 mini-plan [`awgn-main-converse-wiring-mini-plan.md`](awgn-main-converse-wiring-mini-plan.md) closure により `Common2026/Shannon/AWGNConverse.lean` の `awgn_converse` body は `awgn_converse_F3_discharged` への 1 行 `exact` で discharge 済、file scope 0 sorry / 0 @residual = **proof done at file scope**。残置 wall residual は `AWGNConverseDischarge.lean:405` `awgnConverseJoint_pair_mi_ne_top` (`@residual(wall:multivariate-mi)`) に集約維持 — project scope の proof done は wall:multivariate-mi closure (M5 未起草) 待ち。判断ログ #6 後続送り (4) closure 完了。
 >
 > **Phase 0 inventory ✅** (`awgn-converse-aux-mathlib-inventory.md` ~360 行、5 判断 verbatim 確定 — 判断ログ #1)。**最大発見**: `shannon_converse_single_shot` (`Common2026/Shannon/Converse.lean:81`) が Fano + DPI postprocess + entropy chain + `H(W uniform) = log M` を 1 補題に packaging 済 (Y 側 `[MeasurableSpace Y]` のみ)。Phase B-Fano は 1 行呼出に圧縮。
 >
@@ -285,8 +285,23 @@ Phase C 完成度: `AWGNConverseDischarge.lean` 823 行 (A 318 + B 305 + C +200)
 
 Genuine assembly: C-1a (Fubini swap) / C-2 (mechanical chain) / C-3 (B-Fano+DPI+chain+C-2 chain assembly) / C-6 (`haveI : NeZero M`+ discharger 呼出)。
 
-後続セッション送り: (1) C-1b 4 hyp 充足 単独 mini-plan / (2) C-1c Jensen affine subst — `Real.log(1+x/N)` concavity 補題 + Jensen helper 分離 / (3) C-5 transitive MI 有限性 — C-1b 完成後 ENNReal 形 per-letter 経由 (`.toReal ≤ R` 退化境界回避) / (4) `AWGNConverse.lean:70` 置換 — `AWGNMain.lean` とセット。
+後続セッション送り: (1) C-1b 4 hyp 充足 単独 mini-plan / (2) C-1c Jensen affine subst — `Real.log(1+x/N)` concavity 補題 + Jensen helper 分離 / (3) C-5 transitive MI 有限性 — C-1b 完成後 ENNReal 形 per-letter 経由 (`.toReal ≤ R` 退化境界回避) / (4) `AWGNConverse.lean:70` 置換 — `AWGNMain.lean` とセット **→ closure 済 (判断 #7、`awgn-main-converse-wiring-mini-plan.md`)**。
 
-### #7 (TBD、Phase V 完了時) 規模実績 + honesty audit verdict
+### #7 (2026-05-27、後続セッション送り (4) closure) `awgn-main-converse-wiring-mini-plan` 完了
+
+mini-plan [`awgn-main-converse-wiring-mini-plan.md`](awgn-main-converse-wiring-mini-plan.md) closure (M1-M4 全完了)。`Common2026/Shannon/AWGNConverse.lean` の `awgn_converse` body は `awgn_converse_F3_discharged P hP N hN h_meas h_feasible h_mi_bridge_per_letter hM hn_pos c Pe hPe` への 1 行 `exact` で discharge、新引数 3 件 (`h_feasible` / `h_mi_bridge_per_letter` / `hn_pos`) pass-through 済。
+
+採用方針 (i): `AWGNConverse.lean:2` で `import Common2026.Shannon.AWGNConverseDischarge` 新規追加、逆向き import (`AWGNConverseDischarge → AWGNConverse`) は不発火 (verbatim grep 確認済) → 循環依存なし。
+
+verify (orchestrator `lake env lean` 実行済):
+- `AWGNConverse.lean`: 0 errors / 0 sorry / 0 @residual = **proof done at file scope**
+- `AWGNConverseDischarge.lean`: 0 errors / 1 sorry (line 405 `awgnConverseJoint_pair_mi_ne_top`、`@residual(wall:multivariate-mi)`、M3 状態維持)
+- `AWGNMain.lean`: 0 errors / 0 sorry / 0 @residual
+
+採用 tag (`AWGNConverse.lean:71`): `@audit:closed-by-successor(awgn-converse-aux-plan, wall-multivariate-mi)` (`audit-tags.md`「closed-by-successor」語彙準拠、body が wall に伝播するため `@audit:partial-ok` ではなく `closed-by-successor` を選定)。consumer ripple = 0 件 (mini-plan 起草時判定通り)。
+
+**本 plan の残課題**: 後続セッション送り (1)-(3) (C-1b / C-1c / C-5) のみ。`AWGNConverse.lean` の `awgn_converse` body sorry は閉じたが、`AWGNConverseDischarge.lean` 内の 5 sorry (判断 #6 列挙) は維持 → project scope の proof done は wall closure 完了待ち。
+
+### #8 (TBD、Phase V 完了時) 規模実績 + honesty audit verdict
 
 実績 LOC / 0 sorry 状況 / staged hyp 数 / 独立 audit verdict / `@audit:staged(awgn-converse-feasible)` タグ整合。本 plan 完了で `awgn_converse` body sorry 解消、staged hyp 1 本残置 → `awgn-converse-feasible-discharge-plan.md` (未起草) に委譲。
