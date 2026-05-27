@@ -180,7 +180,22 @@ This is the L-FV2DB-B pass-through. -/
 `differentialEntropy (P.map (X + √s · Z))` at `s = t` equals
 `(1/2) · fisherInfoOfDensityReal (p t)`. This is a *statement-form* predicate
 bundling the boundary-vanishing + interchange-of-derivative-and-integral
-conclusions of the IBP argument. -/
+conclusions of the IBP argument.
+
+**Phase 2.B 段 3 (2026-05-27、`epi-stam-fisher-epi-integrated-sweep-plan`
+§Phase 2.B 段 3)**: 本 def は predicate-form literal alias
+(`def IsIBPHypothesis ... := HasDerivAt ((1/2) * fisherInfoOfDensityReal (p t)) t`)
+であり、conclusion-type を predicate に lifting した name-laundering pattern。
+段 2 完了で本 sweep 内 (`FisherInfoV2*` family) の全実 consumer (L3/D5) が
+`_h_ibp` underscore-prefixed unused 引数になり、wall content は
+`debruijnIdentityV2_holds` (`wall:debruijn-integration`) に集約済。
+
+本 sweep では retract 断行せず alias 維持。`FisherDeBruijnGaussianWitness.lean:43/51`
+に散文 documentation 言及あり (実コード reference 0 件、docstring 散文のみ)。
+完全 retract は後続 plan に委譲 (Gaussian witness file 等への外側 ripple を
+伴う場合があるため scope 拡大回避)。
+
+`@audit:retract-candidate(name-laundering-alias)` -/
 def IsIBPHypothesis {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (p : ℝ → ℝ → ℝ) (t : ℝ) : Prop :=
@@ -235,7 +250,9 @@ constructor `ofHeatFlow` を本 declaration の上に移動済 (forward referenc
 `h_ibp : IsIBPHypothesis X Z P p t` 引数は caller compat 維持のため保持
 (`_h_ibp` underscore prefix で unused 明示)。`IsIBPHypothesis` def 自身は
 predicate-form literal alias (D1) として残存し、`@audit:retract-candidate`
-を別途付与する段 3 task に委譲。 -/
+を別途付与する段 3 task に委譲。
+
+`@audit:ok` -/
 @[entry_point]
 theorem deBruijn_identity_v2_of_heat_flow
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]

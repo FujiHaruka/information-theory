@@ -221,7 +221,9 @@ decomposition.
 honest pass-through (`IsRegularDeBruijnHypV2.ofHeatFlow` constructor +
 `deBruijn_identity_v2` wall:debruijn-integration 経由) 化されたため、本 D5 も
 transitive pass-through に昇格。`h_ibp` 引数は caller compat 維持 (L3 と同様
-unused、`_h_ibp` underscore prefix)。 -/
+unused、`_h_ibp` underscore prefix)。
+
+`@audit:ok` -/
 @[entry_point]
 theorem deBruijn_identity_v2_of_heat_subhyp
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
