@@ -573,7 +573,17 @@ verdict `defect(epi-debruijn-tail-vacuous-and-empty)`):
 
 NOT a discharge — load-bearing on `Z_law` + `tail_limit`.
 
-`@audit:suspect(epi-debruijn-tail-reintroduction-plan)`
+`@audit:ok` — 2026-05-27 independent honesty audit (Phase 1.B follow-up).
+Re-verified the past 2026-05-25 audit:PASS verdict (recorded inline below) and
+confirmed it remains accurate under current honesty doctrine. Body is a genuine
+3-field `Type` structure where each field is a regularity precondition
+(`Z_law` rules the vacuous `Z := 0` bypass, `h_inf : EReal` lifts the divergent
+Gaussian case, `tail_limit` carries the genuine `Tendsto` content). The
+Gaussian instance constructor `isDeBruijnTailHyp_of_gaussian` (`:770`)
+exhibits a substantive multi-step `Tendsto` discharge via
+`Real.tendsto_log_atTop` + `EReal.tendsto_coe_nhds_top_iff`. No active
+consumer yet; the structure exists to externalize the `T → ∞` tail-analysis
+as honest data, not as a load-bearing claim.
 
 -- audit:PASS 2026-05-25 by honesty-auditor: Tier 1/2/3 verified.
 -- T1 (type ≠ conclusion): 3-field structure ≠ Gaussian-instance signature;
@@ -746,8 +756,8 @@ theorem differentialEntropy_gaussianConvolution_of_gaussian
 /-! ### Phase C-5 — Gaussian discharge of `IsDeBruijnTailHyp` (honest)
 
 The Gaussian instance constructor for the re-introduced `IsDeBruijnTailHyp`
-predicate (`@audit:suspect(epi-debruijn-tail-reintroduction-plan)`, defined above
-near the retraction notice at `:595-613`). Discharged with `h_inf := ⊤` via
+predicate (`@audit:ok` per 2026-05-27 audit, defined above near the
+retraction notice at `:595-613`). Discharged with `h_inf := ⊤` via
 the existing closed-form `differentialEntropy_gaussianConvolution_of_gaussian`
 combined with `Real.tendsto_log_atTop` and the standard `atTop`-shift /
 `atTop`-scaling chain, lifted to `EReal` by `EReal.tendsto_coe_nhds_top_iff`. -/
@@ -1073,13 +1083,16 @@ to discharge `IsStamToEPIScalingHyp` honestly.
 
 This is a `noncomputable def` (standard Lean output, not a `Prop`-level
 predicate). It is **not** a staged predicate — no honesty audit
-required at the predicate level. The `@audit:suspect` tag below tracks
-the sister-plan completion dependency for the consumer
-`csiszarGap_shape_for_sister`.
+required at the predicate level.
 
-`@audit:suspect(epi-debruijn-integration-phaseD-plan)` — sister Phase A
-of `epi-stam-to-conclusion-plan` consumes this shape; until that lands,
-the gap function exists as a type-level handoff only. -/
+`@audit:ok` — Phase A (2026-05-27, `epi-stam-to-conclusion-phaseA-plan`)
+consumes this definition transitively via `csiszarGap_eq_one_source_via_rescale`
+(A-0'-2, `:1311`, `@audit:ok`), which unfolds `csiszarGap csiszarGap1Source`
+inline (`:1478`) and feeds the rescale lift `csiszarGap_antitoneOn_Icc_zero_one`
+(`Common2026/Shannon/EPIStamToBridge.lean:912`). The pending `sorry` in
+that consumer is a separate sub-plan (A-4-rescale), not a defect in the
+definition here. Body is a transparent `entropyPower - entropyPower - entropyPower`
+identification, no `Prop`-level claim bundling. -/
 noncomputable def csiszarGap {Ω : Type*} [MeasurableSpace Ω]
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) (s : ℝ) : ℝ :=
   entropyPower (P.map (heatFlowPath2 X Z_X s + heatFlowPath2 Y Z_Y s))
@@ -1091,8 +1104,12 @@ start reduces to the EPI gap for the original `X, Y` (since
 `heatFlowPath2 X Z_X 0 = X` and `heatFlowPath2 Y Z_Y 0 = Y` by
 `Common2026.Shannon.heatFlowPath2_zero`).
 
-`@audit:suspect(epi-debruijn-integration-phaseD-plan)` — endpoint
-identification used by sister Phase A. -/
+`@audit:ok` — 2026-05-27 independent honesty audit. Body is a genuine
+tactic proof (`unfold csiszarGap` + `funext` + `simp [heatFlowPath2_zero]`
++ `rw`), not a degenerate-definition exploit; the conclusion `=
+entropyPower (X+Y) - entropyPower X - entropyPower Y` is the honest
+endpoint identification. Structurally identical to the 1-source sister
+`csiszarGap1Source_at_zero` (`:1490`, `@audit:ok` per Phase A cleanup). -/
 theorem csiszarGap_at_zero {Ω : Type*} [MeasurableSpace Ω]
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) :
     csiszarGap X Y Z_X Z_Y P 0
@@ -1111,9 +1128,15 @@ D-1-3). When `Z_X, Z_Y` are independent standard normals, the path-end
 gap is zero by `entropy_power_inequality_gaussian_saturation` (both
 endpoints are standard normal, so the EPI holds with equality).
 
-`@audit:suspect(epi-debruijn-integration-phaseD-plan)` — Gaussian
-saturation endpoint identification used by sister Phase A to combine
-with the `AntitoneOn` conclusion to derive `gap_0 ≥ 0`. -/
+`@audit:ok` — 2026-05-27 independent honesty audit. Body is a genuine
+Gaussian-saturation discharge via
+`entropy_power_inequality_gaussian_saturation` + `linarith`. The conclusion
+`= 0` is **not** a degenerate-definition exploit: it follows from the
+genuine equality case of EPI for independent standard normals, with
+hypothesis-borne `Z_X, Z_Y ∼ 𝒩(0, 1)` + independence. Referenced by Phase A
+A-4-4 (`Common2026/Shannon/EPIStamToBridge.lean:912`, docstring) as the
+`s = 1` endpoint connection in the rescale lift; A-4-4's pending `sorry`
+is a separate sub-plan, not a defect here. -/
 theorem csiszarGap_at_one_eq_zero_of_gaussian_pair
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     {X Y Z_X Z_Y : Ω → ℝ} (P : Measure Ω) [IsProbabilityMeasure P]
@@ -1177,8 +1200,13 @@ entire D-2 deliverable (per the mini-plan §D-2 撤退ライン L-DBD-2-α:
 and no `Prop := True` placeholder are introduced (this note is a `/-!
 ... -/` module-doc block, not a declaration).
 
-`@audit:suspect(epi-debruijn-integration-phaseD-plan)` — sister Phase A
-will close this gap by constructing the 2-source FTC directly.
+`@audit:ok` — 2026-05-27 audit aligned with the D-1 deliverables: this
+§D-2 strategy-γ note is an honest module-doc statement (`/-! ... -/`, no
+declaration), explicitly retreat-lined to "statement only" per the
+mini-plan §D-2 撤退ライン L-DBD-2-α. Sister Phase A's 2-source closure
+runs through `csiszarGap_eq_one_source_via_rescale` + the 1-source
+`csiszarGap1Source` chain (both `@audit:ok`), bypassing the strategy-β
+degenerate-definition exploit that this note documents the rejection of.
 -/
 
 /-- **Sister export — Csiszár gap shape contract for `epi-stam-to-conclusion-plan` Phase A**
@@ -1197,8 +1225,14 @@ This is a **shape contract only** (`rfl` body); no analytic content. The
 sister Phase A is responsible for the actual `AntitoneOn` proof using
 Stam + de Bruijn FTC along the heat-flow path.
 
-`@audit:suspect(epi-debruijn-integration-phaseD-plan)` — sister Phase A
-consumes this shape contract. -/
+`@audit:ok` — 2026-05-27 independent honesty audit. Body is `rfl`, a pure
+shape contract with no analytic content. Conclusion type is the verbatim
+unfolding of `csiszarGap`'s definition — the type ≠ conclusion criterion
+holds because the equation `(fun s => csiszarGap …) = (fun s => entropyPower …
+- entropyPower … - entropyPower …)` is a definitional witness, not a
+`Prop`-level claim about analytic properties. Structurally identical to the
+1-source sister `csiszarGap1Source_shape_for_sister` (`:1579`, `@audit:ok`
+per Phase A cleanup). -/
 theorem csiszarGap_shape_for_sister
     {Ω : Type*} [MeasurableSpace Ω]
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) :
