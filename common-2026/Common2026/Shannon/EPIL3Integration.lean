@@ -493,17 +493,22 @@ general `X` no Mathlib machinery currently produces the required
 `HasDerivAt` family-level statement and so this hypothesis externalizes that
 regularity.
 
-`@audit:retract-candidate(load-bearing-predicate)`
+`@audit:retract-candidate(load-bearing-predicate-empty-consumers)`
 (migrated 2026-05-28 from legacy
 `@audit:staged(epi-heat-flow-family-regularity)`: this `structure` is a
 load-bearing regularity bundle carrying a smooth density path + per-`t`
 V2 de Bruijn `HasDerivAt` witness. Cannot be reduced to `sorry` in its
 body. Closure plan: future `epi-heat-flow-family-regularity-plan` or
 absorption into `wall:debruijn-integration` (once consumers can supply
-the density path directly). Only consumer is the Gaussian constructor
-`isHeatFlowFamilyHyp_of_gaussian` (hypothesis-free); the structure
-stays as a documented load-bearing predicate for non-Gaussian
-extensions.) -/
+the density path directly). Active hypothesis-form consumers are **0**
+(no declaration takes `(h : IsHeatFlowFamilyHyp …)` as an argument);
+the only inhabitation source is the Gaussian constructor
+`isHeatFlowFamilyHyp_of_gaussian` (hypothesis-free), which produces a
+witness rather than consuming one. The structure is therefore purely
+deletable today but is kept as history record + reserved attach point
+for non-Gaussian extensions that would re-introduce a load-bearing
+consumer (sister `34e17bc` / `37284f1` precedent for the
+`-empty-consumers` variant).) -/
 structure IsHeatFlowFamilyHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] : Type where
   /-- `Z` is the standard normal driving the heat flow. -/

@@ -108,6 +108,7 @@ import Common2026.Shannon.AWGNMain
 import Common2026.Shannon.AWGNF1Discharge
 import Common2026.Shannon.AWGNAchievabilityDischarge
 import Common2026.Shannon.AWGNConverseDischarge
+import Common2026.Shannon.AwgnWalls
 import Common2026.Shannon.ParallelGaussian
 import Common2026.Shannon.ParallelGaussianL_PG0Discharge
 import Common2026.Shannon.EntropyPowerInequality
