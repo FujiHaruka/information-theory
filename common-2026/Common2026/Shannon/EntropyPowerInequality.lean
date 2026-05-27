@@ -34,14 +34,18 @@ EPI 本体 (Stam inequality → de Bruijn integration の合成) は Mathlib に
 三本立て hypothesis pass-through pattern** を採用する (T2-B / T2-C / T3-D /
 T3-F と同流儀)。
 
-* **L-EPI1 (Stam inequality)**: `IsStamInequalityHypothesis X Y P : Prop`,
-  Stam の `1/J(X+Y) ≥ 1/J(X) + 1/J(Y)` を hypothesis 化。本 file では
-  placeholder (`True`) として導入し、主定理 signature 露出のみ。Discharge
-  plan `epi-stam-discharge-plan.md` (未着手) で本格化。
-* **L-EPI2 (de Bruijn integration)**: `IsDeBruijnIntegrationHypothesis X Y P :
-  Prop`, heat-flow path 上の EPI integration identity を hypothesis 化。
-  T2-F `IsRegularDeBruijnHyp` を `[0, ∞)` 上で積分する形の discharge plan
-  `epi-debruijn-integration-plan.md` (未着手) で本格化。
+* **L-EPI1 (Stam inequality)**: genuine 代替 `IsStamInequalityResidual X Y P :
+  Prop` (`:197+`) が Stam の `1/J(X+Y) ≥ 1/J(X) + 1/J(Y)` を density-keyed
+  Fisher info で表現。主定理 `entropy_power_inequality` の hypothesis に直接
+  入っており、旧 placeholder `IsStamInequalityHypothesis := True` (Phase 3
+  Wave 2 retract 済) は廃止。Discharge plan `epi-stam-discharge-plan.md`
+  (未着手) で shared sorry 補題 `stamToEPIBridge_holds` を closure 予定。
+* **L-EPI2 (de Bruijn integration)**: heat-flow path 上の EPI integration
+  identity は T2-F `IsRegularDeBruijnHyp` を `[0, ∞)` 上で積分する形で扱う。
+  旧 placeholder `IsDeBruijnIntegrationHypothesis := True` (Phase 3 Wave 2
+  retract 済) は廃止。Discharge plan `epi-debruijn-integration-plan.md`
+  (未着手) + Phase 2.B `wall:debruijn-integration` 集約 (`debruijnIdentityV2_holds`
+  shared sorry 補題、`FisherInfoV2DeBruijn.lean`) で closure 予定。
 * **L-EPI3 (EPI conclusion、核心 retreat)**: `IsEntropyPowerInequalityHypothesis
   X Y P : Prop` を EPI 結論そのものとし、主定理本体は `:= h_epi` で着地。
   Discharge plan `epi-stam-to-conclusion-plan.md` で L-EPI1 + L-EPI2 から
@@ -64,8 +68,9 @@ T3-F と同流儀)。
 
 * `entropyPower` — Phase A 定義
 * `entropyPower_pos`, `entropyPower_gaussianReal` — Tier 0 補助
-* `IsStamInequalityHypothesis` / `IsDeBruijnIntegrationHypothesis` /
-  `IsEntropyPowerInequalityHypothesis` — Phase B L-EPI1/2/3 predicates
+* `IsEntropyPowerInequalityHypothesis` — Phase B L-EPI3 predicate
+  (L-EPI1 / L-EPI2 placeholder `Prop := True` 形は Phase 3 Wave 2 retract 済、
+  genuine 代替は `IsStamInequalityResidual` (L-EPI1) + Phase 2.B `wall:debruijn-integration` 集約 (L-EPI2))
 * `entropy_power_inequality` — Phase C 主定理 (L-EPI3 適用形)
 * `entropy_power_inequality_exp_form` — Cover-Thomas 露出形 (Real.exp 展開)
 * `entropy_power_inequality_gaussian_saturation` — Phase D, full discharge
@@ -128,37 +133,19 @@ theorem entropyPower_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
 
 /-! ## §B — L-EPI1 + L-EPI2 + L-EPI3 retreat predicates -/
 
-/-- **L-EPI1 (Stam inequality hypothesis)**: 1-dim Stam の
-`1/J(X+Y) ≥ 1/J(X) + 1/J(Y)` (Fisher information の inverse triangle inequality)
-を hypothesis 化。
-
-主定理 signature 露出のみ、本体未使用。Cover-Thomas Lemma 17.7.2 (Stam)
-の textbook signature を保持するため、placeholder `Prop := True` で導入。
-Discharge plan `epi-stam-discharge-plan.md` (未着手) で真の Stam inequality
-形に置換する想定。
-
-`@audit:defect(prop-true)` `@audit:closed-by-successor(epi-stam-discharge-plan)`
-— signature 改変は consumer 群 (Stam→EPI bridge / heat-flow integration) の
-広範な書換を要するため当該セッションでは tier 5 暫定マーカーとして残置、
-discharge plan で第一選択 (定義書換 → body sorry) に migrate 予定。 -/
-def IsStamInequalityHypothesis {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω) : Prop := True
-
-
-/-- **L-EPI2 (de Bruijn integration hypothesis)**: heat-flow path `Z_t = X+√t G`
-(`G ∼ 𝒩(0,1)`) 上での `(d/dt) h(Z_t) = (1/2) J(Z_t)` integration identity
-を hypothesis 化。
-
-主定理 signature 露出のみ、本体未使用。T2-F `Common2026.Shannon.IsRegularDeBruijnHyp`
-を `t ∈ [0, ∞)` 上で積分する形の discharge plan `epi-debruijn-integration-plan.md`
-(未着手) で真の積分恒等式 predicate に置換する想定。
-
-`@audit:defect(prop-true)` `@audit:closed-by-successor(epi-debruijn-integration-plan)`
-— signature 改変は heat-flow path 上の積分恒等式定義の再設計を要するため
-当該セッションでは tier 5 暫定マーカーとして残置、discharge plan で第一選択
-(定義書換 → body sorry) に migrate 予定。 -/
-def IsDeBruijnIntegrationHypothesis {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω) : Prop := True
+-- (retracted, Phase 3 Wave 2, 2026-05-27) `IsStamInequalityHypothesis := True`
+-- (旧 L-EPI1 placeholder, defect-kind prop-true) was retracted: the genuine
+-- non-circular alternative `IsStamInequalityResidual` (`:152+`) is now in place
+-- and is consumed directly by `entropy_power_inequality`. The lone bridge
+-- wrapper `isStamInequalityHypothesis_of_stamInequalityHyp` in
+-- `EPIStamDischarge.lean` (body `trivial`) has been deleted in the same wave.
+--
+-- (retracted, Phase 3 Wave 2, 2026-05-27) `IsDeBruijnIntegrationHypothesis := True`
+-- (旧 L-EPI2 placeholder, defect-kind prop-true) was retracted: its sole
+-- call site was `epi_via_stam_main_eq` as an unused `_h_db` argument, which
+-- has been removed; Phase 2.B `wall:debruijn-integration` aggregation
+-- (`debruijnIdentityV2_holds` shared sorry in `FisherInfoV2DeBruijn.lean`)
+-- supersedes the placeholder.
 
 /-- **L-EPI3 (EPI conclusion predicate)**: EPI 結論
 
@@ -290,7 +277,11 @@ theorem entropy_power_inequality_exp_form {Ω : Type*} {mΩ : MeasurableSpace Ω
 
 これにより L-EPI3 hypothesis は **Gaussian の場合 trivially provable**
 (同 hypothesis を `_ge_of_eq` の形で得る、§E corollary
-`isEntropyPowerInequalityHypothesis_of_gaussian` 参照)。 -/
+`isEntropyPowerInequalityHypothesis_of_gaussian` 参照)。
+
+-- Rename pending: `entropyPower_gaussian_additivity` (Cover-Thomas Ch.17
+-- 用語整合、`docs/textbook-roadmap.md` Ch.17 frontier sweep で実施。
+-- Phase 3 Wave 2 では 8 件の call site + 15+ 件 docstring 言及の更新コスト回避のため延期)。 -/
 @[entry_point]
 theorem entropy_power_inequality_gaussian_saturation
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
