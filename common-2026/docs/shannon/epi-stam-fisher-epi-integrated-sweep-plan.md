@@ -205,6 +205,104 @@ rg -n ':= h_ibp|:= h_reg\.derivAt_entropy_eq_half_fisher_v2' Common2026/Shannon/
 
 ---
 
+### Phase 3 pre-launch audit (2026-05-27)
+
+> docs-only fresh pass、実装変更なし。Phase 2.B/2.C verdict 反映漏れ (forgotten-sweep) を 3 declaration について verbatim 確認、3 sub-step default を update。
+
+#### 3 declaration consumer 表 (verbatim、`Common2026/Shannon/EntropyPowerInequality.lean`)
+
+**D1 — `IsStamInequalityHypothesis` (`:144`)**
+
+```lean
+def IsStamInequalityHypothesis {Ω : Type*} [MeasurableSpace Ω]
+    (X Y : Ω → ℝ) (P : Measure Ω) : Prop := True
+```
+
+docstring tag: `@audit:defect(prop-true)` + `@audit:closed-by-successor(epi-stam-discharge-plan)`。
+
+| consumer 種別 | file:line | 性質 |
+|---|---|---|
+| 定義 (本体) | `EntropyPowerInequality.lean:144` | def 自身 |
+| docstring 言及 (本体) | `EntropyPowerInequality.lean:37, 67` | 自己説明 (Roadmap-style listing) |
+| **実 call site (結論型)** | `EPIStamDischarge.lean:111-116` | `isStamInequalityHypothesis_of_stamInequalityHyp` bridge wrapper、結論型に登場、body は `trivial` |
+| docstring 言及 (consumer) | `EPIStamDischarge.lean:48, 109` | bridge wrapper 周辺の説明散文 |
+
+実 call site = **1 件のみ** (EPIStamDischarge.lean:111 の bridge wrapper の結論型)、body は `trivial` で `:= True` を悪用している honest bridge。新規 `IsStamInequalityResidual` (`EntropyPowerInequality.lean:197+`) が genuine 代替として既に存在し、`entropy_power_inequality` 主定理 (`:259`) は新方の hypothesis を取る形に既に migrate 済。retract 時の影響は (a) bridge wrapper 1 件削除 + (b) 自己説明 docstring 文言修正のみ。
+
+**D2 — `IsDeBruijnIntegrationHypothesis` (`:160`)**
+
+```lean
+def IsDeBruijnIntegrationHypothesis {Ω : Type*} [MeasurableSpace Ω]
+    (X Y : Ω → ℝ) (P : Measure Ω) : Prop := True
+```
+
+docstring tag: `@audit:defect(prop-true)` + `@audit:closed-by-successor(epi-debruijn-integration-plan)`。
+
+| consumer 種別 | file:line | 性質 |
+|---|---|---|
+| 定義 (本体) | `EntropyPowerInequality.lean:160` | def 自身 |
+| docstring 言及 (本体) | `EntropyPowerInequality.lean:41, 67` | 自己説明 |
+| **実 call site (引数型)** | `EPIStamDischarge.lean:745` | `epi_via_stam_main_eq` の `_h_db : IsDeBruijnIntegrationHypothesis X Y P` (アンダースコア prefix = unused) |
+| docstring 言及 (consumer) | `EPIStamDischarge.lean:299, 448` | 他 wrapper の vacuity 説明散文 |
+
+実 call site = **1 件のみ + unused** (`_h_db` underscore prefix)。`epi_via_stam_main_eq` の body (`:748`) は `entropy_power_inequality P X Y hX hY hXY h_stam` で `_h_db` を使わない。retract 時の影響は (a) `epi_via_stam_main_eq` の引数 1 件削除 + (b) 自己説明 docstring 修正のみ。**D1 より retract 安全度高い**。
+
+**R — `entropy_power_inequality_gaussian_saturation` (`:295`)**
+
+```lean
+theorem entropy_power_inequality_gaussian_saturation
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (P : Measure Ω) [IsProbabilityMeasure P]
+    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
+    (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
+    (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
+    entropyPower (P.map (fun ω => X ω + Y ω))
+      = entropyPower (P.map X) + entropyPower (P.map Y)
+```
+
+docstring tag: なし (`@audit:ok` 候補だが未付与、body は genuine 22 行)。
+
+| consumer 種別 | file:line | 性質 |
+|---|---|---|
+| 定義 | `EntropyPowerInequality.lean:295` | 本体 |
+| 実 call site | `EntropyPowerInequality.lean:339` | `isEntropyPowerInequalityHypothesis_of_gaussian` 内部 rewrite (同一 file) |
+| 実 call site | `EPIStamDischarge.lean:419, 595` | 2 件 |
+| 実 call site | `EPIStamToBridge.lean:312, 1122` | 2 件 |
+| 実 call site | `EPIL3Integration.lean:377, 1145` | 2 件 |
+| 実 call site | `EPIStamDeBruijnConclusion.lean:274` | 1 件 |
+| docstring 言及 | `EPIL3Integration.lean:47, 361, 1116, 1121` | 4 件 (説明散文) |
+| docstring 言及 | `EPIStamStep12Body.lean:330` / `EPIStamInequalityBody.lean:301` / `EPIStamStep3Body.lean:284` / `EPIStamDischarge.lean:312, 319` / `EPIStamToBridge.lean:45, 70, 1013, 1102` / `EPIStamDeBruijnConclusion.lean:259` | 説明散文 (合計 11 件) |
+
+実 call site = **8 件 (5 file 横断、本体除く)**、docstring 言及 **15+ 件**。`entropyPower_gaussian_additivity` を rg で全件検索 → **0 hit** (命名衝突なし、Phase 2 で preconditioning な別 declaration 追加無し)。
+
+#### Phase 2.B/2.C verdict 反映漏れ check (forgotten-sweep)
+
+- **D1 docstring の successor 参照** (`@audit:closed-by-successor(epi-stam-discharge-plan)`): `docs/shannon/epi-stam-discharge-plan.md` 存在確認済 (`ls docs/shannon/` で hit)。Phase 2 で path 変更なし。**PASS**。
+- **D2 docstring の successor 参照** (`@audit:closed-by-successor(epi-debruijn-integration-plan)`): `docs/shannon/epi-debruijn-integration-plan.md` 存在確認済。さらに Phase 2.B で `debruijnIdentityV2_holds` shared sorry 補題 (`wall:debruijn-integration`、`FisherInfoV2DeBruijn.lean:245`) が genuine wall closure point として確立 (本 plan §Phase 2.B 段 1 で foundation 段が field 削除断行を default)。Phase 2.B 完了後は D2 の `:= True` を **`wall:debruijn-integration` 集約 path 経由の代替 predicate** に書換える option が増える (現状は successor plan 委譲)。**PASS** (option 増加は upside、defect ではない)。
+- **R rename 衝突** (`entropyPower_gaussian_additivity`): rg で 0 hit、Phase 2 で preconditioning 済の同名 declaration なし。**PASS**。
+
+forgotten-sweep verdict: **3 件全 PASS、DEFECT なし**。
+
+副次気付き: D2 の現 successor plan は `epi-debruijn-integration-plan` だが、Phase 2.B で `wall:debruijn-integration` 集約が完成すれば D2 retract path を「successor plan 待ち」から「Phase 2.B 派生 (shared sorry 補題 alias)」に切替可能。Phase 3.B default を update する根拠 (下記)。
+
+#### 3 sub-step 戦略提案 (verbatim consumer 数を反映)
+
+- **3.A (D1)**: **retract 断行を維持**。実 call site 1 件 (bridge wrapper、body `trivial`)、新方 `IsStamInequalityResidual` 代替済。edit 量: D1 def 削除 (3 行) + bridge wrapper `isStamInequalityHypothesis_of_stamInequalityHyp` 削除 (6 行) + docstring 言及 3 箇所修正 (5 行) = **~15 行**。撤退ライン L-INT-3-α (alias 維持) 発火確率は低 (consumer 1 件で alias 維持の利益薄い)。
+
+- **3.B (D2)**: **retract 断行に default 更新** (元 default「consumer 数次第」から強化)。実 call site 1 件かつ **unused underscore** (`_h_db`)、Phase 2.B `wall:debruijn-integration` 集約が successor plan 完成より早く achieve される見込で代替 predicate 書換の動機が薄れた。edit 量: D2 def 削除 (3 行) + `epi_via_stam_main_eq` 引数削除 + 該当 caller (もし `epi_via_stam_main_eq` を直接呼ぶ場所があれば) 修正 = **~10 行** (caller 0 件なら 5 行)。撤退ライン L-INT-3-α 発火確率は **D1 より低い** (unused argument 削除は型 ripple 0)。
+
+- **3.C (R rename)**: **rename を延期 default に弱化** (元 default「consumer 数 < 10 で断行、大なら延期」、verbatim 確認後 = 実 call site 8 件 + docstring 言及 15+ 件 = 計 23+ 件)。8 < 10 で機械的には断行範囲だが docstring 言及まで含めると更新箇所 23+ 件、Phase 3 規模を 30 行 → 80-120 行に膨張させる。さらに Cover-Thomas Ch.17 用語整合は本 sweep の primary objective ではなく **`docs/textbook-roadmap.md` Ch.17 frontier 行 update のついで作業** (Phase V Done 条件にすでに含まれる)。**default = 延期 + docstring に "rename pending (Phase V 後、Ch.17 frontier sweep で実施)" 1 行追加**。撤退ライン L-INT-3-β を新規 default (発火 = 延期実行) に格上げ。
+
+#### 並列可否評価
+
+3 sub-step は **同一 file** (`EntropyPowerInequality.lean`) を編集。3.A/3.B は def 削除 + docstring 修正、3.C は (延期なら) docstring 1 行追加のみ。並列 3 worktree dispatch は (a) 3 worktree merge コスト + (b) 同一 file 3 並列の git conflict 解消コスト + (c) Mathlib 5 GB symlink × 3 のメリットが薄い (実 edit 量計 ~25-30 行)。**sequential single agent dispatch (1 agent で 3.A → 3.B → 3.C 順次) を推奨**。worktree 不要 (3.A は 3.B/3.C と独立だが、file 1 つで edit 量小さく、orchestrator merge step を 1 回に圧縮できる)。所要時間: ~1 session で完結見込。
+
+#### 結論 (Phase 3 Wave 2 dispatch 推奨パターン)
+
+**single agent sequential dispatch** (`lean-implementer` 1 件、worktree なし、main 直接編集)。3.A retract + 3.B retract + 3.C 延期 docstring 1 行で `EntropyPowerInequality.lean` 1 file の全 sub-step を 1 commit で完結。
+
+---
+
 ## Phase 3 — Cluster D (EntropyPowerInequality) sweep 📋
 
 > Phase 2 完了前提。`EntropyPowerInequality.lean` 1 file のみ。
