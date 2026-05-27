@@ -93,8 +93,11 @@ structure IsRegularDensity {Ω : Type*} [MeasurableSpace Ω]
   integrable_deriv : Integrable (deriv density) volume
   /-- Score-times-density `logDeriv p · p = deriv p` is the antiderivative
   whose integral over `ℝ` equals the boundary difference of `p`. Bundled here as
-  a hypothesis equivalent to FTC + tail-vanish on the half-lines; downstream
-  discharge can use `MeasureTheory.integral_deriv_eq_sub` or its improper variants. -/
+  a regularity consequence equivalent to FTC + tail-vanish on the half-lines;
+  downstream discharge can use `MeasureTheory.integral_deriv_eq_sub` or its
+  improper variants. Genuinely discharged for the Gaussian instance at
+  `FisherInfoGaussian.lean:284-292` via the closed-form lemma
+  `integral_deriv_gaussianPDFReal_eq_zero` (~45 lines). -/
   integral_deriv_eq_zero : ∫ x, deriv density x ∂volume = 0
 
 /-- **Score function expectation vanishes** (Cover-Thomas 17.7, regular density form).
@@ -108,7 +111,12 @@ densities satisfy it; general densities may not). Stated on the smooth
 representative `h_reg.density`; combine with `h_reg.pdf_ae_eq` if needed to
 re-cast in terms of `(pdf X P volume).toReal` via an a.e.-integral congruence.
 
-`@audit:suspect(fisher-info-moonshot-plan)` -/
+Body is a genuine 13-line proof (pointwise `logDeriv f · f = deriv f` via positivity
++ `integral_congr_ae` + `IsRegularDensity.integral_deriv_eq_zero` field call). The
+field itself is a regularity consequence (FTC + tail-vanishing on the half-lines),
+not a load-bearing core hypothesis; cf. Phase 2.C honesty audit (2026-05-27).
+
+`@audit:ok` -/
 @[entry_point]
 theorem integral_logDeriv_pdf_eq_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]

@@ -330,8 +330,8 @@ proof-log: yes (各 Phase 完了時に `docs/shannon/proof-log-epi-stam-fisher-e
 
 | file | suspect | sorry | Phase 2 処遇 |
 |---|---:|---:|---|
-| `FisherInfo.lean` | 1 | 0 | `integral_logDeriv_pdf_eq_zero` (`:127`) suspect → sorry-based migration (`IsRegularDensity.integral_deriv_eq_zero` field の load-bearing 解除) |
-| `FisherInfoV2.lean` | 1 | 0 | `integral_logDeriv_density_eq_zero` (`:157`) V2 analog、同上 |
+| `FisherInfo.lean` | 1 | 0 | `integral_logDeriv_pdf_eq_zero` (`:113`) suspect → **`@audit:ok` 昇格** (2026-05-27 Phase 2.C honesty audit verdict、A3 pivot)。body は 13 行 genuine proof + `integral_deriv_eq_zero` field は regularity 帰結 (load-bearing core ではない) と判定 |
+| `FisherInfoV2.lean` | 1 | 0 | `integral_logDeriv_density_eq_zero` (`:151`) V2 analog、同上 (`@audit:ok` 昇格) |
 | `FisherInfoV2DeBruijn.lean` | 1 | 0 | `deBruijn_identity_v2` (`:227+`) tier 5 defect (load-bearing field 抽出)、structure refactor + sorry-based migration |
 | `FisherInfoV2DeBruijnBody.lean` | 1 | 2 | `IsIBPHypothesis` def 書換 + `deBruijn_identity_v2_of_heat_flow` tier 5 defect 解消、既存 sorry 2 件は `@residual` 付与 verify |
 | `FisherInfoV2HeatFlowBody.lean` | 1 | 0 | `deBruijn_identity_v2_of_heat_subhyp` tier 5 defect (transitive literal alias) 解消 |
@@ -427,13 +427,40 @@ Phase 2.A audit verdict (`FisherInfoV2DeBruijn.lean:243-247` audit docstring ver
 
 > **foundation 段 1 を最初に sequential**: F1 削除が L1-L4 signature の prerequisite。並列にすると olean refresh round-trip が L1-L4 dispatch 毎に発生 (`lake build Common2026.Shannon.FisherInfoV2DeBruijn` 4 回)。foundation 1 dispatch で signature が確定すれば後続段は signature 安定下で進行。
 
-#### Phase 2.C — `FisherInfo.lean:127` / `FisherInfoV2.lean:157` `integral_logDeriv` 2 件 sweep
+#### Phase 2.C — `FisherInfo.lean:113` / `FisherInfoV2.lean:151` `integral_logDeriv` 2 件 sweep
 
-- 現状: `IsRegularDensity.integral_deriv_eq_zero` field 経由で `∫ logDeriv f · f = 0` を導出
-- 書換: shared sorry 補題 `integral_logDeriv_pdf_eq_zero_holds` を `FisherInfo.lean` (または新規 `Common2026/Shannon/FisherInfoWalls.lean`) に publish、`@residual(wall:fisher-info-score-zero)` 付与 (新規 wall promote 判断)
-- consumer (`FisherInfo.lean:127` / `FisherInfoV2.lean:157` の 2 件) を shared sorry 補題経由に書換
-- `IsRegularDensity` structure の `integral_deriv_eq_zero` field は load-bearing なので、Phase 2.A と同じ judgement (default: structure 保持 + shared sorry 補題経由)
-- **Phase 2.B foundation 段 1 と並列不可** (`FisherInfo.lean` は `FisherInfoV2.lean` 経由で `FisherInfoV2DeBruijn.lean` を import しないが、honesty-auditor から見た「同種パターン」として段 2 と並列可能)。Wave 2-C で fold。
+> **2026-05-27 A3 pivot**: 当初の「shared sorry 補題化 + sorry-based migration」設計は **reject** (proof-pivot-advisor + 独立 honesty-auditor verdict、Phase 2.A no-op launder verdict の過剰一般化を回避)。実際の closure 経路は **`@audit:suspect` → `@audit:ok` 昇格** (Phase 1.B/1.C パターン)。`wall:fisher-info-score-zero` 新規 promote は不要、`audit-tags.md` Wall register への追記も不要。
+
+##### A3 採用根拠 (verdict サマリ、2026-05-27 honesty audit)
+
+- **V1 (body genuine)**: `integral_logDeriv_pdf_eq_zero` (`FisherInfo.lean:117-129`) は 13 行 genuine proof (pointwise `logDeriv f · f = deriv f` via positivity (`logDeriv_apply` + `div_mul_cancel₀`) → `integral_congr_ae` → `h_reg.integral_deriv_eq_zero` field 呼出)。`integral_logDeriv_density_eq_zero` (`FisherInfoV2.lean:152-162`) も同 12 行 genuine。`:= h` 循環 / `:True` slot / 退化定義悪用 すべて非該当
+- **V2 (field is regularity 帰結、not load-bearing core)**: `IsRegularDensity.integral_deriv_eq_zero` / `IsRegularDensityV2.integral_deriv_eq_zero` は `Differentiable ℝ f` + `Tendsto f atBot/atTop (nhds 0)` + `Integrable (deriv f) volume` から FTC + tail-vanishing で導出可能 (Mathlib improper integral lemma 経由)。**Cover-Thomas 17.7 の核心 (score expectation vanishes)** ではなく、その「FTC step」のみを bundle (conclusion は pointwise bridge `logDeriv f · f = deriv f` を追加で内包、field は strictly weaker)。CLAUDE.md「前提条件 (regularity) か証明の核心 (load-bearing) か」軸で前者
+- **V3 (Gaussian instance で genuine discharge 済)**: `isRegularDensity_gaussianReal_of_law` (`FisherInfoGaussian.lean:280-292`) で 7 field 全てを hypothesis-free 構築、`integral_deriv_eq_zero := integral_deriv_gaussianPDFReal_eq_zero m hv` (closed form ~45 行 at `:231-276`)。`sorry` / `@residual` / `@audit` marker 全て不在
+- **V4 (Phase 2.A 非同型)**: Phase 2.A は `derivAt_entropy_eq_half_fisher_v2` field を engine substitution のみ (`density_t` → `h_reg.density_t` trivial rename) で `exact h_reg.field` 1 段 trivial closure = no-op launder DEFECT。Phase 2.C は `logDeriv f · f` ↔ `deriv f` の positivity-keyed pointwise bridge 13 行を間に挟むため engine substitution **不成立**、no-op launder には該当しない (別カテゴリの「Mathlib 壁が field 内に押し込まれた legacy」)
+
+##### 改訂内容 (本 Phase 2.C closure 実装)
+
+- **`FisherInfo.lean:111`** `@audit:suspect(fisher-info-moonshot-plan)` → `@audit:ok` 置換、`integral_deriv_eq_zero` field docstring に Gaussian instance discharge 参照を追記
+- **`FisherInfoV2.lean:149`** 同上 (`@audit:ok` 置換 + field docstring 拡張)
+- structure refactor / Gaussian instance 修正 / shared sorry 補題追加 / Wall register 追記 すべて **不要**
+- consumer ripple (Cluster C 等) も **不要**
+
+##### Phase 2.A 教訓の一般化リスク (本 pivot で確立した先制検出ルール)
+
+Phase 2.A no-op launder verdict (engine substitution only な field rename を tier 5 認定 + 削除断行) を **全 `@audit:suspect` field に一般化すべきではない**。verbatim 先制検出:
+
+1. shared sorry 補題化を検討する **前** に、対象 declaration の **現 body が genuine proof 完成済か** check (line count + pointwise bridge / non-trivial step の有無)
+2. Mathlib 壁 4 分類 (d)「実は閉鎖済」を wall として promote しないため、当該 field が **Gaussian / 具体例で genuine discharge 済か** verify (Gaussian instance の closure 状態 check)
+3. `:= h_reg.field` 1 段 trivial closure の場合のみ Phase 2.A 同型 launder と認定、それ以外は別カテゴリ (load-bearing vs regularity 帰結 軸で判定)
+
+本ルールは `docs/audit/audit-tags.md` Phase 2.A 教訓セクションに反映候補 (future commit)。
+
+##### `IsRegularDensity(V2).integral_deriv_eq_zero` field の取扱 (load-bearing 判定軸の精緻化)
+
+- `derivAt_entropy_eq_half_fisher_v2` (Phase 2.A、load-bearing) と `integral_deriv_eq_zero` (Phase 2.C、regularity 帰結) の判定差は **「conclusion type と field type が strictly な engine substitution で一致するか」**
+- `derivAt_entropy_eq_half_fisher_v2`: 主定理結論型と field 型が `density_t` rename のみで一致 → load-bearing
+- `integral_deriv_eq_zero`: conclusion `∫ logDeriv f · f = 0` と field `∫ deriv f = 0` の間に positivity-keyed pointwise bridge 13 行 → regularity 帰結 (strictly weaker)
+- 判定軸統一: 「field が conclusion を **strictly weaker な形で** bundle するなら regularity 帰結」、「**結論そのもの (rename のみ)** を bundle するなら load-bearing core」
 
 ### 判定基準 update — Phase 2.A 教訓を反映した先制検出ルール
 

@@ -132,7 +132,9 @@ structure IsRegularDensityV2 (f : ℝ → ℝ) : Prop where
   tail_top : Filter.Tendsto f Filter.atTop (nhds 0)
   /-- `deriv f` is Lebesgue-integrable on all of `ℝ`. -/
   integrable_deriv : Integrable (deriv f) volume
-  /-- `∫ deriv f = 0` (FTC + tail-vanishing on the half-lines). -/
+  /-- `∫ deriv f = 0` — regularity consequence of FTC + tail-vanishing on the
+  half-lines. Genuinely discharged for the Gaussian instance via
+  `integral_deriv_gaussianPDFReal_eq_zero` (`FisherInfoGaussian.lean:231-292`). -/
   integral_deriv_eq_zero : ∫ x, deriv f x ∂volume = 0
 
 /-! ## Phase B-2 — Score function expectation vanishes (density-form) -/
@@ -146,7 +148,12 @@ This is the V2 analogue of `Common2026.Shannon.integral_logDeriv_pdf_eq_zero`
 from `FisherInfo.lean` — the proof structure is identical, but stated cleanly
 on the explicit density `f`.
 
-`@audit:suspect(fisher-info-moonshot-plan)` -/
+Body is a genuine 12-line proof (pointwise `logDeriv f · f = deriv f` via
+positivity + `integral_congr_ae` + `IsRegularDensityV2.integral_deriv_eq_zero`
+field call). The field is a regularity consequence, not a load-bearing core
+hypothesis; cf. Phase 2.C honesty audit (2026-05-27).
+
+`@audit:ok` -/
 @[entry_point]
 theorem integral_logDeriv_density_eq_zero {f : ℝ → ℝ} (h_reg : IsRegularDensityV2 f) :
     ∫ x, logDeriv f x * f x ∂volume = 0 := by
