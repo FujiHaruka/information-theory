@@ -213,7 +213,16 @@ L-EPI3 hypotheses, `entropyPower (X+Y+Z+W) ≥ Σ entropyPower (·)`.
 Chains three applications of L-EPI3 (the 2-arg `IsEntropyPowerInequalityHypothesis`
 predicate): once on `((X+Y)+Z) vs W`, once on `(X+Y) vs Z`, once on `X vs Y`.
 
-`@audit:staged(epi-stam-to-conclusion-plan)` -/
+`@audit:ok` -- Phase 1.C audit 2026-05-27 (fresh-eye sweep, EPI/Stam cluster):
+proof body is genuinely complete (no internal `sorry`, no load-bearing
+predicate bundled at this site — the L-EPI3 hypothesis is carried transparently
+through the `h_*_epi` arguments supplied by the caller, and the chain to
+`entropy_power_inequality_three_arg` + `linarith` is a structural composition).
+Migrated `@audit:staged(epi-stam-to-conclusion-plan)` → `@audit:ok` per the
+Phase 1.B precedent (commit `5376537`, EPIL3Integration 5 declarations
+honestly-complete forgotten-sweep). The transitive load-bearing-ness lives in
+the L-EPI3 predicate's definition site (`EntropyPowerInequality.lean`), not
+in this consumer wrapper. -/
 theorem entropy_power_inequality_four_arg {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y Z W : Ω → ℝ)

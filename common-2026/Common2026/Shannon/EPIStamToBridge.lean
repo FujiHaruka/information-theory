@@ -430,7 +430,14 @@ line 21 cites Mathlib-wall names as the canonical SLUG example
 extensible and the plan-slug usage here matches established
 project-internal practice.
 
-`@audit:staged(epi-stam-to-conclusion-plan)` -/
+`@audit:suspect(epi-stam-to-conclusion-plan)`
+(Phase 1.C audit 2026-05-27, fresh-eye sweep): tag migrated `staged` → `suspect`
+to match the slug's plan-slug nature (per `docs/audit/audit-tags.md` line 22 +
+413: wall slug ↔ `staged`, plan slug ↔ `suspect`). The docstring already noted
+this refinement (Tier 3 PASS-after-fix above) but the marker itself had not
+been updated — fixed here as a forgotten-sweep / vocabulary-integrity patch.
+Load-bearing classification unchanged (richness hypothesis, Cover-Thomas
+Ch.17 暗黙仮定); no body / signature change. -/
 def IsStamScalingNoiseHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∃ (Z_X Z_Y : Ω → ℝ),
