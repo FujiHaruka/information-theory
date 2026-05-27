@@ -216,7 +216,12 @@ wave-7 `IsHeatFlowDensity`) and the IBP hypothesis at time `t`, the de Bruijn
 identity holds. Re-publishes `deBruijn_identity_v2_of_heat_flow` from the finer
 decomposition.
 
-`@audit:suspect(fisher-info-moonshot-plan)` -/
+**Phase 2.B 段 2 (2026-05-27、`epi-stam-fisher-epi-integrated-sweep-plan`
+§Phase 2.B 段 2)**: L3 (`deBruijn_identity_v2_of_heat_flow`) が
+honest pass-through (`IsRegularDeBruijnHypV2.ofHeatFlow` constructor +
+`deBruijn_identity_v2` wall:debruijn-integration 経由) 化されたため、本 D5 も
+transitive pass-through に昇格。`h_ibp` 引数は caller compat 維持 (L3 と同様
+unused、`_h_ibp` underscore prefix)。 -/
 @[entry_point]
 theorem deBruijn_identity_v2_of_heat_subhyp
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
@@ -226,20 +231,21 @@ theorem deBruijn_identity_v2_of_heat_subhyp
     {p : ℝ → ℝ → ℝ} {Δp : ℝ → ℝ → ℝ}
     (h_conv : IsHeatFlowConvolutionHyp X Z P p)
     (h_time : IsHeatTimeDerivHyp p Δp)
-    (h_ibp : IsIBPHypothesis X Z P p t) :
+    (_h_ibp : IsIBPHypothesis X Z P p t) :
     HasDerivAt
       (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
       ((1 / 2) * fisherInfoOfDensityReal (p t))
       t :=
   deBruijn_identity_v2_of_heat_flow X Z hX hZ hXZ ht
-    (IsHeatFlowDensity_of_sub_predicates h_conv h_time) h_ibp
+    (IsHeatFlowDensity_of_sub_predicates h_conv h_time) _h_ibp
 
 /-- **`IsRegularDeBruijnHypV2` constructor from sub-predicates.**
 
 Phase 2.B 段 1 (foundation) で `IsRegularDeBruijnHypV2` が 2-field 化された
-ため、本 constructor の `_h_ibp` 引数は constructor 本体で未使用化した
-(L4 `IsRegularDeBruijnHypV2.ofHeatFlow` から `h_ibp` 引数が削除されたため)。
-signature の formal 縮小 (引数自体の削除) は段 2 scope。 -/
+ため、本 constructor の旧 `h_ibp` 引数は段 1 で未使用化済。**Phase 2.B 段 2
+(2026-05-27)** で formal 引数自体を削除した (constructor body から literal
+alias chain が完全消滅、launder pattern 撲滅完了)。consumer 無し
+(本 file 内のみ定義、外部 reference は docstring 言及のみ)。 -/
 @[entry_point]
 def IsRegularDeBruijnHypV2.ofHeatSubhyp
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
@@ -248,8 +254,7 @@ def IsRegularDeBruijnHypV2.ofHeatSubhyp
     {t : ℝ} (ht : 0 < t)
     {p : ℝ → ℝ → ℝ} {Δp : ℝ → ℝ → ℝ}
     (h_conv : IsHeatFlowConvolutionHyp X Z P p)
-    (h_time : IsHeatTimeDerivHyp p Δp)
-    (_h_ibp : IsIBPHypothesis X Z P p t) :
+    (h_time : IsHeatTimeDerivHyp p Δp) :
     IsRegularDeBruijnHypV2 X Z P t :=
   IsRegularDeBruijnHypV2.ofHeatFlow hX hZ hXZ ht
     (IsHeatFlowDensity_of_sub_predicates h_conv h_time)

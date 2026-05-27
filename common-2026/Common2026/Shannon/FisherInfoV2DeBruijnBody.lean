@@ -197,29 +197,6 @@ predicate (it already states exactly the de Bruijn conclusion). This is the
 **body-side composition** of the two analytic predicates into the
 signature-file `deBruijn_identity_v2` shape. -/
 
-/-- **de Bruijn identity body discharge** (L-FV2DB-C).
-
-Given a heat-flow density family `p` satisfying the heat equation
-(`IsHeatFlowDensity`) and the IBP hypothesis at time `t > 0`
-(`IsIBPHypothesis`), the de Bruijn identity holds with the V2 Fisher
-information of `p t` on the RHS.
-
-`@audit:suspect(fisher-info-moonshot-plan)` -/
-@[entry_point]
-theorem deBruijn_identity_v2_of_heat_flow
-    {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
-    (X Z : Ω → ℝ) (_hX : Measurable X) (_hZ : Measurable Z)
-    (_hXZ : IndepFun X Z P)
-    {t : ℝ} (_ht : 0 < t)
-    {p : ℝ → ℝ → ℝ}
-    (_h_heat : IsHeatFlowDensity X Z P p)
-    (h_ibp : IsIBPHypothesis X Z P p t) :
-    HasDerivAt
-      (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
-      ((1/2) * fisherInfoOfDensityReal (p t))
-      t :=
-  h_ibp
-
 /-- **Constructor for `IsRegularDeBruijnHypV2`** from a heat-flow density.
 
 Phase 2.B 段 1 (foundation): `IsRegularDeBruijnHypV2` is now 2-field
@@ -238,6 +215,41 @@ def IsRegularDeBruijnHypV2.ofHeatFlow
     IsRegularDeBruijnHypV2 X Z P t where
   Z_law := h_heat.Z_law
   density_t := p t
+
+/-- **de Bruijn identity body discharge** (L-FV2DB-C).
+
+Given a heat-flow density family `p` satisfying the heat equation
+(`IsHeatFlowDensity`) and the IBP hypothesis at time `t > 0`
+(`IsIBPHypothesis`), the de Bruijn identity holds with the V2 Fisher
+information of `p t` on the RHS.
+
+**Phase 2.B 段 2 (2026-05-27、`epi-stam-fisher-epi-integrated-sweep-plan`
+§Phase 2.B 段 2)**: 旧 body `h_ibp` (literal alias of
+`IsIBPHypothesis X Z P p t := HasDerivAt ... ((1/2) * fisherInfoOfDensityReal (p t)) t`
+への 1 段 indirection) を解消し、`IsRegularDeBruijnHypV2.ofHeatFlow`
+constructor + `deBruijn_identity_v2` (wall:debruijn-integration 経由 shared
+sorry 補題 `debruijnIdentityV2_holds`) への honest pass-through に書換。
+constructor `ofHeatFlow` を本 declaration の上に移動済 (forward reference
+不可のため)。
+
+`h_ibp : IsIBPHypothesis X Z P p t` 引数は caller compat 維持のため保持
+(`_h_ibp` underscore prefix で unused 明示)。`IsIBPHypothesis` def 自身は
+predicate-form literal alias (D1) として残存し、`@audit:retract-candidate`
+を別途付与する段 3 task に委譲。 -/
+@[entry_point]
+theorem deBruijn_identity_v2_of_heat_flow
+    {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
+    (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z)
+    (hXZ : IndepFun X Z P)
+    {t : ℝ} (ht : 0 < t)
+    {p : ℝ → ℝ → ℝ}
+    (h_heat : IsHeatFlowDensity X Z P p)
+    (_h_ibp : IsIBPHypothesis X Z P p t) :
+    HasDerivAt
+      (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
+      ((1/2) * fisherInfoOfDensityReal (p t))
+      t :=
+  deBruijn_identity_v2 X Z ht (IsRegularDeBruijnHypV2.ofHeatFlow hX hZ hXZ ht h_heat)
 
 /-! ## Convenience corollaries
 
