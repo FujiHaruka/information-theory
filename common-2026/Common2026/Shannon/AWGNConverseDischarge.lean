@@ -142,7 +142,9 @@ Per-letter `Y_i` の `negMulLog (rnDeriv μ_{Y_i} volume)` Lebesgue 可積分性
     defect で撤回、sum-form + Jensen に差替)
 (d) `@audit:staged(awgn-converse-feasible)` 付与
 
-`@audit:staged(awgn-converse-feasible)` -/
+`@audit:retract-candidate(load-bearing-predicate)` (旧 slug: `awgn-converse-feasible`、
+sister `34e17bc` EPI-Stam precedent + `docs/audit/audit-tags.md` reason vocab L233 に従う
+bookkeeping migration) -/
 def PerLetterIntegrabilityForConverse (P : ℝ) (N : ℝ≥0)
     (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (c : AwgnCode M n P) : Prop :=
@@ -160,7 +162,9 @@ Memoryless AWGN continuous MI chain rule `I(X^n; Y^n) ≤ ∑ᵢ I(X_i; Y_i)`。
 non-iid codebook)。姉妹 `awgn-mi-decomp-plan.md` Phase 6 一般 body 補題と相補
 (closure で genuine discharge 候補)。
 
-`@audit:staged(awgn-converse-feasible)` -/
+`@audit:retract-candidate(load-bearing-predicate)` (旧 slug: `awgn-converse-feasible`、
+sister `34e17bc` EPI-Stam precedent + `docs/audit/audit-tags.md` reason vocab L233 に従う
+bookkeeping migration) -/
 def ContinuousMIChainRuleForConverse (P : ℝ) (N : ℝ≥0)
     (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (c : AwgnCode M n P) : Prop :=
@@ -208,7 +212,9 @@ Phase 0 判断 #1: **3 field 連言 = 2 staged (Mathlib 壁) + 1 genuine (regula
 * ❌ Phase C `isAwgnConverseFeasible_discharger` 本体が `h_feasible …` 1 行に
   縮退 (Phase B-Fano / B-DPI / B-chain / B-Gaussian が integrate されていない)
 
-`@audit:staged(awgn-converse-feasible)` -/
+`@audit:retract-candidate(load-bearing-predicate)` (旧 slug: `awgn-converse-feasible`、
+sister `34e17bc` EPI-Stam precedent + `docs/audit/audit-tags.md` reason vocab L233 に従う
+bookkeeping migration) -/
 def IsAwgnConverseFeasible (P : ℝ) (N : ℝ≥0)
     (h_meas : IsAwgnChannelMeasurable N) : Prop :=
   ∀ ⦃M n : ℕ⦄ [NeZero M], 2 ≤ M → ∀ (c : AwgnCode M n P),
@@ -1214,7 +1220,9 @@ log M ≤ I(W; Y^n).toReal + binEntropy(Pe) + Pe·log(M-1)     (Phase B-Fano)
       ≤ n · (1/2) log(1+P/N) + binEntropy(Pe) + Pe·log(M-1) (Phase C-2, sum form)
 ```
 
-`@audit:staged(awgn-converse-feasible)` -/
+`@audit:retract-candidate(load-bearing-predicate)` (旧 slug: `awgn-converse-feasible`、
+load-bearing hyp `h_feasible : IsAwgnConverseFeasible` を取ることの bookkeeping、
+sister `34e17bc` EPI-Stam precedent) -/
 theorem isAwgnConverseFeasible_discharger
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -1254,7 +1262,9 @@ theorem isAwgnConverseFeasible_discharger
 `awgn_converse` の `sorry` body を埋めるための薄い wrapper。`2 ≤ M` から `NeZero M`
 typeclass を導出し、`isAwgnConverseFeasible_discharger` に委譲。
 
-`@audit:staged(awgn-converse-feasible)` -/
+`@audit:retract-candidate(load-bearing-predicate)` (旧 slug: `awgn-converse-feasible`、
+load-bearing hyp `h_feasible : IsAwgnConverseFeasible` を取ることの bookkeeping、
+sister `34e17bc` EPI-Stam precedent) -/
 theorem awgn_converse_F3_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)

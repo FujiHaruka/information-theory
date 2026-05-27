@@ -150,7 +150,9 @@ Honesty (4-条件 per `docs/textbook-roadmap.md` / CLAUDE.md「Mathlib 壁の 4 
     union-bound + expurgation core on top of it;
 (d) `@audit:staged(continuous-aep-gaussian)` tag below.
 
-`@audit:staged(continuous-aep-gaussian)` -/
+`@audit:retract-candidate(load-bearing-predicate)` (旧 slug: `continuous-aep-gaussian`、
+sister `34e17bc` EPI-Stam precedent + `docs/audit/audit-tags.md` reason vocab L233 に従う
+bookkeeping migration) -/
 def IsContinuousAEPGaussian (P : ℝ) (N : ℝ≥0) : Prop :=
   ∀ ⦃ε : ℝ⦄, 0 < ε → ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n →
     ∃ A : Set ((Fin n → ℝ) × (Fin n → ℝ)),
@@ -554,7 +556,9 @@ to ~150-300 lines of probability manipulation. The orchestrator (plan
 `docs/shannon/awgn-achievability-typicality-plan.md` 判断ログ) decides whether
 to schedule a C-3' session.
 
-`@audit:staged(awgn-random-coding-bound)` -/
+`@audit:retract-candidate(load-bearing-predicate)` (旧 slug: `awgn-random-coding-bound`、
+sister `34e17bc` EPI-Stam precedent + `docs/audit/audit-tags.md` reason vocab L233 に従う
+bookkeeping migration) -/
 def IsAwgnRandomCodingBound (P : ℝ) (N : ℝ≥0)
     (h_meas : IsAwgnChannelMeasurable N) : Prop :=
   ∀ ⦃ε : ℝ⦄, 0 < ε → ∀ ⦃R : ℝ⦄, 0 < R → R < (1/2) * Real.log (1 + P / (N : ℝ)) →
@@ -753,7 +757,9 @@ is exposed at the predicate signature.
 (d) ✅ `@audit:staged(awgn-power-constraint-honest)` tag present and slug
     matches docstring.
 
-`@audit:staged(awgn-power-constraint-honest)` -/
+`@audit:retract-candidate(load-bearing-predicate)` (旧 slug: `awgn-power-constraint-honest`、
+sister `34e17bc` EPI-Stam precedent + `docs/audit/audit-tags.md` reason vocab L233 に従う
+bookkeeping migration) -/
 def IsAwgnPowerConstraintHonest (P_cb P_target : ℝ) (N : ℝ≥0) : Prop :=
   ∀ ⦃ε : ℝ⦄, 0 < ε → ∀ ⦃R : ℝ⦄, 0 < R →
       R < (1/2) * Real.log (1 + P_target / (N : ℝ)) →
@@ -830,7 +836,9 @@ filled (no `sorry`); the two consumer wrappers
 `awgn_theorem_F4_discharged_F1_via_staged`) inherit a genuine assembly
 modulo the bundled `h_feasible` hypothesis.
 
-`@audit:staged(awgn-random-coding-feasible)` -/
+`@audit:retract-candidate(load-bearing-predicate)` (旧 slug: `awgn-random-coding-feasible`、
+sister `34e17bc` EPI-Stam precedent + `docs/audit/audit-tags.md` reason vocab L233 に従う
+bookkeeping migration) -/
 def IsAwgnRandomCodingFeasible (P : ℝ) (N : ℝ≥0)
     (h_meas : IsAwgnChannelMeasurable N) : Prop :=
   ∀ ⦃R : ℝ⦄, 0 < R → R < (1/2) * Real.log (1 + P / (N : ℝ)) →
