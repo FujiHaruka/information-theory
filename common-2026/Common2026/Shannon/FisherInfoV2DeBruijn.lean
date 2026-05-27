@@ -229,6 +229,18 @@ regularity-only (2 field: `Z_law` + `density_t`) なので、body は
 「regularity から HasDerivAt 結論を導く」 heat eq + dominated bound + IBP の
 Mathlib 不在部に **直接突き当たる**。
 
+**Forward-looking note (Phase 2.B 段 1 audit 2026-05-27)**: 本 signature から
+`Measurable X` / `Measurable Z` / `IndepFun X Z P` を syntactically 削除済
+(段 1 で caller `csiszarGap1Source_hasDerivAt` が当該 hypothesis 群を持たない
+ために最小縮小を選択)。これらは sorry の wall content (heat equation + IBP
+on density of `P.map (X + √t Z)`) に **semantic に必要** な regularity hyp
+であり、`IsRegularDeBruijnHypV2` 内に明示 pin もない (`density_t` は unpinned)。
+wall sorry を本気で discharge する段で (a) signature に `_hX` / `_hZ` /
+`_hXZ` を underscore-prefixed args として復元 + caller ripple、または (b)
+`IsRegularDeBruijnHypV2` に `meas_X` / `meas_Z` / `indep_XZ` field を bundle、
+の判断が必要 (CLAUDE.md「load-bearing hypothesis bundling」観点で (a) 推奨)。
+forward-looking 負債、tier 5 defect ではない。
+
 `@residual(wall:debruijn-integration)` -/
 theorem debruijnIdentityV2_holds
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
