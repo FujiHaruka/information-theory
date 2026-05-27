@@ -1107,6 +1107,77 @@ structure IsEPIScalingDecomposedPipeline {Ω : Type*} [MeasurableSpace Ω]
   /-- Limit sub-predicate (path-endpoint identification). -/
   limit : IsStamToEPILimitHyp X Y P
 
+/-- **Entropy Power Inequality — A-5-chained wrapper** (Cover-Thomas Theorem 17.7.3).
+
+Hypothesis-shape-converted form of `EntropyPowerInequality.entropy_power_inequality`:
+where the base theorem internally relies on the shared sorry lemma
+`stamToEPIBridge_holds` to discharge the Stam → EPI bridge, this wrapper
+**bypasses that sorry** by constructing the bridge through the A-5 chain
+(`isStamToEPIBridgeHyp_of_stam_debruijn`). The remaining residual is purely the
+Stam inequality body (`IsStamInequalityResidual`, Cover-Thomas Lemma 17.7.2).
+
+This is the Phase A "案 a (案 a, new wrapper publish)" deliverable: the base
+theorem signature stays unchanged for downstream protection, while this wrapper
+exposes the A-5 chain as a genuine alternative discharge route. Callers who can
+supply the regularity bundles (`h_noise`, `h_reg`, `h_pos_stam`, `h_limit`)
+get EPI from Stam alone, without depending on `stamToEPIBridge_holds`'s sorry.
+
+Note on `h_stam` defeq: the base file types Stam as `IsStamInequalityResidual`
+(density-keyed `fisherInfoOfDensityReal`), the bridge consumes it as
+`IsStamInequalityHyp` (measure-keyed `fisherInfoOfMeasureV2 _ _).toReal`).
+They are defeq via `fisherInfoOfMeasureV2_def`
+(`fisherInfoOfMeasureV2 μ f = fisherInfoOfDensity f`, hence
+`(fisherInfoOfMeasureV2 μ f).toReal = fisherInfoOfDensityReal f` by definition
+of `fisherInfoOfDensityReal`).
+
+`@audit:ok` (genuine chained wrapper, no fresh `sorry`; remaining `h_stam`
+is the honest Stam wall consumed by the caller). -/
+theorem entropy_power_inequality_unconditional
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (P : Measure Ω) [IsProbabilityMeasure P]
+    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
+    (h_noise : IsStamScalingNoiseHyp X Y P)
+    (h_reg :
+      ∀ (Z_X Z_Y : Ω → ℝ), Measurable Z_X → Measurable Z_Y →
+        P.map Z_X = gaussianReal 0 1 → P.map Z_Y = gaussianReal 0 1 →
+        IndepFun X Z_X P → IndepFun Y Z_Y P → IndepFun Z_X Z_Y P →
+        InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+            (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P
+          × InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P
+          × InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
+    (h_pos_stam :
+      ∀ (Z_X Z_Y : Ω → ℝ), Measurable Z_X → Measurable Z_Y →
+        P.map Z_X = gaussianReal 0 1 → P.map Z_Y = gaussianReal 0 1 →
+        IndepFun X Z_X P → IndepFun Y Z_Y P → IndepFun Z_X Z_Y P →
+        ∀ (h_reg_sum :
+              InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+                (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+          (h_reg_X :
+              InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
+          (h_reg_Y :
+              InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P),
+            ∀ (t : ℝ) (ht : 0 < t),
+              (0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                      ((h_reg_X.reg_at t ht).density_t)) ∧
+              (0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                      ((h_reg_Y.reg_at t ht).density_t)) ∧
+              (0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                      ((h_reg_sum.reg_at t ht).density_t)) ∧
+              InformationTheory.Shannon.EPIStamDischarge.IsStamInequalityHyp
+                (fun ω => X ω + Real.sqrt t * Z_X ω)
+                (fun ω => Y ω + Real.sqrt t * Z_Y ω) P)
+    (h_limit : IsStamToEPILimitHyp X Y P)
+    (h_stam : IsStamInequalityResidual X Y P) :
+    entropyPower (P.map (fun ω => X ω + Y ω))
+      ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
+  -- Step 1: chain A-5 to obtain the bridge `IsStamInequalityHyp → EPI`.
+  have h_bridge : IsStamToEPIBridgeHyp X Y P :=
+    isStamToEPIBridgeHyp_of_stam_debruijn hX hY h_noise h_reg h_pos_stam h_limit
+  -- Step 2: feed Stam to the bridge. `IsStamInequalityResidual` and
+  -- `IsStamInequalityHyp` are defeq via `fisherInfoOfMeasureV2_def`;
+  -- the `exact` below relies on that defeq.
+  exact h_bridge h_stam
+
 /-! ## §5 — Predicate manipulation: symmetry, congruence, pass-through -/
 
 /-! ## §6 — Chain forms (3-arg / 4-arg) via scaling decomposition -/
