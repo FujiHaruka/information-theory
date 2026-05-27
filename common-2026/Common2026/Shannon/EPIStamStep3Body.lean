@@ -281,7 +281,7 @@ theorem isStamInequalityHyp_via_step3 {Ω : Type*} [MeasurableSpace Ω]
 coupling predicates vacuously by `exfalso`-ing the `0 < J_X` precondition against
 the buggy V1 `fisherInfo = 0` artefact for Gaussians. They asserted nothing about
 Stam actually holding and were removed. The genuine Gaussian EPI runs via
-`entropy_power_inequality_gaussian_saturation` (see `epi_via_stam_step3_gaussian`
+`entropyPower_gaussian_additivity` (see `epi_via_stam_step3_gaussian`
 below); the arithmetic saturation kernel `stam_coupling_saturates` is genuine and
 kept.
 -/

@@ -42,7 +42,7 @@ The two sub-predicates together body-discharge `IsStamToEPIBridgeHyp`
 through `isStamToEPIBridgeHyp_of_scaling_limit`. Each sub-predicate is then
 itself further discharged for the Gaussian saturation case (where both
 predicates collapse to the Gaussian closed-form identity from
-`EntropyPowerInequality.entropy_power_inequality_gaussian_saturation`).
+`EntropyPowerInequality.entropyPower_gaussian_additivity`).
 
 ## Approach
 
@@ -67,7 +67,7 @@ sub-predicates. The bridge's *outer* implication
 
 For the Gaussian saturation case, both sub-predicates are full-discharged
 hypothesis-free (the EPI inequality holds with equality by
-`entropy_power_inequality_gaussian_saturation`, so any predicate which is
+`entropyPower_gaussian_additivity`, so any predicate which is
 implied by EPI is trivially Gaussian-dischargeable).
 
 ## Key signatures
@@ -322,7 +322,7 @@ theorem isStamToEPIBridgeHyp_of_scaling_limit
   have h_gap1_zero :
       entropyPower (P.map (fun ω => Z_X ω + Z_Y ω))
         - entropyPower (P.map Z_X) - entropyPower (P.map Z_Y) = 0 := by
-    have h_sat := entropy_power_inequality_gaussian_saturation
+    have h_sat := entropyPower_gaussian_additivity
       P Z_X Z_Y hZX_meas hZY_meas hZXZY 0 0 1 1
       (by norm_num : (1 : ℝ≥0) ≠ 0) (by norm_num : (1 : ℝ≥0) ≠ 0)
       hZX_law hZY_law
@@ -1031,7 +1031,7 @@ Chains A-4-5 (`isStamToEPIScalingHyp_of_stam_debruijn`, producing
 existing bridge body discards `_h_limit` with an `_` binder
 (`EPIStamToBridge.lean:271-314`: only `h_scaling`'s `AntitoneOn` witness is
 used, the Gaussian saturation endpoint at `s = 1` is discharged internally via
-`entropy_power_inequality_gaussian_saturation` on the extracted `Z_X, Z_Y`),
+`entropyPower_gaussian_additivity` on the extracted `Z_X, Z_Y`),
 so the `_limit` argument is non-load-bearing here in practice but stays in
 the signature for compatibility with the established `_of_scaling_limit`
 shape — this Phase A does not refactor the limit predicate away (that is
@@ -1120,7 +1120,7 @@ theorem isStamToEPIBridgeHyp_of_stam_debruijn
 /-- **Gaussian bridge full discharge (direct Gaussian saturation route)**.
 For independent Gaussians `X, Y` with non-zero variance, the bridge holds
 hypothesis-free: the EPI gap is identically `0` by
-`entropy_power_inequality_gaussian_saturation`, so the Stam-conditional
+`entropyPower_gaussian_additivity`, so the Stam-conditional
 implication is trivial.
 
 Phase 0 (2026-05-25): previously routed via
@@ -1140,7 +1140,7 @@ theorem isStamToEPIBridgeHyp_of_gaussian_via_scaling
     (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
     IsStamToEPIBridgeHyp X Y P := by
   intro _h_stam
-  have h_eq := entropy_power_inequality_gaussian_saturation
+  have h_eq := entropyPower_gaussian_additivity
     P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
   unfold IsEntropyPowerInequalityHypothesis
   exact h_eq.ge

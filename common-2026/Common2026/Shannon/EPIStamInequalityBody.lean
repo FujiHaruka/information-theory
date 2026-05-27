@@ -298,7 +298,7 @@ and its chain lemmas `isStamInequalityHyp_of_gaussian_via_body` /
 vacuously by `exfalso`-ing the `0 < J_X` (resp. `0 < J_Y`) precondition against
 the buggy V1 `fisherInfo = 0` artefact for Gaussians. They asserted nothing about
 Stam actually holding and were removed. The genuine Gaussian EPI runs via
-`entropy_power_inequality_gaussian_saturation` (see `epi_via_stam_body_gaussian`
+`entropyPower_gaussian_additivity` (see `epi_via_stam_body_gaussian`
 in §6 below). -/
 
 /-! ## §6 — EPI pipeline integration with body discharge -/

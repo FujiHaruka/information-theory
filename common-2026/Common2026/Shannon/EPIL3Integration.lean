@@ -44,7 +44,7 @@ L-EPI3 を取り出す **integrated pipeline** を整える。
 * §2 — **integrated 主定理**: integrated pipeline → EPI。`Common2026/Shannon/EPIStamDischarge.lean`
   の `epi_via_stam_main` を packaging。
 * §3 — **Gaussian EPI**: `X, Y` がともに Gaussian なら EPI は等号で成立
-  (`entropy_power_inequality_gaussian_saturation` 直行)。integrated pipeline 形は
+  (`entropyPower_gaussian_additivity` 直行)。integrated pipeline 形は
   `entropy_power_inequality_gaussian_via_pipeline` が真の `IsStamInequalityHyp`
   を引数で受ける (honest pass-through)。
   **RESOLVED (2026-05-20):** 旧 `isStamInequalityHyp_of_gaussian_v1_zero` /
@@ -358,7 +358,7 @@ theorem entropy_power_inequality_exp_form_reduced
 and `isEPIL3IntegratedPipeline_gaussian` discharged the Stam predicate vacuously
 through the buggy V1 `fisherInfo = 0` artefact for Gaussians and were removed. The
 genuine Gaussian EPI is `entropy_power_inequality_gaussian_full` below (direct from
-`entropy_power_inequality_gaussian_saturation`); the integrated-pipeline form takes
+`entropyPower_gaussian_additivity`); the integrated-pipeline form takes
 a real `IsStamInequalityHyp` argument (`entropy_power_inequality_gaussian_via_pipeline`).
 -/
 
@@ -374,7 +374,7 @@ theorem entropy_power_inequality_gaussian_full
     (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
     entropyPower (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
-  have h_eq := entropy_power_inequality_gaussian_saturation
+  have h_eq := entropyPower_gaussian_additivity
     P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
   exact h_eq.ge
 
@@ -1122,12 +1122,12 @@ theorem csiszarGap_at_zero {Ω : Type*} [MeasurableSpace Ω]
 
 /-- **Endpoint at `s = 1` is zero (Gaussian saturation case)** (Phase D
 D-1-3). When `Z_X, Z_Y` are independent standard normals, the path-end
-gap is zero by `entropy_power_inequality_gaussian_saturation` (both
+gap is zero by `entropyPower_gaussian_additivity` (both
 endpoints are standard normal, so the EPI holds with equality).
 
 `@audit:ok` — 2026-05-27 independent honesty audit. Body is a genuine
 Gaussian-saturation discharge via
-`entropy_power_inequality_gaussian_saturation` + `linarith`. The conclusion
+`entropyPower_gaussian_additivity` + `linarith`. The conclusion
 `= 0` is **not** a degenerate-definition exploit: it follows from the
 genuine equality case of EPI for independent standard normals, with
 hypothesis-borne `Z_X, Z_Y ∼ 𝒩(0, 1)` + independence. Referenced by Phase A
@@ -1151,7 +1151,7 @@ theorem csiszarGap_at_one_eq_zero_of_gaussian_pair
     simp [heatFlowPath2_one]
   rw [h_sum_funext, heatFlowPath2_one, heatFlowPath2_one]
   -- Gaussian saturation: independent standard normals saturate EPI.
-  have h_sat := entropy_power_inequality_gaussian_saturation
+  have h_sat := entropyPower_gaussian_additivity
     P Z_X Z_Y hZX hZY hZXZY 0 0 1 1
     (by norm_num : (1 : ℝ≥0) ≠ 0) (by norm_num : (1 : ℝ≥0) ≠ 0)
     hZX_law hZY_law

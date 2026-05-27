@@ -336,14 +336,14 @@ identity (because `J(N(m, v)) = 1/v` closed-form), and de Bruijn-integration
 collapses to the linear variance increase along the heat flow.
 
 The block below packages this discharge via the genuine Gaussian saturation
-result (`entropy_power_inequality_gaussian_saturation`) reused in §7.
+result (`entropyPower_gaussian_additivity`) reused in §7.
 
 **RESOLVED (2026-05-20):** the former `isStamInequalityHyp_of_fisherInfoReal_zero`
 (and its `_sum_zero` / `_Y_zero` siblings) discharged the Stam predicate by
 `exfalso`-ing the `0 < J_X` precondition against the buggy V1 `fisherInfo = 0`
 artefact for Gaussians. That asserted *nothing* about Stam actually holding and
 was removed. The genuine Gaussian EPI path runs entirely through
-`entropy_power_inequality_gaussian_saturation` (see §7).
+`entropyPower_gaussian_additivity` (see §7).
 -/
 
 /-! ## §6 — Stam-to-EPI bridge + 合成 wrapper -/
@@ -443,7 +443,7 @@ theorem epi_via_stam_gaussian
     entropyPower (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
   -- Equality form from Gaussian saturation.
-  have h_eq := entropy_power_inequality_gaussian_saturation
+  have h_eq := entropyPower_gaussian_additivity
     P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
   -- `=` implies `≥`.
   exact h_eq.ge
@@ -619,7 +619,7 @@ theorem entropyPower_gaussian_sum_eq
     (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
     entropyPower (P.map (fun ω => X ω + Y ω))
       = entropyPower (P.map X) + entropyPower (P.map Y) :=
-  entropy_power_inequality_gaussian_saturation P X Y hX hY hXY m₁ m₂ v₁ v₂
+  entropyPower_gaussian_additivity P X Y hX hY hXY m₁ m₂ v₁ v₂
     hv₁ hv₂ hLawX hLawY
 
 /-! ## §14 — Log-form / Cover-Thomas alternative signatures via Stam pipeline -/

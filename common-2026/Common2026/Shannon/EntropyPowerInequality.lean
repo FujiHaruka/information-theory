@@ -73,7 +73,7 @@ T3-F と同流儀)。
   genuine 代替は `IsStamInequalityResidual` (L-EPI1) + Phase 2.B `wall:debruijn-integration` 集約 (L-EPI2))
 * `entropy_power_inequality` — Phase C 主定理 (L-EPI3 適用形)
 * `entropy_power_inequality_exp_form` — Cover-Thomas 露出形 (Real.exp 展開)
-* `entropy_power_inequality_gaussian_saturation` — Phase D, full discharge
+* `entropyPower_gaussian_additivity` — Phase D, full discharge (Cover-Thomas Ch.17 用語整合)
 * `entropyPower_nonneg`, `entropyPower_map_add_const`,
   `entropy_power_inequality_log_form` — Phase E corollaries
 -/
@@ -292,13 +292,9 @@ theorem entropy_power_inequality_exp_form {Ω : Type*} {mΩ : MeasurableSpace Ω
 (同 hypothesis を `_ge_of_eq` の形で得る、§E corollary
 `isEntropyPowerInequalityHypothesis_of_gaussian` 参照)。
 
--- Rename pending: `entropyPower_gaussian_additivity` (Cover-Thomas Ch.17
--- 用語整合、`docs/textbook-roadmap.md` Ch.17 frontier sweep で実施。
--- Phase 3 Wave 2 では 8 件の call site + 15+ 件 docstring 言及の更新コスト回避のため延期)。
-
 @audit:ok -/
 @[entry_point]
-theorem entropy_power_inequality_gaussian_saturation
+theorem entropyPower_gaussian_additivity
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -344,7 +340,7 @@ theorem isEntropyPowerInequalityHypothesis_of_gaussian
     (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
     IsEntropyPowerInequalityHypothesis X Y P := by
   unfold IsEntropyPowerInequalityHypothesis
-  rw [entropy_power_inequality_gaussian_saturation P X Y hX hY hXY m₁ m₂ v₁ v₂
+  rw [entropyPower_gaussian_additivity P X Y hX hY hXY m₁ m₂ v₁ v₂
         hv₁ hv₂ hLawX hLawY]
 
 -- (retracted 2026-05-28, EPI-Stam Cluster C+D sweep) `isStamToEPIBridge_of_epi`

@@ -327,7 +327,7 @@ theorem isStamCauchySchwarz_of_step12 {Ω : Type*} [MeasurableSpace Ω]
 Step 2 vacuously by `exfalso`-ing the `0 < J_X` precondition against the buggy V1
 `fisherInfo = 0` artefact for Gaussians. That asserted nothing about Stam actually
 holding and was removed. The genuine Gaussian EPI runs via
-`entropy_power_inequality_gaussian_saturation`; the genuine *non-vacuous* Gaussian
+`entropyPower_gaussian_additivity`; the genuine *non-vacuous* Gaussian
 convex Fisher bound (keyed on the V2 Fisher information) is
 `Common2026.Shannon.FisherInfoV2.stam_convex_fisher_bound_gaussian`
 (`StamGaussianBound.lean`).

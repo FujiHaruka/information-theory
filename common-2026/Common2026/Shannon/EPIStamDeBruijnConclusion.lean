@@ -256,7 +256,7 @@ vacuously through the buggy V1 `fisherInfo = 0` artefact (`exfalso` on `0 < J_X`
 so the Stam/de Bruijn machinery played no load-bearing role — the inequality came
 entirely from Gaussian saturation. The genuine Gaussian EPI is
 `entropy_power_inequality_gaussian_full'` below (direct from
-`entropy_power_inequality_gaussian_saturation`), which carries no Stam claim.
+`entropyPower_gaussian_additivity`), which carries no Stam claim.
 -/
 
 /-- **Gaussian EPI fully hypothesis-free** (re-verification + extension of
@@ -271,7 +271,7 @@ theorem entropy_power_inequality_gaussian_full'
     (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
     entropyPower (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
-  (entropy_power_inequality_gaussian_saturation
+  (entropyPower_gaussian_additivity
     P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY).ge
 
 /-! ## §6 — Composed de Bruijn gap-monotonicity into the EPI gap -/
