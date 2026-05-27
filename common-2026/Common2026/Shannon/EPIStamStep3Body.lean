@@ -326,6 +326,14 @@ theorem epi_via_stam_step3_gaussian
 `isStamInequalityHyp_via_body` result exactly when fed the optimal CS predicate
 derived from the total expectation.
 
+Signature is **identical** to `isStamInequalityHyp_via_step3` (line 269); the
+intended distinction is that the body should produce its `IsStamInequalityHyp`
+via the Wave 7 `isStamInequalityHyp_via_body` rather than the Step-3 chain,
+yielding an equational sanity check. Both bodies are `sorry` under
+L-INT-1-β / L-Step3-TE retreat, so the duplication is currently vacuous until
+both close — the duplicate is kept (rather than removed) so the sanity
+obligation remains visible to the closure plan.
+
 Signature retains both load-bearing hypotheses (same shape as
 `isStamInequalityHyp_via_step3`). Body sorry honest-marks the deferred
 chain content.
