@@ -28,6 +28,17 @@
 > の Tier 2 状態。本 plan の責務はその `sorry` を **analytic body** で genuine
 > discharge することに完全に絞られる (signature 改変は完了済)。
 >
+> **Phase 0 inventory COMPLETED (2026-05-27)**:
+> [`awgn-converse-aux-mathlib-inventory.md`](awgn-converse-aux-mathlib-inventory.md) (~360 行)
+> 5 判断 (#1-#5) verbatim 確定済。**最大発見**: `shannon_converse_single_shot`
+> (`Common2026/Shannon/Converse.lean:81`) が **Fano + DPI postprocess + entropy chain
+> + `H(W uniform) = log M`** を **1 補題に既に集約済** (Y 側 `[MeasurableSpace Y]` のみ、
+> AWGN `Y := Fin n → ℝ` 直接起動可)。Phase B-Fano + B-DPI 大部分が既存 1 補題呼出
+> に圧縮可能。詳細 → §「Phase 0 結論サマリ」。
+> **規模中央予測**: 起草時 ~650 行 → **inventory 反映後 ~520 行**に下方修正
+> (中央比 -130 行、Phase B-Fano/B-DPI 圧縮による)。悲観 ~810 行 (T-FFC-4 1000 行
+> 未満確実)。
+>
 > **Goal**: `Common2026/Shannon/AWGNConverseDischarge.lean` 新規 publish (姉妹
 > `AWGNAchievabilityDischarge.lean` と対称命名)。最終 signature は:
 >
@@ -85,7 +96,7 @@
 
 ## 進捗
 
-- [ ] Phase 0 — Mathlib + Common2026 在庫 (Fano measure form / DPI continuous / continuous MI chain rule / Gaussian Y max-entropy / per-letter integrability) 📋 → [`awgn-converse-aux-mathlib-inventory.md`](awgn-converse-aux-mathlib-inventory.md) (本 plan で同時起草、subagent 依頼)
+- [x] Phase 0 — Mathlib + Common2026 在庫 (Fano measure form / DPI continuous / continuous MI chain rule / Gaussian Y max-entropy / per-letter integrability) ✅ → [`awgn-converse-aux-mathlib-inventory.md`](awgn-converse-aux-mathlib-inventory.md) (~360 行、5 判断 verbatim 確定、`shannon_converse_single_shot` 圧縮発見)
 - [ ] Phase A — bundle predicate `IsAwgnConverseFeasible` 設計 + skeleton 📋
 - [ ] Phase B-Fano — Fano application via `fano_inequality_measure_theoretic` (`X := Fin M`, `Y := Fin n → ℝ`) 📋
 - [ ] Phase B-DPI/chain — DPI `I(W;Ŵ) ≤ I(X^n;Y^n)` + memoryless chain `I(X^n;Y^n) ≤ ∑ I(X_i;Y_i)` 📋
@@ -119,21 +130,21 @@ theorem awgn_converse
 namespace InformationTheory.Shannon.AWGN
 
 /-- **AWGN converse feasibility bundle** (Cover-Thomas 9.1.2 schema、姉妹
-`IsAwgnRandomCodingFeasible` の converse 対応版)。Fano + DPI + memoryless chain
-rule + per-letter Gaussian max-entropy を 1 bundle に packing し、Mathlib 壁
-(per-letter integrability + continuous MI chain rule) を staged hyp として外出
-し。 -/
+`IsAwgnRandomCodingFeasible` の converse 対応版)。Phase 0 inventory 判断 #1 で
+**3 field 連言確定** (per-letter integrability ∧ continuous MI chain rule ∧
+Markov chain genuine)。staged hyp は 2 件 (PerLetter + Chain)、Markov chain は
+`mutualInfo_le_of_markov` (`Common2026/Shannon/CondMutualInfo.lean:385`) で
+genuine discharge 可能な regularity hypothesis (判断 #3)。 -/
 def IsAwgnConverseFeasible (P : ℝ) (N : ℝ≥0)
     (h_meas : IsAwgnChannelMeasurable N) : Prop :=
   ∀ {M n : ℕ} (_hM : 2 ≤ M) (c : AwgnCode M n P),
     -- "core analytic primitives" のみ要求、結論型は出さない:
-    -- ① per-letter input law marginal の Gaussian dominance
-    -- ② per-letter `Y_i` の `Integrable (negMulLog (rnDeriv ...))` (Mathlib 壁)
-    -- ③ continuous-MI chain rule reuse (memoryless channel 形)
-    -- ④ DPI for `W → X^n → Y^n → Ŵ` (continuous Y_n、Fano 入力 `X := Fin M`)
+    -- ① per-letter `Y_i` の `Integrable (negMulLog (rnDeriv ...))` (Mathlib 壁、staged)
+    -- ② continuous-MI chain rule reuse (memoryless channel 形、Mathlib 壁、staged)
+    -- ③ Markov chain `W → X^n → Y^n` (regularity、genuine)
     PerLetterIntegrabilityForConverse P N h_meas c ∧
     ContinuousMIChainRuleForConverse P N h_meas c ∧
-    DPIForConverse P N h_meas c
+    MarkovChainForConverse P N h_meas c
 
 /-- F-3 撤退ラインの本物 discharge (Cover-Thomas 9.1.2 の Lean 化)。 -/
 theorem isAwgnConverseFeasible_discharger
@@ -164,59 +175,75 @@ witness 不要、3 sub-bound の単純連言で済む見込み)。
 
 **戦略**: Cover-Thomas 9.1.2 (Theorem 9.1.2 converse) の標準 4 段 (Fano → DPI →
 memoryless chain rule → per-letter Gaussian max-entropy) をそのまま Lean に転写。
-各段を独立 Phase に割り当て、Phase 間の界面型は Phase 0 inventory で先に確定する
-(skeleton-driven, CLAUDE.md)。姉妹 achievability discharge と同型の
-**bundle-predicate packing** で Mathlib 壁を 1 staged hyp に集約 (姉妹は
+**Phase 0 inventory の最大発見**は `shannon_converse_single_shot`
+(`Common2026/Shannon/Converse.lean:81`) が (a)+(b)+(e) 部分の **Fano + DPI postprocess
++ entropy chain + `H(W uniform) = log M`** を 1 補題に packaging 済みであること。
+Y 側に `Fintype` 制約なし (`[MeasurableSpace Y]` のみ) で `Y := Fin n → ℝ` 直接
+起動可。本 plan の (a)+(b) 段は **1 行呼出に圧縮**、Mathlib 壁は 2 件 (per-letter
+integrability + continuous MI chain rule、staged) に絞れる。
+姉妹 achievability discharge と同型の **bundle-predicate packing** (姉妹は
 `IsAwgnRandomCodingFeasible` 3 sub-bound 形)。
 
 ```
-(a) Fano's inequality (measure-theoretic form)         [Phase B-Fano]
-    H(W | Ŵ) ≤ H(Pe) + Pe · log(|X| − 1)
-    where X = Fin M, Y = Fin n → ℝ, decoder : Y → X
-    → fano_inequality_measure_theoretic (Common2026/Fano/Measure.lean:226) 直接呼出
+(a)+(b)+(e) 圧縮: shannon_converse_single_shot 1 行呼出  [Phase B-Fano]
+    `log M ≤ I(W; Y^n).toReal + binEntropy(Pe) + Pe · log(M-1)`
+    (Fano + DPI postprocess + entropy chain + H(W uniform) = log M を内包)
+    引数: μ uniform W, Msg = W, Yo = Y^n, decoder = c.decoder
+    + measurability + uniform 表現 (μ.map Msg = |M|⁻¹ • Measure.count) + hM
+    + hMI_finite : mutualInfo μ Msg Yo ≠ ∞ (本 plan 内 plumbing ~10-20 行)
+    → 本 plan 内自作: errorProbAt ↔ Fano errorProb bridge (T-FFC-5、~25-50 行)
 
-(b) Data processing inequality                          [Phase B-DPI]
-    I(W; Ŵ) ≤ I(X^n; Y^n)
-    (W → X^n encoder deterministic、Y^n → Ŵ decoder measurable、Markov chain)
-    → 既存 Common2026 DPI? 在庫確認 (Phase 0)、不在なら bundle 内 staged hyp に格納
+(c-DPI) Markov chain DPI `I(W; Y^n) ≤ I(X^n; Y^n)`     [Phase B-DPI]
+    → mutualInfo_le_of_markov (Common2026/Shannon/CondMutualInfo.lean:385) で
+       genuine 化、`MarkovChainForConverse` bundle field を destructure
+       (judgement #3: `[StandardBorelSpace (Fin M)] [StandardBorelSpace (Fin n → ℝ)]`
+       自動充足、AWGN α := ℝ で発火可)
+    → ~40-70 行 (1 行呼出 + Markov chain instance plumbing)
 
-(c) Memoryless channel chain rule                       [Phase B-chain]
-    I(X^n; Y^n) ≤ ∑ᵢ I(Xᵢ; Yᵢ)
-    (AWGN channel is memoryless: Y^n = X^n + Z^n、Z_i iid)
-    → Common2026/Shannon/ChannelCodingConverseMemorylessPure.lean を schema 参考
-       (`Fintype α` 壁あり、AWGN α := ℝ は直接 reuse 不可)
-    → bundle 内 staged hyp に格納 (continuous channel chain rule の Mathlib 壁)
+(c-chain) Memoryless continuous MI chain rule           [Phase B-chain]
+    `I(X^n; Y^n) ≤ ∑ᵢ I(Xᵢ; Yᵢ)` for AWGN code (non-iid codebook)
+    → `Fintype α` 制約付き既存補題 (CondEntropyMemorylessstrong) AWGN reuse 不可、
+       `mutualInfo_pi_eq_sum` (MIChainRule.lean:318) も iid joint 仮定で発火不可
+    → bundle 内 staged hyp `ContinuousMIChainRuleForConverse` を destructure
+       (T-FFC-3 確定発動、判断 #4)
 
 (d) Per-letter Gaussian max-entropy bound               [Phase B-Gaussian]
     I(Xᵢ; Yᵢ) = h(Yᵢ) − h(Yᵢ | Xᵢ) = h(Yᵢ) − h(N)
               ≤ (1/2) log(2πe(P + N)) − (1/2) log(2πeN)
               = (1/2) log(1 + P/N)
-    → differentialEntropy_le_gaussian_of_variance_le (4-hypothesis 形) +
+    → differentialEntropy_le_gaussian_of_variance_le (4-hypothesis 形、3-of-4
+       genuine、`h_ent_int` のみ wall — 判断 #5) +
        differentialEntropy_gaussianReal +
-       per-letter integrability h_ent_int (bundle 内 staged hyp)
+       per-letter integrability h_ent_int (bundle 内 staged hyp、T-FFC-2 確定発動)
     → I = h(Y) − h(Y|X) bridge は F-2 (awgn-mi-bridge / awgn-mi-decomp) と共有
 
-(e) 合成 + 算術                                         [Phase C]
-    log M = H(W) (W uniform on Fin M)
-          = H(W | Ŵ) + I(W; Ŵ)                  (entropy chain rule)
-          ≤ H(Pe) + Pe · log(M-1) + I(X^n; Y^n)  (Fano + DPI)
-          ≤ H(Pe) + Pe · log(M-1) + ∑ I(Xᵢ; Yᵢ)  (chain rule)
-          ≤ H(Pe) + Pe · log(M-1) + n · (1/2) log(1+P/N)  (per-letter)
+(f) 合成 + 算術                                         [Phase C]
+    log M ≤ I(W; Y^n).toReal + binEntropy(Pe) + Pe · log(M-1)
+          ≤ I(X^n; Y^n).toReal + binEntropy(Pe) + Pe · log(M-1)   (Markov DPI)
+          ≤ ∑ I(Xᵢ; Yᵢ).toReal + binEntropy(Pe) + Pe · log(M-1)   (chain rule)
+          ≤ n · (1/2) log(1+P/N) + binEntropy(Pe) + Pe · log(M-1) (per-letter)
 ```
 
-**Mathlib-shape-driven definitions** (CLAUDE.md、本 plan 起草前に verbatim 確認済):
+**Mathlib-shape-driven definitions** (CLAUDE.md、本 plan 起草前に verbatim 確認済 +
+Phase 0 inventory で `shannon_converse_single_shot` の圧縮発見を反映):
 
-- **Fano** — `fano_inequality_measure_theoretic` (`Common2026/Fano/Measure.lean:226`)
-  は **`condEntropy μ Xs Yo ≤ binEntropy Pe + Pe · log(card X − 1)`** を返す。
-  本 plan の `awgn_converse` 結論 `log M ≤ n·C + binEntropy Pe + Pe · log(M − 1)`
-  に直結する形 ⇒ そのまま使える (X := Fin M `Fintype` finite、Y := Fin n → ℝ
-  continuous、Fano の Y 側に制約なし)。verbatim 確認: `fano_inequality_measure_theoretic`
-  signature 引数 `(μ : Measure Ω) [IsProbabilityMeasure μ] (Xs : Ω → X) (Yo : Ω → Y)
-  (decoder : Y → X) (hXs hYo hdec) (hcard : 2 ≤ Fintype.card X)`、結論
-  `condEntropy μ Xs Yo ≤ binEntropy (errorProb μ Xs Yo decoder) + errorProb … · log (card X − 1)`。
-  注意: AWGN converse は **average error** `Pe = (1/M) ∑ errorProbAt m` を入れた `log M`
-  bound、Fano は `errorProb` 直接 (= `μ.map (X, Yo, decoder) ≠ 0` 確率)。両者の同値性
-  bridge は標準 (uniform W + measurable encoder/decoder)、Phase B-Fano 内で 20-40 行。
+- **Single-shot converse 圧縮** (Phase 0 判断 #2、最大発見) —
+  `shannon_converse_single_shot` (`Common2026/Shannon/Converse.lean:81`、verbatim 確認済)
+  が **Fano + DPI postprocess + entropy chain + `H(W uniform) = log M`** を 1 補題
+  に集約済。signature 引数: `(μ : Measure Ω) [IsProbabilityMeasure μ] (Msg : Ω → M)
+  (Yo : Ω → Y) (decoder : Y → M) (hMsg hYo hdecoder) (hMsg_uniform :
+  μ.map Msg = (Fintype.card M : ℝ≥0∞)⁻¹ • Measure.count) (hcard : 2 ≤ Fintype.card M)
+  (hMI_finite : mutualInfo μ Msg Yo ≠ ∞)`、結論
+  `Real.log (Fintype.card M) ≤ (mutualInfo μ Msg Yo).toReal + Real.binEntropy
+  (errorProb μ Msg Yo decoder) + errorProb … * Real.log ((Fintype.card M : ℝ) - 1)`。
+  **Y 側無制約 `[MeasurableSpace Y]` のみ** ⇒ `Y := Fin n → ℝ` 直接起動可
+  (T-FFC-1 完全回避)。本 plan の Phase B-Fano は **1 行呼出**に圧縮、個別補題
+  `H(W) = log M` / entropy chain rule (`mutualInfo_eq_entropy_sub_condEntropy`) /
+  Fano `fano_inequality_measure_theoretic` の **直接呼出を Phase B-Fano 内で行わない**
+  (`shannon_converse_single_shot` 内部で完結消費される)。
+  **追加 plumbing**: `hMI_finite : mutualInfo μ Msg Yo ≠ ∞` (本 plan で ~10-20 行) +
+  AWGN `(1/M) ∑ errorProbAt m` と Fano `errorProb μ Msg Yo decoder` の同値性 bridge
+  (uniform W + product channel Fubini 展開、~25-50 行 = T-FFC-5 新規撤退ライン)。
 
 - **per-letter Gaussian max-entropy** — `differentialEntropy_le_gaussian_of_variance_le`
   (`Common2026/Shannon/DifferentialEntropy.lean:518`、4-hypothesis 形) で
@@ -237,36 +264,43 @@ memoryless chain rule → per-letter Gaussian max-entropy) をそのまま Lean 
   姉妹 `awgn-mi-decomp-plan.md` の Phase 6 一般 body 補題と相補関係 — 同 plan が
   closure すれば本 staged hyp も自動 discharge 候補。
 
-- **DPI for continuous Y** — `fano_inequality_measure_theoretic` から
-  `condEntropy μ W Ŵ ≤ …` を経由した後、`H(W) ≤ H(W | Ŵ) + I(W; Ŵ)` の `I(W; Ŵ)`
-  を `I(X^n; Y^n)` で上から押さえる DPI が必要。Common2026 在庫は Phase 0 で要 verbatim
-  確認 (`MutualInfo.lean` / `CondMutualInfo.lean` / `MIChainRule.lean` 周辺、loogle
-  `mutualInfo_le_mutualInfo_of_measurable` 等)。不在なら bundle 内 staged hyp
-  `DPIForConverse` に格納。**注意**: encoder `W → X^n` は deterministic
-  (`c.encoder : Fin M → Fin n → ℝ`)、decoder `Y^n → Ŵ` は measurable
-  (`c.decoder_meas`)、両者で `Y^n` が `(W, Ŵ)` の中間 → DPI は標準的に強い形で出る
-  はず、Mathlib 壁ではない可能性。
+- **DPI continuous (judgement #3、genuine 化可)** — Phase 0 inventory で
+  `mutualInfo_le_of_postprocess` (`Common2026/Shannon/DPI.lean:142`、無 Fintype) と
+  `mutualInfo_le_of_markov` (`Common2026/Shannon/CondMutualInfo.lean:385`、
+  `X := Fin M, Y := Fin n → ℝ` で `[StandardBorelSpace]` 自動充足) の在庫を確認。
+  `shannon_converse_single_shot` 出口 `I(W; Y^n).toReal` から `I(X^n; Y^n).toReal`
+  への bound は `mutualInfo_le_of_markov` で genuine discharge 可能。Markov chain
+  `IsMarkovChain μ W (encoder ∘ W) Y^n` は AWGN code 構造の自然帰結 (encoder
+  deterministic + channel memoryless) ⇒ bundle 内 `MarkovChainForConverse` field を
+  **genuine hypothesis** として保持 (regularity hyp、Mathlib 壁ではない)。
+  **T-FFC-3 の DPI 側は staged 不要、本 plan で genuine 化** (T-FFC-3 staged は
+  chain rule 側に絞られる)。
 
 ### 規模見積もり
 
+**Phase 0 inventory 反映後** (2026-05-27、`shannon_converse_single_shot` 圧縮による
+Phase B-Fano + B-DPI 大幅縮小):
+
 | Phase | 内容 | 楽観 | 中央 | 悲観 (壁発動) |
 |---|---|---:|---:|---:|
-| Phase 0 | inventory (別 file) | 0 (Lean) | 0 | 0 |
-| Phase A | skeleton + bundle predicate | 80 | 120 | 180 |
-| Phase B-Fano | Fano application + errorProb bridge | 60 | 100 | 150 |
-| Phase B-DPI/chain | DPI + memoryless chain | 80 | 150 | 250 |
-| Phase B-Gaussian | per-letter Gaussian bound + arith | 120 | 180 | 250 |
+| Phase 0 | inventory (別 file、完了済) | 0 (Lean) | 0 | 0 |
+| Phase A | skeleton + bundle predicate (3 field: 1 genuine + 2 staged) | 60 | 100 | 150 |
+| Phase B-Fano | `shannon_converse_single_shot` 1 行呼出 + Pe bridge + MI-finite plumbing | 30 | 60 | 100 |
+| Phase B-DPI/Markov | `mutualInfo_le_of_markov` (genuine、bundle Markov hyp 経由) | 40 | 70 | 120 |
+| Phase B-chain (staged) | bundle destructure + `I(X^n;Y^n) ≤ ∑ I(X_i;Y_i)` (staged hyp ↦ direct) | 20 | 40 | 60 |
+| Phase B-Gaussian | per-letter Gaussian bound + arith (staged `h_ent_int` のみ) | 100 | 150 | 220 |
 | Phase C | 統合 + wrapper | 30 | 50 | 80 |
 | skeleton + plumbing | (各 Phase の skeleton 部分) | 30 | 50 | 80 |
-| **合計** | | **~400** | **~650** | **~990** |
+| **合計 (inventory 反映後)** | | **~310** | **~520** | **~810** |
 
-中央予測 **~650 行**。姉妹 achievability discharge (1641 行、3 staged hyp bundle +
-580 行 E-1 body) より小さい — converse は Fano + chain rule + per-letter という
-標準形で、achievability の sphere packing + codebook average + expurgation のような
-randomization 工程が無いため。判断 #1 でこの規模感を再確認する。
+中央予測 **~520 行** (起草時 ~650 → -130 行、Phase B-Fano `~100 → ~60` +
+Phase B-DPI/chain `~150 → ~70 (DPI) + ~40 (chain)` の圧縮分)。姉妹 achievability
+discharge (1641 行) より大幅小 — converse は randomization 工程不在 + 既存
+`shannon_converse_single_shot` で Fano+DPI+chain 4 段の中 (a)(b)(e) を吸収できる
+ため。
 
-T-FFC-4 発動条件: 1000 行超過 → 2 file 分割
-(`AWGNConverseDischargeFano.lean` ~250 + `AWGNConverseDischargePerletter.lean` ~400)。
+T-FFC-4 発動条件: 1000 行超過 → 2 file 分割。**inventory 反映後 悲観 ~810 行**
+で確実に 1000 行未満、**T-FFC-4 発動しない見込み**。
 
 ### ファイル構成
 
@@ -369,41 +403,36 @@ import Mathlib.MeasureTheory.Function.LpSpace.Basic
 
 ---
 
-## Phase 0 — Mathlib + Common2026 API 在庫 📋
+## Phase 0 — Mathlib + Common2026 API 在庫 ✅ (2026-05-27 完了)
 
 ### スコープ
 
-`docs/shannon/awgn-converse-aux-mathlib-inventory.md` 新規 (~300-500 行 MD)。
+`docs/shannon/awgn-converse-aux-mathlib-inventory.md` 新規 (~360 行 MD)。
 本 plan 固有の 5 軸 (Fano 適用 / DPI continuous / continuous MI chain rule /
 per-letter Gaussian max-entropy / per-letter integrability) について Mathlib +
 Common2026 在庫を **per-lemma 構造化形式** で裏取り (CLAUDE.md「Subagent Inventory
 of Mathlib Lemmas」: `file:line` + 完全 signature + `[...]` type-class verbatim +
 結論形 verbatim 厳守)。subagent 起動時は **`mathlib-inventory` agent** を使う。
 
-### Done 条件
+### Done 条件 (✅ 全完了)
 
-- [ ] inventory file 新規作成 (`awgn-converse-aux-mathlib-inventory.md`)
-- [ ] 5 軸ごとに「既存 / 部分既存 / 不在」を判定
-- [ ] **判断 #1 (bundle predicate `IsAwgnConverseFeasible` の structure)** —
-      Mathlib + Common2026 在庫を見て、bundle 内 staged sub-bound 数 (2 〜 4)、
-      witness の必要性 (姉妹 achievability bundle は `∃ P'` witness を持つが、
-      converse は input law がコードブック非依存なので不要見込み)、各 sub-bound
-      の field 型を確定。
-- [ ] **判断 #2 (entropy chain rule + uniform W bridge の在庫)** —
-      `H(W) = log M` (W uniform on `Fin M`) + `H(W) = H(W | Ŵ) + I(W; Ŵ)`
-      (entropy chain rule) が Common2026 既存ならそのまま使う、不在なら
-      Phase B-Fano 内で局所構築。
-- [ ] **判断 #3 (DPI continuous の壁判定)** —
-      `I(W; Ŵ) ≤ I(X^n; Y^n)` で `Y^n : Fin n → ℝ` continuous を扱う DPI 補題
-      の存在判定。在庫があれば genuine discharge、不在なら bundle 内 staged hyp。
-- [ ] **判断 #4 (continuous MI chain rule の壁判定)** —
-      `I(X^n; Y^n) ≤ ∑ I(X_i; Y_i)` for memoryless AWGN channel。
-      `awgn-mi-decomp-plan.md` Phase 6 一般 body 補題と相補。在庫 / 部分在庫 /
-      不在を確定。
-- [ ] **判断 #5 (per-letter integrability `h_ent_int` の壁形式)** —
-      `Integrable (negMulLog (rnDeriv μ_{Y_i} volume)) volume` を per-letter で
-      要求するか、bundle 内 1 件で「全 `i : Fin n` について」forall に packing
-      するか。後者なら姉妹 `IsAwgnPowerConstraintHonest` と同型の packing pattern。
+- [x] inventory file 新規作成 (`awgn-converse-aux-mathlib-inventory.md` ~360 行)
+- [x] 5 軸ごとに「既存 / 部分既存 / 不在」を判定
+- [x] **判断 #1**: bundle field 数 = **3 (PerLetter ∧ Chain ∧ Markov)**、
+      staged 2 + genuine 1、witness 不要。→ inventory §「判断 #1」+ 判断ログ #1
+- [x] **判断 #2**: **完全在庫** (`shannon_converse_single_shot` で entropy chain rule
+      + uniform W bridge を packaging 済、Phase B-Fano は 1 行呼出に圧縮)。
+      → inventory §「判断 #2」+ §「B. Single-shot Converse」
+- [x] **判断 #3**: DPI continuous **genuine 化可** (`mutualInfo_le_of_markov` 経由)、
+      bundle field `MarkovChainForConverse` は regularity hyp。
+      → inventory §「判断 #3」+ §「D. DPI」
+- [x] **判断 #4**: continuous MI chain rule **壁深度 large、staged 確定発動** (T-FFC-3)。
+      → inventory §「判断 #4」+ §「C. Memoryless MI chain rule」
+- [x] **判断 #5**: per-letter integrability `h_ent_int` **壁深度 medium、staged 確定**
+      (T-FFC-2)、`∀ i : Fin n, Integrable ...` forall packing。
+      → inventory §「判断 #5」+ §「E. Per-letter Gaussian max-entropy」
+- [x] **新規 T-FFC-5 提案**: Pe bridge 自作 plumbing 肥大時の独立補題化撤退ライン
+      (~25-50 行を超えた場合)。判断ログ #1 + §撤退ライン T-FFC-5
 
 ### proof-log
 
@@ -436,50 +465,59 @@ file 分割した: `axis1` / `axis2` / `axis3` / `axis4` / `axis5`)。
 - A-3 honesty 4 条件 docstring (姉妹 `IsAwgnRandomCodingFeasible` と同型 4 条件)
 - A-4 `@audit:staged(awgn-converse-feasible)` タグ付与
 
-### 入出力型 (key、判断 #1 で確定後 update 予定)
+### 入出力型 (key、Phase 0 判断 #1 + #5 確定形)
 
 ```lean
-/-- per-letter Y_i (= X_i + Z_i) の Gaussian max-entropy integrability + density
-事項を per-letter で要求する bundle field (Mathlib 壁 T-FFC-2)。 -/
+/-- per-letter Y_i (= X_i + Z_i) の `h_ent_int` integrability を per-letter で
+要求する bundle field (Mathlib 壁 T-FFC-2 確定、判断 #5)。3-of-4 Gaussian
+max-entropy hypothesis (`hμ ≪ vol`, `h_mean`, `h_var`, `h_var_int`) は本 plan 内
+で genuine 化 (Gaussian convolution + power constraint + uniform W 平均)、
+`h_ent_int` のみ packing。 -/
 def PerLetterIntegrabilityForConverse (P : ℝ) (N : ℝ≥0)
     (h_meas : IsAwgnChannelMeasurable N) {M n : ℕ} (c : AwgnCode M n P) : Prop :=
   ∀ i : Fin n,
-    -- per-letter input law (W uniform → encoder marginal)
-    let μ_Xi : Measure ℝ := … (uniform W 上の encoder marginal)
-    let μ_Yi : Measure ℝ := μ_Xi.bind (fun x => awgnChannel N h_meas x)
-    -- power constraint per-letter (Cauchy-Schwarz)
-    (∫ x, x^2 ∂μ_Xi ≤ P) ∧
-    -- Gaussian max-entropy 4 hypotheses (3 of 4、`h_ent_int` のみ wall)
-    (μ_Yi ≪ volume) ∧
-    (Integrable (fun y => y^2) μ_Yi) ∧
-    -- ★ Mathlib 壁: integrability of -p log p for Y_i density
-    Integrable (fun y => Real.negMulLog ((μ_Yi.rnDeriv volume y).toReal)) volume
-
-/-- DPI: `I(W; Ŵ) ≤ I(X^n; Y^n)` for continuous Y^n (W uniform on Fin M、
-encoder deterministic、decoder measurable)。Mathlib 壁判定は Phase 0 判断 #3。 -/
-def DPIForConverse (P : ℝ) (N : ℝ≥0)
-    (h_meas : IsAwgnChannelMeasurable N) {M n : ℕ} (c : AwgnCode M n P) : Prop :=
-  ∀ (uniformW : Measure (Fin M)) [_h_unif : IsProbabilityMeasure uniformW],
-    (∀ w : Fin M, uniformW {w} = (1 / M : ℝ≥0∞)) →   -- W uniform
-    -- I(W; Ŵ) ≤ I(X^n; Y^n) 形 (具体形は Phase 0 で確定)
-    sorry
+    -- per-letter Y_i 周辺分布 (uniform W 上の encoder ∘ W marginal を AWGN で
+    -- convolve、Phase A 着手時に local 定義)
+    Integrable (fun y =>
+        Real.negMulLog ((perLetterYLaw c h_meas i).rnDeriv volume y |>.toReal))
+      volume
+    -- @residual(wall:awgn-converse-perletter-integrability)
 
 /-- continuous MI chain rule for memoryless AWGN: `I(X^n; Y^n) ≤ ∑ I(X_i; Y_i)`。
-Mathlib 壁 (`awgn-mi-decomp-plan.md` と相補)。 -/
+Mathlib 壁 T-FFC-3 確定発動 (判断 #4: `Fintype α` 制約付き既存補題 reuse 不可、
+iid joint 仮定付き `mutualInfo_pi_eq_sum` も AWGN non-iid codebook で発火不可)。
+姉妹 `awgn-mi-decomp-plan.md` Phase 6 一般 body 補題と相補 (closure で
+genuine discharge 候補)。 -/
 def ContinuousMIChainRuleForConverse (P : ℝ) (N : ℝ≥0)
     (h_meas : IsAwgnChannelMeasurable N) {M n : ℕ} (c : AwgnCode M n P) : Prop :=
-  ∀ (uniformW : Measure (Fin M)) [IsProbabilityMeasure uniformW],
-    -- I(X^n; Y^n) ≤ ∑ I(X_i; Y_i) 形 (具体形は Phase 0 で確定)
-    sorry
+  -- 具体形は Phase A 着手時に `jointMIXnYn c h_meas` / `perLetterMI c h_meas i`
+  -- local 定義後に確定:
+  --   (jointMIXnYn c h_meas).toReal ≤ ∑ i : Fin n, (perLetterMI c h_meas i).toReal
+  sorry
+  -- @residual(wall:mi-chain-cont)
+
+/-- Markov chain `W → encoder ∘ W → Y^n` の `IsMarkovChain` 仮定 (Common2026
+既存 `IsMarkovChain` (`Common2026/Shannon/CondMutualInfo.lean:73`) 形)。AWGN code
+構造 (encoder deterministic + channel memoryless + W uniform) の自然帰結 ⇒
+regularity hypothesis (load-bearing ではない、Mathlib 壁ではない)。本 plan の
+Phase B-DPI で `mutualInfo_le_of_markov` 経由で I(W; Y^n) ≤ I(X^n; Y^n) を
+genuine discharge する material (判断 #3)。 -/
+def MarkovChainForConverse (P : ℝ) (N : ℝ≥0)
+    (h_meas : IsAwgnChannelMeasurable N) {M n : ℕ} (c : AwgnCode M n P) : Prop :=
+  -- 具体形は Phase A 着手時に local `μ` (uniform W ⊗ product channel) を定義後:
+  --   IsMarkovChain μ W (fun ω => c.encoder (W ω)) Y^n
+  sorry
+  -- @residual(plan:awgn-converse-aux-plan)  -- genuine 化、Phase A-2 で構築
 
 /-- **AWGN converse feasibility bundle** (姉妹 `IsAwgnRandomCodingFeasible` と
-対称、Mathlib 壁の analytic primitives 集約)。3 sub-bound の連言。 -/
+対称)。Phase 0 判断 #1: **3 field 連言 = 2 staged (Mathlib 壁) + 1 genuine
+(regularity)**。 -/
 def IsAwgnConverseFeasible (P : ℝ) (N : ℝ≥0)
     (h_meas : IsAwgnChannelMeasurable N) : Prop :=
   ∀ {M n : ℕ} (_hM : 2 ≤ M) (c : AwgnCode M n P),
     PerLetterIntegrabilityForConverse P N h_meas c ∧
     ContinuousMIChainRuleForConverse P N h_meas c ∧
-    DPIForConverse P N h_meas c
+    MarkovChainForConverse P N h_meas c
 ```
 
 ### 必要 Mathlib API / Common2026 既存補題
@@ -502,71 +540,81 @@ yes (`proof-log-awgn-converse-aux-phaseA.md`)。
 
 ### 工数感
 
-~80-180 行、1 session。
+~60-150 行、1 session (inventory 反映で起草時 ~80-180 行から下方修正、bundle 内
+sub-bound 数 3 確定 + `DPIForConverse` を `MarkovChainForConverse` に置換することで
+field 型が単純化されたため)。
 
 ### 失敗時 fallback
 
 - bundle 内 sub-bound 数が 5 件以上に膨張 → 1 bundle ではなく 2 bundle に分割
   (`IsAwgnConverseFanoFeasible` + `IsAwgnConversePerLetterFeasible`)、判断ログで
-  記録。
+  記録。**確率低** (Phase 0 で 3 field 確定済)。
 - bundle field の型が input law `uniformW` を抱える形に肥大 → uniformW は AWGN
   converse において常に `Measure.uniformDiscrete (Fin M)` で fixed なので、
   bundle predicate が `uniformW` を引数に取らず内部で固定する形に pivot。
 
 ---
 
-## Phase B-Fano — Fano application via `fano_inequality_measure_theoretic` 📋
+## Phase B-Fano — `shannon_converse_single_shot` 1 行呼出 + Pe bridge 📋
 
-### スコープ
+### スコープ (Phase 0 inventory 反映で大幅圧縮、判断 #2)
 
-Cover-Thomas 9.1.2 step 1: `H(W | Ŵ) ≤ binEntropy(Pe) + Pe · log(M-1)` を AWGN code
-の error probability `Pe = (1/M) ∑ errorProbAt m` に接続。Fano 補題は既存
-`fano_inequality_measure_theoretic` (`Common2026/Fano/Measure.lean:226`) を
-**`X := Fin M`, `Y := Fin n → ℝ`** で直接呼出 (X 側の `Fintype + MeasurableSingletonClass`
-は `Fin M` で自動充足、Y 側は制約なし)。
+Cover-Thomas 9.1.2 step (a)+(b)+(e): Fano + DPI postprocess + entropy chain +
+`H(W) = log M` を **`shannon_converse_single_shot` (`Common2026/Shannon/Converse.lean:81`)
+1 行呼出**で吸収。`X := Fin M, Y := Fin n → ℝ, decoder := c.decoder` で起動可
+(Y 側 `[MeasurableSpace Y]` のみ、T-FFC-1 完全回避)。
 
-- B-Fano-1 `H(W) = log M` for uniform W on `Fin M`
-  (`entropy_uniform_eq_log_card` 系、Phase 0 判断 #2 で在庫確認)
-- B-Fano-2 `H(W) = H(W | Ŵ) + I(W; Ŵ)` (entropy chain rule、Phase 0 判断 #2)
-- B-Fano-3 errorProb 同値性 bridge: AWGN `Pe = (1/M) ∑ errorProbAt m` と
-  Fano `errorProb μ Xs Yo decoder = μ {ω | Xs ω ≠ decoder (Yo ω)}` の同値
-  (uniform W + deterministic encoder + measurable decoder)
-- B-Fano-4 `fano_inequality_measure_theoretic` 直接呼出 (`hcard := hM`、`Xs := W`、
-  `Yo := Y^n`、`decoder := c.decoder`)
-- B-Fano-5 結合: `log M ≤ binEntropy(Pe) + Pe · log(M-1) + I(W; Ŵ)`
+**個別補題 B-Fano-1 (`H(W) = log M`) + B-Fano-2 (entropy chain rule) は不要**
+(`shannon_converse_single_shot` 内部で完結消費、判断 #2)。
+**B-Fano-3 (errorProb bridge) は本 plan 内自作必須** (T-FFC-5 新規撤退ライン)。
+
+- B-Fano-1 probability-space 構築: `Ω := Fin M × (Fin n → ℝ)`、
+  `μ := (uniform on Fin M) ⊗ (product channel `Measure.pi (fun i => awgnChannel
+  (encoder W i))`)`。`Msg := Prod.fst`, `Yo := Prod.snd`、measurability + uniform
+  表現 (`μ.map Msg = |M|⁻¹ • Measure.count`) plumbing (~15-25 行)
+- B-Fano-2 `hMI_finite : mutualInfo μ Msg Yo ≠ ∞` の確保 (Y^n continuous の場合、
+  Mathlib MI bound で finite を出す plumbing ~10-20 行)
+- B-Fano-3 **(T-FFC-5)** AWGN `Pe = (1/M) ∑ errorProbAt m` と Fano
+  `errorProb μ Msg Yo decoder = μ {Msg ≠ decoder ∘ Yo}` の同値性 bridge
+  (uniform W + product channel Fubini 展開、~25-50 行)
+- B-Fano-4 **`shannon_converse_single_shot` 1 行呼出**で
+  `log M ≤ (mutualInfo μ Msg Yo).toReal + binEntropy Pe + Pe · log(M-1)` を取得
 
 ### 入出力型 (key)
 
 ```lean
-/-- Cover-Thomas 9.1.2 step 1: Fano application for AWGN code。 -/
-theorem awgn_fano_inequality
+/-- Cover-Thomas 9.1.2 step (a)+(b)+(e) 圧縮: shannon_converse_single_shot
+1 行呼出で `log M ≤ I(W; Y^n).toReal + binEntropy(Pe) + Pe · log(M-1)`。 -/
+theorem awgn_converse_single_shot_call
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (hM : 2 ≤ M) (c : AwgnCode M n P)
     (Pe : ℝ) (hPe : Pe = ((1 / M : ℝ) * ∑ m : Fin M,
         (c.toCode.errorProbAt (awgnChannel N h_meas) m).toReal)) :
     Real.log M
-      ≤ Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1)
-        + (jointMIWWhat c h_meas).toReal := by
-  -- B-Fano-1 + B-Fano-2 + B-Fano-3 + B-Fano-4 + B-Fano-5 で組み立て
+      ≤ (jointMIWYn c h_meas).toReal
+        + Real.binEntropy Pe + Pe * Real.log ((M : ℝ) - 1) := by
+  -- B-Fano-1 (Ω 構築) + B-Fano-2 (MI finite) + B-Fano-3 (Pe bridge) +
+  -- B-Fano-4 (shannon_converse_single_shot 呼出) で組み立て
   sorry
 ```
 
-`jointMIWWhat c h_meas : ℝ≥0∞` は `I(W; Ŵ)` の typed RV 形 (Phase 0 で
-`mutualInfo` 既存 def を確認後に local 定義)。
+`jointMIWYn c h_meas : ℝ≥0∞` は `I(W; Y^n)` の typed RV 形 (Phase A で local 定義)。
 
 ### 必要 Mathlib API / Common2026 既存補題
 
-- `fano_inequality_measure_theoretic` (`Common2026/Fano/Measure.lean:226`、verbatim 確認済)
-- `entropy_uniform_eq_log_card` 系 (Phase 0 判断 #2 で在庫確認、不在なら local
-  ~10-20 行)
-- `mutualInfo_eq_entropy_sub_condEntropy` 系 (entropy chain rule、Phase 0 判断 #2)
-- AWGN error probability bridge: `c.toCode.errorProbAt (awgnChannel N h_meas) m` と
-  Fano `errorProb` の同値性 (~15-25 行手書き、Phase 0 で似た bridge の在庫確認)
+- `shannon_converse_single_shot` (`Common2026/Shannon/Converse.lean:81`、verbatim 確認済、§Approach 参照)
+- `Measure.pi` (Mathlib `MeasureTheory/Constructions/Pi.lean`)
+- `Measure.count` / `Measure.smul_apply` (Mathlib、uniform W 表現)
+- AWGN `errorProbAt` (`Common2026/Shannon/ChannelCoding.lean:195`)
+- Fano `errorProb` (`Common2026/Fano/Measure.lean:74`)
+- Phase 0 で **fano_inequality_measure_theoretic 直接呼出は不要**
+  (`shannon_converse_single_shot` 内部で吸収済)
+- Phase 0 で **`H(W) = log M` / entropy chain rule 直接呼出も不要** (同上、判断 #2)
 
 ### Done 条件
 
-- [ ] B-Fano-1 ~ B-Fano-5 完了
-- [ ] `awgn_fano_inequality` publish、0 sorry
+- [ ] B-Fano-1 ~ B-Fano-4 完了
+- [ ] `awgn_converse_single_shot_call` publish、0 sorry
 - [ ] `lake env lean ...` clean
 
 ### proof-log
@@ -575,70 +623,81 @@ yes (`proof-log-awgn-converse-aux-phaseB-fano.md`)。
 
 ### 工数感
 
-~60-150 行、1-1.5 session。
+**~30-100 行、0.5-1 session** (Phase 0 inventory 反映で起草時 ~60-150 行 から圧縮、
+個別補題 B-Fano-1/B-Fano-2 不要 + Fano 直接呼出不要のため)。
 
 ### 失敗時 fallback
 
-- `Fintype.card (Fin M) = M` の型 cast plumbing (`(M : ℝ) - 1` vs
-  `((Fintype.card (Fin M) : ℝ) - 1)`) で詰まる → `simpa [Fintype.card_fin]` で
+- `Fintype.card (Fin M) = M` の型 cast plumbing → `simpa [Fintype.card_fin]` で
   吸収、~5 行追加。
-- error probability bridge が肥大 (40+ 行) → bridge 補題を Phase A の bundle に
-  staged hyp として packing (T-FFC-2 拡張)、判断ログで記録。
-- `H(W) = log M` for uniform W が Common2026 不在 → local proof
-  (`entropy = ∑ negMulLog (1/M) = log M`、~15-20 行)。
+- **T-FFC-5 発動** (Pe bridge 自作肥大 50+ 行) → 独立補題化
+  `awgn_errorProb_eq_fano_errorProb`、本 plan 内 1 行呼出に。判断ログ #3 で記録。
+- `hMI_finite : mutualInfo μ Msg Yo ≠ ∞` 確保が困難 → Mathlib `mutualInfo_lt_top`
+  系 + 既存 `mutualInfo_ne_top_of_*` を loogle、不在なら local 補題 (~10-20 行)。
 
 ---
 
-## Phase B-DPI/chain — DPI + memoryless chain rule 📋
+## Phase B-DPI/chain — Markov DPI (genuine) + memoryless chain rule (staged) 📋
 
-### スコープ
+### スコープ (Phase 0 inventory 反映で DPI side genuine 化、判断 #3 + #4)
 
-Cover-Thomas 9.1.2 step 2-3: `I(W; Ŵ) ≤ I(X^n; Y^n) ≤ ∑ I(X_i; Y_i)`。
+Cover-Thomas 9.1.2 step 2-3: `I(W; Y^n) ≤ I(X^n; Y^n) ≤ ∑ I(X_i; Y_i)`。
 
-- B-DPI-1 DPI `I(W; Ŵ) ≤ I(X^n; Y^n)` (W → X^n encoder deterministic、
-  Y^n → Ŵ decoder measurable、Markov chain W - X^n - Y^n - Ŵ)
-  - Phase 0 判断 #3 で在庫確認、不在なら bundle 内 staged hyp `DPIForConverse`
-    を destructure
+**DPI 側 = genuine discharge** (`mutualInfo_le_of_markov` 経由、判断 #3)。
+**chain 側 = staged hyp destructure** (T-FFC-3 確定発動、判断 #4)。
+
+- B-DPI-1 Markov DPI `I(W; Y^n) ≤ I(X^n; Y^n)` を
+  `mutualInfo_le_of_markov` (`Common2026/Shannon/CondMutualInfo.lean:385`) で
+  genuine discharge。bundle field `MarkovChainForConverse` の Markov chain
+  `IsMarkovChain μ W (encoder ∘ W) Y^n` (genuine regularity hyp、判断 #1) を
+  destructure。`[StandardBorelSpace (Fin M)]` (Finite 自動) +
+  `[StandardBorelSpace (Fin n → ℝ)]` (`instStandardBorelSpacePi` 自動) 充足。
+  ~40-70 行 (1 行呼出 + Markov chain plumbing)。
 - B-chain-1 memoryless chain rule `I(X^n; Y^n) ≤ ∑ I(X_i; Y_i)` for AWGN
   channel (Y_i = X_i + Z_i、Z_i iid 𝒩(0, N))
-  - Phase 0 判断 #4 で在庫確認、不在なら bundle 内 staged hyp
-    `ContinuousMIChainRuleForConverse` を destructure
+  - bundle 内 staged hyp `ContinuousMIChainRuleForConverse` を destructure。
+    ~20-40 行 (bundle 1 field 取出 → direct apply、判断 #4)。
 
 ### 入出力型 (key)
 
 ```lean
-/-- Cover-Thomas 9.1.2 step 2: data processing inequality for code's
-information chain `W → X^n → Y^n → Ŵ`. -/
+/-- Cover-Thomas 9.1.2 step 2: data processing inequality `I(W; Y^n) ≤ I(X^n; Y^n)`
+via Markov chain `W → encoder ∘ W → Y^n` (Phase 0 判断 #3: genuine 化可)。 -/
 theorem awgn_dpi
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (c : AwgnCode M n P)
-    (h_dpi : DPIForConverse P N h_meas c) :
-    (jointMIWWhat c h_meas).toReal ≤ (jointMIXnYn c h_meas).toReal := by
+    (h_markov : MarkovChainForConverse P N h_meas c) :
+    (jointMIWYn c h_meas).toReal ≤ (jointMIXnYn c h_meas).toReal := by
+  -- mutualInfo_le_of_markov μ W (encoder ∘ W) Y^n h_markov + ENNReal.toReal_mono
   sorry
 
-/-- Cover-Thomas 9.1.2 step 3: memoryless channel chain rule. -/
+/-- Cover-Thomas 9.1.2 step 3: memoryless channel chain rule (staged hyp 経由、
+T-FFC-3 確定発動)。 -/
 theorem awgn_chain_rule
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (c : AwgnCode M n P)
     (h_chain : ContinuousMIChainRuleForConverse P N h_meas c) :
     (jointMIXnYn c h_meas).toReal
       ≤ ∑ i : Fin n, (perLetterMI c h_meas i).toReal := by
+  -- bundle field destructure → direct apply
   sorry
 ```
 
 ### 必要 Mathlib API / Common2026 既存補題
 
-- `condMutualInfo_chain_rule_X_2var` (Common2026 既存、`Fintype α` 制約あり、
-  schema 参考のみ — direct reuse は壁発動)
-- `mutualInfo_le_mutualInfo_of_measurable` 系 DPI (Phase 0 で loogle)
-- bundle 内 staged hyp `DPIForConverse` / `ContinuousMIChainRuleForConverse`
+- `mutualInfo_le_of_markov` (`Common2026/Shannon/CondMutualInfo.lean:385`、
+  verbatim 確認済、§Approach 参照) — B-DPI-1 で genuine 化に使用
+- `IsMarkovChain` (`Common2026/Shannon/CondMutualInfo.lean:73`、verbatim 確認済) —
+  bundle field 型
+- `instStandardBorelSpacePi` (Mathlib) — `Y := Fin n → ℝ` の StandardBorelSpace 自動
+- bundle 内 staged hyp `ContinuousMIChainRuleForConverse` (T-FFC-3、判断 #4 staged 確定)
 - AWGN-agnostic continuous chain rule (姉妹 `awgn-mi-decomp-plan.md` Phase 6 と相補、
   closure 後に staged hyp を本物に置換可能)
 
 ### Done 条件
 
 - [ ] B-DPI-1 + B-chain-1 完了
-- [ ] `awgn_dpi` / `awgn_chain_rule` publish、0 sorry (bundle hyp 経由)
+- [ ] `awgn_dpi` (genuine、Markov hyp 経由) / `awgn_chain_rule` (staged hyp 経由) publish、0 sorry
 - [ ] `lake env lean ...` clean
 
 ### proof-log
@@ -647,15 +706,18 @@ yes (`proof-log-awgn-converse-aux-phaseB-dpi-chain.md`)。
 
 ### 工数感
 
-~80-250 行、1-2 session。
+**~60-180 行、1-1.5 session** (Phase 0 inventory 反映で起草時 ~80-250 行 から圧縮、
+DPI 側 genuine 化で `MarkovChainForConverse` field 経由の 1 行呼出に減ったため)。
 
 ### 失敗時 fallback
 
+- Markov chain `IsMarkovChain μ W (encoder ∘ W) Y^n` の genuine 構築が AWGN code
+  構造から hard (deterministic encoder + product channel の合成で hyp 発火しにくい) →
+  bundle field の `MarkovChainForConverse` 自身が hard hyp になる場合、判断ログで
+  記録 + 必要なら local 補題化 (~30 行追加)。
 - continuous MI chain rule の `Fintype α` 壁が想定より深い → 本 plan の bundle 内
-  staged hyp に集約 (T-FFC-3 確定発動)、後続 plan
-  `awgn-converse-chainrule-discharge-plan.md` で genuine discharge。
-- DPI が Mathlib 不在で bundle 内 staged にも詰めにくい (DPI の hyp 自身が深い) →
-  本 plan の bundle 内 staged を 1 つ追加 (T-FFC-3 拡張)、判断ログで記録。
+  staged hyp に集約 (T-FFC-3 確定発動、現状方針)、後続 plan
+  `awgn-mi-decomp-plan.md` Phase 6 で genuine discharge。
 - `mutualInfo` typed RV 形 vs `klDiv` 形の bridge mismatch (姉妹 mi-bridge plan の
   scope 重複) → 姉妹 `awgn-mi-bridge-plan.md` への dependency 明記、本 plan の本体は
   staged hyp 経由で進める。
@@ -755,13 +817,13 @@ yes (`proof-log-awgn-converse-aux-phaseB-gaussian.md`)。
 
 Phase B-Fano + B-DPI/chain + B-Gaussian を組み立てて主定理 publish。
 
-- C-1 `isAwgnConverseFeasible_discharger` 本体: Fano + DPI + chain + per-letter
-  bound + sum
+- C-1 `isAwgnConverseFeasible_discharger` 本体: `shannon_converse_single_shot` 出口
+  からの bound chain
   ```
-  log M ≤ binEntropy(Pe) + Pe · log(M-1) + I(W; Ŵ)            -- B-Fano (B-Fano-5)
-        ≤ binEntropy(Pe) + Pe · log(M-1) + I(X^n; Y^n)         -- B-DPI-1
-        ≤ binEntropy(Pe) + Pe · log(M-1) + ∑ I(X_i; Y_i)       -- B-chain-1
-        ≤ binEntropy(Pe) + Pe · log(M-1) + n · (1/2) log(1+P/N) -- B-Gauss-7 (sum)
+  log M ≤ I(W; Y^n).toReal + binEntropy(Pe) + Pe · log(M-1)    -- B-Fano (awgn_converse_single_shot_call)
+        ≤ I(X^n; Y^n).toReal + binEntropy(Pe) + Pe · log(M-1)  -- B-DPI-1 (Markov genuine)
+        ≤ ∑ I(X_i; Y_i).toReal + binEntropy(Pe) + Pe · log(M-1) -- B-chain-1 (staged)
+        ≤ n · (1/2) log(1+P/N) + binEntropy(Pe) + Pe · log(M-1) -- B-Gauss-7 (sum)
   ```
 - C-2 `awgn_converse_F3_discharged` wrapper: `awgn_converse` の `sorry` を
   `isAwgnConverseFeasible_discharger` 呼出に置換するための薄い wrapper
@@ -861,6 +923,16 @@ no。
   - 縮退案: 本 plan を 2 file に分割:
     - `AWGNConverseDischargeFano.lean` (Phase B-Fano + B-DPI、~250 行)
     - `AWGNConverseDischargePerletter.lean` (Phase B-chain + B-Gaussian + Phase C、~400 行)
+  - **Phase 0 inventory 反映後 悲観 ~810 行**: 発動しない見込み。
+
+- **T-FFC-5: `shannon_converse_single_shot` Pe bridge plumbing 肥大** (Phase B-Fano、
+  Phase 0 inventory 由来、新規)
+  - 発動条件: AWGN `Pe = (1/M) ∑ errorProbAt m` と Fano `errorProb μ Msg Yo decoder`
+    の同値性 bridge plumbing (uniform W + product channel `Measure.pi (awgnChannel ∘
+    encoder m)` Fubini 展開) が 50+ 行に膨張。
+  - 縮退案: bridge を独立補題 `awgn_errorProb_eq_fano_errorProb` に切り出し、
+    `Common2026/Shannon/AWGNConverseDischarge.lean` 内 helper として配置、本体は
+    1 行呼出に。判断ログ #3 で記録。本 plan 内自作 ~25-50 行を超えた場合のみ発動。
 
 ### honesty 撤退ライン (常時)
 
@@ -889,7 +961,7 @@ CLAUDE.md「検証の誠実性」「load-bearing hypothesis bundling」の判定
 | `IsAwgnConverseFeasible P N h_meas` (bundle predicate) | **regularity (Mathlib 壁 packaging)** | (a) bundle の結論型 ≠ `awgn_converse` 結論、(b) 3 sub-bound はそれぞれ Mathlib 壁 (per-letter integrability / continuous chain rule / DPI continuous) の analytic primitive を表現、(c) `isAwgnConverseFeasible_discharger` body が Fano + chain + per-letter で genuine assembly、(d) `@audit:staged` 付与で stage 表明 |
 | `PerLetterIntegrabilityForConverse` (sub-bound 1) | **regularity (Mathlib 壁)** | per-letter `h_ent_int` Integrable は Mathlib 壁、結論型 `Integrable (negMulLog (rnDeriv ...)) volume` は `awgn_converse` 結論と無関係 |
 | `ContinuousMIChainRuleForConverse` (sub-bound 2) | **regularity (Mathlib 壁)** | 結論型 `I(X^n;Y^n) ≤ ∑ I(X_i;Y_i)` は `awgn_converse` 結論 `log M ≤ n·C + binEntropy + …` と異なる、chain rule で分解した中間量 |
-| `DPIForConverse` (sub-bound 3) | **regularity (Mathlib 壁)** | 結論型 `I(W;Ŵ) ≤ I(X^n;Y^n)` は `awgn_converse` 結論と異なる、DPI で分解した中間量 |
+| `MarkovChainForConverse` (sub-bound 3、Phase 0 判断 #1) | **regularity (genuine、Mathlib 壁ではない)** | 結論型 `IsMarkovChain μ W (encoder ∘ W) Y^n` は probability-space の Markov chain structural fact、`awgn_converse` 結論と無関係。Phase B-DPI で `mutualInfo_le_of_markov` (Common2026 既存、判断 #3) 経由 genuine discharge の material |
 | 仮に `IsAwgnConverseClaim P N h_meas : Prop := ∀ M n c Pe, log M ≤ n·C + binEntropy + …` (禁止例) | **load-bearing (核 bundling、禁止)** | predicate 自身が結論型そのもの → CLAUDE.md「circular `:= h`」defect 同等、tier 5 |
 
 本 plan の bundle は **regularity** 側に分類される。新規導入時は honesty 4 条件
@@ -903,12 +975,13 @@ CLAUDE.md「検証の誠実性」「load-bearing hypothesis bundling」の判定
 |---|---|---|---|
 | **per-letter integrability `h_ent_int` の Mathlib 壁** (Phase B-Gauss-4) | **高** (確定発生想定) | **中** (bundle 内 staged hyp に集約) | T-FFC-2 staged 採用、後続 plan に discharge 委譲 |
 | **continuous MI chain rule の Mathlib 壁** (Phase B-chain-1) | **高** (確定発生想定) | **中** (bundle 内 staged hyp) | T-FFC-3 staged 採用、姉妹 `awgn-mi-decomp-plan.md` Phase 6 と相補 |
-| **DPI continuous の Mathlib 壁** (Phase B-DPI-1) | 中 (Common2026 在庫次第) | 中 (bundle 内 staged hyp 追加) | Phase 0 inventory で在庫確認、不在なら T-FFC-3 拡張 |
+| **DPI continuous の Mathlib 壁** (Phase B-DPI-1) | **低** (Phase 0 判断 #3 で genuine 化可確定) | 低 (`mutualInfo_le_of_markov` 経由 genuine discharge) | bundle field `MarkovChainForConverse` の Markov hyp 経由、staged 不要 |
 | **`fano_inequality_measure_theoretic` の `[StandardBorelSpace (Fin n → ℝ)]` 自動推論失敗** (Phase B-Fano-4) | 中 (Fano Phase 3 経験) | 低 (~10-20 行 plumbing) | T-FFC-1 local instance |
 | **F-2 MI bridge per-letter 形 shape mismatch** (Phase B-Gauss-6) | 中 | 中 (本 plan 内 per-letter bridge hyp 追加 = +1 hyp、姉妹 plan と parallel) | 判断ログで記録、姉妹 `awgn-mi-bridge-plan.md` への dependency 明記 |
 | **error probability bridge (AWGN `Pe` vs Fano `errorProb`) が肥大** (Phase B-Fano-3) | 中 | 中 (Phase B-Fano +25-50 行) | Phase 0 で類似 bridge の在庫確認、なければ手書きで吸収 |
 | **per-letter input power 評価 (`E[X_i²] ≤ P` derivation) のplumbing 肥大** (Phase B-Gauss-1) | 低-中 | 低 (~20-30 行) | uniform W 上の average 計算で素直に出る、必要なら local 補題化 |
-| **規模超過 (~1000 行超)** | 低-中 (中央予測 650 行、悲観 990 行) | 中 (T-FFC-4 で 2 file 分割) | Phase 0 規模再見積、超過確度高ければ事前 2 分割 |
+| **規模超過 (~1000 行超)** | **低** (Phase 0 反映 中央 ~520 行、悲観 ~810 行) | 中 (T-FFC-4 で 2 file 分割) | inventory で `shannon_converse_single_shot` 圧縮確認、T-FFC-4 発動しない見込み |
+| **Pe bridge plumbing 肥大** (Phase B-Fano-3、T-FFC-5 新規) | 中 (Phase 0 inventory 由来) | 中 (Phase B-Fano +20-30 行) | T-FFC-5 縮退案: bridge を独立補題化、本体は 1 行呼出 |
 | **honesty defect 混入** (bundle predicate が rebrand 化 / load-bearing 化) | 低 | **高** (plan goal 失う) | §「honesty 撤退ライン」3 条件 + §「load-bearing 禁止規律」判定軸、Phase V 独立 audit subagent 起動 |
 | **`awgn-mi-decomp-plan.md` Phase 6 一般 body 補題との scope 重複 / 衝突** | 低 | 中 (本 plan の staged hyp と相補的) | 姉妹 plan の Phase 6 完了が先に来たら、本 plan の `ContinuousMIChainRuleForConverse` を staged から genuine に書換可能 — 判断ログで境界明示 |
 
@@ -947,7 +1020,7 @@ CLAUDE.md「検証の誠実性」「load-bearing hypothesis bundling」の判定
 
 - 実装 agent は `Common2026.lean` を編集しない (Phase V でオーケストレータが 1 行追加)
 - 実装 agent はコミットしない (Phase 単位で orchestrator が commit + push)
-- **Phase 0 で判断 #1-#5 を確定**してから Phase A 着手。判断ログ #1 必須
+- **Phase 0 判断 #1-#5 確定済** (2026-05-27、inventory + 判断ログ #1)。Phase A 着手可
 - **Phase A 完了後、独立 honesty audit subagent 必須起動** (CLAUDE.md「Independent
   honesty audit」: 新規 `sorry` + `@residual` 導入 commit + 新規 staged predicate
   導入 commit のため必須)。bundle predicate の 4 条件 verify を auditor に依頼。
@@ -991,20 +1064,47 @@ bundle) と対称な structure** を採用する:
 
 姉妹の 1641 行に対し converse は randomization 工程不在で **~650 行** 中央予測。
 
-### #1 (TBD、Phase 0 完了時) inventory + bundle structure 確定
+### #1 (2026-05-27、Phase 0 inventory 完了) bundle structure + 5 判断 確定
 
-5 軸 inventory 完了後、bundle 内 sub-bound 数 (2/3/4)、witness 必要性
-(姉妹 `∃ P'` 形が converse でも必要かどうか)、各 sub-bound の field 型を確定。
+5 軸 inventory (`docs/shannon/awgn-converse-aux-mathlib-inventory.md`、~360 行) 完了。
+5 判断 verbatim 確定 (詳細根拠は inventory 各 section に分離、SoT 分離):
 
-採否確定予定の項目 (Phase 0 終了時 append):
+- **判断 #1 (bundle field 数)**: **3 field = PerLetter ∧ Chain ∧ Markov**。
+  PerLetter + Chain は **staged** (Mathlib 壁、T-FFC-2 + T-FFC-3 確定発動)、
+  Markov は **genuine** (regularity hyp、`mutualInfo_le_of_markov` で discharge 可)。
+  witness `∃ P'` 不要 (converse 側は input law が code 由来でコードブック非依存)。
+  → inventory §「判断 #1」
+- **判断 #2 (entropy chain rule + uniform W 在庫)**: **完全在庫**。
+  `shannon_converse_single_shot` (`Common2026/Shannon/Converse.lean:81`) が
+  Fano + DPI postprocess + entropy chain + `H(W uniform) = log M` を 1 補題に
+  packaging 済、Y 側無制約。本 plan の Phase B-Fano は **1 行呼出に圧縮**、
+  個別補題 B-Fano-1/B-Fano-2 不要。→ inventory §「判断 #2」+ §「B. Single-shot Converse」
+- **判断 #3 (DPI continuous の壁判定)**: **genuine 化可、staged 不要**。
+  `mutualInfo_le_of_postprocess` (`DPI.lean:142`、無 Fintype) +
+  `mutualInfo_le_of_markov` (`CondMutualInfo.lean:385`、`X := Fin M, Y := Fin n → ℝ`
+  で `[StandardBorelSpace]` 自動充足) で discharge。bundle field
+  `MarkovChainForConverse` を genuine hyp として保持。→ inventory §「判断 #3」+ §「D. DPI」
+- **判断 #4 (continuous MI chain rule の壁判定)**: **壁深度 large、staged 確定発動**。
+  `mutualInfo_le_sum_per_letter_of_memoryless_strong` (`CondEntropyMemoryless.lean:552`、
+  `Fintype α` 制約)、`mutualInfo_pi_eq_sum` (`MIChainRule.lean:318`、iid joint 仮定)
+  両方 AWGN α := ℝ + non-iid codebook で発火不可。bundle 内
+  `ContinuousMIChainRuleForConverse` staged hyp で packing (T-FFC-3)。
+  姉妹 `awgn-mi-decomp-plan.md` Phase 6 と相補。→ inventory §「判断 #4」+ §「C. Memoryless MI chain rule」
+- **判断 #5 (per-letter integrability `h_ent_int` の壁形式)**: **壁深度 medium、
+  staged 確定発動**。`differentialEntropy_le_gaussian_of_variance_le` 4 hypothesis
+  のうち 3 (mean, var, var_int) は本 plan 内 genuine 化可、`h_ent_int`
+  (Integrable (negMulLog ∘ rnDeriv) volume) のみ Mathlib 壁。bundle 内
+  `PerLetterIntegrabilityForConverse` を `∀ i : Fin n, Integrable ...` forall
+  packing (姉妹 `IsAwgnPowerConstraintHonest` と同型 pattern、T-FFC-2)。
+  → inventory §「判断 #5」+ §「E. Per-letter Gaussian max-entropy」
 
-- (a) bundle field 数 = 3 (per-letter integrability + chain rule + DPI) or
-      bundle field 数 = 4 (above + entropy chain rule for `H(W) = H(W|Ŵ) + I(W;Ŵ)`)
-- (b) witness の有無 (姉妹 `∃ P'` は achievability codebook variance 緩和 slack のため、
-      converse 側は input law が code 由来でコードブック非依存 → witness 不要が見込み)
-- (c) DPI continuous の Common2026 在庫判定 (在庫あれば genuine、不在なら bundle に格納)
-- (d) entropy chain rule + uniform W 在庫判定 (Phase B-Fano の前提)
-- (e) 規模再見積 (Phase 0 inventory の Mathlib 壁判定数によって ~400-990 行 spread)
+**規模再見積**: 起草時中央 ~650 行 → **inventory 反映後中央 ~520 行** (-130 行、
+Phase B-Fano `~100 → ~60` + Phase B-DPI/chain `~150 → ~70 (DPI) + ~40 (chain)` の
+圧縮分)。悲観 ~810 行で T-FFC-4 (1000 行) 未満確実。
+
+**新規撤退ライン T-FFC-5 追加**: `shannon_converse_single_shot` 呼出に必要な
+Pe bridge plumbing (~25-50 行) が 50+ 行に膨張した場合の独立補題化。
+inventory §「新規撤退ライン提案」。
 
 ### #2 (TBD、Phase A 完了時) bundle predicate `IsAwgnConverseFeasible` 確定形
 
