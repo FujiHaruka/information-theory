@@ -37,10 +37,13 @@ which is isolated in `outputDistribution_logDensity_integrable` (Phase 6, hard).
 
 ## Residual status
 
-Phases 1–5 are genuinely discharged. Phase 6
-(`outputDistribution_logDensity_integrable`, the dominant analytic wall) and Phase 7
-(final assembly `awgn_per_input_mi_le_log`) are stubs marked
-`@residual(wall:awgn-capacity-converse-maxent)`, scheduled for a follow-up dispatch.
+All phases are genuinely discharged (0 sorry). Phase 6
+(`outputDistribution_logDensity_integrable[_joint]`, formerly the dominant analytic wall)
+is proven via the convolution density representation `q = vol.withDensity (∫⁻ x, gaussianPDF x N · ∂p)`,
+the Gaussian upper bound, the mixture Gaussian lower bound (Chebyshev concentration +
+Gaussian tail), and finite-second-moment domination. Phase 7 (`awgn_per_input_mi_le_log`)
+and the capacity closed form (`awgn_capacity_closed_form_genuine`) assemble these into the
+Cover-Thomas 9.1 converse. The wall `awgn-capacity-converse-maxent` is fully closed here.
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -329,66 +332,408 @@ theorem integrable_log_proxy_fibre_compProd_general
 
 /-! ## Phase 6 — ★ mixture output log-density integrability (hard, dominant wall) -/
 
-/-- (#3, ★ dominant wall, OUT OF SCOPE for this dispatch) the continuous mixture
-output `q = p ∗ 𝒩(0,N)` has integrable log-density: `negMulLog ((q.rnDeriv vol ·).toReal)`
-is `volume`-integrable. The output density is bounded above by `(√(2πN))⁻¹` and below
-by `c·exp(−a·y²)`, so `|log f_q(y)| ≤ c₀ + c₁·y²`, integrable against the finite
-second moment of `q`. This is the only true Mathlib gap (loogle: 0 matches).
+/-- The mixture output density `f_q(y) := ∫⁻ x, gaussianPDF x N y ∂p` (the value of the
+convolution density at `y`). The output law `q = p ∗ 𝒩(0,N)` equals
+`volume.withDensity outputMixtureDensity`. -/
+noncomputable def outputMixtureDensity (N : ℝ≥0) (p : Measure ℝ) (y : ℝ) : ℝ≥0∞ :=
+  ∫⁻ x, gaussianPDF x N y ∂p
+
+/-- The mixture density is jointly measurable in `y`. -/
+theorem measurable_outputMixtureDensity (N : ℝ≥0) (p : Measure ℝ) [SFinite p] :
+    Measurable (outputMixtureDensity N p) := by
+  unfold outputMixtureDensity
+  exact Measurable.lintegral_prod_left' (f := fun z : ℝ × ℝ => gaussianPDF z.1 N z.2)
+    (measurable_gaussianPDF_uncurry N)
+
+/-- Measurability of the Gaussian pdf in the **mean** parameter (fixed argument `y`):
+`Measurable (fun x => gaussianPDF x N y)`. Isolated as its own declaration because the
+`(uncurry).comp` term, if elaborated with an expected type pushed in, makes `isDefEq`
+unfold `gaussianPDF`/`gaussianPDFReal` and hit a heartbeat timeout; the `have h := …; exact h`
+shape elaborates `comp` freely and matches cheaply. Consumers call this lemma (term reuse). -/
+theorem measurable_gaussianPDF_fst (N : ℝ≥0) (y : ℝ) :
+    Measurable (fun x : ℝ => gaussianPDF x N y) := by
+  have h := (measurable_gaussianPDF_uncurry N).comp
+    (measurable_id.prodMk (measurable_const : Measurable fun _ : ℝ => y))
+  exact h
+
+/-- (Phase 6, density representation) The mixture output `q = p ∗ 𝒩(0,N)` is
+`volume.withDensity (fun y => ∫⁻ x, gaussianPDF x N y ∂p)`. Holds for **any** input `p`
+(possibly discrete) since the noise is absolutely continuous. Via `lintegral_conv`
+(Tonelli) and the translation `𝒩(x,N) = volume.withDensity (gaussianPDF x N)`.
+
+The Gaussian density is kept behind the opaque local `g := fun z => gaussianPDF z.1 N z.2`
+to stop `isDefEq`/`whnf` from unfolding `gaussianReal`/`gaussianPDFReal` during the Fubini
+swap (which otherwise hits a heartbeat timeout). -/
+theorem output_eq_withDensity_mixture
+    (hN : N ≠ 0) (p : Measure ℝ) [SFinite p] :
+    p ∗ gaussianReal 0 N = volume.withDensity (outputMixtureDensity N p) := by
+  have h_mix_meas : Measurable (outputMixtureDensity N p) :=
+    measurable_outputMixtureDensity N p
+  refine Measure.ext_of_lintegral _ (fun f hf => ?_)
+  -- LHS: `∫ f ∂(p ∗ 𝒩) = ∫_x ∫_y f(x+y) ∂𝒩(0,N) ∂p`
+  rw [Measure.lintegral_conv hf]
+  -- keep the Gaussian density opaque to stop whnf from unfolding it during Fubini
+  set g : ℝ × ℝ → ℝ≥0∞ := fun z => gaussianPDF z.1 N z.2 with hg_def
+  have hg_meas : Measurable g := measurable_gaussianPDF_uncurry N
+  -- inner: `∫_y f(x+y) ∂𝒩(0,N) = ∫_w f(w) ∂𝒩(x,N) = ∫_w f(w)·g(x,w) ∂vol`
+  have h_inner : ∀ x : ℝ,
+      ∫⁻ y, f (x + y) ∂(gaussianReal 0 N) = ∫⁻ w, f w * g (x, w) ∂volume := by
+    intro x
+    have h_map : (gaussianReal 0 N).map (x + ·) = gaussianReal x N := by
+      have := gaussianReal_map_const_add (μ := 0) (v := N) x
+      simpa using this
+    rw [← lintegral_map hf (by fun_prop), h_map, gaussianReal_of_var_ne_zero x hN,
+      lintegral_withDensity_eq_lintegral_mul _ (measurable_gaussianPDF x N) hf]
+    refine lintegral_congr (fun w => ?_)
+    rw [Pi.mul_apply, hg_def, mul_comm]
+  -- swap order via Fubini
+  have h_swap_meas : AEMeasurable
+      (Function.uncurry fun x w : ℝ => f w * g (x, w)) (p.prod volume) := by
+    apply Measurable.aemeasurable
+    exact (hf.comp measurable_snd).mul (hg_meas.comp (measurable_fst.prodMk measurable_snd))
+  calc ∫⁻ x, ∫⁻ y, f (x + y) ∂(gaussianReal 0 N) ∂p
+      = ∫⁻ x, ∫⁻ w, f w * g (x, w) ∂volume ∂p := lintegral_congr (fun x => h_inner x)
+    _ = ∫⁻ w, ∫⁻ x, f w * g (x, w) ∂p ∂volume := lintegral_lintegral_swap h_swap_meas
+    _ = ∫⁻ w, f w * outputMixtureDensity N p w ∂volume := by
+        refine lintegral_congr (fun w => ?_)
+        have h_pdf_mean : Measurable fun x : ℝ => g (x, w) :=
+          hg_meas.comp (measurable_id.prodMk measurable_const)
+        rw [outputMixtureDensity, ← lintegral_const_mul (f w) h_pdf_mean]
+    _ = ∫⁻ z, f z ∂(volume.withDensity (outputMixtureDensity N p)) := by
+        rw [lintegral_withDensity_eq_lintegral_mul _ h_mix_meas hf]
+        refine lintegral_congr (fun w => ?_)
+        rw [Pi.mul_apply, mul_comm]
+
+/-- (Phase 6) The output rnDeriv is a.e. the mixture density. -/
+theorem output_rnDeriv_ae_mixture
+    (h_meas : IsAwgnChannelMeasurable N) (hN : N ≠ 0)
+    (p : Measure ℝ) [IsProbabilityMeasure p] :
+    (ChannelCoding.outputDistribution p (awgnChannel N h_meas)).rnDeriv volume
+      =ᵐ[volume] outputMixtureDensity N p := by
+  rw [outputDistribution_awgn_eq_conv h_meas p, output_eq_withDensity_mixture hN p]
+  exact Measure.rnDeriv_withDensity volume (measurable_outputMixtureDensity N p)
+
+/-- (Phase 6a, upper bound) The mixture density is bounded above by `(√(2πN))⁻¹`:
+each Gaussian component is `≤ (√(2πN))⁻¹` (`gaussianPDFReal_le_sup`), and `p` is a
+probability measure, so the average inherits the bound. Gives `log f_q ≤ const`. -/
+theorem outputMixtureDensity_le_sup
+    (N : ℝ≥0) (p : Measure ℝ) [IsProbabilityMeasure p] (y : ℝ) :
+    outputMixtureDensity N p y ≤ ENNReal.ofReal (Real.sqrt (2 * Real.pi * N))⁻¹ := by
+  unfold outputMixtureDensity
+  calc ∫⁻ x, gaussianPDF x N y ∂p
+      ≤ ∫⁻ _x, ENNReal.ofReal (Real.sqrt (2 * Real.pi * N))⁻¹ ∂p := by
+        refine lintegral_mono (fun x => ?_)
+        rw [gaussianPDF]
+        exact ENNReal.ofReal_le_ofReal (gaussianPDFReal_le_sup x N y)
+    _ = ENNReal.ofReal (Real.sqrt (2 * Real.pi * N))⁻¹ := by
+        rw [lintegral_const, measure_univ, mul_one]
+
+set_option maxHeartbeats 1000000 in
+/-- (Phase 6b, ★ the only hard sub-lemma — mixture lower bound) the mixture density
+admits a Gaussian lower bound `f_q(y) ≥ c·exp(−a·y²)` with `c, a > 0`, equivalently a
+quadratic upper bound on `−log f_q`: there exist `a, b : ℝ` with
+`−log (f_q y).toReal ≤ a · y² + b` for all `y`. Proof: Chebyshev concentrates `≥ 1/2`
+of the mass of `p` on `{|x| ≤ R}` (from the finite second moment), and on that set
+`gaussianPDF x N y ≥` a Gaussian-tail lower bound quadratic in `y`. -/
+theorem output_logDensity_lower_bound
+    (hP : 0 ≤ P) (hN : N ≠ 0) (p : Measure ℝ) [IsProbabilityMeasure p]
+    (hp : p ∈ awgnPowerConstraintSet P) :
+    ∃ a b : ℝ, 0 ≤ a ∧ ∀ y : ℝ,
+      -Real.log ((outputMixtureDensity N p y).toReal) ≤ a * y ^ 2 + b := by
+  classical
+  have hN_pos : (0 : ℝ) < N := lt_of_le_of_ne N.coe_nonneg (fun h => hN (by exact_mod_cast h.symm))
+  obtain ⟨hp_2mom_int, hp_2mom⟩ := awgnPowerConstraintSet_mem_iff_integrable P hP p hp
+  -- lintegral form of the second-moment bound
+  have hp_lint : ∫⁻ x, ENNReal.ofReal (x ^ 2) ∂p ≤ ENNReal.ofReal P := hp.2
+  -- concentration radius `R := √(2(P+1))`, with `R² = 2(P+1)`
+  set R : ℝ := Real.sqrt (2 * (P + 1)) with hR_def
+  have hR_pos : 0 < R := Real.sqrt_pos.mpr (by linarith)
+  have hR_sq : R ^ 2 = 2 * (P + 1) := Real.sq_sqrt (by linarith)
+  -- the concentration set `S = {x | |x| ≤ R}` has mass `≥ 1/2`
+  set S : Set ℝ := {x : ℝ | |x| ≤ R} with hS_def
+  have hS_meas : MeasurableSet S := by
+    rw [hS_def]; exact measurableSet_le measurable_norm measurable_const
+  have hSc_le : p Sᶜ ≤ 1 / 2 := by
+    -- `Sᶜ = {x | R < |x|} ⊆ {x | ofReal R² ≤ ofReal x²}`; apply Markov
+    have h_subset : Sᶜ ⊆ {x : ℝ | ENNReal.ofReal (R ^ 2) ≤ ENNReal.ofReal (x ^ 2)} := by
+      intro x hx
+      simp only [hS_def, Set.mem_compl_iff, Set.mem_setOf_eq, not_le] at hx
+      refine ENNReal.ofReal_le_ofReal ?_
+      nlinarith [abs_nonneg x, sq_abs x, hR_pos.le]
+    have h_markov : p {x : ℝ | ENNReal.ofReal (R ^ 2) ≤ ENNReal.ofReal (x ^ 2)}
+        ≤ (∫⁻ x, ENNReal.ofReal (x ^ 2) ∂p) / ENNReal.ofReal (R ^ 2) :=
+      meas_ge_le_lintegral_div (by fun_prop)
+        (by simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]; positivity)
+        ENNReal.ofReal_ne_top
+    have hR_sq_pos : (0 : ℝ) < R ^ 2 := by rw [hR_sq]; linarith
+    calc p Sᶜ ≤ p {x : ℝ | ENNReal.ofReal (R ^ 2) ≤ ENNReal.ofReal (x ^ 2)} :=
+          measure_mono h_subset
+      _ ≤ (∫⁻ x, ENNReal.ofReal (x ^ 2) ∂p) / ENNReal.ofReal (R ^ 2) := h_markov
+      _ ≤ ENNReal.ofReal P / ENNReal.ofReal (R ^ 2) :=
+          ENNReal.div_le_div_right hp_lint _
+      _ = ENNReal.ofReal (P / R ^ 2) := by
+          rw [ENNReal.ofReal_div_of_pos hR_sq_pos]
+      _ ≤ 1 / 2 := by
+          rw [show (1:ℝ≥0∞)/2 = ENNReal.ofReal (1/2) by
+            rw [ENNReal.ofReal_div_of_pos (by norm_num)]; simp]
+          refine ENNReal.ofReal_le_ofReal ?_
+          rw [div_le_iff₀ hR_sq_pos, hR_sq]
+          nlinarith
+  have hS_ge : (1 : ℝ≥0∞) / 2 ≤ p S := by
+    have h_compl : p Sᶜ + p S = 1 := by
+      rw [← measure_univ (μ := p), ← Set.compl_union_self S]
+      exact (measure_union (disjoint_compl_left) hS_meas).symm
+    -- `1/2 + p Sᶜ ≤ 1/2 + 1/2 = 1 = p Sᶜ + p S`, cancel `p Sᶜ`
+    have h1 : (1 : ℝ≥0∞) / 2 + p Sᶜ ≤ p Sᶜ + p S := by
+      rw [h_compl]
+      calc (1:ℝ≥0∞)/2 + p Sᶜ ≤ 1/2 + 1/2 := by gcongr
+        _ = 1 := ENNReal.add_halves 1
+    rw [add_comm (p Sᶜ)] at h1
+    exact ENNReal.le_of_add_le_add_right (ne_of_lt (lt_of_le_of_lt hSc_le (by norm_num))) h1
+  -- the per-`y` Gaussian tail lower constant `K y := (√2πN)⁻¹ · exp(−(y²+R²)/N)`
+  refine ⟨1 / N, R ^ 2 / N + Real.log (2 * Real.sqrt (2 * Real.pi * N)), by positivity, fun y => ?_⟩
+  set Kr : ℝ := (Real.sqrt (2 * Real.pi * N))⁻¹ * Real.exp (-(2 * y ^ 2 + 2 * R ^ 2) / (2 * N))
+    with hKr_def
+  have hKr_pos : 0 < Kr := by rw [hKr_def]; positivity
+  -- keep the Gaussian density opaque to stop whnf from unfolding it
+  set gy : ℝ → ℝ≥0∞ := fun x => gaussianPDF x N y with hgy_def
+  have hgy_meas : Measurable gy := measurable_gaussianPDF_fst N y
+  -- pointwise: `gaussianPDF x N y ≥ ofReal Kr` for `x ∈ S`
+  have h_pdf_ge : ∀ x ∈ S, ENNReal.ofReal Kr ≤ gy x := by
+    intro x hx
+    simp only [hgy_def, gaussianPDF]
+    refine ENNReal.ofReal_le_ofReal ?_
+    rw [gaussianPDFReal, hKr_def]
+    have hx_sq : x ^ 2 ≤ R ^ 2 := by
+      simp only [hS_def, Set.mem_setOf_eq] at hx
+      nlinarith [abs_nonneg x, sq_abs x]
+    refine mul_le_mul_of_nonneg_left (Real.exp_le_exp.mpr ?_) (by positivity)
+    -- `−(2y²+2R²)/(2N) ≤ −(y−x)²/(2N)`, i.e. `(y−x)² ≤ 2y²+2R²`
+    rw [neg_div, neg_div, neg_le_neg_iff,
+      div_le_div_iff_of_pos_right (by positivity : (0:ℝ) < 2 * (N:ℝ))]
+    nlinarith [sq_nonneg (y + x), hx_sq]
+  -- f_q(y) ≥ ofReal Kr · p S ≥ ofReal Kr · 1/2
+  have h_fq_ge : ENNReal.ofReal Kr * (1 / 2) ≤ outputMixtureDensity N p y := by
+    have h_eq : outputMixtureDensity N p y = ∫⁻ x, gy x ∂p := rfl
+    rw [h_eq]
+    calc ENNReal.ofReal Kr * (1 / 2)
+        ≤ ENNReal.ofReal Kr * p S := by gcongr
+      _ = ∫⁻ _x in S, ENNReal.ofReal Kr ∂p := by
+          rw [setLIntegral_const, mul_comm]
+      _ ≤ ∫⁻ x in S, gy x ∂p :=
+          setLIntegral_mono hgy_meas (fun x hx => h_pdf_ge x hx)
+      _ ≤ ∫⁻ x, gy x ∂p := setLIntegral_le_lintegral S _
+  -- convert to `-log`: `-log f_q ≤ -log (Kr/2) = (2y²+2R²)/(2N) + log(2√2πN)`
+  have h_lb_real : Kr * (1 / 2) ≤ (outputMixtureDensity N p y).toReal := by
+    have h_ne_top : outputMixtureDensity N p y ≠ ⊤ :=
+      ne_top_of_le_ne_top ENNReal.ofReal_ne_top (outputMixtureDensity_le_sup N p y)
+    have := ENNReal.toReal_mono h_ne_top h_fq_ge
+    rwa [ENNReal.toReal_mul, ENNReal.toReal_ofReal hKr_pos.le,
+      show ((1:ℝ≥0∞)/2).toReal = 1/2 by simp] at this
+  rw [neg_le]
+  set s : ℝ := Real.sqrt (2 * Real.pi * N) with hs_def
+  have hs_pos : 0 < s := by rw [hs_def]; positivity
+  calc -((1 / N) * y ^ 2 + (R ^ 2 / N + Real.log (2 * s)))
+      = Real.log (Kr * (1 / 2)) := by
+        have h_kr_log : Real.log Kr
+            = -Real.log s - (2 * y ^ 2 + 2 * R ^ 2) / (2 * N) := by
+          rw [hKr_def, Real.log_mul (by positivity) (Real.exp_ne_zero _), Real.log_inv,
+            Real.log_exp]; ring
+        have h_half_log : Real.log ((1 : ℝ) / 2) = -Real.log 2 := by
+          rw [one_div, Real.log_inv]
+        have h_2s_log : Real.log (2 * s) = Real.log 2 + Real.log s :=
+          Real.log_mul (by norm_num) hs_pos.ne'
+        rw [Real.log_mul hKr_pos.ne' (by norm_num), h_kr_log, h_half_log, h_2s_log]
+        field_simp
+        ring
+    _ ≤ Real.log ((outputMixtureDensity N p y).toReal) :=
+        Real.log_le_log (by positivity) h_lb_real
+
+/-- (Phase 6c) Quadratic bound on `|log f_q|`: there exist `c₀, c₁ : ℝ` with
+`|log (f_q y).toReal| ≤ c₀ + c₁ · y²` for all `y`. Combines the constant upper bound
+(6a) with the quadratic lower bound (6b). -/
+theorem outputMixtureDensity_log_abs_le
+    (hP : 0 ≤ P) (hN : N ≠ 0) (p : Measure ℝ) [IsProbabilityMeasure p]
+    (hp : p ∈ awgnPowerConstraintSet P) :
+    ∃ c₀ c₁ : ℝ, 0 ≤ c₁ ∧ ∀ y : ℝ,
+      |Real.log ((outputMixtureDensity N p y).toReal)| ≤ c₀ + c₁ * y ^ 2 := by
+  set M : ℝ := (Real.sqrt (2 * Real.pi * N))⁻¹ with hM_def
+  have hM_nonneg : 0 ≤ M := by rw [hM_def]; positivity
+  -- upper bound on log f_q(y) from 6a: `f_q(y).toReal ≤ M`, so `log ≤ max (log M) 0`.
+  have h_up : ∀ y : ℝ, Real.log ((outputMixtureDensity N p y).toReal) ≤ max (Real.log M) 0 := by
+    intro y
+    have h_le : (outputMixtureDensity N p y).toReal ≤ M := by
+      have h := outputMixtureDensity_le_sup N p y
+      rw [← hM_def] at h
+      calc (outputMixtureDensity N p y).toReal
+          ≤ (ENNReal.ofReal M).toReal := ENNReal.toReal_mono ENNReal.ofReal_ne_top h
+        _ = M := ENNReal.toReal_ofReal hM_nonneg
+    rcases le_or_gt (outputMixtureDensity N p y).toReal 0 with h0 | h0
+    · -- `f_q(y).toReal ≤ 0` means `= 0`, `log 0 = 0 ≤ max _ 0`
+      have : (outputMixtureDensity N p y).toReal = 0 :=
+        le_antisymm h0 ENNReal.toReal_nonneg
+      rw [this, Real.log_zero]; exact le_max_right _ _
+    · exact le_trans (Real.log_le_log h0 h_le) (le_max_left _ _)
+  -- lower bound on log f_q(y) from 6b: `-log f_q(y) ≤ a·y² + b`.
+  obtain ⟨a, b, ha, h_low⟩ := output_logDensity_lower_bound hP hN p hp
+  refine ⟨max (Real.log M) 0 + max b 0, a, ha, fun y => ?_⟩
+  rw [abs_le]
+  constructor
+  · -- `-(c₀ + c₁ y²) ≤ log f_q(y)`: from `-log f_q ≤ a y² + b`
+    have := h_low y
+    have hb : b ≤ max b 0 := le_max_left _ _
+    nlinarith [le_max_right (Real.log M) (0 : ℝ), sq_nonneg y, mul_nonneg ha (sq_nonneg y)]
+  · -- `log f_q(y) ≤ c₀ + c₁ y²`: from `log f_q ≤ max (log M) 0`
+    have := h_up y
+    nlinarith [le_max_right b (0 : ℝ), mul_nonneg ha (sq_nonneg y)]
+
+/-- (#3, ★ dominant wall) the continuous mixture output `q = p ∗ 𝒩(0,N)` has
+integrable log-density: `negMulLog ((q.rnDeriv vol ·).toReal)` is `volume`-integrable.
+The output density is bounded above by `(√(2πN))⁻¹` and `−log f_q` is bounded by a
+quadratic, so `|negMulLog f_q(y)| = |f_q(y) · log f_q(y)| ≤ f_q(y)·(c₀ + c₁·y²)`,
+integrable against `volume` since `∫ f_q(y)·(c₀+c₁y²) dvol = ∫ (c₀+c₁y²) dq < ∞`
+(finite second moment of `q`).
 
 The input `p` is constrained by membership in `awgnPowerConstraintSet P` (lintegral
 second moment `≤ P`), which carries the genuine integrability of `x²` via
 `awgnPowerConstraintSet_mem_iff_integrable` — exactly the regularity Phases 1–5 use.
-This rules out the heavy-tailed inputs (Cauchy etc.) that would break the statement, so
-the residual is now a genuine analytic wall (mixture-of-Gaussians log-density
-integrability), not a false statement.
+This rules out the heavy-tailed inputs (Cauchy etc.) that would break the statement.
 
-@residual(wall:awgn-capacity-converse-maxent) -/
+Genuinely discharged (0 sorry): the density representation
+(`output_eq_withDensity_mixture` / `output_rnDeriv_ae_mixture`), the upper bound (6a),
+the mixture Gaussian lower bound (6b, `output_logDensity_lower_bound`, the only hard
+sub-lemma), the quadratic combination (6c), and the `withDensity ↔ smul` transport are
+all proven. -/
 theorem outputDistribution_logDensity_integrable
-    (hP : 0 ≤ P) (h_meas : IsAwgnChannelMeasurable N) (p : Measure ℝ) [IsProbabilityMeasure p]
+    (hP : 0 ≤ P) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
+    (p : Measure ℝ) [IsProbabilityMeasure p]
     (hp : p ∈ awgnPowerConstraintSet P) :
     Integrable (fun y : ℝ =>
         Real.negMulLog
           ((ChannelCoding.outputDistribution p (awgnChannel N h_meas)).rnDeriv
             volume y).toReal)
       volume := by
-  sorry  -- @residual(wall:awgn-capacity-converse-maxent)
+  classical
+  have hN_NN : N ≠ 0 := hN
+  obtain ⟨hp_2mom_int, _hp_2mom⟩ := awgnPowerConstraintSet_mem_iff_integrable P hP p hp
+  set q := ChannelCoding.outputDistribution p (awgnChannel N h_meas) with hq_def
+  set fq := outputMixtureDensity N p with hfq_def
+  have hfq_meas : Measurable fq := measurable_outputMixtureDensity N p
+  have hfq_lt_top : ∀ᵐ y ∂(volume : Measure ℝ), fq y < ∞ := by
+    have h_le : ∀ y, fq y ≤ ENNReal.ofReal (Real.sqrt (2 * Real.pi * N))⁻¹ :=
+      fun y => outputMixtureDensity_le_sup N p y
+    exact Filter.Eventually.of_forall
+      (fun y => lt_of_le_of_lt (h_le y) ENNReal.ofReal_lt_top)
+  -- `q = vol.withDensity fq`
+  have hq_wd : q = volume.withDensity fq := by
+    rw [hq_def, outputDistribution_awgn_eq_conv h_meas p, hfq_def,
+      output_eq_withDensity_mixture hN_NN p]
+  -- quadratic abs bound on `log fq` (Phase 6c)
+  obtain ⟨c₀, c₁, hc₁, h_abs⟩ := outputMixtureDensity_log_abs_le hP hN_NN p hp
+  -- `q` has finite second moment, so `c₀ + c₁·y²` is integrable against `q`
+  have hq_prob : IsProbabilityMeasure q := by
+    rw [hq_def, outputDistribution_awgn_eq_conv h_meas p]; infer_instance
+  have h_q_sq_int : Integrable (fun y : ℝ => y ^ 2) q := by
+    have := output_sq_sub_integrable h_meas hN_NN p hp_2mom_int 0
+    simpa [hq_def] using this
+  have h_dom_q : Integrable (fun y : ℝ => c₀ + c₁ * y ^ 2) q :=
+    (integrable_const c₀).add (h_q_sq_int.const_mul c₁)
+  -- transport to volume via the withDensity ↔ smul iff
+  have h_dom_vol : Integrable (fun y : ℝ => (fq y).toReal • (c₀ + c₁ * y ^ 2)) volume :=
+    (integrable_withDensity_iff_integrable_smul' hfq_meas hfq_lt_top).mp
+      (by rw [← hq_wd]; exact h_dom_q)
+  -- dominate `negMulLog (rnDeriv)` by `(fq y).toReal · (c₀ + c₁ y²)`
+  refine Integrable.mono' h_dom_vol ?_ ?_
+  · -- measurability of the integrand
+    have h_rn_meas : Measurable (fun y => (q.rnDeriv volume y).toReal) :=
+      (Measure.measurable_rnDeriv q volume).ennreal_toReal
+    exact (Real.continuous_negMulLog.measurable.comp h_rn_meas).aestronglyMeasurable
+  · -- `‖negMulLog ((q.rnDeriv vol y).toReal)‖ ≤ (fq y).toReal • (c₀ + c₁ y²)` a.e.
+    have h_rn_ae : q.rnDeriv volume =ᵐ[volume] fq := by
+      rw [hq_def, hfq_def]; exact output_rnDeriv_ae_mixture h_meas hN_NN p
+    filter_upwards [h_rn_ae] with y hy
+    rw [hy, smul_eq_mul, Real.norm_eq_abs]
+    -- `|negMulLog t| = t·|log t| ≤ t·(c₀+c₁y²)` for `t = (fq y).toReal ≥ 0`
+    set t : ℝ := (fq y).toReal with ht_def
+    have ht_nonneg : 0 ≤ t := ENNReal.toReal_nonneg
+    rw [Real.negMulLog_def, abs_mul, abs_neg, abs_of_nonneg ht_nonneg]
+    exact mul_le_mul_of_nonneg_left (h_abs y) ht_nonneg
 
-/-- (#3, ★ dominant wall, joint form, OUT OF SCOPE for this dispatch) the chain-rule
-`h_int_out`: `log ((q.rnDeriv vol ·).toReal) ∘ snd` is integrable against the joint
-`p ⊗ₘ W`. Lift of `outputDistribution_logDensity_integrable` along the snd-marginal.
-
-@residual(wall:awgn-capacity-converse-maxent) -/
+/-- (#3, ★ dominant wall, joint form) the chain-rule `h_int_out`:
+`log ((q.rnDeriv vol ·).toReal) ∘ snd` is integrable against the joint `p ⊗ₘ W`.
+Lift of `outputDistribution_logDensity_integrable` along the snd-marginal:
+`q = (p ⊗ₘ W).map Prod.snd`, and `|log f_q| ≤ c₀ + c₁·y²` is integrable against `q`
+(finite second moment), so the snd-pullback is integrable against `p ⊗ₘ W`.
+Genuinely discharged (0 sorry) via `integrable_map_measure` and the Phase-6c bound. -/
 theorem outputDistribution_logDensity_integrable_joint
-    (hP : 0 ≤ P) (h_meas : IsAwgnChannelMeasurable N) (p : Measure ℝ) [IsProbabilityMeasure p]
+    (hP : 0 ≤ P) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
+    (p : Measure ℝ) [IsProbabilityMeasure p]
     (hp : p ∈ awgnPowerConstraintSet P) :
     Integrable (fun z : ℝ × ℝ =>
         Real.log
           ((ChannelCoding.outputDistribution p (awgnChannel N h_meas)).rnDeriv
             volume z.2).toReal)
       (p ⊗ₘ (awgnChannel N h_meas)) := by
-  sorry  -- @residual(wall:awgn-capacity-converse-maxent)
+  classical
+  obtain ⟨hp_2mom_int, _hp_2mom⟩ := awgnPowerConstraintSet_mem_iff_integrable P hP p hp
+  set W := awgnChannel N h_meas with hW_def
+  set q := ChannelCoding.outputDistribution p W with hq_def
+  set fq := outputMixtureDensity N p with hfq_def
+  set g : ℝ → ℝ := fun y => Real.log ((q.rnDeriv volume y).toReal) with hg_def
+  -- `q` is a probability measure and `q ≪ volume`
+  have hq_prob : IsProbabilityMeasure q := by
+    rw [hq_def, hW_def, outputDistribution_awgn_eq_conv h_meas p]; infer_instance
+  have hq_vol : q ≪ volume := by
+    rw [hq_def, hW_def, outputDistribution_awgn_eq_conv h_meas p]
+    exact Measure.conv_absolutelyContinuous (gaussianReal_absolutelyContinuous 0 hN)
+  -- quadratic abs bound on `log fq` (Phase 6c)
+  obtain ⟨c₀, c₁, hc₁, h_abs⟩ := outputMixtureDensity_log_abs_le hP hN p hp
+  -- `q` has finite second moment ⇒ `c₀ + c₁·y²` integrable against `q`
+  have h_q_sq_int : Integrable (fun y : ℝ => y ^ 2) q := by
+    have := output_sq_sub_integrable h_meas hN p hp_2mom_int 0
+    simpa [hq_def, hW_def] using this
+  have h_dom_q : Integrable (fun y : ℝ => c₀ + c₁ * y ^ 2) q :=
+    (integrable_const c₀).add (h_q_sq_int.const_mul c₁)
+  -- `q.rnDeriv vol =ᵐ[q] fq` (volume-a.e. equality transports along `q ≪ volume`)
+  have h_rn_ae_q : q.rnDeriv volume =ᵐ[q] fq := by
+    refine hq_vol.ae_le ?_
+    rw [hq_def, hW_def, hfq_def]; exact output_rnDeriv_ae_mixture h_meas hN p
+  -- `g` is integrable against `q` by domination
+  have h_g_q : Integrable g q := by
+    refine Integrable.mono' h_dom_q ?_ ?_
+    · have h_rn_meas : Measurable (fun y => (q.rnDeriv volume y).toReal) :=
+        (Measure.measurable_rnDeriv q volume).ennreal_toReal
+      exact (Real.measurable_log.comp h_rn_meas).aestronglyMeasurable
+    · filter_upwards [h_rn_ae_q] with y hy
+      simp only [hg_def, Real.norm_eq_abs, hy]
+      rw [hfq_def] at hy ⊢
+      exact h_abs y
+  -- lift along the snd-marginal: `q = (p ⊗ₘ W).map Prod.snd`
+  have h_map : q = (p ⊗ₘ W).map Prod.snd := by
+    rw [hq_def]; rfl
+  have h_aesm : AEStronglyMeasurable g (Measure.map Prod.snd (p ⊗ₘ W)) := by
+    rw [← h_map]; exact h_g_q.aestronglyMeasurable
+  rw [show (fun z : ℝ × ℝ => Real.log ((q.rnDeriv volume z.2).toReal)) = g ∘ Prod.snd from rfl]
+  rw [← integrable_map_measure h_aesm measurable_snd.aemeasurable, ← h_map]
+  exact h_g_q
 
-/-! ## Phase 7 — final assembly (OUT OF SCOPE for this dispatch) -/
+/-! ## Phase 7 — final assembly (genuine) -/
 
 /-- Final converse conclusion (supplies the `h_max_ent` of
 `awgn_capacity_closed_form_of_out`). For any input law `p ∈ awgnPowerConstraintSet P`
 (lintegral second moment `≤ P`),
 `(mutualInfoOfChannel p (awgnChannel N)).toReal ≤ (1/2) log(1 + P/N)`.
 
-OUT OF SCOPE for this dispatch (assembly of Phases 1–6).
+Genuine assembly of Phases 1–6 (0 sorry): chain rule (`mutualInfoOfChannel_toReal_eq_diffEntropy_sub`)
++ fibre entropy constant + Gaussian max-entropy (`differentialEntropy_le_gaussian_of_variance_le`)
++ `Var(Y) ≤ P + N` + the capacity log-algebra.
 
-The constraint is now membership in `awgnPowerConstraintSet P` (lintegral form), which
+The constraint is membership in `awgnPowerConstraintSet P` (lintegral form), which
 carries the genuine integrability of `x²` (`awgnPowerConstraintSet_mem_iff_integrable`),
 ruling out the heavy-tailed inputs (Cauchy etc.) that made the old Bochner-only signature
-false. The remaining `sorry` is therefore a genuine analytic wall — the assembly of
-Phases 1–6, gated by the mixture-output log-density integrability
-(`outputDistribution_logDensity_integrable`, loogle 0 matches), not a false statement.
-
-The single remaining `sorry` is the output log-density integrability
-(`outputDistribution_logDensity_integrable` / `_joint`, Phase 6), reached via the
-ordinary lemma calls below — no load-bearing hypothesis is introduced.
-
-@residual(wall:awgn-capacity-converse-maxent) -/
+false. The output log-density integrability hypotheses (`h_int_out` / `h_ent_int`) are
+discharged genuinely by `outputDistribution_logDensity_integrable[_joint]` (Phase 6) —
+no load-bearing hypothesis is introduced. -/
 theorem awgn_per_input_mi_le_log
     (hP : 0 < P) (hN : (N : ℝ) ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     (p : Measure ℝ) [IsProbabilityMeasure p] (hp : p ∈ awgnPowerConstraintSet P) :
@@ -438,7 +783,7 @@ theorem awgn_per_input_mi_le_log
   have h_int_out :
       Integrable (fun z : ℝ × ℝ =>
           Real.log (q.rnDeriv volume z.2).toReal) (p ⊗ₘ W) :=
-    outputDistribution_logDensity_integrable_joint hP.le h_meas p hp
+    outputDistribution_logDensity_integrable_joint hP.le hN_NN h_meas p hp
   -- STEP 1: chain rule `MI.toReal = h(q) − ∫ h(W x) ∂p`
   have h_chain :
       (ChannelCoding.mutualInfoOfChannel p W).toReal
@@ -471,7 +816,7 @@ theorem awgn_per_input_mi_le_log
   -- ★ output log-density volume-integrability `h_ent_int` (Phase 6 stub, volume form)
   have h_ent_int :
       Integrable (fun y => Real.negMulLog ((q.rnDeriv volume y).toReal)) volume := by
-    rw [hq_def]; exact outputDistribution_logDensity_integrable hP.le h_meas p hp
+    rw [hq_def]; exact outputDistribution_logDensity_integrable hP.le hN_NN h_meas p hp
   have h_maxent :
       Common2026.Shannon.differentialEntropy q
         ≤ (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (v : ℝ)) :=
@@ -499,15 +844,15 @@ open InformationTheory.Shannon.ChannelCoding in
 `awgnCapacity P N = (1/2) log(1 + P/N)`. This supersedes
 `ContChannelMIDecomp.awgn_capacity_closed_form_of_out`: there the converse
 max-entropy bound `h_max_ent` was a body `sorry`; here it is supplied genuinely by
-`awgn_per_input_mi_le_log` (whose only residual is the Phase-6 output-log-density
-integrability wall). The achievability bridge (`awgn_mi_gaussian_closed_form_of_out`),
+`awgn_per_input_mi_le_log`. The achievability bridge (`awgn_mi_gaussian_closed_form_of_out`),
 the MI decomposition (`isAwgnMIDecomp_of_densitySplit`) and the bind/conv
 output-Gaussian fact are all genuinely wired upstream.
 
-Residual status: the only `sorry` reachable from this theorem is the Phase-6 mixture
-output log-density integrability (`outputDistribution_logDensity_integrable` /
-`_joint`), threaded transitively through `awgn_per_input_mi_le_log`.
-@residual(wall:awgn-capacity-converse-maxent) -/
+Residual status: 0 sorry. The Phase-6 mixture output log-density integrability
+(`outputDistribution_logDensity_integrable` / `_joint`) — formerly the dominant wall —
+is now genuinely discharged via the convolution density representation, the Gaussian
+upper/lower bounds, and the finite-second-moment domination. The whole AWGN
+single-letter capacity converse (Cover-Thomas 9.1) is complete. -/
 theorem awgn_capacity_closed_form_genuine
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0) :
     awgnCapacity P N (isAwgnChannelMeasurable N)
