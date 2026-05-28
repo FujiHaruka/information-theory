@@ -472,12 +472,18 @@ a pending plan-level task (Phase C-5).
    through `fisherInfoOfMeasureV2 μ f = fisherInfoOfDensity f` defeq and
    `fisherInfoOfDensity 0 = 0` (`FisherInfoV2.lean:100`)) is now
    `∃ fPath, ∀ h_X h_target, ...`, so the predicate is satisfiable for
-   genuine density witnesses. The audit tag is now
-   `@audit:staged(epi-debruijn-integration)` (load-bearing honest, not a
-   defect). The standalone Gaussian-case statements below
-   (`bounded_T_ftc_gaussian`) still bypass the predicate because the genuine
-   bridge from the bounded-T identity to a `∃ fPath` witness is sister-plan
-   responsibility (`epi-debruijn-integration-plan.md` Phase B/C/D).
+   genuine density witnesses. Its current declaration-level tag is
+   `@audit:retract-candidate(load-bearing-predicate)` (Tier 3 bookkeeping,
+   `EPIStamDischarge.lean`), and the analytic core is no longer threaded as a
+   load-bearing hypothesis: a general witness `isDeBruijnIntegrationHyp_holds`
+   produces the predicate by delegating to the shared sorry lemma
+   `debruijnIntegrationIdentity_holds` (`@residual(wall:debruijn-integration)`,
+   `FisherInfoV2DeBruijn.lean`). (Stale prose cleanup, honesty audit 2026-05-28:
+   the prior wording cited a now-superseded `@audit:staged` tag.) The standalone
+   Gaussian-case statements below (`bounded_T_ftc_gaussian`) still bypass the
+   predicate because the genuine bridge from the bounded-T identity to a
+   `∃ fPath` witness is sister-plan responsibility
+   (`epi-debruijn-integration-plan.md` Phase B/C/D).
 
 2. Similarly, `IsDeBruijnRegularityHyp X Z P` (`EPIStamDischarge.lean:152-172`)
    **was repaired 2026-05-25** (Wave 3 third batch): the former
