@@ -107,7 +107,7 @@ is carried by a measurable closed-form proxy `g` plus its per-fibre a.e. agreeme
 joint measurability is unavailable — Route B, see `ContChannelMIDecomp.lean`
 Phase 8), and the integrabilities #4/#5 are stated against the joint `p ⊗ₘ W` in
 the proxy/log form the body's `integral_compProd` Fubini step consumes.
-@residual(wall:awgn-mi-decomp) -/
+@residual(wall:awgn-mi-decomp) @audit:ok -/
 theorem contChannelMIDecomp_holds
     (p : Measure ℝ) [IsProbabilityMeasure p]
     (W : InformationTheory.Shannon.ChannelCoding.Channel ℝ ℝ) [IsMarkovKernel W]
