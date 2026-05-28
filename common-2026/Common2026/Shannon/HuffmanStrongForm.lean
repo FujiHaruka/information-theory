@@ -2,6 +2,7 @@ import Common2026.Meta.EntryPoint
 import Common2026.Shannon.HuffmanOptimality
 import Common2026.Shannon.HuffmanSwapNormCompletion
 import Common2026.Shannon.HuffmanMergedIdentBody
+import Common2026.Shannon.HuffmanSwapNormProof
 
 /-!
 # T1-A'' — Hyp1 (swap normalization) genuine discharge, strong-precondition core

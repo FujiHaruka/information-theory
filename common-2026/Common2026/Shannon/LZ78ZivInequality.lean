@@ -281,7 +281,7 @@ end ZivCountingBoundPredicate
 
 section ZivPassthroughBridge
 
-variable {α Ω : Type*} [MeasurableSpace α] [MeasurableSpace Ω]
+variable {α Ω : Type*} [Fintype α] [MeasurableSpace α] [MeasurableSpace Ω]
 
 
 /-- **Trivial reverse**: the combinatorial-layer bound
