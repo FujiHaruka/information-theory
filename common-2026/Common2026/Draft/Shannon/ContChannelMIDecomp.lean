@@ -79,7 +79,8 @@ with `μ ≪ volume` and measurable density `f := μ.rnDeriv volume`, the integr
 `log f` against `μ` is `−differentialEntropy μ`. This is the generalization of
 `integral_log_density_fibre` to an arbitrary `≪ volume` measure (the proof never used
 that `μ` was a channel fibre); it is reused for both the fibre term (`μ := W x`) and
-the output term (`μ := outputDistribution p W`) in the assembly below. -/
+the output term (`μ := outputDistribution p W`) in the assembly below.
+@audit:ok -/
 theorem integral_log_rnDeriv_eq_neg_diffEntropy
     (μ : Measure ℝ) [SigmaFinite μ] (hμ : μ ≪ volume) :
     ∫ y, Real.log (μ.rnDeriv volume y).toReal ∂μ
@@ -269,7 +270,8 @@ log-likelihood ratio by the Bayes density split `llr_compProd_prod_split`, split
 resulting integral with `integral_sub`, identifies the fibre term with
 `integral_compProd` + `integral_log_proxy_fibre` (each fibre `↦ −h(W x)`), and
 identifies the output term with `integral_snd_outputDistribution` +
-`integral_log_rnDeriv_eq_neg_diffEntropy` (`↦ −h(q)`). -/
+`integral_log_rnDeriv_eq_neg_diffEntropy` (`↦ −h(q)`).
+@audit:ok -/
 theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub
     (hW_ac : ∀ x, W x ≪ volume)
     (hWx_q : ∀ x, W x ≪ outputDistribution p W)
