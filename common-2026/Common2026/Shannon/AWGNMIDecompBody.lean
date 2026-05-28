@@ -161,13 +161,12 @@ predicate `IsAwgnMIDecomp` (both unfold to the same `mutualInfoOfChannel … =
 differentialEntropy (outputDistribution …) − ∫ …`). The discharge is therefore an
 `exact`.
 
-`@audit:closed-by-successor(awgn-mi-decomp-plan)`
-(The successor predicate `IsContChannelMIDecompHyp` above is discharged
-hypothesis-free in `ContChannelMIDecomp.lean` (`isContChannelMIDecompHyp_awgn`),
-whose generic body `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` is now assembled
-**genuinely (0 sorry)** from local helpers — the former shared density-level wall
+The successor predicate `IsContChannelMIDecompHyp` is discharged hypothesis-free in
+`ContChannelMIDecomp.lean` (`isContChannelMIDecompHyp_awgn`), whose generic body
+`mutualInfoOfChannel_toReal_eq_diffEntropy_sub` is assembled **genuinely (0 sorry)**
+from local helpers — the former shared density-level wall
 `AwgnWalls.contChannelMIDecomp_holds` has been retired (closed 2026-05-28). This
-wrapper is a pure `unfold + exact` shim and not itself a load-bearing claim.) -/
+wrapper is a pure `unfold + exact` shim and not itself a load-bearing claim. -/
 @[entry_point]
 theorem awgn_midecomp_of_cont_chain
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)

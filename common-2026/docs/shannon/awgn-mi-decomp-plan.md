@@ -18,12 +18,15 @@
 > `awgn_midecomp_of_cont_chain` (`:160`) が AWGN instance への接続子（`exact` で `IsAwgnMIDecomp` を導く）。本 plan はこの
 > named hypothesis の **body を genuine に証明** し、AWGN instance では Gaussian density 事実で全仮定を discharge する。
 >
-> **Status (2026-05-28 更新)**: 段2 AWGN instance discharge は **完了** — `isContChannelMIDecompHyp_awgn`
-> (`ContChannelMIDecomp.lean:459`) が壁の全正則性引数を Gaussian 事実で 0 sorry 供給し、`IsContChannelMIDecompHyp` を
-> 仮定なし publish 済。残る唯一の sorry は **density-level chain rule 本体** = 共有壁 `contChannelMIDecomp_holds`
-> (`AwgnWalls.lean:111`、`@residual(wall:awgn-mi-decomp)` + `@audit:ok`) の body (= Phases 1–6 の klDiv/Fubini 解析、
-> ~200-300 行)。壁は正則性仮定付きの **true-but-hard** な状態 (判断ログ #4 参照: 旧 hyp 全落し偽壁を 2026-05-28 に修正)。
-> **AWGN(#5) / Parallel Gaussian(#6) 両方が共有する foundational brick**。次の moonshot = この壁 body を埋めること。
+> **Status (2026-05-28 — ✅ CLOSED)**: 本 moonshot 完了。連続チャネル MI chain rule
+> `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` (`ContChannelMIDecomp.lean:273`) を **genuine に証明完成
+> (0 sorry, `@audit:ok`)**。段2 instance `isContChannelMIDecompHyp_awgn` も Gaussian 事実で全引数 discharge 済。
+> 共有壁 `contChannelMIDecomp_holds` は **削除** (`AwgnWalls.lean` から retire、wall register CLOSED 注記)。
+> 下流 (`isAwgnMIDecomp_of_densitySplit` / `awgn_mi_gaussian_closed_form_of_out` /
+> `AWGNMIClosedForm.mutualInfoOfChannel_gaussianInput_closed_form'`) は transitively genuine 化。
+> **AWGN MI closed-form ラインは capacity を除き 0 sorry**。**AWGN(#5) / Parallel Gaussian(#6) 共有の foundational
+> brick が genuine 着地**。残る AWGN-MI sorry は `awgn_capacity_closed_form_of_out` (`:647`、capacity = MI 分解とは別件、
+> converse max-entropy + h_bdd) のみ。判断ログ #5 参照。
 
 ## 進捗
 
@@ -715,3 +718,17 @@ honest 仮定の最終本数 (#1-#6 + Markov)、Phase 7 の honest #4 discharge 
    commit `9ccbb67` が density chain-rule 壁を `AwgnWalls.contChannelMIDecomp_holds` に集約した際、**正則性仮定 #1–#6 を壁の引数から全て落とし**、`(p)[IsProbabilityMeasure p] (W)[IsMarkovKernel W]` のみで chain rule を主張する形にした。これは **普遍的に偽** (独立監査 `c40d057` 確定): 決定論チャネル `W x = dirac x` で LHS `= toReal(mutualInfoOfChannel) = toReal(⊤) = 0`、RHS `= differentialEntropy(gaussian) − 0 > 0` (`differentialEntropy_dirac = 0`、対角測度が積に特異で klDiv `= ⊤`)。落とした仮定は消費側 `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` にアンダースコア (未使用) で取り残されていた (= laundering 寄り)。
    **修正 (commit `c4388e0`、再監査 clean)**: 壁に正則性仮定を**引数として復帰**。shape は 判断ログ #2–#3 の Route B proxy 形に統一 — #1–#3 absolute continuity (plan 形) + `hWx_q : ∀ x, W x ≪ outputDistribution p W` + proxy `(g : ℝ×ℝ→ℝ≥0∞)`/`hg_meas`/`hg_ae` + joint log-integrability 2 本 (`h_int_fibre : Integrable (log (g z).toReal) (p⊗ₘW)`、`h_int_out : Integrable (log (q.rnDeriv vol z.2).toReal) (p⊗ₘW)`)。plan §段1 body (L48-66) の教科書形 (`llr`-integrable + `f·log f`-on-volume) は **不採用** — proxy 形の方が instance `isContChannelMIDecompHyp_awgn` が genuine に供給でき、`llr`-integrable は `h_int_fibre.sub h_int_out` の congr で導けるため同等以上。AWGN instance は 9 引数すべてを Gaussian 事実で **0 new sorry** discharge。壁 body は依然 `sorry` + `@residual(wall:awgn-mi-decomp)` + `@audit:ok` (signature honesty を独立確認、残る sorry = density-level chain rule の genuine Mathlib 壁 = Phases 1–6)。
    **教訓**: shared sorry 補題化のとき hypotheses を壁から落とすと over-general 化して偽になりうる。consolidate 時は regularity 前提を壁側に残すこと (memory 候補)。
+5. **(2026-05-28) moonshot CLOSED — assembly は既存 genuine helper の最終結線だけだった**:
+   壁を honest 化 (#4) した後、改めて `ContChannelMIDecomp.lean` を精査すると、chain rule の難所
+   (linchpin `rnDeriv_compProd_fibre`、Bayes split `llr_compProd_prod_split`、fibre/output entropy 同定
+   `integral_log_proxy_fibre`/`integral_snd_outputDistribution`) は **すべて既に genuine に証明済 (0 sorry)** で、
+   スキップされていたのは Approach §7 ステップの最終 assembly (Phase 1 KL→llr / Phase 3 split+Fubini / Phase 5 output
+   同定 / Phase 6 結合) だけだった。`mutualInfoOfChannel_toReal_eq_diffEntropy_sub` の body を壁 delegate から
+   local helper の結線に置換 (`toReal_klDiv_of_measure_eq` + `integral_congr_ae (llr_compProd_prod_split)` +
+   `integral_sub` + `Measure.integral_compProd` + `integral_log_proxy_fibre` + `integral_snd_outputDistribution` +
+   汎用化 helper `integral_log_rnDeriv_eq_neg_diffEntropy` + `ring`) し **0 sorry 達成**。新規 helper は
+   `integral_log_density_fibre` を任意 `μ ≪ volume` に一般化した `integral_log_rnDeriv_eq_neg_diffEntropy` 1 本のみ。
+   独立監査 (commit 後) が Mathlib 補題の隠れ前提なし (`toReal_klDiv_of_measure_eq` は integrability 不要、
+   `integral_compProd` 側条件は `h_int_fibre` で充足) を確認し全 OK。**Phase 1-8 / 撤退ライン D-1〜D-3 は本 closure で
+   moot** (段1 body が genuine 着地、壁削除)。当初見積 ~430 行に対し、helper 群が前セッション群で出来ていたため最終 assembly は
+   ~60 行で済んだ。
