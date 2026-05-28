@@ -294,19 +294,17 @@ is `volume`-integrable. The output density is bounded above by `(√(2πN))⁻¹
 by `c·exp(−a·y²)`, so `|log f_q(y)| ≤ c₀ + c₁·y²`, integrable against the finite
 second moment of `q`. This is the only true Mathlib gap (loogle: 0 matches).
 
-⚠️ Audit note (2026-05-29): like the Phase 7 consumer, this stub constrains `p` only
-by `hp_2mom : ∫ x, x² ∂p ≤ P` (Bochner, `= 0` on non-integrable `x²`), so it is also
-false on heavy-tailed `p` (Cauchy output `negMulLog (f_q)` is not `volume`-integrable).
-The genuine wall (mixture-of-Gaussians log-density integrability, loogle 0 matches) is
-real, but only AFTER the constraint set is pivoted to carry
-`hp_2mom_int : Integrable (fun x => x²) p` (the regularity already present in Phases 1–5).
-Keep the `wall:` tag — the analytic content is genuine — but the signature needs the
-same integrability precondition added during the orchestrator's constraint-set pivot.
+The input `p` is constrained by membership in `awgnPowerConstraintSet P` (lintegral
+second moment `≤ P`), which carries the genuine integrability of `x²` via
+`awgnPowerConstraintSet_mem_iff_integrable` — exactly the regularity Phases 1–5 use.
+This rules out the heavy-tailed inputs (Cauchy etc.) that would break the statement, so
+the residual is now a genuine analytic wall (mixture-of-Gaussians log-density
+integrability), not a false statement.
 
 @residual(wall:awgn-capacity-converse-maxent) -/
 theorem outputDistribution_logDensity_integrable
-    (h_meas : IsAwgnChannelMeasurable N) (p : Measure ℝ) [IsProbabilityMeasure p]
-    (hp_2mom : ∫ x, x ^ 2 ∂p ≤ P) :
+    (hP : 0 ≤ P) (h_meas : IsAwgnChannelMeasurable N) (p : Measure ℝ) [IsProbabilityMeasure p]
+    (hp : p ∈ awgnPowerConstraintSet P) :
     Integrable (fun y : ℝ =>
         Real.negMulLog
           ((ChannelCoding.outputDistribution p (awgnChannel N h_meas)).rnDeriv
@@ -320,8 +318,8 @@ theorem outputDistribution_logDensity_integrable
 
 @residual(wall:awgn-capacity-converse-maxent) -/
 theorem outputDistribution_logDensity_integrable_joint
-    (h_meas : IsAwgnChannelMeasurable N) (p : Measure ℝ) [IsProbabilityMeasure p]
-    (hp_2mom : ∫ x, x ^ 2 ∂p ≤ P) :
+    (hP : 0 ≤ P) (h_meas : IsAwgnChannelMeasurable N) (p : Measure ℝ) [IsProbabilityMeasure p]
+    (hp : p ∈ awgnPowerConstraintSet P) :
     Integrable (fun z : ℝ × ℝ =>
         Real.log
           ((ChannelCoding.outputDistribution p (awgnChannel N h_meas)).rnDeriv
@@ -332,30 +330,23 @@ theorem outputDistribution_logDensity_integrable_joint
 /-! ## Phase 7 — final assembly (OUT OF SCOPE for this dispatch) -/
 
 /-- Final converse conclusion (supplies the `h_max_ent` of
-`awgn_capacity_closed_form_of_out`). For any input law `p` with second moment `≤ P`,
+`awgn_capacity_closed_form_of_out`). For any input law `p ∈ awgnPowerConstraintSet P`
+(lintegral second moment `≤ P`),
 `(mutualInfoOfChannel p (awgnChannel N)).toReal ≤ (1/2) log(1 + P/N)`.
 
 OUT OF SCOPE for this dispatch (assembly of Phases 1–6).
 
-⚠️ DEFECT 残置中 (independent honesty audit 2026-05-29). As stated this signature is
-**universally false** and cannot be genuinely discharged — it is NOT a Mathlib wall.
-The only constraint on `p` is `hp_2mom : ∫ x, x² ∂p ≤ P`, but Bochner `∫` returns `0`
-on a non-integrable integrand (`MeasureTheory.integral_undef`,
-`Mathlib/.../Bochner/Basic.lean:203`). So a heavy-tailed input with infinite second
-moment (e.g. a wide Cauchy law, scale γ) satisfies `∫ x² ∂p = 0 ≤ P` yet has
-`I(X;Y) = h(Y) − (1/2)log(2πeN)` unbounded as γ→∞ (Cauchy differential entropy
-`log(4πγ)` is finite, so the klDiv MI is finite-large, not `∞` — `.toReal` does NOT
-collapse to 0), exceeding any `(1/2)log(1+P/N)`. The fix is a definition pivot at the
-constraint set, not a follow-up proof. Phases 1–5 already carry the needed regularity
-`hp_2mom_int : Integrable (fun x => x²) p` (see `output_variance_le`); this stub and the
-consumer-side `h_max_ent` lack it, which is the inconsistency. The actual constraint-set
-pivot is delegated to the orchestrator (see `awgnCapacity` / `awgn_capacity_closed_form_of_out`).
+The constraint is now membership in `awgnPowerConstraintSet P` (lintegral form), which
+carries the genuine integrability of `x²` (`awgnPowerConstraintSet_mem_iff_integrable`),
+ruling out the heavy-tailed inputs (Cauchy etc.) that made the old Bochner-only signature
+false. The remaining `sorry` is therefore a genuine analytic wall — the assembly of
+Phases 1–6, gated by the mixture-output log-density integrability
+(`outputDistribution_logDensity_integrable`, loogle 0 matches), not a false statement.
 
-@audit:defect(false-statement) @audit:retract-candidate(degenerate-constraint-set-missing-integrability)
 @residual(wall:awgn-capacity-converse-maxent) -/
 theorem awgn_per_input_mi_le_log
     (hP : 0 < P) (hN : (N : ℝ) ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
-    (p : Measure ℝ) [IsProbabilityMeasure p] (hp_2mom : ∫ x, x ^ 2 ∂p ≤ P) :
+    (p : Measure ℝ) [IsProbabilityMeasure p] (hp : p ∈ awgnPowerConstraintSet P) :
     (ChannelCoding.mutualInfoOfChannel p (awgnChannel N h_meas)).toReal
       ≤ (1/2) * Real.log (1 + P / (N : ℝ)) := by
   sorry  -- @residual(wall:awgn-capacity-converse-maxent)

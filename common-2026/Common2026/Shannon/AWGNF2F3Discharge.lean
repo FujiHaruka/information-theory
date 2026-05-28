@@ -238,9 +238,9 @@ theorem awgn_capacity_closed_form_of_maxent_hypotheses
         BddAbove ((fun p : Measure ℝ =>
             (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
                 p (awgnChannel N (isAwgnChannelMeasurable N))).toReal) ''
-          { p : Measure ℝ | IsProbabilityMeasure p ∧ ∫ x, x^2 ∂p ≤ P }))
+          awgnPowerConstraintSet P))
     (h_max_ent :
-        ∀ p ∈ { p : Measure ℝ | IsProbabilityMeasure p ∧ ∫ x, x^2 ∂p ≤ P },
+        ∀ p ∈ awgnPowerConstraintSet P,
           (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
               p (awgnChannel N (isAwgnChannelMeasurable N))).toReal
             ≤ (1/2) * Real.log (1 + P / (N : ℝ))) :

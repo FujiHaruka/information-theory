@@ -190,40 +190,59 @@ theorem mutualInfoOfChannel_gaussianInput_closed_form
   congr 1
   rw [show ((P : ℝ) + N) / (N : ℝ) = 1 + (P : ℝ) / (N : ℝ) by field_simp; ring]
 
-/-! ## D.2 — `awgnCapacity P N` -/
+/-! ## D.2 — `awgnPowerConstraintSet` + `awgnCapacity P N` -/
+
+/-- Power constraint set: probability measures with a (genuine, lintegral) second
+moment `≤ P`. Using the lower integral `∫⁻ x, ofReal (x²) ∂p ≤ ofReal P` instead of the
+Bochner `∫ x, x² ∂p ≤ P` matters: Bochner `∫` returns `0` on a non-`p`-integrable
+integrand (`MeasureTheory.integral_undef`), so the naive Bochner constraint would admit
+heavy-tailed inputs (e.g. wide Cauchy laws) with infinite second moment via the spurious
+`∫ x² ∂p = 0 ≤ P`, making the converse bound `(1/2)log(1+P/N)` false. The lintegral form
+forces `∫⁻ ofReal(x²) < ∞`, hence genuine integrability of `x²`, ruling out those inputs.
+`awgnPowerConstraintSet_mem_iff_integrable` bridges back to the Bochner moment + the
+integrability regularity used by the converse phases. -/
+def awgnPowerConstraintSet (P : ℝ) : Set (Measure ℝ) :=
+  { p : Measure ℝ | IsProbabilityMeasure p ∧ ∫⁻ x, ENNReal.ofReal (x ^ 2) ∂p ≤ ENNReal.ofReal P }
+
+/-- Membership in `awgnPowerConstraintSet P` (lintegral form) yields both the genuine
+integrability of `x²` and the Bochner second-moment bound `∫ x² ∂p ≤ P`. This is the
+bridge the converse phases (`AwgnCapacityConverseMaxent.lean`) consume: the lintegral
+constraint carries the regularity (`Integrable (fun x => x²) p`) the Bochner form alone
+cannot supply. -/
+theorem awgnPowerConstraintSet_mem_iff_integrable
+    (P : ℝ) (hP : 0 ≤ P) (p : Measure ℝ)
+    (hp : p ∈ awgnPowerConstraintSet P) :
+    Integrable (fun x => x ^ 2) p ∧ ∫ x, x ^ 2 ∂p ≤ P := by
+  obtain ⟨hp_prob, hp_lint⟩ := hp
+  have h_nonneg : 0 ≤ᵐ[p] fun x => x ^ 2 := Filter.Eventually.of_forall (fun x => sq_nonneg x)
+  have h_meas_sq : AEStronglyMeasurable (fun x : ℝ => x ^ 2) p := by fun_prop
+  -- finite lintegral ⇒ HasFiniteIntegral ⇒ Integrable
+  have h_lt_top : (∫⁻ x, ENNReal.ofReal (x ^ 2) ∂p) < ∞ :=
+    lt_of_le_of_lt hp_lint ENNReal.ofReal_lt_top
+  have h_hfi : HasFiniteIntegral (fun x => x ^ 2) p :=
+    (hasFiniteIntegral_iff_ofReal h_nonneg).mpr h_lt_top
+  have h_int : Integrable (fun x => x ^ 2) p := ⟨h_meas_sq, h_hfi⟩
+  refine ⟨h_int, ?_⟩
+  -- Bochner bound: ofReal (∫ x²) = ∫⁻ ofReal (x²) ≤ ofReal P, then strip ofReal.
+  have h_ofReal : ENNReal.ofReal (∫ x, x ^ 2 ∂p) = ∫⁻ x, ENNReal.ofReal (x ^ 2) ∂p :=
+    ofReal_integral_eq_lintegral_ofReal h_int h_nonneg
+  have h_le : ENNReal.ofReal (∫ x, x ^ 2 ∂p) ≤ ENNReal.ofReal P := h_ofReal ▸ hp_lint
+  exact (ENNReal.ofReal_le_ofReal_iff hP).mp h_le
 
 /-- Power-constrained channel capacity. Supremum of `I(p; W)` over probability
-measures `p` with second moment ≤ `P`.
-
-⚠️ DEFECT 残置中 (independent honesty audit 2026-05-29). The constraint set
-`{p | IsProbabilityMeasure p ∧ ∫ x, x² ∂p ≤ P}` is **degenerate**: Bochner `∫ x² ∂p`
-returns `0` on a non-integrable integrand (`MeasureTheory.integral_undef`), so
-heavy-tailed inputs with infinite second moment (e.g. wide Cauchy laws) are admitted via
-`∫ x² ∂p = 0 ≤ P`. Such inputs make `I(X;Y)` finite-large but unbounded above
-(`differentialEntropy` of the output grows like `log(scale)`), so the converse bound
-`(1/2)log(1+P/N)` is false and `awgnCapacity` is genuinely `= ⊤`-via-unbounded-sSup
-(`sSup` of an unbounded set = the junk value), NOT the closed form. The fix is a
-definition pivot of this constraint set — preferred: `∫⁻ x, x² ∂p ≤ P` (lintegral
-correctly rules out `∞`); alternative: keep Bochner and conjoin `Integrable (fun x => x²) p`.
-Lintegral is the lighter pivot (no new hypothesis threads through the sandwich lemmas /
-`awgn_capacity_closed_form_of_out`). Delegated to the orchestrator; definition left in
-defect form for now. See `Common2026/Draft/Shannon/AwgnCapacityConverseMaxent.lean` and
-`ContChannelMIDecomp.awgn_capacity_closed_form_of_out`.
-
-@audit:defect(false-statement) @audit:retract-candidate(degenerate-constraint-set-missing-integrability) -/
+measures `p` in `awgnPowerConstraintSet P` (second moment ≤ `P`, lintegral form). -/
 noncomputable def awgnCapacity (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) : ℝ :=
   sSup ((fun p : Measure ℝ =>
           (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
               p (awgnChannel N h_meas)).toReal) ''
-        { p : Measure ℝ | IsProbabilityMeasure p ∧ ∫ x, x^2 ∂p ≤ P })
+        awgnPowerConstraintSet P)
 
 /-- The Gaussian input `𝒩(0, P)` lies in the AWGN constraint set
-`{p | IsProbabilityMeasure p ∧ ∫ x², ≤ P}`. -/
+`awgnPowerConstraintSet P`. -/
 theorem gaussianInput_mem_constraintSet (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) :
-    (gaussianReal 0 P.toNNReal) ∈
-      { p : Measure ℝ | IsProbabilityMeasure p ∧ ∫ x, x^2 ∂p ≤ P } := by
+    (gaussianReal 0 P.toNNReal) ∈ awgnPowerConstraintSet P := by
   refine ⟨inferInstance, ?_⟩
-  -- ∫ x² ∂(gaussianReal 0 P.toNNReal) = Var = P
+  -- ∫ x² ∂(gaussianReal 0 P.toNNReal) = Var = P, so ∫⁻ ofReal(x²) = ofReal P ≤ ofReal P.
   have h_var : (Var[fun x : ℝ => x; gaussianReal 0 P.toNNReal] : ℝ) = (P.toNNReal : ℝ) :=
     by rw [variance_fun_id_gaussianReal]
   have h_var_eq :
@@ -232,12 +251,22 @@ theorem gaussianInput_mem_constraintSet (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) :
     rw [variance_eq_integral measurable_id'.aemeasurable]
     congr 1
     rw [integral_id_gaussianReal]
-  have h_int : ∫ x, x^2 ∂(gaussianReal 0 P.toNNReal) = (P.toNNReal : ℝ) := by
+  have h_int_val : ∫ x, x^2 ∂(gaussianReal 0 P.toNNReal) = (P.toNNReal : ℝ) := by
     have h1 : ∫ x, x^2 ∂(gaussianReal 0 P.toNNReal)
         = ∫ x, (x - (0 : ℝ))^2 ∂(gaussianReal 0 P.toNNReal) := by
       simp
     rw [h1, h_var_eq, h_var]
-  rw [h_int, Real.coe_toNNReal P hP]
+  -- x² is integrable against the Gaussian (MemLp 2).
+  have h_int : Integrable (fun x : ℝ => x ^ 2) (gaussianReal 0 P.toNNReal) :=
+    (memLp_id_gaussianReal (μ := 0) (v := P.toNNReal) 2).integrable_sq
+  have h_nonneg : 0 ≤ᵐ[gaussianReal 0 P.toNNReal] fun x => x ^ 2 :=
+    Filter.Eventually.of_forall (fun x => sq_nonneg x)
+  have h_lint :
+      ∫⁻ x, ENNReal.ofReal (x ^ 2) ∂(gaussianReal 0 P.toNNReal)
+        = ENNReal.ofReal (P.toNNReal : ℝ) := by
+    rw [← ofReal_integral_eq_lintegral_ofReal h_int h_nonneg, h_int_val]
+  rw [h_lint]
+  exact ENNReal.ofReal_le_ofReal (by rw [Real.coe_toNNReal P hP])
 
 /-- The AWGN capacity is bounded below by `(1/2) log(1 + P/N)` — achieved by the
 Gaussian input, using the F-2 hypothesis form of the closed-form MI.
@@ -255,7 +284,7 @@ theorem awgnCapacity_ge_gaussian
         BddAbove ((fun p : Measure ℝ =>
             (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
                 p (awgnChannel N h_meas)).toReal) ''
-          { p : Measure ℝ | IsProbabilityMeasure p ∧ ∫ x, x^2 ∂p ≤ P })) :
+          awgnPowerConstraintSet P)) :
     (1/2) * Real.log (1 + P / (N : ℝ)) ≤ awgnCapacity P N h_meas := by
   -- The Gaussian input is feasible (mem_constraintSet) and achieves the bound.
   have h_mem := gaussianInput_mem_constraintSet P hP N
@@ -273,7 +302,7 @@ theorem awgnCapacity_le_gaussian
     (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
     (h_max_ent :
-        ∀ p ∈ { p : Measure ℝ | IsProbabilityMeasure p ∧ ∫ x, x^2 ∂p ≤ P },
+        ∀ p ∈ awgnPowerConstraintSet P,
           (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
               p (awgnChannel N h_meas)).toReal
             ≤ (1/2) * Real.log (1 + P / (N : ℝ))) :
@@ -305,9 +334,9 @@ theorem awgnCapacity_eq
         BddAbove ((fun p : Measure ℝ =>
             (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
                 p (awgnChannel N h_meas)).toReal) ''
-          { p : Measure ℝ | IsProbabilityMeasure p ∧ ∫ x, x^2 ∂p ≤ P }))
+          awgnPowerConstraintSet P))
     (h_max_ent :
-        ∀ p ∈ { p : Measure ℝ | IsProbabilityMeasure p ∧ ∫ x, x^2 ∂p ≤ P },
+        ∀ p ∈ awgnPowerConstraintSet P,
           (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
               p (awgnChannel N h_meas)).toReal
             ≤ (1/2) * Real.log (1 + P / (N : ℝ))) :

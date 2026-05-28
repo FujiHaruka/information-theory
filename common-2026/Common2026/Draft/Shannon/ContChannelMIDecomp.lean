@@ -649,8 +649,8 @@ and the bind/conv output-Gaussian fact are now **all discharged genuinely**:
   continuous-channel MI chain rule, 0 sorry).
 
 The **only** remaining gap is the converse single-letter Gaussian max-entropy bound
-`h_max_ent`: for every input `p` with second moment `≤ P`,
-`I(p; W).toReal ≤ (1/2) log(1 + P/N)`. `h_bdd` follows from it. This converse is
+`h_max_ent`: for every input `p` in `awgnPowerConstraintSet P` (lintegral second moment
+`≤ P`), `I(p; W).toReal ≤ (1/2) log(1 + P/N)`. `h_bdd` follows from it. This converse is
 gated by output-log-density integrability for an *arbitrary* input marginal (cf.
 the `awgn-per-letter-integrability` / `awgn-continuous-mi-chain-rule` walls): the
 general chain rule `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` needs
@@ -662,21 +662,14 @@ Independent honesty audit (2026-05-29): signature is unconditional (only regular
 are all genuinely wired (0 sorry) and `h_max_ent` is a body `have`-sorry (not a hypothesis
 arg) — no load-bearing hyp, no circularity.
 
-⚠️ DEFECT 残置中 (2026-05-29, second audit). The body `have h_max_ent` statement is NOT a
-genuine wall — it is **universally false as written**, so its `sorry` can never close
-honestly. The constraint set `{p | IsProbabilityMeasure p ∧ ∫ x, x² ∂p ≤ P}` admits
-heavy-tailed inputs with infinite second moment: Bochner `∫ x² ∂p` returns `0` when
-`x²` is non-`p`-integrable (`MeasureTheory.integral_undef`), so e.g. a wide Cauchy law
-satisfies `∫ x² ∂p = 0 ≤ P` yet drives `I(X;Y) = h(Y) − (1/2)log(2πeN)` unbounded
-(finite-large klDiv MI, `.toReal` does not collapse to 0), violating the bound. `h_bdd`
-inherits the falsity (the image is genuinely unbounded above). The fix is a constraint-set
-DEFINITION pivot, not a proof: either `∫⁻ x, x² ∂p ≤ P` (lintegral, excludes `∞`) or add
-`Integrable (fun x => x²) p` to the Bochner form (the regularity Phases 1–5 of
-`AwgnCapacityConverseMaxent.lean` already carry). Lintegral pivot is the lighter change
-(no extra hypothesis threads through `awgnCapacity` / sandwich lemmas). Delegated to the
-orchestrator as a separate task; signature left in defect form for now.
+Constraint-set defect pivot (2026-05-29): the constraint set is now
+`awgnPowerConstraintSet P` (lintegral form `∫⁻ x, ofReal(x²) ∂p ≤ ofReal P`), which excludes
+the heavy-tailed inputs (infinite second moment) that the old Bochner form
+`{p | ∫ x, x² ∂p ≤ P}` spuriously admitted via `integral_undef`. The `h_max_ent` body
+`sorry` is now a **genuine** Mathlib wall (mixture-of-Gaussians log-density integrability,
+loogle 0 matches) rather than a false statement — the membership destructure exposes the
+genuine integrability regularity via `awgnPowerConstraintSet_mem_iff_integrable`.
 
-@audit:defect(false-statement) @audit:retract-candidate(degenerate-constraint-set-missing-integrability)
 @residual(wall:awgn-capacity-converse-maxent) -/
 theorem awgn_capacity_closed_form_of_out
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0) :
@@ -696,17 +689,20 @@ theorem awgn_capacity_closed_form_of_out
     isAwgnMIDecomp_of_densitySplit P N hN_NN hPN (isAwgnChannelMeasurable N) h_out
   -- Converse single-letter Gaussian max-entropy bound — the sole remaining wall.
   have h_max_ent :
-      ∀ p ∈ { p : Measure ℝ | IsProbabilityMeasure p ∧ ∫ x, x^2 ∂p ≤ P },
+      ∀ p ∈ awgnPowerConstraintSet P,
         (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
             p (awgnChannel N (isAwgnChannelMeasurable N))).toReal
           ≤ (1/2) * Real.log (1 + P / (N : ℝ)) := by
+    intro p hp
+    obtain ⟨_, _⟩ := hp
+    -- @residual(wall:awgn-capacity-converse-maxent)
     sorry
   -- Bounded-above follows from the converse bound.
   have h_bdd :
       BddAbove ((fun p : Measure ℝ =>
           (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
               p (awgnChannel N (isAwgnChannelMeasurable N))).toReal) ''
-        { p : Measure ℝ | IsProbabilityMeasure p ∧ ∫ x, x^2 ∂p ≤ P }) :=
+        awgnPowerConstraintSet P) :=
     ⟨(1/2) * Real.log (1 + P / (N : ℝ)), by
       rintro y ⟨p, hp, rfl⟩; exact h_max_ent p hp⟩
   exact awgn_capacity_closed_form_of_maxent_bindconv_discharged
