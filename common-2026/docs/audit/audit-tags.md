@@ -413,6 +413,8 @@ theorem foo : ... := by
 - consumer 側 file は `@residual` を持たず、proof done 判定可能 (壁 file だけが未完成)。
 - 壁 closure 時は shared 補題 1 件を埋めれば全 consumer が genuine 化。
 
+**⚠️ consolidate 時に regularity 前提を壁から落とさないこと** (2026-05-28 `contChannelMIDecomp_holds` 実例、`docs/shannon/awgn-mi-decomp-plan.md` 判断ログ #4)。複数 use-site の壁を 1 ヶ所に集約する際、各 use-site が持っていた絶対連続性 / 可積分性 / 可測性などの前提を壁の引数から削って「全称的に量化された hyp-free 補題」に弱めると、**壁が over-general 化して偽になりうる** (例: `contChannelMIDecomp_holds` を全 Markov channel で hyp なし主張 → 決定論チャネルで反例 → tier-5 `@audit:defect(false-statement)`)。`sorry` 壁は「真だが Mathlib に無いので未証明」であるべきで、「偽なので証明不能」では honest な撤退口にならない。**前提は壁の引数として残し**、consumer 側でそれらを genuine に discharge する (落とした前提が consumer にアンダースコアで取り残されていたら laundering の兆候)。
+
 ## Deprecated (移行対象 — 別セッションで sweep)
 
 以下のタグは旧 honesty workflow (load-bearing hyp 容認) の名残。新規導入禁止、既存は sorry-based に移行。
