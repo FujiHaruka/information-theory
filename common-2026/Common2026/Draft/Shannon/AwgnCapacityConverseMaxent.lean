@@ -363,7 +363,8 @@ theorem measurable_gaussianPDF_fst (N : ℝ≥0) (y : ℝ) :
 
 The Gaussian density is kept behind the opaque local `g := fun z => gaussianPDF z.1 N z.2`
 to stop `isDefEq`/`whnf` from unfolding `gaussianReal`/`gaussianPDFReal` during the Fubini
-swap (which otherwise hits a heartbeat timeout). -/
+swap (which otherwise hits a heartbeat timeout).
+@audit:ok -/
 theorem output_eq_withDensity_mixture
     (hN : N ≠ 0) (p : Measure ℝ) [SFinite p] :
     p ∗ gaussianReal 0 N = volume.withDensity (outputMixtureDensity N p) := by
@@ -434,7 +435,8 @@ admits a Gaussian lower bound `f_q(y) ≥ c·exp(−a·y²)` with `c, a > 0`, eq
 quadratic upper bound on `−log f_q`: there exist `a, b : ℝ` with
 `−log (f_q y).toReal ≤ a · y² + b` for all `y`. Proof: Chebyshev concentrates `≥ 1/2`
 of the mass of `p` on `{|x| ≤ R}` (from the finite second moment), and on that set
-`gaussianPDF x N y ≥` a Gaussian-tail lower bound quadratic in `y`. -/
+`gaussianPDF x N y ≥` a Gaussian-tail lower bound quadratic in `y`.
+@audit:ok -/
 theorem output_logDensity_lower_bound
     (hP : 0 ≤ P) (hN : N ≠ 0) (p : Measure ℝ) [IsProbabilityMeasure p]
     (hp : p ∈ awgnPowerConstraintSet P) :
@@ -603,7 +605,8 @@ Genuinely discharged (0 sorry): the density representation
 (`output_eq_withDensity_mixture` / `output_rnDeriv_ae_mixture`), the upper bound (6a),
 the mixture Gaussian lower bound (6b, `output_logDensity_lower_bound`, the only hard
 sub-lemma), the quadratic combination (6c), and the `withDensity ↔ smul` transport are
-all proven. -/
+all proven.
+@audit:ok -/
 theorem outputDistribution_logDensity_integrable
     (hP : 0 ≤ P) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     (p : Measure ℝ) [IsProbabilityMeasure p]
@@ -664,7 +667,8 @@ theorem outputDistribution_logDensity_integrable
 Lift of `outputDistribution_logDensity_integrable` along the snd-marginal:
 `q = (p ⊗ₘ W).map Prod.snd`, and `|log f_q| ≤ c₀ + c₁·y²` is integrable against `q`
 (finite second moment), so the snd-pullback is integrable against `p ⊗ₘ W`.
-Genuinely discharged (0 sorry) via `integrable_map_measure` and the Phase-6c bound. -/
+Genuinely discharged (0 sorry) via `integrable_map_measure` and the Phase-6c bound.
+@audit:ok -/
 theorem outputDistribution_logDensity_integrable_joint
     (hP : 0 ≤ P) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     (p : Measure ℝ) [IsProbabilityMeasure p]
@@ -733,7 +737,8 @@ carries the genuine integrability of `x²` (`awgnPowerConstraintSet_mem_iff_inte
 ruling out the heavy-tailed inputs (Cauchy etc.) that made the old Bochner-only signature
 false. The output log-density integrability hypotheses (`h_int_out` / `h_ent_int`) are
 discharged genuinely by `outputDistribution_logDensity_integrable[_joint]` (Phase 6) —
-no load-bearing hypothesis is introduced. -/
+no load-bearing hypothesis is introduced.
+@audit:ok -/
 theorem awgn_per_input_mi_le_log
     (hP : 0 < P) (hN : (N : ℝ) ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     (p : Measure ℝ) [IsProbabilityMeasure p] (hp : p ∈ awgnPowerConstraintSet P) :
@@ -852,7 +857,8 @@ Residual status: 0 sorry. The Phase-6 mixture output log-density integrability
 (`outputDistribution_logDensity_integrable` / `_joint`) — formerly the dominant wall —
 is now genuinely discharged via the convolution density representation, the Gaussian
 upper/lower bounds, and the finite-second-moment domination. The whole AWGN
-single-letter capacity converse (Cover-Thomas 9.1) is complete. -/
+single-letter capacity converse (Cover-Thomas 9.1) is complete.
+@audit:ok -/
 theorem awgn_capacity_closed_form_genuine
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0) :
     awgnCapacity P N (isAwgnChannelMeasurable N)
