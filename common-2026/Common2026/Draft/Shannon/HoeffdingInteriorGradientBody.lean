@@ -324,7 +324,15 @@ two variational hypotheses, the optimal Type II rate converges to
 
 `@residual(plan:hoeffding-tradeoff-moonshot-plan)` — the previously bundled
 `IsHoeffdingLagrangeHyp` is retreated. The two variational hypotheses remain
-inputs (Phase C / Phase D deferred). -/
+inputs (Phase C / Phase D deferred).
+
+`@audit:defect(false-hypothesis) @audit:retract-candidate(general-alpha-rate-≠-E₂)`
+Shares the retracted fixed-`alpha` cluster's defect: the conclusion
+`Tendsto rate → hoeffdingE2 P₁ P₂ alpha` is false in general (the fixed-`alpha`
+rate targets `D(P₁‖P₂)`, not `E₂(alpha)` — Stein's lemma), so `h_liminf` /
+`h_limsup` are jointly unsatisfiable. Same false conclusion as the sibling
+`hoeffding_tradeoff_sandwich_at_interior_via_predicate` / `_via_gradient`. Awaits
+the same Draft sweep. -/
 theorem hoeffding_tradeoff_sandwich_at_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
