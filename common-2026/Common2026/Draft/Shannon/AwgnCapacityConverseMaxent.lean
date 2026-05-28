@@ -286,6 +286,47 @@ theorem fibre_absolutelyContinuous_output_general
     (gaussianReal_absolutelyContinuous' 0 hN) h_gauss_pre
   rwa [← (measurePreserving_add_left volume a).measure_preimage hs.nullMeasurableSet]
 
+/-- (fibre side, genuine) Proxy-form joint integrability of the AWGN fibre
+log-density for an **arbitrary** probability-measure input `p`. The fibre log-density
+in measurable-proxy form `fun z => Real.log (gaussianPDF z.1 N z.2).toReal` is
+integrable against the joint `p ⊗ₘ awgnChannel N`. The integrand decomposes everywhere
+as `c₀ + c₁·(z.2 − z.1)²`, and the `(z.2 − z.1)²` term is integrable against the joint
+via `Measure.integrable_compProd_iff` (per-fibre integrability + constant L¹-norm `N`).
+The proof never uses that `p` is Gaussian, only that it is a probability measure — so
+it is the general-`p` counterpart of the in-tree
+`ContChannelMIDecomp.integrable_log_proxy_fibre_compProd` (Gaussian-input only). Supplies
+`h_int_fibre` for the chain rule with a general input. -/
+theorem integrable_log_proxy_fibre_compProd_general
+    (h_meas : IsAwgnChannelMeasurable N) (hN : N ≠ 0)
+    (p : Measure ℝ) [IsProbabilityMeasure p] :
+    Integrable
+      (fun z : ℝ × ℝ => Real.log (gaussianPDF z.1 N z.2).toReal)
+      (p ⊗ₘ (awgnChannel N h_meas)) := by
+  set W := awgnChannel N h_meas with hW_def
+  set c₀ : ℝ := -(1 / 2) * Real.log (2 * Real.pi * N) with hc₀
+  set c₁ : ℝ := -(1 / (2 * (N : ℝ))) with hc₁
+  have h_eq : (fun z : ℝ × ℝ => Real.log (gaussianPDF z.1 N z.2).toReal)
+      = fun z => c₀ + c₁ * (z.2 - z.1) ^ 2 := by
+    funext z
+    rw [toReal_gaussianPDF, Common2026.Shannon.log_gaussianPDFReal_eq z.1 hN z.2, hc₀, hc₁]
+    ring
+  rw [h_eq]
+  have h_sq : Integrable (fun z : ℝ × ℝ => (z.2 - z.1) ^ 2) (p ⊗ₘ W) := by
+    have h_aesm : AEStronglyMeasurable (fun z : ℝ × ℝ => (z.2 - z.1) ^ 2) (p ⊗ₘ W) :=
+      ((measurable_snd.sub measurable_fst).pow_const 2).aestronglyMeasurable
+    rw [Measure.integrable_compProd_iff h_aesm]
+    refine ⟨Filter.Eventually.of_forall (fun x => ?_), ?_⟩
+    · simpa only [hW_def, awgnChannel_apply] using integrable_sq_sub_gaussianReal x x N
+    · have h_norm : (fun x => ∫ y, ‖(y - x) ^ 2‖ ∂(W x)) = fun _ => (N : ℝ) := by
+        funext x
+        have : (fun y => ‖(y - x) ^ 2‖) = fun y => (y - x) ^ 2 := by
+          funext y; rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _)]
+        rw [this, hW_def, awgnChannel_apply]
+        exact integral_sq_sub_self_gaussianReal x N
+      rw [h_norm]
+      exact integrable_const _
+  exact (integrable_const c₀).add (h_sq.const_mul c₁)
+
 /-! ## Phase 6 — ★ mixture output log-density integrability (hard, dominant wall) -/
 
 /-- (#3, ★ dominant wall, OUT OF SCOPE for this dispatch) the continuous mixture
@@ -343,12 +384,162 @@ false. The remaining `sorry` is therefore a genuine analytic wall — the assemb
 Phases 1–6, gated by the mixture-output log-density integrability
 (`outputDistribution_logDensity_integrable`, loogle 0 matches), not a false statement.
 
+The single remaining `sorry` is the output log-density integrability
+(`outputDistribution_logDensity_integrable` / `_joint`, Phase 6), reached via the
+ordinary lemma calls below — no load-bearing hypothesis is introduced.
+
 @residual(wall:awgn-capacity-converse-maxent) -/
 theorem awgn_per_input_mi_le_log
     (hP : 0 < P) (hN : (N : ℝ) ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     (p : Measure ℝ) [IsProbabilityMeasure p] (hp : p ∈ awgnPowerConstraintSet P) :
     (ChannelCoding.mutualInfoOfChannel p (awgnChannel N h_meas)).toReal
       ≤ (1/2) * Real.log (1 + P / (N : ℝ)) := by
-  sorry  -- @residual(wall:awgn-capacity-converse-maxent)
+  classical
+  have hN_pos : (0 : ℝ) < N := lt_of_le_of_ne N.coe_nonneg (Ne.symm hN)
+  have hN_NN : N ≠ 0 := fun h => hN (by exact_mod_cast (congrArg (fun x : ℝ≥0 => (x : ℝ)) h))
+  -- regularity from membership: genuine `x²` integrability + Bochner second-moment bound
+  obtain ⟨hp_2mom_int, hp_2mom⟩ := awgnPowerConstraintSet_mem_iff_integrable P hP.le p hp
+  set W := awgnChannel N h_meas with hW_def
+  set q := ChannelCoding.outputDistribution p W with hq_def
+  -- output law is the noise convolution `q = p ∗ 𝒩(0,N)` (Phase 2)
+  have hq_conv : q = p ∗ gaussianReal 0 N := by
+    rw [hq_def, hW_def, outputDistribution_awgn_eq_conv h_meas p]
+  -- `q` is a probability measure (convolution of two probability measures)
+  have hq_prob : IsProbabilityMeasure q := by
+    rw [hq_conv]; infer_instance
+  -- `q ≪ volume` via convolution absolute continuity (★ general-p, NEW)
+  have hq_vol : q ≪ volume := by
+    rw [hq_conv]
+    exact Measure.conv_absolutelyContinuous (gaussianReal_absolutelyContinuous 0 hN_NN)
+  -- proxy `g := gaussianPDF` for the fibre volume-density (Route B)
+  set g : ℝ × ℝ → ℝ≥0∞ := fun z => gaussianPDF z.1 N z.2 with hg_def
+  have hg_meas : Measurable g := measurable_gaussianPDF_uncurry N
+  -- per-fibre rnDeriv↔proxy bridge `(W x).rnDeriv vol =ᵐ[W x] g(x,·)`
+  have hg_ae : ∀ x, (fun y => (W x).rnDeriv volume y) =ᵐ[W x] fun y => g (x, y) := by
+    intro x
+    rw [hW_def, awgnChannel_apply]
+    exact (gaussianReal_absolutelyContinuous x hN_NN).ae_le (rnDeriv_gaussianReal x N)
+  -- fibre-vs-output absolute continuity `hWx_q` (Phase 5)
+  have hWx_q : ∀ x, W x ≪ q :=
+    fun x => fibre_absolutelyContinuous_output_general h_meas hN_NN p x
+  -- fibre ≪ volume (each fibre is a full-support Gaussian)
+  have hW_ac : ∀ x, W x ≪ volume := by
+    intro x; rw [hW_def, awgnChannel_apply]; exact gaussianReal_absolutelyContinuous x hN_NN
+  -- joint absolute continuity `p ⊗ₘ W ≪ p.prod q` (★ general-p, in-tree手筋)
+  have h_joint_ac : (p ⊗ₘ W) ≪ p.prod q := by
+    rw [show p.prod q = p ⊗ₘ (Kernel.const ℝ q) from (Measure.compProd_const).symm]
+    exact Measure.absolutelyContinuous_compProd_right_iff.mpr
+      (Filter.Eventually.of_forall (fun x => by simpa only [Kernel.const_apply] using hWx_q x))
+  -- fibre log-density joint integrability `h_int_fibre` (proxy form, in-tree)
+  have h_int_fibre :
+      Integrable (fun z : ℝ × ℝ => Real.log (g z).toReal) (p ⊗ₘ W) :=
+    integrable_log_proxy_fibre_compProd_general h_meas hN_NN p
+  -- ★ output log-density joint integrability `h_int_out` (Phase 6 stub, joint form)
+  have h_int_out :
+      Integrable (fun z : ℝ × ℝ =>
+          Real.log (q.rnDeriv volume z.2).toReal) (p ⊗ₘ W) :=
+    outputDistribution_logDensity_integrable_joint hP.le h_meas p hp
+  -- STEP 1: chain rule `MI.toReal = h(q) − ∫ h(W x) ∂p`
+  have h_chain :
+      (ChannelCoding.mutualInfoOfChannel p W).toReal
+        = Common2026.Shannon.differentialEntropy q
+          - ∫ x, Common2026.Shannon.differentialEntropy (W x) ∂p :=
+    ChannelCoding.mutualInfoOfChannel_toReal_eq_diffEntropy_sub
+      hW_ac hWx_q hq_vol h_joint_ac g hg_meas hg_ae h_int_fibre h_int_out
+  -- STEP 2: fibre entropy is the constant `(1/2) log(2πeN)`
+  have h_fibre_ent :
+      ∫ x, Common2026.Shannon.differentialEntropy (W x) ∂p
+        = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ)) := by
+    have h_const : (fun x => Common2026.Shannon.differentialEntropy (W x))
+        = fun _ => (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ)) := by
+      funext x
+      rw [hW_def, awgnChannel_apply, Common2026.Shannon.differentialEntropy_gaussianReal x hN_NN]
+    rw [h_const, integral_const, probReal_univ]
+    simp
+  -- STEP 3: max-entropy bound on `h(q)` with `m := ∫ y ∂q`, `v := (P+N).toNNReal`
+  set m : ℝ := ∫ y, y ∂q with hm_def
+  set v : ℝ≥0 := (P + (N : ℝ)).toNNReal with hv_def
+  have hPN_pos : (0 : ℝ) < P + (N : ℝ) := by positivity
+  have hv_ne : v ≠ 0 := by
+    rw [hv_def]; exact (Real.toNNReal_pos.mpr hPN_pos).ne'
+  have hv_coe : (v : ℝ) = P + (N : ℝ) := by rw [hv_def, Real.coe_toNNReal _ hPN_pos.le]
+  have h_var_int : Integrable (fun y => (y - m) ^ 2) q := by
+    rw [hq_def]; exact output_sq_sub_integrable h_meas hN_NN p hp_2mom_int m
+  have h_var : ∫ y, (y - m) ^ 2 ∂q ≤ (v : ℝ) := by
+    rw [hv_coe, hm_def, hq_def]
+    exact output_variance_le h_meas hN_NN p hp_2mom_int hp_2mom
+  -- ★ output log-density volume-integrability `h_ent_int` (Phase 6 stub, volume form)
+  have h_ent_int :
+      Integrable (fun y => Real.negMulLog ((q.rnDeriv volume y).toReal)) volume := by
+    rw [hq_def]; exact outputDistribution_logDensity_integrable hP.le h_meas p hp
+  have h_maxent :
+      Common2026.Shannon.differentialEntropy q
+        ≤ (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (v : ℝ)) :=
+    Common2026.Shannon.differentialEntropy_le_gaussian_of_variance_le
+      hq_vol m hv_ne rfl h_var h_var_int h_ent_int
+  -- STEP 4+5: assemble `MI ≤ (1/2)log(2πe(P+N)) − (1/2)log(2πeN) = (1/2)log(1+P/N)`.
+  rw [h_chain, h_fibre_ent]
+  have h_arith :
+      (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * (P + (N : ℝ)))
+          - (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ))
+        = (1/2) * Real.log (1 + P / (N : ℝ)) :=
+    capacity_log_diff hP hN
+  calc Common2026.Shannon.differentialEntropy q
+        - (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ))
+      ≤ (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (v : ℝ))
+          - (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ)) := by
+        exact sub_le_sub_right h_maxent _
+    _ = (1/2) * Real.log (1 + P / (N : ℝ)) := by rw [hv_coe]; exact h_arith
+
+/-! ## Phase 7b — genuine capacity closed form (supersedes the `_of_out` wrapper) -/
+
+open InformationTheory.Shannon.ChannelCoding in
+/-- **AWGN capacity closed form (Cover-Thomas 9.1), genuine assembly.**
+
+`awgnCapacity P N = (1/2) log(1 + P/N)`. This supersedes
+`ContChannelMIDecomp.awgn_capacity_closed_form_of_out`: there the converse
+max-entropy bound `h_max_ent` was a body `sorry`; here it is supplied genuinely by
+`awgn_per_input_mi_le_log` (whose only residual is the Phase-6 output-log-density
+integrability wall). The achievability bridge (`awgn_mi_gaussian_closed_form_of_out`),
+the MI decomposition (`isAwgnMIDecomp_of_densitySplit`) and the bind/conv
+output-Gaussian fact are all genuinely wired upstream.
+
+Residual status: the only `sorry` reachable from this theorem is the Phase-6 mixture
+output log-density integrability (`outputDistribution_logDensity_integrable` /
+`_joint`), threaded transitively through `awgn_per_input_mi_le_log`.
+@residual(wall:awgn-capacity-converse-maxent) -/
+theorem awgn_capacity_closed_form_genuine
+    (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0) :
+    awgnCapacity P N (isAwgnChannelMeasurable N)
+      = (1/2) * Real.log (1 + P / (N : ℝ)) := by
+  have hN_NN : N ≠ 0 :=
+    fun h => hN (by exact_mod_cast (congrArg (fun x : ℝ≥0 => (x : ℝ)) h))
+  have hP_toNN_pos : (0 : ℝ≥0) < P.toNNReal := Real.toNNReal_pos.mpr hP
+  have hPN : P.toNNReal + N ≠ 0 :=
+    (add_pos_of_pos_of_nonneg hP_toNN_pos (zero_le' (a := N))).ne'
+  -- Output-Gaussian fact, genuine via the translation-kernel bind/conv bridge.
+  have h_out : IsAwgnOutputGaussian P N (isAwgnChannelMeasurable N) :=
+    awgn_output_gaussian_of_bind_eq_conv P N (isAwgnChannelMeasurable N)
+      (isAwgnBindEqConv_discharged P N (isAwgnChannelMeasurable N))
+  -- MI decomposition, genuine via Route B (the continuous-channel MI chain rule).
+  have h_decomp : IsAwgnMIDecomp P N (isAwgnChannelMeasurable N) :=
+    isAwgnMIDecomp_of_densitySplit P N hN_NN hPN (isAwgnChannelMeasurable N) h_out
+  -- ★ Converse single-letter Gaussian max-entropy bound — genuine via Phase 7 assembly.
+  have h_max_ent :
+      ∀ p ∈ awgnPowerConstraintSet P,
+        (mutualInfoOfChannel p (awgnChannel N (isAwgnChannelMeasurable N))).toReal
+          ≤ (1/2) * Real.log (1 + P / (N : ℝ)) := by
+    intro p hp
+    have hp_prob : IsProbabilityMeasure p := hp.1
+    exact awgn_per_input_mi_le_log hP hN (isAwgnChannelMeasurable N) p hp
+  -- Bounded-above follows from the converse bound.
+  have h_bdd :
+      BddAbove ((fun p : Measure ℝ =>
+          (mutualInfoOfChannel p (awgnChannel N (isAwgnChannelMeasurable N))).toReal) ''
+        awgnPowerConstraintSet P) :=
+    ⟨(1/2) * Real.log (1 + P / (N : ℝ)), by
+      rintro y ⟨p, hp, rfl⟩; exact h_max_ent p hp⟩
+  exact awgn_capacity_closed_form_of_maxent_bindconv_discharged
+    P hP N hN h_decomp h_bdd h_max_ent
 
 end InformationTheory.Shannon.AWGN

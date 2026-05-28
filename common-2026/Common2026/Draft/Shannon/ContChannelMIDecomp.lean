@@ -670,7 +670,16 @@ the heavy-tailed inputs (infinite second moment) that the old Bochner form
 loogle 0 matches) rather than a false statement — the membership destructure exposes the
 genuine integrability regularity via `awgnPowerConstraintSet_mem_iff_integrable`.
 
-@residual(wall:awgn-capacity-converse-maxent) -/
+Successor (2026-05-29): `AwgnCapacityConverseMaxent.awgn_capacity_closed_form_genuine`
+publishes the same closed form with `h_max_ent` supplied genuinely (Phase 7 assembly of
+the chain rule + Gaussian max-entropy + variance bound). Its only residual is the
+transitive Phase-6 output-log-density integrability wall. This `_of_out` wrapper keeps
+its body `h_max_ent` `sorry` (importing the successor here would create a cycle:
+`AwgnCapacityConverseMaxent` already imports this file); use the successor for the
+genuine version.
+
+@residual(wall:awgn-capacity-converse-maxent)
+@audit:superseded-by(awgn_capacity_closed_form_genuine) -/
 theorem awgn_capacity_closed_form_of_out
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0) :
     awgnCapacity P N (isAwgnChannelMeasurable N)
