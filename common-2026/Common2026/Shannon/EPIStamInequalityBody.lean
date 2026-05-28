@@ -395,16 +395,20 @@ theorem isStamCauchySchwarzOptimal_of_lambda_optimal
 body discharge predicates with the Wave 6 `EPIL3Integration` integrated
 pipeline.
 
+The former `h_bridge : IsStamToEPIBridgeHyp` argument was removed in the Cluster C
+Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`, route L-EPISC-3-α):
+`IsEPIL3IntegratedPipeline` no longer carries a load-bearing `bridge` field, so
+the pipeline is built from the genuine Stam residual alone (the Stam→EPI bridge is
+discharged internally by consumers via `stamToEPIBridge_holds`).
+
 `@audit:ok` -/
 theorem isStamInequalityHyp_via_body_to_pipeline
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvolution X Y P)
-    (h_cs_opt : IsStamCauchySchwarzOptimal X Y P)
-    (h_bridge : IsStamToEPIBridgeHyp X Y P) :
+    (h_cs_opt : IsStamCauchySchwarzOptimal X Y P) :
     InformationTheory.Shannon.EPIL3Integration.IsEPIL3IntegratedPipeline X Y P :=
-  { stam := isStamInequalityHyp_via_body h_conv h_cs_opt
-    bridge := h_bridge }
+  { stam := isStamInequalityHyp_via_body h_conv h_cs_opt }
 
 /-- **End-to-end EPI via body discharge** (composes §4 + §6 + EPIL3 pipeline).
 

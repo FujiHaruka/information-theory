@@ -38,9 +38,11 @@ L-EPI3 を取り出す **integrated pipeline** を整える。
 さらに主定理 `entropy_power_inequality` を経由して `entropyPower (P.map (X+Y))
 ≥ entropyPower (P.map X) + entropyPower (P.map Y)` に着地する。
 
-* §1 — **`IsEPIL3IntegratedPipeline`**: Stam (真 signature) + Stam-to-EPI bridge
-  + de Bruijn (V2) を bundle する predicate。`IsStamInequalityHyp X Y P` +
-  `IsStamToEPIBridgeHyp X Y P` の最小組合せで L-EPI3 を生成。
+* §1 — **`IsEPIL3IntegratedPipeline`**: Stam (真 signature) の単一 field predicate。
+  `IsStamInequalityHyp X Y P` から L-EPI3 を生成。Stam-to-EPI *bridge* は
+  load-bearing field ではなくなり (Cluster C Tier-2 migration、
+  `epi-stam-cluster-c-sorry-migration-plan` route L-EPISC-3-α)、consumer が
+  shared sorry 補題 `stamToEPIBridge_holds` で内部 discharge する。
 * §2 — **integrated 主定理**: integrated pipeline → EPI。`Common2026/Shannon/EPIStamDischarge.lean`
   の `epi_via_stam_main` を packaging。
 * §3 — **Gaussian EPI**: `X, Y` がともに Gaussian なら EPI は等号で成立
@@ -72,7 +74,7 @@ Cover-Thomas Lemma 17.7.3 の Csiszár-style coupling argument (path-integral
 
 ## 主シグネチャ
 
-* `IsEPIL3IntegratedPipeline` — Stam + bridge bundling predicate (§1)
+* `IsEPIL3IntegratedPipeline` — single-field Stam-residual bundle predicate (§1)
 * `epi_l3_of_integrated_pipeline` — L-EPI3 を生成 (§1)
 * `entropy_power_inequality_integrated` — integrated 主定理 (§2)
 * `isEPIL3IntegratedPipeline_of_gaussian` — Gaussian full discharge (§3)
@@ -100,38 +102,34 @@ open InformationTheory.Shannon.EPIStamDischarge
 
 /-- **Integrated L-EPI3 pipeline predicate**.
 
-Bundles the three Wave 5 building blocks (Stam inequality + Stam-to-EPI bridge
-+ de Bruijn integration) into a single predicate. Providing this predicate
-gives a discharge route through `epi_via_stam` to the L-EPI3 conclusion
-`IsEntropyPowerInequalityHypothesis X Y P`.
-
-The auxiliary `Z` field plays no role in the predicate itself (its inputs are
-recorded only for the `epi_via_stam` re-use convenience); it can be supplied as
-any measurable function or just `X` itself if no Gaussian standard normal is
-naturally available. -/
+Carries the genuine Stam inequality (Cover-Thomas Lemma 17.7.2 signature) as its
+single field. The Stam-to-EPI *bridge* (Cover-Thomas Lemma 17.7.3 coupling) is no
+longer a load-bearing field: consumers now discharge it internally via the shared
+sorry lemma `EntropyPowerInequality.stamToEPIBridge_holds`
+(`@residual(plan:epi-stam-to-conclusion-plan)`) rather than threading a
+`bridge : IsStamToEPIBridgeHyp` predicate hypothesis (Cluster C Tier-3 → Tier-2
+migration, `epi-stam-cluster-c-sorry-migration-plan`, route L-EPISC-3-α: the
+bundle structure is retained but its load-bearing bridge field is removed). -/
 structure IsEPIL3IntegratedPipeline {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop where
   /-- Stam inequality (Cover-Thomas Lemma 17.7.2) genuine signature. -/
   stam : IsStamInequalityHyp X Y P
-  /-- Stam-to-EPI bridge (Cover-Thomas Lemma 17.7.3 coupling argument). -/
-  bridge : IsStamToEPIBridgeHyp X Y P
 
 /-- **L-EPI3 from integrated pipeline**. The integrated pipeline discharges
-`IsEntropyPowerInequalityHypothesis X Y P` via `epi_via_stam`.
-
-`@audit:retract-candidate(load-bearing-predicate)` — Phase A
-(`epi-stam-to-conclusion-phaseA-plan`, A-5/A-6) ships a genuine alternative
-discharge route (`EPIStamToBridge.entropy_power_inequality_unconditional`,
-hypothesis-free except for the honest Stam residual). This wrapper still
-threads `h_pipeline.bridge : IsStamToEPIBridgeHyp` as a load-bearing
-predicate; it is retained for downstream compatibility but is no longer the
-canonical EPI entry point. -/
+`IsEntropyPowerInequalityHypothesis X Y P` by feeding the genuine Stam residual
+(`h.stam`) through the shared sorry lemma
+`EntropyPowerInequality.stamToEPIBridge_holds`
+(`@residual(plan:epi-stam-to-conclusion-plan)`). The former load-bearing
+`bridge : IsStamToEPIBridgeHyp` field was removed in Cluster C Tier-2 migration
+(`epi-stam-cluster-c-sorry-migration-plan`), so this wrapper no longer threads a
+bridge predicate hypothesis; the Mathlib wall is localized in
+`stamToEPIBridge_holds`. -/
 theorem epi_l3_of_integrated_pipeline
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h : IsEPIL3IntegratedPipeline X Y P) :
     IsEntropyPowerInequalityHypothesis X Y P :=
-  h.bridge h.stam
+  stamToEPIBridge_holds X Y P h.stam
 
 /-! ## §2 — Integrated main theorem (Cover-Thomas Theorem 17.7.3, integrated form) -/
 
@@ -139,11 +137,13 @@ theorem epi_l3_of_integrated_pipeline
 EPI conclusion in one shot (no need for callers to thread through L-EPI1,
 L-EPI2, L-EPI3 separately).
 
-`@audit:retract-candidate(load-bearing-predicate)` — Phase A
-(`epi-stam-to-conclusion-phaseA-plan`) supplied the genuine
-`EPIStamToBridge.entropy_power_inequality_unconditional` route. This wrapper
-keeps the monolithic `IsEPIL3IntegratedPipeline` (whose `bridge` field is the
-load-bearing `IsStamToEPIBridgeHyp` predicate) for legacy callers. -/
+The pipeline now carries only the genuine Stam residual (`h_pipeline.stam`); the
+former load-bearing `bridge : IsStamToEPIBridgeHyp` field was removed in Cluster C
+Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`). The Stam→EPI bridge
+is discharged internally via the shared sorry lemma
+`EntropyPowerInequality.stamToEPIBridge_holds`
+(`@residual(plan:epi-stam-to-conclusion-plan)`), threaded through
+`entropy_power_inequality`. -/
 theorem entropy_power_inequality_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -154,8 +154,9 @@ theorem entropy_power_inequality_integrated
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=
   -- Thread the genuine residual (`stam`) through the non-circular headline;
   -- `IsStamInequalityHyp` is reducibly defeq to `IsStamInequalityResidual`. The
-  -- Stam→EPI bridge field `h_pipeline.bridge` is now internally discharged via
-  -- the shared sorry lemma `stamToEPIBridge_holds`, so it is no longer threaded.
+  -- Stam→EPI bridge (formerly a load-bearing `bridge` field, removed in Cluster C
+  -- Tier-2 migration) is discharged internally by `entropy_power_inequality` via
+  -- the shared sorry lemma `stamToEPIBridge_holds`.
   entropy_power_inequality P X Y hX hY hXY h_pipeline.stam
 
 /-! ## §3 — Gaussian full discharge (hypothesis-free) -/
@@ -183,9 +184,11 @@ theorem isEPIL3IntegratedPipeline_of_gaussian
     (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂)
     (h_stam : IsStamInequalityHyp X Y P) :
     IsEPIL3IntegratedPipeline X Y P :=
-  { stam := h_stam
-    bridge :=
-      isStamToEPIBridgeHyp_of_gaussian P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY }
+  -- The former `bridge` field (discharged here via `isStamToEPIBridgeHyp_of_gaussian`)
+  -- was removed in Cluster C Tier-2 migration; the bridge is now discharged
+  -- internally by consumers via `stamToEPIBridge_holds`. The Gaussian-law
+  -- arguments are retained as regularity preconditions documenting the setting.
+  { stam := h_stam }
 
 /-- **Gaussian EPI via integrated pipeline** — the canonical Gaussian saturation
 case routed through the integrated pipeline. -/
@@ -206,8 +209,11 @@ theorem entropy_power_inequality_gaussian_via_pipeline
 
 /-- **EPI log form via integrated pipeline**.
 
-`@audit:retract-candidate(load-bearing-predicate)` — pipeline wrapper, see
-`entropy_power_inequality_integrated` header for the Phase A migration note. -/
+Pipeline wrapper; the bundle's former load-bearing `bridge` field was removed in
+Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
+Stam→EPI bridge is discharged internally via the shared sorry lemma
+`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
+`entropy_power_inequality_integrated` header. -/
 theorem entropy_power_inequality_log_form_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -221,8 +227,11 @@ theorem entropy_power_inequality_log_form_integrated
 
 /-- **EPI exp form via integrated pipeline** (Cover-Thomas Theorem 17.7.3 露出形).
 
-`@audit:retract-candidate(load-bearing-predicate)` — pipeline wrapper, see
-`entropy_power_inequality_integrated` header for the Phase A migration note. -/
+Pipeline wrapper; the bundle's former load-bearing `bridge` field was removed in
+Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
+Stam→EPI bridge is discharged internally via the shared sorry lemma
+`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
+`entropy_power_inequality_integrated` header. -/
 theorem entropy_power_inequality_exp_form_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -237,8 +246,11 @@ theorem entropy_power_inequality_exp_form_integrated
 
 /-- **EPI normalized `(2πe)⁻¹` form via integrated pipeline** (Cover-Thomas Ch.17).
 
-`@audit:retract-candidate(load-bearing-predicate)` — pipeline wrapper, see
-`entropy_power_inequality_integrated` header for the Phase A migration note. -/
+Pipeline wrapper; the bundle's former load-bearing `bridge` field was removed in
+Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
+Stam→EPI bridge is discharged internally via the shared sorry lemma
+`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
+`entropy_power_inequality_integrated` header. -/
 theorem entropy_power_inequality_normalized_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -254,8 +266,11 @@ theorem entropy_power_inequality_normalized_integrated
 
 /-- **3-arg EPI via integrated pipeline**. Chains two integrated pipelines.
 
-`@audit:retract-candidate(load-bearing-predicate)` — pipeline wrapper, see
-`entropy_power_inequality_integrated` header for the Phase A migration note. -/
+Pipeline wrapper; the bundle's former load-bearing `bridge` field was removed in
+Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
+Stam→EPI bridge is discharged internally via the shared sorry lemma
+`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
+`entropy_power_inequality_integrated` header. -/
 theorem entropy_power_inequality_three_arg_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -270,8 +285,11 @@ theorem entropy_power_inequality_three_arg_integrated
 
 /-- **4-arg EPI via integrated pipeline**. Chains three integrated pipelines.
 
-`@audit:retract-candidate(load-bearing-predicate)` — pipeline wrapper, see
-`entropy_power_inequality_integrated` header for the Phase A migration note. -/
+Pipeline wrapper; the bundle's former load-bearing `bridge` field was removed in
+Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
+Stam→EPI bridge is discharged internally via the shared sorry lemma
+`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
+`entropy_power_inequality_integrated` header. -/
 theorem entropy_power_inequality_four_arg_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -297,17 +315,19 @@ theorem isEPIL3IntegratedPipeline_symm
     (h : IsEPIL3IntegratedPipeline X Y P) :
     IsEPIL3IntegratedPipeline Y X P where
   stam := isStamInequalityHyp_symm h.stam
-  bridge := isStamToEPIBridgeHyp_symm h.bridge
 
-/-- **Pipeline from Stam + bridge directly** (mirrors `epi_via_stam`). -/
-theorem isEPIL3IntegratedPipeline_of_stam_bridge
+/-- **Pipeline from a Stam residual directly** (mirrors `epi_via_stam`).
+
+After the Cluster C Tier-2 migration the bundle no longer carries a `bridge`
+field, so the pipeline is built from the genuine Stam residual alone; the
+Stam→EPI bridge is discharged internally by consumers via
+`stamToEPIBridge_holds`. -/
+theorem isEPIL3IntegratedPipeline_of_stam
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
-    (h_stam : IsStamInequalityHyp X Y P)
-    (h_bridge : IsStamToEPIBridgeHyp X Y P) :
+    (h_stam : IsStamInequalityHyp X Y P) :
     IsEPIL3IntegratedPipeline X Y P where
   stam := h_stam
-  bridge := h_bridge
 
 /-! ## §7 — Hypothesis-reduced re-publish of `entropy_power_inequality`
 
@@ -322,8 +342,11 @@ is the "hypothesis-reduced form" promised in the parent plan. -/
 Single non-trivial hypothesis `IsEPIL3IntegratedPipeline X Y P` (vs the
 three-hypothesis form in `EntropyPowerInequality.entropy_power_inequality`).
 
-`@audit:retract-candidate(load-bearing-predicate)` — pipeline wrapper, see
-`entropy_power_inequality_integrated` header for the Phase A migration note. -/
+Pipeline wrapper; the bundle's former load-bearing `bridge` field was removed in
+Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
+Stam→EPI bridge is discharged internally via the shared sorry lemma
+`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
+`entropy_power_inequality_integrated` header. -/
 theorem entropy_power_inequality_reduced
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -336,8 +359,11 @@ theorem entropy_power_inequality_reduced
 
 /-- **Hypothesis-reduced EPI exp form**. Single integrated hypothesis.
 
-`@audit:retract-candidate(load-bearing-predicate)` — pipeline wrapper, see
-`entropy_power_inequality_integrated` header for the Phase A migration note. -/
+Pipeline wrapper; the bundle's former load-bearing `bridge` field was removed in
+Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
+Stam→EPI bridge is discharged internally via the shared sorry lemma
+`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
+`entropy_power_inequality_integrated` header. -/
 theorem entropy_power_inequality_exp_form_reduced
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -382,22 +408,25 @@ theorem entropy_power_inequality_gaussian_full
 
 /-! ## §11 — Final sanity-check / regression theorems -/
 
-/-- **Round-trip**: building a pipeline from `(Stam, bridge)` and then
-extracting them yields the originals. -/
+/-- **Round-trip**: building a pipeline from the Stam residual and then
+extracting it yields the original. (The bundle no longer carries a `bridge`
+field after the Cluster C Tier-2 migration.) -/
 theorem integrated_pipeline_roundtrip
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
-    (h_stam : IsStamInequalityHyp X Y P)
-    (h_bridge : IsStamToEPIBridgeHyp X Y P) :
-    let h := isEPIL3IntegratedPipeline_of_stam_bridge h_stam h_bridge
-    h.stam = h_stam ∧ h.bridge = h_bridge :=
-  ⟨rfl, rfl⟩
+    (h_stam : IsStamInequalityHyp X Y P) :
+    let h := isEPIL3IntegratedPipeline_of_stam h_stam
+    h.stam = h_stam :=
+  rfl
 
 /-- **Three forms of EPI are equivalent** (in the presence of the integrated
 pipeline + measurability).
 
-`@audit:retract-candidate(load-bearing-predicate)` — pipeline wrapper, see
-`entropy_power_inequality_integrated` header for the Phase A migration note. -/
+Pipeline wrapper; the bundle's former load-bearing `bridge` field was removed in
+Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
+Stam→EPI bridge is discharged internally via the shared sorry lemma
+`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
+`entropy_power_inequality_integrated` header. -/
 theorem entropy_power_inequality_three_forms_equiv
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -421,9 +450,13 @@ theorem entropy_power_inequality_three_forms_equiv
 
 This section contributes the **family-level de Bruijn lift** (Phase B) and the
 **bounded-T Gaussian FTC application** (Phase C) called for by
-`docs/shannon/epi-debruijn-integration-plan.md`, together with the **honest
-load-bearing predicate** `IsHeatFlowFamilyHyp` that externalizes the
-regularity facts which Mathlib does not provide. A second predicate
+`docs/shannon/epi-debruijn-integration-plan.md`. The former load-bearing
+predicate `IsHeatFlowFamilyHyp` (and its Gaussian constructor) was **deleted**
+in the Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`,
+task 3α-3): it had 0 active consumers; the genuine `HasDerivAt` content is
+available through `FisherInfoV2.deBruijn_identity_v2_gaussian` directly, and a
+non-Gaussian extension should route through `wall:debruijn-integration` rather
+than a load-bearing structure. A second predicate
 `IsDeBruijnTailHyp` (intended for the `T → ∞` tail-analysis externalization)
 was attempted in the Wave 3 third batch and then **retracted** in the same
 batch by the independent honesty audit
@@ -461,68 +494,28 @@ a pending plan-level task (Phase C-5).
    constructing `IsDeBruijnRegularityHyp` for Gaussian via the repaired
    signature is sister-plan responsibility.
 
-3. The 14 wrapper declarations in §1–§11 (originally tagged
-   `@audit:suspect(epi-debruijn-integration-plan)`) were migrated to
-   `@audit:retract-candidate(load-bearing-predicate)` on 2026-05-27 (Phase A
-   A-V cleanup, `epi-stam-to-conclusion-phaseA-plan`). Those wrappers thread
+3. The §1–§11 pipeline wrappers used to thread
    `IsEPIL3IntegratedPipeline`'s `bridge : IsStamToEPIBridgeHyp` field as a
-   load-bearing predicate; Phase A A-5/A-6 published a genuine alternative
-   discharge route (`EPIStamToBridge.entropy_power_inequality_unconditional`)
-   that bypasses this monolithic pipeline. The de Bruijn integration identity
-   in this section remains the honest *input* to Csiszár scaling, but the 14
-   pipeline wrappers above are now retract candidates: downstream code should
-   migrate to the unconditional route, after which these wrappers can be
-   removed entirely.
-
-`@audit:retract-candidate(load-bearing-predicate)` — §12 section header carries
-the same bookkeeping tag so grep aggregates the section with the 14 wrappers.
+   load-bearing predicate. That field was **removed** in the Cluster C Tier-2
+   migration (`epi-stam-cluster-c-sorry-migration-plan`, route L-EPISC-3-α): the
+   bundle structure is retained but the bridge is now discharged internally by
+   consumers via the shared sorry lemma
+   `EntropyPowerInequality.stamToEPIBridge_holds`
+   (`@residual(plan:epi-stam-to-conclusion-plan)`). The de Bruijn integration
+   identity in this section remains the honest *input* to Csiszár scaling, and
+   the pipeline wrappers no longer carry a load-bearing predicate hypothesis.
 -/
 
-/-- **Family-level heat-flow regularity hypothesis** (Phase B-5, honest
-load-bearing).
-
-`IsHeatFlowFamilyHyp X Z P` packages, for general (non-Gaussian) `X`, the
-per-time-point V2 de Bruijn regularity witness along the heat-flow path
-`s ↦ X + √s · Z`, together with a smooth density path. This is a **load-bearing
-honest hypothesis** (type ≠ conclusion, no circular discharge); the only
-hypothesis-free constructor produced in this file is the Gaussian case
-(`isHeatFlowFamilyHyp_of_gaussian`).
-
-For Gaussian `X` the witness is `fun t => gaussianPDFReal m (v + ⟨t, _⟩)`; for
-general `X` no Mathlib machinery currently produces the required
-`HasDerivAt` family-level statement and so this hypothesis externalizes that
-regularity.
-
-`@audit:retract-candidate(load-bearing-predicate-empty-consumers)`
-(migrated 2026-05-28 from legacy
-`@audit:staged(epi-heat-flow-family-regularity)`: this `structure` is a
-load-bearing regularity bundle carrying a smooth density path + per-`t`
-V2 de Bruijn `HasDerivAt` witness. Cannot be reduced to `sorry` in its
-body. Closure plan: future `epi-heat-flow-family-regularity-plan` or
-absorption into `wall:debruijn-integration` (once consumers can supply
-the density path directly). Active hypothesis-form consumers are **0**
-(no declaration takes `(h : IsHeatFlowFamilyHyp …)` as an argument);
-the only inhabitation source is the Gaussian constructor
-`isHeatFlowFamilyHyp_of_gaussian` (hypothesis-free), which produces a
-witness rather than consuming one. The structure is therefore purely
-deletable today but is kept as history record + reserved attach point
-for non-Gaussian extensions that would re-introduce a load-bearing
-consumer (sister `34e17bc` / `37284f1` precedent for the
-`-empty-consumers` variant).) -/
-structure IsHeatFlowFamilyHyp {Ω : Type*} [MeasurableSpace Ω]
-    (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] : Type where
-  /-- `Z` is the standard normal driving the heat flow. -/
-  Z_law : P.map Z = gaussianReal 0 1
-  /-- Smooth density witness along the heat-flow path (`fPath t` should be the
-  density of `P.map (X + √t · Z)`). -/
-  fPath : ℝ → ℝ → ℝ
-  /-- For each `t > 0` the V2 de Bruijn regularity holds with `density_t = fPath t`. -/
-  reg_at : ∀ t : ℝ, 0 < t →
-    HasDerivAt
-      (fun s => Common2026.Shannon.differentialEntropy
-                  (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z s)))
-      ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal (fPath t))
-      t
+-- (deleted 2026-05-28, Cluster C Tier-2 migration `epi-stam-cluster-c-sorry-migration-plan`,
+-- task 3α-3) The `structure IsHeatFlowFamilyHyp X Z P` (family-level heat-flow
+-- regularity bundle) was removed outright: it had **0 active hypothesis-form
+-- consumers** (no declaration took `(h : IsHeatFlowFamilyHyp …)` as an
+-- argument) and its sole inhabitation source was the hypothesis-free Gaussian
+-- constructor `isHeatFlowFamilyHyp_of_gaussian` (also deleted below). This is
+-- the `-empty-consumers` pure-delete sister to `34e17bc` / `37284f1`. A
+-- non-Gaussian heat-flow regularity extension that re-introduces a load-bearing
+-- consumer should be re-introduced via `wall:debruijn-integration`
+-- (shared sorry lemma `debruijnIdentityV2_holds`), not a load-bearing structure.
 
 -- (retracted 2026-05-25, Wave 3 third batch independent audit) **De Bruijn
 -- tail-analysis hypothesis** `IsDeBruijnTailHyp X Z P`.
@@ -694,46 +687,11 @@ noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
     { Z_law := hZ_law
       density_t := gaussianPDFReal m (v + ⟨t, ht.le⟩) }
 
-/-- **Family-level heat-flow regularity from a Gaussian** (Phase B-5,
-hypothesis-free Gaussian constructor).
-
-For Gaussian `X` and standard normal `Z` with the usual independence,
-`IsHeatFlowFamilyHyp X Z P` admits a hypothesis-free witness, where the
-density path is `fun t x => gaussianPDFReal m (v + ⟨t, _⟩) x`. -/
-noncomputable def isHeatFlowFamilyHyp_of_gaussian
-    {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
-    (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z)
-    (hXZ : IndepFun X Z P)
-    {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0)
-    (hX_law : P.map X = gaussianReal m v)
-    (hZ_law : P.map Z = gaussianReal 0 1) :
-    IsHeatFlowFamilyHyp X Z P where
-  Z_law := hZ_law
-  fPath := fun t => gaussianPDFReal m
-            (v + ⟨max t 0, le_max_right _ _⟩)
-  reg_at t ht := by
-    -- For `t > 0`, `max t 0 = t`.
-    have h_max : max t 0 = t := max_eq_left ht.le
-    -- The V2 de Bruijn Gaussian discharge gives the derivative.
-    have h_deriv := Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2_gaussian
-      X Z hX hZ hXZ hv hX_law hZ_law ht
-    -- `fisherInfoOfMeasureV2Real μ f = fisherInfoOfDensityReal f` by `rfl`.
-    have h_eq :
-        Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2Real
-            (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z t))
-            (gaussianPDFReal m (v + ⟨t, ht.le⟩))
-          = Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
-              (gaussianPDFReal m (v + ⟨t, ht.le⟩)) := rfl
-    rw [h_eq] at h_deriv
-    -- Massage `⟨max t 0, ...⟩` to `⟨t, ht.le⟩` using `h_max`.
-    have h_subt :
-        gaussianPDFReal m
-            (v + ⟨max t 0, le_max_right _ _⟩)
-        = gaussianPDFReal m (v + ⟨t, ht.le⟩) := by
-      congr 2
-      exact Subtype.ext h_max
-    rw [h_subt]
-    exact h_deriv
+-- (deleted 2026-05-28, Cluster C Tier-2 migration, task 3α-3) The Gaussian
+-- constructor `isHeatFlowFamilyHyp_of_gaussian` was removed together with the
+-- `IsHeatFlowFamilyHyp` structure it inhabited (see the structure-deletion note
+-- in §12). It had no consumers; its genuine `HasDerivAt` content is available
+-- through `FisherInfoV2.deBruijn_identity_v2_gaussian` directly.
 
 /-! ### Phase C-3 — Gaussian closed-form entropy at the heat-flow boundary -/
 
@@ -960,13 +918,15 @@ into the predicate's existential witness remains sister-plan work — see §12
 honesty note 1). The integration uses Mathlib `intervalIntegral` and is
 converted to `Set.Ioo`-form for downstream consumption.
 
-`@audit:retract-candidate(load-bearing-predicate)` — honest bounded-T
-discharge; the predicate that this lemma feeds (`IsEPIL3IntegratedPipeline`'s
-`bridge` field) is the load-bearing wrapper now superseded by Phase A's
-unconditional route. Unbounded `T → ∞` lift remains a pending plan-level
-task (the previously intended `IsDeBruijnTailHyp` externalization was
-retracted by independent audit; see the §12 honesty notes and the retraction
-comment in the structure-definition area). -/
+`@audit:ok` — genuine bounded-T FTC discharge, body 0 sorry. The former
+bookkeeping tag (`@audit:retract-candidate(load-bearing-predicate)`) described
+the downstream `IsEPIL3IntegratedPipeline.bridge` field this lemma fed into;
+that load-bearing field was removed in Cluster C Tier-2 migration
+(`epi-stam-cluster-c-sorry-migration-plan`), so the bookkeeping tag no longer
+applies. Unbounded `T → ∞` lift remains a pending plan-level task (the
+previously intended `IsDeBruijnTailHyp` externalization was retracted by
+independent audit; see the §12 honesty notes and the retraction comment in the
+structure-definition area). -/
 @[entry_point]
 theorem bounded_T_ftc_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
@@ -1020,22 +980,19 @@ theorem bounded_T_ftc_gaussian
 
 /-! ### Phase D — Section closure note
 
-Closure update (2026-05-27, Phase A A-V cleanup): `epi-stam-to-conclusion-phaseA-plan`
-A-5/A-6 shipped a genuine alternative EPI discharge route bypassing
-`IsEPIL3IntegratedPipeline`'s load-bearing `bridge` field. The 14 wrapper
-declarations in §1–§11 were migrated from
-`@audit:suspect(epi-debruijn-integration-plan)` to
-`@audit:retract-candidate(load-bearing-predicate)` to reflect that they are
-no longer the canonical EPI entry point (the genuine route is
-`EPIStamToBridge.entropy_power_inequality_unconditional`).
+Closure update (2026-05-28, Cluster C Tier-2 migration
+`epi-stam-cluster-c-sorry-migration-plan`, route L-EPISC-3-α): the
+`IsEPIL3IntegratedPipeline` bundle's former load-bearing
+`bridge : IsStamToEPIBridgeHyp` field was **removed**. The §1–§11 pipeline
+wrappers now take only the single-field Stam-residual bundle and discharge the
+Stam→EPI bridge internally via the shared sorry lemma
+`EntropyPowerInequality.stamToEPIBridge_holds`
+(`@residual(plan:epi-stam-to-conclusion-plan)`); they no longer carry a
+load-bearing predicate hypothesis and hold no `@residual` of their own (the
+Mathlib wall is localized in `stamToEPIBridge_holds`).
 
-Phase D's own contributions (Phase B-4/B-5/C-1/C-4 above) remain the
-de Bruijn-side honest inputs to the Csiszár scaling argument and are
-unchanged. (Migration target rationale: per `docs/audit/audit-tags.md`'s
-2026-05-25 deprecation table, `@audit:closed-by-successor` is now legacy;
-`@audit:retract-candidate(load-bearing-predicate)` is the current
-bookkeeping vocabulary for monolithic-pipeline wrappers superseded by a
-hypothesis-free alternative.) -/
+Phase D's own contributions (Phase B-4/C-1/C-4 above) remain the de Bruijn-side
+honest inputs to the Csiszár scaling argument and are unchanged. -/
 
 /-! ## §13 — Phase D: `csiszarGap` function + sister entry point
 
@@ -1550,66 +1507,16 @@ theorem csiszarGap1Source_at_zero {Ω : Type*} [MeasurableSpace Ω]
     simp [Real.sqrt_zero]
   rw [h_sum_funext, h_X_funext, h_Y_funext]
 
-/-- **Honest hypothesis predicate: tendsto-zero at infinity of the 1-source
-Csiszár gap with Gaussian noise pair** (Phase D §13 A-0'-4 statement-only
-handoff).
-
-The genuine assertion `Tendsto (csiszarGap1Source X Y Z_X Z_Y P) atTop (𝓝 0)`
-(when `Z_X, Z_Y` are independent standard normals) is the 1-source analogue
-of `csiszarGap_at_one_eq_zero_of_gaussian_pair` (`:1194`) at the boundary
-`t → ∞` (which corresponds to `s → 1` under the rescale `t = s/(1-s)`).
-Cover-Thomas Csiszár scaling tail bound (Theorem 17.7.3 limit step) formalizes
-this in ~50+ lines, exceeding the A-0' scope cap. We externalize the assertion
-as a named honest hypothesis predicate.
-
-**NOT a discharge / load-bearing**: this `Prop` is the genuine `Tendsto`
-assertion — type ≠ conclusion is *not* applicable because the predicate is
-the assertion itself (Mathlib `Filter.Tendsto`). The mini-plan §A-0'-β
-retreat line establishes that sister Phase A's closure path does **not**
-require this lemma in proof form: the 2-source `AntitoneOn` is lifted from
-the 1-source `AntitoneOn (Set.Ici 0)` via the rescale equivalence
-(A-0'-2), and the 2-source endpoint `s = 1` discharge uses the already-
-proven `csiszarGap_at_one_eq_zero_of_gaussian_pair`. This handoff predicate
-exists for completeness of the 1-source form's documentation; sister Phase
-A may carry it as a caller hypothesis only if it elects the alternative
-direct-1-source-endpoint path (namely: proving `AntitoneOn (Set.Ici 0)` for
-`csiszarGap1Source` directly and pinching the upper endpoint via this
-`Tendsto … atTop (𝓝 0)` predicate, instead of the rescale route through
-the 2-source `csiszarGap` and `csiszarGap_at_one_eq_zero_of_gaussian_pair`
-selected by mini-plan §A-0'-β).
-
-**Honesty audit (`csiszar` WALL, 2026-05-25)**: Tier 1 PASS (no
-circularity / `:True` slot / vacuous-`Z_X = 0` path — Gaussian-law
-hypotheses exclude the dirac collapse). Tier 2 PASS (genuinely staged
-Cover-Thomas tail bound, not an orphan: predicate is honest documentation
-of the 1-source form's `t → ∞` endpoint; Phase A's chosen rescale path
-does not consume it, alternative direct-endpoint path would). Tier 3 PASS
-(`csiszar` is a pre-declared WALL slug in `docs/audit/audit-tags.md`;
-this is its first concrete site). Tier 4 PASS post-clarification (the
-"alternative direct-1-source-endpoint path" is now named explicitly).
-No `*_discharged` / `*_full` name-laundering; the predicate name announces
-the assumption.
-
-`@audit:retract-candidate(load-bearing-predicate-empty-consumers)`
-(migrated 2026-05-28 from legacy `@audit:staged(csiszar)`: this
-`def := ... → Filter.Tendsto ...` is a load-bearing assertion of the
-genuine Cover-Thomas Csiszár scaling tail bound, but it has **zero
-active consumers** (`rg "IsCsiszarGap1SourceTendsToZeroAtInfinity"`
-returns only this declaration + a docstring mention). The sister
-Phase A closure path uses the rescale route through
-`csiszarGap_at_one_eq_zero_of_gaussian_pair`, not this `Tendsto … atTop`
-assertion. Predicate retained for completeness of the 1-source form's
-documentation; safe to retract outright if the alternative
-direct-1-source-endpoint path is never adopted. Closure plan (if
-adopted): `epi-stam-to-conclusion-plan` Phase B or a dedicated Csiszár
-tail-bound mini-plan, would land as a shared sorry lemma
-`@residual(wall:csiszar)`.) -/
-def IsCsiszarGap1SourceTendsToZeroAtInfinity {Ω : Type*} [MeasurableSpace Ω]
-    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) : Prop :=
-  Measurable Z_X → Measurable Z_Y → IndepFun Z_X Z_Y P →
-    P.map Z_X = gaussianReal 0 1 → P.map Z_Y = gaussianReal 0 1 →
-    Filter.Tendsto (fun t : ℝ => csiszarGap1Source X Y Z_X Z_Y P t)
-      Filter.atTop (nhds (0 : ℝ))
+-- (deleted 2026-05-28, Cluster C Tier-2 migration `epi-stam-cluster-c-sorry-migration-plan`,
+-- task 3α-4) The `def IsCsiszarGap1SourceTendsToZeroAtInfinity X Y Z_X Z_Y P`
+-- (1-source Csiszár tail bound `… → Tendsto (csiszarGap1Source …) atTop (𝓝 0)`)
+-- was removed outright: it had **0 active consumers** (only this declaration +
+-- a docstring mention). The sister Phase A closure path uses the rescale route
+-- through `csiszarGap_at_one_eq_zero_of_gaussian_pair`, not this `Tendsto … atTop`
+-- assertion. If a future direct-1-source-endpoint path is adopted, re-introduce
+-- the tail bound as a shared sorry lemma `@residual(wall:csiszar)` rather than a
+-- load-bearing predicate. (Former docstring + Cover-Thomas Csiszár tail-bound
+-- narrative preserved in git history at this commit's parent.)
 
 /-- **1-source Csiszár gap shape contract for `epi-stam-to-conclusion-plan` Phase A**
 (Phase D §13 A-0'-5).

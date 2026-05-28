@@ -204,16 +204,17 @@ theorem isStamInequalityHyp_of_stamDeBruijn
 /-- **Reduce the refined pipeline to the monolithic `IsEPIL3IntegratedPipeline`**.
 The Stam field is supplied by deriving it from the genuine primitives.
 
-`@audit:retract-candidate(load-bearing-predicate)` — pipeline-to-pipeline
-adapter that propagates the load-bearing `bridge` field; downstream code
-should switch to Phase A's `entropy_power_inequality_unconditional`. -/
+After the Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`,
+route L-EPISC-3-α) `IsEPIL3IntegratedPipeline` carries only its `stam` field; its
+former load-bearing `bridge` field was removed and is now discharged internally
+by consumers via `stamToEPIBridge_holds`. This adapter therefore no longer
+propagates `IsEPIStamDeBruijnPipeline`'s own `bridge` field. -/
 theorem isEPIL3IntegratedPipeline_of_stamDeBruijn
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h : IsEPIStamDeBruijnPipeline X Y P) :
     IsEPIL3IntegratedPipeline X Y P where
   stam := isStamInequalityHyp_of_stamDeBruijn h
-  bridge := h.bridge
 
 /-! ## §4 — Main EPI via the refined pipeline -/
 
