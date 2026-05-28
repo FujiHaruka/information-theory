@@ -316,39 +316,4 @@ theorem csiszar_pythagoras_at_lagrange
       + klDivPmf (hoeffdingTilt P₁ P₂ lam) P₂ := by
   sorry
 
-/-! ## Phase 9 — Sandwich at the Lagrange tilt -/
-
-/-- **Sandwich at the Lagrange tilt** (textbook L-H4-FS interior): given the
-two variational hypotheses, the optimal Type II rate converges to
-`hoeffdingE2 P₁ P₂ alpha`.
-
-`@residual(plan:hoeffding-tradeoff-moonshot-plan)` — the previously bundled
-`IsHoeffdingLagrangeHyp` is retreated. The two variational hypotheses remain
-inputs (Phase C / Phase D deferred).
-
-`@audit:defect(false-hypothesis) @audit:retract-candidate(general-alpha-rate-≠-E₂)`
-Shares the retracted fixed-`alpha` cluster's defect: the conclusion
-`Tendsto rate → hoeffdingE2 P₁ P₂ alpha` is false in general (the fixed-`alpha`
-rate targets `D(P₁‖P₂)`, not `E₂(alpha)` — Stein's lemma), so `h_liminf` /
-`h_limsup` are jointly unsatisfiable. Same false conclusion as the sibling
-`hoeffding_tradeoff_sandwich_at_interior_via_predicate` / `_via_gradient`. Awaits
-the same Draft sweep. -/
-theorem hoeffding_tradeoff_sandwich_at_lagrange
-    (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
-    {alpha : ℝ} (h_alpha_nn : 0 ≤ alpha) (h_alpha_lt : alpha < 1)
-    (h_liminf : (hoeffdingE2 P₁ P₂ alpha) ≤
-      Filter.liminf
-        (fun n : ℕ =>
-          -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-        atTop)
-    (h_limsup : Filter.limsup
-        (fun n : ℕ =>
-          -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-        atTop ≤ (hoeffdingE2 P₁ P₂ alpha)) :
-    Tendsto (fun n : ℕ =>
-        -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-      atTop (𝓝 (hoeffdingE2 P₁ P₂ alpha)) := by
-  sorry
-
 end InformationTheory.Shannon.HoeffdingInteriorGradientBody

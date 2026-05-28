@@ -65,13 +65,13 @@ plug into its `IsHoeffdingMinimizerFullSupport` constructor.
   the interior discharge: given the two interior predicates, produce a witness
   `Qstar` that realises `hoeffdingE2 P₁ P₂ alpha` and is full-support.
 
-* **`hoeffding_tradeoff_sandwich_at_interior_via_predicates`** — interior
-  sandwich `Tendsto` wrapper for the fixed-`alpha` rate. NOTE: its conclusion
-  is the **retracted** false fixed-`alpha` `Tendsto → hoeffdingE2 … alpha`
-  (Stein's lemma: the fixed-`alpha` rate targets `D`, not `E₂(alpha)`); the
-  successor sandwich `hoeffding_tradeoff_sandwich_via_predicate` it used to plumb
-  into was deleted in the 2026-05-28 retraction. This and the sibling interior
-  wrappers carry `@audit:defect(false-hypothesis)` and await a Draft sweep.
+NOTE: the fixed-`alpha` interior sandwich `Tendsto` wrappers
+(`hoeffding_tradeoff_sandwich_at_interior_via_predicate` / `_via_gradient`) were
+**deleted in the 2026-05-28 Draft retraction**. Their conclusion
+`Tendsto → hoeffdingE2 … alpha` was false in general (Stein's lemma: the
+fixed-`alpha` rate targets `D(P₁‖P₂)`, not `E₂(alpha)`), making their
+variational premises jointly unsatisfiable. The genuine successor is the
+exponential-level `hoeffding_tradeoff_exp` (`HoeffdingTradeoffExp.lean`).
 
 ## Retreat lines (L-H4-FS)
 
@@ -280,74 +280,6 @@ theorem csiszar_pythagoras_at_interior
     (hoeffdingConstraintSet_subset_stdSimplex P₁ alpha)
     hP₂_sum hP₂_pos hQs_interior.mem hQs_interior.full_support
     (hQs_interior.isMinOn hP₂_pos) hP_mem hP_pos
-
-/-! ## Phase 6 — Sandwich plumbing via interior predicate -/
-
-/-- **Sandwich at interior (textbook L-H4-FS interior)**: at interior `alpha`,
-given the two variational hypotheses (achievability liminf + converse limsup),
-the optimal Type II rate converges to `hoeffdingE2 P₁ P₂ alpha`.
-
-`@residual(plan:hoeffding-tradeoff-moonshot-plan)` — the predicate-form
-`IsHoeffdingInteriorMinimizer Qstar` hypothesis was previously bundled and is
-now retreated; the Lagrangian-tilt + full-support discharge is deferred to
-`hoeffding-tradeoff-moonshot-plan` Phase B. The two variational hypotheses
-remain inputs (Phase C / Phase D deferred).
-
-`@audit:defect(false-hypothesis) @audit:retract-candidate(general-alpha-rate-≠-E₂)`
-Shares the retracted fixed-`alpha` cluster's defect: the conclusion
-`Tendsto rate → hoeffdingE2 P₁ P₂ alpha` is false in general (the fixed-`alpha`
-rate targets `D(P₁‖P₂)`, not `E₂(alpha)` — Stein's lemma), so `h_liminf` /
-`h_limsup` are jointly unsatisfiable. Awaits a Draft sweep (carries
-interior-minimizer interface scaffolding needing separate assessment). -/
-theorem hoeffding_tradeoff_sandwich_at_interior_via_predicate
-    (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
-    {alpha : ℝ} (h_alpha_nn : 0 ≤ alpha) (h_alpha_lt : alpha < 1)
-    (h_liminf : (hoeffdingE2 P₁ P₂ alpha) ≤
-      Filter.liminf
-        (fun n : ℕ =>
-          -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-        atTop)
-    (h_limsup : Filter.limsup
-        (fun n : ℕ =>
-          -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-        atTop ≤ (hoeffdingE2 P₁ P₂ alpha)) :
-    Tendsto (fun n : ℕ =>
-        -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-      atTop (𝓝 (hoeffdingE2 P₁ P₂ alpha)) := by
-  sorry
-
-/-- **Sandwich at interior (textbook L-H4-FS interior, gradient entry)**:
-alternate entry point with no predicate hypothesis. Same conclusion as
-`hoeffding_tradeoff_sandwich_at_interior_via_predicate`.
-
-`@residual(plan:hoeffding-tradeoff-moonshot-plan)` — the predicate-form
-`IsHoeffdingInteriorGradient` hypothesis was previously bundled and is now
-retreated.
-
-`@audit:defect(false-hypothesis) @audit:retract-candidate(general-alpha-rate-≠-E₂)`
-Shares the retracted fixed-`alpha` cluster's defect: the conclusion
-`Tendsto rate → hoeffdingE2 P₁ P₂ alpha` is false in general (the fixed-`alpha`
-rate targets `D(P₁‖P₂)`, not `E₂(alpha)` — Stein's lemma), so `h_liminf` /
-`h_limsup` are jointly unsatisfiable. Awaits a Draft sweep (carries
-interior-minimizer interface scaffolding needing separate assessment). -/
-theorem hoeffding_tradeoff_sandwich_at_interior_via_gradient
-    (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
-    {alpha : ℝ} (h_alpha_nn : 0 ≤ alpha) (h_alpha_lt : alpha < 1)
-    (h_liminf : (hoeffdingE2 P₁ P₂ alpha) ≤
-      Filter.liminf
-        (fun n : ℕ =>
-          -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-        atTop)
-    (h_limsup : Filter.limsup
-        (fun n : ℕ =>
-          -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-        atTop ≤ (hoeffdingE2 P₁ P₂ alpha)) :
-    Tendsto (fun n : ℕ =>
-        -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-      atTop (𝓝 (hoeffdingE2 P₁ P₂ alpha)) := by
-  sorry
 
 /-! ## Phase 7 — `hoeffdingE2` interior characterization via predicates -/
 
