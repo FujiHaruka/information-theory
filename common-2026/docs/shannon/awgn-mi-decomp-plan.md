@@ -18,9 +18,12 @@
 > `awgn_midecomp_of_cont_chain` (`:160`) が AWGN instance への接続子（`exact` で `IsAwgnMIDecomp` を導く）。本 plan はこの
 > named hypothesis の **body を genuine に証明** し、AWGN instance では Gaussian density 事実で全仮定を discharge する。
 >
-> **Status (2026-05-21)**: 着手前。`AWGNMIDecompBody.lean` は F-2 を **`IsContChannelMIDecompHyp` (AWGN 非依存版) named hypothesis**
-> に縮減した honest pass-through で 0 sorry 完了済。本 plan はその hypothesis を density-level klDiv 展開で discharge し、
-> AWGN converse/capacity チェーンから F-2 を 1 段 unblock する。**AWGN(#5) / Parallel Gaussian(#6) 両方が共有する foundational brick**。
+> **Status (2026-05-28 更新)**: 段2 AWGN instance discharge は **完了** — `isContChannelMIDecompHyp_awgn`
+> (`ContChannelMIDecomp.lean:459`) が壁の全正則性引数を Gaussian 事実で 0 sorry 供給し、`IsContChannelMIDecompHyp` を
+> 仮定なし publish 済。残る唯一の sorry は **density-level chain rule 本体** = 共有壁 `contChannelMIDecomp_holds`
+> (`AwgnWalls.lean:111`、`@residual(wall:awgn-mi-decomp)` + `@audit:ok`) の body (= Phases 1–6 の klDiv/Fubini 解析、
+> ~200-300 行)。壁は正則性仮定付きの **true-but-hard** な状態 (判断ログ #4 参照: 旧 hyp 全落し偽壁を 2026-05-28 に修正)。
+> **AWGN(#5) / Parallel Gaussian(#6) 両方が共有する foundational brick**。次の moonshot = この壁 body を埋めること。
 
 ## 進捗
 
@@ -708,3 +711,7 @@ honest 仮定の最終本数 (#1-#6 + Markov)、Phase 7 の honest #4 discharge 
    `integral_congr_ae` でしか消費せず、fibre 項処理も `Measure.integral_compProd` → 内側 per-fibre 積分なので、proxy↔rnDeriv の橋は
    全て **per-fibre 積分 (新補題 `integral_log_proxy_fibre`) で「積分の中」に吸収**でき、joint a.e. の MeasurableSet を一度も踏まない。
    output 項 (KL/split/sub/output marginal/結合) は rnDeriv 形のまま **不変**。Route B は依然 viable (中央予測 ~120-180 行)。
+4. **(2026-05-28) 「shared wall への consolidate」が hyp 全落しで壁を偽にした defect → 正則性仮定を引数に復帰して修正**:
+   commit `9ccbb67` が density chain-rule 壁を `AwgnWalls.contChannelMIDecomp_holds` に集約した際、**正則性仮定 #1–#6 を壁の引数から全て落とし**、`(p)[IsProbabilityMeasure p] (W)[IsMarkovKernel W]` のみで chain rule を主張する形にした。これは **普遍的に偽** (独立監査 `c40d057` 確定): 決定論チャネル `W x = dirac x` で LHS `= toReal(mutualInfoOfChannel) = toReal(⊤) = 0`、RHS `= differentialEntropy(gaussian) − 0 > 0` (`differentialEntropy_dirac = 0`、対角測度が積に特異で klDiv `= ⊤`)。落とした仮定は消費側 `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` にアンダースコア (未使用) で取り残されていた (= laundering 寄り)。
+   **修正 (commit `c4388e0`、再監査 clean)**: 壁に正則性仮定を**引数として復帰**。shape は 判断ログ #2–#3 の Route B proxy 形に統一 — #1–#3 absolute continuity (plan 形) + `hWx_q : ∀ x, W x ≪ outputDistribution p W` + proxy `(g : ℝ×ℝ→ℝ≥0∞)`/`hg_meas`/`hg_ae` + joint log-integrability 2 本 (`h_int_fibre : Integrable (log (g z).toReal) (p⊗ₘW)`、`h_int_out : Integrable (log (q.rnDeriv vol z.2).toReal) (p⊗ₘW)`)。plan §段1 body (L48-66) の教科書形 (`llr`-integrable + `f·log f`-on-volume) は **不採用** — proxy 形の方が instance `isContChannelMIDecompHyp_awgn` が genuine に供給でき、`llr`-integrable は `h_int_fibre.sub h_int_out` の congr で導けるため同等以上。AWGN instance は 9 引数すべてを Gaussian 事実で **0 new sorry** discharge。壁 body は依然 `sorry` + `@residual(wall:awgn-mi-decomp)` + `@audit:ok` (signature honesty を独立確認、残る sorry = density-level chain rule の genuine Mathlib 壁 = Phases 1–6)。
+   **教訓**: shared sorry 補題化のとき hypotheses を壁から落とすと over-general 化して偽になりうる。consolidate 時は regularity 前提を壁側に残すこと (memory 候補)。
