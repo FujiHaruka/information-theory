@@ -53,9 +53,11 @@ the bridge into `scaling`/`limit`, but its `stam` field was a *black-box*
    `g'(t) ≥ 0` outright from the de Bruijn V2 witness.
 
 The refined pipeline `IsEPIStamDeBruijnPipeline` (§3) bundles only the
-genuinely-irreducible primitives (the two Stam primitives + the Stam→EPI bridge),
-reduces to the monolithic `IsEPIL3IntegratedPipeline`, and lands the EPI
-conclusion (§4). The genuine Gaussian EPI (§5) is obtained directly from Gaussian
+genuinely-irreducible Stam primitives (Step 1 Blachman + Step 3 IBP); the
+Stam→EPI bridge is no longer a pipeline field (it was vestigial once the
+monolithic pipeline stopped reading it, and is discharged internally by consumers
+via `stamToEPIBridge_holds`). The pipeline reduces to the monolithic
+`IsEPIL3IntegratedPipeline`, and lands the EPI conclusion (§4). The genuine Gaussian EPI (§5) is obtained directly from Gaussian
 saturation (`entropy_power_inequality_gaussian_full'`), with no Stam claim. (The
 former Gaussian *pipeline* discharge routed the Stam half through the buggy V1
 Fisher-info-zero artefact and was removed — see §5, RESOLVED 2026-05-20.)
@@ -176,16 +178,13 @@ theorem isStamInequalityHyp_of_primitives
 Refines `IsEPIL3IntegratedPipeline` (`EPIL3Integration.lean`) by replacing the
 black-box `stam : IsStamInequalityHyp` field with the **two genuine Stam
 primitives** (Step 1 Blachman + Step 3 IBP). The Stam inequality is *derived* via
-`isStamInequalityHyp_of_primitives`, not assumed. The bridge field is the genuine
-Csiszár-coupling `IsStamToEPIBridgeHyp`. -/
+`isStamInequalityHyp_of_primitives`, not assumed. -/
 structure IsEPIStamDeBruijnPipeline {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop where
   /-- Step 1: Blachman convolution-score representation. -/
   convScore : IsStamScoreConvolution X Y P
   /-- Step 3: total-expectation cross-term-drop (the IBP step). -/
   totalExp : IsStamTotalExpectation X Y P
-  /-- Stam-to-EPI bridge (Csiszár coupling, Cover-Thomas Lemma 17.7.3). -/
-  bridge : IsStamToEPIBridgeHyp X Y P
 
 /-- **Derive the Stam inequality** from the refined pipeline.
 
@@ -207,8 +206,10 @@ The Stam field is supplied by deriving it from the genuine primitives.
 After the Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`,
 route L-EPISC-3-α) `IsEPIL3IntegratedPipeline` carries only its `stam` field; its
 former load-bearing `bridge` field was removed and is now discharged internally
-by consumers via `stamToEPIBridge_holds`. This adapter therefore no longer
-propagates `IsEPIStamDeBruijnPipeline`'s own `bridge` field. -/
+by consumers via `stamToEPIBridge_holds`. `IsEPIStamDeBruijnPipeline`'s own former
+load-bearing `bridge` field was likewise removed (it was vestigial once the
+monolithic pipeline stopped reading it); this adapter therefore supplies only the
+`stam` field, derived from the two genuine Stam primitives. -/
 theorem isEPIL3IntegratedPipeline_of_stamDeBruijn
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -236,17 +237,15 @@ theorem entropy_power_inequality_via_stamDeBruijn
   have h_int := isEPIL3IntegratedPipeline_of_stamDeBruijn h
   exact entropy_power_inequality_integrated P X Y hX hY hXY h_int
 
-/-- **Refined pipeline from the three primitives directly**. -/
+/-- **Refined pipeline from the two genuine primitives directly**. -/
 theorem isEPIStamDeBruijnPipeline_of_primitives
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvolution X Y P)
-    (h_te : IsStamTotalExpectation X Y P)
-    (h_bridge : IsStamToEPIBridgeHyp X Y P) :
+    (h_te : IsStamTotalExpectation X Y P) :
     IsEPIStamDeBruijnPipeline X Y P where
   convScore := h_conv
   totalExp := h_te
-  bridge := h_bridge
 
 /-! ## §5 — Gaussian EPI (genuine, via saturation)
 
@@ -319,7 +318,6 @@ theorem isEPIStamDeBruijnPipeline_symm
     IsEPIStamDeBruijnPipeline Y X P where
   convScore := isStamScoreConvolution_symm h.convScore
   totalExp := isStamTotalExpectation_symm h.totalExp
-  bridge := isStamToEPIBridgeHyp_symm h.bridge
 
 /-- **Refined pipeline congruence** under function equality. -/
 theorem isEPIStamDeBruijnPipeline_congr
@@ -330,16 +328,15 @@ theorem isEPIStamDeBruijnPipeline_congr
     IsEPIStamDeBruijnPipeline X' Y' P := by
   subst hX; subst hY; exact h
 
-/-- **Round-trip**: building the refined pipeline from its three primitives and
-extracting them yields the originals. -/
+/-- **Round-trip**: building the refined pipeline from its two genuine primitives
+and extracting them yields the originals. -/
 theorem stamDeBruijn_pipeline_roundtrip
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_conv : IsStamScoreConvolution X Y P)
-    (h_te : IsStamTotalExpectation X Y P)
-    (h_bridge : IsStamToEPIBridgeHyp X Y P) :
-    let h := isEPIStamDeBruijnPipeline_of_primitives h_conv h_te h_bridge
-    h.convScore = h_conv ∧ h.totalExp = h_te ∧ h.bridge = h_bridge :=
-  ⟨rfl, rfl, rfl⟩
+    (h_te : IsStamTotalExpectation X Y P) :
+    let h := isEPIStamDeBruijnPipeline_of_primitives h_conv h_te
+    h.convScore = h_conv ∧ h.totalExp = h_te :=
+  ⟨rfl, rfl⟩
 
 end InformationTheory.Shannon.EPIStamDeBruijnConclusion
