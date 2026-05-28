@@ -38,7 +38,8 @@ bounded above by the arithmetic mean of its eigenvalues:
 
 This is the genuine building block for the Minkowski determinant inequality
 (Cover-Thomas 17.9.1): it is the `p = 1/n ≤ 1` direction of weighted AM-GM applied
-to the eigenvalues, using `det A = ∏ᵢ λᵢ(A)`. Fully proved (no `sorry`). -/
+to the eigenvalues, using `det A = ∏ᵢ λᵢ(A)`. Fully proved (no `sorry`).
+@audit:ok -/
 theorem det_rpow_le_arith_mean_eigenvalues
     {n : Type*} [Fintype n] [DecidableEq n] [Nonempty n]
     {A : Matrix n n ℝ} (hA : A.PosDef) :
@@ -81,7 +82,8 @@ For nonnegative reals `a i, b i` with `a i + b i > 0`,
 This is the scalar core of the Minkowski determinant inequality. It follows from
 weighted AM-GM applied to the normalized weights `a i / (a i + b i)` (and its
 complement), exactly the construction used in `det_rpow_le_arith_mean_eigenvalues`.
-Fully proved (no `sorry`); reusable. -/
+Fully proved (no `sorry`); reusable.
+@audit:ok -/
 theorem geom_mean_superadditive
     {n : Type*} [Fintype n] [Nonempty n]
     (a b : n → ℝ) (ha : ∀ i, 0 ≤ a i) (hb : ∀ i, 0 ≤ b i)
@@ -143,7 +145,8 @@ theorem geom_mean_superadditive
   rw [hN] at hkey ⊢
   exact hkey
 
-/-- The CFC square root of a positive-definite matrix is positive definite. -/
+/-- The CFC square root of a positive-definite matrix is positive definite.
+@audit:ok -/
 theorem posDef_cfcSqrt {n : Type*} [Fintype n] [DecidableEq n]
     {A : Matrix n n ℝ} (hA : A.PosDef) : (CFC.sqrt A).PosDef := by
   have hps : (CFC.sqrt A).PosSemidef :=
@@ -154,7 +157,8 @@ theorem posDef_cfcSqrt {n : Type*} [Fintype n] [DecidableEq n]
 /-- `det (1 + S) = ∏ (1 + eigenvalues S i)` for a Hermitian matrix `S`.
 
 Spectral-mapping bridge: `S = U diag(λ) Uᴴ` gives `1 + S = U diag(1+λ) Uᴴ`, hence
-`det (1 + S) = ∏ (1 + λ i)`. Reusable. -/
+`det (1 + S) = ∏ (1 + λ i)`. Reusable.
+@audit:ok -/
 theorem det_one_add_eq_prod_one_add_eigenvalues
     {n : Type*} [Fintype n] [DecidableEq n]
     {S : Matrix n n ℝ} (hS : S.IsHermitian) :
@@ -192,7 +196,8 @@ by `IsUnit.posDef_star_left_conjugate_iff`). Then `A + B = R * (1 + S) * R`, so
 `det(1+S) = ∏ (1 + μ i)` (`det_one_add_eq_prod_one_add_eigenvalues`) and
 `∏ μ i = det S = det B / det A`. Apply scalar Minkowski
 (`geom_mean_superadditive` with `a ≡ 1`, `b = μ`) and multiply through by
-`(det A)^(1/n)`. -/
+`(det A)^(1/n)`.
+@audit:ok -/
 theorem minkowskiDeterminantInequality
     {n : Type*} [Fintype n] [DecidableEq n] [Nonempty n]
     {A B : Matrix n n ℝ} (hA : A.PosDef) (hB : B.PosDef) :
