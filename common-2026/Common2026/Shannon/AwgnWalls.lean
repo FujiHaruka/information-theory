@@ -51,88 +51,13 @@ set_option linter.unusedVariables false
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal BigOperators Topology
 
-/-! ## Wall 0 — `awgn-mi-decomp` (continuous-channel MI chain rule, AWGN-independent)
+/-! ## Wall 1 — `awgn-continuous-aep-gaussian`
 
-集約対象: 同一の density-level MI chain rule `I(X;Y) = h(Y) − h(Y|X)` が
-`AWGNMIDecompBody.lean` の `IsContChannelMIDecompHyp` (generic channel form,
-load-bearing predicate / tier 4) と `AWGNMIBridge.lean` の `IsAwgnMIDecomp`
-(AWGN single-Gaussian-input form) の 2 箇所に散在していた。両者ともに
-`mutualInfoOfChannel` 形なので、AWGN 非依存の generic 1 補題に集約する。
-per-letter (`mutualInfo` 形) の `AWGNConverse.lean` 側は mixture→compProd の
-plumbing が要るため本補題には直結せず、別 residual で残置。 -/
-
-/-- **Shared Mathlib wall: continuous-channel mutual-information chain rule**
-(AWGN-independent).
-
-For an input law `p` on `ℝ` and a Markov channel `W : Channel ℝ ℝ`,
-```
-(mutualInfoOfChannel p W).toReal
-  = differentialEntropy (outputDistribution p W) − ∫ x, differentialEntropy (W x) ∂p
-```
-i.e. `I(X;Y) = h(Y) − h(Y|X)`, with `h(Y|X)` realized as the integral of fibrewise
-differential entropies. This is the continuous (density-based) analogue of the
-discrete `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ`.
-
-Mathlib gap: the continuous version is absent (loogle `ProbabilityTheory.mutualInfo`
-→ unknown, `differentialEntropy` → unknown, `ProbabilityTheory.condDistrib,
-InformationTheory.klDiv` → Found 0). Discharging it requires the density-level
-`klDiv_compProd_eq_add` expansion + Bayes rnDeriv split + `differentialEntropy`
-unfold (~200-300 lines of rnDeriv / Fubini / integrability bookkeeping with no
-reusable Mathlib lemma). Exposed here as the single shared sorry lemma so that
-`IsContChannelMIDecompHyp` (via `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`)
-and `IsAwgnMIDecomp` (via `awgn_midecomp_of_cont_chain`) delegate to one place.
-NOTE (honesty audit 2026-05-28): a hypothesis-free successor
-`mutualInfoOfChannel_gaussianInput_closed_form'` (`AWGNMIClosedForm.lean`) now
-delegates here transitively via `awgn_mi_gaussian_closed_form_of_out`
-(`ContChannelMIDecomp.lean`), so the AWGN-specific Gaussian-input closed form is
-folded onto this shared wall. The old `h_bridge`-form
-`mutualInfoOfChannel_gaussianInput_closed_form` (`AWGN.lean`) is retained
-transitionally pending capacity-side closure.
-
-This wall carries its regularity preconditions as **arguments** (a deterministic
-channel `W x = dirac x` — for which the bare identity is FALSE, since then
-`I = 0 ≠ h(Y) > 0` — fails `hW_ac : ∀ x, W x ≪ volume`, so the counterexample is
-blocked). It is the genuine continuous-channel chain rule under absolute continuity
-+ log-density integrability; the body is `sorry` only because Mathlib has no
-continuous-version chain rule (`klDiv_compProd_eq_add` stops at the conditional
-rnDeriv and gives no fibre identification, a >200-line rnDeriv/Fubini analysis).
-The genuine route is `awgn-mi-decomp-plan` §段1 body (Phases 1–6); the AWGN instance
-`isContChannelMIDecompHyp_awgn` (`ContChannelMIDecomp.lean`) discharges every
-argument below from the Gaussian density facts (zero residual hypotheses).
-
-Argument shape note (matched to the instance's clean data, per plan «#4–#6 shape
-flexible»): the absolute-continuity args #1–#3 are in plan form; the fibre density
-is carried by a measurable closed-form proxy `g` plus its per-fibre a.e. agreement
-`hg_ae` (the measure-form fibre rnDeriv is only a.e.-determined, so its everywhere
-joint measurability is unavailable — Route B, see `ContChannelMIDecomp.lean`
-Phase 8), and the integrabilities #4/#5 are stated against the joint `p ⊗ₘ W` in
-the proxy/log form the body's `integral_compProd` Fubini step consumes.
-@residual(wall:awgn-mi-decomp) @audit:ok -/
-theorem contChannelMIDecomp_holds
-    (p : Measure ℝ) [IsProbabilityMeasure p]
-    (W : InformationTheory.Shannon.ChannelCoding.Channel ℝ ℝ) [IsMarkovKernel W]
-    (hW_ac : ∀ x, W x ≪ MeasureTheory.volume)                                    -- #1
-    (hWx_q : ∀ x, W x ≪ InformationTheory.Shannon.ChannelCoding.outputDistribution p W)
-    (hq_ac : InformationTheory.Shannon.ChannelCoding.outputDistribution p W
-              ≪ MeasureTheory.volume)                                            -- #2
-    (h_joint_ac : (p ⊗ₘ W)
-        ≪ p.prod (InformationTheory.Shannon.ChannelCoding.outputDistribution p W))  -- #3
-    (g : ℝ × ℝ → ℝ≥0∞) (hg_meas : Measurable g)
-    (hg_ae : ∀ x, (fun y => (W x).rnDeriv MeasureTheory.volume y)
-                    =ᵐ[W x] fun y => g (x, y))
-    (h_int_fibre : MeasureTheory.Integrable
-        (fun z : ℝ × ℝ => Real.log (g z).toReal) (p ⊗ₘ W))                       -- #4
-    (h_int_out : MeasureTheory.Integrable
-        (fun z : ℝ × ℝ => Real.log
-            ((InformationTheory.Shannon.ChannelCoding.outputDistribution p W).rnDeriv
-                MeasureTheory.volume z.2).toReal) (p ⊗ₘ W)) :                     -- #5
-    (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel p W).toReal
-      = Common2026.Shannon.differentialEntropy
-          (InformationTheory.Shannon.ChannelCoding.outputDistribution p W)
-        - (∫ x, Common2026.Shannon.differentialEntropy (W x) ∂p) := by
-  sorry
-
-/-! ## Wall 1 — `awgn-continuous-aep-gaussian` -/
+(Note: the former Wall 0 `contChannelMIDecomp_holds` — the continuous-channel MI
+chain rule `I(X;Y) = h(Y) − h(Y|X)` — was **closed 2026-05-28**: it is now assembled
+genuinely from local helpers in
+`Common2026.Draft.Shannon.ContChannelMIDecomp.mutualInfoOfChannel_toReal_eq_diffEntropy_sub`
+(0 sorry), so no shared wall is needed and this file's wall count is 6.) -/
 
 /-- **Continuous AEP for n-dim Gaussian** (Phase B-0 wall, 旧 `IsContinuousAEPGaussian`).
 

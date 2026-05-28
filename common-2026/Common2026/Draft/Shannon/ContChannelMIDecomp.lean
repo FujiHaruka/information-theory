@@ -42,12 +42,15 @@ ratio into fibre/output log densities — is the conditional-rnDeriv-to-fibre
 identification `(p⊗ₘW).rnDeriv (p.prod q) (x,y) =ᵐ (W x).rnDeriv vol y / q.rnDeriv vol y`.
 Mathlib's `rnDeriv_compProd` machinery stops at the *conditional* rnDeriv
 `(μ⊗ₘκ).rnDeriv (μ⊗ₘη)` and provides **no** fibre identification
-`= (κ a).rnDeriv (η a)`; deriving it genuinely needs the full `Kernel.rnDeriv`
-theory (a >100-line rabbit hole, plan 撤退ライン D-2 = F-2′). We therefore expose
-**only this split** as a single named honest hypothesis `h_llr_split`, keeping the
-body genuine: the entire klDiv→integral structure, the Fubini decomposition and
-both differential-entropy identifications are proved explicitly. At the AWGN
-instance the split is dischargeable from the Gaussian density facts.
+`= (κ a).rnDeriv (η a)`. This is supplied **genuinely** here by the linchpin
+`rnDeriv_compProd_fibre` (withDensity route), assembled into the per-fibre split by
+`llr_compProd_prod_split`. As of 2026-05-28 the body
+`mutualInfoOfChannel_toReal_eq_diffEntropy_sub` is therefore **fully genuine (0 sorry,
+no shared wall)**: the entire klDiv→integral structure (`toReal_klDiv_of_measure_eq`),
+the Bayes split, the Fubini decomposition (`integral_compProd` + `integral_sub`) and
+both differential-entropy identifications (fibre + output, via
+`integral_log_rnDeriv_eq_neg_diffEntropy`) are proved explicitly. The former shared
+sorry lemma `AwgnWalls.contChannelMIDecomp_holds` has been retired.
 -/
 
 namespace InformationTheory.Shannon.ChannelCoding
@@ -71,30 +74,43 @@ theorem integral_snd_outputDistribution
     rw [← h_eq]; exact hg.aestronglyMeasurable
   rw [h_eq, MeasureTheory.integral_map measurable_snd.aemeasurable hg']
 
-/-- **Fibre differential-entropy identification (genuine).** For an `≪ volume`
-fibre `W x` with measurable density `f := (W x).rnDeriv volume`, the inner integral
-of `log f` against `W x` is `−differentialEntropy (W x)`. -/
-theorem integral_log_density_fibre
-    (x : ℝ) (hWx : W x ≪ volume) :
-    ∫ y, Real.log ((W x).rnDeriv volume y).toReal ∂(W x)
-      = -Common2026.Shannon.differentialEntropy (W x) := by
-  set f : ℝ → ℝ≥0∞ := (W x).rnDeriv volume with hf_def
+/-- **General log-density entropy identification (genuine).** For any `μ : Measure ℝ`
+with `μ ≪ volume` and measurable density `f := μ.rnDeriv volume`, the integral of
+`log f` against `μ` is `−differentialEntropy μ`. This is the generalization of
+`integral_log_density_fibre` to an arbitrary `≪ volume` measure (the proof never used
+that `μ` was a channel fibre); it is reused for both the fibre term (`μ := W x`) and
+the output term (`μ := outputDistribution p W`) in the assembly below. -/
+theorem integral_log_rnDeriv_eq_neg_diffEntropy
+    (μ : Measure ℝ) [SigmaFinite μ] (hμ : μ ≪ volume) :
+    ∫ y, Real.log (μ.rnDeriv volume y).toReal ∂μ
+      = -Common2026.Shannon.differentialEntropy μ := by
+  set f : ℝ → ℝ≥0∞ := μ.rnDeriv volume with hf_def
   have hf_meas : Measurable f := Measure.measurable_rnDeriv _ _
   have hf_lt_top : ∀ᵐ y ∂(volume : Measure ℝ), f y < ∞ := Measure.rnDeriv_lt_top _ _
-  have h_wd : W x = volume.withDensity f := (Measure.withDensity_rnDeriv_eq _ _ hWx).symm
-  -- rewrite the LHS integral against `W x` as an integral against `volume`
-  calc ∫ y, Real.log (f y).toReal ∂(W x)
+  have h_wd : μ = volume.withDensity f := (Measure.withDensity_rnDeriv_eq _ _ hμ).symm
+  -- rewrite the LHS integral against `μ` as an integral against `volume`
+  calc ∫ y, Real.log (f y).toReal ∂μ
       = ∫ y, Real.log (f y).toReal ∂(volume.withDensity f) := by rw [h_wd]
     _ = ∫ y, (f y).toReal • Real.log (f y).toReal ∂volume :=
         integral_withDensity_eq_integral_toReal_smul hf_meas hf_lt_top _
     _ = ∫ y, (f y).toReal * Real.log (f y).toReal ∂volume := by
         simp only [smul_eq_mul]
-    _ = -Common2026.Shannon.differentialEntropy (W x) := by
+    _ = -Common2026.Shannon.differentialEntropy μ := by
         unfold Common2026.Shannon.differentialEntropy
         rw [← integral_neg]
         refine integral_congr_ae (Filter.Eventually.of_forall (fun y => ?_))
         rw [Real.negMulLog_def]
         ring
+
+/-- **Fibre differential-entropy identification (genuine).** For an `≪ volume`
+fibre `W x` with measurable density `f := (W x).rnDeriv volume`, the inner integral
+of `log f` against `W x` is `−differentialEntropy (W x)`. Thin wrapper around the
+general `integral_log_rnDeriv_eq_neg_diffEntropy`. -/
+theorem integral_log_density_fibre
+    (x : ℝ) (hWx : W x ≪ volume) :
+    ∫ y, Real.log ((W x).rnDeriv volume y).toReal ∂(W x)
+      = -Common2026.Shannon.differentialEntropy (W x) :=
+  integral_log_rnDeriv_eq_neg_diffEntropy (W x) hWx
 
 /-- **Proxy form of the fibre differential-entropy identification** (Route B).
 Same conclusion as `integral_log_density_fibre`, but stated with a measurable
@@ -245,14 +261,15 @@ theorem llr_compProd_prod_split
 `(mutualInfoOfChannel p W).toReal = h(Y) − ∫ h(Y|X=x) dp(x)`, the density-level
 analogue of the discrete `mutualInfo_eq_entropy_add_entropy_sub_jointEntropy`.
 
-The density-level wall is the single shared sorry lemma
-`InformationTheory.Shannon.AWGN.contChannelMIDecomp_holds` (`AwgnWalls.lean`,
-`@residual(wall:awgn-mi-decomp)`) so the same wall does not sit in multiple files.
-This is a thin wrapper threading the three absolute-continuity preconditions, the
-fibre-vs-output absolute continuity, the measurable density proxy `g` with its
-per-fibre a.e. bridge, and the two log-density integrabilities (proxy fibre + output)
-straight into the shared wall. The wall carries the sole density-level chain-rule
-sorry; every argument here is genuine regularity. -/
+This is now assembled **genuinely (0 sorry)** from the local helpers — no external
+density-level wall. The proof opens `mutualInfoOfChannel = klDiv (p⊗ₘW) (p.prod q)`
+(`q := outputDistribution p W`) via `toReal_klDiv_of_measure_eq` (both factors are
+probability measures, so the univ-mass condition is automatic), rewrites the joint
+log-likelihood ratio by the Bayes density split `llr_compProd_prod_split`, splits the
+resulting integral with `integral_sub`, identifies the fibre term with
+`integral_compProd` + `integral_log_proxy_fibre` (each fibre `↦ −h(W x)`), and
+identifies the output term with `integral_snd_outputDistribution` +
+`integral_log_rnDeriv_eq_neg_diffEntropy` (`↦ −h(q)`). -/
 theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub
     (hW_ac : ∀ x, W x ≪ volume)
     (hWx_q : ∀ x, W x ≪ outputDistribution p W)
@@ -266,9 +283,55 @@ theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub
             ((outputDistribution p W).rnDeriv volume z.2).toReal) (p ⊗ₘ W)) :
     (mutualInfoOfChannel p W).toReal
       = Common2026.Shannon.differentialEntropy (outputDistribution p W)
-        - (∫ x, Common2026.Shannon.differentialEntropy (W x) ∂p) :=
-  InformationTheory.Shannon.AWGN.contChannelMIDecomp_holds p W
-    hW_ac hWx_q hq_ac h_joint_ac g hg_meas hg_ae h_int_fibre h_int_out
+        - (∫ x, Common2026.Shannon.differentialEntropy (W x) ∂p) := by
+  set q := outputDistribution p W with hq_def
+  -- `p.prod q` is a probability measure (product of two probability measures)
+  have hq_vol : q ≪ volume := hq_ac
+  -- Phase 1: open `mutualInfoOfChannel` to an llr integral against the joint.
+  have h_kl :
+      (mutualInfoOfChannel p W).toReal
+        = ∫ z, llr (p ⊗ₘ W) (p.prod q) z ∂(p ⊗ₘ W) := by
+    rw [mutualInfoOfChannel_def, jointDistribution_def]
+    refine toReal_klDiv_of_measure_eq h_joint_ac ?_
+    rw [measure_univ, measure_univ]
+  rw [h_kl]
+  -- Phase 3: rewrite the integrand by the Bayes density split (a.e. on the joint).
+  rw [integral_congr_ae
+        (llr_compProd_prod_split (p := p) (W := W) q hWx_q hq_vol h_joint_ac g hg_meas hg_ae)]
+  -- split the integral of the difference into two integrals
+  rw [integral_sub h_int_fibre h_int_out]
+  -- Phase 4: fibre term `∫ z, log (g z).toReal ∂(p⊗ₘW) = -∫ x, h(W x) ∂p`.
+  have h_fibre :
+      (∫ z, Real.log (g z).toReal ∂(p ⊗ₘ W))
+        = -(∫ x, Common2026.Shannon.differentialEntropy (W x) ∂p) := by
+    rw [Measure.integral_compProd h_int_fibre]
+    rw [← integral_neg]
+    refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+    exact integral_log_proxy_fibre x (hW_ac x) (hg_ae x)
+  -- Phase 5: output term `∫ z, log f_q(z.2) ∂(p⊗ₘW) = -h(q)`.
+  have h_out :
+      (∫ z, Real.log (q.rnDeriv volume z.2).toReal ∂(p ⊗ₘ W))
+        = -Common2026.Shannon.differentialEntropy q := by
+    -- reduce the joint integral to the output marginal `q = (p⊗ₘW).map snd`
+    have h_eq : q = (p ⊗ₘ W).map Prod.snd := rfl
+    have h_int_joint :
+        Integrable
+          ((fun y => Real.log (q.rnDeriv volume y).toReal) ∘ Prod.snd) (p ⊗ₘ W) := h_int_out
+    have h_marg_meas :
+        AEStronglyMeasurable (fun y => Real.log (q.rnDeriv volume y).toReal) q :=
+      ((Measure.measurable_rnDeriv q volume).ennreal_toReal.log).aestronglyMeasurable
+    have h_int_out_marg :
+        Integrable (fun y => Real.log (q.rnDeriv volume y).toReal) q := by
+      rw [h_eq]
+      refine (integrable_map_measure ?_ measurable_snd.aemeasurable).mpr h_int_joint
+      rw [← h_eq]; exact h_marg_meas
+    rw [integral_snd_outputDistribution
+          (fun y => Real.log (q.rnDeriv volume y).toReal) (by rw [← hq_def]; exact h_int_out_marg)]
+    rw [← hq_def]
+    exact integral_log_rnDeriv_eq_neg_diffEntropy q hq_vol
+  -- Phase 6: combine.
+  rw [h_fibre, h_out]
+  ring
 
 end InformationTheory.Shannon.ChannelCoding
 
@@ -517,13 +580,13 @@ theorem isContChannelMIDecompHyp_awgn
     · rw [← h_eq]; exact hg_aesm
     · rw [← h_eq]; exact h_int_out_marg
   unfold IsContChannelMIDecompHyp
-  -- All regularity arguments of the shared wall (via the generic body
-  -- `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`) are discharged genuinely from
-  -- the Gaussian facts built above: the three absolute continuities, the
-  -- fibre-vs-output ac `hWx_q`, the measurable proxy `g` + its per-fibre a.e. bridge
-  -- `hg_ae`, and the two log-density integrabilities (proxy fibre `h_int_fibre_joint`,
-  -- output `h_int_out_joint`). The sole density-level chain-rule sorry lives in the
-  -- shared wall `AwgnWalls.contChannelMIDecomp_holds` (`@residual(wall:awgn-mi-decomp)`).
+  -- All arguments of the now-genuine generic body
+  -- `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` are discharged genuinely from the
+  -- Gaussian facts built above: the three absolute continuities, the fibre-vs-output
+  -- ac `hWx_q`, the measurable proxy `g` + its per-fibre a.e. bridge `hg_ae`, and the
+  -- two log-density integrabilities (proxy fibre `h_int_fibre_joint`, output
+  -- `h_int_out_joint`). The body itself (KL→llr, Bayes split, Fubini, both fibre/output
+  -- entropy identifications) is fully genuine (0 sorry) — no shared MI-decomp wall.
   exact mutualInfoOfChannel_toReal_eq_diffEntropy_sub
     (W := W) (awgnChannel_apply_absolutelyContinuous N hN h_meas)
     hWx_q hq_vol h_joint_ac g hg_meas hg_ae h_int_fibre_joint h_int_out_joint

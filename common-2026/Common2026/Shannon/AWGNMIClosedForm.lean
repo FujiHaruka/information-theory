@@ -20,10 +20,11 @@ producers.
 directly under `AWGNMIBridgeDischarge`), so this NEW file imports both and is the
 sole place where the hypothesis-free wrapper can be assembled.
 
-The wrapper's own body is **0 sorry**. Its only residual is a transitive
-dependency on the shared MI-decomposition wall `contChannelMIDecomp_holds`
-(`AwgnWalls.lean`, `@residual(wall:awgn-mi-decomp)`), tracked transitively by the
-type checker; this file therefore carries no `@residual` tag of its own.
+The wrapper's own body is **0 sorry**. The former transitive dependency on the
+shared MI-decomposition wall `contChannelMIDecomp_holds` has been retired
+(closed 2026-05-28: `ContChannelMIDecomp.mutualInfoOfChannel_toReal_eq_diffEntropy_sub`
+is now assembled genuinely from local helpers), so this Gaussian-input MI closed form
+is now genuine transitively. This file carries no `@residual` tag of its own.
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -33,10 +34,11 @@ open scoped ENNReal NNReal
 
 /-- AWGN channel mutual information, Gaussian input, closed form
 `I = (1/2)·log(1 + P/N)`, fully hypothesis-free (takes no `h_bridge`).
-The sole residual is a transitive dependency on the shared MI-decomposition wall
-`contChannelMIDecomp_holds` (`AwgnWalls.lean`, `@residual(wall:awgn-mi-decomp)`);
-this theorem's own body is 0 sorry. Hypothesis-free successor of the
-`h_bridge`-form `mutualInfoOfChannel_gaussianInput_closed_form` (`AWGN.lean`). -/
+The former transitive dependency on the shared MI-decomposition wall
+`contChannelMIDecomp_holds` has been retired (closed 2026-05-28: the generic body
+`mutualInfoOfChannel_toReal_eq_diffEntropy_sub` is now genuine), so this is now a
+genuine closed form. Hypothesis-free successor of the `h_bridge`-form
+`mutualInfoOfChannel_gaussianInput_closed_form` (`AWGN.lean`). -/
 @[entry_point]
 theorem mutualInfoOfChannel_gaussianInput_closed_form'
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
