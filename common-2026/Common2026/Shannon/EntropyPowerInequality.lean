@@ -405,14 +405,24 @@ theorem entropy_power_inequality_log_form {Ω : Type*} {mΩ : MeasurableSpace Ω
 /-- **3-arg EPI pass-through**: 3 つの独立変数 `X, Y, Z` に対し EPI を
 chain することで `exp(2 h(X+Y+Z)) ≥ exp(2 h(X)) + exp(2 h(Y)) + exp(2 h(Z))`.
 
-撤退ラインは 2-arg 形を 2 回適用するための 2 つの L-EPI3 hypothesis を
-取る形に外出し (X+Y vs Z のペアで 1 回、X vs Y のペアで 1 回)。
+2-arg 形を 2 回適用するための 2 つの lower-arity EPI 結論を取る (X+Y vs Z の
+ペアで 1 回、X vs Y のペアで 1 回)。
 
-`@audit:retract-candidate(load-bearing-predicate)` — chains two L-EPI3
-hypotheses (`IsEntropyPowerInequalityHypothesis _ _ P`); Phase A
-(`epi-stam-to-conclusion-phaseA-plan`) ships a genuine alternative
-discharge route via `EPIStamToBridge.entropy_power_inequality_unconditional`
-that no longer requires L-EPI3 as an input. -/
+`@audit:ok` — Cluster C sorry-migration audit 2026-05-28. 本 wrapper の body は
+genuine な structural composition (assoc + transitivity via `linarith`、internal
+`sorry` なし)。caller が供給する `h_xy_z_epi` / `h_x_y_epi` は lower-arity の EPI
+**結論** (`IsEntropyPowerInequalityHypothesis _ _ P`) を transparent に carry する
+ものであり、当該 wrapper 自身は core を抱えていない — transitive な load-bearing-ness
+は L-EPI3 predicate の定義 site (`IsEntropyPowerInequalityHypothesis`、named
+conclusion form) に live する。sister `EPIPlumbing.entropy_power_inequality_four_arg`
+(Phase 1.C audit で同一 rationale により `@audit:ok`) と同型。stale な
+`@audit:retract-candidate(load-bearing-predicate)` から migrate。
+**signature 不変**: 本 wrapper は `EPIL3Integration.entropy_power_inequality_three_arg_integrated`
+(parallel Group 1 が編集中) が現 signature で consume するため、引数を削ると cross-file
+collision。Phase A の代替 discharge route
+(`EPIStamToBridge.entropy_power_inequality_unconditional`) は hypothesis-free を
+**標榜していない** (Stam noise / de Bruijn regularity / limit hyp を thread) ため、
+hypothesis-free 偽装の delegate 先には使わない。 -/
 theorem entropy_power_inequality_three_arg {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y Z : Ω → ℝ)

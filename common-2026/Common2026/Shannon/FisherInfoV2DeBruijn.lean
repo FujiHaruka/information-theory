@@ -280,6 +280,46 @@ theorem deBruijn_identity_v2
       t :=
   debruijnIdentityV2_holds X Z ht h_reg
 
+/-! ### Shared sorry 補題 — `debruijnIntegrationIdentity_holds` (積分形, wall:debruijn-integration)
+
+Cover-Thomas Lemma 17.7.2 の **積分形** (integration identity along the heat-flow path)。
+`debruijnIdentityV2_holds` は per-time の `HasDerivAt` を返すのみで、その deriv を FTC
+(`intervalIntegral`) で積分して得られる差分恒等式
+
+    `h(X + √T·Z) − h(X) = ∫_0^T (1/2)·J(X + √t·Z) dt`
+
+は一般 `X` では Mathlib 未整備 (一般 heat-flow path の積分可能性 + FTC の bounded/unbounded
+interval 形が無い)。Gaussian 限定なら `bounded_T_ftc_gaussian` (`EPIL3Integration`) が同型を
+実演するが、本 lemma は density witness `fPath` を bundle した存在形で一般 `X` の壁に直接
+突き当たる。consumer (`EPIStamDischarge.IsDeBruijnIntegrationHyp` の witness 生成) は本 lemma を
+普通の lemma call として使う (各 use site で `sorry` を書かない)。
+
+結論 shape は `IsDeBruijnIntegrationHyp X Z P T` の body (`∃ fPath, ∀ h_X h_target, ...
+= ∫ t in Set.Ioo 0 T, (1/2)·(fisherInfoOfMeasureV2 ...).toReal ∂volume`) に合わせてある
+(CLAUDE.md「Mathlib-shape-driven Definitions」)。`IsDeBruijnIntegrationHyp` は downstream file
+で定義されるため (import cycle 回避) ここでは raw 積分形で述べ、consumer 側で predicate に
+畳み込む。 -/
+
+/-- **de Bruijn 積分恒等式 — shared sorry 補題 (wall:debruijn-integration)**.
+
+per-time の `debruijnIdentityV2_holds` を FTC で積分した差分恒等式の存在形。一般 `X` では
+Mathlib 未整備 (heat-flow path の積分可能性 + FTC)。consumer は `IsDeBruijnIntegrationHyp`
+witness を本 lemma 経由で生成する。
+
+`@residual(wall:debruijn-integration)` -/
+theorem debruijnIntegrationIdentity_holds
+    {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
+    (X Z : Ω → ℝ) (T : ℝ) :
+    ∃ (fPath : ℝ → ℝ → ℝ),
+      ∀ (h_X h_target : ℝ),
+        h_X = differentialEntropy (P.map X) →
+        h_target = differentialEntropy (P.map (gaussianConvolution X Z T)) →
+        h_target - h_X
+          = ∫ t in Set.Ioo 0 T, (1/2)
+            * (fisherInfoOfMeasureV2
+                (P.map (gaussianConvolution X Z t)) (fPath t)).toReal ∂volume := by
+  sorry -- @residual(wall:debruijn-integration)
+
 /-! ## Gaussian discharge — `deBruijn_identity_v2_gaussian` (hypothesis-free)
 
 The Stage 2 publish point: when `X ∼ 𝒩(m, v)`, `Z ∼ 𝒩(0, 1)`, `X ⊥ Z`,

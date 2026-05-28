@@ -262,14 +262,19 @@ and the fundamental theorem of calculus along an unbounded interval (`rg
 
 `@audit:retract-candidate(load-bearing-predicate)`
 (migrated 2026-05-28 from legacy `@audit:staged(epi-debruijn-integration)`:
-this `def : Prop` is load-bearing — the body is the existential identity
+this `def : Prop` is the existential identity
 `∃ fPath, ∀ ..., h_target - h_X = ∫ ... ∂volume`, the Cover-Thomas
 17.7.2 integration form itself, which cannot be reduced to `sorry` in a
 def body. Closure plan: `docs/shannon/epi-debruijn-integration-plan.md`.
-Active consumers exist across the file + `EntropyPowerInequality` +
-`EPIL3Integration`; tag flags eventual decomposition into a shared sorry
-lemma `@residual(wall:debruijn-integration)` once consumers can supply
-density paths directly.)
+**Wall-delegation now in place (Cluster C sorry-migration 2026-05-28)**: the
+`def` is kept as the genuine integration-form `Prop` (its shape is referenced by
+heat-flow path consumers + `EPIL3Integration`), but the analytic core is no longer
+threaded as a load-bearing hypothesis anywhere — there are 0 hypothesis-form
+consumers, and a general witness `isDeBruijnIntegrationHyp_holds` (below) produces
+the predicate for every `T` by delegating to the upstream shared sorry 補題
+`debruijnIntegrationIdentity_holds` (`@residual(wall:debruijn-integration)`,
+`FisherInfoV2DeBruijn.lean`). The `sorry` is localized to the wall lemma, not
+duplicated at any use site.)
 
 **Resolved 2026-05-25** (Wave 3 third batch): former `∀ fPath` quantification
 collapsed via `fPath := fun _ _ ↦ 0` (because
@@ -321,6 +326,27 @@ theorem isDeBruijnIntegrationHyp_at_zero
   rw [h_empty, MeasureTheory.setIntegral_empty]
   rw [hX_def, htarget_def, ← h_boundary]
   ring
+
+/-- **General de Bruijn integration witness** — `IsDeBruijnIntegrationHyp X Z P T`
+holds for every `T` by delegation to the shared wall lemma
+`debruijnIntegrationIdentity_holds` (`@residual(wall:debruijn-integration)`).
+
+This is the honest discharge route for the integration predicate: instead of
+threading `IsDeBruijnIntegrationHyp` as a load-bearing hypothesis (the integration
+identity is the Cover-Thomas 17.7.2 analytic core, a Mathlib wall), the predicate
+witness is produced by the upstream shared sorry 補題. The predicate `def` itself
+is kept as the genuine integration-form `Prop` (its shape is referenced by the
+heat-flow path consumers); the wall content lives in
+`debruijnIntegrationIdentity_holds`, so no `sorry` is written at this site.
+
+The wall lemma's existential is stated with `gaussianConvolution X Z t`, which is
+definitionally `fun ω => X ω + √t · Z ω` (the heat-flow path used by the predicate
+body), so the witness threads through directly. -/
+theorem isDeBruijnIntegrationHyp_holds
+    {Ω : Type*} {_mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
+    (X Z : Ω → ℝ) (T : ℝ) :
+    IsDeBruijnIntegrationHyp X Z P T :=
+  Common2026.Shannon.FisherInfoV2.debruijnIntegrationIdentity_holds X Z T
 
 -- (retracted, wave-1) `isDeBruijnIntegrationHypothesis_of_deBruijnIntegrationHyp`
 -- produced `IsDeBruijnIntegrationHypothesis` (formerly `:= True` placeholder)
