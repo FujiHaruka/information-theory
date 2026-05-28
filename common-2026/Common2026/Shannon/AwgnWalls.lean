@@ -51,6 +51,47 @@ set_option linter.unusedVariables false
 open MeasureTheory ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal BigOperators Topology
 
+/-! ## Wall 0 — `awgn-mi-decomp` (continuous-channel MI chain rule, AWGN-independent)
+
+集約対象: 同一の density-level MI chain rule `I(X;Y) = h(Y) − h(Y|X)` が
+`AWGNMIDecompBody.lean` の `IsContChannelMIDecompHyp` (generic channel form,
+load-bearing predicate / tier 4) と `AWGNMIBridge.lean` の `IsAwgnMIDecomp`
+(AWGN single-Gaussian-input form) の 2 箇所に散在していた。両者ともに
+`mutualInfoOfChannel` 形なので、AWGN 非依存の generic 1 補題に集約する。
+per-letter (`mutualInfo` 形) の `AWGNConverse.lean` 側は mixture→compProd の
+plumbing が要るため本補題には直結せず、別 residual で残置。 -/
+
+/-- **Shared Mathlib wall: continuous-channel mutual-information chain rule**
+(AWGN-independent).
+
+For an input law `p` on `ℝ` and a Markov channel `W : Channel ℝ ℝ`,
+```
+(mutualInfoOfChannel p W).toReal
+  = differentialEntropy (outputDistribution p W) − ∫ x, differentialEntropy (W x) ∂p
+```
+i.e. `I(X;Y) = h(Y) − h(Y|X)`, with `h(Y|X)` realized as the integral of fibrewise
+differential entropies. This is the continuous (density-based) analogue of the
+discrete `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ`.
+
+Mathlib gap: the continuous version is absent (loogle `ProbabilityTheory.mutualInfo`
+→ unknown, `differentialEntropy` → unknown, `ProbabilityTheory.condDistrib,
+InformationTheory.klDiv` → Found 0). Discharging it requires the density-level
+`klDiv_compProd_eq_add` expansion + Bayes rnDeriv split + `differentialEntropy`
+unfold (~200-300 lines of rnDeriv / Fubini / integrability bookkeeping with no
+reusable Mathlib lemma). Exposed here as the single shared sorry lemma so that
+`IsContChannelMIDecompHyp` / `IsAwgnMIDecomp` / `mutualInfoOfChannel_gaussianInput_closed_form`
+all delegate to one place.
+
+@residual(wall:awgn-mi-decomp) -/
+theorem contChannelMIDecomp_holds
+    (p : Measure ℝ) [IsProbabilityMeasure p]
+    (W : InformationTheory.Shannon.ChannelCoding.Channel ℝ ℝ) [IsMarkovKernel W] :
+    (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel p W).toReal
+      = Common2026.Shannon.differentialEntropy
+          (InformationTheory.Shannon.ChannelCoding.outputDistribution p W)
+        - (∫ x, Common2026.Shannon.differentialEntropy (W x) ∂p) := by
+  sorry
+
 /-! ## Wall 1 — `awgn-continuous-aep-gaussian` -/
 
 /-- **Continuous AEP for n-dim Gaussian** (Phase B-0 wall, 旧 `IsContinuousAEPGaussian`).

@@ -162,10 +162,12 @@ differentialEntropy (outputDistribution …) − ∫ …`). The discharge is the
 `exact`.
 
 `@audit:closed-by-successor(awgn-mi-decomp-plan)`
-(The successor predicate `IsContChannelMIDecompHyp` above is the genuine sorry-based
-discharge target — see `ContChannelMIDecomp.lean` where `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`
-carries `@residual(plan:awgn-mi-decomp-plan)`. This wrapper is now a pure
-`unfold + exact` shim and not itself a load-bearing claim.) -/
+(The successor predicate `IsContChannelMIDecompHyp` above is discharged
+hypothesis-free in `ContChannelMIDecomp.lean` (`isContChannelMIDecompHyp_awgn`),
+whose generic body `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` now delegates the
+sole density-level wall to the shared sorry lemma
+`AwgnWalls.contChannelMIDecomp_holds` (`@residual(wall:awgn-mi-decomp)`). This
+wrapper is a pure `unfold + exact` shim and not itself a load-bearing claim.) -/
 @[entry_point]
 theorem awgn_midecomp_of_cont_chain
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)

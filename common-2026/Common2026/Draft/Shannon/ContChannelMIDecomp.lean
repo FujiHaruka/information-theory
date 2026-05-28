@@ -1,6 +1,7 @@
 import Common2026.Shannon.ChannelCoding
 import Common2026.Shannon.DifferentialEntropy
 import Common2026.Shannon.AWGNMIDecompBody
+import Common2026.Shannon.AwgnWalls
 import Mathlib.InformationTheory.KullbackLeibler.Basic
 import Mathlib.Probability.Kernel.Composition.RadonNikodym
 import Mathlib.Probability.Kernel.Composition.IntegralCompProd
@@ -244,15 +245,20 @@ theorem llr_compProd_prod_split
 `(mutualInfoOfChannel p W).toReal = h(Y) − ∫ h(Y|X=x) dp(x)`, the density-level
 analogue of the discrete `mutualInfo_eq_entropy_add_entropy_sub_jointEntropy`.
 
-@residual(plan:awgn-mi-decomp-plan) -/
+The density-level wall is now consolidated into the single shared sorry lemma
+`InformationTheory.Shannon.AWGN.contChannelMIDecomp_holds` (`AwgnWalls.lean`,
+`@residual(wall:awgn-mi-decomp)`) so the same wall does not sit in multiple files.
+The three absolute-continuity arguments are kept as preconditions (they document the
+genuine route and are consumed by the closure), but the residual now lives at one
+place. -/
 theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub
     (_hW_ac : ∀ x, W x ≪ volume)
     (_hq_ac : outputDistribution p W ≪ volume)
     (_h_joint_ac : (p ⊗ₘ W) ≪ p.prod (outputDistribution p W)) :
     (mutualInfoOfChannel p W).toReal
       = Common2026.Shannon.differentialEntropy (outputDistribution p W)
-        - (∫ x, Common2026.Shannon.differentialEntropy (W x) ∂p) := by
-  sorry
+        - (∫ x, Common2026.Shannon.differentialEntropy (W x) ∂p) :=
+  InformationTheory.Shannon.AWGN.contChannelMIDecomp_holds p W
 
 end InformationTheory.Shannon.ChannelCoding
 
@@ -504,8 +510,10 @@ theorem isContChannelMIDecompHyp_awgn
   -- The load-bearing hypotheses (g / hg_meas / hg_ae / h_llr_split /
   -- h_int_fibre_joint / h_int_out_joint / h_int_out_marg) have been retired from
   -- `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`'s signature as part of the
-  -- small-cluster sorry-migration (Phase 2.3). The body is now sorry-routed via
-  -- `@residual(plan:awgn-mi-decomp-plan)`. The locally-built data above
+  -- small-cluster sorry-migration (Phase 2.3). The body of that lemma now delegates
+  -- the sole density-level wall to the shared sorry lemma
+  -- `AwgnWalls.contChannelMIDecomp_holds` (`@residual(wall:awgn-mi-decomp)`) so the
+  -- wall lives in exactly one place. The locally-built data above
   -- (h_llr_split / h_int_*) is **dead code retained as a record of the genuine
   -- route** for future closure; it is no longer consumed at the call site below
   -- (`refine mutualInfoOfChannel_toReal_eq_diffEntropy_sub` only passes
