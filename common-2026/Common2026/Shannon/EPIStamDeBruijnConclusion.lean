@@ -64,13 +64,18 @@ Fisher-info-zero artefact and was removed — see §5, RESOLVED 2026-05-20.)
 
 ## Genuinely-irreducible primitives remaining
 
-After this assembly the EPI conclusion reduces to:
+After this assembly the EPI conclusion reduces to the two genuine Stam-wall
+primitives carried by `IsEPIStamDeBruijnPipeline`:
 
 * `IsStamScoreConvolution` — Blachman score-of-convolution identity (Step 1).
 * `IsStamTotalExpectation` — total-expectation cross-term orthogonality (Step 3,
   the integration-by-parts step; Cover-Thomas 17.7.2's deepest analytic content).
-* `IsStamToEPIBridgeHyp` — the Csiszár scaling-path coupling (Lemma 17.7.3),
-  with its Gaussian case fully discharged.
+
+The Stam→EPI bridge (`IsStamToEPIBridgeHyp`, Csiszár scaling-path coupling,
+Lemma 17.7.3) is **no longer a pipeline primitive** — once the monolithic
+`IsEPIL3IntegratedPipeline` stopped reading a bridge field it became vestigial,
+and the bridge is now discharged internally by consumers via the shared sorry
+lemma `stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`).
 
 These are genuine analytic primitives (not `True` placeholders, not defeq no-ops);
 the arithmetic of Steps 2 and 4 and the de Bruijn derivative sign are discharged
