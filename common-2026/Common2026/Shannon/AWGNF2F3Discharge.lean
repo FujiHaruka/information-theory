@@ -22,66 +22,35 @@ jointly typical decoding for achievability) + F-3 (per-letter MI Fano converse)*
   **structural reduction** (hypothesis を `awgn_achievability_jointly_typical_body`
   に流し込み `IsAwgnTypicalityHypothesis` に戻す) だけを実装。
 * **F-3 — Per-letter MI Fano converse (converse body)**:
-  per-letter MI bound `I(X_i; Y_i) ≤ (1/2) log(1+P/N)` を `IsAwgnF3PerLetterHypothesis`
-  predicate に集約、これを `n` 個の chain rule で合算 + Fano data processing で
-  `IsAwgnConverseHypothesis` に変換する body lemma `awgn_converse_fano_body`。
-  **実体 (chain rule on memoryless channel, Gaussian max-entropy via
-  `differentialEntropy_le_gaussian_of_variance_le`, Fano data processing)**
-  は内部 hypothesis として外出し → 縮減 MVP。
+  per-letter MI bound `I(X_i; Y_i) ≤ (1/2) log(1+P/N)` を `n` 個の chain rule で
+  合算 + Fano data processing で converse に変換するライン。**実体 (chain rule on
+  memoryless channel, Gaussian max-entropy via
+  `differentialEntropy_le_gaussian_of_variance_le`, Fano data processing)** は
+  Mathlib 不在。本 file が MVP で予約した F-3 hypothesis predicate はすべて
+  撤回済 — genuine F-3 converse body は `AWGNConverseDischarge.lean` /
+  `AWGNConverse.lean` に存在する。
 
-## 撤退ライン (本 file)
+## 現状 (本 file、2026-05-27/28 migration 後)
 
-F-2 / F-3 の **chain-of-hypothesis reduction**:
+本 file が MVP として導入した F-2 / F-3 の hypothesis pass-through predicate
+群および対応する body lemma はすべて撤回済 (load-bearing alias の
+name-laundering 撤回 + vestigial `True` placeholder の retraction)。現在 file に
+残るのは:
 
-* F-2 body: `IsAwgnF2DecodingHypothesis P N h_meas` (continuous AEP +
-  random Gaussian codebook + joint typical decoder の error bound) を仮定し、
-  `IsAwgnTypicalityHypothesis P N h_meas` を構成 (= F-1 hypothesis を埋める body)。
-* F-3 body: `IsAwgnF3PerLetterHypothesis P N h_meas` (per-letter MI bound) +
-  `IsAwgnF3ChainHypothesis P N h_meas` (chain rule + Fano data processing) を
-  仮定し、`IsAwgnConverseHypothesis P N h_meas` を構成。
+* `AWGNJointlyTypicalSet` 定義 + structural lemmas
+  (`AWGNJointlyTypicalSet_subset_of_le_ε`、`AWGNJointlyTypicalSet_measurable`)。
+* `awgn_theorem_of_F2F3_hypotheses` — `AWGNF1Discharge.awgn_theorem_F1_discharged`
+  の薄い re-publish (F-4 kernel measurability + F-2 MI bridge を hypothesis に取る)。
+* `awgn_capacity_closed_form_of_maxent_hypotheses` — capacity closed form の
+  re-publish (max-entropy / bddAbove を hypothesis に取る)。
 
-両 body は thin wrapper (`AWGNAchievability.awgn_achievability` /
-`AWGNConverse.awgn_converse` の薄い変形)。実体 discharge は別 plan
-(`awgn-achievability-typicality-plan.md` / `awgn-converse-aux-plan.md`、Tier 3) へ。
+genuine F-2 (achievability) / F-3 (converse) body は別 file / 別 plan に存在:
 
-L-S2 / L-C2 / L-F1+L-F2 と同型 pattern (T1-B Chernoff / T1-C Cramér / T2-F de
-Bruijn の hypothesis pass-through wave と同様)。
-
-## Approach
-
-1. **F-2 body**:
-   - `AWGNJointlyTypicalSet n P N ε` を `Set ((Fin n → ℝ) × (Fin n → ℝ))` として
-     3 つの power-bound 条件で定義 (型レベル既定義)。
-   - `AWGNJointlyTypicalSet_subset_of_le_ε` (ε 単調性) で structural property を
-     提示。
-   - `IsAwgnF2DecodingHypothesis` (F-1 hypothesis form と同じ shape の
-     `IsAwgnTypicalityHypothesis` を **異なる名前で alias**) を予約。実体的には
-     `IsAwgnTypicalityHypothesis` をそのまま流用 (MVP 縮減形)。
-   - `awgn_achievability_jointly_typical_body` =
-     `IsAwgnF2DecodingHypothesis → IsAwgnTypicalityHypothesis` (id-like reduction)。
-2. **F-3 body**:
-   - `IsAwgnF3PerLetterHypothesis` (per-letter MI bound predicate) と
-     `IsAwgnF3ChainHypothesis` (chain rule + Fano data processing) を予約。
-   - `awgn_converse_fano_body` =
-     `IsAwgnF3ChainHypothesis → IsAwgnConverseHypothesis` (id-like reduction)。
-3. **再 publish** (⚠️ F-2/F-3 は OPEN、hypothesis として渡すだけ):
-   - `awgn_theorem_of_F2F3_hypotheses`: `AWGNF1Discharge.awgn_theorem_F1_discharged`
-     の `h_typicality` を F-2 body から、`h_converse` を F-3 body から導出した形。
-     signature には MI bridge hypothesis (F-2' MI bridge は別) と F-2 / F-3 の
-     primitive hypothesis (predicate) が残る。F-2/F-3 自体は未 discharge。
-
-## 規模見積
-
-- 構造定義 (`AWGNJointlyTypicalSet` + `IsAwgnF2DecodingHypothesis` +
-  `IsAwgnF3PerLetterHypothesis` + `IsAwgnF3ChainHypothesis`): ~150-200 行
-- structural lemmas (`AWGNJointlyTypicalSet_subset_of_le_ε`、
-  `awgnJointlyTypicalSet_measurable` 等): ~150-250 行
-- body lemmas (`awgn_achievability_jointly_typical_body` /
-  `awgn_converse_fano_body`): ~100-200 行
-- `awgn_theorem_of_F2F3_hypotheses` 再 publish: ~100-150 行
-
-合計 **~500-800 行** (MVP 縮減で 0 sorry / 0 warning 達成可能、実体 discharge は
-別 plan)。
+* F-1 / F-2 achievability → `awgn-achievability-typicality-plan.md`
+  (`awgn_achievability` body)。
+* F-3 converse → `AWGNConverseDischarge.lean` (`perLetterMI` /
+  `jointMIXnYn ≤ ∑ perLetterMI` / honest `h_mi_bridge_per_letter` residual) +
+  `AWGNConverse.lean` (`awgn_converse`)、`awgn-converse-aux-plan.md`。
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -181,37 +150,16 @@ predicate. Phase B is intentionally empty now; F-2 body discharge lives in
 the analytic `awgn-achievability-typicality-plan.md` successor. -/
 
 
-/-! ## Phase C — F-3 body (Per-letter MI Fano converse) -/
+/-! ## Phase C — F-3 body (Per-letter MI Fano converse)
 
-/-- **F-3 body hypothesis 1: per-letter Gaussian max-entropy MI bound.**
-
-For every block length `n`, AWGN code `c : AwgnCode M n P`, and per-letter index
-`i : Fin n`, the per-letter mutual information satisfies
-
-`I(X_i; Y_i) ≤ (1/2) log(1+P/N)`,
-
-where `X_i` is the marginal of the i-th input symbol under uniform message and
-`Y_i` is the i-th output. This is the **Gaussian max-entropy step** of the
-converse (Cover-Thomas 9.1.2 inner step), discharged via
-`differentialEntropy_le_gaussian_of_variance_le`.
-
-⚠️ OPEN placeholder: the body is `True`, so this predicate carries NO actual
-content yet — it is a stub for the per-letter Gaussian max-entropy bound, not a
-discharge. The genuine per-letter MI bound needs continuous differential-entropy
-/ Gaussian extremality machinery absent from Mathlib (deferred to
-`awgn-converse-aux-plan.md`). Following the F-3 撤退ライン convention from
-`AWGNConverse.lean`, the per-letter integrability hypotheses (`h_ent_int`) are
-bundled in here (the discharge layer will assemble them per-`(c, i)`).
-
-`@audit:defect(prop-true)` `@audit:closed-by-successor(awgn-converse-aux-plan)`
-— continuous differential-entropy / Gaussian extremality 機構が Mathlib 不在で
-signature を本体形に書換えると下流 F-3 chain hypothesis の構造再設計が必要、
-当該セッションでは tier 5 暫定マーカーとして残置、successor plan で第一選択
-(定義書換 → body sorry) に migrate 予定。 -/
-def IsAwgnF3PerLetterHypothesis (P : ℝ) (N : ℝ≥0)
-    (h_meas : IsAwgnChannelMeasurable N) : Prop :=
-  ∀ {M n : ℕ} (_hM : 2 ≤ M) (_c : AwgnCode M n P) (_i : Fin n),
-    True  -- OPEN placeholder (`True`): abstract per-letter ≤ bound, not yet discharged
+2026-05-28 retraction: the vestigial per-letter `Prop := True` placeholder
+predicate (tier-5 `defect(prop-true)`) was an orphan left when its sibling
+chain-hypothesis predicate was deleted in the 2026-05-27 peer migration. Its
+sole consumer (`awgn_theorem_of_F2F3_hypotheses`) never used it, so it has been
+deleted (pure retraction, no content lost). The genuine F-3 per-letter converse
+obligation lives in the converse files (`AWGNConverseDischarge.lean`'s
+`perLetterMI` / `jointMIXnYn ≤ ∑ perLetterMI` / honest `h_mi_bridge_per_letter`
+residual, plus `AWGNConverse.lean`'s `awgn_converse`). -/
 
 /- **F-3 body hypothesis 2 (REMOVED)**: the verbatim-equivalent alias
 `IsAwgnF3ChainHypothesis` (a `name-laundering-alias` retract-candidate) was
@@ -227,16 +175,18 @@ aggregation lives inside the analytic `awgn-converse-aux-plan.md` successor. -/
 2026-05-27 F-1/F-3 peer migration: previously this wrapper consumed two
 load-bearing aliases (`IsAwgnF2DecodingHypothesis` ≡ `IsAwgnTypicalityHypothesis`
 and `IsAwgnF3ChainHypothesis` ≡ `IsAwgnConverseHypothesis`) which have been
-deleted. The remaining placeholder `IsAwgnF3PerLetterHypothesis := True` is
-retained as-is (tier-5 `defect(prop-true)` flagged elsewhere, scope-out of
-the current migration). The wrapper now matches `awgn_theorem_F1_discharged`
-exactly (F-1 / F-3 are absent as predicate hyps; their bodies live as
-`sorry + @residual` inside `awgn_achievability` / `awgn_converse`).
+deleted. 2026-05-28: the vestigial per-letter `:= True` placeholder predicate +
+its unused parameter (never referenced in the body) were retracted; the genuine
+F-3 per-letter obligation lives in the converse files
+(`AWGNConverseDischarge.lean`). The wrapper now matches
+`awgn_theorem_F1_discharged` exactly (F-1 / F-3 are absent as predicate hyps;
+their bodies live as `sorry + @residual` inside `awgn_achievability` /
+`awgn_converse`).
 
-⚠️ NOT a full discharge: F-1 achievability body, F-3 converse body and the
-`h_F3_per_letter` placeholder remain OPEN. Only F-4 (kernel measurability)
-+ F-2 MI bridge (via `awgn_theorem_F1_discharged` ⟶ `awgn_channel_coding_theorem`)
-are exposed as concrete hypotheses.
+⚠️ NOT a full discharge: F-1 achievability body and F-3 converse body remain
+OPEN. Only F-4 (kernel measurability) + F-2 MI bridge (via
+`awgn_theorem_F1_discharged` ⟶ `awgn_channel_coding_theorem`) are exposed as
+concrete hypotheses.
 
 実体 discharge は別 plan へ:
 
@@ -246,7 +196,6 @@ are exposed as concrete hypotheses.
 `@audit:closed-by-successor(awgn-achievability-typicality-plan)` -/
 theorem awgn_theorem_of_F2F3_hypotheses
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
-    (h_F3_per_letter : IsAwgnF3PerLetterHypothesis P N (isAwgnChannelMeasurable N))
     (h_mi_bridge :
         (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
             (gaussianReal 0 P.toNNReal)
