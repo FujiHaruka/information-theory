@@ -169,4 +169,134 @@ theorem awgnPowerConstraintHonest_holds
           ≥ ENNReal.ofReal (1 - ε) := by
   sorry
 
+/-! ## Converse-side walls — `awgn-per-letter-integrability` / `awgn-continuous-mi-chain-rule`
+/ `awgn-converse-markov-regularity`
+
+Phase 3-α (`docs/shannon/awgn-m5-sorry-migration-plan.md`) で `AWGNConverseDischarge.lean`
+の 3 sub-bound predicate (`PerLetterIntegrabilityForConverse` /
+`ContinuousMIChainRuleForConverse` / `MarkovChainForConverse`) + bundle
+`IsAwgnConverseFeasible` を削除し、各 sub-bound の analytic content を shared sorry
+補題に格上げする。
+
+**Import cycle 回避**: 旧 predicate body は `awgnConverseJoint` / `perLetterYLaw` /
+`perLetterMI` / `jointMIXnYn` (いずれも `AWGNConverseDischarge.lean` 定義) を参照する。
+これら named def を本 file から直接参照すると `AwgnWalls → AWGNConverseDischarge →
+AwgnWalls` の import cycle になるため、`awgnConverseJoint` の body を本 file の
+private mirror def `converseJointInline` に inline する (両 def は同一 RHS なので
+**defeq**: consumer 側 `unfold awgnConverseJoint perLetterYLaw …` で goal が本 file の
+inline 形に一致し、shared 補題が適用可能)。
+
+**Markov の Route 判定 (Phase 3α-1)**: `MarkovChainForConverse` の genuine 化
+(`IsMarkovChain (awgnConverseJoint) Prod.fst (encoder∘fst) Prod.snd` の condDistrib
+joint factorization 導出) は条件付き独立 `W ⊥ Y^n | X^n` の measure-theoretic
+factorization を要し、当 session の 30-50 行 bridge 上限を超える (encoder 非単射時の
+`condDistrib W (encoder∘W)` が非自明)。よって **L-AWGNM5-1-α 撤退 = Route B**:
+`awgnConverseMarkov_holds` を shared sorry 補題として追加 (wall
+`awgn-converse-markov-regularity`、wall 件数 3 → 4)。 -/
+
+/-- Mirror of `awgnConverseJoint` (`AWGNConverseDischarge.lean:65`) body, inlined here
+to break the would-be import cycle. Defeq to `awgnConverseJoint h_meas c` (both `def`s
+share the same RHS, so consumer-side `unfold awgnConverseJoint` reduces to this form). -/
+private noncomputable def converseJointInline
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} (c : AwgnCode M n P) :
+    Measure (Fin M × (Fin n → ℝ)) :=
+  ((Fintype.card (Fin M) : ℝ≥0∞)⁻¹) •
+    ∑ m : Fin M,
+      (Measure.dirac m).prod
+        (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i)))
+
+/-- `converseJointInline` is a probability measure for `M ≥ 1` (mixture with weights
+`1/M` summing to 1). Mirror of `awgnConverseJoint.instIsProbabilityMeasure`
+(`AWGNConverseDischarge.lean:77`); needed so `IsMarkovChain`'s `[IsFiniteMeasure μ]`
+prerequisite resolves on the inlined joint. -/
+private instance converseJointInline.instIsProbabilityMeasure
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
+    IsProbabilityMeasure (converseJointInline h_meas c) := by
+  refine ⟨?_⟩
+  unfold converseJointInline
+  rw [Measure.smul_apply, Measure.finsetSum_apply _ _ Set.univ]
+  have h_summand : ∀ m : Fin M,
+      ((Measure.dirac m).prod
+          (Measure.pi (fun i : Fin n => awgnChannel N h_meas (c.encoder m i))))
+            Set.univ = 1 := fun _ => measure_univ
+  simp only [h_summand, Finset.sum_const, Finset.card_univ, Fintype.card_fin,
+    nsmul_eq_mul, mul_one, smul_eq_mul]
+  have hM_ne_zero : (M : ℝ≥0∞) ≠ 0 := by exact_mod_cast (NeZero.ne M)
+  have hM_ne_top : (M : ℝ≥0∞) ≠ ∞ := ENNReal.natCast_ne_top M
+  exact ENNReal.inv_mul_cancel hM_ne_zero hM_ne_top
+
+/-! ### Wall 4 — `awgn-per-letter-integrability` -/
+
+/-- **Per-letter `Y_i` log-density integrability** (旧 `PerLetterIntegrabilityForConverse`,
+Mathlib 壁 T-FFC-2).
+
+For every coordinate `i`, the per-letter output law `Y_i` (here written as the pushforward
+of the inlined joint along `ω ↦ ω.2 i`) has Lebesgue-integrable `negMulLog (rnDeriv · vol)`.
+Consumer-side `unfold perLetterYLaw awgnConverseJoint` reduces `perLetterYLaw h_meas c i`
+to `(converseJointInline h_meas c).map (fun ω => ω.2 i)` (defeq).
+
+Mathlib gap: continuous SMB / n-dim `differentialEntropy` integrability of a Gaussian
+mixture's log-density (`h_ent_int` of `differentialEntropy_le_gaussian_of_variance_le`,
+`DifferentialEntropy.lean:518`) is absent.
+
+@residual(wall:awgn-per-letter-integrability) -/
+theorem awgnPerLetterIntegrability_holds
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} (c : AwgnCode M n P) :
+    ∀ i : Fin n,
+      MeasureTheory.Integrable (fun y : ℝ =>
+          Real.negMulLog
+            (((converseJointInline h_meas c).map (fun ω => ω.2 i)).rnDeriv
+                MeasureTheory.volume y).toReal)
+        MeasureTheory.volume := by
+  sorry
+
+/-! ### Wall 5 — `awgn-continuous-mi-chain-rule` -/
+
+/-- **Memoryless AWGN continuous MI chain rule** (旧 `ContinuousMIChainRuleForConverse`,
+Mathlib 壁 T-FFC-3).
+
+`I(X^n; Y^n) ≤ ∑ᵢ I(X_i; Y_i)` on the inlined joint. Common2026 既存 `Fintype α`
+制約付き chain rule は AWGN `α := ℝ` で reuse 不可、`mutualInfo_pi_eq_sum`
+(`MIChainRule.lean:318`) も iid joint 仮定で発火不可 (AWGN code は non-iid codebook)。
+Consumer-side `unfold jointMIXnYn perLetterMI awgnConverseJoint` で defeq.
+
+@residual(wall:awgn-continuous-mi-chain-rule) -/
+theorem awgnContinuousMIChainRule_holds
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} (c : AwgnCode M n P) :
+    (mutualInfo (converseJointInline h_meas c)
+        (fun ω => c.encoder ω.1) Prod.snd).toReal
+      ≤ ∑ i : Fin n,
+          (mutualInfo (converseJointInline h_meas c)
+            (fun ω => c.encoder ω.1 i) (fun ω => ω.2 i)).toReal := by
+  sorry
+
+/-! ### Wall 6 — `awgn-converse-markov-regularity` (Route B, L-AWGNM5-1-α) -/
+
+/-- **Markov chain `W → encoder ∘ W → Y^n` factorization** (旧 `MarkovChainForConverse`).
+
+`IsMarkovChain (awgnConverseJoint h_meas c) Prod.fst (encoder ∘ fst) Prod.snd` の γ-form
+joint factorization. AWGN code 構造 (encoder deterministic + channel memoryless + W
+uniform) から「自然帰結」だが、`IsMarkovChain` の `condDistrib` factorization
+(`μ.map (Zc, Xs, Yo) = (μ.map Zc) ⊗ₘ (condDistrib Xs Zc ×ₖ condDistrib Yo Zc)`) を
+genuine に導くには条件付き独立 `W ⊥ Y^n | X^n` の measure-theoretic 構成を要し、当
+session の bridge 上限を超える (encoder 非単射時の `condDistrib W (encoder∘W)` が非自明)。
+
+**Route B (L-AWGNM5-1-α 撤退)**: shared sorry 補題として保持。closure 時は本補題 1 件を
+埋めれば genuine 化。Consumer-side `unfold MarkovChainForConverse awgnConverseJoint` で
+defeq に接続。
+
+@residual(wall:awgn-converse-markov-regularity) -/
+theorem awgnConverseMarkov_holds
+    {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
+    {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
+    IsMarkovChain (converseJointInline h_meas c)
+      (Prod.fst : Fin M × (Fin n → ℝ) → Fin M)
+      (fun ω : Fin M × (Fin n → ℝ) => c.encoder ω.1)
+      (Prod.snd : Fin M × (Fin n → ℝ) → Fin n → ℝ) := by
+  sorry
+
 end InformationTheory.Shannon.AWGN

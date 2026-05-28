@@ -198,3 +198,4 @@ import Common2026.Draft.Shannon.HuffmanWalls
 import Common2026.Shannon.HuffmanMergedAuxIdent
 import Common2026.Shannon.HuffmanColexDeterminism
 import Common2026.Shannon.HuffmanFirstStepProbe
+import Common2026.Shannon.MinkowskiDet

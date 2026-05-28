@@ -1,5 +1,6 @@
 import Common2026.Meta.EntryPoint
 import Common2026.Shannon.AWGN
+import Common2026.Shannon.AwgnWalls
 import Common2026.Shannon.AWGNAchievability
 import Common2026.Shannon.AWGNMain
 import Common2026.Shannon.AWGNF1Discharge
@@ -106,85 +107,14 @@ theorem gaussianCodebook_indepFun_codewords (M n : ℕ) (σsq : ℝ≥0)
     exact this
   exact h_iIndep.indepFun hmm'
 
-/-! ## Phase B-0 — Continuous AEP for n-dim Gaussian (Mathlib gap, staged) -/
+/-! ## Phase B-0 — Continuous AEP for n-dim Gaussian (Mathlib gap)
 
-/-- **Continuous AEP for n-dim Gaussian under AWGN** (Mathlib gap predicate).
-
-Packages the 3 classical continuous-AEP bounds (Cover-Thomas 9.2 / Thm 7.6.1
-analogue) at noise variance `N` and input power `P`:
-
-* **(i) joint typical probability → 1** — for the joint codebook+noise law,
-  the joint typical set `Aε^{(n)}` has measure ≥ `1 - ε` eventually in `n`.
-* **(ii) typical-set volume bound** — `vol(Aε^{(n)}) ≤ exp(n (h(X,Y) + ε))`.
-* **(iii) independent-pair upper** — when `X'` is an independent fresh
-  Gaussian draw, `P[(X',Y) ∈ Aε^{(n)}] ≤ exp(-n (I(X;Y) - 3ε))`.
-
-The 3 bounds are bundled here as a single existence-of-set statement so that
-Phase C can `obtain ⟨A, hA_meas, hA_prob, hA_vol, hA_indep⟩ := h_aep hε hn` and
-fire the union bound without re-quantifying.
-
-The set `A : Set ((Fin n → ℝ) × (Fin n → ℝ))` is the joint typical set on
-codeword × channel output. `volume` is Lebesgue measure on `(Fin n → ℝ) ×
-(Fin n → ℝ)`. The closed-form constants in the exponents are written via
-`klDiv` (判断 #3 Option γ) so that downstream Phase C can reuse the existing
-Common2026 `klDiv_pi_eq_sum` / `klDiv_gaussianReal_gaussianReal_eq` chain
-without going through the `@audit:suspect(differential-entropy-plan)`
-`jointDifferentialEntropyPi_le_sum` path (Option β).
-
-**NOT load-bearing for the AWGN achievability core.** The codebook + union
-bound + expurgation core is genuinely discharged in Phase C-D of
-`docs/shannon/awgn-achievability-typicality-plan.md`. This predicate only
-packages the 3 AEP bounds whose direct Lean discharge is blocked by the
-absence of continuous SMB (Shannon–McMillan–Breiman) and n-dim
-`differentialEntropy` in Mathlib (see Phase 0 inventory Axis 2). Same staged
-pattern as parallel-gaussian / EPI / Stam.
-
-Honesty (4-条件 per `docs/textbook-roadmap.md` / CLAUDE.md「Mathlib 壁の 4 分類」):
-(a) the predicate type quantifies over `P : ℝ`, `N : ℝ≥0` only — it does **not**
-    mention `IsAwgnChannelMeasurable`, `AwgnCode`, `errorProbAt`, or any of the
-    `IsAwgnTypicalityHypothesis` conclusion shape;
-(b) docstring (this paragraph) flags "NOT load-bearing" + lists the explicit
-    Mathlib gap (continuous SMB / n-d differentialEntropy);
-(c) Phase C-D (this file, currently sorry) consume the predicate as
-    `(h_aep : IsContinuousAEPGaussian P N) → …` and genuinely discharge the
-    union-bound + expurgation core on top of it;
-(d) `@audit:staged(continuous-aep-gaussian)` tag below.
-
-`@audit:retract-candidate(load-bearing-predicate)` (旧 slug: `continuous-aep-gaussian`、
-sister `34e17bc` EPI-Stam precedent + `docs/audit/audit-tags.md` reason vocab L233 に従う
-bookkeeping migration) -/
-def IsContinuousAEPGaussian (P : ℝ) (N : ℝ≥0) : Prop :=
-  ∀ ⦃ε : ℝ⦄, 0 < ε → ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n →
-    ∃ A : Set ((Fin n → ℝ) × (Fin n → ℝ)),
-      MeasurableSet A
-      ∧ -- (i) joint codebook+noise prob ≥ 1 - ε
-        --   joint law of (X, Y) with X ~ N(0,P) iid and Y = X + Z, Z ~ N(0,N) iid
-        (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-              (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
-            (fun p : (Fin n → ℝ) × (Fin n → ℝ) =>
-                (p.1, fun i => p.1 i + p.2 i))) A
-          ≥ ENNReal.ofReal (1 - ε)
-      ∧ -- (ii) typical-set volume bound (Option γ: bound via klDiv form)
-        --   bound by the joint-output entropy h(X,Y) (here represented as a
-        --   `klDiv` of the joint output law against Lebesgue volume).
-        volume A
-          ≤ ENNReal.ofReal (Real.exp ((n : ℝ) *
-              ((klDiv
-                  (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N)))
-                  (volume : Measure (Fin n → ℝ))).toReal + ε)))
-      ∧ -- (iii) independent-pair upper bound (X' indep of Y).
-        --   product law of independent X' ~ N(0,P) and Y ~ N(0,P+N).
-        ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-            (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N)))) A
-          ≤ ENNReal.ofReal (Real.exp (-(n : ℝ) *
-              ((klDiv
-                  (((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-                      (Measure.pi (fun _ : Fin n => gaussianReal 0 N))).map
-                    (fun p : (Fin n → ℝ) × (Fin n → ℝ) =>
-                        (p.1, fun i => p.1 i + p.2 i)))
-                  ((Measure.pi (fun _ : Fin n => gaussianReal 0 P.toNNReal)).prod
-                    (Measure.pi (fun _ : Fin n => gaussianReal 0 (P.toNNReal + N))))).toReal
-                - 3 * ε)))
+The load-bearing predicate `IsContinuousAEPGaussian` was **removed** in the
+AWGN M5 Tier 3 → Tier 2 sorry-based migration (Phase 3-β, plan
+`docs/shannon/awgn-m5-sorry-migration-plan.md`). Its analytic content is now the
+shared sorry 補題 `continuousAepGaussian_holds` in `Common2026/Shannon/AwgnWalls.lean`
+(`@residual(wall:awgn-continuous-aep-gaussian)`). Consumers in this file call that
+lemma directly instead of taking a predicate hypothesis. -/
 
 /-! ## Phase C — Joint typical decoder + union bound -/
 
@@ -513,97 +443,25 @@ instance awgnCodebookKernel.instIsMarkovKernel
     haveI : IsMarkovKernel (awgnChannel N h_meas) := awgnChannel.instIsMarkovKernel N h_meas
     infer_instance
 
-/-- **Phase C-3 staged hypothesis**: the random-coding integral bound.
-
-Given the AEP-supplied typical set `A` at parameters `(P, N, ε, n)` and any
-codebook size `M ≥ 1`, the average per-message error probability over the random
-Gaussian codebook (with `jointTypicalDecoder` as the decoder) is `≤ 2ε`. This is
-the textbook conclusion of the Cover-Thomas 9.2 random-coding argument (sphere
-packing + Fubini + IndepFun across codewords + AEP bounds (i) and (iii)).
-
-**Discharge status (Phase C-3 staged hypothesis, NOT a complete discharge).**
-This predicate isolates the *integral* piece of the union bound. The genuine
-analytic content is the chain
-
-```
-∫⁻ codebook, P[error | codebook] ∂μ_codebook
-  ≤ μ_(c, Y)[(c(m), Y) ∉ A]                         -- Fubini + AEP (i)
-    + ∑_{m' ≠ m} μ_(c, Y)[(c(m'), Y) ∈ A]           -- Fubini + IndepFun across codewords
-  ≤ ε + (M-1) · exp(-n(I - 3ε))                      -- AEP (i), (iii)
-  ≤ 2ε                                               -- for M ≤ ⌈exp(n R)⌉, R < I - 4ε, n large
-```
-
-The chain requires (a) Fubini between the codebook measure
-`Measure.pi (Measure.pi (gaussianReal 0 P))` and the AWGN channel output measure
-`Measure.pi (awgnChannel N (codebook m))`, (b) IndepFun across codewords (Phase A
-`gaussianCodebook_indepFun_codewords`), and (c) the AEP bounds from `h_aep`
-applied to the channel output (Y = X(m) + Z with X(m) ~ marginal codeword law).
-
-Honesty (4 conditions per CLAUDE.md「Mathlib 壁の 4 分類」):
-(a) the predicate signature mentions neither `IsAwgnTypicalityHypothesis`,
-    `AwgnCode`, nor `errorProbAt.toReal < ε` — it stays at the integral / Pe
-    intermediate level;
-(b) docstring (this paragraph) labels it "Phase C-3 staged hypothesis, NOT a
-    complete discharge" and lists the genuine chain components;
-(c) Phase D-E consume this as `(h_rand : IsAwgnRandomCodingBound P N h_meas)`
-    and genuinely discharge the expurgation / `AwgnCode` extraction on top of
-    it (intended Phase D body);
-(d) `@audit:staged(awgn-random-coding-bound)` tag below.
-
-The genuine discharge of this hypothesis (the Fubini + IndepFun + AEP-bound
-chain) is **the natural Phase C-3' follow-up** to this commit and corresponds
-to ~150-300 lines of probability manipulation. The orchestrator (plan
-`docs/shannon/awgn-achievability-typicality-plan.md` 判断ログ) decides whether
-to schedule a C-3' session.
-
-`@audit:retract-candidate(load-bearing-predicate)` (旧 slug: `awgn-random-coding-bound`、
-sister `34e17bc` EPI-Stam precedent + `docs/audit/audit-tags.md` reason vocab L233 に従う
-bookkeeping migration) -/
-def IsAwgnRandomCodingBound (P : ℝ) (N : ℝ≥0)
-    (h_meas : IsAwgnChannelMeasurable N) : Prop :=
-  ∀ ⦃ε : ℝ⦄, 0 < ε → ∀ ⦃R : ℝ⦄, 0 < R → R < (1/2) * Real.log (1 + P / (N : ℝ)) →
-    ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n → ∀ ⦃M : ℕ⦄ (hM_pos : 0 < M),
-      M ≤ Nat.ceil (Real.exp ((n : ℝ) * R)) →
-      ∀ ⦃A : Set ((Fin n → ℝ) × (Fin n → ℝ))⦄, MeasurableSet A →
-        haveI : NeZero M := ⟨Nat.pos_iff_ne_zero.mp hM_pos⟩
-        ∀ m : Fin M,
-          ∫⁻ codebook : Fin M → Fin n → ℝ,
-            ((Measure.pi (fun i => awgnChannel N h_meas (codebook m i)))
-              ((InformationTheory.Shannon.ChannelCoding.Code.mk
-                  (M := M) (n := n) (α := ℝ) (β := ℝ)
-                  codebook (jointTypicalDecoder A codebook)).errorEvent m))
-          ∂(gaussianCodebook M n P.toNNReal)
-            ≤ ENNReal.ofReal (2 * ε)
-
 /-- **Random-coding union bound** (Cover-Thomas 9.2 / Phase C-3). Under the
 random Gaussian codebook + AWGN channel, the average per-message error
 probability (using `jointTypicalDecoder` against the AEP-supplied typical set)
 is `≤ 2ε` for all `M ≤ ⌈exp(n R)⌉` once `n` is large enough.
 
-**Phase C-3 staging note.** This theorem provides the *existence* of a
-measurable typical set `A` (via `h_aep`) plus the integral-bound conclusion.
-The integral-bound conclusion is supplied by the load-bearing hypothesis
-`h_rand : IsAwgnRandomCodingBound P N h_meas` (Phase C-3 staged
-hypothesis, see its docstring). The orchestrator should treat the genuine
-Fubini + IndepFun + AEP-chain discharge as a Phase C-3' follow-up.
-
-Honesty: `h_rand` is a regularity-style load-bearing hypothesis (type ≠
-`IsAwgnTypicalityHypothesis` conclusion), staged with `@audit:staged(awgn-
-random-coding-bound)`. The body here is a routine combination of `h_aep`
-(to produce `A`) and `h_rand` (to bound the integral).
-
-**Independent audit (2026-05-24)**: verdict `load_bearing_hyp / suspect` —
-thin packaging (~10-line body), `h_rand` carries the integral-bound conclusion;
-`h_aep` contributes only the typical-set shell. Honest remaining task until
-both staged predicates are discharged.
-
-`@audit:closed-by-successor(awgn-moonshot-plan)` -/
+**AWGN M5 migration (Phase 3-β)**: the two load-bearing predicate hypotheses
+`h_aep : IsContinuousAEPGaussian P N` / `h_rand : IsAwgnRandomCodingBound P N
+h_meas` were removed. The body now calls the shared sorry 補題
+`continuousAepGaussian_holds P N` (typical-set existence) and
+`awgnRandomCodingBound_holds P N h_meas` (integral bound) in
+`Common2026/Shannon/AwgnWalls.lean`. The latter is stated for an abstract
+measurable `decoder`; here we instantiate it at `jointTypicalDecoder A` and
+bridge the set shape `errorEvent ≡ {y | decoder y ≠ m}` and the measure shape
+`gaussianCodebook ≡ Measure.pi (Measure.pi ...)`. This theorem is therefore a
+genuine consumer of the two walls (no residual in this declaration). -/
 @[entry_point]
 theorem awgn_avg_error_union_bound
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
-    (h_aep : IsContinuousAEPGaussian P N)
-    (h_rand : IsAwgnRandomCodingBound P N h_meas)
     {R ε : ℝ} (hR_pos : 0 < R) (hR : R < (1/2) * Real.log (1 + P / (N : ℝ)))
     (hε : 0 < ε) :
     ∃ N₀ : ℕ, ∀ n, N₀ ≤ n → ∀ M (hM_pos : 0 < M),
@@ -618,9 +476,9 @@ theorem awgn_avg_error_union_bound
                   codebook (jointTypicalDecoder A codebook)).errorEvent m))
           ∂(gaussianCodebook M n P.toNNReal)
             ≤ ENNReal.ofReal (2 * ε) := by
-  -- Both staged hypotheses provide an N₀; we take the maximum.
-  obtain ⟨N_aep, hN_aep⟩ := h_aep hε
-  obtain ⟨N_rand, hN_rand⟩ := h_rand hε hR_pos hR
+  -- Both walls provide an N₀; we take the maximum.
+  obtain ⟨N_aep, hN_aep⟩ := continuousAepGaussian_holds P N hε
+  obtain ⟨N_rand, hN_rand⟩ := awgnRandomCodingBound_holds P N h_meas hε hR_pos hR
   refine ⟨max N_aep N_rand, ?_⟩
   intro n hn M hM_pos hM_le
   haveI : NeZero M := ⟨Nat.pos_iff_ne_zero.mp hM_pos⟩
@@ -628,9 +486,17 @@ theorem awgn_avg_error_union_bound
   obtain ⟨A, hA_meas, _, _, _⟩ :=
     hN_aep (le_of_max_le_left hn : N_aep ≤ n)
   refine ⟨A, hA_meas, ?_⟩
-  -- Hypothesis h_rand supplies the integral bound for any measurable A and any m.
   intro m
-  exact hN_rand (le_of_max_le_right hn : N_rand ≤ n) hM_pos hM_le hA_meas m
+  -- The wall gives the bound for the abstract decoder; instantiate at
+  -- `jointTypicalDecoder A` and bridge `errorEvent ≡ {y | decoder y ≠ m}`.
+  have h_dec_meas : Measurable
+      (Function.uncurry (fun (c : Fin M → Fin n → ℝ) => jointTypicalDecoder A c)) :=
+    jointTypicalDecoder_joint_measurable A hA_meas
+  have h_wall := hN_rand (le_of_max_le_right hn : N_rand ≤ n) hM_pos hM_le hA_meas
+    h_dec_meas m
+  -- `errorEvent ... m = {y | jointTypicalDecoder A codebook y ≠ m}` and
+  -- `gaussianCodebook ≡ Measure.pi (Measure.pi ...)` are both definitional.
+  exact h_wall
 
 /-! ## Phase D — Expurgation -/
 
@@ -715,138 +581,84 @@ theorem awgn_expurgate_worst_half
   · intro m hm
     exact (Finset.mem_filter.mp hm).2
 
-/-- **Power-constraint realizability v2 — honest split form** (Phase 2 pivot
-2026-05-24, sibling plan `awgn-power-constraint-realizable-pivot-plan.md`).
+/-! ## Phase D — Power constraint (Mathlib gap) + feasibility witness
 
-Codebook is generated at variance `P_cb`; the per-message power constraint
-target is `n · P_target`. The intended use is `P_cb < P_target`, in which case
-SLLN gives `(1/n) ∑ᵢ X_i² → P_cb < P_target` a.s. and the mass of
-`{c | ∀ m, ∑ᵢ (c m i)² ≤ n · P_target}` tends to 1 (`n → ∞`). The honest
-analogue of v1's broken statement, parameterised so the `P_cb < P_target` slack
-is exposed at the predicate signature.
+The load-bearing predicate `IsAwgnPowerConstraintHonest` and the bundle
+`IsAwgnRandomCodingFeasible` were **removed** in the AWGN M5 Tier 3 → Tier 2
+sorry-based migration (Phase 3-β, plan
+`docs/shannon/awgn-m5-sorry-migration-plan.md`).
 
-**Honesty 4 conditions (Phase 4 independent audit checks):**
+* The power-constraint analytic content (chi-square SLLN on `gaussianCodebook`,
+  `P_cb < P_target` slack ⇒ mass `≥ 1 - ε`) is now the shared sorry 補題
+  `awgnPowerConstraintHonest_holds` in `Common2026/Shannon/AwgnWalls.lean`
+  (`@residual(wall:awgn-power-constraint-honest)`).
+* The bundle's only genuine (non-wall) content was the shared slack witness
+  `∃ P' ∈ (0, P]` with `R < capacity(P')`. The 3 sub-bounds at `P'` are now
+  supplied directly by the 3 walls, and the slack witness is provided by the
+  genuine helper `awgnPowerWitness_exists` below (which returns a **strict**
+  `P' < P`, as required by `awgnPowerConstraintHonest_holds`). -/
 
-(a) type ≠ `IsAwgnTypicalityHypothesis` conclusion — returns a mass bound on
-    `gaussianCodebook`, not the achievability conclusion;
-(b) Mathlib wall: chi-square SLLN + `gaussianCodebook` mass concentration. The
-    discharge route is the `P_cb < P_target` slack feeding `strong_law_ae_real`
-    in n-d, with the chi-square tail bounded uniformly across the `Fin M`
-    codewords by independence; this is the same Mathlib gap as the v1 remedy;
-(c) Consumer (`IsAwgnRandomCodingFeasible` bundle below) instantiates this
-    predicate with `P_cb = P'`, `P_target = P` and `0 < P' ≤ P`, then the
-    achievability core (Phase A-D plumbing) consumes the bound;
-(d) `@audit:staged(awgn-power-constraint-honest)` tag below.
+/-- **Power-constraint slack witness** (AWGN M5 Phase 3-β helper, genuine).
 
-**Independent honesty audit (2026-05-24)**: verdict `load_bearing_hyp / honest`.
-4 条件 verify:
-(a) ✅ signature is mass bound on `gaussianCodebook`; no `AwgnCode` /
-    `errorProbAt` / `< ε` shape — type-independent of
-    `IsAwgnTypicalityHypothesis` conclusion;
-(b) ✅ Mathlib gap裏取り: `loogle` shows `differentialEntropy` ≡ 0 hits,
-    `McMillan` only Kraft–McMillan (lossless, unrelated), `strong_law_ae`
-    exists but the chi-square-on-`gaussianCodebook` mass-concentration
-    composite is the actual absent piece — honest wall claim;
-(c) consumer (`IsAwgnRandomCodingFeasible` bundle, then
-    `isAwgnTypicalityHypothesis` Phase 3 body) destructures the bound and
-    threads it into the D-3 expurgation chain; bundle's `P' ≤ P` is
-    non-strict but the intended discharger picks `P' < P` via `δ(R, P, N)`
-    so the predicate is satisfiable (`P_cb = P_target` degenerates to v1's
-    false statement, but the existential `∃ P'` in the bundle does NOT
-    force that choice — soft caveat, not a defect);
-(d) ✅ `@audit:staged(awgn-power-constraint-honest)` tag present and slug
-    matches docstring.
+Given `R < capacity(P) = (1/2) log(1 + P/N)`, produce a strictly smaller variance
+`P' ∈ (0, P)` for which the rate `R` is still below `capacity(P')`. The strict
+`P' < P` is genuinely required by `awgnPowerConstraintHonest_holds` (its
+`_hP_slack : P_cb < P_target` argument); the witness must therefore deliver a
+true strict inequality, never a non-strict one fabricated from `≤`.
 
-`@audit:retract-candidate(load-bearing-predicate)` (旧 slug: `awgn-power-constraint-honest`、
-sister `34e17bc` EPI-Stam precedent + `docs/audit/audit-tags.md` reason vocab L233 に従う
-bookkeeping migration) -/
-def IsAwgnPowerConstraintHonest (P_cb P_target : ℝ) (N : ℝ≥0) : Prop :=
-  ∀ ⦃ε : ℝ⦄, 0 < ε → ∀ ⦃R : ℝ⦄, 0 < R →
-      R < (1/2) * Real.log (1 + P_target / (N : ℝ)) →
-    ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n → ∀ ⦃M : ℕ⦄ (_hM_pos : 0 < M),
-      M ≤ Nat.ceil (Real.exp ((n : ℝ) * R)) →
-      -- codebook generated at variance P_cb, target n · P_target.
-      (gaussianCodebook M n P_cb.toNNReal)
-          {c : Fin M → Fin n → ℝ | ∀ m, (∑ i, (c m i)^2) ≤ (n : ℝ) * P_target}
-        ≥ ENNReal.ofReal (1 - ε)
+Construction: `capacity` is continuous and strictly increasing in the variance;
+`R < capacity(P)` lies strictly below the value at `P`, so by continuity there is
+a left neighbourhood of `P` on which the capacity still exceeds `R`. Picking any
+`P'` in that neighbourhood with `0 < P' < P` works.
 
-/-- **Random-coding feasibility bundle** (Phase 2 pivot 2026-05-24, sibling plan
-`awgn-power-constraint-realizable-pivot-plan.md`, Option C bundled). Replaces
-the 3 staged hyps (`IsContinuousAEPGaussian P N`, `IsAwgnRandomCodingBound P N
-h_meas`, `IsAwgnPowerConstraintRealizable P N`) with a single bundled hypothesis
-that owns the witness `P' ∈ (0, P]` shared across the sub-bounds.
-
-For every rate `R` below capacity, the bundle produces a slack variance
-`P' ≤ P` with `R` still below `(1/2) log(1 + P'/N)` (capacity at `P'`), together
-with the 3 sub-bounds re-instantiated at that `P'`:
-
-* AEP at `P'` (typical-set existence + mass / volume / mismatch bounds);
-* random-coding integral bound at `P'`;
-* power-constraint honest mass bound: codebook generated at `P'`, target
-  `n · P` (SLLN slack `(P − P') > 0`).
-
-**Honesty 4 conditions:**
-
-(a) type ≠ `IsAwgnTypicalityHypothesis` conclusion — returns a triple of mass /
-    integral / measurable-set bounds witnessed by `P'`, not the achievability
-    conclusion (no `AwgnCode`, no `errorProbAt`);
-(b) Mathlib wall: this bundles 3 analytic gaps (continuous SMB / n-d
-    differentialEntropy / chi-square SLLN). The discharge picks
-    `P' := P · (1 − δ(R, P, N))` with `δ` small enough to satisfy the rate
-    margin, then feeds each sub-bound;
-(c) Consumer `isAwgnTypicalityHypothesis` (rewritten below) destructures the
-    bundle once per `(ε, R)` invocation and threads `P'` into the codebook
-    distribution while keeping the constraint target at `n · P` — the
-    achievability core (~580 lines of expurgation + worst-half + reindex) is
-    unchanged from the F-1 plan body;
-(d) `@audit:staged(awgn-random-coding-feasible)` tag below.
-
-**Naming**: the suffix `Feasible` makes clear that this is a feasibility witness
-for the random-coding argument, not a discharge of achievability itself.
-
-**Independent honesty audit (2026-05-24)**: verdict `load_bearing_hyp / honest`.
-4 条件 verify:
-(a) ✅ output `⟨P', 0<P', P'≤P, rate-margin, AEP, RC-integral, power-honest⟩`
-    — **no** `AwgnCode`, `errorProbAt`, `< ε` conclusion shape in the
-    signature; type-independent of `IsAwgnTypicalityHypothesis` conclusion;
-(b) ✅ Mathlib wall bundles 3 analytic gaps (continuous SMB / n-d
-    `differentialEntropy` / chi-square SLLN on `gaussianCodebook`); each
-    gap independently checked: `loogle` shows `differentialEntropy` 0 hits
-    in Mathlib, `McMillan` only Kraft-McMillan (lossless), continuous
-    Shannon-McMillan-Breiman absent. Honest wall claim;
-(c) consumer `isAwgnTypicalityHypothesis` (body filled in Phase 3 2026-05-24
-    with `obtain ⟨P', hP'_pos, hP'_lt_P, hR_lt_P'C, h_aep', h_rand',
-    h_power'⟩ := h_feasible hR_pos hR` + 580-line F-1 assembly threading
-    `P'` through `gaussianCodebook` while keeping the constraint target at
-    `n · P`). Core-reconstruction test: granting the bundle yields
-    **analytic primitives + shared `P'` slack**, NOT the achievability
-    conclusion — D-1/D-2/D-3 assembly must still execute. Bundle is
-    regularity-like (Mathlib-wall packaging), not load-bearing-the-conclusion;
-(d) ✅ `@audit:staged(awgn-random-coding-feasible)` tag present and slug
-    matches docstring;
-**Soft note**: `P' ≤ P` (non-strict) permits the witness `P' = P`, which
-collapses `IsAwgnPowerConstraintHonest P P N` to v1's unsatisfiable form.
-The discharger is not forced into that choice (the docstring's "intended
-use is `P_cb < P_target`" steers correctly), so the bundle remains
-honestly satisfiable. Tightening to `P' < P` is a safety-only suggestion,
-not a defect blocker for Phase 2 closure.
-**Phase 3 closure (2026-05-24)**: `isAwgnTypicalityHypothesis` body is now
-filled (no `sorry`); the two consumer wrappers
-(`awgn_achievability_F1_via_staged_hyps`,
-`awgn_theorem_F4_discharged_F1_via_staged`) inherit a genuine assembly
-modulo the bundled `h_feasible` hypothesis.
-
-`@audit:retract-candidate(load-bearing-predicate)` (旧 slug: `awgn-random-coding-feasible`、
-sister `34e17bc` EPI-Stam precedent + `docs/audit/audit-tags.md` reason vocab L233 に従う
-bookkeeping migration) -/
-def IsAwgnRandomCodingFeasible (P : ℝ) (N : ℝ≥0)
-    (h_meas : IsAwgnChannelMeasurable N) : Prop :=
-  ∀ ⦃R : ℝ⦄, 0 < R → R < (1/2) * Real.log (1 + P / (N : ℝ)) →
-    ∃ P' : ℝ, 0 < P' ∧ P' ≤ P ∧
-      R < (1/2) * Real.log (1 + P' / (N : ℝ)) ∧
-      IsContinuousAEPGaussian P' N ∧
-      IsAwgnRandomCodingBound P' N h_meas ∧
-      IsAwgnPowerConstraintHonest P' P N
+Independent honesty audit (AWGN M5 Phase 3-β): GENUINE — 0 sorry / 0 residual.
+The strict `P' < P` is produced by a real closed-form construction
+(`Pmin := N·(exp(2R)−1)` < `P` via `exp(2R) < 1 + P/N`, midpoint `P' := (Pmin+P)/2`),
+not fabricated from a non-strict `≤`. Verified to type-check with no sorry warning.
+@audit:ok -/
+@[entry_point]
+theorem awgnPowerWitness_exists (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
+    {R : ℝ} (hR_pos : 0 < R) (hR : R < (1/2) * Real.log (1 + P / (N : ℝ))) :
+    ∃ P', 0 < P' ∧ P' < P ∧ R < (1/2) * Real.log (1 + P' / (N : ℝ)) := by
+  have hN_pos : (0 : ℝ) < (N : ℝ) :=
+    lt_of_le_of_ne N.coe_nonneg (fun h => hN h.symm)
+  -- `R < (1/2) log(1 + P/N)` ⟺ `2R < log(1 + P/N)` ⟺ `exp(2R) < 1 + P/N`.
+  have hlogP : 2 * R < Real.log (1 + P / (N : ℝ)) := by linarith
+  have harg_P_pos : (0 : ℝ) < 1 + P / (N : ℝ) := by positivity
+  have hexp_lt : Real.exp (2 * R) < 1 + P / (N : ℝ) :=
+    (Real.lt_log_iff_exp_lt harg_P_pos).mp hlogP
+  -- Lower bound on admissible variance: `P_min := N · (exp(2R) − 1)`.
+  set t : ℝ := Real.exp (2 * R) with ht_def
+  have ht_gt_one : (1 : ℝ) < t := by
+    rw [ht_def]; exact Real.one_lt_exp_iff.mpr (by linarith)
+  set Pmin : ℝ := (N : ℝ) * (t - 1) with hPmin_def
+  have hPmin_pos : 0 < Pmin := by
+    rw [hPmin_def]; have : 0 < t - 1 := by linarith
+    positivity
+  -- `exp(2R) < 1 + P/N` rearranges to `Pmin < P`.
+  have hPmin_lt_P : Pmin < P := by
+    rw [hPmin_def]
+    have h1 : t - 1 < P / (N : ℝ) := by linarith
+    have h2 : (N : ℝ) * (t - 1) < (N : ℝ) * (P / (N : ℝ)) :=
+      mul_lt_mul_of_pos_left h1 hN_pos
+    rwa [mul_div_cancel₀ P (ne_of_gt hN_pos)] at h2
+  -- Pick the midpoint `P' := (Pmin + P)/2 ∈ (Pmin, P)`.
+  set P' : ℝ := (Pmin + P) / 2 with hP'_def
+  have hP'_pos : 0 < P' := by rw [hP'_def]; linarith
+  have hP'_lt_P : P' < P := by rw [hP'_def]; linarith
+  have hP'_gt_Pmin : Pmin < P' := by rw [hP'_def]; linarith
+  refine ⟨P', hP'_pos, hP'_lt_P, ?_⟩
+  -- `P' > Pmin = N(t-1)` ⟹ `t - 1 < P'/N` ⟹ `t < 1 + P'/N`.
+  have h1 : t - 1 < P' / (N : ℝ) := by
+    rw [lt_div_iff₀ hN_pos]
+    have := hP'_gt_Pmin; rw [hPmin_def] at this; linarith
+  have harg_P'_pos : (0 : ℝ) < 1 + P' / (N : ℝ) := by
+    have : 0 < P' / (N : ℝ) := div_pos hP'_pos hN_pos; linarith
+  have hexp_lt' : Real.exp (2 * R) < 1 + P' / (N : ℝ) := by
+    rw [← ht_def]; linarith
+  have hlogP' : 2 * R < Real.log (1 + P' / (N : ℝ)) :=
+    (Real.lt_log_iff_exp_lt harg_P'_pos).mpr hexp_lt'
+  linarith
 
 /-- **Expurgation (D-3)**: bridge to `AwgnCode` type given a deterministic
 codebook satisfying both the per-message error bound and the per-message power
@@ -906,48 +718,37 @@ theorem awgn_extract_AwgnCode
 
 /-! ## Phase E — `isAwgnTypicalityHypothesis` 統合 + main wrapper -/
 
-/-- **F-1 撤退ライン discharge** — previously returned the now-removed predicate
-`IsAwgnTypicalityHypothesis P N h_meas`; the return type is inline-expanded
-by the 2026-05-27 F-1/F-3 peer migration (Tier 5 → Tier 2 simultaneous sweep),
-the 580-line body is preserved verbatim. Phase A-D の組合せで本物に discharge
-(Phase 2 pivot 2026-05-24: 3 staged hyp を 1 bundle hyp
-`IsAwgnRandomCodingFeasible P N h_meas` に縮約)。
+/-- **F-1 achievability discharge** — genuine 580-line achievability assembly,
+predicate-hypothesis-free.
 
-**Bundle hypothesis** (1 本、honest 4 条件、Mathlib 壁 analytic 系):
+History: the bundle hyp `h_feasible : IsAwgnRandomCodingFeasible P N h_meas`
+(Phase 2 pivot 2026-05-24) was **removed** by AWGN M5 Phase 3-β (2026-05-28,
+Tier 3 → Tier 2 sorry-based migration). The 3 analytic Mathlib gaps the bundle
+used to package (continuous SMB / n-d `differentialEntropy` / chi-square SLLN)
+are now honest shared sorry 補題 in `AwgnWalls.lean`
+(`continuousAepGaussian_holds` / `awgnRandomCodingBound_holds` /
+`awgnPowerConstraintHonest_holds`, each `@residual(wall:awgn-*)`).
 
-* `h_feasible : IsAwgnRandomCodingFeasible P N h_meas` —
-  `∀ R-below-capacity, ∃ P' ∈ (0, P]` slack variance + 3 sub-bound at P'
-  (AEP at P', random-coding integral at P', power-constraint honest mass at P'
-  with target `n · P`). Bundle owns the witness `P'` so the 3 sub-bounds share
-  the same slack.
+**Body structure (Phase 3-β)**: the shared slack variance `P'` (now a **strict**
+`P' < P`) comes from the genuine helper `awgnPowerWitness_exists` (this file).
+The 3 sub-bounds at `P'` come from the `AwgnWalls.lean` walls; the random-coding
+wall is reshaped into the old `errorEvent`/`gaussianCodebook` predicate form via
+defeq + `jointTypicalDecoder` injection. The 580-line F-1 assembly (rate
+inflation, doubling, barrier construction, D-1 extraction, power-OK
+contradiction, D-2 worst-half, monotonic reindex, sub⊆full inclusion, D-3
+bridge) is preserved verbatim and consumes `h_aep' / h_rand' / h_power'` exactly
+as the old bundle destructure did. `awgnPowerConstraintHonest_holds P' P N`
+consumes the *original* P-capacity rate bound (via `P' < P` log-monotonicity).
 
-The bundle wraps the 3 analytic Mathlib gaps (continuous SMB / n-d
-`differentialEntropy` / chi-square SLLN) into 1 hyp. Achievability core
-(codebook + decoder + union bound + expurgation + AwgnCode 抽出) は本 theorem
-body で genuine に組み上げる (Phase 3 で fill 完了 2026-05-24)。
+**Honesty**: the assembly body is GENUINE (no degenerate/circular/laundering);
+0 sorry / 0 `@residual` in this file. The only honest residuals are the named
+shared walls in `AwgnWalls.lean`, audited 2026-05-28.
 
-**Phase 3 status (2026-05-24)**: body is the filled 580-line F-1 assembly
-prefixed by `obtain ⟨P', hP'_pos, hP'_lt_P, hR_lt_P'C, h_aep', h_rand',
-h_power'⟩ := h_feasible hR_pos hR`. `gaussianCodebook M n P.toNNReal` ↦
-`gaussianCodebook M n P'.toNNReal` in 15 locations; `PowSet` constraint
-target `n · P` unchanged (codebook at P', target at P, SLLN slack on
-`P − P'`). `IsAwgnPowerConstraintHonest P' P N` consumes the *original*
-P-capacity rate bound, derived from `hR_lt_C` (P'-capacity) via P'≤P
-monotonicity in `Real.log`.
-
-**Honesty (Phase 4 audit checks)**: assembly is GENUINE (rate inflation,
-doubling, barrier construction, D-1 extraction, contradiction power-OK proof,
-D-2 worst-half, monotonic reindex, sub⊆full inclusion proof, D-3 bridge); NOT
-degenerate/circular/laundering. Bundle hyp gives primitives + shared `P'`
-witness, body builds the assembly. `h_feasible` is regularity (load-bearing
-analytic hyp, NOT a discharge of the conclusion).
-
-`@audit:closed-by-successor(awgn-achievability-typicality-plan)` -/
+`@audit:ok` -/
 @[entry_point]
 theorem isAwgnTypicalityHypothesis
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
-    (h_meas : IsAwgnChannelMeasurable N)
-    (h_feasible : IsAwgnRandomCodingFeasible P N h_meas) :
+    (h_meas : IsAwgnChannelMeasurable N) :
     ∀ {R : ℝ}, 0 < R → R < (1/2) * Real.log (1 + P / (N : ℝ)) →
       ∀ {ε : ℝ}, 0 < ε →
         ∃ N₀ : ℕ, ∀ n, N₀ ≤ n →
@@ -956,10 +757,51 @@ theorem isAwgnTypicalityHypothesis
               ∀ m, (c.toCode.errorProbAt (awgnChannel N h_meas) m).toReal < ε := by
   intro R hR_pos hR ε hε
   classical
-  -- Destructure the bundled feasibility hypothesis at rate `R` to obtain the
-  -- slack variance `P'` and the three sub-bounds re-instantiated at `P'`.
-  obtain ⟨P', hP'_pos, hP'_lt_P, hR_lt_P'C, h_aep', h_rand', h_power'⟩ :=
-    h_feasible hR_pos hR
+  -- AWGN M5 Phase 3-β: the bundled feasibility hypothesis `h_feasible` was
+  -- removed. The shared slack variance `P'` (strict `P' < P`) comes from the
+  -- genuine helper `awgnPowerWitness_exists`; the three sub-bounds at `P'` come
+  -- from the shared sorry 補題 in `AwgnWalls.lean`. The 580-line assembly below
+  -- is preserved verbatim, consuming `h_aep' / h_rand' / h_power'` exactly as
+  -- the old bundle destructure did.
+  obtain ⟨P', hP'_pos, hP'_lt_P_strict, hR_lt_P'C⟩ :=
+    awgnPowerWitness_exists P hP N hN hR_pos hR
+  -- Non-strict slack kept under the original name for the verbatim assembly.
+  have hP'_lt_P : P' ≤ P := le_of_lt hP'_lt_P_strict
+  -- (i) AEP at `P'` (typical-set existence + 3 bounds) — wall 1.
+  have h_aep' := continuousAepGaussian_holds P' N
+  -- (ii) random-coding integral bound at `P'`, specialised to the joint typical
+  -- decoder against the AEP set. Reconstruct the old predicate shape (errorEvent
+  -- over `gaussianCodebook`) from the abstract-decoder wall.
+  have h_rand' : ∀ ⦃ε : ℝ⦄, 0 < ε → ∀ ⦃R : ℝ⦄, 0 < R →
+      R < (1/2) * Real.log (1 + P' / (N : ℝ)) →
+      ∃ N₀ : ℕ, ∀ ⦃n : ℕ⦄, N₀ ≤ n → ∀ ⦃M : ℕ⦄ (hM_pos : 0 < M),
+        M ≤ Nat.ceil (Real.exp ((n : ℝ) * R)) →
+        ∀ ⦃A : Set ((Fin n → ℝ) × (Fin n → ℝ))⦄, MeasurableSet A →
+          haveI : NeZero M := ⟨Nat.pos_iff_ne_zero.mp hM_pos⟩
+          ∀ m : Fin M,
+            ∫⁻ codebook : Fin M → Fin n → ℝ,
+              ((Measure.pi (fun i => awgnChannel N h_meas (codebook m i)))
+                ((InformationTheory.Shannon.ChannelCoding.Code.mk
+                    (M := M) (n := n) (α := ℝ) (β := ℝ)
+                    codebook (jointTypicalDecoder A codebook)).errorEvent m))
+            ∂(gaussianCodebook M n P'.toNNReal)
+              ≤ ENNReal.ofReal (2 * ε) := by
+    intro ε' hε' R' hR'_pos hR'_lt
+    obtain ⟨N₀, hN₀⟩ := awgnRandomCodingBound_holds P' N h_meas hε' hR'_pos hR'_lt
+    refine ⟨N₀, ?_⟩
+    intro n hn M hM_pos hM_le A hA_meas
+    haveI : NeZero M := ⟨Nat.pos_iff_ne_zero.mp hM_pos⟩
+    intro m
+    have h_dec_meas : Measurable
+        (Function.uncurry (fun (c : Fin M → Fin n → ℝ) => jointTypicalDecoder A c)) :=
+      jointTypicalDecoder_joint_measurable A hA_meas
+    have h_wall := hN₀ hn hM_pos hM_le hA_meas h_dec_meas m
+    -- `errorEvent ... m = {y | jointTypicalDecoder A codebook y ≠ m}` and
+    -- `gaussianCodebook ≡ Measure.pi (Measure.pi ...)` are both definitional.
+    exact h_wall
+  -- (iii) power-constraint honest mass bound — wall 3. The genuine strict slack
+  -- `P' < P` is required by the wall's `_hP_slack` argument.
+  have h_power' := awgnPowerConstraintHonest_holds P' P hP'_lt_P_strict N
   -- WLOG `ε ≤ 1` via `ε₁ := min ε 1`; conclusion `< ε₁` ⟹ `< ε`.
   set ε₁ : ℝ := min ε 1 with hε₁_def
   have hε₁_pos : 0 < ε₁ := lt_min hε one_pos
@@ -1557,71 +1399,62 @@ theorem isAwgnTypicalityHypothesis
     show 5 * (ε₁ / 5) = ε₁; ring
   linarith [h_awg, hε₁_le_ε]
 
-/-- **`awgn_achievability` F-1 wrapper via 1 bundled hyp** — `isAwgnTypicalityHypothesis`
-(580-line genuine assembly) を直接呼出し、`IsAwgnRandomCodingFeasible` bundle
-hyp を経由した F-1 discharge wrapper として再 publish (Phase E-2、Phase 2 pivot
-2026-05-24: 3 staged hyp を 1 bundle hyp に縮約 / 2026-05-27 F-1/F-3 peer
-migration: `awgn_achievability` body が `sorry` 化されたため、本 wrapper は
-`awgn_achievability` を経由せず `isAwgnTypicalityHypothesis` を直接呼ぶ形に書換)。
+/-- **`awgn_achievability` F-1 wrapper** — `isAwgnTypicalityHypothesis`
+(580-line genuine assembly) を直接呼出す F-1 discharge wrapper (Phase E-2 /
+2026-05-27 F-1/F-3 peer migration / 2026-05-28 AWGN M5 Phase 3-β: bundle hyp
+`IsAwgnRandomCodingFeasible` が削除され、`isAwgnTypicalityHypothesis` が
+shared sorry 補題 (`AwgnWalls.lean`) + `awgnPowerWitness_exists` を内部で
+呼ぶ形になったため、本 wrapper の `h_feasible` 引数も消失)。
 
-**Residual hypothesis (NOT a complete discharge)**:
-this wrapper consumes 1 bundled hypothesis `h_feasible :
-IsAwgnRandomCodingFeasible P N h_meas` (Mathlib 壁 analytic 系: continuous
-SMB + n-d `differentialEntropy` + chi-square SLLN). It is a **1-for-1
-hypothesis swap** (F-1 hypothesis traded for 1 bundled staged one), NOT a
-discharge in the sense of "no more residuals". Use this wrapper only when you
-accept the bundle hyp; when standard B verification is required, the bundle
-must be discharged first.
+**Residual status (AWGN M5 Phase 3-β)**: this wrapper no longer carries a
+bundled feasibility hypothesis. The achievability residuals now live as
+`sorry` + `@residual(wall:awgn-*)` in the 3 shared walls of `AwgnWalls.lean`
+(continuous AEP / random-coding bound / power-constraint honest) plus the
+`awgnPowerWitness_exists` helper. The wrapper itself contains no residual.
 
-**Naming (post-rename 2026-05-24)**: theorem name is `_via_staged_hyps` (plural
-historical artefact of the pre-pivot 3-hyp form; bundle preserves the
-hyp-mediated semantics so the name still reads honestly).
+**Naming (historical artefact)**: theorem name is `_via_staged_hyps` (plural
+artefact of the pre-pivot 3-hyp form); the staged content is now in the walls.
 
-`@audit:closed-by-successor(awgn-moonshot-plan)` -/
+`@audit:ok` -/
 @[entry_point]
 theorem awgn_achievability_F1_via_staged_hyps
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
-    (h_feasible : IsAwgnRandomCodingFeasible P N h_meas)
     {R : ℝ} (hR_pos : 0 < R) (hR : R < (1/2) * Real.log (1 + P / (N : ℝ)))
     {ε : ℝ} (hε : 0 < ε) :
     ∃ N₀ : ℕ, ∀ n, N₀ ≤ n →
       ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M) (c : AwgnCode M n P),
         ∀ m, (c.toCode.errorProbAt (awgnChannel N h_meas) m).toReal < ε :=
-  isAwgnTypicalityHypothesis P hP N hN h_meas h_feasible hR_pos hR hε
+  isAwgnTypicalityHypothesis P hP N hN h_meas hR_pos hR hε
 
-/-- **Main theorem F-4 discharged, F-1 via 1 bundled hyp wrapper** —
+/-- **Main theorem F-4 discharged, F-1 wrapper** —
 `awgn_channel_coding_theorem` の `h_meas` (F-4 / `isAwgnChannelMeasurable`) を
 **genuinely 埋め**、F-1 achievability を `isAwgnTypicalityHypothesis` (580-line
 genuine assembly) 経由で再 publish (Phase 2 pivot 2026-05-24 / 2026-05-27
-F-1/F-3 peer migration: `IsAwgnTypicalityHypothesis` / `IsAwgnConverseHypothesis`
-predicate 削除に伴い、F-1 は本 wrapper 内で `isAwgnTypicalityHypothesis` を
-直接呼ぶ形を維持 [genuine discharge]、F-3 hyp は signature から消失 [body は
-`awgn_converse` の `sorry` に defer])。
+F-1/F-3 peer migration / 2026-05-28 AWGN M5 Phase 3-β: bundle hyp
+`IsAwgnRandomCodingFeasible` 削除に伴い `h_feasible` 引数が消失、achievability
+residual は `AwgnWalls.lean` の 3 shared sorry 補題 +
+`awgnPowerWitness_exists` に移動)。
 
 **残 hyp** (docstring に明示、CORE doctrine 透明性):
-- `h_mi_bridge` (F-2、mutual info bridge、未起草 plan)
-- `h_feasible` (`@audit:staged(awgn-random-coding-feasible)`、Mathlib 壁
-  analytic 系: continuous SMB + n-d `differentialEntropy` + chi-square SLLN
-  をまとめた bundle)
+- `h_mi_bridge` (F-2、mutual info bridge、未起草 plan) — 本 wrapper body では
+  未使用だが、`awgn_channel_coding_theorem` の F-2 wiring 整合のため signature
+  に残置 (`set_option linter.unusedVariables false`)。
 
 F-3 converse は `awgn_converse` 内の `sorry + @residual(plan:awgn-converse-aux-plan)`
 に defer。本 wrapper の signature には現れないが、`awgn_channel_coding_theorem`
 は achievability half のみを述べるため converse 側は別経路 (`awgn_converse`) で
 独立に publish される構造に変更なし。
 
-**Naming (post-rename 2026-05-24)**: theorem name is `awgn_theorem_F4_discharged_F1_via_staged`.
-F-4 genuinely discharged (`isAwgnChannelMeasurable N` is concrete), but F-1 is
-hyp-mediated via 1 bundle staged. Independent audit flagged prior
-`_F1F4_discharged` as mild name-laundering; the rename makes F-1's hyp-mediated
-status explicit. The `_via_staged` suffix continues to read honestly with the
-bundle hyp (still staged, just collapsed from 3 → 1).
+**Naming (historical artefact)**: theorem name is
+`awgn_theorem_F4_discharged_F1_via_staged`. F-4 genuinely discharged
+(`isAwgnChannelMeasurable N` is concrete); the F-1 staged content now lives in
+the `AwgnWalls.lean` walls rather than a bundle hyp on this wrapper.
 
-`@audit:closed-by-successor(awgn-moonshot-plan)` -/
+`@audit:ok` -/
 @[entry_point]
 theorem awgn_theorem_F4_discharged_F1_via_staged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
-    (h_feasible : IsAwgnRandomCodingFeasible P N (isAwgnChannelMeasurable N))
     (h_mi_bridge :
         (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
             (gaussianReal 0 P.toNNReal)
@@ -1637,6 +1470,6 @@ theorem awgn_theorem_F4_discharged_F1_via_staged
           ∀ m, (c.toCode.errorProbAt
                   (awgnChannel N (isAwgnChannelMeasurable N)) m).toReal < ε :=
   isAwgnTypicalityHypothesis P hP N hN (isAwgnChannelMeasurable N)
-    h_feasible hR_pos hR_lt_C hε
+    hR_pos hR_lt_C hε
 
 end InformationTheory.Shannon.AWGN
