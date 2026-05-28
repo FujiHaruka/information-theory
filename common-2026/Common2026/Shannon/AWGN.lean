@@ -208,7 +208,14 @@ def awgnPowerConstraintSet (P : ℝ) : Set (Measure ℝ) :=
 integrability of `x²` and the Bochner second-moment bound `∫ x² ∂p ≤ P`. This is the
 bridge the converse phases (`AwgnCapacityConverseMaxent.lean`) consume: the lintegral
 constraint carries the regularity (`Integrable (fun x => x²) p`) the Bochner form alone
-cannot supply. -/
+cannot supply.
+
+Independent honesty audit (2026-05-29): genuine (0 sorry). The four Mathlib lemmas
+(`hasFiniteIntegral_iff_ofReal`, `ENNReal.ofReal_lt_top`, `ofReal_integral_eq_lintegral_ofReal`,
+`ENNReal.ofReal_le_ofReal_iff`) are applied in the correct direction with their nonneg / 0≤P /
+integrability side-conditions discharged genuinely (`sq_nonneg`, `hP`, `h_int`). The name says
+`_iff` but the statement is the one-directional `mem → (integrable ∧ bound)`; not a honesty
+defect, only mildly misleading (callers use it as `_of_mem`). @audit:ok -/
 theorem awgnPowerConstraintSet_mem_iff_integrable
     (P : ℝ) (hP : 0 ≤ P) (p : Measure ℝ)
     (hp : p ∈ awgnPowerConstraintSet P) :
@@ -238,7 +245,12 @@ noncomputable def awgnCapacity (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMe
         awgnPowerConstraintSet P)
 
 /-- The Gaussian input `𝒩(0, P)` lies in the AWGN constraint set
-`awgnPowerConstraintSet P`. -/
+`awgnPowerConstraintSet P`.
+
+Independent honesty audit (2026-05-29): genuine (0 sorry) re-proof against the lintegral
+constraint. `∫⁻ ofReal(x²) = ofReal(Var) = ofReal P ≤ ofReal P` via genuine `Integrable x²`
+(`memLp_id_gaussianReal … .integrable_sq`) + variance identity; achievability side (`_ge_gaussian`)
+is preserved — the Gaussian still feasible under the stricter set. @audit:ok -/
 theorem gaussianInput_mem_constraintSet (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) :
     (gaussianReal 0 P.toNNReal) ∈ awgnPowerConstraintSet P := by
   refine ⟨inferInstance, ?_⟩
