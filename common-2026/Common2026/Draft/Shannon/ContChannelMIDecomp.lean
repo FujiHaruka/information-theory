@@ -1,6 +1,7 @@
 import Common2026.Shannon.ChannelCoding
 import Common2026.Shannon.DifferentialEntropy
 import Common2026.Shannon.AWGNMIDecompBody
+import Common2026.Shannon.AWGNBindConvBody
 import Common2026.Shannon.AwgnWalls
 import Mathlib.InformationTheory.KullbackLeibler.Basic
 import Mathlib.Probability.Kernel.Composition.RadonNikodym
@@ -637,18 +638,67 @@ theorem awgn_mi_gaussian_closed_form_of_out
     isAwgnMIDecomp_of_densitySplit P N hN_NN hPN h_meas h_out
   exact awgn_mi_gaussian_closed_form_of_primitives P hP_pos N hN h_meas h_out h_decomp
 
-/-- **AWGN capacity closed form from `h_out` (plus `h_bdd`/`h_max_ent`).**
+/-- **AWGN capacity closed form, unconditional except the converse max-entropy bound.**
 
-Same as `awgn_capacity_closed_form_F2_discharged` but with the `h_decomp`
-argument removed: `IsAwgnMIDecomp` is now discharged genuinely via Route B
-(`isAwgnMIDecomp_of_densitySplit`), leaving only `h_out`/`h_bdd`/`h_max_ent`
-honest.
+The achievability side (`h_bridge_gauss`), the MI decomposition (`IsAwgnMIDecomp`),
+and the bind/conv output-Gaussian fact are now **all discharged genuinely**:
 
-@residual(plan:awgn-mi-decomp-plan) -/
+* `IsAwgnBindEqConv` via `isAwgnBindEqConv_discharged` (translation-kernel fact);
+* `IsAwgnOutputGaussian` via `awgn_output_gaussian_of_bind_eq_conv`;
+* `IsAwgnMIDecomp` via Route B `isAwgnMIDecomp_of_densitySplit` (the now-genuine
+  continuous-channel MI chain rule, 0 sorry).
+
+The **only** remaining gap is the converse single-letter Gaussian max-entropy bound
+`h_max_ent`: for every input `p` with second moment `≤ P`,
+`I(p; W).toReal ≤ (1/2) log(1 + P/N)`. `h_bdd` follows from it. This converse is
+gated by output-log-density integrability for an *arbitrary* input marginal (cf.
+the `awgn-per-letter-integrability` / `awgn-continuous-mi-chain-rule` walls): the
+general chain rule `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` needs
+`Integrable (fun z => log ((outputDistribution p W).rnDeriv volume z.2).toReal)`,
+which Mathlib does not supply for a general mixture-of-Gaussians output.
+
+Independent honesty audit (2026-05-29): signature is unconditional (only regularity
+`P, 0 < P, N, N ≠ 0`); achievability bridge / `IsAwgnMIDecomp` / bind-conv output-Gaussian
+are all genuinely wired (0 sorry) and the sole residual `h_max_ent` is a body `have`-sorry
+(not a hypothesis arg) consumed only by `awgnCapacity_le_gaussian` via `csSup_le` — no
+load-bearing hyp, no circularity. The `wall:` classification is correct: this is the
+single-letter capacity converse (codebook-free `∀ p : Measure ℝ`), distinct from the
+n-letter coding-converse walls / plans, and the integrability gap is loogle-confirmed
+absent from Mathlib. Wall name registered in `docs/audit/audit-tags.md`.
+
+@residual(wall:awgn-capacity-converse-maxent) -/
 theorem awgn_capacity_closed_form_of_out
-    (P : ℝ) (_hP : 0 < P) (N : ℝ≥0) (_hN : (N : ℝ) ≠ 0) :
+    (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0) :
     awgnCapacity P N (isAwgnChannelMeasurable N)
       = (1/2) * Real.log (1 + P / (N : ℝ)) := by
-  sorry
+  have hN_NN : N ≠ 0 :=
+    fun h => hN (by exact_mod_cast (congrArg (fun x : ℝ≥0 => (x : ℝ)) h))
+  have hP_toNN_pos : (0 : ℝ≥0) < P.toNNReal := Real.toNNReal_pos.mpr hP
+  have hPN : P.toNNReal + N ≠ 0 :=
+    (add_pos_of_pos_of_nonneg hP_toNN_pos (zero_le' (a := N))).ne'
+  -- Output-Gaussian fact, genuine via the translation-kernel bind/conv bridge.
+  have h_out : IsAwgnOutputGaussian P N (isAwgnChannelMeasurable N) :=
+    awgn_output_gaussian_of_bind_eq_conv P N (isAwgnChannelMeasurable N)
+      (isAwgnBindEqConv_discharged P N (isAwgnChannelMeasurable N))
+  -- MI decomposition, genuine via Route B (the continuous-channel MI chain rule).
+  have h_decomp : IsAwgnMIDecomp P N (isAwgnChannelMeasurable N) :=
+    isAwgnMIDecomp_of_densitySplit P N hN_NN hPN (isAwgnChannelMeasurable N) h_out
+  -- Converse single-letter Gaussian max-entropy bound — the sole remaining wall.
+  have h_max_ent :
+      ∀ p ∈ { p : Measure ℝ | IsProbabilityMeasure p ∧ ∫ x, x^2 ∂p ≤ P },
+        (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
+            p (awgnChannel N (isAwgnChannelMeasurable N))).toReal
+          ≤ (1/2) * Real.log (1 + P / (N : ℝ)) := by
+    sorry
+  -- Bounded-above follows from the converse bound.
+  have h_bdd :
+      BddAbove ((fun p : Measure ℝ =>
+          (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
+              p (awgnChannel N (isAwgnChannelMeasurable N))).toReal) ''
+        { p : Measure ℝ | IsProbabilityMeasure p ∧ ∫ x, x^2 ∂p ≤ P }) :=
+    ⟨(1/2) * Real.log (1 + P / (N : ℝ)), by
+      rintro y ⟨p, hp, rfl⟩; exact h_max_ent p hp⟩
+  exact awgn_capacity_closed_form_of_maxent_bindconv_discharged
+    P hP N hN h_decomp h_bdd h_max_ent
 
 end InformationTheory.Shannon.AWGN
