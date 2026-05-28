@@ -138,16 +138,26 @@ theorem hoeffding_tradeoff_achievability_at_boundary
       linarith
     exact mul_nonneg_iff.mpr (Or.inr ⟨h_neg_inv_nonpos, h_log_le⟩)
 
-/-! ## Phase 3 — converse / full headline: honest hypothesis pass-through
+/-! ## Retraction record — the fixed-`alpha` scaffolding does not target the
+## Hoeffding tradeoff curve (judgement log #1)
 
-### Mathematical reality (judgement log #1) — the fixed-`alpha` scaffolding does
-### not target the Hoeffding tradeoff curve
+A cluster of fixed-`alpha` sandwich `Tendsto` wrappers claiming
+`Tendsto rate → hoeffdingE2 P₁ P₂ alpha` (`hoeffding_tradeoff_of_asymptotics`
+here, plus `hoeffding_tradeoff_with_hypothesis` / `hoeffding_tradeoff_sandwich` /
+`hoeffding_tradeoff_sandwich_via_predicate` /
+`hoeffding_tradeoff_sandwich_at_boundary_alpha_ge_kl` in the sibling files) has
+been **retracted** (2026-05-28). They took the two variational inequalities
+`h_liminf` (achievability) / `h_limsup` (converse) as hypotheses, but those
+premises are **jointly unsatisfiable** in the general fixed-`alpha` regime, so the
+wrappers were vacuous `@[entry_point]` deliverables. The sound replacement is the
+exponential-level `hoeffding_tradeoff_exp` (`HoeffdingTradeoffExp.lean`), so the
+retraction loses no content.
 
-The headline `Tendsto rate → hoeffdingE2 P₁ P₂ alpha` claimed by the plan is
-**not provable in general**, because `steinTypeII_at_level_pmf` bakes in a
-*constant* Type-I level `alpha`, whereas the Hoeffding tradeoff curve `E₂(alpha)`
-is the limit only in the **exponential-level** regime `alpha_n = exp(-n r)`.
-Two concrete contradictions of the fixed-`alpha` statement:
+The mathematical reason: `steinTypeII_at_level_pmf` bakes in a *constant* Type-I
+level `alpha`, whereas the Hoeffding tradeoff curve `E₂(alpha)` is the limit only
+in the **exponential-level** regime `alpha_n = exp(-n r)`. The fixed-`alpha` rate
+`-(1/n) log steinTypeII_at_level_pmf` converges to `D(P₁‖P₂)`, *not* `E₂(alpha)`.
+Two concrete contradictions:
 
 * **`alpha = 0`**: with full-support `P₁`, the only Type-I-exact-`0` test is
   `s = univ` (every other `Finset` has `∑ ∏ P₁ < 1`), so
@@ -165,49 +175,15 @@ Consequences for the two variational inequalities:
 
 * **achievability** `hoeffdingE2 alpha ≤ liminf rate`: holds whenever
   `E₂(alpha) ≤ liminf rate`. On the **boundary** `klDivPmf P₂ P₁ ≤ alpha` we have
-  `E₂(alpha) = 0 ≤ liminf rate` unconditionally (Phase 2). At `alpha = 0` it is
-  *false* (`E₂(0) = D > 0 = liminf rate`).
+  `E₂(alpha) = 0 ≤ liminf rate` unconditionally (`hoeffding_tradeoff_achievability_at_boundary`,
+  Phase 2 above — this is the one genuinely-discharged asymptotic inequality and
+  is retained). At `alpha = 0` it is *false* (`E₂(0) = D > 0 = liminf rate`).
 * **converse** `limsup rate ≤ hoeffdingE2 alpha`: would require
   `limsup rate ≤ E₂(alpha)`, contradicted at every `alpha` by the limits above.
 
-Because the fixed-`alpha` scaffolding does not realise the tradeoff curve, the
-hypothesis-free headline cannot be published. The honest general wrapper carries
-the two variational inequalities as explicit named premises (no `True`, no
-`sorry`); callers may only instantiate it where those premises actually hold
-(e.g. the boundary regime, where both collapse to `rate → 0 = E₂(alpha)`). -/
-
-/-- **Honest headline (variational pass-through)**: given the two variational
-inequalities `h_liminf` / `h_limsup`, the rate converges to `hoeffdingE2`.
-
-This is the genuine landing point: achievability holds for all `alpha`
-(unconditional on the boundary, Phase 2), but the converse is only valid at
-`alpha = 0` (Stein's lemma), so the *general*-`alpha` Tendsto is exposed with the
-converse inequality as an explicit premise rather than discharged. See the
-judgement log above for why the fixed-`alpha` headline is mathematically
-inequivalent to the Hoeffding tradeoff curve.
-
-`@audit:defect(false-hypothesis) @audit:retract-candidate(general-alpha-rate-≠-E₂)`
-
-Inherits the load-bearing-false defect: both `h_liminf` and `h_limsup` are
-mathematically false in the general fixed-`alpha` regime per judgement log #1
-above. Acknowledged tier-5 placeholder; the wrapper is currently not
-instantiable except where both premises happen to coincide (e.g. degenerate
-P₁ = P₂), so it survives as a structural pass-through pending pivot to the
-exponential-level Hoeffding statement. -/
-theorem hoeffding_tradeoff_of_asymptotics
-    (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
-    {alpha : ℝ} (h_alpha_nn : 0 ≤ alpha) (h_alpha_lt : alpha < 1)
-    (h_liminf : hoeffdingE2 P₁ P₂ alpha ≤
-      Filter.liminf (fun n : ℕ =>
-        -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha)) atTop)
-    (h_limsup : Filter.limsup (fun n : ℕ =>
-        -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha)) atTop
-      ≤ hoeffdingE2 P₁ P₂ alpha) :
-    Tendsto (fun n : ℕ =>
-        -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-      atTop (𝓝 (hoeffdingE2 P₁ P₂ alpha)) :=
-  HoeffdingSandwich.hoeffding_tradeoff_sandwich P₁ P₂ hP₁_pos hP₂_pos hP₁_sum hP₂_sum
-    h_alpha_nn h_alpha_lt h_liminf h_limsup
+This file is kept (with its `Common2026.lean` import) as this documentation plus
+the two genuine declarations that survive: the constructive minimizer
+`exists_hoeffding_minimizer_full_support` (consumed by `HoeffdingTradeoffExp.lean`)
+and the boundary achievability `hoeffding_tradeoff_achievability_at_boundary`. -/
 
 end InformationTheory.Shannon.HoeffdingSandwichDischarge

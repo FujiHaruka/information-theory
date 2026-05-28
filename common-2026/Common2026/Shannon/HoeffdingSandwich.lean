@@ -1,28 +1,28 @@
-import Common2026.Meta.EntryPoint
 import Common2026.Shannon.HoeffdingTradeoff
 import Common2026.Shannon.Chernoff
-import Mathlib.Topology.Order.LiminfLimsup
 import Mathlib.Order.Filter.IsBounded
 
 /-!
-# T1-D Hoeffding tradeoff — sandwich `Tendsto` partial discharge (boundedness + slim wrapper)
+# T1-D Hoeffding tradeoff — rate boundedness (`IsBoundedUnder` internal discharge)
 
-This file publishes the **boundedness internal discharge** half of the
-`Common2026/Shannon/HoeffdingTradeoff.lean` sandwich `Tendsto` wrapper.
+This file publishes the **boundedness internal discharge** lemmas for the
+fixed-`alpha` Type-II rate sequence
+`-(1/n) log (steinTypeII_at_level_pmf P₁ P₂ n alpha)`.
 
-## Context
+## Retraction note (2026-05-28)
 
-The predecessor `Common2026/Shannon/HoeffdingTradeoff.lean` (316 行) publishes:
+The original `hoeffding_tradeoff_sandwich` slim sandwich `Tendsto` wrapper that
+lived in this file has been **retracted**. It claimed `rate → hoeffdingE2 P₁ P₂ alpha`
+for general fixed `alpha`, taking the two variational inequalities `h_liminf` /
+`h_limsup` as hypotheses — but those premises are jointly unsatisfiable in the
+general fixed-`alpha` regime (Stein's lemma: the fixed-`alpha` rate targets
+`D(P₁‖P₂)`, not the Hoeffding tradeoff curve `E₂(alpha)`). The genuine, sound
+statement is `hoeffding_tradeoff_exp` (`HoeffdingTradeoffExp.lean`, exponential-level
+regime). See the retraction record in `HoeffdingSandwichDischarge.lean`.
 
-* `steinTypeII_at_level_pmf`, `steinBetaSet_pmf` (Cover-Thomas Theorem 11.7.x setup, pmf form),
-* `hoeffdingConstraintSet_convex` + `hoeffding_minimizer_ge` (Pythagoras),
-* `hoeffding_tradeoff_with_hypothesis` (sandwich `Tendsto` with **4 hypotheses**:
-  `h_liminf`, `h_limsup`, `h_bdd_le`, `h_bdd_ge`).
-
-The Phase B `hoeffdingE2_minimizer_full_support` (Qstar full-support via log-singularity
-gradient) is deferred (retreat line L-H4). This file does **not** discharge that —
-instead it internally discharges the two `IsBoundedUnder` predicates, mirroring the
-`Chernoff.lean` / `ChernoffInformation.lean` sister pattern for the Chernoff information.
+The two boundedness lemmas below are retained: they are genuine, unconditional
+facts about the rate sequence, and `hoeffding_rate_isBoundedUnder_le` is consumed
+by `hoeffding_tradeoff_achievability_at_boundary` (`HoeffdingSandwichDischarge.lean`).
 
 ## What this file publishes
 
@@ -35,17 +35,7 @@ instead it internally discharges the two `IsBoundedUnder` predicates, mirroring 
   derived from a lower bound `steinTypeII ≥ (1 - alpha) · p₂_min^n` obtained by
   Type I constraint + minimum P₂ atom.
 
-* `hoeffding_tradeoff_sandwich` (**slim sandwich wrapper**, L-HS-P): given **only the
-  two variational hypotheses** `h_liminf : E_2(α) ≤ liminf rate` and
-  `h_limsup : limsup rate ≤ E_2(α)`, the optimal rate converges to `E_2(α)`. Both
-  `IsBoundedUnder` defaults are supplied internally.
-
 ## Retreat lines adopted
-
-* **L-HS-P** (Pythagoras / variational characterization plumbing): the slim
-  Tendsto wrapper takes the two variational hypotheses as input. Discharge of
-  `h_liminf` requires Sanov LDP per-Qstar; discharge of `h_limsup` requires
-  the Stein typicality template + Pythagoras. Both are deferred to follow-up plans.
 
 * **L-HS-U** (upper bound side, internal discharge): the trivial uniform upper bound
   `rate n ≤ -log p₂_min + |log(1-α)|` via `steinTypeII ≥ (1-α) · p₂_min^n`.
@@ -57,10 +47,6 @@ instead it internally discharges the two `IsBoundedUnder` predicates, mirroring 
 ## Design notes
 
 * The `pmf` form `α → ℝ` is kept throughout.
-* The wrapper is parameterised on the same shape as
-  `hoeffding_tradeoff_with_hypothesis` but with the two boundedness slots discharged.
-* `tendsto_of_le_liminf_of_limsup_le` from `Mathlib.Topology.Order.LiminfLimsup` is
-  the single Mathlib lemma driving the sandwich.
 -/
 
 namespace InformationTheory.Shannon.HoeffdingSandwich
@@ -269,54 +255,5 @@ lemma hoeffding_rate_isBoundedUnder_le
   -- Conclude: rate ≤ -log(1-α)/n - log p_min ≤ |log(1-α)| + (-log p_min).
   -- Then -log p_min + |log(1-α)| ≥ rate.
   linarith
-
-/-! ## Phase 3 — slim sandwich `Tendsto` wrapper (L-HS-P) -/
-
-/-- **Hoeffding tradeoff sandwich `Tendsto`** (Cover-Thomas Theorem 11.7.x,
-slim hypothesis form).
-
-Given:
-* achievability variational hypothesis `h_liminf : E_2(α) ≤ liminf rate`,
-* converse variational hypothesis `h_limsup : limsup rate ≤ E_2(α)`,
-* boundedness defaults: both `IsBoundedUnder (· ≤ ·)` and `IsBoundedUnder (· ≥ ·)`
-  are **internally discharged** here (L-HS-U + L-HS-B),
-
-the optimal Type II rate `-(1/n) log steinTypeII_at_level_pmf` converges to
-`hoeffdingE2 P₁ P₂ alpha`.
-
-This is the **slim form** of `hoeffding_tradeoff_with_hypothesis` (4 hypothesis form
-in `HoeffdingTradeoff.lean`), with the two boundedness slots discharged. The two
-remaining variational hypotheses `h_liminf` / `h_limsup` are deferred to the follow-up
-plan `hoeffding-tradeoff-sandwich-plan.md`.
-
-`@audit:defect(false-hypothesis) @audit:retract-candidate(general-alpha-rate-≠-E₂)`
-
-Inherits the load-bearing-false hypothesis defect from `hoeffding_tradeoff_with_hypothesis`:
-the fixed-`alpha` rate does not target `E₂(alpha)` in general, so `h_liminf` /
-`h_limsup` cannot both hold (see `HoeffdingSandwichDischarge.lean` judgement log #1).
-Acknowledged tier-5 placeholder; closure requires either restricting to the boundary
-regime or pivoting to the exponential-level formulation. -/
-@[entry_point]
-theorem hoeffding_tradeoff_sandwich
-    (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
-    {alpha : ℝ} (h_alpha_nn : 0 ≤ alpha) (h_alpha_lt : alpha < 1)
-    (h_liminf : (hoeffdingE2 P₁ P₂ alpha) ≤
-      Filter.liminf
-        (fun n : ℕ =>
-          -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-        atTop)
-    (h_limsup : Filter.limsup
-        (fun n : ℕ =>
-          -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-        atTop ≤ (hoeffdingE2 P₁ P₂ alpha)) :
-    Tendsto (fun n : ℕ =>
-        -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-      atTop (𝓝 (hoeffdingE2 P₁ P₂ alpha)) :=
-  tendsto_of_le_liminf_of_limsup_le h_liminf h_limsup
-    (hoeffding_rate_isBoundedUnder_le P₁ P₂ hP₁_pos hP₂_pos hP₁_sum hP₂_sum
-      h_alpha_nn h_alpha_lt)
-    (hoeffding_rate_isBoundedUnder_ge P₁ P₂ hP₁_sum hP₂_sum
-      (fun a => (hP₂_pos a).le) h_alpha_nn)
 
 end InformationTheory.Shannon.HoeffdingSandwich

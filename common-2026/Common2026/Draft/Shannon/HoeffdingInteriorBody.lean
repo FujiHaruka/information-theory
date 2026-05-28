@@ -66,9 +66,12 @@ plug into its `IsHoeffdingMinimizerFullSupport` constructor.
   `Qstar` that realises `hoeffdingE2 P₁ P₂ alpha` and is full-support.
 
 * **`hoeffding_tradeoff_sandwich_at_interior_via_predicates`** — interior
-  sandwich `Tendsto` wrapper, plumbing
-  `hoeffdingE2_interior_minimizer_via_predicates` into
-  `hoeffding_tradeoff_sandwich_via_predicate`.
+  sandwich `Tendsto` wrapper for the fixed-`alpha` rate. NOTE: its conclusion
+  is the **retracted** false fixed-`alpha` `Tendsto → hoeffdingE2 … alpha`
+  (Stein's lemma: the fixed-`alpha` rate targets `D`, not `E₂(alpha)`); the
+  successor sandwich `hoeffding_tradeoff_sandwich_via_predicate` it used to plumb
+  into was deleted in the 2026-05-28 retraction. This and the sibling interior
+  wrappers carry `@audit:defect(false-hypothesis)` and await a Draft sweep.
 
 ## Retreat lines (L-H4-FS)
 
@@ -288,7 +291,14 @@ the optimal Type II rate converges to `hoeffdingE2 P₁ P₂ alpha`.
 `IsHoeffdingInteriorMinimizer Qstar` hypothesis was previously bundled and is
 now retreated; the Lagrangian-tilt + full-support discharge is deferred to
 `hoeffding-tradeoff-moonshot-plan` Phase B. The two variational hypotheses
-remain inputs (Phase C / Phase D deferred). -/
+remain inputs (Phase C / Phase D deferred).
+
+`@audit:defect(false-hypothesis) @audit:retract-candidate(general-alpha-rate-≠-E₂)`
+Shares the retracted fixed-`alpha` cluster's defect: the conclusion
+`Tendsto rate → hoeffdingE2 P₁ P₂ alpha` is false in general (the fixed-`alpha`
+rate targets `D(P₁‖P₂)`, not `E₂(alpha)` — Stein's lemma), so `h_liminf` /
+`h_limsup` are jointly unsatisfiable. Awaits a Draft sweep (carries
+interior-minimizer interface scaffolding needing separate assessment). -/
 theorem hoeffding_tradeoff_sandwich_at_interior_via_predicate
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
@@ -313,7 +323,14 @@ alternate entry point with no predicate hypothesis. Same conclusion as
 
 `@residual(plan:hoeffding-tradeoff-moonshot-plan)` — the predicate-form
 `IsHoeffdingInteriorGradient` hypothesis was previously bundled and is now
-retreated. -/
+retreated.
+
+`@audit:defect(false-hypothesis) @audit:retract-candidate(general-alpha-rate-≠-E₂)`
+Shares the retracted fixed-`alpha` cluster's defect: the conclusion
+`Tendsto rate → hoeffdingE2 P₁ P₂ alpha` is false in general (the fixed-`alpha`
+rate targets `D(P₁‖P₂)`, not `E₂(alpha)` — Stein's lemma), so `h_liminf` /
+`h_limsup` are jointly unsatisfiable. Awaits a Draft sweep (carries
+interior-minimizer interface scaffolding needing separate assessment). -/
 theorem hoeffding_tradeoff_sandwich_at_interior_via_gradient
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)

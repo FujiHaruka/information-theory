@@ -6,7 +6,6 @@ import Common2026.InformationTheory.Asymptotic
 import Mathlib.Probability.ProbabilityMassFunction.Basic
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
 import Mathlib.Topology.Order.Compact
-import Mathlib.Topology.Order.LiminfLimsup
 
 /-!
 # T1-D Hoeffding tradeoff exponent (scaffolding + variational form)
@@ -26,7 +25,6 @@ Cover-Thomas Theorem 11.7.x の **n-IID Type II at Type I level `alpha` の指�
 * `hoeffdingConstraintSet_convex` — constraint set 凸性 (Chernoff.lean 内 helper の公開化)
 * `hoeffdingE2_minimizer_full_support` — Csiszar Pythagoras の `hQs_pos` 要件を満たす Qstar full-support 性
 * `hoeffding_sanov_minimizer` — Pythagoras 経由の minimizer 整理 (Sanov LDP per-Qstar 起動の `h_minimizer` 仮定)
-* `hoeffding_tradeoff_with_hypothesis` — `liminf ≥ E_2(α)` + `limsup ≤ E_2(α)` を仮定形に取る sandwich Tendsto wrapper
 
 を publish する. **完全 sandwich Tendsto** (`liminf ≥` を Sanov LDP per-Qstar から
 自前構築, `limsup ≤` を Stein typicality + Pythagoras から自前構築) は撤退ライン **L-H4**
@@ -266,46 +264,5 @@ lemma hoeffding_minimizer_ge
   have h_pq_nn : 0 ≤ klDivPmf P Qstar :=
     klDivPmf_nonneg P Qstar (fun a => (hP_pos a).le) (fun a => (hQs_pos a).le)
   linarith
-
-/-! ## Phase E — Tendsto wrapper (variational hypothesis form, L-H4 scope) -/
-
-/-- **Hoeffding tradeoff (hypothesis form, L-H4)**: assuming achievability `liminf ≥ E_2(α)`
-and converse `limsup ≤ E_2(α)`, the optimal rate `-(1/n) log β_n` converges to `E_2(α)`.
-
-The achievability and converse hypotheses correspond to:
-* Phase C (achievability): `∀ᶠ n, ∃ s ∈ Finset (Fin n → α) with Type I ≤ α, -(1/n) log P₂^n s ≥ E_2(α) - δ`
-* Phase D (converse): `∀ᶠ n, ∀ s ∈ Finset (Fin n → α) with Type I ≤ α, -(1/n) log P₂^n s ≤ E_2(α) + δ`
-
-Both are deferred to a follow-up plan (`hoeffding-tradeoff-sandwich-plan.md`). This wrapper
-publishes the **sandwich** structure so downstream code can already rely on the Tendsto form.
-
-`@audit:defect(false-hypothesis) @audit:retract-candidate(general-alpha-rate-≠-E₂)`
-
-The two variational premises `h_liminf` / `h_limsup` are mathematically false in the
-general fixed-`alpha` regime (see `HoeffdingSandwichDischarge.lean` judgement log #1):
-at `alpha = 0` the rate is identically `0` while `E₂(0) = D(P₁‖P₂) > 0` (achievability
-false); for `0 < alpha < 1` Stein's lemma gives `rate → D > E₂(alpha)` (converse
-false). Acknowledged tier-5 placeholder until the wrapper is either restricted to
-the boundary regime where both premises collapse, or replaced by the exponential-
-level formulation `alpha_n = exp(-n r)` that actually realises the Hoeffding curve. -/
-theorem hoeffding_tradeoff_with_hypothesis
-    (P₁ P₂ : α → ℝ) (_hP₁_sum : ∑ a, P₁ a = 1) (_hP₂_sum : ∑ a, P₂ a = 1)
-    (_hP₂_nn : ∀ a, 0 ≤ P₂ a)
-    {alpha : ℝ} (_h_alpha_nn : 0 ≤ alpha)
-    (h_liminf : (hoeffdingE2 P₁ P₂ alpha) ≤
-      Filter.liminf
-        (fun n : ℕ => -((1:ℝ)/n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-        atTop)
-    (h_limsup : Filter.limsup
-        (fun n : ℕ => -((1:ℝ)/n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-        atTop
-      ≤ (hoeffdingE2 P₁ P₂ alpha))
-    (h_bdd_le : Filter.IsBoundedUnder (· ≤ ·) atTop
-      (fun n : ℕ => -((1:ℝ)/n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha)))
-    (h_bdd_ge : Filter.IsBoundedUnder (· ≥ ·) atTop
-      (fun n : ℕ => -((1:ℝ)/n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))) :
-    Tendsto (fun n : ℕ => -((1:ℝ)/n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-      atTop (𝓝 (hoeffdingE2 P₁ P₂ alpha)) :=
-  tendsto_of_le_liminf_of_limsup_le h_liminf h_limsup h_bdd_le h_bdd_ge
 
 end InformationTheory.Shannon.HoeffdingTradeoff

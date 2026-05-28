@@ -1,15 +1,25 @@
 import Common2026.Shannon.HoeffdingTradeoff
 import Common2026.Shannon.HoeffdingSandwich
 import Common2026.Shannon.MaxEntropyConstrained
-import Mathlib.Topology.Order.LiminfLimsup
 
 /-!
 # T1-D Hoeffding tradeoff — sandwich body completion (residual 2 hypotheses)
 
-This file finalises the **`hoeffding_tradeoff_sandwich`** wrapper of
-`Common2026/Shannon/HoeffdingSandwich.lean` (slim 2-hypothesis sandwich, 312 行) by
-discharging the remaining **2 hypotheses** of the upstream
-`Common2026/Shannon/HoeffdingTradeoff.lean` (316 行) pipeline.
+This file publishes the **`IsHoeffdingMinimizerFullSupport`** predicate plus the
+**boundary full-support discharges** (`α = 0` and `α ≥ klDivPmf P₂ P₁`) used by
+the constructive minimizer of `HoeffdingSandwichDischarge.lean` and the genuine
+exponential-level closure `hoeffding_tradeoff_exp` (`HoeffdingTradeoffExp.lean`).
+
+## Retraction note (2026-05-28)
+
+The fixed-`alpha` sandwich `Tendsto` wrappers `hoeffding_tradeoff_sandwich_via_predicate`
+and `hoeffding_tradeoff_sandwich_at_boundary_alpha_ge_kl` that lived in this file
+have been **retracted**: their `h_liminf` / `h_limsup` premises are jointly
+unsatisfiable in the general fixed-`alpha` regime (the rate targets `D(P₁‖P₂)`,
+not the Hoeffding tradeoff curve `E₂(alpha)`). See the retraction record in
+`HoeffdingSandwichDischarge.lean`. The genuine statement is `hoeffding_tradeoff_exp`.
+The full-support predicate and boundary discharges below are retained — they are
+sound and feed the genuine successor.
 
 ## Context
 
@@ -69,11 +79,6 @@ Per the L-H4 retreat lines:
 * **`hoeffding_minimizer_ge_via_predicate`**: variant of
   `hoeffding_minimizer_ge` taking `IsHoeffdingMinimizerFullSupport` instead of
   raw `hQs_pos`.
-
-* **`hoeffding_tradeoff_sandwich_via_predicate`**: variant of
-  `hoeffding_tradeoff_sandwich` parameterised on `IsHoeffdingMinimizerFullSupport`
-  rather than the deferred-discharge boundedness slot. (The two variational
-  hypotheses `h_liminf` / `h_limsup` are still inputs, deferred to a follow-up.)
 
 ## Retreat lines adopted
 
@@ -243,96 +248,5 @@ lemma hoeffding_minimizer_ge_via_predicate
     klDivPmf Qstar P₂ ≤ klDivPmf P P₂ :=
   hoeffding_minimizer_ge P₁ P₂ hP₁_pos hP₂_pos hP₁_sum hP₂_sum alpha h_alpha_nn
     hQs_mem hQs_full.pos hQs_min hP_mem hP_pos
-
-/-! ## Phase 4 — Slim sandwich `Tendsto` via predicate -/
-
-/-- **Hoeffding tradeoff sandwich via predicate**: variant of
-`HoeffdingSandwich.hoeffding_tradeoff_sandwich` carrying
-`IsHoeffdingMinimizerFullSupport` as an explicit named premise.
-
-The signature is intentionally identical to `hoeffding_tradeoff_sandwich` modulo
-the added `_hQs_*` triple (`mem`, `full`, `min`), which is **bundled** for
-downstream callers to forward unchanged. The two variational hypotheses
-`h_liminf` and `h_limsup` remain inputs (Phase C / Phase D deferred).
-
-This wrapper makes explicit how the `IsHoeffdingMinimizerFullSupport` predicate
-participates in the final sandwich; in particular, it documents that the
-sandwich `Tendsto` proof itself does **not** consume `hQs_full` directly (the
-boundedness internal discharge in `HoeffdingSandwich.lean` is independent of
-the minimizer), but downstream variational discharges (Phase C/D) will.
-
-`@audit:defect(false-hypothesis) @audit:retract-candidate(general-alpha-rate-≠-E₂)`
-
-Inherits the load-bearing-false defect from `hoeffding_tradeoff_sandwich`:
-`h_liminf` / `h_limsup` are mathematically false in the general fixed-`alpha`
-regime (see `HoeffdingSandwichDischarge.lean` judgement log #1). The
-predicate-bundled `Qstar` triple does not change this — the variational
-premises remain the load-bearing defect carriers. Acknowledged tier-5
-placeholder pending boundary restriction or exponential-level pivot. -/
-theorem hoeffding_tradeoff_sandwich_via_predicate
-    (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
-    {alpha : ℝ} (h_alpha_nn : 0 ≤ alpha) (h_alpha_lt : alpha < 1)
-    {Qstar : α → ℝ}
-    (_hQs_mem : Qstar ∈ hoeffdingConstraintSet P₁ alpha)
-    (_hQs_full : IsHoeffdingMinimizerFullSupport Qstar)
-    (_hQs_min : hoeffdingE2 P₁ P₂ alpha = klDivPmf Qstar P₂)
-    (h_liminf : (hoeffdingE2 P₁ P₂ alpha) ≤
-      Filter.liminf
-        (fun n : ℕ =>
-          -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-        atTop)
-    (h_limsup : Filter.limsup
-        (fun n : ℕ =>
-          -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-        atTop ≤ (hoeffdingE2 P₁ P₂ alpha)) :
-    Tendsto (fun n : ℕ =>
-        -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-      atTop (𝓝 (hoeffdingE2 P₁ P₂ alpha)) :=
-  hoeffding_tradeoff_sandwich P₁ P₂ hP₁_pos hP₂_pos hP₁_sum hP₂_sum
-    h_alpha_nn h_alpha_lt h_liminf h_limsup
-
-/-! ## Phase 5 — Boundary sandwich `Tendsto` (α ≥ klDivPmf P₂ P₁ full discharge) -/
-
-/-- At `α ≥ klDivPmf P₂ P₁` (so `α < 1` still required for `HoeffdingSandwich`
-upper bound), the boundary full-support discharge `Qstar = P₂` plugs into
-`hoeffding_tradeoff_sandwich_via_predicate`. The remaining variational
-hypotheses are still inputs (deferred to Phase C/D).
-
-This packages the L-H4-FB-2 boundary discharge so that downstream callers do
-not need to thread the witness extraction by hand.
-
-`@audit:defect(false-hypothesis) @audit:retract-candidate(general-alpha-rate-≠-E₂)`
-
-The boundary hypothesis `klDivPmf P₂ P₁ ≤ alpha` discharges the minimizer
-witness triple (Qstar = P₂) but does **not** rescue the variational premises:
-achievability `E₂(α) = 0 ≤ liminf rate` becomes unconditional, yet the
-converse `limsup rate ≤ E₂(α) = 0` remains load-bearing false because
-`limsup rate = D(P₁‖P₂) > 0` whenever `P₁ ≠ P₂` (Stein's lemma applied on
-the boundary, judgement log #1). Acknowledged tier-5 placeholder; closure
-requires the exponential-level pivot or restriction to the degenerate
-`P₁ = P₂` case. -/
-theorem hoeffding_tradeoff_sandwich_at_boundary_alpha_ge_kl
-    (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
-    (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
-    {alpha : ℝ} (h_alpha_nn : 0 ≤ alpha) (h_alpha_lt : alpha < 1)
-    (h_alpha_ge : klDivPmf P₂ P₁ ≤ alpha)
-    (h_liminf : (hoeffdingE2 P₁ P₂ alpha) ≤
-      Filter.liminf
-        (fun n : ℕ =>
-          -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-        atTop)
-    (h_limsup : Filter.limsup
-        (fun n : ℕ =>
-          -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-        atTop ≤ (hoeffdingE2 P₁ P₂ alpha)) :
-    Tendsto (fun n : ℕ =>
-        -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha))
-      atTop (𝓝 (hoeffdingE2 P₁ P₂ alpha)) := by
-  obtain ⟨Qstar, hQs_mem, hQs_min, hQs_full⟩ :=
-    hoeffdingE2_minimizer_at_boundary_alpha_ge_kl P₁ P₂ hP₁_pos hP₂_pos
-      hP₁_sum hP₂_sum h_alpha_nn h_alpha_ge
-  exact hoeffding_tradeoff_sandwich_via_predicate P₁ P₂ hP₁_pos hP₂_pos
-    hP₁_sum hP₂_sum h_alpha_nn h_alpha_lt hQs_mem hQs_full hQs_min h_liminf h_limsup
 
 end InformationTheory.Shannon.HoeffdingSandwichBody
