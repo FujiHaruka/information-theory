@@ -89,30 +89,43 @@ folded onto this shared wall. The old `h_bridge`-form
 `mutualInfoOfChannel_gaussianInput_closed_form` (`AWGN.lean`) is retained
 transitionally pending capacity-side closure.
 
-HONESTY AUDIT 2026-05-28 (independent): this signature is **FALSE as stated** —
-it lacks the absolute-continuity preconditions, so it is a universally-quantified
-claim over *all* Markov channels `W`, which is refutable. Counterexample (verified):
-take `p := gaussianReal m 1` and `W := Kernel.id` (deterministic copy,
-`W x = Measure.dirac x`, `IsMarkovKernel`). Then RHS
-`= differentialEntropy (outputDistribution p W) − ∫ x, differentialEntropy (W x) ∂p
-= differentialEntropy p − ∫ x, differentialEntropy (dirac x) ∂p
-= (1/2)·log(2πe) − 0 > 0` (`differentialEntropy_dirac = 0`,
-`differentialEntropy_gaussianReal`). But LHS `= (mutualInfoOfChannel p W).toReal
-= (klDiv (p ⊗ₘ id) (p.prod p)).toReal = (⊤).toReal = 0`, because the joint
-`p ⊗ₘ id = p.map (a ↦ (a,a))` is the diagonal measure, singular w.r.t. the product
-`p.prod p` for atomless `p`, so `klDiv = ⊤` (`klDiv_eq_top_iff`) and `toReal_top = 0`.
-Thus `0 = (1/2)·log(2πe) > 0`, contradiction. The root cause is that the regularity
-hypotheses (`∀ x, W x ≪ volume`, `outputDistribution p W ≪ volume`,
-`(p ⊗ₘ W) ≪ p.prod (outputDistribution p W)`, plus fibre/output log-density
-integrability) were dropped when consolidating; they belong as ARGUMENTS of this wall
-(they currently sit, unused, on the consumer `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`).
-The honest signature is given by §段1 body of `awgn-mi-decomp-plan` (honest hyps #1–#6).
-Signature rewrite (adding the preconditions, which propagates to the consumer DAG) is
-a separate implementer task; this tag only records the defect.
-@audit:defect(false-statement) @audit:closed-by-successor(awgn-mi-decomp-plan) -/
+This wall carries its regularity preconditions as **arguments** (a deterministic
+channel `W x = dirac x` — for which the bare identity is FALSE, since then
+`I = 0 ≠ h(Y) > 0` — fails `hW_ac : ∀ x, W x ≪ volume`, so the counterexample is
+blocked). It is the genuine continuous-channel chain rule under absolute continuity
++ log-density integrability; the body is `sorry` only because Mathlib has no
+continuous-version chain rule (`klDiv_compProd_eq_add` stops at the conditional
+rnDeriv and gives no fibre identification, a >200-line rnDeriv/Fubini analysis).
+The genuine route is `awgn-mi-decomp-plan` §段1 body (Phases 1–6); the AWGN instance
+`isContChannelMIDecompHyp_awgn` (`ContChannelMIDecomp.lean`) discharges every
+argument below from the Gaussian density facts (zero residual hypotheses).
+
+Argument shape note (matched to the instance's clean data, per plan «#4–#6 shape
+flexible»): the absolute-continuity args #1–#3 are in plan form; the fibre density
+is carried by a measurable closed-form proxy `g` plus its per-fibre a.e. agreement
+`hg_ae` (the measure-form fibre rnDeriv is only a.e.-determined, so its everywhere
+joint measurability is unavailable — Route B, see `ContChannelMIDecomp.lean`
+Phase 8), and the integrabilities #4/#5 are stated against the joint `p ⊗ₘ W` in
+the proxy/log form the body's `integral_compProd` Fubini step consumes.
+@residual(wall:awgn-mi-decomp) -/
 theorem contChannelMIDecomp_holds
     (p : Measure ℝ) [IsProbabilityMeasure p]
-    (W : InformationTheory.Shannon.ChannelCoding.Channel ℝ ℝ) [IsMarkovKernel W] :
+    (W : InformationTheory.Shannon.ChannelCoding.Channel ℝ ℝ) [IsMarkovKernel W]
+    (hW_ac : ∀ x, W x ≪ MeasureTheory.volume)                                    -- #1
+    (hWx_q : ∀ x, W x ≪ InformationTheory.Shannon.ChannelCoding.outputDistribution p W)
+    (hq_ac : InformationTheory.Shannon.ChannelCoding.outputDistribution p W
+              ≪ MeasureTheory.volume)                                            -- #2
+    (h_joint_ac : (p ⊗ₘ W)
+        ≪ p.prod (InformationTheory.Shannon.ChannelCoding.outputDistribution p W))  -- #3
+    (g : ℝ × ℝ → ℝ≥0∞) (hg_meas : Measurable g)
+    (hg_ae : ∀ x, (fun y => (W x).rnDeriv MeasureTheory.volume y)
+                    =ᵐ[W x] fun y => g (x, y))
+    (h_int_fibre : MeasureTheory.Integrable
+        (fun z : ℝ × ℝ => Real.log (g z).toReal) (p ⊗ₘ W))                       -- #4
+    (h_int_out : MeasureTheory.Integrable
+        (fun z : ℝ × ℝ => Real.log
+            ((InformationTheory.Shannon.ChannelCoding.outputDistribution p W).rnDeriv
+                MeasureTheory.volume z.2).toReal) (p ⊗ₘ W)) :                     -- #5
     (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel p W).toReal
       = Common2026.Shannon.differentialEntropy
           (InformationTheory.Shannon.ChannelCoding.outputDistribution p W)

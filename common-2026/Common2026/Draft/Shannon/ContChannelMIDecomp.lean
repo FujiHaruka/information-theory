@@ -245,27 +245,30 @@ theorem llr_compProd_prod_split
 `(mutualInfoOfChannel p W).toReal = h(Y) − ∫ h(Y|X=x) dp(x)`, the density-level
 analogue of the discrete `mutualInfo_eq_entropy_add_entropy_sub_jointEntropy`.
 
-The density-level wall is now consolidated into the single shared sorry lemma
+The density-level wall is the single shared sorry lemma
 `InformationTheory.Shannon.AWGN.contChannelMIDecomp_holds` (`AwgnWalls.lean`,
 `@residual(wall:awgn-mi-decomp)`) so the same wall does not sit in multiple files.
-HONESTY AUDIT 2026-05-28 (independent): the three absolute-continuity arguments
-(`_hW_ac`, `_hq_ac`, `_h_joint_ac`) are currently **unused** (note the leading
-underscores) — the body delegates straight to `contChannelMIDecomp_holds p W`,
-which itself takes no such hypotheses. So the previous claim that they are
-"consumed by the closure" was inaccurate; they merely document the intended honest
-route. The real defect is upstream: `contChannelMIDecomp_holds` is FALSE as stated
-precisely because those regularity preconditions were dropped from the wall
-(`@audit:defect(false-statement)`, see `AwgnWalls.lean`). Once the wall is rewritten
-to carry the preconditions, this wrapper should thread `_hW_ac`/`_hq_ac`/`_h_joint_ac`
-into it and become genuinely honest. Pending that wall-signature fix. -/
+This is a thin wrapper threading the three absolute-continuity preconditions, the
+fibre-vs-output absolute continuity, the measurable density proxy `g` with its
+per-fibre a.e. bridge, and the two log-density integrabilities (proxy fibre + output)
+straight into the shared wall. The wall carries the sole density-level chain-rule
+sorry; every argument here is genuine regularity. -/
 theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub
-    (_hW_ac : ∀ x, W x ≪ volume)
-    (_hq_ac : outputDistribution p W ≪ volume)
-    (_h_joint_ac : (p ⊗ₘ W) ≪ p.prod (outputDistribution p W)) :
+    (hW_ac : ∀ x, W x ≪ volume)
+    (hWx_q : ∀ x, W x ≪ outputDistribution p W)
+    (hq_ac : outputDistribution p W ≪ volume)
+    (h_joint_ac : (p ⊗ₘ W) ≪ p.prod (outputDistribution p W))
+    (g : ℝ × ℝ → ℝ≥0∞) (hg_meas : Measurable g)
+    (hg_ae : ∀ x, (fun y => (W x).rnDeriv volume y) =ᵐ[W x] fun y => g (x, y))
+    (h_int_fibre : Integrable (fun z : ℝ × ℝ => Real.log (g z).toReal) (p ⊗ₘ W))
+    (h_int_out : Integrable
+        (fun z : ℝ × ℝ => Real.log
+            ((outputDistribution p W).rnDeriv volume z.2).toReal) (p ⊗ₘ W)) :
     (mutualInfoOfChannel p W).toReal
       = Common2026.Shannon.differentialEntropy (outputDistribution p W)
         - (∫ x, Common2026.Shannon.differentialEntropy (W x) ∂p) :=
   InformationTheory.Shannon.AWGN.contChannelMIDecomp_holds p W
+    hW_ac hWx_q hq_ac h_joint_ac g hg_meas hg_ae h_int_fibre h_int_out
 
 end InformationTheory.Shannon.ChannelCoding
 
@@ -514,26 +517,16 @@ theorem isContChannelMIDecompHyp_awgn
     · rw [← h_eq]; exact hg_aesm
     · rw [← h_eq]; exact h_int_out_marg
   unfold IsContChannelMIDecompHyp
-  -- The load-bearing hypotheses (g / hg_meas / hg_ae / h_llr_split /
-  -- h_int_fibre_joint / h_int_out_joint / h_int_out_marg) have been retired from
-  -- `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`'s signature as part of the
-  -- small-cluster sorry-migration (Phase 2.3). The body of that lemma now delegates
-  -- the sole density-level wall to the shared sorry lemma
-  -- `AwgnWalls.contChannelMIDecomp_holds` (`@residual(wall:awgn-mi-decomp)`) so the
-  -- wall lives in exactly one place. The locally-built data above
-  -- (h_llr_split / h_int_*) is **dead code retained as a record of the genuine
-  -- route** for future closure; it is no longer consumed at the call site below
-  -- (`refine mutualInfoOfChannel_toReal_eq_diffEntropy_sub` only passes
-  -- `h_joint_ac` plus the two AC arguments). Future maintainers: removing the
-  -- `have h_llr_split / h_int_fibre_joint / h_int_out_joint / h_int_out_marg`
-  -- blocks would not change the conclusion — they are preserved as inline
-  -- documentation of the discharge route the closure plan will reuse.
-  refine mutualInfoOfChannel_toReal_eq_diffEntropy_sub
-    (W := W) ?_ ?_ h_joint_ac
-  · -- hW_ac : each fibre ≪ volume
-    exact awgnChannel_apply_absolutelyContinuous N hN h_meas
-  · -- hq_ac : output ≪ volume
-    exact hq_vol
+  -- All regularity arguments of the shared wall (via the generic body
+  -- `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`) are discharged genuinely from
+  -- the Gaussian facts built above: the three absolute continuities, the
+  -- fibre-vs-output ac `hWx_q`, the measurable proxy `g` + its per-fibre a.e. bridge
+  -- `hg_ae`, and the two log-density integrabilities (proxy fibre `h_int_fibre_joint`,
+  -- output `h_int_out_joint`). The sole density-level chain-rule sorry lives in the
+  -- shared wall `AwgnWalls.contChannelMIDecomp_holds` (`@residual(wall:awgn-mi-decomp)`).
+  exact mutualInfoOfChannel_toReal_eq_diffEntropy_sub
+    (W := W) (awgnChannel_apply_absolutelyContinuous N hN h_meas)
+    hWx_q hq_vol h_joint_ac g hg_meas hg_ae h_int_fibre_joint h_int_out_joint
 
 open InformationTheory.Shannon.ChannelCoding in
 /-- **F-2′ wrapper: `IsAwgnMIDecomp`, hypothesis-free.**
