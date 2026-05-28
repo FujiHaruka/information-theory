@@ -248,9 +248,16 @@ analogue of the discrete `mutualInfo_eq_entropy_add_entropy_sub_jointEntropy`.
 The density-level wall is now consolidated into the single shared sorry lemma
 `InformationTheory.Shannon.AWGN.contChannelMIDecomp_holds` (`AwgnWalls.lean`,
 `@residual(wall:awgn-mi-decomp)`) so the same wall does not sit in multiple files.
-The three absolute-continuity arguments are kept as preconditions (they document the
-genuine route and are consumed by the closure), but the residual now lives at one
-place. -/
+HONESTY AUDIT 2026-05-28 (independent): the three absolute-continuity arguments
+(`_hW_ac`, `_hq_ac`, `_h_joint_ac`) are currently **unused** (note the leading
+underscores) — the body delegates straight to `contChannelMIDecomp_holds p W`,
+which itself takes no such hypotheses. So the previous claim that they are
+"consumed by the closure" was inaccurate; they merely document the intended honest
+route. The real defect is upstream: `contChannelMIDecomp_holds` is FALSE as stated
+precisely because those regularity preconditions were dropped from the wall
+(`@audit:defect(false-statement)`, see `AwgnWalls.lean`). Once the wall is rewritten
+to carry the preconditions, this wrapper should thread `_hW_ac`/`_hq_ac`/`_h_joint_ac`
+into it and become genuinely honest. Pending that wall-signature fix. -/
 theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub
     (_hW_ac : ∀ x, W x ≪ volume)
     (_hq_ac : outputDistribution p W ≪ volume)

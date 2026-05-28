@@ -89,7 +89,27 @@ folded onto this shared wall. The old `h_bridge`-form
 `mutualInfoOfChannel_gaussianInput_closed_form` (`AWGN.lean`) is retained
 transitionally pending capacity-side closure.
 
-@residual(wall:awgn-mi-decomp) -/
+HONESTY AUDIT 2026-05-28 (independent): this signature is **FALSE as stated** —
+it lacks the absolute-continuity preconditions, so it is a universally-quantified
+claim over *all* Markov channels `W`, which is refutable. Counterexample (verified):
+take `p := gaussianReal m 1` and `W := Kernel.id` (deterministic copy,
+`W x = Measure.dirac x`, `IsMarkovKernel`). Then RHS
+`= differentialEntropy (outputDistribution p W) − ∫ x, differentialEntropy (W x) ∂p
+= differentialEntropy p − ∫ x, differentialEntropy (dirac x) ∂p
+= (1/2)·log(2πe) − 0 > 0` (`differentialEntropy_dirac = 0`,
+`differentialEntropy_gaussianReal`). But LHS `= (mutualInfoOfChannel p W).toReal
+= (klDiv (p ⊗ₘ id) (p.prod p)).toReal = (⊤).toReal = 0`, because the joint
+`p ⊗ₘ id = p.map (a ↦ (a,a))` is the diagonal measure, singular w.r.t. the product
+`p.prod p` for atomless `p`, so `klDiv = ⊤` (`klDiv_eq_top_iff`) and `toReal_top = 0`.
+Thus `0 = (1/2)·log(2πe) > 0`, contradiction. The root cause is that the regularity
+hypotheses (`∀ x, W x ≪ volume`, `outputDistribution p W ≪ volume`,
+`(p ⊗ₘ W) ≪ p.prod (outputDistribution p W)`, plus fibre/output log-density
+integrability) were dropped when consolidating; they belong as ARGUMENTS of this wall
+(they currently sit, unused, on the consumer `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`).
+The honest signature is given by §段1 body of `awgn-mi-decomp-plan` (honest hyps #1–#6).
+Signature rewrite (adding the preconditions, which propagates to the consumer DAG) is
+a separate implementer task; this tag only records the defect.
+@audit:defect(false-statement) @audit:closed-by-successor(awgn-mi-decomp-plan) -/
 theorem contChannelMIDecomp_holds
     (p : Measure ℝ) [IsProbabilityMeasure p]
     (W : InformationTheory.Shannon.ChannelCoding.Channel ℝ ℝ) [IsMarkovKernel W] :
