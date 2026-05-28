@@ -659,13 +659,24 @@ which Mathlib does not supply for a general mixture-of-Gaussians output.
 
 Independent honesty audit (2026-05-29): signature is unconditional (only regularity
 `P, 0 < P, N, N ≠ 0`); achievability bridge / `IsAwgnMIDecomp` / bind-conv output-Gaussian
-are all genuinely wired (0 sorry) and the sole residual `h_max_ent` is a body `have`-sorry
-(not a hypothesis arg) consumed only by `awgnCapacity_le_gaussian` via `csSup_le` — no
-load-bearing hyp, no circularity. The `wall:` classification is correct: this is the
-single-letter capacity converse (codebook-free `∀ p : Measure ℝ`), distinct from the
-n-letter coding-converse walls / plans, and the integrability gap is loogle-confirmed
-absent from Mathlib. Wall name registered in `docs/audit/audit-tags.md`.
+are all genuinely wired (0 sorry) and `h_max_ent` is a body `have`-sorry (not a hypothesis
+arg) — no load-bearing hyp, no circularity.
 
+⚠️ DEFECT 残置中 (2026-05-29, second audit). The body `have h_max_ent` statement is NOT a
+genuine wall — it is **universally false as written**, so its `sorry` can never close
+honestly. The constraint set `{p | IsProbabilityMeasure p ∧ ∫ x, x² ∂p ≤ P}` admits
+heavy-tailed inputs with infinite second moment: Bochner `∫ x² ∂p` returns `0` when
+`x²` is non-`p`-integrable (`MeasureTheory.integral_undef`), so e.g. a wide Cauchy law
+satisfies `∫ x² ∂p = 0 ≤ P` yet drives `I(X;Y) = h(Y) − (1/2)log(2πeN)` unbounded
+(finite-large klDiv MI, `.toReal` does not collapse to 0), violating the bound. `h_bdd`
+inherits the falsity (the image is genuinely unbounded above). The fix is a constraint-set
+DEFINITION pivot, not a proof: either `∫⁻ x, x² ∂p ≤ P` (lintegral, excludes `∞`) or add
+`Integrable (fun x => x²) p` to the Bochner form (the regularity Phases 1–5 of
+`AwgnCapacityConverseMaxent.lean` already carry). Lintegral pivot is the lighter change
+(no extra hypothesis threads through `awgnCapacity` / sandwich lemmas). Delegated to the
+orchestrator as a separate task; signature left in defect form for now.
+
+@audit:defect(false-statement) @audit:retract-candidate(degenerate-constraint-set-missing-integrability)
 @residual(wall:awgn-capacity-converse-maxent) -/
 theorem awgn_capacity_closed_form_of_out
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0) :

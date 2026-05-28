@@ -193,7 +193,24 @@ theorem mutualInfoOfChannel_gaussianInput_closed_form
 /-! ## D.2 — `awgnCapacity P N` -/
 
 /-- Power-constrained channel capacity. Supremum of `I(p; W)` over probability
-measures `p` with second moment ≤ `P`. -/
+measures `p` with second moment ≤ `P`.
+
+⚠️ DEFECT 残置中 (independent honesty audit 2026-05-29). The constraint set
+`{p | IsProbabilityMeasure p ∧ ∫ x, x² ∂p ≤ P}` is **degenerate**: Bochner `∫ x² ∂p`
+returns `0` on a non-integrable integrand (`MeasureTheory.integral_undef`), so
+heavy-tailed inputs with infinite second moment (e.g. wide Cauchy laws) are admitted via
+`∫ x² ∂p = 0 ≤ P`. Such inputs make `I(X;Y)` finite-large but unbounded above
+(`differentialEntropy` of the output grows like `log(scale)`), so the converse bound
+`(1/2)log(1+P/N)` is false and `awgnCapacity` is genuinely `= ⊤`-via-unbounded-sSup
+(`sSup` of an unbounded set = the junk value), NOT the closed form. The fix is a
+definition pivot of this constraint set — preferred: `∫⁻ x, x² ∂p ≤ P` (lintegral
+correctly rules out `∞`); alternative: keep Bochner and conjoin `Integrable (fun x => x²) p`.
+Lintegral is the lighter pivot (no new hypothesis threads through the sandwich lemmas /
+`awgn_capacity_closed_form_of_out`). Delegated to the orchestrator; definition left in
+defect form for now. See `Common2026/Draft/Shannon/AwgnCapacityConverseMaxent.lean` and
+`ContChannelMIDecomp.awgn_capacity_closed_form_of_out`.
+
+@audit:defect(false-statement) @audit:retract-candidate(degenerate-constraint-set-missing-integrability) -/
 noncomputable def awgnCapacity (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) : ℝ :=
   sSup ((fun p : Measure ℝ =>
           (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
