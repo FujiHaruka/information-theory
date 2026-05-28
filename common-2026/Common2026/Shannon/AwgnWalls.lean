@@ -81,12 +81,13 @@ unfold (~200-300 lines of rnDeriv / Fubini / integrability bookkeeping with no
 reusable Mathlib lemma). Exposed here as the single shared sorry lemma so that
 `IsContChannelMIDecompHyp` (via `mutualInfoOfChannel_toReal_eq_diffEntropy_sub`)
 and `IsAwgnMIDecomp` (via `awgn_midecomp_of_cont_chain`) delegate to one place.
-NOTE (honesty audit 2026-05-28): the AWGN-specific
-`mutualInfoOfChannel_gaussianInput_closed_form` (`AWGN.lean:125`) does NOT yet
-delegate here — it still carries the chain rule as a load-bearing `h_bridge`
-hypothesis (tier-4 `@audit:closed-by-successor(awgn-mi-bridge-plan)`). Folding
-that consumer onto this shared lemma is incidental-migration follow-up, not done
-by the consolidation commit `9ccbb67`.
+NOTE (honesty audit 2026-05-28): a hypothesis-free successor
+`mutualInfoOfChannel_gaussianInput_closed_form'` (`AWGNMIClosedForm.lean`) now
+delegates here transitively via `awgn_mi_gaussian_closed_form_of_out`
+(`ContChannelMIDecomp.lean`), so the AWGN-specific Gaussian-input closed form is
+folded onto this shared wall. The old `h_bridge`-form
+`mutualInfoOfChannel_gaussianInput_closed_form` (`AWGN.lean`) is retained
+transitionally pending capacity-side closure.
 
 @residual(wall:awgn-mi-decomp) -/
 theorem contChannelMIDecomp_holds

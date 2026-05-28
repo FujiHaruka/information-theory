@@ -120,7 +120,12 @@ Discharging `h_bridge` (= "`mutualInfoOfChannel` (KL form) = `h(Y) - h(Y|X)`"
 for AWGN) is deferred to the follow-up plan
 `docs/shannon/awgn-mi-bridge-plan.md`.
 
-`@audit:closed-by-successor(awgn-mi-bridge-plan)` -/
+The hypothesis-free successor `mutualInfoOfChannel_gaussianInput_closed_form'`
+lives in `AWGNMIClosedForm.lean` (takes no `h_bridge`). This `h_bridge`-form is
+retained transitionally because its capacity consumer's genuine successor
+(`awgn_capacity_closed_form_of_out`, `ContChannelMIDecomp.lean`) is still a `sorry`.
+
+`@audit:superseded-by(mutualInfoOfChannel_gaussianInput_closed_form')` -/
 @[entry_point]
 theorem mutualInfoOfChannel_gaussianInput_closed_form
     (P N : ℝ≥0) (hP : (P : ℝ) ≠ 0) (hN : (N : ℝ) ≠ 0)

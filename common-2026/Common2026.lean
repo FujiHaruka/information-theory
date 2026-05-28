@@ -171,6 +171,7 @@ import Common2026.Draft.Shannon.HoeffdingInteriorGradientBody
 import Common2026.Shannon.HuffmanSwapStepChainBody
 import Common2026.Shannon.AWGNMIDecompBody
 import Common2026.Draft.Shannon.ContChannelMIDecomp
+import Common2026.Shannon.AWGNMIClosedForm
 import Common2026.Shannon.ParallelGaussianWFCertBody
 import Common2026.Draft.Shannon.HoeffdingLagrangeIVTBody
 import Common2026.Shannon.ParallelGaussianWFStationarityBody
