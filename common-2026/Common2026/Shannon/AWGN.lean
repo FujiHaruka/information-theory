@@ -125,7 +125,16 @@ lives in `AWGNMIClosedForm.lean` (takes no `h_bridge`). This `h_bridge`-form is
 retained transitionally because its capacity consumer's genuine successor
 (`awgn_capacity_closed_form_of_out`, `ContChannelMIDecomp.lean`) is still a `sorry`.
 
-`@audit:superseded-by(mutualInfoOfChannel_gaussianInput_closed_form')` -/
+NOTE (honesty audit 2026-05-28): `h_bridge` here remains a **load-bearing
+hypothesis** — it asserts the textbook identity `I.toReal = h(P+N) − h(N)` that
+the theorem claims to derive, and the body merely `rw [h_bridge]` + Gaussian
+log-algebra (axiom profile has no `sorryAx`: the substance lives entirely in the
+hypothesis). `@audit:superseded-by` records the successor; the retract-candidate
+marker records that this wrapper is itself not honest-complete (load-bearing hyp,
+new-policy sorry-based migration pending) and is kept only for its active consumer
+`awgn_mi_gaussian_closed_form_of_primitives` (`AWGNMIBridge.lean:281`).
+
+`@audit:superseded-by(mutualInfoOfChannel_gaussianInput_closed_form')` @audit:retract-candidate(load-bearing-predicate) -/
 @[entry_point]
 theorem mutualInfoOfChannel_gaussianInput_closed_form
     (P N : ℝ≥0) (hP : (P : ℝ) ≠ 0) (hN : (N : ℝ) ≠ 0)
