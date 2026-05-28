@@ -1,6 +1,13 @@
 # AWGN MI bridge — `mutualInfoOfChannel` ↔ `h(Y) − h(Y|X)` plan (stub)
 
-> **Status**: 未着手 (Tier 3 stub)。実 body は別 session で `lean-planner` agent が起草する。
+> **Status (2026-05-28)**: density chain-rule (per-channel decomposition) 壁が shared sorry
+> `contChannelMIDecomp_holds` (`AwgnWalls.lean`、`@residual(wall:awgn-mi-decomp)`) **1 本に集約済**
+> (commit `9ccbb67`)。`docs/audit/audit-tags.md` Wall name register に `awgn-mi-decomp` 追記済。
+> ②③ (`IsContChannelMIDecompHyp` / `IsAwgnMIDecomp`) は genuine discharge 確認済。
+> **残**: ① per-letter bridge (`AWGNConverse.lean` `h_mi_bridge_per_letter`、
+> `@residual(plan:awgn-mi-bridge-plan)`) は mixture→compProd 因子分解 plumbing 待ちで残置。
+> honesty audit (commit `5c5d94d`) で `mutualInfoOfChannel_gaussianInput_closed_form` がまだ
+> `h_bridge` load-bearing と判明 (incidental-migration follow-up、本 plan に未折込)。
 > **Created**: 2026-05-24 (orphan suspect cleanup, defect-inventory-2026-05-24.md Wave 0)。
 
 ## Position
@@ -40,11 +47,19 @@
 
 ## Closure criteria
 
-- `h_bridge` 引数を `theorem mutualInfoOfChannel_gaussianInput_closed_form` から削除
-  (genuine discharge)、または別の `IsAwgnGaussianMIBridge` staged predicate に振り替え。
-- `@audit:suspect(awgn-mi-bridge-plan)` を `@audit:ok` または `@audit:staged(...)` に降格。
+- ② ③ (per-channel decomposition / density chain-rule): **達成済** — `contChannelMIDecomp_holds`
+  (`AwgnWalls.lean`、`@residual(wall:awgn-mi-decomp)`) に集約、`IsContChannelMIDecompHyp` /
+  `IsAwgnMIDecomp` は genuine discharge。
+- ① per-letter bridge: `h_mi_bridge_per_letter` 引数を `AWGNConverse.lean` から削除
+  (genuine discharge)、mixture→compProd 因子分解 plumbing が必要。`@residual(plan:awgn-mi-bridge-plan)`
+  の closure 担当。
+- `mutualInfoOfChannel_gaussianInput_closed_form` の `h_bridge` 引数を削除 (incidental-migration
+  follow-up、honesty audit `5c5d94d` で load-bearing と確認、本 plan に未折込)。
 
 ## TODO
 
-- [ ] `lean-planner` で Phase 設計 (`Common2026.Shannon.differentialEntropy` の Mathlib
-      対応物 inventory を mathlib-inventory に先行依頼するのが筋)
+- [x] density chain-rule 壁を shared sorry `contChannelMIDecomp_holds` に集約 (`9ccbb67`)、
+      `awgn-mi-decomp` register 追記済
+- [ ] ① per-letter bridge の mixture→compProd 因子分解 plumbing
+- [ ] `mutualInfoOfChannel_gaussianInput_closed_form` の `h_bridge` load-bearing 解消
+      (incidental-migration follow-up)

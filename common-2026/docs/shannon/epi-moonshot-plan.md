@@ -75,6 +75,16 @@
 - [ ] Phase E — 補助 corollary 群 (multi-arg, monotonicity, scaling) 📋
 - [ ] Phase V — verify (`lake env lean ...` clean) 📋
 
+> **Cluster C declaration の Tier 3 → Tier 2 移行完了 (2026-05-28、3 並列、honesty audit OK)** —
+> SPLIT-INTO の 3 sub-plan のうち、load-bearing predicate / bundle field を抱える Cluster C
+> declaration 群 (`EPIL3Integration` / `EPIStamToBridge` / `EPIStamDischarge` /
+> `EntropyPowerInequality` + `EPIStamDeBruijnConclusion` / `EPIStamInequalityBody` / `HeatFlowPath` /
+> `EPIPlumbing`) を [`epi-stam-cluster-c-sorry-migration-plan.md`](epi-stam-cluster-c-sorry-migration-plan.md)
+> で Tier 3 (`@audit:retract-candidate(load-bearing-predicate)` bookkeeping) → Tier 2
+> (`sorry` + `@residual`) に格上げ完了。3 Agent 並列 landing (commit `487547f`/`eeea99b`/`e95b3e2`)、
+> 独立 honesty audit (`4b3d165`) 全 8 項 OK / DEFECT 0。新規 shared sorry 補題 4 件、新規 wall file 0 /
+> 新規 wall name 0。詳細は当該 sub-plan 判断ログ 6/7。
+
 ## ゴール / Approach
 
 ### Goal (最終定理 signature)
@@ -646,3 +656,14 @@ inventory §H と同じ:
    differentialEntropy μ)`** 形を採用 (Cover-Thomas Ch.17 の
    `N(X) = (2πe)⁻¹ · e^{2h(X)}` ではなく `e^{2h(X)}` 形)。係数 `(2πe)` の
    付け替えは corollary で扱える。
+6. **判断 #6 (2026-05-28) — Cluster C declaration の Tier 3 → Tier 2 移行完了 (3 並列、honesty audit OK)**:
+   SPLIT-INTO sub-plan のうち load-bearing predicate / pipeline bundle field を抱える Cluster C
+   declaration 群を [`epi-stam-cluster-c-sorry-migration-plan.md`](epi-stam-cluster-c-sorry-migration-plan.md)
+   で 3 Agent 並列に Tier 2 (`sorry` + `@residual`) へ格上げ。L-EPISC-3-α 採用で bundle
+   `IsEPIL3IntegratedPipeline` の `bridge` field を非 load-bearing 化 (`stamToEPIBridge_holds` 内部呼出)、
+   empty-consumers 3 件 (#4 #17 #19) は純削除。新規 shared sorry 補題 4 件
+   (`debruijnIntegrationIdentity_holds` / `isDeBruijnIntegrationHyp_holds` / `stamToEPIScaling_holds` /
+   `stamScalingNoise_exists`)、新規 wall file 0 / 新規 wall name 0。独立 honesty audit (`4b3d165`)
+   全 8 項 OK / DEFECT 0 — `stam` threading は honest precondition と判定 (Stam 本体壁は
+   upstream `epi-stam-to-conclusion-plan` 責務)。一般 EPI 本体 (L-EPI1+L-EPI2+L-EPI3) の discharge は
+   依然 upstream sub-plan 群へ。

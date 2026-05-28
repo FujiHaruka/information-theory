@@ -28,13 +28,13 @@
 ## 進捗
 
 - [x] Phase 0 — verbatim 棚卸し + 既存 shared wall 流用判定 + Approach 確定 ✅ (2026-05-28、判断ログ 1〜5 参照)
-- [ ] Phase 1 — Wall name register 確認 (新規 wall 1 件追加要、`epi-noise-extension` 候補) 🔄
-- [ ] Phase 2 — shared sorry 補題の補充 (新規 wall 補題 **2 件** 補充確定、判断ログ 4) 🔄
-- [ ] Phase 3-α — pipeline bundle の `bridge` field 非 load-bearing 化 (L-EPISC-3-α 採用) + consumer 書換 (`EPIL3Integration`) 📋
-- [ ] Phase 3-β — Stam-scaling 系 predicate の wall 委任 + consumer 書換 (`EPIStamToBridge`) 📋
-- [ ] Phase 3-γ — de Bruijn regularity / integration predicate の wall 委任 (`EPIStamDischarge`) 📋
-- [ ] Phase 3-δ — empty-consumers predicate の純削除 (3 件) 📋
-- [ ] Phase V — 検証 + honesty audit + roadmap update 📋
+- [x] Phase 1 — Wall name register 確認 ✅ (`epi-noise-extension` 不採用、デフォルト plan slug 採用、`docs/audit/audit-tags.md` 無変更、判断ログ 6 参照)
+- [x] Phase 2 — shared sorry 補題の補充 ✅ (新規 shared sorry 補題 4 件補充、新規 wall file 0 / 新規 wall name 0、判断ログ 6 参照)
+- [x] Phase 3-α — pipeline bundle の `bridge` field 非 load-bearing 化 (L-EPISC-3-α 採用) + consumer 書換 (`EPIL3Integration`、Group 1 = Agent X) ✅ (commit `eeea99b`)
+- [x] Phase 3-β — Stam-scaling 系 predicate の wall 委任 + consumer 書換 (`EPIStamToBridge`、Group 2 = Agent Y) ✅ (commit `e95b3e2`)
+- [x] Phase 3-γ — de Bruijn regularity / integration predicate の wall 委任 (`EPIStamDischarge` + `FisherInfoV2DeBruijn`、Group 3 = Agent Z) ✅ (commit `487547f`)
+- [x] Phase 3-δ — empty-consumers predicate の純削除 (3 件: #4 #17 #19) ✅ (Group 1/2 に内包、判断ログ 6 参照)
+- [x] Phase V — 検証 + honesty audit + roadmap update ✅ (独立 honesty audit commit `4b3d165` 全 8 項 OK / DEFECT 0、判断ログ 7 参照)
 
 > **Phase 0 確定 scope = 6 file** (brief の 4 file から拡張)。
 > `EPIStamDeBruijnConclusion.lean` **in** + `EPIStamInequalityBody.lean` **in**
@@ -695,3 +695,43 @@ bundle field と独立に進められるため並列可能。
    L-EPISC-2-β (#3 phaseA-plan slug 委任)、いずれも対処済で Phase 3 実装に渡せる状態。
    L-EPISC-3-α (bridge field 非 load-bearing 化) は撤退ではなく **採用方針**として確定。
    L-EPISC-4-γ (新規 wall file) / L-EPISC-5 (新規 defect) は不発。
+
+6. **Phase 1-3 実装完了 — 3 並列グループ landing 済 (2026-05-28、commit `487547f` Z / `eeea99b` X / `e95b3e2` Y)**:
+   Phase 3 並列分割 (判断ログ 5) の 3 Agent が全 landing。**新規 shared sorry 補題 = 計 4 件**、
+   **新規 wall file 0 / 新規 wall name 0** (`epi-noise-extension` は採用せずデフォルト plan slug、
+   `docs/audit/audit-tags.md` 無変更 → L-EPISC-4-γ 不発確定)。各 Group の着地内容:
+
+   - **Group 1 (Agent X — `EPIL3Integration` + `EPIStamDeBruijnConclusion` + `EPIStamInequalityBody`、commit `eeea99b`)**:
+     bundle `IsEPIL3IntegratedPipeline` の `bridge` field を除去 (L-EPISC-3-α 採用)。`bridge` を使っていた
+     `epi_l3_of_integrated_pipeline` / `isEPIL3IntegratedPipeline_symm` を `stamToEPIBridge_holds` 内部呼出に書換、
+     構成子 `_of_stam_bridge` → `_of_stam` に改名。#17 `IsHeatFlowFamilyHyp` / #19
+     `IsCsiszarGap1SourceTendsToZeroAtInfinity` は純削除。#18 `bounded_T_ftc_gaussian` を `@audit:ok` に修正。
+     **これら 3 file は 0 新規 sorry / 0 新規 @residual** (proof done 寄り、壁は他 file 局所)。
+
+   - **Group 2 (Agent Y — `EPIStamToBridge` + `HeatFlowPath`、commit `e95b3e2`)**:
+     #3 `IsStamToEPIScalingHyp` を新規 shared sorry `stamToEPIScaling_holds`
+     (`@residual(plan:epi-stam-to-conclusion-phaseA-plan)`) に body 委任 (predicate def は field 型として残置)。
+     #4 `IsStamToEPILimitHyp` は純削除 (`_of_scaling_limit` → `_of_scaling`、`_limit` slot 除去)。
+     #5 `IsStamScalingNoiseHyp` を新規 shared sorry `stamScalingNoise_exists` (同 slug) に委任。
+     **honesty fix**: `entropy_power_inequality_unconditional` は旧「`@audit:ok` を名乗りつつ #1/#4/#5 を
+     load-bearing thread」(tier 5 overstatement) を、`@audit:ok` 除去 +
+     `@residual(plan:epi-stam-to-conclusion-phaseA-plan)` + docstring で `_unconditional` を legacy misnomer
+     明示、に修正。
+
+   - **Group 3 (Agent Z — `EPIStamDischarge` + `FisherInfoV2DeBruijn` + `EntropyPowerInequality` + `EPIPlumbing`、commit `487547f`)**:
+     #2 用に新規 shared sorry `debruijnIntegrationIdentity_holds` (積分形、`@residual(wall:debruijn-integration)`、
+     `FisherInfoV2DeBruijn` 最上流に配置) を補充。#1 / #2 は predicate を削除せず regularity bundle として残し
+     load-bearing 部分のみ wall 委任 (cross-file 衝突回避)。#6 `entropy_power_inequality_three_arg` を `@audit:ok`。
+     署名改変 0。
+
+   **新規 shared sorry 補題 4 件の内訳**: `debruijnIntegrationIdentity_holds` (積分形) + 委任 witness
+   `isDeBruijnIntegrationHyp_holds` [`wall:debruijn-integration`] / `stamToEPIScaling_holds` /
+   `stamScalingNoise_exists` [両者 `plan:epi-stam-to-conclusion-phaseA-plan`]。L-EPISC-4-γ 不発。
+
+7. **Phase V 独立 honesty audit 全 OK (2026-05-28、commit `4b3d165`)**: fresh `honesty-auditor` subagent が
+   **全 8 項 OK / DEFECT 0** 判定。核心の verdict: `stam` / `h_stam` (Stam 不等式) の threading は
+   **honest precondition** と判定 — Stam 本体壁は upstream `epi-stam-to-conclusion-plan` の責務であり、
+   本 plan の scope-out (§scope-out) 通り。Cluster C declaration の Tier 3 → Tier 2 移行は完遂。
+   **残課題 (handoff 追跡用)**: (a) `IsEPIStamDeBruijnPipeline.bridge` field がまだ load-bearing
+   (後続 group が同型 L-EPISC-3-α で処理予定)、(b) `stamScalingNoise_exists` + `isDeBruijnIntegrationHyp_holds`
+   は published-but-unconsumed (Phase A 実装が consumer を生むか追跡)。
