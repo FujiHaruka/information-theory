@@ -120,6 +120,33 @@ docstring が「Mathlib に X 不在」と主張 (`@residual(wall:...)` 含む) 
 
 存在したら **`mathlib_wall_misuse`** verdict (壁分類過大評価)。
 
+## ★ proof-done (`ok` verdict) 裏取り — `#print axioms`
+
+監査対象が **proof done / genuine closure** (0 sorry / 0 residual、`@audit:ok` 候補) を主張するときは、
+**file ローカルの `rg sorry` だけでは不十分**。`rg` は当該 file の literal `sorry` しか見ず、import 先モジュール
+経由の **transitive sorry** (依存ツリーのどこかに残る `sorryAx`) を捕捉できない。`ok` (tier 1) を付ける前に
+**最終定理が標準 3 公理のみに依存** (`propext` / `Classical.choice` / `Quot.sound`、`sorryAx` 非依存) を機械確認する:
+
+1. **第一手 (安い、全体ビルド不要)**: 対象 file の末尾に `#print axioms <最終定理 FQN>` を transient に 1 行足し、
+   ```bash
+   export PATH="$HOME/.elan/bin:$PATH"
+   lake env lean <file>
+   ```
+   `lake env lean` は **その file をソースから毎回再コンパイル**するので、file 自身の decl の axiom 情報は常に fresh
+   (= file 自身の olean が古くても影響しない)。出力の axiom リストに `sorryAx` が無いことを確認。**確認後その行は消す**
+   (commit しない)。コストは「対象 file 1 本の再コンパイル」≒数秒、`lake build` 不要。
+
+2. **stale-olean 偽陽性の罠**: `#print axioms` を「対象を import する別 scratch」から走らせると、**import 先の olean が
+   ソースより古い** (実装直後で未リフレッシュ) 場合に `sorryAx` を**誤検出**する。第一手 (対象 file に直書き +
+   `lake env lean`) はこの罠を回避する。**import 先モジュールも同 commit で編集していた**場合のみ、先に
+   `lake build Common2026.<その import 先>` で olean をリフレッシュ (増分ビルド、依存はビルドするが **dependents は
+   ビルドしない** = 全体ビルドではない) してから第一手を実行。
+
+3. **判定**: axiom リストに `sorryAx` が出たら **`ok` にしない**。transitive sorry の所在を特定し `honest_residual`
+   (壁が残る) に降格、または該当 sorry を flag。標準 3 公理のみなら proof done を独立 verify 済として `@audit:ok` 可。
+
+(本裏取りは `ok` verdict 専用。新規 sorry/`@residual` 監査 (honest_residual 等) では `#print axioms` は論点にならない。)
+
 ## Deprecated タグ残置チェック
 
 新規 commit に以下があれば flag (移行漏れ):
@@ -198,6 +225,7 @@ verdict 返す前に self-check:
 - [ ] hypothesis bundle 全体に core-reconstruction test を適用したか (joint で判断)
 - [ ] consumer body / theorem body を実際に Read して silent leak がないか確認したか
 - [ ] Mathlib 不在主張 (`@residual(wall:...)`) は loogle で裏取りしたか
+- [ ] **`ok` (proof done) verdict は `#print axioms` で `sorryAx` 非依存を裏取りしたか** (transient `#print axioms` + `lake env lean`、`rg sorry` だけでは transitive sorry を見逃す。上記「proof-done 裏取り」参照)
 - [ ] `@residual(plan:<slug>)` の plan は実在するか確認したか
 - [ ] signature に load-bearing hypothesis が残っていないか (新しい defect、即 tier 5 flag)
 - [ ] signature が universally false (free variable に precondition 無し) になっていないか (`false_statement`)
