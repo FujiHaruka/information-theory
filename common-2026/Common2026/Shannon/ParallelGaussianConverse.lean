@@ -25,12 +25,11 @@ Genuine (sorryAx-free): Phase 2 decomposition lift
 Phase 3 `parallel_per_input_mi_le_sum`: the **converse organization is genuine**
 for `0 ≤ P` (MI decomposition + output-entropy subadditivity + per-coord Gaussian
 max-entropy + variance allocation `P'ᵢ := Var(Yᵢ) − Nᵢ` + log-algebra, all
-assembled in-body via `parallelGaussian_max_ent_le_of_subadditivity`). As of Wave 4 all
-the named **Phase 1 precondition lemmas** (correlated-output absolute continuity / fibre
-product-entropy / output variance structure / fibre log-proxy / MI-decomposition value) are
-genuine; the sole remaining residual is the correlated-output joint log-density integrability
-#5, carrying `@residual(plan:parallel-gaussian-converse-5-closure)` (reclassified
-2026-05-29 from `wall:multivariate-mi`; see its docstring). None bundles the conclusion;
+assembled in-body via `parallelGaussian_max_ent_le_of_subadditivity`). As of the #5 closure
+(2026-05-29) all the named **Phase 1 precondition lemmas** (correlated-output absolute
+continuity / fibre product-entropy / output variance structure / fibre log-proxy /
+MI-decomposition value) AND the correlated-output joint log-density integrability #5 are
+genuine (0 sorry, 0 residual, `@audit:ok`). None bundles the conclusion;
 they are genuine consequences of Gaussian smoothing.
 
 **`false-statement` defect FIXED (2026-05-29)**: `parallel_per_input_mi_le_sum` now
@@ -46,7 +45,8 @@ is sorryAx-free (`#print axioms` = [propext, Classical.choice, Quot.sound]). #5
 `parallelOutput_joint_logDensity_integrable` was genuinely closed 2026-05-29 (plan
 `parallel-gaussian-converse-5-closure`): the joint mixture-density representation
 `μY = volume.withDensity (∫⁻ ∏ gaussianPDF ∂p)` is `p`-independent (Tonelli), lifting the
-1-D AWGN Phase-6 integrability coordinate-wise. `@audit:ok` pending independent honesty audit.
+1-D AWGN Phase-6 integrability coordinate-wise. Independent honesty audit (2026-05-29) DONE:
+the 8 closure helpers + #5 are `@audit:ok`, `#print axioms` re-confirmed sorryAx-free.
 
 Wave 4 (2026-05-29): #13 `parallel_mi_decomp_value` and the fibre log-proxy
 `parallelFibre_logProxy_integrable_compProd` are now GENUINE. The fibre log-proxy is
@@ -54,13 +54,12 @@ sorryAx-free (`log(∏ gaussianPDF)` rewritten to the coordinate sum `∑ᵢ (c�
 each quadratic integrable against `p ⊗ₘ W` via `integrable_comp_eval` / Gaussian 2nd moment).
 #13 is a genuine MI-decomposition assembly (0 own `sorry`) reducing to the Phase-2 lift; its
 heartbeat blow-up was tamed by the named proxy `def piGaussProxy` (atomic `g` argument) +
-`set_option maxHeartbeats`. The **only** remaining `sorry` is #5
-`parallelOutput_joint_logDensity_integrable`, carrying
-`@residual(plan:parallel-gaussian-converse-5-closure)` (reclassified 2026-05-29 from the
-former `wall:multivariate-mi`: the mixture-density representation `μY = volume.withDensity
-(∫⁻ ∏ gaussianPDF ∂p)` is `p`-independent (Tonelli), so it is a big-but-mechanical self-build
-~180-270 lines, NOT a Mathlib wall; see its docstring). #13 depends on `sorryAx` only
-*transitively* via #5.
+`set_option maxHeartbeats`. #5 `parallelOutput_joint_logDensity_integrable` (formerly the last
+residual, reclassified 2026-05-29 from `wall:multivariate-mi` to
+`plan:parallel-gaussian-converse-5-closure`: the mixture-density representation
+`μY = volume.withDensity (∫⁻ ∏ gaussianPDF ∂p)` is `p`-independent (Tonelli), so it was a
+big-but-mechanical self-build, NOT a Mathlib wall) is now genuinely closed (`@audit:ok`),
+so #13 is sorryAx-free.
 
 Wave 3 (2026-05-29): the parallel-output marginal-as-convolution linchpin is now genuine
 (`parallelOutput_marginal_eq_conv`, sorryAx-free): `μY.map(·i) = (p.map(·i)) ∗ gaussianReal 0 (N i)`,
@@ -74,13 +73,13 @@ via `integral_conv` + Gaussian fibre second moment; `parallelOutputMean_eq`: out
 mean), #11 entropy integrand (1-D `outputDistribution_logDensity_integrable`). The `i`-marginal
 inherits the 1-D AWGN power constraint via `parallelMarginal_mem_awgnPowerConstraintSet`.
 
-Remaining 1 `sorry`:
-* #5 `parallelOutput_joint_logDensity_integrable`
-  (`@residual(plan:parallel-gaussian-converse-5-closure)`) — joint output log-density
-  integrability for the **correlated** output. Reclassified 2026-05-29 from
-  `wall:multivariate-mi`: the multivariate mixture-density representation is `p`-independent
-  (Tonelli), so this is a big-but-mechanical self-build, NOT a Mathlib wall; see the
-  declaration docstring + closure plan for the re-adjudication.
+Remaining `sorry`: **none** (file is proof-done, 0 sorry / 0 residual).
+* #5 `parallelOutput_joint_logDensity_integrable` — joint output log-density integrability for
+  the **correlated** output — was genuinely closed 2026-05-29 (`@audit:ok`). It had been
+  reclassified from `wall:multivariate-mi` to `plan:parallel-gaussian-converse-5-closure`
+  (the multivariate mixture-density representation is `p`-independent via Tonelli, a
+  big-but-mechanical self-build, NOT a Mathlib wall); see the declaration docstring + closure
+  plan for the re-adjudication and the independent honesty audit sign-off.
 
 Wave 1 (2026-05-29): the volume-AC chain is now genuine (sorryAx-free,
 `#print axioms` = [propext, Classical.choice, Quot.sound]): shared base helper
@@ -108,9 +107,10 @@ The product→sum entropy identity `jointDifferentialEntropyPi_pi_eq_sum` (鍵�
 
 (Wave 2's then-remaining residuals — per-coord log-density integrability #4 / #11, output
 marginal variance #8 / #9 / #10 — were closed in Wave 3 via the marginal-as-convolution
-identity; #13 and the fibre log-proxy were closed in Wave 4. Only the correlated-output
-joint integrability #5 remains, now `@residual(plan:parallel-gaussian-converse-5-closure)`
-— reclassified 2026-05-29 from `wall:multivariate-mi`, see its docstring.)
+identity; #13 and the fibre log-proxy were closed in Wave 4. The correlated-output
+joint integrability #5 — formerly `@residual(plan:parallel-gaussian-converse-5-closure)`,
+reclassified 2026-05-29 from `wall:multivariate-mi` — is now genuinely closed (`@audit:ok`),
+so the file is proof-done.)
 
 Independent honesty audit (2026-05-29, commit `6f495bc`): genuine `0 ≤ P` converse
 chain confirmed (no load-bearing hypothesis, no degenerate/exfalso exploitation; the
@@ -1065,12 +1065,14 @@ noncomputable def parallelOutputMixtureDensity (z : Fin n → ℝ) : ℝ≥0∞ 
   ∫⁻ x : Fin n → ℝ, piGaussProxy N (x, z) ∂p
 
 /-- Unfolded form of `parallelOutputMixtureDensity` (the product of coordinate Gaussian
-pdfs averaged over `p`). -/
+pdfs averaged over `p`). Independent honesty audit (2026-05-29): `rfl`, no honesty content.
+@audit:ok -/
 theorem parallelOutputMixtureDensity_eq (z : Fin n → ℝ) :
     parallelOutputMixtureDensity N p z
       = ∫⁻ x : Fin n → ℝ, ∏ i, gaussianPDF (x i) (N i) (z i) ∂p := rfl
 
-/-- The joint mixture density is measurable in `z`. -/
+/-- The joint mixture density is measurable in `z`.
+Independent honesty audit (2026-05-29): genuine, no honesty content. @audit:ok -/
 theorem measurable_parallelOutputMixtureDensity :
     Measurable (parallelOutputMixtureDensity N p) := by
   unfold parallelOutputMixtureDensity
@@ -1081,7 +1083,8 @@ theorem measurable_parallelOutputMixtureDensity :
 `Measure.pi (gaussianReal (x i)(N i)) = volume.withDensity (∏ᵢ gaussianPDF (x i)(N i)·)`
 (`pi_withDensity_fin` + `gaussianReal_of_var_ne_zero`), and Tonelli swaps the `∂p` average
 to the outside — `p`-independent, so it lifts the 1-D `output_eq_withDensity_mixture`.
-Genuine, 0 sorry (pending independent honesty audit). -/
+Genuine, 0 sorry. Independent honesty audit (2026-05-29): Tonelli/Fubini construction,
+`hN` regularity only, no conclusion-bundle. @audit:ok -/
 theorem parallelOutput_eq_withDensity_mixture (hN : ∀ i, (N i : ℝ) ≠ 0) :
     outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)
       = volume.withDensity (parallelOutputMixtureDensity N p) := by
@@ -1144,7 +1147,8 @@ theorem parallelOutput_eq_withDensity_mixture (hN : ∀ i, (N i : ℝ) ≠ 0) :
         refine lintegral_congr (fun z => ?_)
         rw [Pi.mul_apply, mul_comm]
 
-/-- (#5) The output rnDeriv is a.e. the joint mixture density. -/
+/-- (#5) The output rnDeriv is a.e. the joint mixture density.
+Independent honesty audit (2026-05-29): genuine, `hN` regularity only. @audit:ok -/
 theorem parallelOutput_rnDeriv_ae_mixture (hN : ∀ i, (N i : ℝ) ≠ 0) :
     (outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)).rnDeriv volume
       =ᵐ[volume] parallelOutputMixtureDensity N p := by
@@ -1153,7 +1157,8 @@ theorem parallelOutput_rnDeriv_ae_mixture (hN : ∀ i, (N i : ℝ) ≠ 0) :
 
 /-- (#5, upper bound) The joint mixture density is bounded above by
 `∏ᵢ (√(2π Nᵢ))⁻¹`: each coordinate Gaussian is `≤ (√(2π Nᵢ))⁻¹`
-(`gaussianPDFReal_le_sup`), and `p` is a probability measure. -/
+(`gaussianPDFReal_le_sup`), and `p` is a probability measure.
+Independent honesty audit (2026-05-29): genuine, no hypotheses, no defect. @audit:ok -/
 theorem parallelOutputMixtureDensity_le_sup (z : Fin n → ℝ) :
     parallelOutputMixtureDensity N p z
       ≤ ENNReal.ofReal (∏ i, (Real.sqrt (2 * Real.pi * N i))⁻¹) := by
@@ -1172,7 +1177,11 @@ theorem parallelOutputMixtureDensity_le_sup (z : Fin n → ℝ) :
 `S = {x | ∀ i, |x i| ≤ Rᵢ}` carrying `≥ 1/2` of the mass of `p`. Each coordinate's
 finite second moment gives `p {|xᵢ| > Rᵢ} ≤ 1/(2n)`; a union bound over `Fin n` keeps the
 complement `≤ 1/2`. (`Fin n → ℝ` uses the sup norm, so the concentration set is the box,
-not the `‖·‖`-ball.) -/
+not the `‖·‖`-ball.)
+Independent honesty audit (2026-05-29): genuine Chebyshev + union bound; `∃ R` is a
+genuinely-constructed concentration claim (`R i := √(2n·E[xᵢ²]+1)`), NOT a conclusion-bundle.
+The `n = 0` branch is honest (box = univ, `p univ = 1 ≥ 1/2`), not a vacuity exploit;
+the headline anyway uses `Fin (n+1)`. `0 ≤ P` / `hp` regularity only. @audit:ok -/
 theorem parallel_concentration_box (P : ℝ) (hP : 0 ≤ P)
     (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     ∃ R : Fin n → ℝ, (∀ i, 0 < R i) ∧
@@ -1265,8 +1274,11 @@ set_option maxHeartbeats 1000000 in
 `∃ a b, 0 ≤ a ∧ ∀ z, -log (f_Y z).toReal ≤ a · ∑ᵢ (zᵢ)² + b`. The coordinate-box
 concentration (`parallel_concentration_box`) gives `≥ 1/2` of the mass on `S`, and on `S`
 each coordinate Gaussian has a tail lower bound; the product gives `f_Y(z) ≥ (1/2)·∏ᵢ Krᵢ(zᵢ)`,
-quadratic in each `zᵢ`. Coordinate-product lift of the 1-D `output_logDensity_lower_bound`.
-Genuine, 0 sorry (pending independent honesty audit). -/
+quadratic in each `zᵢ`. Coordinate-product lift of the 1-D `output_logDensity_lower_bound` (`@audit:ok`).
+Genuine, 0 sorry. Independent honesty audit (2026-05-29): explicit `∃ a b` witnesses
+(`a := ∑ 1/Nᵢ`, `b := …`) genuinely constructed; the box concentration + per-coordinate
+Gaussian-tail lower bound `(z−x)² ≤ 2z² + 2R²` is honest, no degeneracy/hyp-bundling.
+`0 ≤ P` / `hN` / `hp` regularity only. @audit:ok -/
 theorem parallelOutput_logDensity_lower_bound (P : ℝ) (hP : 0 ≤ P)
     (hN : ∀ i, (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     ∃ a b : ℝ, 0 ≤ a ∧ ∀ z : Fin n → ℝ,
@@ -1386,7 +1398,9 @@ theorem parallelOutput_logDensity_lower_bound (P : ℝ) (hP : 0 ≤ P)
         gcongr
 
 /-- (#5, combination) Quadratic bound on `|log f_Y|`: combines the constant upper bound
-with the quadratic lower bound. `∃ c₀ c₁, 0 ≤ c₁ ∧ ∀ z, |log (f_Y z).toReal| ≤ c₀ + c₁ ∑ᵢ(zᵢ)²`. -/
+with the quadratic lower bound. `∃ c₀ c₁, 0 ≤ c₁ ∧ ∀ z, |log (f_Y z).toReal| ≤ c₀ + c₁ ∑ᵢ(zᵢ)²`.
+Independent honesty audit (2026-05-29): genuine combination of the `@audit:ok` upper/lower
+bounds, regularity-only hypotheses. @audit:ok -/
 theorem parallelOutputMixtureDensity_log_abs_le (P : ℝ) (hP : 0 ≤ P)
     (hN : ∀ i, (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     ∃ c₀ c₁ : ℝ, 0 ≤ c₁ ∧ ∀ z : Fin n → ℝ,
@@ -1447,8 +1461,10 @@ with "no mixture-density representation exists" (FALSE)). Closure: density repre
 
 Signature is a clean `Integrable` claim with regularity-only preconditions
 (`0 ≤ P` / `hN` / `hp`) — no load-bearing hypothesis, no conclusion-bundle, no circularity.
-`#print axioms` = [propext, Classical.choice, Quot.sound] (sorryAx-free). Pending independent
-honesty audit for the `@audit:ok` tag. -/
+Independent honesty audit (2026-05-29): all 8 closure helpers re-verified genuine (no
+degenerate-definition / hyp-bundling exploit), and `#print axioms
+parallelOutput_joint_logDensity_integrable` = [propext, Classical.choice, Quot.sound]
+re-confirmed independently (sorryAx-free). @audit:ok -/
 theorem parallelOutput_joint_logDensity_integrable (P : ℝ) (hP : 0 ≤ P)
     (hN : ∀ i, (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     Integrable
@@ -1923,13 +1939,10 @@ log-proxy integrability (`parallelFibre_logProxy_integrable_compProd`, now `@aud
 the output log-density integrability (#5, pushed from `μY` to `p ⊗ₘ W` via
 `integrable_map_measure` on `snd`).
 
-The body itself contains **0 `sorry`** — the genuine MI-decomposition assembly. `#print axioms`
-shows `sorryAx` **transitively only**, via the single leaf #5
-(`parallelOutput_joint_logDensity_integrable`,
-`@residual(plan:parallel-gaussian-converse-5-closure)`); the fibre
-log-proxy is now genuine, so #5 is the *only* remaining sorry source. No own `@residual` tag:
-this declaration carries no `sorry` (a fresh auditor sees a clean body). It is dischargeable
-the moment the #5 leaf lands. -/
+The body itself contains **0 `sorry`** — the genuine MI-decomposition assembly. With the #5
+leaf `parallelOutput_joint_logDensity_integrable` now genuinely closed (`@audit:ok`,
+independent honesty audit 2026-05-29), `#print axioms` is sorryAx-free
+([propext, Classical.choice, Quot.sound]); this declaration is therefore proof-done. -/
 theorem parallel_mi_decomp_value (P : ℝ) (hP : 0 ≤ P) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     (mutualInfoOfChannel p (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
@@ -1995,11 +2008,10 @@ For `0 ≤ P` the converse chain is a **genuine assembly** (0 own `sorry`): MI d
 genuine) + per-coord Gaussian max-entropy (`differentialEntropy_le_gaussian_of_variance_le`,
 `@audit:ok`) + variance allocation `P'ᵢ := Var(Yᵢ) − Nᵢ` + capacity log-algebra. As of Wave 4
 the entire converse organization plus all Phase-1 regularity / fibre product-entropy /
-output-variance preconditions are genuine; the **only** transitive `sorry` source is the
-correlated-output joint integrability #5
-(`@residual(plan:parallel-gaussian-converse-5-closure)`), reached via
-`parallel_mi_decomp_value`. This declaration carries no own `sorry` (a fresh auditor sees a
-clean body); it is dischargeable the moment the #5 leaf lands.
+output-variance preconditions are genuine, and the formerly-residual correlated-output joint
+integrability #5 (reached via `parallel_mi_decomp_value`) is now genuinely closed
+(`@audit:ok`, independent honesty audit 2026-05-29). This declaration carries no own `sorry`
+and is proof-done (sorryAx-free transitively).
 
 The `0 ≤ P` precondition is genuine and necessary: without it `parallel_per_input_mi_le_sum`
 would be FALSE for `P < 0` (the constraint set `parallelGaussianPowerConstraintSet P` is

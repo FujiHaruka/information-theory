@@ -184,9 +184,9 @@ theorem parallel_gaussian_capacity_formula_minimal {n : ℕ}
       = ∑ i : Fin (n + 1), (1/2) *
           Real.log (1 + waterFillingPower ν N i / (N i : ℝ)) := by
   -- Assemble the regularity bundle from the genuine achiever piece via the
-  -- constructor (whose `bddAbove` / `max_ent` carry the transitive
-  -- `wall:multivariate-mi` residual), then invoke the genuine `le_antisymm`
-  -- headline `parallel_gaussian_capacity_formula`.
+  -- constructor (`bddAbove` / `max_ent`, both now genuine — #5 joint
+  -- log-density integrability is closed, so this headline is sorryAx-free),
+  -- then invoke the genuine `le_antisymm` headline `parallel_gaussian_capacity_formula`.
   set Q : Fin (n + 1) → ℝ≥0 := fun i => (waterFillingPower ν N i).toNNReal with hQ_def
   have h_reg : IsParallelGaussianPerCoordRegularity P N h_meas h_parallel_meas Q :=
     isParallelGaussianPerCoordRegularity_of_pieces P hP.le N hN h_meas h_parallel_meas Q
