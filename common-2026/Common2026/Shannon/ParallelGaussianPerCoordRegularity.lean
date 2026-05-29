@@ -98,8 +98,7 @@ theorem isParallelGaussianPerCoordRegularity_of_pieces {n : ℕ}
     (Q : Fin n → ℝ≥0)
     -- (P-1, Phase 1) global P-upper-bound (Q-free)
     (h_bdd_global :
-      ∀ p ∈ { p : Measure (Fin n → ℝ) | IsProbabilityMeasure p ∧
-                ∑ i : Fin n, ∫ x : Fin n → ℝ, (x i)^2 ∂p ≤ P },
+      ∀ p ∈ parallelGaussianPowerConstraintSet P,
         (mutualInfoOfChannel p (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
           ≤ ∑ i : Fin n, (1/2) * Real.log (1 + P / (N i : ℝ)))
     -- (P-2, Phase 2) per-coord AWGN bridge for the achiever
@@ -112,8 +111,7 @@ theorem isParallelGaussianPerCoordRegularity_of_pieces {n : ℕ}
     -- such that the MI decomposes as `h(Yⁿ) − condTerm`, and there exists a
     -- per-coord power split `P'` (≥0, ∑≤P) whose subadditive upper bound is met.
     (h_multivar_decomp :
-      ∀ p ∈ { p : Measure (Fin n → ℝ) | IsProbabilityMeasure p ∧
-                ∑ i : Fin n, ∫ x : Fin n → ℝ, (x i)^2 ∂p ≤ P },
+      ∀ p ∈ parallelGaussianPowerConstraintSet P,
         ∃ P' : Fin n → ℝ, (∀ i, 0 ≤ P' i) ∧ (∑ i : Fin n, P' i ≤ P) ∧
           (mutualInfoOfChannel p (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
             ≤ ∑ i : Fin n, (1/2) * Real.log (1 + P' i / (N i : ℝ))) :
@@ -150,8 +148,7 @@ theorem parallel_gaussian_capacity_formula_minimal {n : ℕ}
     (ν : ℝ) (h_kkt : IsWaterFillingKKT P N ν) (h_opt : IsWaterFillingOptimal P N ν)
     -- (P-1) global P-upper-bound (Phase 1 honest piece, Q-free)
     (h_bdd_global :
-      ∀ p ∈ { p : Measure (Fin (n + 1) → ℝ) | IsProbabilityMeasure p ∧
-                ∑ i : Fin (n + 1), ∫ x : Fin (n + 1) → ℝ, (x i)^2 ∂p ≤ P },
+      ∀ p ∈ parallelGaussianPowerConstraintSet P,
         (mutualInfoOfChannel p (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
           ≤ ∑ i : Fin (n + 1), (1/2) * Real.log (1 + P / (N i : ℝ)))
     -- (P-2) per-coord AWGN bridge for the water-filling achiever (Phase 2 honest piece)
@@ -164,8 +161,7 @@ theorem parallel_gaussian_capacity_formula_minimal {n : ℕ}
     -- (P-3) multivariate channel↔RV decomp + per-coord max-entropy allocation
     -- (Phase 3 honest piece — the *only* new honest piece of this plan).
     (h_multivar_decomp :
-      ∀ p ∈ { p : Measure (Fin (n + 1) → ℝ) | IsProbabilityMeasure p ∧
-                ∑ i : Fin (n + 1), ∫ x : Fin (n + 1) → ℝ, (x i)^2 ∂p ≤ P },
+      ∀ p ∈ parallelGaussianPowerConstraintSet P,
         ∃ P' : Fin (n + 1) → ℝ, (∀ i, 0 ≤ P' i) ∧ (∑ i : Fin (n + 1), P' i ≤ P) ∧
           (mutualInfoOfChannel p (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
             ≤ ∑ i : Fin (n + 1), (1/2) * Real.log (1 + P' i / (N i : ℝ))) :

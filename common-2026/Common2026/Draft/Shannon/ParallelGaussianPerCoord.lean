@@ -76,8 +76,7 @@ noncomputable def miImage {n : ℕ} (P : ℝ)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N) : Set ℝ :=
   (fun p : Measure (Fin n → ℝ) =>
         (mutualInfoOfChannel p (parallelGaussianChannel N h_meas h_parallel_meas)).toReal) ''
-      { p : Measure (Fin n → ℝ) | IsProbabilityMeasure p ∧
-          ∑ i : Fin n, ∫ x : Fin n → ℝ, (x i)^2 ∂p ≤ P }
+      parallelGaussianPowerConstraintSet P
 
 lemma parallelGaussianCapacity_eq_sSup_miImage {n : ℕ} (P : ℝ)
     (N : Fin n → ℝ≥0) (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -131,18 +130,42 @@ lemma integral_sq_gaussianProductInput {n : ℕ} (Q : Fin n → ℝ≥0) (i : Fi
     _ = (Q i : ℝ) := by rw [h_var_eq, h_var]
 
 /-- **Achiever feasibility (genuine).** If `∑ᵢ Q i ≤ P` then the product Gaussian
-input lies in the power-constrained set. -/
+input lies in the (lintegral form) power-constrained set
+`parallelGaussianPowerConstraintSet P`. Re-proved against the lintegral constraint:
+`∑ᵢ ∫⁻ ofReal((x i)²) = ∑ᵢ ofReal(∫ (x i)²) = ∑ᵢ ofReal(Q i) = ofReal(∑ Q i) ≤ ofReal P`,
+the sum-version of the 1-D `AWGN.gaussianInput_mem_constraintSet`. Per-coordinate
+integrability of `(x i)²` is genuine via `MeasureTheory.integrable_comp_eval` applied
+to `(memLp_id_gaussianReal 2).integrable_sq`. -/
 lemma gaussianProductInput_mem_constraintSet {n : ℕ} (P : ℝ) (Q : Fin n → ℝ≥0)
     (hQ : ∑ i : Fin n, (Q i : ℝ) ≤ P) :
-    (gaussianProductInput Q) ∈
-      { p : Measure (Fin n → ℝ) | IsProbabilityMeasure p ∧
-          ∑ i : Fin n, ∫ x : Fin n → ℝ, (x i)^2 ∂p ≤ P } := by
+    (gaussianProductInput Q) ∈ parallelGaussianPowerConstraintSet P := by
   refine ⟨inferInstance, ?_⟩
-  have h_each : ∀ i : Fin n,
-      (∫ x : Fin n → ℝ, (x i) ^ 2 ∂(gaussianProductInput Q)) = (Q i : ℝ) :=
-    fun i => integral_sq_gaussianProductInput Q i
-  rw [Finset.sum_congr rfl (fun i _ => h_each i)]
-  exact hQ
+  -- per-coordinate integrability of (x i)² against the product Gaussian
+  have h_int : ∀ i : Fin n,
+      Integrable (fun x : Fin n → ℝ => (x i) ^ 2) (gaussianProductInput Q) := by
+    intro i
+    have h_int_i : Integrable (fun y : ℝ => y ^ 2) (gaussianReal 0 (Q i)) :=
+      (memLp_id_gaussianReal (μ := 0) (v := Q i) 2).integrable_sq
+    -- `gaussianProductInput Q = Measure.pi (fun j => gaussianReal 0 (Q j))`
+    show Integrable (fun x : Fin n → ℝ => (x i) ^ 2)
+      (Measure.pi (fun j => gaussianReal 0 (Q j)))
+    exact MeasureTheory.integrable_comp_eval (μ := fun j => gaussianReal 0 (Q j))
+      (i := i) (f := fun y : ℝ => y ^ 2) h_int_i
+  -- per-coordinate lintegral = ofReal (Q i)
+  have h_nonneg : ∀ i : Fin n, 0 ≤ᵐ[gaussianProductInput Q] fun x : Fin n → ℝ => (x i) ^ 2 :=
+    fun i => Filter.Eventually.of_forall (fun x => sq_nonneg (x i))
+  have h_lint_each : ∀ i : Fin n,
+      (∫⁻ x : Fin n → ℝ, ENNReal.ofReal ((x i) ^ 2) ∂(gaussianProductInput Q))
+        = ENNReal.ofReal (Q i : ℝ) := by
+    intro i
+    rw [← ofReal_integral_eq_lintegral_ofReal (h_int i) (h_nonneg i),
+      integral_sq_gaussianProductInput Q i]
+  -- ∑ ∫⁻ = ∑ ofReal(Q i) = ofReal(∑ Q i) ≤ ofReal P
+  calc ∑ i : Fin n, ∫⁻ x : Fin n → ℝ, ENNReal.ofReal ((x i) ^ 2) ∂(gaussianProductInput Q)
+      = ∑ i : Fin n, ENNReal.ofReal (Q i : ℝ) := Finset.sum_congr rfl (fun i _ => h_lint_each i)
+    _ = ENNReal.ofReal (∑ i : Fin n, (Q i : ℝ)) :=
+        (ENNReal.ofReal_sum_of_nonneg (fun i _ => (Q i).coe_nonneg)).symm
+    _ ≤ ENNReal.ofReal P := ENNReal.ofReal_le_ofReal hQ
 
 /-! ## Honest regularity bundle (🟢ʰ)
 
@@ -172,8 +195,7 @@ structure IsParallelGaussianPerCoordRegularity {n : ℕ} (P : ℝ)
   variance allocation), honest because multivariate differential-entropy
   subadditivity is absent from Mathlib/Common2026. -/
   max_ent :
-    ∀ p ∈ { p : Measure (Fin n → ℝ) | IsProbabilityMeasure p ∧
-              ∑ i : Fin n, ∫ x : Fin n → ℝ, (x i)^2 ∂p ≤ P },
+    ∀ p ∈ parallelGaussianPowerConstraintSet P,
       ∃ P' : Fin n → ℝ, (∀ i, 0 ≤ P' i) ∧ (∑ i : Fin n, P' i ≤ P) ∧
         (mutualInfoOfChannel p (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
           ≤ ∑ i : Fin n, (1/2) * Real.log (1 + P' i / (N i : ℝ))

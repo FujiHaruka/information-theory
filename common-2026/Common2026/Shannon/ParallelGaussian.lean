@@ -153,17 +153,80 @@ over input laws `p : Measure (Fin n → ℝ)` satisfying the per-coordinate tota
 second-moment constraint `∑_i ∫ x_i² ∂p ≤ P`. T2-A `awgnCapacity` の `Fin n`
 拡張版。 -/
 
+/-- **Parallel power constraint set**: probability measures with a (genuine,
+lintegral) total per-coordinate second moment `≤ P`. Multivariate analogue of the
+single-coordinate `AWGN.awgnPowerConstraintSet`. Using the lower integral
+`∑_i ∫⁻ x, ofReal ((x i)²) ∂p ≤ ofReal P` instead of the Bochner
+`∑_i ∫ x, (x i)² ∂p ≤ P` matters: Bochner `∫` returns `0` on a non-`p`-integrable
+integrand (`MeasureTheory.integral_undef`), so the naive Bochner constraint would
+admit heavy-tailed inputs (e.g. wide Cauchy laws) with infinite second moment via
+the spurious `∫ (x i)² ∂p = 0 ≤ P`, making the converse bound
+`∑_i (1/2)log(1+P_i/N_i)` false. The lintegral form forces each
+`∫⁻ ofReal((x i)²) < ∞`, hence genuine integrability of every coordinate `(x i)²`.
+`parallelGaussianPowerConstraintSet_mem_iff_integrable` bridges back to the Bochner
+moment + the integrability regularity used by the capacity proofs. -/
+def parallelGaussianPowerConstraintSet {n : ℕ} (P : ℝ) : Set (Measure (Fin n → ℝ)) :=
+  { p : Measure (Fin n → ℝ) | IsProbabilityMeasure p ∧
+      ∑ i : Fin n, ∫⁻ x : Fin n → ℝ, ENNReal.ofReal ((x i) ^ 2) ∂p ≤ ENNReal.ofReal P }
+
+/-- Membership in `parallelGaussianPowerConstraintSet P` (lintegral form) yields both
+the genuine per-coordinate integrability of `(x i)²` and the Bochner total
+second-moment bound `∑_i ∫ (x i)² ∂p ≤ P`. Multivariate analogue of
+`AWGN.awgnPowerConstraintSet_mem_iff_integrable`; the lintegral constraint carries the
+regularity (`Integrable (fun x => (x i)²) p`) the Bochner form alone cannot supply. -/
+theorem parallelGaussianPowerConstraintSet_mem_iff_integrable {n : ℕ}
+    (P : ℝ) (hP : 0 ≤ P) (p : Measure (Fin n → ℝ))
+    (hp : p ∈ parallelGaussianPowerConstraintSet P) :
+    (∀ i, Integrable (fun x : Fin n → ℝ => (x i) ^ 2) p) ∧
+      ∑ i : Fin n, ∫ x : Fin n → ℝ, (x i) ^ 2 ∂p ≤ P := by
+  obtain ⟨hp_prob, hp_lint⟩ := hp
+  -- each coordinate's lintegral is ≤ the sum ≤ ofReal P < ∞, hence integrable
+  have h_each_nonneg : ∀ i : Fin n, 0 ≤ᵐ[p] fun x : Fin n → ℝ => (x i) ^ 2 :=
+    fun i => Filter.Eventually.of_forall (fun x => sq_nonneg (x i))
+  have h_each_lt_top : ∀ i : Fin n,
+      (∫⁻ x : Fin n → ℝ, ENNReal.ofReal ((x i) ^ 2) ∂p) < ∞ := by
+    intro i
+    have h_single_le :
+        (∫⁻ x : Fin n → ℝ, ENNReal.ofReal ((x i) ^ 2) ∂p)
+          ≤ ∑ j : Fin n, ∫⁻ x : Fin n → ℝ, ENNReal.ofReal ((x j) ^ 2) ∂p :=
+      Finset.single_le_sum (f := fun j => ∫⁻ x : Fin n → ℝ, ENNReal.ofReal ((x j) ^ 2) ∂p)
+        (fun j _ => bot_le) (Finset.mem_univ i)
+    exact lt_of_le_of_lt (h_single_le.trans hp_lint) ENNReal.ofReal_lt_top
+  have h_int : ∀ i, Integrable (fun x : Fin n → ℝ => (x i) ^ 2) p := by
+    intro i
+    have h_meas : AEStronglyMeasurable (fun x : Fin n → ℝ => (x i) ^ 2) p :=
+      ((measurable_pi_apply i).pow_const 2).aestronglyMeasurable
+    have h_hfi : HasFiniteIntegral (fun x : Fin n → ℝ => (x i) ^ 2) p :=
+      (hasFiniteIntegral_iff_ofReal (h_each_nonneg i)).mpr (h_each_lt_top i)
+    exact ⟨h_meas, h_hfi⟩
+  refine ⟨h_int, ?_⟩
+  -- Bochner sum bound: ofReal (∑ ∫ (x i)²) = ∑ ∫⁻ ofReal((x i)²) ≤ ofReal P, strip.
+  have h_ofReal_each : ∀ i : Fin n,
+      ENNReal.ofReal (∫ x : Fin n → ℝ, (x i) ^ 2 ∂p)
+        = ∫⁻ x : Fin n → ℝ, ENNReal.ofReal ((x i) ^ 2) ∂p :=
+    fun i => ofReal_integral_eq_lintegral_ofReal (h_int i) (h_each_nonneg i)
+  have h_int_nonneg : ∀ i : Fin n, 0 ≤ ∫ x : Fin n → ℝ, (x i) ^ 2 ∂p :=
+    fun i => integral_nonneg (fun x => sq_nonneg (x i))
+  have h_sum_ofReal :
+      ENNReal.ofReal (∑ i : Fin n, ∫ x : Fin n → ℝ, (x i) ^ 2 ∂p)
+        = ∑ i : Fin n, ∫⁻ x : Fin n → ℝ, ENNReal.ofReal ((x i) ^ 2) ∂p := by
+    rw [ENNReal.ofReal_sum_of_nonneg (fun i _ => h_int_nonneg i)]
+    exact Finset.sum_congr rfl (fun i _ => h_ofReal_each i)
+  have h_le : ENNReal.ofReal (∑ i : Fin n, ∫ x : Fin n → ℝ, (x i) ^ 2 ∂p) ≤ ENNReal.ofReal P :=
+    h_sum_ofReal ▸ hp_lint
+  exact (ENNReal.ofReal_le_ofReal_iff hP).mp h_le
+
 /-- **Power-constrained parallel Gaussian capacity**. Supremum of `I(p; W_parallel)`
 over probability measures `p` on `Fin n → ℝ` with total per-coordinate second
-moment `∑_i ∫ x_i² ∂p ≤ P`. -/
+moment `∑_i ∫ x_i² ∂p ≤ P` (genuine lintegral form, see
+`parallelGaussianPowerConstraintSet`). -/
 noncomputable def parallelGaussianCapacity {n : ℕ} (P : ℝ)
     (N : Fin n → ℝ≥0) (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N) : ℝ :=
   sSup ((fun p : Measure (Fin n → ℝ) =>
           (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
               p (parallelGaussianChannel N h_meas h_parallel_meas)).toReal) ''
-        { p : Measure (Fin n → ℝ) | IsProbabilityMeasure p ∧
-            ∑ i : Fin n, ∫ x : Fin n → ℝ, (x i)^2 ∂p ≤ P })
+        parallelGaussianPowerConstraintSet P)
 
 /-! ## D.4 — 撤退ライン predicates (L-WF1, L-WF2, L-PG1)
 
