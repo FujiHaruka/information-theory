@@ -22,7 +22,9 @@ Section F–I は **genuine に実装済** (無条件 relabel cornerstone `huffm
 旧 `huffmanLengthAux_relabel` の NodupChain 前提を除去した版)。carrier-embedding が
 **colex 保存 (StrictMono)** なら relabel と決定的 min 選択は無条件可換、を機械検証で確立。
 
-Section J (collapse correspondence) は依然 open。`@residual(plan:huffman-strong-form-completion)`。
+Section J (collapse correspondence `collapseLabel_huffmanLengthAux`) は **FALSE statement** と
+判明 (2026-05-30、機械的反例で refute、`@audit:defect(false-statement)`)。per-symbol collapse は
+dead-end で、consumer 設計の pivot が必要 (Section J 末尾 docstring 参照)。
 -/
 
 namespace InformationTheory.Shannon.Huffman
@@ -289,30 +291,53 @@ mergedInit 側は absorbing leaf が singleton `({a}, Q{a}+Q{b})`、`s''_β` 側
 `huffmanLengthAux (({a},p) ::ₘ rest) z = huffmanLengthAux (({a,b},p) ::ₘ rest) z`  (`z ≠ b`).
 
 merge **order** は equal-probability tie 下で colex tie-break が両木間で食い違いうるため、
-naive な lockstep 帰納では閉じない。詳細は下記 `collapseLabel_huffmanLengthAux`
-(`@residual(plan:huffman-strong-form-completion)`) を参照。 -/
+naive な lockstep 帰納では閉じない。**2026-05-30 追記**: さらに精査した結果、下記
+`collapseLabel_huffmanLengthAux` の per-symbol collapse statement は単に hard なのではなく
+**FALSE** (`z ≠ a, b` でも機械的反例あり) と判明 (`@audit:defect(false-statement)`)。
+label `{a}→{a,b}` の colex 変化が `b` を含まない group の tie-break をずらすため。
+consumer 設計は per-symbol collapse を捨て length-multiset / leaf-merge reduction へ
+pivot が必要。詳細は下記 `collapseLabel_huffmanLengthAux` docstring を参照。 -/
 
 variable [DecidableEq α]
 
 omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **collapse correspondence (genuine statement, body open)**: ある group の Finset-label を
-singleton `{a}` から card-2 `{a,b}` (同確率 `p`、`b` は `rest` の他 group に現れない fresh
-element) に拡張しても、`huffmanLengthAux` は `b` 以外の leaf 上で不変:
-`huffmanLengthAux (({a,b},p) ::ₘ rest) z = huffmanLengthAux (({a},p) ::ₘ rest) z`  (`z ≠ b`).
+/-- **collapse correspondence — この statement は FALSE (2026-05-30、機械的反例で refute)**.
 
-これが `MergedHuffmanAuxIdentHypothesis` discharge に残る最後の genuine な構造補題。
-両木は merged group の colex が異なる (`toColex {a} < toColex {a,b}`) ため、equal-probability
-tie 下で `huffmanStep` の選択順が食い違いうる。よって naive な lockstep 帰納では閉じず、
-tie-break order に依存しない invariant (確率 multiset で Huffman depth が決まる性質の機械化)
-が必要。規模 ~150-250 行 + tie 場合分けで、proof-pivot-advisor エスカレーション案件。
+当初の意図: ある group の Finset-label を singleton `{a}` から card-2 `{a,b}` (同確率 `p`、
+`b` は fresh element) に拡張しても `huffmanLengthAux` は `b` 以外の leaf 上で不変、
+`huffmanLengthAux (({a,b},p) ::ₘ rest) z = huffmanLengthAux (({a},p) ::ₘ rest) z`  (`z ≠ b`)。
 
-仮説:
-- `hg` / `hg'`: 両 multiset が `HuffmanGrouping` (singleton 版 / card-2 版)。
-- `ha_ne_b`: `a ≠ b` (singleton と拡張先が別 element)。
-- `hb_fresh`: `b` は `rest` のどの group label にも現れない (fresh element)。
-- `hz`: 評価点 `z ≠ b`。
+**しかしこれは偽** (`z ≠ a` かつ `z ≠ b` でも反例あり、consumer に致命的)。判断ログ #3 の
+「tie-order 独立 invariant が要る (~150-250 行、true-but-hard)」という診断は **誤り** で、
+壁ではなく FALSE statement だった (= Mathlib wall misuse、tier 5)。根因: 決定化された
+`huffmanStep` は `groupKey = (prob, toColex label)` で tie-break するが、label を `{a}` から
+`{a,b}` に拡げると **colex が変わる** ため、同確率 group との tie-break 選択順が `b` を含まない
+group に対しても変わり、それらの leaf の depth が動く。
 
-@residual(plan:huffman-strong-form-completion) -/
+**機械的反例** (hand-verified、`groupKey` の colex tie-break を直接追跡):
+`α` 上で `a=1, b=6` (`a < b`)、特殊 group prob `p = 4`、
+`rest = {({0},4),({2},4),({3},3),({4},6),({5},3)}` (全 singleton、`b=6` は出現しない)。
+- `S₁ = ({1},4) ::ₘ rest` の決定的 merge 列: `[3]+[5]→[0]+[1]→[2]+[4]→…` ⇒ `depth(2) = 2`。
+- `S₂ = ({1,6},4) ::ₘ rest` の決定的 merge 列: `[3]+[5]→[0]+[2]→[1,6]+[4]→…` ⇒ `depth(2) = 3`。
+prob-4 の 3 singleton `{0},{1},{2}` (と `{1,6}`) の tie で、`S₁` は colex 順 `{0}<{1}<{2}` から
+`{0}+{1}` を選ぶが、`S₂` では `{1,6}` の colex が `{2}` より大 (`6 > 2`) になり `{0}+{2}` を選ぶ。
+これが `z=2` (`≠ a, ≠ b`) の depth を `2 → 3` にずらす。consumer の preconditions
+(`a` global-min / `b` rest-min) 下でも反例多数 (84230/2M random trials)。
+
+**consumer への含意**: `MergedHuffmanAuxIdentHypothesis`
+(`HuffmanMergedIdentBody.lean:124`) はこの collapse を経由する素朴な reduction では
+**閉じない**。consumer は `_h_sibling : huffmanLength Q a = huffmanLength Q b` を持つが、
+それは un-merged tree `Q` 上の性質で、本 collapse (= `S₁`/`S₂` 上の per-symbol 等式) を
+直接救わない。次セッションは「label collapse の per-symbol invariance」ではなく、Cover-Thomas
+5.8.1 本来の reduction (merged tree の最適性を leaf-merge の逆操作で持ち上げる、あるいは
+確率 multiset 同一性から得る length-multiset / 期待長レベルの不変量) に設計を切り替える
+必要がある。per-symbol collapse path は dead-end。
+
+`sorry` は FALSE statement を proof body に置いており、正当な未完成マーカーではなく defect。
+proof done には到達不能 (statement が偽)。signature を refutable な形に直す or consumer 設計を
+pivot するのは別 task。
+@audit:defect(false-statement) @audit:retract-candidate(false-statement)
+@audit:closed-by-successor(huffman-strong-form-completion) -/
 lemma collapseLabel_huffmanLengthAux
     (rest : Multiset (Finset α × ℝ)) (a b : α) (p : ℝ) (ha_ne_b : a ≠ b)
     (hb_fresh : ∀ g ∈ rest, b ∉ g.1)
