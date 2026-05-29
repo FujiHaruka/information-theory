@@ -17,6 +17,7 @@ plan filename stem = `parallel-gaussian-headline-honest-restructure-plan` →
 - [ ] R2 `parallel_gaussian_capacity_formula_minimal` honest restructure 📋
 - [ ] R3 `@[entry_point]` 再判定 + caller 影響確認 📋
 - [ ] R4 独立 honesty 監査 (sorry+@residual classification 検証) 📋
+- [ ] R5 converse 2 件 (`bddAbove`/`max_ent`) genuine closure → 子 plan [`parallel-gaussian-converse-closure-plan.md`](parallel-gaussian-converse-closure-plan.md) 📋
 
 ## ゴール / Approach
 
