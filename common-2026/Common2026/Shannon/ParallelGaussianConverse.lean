@@ -123,6 +123,89 @@ private theorem pi_absolutelyContinuous {n : ℕ} (μ : Fin n → Measure ℝ)
   rw [h_pi_eq, volume_pi]
   exact withDensity_absolutelyContinuous _ _
 
+/-- **Reverse `Measure.pi` absolute continuity from componentwise mutual AC.** If every
+factor is mutually absolutely continuous with `volume` (`ν i ≪ volume` and `volume ≪ ν i`),
+then `volume ≪ Measure.pi ν`. Built from `pi_withDensity_fin` (write `Measure.pi ν =
+volume.withDensity (∏ rnDeriv (ν i) volume)`) + `withDensity_absolutelyContinuous'`, whose
+a.e.-nonzero density hypothesis comes from `Measure.rnDeriv_pos'` (`volume ≪ ν i` makes each
+`rnDeriv (ν i) volume` a.e.-positive on `volume`).
+
+Genuine, sorryAx-free (`#print axioms` = [propext, Classical.choice, Quot.sound]);
+awaiting independent honesty audit. -/
+private theorem pi_absolutelyContinuous_reverse {n : ℕ} (ν : Fin n → Measure ℝ)
+    [∀ i, IsProbabilityMeasure (ν i)] (h_ac : ∀ i, ν i ≪ (volume : Measure ℝ))
+    (h_rev : ∀ i, (volume : Measure ℝ) ≪ ν i) :
+    (volume : Measure (Fin n → ℝ)) ≪ Measure.pi ν := by
+  classical
+  set f : Fin n → ℝ → ℝ≥0∞ := fun i => (ν i).rnDeriv volume with hf_def
+  have hf_meas : ∀ i, Measurable (f i) := fun i => Measure.measurable_rnDeriv (ν i) volume
+  have h_eq : ∀ i, (volume : Measure ℝ).withDensity (f i) = ν i :=
+    fun i => Measure.withDensity_rnDeriv_eq (ν i) volume (h_ac i)
+  haveI : ∀ i, SigmaFinite ((volume : Measure ℝ).withDensity (f i)) := by
+    intro i; rw [h_eq i]; infer_instance
+  have h_pi_eq : Measure.pi ν
+      = (Measure.pi (fun _ : Fin n => (volume : Measure ℝ))).withDensity
+          (fun z => ∏ i, f i (z i)) := by
+    have h_factor : (fun i => (volume : Measure ℝ).withDensity (f i)) = ν := funext h_eq
+    rw [← h_factor]
+    exact pi_withDensity_fin (fun _ : Fin n => (volume : Measure ℝ)) hf_meas
+  rw [h_pi_eq, ← volume_pi]
+  refine withDensity_absolutelyContinuous' ?_ ?_
+  · exact (Finset.measurable_prod _ (fun i _ => (hf_meas i).comp (measurable_pi_apply i))).aemeasurable
+  · -- each `rnDeriv (ν i) volume` is a.e.-positive on `volume` (reverse AC)
+    have h_pos : ∀ i, ∀ᵐ z ∂(volume : Measure ℝ), f i z ≠ 0 := by
+      intro i
+      filter_upwards [Measure.rnDeriv_pos' (h_rev i)] with z hz
+      exact hz.ne'
+    -- transfer each coordinate's a.e. to the product measure, then take the product
+    have h_pos_pi : ∀ i, ∀ᵐ z ∂(volume : Measure (Fin n → ℝ)), f i (z i) ≠ 0 := by
+      intro i
+      rw [volume_pi]
+      exact (Measure.quasiMeasurePreserving_eval
+        (μ := fun _ : Fin n => (volume : Measure ℝ)) i).ae (h_pos i)
+    filter_upwards [eventually_countable_forall.mpr h_pos_pi] with z hz
+    exact Finset.prod_ne_zero_iff.mpr (fun i _ => hz i)
+
+/-- **Reverse full-support AC for a Gaussian product fibre** (鍵①).
+`volume ≪ Measure.pi (gaussianReal (x i) (N i))` whenever every `N i ≠ 0`. Each
+`gaussianReal (x i) (N i) = volume.withDensity (gaussianPDF (x i) (N i))` with the
+product density `z ↦ ∏ᵢ gaussianPDF (x i) (N i) (z i)` *everywhere* positive
+(`gaussianPDFReal_pos`), so `withDensity_absolutelyContinuous'` gives the reverse AC.
+Mathlib ships only the 1-D `gaussianReal_absolutelyContinuous'`; this is its
+`Fin n → ℝ` product analogue, self-built via `pi_withDensity_fin`.
+
+Genuine, sorryAx-free (`#print axioms` = [propext, Classical.choice, Quot.sound]);
+awaiting independent honesty audit. -/
+private theorem volume_absolutelyContinuous_pi_gaussian {n : ℕ}
+    (x : Fin n → ℝ) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0) :
+    (volume : Measure (Fin n → ℝ)) ≪ Measure.pi (fun i => gaussianReal (x i) (N i)) := by
+  classical
+  have hN' : ∀ i, (N i) ≠ 0 := fun i => by
+    intro h; exact hN i (by rw [h]; norm_num)
+  set f : Fin n → ℝ → ℝ≥0∞ := fun i => gaussianPDF (x i) (N i) with hf_def
+  have hf_meas : ∀ i, Measurable (f i) := fun i => measurable_gaussianPDF _ _
+  -- each factor as `volume.withDensity (gaussianPDF ...)`
+  have h_eq : ∀ i, (volume : Measure ℝ).withDensity (f i) = gaussianReal (x i) (N i) :=
+    fun i => (gaussianReal_of_var_ne_zero (x i) (hN' i)).symm
+  haveI : ∀ i, SigmaFinite ((volume : Measure ℝ).withDensity (f i)) := by
+    intro i; rw [h_eq i]; infer_instance
+  -- `Measure.pi (gaussianReal ...) = (Measure.pi volume).withDensity (∏ f)`
+  have h_pi_eq : Measure.pi (fun i => gaussianReal (x i) (N i))
+      = (Measure.pi (fun _ : Fin n => (volume : Measure ℝ))).withDensity
+          (fun z => ∏ i, f i (z i)) := by
+    have h_factor : (fun i => (volume : Measure ℝ).withDensity (f i))
+        = fun i => gaussianReal (x i) (N i) := funext h_eq
+    rw [← h_factor]
+    exact pi_withDensity_fin (fun _ : Fin n => (volume : Measure ℝ)) hf_meas
+  rw [h_pi_eq, ← volume_pi]
+  refine withDensity_absolutelyContinuous' ?_ ?_
+  · exact (Finset.measurable_prod _ (fun i _ => (hf_meas i).comp (measurable_pi_apply i))).aemeasurable
+  · -- the product density is everywhere `≠ 0` since each Gaussian pdf is positive
+    refine Filter.Eventually.of_forall (fun z => ?_)
+    refine Finset.prod_ne_zero_iff.mpr (fun i _ => ?_)
+    simp only [hf_def, gaussianPDF_def, ne_eq, ENNReal.ofReal_eq_zero, not_le]
+    exact gaussianPDFReal_pos (x i) (N i) (z i) (hN' i)
+
 /-! ## Phase 2 — channel↔RV MI decomposition, generic lift
 
 The 1-D `ContChannelMIDecomp.mutualInfoOfChannel_toReal_eq_diffEntropy_sub` is
@@ -466,14 +549,100 @@ theorem parallelOutput_marginal_absolutelyContinuous_volume (hN : ∀ i, (N i : 
   rw [hpre, ← Measure.map_apply hmeas_i hs]
   exact h_fibre_marg_ac x hvol
 
+/-- **Reverse full-support AC of each output coordinate marginal** `volume ≪ μY.map (· i)`.
+Mirror of `parallelOutput_marginal_absolutelyContinuous_volume` with the fibre marginal
+reverse AC `volume ≪ gaussianReal (x i) (N i)` (`gaussianReal_absolutelyContinuous'`).
+
+Genuine, sorryAx-free (`#print axioms` = [propext, Classical.choice, Quot.sound]);
+awaiting independent honesty audit. -/
+theorem volume_absolutelyContinuous_parallelOutput_marginal (hN : ∀ i, (N i : ℝ) ≠ 0)
+    (i : Fin n) :
+    (volume : Measure ℝ)
+      ≪ (outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)).map
+          (fun z => z i) := by
+  classical
+  set W := parallelGaussianChannel N h_meas h_parallel_meas with hW
+  have hmeas_i : Measurable (fun z : Fin n → ℝ => z i) := measurable_pi_apply i
+  -- fibre `i`-marginal reverse AC: `volume ≪ (W x).map (· i) = gaussianReal (x i) (N i)`
+  have h_fibre_marg_rev : ∀ x : Fin n → ℝ,
+      (volume : Measure ℝ) ≪ (W x).map (fun z => z i) := by
+    intro x
+    rw [hW, parallelGaussianChannel_apply]
+    have h_eval := Measure.pi_map_eval (μ := fun j => gaussianReal (x j) (N j)) i
+    have h_one : (∏ j ∈ Finset.univ.erase i, (gaussianReal (x j) (N j)) Set.univ) = 1 :=
+      Finset.prod_eq_one (fun j _ => measure_univ)
+    have h_eq : (Measure.pi (fun j => gaussianReal (x j) (N j))).map (fun z => z i)
+        = gaussianReal (x i) (N i) := by
+      rw [show (fun z : Fin n → ℝ => z i) = Function.eval i from rfl, h_eval, h_one, one_smul]
+    rw [h_eq]
+    exact gaussianReal_absolutelyContinuous' (x i) (by exact_mod_cast hN i)
+  refine Measure.AbsolutelyContinuous.mk (fun s hs hmargs => ?_)
+  rw [Measure.map_apply hmeas_i hs, outputDistribution, jointDistribution_def, Measure.snd,
+    Measure.map_apply measurable_snd (hmeas_i hs),
+    Measure.compProd_apply (measurable_snd (hmeas_i hs))] at hmargs
+  rw [lintegral_eq_zero_iff
+    (ProbabilityTheory.Kernel.measurable_kernel_prodMk_left (κ := W) (measurable_snd (hmeas_i hs)))]
+    at hmargs
+  have h_ae : ∀ᵐ x ∂p, (W x).map (fun z => z i) s = 0 := by
+    filter_upwards [hmargs] with x hx
+    have hpre : (Prod.mk x ⁻¹' (Prod.snd ⁻¹' ((fun z : Fin n → ℝ => z i) ⁻¹' s)))
+        = (fun z : Fin n → ℝ => z i) ⁻¹' s := by ext y; simp
+    rw [hpre, ← Measure.map_apply hmeas_i hs] at hx
+    exact hx
+  obtain ⟨x, hx⟩ := h_ae.exists
+  exact h_fibre_marg_rev x hx
+
+/-- **Reverse full-support AC of the correlated output law** `volume ≪ μY`.
+The output mixture `μY s = ∫⁻ x, (W x) s ∂p`; from `μY s = 0` the `p`-integral of the
+nonnegative `x ↦ (W x) s` vanishes, so `(W x) s = 0` for `p`-a.e. `x` (in particular some
+`x`, as `p` is a probability measure), whence `volume s = 0` by the reverse Gaussian-product
+AC `volume ≪ W x` (`volume_absolutelyContinuous_pi_gaussian`, needs `hN`).
+
+Genuine, sorryAx-free (`#print axioms` = [propext, Classical.choice, Quot.sound]);
+awaiting independent honesty audit. -/
+theorem volume_absolutelyContinuous_parallelOutput (hN : ∀ i, (N i : ℝ) ≠ 0) :
+    (volume : Measure (Fin n → ℝ))
+      ≪ outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas) := by
+  set W := parallelGaussianChannel N h_meas h_parallel_meas with hW
+  -- reverse AC of each fibre
+  have h_fibre_rev : ∀ x : Fin n → ℝ, (volume : Measure (Fin n → ℝ)) ≪ W x := by
+    intro x
+    rw [hW, parallelGaussianChannel_apply]
+    exact volume_absolutelyContinuous_pi_gaussian x N hN
+  refine Measure.AbsolutelyContinuous.mk (fun s hs hμYs => ?_)
+  -- expand `μY s = ∫⁻ x, (W x) s ∂p` and conclude `(W x) s = 0` p-a.e.
+  rw [outputDistribution, jointDistribution_def, Measure.snd,
+    Measure.map_apply measurable_snd hs, Measure.compProd_apply (measurable_snd hs)] at hμYs
+  rw [lintegral_eq_zero_iff
+    (ProbabilityTheory.Kernel.measurable_kernel_prodMk_left (κ := W) (measurable_snd hs))]
+    at hμYs
+  -- `hμYs : (fun x => W x (Prod.mk x ⁻¹' (Prod.snd ⁻¹' s))) =ᵐ[p] 0`; pick a point
+  have h_ae : ∀ᵐ x ∂p, (W x) s = 0 := by
+    filter_upwards [hμYs] with x hx
+    have hpre : (Prod.mk x ⁻¹' (Prod.snd ⁻¹' s)) = s := by ext y; simp
+    rwa [hpre] at hx
+  -- a.e. nonempty under a probability measure
+  obtain ⟨x, hx⟩ := h_ae.exists
+  exact h_fibre_rev x hx
+
 /-- Joint vs. product-of-marginals absolute continuity for the output law.
-@residual(plan:parallel-gaussian-converse-closure-plan) -/
-theorem parallelOutput_absolutelyContinuous_pi_marginals :
+`μY ≪ volume` (`parallelOutput_absolutelyContinuous_volume`, Wave 1) composed with the
+reverse `volume ≪ Measure.pi (μY.map (· i))` from `pi_absolutelyContinuous_reverse`, whose
+componentwise mutual-AC hypotheses are the forward marginal AC
+(`parallelOutput_marginal_absolutelyContinuous_volume`) and the reverse marginal AC
+(`volume_absolutelyContinuous_parallelOutput_marginal`); all need `hN`.
+
+Genuine, sorryAx-free (`#print axioms` = [propext, Classical.choice, Quot.sound]);
+awaiting independent honesty audit. -/
+theorem parallelOutput_absolutelyContinuous_pi_marginals (hN : ∀ i, (N i : ℝ) ≠ 0) :
     outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)
       ≪ Measure.pi (fun i =>
           (outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)).map
             (fun z => z i)) := by
-  sorry
+  refine (parallelOutput_absolutelyContinuous_volume N h_meas h_parallel_meas p hN).trans ?_
+  exact pi_absolutelyContinuous_reverse _
+    (fun i => parallelOutput_marginal_absolutelyContinuous_volume N h_meas h_parallel_meas p hN i)
+    (fun i => volume_absolutelyContinuous_parallelOutput_marginal N h_meas h_parallel_meas p hN i)
 
 /-- Marginal log-density joint integrability.
 @residual(plan:parallel-gaussian-converse-closure-plan) -/
@@ -553,11 +722,18 @@ theorem parallelOutput_marginal_entropy_integrable (i : Fin n) :
   sorry
 
 /-- **Decomposition regularity bundle: `hWx_q`** (fibre ≪ output).
-@residual(plan:parallel-gaussian-converse-closure-plan) -/
-theorem parallelChannel_fibre_absolutelyContinuous_output (x : Fin n → ℝ) :
+`W x ≪ volume` (`parallelChannel_fibre_absolutelyContinuous_volume`, Wave 1) composed with
+the reverse full-support AC `volume ≪ μY` (`volume_absolutelyContinuous_parallelOutput`);
+both need `hN`.
+
+Genuine, sorryAx-free (`#print axioms` = [propext, Classical.choice, Quot.sound]);
+awaiting independent honesty audit. -/
+theorem parallelChannel_fibre_absolutelyContinuous_output (hN : ∀ i, (N i : ℝ) ≠ 0)
+    (x : Fin n → ℝ) :
     (parallelGaussianChannel N h_meas h_parallel_meas) x
       ≪ outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas) := by
-  sorry
+  exact (parallelChannel_fibre_absolutelyContinuous_volume N hN h_meas h_parallel_meas x).trans
+    (volume_absolutelyContinuous_parallelOutput N h_meas h_parallel_meas p hN)
 
 /-- **Channel↔RV MI decomposition value** for the correlated input.
 `I = jointDifferentialEntropyPi(μY) − ∫ jointDifferentialEntropyPi(W x) ∂p`.
@@ -708,7 +884,7 @@ theorem parallel_per_input_mi_le_sum {n : ℕ}
     -- assemble via the genuine subadditivity wrapper
     have h_marg_ac := fun i => parallelOutput_marginal_absolutelyContinuous_volume N h_meas h_parallel_meas p hN i
     have hμ_ac := parallelOutput_absolutelyContinuous_volume N h_meas h_parallel_meas p hN
-    have h_joint_ac := parallelOutput_absolutelyContinuous_pi_marginals N h_meas h_parallel_meas p
+    have h_joint_ac := parallelOutput_absolutelyContinuous_pi_marginals N h_meas h_parallel_meas p hN
     have h_int_marg := parallelOutput_marginal_logDensity_integrable N h_meas h_parallel_meas p
     have h_int_joint := parallelOutput_joint_logDensity_integrable N h_meas h_parallel_meas p
     rw [← hW_def, ← hμY_def] at h_marg_ac hμ_ac h_joint_ac h_int_marg h_int_joint
