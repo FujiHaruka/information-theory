@@ -103,14 +103,14 @@ reduces to a named lemma, no load-bearing hypothesis survives in the body.
 * `max_ent` field — **genuine reduction** to `parallel_per_input_mi_le_sum`
   (`ParallelGaussianConverse.lean`).
 
-Both converse fields inherit a single transitive
-`@residual(plan:parallel-gaussian-converse-closure-plan)` `sorry` located inside
-`parallel_per_input_mi_le_sum` (Phase 3 per-coord max-entropy split); the Phase 2
-channel↔RV decomposition lift is genuine (sorryAx-free). Reclassified from
-`wall:multivariate-mi` to `plan:…-closure-plan` per the inventory's self-buildable
-verdict.
+Both converse fields are now fully genuine: the formerly transitive
+`plan:parallel-gaussian-converse-5-closure` `sorry` inside
+`parallel_per_input_mi_le_sum` (joint log-density integrability #5) was closed
+2026-05-29 (multivariate mixture-density lift, `@audit:ok`), so both
+`parallel_bddAbove_miImage` and `parallel_per_input_mi_le_sum` are sorryAx-free.
 
-This file is `0 sorry`; type-check done (tier 2). -/
+This file is `0 sorry`; **proof done** — `parallel_gaussian_capacity_formula_minimal`
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free). -/
 @[entry_point]
 theorem isParallelGaussianPerCoordRegularity_of_pieces {n : ℕ}
     (P : ℝ) (hP : 0 ≤ P) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
@@ -123,18 +123,16 @@ theorem isParallelGaussianPerCoordRegularity_of_pieces {n : ℕ}
       achiever_mi := ?_
       max_ent := ?_ }
   · -- `bddAbove` field: GENUINE reduction to the Phase 3 converse split
-    -- (`parallel_bddAbove_miImage`, `ParallelGaussianConverse.lean`). The only
-    -- residual is the transitive `plan:parallel-gaussian-converse-closure-plan`
-    -- `sorry` inside `parallel_per_input_mi_le_sum` (tracked by the type-checker).
+    -- (`parallel_bddAbove_miImage`, `ParallelGaussianConverse.lean`), now
+    -- fully sorryAx-free after #5 (joint log-density integrability) closure.
     exact parallel_bddAbove_miImage P hP N hN h_meas h_parallel_meas
   · -- `achiever_mi` field: GENUINE. Product-input MI additivity (structural
     -- reduction) discharges the per-coordinate AWGN closed form in-body.
     exact parallelGaussianCapacity_achiever_mi Q N (fun i => NNReal.coe_ne_zero.mp (hN i))
       h_meas h_parallel_meas
   · -- `max_ent` field: GENUINE reduction to the Phase 3 converse split
-    -- (`parallel_per_input_mi_le_sum`, `ParallelGaussianConverse.lean`). Its body
-    -- carries the single transitive `plan:parallel-gaussian-converse-closure-plan`
-    -- `sorry` (tracked by the type-checker, not re-stated here).
+    -- (`parallel_per_input_mi_le_sum`, `ParallelGaussianConverse.lean`), now
+    -- fully sorryAx-free after #5 (joint log-density integrability) closure.
     intro p hp
     haveI : IsProbabilityMeasure p := hp.1
     exact parallel_per_input_mi_le_sum P hP N hN h_meas h_parallel_meas p hp

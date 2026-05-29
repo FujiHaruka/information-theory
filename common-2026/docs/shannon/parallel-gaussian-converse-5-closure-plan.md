@@ -14,15 +14,19 @@ plan filename stem = `parallel-gaussian-converse-5-closure-plan`。
 着手中・着地中の self-build 残課題は @residual(plan:parallel-gaussian-converse-5-closure-plan) で参照する。
 -->
 
-## 進捗
+## 進捗 — ✅ 完了 (2026-05-29、全 Phase genuine、#5 proof done、headline sorryAx-free)
 
-- [ ] M0 在庫照合 + wall/plan 再裁定の確定 (独立 auditor) 📋
-- [ ] Phase 1 — 多変量 mixture density def + withDensity 等式 (在庫項目 1) 📋
-- [ ] Phase 2 — 上界 (容易) + 座標箱 Chebyshev (在庫項目 3) 📋
-- [ ] Phase 3 — ★ 下界 (Gaussian tail 座標積、最重量、在庫項目 2 下界部) 📋
-- [ ] Phase 4 — log 絶対値 quadratic 包絡合成 (在庫項目 2 合成部) 📋
-- [ ] Phase 5 — #5 本体 joint integrable 締め (在庫項目 4) 📋
-- [ ] Phase 6 — 独立 honesty 監査 + `@residual` 解除 / reclassify 📋
+- [x] M0 在庫照合 + wall/plan 再裁定の確定 (独立 auditor) ✅ — self-buildable 確定、`wall:multivariate-mi`→`plan:...` reclassify
+- [x] Phase 1 — 多変量 mixture density def + withDensity 等式 (在庫項目 1) ✅
+- [x] Phase 2 — 上界 (容易) + 座標箱 Chebyshev (在庫項目 3) ✅
+- [x] Phase 3 — ★ 下界 (Gaussian tail 座標積、最重量、在庫項目 2 下界部) ✅ — 撤退口未使用、genuine
+- [x] Phase 4 — log 絶対値 quadratic 包絡合成 (在庫項目 2 合成部) ✅
+- [x] Phase 5 — #5 本体 joint integrable 締め (在庫項目 4) ✅
+- [x] Phase 6 — 独立 honesty 監査 + `@audit:ok` 付与 ✅ — 9 declaration ok / defect 0、n=0 退化 honest 確認、#print axioms 独立確認
+
+**結果**: `parallelOutput_joint_logDensity_integrable` 0 sorry / 0 residual / `@audit:ok`。
+`#print axioms parallel_gaussian_capacity_formula_minimal` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free)。
+commit `07da6b8` (実装) + `bc72889` (docstring cleanup)。
 
 ## ゴール / Approach
 
