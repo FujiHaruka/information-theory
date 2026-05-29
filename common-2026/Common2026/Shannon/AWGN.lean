@@ -121,9 +121,11 @@ for AWGN) is deferred to the follow-up plan
 `docs/shannon/awgn-mi-bridge-plan.md`.
 
 The hypothesis-free successor `mutualInfoOfChannel_gaussianInput_closed_form'`
-lives in `AWGNMIClosedForm.lean` (takes no `h_bridge`). This `h_bridge`-form is
-retained transitionally because its capacity consumer's genuine successor
-(`awgn_capacity_closed_form_of_out`, `ContChannelMIDecomp.lean`) is still a `sorry`.
+lives in `AWGNMIClosedForm.lean` (takes no `h_bridge`). The capacity closed form is
+now genuinely proven downstream
+(`AwgnCapacityConverseMaxent.awgn_capacity_closed_form_genuine`, 0 sorry / 0 residual);
+this `h_bridge`-form remains a load-bearing wrapper pending a separate sorry-based
+migration sweep (see retract-candidate marker below).
 
 NOTE (honesty audit 2026-05-28): `h_bridge` here remains a **load-bearing
 hypothesis** — it asserts the textbook identity `I.toReal = h(P+N) − h(N)` that

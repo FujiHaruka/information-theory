@@ -638,83 +638,14 @@ theorem awgn_mi_gaussian_closed_form_of_out
     isAwgnMIDecomp_of_densitySplit P N hN_NN hPN h_meas h_out
   exact awgn_mi_gaussian_closed_form_of_primitives P hP_pos N hN h_meas h_out h_decomp
 
-/-- **AWGN capacity closed form, unconditional except the converse max-entropy bound.**
+/-! **AWGN capacity closed form** — genuinely discharged downstream.
 
-The achievability side (`h_bridge_gauss`), the MI decomposition (`IsAwgnMIDecomp`),
-and the bind/conv output-Gaussian fact are now **all discharged genuinely**:
-
-* `IsAwgnBindEqConv` via `isAwgnBindEqConv_discharged` (translation-kernel fact);
-* `IsAwgnOutputGaussian` via `awgn_output_gaussian_of_bind_eq_conv`;
-* `IsAwgnMIDecomp` via Route B `isAwgnMIDecomp_of_densitySplit` (the now-genuine
-  continuous-channel MI chain rule, 0 sorry).
-
-The **only** remaining gap is the converse single-letter Gaussian max-entropy bound
-`h_max_ent`: for every input `p` in `awgnPowerConstraintSet P` (lintegral second moment
-`≤ P`), `I(p; W).toReal ≤ (1/2) log(1 + P/N)`. `h_bdd` follows from it. This converse is
-gated by output-log-density integrability for an *arbitrary* input marginal (cf.
-the `awgn-per-letter-integrability` / `awgn-continuous-mi-chain-rule` walls): the
-general chain rule `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` needs
-`Integrable (fun z => log ((outputDistribution p W).rnDeriv volume z.2).toReal)`,
-which Mathlib does not supply for a general mixture-of-Gaussians output.
-
-Independent honesty audit (2026-05-29): signature is unconditional (only regularity
-`P, 0 < P, N, N ≠ 0`); achievability bridge / `IsAwgnMIDecomp` / bind-conv output-Gaussian
-are all genuinely wired (0 sorry) and `h_max_ent` is a body `have`-sorry (not a hypothesis
-arg) — no load-bearing hyp, no circularity.
-
-Constraint-set defect pivot (2026-05-29): the constraint set is now
-`awgnPowerConstraintSet P` (lintegral form `∫⁻ x, ofReal(x²) ∂p ≤ ofReal P`), which excludes
-the heavy-tailed inputs (infinite second moment) that the old Bochner form
-`{p | ∫ x, x² ∂p ≤ P}` spuriously admitted via `integral_undef`. The `h_max_ent` body
-`sorry` is now a **genuine** Mathlib wall (mixture-of-Gaussians log-density integrability,
-loogle 0 matches) rather than a false statement — the membership destructure exposes the
-genuine integrability regularity via `awgnPowerConstraintSet_mem_iff_integrable`.
-
-Successor (2026-05-29): `AwgnCapacityConverseMaxent.awgn_capacity_closed_form_genuine`
-publishes the same closed form with `h_max_ent` supplied genuinely (Phase 7 assembly of
-the chain rule + Gaussian max-entropy + variance bound). Its only residual is the
-transitive Phase-6 output-log-density integrability wall. This `_of_out` wrapper keeps
-its body `h_max_ent` `sorry` (importing the successor here would create a cycle:
-`AwgnCapacityConverseMaxent` already imports this file); use the successor for the
-genuine version.
-
-@residual(wall:awgn-capacity-converse-maxent)
-@audit:superseded-by(awgn_capacity_closed_form_genuine) -/
-theorem awgn_capacity_closed_form_of_out
-    (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0) :
-    awgnCapacity P N (isAwgnChannelMeasurable N)
-      = (1/2) * Real.log (1 + P / (N : ℝ)) := by
-  have hN_NN : N ≠ 0 :=
-    fun h => hN (by exact_mod_cast (congrArg (fun x : ℝ≥0 => (x : ℝ)) h))
-  have hP_toNN_pos : (0 : ℝ≥0) < P.toNNReal := Real.toNNReal_pos.mpr hP
-  have hPN : P.toNNReal + N ≠ 0 :=
-    (add_pos_of_pos_of_nonneg hP_toNN_pos (zero_le' (a := N))).ne'
-  -- Output-Gaussian fact, genuine via the translation-kernel bind/conv bridge.
-  have h_out : IsAwgnOutputGaussian P N (isAwgnChannelMeasurable N) :=
-    awgn_output_gaussian_of_bind_eq_conv P N (isAwgnChannelMeasurable N)
-      (isAwgnBindEqConv_discharged P N (isAwgnChannelMeasurable N))
-  -- MI decomposition, genuine via Route B (the continuous-channel MI chain rule).
-  have h_decomp : IsAwgnMIDecomp P N (isAwgnChannelMeasurable N) :=
-    isAwgnMIDecomp_of_densitySplit P N hN_NN hPN (isAwgnChannelMeasurable N) h_out
-  -- Converse single-letter Gaussian max-entropy bound — the sole remaining wall.
-  have h_max_ent :
-      ∀ p ∈ awgnPowerConstraintSet P,
-        (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
-            p (awgnChannel N (isAwgnChannelMeasurable N))).toReal
-          ≤ (1/2) * Real.log (1 + P / (N : ℝ)) := by
-    intro p hp
-    obtain ⟨_, _⟩ := hp
-    -- @residual(wall:awgn-capacity-converse-maxent)
-    sorry
-  -- Bounded-above follows from the converse bound.
-  have h_bdd :
-      BddAbove ((fun p : Measure ℝ =>
-          (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
-              p (awgnChannel N (isAwgnChannelMeasurable N))).toReal) ''
-        awgnPowerConstraintSet P) :=
-    ⟨(1/2) * Real.log (1 + P / (N : ℝ)), by
-      rintro y ⟨p, hp, rfl⟩; exact h_max_ent p hp⟩
-  exact awgn_capacity_closed_form_of_maxent_bindconv_discharged
-    P hP N hN h_decomp h_bdd h_max_ent
+This file can only host the closed form with the converse `h_max_ent` as a `sorry`
+(the genuine converse lives in `AwgnCapacityConverseMaxent`, which imports this file, so
+wiring it here would create an import cycle). The former in-file `sorry` wrapper
+`awgn_capacity_closed_form_of_out` has therefore been removed in favour of the genuine
+successor `AwgnCapacityConverseMaxent.awgn_capacity_closed_form_genuine`
+(`awgnCapacity P N = (1/2) log(1 + P/N)`, 0 sorry / 0 residual, `@audit:ok`). The wall
+`awgn-capacity-converse-maxent` is CLOSED (2026-05-29). -/
 
 end InformationTheory.Shannon.AWGN
