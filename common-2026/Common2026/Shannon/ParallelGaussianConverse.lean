@@ -136,7 +136,12 @@ private theorem llr_compProd_prod_split_gen
 
 /-- **Generic continuous-channel MI chain rule** (entropy in raw integral form).
 `(mutualInfoOfChannel p W).toReal = (−∫_y log(dq/dvol) ∂q) − ∫_x (−∫_y log(d(Wx)/dvol) ∂(Wx)) dp`.
-Specialized below to `jointDifferentialEntropyPi` via `integral_log_rnDeriv_self_eq_neg`. -/
+Specialized below to `jointDifferentialEntropyPi` via `integral_log_rnDeriv_self_eq_neg`.
+
+Independent honesty audit (2026-05-29): genuine, sorryAx-free (`#print axioms` =
+[propext, Classical.choice, Quot.sound]). All hypotheses are regularity preconditions;
+generic re-derivation of the 1-D klDiv→llr→Fubini chain over an arbitrary `β` with a
+`SigmaFinite` reference measure. @audit:ok -/
 private theorem mutualInfoOfChannel_toReal_eq_neg_integral_log_sub
     [MeasurableSpace.CountableOrCountablyGenerated α β]
     (hW_ac : ∀ x, W x ≪ vol)
@@ -202,7 +207,15 @@ Specializes the generic chain rule to `β = Fin n → ℝ`, `vol = volume`, prod
 entropy in `jointDifferentialEntropyPi` form via the generic
 `integral_log_rnDeriv_self_eq_neg` bridge. The regularity / integrability
 hypotheses (absolute continuity + log-density integrability of the correlated output
-law) are genuine preconditions supplied by Phase 1. -/
+law) are genuine preconditions supplied by Phase 1.
+
+Independent honesty audit (2026-05-29): genuine, sorryAx-free. `#print axioms` =
+[propext, Classical.choice, Quot.sound] (no `sorryAx`); transitive over the generic
+core `mutualInfoOfChannel_toReal_eq_neg_integral_log_sub` (also sorryAx-free). The
+hypotheses are all regularity preconditions (AC / measurability / integrability) — none
+bundles the conclusion; the entropy bridge to `jointDifferentialEntropyPi` is genuine
+via `integral_log_rnDeriv_self_eq_neg`. Faithful `Fin n → ℝ` generalization of the 1-D
+`mutualInfoOfChannel_toReal_eq_diffEntropy_sub`. @audit:ok -/
 theorem parallel_mutualInfoOfChannel_toReal_eq_diffEntropyPi_sub {n : ℕ}
     (N : Fin n → ℝ≥0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
