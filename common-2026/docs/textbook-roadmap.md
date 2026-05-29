@@ -15,6 +15,7 @@ Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理
 
 **章内部分 scope-out** (2026-05-26 judgment #10):
 - **Ch.9 Shannon-Hartley Nyquist 2W-DOF**: (c) 数学的深さ の真の壁、C&T 自身が厳密証明せず。`IsTwoWDegreesOfFreedom` degenerate-def の凍結を確定
+- **Ch.9 AWGN operational 符号化定理 (n-letter achievability + converse)** (2026-05-29 judgment #11): `情報容量 = 操作的容量` の等価性 (Shannon 雑音通信路符号化定理の Gaussian 版)。continuous AEP / SMB・random coding bound・sphere packing・連続領域 MI chain rule・Fano converse など (a) 量の壁が大量 (`AwgnWalls.lean` 6 壁 + `AWGNConverse*`/`AWGNAchievability*`/`AWGNMain` の数十 residual)。原稿パイロット優先方針 (judgment #10) では Nyquist と同じく future work に隔離。Ch.9 は**単一文字情報容量公式 + max-entropy converse** として publish (① genuine ✅)。残る honest sorry+@residual は honest marker として保持 (削除しない)
 - **Ch.10 measure-form Rate Distortion**: pmf-form ✅ で C&T 10.5 acceptable、measure-form は将来拡張に隔離
 - **Ch.11 Chernoff Information converse / Hoeffding interior body / Cramér Phase C**: C&T §11.9 自身が Sanov `≐` heuristic (textbook rigor で converse は不要)、MacKay/Yeung/El Gamal-Kim は触れもしない。Sanov LDP ✅ から将来 1 段落 corollary 可能
 - **Ch.13 LZ78 M3 (variable-depth tree AEP) / M4 (Barron a.s. lift)**: research-level upstream (Mathlib 測度論基盤の新規追加要)、M1 + Arithmetic で Ch.13 closure
@@ -41,7 +42,7 @@ Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理
 | 6 | Gambling | ✖ scope-out | — | — |
 | 7 | Channel Capacity | ✅ | `shannon_noisy_..._general_full`, `_feedback_complete`, `strong_converse_singleShot` (Verdú-Han 単発) | strong converse asymptotic (`Pe → 1`, R > C) は deferred plan; Draft `ConverseGeneralComplete` 2 sorry は `_memoryless_pure` で置換可 |
 | 8 | Differential Entropy | ✅ (1-var) / 🟡 (n-var) | `differentialEntropy_gaussianReal`, `_le_gaussian_of_variance_le`, KLDivContinuous | n-var subadditivity `jointDifferentialEntropyPi_le_sum` (Parallel Gaussian L-PG1 共有壁、Draft 2 sorry) |
-| 9 | Gaussian Channel | 🟡 | `awgn_capacity_closed_form` (F-2/F-3 pass-through), Parallel Gaussian `parallel_gaussian_capacity_formula_minimal` (L-PG1 honest), F-1 / L-PG0 / L-WF1/WF2 discharge | **AWGN F-2/F-3** tier-5 circular → sorry+@residual 移行 + continuous AEP + sphere packing 構築 ((a) 量の壁); MI 分解 density chain-rule 壁が shared sorry `contChannelMIDecomp_holds` (`AwgnWalls.lean`、`@residual(wall:awgn-mi-decomp)`、commit `9ccbb67`) 1 本に集約済 (②③ `IsContChannelMIDecompHyp`/`IsAwgnMIDecomp` は genuine discharge)、残① per-letter (`AWGNConverse.lean` `h_mi_bridge_per_letter`、`@residual(plan:awgn-mi-bridge-plan)`) は mixture→compProd 因子分解 plumbing 待ち。Shannon-Hartley Nyquist 2W-DOF は **scope-out** |
+| 9 | Gaussian Channel | 🟡 (① ✅ / ② frontier) | **① 単一文字情報容量 `awgn_capacity_closed_form_genuine` = (1/2)log(1+P/N) genuine ✅** (0/0、`#print axioms` sorryAx 非依存、監査 OK、2026-05-29) + hypothesis-free MI 後継 `mutualInfoOfChannel_gaussianInput_closed_form'` ✅ + ParallelGaussian 電力制約 lintegral pivot (偽命題 defect 修正済 ✅) + F-1 / L-PG0 / L-WF1/WF2 discharge | **② Parallel Gaussian water-filling** `parallel_gaussian_capacity_formula_minimal` の load-bearing hyp `IsParallelGaussianPerCoordRegularity` (`achiever_mi` per-coord MI bridge + `max_ent` → 多変量 diffent subadditivity `jointDifferentialEntropyPi_le_sum` [Ch.8 共有壁、sorry-routed] + channel↔RV MI decomp) の genuine 化 = in-scope frontier ((b) 解析の壁)。**③ operational 符号化定理 (n-letter、continuous AEP/random coding/sphere packing/連続 MI chain rule/Fano) は scope-out (judgment #11)**。Shannon-Hartley Nyquist も scope-out |
 | 10 | Rate Distortion | ✅ (pmf-form scope) | `rate_distortion_achievability` (Shannon), `rate_distortion_converse_single_shot/_specified`, `rateDistortionFunction_convexOn_pmf` | — (measure-form Draft は **scope-out**) |
 | 11 | Statistics | 🟢 (scope 内) | Stein / StrongStein / Sanov / SanovLDP / SanovLDPEquality / Pinsker (+sharp) / Csiszar / CondMethodOfTypes ✅、Chernoff **achievability** `chernoff_lemma_achievability` ✅、Hoeffding sandwich Tendsto + tradeoff exp ✅、Cramér LC2 discharge ext ✅ | `hoeffding_tradeoff_with_hypothesis` tier-4 marker retro-tag。Chernoff converse / Hoeffding interior / Cramér Phase C は **scope-out** (C&T 自身が `≐` heuristic で textbook rigor 達成) |
 | 12 | Maximum Entropy | ✅ | `entropy_le_log_card`, `entropy_eq_log_card_iff`, `entropy_le_gibbs_of_constraints`, `expFamily_maximizes_entropy_of_KKT` | — |
@@ -55,7 +56,7 @@ Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理
 
 ## 「Mathlib 壁」5 分類 (scope 内 frontier に残る型)
 
-- **(a) 量の壁** (低、未構築): well-understood、Mathlib に補題不在で一から数百行。AWGN F-2 continuous AEP / F-3 sphere packing (Ch.9)、Slepian-Wolf Phase E error bound (Ch.15)
+- **(a) 量の壁** (低、未構築): well-understood、Mathlib に補題不在で一から数百行。Slepian-Wolf Phase E error bound (Ch.15)。(Ch.9 AWGN operational 符号化定理の continuous AEP / sphere packing も本型だったが judgment #11 で scope-out)
 - **(b) 解析の壁** (中〜高): 計算体系自体を建てる型。EPI Stam Step 2 (Ch.17) — Rioul 2011 §II-C より score-cond-mean identity + total variance decomposition で ~100 行 density-level computation (従来 ~300 行 PR 級見積りより小)、再見積もり後 scope 内に戻す余地あり
 - **(c) 数学的深さ** (高、真の壁): Nyquist 2W-DOF (Ch.9、scope-out 確定)
 - **(d) 実は選択** (de-circularize 済): "ROI 無し" の婉曲表現で「壁」と呼ばれていたもの、現在は honest 開示のみ
@@ -65,7 +66,7 @@ Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理
 
 - **Ch.5 Huffman 強形**: `mergedMeasure` card-2 redesign 進行中、honest frontier `huffmanLength_optimal_modulo_aux_ident` まで精密 localize 済
 - **Ch.8 n-var DiffEnt subadditivity**: Parallel Gaussian L-PG1 共有壁、Draft 2 sorry (小)
-- **Ch.9 AWGN F-2/F-3**: tier-5 circular hypothesis → sorry+@residual 移行 + continuous AEP + sphere packing 構築 ((a) 量の壁、定型量の上積み)
+- **Ch.9 ② Parallel Gaussian water-filling**: ① 単一文字容量は genuine ✅。残 in-scope frontier は `parallel_gaussian_capacity_formula_minimal` の load-bearing hyp `IsParallelGaussianPerCoordRegularity` の genuine 化 = 多変量 diffent subadditivity `jointDifferentialEntropyPi_le_sum` (Ch.8 共有壁、`@residual(plan:multivariate-diffentropy-subadditivity-plan)`) + channel↔RV MI decomp ((b) 解析の壁)。③ operational 符号化定理は scope-out (judgment #11)
 - **Ch.15 Slepian-Wolf Phase E**: Full Rate Region 4-way error decomposition は Phase D ✅、Phase E 確率上界収束のみ残
 - **Ch.17 EPI Stam Step 2 再見積もり**: Rioul 2011 経路で ~100 行 density-level computation の見込み、keep するか scope-out 確定するか要判断
 - **Ch.17 legacy migration**: 32 件 `@audit:suspect` の sorry-based 移行 (mechanical)
@@ -74,7 +75,7 @@ Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理
 ## 教科書原稿 (層 3) / 次の一手
 
 - 層 3 (原稿) は未着手 (`docs/textbook/` 未生成)
-- genuine ✅ で原稿起動可能: **Ch.2 / 3 / 4 / 7 / 8 (1-var) / 10 (pmf-form) / 12 / 17 inequality 群** — scope-out 反映で Ch.10, 11, 13, 15, 17 も部分 publish 圏内
+- genuine ✅ で原稿起動可能: **Ch.2 / 3 / 4 / 7 / 8 (1-var) / 9 (単一文字 AWGN 容量公式 + max-ent converse) / 10 (pmf-form) / 12 / 17 inequality 群** — scope-out 反映で Ch.9 (③ 除く), Ch.10, 11, 13, 15, 17 も部分 publish 圏内
 - **合意した次の一手**: 完成済み 1 章 (Ch.2 or Ch.7 or Ch.12) で原稿層をパイロット起動 — 本文が「定理 Y は検証済み」と書くことで、scope-out した範囲が原稿として acceptable か、scope 内 frontier の優先度がどう動くかが具体化する
 
 ## 判断ログ
@@ -98,3 +99,9 @@ Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理
     - **Ch.10 measure-form scope-out** — pmf-form ✅ で C&T 10.5 acceptable
     - **Ch.9 Shannon-Hartley Nyquist scope-out** — (c) 数学的深さ の真の壁、C&T 自身が厳密証明せず
     - scope-out 総量 ~22k 行 Draft + ~250 residual 解放、scope 内 frontier は数百 sorry オーダー
+11. **2026-05-29 Ch.9 AWGN 単一文字容量 genuine closure + ③ operational 符号化定理 scope-out**:
+    - **① 単一文字情報容量 genuine 完成** — `awgn_capacity_closed_form_genuine = (1/2)log(1+P/N)` (0 sorry / 0 residual、`#print axioms` sorryAx 非依存、独立監査 OK)。max-entropy converse 込み。Ch.9 を 🟡 → 「① ✅ / ② frontier」に更新
+    - **ParallelGaussian 多次元 false-statement defect 修正** — 電力制約集合が Bochner `∑ᵢ ∫(xᵢ)²∂p ≤ P` で非可積分入力 (Cauchy 等) が `integral_undef→0` で紛れ込み converse を偽命題化。AWGN と同型の lintegral pivot (`parallelGaussianPowerConstraintSet` + bridge) で修正、3 file 8 site 全置換、独立監査 OK (3 decl `@audit:ok`)
+    - **load-bearing wrapper `mutualInfoOfChannel_gaussianInput_closed_form` retire** — base `AWGN.lean` の `h_bridge`-form load-bearing wrapper を削除、唯一の genuine consumer (`AWGNMIBridge.awgn_mi_gaussian_closed_form_of_primitives`、bridge を primitives から genuine 構築済) に log 代数を inline。後継 `_closed_form'` も併存。sorry 化は genuine 証明上の fake wall になるため**不可**、削除が正しい retirement
+    - **③ scope-out 決定** — operational 符号化定理 (n-letter achievability + converse) の continuous AEP / random coding / sphere packing / 連続 MI chain rule / Fano は (a) 量の壁が大量。原稿パイロット優先方針 (judgment #10) で Nyquist と同じく future work に隔離。Ch.9 は単一文字容量公式の章として publish 可。honest sorry+@residual は marker として保持
+    - **次セッション = AWGN 継続 (② Parallel Gaussian water-filling)** — `IsParallelGaussianPerCoordRegularity` の load-bearing hyp 解消。依存先は Ch.8 共有壁 `jointDifferentialEntropyPi_le_sum` (多変量 diffent subadditivity、sorry-routed) + channel↔RV MI decomp。着手は `docs/shannon/multivariate-diffentropy-subadditivity-plan.md` + L-PG1 discharge plan の tractability 評価から
