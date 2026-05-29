@@ -56,6 +56,7 @@ set_option linter.unusedSectionVars false
 
 open MeasureTheory ProbabilityTheory InformationTheory
 open InformationTheory.Shannon.ChannelCoding
+open InformationTheory.Shannon.AWGN
 open scoped ENNReal NNReal BigOperators Topology
 
 /-! ## Phase 0 — constructor skeleton
@@ -151,12 +152,17 @@ theorem parallel_gaussian_capacity_formula_minimal {n : ℕ}
       ∀ p ∈ parallelGaussianPowerConstraintSet P,
         (mutualInfoOfChannel p (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
           ≤ ∑ i : Fin (n + 1), (1/2) * Real.log (1 + P / (N i : ℝ)))
-    -- (P-2) per-coord AWGN bridge for the water-filling achiever (Phase 2 honest piece)
-    (h_bridge_per_coord :
-      (mutualInfoOfChannel
-          (gaussianProductInput (fun i => (waterFillingPower ν N i).toNNReal))
-          (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
-        = ∑ i : Fin (n + 1), (1/2) * Real.log
+    -- (P-2) per-COORDINATE AWGN closed form for the water-filling achiever
+    -- (Phase 2 honest piece, now isolated per-coordinate rather than bundled as
+    -- the full sum). The bundled achiever-MI sum is *derived* from this plus the
+    -- genuine structural per-channel decomposition
+    -- `parallelGaussianCapacity_achiever_mi`; each `h_perCoordMI i` is the single-
+    -- channel AWGN closed form `awgn_mi_gaussian_closed_form_of_primitives`
+    -- (analytic AWGN residual), not the conclusion equality.
+    (h_perCoordMI : ∀ i,
+      (mutualInfoOfChannel (gaussianReal 0 ((waterFillingPower ν N i).toNNReal))
+          (awgnChannel (N i) (h_meas i))).toReal
+        = (1/2) * Real.log
             (1 + ((waterFillingPower ν N i).toNNReal : ℝ) / (N i : ℝ)))
     -- (P-3) multivariate channel↔RV decomp + per-coord max-entropy allocation
     -- (Phase 3 honest piece — the *only* new honest piece of this plan).
@@ -172,6 +178,14 @@ theorem parallel_gaussian_capacity_formula_minimal {n : ℕ}
   -- constructor, then invoke the existing genuine `le_antisymm` headline
   -- `parallel_gaussian_capacity_formula` (`PerCoord.lean:367`).
   set Q : Fin (n + 1) → ℝ≥0 := fun i => (waterFillingPower ν N i).toNNReal with hQ_def
+  -- Derive the bundled achiever-MI sum equality from the per-coordinate AWGN
+  -- closed form via the genuine structural reduction (the only residual being the
+  -- shared `wall:multivariate-mi` per-channel decomposition inside it).
+  have h_bridge_per_coord :
+      (mutualInfoOfChannel (gaussianProductInput Q)
+          (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
+        = ∑ i : Fin (n + 1), (1/2) * Real.log (1 + (Q i : ℝ) / (N i : ℝ)) :=
+    parallelGaussianCapacity_achiever_mi Q N h_meas h_parallel_meas h_perCoordMI
   have h_reg : IsParallelGaussianPerCoordRegularity P N h_meas h_parallel_meas Q :=
     isParallelGaussianPerCoordRegularity_of_pieces P N h_meas h_parallel_meas Q
       h_bdd_global h_bridge_per_coord h_multivar_decomp

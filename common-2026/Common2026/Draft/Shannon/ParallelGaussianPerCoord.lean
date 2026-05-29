@@ -414,6 +414,76 @@ theorem parallel_gaussian_capacity_formula {n : ℕ}
   isParallelGaussianPerCoordReduction_discharged P hP N hN h_meas h_parallel_meas
     ν h_kkt h_opt h_reg
 
+/-! ## `achiever_mi` genuine reduction (L-PG1 Phase 2)
+
+The achiever MI value `I(productGaussian; parallelOutput) = ∑ᵢ (1/2)log(1 + Qᵢ/Nᵢ)`
+is split into two isolated pieces:
+
+* the **per-channel decomposition** (structural):
+  `I(productGaussian; parallelChannel) = ∑ᵢ I(gaussian Qᵢ; awgnChannel Nᵢ)`.
+  Genuinely this is `mutualInfo_pi_eq_sum` after converting both sides to the
+  RV form via `mutualInfoOfChannel_eq_mutualInfo_prod`; the three i.i.d.
+  factorization hypotheses reduce to the claim that the channel joint
+  `gaussianProductInput Q ⊗ₘ parallelGaussianChannel N` factors as a
+  `Measure.pi` of the per-coordinate joints. That `compProd`-of-`Measure.pi`
+  factorization is **absent from Mathlib** (`loogle`: 0 declarations mentioning
+  both `Measure.pi` and `Measure.compProd`, 2026-05-29). It is isolated as the
+  shared sorry wall `parallelGaussian_achiever_mi_eq_sum_perChannel` below.
+
+* the **per-coordinate AWGN closed form** (analytic, reusable):
+  `I(gaussian Qᵢ; awgnChannel Nᵢ) = (1/2)log(1 + Qᵢ/Nᵢ)`, supplied as the
+  hypothesis `h_perCoordMI`. For active coordinates this is genuinely
+  `AWGNMIBridge.awgn_mi_gaussian_closed_form_of_primitives` (modulo the AWGN
+  output-Gaussian / MI-decomposition residuals shared with the AWGN-MI plan);
+  for an inactive coordinate `Q i = 0` the Dirac input gives MI 0 = `(1/2)log 1`.
+  Threading it per-coordinate (rather than the bundled sum) keeps the achiever
+  bridge hypothesis-minimal and the structural step genuine.
+-/
+
+open Common2026.Shannon InformationTheory.Shannon.AWGN in
+/-- **Shared sorry wall — per-channel MI decomposition of the product achiever.**
+The channel mutual information of the independent-Gaussian product input through
+the parallel Gaussian channel equals the sum of the per-coordinate single-channel
+mutual informations.
+
+Genuine content: `mutualInfo_pi_eq_sum` (genuine) applied to the RV form of both
+sides; the only missing ingredient is the `compProd`-of-`Measure.pi` factorization
+`gaussianProductInput Q ⊗ₘ parallelGaussianChannel N = (Measure.pi of per-coord joints)`,
+which Mathlib does not provide (no lemma links `Measure.pi` and `Measure.compProd`).
+
+@residual(wall:multivariate-mi) -/
+theorem parallelGaussian_achiever_mi_eq_sum_perChannel {n : ℕ}
+    (Q : Fin n → ℝ≥0) (N : Fin n → ℝ≥0)
+    (h_meas : IsParallelAwgnChannelMeasurable N)
+    (h_parallel_meas : IsParallelGaussianKernelMeasurable N) :
+    (mutualInfoOfChannel (gaussianProductInput Q)
+        (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
+      = ∑ i : Fin n,
+          (mutualInfoOfChannel (gaussianReal 0 (Q i)) (awgnChannel (N i) (h_meas i))).toReal := by
+  sorry
+
+open Common2026.Shannon InformationTheory.Shannon.AWGN in
+/-- **`achiever_mi` genuine reduction (L-PG1 Phase 2).** The achiever MI value
+equals the per-coordinate water-filling sum, assembled from the genuine
+structural per-channel decomposition `parallelGaussian_achiever_mi_eq_sum_perChannel`
+(shared `wall:multivariate-mi`) and the per-coordinate AWGN closed form
+`h_perCoordMI` (analytic AWGN residual, shared with the AWGN-MI plan).
+
+This discharges `IsParallelGaussianPerCoordRegularity.achiever_mi` from honest
+per-coordinate pieces rather than the bundled sum equality. -/
+theorem parallelGaussianCapacity_achiever_mi {n : ℕ}
+    (Q : Fin n → ℝ≥0) (N : Fin n → ℝ≥0)
+    (h_meas : IsParallelAwgnChannelMeasurable N)
+    (h_parallel_meas : IsParallelGaussianKernelMeasurable N)
+    (h_perCoordMI : ∀ i,
+      (mutualInfoOfChannel (gaussianReal 0 (Q i)) (awgnChannel (N i) (h_meas i))).toReal
+        = (1/2) * Real.log (1 + (Q i : ℝ) / (N i : ℝ))) :
+    (mutualInfoOfChannel (gaussianProductInput Q)
+        (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
+      = ∑ i : Fin n, (1/2) * Real.log (1 + (Q i : ℝ) / (N i : ℝ)) := by
+  rw [parallelGaussian_achiever_mi_eq_sum_perChannel Q N h_meas h_parallel_meas]
+  exact Finset.sum_congr rfl (fun i _ => h_perCoordMI i)
+
 /-- Backward-compatible alias for the genuine headline
 `parallel_gaussian_capacity_formula` (was the `_discharged` re-publish name). -/
 @[deprecated parallel_gaussian_capacity_formula (since := "2026-05-21")]
