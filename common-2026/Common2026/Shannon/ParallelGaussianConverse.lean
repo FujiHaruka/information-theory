@@ -41,7 +41,12 @@ statement is genuinely FALSE for `P < 0` (the constraint set is non-empty — co
 Dirac at 0 — yet `∑ P'ᵢ ≤ P < 0` with `P'ᵢ ≥ 0` is unsatisfiable). The previous tier-5
 false-statement residual `P < 0` branch has been removed.
 
-Status: type-check done (tier 2), NOT proof done (1 `sorry`).
+Status: 0 `sorry` in this file. The headline `parallel_gaussian_capacity_formula_minimal`
+is sorryAx-free (`#print axioms` = [propext, Classical.choice, Quot.sound]). #5
+`parallelOutput_joint_logDensity_integrable` was genuinely closed 2026-05-29 (plan
+`parallel-gaussian-converse-5-closure`): the joint mixture-density representation
+`μY = volume.withDensity (∫⁻ ∏ gaussianPDF ∂p)` is `p`-independent (Tonelli), lifting the
+1-D AWGN Phase-6 integrability coordinate-wise. `@audit:ok` pending independent honesty audit.
 
 Wave 4 (2026-05-29): #13 `parallel_mi_decomp_value` and the fibre log-proxy
 `parallelFibre_logProxy_integrable_compProd` are now GENUINE. The fibre log-proxy is
@@ -1051,56 +1056,399 @@ theorem parallelOutput_marginal_logDensity_integrable (P : ℝ) (hP : 0 ≤ P) (
     Measure.isProbabilityMeasure_map hmeas_i.aemeasurable
   exact awgnOutput_logDensity_integrable_self P hP (N i) hN (p.map (fun z => z i)) h_mem
 
+/-! ## #5 closure — joint mixture density (1-D Phase 6 coordinate-product lift) -/
+
+/-- **Joint mixture output density** `f_Y(z) := ∫⁻ x, ∏ᵢ gaussianPDF (x i)(N i)(z i) ∂p`.
+The `Fin n → ℝ` analogue of the 1-D `outputMixtureDensity`; `p` enters only as the
+integrating measure, so no product/AC structure on `p` is required. -/
+noncomputable def parallelOutputMixtureDensity (z : Fin n → ℝ) : ℝ≥0∞ :=
+  ∫⁻ x : Fin n → ℝ, piGaussProxy N (x, z) ∂p
+
+/-- Unfolded form of `parallelOutputMixtureDensity` (the product of coordinate Gaussian
+pdfs averaged over `p`). -/
+theorem parallelOutputMixtureDensity_eq (z : Fin n → ℝ) :
+    parallelOutputMixtureDensity N p z
+      = ∫⁻ x : Fin n → ℝ, ∏ i, gaussianPDF (x i) (N i) (z i) ∂p := rfl
+
+/-- The joint mixture density is measurable in `z`. -/
+theorem measurable_parallelOutputMixtureDensity :
+    Measurable (parallelOutputMixtureDensity N p) := by
+  unfold parallelOutputMixtureDensity
+  exact Measurable.lintegral_prod_left' (piGaussProxy_measurable N)
+
+/-- (#5, density representation) The correlated output `μY` equals
+`volume.withDensity (parallelOutputMixtureDensity)`. The noise fibre
+`Measure.pi (gaussianReal (x i)(N i)) = volume.withDensity (∏ᵢ gaussianPDF (x i)(N i)·)`
+(`pi_withDensity_fin` + `gaussianReal_of_var_ne_zero`), and Tonelli swaps the `∂p` average
+to the outside — `p`-independent, so it lifts the 1-D `output_eq_withDensity_mixture`.
+Genuine, 0 sorry (pending independent honesty audit). -/
+theorem parallelOutput_eq_withDensity_mixture (hN : ∀ i, (N i : ℝ) ≠ 0) :
+    outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)
+      = volume.withDensity (parallelOutputMixtureDensity N p) := by
+  classical
+  set W := parallelGaussianChannel N h_meas h_parallel_meas with hW
+  have hN' : ∀ i, N i ≠ 0 := fun i h => hN i (by rw [h]; norm_num)
+  have h_mix_meas : Measurable (parallelOutputMixtureDensity N p) :=
+    measurable_parallelOutputMixtureDensity N p
+  -- the fibre `W x` is `volume.withDensity (z ↦ piGaussProxy N (x, z))`
+  have h_fibre_wd : ∀ x : Fin n → ℝ,
+      W x = volume.withDensity (fun z => piGaussProxy N (x, z)) := by
+    intro x
+    rw [hW, parallelGaussianChannel_apply]
+    have h_each : ∀ i, gaussianReal (x i) (N i)
+        = (volume : Measure ℝ).withDensity (gaussianPDF (x i) (N i)) :=
+      fun i => gaussianReal_of_var_ne_zero (x i) (hN' i)
+    rw [show (fun i => gaussianReal (x i) (N i))
+        = (fun i => (volume : Measure ℝ).withDensity (gaussianPDF (x i) (N i))) from
+        funext h_each]
+    haveI : ∀ i, SigmaFinite ((volume : Measure ℝ).withDensity (gaussianPDF (x i) (N i))) := by
+      intro i; rw [← h_each i]; infer_instance
+    rw [pi_withDensity_fin (fun _ => (volume : Measure ℝ))
+      (fun i => measurable_gaussianPDF (x i) (N i)), ← volume_pi]
+    rfl
+  refine Measure.ext_of_lintegral _ (fun f hf => ?_)
+  -- LHS = ∫⁻ x, ∫⁻ z, f z · piGaussProxy N (x,z) ∂volume ∂p
+  have hfi_meas : Measurable (fun z : (Fin n → ℝ) × (Fin n → ℝ) => f z.2) :=
+    hf.comp measurable_snd
+  have hLHS : ∫⁻ a, f a ∂(outputDistribution p W)
+      = ∫⁻ x, ∫⁻ z, f z * piGaussProxy N (x, z) ∂volume ∂p := by
+    calc ∫⁻ a, f a ∂(outputDistribution p W)
+        = ∫⁻ z, f z.2 ∂(p ⊗ₘ W) := by
+            rw [outputDistribution, jointDistribution_def, Measure.snd]
+            exact lintegral_map hf measurable_snd
+      _ = ∫⁻ x, ∫⁻ y, f y ∂(W x) ∂p := Measure.lintegral_compProd hfi_meas
+      _ = ∫⁻ x, ∫⁻ z, f z * piGaussProxy N (x, z) ∂volume ∂p := by
+            refine lintegral_congr (fun x => ?_)
+            have h_slice : Measurable (fun z : Fin n → ℝ => piGaussProxy N (x, z)) :=
+              (piGaussProxy_measurable N).comp (measurable_const.prodMk measurable_id)
+            rw [h_fibre_wd x,
+              lintegral_withDensity_eq_lintegral_mul _ h_slice hf]
+            refine lintegral_congr (fun z => ?_)
+            rw [Pi.mul_apply, mul_comm]
+  -- swap order via Fubini-Tonelli
+  have h_swap_meas : Measurable
+      (Function.uncurry fun x z : Fin n → ℝ => f z * piGaussProxy N (x, z)) := by
+    refine (hf.comp measurable_snd).mul ?_
+    exact (piGaussProxy_measurable N).comp (measurable_fst.prodMk measurable_snd)
+  rw [hLHS]
+  calc ∫⁻ x, ∫⁻ z, f z * piGaussProxy N (x, z) ∂volume ∂p
+      = ∫⁻ z, ∫⁻ x, f z * piGaussProxy N (x, z) ∂p ∂volume :=
+        lintegral_lintegral_swap h_swap_meas.aemeasurable
+    _ = ∫⁻ z, f z * parallelOutputMixtureDensity N p z ∂volume := by
+        refine lintegral_congr (fun z => ?_)
+        have h_slice : Measurable (fun x : Fin n → ℝ => piGaussProxy N (x, z)) :=
+          (piGaussProxy_measurable N).comp (measurable_id.prodMk measurable_const)
+        rw [parallelOutputMixtureDensity, ← lintegral_const_mul (f z) h_slice]
+    _ = ∫⁻ z, f z ∂(volume.withDensity (parallelOutputMixtureDensity N p)) := by
+        rw [lintegral_withDensity_eq_lintegral_mul _ h_mix_meas hf]
+        refine lintegral_congr (fun z => ?_)
+        rw [Pi.mul_apply, mul_comm]
+
+/-- (#5) The output rnDeriv is a.e. the joint mixture density. -/
+theorem parallelOutput_rnDeriv_ae_mixture (hN : ∀ i, (N i : ℝ) ≠ 0) :
+    (outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)).rnDeriv volume
+      =ᵐ[volume] parallelOutputMixtureDensity N p := by
+  rw [parallelOutput_eq_withDensity_mixture N h_meas h_parallel_meas p hN]
+  exact Measure.rnDeriv_withDensity volume (measurable_parallelOutputMixtureDensity N p)
+
+/-- (#5, upper bound) The joint mixture density is bounded above by
+`∏ᵢ (√(2π Nᵢ))⁻¹`: each coordinate Gaussian is `≤ (√(2π Nᵢ))⁻¹`
+(`gaussianPDFReal_le_sup`), and `p` is a probability measure. -/
+theorem parallelOutputMixtureDensity_le_sup (z : Fin n → ℝ) :
+    parallelOutputMixtureDensity N p z
+      ≤ ENNReal.ofReal (∏ i, (Real.sqrt (2 * Real.pi * N i))⁻¹) := by
+  rw [parallelOutputMixtureDensity_eq,
+    ENNReal.ofReal_prod_of_nonneg (fun i _ => by positivity)]
+  calc ∫⁻ x, ∏ i, gaussianPDF (x i) (N i) (z i) ∂p
+      ≤ ∫⁻ _x, ∏ i, ENNReal.ofReal (Real.sqrt (2 * Real.pi * N i))⁻¹ ∂p := by
+        refine lintegral_mono (fun x => ?_)
+        refine Finset.prod_le_prod' (fun i _ => ?_)
+        rw [gaussianPDF]
+        exact ENNReal.ofReal_le_ofReal (AWGN.gaussianPDFReal_le_sup (x i) (N i) (z i))
+    _ = ∏ i, ENNReal.ofReal (Real.sqrt (2 * Real.pi * N i))⁻¹ := by
+        rw [lintegral_const, measure_univ, mul_one]
+
+/-- (#5, concentration) Coordinate-box Chebyshev: there is a box
+`S = {x | ∀ i, |x i| ≤ Rᵢ}` carrying `≥ 1/2` of the mass of `p`. Each coordinate's
+finite second moment gives `p {|xᵢ| > Rᵢ} ≤ 1/(2n)`; a union bound over `Fin n` keeps the
+complement `≤ 1/2`. (`Fin n → ℝ` uses the sup norm, so the concentration set is the box,
+not the `‖·‖`-ball.) -/
+theorem parallel_concentration_box (P : ℝ) (hP : 0 ≤ P)
+    (hp : p ∈ parallelGaussianPowerConstraintSet P) :
+    ∃ R : Fin n → ℝ, (∀ i, 0 < R i) ∧
+      (1 : ℝ≥0∞) / 2 ≤ p {x : Fin n → ℝ | ∀ i, |x i| ≤ R i} := by
+  classical
+  obtain ⟨hp_prob, hp_lint⟩ := hp
+  -- per-coordinate second-moment lintegral, finite
+  set M : Fin n → ℝ≥0∞ := fun i => ∫⁻ x : Fin n → ℝ, ENNReal.ofReal ((x i) ^ 2) ∂p with hM_def
+  have hM_lt_top : ∀ i, M i < ∞ := by
+    intro i
+    have h_single_le : M i ≤ ∑ j : Fin n, M j :=
+      Finset.single_le_sum (f := M) (fun j _ => bot_le) (Finset.mem_univ i)
+    exact lt_of_le_of_lt (h_single_le.trans hp_lint) ENNReal.ofReal_lt_top
+  -- choose `Rᵢ := √(2n·(M i).toReal + 1)`, so `Rᵢ² = 2n·(M i).toReal + 1`
+  set R : Fin n → ℝ := fun i => Real.sqrt (2 * n * (M i).toReal + 1) with hR_def
+  have hR_pos : ∀ i, 0 < R i := fun i => Real.sqrt_pos.mpr (by positivity)
+  have hR_sq : ∀ i, R i ^ 2 = 2 * n * (M i).toReal + 1 :=
+    fun i => Real.sq_sqrt (by positivity)
+  refine ⟨R, hR_pos, ?_⟩
+  -- the box is the complement of `⋃ i, {Rᵢ < |xᵢ|}`
+  set S : Set (Fin n → ℝ) := {x : Fin n → ℝ | ∀ i, |x i| ≤ R i} with hS_def
+  set T : Fin n → Set (Fin n → ℝ) := fun i => {x : Fin n → ℝ | R i < |x i|} with hT_def
+  have hSc_eq : Sᶜ = ⋃ i, T i := by
+    ext x
+    simp only [hS_def, hT_def, Set.mem_compl_iff, Set.mem_setOf_eq, Set.mem_iUnion, not_forall,
+      not_le]
+  -- per-coordinate Markov bound `p (T i) ≤ 1/(2n)`
+  have h_per : ∀ i, p (T i) ≤ ENNReal.ofReal (1 / (2 * n)) := by
+    intro i
+    have hn_pos' : (0 : ℝ) < 2 * n := by
+      have : 0 < n := i.pos
+      positivity
+    have h_subset : T i ⊆ {x : Fin n → ℝ | ENNReal.ofReal (R i ^ 2) ≤ ENNReal.ofReal ((x i) ^ 2)} := by
+      intro x hx
+      simp only [hT_def, Set.mem_setOf_eq] at hx
+      refine ENNReal.ofReal_le_ofReal ?_
+      nlinarith [abs_nonneg (x i), sq_abs (x i), (hR_pos i).le]
+    have hRsq_pos : (0 : ℝ) < R i ^ 2 := by rw [hR_sq i]; positivity
+    have h_markov : p {x : Fin n → ℝ | ENNReal.ofReal (R i ^ 2) ≤ ENNReal.ofReal ((x i) ^ 2)}
+        ≤ M i / ENNReal.ofReal (R i ^ 2) :=
+      meas_ge_le_lintegral_div
+        (((measurable_pi_apply i).pow_const 2).ennreal_ofReal.aemeasurable)
+        (by simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]; exact hRsq_pos)
+        ENNReal.ofReal_ne_top
+    refine le_trans (measure_mono h_subset) (le_trans h_markov ?_)
+    -- `M i / ofReal(Rᵢ²) ≤ ofReal(1/(2n))`
+    rw [show M i = ENNReal.ofReal (M i).toReal from (ENNReal.ofReal_toReal (hM_lt_top i).ne).symm,
+      ← ENNReal.ofReal_div_of_pos hRsq_pos]
+    refine ENNReal.ofReal_le_ofReal ?_
+    rw [hR_sq i, div_le_div_iff₀ (by positivity) hn_pos']
+    have hM_nonneg : 0 ≤ (M i).toReal := ENNReal.toReal_nonneg
+    nlinarith [hM_nonneg]
+  -- union bound: `p Sᶜ ≤ ∑ i, 1/(2n) = 1/2` (n > 0); n = 0 ⇒ box is univ
+  rcases Nat.eq_zero_or_pos n with hn | hn
+  · subst hn
+    have : S = Set.univ := by
+      rw [hS_def]; ext x; simp
+    rw [this, measure_univ]; norm_num
+  · have h_union : p Sᶜ ≤ 1 / 2 := by
+      rw [hSc_eq]
+      refine le_trans (measure_iUnion_fintype_le p T) ?_
+      refine le_trans (Finset.sum_le_sum (fun i _ => h_per i)) ?_
+      rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
+      have hn_pos : (0 : ℝ) < 2 * n := by positivity
+      rw [show (n : ℝ≥0∞) = ENNReal.ofReal (n : ℝ) from (ENNReal.ofReal_natCast n).symm,
+        ← ENNReal.ofReal_mul (Nat.cast_nonneg n),
+        show (1:ℝ≥0∞)/2 = ENNReal.ofReal (1/2) by
+          rw [ENNReal.ofReal_div_of_pos (by norm_num)]; simp]
+      refine ENNReal.ofReal_le_ofReal ?_
+      rw [mul_one_div, div_le_div_iff₀ hn_pos (by norm_num : (0:ℝ) < 2)]
+      nlinarith [Nat.cast_nonneg (α := ℝ) n]
+    have h_compl : p Sᶜ + p S = 1 := by
+      rw [← measure_univ (μ := p), ← Set.compl_union_self S]
+      have hS_meas : MeasurableSet S := by
+        rw [hS_def, show {x : Fin n → ℝ | ∀ i, |x i| ≤ R i}
+            = ⋂ i, {x : Fin n → ℝ | |x i| ≤ R i} by ext x; simp]
+        exact MeasurableSet.iInter (fun i =>
+          measurableSet_le ((measurable_pi_apply i).abs) measurable_const)
+      exact (measure_union (disjoint_compl_left) hS_meas).symm
+    have h1 : (1 : ℝ≥0∞) / 2 + p Sᶜ ≤ p Sᶜ + p S := by
+      rw [h_compl]
+      calc (1:ℝ≥0∞)/2 + p Sᶜ ≤ 1/2 + 1/2 := by gcongr
+        _ = 1 := ENNReal.add_halves 1
+    rw [add_comm (p Sᶜ)] at h1
+    exact ENNReal.le_of_add_le_add_right
+      (ne_of_lt (lt_of_le_of_lt h_union (by norm_num))) h1
+
+set_option maxHeartbeats 1000000 in
+/-- (#5, ★ lower bound) the joint mixture density admits a quadratic `-log` upper bound:
+`∃ a b, 0 ≤ a ∧ ∀ z, -log (f_Y z).toReal ≤ a · ∑ᵢ (zᵢ)² + b`. The coordinate-box
+concentration (`parallel_concentration_box`) gives `≥ 1/2` of the mass on `S`, and on `S`
+each coordinate Gaussian has a tail lower bound; the product gives `f_Y(z) ≥ (1/2)·∏ᵢ Krᵢ(zᵢ)`,
+quadratic in each `zᵢ`. Coordinate-product lift of the 1-D `output_logDensity_lower_bound`.
+Genuine, 0 sorry (pending independent honesty audit). -/
+theorem parallelOutput_logDensity_lower_bound (P : ℝ) (hP : 0 ≤ P)
+    (hN : ∀ i, (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
+    ∃ a b : ℝ, 0 ≤ a ∧ ∀ z : Fin n → ℝ,
+      -Real.log ((parallelOutputMixtureDensity N p z).toReal)
+        ≤ a * (∑ i, (z i) ^ 2) + b := by
+  classical
+  haveI hp_prob : IsProbabilityMeasure p := hp.1
+  have hN_pos : ∀ i, (0 : ℝ) < N i :=
+    fun i => lt_of_le_of_ne (N i).coe_nonneg (fun h => hN i h.symm)
+  -- coordinate-box concentration
+  obtain ⟨R, hR_pos, hS_ge⟩ := parallel_concentration_box p P hP hp
+  set S : Set (Fin n → ℝ) := {x : Fin n → ℝ | ∀ i, |x i| ≤ R i} with hS_def
+  -- per-coordinate Gaussian-tail lower constant `Krᵢ(zᵢ)`
+  set Kr : Fin n → ℝ → ℝ := fun i zi =>
+    (Real.sqrt (2 * Real.pi * (N i : ℝ)))⁻¹
+      * Real.exp (-(2 * zi ^ 2 + 2 * R i ^ 2) / (2 * (N i : ℝ)))
+    with hKr_def
+  have hKr_pos : ∀ i zi, 0 < Kr i zi := fun i zi => by
+    rw [hKr_def]; have := hN_pos i; positivity
+  -- on `S`, the product of coordinate pdfs dominates `∏ᵢ ofReal (Krᵢ zᵢ)`
+  have h_prod_ge : ∀ z : Fin n → ℝ, ∀ x ∈ S,
+      ENNReal.ofReal (∏ i, Kr i (z i)) ≤ ∏ i, gaussianPDF (x i) (N i) (z i) := by
+    intro z x hx
+    rw [ENNReal.ofReal_prod_of_nonneg (fun i _ => (hKr_pos i (z i)).le)]
+    refine Finset.prod_le_prod' (fun i _ => ?_)
+    rw [gaussianPDF]
+    refine ENNReal.ofReal_le_ofReal ?_
+    rw [gaussianPDFReal, hKr_def]
+    have hxi : |x i| ≤ R i := hx i
+    have hxi_sq : (x i) ^ 2 ≤ R i ^ 2 := by nlinarith [abs_nonneg (x i), sq_abs (x i), (hR_pos i).le]
+    have hNi := hN_pos i
+    refine mul_le_mul_of_nonneg_left (Real.exp_le_exp.mpr ?_) (by positivity)
+    rw [neg_div, neg_div, neg_le_neg_iff,
+      div_le_div_iff_of_pos_right (by positivity : (0:ℝ) < 2 * (N i : ℝ))]
+    nlinarith [sq_nonneg (z i + x i), hxi_sq]
+  -- `f_Y(z) ≥ ofReal (∏ᵢ Krᵢ zᵢ) · (1/2)`
+  have h_fY_ge : ∀ z : Fin n → ℝ,
+      ENNReal.ofReal (∏ i, Kr i (z i)) * (1 / 2) ≤ parallelOutputMixtureDensity N p z := by
+    intro z
+    rw [parallelOutputMixtureDensity_eq]
+    have hS_meas : MeasurableSet S := by
+      rw [hS_def, show {x : Fin n → ℝ | ∀ i, |x i| ≤ R i}
+          = ⋂ i, {x : Fin n → ℝ | |x i| ≤ R i} by ext x; simp]
+      exact MeasurableSet.iInter (fun i =>
+        measurableSet_le ((measurable_pi_apply i).abs) measurable_const)
+    have h_prod_meas : Measurable
+        (fun x : Fin n → ℝ => ∏ i, gaussianPDF (x i) (N i) (z i)) := by
+      have := (piGaussProxy_measurable N).comp (measurable_id.prodMk (measurable_const : Measurable fun _ : Fin n → ℝ => z))
+      simpa [piGaussProxy] using this
+    calc ENNReal.ofReal (∏ i, Kr i (z i)) * (1 / 2)
+        ≤ ENNReal.ofReal (∏ i, Kr i (z i)) * p S := by gcongr
+      _ = ∫⁻ _x in S, ENNReal.ofReal (∏ i, Kr i (z i)) ∂p := by
+          rw [setLIntegral_const, mul_comm]
+      _ ≤ ∫⁻ x in S, ∏ i, gaussianPDF (x i) (N i) (z i) ∂p :=
+          setLIntegral_mono h_prod_meas (fun x hx => h_prod_ge z x hx)
+      _ ≤ ∫⁻ x, ∏ i, gaussianPDF (x i) (N i) (z i) ∂p := setLIntegral_le_lintegral S _
+  -- pick `a := ∑ᵢ 1/Nᵢ`, `b := ∑ᵢ (Rᵢ²/Nᵢ + log(√(2π Nᵢ))) + log 2`
+  refine ⟨∑ i, (1 / (N i : ℝ)),
+    ∑ i, (R i ^ 2 / (N i : ℝ) + Real.log (Real.sqrt (2 * Real.pi * (N i : ℝ))))
+    + Real.log 2, ?_, fun z => ?_⟩
+  · refine Finset.sum_nonneg (fun i _ => ?_); have := hN_pos i; positivity
+  -- bound `f_Y(z).toReal` below by `(∏ Krᵢ)·(1/2)`
+  have h_ne_top : parallelOutputMixtureDensity N p z ≠ ⊤ :=
+    ne_top_of_le_ne_top ENNReal.ofReal_ne_top (parallelOutputMixtureDensity_le_sup N p z)
+  have h_lb_real : (∏ i, Kr i (z i)) * (1 / 2)
+      ≤ (parallelOutputMixtureDensity N p z).toReal := by
+    have := ENNReal.toReal_mono h_ne_top (h_fY_ge z)
+    rwa [ENNReal.toReal_mul, ENNReal.toReal_ofReal (by positivity),
+      show ((1:ℝ≥0∞)/2).toReal = 1/2 by simp] at this
+  rw [neg_le]
+  -- exact value: `log ((∏ Krᵢ)·(1/2)) = -(∑ᵢ zᵢ²/Nᵢ + b)`
+  have h_log_eq : Real.log ((∏ i, Kr i (z i)) * (1 / 2))
+      = -((∑ i, (z i) ^ 2 / (N i : ℝ))
+          + (∑ i, (R i ^ 2 / (N i : ℝ)
+              + Real.log (Real.sqrt (2 * Real.pi * (N i : ℝ)))) + Real.log 2)) := by
+    have h_prod_pos : 0 < ∏ i, Kr i (z i) :=
+      Finset.prod_pos (fun i _ => hKr_pos i (z i))
+    rw [Real.log_mul h_prod_pos.ne' (by norm_num)]
+    have h_log_prod : Real.log (∏ i, Kr i (z i)) = ∑ i, Real.log (Kr i (z i)) :=
+      Real.log_prod (fun i _ => (hKr_pos i (z i)).ne')
+    rw [h_log_prod]
+    have h_log_Kr : ∀ i, Real.log (Kr i (z i))
+        = -((z i) ^ 2 / (N i : ℝ)
+          + (R i ^ 2 / (N i : ℝ) + Real.log (Real.sqrt (2 * Real.pi * (N i : ℝ))))) := by
+      intro i
+      have hNi : (N i : ℝ) ≠ 0 := hN i
+      have hNpos := hN_pos i
+      rw [hKr_def, Real.log_mul (by positivity) (Real.exp_ne_zero _), Real.log_inv, Real.log_exp]
+      field_simp
+      ring
+    rw [Finset.sum_congr rfl (fun i _ => h_log_Kr i)]
+    rw [show (1:ℝ)/2 = ((2:ℝ))⁻¹ by norm_num, Real.log_inv,
+      Finset.sum_neg_distrib, Finset.sum_add_distrib]
+    ring
+  -- bound `∑ᵢ zᵢ²/Nᵢ ≤ (∑ᵢ 1/Nᵢ)·∑zᵢ²`
+  have h_quad : (∑ i, (z i) ^ 2 / (N i : ℝ))
+      ≤ (∑ i, (1 / (N i : ℝ))) * (∑ i, (z i) ^ 2) := by
+    rw [Finset.mul_sum]
+    refine Finset.sum_le_sum (fun i _ => ?_)
+    have h_single : (1 / (N i : ℝ)) ≤ ∑ j, (1 / (N j : ℝ)) :=
+      Finset.single_le_sum (f := fun j => (1 : ℝ) / (N j : ℝ))
+        (fun j _ => by have := hN_pos j; positivity) (Finset.mem_univ i)
+    rw [div_eq_mul_one_div, mul_comm ((z i) ^ 2)]
+    exact mul_le_mul_of_nonneg_right h_single (sq_nonneg (z i))
+  have h_prod_pos : 0 < ∏ i, Kr i (z i) :=
+    Finset.prod_pos (fun i _ => hKr_pos i (z i))
+  calc Real.log ((parallelOutputMixtureDensity N p z).toReal)
+      ≥ Real.log ((∏ i, Kr i (z i)) * (1 / 2)) :=
+        Real.log_le_log (by positivity) h_lb_real
+    _ = -((∑ i, (z i) ^ 2 / (N i : ℝ))
+          + (∑ i, (R i ^ 2 / (N i : ℝ)
+              + Real.log (Real.sqrt (2 * Real.pi * (N i : ℝ)))) + Real.log 2)) :=
+        h_log_eq
+    _ ≥ -((∑ i, (1 / (N i : ℝ))) * (∑ i, (z i) ^ 2)
+          + (∑ i, (R i ^ 2 / (N i : ℝ)
+              + Real.log (Real.sqrt (2 * Real.pi * (N i : ℝ)))) + Real.log 2)) := by
+        gcongr
+
+/-- (#5, combination) Quadratic bound on `|log f_Y|`: combines the constant upper bound
+with the quadratic lower bound. `∃ c₀ c₁, 0 ≤ c₁ ∧ ∀ z, |log (f_Y z).toReal| ≤ c₀ + c₁ ∑ᵢ(zᵢ)²`. -/
+theorem parallelOutputMixtureDensity_log_abs_le (P : ℝ) (hP : 0 ≤ P)
+    (hN : ∀ i, (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
+    ∃ c₀ c₁ : ℝ, 0 ≤ c₁ ∧ ∀ z : Fin n → ℝ,
+      |Real.log ((parallelOutputMixtureDensity N p z).toReal)| ≤ c₀ + c₁ * ∑ i, (z i) ^ 2 := by
+  haveI hp_prob : IsProbabilityMeasure p := hp.1
+  set M : ℝ := ∏ i, (Real.sqrt (2 * Real.pi * N i))⁻¹ with hM_def
+  have hM_nonneg : 0 ≤ M := by rw [hM_def]; positivity
+  -- upper bound on log f_Y(z) from the sup bound: `f_Y(z).toReal ≤ M`
+  have h_up : ∀ z : Fin n → ℝ,
+      Real.log ((parallelOutputMixtureDensity N p z).toReal) ≤ max (Real.log M) 0 := by
+    intro z
+    have h_le : (parallelOutputMixtureDensity N p z).toReal ≤ M := by
+      have h := parallelOutputMixtureDensity_le_sup N p z
+      rw [← hM_def] at h
+      calc (parallelOutputMixtureDensity N p z).toReal
+          ≤ (ENNReal.ofReal M).toReal := ENNReal.toReal_mono ENNReal.ofReal_ne_top h
+        _ = M := ENNReal.toReal_ofReal hM_nonneg
+    rcases le_or_gt (parallelOutputMixtureDensity N p z).toReal 0 with h0 | h0
+    · have : (parallelOutputMixtureDensity N p z).toReal = 0 :=
+        le_antisymm h0 ENNReal.toReal_nonneg
+      rw [this, Real.log_zero]; exact le_max_right _ _
+    · exact le_trans (Real.log_le_log h0 h_le) (le_max_left _ _)
+  -- lower bound from Phase 3: `-log f_Y(z) ≤ a·∑zᵢ² + b`
+  obtain ⟨a, b, ha, h_low⟩ := parallelOutput_logDensity_lower_bound N p P hP hN hp
+  refine ⟨max (Real.log M) 0 + max b 0, a, ha, fun z => ?_⟩
+  rw [abs_le]
+  refine ⟨?_, ?_⟩
+  · have := h_low z
+    have hb : b ≤ max b 0 := le_max_left _ _
+    nlinarith [le_max_right (Real.log M) (0 : ℝ), Finset.sum_nonneg
+      (fun i (_ : i ∈ Finset.univ) => sq_nonneg (z i)),
+      mul_nonneg ha (Finset.sum_nonneg (fun i (_ : i ∈ Finset.univ) => sq_nonneg (z i)))]
+  · have := h_up z
+    nlinarith [le_max_right b (0 : ℝ), mul_nonneg ha
+      (Finset.sum_nonneg (fun i (_ : i ∈ Finset.univ) => sq_nonneg (z i)))]
+
 /-- Joint log-density integrability for the **correlated** output law.
 
-Unlike the per-coordinate marginal (#4), the joint output `μY` of a correlated input is
-*not* a product measure, so `μY.rnDeriv volume` does not factor into marginal rnDerivs and
-the 1-D AWGN Phase-6 template does not lift coordinate-wise. The integrability of
-`log ((μY.rnDeriv volume z).toReal)` over `μY` (= finiteness of the joint differential
-entropy integrand) for a general correlated Gaussian-smoothed output is the genuine
-`Fin n → ℝ` analogue of the 1-D mixture log-density wall.
+`log ((μY.rnDeriv volume z).toReal)` is integrable against `μY` (= finiteness of the joint
+differential entropy integrand) for the correlated Gaussian-smoothed output `μY`.
 
-**Reclassified to `plan:parallel-gaussian-converse-5-closure` (2026-05-29, independent
-honesty re-adjudication — overturns the prior `wall:multivariate-mi` verdict).** The earlier
-docstring asserted this was a *principled-impossible Mathlib wall* ("no multivariate
-mixture-density representation", "genuine Mathlib gap", "VERIFIED true Mathlib gap"). A fresh
-independent audit verbatim-reading the 1-D template proof finds that claim to be a
-**classification defect** (Mathlib-wall misuse: a big-but-mechanical self-build mislabelled as
-blocked). Two grounds:
+**GENUINELY CLOSED (2026-05-29, plan `parallel-gaussian-converse-5-closure`, 0 sorry).**
+Lift of the 1-D AWGN Phase-6 mixture log-density integrability to the coordinate product.
+The mixture-density representation
+`μY = volume.withDensity (fun z => ∫⁻ x, ∏ᵢ gaussianPDF (x i)(N i)(z i) ∂p)`
+(`parallelOutput_eq_withDensity_mixture`) is `p`-independent: Tonelli swaps the `∂p` average to
+the outside, and the noise fibre `Measure.pi (gaussianReal (x i)(N i))` equals
+`volume.withDensity (∏ᵢ gaussianPDF (x i)(N i)·)` via `pi_withDensity_fin` — so the
+correlated input imposes no obstruction (this overturns the earlier `wall:multivariate-mi`
+classification, which conflated "`μY.rnDeriv` does not factor into marginal rnDerivs" (TRUE)
+with "no mixture-density representation exists" (FALSE)). Closure: density representation
+(`parallelOutput_rnDeriv_ae_mixture`) + Gaussian upper bound
+(`parallelOutputMixtureDensity_le_sup`) + coordinate-box Chebyshev concentration
+(`parallel_concentration_box`) + Gaussian-tail lower bound
+(`parallelOutput_logDensity_lower_bound`) → quadratic envelope
+(`parallelOutputMixtureDensity_log_abs_le`) → finite-second-moment domination
+(`Integrable.mono'` against the per-coordinate output second moments).
 
-(1) **The mixture-density representation does NOT require input factorization — Tonelli is
-`p`-independent.** The 1-D `output_eq_withDensity_mixture`
-(`AwgnCapacityConverseMaxent.lean:368-406`, `@audit:ok`) proves
-`p ∗ 𝒩(0,N) = volume.withDensity (fun y => ∫⁻ x, gaussianPDF x N y ∂p)` from hypotheses
-`hN : N ≠ 0` and `[SFinite p]` ONLY — it never uses absolute continuity or factorization of
-`p`. `p` appears solely as the outer `∫⁻ ... ∂p`; the proof is `Measure.lintegral_conv`
-(Tonelli) + the Gaussian translation `gaussianReal_of_var_ne_zero` + `lintegral_lintegral_swap`
-(Fubini). The mixture density is a `p`-average of the *noise* density, which is AC; the input
-`p` stays as an integrating measure. The same argument lifts to `Fin n → ℝ`: the parallel
-noise fibre `Measure.pi (fun i => gaussianReal (x i) (N i))` equals
-`volume.withDensity (fun z => ∏ᵢ gaussianPDF (x i)(N i)(z i))` via the existing `@audit:ok`
-building block `pi_withDensity_fin` (`MultivariateDiffEntropy.lean:263`), so
-`μY = volume.withDensity (fun z => ∫⁻ x, ∏ᵢ gaussianPDF (x i)(N i)(z i) ∂p)` holds regardless
-of whether `p` is a product. The prior docstring conflated "`μY.rnDeriv` does not factor into
-marginal rnDerivs" (TRUE, because the input is correlated) with "no mixture-density
-representation exists" (FALSE — the `∫⁻ ∂p` form imposes no product structure on the input).
-The Phase-6a/6b envelope + concentration steps lift coordinate-wise (the per-coordinate
-Gaussian envelope of the product density, plus the marginal second-moment constraints already
-established for #8/#9). Estimated ~180-270 lines, mechanical.
-
-(2) **Slug semantic mismatch.** The registered `wall:multivariate-mi` (audit-tags.md:62) means
-the continuous `mutualInfo_pi_eq_sum` MI-additivity identity `I(X^n;Y^n) = ∑ I(X_i;Y_i)`. This
-declaration is a joint **log-density integrability** claim (finiteness of the joint differential
-entropy integrand), semantically unrelated to MI additivity. The wall slug was borrowed, not
-matched.
-
-Signature is HONEST and unchanged: a clean `Integrable` claim with regularity-only
-preconditions (`0 ≤ P` / `hN` / `hp`) — no load-bearing hypothesis, no conclusion-bundle, no
-circularity. The defect was purely in classification (tier-5 mathlib-wall-misuse), not in the
-signature; the honest sorry is reclassified to a tier-2 plan-deferred residual. Closure plan:
-`docs/shannon/parallel-gaussian-converse-5-closure-plan.md` (M0 = this re-adjudication gate);
-API inventory: `docs/shannon/parallel-gaussian-converse-multivariate-mi-api-inventory.md`.
-@residual(plan:parallel-gaussian-converse-5-closure) -/
+Signature is a clean `Integrable` claim with regularity-only preconditions
+(`0 ≤ P` / `hN` / `hp`) — no load-bearing hypothesis, no conclusion-bundle, no circularity.
+`#print axioms` = [propext, Classical.choice, Quot.sound] (sorryAx-free). Pending independent
+honesty audit for the `@audit:ok` tag. -/
 theorem parallelOutput_joint_logDensity_integrable (P : ℝ) (hP : 0 ≤ P)
     (hN : ∀ i, (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     Integrable
@@ -1108,7 +1456,52 @@ theorem parallelOutput_joint_logDensity_integrable (P : ℝ) (hP : 0 ≤ P)
         ((outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)).rnDeriv
           volume z).toReal)
       (outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)) := by
-  sorry
+  classical
+  haveI hp_prob : IsProbabilityMeasure p := hp.1
+  set q := outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas) with hq_def
+  set fY := parallelOutputMixtureDensity N p with hfY_def
+  -- `q ≪ volume` and `q.rnDeriv vol =ᵐ[q] fY`
+  have hq_ac : q ≪ (volume : Measure (Fin n → ℝ)) :=
+    parallelOutput_absolutelyContinuous_volume N h_meas h_parallel_meas p hN
+  have h_rn_ae_q : q.rnDeriv volume =ᵐ[q] fY :=
+    hq_ac.ae_le (parallelOutput_rnDeriv_ae_mixture N h_meas h_parallel_meas p hN)
+  -- quadratic abs bound on `log fY` (Phase 4)
+  obtain ⟨c₀, c₁, hc₁, h_abs⟩ := parallelOutputMixtureDensity_log_abs_le N p P hP hN hp
+  -- each coordinate second moment is integrable against `q`
+  have h_q_coord_sq : ∀ i, Integrable (fun z : Fin n → ℝ => (z i) ^ 2) q := by
+    intro i
+    have hmeas_i : Measurable (fun z : Fin n → ℝ => z i) := measurable_pi_apply i
+    -- push to the marginal `q.map (· i)`, which has finite second moment
+    have h_marg_sq : Integrable (fun y : ℝ => y ^ 2) (q.map (fun z => z i)) := by
+      -- finite-second-moment ⇒ integrable on the marginal (1-D AWGN output law)
+      rw [hq_def, parallelOutput_marginal_eq_awgn_output N h_meas h_parallel_meas p i]
+      have h_mem : p.map (fun z => z i) ∈ AWGN.awgnPowerConstraintSet P :=
+        parallelMarginal_mem_awgnPowerConstraintSet p P hp i
+      haveI : IsProbabilityMeasure (p.map (fun z => z i)) :=
+        Measure.isProbabilityMeasure_map hmeas_i.aemeasurable
+      obtain ⟨hp_int, _⟩ := AWGN.awgnPowerConstraintSet_mem_iff_integrable P hP _ h_mem
+      have h_pi_sq : Integrable (fun y : ℝ => y ^ 2) (p.map (fun z => z i)) := hp_int
+      have h_sq0 := InformationTheory.Shannon.AWGN.output_sq_sub_integrable
+        (AWGN.isAwgnChannelMeasurable (N i)) (by exact_mod_cast hN i)
+        (p.map (fun z => z i)) h_pi_sq 0
+      refine h_sq0.congr (Filter.Eventually.of_forall (fun y => ?_))
+      simp
+    rw [show (fun z : Fin n → ℝ => (z i) ^ 2) = (fun y : ℝ => y ^ 2) ∘ (fun z => z i) from rfl,
+      ← integrable_map_measure (by fun_prop) hmeas_i.aemeasurable]
+    exact h_marg_sq
+  -- the quadratic `c₀ + c₁·∑ᵢ zᵢ²` is integrable against `q`
+  have h_sum_sq : Integrable (fun z : Fin n → ℝ => ∑ i, (z i) ^ 2) q :=
+    integrable_finsetSum _ (fun i _ => h_q_coord_sq i)
+  have h_dom_q : Integrable (fun z : Fin n → ℝ => c₀ + c₁ * ∑ i, (z i) ^ 2) q :=
+    (integrable_const c₀).add (h_sum_sq.const_mul c₁)
+  -- dominate `log (rnDeriv)` by `c₀ + c₁·∑zᵢ²`
+  refine Integrable.mono' h_dom_q ?_ ?_
+  · have h_rn_meas : Measurable (fun z => (q.rnDeriv volume z).toReal) :=
+      (Measure.measurable_rnDeriv q volume).ennreal_toReal
+    exact (Real.measurable_log.comp h_rn_meas).aestronglyMeasurable
+  · filter_upwards [h_rn_ae_q] with z hz
+    rw [Real.norm_eq_abs, hz, hfY_def]
+    exact h_abs z
 
 /-- **Fibre product-entropy identity.** Each fibre is a coordinate product of Gaussians,
 so its joint differential entropy is the coordinate sum of Gaussian entropies, each
