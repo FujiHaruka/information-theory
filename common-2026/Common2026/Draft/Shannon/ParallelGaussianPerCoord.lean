@@ -1,6 +1,7 @@
 import Common2026.Shannon.ParallelGaussian
 import Common2026.Shannon.ParallelGaussianKKT
 import Common2026.Draft.Shannon.ContChannelMIDecomp
+import Common2026.Shannon.AWGNMIClosedForm
 import Common2026.Shannon.DifferentialEntropy
 import Common2026.Draft.Shannon.MultivariateDiffEntropy
 import Common2026.Shannon.MIChainRule
@@ -800,26 +801,77 @@ theorem parallelGaussian_achiever_mi_eq_sum_perChannel {n : ℕ}
   rw [ENNReal.toReal_sum (fun i _ => awgn_mutualInfoOfChannel_ne_top (N i) (hN i) (h_meas i) (Q i))]
 
 open Common2026.Shannon InformationTheory.Shannon.AWGN in
+/-- **Per-coordinate AWGN MI closed form (genuine, all variances).** For a single
+AWGN sub-channel, the Gaussian-input mutual information equals
+`(1/2)·log(1 + Q/N)`, with no positivity hypothesis on the input variance `Q`.
+
+* `Q ≠ 0` branch: delegates to the hypothesis-free, sorryAx-free closed form
+  `AWGN.mutualInfoOfChannel_gaussianInput_closed_form'` (cast `Q : ℝ≥0` through
+  `Real.toNNReal_coe`).
+* `Q = 0` branch (deterministic input `gaussianReal 0 0 = dirac 0`): the joint
+  `dirac 0 ⊗ₘ W` coincides with the product `(dirac 0) ×ₘ output`, so `klDiv_self`
+  gives MI `= 0`; the RHS is `(1/2)·log(1 + 0/N) = (1/2)·log 1 = 0`. Genuine. -/
+theorem awgn_perCoord_mi_closed_form (Q N : ℝ≥0) (hN : N ≠ 0)
+    (h_meas : IsAwgnChannelMeasurable N) :
+    (mutualInfoOfChannel (gaussianReal 0 Q) (awgnChannel N h_meas)).toReal
+      = (1/2) * Real.log (1 + (Q : ℝ) / (N : ℝ)) := by
+  by_cases hQ : Q = 0
+  · -- deterministic input: gaussianReal 0 0 = dirac 0, joint = product ⇒ MI = 0.
+    subst hQ
+    rw [NNReal.coe_zero, zero_div, add_zero, Real.log_one, mul_zero]
+    -- MI = klDiv (dirac 0 ⊗ₘ W) ((dirac 0) ×ₘ output) = klDiv_self = 0.
+    have h_joint_eq :
+        jointDistribution (gaussianReal 0 0) (awgnChannel N h_meas)
+          = (gaussianReal 0 0).prod
+              (outputDistribution (gaussianReal 0 0) (awgnChannel N h_meas)) := by
+      rw [ProbabilityTheory.gaussianReal_zero_var]
+      -- LHS: dirac 0 ⊗ₘ W = (W 0).map (Prod.mk 0); RHS: dirac.prod = map (Prod.mk 0) ∘ snd.
+      have hW : awgnChannel N h_meas 0 = gaussianReal 0 N := rfl
+      rw [jointDistribution, outputDistribution, jointDistribution]
+      rw [Measure.dirac_prod]
+      -- both sides are `(W 0).map (Prod.mk 0)`.
+      have h_compProd :
+          (Measure.dirac (0 : ℝ)) ⊗ₘ (awgnChannel N h_meas)
+            = ((awgnChannel N h_meas) 0).map (Prod.mk 0) := by
+        ext s hs
+        rw [MeasureTheory.Measure.dirac_compProd_apply hs,
+          Measure.map_apply measurable_prodMk_left hs]
+      rw [h_compProd,
+        show (Prod.mk (0 : ℝ)) = (fun y : ℝ => ((fun _ : ℝ => (0 : ℝ)) y, id y)) from rfl,
+        Measure.snd_map_prodMk (measurable_const), Measure.map_id]
+    rw [mutualInfoOfChannel_def, h_joint_eq, InformationTheory.klDiv_self,
+      ENNReal.toReal_zero]
+  · -- Q ≠ 0: the hypothesis-free closed form with P := (Q : ℝ) > 0.
+    have hQpos : (0 : ℝ) < (Q : ℝ) := by
+      rw [NNReal.coe_pos]; exact pos_iff_ne_zero.mpr hQ
+    have hN' : (N : ℝ) ≠ 0 := NNReal.coe_ne_zero.mpr hN
+    have hQ_cast : ((Q : ℝ)).toNNReal = Q := Real.toNNReal_coe
+    have h := AWGN.mutualInfoOfChannel_gaussianInput_closed_form' (Q : ℝ) hQpos N hN' h_meas
+    rw [hQ_cast] at h
+    exact h
+
+open Common2026.Shannon InformationTheory.Shannon.AWGN in
 /-- **`achiever_mi` genuine reduction (L-PG1 Phase 2).** The achiever MI value
 equals the per-coordinate water-filling sum, assembled from the genuine
 structural per-channel decomposition `parallelGaussian_achiever_mi_eq_sum_perChannel`
 (shared `wall:multivariate-mi`) and the per-coordinate AWGN closed form
-`h_perCoordMI` (analytic AWGN residual, shared with the AWGN-MI plan).
+`awgn_perCoord_mi_closed_form` (discharged in-body via the hypothesis-free closed
+form `AWGN.mutualInfoOfChannel_gaussianInput_closed_form'`, no load-bearing hyp).
 
 This discharges `IsParallelGaussianPerCoordRegularity.achiever_mi` from honest
-per-coordinate pieces rather than the bundled sum equality. -/
+per-coordinate pieces rather than the bundled sum equality. Fully genuine
+(0 sorry / 0 @residual on the achiever side; only the `bddAbove` / `max_ent`
+fields retain `wall:multivariate-mi`). -/
 theorem parallelGaussianCapacity_achiever_mi {n : ℕ}
     (Q : Fin n → ℝ≥0) (N : Fin n → ℝ≥0) (hN : ∀ i, N i ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
-    (h_parallel_meas : IsParallelGaussianKernelMeasurable N)
-    (h_perCoordMI : ∀ i,
-      (mutualInfoOfChannel (gaussianReal 0 (Q i)) (awgnChannel (N i) (h_meas i))).toReal
-        = (1/2) * Real.log (1 + (Q i : ℝ) / (N i : ℝ))) :
+    (h_parallel_meas : IsParallelGaussianKernelMeasurable N) :
     (mutualInfoOfChannel (gaussianProductInput Q)
         (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
       = ∑ i : Fin n, (1/2) * Real.log (1 + (Q i : ℝ) / (N i : ℝ)) := by
   rw [parallelGaussian_achiever_mi_eq_sum_perChannel Q N hN h_meas h_parallel_meas]
-  exact Finset.sum_congr rfl (fun i _ => h_perCoordMI i)
+  exact Finset.sum_congr rfl
+    (fun i _ => awgn_perCoord_mi_closed_form (Q i) (N i) (hN i) (h_meas i))
 
 /-- Backward-compatible alias for the genuine headline
 `parallel_gaussian_capacity_formula` (was the `_discharged` re-publish name). -/
