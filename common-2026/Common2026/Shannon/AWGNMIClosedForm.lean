@@ -6,10 +6,12 @@ import Common2026.Draft.Shannon.ContChannelMIDecomp
 
 [awgn-mi-closed-form-relocation-plan.md](../../docs/shannon/awgn-mi-closed-form-relocation-plan.md).
 
-This file hosts the hypothesis-free successor of the `h_bridge`-form
-`mutualInfoOfChannel_gaussianInput_closed_form` (`AWGN.lean:125`). The old form
-took the textbook identity `I = h(P+N) − h(N)` as an opaque load-bearing
-hypothesis `h_bridge`; the genuine machinery that discharges it lives strictly
+This file hosts the hypothesis-free Gaussian-input MI closed form. The old
+`h_bridge`-form wrapper `AWGN.mutualInfoOfChannel_gaussianInput_closed_form`
+(took the textbook identity `I = h(P+N) − h(N)` as an opaque load-bearing
+hypothesis `h_bridge`) has been **retired**; its log-algebra was inlined into
+`AWGNMIBridge.awgn_mi_gaussian_closed_form_of_primitives`, where the bridge is
+genuinely discharged. The genuine machinery that discharges the bridge lives strictly
 **downstream** of `AWGN.lean` (the MI-decomposition wall in `AwgnWalls.lean`, the
 output-Gaussian bind/conv bridge in `AWGNBindConvBody.lean`, and the assembled
 `awgn_mi_gaussian_closed_form_of_out` in `ContChannelMIDecomp.lean`), so the
@@ -37,8 +39,9 @@ open scoped ENNReal NNReal
 The former transitive dependency on the shared MI-decomposition wall
 `contChannelMIDecomp_holds` has been retired (closed 2026-05-28: the generic body
 `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` is now genuine), so this is now a
-genuine closed form. Hypothesis-free successor of the `h_bridge`-form
-`mutualInfoOfChannel_gaussianInput_closed_form` (`AWGN.lean`). -/
+genuine closed form. The old `h_bridge`-form wrapper in `AWGN.lean` has been
+retired (its log-algebra inlined into
+`AWGNMIBridge.awgn_mi_gaussian_closed_form_of_primitives`). -/
 @[entry_point]
 theorem mutualInfoOfChannel_gaussianInput_closed_form'
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)

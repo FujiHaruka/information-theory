@@ -100,8 +100,8 @@ theorem outputDistribution_awgn_eq_conv
 
 /-- (#6) The capacity log-algebra step:
 `(1/2)log(2πe(P+N)) − (1/2)log(2πeN) = (1/2)log(1+P/N)`.
-Follows the in-tree `mutualInfoOfChannel_gaussianInput_closed_form` algebra
-(`AWGN.lean:176-191`). -/
+Follows the in-tree Gaussian-input MI closed-form log-algebra (same step inlined
+in `AWGNMIBridge.awgn_mi_gaussian_closed_form_of_primitives`). -/
 theorem capacity_log_diff (hP : 0 < P) (hN : (N : ℝ) ≠ 0) :
     (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * (P + (N : ℝ)))
         - (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ))

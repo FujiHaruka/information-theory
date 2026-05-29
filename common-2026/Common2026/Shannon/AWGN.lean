@@ -25,8 +25,10 @@ coding theorem to the additive white Gaussian noise channel.
 ## 撤退ライン (本 file で発動)
 
 * **F-2 (MI bridge)**: `mutualInfoOfChannel (gaussianReal 0 P) (awgnChannel N)
-  = h(Y) - h(Z)` の bridge は hypothesis として外出し
-  (`mutualInfoOfChannel_gaussianInput_closed_form` の `h_bridge` 引数)。
+  = h(Y) - h(Z)` の bridge は下流で genuine に discharge 済
+  (`AWGNMIBridge.awgn_mi_bridge_of_primitives`)。closed-form の log-algebra は
+  `AWGNMIBridge.awgn_mi_gaussian_closed_form_of_primitives` に inline 済 (旧
+  `mutualInfoOfChannel_gaussianInput_closed_form` h_bridge-form wrapper は retire)。
 * **F-1 / F-3**: 主定理 `awgn_channel_coding_theorem` の signature で
   `IsAwgnTypicalityHypothesis` / `IsAwgnConverseIntegrableHyp` を pass-through。
 * **F-4 (kernel measurability)**: `awgnChannel` の `measurable'` field —
@@ -107,90 +109,6 @@ noncomputable def AwgnCode.toCode {M n : ℕ} {P : ℝ} (c : AwgnCode M n P) :
     InformationTheory.Shannon.ChannelCoding.Code M n ℝ ℝ where
   encoder := c.encoder
   decoder := c.decoder
-
-/-! ## D.3 — `mutualInfo` closed form for Gaussian-input AWGN (F-2 hypothesis form) -/
-
-/-- (撤退ライン F-2 hypothesis form) Closed form of the channel mutual information
-for the AWGN channel with Gaussian input. We require the textbook identity
-`I = h(Y) - h(Z)` as a hypothesis `h_bridge` (here `Y ∼ 𝒩(0, P+N)`,
-`Z ∼ 𝒩(0, N)`); from there the right-hand side reduces to `(1/2) log(1+P/N)` by
-pure `differentialEntropy_gaussianReal` algebra.
-
-Discharging `h_bridge` (= "`mutualInfoOfChannel` (KL form) = `h(Y) - h(Y|X)`"
-for AWGN) is deferred to the follow-up plan
-`docs/shannon/awgn-mi-bridge-plan.md`.
-
-The hypothesis-free successor `mutualInfoOfChannel_gaussianInput_closed_form'`
-lives in `AWGNMIClosedForm.lean` (takes no `h_bridge`). The capacity closed form is
-now genuinely proven downstream
-(`AwgnCapacityConverseMaxent.awgn_capacity_closed_form_genuine`, 0 sorry / 0 residual);
-this `h_bridge`-form remains a load-bearing wrapper pending a separate sorry-based
-migration sweep (see retract-candidate marker below).
-
-NOTE (honesty audit 2026-05-28): `h_bridge` here remains a **load-bearing
-hypothesis** — it asserts the textbook identity `I.toReal = h(P+N) − h(N)` that
-the theorem claims to derive, and the body merely `rw [h_bridge]` + Gaussian
-log-algebra (axiom profile has no `sorryAx`: the substance lives entirely in the
-hypothesis). `@audit:superseded-by` records the successor; the retract-candidate
-marker records that this wrapper is itself not honest-complete (load-bearing hyp,
-new-policy sorry-based migration pending) and is kept only for its active consumer
-`awgn_mi_gaussian_closed_form_of_primitives` (`AWGNMIBridge.lean:281`).
-
-`@audit:superseded-by(mutualInfoOfChannel_gaussianInput_closed_form')` @audit:retract-candidate(load-bearing-predicate) -/
-@[entry_point]
-theorem mutualInfoOfChannel_gaussianInput_closed_form
-    (P N : ℝ≥0) (hP : (P : ℝ) ≠ 0) (hN : (N : ℝ) ≠ 0)
-    (h_meas : IsAwgnChannelMeasurable N)
-    (h_bridge :
-        (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
-            (gaussianReal 0 P) (awgnChannel N h_meas)).toReal
-          = Common2026.Shannon.differentialEntropy (gaussianReal 0 (P + N))
-              - Common2026.Shannon.differentialEntropy (gaussianReal 0 N)) :
-    (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
-        (gaussianReal 0 P) (awgnChannel N h_meas)).toReal
-      = (1/2) * Real.log (1 + (P : ℝ) / (N : ℝ)) := by
-  -- Step 1: rewrite MI as h(P+N) - h(N) via the bridge hypothesis.
-  rw [h_bridge]
-  -- Step 2: discharge both entropies via `differentialEntropy_gaussianReal`.
-  have hPN_NN : P + N ≠ 0 := by
-    intro h
-    have hP0 : (P : ℝ) = 0 := by
-      have hPnn : (0 : ℝ) ≤ P := P.coe_nonneg
-      have hNnn : (0 : ℝ) ≤ N := N.coe_nonneg
-      have hsum : (P : ℝ) + N = 0 := by exact_mod_cast (congrArg (fun x : ℝ≥0 => (x : ℝ)) h)
-      linarith
-    exact hP hP0
-  have hN_NN : N ≠ 0 := fun h => hN (by exact_mod_cast (congrArg (fun x : ℝ≥0 => (x : ℝ)) h))
-  rw [Common2026.Shannon.differentialEntropy_gaussianReal 0 hPN_NN,
-      Common2026.Shannon.differentialEntropy_gaussianReal 0 hN_NN]
-  -- Step 3: pure log algebra: (1/2)[log(2πe(P+N)) - log(2πeN)] = (1/2) log((P+N)/N)
-  --                          = (1/2) log(1 + P/N).
-  have hN_pos : (0 : ℝ) < N := by
-    have : (N : ℝ) ≥ 0 := N.coe_nonneg
-    exact lt_of_le_of_ne this (Ne.symm hN)
-  have hP_pos : (0 : ℝ) < P := by
-    have : (P : ℝ) ≥ 0 := P.coe_nonneg
-    exact lt_of_le_of_ne this (Ne.symm hP)
-  have hPN_pos : (0 : ℝ) < (P : ℝ) + (N : ℝ) := by linarith
-  have hPN_coe : ((P + N : ℝ≥0) : ℝ) = (P : ℝ) + (N : ℝ) := by push_cast; ring
-  have h2πe : (0 : ℝ) < 2 * Real.pi * Real.exp 1 := by positivity
-  -- (1/2) log(2πe(P+N)) - (1/2) log(2πeN) = (1/2) log((2πe(P+N))/(2πeN)) = (1/2) log((P+N)/N)
-  have h_log_diff :
-      (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * ((P + N : ℝ≥0) : ℝ))
-        - (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ))
-      = (1/2) * Real.log (((P : ℝ) + N) / (N : ℝ)) := by
-    rw [hPN_coe]
-    have h_num : (0 : ℝ) < 2 * Real.pi * Real.exp 1 * ((P : ℝ) + N) := by positivity
-    have h_den : (0 : ℝ) < 2 * Real.pi * Real.exp 1 * (N : ℝ) := by positivity
-    rw [← mul_sub]
-    congr 1
-    rw [← Real.log_div h_num.ne' h_den.ne']
-    congr 1
-    field_simp
-  rw [h_log_diff]
-  -- ((P + N)/N) = 1 + P/N
-  congr 1
-  rw [show ((P : ℝ) + N) / (N : ℝ) = 1 + (P : ℝ) / (N : ℝ) by field_simp; ring]
 
 /-! ## D.2 — `awgnPowerConstraintSet` + `awgnCapacity P N` -/
 

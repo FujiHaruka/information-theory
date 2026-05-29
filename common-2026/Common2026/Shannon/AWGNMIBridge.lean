@@ -249,11 +249,15 @@ theorem awgn_theorem_F2_discharged
 
 /-! ## Phase F — Capacity closed form (3-primitive form) -/
 
-/-- **Closed-form Gaussian MI** from primitives + `mutualInfoOfChannel_gaussianInput_closed_form`.
+/-- **Closed-form Gaussian MI** from primitives.
 
-Combines the 3 primitives into the bridge, then runs the Gaussian closed-form
-algebra (`mutualInfoOfChannel_gaussianInput_closed_form` from `AWGN.lean`) to
-produce the `(1/2) log(1 + P/N)` value used by `awgnCapacity_eq`.
+Combines the 3 primitives into the bridge (`awgn_mi_bridge_of_primitives`), then
+runs the Gaussian closed-form `differentialEntropy_gaussianReal` log-algebra
+**inline** to produce the `(1/2) log(1 + P/N)` value used by `awgnCapacity_eq`.
+The algebra was formerly the load-bearing wrapper
+`AWGN.mutualInfoOfChannel_gaussianInput_closed_form` (took the bridge identity as
+a hypothesis `h_bridge`); that wrapper has been retired and its body inlined here,
+where `h_mi_bridge` is genuinely discharged from primitives.
 
 `@audit:closed-by-successor(awgn-mi-decomp-plan)` -/
 @[entry_point]
@@ -271,18 +275,52 @@ theorem awgn_mi_gaussian_closed_form_of_primitives
     awgn_cond_entropy_eq_noise_entropy_of_const P N hN_NN h_meas
   have h_mi_bridge :=
     awgn_mi_bridge_of_primitives P N h_meas h_out h_decomp h_cond
-  -- Now apply the AWGN.lean Gaussian-input closed form.
-  -- It expects parameters `P N : ℝ≥0` with both nonzero coercions; we use `P.toNNReal`.
-  have hP_toNN_ne : ((P.toNNReal : ℝ≥0) : ℝ) ≠ 0 := by
-    rw [Real.coe_toNNReal P hP_pos.le]; exact hP_pos.ne'
-  -- Bridge from `(P.toNNReal + N : ℝ≥0)` ↔ `(P.toNNReal + N : ℝ≥0)` (same expression);
-  -- need to convert: AWGN closed-form expects `(P.toNNReal : ℝ) / (N : ℝ)` form, which
-  -- equals `P / N` after `coe_toNNReal`.
-  have h_alg := mutualInfoOfChannel_gaussianInput_closed_form
-      P.toNNReal N hP_toNN_ne hN h_meas h_mi_bridge
-  -- Rewrite `(P.toNNReal : ℝ)` ↦ `P` on the RHS.
-  rw [Real.coe_toNNReal P hP_pos.le] at h_alg
-  exact h_alg
+  -- Inlined Gaussian-input closed-form algebra (was the load-bearing wrapper
+  -- `AWGN.mutualInfoOfChannel_gaussianInput_closed_form`, now retired). `h_mi_bridge`
+  -- is genuinely constructed above from `awgn_mi_bridge_of_primitives`, so the
+  -- remaining steps are pure `differentialEntropy_gaussianReal` log-algebra.
+  -- `(P.toNNReal : ℝ) = P` from positivity.
+  have hP_toNN : ((P.toNNReal : ℝ≥0) : ℝ) = P := Real.coe_toNNReal P hP_pos.le
+  -- Step 1: rewrite MI as h(P+N) - h(N) via the bridge identity.
+  rw [h_mi_bridge]
+  -- Step 2: discharge both entropies via `differentialEntropy_gaussianReal`.
+  have hPN_NN : P.toNNReal + N ≠ 0 := by
+    intro h
+    have hP0 : (P.toNNReal : ℝ) = 0 := by
+      have hPnn : (0 : ℝ) ≤ (P.toNNReal : ℝ≥0) := (P.toNNReal).coe_nonneg
+      have hNnn : (0 : ℝ) ≤ N := N.coe_nonneg
+      have hsum : ((P.toNNReal : ℝ≥0) : ℝ) + N = 0 := by
+        exact_mod_cast (congrArg (fun x : ℝ≥0 => (x : ℝ)) h)
+      linarith
+    rw [hP_toNN] at hP0
+    exact hP_pos.ne' hP0
+  rw [Common2026.Shannon.differentialEntropy_gaussianReal 0 hPN_NN,
+      Common2026.Shannon.differentialEntropy_gaussianReal 0 hN_NN]
+  -- Step 3: pure log algebra: (1/2)[log(2πe(P+N)) - log(2πeN)] = (1/2) log((P+N)/N)
+  --                          = (1/2) log(1 + P/N).
+  have hN_pos : (0 : ℝ) < N := by
+    have : (N : ℝ) ≥ 0 := N.coe_nonneg
+    exact lt_of_le_of_ne this (Ne.symm hN)
+  have hPN_pos : (0 : ℝ) < P + (N : ℝ) := by linarith [N.coe_nonneg]
+  have hPN_coe : ((P.toNNReal + N : ℝ≥0) : ℝ) = P + (N : ℝ) := by
+    push_cast [hP_toNN]; ring
+  have h_2pe : (0 : ℝ) < 2 * Real.pi * Real.exp 1 := by positivity
+  have h_log_diff :
+      (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * ((P.toNNReal + N : ℝ≥0) : ℝ))
+        - (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ))
+      = (1/2) * Real.log ((P + N) / (N : ℝ)) := by
+    rw [hPN_coe]
+    have h_num : (0 : ℝ) < 2 * Real.pi * Real.exp 1 * (P + N) := mul_pos h_2pe hPN_pos
+    have h_den : (0 : ℝ) < 2 * Real.pi * Real.exp 1 * (N : ℝ) := mul_pos h_2pe hN_pos
+    rw [← mul_sub]
+    congr 1
+    rw [← Real.log_div h_num.ne' h_den.ne']
+    congr 1
+    field_simp
+  rw [h_log_diff]
+  -- ((P + N)/N) = 1 + P/N
+  congr 1
+  rw [show (P + N) / (N : ℝ) = 1 + P / (N : ℝ) by field_simp; ring]
 
 /-- **AWGN capacity closed form** (F-1 + F-2 partially discharged form).
 
