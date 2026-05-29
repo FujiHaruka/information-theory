@@ -458,7 +458,8 @@ version of `n`-variate Fubini (`lintegral_fin_nat_prod_eq_prod`), which is the
 `Measure.pi μ` over `Fin n`, the integral of a product of single-coordinate
 functions equals the product of the per-coordinate integrals. This is the
 `ℝ≥0∞` analogue of Mathlib's `MeasureTheory.integral_fin_nat_prod_eq_prod`,
-proved by the same `measurePreserving_piFinSuccAbove` induction. -/
+proved by the same `measurePreserving_piFinSuccAbove` induction.
+@audit:ok -/
 theorem lintegral_fin_nat_prod_eq_prod {n : ℕ} {E : Fin n → Type*}
     {mE : ∀ i, MeasurableSpace (E i)} (μ : (i : Fin n) → Measure (E i))
     [∀ i, SigmaFinite (μ i)] (f : (i : Fin n) → E i → ℝ≥0∞)
@@ -498,7 +499,8 @@ open Common2026.Shannon InformationTheory.Shannon.AWGN in
 The channel joint `gaussianProductInput Q ⊗ₘ parallelGaussianChannel N` factors as
 the `Measure.pi` of the per-coordinate joints `gaussianReal 0 (Qᵢ) ⊗ₘ awgnChannel Nᵢ`,
 reshaped by `arrowProdEquivProdArrow`. Proved on boxes via `Measure.pi_eq`,
-`compProd_apply_prod`, `pi_pi`, and the `lintegral` Fubini above. -/
+`compProd_apply_prod`, `pi_pi`, and the `lintegral` Fubini above.
+@audit:ok -/
 theorem gaussianProductInput_compProd_parallelGaussianChannel_eq_pi {n : ℕ}
     (Q : Fin n → ℝ≥0) (N : Fin n → ℝ≥0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -581,7 +583,8 @@ Genuine content: `mutualInfo_pi_eq_sum` (genuine) applied to the RV form of both
 sides, with the `compProd`-of-`Measure.pi` factorization
 `gaussianProductInput_compProd_parallelGaussianChannel_eq_pi` (self-built above,
 multivariate Tonelli via `lintegral_fin_nat_prod_eq_prod`) supplying the three
-i.i.d. factorization hypotheses. -/
+i.i.d. factorization hypotheses.
+@audit:ok -/
 theorem parallelGaussian_achiever_mi_eq_sum_perChannel_enn {n : ℕ}
     (Q : Fin n → ℝ≥0) (N : Fin n → ℝ≥0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
@@ -686,15 +689,31 @@ open Common2026.Shannon InformationTheory.Shannon.AWGN in
 Gaussian input through a single AWGN channel is a finite ENNReal (`≠ ⊤`).
 
 Genuinely this is `klDiv_ne_top` applied to the Gaussian-through-AWGN joint
-`gaussianReal 0 P ⊗ₘ awgnChannel N` against the product of its marginals, which
-needs the absolute continuity and llr integrability of the AWGN channel — the same
-analytic content the AWGN single-channel MI closed form
-(`AWGNMIBridge.awgn_mi_gaussian_closed_form_of_primitives`, via the load-bearing
-`IsAwgnOutputGaussian` / `IsAwgnMIDecomp` predicates) carries. Isolated here so the
+`gaussianReal 0 P ⊗ₘ awgnChannel N` against the product of its marginals. By
+`InformationTheory.klDiv_ne_top_iff` this needs `jointDistribution ≪ p.prod
+(outputDistribution …)` AND `Integrable (llr …) jointDistribution` — finiteness of
+probability measures alone is NOT enough, the llr integrability is genuine analytic
+content. Isolated here as its own sorry lemma (shared-sorry-lemma pattern) so the
 multivariate decomposition `parallelGaussian_achiever_mi_eq_sum_perChannel_enn`
 stays genuine.
 
-@residual(plan:awgn-mi-bridge-plan) -/
+Audit (2026-05-29, commit b1e57e8): NOT closeable for free from the genuine
+single-letter AWGN capacity `awgn_capacity_closed_form_genuine`
+(`AwgnCapacityConverseMaxent.lean`). That result and the underlying chain rule
+`mutualInfoOfChannel_toReal_eq_diffEntropy_sub` work entirely at the `.toReal`
+level via `toReal_klDiv_of_measure_eq` (absolute continuity only), so they never
+establish `klDiv ≠ ⊤` — `(⊤).toReal = 0` makes a `.toReal ≤ bound` compatible with
+`= ⊤`. Genuine residual.
+
+Classification corrected from the implementer's `plan:awgn-mi-bridge-plan`:
+`awgn-mi-bridge-plan.md` owns the MI = h(Y)−h(Y|X) *identity / closed form*, not
+finiteness (no `ne_top` / `klDiv` / finiteness clause in that plan). The owning
+plan is `parallel-gaussian-l-pg1-discharge-plan.md` (its step 5, "(軽) `.toReal` と
+`Finset.sum` の交換 — 各 per-coord channel MI が finite"). Note: the plan's "軽
+~15-25 行" estimate underweights the llr-integrability obligation; the single-AWGN
+joint llr integrability is genuine analytic content (same family as the AWGN MI
+density work), so this may merit promotion to a dedicated wall if it recurs.
+@residual(plan:parallel-gaussian-l-pg1-discharge-plan) -/
 theorem awgn_mutualInfoOfChannel_ne_top (N : ℝ≥0)
     (h_meas : InformationTheory.Shannon.AWGN.IsAwgnChannelMeasurable N) (P : ℝ≥0) :
     mutualInfoOfChannel (gaussianReal 0 P) (awgnChannel N h_meas) ≠ ⊤ := by
