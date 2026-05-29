@@ -236,3 +236,212 @@ n 変数版 (`Measure (Fin n → ℝ)`, 消費者要求形) は同 file に `joi
 - **推定行数**: 2 変数 genuine ~120-220 行 (中央 ~170)、n 変数 +50-100 行 (`pi_withDensity` 自作込み ~250-400)。
 - **必要 honest 仮定**: density `=ᵐ` split + integrability bundle (`ContChannelMIDecomp.lean:223` 手本と同型、新規でない / AWGN #5 と共有見込み) + 各 marginal `≪ volume`。
 - **最大 gap**: **`pi_withDensity` が Mathlib 不在** (`prod_withDensity` は存在)。n 変数 joint density = ∏ marginal density の橋がないため、n 変数を 2 変数 induction に帰着できるかが genuine/honest の分水嶺。**撤退ライン D-1 は 2 変数なら回避見込み、n 変数なら発動リスク高 (新規 D-1a/D-1b 提案)**。
+
+---
+
+## 2026-05-29 再調査 — n 変数 closure ゲート
+
+> **調査目的**: `jointDifferentialEntropyPi_le_sum` (n 変数 subadditivity, `MultivariateDiffEntropy.lean:257`) + その bridge `klDiv_pi_marginals_toReal_eq_sum_sub_joint` (L242) — 現状 sorry-routed (`@residual(plan:multivariate-diffentropy-subadditivity-plan)`) — が closeable か、generic `withDensity_map` 自作 1 件で genuine 化できるか、を loogle で authoritative に再判定する。
+>
+> **前回 (Wave 3) の停止点**: 案 A (2 変数 induction via `MeasurableEquiv.piFinSuccAbove`) を ~250 行試行 → reshape 各 step で **generic `withDensity_map`** (`(μ.withDensity g).map e = (μ.map e).withDensity (g ∘ e.symm)`) を要求、これが Mathlib 不在で停止。plan は「`Measure.ext` + `MeasurableEquiv.lintegral_map` で ~10 行自作可能」と評価。本調査はこの自作可否を verbatim 確認した。
+
+### 一行サマリ
+
+**closeable = (b) generic `withDensity_map` は Mathlib 不在だが自作 ~10-20 行で genuine 可能。** 5 つの命名候補 (`Measure.map_withDensity` / `MeasurableEquiv.map_withDensity` / `withDensity_map` / `MeasurableEmbedding.withDensity_map` / `MeasurableEmbedding.map_withDensity`) は**全て `unknown identifier` = 不在**。ただし rnDeriv 特化版 `MeasurableEmbedding.map_withDensity_rnDeriv` (`RadonNikodym.lean:537`) が **generic 版とほぼ同型の 5 行証明** (`ext` + `hf.map_apply` + `withDensity_apply` + `setLIntegral_map`) を持ち、これを density 一般 (rnDeriv でない) に脱特化すれば generic `withDensity_map` の自作テンプレートになる。自作部品 (`Measure.ext` / `lintegral_map` / `setLIntegral_map` / `withDensity_apply` / `MeasurableEquiv.map_apply`) は全て verbatim 存在。reshape 部品 (`measurePreserving_piFinSuccAbove` 等) も全て存在。**残り規模見積**: helper ~15-25 行 + 案 A induction 本体 ~120-200 行 = **closure 全体 ~150-250 行**。代替路 (rnDeriv-of-product 直接) は **`rnDeriv_prod` / `rnDeriv_pi` 双方 Mathlib 不在** (`Found 0`) のため案 A より重い (rnDeriv の積分解自体を自作することになる)。
+
+### 主定理の最終形 (再掲)
+
+```lean
+-- MultivariateDiffEntropy.lean:257 (sorry-routed)
+theorem jointDifferentialEntropyPi_le_sum
+    {n : ℕ} {μ : Measure (Fin n → ℝ)} [IsProbabilityMeasure μ]
+    [∀ i, IsProbabilityMeasure (μ.map (fun z => z i))]
+    (_h_marg_ac : ∀ i, (μ.map (fun z => z i)) ≪ volume)
+    (_hμ_ac : μ ≪ (volume : Measure (Fin n → ℝ)))
+    (_h_joint_ac : μ ≪ Measure.pi (fun i => μ.map (fun z => z i))) :
+    jointDifferentialEntropyPi μ ≤ ∑ i, differentialEntropy (μ.map (fun z => z i))
+```
+
+closure 戦略 (案 A, pseudo-Lean):
+
+```lean
+-- 自作 helper (generic withDensity_map, ~15-25 行, rnDeriv 版を脱特化):
+theorem withDensity_map_equiv (e : α ≃ᵐ β) {g : α → ℝ≥0∞} (hg : Measurable g) :
+    (μ.withDensity g).map e = (μ.map e).withDensity (g ∘ e.symm) := by
+  ext s hs
+  rw [e.map_apply, withDensity_apply _ (e.measurable hs), withDensity_apply _ hs,
+      setLIntegral_map hs (hg.comp e.symm.measurable) e.measurable]
+  -- ∫⁻ in e⁻¹'s, g ∂μ = ∫⁻ in e⁻¹'s, (g∘e.symm)(e ·) ∂μ  (e.symm ∘ e = id)
+  exact setLIntegral_congr_fun ... (by simp [Function.comp, e.symm_apply_apply])
+-- 案 A induction: Fin (n+1) → ℝ ≃ᵐ ℝ × (Fin n → ℝ) を piFinSuccAbove で reshape、
+-- 2 変数 _v2 (genuine 完成済) + 帰納仮定で h(Y₁..Yₙ₊₁) ≤ h(Y₁) + h(Y₂..Yₙ₊₁) を組む。
+```
+
+### API 在庫テーブル
+
+#### 1. generic `withDensity_map` 系 (最重要)
+
+| 命名候補 | loogle 結果 | file:line | 状態 / 扱い |
+|---|---|---|---|
+| `MeasureTheory.Measure.map_withDensity` | `unknown identifier` | — | ❌ 不在 |
+| `MeasurableEquiv.map_withDensity` | `unknown identifier` | — | ❌ 不在 |
+| `MeasureTheory.withDensity_map` | `unknown identifier` | — | ❌ 不在 |
+| `MeasurableEmbedding.withDensity_map` | `unknown identifier` | — | ❌ 不在 |
+| `MeasurableEmbedding.map_withDensity` | `unknown identifier` | — | ❌ 不在 |
+| 結論パターン `Measure.map (Measure.withDensity _ _) _` | **`Found 0`** (0 match) | — | ❌ **generic 版 authoritative 不在確認** |
+| 結論パターン `Measure.withDensity (Measure.map _ _) _` | `Found 11`, **1 match** | — | rnDeriv 版のみ (下記) |
+| **rnDeriv 特化版** `MeasurableEmbedding.map_withDensity_rnDeriv` | `Found 1` | `Mathlib/MeasureTheory/Measure/Decomposition/RadonNikodym.lean:537` | ✅ **存在 (脱特化テンプレート)** |
+
+`map_withDensity_rnDeriv` verbatim (`RadonNikodym.lean:537`):
+
+```lean
+lemma _root_.MeasurableEmbedding.map_withDensity_rnDeriv (hf : MeasurableEmbedding f)
+    (μ ν : Measure α) [SigmaFinite μ] [SigmaFinite ν] :
+    (ν.withDensity (μ.rnDeriv ν)).map f = (ν.map f).withDensity ((μ.map f).rnDeriv (ν.map f))
+```
+
+証明 body verbatim (`RadonNikodym.lean:540-544`, **5 行**):
+
+```lean
+  ext s hs
+  rw [hf.map_apply, withDensity_apply _ (hf.measurable hs), withDensity_apply _ hs,
+    setLIntegral_map hs (Measure.measurable_rnDeriv _ _) hf.measurable]
+  refine setLIntegral_congr_fun_ae (hf.measurable hs) ?_
+  filter_upwards [hf.rnDeriv_map μ ν] with a ha _ using ha.symm
+```
+
+> **判定**: generic `withDensity_map` 自体は不在 (5 命名候補 + 結論パターン全て negative)。だが rnDeriv 版の証明骨格 (`ext` → `map_apply` → `withDensity_apply` ×2 → `setLIntegral_map` → `setLIntegral_congr`) は **density を rnDeriv に固定していない** — 最後の `hf.rnDeriv_map` step (rnDeriv が map と可換) のみ rnDeriv 特化。generic 版では density `g` が任意なので、`setLIntegral_map` 後の被積分 `g (e.symm (e x))` を `e.symm_apply_apply` で `g x` に潰すだけ (rnDeriv_map より易しい)。**自作は rnDeriv 版より短くなる見込み**。`MeasurableEquiv` は `MeasurableEmbedding` (`f.measurableEmbedding`) なので前提も充足。
+
+#### 2. 自作経路の部品 (全て verbatim 存在)
+
+| 概念 | API (file:line) | signature `[...]` verbatim | 結論 verbatim | 状態 |
+|---|---|---|---|---|
+| 測度の外延性 | `MeasureTheory.Measure.ext` `Mathlib/MeasureTheory/Measure/MeasureSpaceDef.lean:143` | `(h : ∀ s, MeasurableSet s → μ₁ s = μ₂ s)` | `μ₁ = μ₂` | ✅ |
+| lintegral of map | `MeasureTheory.lintegral_map` `Mathlib/MeasureTheory/Integral/Lebesgue/Map.lean:27` | `{f : β → ℝ≥0∞} {g : α → β} (hf : Measurable f) (hg : Measurable g)` | `∫⁻ a, f a ∂map g μ = ∫⁻ a, f (g a) ∂μ` | ✅ (`MeasurableEquiv.lintegral_map` は不在だが本 generic 版で代用) |
+| set-lintegral of map | `MeasureTheory.setLIntegral_map` `Mathlib/MeasureTheory/Integral/Lebesgue/Map.lean:67` | `{f : β → ℝ≥0∞} {g : α → β} {s : Set β} (hs : MeasurableSet s) (hf : Measurable f) (hg : Measurable g)` | `∫⁻ y in s, f y ∂map g μ = ∫⁻ x in g ⁻¹' s, f (g x) ∂μ` | ✅ **rnDeriv 版が実際に使う step** |
+| withDensity の集合測度 | `MeasureTheory.withDensity_apply` `Mathlib/MeasureTheory/Measure/WithDensity.lean:45` | `(f : α → ℝ≥0∞) {s : Set α} (hs : MeasurableSet s)` | `μ.withDensity f s = ∫⁻ a in s, f a ∂μ` | ✅ |
+| map of MeasurableEquiv | `MeasureTheory.Measure.map_apply` (MeasurableEquiv) `Mathlib/MeasureTheory/Measure/Map.lean:302` | `(f : α ≃ᵐ β) (s : Set β)` | `μ.map f s = μ (f ⁻¹' s)` (`protected`) | ✅ (`:= f.measurableEmbedding.map_apply _ _`) |
+| map of Measurable (一般) | `MeasureTheory.Measure.map_apply` `Mathlib/MeasureTheory/Measure/Map.lean:160` | `(hf : Measurable f) {s : Set β} (hs : MeasurableSet s)` | `μ.map f s = μ (f ⁻¹' s)` | ✅ |
+| lintegral_withDensity (mul 形) | `MeasureTheory.lintegral_withDensity_eq_lintegral_mul` `Mathlib/MeasureTheory/Measure/WithDensity.lean:386` | `(μ : Measure α) {f : α → ℝ≥0∞} (hf : Measurable f) (hg : Measurable g)` (本文 hg 可測性付き) | `∫⁻ a, g a ∂μ.withDensity f = ∫⁻ a, (f * g) a ∂μ` | ✅ (本経路では不要だが density 積分表現として在庫) |
+
+**自作スケッチ (紙)**: `(μ.withDensity g).map e = (μ.map e).withDensity (g ∘ e.symm)`。`ext s hs` → LHS `= (μ.withDensity g) (e⁻¹'s)` (`MeasurableEquiv.map_apply` :302) `= ∫⁻ in e⁻¹'s, g ∂μ` (`withDensity_apply` :45)。RHS `= ∫⁻ in s, (g∘e.symm) ∂(μ.map e)` (`withDensity_apply` :45) `= ∫⁻ in e⁻¹'s, (g∘e.symm)(e x) ∂μ` (`setLIntegral_map` :67)。被積分 `(g∘e.symm)(e x) = g (e.symm (e x)) = g x` (`e.symm_apply_apply`)。両辺一致。**~15-25 行**。rnDeriv 版 (`:540-544`) は最後の congr が rnDeriv_map 経由で 1 step 重いだけ、generic 版はそれが `simp [e.symm_apply_apply]` で潰れる分むしろ短い。
+
+#### 3. `pi_withDensity` 直接版 (再確認 — 不在維持)
+
+| 命名候補 | loogle 結果 | 状態 |
+|---|---|---|
+| `MeasureTheory.Measure.pi_withDensity` | `unknown identifier` | ❌ 不在 (前回 `Found 0` 再確認) |
+| `MeasureTheory.withDensity_pi` | `unknown identifier` | ❌ 不在 |
+| `MeasureTheory.Measure.withDensity_pi` | (上と同 namespace) | ❌ 不在 |
+
+> 案 B (`pi_withDensity` 直接自作) は依然不在。前回判断ログの通り案 B も内部で generic `withDensity_map` を要求するため、**自作すべきは generic `withDensity_map` 1 本** (案 A のため)。`pi_withDensity` 全体を自作する必要はない。
+
+#### 4. rnDeriv-of-product 系 (代替路 — 不在で却下)
+
+| 命名候補 | loogle 結果 | 状態 / 扱い |
+|---|---|---|
+| `MeasureTheory.Measure.rnDeriv_prod` | `unknown identifier` | ❌ 不在 |
+| `MeasureTheory.Measure.rnDeriv_pi` | `unknown identifier` | ❌ 不在 |
+| 結論パターン `Measure.rnDeriv (Measure.prod _ _) _` | **`Found 0`** | ❌ **rnDeriv-of-product authoritative 不在** |
+
+> **代替路は案 A より重い**。bridge を density split 経由でなく rnDeriv-of-product 直接で組む路は、`rnDeriv (μ.prod ν)` / `rnDeriv (Measure.pi μs)` の積分解補題が双方不在のため、それ自体を自作することになる (rnDeriv は `prod_withDensity` のように直接の積公式を持たない)。案 A の generic `withDensity_map` 1 本より部品が多く却下。
+
+#### 5. reshape 部品 (全て verbatim 存在)
+
+| 概念 | API (file:line) | signature `[...]` verbatim | 結論 verbatim | 状態 |
+|---|---|---|---|---|
+| Fin(n+1) → ℝ ≃ᵐ reshape | `MeasurableEquiv.piFinSuccAbove` `Mathlib/MeasureTheory/MeasurableSpace/Embedding.lean:560` | `{n : ℕ} (α : Fin (n + 1) → Type*) [∀ i, MeasurableSpace (α i)] (i : Fin (n + 1))` | `(∀ j, α j) ≃ᵐ α i × ∀ j, α (i.succAbove j)` | ✅ |
+| 測度保存 (reshape) | `MeasureTheory.measurePreserving_piFinSuccAbove` `Mathlib/MeasureTheory/Constructions/Pi.lean:802` | `{n : ℕ} {α : Fin (n + 1) → Type u} {m : ∀ i, MeasurableSpace (α i)} (μ : ∀ i, Measure (α i)) [∀ i, SigmaFinite (μ i)] (i : Fin (n + 1))` | `MeasurePreserving (MeasurableEquiv.piFinSuccAbove α i) (Measure.pi μ) ((μ i).prod <| Measure.pi fun j => μ (i.succAbove j))` | ✅ **一般測度版** (volume 限定でない) |
+| volume 版 | `MeasureTheory.volume_preserving_piFinSuccAbove` `Constructions/Pi.lean:814` | `{n : ℕ} (α : Fin (n + 1) → Type u) [∀ i, MeasureSpace (α i)] [∀ i, SigmaFinite (volume : Measure (α i))] (i : Fin (n + 1))` | `MeasurePreserving (MeasurableEquiv.piFinSuccAbove α i)` | ✅ |
+| Unique reshape | `MeasurableEquiv.funUnique` `MeasurableSpace/Embedding.lean:541` | `(α β : Type*) [Unique α] [MeasurableSpace β]` | `(α → β) ≃ᵐ β` | ✅ (base case `n=1`) |
+| Unique 測度保存 | `MeasureTheory.measurePreserving_funUnique` `Constructions/Pi.lean:836` | `{β : Type u} {_m : MeasurableSpace β} (μ : Measure β) (α : Type v) [Unique α]` | `MeasurePreserving (MeasurableEquiv.funUnique α β) (Measure.pi fun _ : α => μ) μ` | ✅ |
+
+#### 6. 既消費部品 (2 変数 `_v2` genuine 完成済が使用 — verbatim 再確認)
+
+| 概念 | API (file:line) | signature `[...]` verbatim | 結論 verbatim | 状態 |
+|---|---|---|---|---|
+| product withDensity (AEMeasurable) | `MeasureTheory.prod_withDensity₀` `Mathlib/MeasureTheory/Measure/WithDensity.lean:705` | `{f : α → ℝ≥0∞} {g : β → ℝ≥0∞} (hf : AEMeasurable f μ) (hg : AEMeasurable g ν)` | `(μ.withDensity f).prod (ν.withDensity g) = (μ.prod ν).withDensity (fun z ↦ f z.1 * g z.2)` | ✅ |
+| product withDensity (Measurable) | `MeasureTheory.prod_withDensity` `WithDensity.lean:712` | `{f : α → ℝ≥0∞} {g : β → ℝ≥0∞} (hf : Measurable f) (hg : Measurable g)` | 同上 | ✅ |
+| withDensity rnDeriv 復元 | `MeasureTheory.Measure.withDensity_rnDeriv_eq` `Mathlib/MeasureTheory/Measure/Decomposition/RadonNikodym.lean:60` | `(μ ν : Measure α) [HaveLebesgueDecomposition μ ν] (h : μ ≪ ν)` | `ν.withDensity (μ.rnDeriv ν) = μ` (本文形) | ✅ |
+| rnDeriv chain | `MeasureTheory.Measure.rnDeriv_mul_rnDeriv` `RadonNikodym.lean:402` | `{κ : Measure α} [SigmaFinite μ] [SigmaFinite ν] [SigmaFinite κ] (hμν : μ ≪ ν)` | `μ.rnDeriv ν * ν.rnDeriv κ =ᵐ[κ] μ.rnDeriv κ` | ✅ |
+| volume (ℝ×ℝ) = prod | `MeasureTheory.volume_eq_prod` `Mathlib/MeasureTheory/Measure/Prod.lean:177` | `(α β) [MeasureSpace α] [MeasureSpace β]` | `(volume : Measure (α × β)) = (volume : Measure α).prod (volume : Measure β)` (`:= rfl`) | ✅ |
+| volume (Fin n → ℝ) = pi | `MeasureTheory.volume_pi` `Mathlib/MeasureTheory/Constructions/Pi.lean` (`[∀ i, MeasureSpace (α i)]`) | `[∀ i, MeasureSpace (α i)]` | `(volume : Measure (∀ i, α i)) = Measure.pi fun i => volume` | ✅ |
+
+### 主要前提条件ボックス
+
+- **自作 `withDensity_map` helper の前提**: density `g` の `Measurable g` (rnDeriv 版は `Measure.measurable_rnDeriv` で自動充足、generic 版では明示前提)。`MeasurableEquiv` を使う限り `MeasurableEmbedding` (`e.measurableEmbedding`) + `e.measurable` / `e.symm.measurable` は自動。**`SigmaFinite` は generic density 版では不要** (rnDeriv 版が `[SigmaFinite μ] [SigmaFinite ν]` を要求するのは `rnDeriv_map` step のため、generic 版はその step を `symm_apply_apply` で回避するので落とせる見込み — 着手時要確認)。
+- **`measurePreserving_piFinSuccAbove` (`Pi.lean:802`)**: `[∀ i, SigmaFinite (μ i)]` を要求。案 A induction で各 marginal `μ.map (· i)` は `IsProbabilityMeasure` (供給済 instance) ⇒ `SigmaFinite` 自動。**ただし `Measure.pi` を `(μ i).prod (Measure.pi rest)` に分解した後、`klDiv_prod_eq_add` (`MIChainRule.lean:254`) は 4 measure 全て `[IsProbabilityMeasure]` を要求** — reshape 後の `Measure.pi rest` が `IsProbabilityMeasure` であることを `MeasureTheory.isProbabilityMeasure_pi` 等で供給する必要 (前回 plan §落とし穴で言及済、`Measure.isProbabilityMeasure_map` pattern で derive)。
+- **2 変数 `_v2` 既存資産は genuine 完成** (`prod_marginals_eq_volume_withDensity` / `llr_split_from_density_factorize` / `jointDifferentialEntropy_le_sum_v2`, L285+)。案 A induction の内側 (2 変数 step) はこれを `Fin n → ℝ` carrier 側に適用するだけ — **新規 honest 仮定なし、helper 1 本のみが残 gap**。
+
+### 自作が必要な要素 (優先度順)
+
+1. **generic `withDensity_map` helper** (~15-25 行, **唯一の真の gap**)
+   - 推奨実装: `MeasurableEmbedding.map_withDensity_rnDeriv` (`RadonNikodym.lean:537`) の 5 行証明を density 一般に脱特化。最後の `hf.rnDeriv_map` step を `setLIntegral_congr_fun` + `simp [Function.comp, e.symm_apply_apply]` に置換。
+   - signature 候補: `theorem withDensity_map_equiv (e : α ≃ᵐ β) {g : α → ℝ≥0∞} (hg : Measurable g) : (μ.withDensity g).map e = (μ.map e).withDensity (g ∘ e.symm)`。
+   - 落とし穴: `g ∘ e.symm` の可測性 (`hg.comp e.symm.measurable`) を `setLIntegral_map` に渡す。被積分の `e.symm (e x)` 簡約は `MeasurableEquiv.symm_apply_apply` (defeq でない場合 `simp` 必要)。
+
+2. **案 A induction 本体** `jointDifferentialEntropyPi_le_sum_v2` (~120-200 行)
+   - base `n=0/1`: `funUnique` reshape で 1-D `differentialEntropy` に帰着 (subadditivity 自明 / 等号)。
+   - step `n → n+1`: `piFinSuccAbove 0` で `Fin (n+1) → ℝ ≃ᵐ ℝ × (Fin n → ℝ)`、helper #1 で joint density を reshape、2 変数 `_v2` (genuine) を外側に + 帰納仮定を内側 (`Fin n → ℝ`) に適用。
+   - bridge `klDiv_pi_marginals_toReal_eq_sum_sub_joint` も同 reshape で discharge (`klDiv_pi_eq_sum` 既存 + helper)。
+
+工数感: helper #1 ~15-25 行 + induction #2 ~120-200 行 = **closure 全体 ~150-250 行**。前回 plan の「Phase 2 案 A ~50-100 行」見積りは helper を ~10 行と過小評価していた節があるが、reshape 配線 (instance 供給 + measurability) 込みで ~150-250 行が現実的。
+
+### Mathlib 壁の列挙 (`@residual(wall:...)` 対象)
+
+- **generic `withDensity_map`** — `Found 0` (結論パターン `Measure.map (Measure.withDensity _ _) _`) + 5 命名候補 `unknown identifier`。**ただし真の Mathlib 壁ではなく「Mathlib に lemma 名が無いだけ」= 自作 ~15-25 行で genuine 化可能な選択 (big) 案件**。`wall:` ではなく `plan:` 分類が正しい (現状の `@residual(plan:multivariate-diffentropy-subadditivity-plan)` は分類正確)。shared sorry 補題化は不要 (本 family 1 file 内 helper で足りる)。
+- **`pi_withDensity` / `withDensity_pi`** — `unknown identifier` (不在維持)。だが案 A 経路では `withDensity_map` helper があれば不要なので壁として残す必要なし。
+- **`rnDeriv_prod` / `rnDeriv_pi`** — `unknown identifier` + 結論パターン `Found 0`。代替路用だが案 A 採用なら不要。
+
+> **結論**: 真の `@residual(wall:...)` 対象は **ゼロ**。現状の sorry は全て plan-closeable (helper 自作 1 本で道が開く)。`@residual(plan:...)` 分類は honest。
+
+### 撤退ラインへの距離
+
+親 plan `docs/shannon/multivariate-diffentropy-subadditivity-plan.md` の撤退ライン:
+
+> 「**Phase 2 案 A / 案 B 双方で行き詰まる (>250 行) → n 変数のみ honest hyp 温存**」(plan L307)
+
+判定:
+
+- **撤退ライン発動: NO (close 再開推奨)。** 前回 Wave 3 の停止理由「generic `withDensity_map` が Mathlib 不在」は事実だが、**自作不能ではなく自作未着手**。rnDeriv 版 (`:537`) という 5 行のテンプレートが存在し、自作部品 (`ext` / `map_apply` / `withDensity_apply` / `setLIntegral_map`) は全て verbatim 在庫。前回 plan 自身が「`Measure.ext` + `lintegral_map` で ~10 行自作可能」と評価していた通り。
+- **closure 全体見積 ~150-250 行** は撤退ライン閾値 (>250 行) の境界内〜やや下。helper #1 (~20 行) が取れれば induction 本体は 2 変数 `_v2` の機械的 lift なので 250 行は超えない見込み。
+- **新規撤退ライン (本調査の細分)**: [G-1] helper #1 自作で `e.symm (e x)` 簡約 or `g ∘ e.symm` 可測性配線が予想外に重く >50 行化 → helper を共有 sorry 補題 (`withDensity_map_equiv := by sorry` + `@residual(wall:withdensity-map-equiv)`) に切り出し、induction 本体だけ genuine 化。これでも現状 (全 sorry) より前進。撤退口は sorry + `@residual`、仮説束化は禁止。
+
+### 着手 skeleton
+
+```lean
+-- Common2026/Draft/Shannon/MultivariateDiffEntropy.lean (既存 file 拡張)
+-- 既存 imports (L1-11) に追加不要 (Map / WithDensity / Pi / RadonNikodym 既存)
+
+namespace Common2026.Shannon
+open MeasureTheory Real ProbabilityTheory InformationTheory
+open scoped ENNReal NNReal Real
+
+/-- **generic `withDensity_map` (Mathlib 不在、rnDeriv 版 `RadonNikodym.lean:537` を脱特化)。**
+pushforward of a `withDensity` measure along a measurable equivalence. -/
+theorem withDensity_map_equiv {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
+    {μ : Measure α} (e : α ≃ᵐ β) {g : α → ℝ≥0∞} (hg : Measurable g) :
+    (μ.withDensity g).map e = (μ.map e).withDensity (g ∘ e.symm) := by
+  sorry  -- @residual(plan:multivariate-diffentropy-subadditivity-plan)
+         -- ext + e.map_apply + withDensity_apply ×2 + setLIntegral_map + symm_apply_apply
+
+/-- **n 変数 subadditivity (genuine successor, 案 A induction).** -/
+theorem jointDifferentialEntropyPi_le_sum_v2
+    {n : ℕ} {μ : Measure (Fin n → ℝ)} [IsProbabilityMeasure μ]
+    [∀ i, IsProbabilityMeasure (μ.map (fun z => z i))]
+    (h_marg_ac : ∀ i, (μ.map (fun z => z i)) ≪ volume)
+    (hμ_ac : μ ≪ (volume : Measure (Fin n → ℝ)))
+    (h_joint_ac : μ ≪ Measure.pi (fun i => μ.map (fun z => z i))) :
+    jointDifferentialEntropyPi μ ≤ ∑ i, differentialEntropy (μ.map (fun z => z i)) := by
+  sorry  -- @residual(plan:multivariate-diffentropy-subadditivity-plan)
+         -- piFinSuccAbove reshape + withDensity_map_equiv + 2 変数 _v2 + 帰納仮定
+
+end Common2026.Shannon
+```
+
+### ゲート判定
+
+- **closeable = (b)**: generic `withDensity_map` は **Mathlib 不在** (5 命名候補 `unknown identifier` + 結論パターン `Found 0`) だが、**自作 ~15-25 行で genuine 可能**。rnDeriv 特化版 `MeasurableEmbedding.map_withDensity_rnDeriv` (`RadonNikodym.lean:537`) の 5 行証明が脱特化テンプレートで、自作部品 (`Measure.ext` :143 / `lintegral_map` :27 / `setLIntegral_map` :67 / `withDensity_apply` :45 / `MeasurableEquiv.map_apply` :302) は全て verbatim 在庫。reshape 部品 (`piFinSuccAbove` :560 / `measurePreserving_piFinSuccAbove` :802 / `funUnique` :541) も全存在。
+- **規模見積**: helper #1 ~15-25 行 + 案 A induction 本体 ~120-200 行 = **closure 全体 ~150-250 行** (撤退ライン >250 行の境界内)。2 変数 `_v2` が genuine 完成済なので induction 内側は機械的 lift。
+- **代替路 (rnDeriv-of-product 直接) は案 A より重い**: `rnDeriv_prod` / `rnDeriv_pi` 双方 `unknown identifier` + 結論パターン `Found 0`、rnDeriv の積分解補題自体を自作する羽目になり却下。
+- **撤退ライン発動: NO** — 前回 Wave 3 は「自作未着手」を「Mathlib 不在で停止」と扱っていた。helper 1 本の自作で再開可能、`@residual(wall:...)` 対象はゼロ、現状の `@residual(plan:...)` 分類は honest。

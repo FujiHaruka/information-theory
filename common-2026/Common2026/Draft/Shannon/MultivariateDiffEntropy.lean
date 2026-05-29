@@ -105,7 +105,8 @@ Pushforward of a `withDensity` measure along a measurable equivalence `e`:
 `(μ.withDensity g).map e = (μ.map e).withDensity (g ∘ e.symm)`. Mathlib only ships
 the rnDeriv-specialized `MeasurableEmbedding.map_withDensity_rnDeriv`; the generic
 form below de-specializes its 5-line proof, replacing the final `rnDeriv_map`
-congruence by the trivial `e.symm_apply_apply` cancellation. -/
+congruence by the trivial `e.symm_apply_apply` cancellation.
+@audit:ok -/
 theorem withDensity_map_equiv {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
     {μ : Measure α} (e : α ≃ᵐ β) {g : α → ℝ≥0∞} (hg : Measurable g) :
     (μ.withDensity g).map e = (μ.map e).withDensity (g ∘ e.symm) := by
@@ -254,7 +255,8 @@ theorem jointDifferentialEntropy_le_sum
 /-- **`pi_withDensity` (Mathlib absent, built by `piFinSuccAbove` induction).**
 The product measure of `withDensity` factors is the `withDensity` of the product
 measure with the product density `z ↦ ∏ᵢ fᵢ (z i)`. Specialized to `Fin n → ℝ`
-(all factors on `ℝ`), the form the `n`-variable density split requires. -/
+(all factors on `ℝ`), the form the `n`-variable density split requires.
+@audit:ok -/
 theorem pi_withDensity_fin {n : ℕ} (ν : Fin n → Measure ℝ) [∀ i, SigmaFinite (ν i)]
     {f : Fin n → ℝ → ℝ≥0∞} (hf : ∀ i, Measurable (f i))
     [∀ i, SigmaFinite ((ν i).withDensity (f i))] :
@@ -324,7 +326,8 @@ For a joint probability measure `μ` on `Fin n → ℝ` with each coordinate mar
 `Measure.pi (μ ·)` factors through the Lebesgue measure on `Fin n → ℝ` as the
 `withDensity` with product density `z ↦ ∏ᵢ μᵢ.rnDeriv volume (z i)`. The
 `n`-variable analogue of `prod_marginals_eq_volume_withDensity`, discharged via
-`withDensity_rnDeriv_eq` (each marginal) + `pi_withDensity_fin` + `volume_pi`. -/
+`withDensity_rnDeriv_eq` (each marginal) + `pi_withDensity_fin` + `volume_pi`.
+@audit:ok -/
 theorem pi_marginals_eq_volume_withDensity
     {n : ℕ} {μ : Measure (Fin n → ℝ)} [IsProbabilityMeasure μ]
     [∀ i, IsProbabilityMeasure (μ.map (fun z => z i))]
@@ -350,7 +353,8 @@ log(marginalᵢ density on the `i`-th coordinate)` almost-everywhere wrt `μ`,
 *without* an honest hypothesis. The `n`-variable generalization of
 `llr_split_from_density_factorize` (the 2-variable analogue), discharged via
 `pi_marginals_eq_volume_withDensity` + `rnDeriv_mul_rnDeriv` + `Real.log_mul`
-/ `Finset` log split. -/
+/ `Finset` log split.
+@audit:ok -/
 theorem llr_split_from_density_factorize_pi
     {n : ℕ} {μ : Measure (Fin n → ℝ)} [IsProbabilityMeasure μ]
     [∀ i, IsProbabilityMeasure (μ.map (fun z => z i))]
@@ -458,7 +462,8 @@ The Bayes density split is supplied by the genuine lemma
 `llr_split_from_density_factorize_pi` (no honest hypothesis). The remaining
 hypotheses are regularity (absolute continuity + Bochner integrability of the
 log-density observables), exactly mirroring the 2-variable bridge
-`klDiv_prod_marginals_toReal_eq_sum_sub_joint`. -/
+`klDiv_prod_marginals_toReal_eq_sum_sub_joint`.
+@audit:ok -/
 theorem klDiv_pi_marginals_toReal_eq_sum_sub_joint
     {n : ℕ} {μ : Measure (Fin n → ℝ)} [IsProbabilityMeasure μ]
     [∀ i, IsProbabilityMeasure (μ.map (fun z => z i))]
@@ -531,7 +536,8 @@ theorem klDiv_pi_marginals_toReal_eq_sum_sub_joint
   ring
 
 /-- **★ `n`-variable differential-entropy subadditivity** `h(Yⁿ) ≤ ∑ᵢ h(Yᵢ)`
-(the parallel-Gaussian consumer form). `KL ≥ 0` + the bridge, by `linarith`. -/
+(the parallel-Gaussian consumer form). `KL ≥ 0` + the bridge, by `linarith`.
+@audit:ok -/
 @[entry_point]
 theorem jointDifferentialEntropyPi_le_sum
     {n : ℕ} {μ : Measure (Fin n → ℝ)} [IsProbabilityMeasure μ]
