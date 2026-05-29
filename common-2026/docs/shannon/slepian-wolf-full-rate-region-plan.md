@@ -39,7 +39,7 @@ publish 済の `swErrorProb` 定義 + 2 corner-point 結果を **boundary check*
 - [x] Phase C — Conditional typical slice size bound ✅ (2026-05-14、`SlepianWolfConditionalTypicalSlice.lean` 315 行、0 sorry)
 - [x] Phase D — Error event decomposition `E ⊆ E_0 ∪ E_X ∪ E_Y ∪ E_{XY}` ✅ (`swErrorProb_le_E0_plus_EX_plus_EY_plus_EXY:140`)
 - [x] Phase E — Per-term expectation bound ✅ (E0 tendsto `:293` + EX `:465` + EY `:865` + EXY `:1206`、全 0 sorry)
-- [~] Phase F — **未完 (2026-05-30 訂正)**: F.1 total exp (`:1455`) / F.2 pigeonhole (`:1873`) / bridge (`:1442`) は実装済。**残: E.5 squeeze + F.3 headline `slepian_wolf_full_rate_region_achievability` assembly + F.4 boundary(optional)**。在庫 → `slepian-wolf-full-rate-region-phase-f-inventory.md`
+- [x] Phase F — **✅ 完了 (2026-05-30)**: E.5 squeeze (`tendsto_exp_mul_codebookSize_inv`/`_inv₂` + `codebookSize_inv_le_exp_neg`) + F.3 headline `slepian_wolf_full_rate_region_achievability` (`:1992`) genuine assembly。**proof done (0 sorry / 0 @residual、`#print axioms` sorryAx-free、honesty audit 全 `@audit:ok`、連結 gap 独立確認済)**。F.4 boundary は core 非依存で省略。在庫 → `slepian-wolf-full-rate-region-phase-f-inventory.md`
 
 **MVP 完了サマリ (2026-05-14)**: `Common2026/Shannon/SlepianWolfBinning.lean` (273 行、0 sorry / 0 warning):
 - `binningMeasure α n M := Measure.pi (fun _ => uniformOn (univ : Set (Fin M)))`

@@ -1905,7 +1905,8 @@ each expectation bound `exp(n c) · M_n⁻¹` is `≤ exp(n (c - R))`, which ten
 whenever `c < R`. This is the analytic engine that turns the per-term expectation
 bounds (E.2/E.3/E.4) into `Tendsto (𝓝 0)`. -/
 
-/-- `(codebookSize R n)⁻¹ ≤ exp(-n R)`. From `exp(n R) ≤ ⌈exp(n R)⌉ = codebookSize R n`. -/
+/-- `(codebookSize R n)⁻¹ ≤ exp(-n R)`. From `exp(n R) ≤ ⌈exp(n R)⌉ = codebookSize R n`.
+@audit:ok -/
 private lemma codebookSize_inv_le_exp_neg (R : ℝ) (n : ℕ) :
     ((codebookSize R n : ℝ))⁻¹ ≤ Real.exp (-(n : ℝ) * R) := by
   have hpos : (0 : ℝ) < Real.exp ((n : ℝ) * R) := Real.exp_pos _
@@ -1917,7 +1918,8 @@ private lemma codebookSize_inv_le_exp_neg (R : ℝ) (n : ℕ) :
     _ = Real.exp (-(n : ℝ) * R) := by
         rw [← Real.exp_neg]; ring_nf
 
-/-- **E.5 squeeze**: for `c < R`, `exp(n c) · (codebookSize R n)⁻¹ → 0`. -/
+/-- **E.5 squeeze**: for `c < R`, `exp(n c) · (codebookSize R n)⁻¹ → 0`.
+@audit:ok -/
 private lemma tendsto_exp_mul_codebookSize_inv {c R : ℝ} (hcR : c < R) :
     Filter.Tendsto
       (fun n : ℕ => Real.exp ((n : ℝ) * c) * ((codebookSize R n : ℝ))⁻¹)
@@ -1944,7 +1946,8 @@ private lemma tendsto_exp_mul_codebookSize_inv {c R : ℝ} (hcR : c < R) :
           rw [← Real.exp_add]; ring_nf
 
 /-- **E.5 squeeze (two-codebook)**: for `c < R_X + R_Y`,
-`exp(n c) · (codebookSize R_X n)⁻¹ · (codebookSize R_Y n)⁻¹ → 0`. -/
+`exp(n c) · (codebookSize R_X n)⁻¹ · (codebookSize R_Y n)⁻¹ → 0`.
+@audit:ok -/
 private lemma tendsto_exp_mul_codebookSize_inv₂ {c R_X R_Y : ℝ}
     (hcR : c < R_X + R_Y) :
     Filter.Tendsto
@@ -1988,7 +1991,16 @@ binning encoders + joint typicality decoders whose error probability tends to `0
 (Cover–Thomas 15.4.1). For an i.i.d. source `(Xⁿ, Yⁿ)` with full support, any rate
 pair `(R_X, R_Y)` with `R_X > H(X|Y)`, `R_Y > H(Y|X)`, `R_X + R_Y > H(X,Y)` is
 achievable: there are codebook sizes `M_X, M_Y` with the required asymptotic rates and
-encoders/decoders whose error probability → 0. -/
+encoders/decoders whose error probability → 0.
+
+Independent honesty audit (2026-05-30): signature carries only regularity + the C&T
+rate-region conditions `hRX/hRY/hRXY` (no load-bearing `*Hypothesis`/`*Reduction`
+predicate); conclusion is the genuine achievability `∃ … (swErrorProb → 0)` with
+`swErrorProb` the real misdecoding probability; error→0 chains F.1 → pigeonhole →
+E.5 squeeze with the conclusion decoder matching the `B n`-bounded witness; the whole
+transitive tree is `sorryAx`-free (`#print axioms` = `[propext, Classical.choice,
+Quot.sound]`).
+@audit:ok -/
 theorem slepian_wolf_full_rate_region_achievability
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
