@@ -431,10 +431,11 @@ is split into two isolated pieces:
   box universality + the `lintegral` n-variate Fubini
   `lintegral_fin_nat_prod_eq_prod`. The ENNReal additivity
   `parallelGaussian_achiever_mi_eq_sum_perChannel_enn` is `sorryAx`-free
-  (`wall:multivariate-mi` closed). Only the `.toReal` form
-  `parallelGaussian_achiever_mi_eq_sum_perChannel` carries a residual: the
-  per-coordinate AWGN MI finiteness `awgn_mutualInfoOfChannel_ne_top`
-  (AWGN-MI bridge, distinct wall).
+  (`wall:multivariate-mi` closed). The `.toReal` form
+  `parallelGaussian_achiever_mi_eq_sum_perChannel` is now genuine (0 sorry) too:
+  the per-coordinate AWGN MI finiteness `awgn_mutualInfoOfChannel_ne_top` is
+  discharged from the AWGN density facts and requires `N i ≠ 0` (threaded down
+  from the headline's `∀ i, (N i : ℝ) ≠ 0`).
 
 * the **per-coordinate AWGN closed form** (analytic, reusable):
   `I(gaussian Qᵢ; awgnChannel Nᵢ) = (1/2)log(1 + Qᵢ/Nᵢ)`, supplied as the
@@ -695,7 +696,7 @@ This is `klDiv_ne_top` applied to the Gaussian-through-AWGN joint
 probability measures alone is NOT enough, the llr integrability is genuine analytic
 content.
 
-**Main branch `N ≠ 0` (genuine, 0 sorry).** Discharged by re-using the AWGN density
+**Genuine, 0 sorry — requires `N ≠ 0`.** Discharged by re-using the AWGN density
 facts already proved in `ContChannelMIDecomp` — the same assembly as
 `isContChannelMIDecompHyp_awgn`, but fed into `klDiv_ne_top` instead of the `.toReal`
 chain rule. The joint absolute continuity is built from
@@ -708,96 +709,87 @@ unconditionally via `awgn_output_gaussian_of_bind_eq_conv` + `isAwgnBindEqConv_d
 The earlier audit worry (the `.toReal` capacity route never establishes `klDiv ≠ ⊤`,
 since `(⊤).toReal = 0`) is moot here: this proof works at the `klDiv` level directly.
 
-**Degenerate branch `N = 0` (residual).** The channel becomes deterministic
-(`W x = dirac x`), so the proxy-density route breaks (`gaussianReal_absolutelyContinuous`
-needs `N ≠ 0`). For a continuous input (`P ≠ 0`) the joint lives on the diagonal graph,
-which is `p.prod q`-null, so `klDiv = ⊤` and the statement is genuinely *false* there;
-it is true only for `P = 0` (Dirac input). The target signature carries no `N ≠ 0`
-(nor `P = 0`) hypothesis, so this edge cannot be closed as stated and is left as the
-sole residual. Owned by `parallel-gaussian-l-pg1-discharge-plan.md` (its step 5).
-@residual(plan:parallel-gaussian-l-pg1-discharge-plan) -/
-theorem awgn_mutualInfoOfChannel_ne_top (N : ℝ≥0)
+The `N ≠ 0` hypothesis is genuinely required: for `N = 0` the channel is deterministic
+(`W x = dirac x`), the joint lives on the diagonal graph (`p.prod q`-null for a
+continuous input `P ≠ 0`), and `klDiv = ⊤` — i.e. the claim is *false* there. Adding
+`N ≠ 0` is the honest fix of that false-statement edge; the caller chain up to
+`parallel_gaussian_capacity_formula_minimal` already carries `∀ i, (N i : ℝ) ≠ 0`. -/
+theorem awgn_mutualInfoOfChannel_ne_top (N : ℝ≥0) (hN : N ≠ 0)
     (h_meas : InformationTheory.Shannon.AWGN.IsAwgnChannelMeasurable N) (P : ℝ≥0) :
     mutualInfoOfChannel (gaussianReal 0 P) (awgnChannel N h_meas) ≠ ⊤ := by
   classical
-  by_cases hN : N = 0
-  · -- Degenerate noise `N = 0`: the AWGN channel is deterministic (`W x = dirac x`),
-    -- so the proxy-density route breaks. For a continuous input the joint lives on the
-    -- diagonal graph, `p.prod q`-null, making `klDiv = ⊤` — i.e. the statement can fail
-    -- for `P ≠ 0`. Owned by the L-PG1 discharge plan (target lacks `N ≠ 0`).
-    -- @residual(plan:parallel-gaussian-l-pg1-discharge-plan) — N=0 deterministic channel branch: density route inapplicable, finiteness genuinely delicate.
-    sorry
-  · -- Main branch `N ≠ 0`: reduce to `klDiv_ne_top` via the AWGN density facts already
-    -- discharged in `ContChannelMIDecomp` (same assembly as `isContChannelMIDecompHyp_awgn`,
-    -- but feeding `klDiv_ne_top` instead of the `.toReal` chain rule).
-    -- Cast `P : ℝ≥0` to the `P.toNNReal` shape used by the supporting lemmas.
-    have hP_cast : ((P : ℝ)).toNNReal = P := Real.toNNReal_coe
-    rw [show (P : ℝ≥0) = ((P : ℝ)).toNNReal from hP_cast.symm]
-    set Pr : ℝ := (P : ℝ) with hPr
-    have hPN : Pr.toNNReal + N ≠ 0 := by
-      rw [hPr, hP_cast]
-      exact fun h => hN (by simpa using (add_eq_zero.mp h).2)
-    set p := gaussianReal 0 Pr.toNNReal with hp_def
-    set W := awgnChannel N h_meas with hW_def
-    set q := outputDistribution p W with hq_def
-    -- output Gaussian fact `q = gaussianReal 0 (P+N)`, discharged unconditionally.
-    have h_out : InformationTheory.Shannon.AWGN.IsAwgnOutputGaussian Pr N h_meas :=
-      InformationTheory.Shannon.AWGN.awgn_output_gaussian_of_bind_eq_conv Pr N h_meas
-        (InformationTheory.Shannon.AWGN.isAwgnBindEqConv_discharged Pr N h_meas)
-    -- measurable PDF proxy `g := gaussianPDF` for the fibre volume-density (Route B)
-    set g : ℝ × ℝ → ℝ≥0∞ := fun z => gaussianPDF z.1 N z.2 with hg_def
-    have hg_meas : Measurable g :=
-      InformationTheory.Shannon.AWGN.measurable_gaussianPDF_uncurry N
-    have hg_ae : ∀ x, (fun y => (W x).rnDeriv volume y) =ᵐ[W x] fun y => g (x, y) := by
-      intro x
-      rw [hW_def, awgnChannel_apply]
-      exact (gaussianReal_absolutelyContinuous x hN).ae_le (rnDeriv_gaussianReal x N)
-    have hq_prob : IsProbabilityMeasure q := by rw [hq_def, h_out]; infer_instance
-    have hWx_q : ∀ x, W x ≪ q :=
-      InformationTheory.Shannon.AWGN.awgnChannel_apply_absolutelyContinuous_output
-        Pr N hN hPN h_meas h_out
-    have hq_vol : q ≪ volume :=
-      InformationTheory.Shannon.AWGN.awgn_output_absolutelyContinuous_of_outputGaussian
-        Pr N hPN h_meas h_out
-    have h_joint_ac : (p ⊗ₘ W) ≪ p.prod q := by
-      rw [show p.prod q = p ⊗ₘ (Kernel.const ℝ q) from (Measure.compProd_const).symm]
-      exact Measure.absolutelyContinuous_compProd_right_iff.mpr
-        (Filter.Eventually.of_forall (fun x => by simpa only [Kernel.const_apply] using hWx_q x))
-    -- llr split + fibre/output log-density integrabilities (analytic core, all existing)
-    have h_llr_split := llr_compProd_prod_split (p := p) (W := W) q hWx_q hq_vol
-      h_joint_ac g hg_meas hg_ae
-    have h_int_fibre_joint :
-        Integrable (fun z => Real.log (g z).toReal) (p ⊗ₘ W) :=
-      integrable_log_proxy_fibre_compProd Pr N hN h_meas
-    have h_int_out_marg :
-        Integrable (fun y => Real.log (q.rnDeriv volume y).toReal) q := by
-      rw [hq_def, h_out]
-      exact integrable_log_rnDeriv_gaussianReal 0 hPN
-    have h_int_out_joint :
-        Integrable (fun z => Real.log (q.rnDeriv volume z.2).toReal) (p ⊗ₘ W) := by
-      have h_eq : q = (p ⊗ₘ W).map Prod.snd := rfl
-      have hg_aesm :
-          AEStronglyMeasurable (fun y => Real.log (q.rnDeriv volume y).toReal) q :=
-        h_int_out_marg.aestronglyMeasurable
-      rw [show (fun z : ℝ × ℝ => Real.log (q.rnDeriv volume z.2).toReal)
-            = (fun y => Real.log (q.rnDeriv volume y).toReal) ∘ Prod.snd from rfl]
-      refine (integrable_map_measure ?_ measurable_snd.aemeasurable).mp ?_
-      · rw [← h_eq]; exact hg_aesm
-      · rw [← h_eq]; exact h_int_out_marg
-    -- assemble `klDiv_ne_top`: AC + llr integrability (split into fibre − output).
-    rw [mutualInfoOfChannel_def, jointDistribution_def]
-    refine klDiv_ne_top h_joint_ac ?_
-    refine (h_int_fibre_joint.sub h_int_out_joint).congr ?_
-    exact (h_llr_split).symm
+  -- Reduce to `klDiv_ne_top` via the AWGN density facts already discharged in
+  -- `ContChannelMIDecomp` (same assembly as `isContChannelMIDecompHyp_awgn`, but
+  -- feeding `klDiv_ne_top` instead of the `.toReal` chain rule).
+  -- Cast `P : ℝ≥0` to the `P.toNNReal` shape used by the supporting lemmas.
+  have hP_cast : ((P : ℝ)).toNNReal = P := Real.toNNReal_coe
+  rw [show (P : ℝ≥0) = ((P : ℝ)).toNNReal from hP_cast.symm]
+  set Pr : ℝ := (P : ℝ) with hPr
+  have hPN : Pr.toNNReal + N ≠ 0 := by
+    rw [hPr, hP_cast]
+    exact fun h => hN (by simpa using (add_eq_zero.mp h).2)
+  set p := gaussianReal 0 Pr.toNNReal with hp_def
+  set W := awgnChannel N h_meas with hW_def
+  set q := outputDistribution p W with hq_def
+  -- output Gaussian fact `q = gaussianReal 0 (P+N)`, discharged unconditionally.
+  have h_out : InformationTheory.Shannon.AWGN.IsAwgnOutputGaussian Pr N h_meas :=
+    InformationTheory.Shannon.AWGN.awgn_output_gaussian_of_bind_eq_conv Pr N h_meas
+      (InformationTheory.Shannon.AWGN.isAwgnBindEqConv_discharged Pr N h_meas)
+  -- measurable PDF proxy `g := gaussianPDF` for the fibre volume-density (Route B)
+  set g : ℝ × ℝ → ℝ≥0∞ := fun z => gaussianPDF z.1 N z.2 with hg_def
+  have hg_meas : Measurable g :=
+    InformationTheory.Shannon.AWGN.measurable_gaussianPDF_uncurry N
+  have hg_ae : ∀ x, (fun y => (W x).rnDeriv volume y) =ᵐ[W x] fun y => g (x, y) := by
+    intro x
+    rw [hW_def, awgnChannel_apply]
+    exact (gaussianReal_absolutelyContinuous x hN).ae_le (rnDeriv_gaussianReal x N)
+  have hq_prob : IsProbabilityMeasure q := by rw [hq_def, h_out]; infer_instance
+  have hWx_q : ∀ x, W x ≪ q :=
+    InformationTheory.Shannon.AWGN.awgnChannel_apply_absolutelyContinuous_output
+      Pr N hN hPN h_meas h_out
+  have hq_vol : q ≪ volume :=
+    InformationTheory.Shannon.AWGN.awgn_output_absolutelyContinuous_of_outputGaussian
+      Pr N hPN h_meas h_out
+  have h_joint_ac : (p ⊗ₘ W) ≪ p.prod q := by
+    rw [show p.prod q = p ⊗ₘ (Kernel.const ℝ q) from (Measure.compProd_const).symm]
+    exact Measure.absolutelyContinuous_compProd_right_iff.mpr
+      (Filter.Eventually.of_forall (fun x => by simpa only [Kernel.const_apply] using hWx_q x))
+  -- llr split + fibre/output log-density integrabilities (analytic core, all existing)
+  have h_llr_split := llr_compProd_prod_split (p := p) (W := W) q hWx_q hq_vol
+    h_joint_ac g hg_meas hg_ae
+  have h_int_fibre_joint :
+      Integrable (fun z => Real.log (g z).toReal) (p ⊗ₘ W) :=
+    integrable_log_proxy_fibre_compProd Pr N hN h_meas
+  have h_int_out_marg :
+      Integrable (fun y => Real.log (q.rnDeriv volume y).toReal) q := by
+    rw [hq_def, h_out]
+    exact integrable_log_rnDeriv_gaussianReal 0 hPN
+  have h_int_out_joint :
+      Integrable (fun z => Real.log (q.rnDeriv volume z.2).toReal) (p ⊗ₘ W) := by
+    have h_eq : q = (p ⊗ₘ W).map Prod.snd := rfl
+    have hg_aesm :
+        AEStronglyMeasurable (fun y => Real.log (q.rnDeriv volume y).toReal) q :=
+      h_int_out_marg.aestronglyMeasurable
+    rw [show (fun z : ℝ × ℝ => Real.log (q.rnDeriv volume z.2).toReal)
+          = (fun y => Real.log (q.rnDeriv volume y).toReal) ∘ Prod.snd from rfl]
+    refine (integrable_map_measure ?_ measurable_snd.aemeasurable).mp ?_
+    · rw [← h_eq]; exact hg_aesm
+    · rw [← h_eq]; exact h_int_out_marg
+  -- assemble `klDiv_ne_top`: AC + llr integrability (split into fibre − output).
+  rw [mutualInfoOfChannel_def, jointDistribution_def]
+  refine klDiv_ne_top h_joint_ac ?_
+  refine (h_int_fibre_joint.sub h_int_out_joint).congr ?_
+  exact (h_llr_split).symm
 
 open Common2026.Shannon InformationTheory.Shannon.AWGN in
 /-- **Per-channel MI decomposition of the product achiever (`.toReal` form).**
 `.toReal` of the genuine ENNReal additivity
 `parallelGaussian_achiever_mi_eq_sum_perChannel_enn` (the multivariate decomposition
 is genuine, 0 sorry). The per-coordinate finiteness used for the `.toReal`/`∑`
-exchange comes from `awgn_mutualInfoOfChannel_ne_top` (AWGN-MI bridge residual). -/
+exchange comes from `awgn_mutualInfoOfChannel_ne_top`, which needs `N i ≠ 0`
+(genuine, 0 sorry). -/
 theorem parallelGaussian_achiever_mi_eq_sum_perChannel {n : ℕ}
-    (Q : Fin n → ℝ≥0) (N : Fin n → ℝ≥0)
+    (Q : Fin n → ℝ≥0) (N : Fin n → ℝ≥0) (hN : ∀ i, N i ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N) :
     (mutualInfoOfChannel (gaussianProductInput Q)
@@ -805,7 +797,7 @@ theorem parallelGaussian_achiever_mi_eq_sum_perChannel {n : ℕ}
       = ∑ i : Fin n,
           (mutualInfoOfChannel (gaussianReal 0 (Q i)) (awgnChannel (N i) (h_meas i))).toReal := by
   rw [parallelGaussian_achiever_mi_eq_sum_perChannel_enn Q N h_meas h_parallel_meas]
-  rw [ENNReal.toReal_sum (fun i _ => awgn_mutualInfoOfChannel_ne_top (N i) (h_meas i) (Q i))]
+  rw [ENNReal.toReal_sum (fun i _ => awgn_mutualInfoOfChannel_ne_top (N i) (hN i) (h_meas i) (Q i))]
 
 open Common2026.Shannon InformationTheory.Shannon.AWGN in
 /-- **`achiever_mi` genuine reduction (L-PG1 Phase 2).** The achiever MI value
@@ -817,7 +809,7 @@ structural per-channel decomposition `parallelGaussian_achiever_mi_eq_sum_perCha
 This discharges `IsParallelGaussianPerCoordRegularity.achiever_mi` from honest
 per-coordinate pieces rather than the bundled sum equality. -/
 theorem parallelGaussianCapacity_achiever_mi {n : ℕ}
-    (Q : Fin n → ℝ≥0) (N : Fin n → ℝ≥0)
+    (Q : Fin n → ℝ≥0) (N : Fin n → ℝ≥0) (hN : ∀ i, N i ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N)
     (h_perCoordMI : ∀ i,
@@ -826,7 +818,7 @@ theorem parallelGaussianCapacity_achiever_mi {n : ℕ}
     (mutualInfoOfChannel (gaussianProductInput Q)
         (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
       = ∑ i : Fin n, (1/2) * Real.log (1 + (Q i : ℝ) / (N i : ℝ)) := by
-  rw [parallelGaussian_achiever_mi_eq_sum_perChannel Q N h_meas h_parallel_meas]
+  rw [parallelGaussian_achiever_mi_eq_sum_perChannel Q N hN h_meas h_parallel_meas]
   exact Finset.sum_congr rfl (fun i _ => h_perCoordMI i)
 
 /-- Backward-compatible alias for the genuine headline

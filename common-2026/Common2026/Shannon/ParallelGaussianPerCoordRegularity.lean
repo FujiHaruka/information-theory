@@ -90,7 +90,17 @@ honest pieces, one per field. Body to be filled by Phase 1-4 of the discharge pl
   **single new honest piece** introduced by the L-PG1 discharge plan; not present
   in Mathlib.
 
-`@audit:ok(parallel-gaussian-l-pg1-discharge)` -/
+**Honesty audit (2026-05-29):** NOT `@audit:ok`. The body has no `sorry`, but the
+conclusion `IsParallelGaussianPerCoordRegularity` is reduced wholesale to the open
+hypotheses `h_bdd_global` / `h_multivar_decomp`, which carry the CORE analytic
+content (the global MI upper bound = `bddAbove` field, and the per-coord
+max-entropy converse split = `max_ent` field), not regularity preconditions. The
+docstring itself admits these are "load-bearing assumptions ... absent from
+Mathlib", which are POSITIVE indicators of load-bearing. `@audit:ok` (tier 1 =
+0 sorry / 0 residual) would launder this as unconditional completion. Honest fix
+(orchestrator/implementer): drop the load-bearing hyps, body `sorry` +
+`@residual(wall:multivariate-mi)` (`h_multivar_decomp`) plus a residual for the
+global-bound piece. Until rewritten, this is a conditional theorem, NOT a discharge. -/
 @[entry_point]
 theorem isParallelGaussianPerCoordRegularity_of_pieces {n : ℕ}
     (P : ℝ) (N : Fin n → ℝ≥0)
@@ -140,7 +150,18 @@ equals the water-filling sum, with the regularity bundle unfolded into its
 3 honest pieces. Body to be filled by Phase 4 of the discharge plan via the
 constructor `isParallelGaussianPerCoordRegularity_of_pieces` above.
 
-`@audit:ok(parallel-gaussian-l-pg1-discharge)` -/
+**Honesty audit (2026-05-29):** NOT `@audit:ok`. The body has no `sorry`, but the
+water-filling capacity equality is reduced to the open hypotheses `h_bdd_global`
+(global MI upper bound), `h_perCoordMI` (per-coord AWGN achiever closed form), and
+`h_multivar_decomp` (per-coord max-entropy converse split). These carry the CORE
+analytic content (achievability VALUE + converse bound), not regularity
+preconditions; `h_kkt` / `h_opt` are the genuine water-filling optimality inputs,
+but the MI-analysis hyps are load-bearing. The name `_minimal` correctly signals an
+intentionally exposed conditional form — but `@audit:ok` on a conditional theorem
+laundering it as "② capacity formula complete (unconditional)". Honest fix
+(orchestrator/implementer): drop the load-bearing MI hyps, body `sorry` +
+`@residual(wall:multivariate-mi)` + per-coord AWGN residual. Until rewritten, this
+is a conditional (hypothesis-minimal) theorem, NOT a discharge. -/
 @[entry_point]
 theorem parallel_gaussian_capacity_formula_minimal {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
@@ -185,7 +206,8 @@ theorem parallel_gaussian_capacity_formula_minimal {n : ℕ}
       (mutualInfoOfChannel (gaussianProductInput Q)
           (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
         = ∑ i : Fin (n + 1), (1/2) * Real.log (1 + (Q i : ℝ) / (N i : ℝ)) :=
-    parallelGaussianCapacity_achiever_mi Q N h_meas h_parallel_meas h_perCoordMI
+    parallelGaussianCapacity_achiever_mi Q N (fun i => NNReal.coe_ne_zero.mp (hN i))
+      h_meas h_parallel_meas h_perCoordMI
   have h_reg : IsParallelGaussianPerCoordRegularity P N h_meas h_parallel_meas Q :=
     isParallelGaussianPerCoordRegularity_of_pieces P N h_meas h_parallel_meas Q
       h_bdd_global h_bridge_per_coord h_multivar_decomp
