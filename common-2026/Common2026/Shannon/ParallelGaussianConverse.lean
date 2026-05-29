@@ -29,8 +29,9 @@ assembled in-body via `parallelGaussian_max_ent_le_of_subadditivity`). As of Wav
 the named **Phase 1 precondition lemmas** (correlated-output absolute continuity / fibre
 product-entropy / output variance structure / fibre log-proxy / MI-decomposition value) are
 genuine; the sole remaining residual is the correlated-output joint log-density integrability
-#5, carrying `@residual(wall:multivariate-mi)`. None bundles the conclusion; they are genuine
-consequences of Gaussian smoothing.
+#5, carrying `@residual(plan:parallel-gaussian-converse-5-closure)` (reclassified
+2026-05-29 from `wall:multivariate-mi`; see its docstring). None bundles the conclusion;
+they are genuine consequences of Gaussian smoothing.
 
 **`false-statement` defect FIXED (2026-05-29)**: `parallel_per_input_mi_le_sum` now
 takes `0 ≤ P` (threaded through `parallel_bddAbove_miImage` + the constructor
@@ -49,11 +50,11 @@ each quadratic integrable against `p ⊗ₘ W` via `integrable_comp_eval` / Gaus
 #13 is a genuine MI-decomposition assembly (0 own `sorry`) reducing to the Phase-2 lift; its
 heartbeat blow-up was tamed by the named proxy `def piGaussProxy` (atomic `g` argument) +
 `set_option maxHeartbeats`. The **only** remaining `sorry` is #5
-`parallelOutput_joint_logDensity_integrable`, **reclassified to `@residual(wall:multivariate-mi)`**
-(a true Mathlib gap: the correlated joint output has no multivariate mixture-density
-representation in this file, so the 1-D Phase-6 quadratic-Gaussian lower bound cannot lift —
-per-coordinate factorization is principled-impossible for a correlated input; ~150-250 line
-new machinery required, deferred to a dedicated plan). #13 depends on `sorryAx` only
+`parallelOutput_joint_logDensity_integrable`, carrying
+`@residual(plan:parallel-gaussian-converse-5-closure)` (reclassified 2026-05-29 from the
+former `wall:multivariate-mi`: the mixture-density representation `μY = volume.withDensity
+(∫⁻ ∏ gaussianPDF ∂p)` is `p`-independent (Tonelli), so it is a big-but-mechanical self-build
+~180-270 lines, NOT a Mathlib wall; see its docstring). #13 depends on `sorryAx` only
 *transitively* via #5.
 
 Wave 3 (2026-05-29): the parallel-output marginal-as-convolution linchpin is now genuine
@@ -69,10 +70,12 @@ mean), #11 entropy integrand (1-D `outputDistribution_logDensity_integrable`). T
 inherits the 1-D AWGN power constraint via `parallelMarginal_mem_awgnPowerConstraintSet`.
 
 Remaining 1 `sorry`:
-* #5 `parallelOutput_joint_logDensity_integrable` (`@residual(wall:multivariate-mi)`) — joint
-  output log-density integrability for the **correlated** output (not a product measure, so the
-  1-D template does not lift coordinate-wise; the genuine wall = multivariate mixture-density
-  domination, see the declaration docstring for the is-a-wall analysis).
+* #5 `parallelOutput_joint_logDensity_integrable`
+  (`@residual(plan:parallel-gaussian-converse-5-closure)`) — joint output log-density
+  integrability for the **correlated** output. Reclassified 2026-05-29 from
+  `wall:multivariate-mi`: the multivariate mixture-density representation is `p`-independent
+  (Tonelli), so this is a big-but-mechanical self-build, NOT a Mathlib wall; see the
+  declaration docstring + closure plan for the re-adjudication.
 
 Wave 1 (2026-05-29): the volume-AC chain is now genuine (sorryAx-free,
 `#print axioms` = [propext, Classical.choice, Quot.sound]): shared base helper
@@ -101,7 +104,8 @@ The product→sum entropy identity `jointDifferentialEntropyPi_pi_eq_sum` (鍵�
 (Wave 2's then-remaining residuals — per-coord log-density integrability #4 / #11, output
 marginal variance #8 / #9 / #10 — were closed in Wave 3 via the marginal-as-convolution
 identity; #13 and the fibre log-proxy were closed in Wave 4. Only the correlated-output
-joint integrability #5 remains, now `@residual(wall:multivariate-mi)`.)
+joint integrability #5 remains, now `@residual(plan:parallel-gaussian-converse-5-closure)`
+— reclassified 2026-05-29 from `wall:multivariate-mi`, see its docstring.)
 
 Independent honesty audit (2026-05-29, commit `6f495bc`): genuine `0 ≤ P` converse
 chain confirmed (no load-bearing hypothesis, no degenerate/exfalso exploitation; the
@@ -1056,40 +1060,47 @@ the 1-D AWGN Phase-6 template does not lift coordinate-wise. The integrability o
 entropy integrand) for a general correlated Gaussian-smoothed output is the genuine
 `Fin n → ℝ` analogue of the 1-D mixture log-density wall.
 
-**Reclassified to `wall:multivariate-mi` (2026-05-29, independent proof-pivot re-evaluation).**
-A deeper independent analysis of the 1-D proof structure (`AwgnCapacityConverseMaxent.lean`
-Phase 6, lines 610-714) overturns the earlier `plan:*` "self-buildable" verdict. The 1-D
-joint integrability hinges on the hard sub-lemma `output_logDensity_lower_bound`
-(`:440`, whose own docstring flags it as *the only hard sub-lemma*), and that lemma is
-underpinned by an **explicit 1-D mixture density** `outputMixtureDensity N p y = ∫⁻ gaussianPDF x N y ∂p`
-(the convolution density representation `q = vol.withDensity (∫⁻ gaussianPDF ∂p)`). The
-*correlated* joint output `μY` has **no corresponding multivariate mixture-density
-representation in this file**: it is genuinely not a product measure, so its `rnDeriv` does
-not factor, and the per-coordinate decomposition that makes the 1-D quadratic Gaussian lower
-bound work is **principled-impossible** here (the cross-coordinate dependence of the input
-breaks the factorization). Closing it requires a new ~150-250 line multivariate mixture-density
-machinery (the `Measure.pi`-structured mixture density, its `withDensity` representation, a
-Gaussian upper/lower envelope, and the `Fin n → ℝ`-ball Chebyshev concentration lifting the
-1-D `p({|x|≤R}) ≥ 1/2` step) — a genuine Mathlib gap, not "big-but-easy". This is a separate
-sub-project, deferred to a dedicated plan.
+**Reclassified to `plan:parallel-gaussian-converse-5-closure` (2026-05-29, independent
+honesty re-adjudication — overturns the prior `wall:multivariate-mi` verdict).** The earlier
+docstring asserted this was a *principled-impossible Mathlib wall* ("no multivariate
+mixture-density representation", "genuine Mathlib gap", "VERIFIED true Mathlib gap"). A fresh
+independent audit verbatim-reading the 1-D template proof finds that claim to be a
+**classification defect** (Mathlib-wall misuse: a big-but-mechanical self-build mislabelled as
+blocked). Two grounds:
 
-The earlier audit note ("`plan:*` VERIFIED, self-buildable ~120-160 lines") rested on the
-inventory's surface estimate and is **superseded** by this is-a-wall finding. Signature
-unchanged: a clean `Integrable` claim with regularity preconditions (`0 ≤ P` / `hN` / `hp`)
-— no load-bearing hypothesis, no conclusion-bundle. Honest tier-2 residual, now pointing at
-a true Mathlib wall.
+(1) **The mixture-density representation does NOT require input factorization — Tonelli is
+`p`-independent.** The 1-D `output_eq_withDensity_mixture`
+(`AwgnCapacityConverseMaxent.lean:368-406`, `@audit:ok`) proves
+`p ∗ 𝒩(0,N) = volume.withDensity (fun y => ∫⁻ x, gaussianPDF x N y ∂p)` from hypotheses
+`hN : N ≠ 0` and `[SFinite p]` ONLY — it never uses absolute continuity or factorization of
+`p`. `p` appears solely as the outer `∫⁻ ... ∂p`; the proof is `Measure.lintegral_conv`
+(Tonelli) + the Gaussian translation `gaussianReal_of_var_ne_zero` + `lintegral_lintegral_swap`
+(Fubini). The mixture density is a `p`-average of the *noise* density, which is AC; the input
+`p` stays as an integrating measure. The same argument lifts to `Fin n → ℝ`: the parallel
+noise fibre `Measure.pi (fun i => gaussianReal (x i) (N i))` equals
+`volume.withDensity (fun z => ∏ᵢ gaussianPDF (x i)(N i)(z i))` via the existing `@audit:ok`
+building block `pi_withDensity_fin` (`MultivariateDiffEntropy.lean:263`), so
+`μY = volume.withDensity (fun z => ∫⁻ x, ∏ᵢ gaussianPDF (x i)(N i)(z i) ∂p)` holds regardless
+of whether `p` is a product. The prior docstring conflated "`μY.rnDeriv` does not factor into
+marginal rnDerivs" (TRUE, because the input is correlated) with "no mixture-density
+representation exists" (FALSE — the `∫⁻ ∂p` form imposes no product structure on the input).
+The Phase-6a/6b envelope + concentration steps lift coordinate-wise (the per-coordinate
+Gaussian envelope of the product density, plus the marginal second-moment constraints already
+established for #8/#9). Estimated ~180-270 lines, mechanical.
 
-Independent honesty audit (2026-05-29, Wave 4 delta, commits `82a50bb`/`7f97e4d`): the
-`wall:multivariate-mi` reclassification is VERIFIED honest. (a) The 1-D closure hinges on the
-scalar `outputMixtureDensity N p y = ∫⁻ gaussianPDF x N y ∂p` (`AwgnCapacityConverseMaxent.lean:338`),
-fed into `output_logDensity_lower_bound` (`:440`); the correlated joint output is genuinely not
-a product measure, so `MultivariateDiffEntropy.pi_withDensity` (product-density only) does not
-apply and no multivariate mixture-density representation exists in this file. (b) loogle: 0
-declarations for `Integrable (fun _ => log (rnDeriv _ _ _).toReal)` over the joint — a true
-Mathlib gap. (c) `wall:multivariate-mi` is the registered Ch.9 ParallelGaussian wall
-(audit-tags.md:62). Not a self-buildable task masquerading as a wall. The earlier `plan:*`
-"VERIFIED self-buildable" note is correctly superseded.
-@residual(wall:multivariate-mi) -/
+(2) **Slug semantic mismatch.** The registered `wall:multivariate-mi` (audit-tags.md:62) means
+the continuous `mutualInfo_pi_eq_sum` MI-additivity identity `I(X^n;Y^n) = ∑ I(X_i;Y_i)`. This
+declaration is a joint **log-density integrability** claim (finiteness of the joint differential
+entropy integrand), semantically unrelated to MI additivity. The wall slug was borrowed, not
+matched.
+
+Signature is HONEST and unchanged: a clean `Integrable` claim with regularity-only
+preconditions (`0 ≤ P` / `hN` / `hp`) — no load-bearing hypothesis, no conclusion-bundle, no
+circularity. The defect was purely in classification (tier-5 mathlib-wall-misuse), not in the
+signature; the honest sorry is reclassified to a tier-2 plan-deferred residual. Closure plan:
+`docs/shannon/parallel-gaussian-converse-5-closure-plan.md` (M0 = this re-adjudication gate);
+API inventory: `docs/shannon/parallel-gaussian-converse-multivariate-mi-api-inventory.md`.
+@residual(plan:parallel-gaussian-converse-5-closure) -/
 theorem parallelOutput_joint_logDensity_integrable (P : ℝ) (hP : 0 ≤ P)
     (hN : ∀ i, (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     Integrable
@@ -1521,10 +1532,11 @@ the output log-density integrability (#5, pushed from `μY` to `p ⊗ₘ W` via
 
 The body itself contains **0 `sorry`** — the genuine MI-decomposition assembly. `#print axioms`
 shows `sorryAx` **transitively only**, via the single leaf #5
-(`parallelOutput_joint_logDensity_integrable`, `@residual(wall:multivariate-mi)`); the fibre
+(`parallelOutput_joint_logDensity_integrable`,
+`@residual(plan:parallel-gaussian-converse-5-closure)`); the fibre
 log-proxy is now genuine, so #5 is the *only* remaining sorry source. No own `@residual` tag:
 this declaration carries no `sorry` (a fresh auditor sees a clean body). It is dischargeable
-the moment the `wall:multivariate-mi` leaf #5 lands. -/
+the moment the #5 leaf lands. -/
 theorem parallel_mi_decomp_value (P : ℝ) (hP : 0 ≤ P) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     (mutualInfoOfChannel p (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
@@ -1591,9 +1603,10 @@ genuine) + per-coord Gaussian max-entropy (`differentialEntropy_le_gaussian_of_v
 `@audit:ok`) + variance allocation `P'ᵢ := Var(Yᵢ) − Nᵢ` + capacity log-algebra. As of Wave 4
 the entire converse organization plus all Phase-1 regularity / fibre product-entropy /
 output-variance preconditions are genuine; the **only** transitive `sorry` source is the
-correlated-output joint integrability #5 (`@residual(wall:multivariate-mi)`), reached via
+correlated-output joint integrability #5
+(`@residual(plan:parallel-gaussian-converse-5-closure)`), reached via
 `parallel_mi_decomp_value`. This declaration carries no own `sorry` (a fresh auditor sees a
-clean body); it is dischargeable the moment the `wall:multivariate-mi` leaf lands.
+clean body); it is dischargeable the moment the #5 leaf lands.
 
 The `0 ≤ P` precondition is genuine and necessary: without it `parallel_per_input_mi_le_sum`
 would be FALSE for `P < 0` (the constraint set `parallelGaussianPowerConstraintSet P` is
