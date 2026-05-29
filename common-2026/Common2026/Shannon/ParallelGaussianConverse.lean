@@ -25,13 +25,12 @@ Genuine (sorryAx-free): Phase 2 decomposition lift
 Phase 3 `parallel_per_input_mi_le_sum`: the **converse organization is genuine**
 for `0 ≤ P` (MI decomposition + output-entropy subadditivity + per-coord Gaussian
 max-entropy + variance allocation `P'ᵢ := Var(Yᵢ) − Nᵢ` + log-algebra, all
-assembled in-body via `parallelGaussian_max_ent_le_of_subadditivity`). The residual
-content is isolated into named **Phase 1 precondition lemmas** (correlated-output
-absolute continuity / log-density integrability / fibre product-entropy / output
-variance structure), each carrying
-`@residual(plan:parallel-gaussian-converse-closure-plan)`. None bundles the
-conclusion; they are genuine consequences of Gaussian smoothing awaiting the
-`Fin n → ℝ` analogue of the 1-D AWGN Phase 6 measure-theoretic plumbing.
+assembled in-body via `parallelGaussian_max_ent_le_of_subadditivity`). As of Wave 4 all
+the named **Phase 1 precondition lemmas** (correlated-output absolute continuity / fibre
+product-entropy / output variance structure / fibre log-proxy / MI-decomposition value) are
+genuine; the sole remaining residual is the correlated-output joint log-density integrability
+#5, carrying `@residual(wall:multivariate-mi)`. None bundles the conclusion; they are genuine
+consequences of Gaussian smoothing.
 
 **`false-statement` defect FIXED (2026-05-29)**: `parallel_per_input_mi_le_sum` now
 takes `0 ≤ P` (threaded through `parallel_bddAbove_miImage` + the constructor
@@ -41,7 +40,21 @@ statement is genuinely FALSE for `P < 0` (the constraint set is non-empty — co
 Dirac at 0 — yet `∑ P'ᵢ ≤ P < 0` with `P'ᵢ ≥ 0` is unsatisfiable). The previous tier-5
 false-statement residual `P < 0` branch has been removed.
 
-Status: type-check done (tier 2), NOT proof done (3 `sorry`).
+Status: type-check done (tier 2), NOT proof done (1 `sorry`).
+
+Wave 4 (2026-05-29): #13 `parallel_mi_decomp_value` and the fibre log-proxy
+`parallelFibre_logProxy_integrable_compProd` are now GENUINE. The fibre log-proxy is
+sorryAx-free (`log(∏ gaussianPDF)` rewritten to the coordinate sum `∑ᵢ (c₀ᵢ + c₁ᵢ(yᵢ−xᵢ)²)`,
+each quadratic integrable against `p ⊗ₘ W` via `integrable_comp_eval` / Gaussian 2nd moment).
+#13 is a genuine MI-decomposition assembly (0 own `sorry`) reducing to the Phase-2 lift; its
+heartbeat blow-up was tamed by the named proxy `def piGaussProxy` (atomic `g` argument) +
+`set_option maxHeartbeats`. The **only** remaining `sorry` is #5
+`parallelOutput_joint_logDensity_integrable`, **reclassified to `@residual(wall:multivariate-mi)`**
+(a true Mathlib gap: the correlated joint output has no multivariate mixture-density
+representation in this file, so the 1-D Phase-6 quadratic-Gaussian lower bound cannot lift —
+per-coordinate factorization is principled-impossible for a correlated input; ~150-250 line
+new machinery required, deferred to a dedicated plan). #13 depends on `sorryAx` only
+*transitively* via #5.
 
 Wave 3 (2026-05-29): the parallel-output marginal-as-convolution linchpin is now genuine
 (`parallelOutput_marginal_eq_conv`, sorryAx-free): `μY.map(·i) = (p.map(·i)) ∗ gaussianReal 0 (N i)`,
@@ -55,16 +68,11 @@ via `integral_conv` + Gaussian fibre second moment; `parallelOutputMean_eq`: out
 mean), #11 entropy integrand (1-D `outputDistribution_logDensity_integrable`). The `i`-marginal
 inherits the 1-D AWGN power constraint via `parallelMarginal_mem_awgnPowerConstraintSet`.
 
-Remaining 3 `sorry` (all `@residual(plan:parallel-gaussian-converse-closure-plan)`):
-* #5 `parallelOutput_joint_logDensity_integrable` — joint output log-density integrability for the
-  **correlated** output (not a product measure, so the 1-D template does not lift coordinate-wise;
-  the genuine wall = multivariate mixture-density domination).
-* `parallelFibre_logProxy_integrable_compProd` — fibre `∫ log(∏ gaussianPDF) ∂(p ⊗ₘ W)` (the
-  `Fin n → ℝ` analogue of the 1-D `integrable_log_proxy_fibre_compProd_general`).
-* #13 `parallel_mi_decomp_value` — genuine reduction to the sorryAx-free Phase 2 lift is logically
-  complete (all preconditions supplied: AC lemmas + proxy density `parallelFibre_rnDeriv_ae_proxy` +
-  the two integrability lemmas above), but the `Measure.pi`-product proxy density makes the lift's
-  `whnf`/`isDefEq` exceed the heartbeat budget in-session; pending an elaboration-light reformulation.
+Remaining 1 `sorry`:
+* #5 `parallelOutput_joint_logDensity_integrable` (`@residual(wall:multivariate-mi)`) — joint
+  output log-density integrability for the **correlated** output (not a product measure, so the
+  1-D template does not lift coordinate-wise; the genuine wall = multivariate mixture-density
+  domination, see the declaration docstring for the is-a-wall analysis).
 
 Wave 1 (2026-05-29): the volume-AC chain is now genuine (sorryAx-free,
 `#print axioms` = [propext, Classical.choice, Quot.sound]): shared base helper
@@ -90,12 +98,10 @@ its coordinate marginals). With these:
 The product→sum entropy identity `jointDifferentialEntropyPi_pi_eq_sum` (鍵②) +
 `gaussianReal_logRnDeriv_integrable` give `parallel_condTerm_eq_sum_noise_entropy` (#6).
 
-The remaining 7 residuals (per-coord log-density integrability #4 / #5 / #11, output
-marginal variance #8 / #9 / #10, and the mi-decomp value #13 which depends on #4 / #5)
-await the parallel-output marginal-as-convolution identity
-`μY.map (· i) = (p.map (· i)) ∗ gaussianReal 0 (N i)` (the `Fin n → ℝ` analogue of the
-1-D `outputDistribution_awgn_eq_conv`), all carrying
-`@residual(plan:parallel-gaussian-converse-closure-plan)`.
+(Wave 2's then-remaining residuals — per-coord log-density integrability #4 / #11, output
+marginal variance #8 / #9 / #10 — were closed in Wave 3 via the marginal-as-convolution
+identity; #13 and the fibre log-proxy were closed in Wave 4. Only the correlated-output
+joint integrability #5 remains, now `@residual(wall:multivariate-mi)`.)
 
 Independent honesty audit (2026-05-29, commit `6f495bc`): genuine `0 ≤ P` converse
 chain confirmed (no load-bearing hypothesis, no degenerate/exfalso exploitation; the
@@ -1048,20 +1054,31 @@ Unlike the per-coordinate marginal (#4), the joint output `μY` of a correlated 
 the 1-D AWGN Phase-6 template does not lift coordinate-wise. The integrability of
 `log ((μY.rnDeriv volume z).toReal)` over `μY` (= finiteness of the joint differential
 entropy integrand) for a general correlated Gaussian-smoothed output is the genuine
-`Fin n → ℝ` analogue of the 1-D mixture log-density wall, awaiting the multivariate
-mixture-density domination (the `Measure.pi`-structured analogue of the 1-D
-`outputMixtureDensity` quadratic bound).
+`Fin n → ℝ` analogue of the 1-D mixture log-density wall.
 
-Independent honesty audit (2026-05-29): `plan:*` classification VERIFIED (not `wall:*`).
-The inventory (`parallel-gaussian-converse-multivariate-mi-inventory.md` §judgment) rates
-the correlated-output regularity as **self-buildable** (~120-160 lines) from the genuine
-1-D AWGN Phase-6 template (`outputDistribution_logDensity_integrable_joint`), not a hard
-Mathlib gap; the old `wall:multivariate-mi` was a misclassification ("big, not hard"), and
-the Phase-2-lift typeclass prerequisite `CountableOrCountablyGenerated (Fin n → ℝ) (Fin n → ℝ)`
-resolves cleanly (`infer_instance` confirmed), so no genuine Mathlib wall remains. Signature
-is a clean `Integrable` claim with regularity preconditions (`0 ≤ P` / `hN` / `hp`) — no
-load-bearing hypothesis, no conclusion-bundle. Honest tier-2 residual.
-@residual(plan:parallel-gaussian-converse-closure-plan) -/
+**Reclassified to `wall:multivariate-mi` (2026-05-29, independent proof-pivot re-evaluation).**
+A deeper independent analysis of the 1-D proof structure (`AwgnCapacityConverseMaxent.lean`
+Phase 6, lines 610-714) overturns the earlier `plan:*` "self-buildable" verdict. The 1-D
+joint integrability hinges on the hard sub-lemma `output_logDensity_lower_bound`
+(`:440`, whose own docstring flags it as *the only hard sub-lemma*), and that lemma is
+underpinned by an **explicit 1-D mixture density** `outputMixtureDensity N p y = ∫⁻ gaussianPDF x N y ∂p`
+(the convolution density representation `q = vol.withDensity (∫⁻ gaussianPDF ∂p)`). The
+*correlated* joint output `μY` has **no corresponding multivariate mixture-density
+representation in this file**: it is genuinely not a product measure, so its `rnDeriv` does
+not factor, and the per-coordinate decomposition that makes the 1-D quadratic Gaussian lower
+bound work is **principled-impossible** here (the cross-coordinate dependence of the input
+breaks the factorization). Closing it requires a new ~150-250 line multivariate mixture-density
+machinery (the `Measure.pi`-structured mixture density, its `withDensity` representation, a
+Gaussian upper/lower envelope, and the `Fin n → ℝ`-ball Chebyshev concentration lifting the
+1-D `p({|x|≤R}) ≥ 1/2` step) — a genuine Mathlib gap, not "big-but-easy". This is a separate
+sub-project, deferred to a dedicated plan.
+
+The earlier audit note ("`plan:*` VERIFIED, self-buildable ~120-160 lines") rested on the
+inventory's surface estimate and is **superseded** by this is-a-wall finding. Signature
+unchanged: a clean `Integrable` claim with regularity preconditions (`0 ≤ P` / `hN` / `hp`)
+— no load-bearing hypothesis, no conclusion-bundle. Honest tier-2 residual, now pointing at
+a true Mathlib wall.
+@residual(wall:multivariate-mi) -/
 theorem parallelOutput_joint_logDensity_integrable (P : ℝ) (hP : 0 ≤ P)
     (hN : ∀ i, (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     Integrable
@@ -1401,16 +1418,76 @@ fibre second moment + `(xᵢ)²` power constraint). The genuine multivariate ass
 (`Measure.integrable_compProd_iff` + per-coordinate `Measure.pi` marginal integrals) mirrors
 the 1-D template at `Fin n` scale.
 
-Independent honesty audit (2026-05-29): `plan:*` classification VERIFIED. Self-buildable
-`Fin n` analogue of the genuine 1-D `integrable_log_proxy_fibre_compProd_general`; signature
-is a clean `Integrable` claim with regularity preconditions only. Honest tier-2 residual.
-@residual(plan:parallel-gaussian-converse-closure-plan) -/
+Wave 4 (2026-05-29): GENUINE, sorryAx-free (`#print axioms` = [propext, Classical.choice,
+Quot.sound]). The log-of-product integrand is rewritten via `ENNReal.toReal_prod` +
+`Real.log_prod` (each `gaussianPDFReal > 0`) + `log_gaussianPDFReal_eq` into the coordinate
+sum `∑ᵢ (c₀ᵢ + c₁ᵢ (z.2 i − z.1 i)²)`; `integrable_finsetSum` reduces to per-coordinate
+summands, and each `(z.2 i − z.1 i)²` is integrable against `p ⊗ₘ W` by
+`Measure.integrable_compProd_iff` — the fibre `Measure.pi` integral of the `i`-coordinate
+quadratic is the 1-D Gaussian second moment `N i` via `integrable_comp_eval` /
+`integral_comp_eval` + `integral_sq_sub_self_gaussianReal`. The proof never uses that `p` is
+Gaussian. @audit:ok -/
 theorem parallelFibre_logProxy_integrable_compProd (P : ℝ) (hP : 0 ≤ P)
     (hN : ∀ i, (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     Integrable (fun z : (Fin n → ℝ) × (Fin n → ℝ) =>
         Real.log (∏ i, gaussianPDF (z.1 i) (N i) (z.2 i)).toReal)
       (p ⊗ₘ (parallelGaussianChannel N h_meas h_parallel_meas)) := by
-  sorry
+  classical
+  set W := parallelGaussianChannel N h_meas h_parallel_meas with hW_def
+  have hN' : ∀ i, N i ≠ 0 := fun i h => hN i (by rw [h]; norm_num)
+  -- per-coordinate affine constants
+  set c₀ : Fin n → ℝ := fun i => -(1 / 2) * Real.log (2 * Real.pi * (N i : ℝ)) with hc₀
+  set c₁ : Fin n → ℝ := fun i => -(1 / (2 * (N i : ℝ))) with hc₁
+  -- STEP 1: rewrite the log-of-product integrand as the coordinate sum
+  -- `∑ᵢ (c₀ᵢ + c₁ᵢ (z.2 i − z.1 i)²)`
+  have h_eq : (fun z : (Fin n → ℝ) × (Fin n → ℝ) =>
+        Real.log (∏ i, gaussianPDF (z.1 i) (N i) (z.2 i)).toReal)
+      = fun z => ∑ i, (c₀ i + c₁ i * (z.2 i - z.1 i) ^ 2) := by
+    funext z
+    rw [ENNReal.toReal_prod]
+    have h_pos : ∀ i ∈ (Finset.univ : Finset (Fin n)),
+        (gaussianPDF (z.1 i) (N i) (z.2 i)).toReal ≠ 0 := by
+      intro i _
+      rw [toReal_gaussianPDF]
+      exact (gaussianPDFReal_pos (z.1 i) (N i) (z.2 i) (hN' i)).ne'
+    rw [Real.log_prod h_pos]
+    refine Finset.sum_congr rfl (fun i _ => ?_)
+    rw [toReal_gaussianPDF, log_gaussianPDFReal_eq (z.1 i) (hN' i) (z.2 i), hc₀, hc₁]
+    ring
+  rw [h_eq]
+  -- STEP 2: each summand is integrable; sum over `Fin n` is integrable
+  refine integrable_finsetSum _ (fun i _ => ?_)
+  -- `(z.2 i − z.1 i)²` integrable against `p ⊗ₘ W`
+  have h_sq : Integrable (fun z : (Fin n → ℝ) × (Fin n → ℝ) => (z.2 i - z.1 i) ^ 2)
+      (p ⊗ₘ W) := by
+    have h_aesm : AEStronglyMeasurable
+        (fun z : (Fin n → ℝ) × (Fin n → ℝ) => (z.2 i - z.1 i) ^ 2) (p ⊗ₘ W) :=
+      (((measurable_pi_apply i).comp measurable_snd).sub
+        ((measurable_pi_apply i).comp measurable_fst)).pow_const 2 |>.aestronglyMeasurable
+    rw [Measure.integrable_compProd_iff h_aesm]
+    constructor
+    · -- per-fibre: `∫ y, (y i − x i)² ∂(W x)` integrable (Gaussian `i`-marginal 2nd moment)
+      refine Filter.Eventually.of_forall (fun x => ?_)
+      rw [hW_def, parallelGaussianChannel_apply]
+      have hfib : Integrable (fun yi : ℝ => (yi - x i) ^ 2) (gaussianReal (x i) (N i)) :=
+        InformationTheory.Shannon.AWGN.integrable_sq_sub_gaussianReal (x i) (x i) (N i)
+      exact integrable_comp_eval (μ := fun j => gaussianReal (x j) (N j)) (i := i) hfib
+    · -- L¹ norm of the fibre is the constant `N i`
+      have h_norm : (fun x : Fin n → ℝ => ∫ y, ‖(y i - x i) ^ 2‖ ∂(W x))
+          = fun _ => (N i : ℝ) := by
+        funext x
+        have hnn : (fun y : Fin n → ℝ => ‖(y i - x i) ^ 2‖)
+            = fun y => (fun yi : ℝ => (yi - x i) ^ 2) (y i) := by
+          funext y; rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _)]
+        rw [hnn, hW_def, parallelGaussianChannel_apply]
+        rw [integral_comp_eval (μ := fun j => gaussianReal (x j) (N j)) (i := i)
+          (f := fun yi : ℝ => (yi - x i) ^ 2)
+          (InformationTheory.Shannon.AWGN.integrable_sq_sub_gaussianReal
+            (x i) (x i) (N i)).aestronglyMeasurable]
+        exact InformationTheory.Shannon.AWGN.integral_sq_sub_self_gaussianReal (x i) (N i)
+      rw [h_norm]
+      exact integrable_const _
+  exact (integrable_const (c₀ i)).add (h_sq.const_mul (c₁ i))
 
 set_option maxHeartbeats 1600000 in
 /-- **Channel↔RV MI decomposition value** for the correlated input.
@@ -1425,27 +1502,22 @@ parallelFibre_logProxy_integrable_compProd`; `h_int_out` = snd-pushforward of #5
 signature exceed the heartbeat budget in-session; left as a residual pending an
 elaboration-light reformulation. Residual is otherwise transitive over #5 + the fibre log-proxy.
 
-Independent honesty audit (2026-05-29): HONEST tier-2 residual, `plan:*` VERIFIED.
-The sorry is NOT a defect: signature is a clean MI-decomposition EQUALITY with regularity
-preconditions only (no load-bearing hypothesis, no circularity, no degenerate exploitation).
-The "logically complete but whnf/heartbeat" framing is corroborated — the reduction target
-`parallel_mutualInfoOfChannel_toReal_eq_diffEntropyPi_sub` is genuine (`@audit:ok`, sorryAx-free)
-and its typeclass prerequisite `CountableOrCountablyGenerated (Fin n → ℝ) (Fin n → ℝ)` resolves
-(`infer_instance` confirmed), so no genuine Mathlib wall blocks it; the residual is genuinely
-transitive over #5 + the fibre log-proxy (both still `sorry`), so #13 cannot be discharged
-until those land regardless of the elaboration-cost reformulation. `plan:*` (not `wall:*`)
-because the closure path is self-buildable per the inventory.
-
 Wave 4 (2026-05-29): GENUINE reduction. The body is now a self-contained assembly that
 threads all Phase-2-lift preconditions and calls
-`parallel_mutualInfoOfChannel_toReal_eq_diffEntropyPi_sub` (`@audit:ok`, sorryAx-free).
-The residual content is isolated entirely into #5 (`parallelOutput_joint_logDensity_integrable`)
-and the fibre log-proxy (`parallelFibre_logProxy_integrable_compProd`), passed as honest
-arguments. `#print axioms` therefore shows `sorryAx` *transitively* via those two leaves only;
-the body itself contains 0 `sorry`. The proxy density is the explicit Gaussian-PDF product
-`g x y = ∏ᵢ gaussianPDF (x i)(N i)(y i)`, kept opaque enough (each precondition pre-bound to a
-`have`) that the lift's `whnf`/`isDefEq` stays within the heartbeat budget.
-@residual(plan:parallel-gaussian-converse-closure-plan) -/
+`parallel_mutualInfoOfChannel_toReal_eq_diffEntropyPi_sub` (`@audit:ok`, sorryAx-free): the
+AC lemmas (Wave 1/2), the joint AC `p ⊗ₘ W ≪ p.prod q` (in-tree 手筋), the proxy density
+`g = piGaussProxy N` (a named `def` so the lift receives a single atomic `g`, with
+`hg_ae = parallelFibre_rnDeriv_ae_proxy` and `hg_meas = piGaussProxy_measurable`), the fibre
+log-proxy integrability (`parallelFibre_logProxy_integrable_compProd`, now `@audit:ok`), and
+the output log-density integrability (#5, pushed from `μY` to `p ⊗ₘ W` via
+`integrable_map_measure` on `snd`).
+
+The body itself contains **0 `sorry`** — the genuine MI-decomposition assembly. `#print axioms`
+shows `sorryAx` **transitively only**, via the single leaf #5
+(`parallelOutput_joint_logDensity_integrable`, `@residual(wall:multivariate-mi)`); the fibre
+log-proxy is now genuine, so #5 is the *only* remaining sorry source. No own `@residual` tag:
+this declaration carries no `sorry` (a fresh auditor sees a clean body). It is dischargeable
+the moment the `wall:multivariate-mi` leaf #5 lands. -/
 theorem parallel_mi_decomp_value (P : ℝ) (hP : 0 ≤ P) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     (mutualInfoOfChannel p (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
@@ -1506,14 +1578,15 @@ end Phase1Regularity
 
 /-- **#2 per-coord max-entropy converse split (correlated input).** (Plan Phase 3 / inventory §C)
 
-For `0 ≤ P` the converse chain is a **genuine assembly**: MI decomposition (Phase 2 lift,
-sorryAx-free) + output-entropy subadditivity (`jointDifferentialEntropyPi_le_sum`, genuine)
-+ per-coord Gaussian max-entropy (`differentialEntropy_le_gaussian_of_variance_le`,
-`@audit:ok`) + variance allocation `P'ᵢ := Var(Yᵢ) − Nᵢ` + capacity log-algebra. The
-remaining residuals are the *correlated-output regularity* (Phase 1 precondition
-lemmas above) and the fibre product-entropy / output-variance identities, all carrying
-`@residual(plan:parallel-gaussian-converse-closure-plan)`; the converse organization itself
-is genuine (no load-bearing hypothesis, no degenerate exploitation).
+For `0 ≤ P` the converse chain is a **genuine assembly** (0 own `sorry`): MI decomposition
+(Phase 2 lift, sorryAx-free) + output-entropy subadditivity (`jointDifferentialEntropyPi_le_sum`,
+genuine) + per-coord Gaussian max-entropy (`differentialEntropy_le_gaussian_of_variance_le`,
+`@audit:ok`) + variance allocation `P'ᵢ := Var(Yᵢ) − Nᵢ` + capacity log-algebra. As of Wave 4
+the entire converse organization plus all Phase-1 regularity / fibre product-entropy /
+output-variance preconditions are genuine; the **only** transitive `sorry` source is the
+correlated-output joint integrability #5 (`@residual(wall:multivariate-mi)`), reached via
+`parallel_mi_decomp_value`. This declaration carries no own `sorry` (a fresh auditor sees a
+clean body); it is dischargeable the moment the `wall:multivariate-mi` leaf lands.
 
 The `0 ≤ P` precondition is genuine and necessary: without it `parallel_per_input_mi_le_sum`
 would be FALSE for `P < 0` (the constraint set `parallelGaussianPowerConstraintSet P` is
@@ -1521,8 +1594,7 @@ non-empty for `P < 0` — it contains the Dirac at 0, since `ENNReal.ofReal P = 
 the lintegral constraint to `0 ≤ 0` — yet `∑ P'ᵢ ≤ P < 0` with `P'ᵢ ≥ 0` is unsatisfiable).
 The constraint is threaded from the headline `parallel_gaussian_capacity_formula_minimal`
 (which holds `0 < P`) through the constructor; the previous tier-5 `false-statement` defect
-(P unconstrained) has been fixed by adding this hypothesis.
-@residual(plan:parallel-gaussian-converse-closure-plan) -/
+(P unconstrained) has been fixed by adding this hypothesis. -/
 theorem parallel_per_input_mi_le_sum {n : ℕ}
     (P : ℝ) (hP : 0 ≤ P) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
