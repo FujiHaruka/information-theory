@@ -299,19 +299,10 @@ theorem parallelGaussian_max_ent_le_of_subadditivity {n : ℕ}
     (h_marg_ac : ∀ i, (μY.map (fun z => z i)) ≪ volume)
     (hμ_ac : μY ≪ (volume : Measure (Fin n → ℝ)))
     (h_joint_ac : μY ≪ Measure.pi (fun i => μY.map (fun z => z i)))
-    (h_llr_split :
-      (fun z => llr μY (Measure.pi (fun i => μY.map (fun z => z i))) z)
-        =ᵐ[μY]
-      (fun z => Real.log ((μY.rnDeriv volume z).toReal)
-                  - (∑ i, Real.log (((μY.map (fun z => z i)).rnDeriv volume (z i)).toReal))))
     (h_int_marg : ∀ i,
       Integrable (fun z => Real.log (((μY.map (fun z => z i)).rnDeriv volume (z i)).toReal)) μY)
     (h_int_joint :
       Integrable (fun z => Real.log ((μY.rnDeriv volume z).toReal)) μY)
-    (h_marg_id : ∀ i,
-      (∫ z, Real.log (((μY.map (fun z => z i)).rnDeriv volume (z i)).toReal) ∂μY)
-        = ∫ x, Real.log (((μY.map (fun z => z i)).rnDeriv volume x).toReal)
-            ∂(μY.map (fun z => z i)))
     -- (honest) per-coord max-entropy + variance allocation:
     --   ∑ᵢ h(Yᵢ) − condTerm ≤ ∑ᵢ (1/2) log(1 + P'ᵢ/Nᵢ)
     (h_perCoord :
@@ -322,11 +313,11 @@ theorem parallelGaussian_max_ent_le_of_subadditivity {n : ℕ}
   -- The subadditivity is now fully genuine (Phase 2, completed 2026-05-29:
   -- 0 sorry / 0 residual in MultivariateDiffEntropy.lean). It is derived from
   -- `KL ≥ 0` + the genuine bridge `klDiv_pi_marginals_toReal_eq_sum_sub_joint`,
-  -- whose Bayes density split is discharged in-tree. The wrapper's regularity +
-  -- integrability hypotheses (`h_marg_ac` / `hμ_ac` / `h_joint_ac` /
-  -- `h_int_joint` / `h_int_marg`) are genuinely consumed here; the Bayes density
-  -- split `h_llr_split` and the marginal identity `h_marg_id` are no longer
-  -- consumed (internalized / Fubini-derived).
+  -- whose Bayes density split is discharged in-tree. The wrapper's only residual
+  -- hypotheses are regularity + integrability (`h_marg_ac` / `hμ_ac` /
+  -- `h_joint_ac` / `h_int_joint` / `h_int_marg`), all genuinely consumed here.
+  -- (The Bayes density split / marginal identity formerly threaded through are
+  -- now internalized in the genuine subadditivity foundation.)
   have h_subadd : jointDifferentialEntropyPi μY
       ≤ ∑ i, differentialEntropy (μY.map (fun z => z i)) :=
     jointDifferentialEntropyPi_le_sum h_marg_ac hμ_ac h_joint_ac h_int_joint h_int_marg
