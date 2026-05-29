@@ -23,21 +23,36 @@
 > Gaussian mixture 出力 log-density 可積分性 (`differentialEntropy_le_gaussian_of_variance_le` の `h_ent_int`,
 > `DifferentialEntropy.lean:518`)。Phase 3 で 1 本の shared sorry 補題に集約候補 (条件は撤退ライン参照)。
 
-## 進捗
+## 進捗 — ✅ CLOSED 2026-05-29 (commit f8549b9, wall genuine closure / proof done)
 
-- [ ] Phase 0 — signature / 数値 / 在庫差分 verbatim 確認 + skeleton 📋 → [awgn-capacity-converse-maxent-inventory.md](awgn-capacity-converse-maxent-inventory.md)
-- [ ] Phase 1 — `gaussianPDFReal_le_sup` (#5, easy) 📋
-- [ ] Phase 2 — `outputDistribution_awgn_eq_conv` (#1, medium) 📋
-- [ ] Phase 3 — log algebra 算術 step (#6, easy) 📋
-- [ ] Phase 4 — `output_secondMoment_le` / Var(Y) ≤ P+N (#2, medium) 📋
-- [ ] Phase 5 — `fibre_absolutelyContinuous_output_general` (#4, medium) 📋
-- [ ] Phase 6 — ★ `outputDistribution_logDensity_integrable` (#3, hard, 支配的) 📋
-  - [ ] 6a — Gaussian pdf 上界 → `log f_q ≤` 定数 (上界側) 📋
-  - [ ] 6b — ★ mixture 下界 `f_q(y) ≥ c·exp(−a·y²)` (唯一の hard、隔離 sub-lemma) 📋
-  - [ ] 6c — `|log f_q| ≤ c₀ + c₁·y²` 結合 + `Integrable.mono'` → `Integrable (log f_q) q` 📋
-  - [ ] 6d — joint への lift (`p⊗ₘW` 形 `h_int_out` / volume 形 `h_ent_int`) 📋
-- [ ] Phase 7 — 最終結線 `awgn_per_input_mi_le_log` → `h_max_ent` discharge 📋
-- [ ] Phase V — verify + `Common2026.lean` import + 親 plan F-3 反映 📋
+> **壁 `awgn-capacity-converse-maxent` は genuine に閉じた**。`AwgnCapacityConverseMaxent.lean` 0 sorry / 0 residual、
+> `#print axioms` で `sorryAx` 非依存 (標準 3 公理のみ) を独立監査が機械確認、6 declaration に `@audit:ok`。
+> 最終 genuine 定理: `awgn_capacity_closed_form_genuine : awgnCapacity P N = (1/2)log(1+P/N)`。
+> 前提: constraint set の false-statement defect を lintegral pivot で修正 (別途独立監査 OK)。
+
+- [x] Phase 0 — signature / import 方向 verbatim 確認 + skeleton ✅ (import 方向 (a): 新 file が genuine closed-form publish)
+- [x] Phase 1 — `gaussianPDFReal_le_sup` (#5) ✅
+- [x] Phase 2 — `outputDistribution_awgn_eq_conv` (#1) ✅
+- [x] Phase 3 — `capacity_log_diff` 算術 (#6) ✅
+- [x] Phase 4 — `output_secondMoment_eq` / `output_variance_le` Var(Y) ≤ P+N (#2) ✅
+- [x] Phase 5 — `fibre_absolutelyContinuous_output_general` (#4) ✅
+- [x] Phase 6 — ★ `outputDistribution_logDensity_integrable` (#3, hard) ✅ (撤退ライン L-CONV 不発、6b まで genuine)
+  - [x] 6a — Gaussian pdf 上界 → `log f_q ≤` 定数 ✅ (`outputMixtureDensity_le_sup`)
+  - [x] 6b — ★ mixture 下界 `f_q(y) ≥ c·exp(−a·y²)` ✅ genuine (`output_logDensity_lower_bound`, Chebyshev + Gaussian tail)
+  - [x] 6c — `|log f_q| ≤ c₀ + c₁·y²` 結合 + `Integrable.mono'` ✅ (`outputMixtureDensity_log_abs_le`)
+  - [x] 6d — joint lift (`p⊗ₘW` 形 / volume 形) ✅
+- [x] Phase 7 — 最終結線 `awgn_per_input_mi_le_log` + `awgn_capacity_closed_form_genuine` publish ✅
+- [x] Phase V — verify + `Common2026.lean` import 済 + 旧 `_of_out` wrapper 削除 (superseded) + wall register CLOSED ✅
+
+### 計画外で判明した重要事項 (実装中)
+- **🔴 constraint-set false-statement defect (tier-5)**: 着手前の `awgnCapacity` constraint set は Bochner `∫x²∂p≤P` で、
+  非可積分 (二次モーメント ∞) 入力が `integral_undef→0≤P` で紛れ込み converse を偽にしていた。lintegral 形
+  `awgnPowerConstraintSet` に pivot して修正 (9 file 横断、別 commit、独立監査 OK)。
+- **6a 密度表示**: 計画想定の `rnDeriv_conv` は一般 `p` (非 `≪volume`) で不適用 → `withDensity` 直接構成
+  (`output_eq_withDensity_mixture`) に pivot。
+- **whnf/heartbeat timeout**: `gaussianPDF` を絡める lintegral/Measurable で頻発。「密度を `set` で不透明化」+
+  「mean パラメータ可測性を独立補題 `measurable_gaussianPDF_fst` に切出し」で回避。
+- **ParallelGaussian 多次元版に同型 defect 残存** (`ParallelGaussian.lean:166`)、別ライン (後回し、handoff 参照)。
 
 ## ゴール / Approach
 
