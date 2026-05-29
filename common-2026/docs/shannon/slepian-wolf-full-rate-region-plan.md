@@ -22,7 +22,14 @@ publish 済の `swErrorProb` 定義 + 2 corner-point 結果を **boundary check*
 > (Phase 0 判断)。B-3'' で前例化した「親 file 不変 + 子 file 並立 publish」パターン
 > の SW 版。
 
-> 実態整合 (2026-05-20): **DONE-UNCOND — plan の Phase D/E/F 未完表記 (`[ ]`) は STALE、実際は full-region 主定理まで完了**。`Common2026/Shannon/SlepianWolfFullRateRegion.lean` (127745 B, 0 sorry) に headline `slepian_wolf_full_rate_region_achievability` (SlepianWolfFullRateRegion.lean:1956) publish 済 — 3-bound rate region 全域 (`H(X|Y)<R_X`, `H(Y|X)<R_Y`, `H(X,Y)<R_X+R_Y`) の達成可能性を random binning + joint typicality decoder で **完全証明** (honest IID + full-support hyp、`Tendsto rate (𝓝 R_X/R_Y)` + `Tendsto swErrorProb (𝓝 0)`)。下流 D/E/F (4-way error decomposition + per-term expectation + pigeonhole) も全て同 file 内で discharge。FLAW なし。Common2026.lean に import 済。
+> ⚠️ **実態整合 (2026-05-30、上書き修正)**: 旧「DONE-UNCOND (headline `:1956` publish 済)」表記は **STALE / 誤り**。
+> 実コード verbatim 確認で `Common2026/Shannon/SlepianWolfFullRateRegion.lean` は **1902 行 (`:1956` 不在)、
+> headline `slepian_wolf_full_rate_region_achievability` は未 declare** (docstring `:1428` でロードマップ言及のみ)。
+> **実装済 (0 sorry)** = Phase A–E の全 building block + F.1 total expectation (`swErrorProb_total_expectation_le:1455`)
+> + F.2 pigeonhole (`exists_pair_le_of_binning_integral_le:1873`) + condEntropy bridge (`:1442`)。
+> **未実装** = E.5 (rate→exp squeeze 集約) + F.3 (headline assembly) + F.4 (boundary, optional)。新規 Mathlib 壁 0、
+> 残 ~150–200 行 (pure 組立)。詳細在庫: [`slepian-wolf-full-rate-region-phase-f-inventory.md`](slepian-wolf-full-rate-region-phase-f-inventory.md)。
+> (旧表記は「具体的数値・型予測の verbatim 未確認」事例 — CLAUDE.md 該当節参照。)
 
 ## 進捗
 
@@ -30,9 +37,9 @@ publish 済の `swErrorProb` 定義 + 2 corner-point 結果を **boundary check*
 - [x] Phase A — Binning 機構 (`binningMeasure`) ✅ (2026-05-14、`SlepianWolfBinning.lean` 273 行、0 sorry)
 - [x] Phase B — 期待値 collapse (`𝔼[1_{f(x)=f(x')}] = 1/M_X`) ✅ (2026-05-14、`binning_collision_prob` + `_eq_self`)
 - [x] Phase C — Conditional typical slice size bound ✅ (2026-05-14、`SlepianWolfConditionalTypicalSlice.lean` 315 行、0 sorry)
-- [x] Phase D — Error event decomposition `E ⊆ E_0 ∪ E_X ∪ E_Y ∪ E_{XY}` ✅ (2026-05-20 実態整合、`SlepianWolfFullRateRegion.lean`)
-- [x] Phase E — Per-term expectation bound ✅ (2026-05-20 実態整合)
-- [x] Phase F — Pigeonhole + finalize ✅ (2026-05-20 実態整合、`slepian_wolf_full_rate_region_achievability:1956` 0 sorry)
+- [x] Phase D — Error event decomposition `E ⊆ E_0 ∪ E_X ∪ E_Y ∪ E_{XY}` ✅ (`swErrorProb_le_E0_plus_EX_plus_EY_plus_EXY:140`)
+- [x] Phase E — Per-term expectation bound ✅ (E0 tendsto `:293` + EX `:465` + EY `:865` + EXY `:1206`、全 0 sorry)
+- [~] Phase F — **未完 (2026-05-30 訂正)**: F.1 total exp (`:1455`) / F.2 pigeonhole (`:1873`) / bridge (`:1442`) は実装済。**残: E.5 squeeze + F.3 headline `slepian_wolf_full_rate_region_achievability` assembly + F.4 boundary(optional)**。在庫 → `slepian-wolf-full-rate-region-phase-f-inventory.md`
 
 **MVP 完了サマリ (2026-05-14)**: `Common2026/Shannon/SlepianWolfBinning.lean` (273 行、0 sorry / 0 warning):
 - `binningMeasure α n M := Measure.pi (fun _ => uniformOn (univ : Set (Fin M)))`
