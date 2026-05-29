@@ -192,6 +192,7 @@ import Common2026.Shannon.EPIStamDeBruijnConclusion
 import Common2026.Shannon.WynerZivCondEntDiffConvexBody
 import Common2026.Draft.Shannon.MultivariateDiffEntropy
 import Common2026.Draft.Shannon.ParallelGaussianPerCoord
+import Common2026.Shannon.ParallelGaussianConverse
 import Common2026.Shannon.ParallelGaussianPerCoordRegularity
 import Common2026.Shannon.HuffmanSwapNormProof
 import Common2026.Shannon.HuffmanSwapNormCompletion

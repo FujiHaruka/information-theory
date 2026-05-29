@@ -1,6 +1,7 @@
 import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ParallelGaussian
 import Common2026.Draft.Shannon.ParallelGaussianPerCoord
+import Common2026.Shannon.ParallelGaussianConverse
 import Common2026.Shannon.AWGN
 import Common2026.Shannon.AWGNMIBridge
 import Common2026.Draft.Shannon.ContChannelMIDecomp
@@ -27,27 +28,36 @@ hypothesis-minimal form.
 [parallel-gaussian-headline-honest-restructure-plan.md](../../../docs/shannon/parallel-gaussian-headline-honest-restructure-plan.md)):
 the previous versions reduced their conclusions wholesale to load-bearing open
 hypotheses (`h_bdd_global` / `h_multivar_decomp`) carrying the converse analytic
-core — flagged tier 5 by independent honesty audit. Those hypotheses are now
-dropped and replaced by `sorry` + `@residual(wall:multivariate-mi)` at the genuine
-walls:
+core — flagged tier 5 by independent honesty audit. Those hypotheses were dropped.
 
-* `achiever_mi` field — **genuine** (product-input MI additivity
-  `parallelGaussianCapacity_achiever_mi`, which discharges the per-coordinate AWGN
-  closed form `awgn_perCoord_mi_closed_form` in-body; the former load-bearing
-  `h_perCoordMI` hypothesis has been dropped, 2026-05-29).
-* `bddAbove` / `max_ent` fields — `sorry` + `@residual(wall:multivariate-mi)`. The
-  global MI upper bound and per-coord max-entropy converse split on *correlated*
-  feasible inputs are the converse side of the multivariate MI additivity wall, not
-  closed by the achiever's product-input closure (see plan M0).
+**Converse closure progress** (2026-05-29,
+[parallel-gaussian-converse-closure-plan.md](../../../docs/shannon/parallel-gaussian-converse-closure-plan.md)):
+all three constructor fields are now **structurally genuine** — every field reduces
+to a named lemma, no load-bearing hypothesis survives in the constructor body:
+
+* `achiever_mi` field — **fully genuine** (0 sorry / 0 @residual; product-input MI
+  additivity `parallelGaussianCapacity_achiever_mi`, discharging the per-coordinate
+  AWGN closed form in-body).
+* `bddAbove` field — **genuine reduction** to `parallel_bddAbove_miImage`
+  (`ParallelGaussianConverse.lean`): the constant `p`-independent water-filling sum
+  caps every feasible MI value, via `log` monotonicity on the Phase 3 split.
+* `max_ent` field — **genuine reduction** to `parallel_per_input_mi_le_sum`
+  (`ParallelGaussianConverse.lean`).
+
+Both converse reductions inherit a single transitive
+`@residual(plan:parallel-gaussian-converse-closure-plan)` `sorry` located in
+`parallel_per_input_mi_le_sum` (Phase 3 per-coord max-entropy split); the Phase 2
+channel↔RV decomposition lift (`parallel_mutualInfoOfChannel_toReal_eq_diffEntropyPi_sub`)
+is **genuine, sorryAx-free**. The wall was reclassified from `wall:multivariate-mi`
+to `plan:…-closure-plan` per the inventory's self-buildable verdict.
 
 The headline `parallel_gaussian_capacity_formula_minimal` keeps the genuine
-water-filling optimality inputs (`h_kkt` / `h_opt`), genuinely
-assembles `h_reg` via the constructor, and invokes the genuine `le_antisymm`
-sup-sandwich; its only residual is the transitive `wall:multivariate-mi` from the
-constructor (tracked by the type-checker, not re-stated here).
+water-filling optimality inputs (`h_kkt` / `h_opt`), assembles `h_reg` via the
+constructor, and invokes the genuine `le_antisymm` sup-sandwich; its only residual
+is the transitive Phase 3 `sorry` (tracked by the type-checker, not re-stated here).
 
-Status: type-check done (tier 2), NOT proof done (2 `sorry` at
-`wall:multivariate-mi`).
+Status: type-check done (tier 2). This file is `0 sorry`; the sole transitive
+residual lives in `ParallelGaussianConverse.parallel_per_input_mi_le_sum`.
 -/
 
 namespace InformationTheory.Shannon.ParallelGaussian
@@ -77,33 +87,30 @@ sharing residuals with the AWGN-MI plan). Phase 3: the `max_ent` residual
 piece) + the per-coord max-entropy plumbing fed back via `parallelGaussian_max_ent_le_of_subadditivity`.
 -/
 
-/-- **Constructor (honest restructure, 2026-05-29).** Assemble
-`IsParallelGaussianPerCoordRegularity` from genuine pieces only. The two
-load-bearing converse hypotheses of the previous version (`h_bdd_global` /
-`h_multivar_decomp`, which carried the CORE analytic content of the `bddAbove`
-and `max_ent` fields rather than regularity preconditions) are dropped; those
-fields are now `sorry` + `@residual(wall:multivariate-mi)`.
+/-- **Constructor (converse closure, 2026-05-29).** Assemble
+`IsParallelGaussianPerCoordRegularity` from genuine pieces only — every field
+reduces to a named lemma, no load-bearing hypothesis survives in the body.
 
 * `achiever_mi` field — **fully genuine** (0 sorry / 0 @residual). Built from
   `parallelGaussianCapacity_achiever_mi` (the genuine structural per-channel
   decomposition: product-input MI additivity on `gaussianProductInput Q`,
-  sorryAx-free), which now discharges the per-coordinate AWGN closed form in-body
-  via `awgn_perCoord_mi_closed_form` (delegating to the hypothesis-free, sorryAx-free
-  `AWGN.mutualInfoOfChannel_gaussianInput_closed_form'`; the `Q i = 0` deterministic
-  branch is closed genuinely by `klDiv_self`). The former load-bearing `h_perCoordMI`
-  hypothesis (tier-5, flagged by the 2026-05-29 honesty audit) has been **dropped**.
-* `bddAbove` field — `sorry` + `@residual(wall:multivariate-mi)`. The global MI
-  upper bound on the *correlated* feasible inputs is the converse side of the
-  multivariate MI additivity wall (not closed by the achiever's product-input
-  closure).
-* `max_ent` field — `sorry` + `@residual(wall:multivariate-mi)`. The per-coord
-  max-entropy converse split on *correlated* feasible inputs. The output-entropy
-  subadditivity step (`jointDifferentialEntropyPi_le_sum`) is genuine, but the
-  channel↔RV decomposition and per-coord max-entropy values it needs are the same
-  correlated-input wall content, absent from Mathlib.
+  sorryAx-free), which discharges the per-coordinate AWGN closed form in-body
+  via `awgn_perCoord_mi_closed_form`.
+* `bddAbove` field — **genuine reduction** to `parallel_bddAbove_miImage`
+  (`ParallelGaussianConverse.lean`): the constant `p`-independent water-filling sum
+  `∑ᵢ (1/2)log(1+P/Nᵢ)` caps every feasible MI value (each `P'ᵢ ≤ P` + `log`
+  monotonicity on the Phase 3 split).
+* `max_ent` field — **genuine reduction** to `parallel_per_input_mi_le_sum`
+  (`ParallelGaussianConverse.lean`).
 
-This is type-check done (tier 2), NOT proof done: 2 `sorry` remain at the
-`wall:multivariate-mi`. The achiever side is genuine. -/
+Both converse fields inherit a single transitive
+`@residual(plan:parallel-gaussian-converse-closure-plan)` `sorry` located inside
+`parallel_per_input_mi_le_sum` (Phase 3 per-coord max-entropy split); the Phase 2
+channel↔RV decomposition lift is genuine (sorryAx-free). Reclassified from
+`wall:multivariate-mi` to `plan:…-closure-plan` per the inventory's self-buildable
+verdict.
+
+This file is `0 sorry`; type-check done (tier 2). -/
 @[entry_point]
 theorem isParallelGaussianPerCoordRegularity_of_pieces {n : ℕ}
     (P : ℝ) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
@@ -115,16 +122,22 @@ theorem isParallelGaussianPerCoordRegularity_of_pieces {n : ℕ}
     { bddAbove := ?_
       achiever_mi := ?_
       max_ent := ?_ }
-  · -- `bddAbove` field: global MI upper bound on correlated feasible inputs.
-    -- @residual(wall:multivariate-mi)
-    sorry
+  · -- `bddAbove` field: GENUINE reduction to the Phase 3 converse split
+    -- (`parallel_bddAbove_miImage`, `ParallelGaussianConverse.lean`). The only
+    -- residual is the transitive `plan:parallel-gaussian-converse-closure-plan`
+    -- `sorry` inside `parallel_per_input_mi_le_sum` (tracked by the type-checker).
+    exact parallel_bddAbove_miImage P N hN h_meas h_parallel_meas
   · -- `achiever_mi` field: GENUINE. Product-input MI additivity (structural
     -- reduction) discharges the per-coordinate AWGN closed form in-body.
     exact parallelGaussianCapacity_achiever_mi Q N (fun i => NNReal.coe_ne_zero.mp (hN i))
       h_meas h_parallel_meas
-  · -- `max_ent` field: per-coord max-entropy converse split on correlated inputs.
-    -- @residual(wall:multivariate-mi)
-    sorry
+  · -- `max_ent` field: GENUINE reduction to the Phase 3 converse split
+    -- (`parallel_per_input_mi_le_sum`, `ParallelGaussianConverse.lean`). Its body
+    -- carries the single transitive `plan:parallel-gaussian-converse-closure-plan`
+    -- `sorry` (tracked by the type-checker, not re-stated here).
+    intro p hp
+    haveI : IsProbabilityMeasure p := hp.1
+    exact parallel_per_input_mi_le_sum P N hN h_meas h_parallel_meas p hp
 
 /-! ## Phase 0 — hypothesis-minimal headline skeleton
 
@@ -139,10 +152,12 @@ need not assemble the bundle manually.
 Gaussian capacity equals the water-filling sum. The two load-bearing converse
 hypotheses of the previous version (`h_bdd_global` / `h_multivar_decomp`, which
 carried the converse analytic content) are dropped; the residual is now a
-**transitive** `wall:multivariate-mi` `sorry` inherited from the constructor
-`isParallelGaussianPerCoordRegularity_of_pieces` (its `bddAbove` / `max_ent`
-fields), tracked by Lean's type-checker — no `@residual` is re-stated here per the
-audit-tags convention (dependent `sorry` is managed at its source).
+**transitive** `plan:parallel-gaussian-converse-closure-plan` `sorry` inherited from
+the constructor `isParallelGaussianPerCoordRegularity_of_pieces` (its `bddAbove` /
+`max_ent` fields reduce to `ParallelGaussianConverse.parallel_per_input_mi_le_sum`,
+whose Phase 3 body carries the single `sorry`), tracked by Lean's type-checker — no
+`@residual` is re-stated here per the audit-tags convention (dependent `sorry` is
+managed at its source).
 
 Genuine inputs retained: `h_kkt` / `h_opt` (water-filling optimality, L-WF1/L-WF2,
 genuine — discharged by IVT/concavity, not the conclusion), and the regularity
@@ -157,7 +172,8 @@ per-coordinate AWGN closed form in-body via `awgn_perCoord_mi_closed_form`
 `AWGN.mutualInfoOfChannel_gaussianInput_closed_form'`).
 
 This is type-check done (tier 2), NOT proof done: the only residual is the
-transitive `wall:multivariate-mi` from the constructor. -/
+transitive `plan:parallel-gaussian-converse-closure-plan` Phase 3 `sorry` from the
+constructor. -/
 @[entry_point]
 theorem parallel_gaussian_capacity_formula_minimal {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
