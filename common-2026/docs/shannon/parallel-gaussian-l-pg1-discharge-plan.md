@@ -760,3 +760,208 @@ Wave 3 second batch (parallel orchestration、本 plan は 4 plan 中 1) で全 
   formalization は `awgn-mi-decomp-plan` の multivariate 拡張 / 将来の独立 plan で。
 - PG family の上位 chain (T2-B Tier 3 stretch goal) は本 plan の outside、roadmap 側の
   優先付け判断。
+
+---
+
+## 2026-05-29 wall:multivariate-mi 再検証
+
+> **トリガー**: subadditivity が `withDensity_map` Found 0 にもかかわらず 13 行で self-build
+> できた前例を踏まえ、`@residual(wall:multivariate-mi)` も「誤診された壁」でないかを独立再検証。
+> 対象: `Common2026/Draft/Shannon/ParallelGaussianPerCoord.lean:455`
+> `parallelGaussian_achiever_mi_eq_sum_perChannel` (現 `sorry`)。
+> docs-only 調査、コード未変更。
+
+### 一行サマリ
+
+`wall:multivariate-mi` は **(b) self-build closeable だが subadditivity の 13 行とは桁が違う**
+(中央 ~120-200 行、最重ステップ = pi-input × pi-kernel の compProd が per-coord 結合 box の
+`Measure.pi` に factor することを `Measure.pi_eq` の box 普遍性で示す multivariate Tonelli)。
+真の Mathlib 不在は `compProd`-of-`Measure.pi` factorization **1 点のみ**で、その下流の
+`mutualInfo_pi_eq_sum` / `klDiv_pi_eq_sum` は既に genuine。subadditivity 型の「実は誤診」では
+**ない**が、「未着手の self-buildable」ではある (predicate bundling や別壁阻害ではない)。
+
+### 主定理の最終形 (再掲) + 証明戦略
+
+```lean
+-- ParallelGaussianPerCoord.lean:455 (現 sorry, @residual(wall:multivariate-mi))
+theorem parallelGaussian_achiever_mi_eq_sum_perChannel {n : ℕ}
+    (Q : Fin n → ℝ≥0) (N : Fin n → ℝ≥0)
+    (h_meas : IsParallelAwgnChannelMeasurable N)
+    (h_parallel_meas : IsParallelGaussianKernelMeasurable N) :
+    (mutualInfoOfChannel (gaussianProductInput Q)
+        (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
+      = ∑ i : Fin n,
+          (mutualInfoOfChannel (gaussianReal 0 (Q i)) (awgnChannel (N i) (h_meas i))).toReal
+```
+
+pseudo-Lean 証明戦略 (RV-form 経由):
+
+```
+-- step 1: 両辺の mutualInfoOfChannel → mutualInfo (RV 形) へ
+--   mutualInfoOfChannel_eq_mutualInfo_prod (ChannelCoding.lean:96, [IsMarkovKernel] 充足)
+--   LHS = mutualInfo (jointDistribution p W) Prod.fst Prod.snd  (p,W は Markov)
+-- step 2: jointDistribution p W = p ⊗ₘ W を Measure.pi (per-coord joint) に reshape
+--   ★ここが唯一の Mathlib 不在 = wall 本体:
+--     gaussianProductInput Q ⊗ₘ parallelGaussianChannel N
+--       = (Measure.pi (fun i => gaussianReal 0 (Q i) ⊗ₘ awgnChannel (N i))).map e
+--     e := MeasurableEquiv.arrowProdEquivProdArrow ℝ ℝ (Fin n)
+-- step 3: mutualInfo_pi_eq_sum (MIChainRule.lean:318, genuine) を適用
+--     → ∑ i, mutualInfo (per-coord joint) X_i Y_i
+-- step 4: 各 summand を mutualInfoOfChannel_eq_mutualInfo_prod の逆で per-coord channel MI に戻す
+-- step 5: .toReal を Finset.sum と交換 (各項 ≠ ⊤、IsMarkovKernel で finite)
+```
+
+### API 在庫テーブル
+
+#### (A) 既存 genuine 部品 (下流, 再利用可)
+
+| 概念 | API | file:line | 状態 | 扱い |
+|---|---|---|---|---|
+| channel MI → RV MI | `InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel_eq_mutualInfo_prod (p : Measure α) [IsProbabilityMeasure p] (W : Channel α β) [IsMarkovKernel W] : mutualInfoOfChannel p W = InformationTheory.Shannon.mutualInfo (jointDistribution p W) Prod.fst Prod.snd` | `Common2026/Shannon/ChannelCoding.lean:96` | genuine | step 1/4 両方向で使用。`[IsMarkovKernel]` は `parallelGaussianChannel.instIsMarkovKernel` / `awgnChannel.instIsMarkovKernel` で充足 |
+| RV-form MI 加法性 | `mutualInfo_pi_eq_sum {n} (μ : Measure Ω) [IsProbabilityMeasure μ] (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β) (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i)) (h_iid_joint : μ.map (fun ω i => (Xs i ω, Ys i ω)) = Measure.pi (fun i => μ.map (fun ω => (Xs i ω, Ys i ω)))) (h_iid_X : μ.map (fun ω i => Xs i ω) = Measure.pi (fun i => μ.map (Xs i))) (h_iid_Y : μ.map (fun ω i => Ys i ω) = Measure.pi (fun i => μ.map (Ys i))) : mutualInfo μ (fun ω i => Xs i ω) (fun ω i => Ys i ω) = ∑ i, mutualInfo μ (Xs i) (Ys i)` | `Common2026/Shannon/MIChainRule.lean:318` | genuine (`@entry_point`) | step 3。**RV 形** であり channel 形ではない点が壁の本質 (下記ボックス) |
+| KL 加法性 (pi) | `klDiv_pi_eq_sum {n} {α' : Fin n → Type*} [∀ i, MeasurableSpace (α' i)] (μs νs : ∀ i, Measure (α' i)) [∀ i, IsProbabilityMeasure (μs i)] [∀ i, IsProbabilityMeasure (νs i)] : klDiv (Measure.pi μs) (Measure.pi νs) = ∑ i, klDiv (μs i) (νs i)` | `Common2026/Shannon/MIChainRule.lean:249` | genuine | `mutualInfo_pi_eq_sum` 内部で使用済、直接呼ぶ別経路 (代替路) でも使える |
+| KL 積加法性 | `klDiv_prod_eq_add (μ₁ μ₂ : Measure α') [IsProbabilityMeasure μ₁] [IsProbabilityMeasure μ₂] (ν₁ ν₂ : Measure β') [IsProbabilityMeasure ν₁] [IsProbabilityMeasure ν₂] : klDiv (μ₁.prod ν₁) (μ₂.prod ν₂) = klDiv μ₁ μ₂ + klDiv ν₁ ν₂` | `Common2026/Shannon/MIChainRule.lean:230` | genuine | 代替路の base case |
+
+#### (B) Mathlib 構成プリミティブ (壁 step 2 の self-build 用)
+
+| 概念 | Mathlib API | file:line | 状態 | 扱い |
+|---|---|---|---|---|
+| pi 普遍性 (box) | `MeasureTheory.Measure.pi_eq [∀ i, SigmaFinite (μ i)] {μ' : Measure (∀ i, α i)} (h : ∀ s : ∀ i, Set (α i), (∀ i, MeasurableSet (s i)) → μ' (Set.pi univ s) = ∏ i, μ i (s i)) : Measure.pi μ = μ'` | `Mathlib/MeasureTheory/Constructions/Pi.lean:281` | 存在 | step 2 の本丸。joint を box で評価して `∏` に一致させる。`IsProbabilityMeasure ⇒ SigmaFinite` |
+| pi の box 値 | `MeasureTheory.Measure.pi_pi [∀ i, SigmaFinite (μ i)] (s : (i : ι) → Set (α i)) : Measure.pi μ (Set.pi univ s) = ∏ i, μ i (s i)` | `Mathlib/MeasureTheory/Constructions/Pi.lean:293` | 存在 (`@[simp]`) | RHS (per-coord joint の pi) を box で展開 |
+| compProd box 値 | `MeasureTheory.Measure.compProd_apply [SFinite μ] [IsSFiniteKernel κ] {s : Set (α × β)} (hs : MeasurableSet s) : (μ ⊗ₘ κ) s = ∫⁻ a, κ a (Prod.mk a ⁻¹' s) ∂μ` | `Mathlib/Probability/Kernel/Composition/MeasureCompProd.lean:61` | 存在 | LHS の joint を box で展開して `∫⁻` に。`IsMarkovKernel ⇒ IsSFiniteKernel`、`IsProbabilityMeasure ⇒ SFinite` |
+| arrow↔prod 同型 (測度保存) | `MeasureTheory.measurePreserving_arrowProdEquivProdArrow (α β ι) (μ : ι → Measure α) (ν : ι → Measure β) : MeasurePreserving (MeasurableEquiv.arrowProdEquivProdArrow α β ι) (Measure.pi (fun i => (μ i).prod (ν i))) ((Measure.pi μ).prod (Measure.pi ν))` | `Mathlib/MeasureTheory/Constructions/Pi.lean` (loogle 確認) | 存在 | `mutualInfo_pi_eq_sum` の内部で既に消費済。step 2 の reshape `e` の測度保存性 |
+| 入力 pi 定義 | `gaussianProductInput Q = Measure.pi (fun i => gaussianReal 0 (Q i))` | `Common2026/Draft/Shannon/ParallelGaussianPerCoord.lean:95` | def | step 2 LHS の `μ` 部 |
+| kernel fibre pi 定義 | `parallelGaussianChannel N x = Measure.pi (fun i => gaussianReal (x i) (N i))` (`@[simp] parallelGaussianChannel_apply`) | `Common2026/Shannon/ParallelGaussian.lean:94,101` | def | step 2 LHS の `κ` 部。各 fibre が `Measure.pi` |
+| per-coord 入力 | `awgnChannel N x = gaussianReal x N` (`@[simp] awgnChannel_apply`) | `Common2026/Shannon/AWGN.lean:76,81` | def | per-coord joint `gaussianReal 0 (Q i) ⊗ₘ awgnChannel (N i)` の κ |
+
+### 主要前提条件ボックス (壁 step 2 の事故りやすい点)
+
+- **`mutualInfo_pi_eq_sum` は RV 形であって channel 形ではない**: `μ : Measure Ω` 上の RV 族
+  `Xs Ys : Fin n → Ω → α/β` を取り、joint/X/Y が **3 本とも** `Measure.pi` に factor することを
+  要求する。channel MI からこの形に持ち込むには、`Ω := (Fin n → ℝ) × (Fin n → ℝ)`、
+  `μ := jointDistribution p W`、`Xs i := fun ω => ω.1 i`、`Ys i := fun ω => ω.2 i` と置く必要。
+  このとき `h_iid_joint` は「`(p ⊗ₘ W).map (coordinate pairing) = Measure.pi (per-coord joint)`」
+  に帰着 = 壁本体。`h_iid_X` は入力 marginal `p = Measure.pi (gaussianReal 0 (Q i))` (def で即),
+  `h_iid_Y` は出力 marginal `W の output = Measure.pi (...)` (要 step 2 の系)。
+- **`compProd_apply` の前提**: `[SFinite μ]` + `[IsSFiniteKernel κ]`。`IsProbabilityMeasure ⇒ SFinite`,
+  `IsMarkovKernel ⇒ IsSFiniteKernel` は instance で自動だが、`κ a (Prod.mk a ⁻¹' s)` の box
+  `s = box₁ ×ˢ box₂` での preimage は **per-coord box の積ではない** (preimage が a に依存)。
+  実際は `compProd_apply_prod` (`MeasureCompProd.lean:69`, `(μ ⊗ₘ κ)(s ×ˢ t) = ∫⁻ a in s, κ a t ∂μ`)
+  を使い、`κ a t = Measure.pi (gaussianReal (a i) (N i)) t` を box `t = Set.pi univ tᵢ` で
+  `pi_pi` 展開 → `∫⁻ a in (Set.pi univ sᵢ), ∏ i, gaussianReal (a i) (N i) (tᵢ) ∂(Measure.pi (gaussianReal 0 (Q i)))`。
+- **multivariate Tonelli が無料ではない**: 上の `∫⁻ over Measure.pi of ∏ i, fᵢ(aᵢ)` を
+  `∏ i, ∫⁻ fᵢ` に分けるクリーンな `lintegral_pi` は **Mathlib に無い** (loogle:
+  `lintegral_pi` unknown identifier; product-of-integrals は `lmarginal` /
+  `lintegral_eq_lmarginal_univ` 経由の重い経路のみ)。ここが行数を押し上げる主因。
+  ただし各 box `tᵢ` が固定なので `∏ i, gaussianReal (aᵢ)(Nᵢ)(tᵢ)` は `aᵢ` のみに依存する
+  関数の積 → `Measure.pi` 上の独立積分公式 (`lintegral` の独立分解、`MeasureTheory.lintegral` ×
+  `Measure.pi`) が要る。
+
+### 自作が必要な要素 (優先度順)
+
+1. **(最重) compProd-of-pi factorization lemma** — `(Measure.pi μᵢ) ⊗ₘ K = (Measure.pi (μᵢ ⊗ₘ Kᵢ)).map e`
+   形 (K が per-coord kernel の "pi-fibre" kernel)。推奨: 直接 general lemma を立てず、
+   本 achiever に特化した `gaussianProductInput Q ⊗ₘ parallelGaussianChannel N = (Measure.pi (per-coord joint)).map e`
+   を `Measure.pi_eq` の box 普遍性で示す。box で `compProd_apply_prod` + `pi_pi` + per-coord
+   Gaussian の独立積分。**工数 ~80-140 行**。落とし穴 = multivariate Tonelli (`lintegral_pi` 不在)。
+2. **(中) 出力 marginal の pi 形** `(p ⊗ₘ W).snd = Measure.pi (gaussianReal 0 (Qᵢ) ⊗ₘ awgnChannel Nᵢ).snd`
+   — step 2 lemma から `.snd` を取れば従う系。**~10-20 行**。
+3. **(軽) `.toReal` と `Finset.sum` の交換** — 各 per-coord channel MI が finite (`klDiv` of prob
+   measures, `IsMarkovKernel`)。`ENNReal.toReal_sum` + finiteness。**~15-25 行**。
+4. **(軽) RV 形 plumbing** — `Xs/Ys i := ω ↦ ω.1/2 i` の measurability、`h_iid_X`/`h_iid_Y`/`h_iid_joint`
+   を step 2 系から供給。**~30-50 行**。
+
+合計中央 **~120-200 行** (subadditivity の 13 行とは桁違い、多変量 Tonelli が支配項)。
+
+### Mathlib 壁の列挙 (真の不在)
+
+| wall | loogle 確認 | shared sorry 補題化 |
+|---|---|---|
+| `Measure.pi` と `Measure.compProd` を結ぶ factorization lemma | `MeasureTheory.Measure.pi, MeasureTheory.Measure.compProd` → **`Found 0 declarations`** (2026-05-29) | この achiever 専用なので shared 化不要。ただし将来 multivariate channel が増えるなら `Common2026/Shannon/` の共有補題化候補 |
+| `ProbabilityTheory.Kernel.pi` (kernel の pi) | **`unknown identifier 'ProbabilityTheory.Kernel.pi'`** (2026-05-29) | Mathlib に kernel-pi machinery が無いので「Kernel.pi の compProd 法則」経路 (orchestrator 仮説) は **存在しない**。pi-fibre kernel を独自定義する必要があるが、本件は `parallelGaussianChannel` が既に pi-fibre 形なので新規 kernel-pi 抽象は不要 |
+| `lintegral_pi` (`∫⁻ over Measure.pi = ∏ ∫⁻`) | **`unknown identifier 'MeasureTheory.lintegral_pi'`** (2026-05-29); `lmarginal` 経由 (`lintegral_eq_lmarginal_univ`) のみ存在 | self-build 内で吸収 (box ごとの独立積分)。これが行数押上げ主因 |
+
+**判定**: subadditivity (`withDensity_map` Found 0 → 13 行で self-build) と **同種だが規模が一桁上**。
+真の不在は `compProd`-of-`pi` factorization 1 点で、それを `pi_eq` 普遍性で self-build できる
+(=「誤診」ではあるが軽量ではない)。`Kernel.pi` 経路 (orchestrator 仮説 2) は Mathlib 不在で
+**使えない** — `parallelGaussianChannel` が既に pi-fibre 形なので機械的に出ることは **ない**。
+
+### 代替路 (factorization 非経由) の評価
+
+- **`klDiv_pi_eq_sum` 直接経路**: MI を `klDiv (joint) (product)` で展開し、joint と product
+  の両方を `Measure.pi` 形に reshape して `klDiv_pi_eq_sum` を割る経路。これも結局
+  **joint = `Measure.pi` を示す** step が必要で、step 2 と同じ compProd-of-pi factorization に
+  帰着する。`mutualInfo_pi_eq_sum` は内部でまさにこれ (`klDiv_pi_eq_sum`) を呼んでいる
+  (`MIChainRule.lean:364`) ので、**代替路 = 同じ壁を別の入口から踏む**。回避にならない。
+- 本質的に、joint `p ⊗ₘ W` が `Measure.pi` 形に factor することを示す step を回避する経路は
+  無い (MI/KL の per-coord 分解は全て product 構造に依存)。**唯一の壁は step 2 に集約**。
+
+### 撤退ラインへの距離
+
+- 親 plan の撤退ライン **D-2** (achiever_mi が `mutualInfo_pi_eq_sum` 適用条件で詰まる) が
+  まさにこの壁を予見していた。本 plan は D-2 を **回避** して `parallelGaussianCapacity_achiever_mi`
+  に `h_perCoordMI` を named hypothesis で受ける形 (`PerCoord.lean:474`) で着地済、壁は
+  `parallelGaussian_achiever_mi_eq_sum_perChannel` の `sorry` に **隔離済** (構造的撤退口は確保)。
+- 本再検証は **新規撤退ライン発動なし**。現状の `sorry + @residual(wall:multivariate-mi)` は
+  honesty 上 tier 2 で適正。ただし `@residual` の class は厳密には「**self-buildable wall**」
+  (Mathlib に部品は揃う) であり、「閉じられない真の壁」ではない点を docstring に補足すると
+  分類精度が上がる (orchestrator 判断)。
+
+### 着手 skeleton (compProd-of-pi factorization を切り出す形)
+
+```lean
+import Common2026.Shannon.ParallelGaussian
+import Common2026.Shannon.AWGN
+import Common2026.Shannon.ChannelCoding
+import Common2026.Shannon.MIChainRule
+import Mathlib.MeasureTheory.Constructions.Pi
+import Mathlib.Probability.Kernel.Composition.MeasureCompProd
+
+open MeasureTheory ProbabilityTheory
+open scoped ENNReal
+
+namespace InformationTheory.Shannon.ParallelGaussian
+open Common2026.Shannon InformationTheory.Shannon.AWGN
+
+/-- ★ wall 本体を切り出した補題: pi-input × pi-fibre-kernel の joint が
+per-coord joint の `Measure.pi` を `arrowProdEquivProdArrow` で reshape した形に factor する。
+Mathlib 不在 (compProd-of-pi)、`Measure.pi_eq` の box 普遍性で self-build (~80-140 行)。 -/
+theorem gaussianProductInput_compProd_parallelGaussianChannel_eq_pi {n : ℕ}
+    (Q N : Fin n → ℝ≥0)
+    (h_meas : IsParallelAwgnChannelMeasurable N)
+    (h_parallel_meas : IsParallelGaussianKernelMeasurable N) :
+    (gaussianProductInput Q) ⊗ₘ (parallelGaussianChannel N h_meas h_parallel_meas)
+      = (Measure.pi (fun i => (gaussianReal 0 (Q i)) ⊗ₘ (awgnChannel (N i) (h_meas i)))).map
+          (MeasurableEquiv.arrowProdEquivProdArrow ℝ ℝ (Fin n)) := by
+  sorry -- @residual(wall:multivariate-mi)
+
+/-- 主壁定理 (現 PerCoord.lean:455 の本体)。上の factorization + mutualInfo_pi_eq_sum で genuine 化。 -/
+theorem parallelGaussian_achiever_mi_eq_sum_perChannel {n : ℕ}
+    (Q N : Fin n → ℝ≥0)
+    (h_meas : IsParallelAwgnChannelMeasurable N)
+    (h_parallel_meas : IsParallelGaussianKernelMeasurable N) :
+    (mutualInfoOfChannel (gaussianProductInput Q)
+        (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
+      = ∑ i : Fin n,
+          (mutualInfoOfChannel (gaussianReal 0 (Q i)) (awgnChannel (N i) (h_meas i))).toReal := by
+  sorry -- step 1-5 above; depends on the factorization lemma
+
+end InformationTheory.Shannon.ParallelGaussian
+```
+
+### ゲート判定 (3-5 行)
+
+- `wall:multivariate-mi` = **(b) self-build closeable**。真の Mathlib 不在は `compProd`-of-`Measure.pi`
+  factorization **1 点** (loogle Found 0、`Kernel.pi` も unknown identifier)。下流の
+  `mutualInfo_pi_eq_sum` / `klDiv_pi_eq_sum` は既に genuine、`Measure.pi_eq` / `compProd_apply_prod` /
+  `pi_pi` / `measurePreserving_arrowProdEquivProdArrow` の部品も揃う。
+- **(c) `Kernel.pi` factorization が機械的、は誤り**: Mathlib に kernel-pi が無いため
+  orchestrator 仮説 2 (Kernel.pi の compProd 法則) は使えない。`parallelGaussianChannel` が
+  既に pi-fibre 形である事実を直接突く self-build が唯一の道。
+- closeable 必要部品: 切出し補題 `gaussianProductInput_compProd_parallelGaussianChannel_eq_pi`
+  (~80-140 行、`Measure.pi_eq` 普遍性 + box ごとの多変量 Tonelli)。規模中央 **~120-200 行**
+  (subadditivity の 13 行とは一桁違う)。**最初の 1 手** = 上記切出し補題を skeleton 化し、
+  `Measure.pi_eq` で box `Set.pi univ sᵢ` に対し LHS=`compProd_apply_prod`、RHS=`pi_pi` を展開、
+  per-coord Gaussian の独立積分で `∏` 一致を埋める。
+- subadditivity と同様の「**未着手の self-buildable 壁**」である (predicate bundling / 別壁阻害
+  ではない)。ただし軽量 (13 行) ではなく、多変量 Tonelli が支配項のため subadditivity より重い。
