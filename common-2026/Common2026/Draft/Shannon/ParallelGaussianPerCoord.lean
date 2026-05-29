@@ -319,13 +319,17 @@ theorem parallelGaussian_max_ent_le_of_subadditivity {n : ℕ}
         ≤ ∑ i, (1/2) * Real.log (1 + P' i / (N i : ℝ))) :
     miReal ≤ ∑ i, (1/2) * Real.log (1 + P' i / (N i : ℝ)) := by
   -- ★ genuine output-entropy subadditivity: h(Yⁿ) ≤ ∑ᵢ h(Yᵢ)
-  -- subadditivity is now genuine; the bundled honest hypotheses
-  -- (h_llr_split / h_int_marg / h_int_joint / h_marg_id) are retained on the
-  -- wrapper signature for future discharge of the residual but no longer
-  -- consumed at this call site (signature shrunk in Round 3 sorry-migration).
+  -- The subadditivity is now fully genuine (Phase 2, completed 2026-05-29:
+  -- 0 sorry / 0 residual in MultivariateDiffEntropy.lean). It is derived from
+  -- `KL ≥ 0` + the genuine bridge `klDiv_pi_marginals_toReal_eq_sum_sub_joint`,
+  -- whose Bayes density split is discharged in-tree. The wrapper's regularity +
+  -- integrability hypotheses (`h_marg_ac` / `hμ_ac` / `h_joint_ac` /
+  -- `h_int_joint` / `h_int_marg`) are genuinely consumed here; the Bayes density
+  -- split `h_llr_split` and the marginal identity `h_marg_id` are no longer
+  -- consumed (internalized / Fubini-derived).
   have h_subadd : jointDifferentialEntropyPi μY
       ≤ ∑ i, differentialEntropy (μY.map (fun z => z i)) :=
-    jointDifferentialEntropyPi_le_sum h_marg_ac hμ_ac h_joint_ac
+    jointDifferentialEntropyPi_le_sum h_marg_ac hμ_ac h_joint_ac h_int_joint h_int_marg
   -- I = h(Yⁿ) − condTerm ≤ ∑ h(Yᵢ) − condTerm ≤ ∑ (1/2) log(1 + P'ᵢ/Nᵢ)
   rw [h_decomp]
   refine le_trans ?_ h_perCoord
