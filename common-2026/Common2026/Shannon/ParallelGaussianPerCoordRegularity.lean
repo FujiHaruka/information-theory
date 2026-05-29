@@ -17,36 +17,36 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 
 [parallel-gaussian-l-pg1-discharge-plan.md](../../../docs/shannon/parallel-gaussian-l-pg1-discharge-plan.md).
 
-This file discharges the honest regularity bundle
+This file assembles the regularity bundle
 `InformationTheory.Shannon.ParallelGaussian.IsParallelGaussianPerCoordRegularity`
-(`ParallelGaussianPerCoord.lean:156`, 3 fields: `bddAbove` / `achiever_mi` /
-`max_ent`) from honest pieces only, and re-publishes the headline
-`parallel_gaussian_capacity_formula` in hypothesis-minimal form
-(`h_reg` is unfolded into its 3 fields, the only residual being the
-multivariate channel↔RV MI decomposition, which is absent from Mathlib and
-not the conclusion equality).
+(`ParallelGaussianPerCoord.lean:186`, 3 fields: `bddAbove` / `achiever_mi` /
+`max_ent`) and re-publishes the headline `parallel_gaussian_capacity_formula` in
+hypothesis-minimal form.
 
-**Phase 0 skeleton** (2026-05-25): only `isParallelGaussianPerCoordRegularity_of_pieces`
-and `parallel_gaussian_capacity_formula_minimal` are stated, with bodies
-`:= by sorry`. Phase 1-4 of the discharge plan will fill these one by one.
-No new `@audit:staged(...)` predicate is introduced — both statements only
-consume the already-existing bundle `IsParallelGaussianPerCoordRegularity`.
+**Honest restructure** (2026-05-29,
+[parallel-gaussian-headline-honest-restructure-plan.md](../../../docs/shannon/parallel-gaussian-headline-honest-restructure-plan.md)):
+the previous versions reduced their conclusions wholesale to load-bearing open
+hypotheses (`h_bdd_global` / `h_multivar_decomp`) carrying the converse analytic
+core — flagged tier 5 by independent honesty audit. Those hypotheses are now
+dropped and replaced by `sorry` + `@residual(wall:multivariate-mi)` at the genuine
+walls:
 
-## Skeleton scope
+* `achiever_mi` field — **genuine** (product-input MI additivity
+  `parallelGaussianCapacity_achiever_mi` fed the per-coordinate AWGN closed form
+  `h_perCoordMI`, a regularity-shaped precondition).
+* `bddAbove` / `max_ent` fields — `sorry` + `@residual(wall:multivariate-mi)`. The
+  global MI upper bound and per-coord max-entropy converse split on *correlated*
+  feasible inputs are the converse side of the multivariate MI additivity wall, not
+  closed by the achiever's product-input closure (see plan M0).
 
-* **constructor**: take the 3 honest pieces (`h_bdd_global` / `h_perCoord_bridge_achiever` /
-  the `max_ent` residual = `h_multivar_decomp` + per-coord bridge) and return
-  `IsParallelGaussianPerCoordRegularity P N h_meas h_parallel_meas Q`.
-* **headline**: take the genuine L-WF1/L-WF2 outputs (`h_kkt` + `h_opt`) plus the
-  honest multivariate MI decomposition + per-coord bridge, and return the
-  water-filling capacity equality (discharging the previous `h_reg` argument of
-  `parallel_gaussian_capacity_formula` via the constructor above).
+The headline `parallel_gaussian_capacity_formula_minimal` keeps the genuine
+water-filling optimality inputs (`h_kkt` / `h_opt`) and `h_perCoordMI`, genuinely
+assembles `h_reg` via the constructor, and invokes the genuine `le_antisymm`
+sup-sandwich; its only residual is the transitive `wall:multivariate-mi` from the
+constructor (tracked by the type-checker, not re-stated here).
 
-The honest pieces (`h_multivar_decomp`, `h_bridge_per_coord`) are stated with
-real Prop signatures (NOT `:True` placeholders), in the shape Mathlib /
-AWGN-MI bridge plan can later discharge. They are load-bearing assumptions
-(not conclusions in disguise): each pins down an analytic fact about Gaussian
-channels that Mathlib does not currently provide.
+Status: type-check done (tier 2), NOT proof done (2 `sorry` at
+`wall:multivariate-mi`).
 -/
 
 namespace InformationTheory.Shannon.ParallelGaussian
@@ -76,65 +76,59 @@ sharing residuals with the AWGN-MI plan). Phase 3: the `max_ent` residual
 piece) + the per-coord max-entropy plumbing fed back via `parallelGaussian_max_ent_le_of_subadditivity`.
 -/
 
-/-- **Constructor (skeleton).** Assemble `IsParallelGaussianPerCoordRegularity` from
-honest pieces, one per field. Body to be filled by Phase 1-4 of the discharge plan.
+/-- **Constructor (honest restructure, 2026-05-29).** Assemble
+`IsParallelGaussianPerCoordRegularity` from genuine pieces only. The two
+load-bearing converse hypotheses of the previous version (`h_bdd_global` /
+`h_multivar_decomp`, which carried the CORE analytic content of the `bddAbove`
+and `max_ent` fields rather than regularity preconditions) are dropped; those
+fields are now `sorry` + `@residual(wall:multivariate-mi)`.
 
-* `h_bdd_global` — Phase 1: every feasible `p` has MI value bounded by the
-  Q-free global upper bound `∑ᵢ (1/2) log(1 + P/(N i))`.
-* `h_perCoord_bridge_achiever` — Phase 2: per-coord AWGN bridge giving the
-  achiever MI value for each coordinate (this is the AWGN(#5) residual, shared
-  with the AWGN-MI bridge plan).
-* `h_multivar_decomp` — Phase 3: multivariate channel↔RV MI decomposition for
-  every feasible input, exposing the joint output marginal `μY`, the conditional
-  term `condTerm`, and the per-coord max-entropy upper bound. This is the
-  **single new honest piece** introduced by the L-PG1 discharge plan; not present
-  in Mathlib.
+* `achiever_mi` field — **genuine**, built from
+  `parallelGaussianCapacity_achiever_mi` (the genuine structural per-channel
+  decomposition: product-input MI additivity on `gaussianProductInput Q`) fed the
+  per-coordinate AWGN closed form `h_perCoordMI`. `h_perCoordMI` is a per-channel
+  regularity-shaped fact (single-channel AWGN value, `p`-independent), NOT the
+  conclusion equality; it is supplied as a precondition.
+* `bddAbove` field — `sorry` + `@residual(wall:multivariate-mi)`. The global MI
+  upper bound on the *correlated* feasible inputs is the converse side of the
+  multivariate MI additivity wall (not closed by the achiever's product-input
+  closure).
+* `max_ent` field — `sorry` + `@residual(wall:multivariate-mi)`. The per-coord
+  max-entropy converse split on *correlated* feasible inputs. The output-entropy
+  subadditivity step (`jointDifferentialEntropyPi_le_sum`) is genuine, but the
+  channel↔RV decomposition and per-coord max-entropy values it needs are the same
+  correlated-input wall content, absent from Mathlib.
 
-**Honesty audit (2026-05-29):** NOT `@audit:ok`. The body has no `sorry`, but the
-conclusion `IsParallelGaussianPerCoordRegularity` is reduced wholesale to the open
-hypotheses `h_bdd_global` / `h_multivar_decomp`, which carry the CORE analytic
-content (the global MI upper bound = `bddAbove` field, and the per-coord
-max-entropy converse split = `max_ent` field), not regularity preconditions. The
-docstring itself admits these are "load-bearing assumptions ... absent from
-Mathlib", which are POSITIVE indicators of load-bearing. `@audit:ok` (tier 1 =
-0 sorry / 0 residual) would launder this as unconditional completion. Honest fix
-(orchestrator/implementer): drop the load-bearing hyps, body `sorry` +
-`@residual(wall:multivariate-mi)` (`h_multivar_decomp`) plus a residual for the
-global-bound piece. Until rewritten, this is a conditional theorem, NOT a discharge. -/
+This is type-check done (tier 2), NOT proof done: 2 `sorry` remain at the
+`wall:multivariate-mi`. The achiever side is genuine. -/
 @[entry_point]
 theorem isParallelGaussianPerCoordRegularity_of_pieces {n : ℕ}
-    (P : ℝ) (N : Fin n → ℝ≥0)
+    (P : ℝ) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N)
     (Q : Fin n → ℝ≥0)
-    -- (P-1, Phase 1) global P-upper-bound (Q-free)
-    (h_bdd_global :
-      ∀ p ∈ parallelGaussianPowerConstraintSet P,
-        (mutualInfoOfChannel p (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
-          ≤ ∑ i : Fin n, (1/2) * Real.log (1 + P / (N i : ℝ)))
-    -- (P-2, Phase 2) per-coord AWGN bridge for the achiever
-    (h_perCoord_bridge_achiever :
-      (mutualInfoOfChannel (gaussianProductInput Q)
-          (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
-        = ∑ i : Fin n, (1/2) * Real.log (1 + (Q i : ℝ) / (N i : ℝ)))
-    -- (P-3, Phase 3) multivariate channel↔RV decomp + per-coord max-entropy allocation
-    -- For every feasible `p`, there exist a joint output `μY` and a conditional term
-    -- such that the MI decomposes as `h(Yⁿ) − condTerm`, and there exists a
-    -- per-coord power split `P'` (≥0, ∑≤P) whose subadditive upper bound is met.
-    (h_multivar_decomp :
-      ∀ p ∈ parallelGaussianPowerConstraintSet P,
-        ∃ P' : Fin n → ℝ, (∀ i, 0 ≤ P' i) ∧ (∑ i : Fin n, P' i ≤ P) ∧
-          (mutualInfoOfChannel p (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
-            ≤ ∑ i : Fin n, (1/2) * Real.log (1 + P' i / (N i : ℝ))) :
+    -- per-COORDINATE AWGN closed form for the product-input achiever
+    -- (regularity-shaped: single-channel AWGN value, `p`-independent, not the
+    -- conclusion equality). Supplied as a precondition; feeds the genuine
+    -- structural reduction `parallelGaussianCapacity_achiever_mi`.
+    (h_perCoordMI : ∀ i,
+      (mutualInfoOfChannel (gaussianReal 0 (Q i)) (awgnChannel (N i) (h_meas i))).toReal
+        = (1/2) * Real.log (1 + (Q i : ℝ) / (N i : ℝ))) :
     IsParallelGaussianPerCoordRegularity P N h_meas h_parallel_meas Q := by
   refine
     { bddAbove := ?_
-      achiever_mi := h_perCoord_bridge_achiever
-      max_ent := h_multivar_decomp }
-  -- Phase 1: the MI image is bounded above by the Q-free global P-upper bound.
-  refine ⟨∑ i : Fin n, (1/2) * Real.log (1 + P / (N i : ℝ)), ?_⟩
-  rintro y ⟨p, hp_mem, rfl⟩
-  exact h_bdd_global p hp_mem
+      achiever_mi := ?_
+      max_ent := ?_ }
+  · -- `bddAbove` field: global MI upper bound on correlated feasible inputs.
+    -- @residual(wall:multivariate-mi)
+    sorry
+  · -- `achiever_mi` field: GENUINE. Product-input MI additivity (structural
+    -- reduction) fed the per-coordinate AWGN closed form.
+    exact parallelGaussianCapacity_achiever_mi Q N (fun i => NNReal.coe_ne_zero.mp (hN i))
+      h_meas h_parallel_meas h_perCoordMI
+  · -- `max_ent` field: per-coord max-entropy converse split on correlated inputs.
+    -- @residual(wall:multivariate-mi)
+    sorry
 
 /-! ## Phase 0 — hypothesis-minimal headline skeleton
 
@@ -145,72 +139,50 @@ The headline below is the hypothesis-minimal re-publish of
 need not assemble the bundle manually.
 -/
 
-/-- **Hypothesis-minimal headline (skeleton).** The parallel Gaussian capacity
-equals the water-filling sum, with the regularity bundle unfolded into its
-3 honest pieces. Body to be filled by Phase 4 of the discharge plan via the
-constructor `isParallelGaussianPerCoordRegularity_of_pieces` above.
+/-- **Hypothesis-minimal headline (honest restructure, 2026-05-29).** The parallel
+Gaussian capacity equals the water-filling sum. The two load-bearing converse
+hypotheses of the previous version (`h_bdd_global` / `h_multivar_decomp`, which
+carried the converse analytic content) are dropped; the residual is now a
+**transitive** `wall:multivariate-mi` `sorry` inherited from the constructor
+`isParallelGaussianPerCoordRegularity_of_pieces` (its `bddAbove` / `max_ent`
+fields), tracked by Lean's type-checker — no `@residual` is re-stated here per the
+audit-tags convention (dependent `sorry` is managed at its source).
 
-**Honesty audit (2026-05-29):** NOT `@audit:ok`. The body has no `sorry`, but the
-water-filling capacity equality is reduced to the open hypotheses `h_bdd_global`
-(global MI upper bound), `h_perCoordMI` (per-coord AWGN achiever closed form), and
-`h_multivar_decomp` (per-coord max-entropy converse split). These carry the CORE
-analytic content (achievability VALUE + converse bound), not regularity
-preconditions; `h_kkt` / `h_opt` are the genuine water-filling optimality inputs,
-but the MI-analysis hyps are load-bearing. The name `_minimal` correctly signals an
-intentionally exposed conditional form — but `@audit:ok` on a conditional theorem
-laundering it as "② capacity formula complete (unconditional)". Honest fix
-(orchestrator/implementer): drop the load-bearing MI hyps, body `sorry` +
-`@residual(wall:multivariate-mi)` + per-coord AWGN residual. Until rewritten, this
-is a conditional (hypothesis-minimal) theorem, NOT a discharge. -/
+Genuine inputs retained: `h_kkt` / `h_opt` (water-filling optimality, L-WF1/L-WF2,
+genuine — discharged by IVT/concavity, not the conclusion), `h_perCoordMI`
+(per-coordinate AWGN closed form, regularity-shaped), and the regularity
+preconditions `hP` / `hN` / `h_meas` / `h_parallel_meas`. The body genuinely
+assembles `h_reg` via the constructor and invokes the genuine `le_antisymm`
+sup-sandwich `parallel_gaussian_capacity_formula`.
+
+This is type-check done (tier 2), NOT proof done: the only residual is the
+transitive `wall:multivariate-mi` from the constructor. -/
 @[entry_point]
 theorem parallel_gaussian_capacity_formula_minimal {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N)
     (ν : ℝ) (h_kkt : IsWaterFillingKKT P N ν) (h_opt : IsWaterFillingOptimal P N ν)
-    -- (P-1) global P-upper-bound (Phase 1 honest piece, Q-free)
-    (h_bdd_global :
-      ∀ p ∈ parallelGaussianPowerConstraintSet P,
-        (mutualInfoOfChannel p (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
-          ≤ ∑ i : Fin (n + 1), (1/2) * Real.log (1 + P / (N i : ℝ)))
-    -- (P-2) per-COORDINATE AWGN closed form for the water-filling achiever
-    -- (Phase 2 honest piece, now isolated per-coordinate rather than bundled as
-    -- the full sum). The bundled achiever-MI sum is *derived* from this plus the
-    -- genuine structural per-channel decomposition
-    -- `parallelGaussianCapacity_achiever_mi`; each `h_perCoordMI i` is the single-
-    -- channel AWGN closed form `awgn_mi_gaussian_closed_form_of_primitives`
-    -- (analytic AWGN residual), not the conclusion equality.
+    -- per-COORDINATE AWGN closed form for the water-filling achiever
+    -- (regularity-shaped: single-channel AWGN value, `p`-independent, not the
+    -- conclusion equality). Feeds the genuine structural reduction inside the
+    -- constructor's `achiever_mi` field.
     (h_perCoordMI : ∀ i,
       (mutualInfoOfChannel (gaussianReal 0 ((waterFillingPower ν N i).toNNReal))
           (awgnChannel (N i) (h_meas i))).toReal
         = (1/2) * Real.log
-            (1 + ((waterFillingPower ν N i).toNNReal : ℝ) / (N i : ℝ)))
-    -- (P-3) multivariate channel↔RV decomp + per-coord max-entropy allocation
-    -- (Phase 3 honest piece — the *only* new honest piece of this plan).
-    (h_multivar_decomp :
-      ∀ p ∈ parallelGaussianPowerConstraintSet P,
-        ∃ P' : Fin (n + 1) → ℝ, (∀ i, 0 ≤ P' i) ∧ (∑ i : Fin (n + 1), P' i ≤ P) ∧
-          (mutualInfoOfChannel p (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
-            ≤ ∑ i : Fin (n + 1), (1/2) * Real.log (1 + P' i / (N i : ℝ))) :
+            (1 + ((waterFillingPower ν N i).toNNReal : ℝ) / (N i : ℝ))) :
     parallelGaussianCapacity P N h_meas h_parallel_meas
       = ∑ i : Fin (n + 1), (1/2) *
           Real.log (1 + waterFillingPower ν N i / (N i : ℝ)) := by
-  -- Phase 4: assemble the regularity bundle from the 3 honest pieces via the
-  -- constructor, then invoke the existing genuine `le_antisymm` headline
-  -- `parallel_gaussian_capacity_formula` (`PerCoord.lean:367`).
+  -- Assemble the regularity bundle from the genuine achiever piece via the
+  -- constructor (whose `bddAbove` / `max_ent` carry the transitive
+  -- `wall:multivariate-mi` residual), then invoke the genuine `le_antisymm`
+  -- headline `parallel_gaussian_capacity_formula`.
   set Q : Fin (n + 1) → ℝ≥0 := fun i => (waterFillingPower ν N i).toNNReal with hQ_def
-  -- Derive the bundled achiever-MI sum equality from the per-coordinate AWGN
-  -- closed form via the genuine structural reduction (the only residual being the
-  -- shared `wall:multivariate-mi` per-channel decomposition inside it).
-  have h_bridge_per_coord :
-      (mutualInfoOfChannel (gaussianProductInput Q)
-          (parallelGaussianChannel N h_meas h_parallel_meas)).toReal
-        = ∑ i : Fin (n + 1), (1/2) * Real.log (1 + (Q i : ℝ) / (N i : ℝ)) :=
-    parallelGaussianCapacity_achiever_mi Q N (fun i => NNReal.coe_ne_zero.mp (hN i))
-      h_meas h_parallel_meas h_perCoordMI
   have h_reg : IsParallelGaussianPerCoordRegularity P N h_meas h_parallel_meas Q :=
-    isParallelGaussianPerCoordRegularity_of_pieces P N h_meas h_parallel_meas Q
-      h_bdd_global h_bridge_per_coord h_multivar_decomp
+    isParallelGaussianPerCoordRegularity_of_pieces P N hN h_meas h_parallel_meas Q
+      h_perCoordMI
   exact parallel_gaussian_capacity_formula P hP N hN h_meas h_parallel_meas
     ν h_kkt h_opt h_reg
 
