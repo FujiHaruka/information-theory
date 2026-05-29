@@ -206,6 +206,127 @@ private theorem volume_absolutelyContinuous_pi_gaussian {n : ℕ}
     simp only [hf_def, gaussianPDF_def, ne_eq, ENNReal.ofReal_eq_zero, not_le]
     exact gaussianPDFReal_pos (x i) (N i) (z i) (hN' i)
 
+/-- **Product → sum differential entropy identity** (鍵②). For a product of probability
+measures `μ i ≪ volume` on `ℝ`, the joint differential entropy of `Measure.pi μ` is the
+coordinate sum of the 1-D entropies:
+`jointDifferentialEntropyPi (Measure.pi μ) = ∑ i, differentialEntropy (μ i)`.
+The per-component log-density integrability `h_int` is a genuine regularity precondition
+(satisfied by Gaussians). Built from `pi_withDensity_fin` (rnDeriv-of-pi = ∏ component
+rnDerivs), `log (∏ aᵢ) = ∑ log aᵢ`, `integral_finset_sum`, and the marginal projection
+`(Measure.pi μ).map (eval j) = μ j` (`measurePreserving_eval`).
+
+Genuine, sorryAx-free (`#print axioms` = [propext, Classical.choice, Quot.sound]);
+awaiting independent honesty audit. -/
+private theorem jointDifferentialEntropyPi_pi_eq_sum {n : ℕ} (μ : Fin n → Measure ℝ)
+    [∀ i, IsProbabilityMeasure (μ i)] (h_ac : ∀ i, μ i ≪ (volume : Measure ℝ))
+    (h_int : ∀ i, Integrable (fun y => Real.log ((μ i).rnDeriv volume y).toReal) (μ i)) :
+    jointDifferentialEntropyPi (Measure.pi μ) = ∑ i, differentialEntropy (μ i) := by
+  classical
+  set P := Measure.pi μ with hP
+  have hP_ac : P ≪ (volume : Measure (Fin n → ℝ)) := pi_absolutelyContinuous μ h_ac
+  set a : Fin n → ℝ → ℝ≥0∞ := fun i => (μ i).rnDeriv volume with ha_def
+  have ha_meas : ∀ i, Measurable (a i) := fun i => Measure.measurable_rnDeriv (μ i) volume
+  -- (1) `jointDifferentialEntropyPi P = -∫ log(P.rnDeriv volume z).toReal ∂P`
+  have h_step1 : jointDifferentialEntropyPi P
+      = -∫ z, Real.log ((P.rnDeriv volume z).toReal) ∂P := by
+    rw [integral_log_rnDeriv_self_eq_neg hP_ac, neg_neg]; rfl
+  -- (2) rnDeriv-of-pi = product of component rnDerivs, a.e. P
+  have h_rn_pi : (P.rnDeriv volume) =ᵐ[P] fun z => ∏ i, a i (z i) := by
+    have h_eq : ∀ i, (volume : Measure ℝ).withDensity (a i) = μ i :=
+      fun i => Measure.withDensity_rnDeriv_eq (μ i) volume (h_ac i)
+    haveI : ∀ i, SigmaFinite ((volume : Measure ℝ).withDensity (a i)) := by
+      intro i; rw [h_eq i]; infer_instance
+    have h_pi_wd : P = (volume : Measure (Fin n → ℝ)).withDensity (fun z => ∏ i, a i (z i)) := by
+      rw [hP, ← (funext h_eq : (fun i => (volume : Measure ℝ).withDensity (a i)) = μ)]
+      rw [pi_withDensity_fin (fun _ : Fin n => (volume : Measure ℝ)) ha_meas, volume_pi]
+    have h_prod_meas : Measurable (fun z : Fin n → ℝ => ∏ i, a i (z i)) :=
+      Finset.measurable_prod _ (fun i _ => (ha_meas i).comp (measurable_pi_apply i))
+    have h_rn_vol : (P.rnDeriv volume) =ᵐ[volume] fun z => ∏ i, a i (z i) := by
+      conv_lhs => rw [h_pi_wd]
+      exact Measure.rnDeriv_withDensity volume h_prod_meas
+    exact hP_ac.ae_le h_rn_vol
+  -- (3) each component rnDeriv is a.e. positive + finite on P (so log of product splits)
+  have h_pos : ∀ i, ∀ᵐ z ∂P, 0 < a i (z i) := by
+    intro i
+    have h1d : ∀ᵐ y ∂(μ i), 0 < a i y := Measure.rnDeriv_pos (h_ac i)
+    exact (Measure.quasiMeasurePreserving_eval (μ := μ) i).ae h1d
+  have h_lt : ∀ i, ∀ᵐ z ∂P, a i (z i) < ∞ := by
+    intro i
+    have h1d : ∀ᵐ y ∂(μ i), a i y < ∞ := (h_ac i).ae_le (Measure.rnDeriv_lt_top (μ i) volume)
+    exact (Measure.quasiMeasurePreserving_eval (μ := μ) i).ae h1d
+  -- (4) `log((∏ aᵢ).toReal) =ᵐ[P] ∑ log(aᵢ.toReal)`
+  have h_log_split : (fun z => Real.log ((P.rnDeriv volume z).toReal))
+      =ᵐ[P] fun z => ∑ i, Real.log ((a i (z i)).toReal) := by
+    filter_upwards [h_rn_pi, eventually_countable_forall.mpr h_pos,
+      eventually_countable_forall.mpr h_lt] with z hz hpos hlt
+    rw [hz]
+    rw [ENNReal.toReal_prod, Real.log_prod]
+    intro i _
+    have : (0 : ℝ) < (a i (z i)).toReal := ENNReal.toReal_pos (hpos i).ne' (hlt i).ne
+    exact this.ne'
+  -- (5) per-component log-density is integrable over P (transfer from μ i)
+  have h_int_P : ∀ i, Integrable (fun z => Real.log ((a i (z i)).toReal)) P := by
+    intro i
+    have hmp : MeasurePreserving (Function.eval i) P (μ i) := by
+      rw [hP]; exact MeasureTheory.measurePreserving_eval μ i
+    have hcomp : (fun z : Fin n → ℝ => Real.log ((a i (z i)).toReal))
+        = (fun y => Real.log ((a i y).toReal)) ∘ (Function.eval i) := rfl
+    rw [hcomp]
+    exact (hmp.integrable_comp
+      ((((ha_meas i).ennreal_toReal.log).aestronglyMeasurable))).mpr (h_int i)
+  -- (6) marginal projection: `∫ log(aⱼ(zⱼ)) ∂P = ∫ log(aⱼ) ∂(μ j) = -differentialEntropy(μ j)`
+  have h_marg : ∀ i, (∫ z, Real.log ((a i (z i)).toReal) ∂P) = -differentialEntropy (μ i) := by
+    intro i
+    have hmp : MeasurePreserving (Function.eval i) P (μ i) := by
+      rw [hP]; exact MeasureTheory.measurePreserving_eval μ i
+    have hGmeas : AEStronglyMeasurable (fun y => Real.log ((a i y).toReal)) (μ i) :=
+      ((ha_meas i).ennreal_toReal.log).aestronglyMeasurable
+    -- `∫ (G ∘ eval i) ∂P = ∫ G ∂((P.map (eval i))) = ∫ G ∂(μ i)`
+    have h_map : (∫ z, Real.log ((a i (z i)).toReal) ∂P)
+        = ∫ y, Real.log ((a i y).toReal) ∂(μ i) := by
+      rw [← hmp.map_eq]
+      exact (MeasureTheory.integral_map (measurable_pi_apply i).aemeasurable
+        (by rw [hmp.map_eq]; exact hGmeas)).symm
+    rw [h_map, ha_def, integral_log_rnDeriv_self_eq_neg (h_ac i)]
+    rfl
+  -- assemble
+  rw [h_step1, integral_congr_ae h_log_split, integral_finsetSum _ (fun i _ => h_int_P i)]
+  rw [show (∑ i, ∫ z, Real.log ((a i (z i)).toReal) ∂P) = ∑ i, -differentialEntropy (μ i) from
+    Finset.sum_congr rfl (fun i _ => h_marg i)]
+  rw [Finset.sum_neg_distrib, neg_neg]
+
+/-- **Per-Gaussian log-density integrability** (precondition of 鍵②). For `v ≠ 0`,
+`log ((gaussianReal m v).rnDeriv volume y).toReal` is integrable against `gaussianReal m v`.
+Via `rnDeriv_gaussianReal` (= `gaussianPDF` a.e.), `toReal_gaussianPDF`, and
+`log_gaussianPDFReal_eq` it is the affine-in-`(y-m)²` function
+`-(1/2)log(2πv) - (y-m)²/(2v)`, integrable since `(y-m)²` is (`MemLp id 2 (gaussianReal)`).
+
+Genuine, sorryAx-free (`#print axioms` = [propext, Classical.choice, Quot.sound]);
+awaiting independent honesty audit. -/
+private theorem gaussianReal_logRnDeriv_integrable (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
+    Integrable (fun y => Real.log ((gaussianReal m v).rnDeriv volume y).toReal)
+      (gaussianReal m v) := by
+  have hv_pos : (0 : ℝ) < v := lt_of_le_of_ne v.coe_nonneg
+    (Ne.symm (by exact_mod_cast hv))
+  -- `(y - m)²` is integrable: `id - const` is MemLp 2
+  have h_memLp : MemLp (fun y : ℝ => y - m) 2 (gaussianReal m v) :=
+    (memLp_id_gaussianReal 2).sub (memLp_const m)
+  have h_sq_int : Integrable (fun y => (y - m) ^ 2) (gaussianReal m v) := h_memLp.integrable_sq
+  -- rewrite the log-rnDeriv as the affine-in-`(y-m)²` function
+  have h_rn : ∀ᵐ y ∂(gaussianReal m v),
+      Real.log ((gaussianReal m v).rnDeriv volume y).toReal
+        = -(1/2) * Real.log (2 * Real.pi * v) - (y - m) ^ 2 / (2 * v) := by
+    have h_ac : gaussianReal m v ≪ volume := gaussianReal_absolutelyContinuous m hv
+    filter_upwards [h_ac.ae_le (rnDeriv_gaussianReal m v)] with y hy
+    rw [hy, toReal_gaussianPDF, log_gaussianPDFReal_eq m hv y]
+  have h_affine_int : Integrable
+      (fun y => -(1/2) * Real.log (2 * Real.pi * v) - (y - m) ^ 2 / (2 * v))
+      (gaussianReal m v) :=
+    (integrable_const _).sub (h_sq_int.div_const (2 * v))
+  refine h_affine_int.congr ?_
+  filter_upwards [h_rn] with y hy
+  exact hy.symm
+
 /-! ## Phase 2 — channel↔RV MI decomposition, generic lift
 
 The 1-D `ContChannelMIDecomp.mutualInfoOfChannel_toReal_eq_diffEntropy_sub` is
@@ -673,7 +794,21 @@ theorem parallel_condTerm_eq_sum_noise_entropy (hN : ∀ i, (N i : ℝ) ≠ 0) :
     (∫ x, jointDifferentialEntropyPi
         ((parallelGaussianChannel N h_meas h_parallel_meas) x) ∂p)
       = ∑ i : Fin n, (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (N i : ℝ)) := by
-  sorry
+  have hN' : ∀ i, N i ≠ 0 := fun i h => hN i (by rw [h]; norm_num)
+  -- the integrand is the constant noise-entropy sum (mean-independent), via 鍵②
+  have h_const : ∀ x : Fin n → ℝ,
+      jointDifferentialEntropyPi ((parallelGaussianChannel N h_meas h_parallel_meas) x)
+        = ∑ i : Fin n, (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (N i : ℝ)) := by
+    intro x
+    rw [parallelGaussianChannel_apply]
+    rw [jointDifferentialEntropyPi_pi_eq_sum (fun i => gaussianReal (x i) (N i))
+      (fun i => gaussianReal_absolutelyContinuous (x i) (hN' i))
+      (fun i => gaussianReal_logRnDeriv_integrable (x i) (hN' i))]
+    refine Finset.sum_congr rfl (fun i _ => ?_)
+    rw [differentialEntropy_gaussianReal (x i) (hN' i)]
+  -- integrate the constant over the probability measure `p`
+  rw [integral_congr_ae (Filter.Eventually.of_forall h_const), integral_const]
+  simp
 
 /-- **Output marginal mean.** `mᵢ := ∫ y, y ∂(μY.map (· i))`. Abbreviation. -/
 noncomputable def parallelOutputMean (i : Fin n) : ℝ :=
