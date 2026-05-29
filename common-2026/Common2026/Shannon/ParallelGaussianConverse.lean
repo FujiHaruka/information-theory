@@ -1078,6 +1078,17 @@ inventory's surface estimate and is **superseded** by this is-a-wall finding. Si
 unchanged: a clean `Integrable` claim with regularity preconditions (`0 ≤ P` / `hN` / `hp`)
 — no load-bearing hypothesis, no conclusion-bundle. Honest tier-2 residual, now pointing at
 a true Mathlib wall.
+
+Independent honesty audit (2026-05-29, Wave 4 delta, commits `82a50bb`/`7f97e4d`): the
+`wall:multivariate-mi` reclassification is VERIFIED honest. (a) The 1-D closure hinges on the
+scalar `outputMixtureDensity N p y = ∫⁻ gaussianPDF x N y ∂p` (`AwgnCapacityConverseMaxent.lean:338`),
+fed into `output_logDensity_lower_bound` (`:440`); the correlated joint output is genuinely not
+a product measure, so `MultivariateDiffEntropy.pi_withDensity` (product-density only) does not
+apply and no multivariate mixture-density representation exists in this file. (b) loogle: 0
+declarations for `Integrable (fun _ => log (rnDeriv _ _ _).toReal)` over the joint — a true
+Mathlib gap. (c) `wall:multivariate-mi` is the registered Ch.9 ParallelGaussian wall
+(audit-tags.md:62). Not a self-buildable task masquerading as a wall. The earlier `plan:*`
+"VERIFIED self-buildable" note is correctly superseded.
 @residual(wall:multivariate-mi) -/
 theorem parallelOutput_joint_logDensity_integrable (P : ℝ) (hP : 0 ≤ P)
     (hN : ∀ i, (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
@@ -1493,14 +1504,10 @@ set_option maxHeartbeats 1600000 in
 /-- **Channel↔RV MI decomposition value** for the correlated input.
 `I = jointDifferentialEntropyPi(μY) − ∫ jointDifferentialEntropyPi(W x) ∂p`.
 Genuine reduction to the sorryAx-free Phase 2 lift
-`parallel_mutualInfoOfChannel_toReal_eq_diffEntropyPi_sub`: all preconditions are supplied
-genuinely (Wave-1/2 AC lemmas; proxy fibre density `g x y = ∏ᵢ gaussianPDF (x i)(N i)(y i)` with
-`hg_ae = parallelFibre_rnDeriv_ae_proxy`; `h_int_fibre =
-parallelFibre_logProxy_integrable_compProd`; `h_int_out` = snd-pushforward of #5
-`parallelOutput_joint_logDensity_integrable`). The reduction is logically complete but the
-`Measure.pi`-product proxy density makes the unifier's `whnf`/`isDefEq` on the large lift
-signature exceed the heartbeat budget in-session; left as a residual pending an
-elaboration-light reformulation. Residual is otherwise transitive over #5 + the fibre log-proxy.
+`parallel_mutualInfoOfChannel_toReal_eq_diffEntropyPi_sub`, with all preconditions supplied
+genuinely. (An earlier draft left this as a residual because the `Measure.pi`-product proxy
+density blew the unifier's `whnf` heartbeat budget on the large lift signature; Wave 4 fixed
+this by naming the proxy as an atomic `def`. See below.)
 
 Wave 4 (2026-05-29): GENUINE reduction. The body is now a self-contained assembly that
 threads all Phase-2-lift preconditions and calls
