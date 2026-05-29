@@ -16,20 +16,15 @@
 
 ## 進捗
 
-- [ ] Phase 0 — 在庫再確認 + 設計 probe (deterministic huffmanStep の sort key + cross-type 対応 1 行 probe) 📋 → [`huffman-optimality-t1apprime-mathlib-inventory.md`](./huffman-optimality-t1apprime-mathlib-inventory.md)
-- [ ] Phase H2 — Hyp2 (Identification) を C1 = `huffmanStep` 決定的再定義で discharge 📋
-  - [ ] H2-a — `huffmanStep` 決定的再定義 + 全 spec 補題 (`_spec`/`_grouping`/`_card_*`) 移植
-  - [ ] H2-b — Huffman 部分木の relabel 補題群再検証 (HuffmanOptimality / 既存 body)
-  - [ ] H2-c — `MergedHuffmanAuxIdentHypothesis` (`HuffmanMergedIdentBody.lean:135`) を genuine 証明
-  - [ ] H2-d — `huffman_merged_identification_proof : HuffmanMergedIdentificationHypothesis` publish
-- [ ] Phase RV — 全 Huffman* file + (確認のみ) Ch.5 file 再検証 (C1 blast radius) 📋
-- [ ] Phase H1 — Hyp1 (SwapNormalization) を Kraft 保持 multiset 構成で discharge 📋
-  - [ ] H1-a — shorten-to-Kraft=1 (feasible `ll` を Kraft=1 へ、E 非増加)
-  - [ ] H1-b — keystone で最長 2 leaf 等長 (`exists_two_equal_longest` 黒箱 reuse)
-  - [ ] H1-c — least-prob 対 `(a,b)` を最長 2 leaf へ swap (`swap_step_le` 黒箱 reuse)
-  - [ ] H1-d — `swap_normalization_proof : SwapNormalizationHypothesis` publish
+- [x] Phase H1 — Hyp1 (SwapNormalization) ✅ **無条件 genuine discharge 済** (`swap_normalization_proof` → `swap_normalization_strong`、shorten + keystone + 2-swap)
+- [~] Phase H2 — Hyp2 (Identification) を C1 決定的再定義で discharge: **部分前進 (2026-05-30)**
+  - [x] H2-a/H2-b — 決定的 (colex) relabel cornerstone `huffmanLengthAux_relabel_det` + 6 補助 ✅ (`HuffmanColexDeterminism.lean`、sorryAx 非依存、`@audit:ok`)。docstring-only defect 解消
+  - [~] H2-c — collapse correspondence `collapseLabel_huffmanLengthAux` は **Case B 撤退** (honest sorry、tie-order 独立 invariant の壁、判断ログ #3)。`MergedHuffmanAuxIdentHypothesis` 本体は `Draft/HuffmanWalls.lean:70` で honest sorry 据置
+  - [ ] H2-d — `huffman_merged_identification_proof` publish (collapse closure 後)
+- [ ] Phase H2 残 — **tie-order 独立 invariant の機械化** (~150-250 行、判断ログ #3): 次セッション target
 - [ ] Phase M — 強形主定理 `huffmanLength_optimal` (hypothesis 引数なし、~5 行 wrapper) 📋
 - [ ] Phase V — 全 file silent + `#print axioms huffmanLength_optimal` で sorryAx 非依存確認 📋
+- 注: 別壁 Hyp2 `huffman_merged_identification_hypothesis_holds` (`HuffmanWalls.lean:63`, `@residual(plan:huffman-2hyp-vertical-reduction)`) も強形完遂には要 closure (別 plan)
 
 proof-log: yes (Phase H2-a の C1 redefine と Phase H1-a の shorten 設計は迷走しやすいので残す)
 
@@ -343,3 +338,22 @@ feasible `ll` (Kraft < 1) を Kraft = 1 へ E 非増加で到達。subset-sum re
    参照ゼロ) と確認。C1 の実 blast radius は `Huffman.lean` を import する Huffman* 6 file
    のみ。`HuffmanSwapNormProof.lean` (keystone) は Common2026 依存ゼロで insulated。
    Phase RV の Ch.5 再検証は「波及しないことの確認」に縮小。
+3. **2026-05-30 — Hyp1 既 discharge 確認 + 決定的 relabel cornerstone genuine 化 + collapse は Case B 撤退**:
+   実コード確認で **Hyp1 (SwapNormalization) は既に `swap_normalization_proof` で無条件 genuine
+   discharge 済** (Phase H1 完了)。残 frontier = Hyp2 系 primitive `MergedHuffmanAuxIdentHypothesis`
+   (= `merged_huffman_aux_ident_hypothesis_holds`, `Draft/HuffmanWalls.lean:70`, honest sorry 据置)。
+   - **genuine 前進**: `HuffmanColexDeterminism.lean` は着手前 **docstring-only (declaration 0 個)**
+     で「Section I cornerstone 確立済」と完了形記述する tier-5 寄り誤誘導だった。本 session で
+     **無条件 (NodupChain 不要) relabel cornerstone `huffmanLengthAux_relabel_det` + 6 補助を genuine
+     実装** (sorryAx 非依存、honesty audit で 7 件 `@audit:ok`)。Phase H2-a/H2-b の決定的 step-correspondence
+     が確立。
+   - **collapse correspondence は閉じず (Case B 撤退)**: `collapseLabel_huffmanLengthAux`
+     (`HuffmanColexDeterminism.lean:316`, honest sorry + `@residual(plan:huffman-strong-form-completion)`)。
+     **壁の正体 = Huffman 語長の tie-order 独立性**: collapse も first-step identification も同根で、
+     `groupKey ({a},p)=(p,toColex{a})` と `({a,b},p)=(p,toColex{a,b})` が同確率 `p` で colex 異なるため、
+     `rest` に `toColex{a} < toColex g < toColex{a,b}` な同確率 group があると singleton 木と card-2 木の
+     merge 順が食い違い naive lockstep 帰納が閉じない。必要なのは「Huffman 語長は確率 multiset で決まり
+     tie-break (colex) 選択に依らない」**tie-order 独立 invariant の機械化** (~150-250 行 + tie 場合分け)。
+     これは Mathlib 壁でも C3 (tie-invariance、within-tree) でもなく、cross-tree 構造の自作補題。次セッション target。
+   - **次の前提整備**: 本 cornerstone closure 後、`HuffmanMergedIdentBody.lean:117` の load-bearing-predicate
+     wrapper 群 (`@audit:retract-candidate`) が tier 2→1 化可能になる (incidental migration の前提が整った)。
