@@ -41,7 +41,7 @@ statement is genuinely FALSE for `P < 0` (the constraint set is non-empty — co
 Dirac at 0 — yet `∑ P'ᵢ ≤ P < 0` with `P'ᵢ ≥ 0` is unsatisfiable). The previous tier-5
 false-statement residual `P < 0` branch has been removed.
 
-Status: type-check done (tier 2), NOT proof done (10 `sorry`).
+Status: type-check done (tier 2), NOT proof done (7 `sorry`).
 
 Wave 1 (2026-05-29): the volume-AC chain is now genuine (sorryAx-free,
 `#print axioms` = [propext, Classical.choice, Quot.sound]): shared base helper
@@ -50,11 +50,29 @@ Wave 1 (2026-05-29): the volume-AC chain is now genuine (sorryAx-free,
 `parallelOutput_absolutelyContinuous_volume`,
 `parallelOutput_marginal_absolutelyContinuous_volume`. These now carry an explicit
 `hN : ∀ i, (N i : ℝ) ≠ 0` regularity precondition (necessary: a `N i = 0` coordinate
-gives a Dirac fibre, breaking AC). The remaining 10 residuals (joint-vs-marginal AC,
-log-density / variance integrability, fibre→output AC, fibre product-entropy, mi-decomp
-value) await the reverse full-support machinery (`volume ≪ Measure.pi (gaussianReal …)`,
-needs ae-over-pi product-nonzero) and the product→sum entropy / convolution-variance
-identities, all carrying `@residual(plan:parallel-gaussian-converse-closure-plan)`.
+gives a Dirac fibre, breaking AC).
+
+Wave 2 (2026-05-29): three more residuals are now genuine (sorryAx-free,
+`#print axioms` = [propext, Classical.choice, Quot.sound]). The reverse full-support
+machinery is built: `volume_absolutelyContinuous_pi_gaussian` (鍵①,
+`volume ≪ Measure.pi (gaussianReal …)` via `withDensity_absolutelyContinuous'` +
+everywhere-positive Gaussian pdf product), `pi_absolutelyContinuous_reverse` (generic
+`volume ≪ Measure.pi ν` from componentwise mutual AC via `rnDeriv_pos'`),
+`volume_absolutelyContinuous_parallelOutput[_marginal]` (reverse AC of the output law /
+its coordinate marginals). With these:
+* `parallelOutput_absolutelyContinuous_pi_marginals` (#3, joint-vs-marginal AC) =
+  `μY ≪ volume ≪ Measure.pi (marginals)`.
+* `parallelChannel_fibre_absolutelyContinuous_output` (#12, fibre ≪ output) =
+  `W x ≪ volume ≪ μY`.
+The product→sum entropy identity `jointDifferentialEntropyPi_pi_eq_sum` (鍵②) +
+`gaussianReal_logRnDeriv_integrable` give `parallel_condTerm_eq_sum_noise_entropy` (#6).
+
+The remaining 7 residuals (per-coord log-density integrability #4 / #5 / #11, output
+marginal variance #8 / #9 / #10, and the mi-decomp value #13 which depends on #4 / #5)
+await the parallel-output marginal-as-convolution identity
+`μY.map (· i) = (p.map (· i)) ∗ gaussianReal 0 (N i)` (the `Fin n → ℝ` analogue of the
+1-D `outputDistribution_awgn_eq_conv`), all carrying
+`@residual(plan:parallel-gaussian-converse-closure-plan)`.
 
 Independent honesty audit (2026-05-29, commit `6f495bc`): genuine `0 ≤ P` converse
 chain confirmed (no load-bearing hypothesis, no degenerate/exfalso exploitation; the
