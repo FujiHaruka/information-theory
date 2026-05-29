@@ -33,16 +33,32 @@ variance structure), each carrying
 conclusion; they are genuine consequences of Gaussian smoothing awaiting the
 `Fin n → ℝ` analogue of the 1-D AWGN Phase 6 measure-theoretic plumbing.
 
-⚠️ **Pre-existing tier-5 `false-statement` defect**: the `max_ent` field of
-`IsParallelGaussianPerCoordRegularity` (and its constructor) takes `P : ℝ`
-unconstrained, but the statement is genuinely FALSE for `P < 0` (the constraint set
-is non-empty — contains the Dirac at 0 — yet `∑ P'ᵢ ≤ P < 0` with `P'ᵢ ≥ 0` is
-unsatisfiable). The `P < 0` branch of `parallel_per_input_mi_le_sum` carries
-`@residual(defect:false-statement)`. The genuine fix (add `0 ≤ P` to the field /
-constructor) is a signature change outside this file's body-only scope; flagged for
-the owner.
+**`false-statement` defect FIXED (2026-05-29)**: `parallel_per_input_mi_le_sum` now
+takes `0 ≤ P` (threaded through `parallel_bddAbove_miImage` + the constructor
+`isParallelGaussianPerCoordRegularity_of_pieces` from the headline
+`parallel_gaussian_capacity_formula_minimal`, which holds `0 < P`). Without it the
+statement is genuinely FALSE for `P < 0` (the constraint set is non-empty — contains the
+Dirac at 0 — yet `∑ P'ᵢ ≤ P < 0` with `P'ᵢ ≥ 0` is unsatisfiable). The previous tier-5
+false-statement residual `P < 0` branch has been removed.
 
-Status: type-check done (tier 2), NOT proof done (14 `sorry`).
+Status: type-check done (tier 2), NOT proof done (13 `sorry`).
+
+Independent honesty audit (2026-05-29, commit `6f495bc`): genuine `0 ≤ P` converse
+chain confirmed (no load-bearing hypothesis, no degenerate/exfalso exploitation; the
+`∑P'ᵢ ≤ P` feasibility comes genuinely from `parallelGaussianPowerConstraintSet`
+membership via `parallelGaussianPowerConstraintSet_mem_iff_integrable`, not exfalso).
+The 13 Phase 1 precondition lemmas are honest regularity residuals (AC / integrability
+/ fibre product-entropy / output-variance plumbing) — none bundles the converse core
+`MI ≤ ∑log`; `plan:parallel-gaussian-converse-closure-plan` classification verified
+(plan exists). The `P < 0` `false-statement` defect (constraint set non-empty via Dirac-at-0
+since `ENNReal.ofReal P = 0` for `P ≤ 0`, but `∑P'ᵢ ≤ P < 0` with `P'ᵢ ≥ 0` is unsatisfiable)
+has since been FIXED (2026-05-29) by threading `0 ≤ P` through
+`parallel_per_input_mi_le_sum` / `parallel_bddAbove_miImage` /
+`isParallelGaussianPerCoordRegularity_of_pieces` from the headline consumer
+`parallel_gaussian_capacity_formula_minimal` (which holds `hP : 0 < P`). No other consumer
+was affected. `P = 0` is handled genuinely (not by exfalso): the membership-derived
+second-moment bound `∑ E[Xᵢ²] ≤ P = 0` forces the allocation `P'ᵢ = Var(Yᵢ) − Nᵢ` to be
+feasible against `∑ P'ᵢ ≤ 0` via the same genuine variance chain.
 -/
 
 namespace InformationTheory.Shannon.ParallelGaussian
@@ -462,25 +478,21 @@ For `0 ≤ P` the converse chain is a **genuine assembly**: MI decomposition (Ph
 sorryAx-free) + output-entropy subadditivity (`jointDifferentialEntropyPi_le_sum`, genuine)
 + per-coord Gaussian max-entropy (`differentialEntropy_le_gaussian_of_variance_le`,
 `@audit:ok`) + variance allocation `P'ᵢ := Var(Yᵢ) − Nᵢ` + capacity log-algebra. The
-remaining `0 ≤ P` residuals are the *correlated-output regularity* (Phase 1 precondition
+remaining residuals are the *correlated-output regularity* (Phase 1 precondition
 lemmas above) and the fibre product-entropy / output-variance identities, all carrying
 `@residual(plan:parallel-gaussian-converse-closure-plan)`; the converse organization itself
 is genuine (no load-bearing hypothesis, no degenerate exploitation).
 
-⚠️ **`P < 0` is a pre-existing tier-5 `false-statement` defect** in the surrounding
-signature, NOT introduced here: `parallelGaussianPowerConstraintSet P` is non-empty for
-`P < 0` (it contains the Dirac at 0, since `ENNReal.ofReal P = 0` collapses the lintegral
-constraint to `0 ≤ 0`), yet the demanded split needs `∑ P'ᵢ ≤ P < 0` with `P'ᵢ ≥ 0`,
-which is unsatisfiable. The defect lives in `IsParallelGaussianPerCoordRegularity.max_ent`
-(`ParallelGaussianPerCoord.lean`) and its constructor
-`isParallelGaussianPerCoordRegularity_of_pieces`
-(`ParallelGaussianPerCoordRegularity.lean`), both taking `P : ℝ` unconstrained. The
-genuine fix is to add `0 ≤ P` (or `0 < P`, matching the headline) to the field / constructor;
-that is a signature change outside this body's scope. The `P < 0` branch is flagged with
-`@residual(defect:false-statement)` per the audit-tags vocabulary.
-@residual(plan:parallel-gaussian-converse-closure-plan) @residual(defect:false-statement) -/
+The `0 ≤ P` precondition is genuine and necessary: without it `parallel_per_input_mi_le_sum`
+would be FALSE for `P < 0` (the constraint set `parallelGaussianPowerConstraintSet P` is
+non-empty for `P < 0` — it contains the Dirac at 0, since `ENNReal.ofReal P = 0` collapses
+the lintegral constraint to `0 ≤ 0` — yet `∑ P'ᵢ ≤ P < 0` with `P'ᵢ ≥ 0` is unsatisfiable).
+The constraint is threaded from the headline `parallel_gaussian_capacity_formula_minimal`
+(which holds `0 < P`) through the constructor; the previous tier-5 `false-statement` defect
+(P unconstrained) has been fixed by adding this hypothesis.
+@residual(plan:parallel-gaussian-converse-closure-plan) -/
 theorem parallel_per_input_mi_le_sum {n : ℕ}
-    (P : ℝ) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
+    (P : ℝ) (hP : 0 ≤ P) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N)
     (p : Measure (Fin n → ℝ)) [IsProbabilityMeasure p]
@@ -494,21 +506,10 @@ theorem parallel_per_input_mi_le_sum {n : ℕ}
   -- per-coordinate noise positivity
   have hN_pos : ∀ i, (0 : ℝ) < (N i : ℝ) :=
     fun i => lt_of_le_of_ne (N i).coe_nonneg (Ne.symm (hN i))
-  -- ⚠️ The `P < 0` region of this signature is genuinely FALSE: the constraint set
-  -- `parallelGaussianPowerConstraintSet P` is non-empty for `P < 0` (it contains the
-  -- Dirac at 0, since `ENNReal.ofReal P = 0` and the lintegral constraint reduces to
-  -- `0 ≤ 0`), yet the demanded split needs `∑ P'ᵢ ≤ P < 0` with `P'ᵢ ≥ 0`, which is
-  -- unsatisfiable. This is a pre-existing tier-5 `false-statement` defect in the
-  -- `IsParallelGaussianPerCoordRegularity.max_ent` field / its constructor (both take
-  -- `P : ℝ` unconstrained); the genuine fix is `0 ≤ P` on the field / constructor.
-  -- We close the genuine `0 ≤ P` region below; the `P < 0` branch is flagged.
-  rcases lt_or_ge P 0 with hP_neg | hP_nonneg
-  · -- @residual(defect:false-statement) — see report; statement false for `P < 0`.
-    sorry
-  -- ===== Genuine region: `0 ≤ P` =====
+  -- ===== Genuine region: `0 ≤ P` (threaded from the headline) =====
   -- genuine integrability + Bochner second-moment bound from membership
   obtain ⟨hp_2mom_int, hp_2mom⟩ :=
-    parallelGaussianPowerConstraintSet_mem_iff_integrable P hP_nonneg p hp
+    parallelGaussianPowerConstraintSet_mem_iff_integrable P hP p hp
   -- output law + marginals are probability measures
   haveI hμY_prob : IsProbabilityMeasure μY := by rw [hμY_def]; infer_instance
   haveI hμY_marg_prob : ∀ i, IsProbabilityMeasure (μY.map (fun z => z i)) := by
@@ -617,7 +618,7 @@ water-filling sum `∑ᵢ (1/2) log(1 + P/Nᵢ)`: the Phase 3 split returns a fe
 with `0 ≤ P'ᵢ` and `∑P'ᵢ ≤ P`, so `P'ᵢ ≤ P` coordinate-wise and `log` monotonicity
 caps each term. Genuine modulo the Phase 3 converse split. -/
 theorem parallel_bddAbove_miImage {n : ℕ}
-    (P : ℝ) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
+    (P : ℝ) (hP : 0 ≤ P) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N) :
     BddAbove (miImage P N h_meas h_parallel_meas) := by
@@ -627,7 +628,7 @@ theorem parallel_bddAbove_miImage {n : ℕ}
   -- `p` is a probability measure (set membership)
   have hp_prob : IsProbabilityMeasure p := hp_mem.1
   obtain ⟨P', hP'_nn, hP'_sum, hP'_le⟩ :=
-    parallel_per_input_mi_le_sum P N hN h_meas h_parallel_meas p hp_mem
+    parallel_per_input_mi_le_sum P hP N hN h_meas h_parallel_meas p hp_mem
   refine hP'_le.trans ?_
   -- each P'ᵢ ≤ ∑P'ⱼ ≤ P, hence the term-wise log bound
   refine Finset.sum_le_sum (fun i _ => ?_)

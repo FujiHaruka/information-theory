@@ -113,7 +113,7 @@ verdict.
 This file is `0 sorry`; type-check done (tier 2). -/
 @[entry_point]
 theorem isParallelGaussianPerCoordRegularity_of_pieces {n : ℕ}
-    (P : ℝ) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
+    (P : ℝ) (hP : 0 ≤ P) (N : Fin n → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)
     (h_parallel_meas : IsParallelGaussianKernelMeasurable N)
     (Q : Fin n → ℝ≥0) :
@@ -126,7 +126,7 @@ theorem isParallelGaussianPerCoordRegularity_of_pieces {n : ℕ}
     -- (`parallel_bddAbove_miImage`, `ParallelGaussianConverse.lean`). The only
     -- residual is the transitive `plan:parallel-gaussian-converse-closure-plan`
     -- `sorry` inside `parallel_per_input_mi_le_sum` (tracked by the type-checker).
-    exact parallel_bddAbove_miImage P N hN h_meas h_parallel_meas
+    exact parallel_bddAbove_miImage P hP N hN h_meas h_parallel_meas
   · -- `achiever_mi` field: GENUINE. Product-input MI additivity (structural
     -- reduction) discharges the per-coordinate AWGN closed form in-body.
     exact parallelGaussianCapacity_achiever_mi Q N (fun i => NNReal.coe_ne_zero.mp (hN i))
@@ -137,7 +137,7 @@ theorem isParallelGaussianPerCoordRegularity_of_pieces {n : ℕ}
     -- `sorry` (tracked by the type-checker, not re-stated here).
     intro p hp
     haveI : IsProbabilityMeasure p := hp.1
-    exact parallel_per_input_mi_le_sum P N hN h_meas h_parallel_meas p hp
+    exact parallel_per_input_mi_le_sum P hP N hN h_meas h_parallel_meas p hp
 
 /-! ## Phase 0 — hypothesis-minimal headline skeleton
 
@@ -189,7 +189,7 @@ theorem parallel_gaussian_capacity_formula_minimal {n : ℕ}
   -- headline `parallel_gaussian_capacity_formula`.
   set Q : Fin (n + 1) → ℝ≥0 := fun i => (waterFillingPower ν N i).toNNReal with hQ_def
   have h_reg : IsParallelGaussianPerCoordRegularity P N h_meas h_parallel_meas Q :=
-    isParallelGaussianPerCoordRegularity_of_pieces P N hN h_meas h_parallel_meas Q
+    isParallelGaussianPerCoordRegularity_of_pieces P hP.le N hN h_meas h_parallel_meas Q
   exact parallel_gaussian_capacity_formula P hP N hN h_meas h_parallel_meas
     ν h_kkt h_opt h_reg
 
