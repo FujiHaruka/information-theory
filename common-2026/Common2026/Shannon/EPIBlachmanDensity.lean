@@ -241,8 +241,13 @@ for `0 ≤ lam ≤ 1`, via:
 are regularity preconditions, satisfied by any genuine probability density with
 finite Fisher information; neither bundles the Fisher-info value.
 
-Genuine (0 sorry): pure lintegral↔Bochner bridge, no Blachman content. Pending
-independent honesty audit (then `@audit:ok`). -/
+Genuine (0 sorry): pure lintegral↔Bochner bridge, no Blachman content.
+
+@audit:ok — independent audit: hyps `hpos`/`hint` are regularity preconditions
+(nonneg + integrability of the squared-score density), neither bundles the
+Fisher-info value. Conclusion genuinely assembled
+(`integral_eq_lintegral_of_nonneg_ae` + `ENNReal.ofReal_mul`). `#print axioms` =
+`[propext, Classical.choice, Quot.sound]` (sorryAx-free, verified transiently). -/
 theorem fisherInfoOfDensity_toReal_eq_integral (f : ℝ → ℝ)
     (hpos : ∀ x, 0 ≤ f x)
     (hint : Integrable (fun x => (logDeriv f x) ^ 2 * f x) volume) :
@@ -267,10 +272,23 @@ With `W_λ(x,z) := scoreWeight fX fY lam z x` and `p_{X|Z}(x|z) := condDensityX 
 
 `hpZ` (positivity of `p_Z(z)`) is a regularity precondition; the squared-weight
 integrability `hint_Wsq` is a regularity precondition on admissible densities.
-The inequality core (conditional CS on the explicit probability weight) is the
-Blachman/Stam analytic content.
+None of the hyps bundles the conclusion inequality.
 
-@residual(wall:stam-blachman) -/
+Independent audit (2026-05-30): reclassified `wall:stam-blachman` →
+`plan:epi-wall-reattack-plan`. This is NOT a Mathlib gap: with the probability
+measure `μ := volume.withDensity (fun x => ENNReal.ofReal (condDensityX fX fY z x))`
+(`IsProbabilityMeasure` from 3b `condDensityX_integral_eq_one`), S4 is exactly
+Jensen for the convex `(·)²`: `ConvexOn.map_integral_le`
+(`Mathlib/Analysis/Convex/Integral.lean:199`, `[IsProbabilityMeasure μ]`,
+`g (∫ f ∂μ) ≤ ∫ g∘f ∂μ`) composed with the change-of-variables
+`integral_withDensity_eq_integral_toReal_smul₀`
+(`Bochner/ContinuousLinearMap.lean:310`) to rewrite `∫ · ∂μ = ∫ ·*condDensityX ∂volume`.
+loogle-confirmed present; the density-route inventory itself records S4 as
+"Mathlib 部品揃い = closure 可能" (epi-blachman-density-route-inventory.md:62).
+The genuine PR-level wall is the abstract-condExp disintegration bridge, which
+this density route deliberately avoids. Closure deferred to Phase 3c-cont of the
+owning plan (alt route: `ConvexOn.map_condExp_le`, inventory's first candidate).
+@residual(plan:epi-wall-reattack-plan) -/
 theorem score_sq_le_weighted_integral (fX fY : ℝ → ℝ) (lam z : ℝ)
     (hregX : IsRegularDensityV2 fX) (hregY : IsRegularDensityV2 fY)
     (hX_int : Integrable fX volume) (hY_int : Integrable fY volume)
@@ -305,10 +323,18 @@ Proof shape (explicit density route, condExp-free):
 All bundled hypotheses are regularity preconditions (`IsRegularDensityV2`,
 boundedness, integrability side-conditions, normalization `∫ = 1`, positivity of
 `p_Z`); none bundles the inequality core, which lives in the `sorry` below and in
-the S4 lemma. The score-of-convolution Cauchy-Schwarz + Tonelli evaluation is the
-Blachman/Stam analytic wall.
+the S4 lemma.
 
-@residual(wall:stam-blachman) -/
+Independent audit (2026-05-30): reclassified `wall:stam-blachman` →
+`plan:epi-wall-reattack-plan`. Closability is transitive on S4
+(`score_sq_le_weighted_integral`, itself plan-closable via `ConvexOn.map_integral_le`
+on a withDensity probability measure) plus parts all present: Tonelli
+`integral_integral_swap` (`Mathlib/MeasureTheory/Integral/Prod.lean`), cross-term
+`= 0` via `integral_logDeriv_density_eq_zero` (`FisherInfoV2.lean:158`, repo), and
+atom A `fisherInfoOfDensity_toReal_eq_integral` (genuine, `@audit:ok`). No separate
+genuine Mathlib gap; not a wall. Closure deferred to Phase 3c/3d of the owning plan
+(see L-EPIW-3-密度-β precondition-gap note on `deriv` boundedness threading).
+@residual(plan:epi-wall-reattack-plan) -/
 theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
     (hlam0 : 0 ≤ lam) (hlam1 : lam ≤ 1)
     (hregX : IsRegularDensityV2 fX) (hregY : IsRegularDensityV2 fY)
@@ -332,9 +358,10 @@ theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
       fisherInfoOfDensity_toReal_eq_integral fY (fun x => (hregY.pos x).le) hint_fisherY]
   -- Reduced goal: `∫ z, (logDeriv p_Z z)²·p_Z z ≤ λ²·∫ s_X²·fX + (1-λ)²·∫ s_Y²·fY`.
   -- Remaining content = score-of-convolution Cauchy-Schwarz (S4) integrated against `p_Z`
-  -- + Tonelli order-swap + 3-term evaluation (cross term = 0). This is the Blachman/Stam
-  -- analytic wall; the S4 pointwise bound is `score_sq_le_weighted_integral`.
-  -- @residual(wall:stam-blachman)
+  -- + Tonelli order-swap + 3-term evaluation (cross term = 0); the S4 pointwise bound is
+  -- `score_sq_le_weighted_integral`. Plan-closable (parts all present: S4 Jensen, Tonelli,
+  -- cross-term-zero, atom A) — not a Mathlib wall, see docstring.
+  -- @residual(plan:epi-wall-reattack-plan)
   sorry
 
 end InformationTheory.Shannon.EPIBlachmanDensity
