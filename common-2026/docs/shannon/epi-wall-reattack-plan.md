@@ -37,6 +37,7 @@ go/no-go の決定的判定基準は §Phase 1 末尾「Done 条件 / go-no-go g
   - [x] **Phase 3c-cont — S4 genuine ✅ (@audit:ok)**。`score_sq_le_weighted_integral` を Jensen `ConvexOn.map_integral_le` via 確率測度 `volume.withDensity(ofReal∘condDensityX)` (mass=1 は 3b、`integral_withDensity_eq_integral_toReal_smul₀` で ∫ 往復) で genuine closure、sorryAx-free 独立監査 OK。**予測した解析核がついに genuine 化**。`convex_fisher_bound` は step (a) per-z S4 適用 + (b) `condDensityX·p_Z=fX·fY(z-·)` 約分まで genuine、残 sorry = (c) Tonelli order-swap + (d) 3 項評価 (`λ²J_X+(1-λ)²J_Y`, cross=0) のみ、`@residual(plan:epi-wall-reattack-plan)` (closable, 真壁なし、precondition は全 regularity)。
   - [x] **Phase 3c-fin — `convex_fisher_bound` genuine ✅ (2026-05-30、独立監査 @audit:ok)**。残 sorry (Tonelli `integral_integral_swap` 3 件 + 3 項評価 + cross=0) を `convex_fisher_term1/2/cross` 補助補題で genuine closure。結論 `(fisherInfoOfDensity (convDensityAdd fX fY)).toReal ≤ lam²·(fisherInfoOfDensity fX).toReal + (1-lam)²·(fisherInfoOfDensity fY).toReal` (`EPIBlachmanDensity.lean:538`)、0-sorry/sorryAx-free。**density route の解析核は完全に揃った**。残 = Phase 3d の precondition 整合のみ。
 - [ ] Phase 3d — assemble: `stam_step2_density_wall` (`EPIStamInequalityBody.lean:376`) の sorry を genuine 充足 📋。**決定済 (判断ログ #6、下記 §Phase 3d): 案 b' = `IsStamCondExpCSHyp` 経由**。詳細 + proof skeleton + 新規 atom リストは下記 §Phase 3d 参照。precondition gap (L-EPIW-3-密度-β: `deriv f` 有界 + 高階 integrability) は **案 b (lockstep 述語 + `IsStamCauchySchwarzOptimal`/`IsStamCondExpCSHyp` に boundedness/integrability hyp 追加)** で解消。案 a (構造 field 追加) は構築サイト 0 件で ripple ゼロだが Gaussian instance 未 wire のため非 vacuousness の検証点を増やす — 比較表は §Phase 3d。
+- [ ] Phase 3e — **Gaussian witness `IsBlachmanConvReady` 構築 (density route 非vacuousness 確証)** 📋 → [`epi-blachman-gaussian-witness-inventory.md`](epi-blachman-gaussian-witness-inventory.md)。Phase 3d が closure 条件として明示した「Gaussian instance wiring」を本 Phase で実装。linchpin-first (`convDensityAdd_gaussian_closed_form`) + measure-level 橋 + shear 前処理。詳細 §Phase 3e。
 - [ ] Phase 4 — 壁2 (per-time de Bruijn + FTC 積分形) 📋 (advisor: 同根 apparatus 依存で Phase 3 と並走しても空回り高リスク、heat eq IBP = L-EPIW-4-α 真壁可能性高)
 
 ## ⚠ Phase 3-pre — 3+1 述語 signature pivot (実装可能粒度) 📋
@@ -869,6 +870,243 @@ wall content に **semantic に必要な regularity hyp**。Phase 4 着手時の
 概算規模: per-time (step 1) 100-200 行 (heat eq IBP self-build、L-EPIW-4-α 発火確率高) +
 FTC 積分形 (step 2) 60-100 行 (テンプレ一般化、step 1 後)。proof-log: yes。
 
+## Phase 3e — Gaussian witness `IsBlachmanConvReady` 構築 (density route 非vacuousness 確証) 📋
+
+> **Inventory**: [`epi-blachman-gaussian-witness-inventory.md`](epi-blachman-gaussian-witness-inventory.md)
+> (本 session 作成、19 field × Mathlib/repo API verbatim + 3 分類 + linchpin 結論)。
+> **closure 対象**: `IsBlachmanConvReady` (`Common2026/Shannon/EPIBlachmanDensity.lean:708`, 19 field) +
+> `IsRegularDensityV2` (`Common2026/Shannon/FisherInfoV2.lean:124`, 6 field) の **Gaussian proven inhabitant**。
+> **由来**: Phase 3d の Approach (§Phase 3d「非 vacuousness (案 b の honesty 担保 = closure 条件)」+
+> Done 条件 L817) が下流 task として明示した「Gaussian instance が新 boundedness/integrability hyp 群を
+> 含む全 precondition を discharge する補題」を本 Phase で実装する。`convex_fisher_bound`/`convex_fisher_bound_of_ready`
+> の `@audit:ok` docstring (`:703-707`) も「non-vacuousness is NOT yet machine-confirmed — no Gaussian witness
+> wired in-tree」と明記しており、本 Phase が density route 全体の **genuine closure 完了点**。
+
+**proof-log: yes** (`epi-wall-reattack-proof-log.md` に linchpin + per-field 追記)。
+
+### Context (verbatim 確認済の事実)
+
+- **target predicate (consumer)**: `IsStamCauchySchwarzOptimal`/`IsStamCondExpCSHyp` は Phase 3d で
+  `IsRegularDensityV2 fX/fY` + `∫=1` + `IsBlachmanConvReady fX fY` を量化 hyp として要求する形に pivot
+  予定 (§Phase 3d 案 b)。これらの **proven inhabitant** = `fX = gaussianPDFReal mX vX`,
+  `fY = gaussianPDFReal mY vY` で全 hyp を同時充足する補題群。本 Phase がそれを供給して非vacuousness を
+  機械確認する。
+- **field 数の訂正 (verbatim)**: inventory は「20 field」と書くが、実コード `IsBlachmanConvReady`
+  (`EPIBlachmanDensity.lean:708-757`) は **19 field** (`int_fX` `int_fY` `bdd_fX` `bdd_fX'` `bdd_fY`
+  `bdd_fY'` `pos_pZ` `int_X` `int_Y` `cond_int` `int_W` `int_Wsq` `int_inner` `int_fisherX`
+  `int_fisherY` `int_fisherZ` `int_prod1` `int_prod2` `int_prod3`)。本 Phase は **19 field** を SoT とする
+  (inventory の per-field テーブルは pos_pZ を独立行に数えて 20 と書いた数え方の差、内容は一致)。
+- **linchpin atom (最優先)**: `convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) z =
+  gaussianPDFReal (mX+mY) (vX+vY) z` (点ごと密度畳み込み閉形式)。Mathlib 直接不在 (loogle `Found 0` ×2)
+  だが measure-level 部品が完備 (下表)、self-build ~120-200 行。`int_fisherZ` (#16) は linchpin 無しでは
+  `logDeriv (convDensityAdd …)` の閉形式が無く詰む = linchpin が最優先 atom。
+- **private 補題 2 件** (`integrable_sub_mul_gaussianPDFReal` `FisherInfoGaussian.lean:178` /
+  `integrable_logDeriv_sq_mul_gaussianPDFReal` `FisherInfoV2.lean:181`): **file-scoped private**。
+  別 file から不可視。`int_X/int_Y` (#8/#9) + `int_fisherX/int_fisherY` (#14/#15) の直接素材。
+  → file 配置決定の核 (§file 配置)。
+- **既存閉形式 route (別系、本 Phase では非参照)**: `stam_convex_fisher_bound_gaussian`
+  (`StamGaussianBound.lean:77`) は Gaussian 凸 Fisher bound を閉形式 `1/v` で非vacuous 証明済だが、
+  `convDensityAdd`/`IsBlachmanConvReady` を経由しない別 route。本 Phase は density-route predicate の
+  inhabitant を作るのが目的なので、StamGaussianBound は **検証材料 (Fisher 値 `1/v` の sanity)** に留め、
+  証明には使わない (経由 route が違う)。
+
+#### linchpin の measure-level 部品 (Mathlib 全存在、verbatim — Read 照合済 2026-05-31)
+
+| 部品 | file:line | verbatim signature (`[型クラス前提]`) | 役割 |
+|---|---|---|---|
+| `gaussianReal_conv_gaussianReal` | `Gaussian/Real.lean:613` | `lemma gaussianReal_conv_gaussianReal {m₁ m₂ : ℝ} {v₁ v₂ : ℝ≥0} : (gaussianReal m₁ v₁) ∗ (gaussianReal m₂ v₂) = gaussianReal (m₁ + m₂) (v₁ + v₂)` (型クラス前提なし、`∗` = additive `mconv`) | measure 畳み込み閉形式 |
+| `gaussianReal_of_var_ne_zero` | `Gaussian/Real.lean:203` | `lemma gaussianReal_of_var_ne_zero (μ : ℝ) {v : ℝ≥0} (hv : v ≠ 0) : gaussianReal μ v = volume.withDensity (gaussianPDF μ v)` (`:= if_neg hv`、`gaussianPDF` = ℝ≥0∞-valued) | `gaussianReal = withDensity (gaussianPDF …)` 同一視 |
+| `mconv_withDensity_eq_mlconvolution₀` | `WithDensity.lean:757` | `theorem mconv_withDensity_eq_mlconvolution₀ {f g : G → ℝ≥0∞} (hf : AEMeasurable f μ) (hg : AEMeasurable g μ) : μ.withDensity f ∗ₘ μ.withDensity g = μ.withDensity (f ⋆ₘₗ[μ] g)` — `variable {G} [Group G] {mG : MeasurableSpace G} [MeasurableMul₂ G] [MeasurableInv G] {μ : Measure G} [SFinite μ] [IsMulLeftInvariant μ]`。`@[to_additive]` 版 (`conv_withDensity_eq_mlconvolution₀`) が `ℝ`+`volume` に発火 | density-level (ℝ≥0∞) 畳み込みへ橋渡し |
+| `measurePreserving_prod_div` | `Group/Prod.lean:368` | `theorem measurePreserving_prod_div [IsMulRightInvariant ν] : MeasurePreserving (fun z : G × G => (z.1, z.2 / z.1)) (μ.prod ν) (μ.prod ν)` — `variable {G} [Group G] {mG} [MeasurableInv G]`。**`@[to_additive measurePreserving_prod_sub]` 版 = `(x, y) ↦ (x, y - x)`** | `int_prod1/2/3` の shear 前処理 |
+
+> ⚠ **shear 方向の verbatim 注意 (inventory drift 訂正)**: inventory 本文は shear を「`(z,x)↦(z,z-x)`」と
+> 記すが、実 Mathlib `measurePreserving_prod_div` の additive 版 `measurePreserving_prod_sub` は
+> **`(x, y) ↦ (x, y - x)`** (第 1 座標を保持し第 2 座標から第 1 座標を**引く**)。`int_prod` integrand の
+> `fY (z - x)` を分離形に変換するには、この map の向き (どちらの座標を `z`/`x` に割り当て、`y - x` が
+> `z - x` に一致するか) を実装時に verbatim 合わせる必要がある。第 1 戻り型 mismatch を避けるため、
+> implementer は shear 適用前に「どの座標が併進相手か」を 1 度 LSP で確認すること。
+
+### Approach (解の全体形 = linchpin-first + measure-level 橋 + shear 前処理)
+
+**3 段階の依存構造**で組む。linchpin を最初に閉じることが全体の最短路。
+
+```
+   ┌─ 段0: linchpin atom ───────────────────────────────────────────────┐
+   │ convDensityAdd_gaussian_closed_form                                 │
+   │   convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal mY vY)    │
+   │     = gaussianPDFReal (mX+mY) (vX+vY)   (点ごと ∀z)                 │
+   │   measure-level 経路 self-build (5 step、下記 skeleton)             │
+   └───────────┬───────────────────────────────────────┬───────────────┘
+               │ (#16 int_fisherZ が必須消費)            │ (#7 pos_pZ は route A で消費 / route B で回避可)
+   ┌───────────▼──────────────┐          ┌──────────────▼──────────────────────┐
+   │ 段1: IsRegularDensityV2  │          │ 段2: IsBlachmanConvReady 19 field    │
+   │   (gaussianPDFReal m v)  │          │   ┌─ 既存直結 3 (int_fX/fY)        │
+   │   6 field 全直結 (~10 行) │ ──────►  │   ├─ 軽 self-build 9              │
+   │   = consumer hregX/hregY │  (前提)   │   └─ 重 7 (linchpin + 2D shear)   │
+   └──────────────────────────┘          └──────────────────────────────────────┘
+                                                          │
+                                          ┌───────────────▼───────────────┐
+                                          │ 段3: top-level witness         │
+                                          │ isBlachmanConvReady_of_gaussian│
+                                          │ + isRegularDensityV2_of_gaussian│
+                                          │ (consumer predicate の inhabitant)│
+                                          └────────────────────────────────┘
+```
+
+- **linchpin-first**: 段0 を最初に閉じる。`int_fisherZ` (#16) は `logDeriv (convDensityAdd …)` の閉形式が
+  linchpin 無しでは存在せず、linchpin で `gaussianPDFReal (mX+mY)(vX+vY)` に帰着して初めて
+  `int_fisherX` と同じ補題で閉じる。`pos_pZ` (#7) のみ linchpin を回避する route B (generic positivity)
+  があるが、`int_fisherZ` が不可避なので linchpin self-build が全体最短。
+- **measure-level 橋**: linchpin は点ごと閉形式を Mathlib が直接持たないため、measure 等式
+  (`gaussianReal_conv_gaussianReal`) → `withDensity` 同一視 (`gaussianReal_of_var_ne_zero`) →
+  density-level mlconvolution (`mconv_withDensity_eq_mlconvolution₀`) → ℝ≥0∞↔Real 橋 → a.e.→pointwise
+  upgrade の 5 段で self-build する (下記 skeleton)。
+- **shear 前処理**: `int_prod1/2/3` (#17-19) は非分離 integrand `fY(z-x)` を持ち `Integrable.mul_prod`
+  (分離形 `f z.1 * g z.2` 専用) が直接効かない。shear `measurePreserving_prod_sub` で
+  `(x,y) ↦ (x, y-x)` の変数変換を先に噛ませて分離形に直してから `mul_prod`。
+
+**段階 ship 方針**: 段0 (linchpin) + 段1 (IsRegularDensityV2) が閉じれば部分前進 commit 可
+(`int_fisherZ` 以外の依存解消)。重い 7 field (#7 route A / #12 #13 #16-19) が 1 session 超なら当該 field を
+`sorry` + `@residual(plan:epi-wall-reattack-plan)` で type-check done、witness 全体 0-sorry を proof done
+とする 2 段。
+
+### file 配置決定
+
+**決定: 新規 file `Common2026/Shannon/EPIBlachmanGaussianWitness.lean`。private 補題 2 件は public 化する。**
+
+| 軸 | 新規 file + private→public (採用) | 既存 file 拡張 (`FisherInfoV2.lean`/`FisherInfoGaussian.lean`) |
+|---|---|---|
+| private 補題可視性 | `integrable_sub_mul_gaussianPDFReal` (`FisherInfoGaussian.lean:178`) / `integrable_logDeriv_sq_mul_gaussianPDFReal` (`FisherInfoV2.lean:181`) の `private` を外して public 化 (1 行 ×2)。`int_X/Y`/`int_fisherX/Y` が import 経由で消費可 | private のまま同 file 配置で可視。だが witness は `EPIBlachmanDensity`/`EPIConvDensity` (`IsBlachmanConvReady`/`convDensityAdd`) も import 必要 → import が両 file に逆流 |
+| import 方向 (循環チェック) | witness file → `FisherInfoV2` + `FisherInfoGaussian` + `EPIConvDensity` + `EPIBlachmanDensity` を import。これら 4 file は witness を import しない (witness が最下流) ⇒ **循環なし** | witness を `FisherInfoV2`/`FisherInfoGaussian` に入れると、そこから `EPIBlachmanDensity` (= `IsBlachmanConvReady` 定義 file) を import 必要 → `EPIBlachmanDensity` は `FisherInfoV2` を import 済 ⇒ **import cycle** |
+| scope 明快さ | witness 専用 file = density-route の inhabitant が 1 file に集約、grep 容易 | Gaussian Fisher 補題群に混在、責務が肥大 |
+
+**決定根拠**: 既存 file 拡張は **import cycle 直撃** (`EPIBlachmanDensity` が `FisherInfoV2` を import 済なので、
+`FisherInfoV2` 側に `IsBlachmanConvReady` consumer を置くと逆向き import で cycle)。新規 file は最下流に
+witness を置けて循環ゼロ。private 補題は CLAUDE.md「private は file-scoped」より別 file から不可視なので
+**public 化が必須** (同 file 配置で回避する案は import cycle で潰れる)。public 化は 2 補題の `private`
+キーワード除去のみ = signature 不変・honesty 影響ゼロの incidental 変更。
+
+> **import 方向 verbatim 確認義務 (CLAUDE.md)**: implementer は着手時に `EPIConvDensity` /
+> `EPIBlachmanDensity` / `FisherInfoV2` / `FisherInfoGaussian` の相互 import を `rg '^import' <各 file>`
+> で 1 度確認し、witness file が全 4 を import しても循環しないことを実証してから skeleton を書くこと
+> (inventory 着手 skeleton `EPIBlachmanGaussianWitness.lean:204-213` の import リストを SoT 候補とするが、
+> verbatim 照合で逆順修正があれば accept がデフォルト)。
+
+### linchpin self-build skeleton (段0、measure-level 5 step)
+
+`convDensityAdd_gaussian_closed_form {mX mY : ℝ} {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0) :
+convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) = gaussianPDFReal (mX+mY) (vX+vY)` を
+以下 5 step で組む (各 step を `have` で sub-lemma 化、詰まれば当該 step のみ `sorry`+`@residual`):
+
+1. **measure 等式**: `gaussianReal mX vX ∗ gaussianReal mY vY = gaussianReal (mX+mY)(vX+vY)`
+   (`gaussianReal_conv_gaussianReal` 直適用、0 self-build)。
+2. **withDensity 展開**: 両辺を `gaussianReal_of_var_ne_zero` で `volume.withDensity (gaussianPDF …)` に
+   (`hvX`/`hvY`/`vX+vY≠0` 必要 — `vX+vY≠0` は `hvX` から `add_ne_zero`/`NNReal` 正値で導出)。
+3. **mlconvolution へ**: `mconv_withDensity_eq_mlconvolution₀` (additive 版) で
+   `withDensity (gaussianPDF mX vX) ∗ₘ withDensity (gaussianPDF mY vY) = withDensity (gaussianPDF mX vX ⋆ₘₗ gaussianPDF mY vY)`。
+   AEMeasurable 前提は `measurable_gaussianPDF`/`gaussianPDF` の可測性から。
+4. **withDensity injective (a.e.)**: step1-3 から `withDensity (gaussianPDF mX vX ⋆ₘₗ gaussianPDF mY vY)
+   = withDensity (gaussianPDF (mX+mY)(vX+vY))` ⇒ `withDensity_eq_iff` 系で被密度の **a.e.-equality**
+   `(gaussianPDF mX vX ⋆ₘₗ gaussianPDF mY vY) =ᵐ gaussianPDF (mX+mY)(vX+vY)` (ℝ≥0∞-valued)。
+5. **ℝ≥0∞↔Real + a.e.→pointwise**: (a) `mlconvolution` の ℝ≥0∞ lintegral `∫⁻ x, gaussianPDF x · gaussianPDF (z-x)`
+   を Bochner `∫ x, gaussianPDFReal x · gaussianPDFReal (z-x)` (= `convDensityAdd`) に `toReal` 橋
+   (`ofReal_integral_eq_lintegral_ofReal` 系 + 非負 + 可積分 `int_fX`/`int_fY` 済) で接続。(b) a.e.-equality
+   を **両辺連続** (`gaussianPDFReal` は `Continuous`、`convDensityAdd (gaussian…)` の連続性は gateway
+   `convDensityAdd_hasDerivAt` の Gaussian instance or `Continuous` 直接) から **pointwise (∀z)** に upgrade。
+
+> **段0 撤退口 (a.e.→pointwise が困難な場合)**: 連続関数の a.e. 一致は pointwise 一致 (`Continuous.ae_eq_iff_eq`
+> 系 / `Continuous.ext_on` の dense 版 / `ae_eq_of_ae_eq_of_continuous`)。両辺が `Continuous` であれば
+> a.e.-equality から pointwise を Mathlib atom で導ける見込み。**この atom の verbatim 当て先確認が
+> step 5(b) の hard part** — implementer は連続関数 a.e.→pointwise の Mathlib lemma を loogle
+> (`Continuous, Continuous, Filter.EventuallyEq, Eq`) で 1 度確認してから埋めること。詰まれば linchpin
+> body 全体 `sorry` + `@residual(plan:epi-wall-reattack-plan)` (壁ではない — 素材完備、撤退 R1)。
+
+### atom 表 (19 field × step × Mathlib 当て先 verbatim × 規模 × 難所/撤退口)
+
+凡例: 状態 = **直結** (既存補題 1 行) / **軽** (~5-30 行) / **重** (linchpin 依存 or 2D shear、~30-80 行)。
+全 Mathlib/repo 当て先は inventory §per-field 在庫 (`epi-blachman-gaussian-witness-inventory.lean:107-141`)
+を SoT とし、verbatim signature はそこを参照。
+
+| # | field | 内容 | Mathlib/repo 当て先 (verbatim 前提、inventory 参照) | 状態 | 規模 | 難所 / 撤退口 |
+|---|---|---|---|---|---|---|
+| 1 | `int_fX` | `Integrable fX volume` | `integrable_gaussianPDFReal mX vX` (`Gaussian/Real.lean:82`, 前提なし) | 直結 | 1 行 | — |
+| 2 | `int_fY` | 同 (mY vY) | 同上 | 直結 | 1 行 | — |
+| 3 | `bdd_fX` | `∃M,∀w,|fX w|≤M` | `gaussianPDFReal_nonneg:66` + `exp(-(x-m)²/2v)≤1` (`Real.exp_le_one`) で sup `(√(2πv))⁻¹` | 軽 | ~12 行 | Mathlib に sup 補題なし、粗 bound 自作 |
+| 4 | `bdd_fX'` | `∃M,∀w,|deriv fX w|≤M` | `deriv_gaussianPDFReal:75` (`=-(x-m)/v·f`) → `|x-m|exp(-a(x-m)²)` の sup | 軽 | ~25 行 | linear×Gaussian decay sup、`x·exp(-ax²)` 最大値 or 粗 bound |
+| 5 | `bdd_fY` | 同 #3 | #3 同型 | 軽 | ~12 行 | #3 と同 |
+| 6 | `bdd_fY'` | 同 #4 | #4 同型 | 軽 | ~25 行 | #4 と同 |
+| 7 | `pos_pZ` | `∀z, 0<convDensityAdd fX fY z` | **(A) linchpin 経由** `gaussianPDFReal_pos:61` / **(B) generic** `integral_pos_of_integrable_nonneg_nonzero` (loogle 済、`Bochner/Basic`) | 重(A)/軽(B) | A:linchpin / B:~30 行 | route B が linchpin 回避、当て先 atom 名要 verbatim |
+| 8 | `int_X` | `∀z, Integrable (deriv fX·fY(z-·))` | `integrable_sub_mul_gaussianPDFReal:178` (**public 化要**) + `gaussianPDFReal(z-x)` 有界 (#5) → `Integrable.bdd_mul` | 軽 | ~20 行 | **private 解消** (public 化) |
+| 9 | `int_Y` | `∀z, Integrable (fX·deriv fY(z-·))` | `int_fX` + `deriv fY(z-x)` 有界 (#6) → `Integrable.bdd_mul` | 軽 | ~18 行 | bounded×integrable |
+| 10 | `cond_int` | `∀z, Integrable (condDensityX fX fY z)` | `condDensityX = (1/pZ)·fX·fY(z-·)` → `int_fX`×bdd(#5)×const | 軽 | ~20 行 | `pZ z≠0` (= #7 依存) |
+| 11 | `int_W` | `∀lam∈[0,1]∀z, Integrable (scoreWeight·condDensityX)` | `logDeriv_gaussianPDFReal:298` (`=-(x-m)/v`, linear) × cond_int(#10) | 軽 | ~30 行 | 2 項 (logDeriv fX/fY) × cond_int |
+| 12 | `int_Wsq` | `∀lam∈[0,1]∀z, Integrable (scoreWeight²·condDensityX)` | `integrable_logDeriv_sq_mul_gaussianPDFReal:181` (**public 化要**) + (a+b)² 3 項展開 | 重 | ~40 行 | quadratic×gaussian×shift、展開項多、private 解消 |
+| 13 | `int_inner` | `∀lam∈[0,1], Integrable (fun z=>(∫scoreWeight²·condDensityX)·convDensityAdd)` | 内側 ∫ (#12) × pZ(z) の z-可積分性 | 重 | ~50 行 | 内側積分が z 関数として可積分か (Gaussian closed-form `c/(vX+vY)` 見込み) |
+| 14 | `int_fisherX` | `Integrable ((logDeriv fX)²·fX)` | `integrable_logDeriv_sq_mul_gaussianPDFReal mX hvX:181` (**public 化要**) + `logDeriv_gaussianPDFReal:298` 書換 | 軽 | ~8 行 | **private 解消** |
+| 15 | `int_fisherY` | 同 (mY vY) | 同上 | 軽 | ~8 行 | #14 と同 |
+| 16 | `int_fisherZ` | `Integrable ((logDeriv pZ)²·pZ)` | **linchpin 必須**: `pZ = gaussianPDFReal (mX+mY)(vX+vY)` 帰着 → #14 と同補題 | 重 | linchpin+~10 行 | **linchpin self-build がここで効く、回避不可** |
+| 17 | `int_prod1` | `Integrable (uncurry fun z x=>(logDeriv fX x)²·fX x·fY(z-x)) (volume.prod volume)` | **shear `measurePreserving_prod_sub`** (`Group/Prod.lean:368`) で `(z,x)→(z,z-x)` 分離 → `Integrable.mul_prod` (`Prod.lean:346`) | 重 | ~50 行 | **shear 方向 verbatim** (上 ⚠)、`mul_prod` 分離専用 |
+| 18 | `int_prod2` | `Integrable (uncurry fun z x=>(logDeriv fY(z-x))²·fX x·fY(z-x)) …` | 同 shear、`(logDeriv fY)²·fY` を z'=z-x に集約 | 重 | ~50 行 | #17 と同 |
+| 19 | `int_prod3` | `Integrable (uncurry fun z x=>logDeriv fX x·fX x·(logDeriv fY(z-x)·fY(z-x))) …` | 同 shear、cross 項分離 → `mul_prod` | 重 | ~45 行 | #17 と同 |
+
+**段1 `isRegularDensityV2_of_gaussian` (6 field 全直結、~10 行)**: `diff` =
+`differentiable_gaussianPDFReal m v` (`FisherInfoGaussian.lean:68`) / `pos` =
+`gaussianPDFReal_pos m v · hv` (`Gaussian/Real.lean:61`) / `tail_bot` = `tendsto_gaussianPDFReal_atBot m hv`
+(`:127`) / `tail_top` = `:154` / `integrable_deriv` = `integrable_deriv_gaussianPDFReal m hv` (`:210`) /
+`integral_deriv_eq_zero` = `integral_deriv_gaussianPDFReal_eq_zero m hv` (`:231`)。全 inventory §IsRegularDensityV2
+テーブルで verbatim 確認済。
+
+**段3 top-level witness signature (consumer 確認済)**:
+
+```lean
+theorem isRegularDensityV2_of_gaussian {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) :
+    IsRegularDensityV2 (gaussianPDFReal m v)   -- 段1
+
+theorem isBlachmanConvReady_of_gaussian {mX mY : ℝ} {vX vY : ℝ≥0}
+    (hvX : vX ≠ 0) (hvY : vY ≠ 0) :
+    IsBlachmanConvReady (gaussianPDFReal mX vX) (gaussianPDFReal mY vY)   -- 段2 (19 field)
+```
+
+型クラス前提は `ℝ → ℝ` 上の述語ゆえ追加 `[…]` なし (Ω 不在版)。漏れる引数は `{mX mY : ℝ} {vX vY : ℝ≥0}
+(hvX : vX ≠ 0) (hvY : vY ≠ 0)` のみ (inventory §witness signature L88 確認済)。正規化 `∫=1` は consumer が
+別途要求するので `integral_gaussianPDFReal_eq_one m hv` (`Gaussian/Real.lean:121`) を併せて供給。
+
+### 撤退ライン
+
+| slug | 内容 | 撤退口 |
+|---|---|---|
+| **L-EPIW-3e-α** (linchpin) | 段0 `convDensityAdd_gaussian_closed_form` の measure-level self-build が 1 session 超 (特に step 5(b) a.e.→pointwise の連続関数当て先で詰まる) | linchpin body `sorry` + `@residual(plan:epi-wall-reattack-plan)` (**壁ではない** — measure 部品完備、`wall:` 不可)。残 18 field は genuine 継続、`int_fisherZ` (#16) のみ linchpin に transitive 依存して未完。これで「#16 以外 18 field proven」の partial 非vacuousness 確認 (inventory 撤退 R1 相当) |
+| **L-EPIW-3e-β** (shear) | `int_prod1/2/3` (#17-19) の shear 組立 (`measurePreserving_prod_sub` 方向 + `mul_prod` 接続) が詰まる | 該当 3 field のみ `sorry` + `@residual(plan:epi-wall-reattack-plan)`、残 16 field genuine (inventory 撤退 R2 相当) |
+| **L-EPIW-3e-γ** (private) | private 補題 public 化が他 file の `private` 前提に副作用 (想定低、signature 不変) | public 化を諦め witness を `FisherInfoV2`/`FisherInfoGaussian` 同居に切替 → だが import cycle 直撃 (§file 配置) ⇒ この場合は当該 private 補題を witness file 内で **再証明** (重複コスト ~30 行 ×2) |
+| **L-EPIW-3e-δ** (sup 自作) | `bdd_fX'/bdd_fY'` (#4/#6) の `|x|exp(-ax²)` sup が初等解析 self-build で >1 session | 該当 field `sorry` + `@residual(plan:epi-wall-reattack-plan)`、粗 bound で十分なので発火確率低 |
+
+**honesty 規律 (再掲、本 Phase 固有)**: witness を `IsGaussianWitnessHypothesis` 等の predicate に核を
+抱えさせて `sorry` を消すのは **禁止** (tier 5 load-bearing)。各 field は genuine 構築 or
+`sorry`+`@residual(plan:epi-wall-reattack-plan)` で正直に残す。`@residual` は全て **`plan:` 分類**
+(`wall:` 不可 — inventory 結論「真の Mathlib 壁 0 件、全 field self-build 可能」より、closure は plan 1 つで
+達成可能 = `plan:` が正しい分類)。新規 `sorry`+`@residual` 導入 commit が出たら orchestrator が独立
+honesty audit subagent を起動 (CLAUDE.md「Independent honesty audit」)。Gaussian witness 完成時に
+`convex_fisher_bound`/`IsBlachmanConvReady` docstring (`:703-707`) の「non-vacuousness NOT yet
+machine-confirmed」CAVEAT を除去 (= density route の genuine closure 完了)。
+
+### Done 条件 / proof-log
+
+- **type-check done** (commit OK): `isBlachmanConvReady_of_gaussian` + `isRegularDensityV2_of_gaussian` が
+  新規 file で `lake env lean Common2026.Shannon.EPIBlachmanGaussianWitness` 0 errors。未完 field は
+  `sorry` + `@residual(plan:epi-wall-reattack-plan)`。`Common2026.lean` に import 1 行追加。private→public
+  化した 2 file (`FisherInfoGaussian`/`FisherInfoV2`) は olean refresh 注意 (CLAUDE.md「After upstream edits」)。
+- **proof done** (witness 0-sorry): linchpin (段0) + 19 field (段2) + 6 field (段1) 全 genuine、独立
+  honesty audit pass で `@audit:ok`。これにより density route の proven inhabitant が確定し非vacuousness
+  機械確認完了。
+- **density route closure 完了点**: 本 Phase proof done = Phase 3 (`stam_step2_density_wall`) の
+  predicate inhabitant が存在 → Phase 3d の closure 条件「Gaussian instance wiring」充足。EPI density
+  route の genuine closure。
+- proof-log: **yes** (`epi-wall-reattack-proof-log.md` に linchpin self-build 5 step + per-field 状態 +
+  private 解消 + shear 方向の実観測を追記)。
+
+概算規模: linchpin ~120-200 行 + 段1 ~10 行 + 段2 残 18 field ~400 行 = **~530-610 行**
+(inventory 工数感 ~560 行と整合)。Fano Phase 3 (~150 行) の 3-4 倍、`convex_fisher_bound` 本体と同規模。
+
 ## 全 Phase 通じた honesty 規律
 
 - 詰まれば **`sorry` + `@residual(<class>:<slug>)`** で抜く (tier 2、唯一の正規撤退口)。
@@ -1018,3 +1256,34 @@ FTC 積分形 (step 2) 60-100 行 (テンプレ一般化、step 1 後)。proof-l
      vacuousness 懸念を明示すること。
    - **slug 統一**: 本壁の正規 slug = `wall:stam-step2-density` (audit-tags.md register 登録済)。コード現状
      `@residual(wall:stam-blachman)` (register 未登録) ⇒ Phase 3d touch 時に統一是正。
+
+7. **2026-05-31 Phase 3e 起草 (Gaussian witness 非vacuousness 確証、§Phase 3e 追加)**: Phase 3d が closure
+   条件として明示した「Gaussian instance wiring」(density route predicate の proven inhabitant) を実装
+   Phase として固定。inventory `epi-blachman-gaussian-witness-inventory.md` を消費。
+   - **linchpin-first 戦略**: `convDensityAdd_gaussian_closed_form` (点ごと Gaussian PDF 畳み込み閉形式)
+     を段0 で最優先 closure。`int_fisherZ` (#16) が linchpin 無しでは `logDeriv (convDensityAdd …)` 閉形式
+     不在で詰むため、measure-level 経路 (`gaussianReal_conv_gaussianReal` + `gaussianReal_of_var_ne_zero` +
+     `mconv_withDensity_eq_mlconvolution₀` の 5 step self-build、~120-200 行) を全体の起点に置く。
+   - **file 配置決定 = 新規 `EPIBlachmanGaussianWitness.lean` + private 2 補題 public 化**: 既存 file 拡張
+     (`FisherInfoV2`/`FisherInfoGaussian`) は `EPIBlachmanDensity → FisherInfoV2` 既存 import との逆向きで
+     **import cycle 直撃**。新規 file が最下流で循環ゼロ。private 補題 (`integrable_sub_mul_gaussianPDFReal`
+     `:178` / `integrable_logDeriv_sq_mul_gaussianPDFReal` `:181`) は file-scoped ゆえ別 file 不可視 →
+     public 化必須 (signature 不変・honesty 影響ゼロ)。
+   - **verbatim 確認 (Read 照合済 2026-05-31)**: `gaussianReal_conv_gaussianReal` (`Gaussian/Real.lean:613`) /
+     `gaussianReal_of_var_ne_zero` (`:203`, `:= if_neg hv`) / `mconv_withDensity_eq_mlconvolution₀`
+     (`WithDensity.lean:757`, `[Group][MeasurableMul₂][MeasurableInv][SFinite][IsMulLeftInvariant]`) /
+     `measurePreserving_prod_div` (`Group/Prod.lean:368`, additive `measurePreserving_prod_sub`) を
+     verbatim 照合。
+   - **inventory drift 2 点訂正**: (a) **field 数** — inventory「20 field」だが実コード
+     `IsBlachmanConvReady` (`:708-757`) は **19 field** (inventory が `pos_pZ` を独立行に二重計上した差、
+     内容一致)。本 Phase は 19 field を SoT。(b) **shear 方向** — inventory「`(z,x)↦(z,z-x)`」だが実
+     `measurePreserving_prod_sub` は **`(x,y)↦(x,y-x)`** (第1座標保持・第2から引く)。`int_prod` の
+     `fY(z-x)` 分離には map の座標割当を verbatim 合わせる要 (第1戻り型 mismatch 注意)。
+   - **撤退ライン L-EPIW-3e-α/β/γ/δ**: linchpin a.e.→pointwise (α) / shear 組立 (β) / private 解消の副作用
+     (γ) / sup 自作 (δ)。全 `@residual` は **`plan:epi-wall-reattack-plan` 分類** (inventory 結論「真の
+     Mathlib 壁 0 件」より `wall:` 不可、plan 1 つで closure 可能)。段0+段1 closure で部分前進 commit 可、
+     重い 7 field 1 session 超は当該 field sorry+residual で type-check done、全 0-sorry を proof done の 2 段。
+   - **closure 完了点**: 本 Phase proof done = `convex_fisher_bound`/`IsBlachmanConvReady` docstring
+     (`:703-707`) の「non-vacuousness NOT yet machine-confirmed」CAVEAT 除去 = EPI density route の
+     genuine closure 完了。`StamGaussianBound.lean:77` `stam_convex_fisher_bound_gaussian` は別 route
+     (closed-form `1/v`、`convDensityAdd` 非経由) なので Fisher 値 sanity 検証材料に留め証明には非参照。

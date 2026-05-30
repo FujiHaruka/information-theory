@@ -178,7 +178,7 @@ theorem integral_logDeriv_density_eq_zero {f : ℝ → ℝ} (h_reg : IsRegularDe
 
 Strategy: rewrite as `(1/v²) · (x - m)² · gaussianPDFReal m v x`, then use
 `integrable_rpow_mul_exp_neg_mul_sq` at `s = 2` substituted via `y = x - m`. -/
-private lemma integrable_logDeriv_sq_mul_gaussianPDFReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
+lemma integrable_logDeriv_sq_mul_gaussianPDFReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     Integrable (fun x => ((x - m) / (v : ℝ)) ^ 2 * gaussianPDFReal m v x) volume := by
   have hv_pos : (0 : ℝ) < v := by
     have : (v : ℝ) ≠ 0 := by exact_mod_cast hv

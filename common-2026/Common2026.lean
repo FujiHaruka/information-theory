@@ -205,3 +205,4 @@ import Common2026.Shannon.MinkowskiDet
 import Common2026.Shannon.EPIScoreCrossTermOrth
 import Common2026.Shannon.EPIConvDensity
 import Common2026.Shannon.EPIBlachmanDensity
+import Common2026.Shannon.EPIBlachmanGaussianWitness

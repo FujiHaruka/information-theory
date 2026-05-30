@@ -175,7 +175,7 @@ lemma tendsto_gaussianPDFReal_atTop (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
 /-- `(x - m) * gaussianPDFReal m v x` is Lebesgue-integrable: this is the first
 moment integrand (against Lebesgue), expressible via
 `integral_gaussianReal_eq_integral_smul`. -/
-private lemma integrable_sub_mul_gaussianPDFReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
+lemma integrable_sub_mul_gaussianPDFReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     Integrable (fun x => (x - m) * gaussianPDFReal m v x) volume := by
   have hv_pos : (0 : ℝ) < v := by
     have : (v : ℝ) ≠ 0 := by exact_mod_cast hv
