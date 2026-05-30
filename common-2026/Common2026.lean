@@ -203,3 +203,4 @@ import Common2026.Shannon.HuffmanColexDeterminism
 import Common2026.Shannon.HuffmanFirstStepProbe
 import Common2026.Shannon.MinkowskiDet
 import Common2026.Shannon.EPIScoreCrossTermOrth
+import Common2026.Shannon.EPIConvDensity
