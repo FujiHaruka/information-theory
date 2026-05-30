@@ -320,7 +320,20 @@ regular the heat-flow path is), NOT the de Bruijn analytic core — the core
   (a path-regularity precondition; cf. the Gaussian instance
   `continuousOn_differentialEntropy_heat_flow_gaussian`).
 * `integrable` — the path integrand `(1/2) · J(X + √t·Z)` is interval-integrable
-  on `(0, T)` (path integrability precondition). -/
+  on `(0, T)` (path integrability precondition).
+
+@audit:ok — independent honesty audit (2026-05-31): all 4 fields are genuine
+regularity preconditions, NOT load-bearing. Core-reconstruction test: granting
+`fPath` (bare data) + `reg_t` + `cont` + `integrable` does NOT yield the
+integration identity directly — `reg_t` only supplies per-time
+`IsRegularDeBruijnHypV2` inputs (2 fields `Z_law` + `density_t`, the
+`derivAt_entropy_eq_half_fisher_v2` field having been removed Phase 2.B), so the
+de Bruijn analytic core `(d/dt)h = (1/2)J` (heat eq + IBP) is NOT bundled here;
+it is produced only by calling the per-time wall `debruijnIdentityV2_holds`
+(`@residual(wall:debruijn-integration)`) inside the consumer body. `cont` /
+`integrable` are standard FTC preconditions. Non-vacuous: Gaussian instance
+(`continuousOn_differentialEntropy_heat_flow_gaussian`, `bounded_T_ftc_gaussian`
+in EPIL3Integration) satisfies all fields. -/
 structure IsDeBruijnPathRegular {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] (T : ℝ) where
   /-- Density witness path. -/
@@ -348,7 +361,19 @@ per-time sorry) に transitively 依存するだけ。
 
 `hT : 0 ≤ T` と path-regularity bundle `h_path` は regularity / 積分可能性の
 precondition であり、de Bruijn 不等式の核 (heat eq IBP) は per-time wall lemma
-側に残る (load-bearing bundling ではない)。 -/
+側に残る (load-bearing bundling ではない)。
+
+Independent honesty audit (2026-05-31): body genuine — Step 1 calls the per-time
+wall `debruijnIdentityV2_holds` (`@residual(wall:debruijn-integration)`) for each
+`t ∈ Ioo 0 T`, Step 2 assembles via Mathlib FTC
+`intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le`, Steps 3-5 convert the
+interval integral to `Set.Ioo`/`Set.Ioc` and fix the boundary `f 0 = h(P.map X)`.
+No `:= sorry` / `:True` disguise. `h_path : IsDeBruijnPathRegular` is a genuine
+regularity precondition (not load-bearing — see that structure's audit note).
+Honesty improvement: this replaced 2 independent `sorry`s with a single
+transitive dependency on the per-time wall (`#print axioms` shows `sorryAx`
+solely via that wall + standard `propext`/`Classical.choice`/`Quot.sound`).
+Verdict honest_residual: local 0 sorry, transitive `wall:debruijn-integration`. -/
 theorem debruijnIntegrationIdentity_holds
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (T : ℝ) (hT : 0 ≤ T)

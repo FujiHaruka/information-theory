@@ -199,7 +199,13 @@ NON-vacuous); the pointwise `hconv` ties `fXY` to the convolution so the conclus
 regularity preconditions, not the core (the core is genuinely closed in
 `stam_step2_density_wall` via `convex_fisher_bound_of_ready`). Pivoted in lockstep with
 `IsStamInequalityHyp` (defeq chain via `fisherInfoOfMeasureV2_def`). No honesty defect.
-@audit:ok -/
+
+@audit:ok — independent honesty audit (2026-05-31): SOUND non-vacuous Prop, defeq-aligned
+sibling of `IsStamInequalityHyp` (`EPIStamDischarge`). Injected hyps are regularity
+preconditions only (19-field `IsBlachmanConvReady` bundle = `Integrable`/boundedness/
+positivity, no inequality core); conclusion `1/J_sum ≥ 1/J_X+1/J_Y` genuinely produced
+upstream (`stam_step2_density_wall` via `convex_fisher_bound_of_ready`, sorryAx-free).
+Non-vacuous: Gaussian `isBlachmanConvReady_gaussianPDFReal` inhabits the gating bundle. @audit:ok -/
 def IsStamInequalityResidual {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →

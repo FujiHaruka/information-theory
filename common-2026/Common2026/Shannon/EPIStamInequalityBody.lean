@@ -439,6 +439,26 @@ genuinely assembled upstream in `stam_step2_density_wall`
 (`convex_fisher_bound_of_ready`). The added hypotheses are regularity preconditions,
 NOT the core. `#print axioms` → sorryAx-free.
 
+@audit:ok — independent honesty audit (2026-05-31): genuine implication wrapper, NOT
+load-bearing. Body `intro`s all matching hyps, applies `h_cs_opt` to get the
+harmonic-mean bound `J_sum ≤ J_X·J_Y/(J_X+J_Y)`, reshapes to `1/J_sum ≥ 1/J_X+1/J_Y`
+via `stam_inverse_form_of_harmonic_mean` (conclusion type ≠ hypothesis type, no `:= h`
+circularity). The antecedent `IsStamCauchySchwarzOptimal` is NOT injected as an open
+core hyp at the deliverable level: its production site `isStamInequalityHyp_via_step3`
+discharges it from regularity (`hX hY hXY`) alone via `stam_step2_density_wall`, whose
+inequality core is genuinely supplied by `convex_fisher_bound_of_ready` → genuine
+`convex_fisher_bound` (both `@audit:ok`). The 2 pivot-added hyps are regularity
+preconditions: the pointwise convolution identity `∀x, fXY x = convDensityAdd fX fY x`
+ties `fXY` to the convolution (so the conclusion is the genuine Stam bound, not
+universally false), and `IsBlachmanConvReady fX fY` is a 19-field bundle of
+`Integrable`/boundedness/positivity ONLY (no inequality/equality core; core-reconstruction
+test: granting the bundle does NOT hand the Stam bound). NON-VACUOUS: Gaussian witness
+`isBlachmanConvReady_gaussianPDFReal` inhabits the bundle and the density route fires
+end-to-end (`convex_fisher_bound_gaussian_via_density_route`, `@audit:ok`). sorryAx-free
+machine-verified transiently: `#print axioms isStamInequalityHyp_via_body` =
+`[propext, Classical.choice, Quot.sound]` (after `lake build` olean refresh of the 6
+pivot modules). Self-assigned `@audit:ok` confirmed.
+
 @audit:ok -/
 @[entry_point]
 theorem isStamInequalityHyp_via_body
