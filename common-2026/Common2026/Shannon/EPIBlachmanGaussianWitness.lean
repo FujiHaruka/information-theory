@@ -33,7 +33,9 @@ open scoped ENNReal NNReal
 /-! ## Helpers -/
 
 /-- Uniform sup bound `gaussianPDFReal μ v x ≤ (√(2πv))⁻¹` (attained at `x = μ`),
-from `exp(-(x-μ)²/(2v)) ≤ 1`. -/
+from `exp(-(x-μ)²/(2v)) ≤ 1`.
+@audit:ok — independent honesty audit (2026-05-31): 0-sorry genuine, sorryAx-free
+(`#print axioms` → [propext, Classical.choice, Quot.sound]). -/
 theorem gaussianPDFReal_le (μ : ℝ) (v : ℝ≥0) (x : ℝ) :
     gaussianPDFReal μ v x ≤ (Real.sqrt (2 * Real.pi * v))⁻¹ := by
   rw [gaussianPDFReal_def]
@@ -47,7 +49,8 @@ theorem gaussianPDFReal_le (μ : ℝ) (v : ℝ≥0) (x : ℝ) :
         · positivity
     _ = (Real.sqrt (2 * Real.pi * v))⁻¹ := mul_one _
 
-/-- Boundedness of `gaussianPDFReal μ v`. -/
+/-- Boundedness of `gaussianPDFReal μ v`.
+@audit:ok — independent honesty audit (2026-05-31): 0-sorry genuine, sorryAx-free. -/
 theorem bdd_gaussianPDFReal (μ : ℝ) (v : ℝ≥0) :
     ∃ M : ℝ, ∀ w, |gaussianPDFReal μ v w| ≤ M :=
   ⟨(Real.sqrt (2 * Real.pi * v))⁻¹, fun w => by
@@ -56,7 +59,9 @@ theorem bdd_gaussianPDFReal (μ : ℝ) (v : ℝ≥0) :
 
 /-- Elementary bound `s * exp(-s²/(2v)) ≤ √v` for `s ≥ 0`, `v > 0`.
 Proof: with `u = s/√v ≥ 0`, the claim is `u ≤ exp(u²/2)`, which follows from
-`u ≤ 1 + u²/2 ≤ exp(u²/2)`. -/
+`u ≤ 1 + u²/2 ≤ exp(u²/2)`.
+@audit:ok — independent honesty audit (2026-05-31): elementary bound genuine
+(`u ≤ 1+u²/2` via `(u-1)²≥0`, `1+t ≤ exp t` via `add_one_le_exp`); sorryAx-free. -/
 theorem mul_exp_neg_sq_le {v : ℝ} (hv : 0 < v) {s : ℝ} (hs : 0 ≤ s) :
     s * Real.exp (-s ^ 2 / (2 * v)) ≤ Real.sqrt v := by
   have hsv : 0 < Real.sqrt v := Real.sqrt_pos.mpr hv
@@ -88,7 +93,8 @@ theorem mul_exp_neg_sq_le {v : ℝ} (hv : 0 < v) {s : ℝ} (hs : 0 ≤ s) :
     _ = Real.sqrt v := one_mul _
 
 /-- Continuity of `deriv (gaussianPDFReal m v)` via its closed form
-`-(x-m)/v · gaussianPDFReal m v x`. -/
+`-(x-m)/v · gaussianPDFReal m v x`.
+@audit:ok — independent honesty audit (2026-05-31): 0-sorry genuine, sorryAx-free. -/
 theorem continuous_deriv_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) :
     Continuous (deriv (gaussianPDFReal m v)) := by
   have heq : deriv (gaussianPDFReal m v)
@@ -100,7 +106,8 @@ theorem continuous_deriv_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) 
 
 /-- Boundedness of `deriv (gaussianPDFReal m v)`.
 `deriv f w = -(w-m)/v · f w`, and `|w-m| · exp(-(w-m)²/(2v)) ≤ √v`
-(by `mul_exp_neg_sq_le`), so the derivative is uniformly bounded. -/
+(by `mul_exp_neg_sq_le`), so the derivative is uniformly bounded.
+@audit:ok — independent honesty audit (2026-05-31): 0-sorry genuine, sorryAx-free. -/
 theorem bdd_deriv_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) :
     ∃ M : ℝ, ∀ w, |deriv (gaussianPDFReal m v) w| ≤ M := by
   have hv_pos : (0 : ℝ) < v := by
@@ -129,7 +136,8 @@ theorem bdd_deriv_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) :
 
 /-- `Integrable (fun x => logDeriv (gaussianPDFReal m v) x * gaussianPDFReal m v x)`.
 Since `logDeriv f · f = -(x-m)/v · f`, this is `-(1/v)` times
-`integrable_sub_mul_gaussianPDFReal`. -/
+`integrable_sub_mul_gaussianPDFReal`.
+@audit:ok — independent honesty audit (2026-05-31): 0-sorry genuine, sorryAx-free. -/
 theorem integrable_logDeriv_mul_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) :
     Integrable (fun x => logDeriv (gaussianPDFReal m v) x * gaussianPDFReal m v x) volume := by
   refine ((Common2026.Shannon.integrable_sub_mul_gaussianPDFReal m hv).const_mul
@@ -147,7 +155,16 @@ theorem integrable_logDeriv_mul_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v 
 Built via the measure-level route
 `gaussianReal_conv_gaussianReal` + `gaussianReal_of_var_ne_zero`
 + `mconv_withDensity_eq_mlconvolution₀`, then ENNReal↔Real bridge and an
-a.e.→pointwise upgrade using continuity of both sides. -/
+a.e.→pointwise upgrade using continuity of both sides.
+
+@audit:ok — independent honesty audit (2026-05-31): genuine core-reconstruction.
+The 5-step measure-level route (lconvolution pointwise value → withDensity equality
+via `gaussianReal_conv_gaussianReal` + `conv_withDensity_eq_mlconvolution₀` →
+a.e. density equality via `withDensity_eq_iff_of_sigmaFinite` → ENNReal↔Real bridge →
+a.e.→pointwise via `Continuous.ae_eq_iff_eq`) reconstructs the stated pointwise
+closed form; no field is the conclusion-as-hypothesis. All cited Mathlib lemmas
+verified present (loogle/rg). `#print axioms` → [propext, Classical.choice, Quot.sound]
+(sorryAx-free, transitive 0 sorry). -/
 theorem convDensityAdd_gaussian_closed_form
     {mX mY : ℝ} {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0) :
     convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal mY vY)
@@ -249,7 +266,12 @@ theorem convDensityAdd_gaussian_closed_form
 /-! ## 段1 — `IsRegularDensityV2 (gaussianPDFReal m v)` (6 fields, all direct) -/
 
 /-- `IsRegularDensityV2 (gaussianPDFReal m v)` — all six fields discharged from the
-existing Gaussian regularity lemmas in `FisherInfoGaussian`. -/
+existing Gaussian regularity lemmas in `FisherInfoGaussian`.
+
+@audit:ok — independent honesty audit (2026-05-31): all 6 fields (`diff`/`pos`/
+`tail_bot`/`tail_top`/`integrable_deriv`/`integral_deriv_eq_zero`) are pure regularity
+claims discharged by existing Gaussian lemmas, no core bundled. `#print axioms` →
+[propext, Classical.choice, Quot.sound] (sorryAx-free). -/
 theorem isRegularDensityV2_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) :
     IsRegularDensityV2 (gaussianPDFReal m v) where
   diff := Common2026.Shannon.differentiable_gaussianPDFReal m v
@@ -269,7 +291,21 @@ lemmas (and the linchpin for `int_fisherZ`). 14 of the 19 fields are genuine
 `int_fisherX/Y/Z`). The remaining 5 — `int_Wsq`, `int_inner` (quadratic-score
 integrability) and `int_prod1/2/3` (non-separable 2D Tonelli terms needing the
 shear `measurePreserving_prod_sub`) — are left as `sorry`; see the per-field
-`@residual(plan:epi-wall-reattack-plan)` markers. -/
+`@residual(plan:epi-wall-reattack-plan)` markers.
+
+Independent honesty audit (2026-05-31): structurally GENUINE — the witness is a plain
+`structure` literal `{mX mY vX vY} (hvX hvY)`; `IsBlachmanConvReady` carries ONLY
+`Integrable`/boundedness/positivity fields (no inequality/equality/value core), so this
+is not a load-bearing bundle. The 14 filled fields are genuine (Z-side `pos_pZ`/
+`int_fisherZ` route through the sorryAx-free linchpin; `int_fisher{X,Y}` via the public
+`integrable_logDeriv_sq_mul_gaussianPDFReal`). The 5 residual fields (`int_Wsq`,
+`int_inner`, `int_prod1/2/3`) are all `Integrable (…)` plumbing closable WITHOUT a
+Mathlib wall (`measurePreserving_prod_sub` exists; plan §Phase 3c confirms "真壁なし"),
+so `@residual(plan:epi-wall-reattack-plan)` is correctly classified (NOT `wall:`).
+NON-VACUOUSNESS STATUS: PARTIAL / NOT YET CONFIRMED — because 5 fields remain `sorry`,
+this is type-check done but not proof done, so no proven `IsBlachmanConvReady` inhabitant
+exists yet. The Phase 3d non-vacuousness caveat is advanced but not discharged; it
+resolves only when all 5 residual fields are filled (0 sorry). NOT `@audit:ok`. -/
 theorem isBlachmanConvReady_gaussianPDFReal
     {mX mY : ℝ} {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0) :
     IsBlachmanConvReady (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) where
