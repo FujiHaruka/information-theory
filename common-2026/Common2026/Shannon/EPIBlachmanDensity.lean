@@ -376,6 +376,88 @@ theorem score_sq_le_weighted_integral (fX fY : ℝ → ℝ) (lam z : ℝ)
   refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
   simp only [mul_comm]
 
+/-! ### Phase 3c-fin — Tonelli 3-term evaluation helpers
+
+These three private lemmas evaluate each of the three terms obtained by expanding
+`W_λ² = λ²·s_X(x)² + (1-λ)²·s_Y(z-x)² + 2λ(1-λ)·s_X(x)·s_Y(z-x)` inside the double
+integral `∫_z ∫_x W_λ²·fX(x)·fY(z-x)`. Each uses `integral_integral_swap` (Tonelli,
+Bochner) to put `z` innermost, then translation invariance `integral_sub_right_eq_self`
++ the normalizations / `integral_logDeriv_density_eq_zero` to collapse the inner `z`
+integral. The product-measure integrability hypotheses (`Integrable (uncurry …)`) are
+honest regularity preconditions (Gaussian-satisfied, load-bearing-free). -/
+
+/-- **Term 1** (the `λ²` term): translation invariance pulls the inner `z` integral of
+`fY (z - x)` to `1`, leaving `J_X`. -/
+private theorem convex_fisher_term1 (fX fY : ℝ → ℝ)
+    (hnormY : ∫ x, fY x ∂volume = 1)
+    (hint1 :
+        Integrable
+          (Function.uncurry fun z x => (logDeriv fX x) ^ 2 * fX x * fY (z - x))
+          (volume.prod volume)) :
+    (∫ z, ∫ x, (logDeriv fX x) ^ 2 * fX x * fY (z - x) ∂volume ∂volume)
+      = ∫ x, (logDeriv fX x) ^ 2 * fX x ∂volume := by
+  -- Tonelli: put `z` innermost.
+  rw [integral_integral_swap hint1]
+  -- inner `z` integral of `fY (z - x)` is `∫ fY = 1`; pull constant out.
+  refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+  simp only
+  rw [show (fun z => (logDeriv fX x) ^ 2 * fX x * fY (z - x))
+        = (fun z => ((logDeriv fX x) ^ 2 * fX x) * fY (z - x)) from rfl,
+    integral_const_mul]
+  have htr := MeasureTheory.integral_sub_right_eq_self fY (μ := volume) x
+  rw [htr, hnormY, mul_one]
+
+/-- **Term 2** (the `(1-λ)²` term): substitute `y = z - x` (translation), the inner `z`
+integral becomes `J_Y`, and `∫_x fX = 1`. -/
+private theorem convex_fisher_term2 (fX fY : ℝ → ℝ)
+    (hnormX : ∫ x, fX x ∂volume = 1)
+    (hint2 :
+        Integrable
+          (Function.uncurry fun z x => (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x))
+          (volume.prod volume)) :
+    (∫ z, ∫ x, (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x) ∂volume ∂volume)
+      = ∫ y, (logDeriv fY y) ^ 2 * fY y ∂volume := by
+  -- Tonelli: put `z` innermost.
+  rw [integral_integral_swap hint2]
+  -- inner `z` integral of `(logDeriv fY (z-x))²·fY (z-x)` is `J_Y` (translation), `fX x` is constant.
+  have hinner : ∀ x : ℝ,
+      (∫ z, (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x) ∂volume)
+        = fX x * ∫ y, (logDeriv fY y) ^ 2 * fY y ∂volume := by
+    intro x
+    rw [show (fun z => (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x))
+          = (fun z => fX x * ((logDeriv fY (z - x)) ^ 2 * fY (z - x))) from
+        funext (fun z => by ring),
+      integral_const_mul]
+    have htr := MeasureTheory.integral_sub_right_eq_self
+        (fun y => (logDeriv fY y) ^ 2 * fY y) (μ := volume) x
+    rw [htr]
+  simp only [hinner]
+  rw [integral_mul_const, hnormX, one_mul]
+
+/-- **Term 3** (the cross term): the inner `z` integral of `logDeriv fY (z-x)·fY (z-x)`
+is `∫ logDeriv fY · fY = 0`, so the whole term vanishes. -/
+private theorem convex_fisher_cross (fX fY : ℝ → ℝ)
+    (hregY : IsRegularDensityV2 fY)
+    (hint3 :
+        Integrable
+          (Function.uncurry fun z x =>
+            logDeriv fX x * fX x * (logDeriv fY (z - x) * fY (z - x)))
+          (volume.prod volume)) :
+    (∫ z, ∫ x, logDeriv fX x * fX x * (logDeriv fY (z - x) * fY (z - x))
+        ∂volume ∂volume) = 0 := by
+  -- Tonelli: put `z` innermost.
+  rw [integral_integral_swap hint3]
+  -- inner `z` integral of `logDeriv fY (z-x)·fY (z-x)` is `J_Y`-score = 0; pull constant out.
+  have hinner : ∀ x : ℝ,
+      (∫ z, logDeriv fX x * fX x * (logDeriv fY (z - x) * fY (z - x)) ∂volume) = 0 := by
+    intro x
+    rw [integral_const_mul]
+    -- `∫ z, logDeriv fY (z - x) · fY (z - x) = ∫ y, logDeriv fY y · fY y = 0`.
+    have htr := MeasureTheory.integral_sub_right_eq_self
+        (fun y => logDeriv fY y * fY y) (μ := volume) x
+    rw [htr, integral_logDeriv_density_eq_zero hregY, mul_zero]
+  simp only [hinner, integral_zero]
+
 /-- **Convex Fisher bound (density route, Phase 3c main result).**
 
 For `0 ≤ lam ≤ 1`,
@@ -395,38 +477,23 @@ Proof shape (explicit density route, condExp-free):
 
 All bundled hypotheses are regularity preconditions (`IsRegularDensityV2`,
 boundedness, integrability side-conditions, normalization `∫ = 1`, positivity of
-`p_Z`); none bundles the inequality core, which lives in the `sorry` below and in
-the S4 lemma.
+`p_Z`, and the three product-measure `Integrable (uncurry …)` Tonelli
+preconditions); none bundles the inequality core.
 
-Independent audit (2026-05-30): reclassified `wall:stam-blachman` →
-`plan:epi-wall-reattack-plan`. Closability is transitive on S4
-(`score_sq_le_weighted_integral`, now genuinely closed via `ConvexOn.map_integral_le`
-on a withDensity probability measure) plus parts all present: Tonelli
-`integral_integral_swap` (`Mathlib/MeasureTheory/Integral/Prod.lean`), cross-term
-`= 0` via `integral_logDeriv_density_eq_zero` (`FisherInfoV2.lean:158`, repo), and
-atom A `fisherInfoOfDensity_toReal_eq_integral` (genuine, `@audit:ok`). No separate
-genuine Mathlib gap; not a wall.
+Assembly (all genuine, no `sorry`):
+* atom A `fisherInfoOfDensity_toReal_eq_integral` rewrites all three Fisher
+  informations to Bochner integrals;
+* S4 `score_sq_le_weighted_integral` (`@audit:ok`, Jensen on a `withDensity`
+  probability measure) gives `(logDeriv p_Z z)² ≤ ∫ x, W_λ²·p_{X|Z}` pointwise,
+  integrated against `p_Z ≥ 0` via `integral_mono_ae`;
+* `condDensityX·p_Z = fX(x)·fY(z-x)` cancellation;
+* the 3-term Tonelli evaluation `convex_fisher_term1/2/cross` (`integral_integral_swap`
+  + translation invariance `integral_sub_right_eq_self` + normalization /
+  `integral_logDeriv_density_eq_zero` for the cross term) yields
+  `λ²·J_X + (1-λ)²·J_Y` (cross term `= 0`).
 
-Phase 3c-cont status (2026-05-30): the atom-A reduction (LHS/RHS → Bochner) and the
-S4 pointwise→integrated monotone step are genuinely assembled below; the residual
-`sorry` is the Tonelli order-swap + 3-term evaluation of the post-swap integral
-(`λ²·J_X + (1-λ)²·J_Y` via translation invariance + `integral_logDeriv_density_eq_zero`
-cross-term-zero). That step requires `∀z`-quantified product / fibre integrability
-preconditions (`hint_W_z`, `hint_Wsq_z`, `hcond_int_z`, the product-measure
-`Integrable (uncurry ...)`), threaded below as honest regularity preconditions.
-The remaining `sorry` is purely the analytic 3-term Tonelli evaluation, not a wall.
-
-Independent audit (2026-05-30): honest residual, classification confirmed. All
-preconditions are regularity — the `∀z` Integrable hyps (`hint_X/Y/cond_int/W/Wsq`)
-feed S4 per-z; `hint_inner` is the Integrable side-condition of the RHS integrand
-required by `integral_mono_ae` (asserts integrability, NOT the cross-term=0 nor the
-3-term value); `hint_fisherX/Y/Z` are atom-A integrability preconditions. None
-bundles the inequality core, which lives in the `sorry`. Steps (a) S4-monotone via
-`integral_mono_ae` and (b) `condDensityX·p_Z` cancellation are genuine. The `sorry`
-(Tonelli swap + 3-term eval) is plan-closable: `integral_logDeriv_density_eq_zero`
-(FisherInfoV2.lean:158, repo), Tonelli, atom A, S4 (`@audit:ok`) all present → not a
-Mathlib wall. Plan `docs/shannon/epi-wall-reattack-plan.md` exists.
-@residual(plan:epi-wall-reattack-plan) -/
+2026-05-30 Phase 3c-fin genuine closure (0 sorry, `sorryAx`-free: `#print axioms` =
+`[propext, Classical.choice, Quot.sound]`), independent honesty audit pending. -/
 theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
     (hlam0 : 0 ≤ lam) (hlam1 : lam ≤ 1)
     (hregX : IsRegularDensityV2 fX) (hregY : IsRegularDensityV2 fY)
@@ -450,7 +517,22 @@ theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
     (hint_fisherY : Integrable (fun x => (logDeriv fY x) ^ 2 * fY x) volume)
     (hint_fisherZ :
         Integrable (fun z => (logDeriv (convDensityAdd fX fY) z) ^ 2 * convDensityAdd fX fY z)
-          volume) :
+          volume)
+    -- Product-measure integrability of the 3 expanded terms (Tonelli preconditions,
+    -- Gaussian-satisfied regularity; none bundles the inequality core).
+    (hint_prod1 :
+        Integrable
+          (Function.uncurry fun z x => (logDeriv fX x) ^ 2 * fX x * fY (z - x))
+          (volume.prod volume))
+    (hint_prod2 :
+        Integrable
+          (Function.uncurry fun z x => (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x))
+          (volume.prod volume))
+    (hint_prod3 :
+        Integrable
+          (Function.uncurry fun z x =>
+            logDeriv fX x * fX x * (logDeriv fY (z - x) * fY (z - x)))
+          (volume.prod volume)) :
     (fisherInfoOfDensity (convDensityAdd fX fY)).toReal
       ≤ lam ^ 2 * (fisherInfoOfDensity fX).toReal
           + (1 - lam) ^ 2 * (fisherInfoOfDensity fY).toReal := by
@@ -485,15 +567,69 @@ theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
     unfold condDensityX
     rw [mul_assoc, div_mul_cancel₀ _ (hpZ z).ne']
   simp only [hb]
-  -- Remaining: (c) Tonelli order-swap `∫_z ∫_x W²·fX(x)·fY(z-x) = ∫_x ∫_z (...)`
-  -- (needs product-measure `Integrable (uncurry ...)`), then (d) the 3-term evaluation
-  -- expanding `W² = λ²s_X(x)² + (1-λ)²s_Y(z-x)² + 2λ(1-λ)s_X(x)s_Y(z-x)`:
-  --   λ² term  → λ²·∫ s_X²·fX  (∫_z fY(z-x) dz = 1 by `integral_sub_left_eq_self` + `hnormY`)
-  --   (1-λ)² term → (1-λ)²·∫ s_Y²·fY  (translation + `hnormX`)
-  --   cross term → 0  (`integral_logDeriv_density_eq_zero` on each factor).
-  -- Steps (a) S4-monotone + (b) condDensityX·p_Z cancellation above are genuine; this
-  -- residual is purely the analytic Tonelli evaluation (not a Mathlib wall).
-  -- @residual(plan:epi-wall-reattack-plan)
-  sorry
+  -- (c)-(d) Expand `W²·fX(x)·fY(z-x)` into 3 terms, split the double integral, evaluate
+  -- each term with the Tonelli helpers `convex_fisher_term1/2/cross`.
+  -- Abbreviations for the three (uncurried) term integrands.
+  set T1 : ℝ → ℝ → ℝ := fun z x => (logDeriv fX x) ^ 2 * fX x * fY (z - x) with hT1_def
+  set T2 : ℝ → ℝ → ℝ := fun z x => (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x) with hT2_def
+  set T3 : ℝ → ℝ → ℝ :=
+    fun z x => logDeriv fX x * fX x * (logDeriv fY (z - x) * fY (z - x)) with hT3_def
+  -- Pointwise expansion `W²·(fX·fY(z-x)) = λ²·T1 + (1-λ)²·T2 + 2λ(1-λ)·T3`.
+  have hexpand : ∀ z x,
+      (scoreWeight fX fY lam z x) ^ 2 * (fX x * fY (z - x))
+        = lam ^ 2 * T1 z x + (1 - lam) ^ 2 * T2 z x + 2 * lam * (1 - lam) * T3 z x := by
+    intro z x
+    simp only [scoreWeight, hT1_def, hT2_def, hT3_def]
+    ring
+  -- Rewrite the inner integrand pointwise (no integrability needed for the rewrite).
+  have hstep1 :
+      (∫ z, ∫ x, (scoreWeight fX fY lam z x) ^ 2 * (fX x * fY (z - x)) ∂volume ∂volume)
+        = ∫ z, ∫ x,
+            (lam ^ 2 * T1 z x + (1 - lam) ^ 2 * T2 z x + 2 * lam * (1 - lam) * T3 z x)
+            ∂volume ∂volume := by
+    refine integral_congr_ae (Filter.Eventually.of_forall (fun z => ?_))
+    exact integral_congr_ae (Filter.Eventually.of_forall (fun x => hexpand z x))
+  rw [hstep1]
+  -- Convert the nested double integrals to product-measure integrals.
+  rw [integral_integral
+        (f := fun z x =>
+          lam ^ 2 * T1 z x + (1 - lam) ^ 2 * T2 z x + 2 * lam * (1 - lam) * T3 z x)
+        (by
+          -- prod-integrability of the sum from the 3 scaled prod hyps.
+          have h1 := (hint_prod1.const_mul (lam ^ 2))
+          have h2 := (hint_prod2.const_mul ((1 - lam) ^ 2))
+          have h3 := (hint_prod3.const_mul (2 * lam * (1 - lam)))
+          simpa only [Function.uncurry, hT1_def, hT2_def, hT3_def] using
+            (h1.add h2).add h3)]
+  -- Split the product integral into the 3 scaled pieces.
+  have hi1 : Integrable (fun p : ℝ × ℝ => lam ^ 2 * T1 p.1 p.2) (volume.prod volume) :=
+    hint_prod1.const_mul (lam ^ 2)
+  have hi2 : Integrable (fun p : ℝ × ℝ => (1 - lam) ^ 2 * T2 p.1 p.2) (volume.prod volume) :=
+    hint_prod2.const_mul ((1 - lam) ^ 2)
+  have hi3 : Integrable (fun p : ℝ × ℝ => 2 * lam * (1 - lam) * T3 p.1 p.2) (volume.prod volume) :=
+    hint_prod3.const_mul (2 * lam * (1 - lam))
+  have hsplit :
+      (∫ p : ℝ × ℝ, (lam ^ 2 * T1 p.1 p.2 + (1 - lam) ^ 2 * T2 p.1 p.2
+            + 2 * lam * (1 - lam) * T3 p.1 p.2) ∂volume.prod volume)
+        = (lam ^ 2 * ∫ p : ℝ × ℝ, T1 p.1 p.2 ∂volume.prod volume)
+            + (1 - lam) ^ 2 * (∫ p : ℝ × ℝ, T2 p.1 p.2 ∂volume.prod volume)
+            + 2 * lam * (1 - lam) * ∫ p : ℝ × ℝ, T3 p.1 p.2 ∂volume.prod volume := by
+    have h12 :
+        (∫ p : ℝ × ℝ, (lam ^ 2 * T1 p.1 p.2 + (1 - lam) ^ 2 * T2 p.1 p.2)
+            + 2 * lam * (1 - lam) * T3 p.1 p.2 ∂volume.prod volume)
+          = (∫ p : ℝ × ℝ, lam ^ 2 * T1 p.1 p.2 + (1 - lam) ^ 2 * T2 p.1 p.2 ∂volume.prod volume)
+              + ∫ p : ℝ × ℝ, 2 * lam * (1 - lam) * T3 p.1 p.2 ∂volume.prod volume :=
+      integral_add (hi1.add hi2) hi3
+    rw [h12, integral_add hi1 hi2,
+      integral_const_mul, integral_const_mul, integral_const_mul]
+  rw [hsplit]
+  -- Convert each product integral back to nested and apply the helper lemmas.
+  rw [← integral_integral (f := T1) hint_prod1, ← integral_integral (f := T2) hint_prod2,
+    ← integral_integral (f := T3) hint_prod3]
+  rw [hT1_def, hT2_def, hT3_def]
+  rw [convex_fisher_term1 fX fY hnormY hint_prod1,
+    convex_fisher_term2 fX fY hnormX hint_prod2,
+    convex_fisher_cross fX fY hregY hint_prod3]
+  ring
 
 end InformationTheory.Shannon.EPIBlachmanDensity
