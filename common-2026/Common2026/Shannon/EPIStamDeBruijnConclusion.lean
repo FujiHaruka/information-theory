@@ -66,10 +66,15 @@ buggy V1 Fisher-info-zero artefact and was removed — see §5, RESOLVED 2026-05
 
 ## Genuine residual remaining
 
-After this assembly the EPI conclusion reduces to the **single shared Stam-wall
-sorry** `stam_step2_density_wall` (`@residual(wall:stam-step2-density)`,
-`EPIStamInequalityBody.lean`): the conditional Cauchy-Schwarz + convex Fisher
-bound (Cover-Thomas 17.7.2's deepest analytic content). The Stam→EPI bridge
+After this assembly the EPI conclusion reduces to a single residual. Update
+2026-05-31 (Phase 3d): `stam_step2_density_wall` — the conditional Cauchy-Schwarz +
+convex Fisher bound (Cover-Thomas 17.7.2's deepest analytic content) — is now
+**genuinely closed** (0-sorry, sorryAx-free, `@audit:ok`) via
+`convex_fisher_bound_of_ready`. The remaining residual is the regularity-precondition
+signature gap on the published `IsStamInequalityHyp`, localized to
+`isStamInequalityHyp_via_body` (`@residual(plan:epi-wall-reattack-plan)`,
+`EPIStamInequalityBody.lean`), an owner-level pivot — not a Mathlib wall. The
+Stam→EPI bridge
 (`IsStamToEPIBridgeHyp`, Csiszár scaling-path coupling, Lemma 17.7.3) is
 discharged internally by consumers via the shared sorry lemma
 `stamToEPIBridge_holds`.
@@ -192,15 +197,17 @@ Produces the EPI conclusion from measurability / independence / probability
 measure alone, deriving the Stam inequality via the shared wall and feeding it
 through the integrated pipeline. Carries **no** load-bearing analytic hypothesis.
 
-This wrapper is **not** proof done: it consumes the shared sorry lemma
-`stam_step2_density_wall` (transitively, via `isStamInequalityHyp_of_primitives`)
-and so depends transitively on `sorryAx`. The genuine residual lives in that lemma.
-⚠ Audit 2026-05-30: `stam_step2_density_wall` is a **false-statement defect**, not a
-genuine Mathlib wall (target predicate `IsStamCauchySchwarzOptimal` universally FALSE
-at its current signature, `@audit:defect(false-statement)`, see
-`EPIStamInequalityBody.lean:359`); honest closure needs the owner-level signature
-pivot under `epi-wall-reattack-plan`. Transitive consumer (no local `sorry`), so no
-active `@residual` — defect marker lives on the wall lemma. -/
+This wrapper is **not** proof done: it depends transitively on `sorryAx` (via
+`isStamInequalityHyp_of_primitives`). The genuine residual now lives in
+`isStamInequalityHyp_via_body` (`@residual(plan:epi-wall-reattack-plan)`).
+Update 2026-05-31 (Phase 3d): `stam_step2_density_wall` is **genuinely closed**
+(0-sorry, `#print axioms` sorryAx-free) via `convex_fisher_bound_of_ready`;
+`IsStamCauchySchwarzOptimal` is a provable (non-false) Prop. The prior
+"false-statement defect / universally FALSE" note is obsolete. The remaining
+transitive `sorry` is the regularity-precondition signature gap on the published
+`IsStamInequalityHyp` (`isStamInequalityHyp_via_body`), a clean owner-level pivot
+tracked under `epi-wall-reattack-plan`, not a Mathlib wall. Transitive consumer
+(no local `sorry`), so no active `@residual` here. -/
 theorem entropy_power_inequality_via_stamDeBruijn
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

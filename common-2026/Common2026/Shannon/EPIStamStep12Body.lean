@@ -202,11 +202,15 @@ granted for all `λ`, §4 derives the optimal bound *fully* via the Wave 7
 Phase 3d (2026-05-31): sound Prop statement. The injected hyps
 (`IsRegularDensityV2 fX/fY`, `∫fX=1`, `∫fY=1`, the *pointwise* convolution identity
 `∀ x, fXY x = convDensityAdd fX fY x`, and the `IsBlachmanConvReady fX fY` regularity
-bundle) are jointly satisfiable (Gaussian witness, NON-vacuous) and are regularity
-preconditions, NOT the inequality's core. The `∀λ` convex Fisher bound is now supplied
-**genuinely** by `convex_fisher_bound_of_ready` (`EPIBlachmanDensity`); the producer
-`stam_step2_density_wall` of the resulting optimal predicate is genuinely closed
-(0-sorry, sorryAx-free). No honesty defect. @audit:ok -/
+bundle) are regularity preconditions, NOT the inequality's core. The `∀λ` convex Fisher
+bound is now supplied **genuinely** by `convex_fisher_bound_of_ready`
+(`EPIBlachmanDensity`); the producer `stam_step2_density_wall` of the resulting optimal
+predicate is genuinely closed (0-sorry, sorryAx-free). No honesty defect.
+
+@audit:ok — independent honesty audit (2026-05-31): SOUND Prop, no load-bearing /
+circular / `:True` field. NON-vacuity CAVEAT: the gating `IsBlachmanConvReady fX fY`
+hyp has no in-tree witness yet (Gaussian instance unwired); non-vacuousness pending the
+Gaussian witness (`epi-wall-reattack-plan`). -/
 def IsStamCondExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →

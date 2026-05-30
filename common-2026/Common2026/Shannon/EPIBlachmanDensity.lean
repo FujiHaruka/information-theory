@@ -690,6 +690,21 @@ the convex Fisher inequality core (which lives genuinely inside `convex_fisher_b
 body). The `lam`-dependent integrabilities (`int_W`, `int_Wsq`, `int_inner`) are
 quantified over `lam ∈ [0,1]` because the consuming predicates conclude an `∀ lam`
 bound. -/
+/-- Regularity precondition bundle for the convolution-Fisher analysis.
+
+@audit:ok — independent honesty audit (2026-05-31): all 20 fields are pure
+regularity / integrability / boundedness / positivity preconditions; the bundle is
+field-for-field the SAME hypotheses `convex_fisher_bound` (`@audit:ok`) already takes
+individually (1:1 mapping verified — see `convex_fisher_bound_of_ready`). The
+`logDeriv (convDensityAdd fX fY)`-containing fields (`int_fisherZ` / `int_prod1/2/3`)
+assert only **`Integrable (…)`** of the verbatim integrands, NOT the value of any
+integral nor any inequality — identical honesty state to `convex_fisher_bound`'s
+already-`@audit:ok` argument group. No `:True` slot, no circular field, no
+inequality/equality core bundled. CAVEAT: non-vacuousness is NOT yet machine-confirmed
+— no Gaussian (or other) witness `IsBlachmanConvReady` is wired in-tree (`rg` → 0
+constructors), so the predicates carrying this bundle are sound but not yet shown to
+have a proven inhabitant. The Gaussian instance is the non-vacuousness closure
+condition (`epi-wall-reattack-plan`). -/
 structure IsBlachmanConvReady (fX fY : ℝ → ℝ) : Prop where
   /-- `fX` is Lebesgue-integrable. -/
   int_fX : Integrable fX volume
@@ -759,7 +774,12 @@ theorem isBlachmanConvReady_symm {fX fY : ℝ → ℝ}
 /-- **Convex Fisher bound from the regularity bundle**. Applies `convex_fisher_bound`
 by projecting all 14+ integrability / boundedness / positivity preconditions out of
 the `IsBlachmanConvReady` bundle. Pure plumbing — no analytic content beyond
-`convex_fisher_bound`. -/
+`convex_fisher_bound`.
+
+@audit:ok — independent honesty audit (2026-05-31): 0-sorry projection wrapper; body
+forwards the 20 `IsBlachmanConvReady` fields (+ `hreg`/`hnorm` regularity) into the
+`@audit:ok` core `convex_fisher_bound` at the consumer-chosen `lam`. No hypothesis
+carries the inequality core; conclusion ≠ any hypothesis type. -/
 theorem convex_fisher_bound_of_ready (fX fY : ℝ → ℝ) (lam : ℝ)
     (hlam0 : 0 ≤ lam) (hlam1 : lam ≤ 1)
     (hregX : IsRegularDensityV2 fX) (hregY : IsRegularDensityV2 fY)

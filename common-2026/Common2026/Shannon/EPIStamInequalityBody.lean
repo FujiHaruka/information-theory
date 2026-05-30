@@ -267,13 +267,18 @@ which is the optimal λ minimizing `λ² J_X + (1-λ)² J_Y`.
 the regularity preconditions (`IsRegularDensityV2 fX/fY`, `∫fX=1`, `∫fY=1`, the
 *pointwise* convolution identity `∀ x, fXY x = convDensityAdd fX fY x`, and the
 `IsBlachmanConvReady fX fY` bundle) between the Fisher-info identifications and the
-conclusion `J_sum ≤ J_X·J_Y/(J_X+J_Y)`. These are **jointly satisfiable, NON-vacuous**
-(Gaussian witness) and are regularity preconditions (smoothness / normalization /
+conclusion `J_sum ≤ J_X·J_Y/(J_X+J_Y)`. These are regularity preconditions
+(smoothness / normalization /
 convolution identification / boundedness / integrability), NOT the inequality's core.
 The unique producer `stam_step2_density_wall` is now **genuinely closed** (0-sorry,
 `#print axioms` sorryAx-free) — the Stam bound is assembled genuinely via
 `convex_fisher_bound_of_ready`. sound Prop statement; no honesty defect.
-@audit:ok -/
+
+@audit:ok — independent honesty audit (2026-05-31): SOUND (provable producer, NOT a
+false-statement defect — `stam_step2_density_wall` proves it sorryAx-free). NON-vacuity
+CAVEAT: the gating `IsBlachmanConvReady fX fY` hyp has no in-tree witness yet (Gaussian
+instance unwired, `rg` → 0 constructors); soundness ≠ non-vacuousness. Non-vacuousness
+is pending the Gaussian `IsBlachmanConvReady` witness (`epi-wall-reattack-plan`). -/
 def IsStamCauchySchwarzOptimal {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
@@ -324,8 +329,23 @@ hypotheses (`hconv` pointwise + `IsBlachmanConvReady`) are **regularity
 preconditions** (smoothness / boundedness / integrability / positivity), NOT the
 inequality core — that core is genuinely assembled inside `convex_fisher_bound`.
 
-Closure tracked under `epi-wall-reattack-plan` (Phase 3d). Independent honesty audit
-pending. -/
+Closure tracked under `epi-wall-reattack-plan` (Phase 3d).
+
+@audit:ok — independent honesty audit (2026-05-31): core-reconstruction test PASS.
+Body intros all preconditions, collapses `fXY` to `convDensityAdd fX fY` via
+`funext hconv` (pointwise convolution constraint), then **genuinely reconstructs** the
+Stam bound by applying `convex_fisher_bound_of_ready` at the optimal
+`λ* = J_Y/(J_X+J_Y)` and combining with `stam_lambda_min` via `linarith` — the
+inequality core is NOT handed by any hypothesis (the only predicate hyp `hready` is the
+regularity bundle, the rest are regularity/normalization). `#print axioms` →
+`[propext, Classical.choice, Quot.sound]`, sorryAx-free (machine-verified transiently,
+olean refreshed via `lake build EPIBlachmanDensity` first). This is decisive evidence
+that `IsStamCauchySchwarzOptimal` is a SOUND (provable, non-false) Prop — the prior
+"universally FALSE / false-statement defect" classification is obsolete. CAVEAT:
+soundness ≠ non-vacuousness. The conclusion is gated on `IsBlachmanConvReady fX fY`,
+for which no in-tree witness exists yet (Gaussian instance unwired); so genuine
+non-vacuous closure of the EPI pipeline still requires wiring a Gaussian
+`IsBlachmanConvReady` witness (`epi-wall-reattack-plan`). -/
 theorem stam_step2_density_wall
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
