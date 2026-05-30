@@ -157,4 +157,100 @@ theorem convDensity_add_differentiable
     convDensityAdd_logDeriv pX pY z₀ hs hF_meas hF_int hF'_meas h_bound
       bound_integrable h_diff⟩
 
+/-! ## Phase 3a (GATE) — discharge the 7 gateway hyps from `IsRegularDensityV2`
+
+`convDensityAdd_hasDerivAt_of_regular`: the GATE wrapper that supplies all 7
+parametric-integral regularity hyps from Stam's density preconditions
+`IsRegularDensityV2 fX/fY` + normalization `∫fX = 1` (`∫fY = 1` not needed here)
+plus three genuine regularity preconditions:
+
+* `hX_int : Integrable fX` — `fX` is a probability density.
+* `hY_bdd`  : `fY` is bounded (Gaussian PDF is, since `exp(-x²)` is bounded).
+* `hY'_bdd` : `deriv fY` is bounded (Gaussian `deriv = -(x-m)/v · pdf`,
+  polynomial × Gaussian decay → bounded).
+
+These three are **honest regularity preconditions**, NOT load-bearing: the
+differentiability of `convDensityAdd` is *derived* via the gateway, not assumed.
+The Gaussian instance satisfies all three (1-line confirmation in docstring of
+each `have`). -/
+theorem convDensityAdd_hasDerivAt_of_regular (fX fY : ℝ → ℝ) (z₀ : ℝ)
+    (hregX : Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fX)
+    (hregY : Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fY)
+    (hX_int : Integrable fX volume)
+    (hY_bdd : ∃ M : ℝ, ∀ w, |fY w| ≤ M)
+    (hY'_bdd : ∃ M : ℝ, ∀ w, |deriv fY w| ≤ M) :
+    HasDerivAt (convDensityAdd fX fY)
+      (∫ x, convDensityAddDeriv fX fY z₀ x ∂volume) z₀ := by
+  obtain ⟨MY, hMY⟩ := hY_bdd
+  obtain ⟨MY', hMY'⟩ := hY'_bdd
+  -- Continuity / measurability facts.
+  have hX_cont : Continuous fX := hregX.diff.continuous
+  have hY_cont : Continuous fY := hregY.diff.continuous
+  have hY'_meas : Measurable (deriv fY) := measurable_deriv fY
+  -- `s := Metric.ball z₀ 1`, a neighborhood of `z₀`.
+  set s : Set ℝ := Metric.ball z₀ 1 with hs_def
+  -- (1) `hs : s ∈ nhds z₀`.
+  have hs : s ∈ nhds z₀ := Metric.ball_mem_nhds z₀ one_pos
+  -- (2) `hF_meas`.
+  have hF_meas : ∀ᶠ z in nhds z₀,
+      AEStronglyMeasurable (fun x => fX x * fY (z - x)) volume := by
+    refine Filter.Eventually.of_forall (fun z => ?_)
+    exact (hX_cont.aestronglyMeasurable).mul
+      ((hY_cont.comp (continuous_const.sub continuous_id)).aestronglyMeasurable)
+  -- (3) `hF_int : Integrable (fun x => fX x * fY (z₀ - x))`.
+  have hF_int : Integrable (fun x => fX x * fY (z₀ - x)) volume := by
+    have hYmeas : AEStronglyMeasurable (fun x => fY (z₀ - x)) volume :=
+      (hY_cont.comp (continuous_const.sub continuous_id)).aestronglyMeasurable
+    have hbound : ∀ᵐ x ∂volume, ‖fY (z₀ - x)‖ ≤ MY :=
+      Filter.Eventually.of_forall (fun x => by
+        rw [Real.norm_eq_abs]; exact hMY (z₀ - x))
+    have := hX_int.bdd_mul hYmeas hbound
+    -- `this : Integrable (fun x => fY (z₀ - x) * fX x)`
+    simpa only [mul_comm] using this
+  -- (4) `hF'_meas`.
+  have hF'_meas : AEStronglyMeasurable
+      (fun x => convDensityAddDeriv fX fY z₀ x) volume := by
+    unfold convDensityAddDeriv
+    exact (hX_cont.aestronglyMeasurable).mul
+      ((hY'_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable)
+  -- bound function `bound x := MY' * |fX x|`.
+  set bound : ℝ → ℝ := fun x => MY' * |fX x| with hbound_def
+  -- (5) `h_bound`.
+  have h_bound : ∀ᵐ x ∂volume, ∀ z ∈ s,
+      ‖convDensityAddDeriv fX fY z x‖ ≤ bound x := by
+    refine Filter.Eventually.of_forall (fun x z _ => ?_)
+    unfold convDensityAddDeriv
+    rw [Real.norm_eq_abs, abs_mul, hbound_def]
+    have : |deriv fY (z - x)| ≤ MY' := hMY' (z - x)
+    calc |fX x| * |deriv fY (z - x)|
+        ≤ |fX x| * MY' := by
+          gcongr
+      _ = MY' * |fX x| := mul_comm _ _
+  -- (6) `bound_integrable`.
+  have bound_integrable : Integrable bound volume := by
+    rw [hbound_def]
+    exact (hX_int.abs).const_mul MY'
+  -- (7) `h_diff`.
+  have h_diff : ∀ᵐ x ∂volume, ∀ z ∈ s,
+      HasDerivAt (fun z => fX x * fY (z - x))
+        (convDensityAddDeriv fX fY z x) z := by
+    refine Filter.Eventually.of_forall (fun x z _ => ?_)
+    unfold convDensityAddDeriv
+    -- inner: `z ↦ z - x` has derivative `1`.
+    have hinner : HasDerivAt (fun z : ℝ => z - x) 1 z :=
+      (hasDerivAt_id z).sub_const x
+    -- `fY` differentiable at `z - x`.
+    have hY_at : HasDerivAt fY (deriv fY (z - x)) (z - x) :=
+      (hregY.diff (z - x)).hasDerivAt
+    -- compose: `z ↦ fY (z - x)` has derivative `deriv fY (z-x) * 1`.
+    have hcomp : HasDerivAt (fun z : ℝ => fY (z - x)) (deriv fY (z - x) * 1) z :=
+      hY_at.comp z hinner
+    rw [mul_one] at hcomp
+    -- const_mul by `fX x`.
+    have := hcomp.const_mul (fX x)
+    -- `this : HasDerivAt (fun z => fX x * fY (z - x)) (fX x * deriv fY (z - x)) z`
+    exact this
+  exact convDensityAdd_hasDerivAt fX fY z₀ hs hF_meas hF_int hF'_meas h_bound
+    bound_integrable h_diff
+
 end InformationTheory.Shannon.EPIConvDensity
