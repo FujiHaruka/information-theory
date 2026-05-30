@@ -149,3 +149,15 @@ for (n,w,a,b,dQ,dM,bad) in c:
     mult=sum(1 for x in w if x==minp)
     if mult==1 and len(set(w))==len(w): notie_ce+=1
 print(f"n=5,wmax=4: total CE={len(c)}, CE with strictly-distinct weights={notie_ce}")
+
+# ============================================================================
+# PIVOT EVIDENCE (2026-05-30): cost-level identity is TRUE where depth-level is FALSE.
+# - depth-level per-symbol identity (MergedHuffmanAuxIdentHypothesis / HuffmanMergedIdentificationHypothesis)
+#   is FALSE under deterministic colex tie-break (2532 counterexamples among 61254 precond cases).
+# - COST-level merge identity  cost(huffman Q) = cost(huffman mergedQ') + (Q{a}+Q{b})  holds in ALL
+#   61254 cases (0 failures). The deterministic algorithm produces a different *tree* but the same
+#   optimal *cost*, since cost is tie-break invariant.
+# - Cleanest form: multiset-level recursion  cost(huffmanLengthAux s) = cost(huffmanLengthAux s'') + (x1.p+x2.p)
+#   where (x1,x2,s'') = huffmanStep s. Verified 0 failures; near-definitional, needs no (a,b) global-min framing.
+# => Pivot: prove Huffman strong-form optimality via the tie-invariant cost recursion over the
+#    actually-first-merged pair (huffmanStep output), inducting on s.card — NOT the per-symbol depth identity.
