@@ -1049,4 +1049,333 @@ theorem exists_huffman_prefix_code
 -- Phase 4-5 (`exists_sibling_min_pair` + `huffmanLength_optimal`) は本 plan
 -- scope-out. 後続 seed `T1-A'` (`docs/textbook-roadmap.md` 参照) で publish 予定.
 
+/-! ### cost-level pivot (T1-A'') — multiset-level expected length 漸化式
+
+Cover-Thomas Theorem 5.8.1 強形を per-symbol depth identity (FALSE) ではなく
+**期待長そのもの (cost = ∑ prob·depth)** の多重集合上漸化で閉じるための核。
+`kraftPerGroup` 群 (`Huffman.lean:655`) と同じ per-group shape を採り、
+`kraftPerGroup_step` の証明 template を mirror する
+(`docs/shannon/huffman-cost-level-optimality-plan.md`)。 -/
+
+/-- group 多重集合上の期待長 (= ∑ group, (group 確率質量 `p.2`) · (group depth)).
+group 上 depth は `huffmanLengthAux_const_on_group` で定数なので、
+`(∑ a ∈ p.1, d) / p.1.card` で代表元の depth を取り出す (= `kraftPerGroup` と同 shape). -/
+noncomputable def huffmanCost (s : Multiset (Finset α × ℝ)) : ℝ :=
+  (s.map (fun p =>
+    p.2 * ((∑ a ∈ p.1, (huffmanLengthAux s a : ℝ)) / (p.1.card : ℝ)))).sum
+
+omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- **cost の step 不変 + merged ペナルティ**:
+`huffmanCost s = huffmanCost s'' + (x1.2 + x2.2)`  where `s'' = (huffmanStep s ..).val.2.2`,
+`x1 = .val.1`, `x2 = .val.2.1`.
+論証は `kraftPerGroup_step` (`Huffman.lean:770`) の直接 mirror: 重み `(∑ 2^(-d))/card` を
+`p.2 * (∑ d)/card` に替え、merged 寄与 `(x1.2+x2.2)·d_m` と x1/x2 寄与
+`x1.2·(d_m+1)+x2.2·(d_m+1)` の差 = `(x1.2+x2.2)`。 -/
+lemma huffmanCost_step
+    (s : Multiset (Finset α × ℝ)) (hs : 2 ≤ s.card) (hg : HuffmanGrouping s) :
+    huffmanCost s
+      = huffmanCost (huffmanStep s hs hg).val.2.2
+        + ((huffmanStep s hs hg).val.1.2 + (huffmanStep s hs hg).val.2.1.2) := by
+  obtain ⟨hx1_mem, hx2_mem, hshape, hg''⟩ := (huffmanStep s hs hg).property
+  set x1 := (huffmanStep s hs hg).val.1 with hx1_def
+  set x2 := (huffmanStep s hs hg).val.2.1 with hx2_def
+  set s'' := (huffmanStep s hs hg).val.2.2 with hs''_def
+  set ee := (s.erase x1).erase x2 with hee_def
+  let merged : Finset α × ℝ := (x1.1 ∪ x2.1, x1.2 + x2.2)
+  have hshape' : s'' = merged ::ₘ ee := hshape
+  have hx1_x2_ne : x1 ≠ x2 := by
+    intro heq; rw [← heq] at hx2_mem
+    exact hg.nodup.notMem_erase hx2_mem
+  have hs_decomp : s = x1 ::ₘ x2 ::ₘ ee := huffmanStep_orig_decomp s hs hg
+  have hx1_ne : x1.1.Nonempty := hg.nonempty hx1_mem
+  have hx2_s : x2 ∈ s := Multiset.mem_of_mem_erase hx2_mem
+  have hx2_ne : x2.1.Nonempty := hg.nonempty hx2_s
+  have hmerged_ne : merged.1.Nonempty := hx1_ne.mono Finset.subset_union_left
+  have hx1_card_pos : (0 : ℝ) < x1.1.card := by
+    exact_mod_cast Finset.card_pos.mpr hx1_ne
+  have hx2_card_pos : (0 : ℝ) < x2.1.card := by
+    exact_mod_cast Finset.card_pos.mpr hx2_ne
+  have hmerged_card_pos : (0 : ℝ) < merged.1.card := by
+    exact_mod_cast Finset.card_pos.mpr hmerged_ne
+  have hdisj_x1x2 : Disjoint x1.1 x2.1 := hg.disjoint hx1_mem hx2_s hx1_x2_ne
+  have hmerged_card : (merged.1.card : ℝ) = x1.1.card + x2.1.card := by
+    show ((x1.1 ∪ x2.1).card : ℝ) = _
+    rw [Finset.card_union_of_disjoint hdisj_x1x2]
+    push_cast; ring
+  -- LHS / RHS を per-group 形に展開 (kraftPerGroup_step mirror)
+  have lhs_eq :
+      huffmanCost s =
+      x1.2 * ((∑ a ∈ x1.1, (huffmanLengthAux s a : ℝ)) / (x1.1.card : ℝ))
+      + (x2.2 * ((∑ a ∈ x2.1, (huffmanLengthAux s a : ℝ)) / (x2.1.card : ℝ))
+      + (ee.map (fun p =>
+          p.2 * ((∑ a ∈ p.1, (huffmanLengthAux s a : ℝ)) / (p.1.card : ℝ)))).sum) := by
+    unfold huffmanCost
+    have : (s.map (fun p =>
+        p.2 * ((∑ a ∈ p.1, (huffmanLengthAux s a : ℝ)) / (p.1.card : ℝ)))).sum
+        = ((x1 ::ₘ x2 ::ₘ ee).map (fun p =>
+        p.2 * ((∑ a ∈ p.1, (huffmanLengthAux s a : ℝ)) / (p.1.card : ℝ)))).sum := by
+      exact congr_arg _ (congr_arg _ hs_decomp)
+    rw [this]
+    simp only [Multiset.map_cons, Multiset.sum_cons]
+  have rhs_eq :
+      huffmanCost s'' =
+      merged.2 * ((∑ a ∈ merged.1, (huffmanLengthAux s'' a : ℝ)) / (merged.1.card : ℝ))
+      + (ee.map (fun p =>
+          p.2 * ((∑ a ∈ p.1, (huffmanLengthAux s'' a : ℝ)) / (p.1.card : ℝ)))).sum := by
+    unfold huffmanCost
+    have : (s''.map (fun p =>
+        p.2 * ((∑ a ∈ p.1, (huffmanLengthAux s'' a : ℝ)) / (p.1.card : ℝ)))).sum
+        = ((merged ::ₘ ee).map (fun p =>
+        p.2 * ((∑ a ∈ p.1, (huffmanLengthAux s'' a : ℝ)) / (p.1.card : ℝ)))).sum := by
+      exact congr_arg _ (congr_arg _ hshape')
+    rw [this]
+    simp only [Multiset.map_cons, Multiset.sum_cons]
+  rw [lhs_eq, rhs_eq]
+  -- ee 寄与等式
+  have h_ee_sum :
+      (ee.map (fun p =>
+        p.2 * ((∑ a ∈ p.1, (huffmanLengthAux s a : ℝ)) / (p.1.card : ℝ)))).sum
+      = (ee.map (fun p =>
+          p.2 * ((∑ a ∈ p.1, (huffmanLengthAux s'' a : ℝ)) / (p.1.card : ℝ)))).sum := by
+    apply congr_arg Multiset.sum
+    apply Multiset.map_congr rfl
+    intro q hq
+    apply congr_arg (q.2 * ·)
+    apply congr_arg (· / (q.1.card : ℝ))
+    apply Finset.sum_congr rfl
+    intro a ha
+    rw [huffmanLengthAux_step_eq_on_other_group s hs hg q hq ha]
+  -- depth 値: a0 ∈ x1.1, b0 ∈ x2.1, d_m := huffmanLengthAux s'' a0
+  obtain ⟨a0, ha0⟩ := hx1_ne
+  obtain ⟨b0, hb0⟩ := hx2_ne
+  have hmerged_in_s'' : merged ∈ s'' := by rw [hshape']; exact Multiset.mem_cons_self _ _
+  have ha0_merged : a0 ∈ merged.1 := Finset.mem_union_left _ ha0
+  have hb0_merged : b0 ∈ merged.1 := Finset.mem_union_right _ hb0
+  set d_m := huffmanLengthAux s'' a0 with hd_m_def
+  have h_merged_const : ∀ a ∈ merged.1, huffmanLengthAux s'' a = d_m := by
+    intro a ha
+    exact huffmanLengthAux_const_on_group s'' hg'' merged hmerged_in_s'' a a0 ha ha0_merged
+  have h_x1_aux : ∀ a ∈ x1.1, huffmanLengthAux s a = d_m + 1 := by
+    intro a ha
+    have h1 : huffmanLengthAux s a = huffmanLengthAux s'' a + 1 :=
+      huffmanLengthAux_step_merged s hs hg (Or.inl ha)
+    have h2 : huffmanLengthAux s'' a = d_m :=
+      h_merged_const a (Finset.mem_union_left _ ha)
+    omega
+  have h_x2_aux : ∀ a ∈ x2.1, huffmanLengthAux s a = d_m + 1 := by
+    intro a ha
+    have h1 : huffmanLengthAux s a = huffmanLengthAux s'' a + 1 :=
+      huffmanLengthAux_step_merged s hs hg (Or.inr ha)
+    have h2 : huffmanLengthAux s'' a = d_m :=
+      h_merged_const a (Finset.mem_union_right _ ha)
+    omega
+  -- x1 寄与: (∑ a ∈ x1.1, (d_m+1)) / card = (d_m+1)
+  have h_x1_term :
+      (∑ a ∈ x1.1, (huffmanLengthAux s a : ℝ)) / (x1.1.card : ℝ)
+      = ((d_m : ℝ) + 1) := by
+    have hsum : (∑ a ∈ x1.1, (huffmanLengthAux s a : ℝ))
+        = (x1.1.card : ℝ) * ((d_m : ℝ) + 1) := by
+      rw [show (x1.1.card : ℝ) * ((d_m : ℝ) + 1)
+          = ∑ _x ∈ x1.1, ((d_m : ℝ) + 1) by
+        rw [Finset.sum_const, nsmul_eq_mul]]
+      apply Finset.sum_congr rfl
+      intro a ha
+      rw [h_x1_aux a ha]; push_cast; ring
+    rw [hsum]; field_simp
+  have h_x2_term :
+      (∑ a ∈ x2.1, (huffmanLengthAux s a : ℝ)) / (x2.1.card : ℝ)
+      = ((d_m : ℝ) + 1) := by
+    have hsum : (∑ a ∈ x2.1, (huffmanLengthAux s a : ℝ))
+        = (x2.1.card : ℝ) * ((d_m : ℝ) + 1) := by
+      rw [show (x2.1.card : ℝ) * ((d_m : ℝ) + 1)
+          = ∑ _x ∈ x2.1, ((d_m : ℝ) + 1) by
+        rw [Finset.sum_const, nsmul_eq_mul]]
+      apply Finset.sum_congr rfl
+      intro a ha
+      rw [h_x2_aux a ha]; push_cast; ring
+    rw [hsum]; field_simp
+  have h_merged_term :
+      (∑ a ∈ merged.1, (huffmanLengthAux s'' a : ℝ)) / (merged.1.card : ℝ)
+      = (d_m : ℝ) := by
+    have hsum : (∑ a ∈ merged.1, (huffmanLengthAux s'' a : ℝ))
+        = (merged.1.card : ℝ) * (d_m : ℝ) := by
+      rw [show (merged.1.card : ℝ) * (d_m : ℝ)
+          = ∑ _x ∈ merged.1, (d_m : ℝ) by
+        rw [Finset.sum_const, nsmul_eq_mul]]
+      apply Finset.sum_congr rfl
+      intro a ha
+      rw [h_merged_const a ha]
+    rw [hsum]; field_simp
+  rw [h_x1_term, h_x2_term, h_merged_term, h_ee_sum]
+  -- merged.2 = x1.2 + x2.2
+  show x1.2 * ((d_m : ℝ) + 1)
+      + (x2.2 * ((d_m : ℝ) + 1) + _)
+      = (x1.2 + x2.2) * (d_m : ℝ) + _ + (x1.2 + x2.2)
+  ring
+
+omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+/-- **C2 base**: `huffmanCost s = 0` for `s.card ≤ 1` (全 group depth 0). -/
+lemma huffmanCost_eq_zero_of_base
+    (s : Multiset (Finset α × ℝ)) (h : s.card ≤ 1) (hg : HuffmanGrouping s) :
+    huffmanCost s = 0 := by
+  unfold huffmanCost
+  rw [huffmanLengthAux_eq_zero s h hg]
+  rw [show s.map (fun p =>
+      p.2 * ((∑ a ∈ p.1, ((fun _ : α => (0 : ℕ)) a : ℝ)) / (p.1.card : ℝ)))
+      = s.map (fun _ => (0 : ℝ)) from ?_]
+  · simp
+  · apply Multiset.map_congr rfl
+    intro p _
+    simp
+
+/-- Helper: 特定要素 `x ∈ s` を erase してから snd を map した結果は、
+`s.map snd` から値 `x.2` を 1 個 erase したものに等しい (injective 不要、cons 分解). -/
+private lemma map_snd_erase {α : Type*} [DecidableEq α]
+    (s : Multiset (Finset α × ℝ)) (x : Finset α × ℝ) (hx : x ∈ s) :
+    (s.erase x).map Prod.snd = (s.map Prod.snd).erase x.2 := by
+  classical
+  conv_rhs => rw [show s = x ::ₘ s.erase x from (Multiset.cons_erase hx).symm]
+  rw [Multiset.map_cons, Multiset.erase_cons_head]
+
+/-- **C3 核 — cost は確率多重集合のみで決まる (carrier 非依存)**.
+2 つの `HuffmanGrouping` 多重集合 `s` (carrier `α`), `t` (carrier `β`) が同じ確率多重集合
+(`s.map Prod.snd = t.map Prod.snd : Multiset ℝ`) を持てば、`huffmanCost s = huffmanCost t`.
+
+証明 = `s.card` strong induction + `huffmanCost_step`:
+- `huffmanStep` は確率最小・第2最小の 2 group を選ぶ (`huffmanStep_min_fst`/`_min_snd`)。
+  tie でどの物理 group を選ぶかは違っても、選ばれる確率**値**は多重集合の最小2値で確定。
+- ペナルティ `x1.2 + x2.2` = 最小2値の和 = `s.map snd` から確定 (s, t で一致)。
+- 残木の確率多重集合も多重集合から確定 → IH 適用。 -/
+lemma huffmanCost_eq_of_prob_multiset
+    {α : Type*} [DecidableEq α] [LinearOrder α]
+    {β : Type*} [DecidableEq β] [LinearOrder β]
+    (s : Multiset (Finset α × ℝ)) (t : Multiset (Finset β × ℝ))
+    (hsg : HuffmanGrouping s) (htg : HuffmanGrouping t)
+    (h : s.map Prod.snd = t.map Prod.snd) :
+    huffmanCost s = huffmanCost t := by
+  classical
+  induction hn : s.card using Nat.strong_induction_on generalizing s t β with
+  | _ n ih =>
+    -- card 一致
+    have hcard_eq : s.card = t.card := by
+      have h1 : (s.map Prod.snd).card = s.card := Multiset.card_map _ _
+      have h2 : (t.map Prod.snd).card = t.card := Multiset.card_map _ _
+      rw [← h1, ← h2, h]
+    by_cases h2 : 2 ≤ s.card
+    · -- step case
+      have h2t : 2 ≤ t.card := by rw [← hcard_eq]; exact h2
+      -- s 側 step
+      set xs1 := (huffmanStep s h2 hsg).val.1 with hxs1
+      set xs2 := (huffmanStep s h2 hsg).val.2.1 with hxs2
+      set s'' := (huffmanStep s h2 hsg).val.2.2 with hs''
+      obtain ⟨hxs1_mem, hxs2_mem, hshape_s, hg_s''⟩ := (huffmanStep s h2 hsg).property
+      -- t 側 step
+      set yt1 := (huffmanStep t h2t htg).val.1 with hyt1
+      set yt2 := (huffmanStep t h2t htg).val.2.1 with hyt2
+      set t'' := (huffmanStep t h2t htg).val.2.2 with ht''
+      obtain ⟨hyt1_mem, hyt2_mem, hshape_t, hg_t''⟩ := (huffmanStep t h2t htg).property
+      -- min 性 (確率値)
+      have hxs1_min : ∀ z ∈ s, xs1.2 ≤ z.2 := huffmanStep_min_fst s h2 hsg
+      have hxs2_min : ∀ z ∈ s.erase xs1, xs2.2 ≤ z.2 := huffmanStep_min_snd s h2 hsg
+      have hyt1_min : ∀ z ∈ t, yt1.2 ≤ z.2 := huffmanStep_min_fst t h2t htg
+      have hyt2_min : ∀ z ∈ t.erase yt1, yt2.2 ≤ z.2 := huffmanStep_min_snd t h2t htg
+      have hxs2_mem_s : xs2 ∈ s := Multiset.mem_of_mem_erase hxs2_mem
+      have hyt2_mem_t : yt2 ∈ t := Multiset.mem_of_mem_erase hyt2_mem
+      -- M := s.map snd = t.map snd ; xs1.2, xs2.2, yt1.2, yt2.2 は M の元
+      -- 最小値 (xs1.2 = yt1.2) を確率多重集合の antisymmetry で同定
+      have hxs1_min_M : ∀ v ∈ s.map Prod.snd, xs1.2 ≤ v := by
+        intro v hv
+        rw [Multiset.mem_map] at hv
+        obtain ⟨z, hz, hzv⟩ := hv
+        rw [← hzv]; exact hxs1_min z hz
+      have hyt1_min_M : ∀ v ∈ s.map Prod.snd, yt1.2 ≤ v := by
+        intro v hv
+        rw [h, Multiset.mem_map] at hv
+        obtain ⟨z, hz, hzv⟩ := hv
+        rw [← hzv]; exact hyt1_min z hz
+      have hxs1v_M : xs1.2 ∈ s.map Prod.snd := Multiset.mem_map_of_mem _ hxs1_mem
+      have hyt1v_M : yt1.2 ∈ s.map Prod.snd := by
+        rw [h]; exact Multiset.mem_map_of_mem _ hyt1_mem
+      have hv1_eq : xs1.2 = yt1.2 :=
+        le_antisymm (hxs1_min_M _ hyt1v_M) (hyt1_min_M _ hxs1v_M)
+      -- (s.erase xs1).map snd = (s.map snd).erase xs1.2
+      have hsnd_s' : (s.erase xs1).map Prod.snd = (s.map Prod.snd).erase xs1.2 :=
+        map_snd_erase s xs1 hxs1_mem
+      have hsnd_t' : (t.erase yt1).map Prod.snd = (s.map Prod.snd).erase yt1.2 := by
+        rw [map_snd_erase t yt1 hyt1_mem, ← h]
+      -- xs2.2, yt2.2 は (s.map snd).erase xs1.2 = ....erase yt1.2 の最小値
+      have hMe : (s.map Prod.snd).erase xs1.2 = (s.map Prod.snd).erase yt1.2 := by
+        rw [hv1_eq]
+      have hxs2v_Me : xs2.2 ∈ (s.map Prod.snd).erase xs1.2 := by
+        rw [← hsnd_s']; exact Multiset.mem_map_of_mem _ hxs2_mem
+      have hyt2v_Me : yt2.2 ∈ (s.map Prod.snd).erase yt1.2 := by
+        rw [← hsnd_t']; exact Multiset.mem_map_of_mem _ hyt2_mem
+      have hxs2_min_Me : ∀ v ∈ (s.map Prod.snd).erase xs1.2, xs2.2 ≤ v := by
+        intro v hv
+        rw [← hsnd_s', Multiset.mem_map] at hv
+        obtain ⟨z, hz, hzv⟩ := hv
+        rw [← hzv]; exact hxs2_min z hz
+      have hyt2_min_Me : ∀ v ∈ (s.map Prod.snd).erase yt1.2, yt2.2 ≤ v := by
+        intro v hv
+        rw [← hsnd_t', Multiset.mem_map] at hv
+        obtain ⟨z, hz, hzv⟩ := hv
+        rw [← hzv]; exact hyt2_min z hz
+      have hv2_eq : xs2.2 = yt2.2 := by
+        apply le_antisymm
+        · exact hxs2_min_Me _ (hMe ▸ hyt2v_Me)
+        · exact hyt2_min_Me _ (hMe ▸ hxs2v_Me)
+      -- penalty 一致
+      have hpen : xs1.2 + xs2.2 = yt1.2 + yt2.2 := by rw [hv1_eq, hv2_eq]
+      -- s''.map snd = t''.map snd
+      have hsnd_s'' : s''.map Prod.snd
+          = (xs1.2 + xs2.2) ::ₘ (((s.map Prod.snd).erase xs1.2).erase xs2.2) := by
+        rw [hs'', hshape_s, Multiset.map_cons]
+        congr 1
+        rw [map_snd_erase (s.erase xs1) xs2 hxs2_mem, hsnd_s']
+      have hsnd_t'' : t''.map Prod.snd
+          = (yt1.2 + yt2.2) ::ₘ (((s.map Prod.snd).erase yt1.2).erase yt2.2) := by
+        rw [ht'', hshape_t, Multiset.map_cons]
+        congr 1
+        rw [map_snd_erase (t.erase yt1) yt2 hyt2_mem, hsnd_t']
+      have hsnd_eq : s''.map Prod.snd = t''.map Prod.snd := by
+        rw [hsnd_s'', hsnd_t'', hpen, hv1_eq, hv2_eq]
+      -- IH
+      have hcard_s'' : s''.card < s.card := huffmanStep_card_lt s h2 hsg
+      have hcard_s''_lt_n : s''.card < n := by omega
+      have hcost_s'' : huffmanCost s'' = huffmanCost t'' :=
+        ih s''.card hcard_s''_lt_n s'' t'' hg_s'' hg_t'' hsnd_eq rfl
+      -- 連結
+      rw [huffmanCost_step s h2 hsg, huffmanCost_step t h2t htg,
+          ← hxs1, ← hxs2, ← hs'', ← hyt1, ← hyt2, ← ht'',
+          hcost_s'', hpen]
+    · -- base case: s.card ≤ 1
+      have hs_le : s.card ≤ 1 := by omega
+      have ht_le : t.card ≤ 1 := by rw [← hcard_eq]; exact hs_le
+      rw [huffmanCost_eq_zero_of_base s hs_le hsg,
+          huffmanCost_eq_zero_of_base t ht_le htg]
+
+omit [Nonempty α] [MeasurableSingletonClass α] in
+/-- **C1-b**: `expectedLength P (huffmanLength P) = huffmanCost (initMultiset P)`.
+`initMultiset` の各 group は singleton `({a}, P.real{a})` なので per-group sum が
+`∑ a, P.real{a}·(huffmanLength P a)` に collapse する. -/
+lemma expectedLength_eq_huffmanCost (P : Measure α) :
+    InformationTheory.Shannon.ShannonCode.expectedLength P (huffmanLength P)
+      = huffmanCost (initMultiset P) := by
+  classical
+  unfold InformationTheory.Shannon.ShannonCode.expectedLength huffmanCost
+  unfold huffmanLength
+  -- LHS: ∑ a : α, P.real{a} * d a = (univ.val.map (fun a => P.real{a} * d a)).sum
+  rw [show ∑ a : α, P.real {a} * (huffmanLengthAux (initMultiset P) a : ℝ)
+      = ((Finset.univ : Finset α).val.map
+          (fun a => P.real {a} * (huffmanLengthAux (initMultiset P) a : ℝ))).sum from rfl]
+  conv_rhs => rw [initMultiset, Multiset.map_map]
+  congr 1
+  apply Multiset.map_congr rfl
+  intro a _
+  -- 各 singleton group では p.2 * (∑_{x∈{a}} d)/card = P.real{a} * (d a)
+  show P.real {a} * (huffmanLengthAux (initMultiset P) a : ℝ)
+    = P.real {a} * ((∑ x ∈ ({a} : Finset α),
+        (huffmanLengthAux (initMultiset P) x : ℝ)) / (({a} : Finset α).card : ℝ))
+  simp
+
 end InformationTheory.Shannon.Huffman
