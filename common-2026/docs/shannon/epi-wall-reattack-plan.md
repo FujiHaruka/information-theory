@@ -29,7 +29,8 @@ go/no-go の決定的判定基準は §Phase 1 末尾「Done 条件 / go-no-go g
 - [x] Phase 2 — cross-term orthogonality `score_cross_term_eq_zero` = genuine ✅ (0 sorry, `@audit:ok`)
 - [x] **Phase 3-pre — 3+1 述語 signature pivot 完了 ✅** (2026-05-30、軸1 `hconv` + `IsRegularDensityV2` + 正規化 `∫=1`、軸2 廃止)。
       false-statement defect 除去、4 述語 `@audit:ok`、`stam_step2_density_wall` → `@residual(wall:stam-blachman)` 格下げ。独立 honesty 監査 ALL OK (Gaussian witness で非 vacuous 確認)。新規 sorry 0。
-- [x] **Phase 3 — 真壁確定 ✅ (2026-05-30、L-EPIW-3-α 発火)**。proof-pivot-advisor (独立 RO) verdict: gateway が score の**解析的 (logDeriv) 表現**まで genuine に建てても、Stam closure に要るのは score の**確率的 (condExp) 表現** `s_Z(z)=E[s_X|X+Y=z]` であり、両者を繋ぐ Blachman 恒等式 (同時分布 `ℝ×ℝ` + sum-level sub-σ-algebra disintegration + Fubini) は Mathlib にも repo にも hook 皆無 = 約 300 行 multi-file self-build = PR 級。`condDistrib`/`condExp`/`condVar_ae_le_condExp_sq`/`condExp_ae_eq_integral_condDistrib_id` は実在するが `pdf`/`logDeriv`/`fisherInfoOfDensity` に結びつける hook が無い。**「gateway GO」≠「Phase 3 GO」**。`stam_step2_density_wall` の `sorry`+`@residual(wall:stam-blachman)` を **honest wall として確定据置** (signature は pivot 済で sound、regularity precondition のみ、load-bearing 無し)。closure は後続 PR scope に切出し。
+- [~] **Phase 3 — 密度レベル明示積分経路 = scoped multi-session path 📋 (2026-05-30 再評価で「真壁確定」から格下げ、判断ログ #4)**。
+      旧「真壁確定 (~300 行 PR 級 unscoped wall)」は **抽象 condExp 経路限定の過大判定**だった。独立 proof-pivot-advisor (density pivot 検証) が決定的事実を発見: `fisherInfoOfMeasureV2 _μ f = fisherInfoOfDensity f` (`FisherInfoV2DeBruijn.lean:86-87`, `rfl`、measure 引数を捨てる) により `stam_step2_density_wall:376` の goal は**純粋に密度上の解析命題** `(fisherInfoOfDensity fXY).toReal ≤ J_X·J_Y/(J_X+J_Y)` (with `fXY =ᵐ convDensityAdd fX fY`, `IsRegularDensityV2 fX/fY`, `∫fX=∫fY=1`) に collapse する。**抽象 condExp/condDistrib/disintegration は一切不要**。密度レベル明示積分経路 (Phase 3a–3d に分解、各 atom shared sorry 補題 + 段階 ship) で攻略を再開する。条件付き Cauchy-Schwarz を**確率重み `p_{X|Z}(x|z) := fX(x)fY(z-x)/p_Z(z)` 上の点ごと積分**として明示書き下し、condExp の disintegration 橋を概念ごと回避。
 - [ ] Phase 4 — 壁2 (per-time de Bruijn + FTC 積分形) 📋 (advisor: 同根 apparatus 依存で Phase 3 と並走しても空回り高リスク、heat eq IBP = L-EPIW-4-α 真壁可能性高)
 
 ## ⚠ Phase 3-pre — 3+1 述語 signature pivot (実装可能粒度) 📋
@@ -300,12 +301,12 @@ Fisher bound) を先に閉じ、壁2 (per-time de Bruijn density witness → FTC
               ▼ (density witness +                          ▼ (per-time density
                 logDeriv → score)                              witness p_t)
    ┌──────────────────────────┐                   ┌──────────────────────────────┐
-   │ 壁1 (Phase 3)            │                   │ 壁2 (Phase 4)                │
-   │ 条件付き Blachman        │                   │ per-time de Bruijn           │
-   │   s_Z = E[s_X|X+Y=z]     │                   │   (d/dt)h = (1/2)J            │
-   │ + ConvexOn.map_condExp_le│                   │   ← heat eq IBP (真壁可能性高)│
-   │ + integral_condExp       │                   │ + FTC 積分形                 │
-   │ + cross-term (Phase 2)   │ ◀── 直列依存 ──   │   ← bounded_T_ftc_gaussian   │
+   │ 壁1 (Phase 3, density route)│                 │ 壁2 (Phase 4)                │
+   │ 明示積分 (condExp 不使用) │                   │ per-time de Bruijn           │
+   │  s_Z = ∫ W_λ·p_{X|Z} dx  │                   │   (d/dt)h = (1/2)J            │
+   │ + 点ごと CS (integral_mul │                   │   ← heat eq IBP (真壁可能性高)│
+   │   _le_Lp_mul_Lq)         │                   │ + FTC 積分形                 │
+   │ + Tonelli + cross=0(Ph2) │ ◀── 直列依存 ──   │   ← bounded_T_ftc_gaussian   │
    │ ⇒ convex Fisher bound    │     (壁2 の per-     │     一般化 (~60-100行)      │
    └──────────────────────────┘     time witness は  └──────────────────────────────┘
                                      壁1 apparatus を
@@ -319,8 +320,12 @@ Fisher bound) を先に閉じ、壁2 (per-time de Bruijn density witness → FTC
 
 **各壁が共通 apparatus のどこを消費するか**:
 
-- 壁1 (Phase 3) = gateway の `logDeriv p_Z` 表現 + Phase 2 の cross-term + Mathlib 既存
-  `ConvexOn.map_condExp_le` (条件付き Jensen) + `integral_condExp` (total expectation)。
+- 壁1 (Phase 3, **density route / condExp 不使用**) = gateway の `convDensityAddDeriv`/導関数表現 + Phase 2
+  cross-term (`∫ fX' = 0`) + score を確率重み `p_{X|Z}(x|z) := fX(x)fY(z-x)/p_Z(z)` 上の明示積分
+  `s_Z = ∫ W_λ·p_{X|Z}` で書き下し、点ごと積分 Cauchy-Schwarz (`integral_mul_le_Lp_mul_Lq_of_nonneg`) +
+  Tonelli (`lintegral_lintegral_swap`) + p_Z 約分 → `λ²J_X+(1-λ)²J_Y` → λ最適化 (`stam_lambda_min`)。
+  **`ConvexOn.map_condExp_le` / `integral_condExp` / disintegration は使わない** (旧 condExp 経路の残骸、
+  §Phase 3 参照)。
 - 壁2 (Phase 4) = gateway の per-time 特殊化 (`p_t = p_X ⋆ heatKernel_t`) の density witness +
   heat eq IBP (`integral_mul_deriv_eq_deriv_mul_of_integrable`、inventory §5) + Gaussian テンプレ
   `bounded_T_ftc_gaussian` (`EPIL3Integration.lean:937-985`、`@audit:ok`) の一般化。
@@ -471,34 +476,145 @@ theorem score_cross_term_eq_zero
 
 概算規模: 20-40 行。proof-log: yes。
 
-## Phase 3 — 壁1 本体 (条件付き Blachman → convex Fisher bound) 📋
+## Phase 3 — 壁1 本体: 密度レベル明示積分経路 (condExp 不使用) 📋
 
-**Phase 1 GO + Phase 2 Done を前提**。`stam_step2_density_wall` (`EPIStamInequalityBody.lean:283`)
-の `sorry` body を充足。
+> **2026-05-30 全面書換 (density pivot)**: 旧 Phase 3 は「真壁確定 (~300 行 PR 級 unscoped wall)」
+> だった。だが独立 proof-pivot-advisor (density pivot 検証) が **`fisherInfoOfMeasureV2 _μ f =
+> fisherInfoOfDensity f` (`FisherInfoV2DeBruijn.lean:86-87`, `rfl`、measure 引数を捨てる)** を起点に、
+> `stam_step2_density_wall:376` の goal が**純粋に密度上の解析命題**に collapse する事実を発見。
+> 前 advisor の「PR 級」判定は**抽象 condExp 経路限定**で、密度レベル明示経路はそれを概念ごと回避する。
+> よって Phase 3 を「真壁」から **scoped multi-session path** に格下げ、本書換でその explicit route を
+> authoritative 戦略として固定する。**`epi-blachman-density-route-inventory.md` の S1 disintegration /
+> S3 `ConvexOn.map_condExp_le` / S4 `integral_condExp` は旧 condExp 経路の残骸で本経路とずれている** —
+> inventory からは **API 部品 (積分 Cauchy-Schwarz / Tonelli / IBP / λ最適化) のみ消費**し、condExp 系の
+> 戦略記述は採らない。
 
-### 組み方
+**Phase 1 GO (gateway `convDensityAdd_hasDerivAt`/`convDensityAdd_logDeriv` `@audit:ok`) + Phase 2 Done
+(`score_cross_term_eq_zero` `@audit:ok`) + Phase 3-pre Done (4 述語 pivot 済、`hconv` 制約注入済) を前提**。
+`stam_step2_density_wall` (`EPIStamInequalityBody.lean:376`) の `sorry` body を充足する。
 
-1. gateway (Phase 1) の `logDeriv (convDensityAdd pX pY)` 表現から条件付き score 表現
-   `s_Z(z) = E[s_X(X) | X+Y=z]` (Blachman 恒等式) を導く。← ここが genuine に不在の核
-   (`condExp ∧ IndepFun` 同時補題 = loogle Found 0)、disintegration 経由の self-build。
-2. `ConvexOn.map_condExp_le` (条件付き Jensen、Mathlib 既存) で
-   `s_Z(z)² ≤ E[(λ s_X + (1-λ) s_Y)² | X+Y=z]`。
-3. `integral_condExp` (total expectation、Mathlib 既存) + Phase 2 cross-term で積分して
-   `J(Z) ≤ λ²·J(X) + (1-λ)²·J(Y)`。
-4. λ 最適化 (`λ = J(Y)/(J(X)+J(Y))`) で `J(Z) ≤ J(X)·J(Y)/(J(X)+J(Y))` =
-   `IsStamCauchySchwarzOptimal` の結論。
+### Approach (密度レベル明示積分経路 — condExp 不使用、orchestrator 検算済の骨子)
+
+**鍵となる collapse**: `IsStamCauchySchwarzOptimal X Y P` の goal は (Phase 3-pre pivot 済 signature で)
+`J_sum = (fisherInfoOfMeasureV2 (P.map (X+Y)) fXY).toReal` を含むが、`fisherInfoOfMeasureV2_def`
+(`:86-87`, `rfl`) で measure 引数が捨てられるため `J_sum = (fisherInfoOfDensity fXY).toReal`。
+`hconv : fXY =ᵐ[volume] convDensityAdd fX fY` 制約下、goal は**純粋に密度上の解析命題**
+`(fisherInfoOfDensity fXY).toReal ≤ J_X·J_Y/(J_X+J_Y)` に縮約する。**抽象 condExp/condDistrib は不要**。
+
+以下、`p_X := fX`, `p_Y := fY`, `p_Z(z) := convDensityAdd fX fY z = ∫ x, fX x · fY (z-x) ∂volume`。
+
+1. **畳み込み密度の導関数表現** (gateway 消費): `p_Z'(z) = ∫ x, fX x · fY'(z-x) dx`
+   (gateway `convDensityAddDeriv` `EPIConvDensity.lean:64` = `fun z x => pX x · deriv pY (z-x)`、
+   `convDensityAdd_hasDerivAt` `:86` が `HasDerivAt (convDensityAdd pX pY) (∫ x, convDensityAddDeriv pX pY z₀ x) z₀`)。
+2. **対称導関数恒等式 (S2)**: `∫ x, fX'(x)·fY(z-x) dx = ∫ x, fX(x)·fY'(z-x) dx = p_Z'(z)`
+   (全直線 IBP `integral_mul_deriv_eq_deriv_mul_of_integrable` `IntegralEqImproper.lean:1318` + 1-D 変数変換
+   `integral_sub_left_eq_self` / `integral_comp_sub_left` 系)。
+3. **score 表現 (condExp 不要)**: 任意 `λ∈[0,1]` で
+   `W_λ(x,z) := λ·(fX'(x)/fX(x)) + (1-λ)·(fY'(z-x)/fY(z-x))` とおくと、確率重み
+   `p_{X|Z}(x|z) := fX(x)·fY(z-x)/p_Z(z)` (`∫ x, p_{X|Z}(x|z) dx = 1`) に対し
+   `∫ x, W_λ(x,z)·fX(x)·fY(z-x) dx = λ·p_Z'(z) + (1-λ)·p_Z'(z) = p_Z'(z)` (step 2 の両表現が両項を与える)。
+   よって score `s_Z(z) = p_Z'(z)/p_Z(z) = ∫ x, W_λ(x,z)·p_{X|Z}(x|z) dx`。**これは condExp の disintegration
+   ではなく、明示的に書いた確率重み積分**。
+4. **点ごと Cauchy-Schwarz (S3、condExp 不要)**: 確率重み `p_{X|Z}` に対し
+   `s_Z(z)² = (∫ x, W_λ·p_{X|Z})² ≤ (∫ x, W_λ²·p_{X|Z})·(∫ x, p_{X|Z}) = ∫ x, W_λ²·p_{X|Z}`
+   (Mathlib 積分 CS `integral_mul_le_Lp_mul_Lq_of_nonneg` `Bochner/Basic.lean:1237` を p=q=2 で、または
+   `inner_mul_le_norm_mul_norm` 系)。**`ConvexOn.map_condExp_le` は使わない** (inventory S3 の condExp 版は本経路外)。
+5. **積分 + Tonelli + p_Z 約分 (S4)**:
+   `J_sum = ∫ z, s_Z(z)²·p_Z(z) dz ≤ ∫ z, (∫ x, W_λ(x,z)²·fX(x)·fY(z-x) dx) dz` (`p_{X|Z}·p_Z = fX·fY(z-x)`
+   で `p_Z` 約分)。Tonelli (`integral_integral_swap` `Integral/Prod.lean:532`、または `∫⁻` 版
+   `lintegral_lintegral_swap` `Measure/Prod.lean:1058`) で `(x,z)` 順序交換 + `W_λ²` 展開:
+   - **第 1 項** `λ²·∫ x, (fX'/fX)²·fX·[∫ z, fY(z-x) dz] dx = λ²·∫ x, (fX')²/fX dx·1 = λ²·J_X`
+     (`∫ z, fY(z-x) dz = ∫ fY = 1` を `hnormY` + 併進不変で)。
+   - **第 2 項** `(1-λ)²·J_Y` (変数変換 `z-x ↦ y`、`hnormX`)。
+   - **cross 項** `2λ(1-λ)·(∫ fX')·(∫ fY') = 0` (`∫ fX' = 0` 正規化密度の境界消失、Phase 2
+     `score_cross_term_eq_zero` `EPIScoreCrossTermOrth.lean:45` で genuine 済 + `integral_logDeriv_density_eq_zero`
+     `FisherInfoV2.lean:158` で `∫ logDeriv f · f = 0`)。
+   ⇒ `J_sum ≤ λ²·J_X + (1-λ)²·J_Y` (任意 `λ∈[0,1]`)。
+6. **λ 最適化 (S5、完済)**: `λ = J_Y/(J_X+J_Y)` で `stam_lambda_min` (`EPIStamInequalityBody.lean:204`,
+   `@audit:ok`) + `stam_lambda_lower_bound` (`:216`, `@audit:ok`) により
+   `J_sum ≤ J_X·J_Y/(J_X+J_Y)` = `IsStamCauchySchwarzOptimal` の結論。
+
+**この経路が condExp を使わない帰結 (撤退ラインに効く)**: inventory が flag した「`condExp_ae_eq_integral_condDistrib_id`
+の `[StandardBorelSpace]` / score `Integrable f μ` 前提が `IsStamCauchySchwarzOptimal` signature に漏れる」
+懸念 (L-EPIW-3-密度-α) は **condExp 経路前提だった** ので本経路では発生しない。score 表現は step 3 で
+明示積分として書き下すため、`condDistrib`/`StandardBorelSpace` 依存が一切無い。
+
+### Phase 3 の atom 分解 (案 E pivot + 案 G staged shared sorry 補題)
+
+advisor の A/B/C 分解を採用、multi-session 着手可能粒度に。各 atom は **shared sorry 補題化**し、未完は
+`sorry` + `@residual` で type-check done commit (proof done は全 atom 完成時)。推奨実装 file は
+`Common2026/Shannon/EPIBlachmanConvScore.lean` (新規、inventory 着手 skeleton の file 名を流用、ただし
+**結論型は condExp ではなく上記 explicit route の各 step**)。
+
+| atom | step | 内容 | 規模見積 | 支配項 / hard part |
+|---|---|---|---|---|
+| **Phase 3a (GATE)** | gateway hyp 充足 + S2 | atom B の土台 = gateway `convDensityAdd_hasDerivAt` (`:86`) の **regularity hyp 7 本** (`hs`/`hF_meas`/`hF_int`/`hF'_meas`/`h_bound`/`bound_integrable`/`h_diff`) を `IsRegularDensityV2 fX/fY` + 正規化から discharge 可能か独立検証。+ 対称導関数恒等式 (step 2)。 | 検証 + 40-80 行 | **`h_bound` (Gaussian-tail dominated)** が新 PR 級 self-build か否か = GO/NO-GO。dominated bound を regularity から導けるか |
+| **Phase 3b** | S3 score + S4 CS | score 表現 (step 3、確率重み `p_{X|Z}` 明示積分) + 点ごと Cauchy-Schwarz (step 4)。 | 60-120 行 | score 表現の `p_Z` 約分 + 確率重み正規化 `∫ p_{X|Z} = 1` の plumbing |
+| **Phase 3c** | S4 Tonelli + 3 項 | Tonelli 積分 (step 5) + 3 項評価 (`J_X`/`J_Y`/cross=0) + **lintegral↔Bochner 橋 (atom A)**: `(fisherInfoOfDensity f).toReal = ∫ (logDeriv f)²·f` (`integral_eq_lintegral_of_nonneg_ae` + 可積分性副条件)。 | 80-150 行 | **Tonelli の積測度上可積分性副条件** (`Integrable (uncurry …) (volume.prod volume)`) — `∫⁻` 版に揃えれば非負性で回避可、Bochner 版なら self-build。lintegral↔Bochner の `.toReal` 往復 |
+| **Phase 3d** | assemble | `stam_step2_density_wall` (`:376`) の `sorry` を 3a–3c の補題で genuine 充足 (S5 λ 最適化は既済呼出のみ)。 | 30-60 行 | 各 atom の signature 整合 (hyp の流れ込み) |
+
+支配項 (advisor): **atom B (Phase 3a) の gateway hyp 充足** + **atom C (Phase 3c) の Tonelli 可積分性副条件**
+が hard part。L-EPIW-3-α は atom B の `h_bound` が PR 級なら発火。
+
+### per-atom Mathlib API 在庫 (inventory から API 部品のみ引用、verbatim 前提付き)
+
+inventory のうち **S1 disintegration / condExp 系は採らない**。以下は explicit route で実消費する API:
+
+- **Phase 3a (gateway hyp + S2)**:
+  - gateway `EPIConvDensity.convDensityAdd_hasDerivAt` (`EPIConvDensity.lean:86`) — 7 hyp:
+    `hs : s ∈ nhds z₀` / `hF_meas : ∀ᶠ z in nhds z₀, AEStronglyMeasurable (fun x => pX x * pY (z - x)) volume` /
+    `hF_int : Integrable (fun x => pX x * pY (z₀ - x)) volume` /
+    `hF'_meas : AEStronglyMeasurable (fun x => convDensityAddDeriv pX pY z₀ x) volume` /
+    `h_bound : ∀ᵐ x ∂volume, ∀ z ∈ s, ‖convDensityAddDeriv pX pY z x‖ ≤ bound x` /
+    `bound_integrable : Integrable bound volume` /
+    `h_diff : ∀ᵐ x ∂volume, ∀ z ∈ s, HasDerivAt (fun z => pX x * pY (z - x)) (convDensityAddDeriv pX pY z x) z`
+    → 結論 `HasDerivAt (convDensityAdd pX pY) (∫ x, convDensityAddDeriv pX pY z₀ x ∂volume) z₀`。
+    **Phase 3a の検証対象 = この 7 hyp を `IsRegularDensityV2 fX/fY` + `hnormX/hnormY` から discharge できるか。**
+  - S2 IBP `MeasureTheory.integral_mul_deriv_eq_deriv_mul_of_integrable` (`IntegralEqImproper.lean:1318`):
+    型クラス前提 `{A : Type*} [NormedRing A] [NormedAlgebra ℝ A]` (`A = ℝ` で充足)。引数 `hu`/`hv`
+    (tsupport 上 `HasDerivAt`) + `huv'`/`hu'v`/`huv` (3 つの `Integrable`、score×密度積の可積分性 =
+    regularity precondition)。結論 `∫ (x : ℝ), u x * v' x = - ∫ (x : ℝ), u' x * v x`。
+  - 併進不変 `MeasureTheory.integral_sub_left_eq_self` (`Group/Integral.lean`、gateway `convDensityAdd_comm` で
+    使用実績あり) — `z-x` 置換。
+- **Phase 3b (S3 score + CS)**:
+  - 積分 Cauchy-Schwarz `MeasureTheory.integral_mul_le_Lp_mul_Lq_of_nonneg` (`Bochner/Basic.lean:1237`):
+    型クラス前提 `{α : Type*} [MeasurableSpace α] {μ : Measure α}` (本補題は `f g : α → ℝ`)。引数
+    `hpq : p.HolderConjugate q` / `hf_nonneg : 0 ≤ᵐ[μ] f` / `hg_nonneg : 0 ≤ᵐ[μ] g` /
+    `hf : MemLp f (ENNReal.ofReal p) μ` / `hg : MemLp g (ENNReal.ofReal q) μ`。結論
+    `∫ a, f a * g a ∂μ ≤ (∫ a, f a ^ p ∂μ) ^ (1 / p) * (∫ a, g a ^ q ∂μ) ^ (1 / q)`。**p=q=2 で CS**。
+    (重み付き CS は `f = W_λ·√p_{X|Z}`, `g = √p_{X|Z}` の取り方、または `∫⁻` 版 `ENNReal.lintegral_mul_le_Lp_mul_Lq`)。
+- **Phase 3c (S4 Tonelli + 3 項 + lintegral↔Bochner)**:
+  - Tonelli `MeasureTheory.lintegral_lintegral_swap` (`Measure/Prod.lean:1058`、**`∫⁻` 版優先 = 可積分性不要**):
+    型クラス前提 `[SFinite μ]` + section `[SFinite ν]` (`volume` は SFinite で充足)。引数
+    `hf : AEMeasurable (uncurry f) (μ.prod ν)`。結論 `∫⁻ x, ∫⁻ y, f x y ∂ν ∂μ = ∫⁻ y, ∫⁻ x, f x y ∂μ ∂ν`。
+  - Bochner 版 `MeasureTheory.integral_integral_swap` (`Integral/Prod.lean:532`): 両 measure SFinite +
+    引数 `hf : Integrable (uncurry f) (μ.prod ν)` (**この可積分性副条件が atom C の hard part**)。結論
+    `∫ x, ∫ y, f x y ∂ν ∂μ = ∫ y, ∫ x, f x y ∂μ ∂ν`。
+  - cross 項 `∫ fX' = 0`: `FisherInfoV2.integral_logDeriv_density_eq_zero` (`FisherInfoV2.lean:158`,
+    `@audit:ok`、結論 `∫ x, logDeriv f x * f x ∂volume = 0`) + Phase 2 `score_cross_term_eq_zero`
+    (`EPIScoreCrossTermOrth.lean:45`, `@audit:ok`)。
+  - lintegral↔Bochner 橋 (atom A): `J = (fisherInfoOfDensity f).toReal = (∫⁻ ofReal((logDeriv f)²·f)).toReal`
+    と Bochner `∫ (logDeriv f)²·f` の往復 = `integral_eq_lintegral_of_nonneg_ae` + 非負性 + 可積分性副条件
+    (`fisherInfoOfDensity` `FisherInfoV2.lean:89` / `fisherInfoOfDensityReal` `:103`)。
+- **Phase 3d (assemble)**: S5 λ 最適化 `stam_lambda_min` (`EPIStamInequalityBody.lean:204`, `@audit:ok`) +
+  `stam_lambda_lower_bound` (`:216`, `@audit:ok`) は既済呼出のみ (0 行 self-build)。
 
 ### 撤退ライン
 
 | slug | 内容 | 撤退口 |
 |---|---|---|
-| **L-EPIW-3-α** | Blachman 条件付き score 表現 (step 1) の disintegration self-build が PR 級 | `stam_step2_density_wall` body `sorry` + `@residual(wall:stam-blachman)` 据置 (regularity hyp は維持、honesty defect 化させない) |
-| **L-EPIW-3-β** | λ 最適化の algebraic transform が `linarith` 吸収不可で >50 行 | step 4 のみ `sorry` + `@residual(plan:epi-wall-reattack-plan)`、step 1-3 は genuine 部分 ship |
+| **L-EPIW-3-α** | atom B (Phase 3a) の gateway hyp `h_bound` (Gaussian-tail dominated) が `IsRegularDensityV2` から導けず新 PR 級 self-build = **honest sorry 据置継続** (この場合のみ撤退) | `stam_step2_density_wall` body `sorry` + `@residual(wall:stam-blachman)` 据置 (regularity hyp は維持、honesty defect 化させない)。未完 atom も各 shared sorry 補題に `sorry` + `@residual(wall:stam-blachman)` で type-check done、完成 atom (3b/3c の Mathlib 部品揃いパート) は genuine ship |
+| **L-EPIW-3-密度-α** | inventory が flag した「score 可積分性が `IsStamCauchySchwarzOptimal` signature に漏れる」懸念。**ただし本経路は condExp を使わないので `StandardBorelSpace`/`condExp_ae_eq_integral_condDistrib_id` の signature 漏れは発生しない** (この懸念は condExp 経路前提だった) | 本経路では原則発火しない。万一 atom C の Tonelli 可積分性副条件が `IsStamCauchySchwarzOptimal` の hyp に新規漏れする場合のみ、該当副条件を `IsRegularDensityV2` から導く plumbing で吸収 (regularity precondition なので signature 後退ではない)。導けなければ当該 atom のみ `sorry` + `@residual(wall:stam-blachman)` |
+| **L-EPIW-3-β** | S5 λ 最適化が `linarith` 吸収不可で >50 行 | 発動見込みなし (`stam_lambda_min` 既済 `@audit:ok`)。万一の場合 step 6 のみ `sorry` + `@residual(plan:epi-wall-reattack-plan)` |
 
-**honesty 規律**: Blachman identity を `Is...Hyp` predicate に bundle して `:= h` 機械展開で
-抜くのは禁止 (tier 5 load-bearing)。詰まれば必ず `sorry` + `@residual(wall:stam-blachman)`。
+**honesty 規律**: 注入済 hyp (`hconv` 畳み込み / `hregX/hregY` 密度性 / `hnormX/hnormY` 正規化) は
+**regularity precondition** であって不等式の核ではない。step 1-6 の analytic core を `Is...Hyp` predicate に
+bundle して `:= h` 機械展開で抜くのは禁止 (tier 5 load-bearing)。詰まれば必ず `sorry` +
+`@residual(wall:stam-blachman)`。score 表現を確率重み積分で明示するため、core を condExp predicate に
+潰す誘惑は構造的に発生しない。
 
-概算規模: 100-250 行 (step 1 Blachman 表現が支配項、L-EPIW-3-α 発火確率高)。proof-log: yes。
+概算規模: 全 atom 合計 ~210-410 行 (atom B の gateway hyp 充足 + atom C の Tonelli 可積分性副条件が
+支配項)。proof-log: yes (`epi-wall-reattack-proof-log.md` に per-atom 追記)。
 
 ## Phase 4 — 壁2 (per-time de Bruijn + FTC 積分形) 📋
 
@@ -611,3 +727,39 @@ FTC 積分形 (step 2) 60-100 行 (テンプレ一般化、step 1 後)。proof-l
      precondition のみ、load-bearing 無し。`sorry` は tier-2 = 最も honest なマーカー。closure は後続 PR
      scope に切出し。case D (現状維持) 確定、案 C (bridge 直接 self-build ~300 行) は CLAUDE.md
      「50 行超は定義側を疑え」の遥か上で非推奨。
+
+4. **2026-05-30 Phase 3 「真壁確定」是正 → 密度レベル明示積分経路に格下げ (§Phase 3 全面書換)**:
+   判断ログ #3 の「Phase 3 真壁確定 (~300 行 PR 級 unscoped wall)」は **density route 未評価による過大
+   判定**だった。独立 proof-pivot-advisor (density pivot 検証) が決定的事実を発見し scoped multi-session
+   path に格下げ、§Phase 3 を explicit density route で全面書換。
+   - **collapse の根拠 (verbatim)**: `fisherInfoOfMeasureV2 _μ f = fisherInfoOfDensity f`
+     (`FisherInfoV2DeBruijn.lean:86-87`, `fisherInfoOfMeasureV2_def`, `rfl`、measure 引数を無視) により
+     `stam_step2_density_wall:376` の goal は**純粋に密度上の解析命題** `(fisherInfoOfDensity fXY).toReal
+     ≤ J_X·J_Y/(J_X+J_Y)` (with `fXY =ᵐ convDensityAdd fX fY`, `IsRegularDensityV2 fX/fY`, `∫fX=∫fY=1`)
+     に collapse する。**抽象 condExp/condDistrib/disintegration は一切不要**。判断ログ #3 の「~300 行 PR 級」
+     は**抽象 condExp 経路限定**で、密度レベル明示経路はそれを概念ごと回避する。
+   - **採用戦略 = 密度レベル明示積分経路 (condExp 不使用)**: 条件付き Cauchy-Schwarz を**確率重み
+     `p_{X|Z}(x|z) := fX(x)fY(z-x)/p_Z(z)` 上の点ごと明示積分** `s_Z(z) = ∫ x, W_λ(x,z)·p_{X|Z}(x|z) dx`
+     として書き下す (§Approach step 1-6)。`epi-blachman-density-route-inventory.md` の S1 disintegration /
+     S3 `ConvexOn.map_condExp_le` / S4 `integral_condExp` は**旧 condExp 経路の残骸**で本経路とずれており
+     採らない。inventory からは **API 部品 (積分 CS `integral_mul_le_Lp_mul_Lq_of_nonneg` / Tonelli
+     `lintegral_lintegral_swap` / IBP `integral_mul_deriv_eq_deriv_mul_of_integrable` / λ最適化
+     `stam_lambda_min`) のみ消費**。
+   - **atom 分解 (案 E pivot + 案 G staged shared sorry 補題)**: Phase 3a (GATE、gateway 7 hyp 充足検証
+     + S2 対称導関数恒等式) → 3b (S3 score 表現 + S4 点ごと CS) → 3c (S4 Tonelli + 3 項 + lintegral↔Bochner
+     橋) → 3d (assemble)。各 atom shared sorry 補題化、未完は `sorry`+`@residual(wall:stam-blachman)` で
+     type-check done commit、proof done は全 atom 完成時。
+   - **支配項 (advisor)**: atom B (Phase 3a) の gateway hyp `h_bound` (Gaussian-tail dominated) 充足 +
+     atom C (Phase 3c) の Tonelli 可積分性副条件が hard part。`h_bound` が PR 級なら L-EPIW-3-α 発火 =
+     honest sorry 据置継続 (この場合のみ撤退)。
+   - **L-EPIW-3-密度-α の是正**: inventory が flag した「score 可積分性が `IsStamCauchySchwarzOptimal`
+     signature に漏れる」懸念は **condExp 経路前提**で、本経路は condExp を使わないため
+     `StandardBorelSpace`/`condExp_ae_eq_integral_condDistrib_id` の signature 漏れは発生しない。
+   - **起草時 verbatim 確認**: `fisherInfoOfMeasureV2_def` (`FisherInfoV2DeBruijn.lean:86-87`, `rfl`) /
+     `stam_step2_density_wall` (`EPIStamInequalityBody.lean:376`) / gateway 7 hyp
+     (`convDensityAdd_hasDerivAt` `EPIConvDensity.lean:86-97`) / `convDensityAddDeriv` (`:64`) /
+     S2 IBP (`IntegralEqImproper.lean:1318`) / 積分 CS (`Bochner/Basic.lean:1237`) / Tonelli
+     (`Measure/Prod.lean:1058` / `Integral/Prod.lean:532`) / cross=0
+     (`integral_logDeriv_density_eq_zero` `FisherInfoV2.lean:158`, `score_cross_term_eq_zero`
+     `EPIScoreCrossTermOrth.lean:45`) / λ最適化 (`stam_lambda_min` `:204` / `stam_lambda_lower_bound` `:216`)
+     を Read で照合済。
