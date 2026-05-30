@@ -27,8 +27,9 @@ go/no-go の決定的判定基準は §Phase 1 末尾「Done 条件 / go-no-go g
 - [x] Phase 0 — 在庫確定 + 壁 signature verbatim 照合 ✅
 - [x] Phase 1 — **gateway atom `convDensity_add_differentiable` = GATE GO ✅** (genuine, 0 sorry, sorryAx-free, 独立監査 `@audit:ok`)
 - [x] Phase 2 — cross-term orthogonality `score_cross_term_eq_zero` = genuine ✅ (0 sorry, `@audit:ok`)
-- [ ] **Phase 3-pre — 🔴 BLOCKER: 3+1 述語 signature pivot (owner-task、設計確定・実装 pending)** 📋 ← Phase 3 着手の前提、Wave 6 監査で判明
-- [ ] Phase 3 — 壁1 本体 (条件付き Blachman → convex Fisher bound) 📋 (Phase 3-pre 完了後)
+- [x] **Phase 3-pre — 3+1 述語 signature pivot 完了 ✅** (2026-05-30、軸1 `hconv` + `IsRegularDensityV2` + 正規化 `∫=1`、軸2 廃止)。
+      false-statement defect 除去、4 述語 `@audit:ok`、`stam_step2_density_wall` → `@residual(wall:stam-blachman)` 格下げ。独立 honesty 監査 ALL OK (Gaussian witness で非 vacuous 確認)。新規 sorry 0。
+- [ ] Phase 3 — 壁1 本体 (条件付き Blachman → convex Fisher bound) 📋 ← **次の一手** (着手前に proof-pivot-advisor で tractability 判定推奨)
 - [ ] Phase 4 — 壁2 (per-time de Bruijn + FTC 積分形) 📋
 
 ## ⚠ Phase 3-pre — 3+1 述語 signature pivot (実装可能粒度) 📋
