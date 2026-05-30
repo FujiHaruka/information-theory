@@ -223,7 +223,13 @@ honest pass-through (`IsRegularDeBruijnHypV2.ofHeatFlow` constructor +
 transitive pass-through に昇格。`h_ibp` 引数は caller compat 維持 (L3 と同様
 unused、`_h_ibp` underscore prefix)。
 
-`@audit:ok` -/
+NOTE (2026-05-30 audit): 以前の `@audit:ok` は tier-1 誤付与だった。本 lemma は
+`deBruijn_identity_v2_of_heat_flow` を経由し、さらにその先で `deBruijn_identity_v2`
+→ shared sorry 補題 `debruijnIdentityV2_holds`
+(`@residual(wall:debruijn-integration)`, `FisherInfoV2DeBruijn.lean`) の `sorry`
+を消費する (`#print axioms` で `sorryAx` 依存を確認)。proof-done ではない。
+pass-through 自体は honest。transitive consumer のため `@residual` は付けない
+(sorry は wall 補題が保持)。 -/
 @[entry_point]
 theorem deBruijn_identity_v2_of_heat_subhyp
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]

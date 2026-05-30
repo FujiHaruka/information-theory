@@ -463,12 +463,13 @@ The result is consumed by Phase A A-3 (1-source Stam reduction to `≤ 0`).
 The bases `X`, `Y`, `X + Y` are `t`-independent so no scaling-correction term
 appears (L-Concl-A-δ avoidance via the 1-source design).
 
-`@audit:ok` — Phase A A-2 (2026-05-27, `epi-stam-to-conclusion-phaseA-plan`)
-completed the genuine derivative computation. The three sister
-`IsDeBruijnRegularityHyp` inputs are regularity preconditions (not
-load-bearing predicates); the proof is a structural composition of
-the V2 de Bruijn identity with the `entropyPower_hasDerivAt_of_diffEnt_hasDerivAt`
-chain-rule helper (A-2-2). -/
+NOTE (2026-05-30 audit): 以前の `@audit:ok` は tier-1 誤付与だった。body は
+`FisherInfoV2.deBruijn_identity_v2` を 3 回呼ぶため、transitive に
+`debruijnIdentityV2_holds` (`@residual(wall:debruijn-integration)`,
+`FisherInfoV2DeBruijn.lean`) の `sorry` を消費する (`#print axioms` で `sorryAx`
+依存を確認)。proof-done ではない。derivative computation 自体は genuine reduction
+(三 `IsDeBruijnRegularityHyp` は regularity precondition、core ではない)。
+transitive consumer のため `@residual` は付けない (sorry は wall 補題が保持)。 -/
 theorem csiszarGap1Source_hasDerivAt
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -963,8 +964,14 @@ Honesty notes:
   richness hypothesis, the three `IsDeBruijnRegularityHyp` carry density /
   derivative regularity.
 
-`@audit:ok` (genuine constructor, no fresh `sorry`; transitive Phase A
-residuals live in `isStamToEPIScalingHyp_of_stam_debruijn`'s chain). -/
+NOTE (2026-05-30 audit): 以前の `@audit:ok` は tier-1 誤付与だった。constructor
+自体は fresh sorry を持たないが、body は `isStamToEPIScalingHyp_of_stam_debruijn`
+を経由するため、transitive に shared sorry 補題 `stamToEPIScaling_holds` /
+`stamScalingNoise_exists` (`@residual(plan:epi-stam-to-conclusion-phaseA-plan)`,
+本 file) + `debruijnIdentityV2_holds` (`@residual(wall:debruijn-integration)`) の
+`sorry` を消費する (`#print axioms` で `sorryAx` 依存を確認)。proof-done ではない。
+constructor は genuine (non-circular、non-laundering)。transitive consumer のため
+`@residual` は付けない (sorry は被呼出補題が保持)。 -/
 theorem isStamToEPIBridgeHyp_of_stam_debruijn
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     {X Y : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]

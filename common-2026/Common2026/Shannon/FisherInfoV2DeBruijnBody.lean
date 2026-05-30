@@ -252,7 +252,12 @@ constructor `ofHeatFlow` を本 declaration の上に移動済 (forward referenc
 predicate-form literal alias (D1) として残存し、`@audit:retract-candidate`
 を別途付与する段 3 task に委譲。
 
-`@audit:ok` -/
+NOTE (2026-05-30 audit): 以前の `@audit:ok` は tier-1 誤付与だった。body は
+`deBruijn_identity_v2` への honest pass-through だが、その先で shared sorry 補題
+`debruijnIdentityV2_holds` (`@residual(wall:debruijn-integration)`,
+`FisherInfoV2DeBruijn.lean`) の `sorry` を transitive に消費する (`#print axioms`
+で `sorryAx` 依存を確認)。proof-done ではない。pass-through 自体は honest。
+transitive consumer のため `@residual` は付けない (sorry は wall 補題が保持)。 -/
 @[entry_point]
 theorem deBruijn_identity_v2_of_heat_flow
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]

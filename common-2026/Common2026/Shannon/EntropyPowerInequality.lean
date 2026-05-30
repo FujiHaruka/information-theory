@@ -250,9 +250,13 @@ discharge (真の Mathlib 壁) は shared sorry 補題で集中管理、closure 
 `epi-stam-to-conclusion-plan.md` で進行、Gaussian case は §D で full discharge。
 
 shared sorry 補題 (`stamToEPIBridge_holds`) の consumer であり、当該 wrapper
-自身は 0 sorry / 0 residual (audit-tags.md「共有 Mathlib 壁」pattern)。
-
-@audit:ok -/
+自身は 0 local sorry だが、transitive に `stamToEPIBridge_holds`
+(`@residual(plan:epi-stam-to-conclusion-plan)`, `:223`) の `sorry` を消費する
+(`#print axioms` で `sorryAx` 依存を確認、2026-05-30 audit)。よって proof-done
+ではなく、以前の `@audit:ok` は tier-1 誤付与だった (file-local `rg sorry` が
+transitive sorry を見逃した)。reduction 自体は honest: bridge を所与とした正しい
+変形 (body `:= stamToEPIBridge_holds X Y P h_stam`)。local sorry を持たない
+transitive consumer なので `@residual` は付けない (sorry は被呼出 wall が保持)。 -/
 @[entry_point]
 theorem entropy_power_inequality {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -265,7 +269,11 @@ theorem entropy_power_inequality {Ω : Type*} {mΩ : MeasurableSpace Ω}
 
 /-- **EPI in `Real.exp (2 · ...)` form** (Cover-Thomas 露出形).
 
-@audit:ok -/
+`entropy_power_inequality` を経由するため transitive に
+`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`, `:223`)
+の `sorry` を消費 (`#print axioms` で `sorryAx` 依存を確認、2026-05-30 audit)。
+proof-done でなく、以前の `@audit:ok` は tier-1 誤付与だった。reduction (exp 形へ
+の simp 変形) は honest。transitive consumer のため `@residual` は付けない。 -/
 @[entry_point]
 theorem entropy_power_inequality_exp_form {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -372,7 +380,11 @@ theorem entropyPower_map_add_const {μ : Measure ℝ} (hμ : μ ≪ volume)
 
 For independent `X, Y`, `h(X+Y) ≥ (1/2) · log (exp(2 h(X)) + exp(2 h(Y)))`.
 
-@audit:ok -/
+`entropy_power_inequality` を経由するため transitive に
+`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`, `:223`)
+の `sorry` を消費 (`#print axioms` で `sorryAx` 依存を確認、2026-05-30 audit)。
+proof-done でなく、以前の `@audit:ok` は tier-1 誤付与だった。log 形への monotone
+変形は honest。transitive consumer のため `@residual` は付けない。 -/
 @[entry_point]
 theorem entropy_power_inequality_log_form {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

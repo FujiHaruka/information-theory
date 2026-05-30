@@ -419,7 +419,14 @@ theorem epi_via_stam
 /-- **Variant of `epi_via_stam`** routed through the EntropyPowerInequality
 main theorem `entropy_power_inequality`. Returns the EPI directly.
 
-`@audit:ok` -/
+NOTE (2026-05-30 audit): body は `entropy_power_inequality` を呼び `_h_bridge`
+を無視するため、transitive に `stamToEPIBridge_holds`
+(`@residual(plan:epi-stam-to-conclusion-plan)`,
+`EntropyPowerInequality.lean:223`) の `sorry` を消費する (`#print axioms` で
+`sorryAx` 依存を確認)。proof-done でなく、以前の `@audit:ok` は tier-1 誤付与だった
+(sibling `epi_via_stam` は `h_bridge h_stam` で genuine に conditional 適用するため
+sorryAx 非依存; こちらは headline 経由で bridge を内部 discharge してしまう点が違い)。
+reduction 自体は honest。transitive consumer のため `@residual` は付けない。 -/
 @[entry_point]
 theorem epi_via_stam_main
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -653,7 +660,12 @@ theorem entropyPower_gaussian_sum_eq
 /-- **Log-form EPI via Stam pipeline**: combines `epi_via_stam_main` with
 `entropy_power_inequality_log_form` from `EntropyPowerInequality.lean`.
 
-`@audit:ok` -/
+NOTE (2026-05-30 audit): body は `entropy_power_inequality_log_form` を呼ぶため
+transitive に `stamToEPIBridge_holds`
+(`@residual(plan:epi-stam-to-conclusion-plan)`, `EntropyPowerInequality.lean:223`)
+の `sorry` を消費する (`#print axioms` で `sorryAx` 依存を確認)。proof-done でなく、
+以前の `@audit:ok` は tier-1 誤付与だった。reduction は honest。transitive consumer
+のため `@residual` は付けない。 -/
 @[entry_point]
 theorem entropy_log_form_via_stam
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -669,7 +681,12 @@ theorem entropy_log_form_via_stam
 
 /-- **Exp-form EPI via Stam pipeline**: Cover-Thomas Theorem 17.7.3 露出形.
 
-`@audit:ok` -/
+NOTE (2026-05-30 audit): body は `entropy_power_inequality_exp_form` を呼ぶため
+transitive に `stamToEPIBridge_holds`
+(`@residual(plan:epi-stam-to-conclusion-plan)`, `EntropyPowerInequality.lean:223`)
+の `sorry` を消費する (`#print axioms` で `sorryAx` 依存を確認)。proof-done でなく、
+以前の `@audit:ok` は tier-1 誤付与だった。reduction は honest。transitive consumer
+のため `@residual` は付けない。 -/
 @[entry_point]
 theorem entropy_exp_form_via_stam
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -687,7 +704,12 @@ theorem entropy_exp_form_via_stam
 /-- **Normalized `(2πe)⁻¹` form via Stam pipeline**: Cover-Thomas Ch.17 流儀
 `N(X+Y) ≥ N(X) + N(Y)`.
 
-`@audit:ok` -/
+NOTE (2026-05-30 audit): body は `entropy_power_inequality_normalized` を呼ぶため
+transitive に `stamToEPIBridge_holds`
+(`@residual(plan:epi-stam-to-conclusion-plan)`, `EntropyPowerInequality.lean:223`)
+の `sorry` を消費する (`#print axioms` で `sorryAx` 依存を確認)。proof-done でなく、
+以前の `@audit:ok` は tier-1 誤付与だった。reduction は honest。transitive consumer
+のため `@residual` は付けない。 -/
 @[entry_point]
 theorem entropy_normalized_form_via_stam
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -787,7 +809,12 @@ theorem epi_via_stam_three_arg_normalized
 /-- **Sanity check**: the Stam pipeline composed with the EntropyPowerInequality
 top-level theorem recovers the exact main statement signature.
 
-`@audit:ok` -/
+NOTE (2026-05-30 audit): body は `entropy_power_inequality` を呼び `_h_bridge`
+を無視するため、transitive に `stamToEPIBridge_holds`
+(`@residual(plan:epi-stam-to-conclusion-plan)`, `EntropyPowerInequality.lean:223`)
+の `sorry` を消費する (`#print axioms` で `sorryAx` 依存を確認)。proof-done でなく、
+以前の `@audit:ok` は tier-1 誤付与だった。reduction は honest。transitive consumer
+のため `@residual` は付けない。 -/
 theorem epi_via_stam_main_eq
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
