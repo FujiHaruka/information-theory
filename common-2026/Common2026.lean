@@ -138,6 +138,7 @@ import Common2026.Shannon.EPIStamDischarge
 import Common2026.Shannon.MaxEntropyConstrainedKKT
 import Common2026.Shannon.LZ78GreedyParsing
 import Common2026.Shannon.FisherInfoV2DeBruijn
+import Common2026.Shannon.FisherInfoV2DeBruijnPerTime
 import Common2026.Shannon.HeatFlowPath
 import Common2026.Shannon.AWGNF2F3Discharge
 -- Wave5 gap-close
