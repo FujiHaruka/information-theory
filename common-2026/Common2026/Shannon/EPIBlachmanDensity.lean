@@ -704,8 +704,11 @@ inequality/equality core bundled. NON-VACUOUSNESS: a proven Gaussian inhabitant
 `isBlachmanConvReady_gaussianPDFReal` (`EPIBlachmanGaussianWitness.lean`) is now wired
 in-tree with all 19 fields genuine (0 sorry, `#print axioms` → sorryAx-free), so the
 predicates carrying this bundle have a machine-confirmed proven inhabitant. (Witness
-self-reported proof done 2026-05-31, `epi-wall-reattack-plan` Phase 3e; final
-`@audit:ok` / caveat removal pending independent honesty audit confirmation.) -/
+`isBlachmanConvReady_gaussianPDFReal` independent honesty audit COMPLETE 2026-05-31,
+commit `6e65535`, `@audit:ok` confirmed — sorryAx-free machine-verified. Scope note:
+this confirms non-vacuousness of `IsBlachmanConvReady` itself; a Gaussian inhabitant
+lemma for the upstream `IsStamCauchySchwarz*` predicates is the remaining
+`epi-wall-reattack-plan` wiring step.) -/
 structure IsBlachmanConvReady (fX fY : ℝ → ℝ) : Prop where
   /-- `fX` is Lebesgue-integrable. -/
   int_fX : Integrable fX volume

@@ -310,8 +310,25 @@ The Z-side `pos_pZ`/`int_fisherZ` route through the sorryAx-free linchpin
 `convDensityAdd_gaussian_closed_form`; `int_fisher{X,Y}` via the public
 `integrable_logDeriv_sq_mul_gaussianPDFReal`.
 
-NOT `@audit:ok` — awaiting independent honesty audit confirmation of the witness
-0-sorry achievement (implementation-side self-report only). -/
+@audit:ok — independent honesty audit (2026-05-31, commit `6e65535`): witness is
+proof done. `#print axioms isBlachmanConvReady_gaussianPDFReal` →
+[propext, Classical.choice, Quot.sound] (sorryAx-free, transitive 0 sorry,
+machine-verified after olean refresh of `EPIBlachmanDensity`). STRUCTURAL: plain
+`structure` literal taking only `hvX hvY : v ≠ 0`; `IsBlachmanConvReady` carries ONLY
+Integrable / boundedness / positivity fields (no inequality / equality / value core),
+so no load-bearing bundle — genuine inhabitant. The 5 newly-genuine fields
+(`int_Wsq` / `int_inner` / `int_prod1/2/3`) RECONSTRUCT `Integrable (…)` (not
+hypothesis-handed): `int_prod1/2/3` via the shear `measurePreserving_prod_sub_swap`
+(Mathlib `Group/Prod.lean:373`, additive form of `measurePreserving_prod_div_swap`,
+`(z,x) ↦ (x, z-x)`, `μ×ν → ν×μ` — direction + type verified) + `Integrable.mul_prod`
+(`Integral/Prod.lean:346`) + `MeasurePreserving.integrable_comp_of_integrable`;
+`int_inner` via `Integrable.integral_prod_left` (`Integral/Prod.lean:380`) marginal +
+`condDensityX·pZ = fX·fY(z-·)` cancellation; `int_Wsq` via 3-term `(a+b)²` expansion.
+All cited Mathlib lemmas verified present with correct signatures. NON-VACUOUSNESS
+SCOPE: this confirms a proven inhabitant of `IsBlachmanConvReady (gaussian)(gaussian)`
+ONLY; the upstream density-route predicates (`IsStamCauchySchwarzOptimal` /
+`IsStamCondExpCSHyp`) do not yet have a wired Gaussian inhabitant lemma (witness has
+no in-tree consumer beyond docstring prose — final density-route closure step). -/
 theorem isBlachmanConvReady_gaussianPDFReal
     {mX mY : ℝ} {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0) :
     IsBlachmanConvReady (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) where
