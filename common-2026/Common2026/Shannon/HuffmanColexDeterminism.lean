@@ -336,6 +336,18 @@ prob-4 の 3 singleton `{0},{1},{2}` (と `{1,6}`) の tie で、`S₁` は cole
 `sorry` は FALSE statement を proof body に置いており、正当な未完成マーカーではなく defect。
 proof done には到達不能 (statement が偽)。signature を refutable な形に直す or consumer 設計を
 pivot するのは別 task。
+
+独立 honesty audit (2026-05-30): 反例を groupKey = (prob, toColex label) の決定的
+tie-break で独立に再追跡し confirm。Colex 順は `toColex s < toColex t ↔ (s∆t).max' ∈ t`
+(Mathlib `Colex.toColex_lt_toColex_iff_max'_mem`、max-element 優位) より
+`toColex {2} < toColex {1,6}` (∆={1,2,6}, max=6∈{1,6})。S₁ で z=2 の merge は step 3+5 の
+2 回 (depth 2)、S₂ では label `{1}→{1,6}` が prob-4 tie 順を `{0}<{2}<{1,6}` に変え
+step 2 (0+2) を誘発、z=2 が step 2+4+5 の 3 回 merge (depth 3)。3 ≠ 2 で statement は
+precondition (a global-min 等) 下でも FALSE。`false_statement` (tier 5) 分類は妥当、旧
+判断ログ #3 の「tie-order 独立 invariant の壁 (true-but-hard)」診断は誤り
+(huffmanLengthAux depth は colex tie-break order に依存 = tie-order 独立でない)。
+term-level consumer 0 件 (declaration + 同 file docstring 言及のみ)、偽 foundation の
+伝播ゼロを確認。
 @audit:defect(false-statement) @audit:retract-candidate(false-statement)
 @audit:closed-by-successor(huffman-strong-form-completion) -/
 lemma collapseLabel_huffmanLengthAux
