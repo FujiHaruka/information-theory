@@ -786,8 +786,20 @@ Consumed only by the (unused) API-completeness lemmas
 Genuine reflection-invariance transport: 0 sorry, `#print axioms` =
 `[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified after olean
 refresh). No hypothesis bundling — `h` is the sibling regularity bundle, every field is
-*derived* from `h`'s fields, not handed by a load-bearing predicate. Independent honesty
-audit pending. -/
+*derived* from `h`'s fields, not handed by a load-bearing predicate.
+
+@audit:ok — independent honesty audit (2026-05-31): conclusion `IsBlachmanConvReady fY fX`
+≠ hypothesis `IsBlachmanConvReady fX fY` (X↔Y swap is a distinct proposition; not `:= h`
+circular). The hypothesis `h` is the sibling 19-field regularity bundle (Integrable /
+`∃ M, |·| ≤ M` / `0 < ·` only — no inequality/equality/achievability core bundled), so it
+is precondition, not load-bearing. All 19 fields genuinely 1:1 transported from `h`:
+direct X↔Y projection (5 fields), `convDensityAdd_comm` rewrite (verified genuine
+reflection proof), `comp_sub_left` reflection + `mul_comm`, `lam↔1-lam` relabel under
+`x↦z-x`, `integral_sub_left_eq_self` inner-integral invariance, `measurePreserving_prod_sub_swap`
+shear, and `MeasurePreserving.skew_product` (`(z,x)↦(z,z-x)`, measurability via `fun_prop`
++ `measurePreserving_sub_left` — no sorry-discharged obligation). sorryAx-free confirmed
+via transient `#print axioms` after `lake build` olean refresh = `[propext,
+Classical.choice, Quot.sound]`. -/
 theorem isBlachmanConvReady_symm {fX fY : ℝ → ℝ}
     (h : IsBlachmanConvReady fX fY) : IsBlachmanConvReady fY fX := by
   -- `pZ` of the swapped pair coincides with the original (commutativity).

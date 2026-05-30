@@ -3,6 +3,7 @@ import Common2026.Shannon.DifferentialEntropy
 import Common2026.Shannon.FisherInfo
 import Common2026.Shannon.FisherInfoV2
 import Common2026.Shannon.EPIConvDensity
+import Common2026.Shannon.EPIBlachmanDensity
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Probability.Distributions.Gaussian.Real
@@ -189,13 +190,16 @@ density witnesses; this is the predicate the EPI derivation actually consumes.
 `fisherInfoOfMeasureV2` to keep this base file free of an import cycle through
 `FisherInfoV2DeBruijn`; the two agree by `fisherInfoOfMeasureV2_def`.)
 
-Audit 2026-05-30 (post-pivot): sound Prop statement. The 5 injected hyps
-(`IsRegularDensityV2 fX/fY`, `∫fX=1`, `∫fY=1`, `fXY =ᵐ convDensityAdd fX fY`) are
-jointly satisfiable (Gaussian witness, NON-vacuous); `hconv` ties `fXY` to the
-convolution so the conclusion `1/J_sum ≥ 1/J_X + 1/J_Y` is the genuine Stam bound,
-not universally false. The 5 hyps are regularity preconditions, not the core; the
-core is the Blachman wall (`@residual(wall:stam-blachman)`, discharged downstream).
-No honesty defect. @audit:ok -/
+Audit 2026-05-31 (owner-level pivot, epi-wall-reattack-plan): sound Prop statement.
+The injected hyps (`IsRegularDensityV2 fX/fY`, `∫fX=1`, `∫fY=1`, the *pointwise*
+convolution identity `∀ x, fXY x = convDensityAdd fX fY x`, and the
+`IsBlachmanConvReady fX fY` bundle) are jointly satisfiable (Gaussian witness,
+NON-vacuous); the pointwise `hconv` ties `fXY` to the convolution so the conclusion
+`1/J_sum ≥ 1/J_X + 1/J_Y` is the genuine Stam bound, not universally false. These are
+regularity preconditions, not the core (the core is genuinely closed in
+`stam_step2_density_wall` via `convex_fisher_bound_of_ready`). Pivoted in lockstep with
+`IsStamInequalityHyp` (defeq chain via `fisherInfoOfMeasureV2_def`). No honesty defect.
+@audit:ok -/
 def IsStamInequalityResidual {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
@@ -206,8 +210,9 @@ def IsStamInequalityResidual {Ω : Type*} [MeasurableSpace Ω]
     Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fY →
     (∫ x, fX x ∂MeasureTheory.volume = 1) →
     (∫ x, fY x ∂MeasureTheory.volume = 1) →
-    (fXY =ᵐ[MeasureTheory.volume]
-      InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY) →
+    (∀ x, fXY x =
+      InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY x) →
+    InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady fX fY →
     1 / J_sum ≥ 1 / J_X + 1 / J_Y
 
 /-- **Stam-to-EPI bridge** (Cover-Thomas Lemma 17.7.3 coupling argument).

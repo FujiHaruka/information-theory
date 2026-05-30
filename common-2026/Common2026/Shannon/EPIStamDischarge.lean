@@ -5,6 +5,8 @@ import Common2026.Shannon.FisherInfoV2
 import Common2026.Shannon.FisherInfoV2DeBruijn
 import Common2026.Shannon.FisherInfoGaussian
 import Common2026.Shannon.DifferentialEntropy
+import Common2026.Shannon.EPIConvDensity
+import Common2026.Shannon.EPIBlachmanDensity
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Probability.Distributions.Gaussian.Real
@@ -98,14 +100,18 @@ To avoid division-by-zero, we phrase the predicate to require either
 `J(X) = J(Y) = 0` (Dirac case) or the inverse inequality on the real-valued
 projections (with finiteness).
 
-Audit 2026-05-30 (post-pivot): sound Prop statement. The 5 injected hyps
-(`IsRegularDensityV2 fX/fY`, `∫fX=1`, `∫fY=1`, `fXY =ᵐ convDensityAdd fX fY`) are
-jointly satisfiable (Gaussian witness, NON-vacuous); `hconv` excludes the prior
-counterexample so the conclusion is the genuine Stam bound, not universally false.
-The 5 hyps are regularity preconditions, not the core (the core is the Blachman
-wall `@residual(wall:stam-blachman)`). Pivoted in lockstep with
-`IsStamInequalityResidual` (defeq chain via `fisherInfoOfMeasureV2_def`). No honesty
-defect. @audit:ok -/
+Audit 2026-05-31 (owner-level pivot, epi-wall-reattack-plan): sound Prop statement.
+The injected hyps (`IsRegularDensityV2 fX/fY`, `∫fX=1`, `∫fY=1`, the *pointwise*
+convolution identity `∀ x, fXY x = convDensityAdd fX fY x`, and the
+`IsBlachmanConvReady fX fY` bundle) are jointly satisfiable (Gaussian witness
+`isBlachmanConvReady_gaussianPDFReal` + `convDensityAdd_gaussian_closed_form`,
+NON-vacuous); the pointwise `hconv` ties `fXY` to the convolution so the conclusion is
+the genuine Stam bound, not universally false. These are regularity preconditions, not
+the inequality core (which is genuinely closed in `stam_step2_density_wall` via
+`convex_fisher_bound_of_ready`). Pivoted in lockstep with `IsStamInequalityResidual`
+(defeq chain via `fisherInfoOfMeasureV2_def`); the pointwise convolution constraint +
+`IsBlachmanConvReady` were added to let `isStamInequalityHyp_via_body` consume the
+genuine `IsStamCauchySchwarzOptimal` producer. No honesty defect. @audit:ok -/
 def IsStamInequalityHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
@@ -117,8 +123,9 @@ def IsStamInequalityHyp {Ω : Type*} [MeasurableSpace Ω]
     Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fY →
     (∫ x, fX x ∂MeasureTheory.volume = 1) →
     (∫ x, fY x ∂MeasureTheory.volume = 1) →
-    (fXY =ᵐ[MeasureTheory.volume]
-      InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY) →
+    (∀ x, fXY x =
+      InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY x) →
+    InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady fX fY →
     1 / J_sum ≥ 1 / J_X + 1 / J_Y
 
 -- (retracted, Phase 3 Wave 2, 2026-05-27) `isStamInequalityHypothesis_of_stamInequalityHyp`
@@ -135,17 +142,21 @@ theorem isStamInequalityHyp_symm
     (h : IsStamInequalityHyp X Y P) :
     IsStamInequalityHyp Y X P := by
   intro J_Y J_X J_sum fY fX fXY hJY hJX hJsum hJY_def hJX_def hJsum_def
-    hregY hregX hnormY hnormX hconv
+    hregY hregX hnormY hnormX hconv hready
   have h_comm : (fun ω => Y ω + X ω) = fun ω => X ω + Y ω := by
     funext ω; ring
   rw [h_comm] at hJsum_def
-  -- transport the convolution constraint across `convDensityAdd` commutativity
-  have hconv' : fXY =ᵐ[MeasureTheory.volume]
-      InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY := by
+  -- transport the pointwise convolution constraint across `convDensityAdd` commutativity
+  have hconv' : ∀ x, fXY x =
+      InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY x := by
+    intro x
     rw [InformationTheory.Shannon.EPIConvDensity.convDensityAdd_comm fX fY]
-    exact hconv
+    exact hconv x
+  have hready' :
+      InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady fX fY :=
+    InformationTheory.Shannon.EPIBlachmanDensity.isBlachmanConvReady_symm hready
   have h_inst := h J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
-    hregX hregY hnormX hnormY hconv'
+    hregX hregY hnormX hnormY hconv' hready'
   linarith
 
 /-! ## §3 — de Bruijn regularity predicate -/

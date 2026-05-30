@@ -108,15 +108,13 @@ Fisher bound is supplied internally by the shared sorry wall lemma
 `isStamInequalityHyp_via_body`. This carries **no** load-bearing analytic
 hypothesis — only measurability / independence / probability measure.
 
-This wrapper is **not** proof done: it depends transitively on `sorryAx`. The genuine
-residual now lives in `isStamInequalityHyp_via_body`
-(`@residual(plan:epi-wall-reattack-plan)`).
-Update 2026-05-31 (Phase 3d): `stam_step2_density_wall` is **genuinely closed** (0-sorry,
-sorryAx-free) via `convex_fisher_bound_of_ready`; `IsStamCauchySchwarzOptimal` is a
-provable (non-false) Prop. The prior "false-statement defect / universally FALSE" note is
-obsolete. The remaining transitive `sorry` is the regularity-precondition signature gap on
-the published `IsStamInequalityHyp` (`isStamInequalityHyp_via_body`), a clean owner-level
-pivot tracked under `epi-wall-reattack-plan`, not a Mathlib wall. -/
+Update 2026-05-31 (owner-level pivot, epi-wall-reattack-plan): `stam_step2_density_wall`
+**and** `isStamInequalityHyp_via_body` are now **both genuinely closed** (0-sorry,
+`#print axioms` sorryAx-free). The published `IsStamInequalityHyp` was pivoted in lockstep
+with `IsStamInequalityResidual` to carry the pointwise convolution constraint +
+`IsBlachmanConvReady` bundle, closing the former regularity-precondition signature gap.
+This wrapper is therefore **sorryAx-free** — it produces a genuine `IsStamInequalityHyp`.
+(Verify: `#print axioms isStamInequalityHyp_via_step3`.) -/
 @[entry_point]
 theorem isStamInequalityHyp_via_step3 {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

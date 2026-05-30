@@ -422,33 +422,35 @@ theorem stam_inequality_via_predicate_optimal
 optimal-CS predicate to the published Cover-Thomas Lemma 17.7.2 signature
 `IsStamInequalityHyp` (`EPIStamDischarge`).
 
-## ⚠ Regularity-precondition gap (Phase 3d, 2026-05-31)
+## ✅ 2026-05-31 owner-level pivot (epi-wall-reattack-plan) — GENUINELY CLOSED
 
-After the Phase 3d 案 b pivot, `IsStamCauchySchwarzOptimal` carries two extra
-**regularity preconditions** beyond `IsStamInequalityHyp`'s body: the *pointwise*
-convolution identity `∀ x, fXY x = convDensityAdd fX fY x` (strengthened from the
-published `=ᵐ` form) and the `IsBlachmanConvReady fX fY` bundle (deriv-boundedness +
-higher-order integrability, needed by the genuine `convex_fisher_bound`). The
-published `IsStamInequalityHyp` (`EPIStamDischarge.lean:109`) supplies neither — it
-only gives the weaker `fXY =ᵐ convDensityAdd fX fY` and no `IsBlachmanConvReady`.
-So `IsStamCauchySchwarzOptimal` cannot be instantiated from `IsStamInequalityHyp`'s
-hypotheses, and this bridge is **not closable at the current `IsStamInequalityHyp`
-signature**. The honest fix is the owner-level pivot of `IsStamInequalityHyp`
-(adding the same two preconditions, rippling to `EPIStamDischarge` / `EPIStamToBridge`
-/ `EPIL3Integration`) — out of scope for Phase 3d (8-file pivot, L-EPIW-3d-β), so the
-residual relocates here from the now-genuine `stam_step2_density_wall`. This is a
-**regularity-precondition signature gap** (a clean owner-level pivot of the published
-`IsStamInequalityHyp`), NOT a Mathlib wall — the analytic Stam core is genuinely closed
-in `stam_step2_density_wall` (`#print axioms` → sorryAx-free).
+The published `IsStamInequalityHyp` (`EPIStamDischarge`) and its sibling
+`IsStamInequalityResidual` (`EntropyPowerInequality`) were pivoted in lockstep to
+carry the same two regularity preconditions that `IsStamCauchySchwarzOptimal`
+requires: the *pointwise* convolution identity `∀ x, fXY x = convDensityAdd fX fY x`
+(strengthened from the published `=ᵐ` form) and the `IsBlachmanConvReady fX fY` bundle
+(deriv-boundedness + higher-order integrability needed by the genuine
+`convex_fisher_bound`). With both signatures aligned, this bridge is now a genuine
+**implication** wrapper: `intro` all the (now-matching) hypotheses, apply `h_cs_opt`
+to get the harmonic-mean upper bound `J_sum ≤ J_X·J_Y/(J_X+J_Y)`, and reshape to the
+inverse form `1/J_sum ≥ 1/J_X + 1/J_Y` via `stam_inverse_form_of_harmonic_mean`. The
+conclusion type ≠ hypothesis type (no `:= h` circularity); the inequality core was
+genuinely assembled upstream in `stam_step2_density_wall`
+(`convex_fisher_bound_of_ready`). The added hypotheses are regularity preconditions,
+NOT the core. `#print axioms` → sorryAx-free.
 
-@residual(plan:epi-wall-reattack-plan) -/
+@audit:ok -/
 @[entry_point]
 theorem isStamInequalityHyp_via_body
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
     (h_cs_opt : IsStamCauchySchwarzOptimal X Y P) :
     IsStamInequalityHyp X Y P := by
-  sorry
+  intro J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
+    hregX hregY hnormX hnormY hconv hready
+  have h_le := h_cs_opt J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
+    hregX hregY hnormX hnormY hconv hready
+  exact stam_inverse_form_of_harmonic_mean hJX hJY hJsum h_le
 
 /-! ## §5 — Gaussian saturation discharge -/
 
@@ -585,22 +587,22 @@ carries **no** load-bearing Step-2 analytic hypothesis — only regularity
 (measurability / independence / probability measure) — with the Step-2 obligation
 localized to the shared sorry lemma `stam_step2_density_wall`.
 
-Update 2026-05-31 (Phase 3d): `stam_step2_density_wall` is **genuinely closed**
-(0-sorry, `#print axioms` sorryAx-free) — the convex Fisher bound is now supplied
-genuinely by `convex_fisher_bound_of_ready`. The Step-2 analytic core is proven; the
-remaining `sorry` this wrapper consumes transitively is the **regularity-precondition
-signature gap** in `isStamInequalityHyp_via_body` (`@residual(plan:epi-wall-reattack-plan)`),
-not a Mathlib wall — it is a clean owner-level pivot of the published `IsStamInequalityHyp`
-to carry the pointwise convolution constraint + `IsBlachmanConvReady` bundle.
+Update 2026-05-31 (owner-level pivot, epi-wall-reattack-plan): `stam_step2_density_wall`
+**and** `isStamInequalityHyp_via_body` are now **both genuinely closed** (0-sorry,
+`#print axioms` sorryAx-free). The published `IsStamInequalityHyp` was pivoted in lockstep
+with `IsStamInequalityResidual` to carry the pointwise convolution constraint +
+`IsBlachmanConvReady` bundle, so the former regularity-precondition signature gap is
+resolved — the Stam half of the pipeline (`h_stam`) is now sorryAx-free.
 
 The remaining `h_bridge : IsStamToEPIBridgeHyp` argument is **not** load-bearing
 at this wrapper: `epi_via_stam_main` ignores it (`_h_bridge`), discharging the
 Stam→EPI bridge internally via the separate shared sorry lemma
 `stamToEPIBridge_holds`. It is retained only as a cosmetic interface slot.
 
-This wrapper is **not** proof done: it depends transitively on `sorryAx` via
-`isStamInequalityHyp_via_body` (regularity-precondition gap) and
-`EntropyPowerInequality.stamToEPIBridge_holds` (Stam→EPI bridge wall). No `@audit:ok`. -/
+This wrapper is **not** proof done: it depends transitively on `sorryAx` solely via
+`EntropyPowerInequality.stamToEPIBridge_holds` (Stam→EPI bridge wall,
+`@residual(plan:epi-stam-to-conclusion-plan)`). The Stam-inequality half is now genuine.
+No `@audit:ok`. -/
 @[entry_point]
 theorem entropy_power_inequality_via_body
     {Ω : Type*} {mΩ : MeasurableSpace Ω}

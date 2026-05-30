@@ -162,15 +162,12 @@ predicates (`IsStamScoreConvolution`, `IsStamTotalExpectation`); those predicate
 were removed in the wall-consolidation pass. The signature now carries **no**
 load-bearing analytic hypothesis.
 
-This wrapper is **not** proof done: it depends transitively on `sorryAx`. The genuine
-residual now lives in `isStamInequalityHyp_via_body`
-(`@residual(plan:epi-wall-reattack-plan)`).
-Update 2026-05-31 (Phase 3d): `stam_step2_density_wall` is **genuinely closed** (0-sorry,
-`#print axioms` sorryAx-free) via `convex_fisher_bound_of_ready`; `IsStamCauchySchwarzOptimal`
-is a provable (non-false) Prop. The prior "false-statement defect / universally FALSE"
-note is obsolete. The remaining transitive `sorry` is the regularity-precondition signature
-gap on the published `IsStamInequalityHyp` (`isStamInequalityHyp_via_body`), a clean
-owner-level pivot tracked under `epi-wall-reattack-plan`, not a Mathlib wall. -/
+Update 2026-05-31 (owner-level pivot, epi-wall-reattack-plan): `stam_step2_density_wall`
+**and** `isStamInequalityHyp_via_body` are now **both genuinely closed** (0-sorry,
+`#print axioms` sorryAx-free). The published `IsStamInequalityHyp` was pivoted in lockstep
+with `IsStamInequalityResidual` to carry the pointwise convolution constraint +
+`IsBlachmanConvReady` bundle, closing the former regularity-precondition signature gap.
+This wrapper therefore produces a genuine, **sorryAx-free** `IsStamInequalityHyp`. -/
 @[entry_point]
 theorem isStamInequalityHyp_of_primitives
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
