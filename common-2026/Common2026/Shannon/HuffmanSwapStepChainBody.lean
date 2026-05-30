@@ -244,10 +244,13 @@ theorem swapStepLeChainHypothesis_holds_via_subpredicates :
 `SwapStepLeChainHypothesis` を加えた 3-way conjunction. chain hypothesis は常に成立
 するので、triple は 2-way `HuffmanCombinedHypothesis` と同値.
 
-@audit:retract-candidate(load-bearing-predicate) — `HuffmanWalls.huffman_chain_combined_hypothesis_holds`
-が constructive composition で discharge 済 (chain は trivial discharge、core は Hyp2 wall sorry
-の transitive)。consumer wrapper (`huffmanLength_optimal_with_chain_combined` / `_via_chain_lift`)
-が hypothesis 形のまま残るため predicate も併存。 -/
+independent audit (2026-05-30): 第 2 conjunct `HuffmanMergedIdentificationHypothesis` が機械検証
+可能に FALSE (反例独立再現済) のため、本 triple conjunction も **universally false** (chain conjunct
+が常成立でも ∧ の片側 false で全体 false)。`HuffmanWalls.huffman_chain_combined_hypothesis_holds`
+は transitively false-premised wall (`@audit:defect(false-statement)`)。retract reason は正規 vocab
+`false-hypothesis` に確定。consumer wrapper (`huffmanLength_optimal_with_chain_combined` /
+`_via_chain_lift`) は hypothesis 形のまま残るが false premise を渡す vacuously-true wrapper。
+@audit:defect(false-statement) @audit:retract-candidate(false-hypothesis) @audit:closed-by-successor(huffman-strong-form-completion) -/
 abbrev HuffmanChainCombinedHypothesis : Prop :=
   SwapNormalizationHypothesis.{u} ∧ HuffmanMergedIdentificationHypothesis.{u}
     ∧ SwapStepLeChainHypothesis.{u}

@@ -114,20 +114,20 @@ lemma mergedInitMultiset_huffmanGrouping
 `Measure.real` / `initMultiset` の measure 計算) を完全に剥がした形. 残るのは pure な
 Huffman 木の再帰 content のみ. これが本 seed が discharge を委ねる primitive.
 
-@audit:retract-candidate(load-bearing-predicate) — `HuffmanWalls.merged_huffman_aux_ident_hypothesis_holds`
-が wall lemma として未 discharge (`@residual(plan:huffman-strong-form-completion)`)。本
-predicate を hypothesis に取る wrapper 群 (`huffmanLength_optimal_with_swap_and_aux` /
-`huffmanLength_optimal_modulo_aux_ident`) は import cycle 回避のため signature 不変
-(`huffman-sorry-migration-plan.md` 判断ログ #3)。後続 plan `huffman-strong-form-completion-plan`
-完遂時に wall lemma を constructive に置換 + wrapper を signature 改変すれば本 predicate
-は完全に削除可能。
-
 ⚠ **FALSE as a universal statement** (2026-05-30 機械確定): 反例 β={0,1,2,3} weights
 `[1,2,1,1]` a=0 b=2 — 全強前提 (a global-min / b rest-min / huffmanLength 一致) **かつ
 a,b first-merged** でも x=0 で恒等式失敗 (merged depth 2 vs 期待 `huffmanLength Q a - 1 = 1`)。
 決定的 colex tie-break の merge 不安定性により merged tree が元木の collapse に対応しない
 ため。discharge 不能。consumer 設計の pivot 要 (per-symbol depth identity → tie-invariant
-な cost-level merge identity へ)。検証 script: `docs/shannon/verify/merged_huffman_aux_ident_counterexample.py`。 -/
+な cost-level merge identity へ)。検証 script: `docs/shannon/verify/merged_huffman_aux_ident_counterexample.py`。
+
+independent audit (2026-05-30): 反例独立再現 (script 再実行 + 手計算) + simulator↔Lean 定義
+(`groupKey`/`huffmanStep`/`huffmanLengthAux`) 忠実性照合済 → false-statement 確定。本 predicate def
+は機械検証可能に FALSE な universal statement のため、tag を wall lemma 側
+(`HuffmanWalls.merged_huffman_aux_ident_hypothesis_holds`) と整合する `false-hypothesis` reason に統一
+(旧 `load-bearing-predicate` は「true だが closure 待ち」を含意するため不正確)。closure 責任は後続
+plan `huffman-strong-form-completion` (consumer 設計を cost-level identity に pivot)。
+@audit:defect(false-statement) @audit:retract-candidate(false-hypothesis) @audit:closed-by-successor(huffman-strong-form-completion) -/
 abbrev MergedHuffmanAuxIdentHypothesis : Prop :=
   ∀ {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]

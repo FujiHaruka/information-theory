@@ -773,16 +773,16 @@ predicate は `MergedHuffmanAuxIdentHypothesis` と同一 statement (measure-lev
 `initMultiset_mergedMeasure_eq` 経由) で同じ反例で FALSE。discharge 不能。検証 script:
 `docs/shannon/verify/merged_huffman_aux_ident_counterexample.py`。
 
-タグ語彙について: 本 def は conditional wrapper に hypothesis として渡る形なので
-`@audit:retract-candidate(load-bearing-predicate)` を保持するが、wall lemma 側は
-`@audit:defect(false-statement)` 寄りの状況。最終タグ語彙の確定は別途起動される
-honesty-auditor の判定に委ねる。
+タグ語彙裁定 (independent honesty audit 2026-05-30): 本 def は conditional wrapper に
+hypothesis として渡る形だが、predicate **自身が機械検証可能に FALSE** (universal statement、
+反例独立再現済) なので根本原因は load-bearing ではなく false-hypothesis。`load-bearing-predicate`
+は「true だが closure 待ちの暫定」を含意するため不正確 → wall lemma 側 (`huffman_merged_identification_hypothesis_holds`
+の `@audit:defect(false-statement)`) と整合する `false-hypothesis` reason に確定。consumer は
+hypothesis 形のまま残存 (上流 + 下流 全 21 件、import cycle 回避、`huffman-sorry-migration-plan.md`
+判断ログ #2-#4) するが、false premise を渡す形なので vacuously-true wrapper、genuine closure は
+cost-level identity への pivot 完遂時 (`huffman-strong-form-completion`)。
 
-@audit:retract-candidate(load-bearing-predicate) — `HuffmanWalls.huffman_merged_identification_hypothesis_holds`
-が wall lemma として false-statement で discharge 不能
-(`@audit:defect(false-statement)`)。本 predicate を hypothesis に取る wrapper 群
-(上流 + 下流 全 21 件) は signature 不変で hypothesis 形のまま残存 (import cycle 回避、
-`huffman-sorry-migration-plan.md` 判断ログ #2-#4)。 -/
+@audit:defect(false-statement) @audit:retract-candidate(false-hypothesis) @audit:closed-by-successor(huffman-strong-form-completion) -/
 abbrev HuffmanMergedIdentificationHypothesis : Prop :=
   ∀ {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]

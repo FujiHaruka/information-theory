@@ -173,10 +173,14 @@ theorem expectedLength_perm_invariant_when_l_eq
 /-- **hypothesis combined as conjunction**: 2 hypothesis を `And` で 1 つの命題に結合
 した form. 後続 client で `h.1, h.2` で取り出せる.
 
-@audit:retract-candidate(load-bearing-predicate) — `HuffmanWalls.huffman_combined_hypothesis_holds`
-が constructive composition で discharge 済 (Hyp1 constructive + Hyp2 wall sorry の transitive)。
-consumer wrapper (`huffmanLength_optimal_with_combined` / `_terminal` ほか) が hypothesis
-形のまま残るため predicate も併存。 -/
+independent audit (2026-05-30): 第 2 conjunct `HuffmanMergedIdentificationHypothesis` が
+機械検証可能に FALSE (反例独立再現済) のため、本 conjunction (∧) も **universally false**。
+`HuffmanWalls.huffman_combined_hypothesis_holds` は transitively false-premised wall
+(`@audit:defect(false-statement)`)。retract reason は `load-bearing-predicate` ではなく正規 vocab
+`false-hypothesis` に確定 (conjunction の片側が false-statement なので全体が false)。consumer
+wrapper (`huffmanLength_optimal_with_combined` / `_terminal` ほか) は hypothesis 形のまま残るが
+false premise を渡す vacuously-true wrapper。closure は cost-level pivot 完遂時。
+@audit:defect(false-statement) @audit:retract-candidate(false-hypothesis) @audit:closed-by-successor(huffman-strong-form-completion) -/
 abbrev HuffmanCombinedHypothesis : Prop :=
   SwapNormalizationHypothesis.{u} ∧ HuffmanMergedIdentificationHypothesis.{u}
 
