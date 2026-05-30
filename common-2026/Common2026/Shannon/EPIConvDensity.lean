@@ -172,7 +172,18 @@ plus three genuine regularity preconditions:
 These three are **honest regularity preconditions**, NOT load-bearing: the
 differentiability of `convDensityAdd` is *derived* via the gateway, not assumed.
 The Gaussian instance satisfies all three (1-line confirmation in docstring of
-each `have`). -/
+each `have`).
+
+Independent audit 2026-05-30: the 3 added hyps are per-factor regularity
+(`Integrable fX` / `|fY|≤M` / `|deriv fY|≤M`) on `fX`/`fY` individually, NOT on
+the convolution; none has `HasDerivAt`/`Differentiable (convDensityAdd …)` type,
+so no circularity. core-reconstruction test: granting all 5 hyps does not hand
+the differentiability — it is constructed via the gateway `convDensityAdd_hasDerivAt`
+(itself `@audit:ok`) inside the body. Gaussian witnesses are non-vacuous
+(smooth+positive+tail→0 ⇒ `IsRegularDensityV2`; PDF bounded; `deriv = poly×Gaussian`
+bounded; PDF integrable). `#print axioms` = [propext, Classical.choice, Quot.sound]
+(sorryAx-free, machine-checked). 0 sorry / 0 @residual.
+@audit:ok -/
 theorem convDensityAdd_hasDerivAt_of_regular (fX fY : ℝ → ℝ) (z₀ : ℝ)
     (hregX : Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fX)
     (hregY : Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fY)
