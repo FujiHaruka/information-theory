@@ -180,10 +180,14 @@ Hyp1 (swap normalization) は `swap_normalization_proof` で無条件に genuine
 `HuffmanWalls.lean → HuffmanStrongForm.lean` の import chain で循環するため signature 不変
 (`huffman-sorry-migration-plan.md` 判断ログ #3 L-MIG-4 拡張発動)。consumer 側で
 `HuffmanWalls.merged_huffman_aux_ident_hypothesis_holds` を渡せば transitive に閉じる。
-genuine discharge は後続 plan `huffman-strong-form-completion-plan` で予定 (`huffmanStep` の
-`Classical.choose` 非決定性 / min 選択の tie 破り / carrier 横断対応の judgement log #3)。
+**Superseded (2026-05-30)**: cost-level pivot (`huffman-cost-level-optimality`) で帰納核から
+`h_aux`/`h_ident` 依存を除去した無引数 genuine 後継 `huffmanLength_optimal` (本 file:225、
+`@audit:ok`、`#print axioms` sorryAx 非依存) が同結論を hypothesis なしで与える。本 wrapper は
+body に実 sorry を持たず FALSE `h_aux` (`MergedHuffmanAuxIdentHypothesis`) を load-bearing
+hypothesis として取るだけなので、`@residual(plan:...)` が指す closure 対象の sorry は存在しない
+(旧 `@residual` を撤回)。weak-form API 後方互換のため残置。
 
-@residual(plan:huffman-strong-form-completion) -/
+@audit:superseded-by(huffmanLength_optimal) -/
 @[entry_point]
 theorem huffmanLength_optimal_modulo_aux_ident
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]

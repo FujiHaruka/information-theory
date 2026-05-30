@@ -22,9 +22,10 @@ Section F–I は **genuine に実装済** (無条件 relabel cornerstone `huffm
 旧 `huffmanLengthAux_relabel` の NodupChain 前提を除去した版)。carrier-embedding が
 **colex 保存 (StrictMono)** なら relabel と決定的 min 選択は無条件可換、を機械検証で確立。
 
-Section J (collapse correspondence `collapseLabel_huffmanLengthAux`) は **FALSE statement** と
-判明 (2026-05-30、機械的反例で refute、`@audit:defect(false-statement)`)。per-symbol collapse は
-dead-end で、consumer 設計の pivot が必要 (Section J 末尾 docstring 参照)。
+旧 Section J (collapse correspondence `collapseLabel_huffmanLengthAux`) は **FALSE statement** と
+判明 (2026-05-30、機械的反例で refute) し、cost-level pivot (`huffman-cost-level-optimality`) で
+headline が genuine 化したため **削除済** (term-level consumer 0 件、dead artifact)。per-symbol
+collapse path 自体が dead-end であった旨は git history に保存。
 -/
 
 namespace InformationTheory.Shannon.Huffman
@@ -267,97 +268,5 @@ lemma huffmanLengthAux_relabel_det {γ : Type*} [DecidableEq γ] [LinearOrder γ
       have hc1' : (relabelMultiset e s).card ≤ 1 := by rw [relabelMultiset_card]; exact hc1
       rw [huffmanLengthAux_eq_zero (relabelMultiset e s) hc1' hg',
         huffmanLengthAux_eq_zero s hc1 hg]
-
-/-! ### Section J — 残タスク (honest, load-bearing): collapse correspondence
-
-`huffmanLengthAux_relabel_det` (Section I) は決定化が unlock した **無条件 genuine** な
-relabel 不変量で、`HuffmanMergedAuxIdent.lean` の旧 no-ties (`NodupChain`) 機構を
-完全に置き換える。これにより Section E の障害 (ii) (NodupChain 不成立) と
-(iii) (per-symbol invariance 偽) は **解消** された (両 carrier の決定的 min は colex で
-常に一意、relabel と無条件可換)。
-
-**しかし `MergedHuffmanAuxIdentHypothesis` の完全 discharge には、なお 1 つの genuine な
-構造補題 (collapse correspondence) が残る。** これは determinization では自動的に閉じない。
-具体的に:
-
-`relabelMultiset (subtypeNeEmbedding b) (mergedInitMultiset Q a b)` (β carrier 上) は
-`initMultiset Q` の最初の決定的 merge 後の残木 `s''_β` と **1 group だけ** 異なる:
-mergedInit 側は absorbing leaf が singleton `({a}, Q{a}+Q{b})`、`s''_β` 側は card-2 group
-`({a,b}, Q{a}+Q{b})`。確率は同一だが colex が異なる
-(`toColex {a} < toColex {a,b}`、`{a} ⊂ {a,b}` より strict)。
-
-**collapse 補題**: `huffmanLengthAux` は、ある group の Finset-label `{a}` を `{a,b}`
-(同確率、`b` は他に現れない fresh element) に拡張しても、`b` 以外の leaf の値を保つ:
-`huffmanLengthAux (({a},p) ::ₘ rest) z = huffmanLengthAux (({a,b},p) ::ₘ rest) z`  (`z ≠ b`).
-
-merge **order** は equal-probability tie 下で colex tie-break が両木間で食い違いうるため、
-naive な lockstep 帰納では閉じない。**2026-05-30 追記**: さらに精査した結果、下記
-`collapseLabel_huffmanLengthAux` の per-symbol collapse statement は単に hard なのではなく
-**FALSE** (`z ≠ a, b` でも機械的反例あり) と判明 (`@audit:defect(false-statement)`)。
-label `{a}→{a,b}` の colex 変化が `b` を含まない group の tie-break をずらすため。
-consumer 設計は per-symbol collapse を捨て length-multiset / leaf-merge reduction へ
-pivot が必要。詳細は下記 `collapseLabel_huffmanLengthAux` docstring を参照。 -/
-
-variable [DecidableEq α]
-
-omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
-/-- **collapse correspondence — この statement は FALSE (2026-05-30、機械的反例で refute)**.
-
-当初の意図: ある group の Finset-label を singleton `{a}` から card-2 `{a,b}` (同確率 `p`、
-`b` は fresh element) に拡張しても `huffmanLengthAux` は `b` 以外の leaf 上で不変、
-`huffmanLengthAux (({a,b},p) ::ₘ rest) z = huffmanLengthAux (({a},p) ::ₘ rest) z`  (`z ≠ b`)。
-
-**しかしこれは偽** (`z ≠ a` かつ `z ≠ b` でも反例あり、consumer に致命的)。判断ログ #3 の
-「tie-order 独立 invariant が要る (~150-250 行、true-but-hard)」という診断は **誤り** で、
-壁ではなく FALSE statement だった (= Mathlib wall misuse、tier 5)。根因: 決定化された
-`huffmanStep` は `groupKey = (prob, toColex label)` で tie-break するが、label を `{a}` から
-`{a,b}` に拡げると **colex が変わる** ため、同確率 group との tie-break 選択順が `b` を含まない
-group に対しても変わり、それらの leaf の depth が動く。
-
-**機械的反例** (hand-verified、`groupKey` の colex tie-break を直接追跡):
-`α` 上で `a=1, b=6` (`a < b`)、特殊 group prob `p = 4`、
-`rest = {({0},4),({2},4),({3},3),({4},6),({5},3)}` (全 singleton、`b=6` は出現しない)。
-- `S₁ = ({1},4) ::ₘ rest` の決定的 merge 列: `[3]+[5]→[0]+[1]→[2]+[4]→…` ⇒ `depth(2) = 2`。
-- `S₂ = ({1,6},4) ::ₘ rest` の決定的 merge 列: `[3]+[5]→[0]+[2]→[1,6]+[4]→…` ⇒ `depth(2) = 3`。
-prob-4 の 3 singleton `{0},{1},{2}` (と `{1,6}`) の tie で、`S₁` は colex 順 `{0}<{1}<{2}` から
-`{0}+{1}` を選ぶが、`S₂` では `{1,6}` の colex が `{2}` より大 (`6 > 2`) になり `{0}+{2}` を選ぶ。
-これが `z=2` (`≠ a, ≠ b`) の depth を `2 → 3` にずらす。consumer の preconditions
-(`a` global-min / `b` rest-min) 下でも反例多数 (84230/2M random trials)。
-
-**consumer への含意**: `MergedHuffmanAuxIdentHypothesis`
-(`HuffmanMergedIdentBody.lean:124`) はこの collapse を経由する素朴な reduction では
-**閉じない**。consumer は `_h_sibling : huffmanLength Q a = huffmanLength Q b` を持つが、
-それは un-merged tree `Q` 上の性質で、本 collapse (= `S₁`/`S₂` 上の per-symbol 等式) を
-直接救わない。次セッションは「label collapse の per-symbol invariance」ではなく、Cover-Thomas
-5.8.1 本来の reduction (merged tree の最適性を leaf-merge の逆操作で持ち上げる、あるいは
-確率 multiset 同一性から得る length-multiset / 期待長レベルの不変量) に設計を切り替える
-必要がある。per-symbol collapse path は dead-end。
-
-`sorry` は FALSE statement を proof body に置いており、正当な未完成マーカーではなく defect。
-proof done には到達不能 (statement が偽)。signature を refutable な形に直す or consumer 設計を
-pivot するのは別 task。
-
-独立 honesty audit (2026-05-30): 反例を groupKey = (prob, toColex label) の決定的
-tie-break で独立に再追跡し confirm。Colex 順は `toColex s < toColex t ↔ (s∆t).max' ∈ t`
-(Mathlib `Colex.toColex_lt_toColex_iff_max'_mem`、max-element 優位) より
-`toColex {2} < toColex {1,6}` (∆={1,2,6}, max=6∈{1,6})。S₁ で z=2 の merge は step 3+5 の
-2 回 (depth 2)、S₂ では label `{1}→{1,6}` が prob-4 tie 順を `{0}<{2}<{1,6}` に変え
-step 2 (0+2) を誘発、z=2 が step 2+4+5 の 3 回 merge (depth 3)。3 ≠ 2 で statement は
-precondition (a global-min 等) 下でも FALSE。`false_statement` (tier 5) 分類は妥当、旧
-判断ログ #3 の「tie-order 独立 invariant の壁 (true-but-hard)」診断は誤り
-(huffmanLengthAux depth は colex tie-break order に依存 = tie-order 独立でない)。
-term-level consumer 0 件 (declaration + 同 file docstring 言及のみ)、偽 foundation の
-伝播ゼロを確認。
-@audit:defect(false-statement) @audit:retract-candidate(false-statement)
-@audit:closed-by-successor(huffman-strong-form-completion) -/
-lemma collapseLabel_huffmanLengthAux
-    (rest : Multiset (Finset α × ℝ)) (a b : α) (p : ℝ) (ha_ne_b : a ≠ b)
-    (hb_fresh : ∀ g ∈ rest, b ∉ g.1)
-    (hg : HuffmanGrouping (({a}, p) ::ₘ rest))
-    (hg' : HuffmanGrouping (({a, b}, p) ::ₘ rest))
-    (z : α) (hz : z ≠ b) :
-    huffmanLengthAux (({a, b}, p) ::ₘ rest) z
-      = huffmanLengthAux (({a}, p) ::ₘ rest) z := by
-  sorry
 
 end InformationTheory.Shannon.Huffman

@@ -127,7 +127,7 @@ independent audit (2026-05-30): 反例独立再現 (script 再実行 + 手計算
 (`HuffmanWalls.merged_huffman_aux_ident_hypothesis_holds`) と整合する `false-hypothesis` reason に統一
 (旧 `load-bearing-predicate` は「true だが closure 待ち」を含意するため不正確)。closure 責任は後続
 plan `huffman-strong-form-completion` (consumer 設計を cost-level identity に pivot)。
-@audit:defect(false-statement) @audit:retract-candidate(false-hypothesis) @audit:closed-by-successor(huffman-strong-form-completion) -/
+@audit:defect(false-statement) @audit:retract-candidate(false-hypothesis) @audit:closed-by-successor(huffman-cost-level-optimality) -/
 abbrev MergedHuffmanAuxIdentHypothesis : Prop :=
   ∀ {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]

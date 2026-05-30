@@ -780,9 +780,9 @@ hypothesis として渡る形だが、predicate **自身が機械検証可能に
 の `@audit:defect(false-statement)`) と整合する `false-hypothesis` reason に確定。consumer は
 hypothesis 形のまま残存 (上流 + 下流 全 21 件、import cycle 回避、`huffman-sorry-migration-plan.md`
 判断ログ #2-#4) するが、false premise を渡す形なので vacuously-true wrapper、genuine closure は
-cost-level identity への pivot 完遂時 (`huffman-strong-form-completion`)。
+cost-level identity への pivot 完遂時 (`huffman-cost-level-optimality`)。
 
-@audit:defect(false-statement) @audit:retract-candidate(false-hypothesis) @audit:closed-by-successor(huffman-strong-form-completion) -/
+@audit:defect(false-statement) @audit:retract-candidate(false-hypothesis) @audit:closed-by-successor(huffman-cost-level-optimality) -/
 abbrev HuffmanMergedIdentificationHypothesis : Prop :=
   ∀ {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -808,10 +808,16 @@ explicit, allowing `Nat.strong_induction_on` on `n` with `generalizing α P l`.
 を呼び出す形に書換べきだが、`HuffmanWalls.lean → HuffmanStrongForm.lean → HuffmanOptimality.lean`
 の import chain で循環するため signature 不変・body 不変 (`huffman-sorry-migration-plan.md`
 判断ログ #2 L-MIG-4 発動)。本宣言は top-most weak-form API として hypothesis を引数で受け取り
-続ける = consumer 側で `HuffmanWalls` の wall lemma を渡せば transitive に閉じる。完全 honest
-化は後続 plan `huffman-2hyp-vertical-reduction-plan` 完遂時に signature 改変 patch と同時。
+続ける = consumer 側で `HuffmanWalls` の wall lemma を渡せば transitive に閉じる。
 
-@residual(plan:huffman-2hyp-vertical-reduction) -/
+**Superseded (2026-05-30)**: cost-level pivot (`huffman-cost-level-optimality`) で帰納核から
+`h_ident` 依存を除去した genuine 後継 `huffmanLength_optimal_aux` (本 file:1259、`@audit:ok`、
+`#print axioms` sorryAx 非依存) が同結論を FALSE predicate 非経由で与える。本 motor は body に
+実 sorry を持たず FALSE `h_ident` を load-bearing hypothesis として thread するだけ (line 1040) で
+あり、`@residual(plan:...)` が指す closure 対象の sorry は存在しない (旧 `@residual` を撤回)。
+weak-form API 後方互換のため宣言は残置。
+
+@audit:superseded-by(huffmanLength_optimal_aux) -/
 private theorem huffmanLength_optimal_aux_with_hypotheses (n : ℕ)
     (h_swap : SwapNormalizationHypothesis.{u})
     (h_ident : HuffmanMergedIdentificationHypothesis.{u})
@@ -1452,7 +1458,13 @@ discharge は後継 seed `T1-A''` で予定.
 docstring 参照)。consumer は `HuffmanWalls.swap_normalization_hypothesis_holds` /
 `huffman_merged_identification_hypothesis_holds` を渡せば transitive に閉じる。
 
-@residual(plan:huffman-2hyp-vertical-reduction) -/
+**Superseded (2026-05-30)**: 無引数 genuine 後継 `huffmanLength_optimal`
+(`HuffmanStrongForm.lean`、`@audit:ok`) が同結論を hypothesis なしで与える。本 wrapper は body に
+実 sorry を持たず FALSE `h_ident` (`HuffmanMergedIdentificationHypothesis`) を hypothesis として
+取るだけなので、`@residual(plan:...)` が指す closure 対象の sorry は存在しない (旧 `@residual` を
+撤回)。weak-form API 後方互換のため残置。
+
+@audit:superseded-by(huffmanLength_optimal) -/
 theorem huffmanLength_optimal_with_hypotheses
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
