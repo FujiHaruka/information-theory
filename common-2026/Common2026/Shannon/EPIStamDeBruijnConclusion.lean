@@ -21,12 +21,12 @@ The EPI proof pieces have been progressively discharged across waves:
 * **Stam inequality** (Cover-Thomas Lemma 17.7.2). Step 4 (λ-optimization closed
   form `J_sum ≤ J_X J_Y / (J_X + J_Y)`) is *fully arithmetic* and discharged in
   `EPIStamInequalityBody.lean` (`stam_lambda_min`, `stam_lambda_lower_bound`,
-  `stam_inverse_form_of_harmonic_mean`). Steps 1–3 are split into two
-  genuinely-primitive predicates: the Blachman convolution-score representation
-  `IsStamScoreConvolution` (Step 1) and the total-expectation cross-term-drop
-  `IsStamTotalExpectation` (Step 3, the integration-by-parts content). The chain
-  `isStamInequalityHyp_via_step3` discharges `IsStamInequalityHyp` from those two
-  primitives (Steps 2 and 4 being arithmetic).
+  `stam_inverse_form_of_harmonic_mean`). The genuine Step 2-3 analytic core (the
+  conditional Cauchy-Schwarz + convex Fisher bound) is localized to the single
+  shared sorry lemma `EPIStamInequalityBody.stam_step2_density_wall`
+  (`@residual(wall:stam-step2-density)`, regularity preconditions only). The chain
+  `isStamInequalityHyp_via_step3` discharges `IsStamInequalityHyp` from regularity
+  alone via that shared wall.
 * **de Bruijn identity** (V2). `deBruijn_identity_v2` gives, from
   `IsRegularDeBruijnHypV2`, the heat-flow derivative
   `(d/dt) h(X + √t · Z) = (1/2) · J(g_t)`, with the Gaussian case
@@ -40,55 +40,46 @@ remaining hypothesis to the genuinely-irreducible primitives.
 
 The Wave-7 `IsEPIScalingDecomposedPipeline` (`EPIStamToBridge.lean`) decomposed
 the bridge into `scaling`/`limit`, but its `stam` field was a *black-box*
-`IsStamInequalityHyp`. We refine this two ways:
+`IsStamInequalityHyp`. This file wires the discharged pieces two ways:
 
-1. **Stam from genuine primitives** (§2). Replace the black-box `stam` field by
-   the two genuine Stam primitives `IsStamScoreConvolution` (Step 1, Blachman) +
-   `IsStamTotalExpectation` (Step 3, IBP/cross-term). `IsStamInequalityHyp` is
-   then *derived*, not assumed — the arithmetic Steps 2 and 4 are discharged.
+1. **Stam from regularity via the shared wall** (§2). The genuine Step 2-3
+   analytic core is localized to the shared sorry lemma `stam_step2_density_wall`
+   (`@residual(wall:stam-step2-density)`); `isStamInequalityHyp_of_primitives`
+   derives `IsStamInequalityHyp` from regularity preconditions alone (no
+   load-bearing analytic hypothesis). The earlier design carried this content as
+   load-bearing predicates (`IsStamScoreConvolution` + `IsStamTotalExpectation`
+   bundled in the `IsEPIStamDeBruijnPipeline` structure); those were removed in
+   the wall-consolidation pass (`epi-stam-wall-consolidation-plan`) as an isolated
+   island with zero cross-file consumers.
 2. **de Bruijn gap-monotonicity engine** (§1, §6). The de Bruijn derivative
    `g'(t) = (1/2) · J(g_t)` is `≥ 0` because Fisher information is non-negative
    (`fisherInfoOfDensityReal_nonneg`). This is the *genuine* monotonicity content
    that makes the EPI gap monotone along the heat-flow scaling path — we discharge
    `g'(t) ≥ 0` outright from the de Bruijn V2 witness.
 
-The refined pipeline `IsEPIStamDeBruijnPipeline` (§3) bundles only the
-genuinely-irreducible Stam primitives (Step 1 Blachman + Step 3 IBP); the
-Stam→EPI bridge is no longer a pipeline field (it was vestigial once the
-monolithic pipeline stopped reading it, and is discharged internally by consumers
-via `stamToEPIBridge_holds`). The pipeline reduces to the monolithic
-`IsEPIL3IntegratedPipeline`, and lands the EPI conclusion (§4). The genuine Gaussian EPI (§5) is obtained directly from Gaussian
-saturation (`entropy_power_inequality_gaussian_full'`), with no Stam claim. (The
-former Gaussian *pipeline* discharge routed the Stam half through the buggy V1
-Fisher-info-zero artefact and was removed — see §5, RESOLVED 2026-05-20.)
+The EPI conclusion (§3) is landed from regularity by deriving the Stam inequality
+from the shared wall and feeding it through the monolithic
+`IsEPIL3IntegratedPipeline`. The genuine Gaussian EPI (§5) is obtained directly
+from Gaussian saturation (`entropy_power_inequality_gaussian_full'`), with no Stam
+claim. (The former Gaussian *pipeline* discharge routed the Stam half through the
+buggy V1 Fisher-info-zero artefact and was removed — see §5, RESOLVED 2026-05-20.)
 
-## Genuinely-irreducible primitives remaining
+## Genuine residual remaining
 
-After this assembly the EPI conclusion reduces to the two genuine Stam-wall
-primitives carried by `IsEPIStamDeBruijnPipeline`:
-
-* `IsStamScoreConvolution` — Blachman score-of-convolution identity (Step 1).
-* `IsStamTotalExpectation` — total-expectation cross-term orthogonality (Step 3,
-  the integration-by-parts step; Cover-Thomas 17.7.2's deepest analytic content).
-
-The Stam→EPI bridge (`IsStamToEPIBridgeHyp`, Csiszár scaling-path coupling,
-Lemma 17.7.3) is **no longer a pipeline primitive** — once the monolithic
-`IsEPIL3IntegratedPipeline` stopped reading a bridge field it became vestigial,
-and the bridge is now discharged internally by consumers via the shared sorry
-lemma `stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`).
-
-These are genuine analytic primitives (not `True` placeholders, not defeq no-ops);
-the arithmetic of Steps 2 and 4 and the de Bruijn derivative sign are discharged
-internally here.
+After this assembly the EPI conclusion reduces to the **single shared Stam-wall
+sorry** `stam_step2_density_wall` (`@residual(wall:stam-step2-density)`,
+`EPIStamInequalityBody.lean`): the conditional Cauchy-Schwarz + convex Fisher
+bound (Cover-Thomas 17.7.2's deepest analytic content). The Stam→EPI bridge
+(`IsStamToEPIBridgeHyp`, Csiszár scaling-path coupling, Lemma 17.7.3) is
+discharged internally by consumers via the shared sorry lemma
+`stamToEPIBridge_holds`.
 
 ## Key signatures
 
 * `IsEPIGapMonotoneHyp` — de Bruijn gap-monotonicity sub-predicate (§1)
 * `deBruijn_deriv_nonneg` / `isEPIGapMonotoneHyp_of_deBruijnV2` — `g'(t) ≥ 0` (§1)
-* `isStamInequalityHyp_of_primitives` — Stam from Step 1 + Step 3 (§2)
-* `IsEPIStamDeBruijnPipeline` — refined pipeline (§3)
-* `isEPIL3IntegratedPipeline_of_stamDeBruijn` — reduction to monolithic (§3)
-* `entropy_power_inequality_via_stamDeBruijn` — main EPI (§4)
+* `isStamInequalityHyp_of_primitives` — Stam from regularity via shared wall (§2)
+* `entropy_power_inequality_via_stamDeBruijn` — main EPI from regularity (§3)
 * `entropy_power_inequality_gaussian_full'` — genuine Gaussian EPI via saturation (§5)
 * `deBruijn_gap_deriv_nonneg_gaussian` — composed Gaussian gap monotonicity (§6)
 -/
@@ -152,105 +143,65 @@ theorem isEPIGapMonotoneHyp_of_deBruijnV2
     IsEPIGapMonotoneHyp h_reg.density_t :=
   isEPIGapMonotoneHyp_discharge h_reg.density_t
 
-/-! ## §2 — Stam inequality from genuine primitives (Step 1 + Step 3) -/
+/-! ## §2 — Stam inequality from regularity (via shared wall) -/
 
-/-- **Stam inequality from the two genuine primitives** (Step 1 + Step 3).
+/-- **Stam inequality from regularity preconditions** (via the shared wall).
 
-Replaces the black-box `IsStamInequalityHyp` assumption by the two
-genuinely-irreducible Stam primitives: the Blachman convolution-score identity
-(`IsStamScoreConvolution`, Step 1) and the total-expectation cross-term-drop
-(`IsStamTotalExpectation`, Step 3, the IBP content). Steps 2 and 4 are discharged
-arithmetically (`isStamInequalityHyp_via_step3`).
+Produces the genuine `IsStamInequalityHyp` from measurability / independence /
+probability measure alone, delegating the genuine Step 2-3 analytic core to the
+shared sorry wall lemma `stam_step2_density_wall`
+(`@residual(wall:stam-step2-density)`) via `isStamInequalityHyp_via_step3`.
 
-`@audit:retract-candidate(load-bearing-predicate)` — chains two Stam-wall
-predicates (`IsStamScoreConvolution`, `IsStamTotalExpectation`) into the
-`IsStamInequalityHyp` predicate. The Stam wall itself is the closure target
-of separate `wall:stam` discharge plans (`EPIStamStep3Body.lean` chain); this
-wrapper is a load-bearing pass-through for that chain. -/
+This replaces the former load-bearing version that chained two Stam-wall
+predicates (`IsStamScoreConvolution`, `IsStamTotalExpectation`); those predicates
+were removed in the wall-consolidation pass. The signature now carries **no**
+load-bearing analytic hypothesis.
+
+This wrapper is **not** proof done: it consumes the shared sorry wall and so
+depends transitively on `sorryAx`. The genuine residual lives in that wall.
+
+@residual(wall:stam-step2-density) -/
 @[entry_point]
 theorem isStamInequalityHyp_of_primitives
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h_conv : IsStamScoreConvolution X Y P)
-    (h_te : IsStamTotalExpectation X Y P) :
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (P : Measure Ω) [IsProbabilityMeasure P]
+    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P) :
     IsStamInequalityHyp X Y P :=
-  isStamInequalityHyp_via_step3 h_conv h_te
+  isStamInequalityHyp_via_step3 P X Y hX hY hXY
 
-/-! ## §3 — Refined pipeline: only genuine primitives -/
+/-! ## §3 — Main EPI from regularity (via shared wall)
 
-/-- **Refined EPI conclusion-assembly pipeline**.
+The former refined pipeline `IsEPIStamDeBruijnPipeline` (a structure bundling the
+load-bearing `IsStamScoreConvolution` + `IsStamTotalExpectation` predicates) and
+its operation helpers (`isStamInequalityHyp_of_stamDeBruijn`,
+`isEPIL3IntegratedPipeline_of_stamDeBruijn`, `entropy_power_inequality_via_stamDeBruijn`,
+`isEPIStamDeBruijnPipeline_of_primitives`, `_symm`, `_congr`, `_roundtrip`) were
+removed in the wall-consolidation pass. They were an isolated island (zero
+cross-file consumers; the public main theorem `entropy_power_inequality` runs via
+`EPIStamToBridge.entropy_power_inequality_unconditional`), and their load-bearing
+predicate content is now localized to the shared `stam_step2_density_wall`. -/
 
-Refines `IsEPIL3IntegratedPipeline` (`EPIL3Integration.lean`) by replacing the
-black-box `stam : IsStamInequalityHyp` field with the **two genuine Stam
-primitives** (Step 1 Blachman + Step 3 IBP). The Stam inequality is *derived* via
-`isStamInequalityHyp_of_primitives`, not assumed. -/
-structure IsEPIStamDeBruijnPipeline {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω) : Prop where
-  /-- Step 1: Blachman convolution-score representation. -/
-  convScore : IsStamScoreConvolution X Y P
-  /-- Step 3: total-expectation cross-term-drop (the IBP step). -/
-  totalExp : IsStamTotalExpectation X Y P
+/-- **EPI conclusion from regularity preconditions** (via the shared wall).
 
-/-- **Derive the Stam inequality** from the refined pipeline.
+Produces the EPI conclusion from measurability / independence / probability
+measure alone, deriving the Stam inequality via the shared wall and feeding it
+through the integrated pipeline. Carries **no** load-bearing analytic hypothesis.
 
-`@audit:retract-candidate(load-bearing-predicate)` — `IsEPIStamDeBruijnPipeline`
-is a refined pipeline whose `convScore`/`totalExp` fields are Stam-wall
-predicates; this extraction is a pass-through. The genuine alternative
-(Phase A `entropy_power_inequality_unconditional`) bypasses the pipeline
-entirely. -/
-theorem isStamInequalityHyp_of_stamDeBruijn
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h : IsEPIStamDeBruijnPipeline X Y P) :
-    IsStamInequalityHyp X Y P :=
-  isStamInequalityHyp_of_primitives h.convScore h.totalExp
+This wrapper is **not** proof done: it consumes the shared sorry wall
+`stam_step2_density_wall` (transitively, via `isStamInequalityHyp_of_primitives`)
+and so depends transitively on `sorryAx`. The genuine residual lives in that wall.
 
-/-- **Reduce the refined pipeline to the monolithic `IsEPIL3IntegratedPipeline`**.
-The Stam field is supplied by deriving it from the genuine primitives.
-
-After the Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`,
-route L-EPISC-3-α) `IsEPIL3IntegratedPipeline` carries only its `stam` field; its
-former load-bearing `bridge` field was removed and is now discharged internally
-by consumers via `stamToEPIBridge_holds`. `IsEPIStamDeBruijnPipeline`'s own former
-load-bearing `bridge` field was likewise removed (it was vestigial once the
-monolithic pipeline stopped reading it); this adapter therefore supplies only the
-`stam` field, derived from the two genuine Stam primitives. -/
-theorem isEPIL3IntegratedPipeline_of_stamDeBruijn
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h : IsEPIStamDeBruijnPipeline X Y P) :
-    IsEPIL3IntegratedPipeline X Y P where
-  stam := isStamInequalityHyp_of_stamDeBruijn h
-
-/-! ## §4 — Main EPI via the refined pipeline -/
-
-/-- **EPI conclusion via the refined Stam + de Bruijn pipeline** (the main
-deliverable). Single hypothesis is the refined pipeline, which bundles only the
-genuinely-irreducible primitives.
-
-`@audit:retract-candidate(load-bearing-predicate)` — load-bearing pipeline
-wrapper superseded by Phase A's hypothesis-free alternative
-`EPIStamToBridge.entropy_power_inequality_unconditional`. -/
+@residual(wall:stam-step2-density) -/
 theorem entropy_power_inequality_via_stamDeBruijn
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (hXY : IndepFun X Y P)
-    (h : IsEPIStamDeBruijnPipeline X Y P) :
+    (hXY : IndepFun X Y P) :
     entropyPower (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
-  have h_int := isEPIL3IntegratedPipeline_of_stamDeBruijn h
+  have h_int : IsEPIL3IntegratedPipeline X Y P :=
+    { stam := isStamInequalityHyp_of_primitives P X Y hX hY hXY }
   exact entropy_power_inequality_integrated P X Y hX hY hXY h_int
-
-/-- **Refined pipeline from the two genuine primitives directly**. -/
-theorem isEPIStamDeBruijnPipeline_of_primitives
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h_conv : IsStamScoreConvolution X Y P)
-    (h_te : IsStamTotalExpectation X Y P) :
-    IsEPIStamDeBruijnPipeline X Y P where
-  convScore := h_conv
-  totalExp := h_te
 
 /-! ## §5 — Gaussian EPI (genuine, via saturation)
 
@@ -307,41 +258,10 @@ predicate for the density witness. -/
 theorem isEPIGapMonotoneHyp_of_density (f : ℝ → ℝ) : IsEPIGapMonotoneHyp f :=
   isEPIGapMonotoneHyp_discharge f
 
-/-! ## §7 — Predicate manipulation + sanity checks -/
+/-! ## §7 — Predicate manipulation + sanity checks
 
-/-- **Refined pipeline symmetry**: `IsEPIStamDeBruijnPipeline X Y P` implies
-`IsEPIStamDeBruijnPipeline Y X P`.
-
-Note: the `convScore` field is rebuilt via `isStamScoreConvolution_symm` (no
-longer `trivial`, since `IsStamScoreConvolution` was upgraded from the W7
-`Prop := True` placeholder to the typed optimal-λ-witness Prop in the
-`epi-stam-discharge-plan` Phase B). -/
-theorem isEPIStamDeBruijnPipeline_symm
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h : IsEPIStamDeBruijnPipeline X Y P) :
-    IsEPIStamDeBruijnPipeline Y X P where
-  convScore := isStamScoreConvolution_symm h.convScore
-  totalExp := isStamTotalExpectation_symm h.totalExp
-
-/-- **Refined pipeline congruence** under function equality. -/
-theorem isEPIStamDeBruijnPipeline_congr
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y X' Y' : Ω → ℝ} {P : Measure Ω}
-    (hX : X = X') (hY : Y = Y')
-    (h : IsEPIStamDeBruijnPipeline X Y P) :
-    IsEPIStamDeBruijnPipeline X' Y' P := by
-  subst hX; subst hY; exact h
-
-/-- **Round-trip**: building the refined pipeline from its two genuine primitives
-and extracting them yields the originals. -/
-theorem stamDeBruijn_pipeline_roundtrip
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h_conv : IsStamScoreConvolution X Y P)
-    (h_te : IsStamTotalExpectation X Y P) :
-    let h := isEPIStamDeBruijnPipeline_of_primitives h_conv h_te
-    h.convScore = h_conv ∧ h.totalExp = h_te :=
-  ⟨rfl, rfl⟩
+The former refined-pipeline manipulation lemmas (`isEPIStamDeBruijnPipeline_symm`,
+`_congr`, `stamDeBruijn_pipeline_roundtrip`) were removed alongside the
+`IsEPIStamDeBruijnPipeline` structure in the wall-consolidation pass. -/
 
 end InformationTheory.Shannon.EPIStamDeBruijnConclusion

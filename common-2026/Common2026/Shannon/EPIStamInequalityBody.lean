@@ -289,15 +289,17 @@ theorem stam_step2_density_wall
 
 /-- **Stam inequality via predicate chain (optimal form)** — actual deliverable.
 
-Given the convolution-score predicate + the optimal Cauchy-Schwarz predicate,
-chain through Step 4 closed form to obtain the inverse-form Stam inequality.
+Given the optimal Cauchy-Schwarz predicate, chain through Step 4 closed form to
+obtain the inverse-form Stam inequality. (The former cosmetic
+`IsStamScoreConvolution` slot was dropped in the wall-consolidation pass: its
+body never used it — it is unconditionally constructible by
+`isStamScoreConvolution_intro` and carried no information.)
 
 `@audit:ok` -/
 @[entry_point]
 theorem stam_inequality_via_predicate_optimal
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
-    (h_conv : IsStamScoreConvolution X Y P)
     (h_cs_opt : IsStamCauchySchwarzOptimal X Y P) :
     ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
       J_X = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
@@ -309,20 +311,22 @@ theorem stam_inequality_via_predicate_optimal
   have h_le := h_cs_opt J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
   exact stam_inverse_form_of_harmonic_mean hJX hJY hJsum h_le
 
-/-- **`IsStamInequalityHyp` from body predicates**. The genuine Stam-inequality
-predicate (Cover-Thomas Lemma 17.7.2 真 signature) follows from the convolution
-+ optimal-CS pair. This is the **bridge from body to plumbing**.
+/-- **`IsStamInequalityHyp` from body predicate**. The genuine Stam-inequality
+predicate (Cover-Thomas Lemma 17.7.2 真 signature) follows from the optimal-CS
+predicate alone. This is the **bridge from body to plumbing**. (The former
+cosmetic `IsStamScoreConvolution` argument was dropped in the wall-consolidation
+pass — it was unused, unconditionally constructible by
+`isStamScoreConvolution_intro`.)
 
 `@audit:ok` -/
 @[entry_point]
 theorem isStamInequalityHyp_via_body
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
-    (h_conv : IsStamScoreConvolution X Y P)
     (h_cs_opt : IsStamCauchySchwarzOptimal X Y P) :
     IsStamInequalityHyp X Y P := by
   intro J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
-  exact stam_inequality_via_predicate_optimal h_conv h_cs_opt
+  exact stam_inequality_via_predicate_optimal h_cs_opt
     J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
 
 /-! ## §5 — Gaussian saturation discharge -/
@@ -441,10 +445,9 @@ discharged internally by consumers via `stamToEPIBridge_holds`).
 theorem isStamInequalityHyp_via_body_to_pipeline
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
-    (h_conv : IsStamScoreConvolution X Y P)
     (h_cs_opt : IsStamCauchySchwarzOptimal X Y P) :
     InformationTheory.Shannon.EPIL3Integration.IsEPIL3IntegratedPipeline X Y P :=
-  { stam := isStamInequalityHyp_via_body h_conv h_cs_opt }
+  { stam := isStamInequalityHyp_via_body h_cs_opt }
 
 /-- **End-to-end EPI via body discharge** (composes §4 + §6 + EPIL3 pipeline).
 
@@ -482,7 +485,7 @@ theorem entropy_power_inequality_via_body
     entropyPower (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
   have h_cs_opt := stam_step2_density_wall P X Y hX hY hXY
-  have h_stam := isStamInequalityHyp_via_body (isStamScoreConvolution_intro X Y P) h_cs_opt
+  have h_stam := isStamInequalityHyp_via_body h_cs_opt
   exact epi_via_stam_main P X Y X hX hY hXY h_stam h_bridge
 
 /-! ## §11 — Sanity check / regression theorems -/

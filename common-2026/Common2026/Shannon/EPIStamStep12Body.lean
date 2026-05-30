@@ -288,13 +288,11 @@ Composes the typed Step-1/Step-2 predicates with the Wave 7 body bridge
 `isStamInequalityHyp_via_body`, closing the chain from the conditional-CS body
 to the Cover-Thomas Lemma 17.7.2 真 signature `1/J(Z) ≥ 1/J(X) + 1/J(Y)`.
 
-Note: `isStamInequalityHyp_via_body` still takes the published predicate
-`IsStamScoreConvolution X Y P` as a *cosmetic* argument (after the W9 upgrade
-its body is the optimal-λ-witness existence Prop, **unconditionally
-constructible** by `isStamScoreConvolution_intro`). The chain's genuine
-load-bearing input is the typed `h_cs : IsStamCondExpCSHyp X Y P` (Step 2,
-the ∀λ convex Fisher bound). We pass `isStamScoreConvolution_intro X Y P` for
-the cosmetic slot, replacing the former `trivial`-on-`Prop := True`.
+Note: the former cosmetic `IsStamScoreConvolution X Y P` slot on
+`isStamInequalityHyp_via_body` was dropped in the wall-consolidation pass (it
+was unconditionally constructible and unused). The chain's genuine input is the
+typed `h_cs : IsStamCondExpCSHyp X Y P` (Step 2, the ∀λ convex Fisher bound),
+threaded via `stamCauchySchwarzOptimal_of_step12`.
 
 `@audit:ok` -/
 @[entry_point]
@@ -304,7 +302,6 @@ theorem isStamInequalityHyp_of_step12 {Ω : Type*} [MeasurableSpace Ω]
     (h_cs : IsStamCondExpCSHyp X Y P) :
     IsStamInequalityHyp X Y P :=
   isStamInequalityHyp_via_body
-    (isStamScoreConvolution_intro X Y P)
     (stamCauchySchwarzOptimal_of_step12 h_conv h_cs)
 
 /-- **Step 1 + Step 2 ⇒ Wave 7 existential Cauchy-Schwarz** (`IsStamCauchySchwarz`),
