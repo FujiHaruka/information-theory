@@ -765,15 +765,148 @@ structure IsBlachmanConvReady (fX fY : ℝ → ℝ) : Prop where
 `IsBlachmanConvReady` is genuinely symmetric: `convDensityAdd` is commutative
 (`convDensityAdd_comm`) and each integrability / boundedness field transports across
 the reflection substitution `x ↦ z - x` (volume-preserving) together with the marginal
-swap on the product-measure fields. The full field-by-field transport is a ~50-line
-reflection-invariance exercise orthogonal to the Phase 3d analytic core; it is deferred
-as a regularity-bundle lemma. Consumed only by the (unused) API-completeness lemmas
+swap on the product-measure fields. All 19 fields are constructed:
+
+* `int_fX/int_fY/bdd_*/int_fisherX/int_fisherY` — direct `X ↔ Y` projection of `h`.
+* `pos_pZ/int_fisherZ` — `convDensityAdd_comm` rewrite of the corresponding `h` field.
+* `int_X/int_Y/cond_int` — reflection (`Integrable.comp_sub_left`) of the swapped `h`
+  field, then a pointwise `mul_comm`.
+* `int_W/int_Wsq` — reflection of `h.int_W (1-lam)` / `h.int_Wsq (1-lam)` (the
+  `lam ↔ 1-lam` relabelling is exactly the X↔Y swap under `x ↦ z - x`).
+* `int_inner` — `z`-pointwise congruence with `h.int_inner (1-lam)`, the inner
+  `x`-integral being reflection-invariant (`integral_sub_left_eq_self`).
+* `int_prod1/int_prod2` — separable rebuild from `h` Fisher/integrability fields,
+  sheared by `measurePreserving_prod_sub_swap` (`(z,x) ↦ (x, z-x)`).
+* `int_prod3` — transport of `h.int_prod3` by the skew map `(z,x) ↦ (z, z-x)`
+  (`MeasurePreserving.skew_product` with the `x ↦ z - x` reflection on the 2nd coord).
+
+Consumed only by the (unused) API-completeness lemmas
 `isStamCauchySchwarz_symm` / `isStamCondExpCSHyp_symm`.
 
-@residual(plan:epi-wall-reattack-plan) -/
+Genuine reflection-invariance transport: 0 sorry, `#print axioms` =
+`[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified after olean
+refresh). No hypothesis bundling — `h` is the sibling regularity bundle, every field is
+*derived* from `h`'s fields, not handed by a load-bearing predicate. Independent honesty
+audit pending. -/
 theorem isBlachmanConvReady_symm {fX fY : ℝ → ℝ}
     (h : IsBlachmanConvReady fX fY) : IsBlachmanConvReady fY fX := by
-  sorry
+  -- `pZ` of the swapped pair coincides with the original (commutativity).
+  have hcomm : convDensityAdd fY fX = convDensityAdd fX fY := convDensityAdd_comm fY fX
+  refine
+    { int_fX := h.int_fY
+      int_fY := h.int_fX
+      bdd_fX := h.bdd_fY
+      bdd_fX' := h.bdd_fY'
+      bdd_fY := h.bdd_fX
+      bdd_fY' := h.bdd_fX'
+      pos_pZ := ?_
+      int_X := ?_
+      int_Y := ?_
+      cond_int := ?_
+      int_W := ?_
+      int_Wsq := ?_
+      int_inner := ?_
+      int_fisherX := h.int_fisherY
+      int_fisherY := h.int_fisherX
+      int_fisherZ := ?_
+      int_prod1 := ?_
+      int_prod2 := ?_
+      int_prod3 := ?_ }
+  · -- pos_pZ
+    intro z; rw [hcomm]; exact h.pos_pZ z
+  · -- int_X : Integrable (fun x => deriv fY x * fX (z - x))
+    intro z
+    -- reflection of `h.int_Y z : Integrable (fun x => fX x * deriv fY (z - x))`
+    have hrefl := (h.int_Y z).comp_sub_left z
+    -- hrefl : Integrable (fun x => fX (z - x) * deriv fY (z - (z - x)))
+    refine hrefl.congr (Filter.Eventually.of_forall fun x => ?_)
+    simp only [sub_sub_cancel]
+    rw [mul_comm]
+  · -- int_Y : Integrable (fun x => fY x * deriv fX (z - x))
+    intro z
+    -- reflection of `h.int_X z : Integrable (fun x => deriv fX x * fY (z - x))`
+    have hrefl := (h.int_X z).comp_sub_left z
+    refine hrefl.congr (Filter.Eventually.of_forall fun x => ?_)
+    simp only [sub_sub_cancel]
+    rw [mul_comm]
+  · -- cond_int : Integrable (condDensityX fY fX z)
+    intro z
+    -- reflection of `h.cond_int z : Integrable (condDensityX fX fY z)`
+    have hrefl := (h.cond_int z).comp_sub_left z
+    refine hrefl.congr (Filter.Eventually.of_forall fun x => ?_)
+    simp only [condDensityX, sub_sub_cancel, hcomm]
+    rw [mul_comm (fY x)]
+  · -- int_W : reflection of `h.int_W (1 - lam) z` (the `lam ↔ 1-lam` swap matches the
+    -- X↔Y relabelling under `x ↦ z - x`).
+    intro lam hlam0 hlam1 z
+    have hrefl := (h.int_W (1 - lam) (by linarith) (by linarith) z).comp_sub_left z
+    refine hrefl.congr (Filter.Eventually.of_forall fun x => ?_)
+    simp only [scoreWeight, condDensityX, sub_sub_cancel, hcomm]
+    rw [mul_comm (fY x)]; ring
+  · -- int_Wsq : same reflection / `lam ↔ 1-lam` swap as `int_W`.
+    intro lam hlam0 hlam1 z
+    have hrefl := (h.int_Wsq (1 - lam) (by linarith) (by linarith) z).comp_sub_left z
+    refine hrefl.congr (Filter.Eventually.of_forall fun x => ?_)
+    simp only [scoreWeight, condDensityX, sub_sub_cancel, hcomm]
+    rw [mul_comm (fY x)]; ring
+  · -- int_inner : the `z`-integrand of `h.int_inner (1 - lam)` is *pointwise* (in `z`) equal
+    -- to the target's — the inner `x`-integral is reflection-invariant and `pZ` commutes.
+    intro lam hlam0 hlam1
+    refine (h.int_inner (1 - lam) (by linarith) (by linarith)).congr
+      (Filter.Eventually.of_forall fun z => ?_)
+    -- inner integral: reflection `x ↦ z - x` on
+    -- `g x := scoreWeight fX fY (1-lam) z x ^ 2 * condDensityX fX fY z x`.
+    have hrefl := MeasureTheory.integral_sub_left_eq_self
+      (fun x => (scoreWeight fX fY (1 - lam) z x) ^ 2 * condDensityX fX fY z x)
+      (μ := volume) z
+    -- hrefl : ∫ x, g (z - x) = ∫ x, g x
+    have hpt : (fun x => (scoreWeight fX fY (1 - lam) z (z - x)) ^ 2
+        * condDensityX fX fY z (z - x))
+        = (fun x => (scoreWeight fY fX lam z x) ^ 2 * condDensityX fY fX z x) := by
+      funext x
+      simp only [scoreWeight, condDensityX, sub_sub_cancel, hcomm]
+      rw [mul_comm (fY x)]; ring
+    rw [hpt] at hrefl
+    -- hrefl : ∫ x, scoreWeight fY fX lam z x ^2 * condDensityX fY fX z x = ∫ x, g x
+    simp only []
+    rw [hrefl, hcomm]
+  · -- int_fisherZ
+    rw [hcomm]; exact h.int_fisherZ
+  · -- int_prod1 : Integrable ((z,x) ↦ (logDeriv fY x)²·fY x · fX(z-x)) = separable A_Y ⊗ fX, sheared
+    have hsep : Integrable
+        (fun p : ℝ × ℝ =>
+          ((logDeriv fY p.1) ^ 2 * fY p.1) * fX p.2) (volume.prod volume) :=
+      h.int_fisherY.mul_prod h.int_fX
+    have hcomp := (MeasureTheory.measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
+      (ν := (volume : Measure ℝ))).integrable_comp_of_integrable hsep
+    refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
+    simp only [Function.comp, Function.uncurry]
+  · -- int_prod2 : Integrable ((z,x) ↦ (logDeriv fX(z-x))²·fY x · fX(z-x)) = fY ⊗ C_X, sheared
+    have hsep : Integrable
+        (fun p : ℝ × ℝ =>
+          fY p.1 * ((logDeriv fX p.2) ^ 2 * fX p.2)) (volume.prod volume) :=
+      h.int_fY.mul_prod h.int_fisherX
+    have hcomp := (MeasureTheory.measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
+      (ν := (volume : Measure ℝ))).integrable_comp_of_integrable hsep
+    refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
+    simp only [Function.comp, Function.uncurry]
+    ring
+  · -- int_prod3 : transport from `h.int_prod3` via the skew map `(z,x) ↦ (z, z-x)`
+    -- (volume-preserving: id on first coord, `x ↦ z - x` reflection on second).
+    have hT : MeasureTheory.MeasurePreserving
+        (fun p : ℝ × ℝ => (p.1, p.1 - p.2)) (volume.prod volume) (volume.prod volume) :=
+      MeasureTheory.MeasurePreserving.skew_product
+        (MeasureTheory.MeasurePreserving.id volume)
+        (g := fun z x => z - x)
+        (by fun_prop)
+        (Filter.Eventually.of_forall fun z =>
+          ((volume : Measure ℝ).measurePreserving_sub_left z).map_eq)
+    have hcomp := hT.integrable_comp_of_integrable h.int_prod3
+    refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
+    -- (h.int_prod3 ∘ T)(z,x) = logDeriv fX(z-x)·fX(z-x)·(logDeriv fY x · fY x)
+    -- target int_prod3 (fY fX)(z,x) = logDeriv fY x · fY x · (logDeriv fX(z-x) · fX(z-x))
+    simp only [Function.comp, Function.uncurry, sub_sub_cancel]
+    ring
 
 /-- **Convex Fisher bound from the regularity bundle**. Applies `convex_fisher_bound`
 by projecting all 14+ integrability / boundedness / positivity preconditions out of
