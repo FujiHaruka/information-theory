@@ -700,11 +700,12 @@ individually (1:1 mapping verified — see `convex_fisher_bound_of_ready`). The
 assert only **`Integrable (…)`** of the verbatim integrands, NOT the value of any
 integral nor any inequality — identical honesty state to `convex_fisher_bound`'s
 already-`@audit:ok` argument group. No `:True` slot, no circular field, no
-inequality/equality core bundled. CAVEAT: non-vacuousness is NOT yet machine-confirmed
-— no Gaussian (or other) witness `IsBlachmanConvReady` is wired in-tree (`rg` → 0
-constructors), so the predicates carrying this bundle are sound but not yet shown to
-have a proven inhabitant. The Gaussian instance is the non-vacuousness closure
-condition (`epi-wall-reattack-plan`). -/
+inequality/equality core bundled. NON-VACUOUSNESS: a proven Gaussian inhabitant
+`isBlachmanConvReady_gaussianPDFReal` (`EPIBlachmanGaussianWitness.lean`) is now wired
+in-tree with all 19 fields genuine (0 sorry, `#print axioms` → sorryAx-free), so the
+predicates carrying this bundle have a machine-confirmed proven inhabitant. (Witness
+self-reported proof done 2026-05-31, `epi-wall-reattack-plan` Phase 3e; final
+`@audit:ok` / caveat removal pending independent honesty audit confirmation.) -/
 structure IsBlachmanConvReady (fX fY : ℝ → ℝ) : Prop where
   /-- `fX` is Lebesgue-integrable. -/
   int_fX : Integrable fX volume
