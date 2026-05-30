@@ -205,6 +205,19 @@ structure IsRegularDeBruijnHypV2 {Ω : Type*} [MeasurableSpace Ω]
   Z_law : P.map Z = gaussianReal 0 1
   /-- Smooth density witness for `P.map (X + √t · Z)`. -/
   density_t : ℝ → ℝ
+  /-- **Density-pin field (Phase 0 false→true pivot, 2026-05-31)**: the density
+  witness `density_t` is pinned to the *actual* density (Radon–Nikodym derivative
+  w.r.t. `volume`, taken to `ℝ`) of the pushforward `P.map (X + √t · Z)` at the
+  fixed time `t`. Without this pin `density_t` was a free function, so the RHS of
+  `debruijnIdentityV2_holds` was unpinned and the statement was FALSE (the
+  counterexample `density_t := 0` forces RHS `= 0`, contradicting the Gaussian
+  derivative `1/(2(v+t)) ≠ 0` via `HasDerivAt.unique`).
+
+  This is a **regularity precondition** (an external-shape equation
+  `density_t x = (rnDeriv).toReal`), NOT load-bearing: it does not bundle the
+  analytic core (`HasDerivAt` / heat equation / IBP). Same series as `Z_law`. -/
+  density_t_eq : ∀ x,
+    density_t x = ((P.map (gaussianConvolution X Z t)).rnDeriv volume x).toReal
 
 /-! ### Shared sorry 補題 — `debruijnIdentityV2_holds` (genuine wall closure point)
 
@@ -220,38 +233,43 @@ field 削除 foundation の完了点。
 集約 target は **wall:debruijn-integration**。
 -/
 
-/-- **de Bruijn identity body — shared sorry 補題 (wall:debruijn-integration)**.
+/-- **de Bruijn identity body — shared sorry 補題 (plan:epi-debruijn-pertime-closure)**.
 
-Phase 2.B foundation step で `IsRegularDeBruijnHypV2.derivAt_entropy_eq_half_fisher_v2`
-field 削除完了 (commit chain 上、本 lemma の上に乗っていた 1 段 indirection が
-解消された) → 本 lemma が genuine wall closure point に昇格。`h_reg` は
-regularity-only (2 field: `Z_law` + `density_t`) なので、body は
-「regularity から HasDerivAt 結論を導く」 heat eq + dominated bound + IBP の
-Mathlib 不在部に **直接突き当たる**。
+**Phase 0 false→true pivot (2026-05-31, `epi-debruijn-pertime-closure-plan` Phase 0)**:
 
-**Forward-looking note (Phase 2.B 段 1 audit 2026-05-27)**: 本 signature から
-`Measurable X` / `Measurable Z` / `IndepFun X Z P` を syntactically 削除済
-(段 1 で caller `csiszarGap1Source_hasDerivAt` が当該 hypothesis 群を持たない
-ために最小縮小を選択)。これらは sorry の wall content (heat equation + IBP
-on density of `P.map (X + √t Z)`) に **semantic に必要** な regularity hyp
-であり、`IsRegularDeBruijnHypV2` 内に明示 pin もない (`density_t` は unpinned)。
-wall sorry を本気で discharge する段で (a) signature に `_hX` / `_hZ` /
-`_hXZ` を underscore-prefixed args として復元 + caller ripple、または (b)
-`IsRegularDeBruijnHypV2` に `meas_X` / `meas_Z` / `indep_XZ` field を bundle、
-の判断が必要 (CLAUDE.md「load-bearing hypothesis bundling」観点で (a) 推奨)。
-forward-looking 負債、tier 5 defect ではない。
+1. `IsRegularDeBruijnHypV2` に density-pin field `density_t_eq` を追加した
+   (`density_t x = (rnDeriv (P.map (X+√t·Z)) volume x).toReal`)。これにより RHS の
+   `density_t` が当該 pushforward の実 density に pin され、旧 signature の偽性
+   (反例 `density_t := 0` で RHS `= 0` ≠ Gaussian deriv `1/(2(v+t))`) が解消され、
+   命題は **true statement** になった。
+2. wall content (heat eq + IBP on density of `P.map (X + √t Z)`) に semantic 必要な
+   regularity hyp `_hX` / `_hZ` / `_hXZ` を underscore-prefixed args として復元 (Phase
+   2.B 段 1 で削除されていた forward-looking 負債、plan §0-b 案 (a))。
 
-`@residual(wall:debruijn-integration)` -/
+**再分類根拠 (`wall:debruijn-integration` → `plan:epi-debruijn-pertime-closure`)**:
+Wave 1 独立再評価 (inventory §0/§12) で、これは「hard absence」ではなく「big plumbing」と
+確定した。Mathlib API は揃っている — 無限区間 IBP (`integral_mul_deriv_eq_deriv_mul_of_integrable`,
+`IntegralEqImproper.lean:1318`) は PRESENT、parametric diff
+(`hasDerivAt_integral_of_dominated_loc_of_deriv_le`) 完備、rnDeriv↔withDensity 軸
+完備、convolution density (`EPIConvDensity.lean` の `@audit:ok` 資産) 完備。唯一の
+Mathlib 不在は Gaussian heat semigroup closed-form だが density-route で迂回可
+(self-build 見積 ~250 行、Phase 1+ で closure 予定)。Gaussian case は
+`deBruijn_identity_v2_gaussian` で既に genuine。
+
+body は依然 `sorry` (解析核は Phase 1+ の別タスク)。命題は true、tier 2 honest 残課題。
+
+`@residual(plan:epi-debruijn-pertime-closure)` -/
 theorem debruijnIdentityV2_holds
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ)
+    (_hX : Measurable X) (_hZ : Measurable Z) (_hXZ : IndepFun X Z P)
     {t : ℝ} (_ht : 0 < t)
     (h_reg : IsRegularDeBruijnHypV2 X Z P t) :
     HasDerivAt
       (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
       ((1/2) * fisherInfoOfDensityReal h_reg.density_t)
       t := by
-  sorry -- @residual(wall:debruijn-integration)
+  sorry -- @residual(plan:epi-debruijn-pertime-closure)
 
 /-- **de Bruijn identity (V2 form)**, honest pass-through to shared wall lemma.
 
@@ -272,13 +290,14 @@ honest pass-through (regularity hyp `h_reg` → shared wall lemma
 theorem deBruijn_identity_v2
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ)
+    (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
     {t : ℝ} (ht : 0 < t)
     (h_reg : IsRegularDeBruijnHypV2 X Z P t) :
     HasDerivAt
       (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
       ((1/2) * fisherInfoOfDensityReal h_reg.density_t)
       t :=
-  debruijnIdentityV2_holds X Z ht h_reg
+  debruijnIdentityV2_holds X Z hX hZ hXZ ht h_reg
 
 /-! ### Shared sorry 補題 — `debruijnIntegrationIdentity_holds` (積分形, wall:debruijn-integration)
 
@@ -376,7 +395,8 @@ solely via that wall + standard `propext`/`Classical.choice`/`Quot.sound`).
 Verdict honest_residual: local 0 sorry, transitive `wall:debruijn-integration`. -/
 theorem debruijnIntegrationIdentity_holds
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
-    (X Z : Ω → ℝ) (T : ℝ) (hT : 0 ≤ T)
+    (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
+    (T : ℝ) (hT : 0 ≤ T)
     (h_path : IsDeBruijnPathRegular X Z P T) :
     ∃ (fPath : ℝ → ℝ → ℝ),
       ∀ (h_X h_target : ℝ),
@@ -397,7 +417,7 @@ theorem debruijnIntegrationIdentity_holds
   have h_deriv : ∀ t ∈ Set.Ioo (0 : ℝ) T, HasDerivAt f (f' t) t := by
     intro t ht
     obtain ⟨h_reg, h_dens⟩ := h_path.reg_t t ht
-    have h := debruijnIdentityV2_holds X Z ht.1 h_reg
+    have h := debruijnIdentityV2_holds X Z hX hZ hXZ ht.1 h_reg
     -- `h : HasDerivAt f ((1/2) * fisherInfoOfDensityReal h_reg.density_t) t`.
     rw [h_dens] at h
     exact h

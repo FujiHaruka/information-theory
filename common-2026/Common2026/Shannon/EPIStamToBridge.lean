@@ -473,6 +473,9 @@ transitive consumer のため `@residual` は付けない (sorry は wall 補題
 theorem csiszarGap1Source_hasDerivAt
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (_hX : Measurable X) (_hZX : Measurable Z_X) (_hXZX : IndepFun X Z_X P)
+    (_hY : Measurable Y) (_hZY : Measurable Z_Y) (_hYZY : IndepFun Y Z_Y P)
+    (_hXYZXY : IndepFun (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
     (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
                     (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
     (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
@@ -496,14 +499,16 @@ theorem csiszarGap1Source_hasDerivAt
           (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z_X s)))
         ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
           ((h_reg_X.reg_at t ht).density_t)) t :=
-    Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2 X Z_X ht (h_reg_X.reg_at t ht)
+    Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2 X Z_X _hX _hZX _hXZX ht
+      (h_reg_X.reg_at t ht)
   have h_dB_Y :
       HasDerivAt
         (fun s : ℝ => Common2026.Shannon.differentialEntropy
           (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution Y Z_Y s)))
         ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
           ((h_reg_Y.reg_at t ht).density_t)) t :=
-    Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2 Y Z_Y ht (h_reg_Y.reg_at t ht)
+    Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2 Y Z_Y _hY _hZY _hYZY ht
+      (h_reg_Y.reg_at t ht)
   have h_dB_sum :
       HasDerivAt
         (fun s : ℝ => Common2026.Shannon.differentialEntropy
@@ -512,7 +517,8 @@ theorem csiszarGap1Source_hasDerivAt
         ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
           ((h_reg_sum.reg_at t ht).density_t)) t :=
     Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2
-      (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) ht (h_reg_sum.reg_at t ht)
+      (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω)
+      (_hX.add _hY) (_hZX.add _hZY) _hXYZXY ht (h_reg_sum.reg_at t ht)
   -- Compose with the entropyPower chain rule (A-2-2).
   have h_eP_X := entropyPower_hasDerivAt_of_diffEnt_hasDerivAt h_dB_X
   have h_eP_Y := entropyPower_hasDerivAt_of_diffEnt_hasDerivAt h_dB_Y
@@ -782,6 +788,9 @@ interior `Set.Ioi 0 = interior (Set.Ici 0)`, via A-2-3 + `HasDerivAt.differentia
 theorem csiszarGap1Source_differentiableOn_interior
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
+    (hY : Measurable Y) (hZY : Measurable Z_Y) (hYZY : IndepFun Y Z_Y P)
+    (hXYZXY : IndepFun (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
     (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
                     (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
     (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
@@ -793,6 +802,7 @@ theorem csiszarGap1Source_differentiableOn_interior
   -- `ht : t ∈ Set.Ioi 0` gives `0 < t`.
   have ht_pos : (0 : ℝ) < t := ht
   exact ((csiszarGap1Source_hasDerivAt X Y Z_X Z_Y P
+    hX hZX hXZX hY hZY hYZY hXYZXY
     h_reg_sum h_reg_X h_reg_Y ht_pos).differentiableAt).differentiableWithinAt
 
 /-- **A-4-3**: `AntitoneOn (fun t => csiszarGap1Source X Y Z_X Z_Y P t) (Set.Ici 0)`,
@@ -810,6 +820,9 @@ not bundled in the `IsDeBruijnRegularityHyp` structure. -/
 theorem csiszarGap1Source_antitoneOn_Ici_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
+    (hY : Measurable Y) (hZY : Measurable Z_Y) (hYZY : IndepFun Y Z_Y P)
+    (hXYZXY : IndepFun (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
     (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
                     (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
     (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
@@ -829,6 +842,7 @@ theorem csiszarGap1Source_antitoneOn_Ici_zero
   refine antitoneOn_of_deriv_nonpos (convex_Ici 0)
     (csiszarGap1Source_continuousOn X Y Z_X Z_Y P h_reg_sum h_reg_X h_reg_Y)
     (csiszarGap1Source_differentiableOn_interior X Y Z_X Z_Y P
+      hX hZX hXZX hY hZY hYZY hXYZXY
       h_reg_sum h_reg_X h_reg_Y) ?_
   intro t ht
   rw [interior_Ici] at ht
@@ -836,6 +850,7 @@ theorem csiszarGap1Source_antitoneOn_Ici_zero
   obtain ⟨hJX_pos, hJY_pos, hJsum_pos, h_stam⟩ := h_pos_stam t ht_pos
   -- A-2-3 gives `HasDerivAt (csiszarGap1Source ...) (RHS) t`.
   have h_deriv := csiszarGap1Source_hasDerivAt X Y Z_X Z_Y P
+    hX hZX hXZX hY hZY hYZY hXYZXY
     h_reg_sum h_reg_X h_reg_Y ht_pos
   -- A-3 gives `RHS ≤ 0`.
   have h_le := csiszarGap1Source_deriv_le_zero X Y Z_X Z_Y P
@@ -936,7 +951,16 @@ theorem isStamToEPIScalingHyp_of_stam_debruijn
     h_reg Z_X Z_Y hZX_meas hZY_meas hZX_law hZY_law hXZX hYZY hZXZY
   have h_pos := h_pos_stam Z_X Z_Y hZX_meas hZY_meas hZX_law hZY_law
     hXZX hYZY hZXZY h_reg_sum h_reg_X h_reg_Y
+  -- `IndepFun (X+Y) (Z_X+Z_Y) P` is needed by the per-time de Bruijn wall
+  -- (`debruijnIdentityV2_holds` via A-2-3) as a regularity precondition. It is a
+  -- genuine fact under the noise-richness coupling but is NOT derivable from the
+  -- pairwise independences `IndepFun X Z_X` / `IndepFun Y Z_Y` / `IndepFun Z_X Z_Y`
+  -- that `IsStamScalingNoiseHyp` supplies (joint 4-tuple independence is needed).
+  -- @residual(plan:epi-debruijn-pertime-closure)
+  have hXYZXY : IndepFun (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P := by
+    sorry
   have h_anti1 := csiszarGap1Source_antitoneOn_Ici_zero X Y Z_X Z_Y P
+    hX hZX_meas hXZX hY hZY_meas hYZY hXYZXY
     h_reg_sum h_reg_X h_reg_Y h_pos
   have h_anti2 := csiszarGap_antitoneOn_Icc_zero_one X Y Z_X Z_Y P
     hX hY hZX_meas hZY_meas hZXZY hZX_law hZY_law h_anti1

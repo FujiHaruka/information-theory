@@ -390,10 +390,11 @@ definitionally `fun ω => X ω + √t · Z ω` (the heat-flow path used by the p
 body), so the witness threads through directly. -/
 theorem isDeBruijnIntegrationHyp_holds
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Z : Ω → ℝ) (T : ℝ) (hT : 0 ≤ T)
+    (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
+    (T : ℝ) (hT : 0 ≤ T)
     (h_path : Common2026.Shannon.FisherInfoV2.IsDeBruijnPathRegular X Z P T) :
     IsDeBruijnIntegrationHyp X Z P T :=
-  Common2026.Shannon.FisherInfoV2.debruijnIntegrationIdentity_holds X Z T hT h_path
+  Common2026.Shannon.FisherInfoV2.debruijnIntegrationIdentity_holds X Z hX hZ hXZ T hT h_path
 
 -- (retracted, wave-1) `isDeBruijnIntegrationHypothesis_of_deBruijnIntegrationHyp`
 -- produced `IsDeBruijnIntegrationHypothesis` (formerly `:= True` placeholder)

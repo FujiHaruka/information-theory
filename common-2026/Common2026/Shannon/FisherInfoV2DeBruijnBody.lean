@@ -230,6 +230,13 @@ def IsRegularDeBruijnHypV2.ofHeatFlow
     IsRegularDeBruijnHypV2 X Z P t where
   Z_law := h_heat.Z_law
   density_t := p t
+  -- Phase 0 density-pin: `p t` is the density of `P.map (X + √t·Z)` by the
+  -- intended meaning of `IsHeatFlowDensity` (docstring: `p t x = density at x`),
+  -- but the predicate only carries nonnegativity + measurability + heat eq, not
+  -- the `= (rnDeriv).toReal` external-shape equation. Pinning `p t` to the actual
+  -- rnDeriv is the Phase 1 density-identification atom (`pPath_eq_convDensityAdd`).
+  -- @residual(plan:epi-debruijn-pertime-closure)
+  density_t_eq := by sorry
 
 /-- **de Bruijn identity body discharge** (L-FV2DB-C).
 
@@ -271,7 +278,7 @@ theorem deBruijn_identity_v2_of_heat_flow
       (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
       ((1/2) * fisherInfoOfDensityReal (p t))
       t :=
-  deBruijn_identity_v2 X Z ht (IsRegularDeBruijnHypV2.ofHeatFlow hX hZ hXZ ht h_heat)
+  deBruijn_identity_v2 X Z hX hZ hXZ ht (IsRegularDeBruijnHypV2.ofHeatFlow hX hZ hXZ ht h_heat)
 
 /-! ## Convenience corollaries
 

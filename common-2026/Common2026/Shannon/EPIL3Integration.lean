@@ -691,7 +691,15 @@ noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
   -- now downstream (via `debruijnIdentityV2_holds` / shared wall lemma).
   exact
     { Z_law := hZ_law
-      density_t := gaussianPDFReal m (v + ⟨t, ht.le⟩) }
+      density_t := gaussianPDFReal m (v + ⟨t, ht.le⟩)
+      -- Phase 0 density-pin (Gaussian case): the law of `X + √t·Z` is
+      -- `gaussianReal m (v + t)` (`gaussianConvolution_law_of_gaussian`), whose
+      -- density w.r.t. `volume` is `gaussianPDFReal m (v + t)`. Pinning the
+      -- witness to `(rnDeriv).toReal` is the Gaussian special case of the
+      -- Phase 1 density-identification atom (Gaussian PDF = rnDeriv via
+      -- `IsGaussian.rnDeriv` / `gaussianReal_def`); deferred to Phase 1.
+      -- @residual(plan:epi-debruijn-pertime-closure)
+      density_t_eq := by sorry }
 
 -- (deleted 2026-05-28, Cluster C Tier-2 migration, task 3α-3) The Gaussian
 -- constructor `isHeatFlowFamilyHyp_of_gaussian` was removed together with the
