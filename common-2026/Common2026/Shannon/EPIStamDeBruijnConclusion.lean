@@ -157,14 +157,15 @@ predicates (`IsStamScoreConvolution`, `IsStamTotalExpectation`); those predicate
 were removed in the wall-consolidation pass. The signature now carries **no**
 load-bearing analytic hypothesis.
 
-This wrapper is **not** proof done: it consumes the shared sorry lemma and so
-depends transitively on `sorryAx`. The genuine residual lives in that lemma.
-⚠ Audit 2026-05-30: `stam_step2_density_wall` is a **false-statement defect**, not a
-genuine Mathlib wall (target predicate `IsStamCauchySchwarzOptimal` universally FALSE
-at its current signature, `@audit:defect(false-statement)`, see
-`EPIStamInequalityBody.lean:359`); honest closure needs the owner-level signature
-pivot under `epi-wall-reattack-plan`. Transitive consumer (no local `sorry`), so no
-active `@residual` — defect marker lives on the wall lemma. -/
+This wrapper is **not** proof done: it depends transitively on `sorryAx`. The genuine
+residual now lives in `isStamInequalityHyp_via_body`
+(`@residual(plan:epi-wall-reattack-plan)`).
+Update 2026-05-31 (Phase 3d): `stam_step2_density_wall` is **genuinely closed** (0-sorry,
+`#print axioms` sorryAx-free) via `convex_fisher_bound_of_ready`; `IsStamCauchySchwarzOptimal`
+is a provable (non-false) Prop. The prior "false-statement defect / universally FALSE"
+note is obsolete. The remaining transitive `sorry` is the regularity-precondition signature
+gap on the published `IsStamInequalityHyp` (`isStamInequalityHyp_via_body`), a clean
+owner-level pivot tracked under `epi-wall-reattack-plan`, not a Mathlib wall. -/
 @[entry_point]
 theorem isStamInequalityHyp_of_primitives
     {Ω : Type*} {mΩ : MeasurableSpace Ω}

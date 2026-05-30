@@ -673,4 +673,107 @@ theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
     convex_fisher_cross fX fY hregY hint_prod3]
   ring
 
+/-! ## Phase 3d bundle — `IsBlachmanConvReady` regularity precondition bundle
+
+`convex_fisher_bound` requires, beyond `IsRegularDensityV2 fX/fY` + `∫=1`, a set of
+**regularity preconditions** that `IsRegularDensityV2` does *not* imply: boundedness
+of `f` and `deriv f`, several integrability side-conditions, positivity of the
+convolution density `p_Z`, and the three product-measure (Tonelli) integrabilities.
+These are needed for the convolution-Fisher analysis but are **not** derivable from
+"regular density" alone (e.g. `Differentiable` does not bound `deriv f`).
+
+We bundle them into a single structure `IsBlachmanConvReady fX fY` so the Stam
+predicates (`IsStamCondExpCSHyp` / `IsStamCauchySchwarz` / `IsStamCauchySchwarzOptimal`)
+can carry exactly **one** extra hypothesis rather than 14. Every field is a
+regularity / integrability / boundedness / positivity precondition — **none** bundles
+the convex Fisher inequality core (which lives genuinely inside `convex_fisher_bound`'s
+body). The `lam`-dependent integrabilities (`int_W`, `int_Wsq`, `int_inner`) are
+quantified over `lam ∈ [0,1]` because the consuming predicates conclude an `∀ lam`
+bound. -/
+structure IsBlachmanConvReady (fX fY : ℝ → ℝ) : Prop where
+  /-- `fX` is Lebesgue-integrable. -/
+  int_fX : Integrable fX volume
+  /-- `fY` is Lebesgue-integrable. -/
+  int_fY : Integrable fY volume
+  /-- `fX` is bounded. -/
+  bdd_fX : ∃ M : ℝ, ∀ w, |fX w| ≤ M
+  /-- `deriv fX` is bounded (NOT implied by `IsRegularDensityV2`). -/
+  bdd_fX' : ∃ M : ℝ, ∀ w, |deriv fX w| ≤ M
+  /-- `fY` is bounded. -/
+  bdd_fY : ∃ M : ℝ, ∀ w, |fY w| ≤ M
+  /-- `deriv fY` is bounded (NOT implied by `IsRegularDensityV2`). -/
+  bdd_fY' : ∃ M : ℝ, ∀ w, |deriv fY w| ≤ M
+  /-- The convolution density `p_Z = convDensityAdd fX fY` is strictly positive. -/
+  pos_pZ : ∀ z, 0 < convDensityAdd fX fY z
+  /-- Per-`z` integrability of `deriv fX · fY(z - ·)`. -/
+  int_X : ∀ z, Integrable (fun x => deriv fX x * fY (z - x)) volume
+  /-- Per-`z` integrability of `fX · deriv fY(z - ·)`. -/
+  int_Y : ∀ z, Integrable (fun x => fX x * deriv fY (z - x)) volume
+  /-- Per-`z` integrability of the conditional density. -/
+  cond_int : ∀ z, Integrable (condDensityX fX fY z) volume
+  /-- Per-`(lam, z)` integrability of `scoreWeight · condDensityX`. -/
+  int_W : ∀ lam, 0 ≤ lam → lam ≤ 1 → ∀ z,
+      Integrable (fun x => scoreWeight fX fY lam z x * condDensityX fX fY z x) volume
+  /-- Per-`(lam, z)` integrability of `scoreWeight² · condDensityX`. -/
+  int_Wsq : ∀ lam, 0 ≤ lam → lam ≤ 1 → ∀ z,
+      Integrable (fun x => (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x) volume
+  /-- Per-`lam` integrability of the inner-weighted convolution density. -/
+  int_inner : ∀ lam, 0 ≤ lam → lam ≤ 1 →
+      Integrable (fun z =>
+        (∫ x, (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x ∂volume)
+          * convDensityAdd fX fY z) volume
+  /-- Integrability of the `fX`-Fisher integrand. -/
+  int_fisherX : Integrable (fun x => (logDeriv fX x) ^ 2 * fX x) volume
+  /-- Integrability of the `fY`-Fisher integrand. -/
+  int_fisherY : Integrable (fun x => (logDeriv fY x) ^ 2 * fY x) volume
+  /-- Integrability of the `p_Z`-Fisher integrand. -/
+  int_fisherZ : Integrable
+      (fun z => (logDeriv (convDensityAdd fX fY) z) ^ 2 * convDensityAdd fX fY z) volume
+  /-- Product-measure integrability of the first expanded Tonelli term. -/
+  int_prod1 : Integrable
+      (Function.uncurry fun z x => (logDeriv fX x) ^ 2 * fX x * fY (z - x)) (volume.prod volume)
+  /-- Product-measure integrability of the second expanded Tonelli term. -/
+  int_prod2 : Integrable
+      (Function.uncurry fun z x => (logDeriv fY (z - x)) ^ 2 * fX x * fY (z - x))
+      (volume.prod volume)
+  /-- Product-measure integrability of the cross Tonelli term. -/
+  int_prod3 : Integrable
+      (Function.uncurry fun z x =>
+        logDeriv fX x * fX x * (logDeriv fY (z - x) * fY (z - x))) (volume.prod volume)
+
+/-- **Symmetry of the regularity bundle** under `X ↔ Y` swap.
+
+`IsBlachmanConvReady` is genuinely symmetric: `convDensityAdd` is commutative
+(`convDensityAdd_comm`) and each integrability / boundedness field transports across
+the reflection substitution `x ↦ z - x` (volume-preserving) together with the marginal
+swap on the product-measure fields. The full field-by-field transport is a ~50-line
+reflection-invariance exercise orthogonal to the Phase 3d analytic core; it is deferred
+as a regularity-bundle lemma. Consumed only by the (unused) API-completeness lemmas
+`isStamCauchySchwarz_symm` / `isStamCondExpCSHyp_symm`.
+
+@residual(plan:epi-wall-reattack-plan) -/
+theorem isBlachmanConvReady_symm {fX fY : ℝ → ℝ}
+    (h : IsBlachmanConvReady fX fY) : IsBlachmanConvReady fY fX := by
+  sorry
+
+/-- **Convex Fisher bound from the regularity bundle**. Applies `convex_fisher_bound`
+by projecting all 14+ integrability / boundedness / positivity preconditions out of
+the `IsBlachmanConvReady` bundle. Pure plumbing — no analytic content beyond
+`convex_fisher_bound`. -/
+theorem convex_fisher_bound_of_ready (fX fY : ℝ → ℝ) (lam : ℝ)
+    (hlam0 : 0 ≤ lam) (hlam1 : lam ≤ 1)
+    (hregX : IsRegularDensityV2 fX) (hregY : IsRegularDensityV2 fY)
+    (hnormX : ∫ x, fX x ∂volume = 1) (hnormY : ∫ x, fY x ∂volume = 1)
+    (hready : IsBlachmanConvReady fX fY) :
+    (fisherInfoOfDensity (convDensityAdd fX fY)).toReal
+      ≤ lam ^ 2 * (fisherInfoOfDensity fX).toReal
+          + (1 - lam) ^ 2 * (fisherInfoOfDensity fY).toReal :=
+  convex_fisher_bound fX fY lam hlam0 hlam1 hregX hregY
+    hready.int_fX hready.int_fY hready.bdd_fX hready.bdd_fX' hready.bdd_fY hready.bdd_fY'
+    hnormX hnormY hready.pos_pZ hready.int_X hready.int_Y hready.cond_int
+    (hready.int_W lam hlam0 hlam1) (hready.int_Wsq lam hlam0 hlam1)
+    (hready.int_inner lam hlam0 hlam1)
+    hready.int_fisherX hready.int_fisherY hready.int_fisherZ
+    hready.int_prod1 hready.int_prod2 hready.int_prod3
+
 end InformationTheory.Shannon.EPIBlachmanDensity

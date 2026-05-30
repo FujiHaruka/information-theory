@@ -108,15 +108,15 @@ Fisher bound is supplied internally by the shared sorry wall lemma
 `isStamInequalityHyp_via_body`. This carries **no** load-bearing analytic
 hypothesis — only measurability / independence / probability measure.
 
-This wrapper is **not** proof done: it consumes the shared sorry lemma
-`stam_step2_density_wall` and so depends transitively on `sorryAx`. The genuine
-residual lives in that lemma. ⚠ Audit 2026-05-30: `stam_step2_density_wall` is a
-**false-statement defect**, not a genuine Mathlib wall — its target predicate
-`IsStamCauchySchwarzOptimal` is universally FALSE at its current signature
-(reclassified `@audit:defect(false-statement)`, see `EPIStamInequalityBody.lean:359`).
-Honest closure needs the owner-level signature pivot under `epi-wall-reattack-plan`.
-This is a transitive consumer (body has no local `sorry`), so it carries no active
-`@residual` tag — the defect marker lives on the wall lemma. -/
+This wrapper is **not** proof done: it depends transitively on `sorryAx`. The genuine
+residual now lives in `isStamInequalityHyp_via_body`
+(`@residual(plan:epi-wall-reattack-plan)`).
+Update 2026-05-31 (Phase 3d): `stam_step2_density_wall` is **genuinely closed** (0-sorry,
+sorryAx-free) via `convex_fisher_bound_of_ready`; `IsStamCauchySchwarzOptimal` is a
+provable (non-false) Prop. The prior "false-statement defect / universally FALSE" note is
+obsolete. The remaining transitive `sorry` is the regularity-precondition signature gap on
+the published `IsStamInequalityHyp` (`isStamInequalityHyp_via_body`), a clean owner-level
+pivot tracked under `epi-wall-reattack-plan`, not a Mathlib wall. -/
 @[entry_point]
 theorem isStamInequalityHyp_via_step3 {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

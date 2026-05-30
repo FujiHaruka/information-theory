@@ -199,14 +199,14 @@ into the Fisher-info integral inequality) is the L-S12-A pass-through; once
 granted for all `λ`, §4 derives the optimal bound *fully* via the Wave 7
 λ-optimization.
 
-Audit 2026-05-30 (post-pivot): sound Prop statement. The 5 injected hyps
-(`IsRegularDensityV2 fX/fY`, `∫fX=1`, `∫fY=1`, `fXY =ᵐ convDensityAdd fX fY`) are
-jointly satisfiable (Gaussian witness `fX=fY=gaussianPDFReal 0 1`, NON-vacuous) and
-the `hconv` constraint excludes the prior counterexample; the body is the genuine
-∀λ convex Fisher bound, not universally false. The 5 hyps are regularity
-preconditions, NOT the inequality's core (that core is the Blachman wall
-`@residual(wall:stam-blachman)` reached transitively via
-`stamCauchySchwarzOptimal_of_condExpCSHyp`). No honesty defect. @audit:ok -/
+Phase 3d (2026-05-31): sound Prop statement. The injected hyps
+(`IsRegularDensityV2 fX/fY`, `∫fX=1`, `∫fY=1`, the *pointwise* convolution identity
+`∀ x, fXY x = convDensityAdd fX fY x`, and the `IsBlachmanConvReady fX fY` regularity
+bundle) are jointly satisfiable (Gaussian witness, NON-vacuous) and are regularity
+preconditions, NOT the inequality's core. The `∀λ` convex Fisher bound is now supplied
+**genuinely** by `convex_fisher_bound_of_ready` (`EPIBlachmanDensity`); the producer
+`stam_step2_density_wall` of the resulting optimal predicate is genuinely closed
+(0-sorry, sorryAx-free). No honesty defect. @audit:ok -/
 def IsStamCondExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
@@ -218,8 +218,9 @@ def IsStamCondExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fY →
     (∫ x, fX x ∂MeasureTheory.volume = 1) →
     (∫ x, fY x ∂MeasureTheory.volume = 1) →
-    (fXY =ᵐ[MeasureTheory.volume]
-      InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY) →
+    (∀ x, fXY x =
+      InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY x) →
+    InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady fX fY →
     ∀ lam : ℝ, 0 ≤ lam → lam ≤ 1 →
       J_sum ≤ lam ^ 2 * J_X + (1 - lam) ^ 2 * J_Y
 
@@ -232,12 +233,12 @@ theorem isStamCauchySchwarz_of_condExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω} (h : IsStamCondExpCSHyp X Y P) :
     IsStamCauchySchwarz X Y P := by
   intro J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
-    hregX hregY hnormX hnormY hconv
+    hregX hregY hnormX hnormY hconv hready
   have hsum : 0 < J_X + J_Y := by linarith
   refine ⟨J_Y / (J_X + J_Y), by positivity, ?_, ?_⟩
   · rw [div_le_one hsum]; linarith
   · exact h J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
-      hregX hregY hnormX hnormY hconv
+      hregX hregY hnormX hnormY hconv hready
       (J_Y / (J_X + J_Y)) (by positivity) (by rw [div_le_one hsum]; linarith)
 
 /-- The Step-2 typed predicate is congruent under function equality. -/
@@ -253,16 +254,20 @@ theorem isStamCondExpCSHyp_symm {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω} (h : IsStamCondExpCSHyp X Y P) :
     IsStamCondExpCSHyp Y X P := by
   intro J_Y J_X J_sum fY fX fXY hJY hJX hJsum hJY_def hJX_def hJsum_def
-    hregY hregX hnormY hnormX hconv lam hlo hhi
+    hregY hregX hnormY hnormX hconv hready lam hlo hhi
   have h_comm : (fun ω => Y ω + X ω) = fun ω => X ω + Y ω := by funext ω; ring
   rw [h_comm] at hJsum_def
   -- transport the convolution constraint across `convDensityAdd` commutativity
-  have hconv' : fXY =ᵐ[MeasureTheory.volume]
-      InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY := by
+  have hconv' : ∀ x, fXY x =
+      InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY x := by
+    intro x
     rw [InformationTheory.Shannon.EPIConvDensity.convDensityAdd_comm fX fY]
-    exact hconv
+    exact hconv x
+  have hready' :
+      InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady fX fY :=
+    InformationTheory.Shannon.EPIBlachmanDensity.isBlachmanConvReady_symm hready
   have hbd := h J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
-    hregX hregY hnormX hnormY hconv'
+    hregX hregY hnormX hnormY hconv' hready'
     (1 - lam) (by linarith) (by linarith)
   have heq : (1 - (1 - lam)) ^ 2 = lam ^ 2 := by ring
   linarith [hbd, heq]
@@ -283,11 +288,11 @@ theorem stamCauchySchwarzOptimal_of_condExpCSHyp {Ω : Type*} [MeasurableSpace �
     {X Y : Ω → ℝ} {P : Measure Ω} (h : IsStamCondExpCSHyp X Y P) :
     IsStamCauchySchwarzOptimal X Y P := by
   intro J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
-    hregX hregY hnormX hnormY hconv
+    hregX hregY hnormX hnormY hconv hready
   have hsum : 0 < J_X + J_Y := by linarith
   -- Instantiate Step 2 at the optimal λ = J_Y / (J_X + J_Y).
   have h_bd := h J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
-    hregX hregY hnormX hnormY hconv
+    hregX hregY hnormX hnormY hconv hready
     (J_Y / (J_X + J_Y)) (by positivity) (by rw [div_le_one hsum]; linarith)
   -- Wave 7 closed form: at λ*, the convex bound equals the harmonic mean.
   have h_min := stam_lambda_min hJX hJY
