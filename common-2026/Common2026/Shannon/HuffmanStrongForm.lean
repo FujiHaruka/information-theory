@@ -199,4 +199,31 @@ theorem huffmanLength_optimal_modulo_aux_ident
     (huffmanMergedIdentification_of_aux h_aux)
     P hP l hl_pos hl_kraft
 
+/-! ### T1-A'' — 無条件 strong form (cost-level pivot) -/
+
+/-- **Cover–Thomas Theorem 5.8.1 (strong form) — hypothesis 引数なし**.
+
+Huffman 語長は任意の Kraft-feasible 語長関数 `l` より期待長が小さい。**無条件**
+(swap normalization は `swap_normalization_proof` で genuine discharge 済、
+merged-carrier の bridge は cost-level
+(`expectedLength_merged_cost_bridge`、per-symbol depth identity FALSE を経由しない)
+で閉じている)。
+
+前任 `huffmanLength_optimal_modulo_aux_ident` は FALSE predicate
+`MergedHuffmanAuxIdentHypothesis` を hypothesis に取る weak form だったが、本定理は
+cost-level pivot (`docs/shannon/huffman-cost-level-optimality-plan.md`) で帰納核から
+`h_ident` 依存を除去した新 motor `huffmanLength_optimal_aux` を経由するため、FALSE
+predicate を **一切経由しない**。 -/
+@[entry_point]
+theorem huffmanLength_optimal
+    {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
+    [MeasurableSpace α] [MeasurableSingletonClass α]
+    (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a, 0 < P.real {a})
+    (l : α → ℕ) (hl_pos : ∀ a, 0 < l a)
+    (hl_kraft : ∑ a : α, ((2 : ℝ)) ^ (-(l a : ℤ)) ≤ 1) :
+    InformationTheory.Shannon.ShannonCode.expectedLength P (huffmanLength P)
+      ≤ InformationTheory.Shannon.ShannonCode.expectedLength P l :=
+  huffmanLength_optimal_aux (Fintype.card α) swap_normalization_proof
+    P hP l hl_pos hl_kraft rfl
+
 end InformationTheory.Shannon.Huffman
