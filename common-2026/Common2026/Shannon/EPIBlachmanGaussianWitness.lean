@@ -728,7 +728,13 @@ density route computes the bound for Gaussians".
 WITNESS STATUS: proof done (genuine 0-sorry). Every argument to
 `convex_fisher_bound_of_ready` is an `@audit:ok` part:
 `isBlachmanConvReady_gaussianPDFReal` / `isRegularDensityV2_gaussianPDFReal` (this file)
-and `integral_gaussianPDFReal_eq_one` (Mathlib). -/
+and `integral_gaussianPDFReal_eq_one` (Mathlib).
+
+@audit:ok — independent honesty audit (2026-05-31, commit `de4099b`): single-term
+application of the `@audit:ok` core `convex_fisher_bound_of_ready`; the only
+hypotheses are regularity (`vX,vY ≠ 0`, `0 ≤ lam ≤ 1`), none carries the inequality
+core (structurally bundle-incapable). `#print axioms` →
+[propext, Classical.choice, Quot.sound] (sorryAx-free, transitive 0 sorry). -/
 theorem convex_fisher_bound_gaussian_via_density_route
     (mX mY : ℝ) {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0)
     (lam : ℝ) (hlo : 0 ≤ lam) (hhi : lam ≤ 1) :
@@ -747,7 +753,16 @@ closed form `J(𝒩(m,v)) = 1/v` (`fisherInfoOfDensity_gaussianPDFReal`) and the
 convolution closed form `convDensityAdd (gaussian)(gaussian) = gaussian(sum)`, the
 density route yields the same `1/(vX+vY) ≤ λ²/vX + (1-λ)²/vY` arithmetic content as the
 measure-level closed-form route `stam_convex_fisher_bound_gaussian`. This makes the
-agreement of the two routes explicit. -/
+agreement of the two routes explicit.
+
+@audit:ok — independent honesty audit (2026-05-31, commit `de4099b`): genuine rewrite
+chain (`convDensityAdd_gaussian_closed_form` + `fisherInfoOfDensity_gaussianPDFReal` =
+`1/v`, all `@audit:ok`) of the proven density-route bound `hbnd`; no degenerate-equality
+exploitation (`1/v` is a genuine positive closed form, `vXY,vX,vY ≠ 0`). The 2-route
+agreement claim is accurately scoped — same `1/(vX+vY) ≤ λ²/vX+(1-λ)²/vY` *arithmetic
+content* as `stam_convex_fisher_bound_gaussian` (which goes through `stam_fisher_arith`),
+not a definitional identity of `fisherInfoOfDensity` vs `fisherInfoOfMeasureV2`.
+`#print axioms` → [propext, Classical.choice, Quot.sound] (sorryAx-free). -/
 theorem convex_fisher_bound_gaussian_via_density_route_closed_form
     (mX mY : ℝ) {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0)
     (lam : ℝ) (hlo : 0 ≤ lam) (hhi : lam ≤ 1) :
