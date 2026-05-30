@@ -29,8 +29,8 @@ go/no-go の決定的判定基準は §Phase 1 末尾「Done 条件 / go-no-go g
 - [x] Phase 2 — cross-term orthogonality `score_cross_term_eq_zero` = genuine ✅ (0 sorry, `@audit:ok`)
 - [x] **Phase 3-pre — 3+1 述語 signature pivot 完了 ✅** (2026-05-30、軸1 `hconv` + `IsRegularDensityV2` + 正規化 `∫=1`、軸2 廃止)。
       false-statement defect 除去、4 述語 `@audit:ok`、`stam_step2_density_wall` → `@residual(wall:stam-blachman)` 格下げ。独立 honesty 監査 ALL OK (Gaussian witness で非 vacuous 確認)。新規 sorry 0。
-- [ ] Phase 3 — 壁1 本体 (条件付き Blachman → convex Fisher bound) 📋 ← **次の一手** (着手前に proof-pivot-advisor で tractability 判定推奨)
-- [ ] Phase 4 — 壁2 (per-time de Bruijn + FTC 積分形) 📋
+- [x] **Phase 3 — 真壁確定 ✅ (2026-05-30、L-EPIW-3-α 発火)**。proof-pivot-advisor (独立 RO) verdict: gateway が score の**解析的 (logDeriv) 表現**まで genuine に建てても、Stam closure に要るのは score の**確率的 (condExp) 表現** `s_Z(z)=E[s_X|X+Y=z]` であり、両者を繋ぐ Blachman 恒等式 (同時分布 `ℝ×ℝ` + sum-level sub-σ-algebra disintegration + Fubini) は Mathlib にも repo にも hook 皆無 = 約 300 行 multi-file self-build = PR 級。`condDistrib`/`condExp`/`condVar_ae_le_condExp_sq`/`condExp_ae_eq_integral_condDistrib_id` は実在するが `pdf`/`logDeriv`/`fisherInfoOfDensity` に結びつける hook が無い。**「gateway GO」≠「Phase 3 GO」**。`stam_step2_density_wall` の `sorry`+`@residual(wall:stam-blachman)` を **honest wall として確定据置** (signature は pivot 済で sound、regularity precondition のみ、load-bearing 無し)。closure は後続 PR scope に切出し。
+- [ ] Phase 4 — 壁2 (per-time de Bruijn + FTC 積分形) 📋 (advisor: 同根 apparatus 依存で Phase 3 と並走しても空回り高リスク、heat eq IBP = L-EPIW-4-α 真壁可能性高)
 
 ## ⚠ Phase 3-pre — 3+1 述語 signature pivot (実装可能粒度) 📋
 
@@ -590,3 +590,24 @@ FTC 積分形 (step 2) 60-100 行 (テンプレ一般化、step 1 後)。proof-l
    - **タグ**: pivot 後 `@audit:defect(false-statement)` → `@residual(wall:stam-blachman)` 格下げ予定
      (反例消失 = 結論 TRUE-in-principle)。書換は実装後の独立 audit が実施。pivot は defect 除去であって
      Blachman 壁 closure (Phase 3) ではない。注入 hyp は regularity precondition、核は `sorry` 据置。
+
+3. **2026-05-30 Phase 3 真壁確定 (proof-pivot-advisor 独立 RO verdict)**: Phase 3 本体着手を見送り、
+   `stam_step2_density_wall` の `sorry`+`@residual(wall:stam-blachman)` を honest wall として確定据置
+   (L-EPIW-3-α 発火)。
+   - **判定**: gateway `convDensityAdd_logDeriv` (`EPIConvDensity.lean:113`) は score の**解析的 (logDeriv)
+     表現**まで genuine に到達。だが Stam closure に要るのは score の**確率的 (condExp) 表現**
+     `s_Z(z)=E[s_X|X+Y=z]` (Blachman 恒等式)。両者を繋ぐ橋 (同時分布 `ℝ×ℝ` + `X+Y` sub-σ-algebra への
+     disintegration + Fubini で積分) は Mathlib にも repo にも hook 皆無 = 約 300 行 multi-file self-build
+     = PR 級。「`f(convDensityAdd …)` を `condExp …` に変える bridge を探している」= CLAUDE.md
+     「Mathlib-shape-driven」の赤フラグそのもの。
+   - **既存 Mathlib lemma 照合**: `condDistrib` (51) / `condExp` (171) / `condVar_ae_le_condExp_sq`
+     (条件付き Jensen 実体、`CondVar.lean:127`) / `condExp_ae_eq_integral_condDistrib_id` は**実在**するが、
+     `pdf`/`logDeriv`/`fisherInfoOfDensity` に結びつける hook が一切ない (`fisherInfo` loogle unknown
+     identifier、`Stam|Blachman|score_conv` rg 0 hit)。gateway があっても disintegration step1 は丸ごと残る。
+   - **教訓 (proof-log 候補)**: gateway が score の解析的 (logDeriv) 表現まで建っても、Stam closure に要るのは
+     score の確率的 (condExp) 表現であり、両者を繋ぐ Blachman 恒等式が核 — 「score 表現済」と「Blachman
+     closure 可能」は別物、**gateway GO は Phase 3 GO を意味しない**。
+   - **signature は健全**: predicate は Phase 3-pre pivot 済で sound、`hconv` 制約 + regularity
+     precondition のみ、load-bearing 無し。`sorry` は tier-2 = 最も honest なマーカー。closure は後続 PR
+     scope に切出し。case D (現状維持) 確定、案 C (bridge 直接 self-build ~300 行) は CLAUDE.md
+     「50 行超は定義側を疑え」の遥か上で非推奨。

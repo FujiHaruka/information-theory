@@ -57,6 +57,13 @@
 
 ### 1A. primitive predicate 一覧 (`def ... : Prop := ...` body 逐語)
 
+> **⚠ 2026-05-30 drift 注記 (pivot 後)**: 下表の `IsStamCauchySchwarzOptimal` / `IsStamCondExpCSHyp` /
+> `IsStamInequalityResidual` の行は **pivot 前の古い版** (V1 `fisherInfo` 参照・`fXY` 無制約・行番号も旧値)。
+> 現コードは Phase 3-pre signature pivot 済 = **V2 `fisherInfoOfMeasureV2` + `hconv : fXY =ᵐ convDensityAdd fX fY`
+> 制約 + `IsRegularDensityV2` + 正規化注入** (4 述語 `@audit:ok`、`stam_step2_density_wall` →
+> `@residual(wall:stam-blachman)`)。V1→V2 張替・畳み込み制約注入は**完了済** — 表の `(V1)` 表記を信じて未了と
+> 誤認しないこと。pivot 詳細 → `epi-wall-reattack-plan.md` 判断ログ #2、Phase 3 真壁確定 → 同 #3。
+
 | primitive | file:line | `def` body (要約) | 真の数学内容? | unconditional discharge? |
 |---|---|---|---|---|
 | `IsStamScoreConvolution` | `EPIStamInequalityBody.lean:104` | `:= True` | **無** (placeholder) | `_trivial` (= `trivial`)。実体ゼロ |
