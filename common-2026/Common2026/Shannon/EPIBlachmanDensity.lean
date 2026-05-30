@@ -394,13 +394,21 @@ the S4 lemma.
 
 Independent audit (2026-05-30): reclassified `wall:stam-blachman` →
 `plan:epi-wall-reattack-plan`. Closability is transitive on S4
-(`score_sq_le_weighted_integral`, itself plan-closable via `ConvexOn.map_integral_le`
+(`score_sq_le_weighted_integral`, now genuinely closed via `ConvexOn.map_integral_le`
 on a withDensity probability measure) plus parts all present: Tonelli
 `integral_integral_swap` (`Mathlib/MeasureTheory/Integral/Prod.lean`), cross-term
 `= 0` via `integral_logDeriv_density_eq_zero` (`FisherInfoV2.lean:158`, repo), and
 atom A `fisherInfoOfDensity_toReal_eq_integral` (genuine, `@audit:ok`). No separate
-genuine Mathlib gap; not a wall. Closure deferred to Phase 3c/3d of the owning plan
-(see L-EPIW-3-密度-β precondition-gap note on `deriv` boundedness threading).
+genuine Mathlib gap; not a wall.
+
+Phase 3c-cont status (2026-05-30): the atom-A reduction (LHS/RHS → Bochner) and the
+S4 pointwise→integrated monotone step are genuinely assembled below; the residual
+`sorry` is the Tonelli order-swap + 3-term evaluation of the post-swap integral
+(`λ²·J_X + (1-λ)²·J_Y` via translation invariance + `integral_logDeriv_density_eq_zero`
+cross-term-zero). That step requires `∀z`-quantified product / fibre integrability
+preconditions (`hint_W_z`, `hint_Wsq_z`, `hcond_int_z`, the product-measure
+`Integrable (uncurry ...)`), threaded below as honest regularity preconditions.
+The remaining `sorry` is purely the analytic 3-term Tonelli evaluation, not a wall.
 @residual(plan:epi-wall-reattack-plan) -/
 theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
     (hlam0 : 0 ≤ lam) (hlam1 : lam ≤ 1)
@@ -410,6 +418,17 @@ theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
     (hY_bdd : ∃ M : ℝ, ∀ w, |fY w| ≤ M) (hY'_bdd : ∃ M : ℝ, ∀ w, |deriv fY w| ≤ M)
     (hnormX : ∫ x, fX x ∂volume = 1) (hnormY : ∫ x, fY x ∂volume = 1)
     (hpZ : ∀ z, 0 < convDensityAdd fX fY z)
+    (hint_X : ∀ z, Integrable (fun x => deriv fX x * fY (z - x)) volume)
+    (hint_Y : ∀ z, Integrable (fun x => fX x * deriv fY (z - x)) volume)
+    (hcond_int : ∀ z, Integrable (condDensityX fX fY z) volume)
+    (hint_W : ∀ z,
+        Integrable (fun x => scoreWeight fX fY lam z x * condDensityX fX fY z x) volume)
+    (hint_Wsq : ∀ z,
+        Integrable (fun x => (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x) volume)
+    (hint_inner :
+        Integrable (fun z =>
+          (∫ x, (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x ∂volume)
+            * convDensityAdd fX fY z) volume)
     (hint_fisherX : Integrable (fun x => (logDeriv fX x) ^ 2 * fX x) volume)
     (hint_fisherY : Integrable (fun x => (logDeriv fY x) ^ 2 * fY x) volume)
     (hint_fisherZ :
@@ -424,10 +443,39 @@ theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
       fisherInfoOfDensity_toReal_eq_integral fX (fun x => (hregX.pos x).le) hint_fisherX,
       fisherInfoOfDensity_toReal_eq_integral fY (fun x => (hregY.pos x).le) hint_fisherY]
   -- Reduced goal: `∫ z, (logDeriv p_Z z)²·p_Z z ≤ λ²·∫ s_X²·fX + (1-λ)²·∫ s_Y²·fY`.
-  -- Remaining content = score-of-convolution Cauchy-Schwarz (S4) integrated against `p_Z`
-  -- + Tonelli order-swap + 3-term evaluation (cross term = 0); the S4 pointwise bound is
-  -- `score_sq_le_weighted_integral`. Plan-closable (parts all present: S4 Jensen, Tonelli,
-  -- cross-term-zero, atom A) — not a Mathlib wall, see docstring.
+  -- (a) S4 pointwise → integrate against `p_Z ≥ 0` (monotone).
+  have hmono :
+      (∫ z, (logDeriv (convDensityAdd fX fY) z) ^ 2 * convDensityAdd fX fY z ∂volume)
+        ≤ ∫ z, (∫ x, (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x ∂volume)
+            * convDensityAdd fX fY z ∂volume := by
+    refine integral_mono_ae hint_fisherZ hint_inner
+      (Filter.Eventually.of_forall (fun z => ?_))
+    have hS4 := score_sq_le_weighted_integral fX fY lam z hregX hregY hX_int hY_int
+      hX_bdd hX'_bdd hY_bdd hY'_bdd (hpZ z) (hint_X z) (hint_Y z) (hcond_int z)
+      (hint_W z) (hint_Wsq z)
+    exact mul_le_mul_of_nonneg_right hS4 (hpZ z).le
+  refine hmono.trans (le_of_eq ?_)
+  -- (b) cancel `condDensityX z x · p_Z z = fX x · fY (z - x)`, pull `p_Z z` into the inner ∫.
+  have hb : ∀ z,
+      (∫ x, (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x ∂volume)
+          * convDensityAdd fX fY z
+        = ∫ x, (scoreWeight fX fY lam z x) ^ 2 * (fX x * fY (z - x)) ∂volume := by
+    intro z
+    rw [← integral_mul_const]
+    refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+    show (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x * convDensityAdd fX fY z
+      = (scoreWeight fX fY lam z x) ^ 2 * (fX x * fY (z - x))
+    unfold condDensityX
+    rw [mul_assoc, div_mul_cancel₀ _ (hpZ z).ne']
+  simp only [hb]
+  -- Remaining: (c) Tonelli order-swap `∫_z ∫_x W²·fX(x)·fY(z-x) = ∫_x ∫_z (...)`
+  -- (needs product-measure `Integrable (uncurry ...)`), then (d) the 3-term evaluation
+  -- expanding `W² = λ²s_X(x)² + (1-λ)²s_Y(z-x)² + 2λ(1-λ)s_X(x)s_Y(z-x)`:
+  --   λ² term  → λ²·∫ s_X²·fX  (∫_z fY(z-x) dz = 1 by `integral_sub_left_eq_self` + `hnormY`)
+  --   (1-λ)² term → (1-λ)²·∫ s_Y²·fY  (translation + `hnormX`)
+  --   cross term → 0  (`integral_logDeriv_density_eq_zero` on each factor).
+  -- Steps (a) S4-monotone + (b) condDensityX·p_Z cancellation above are genuine; this
+  -- residual is purely the analytic Tonelli evaluation (not a Mathlib wall).
   -- @residual(plan:epi-wall-reattack-plan)
   sorry
 
