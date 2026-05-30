@@ -3,8 +3,11 @@ import Common2026.Shannon.FisherInfoV2
 import Mathlib.Analysis.Calculus.LogDeriv
 import Mathlib.MeasureTheory.Group.Integral
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
+import Mathlib.MeasureTheory.Integral.Bochner.ContinuousLinearMap
 import Mathlib.MeasureTheory.Integral.Prod
 import Mathlib.MeasureTheory.Integral.MeanInequalities
+import Mathlib.Analysis.Convex.Integral
+import Mathlib.Analysis.Convex.Mul
 
 /-!
 # EPI Blachman — explicit density route (S2 + S3, condExp 不使用)
@@ -274,21 +277,24 @@ With `W_λ(x,z) := scoreWeight fX fY lam z x` and `p_{X|Z}(x|z) := condDensityX 
 integrability `hint_Wsq` is a regularity precondition on admissible densities.
 None of the hyps bundles the conclusion inequality.
 
-Independent audit (2026-05-30): reclassified `wall:stam-blachman` →
-`plan:epi-wall-reattack-plan`. This is NOT a Mathlib gap: with the probability
-measure `μ := volume.withDensity (fun x => ENNReal.ofReal (condDensityX fX fY z x))`
-(`IsProbabilityMeasure` from 3b `condDensityX_integral_eq_one`), S4 is exactly
-Jensen for the convex `(·)²`: `ConvexOn.map_integral_le`
+Genuine (0 sorry): with the probability measure
+`μ := volume.withDensity (fun x => ENNReal.ofReal (condDensityX fX fY z x))`
+(`IsProbabilityMeasure` from 3b `condDensityX_integral_eq_one` via
+`ofReal_integral_eq_lintegral_ofReal`), S4 is exactly Jensen for the convex `(·)²`:
+`Even.convexOn_pow` + `ConvexOn.map_integral_le`
 (`Mathlib/Analysis/Convex/Integral.lean:199`, `[IsProbabilityMeasure μ]`,
 `g (∫ f ∂μ) ≤ ∫ g∘f ∂μ`) composed with the change-of-variables
 `integral_withDensity_eq_integral_toReal_smul₀`
-(`Bochner/ContinuousLinearMap.lean:310`) to rewrite `∫ · ∂μ = ∫ ·*condDensityX ∂volume`.
-loogle-confirmed present; the density-route inventory itself records S4 as
-"Mathlib 部品揃い = closure 可能" (epi-blachman-density-route-inventory.md:62).
-The genuine PR-level wall is the abstract-condExp disintegration bridge, which
-this density route deliberately avoids. Closure deferred to Phase 3c-cont of the
-owning plan (alt route: `ConvexOn.map_condExp_le`, inventory's first candidate).
-@residual(plan:epi-wall-reattack-plan) -/
+(`Bochner/ContinuousLinearMap.lean:310`) to rewrite `∫ · ∂μ = ∫ condDensityX·· ∂volume`,
+and S3 `score_conv_eq_weighted_integral` to identify `∫ scoreWeight ∂μ` with
+`logDeriv p_Z z`. condExp/condDistrib/disintegration absent (density route honest).
+
+`hcond_int` (integrability of the conditional density), `hint_W` (integrability of
+the score weight against `condDensityX`) and `hint_Wsq` are regularity preconditions
+on admissible densities; none bundles the conclusion inequality.
+
+@audit candidate (Phase 3c-cont closure): no hyp contains the score-square inequality;
+conclusion genuinely assembled (Jensen on a withDensity probability measure). -/
 theorem score_sq_le_weighted_integral (fX fY : ℝ → ℝ) (lam z : ℝ)
     (hregX : IsRegularDensityV2 fX) (hregY : IsRegularDensityV2 fY)
     (hX_int : Integrable fX volume) (hY_int : Integrable fY volume)
@@ -297,11 +303,72 @@ theorem score_sq_le_weighted_integral (fX fY : ℝ → ℝ) (lam z : ℝ)
     (hpZ : 0 < convDensityAdd fX fY z)
     (hint_X : Integrable (fun x => deriv fX x * fY (z - x)) volume)
     (hint_Y : Integrable (fun x => fX x * deriv fY (z - x)) volume)
+    (hcond_int : Integrable (condDensityX fX fY z) volume)
+    (hint_W :
+        Integrable (fun x => scoreWeight fX fY lam z x * condDensityX fX fY z x) volume)
     (hint_Wsq :
         Integrable (fun x => (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x) volume) :
     (logDeriv (convDensityAdd fX fY) z) ^ 2
       ≤ ∫ x, (scoreWeight fX fY lam z x) ^ 2 * condDensityX fX fY z x ∂volume := by
-  sorry
+  -- Conditional density is nonneg (ratio of nonneg `fX·fY(z-·)` by positive `p_Z`).
+  have hcond_nonneg : ∀ x, 0 ≤ condDensityX fX fY z x := by
+    intro x
+    unfold condDensityX
+    exact div_nonneg (mul_nonneg (hregX.pos x).le (hregY.pos (z - x)).le) hpZ.le
+  -- Density `d x := ENNReal.ofReal (condDensityX fX fY z x)`, ae-measurable + finite.
+  set d : ℝ → ℝ≥0∞ := fun x => ENNReal.ofReal (condDensityX fX fY z x) with hd_def
+  have hd_meas : AEMeasurable d volume :=
+    (hcond_int.aestronglyMeasurable.aemeasurable.ennreal_ofReal)
+  have hd_lt_top : ∀ᵐ x ∂volume, d x < ∞ :=
+    Filter.Eventually.of_forall (fun x => ENNReal.ofReal_lt_top)
+  -- Probability measure `μ := volume.withDensity d`; mass = ∫⁻ d = ofReal(∫ condDensityX) = 1.
+  set μ : Measure ℝ := volume.withDensity d with hμ_def
+  have hμ_mass : μ Set.univ = 1 := by
+    rw [hμ_def, withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ]
+    rw [hd_def, ← ofReal_integral_eq_lintegral_ofReal hcond_int
+        (Filter.Eventually.of_forall hcond_nonneg),
+      condDensityX_integral_eq_one fX fY z hpZ, ENNReal.ofReal_one]
+  have : IsProbabilityMeasure μ := ⟨hμ_mass⟩
+  -- Change of variables: `∫ g ∂μ = ∫ condDensityX·g ∂volume` for `g : ℝ → ℝ`.
+  have hCoV : ∀ g : ℝ → ℝ,
+      ∫ x, g x ∂μ = ∫ x, condDensityX fX fY z x * g x ∂volume := by
+    intro g
+    rw [hμ_def, integral_withDensity_eq_integral_toReal_smul₀ hd_meas hd_lt_top]
+    refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+    simp only [hd_def, smul_eq_mul, ENNReal.toReal_ofReal (hcond_nonneg x)]
+  -- (1) `∫ scoreWeight ∂μ = logDeriv p_Z z` (S3 + CoV + mul_comm).
+  have hmean : ∫ x, scoreWeight fX fY lam z x ∂μ = logDeriv (convDensityAdd fX fY) z := by
+    rw [hCoV]
+    rw [score_conv_eq_weighted_integral fX fY lam z hregX hregY hX_int hY_int
+      hX_bdd hX'_bdd hY_bdd hY'_bdd hpZ hint_X hint_Y]
+    refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+    simp only [mul_comm]
+  -- (2) Jensen for the convex `(·)²` on `μ`.
+  have hconv : ConvexOn ℝ Set.univ (fun x : ℝ => x ^ 2) :=
+    Even.convexOn_pow (by norm_num)
+  have hjensen :
+      (∫ x, scoreWeight fX fY lam z x ∂μ) ^ 2
+        ≤ ∫ x, (scoreWeight fX fY lam z x) ^ 2 ∂μ := by
+    have hfi : Integrable (scoreWeight fX fY lam z) μ := by
+      rw [hμ_def, integrable_withDensity_iff_integrable_smul₀' hd_meas hd_lt_top]
+      refine (hint_W.congr (Filter.Eventually.of_forall (fun x => ?_)))
+      simp only [hd_def, smul_eq_mul, ENNReal.toReal_ofReal (hcond_nonneg x), mul_comm]
+    have hgi : Integrable ((fun x : ℝ => x ^ 2) ∘ scoreWeight fX fY lam z) μ := by
+      rw [hμ_def, integrable_withDensity_iff_integrable_smul₀' hd_meas hd_lt_top]
+      refine (hint_Wsq.congr (Filter.Eventually.of_forall (fun x => ?_)))
+      simp only [hd_def, Function.comp_apply, smul_eq_mul,
+        ENNReal.toReal_ofReal (hcond_nonneg x), mul_comm]
+    have hcont : ContinuousOn (fun x : ℝ => x ^ 2) Set.univ :=
+      (continuous_pow 2).continuousOn
+    have := hconv.map_integral_le hcont isClosed_univ
+      (Filter.Eventually.of_forall (fun _ => Set.mem_univ _)) hfi hgi
+    simpa only [Function.comp_apply] using this
+  -- Assemble: rewrite the mean via S3, then push the RHS through CoV.
+  rw [← hmean]
+  refine hjensen.trans (le_of_eq ?_)
+  rw [hCoV]
+  refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+  simp only [mul_comm]
 
 /-- **Convex Fisher bound (density route, Phase 3c main result).**
 
