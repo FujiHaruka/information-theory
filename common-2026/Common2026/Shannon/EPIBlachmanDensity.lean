@@ -293,8 +293,14 @@ and S3 `score_conv_eq_weighted_integral` to identify `∫ scoreWeight ∂μ` wit
 the score weight against `condDensityX`) and `hint_Wsq` are regularity preconditions
 on admissible densities; none bundles the conclusion inequality.
 
-@audit candidate (Phase 3c-cont closure): no hyp contains the score-square inequality;
-conclusion genuinely assembled (Jensen on a withDensity probability measure). -/
+@audit:ok — independent audit (2026-05-30): no hyp contains the score-square
+inequality. `hpZ` (positivity), `hcond_int`/`hint_W`/`hint_Wsq` (Integrable
+side-conditions) and the boundedness hyps are all regularity preconditions; none
+bundles the conclusion. `IsProbabilityMeasure μ` is genuinely derived from 3b
+`condDensityX_integral_eq_one` (mass = 1, not faked). Conclusion assembled via
+`ConvexOn.map_integral_le` (Jensen for `(·)²`) + `integral_withDensity_…` CoV + S3.
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free, verified
+transiently — S4 body is genuine 0-sorry, no transitive sorry). -/
 theorem score_sq_le_weighted_integral (fX fY : ℝ → ℝ) (lam z : ℝ)
     (hregX : IsRegularDensityV2 fX) (hregY : IsRegularDensityV2 fY)
     (hX_int : Integrable fX volume) (hY_int : Integrable fY volume)
@@ -409,6 +415,17 @@ cross-term-zero). That step requires `∀z`-quantified product / fibre integrabi
 preconditions (`hint_W_z`, `hint_Wsq_z`, `hcond_int_z`, the product-measure
 `Integrable (uncurry ...)`), threaded below as honest regularity preconditions.
 The remaining `sorry` is purely the analytic 3-term Tonelli evaluation, not a wall.
+
+Independent audit (2026-05-30): honest residual, classification confirmed. All
+preconditions are regularity — the `∀z` Integrable hyps (`hint_X/Y/cond_int/W/Wsq`)
+feed S4 per-z; `hint_inner` is the Integrable side-condition of the RHS integrand
+required by `integral_mono_ae` (asserts integrability, NOT the cross-term=0 nor the
+3-term value); `hint_fisherX/Y/Z` are atom-A integrability preconditions. None
+bundles the inequality core, which lives in the `sorry`. Steps (a) S4-monotone via
+`integral_mono_ae` and (b) `condDensityX·p_Z` cancellation are genuine. The `sorry`
+(Tonelli swap + 3-term eval) is plan-closable: `integral_logDeriv_density_eq_zero`
+(FisherInfoV2.lean:158, repo), Tonelli, atom A, S4 (`@audit:ok`) all present → not a
+Mathlib wall. Plan `docs/shannon/epi-wall-reattack-plan.md` exists.
 @residual(plan:epi-wall-reattack-plan) -/
 theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
     (hlam0 : 0 ≤ lam) (hlam1 : lam ≤ 1)
