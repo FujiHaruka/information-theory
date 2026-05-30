@@ -187,7 +187,15 @@ Quantified over abstract positive reals matching the V2 Fisher info of the three
 density witnesses; this is the predicate the EPI derivation actually consumes.
 (Density-keyed `fisherInfoOfDensityReal` is used here rather than the measure-keyed
 `fisherInfoOfMeasureV2` to keep this base file free of an import cycle through
-`FisherInfoV2DeBruijn`; the two agree by `fisherInfoOfMeasureV2_def`.) -/
+`FisherInfoV2DeBruijn`; the two agree by `fisherInfoOfMeasureV2_def`.)
+
+Audit 2026-05-30 (post-pivot): sound Prop statement. The 5 injected hyps
+(`IsRegularDensityV2 fX/fY`, `∫fX=1`, `∫fY=1`, `fXY =ᵐ convDensityAdd fX fY`) are
+jointly satisfiable (Gaussian witness, NON-vacuous); `hconv` ties `fXY` to the
+convolution so the conclusion `1/J_sum ≥ 1/J_X + 1/J_Y` is the genuine Stam bound,
+not universally false. The 5 hyps are regularity preconditions, not the core; the
+core is the Blachman wall (`@residual(wall:stam-blachman)`, discharged downstream).
+No honesty defect. @audit:ok -/
 def IsStamInequalityResidual {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →

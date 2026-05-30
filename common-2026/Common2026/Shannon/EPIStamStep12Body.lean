@@ -197,7 +197,16 @@ conditional-CS integration (`stam_convex_cs` integrated against `p_Z`). The
 single irreducible measure-theoretic step (turning the pointwise `stam_convex_cs`
 into the Fisher-info integral inequality) is the L-S12-A pass-through; once
 granted for all `λ`, §4 derives the optimal bound *fully* via the Wave 7
-λ-optimization. -/
+λ-optimization.
+
+Audit 2026-05-30 (post-pivot): sound Prop statement. The 5 injected hyps
+(`IsRegularDensityV2 fX/fY`, `∫fX=1`, `∫fY=1`, `fXY =ᵐ convDensityAdd fX fY`) are
+jointly satisfiable (Gaussian witness `fX=fY=gaussianPDFReal 0 1`, NON-vacuous) and
+the `hconv` constraint excludes the prior counterexample; the body is the genuine
+∀λ convex Fisher bound, not universally false. The 5 hyps are regularity
+preconditions, NOT the inequality's core (that core is the Blachman wall
+`@residual(wall:stam-blachman)` reached transitively via
+`stamCauchySchwarzOptimal_of_condExpCSHyp`). No honesty defect. @audit:ok -/
 def IsStamCondExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →

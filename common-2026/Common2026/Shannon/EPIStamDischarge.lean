@@ -96,7 +96,16 @@ neither Fisher info convolution nor the inverse-triangle inequality (`rg "Stam"
 
 To avoid division-by-zero, we phrase the predicate to require either
 `J(X) = J(Y) = 0` (Dirac case) or the inverse inequality on the real-valued
-projections (with finiteness). -/
+projections (with finiteness).
+
+Audit 2026-05-30 (post-pivot): sound Prop statement. The 5 injected hyps
+(`IsRegularDensityV2 fX/fY`, `∫fX=1`, `∫fY=1`, `fXY =ᵐ convDensityAdd fX fY`) are
+jointly satisfiable (Gaussian witness, NON-vacuous); `hconv` excludes the prior
+counterexample so the conclusion is the genuine Stam bound, not universally false.
+The 5 hyps are regularity preconditions, not the core (the core is the Blachman
+wall `@residual(wall:stam-blachman)`). Pivoted in lockstep with
+`IsStamInequalityResidual` (defeq chain via `fisherInfoOfMeasureV2_def`). No honesty
+defect. @audit:ok -/
 def IsStamInequalityHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →

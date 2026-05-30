@@ -257,29 +257,24 @@ theorem stam_inverse_form_of_harmonic_mean
 Strengthens `IsStamCauchySchwarz` to require the witness `λ = J_Y / (J_X + J_Y)`,
 which is the optimal λ minimizing `λ² J_X + (1-λ)² J_Y`.
 
-⚠ **DEFECT — universally FALSE predicate** (independent honesty audit 2026-05-30).
-The body universally quantifies over **arbitrary unconstrained** `fX fY fXY : ℝ→ℝ`
-with NO constraint tying `fXY` to the convolution of `fX, fY`, and
-`fisherInfoOfMeasureV2 _μ f = fisherInfoOfDensity f` **ignores its measure
-argument** (`fisherInfoOfMeasureV2_def`, `:86`, `rfl`), so the densities are also
-untied to `P.map X / P.map Y / P.map (X+Y)`. Refuting instance (all hypotheses
-genuinely satisfiable, NON-vacuous): `fX = fY = gaussianPDFReal 0 1`
-⇒ `J_X = J_Y = (fisherInfoOfDensity (gaussianPDFReal 0 1)).toReal = (ofReal (1/1)).toReal = 1`
-(`fisherInfoOfDensity_gaussianPDFReal`, `FisherInfoV2.lean:273`), RHS `= 1/2`;
-`fXY = gaussianPDFReal 0 (1/100)` ⇒ `J_sum = (ofReal (1/(1/100))).toReal = 100`
-(positive finite, `0 < J_sum` holds); conclusion `100 ≤ 1/2` is FALSE. The genuine
-Stam content `J(p_X ⋆ p_Y) ≤ λ²J(p_X)+(1-λ)²J(p_Y)` cannot be plugged in: the body
-has no handle identifying `fXY` with `convDensityAdd fX fY`. This is NOT a Mathlib
-wall — it is a signature pivot bug. **Owner-task** (out of scope for the
-audit; flagged to orchestrator): add the convolution constraint (e.g.
-`fXY =ᵐ[volume] EPIConvDensity.convDensityAdd fX fY` + density regularity tying
-`fX, fY, fXY` to `pdf (P.map X/Y/(X+Y))`), rippling to
-`entropy_power_inequality_via_body` / `stam_inequality_via_predicate_optimal` /
-`stam_convex_fisher_bound_gaussian`. Note the sibling predicates
-`IsStamCondExpCSHyp` (`EPIStamStep12Body.lean:200`) and `IsStamInequalityResidual`
-(`EntropyPowerInequality.lean:190`) share the identical missing-convolution-constraint
-defect (same refuting instance).
-@audit:defect(false-statement) @audit:closed-by-successor(epi-wall-reattack-plan) -/
+**Audit 2026-05-30 (post-pivot, independent honesty audit) — defect RESOLVED.**
+The Phase 3-pre signature pivot injected the 5 binding hypotheses
+(`IsRegularDensityV2 fX`, `IsRegularDensityV2 fY`, `∫fX=1`, `∫fY=1`,
+`fXY =ᵐ[volume] convDensityAdd fX fY`) between the Fisher-info identifications and
+the conclusion. These hyps are **jointly satisfiable, NON-vacuous** (Gaussian
+witness: `fX = fY = gaussianPDFReal 0 1` satisfies `IsRegularDensityV2`
+— the structure's `integral_deriv_eq_zero` field is the Gaussian
+`integral_deriv_gaussianPDFReal_eq_zero` — and `∫ = 1`; then
+`convDensityAdd fX fY = gaussianPDFReal 0 2`, so `fXY` is constrained to it). With
+`hconv` in force the prior refuting instance (`fXY = gaussianPDFReal 0 (1/100)`,
+unrelated to the convolution) is **excluded**: `J_sum = 1/2 = J_X·J_Y/(J_X+J_Y)`
+holds with equality (Gaussian saturation). The conclusion
+`J_sum ≤ J_X·J_Y/(J_X+J_Y)` is now the **genuine Stam bound**, not universally
+false. The 5 hyps are regularity preconditions (density smoothness / probability
+normalization / convolution identification), NOT the inequality's core — the core
+(Blachman score-of-convolution) stays in the `sorry` of `stam_step2_density_wall`.
+sound Prop statement; no honesty defect.
+@audit:ok -/
 def IsStamCauchySchwarzOptimal {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
@@ -359,23 +354,25 @@ The correct next step is an **owner-level signature pivot** of
 `sorry` and is flagged to the orchestrator rather than built upon. Until then the
 honest residual stays here.
 
-## ⚠ Audit verdict 2026-05-30 — `wall:stam-step2-density` is a DEFECT, not a wall
+## ✅ Audit verdict 2026-05-30 (post-pivot) — defect RESOLVED, downgraded to honest wall
 
-Independent honesty audit confirmed (counterexample re-derived from verbatim
-closed forms) that the target predicate `IsStamCauchySchwarzOptimal X Y P` is
-**universally FALSE at its current signature** (see the def docstring at `:245`).
-This `sorry` therefore does **not** mark a genuine "Mathlib-absent wall" closeable
-by Blachman apparatus — it proves a FALSE statement, so **no** honest discharge
-exists at this signature. The prior `@residual(wall:stam-step2-density)` was a
-**misclassification** (a defect masquerading as a Mathlib wall). Reclassified to
-`@audit:defect(false-statement)`. The genuine next step is the **owner-level
-signature pivot** of `IsStamCauchySchwarzOptimal` (add the convolution constraint;
-ripple to `entropy_power_inequality_via_body` / `stam_inequality_via_predicate_optimal`
-/ `stam_convex_fisher_bound_gaussian`); the `sorry` body becomes honestly
-dischargeable only after that pivot. Out of scope for the audit — flagged to
-orchestrator as an owner task under `epi-wall-reattack-plan`.
+The Phase 3-pre signature pivot added the convolution constraint
+`fXY =ᵐ[volume] convDensityAdd fX fY` (+ density regularity + normalization) to
+`IsStamCauchySchwarzOptimal` (see its def docstring at `:283`). With that
+constraint in force the prior counterexample (`fXY` unrelated to the convolution)
+is **excluded**, so the target predicate is **no longer universally false** — it
+states the genuine Stam bound `J(p_X ⋆ p_Y) ≤ J(p_X)J(p_Y)/(J(p_X)+J(p_Y))`. The
+prior `@audit:defect(false-statement)` therefore no longer applies. What remains
+is the **genuine Mathlib wall**: the Blachman score-of-convolution conditional-
+expectation representation (`condExp` of `logDeriv` of a convolution density) plus
+Fisher-information convolution lemmas are absent from Mathlib (`rg "Stam|Blachman|
+score_conv" → 0 hit`; corroborated by `epi-stam-blachman-discharge-inventory.md`
+loogle `Found 0`). Reclassified from `@audit:defect(false-statement)` to an honest
+`sorry` carrying `@residual(wall:stam-blachman)`. The regularity / measurability /
+independence arguments are honest preconditions; the irreducible analytic core is
+the `sorry`. Closure tracked under `epi-wall-reattack-plan` (Phase 3).
 
-@audit:defect(false-statement) @audit:closed-by-successor(epi-wall-reattack-plan) -/
+@residual(wall:stam-blachman) -/
 theorem stam_step2_density_wall
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -394,13 +391,12 @@ body never used it — it is unconditionally constructible by
 Audit note (2026-05-30): this is a genuine **implication** wrapper — body is the
 algebraic reshaping `J_sum ≤ J_X·J_Y/(J_X+J_Y) ⊢ 1/J_sum ≥ 1/J_X+1/J_Y` (conclusion
 type ≠ hypothesis type), `sorryAx`-free (`#print axioms` → `[propext, Classical.choice,
-Quot.sound]`), so `@audit:ok` for the implication is correct. **Caveat**: the
-antecedent `IsStamCauchySchwarzOptimal X Y P` is a universally-FALSE predicate at its
-current signature (`:245` audit), satisfiable only via the false-statement `sorry`
-wall `stam_step2_density_wall` (`@audit:defect(false-statement)`). This wrapper does
-NOT launder that defect into genuine completeness — it asserts only the implication,
-not the antecedent. After the owner-level signature pivot of `IsStamCauchySchwarzOptimal`
-(`epi-wall-reattack-plan`) the wrapper stays valid (the algebra is signature-agnostic).
+Quot.sound]`), so `@audit:ok` for the implication is correct. **Note (post-pivot,
+audit 2026-05-30)**: the antecedent `IsStamCauchySchwarzOptimal X Y P` now carries
+the convolution constraint `fXY =ᵐ convDensityAdd fX fY` and is a sound (non-false)
+Prop; its remaining `sorry` (`stam_step2_density_wall`) is the honest Mathlib wall
+`@residual(wall:stam-blachman)`, not a false-statement defect. This wrapper asserts
+only the implication and is signature-agnostic, so it stays valid.
 
 `@audit:ok` -/
 @[entry_point]
@@ -580,8 +576,9 @@ carries **no** load-bearing Step-2 analytic hypothesis — only regularity
 localized to the shared sorry lemma `stam_step2_density_wall`.
 
 ⚠ Audit 2026-05-30: `stam_step2_density_wall` is NOT a genuine Mathlib wall — its
-target predicate `IsStamCauchySchwarzOptimal` is universally FALSE at its current
-signature (reclassified to `@audit:defect(false-statement)`; see `:245` / `:359`).
+target predicate `IsStamCauchySchwarzOptimal` is now a sound (non-false) Prop after
+the convolution-constraint pivot (audit 2026-05-30; its remaining `sorry` is the
+honest wall `@residual(wall:stam-blachman)`; see `:283` / `:376`).
 This wrapper therefore consumes a false-statement `sorry` (and a second wall
 `stamToEPIBridge_holds`), so it is NOT proof-done. Honest closure requires the
 owner-level signature pivot under `epi-wall-reattack-plan`, not a Blachman discharge.
