@@ -377,3 +377,25 @@ feasible `ll` (Kraft < 1) を Kraft = 1 へ E 非増加で到達。subset-sum re
      性質で per-symbol collapse を直接救わない。
    - **教訓**: 撤退ライン設計で「閉じない (hard)」と「偽 (false)」を区別する verify step (small-case sim) を必須化。
      statement を信じて 200 行の invariant 機械化に着手していたら偽命題の証明で必ず行き詰まっていた。
+5. **2026-05-30 — `MergedHuffmanAuxIdentHypothesis` 本体も FALSE と確定 (collapse 補題だけでなく primitive 本体が偽)**:
+   判断 #4 は collapse 補題 (`collapseLabel_huffmanLengthAux`) を偽と確定したが、`MergedHuffmanAuxIdentHypothesis`
+   **本体 (primitive predicate そのもの)** は「strong precondition (a,b first-merged 対) なら成立」と旧 docstring が
+   主張していた。本 session で **本体も機械的に FALSE と確定** (反例構成 + 独立網羅検証)。
+   - **反例** (`docs/shannon/verify/merged_huffman_aux_ident_counterexample.py`、機械検証済):
+     β={0,1,2,3} (card 4)、weights `[1,2,1,1]`、`a=0`, `b=2`。全強前提 (a global-min / b rest-min / a≠b /
+     `huffmanLength Q 0 = huffmanLength Q 2 = 2`) を充足し、**かつ a,b は実際に first-merged 対**
+     (元木の最初の merge = {0},{2}) だが、x=0 で恒等式が要求する `huffmanLength Q a - 1 = 1` に対し merged
+     depth = 2 で MISMATCH (x=1 でも depth 1 vs 期待 2 で失敗)。tie が無ければ恒等式は常に成立
+     (870 distinct-weight case で反例 0)。
+   - **根本原因**: 決定的 colex tie-break が merge 操作で不安定。merge 後 singleton {0}(確率 2/5) が再 Huffman で
+     {3}(1/5) と先に対になり depth 2 に戻り、元木の {0,2} 部分木を collapse した構造に**対応しない**。collapse
+     補題 (判断 #4) と同根。「strong precondition で救える」という旧 docstring 主張は誤り。
+   - **帰結**: per-symbol depth identity を介する merged-identity 経路 (`MergedHuffmanAuxIdentHypothesis` /
+     `HuffmanMergedIdentificationHypothesis` / combined walls) は**全体が dead**。`Draft/HuffmanWalls.lean` の
+     wall 2 件は `@audit:defect(false-statement) @audit:retract-candidate(deterministic-colex-merge-instability)`
+     に reclassify (sorry は false-statement の honest marker として残置)、combined/chain-combined 2 件は
+     transitively false-premised (`@audit:defect(false-statement)`)。
+   - **pivot 方向**: tie-invariant な **cost-level merge identity**
+     (`expectedLength(huffman Q) = expectedLength(huffman mergedMeasure) + (Q{a}+Q{b})`) へ。cost は tie-break
+     不変なので決定的 colex でも成立見込み。あるいは exchange-argument による任意 optimal code 経由。per-symbol
+     (depth/length 単位) の identity は決定的 tie-break と相性が悪く、cost/expected-length 単位に上げるのが鍵。

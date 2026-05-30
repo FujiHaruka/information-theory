@@ -762,18 +762,27 @@ abbrev SwapNormalizationHypothesis : Prop :=
 
 /-- **Weak form hypothesis 2**: `huffmanLength` identification on `mergedMeasure`.
 
-**strong precondition** (T1-A'' interface refactor): `a` = global-min (`_h_a_min`),
-`b` = rest-min (`_h_b_min`). identification は `a, b` が **first-merged (確率最小) 対**
-のときのみ成立する (任意の sibling 対では merged tree が一致しない). call site
-(`huffmanLength_optimal_aux_with_hypotheses` の step case) は `exists_sibling_min_pair`
-経由で strong 形を実際に供給するため、これは weak 化ではなく mis-statement の修正.
+`a` = global-min (`_h_a_min`), `b` = rest-min (`_h_b_min`).
+
+⚠ **FALSE as a universal statement** (2026-05-30 機械確定): 旧 docstring は「strong
+precondition (a,b first-merged 対) なら成立、任意 sibling 対では一致しない」と主張したが
+**これは誤り**。反例 β={0,1,2,3} weights `[1,2,1,1]` a=0 b=2 — 全強前提 (a global-min /
+b rest-min / a≠b / huffmanLength 一致) **かつ a,b first-merged** でも x=0 で恒等式失敗。
+merged tree が元木の collapse に対応しない (決定的 colex tie-break の merge 不安定性)。本
+predicate は `MergedHuffmanAuxIdentHypothesis` と同一 statement (measure-level、
+`initMultiset_mergedMeasure_eq` 経由) で同じ反例で FALSE。discharge 不能。検証 script:
+`docs/shannon/verify/merged_huffman_aux_ident_counterexample.py`。
+
+タグ語彙について: 本 def は conditional wrapper に hypothesis として渡る形なので
+`@audit:retract-candidate(load-bearing-predicate)` を保持するが、wall lemma 側は
+`@audit:defect(false-statement)` 寄りの状況。最終タグ語彙の確定は別途起動される
+honesty-auditor の判定に委ねる。
 
 @audit:retract-candidate(load-bearing-predicate) — `HuffmanWalls.huffman_merged_identification_hypothesis_holds`
-が wall lemma として未 discharge (`@residual(plan:huffman-2hyp-vertical-reduction)`)。本
-predicate を hypothesis に取る wrapper 群 (上流 + 下流 全 21 件) は signature 不変で hypothesis
-形のまま残存 (import cycle 回避、`huffman-sorry-migration-plan.md` 判断ログ #2-#4)。後続 plan
-完遂時に wall lemma を constructive に置換 + wrapper 群を file-by-file で signature 改変
-(hypothesis 引数削除) すれば本 predicate は完全に削除可能。 -/
+が wall lemma として false-statement で discharge 不能
+(`@audit:defect(false-statement)`)。本 predicate を hypothesis に取る wrapper 群
+(上流 + 下流 全 21 件) は signature 不変で hypothesis 形のまま残存 (import cycle 回避、
+`huffman-sorry-migration-plan.md` 判断ログ #2-#4)。 -/
 abbrev HuffmanMergedIdentificationHypothesis : Prop :=
   ∀ {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]

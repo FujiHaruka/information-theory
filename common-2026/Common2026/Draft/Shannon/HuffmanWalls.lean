@@ -28,18 +28,23 @@ import cycle を避けるため、`HuffmanOptimality.lean:778/:1028` (`huffmanLe
 ## Wall lemma の構成
 
 - **Hyp1 (`SwapNormalizationHypothesis`)**: `swap_normalization_proof` (`HuffmanStrongForm.lean:144`)
-  が **constructive proof 済** のため direct alias、sorry なし。
-- **Hyp2 (`HuffmanMergedIdentificationHypothesis`)**: 未 proved、direct sorry +
-  `@residual(plan:huffman-2hyp-vertical-reduction)`。
-- **Hyp_aux (`MergedHuffmanAuxIdentHypothesis`)**: 未 proved、direct sorry +
-  `@residual(plan:huffman-strong-form-completion)`。
+  が **constructive proof 済** のため direct alias、sorry なし (`@audit:ok`)。
+- **Hyp2 (`HuffmanMergedIdentificationHypothesis`)**: ⚠ **FALSE STATEMENT** (2026-05-30 機械確定)。
+  direct sorry は discharge 可能性ではなく false-statement の honest marker として残置。
+  `@audit:defect(false-statement) @audit:retract-candidate(deterministic-colex-merge-instability)`。
+- **Hyp_aux (`MergedHuffmanAuxIdentHypothesis`)**: ⚠ **FALSE STATEMENT** (Hyp2 と同一 statement、
+  同じ反例で偽)。direct sorry は false-statement の honest marker。同上タグ。
 - **Combined (`HuffmanCombinedHypothesis`)**: Hyp1 + Hyp2 の constructive `And` composition、
-  sorry なし。
+  body は ⟨...⟩ で sorry を直接持たないが Hyp2 が false のため transitively false-premised。
 - **Chain combined (`HuffmanChainCombinedHypothesis`)**: Hyp1 + Hyp2 + `SwapStepLeChainHypothesis`
   の constructive composition (chain は `swapStepLeChainHypothesis_holds` が trivial discharge 済)、
-  sorry なし。
+  body は ⟨...⟩ で sorry を直接持たないが Hyp2 が false のため transitively false-premised。
 
-合計: direct sorry 2 件 + constructive composition 3 件 = 5 wall lemma。
+合計: false-statement direct sorry 2 件 + transitively false-premised composition 2 件
++ constructive `@audit:ok` 1 件 = 5 wall lemma。merged-identity 経路 (per-symbol depth identity)
+は全体が dead — pivot 方向は tie-invariant な cost-level merge identity
+(反例 / 根本原因 → `docs/shannon/verify/merged_huffman_aux_ident_counterexample.py` +
+`huffman-strong-form-completion-plan.md` 判断ログ #5)。
 -/
 
 namespace InformationTheory.Shannon.Huffman
@@ -54,30 +59,67 @@ universe u
 theorem swap_normalization_hypothesis_holds : SwapNormalizationHypothesis.{u} :=
   swap_normalization_proof
 
-/-- **Wall lemma (Hyp2)**: `huffmanLength` identification on `mergedMeasure`。
-完全 discharge は後続 plan `huffman-2hyp-vertical-reduction-plan` で予定。
+/-- **Wall lemma (Hyp2)** — ⚠ **FALSE STATEMENT, discharge 不能**.
 
-@residual(plan:huffman-2hyp-vertical-reduction) -/
+`HuffmanMergedIdentificationHypothesis` は `MergedHuffmanAuxIdentHypothesis` と
+**同一 statement** (measure-level、`initMultiset_mergedMeasure_eq` 経由で aux 形に帰着)。
+従って下記の aux 反例がそのまま適用され、本 statement も FALSE。
+
+反例 (機械検証済、`docs/shannon/verify/merged_huffman_aux_ident_counterexample.py`):
+β = {0,1,2,3} (card 4)、weights `[1,2,1,1]`、`a=0`, `b=2`。全強前提 (a global-min /
+b rest-min / a≠b / huffmanLength 一致) を充足し、かつ a,b は実際に first-merged 対だが、
+x=0 で恒等式が要求する `huffmanLength Q a - 1 = 1` に対し merged depth = 2 で MISMATCH。
+根本原因: 決定的 colex tie-break が merge 操作で不安定 (merge 後 singleton {0}(確率2/5)
+が再 Huffman で {3}(1/5) と先に対になり depth 2 に戻る → 元木の collapse に対応しない)。
+
+`sorry` は discharge 可能性を示すものではなく、false statement の honest marker として
+残置 (consumer 設計を cost-level identity に pivot するまで撤回保留)。
+
+@audit:defect(false-statement) @audit:retract-candidate(deterministic-colex-merge-instability) -/
 theorem huffman_merged_identification_hypothesis_holds :
     HuffmanMergedIdentificationHypothesis.{u} := by
   sorry
 
-/-- **Wall lemma (Hyp_aux)**: merged measure 上の `huffmanLengthAux` 識別の primitive 形。
-完全 discharge は後続 plan `huffman-strong-form-completion-plan` で予定。
+/-- **Wall lemma (Hyp_aux)** — ⚠ **FALSE STATEMENT, discharge 不能**.
 
-@residual(plan:huffman-strong-form-completion) -/
+merged measure 上の `huffmanLengthAux` 識別の primitive 形。`MergedHuffmanAuxIdentHypothesis`
+は universal statement として FALSE と機械的に確定 (2026-05-30)。
+
+反例 (機械検証済、`docs/shannon/verify/merged_huffman_aux_ident_counterexample.py`):
+β = {0,1,2,3} (card 4)、weights `[1,2,1,1]`、`a=0`, `b=2`。全強前提 (a global-min /
+b rest-min / a≠b / `huffmanLength Q 0 = huffmanLength Q 2 = 2`) を充足し、かつ a,b は
+実際に first-merged 対 (元木の最初の merge = {0},{2}) だが、x=0 で恒等式が要求する
+`huffmanLength Q a - 1 = 1` に対し merged depth = 2 で MISMATCH (x=1 でも depth 1 vs
+期待 2 で失敗)。根本原因: 決定的 colex tie-break が merge 操作で不安定 — merge 後 singleton
+{0}(確率 2/5) が再 Huffman で {3}(1/5) と先に対になり depth 2 に戻り、元木の {0,2} 部分木を
+collapse した構造に対応しない。tie が無ければ恒等式は常に成立 (870 distinct-weight case で
+反例 0、検証済) であり collapse 補題 (前セッション FALSE 確定) と同根。「strong precondition
+(first-merged) なら成立」という旧 docstring 主張も上記反例で誤りと確定。
+
+`sorry` は discharge 可能性を示すものではなく、false statement の honest marker として残置。
+
+@audit:defect(false-statement) @audit:retract-candidate(deterministic-colex-merge-instability) -/
 theorem merged_huffman_aux_ident_hypothesis_holds : MergedHuffmanAuxIdentHypothesis.{u} := by
   sorry
 
-/-- **Wall lemma (combined, constructive)**: Hyp1 + Hyp2 の `And` composition。
-Hyp1 は constructive、Hyp2 は wall lemma 経由なので本 wall も sorry を持たないが、
-Hyp2 wall の closure に transitively 依存する。 -/
+/-- **Wall lemma (combined)** — ⚠ **transitively false-premised**.
+
+Hyp1 + Hyp2 の `And` composition。body は ⟨...⟩ constructive で sorry を直接持たないが、
+Hyp2 (`huffman_merged_identification_hypothesis_holds`) が false-statement wall のため、
+本 composition も transitively false-premised (Hyp2 wall closure 不能 = 本 wall も genuine 化不能)。
+
+@audit:defect(false-statement) -/
 theorem huffman_combined_hypothesis_holds : HuffmanCombinedHypothesis.{u} :=
   ⟨swap_normalization_hypothesis_holds, huffman_merged_identification_hypothesis_holds⟩
 
-/-- **Wall lemma (chain combined, constructive)**: Hyp1 + Hyp2 + chain hypothesis の triple
-`And` composition。chain hypothesis は `swapStepLeChainHypothesis_holds` で trivial に
-discharge 済。本 wall も sorry を持たないが、Hyp2 wall の closure に transitively 依存する。 -/
+/-- **Wall lemma (chain combined)** — ⚠ **transitively false-premised**.
+
+Hyp1 + Hyp2 + chain hypothesis の triple `And` composition。chain hypothesis は
+`swapStepLeChainHypothesis_holds` で trivial に discharge 済。body は ⟨...⟩ constructive で
+sorry を直接持たないが、Hyp2 (`huffman_merged_identification_hypothesis_holds`) が
+false-statement wall のため、本 composition も transitively false-premised。
+
+@audit:defect(false-statement) -/
 theorem huffman_chain_combined_hypothesis_holds : HuffmanChainCombinedHypothesis.{u} :=
   ⟨swap_normalization_hypothesis_holds, huffman_merged_identification_hypothesis_holds,
    swapStepLeChainHypothesis_holds⟩

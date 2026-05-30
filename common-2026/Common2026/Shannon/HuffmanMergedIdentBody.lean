@@ -120,7 +120,14 @@ predicate を hypothesis に取る wrapper 群 (`huffmanLength_optimal_with_swap
 `huffmanLength_optimal_modulo_aux_ident`) は import cycle 回避のため signature 不変
 (`huffman-sorry-migration-plan.md` 判断ログ #3)。後続 plan `huffman-strong-form-completion-plan`
 完遂時に wall lemma を constructive に置換 + wrapper を signature 改変すれば本 predicate
-は完全に削除可能。 -/
+は完全に削除可能。
+
+⚠ **FALSE as a universal statement** (2026-05-30 機械確定): 反例 β={0,1,2,3} weights
+`[1,2,1,1]` a=0 b=2 — 全強前提 (a global-min / b rest-min / huffmanLength 一致) **かつ
+a,b first-merged** でも x=0 で恒等式失敗 (merged depth 2 vs 期待 `huffmanLength Q a - 1 = 1`)。
+決定的 colex tie-break の merge 不安定性により merged tree が元木の collapse に対応しない
+ため。discharge 不能。consumer 設計の pivot 要 (per-symbol depth identity → tie-invariant
+な cost-level merge identity へ)。検証 script: `docs/shannon/verify/merged_huffman_aux_ident_counterexample.py`。 -/
 abbrev MergedHuffmanAuxIdentHypothesis : Prop :=
   ∀ {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]

@@ -170,6 +170,28 @@ source: [`wave1-plan-sync-source-coding.md`](../audit/wave1-plan-sync-source-cod
 - 既存 Lean code (signature / body) は不変. docstring 内タグ書換のみ.
 - 本 plan stub は Phase 設計を含まない (skeleton, 後続 `lean-planner` 仕事). 実装計画は TBD.
 
+## 判断ログ
+
+1. **2026-05-30 — Hyp2 (`HuffmanMergedIdentificationHypothesis`) は FALSE STATEMENT と確定、本 plan の discharge target は dead**:
+   本 plan の SoT 2 load-bearing hypothesis のうち Hyp2 `HuffmanMergedIdentificationHypothesis`
+   (`HuffmanOptimality.lean:777`) は、`MergedHuffmanAuxIdentHypothesis` と同一 statement
+   (measure-level、`initMultiset_mergedMeasure_eq` 経由で aux 形に帰着) であり、**universal statement
+   として機械的に FALSE と確定**。
+   - **反例** (`docs/shannon/verify/merged_huffman_aux_ident_counterexample.py`、機械検証済):
+     β={0,1,2,3} (card 4)、weights `[1,2,1,1]`、`a=0`, `b=2`。全強前提充足 + a,b first-merged でも
+     x=0 で恒等式失敗 (merged depth 2 vs 期待 `huffmanLength Q a - 1 = 1`)。根本原因は決定的 colex
+     tie-break の merge 不安定性 (詳細は `huffman-strong-form-completion-plan.md` 判断ログ #5)。
+   - **帰結**: 本 plan の discharge target (Hyp2 wall `huffman_merged_identification_hypothesis_holds`
+     を constructive に閉じる) は **dead**。`Draft/HuffmanWalls.lean` で当該 wall は
+     `@audit:defect(false-statement) @audit:retract-candidate(deterministic-colex-merge-instability)`
+     に reclassify 済 (sorry は false-statement の honest marker として残置)。Hyp1
+     (`SwapNormalizationHypothesis`) は `swap_normalization_proof` で既に genuine discharge 済のため
+     本 plan の 2-hyp のうち閉じる余地があるのは Hyp1 のみ。
+   - **pivot 要**: per-symbol depth identity 経路全体が dead。tie-invariant な cost-level merge identity
+     (`expectedLength(huffman Q) = expectedLength(huffman mergedMeasure) + (Q{a}+Q{b})`) へ pivot。
+     本 plan の vertical-reduction 集約構造 (30 declaration の slug 移管) は維持しつつ、discharge target を
+     cost-level に差し替える後続 plan 設計が必要。
+
 ## 関連 audit / planning 文書
 
 - 集約根拠: [`docs/audit/wave1-plan-sync-source-coding.md`](../audit/wave1-plan-sync-source-coding.md)
