@@ -387,7 +387,15 @@ integral. The product-measure integrability hypotheses (`Integrable (uncurry …
 honest regularity preconditions (Gaussian-satisfied, load-bearing-free). -/
 
 /-- **Term 1** (the `λ²` term): translation invariance pulls the inner `z` integral of
-`fY (z - x)` to `1`, leaving `J_X`. -/
+`fY (z - x)` to `1`, leaving `J_X`.
+
+@audit:ok — independent audit (2026-05-30): `hnormY` (∫fY=1) is a normalization
+regularity precondition; `hint1 : Integrable (uncurry …) (volume.prod volume)` is a
+pure product-measure integrability precondition on the already-expanded `λ²` term
+integrand (asserts integrability, not the integral's value — no core bundling).
+Conclusion genuinely reconstructed: `integral_integral_swap` (Tonelli) +
+`integral_sub_right_eq_self` (translation) + `hnormY`. Not handed by any hyp.
+sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`). -/
 private theorem convex_fisher_term1 (fX fY : ℝ → ℝ)
     (hnormY : ∫ x, fY x ∂volume = 1)
     (hint1 :
@@ -408,7 +416,15 @@ private theorem convex_fisher_term1 (fX fY : ℝ → ℝ)
   rw [htr, hnormY, mul_one]
 
 /-- **Term 2** (the `(1-λ)²` term): substitute `y = z - x` (translation), the inner `z`
-integral becomes `J_Y`, and `∫_x fX = 1`. -/
+integral becomes `J_Y`, and `∫_x fX = 1`.
+
+@audit:ok — independent audit (2026-05-30): `hnormX` (∫fX=1) is a normalization
+regularity precondition; `hint2 : Integrable (uncurry …) (volume.prod volume)` is a
+pure product-measure integrability precondition on the already-expanded `(1-λ)²` term
+integrand (no core bundling). Conclusion genuinely reconstructed:
+`integral_integral_swap` (Tonelli) + `integral_sub_right_eq_self` (translation) +
+`hnormX`. Not handed by any hyp.
+sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`). -/
 private theorem convex_fisher_term2 (fX fY : ℝ → ℝ)
     (hnormX : ∫ x, fX x ∂volume = 1)
     (hint2 :
@@ -435,7 +451,16 @@ private theorem convex_fisher_term2 (fX fY : ℝ → ℝ)
   rw [integral_mul_const, hnormX, one_mul]
 
 /-- **Term 3** (the cross term): the inner `z` integral of `logDeriv fY (z-x)·fY (z-x)`
-is `∫ logDeriv fY · fY = 0`, so the whole term vanishes. -/
+is `∫ logDeriv fY · fY = 0`, so the whole term vanishes.
+
+@audit:ok — independent audit (2026-05-30): `hregY : IsRegularDensityV2 fY` is a
+regularity precondition (diff/pos/tail/∫deriv=0), consumed only to invoke the
+`@audit:ok` lemma `integral_logDeriv_density_eq_zero`; `hint3 : Integrable (uncurry
+…) (volume.prod volume)` is a pure product-measure integrability precondition on the
+already-expanded cross-term integrand (no core bundling). Conclusion (= 0) genuinely
+reconstructed: `integral_integral_swap` (Tonelli) + `integral_sub_right_eq_self`
+(translation) + `integral_logDeriv_density_eq_zero` (score-mean-zero). Not handed by
+any hyp. sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`). -/
 private theorem convex_fisher_cross (fX fY : ℝ → ℝ)
     (hregY : IsRegularDensityV2 fY)
     (hint3 :
@@ -493,7 +518,23 @@ Assembly (all genuine, no `sorry`):
   `λ²·J_X + (1-λ)²·J_Y` (cross term `= 0`).
 
 2026-05-30 Phase 3c-fin genuine closure (0 sorry, `sorryAx`-free: `#print axioms` =
-`[propext, Classical.choice, Quot.sound]`), independent honesty audit pending. -/
+`[propext, Classical.choice, Quot.sound]`).
+
+@audit:ok — independent honesty audit (2026-05-30): core-reconstruction test PASS.
+The newly-added `hint_prod1/2/3 : Integrable (uncurry fun z x => <concrete expanded
+term>) (volume.prod volume)` assert only product-measure integrability of the three
+fully-spelled-out expanded integrands — they carry the integrand verbatim but assert
+integrability, NOT the integral's value; granting all 3 does not hand over `J_sum ≤
+λ²J_X + (1-λ)²J_Y` (consumed only as Tonelli `integral_integral_swap` /
+`integral_integral` preconditions + helper-lemma args). Likewise `hint_inner`,
+per-z `hint_X/Y`, `hcond_int`, `hint_W/Wsq`, `hint_fisherX/Y/Z` are Integrable
+side-conditions; `hregX/hregY` (IsRegularDensityV2), `hX_bdd`/…, `hnormX/Y`, `hpZ`
+(0 < p_Z), `0 ≤ lam ≤ 1` are regularity preconditions. None bundles the inequality
+core. The bound is genuinely assembled from atom A (`@audit:ok`) + S4
+`score_sq_le_weighted_integral` (`@audit:ok`, Jensen pointwise) + `integral_mono_ae`
++ condDensityX·p_Z cancellation + the 3 Tonelli helpers (each `@audit:ok` above).
+sorryAx-free verified transiently (`#print axioms` = `[propext, Classical.choice,
+Quot.sound]`, no transitive sorry). -/
 theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
     (hlam0 : 0 ≤ lam) (hlam1 : lam ≤ 1)
     (hregX : IsRegularDensityV2 fX) (hregY : IsRegularDensityV2 fY)
