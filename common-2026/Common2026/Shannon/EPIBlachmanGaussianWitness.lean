@@ -325,10 +325,13 @@ hypothesis-handed): `int_prod1/2/3` via the shear `measurePreserving_prod_sub_sw
 `int_inner` via `Integrable.integral_prod_left` (`Integral/Prod.lean:380`) marginal +
 `condDensityX·pZ = fX·fY(z-·)` cancellation; `int_Wsq` via 3-term `(a+b)²` expansion.
 All cited Mathlib lemmas verified present with correct signatures. NON-VACUOUSNESS
-SCOPE: this confirms a proven inhabitant of `IsBlachmanConvReady (gaussian)(gaussian)`
-ONLY; the upstream density-route predicates (`IsStamCauchySchwarzOptimal` /
-`IsStamCondExpCSHyp`) do not yet have a wired Gaussian inhabitant lemma (witness has
-no in-tree consumer beyond docstring prose — final density-route closure step). -/
+SCOPE: this confirms a proven inhabitant of `IsBlachmanConvReady (gaussian)(gaussian)`,
+**now operationally consumed** by `convex_fisher_bound_gaussian_via_density_route`
+(this file, 段4) — the density-route convex Fisher bound `J(Z) ≤ λ² J(X) + (1-λ)² J(Y)`
+genuinely fires end-to-end on Gaussian densities through this witness (the witness is no
+longer an isolated existence proof). The upstream density-route predicates
+(`IsStamCauchySchwarzOptimal` / `IsStamCondExpCSHyp`) do not yet have a wired Gaussian
+inhabitant lemma — that remains the final density-route closure step. -/
 theorem isBlachmanConvReady_gaussianPDFReal
     {mX mY : ℝ} {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0) :
     IsBlachmanConvReady (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) where
@@ -702,5 +705,63 @@ theorem isBlachmanConvReady_gaussianPDFReal
       (ν := (volume : Measure ℝ))).integrable_comp_of_integrable hsep
     refine hcomp.congr (Filter.Eventually.of_forall fun p => ?_)
     simp only [Function.comp, Function.uncurry]
+
+/-! ## 段4 — capstone: density-route convex Fisher bound fires on Gaussians
+
+The witness `isBlachmanConvReady_gaussianPDFReal`, `isRegularDensityV2_gaussianPDFReal`
+and Gaussian normalization (`integral_gaussianPDFReal_eq_one`) are fed into the
+`@audit:ok` density-route core `convex_fisher_bound_of_ready`, turning the isolated
+existence proof of an `IsBlachmanConvReady` inhabitant into an **operational** statement:
+the convex Fisher bound `J(Z) ≤ λ² J(X) + (1-λ)² J(Y)` genuinely fires for Gaussian
+densities through the density route. This is the first in-tree consumer of the witness.
+-/
+
+/-- **Density-route convex Fisher bound for Gaussians (capstone).**
+
+The density-route convex Fisher bound `convex_fisher_bound_of_ready` fires end-to-end
+on Gaussian densities: feeding the proven `IsBlachmanConvReady` witness +
+`IsRegularDensityV2` instances + Gaussian normalization, every precondition is an
+existing `@audit:ok` part, so this is genuine 0-sorry. This wires the previously
+isolated witness into an actual consumer, upgrading "an inhabitant exists" to "the
+density route computes the bound for Gaussians".
+
+WITNESS STATUS: proof done (genuine 0-sorry). Every argument to
+`convex_fisher_bound_of_ready` is an `@audit:ok` part:
+`isBlachmanConvReady_gaussianPDFReal` / `isRegularDensityV2_gaussianPDFReal` (this file)
+and `integral_gaussianPDFReal_eq_one` (Mathlib). -/
+theorem convex_fisher_bound_gaussian_via_density_route
+    (mX mY : ℝ) {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0)
+    (lam : ℝ) (hlo : 0 ≤ lam) (hhi : lam ≤ 1) :
+    (fisherInfoOfDensity (convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal mY vY))).toReal
+      ≤ lam ^ 2 * (fisherInfoOfDensity (gaussianPDFReal mX vX)).toReal
+        + (1 - lam) ^ 2 * (fisherInfoOfDensity (gaussianPDFReal mY vY)).toReal :=
+  convex_fisher_bound_of_ready (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) lam hlo hhi
+    (isRegularDensityV2_gaussianPDFReal hvX) (isRegularDensityV2_gaussianPDFReal hvY)
+    (integral_gaussianPDFReal_eq_one mX hvX) (integral_gaussianPDFReal_eq_one mY hvY)
+    (isBlachmanConvReady_gaussianPDFReal hvX hvY)
+
+/-- **Density-route Gaussian Fisher bound in closed form.**
+
+Specializing `convex_fisher_bound_gaussian_via_density_route` via the Gaussian Fisher
+closed form `J(𝒩(m,v)) = 1/v` (`fisherInfoOfDensity_gaussianPDFReal`) and the
+convolution closed form `convDensityAdd (gaussian)(gaussian) = gaussian(sum)`, the
+density route yields the same `1/(vX+vY) ≤ λ²/vX + (1-λ)²/vY` arithmetic content as the
+measure-level closed-form route `stam_convex_fisher_bound_gaussian`. This makes the
+agreement of the two routes explicit. -/
+theorem convex_fisher_bound_gaussian_via_density_route_closed_form
+    (mX mY : ℝ) {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0)
+    (lam : ℝ) (hlo : 0 ≤ lam) (hhi : lam ≤ 1) :
+    (1 : ℝ) / (vX + vY) ≤ lam ^ 2 * (1 / (vX : ℝ)) + (1 - lam) ^ 2 * (1 / (vY : ℝ)) := by
+  have hvXY : vX + vY ≠ 0 := fun h => hvX (add_eq_zero.mp h).1
+  have hbnd := convex_fisher_bound_gaussian_via_density_route mX mY hvX hvY lam hlo hhi
+  rw [convDensityAdd_gaussian_closed_form hvX hvY,
+    fisherInfoOfDensity_gaussianPDFReal _ hvXY,
+    fisherInfoOfDensity_gaussianPDFReal _ hvX,
+    fisherInfoOfDensity_gaussianPDFReal _ hvY,
+    ENNReal.toReal_ofReal (by positivity),
+    ENNReal.toReal_ofReal (by positivity),
+    ENNReal.toReal_ofReal (by positivity),
+    NNReal.coe_add] at hbnd
+  exact hbnd
 
 end Common2026.Shannon.EPIBlachmanGaussianWitness

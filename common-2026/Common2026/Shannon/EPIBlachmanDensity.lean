@@ -692,7 +692,7 @@ quantified over `lam ∈ [0,1]` because the consuming predicates conclude an `�
 bound. -/
 /-- Regularity precondition bundle for the convolution-Fisher analysis.
 
-@audit:ok — independent honesty audit (2026-05-31): all 20 fields are pure
+@audit:ok — independent honesty audit (2026-05-31): all 19 fields are pure
 regularity / integrability / boundedness / positivity preconditions; the bundle is
 field-for-field the SAME hypotheses `convex_fisher_bound` (`@audit:ok`) already takes
 individually (1:1 mapping verified — see `convex_fisher_bound_of_ready`). The
