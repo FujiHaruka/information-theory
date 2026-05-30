@@ -279,6 +279,42 @@ genuinely discharged separately
 Regularity preconditions (measurability, independence, probability measure) are
 kept as honest arguments; the irreducible analytic content is the `sorry`.
 
+## ⚠ Structural blocker discovered 2026-05-30 (epi-wall-reattack Phase 3, NO-GO)
+
+Phase 3 attempted to discharge this `sorry` via the genuine Blachman route
+(gateway `convDensity_add_differentiable` → conditional score `s_Z = E[s_X | X+Y=z]`
+→ `ConvexOn.map_condExp_le` → `integral_condExp` + cross-term → λ-optimization).
+The attempt is **NO-GO for a deeper reason than the anticipated L-EPIW-3-α
+(Blachman disintegration self-build)**: the *target predicate*
+`IsStamCauchySchwarzOptimal X Y P` is **not provable at its current signature**,
+independent of any Blachman apparatus.
+
+`IsStamCauchySchwarzOptimal` (`:245`) universally quantifies over **arbitrary,
+unconstrained** densities `fX fY fXY : ℝ → ℝ`, with the only hypotheses being the
+three Fisher-info `.toReal` definitions and positivity, and concludes
+`J_sum ≤ J_X * J_Y / (J_X + J_Y)`. Crucially, **there is no constraint linking
+`fXY` to the convolution of `fX, fY`** (and `fisherInfoOfMeasureV2 _μ f`
+**ignores its measure argument** — it is `fisherInfoOfDensity f`, so the
+densities are also not tied to `P.map X / P.map Y / P.map (X+Y)`). The statement
+is therefore mathematically **false**: take `fX = fY = gaussianPDFReal 0 1`
+(`J_X = J_Y = 1`, RHS `= 1/2`) and `fXY = gaussianPDFReal 0 (1/100)`
+(`J_sum = 100`, a finite positive Fisher info via the closed form `1/v`); then
+`100 ≤ 1/2` fails. The genuine Stam content `J(p_X ⋆ p_Y) ≤ λ²J(p_X)+(1-λ)²J(p_Y)`
+cannot be plugged in because the body has **no handle** identifying `fXY` with
+`convDensityAdd fX fY`.
+
+Honest verdict: the wall here is **not** (only) the Blachman score-of-convolution
+self-build. The predicate signature itself strips the convolution relationship
+that makes Stam true, so no Mathlib-complete Blachman apparatus discharges it.
+The correct next step is an **owner-level signature pivot** of
+`IsStamCauchySchwarzOptimal` to add the convolution constraint (e.g.
+`fXY =ᵐ[volume] EPIConvDensity.convDensityAdd fX fY` + density regularity tying
+`fX, fY, fXY` to `pdf (P.map X/Y/(X+Y))`) — a multi-declaration change rippling to
+`entropy_power_inequality_via_body` and the Gaussian discharge
+`stam_convex_fisher_bound_gaussian`. That pivot is out of scope for filling this
+`sorry` and is flagged to the orchestrator rather than built upon. Until then the
+honest residual stays here.
+
 @residual(wall:stam-step2-density) -/
 theorem stam_step2_density_wall
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
