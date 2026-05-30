@@ -108,11 +108,15 @@ Fisher bound is supplied internally by the shared sorry wall lemma
 `isStamInequalityHyp_via_body`. This carries **no** load-bearing analytic
 hypothesis — only measurability / independence / probability measure.
 
-This wrapper is **not** proof done: it consumes the shared sorry wall
+This wrapper is **not** proof done: it consumes the shared sorry lemma
 `stam_step2_density_wall` and so depends transitively on `sorryAx`. The genuine
-residual lives in that wall.
-
-@residual(wall:stam-step2-density) -/
+residual lives in that lemma. ⚠ Audit 2026-05-30: `stam_step2_density_wall` is a
+**false-statement defect**, not a genuine Mathlib wall — its target predicate
+`IsStamCauchySchwarzOptimal` is universally FALSE at its current signature
+(reclassified `@audit:defect(false-statement)`, see `EPIStamInequalityBody.lean:359`).
+Honest closure needs the owner-level signature pivot under `epi-wall-reattack-plan`.
+This is a transitive consumer (body has no local `sorry`), so it carries no active
+`@residual` tag — the defect marker lives on the wall lemma. -/
 @[entry_point]
 theorem isStamInequalityHyp_via_step3 {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

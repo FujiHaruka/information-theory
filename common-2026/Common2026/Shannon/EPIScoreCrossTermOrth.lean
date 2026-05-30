@@ -35,7 +35,13 @@ hypothesis `hmeanX`; NOT a discharge of the Blachman identity (which stays
 `@residual(wall:stam-blachman)` in its own file).
 
 `hsXmeas` / `hsYmeas` are `Measurable sX` / `Measurable sY` regularity
-preconditions (honest hyp, needed for `IndepFun.comp`), not load-bearing. -/
+preconditions (honest hyp, needed for `IndepFun.comp`), not load-bearing.
+
+Independent audit 2026-05-30: `hmeanX` is a precondition on the *input* score's
+mean (`E[sX∘X]=0`), distinct from the conclusion `E[sX·sY]=0` — not circular.
+`IndepFun.comp` + `IndepFun.integral_fun_mul_eq_mul_integral` used correctly.
+`#print axioms` = [propext, Classical.choice, Quot.sound] (sorryAx-free).
+@audit:ok -/
 theorem score_cross_term_eq_zero
     {X Y : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]
     {sX sY : ℝ → ℝ}

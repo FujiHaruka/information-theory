@@ -55,7 +55,13 @@ load-bearing bundling of the conclusion: the differentiability of `convDensityAd
 is *derived*, not assumed.
 
 * `s` is a neighborhood of `z₀`.
-* `bound` is the integrable Gaussian-tail dominating function. -/
+* `bound` is the integrable Gaussian-tail dominating function.
+
+Independent audit 2026-05-30: `h_diff` quantifies the *per-`x` integrand*
+`fun z => pX x * pY (z - x)`, not the integral — regularity precondition, 1:1
+with the gateway lemma's `h_diff`. All 7 hyps are regularity (no load-bearing).
+`#print axioms` = [propext, Classical.choice, Quot.sound] (sorryAx-free).
+@audit:ok -/
 theorem convDensityAdd_hasDerivAt
     (pX pY : ℝ → ℝ) (z₀ : ℝ) {s : Set ℝ} {bound : ℝ → ℝ}
     (hs : s ∈ nhds z₀)
@@ -78,7 +84,11 @@ theorem convDensityAdd_hasDerivAt
 
 /-- `logDeriv p_Z` representation at `z₀` (score of the convolution density):
 `logDeriv (convDensityAdd pX pY) z₀ = (∫ x, p_X x · p_Y'(z₀ - x)) / p_Z(z₀)`.
-This is the Blachman / Fisher connection point. -/
+This is the Blachman / Fisher connection point.
+
+Independent audit 2026-05-30: genuine, sorryAx-free
+(`#print axioms` = [propext, Classical.choice, Quot.sound]).
+@audit:ok -/
 theorem convDensityAdd_logDeriv
     (pX pY : ℝ → ℝ) (z₀ : ℝ) {s : Set ℝ} {bound : ℝ → ℝ}
     (hs : s ∈ nhds z₀)
@@ -101,7 +111,11 @@ theorem convDensityAdd_logDeriv
 
 /-- **Public gateway API**: the convolution density is differentiable at `z₀`, with
 the `logDeriv` (score) given by the score-of-convolution formula. Bundles the two
-atoms above for downstream walls (Phase 3 Blachman / Phase 4 de Bruijn). -/
+atoms above for downstream walls (Phase 3 Blachman / Phase 4 de Bruijn).
+
+Independent audit 2026-05-30: genuine, sorryAx-free.
+`#print axioms` = [propext, Classical.choice, Quot.sound].
+@audit:ok -/
 theorem convDensity_add_differentiable
     (pX pY : ℝ → ℝ) (z₀ : ℝ) {s : Set ℝ} {bound : ℝ → ℝ}
     (hs : s ∈ nhds z₀)
