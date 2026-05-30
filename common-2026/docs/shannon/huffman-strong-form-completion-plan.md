@@ -19,9 +19,9 @@
 - [x] Phase H1 — Hyp1 (SwapNormalization) ✅ **無条件 genuine discharge 済** (`swap_normalization_proof` → `swap_normalization_strong`、shorten + keystone + 2-swap)
 - [~] Phase H2 — Hyp2 (Identification) を C1 決定的再定義で discharge: **部分前進 (2026-05-30)**
   - [x] H2-a/H2-b — 決定的 (colex) relabel cornerstone `huffmanLengthAux_relabel_det` + 6 補助 ✅ (`HuffmanColexDeterminism.lean`、sorryAx 非依存、`@audit:ok`)。docstring-only defect 解消
-  - [~] H2-c — collapse correspondence `collapseLabel_huffmanLengthAux` は **Case B 撤退** (honest sorry、tie-order 独立 invariant の壁、判断ログ #3)。`MergedHuffmanAuxIdentHypothesis` 本体は `Draft/HuffmanWalls.lean:70` で honest sorry 据置
-  - [ ] H2-d — `huffman_merged_identification_proof` publish (collapse closure 後)
-- [ ] Phase H2 残 — **tie-order 独立 invariant の機械化** (~150-250 行、判断ログ #3): 次セッション target
+  - [✗] H2-c — collapse correspondence `collapseLabel_huffmanLengthAux` は **FALSE statement と確定** (2026-05-30、機械的反例 + 独立監査、`@audit:defect(false-statement)`、判断ログ #4)。**per-symbol collapse path は dead-end**。`MergedHuffmanAuxIdentHypothesis` 本体は `Draft/HuffmanWalls.lean:70` で honest sorry 据置
+  - [ ] H2-d — `huffman_merged_identification_proof` publish (新 reduction 経路 closure 後)
+- [ ] Phase H2 残 — **`MergedHuffmanAuxIdentHypothesis` discharge を leaf-merge / length-multiset reduction へ pivot** (新規設計、判断ログ #4): 次セッション target。per-symbol collapse (旧判断ログ #3 の tie-order 独立 invariant) は偽命題で放棄
 - [ ] Phase M — 強形主定理 `huffmanLength_optimal` (hypothesis 引数なし、~5 行 wrapper) 📋
 - [ ] Phase V — 全 file silent + `#print axioms huffmanLength_optimal` で sorryAx 非依存確認 📋
 - 注: 別壁 Hyp2 `huffman_merged_identification_hypothesis_holds` (`HuffmanWalls.lean:63`, `@residual(plan:huffman-2hyp-vertical-reduction)`) も強形完遂には要 closure (別 plan)
@@ -357,3 +357,23 @@ feasible `ll` (Kraft < 1) を Kraft = 1 へ E 非増加で到達。subset-sum re
      これは Mathlib 壁でも C3 (tie-invariance、within-tree) でもなく、cross-tree 構造の自作補題。次セッション target。
    - **次の前提整備**: 本 cornerstone closure 後、`HuffmanMergedIdentBody.lean:117` の load-bearing-predicate
      wrapper 群 (`@audit:retract-candidate`) が tier 2→1 化可能になる (incidental migration の前提が整った)。
+4. **2026-05-30 — collapse 補題 `collapseLabel_huffmanLengthAux` は FALSE statement と確定 (judgment #3 の壁診断は誤り)**:
+   判断ログ #3 はこの補題を「tie-order 独立 invariant が要る true-but-hard な壁 (~150-250 行)」と診断したが、
+   実装着手前の small-case シミュレーションで **statement 自体が偽**と判明、独立 honesty-auditor が反例を
+   step-by-step 検算 + Mathlib `Colex.toColex_lt_toColex_iff_max'_mem` (Colex は max-element 優位) で confirm。
+   - **反例** (`a=1, b=6, p=4`, `rest={({0},4),({2},4),({3},3),({4},6),({5},3)}`、consumer precondition 下でも 84230/2M trials):
+     決定化 `huffmanStep` の tie-break は `groupKey = (prob, toColex label)`。label を `{1}→{1,6}` に拡げると
+     `toColex {1,6} > toColex {2}` (6 が max) になり、同確率 prob-4 group 間の min-2 選択が `{0}+{1}→{0}+{2}` に反転、
+     `z=2` (`≠a,≠b`) の depth が `2→3` に動く。`S₁` 側 depth(2)=2、`S₂` 側 depth(2)=3。
+   - **根因**: `huffmanLengthAux` の depth は colex tie-break order に**依存する** (= tie-order 独立**でない**)。
+     よって「colex を変える relabel 下の per-symbol 不変性」を主張する collapse statement は偽。judgment #3 の
+     「tie-order 独立 invariant」前提が誤りだった。同じ決定化 (Section I の `@audit:ok` cornerstone を unlock) が
+     collapse 系の per-symbol 不変性を**破る**方向に働く設計上の緊張。
+   - **tag**: `@residual(plan:...)` → `@audit:defect(false-statement) @audit:retract-candidate @audit:closed-by-successor(huffman-strong-form-completion)`。standalone (consumer 0、伝播ゼロ)。
+   - **次セッション設計 pivot**: per-symbol collapse は dead-end。`MergedHuffmanAuxIdentHypothesis`
+     (`HuffmanMergedIdentBody.lean:124`) の discharge は (a) 確率 multiset 同一性 (`S₁`/`S₂` の確率は完全一致) から
+     得る length-multiset / 期待長レベルの不変量、または (b) Cover-Thomas 5.8.1 本来の leaf-merge 逆操作 (merged tree
+     最適性の lifting) に切り替える。`_h_sibling : huffmanLength Q a = huffmanLength Q b` は un-merged tree `Q` 上の
+     性質で per-symbol collapse を直接救わない。
+   - **教訓**: 撤退ライン設計で「閉じない (hard)」と「偽 (false)」を区別する verify step (small-case sim) を必須化。
+     statement を信じて 200 行の invariant 機械化に着手していたら偽命題の証明で必ず行き詰まっていた。
