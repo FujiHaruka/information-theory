@@ -7,6 +7,7 @@ import Common2026.Shannon.FisherInfoV2
 import Common2026.Shannon.FisherInfoV2DeBruijn
 import Common2026.Shannon.FisherInfoGaussian
 import Common2026.Shannon.DifferentialEntropy
+import Common2026.Shannon.EPIConvDensity
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Probability.Distributions.Gaussian.Real
@@ -159,6 +160,12 @@ def IsStamCauchySchwarz {Ω : Type*} [MeasurableSpace Ω]
     J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
     J_sum = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
               (P.map (fun ω => X ω + Y ω)) fXY).toReal →
+    Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fX →
+    Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fY →
+    (∫ x, fX x ∂MeasureTheory.volume = 1) →
+    (∫ x, fY x ∂MeasureTheory.volume = 1) →
+    (fXY =ᵐ[MeasureTheory.volume]
+      InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY) →
     ∃ lam : ℝ, 0 ≤ lam ∧ lam ≤ 1 ∧
       J_sum ≤ lam ^ 2 * J_X + (1 - lam) ^ 2 * J_Y
 
@@ -168,11 +175,18 @@ theorem isStamCauchySchwarz_symm {Ω : Type*} [MeasurableSpace Ω]
     (h : IsStamCauchySchwarz X Y P) :
     IsStamCauchySchwarz Y X P := by
   intro J_Y J_X J_sum fY fX fXY hJY hJX hJsum hJY_def hJX_def hJsum_def
+    hregY hregX hnormY hnormX hconv
   have h_comm : (fun ω => Y ω + X ω) = fun ω => X ω + Y ω := by
     funext ω; ring
   rw [h_comm] at hJsum_def
+  -- transport the convolution constraint across `convDensityAdd` commutativity
+  have hconv' : fXY =ᵐ[MeasureTheory.volume]
+      InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY := by
+    rw [InformationTheory.Shannon.EPIConvDensity.convDensityAdd_comm fX fY]
+    exact hconv
   obtain ⟨lam, hlam_lo, hlam_hi, hbd⟩ :=
     h J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
+      hregX hregY hnormX hnormY hconv'
   refine ⟨1 - lam, by linarith, by linarith, ?_⟩
   -- `J_sum ≤ lam² J_X + (1 - lam)² J_Y = (1 - (1 - lam))² J_X + (1 - lam)² J_Y`.
   have : (1 - (1 - lam)) ^ 2 = lam ^ 2 := by ring
@@ -273,6 +287,12 @@ def IsStamCauchySchwarzOptimal {Ω : Type*} [MeasurableSpace Ω]
     J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
     J_sum = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
               (P.map (fun ω => X ω + Y ω)) fXY).toReal →
+    Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fX →
+    Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fY →
+    (∫ x, fX x ∂MeasureTheory.volume = 1) →
+    (∫ x, fY x ∂MeasureTheory.volume = 1) →
+    (fXY =ᵐ[MeasureTheory.volume]
+      InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY) →
     J_sum ≤ J_X * J_Y / (J_X + J_Y)
 
 /-- **Stam Step 2 density wall — shared sorry 補題**.
@@ -393,9 +413,17 @@ theorem stam_inequality_via_predicate_optimal
       J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
       J_sum = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
                 (P.map (fun ω => X ω + Y ω)) fXY).toReal →
+      Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fX →
+      Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fY →
+      (∫ x, fX x ∂MeasureTheory.volume = 1) →
+      (∫ x, fY x ∂MeasureTheory.volume = 1) →
+      (fXY =ᵐ[MeasureTheory.volume]
+        InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY) →
       1 / J_sum ≥ 1 / J_X + 1 / J_Y := by
   intro J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
+    hregX hregY hnormX hnormY hconv
   have h_le := h_cs_opt J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
+    hregX hregY hnormX hnormY hconv
   exact stam_inverse_form_of_harmonic_mean hJX hJY hJsum h_le
 
 /-- **`IsStamInequalityHyp` from body predicate**. The genuine Stam-inequality
@@ -466,6 +494,7 @@ theorem isStamCauchySchwarz_of_optimal
     (h : IsStamCauchySchwarzOptimal X Y P) :
     IsStamCauchySchwarz X Y P := by
   intro J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
+    hregX hregY hnormX hnormY hconv
   -- Optimal λ = J_Y / (J_X + J_Y) gives the inequality
   -- `J_sum ≤ λ² J_X + (1-λ)² J_Y = J_X J_Y / (J_X + J_Y)`.
   refine ⟨J_Y / (J_X + J_Y), ?_, ?_, ?_⟩
@@ -474,6 +503,7 @@ theorem isStamCauchySchwarz_of_optimal
     rw [div_le_one hsum]
     linarith
   · have h_le := h J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
+      hregX hregY hnormX hnormY hconv
     have h_min := stam_lambda_min hJX hJY
     -- `lam² J_X + (1-lam)² J_Y = J_X J_Y / (J_X + J_Y)` at `lam = J_Y/(J_X+J_Y)`.
     show J_sum ≤ (J_Y / (J_X + J_Y)) ^ 2 * J_X
@@ -512,6 +542,7 @@ theorem isStamCauchySchwarzOptimal_of_lambda_optimal
               + (1 - J_Y / (J_X + J_Y)) ^ 2 * J_Y) :
     IsStamCauchySchwarzOptimal X Y P := by
   intro J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
+    hregX hregY hnormX hnormY hconv
   have h_bd := h J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
   have h_min := stam_lambda_min hJX hJY
   linarith [h_min]

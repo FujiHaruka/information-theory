@@ -1,6 +1,7 @@
 import Common2026.Shannon.FisherInfoV2
 import Mathlib.Analysis.Calculus.ParametricIntegral   -- hasDerivAt_integral_of_dominated_loc_of_deriv_le
 import Mathlib.Analysis.Calculus.LogDeriv
+import Mathlib.MeasureTheory.Group.Integral           -- integral_sub_left_eq_self (reflection)
 
 /-!
 # Convolution density apparatus — gateway atom (DECISIVE GATE)
@@ -38,6 +39,26 @@ open scoped ENNReal NNReal
 `hasDerivAt_integral_of_dominated_loc_of_deriv_le` conclusion shape. -/
 noncomputable def convDensityAdd (pX pY : ℝ → ℝ) : ℝ → ℝ :=
   fun z => ∫ x, pX x * pY (z - x) ∂volume
+
+/-- **Commutativity of the convolution density**: `pX ⋆ pY = pY ⋆ pX`.
+Genuine fact via the reflection substitution `x ↦ z - x` (volume-preserving). -/
+theorem convDensityAdd_comm (pX pY : ℝ → ℝ) :
+    convDensityAdd pX pY = convDensityAdd pY pX := by
+  funext z
+  unfold convDensityAdd
+  -- Reflection substitution `x ↦ z - x` (volume is add-right-invariant) applied to
+  -- the integrand `f x := pX (z - x) * pY x`:
+  --   `∫ x, f (z - x) = ∫ x, f x`, i.e.
+  --   `∫ x, pX (z - (z - x)) * pY (z - x) = ∫ x, pX (z - x) * pY x`.
+  have h := MeasureTheory.integral_sub_left_eq_self
+      (fun x => pX (z - x) * pY x) (μ := volume) z
+  -- h : ∫ x, pX (z - (z - x)) * pY (z - x) = ∫ x, pX (z - x) * pY x
+  simp only [sub_sub_cancel] at h
+  -- h : ∫ x, pX x * pY (z - x) = ∫ x, pX (z - x) * pY x
+  rw [h]
+  congr 1
+  funext x
+  rw [mul_comm]
 
 /-- The `z`-partial-derivative integrand: `∂_z (p_X x · p_Y (z - x)) = p_X x · p_Y' (z - x)`. -/
 noncomputable def convDensityAddDeriv (pX pY : ℝ → ℝ) : ℝ → ℝ → ℝ :=

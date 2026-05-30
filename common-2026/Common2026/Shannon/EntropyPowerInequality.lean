@@ -2,6 +2,7 @@ import Common2026.Meta.EntryPoint
 import Common2026.Shannon.DifferentialEntropy
 import Common2026.Shannon.FisherInfo
 import Common2026.Shannon.FisherInfoV2
+import Common2026.Shannon.EPIConvDensity
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Probability.Distributions.Gaussian.Real
@@ -193,6 +194,12 @@ def IsStamInequalityResidual {Ω : Type*} [MeasurableSpace Ω]
     J_X = Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal fX →
     J_Y = Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal fY →
     J_sum = Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal fXY →
+    Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fX →
+    Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fY →
+    (∫ x, fX x ∂MeasureTheory.volume = 1) →
+    (∫ x, fY x ∂MeasureTheory.volume = 1) →
+    (fXY =ᵐ[MeasureTheory.volume]
+      InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY) →
     1 / J_sum ≥ 1 / J_X + 1 / J_Y
 
 /-- **Stam-to-EPI bridge** (Cover-Thomas Lemma 17.7.3 coupling argument).

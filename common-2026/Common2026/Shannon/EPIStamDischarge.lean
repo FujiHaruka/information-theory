@@ -104,6 +104,12 @@ def IsStamInequalityHyp {Ω : Type*} [MeasurableSpace Ω]
     J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
     J_sum = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
               (P.map (fun ω => X ω + Y ω)) fXY).toReal →
+    Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fX →
+    Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fY →
+    (∫ x, fX x ∂MeasureTheory.volume = 1) →
+    (∫ x, fY x ∂MeasureTheory.volume = 1) →
+    (fXY =ᵐ[MeasureTheory.volume]
+      InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY) →
     1 / J_sum ≥ 1 / J_X + 1 / J_Y
 
 -- (retracted, Phase 3 Wave 2, 2026-05-27) `isStamInequalityHypothesis_of_stamInequalityHyp`
@@ -120,10 +126,17 @@ theorem isStamInequalityHyp_symm
     (h : IsStamInequalityHyp X Y P) :
     IsStamInequalityHyp Y X P := by
   intro J_Y J_X J_sum fY fX fXY hJY hJX hJsum hJY_def hJX_def hJsum_def
+    hregY hregX hnormY hnormX hconv
   have h_comm : (fun ω => Y ω + X ω) = fun ω => X ω + Y ω := by
     funext ω; ring
   rw [h_comm] at hJsum_def
+  -- transport the convolution constraint across `convDensityAdd` commutativity
+  have hconv' : fXY =ᵐ[MeasureTheory.volume]
+      InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY := by
+    rw [InformationTheory.Shannon.EPIConvDensity.convDensityAdd_comm fX fY]
+    exact hconv
   have h_inst := h J_X J_Y J_sum fX fY fXY hJX hJY hJsum hJX_def hJY_def hJsum_def
+    hregX hregY hnormX hnormY hconv'
   linarith
 
 /-! ## §3 — de Bruijn regularity predicate -/
