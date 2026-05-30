@@ -53,54 +53,76 @@ go/no-go の決定的判定基準は §Phase 1 末尾「Done 条件 / go-no-go g
 
 ### Approach
 
-pivot は 1 つの構造手術を 4 述語に複製する: **畳み込み関係を `∀`-body の hyp として注入** (軸1、全 4)、
-かつ **measure-keyed 2 述語には密度同定 hyp を carry** (軸2、Optimal + CondExpCSHyp)。verbatim 確認した
-事実 (`rg`, exit 1): `fisherInfoOfMeasureV2_eq_of_pdf_ae_eq` 系の lemma は **Mathlib にも Common2026
-にも存在しない**。よって軸2 同定は rewrite では不可能で、**抽象 `Prop` hyp** (`HasDensityReal` marker、
-decision A) として consumer から供給する。これらは「どの密度が admissible か」を述べる *regularity
-precondition* であり、不等式の核 (`sorry`) ではない。
+> **2026-05-30 reconcile (独立 proof-pivot-advisor verdict 反映)**: 当初設計の **軸2 (measure-keyed
+> 密度同定 hyp `HasDensityReal`) は廃止**。理由 (verbatim 根拠付き、§判断ログ #3): (a) `fisherInfoOfMeasureV2
+> _μ f := fisherInfoOfDensity f` (`FisherInfoV2.lean:77`/`:89`, `rfl`) が measure を捨てる以上、`J` は
+> density のみで決まり `fX = pdf(P.map X)` は結論に **寄与しない冗長 hyp**。(b) 接続予定だった
+> `fisherInfoOfMeasureV2_eq_of_pdf_ae_eq` は **実在しない** (`rg`/loogle "unknown identifier")。よって
+> `HasDensityReal` を抽象 `Prop` で足すと consumer が witness 供給不能 → 述語が **vacuously satisfiable**
+> → 除去対象の false-statement defect を **degenerate-exploit defect (新 tier-5) にすり替えるだけ**。
+> 代わりに採用するのは **軸1 (畳み込み) + 密度性 regularity (既存 `IsRegularDensityV2` + 正規化 `∫=1`)**。
 
-`IsStamInequalityResidual` は **density-keyed** (`fisherInfoOfDensityReal f` 直、`P.map` 非経由) なので
-**軸1 のみ**で足りる。measure-keyed の Optimal / CondExpCSHyp は `P X Y` 引数を意味あるものにするため
-**軸1+2** が要る。この非対称が decision A の表に現れる。
+pivot は 1 つの構造手術を 4 述語に複製する: **畳み込み関係 + 密度性 regularity を `∀`-body の hyp として
+注入** (全 4 述語、同形)。注入する hyp は 3 種:
+
+- **軸1 (畳み込み)**: `hconv : fXY =ᵐ[volume] convDensityAdd fX fY`。`fXY` を `fX,fY` の畳み込みに縛る
+  (反例 `fXY=𝒩(0,1/100)` を排除する核)。
+- **密度性 (Stam の確率密度前提)**: `hregX : IsRegularDensityV2 fX` / `hregY : IsRegularDensityV2 fY`
+  (既存 structure `FisherInfoV2.lean:124`、`diff`/`pos`/`tail_bot`/`tail_top`/`integrable_deriv`/
+  `integral_deriv_eq_zero` を bundle、Gaussian が充足) + 正規化 `hnormX : ∫ x, fX x ∂volume = 1` /
+  `hnormY : ∫ x, fY x ∂volume = 1` (`IsRegularDensityV2` に正規化 field は無いので別 hyp)。任意関数
+  (負値・非正規化) だと Blachman/Stam は崩れるため、確率密度性は genuine precondition。
+
+`IsRegularDensityV2 fXY` / `hnormXY` は `hconv` から導出可能 (畳み込みが密度性を保存) なので **注入しない**
+(冗長回避、Phase 3 本体で `hconv` 経由で使う)。3 種とも *regularity precondition* であり、不等式の核
+(`sorry`) ではない。measure-keyed (Optimal/CondExpCSHyp) と density-keyed (Residual/Hyp) で **対称**
+(軸2 廃止で非対称は消えた)。measure-keyed の `X Y P` は density-level Stam の interpretive label に留まる。
 
 第 4 の `IsStamInequalityHyp` は `IsStamInequalityResidual` と **別 def** (measure-keyed
 `(fisherInfoOfMeasureV2 _ _).toReal` vs density-keyed `fisherInfoOfDensityReal`) だが、両者は
 `fisherInfoOfMeasureV2_def` 経由で defeq とされ 3 箇所の `exact` がこの defeq に依存する。Residual
-だけ軸1 pivot すると defeq が破れる (`hconv` が片側にしか無くなる) ので、**Hyp も同じ軸1 hyp を注入して
-lockstep で pivot** する (decision B、bridge lemma より cheap)。
+だけ pivot すると defeq が破れるので、**Hyp も同じ hyp を注入して lockstep で pivot** する (decision B、
+bridge lemma より cheap)。
 
-実装順 (decision C): scoping 推奨に従い **Residual + Hyp を先** (軸1 のみ、defeq lockstep)、次に
-**Optimal + CondExpCSHyp** (軸1+2、`stamCauchySchwarzOptimal_of_condExpCSHyp` chain が両者の hyp shape
-一致を要求するので lockstep)。各 step 終了時 `lake env lean` 緑 (type-check done)、1 commit/step。
+実装順 (decision C、advisor verdict で修正): 実依存は `IsStamCondExpCSHyp → (stamCauchySchwarzOptimal_of_condExpCSHyp,
+`Step12:257`) → IsStamCauchySchwarzOptimal → (isStamInequalityHyp_via_body) → IsStamInequalityHyp`。
+よって **`IsStamCondExpCSHyp` が最上流** = 制約注入の起点。推奨順: **段1 = CondExpCSHyp → 段2 = Optimal**
+(of_condExpCSHyp の `linarith` は ∀λ→λ* 抜き出しで新 hyp は透過、引数 append のみ) → **段3 =
+Residual + Hyp** (density-keyed 独立、defeq lockstep)。各 step 終了時 `lake env lean` 緑、1 commit/step。
 
 ### A. 各述語に注入する制約 (verbatim Lean target)
 
 記法: `convDensityAdd := InformationTheory.Shannon.EPIConvDensity.convDensityAdd`
 (`EPIConvDensity.lean:39`、body `fun z => ∫ x, pX x * pY (z - x) ∂volume`、型 `(ℝ→ℝ)→(ℝ→ℝ)→(ℝ→ℝ)`)。
-畳み込み hyp 名 `hconv`、式 `fXY =ᵐ[MeasureTheory.volume] convDensityAdd fX fY`。軸2 同定 hyp は抽象
-`Prop` placeholder `hidX hidY hidXY` (discharge する Mathlib lemma 無し、consumer 供給 — decision A 註)。
+`IsRegularDensityV2 := Common2026.Shannon.FisherInfoV2.IsRegularDensityV2`
+(`FisherInfoV2.lean:124`、structure、field `diff`/`pos`/`tail_bot`/`tail_top`/`integrable_deriv`/
+`integral_deriv_eq_zero` — **正規化 field 無し**)。
 
-| 述語 | file:line | keying | 軸1 hyp (注入式) | 軸2 hyp | 註 |
-|---|---|---|---|---|---|
-| `IsStamInequalityResidual` | `EntropyPowerInequality.lean:190` | density | `(hconv : fXY =ᵐ[volume] convDensityAdd fX fY) →`、`fisherInfoOfDensityReal` 同定 3 連の **後**・`1/J_sum ≥ …` 結論の **前** | なし (density-keyed、`P` 非使用) | self-contained、step1 |
-| `IsStamInequalityHyp` | `EPIStamDischarge.lean:100` | measure | 同 `hconv` を同位置 (3 つの `fisherInfoOfMeasureV2 .toReal` 同定の後) に注入 | なし (defeq 維持のため Residual と同形のみ) | Residual と lockstep、軸2 入れない |
-| `IsStamCauchySchwarzOptimal` | `EPIStamInequalityBody.lean:269` | measure | `(hconv : fXY =ᵐ[volume] convDensityAdd fX fY) →` | `(hidX : HasDensityReal (P.map X) fX) → (hidY : HasDensityReal (P.map Y) fY) → (hidXY : HasDensityReal (P.map (fun ω => X ω + Y ω)) fXY) →` | step2 |
-| `IsStamCondExpCSHyp` | `EPIStamStep12Body.lean:200` | measure | Optimal と同 `hconv` | Optimal と同 `hidX hidY hidXY` | Optimal と完全同形 (chain 一致) |
+**注入する 3 種 hyp** (全 4 述語 同形、軸2 廃止で対称):
 
-`hconv` 配置: 3 つの Fisher 同定 hyp (`J_X = …` `J_Y = …` `J_sum = …`) の **後**、最終結論
-(`J_sum ≤ …` / `1/J_sum ≥ …` / `∀ lam, …`) の **前**。measure-keyed では `hconv` の直後に
-`hidX hidY hidXY`。この順序で consumer の `intro …` / `exact h … ` 呼出は中間に引数を append するだけの
-機械的編集になる (Optimal の最終結論は `J_sum ≤ J_X*J_Y/(J_X+J_Y)`、CondExpCSHyp は `∀ lam, 0≤lam →
-lam≤1 → J_sum ≤ lam^2*J_X + (1-lam)^2*J_Y`、verbatim 確認済)。
+```
+(hregX : IsRegularDensityV2 fX) → (hregY : IsRegularDensityV2 fY) →   -- 密度性 (Gaussian 充足)
+(hnormX : ∫ x, fX x ∂volume = 1) → (hnormY : ∫ x, fY x ∂volume = 1) → -- 正規化
+(hconv : fXY =ᵐ[MeasureTheory.volume] convDensityAdd fX fY) →          -- 軸1 畳み込み
+```
 
-**`HasDensityReal` placeholder** (軸2 carrier): `fisherInfoOfMeasureV2_eq_of_pdf_ae_eq` 不在のため
-`def HasDensityReal (μ : Measure ℝ) (f : ℝ → ℝ) : Prop` を **抽象 marker** として導入する。body は
-implementer が選択: (i) honest 内容形 `μ = μ.withDensity (fun x => ENNReal.ofReal (f x))` が安価に
-type-check するならそれ (residual 不要)、(ii) measurability 義務がこの Phase を超えて波及するなら
-opaque `Prop` forward-declaration として `@residual(wall:stam-pdf-identification)` を付す
-(L-EPIW-3pre-β)。いずれも *precondition* であり load-bearing ではない (不等式の核は `sorry` に残る)。
-**禁止**: `HasDensityReal := True`。
+`fXY` 側の `IsRegularDensityV2 fXY` / `hnormXY` は注入しない (`hconv` から導出可能、Phase 3 で使用)。
+
+| 述語 | file:line | keying | 注入 hyp | 註 |
+|---|---|---|---|---|
+| `IsStamCondExpCSHyp` | `EPIStamStep12Body.lean:200` | measure | `hregX hregY hnormX hnormY hconv` | **最上流**、段1、注入の起点 |
+| `IsStamCauchySchwarzOptimal` | `EPIStamInequalityBody.lean:269` | measure | 同形 | 段2、CondExpCSHyp から伝播 |
+| `IsStamInequalityResidual` | `EntropyPowerInequality.lean:190` | density | 同形 | 段3、density-keyed 独立 |
+| `IsStamInequalityHyp` | `EPIStamDischarge.lean:100` | measure | 同形 (Residual と defeq lockstep) | 段3 |
+
+配置: 3 つの Fisher 同定 hyp (`J_X = …` `J_Y = …` `J_sum = …`) の **後**、最終結論 (`J_sum ≤ …` /
+`1/J_sum ≥ …` / `∀ lam, …`) の **前** に `hregX hregY hnormX hnormY hconv` を append。この順序で
+consumer の `intro …` / `exact h …` 呼出は中間に 5 引数を append するだけの機械的編集になる (Optimal の
+最終結論は `J_sum ≤ J_X*J_Y/(J_X+J_Y)`、CondExpCSHyp は `∀ lam, 0≤lam → lam≤1 → J_sum ≤ lam^2*J_X +
+(1-lam)^2*J_Y`、verbatim 確認済)。density-keyed/measure-keyed で hyp は完全同形 (軸2 廃止)。
+
+**新規 def は導入しない**: 軸2 廃止により `HasDensityReal` placeholder は不要。注入はすべて既存
+`IsRegularDensityV2` + 標準 `=ᵐ` / `∫` で書ける。`L-EPIW-3pre-β` (`HasDensityReal` 不成立) も廃止 (下記 D)。
 
 ### B. 第 4 ripple 対象 `IsStamInequalityHyp` の扱い — 決定
 
@@ -138,39 +160,47 @@ Residual) → (新 Residual)` adapter を 1 本足す方向に退避 (L-EPIW-3pr
 
 ### C. 実装順序 (各 step 終了時 type-check 緑、1 commit/step)
 
-**Step 1 — Residual + Hyp (軸1、defeq lockstep)。**
-1. `EntropyPowerInequality.lean` に `import Common2026.Shannon.EPIConvDensity` 追加 (cycle 無し:
-   EPIConvDensity は `FisherInfoV2` のみ依存の葉 module、scoping §2 確定)。
-2. `IsStamInequalityResidual` (`:190`) に `hconv` 注入。
-3. `IsStamInequalityHyp` (`EPIStamDischarge.lean:100`) に同 `hconv` 注入 (chain 長を Residual と一致)。
-   EPIStamDischarge は EntropyPowerInequality を import 済か確認、未 import なら EPIConvDensity を直 import。
+依存方向 (advisor verdict 確定): `CondExpCSHyp` (最上流) → `Optimal` → `Residual`/`Hyp`。注入する 5 hyp
+`hregX hregY hnormX hnormY hconv` は全 4 述語 同形。
+
+**Step 1 — `IsStamCondExpCSHyp` (最上流、注入起点)。**
+1. `EPIStamStep12Body.lean` に `import Common2026.Shannon.EPIConvDensity` 追加 (cycle 無し:
+   EPIConvDensity は `FisherInfoV2` のみ依存の葉 module、scoping §2 確定)。`IsRegularDensityV2` は
+   `FisherInfoV2` 由来で import 済のはず (未 import なら追加)。
+2. `IsStamCondExpCSHyp` (`:200`) に 5 hyp 注入。
+3. 同 file consumer 透過 (全 pass-through、`fXY` instantiate 無し — scoping §1 確定):
+   `:215 isStamCauchySchwarz_of_condExpCSHyp` / `:227 _congr` / `:234 _symm` /
+   `:257 stamCauchySchwarzOptimal_of_condExpCSHyp` (intro 後 `h … ` に 5 hyp append、`linarith` は
+   ∀λ→λ* 抜き出しで透過) / `:278 _of_step12` / `:299 isStamInequalityHyp_of_step12` /
+   `:313 isStamCauchySchwarz_of_step12`。各 `intro … exact h …` に 5 hyp を中間 append。
+4. 緑 gate: `lake env lean Common2026.Shannon.EPIStamStep12Body`。Commit。
+
+**Step 2 — `IsStamCauchySchwarzOptimal`。**
+1. `EPIStamInequalityBody.lean` に `import Common2026.Shannon.EPIConvDensity` 追加。
+2. `IsStamCauchySchwarzOptimal` (`:269`) に 5 hyp 注入 (CondExpCSHyp と同形 → `of_condExpCSHyp` chain
+   の hyp shape 一致)。
+3. `stam_step2_density_wall` (`:359`): signature が制約付き結論を要求、body は `sorry` 据置。タグは
+   decision D (実装後の独立 audit が書換)。
+4. 同 file consumer 透過 (全 pass-through): `:387 stam_inequality_via_predicate_optimal` /
+   `:410 isStamInequalityHyp_via_body` / `:463 isStamCauchySchwarz_of_optimal` /
+   `:503 isStamCauchySchwarzOptimal_of_lambda_optimal` / `:532 _to_pipeline` /
+   `:574 entropy_power_inequality_via_body`。各 `intro … exact h …` に 5 hyp を中間 append。
+   **sub-bound 引数表**: 5 つの新引数は全て predicate の `∀`-body から素直に流れ、capacity 側分離は無い
+   (`P_cb`/`P_target` 型の sub-bound 分岐は本 predicate 群に無し)。
+5. 緑 gate: `lake env lean Common2026.Shannon.EPIStamInequalityBody` + transitive
+   (`EPIStamStep3Body` `:121 isStamInequalityHyp_via_step3` / `EPIStamDeBruijnConclusion` `:169/203`)。
+   `stam_convex_fisher_bound_gaussian` (`StamGaussianBound.lean:77`) は別系 = ripple 不要。Commit。
+
+**Step 3 — `IsStamInequalityResidual` + `IsStamInequalityHyp` (density-keyed 独立、defeq lockstep)。**
+1. `EntropyPowerInequality.lean` に `import Common2026.Shannon.EPIConvDensity` 追加。
+2. `IsStamInequalityResidual` (`:190`) に 5 hyp 注入。
+3. `IsStamInequalityHyp` (`EPIStamDischarge.lean:100`) に同形注入 (chain 長を Residual と一致させ
+   `fisherInfoOfMeasureV2_def` defeq を維持)。
 4. defeq 3 site (`EPIStamDischarge.lean:445` / `EPIStamToBridge.lean:1119` / `EPIL3Integration.lean:160`)
    + headline consumer (`EntropyPowerInequality.lean:265/278/393`, `EPIPlumbing.lean:192/267`,
-   `EPIStamToBridge.lean:1109`) を `intro`/引数に `hconv` append で透過。
+   `EPIStamToBridge.lean:1109`) を `intro`/引数に 5 hyp append で透過。
 5. 緑 gate: `lake env lean` を `EntropyPowerInequality` / `EPIStamDischarge` / `EPIStamToBridge` /
    `EPIL3Integration` / `EPIPlumbing` に。olean refresh 注意 (CLAUDE.md「After upstream edits」)。Commit。
-
-**Step 2 — Optimal + CondExpCSHyp (軸1+2、lockstep)。**
-1. `HasDensityReal` (decision A) を import 順最下層の file に導入 (`FisherInfoV2` か
-   `EPIStamInequalityBody`、implementer が import cycle 無しを verbatim 確認して選択)。
-2. `IsStamCauchySchwarzOptimal` (`EPIStamInequalityBody.lean:269`) に `hconv hidX hidY hidXY` 注入。
-   同 file に `import Common2026.Shannon.EPIConvDensity` 追加。
-3. `IsStamCondExpCSHyp` (`EPIStamStep12Body.lean:200`) に同形注入。同 file にも EPIConvDensity import。
-4. `stam_step2_density_wall` (`:359`): signature が制約付き結論を要求、body は `sorry` 据置。タグは
-   decision D (実装後の独立 audit が書換)。
-5. consumer 透過 (全て pass-through、`fXY` instantiate 無し — scoping §1 確定): `EPIStamInequalityBody`
-   の `:387 stam_inequality_via_predicate_optimal` / `:410 isStamInequalityHyp_via_body` /
-   `:463 isStamCauchySchwarz_of_optimal` / `:503 isStamCauchySchwarzOptimal_of_lambda_optimal` /
-   `:532 _to_pipeline` / `:574 entropy_power_inequality_via_body`; `EPIStamStep12Body` の
-   `:215 isStamCauchySchwarz_of_condExpCSHyp` / `:227 _congr` / `:234 _symm` / `:257
-   stamCauchySchwarzOptimal_of_condExpCSHyp` / `:278 _of_step12` / `:299 isStamInequalityHyp_of_step12` /
-   `:313 isStamCauchySchwarz_of_step12`。各 `intro … exact h …` に `hconv hidX hidY hidXY` を中間 append。
-   **sub-bound 引数表**: 4 つの新引数は全て predicate の `∀`-body から素直に流れ、capacity 側分離は無い
-   (`P_cb`/`P_target` 型の sub-bound 分岐は本 predicate 群に無し)。
-6. transitive consumer (`EPIStamStep3Body.lean:121 isStamInequalityHyp_via_step3` /
-   `EPIStamDeBruijnConclusion.lean:169/203`): wall 内部呼出のみ、wall signature に増えた precondition を
-   呼出側で供給。`stam_convex_fisher_bound_gaussian` (`StamGaussianBound.lean:77`) は別系 = ripple 不要。
-7. 緑 gate: `lake env lean` を `EPIStamInequalityBody` / `EPIStamStep12Body` / step3 / debruijn 系に。Commit。
 
 ### D. Done 条件 / タグ遷移
 
