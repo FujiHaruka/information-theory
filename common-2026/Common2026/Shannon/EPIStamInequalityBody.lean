@@ -463,7 +463,16 @@ at this wrapper: `epi_via_stam_main` ignores it (`_h_bridge`), discharging the
 Stam→EPI bridge internally via the separate shared sorry lemma
 `stamToEPIBridge_holds`. It is retained only as a cosmetic interface slot.
 
-`@audit:ok` -/
+Independent honesty audit (2026-05-30, commit `f3affec`): the signature is now
+honest — the former load-bearing `h_cs_opt : IsStamCauchySchwarzOptimal` (tier-5
+defect: Step 2 *assumed*) is genuinely removed and `h_bridge` is verified unused
+(`epi_via_stam_main` binds it as `_h_bridge`). However this wrapper is **not**
+proof done: it consumes two shared sorry walls (`stam_step2_density_wall` in this
+file, `EntropyPowerInequality.stamToEPIBridge_holds`) and so depends transitively
+on `sorryAx` (verified via `#print axioms` →
+`[propext, sorryAx, Classical.choice, Quot.sound]`). The prior `@audit:ok`
+(tier 1) was therefore incorrect for the post-rewrite state and has been removed;
+the genuine residual lives in the two walls, each carrying its own `@residual`. -/
 @[entry_point]
 theorem entropy_power_inequality_via_body
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
