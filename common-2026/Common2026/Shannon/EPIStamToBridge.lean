@@ -951,12 +951,19 @@ theorem isStamToEPIScalingHyp_of_stam_debruijn
     h_reg Z_X Z_Y hZX_meas hZY_meas hZX_law hZY_law hXZX hYZY hZXZY
   have h_pos := h_pos_stam Z_X Z_Y hZX_meas hZY_meas hZX_law hZY_law
     hXZX hYZY hZXZY h_reg_sum h_reg_X h_reg_Y
-  -- `IndepFun (X+Y) (Z_X+Z_Y) P` is needed by the per-time de Bruijn wall
+  -- `IndepFun (X+Y) (Z_X+Z_Y) P` is consumed by the per-time de Bruijn wall
   -- (`debruijnIdentityV2_holds` via A-2-3) as a regularity precondition. It is a
   -- genuine fact under the noise-richness coupling but is NOT derivable from the
   -- pairwise independences `IndepFun X Z_X` / `IndepFun Y Z_Y` / `IndepFun Z_X Z_Y`
   -- that `IsStamScalingNoiseHyp` supplies (joint 4-tuple independence is needed).
-  -- @residual(plan:epi-debruijn-pertime-closure)
+  -- Honesty audit (2026-05-31): honest sorry (NOT load-bearing — joint independence
+  -- is a genuine gap, not a conclusion dodge), but slug RECLASSIFIED. This obligation
+  -- is a noise-richness coupling gap owned by the Stam-to-conclusion line
+  -- (`IsStamScalingNoiseHyp` / `stamScalingNoise_exists` live there), NOT the de Bruijn
+  -- per-time analytic plan (Phases 0-5 = density-id / heat-eq / IBP, which do not close
+  -- joint independence). Closure = strengthen the noise model to supply 4-tuple joint
+  -- independence. Reclassified `epi-debruijn-pertime-closure` → `epi-stam-to-conclusion-phaseA-plan`.
+  -- @residual(plan:epi-stam-to-conclusion-phaseA-plan)
   have hXYZXY : IndepFun (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P := by
     sorry
   have h_anti1 := csiszarGap1Source_antitoneOn_Ici_zero X Y Z_X Z_Y P

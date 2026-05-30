@@ -698,6 +698,10 @@ noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
       -- witness to `(rnDeriv).toReal` is the Gaussian special case of the
       -- Phase 1 density-identification atom (Gaussian PDF = rnDeriv via
       -- `IsGaussian.rnDeriv` / `gaussianReal_def`); deferred to Phase 1.
+      -- Honesty audit (2026-05-31): honest_residual, slug correct. Gaussian
+      -- specialization of the Phase 1 density-identification atom; provable from
+      -- `gaussianConvolution_law_of_gaussian` + Gaussian rnDeriv. Not load-bearing
+      -- (proves the external pin equation, not the de Bruijn analytic core).
       -- @residual(plan:epi-debruijn-pertime-closure)
       density_t_eq := by sorry }
 

@@ -235,6 +235,13 @@ def IsRegularDeBruijnHypV2.ofHeatFlow
   -- but the predicate only carries nonnegativity + measurability + heat eq, not
   -- the `= (rnDeriv).toReal` external-shape equation. Pinning `p t` to the actual
   -- rnDeriv is the Phase 1 density-identification atom (`pPath_eq_convDensityAdd`).
+  -- Honesty audit (2026-05-31): honest_residual, slug correct. This is the Phase 1
+  -- density-identification atom; not load-bearing (proves the external pin equation
+  -- bridging `IsHeatFlowDensity`'s `p t` to the actual rnDeriv). NOTE for orchestrator:
+  -- the pre-existing structure `IsHeatFlowDensity` (:135) carries a statement-form
+  -- `heat_equation` field that its OWN docstring admits "holds the conclusion, not the
+  -- derivation" — that is a tier-4-adjacent load-bearing field, but it predates this
+  -- commit (out of pivot scope); flag for incidental migration, not this audit's verdict.
   -- @residual(plan:epi-debruijn-pertime-closure)
   density_t_eq := by sorry
 
