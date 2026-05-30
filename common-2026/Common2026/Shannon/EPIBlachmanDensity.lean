@@ -53,7 +53,11 @@ Numerator `∫ x, fX x · fY (z - x) = convDensityAdd fX fY z = p_Z(z)` (by
 definition), divided by `p_Z(z) > 0`.
 
 `hpZ` is a regularity precondition (positivity of the convolution density at `z`,
-satisfied whenever `fX, fY > 0` are integrable). -/
+satisfied whenever `fX, fY > 0` are integrable).
+
+@audit:ok — genuine: numerator `∫ fX·fY(z-·) = convDensityAdd` is `rfl`, divided
+by genuine positivity `hpZ` (`div_self`); not a degenerate/vacuous use of `0 < p_Z`.
+sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`). -/
 theorem condDensityX_integral_eq_one (fX fY : ℝ → ℝ) (z : ℝ)
     (hpZ : 0 < convDensityAdd fX fY z) :
     ∫ x, condDensityX fX fY z x ∂volume = 1 := by
@@ -70,7 +74,12 @@ theorem condDensityX_integral_eq_one (fX fY : ℝ → ℝ) (z : ℝ)
 
 Genuine: apply the Phase 3a gateway `convDensityAdd_hasDerivAt_of_regular` in both
 factor orders, use `convDensityAdd_comm` + derivative uniqueness, then the
-volume-preserving reflection substitution `x ↦ z - x`. -/
+volume-preserving reflection substitution `x ↦ z - x`.
+
+@audit:ok — all hyps are regularity preconditions (`IsRegularDensityV2` =
+diff/pos/tail/∫deriv=0, `Integrable`, `∃M` boundedness); none bundles the
+conclusion. Conclusion derived from the `@audit:ok` gateway in both factor orders
++ `HasDerivAt.unique` + reflection. sorryAx-free. -/
 theorem symm_deriv_integral_eq (fX fY : ℝ → ℝ) (z : ℝ)
     (hregX : IsRegularDensityV2 fX) (hregY : IsRegularDensityV2 fY)
     (hX_int : Integrable fX volume) (hY_int : Integrable fY volume)
@@ -122,7 +131,15 @@ Proof skeleton (explicit Bochner integrals + cancellation, NO disintegration):
 * `∫ deriv fX(x) fY(z-x) = p_Z'(z)` (S2) and `∫ fX(x) deriv fY(z-x) = p_Z'(z)`
   (gateway derivative).  Numerator `= λ p_Z' + (1-λ) p_Z' = p_Z'`.  Divide by `p_Z`.
 
-`h_int_W` is the regularity precondition that the weighted integrand is integrable. -/
+`h_int_W` is the regularity precondition that the weighted integrand is integrable.
+
+@audit:ok — NOT load-bearing: no hyp contains `logDeriv (convDensityAdd …)` nor
+the score equality; all hyps are regularity (`IsRegularDensityV2`, `∃M`,
+`Integrable`, `0 < p_Z`). Core-reconstruction test passes — conclusion is genuinely
+assembled (LHS via gateway `HasDerivAt`+`logDeriv_apply`; RHS via pointwise
+`logDeriv f·f = deriv f` cancellation + S2 `symm_deriv_integral_eq`), not handed by
+a hypothesis. condExp/condDistrib/disintegration absent from body + imports
+(density route honest). sorryAx-free (`#print axioms` = standard 3). -/
 theorem score_conv_eq_weighted_integral (fX fY : ℝ → ℝ) (lam z : ℝ)
     (hregX : IsRegularDensityV2 fX) (hregY : IsRegularDensityV2 fY)
     (hX_int : Integrable fX volume) (hY_int : Integrable fY volume)
