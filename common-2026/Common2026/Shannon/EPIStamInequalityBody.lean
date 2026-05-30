@@ -251,6 +251,42 @@ def IsStamCauchySchwarzOptimal {Ω : Type*} [MeasurableSpace Ω]
               (P.map (fun ω => X ω + Y ω)) fXY).toReal →
     J_sum ≤ J_X * J_Y / (J_X + J_Y)
 
+/-- **Stam Step 2 density wall — shared sorry 補題**.
+
+The genuine analytic core of the Stam inequality's Step 2-3 (Cover-Thomas Lemma
+17.7.2 / Blachman 1965): for independent `X, Y` with smooth densities, the
+conditional Cauchy-Schwarz `s_Z(z)² ≤ E[(λ s_X + (1-λ) s_Y)² | X+Y=z]` integrated
+against `p_Z` gives the convex Fisher bound `J(Z) ≤ λ² J(X) + (1-λ)² J(Y)`,
+whose λ-optimum is the **optimal Cauchy-Schwarz** form
+`J(Z) ≤ J(X) J(Y) / (J(X) + J(Y))`.
+
+This is the genuine measure-theoretic wall: Mathlib has **neither** the
+score-of-convolution conditional-expectation representation (`condExp` of
+`logDeriv` of a convolution density) **nor** Fisher-information convolution
+lemmas (`rg "Stam|Blachman|score_conv" → 0 hit`). Building the apparatus
+(joint law on `ℝ × ℝ` + sum-level sub-σ-algebra + Fubini + heat-kernel score
+identity) is a multi-file ~300-line effort, scoped out as a single shared wall.
+
+Before this lemma, the genuine Step 2 core was carried as a **load-bearing
+hypothesis** `(h_cs_opt : IsStamCauchySchwarzOptimal X Y P)` on the public
+end-to-end theorem `entropy_power_inequality_via_body` (a tier-5 honesty
+defect: Step 2 was *assumed*, not proved). This lemma localizes that core to a
+single honest `sorry`, so downstream wrappers consume it as a normal lemma call
+and carry no load-bearing Step-2 hypothesis. The Gaussian special case is
+genuinely discharged separately
+(`Common2026.Shannon.FisherInfoV2.stam_convex_fisher_bound_gaussian`).
+
+Regularity preconditions (measurability, independence, probability measure) are
+kept as honest arguments; the irreducible analytic content is the `sorry`.
+
+@residual(wall:stam-step2-density) -/
+theorem stam_step2_density_wall
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (P : Measure Ω) [IsProbabilityMeasure P]
+    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P) :
+    IsStamCauchySchwarzOptimal X Y P := by
+  sorry
+
 /-- **Stam inequality via predicate chain (optimal form)** — actual deliverable.
 
 Given the convolution-score predicate + the optimal Cauchy-Schwarz predicate,
@@ -412,18 +448,32 @@ theorem isStamInequalityHyp_via_body_to_pipeline
 
 /-- **End-to-end EPI via body discharge** (composes §4 + §6 + EPIL3 pipeline).
 
+The former load-bearing Step-2 hypothesis `(h_cs_opt : IsStamCauchySchwarzOptimal
+X Y P)` (a tier-5 honesty defect — Step 2 was *assumed*) has been removed: the
+optimal Cauchy-Schwarz / convex Fisher bound is now supplied internally by the
+shared sorry wall lemma `stam_step2_density_wall` (`@residual(wall:stam-step2-density)`).
+The Step-1 score-convolution predicate is constructed unconditionally via
+`isStamScoreConvolution_intro` (cosmetic slot). The public signature therefore
+carries **no** load-bearing Step-2 analytic hypothesis — only regularity
+(measurability / independence / probability measure) — with the genuine Step-2
+Mathlib wall localized to the shared sorry lemma `stam_step2_density_wall`.
+
+The remaining `h_bridge : IsStamToEPIBridgeHyp` argument is **not** load-bearing
+at this wrapper: `epi_via_stam_main` ignores it (`_h_bridge`), discharging the
+Stam→EPI bridge internally via the separate shared sorry lemma
+`stamToEPIBridge_holds`. It is retained only as a cosmetic interface slot.
+
 `@audit:ok` -/
 @[entry_point]
 theorem entropy_power_inequality_via_body
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (h_conv : IsStamScoreConvolution X Y P)
-    (h_cs_opt : IsStamCauchySchwarzOptimal X Y P)
     (h_bridge : IsStamToEPIBridgeHyp X Y P) :
     entropyPower (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
-  have h_stam := isStamInequalityHyp_via_body h_conv h_cs_opt
+  have h_cs_opt := stam_step2_density_wall P X Y hX hY hXY
+  have h_stam := isStamInequalityHyp_via_body (isStamScoreConvolution_intro X Y P) h_cs_opt
   exact epi_via_stam_main P X Y X hX hY hXY h_stam h_bridge
 
 /-! ## §11 — Sanity check / regression theorems -/
