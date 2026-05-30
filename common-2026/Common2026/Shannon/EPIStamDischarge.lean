@@ -111,7 +111,17 @@ the inequality core (which is genuinely closed in `stam_step2_density_wall` via
 `convex_fisher_bound_of_ready`). Pivoted in lockstep with `IsStamInequalityResidual`
 (defeq chain via `fisherInfoOfMeasureV2_def`); the pointwise convolution constraint +
 `IsBlachmanConvReady` were added to let `isStamInequalityHyp_via_body` consume the
-genuine `IsStamCauchySchwarzOptimal` producer. No honesty defect. @audit:ok -/
+genuine `IsStamCauchySchwarzOptimal` producer. No honesty defect.
+
+@audit:ok — independent honesty audit (2026-05-31): SOUND non-vacuous Prop. The injected
+hyps are regularity preconditions (smoothness / normalization / pointwise convolution
+identification / 19-field `Integrable`/boundedness/positivity bundle); none bundles the
+inequality core (the conclusion `1/J_sum ≥ 1/J_X+1/J_Y` is genuinely produced from
+regularity by `isStamInequalityHyp_via_step3` → `stam_step2_density_wall`, sorryAx-free).
+Non-vacuous: Gaussian witness `isBlachmanConvReady_gaussianPDFReal` inhabits the gating
+bundle. Pivot defeq-aligned with `IsStamInequalityResidual` (`fisherInfoOfMeasureV2_def`);
+defeq pass-through sites (`EPIStamToBridge` / `EPIL3Integration`) unchanged + green =
+honest type-identity, not sorry concealment. @audit:ok -/
 def IsStamInequalityHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
@@ -299,15 +309,18 @@ this `def : Prop` is the existential identity
 `∃ fPath, ∀ ..., h_target - h_X = ∫ ... ∂volume`, the Cover-Thomas
 17.7.2 integration form itself, which cannot be reduced to `sorry` in a
 def body. Closure plan: `docs/shannon/epi-debruijn-integration-plan.md`.
-**Wall-delegation now in place (Cluster C sorry-migration 2026-05-28)**: the
-`def` is kept as the genuine integration-form `Prop` (its shape is referenced by
-heat-flow path consumers + `EPIL3Integration`), but the analytic core is no longer
-threaded as a load-bearing hypothesis anywhere — there are 0 hypothesis-form
-consumers, and a general witness `isDeBruijnIntegrationHyp_holds` (below) produces
-the predicate for every `T` by delegating to the upstream shared sorry 補題
-`debruijnIntegrationIdentity_holds` (`@residual(wall:debruijn-integration)`,
-`FisherInfoV2DeBruijn.lean`). The `sorry` is localized to the wall lemma, not
-duplicated at any use site.)
+**Wall-delegation now in place (Cluster C sorry-migration 2026-05-28; Phase 4
+structural closure 2026-05-31)**: the `def` is kept as the genuine
+integration-form `Prop` (its shape is referenced by heat-flow path consumers +
+`EPIL3Integration`), but the analytic core is no longer threaded as a
+load-bearing hypothesis anywhere — there are 0 hypothesis-form consumers, and a
+general witness `isDeBruijnIntegrationHyp_holds` (below) produces the predicate
+(given `0 ≤ T` + a `IsDeBruijnPathRegular` path-regularity precondition) by
+delegating to the upstream lemma `debruijnIntegrationIdentity_holds`
+(`FisherInfoV2DeBruijn.lean`). Phase 4 reduced that lemma's former independent
+`sorry` to the per-time wall `debruijnIdentityV2_holds`
+(`@residual(wall:debruijn-integration)`) via FTC, so the `sorry` is now
+localized to the single per-time wall lemma, not duplicated at any use site.)
 
 **Resolved 2026-05-25** (Wave 3 third batch): former `∀ fPath` quantification
 collapsed via `fPath := fun _ _ ↦ 0` (because
@@ -361,25 +374,26 @@ theorem isDeBruijnIntegrationHyp_at_zero
   ring
 
 /-- **General de Bruijn integration witness** — `IsDeBruijnIntegrationHyp X Z P T`
-holds for every `T` by delegation to the shared wall lemma
-`debruijnIntegrationIdentity_holds` (`@residual(wall:debruijn-integration)`).
+holds whenever `0 ≤ T` and the heat-flow path is regular
+(`IsDeBruijnPathRegular`), by delegation to the structurally-closed lemma
+`debruijnIntegrationIdentity_holds` (Phase 4 structural closure 2026-05-31).
 
-This is the honest discharge route for the integration predicate: instead of
-threading `IsDeBruijnIntegrationHyp` as a load-bearing hypothesis (the integration
-identity is the Cover-Thomas 17.7.2 analytic core, a Mathlib wall), the predicate
-witness is produced by the upstream shared sorry 補題. The predicate `def` itself
-is kept as the genuine integration-form `Prop` (its shape is referenced by the
-heat-flow path consumers); the wall content lives in
-`debruijnIntegrationIdentity_holds`, so no `sorry` is written at this site.
+The integration identity is now genuinely reduced to the per-time wall
+`debruijnIdentityV2_holds` (`@residual(wall:debruijn-integration)`) via FTC: the
+upstream lemma carries **no local `sorry`**, only a path-regularity /
+integrability precondition `h_path` (which `X` admissible, how regular the
+path) plus `0 ≤ T`. The de Bruijn analytic core (heat eq + IBP) lives solely in
+the per-time wall lemma, not in any hypothesis bundle here.
 
 The wall lemma's existential is stated with `gaussianConvolution X Z t`, which is
 definitionally `fun ω => X ω + √t · Z ω` (the heat-flow path used by the predicate
 body), so the witness threads through directly. -/
 theorem isDeBruijnIntegrationHyp_holds
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Z : Ω → ℝ) (T : ℝ) :
+    (X Z : Ω → ℝ) (T : ℝ) (hT : 0 ≤ T)
+    (h_path : Common2026.Shannon.FisherInfoV2.IsDeBruijnPathRegular X Z P T) :
     IsDeBruijnIntegrationHyp X Z P T :=
-  Common2026.Shannon.FisherInfoV2.debruijnIntegrationIdentity_holds X Z T
+  Common2026.Shannon.FisherInfoV2.debruijnIntegrationIdentity_holds X Z T hT h_path
 
 -- (retracted, wave-1) `isDeBruijnIntegrationHypothesis_of_deBruijnIntegrationHyp`
 -- produced `IsDeBruijnIntegrationHypothesis` (formerly `:= True` placeholder)

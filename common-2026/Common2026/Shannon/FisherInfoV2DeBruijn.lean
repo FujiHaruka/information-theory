@@ -300,16 +300,59 @@ interval 形が無い)。Gaussian 限定なら `bounded_T_ftc_gaussian` (`EPIL3I
 で定義されるため (import cycle 回避) ここでは raw 積分形で述べ、consumer 側で predicate に
 畳み込む。 -/
 
-/-- **de Bruijn 積分恒等式 — shared sorry 補題 (wall:debruijn-integration)**.
+/-- **Path regularity bundle for the de Bruijn integration identity**.
 
-per-time の `debruijnIdentityV2_holds` を FTC で積分した差分恒等式の存在形。一般 `X` では
-Mathlib 未整備 (heat-flow path の積分可能性 + FTC)。consumer は `IsDeBruijnIntegrationHyp`
-witness を本 lemma 経由で生成する。
+Phase 4 structural-closure precondition (`epi-debruijn-integration-phaseD-plan`
+follow-up): packages the FTC ingredients needed to integrate the per-time
+`debruijnIdentityV2_holds` derivative along the heat-flow path `(0, T)`. All
+four fields are **regularity preconditions** (which `X` is admissible / how
+regular the heat-flow path is), NOT the de Bruijn analytic core — the core
+(heat equation + IBP) stays localized in the per-time wall lemma
+`debruijnIdentityV2_holds` (`@residual(wall:debruijn-integration)`), which each
+`reg_t` field invokes.
 
-`@residual(wall:debruijn-integration)` -/
+* `fPath` — density witness path: `fPath t` is the density of
+  `P.map (gaussianConvolution X Z t)`.
+* `reg_t` — per-time V2 de Bruijn regularity at each interior `t ∈ (0, T)`,
+  with `density_t = fPath t` (so the per-time `HasDerivAt` value matches the
+  integrand). This is what feeds `debruijnIdentityV2_holds` per time-point.
+* `cont` — continuity of the heat-flow entropy on the closed interval `[0, T]`
+  (a path-regularity precondition; cf. the Gaussian instance
+  `continuousOn_differentialEntropy_heat_flow_gaussian`).
+* `integrable` — the path integrand `(1/2) · J(X + √t·Z)` is interval-integrable
+  on `(0, T)` (path integrability precondition). -/
+structure IsDeBruijnPathRegular {Ω : Type*} [MeasurableSpace Ω]
+    (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] (T : ℝ) where
+  /-- Density witness path. -/
+  fPath : ℝ → ℝ → ℝ
+  /-- Per-time V2 de Bruijn regularity at each interior time, with the density
+  witness pinned to `fPath t`. -/
+  reg_t : ∀ t ∈ Set.Ioo (0 : ℝ) T,
+    ∃ h_reg : IsRegularDeBruijnHypV2 X Z P t, h_reg.density_t = fPath t
+  /-- Continuity of the heat-flow entropy on `[0, T]`. -/
+  cont : ContinuousOn
+    (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
+    (Set.Icc 0 T)
+  /-- The path integrand is interval-integrable. -/
+  integrable : IntervalIntegrable
+    (fun t => (1/2) * fisherInfoOfDensityReal (fPath t)) volume 0 T
+
+/-- **de Bruijn 積分恒等式 — 構造的 closure (per-time wall への reduction)**.
+
+per-time の `debruijnIdentityV2_holds` (`@residual(wall:debruijn-integration)`)
+を FTC (`intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le`) で積分した差分
+恒等式の存在形。Phase 4 structural closure (2026-05-31): 旧 independent `sorry`
+を path-regularity precondition `IsDeBruijnPathRegular` + FTC で genuine 化。本
+lemma 自身に local `sorry` は無く、唯一の wall (`debruijnIdentityV2_holds` の
+per-time sorry) に transitively 依存するだけ。
+
+`hT : 0 ≤ T` と path-regularity bundle `h_path` は regularity / 積分可能性の
+precondition であり、de Bruijn 不等式の核 (heat eq IBP) は per-time wall lemma
+側に残る (load-bearing bundling ではない)。 -/
 theorem debruijnIntegrationIdentity_holds
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
-    (X Z : Ω → ℝ) (T : ℝ) :
+    (X Z : Ω → ℝ) (T : ℝ) (hT : 0 ≤ T)
+    (h_path : IsDeBruijnPathRegular X Z P T) :
     ∃ (fPath : ℝ → ℝ → ℝ),
       ∀ (h_X h_target : ℝ),
         h_X = differentialEntropy (P.map X) →
@@ -318,7 +361,47 @@ theorem debruijnIntegrationIdentity_holds
           = ∫ t in Set.Ioo 0 T, (1/2)
             * (fisherInfoOfMeasureV2
                 (P.map (gaussianConvolution X Z t)) (fPath t)).toReal ∂volume := by
-  sorry -- @residual(wall:debruijn-integration)
+  refine ⟨h_path.fPath, ?_⟩
+  intro h_X h_target hX_def htarget_def
+  -- The integrand `(1/2) * (fisherInfoOfMeasureV2 _ (fPath t)).toReal` is defeq to
+  -- `(1/2) * fisherInfoOfDensityReal (fPath t)`.
+  set f : ℝ → ℝ :=
+    fun s => differentialEntropy (P.map (gaussianConvolution X Z s)) with hf_def
+  set f' : ℝ → ℝ := fun t => (1/2) * fisherInfoOfDensityReal (h_path.fPath t) with hf'_def
+  -- Step 1: per-time `HasDerivAt f (f' t) t` for `t ∈ Ioo 0 T`, via the wall lemma.
+  have h_deriv : ∀ t ∈ Set.Ioo (0 : ℝ) T, HasDerivAt f (f' t) t := by
+    intro t ht
+    obtain ⟨h_reg, h_dens⟩ := h_path.reg_t t ht
+    have h := debruijnIdentityV2_holds X Z ht.1 h_reg
+    -- `h : HasDerivAt f ((1/2) * fisherInfoOfDensityReal h_reg.density_t) t`.
+    rw [h_dens] at h
+    exact h
+  -- Step 2: Mathlib FTC.
+  have h_ftc : ∫ t in (0 : ℝ)..T, f' t = f T - f 0 :=
+    intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le hT h_path.cont h_deriv
+      h_path.integrable
+  -- Step 3: convert `intervalIntegral` (0..T) → `Set.Ioo 0 T ∂volume`.
+  have h_ioc : ∫ t in (0 : ℝ)..T, f' t = ∫ t in Set.Ioc (0 : ℝ) T, f' t ∂volume :=
+    intervalIntegral.integral_of_le hT
+  have h_ioo_eq_ioc :
+      ∫ t in Set.Ioc (0 : ℝ) T, f' t ∂volume = ∫ t in Set.Ioo (0 : ℝ) T, f' t ∂volume :=
+    MeasureTheory.integral_Ioc_eq_integral_Ioo
+  -- Step 4: boundary `f 0 = differentialEntropy (P.map X)`.
+  have h_f0 : f 0 = differentialEntropy (P.map X) := by
+    have h_path0 : gaussianConvolution X Z 0 = X := by
+      funext ω; simp [gaussianConvolution]
+    simp only [hf_def, h_path0]
+  -- Step 5: identify the goal integrand with `f'` (defeq).
+  have h_integrand :
+      (fun t => (1/2)
+        * (fisherInfoOfMeasureV2 (P.map (gaussianConvolution X Z t)) (h_path.fPath t)).toReal)
+      = f' := rfl
+  -- Assemble.
+  rw [hX_def, htarget_def]
+  show differentialEntropy (P.map (gaussianConvolution X Z T))
+        - differentialEntropy (P.map X)
+      = ∫ t in Set.Ioo 0 T, f' t ∂volume
+  rw [← h_f0, ← h_ftc, h_ioc, h_ioo_eq_ioc]
 
 /-! ## Gaussian discharge — `deBruijn_identity_v2_gaussian` (hypothesis-free)
 
