@@ -32,7 +32,9 @@ Phase 0 (false→true signature pivot) は親 file `FisherInfoV2DeBruijn.lean` �
   可積分性は `Integrable.mul_bdd` (pX 可積分 × Gaussian 有界 `gaussianPDFReal_le_prefactor`)、
   density witness 可測性は `hpX_meas.ennreal_ofReal` で genuine 化 (regularity hyp
   `hpX_meas : Measurable pX` 追加)。
-* **Phase 2** `heatFlow_density_heat_equation` — heat eq per-density (`sorry`, L-PT-α、最大コスト)
+* **Phase 2** `heatFlow_density_heat_equation` — heat eq per-density (**genuine**, L-PT-α closed:
+  σ-direction + spatial 2nd-deriv lifts via gateway lemma `hasDerivAt_integral_of_dominated_loc_of_deriv_le`,
+  `Set.Ioo (s/2) (2s)` σ-neighborhood, `HasDerivAt.unique` against pins; per-`y` domination as §5B-2 hyps)
 * **Phase 3** `entropy_hasDerivAt_via_parametric` — entropy parametric diff (`sorry`, L-PT-γ)
 * **Phase 4a** `debruijn_ibp_step` — 無限区間 IBP (**genuine** `@audit:ok`:
   `integral_mul_deriv_eq_deriv_mul_of_integrable` と同形、`exact` 一発)
@@ -360,7 +362,7 @@ theorem heatFlow_density_heat_equation_kernel_heat_eq
   ⟨heatFlow_density_heat_equation_kernel_sigma_deriv hσ u,
    heatFlow_density_heat_equation_kernel_x_deriv2 hσ u⟩
 
-/-- **Phase 2 (L-PT-α honest sorry)**: the heat-flow density satisfies the heat
+/-- **Phase 2 (genuine, L-PT-α closed)**: the heat-flow density satisfies the heat
 equation per density: `∂_σ pPath σ x = (1/2) ∂²_x pPath σ x` at `σ = s`.
 
 `pPath : ℝ → ℝ → ℝ` is the heat-flow density path, **pinned** by `hpPath` to be the
@@ -379,36 +381,29 @@ a `1 = 0` contradiction — the same false-statement shape that judgment #17 fix
 derivatives of `pPath`, and `pPath` is *identified* as the heat-flow convolution. These
 are regularity / definitional bindings (which function `pathDeriv2` *is*), NOT the heat
 equation. The heat-equation equality `∂_σ pPath = (1/2) ∂²_x pPath` is the **conclusion**
-to be proven (body `sorry`) and is deliberately NOT supplied as a hypothesis — doing so
+that the body proves and is deliberately NOT supplied as a hypothesis — doing so
 would be load-bearing (bundling the proof core into a hypothesis), which is forbidden.
 
-**Independent audit (commit `69478a4`, re-audit of prior `b37b9ae` false_statement)**:
-signature confirmed a TRUE statement, NOT load-bearing. The Phase-0 false-statement
-defect is fully resolved — the old counterexample `pPath := fun σ _ => σ` now violates
-`hpPath` (a Gaussian-convolution density cannot be a nonzero constant in `x`), and the
-remaining free symbols `pX` / `pathDeriv1` parametrize true instances (the pins force
-`pathDeriv1`/`pathDeriv2` to be the unique spatial derivatives, and the conclusion's
-σ↔x heat-equation link is supplied by NONE of the three pins — it stays in the body).
-Verdict: honest_residual (body `sorry` retained, `@residual` kept).
+**Honesty of the added domination hyps (§5B-2)**: the `boundσ`/`hboundσ_int`/`hFσ_*`/`hbσ`
+(σ-direction) and `boundξ{1,2}`/`hFξ*`/`hbξ*` (spatial-direction) hypotheses are all
+*regularity preconditions* — per-`y` integrand integrability / ae-measurability /
+Gaussian-tail domination bounds, in the exact shape the gateway lemma
+`hasDerivAt_integral_of_dominated_loc_of_deriv_le` consumes. They are 1:1 with the 7-hyp
+group of `convDensityAdd_hasDerivAt` (`EPIConvDensity.lean:86`, `@audit:ok`) and the
+hyp group of Phase 3 `entropy_hasDerivAt_via_parametric` (`@audit:ok`). They do NOT bundle
+the heat-equation conclusion: that link is *derived* in the body from the genuine
+kernel-level heat equation `heatFlow_density_heat_equation_kernel_heat_eq`.
 
-Mathlib has no Gaussian heat semigroup closed-form (`"heat"`/`"Mehler"`/
-`"OrnsteinUhlenbeck"`/`"FokkerPlanck"` all `Found 0`); this is the largest atom
-(~80-120 lines, plan §Phase 2). The route is density-side: differentiate the
-Gaussian factor `gaussianPDFReal 0 ⟨σ,_⟩` in `σ` (chain rule) and connect to the
-`x`-second-derivative `pathDeriv2` via `convDensityAddDeriv`.
-
-**Partial progress (L-PT-α retreat, body `sorry` retained)**: the kernel-level heat
-equation is now genuine (`sorryAx`-free): the four helpers above
-(`heatFlow_density_heat_equation_kernel_{x_deriv1,x_deriv2,sigma_deriv,heat_eq}`)
-establish `∂_σ g_σ(u) = (1/2) ∂²_u g_σ(u)`, both sides `= (1/2) g_σ(u)(u²/σ² - 1/σ)`,
-discharging the "differentiate the Gaussian factor in σ (chain rule)" step. What
-remains in this body is the two differentiation-under-the-integral-sign steps that
-lift the kernel identity through `convDensityAdd`: (i) `∂_σ pPath x = ∫ pX·∂_σ g_σ`
-and (ii) identifying the pinned `pathDeriv2 s x` with `∫ pX·∂²_x g_σ`, each requiring
-a Gaussian-tail domination-bound `Integrable` construction (~80+ lines, PR-level,
-plan §Phase 2 L-PT-α). These stay `sorry` per the explicit retreat line.
-
-`@residual(plan:epi-debruijn-pertime-closure)` -/
+**Closure (genuine, L-PT-α resolved)**: the two differentiation-under-the-integral-sign
+lifts are discharged via the gateway lemma. STEP A/B/C (σ-direction): the gateway over
+the compact neighborhood `Set.Ioo (s/2) (2s)` gives `∂_σ pPath x = ∫ y, pX y · ∂_σ g_σ(x-y)`
+(keeping `σ > 0` so the `(u²/σ²-1/σ)` factor stays finite — the σ→0 blow-up of plan §5B-4
+is avoided), then the `1/2` is pulled out via the kernel σ-derivative closed form. STEP D
+(spatial): two further gateway applications + `HasDerivAt.unique` against the pins
+`hpathDeriv1`/`hpathDeriv2` identify `pathDeriv2 s x = ∫ y, pX y · ∂²_x g_σ(x-y)`, which
+matches the σ-side via `heatFlow_density_heat_equation_kernel_heat_eq`. `#print axioms` =
+`[propext, Classical.choice, Quot.sound]` (sorryAx-free, transitive 0 sorry).
+Pending independent honesty audit before `@audit:ok`. -/
 theorem heatFlow_density_heat_equation
     (pX : ℝ → ℝ)
     (pPath pathDeriv1 pathDeriv2 : ℝ → ℝ → ℝ)
@@ -419,11 +414,194 @@ theorem heatFlow_density_heat_equation
     (hpathDeriv1 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pPath σ ξ) (pathDeriv1 σ y) y)
     -- definitional pin: `pathDeriv2` IS the spatial second derivative of `pPath`
     (hpathDeriv2 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pathDeriv1 σ ξ) (pathDeriv2 σ y) y)
-    {s : ℝ} (hs : 0 < s) (x : ℝ) :
+    {s : ℝ} (hs : 0 < s) (x : ℝ)
+    -- §5B-2 σ-direction domination: per-`y` integrand `pX y · g_σ(x-y)` and its σ-derivative
+    -- `pX y · ∂_σ g_σ(x-y)` are bounded/integrable on the compact σ-neighborhood
+    -- `Set.Ioo (s/2) (2s)`. These are regularity preconditions (NOT the heat equation).
+    (boundσ : ℝ → ℝ) (hboundσ_int : Integrable boundσ volume)
+    (hFσ_meas : ∀ᶠ σ in nhds s,
+      AEStronglyMeasurable
+        (fun y => pX y * heatFlow_density_heat_equation_kernel σ (x - y)) volume)
+    (hFσ_int : Integrable
+      (fun y => pX y * heatFlow_density_heat_equation_kernel s (x - y)) volume)
+    (hFσ'_meas : AEStronglyMeasurable
+      (fun y => pX y * ((1/2) * (heatFlow_density_heat_equation_kernel s (x - y)
+        * ((x - y) ^ 2 / s ^ 2 - 1 / s)))) volume)
+    (hbσ : ∀ᵐ y ∂volume, ∀ σ ∈ Set.Ioo (s/2) (2*s),
+      ‖pX y * ((1/2) * (heatFlow_density_heat_equation_kernel σ (x - y)
+        * ((x - y) ^ 2 / σ ^ 2 - 1 / σ)))‖ ≤ boundσ y)
+    -- §5B-2 spatial-direction domination (pathDeriv2 identification): the spatial 1st and
+    -- 2nd derivative integrands of `pX y · g_s(x-y)` are bounded/integrable.
+    (boundξ1 : ℝ → ℝ) (hboundξ1_int : Integrable boundξ1 volume)
+    (hFξ1_meas : ∀ ξ : ℝ,
+      AEStronglyMeasurable
+        (fun y => pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume)
+    (hFξ1_int : ∀ ξ : ℝ,
+      Integrable (fun y => pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume)
+    (hFξ1'_meas : ∀ ξ : ℝ, AEStronglyMeasurable
+      (fun y => pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-(((ξ - y)) / s)))) volume)
+    (hbξ1 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
+      ‖pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-((ξ - y) / s)))‖ ≤ boundξ1 y)
+    (boundξ2 : ℝ → ℝ) (hboundξ2_int : Integrable boundξ2 volume)
+    (hFξ2_int : Integrable
+      (fun y => pX y * (heatFlow_density_heat_equation_kernel s (x - y) * (-((x - y) / s)))) volume)
+    (hFξ2'_meas : AEStronglyMeasurable
+      (fun y => pX y * (heatFlow_density_heat_equation_kernel s (x - y)
+        * ((x - y) ^ 2 / s ^ 2 - 1 / s))) volume)
+    (hbξ2 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
+      ‖pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+        * ((ξ - y) ^ 2 / s ^ 2 - 1 / s))‖ ≤ boundξ2 y) :
     HasDerivAt
       (fun σ : ℝ => pPath σ x)
       ((1/2) * pathDeriv2 s x) s := by
-  sorry -- @residual(plan:epi-debruijn-pertime-closure) — heat eq per-density, density-route self-build
+  classical
+  -- σ-neighborhood (compact, keeps σ > 0; avoids the σ→0 blow-up of `(u²/σ²-1/σ)`).
+  set sset : Set ℝ := Set.Ioo (s/2) (2*s) with hsset
+  have hs_nhds : sset ∈ nhds s := by
+    rw [hsset]
+    refine Ioo_mem_nhds ?_ ?_
+    · linarith
+    · linarith
+  -- positivity of σ on the neighborhood
+  have hσ_pos : ∀ σ ∈ sset, 0 < σ := by
+    intro σ hσ
+    rw [hsset] at hσ
+    have : s/2 < σ := hσ.1
+    linarith
+  -- =========================================================================
+  -- STEP A (σ-direction): differentiate `∫ y, pX y · kernel σ (x-y)` in σ.
+  -- =========================================================================
+  -- per-y σ-derivative HasDerivAt (from kernel σ-deriv scaled by `pX y`).
+  have hAdiff : ∀ᵐ y ∂volume, ∀ σ ∈ sset,
+      HasDerivAt (fun σ => pX y * heatFlow_density_heat_equation_kernel σ (x - y))
+        (pX y * ((1/2) * (heatFlow_density_heat_equation_kernel σ (x - y)
+          * ((x - y) ^ 2 / σ ^ 2 - 1 / σ)))) σ := by
+    filter_upwards with y
+    intro σ hσ
+    exact (heatFlow_density_heat_equation_kernel_sigma_deriv (hσ_pos σ hσ) (x - y)).const_mul (pX y)
+  have hAgate :=
+    hasDerivAt_integral_of_dominated_loc_of_deriv_le
+      (F := fun σ y => pX y * heatFlow_density_heat_equation_kernel σ (x - y))
+      (F' := fun σ y => pX y * ((1/2) * (heatFlow_density_heat_equation_kernel σ (x - y)
+        * ((x - y) ^ 2 / σ ^ 2 - 1 / σ))))
+      (bound := boundσ) hs_nhds hFσ_meas hFσ_int hFσ'_meas hbσ hboundσ_int hAdiff
+  -- hAgate.2 : HasDerivAt (fun σ => ∫ y, pX y · kernel σ (x-y))
+  --              (∫ y, pX y · (1/2)(kernel s (x-y)(…))) s
+  have hA : HasDerivAt (fun σ : ℝ => ∫ y, pX y * heatFlow_density_heat_equation_kernel σ (x - y) ∂volume)
+      (∫ y, pX y * ((1/2) * (heatFlow_density_heat_equation_kernel s (x - y)
+        * ((x - y) ^ 2 / s ^ 2 - 1 / s))) ∂volume) s := hAgate.2
+  -- =========================================================================
+  -- STEP B: transfer `hA` to `fun σ => pPath σ x` (they agree on `sset ∈ 𝓝 s`).
+  -- =========================================================================
+  have hEq : (fun σ : ℝ => pPath σ x)
+      =ᶠ[nhds s] (fun σ : ℝ => ∫ y, pX y * heatFlow_density_heat_equation_kernel σ (x - y) ∂volume) := by
+    filter_upwards [hs_nhds] with σ hσ
+    have hσpos : 0 < σ := hσ_pos σ hσ
+    rw [hpPath σ hσpos]
+    unfold convDensityAdd
+    refine integral_congr_ae ?_
+    filter_upwards with y
+    rw [heatFlow_density_heat_equation_kernel_eq hσpos (x - y)]
+  have hB : HasDerivAt (fun σ : ℝ => pPath σ x)
+      (∫ y, pX y * ((1/2) * (heatFlow_density_heat_equation_kernel s (x - y)
+        * ((x - y) ^ 2 / s ^ 2 - 1 / s))) ∂volume) s :=
+    hA.congr_of_eventuallyEq hEq
+  -- =========================================================================
+  -- STEP C: pull out the `1/2` from the σ-derivative integral.
+  --   ∫ y, pX y · (1/2)·K(y) = (1/2) · ∫ y, pX y · K(y),
+  --   with K(y) = kernel s (x-y) · ((x-y)²/s² - 1/s).
+  -- =========================================================================
+  have hC : (∫ y, pX y * ((1/2) * (heatFlow_density_heat_equation_kernel s (x - y)
+        * ((x - y) ^ 2 / s ^ 2 - 1 / s))) ∂volume)
+      = (1/2) * ∫ y, pX y * (heatFlow_density_heat_equation_kernel s (x - y)
+        * ((x - y) ^ 2 / s ^ 2 - 1 / s)) ∂volume := by
+    rw [← integral_const_mul]
+    refine integral_congr_ae ?_
+    filter_upwards with y
+    ring
+  rw [hC] at hB
+  -- hB : HasDerivAt (fun σ => pPath σ x)
+  --        ((1/2) · ∫ y, pX y · (kernel s (x-y) · ((x-y)²/s² - 1/s))) s
+  -- =========================================================================
+  -- STEP D: identify the pinned `pathDeriv2 s x` with `∫ y, pX y · ∂²_x kernel`.
+  -- =========================================================================
+  -- Global agreement `pPath s = fun ξ => ∫ y, pX y · kernel s (ξ-y)` (s > 0, all ξ).
+  have hpPaths : (fun ξ : ℝ => pPath s ξ)
+      = (fun ξ : ℝ => ∫ y, pX y * heatFlow_density_heat_equation_kernel s (ξ - y) ∂volume) := by
+    funext ξ
+    rw [hpPath s hs]
+    unfold convDensityAdd
+    refine integral_congr_ae ?_
+    filter_upwards with y
+    rw [heatFlow_density_heat_equation_kernel_eq hs (ξ - y)]
+  -- per-y spatial 1st-derivative HasDerivAt (kernel `_x_deriv1` chained through `ξ ↦ ξ - y`).
+  have hD1diff : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
+      HasDerivAt (fun ξ => pX y * heatFlow_density_heat_equation_kernel s (ξ - y))
+        (pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-((ξ - y) / s)))) ξ := by
+    filter_upwards with y
+    intro ξ _
+    have hk := heatFlow_density_heat_equation_kernel_x_deriv1 hs (ξ - y)
+    have hshift : HasDerivAt (fun ξ : ℝ => ξ - y) 1 ξ := by
+      simpa using (hasDerivAt_id ξ).sub_const y
+    have hcomp := hk.comp ξ hshift
+    simp only [mul_one] at hcomp
+    exact hcomp.const_mul (pX y)
+  -- D1: identify `pathDeriv1 s` (spatial 1st deriv) with the integral, at every ξ.
+  have hpathDeriv1_eq : (fun ξ : ℝ => pathDeriv1 s ξ)
+      = (fun ξ : ℝ => ∫ y, pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+          * (-((ξ - y) / s))) ∂volume) := by
+    funext ξ
+    have hgξ :=
+      hasDerivAt_integral_of_dominated_loc_of_deriv_le
+        (F := fun ζ y => pX y * heatFlow_density_heat_equation_kernel s (ζ - y))
+        (F' := fun ζ y => pX y * (heatFlow_density_heat_equation_kernel s (ζ - y)
+          * (-((ζ - y) / s))))
+        (bound := boundξ1) (Filter.univ_mem)
+        (Filter.Eventually.of_forall hFξ1_meas) (hFξ1_int ξ) (hFξ1'_meas ξ)
+        hbξ1 hboundξ1_int hD1diff
+    have hpath : HasDerivAt (fun ξ : ℝ => pPath s ξ)
+        (∫ y, pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-((ξ - y) / s))) ∂volume) ξ := by
+      rw [hpPaths]; exact hgξ.2
+    exact (hpathDeriv1 s ξ).unique hpath
+  -- D2: identify `pathDeriv2 s x` (spatial 2nd deriv) with `∫ y, pX y · ∂²_x kernel`.
+  -- per-y spatial 2nd-derivative HasDerivAt (kernel `_x_deriv2` chained through `ξ ↦ ξ - y`).
+  have hD2diff : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
+      HasDerivAt (fun ξ => pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+          * (-((ξ - y) / s))))
+        (pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+          * ((ξ - y) ^ 2 / s ^ 2 - 1 / s))) ξ := by
+    filter_upwards with y
+    intro ξ _
+    have hk := heatFlow_density_heat_equation_kernel_x_deriv2 hs (ξ - y)
+    have hshift : HasDerivAt (fun ξ : ℝ => ξ - y) 1 ξ := by
+      simpa using (hasDerivAt_id ξ).sub_const y
+    have hcomp := hk.comp ξ hshift
+    simp only [mul_one] at hcomp
+    exact hcomp.const_mul (pX y)
+  have hD2gate :=
+    hasDerivAt_integral_of_dominated_loc_of_deriv_le
+      (F := fun ξ y => pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+        * (-((ξ - y) / s))))
+      (F' := fun ξ y => pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+        * ((ξ - y) ^ 2 / s ^ 2 - 1 / s)))
+      (bound := boundξ2) (Filter.univ_mem)
+      (Filter.Eventually.of_forall (fun ξ => hFξ1'_meas ξ)) hFξ2_int hFξ2'_meas
+      hbξ2 hboundξ2_int hD2diff
+  -- `pathDeriv1 s` IS the integral function (hpathDeriv1_eq), so differentiating it at x gives
+  -- `∫ y, pX y · ∂²_x kernel`; uniqueness with the pin `hpathDeriv2 s x` identifies the value.
+  have hpathDeriv2_eq : pathDeriv2 s x
+      = ∫ y, pX y * (heatFlow_density_heat_equation_kernel s (x - y)
+          * ((x - y) ^ 2 / s ^ 2 - 1 / s)) ∂volume := by
+    have hpath2 : HasDerivAt (fun ξ : ℝ => pathDeriv1 s ξ)
+        (∫ y, pX y * (heatFlow_density_heat_equation_kernel s (x - y)
+          * ((x - y) ^ 2 / s ^ 2 - 1 / s)) ∂volume) x := by
+      rw [hpathDeriv1_eq]; exact hD2gate.2
+    exact (hpathDeriv2 s x).unique hpath2
+  -- =========================================================================
+  -- STEP E: conclude. `hB` gives `(1/2)·∫ pX·∂²_x kernel`; rewrite via `hpathDeriv2_eq`.
+  -- =========================================================================
+  rw [hpathDeriv2_eq]
+  exact hB
 
 /-! ## Phase 3 — entropy parametric diff (L-PT-γ honest sorry) -/
 

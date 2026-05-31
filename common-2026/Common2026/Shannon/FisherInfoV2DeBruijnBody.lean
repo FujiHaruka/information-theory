@@ -220,7 +220,7 @@ density predicate. The IBP hypothesis is no longer carried here — it is
 discharged downstream by the shared wall lemma
 `debruijnIdentityV2_holds` (`wall:debruijn-integration`). -/
 @[entry_point]
-def IsRegularDeBruijnHypV2.ofHeatFlow
+noncomputable def IsRegularDeBruijnHypV2.ofHeatFlow
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     {X Z : Ω → ℝ} (_hX : Measurable X) (_hZ : Measurable Z)
     (_hXZ : IndepFun X Z P)
@@ -244,6 +244,19 @@ def IsRegularDeBruijnHypV2.ofHeatFlow
   -- commit (out of pivot scope); flag for incidental migration, not this audit's verdict.
   -- @residual(plan:epi-debruijn-pertime-closure)
   density_t_eq := by sorry
+  -- §5A `pX`-witness fields. `IsHeatFlowDensity` carries only the *path* density
+  -- `p` (the density of `X + √t·Z`), NOT a witness for `X`'s own Lebesgue density.
+  -- So we pin `pX` to the actual rnDeriv of `P.map X` and leave the external-shape
+  -- equation `pX_law` as a regularity-precondition sorry: it holds whenever `X` has
+  -- a density (the `ofHeatFlow` route does not supply one). This is the X-density
+  -- analogue of the existing `density_t_eq` sorry above (Phase 1 special case for
+  -- the non-Gaussian heat-flow route). Not load-bearing (external-shape equation).
+  -- @residual(plan:epi-debruijn-pertime-closure)
+  pX := fun x => ((P.map X).rnDeriv volume x).toReal
+  pX_nn := fun x => ENNReal.toReal_nonneg
+  pX_meas := ((P.map X).measurable_rnDeriv volume).ennreal_toReal
+  -- @residual(plan:epi-debruijn-pertime-closure)
+  pX_law := by sorry
 
 /-- **de Bruijn identity body discharge** (L-FV2DB-C).
 

@@ -224,6 +224,30 @@ structure IsRegularDeBruijnHypV2 {Ω : Type*} [MeasurableSpace Ω]
   (false→true pivot rationale verified). @audit:ok (field is genuine regularity). -/
   density_t_eq : ∀ x,
     density_t x = ((P.map (gaussianConvolution X Z t)).rnDeriv volume x).toReal
+  /-- **X-density witness fields (§5A, `epi-debruijn-pertime-closure-plan` Phase 5)**:
+  the `pX` series (4 fields) supplies a Real density witness for `X` itself, which is
+  the input required by the Phase 1b density-identification atom
+  `pPath_eq_convDensityAdd` (the law of `X + √s·Z` is the convolution of `P.map X`
+  with a Gaussian, expressed via `convDensityAdd pX g_σ`).
+
+  All four are **regularity preconditions**, NOT load-bearing: they assert that `X`
+  has a Lebesgue density `pX` (nonnegativity + measurability + the external-shape
+  equation `P.map X = withDensity (ofReal∘pX)`). They do not bundle the analytic
+  core (`HasDerivAt` / heat equation / Fisher); same series as `Z_law` / `density_t_eq`.
+
+  Note on the two pins of `density_t`: it carries both the rnDeriv pin (`density_t_eq`,
+  `= (rnDeriv (P.map (X+√t·Z)) volume).toReal`) and a convolution representation
+  (`=ᵐ convDensityAdd pX g_t`, obtained in assembly via Phase 1b
+  `pPath_eq_convDensityAdd`). The two are the same density in two shapes and agree
+  a.e. (assembly 段 1, §5A-4). -/
+  pX : ℝ → ℝ
+  /-- Nonnegativity of the X density witness (regularity precondition). -/
+  pX_nn : ∀ x, 0 ≤ pX x
+  /-- Measurability of the X density witness (regularity precondition). -/
+  pX_meas : Measurable pX
+  /-- External-shape equation: `X` has Lebesgue density `pX` (regularity
+  precondition, same form as `density_t_eq`; not load-bearing). -/
+  pX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x))
 
 /-! ### Shared sorry 補題 — `debruijnIdentityV2_holds` (genuine wall closure point)
 

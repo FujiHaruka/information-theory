@@ -703,7 +703,16 @@ noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
       -- `gaussianConvolution_law_of_gaussian` + Gaussian rnDeriv. Not load-bearing
       -- (proves the external pin equation, not the de Bruijn analytic core).
       -- @residual(plan:epi-debruijn-pertime-closure)
-      density_t_eq := by sorry }
+      density_t_eq := by sorry
+      -- §5A `pX`-witness fields (Gaussian case): `X ∼ 𝒩(m, v)` has Lebesgue
+      -- density `gaussianPDFReal m v`. All genuine (no new sorry).
+      pX := gaussianPDFReal m v
+      pX_nn := fun x => gaussianPDFReal_nonneg m v x
+      pX_meas := measurable_gaussianPDFReal m v
+      pX_law := by
+        -- `P.map X = gaussianReal m v = withDensity (gaussianPDF m v)`,
+        -- and `gaussianPDF m v = fun x => ofReal (gaussianPDFReal m v x)` (def).
+        rw [_hX_law, gaussianReal_of_var_ne_zero m _hv, gaussianPDF_def] }
 
 -- (deleted 2026-05-28, Cluster C Tier-2 migration, task 3α-3) The Gaussian
 -- constructor `isHeatFlowFamilyHyp_of_gaussian` was removed together with the
