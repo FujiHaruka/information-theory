@@ -1625,6 +1625,14 @@ That construction is heavy plumbing, not a Mathlib gap — hence classified `pla
 new wall). The conclusion is a derivative-existence statement (regularity output), not a
 bundled de Bruijn / Fisher conclusion.
 
+Independent honesty audit (2026-05-31, fresh auditor, commit `d5951a5`): honest_residual.
+NOT circular: `HasDerivAt p_t (deriv p_t x) x` is the standard differentiability-at-`x`
+statement (`HasDerivAt f (deriv f x) x` ⟺ `DifferentiableAt f x`), the self-referential
+`deriv p_t x` is the *value* of the derivative, not a hypothesis ≡ conclusion `:= h`.
+`plan:` (not `wall:`) correct — referenced in-tree atoms `convDensityAdd_deriv1_gaussian_eq`
+/ `convDensityAdd_deriv2_eq_gaussian` (`EPIConvDensitySecondDeriv.lean:58`/`:145`) verified
+`#print axioms` sorryAx-free; residual is domination-hyp plumbing over those atoms, not a
+Mathlib gap. Plan slug exists (`docs/shannon/epi-debruijn-pertime-closure-plan.md`).
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem convDensityAdd_hasDerivAt_self
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -1645,6 +1653,10 @@ residual is supplying that atom's two Gaussian-tail domination groups (`bound1` 
 Mathlib gap. Classified `plan:`. The conclusion is a derivative-existence statement
 (regularity output), not a bundled conclusion.
 
+Independent honesty audit (2026-05-31, fresh auditor, commit `d5951a5`): honest_residual.
+Same family as `convDensityAdd_hasDerivAt_self`; differentiability-at-`x` statement (NOT
+circular), `plan:` classification correct (in-tree atom `convDensityAdd_deriv2_eq_gaussian`
+sorryAx-free verified, domination-hyp plumbing, not a Mathlib gap).
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem convDensityAdd_deriv_hasDerivAt_self
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -1682,6 +1694,19 @@ in-tree machinery, heavy domination-hyp plumbing, NOT a Mathlib gap); (b) the en
 wall (`EntropyConvFinite.lean`); (c) the Fisher-finiteness wall (`convDensityAdd_fisher_integrable`).
 The transitive marker is compound (AND of the plan + the two walls).
 
+Independent honesty audit (2026-05-31, fresh auditor, commit `d5951a5`): honest_residual
+(transitive). 0 local sorry confirmed (`lake env lean` shows no `sorry` warning at this decl;
+only B helpers `:1629`/`:1649` warn). `debruijn_ibp_step` application genuine: u/v/u'/v'
+identified, `hp_pos` discharged via `convDensityAdd_pos` with `0 < ∫ pX = 1` from `hpX_mass`;
+`hu`/`hv` via the deriv-existence helpers + `Real.hasDerivAt_log`; the pointwise identity
+`u'·v = -((logDeriv p_t)²·p_t)` is derived once (`field_simp` using `hp_pos`), genuine; `hu'v`
+supplied from the Fisher wall via `.neg.congr` on that identity; RHS reconciled by
+`integral_congr_ae` on the same identity. NOT name-laundering: `hpX_mass` is unit-mass
+regularity (used only to discharge `convDensityAdd_pos`'s `0 < ∫ pX`), conclusion is the
+original IBP equality unchanged. Compound `@residual` correctly reflects the AND of the plan
+(deriv-existence helpers) + the entropy-finiteness wall (`huv'`/`huv`) + the Fisher-finiteness
+wall (`hu'v`). Carries `@residual` not `@audit:ok` (transitive sorry, honest). NOT circular,
+NOT load-bearing.
 @residual(plan:epi-debruijn-pertime-closure,wall:entropy-finiteness,wall:fisher-finiteness) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)

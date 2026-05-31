@@ -39,6 +39,13 @@ convolution density (Mathlib absent, same family as `convDensityAdd_fisher_integ
 Fisher-finiteness wall). The conclusion is integrability of a concrete integrand
 (regularity output), NOT a bundled de Bruijn / Fisher conclusion.
 
+Independent honesty audit (2026-05-31, fresh auditor, commit `d5951a5`): honest_residual.
+Conclusion is `Integrable (u·v')` (regularity output), `hpX_nn`/`hpX_meas`/`hpX_int` are pX
+regularity preconditions (core-reconstruction test: granting them does not hand over a de
+Bruijn / Fisher conclusion). `wall:entropy-finiteness` correct — semantically distinct from
+`fisher-finiteness` (log-factor/entropy side, not score side); loogle confirms 0 declarations
+for `Integrable (negMulLog ∘ conv)` / `Integrable (_ * log ∘ conv)` and no
+`differentialEntropy (conv ...)` result (only `integrable_rnDeriv_mul_log_iff`, KL form, off-target).
 @residual(wall:entropy-finiteness) -/
 theorem convDensityAdd_logFactor_deriv2_integrable
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -58,6 +65,9 @@ convolution density (Mathlib absent, same family as the Fisher-finiteness wall).
 conclusion is integrability of a concrete integrand (regularity output), NOT a bundled
 conclusion.
 
+Independent honesty audit (2026-05-31, fresh auditor, commit `d5951a5`): honest_residual.
+Same family as `_deriv2_integrable` above; conclusion `Integrable (u·v)` regularity output,
+pX hyps are preconditions, `wall:entropy-finiteness` loogle-backed.
 @residual(wall:entropy-finiteness) -/
 theorem convDensityAdd_logFactor_deriv_integrable
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -77,6 +87,10 @@ parametric-diff body, Wave 2). Differential-entropy finiteness of a Gaussian con
 density (Mathlib absent). The conclusion is integrability of a concrete integrand
 (regularity output), NOT a bundled conclusion.
 
+Independent honesty audit (2026-05-31, fresh auditor, commit `d5951a5`): honest_residual.
+Conclusion `Integrable (negMulLog p_t)` (differential-entropy integrand finiteness, regularity
+output); pX hyps are preconditions. `wall:entropy-finiteness` loogle-backed (0 declarations for
+`Integrable (negMulLog ...)`).
 @residual(wall:entropy-finiteness) -/
 theorem convDensityAdd_negMulLog_integrable
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
