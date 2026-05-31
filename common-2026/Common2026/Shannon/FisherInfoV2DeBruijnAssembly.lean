@@ -1,6 +1,7 @@
 import Common2026.Shannon.FisherInfoV2DeBruijnPerTime
 import Common2026.Shannon.FisherConvBound   -- shared 壁 gaussianConv_fisher_le_inv_var
 import Common2026.Shannon.EPIConvDensitySecondDeriv  -- STEP-D bridge convDensityAdd_deriv2_eq_gaussian
+import Common2026.Shannon.EntropyConvFinite  -- entropy-finiteness wall (log-factor integrands)
 
 /-!
 # per-time de Bruijn identity — Phase 5 capstone assembly
@@ -1610,42 +1611,152 @@ private theorem convDensityAdd_fisher_integrable
   -- Step 6 (concl): `∫⁻ ofReal g ≠ ∞ ↔ Integrable g`.
   exact (lintegral_ofReal_ne_top_iff_integrable hg_aesm hg_nn).mp hfin.ne
 
-/-- **de Bruijn IBP step on the time-`t` convolution density (IBP + full-support wall).**
+/-- **Differentiability of the convolution density (deriv-existence helper, plumbing).**
+`HasDerivAt p_t (deriv p_t x) x` for `p_t = convDensityAdd pX g_t` at every `x` (`t > 0`).
+
+This is a `HasDerivAt`-existence fact: the machinery is in-tree
+(`convDensityAdd_hasDerivAt` / `convDensityAdd_deriv1_gaussian_eq`,
+`EPIConvDensitySecondDeriv.lean`), which establishes the spatial first derivative of the
+heat-flow convolution density via the parametric-integral gateway. What remains is
+constructing the gateway's Gaussian-tail domination preconditions (the `bound1` group, 4-5
+integrand-level `Integrable`/`AEStronglyMeasurable`/norm-bound hyps) from the envelopes
+already built in `_chain_domination` (`gaussHessMaj` / `convKernel_envelope_integrable`).
+That construction is heavy plumbing, not a Mathlib gap — hence classified `plan:` (NOT a
+new wall). The conclusion is a derivative-existence statement (regularity output), not a
+bundled de Bruijn / Fisher conclusion.
+
+@residual(plan:epi-debruijn-pertime-closure) -/
+private theorem convDensityAdd_hasDerivAt_self
+    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (hpX_int : Integrable pX volume) {t : ℝ} (ht : 0 < t) (x : ℝ) :
+    HasDerivAt (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩))
+      (deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)) x) x := by
+  sorry -- @residual(plan:epi-debruijn-pertime-closure)
+
+/-- **Differentiability of the convolution-density derivative (deriv-existence helper).**
+`HasDerivAt (deriv p_t) (deriv (deriv p_t) x) x` for `p_t = convDensityAdd pX g_t` at every
+`x` (`t > 0`).
+
+Same family as `convDensityAdd_hasDerivAt_self`: the second spatial derivative closed form
+is the in-tree `@audit:ok` atom `convDensityAdd_deriv2_eq_gaussian`
+(`EPIConvDensitySecondDeriv.lean:145`), constructed via two gateway applications. The
+residual is supplying that atom's two Gaussian-tail domination groups (`bound1` / `bound2`,
+11 integrand-level hyps) from `_chain_domination`'s envelopes — heavy plumbing, NOT a
+Mathlib gap. Classified `plan:`. The conclusion is a derivative-existence statement
+(regularity output), not a bundled conclusion.
+
+@residual(plan:epi-debruijn-pertime-closure) -/
+private theorem convDensityAdd_deriv_hasDerivAt_self
+    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (hpX_int : Integrable pX volume) {t : ℝ} (ht : 0 < t) (x : ℝ) :
+    HasDerivAt (deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)))
+      (deriv (deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩))) x) x := by
+  sorry -- @residual(plan:epi-debruijn-pertime-closure)
+
+/-- **de Bruijn IBP step on the time-`t` convolution density — genuine atom application.**
 The de Bruijn integration-by-parts identity at fixed time `t`:
 `∫ (- log p_t - 1) · ∂²_x p_t = ∫ (logDeriv p_t)² · p_t`, where `p_t = convDensityAdd pX g_t`.
 
-**True statement** (de Bruijn / heat-flow IBP): writing `negMulLog'(p) = - log p - 1`, two
-integrations by parts on `ℝ` move the spatial second derivative `∂²_x p_t` onto the score
-factor, producing `∫ (∂_x p_t)²/p_t = ∫ (logDeriv p_t)²·p_t`. The boundary terms vanish by the
-Gaussian/heavy-tail decay of `p_t` and its derivatives. The genuine atom
-`debruijn_ibp_step` (`FisherInfoV2DeBruijnPerTime.lean:693`, `@audit:ok`) supplies the
-Mathlib IBP core; what remains (the honest residual) is constructing its preconditions:
-`tsupport = ℝ` full-support C¹ of `p_t` and the three IBP integrability hyps + identifying
-the spatial 2nd derivative as a `HasDerivAt` (PR-level, plan L-PT-δ).
+**§Phase 5-G IBP localization (2026-05-31)**: the former monolithic body `sorry` is **factored**
+into a genuine `debruijn_ibp_step` (`@audit:ok`) application + named residuals (0 local sorry).
+The body now:
+- identifies the IBP quadruple `u = -log p_t - 1`, `v = ∂_x p_t`, `u' = -logDeriv p_t`,
+  `v' = ∂²_x p_t`;
+- supplies `hp_pos : 0 < p_t` genuinely (`convDensityAdd_pos`, mass `0 < ∫ pX = 1` from `hpX_mass`);
+- builds `hu : HasDerivAt u (u' ·)` genuinely (`Real.hasDerivAt_log ∘ HasDerivAt p_t` via the
+  deriv-existence helper `convDensityAdd_hasDerivAt_self`);
+- builds `hv : HasDerivAt v (v' ·)` from the deriv-existence helper
+  `convDensityAdd_deriv_hasDerivAt_self`;
+- supplies the three integrability hyps from the **entropy-finiteness wall** (`huv'`/`huv` =
+  `EntropyConvFinite.convDensityAdd_logFactor_deriv2_integrable` / `_deriv_integrable`) and the
+  **Fisher-finiteness wall** (`hu'v` from `convDensityAdd_fisher_integrable`, via the genuine
+  pointwise identity `u'·v = -((logDeriv p_t)²·p_t)` using `hp_pos`);
+- applies `debruijn_ibp_step` and reconciles RHS `-∫ u'·v = ∫ (logDeriv p_t)²·p_t` by
+  `integral_congr_ae` (same genuine pointwise identity).
 
-`hpX_nn`/`hpX_meas`/`hpX_int` are pure pX regularity preconditions; the IBP equality is the
-genuine claim. No load-bearing hypothesis bundled.
+`hpX_nn`/`hpX_meas`/`hpX_int`/`hpX_mass` are pure pX regularity preconditions (`hpX_mass`:
+unit mass, used for strict positivity); the IBP equality is the genuine claim. No load-bearing
+hypothesis bundled. The remaining honest `sorry`s are localized in: (a) the 2 deriv-existence
+helpers `convDensityAdd_hasDerivAt_self` / `convDensityAdd_deriv_hasDerivAt_self` (`plan:` —
+in-tree machinery, heavy domination-hyp plumbing, NOT a Mathlib gap); (b) the entropy-finiteness
+wall (`EntropyConvFinite.lean`); (c) the Fisher-finiteness wall (`convDensityAdd_fisher_integrable`).
+The transitive marker is compound (AND of the plan + the two walls).
 
-Independent honesty audit (2026-05-31, fresh auditor, 案 B split commit): verdict
-honest_residual. de Bruijn IBP identity is true (boundary terms vanish by Gaussian/heavy-tail
-decay). Classification `plan:` correct (NOT a new wall): the IBP core is the in-tree atom
-`debruijn_ibp_step` (`@audit:ok`, sorryAx-free via `integral_mul_deriv_eq_deriv_mul_of_integrable`);
-the residual is constructing that atom's preconditions (`tsupport`=ℝ full-support C¹ + the 3 IBP
-integrability hyps + 2nd-derivative `HasDerivAt` identification) = same-family plumbing, closeable
-under the named plan. The 3 pX hyps are regularity; the IBP equality is the claim (not bundled).
-Note for orchestrator: the atom's `Integrable (u'*v)` precondition (= `∫(logDeriv p)²·p` shape)
-overlaps the Fisher-finiteness wall — when both residuals close, consider whether the integrability
-can be sourced from `convDensityAdd_fisher_integrable` to avoid duplicate construction. @residual kept.
-
-@residual(plan:epi-debruijn-pertime-closure) -/
+@residual(plan:epi-debruijn-pertime-closure,wall:entropy-finiteness,wall:fisher-finiteness) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_int : Integrable pX volume) {t : ℝ} (ht : 0 < t) :
+    (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
+    {t : ℝ} (ht : 0 < t) :
     ∫ x, (- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x) - 1)
         * deriv (deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩))) x ∂volume
       = ∫ x, (logDeriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)) x)^2
         * convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x ∂volume := by
-  sorry -- @residual(plan:epi-debruijn-pertime-closure)
+  -- abbreviate the time-`t` convolution density.
+  set p_t : ℝ → ℝ := convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) with hp_t
+  -- STEP 2: strict positivity of `p_t` (genuine; `0 < ∫ pX = 1` from `hpX_mass`).
+  have hp_pos : ∀ x, 0 < p_t x := fun x =>
+    convDensityAdd_pos pX hpX_nn hpX_int (by rw [hpX_mass]; norm_num) ht x
+  -- IBP quadruple: u, v, u', v'.
+  set u : ℝ → ℝ := fun x => - Real.log (p_t x) - 1 with hu_def
+  set v : ℝ → ℝ := deriv p_t with hv_def
+  set u' : ℝ → ℝ := fun x => - logDeriv p_t x with hu'_def
+  set v' : ℝ → ℝ := deriv (deriv p_t) with hv'_def
+  -- STEP 3: `hu : ∀ x ∈ tsupport v, HasDerivAt u (u' x) x` — proved for all `x`.
+  have hu : ∀ x ∈ tsupport v, HasDerivAt u (u' x) x := by
+    intro x _
+    -- `HasDerivAt p_t (deriv p_t x) x` from the differentiability helper.
+    have hpt_diff : HasDerivAt p_t (deriv p_t x) x :=
+      convDensityAdd_hasDerivAt_self pX hpX_nn hpX_meas hpX_int ht x
+    -- `HasDerivAt (log ∘ p_t) (deriv p_t x / p_t x) x` via `Real.hasDerivAt_log`.
+    have hlog : HasDerivAt (fun x => Real.log (p_t x)) (deriv p_t x / p_t x) x := by
+      have := (Real.hasDerivAt_log (hp_pos x).ne').comp x hpt_diff
+      simpa [one_div, div_eq_mul_inv, mul_comm] using this
+    -- `u x = - log (p_t x) - 1`, `u' x = - logDeriv p_t x = - (deriv p_t x / p_t x)`.
+    have : HasDerivAt u (-(deriv p_t x / p_t x)) x := by
+      simpa [hu_def] using (hlog.neg.sub_const 1)
+    have hu'_eq : u' x = -(deriv p_t x / p_t x) := by
+      rw [hu'_def]; simp [logDeriv]
+    rw [hu'_eq]; exact this
+  -- STEP 3': `hv : ∀ x ∈ tsupport u, HasDerivAt v (v' x) x` — proved for all `x`.
+  have hv : ∀ x ∈ tsupport u, HasDerivAt v (v' x) x := by
+    intro x _
+    rw [hv_def, hv'_def]
+    exact convDensityAdd_deriv_hasDerivAt_self pX hpX_nn hpX_meas hpX_int ht x
+  -- STEP 4: the three integrability preconditions.
+  -- `huv' = Integrable (u * v')`: entropy-finiteness wall.
+  have huv' : Integrable (u * v') := by
+    simpa only [Pi.mul_def, hu_def, hv'_def, hp_t] using
+      InformationTheory.Shannon.EntropyConvFinite.convDensityAdd_logFactor_deriv2_integrable
+        pX hpX_nn hpX_meas hpX_int ht
+  -- `huv = Integrable (u * v)`: entropy-finiteness wall.
+  have huv : Integrable (u * v) := by
+    simpa only [Pi.mul_def, hu_def, hv_def, hp_t] using
+      InformationTheory.Shannon.EntropyConvFinite.convDensityAdd_logFactor_deriv_integrable
+        pX hpX_nn hpX_meas hpX_int ht
+  -- `hu'v = Integrable (u' * v)`: from the Fisher-finiteness wall (`(logDeriv)²·p_t`),
+  --   since `u' x · v x = - logDeriv p_t x · deriv p_t x = -((logDeriv p_t x)²·p_t x)`.
+  have hfisher := convDensityAdd_fisher_integrable pX hpX_nn hpX_meas hpX_int ht
+  -- pointwise identity `u' x · v x = -((logDeriv p_t x)² · p_t x)`, derived once.
+  have hpt_pointwise : ∀ x, (u' * v) x
+      = -(logDeriv p_t x ^ 2 * p_t x) := by
+    intro x
+    have hpx := (hp_pos x).ne'
+    simp only [Pi.mul_apply, hu'_def, hv_def, logDeriv, Pi.div_apply]
+    field_simp
+  have hu'v : Integrable (u' * v) := by
+    refine (hfisher.neg).congr ?_
+    filter_upwards with x
+    rw [Pi.neg_apply, hpt_pointwise x]
+  -- STEP 5: apply the IBP atom and reconcile.
+  have hibp := debruijn_ibp_step u v u' v' hu hv huv' hu'v huv
+  -- LHS of the goal = `∫ u x * v' x`; RHS of `hibp` = `- ∫ u' x * v x`.
+  rw [show (∫ x, (- Real.log (p_t x) - 1) * deriv (deriv p_t) x ∂volume)
+        = ∫ x, u x * v' x ∂volume from rfl, hibp]
+  -- `- ∫ u' x * v x = ∫ (logDeriv p_t x)² * p_t x`.
+  rw [← integral_neg]
+  refine integral_congr_ae ?_
+  filter_upwards with x
+  rw [show u' x * v x = (u' * v) x from rfl, hpt_pointwise x, neg_neg]
 
 /-- **§5G-4: IBP + Fisher value match (L-PT-δ) — genuine plumbing over 2 named walls.**
 The integrated entropy-derivative equals half the Fisher info of `pPath t`. de Bruijn IBP
@@ -1682,7 +1793,7 @@ name-laundering (carries `@residual`, not `@audit:ok`). The transitive marker is
 the wall + plan walls below). @residual(wall:fisher-finiteness,plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_int : Integrable pX volume)
+    (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
     {t : ℝ} (ht : 0 < t)
     (entDeriv : ℝ → ℝ)
     (hentDeriv : ∀ᵐ x ∂volume, entDeriv x =
@@ -1707,7 +1818,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher
   -- (2) pull out the `(1/2)` constant.
   rw [hstep1, integral_const_mul]
   -- (3) IBP step wall: `∫ (- log p_t - 1)·∂²_x p_t = ∫ (logDeriv p_t)²·p_t`.
-  rw [debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step pX hpX_nn hpX_meas hpX_int ht]
+  rw [debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step pX hpX_nn hpX_meas hpX_int hpX_mass ht]
   -- (4) Fisher value: `∫ (logDeriv p_t)²·p_t = fisherInfoOfDensityReal p_t`,
   --     integrability supplied by the Fisher-finiteness wall.
   rw [fisher_from_logDeriv p_t hp_nn
