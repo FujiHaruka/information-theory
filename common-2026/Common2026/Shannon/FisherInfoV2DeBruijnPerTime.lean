@@ -95,6 +95,48 @@ theorem gaussianConvolution_law_conv
 
 /-! ## Phase 1b — density identification (L-PT-β honest sorry) -/
 
+/-- **L-PT-β bridge (honest sorry)**: the ENNReal lconvolution density of the two
+`withDensity` factors equals `ENNReal.ofReal` of the Bochner-`∫` convolution density
+`convDensityAdd pX (gaussianPDFReal 0 v)`, pointwise (so a.e.).
+
+`lconvolution_def`: `((ofReal∘pX) ⋆ₗ gaussianPDF 0 v) z = ∫⁻ y, ofReal (pX y) * ofReal (gpdfReal 0 v (-y+z)) ∂volume`.
+`convDensityAdd pX g z = ∫ y, pX y * g (z-y) ∂volume`. With `z - y = -y + z` and
+`ofReal (a*b) = ofReal a * ofReal b` (`0 ≤ pX y`), the `∫⁻` equals `ofReal (∫ ...)` by
+`ofReal_integral_eq_lintegral_ofReal` — but that lemma requires per-`z` integrability of
+`fun y => pX y * gpdfReal 0 v (z-y)` (a genuine analytic precondition that the
+heat-flow Gaussian smoothing supplies but is not exposed in this signature). That
+integrability is the L-PT-β residual gap (~Gaussian-tail × density domination).
+
+`@residual(plan:epi-debruijn-pertime-closure)` -/
+private theorem pPath_eq_convDensityAdd_lconvolution_bridge
+    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (s : ℝ) (hs : 0 ≤ s)
+    (hv_ne : (⟨s, hs⟩ : ℝ≥0) ≠ 0) :
+    ((fun x => ENNReal.ofReal (pX x)) ⋆ₗ gaussianPDF 0 (⟨s, hs⟩ : ℝ≥0))
+      =ᵐ[volume] fun z => ENNReal.ofReal
+        (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs⟩) z) := by
+  refine Filter.Eventually.of_forall (fun z => ?_)
+  -- unfold lconvolution: `∫⁻ y, ofReal (pX y) * gaussianPDF 0 v (-y + z)`
+  rw [MeasureTheory.lconvolution_def]
+  simp only [gaussianPDF]
+  -- fold the product of `ofReal`s into `ofReal` of the product (uses `0 ≤ pX y`)
+  have hofReal_mul : ∀ y : ℝ,
+      ENNReal.ofReal (pX y) * ENNReal.ofReal (gaussianPDFReal 0 ⟨s, hs⟩ (-y + z))
+        = ENNReal.ofReal (pX y * gaussianPDFReal 0 ⟨s, hs⟩ (-y + z)) :=
+    fun y => (ENNReal.ofReal_mul (hpX_nn y)).symm
+  simp only [hofReal_mul]
+  -- rewrite `-y + z` to the `convDensityAdd` shape `z - y`
+  have hsub : ∀ y : ℝ, (-y + z) = z - y := fun y => by ring
+  simp only [hsub]
+  -- `∫⁻ ofReal f = ofReal (∫ f)` needs integrability of `fun y => pX y * gpdfReal 0 v (z-y)`
+  -- (per-`z` analytic precondition — L-PT-β residual).
+  have hint : Integrable (fun y => pX y * gaussianPDFReal 0 ⟨s, hs⟩ (z - y)) volume := by
+    sorry -- @residual(plan:epi-debruijn-pertime-closure) — per-z integrability of conv integrand
+  have hnn : 0 ≤ᵐ[volume] fun y => pX y * gaussianPDFReal 0 ⟨s, hs⟩ (z - y) :=
+    Filter.Eventually.of_forall fun y =>
+      mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ (z - y))
+  rw [← ofReal_integral_eq_lintegral_ofReal hint hnn]
+  rfl
+
 /-- **Phase 1b (L-PT-β honest sorry)**: when `P.map X` has a Real density witness `pX`
 (`P.map X = volume.withDensity (ENNReal.ofReal ∘ pX)`), the density of the heat-flow
 path `X + √s·Z` is a.e. equal to `convDensityAdd pX (gaussianPDFReal 0 ⟨s,_⟩)`.
@@ -117,7 +159,28 @@ theorem pPath_eq_convDensityAdd
     (P.map (gaussianConvolution X Z s)).rnDeriv volume
       =ᵐ[volume] fun z => ENNReal.ofReal
         (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩) z) := by
-  sorry -- @residual(plan:epi-debruijn-pertime-closure) — L-PT-β: ∫⁻→∫ bridge
+  -- variance witness `⟨s, hs.le⟩ : ℝ≥0` is nonzero (so the Gaussian is volume-AC).
+  have hv_ne : (⟨s, hs.le⟩ : ℝ≥0) ≠ 0 := by
+    intro h
+    exact hs.ne' (congrArg NNReal.toReal h)
+  -- Step 1 (Phase 1a): law of `X + √s·Z` is the convolution `(P.map X) ∗ 𝒩(0,s)`.
+  rw [gaussianConvolution_law_conv X Z hX hZ hXZ hZ_law hs.le]
+  -- Step 2: write both factors as `volume.withDensity _`.
+  --   `P.map X = volume.withDensity (ofReal ∘ pX)`  (hyp)
+  --   `𝒩(0,s) = volume.withDensity (gaussianPDF 0 ⟨s,_⟩)`  (gaussianReal_of_var_ne_zero)
+  rw [hpX_law, gaussianReal_of_var_ne_zero 0 hv_ne]
+  -- Step 3: conv of two `withDensity` = `withDensity` of the lconvolution `∫⁻`.
+  have hf_meas : Measurable (fun x => ENNReal.ofReal (pX x)) := by
+    -- pX is the Real density of `P.map X`; measurability of `ofReal ∘ pX` is forced
+    -- by `withDensity` well-formedness (regularity precondition, supplied via the law).
+    sorry -- @residual(plan:epi-debruijn-pertime-closure) — measurability of density witness
+  have hg_meas : Measurable (gaussianPDF 0 (⟨s, hs.le⟩ : ℝ≥0)) := measurable_gaussianPDF 0 _
+  rw [MeasureTheory.conv_withDensity_eq_lconvolution hf_meas hg_meas]
+  -- Step 4: `rnDeriv (withDensity h) =ᵐ h`, then identify the lconvolution density with
+  --   `ofReal ∘ convDensityAdd` via the `∫⁻ → ofReal ∫` bridge (L-PT-β).
+  refine (Measure.rnDeriv_withDensity volume
+    (MeasureTheory.measurable_lconvolution volume hf_meas hg_meas)).trans ?_
+  exact pPath_eq_convDensityAdd_lconvolution_bridge pX hpX_nn s hs.le hv_ne
 
 /-! ## Phase 2 — heat equation per-density (L-PT-α honest sorry, max cost) -/
 
