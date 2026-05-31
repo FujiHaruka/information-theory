@@ -467,11 +467,16 @@ factor `|u²/s² − 1/s| ≤ u²/s² + 1/s ≤ 4u²/t² + 2/t` (`s ≥ t/2`). `
 Gaussian × quadratic, hence Lebesgue-integrable. This is the genuine `s`-uniform pointwise
 envelope feeding GAP②'s triangle inequality. -/
 
-/-- The `s`-uniform Gaussian-Hessian kernel majorant on the window `s ∈ (t/2, 2t)`. -/
+/-- The `s`-uniform Gaussian-Hessian kernel majorant on the window `s ∈ (t/2, 2t)`.
+Independent honesty audit (2026-05-31, fresh auditor, Wave 3 commit `b5b9360`): genuine def,
+not load-bearing (the consumer `convDensityAdd_deriv2_poly_moment_majorant` builds its envelope
+as a convolution against this kernel; the kernel is a plain Gaussian×quadratic, no claim bundled).
+@audit:ok -/
 private noncomputable def gaussHessMaj (t : ℝ) (u : ℝ) : ℝ :=
   (Real.sqrt (Real.pi * t))⁻¹ * Real.exp (-u ^ 2 / (4 * t)) * (4 * u ^ 2 / t ^ 2 + 2 / t)
 
-/-- `gaussHessMaj t` is nonnegative. -/
+/-- `gaussHessMaj t` is nonnegative.
+@audit:ok -/
 private theorem gaussHessMaj_nonneg {t : ℝ} (ht : 0 < t) (u : ℝ) : 0 ≤ gaussHessMaj t u := by
   unfold gaussHessMaj
   have h1 : (0:ℝ) ≤ (Real.sqrt (Real.pi * t))⁻¹ := by positivity
@@ -479,7 +484,10 @@ private theorem gaussHessMaj_nonneg {t : ℝ} (ht : 0 < t) (u : ℝ) : 0 ≤ gau
   have h3 : (0:ℝ) ≤ 4 * u ^ 2 / t ^ 2 + 2 / t := by positivity
   positivity
 
-/-- `gaussHessMaj t` is Lebesgue-integrable (Gaussian × quadratic). -/
+/-- `gaussHessMaj t` is Lebesgue-integrable (Gaussian × quadratic).
+Independent honesty audit (2026-05-31, fresh auditor, Wave 3 commit `b5b9360`): genuine,
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free). All hyps regularity.
+@audit:ok -/
 private theorem gaussHessMaj_integrable {t : ℝ} (ht : 0 < t) :
     Integrable (gaussHessMaj t) volume := by
   have hb : (0:ℝ) < 1 / (4 * t) := by positivity
@@ -505,7 +513,21 @@ private theorem gaussHessMaj_integrable {t : ℝ} (ht : 0 < t) :
   rw [hexp_eq]; ring
 
 /-- `s`-uniform pointwise majorant: for `s ∈ (t/2, 2t)`,
-`g_s(u)·|u²/s² − 1/s| ≤ gaussHessMaj t u`. -/
+`g_s(u)·|u²/s² − 1/s| ≤ gaussHessMaj t u`.
+
+Independent honesty audit (2026-05-31, fresh auditor, Wave 3 commit `b5b9360`):
+**MAJORANT-INEQUALITY SOUNDNESS = PASS** (verified the 3 sub-bounds on the window `s ∈ (t/2,2t)`):
+(i) prefactor `(√(2πs))⁻¹ ≤ (√(πt))⁻¹` ⟺ `2s ≥ t`, holds from `s > t/2` (`hpref`, `ht2s`);
+(ii) exponent `exp(−u²/(2s)) ≤ exp(−u²/(4t))` ⟺ `s ≤ 2t` (with `u² ≥ 0`), holds from `s < 2t`
+(`hexp`, `sq_nonneg u`); (iii) polynomial `|u²/s²−1/s| ≤ u²/s²+1/s ≤ 4u²/t²+2/t` ⟺ `t ≤ 2s`
+(`u²/s² ≤ 4u²/t²` ⟺ `t² ≤ 4s²`; `1/s ≤ 2/t` ⟺ `t ≤ 2s`), holds from `2s > t` (`hpoly` `h1`/`h2`).
+**Case-A re-emergence ruled out**: this is the single Gaussian kernel `g_s` *outside* the
+convolution (`g_s` is genuinely Gaussian, so a Gaussian majorant is correct) — categorically
+different from the deleted case-A defect, which falsely asserted a Gaussian tail for the
+*convolution* `pX∗g_s` against polynomial-tail `pX`. A wrong majorant here would make GAP②
+pointwise vacuous; it is correct. `#print axioms` = `[propext, Classical.choice, Quot.sound]`
+(sorryAx-free). All hyps regularity; not load-bearing.
+@audit:ok -/
 private theorem gaussianHess_le_gaussHessMaj {t : ℝ} (ht : 0 < t) {s : ℝ}
     (hs : s ∈ Set.Ioo (t/2) (2*t)) (u : ℝ) :
     gaussianPDFReal 0 ⟨s, le_of_lt (by have := hs.1; linarith : (0:ℝ) < s)⟩ u
@@ -557,7 +579,14 @@ private theorem gaussianHess_le_gaussHessMaj {t : ℝ} (ht : 0 < t) {s : ℝ}
 For an integrable kernel `K` and an integrable density `pX`, the convolution-shaped function
 `x ↦ ∫ y, pX y · K (x − y)` is Lebesgue-integrable (`∫_x = (∫K)·∫pX`, by translation
 invariance + `Integrable.integral_prod_left`). The product integrability on `volume.prod volume`
-uses `integrable_prod_iff'`. -/
+uses `integrable_prod_iff'`.
+
+Independent honesty audit (2026-05-31, fresh auditor, Wave 3 commit `b5b9360`): genuine Tonelli
+helper, `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free). All four hyps
+(`hpX_int`/`hpX_meas`/`hK_int`/`hK_meas`) are regularity (integrability + measurability of the two
+factors); the integrability conclusion is the genuine claim, not bundled in any hyp. This is the
+helper that genuinely closes the `Integrable bound` half of GAP②.
+@audit:ok -/
 private theorem convKernel_envelope_integrable
     (pX K : ℝ → ℝ) (hpX_int : Integrable pX volume) (hpX_meas : Measurable pX)
     (hK_int : Integrable K volume) (hK_meas : Measurable K) :
@@ -661,6 +690,21 @@ plumbing, not a Mathlib gap; plan `docs/shannon/epi-debruijn-pertime-closure-pla
 finite 2nd moment), NOT load-bearing — the Hessian bound (the conclusion) is asserted by none of them. NOT
 circular, NOT false-statement, NOT degenerate. The prior `@audit:defect(false-statement)` +
 `@audit:retract-candidate` are correctly removed (statement now genuinely true). @residual kept.
+
+Independent honesty audit (2026-05-31, fresh auditor, Wave 3 genuine-helper commit `b5b9360`):
+verdict **honest_residual** (re-confirmed after envelope concretisation). **Integrability half now
+genuinely closed** (body L678-681 calls `convKernel_envelope_integrable` — audited `@audit:ok`,
+sorryAx-free — with the concrete `bound x = ∫ y, pX y · gaussHessMaj t (x−y)`; the s-uniform kernel
+majorant `gaussHessMaj` is `@audit:ok` and its pointwise bound `gaussianHess_le_gaussHessMaj` passed
+the 3-sub-bound soundness check). **Only the pointwise `sorry` (L690) remains** and is correctly
+narrowed: the bridge `EPIConvDensitySecondDeriv.convDensityAdd_deriv2_eq_gaussian` it routes through is
+already genuine + `@audit:ok` + Mathlib-present (a `hasDerivAt_integral_of_dominated_loc_of_deriv_le`
+gateway), so the residual is supplying that bridge's per-`s` `bound1`/`bound2` domination hyps + triangle
++ `gaussianHess_le_gaussHessMaj` = same-family **plan plumbing**, NOT a Mathlib gap. **Classification
+`plan:epi-debruijn-pertime-closure` correct** (plan file exists at `docs/shannon/`). All 5 pX hyps are
+regularity (nn/meas/int/normalisation/2nd-moment); the Hessian bound (conclusion) is asserted by none of
+them — NOT load-bearing. Statement TRUE & satisfiable for finite-2nd-moment pX (existential envelope,
+no concrete decay shape demanded, so NOT the case-A false Gaussian-tail). NOT circular/degenerate. @residual kept.
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem convDensityAdd_deriv2_poly_moment_majorant
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -746,6 +790,20 @@ the integrability-core sorry: Tonelli + Gaussian moments + finite-2nd-moment are
 exists. All hyps are pX regularity, NOT load-bearing; the existential output is integrand-level
 domination (the genuine claim). NOT circular, NOT vacuous-genuine, NOT false-statement. The
 `@audit:defect(false-statement)` is correctly removed (statement true via 案B joint route). @residual kept.
+
+Independent honesty audit (2026-05-31, fresh auditor, Wave 3 genuine-helper commit `b5b9360`):
+verdict **honest_residual** (re-confirmed). Two goals: (1st) joint-envelope integrability `sorry`
+(L784), (2nd) domination — **genuine, sorry-free** (L786-809: `filter_upwards [hLog, hHess]` then
+`norm_mul`/`mul_le_mul hlf hhalf` consumes BOTH GAP① `hLog` and GAP② `hHess` outputs; verified
+no `sorry`). **Core-reconstruction PASS**: granting GAP① (poly majorant `A+Bx²` for the log factor
+ONLY) + GAP② (integrable envelope for the Hessian ONLY) does NOT auto-discharge the conclusion —
+the conclusion needs the **product** `(A+Bx²)·(1/2)hessBound` integrable, and poly-growth ×
+integrable-envelope is not auto-integrable from `hHess_int` alone; the genuine analytic core is
+correctly localised to the 1st-goal `sorry` (route II = Tonelli + g_s moment). **`integrable_natPow_mul_exp_neg_mul_sq`
+correctly NOT used** (route I = deleted case-A defect, false for polynomial-tail pX). **Classification
+`plan:` correct**: route II = `lintegral_lintegral_swap`/`Integrable.integral_prod_left` (Mathlib-present)
++ Gaussian moments + finite-2nd-moment = same-family plumbing, not a wall. All hyps pX regularity, NOT
+load-bearing; existential output is integrand-level domination (genuine claim). NOT circular/vacuous-genuine/false-statement. @residual kept.
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_domination
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
