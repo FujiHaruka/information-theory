@@ -13,12 +13,14 @@ plan filename stem = `epi-debruijn-pertime-closure` → 再分類後の `@residu
 
 ## 進捗
 
-- [ ] Phase 0 — signature pivot (false→true、最小先行 closure) 📋
-- [ ] Phase 1 — density 同定 (`pPath_eq_convDensityAdd`) 📋 → [inventory §8 優先1](epi-debruijn-pertime-reattack-inventory.md)
-- [ ] Phase 2 — heat equation per-density (`∂_s pPath`) 📋 → [inventory §8 優先2 / §3 軸2]
-- [ ] Phase 3 — entropy parametric diff (`(d/ds)∫negMulLog`) 📋 → [inventory §8 優先3 / §2 軸1]
-- [ ] Phase 4 — 無限区間 IBP (logDeriv→Fisher) 📋 → [inventory §8 優先4-5 / §4 軸3]
-- [ ] Phase 5 — capstone congr + `@audit:ok` 移行 📋
+- [x] Phase 0 — signature pivot (false→true、最小先行 closure) ✅ (commit `138bc49`/`42f8a85`、独立監査 honest 確認、wall→plan 再分類確定)
+- [~] Phase 1 — density 同定 🔄: **1a `gaussianConvolution_law_conv` genuine ✅** (`@audit:ok`、sorryAx 非依存、`P.map(X+√s·Z)=(P.map X)∗𝒩(0,s)` 全 X)。**1b `pPath_eq_convDensityAdd` = honest sorry** (L-PT-β 撤退、`∫⁻→∫` bridge ~60行)
+- [~] Phase 2 — heat equation per-density 🔄: `heatFlow_density_heat_equation` skeleton = **honest sorry (true statement, not load-bearing)**。初回 unpinned `pathDeriv2` で false-statement 再混入 → 独立監査検出 → `hpPath`(畳み込み密度同定)+空間1/2階 pin で是正 (commit `69478a4`、再監査 OK)
+- [~] Phase 3 — entropy parametric diff 🔄: `entropy_hasDerivAt_via_parametric` skeleton = honest sorry (pin 済、`hasDerivAt_integral_of_dominated_loc_of_deriv_le` 同形)
+- [~] Phase 4 — 無限区間 IBP 🔄: **4a `debruijn_ibp_step` genuine ✅** (`@audit:ok`、`integral_mul_deriv_eq_deriv_mul_of_integrable` で exact)。**4b `fisher_from_logDeriv` = honest sorry** (logDeriv→Fisher congr)
+- [ ] Phase 5 — capstone congr (`debruijnIdentityV2_holds` 本体を atom で assemble) + `@audit:ok` 移行 📋
+
+> **進捗サマリ (2026-05-31 orchestrator session)**: 新 file `Common2026/Shannon/FisherInfoV2DeBruijnPerTime.lean` を起点に atom 分解。genuine 2 (`gaussianConvolution_law_conv` / `debruijn_ibp_step`)、honest sorry 4 (Phase 1b/2/3/4b)。Phase 0 で隠れた tier-5 false-statement (unpinned `density_t`) を honest true statement 化 = 最大の honesty 成果。残 = 4 atom + Phase 5 assembly。次着手は smaller atom (Phase 3 parametric diff / Phase 4b Fisher congr) → Phase 1b bridge → Phase 2 heat eq body (最大) → Phase 5。
 
 ## ゴール / Approach
 
