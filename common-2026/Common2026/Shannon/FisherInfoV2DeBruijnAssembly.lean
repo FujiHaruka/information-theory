@@ -1713,25 +1713,142 @@ private theorem convDensityAdd_hasDerivAt_self
 `HasDerivAt (deriv p_t) (deriv (deriv p_t) x) x` for `p_t = convDensityAdd pX g_t` at every
 `x` (`t > 0`).
 
-Same family as `convDensityAdd_hasDerivAt_self`: the second spatial derivative closed form
-is the in-tree `@audit:ok` atom `convDensityAdd_deriv2_eq_gaussian`
-(`EPIConvDensitySecondDeriv.lean:145`), constructed via two gateway applications. The
-residual is supplying that atom's two Gaussian-tail domination groups (`bound1` / `bound2`,
-11 integrand-level hyps) from `_chain_domination`'s envelopes — heavy plumbing, NOT a
-Mathlib gap. Classified `plan:`. The conclusion is a derivative-existence statement
-(regularity output), not a bundled conclusion.
-
-Independent honesty audit (2026-05-31, fresh auditor, commit `d5951a5`): honest_residual.
-Same family as `convDensityAdd_hasDerivAt_self`; differentiability-at-`x` statement (NOT
-circular), `plan:` classification correct (in-tree atom `convDensityAdd_deriv2_eq_gaussian`
-sorryAx-free verified, domination-hyp plumbing, not a Mathlib gap).
-@residual(plan:epi-debruijn-pertime-closure) -/
+Genuinely closed (0 sorry / 0 residual). Same family as `convDensityAdd_hasDerivAt_self`. The
+proof: (STEP 1) identifies `deriv p_t` as the kernel-form 1st-derivative function
+`fun ζ => ∫ y, pX y·(kernel t (ζ-y)·(-((ζ-y)/t)))` via the `@audit:ok` atom
+`convDensityAdd_deriv1_gaussian_eq` (`bound1 := |pX y| · M1` from `kernel_x_deriv1_global_bound`)
++ a `gaussianPDFReal`↔kernel rewrite; (STEP 2) differentiates that 1st-derivative function at `x`
+via the parametric-integral gateway `hasDerivAt_integral_of_dominated_loc_of_deriv_le`
+(`bound2 := |pX y| · M2` from `kernel_x_deriv2_global_bound`, per-`y` 2nd-derivative
+`heatFlow_density_heat_equation_kernel_x_deriv2`); then concludes `HasDerivAt (deriv p_t)
+(deriv (deriv p_t) x) x` by rewriting the 2nd-derivative value (`hgate2.2.deriv`). All hyps are
+pX regularity (`hpX_nn` carried for the family signature). NOT load-bearing, NOT circular. -/
 private theorem convDensityAdd_deriv_hasDerivAt_self
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) {t : ℝ} (ht : 0 < t) (x : ℝ) :
     HasDerivAt (deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)))
       (deriv (deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩))) x) x := by
-  sorry -- @residual(plan:epi-debruijn-pertime-closure)
+  -- kernel continuity / measurability.
+  have hker_cont : Continuous (fun u : ℝ => heatFlow_density_heat_equation_kernel t u) := by
+    unfold heatFlow_density_heat_equation_kernel; fun_prop
+  have hker_meas : Measurable (fun u : ℝ => heatFlow_density_heat_equation_kernel t u) :=
+    hker_cont.measurable
+  -- global-sup constants of the kernel 1st / 2nd spatial derivatives.
+  set M1 : ℝ := (Real.sqrt (2 * Real.pi * t))⁻¹ * ((1 + 2 * t * Real.exp (-1)) / (2 * t)) with hM1
+  set M2 : ℝ := (Real.sqrt (2 * Real.pi * t))⁻¹ * ((2 * Real.exp (-1) + 1) / t) with hM2
+  -- ===== bound1 group (for the deriv1 atom function equality) =====
+  have hF1_meas : ∀ ξ : ℝ,
+      AEStronglyMeasurable
+        (fun y => pX y * heatFlow_density_heat_equation_kernel t (ξ - y)) volume := by
+    intro ξ
+    exact (hpX_meas.aestronglyMeasurable).mul
+      ((hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable)
+  have hker_le : ∀ v : ℝ, |heatFlow_density_heat_equation_kernel t v|
+      ≤ (Real.sqrt (2 * Real.pi * (⟨t, ht.le⟩ : ℝ≥0)))⁻¹ := by
+    intro v
+    rw [heatFlow_density_heat_equation_kernel_eq ht v,
+      abs_of_nonneg (gaussianPDFReal_nonneg 0 _ v)]
+    exact gaussianPDFReal_le_prefactor' ⟨t, ht.le⟩ v
+  have hF1_int : ∀ ξ : ℝ,
+      Integrable (fun y => pX y * heatFlow_density_heat_equation_kernel t (ξ - y)) volume := by
+    intro ξ
+    refine hpX_int.mul_bdd
+      (c := (Real.sqrt (2 * Real.pi * (⟨t, ht.le⟩ : ℝ≥0)))⁻¹) ?_ ?_
+    · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+    · exact Filter.Eventually.of_forall (fun y => by
+        rw [Real.norm_eq_abs]; exact hker_le (ξ - y))
+  have hF1'_meas : ∀ ξ : ℝ, AEStronglyMeasurable
+      (fun y => pX y * (heatFlow_density_heat_equation_kernel t (ξ - y)
+        * (-((ξ - y) / t)))) volume := by
+    intro ξ
+    refine (hpX_meas.aestronglyMeasurable).mul ?_
+    refine AEStronglyMeasurable.mul ?_ ?_
+    · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+    · exact ((measurable_const.sub measurable_id).div_const t).neg.aestronglyMeasurable
+  have hb1 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
+      ‖pX y * (heatFlow_density_heat_equation_kernel t (ξ - y)
+        * (-((ξ - y) / t)))‖ ≤ (fun y => |pX y| * M1) y := by
+    refine Filter.Eventually.of_forall (fun y ξ _ => ?_)
+    rw [norm_mul, Real.norm_eq_abs]
+    apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
+    have := kernel_x_deriv1_global_bound ht (ξ - y)
+    rwa [hM1]
+  have hb1_int : Integrable (fun y => |pX y| * M1) volume := hpX_int.abs.mul_const _
+  -- ===== bound2 group (for the 2nd gateway) =====
+  have hb2 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
+      ‖pX y * (heatFlow_density_heat_equation_kernel t (ξ - y)
+        * ((ξ - y) ^ 2 / t ^ 2 - 1 / t))‖ ≤ (fun y => |pX y| * M2) y := by
+    refine Filter.Eventually.of_forall (fun y ξ _ => ?_)
+    rw [norm_mul, Real.norm_eq_abs]
+    apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
+    have := kernel_x_deriv2_global_bound ht (ξ - y)
+    rwa [hM2]
+  have hb2_int : Integrable (fun y => |pX y| * M2) volume := hpX_int.abs.mul_const _
+  have hF2'_meas : AEStronglyMeasurable
+      (fun y => pX y * (heatFlow_density_heat_equation_kernel t (x - y)
+        * ((x - y) ^ 2 / t ^ 2 - 1 / t))) volume := by
+    refine (hpX_meas.aestronglyMeasurable).mul ?_
+    refine AEStronglyMeasurable.mul ?_ ?_
+    · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+    · exact (((measurable_const.sub measurable_id).pow_const 2).div_const _).sub
+        measurable_const |>.aestronglyMeasurable
+  have hF2_int : Integrable
+      (fun y => pX y * (heatFlow_density_heat_equation_kernel t (x - y)
+        * (-((x - y) / t)))) volume := by
+    refine Integrable.mono' hb1_int (hF1'_meas x) (Filter.Eventually.of_forall (fun y => ?_))
+    have := kernel_x_deriv1_global_bound ht (x - y)
+    rw [norm_mul, Real.norm_eq_abs]
+    apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
+    rwa [hM1]
+  -- STEP 1: identify `deriv p_t` as the 1st-derivative integral function (deriv1 atom).
+  have hd1 := InformationTheory.Shannon.EPIConvDensitySecondDeriv.convDensityAdd_deriv1_gaussian_eq
+    pX ht (fun y => |pX y| * M1) hb1_int hF1_meas hF1_int hF1'_meas hb1
+  -- the 1st-derivative function, in kernel form.
+  have hd1_kernel : (fun ζ : ℝ => ∫ y, pX y * (gaussianPDFReal 0 ⟨t, ht.le⟩ (ζ - y)
+        * (-((ζ - y) / t))) ∂volume)
+      = (fun ζ : ℝ => ∫ y, pX y * (heatFlow_density_heat_equation_kernel t (ζ - y)
+          * (-((ζ - y) / t))) ∂volume) := by
+    funext ζ
+    refine integral_congr_ae ?_
+    filter_upwards with y
+    rw [heatFlow_density_heat_equation_kernel_eq ht (ζ - y)]
+  -- so `deriv p_t = kernel-form 1st-derivative function`.
+  have hderiv_eq : deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩))
+      = (fun ζ : ℝ => ∫ y, pX y * (heatFlow_density_heat_equation_kernel t (ζ - y)
+          * (-((ζ - y) / t))) ∂volume) := by
+    rw [hd1, hd1_kernel]
+  -- STEP 2: per-y spatial 2nd-derivative HasDerivAt (kernel `_x_deriv2` chained through `ξ ↦ ξ-y`).
+  have hdiff2 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
+      HasDerivAt (fun ξ => pX y * (heatFlow_density_heat_equation_kernel t (ξ - y)
+          * (-((ξ - y) / t))))
+        (pX y * (heatFlow_density_heat_equation_kernel t (ξ - y)
+          * ((ξ - y) ^ 2 / t ^ 2 - 1 / t))) ξ := by
+    filter_upwards with y
+    intro ξ _
+    have hk := heatFlow_density_heat_equation_kernel_x_deriv2 ht (ξ - y)
+    have hshift : HasDerivAt (fun ξ : ℝ => ξ - y) 1 ξ := by
+      simpa using (hasDerivAt_id ξ).sub_const y
+    have hcomp := hk.comp ξ hshift
+    simp only [mul_one] at hcomp
+    exact hcomp.const_mul (pX y)
+  -- the 2nd gateway at `x` (differentiate the kernel-form 1st-derivative function).
+  have hgate2 :=
+    hasDerivAt_integral_of_dominated_loc_of_deriv_le
+      (F := fun ξ y => pX y * (heatFlow_density_heat_equation_kernel t (ξ - y)
+        * (-((ξ - y) / t))))
+      (F' := fun ξ y => pX y * (heatFlow_density_heat_equation_kernel t (ξ - y)
+        * ((ξ - y) ^ 2 / t ^ 2 - 1 / t)))
+      (bound := fun y => |pX y| * M2) (Filter.univ_mem)
+      (Filter.Eventually.of_forall hF1'_meas) hF2_int hF2'_meas
+      hb2 hb2_int hdiff2
+  -- `hgate2.2 : HasDerivAt (kernel-form 1st-deriv fn) (∫ y, pX y·kernel·((x-y)²/t²-1/t)) x`.
+  have hderiv2 : HasDerivAt (deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)))
+      (∫ y, pX y * (heatFlow_density_heat_equation_kernel t (x - y)
+        * ((x - y) ^ 2 / t ^ 2 - 1 / t)) ∂volume) x := by
+    rw [hderiv_eq]; exact hgate2.2
+  -- conclude by rewriting the 2nd-derivative value.
+  rw [hderiv2.deriv]
+  exact hderiv2
 
 /-- **de Bruijn IBP step on the time-`t` convolution density — genuine atom application.**
 The de Bruijn integration-by-parts identity at fixed time `t`:
