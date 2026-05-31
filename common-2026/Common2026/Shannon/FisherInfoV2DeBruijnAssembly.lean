@@ -2058,11 +2058,13 @@ convolution density of the law of `X + √s·Z`) with its X-density witness `pX`
 After the §Phase 5-G sub-lemma split (2026-05-31), the former monolithic sorry is
 **factored** into the 5 §5G sub-lemmas. The body of this lemma is now **genuine plumbing**
 (§5G-5): it `obtain`s the entropy-derivative + value from `_chain_parametric` (§5G-3) and
-rewrites — no local sorry. The remaining honest `sorry` + `@residual` are localized in
-`_chain_domination` (§5G-2, L-PT-γ Gaussian-tail log-tail majorant), `_chain_ibp_fisher`
-(§5G-4, L-PT-δ `tsupport`=ℝ C¹ + integrability), and `_chain_parametric` (§5G-3, transitive
-over §5G-1/§5G-2/§5G-4). `_chain_entDeriv_formula` (§5G-1, the negMulLog chain rule) is
-genuine (0 sorry).
+rewrites — no local sorry. After the §5G wiring (2026-05-31), `_chain_domination` (§5G-2) and
+`_chain_entDeriv_formula` (§5G-1) are genuine (proof-done / `@audit:ok`); `_chain_parametric`
+(§5G-3) and `_chain_ibp_fisher` (§5G-4) are genuine plumbing (0 local sorry). The remaining
+honest `sorry` + `@residual` are localized in the named leaf residuals only: `_chain_hdiff`
+(§5G-3 hdiff, `plan:` heat-eq domination plumbing), the 2 deriv-existence helpers
+(`convDensityAdd_hasDerivAt_self` / `_deriv_hasDerivAt_self`, `plan:`), the entropy-finiteness
+wall (`EntropyConvFinite.lean`), and the Fisher-finiteness wall (`convDensityAdd_fisher_integrable`).
 
 `pX`/`hpX_nn`/`hpX_meas`/`hpX_int` are pure regularity preconditions (X has a Lebesgue
 density `pX`). The conclusion (`HasDerivAt … (1/2) · fisher`) is NOT bundled into a
