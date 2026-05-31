@@ -75,6 +75,14 @@ density `pX`). The conclusion (`HasDerivAt … (1/2) · fisher`) is NOT bundled 
 hypothesis — it is the genuine claim, derived from the 6 atoms once the regularity is
 supplied.
 
+Independent honesty audit (2026-05-31, Wave8 fresh auditor): verdict honest_residual.
+core-reconstruction test — granting the 4 pX regularity hyps does NOT hand you the
+HasDerivAt; the entropy-derivative=half-Fisher analytic chain stays in this sorry body.
+NOT load-bearing (no `*Hypothesis` predicate, conclusion is the genuine claim). classification
+`plan:` correct: the 6 atoms are @audit:ok, so the residual is plumbing gap (Gaussian-tail
+domination integrability / parametric-diff chain), not a Mathlib absence (IBP +
+parametric-diff present per loogle). plan file exists. @residual kept.
+
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -103,7 +111,12 @@ This uses Phase 1b (`pPath_eq_convDensityAdd`, density identification) +
 All hypotheses are regularity preconditions; the conclusion (an entropy/integral
 equality) is NOT a `HasDerivAt` core.
 
-@residual(plan:epi-debruijn-pertime-closure) -/
+Independent honesty audit (2026-05-31, Wave8 fresh auditor): verdict ok. Body is a
+genuine `filter_upwards` + `integral_congr_ae` + `toReal_ofReal` derivation (no local
+sorry). `#print axioms` confirms dependency `[propext, Classical.choice, Quot.sound]`
+only (sorryAx-free, transitive 0 sorry). All hyps are regularity preconditions
+(X/Z law/measurability + pX density data); the eventual-equality conclusion is not a
+HasDerivAt core. proof-done. @audit:ok -/
 private theorem debruijnIdentityV2_holds_assembled_entropy_eq
     {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
@@ -146,6 +159,15 @@ density (`density_t` via the rnDeriv pin `density_t_eq`, the convolution via Pha
 matches a.e.). The gap is the a.e.-congruence of `fisherInfoOfDensity` under a.e.-equal
 densities + the two-pin合成 (plan §5A-4).
 
+Independent honesty audit (2026-05-31, Wave8 fresh auditor): verdict honest_residual.
+core-reconstruction test — all hyps are regularity (X/Z law/meas/indep + pX density data
++ `hdensity_t_eq` external-shape rnDeriv pin); granting them does NOT supply the Fisher
+a.e.-congruence, which is the genuine sub-goal in this sorry body. NOT load-bearing
+(`hdensity_t_eq` is the same external-shape pin form as the wall's `density_t_eq`, not a
+conclusion bundle). classification `plan:` correct: this is the representative-choice /
+a.e.-congruence-of-logDeriv plumbing downstream of the @audit:ok atoms, not a Mathlib
+wall. @residual kept.
+
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_fisher_match
     {P : Measure Ω} [IsProbabilityMeasure P]
@@ -174,6 +196,20 @@ The assembly threads through three named regularity-plumbing lemmas
 honest `sorry` + `@residual(plan:epi-debruijn-pertime-closure)` for the concrete
 Gaussian-tail domination / `tsupport`-wide C¹ / integrability regularity (PR-level,
 plan L-PT-γ/δ). The atoms themselves are genuine.
+
+Independent honesty audit (2026-05-31, Wave8 fresh auditor): verdict honest_residual
+(NOT proof-done). (1) **Signature identical to wall `debruijnIdentityV2_holds`**
+(`FisherInfoV2DeBruijn.lean:326`): same conclusion `HasDerivAt (… differentialEntropy …)
+((1/2)·fisherInfoOfDensityReal h_reg.density_t) t`, same hyps (`h_reg :
+IsRegularDeBruijnHypV2`); no weakening / no extra regularity added (the wall uses
+underscore `_hX/_hZ/_hXZ/_ht`, the assembly genuinely consumes `hX/hZ/hXZ/ht`).
+(2) **Body genuine**: real wiring (`_chain` deriv + `_eq` eventual-equality →
+`congr_of_eventuallyEq` → `rw [_fisher_match]`), no circular `:= h`, no degenerate.
+(3) **NOT name-laundering**: `_assembled` + same signature, but `#print axioms` confirms
+transitive `sorryAx` dependency (via `_chain` + `_fisher_match`); docstring explicitly
+states it is NOT proof-done, with the 2 gaps localized in named honest-sorry lemmas. It
+carries `@residual` (not `@audit:ok`), so it does not claim completion. classification
+`plan:` correct (downstream of @audit:ok atoms = plumbing). @residual kept.
 
 `@residual(plan:epi-debruijn-pertime-closure)` -/
 theorem debruijnIdentityV2_holds_assembled
