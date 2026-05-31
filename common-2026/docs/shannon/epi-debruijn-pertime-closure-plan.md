@@ -14,13 +14,17 @@ plan filename stem = `epi-debruijn-pertime-closure` → 再分類後の `@residu
 ## 進捗
 
 - [x] Phase 0 — signature pivot (false→true、最小先行 closure) ✅ (commit `138bc49`/`42f8a85`、独立監査 honest 確認、wall→plan 再分類確定)
-- [~] Phase 1 — density 同定 🔄: **1a `gaussianConvolution_law_conv` genuine ✅** (`@audit:ok`、sorryAx 非依存、`P.map(X+√s·Z)=(P.map X)∗𝒩(0,s)` 全 X)。**1b `pPath_eq_convDensityAdd` = honest sorry** (L-PT-β 撤退、`∫⁻→∫` bridge ~60行)
-- [~] Phase 2 — heat equation per-density 🔄: `heatFlow_density_heat_equation` skeleton = **honest sorry (true statement, not load-bearing)**。初回 unpinned `pathDeriv2` で false-statement 再混入 → 独立監査検出 → `hpPath`(畳み込み密度同定)+空間1/2階 pin で是正 (commit `69478a4`、再監査 OK)
-- [~] Phase 3 — entropy parametric diff 🔄: `entropy_hasDerivAt_via_parametric` skeleton = honest sorry (pin 済、`hasDerivAt_integral_of_dominated_loc_of_deriv_le` 同形)
-- [~] Phase 4 — 無限区間 IBP 🔄: **4a `debruijn_ibp_step` genuine ✅** (`@audit:ok`、`integral_mul_deriv_eq_deriv_mul_of_integrable` で exact)。**4b `fisher_from_logDeriv` = honest sorry** (logDeriv→Fisher congr)
-- [ ] Phase 5 — capstone congr (`debruijnIdentityV2_holds` 本体を atom で assemble) + `@audit:ok` 移行 📋
+- [x] Phase 1 — density 同定 ✅: **1a `gaussianConvolution_law_conv` genuine ✅** (`@audit:ok`)。**1b `pPath_eq_convDensityAdd` + bridge genuine ✅** (Wave3、commit `6f675ca`、`@audit:ok`、sorryAx 非依存。`Measurable pX` regularity hyp 追加で可測性 gap、`Integrable pX` 導出 + `gaussianPDFReal_le_prefactor` 上界で可積分性 gap を closure。両 narrow sorry 解消)
+- [~] Phase 2 — heat equation per-density 🔄: **kernel-level heat eq genuine ✅** (Wave3、commit `6f675ca`)。`heatFlow_density_heat_equation_kernel{,_eq,_x_deriv1,_x_deriv2,_sigma_deriv,_heat_eq}` 7 件 `@audit:ok` (ℝ-引数化 kernel の `∂_σ g = (1/2)∂²_u g` を genuine 化、非退化確認)。**main body `heatFlow_density_heat_equation` = honest sorry (L-PT-α 据置)**: 残 gap = σ-積分記号下微分 (kernel heat eq を ∫ 越しに lift) に Gaussian-tail domination bound `Integrable` が必要 (~80+ 行 PR 級)。3 pin 不変、false-statement 再混入なし (Wave4 監査確認)
+- [x] Phase 3 — entropy parametric diff ✅: `entropy_hasDerivAt_via_parametric` genuine ✅ (Wave1、`@audit:ok`、sorryAx 非依存、`hasDerivAt_integral_of_dominated_loc_of_deriv_le` 1:1 plumbing)
+- [x] Phase 4 — 無限区間 IBP ✅: **4a `debruijn_ibp_step` genuine ✅** (`@audit:ok`)。**4b `fisher_from_logDeriv` genuine ✅** (Wave1、`@audit:ok`、sorryAx 非依存、`∫↔(∫⁻ ofReal).toReal` 往復 = `ofReal_integral_eq_lintegral_ofReal`)
+- [ ] Phase 5 — capstone congr (`debruijnIdentityV2_holds` 本体を atom で assemble) + `@audit:ok` 移行 📋 **← 着手前に設計判断要 (下記)**
 
-> **進捗サマリ (2026-05-31 orchestrator session)**: 新 file `Common2026/Shannon/FisherInfoV2DeBruijnPerTime.lean` を起点に atom 分解。genuine 2 (`gaussianConvolution_law_conv` / `debruijn_ibp_step`)、honest sorry 4 (Phase 1b/2/3/4b)。Phase 0 で隠れた tier-5 false-statement (unpinned `density_t`) を honest true statement 化 = 最大の honesty 成果。残 = 4 atom + Phase 5 assembly。次着手は smaller atom (Phase 3 parametric diff / Phase 4b Fisher congr) → Phase 1b bridge → Phase 2 heat eq body (最大) → Phase 5。
+> **進捗サマリ (2026-05-31 orchestrator session、Wave1-4)**: atom file `Common2026/Shannon/FisherInfoV2DeBruijnPerTime.lean` を 4 並列実装 (worktree) + 独立監査 2 round で前進。**session 開始 4 honest sorry → 残 1** (Phase 2 main body L-PT-α のみ)。genuine 化 + `@audit:ok`: Phase 1a / **1b (+bridge)** / **3** / 4a / **4b** / Phase2 **kernel 群 7 件** (太字 = 本 session 新規)。最大成果 = **kernel-level heat eq `∂_σ g = (1/2)∂²_u g` を genuine 化** (`kernel_heat_eq`、Phase 2 の解析核)。
+>
+> **残課題 (次 session)**:
+> 1. **Phase 2 main body closure** (L-PT-α 解除): kernel heat eq は genuine 済。残るのは σ-積分記号下微分 (gateway lemma を σ 方向で適用、被積分関数 σ微分 = `kernel_sigma_deriv`) + spatial 2nd diff の `pathDeriv2` 同定。各 step に domination bound `Integrable` 構成が要る (~80+ 行)。main signature に regularity hyp (domination/integrability) 追加が妥当 (Phase 3 と同型、load-bearing でない)。
+> 2. **Phase 5 assembly = 設計判断要**: `debruijnIdentityV2_holds` 本体を atom で組むには **`IsRegularDeBruijnHypV2` の拡張が必要**。現 structure は `Z_law` + `density_t` (時刻 t の密度) + `density_t_eq` のみで、**X 自身の Real 密度 witness `pX` (+ `Measurable pX`)** を持たない。Phase 1b は `pX` を要求するので、assembly 前に structure 拡張 (forward-looking debt の本格解消) が要る。consumer ripple (`EPIL3Integration` / `EPIStamDischarge` / `IsDeBruijnPathRegular.reg_t`) があるため lean-planner で ripple 設計してから着手。premature な assembly は避ける。
 
 ## ゴール / Approach
 
