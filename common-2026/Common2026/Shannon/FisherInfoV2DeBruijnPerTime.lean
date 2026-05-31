@@ -648,8 +648,13 @@ honest precondition shape is a `t`-neighborhood `Set.Ioo (t/2) (2*t)`. We add `(
 (needed so `Ioo (t/2) (2*t) ∈ 𝓝 t` with `t/2 < t < 2*t`) and pass `Ioo_mem_nhds` as the gateway's
 `hs`. Body remains a pure gateway call + `.2` extraction (genuine, 0 sorry); the heat-eq atom
 `heatFlow_density_heat_equation` (`:472-477`) uses the identical `Set.Ioo (s/2) (2*s)` +
-`Ioo_mem_nhds` precedent. `@audit:ok` retained (still genuine + now satisfiable), pending
-independent re-audit of the weakened signature.
+`Ioo_mem_nhds` precedent. `@audit:ok` retained (still genuine + now satisfiable).
+
+**Independent re-audit (2026-05-31, weakened signature)**: ok. `#print axioms` re-confirmed
+sorryAx-free (`[propext, Classical.choice, Quot.sound]`). The `Ioo (t/2)(2*t)` neighborhood is
+instantiable (gateway needs only `s ∈ 𝓝 t`, extracting an ε-ball internally per
+`ParametricIntegral.lean:295`); the old `Set.univ` form was un-instantiable. `hb`/`hdiff` stay
+integrand-level (not load-bearing). @audit:ok confirmed.
 @audit:ok -/
 theorem entropy_hasDerivAt_via_parametric
     (pPath : ℝ → ℝ → ℝ) (entDeriv : ℝ → ℝ → ℝ) (bound : ℝ → ℝ) {t : ℝ} (ht : 0 < t)

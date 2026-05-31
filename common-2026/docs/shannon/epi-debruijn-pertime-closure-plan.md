@@ -1316,3 +1316,25 @@ predicate 化 / `:True` slot / 循環 `:= h` / 退化 (rnDeriv pin 等)。詰ま
     並列は全 sub-lemma 同一 file ゆえ不可 (単一 implementer 逐次推奨)。`entDeriv` 閉形は
     `Real.hasDerivAt_negMulLog (hx : x ≠ 0)` を要するため `pPath t x > 0` (Gaussian conv 正値、
     a.e.) が必須 — `integral_nonneg` + Gaussian 正値で genuine 導出 (`_entropy_eq:150-151` precedent)。
+11. **§5G-2 の `_chain_domination` 初版は false-statement defect、§5G-3 上流 atom の univ 制約も
+    instantiate 不能 → full-entDeriv + neighborhood 量化に re-design (Phase 5-G 改訂)** (2026-05-31,
+    orchestrator + proof-pivot-advisor 独立確認): 初版実装の `_chain_domination` (#2) 結論
+    `∃ bound, Integrable bound ∧ ∀ᵐ x, ∀ s ∈ univ, ‖-log(pPath_{max s 0} x)-1‖ ≤ bound x` は **2 点で
+    false** — (a) `∀ s ∈ univ` 量化下、pX=N(0,1) で `pPath_s=N(0,1+s)` を取ると `-log pPath_s x =
+    (1/2)log(2π(1+s)) + x²/(2(1+s))-1` が s→∞ で各 x で +∞ 発散 → 有限 bound x 不在、(b) t 近傍に絞っても
+    log 因子単独は ~x² で **Lebesgue 非可積分** (x² は integrable でない)。**`negMulLog'` 因子 `(-log p-1)`
+    を単独で integrable-dominate しようとすると必ず false** — `∂²_x p` の Gaussian 減衰因子と **積一体**で
+    `entDeriv s x = (-log p_s x-1)·(1/2)·∂²_x p_s x` を dominate せねばならない。さらに上流 atom
+    `entropy_hasDerivAt_via_parametric` (`FisherInfoV2DeBruijnPerTime.lean:639`、`@audit:ok`) の `hb`/`hdiff`
+    が `∀ s ∈ Set.univ` で量化されているのは **over-strengthening** — gateway
+    `hasDerivAt_integral_of_dominated_loc_of_deriv_le` は `s ∈ 𝓝 t` (ball) の domination で足りる
+    (`:295-296` で ε-ball 内部抽出)。univ 量化は s→∞/s→0+ の発散を呼び込み genuine instantiate 不能 →
+    **atom の `@audit:ok` は誤り** (load-bearing でないことは verify したが satisfiable かを未検証。honesty
+    audit は「load-bearing でない」と「instantiate 可能」を別軸で両方 check すべき教訓)。**採用 = 案 A**:
+    (1) atom の `hb`/`hdiff` を `∀ s ∈ Set.Ioo (t/2) (2*t)` に弱化 + `ht : 0 < t` 追加、body
+    `(Filter.univ_mem)` → `(Ioo_mem_nhds (by linarith) (by linarith))` (heat-eq atom `:443` の
+    `Set.Ioo (s/2)(2s)` pattern と整合)、(2) `_chain_domination` を **full-entDeriv 一体形 + Ioo 近傍量化**
+    に再定義 (sorry だが true statement)、(3) `_chain_parametric` の atom 呼出を Ioo 版に追従。atom signature
+    変更ゆえ独立 honesty 監査再起動。**禁止**: log 因子単独 domination に戻す / univ 量化維持 / 結論 bundle。
+    §5G-2 表 (`:1041-1043`) の「measurability 群は genuine、log-tail のみ sorry」分類は **本 defect で無効化**
+    (full-entDeriv domination の Integrable 構成全体が L-PT-γ residual、~120-180 行)。
