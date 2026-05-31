@@ -647,7 +647,19 @@ group of `heatFlow_density_heat_equation` `:448-459` and with `convDensityAdd_ha
 `EPIConvDensity.lean:86`, both `@audit:ok`). They do NOT bundle the `HasDerivAt` conclusion:
 that is *derived* in the body from the genuine `@audit:ok` kernel 1st-deriv closed form
 chained through `ξ ↦ ξ - y` plus the gateway. The conclusion is a genuine `HasDerivAt`, not a
-hyp-bundled equality. -/
+hyp-bundled equality.
+
+**Independent honesty audit (commit `d9ba34b`)**: genuine, NOT load-bearing. Core-reconstruction
+test applied jointly to the full hyp bundle (`boundξ1` / `hboundξ1_int` / `hFξ1_meas` / `hFξ1_int`
+/ `hFξ1'_meas` / `hbξ1`): granting all of them does NOT hand the composed `HasDerivAt` value —
+every hyp is integrand-level (per-`y`, `∀ξ`-quantified ae-measurability / integrability / Gaussian-
+tail norm bound `≤ boundξ1 y`), 1:1 with the gateway
+`hasDerivAt_integral_of_dominated_loc_of_deriv_le` arg shape and verbatim-identical to the spatial
+1st-deriv group of `heatFlow_density_heat_equation` (`:450-459`, `@audit:ok`). Body derives the
+conclusion (`hconv_eq` + `hdiff` from `@audit:ok` kernel `_x_deriv1` chained `ξ↦ξ-y` + `hgate.2`);
+no `:= h` circular, no `:True` slot, no degenerate def. `#print axioms` re-verified =
+`[propext, Classical.choice, Quot.sound]` (sorryAx-free). 0 sorry / 0 residual.
+@audit:ok -/
 theorem convDensityAdd_hasDerivAt_spatial
     (pX : ℝ → ℝ) {t : ℝ} (ht : 0 < t) (x : ℝ)
     (boundξ1 : ℝ → ℝ) (hboundξ1_int : Integrable boundξ1 volume)
@@ -694,7 +706,13 @@ theorem convDensityAdd_hasDerivAt_spatial
   exact hgate.2
 
 /-- **Phase 2c corollary (genuine)**: `deriv` form of `convDensityAdd_hasDerivAt_spatial`.
-`deriv (convDensityAdd pX g_t) x = ∫ y, pX y · kernel t (x-y)·(-((x-y)/t))`. -/
+`deriv (convDensityAdd pX g_t) x = ∫ y, pX y · kernel t (x-y)·(-((x-y)/t))`.
+
+**Independent honesty audit (commit `d9ba34b`)**: genuine, NOT circular. Body is the standard
+`.deriv` projection of `convDensityAdd_hasDerivAt_spatial` (no `:= h`); same integrand-level
+domination group, conclusion converts the `HasDerivAt` to `deriv =`. `#print axioms` =
+`[propext, Classical.choice, Quot.sound]` (sorryAx-free). 0 sorry / 0 residual.
+@audit:ok -/
 theorem convDensityAdd_deriv_spatial_eq
     (pX : ℝ → ℝ) {t : ℝ} (ht : 0 < t) (x : ℝ)
     (boundξ1 : ℝ → ℝ) (hboundξ1_int : Integrable boundξ1 volume)
@@ -726,7 +744,17 @@ derivative `deriv (deriv (convDensityAdd pX g_t)) x` (needed by `debruijn_ibp_st
 (`hpathDeriv2_eq`, `:607`). Domination hyps are the spatial 2nd-deriv group (`boundξ2` /
 integrability / ae-measurability / `hbξ2`), all integrand-level regularity preconditions in
 the gateway's shape; the `HasDerivAt` conclusion is *derived* from the `@audit:ok` kernel
-2nd-deriv closed form chained through `ξ ↦ ξ - y` + the gateway. Not load-bearing. -/
+2nd-deriv closed form chained through `ξ ↦ ξ - y` + the gateway. Not load-bearing.
+
+**Independent honesty audit (commit `d9ba34b`)**: genuine, NOT load-bearing. Core-reconstruction
+test applied jointly to the 2nd-deriv hyp bundle (`boundξ2` / `hboundξ2_int` / `hFξ1'_meas` /
+`hFξ2_int` / `hFξ2'_meas` / `hbξ2`): granting all does NOT hand the composed `HasDerivAt` value —
+every hyp is integrand-level regularity in the gateway's shape, verbatim-identical to the spatial
+2nd-deriv group of `heatFlow_density_heat_equation` (`:460-468`, `@audit:ok`). Body derives the
+conclusion (`hdiff` from `@audit:ok` kernel `_x_deriv2` chained `ξ↦ξ-y` + `hgate.2`), mirroring
+heat-eq STEP D2 `hpathDeriv2_eq`; no `:= h` circular, no `:True` slot, no degenerate def.
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free). 0 sorry / 0 residual.
+@audit:ok -/
 theorem convDensityAdd_deriv_hasDerivAt_spatial
     (pX : ℝ → ℝ) {t : ℝ} (ht : 0 < t) (x : ℝ)
     (boundξ2 : ℝ → ℝ) (hboundξ2_int : Integrable boundξ2 volume)

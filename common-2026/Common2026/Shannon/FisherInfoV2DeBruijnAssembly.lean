@@ -107,6 +107,78 @@ private theorem debruijnIdentityV2_holds_assembled_chain_entDeriv_formula
   -- chain rule: `negMulLog ∘ (fun s => pPath s x)`.
   exact hneg.comp t hpath_deriv
 
+/-- **Genuine integrability helper**: `x ↦ x^k · exp(-b·x²)` is Lebesgue integrable for any
+`k : ℕ` and `b > 0`. Bridges the Mathlib `rpow` lemma `integrable_rpow_mul_exp_neg_mul_sq`
+(which uses `x ^ (k:ℝ)`) to the `pow` (`ℕ`-exponent) form via `rpow_natCast`. -/
+private theorem integrable_natPow_mul_exp_neg_mul_sq {b : ℝ} (hb : 0 < b) (k : ℕ) :
+    Integrable (fun x : ℝ => x ^ k * Real.exp (-b * x ^ 2)) volume := by
+  have hk : (-1 : ℝ) < (k : ℝ) := by
+    have : (0:ℝ) ≤ (k : ℝ) := Nat.cast_nonneg k
+    linarith
+  have hrpow := integrable_rpow_mul_exp_neg_mul_sq hb hk
+  -- bridge `x ^ (k:ℝ)` (rpow) to `x ^ k` (pow): equal everywhere by `Real.rpow_natCast`.
+  have hcongr : (fun x : ℝ => x ^ (k : ℝ) * Real.exp (-b * x ^ 2))
+      = fun x : ℝ => x ^ k * Real.exp (-b * x ^ 2) := by
+    funext x; rw [Real.rpow_natCast]
+  rwa [hcongr] at hrpow
+
+/-- **§5G-2a (GAP①): `s`-uniform polynomial majorant for the log factor.**
+On the `t`-neighborhood `Set.Ioo (t/2) (2*t)` (where `t/2 < s`, hence `s > 0`), the entropy
+log-factor `- log (p_s x) - 1` of the convolution density `p_s = convDensityAdd pX g_s` admits
+a polynomial-in-`x²` majorant uniform in `s`:
+`‖- log (p_s x) - 1‖ ≤ A + B·x²` with `B ≥ 0`.
+
+The bound follows from a Gaussian *lower* bound on the convolution density
+`p_s x ≥ c·exp(-(|x|+R)²/(2s))` (the mass of `pX` on a bounded set, pushed down by the
+Gaussian kernel value): taking `log` gives `- log (p_s x) ≤ - log c + (|x|+R)²/(2s) ≤ A + B·x²`
+(uniform in `s` on the bounded window `s ∈ (t/2, 2t)`). **The route is "take the `log` of the
+lower bound"** (`Real.log_le_log` + `Real.log_exp`), NOT `one_sub_inv_le_log_of_pos`
+(`-log p ≤ p⁻¹-1` would make `p⁻¹ ~ exp(+x²)` and the majorant non-integrable).
+
+All hyps are pX-system regularity; the existential output is a pointwise polynomial bound.
+The remaining honest `sorry` is the convolution-density Gaussian lower bound (Mathlib/repo
+absent — convolution lower bounds and Gaussian density lower bounds are both `Found 0`).
+
+@residual(plan:epi-debruijn-pertime-closure) -/
+private theorem convDensityAdd_logFactor_poly_majorant
+    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (hpX_int : Integrable pX volume)
+    {t : ℝ} (ht : 0 < t) :
+    ∃ A B : ℝ, 0 ≤ B ∧
+      ∀ᵐ x ∂volume, ∀ s : ℝ, (hs : s ∈ Set.Ioo (t/2) (2*t)) →
+        ‖- Real.log (convDensityAdd pX
+            (gaussianPDFReal 0 ⟨s, le_of_lt (by have := hs.1; linarith : (0:ℝ) < s)⟩) x) - 1‖
+          ≤ A + B * x ^ 2 := by
+  sorry -- @residual(plan:epi-debruijn-pertime-closure)  -- GAP①
+
+/-- **§5G-2b (GAP②): `s`-uniform Gaussian-tail majorant for the spatial Hessian.**
+On the `t`-neighborhood `Set.Ioo (t/2) (2*t)`, the spatial second derivative
+`∂²_x p_s x = deriv (deriv (convDensityAdd pX g_s)) x` of the convolution density admits a
+Gaussian-tail majorant uniform in `s`:
+`‖∂²_x p_s x‖ ≤ C·(1 + x²)·exp(-x²/c')` with `0 < c'`, `0 ≤ C`.
+
+Via the heat-eq STEP D identification `∂²_x p_s x = ∫ y, pX y · g_s(x-y)·((x-y)²/s² - 1/s)`
+(`FisherInfoV2DeBruijnPerTime.heatFlow_density_heat_equation` STEP D + the kernel 2nd-deriv
+closed form `heatFlow_density_heat_equation_kernel_x_deriv2`), the triangle inequality and the
+Gaussian prefactor bound (`gaussianPDFReal_le_prefactor`) give a Gaussian-tail bound uniform on
+the bounded window `s ∈ (t/2, 2t)`. The bridge `deriv (deriv (convDensityAdd …)) = pathDeriv2`
+requires the `pathDeriv1/2` `HasDerivAt` preconditions (full-support C¹ plumbing shared with
+L-PT-δ), which is the remaining honest `sorry`.
+
+All hyps are pX-system regularity; the existential output is a pointwise Gaussian-tail bound.
+
+@residual(plan:epi-debruijn-pertime-closure) -/
+private theorem convDensityAdd_deriv2_tail_majorant
+    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (hpX_int : Integrable pX volume)
+    {t : ℝ} (ht : 0 < t) :
+    ∃ C c' : ℝ, 0 < c' ∧ 0 ≤ C ∧
+      ∀ᵐ x ∂volume, ∀ s : ℝ, (hs : s ∈ Set.Ioo (t/2) (2*t)) →
+        ‖deriv (deriv (convDensityAdd pX
+            (gaussianPDFReal 0 ⟨s, le_of_lt (by have := hs.1; linarith : (0:ℝ) < s)⟩))) x‖
+          ≤ C * (1 + x ^ 2) * Real.exp (-x ^ 2 / c') := by
+  sorry -- @residual(plan:epi-debruijn-pertime-closure)  -- GAP②
+
 /-- **§5G-2: full-entDeriv Gaussian-tail domination group (L-PT-γ, max cost).**
 Produces an integrable majorant `bound` dominating the **full** entropy σ-derivand
 `(- log (pPath s x) - 1) · ((1/2)·∂²_x pPath s x)` over the `t`-neighborhood
@@ -124,10 +196,23 @@ majorant exists). The fix dominates the **full σ-derivand product** (the `∂²
 kills the `x²` factor → integrable) over a **bounded `t`-neighborhood** `Ioo (t/2)(2*t)` (so
 `s` stays in a compact away-from-0/∞ window), which is the true, satisfiable shape
 (proof-pivot-advisor confirmed). On `Ioo (t/2)(2*t)` with `t > 0` we have `s > t/2 > 0`, so the
-NNReal variance witness `⟨s, _⟩` is well-defined (no `max s 0` needed). The remaining honest
-`sorry` is the Gaussian-tail integrable majorant construction (~120-180 lines, plan L-PT-γ).
+NNReal variance witness `⟨s, _⟩` is well-defined (no `max s 0` needed).
 
-All hyps are pX-system regularity; the existential output is integrand-level domination.
+**Genuine-wiring split (2026-05-31)**: the former monolithic `sorry` is **factored** into
+genuine wiring over two named regularity helpers. The body is now **genuine** (0 local sorry):
+it `obtain`s an `s`-uniform polynomial majorant `A + B·x²` for the log factor
+(`convDensityAdd_logFactor_poly_majorant`, §5G-2a / GAP①) and an `s`-uniform Gaussian-tail
+majorant `C·(1+x²)·exp(-x²/c')` for the spatial Hessian (`convDensityAdd_deriv2_tail_majorant`,
+§5G-2b / GAP②), then (i) proves the product majorant `(A+B·x²)·((1/2)·C·(1+x²)·exp(-x²/c'))` is
+Lebesgue integrable (genuine: expands to a finite combination of `x^{0,2,4}·exp(-(1/c')x²)`,
+each integrable via `integrable_natPow_mul_exp_neg_mul_sq`), and (ii) proves the domination
+`‖LogFactor · (1/2·Hess)‖ ≤ bound` via `norm_mul` + `mul_le_mul`. The remaining honest `sorry`s
+are localized in the two named helpers GAP①/GAP② (Mathlib/repo-absent: convolution-density
+Gaussian lower bound + `deriv∘deriv` → STEP-D bridge, plan L-PT-γ/δ).
+
+All hyps are pX-system regularity; the existential output is integrand-level domination. The
+`@residual` is transitive (the sorries now live in the named §5G-2a/§5G-2b helpers), kept here
+so the file-level residual grep still reflects this declaration's dependency.
 
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_domination
@@ -141,7 +226,59 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
             * ((1/2) * deriv (deriv (convDensityAdd pX
               (gaussianPDFReal 0 ⟨s, le_of_lt (by have := hs.1; linarith : (0:ℝ) < s)⟩))) x)‖
           ≤ bound x) := by
-  sorry -- @residual(plan:epi-debruijn-pertime-closure)
+  -- The σ-derivand at `s` is the product `LogFactor(s,x) · ((1/2)·Hess(s,x))`:
+  --   LogFactor(s,x) = - log (p_s x) - 1     (poly-in-x growth, GAP①)
+  --   Hess(s,x)      = ∂²_x p_s x            (Gaussian super-poly tail decay, GAP②).
+  -- §5G-2a (GAP①) gives an `s`-uniform polynomial majorant for the log factor;
+  -- §5G-2b (GAP②) gives an `s`-uniform Gaussian-tail majorant for the spatial Hessian.
+  -- The product of (poly) × (poly × Gaussian) is poly × Gaussian = Lebesgue integrable.
+  obtain ⟨A, B, hB_nn, hLog⟩ :=
+    convDensityAdd_logFactor_poly_majorant pX hpX_nn hpX_meas hpX_int ht
+  obtain ⟨C, c', hc'_pos, hC_nn, hHess⟩ :=
+    convDensityAdd_deriv2_tail_majorant pX hpX_nn hpX_meas hpX_int ht
+  -- the integrable majorant: (A + B·x²) · ((1/2)·C·(1+x²)·exp(-x²/c')).
+  refine ⟨fun x => (A + B * x ^ 2) * ((1/2) * (C * (1 + x ^ 2) * Real.exp (-x ^ 2 / c'))), ?_, ?_⟩
+  · -- integrability: expand into a finite sum of `x^k · exp(-b·x²)` terms (poly × Gaussian).
+    have hb : (0:ℝ) < 1 / c' := by positivity
+    -- `exp(-x²/c') = exp(-(1/c')·x²)`.
+    have hexp_eq : ∀ x : ℝ, Real.exp (-x ^ 2 / c') = Real.exp (-(1/c') * x ^ 2) := by
+      intro x; congr 1; rw [neg_div, div_eq_inv_mul]; ring
+    -- the bound equals a polynomial combination of `x^{0,2,4}·exp(-(1/c')x²)`.
+    have hbound_eq : (fun x : ℝ => (A + B * x ^ 2) * ((1/2) * (C * (1 + x ^ 2)
+          * Real.exp (-x ^ 2 / c'))))
+        = fun x : ℝ =>
+            ((1/2 * (A * C)) * (x ^ 0 * Real.exp (-(1/c') * x ^ 2))
+            + (1/2 * (A * C) + 1/2 * (B * C)) * (x ^ 2 * Real.exp (-(1/c') * x ^ 2))
+            + (1/2 * (B * C)) * (x ^ 4 * Real.exp (-(1/c') * x ^ 2))) := by
+      funext x; rw [hexp_eq x]; ring
+    rw [hbound_eq]
+    refine ((((integrable_natPow_mul_exp_neg_mul_sq hb 0).const_mul _).add
+      ((integrable_natPow_mul_exp_neg_mul_sq hb 2).const_mul _)).add
+      ((integrable_natPow_mul_exp_neg_mul_sq hb 4).const_mul _))
+  · -- domination: `‖LogFactor · (1/2 · Hess)‖ ≤ (A + B·x²)·((1/2)·C·(1+x²)·exp(-x²/c'))`.
+    filter_upwards [hLog, hHess] with x hLogx hHessx
+    intro s hs
+    have hspos : (0:ℝ) < s := by have := hs.1; linarith
+    -- `‖a·b‖ = ‖a‖·‖b‖`, then bound each factor.
+    rw [norm_mul]
+    have hlf := hLogx s hs
+    have hhf := hHessx s hs
+    -- ‖(1/2)·Hess‖ = (1/2)·‖Hess‖ ≤ (1/2)·(C·(1+x²)·exp(-x²/c')).
+    have hhalf : ‖(1/2 : ℝ) * deriv (deriv (convDensityAdd pX
+        (gaussianPDFReal 0 ⟨s, hspos.le⟩))) x‖
+        ≤ (1/2) * (C * (1 + x ^ 2) * Real.exp (-x ^ 2 / c')) := by
+      rw [norm_mul]
+      have : ‖(1/2 : ℝ)‖ = 1/2 := by rw [Real.norm_eq_abs]; rw [abs_of_pos]; norm_num
+      rw [this]
+      have hHnn : (0:ℝ) ≤ C * (1 + x ^ 2) * Real.exp (-x ^ 2 / c') := by positivity
+      exact mul_le_mul_of_nonneg_left hhf (by norm_num)
+    -- combine: ‖LogFactor‖·‖(1/2)Hess‖ ≤ (A+B·x²)·((1/2)·C·(1+x²)·exp(-x²/c')).
+    have hLog_nn : (0:ℝ) ≤ A + B * x ^ 2 := le_trans (norm_nonneg _) hlf
+    calc ‖(- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hspos.le⟩) x) - 1)‖
+            * ‖(1/2 : ℝ) * deriv (deriv (convDensityAdd pX
+                (gaussianPDFReal 0 ⟨s, hspos.le⟩))) x‖
+          ≤ (A + B * x ^ 2) * ((1/2) * (C * (1 + x ^ 2) * Real.exp (-x ^ 2 / c'))) := by
+            apply mul_le_mul hlf hhalf (norm_nonneg _) hLog_nn
 
 /-- **Fisher integrability of the time-`t` convolution density (Mathlib/repo wall).**
 The square-score density `(logDeriv p_t)² · p_t` of the convolution density
