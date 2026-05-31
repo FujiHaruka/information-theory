@@ -200,7 +200,14 @@ does not carry — hence the main theorem retreats to L-PT-α. -/
 
 /-- The σ-derivative of the variance-`σ` Gaussian kernel, in closed form:
 `∂_σ [(√(2πσ))⁻¹ · exp(-u²/(2σ))] = (1/2)·g_s(u)·(u²/s² − 1/s)` at `σ = s > 0`.
-Genuine; uses `HasDerivAt.sqrt` / `HasDerivAt.exp` / quotient + product rules. -/
+Genuine; uses `HasDerivAt.sqrt` / `HasDerivAt.exp` / quotient + product rules.
+
+**Independent audit (commit `127319f`)**: genuine non-degenerate closed-form derivative.
+Statement is a `HasDerivAt` of the variance-σ Gaussian kernel at `s > 0` with the textbook
+σ-derivative coefficient (the `(u²/s² − 1/s)` factor is the genuine log-derivative of the
+kernel in σ, not a vacuous value). 0 sorry, `#print axioms` = `[propext, Classical.choice,
+Quot.sound]` (sorryAx-free).
+@audit:ok -/
 private theorem heatFlow_density_heat_equation_kernel_sigma_deriv
     (u : ℝ) {s : ℝ} (hs : 0 < s) :
     HasDerivAt
@@ -251,7 +258,12 @@ private theorem heatFlow_density_heat_equation_kernel_sigma_deriv
   ring
 
 /-- The first spatial derivative of the variance-`s` Gaussian kernel:
-`∂_u [(√(2πs))⁻¹ · exp(-u²/(2s))] = g_s(u)·(−u/s)`. Genuine. -/
+`∂_u [(√(2πs))⁻¹ · exp(-u²/(2s))] = g_s(u)·(−u/s)`. Genuine.
+
+**Independent audit (commit `127319f`)**: genuine non-degenerate closed-form first spatial
+derivative (the `(−u/s)` factor is the genuine log-derivative of the kernel in `u`). 0 sorry,
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free).
+@audit:ok -/
 private theorem heatFlow_density_heat_equation_kernel_x_deriv1
     (s : ℝ) (u : ℝ) :
     HasDerivAt
@@ -348,7 +360,13 @@ Core lemma: `hasDerivAt_integral_of_dominated_loc_of_deriv_le`
 (supplied here as a hypothesis). Stated against an abstract entropy-integrand
 derivative `entDeriv` and dominating `bound` to keep the parametric-diff shape.
 
-`@residual(plan:epi-debruijn-pertime-closure)` -/
+**Independent audit (commit `127319f`)**: genuine. Hypotheses are all regularity /
+parametric-diff preconditions — `hdiff` is the *per-x integrand* `HasDerivAt`, NOT the
+integral-level conclusion (which `hasDerivAt_integral_of_dominated_loc_of_deriv_le`
+produces from them). No load-bearing hyp, no circular `:= h`. Body genuinely plumbs the
+hyps into the gateway lemma and extracts `.2`. `#print axioms` = `[propext,
+Classical.choice, Quot.sound]` (sorryAx-free), 0 sorry / 0 residual.
+@audit:ok -/
 theorem entropy_hasDerivAt_via_parametric
     (pPath : ℝ → ℝ → ℝ) (entDeriv : ℝ → ℝ → ℝ) (bound : ℝ → ℝ) {t : ℝ}
     (hbound_int : Integrable bound volume)
@@ -401,7 +419,14 @@ Uses `convDensityAdd_logDeriv` (`EPIConvDensity.lean:113`, `@audit:ok`) for the
 (`FisherInfoV2.lean:89`). Stated against a density `p` with an integrability
 precondition.
 
-`@residual(plan:epi-debruijn-pertime-closure)` -/
+**Independent audit (commit `127319f`)**: genuine. `hp_nn` (nonnegativity) and `hint`
+(integrability) are regularity preconditions, not the claim. Body genuinely performs the
+`∫ ↔ (∫⁻ ofReal).toReal` round-trip via `ofReal_integral_eq_lintegral_ofReal` (uses
+`hint` + a.e. nonnegativity) and `ENNReal.toReal_ofReal` (uses `integral_nonneg`); both
+directions of the `.toReal` round-trip discharge their nonneg / integrability side-goals
+from the hyps. `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free),
+0 sorry / 0 residual.
+@audit:ok -/
 theorem fisher_from_logDeriv
     (p : ℝ → ℝ) (hp_nn : ∀ x, 0 ≤ p x)
     (hint : Integrable (fun x => (logDeriv p x)^2 * p x) volume) :
