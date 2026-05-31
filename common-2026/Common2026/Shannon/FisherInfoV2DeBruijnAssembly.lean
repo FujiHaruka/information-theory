@@ -1621,7 +1621,18 @@ of the heat-flow convolution density at `x` via the parametric-integral gateway
 `@audit:ok` global-sup bound `kernel_x_deriv1_global_bound` (`bound1 := |pX y| · M1` integrable
 via `Integrable.mul_const`). It then concludes `HasDerivAt p_t (deriv p_t x) x` by rewriting the
 derivative value (`hgate.2.deriv`). All hyps are pX regularity (`hpX_nn` carried for the family
-signature; `hpX_meas`/`hpX_int` used). NOT load-bearing, NOT circular. -/
+signature; `hpX_meas`/`hpX_int` used). NOT load-bearing, NOT circular.
+
+Independent honesty audit (2026-06-01, fresh auditor, commits `e0e81ba`/`c7df95f`): `@audit:ok`.
+Genuine closure machine-verified — transient `#print axioms` + `lake env lean` reports
+`[propext, Classical.choice, Quot.sound]` only (sorryAx-free, transitive 0 sorry). NOT circular:
+the `deriv … x` in the conclusion is the derivative VALUE, reconstructed independently via the
+parametric-integral gateway then `hderiv.deriv` (no hypothesis ≡ conclusion). NOT load-bearing:
+every hypothesis is pX regularity / context; `hpX_nn` is unused, carried only for family-signature
+uniformity (a benign precondition, not a defect). The differentiability is genuinely derived from
+`hasDerivAt_integral_of_dominated_loc_of_deriv_le` + per-`y` kernel `HasDerivAt`, not granted by a
+`HasDerivAt`/`Differentiable` bundle.
+@audit:ok -/
 private theorem convDensityAdd_hasDerivAt_self
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) {t : ℝ} (ht : 0 < t) (x : ℝ) :
@@ -1722,7 +1733,18 @@ via the parametric-integral gateway `hasDerivAt_integral_of_dominated_loc_of_der
 (`bound2 := |pX y| · M2` from `kernel_x_deriv2_global_bound`, per-`y` 2nd-derivative
 `heatFlow_density_heat_equation_kernel_x_deriv2`); then concludes `HasDerivAt (deriv p_t)
 (deriv (deriv p_t) x) x` by rewriting the 2nd-derivative value (`hgate2.2.deriv`). All hyps are
-pX regularity (`hpX_nn` carried for the family signature). NOT load-bearing, NOT circular. -/
+pX regularity (`hpX_nn` carried for the family signature). NOT load-bearing, NOT circular.
+
+Independent honesty audit (2026-06-01, fresh auditor, commits `e0e81ba`/`c7df95f`): `@audit:ok`.
+Genuine closure machine-verified — transient `#print axioms` + `lake env lean` reports
+`[propext, Classical.choice, Quot.sound]` only (sorryAx-free, transitive 0 sorry; covers the
+`@audit:ok` atom `convDensityAdd_deriv1_gaussian_eq` (STEP 1) + `kernel_x_deriv2_global_bound`
+(STEP 2) transitively). NOT circular: the nested `deriv (deriv …) x` in the conclusion is the
+2nd-derivative VALUE, reconstructed independently via STEP-1 `deriv p_t` identification + the 2nd
+parametric-integral gateway then `hderiv2.deriv` (no hypothesis ≡ conclusion). NOT load-bearing:
+every hypothesis is pX regularity / context; `hpX_nn` unused, carried only for family-signature
+uniformity.
+@audit:ok -/
 private theorem convDensityAdd_deriv_hasDerivAt_self
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) {t : ℝ} (ht : 0 < t) (x : ℝ) :
@@ -1873,11 +1895,13 @@ The body now:
 
 `hpX_nn`/`hpX_meas`/`hpX_int`/`hpX_mass` are pure pX regularity preconditions (`hpX_mass`:
 unit mass, used for strict positivity); the IBP equality is the genuine claim. No load-bearing
-hypothesis bundled. The remaining honest `sorry`s are localized in: (a) the 2 deriv-existence
-helpers `convDensityAdd_hasDerivAt_self` / `convDensityAdd_deriv_hasDerivAt_self` (`plan:` —
-in-tree machinery, heavy domination-hyp plumbing, NOT a Mathlib gap); (b) the entropy-finiteness
-wall (`EntropyConvFinite.lean`); (c) the Fisher-finiteness wall (`convDensityAdd_fisher_integrable`).
-The transitive marker is compound (AND of the plan + the two walls).
+hypothesis bundled. The remaining honest `sorry`s are localized in: (a) the `plan:` arm — the two
+deriv-existence helpers `convDensityAdd_hasDerivAt_self` / `convDensityAdd_deriv_hasDerivAt_self`
+are now **genuinely closed** (`@audit:ok`, 0 sorry), so the live `plan:` residual is the per-`x`
+heat-equation domination plumbing in `debruijnIdentityV2_holds_assembled_chain_hdiff` (`:2088`,
+in-tree machinery, NOT a Mathlib gap); (b) the entropy-finiteness wall (`EntropyConvFinite.lean`);
+(c) the Fisher-finiteness wall (`convDensityAdd_fisher_integrable`). The transitive marker is
+compound (AND of the plan + the two walls).
 
 Independent honesty audit (2026-05-31, fresh auditor, commit `d5951a5`): honest_residual
 (transitive). 0 local sorry confirmed (`lake env lean` shows no `sorry` warning at this decl;
@@ -1889,9 +1913,15 @@ supplied from the Fisher wall via `.neg.congr` on that identity; RHS reconciled 
 `integral_congr_ae` on the same identity. NOT name-laundering: `hpX_mass` is unit-mass
 regularity (used only to discharge `convDensityAdd_pos`'s `0 < ∫ pX`), conclusion is the
 original IBP equality unchanged. Compound `@residual` correctly reflects the AND of the plan
-(deriv-existence helpers) + the entropy-finiteness wall (`huv'`/`huv`) + the Fisher-finiteness
-wall (`hu'v`). Carries `@residual` not `@audit:ok` (transitive sorry, honest). NOT circular,
-NOT load-bearing.
++ the entropy-finiteness wall (`huv'`/`huv`) + the Fisher-finiteness wall (`hu'v`). Carries
+`@residual` not `@audit:ok` (transitive sorry, honest). NOT circular, NOT load-bearing.
+
+Re-audit (2026-06-01, fresh auditor, commits `e0e81ba`/`c7df95f`): compound `@residual` UNCHANGED
+and still correct. The deriv-existence helpers `hu`/`hv` are now genuinely closed (`@audit:ok`), but
+the `plan:epi-debruijn-pertime-closure` arm remains live transitively via
+`debruijnIdentityV2_holds_assembled_chain_hdiff` (`:2088`, literal `sorry` at `:2100`) — only the
+narrative attribution of the `plan:` arm was refined (helpers → `_chain_hdiff`), the tag itself is
+not edited.
 @residual(plan:epi-debruijn-pertime-closure,wall:entropy-finiteness,wall:fisher-finiteness) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
