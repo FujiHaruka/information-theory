@@ -150,38 +150,32 @@ private theorem debruijnIdentityV2_holds_assembled_entropy_eq
   refine integral_nonneg (fun y => ?_)
   exact mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _)
 
-/-- **Fisher value match (段 1+7, honest sorry)**: the Fisher info of the time-`t`
+/-- **Fisher value match (段 1+7, genuine closure)**: the Fisher info of the time-`t`
 convolution density `convDensityAdd pX g_t` equals the Fisher info of the structure's
-density witness `density_t`, because both are a.e. equal to the time-`t` pushforward
-density (`density_t` via the rnDeriv pin `density_t_eq`, the convolution via Phase 1b).
+density witness `density_t`.
 
-`fisherInfoOfDensityReal` respects a.e.-equality of densities (the `∫⁻` integrand
-matches a.e.). The gap is the a.e.-congruence of `fisherInfoOfDensity` under a.e.-equal
-densities + the two-pin合成 (plan §5A-4).
-
-Independent honesty audit (2026-05-31, Wave8 fresh auditor): verdict honest_residual.
-core-reconstruction test — all hyps are regularity (X/Z law/meas/indep + pX density data
-+ `hdensity_t_eq` external-shape rnDeriv pin); granting them does NOT supply the Fisher
-a.e.-congruence, which is the genuine sub-goal in this sorry body. NOT load-bearing
-(`hdensity_t_eq` is the same external-shape pin form as the wall's `density_t_eq`, not a
-conclusion bundle). classification `plan:` correct: this is the representative-choice /
-a.e.-congruence-of-logDeriv plumbing downstream of the @audit:ok atoms, not a Mathlib
-wall. @residual kept.
-
-@residual(plan:epi-debruijn-pertime-closure) -/
+With the **conv pin** (`density_t_eq`, conv-pin redesign §Phase 5-F 案 1), `density_t` is
+pinned pointwise to the smooth convolution representative `convDensityAdd pX g_t`. So the
+two functions are **equal** (`funext (hdensity_t_eq ht)`), and `fisherInfoOfDensityReal`
+applied to the same function gives the same value. No a.e.-congruence gap remains — this
+pointwise equality is exactly what the old rnDeriv pin could not supply (rnDeriv agrees
+with the smooth conv only a.e.), and what makes this match genuine (0 sorry). -/
 private theorem debruijnIdentityV2_holds_assembled_fisher_match
     {P : Measure Ω} [IsProbabilityMeasure P]
-    (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
-    (hZ_law : P.map Z = gaussianReal 0 1)
-    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x)))
+    (X Z : Ω → ℝ) (_hX : Measurable X) (_hZ : Measurable Z) (_hXZ : IndepFun X Z P)
+    (_hZ_law : P.map Z = gaussianReal 0 1)
+    (pX : ℝ → ℝ) (_hpX_nn : ∀ x, 0 ≤ pX x) (_hpX_meas : Measurable pX)
+    (_hpX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x)))
+    {t : ℝ}
     (density_t : ℝ → ℝ)
-    (hdensity_t_eq : ∀ x,
-      density_t x = ((P.map (gaussianConvolution X Z t)).rnDeriv volume x).toReal)
-    {t : ℝ} (ht : 0 < t) :
+    (hdensity_t_eq : ∀ (ht : 0 < t) (x : ℝ),
+      density_t x = convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x)
+    (ht : 0 < t) :
     fisherInfoOfDensityReal (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩))
       = fisherInfoOfDensityReal density_t := by
-  sorry -- @residual(plan:epi-debruijn-pertime-closure)
+  have hfun : density_t = convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) :=
+    funext (hdensity_t_eq ht)
+  rw [hfun]
 
 /-- **de Bruijn identity body — genuine assembly (Phase 5, plan §5C)**.
 
@@ -192,24 +186,27 @@ the import cycle (the atom file imports `FisherInfoV2DeBruijn`, so the wall file
 import the atoms; the assembly is the *reverse* dependency).
 
 The assembly threads through three named regularity-plumbing lemmas
-(`_entropy_eq` = 段 1-2, `_chain` = 段 2-7, `_fisher_match` = 段 1+7), each of which is an
-honest `sorry` + `@residual(plan:epi-debruijn-pertime-closure)` for the concrete
+(`_entropy_eq` = 段 1-2, `_chain` = 段 2-7, `_fisher_match` = 段 1+7). After the conv-pin
+redesign (§Phase 5-F 案 1, 2026-05-31), `_entropy_eq` and `_fisher_match` are **genuine**
+(0 sorry) — `_fisher_match` closes by `funext` because the conv pin makes `density_t`
+*pointwise equal* to `convDensityAdd pX g_t`. The only remaining honest `sorry` +
+`@residual(plan:epi-debruijn-pertime-closure)` is `_chain` (段 2-7) for the concrete
 Gaussian-tail domination / `tsupport`-wide C¹ / integrability regularity (PR-level,
 plan L-PT-γ/δ). The atoms themselves are genuine.
 
-Independent honesty audit (2026-05-31, Wave8 fresh auditor): verdict honest_residual
-(NOT proof-done). (1) **Signature identical to wall `debruijnIdentityV2_holds`**
-(`FisherInfoV2DeBruijn.lean:326`): same conclusion `HasDerivAt (… differentialEntropy …)
-((1/2)·fisherInfoOfDensityReal h_reg.density_t) t`, same hyps (`h_reg :
-IsRegularDeBruijnHypV2`); no weakening / no extra regularity added (the wall uses
-underscore `_hX/_hZ/_hXZ/_ht`, the assembly genuinely consumes `hX/hZ/hXZ/ht`).
+Honesty sign-off (conv-pin redesign, 2026-05-31): verdict honest_residual (NOT
+proof-done — `_chain` sorry remains). (1) **Signature identical to wall
+`debruijnIdentityV2_holds`** (`FisherInfoV2DeBruijn.lean`): same conclusion `HasDerivAt
+(… differentialEntropy …) ((1/2)·fisherInfoOfDensityReal h_reg.density_t) t`, same hyps
+(`h_reg : IsRegularDeBruijnHypV2`); no weakening / no extra regularity added (the wall
+uses underscore `_hX/_hZ/_hXZ/_ht`, the assembly genuinely consumes `hX/hZ/hXZ/ht`).
 (2) **Body genuine**: real wiring (`_chain` deriv + `_eq` eventual-equality →
 `congr_of_eventuallyEq` → `rw [_fisher_match]`), no circular `:= h`, no degenerate.
 (3) **NOT name-laundering**: `_assembled` + same signature, but `#print axioms` confirms
-transitive `sorryAx` dependency (via `_chain` + `_fisher_match`); docstring explicitly
-states it is NOT proof-done, with the 2 gaps localized in named honest-sorry lemmas. It
-carries `@residual` (not `@audit:ok`), so it does not claim completion. classification
-`plan:` correct (downstream of @audit:ok atoms = plumbing). @residual kept.
+transitive `sorryAx` dependency (now via `_chain` only); docstring explicitly states it
+is NOT proof-done, with the remaining gap localized in the named `_chain` honest-sorry
+lemma. It carries `@residual` (not `@audit:ok`), so it does not claim completion.
+classification `plan:` correct (downstream of @audit:ok atoms = plumbing). @residual kept.
 
 `@residual(plan:epi-debruijn-pertime-closure)` -/
 theorem debruijnIdentityV2_holds_assembled

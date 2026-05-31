@@ -5,6 +5,7 @@ import Common2026.Shannon.EPIStamDischarge
 import Common2026.Shannon.FisherInfoV2DeBruijn
 import Common2026.Shannon.FisherInfoV2
 import Common2026.Shannon.FisherInfoGaussian
+import Common2026.Shannon.EPIBlachmanGaussianWitness
 import Common2026.Shannon.DifferentialEntropy
 import Common2026.Shannon.HeatFlowPath
 import Mathlib.Analysis.SpecialFunctions.Exp
@@ -97,6 +98,8 @@ open MeasureTheory ProbabilityTheory Real Filter
 open scoped ENNReal NNReal Topology
 open InformationTheory.Shannon.EntropyPowerInequality
 open InformationTheory.Shannon.EPIStamDischarge
+open InformationTheory.Shannon.EPIConvDensity (convDensityAdd)
+open Common2026.Shannon.EPIBlachmanGaussianWitness (convDensityAdd_gaussian_closed_form)
 
 /-! ## §1 — Integrated pipeline predicate -/
 
@@ -679,7 +682,7 @@ noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (_hX : Measurable X) (_hZ : Measurable Z)
     (_hXZ : IndepFun X Z P)
-    {m : ℝ} {v : ℝ≥0} (_hv : v ≠ 0)
+    {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0)
     (_hX_law : P.map X = gaussianReal m v)
     (hZ_law : P.map Z = gaussianReal 0 1) :
     ∀ t : ℝ, 0 < t →
@@ -692,18 +695,17 @@ noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
   exact
     { Z_law := hZ_law
       density_t := gaussianPDFReal m (v + ⟨t, ht.le⟩)
-      -- Phase 0 density-pin (Gaussian case): the law of `X + √t·Z` is
-      -- `gaussianReal m (v + t)` (`gaussianConvolution_law_of_gaussian`), whose
-      -- density w.r.t. `volume` is `gaussianPDFReal m (v + t)`. Pinning the
-      -- witness to `(rnDeriv).toReal` is the Gaussian special case of the
-      -- Phase 1 density-identification atom (Gaussian PDF = rnDeriv via
-      -- `IsGaussian.rnDeriv` / `gaussianReal_def`); deferred to Phase 1.
-      -- Honesty audit (2026-05-31): honest_residual, slug correct. Gaussian
-      -- specialization of the Phase 1 density-identification atom; provable from
-      -- `gaussianConvolution_law_of_gaussian` + Gaussian rnDeriv. Not load-bearing
-      -- (proves the external pin equation, not the de Bruijn analytic core).
-      -- @residual(plan:epi-debruijn-pertime-closure)
-      density_t_eq := by sorry
+      -- Conv-pin (Gaussian case, 2026-05-31 plan §5-F): genuine closure.
+      -- `density_t = gaussianPDFReal m (v + ⟨t,ht.le⟩)` and the conv-pin RHS is
+      -- `convDensityAdd (gaussianPDFReal m v) (gaussianPDFReal 0 ⟨t,ht.le⟩)`, which
+      -- equals `gaussianPDFReal (m+0) (v+⟨t,ht.le⟩) = gaussianPDFReal m (v+⟨t,ht.le⟩)`
+      -- by `convDensityAdd_gaussian_closed_form` (@audit:ok, sorryAx-free) + `add_zero`.
+      density_t_eq := by
+        intro ht' x
+        have ht_ne : (⟨t, ht.le⟩ : ℝ≥0) ≠ 0 := by
+          intro h
+          exact ht.ne' (congrArg NNReal.toReal h)
+        rw [convDensityAdd_gaussian_closed_form hv ht_ne, add_zero]
       -- §5A `pX`-witness fields (Gaussian case): `X ∼ 𝒩(m, v)` has Lebesgue
       -- density `gaussianPDFReal m v`. All genuine (no new sorry).
       pX := gaussianPDFReal m v
@@ -712,7 +714,7 @@ noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
       pX_law := by
         -- `P.map X = gaussianReal m v = withDensity (gaussianPDF m v)`,
         -- and `gaussianPDF m v = fun x => ofReal (gaussianPDFReal m v x)` (def).
-        rw [_hX_law, gaussianReal_of_var_ne_zero m _hv, gaussianPDF_def] }
+        rw [_hX_law, gaussianReal_of_var_ne_zero m hv, gaussianPDF_def] }
 
 -- (deleted 2026-05-28, Cluster C Tier-2 migration, task 3α-3) The Gaussian
 -- constructor `isHeatFlowFamilyHyp_of_gaussian` was removed together with the

@@ -667,6 +667,243 @@ main body `sorry` 据置)。§5A structure 拡張 + §5D Gaussian ripple は L-P
 
 ---
 
+## Phase 5-F — `density_t` pin redesign (rnDeriv defect fix + `_fisher_match` closure)
+
+> 2026-05-31 起草 (lean-planner)。verbatim 確認済 file:
+> `FisherInfoV2DeBruijn.lean:200-353`、`FisherInfoV2.lean:22-37/89-103`、
+> `FisherInfoV2DeBruijnAssembly.lean:153-246`、`EPIL3Integration.lean:678-715`、
+> `EPIStamDischarge.lean:251-286`、`EPIConvDensity.lean`、
+> `EPIBlachmanGaussianWitness.lean:150-171` (`convDensityAdd_gaussian_closed_form`、`@audit:ok` sorryAx-free)、
+> `FisherInfoV2DeBruijnPerTime.lean:192-201` (`pPath_eq_convDensityAdd`)。
+
+### Approach (Phase 5-F の解の全体形)
+
+**駆動理由 = `density_t_eq` の rnDeriv pin が false-statement defect** (resume session 発見、
+コード上既に `@audit:defect(degenerate)` marker 在 `FisherInfoV2DeBruijn.lean:226-243`)。現
+field (`:244-245` verbatim):
+
+```lean
+density_t_eq : ∀ x,
+  density_t x = ((P.map (gaussianConvolution X Z t)).rnDeriv volume x).toReal
+```
+
+は `density_t` を **rnDeriv 代表元** に `∀ x` pointwise pin する。これが Phase 0 が「修正した」
+はずの `density_t := 0` と **同型の false-statement defect** を再導入している。
+
+**verbatim 根拠** (`FisherInfoV2.lean:22-37/89-90`):
+- `fisherInfoOfDensity f := ∫⁻ x, ofReal((logDeriv f x)^2) · ofReal(f x)` (`:89-90`)。
+  `logDeriv f = deriv f / f` は **pointwise** 量 (`:78-79`)、a.e.-不変でない。
+- `Measure.rnDeriv` は Lebesgue decomposition の `Classical.choose` (`:24-25`) ゆえ代表元は
+  co-null 集合上で一般に非可微 → `logDeriv((rnDeriv).toReal) = 0` a.e. →
+  `fisherInfoOfDensity (rnDeriv.toReal) = 0` (`:26-29` が明記する V1 flaw そのもの。V2 が V1 を
+  捨てて density-as-input にした理由 = `:30-37`)。
+- よって RHS `(1/2)·fisherInfoOfDensityReal h_reg.density_t` が **0 に固定** → Gaussian 真値
+  `1/(2(v+t)) ≠ 0` と矛盾 → **statement が false**。
+
+**帰結 (実コードで確認)**:
+- (a) Gaussian constructor `density_t_eq := by sorry` (`EPIL3Integration.lean:706`) は
+  **pointwise 証明不能** (`density_t := gaussianPDFReal m (v+⟨t,_⟩)` (`:694`) は smooth、rnDeriv 代表元と
+  `∀ x` 等号は成立しない、a.e. のみ)。
+- (b) `_fisher_match` (`FisherInfoV2DeBruijnAssembly.lean:172-184`) =
+  `fisherInfoOfDensityReal (convDensityAdd pX g_t) = fisherInfoOfDensityReal density_t` が **証明不能**
+  (LHS は smooth conv の genuine Fisher、RHS は rnDeriv pin → 0、両辺一般に不一致)。
+
+**解の全体形 = `density_t` を smooth 代表元 `convDensityAdd pX g_t` に pin し直す**。Gaussian
+畳み込みは smooth ゆえ `logDeriv` が genuine、Fisher が正しい値を取る。これは同時に LHS/RHS を
+**pointwise 一致**させ `_fisher_match` を congr/funext で closure する (両辺が同一関数の Fisher)。
+2 案を §5F-2 で weigh し §5F-4 で 1 つ推奨。
+
+### §5F-1. 現 `density_t_eq` defect の audit verdict downgrade 所見
+
+`FisherInfoV2DeBruijn.lean` の以下 2 verdict は **downgrade すべき** (本 plan は所見、最終書換は
+実装後の honesty-auditor 判断):
+
+| declaration | 現 verdict | 所見 (downgrade 先) |
+|---|---|---|
+| `density_t_eq` field (`:208-245`) | `@audit:ok` (Wave6) + `@audit:defect(degenerate)` (resume) が **併存** (`:224` ok / `:243` defect) | `@audit:ok` 撤回 (Wave6 が non-load-bearing は verify したが degenerate を見逃し、`:234-235` 自認)。pin 書換後に regularity verdict 再付与 |
+| `debruijnIdentityV2_holds` (`:294-353`) | `@residual(plan:...)` + docstring `:328-331` が「signature true 化を確認」「旧反例 un-constructible」と主張 | docstring `:328-342` の honesty sign-off が **false 前提**: RHS は rnDeriv pin で 0 固定ゆえ依然 false。pin 書換まで「true statement」主張を撤回し defect 言及に置換 |
+
+> defect は **既に tier 5 marker 付き** (`@audit:defect(degenerate)` + `@audit:retract-candidate(rnDeriv-pin-forces-Fisher-zero)`、`:243`)。本 Phase 5-F が「後の第一選択 (定義書換) を待つ暫定 marker」の closure 担当。
+
+### §5F-2. 2 案の signature 案 (verbatim Lean)
+
+#### 案 1 — field `density_t_eq` を conv pin に差し替え (推奨)
+
+`density_t_eq` (rnDeriv pin) を **conv pin** に差し替える。structure は `0 < t` を field として
+持たないため、§5A-2 案 A (`∀ (ht : 0 < t)`) を踏襲して `ht` を field-internal に受ける:
+
+```lean
+structure IsRegularDeBruijnHypV2 ... (t : ℝ) where
+  Z_law : P.map Z = gaussianReal 0 1
+  density_t : ℝ → ℝ
+  -- 差し替え後 (rnDeriv pin → conv pin):
+  density_t_eq : ∀ (ht : 0 < t) (x : ℝ),
+    density_t x = convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x
+  pX : ℝ → ℝ
+  pX_nn : ∀ x, 0 ≤ pX x
+  pX_meas : Measurable pX
+  pX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x))
+```
+
+- `pX` は **field 順序上 `density_t_eq` より後**に宣言されているため (`:271-278`)、`density_t_eq` の
+  RHS が `pX` を参照するには **field の宣言順を `pX` 系を前に移す** 必要がある (structure field
+  forward-reference 不可)。実装時の必須 ripple (§5F-3 表に記載)。
+- `_fisher_match` (`FisherInfoV2DeBruijnAssembly.lean:172-184`) は `density_t x = convDensityAdd pX g_t x`
+  (= 段 1 で `h_reg.density_t_eq ht` が直接供給) で **両辺 pointwise 一致** → `congr` / `funext` +
+  `fisherInfoOfDensityReal` の関数引数 congr で closure (genuine、新規 sorry 0)。
+- Gaussian constructor の新 pin 充足: `convDensityAdd (gaussianPDFReal m v) (gaussianPDFReal 0 ⟨t,_⟩)`
+  を `gaussianPDFReal m (v+⟨t,_⟩)` (= `density_t`) に一致させる。**既存資産
+  `convDensityAdd_gaussian_closed_form` (`EPIBlachmanGaussianWitness.lean:168-171`、`@audit:ok`
+  sorryAx-free) で genuine 充足可** (§5F-5)。
+
+#### 案 2 — `density_t` / `density_t_eq` field を廃し RHS を直接 conv に
+
+`density_t` / `density_t_eq` field を structure から削除し、`debruijnIdentityV2_holds`
+(+ `_assembled`) の結論 RHS を `convDensityAdd pX g_t` の Fisher に直接書く:
+
+```lean
+theorem debruijnIdentityV2_holds
+    ... (h_reg : IsRegularDeBruijnHypV2 X Z P t) :
+    HasDerivAt (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
+      ((1/2) * fisherInfoOfDensityReal
+        (convDensityAdd h_reg.pX (gaussianPDFReal 0 ⟨t, _ht.le⟩))) t := by
+```
+
+- `_fisher_match` は **消滅** (RHS が既に conv の Fisher、段 7 で同定不要)。
+- ただし signature (RHS) 変更で **consumer ripple が広い**: `deBruijn_identity_v2` (`:378-381`)、
+  `IsDeBruijnPathRegular.reg_t` (`:446` `h_reg.density_t = fPath t`)、`debruijnIntegrationIdentity_holds`、
+  `_assembled` (`:223`)、`EPIStamDischarge.lean:271` (`(reg_at t ht).density_t = density_path t`)、
+  `FisherInfoV2DeBruijn.lean:504` (`HasDerivAt f ((1/2) * fisherInfoOfDensityReal h_reg.density_t) t`)
+  の全 RHS / `density_t` 参照 site が追従改修対象。
+
+### §5F-3. consumer ripple 表 (案別 × file:line × touch × 新 pin 充足)
+
+`rg "density_t\b" / "IsRegularDeBruijnHypV2" / "debruijnIdentityV2_holds"` verbatim 全 site:
+
+| file:line | declaration | 案 1 touch | 案 2 touch |
+|---|---|---|---|
+| `FisherInfoV2DeBruijn.lean:200` | `IsRegularDeBruijnHypV2` (structure) | `density_t_eq` を conv pin に差替 + **field 順序 `pX` 系を前に移動** (`density_t_eq` が `pX` 参照) + docstring defect marker 除去 → regularity 再付与 | `density_t`/`density_t_eq` field **削除** + docstring 全面改訂 |
+| `FisherInfoV2DeBruijn.lean:294` | `debruijnIdentityV2_holds` | RHS `fisherInfoOfDensityReal h_reg.density_t` 不変 (`density_t` は残る)。docstring honesty sign-off 改訂 (false→true 主張撤回、conv-pin 根拠に) | **RHS を `convDensityAdd h_reg.pX g_t` の Fisher に書換** |
+| `FisherInfoV2DeBruijn.lean:378` | `deBruijn_identity_v2` | pass-through、不変 | RHS 追従改修 |
+| `FisherInfoV2DeBruijn.lean:446` | `IsDeBruijnPathRegular.reg_t` | `h_reg.density_t = fPath t` 不変 (`density_t` 残存) | `density_t` 廃止で `fPath t` 同定の再設計要 (existential witness の意味変化) |
+| `FisherInfoV2DeBruijn.lean:504` | `debruijnIntegrationIdentity_holds` body | `... h_reg.density_t` 不変 | RHS 追従改修 |
+| `FisherInfoV2DeBruijnAssembly.lean:172` | `_fisher_match` | hyp `hdensity_t_eq` を conv pin 形に差替 → body は `congr`/`funext` で **genuine closure** (sorry 除去) | declaration **削除** (`:246` consumer も除去) |
+| `FisherInfoV2DeBruijnAssembly.lean:215` | `_assembled` | `:246` `rw [_fisher_match ...]` 後の RHS 一致が genuine 化 | RHS 追従 + `_fisher_match` 呼出削除 |
+| `EPIL3Integration.lean:694-706` | Gaussian constructor | `density_t := gaussianPDFReal m (v+⟨t,ht.le⟩)` 不変、`density_t_eq := by sorry` を **`convDensityAdd_gaussian_closed_form` で genuine 充足** (§5F-5) | `density_t`/`density_t_eq` literal 削除 (pX 系のみ残す) |
+| `EPIStamDischarge.lean:271` | top-level `density_t_eq` (`IsDeBruijnRegularityHyp`) | `(reg_at t ht).density_t = density_path t` 不変 (`density_t` 残存) | `density_t` 廃止で top-level pin 再設計要 (`density_path` 同定先変更) |
+
+> **案 1 の ripple は localize**: `density_t` field を残すため RHS 不変、外向き API 不変。touch は
+> (i) structure 内 field 差替 + 順序移動、(ii) Gaussian constructor の `density_t_eq` body genuine 化、
+> (iii) `_fisher_match` の hyp 差替 + body genuine 化、の 3 file。`reg_t` / 下流 `density_t_eq` /
+> `debruijnIntegrationIdentity_holds` は `density_t` 参照のまま不変。
+>
+> **案 2 の ripple は広い**: RHS が `density_t` から `convDensityAdd ...` に変わるため、`density_t` を
+> 参照する全 consumer (reg_t / EPIStamDischarge top-level pin / FTC consumer) が意味変化、再設計要。
+
+### §5F-4. honesty 判定表 + 推奨案
+
+| 項目 | 案 1 (conv pin 差替) | 案 2 (RHS 直接 conv) |
+|---|---|---|
+| defect 解消 | ✓ rnDeriv pin 除去で false-statement 解消 | ✓ rnDeriv pin 不在で解消 |
+| 新 pin の honesty | conv pin は **外形等式** (`density_t = convDensityAdd pX g_t`)。`convDensityAdd pX g_t` は explicit smooth 関数 (`∫ y, pX y · g_t(x-y)`、`EPIConvDensity.lean`)、`HasDerivAt`/Fisher core を **bundle しない** → regularity (Z_law 同列) | RHS が conv の Fisher になり、`density_t` witness 自体が消滅。pin 問題は構造的に発生しない (witness 不在) |
+| `_fisher_match` | genuine closure (両辺 pointwise 一致) | 消滅 (同定不要) |
+| ripple | localize (3 file、`density_t` 残存で外向き API 不変) | 広い (RHS 変更で全 consumer 追従) |
+| Gaussian constructor | `convDensityAdd_gaussian_closed_form` で genuine 充足 (§5F-5) | 同 lemma で RHS 同定、ただし consumer 全追従 |
+| load-bearing リスク | 低 (conv pin = 外形等式、§5A-3 の `density_t_eq` rnDeriv pin と同種だが degenerate でない smooth 形) | なし (witness 不在) |
+
+**推奨 = 案 1 (conv pin 差替)**。根拠:
+1. **ripple localize**: `density_t` field を残し RHS 不変ゆえ、外向き API (`deBruijn_identity_v2` /
+   `reg_t` / EPIStamDischarge / FTC consumer) が全て不変。touch は 3 file の内部のみ。案 2 は RHS
+   変更で 6+ consumer が意味変化、再設計コスト大。
+2. **`_fisher_match` を genuine closure**: 案 1 の conv pin は `_fisher_match` の両辺を pointwise
+   一致させ congr で閉じる (新規 sorry 0)。案 2 は `_fisher_match` 消滅だが、RHS 変更で別の同定
+   負債が `reg_t` / top-level pin 側に移るだけ (closure ではなく転嫁)。
+3. **honesty 同等**: 両案とも rnDeriv pin defect を解消。案 1 の conv pin は smooth explicit 関数への
+   外形等式で degenerate でない (rnDeriv pin の degenerate 性は smooth 代表元で解消)、load-bearing
+   でない (`HasDerivAt`/Fisher core 非 bundle、§5A-3 判定軸 = regularity)。
+
+### §5F-5. Gaussian constructor の新 pin 充足 (具体手順、既存資産で賄えるか)
+
+案 1 の新 conv pin `density_t_eq : density_t x = convDensityAdd pX g_t x` を Gaussian case で
+genuine 充足する。Gaussian constructor (`EPIL3Integration.lean:694/709`) は:
+- `density_t := gaussianPDFReal m (v + ⟨t, ht.le⟩)`
+- `pX := gaussianPDFReal m v`
+
+→ 新 pin の RHS = `convDensityAdd (gaussianPDFReal m v) (gaussianPDFReal 0 ⟨t,ht.le⟩) x`。
+
+**既存資産 `convDensityAdd_gaussian_closed_form` (`EPIBlachmanGaussianWitness.lean:168-171` verbatim、`@audit:ok` sorryAx-free)**:
+
+```lean
+theorem convDensityAdd_gaussian_closed_form
+    {mX mY : ℝ} {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0) :
+    convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal mY vY)
+      = gaussianPDFReal (mX + mY) (vX + vY)
+```
+
+を `mX:=m, vX:=v, mY:=0, vY:=⟨t,ht.le⟩` で適用すると:
+
+```
+convDensityAdd (gaussianPDFReal m v) (gaussianPDFReal 0 ⟨t,ht.le⟩)
+  = gaussianPDFReal (m + 0) (v + ⟨t,ht.le⟩) = gaussianPDFReal m (v + ⟨t,ht.le⟩) = density_t
+```
+
+→ `density_t_eq` body は `fun ht x => by rw [convDensityAdd_gaussian_closed_form _hv ht_ne, add_zero]`
+(pointwise は funext 不要、`convDensityAdd_gaussian_closed_form` が関数等式を返す)。
+
+**型クラス前提 verbatim**: `(hvX : vX ≠ 0)` `(hvY : vY ≠ 0)` の 2 つ。
+- `hvX := _hv` (`EPIL3Integration.lean:682` `_hv : v ≠ 0` 既受、要 underscore 外し)。
+- `hvY : (⟨t, ht.le⟩ : ℝ≥0) ≠ 0` は `ht : 0 < t` から導出。`⟨t,ht.le⟩ ≠ 0 ↔ t ≠ 0`、`ht.ne'`
+  (`0 < t → t ≠ 0`) + `NNReal` の `≠ 0` 同定 (`Subtype.ne` / `NNReal.coe_ne_zero` 経由、実装時
+  verbatim 確認)。
+
+→ **既存資産で genuine 充足可、新規 sorry 0 件** (Gaussian constructor の `density_t_eq := by sorry`
+を消せる)。`add_zero` で `m + 0 = m` を整理。`gaussianPDFReal 0 ⟨t,ht.le⟩` の引数形 (`⟨t,ht.le⟩`)
+は Phase 1b / `convDensityAdd_gaussian_closed_form` の `vY : ℝ≥0` と整合。
+
+### §5F-6. `_fisher_match` の closure 手順 (案 1)
+
+`FisherInfoV2DeBruijnAssembly.lean:172-184` の `_fisher_match` を新 conv pin 形に書換:
+- hyp `hdensity_t_eq` を rnDeriv pin (`:179-180`) から conv pin
+  (`∀ ht x, density_t x = convDensityAdd pX (gaussianPDFReal 0 ⟨t,ht.le⟩) x`) に差替。
+- 結論 `fisherInfoOfDensityReal (convDensityAdd pX g_t) = fisherInfoOfDensityReal density_t` は、
+  `density_t = convDensityAdd pX g_t` (関数等式、`hdensity_t_eq ht` を funext) で **両辺の引数が同一関数**
+  → `congr` / `rw` で genuine closure (sorry 除去)。
+- `fisherInfoOfDensityReal` は引数関数に対し congr が効く (関数等式なので a.e. 同定不要、pointwise 一致)。
+  この **pointwise 一致が rnDeriv pin では得られなかった核** (rnDeriv は smooth conv と pointwise 不一致、
+  a.e. のみ) → conv pin で初めて genuine。
+
+### §5F-7. 撤退ライン (Gaussian∗Gaussian 補題が PR 級なら honest sorry 据置)
+
+`convDensityAdd_gaussian_closed_form` は **既に in-tree `@audit:ok` sorryAx-free** (§5F-5 verbatim
+確認済) ゆえ、Gaussian constructor の新 pin 充足は **PR 級ではない** (既存補題呼出のみ)。したがって
+本 Phase 5-F の Gaussian constructor closure は撤退不要 (genuine 充足が即可)。
+
+万一 (a) `hvY` 同定 (`⟨t,ht.le⟩ ≠ 0`) の NNReal 詰まり、(b) structure field 順序移動による下流
+olean refresh の想定外 ripple、(c) `_fisher_match` の `fisherInfoOfDensityReal` congr の型詰まりが
+session 内に解けない場合は、当該 step を `sorry` + `@residual(plan:epi-debruijn-pertime-closure)`
+で honest 据置 (tier 2、type-check done 維持)。**禁止**: rnDeriv pin に戻す / `density_t_eq` を
+`*Hypothesis` predicate に bundle / RHS を 0 に退化させる (defect 再導入)。
+
+### §5F-8. 着手順 (推奨)
+
+1. **structure field 差替 + 順序移動** (`FisherInfoV2DeBruijn.lean:200-278`): `pX` 系 4 field を
+   `density_t` の後・`density_t_eq` の前に移動 (forward-reference 解消) → `density_t_eq` を conv pin に
+   差替 → defect docstring (`:226-243`) 除去、regularity verdict 再付与。`lake env lean` + 下流 olean
+   refresh (`lake build Common2026.Shannon.FisherInfoV2DeBruijn` 1 回)。
+2. **Gaussian constructor genuine 充足** (`EPIL3Integration.lean:706`): `density_t_eq := by`
+   `intro ht x; rw [convDensityAdd_gaussian_closed_form _hv ht_ne, add_zero]` (§5F-5)。`_hv` underscore
+   外す。
+3. **`_fisher_match` genuine closure** (`FisherInfoV2DeBruijnAssembly.lean:172`): hyp 差替 + body
+   congr (§5F-6)。`_assembled` (`:215`) の `rw [_fisher_match ...]` が genuine 化。
+4. **独立 honesty 監査** (起動条件: signature 変更で honesty 意味が変わる + 新規 genuine 化): defect
+   marker 除去 + conv pin の regularity 判定 + Gaussian closure の sorryAx 非依存確認。`@audit:ok` /
+   regularity verdict 付与判定は auditor。
+5. 残 `_chain` (段 2-7、L-PT-γ/δ) は本 Phase 5-F scope 外 (引き続き honest sorry)。Phase 5-F は
+   **`density_t_eq` defect 解消 + `_fisher_match` closure** に focus。proof done (assembly 0 sorry) は
+   `_chain` closure (Phase 2 main + plumbing) に依然 gated。
+
+---
+
 ## 撤退ライン (L-* マーカー集約)
 
 各 Phase の honest 撤退口。すべて **sorry + `@residual`** 維持 / 仮説束化禁止。
@@ -751,3 +988,20 @@ main body `sorry` 据置)。§5A structure 拡張 + §5D Gaussian ripple は L-P
    `debruijnIdentityV2_holds` も transitive sorry。着手順 = §5A 拡張 + §5D ripple 先行 (type-check
    done で commit) → §5B Phase 2 main hyp + domination (L-PT-α 解除トライ) → §5C assembly →
    capstone congr + `@audit:ok`。
+9. **`density_t_eq` の rnDeriv pin = false-statement defect 発見、conv pin への差替で fix
+   (§Phase 5-F)** (2026-05-31, resume session): `density_t_eq` (`FisherInfoV2DeBruijn.lean:244-245`)
+   が `density_t` を rnDeriv 代表元に `∀ x` pointwise pin する形は、`FisherInfoV2.lean:22-29` の V1
+   Fisher flaw (rnDeriv 代表元は `Classical.choose` ゆえ co-null で非可微 → `logDeriv(rnDeriv.toReal)=0`
+   a.e. → Fisher=0) を再導入し、RHS を 0 固定 → Gaussian 真値 `1/(2(v+t))≠0` と矛盾 → **Phase 0 が
+   修正したはずの `density_t:=0` と同型の false-statement defect**。Wave6 `@audit:ok` は non-load-bearing
+   は verify したが degenerate を見逃した (コード上 `@audit:defect(degenerate)` marker 既付与 `:226-243`)。
+   **採用 = 案 1 (`density_t_eq` を conv pin `density_t = convDensityAdd pX g_t` に差替)**。根拠: (a)
+   ripple localize (`density_t` field 残存で RHS / 外向き API 不変、touch 3 file)、(b) `_fisher_match`
+   (`FisherInfoV2DeBruijnAssembly.lean:172`) を両辺 pointwise 一致で genuine closure、(c) Gaussian
+   constructor 充足は **既存 `convDensityAdd_gaussian_closed_form` (`EPIBlachmanGaussianWitness.lean:168`、
+   `@audit:ok` sorryAx-free) で genuine 即可、新規 sorry 0**。案 2 (RHS 直接 conv) は defect 解消も
+   ripple 広 (`density_t` 参照の全 consumer 追従) ゆえ非採用。conv pin は smooth explicit 関数への外形
+   等式で degenerate でなく load-bearing でない (regularity)。実装時注意: structure field 順序を `pX`
+   系を `density_t_eq` の前に移動 (forward-reference 解消)、`_hv` underscore 外し、`⟨t,ht.le⟩≠0` の
+   NNReal 同定。`density_t_eq` field `@audit:ok` + `debruijnIdentityV2_holds` の「true statement」
+   docstring sign-off は **downgrade 所見** (pin 書換まで false 前提、最終書換は実装後 auditor、§5F-1)。

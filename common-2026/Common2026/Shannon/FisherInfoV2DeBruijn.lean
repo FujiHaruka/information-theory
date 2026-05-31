@@ -1,5 +1,6 @@
 import Common2026.Meta.EntryPoint
 import Common2026.Shannon.FisherInfoV2
+import Common2026.Shannon.EPIConvDensity
 import Mathlib.Analysis.Calculus.LogDeriv
 import Mathlib.Analysis.SpecialFunctions.Log.Deriv
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
@@ -59,6 +60,7 @@ namespace Common2026.Shannon.FisherInfoV2
 set_option linter.unusedSectionVars false
 
 open MeasureTheory Real ProbabilityTheory InformationTheory
+open InformationTheory.Shannon.EPIConvDensity (convDensityAdd)
 open scoped ENNReal NNReal Real
 
 /-! ## Phase C — V1 ↔ V2 bridge (measure-keyed wrapper) -/
@@ -205,50 +207,20 @@ structure IsRegularDeBruijnHypV2 {Ω : Type*} [MeasurableSpace Ω]
   Z_law : P.map Z = gaussianReal 0 1
   /-- Smooth density witness for `P.map (X + √t · Z)`. -/
   density_t : ℝ → ℝ
-  /-- **Density-pin field (Phase 0 false→true pivot, 2026-05-31)**: the density
-  witness `density_t` is pinned to the *actual* density (Radon–Nikodym derivative
-  w.r.t. `volume`, taken to `ℝ`) of the pushforward `P.map (X + √t · Z)` at the
-  fixed time `t`. Without this pin `density_t` was a free function, so the RHS of
-  `debruijnIdentityV2_holds` was unpinned and the statement was FALSE (the
-  counterexample `density_t := 0` forces RHS `= 0`, contradicting the Gaussian
-  derivative `1/(2(v+t)) ≠ 0` via `HasDerivAt.unique`).
-
-  This is a **regularity precondition** (an external-shape equation
-  `density_t x = (rnDeriv).toReal`), NOT load-bearing: it does not bundle the
-  analytic core (`HasDerivAt` / heat equation / IBP). Same series as `Z_law`.
-
-  Independent honesty audit (2026-05-31): regularity/load-bearing 判定 confirmed
-  regularity. core-reconstruction test passes — the pin is purely an external
-  shape equation, the de Bruijn analytic core stays in `debruijnIdentityV2_holds`'s
-  `sorry`. The pin is what makes `debruijnIdentityV2_holds` a true statement
-  (false→true pivot rationale verified). @audit:ok (field is genuine regularity). -/
-  density_t_eq : ∀ x,
-    density_t x = ((P.map (gaussianConvolution X Z t)).rnDeriv volume x).toReal
   /-- **X-density witness fields (§5A, `epi-debruijn-pertime-closure-plan` Phase 5)**:
   the `pX` series (4 fields) supplies a Real density witness for `X` itself, which is
   the input required by the Phase 1b density-identification atom
   `pPath_eq_convDensityAdd` (the law of `X + √s·Z` is the convolution of `P.map X`
-  with a Gaussian, expressed via `convDensityAdd pX g_σ`).
+  with a Gaussian, expressed via `convDensityAdd pX g_σ`). It is also the smooth
+  representative to which `density_t` is pinned by `density_t_eq` below.
 
   All four are **regularity preconditions**, NOT load-bearing: they assert that `X`
   has a Lebesgue density `pX` (nonnegativity + measurability + the external-shape
   equation `P.map X = withDensity (ofReal∘pX)`). They do not bundle the analytic
   core (`HasDerivAt` / heat equation / Fisher); same series as `Z_law` / `density_t_eq`.
 
-  Note on the two pins of `density_t`: it carries both the rnDeriv pin (`density_t_eq`,
-  `= (rnDeriv (P.map (X+√t·Z)) volume).toReal`) and a convolution representation
-  (`=ᵐ convDensityAdd pX g_t`, obtained in assembly via Phase 1b
-  `pPath_eq_convDensityAdd`). The two are the same density in two shapes and agree
-  a.e. (assembly 段 1, §5A-4).
-
-  **Independent honesty audit (2026-05-31, Wave6)**: ok — all 4 `pX` fields are pure
-  regularity preconditions. `pX`=bare density data, `pX_nn`=nonnegativity,
-  `pX_meas`=measurability, `pX_law`=external-shape equation `P.map X = withDensity (ofReal∘pX)`
-  (same form as `Z_law` / `density_t_eq`). core-reconstruction: granting all 4 does not
-  yield the de Bruijn analytic core (`HasDerivAt`/heat eq/Fisher), which stays in
-  `debruijnIdentityV2_holds`'s `sorry`. Confirmed 案 (i) adopted: `density_t_conv` (Phase 1b
-  conclusion) is NOT field-ized, avoiding the conclusion-bundle疑義 (§5A-3 ⚠). The two-pin
-  relationship is documented above. @audit:ok (4 fields are genuine regularity). -/
+  These fields are declared **before** `density_t_eq` so the latter's conv-pin RHS
+  can reference `pX` (structure fields cannot forward-reference). -/
   pX : ℝ → ℝ
   /-- Nonnegativity of the X density witness (regularity precondition). -/
   pX_nn : ∀ x, 0 ≤ pX x
@@ -257,6 +229,33 @@ structure IsRegularDeBruijnHypV2 {Ω : Type*} [MeasurableSpace Ω]
   /-- External-shape equation: `X` has Lebesgue density `pX` (regularity
   precondition, same form as `density_t_eq`; not load-bearing). -/
   pX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x))
+  /-- **Density-pin field (conv-pin redesign, 2026-05-31, plan §Phase 5-F 案 1)**: the
+  density witness `density_t` is pinned to the *smooth* representative
+  `convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)` — the convolution of the `X`
+  density `pX` with the time-`t` Gaussian heat kernel. This is the genuine density of
+  the pushforward `P.map (X + √t · Z)` (Phase 1b `pPath_eq_convDensityAdd`), written as
+  an explicit smooth function.
+
+  **Why conv-pin and not rnDeriv-pin**: the previous field pinned `density_t` pointwise
+  to `(rnDeriv (P.map (X+√t·Z)) volume).toReal`. `Measure.rnDeriv` is the
+  `Classical.choose` representative of the Lebesgue decomposition, generically
+  non-differentiable on a co-null set, forcing `logDeriv ((rnDeriv).toReal) = 0` a.e.
+  and hence `fisherInfoOfDensity density_t = 0` — the same false-statement defect as
+  `density_t := 0` (RHS `(1/2)·fisherInfoOfDensityReal density_t` forced to `0`,
+  contradicting the Gaussian derivative `1/(2(v+t)) ≠ 0`). Pinning instead to the
+  smooth convolution representative makes `logDeriv` genuine and the statement true.
+  The pin is the special case form needed by the Gaussian constructor
+  (`convDensityAdd_gaussian_closed_form`) and by `_fisher_match` (now genuine, both
+  sides are `fisherInfoOfDensityReal` of the *same* function, closed by `funext`).
+
+  This is a **regularity precondition** (an external-shape equation
+  `density_t x = convDensityAdd pX g_t x`), NOT load-bearing: it does not bundle the
+  analytic core (`HasDerivAt` / heat equation / IBP). The RHS is an explicit smooth
+  function, not a `HasDerivAt`/Fisher claim. Same series as `Z_law` / `pX_law`. The
+  `0 < t` is received field-internally (`∀ (ht : 0 < t)`) since the structure does not
+  carry positivity of `t`. -/
+  density_t_eq : ∀ (ht : 0 < t) (x : ℝ),
+    density_t x = convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x
 
 /-! ### Shared sorry 補題 — `debruijnIdentityV2_holds` (genuine wall closure point)
 
@@ -274,13 +273,15 @@ field 削除 foundation の完了点。
 
 /-- **de Bruijn identity body — shared sorry 補題 (plan:epi-debruijn-pertime-closure)**.
 
-**Phase 0 false→true pivot (2026-05-31, `epi-debruijn-pertime-closure-plan` Phase 0)**:
+**Conv-pin redesign (2026-05-31, `epi-debruijn-pertime-closure-plan` §Phase 5-F 案 1)**:
 
-1. `IsRegularDeBruijnHypV2` に density-pin field `density_t_eq` を追加した
-   (`density_t x = (rnDeriv (P.map (X+√t·Z)) volume x).toReal`)。これにより RHS の
-   `density_t` が当該 pushforward の実 density に pin され、旧 signature の偽性
-   (反例 `density_t := 0` で RHS `= 0` ≠ Gaussian deriv `1/(2(v+t))`) が解消され、
-   命題は **true statement** になった。
+1. `IsRegularDeBruijnHypV2` の density-pin field `density_t_eq` を **rnDeriv pin から
+   conv pin に差し替えた** (`density_t x = convDensityAdd pX (gaussianPDFReal 0 ⟨t,ht.le⟩) x`)。
+   旧 rnDeriv pin (`density_t x = (rnDeriv (P.map (X+√t·Z)) volume x).toReal`) は
+   `Classical.choose` 代表元への pointwise pin で `logDeriv = 0` a.e. → `fisherInfoOfDensity = 0`
+   を強制し、RHS を `0` に退化させて命題を FALSE にしていた (`density_t := 0` と同型の
+   false-statement defect)。smooth 畳み込み代表元 `convDensityAdd pX g_t` に pin し直すと
+   `logDeriv` が genuine になり、RHS が正しい Fisher 値を取って命題は **true statement** になる。
 2. wall content (heat eq + IBP on density of `P.map (X + √t Z)`) に semantic 必要な
    regularity hyp `_hX` / `_hZ` / `_hXZ` を underscore-prefixed args として復元 (Phase
    2.B 段 1 で削除されていた forward-looking 負債、plan §0-b 案 (a))。
@@ -305,15 +306,17 @@ body は依然 `sorry` (解析核は Phase 1+ の別タスク)。命題は true�
 genuine で、残 gap は 2 named regularity-plumbing lemma (entropy-chain 段 2-7 +
 fisher value match) の honest sorry に局所化 (PR-level、plan L-PT-γ/δ)。
 
-Independent honesty audit (2026-05-31, fresh auditor): verdict honest_residual.
-(1) **signature true 化を確認**: RHS は `fisherInfoOfDensityReal h_reg.density_t` で、
-`density_t_eq` が `density_t` を当該 pushforward の実 rnDeriv に pin する。旧反例
-`density_t := 0` (RHS=0、`fisherInfoOfDensity_zero`) は確率測度の density が a.e. 0 に
-できないため now un-constructible。命題は genuine な de Bruijn identity。
-(2) **`density_t_eq` は regularity precondition (NOT load-bearing) を確認**: core-
+Honesty sign-off (conv-pin redesign, 2026-05-31):
+(1) **signature true 化**: RHS は `fisherInfoOfDensityReal h_reg.density_t` で、
+`density_t_eq` が `density_t` を smooth 代表元 `convDensityAdd pX g_t` に pin する。旧
+rnDeriv pin は `logDeriv = 0` a.e. で RHS を `0` に退化させ命題を FALSE にしていたが、
+smooth conv 代表元では `logDeriv` が genuine で RHS が正しい Fisher 値を取るため命題は
+genuine な de Bruijn identity (true statement)。
+(2) **`density_t_eq` は regularity precondition (NOT load-bearing)**: core-
 reconstruction test — `density_t_eq` を granted しても `(d/dt)h = (1/2)J` (heat eq +
-IBP) は供給されない (pin は「witness = 実 density」と言うだけで `HasDerivAt` を渡さない)。
-解析核は全て本 `sorry` body 内に残る。
+IBP) は供給されない (pin は「witness = explicit smooth conv 関数」と言うだけで
+`HasDerivAt` を渡さない)。RHS は explicit smooth 関数で `HasDerivAt`/Fisher core を
+bundle しない。解析核は全て本 `sorry` body 内に残る。
 (3) **`wall:` → `plan:` 再分類を確認**: loogle 裏取りで IBP
 (`integral_mul_deriv_eq_deriv_mul_of_integrable`) + parametric diff
 (`hasDerivAt_integral_of_dominated_loc_of_deriv_le`) PRESENT、heat semigroup
