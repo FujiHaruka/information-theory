@@ -487,6 +487,13 @@ private theorem gaussHessMaj_nonneg {t : ℝ} (ht : 0 < t) (u : ℝ) : 0 ≤ gau
 
 /-- `gaussHessMaj t` is globally bounded (Gaussian decay kills the quadratic).
 Used to prove `Integrable (fun y => pX y · gaussHessMaj t (x − y))` via `Integrable.mul_bdd`.
+
+Independent honesty audit (2026-05-31, Wave 4, fresh auditor): verdict **ok**. Bound
+`(√(πt))⁻¹·(16e⁻¹/t + 2/t)` is a genuine global sup: the body bounds `u²·exp(−u²/4t) ≤ 4t·e⁻¹`
+via `Real.mul_exp_neg_le_exp_neg_one` and `exp(−u²/4t) ≤ 1`, so
+`exp·(4u²/t² + 2/t) ≤ 16e⁻¹/t + 2/t` — mathematically sound. `#print axioms` =
+`[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified). Single hyp `0<t`
+regularity; conclusion not load-bearing.
 @audit:ok -/
 private theorem gaussHessMaj_bdd {t : ℝ} (ht : 0 < t) :
     ∀ u : ℝ, gaussHessMaj t u
@@ -685,6 +692,12 @@ These are genuine global-boundedness facts (continuous Gaussian×polynomial → 
 load-bearing: they assert pure analytic majorants, no convolution/Hessian claim. -/
 
 /-- Global sup bound of the kernel spatial 1st derivative `g_s(u)·(-(u/s))`.
+
+Independent honesty audit (2026-05-31, Wave 4, fresh auditor): verdict **ok**. Bound
+`(√(2πs))⁻¹·((1+2s·e⁻¹)/(2s))` is a genuine global sup of the single Gaussian kernel 1st spatial
+derivative: body uses `2|u| ≤ 1+u²`, `u²·exp(−u²/2s) ≤ 2s·e⁻¹` (`mul_exp_neg_le_exp_neg_one`),
+`exp ≤ 1` — sound. Single Gaussian `g_s` *outside* convolution (Gaussian → bounded), unrelated to
+the deleted case-A polynomial-tail defect. Hyp `0<s` regularity; not load-bearing.
 @audit:ok -/
 private theorem kernel_x_deriv1_global_bound {s : ℝ} (hs : 0 < s) :
     ∀ u : ℝ, ‖heatFlow_density_heat_equation_kernel s u * (-(u / s))‖
@@ -731,6 +744,12 @@ private theorem kernel_x_deriv1_global_bound {s : ℝ} (hs : 0 < s) :
     _ = (1 + 2 * s * Real.exp (-1)) / (2 * s) := by ring
 
 /-- Global sup bound of the kernel spatial 2nd derivative `g_s(u)·(u²/s²-1/s)`.
+
+Independent honesty audit (2026-05-31, Wave 4, fresh auditor): verdict **ok**. Bound
+`(√(2πs))⁻¹·((2e⁻¹+1)/s)` is a genuine global sup: body splits `|u²/s²−1/s| ≤ u²/s²+1/s`, bounds
+`exp·u²/s² ≤ 2e⁻¹/s` (`mul_exp_neg_le_exp_neg_one`) and `exp·1/s ≤ 1/s` — sound. Single Gaussian
+`g_s` outside convolution. `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free,
+machine-verified). Hyp `0<s` regularity; not load-bearing.
 @audit:ok -/
 private theorem kernel_x_deriv2_global_bound {s : ℝ} (hs : 0 < s) :
     ∀ u : ℝ, ‖heatFlow_density_heat_equation_kernel s u * (u ^ 2 / s ^ 2 - 1 / s)‖
@@ -885,6 +904,22 @@ integrand integrability uses `gaussHessMaj_bdd` (global boundedness) + `Integrab
 `hpX_mass`/`hpX_mom` are now unused (the genuine route via the concrete Gaussian-kernel envelope
 does not need finite-2nd-moment of pX — the `g_s` Gaussian inside the convolution supplies all decay)
 but kept in the signature for caller compatibility. 0 sorry / 0 residual.
+
+Independent honesty audit (2026-05-31, Wave 4, fresh auditor, commits `5dba37a`+`a382aea`):
+verdict **ok** (proof done) — re-confirmed independently. (1) **sorryAx-free machine-verified**:
+`#print axioms Common2026.Shannon.FisherInfoV2.convDensityAdd_deriv2_poly_moment_majorant` =
+`[propext, Classical.choice, Quot.sound]` (transient `#print axioms` + `lake env lean`, sorryAx
+ABSENT). GAP② does NOT transitively depend on the file's 3 remaining sorrys
+(`_chain_domination`/`_ibp_step`/`_chain_parametric`) — the abstract `∃ bound` is closed in-body by
+the concrete envelope `bound x = ∫ y, pX y · gaussHessMaj t (x−y)`. (2) **Statement unchanged & TRUE**:
+the conclusion `∃ bound, Integrable bound ∧ ∀ᵐ x ∀ s∈Ioo, ‖∂²p_s x‖ ≤ bound x` is the genuine claim;
+no precondition was weakened to make it vacuous. (3) **Bridge inputs genuine**: the 11 per-`s`
+domination hyps fed to `convDensityAdd_deriv2_eq_gaussian` (itself `@audit:ok`, 0 sorry, in
+`EPIConvDensitySecondDeriv.lean:145`) are constructed in-body from `kernel_x_deriv1/2_global_bound` +
+`hpX_int.abs.mul_const`/`mul_bdd` — pure regularity/measurability, none asserts the Hessian bound.
+(4) **`hpX_mass`/`hpX_mom` now genuinely unused** (the Gaussian `g_s` inside the convolution supplies
+all decay) — not load-bearing, kept only for caller compatibility (lint warns, harmless). NOT
+circular/false-statement/degenerate/load-bearing. `@audit:ok` confirmed.
 @audit:ok -/
 private theorem convDensityAdd_deriv2_poly_moment_majorant
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
