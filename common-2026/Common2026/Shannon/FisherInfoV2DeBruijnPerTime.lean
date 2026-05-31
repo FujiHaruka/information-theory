@@ -35,7 +35,9 @@ Phase 0 (false→true signature pivot) は親 file `FisherInfoV2DeBruijn.lean` �
 * **Phase 2** `heatFlow_density_heat_equation` — heat eq per-density (**genuine**, L-PT-α closed:
   σ-direction + spatial 2nd-deriv lifts via gateway lemma `hasDerivAt_integral_of_dominated_loc_of_deriv_le`,
   `Set.Ioo (s/2) (2s)` σ-neighborhood, `HasDerivAt.unique` against pins; per-`y` domination as §5B-2 hyps)
-* **Phase 3** `entropy_hasDerivAt_via_parametric` — entropy parametric diff (`sorry`, L-PT-γ)
+* **Phase 3** `entropy_hasDerivAt_via_parametric` — entropy parametric diff (**genuine** `@audit:ok`,
+  neighborhood version: `hb`/`hdiff` over `Set.Ioo (t/2)(2t)`, requires `0 < t`; gateway needs only
+  ball domination, the former `∀ s ∈ univ` form was un-instantiable / false-statement, fixed 2026-05-31)
 * **Phase 4a** `debruijn_ibp_step` — 無限区間 IBP (**genuine** `@audit:ok`:
   `integral_mul_deriv_eq_deriv_mul_of_integrable` と同形、`exact` 一発)
 * **Phase 4b** `fisher_from_logDeriv` — logDeriv→Fisher congr (`sorry`)
@@ -635,23 +637,38 @@ integral-level conclusion (which `hasDerivAt_integral_of_dominated_loc_of_deriv_
 produces from them). No load-bearing hyp, no circular `:= h`. Body genuinely plumbs the
 hyps into the gateway lemma and extracts `.2`. `#print axioms` = `[propext,
 Classical.choice, Quot.sound]` (sorryAx-free), 0 sorry / 0 residual.
+
+**Neighborhood-version weakening (2026-05-31, false-statement fix §Phase 5-G case A)**:
+the previous `hb`/`hdiff` quantified `∀ s ∈ Set.univ`, which is **not instantiable** for the
+de Bruijn integrand (the negMulLog' factor `-log p_s x - 1` diverges as `s→∞` for fixed `x`,
+and the heat-eq σ-derivative blows up as `s→0+`), so the over-strong univ form could never be
+supplied by a true caller. The gateway `hasDerivAt_integral_of_dominated_loc_of_deriv_le` only
+needs domination/derivative on a set `s ∈ 𝓝 t` (its body extracts an ε-ball internally), so the
+honest precondition shape is a `t`-neighborhood `Set.Ioo (t/2) (2*t)`. We add `(ht : 0 < t)`
+(needed so `Ioo (t/2) (2*t) ∈ 𝓝 t` with `t/2 < t < 2*t`) and pass `Ioo_mem_nhds` as the gateway's
+`hs`. Body remains a pure gateway call + `.2` extraction (genuine, 0 sorry); the heat-eq atom
+`heatFlow_density_heat_equation` (`:472-477`) uses the identical `Set.Ioo (s/2) (2*s)` +
+`Ioo_mem_nhds` precedent. `@audit:ok` retained (still genuine + now satisfiable), pending
+independent re-audit of the weakened signature.
 @audit:ok -/
 theorem entropy_hasDerivAt_via_parametric
-    (pPath : ℝ → ℝ → ℝ) (entDeriv : ℝ → ℝ → ℝ) (bound : ℝ → ℝ) {t : ℝ}
+    (pPath : ℝ → ℝ → ℝ) (entDeriv : ℝ → ℝ → ℝ) (bound : ℝ → ℝ) {t : ℝ} (ht : 0 < t)
     (hbound_int : Integrable bound volume)
     (hmeas : ∀ᶠ s in nhds t, AEStronglyMeasurable (fun x => negMulLog (pPath s x)) volume)
     (hint : Integrable (fun x => negMulLog (pPath t x)) volume)
     (hderiv_meas : AEStronglyMeasurable (entDeriv t) volume)
-    (hb : ∀ᵐ x ∂volume, ∀ s ∈ Set.univ, ‖entDeriv s x‖ ≤ bound x)
-    (hdiff : ∀ᵐ x ∂volume, ∀ s ∈ Set.univ,
+    (hb : ∀ᵐ x ∂volume, ∀ s ∈ Set.Ioo (t/2) (2*t), ‖entDeriv s x‖ ≤ bound x)
+    (hdiff : ∀ᵐ x ∂volume, ∀ s ∈ Set.Ioo (t/2) (2*t),
       HasDerivAt (fun s => negMulLog (pPath s x)) (entDeriv s x) s) :
     HasDerivAt (fun s => ∫ x, negMulLog (pPath s x) ∂volume)
       (∫ x, entDeriv t x ∂volume) t := by
+  have hnhds : Set.Ioo (t/2) (2*t) ∈ nhds t :=
+    Ioo_mem_nhds (by linarith) (by linarith)
   have hgate :=
     hasDerivAt_integral_of_dominated_loc_of_deriv_le
       (F := fun s x => negMulLog (pPath s x))
       (F' := fun s x => entDeriv s x)
-      (bound := bound) (Filter.univ_mem) hmeas hint hderiv_meas hb hbound_int hdiff
+      (bound := bound) hnhds hmeas hint hderiv_meas hb hbound_int hdiff
   simpa only using hgate.2
 
 /-! ## Phase 4a — infinite-interval IBP (L-PT-δ honest sorry) -/

@@ -107,12 +107,25 @@ private theorem debruijnIdentityV2_holds_assembled_chain_entDeriv_formula
   -- chain rule: `negMulLog ∘ (fun s => pPath s x)`.
   exact hneg.comp t hpath_deriv
 
-/-- **§5G-2: Gaussian-tail domination group (L-PT-γ, max cost).**
-Produces an integrable majorant `bound` dominating the `negMulLog'` factor
-`(- log (pPath s x) - 1)` over the `s`-neighborhood (the log-tail bound). The
-measurability sub-group and `Integrable.mul_bdd` base-point integrability are genuine
-(precedent `pPath_eq_convDensityAdd_lconvolution_bridge:166-173`); the log-tail integrable
-majorant is the honest-sorry residual (~80-120 lines, plan L-PT-γ).
+/-- **§5G-2: full-entDeriv Gaussian-tail domination group (L-PT-γ, max cost).**
+Produces an integrable majorant `bound` dominating the **full** entropy σ-derivand
+`(- log (pPath s x) - 1) · ((1/2)·∂²_x pPath s x)` over the `t`-neighborhood
+`Set.Ioo (t/2) (2*t)`. The integrability is genuine because the σ-derivand is taken as a
+*product*: the Gaussian-tail decay of the spatial 2nd-derivative factor `∂²_x p_s x`
+(super-polynomial in `x`) absorbs the `~x²` growth of the log factor, so the product has a
+Lebesgue-integrable majorant.
+
+**False-statement fix (2026-05-31, §Phase 5-G case A)**: the previous statement dominated the
+**log factor alone** `(- log (pPath s x) - 1)` over `∀ s ∈ Set.univ`. That statement is FALSE:
+(a) for `pX = N(0,1)`, `- log p_s x - 1 = (1/2)log(2π(1+s)) + x²/(2(1+s)) - 1`, which diverges as
+`s → ∞` (so the `∀ s ∈ univ` quantifier is unsatisfiable by any single integrand bound), and
+(b) the log factor alone grows `~x²` in `x`, which is Lebesgue **non-integrable** (no integrable
+majorant exists). The fix dominates the **full σ-derivand product** (the `∂²_x p` Gaussian tail
+kills the `x²` factor → integrable) over a **bounded `t`-neighborhood** `Ioo (t/2)(2*t)` (so
+`s` stays in a compact away-from-0/∞ window), which is the true, satisfiable shape
+(proof-pivot-advisor confirmed). On `Ioo (t/2)(2*t)` with `t > 0` we have `s > t/2 > 0`, so the
+NNReal variance witness `⟨s, _⟩` is well-defined (no `max s 0` needed). The remaining honest
+`sorry` is the Gaussian-tail integrable majorant construction (~120-180 lines, plan L-PT-γ).
 
 All hyps are pX-system regularity; the existential output is integrand-level domination.
 
@@ -122,8 +135,11 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
     (hpX_int : Integrable pX volume)
     {t : ℝ} (ht : 0 < t) :
     ∃ bound : ℝ → ℝ, Integrable bound volume ∧
-      (∀ᵐ x ∂volume, ∀ s ∈ (Set.univ : Set ℝ),
-        ‖(- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩) x) - 1)‖
+      (∀ᵐ x ∂volume, ∀ s : ℝ, (hs : s ∈ Set.Ioo (t/2) (2*t)) →
+        ‖(- Real.log (convDensityAdd pX
+              (gaussianPDFReal 0 ⟨s, le_of_lt (by have := hs.1; linarith : (0:ℝ) < s)⟩) x) - 1)
+            * ((1/2) * deriv (deriv (convDensityAdd pX
+              (gaussianPDFReal 0 ⟨s, le_of_lt (by have := hs.1; linarith : (0:ℝ) < s)⟩))) x)‖
           ≤ bound x) := by
   sorry -- @residual(plan:epi-debruijn-pertime-closure)
 
@@ -154,9 +170,20 @@ private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher
 /-- **§5G-3: parametric-diff composition.**
 The entropy integral `∫ negMulLog (pPath s ·)` has its `s`-derivative at `t` given by the
 integral of `entDeriv` (the §5G-1 per-`x` closed form), and that integral equals
-`(1/2)·fisherInfoOfDensityReal (pPath t)`. Composes `entropy_hasDerivAt_via_parametric` (atom)
-with §5G-1 (per-`x` chain rule), §5G-2 (domination), §5G-4 (Fisher value). The `HasDerivAt`
-and Fisher-value conclusions are genuine claims; they are NOT supplied as hypotheses.
+`(1/2)·fisherInfoOfDensityReal (pPath t)`. Composes `entropy_hasDerivAt_via_parametric` (atom,
+now neighborhood-version: `hb`/`hdiff` quantified over `Set.Ioo (t/2)(2*t)`, requires `0 < t`)
+with §5G-1 (per-`x` chain rule), §5G-2 (full-entDeriv Ioo domination), §5G-4 (Fisher value). The
+`HasDerivAt` and Fisher-value conclusions are genuine claims; they are NOT supplied as
+hypotheses.
+
+**Statement true (2026-05-31, §Phase 5-G)**: the existential output `entDeriv` is the §5G-1
+per-`x` closed form `(- log p_s x - 1)·((1/2)·∂²_x p_s x)`, which on the `Ioo (t/2)(2*t)`
+neighborhood (each `s > 0`) satisfies the per-`x` chain rule (§5G-1, `pPath_s x > 0` a.e. + heat
+eq) and is dominated by §5G-2's integrable majorant. Feeding these into the Ioo-version atom
+yields the `HasDerivAt`; the Fisher value is §5G-4. The body is left as an honest `sorry` (the
+a.e.-over-`Ioo` `hdiff` plumbing + atom invocation is L-PT-γ scope), but the **statement is
+satisfiable** (proof-pivot-advisor confirmed). The被微分関数 keeps the `max s 0` form to match
+`_chain` verbatim (`max s 0 = s` on the `t`-neighborhood).
 
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_parametric
