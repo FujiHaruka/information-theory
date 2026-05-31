@@ -5,6 +5,8 @@ import Mathlib.Analysis.Calculus.ParametricIntegral
 import Mathlib.MeasureTheory.Integral.IntegralEqImproper
 import Mathlib.MeasureTheory.Measure.WithDensity
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
+import Mathlib.Analysis.SpecialFunctions.Sqrt              -- HasDerivAt.sqrt
+import Mathlib.Analysis.SpecialFunctions.ExpDeriv          -- HasDerivAt.exp
 
 /-!
 # per-time de Bruijn identity — density-route analytic core (atoms)
@@ -182,7 +184,92 @@ theorem pPath_eq_convDensityAdd
     (MeasureTheory.measurable_lconvolution volume hf_meas hg_meas)).trans ?_
   exact pPath_eq_convDensityAdd_lconvolution_bridge pX hpX_nn s hs.le hv_ne
 
-/-! ## Phase 2 — heat equation per-density (L-PT-α honest sorry, max cost) -/
+/-! ## Phase 2 — heat equation per-density (L-PT-α honest sorry, max cost)
+
+### Phase 2 genuine sub-core — closed-form Gaussian-kernel heat equation
+
+The single Mathlib-absent fact at the heart of Phase 2 is that the Gaussian
+kernel (with **variance** `σ`) `g_σ(u) = (√(2πσ))⁻¹ · exp(-u²/(2σ))` solves the
+heat equation `∂_σ g_σ(u) = (1/2) ∂²_u g_σ(u)`. The two lemmas below establish
+the σ-derivative and the first spatial derivative in closed form; these are
+genuine (no `sorry`) and are the self-contained analytic content the full
+Phase-2 statement assembles. The remaining gap (differentiation under the
+integral sign connecting these to `pathDeriv2` plus the heat-equation identity at
+integral level) needs Gaussian-tail domination hypotheses the current signature
+does not carry — hence the main theorem retreats to L-PT-α. -/
+
+/-- The σ-derivative of the variance-`σ` Gaussian kernel, in closed form:
+`∂_σ [(√(2πσ))⁻¹ · exp(-u²/(2σ))] = (1/2)·g_s(u)·(u²/s² − 1/s)` at `σ = s > 0`.
+Genuine; uses `HasDerivAt.sqrt` / `HasDerivAt.exp` / quotient + product rules. -/
+private theorem heatFlow_density_heat_equation_kernel_sigma_deriv
+    (u : ℝ) {s : ℝ} (hs : 0 < s) :
+    HasDerivAt
+      (fun σ : ℝ => (Real.sqrt (2 * Real.pi * σ))⁻¹ * Real.exp (-u ^ 2 / (2 * σ)))
+      ((1 / 2) * ((Real.sqrt (2 * Real.pi * s))⁻¹ * Real.exp (-u ^ 2 / (2 * s)))
+        * (u ^ 2 / s ^ 2 - 1 / s)) s := by
+  have hpi : (0:ℝ) < Real.pi := Real.pi_pos
+  have h2pis_pos : 0 < 2 * Real.pi * s := by positivity
+  have hsqrt_pos : 0 < Real.sqrt (2 * Real.pi * s) := Real.sqrt_pos.mpr h2pis_pos
+  have hsqrt_ne : Real.sqrt (2 * Real.pi * s) ≠ 0 := ne_of_gt hsqrt_pos
+  have hs_ne : s ≠ 0 := ne_of_gt hs
+  -- Inner `σ ↦ 2πσ` and its sqrt.
+  have hinner : HasDerivAt (fun σ : ℝ => 2 * Real.pi * σ) (2 * Real.pi) s := by
+    simpa using (hasDerivAt_id s).const_mul (2 * Real.pi)
+  -- `h(σ) = √(2πσ)` has derivative `(2π)/(2√(2πs))` at `s`.
+  have hsqrtσ : HasDerivAt (fun σ : ℝ => Real.sqrt (2 * Real.pi * σ))
+      (2 * Real.pi / (2 * Real.sqrt (2 * Real.pi * s))) s := by
+    have := hinner.sqrt (by positivity)
+    simpa using this
+  -- `A(σ) = (√(2πσ))⁻¹` has derivative `-(2π)/(2√(2πs)) / (2πs)`.
+  have hA : HasDerivAt (fun σ : ℝ => (Real.sqrt (2 * Real.pi * σ))⁻¹)
+      (-(2 * Real.pi / (2 * Real.sqrt (2 * Real.pi * s))) / (Real.sqrt (2 * Real.pi * s)) ^ 2) s :=
+    hsqrtσ.inv hsqrt_ne
+  -- Inner exponent `σ ↦ -u²/(2σ)` has derivative `u²/(2s²)` at `s`.
+  have hexpo : HasDerivAt (fun σ : ℝ => -u ^ 2 / (2 * σ)) (u ^ 2 / (2 * s ^ 2)) s := by
+    -- `-u²/(2σ) = (-u²/2) * σ⁻¹`; derivative `= (-u²/2)·(-σ⁻²) = u²/(2s²)`.
+    have hinvσ : HasDerivAt (fun σ : ℝ => σ⁻¹) (-(s ^ 2)⁻¹) s := by
+      simpa using (hasDerivAt_inv hs_ne)
+    have hconst := hinvσ.const_mul (-u ^ 2 / 2)
+    -- hconst : HasDerivAt (fun σ => (-u²/2) * σ⁻¹) ((-u²/2) * (-(s²)⁻¹)) s
+    have hfun : (fun σ : ℝ => -u ^ 2 / (2 * σ)) = (fun σ : ℝ => (-u ^ 2 / 2) * σ⁻¹) := by
+      funext σ
+      rw [div_eq_mul_inv, div_eq_mul_inv, mul_inv, mul_assoc]
+    rw [hfun]
+    convert hconst using 1
+    field_simp
+  -- `B(σ) = exp(-u²/(2σ))` chain rule.
+  have hB : HasDerivAt (fun σ : ℝ => Real.exp (-u ^ 2 / (2 * σ)))
+      (Real.exp (-u ^ 2 / (2 * s)) * (u ^ 2 / (2 * s ^ 2))) s := hexpo.exp
+  -- Product rule.
+  have hprod := hA.mul hB
+  convert hprod using 1
+  -- algebraic identity for the derivative coefficient.
+  have hsqsq : Real.sqrt (2 * Real.pi * s) ^ 2 = 2 * Real.pi * s :=
+    Real.sq_sqrt h2pis_pos.le
+  rw [hsqsq]
+  field_simp
+  ring
+
+/-- The first spatial derivative of the variance-`s` Gaussian kernel:
+`∂_u [(√(2πs))⁻¹ · exp(-u²/(2s))] = g_s(u)·(−u/s)`. Genuine. -/
+private theorem heatFlow_density_heat_equation_kernel_x_deriv1
+    (s : ℝ) (u : ℝ) :
+    HasDerivAt
+      (fun w : ℝ => (Real.sqrt (2 * Real.pi * s))⁻¹ * Real.exp (-w ^ 2 / (2 * s)))
+      ((Real.sqrt (2 * Real.pi * s))⁻¹ * Real.exp (-u ^ 2 / (2 * s)) * (-u / s)) u := by
+  -- inner exponent `w ↦ -w²/(2s)` has derivative `-u/s` at `u`.
+  have hsq : HasDerivAt (fun w : ℝ => w ^ 2) (2 * u) u := by
+    simpa using (hasDerivAt_pow 2 u)
+  have hexpo : HasDerivAt (fun w : ℝ => -w ^ 2 / (2 * s)) (-u / s) u := by
+    have h := ((hsq.neg).div_const (2 * s))
+    -- h : HasDerivAt (fun w => -w^2 / (2*s)) (-(2*u) / (2*s)) u
+    convert h using 1
+    field_simp
+  -- exponential chain rule.
+  have hexp : HasDerivAt (fun w : ℝ => Real.exp (-w ^ 2 / (2 * s)))
+      (Real.exp (-u ^ 2 / (2 * s)) * (-u / s)) u := hexpo.exp
+  -- multiply by the constant prefactor.
+  simpa [mul_assoc] using hexp.const_mul ((Real.sqrt (2 * Real.pi * s))⁻¹)
 
 /-- **Phase 2 (L-PT-α honest sorry)**: the heat-flow density satisfies the heat
 equation per density: `∂_σ pPath σ x = (1/2) ∂²_x pPath σ x` at `σ = s`.
@@ -236,7 +323,17 @@ theorem heatFlow_density_heat_equation
     HasDerivAt
       (fun σ : ℝ => pPath σ x)
       ((1/2) * pathDeriv2 s x) s := by
-  sorry -- @residual(plan:epi-debruijn-pertime-closure) — heat eq per-density, density-route self-build
+  -- Genuine sub-core in place: `heatFlow_density_heat_equation_kernel_sigma_deriv`
+  -- (closed-form σ-derivative of the variance-σ Gaussian kernel) and
+  -- `heatFlow_density_heat_equation_kernel_x_deriv1` (first spatial derivative).
+  -- Remaining gap (L-PT-α): assembling the per-density statement requires two
+  -- differentiation-under-the-integral-sign steps — (a) `∂_σ pPath = ∫ pX·∂_σ g_σ`
+  -- via `hasDerivAt_integral_of_dominated_loc_of_deriv_le`, (b) identifying
+  -- `pathDeriv2 s x` (pinned only as the spatial 2nd derivative of `pPath`) with
+  -- `∫ pX·∂²_u g_s` — both of which need Gaussian-tail domination / integrability
+  -- hypotheses on `pX` that the current signature deliberately does not carry
+  -- (forward-looking debt, see inventory §2 / §6). Honest L-PT-α retreat.
+  sorry -- @residual(plan:epi-debruijn-pertime-closure) — integral-level diff needs domination hyps (L-PT-α)
 
 /-! ## Phase 3 — entropy parametric diff (L-PT-γ honest sorry) -/
 
