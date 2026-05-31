@@ -456,164 +456,92 @@ private theorem convDensityAdd_logFactor_poly_majorant
   rw [Real.norm_eq_abs, abs_le]
   exact ⟨hlower, hupper⟩
 
-/-- **§5G-2b (GAP②): `s`-uniform Gaussian-tail majorant for the spatial Hessian.**
+/-- **§5G-2b (GAP②, 案B polynomial-moment restate): integrable envelope for the spatial Hessian.**
 On the `t`-neighborhood `Set.Ioo (t/2) (2*t)`, the spatial second derivative
 `∂²_x p_s x = deriv (deriv (convDensityAdd pX g_s)) x` of the convolution density admits a
-Gaussian-tail majorant uniform in `s`:
-`‖∂²_x p_s x‖ ≤ C·(1 + x²)·exp(-x²/c')` with `0 < c'`, `0 ≤ C`.
+**single Lebesgue-integrable envelope** `bound : ℝ → ℝ` uniform in `s`:
+`‖∂²_x p_s x‖ ≤ bound x` for all `s ∈ (t/2, 2t)`, with `Integrable bound volume`.
 
-Via the heat-eq STEP D identification `∂²_x p_s x = ∫ y, pX y · g_s(x-y)·((x-y)²/s² - 1/s)`
+**Why the conclusion is an integrable-envelope existential, not a Gaussian-tail bound.** The
+prior `≤ C·(1+x²)·exp(-x²/c')` (Gaussian-tail) conclusion was a false statement: it asserts the
+Hessian decays *faster than any polynomial* in `x`, which fails for polynomial-tail finite-variance
+`pX` (counterexample `pX(y) = (2/π)/(1+y²)²` satisfies `∫pX = 1`, `∫y²·pX < ∞`, yet
+`∂²_x p_s(x) ~ const/x²` decays only polynomially — judgment log #15). The honest envelope keeps the
+Gaussian `g_s` *inside* the convolution rather than dropping it via a prefactor bound: via the
+heat-eq STEP D identification
+`∂²_x p_s x = ∫ y, pX y · g_s(x-y)·((x-y)²/s² - 1/s)`
 (`FisherInfoV2DeBruijnPerTime.heatFlow_density_heat_equation` STEP D + the kernel 2nd-deriv
-closed form `heatFlow_density_heat_equation_kernel_x_deriv2`), the triangle inequality and the
-Gaussian prefactor bound (`gaussianPDFReal_le_prefactor`) give a Gaussian-tail bound uniform on
-the bounded window `s ∈ (t/2, 2t)`. The bridge `deriv (deriv (convDensityAdd …)) = pathDeriv2`
-requires the `pathDeriv1/2` `HasDerivAt` preconditions (full-support C¹ plumbing shared with
-L-PT-δ), which is the remaining honest `sorry`.
+closed form `heatFlow_density_heat_equation_kernel_x_deriv2`), the triangle inequality gives the
+pointwise bound `‖∂²_x p_s x‖ ≤ ∫ y, pX y · g_s(x-y)·|(x-y)²/s² - 1/s| dy =: bound x` (the `g_s`
+Gaussian factor is retained, not bounded by its prefactor constant).
 
-All hyps are pX-system regularity; the existential output is a pointwise Gaussian-tail bound.
+**Integrability of the envelope (finite-second-moment).** `bound` is Lebesgue-integrable for any
+finite-variance `pX`: by Tonelli (the integrand is nonnegative)
+`∫_x bound x dx = ∫_y pX(y)·[∫_x g_s(x-y)·|(x-y)²/s² - 1/s| dx] dy = ∫_y pX(y)·K(y) dy`, where after
+the substitution `u = x - y` the inner integral
+`K(y) = ∫_u g_s(u)·|u²/s² - 1/s| du` is a *constant* in `y` (independent of `y`, since `g_s` is
+centred at 0 and `u` ranges over all of `ℝ`); more generally when the envelope is paired with a
+polynomial log-factor (`_chain_domination`) the `y`-integral picks up only `∫pX`, `∫y·pX`, `∫y²·pX`
+(mass + first + second moment), all finite under `hpX_mass`/`hpX_mom` (`∫y·pX` finite by `2|y| ≤ 1+y²`
+domination via `hpX_int.add hpX_mom`). The result is finite.
 
-**Finite-second-moment restate (2026-05-31, §Phase 5-G case A, 案A, 判断ログ #14)**: the statement is
-now made **TRUE & satisfiable** by adding two pX regularity preconditions: `hpX_mass : ∫pX = 1` and
-`hpX_mom : Integrable (fun y => y²·pX y)` (finite second moment). Why this closes the prior
-false-statement gap: via the heat-eq STEP D표시 the supported majorant term is
-`∫ pX(y)·g_s(x-y)·(x-y)² dy`, which after the Gaussian prefactor bound is dominated by
-`pref(s)·∫ pX(y)·(x-y)² dy`. Expanding the (x-y)² polynomial,
-`∫ pX(y)(x-y)² dy = x²·∫pX − 2x·∫y·pX + ∫y²·pX`; under `hpX_mass` (`∫pX = 1 < ∞`), `hpX_mom`
-(`∫y²·pX < ∞`), and the derived first moment (`∫y·pX < ∞`, obtained from `2|y| ≤ 1+y²` domination
-by `hpX_int.add hpX_mom`), all three terms are finite. The result is a finite-coefficient polynomial
-`A·x² + B·x + C` absorbable into `C·(1 + x²)` and multiplied by the Gaussian factor `exp(-x²/c')`,
-matching the `C·(1 + x²)·exp(-x²/c')` conclusion form (no signature change to the conclusion). A
-heavy-tailed `pX` (e.g. standard Cauchy `1/(π(1+y²))`) has `∫y²·pX = ∞`, so `hpX_mom` is **not
-satisfiable** for it — it is honestly excluded from the statement's scope rather than being a
-counterexample to a claimed-universal bound (the prior false-statement defect was that no moment
-hypothesis was present, so the bound was asserted for all pX including Cauchy, where it is false).
-Finite second moment is the standard de Bruijn regularity precondition; it is a regularity hyp, NOT
-load-bearing.
+This is honestly **true for polynomial-tail finite-variance pX** (the judgment-log-#15 counterexample
+`(2/π)/(1+y²)²` is *inside* scope — the envelope does not claim Gaussian tail), and heavy-tailed `pX`
+with infinite variance (e.g. Cauchy) is honestly excluded by the regularity hyp `hpX_mom`. All hyps
+(`hpX_mass`/`hpX_mom` included) are pX-system regularity, NOT load-bearing.
 
-The body Gaussian-tail majorant construction (STEP D bridge + `gaussianPDFReal_le_prefactor` +
-moment expansion) is not yet implemented, so this remains an **honest sorry** to be discharged in
-Phase 5-G (L-PT-γ/δ).
-
-**INDEPENDENT HONESTY AUDIT (2026-05-31, fresh auditor, commit `23ea70a`): verdict false_statement
-(tier 5) — 案A does NOT fix the defect; it REPLACES the Cauchy counterexample with a polynomial-tail
-counterexample. The restate is REJECTED.** The added `hpX_mom` (finite 2nd moment) is insufficient
-for the `exp(-x²/c')` (Gaussian-tail) conclusion. Two mutually exclusive routes both fail:
-(1) **prefactor route** (the one the docstring/plan §1302-1308 actually describe): `gaussianPDFReal_le_prefactor`
-bounds `g_s(x-y) ≤ pref(s) = (√(2πs))⁻¹`, a CONSTANT in x — it DROPS the `exp(-(x-y)²/2s)` factor
-(verified at `FisherInfoV2DeBruijnPerTime.lean:115-126`; the plan's `pref(s)·exp(-(x-y)²/2s)級`
-parenthetical at §1303 is wishful, not what the lemma gives). This yields only a POLYNOMIAL majorant
-`A·x²+B·x+C` (finite under `hpX_mom`/`hpX_mass`, true), but a polynomial does NOT satisfy
-`≤ C(1+x²)exp(-x²/c')`: for any fixed C,c' the Gaussian RHS → 0 while the polynomial → ∞, so it fails
-for all large x. The plan's "多項式は (1+x²) に吸収可能" (§1308) is the error — absorption into `(1+x²)`
-is fine, but the `exp(-x²/c')` factor still kills the RHS below the polynomial.
-(2) **keep-Gaussian route**: to factor `exp(-x²/c')` out of `∫pX(y)g_s(x-y)(x-y)²dy` one needs the MGF
-`∫pX(y)exp(xy/s)dy < ∞` (the ORIGINAL defect note at the old `:483` was CORRECT), which is ∞ for any
-polynomial-tail pX, not only Cauchy.
-**Counterexample satisfying ALL hypotheses** (`hpX_nn`/`hpX_meas`/`hpX_int`/`hpX_mass`/`hpX_mom`):
-`pX(y) = (2/π)·1/(1+y²)²`. Verified: `∫pX = 1` (exact, `∫1/(1+y²)² = π/2`), `∫y²·pX = 1 < ∞` (exact,
-`∫y²/(1+y²)² = π/2`) so `hpX_mom` holds — yet its convolution-density 2nd derivative
-`∂²_x p_s(x) = ∫pX(y)g_s(x-y)((x-y)²/s²−1/s)dy` decays only POLYNOMIALLY `~const/x²` (numerically:
-`I(x)·x²` ≈ const ≈ 1e-5 over x∈[20,300]; `I(x) >> C(1+x²)exp(-x²/c')` already at x=200 for C=c'=1e3,
-gap widening to 1e-11 vs 1e-32 at x=300). So the Gaussian-tail conclusion is FALSE for this pX.
-Finite 2nd moment is NOT the right precondition; the conclusion would require a sub-Gaussian / finite-MGF
-tail condition (e.g. `∫pX(y)exp(a|y|)dy < ∞`), which is MUCH stronger and excludes all polynomial-tail
-densities. **Orchestrator action: this commit's defect-removal must be reverted (or the conclusion
-weakened to a polynomial majorant `‖∂²_x p_s x‖ ≤ A(1+x²)`, which IS provable under finite 2nd moment
-— but then `_chain_domination`'s separated-product integrability FAILS, exactly the §judgment-log-#13
-obstruction, so 案B joint strategy is the real fix). Mark restored below pending rewrite.**
-
-@audit:defect(false-statement)
-@audit:retract-candidate(finite-2nd-moment-insufficient-polynomial-tail-counterexample: GAP②-Gaussian-tail-false-for-pX∝1/(1+y²)²)
+The envelope construction (STEP D bridge + Tonelli + g_s moment) is not yet implemented, so this
+remains an **honest sorry** to be discharged in Phase 5-G.
 @residual(plan:epi-debruijn-pertime-closure) -/
-private theorem convDensityAdd_deriv2_tail_majorant
+private theorem convDensityAdd_deriv2_poly_moment_majorant
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
     (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
     {t : ℝ} (ht : 0 < t) :
-    ∃ C c' : ℝ, 0 < c' ∧ 0 ≤ C ∧
+    ∃ bound : ℝ → ℝ, Integrable bound volume ∧
       ∀ᵐ x ∂volume, ∀ s : ℝ, (hs : s ∈ Set.Ioo (t/2) (2*t)) →
         ‖deriv (deriv (convDensityAdd pX
             (gaussianPDFReal 0 ⟨s, le_of_lt (by have := hs.1; linarith : (0:ℝ) < s)⟩))) x‖
-          ≤ C * (1 + x ^ 2) * Real.exp (-x ^ 2 / c') := by
+          ≤ bound x := by
   sorry -- @residual(plan:epi-debruijn-pertime-closure)  -- GAP②
 
-/-- **§5G-2: full-entDeriv Gaussian-tail domination group (L-PT-γ, max cost).**
+/-- **§5G-2: full-entDeriv joint-domination group (L-PT-γ, 案B joint strategy).**
 Produces an integrable majorant `bound` dominating the **full** entropy σ-derivand
 `(- log (pPath s x) - 1) · ((1/2)·∂²_x pPath s x)` over the `t`-neighborhood
-`Set.Ioo (t/2) (2*t)`. The integrability is genuine because the σ-derivand is taken as a
-*product*: the Gaussian-tail decay of the spatial 2nd-derivative factor `∂²_x p_s x`
-(super-polynomial in `x`) absorbs the `~x²` growth of the log factor, so the product has a
-Lebesgue-integrable majorant.
+`Set.Ioo (t/2) (2*t)`. On `Ioo (t/2)(2*t)` with `t > 0` we have `s > t/2 > 0`, so the NNReal
+variance witness `⟨s, _⟩` is well-defined (no `max s 0` needed).
 
-**False-statement fix (2026-05-31, §Phase 5-G case A)**: the previous statement dominated the
-**log factor alone** `(- log (pPath s x) - 1)` over `∀ s ∈ Set.univ`. That statement is FALSE:
-(a) for `pX = N(0,1)`, `- log p_s x - 1 = (1/2)log(2π(1+s)) + x²/(2(1+s)) - 1`, which diverges as
-`s → ∞` (so the `∀ s ∈ univ` quantifier is unsatisfiable by any single integrand bound), and
-(b) the log factor alone grows `~x²` in `x`, which is Lebesgue **non-integrable** (no integrable
-majorant exists). The fix dominates the **full σ-derivand product** (the `∂²_x p` Gaussian tail
-kills the `x²` factor → integrable) over a **bounded `t`-neighborhood** `Ioo (t/2)(2*t)` (so
-`s` stays in a compact away-from-0/∞ window), which is the true, satisfiable shape
-(proof-pivot-advisor confirmed). On `Ioo (t/2)(2*t)` with `t > 0` we have `s > t/2 > 0`, so the
-NNReal variance witness `⟨s, _⟩` is well-defined (no `max s 0` needed).
+**案B joint-domination wiring (2026-05-31, judgment log #16/#17)**: the body `obtain`s two
+`s`-uniform regularity helpers and forms their *joint* product envelope:
+- §5G-2a / GAP① (`convDensityAdd_logFactor_poly_majorant`, genuine `@audit:ok`): an `s`-uniform
+  polynomial majorant `A + B·x²` for the log factor `-log p_s x - 1`;
+- §5G-2b / GAP② (`convDensityAdd_deriv2_poly_moment_majorant`, honest sorry, polynomial-moment
+  restate): an `s`-uniform **integrable envelope** `hessBound x` for the spatial Hessian
+  `∂²_x p_s x` (keeping the `g_s` Gaussian inside the convolution; NO Gaussian-tail claim).
 
-**Genuine-wiring split (2026-05-31)**: the former monolithic `sorry` is **factored** into
-genuine wiring over two named regularity helpers. The body is now **genuine** (0 local sorry):
-it `obtain`s an `s`-uniform polynomial majorant `A + B·x²` for the log factor
-(`convDensityAdd_logFactor_poly_majorant`, §5G-2a / GAP①) and an `s`-uniform Gaussian-tail
-majorant `C·(1+x²)·exp(-x²/c')` for the spatial Hessian (`convDensityAdd_deriv2_tail_majorant`,
-§5G-2b / GAP②), then (i) proves the product majorant `(A+B·x²)·((1/2)·C·(1+x²)·exp(-x²/c'))` is
-Lebesgue integrable (genuine: expands to a finite combination of `x^{0,2,4}·exp(-(1/c')x²)`,
-each integrable via `integrable_natPow_mul_exp_neg_mul_sq`), and (ii) proves the domination
-`‖LogFactor · (1/2·Hess)‖ ≤ bound` via `norm_mul` + `mul_le_mul`. The remaining honest `sorry`s
-are localized in the two named helpers GAP①/GAP② (Mathlib/repo-absent: convolution-density
-Gaussian lower bound + `deriv∘deriv` → STEP-D bridge, plan L-PT-γ/δ).
+The joint majorant is `(A + B·x²)·((1/2)·hessBound x)`. Its integrability is the analytic core,
+discharged via **route II = Tonelli + g_s moment** (the only honest route, judgment log #17):
+`∫_x (A+Bx²)·(1/2)hessBound x dx = (1/2)∫_y pX(y)·K(y) dy` where `K(y)` is a degree-2 polynomial in
+`y` (from `∫_u (A+B(u+y)²)·g_s(u)·|u²/s²−1/s| du` after `u = x−y` and the even-moment closed forms of
+`g_s`), so the outer integral collapses to `c0 + c1·∫y·pX + c2·∫y²·pX < ∞` (mass + first + second
+moment, all finite under `hpX_mass`/`hpX_mom`; the first moment is dominated by `2|y| ≤ 1+y²`).
 
-All hyps are pX-system regularity; the existential output is integrand-level domination. The
-`@residual` is transitive (the sorries now live in the named §5G-2a/§5G-2b helpers), kept here
-so the file-level residual grep still reflects this declaration's dependency.
+**Why route I is forbidden (judgment log #17, proof-pivot-advisor mpmath verification)**: the
+Hessian envelope `hessBound x` decays only **polynomially** `~const/x⁴` in `x` (the `g_s` Gaussian
+factor is dominated/killed by polynomial-tail `pX`, e.g. `(2/π)/(1+y²)²`). The closed-form route
+"bound `hessBound` by `x^{0,2,4}·exp(-(1/c)x²)` and close with `integrable_natPow_mul_exp_neg_mul_sq`"
+is **FALSE for polynomial-tail finite-variance pX** (it is the case-A defect re-emerging — the old
+Gaussian-tail `exp(-x²/c')` factor does not exist). Route II keeps the integrability honest by never
+asserting a Gaussian-tail closed form; the Gaussian decay only ever appears inside `g_s` under the
+moment integral.
 
-Independent honesty audit (2026-05-31, fresh auditor, §5G-2 wiring commit `cf88267`): verdict
-honest_residual (transitive). **0 local sorry** — the former monolithic sorry is genuinely
-removed. **Genuine wiring (core-reconstruction test PASS)**: granting the two helpers' existential
-outputs (`⟨A,B,…⟩` log majorant, `⟨C,c',…⟩` Hessian majorant) does NOT auto-discharge the
-domination conclusion; the body genuinely constructs the product majorant
-`(A+B·x²)·((1/2)·C·(1+x²)·exp(-x²/c'))` then (i) proves its integrability by a `ring`-expansion
-into `x^{0,2,4}·exp(-(1/c')x²)` + 3× `integrable_natPow_mul_exp_neg_mul_sq` (`@audit:ok`,
-sorryAx-free), and (ii) proves the domination via `norm_mul` + `mul_le_mul` +
-`mul_le_mul_of_nonneg_left`. The helper outputs are `obtain`ed (genuinely consumed), NOT bundled
-as load-bearing hypotheses. NOT circular, NOT load-bearing, NOT name-laundering (carries
-`@residual`). The false-statement fix (judgment log #11: full-σ-derivand product over bounded
-`Ioo (t/2,2t)`, not log-factor-alone over `univ`) makes the dominated statement true and
-satisfiable.
-
-Independent honesty audit (2026-05-31, fresh auditor, hpX_mass threading commit `b53107a`): verdict
-honest_residual. **Update**: GAP① (`convDensityAdd_logFactor_poly_majorant`) is now genuine
-(sorryAx-free, `@audit:ok` this commit), so the transitive `sorryAx` here comes **only** from GAP②
-(`convDensityAdd_deriv2_tail_majorant`, still `@residual(plan:…)`). The new `hpX_mass` hyp is honest
-regularity threaded to GAP①'s normalization need (NOT load-bearing). Body is genuine wiring (0 local
-sorry); the single remaining residual is GAP②. @residual kept (transitive over the GAP② plan wall).
-
-**INDEPENDENT HONESTY AUDIT (2026-05-31, fresh auditor, commit `23ea70a`): the claim that GAP② is
-"restated TRUE" is REJECTED — verdict false_statement (transitive-via-GAP②), still tier 5.** The
-consumed helper GAP② (`convDensityAdd_deriv2_tail_majorant`) remains a false-statement defect even
-WITH `hpX_mass` + `hpX_mom`: finite 2nd moment is insufficient for its `exp(-x²/c')` Gaussian-tail
-Hessian conclusion (counterexample `pX(y) = (2/π)/(1+y²)²` satisfies all five hyps incl. `hpX_mom`
-but has only POLYNOMIAL `~1/x²` 2nd-derivative decay; see GAP② docstring audit note). Therefore this
-body's product-majorant integrability proof (`(A+Bx²)·C(1+x²)exp(-x²/c')` → finite sum of
-`x^{0,2,4}·exp(-(1/c')x²)`) is STILL **VACUOUS-GENUINE**: locally sorry-free but resting on GAP②'s
-false `exp(-x²/c')` Hessian decay. The `_chain_domination` STATEMENT (∃ integrable majorant over
-`Ioo(t/2,2t)`) is itself TRUE for general finite-2nd-moment pX (the true product
-`(-log p_s)·∂²p_s ~ (log x)/x²·...` is integrable), but it is **NOT provable via the GAP①×GAP②
-separated-product strategy** — GAP①'s `~x²` log-factor overestimate times any HONEST Hessian bound
-(only polynomial `~1/x²` for polynomial-tail pX) gives a NON-integrable `~const` product majorant.
-This is exactly the §judgment-log-#13 obstruction, which 案A did NOT remove (it only narrowed the
-class from "all pX" to "finite-2nd-moment pX", but the obstruction persists on polynomial-tail
-finite-2nd-moment pX). **DO NOT build further genuine claims downstream of this wiring until GAP② is
-rewritten — either weaken GAP②/`_chain_domination` to a polynomial majorant (then this separated body
-fails integrability) or adopt the 案B joint entropy-finiteness strategy.** Body type-checks (GAP②
-conclusion form invariant under the hyp addition) but type-check passing ≠ honest.
-
-@audit:defect(false-statement)
+The `_chain_domination` statement (∃ integrable majorant over `Ioo (t/2,2t)`) is TRUE for general
+finite-2nd-moment pX, and the joint-domination wiring is the genuine route to it (no separated
+Gaussian-tail product, no false-statement dependency). All hyps are pX-system regularity; the
+existential output is integrand-level domination. The honest residual is localized in (a) the GAP②
+poly-moment envelope (§5G-2b) and (b) the joint envelope integrability core (route II Tonelli+moment,
+first goal below); the domination goal (second) is closed genuinely by `norm_mul`/`mul_le_mul`. The
+`@residual` is kept (transitive over GAP② + the integrability core).
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_domination
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -627,36 +555,30 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
             * ((1/2) * deriv (deriv (convDensityAdd pX
               (gaussianPDFReal 0 ⟨s, le_of_lt (by have := hs.1; linarith : (0:ℝ) < s)⟩))) x)‖
           ≤ bound x) := by
-  -- The σ-derivand at `s` is the product `LogFactor(s,x) · ((1/2)·Hess(s,x))`:
-  --   LogFactor(s,x) = - log (p_s x) - 1     (poly-in-x growth, GAP①)
-  --   Hess(s,x)      = ∂²_x p_s x            (Gaussian super-poly tail decay, GAP②).
-  -- §5G-2a (GAP①) gives an `s`-uniform polynomial majorant for the log factor;
-  -- §5G-2b (GAP②) gives an `s`-uniform Gaussian-tail majorant for the spatial Hessian.
-  -- The product of (poly) × (poly × Gaussian) is poly × Gaussian = Lebesgue integrable.
+  -- 案B joint domination: the σ-derivand at `s` is the product
+  --   LogFactor(s,x) = - log (p_s x) - 1     (poly-in-x growth, GAP① `A + B·x²`)
+  --   (1/2)·Hess(s,x) = (1/2)·∂²_x p_s x     (integrable envelope `(1/2)·hessBound x`, GAP②).
+  -- GAP① gives an `s`-uniform polynomial majorant for the log factor;
+  -- GAP② (poly-moment restate) gives an `s`-uniform integrable envelope `hessBound` for the Hessian.
   obtain ⟨A, B, hB_nn, hLog⟩ :=
     convDensityAdd_logFactor_poly_majorant pX hpX_nn hpX_meas hpX_int hpX_mass ht
-  obtain ⟨C, c', hc'_pos, hC_nn, hHess⟩ :=
-    convDensityAdd_deriv2_tail_majorant pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
-  -- the integrable majorant: (A + B·x²) · ((1/2)·C·(1+x²)·exp(-x²/c')).
-  refine ⟨fun x => (A + B * x ^ 2) * ((1/2) * (C * (1 + x ^ 2) * Real.exp (-x ^ 2 / c'))), ?_, ?_⟩
-  · -- integrability: expand into a finite sum of `x^k · exp(-b·x²)` terms (poly × Gaussian).
-    have hb : (0:ℝ) < 1 / c' := by positivity
-    -- `exp(-x²/c') = exp(-(1/c')·x²)`.
-    have hexp_eq : ∀ x : ℝ, Real.exp (-x ^ 2 / c') = Real.exp (-(1/c') * x ^ 2) := by
-      intro x; congr 1; rw [neg_div, div_eq_inv_mul]; ring
-    -- the bound equals a polynomial combination of `x^{0,2,4}·exp(-(1/c')x²)`.
-    have hbound_eq : (fun x : ℝ => (A + B * x ^ 2) * ((1/2) * (C * (1 + x ^ 2)
-          * Real.exp (-x ^ 2 / c'))))
-        = fun x : ℝ =>
-            ((1/2 * (A * C)) * (x ^ 0 * Real.exp (-(1/c') * x ^ 2))
-            + (1/2 * (A * C) + 1/2 * (B * C)) * (x ^ 2 * Real.exp (-(1/c') * x ^ 2))
-            + (1/2 * (B * C)) * (x ^ 4 * Real.exp (-(1/c') * x ^ 2))) := by
-      funext x; rw [hexp_eq x]; ring
-    rw [hbound_eq]
-    refine ((((integrable_natPow_mul_exp_neg_mul_sq hb 0).const_mul _).add
-      ((integrable_natPow_mul_exp_neg_mul_sq hb 2).const_mul _)).add
-      ((integrable_natPow_mul_exp_neg_mul_sq hb 4).const_mul _))
-  · -- domination: `‖LogFactor · (1/2 · Hess)‖ ≤ (A + B·x²)·((1/2)·C·(1+x²)·exp(-x²/c'))`.
+  obtain ⟨hessBound, hHess_int, hHess⟩ :=
+    convDensityAdd_deriv2_poly_moment_majorant pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
+  -- the joint majorant: (A + B·x²) · ((1/2)·hessBound x).
+  refine ⟨fun x => (A + B * x ^ 2) * ((1/2) * hessBound x), ?_, ?_⟩
+  · -- integrability via route II = Tonelli + g_s moment (judgment log #17, the only honest route):
+    --   ∫_x (A+Bx²)·(1/2)hessBound(x) dx
+    --     = (1/2)∫_x (A+Bx²) ∫_y pX(y)·g_s(x-y)·|(x-y)²/s²−1/s| dy dx     [hessBound STEP-D form]
+    --     = (1/2)∫_y pX(y) · [∫_x (A+Bx²)·g_s(x-y)·|(x-y)²/s²−1/s| dx] dy   [Tonelli, nonneg integrand]
+    --     = (1/2)∫_y pX(y) · K(y) dy                                          [K(y) degree-2 poly in y]
+    --     = (1/2)(c0 + c1·∫y·pX + c2·∫y²·pX) < ∞                              [mass+1st+2nd moment finite]
+    --   K(y)=∫_u(A+B(u+y)²)g_s(u)|u²/s²−1/s|du is degree-2 in y via u=x-y + the even g_s moments;
+    --   the 1st moment ∫y·pX is finite by 2|y| ≤ 1+y² domination (`hpX_int.add hpX_mom`).
+    -- ⚠ `integrable_natPow_mul_exp_neg_mul_sq` is NOT usable here: hessBound decays only
+    --   polynomially ~const/x⁴ (no Gaussian factor survives for polynomial-tail pX, judgment log #17).
+    --   Route I (closed-form `x^k·exp(-x²/c)` majorant) is the deleted case-A defect.
+    sorry -- @residual(plan:epi-debruijn-pertime-closure)  -- joint envelope integrability core (route II Tonelli+moment)
+  · -- domination: `‖LogFactor · (1/2 · Hess)‖ ≤ (A + B·x²)·((1/2)·hessBound x)`, genuine via norm_mul.
     filter_upwards [hLog, hHess] with x hLogx hHessx
     intro s hs
     have hspos : (0:ℝ) < s := by have := hs.1; linarith
@@ -664,21 +586,22 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
     rw [norm_mul]
     have hlf := hLogx s hs
     have hhf := hHessx s hs
-    -- ‖(1/2)·Hess‖ = (1/2)·‖Hess‖ ≤ (1/2)·(C·(1+x²)·exp(-x²/c')).
+    -- hessBound x ≥ ‖Hess‖ ≥ 0, so the envelope is nonneg.
+    have hHB_nn : (0:ℝ) ≤ hessBound x := le_trans (norm_nonneg _) hhf
+    -- ‖(1/2)·Hess‖ = (1/2)·‖Hess‖ ≤ (1/2)·hessBound x.
     have hhalf : ‖(1/2 : ℝ) * deriv (deriv (convDensityAdd pX
         (gaussianPDFReal 0 ⟨s, hspos.le⟩))) x‖
-        ≤ (1/2) * (C * (1 + x ^ 2) * Real.exp (-x ^ 2 / c')) := by
+        ≤ (1/2) * hessBound x := by
       rw [norm_mul]
-      have : ‖(1/2 : ℝ)‖ = 1/2 := by rw [Real.norm_eq_abs]; rw [abs_of_pos]; norm_num
-      rw [this]
-      have hHnn : (0:ℝ) ≤ C * (1 + x ^ 2) * Real.exp (-x ^ 2 / c') := by positivity
+      have hhn : ‖(1/2 : ℝ)‖ = 1/2 := by rw [Real.norm_eq_abs]; rw [abs_of_pos]; norm_num
+      rw [hhn]
       exact mul_le_mul_of_nonneg_left hhf (by norm_num)
-    -- combine: ‖LogFactor‖·‖(1/2)Hess‖ ≤ (A+B·x²)·((1/2)·C·(1+x²)·exp(-x²/c')).
+    -- combine: ‖LogFactor‖·‖(1/2)Hess‖ ≤ (A+B·x²)·((1/2)·hessBound x).
     have hLog_nn : (0:ℝ) ≤ A + B * x ^ 2 := le_trans (norm_nonneg _) hlf
     calc ‖(- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hspos.le⟩) x) - 1)‖
             * ‖(1/2 : ℝ) * deriv (deriv (convDensityAdd pX
                 (gaussianPDFReal 0 ⟨s, hspos.le⟩))) x‖
-          ≤ (A + B * x ^ 2) * ((1/2) * (C * (1 + x ^ 2) * Real.exp (-x ^ 2 / c'))) := by
+          ≤ (A + B * x ^ 2) * ((1/2) * hessBound x) := by
             apply mul_le_mul hlf hhalf (norm_nonneg _) hLog_nn
 
 /-- **Fisher integrability of the time-`t` convolution density (Mathlib/repo wall).**
