@@ -129,51 +129,300 @@ private theorem integrable_natPow_mul_exp_neg_mul_sq {b : ℝ} (hb : 0 < b) (k :
     funext x; rw [Real.rpow_natCast]
   rwa [hcongr] at hrpow
 
-/-- **§5G-2a (GAP①): `s`-uniform polynomial majorant for the log factor.**
+/-- **Closed-form Gaussian pdf upper bound (genuine, Assembly-local).** The centered Gaussian
+density is bounded above by its normalizing prefactor `(√(2πv))⁻¹` (since `exp` of a
+nonpositive exponent is `≤ 1`). Re-proved here because the PerTime version is `private`. -/
+private theorem gaussianPDFReal_le_prefactor' (v : ℝ≥0) (u : ℝ) :
+    gaussianPDFReal 0 v u ≤ (Real.sqrt (2 * Real.pi * v))⁻¹ := by
+  rw [gaussianPDFReal]
+  have hpref_nn : 0 ≤ (Real.sqrt (2 * Real.pi * v))⁻¹ := by positivity
+  have hexp_le : Real.exp (-(u - 0) ^ 2 / (2 * v)) ≤ 1 := by
+    rw [Real.exp_le_one_iff]
+    have : 0 ≤ (u - 0) ^ 2 / (2 * v) := by positivity
+    linarith [neg_div (2 * (v : ℝ)) ((u - 0) ^ 2)]
+  calc (Real.sqrt (2 * Real.pi * v))⁻¹ * Real.exp (-(u - 0) ^ 2 / (2 * v))
+      ≤ (Real.sqrt (2 * Real.pi * v))⁻¹ * 1 := mul_le_mul_of_nonneg_left hexp_le hpref_nn
+    _ = (Real.sqrt (2 * Real.pi * v))⁻¹ := mul_one _
+
+/-- **Convolution density upper bound (genuine, Assembly-local).** For a probability density
+`pX` (`∫ pX = 1`), the convolution density `p_s x = ∫ pX y · g_s(x-y)` is bounded above by the
+Gaussian prefactor `(√(2πs))⁻¹`, uniformly in `x`. (`p_s x ≤ ∫ pX y · prefactor =
+prefactor · ∫ pX = prefactor`.) Used for the lower side of the GAP① `‖·‖` bound. -/
+private theorem convDensityAdd_le_prefactor
+    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
+    (hpX_mass : (∫ y, pX y ∂volume) = 1)
+    {s : ℝ} (hs : 0 < s) (x : ℝ) :
+    convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩) x
+      ≤ (Real.sqrt (2 * Real.pi * (⟨s, hs.le⟩ : ℝ≥0)))⁻¹ := by
+  set pref : ℝ := (Real.sqrt (2 * Real.pi * (⟨s, hs.le⟩ : ℝ≥0)))⁻¹ with hpref
+  have hpref_nn : 0 ≤ pref := by rw [hpref]; positivity
+  -- integrand `F y := pX y * g_s(x-y)` integrable; majorant `pX y * pref` integrable.
+  have hF_int : Integrable (fun y => pX y * gaussianPDFReal 0 ⟨s, hs.le⟩ (x - y)) volume := by
+    refine hpX_int.mul_bdd (c := pref) ?_ ?_
+    · exact ((measurable_gaussianPDFReal 0 ⟨s, hs.le⟩).comp
+        (measurable_const.sub measurable_id)).aestronglyMeasurable
+    · refine Filter.Eventually.of_forall (fun y => ?_)
+      rw [Real.norm_eq_abs, abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (x - y))]
+      exact gaussianPDFReal_le_prefactor' ⟨s, hs.le⟩ (x - y)
+  have hmaj_int : Integrable (fun y => pX y * pref) volume := hpX_int.mul_const _
+  -- `∫ F ≤ ∫ (pX · pref) = pref · ∫ pX = pref`.
+  have hle : (∫ y, pX y * gaussianPDFReal 0 ⟨s, hs.le⟩ (x - y) ∂volume)
+      ≤ ∫ y, pX y * pref ∂volume := by
+    refine integral_mono hF_int hmaj_int (fun y => ?_)
+    exact mul_le_mul_of_nonneg_left (gaussianPDFReal_le_prefactor' ⟨s, hs.le⟩ (x - y)) (hpX_nn y)
+  rwa [integral_mul_const, hpX_mass, one_mul] at hle
+
+/-- Monotonicity of the centered Gaussian pdf in `|·|` (Assembly-local re-proof of the
+PerTime `private` version): if `|u| ≤ |w|` then `g_v(w) ≤ g_v(u)`. -/
+private theorem gaussianPDFReal_antitone_abs'
+    (v : ℝ≥0) {u w : ℝ} (huw : |u| ≤ |w|) :
+    gaussianPDFReal 0 v w ≤ gaussianPDFReal 0 v u := by
+  simp only [gaussianPDFReal, sub_zero]
+  have hpref_nn : 0 ≤ (Real.sqrt (2 * Real.pi * v))⁻¹ := by positivity
+  refine mul_le_mul_of_nonneg_left ?_ hpref_nn
+  rw [Real.exp_le_exp]
+  have hsq : u ^ 2 ≤ w ^ 2 := by
+    have := pow_le_pow_left₀ (abs_nonneg u) huw 2
+    rwa [sq_abs, sq_abs] at this
+  rcases eq_or_lt_of_le (show (0:ℝ) ≤ 2 * v from by positivity) with hv0 | hvpos
+  · rw [← hv0]; simp
+  · rw [neg_div, neg_div, neg_le_neg_iff]; gcongr
+
+/-- **Uniform-`R` Gaussian lower bound (genuine, Assembly-local).** A single tightness radius
+`R > 0`, *independent of `s`*, with `(1/2)·g_s(|x|+R) ≤ convDensityAdd pX g_s x` for every
+`s > 0` and `x`. The PerTime `convDensityAdd_lower_bound_gaussian` produces an `R` per `s`; for
+the `s`-uniform GAP① majorant the same tightness radius (`∫_{[-R,R]} pX ≥ 1/2`, which depends
+only on `pX`) must be reused across all `s`, so the tightness step is hoisted out and the per-`s`
+box-drop + Gaussian-monotonicity argument is applied with the common `R`. -/
+private theorem convDensityAdd_lower_bound_gaussian_uniformR
+    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
+    (hpX_mass : (∫ y, pX y ∂volume) = 1) :
+    ∃ R : ℝ, 0 < R ∧ ∀ (s : ℝ) (hs : 0 < s) (x : ℝ),
+      (1/2) * gaussianPDFReal 0 ⟨s, hs.le⟩ (|x| + R)
+        ≤ convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩) x := by
+  classical
+  -- STEP 1 (tightness, `s`-independent): `∃ R > 0, ∫_{[-R,R]} pX ≥ 1/2`.
+  obtain ⟨R, hR_pos, hR_mass⟩ :
+      ∃ R : ℝ, 0 < R ∧ (1:ℝ)/2 ≤ ∫ y in Set.Icc (-R) R, pX y ∂volume := by
+    set sN : ℕ → Set ℝ := fun n => Set.Icc (-(n:ℝ)) (n:ℝ) with hsN_def
+    have hsN_meas : ∀ n, MeasurableSet (sN n) := fun n => measurableSet_Icc
+    have hsN_mono : Monotone sN := by
+      intro m n hmn
+      apply Set.Icc_subset_Icc
+      · exact neg_le_neg (by exact_mod_cast hmn)
+      · exact_mod_cast hmn
+    have hsN_union : (⋃ n, sN n) = Set.univ := by
+      rw [Set.eq_univ_iff_forall]
+      intro y
+      obtain ⟨n, hn⟩ := exists_nat_ge |y|
+      refine Set.mem_iUnion.mpr ⟨n, ?_⟩
+      rw [hsN_def]; simp only [Set.mem_Icc]
+      rw [abs_le] at hn; exact ⟨hn.1, hn.2⟩
+    have hfi : IntegrableOn pX (⋃ n, sN n) volume := by
+      rw [hsN_union]; exact hpX_int.integrableOn
+    have htends := tendsto_setIntegral_of_monotone hsN_meas hsN_mono hfi
+    rw [hsN_union, setIntegral_univ, hpX_mass] at htends
+    have hev : ∀ᶠ n in Filter.atTop, (1:ℝ)/2 < ∫ y in sN n, pX y ∂volume :=
+      htends.eventually (eventually_gt_nhds (by norm_num : (1:ℝ)/2 < 1))
+    obtain ⟨N, hN⟩ := (hev.and (Filter.eventually_gt_atTop 0)).exists
+    refine ⟨(N:ℝ), by exact_mod_cast hN.2, ?_⟩
+    rw [hsN_def] at hN; exact hN.1.le
+  refine ⟨R, hR_pos, fun s hs x => ?_⟩
+  set g : ℝ → ℝ := gaussianPDFReal 0 ⟨s, hs.le⟩ with hg_def
+  -- integrand `F y := pX y * g (x - y)` nonnegative + integrable.
+  set F : ℝ → ℝ := fun y => pX y * g (x - y) with hF_def
+  have hF_nn : ∀ y, 0 ≤ F y := fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ (x - y))
+  have hF_int : Integrable F volume := by
+    refine hpX_int.mul_bdd (c := (Real.sqrt (2 * Real.pi * (⟨s, hs.le⟩ : ℝ≥0)))⁻¹) ?_ ?_
+    · exact ((measurable_gaussianPDFReal 0 ⟨s, hs.le⟩).comp
+        (measurable_const.sub measurable_id)).aestronglyMeasurable
+    · refine Filter.Eventually.of_forall (fun y => ?_)
+      rw [Real.norm_eq_abs, abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (x - y))]
+      exact gaussianPDFReal_le_prefactor' ⟨s, hs.le⟩ (x - y)
+  -- STEP 2: drop the integral to the box `Icc (-R) R`.
+  have hbox_le : (∫ y in Set.Icc (-R) R, F y ∂volume) ≤ ∫ y, F y ∂volume :=
+    setIntegral_le_integral hF_int (Filter.Eventually.of_forall hF_nn)
+  -- STEP 3: on the box, `g (x-y) ≥ g (|x| + R)`.
+  have hbox_lb : (1/2) * g (|x| + R) ≤ ∫ y in Set.Icc (-R) R, F y ∂volume := by
+    have hxR_nn : 0 ≤ |x| + R := add_nonneg (abs_nonneg x) hR_pos.le
+    have hpt : ∀ y ∈ Set.Icc (-R) R, pX y * g (|x| + R) ≤ F y := by
+      intro y hy
+      have hy_abs : |x - y| ≤ |x| + R := by
+        have h1 : |x - y| ≤ |x| + |y| := abs_sub _ _
+        have h2 : |y| ≤ R := abs_le.mpr ⟨hy.1, hy.2⟩
+        linarith
+      have hmono : g (|x| + R) ≤ g (x - y) := by
+        rw [hg_def]
+        refine gaussianPDFReal_antitone_abs' ⟨s, hs.le⟩ ?_
+        rwa [abs_of_nonneg hxR_nn]
+      exact mul_le_mul_of_nonneg_left hmono (hpX_nn y)
+    have hlb_int : IntegrableOn (fun y => pX y * g (|x| + R)) (Set.Icc (-R) R) volume :=
+      hpX_int.integrableOn.mul_const _
+    have hstep : (∫ y in Set.Icc (-R) R, pX y * g (|x| + R) ∂volume)
+        ≤ ∫ y in Set.Icc (-R) R, F y ∂volume :=
+      setIntegral_mono_on hlb_int hF_int.integrableOn measurableSet_Icc hpt
+    rw [integral_mul_const] at hstep
+    have hg_nn : 0 ≤ g (|x| + R) := by rw [hg_def]; exact gaussianPDFReal_nonneg 0 _ _
+    have hhalf : g (|x| + R) * (1/2) ≤ g (|x| + R) * ∫ y in Set.Icc (-R) R, pX y ∂volume :=
+      mul_le_mul_of_nonneg_left hR_mass hg_nn
+    calc (1/2) * g (|x| + R)
+        = g (|x| + R) * (1/2) := by ring
+      _ ≤ g (|x| + R) * ∫ y in Set.Icc (-R) R, pX y ∂volume := hhalf
+      _ = (∫ y in Set.Icc (-R) R, pX y ∂volume) * g (|x| + R) := by rw [mul_comm]
+      _ ≤ ∫ y in Set.Icc (-R) R, F y ∂volume := hstep
+  calc (1/2) * g (|x| + R)
+      ≤ ∫ y in Set.Icc (-R) R, F y ∂volume := hbox_lb
+    _ ≤ ∫ y, F y ∂volume := hbox_le
+    _ = convDensityAdd pX g x := rfl
+
+/-- **§5G-2a (GAP①): `s`-uniform polynomial majorant for the log factor — GENUINE (0 sorry).**
 On the `t`-neighborhood `Set.Ioo (t/2) (2*t)` (where `t/2 < s`, hence `s > 0`), the entropy
 log-factor `- log (p_s x) - 1` of the convolution density `p_s = convDensityAdd pX g_s` admits
 a polynomial-in-`x²` majorant uniform in `s`:
-`‖- log (p_s x) - 1‖ ≤ A + B·x²` with `B ≥ 0`.
+`‖- log (p_s x) - 1‖ ≤ A + B·x²` with `B ≥ 0` (concretely `B = 2/t`).
 
-The bound follows from a Gaussian *lower* bound on the convolution density
-`p_s x ≥ c·exp(-(|x|+R)²/(2s))` (the mass of `pX` on a bounded set, pushed down by the
-Gaussian kernel value): taking `log` gives `- log (p_s x) ≤ - log c + (|x|+R)²/(2s) ≤ A + B·x²`
-(uniform in `s` on the bounded window `s ∈ (t/2, 2t)`). **The route is "take the `log` of the
-lower bound"** (`Real.log_le_log` + `Real.log_exp`), NOT `one_sub_inv_le_log_of_pos`
-(`-log p ≤ p⁻¹-1` would make `p⁻¹ ~ exp(+x²)` and the majorant non-integrable).
+**Closure (2026-05-31)**: now fully proved (was `sorry`). Two-sided `abs_le`:
+- **upper** (`- log p_s x - 1 ≤ A + B·x²`): the `s`-uniform Gaussian lower bound
+  `(1/2)·g_s(|x|+R) ≤ p_s x` (`convDensityAdd_lower_bound_gaussian_uniformR`, a single tightness
+  radius `R` reused across all `s`) + `Real.log_le_log`, then the closed form
+  `-log((1/2)g_s(|x|+R)) = log 2 + (1/2)log(2πs) + (|x|+R)²/(2s)`; on `s ∈ (t/2,2t)` use
+  `(1/2)log(2πs) ≤ (1/2)log(4πt)` (`s<2t`) and `(|x|+R)²/(2s) ≤ (2x²+2R²)/t` (`s>t/2`,
+  `(|x|+R)²≤2x²+2R²`).
+- **lower** (`-(A+B·x²) ≤ - log p_s x - 1`): `p_s x ≤ (√(2πs))⁻¹` (`convDensityAdd_le_prefactor`,
+  `g_s ≤ prefactor` + `∫pX=1`) ⇒ `-log p_s x ≥ (1/2)log(2πs) ≥ (1/2)log(πt)` (`s>t/2`), a constant
+  lower bound absorbed by `A`. `p_s x > 0` from `convDensityAdd_pos` (uses `0 < ∫ pX`).
+The route is "log of the lower bound" (`Real.log_le_log`+`Real.log_exp`), NOT `-log p ≤ p⁻¹-1`
+(which would blow up as `exp(+x²)`).
 
-All hyps are pX-system regularity; the existential output is a pointwise polynomial bound.
-The remaining honest `sorry` is the convolution-density Gaussian lower bound (Mathlib/repo
-absent — convolution lower bounds and Gaussian density lower bounds are both `Found 0`).
-
-Independent honesty audit (2026-05-31, fresh auditor, §5G-2 wiring commit `cf88267`): verdict
-honest_residual. **Signature honest**: all hyps are pX-system regularity (`hpX_nn`/`hpX_meas`/
-`hpX_int`) + `ht`; the conclusion is an existential pointwise polynomial bound, NOT bundled into
-a hypothesis (no `*Hypothesis` predicate, no conclusion-as-hyp). **Satisfiability TRUE**: on the
-bounded window `s ∈ Ioo (t/2, 2t)` (each `s > t/2 > 0`, compact away from 0/∞), the convolution
-density has a Gaussian lower bound `p_s x ≥ c·exp(-(|x|+R)²/(2s))` (positive mass of pX on a
-bounded set × Gaussian kernel value), so `-log p_s x ≤ A + B·x²` uniformly in `s`. The two
-false-statement defects caught earlier (judgment log #11: log factor alone + `∀ s∈univ` `s→∞`
-divergence, and `p⁻¹~exp(+x²)` blow-up via `one_sub_inv_le_log_of_pos`) are BOTH avoided here:
-the bound is `s`-uniform on the bounded `Ioo` window (no `s→∞`), and the route is "log of the
-lower bound" (`Real.log_le_log` + `Real.log_exp`), NOT `p⁻¹-1`. **Classification `plan:` correct**
-(NOT `wall:`): the Gaussian lower bound is an elementary self-contained integral lower-bound
-(positive mass × kernel minimum on bounded set), within plan analytic plumbing — distinct from
-the genuine Mathlib gap `wall:fisher-finiteness` (Stam convolution Fisher bound, PR-level). The
-loogle `Found 0` reflects "elementary but not in Mathlib", not a deep wall (judgment log #12
-separates #2/GAP from #4/Fisher; only #4 promoted toward `wall:`). @residual kept.
-
-@residual(plan:epi-debruijn-pertime-closure) -/
+`hpX_mass : ∫ pX = 1` is an honest probability-density regularity precondition (threaded from
+`debruijnIdentityV2_holds_assembled`, supplied via `(P.map X) univ = 1`); it feeds
+`convDensityAdd_lower_bound_gaussian_uniformR` / `_le_prefactor` / `_pos`. NOT load-bearing
+(the majorant inequality is derived, not assumed). `B ≥ 0` and the existential output are genuine. -/
 private theorem convDensityAdd_logFactor_poly_majorant
-    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_int : Integrable pX volume)
+    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (_hpX_meas : Measurable pX)
+    (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
     {t : ℝ} (ht : 0 < t) :
     ∃ A B : ℝ, 0 ≤ B ∧
       ∀ᵐ x ∂volume, ∀ s : ℝ, (hs : s ∈ Set.Ioo (t/2) (2*t)) →
         ‖- Real.log (convDensityAdd pX
             (gaussianPDFReal 0 ⟨s, le_of_lt (by have := hs.1; linarith : (0:ℝ) < s)⟩) x) - 1‖
           ≤ A + B * x ^ 2 := by
-  sorry -- @residual(plan:epi-debruijn-pertime-closure)  -- GAP①
+  -- positive mass from `∫ pX = 1` (for `convDensityAdd_pos`).
+  have hpX_pos : 0 < ∫ y, pX y ∂volume := by rw [hpX_mass]; norm_num
+  -- `s`-uniform tightness radius `R > 0` and the Gaussian lower bound.
+  obtain ⟨R, hR_pos, hLB⟩ :=
+    convDensityAdd_lower_bound_gaussian_uniformR pX hpX_nn hpX_int hpX_mass
+  -- constants for the two-sided bound (`B = 2/t`; `A` covers both the upper polynomial
+  -- offset and the lower constant, uniform over `s ∈ Ioo (t/2, 2t)`).
+  set A_up : ℝ := Real.log 2 + (1/2) * Real.log (4 * Real.pi * t) + 2 * R ^ 2 / t - 1 with hA_up
+  set A_lo : ℝ := 1 - (1/2) * Real.log (Real.pi * t) with hA_lo
+  refine ⟨max A_up A_lo, 2 / t, by positivity, ?_⟩
+  -- the bound is pointwise in `x`, holds for every `x` (so trivially a.e.).
+  refine Filter.Eventually.of_forall (fun x s hs => ?_)
+  have hspos : (0:ℝ) < s := by have := hs.1; linarith
+  set g : ℝ → ℝ := gaussianPDFReal 0 ⟨s, hspos.le⟩ with hg_def
+  set p : ℝ := convDensityAdd pX g x with hp_def
+  -- `p > 0` and a closed form for `log` of the Gaussian prefactor.
+  have hp_pos : 0 < p := by
+    rw [hp_def, hg_def]; exact convDensityAdd_pos pX hpX_nn hpX_int hpX_pos hspos x
+  have h2pis_pos : (0:ℝ) < 2 * Real.pi * s := by positivity
+  have hpref_pos : (0:ℝ) < (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹ := by positivity
+  have hcoe : ((⟨s, hspos.le⟩ : ℝ≥0) : ℝ) = s := rfl
+  -- `log pref_s = -(1/2)·log(2πs)`.
+  have hlog_pref : Real.log (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹
+      = -((1/2) * Real.log (2 * Real.pi * s)) := by
+    rw [Real.log_inv, hcoe, Real.log_sqrt h2pis_pos.le]; ring
+  -- ============ upper side: `- log p - 1 ≤ A_up + (2/t)·x²` ============
+  have hxR_nn : (0:ℝ) ≤ |x| + R := add_nonneg (abs_nonneg x) hR_pos.le
+  -- lower bound on `p`: `(1/2)·g(|x|+R) ≤ p`, and `(1/2)·g(|x|+R) > 0`.
+  have hlb := hLB s hspos x
+  rw [← hg_def, ← hp_def] at hlb
+  have hg_xR_pos : 0 < g (|x| + R) := by
+    rw [hg_def]; exact gaussianPDFReal_pos 0 _ _ (by
+      intro h; exact hspos.ne' (congrArg NNReal.toReal h))
+  have hhalf_pos : (0:ℝ) < (1/2) * g (|x| + R) := by positivity
+  -- `log p ≥ log ((1/2)·g(|x|+R))`.
+  have hlog_lb : Real.log ((1/2) * g (|x| + R)) ≤ Real.log p := Real.log_le_log hhalf_pos hlb
+  -- closed form: `log((1/2)·g(|x|+R)) = log(1/2) + log pref_s - (|x|+R)²/(2s)`.
+  -- proved via the defeq natural unfold (RHS keeps the `- 0` and NNReal cast verbatim),
+  -- then reshaped by the `s`-form equation `hlog_reshape`.
+  have hlog_nat : Real.log ((1/2) * g (|x| + R))
+      = Real.log (1/2) + (Real.log ((Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹)
+        + -(|x| + R - 0) ^ 2 / (2 * s)) := by
+    rw [hg_def]
+    simp only [gaussianPDFReal]
+    rw [Real.log_mul (by norm_num) (ne_of_gt (by positivity)),
+      Real.log_mul (ne_of_gt (by positivity)) (Real.exp_ne_zero _), Real.log_exp]
+    rfl
+  have hlog_half : Real.log ((1/2) * g (|x| + R))
+      = Real.log (1/2) + Real.log (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹
+        - (|x| + R) ^ 2 / (2 * s) := by
+    rw [hlog_nat]; ring
+  -- `(|x|+R)²/(2s) ≤ (2/t)·x² + 2R²/t` (using `s > t/2` and `2|x|R ≤ x²+R²`).
+  have hquad : (|x| + R) ^ 2 / (2 * s) ≤ (2 / t) * x ^ 2 + 2 * R ^ 2 / t := by
+    have h2s : t ≤ 2 * s := by have := hs.1; linarith
+    have hnum : (|x| + R) ^ 2 ≤ 2 * x ^ 2 + 2 * R ^ 2 := by
+      have hcross : 2 * |x| * R ≤ x ^ 2 + R ^ 2 := by
+        nlinarith [sq_nonneg (|x| - R), sq_abs x]
+      have hsplit : (|x| + R) ^ 2 = x ^ 2 + 2 * |x| * R + R ^ 2 := by
+        rw [add_sq]; rw [sq_abs]
+      rw [hsplit]; linarith
+    calc (|x| + R) ^ 2 / (2 * s)
+        ≤ (|x| + R) ^ 2 / t := div_le_div_of_nonneg_left (sq_nonneg _) ht h2s
+      _ ≤ (2 * x ^ 2 + 2 * R ^ 2) / t := div_le_div_of_nonneg_right hnum ht.le
+      _ = (2 / t) * x ^ 2 + 2 * R ^ 2 / t := by ring
+  -- `(1/2)·log(2πs) ≤ (1/2)·log(4πt)` (using `s < 2t`).
+  have hlog_2pis_up : (1/2) * Real.log (2 * Real.pi * s) ≤ (1/2) * Real.log (4 * Real.pi * t) := by
+    have hle : 2 * Real.pi * s ≤ 4 * Real.pi * t := by
+      have := hs.2; nlinarith [Real.pi_pos]
+    have := Real.log_le_log h2pis_pos hle; linarith
+  -- assemble the upper bound: `- log p ≤ log 2 + (1/2)log(2πs) + (|x|+R)²/(2s)`.
+  have hupper : - Real.log p - 1 ≤ max A_up A_lo + (2 / t) * x ^ 2 := by
+    have hstep : - Real.log p
+        ≤ Real.log 2 + (1/2) * Real.log (2 * Real.pi * s) + (|x| + R) ^ 2 / (2 * s) := by
+      have := hlog_lb
+      rw [hlog_half, hlog_pref] at this
+      have hlog2 : Real.log (1/2) = - Real.log 2 := by
+        rw [Real.log_div (by norm_num) (by norm_num), Real.log_one]; ring
+      rw [hlog2] at this
+      linarith
+    have : - Real.log p - 1
+        ≤ Real.log 2 + (1/2) * Real.log (4 * Real.pi * t) + ((2 / t) * x ^ 2 + 2 * R ^ 2 / t) - 1 :=
+      by linarith [hquad, hlog_2pis_up]
+    have hAup : A_up + (2 / t) * x ^ 2
+        = Real.log 2 + (1/2) * Real.log (4 * Real.pi * t) + ((2 / t) * x ^ 2 + 2 * R ^ 2 / t) - 1 :=
+      by rw [hA_up]; ring
+    calc - Real.log p - 1
+        ≤ Real.log 2 + (1/2) * Real.log (4 * Real.pi * t) + ((2 / t) * x ^ 2 + 2 * R ^ 2 / t) - 1 :=
+          this
+      _ = A_up + (2 / t) * x ^ 2 := hAup.symm
+      _ ≤ max A_up A_lo + (2 / t) * x ^ 2 := by
+          gcongr; exact le_max_left _ _
+  -- ============ lower side: `-(A + (2/t)x²) ≤ - log p - 1` ============
+  -- `p ≤ pref_s` ⇒ `log p ≤ log pref_s = -(1/2)log(2πs)` ⇒ `- log p ≥ (1/2)log(2πs)`.
+  have hp_le := convDensityAdd_le_prefactor pX hpX_nn hpX_int hpX_mass hspos x
+  rw [← hg_def, ← hp_def] at hp_le
+  have hlog_p_up : Real.log p ≤ -((1/2) * Real.log (2 * Real.pi * s)) := by
+    have := Real.log_le_log hp_pos hp_le
+    rwa [hlog_pref] at this
+  -- `(1/2)log(πt) ≤ (1/2)log(2πs)` (using `2πs > πt`, i.e. `s > t/2`).
+  have hlog_lo : (1/2) * Real.log (Real.pi * t) ≤ (1/2) * Real.log (2 * Real.pi * s) := by
+    have hpit_pos : (0:ℝ) < Real.pi * t := by positivity
+    have hle : Real.pi * t ≤ 2 * Real.pi * s := by
+      have := hs.1; nlinarith [Real.pi_pos]
+    have := Real.log_le_log hpit_pos hle; linarith
+  have hlower : -(max A_up A_lo + (2 / t) * x ^ 2) ≤ - Real.log p - 1 := by
+    -- `- log p ≥ (1/2)log(2πs) ≥ (1/2)log(πt)`, so `- log p - 1 ≥ (1/2)log(πt) - 1 = -A_lo`.
+    have hge : (1/2) * Real.log (Real.pi * t) ≤ - Real.log p := by linarith [hlog_p_up, hlog_lo]
+    have hAlo : -A_lo ≤ - Real.log p - 1 := by rw [hA_lo]; linarith
+    have hnonpos : (0:ℝ) ≤ (2 / t) * x ^ 2 := by positivity
+    calc -(max A_up A_lo + (2 / t) * x ^ 2)
+        ≤ - max A_up A_lo := by linarith
+      _ ≤ - A_lo := by apply neg_le_neg (le_max_right _ _)
+      _ ≤ - Real.log p - 1 := hAlo
+  -- combine into the `‖·‖` bound.
+  rw [Real.norm_eq_abs, abs_le]
+  exact ⟨hlower, hupper⟩
 
 /-- **§5G-2b (GAP②): `s`-uniform Gaussian-tail majorant for the spatial Hessian.**
 On the `t`-neighborhood `Set.Ioo (t/2) (2*t)`, the spatial second derivative
@@ -269,7 +518,7 @@ satisfiable. @residual kept (transitive over GAP①/② plan walls).
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_domination
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_int : Integrable pX volume)
+    (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
     {t : ℝ} (ht : 0 < t) :
     ∃ bound : ℝ → ℝ, Integrable bound volume ∧
       (∀ᵐ x ∂volume, ∀ s : ℝ, (hs : s ∈ Set.Ioo (t/2) (2*t)) →
@@ -285,7 +534,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
   -- §5G-2b (GAP②) gives an `s`-uniform Gaussian-tail majorant for the spatial Hessian.
   -- The product of (poly) × (poly × Gaussian) is poly × Gaussian = Lebesgue integrable.
   obtain ⟨A, B, hB_nn, hLog⟩ :=
-    convDensityAdd_logFactor_poly_majorant pX hpX_nn hpX_meas hpX_int ht
+    convDensityAdd_logFactor_poly_majorant pX hpX_nn hpX_meas hpX_int hpX_mass ht
   obtain ⟨C, c', hc'_pos, hC_nn, hHess⟩ :=
     convDensityAdd_deriv2_tail_majorant pX hpX_nn hpX_meas hpX_int ht
   -- the integrable majorant: (A + B·x²) · ((1/2)·C·(1+x²)·exp(-x²/c')).
@@ -494,7 +743,7 @@ satisfiable** (proof-pivot-advisor confirmed). The被微分関数 keeps the `max
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_parametric
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_int : Integrable pX volume)
+    (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
     {t : ℝ} (ht : 0 < t) :
     ∃ entDeriv : ℝ → ℝ,
       HasDerivAt
@@ -529,7 +778,7 @@ kept here so the file-level residual grep still reflects this declaration's depe
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_int : Integrable pX volume)
+    (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
     {t : ℝ} (ht : 0 < t) :
     HasDerivAt
       (fun s => ∫ x, Real.negMulLog
@@ -541,7 +790,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain
   -- value `= (1/2)·fisher`. The `max s 0` neighborhood correction is baked into the
   -- `_parametric` signature (integrand matches the `_chain` conclusion verbatim).
   obtain ⟨entDeriv, hderiv, hval⟩ :=
-    debruijnIdentityV2_holds_assembled_chain_parametric pX hpX_nn hpX_meas hpX_int ht
+    debruijnIdentityV2_holds_assembled_chain_parametric pX hpX_nn hpX_meas hpX_int hpX_mass ht
   rw [hval] at hderiv
   exact hderiv
 
@@ -676,9 +925,19 @@ theorem debruijnIdentityV2_holds_assembled
       rw [h_reg.pX_law, withDensity_apply _ MeasurableSet.univ, setLIntegral_univ]
     rw [hlint, Measure.map_apply hX MeasurableSet.univ, Set.preimage_univ, measure_univ]
     exact ENNReal.one_lt_top
+  -- pX is a genuine probability density ⇒ `∫ pX = 1` (mass = (P.map X) univ = P univ = 1).
+  --   Honest regularity precondition for the convolution Gaussian lower bound
+  --   (`convDensityAdd_lower_bound_gaussian`, GAP① route).
+  have hpX_mass : (∫ y, h_reg.pX y ∂volume) = 1 := by
+    rw [integral_eq_lintegral_of_nonneg_ae (Filter.Eventually.of_forall h_reg.pX_nn)
+      h_reg.pX_meas.aestronglyMeasurable]
+    have hlint : ∫⁻ x, ENNReal.ofReal (h_reg.pX x) ∂volume = (P.map X) Set.univ := by
+      rw [h_reg.pX_law, withDensity_apply _ MeasurableSet.univ, setLIntegral_univ]
+    rw [hlint, Measure.map_apply hX MeasurableSet.univ, Set.preimage_univ, measure_univ,
+      ENNReal.toReal_one]
   -- 段 2-7: the entropy-as-∫negMulLog chain has the half-fisher derivative at t.
   have h_chain := debruijnIdentityV2_holds_assembled_chain h_reg.pX h_reg.pX_nn
-    h_reg.pX_meas hpX_int ht
+    h_reg.pX_meas hpX_int hpX_mass ht
   -- 段 1-2: entropy =ᶠ ∫ negMulLog (convDensityAdd …) near t.
   have h_eq := debruijnIdentityV2_holds_assembled_entropy_eq X Z hX hZ hXZ h_reg.Z_law
     h_reg.pX h_reg.pX_nn h_reg.pX_meas h_reg.pX_law ht
