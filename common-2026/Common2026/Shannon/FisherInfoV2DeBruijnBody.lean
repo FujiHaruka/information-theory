@@ -257,6 +257,12 @@ noncomputable def IsRegularDeBruijnHypV2.ofHeatFlow
   pX_meas := ((P.map X).measurable_rnDeriv volume).ennreal_toReal
   -- @residual(plan:epi-debruijn-pertime-closure)
   pX_law := by sorry
+  -- Second-moment regularity precondition. The rnDeriv route does not supply a
+  -- finite-variance source for `X`, so this is an honest regularity-precondition
+  -- sorry, the moment analogue of the `pX_law` sorry above (holds whenever `X` has
+  -- finite second moment). Not load-bearing (no Fisher/HasDerivAt core).
+  -- @residual(plan:epi-debruijn-pertime-closure)
+  pX_mom := by sorry
 
 /-- **de Bruijn identity body discharge** (L-FV2DB-C).
 

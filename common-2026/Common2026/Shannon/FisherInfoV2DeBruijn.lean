@@ -256,6 +256,13 @@ structure IsRegularDeBruijnHypV2 {Ω : Type*} [MeasurableSpace Ω]
   carry positivity of `t`. -/
   density_t_eq : ∀ (ht : 0 < t) (x : ℝ),
     density_t x = convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x
+  /-- **Second-moment regularity precondition** (§Phase 5-G, hpX_mom threading 2026-05-31):
+  the X density `pX` has a finite second moment, i.e. `y ↦ y²·pX y` is volume-integrable.
+  This is a regularity precondition (NOT load-bearing): it asserts finite variance of `X`,
+  required by the §5G-2 domination's route-II Tonelli even-moment envelope
+  (`_chain_domination` → `convKernel_envelope_integrable` on `y²·pX`). It does NOT bundle any
+  `HasDerivAt` / Fisher analytic core. Same regularity series as `pX_law` / `density_t_eq`. -/
+  pX_mom : Integrable (fun y => y ^ 2 * pX y) volume
 
 /-! ### Shared sorry 補題 — `debruijnIdentityV2_holds` (genuine wall closure point)
 

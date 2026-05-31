@@ -1737,10 +1737,16 @@ supply the §5G-2 domination's GAP① subcall (`_chain_domination` → `convDens
 which needs normalization for the Gaussian lower/upper bounds); it does NOT change the residual's meaning
 (the body is still the parametric-diff / `hdiff`-over-Ioo plumbing sorry, L-PT-γ scope). Conclusion
 (`HasDerivAt` + Fisher value) is the genuine claim, not bundled. Classification `plan:` unchanged and
-correct. @residual kept. @residual(plan:epi-debruijn-pertime-closure) -/
+correct. @residual kept.
+
+`hpX_mom : Integrable (fun y => y²·pX y) volume` is likewise an honest regularity precondition
+(finite second moment / variance of `X`), threaded purely to supply the §5G-2 domination's
+route-II Tonelli even-moment envelope (`_chain_domination` → `convKernel_envelope_integrable`);
+it does NOT change the residual's meaning. @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_parametric
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
+    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
     {t : ℝ} (ht : 0 < t) :
     ∃ entDeriv : ℝ → ℝ,
       HasDerivAt
@@ -1776,6 +1782,7 @@ kept here so the file-level residual grep still reflects this declaration's depe
 private theorem debruijnIdentityV2_holds_assembled_chain
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
+    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
     {t : ℝ} (ht : 0 < t) :
     HasDerivAt
       (fun s => ∫ x, Real.negMulLog
@@ -1787,7 +1794,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain
   -- value `= (1/2)·fisher`. The `max s 0` neighborhood correction is baked into the
   -- `_parametric` signature (integrand matches the `_chain` conclusion verbatim).
   obtain ⟨entDeriv, hderiv, hval⟩ :=
-    debruijnIdentityV2_holds_assembled_chain_parametric pX hpX_nn hpX_meas hpX_int hpX_mass ht
+    debruijnIdentityV2_holds_assembled_chain_parametric pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
   rw [hval] at hderiv
   exact hderiv
 
@@ -1934,7 +1941,7 @@ theorem debruijnIdentityV2_holds_assembled
       ENNReal.toReal_one]
   -- 段 2-7: the entropy-as-∫negMulLog chain has the half-fisher derivative at t.
   have h_chain := debruijnIdentityV2_holds_assembled_chain h_reg.pX h_reg.pX_nn
-    h_reg.pX_meas hpX_int hpX_mass ht
+    h_reg.pX_meas hpX_int hpX_mass h_reg.pX_mom ht
   -- 段 1-2: entropy =ᶠ ∫ negMulLog (convDensityAdd …) near t.
   have h_eq := debruijnIdentityV2_holds_assembled_entropy_eq X Z hX hZ hXZ h_reg.Z_law
     h_reg.pX h_reg.pX_nn h_reg.pX_meas h_reg.pX_law ht

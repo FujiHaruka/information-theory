@@ -714,7 +714,24 @@ noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
       pX_law := by
         -- `P.map X = gaussianReal m v = withDensity (gaussianPDF m v)`,
         -- and `gaussianPDF m v = fun x => ofReal (gaussianPDFReal m v x)` (def).
-        rw [_hX_law, gaussianReal_of_var_ne_zero m hv, gaussianPDF_def] }
+        rw [_hX_law, gaussianReal_of_var_ne_zero m hv, gaussianPDF_def]
+      -- Second-moment regularity (genuine, Gaussian case). `X ∼ 𝒩(m,v)` has a finite
+      -- second moment: `id ∈ L²(gaussianReal m v)` (`memLp_id_gaussianReal`), so
+      -- `x ↦ x²` is `gaussianReal m v`-integrable (`MemLp.integrable_sq`); transport to
+      -- `volume` via `gaussianReal = withDensity (gaussianPDF m v)` and
+      -- `integrable_withDensity_iff` (giving `x² · (gaussianPDF m v x).toReal`, which is
+      -- `x² · gaussianPDFReal m v x`).
+      pX_mom := by
+        have hsq : Integrable (fun x => x ^ 2) (gaussianReal m v) := by
+          have hL2 : MemLp id 2 (gaussianReal m v) := memLp_id_gaussianReal 2
+          simpa using hL2.integrable_sq
+        rw [gaussianReal_of_var_ne_zero m hv] at hsq
+        have hvol : Integrable (fun x => x ^ 2 * (gaussianPDF m v x).toReal) volume :=
+          (integrable_withDensity_iff (measurable_gaussianPDF m v)
+            (Filter.Eventually.of_forall (fun _ => ENNReal.ofReal_lt_top))).mp hsq
+        refine hvol.congr ?_
+        filter_upwards with x
+        rw [gaussianPDF, ENNReal.toReal_ofReal (gaussianPDFReal_nonneg m v x)] }
 
 -- (deleted 2026-05-28, Cluster C Tier-2 migration, task 3α-3) The Gaussian
 -- constructor `isHeatFlowFamilyHyp_of_gaussian` was removed together with the
