@@ -1,4 +1,5 @@
 import Common2026.Shannon.FisherInfoV2DeBruijnPerTime
+import Common2026.Shannon.FisherConvBound   -- shared 壁 gaussianConv_fisher_le_inv_var
 
 /-!
 # per-time de Bruijn identity — Phase 5 capstone assembly
@@ -646,9 +647,24 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
           ≤ (A + B * x ^ 2) * ((1/2) * hessBound x) := by
             apply mul_le_mul hlf hhalf (norm_nonneg _) hLog_nn
 
-/-- **Fisher integrability of the time-`t` convolution density (Mathlib/repo wall).**
+/-- **Fisher integrability of the time-`t` convolution density (wall call + Step-3 plumbing).**
 The square-score density `(logDeriv p_t)² · p_t` of the convolution density
 `p_t = convDensityAdd pX g_t` is Lebesgue-integrable, where `g_t = gaussianPDFReal 0 ⟨t,_⟩`.
+
+**Rewire (2026-05-31, fisher-finiteness-closure-plan R-A Step 3 — genuine plumbing).** The
+former monolithic body sorry (`@residual(wall:fisher-finiteness)`) is replaced by a call to
+the shared Stam-convolution-Fisher wall `gaussianConv_fisher_le_inv_var`
+(`FisherConvBound.lean`, the sole `@residual(wall:fisher-finiteness)` carrier) plus genuine
+plumbing. The body now: (Step 2) `p_t ≥ 0` pointwise via `integral_nonneg`; (Step 3) calls
+the wall for `J(p_t) ≤ 1/t`; (Step 4) `J(p_t) < ⊤` by `lt_of_le_of_lt … ENNReal.ofReal_lt_top`;
+(Step 5) unfolds `fisherInfoOfDensity` and merges the two `ENNReal.ofReal` factors via
+`← ENNReal.ofReal_mul (sq_nonneg _)` (same as `fisher_from_logDeriv`) to `∫⁻ ofReal((logDeriv
+p_t)²·p_t) ≠ ∞`; (Step 6) a.e.-strong-measurability of `(logDeriv p_t)²·p_t` is now **genuine
+plumbing** (`p_t` strongly measurable via `StronglyMeasurable.integral_prod_right` on the
+jointly-measurable integrand `(z,x) ↦ pX x · g_t (z-x)`, `logDeriv p_t = deriv p_t / p_t` via
+`measurable_deriv` + the div), and concludes via
+`lintegral_ofReal_ne_top_iff_integrable`. **0 local sorry** here; the only residual is the
+shared wall it calls (transitive `sorryAx` via `gaussianConv_fisher_le_inv_var`).
 
 **True statement** (Stam convolution Fisher bound): for any probability density `pX`, the
 Fisher information of `X + √t·Z` is bounded by that of the Gaussian noise alone,
@@ -661,28 +677,84 @@ integrable. Even for a heavy-tailed `pX` (e.g. Cauchy) the Gaussian-smoothed sco
 bound — loogle `fisherInfo` / `Blachman` return `Found 0 declarations`, and the in-repo Stam
 machinery (`EPIStam*`) is predicate pass-through only (no genuine `J(X+Z) ≤ J(Z)` lemma).
 Closing this requires a self-written Stam-convolution-Fisher-bound PR (`J(X+Z) ≤ J(Z) = 1/t`),
-i.e. a genuine Mathlib gap rather than a same-family closure plan.
+i.e. a genuine Mathlib gap rather than a same-family closure plan. After this rewire the wall
+is localized to `gaussianConv_fisher_le_inv_var`; this consumer carries no local sorry.
 
 `hpX_nn`/`hpX_meas`/`hpX_int` are pure pX regularity preconditions; the integrability
 conclusion is the genuine claim. No load-bearing hypothesis bundled.
 
-Independent honesty audit (2026-05-31, fresh auditor, 案 B split commit): verdict
-honest_residual. Statement true for any probability density `pX` (incl. heavy-tailed Cauchy)
-by the Stam convolution Fisher bound `J(X+√t·Z) ≤ J(√t·Z) = 1/t < ∞` (proof-pivot-advisor +
-判断ログ #12 独立確認). Classification `wall:fisher-finiteness` correct: loogle `fisherInfo` /
-`Blachman` = Found 0 (`Stam` hits are `Std.Time.Timestamp`, unrelated), in-repo Stam machinery
-is predicate pass-through only — a genuine Mathlib/repo gap, not a same-family closure plan.
-Register entry (audit-tags.md L70) matches; semantic distinction vs `stam` (superadditivity =
-EPI conclusion) is honored. The 3 pX hyps are regularity preconditions; integrability is the
-claim (not bundled). @residual kept.
+The `@residual` is now **transitive** (the wall sorry lives in the shared lemma, not here).
+Marker kept so the transitive dependency on the Fisher wall stays grep-visible until the wall
+is closed.
 
+Independent honesty audit (2026-05-31, fresh auditor, Wave 2 rewire): verdict honest_residual
+(transitive). Body is genuine: 0 local sorry (`:694-741` contains no literal `sorry`); the wall
+is consumed as a *lemma call* `gaussianConv_fisher_le_inv_var pX …` (Step 3), NOT bundled as a
+hypothesis. Step-6 a.e.-strong-measurability is genuine plumbing, not circular/false: `hpt_meas`
+via `StronglyMeasurable.integral_prod_right` on the jointly-measurable integrand, `hlogderiv_meas`
+via `measurable_deriv` + `.div` (`logDeriv = deriv p_t / p_t`) — all Mathlib std, no conclusion
+assumed. `hpX_nn`/`hpX_meas`/`hpX_int` are pure pX regularity; the integrability conclusion is the
+genuine claim. `#print axioms` = `[propext, sorryAx, Classical.choice, Quot.sound]`, where the lone
+`sorryAx` is **transitive** via the shared wall `gaussianConv_fisher_le_inv_var`
+(`FisherConvBound.lean:73`, the sole `wall:fisher-finiteness` carrier). Wall aggregation verified:
+`rg wall:fisher-finiteness` shows exactly ONE real sorry (FisherConvBound.lean:73); this consumer
+and `…_chain_ibp_fisher` (`:844` call site) are transitive markers only. The transitive `@residual`
+is retained per audit-tags.md compound-syntax scenario 1 (transitive sorry の正式表現); docstring
+states the wall is localized to the shared lemma and this declaration carries no local sorry —
+honest. `@residual(wall:fisher-finiteness)` kept.
 @residual(wall:fisher-finiteness) -/
 private theorem convDensityAdd_fisher_integrable
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) {t : ℝ} (ht : 0 < t) :
     Integrable (fun x => (logDeriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)) x)^2
       * convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x) volume := by
-  sorry -- @residual(wall:fisher-finiteness)
+  set p_t : ℝ → ℝ := convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) with hp_def
+  -- Step 2: `p_t ≥ 0` pointwise (convolution of nonnegatives).
+  have hp_nn : ∀ x, 0 ≤ p_t x := fun x =>
+    integral_nonneg fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _)
+  -- the integrand `g x = (logDeriv p_t x)² · p_t x` is pointwise nonnegative.
+  have hg_nn : 0 ≤ᵐ[volume] fun x => (logDeriv p_t x) ^ 2 * p_t x :=
+    Filter.Eventually.of_forall fun x => mul_nonneg (sq_nonneg _) (hp_nn x)
+  -- Step 3: shared Stam-convolution-Fisher wall `J(p_t) ≤ 1/t`.
+  have hbound : fisherInfoOfDensity p_t ≤ ENNReal.ofReal (1 / t) :=
+    gaussianConv_fisher_le_inv_var pX hpX_nn hpX_meas hpX_int ht
+  -- Step 4: hence `J(p_t) < ⊤`.
+  have hfin : fisherInfoOfDensity p_t < ⊤ :=
+    lt_of_le_of_lt hbound ENNReal.ofReal_lt_top
+  -- Step 5: merge the two `ENNReal.ofReal` factors so the lintegrand is `ofReal g`.
+  have hmerge :
+      fisherInfoOfDensity p_t
+        = ∫⁻ x, ENNReal.ofReal ((logDeriv p_t x) ^ 2 * p_t x) ∂volume := by
+    unfold fisherInfoOfDensity
+    refine lintegral_congr fun x => ?_
+    rw [← ENNReal.ofReal_mul (sq_nonneg _)]
+  -- `∫⁻ ofReal g < ⊤` i.e. `≠ ∞`.
+  rw [hmerge] at hfin
+  -- Step 6: a.e.-strong-measurability of `g = (logDeriv p_t)² · p_t`.
+  -- `p_t = z ↦ ∫ x, pX x · g_t (z - x)` is strongly measurable (parametric integral of a
+  -- jointly measurable integrand); `logDeriv p_t = deriv p_t / p_t` with `deriv p_t`
+  -- measurable. All genuine plumbing (Mathlib `StronglyMeasurable.integral_prod_right` +
+  -- `measurable_deriv`), not a wall.
+  have hgt_meas : Measurable (gaussianPDFReal 0 ⟨t, ht.le⟩) :=
+    measurable_gaussianPDFReal 0 ⟨t, ht.le⟩
+  have hpt_meas : Measurable p_t := by
+    have huncurry :
+        StronglyMeasurable
+          (Function.uncurry fun z x => pX x * gaussianPDFReal 0 ⟨t, ht.le⟩ (z - x)) := by
+      apply Measurable.stronglyMeasurable
+      apply (hpX_meas.comp measurable_snd).mul
+      exact hgt_meas.comp ((measurable_fst).sub measurable_snd)
+    have h := huncurry.integral_prod_right (ν := volume)
+    simpa only [hp_def, convDensityAdd] using h.measurable
+  have hderiv_meas : Measurable (deriv p_t) := measurable_deriv p_t
+  have hlogderiv_meas : Measurable (logDeriv p_t) := by
+    simp only [logDeriv]
+    exact hderiv_meas.div hpt_meas
+  have hg_aesm :
+      AEStronglyMeasurable (fun x => (logDeriv p_t x) ^ 2 * p_t x) volume :=
+    ((hlogderiv_meas.pow_const 2).mul hpt_meas).aestronglyMeasurable
+  -- Step 6 (concl): `∫⁻ ofReal g ≠ ∞ ↔ Integrable g`.
+  exact (lintegral_ofReal_ne_top_iff_integrable hg_aesm hg_nn).mp hfin.ne
 
 /-- **de Bruijn IBP step on the time-`t` convolution density (IBP + full-support wall).**
 The de Bruijn integration-by-parts identity at fixed time `t`:

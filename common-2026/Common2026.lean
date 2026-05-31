@@ -207,5 +207,6 @@ import Common2026.Shannon.HuffmanFirstStepProbe
 import Common2026.Shannon.MinkowskiDet
 import Common2026.Shannon.EPIScoreCrossTermOrth
 import Common2026.Shannon.EPIConvDensity
+import Common2026.Shannon.EPIConvDensitySecondDeriv
 import Common2026.Shannon.EPIBlachmanDensity
 import Common2026.Shannon.EPIBlachmanGaussianWitness
