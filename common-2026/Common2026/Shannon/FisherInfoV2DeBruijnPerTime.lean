@@ -102,7 +102,12 @@ theorem gaussianConvolution_law_conv
 /-- **Closed-form Gaussian pdf bound (genuine)**: the Gaussian density is bounded above by
 the normalizing prefactor `(√(2πv))⁻¹` (since `exp` of a nonpositive exponent is `≤ 1`).
 Mathlib has `gaussianPDFReal_nonneg` / `_pos` but no upper bound; supplied here for the
-`Integrable.mul_bdd` domination in the L-PT-β bridge. Genuine, no `sorry`. -/
+`Integrable.mul_bdd` domination in the L-PT-β bridge. Genuine, no `sorry`.
+
+**Independent audit (commit `6f675ca`)**: genuine non-degenerate upper bound
+(`exp` of a nonpositive exponent `≤ 1`, prefactor finite positive). `#print axioms` =
+`[propext, Classical.choice, Quot.sound]` (sorryAx-free), 0 sorry / 0 residual.
+@audit:ok -/
 private theorem gaussianPDFReal_le_prefactor (μ : ℝ) (v : ℝ≥0) (x : ℝ) :
     gaussianPDFReal μ v x ≤ (Real.sqrt (2 * Real.pi * v))⁻¹ := by
   rw [gaussianPDFReal]
@@ -232,11 +237,16 @@ theorem pPath_eq_convDensityAdd
 /-- Explicit `ℝ`-parameterized heat kernel `g(σ, u) = (√(2πσ))⁻¹ · exp(-u²/(2σ))`, with `σ`
 ranging over `ℝ` (not `ℝ≥0`). Agrees with `gaussianPDFReal 0 ⟨σ,_⟩` for `σ > 0`; needed so
 the `σ`-derivative can be taken over a real neighborhood (the `NNReal` coercion `⟨σ,_⟩` cannot
-be formed for `σ < 0`). -/
+be formed for `σ < 0`). `def` — no proof obligation, agreement with `gaussianPDFReal`
+established by `heatFlow_density_heat_equation_kernel_eq`. -/
 noncomputable def heatFlow_density_heat_equation_kernel (σ u : ℝ) : ℝ :=
   (Real.sqrt (2 * Real.pi * σ))⁻¹ * Real.exp (-u ^ 2 / (2 * σ))
 
-/-- The explicit `ℝ`-kernel agrees with `gaussianPDFReal 0 ⟨σ,_⟩` for `σ > 0`. -/
+/-- The explicit `ℝ`-kernel agrees with `gaussianPDFReal 0 ⟨σ,_⟩` for `σ > 0`.
+
+**Independent audit (commit `6f675ca`)**: genuine definitional agreement (`rfl` after
+`sub_zero`). sorryAx-free, 0 sorry / 0 residual.
+@audit:ok -/
 theorem heatFlow_density_heat_equation_kernel_eq
     {σ : ℝ} (hσ : 0 < σ) (u : ℝ) :
     heatFlow_density_heat_equation_kernel σ u = gaussianPDFReal 0 ⟨σ, hσ.le⟩ u := by
@@ -247,7 +257,11 @@ theorem heatFlow_density_heat_equation_kernel_eq
 
 /-- **Kernel spatial 1st derivative (genuine)**: for the Gaussian heat kernel with mean `0`
 and variance `σ > 0`, `g_σ(u) = (√(2πσ))⁻¹ · exp(-u²/(2σ))`,
-`∂_u g_σ(u) = g_σ(u) · (-(u/σ))`. -/
+`∂_u g_σ(u) = g_σ(u) · (-(u/σ))`.
+
+**Independent audit (commit `6f675ca`)**: genuine chain-rule computation, non-degenerate
+closed form (`-(u/σ)` factor). sorryAx-free, 0 sorry / 0 residual.
+@audit:ok -/
 theorem heatFlow_density_heat_equation_kernel_x_deriv1
     {σ : ℝ} (hσ : 0 < σ) (u : ℝ) :
     HasDerivAt (fun ξ : ℝ => heatFlow_density_heat_equation_kernel σ ξ)
@@ -264,7 +278,11 @@ theorem heatFlow_density_heat_equation_kernel_x_deriv1
   convert hcm using 1
   ring
 
-/-- **Kernel spatial 2nd derivative (genuine)**: `∂²_u g_σ(u) = g_σ(u) · (u²/σ² - 1/σ)`. -/
+/-- **Kernel spatial 2nd derivative (genuine)**: `∂²_u g_σ(u) = g_σ(u) · (u²/σ² - 1/σ)`.
+
+**Independent audit (commit `6f675ca`)**: genuine product-rule computation, non-degenerate
+closed form (`u²/σ² - 1/σ` factor, `≠ 0` e.g. at `u = 0`). sorryAx-free, 0 sorry / 0 residual.
+@audit:ok -/
 theorem heatFlow_density_heat_equation_kernel_x_deriv2
     {σ : ℝ} (hσ : 0 < σ) (u : ℝ) :
     HasDerivAt
@@ -280,7 +298,12 @@ theorem heatFlow_density_heat_equation_kernel_x_deriv2
   ring
 
 /-- **Kernel σ-derivative (genuine)**: differentiating the kernel in its variance `σ`,
-`∂_σ g_σ(u) = (1/2) · g_σ(u) · (u²/σ² - 1/σ)`. -/
+`∂_σ g_σ(u) = (1/2) · g_σ(u) · (u²/σ² - 1/σ)`.
+
+**Independent audit (commit `6f675ca`)**: genuine — differentiates both the prefactor
+`(√(2πσ))⁻¹` and the exponent in `σ`, closes via `√(2πσ)² = 2πσ`. Non-degenerate closed
+form. sorryAx-free, 0 sorry / 0 residual.
+@audit:ok -/
 theorem heatFlow_density_heat_equation_kernel_sigma_deriv
     {σ : ℝ} (hσ : 0 < σ) (u : ℝ) :
     HasDerivAt (fun τ : ℝ => heatFlow_density_heat_equation_kernel τ u)
@@ -319,7 +342,14 @@ theorem heatFlow_density_heat_equation_kernel_sigma_deriv
   ring
 
 /-- **Kernel heat equation (genuine)**: the Gaussian heat kernel solves the heat equation,
-`∂_σ g_σ(u) = (1/2) · ∂²_u g_σ(u)`. Both sides equal `(1/2) · g_σ(u) · (u²/σ² - 1/σ)`. -/
+`∂_σ g_σ(u) = (1/2) · ∂²_u g_σ(u)`. Both sides equal `(1/2) · g_σ(u) · (u²/σ² - 1/σ)`.
+
+**Independent audit (commit `6f675ca`)**: genuine, NON-degenerate. The two `HasDerivAt`
+conjuncts are not vacuously-equal: σ-side derivative is `(1/2)·g·(u²/σ²-1/σ)`, x-2nd
+derivative is `g·(u²/σ²-1/σ)`, both non-trivially nonzero (e.g. `-1/σ ≠ 0` at `u = 0`), so
+the heat-equation link `∂_σ = (1/2)∂²_u` is a real identity (not both ≡ 0). Assembled from
+the two genuine kernel-derivative lemmas. sorryAx-free, 0 sorry / 0 residual.
+@audit:ok -/
 theorem heatFlow_density_heat_equation_kernel_heat_eq
     {σ : ℝ} (hσ : 0 < σ) (u : ℝ) :
     HasDerivAt (fun τ : ℝ => heatFlow_density_heat_equation_kernel τ u)
