@@ -472,18 +472,28 @@ L-PT-δ), which is the remaining honest `sorry`.
 
 All hyps are pX-system regularity; the existential output is a pointwise Gaussian-tail bound.
 
-Independent honesty audit (2026-05-31, fresh auditor, §5G-2 wiring commit `cf88267`): verdict
-honest_residual. **Signature honest**: hyps are pX-system regularity + `ht`; the conclusion is an
-existential pointwise Gaussian-tail bound, NOT bundled. **Satisfiability TRUE**: via the heat-eq
-STEP D identification `∂²_x p_s x = ∫ y, pX y · g_s(x-y)·((x-y)²/s² - 1/s)` (atom
-`heatFlow_density_heat_equation` STEP D + `heatFlow_density_heat_equation_kernel_x_deriv2`, both
-in-repo `@audit:ok`), the triangle inequality + Gaussian prefactor bound
-(`gaussianPDFReal_le_prefactor`, in-repo `:115`) give a Gaussian-tail bound `C·(1+x²)·exp(-x²/c')`
-uniform on the bounded window `s ∈ Ioo (t/2, 2t)`. **Classification `plan:` correct** (NOT `wall:`):
-the residual is the `deriv∘deriv → STEP-D bridge` (the `pathDeriv1/2 HasDerivAt` full-support C¹
-plumbing shared with L-PT-δ), assembled from in-repo `@audit:ok` atoms — same-family analytic
-plumbing, not a genuine Mathlib gap. @residual kept.
+**FALSE-STATEMENT DEFECT (2026-05-31, proof-pivot-advisor 独立検算、prior「Satisfiability TRUE」撤回)**:
+the Gaussian-tail upper bound `‖∂²_x p_s x‖ ≤ C·(1+x²)·exp(-x²/c')` is **FALSE for general pX**.
+Counterexample `pX = standard Cauchy 1/(π(1+y²))` (satisfies `hpX_nn`/`hpX_meas`/`hpX_int`): then
+`p_s = pX∗g_s` has polynomial tails and `∂²_x p_s = (∂²_x pX)∗g_s ~ pX''(x) ~ 6/(π x⁴)` (numerically
+confirmed: `x⁴·∂²_x p_s → 6/π`, ratio→1 at x=10,40,80), which is **polynomial decay** and exceeds
+`C·(1+x²)·exp(-x²/c')` (super-exponential) for every `C,c'` at large x. The prior 3 audits' "triangle
+inequality + `gaussianPDFReal_le_prefactor` → Gaussian tail" argument is **light-tail-pX-only**: the
+prefactor majorant gives `∫ pX(y)·g_s(x-y)·(x-y)² dy ⊇ ∫ pX(y)(x-y)² dy = x²−2xE[X]+E[X²]`, which
+**diverges** when `E[X²]=∞` (Cauchy); factoring out `exp(-x²/c')` needs a finite MGF `∫pX(y)exp(xy/s)dy`,
+infinite for any heavy-tailed pX. So the statement is unsatisfiable for general pX (signature cannot be
+kept in its present "本来証明したい形" — it is false, not merely hard).
 
+**Fix direction (next session, planner decision)**: 案A = add a finite-second-moment regularity
+precondition `(hpX_mom : Integrable (fun y => y^2 * pX y) volume)` so `∫pX(y)(x-y)²dy` is finite and the
+prefactor argument works (makes the statement TRUE; a regularity hyp, not load-bearing; but weakens the
+plan's general-pX goal, excludes Cauchy). 案B = keep general pX but redesign `_chain_domination` with a
+joint / self-bounding (entropy-finiteness) strategy — the true product `(-log p_s)·∂²p_s ~ (log x)/x⁴`
+IS integrable, but NOT via the separated GAP①(x² log bound)×GAP②(Gaussian Hessian) product (the x²
+overestimate of the log factor breaks integrability for heavy pX). See plan §Phase 5-G judgment log #13.
+
+@audit:defect(false-statement)
+@audit:retract-candidate(heavy-tail-pX-counterexample: GAP②-Gaussian-tail-false-for-Cauchy)
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem convDensityAdd_deriv2_tail_majorant
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -551,6 +561,20 @@ honest_residual. **Update**: GAP① (`convDensityAdd_logFactor_poly_majorant`) i
 (`convDensityAdd_deriv2_tail_majorant`, still `@residual(plan:…)`). The new `hpX_mass` hyp is honest
 regularity threaded to GAP①'s normalization need (NOT load-bearing). Body is genuine wiring (0 local
 sorry); the single remaining residual is GAP②. @residual kept (transitive over the GAP② plan wall).
+
+**DEFECT PROPAGATION (2026-05-31, proof-pivot-advisor)**: the consumed helper GAP②
+(`convDensityAdd_deriv2_tail_majorant`) is now a confirmed **false-statement defect** for general pX
+(Gaussian-tail Hessian bound false for Cauchy — see GAP② docstring). The body's "genuine wiring /
+core-reconstruction PASS" is therefore **VACUOUS-genuine**: the product-majorant integrability proof
+(`(A+Bx²)·C(1+x²)exp(-x²/c')` → finite sum of `x^{0,2,4}·exp(-(1/c')x²)`) is locally sorry-free but
+rests on GAP②'s false `exp(-x²/c')` Hessian decay. The `_chain_domination` STATEMENT (∃ integrable
+majorant over `Ioo(t/2,2t)`) is itself TRUE for general pX (the true product `(-log p_s)·∂²p_s ~
+(log x)/x⁴` is integrable), but it is **NOT provable via the GAP①×GAP² separated-product strategy** —
+the x² overestimate of the log factor (GAP①) times any honest Hessian bound (Gaussian for light pX,
+polynomial `~C·q(x)` for heavy pX) gives a non-integrable `~x²·(1/x²)=const` majorant for heavy pX.
+Resolution requires GAP② restatement (plan §5G judgment log #13, 案A finite-2nd-moment / 案B joint
+entropy-finiteness strategy). DO NOT build further genuine claims downstream of this wiring until GAP②
+is restated. @audit:defect(false-statement, transitive-via-GAP②)
 
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_domination

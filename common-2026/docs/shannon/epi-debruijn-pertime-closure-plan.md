@@ -1358,3 +1358,28 @@ predicate 化 / `:True` slot / 循環 `:= h` / 退化 (rnDeriv pin 等)。詰ま
     integrability を **共有 sorry 補題 `convDensityAdd_fisher_integrable`** に切り出し (audit-tags「共有
     Mathlib 壁」整合)、#4 を IBP 割当 + fisher congr の **genuine plumbing** にして残 sorry を named 壁補題に
     局所化 (#5/#1 と同型の genuine-plumbing-over-named-wall 構造)。
+13. **GAP② (`convDensityAdd_deriv2_tail_majorant`) は false-statement defect、`_chain_domination` の
+    GAP①×GAP² 分解戦略は general pX で無効** (2026-05-31, proof-pivot-advisor 独立検算、判断ログ #12 の部分訂正):
+    §5G-2b GAP② は `‖∂²_x p_s x‖ ≤ C·(1+x²)·exp(-x²/c')` (Gaussian-tail 上界) を主張するが、これは
+    **general pX で FALSE**。反例 `pX = Cauchy 1/(π(1+y²))` (全 hyp 充足) で `∂²_x p_s = (∂²_x pX)∗g_s ~
+    pX''(x) ~ 6/(π x⁴)` の**多項式減衰** (数値確認 `x⁴·∂²_x p_s → 6/π`)、Gaussian 上界を large x で必ず超過。
+    prior 3 監査 (2 audit + 1 pivot) の「triangle + `gaussianPDFReal_le_prefactor` → Gaussian tail」論法は
+    **light-tail pX 専用** — prefactor majorant が `∫pX(y)(x-y)²dy = x²−2xE[X]+E[X²]` を含み Cauchy で
+    `E[X²]=∞` 発散、`exp(-x²/c')` 括り出しに finite MGF が要るが heavy pX は全点 ∞。
+    **波及**: `_chain_domination` の "genuine wiring / core-reconstruction PASS" は false GAP② を消費する
+    **vacuous genuine**。ただし `_chain_domination` の **statement 自体は general pX で true** (判断ログ #12
+    と整合: 真の積 `(-log p_s)·∂²p_s ~ (log x)/x⁴` は可積分、∵ `∫(-log q)q=微分エントロピー有限)。問題は
+    **証明戦略** — GAP①(log因子を x² で上界) は light pX で tight だが heavy pX で過大評価 (実際 ~log x)、
+    GAP② の honest 化形 `∂² ≤ C·q(x)` (q=pX∗g_{2s}~1/x²) と掛けても `x²·(1/x²)=定数` 非可積分。分離積では
+    general pX を証明できず、joint/self-bounding (エントロピー有限性) が要る。
+    **採用 = 撤退 + 後続 planner 判断**: GAP② に `@audit:defect(false-statement)` +
+    `@audit:retract-candidate` を即マーク、`_chain_domination` に defect-propagation note (vacuous genuine)。
+    その上に build しない (GAP② fill / #4 downstream の genuine 申告を停止)。次セッションの planner 判断 =
+    **案A** (GAP②/`_chain_domination`/上流 assembly に `hpX_mom : Integrable (y²·pX)` finite-2nd-moment
+    regularity を threading して statement を true 化、ただし general-pX goal を弱め Cauchy 除外) vs
+    **案B** (general pX 維持で `_chain_domination` を joint entropy-finiteness 戦略に再設計、Mathlib 在庫
+    再調査要、高コスト)。**教訓**: convolution-density の spatial-deriv に Gaussian tail を主張する lemma は
+    pX 側に有限モーメント regularity を必ず要求する。監査 checklist に heavy-tail (Cauchy) 反例 1 点を追加。
+    sorry 分割は honesty を上げるが、**分割先が false だと「genuine plumbing 化」ラベルが defect を隠蔽する
+    逆効果**になり得る (本件 = monolithic sorry を 2 named helper に factor した結果 false GAP② が "genuine
+    wiring" の下に埋もれ 3 監査を通過)。
