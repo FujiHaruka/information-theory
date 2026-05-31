@@ -1868,6 +1868,15 @@ The genuine derivation route is, for each `(x, s∈Ioo)`:
 `plan:` plumbing over the `@audit:ok` heat-eq atom + deriv-existence helpers, not a Mathlib wall.
 The conclusion is an integrand-level derivative-existence statement (regularity output for the atom);
 it does NOT bundle the composed `HasDerivAt`-of-the-integral conclusion. All hyps are pX regularity.
+
+Independent honesty audit (2026-05-31, Wave fresh auditor, commit `20ecddc`): honest_residual.
+Conclusion is per-`x` `HasDerivAt (fun s => negMulLog (pPath s x)) (entDerivFn s x) s` — the value
+`entDerivFn s x` is the §5G-1 closed form (a *value*, not hyp ≡ conclusion), NOT circular, NOT the
+composed integral derivative. All hyps pX regularity (nonneg/meas/int/mass/2nd-moment). `plan:` (not
+`wall:`) correct: heat-eq atom `heatFlow_density_heat_equation` (PerTime:422) verified `#print axioms`
+sorryAx-free (`[propext, Classical.choice, Quot.sound]`); residual is per-`x` assembly of its 11
+domination hyps = `plan:` plumbing, not a Mathlib gap. Plan slug exists
+(`docs/shannon/epi-debruijn-pertime-closure-plan.md`).
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_hdiff
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -1920,7 +1929,19 @@ residual grep still reflects this declaration's transitive dependency on §5G-2,
 `hpX_mass:∫pX=1` and `hpX_mom : Integrable (fun y => y²·pX y) volume` are honest regularity
 preconditions (unit mass + finite second moment / variance of `X`), threaded purely to supply
 the §5G-2 domination's GAP① normalization and route-II Tonelli even-moment envelope; they do NOT
-change the residual's meaning. @residual(plan:epi-debruijn-pertime-closure) -/
+change the residual's meaning.
+
+Independent honesty audit (2026-05-31, Wave fresh auditor, commit `20ecddc`): honest_residual.
+Body has **0 local sorry** (machine-confirmed: only `_chain_hdiff`/deriv-helpers carry sorry warnings,
+not this decl); sorryAx dependency is purely transitive. The `entropy_hasDerivAt_via_parametric` atom
+(PerTime:659, `#print axioms` sorryAx-free) application is sound: arg order matches signature, `hint`
+from entropy-finiteness wall + `hb` from `_chain_domination` reconciled genuinely via `max s 0 = s`
+(`NNReal.eq`+`max_eq_left`, `s>0` on `Ioo` by linarith); `hmeas`/`hderiv_meas` genuine (Mathlib std
+joint-measurability + `measurable_deriv`, no sorry/admit); 2nd goal `_chain_ibp_fisher` applied with
+`hentDeriv` pin (`max t 0 = t`) — genuine. Conclusion `∃ entDeriv, HasDerivAt ∧ ∫ = (1/2)·fisher` is
+the genuine claim (NOT hyp-bundled, NOT weakened) — no name laundering. `@residual` correctly
+maintained (transitive sorry present, not falsely `@audit:ok`).
+@residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_parametric
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
