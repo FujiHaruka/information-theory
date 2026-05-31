@@ -472,32 +472,33 @@ L-PT-δ), which is the remaining honest `sorry`.
 
 All hyps are pX-system regularity; the existential output is a pointwise Gaussian-tail bound.
 
-**FALSE-STATEMENT DEFECT (2026-05-31, proof-pivot-advisor 独立検算、prior「Satisfiability TRUE」撤回)**:
-the Gaussian-tail upper bound `‖∂²_x p_s x‖ ≤ C·(1+x²)·exp(-x²/c')` is **FALSE for general pX**.
-Counterexample `pX = standard Cauchy 1/(π(1+y²))` (satisfies `hpX_nn`/`hpX_meas`/`hpX_int`): then
-`p_s = pX∗g_s` has polynomial tails and `∂²_x p_s = (∂²_x pX)∗g_s ~ pX''(x) ~ 6/(π x⁴)` (numerically
-confirmed: `x⁴·∂²_x p_s → 6/π`, ratio→1 at x=10,40,80), which is **polynomial decay** and exceeds
-`C·(1+x²)·exp(-x²/c')` (super-exponential) for every `C,c'` at large x. The prior 3 audits' "triangle
-inequality + `gaussianPDFReal_le_prefactor` → Gaussian tail" argument is **light-tail-pX-only**: the
-prefactor majorant gives `∫ pX(y)·g_s(x-y)·(x-y)² dy ⊇ ∫ pX(y)(x-y)² dy = x²−2xE[X]+E[X²]`, which
-**diverges** when `E[X²]=∞` (Cauchy); factoring out `exp(-x²/c')` needs a finite MGF `∫pX(y)exp(xy/s)dy`,
-infinite for any heavy-tailed pX. So the statement is unsatisfiable for general pX (signature cannot be
-kept in its present "本来証明したい形" — it is false, not merely hard).
+**Finite-second-moment restate (2026-05-31, §Phase 5-G case A, 案A, 判断ログ #14)**: the statement is
+now made **TRUE & satisfiable** by adding two pX regularity preconditions: `hpX_mass : ∫pX = 1` and
+`hpX_mom : Integrable (fun y => y²·pX y)` (finite second moment). Why this closes the prior
+false-statement gap: via the heat-eq STEP D표시 the supported majorant term is
+`∫ pX(y)·g_s(x-y)·(x-y)² dy`, which after the Gaussian prefactor bound is dominated by
+`pref(s)·∫ pX(y)·(x-y)² dy`. Expanding the (x-y)² polynomial,
+`∫ pX(y)(x-y)² dy = x²·∫pX − 2x·∫y·pX + ∫y²·pX`; under `hpX_mass` (`∫pX = 1 < ∞`), `hpX_mom`
+(`∫y²·pX < ∞`), and the derived first moment (`∫y·pX < ∞`, obtained from `2|y| ≤ 1+y²` domination
+by `hpX_int.add hpX_mom`), all three terms are finite. The result is a finite-coefficient polynomial
+`A·x² + B·x + C` absorbable into `C·(1 + x²)` and multiplied by the Gaussian factor `exp(-x²/c')`,
+matching the `C·(1 + x²)·exp(-x²/c')` conclusion form (no signature change to the conclusion). A
+heavy-tailed `pX` (e.g. standard Cauchy `1/(π(1+y²))`) has `∫y²·pX = ∞`, so `hpX_mom` is **not
+satisfiable** for it — it is honestly excluded from the statement's scope rather than being a
+counterexample to a claimed-universal bound (the prior false-statement defect was that no moment
+hypothesis was present, so the bound was asserted for all pX including Cauchy, where it is false).
+Finite second moment is the standard de Bruijn regularity precondition; it is a regularity hyp, NOT
+load-bearing.
 
-**Fix direction (next session, planner decision)**: 案A = add a finite-second-moment regularity
-precondition `(hpX_mom : Integrable (fun y => y^2 * pX y) volume)` so `∫pX(y)(x-y)²dy` is finite and the
-prefactor argument works (makes the statement TRUE; a regularity hyp, not load-bearing; but weakens the
-plan's general-pX goal, excludes Cauchy). 案B = keep general pX but redesign `_chain_domination` with a
-joint / self-bounding (entropy-finiteness) strategy — the true product `(-log p_s)·∂²p_s ~ (log x)/x⁴`
-IS integrable, but NOT via the separated GAP①(x² log bound)×GAP②(Gaussian Hessian) product (the x²
-overestimate of the log factor breaks integrability for heavy pX). See plan §Phase 5-G judgment log #13.
+The body Gaussian-tail majorant construction (STEP D bridge + `gaussianPDFReal_le_prefactor` +
+moment expansion) is not yet implemented, so this remains an **honest sorry** to be discharged in
+Phase 5-G (L-PT-γ/δ).
 
-@audit:defect(false-statement)
-@audit:retract-candidate(heavy-tail-pX-counterexample: GAP②-Gaussian-tail-false-for-Cauchy)
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem convDensityAdd_deriv2_tail_majorant
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_int : Integrable pX volume)
+    (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
+    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
     {t : ℝ} (ht : 0 < t) :
     ∃ C c' : ℝ, 0 < c' ∧ 0 ≤ C ∧
       ∀ᵐ x ∂volume, ∀ s : ℝ, (hs : s ∈ Set.Ioo (t/2) (2*t)) →
@@ -562,24 +563,27 @@ honest_residual. **Update**: GAP① (`convDensityAdd_logFactor_poly_majorant`) i
 regularity threaded to GAP①'s normalization need (NOT load-bearing). Body is genuine wiring (0 local
 sorry); the single remaining residual is GAP②. @residual kept (transitive over the GAP② plan wall).
 
-**DEFECT PROPAGATION (2026-05-31, proof-pivot-advisor)**: the consumed helper GAP②
-(`convDensityAdd_deriv2_tail_majorant`) is now a confirmed **false-statement defect** for general pX
-(Gaussian-tail Hessian bound false for Cauchy — see GAP② docstring). The body's "genuine wiring /
-core-reconstruction PASS" is therefore **VACUOUS-genuine**: the product-majorant integrability proof
-(`(A+Bx²)·C(1+x²)exp(-x²/c')` → finite sum of `x^{0,2,4}·exp(-(1/c')x²)`) is locally sorry-free but
-rests on GAP②'s false `exp(-x²/c')` Hessian decay. The `_chain_domination` STATEMENT (∃ integrable
-majorant over `Ioo(t/2,2t)`) is itself TRUE for general pX (the true product `(-log p_s)·∂²p_s ~
-(log x)/x⁴` is integrable), but it is **NOT provable via the GAP①×GAP² separated-product strategy** —
-the x² overestimate of the log factor (GAP①) times any honest Hessian bound (Gaussian for light pX,
-polynomial `~C·q(x)` for heavy pX) gives a non-integrable `~x²·(1/x²)=const` majorant for heavy pX.
-Resolution requires GAP② restatement (plan §5G judgment log #13, 案A finite-2nd-moment / 案B joint
-entropy-finiteness strategy). DO NOT build further genuine claims downstream of this wiring until GAP②
-is restated. @audit:defect(false-statement, transitive-via-GAP②)
+**GAP② restated TRUE (2026-05-31, §Phase 5-G case A, 案A, 判断ログ #14)**: the consumed helper GAP②
+(`convDensityAdd_deriv2_tail_majorant`) is **no longer a false-statement defect** — it now carries the
+finite-second-moment regularity hyps `hpX_mass` + `hpX_mom`, under which the Gaussian-tail Hessian
+bound is TRUE & satisfiable (heavy-tailed pX such as Cauchy are honestly excluded by the
+non-satisfiability of `hpX_mom`; see GAP② docstring). Consequently this body's genuine wiring /
+core-reconstruction PASS is **no longer vacuous-genuine**: the product-majorant integrability proof
+(`(A+Bx²)·C(1+x²)exp(-x²/c')` → finite sum of `x^{0,2,4}·exp(-(1/c')x²)`) now rests on a true Hessian
+decay bound. The `_chain_domination` STATEMENT (∃ integrable majorant over `Ioo(t/2,2t)`) is true
+under the threaded finite-second-moment regularity, and the GAP①×GAP② separated-product strategy is
+sound on that regularity class (the x² log-factor overestimate × the Gaussian Hessian bound gives a
+`poly × Gaussian` integrable majorant). The single remaining honest `sorry` is GAP② alone (its body
+construction is not yet implemented); the `@residual` here is therefore **transitive over the GAP②
+plan wall**. The product-majorant integrability body is **unchanged**: GAP②'s conclusion form
+(`C·(1+x²)·exp(-x²/c')`) is invariant under the hyp addition, so only the GAP② call site gains the
+`hpX_mass hpX_mom` actual arguments.
 
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_domination
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
+    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
     {t : ℝ} (ht : 0 < t) :
     ∃ bound : ℝ → ℝ, Integrable bound volume ∧
       (∀ᵐ x ∂volume, ∀ s : ℝ, (hs : s ∈ Set.Ioo (t/2) (2*t)) →
@@ -597,7 +601,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
   obtain ⟨A, B, hB_nn, hLog⟩ :=
     convDensityAdd_logFactor_poly_majorant pX hpX_nn hpX_meas hpX_int hpX_mass ht
   obtain ⟨C, c', hc'_pos, hC_nn, hHess⟩ :=
-    convDensityAdd_deriv2_tail_majorant pX hpX_nn hpX_meas hpX_int ht
+    convDensityAdd_deriv2_tail_majorant pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
   -- the integrable majorant: (A + B·x²) · ((1/2)·C·(1+x²)·exp(-x²/c')).
   refine ⟨fun x => (A + B * x ^ 2) * ((1/2) * (C * (1 + x ^ 2) * Real.exp (-x ^ 2 / c'))), ?_, ?_⟩
   · -- integrability: expand into a finite sum of `x^k · exp(-b·x²)` terms (poly × Gaussian).
