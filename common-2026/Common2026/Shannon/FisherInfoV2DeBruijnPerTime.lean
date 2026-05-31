@@ -241,6 +241,17 @@ theorem fisher_from_logDeriv
     (p : ℝ → ℝ) (hp_nn : ∀ x, 0 ≤ p x)
     (hint : Integrable (fun x => (logDeriv p x)^2 * p x) volume) :
     ∫ x, (logDeriv p x)^2 * p x ∂volume = fisherInfoOfDensityReal p := by
-  sorry -- @residual(plan:epi-debruijn-pertime-closure) — logDeriv→Fisher shape congr
+  -- non-negativity of the integrand `g x = (logDeriv p x)^2 * p x`
+  have hg_nn : 0 ≤ᵐ[volume] fun x => (logDeriv p x)^2 * p x :=
+    Filter.Eventually.of_forall fun x => mul_nonneg (sq_nonneg _) (hp_nn x)
+  -- RHS unfolds to the `.toReal` of a lintegral; match the lintegrands
+  unfold fisherInfoOfDensityReal fisherInfoOfDensity
+  have hlint :
+      (∫⁻ x, ENNReal.ofReal ((logDeriv p x) ^ 2) * ENNReal.ofReal (p x) ∂volume)
+        = ∫⁻ x, ENNReal.ofReal ((logDeriv p x)^2 * p x) ∂volume := by
+    refine lintegral_congr fun x => ?_
+    rw [← ENNReal.ofReal_mul (sq_nonneg _)]
+  rw [hlint, ← ofReal_integral_eq_lintegral_ofReal hint hg_nn,
+    ENNReal.toReal_ofReal (integral_nonneg fun x => mul_nonneg (sq_nonneg _) (hp_nn x))]
 
 end Common2026.Shannon.FisherInfoV2
