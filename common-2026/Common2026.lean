@@ -165,6 +165,7 @@ import Common2026.Shannon.GeneralDMCExtension
 import Common2026.Shannon.AWGNBindConvBody
 import Common2026.Shannon.EPIStamStep12Body
 import Common2026.Shannon.StamGaussianBound
+import Common2026.Shannon.FisherConvBound
 import Common2026.Shannon.EPIStamStep3Body
 import Common2026.Shannon.FisherInfoV2HeatFlowBody
 import Common2026.Shannon.LZ78GreedyParsingImpl
