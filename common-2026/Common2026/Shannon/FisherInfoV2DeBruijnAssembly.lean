@@ -78,7 +78,13 @@ where `D` is the σ-derivative `∂_s pPath t x`, supplied as the `HasDerivAt` w
 regularity from `heatFlow_density_heat_equation`). The composed `HasDerivAt` conclusion is
 the genuine claim, derived via `HasDerivAt.comp` — NOT bundled into a hypothesis.
 
-@residual(plan:epi-debruijn-pertime-closure) -/
+Independent honesty audit (2026-05-31, fresh auditor, §5G split commit `8906b5c`): verdict
+ok. 0 local sorry; `#print axioms` confirms `[propext, Classical.choice, Quot.sound]` only
+(sorryAx-free). `hpos` is a positivity precondition required by `hasDerivAt_negMulLog`;
+`hpath_deriv` is an integrand-level σ-derivative `HasDerivAt` witness — neither bundles the
+composed conclusion (core-reconstruction test: granting both does not hand over the chain-rule
+composite value `(-log p - 1)·D`, which `hneg.comp t hpath_deriv` genuinely derives). NOT
+circular, NOT load-bearing. proof-done. @audit:ok -/
 private theorem debruijnIdentityV2_holds_assembled_chain_entDeriv_formula
     (pX : ℝ → ℝ) {t : ℝ} (ht : 0 < t) (x : ℝ) (D : ℝ)
     (hpos : convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x ≠ 0)

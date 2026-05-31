@@ -904,6 +904,301 @@ session 内に解けない場合は、当該 step を `sorry` + `@residual(plan:
 
 ---
 
+## Phase 5-G — `_chain` sub-lemma 分割設計
+
+> 2026-05-31 起草 (lean-planner)。verbatim 確認済 file:
+> `FisherInfoV2DeBruijnAssembly.lean:87-97` (`_chain` 現 signature)、
+> `FisherInfoV2DeBruijnPerTime.lean:639-655` (`entropy_hasDerivAt_via_parametric`)、
+> `:420-469` (`heatFlow_density_heat_equation` 全 hyp)、`:671-677` (`debruijn_ibp_step`)、
+> `:699-715` (`fisher_from_logDeriv`)、`:113-124` (`gaussianPDFReal_le_prefactor`)、
+> `:144-178` (`pPath_eq_convDensityAdd_lconvolution_bridge` の domination 構成 precedent)、
+> `:267-296/309-361` (kernel x_deriv1/x_deriv2/sigma_deriv/heat_eq closed form)、
+> `EPIConvDensity.lean:40-104/113-131` (`convDensityAdd` / `_hasDerivAt` / `_logDeriv`)、
+> `FisherInfoV2.lean:89-103` (`fisherInfoOfDensity` / `Real`)、
+> Mathlib `IntegralEqImproper.lean:1318` (`integral_mul_deriv_eq_deriv_mul_of_integrable`)、
+> `Log/NegMulLog.lean:208-213` (`deriv_negMulLog` / `hasDerivAt_negMulLog`)。
+
+### Approach (Phase 5-G の解の全体形)
+
+`_chain` (`FisherInfoV2DeBruijnAssembly.lean:87-97`) は **monolithic sorry** で、段 2-7 の
+解析核 (entropy=∫negMulLog → parametric diff → heat eq → IBP → fisher congr → value match)
+を一括で抱えている。**現 signature の特徴 (verbatim 確認で判明)**: 入力は `pX`/`hpX_nn`/
+`hpX_meas`/`hpX_int`/`ht` の **5 つ (pX 系 regularity のみ、structure 非依存)**。結論は
+
+```
+HasDerivAt
+  (fun s => ∫ x, negMulLog (convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, _⟩) x))
+  ((1/2) * fisherInfoOfDensityReal (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)))
+  t
+```
+
+`pPath s := convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, _⟩)` と置くと、結論は
+「entropy 積分の s-微分 = (1/2)·Fisher(pPath t)」。6 atom は全て genuine (`@audit:ok`) なので、
+`_chain` の残課題は **atom を具体 instantiation で繋ぐための regularity discharge** (Gaussian-tail
+domination の `Integrable` / 被積分関数 ae-measurability / `tsupport` 全域 `HasDerivAt` /
+chain-rule plumbing)。これらを **named private sub-lemma に factor out** し、各々を genuine か
+honest sorry に分類する。
+
+**全体形 = 5 sub-lemma 列**:
+
+1. `_chain_entDeriv_formula` — `entDeriv` の閉形 (negMulLog chain rule × heat eq)。**genuine 見込み**。
+2. `_chain_domination` — parametric diff / heat eq の Gaussian-tail domination bound 群構成。
+   **最大コスト、honest sorry 据置 (L-PT-γ)**。
+3. `_chain_parametric` — 段 3+4 を `entropy_hasDerivAt_via_parametric` + `heatFlow_density_heat_equation`
+   で組み `HasDerivAt (∫negMulLog pPath) (∫ entDeriv t) t` を出す。**domination 供給後 genuine**。
+4. `_chain_ibp_fisher` — 段 5+6 を `debruijn_ibp_step` + `fisher_from_logDeriv` で組み
+   `∫ entDeriv t = (1/2)·Fisher(pPath t)` を出す。**`tsupport` 全域 C¹ + Gaussian-tail
+   integrability 据置 (L-PT-δ)**。
+5. `_chain` (本体) — 上記を `max s 0` 近傍補正込みで合成。**plumbing genuine**。
+
+**honesty 制約 (全 sub-lemma)**: hyp は全て **pX 系 regularity + 被積分関数レベルの
+domination/integrability/可測性** に限る。結論 (`HasDerivAt` / Fisher 値) を sub-lemma の
+hyp に bundle しない (load-bearing 禁止)。precedent: `heatFlow_density_heat_equation`
+(`:420-469`、同型 domination hyp 群で `@audit:ok`) / `entropy_hasDerivAt_via_parametric`
+(`:639-655`、`@audit:ok`)。
+
+> **`max s 0` 近傍補正の注意 (verbatim 確認)**: `_chain` の被微分関数は
+> `fun s => ∫ negMulLog (convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, _⟩) x)` で variance
+> witness が `⟨max s 0, le_max_right _ _⟩`。`t > 0` ゆえ `t` の近傍 (`s > 0`) では `max s 0 = s`
+> (`max_eq_left hs.le`)。`_entropy_eq` (`:120-151` verbatim) が既にこの `max s 0` 形を
+> `eventually_gt_nhds ht` + `max_eq_left` で `⟨s, hs.le⟩` に書換える pattern を持つ (genuine)
+> ので、段 5 本体は **同 pattern を `HasDerivAt.congr_of_eventuallyEq` で適用**して `max` を外す。
+
+---
+
+### §5G-1. `entDeriv` の閉形 (verbatim chain rule 展開)
+
+段 3 (parametric diff) と段 4 (heat eq) と段 5 (IBP) の接続核 = `entDeriv t x` の閉形。
+`entDeriv t x := (d/ds) negMulLog (pPath s x)|_{s=t}`。chain rule で展開する。
+
+**verbatim 部品**:
+- `Real.hasDerivAt_negMulLog {x : ℝ} (hx : x ≠ 0) : HasDerivAt negMulLog (-log x - 1) x`
+  (`Log/NegMulLog.lean:212-213`)。
+- `Real.deriv_negMulLog {x : ℝ} (hx : x ≠ 0) : deriv negMulLog x = -log x - 1` (`:208`)。
+- `heatFlow_density_heat_equation` 結論 (`:467-469`): `HasDerivAt (fun σ => pPath σ x)`
+  `((1/2) * pathDeriv2 s x) s` (= `∂_s pPath t x = (1/2) ∂²_x pPath t x`)。
+
+**chain rule (composition `negMulLog ∘ (s ↦ pPath s x)`)**:
+
+```
+(d/ds) negMulLog (pPath s x)|_{s=t}
+  = (deriv negMulLog (pPath t x)) · (∂_s pPath t x)              -- HasDerivAt.comp / .scomp
+  = (- log (pPath t x) - 1) · ((1/2) · pathDeriv2 t x)            -- deriv_negMulLog + heat eq
+```
+
+→ **`entDeriv t x := (- Real.log (pPath t x) - 1) * ((1/2) * pathDeriv2 t x)`**
+(ここで `pathDeriv2 t x = ∂²_x pPath t x`、heat eq の RHS 因子)。
+
+> **`pPath t x ≠ 0` の扱い (落とし穴)**: `hasDerivAt_negMulLog` は `x ≠ 0` 仮定を要する。
+> `pPath t x = convDensityAdd pX g_t x = ∫ pX·g_t(x-·)` は Gaussian 因子が strictly positive
+> ゆえ `pX` の質量が正なら `> 0`。ただし `pX ≡ 0` 退化や測度 0 集合での扱いは a.e. で済ませる
+> (`entDeriv` の閉形は a.e. 成立で良い、段 3 の `hdiff`/`hb`/`hint` が a.e. 量化)。**genuine
+> 構成可** (`convDensityAdd` 正値性は `pPath_eq_convDensityAdd_lconvolution_bridge` 周辺の
+> `integral_nonneg` + Gaussian 正値で導出、`_entropy_eq:150-151` が `integral_nonneg` precedent)。
+
+| sub-lemma | signature 骨子 | discharge 元 | genuine/sorry 見込み | 行数 |
+|---|---|---|---|---|
+| `_chain_entDeriv_formula` | `(pX) (hpX_nn) (hpX_meas) {t} (ht) (x) (hpos : 0 < convDensityAdd pX g_t x) : HasDerivAt (fun s => negMulLog (convDensityAdd pX g_s x)) ((-log(pPath t x)-1)*((1/2)*pathDeriv2 t x)) t` | `hasDerivAt_negMulLog` + `heatFlow_density_heat_equation` (heat eq atom) + `HasDerivAt.comp` | **genuine** (atom 合成、chain rule) ただし heat eq atom の domination hyp を `_chain_domination` から受ける (§5G-2) | ~40-60 |
+
+> ⚠ `_chain_entDeriv_formula` は heat eq atom を呼ぶため、**heat eq の §5B domination hyp 群を
+> 引数で受ける** (per-y domination は `_chain_domination` で構成 → ここに渡す)。結論 (`HasDerivAt`)
+> は genuine claim で hyp に bundle しない。
+
+---
+
+### §5G-2. Gaussian-tail domination 群 (最大コスト、L-PT-γ)
+
+段 3 (`entropy_hasDerivAt_via_parametric`) と段 4 (`heatFlow_density_heat_equation`) が要求する
+domination bound 群を構成する。これが `_chain` の **真の最大コスト**。
+
+**段 3 が要求する hyp (verbatim `:640-647`)**:
+- `bound : ℝ → ℝ` + `hbound_int : Integrable bound volume` (Gaussian-tail dominating fn)。
+- `hmeas` (∀ᶠ s, AEStronglyMeasurable (negMulLog∘pPath s))、`hint` (基点 integrable)。
+- `hderiv_meas : AEStronglyMeasurable (entDeriv t)`。
+- `hb : ∀ᵐ x, ∀ s, ‖entDeriv s x‖ ≤ bound x` / `hdiff : ∀ᵐ x, ∀ s, HasDerivAt (...) (entDeriv s x) s`。
+
+**段 4 が要求する hyp (verbatim `:434-466`、§5B-2 と同形)**: `boundσ`/`hboundσ_int`/`hFσ_meas`/
+`hFσ_int`/`hFσ'_meas`/`hbσ` (σ方向) + `boundξ1`/`boundξ2` 系 (spatial、計 12 hyp)。
+
+**discharge 元 (1 件ずつ判定)**:
+
+| 要求 hyp | 構成方法 | 判定 (a/b/c) | 根拠 |
+|---|---|---|---|
+| `hbound_int`/`hboundσ_int`/`hboundξ*_int` (Integrable bound) | `pX` integrable × Gaussian factor の prefactor 上界 → `Integrable.mul_bdd` | **(a) 既存 atom 同型** | `pPath_eq_convDensityAdd_lconvolution_bridge:166-173` が `hpX_int.mul_bdd` + `gaussianPDFReal_le_prefactor` で同型構成済 (verbatim precedent) |
+| `hb`/`hbσ`/`hbξ*` (‖integrand 微分‖ ≤ bound) | kernel closed form (`_sigma_deriv:309`/`_x_deriv2:288`) の prefactor 上界 + `pX y·` スケール | **(a/b 混合)** | kernel は `g_σ·(u²/σ²-1/σ)` 形 (`:443-445`)。σ-近傍を `Set.Ioo (s/2)(2s)` に取れば `(u²/σ²-1/σ)` 有限化 (§5B-4、heat eq atom が既に採用 `:443`)。**σ→0 発散は近傍補正で回避済 (atom 内で実証)** |
+| `hmeas`/`hderiv_meas`/`hFσ_meas`/`hF*_meas` (AEStronglyMeasurable) | `pX` 可測 (`hpX_meas`) × kernel 可測 (`measurable_gaussianPDFReal`.comp) | **(b) Mathlib 直結** | bridge `:169-170` が `(measurable_gaussianPDFReal).comp (...).aestronglyMeasurable` で同型 |
+| `hint`/`hFσ_int`/`hFξ*_int` (基点 integrable) | `Integrable.mul_bdd` 同型 (上記 bound 構成の基点版) | **(a)** | bridge `:166` と同型 |
+| `hdiff` (per-x σ微分 HasDerivAt) | `_chain_entDeriv_formula` (§5G-1) を a.e. 量化 | **(a) atom 合成** | §5G-1 |
+
+**判定総括**: domination 群は **真の Mathlib 壁ではない** ((c) 該当なし)。全て (a) 既存 atom
+(`Integrable.mul_bdd` + `gaussianPDFReal_le_prefactor` + kernel closed form) or (b) Mathlib
+直結で genuine 構成可。**ただし bound 関数の explicit 構成 (negMulLog 因子 `(-log p - 1)` の
+Gaussian-tail integrability)** が嵩む — `negMulLog'(pPath t x) = -log(pPath t x) - 1` は
+`pPath t x → 0` (tail) で `log → -∞` ゆえ `bound` に `|log(pPath)|` の integrable majorant が
+要る。これは Gaussian-tail で `pPath t x ≍ exp(-x²/2(v+t))` ゆえ `|log pPath| ≍ x²` (polynomial)
+× Gaussian decay で integrable だが、**この log-tail bound の explicit 補題が嵩む (~80-120 行)**。
+
+| sub-lemma | signature 骨子 | discharge 元 | genuine/sorry 見込み | 行数 |
+|---|---|---|---|---|
+| `_chain_domination` | `(pX) (hpX_nn) (hpX_meas) (hpX_int) {t} (ht) : <段3+段4 の bound/domination hyp 群を ∃ or 構造体で返す>` | `Integrable.mul_bdd` + `gaussianPDFReal_le_prefactor` + kernel closed form (全 (a)/(b)) | **honest sorry 据置 (L-PT-γ)**: 構成方法は全 genuine だが log-tail bound explicit 化が ~80-120 行で session 内不可見込み。可分なら段別に部分 genuine 化 | ~80-150 |
+
+> **L-PT-γ 発動**: bound 群構成は「Mathlib 不在」ではなく「explicit 構成が嵩む plumbing」。
+> 撤退時は `_chain_domination` を honest sorry + `@residual(plan:epi-debruijn-pertime-closure)`
+> で据置 (tier 2)。**禁止**: heat eq 結論や Fisher 値を hyp に bundle して sorry を消す。
+> **部分 genuine 化推奨**: measurability 群 (b) と `Integrable.mul_bdd` 基点版 (a) は先に
+> genuine 化し、log-tail bound のみ sorry に残す (段別分割で残 sorry 局所化)。
+
+---
+
+### §5G-3. 段 3+4 合成 (`_chain_parametric`)
+
+domination 群 (§5G-2) を供給したうえで、段 3 atom + 段 4 atom を合成して
+`HasDerivAt (fun s => ∫ negMulLog (pPath s x)) (∫ entDeriv t x) t` を出す。
+
+**手順**:
+1. `entropy_hasDerivAt_via_parametric pPath entDeriv bound hbound_int hmeas hint hderiv_meas hb hdiff`
+   (`:639-649` verbatim) で `HasDerivAt (∫ negMulLog pPath) (∫ entDeriv t) t`。
+2. `entDeriv t x` を §5G-1 の閉形 `(-log(pPath t x)-1)·((1/2)·pathDeriv2 t x)` に同定
+   (`hdiff` の値が §5G-1 と一致 → `entropy_hasDerivAt_via_parametric` の `∫ entDeriv t` が
+   この閉形の積分)。
+
+| sub-lemma | signature 骨子 | discharge 元 | genuine/sorry 見込み | 行数 |
+|---|---|---|---|---|
+| `_chain_parametric` | `(pX) (hpX_nn) (hpX_meas) (hpX_int) {t} (ht) (<domination 群>) : HasDerivAt (fun s => ∫ negMulLog (convDensityAdd pX g_{max s 0} x) ∂x) (∫ ((-log(pPath t x)-1)*((1/2)*pathDeriv2 t x)) ∂x) t` | `entropy_hasDerivAt_via_parametric` (atom) + §5G-1 + §5G-2 | **domination 供給後 genuine** (atom 合成)。domination が sorry なら transitive sorry | ~30-50 |
+
+---
+
+### §5G-4. 段 5+6 合成 (`_chain_ibp_fisher`、L-PT-δ)
+
+`∫ entDeriv t x = (1/2)·fisherInfoOfDensityReal (pPath t)` を IBP + fisher congr で出す。
+
+**段 5 IBP の verbatim 部品 (`debruijn_ibp_step:671-677`)**:
+
+```lean
+debruijn_ibp_step (u v u' v' : ℝ → ℝ)
+  (hu : ∀ x ∈ tsupport v, HasDerivAt u (u' x) x)
+  (hv : ∀ x ∈ tsupport u, HasDerivAt v (v' x) x)
+  (huv' : Integrable (u * v')) (hu'v : Integrable (u' * v)) (huv : Integrable (u * v)) :
+  ∫ x, u x * v' x = - ∫ x, u' x * v x
+```
+
+**IBP の具体割当** (de Bruijn 計算 `∫ negMulLog'(p)·∂_s p →IBP→ (1/2)∫ (∂_x p)²/p`):
+- 段 3 の `∫ entDeriv t = ∫ (-log(p)-1)·(1/2)·pathDeriv2` で `pathDeriv2 t = ∂²_x p`
+  (heat eq の spatial 2nd deriv)。
+- IBP で `∂²_x p` の 1 階を `negMulLog'(p) = -log(p)-1` 側に移す。**割当**:
+  `u := fun x => -log(pPath t x)-1` (= `negMulLog'∘pPath t`)、`v := fun x => ∂_x pPath t x`
+  (= pathDeriv1 t)、`v' := ∂²_x pPath t = pathDeriv2 t`、
+  `u' := ∂_x (negMulLog'∘pPath t) x = -(∂_x pPath t)/(pPath t)` (= `-(logDeriv (pPath t))`
+  の符号付き、`deriv(-log) = -1/p · ∂_x p`)。
+- → `∫ u·v' = ∫ (-log p-1)·∂²_x p = -∫ u'·v = -∫ (-(∂_x p)/p)·∂_x p = ∫ (∂_x p)²/p`
+  = `∫ (logDeriv (pPath t))²·(pPath t)` (`logDeriv p = ∂_x p / p`)。
+
+**段 6 fisher congr (`fisher_from_logDeriv:699-702`)**:
+
+```lean
+fisher_from_logDeriv (p : ℝ → ℝ) (hp_nn : ∀ x, 0 ≤ p x)
+  (hint : Integrable (fun x => (logDeriv p x)^2 * p x) volume) :
+  ∫ x, (logDeriv p x)^2 * p x ∂volume = fisherInfoOfDensityReal p
+```
+
+→ `(1/2)·∫ (logDeriv (pPath t))²·(pPath t) = (1/2)·fisherInfoOfDensityReal (pPath t)`。
+
+**IBP hyp の discharge (1 件ずつ判定)**:
+
+| 要求 hyp | 構成方法 | 判定 (a/b/c) | 根拠 |
+|---|---|---|---|
+| `hu`/`hv` (`∀ x ∈ tsupport ·, HasDerivAt`) | **Gaussian conv density は full-support (`tsupport = ℝ`) → 全 ℝ で `HasDerivAt` 要**。`convDensityAdd_hasDerivAt` (`EPIConvDensity.lean:86`、`@audit:ok`、空間微分) で `∂_x p` の HasDerivAt、`u = negMulLog'∘p` は `hasDerivAt_negMulLog` + `convDensityAdd_hasDerivAt` の chain | **(a) atom 合成、ただし `tsupport`=ℝ 確認 + 全域 C¹ が要** | loogle: 真壁ではない (Gaussian conv は C^∞)。**ただし `tsupport v = ℝ` を確定する補題** (`v = ∂_x p` の support が ℝ) が要 — full-support density の `tsupport` は閉包 = ℝ。`p > 0` (Gaussian conv 正値) → `tsupport ⊇ support = ℝ` → `= ℝ`。`p > 0` 正値補題 (§5G-1 の `hpos`) から導出 |
+| `huv'`/`hu'v`/`huv` (Integrable) | Gaussian-tail integrability (`u·v' = (-log p-1)·∂²_x p` 等)。`Integrable.mul_bdd` 系 + log-tail bound | **(a) §5G-2 と同型** | §5G-2 の log-tail bound に帰着 (`-log p` 因子 × Gaussian decay) |
+
+**判定総括**: 段 5+6 も **真の Mathlib 壁ではない** ((c) なし)。IBP atom + fisher atom は genuine、
+hyp は全て (a) atom 合成 or §5G-2 domination に帰着。**ただし `tsupport = ℝ` 確定 (full-support
+density の C¹ 全域) と log-tail integrability が嵩む** (L-PT-δ)。
+
+| sub-lemma | signature 骨子 | discharge 元 | genuine/sorry 見込み | 行数 |
+|---|---|---|---|---|
+| `_chain_ibp_fisher` | `(pX) (hpX_nn) (hpX_meas) (hpX_int) {t} (ht) (<C¹全域 + integrability 群>) : ∫ x, ((-log(pPath t x)-1)*((1/2)*pathDeriv2 t x)) ∂x = (1/2)*fisherInfoOfDensityReal (convDensityAdd pX g_t)` | `debruijn_ibp_step` + `fisher_from_logDeriv` + `convDensityAdd_hasDerivAt` (全 atom @audit:ok) + `tsupport=ℝ` 補題 | **L-PT-δ honest sorry 据置**: atom は genuine、`tsupport=ℝ` C¹ 全域 + log-tail integrability が ~50-80 行で session 内不可見込み。`Integrable` 群と `tsupport=ℝ` を別補題に切出せば部分 genuine 化可 | ~50-100 |
+
+> **L-PT-δ 発動**: `tsupport` 全域 `HasDerivAt` (Gaussian conv は C^∞ なので真壁ではないが、
+> `tsupport = ℝ` 確定 + 全域 C¹ + Gaussian-tail integrability の explicit 化が嵩む)。撤退時は
+> `_chain_ibp_fisher` を honest sorry。**部分 genuine 化推奨**: IBP の割当 (`u/v/u'/v'`) と
+> fisher congr は genuine、`tsupport=ℝ` + integrability 群のみ sorry。
+
+---
+
+### §5G-5. 本体合成 (`_chain`)
+
+§5G-3 (`_chain_parametric`) + §5G-4 (`_chain_ibp_fisher`) を合成し、`max s 0` 近傍補正を
+施して `_chain` の結論に一致させる。
+
+**手順**:
+1. `_chain_parametric` で `HasDerivAt (fun s => ∫ negMulLog (pPath_{max s 0} x)) (∫ entDeriv t) t`。
+2. `_chain_ibp_fisher` で `∫ entDeriv t = (1/2)·fisherInfoOfDensityReal (pPath t)`。
+3. (1) の deriv 値を (2) で rewrite → `_chain` 結論。`max s 0` は `_chain_parametric` 側で
+   既に処理済 (signature が `max s 0` 形) なら追加補正不要、そうでなければ
+   `HasDerivAt.congr_of_eventuallyEq` で `eventually_gt_nhds ht` + `max_eq_left` (`_entropy_eq:131-133`
+   precedent) を適用。
+
+| sub-lemma | signature 骨子 | discharge 元 | genuine/sorry 見込み | 行数 |
+|---|---|---|---|---|
+| `_chain` (本体) | (現状不変、`:87-96`) | `_chain_parametric` + `_chain_ibp_fisher` + `max` 近傍補正 | **plumbing genuine** (両 sub-lemma 供給後)。両 sub-lemma が sorry なら transitive sorry だが本体 plumbing は genuine | ~20-40 |
+
+---
+
+### §5G-6. sub-lemma 一覧 (factor-out 設計サマリ)
+
+| # | sub-lemma 名 (private) | 役割 (段) | hyp (全 regularity) | genuine/sorry | 行数 | 並列可? |
+|---|---|---|---|---|---|---|
+| 1 | `_chain_entDeriv_formula` | entDeriv 閉形 (段 3↔4↔5 接続核) | `pX`/`hpX_nn`/`hpX_meas` + heat eq domination | **genuine** | ~40-60 | A |
+| 2 | `_chain_domination` | Gaussian-tail bound 群 (段 3+4) | `pX`/`hpX_nn`/`hpX_meas`/`hpX_int` | **honest sorry (L-PT-γ)**、measurability 部 (b) は部分 genuine | ~80-150 | B |
+| 3 | `_chain_parametric` | 段 3+4 合成 | #1 + #2 出力 | **#2 供給後 genuine** | ~30-50 | (1+2 依存) |
+| 4 | `_chain_ibp_fisher` | 段 5+6 合成 (IBP+fisher) | `pX` + C¹全域 + integrability | **honest sorry (L-PT-δ)**、IBP割当+fisher congr は genuine | ~50-100 | C |
+| 5 | `_chain` (本体) | 段 7 合成 + max 補正 | #3 + #4 出力 | **plumbing genuine** | ~20-40 | (3+4 依存) |
+
+**並列化**: file 所有権は全て `FisherInfoV2DeBruijnAssembly.lean` 1 file なので、**並列
+lean-implementer は不可** (同一 file 同時編集は merge 衝突)。ただし sub-lemma A (#1) / B (#2) /
+C (#4) は **互いに独立** (依存なし) なので、**単一 implementer が A→B→C→#3→#5 の順で逐次**
+実装するか、もし並列するなら各 sub-lemma を別 file (例 `_chain` 用 helper file) に切出してから
+worktree 並列。**推奨 = 単一逐次** (1 file 内、merge cost 回避)。
+
+---
+
+### §5G-7. 着手順 + genuine/PR 級線引き
+
+**1 session で genuine closure 可能な部分** (推奨着手順):
+1. **`_chain_entDeriv_formula` (#1)** — chain rule + heat eq atom 合成、genuine 見込み高。
+   ただし heat eq atom の domination hyp を受ける形にし、本 sub-lemma 自体は domination を
+   引数化 (closure は #2 待ち)。**着手 1**。
+2. **`_chain_domination` (#2) の measurability 群 (b) + `Integrable.mul_bdd` 基点版 (a)** —
+   bridge `:166-173` precedent を踏襲して genuine 化。**log-tail bound のみ honest sorry に
+   残す** (段別分割)。**着手 2 (部分 genuine)**。
+3. **`_chain_ibp_fisher` (#4) の IBP 割当 + fisher congr** — `u/v/u'/v'` 割当と
+   `debruijn_ibp_step`/`fisher_from_logDeriv` 呼出は genuine。**`tsupport=ℝ` + integrability 群
+   のみ honest sorry に残す**。**着手 3 (部分 genuine)**。
+4. **`_chain_parametric` (#3) + `_chain` 本体 (#5)** — sub-lemma 供給後の合成 plumbing、genuine。
+   ただし #2/#4 の残 sorry が transitive に効く (type-check done 止まり)。**着手 4**。
+
+**PR 級据置部分** (L-PT-γ/δ、honest sorry + `@residual(plan:epi-debruijn-pertime-closure)`):
+- `_chain_domination` の **log-tail bound** (`|log(pPath t x)|` の Gaussian-tail integrable
+  majorant の explicit 構成、~80-120 行)。
+- `_chain_ibp_fisher` の **`tsupport=ℝ` 全域 C¹ + Gaussian-tail integrability** (full-support
+  density の `tsupport` 確定 + IBP integrand 群の integrability、~50-80 行)。
+
+> **線引きの本質 (verbatim 確認の結論)**: `_chain` の残課題は **真の Mathlib 壁 ((c)) を含まない**。
+> IBP (`integral_mul_deriv_eq_deriv_mul_of_integrable`) / parametric diff
+> (`hasDerivAt_integral_of_dominated_loc_of_deriv_le`) / negMulLog deriv / heat eq kernel は
+> 全て in-tree。残るは **explicit Gaussian-tail bound 構成** (domination の `Integrable` /
+> `tsupport=ℝ` C¹ / log-tail majorant) という plumbing で、~150-280 行。1 session では
+> measurability 群 + atom 合成 plumbing を genuine 化し、log-tail bound と tsupport C¹ を
+> honest sorry で残す (部分 genuine) のが現実的。proof done (assembly 0 sorry) は #2/#4 の
+> log-tail / tsupport sorry closure に gated。
+
+**撤退ライン整合**: §5G-2 = L-PT-γ (dominating fn の `Integrable`)、§5G-4 = L-PT-δ
+(`tsupport` 全域 C¹ / tail decay)。両者とも既存撤退ライン表 (本 plan 末尾) に整合。
+**禁止 (全 sub-lemma 共通)**: 結論 (`HasDerivAt`/Fisher/heat eq) を hyp に bundle / `*Hypothesis`
+predicate 化 / `:True` slot / 循環 `:= h` / 退化 (rnDeriv pin 等)。詰まったら tier 2 sorry。
+
+---
+
 ## 撤退ライン (L-* マーカー集約)
 
 各 Phase の honest 撤退口。すべて **sorry + `@residual`** 維持 / 仮説束化禁止。
@@ -1005,3 +1300,19 @@ session 内に解けない場合は、当該 step を `sorry` + `@residual(plan:
    系を `density_t_eq` の前に移動 (forward-reference 解消)、`_hv` underscore 外し、`⟨t,ht.le⟩≠0` の
    NNReal 同定。`density_t_eq` field `@audit:ok` + `debruijnIdentityV2_holds` の「true statement」
    docstring sign-off は **downgrade 所見** (pin 書換まで false 前提、最終書換は実装後 auditor、§5F-1)。
+10. **`_chain` (assembly 段 2-7) を 5 sub-lemma に分割、真壁 0 件 = explicit plumbing のみ
+    (§Phase 5-G)** (2026-05-31, lean-planner): `_chain` (`FisherInfoV2DeBruijnAssembly.lean:87-97`、
+    現 monolithic sorry) を verbatim 確認のうえ `_chain_entDeriv_formula` (#1、entDeriv 閉形
+    `(-log p-1)·(1/2)·∂²_x p`、chain rule + heat eq atom) / `_chain_domination` (#2、Gaussian-tail
+    bound 群) / `_chain_parametric` (#3、段3+4 合成) / `_chain_ibp_fisher` (#4、段5+6 IBP+fisher) /
+    `_chain` 本体 (#5、段7+max 補正) の 5 sub-lemma に factor out。**重要発見**: 全 atom が in-tree
+    `@audit:ok` (IBP `integral_mul_deriv_eq_deriv_mul_of_integrable` / parametric
+    `hasDerivAt_integral_of_dominated_loc_of_deriv_le` / `hasDerivAt_negMulLog` / heat eq kernel)
+    ゆえ `_chain` の残課題は **真の Mathlib 壁 (分類 c) を 1 件も含まず**、explicit Gaussian-tail
+    bound 構成 (domination の `Integrable` / `tsupport=ℝ` 全域 C¹ / `|log(pPath)|` の Gaussian-tail
+    integrable majorant) という plumbing (~150-280 行)。1 session 着手順 = measurability 群 (b) +
+    `Integrable.mul_bdd` 基点版 (a、bridge `:166-173` precedent) + atom 合成 plumbing を genuine 化
+    → log-tail bound (L-PT-γ) と tsupport C¹ (L-PT-δ) を honest sorry で残す (部分 genuine)。
+    並列は全 sub-lemma 同一 file ゆえ不可 (単一 implementer 逐次推奨)。`entDeriv` 閉形は
+    `Real.hasDerivAt_negMulLog (hx : x ≠ 0)` を要するため `pPath t x > 0` (Gaussian conv 正値、
+    a.e.) が必須 — `integral_nonneg` + Gaussian 正値で genuine 導出 (`_entropy_eq:150-151` precedent)。
