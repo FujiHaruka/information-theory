@@ -1849,6 +1849,40 @@ private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher
   rw [fisher_from_logDeriv p_t hp_nn
     (convDensityAdd_fisher_integrable pX hpX_nn hpX_meas hpX_int ht)]
 
+/-- **§5G-3 hdiff plumbing (a.e.-over-Ioo per-`x` chain-rule, named honest sorry).**
+The per-`x`, per-`s∈Ioo (t/2)(2*t)` chain-rule derivative of the entropy integrand
+`fun s => negMulLog (pPath s x)`, with value the §5G-1 closed form
+`entDerivFn s x = (- log (pPath s x) - 1)·((1/2)·∂²_x pPath_s x)`, where
+`pPath s x = convDensityAdd pX g_{max s 0} x`.
+
+This is the `hdiff` precondition of the parametric-diff atom `entropy_hasDerivAt_via_parametric`.
+The genuine derivation route is, for each `(x, s∈Ioo)`:
+(1) §5G-1 `_chain_entDeriv_formula` (the negMulLog chain rule, `@audit:ok`), fed the σ-derivative
+    witness `hpath_deriv : HasDerivAt (fun σ => convDensityAdd pX g_{max σ 0} x) ((1/2)·∂²_x p_s x) s`;
+(2) that σ-derivative from `heatFlow_density_heat_equation` (`@audit:ok` atom), whose **11
+    integrand-level Gaussian-tail domination hyps** plus the two deriv pins (`convDensityAdd_hasDerivAt_self`
+    / `convDensityAdd_deriv_hasDerivAt_self`) must be supplied per-`x`.
+
+**Honest sorry (NOT a Mathlib gap)**: the residual is the per-`x` assembly of the heat-eq atom's
+11-hyp Gaussian-tail domination groups (which duplicate `_chain_domination`'s envelopes) — heavy
+`plan:` plumbing over the `@audit:ok` heat-eq atom + deriv-existence helpers, not a Mathlib wall.
+The conclusion is an integrand-level derivative-existence statement (regularity output for the atom);
+it does NOT bundle the composed `HasDerivAt`-of-the-integral conclusion. All hyps are pX regularity.
+@residual(plan:epi-debruijn-pertime-closure) -/
+private theorem debruijnIdentityV2_holds_assembled_chain_hdiff
+    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
+    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    {t : ℝ} (ht : 0 < t) :
+    ∀ᵐ x ∂volume, ∀ s ∈ Set.Ioo (t/2) (2*t),
+      HasDerivAt
+        (fun s => Real.negMulLog
+          (convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩) x))
+        ((- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩) x) - 1)
+          * ((1/2) * deriv (deriv (convDensityAdd pX
+              (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩))) x)) s := by
+  sorry -- @residual(plan:epi-debruijn-pertime-closure)
+
 /-- **§5G-3: parametric-diff composition.**
 The entropy integral `∫ negMulLog (pPath s ·)` has its `s`-derivative at `t` given by the
 integral of `entDeriv` (the §5G-1 per-`x` closed form), and that integral equals
@@ -1858,27 +1892,35 @@ with §5G-1 (per-`x` chain rule), §5G-2 (full-entDeriv Ioo domination), §5G-4 
 `HasDerivAt` and Fisher-value conclusions are genuine claims; they are NOT supplied as
 hypotheses.
 
-**Statement true (2026-05-31, §Phase 5-G)**: the existential output `entDeriv` is the §5G-1
-per-`x` closed form `(- log p_s x - 1)·((1/2)·∂²_x p_s x)`, which on the `Ioo (t/2)(2*t)`
-neighborhood (each `s > 0`) satisfies the per-`x` chain rule (§5G-1, `pPath_s x > 0` a.e. + heat
-eq) and is dominated by §5G-2's integrable majorant. Feeding these into the Ioo-version atom
-yields the `HasDerivAt`; the Fisher value is §5G-4. The body is left as an honest `sorry` (the
-a.e.-over-`Ioo` `hdiff` plumbing + atom invocation is L-PT-γ scope), but the **statement is
-satisfiable** (proof-pivot-advisor confirmed). The被微分関数 keeps the `max s 0` form to match
-`_chain` verbatim (`max s 0 = s` on the `t`-neighborhood).
+**§Phase 5-G case C wiring (2026-05-31, §5G-3 配線完了)**: the former monolithic body `sorry`
+is **factored** into a genuine `entropy_hasDerivAt_via_parametric` (`@audit:ok` atom) application
++ named residuals (0 local sorry). The existential output `entDeriv` is the §5G-1 per-`x` closed
+form `entDerivFn t x = (- log p_t x - 1)·((1/2)·∂²_x p_t x)` (kept in `max s 0` form so the
+被微分関数 matches `_chain` verbatim; `max s 0 = s` on the `Ioo (t/2)(2*t)` neighborhood). The body:
 
-Independent honesty audit (2026-05-31, fresh auditor, hpX_mass threading commit `b53107a`): verdict
-honest_residual. The new `hpX_mass:∫pX=1` hyp is an honest regularity precondition threaded purely to
-supply the §5G-2 domination's GAP① subcall (`_chain_domination` → `convDensityAdd_logFactor_poly_majorant`,
-which needs normalization for the Gaussian lower/upper bounds); it does NOT change the residual's meaning
-(the body is still the parametric-diff / `hdiff`-over-Ioo plumbing sorry, L-PT-γ scope). Conclusion
-(`HasDerivAt` + Fisher value) is the genuine claim, not bundled. Classification `plan:` unchanged and
-correct. @residual kept.
+- **first goal** (`HasDerivAt`): applies the Ioo-version atom `entropy_hasDerivAt_via_parametric`,
+  supplying its 6 preconditions —
+  · `hbound_int` / `hb` from §5G-2 `_chain_domination` (proof-done envelope, `@audit:ok`), with the
+    `max s 0 = s` reconciliation on `Ioo` (each `s > 0`);
+  · `hint` from the entropy-finiteness wall `convDensityAdd_negMulLog_integrable`
+    (`wall:entropy-finiteness`), moved to the `g_{max t 0}` form via `max t 0 = t`;
+  · `hmeas` / `hderiv_meas` **genuine** (joint-measurable convolution integrand + `negMulLog`/`log`
+    composition + `measurable_deriv`, all Mathlib std — mirrors `convDensityAdd_fisher_integrable`'s
+    `hpt_meas` route);
+  · `hdiff` from the named honest-sorry helper `_chain_hdiff` (a.e.-over-Ioo §5G-1 chain rule +
+    heat-eq atom domination plumbing, `plan:`).
+- **second goal** (Fisher value): applies §5G-4 `_chain_ibp_fisher` (genuine plumbing over the
+  Fisher + entropy walls), with `hentDeriv` pinning `entDerivFn t` to the `⟨t,_⟩`-form integrand a.e.
+  (definitional `max t 0 = t` reconciliation).
 
-`hpX_mom : Integrable (fun y => y²·pX y) volume` is likewise an honest regularity precondition
-(finite second moment / variance of `X`), threaded purely to supply the §5G-2 domination's
-route-II Tonelli even-moment envelope (`_chain_domination` → `convKernel_envelope_integrable`);
-it does NOT change the residual's meaning. @residual(plan:epi-debruijn-pertime-closure) -/
+The `HasDerivAt` + Fisher-value conclusions are the genuine claims, NOT bundled into hypotheses.
+The remaining honest `sorry` is localized in `_chain_hdiff` (named, `plan:`); the file-level
+residual grep still reflects this declaration's transitive dependency on §5G-2, §5G-3, §5G-4.
+
+`hpX_mass:∫pX=1` and `hpX_mom : Integrable (fun y => y²·pX y) volume` are honest regularity
+preconditions (unit mass + finite second moment / variance of `X`), threaded purely to supply
+the §5G-2 domination's GAP① normalization and route-II Tonelli even-moment envelope; they do NOT
+change the residual's meaning. @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_parametric
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -1891,7 +1933,100 @@ private theorem debruijnIdentityV2_holds_assembled_chain_parametric
         (∫ x, entDeriv x ∂volume) t
       ∧ (∫ x, entDeriv x ∂volume
           = (1/2) * fisherInfoOfDensityReal (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩))) := by
-  sorry -- @residual(plan:epi-debruijn-pertime-closure)
+  -- the §5G-1 per-`x` closed form `entDerivFn s x`, as a 2-arg function for the atom.
+  set entDerivFn : ℝ → ℝ → ℝ := fun s x =>
+    (- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩) x) - 1)
+      * ((1/2) * deriv (deriv (convDensityAdd pX
+          (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩))) x) with hentDerivFn
+  -- the witness derivative is `entDerivFn t`.
+  refine ⟨fun x => entDerivFn t x, ?_, ?_⟩
+  · -- ===== first goal: the HasDerivAt, via the parametric-diff atom. =====
+    -- §5G-2 domination: an integrable `bound` dominating `entDerivFn s` on `Ioo (t/2)(2*t)`.
+    obtain ⟨bound, hbound_int, hb_dom⟩ :=
+      debruijnIdentityV2_holds_assembled_chain_domination
+        pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
+    -- `max t 0 = t` reconciliation of the variance witness at the base point.
+    have hmaxt : (⟨max t 0, le_max_right t 0⟩ : ℝ≥0) = ⟨t, ht.le⟩ := by
+      apply NNReal.eq; exact max_eq_left ht.le
+    -- abbreviate the path.
+    set pPath : ℝ → ℝ → ℝ := fun s x =>
+      convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩) x with hpPath
+    -- `hint`: entropy-integrand integrability at `t` (entropy-finiteness wall), moved to
+    --   the `pPath t = g_{max t 0}` form via `max t 0 = t`.
+    have hint : Integrable (fun x => Real.negMulLog (pPath t x)) volume := by
+      have h := InformationTheory.Shannon.EntropyConvFinite.convDensityAdd_negMulLog_integrable
+        pX hpX_nn hpX_meas hpX_int ht
+      refine h.congr ?_
+      filter_upwards with x
+      rw [hpPath]; simp only; rw [hmaxt]
+    -- `hmeas`: a.e.-strong-measurability of the entropy integrand, for `s` near `t` (genuine).
+    have hmeas : ∀ᶠ s in nhds t,
+        AEStronglyMeasurable (fun x => Real.negMulLog (pPath s x)) volume := by
+      refine Filter.Eventually.of_forall (fun s => ?_)
+      -- `convDensityAdd pX g_{max s 0}` is measurable (joint-measurable integrand + Fubini).
+      have hg_meas : Measurable (gaussianPDFReal 0 ⟨max s 0, le_max_right s 0⟩) :=
+        measurable_gaussianPDFReal 0 _
+      have hpath_meas : Measurable
+          (convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right s 0⟩)) := by
+        have huncurry : StronglyMeasurable
+            (Function.uncurry fun z x =>
+              pX x * gaussianPDFReal 0 ⟨max s 0, le_max_right s 0⟩ (z - x)) := by
+          apply Measurable.stronglyMeasurable
+          apply (hpX_meas.comp measurable_snd).mul
+          exact hg_meas.comp ((measurable_fst).sub measurable_snd)
+        have h := huncurry.integral_prod_right (ν := volume)
+        simpa only [convDensityAdd] using h.measurable
+      exact (Real.continuous_negMulLog.measurable.comp hpath_meas).aestronglyMeasurable
+    -- `hderiv_meas`: a.e.-strong-measurability of `entDerivFn t` (genuine).
+    have hderiv_meas : AEStronglyMeasurable (entDerivFn t) volume := by
+      have hg_meas : Measurable (gaussianPDFReal 0 ⟨max t 0, le_max_right t 0⟩) :=
+        measurable_gaussianPDFReal 0 _
+      have hpath_meas : Measurable
+          (convDensityAdd pX (gaussianPDFReal 0 ⟨max t 0, le_max_right t 0⟩)) := by
+        have huncurry : StronglyMeasurable
+            (Function.uncurry fun z x =>
+              pX x * gaussianPDFReal 0 ⟨max t 0, le_max_right t 0⟩ (z - x)) := by
+          apply Measurable.stronglyMeasurable
+          apply (hpX_meas.comp measurable_snd).mul
+          exact hg_meas.comp ((measurable_fst).sub measurable_snd)
+        have h := huncurry.integral_prod_right (ν := volume)
+        simpa only [convDensityAdd] using h.measurable
+      have hlog_meas : Measurable
+          (fun x => - Real.log (convDensityAdd pX
+            (gaussianPDFReal 0 ⟨max t 0, le_max_right t 0⟩) x) - 1) :=
+        ((Real.measurable_log.comp hpath_meas).neg).sub_const 1
+      have hd2_meas : Measurable
+          (fun x => (1:ℝ)/2 * deriv (deriv (convDensityAdd pX
+            (gaussianPDFReal 0 ⟨max t 0, le_max_right t 0⟩))) x) :=
+        (measurable_deriv _).const_mul _
+      exact (hlog_meas.mul hd2_meas).aestronglyMeasurable
+    -- `hb`: §5G-2 domination, restated for `entDerivFn s` (= `max s 0` form). On `Ioo (t/2)(2*t)`
+    --   each `s > 0` so `max s 0 = s`, matching `_chain_domination`'s `⟨s,_⟩` form.
+    have hb : ∀ᵐ x ∂volume, ∀ s ∈ Set.Ioo (t/2) (2*t), ‖entDerivFn s x‖ ≤ bound x := by
+      filter_upwards [hb_dom] with x hx
+      intro s hs
+      have hspos : (0:ℝ) < s := by have := hs.1; linarith
+      have hmaxs : (⟨max s 0, le_max_right s 0⟩ : ℝ≥0) = ⟨s, hspos.le⟩ := by
+        apply NNReal.eq; exact max_eq_left hspos.le
+      have hbx := hx s hs
+      rw [hentDerivFn]; simp only; rw [hmaxs]; exact hbx
+    -- `hdiff`: §5G-3 hdiff plumbing (named honest sorry helper).
+    have hdiff := debruijnIdentityV2_holds_assembled_chain_hdiff
+      pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
+    -- apply the parametric-diff atom (its `entDeriv` arg is `entDerivFn`, `pPath` arg is `pPath`).
+    exact entropy_hasDerivAt_via_parametric pPath entDerivFn bound ht
+      hbound_int hmeas hint hderiv_meas hb hdiff
+  · -- ===== second goal: Fisher value, via §5G-4 `_chain_ibp_fisher`. =====
+    -- the witness `entDeriv x = entDerivFn t x` equals the `⟨t,_⟩`-form §5G-1 integrand a.e.
+    have hmaxt : (⟨max t 0, le_max_right t 0⟩ : ℝ≥0) = ⟨t, ht.le⟩ := by
+      apply NNReal.eq; exact max_eq_left ht.le
+    have hentDeriv : ∀ᵐ x ∂volume, entDerivFn t x =
+        (- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x) - 1)
+          * ((1/2) * deriv (deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩))) x) := by
+      filter_upwards with x
+      rw [hentDerivFn]; simp only; rw [hmaxt]
+    exact debruijnIdentityV2_holds_assembled_chain_ibp_fisher
+      pX hpX_nn hpX_meas hpX_int hpX_mass ht (fun x => entDerivFn t x) hentDeriv
 
 /-- **Assembly chain core (段 2-7, genuine plumbing over §5G sub-lemmas)**: given the
 heat-flow density path `pPath s = convDensityAdd pX (gaussianPDFReal 0 ⟨s,_⟩)` (the
