@@ -572,6 +572,11 @@ integrable via `integrable_rpow_mul_exp_neg_mul_sq` (the `u⁴` and `u²` Gaussi
 This is the kernel `G(u) = (a+b·u²)·gaussHessMaj t u` used by the joint-envelope Tonelli
 route (`_chain_domination` first goal): the `x²`-weight `(A+B·x²)` of the log factor is split
 via `x² ≤ 2(x−y)² + 2y²`, and the `(x−y)²` part absorbs into this polynomial-weighted kernel.
+
+**Independent honesty audit (2026-05-31, Wave 5, commit `647015d`, fresh auditor): verdict ok.**
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free). Mathematically sound:
+`(a+b·u²)·gaussHessMaj t u` is Gaussian × quartic, integrable via the u²/u⁴ Gaussian moments
+(`integrable_rpow_mul_exp_neg_mul_sq`). Hyps `0<t` + free constants `a b` are regularity.
 @audit:ok -/
 private theorem gaussHessMaj_polyWeight_integrable {t : ℝ} (ht : 0 < t) (a b : ℝ) :
     Integrable (fun u : ℝ => (a + b * u ^ 2) * gaussHessMaj t u) volume := by
@@ -613,6 +618,11 @@ term and `u²·gaussHessMaj ≤ (√(πt))⁻¹·(256e⁻² + 8e⁻¹)` (from `u
 ≤ (8t·e⁻¹)²` and `u²·exp(-u²/4t) ≤ 4t·e⁻¹`, both via `mul_exp_neg_le_exp_neg_one`). Used to discharge
 the per-`y` fibre integrability `Integrable (fun y => pX y · G(x−y))` (bounded kernel × integrable pX)
 in the joint-envelope route II.
+
+**Independent honesty audit (2026-05-31, Wave 5, commit `647015d`, fresh auditor): verdict ok.**
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free). Mathematically sound:
+Gaussian × quartic decays to 0 at ±∞, global bound via `mul_exp_neg_le_exp_neg_one`. Hyps `0<t`,
+`0≤a`, `0≤b` are regularity (nonneg constants needed for the bound direction).
 @audit:ok -/
 private theorem gaussHessMaj_polyWeight_bdd {t : ℝ} (ht : 0 < t) {a b : ℝ}
     (ha : 0 ≤ a) (hb : 0 ≤ b) :
@@ -950,6 +960,12 @@ the `s`-uniform majorant `gaussianHess_le_gaussHessMaj`. This is GAP②'s pointw
 named lemma so that **both** GAP② (as the existential envelope) **and** `_chain_domination` (route
 II Tonelli, which needs the concrete envelope, not the abstract `∃`) consume it. Only `0<t`
 regularity hyps; the Hessian bound (conclusion) is the genuine claim, not load-bearing.
+
+**Independent honesty audit (2026-05-31, Wave 5, commit `647015d`, fresh auditor): verdict ok.**
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified — the
+STEP-D bridge `convDensityAdd_deriv2_eq_gaussian` it calls is itself sorry-free). Conclusion
+`‖∂²(pX∗g_s) x‖ ≤ ∫ pX y·gaussHessMaj t (x−y)` is a genuine pointwise claim (not a hypothesis-bundled
+existence); all 5 hyps are pX-regularity + `0<t`. NOT circular/false-statement/load-bearing.
 @audit:ok -/
 private theorem convDensityAdd_deriv2_le_gaussHessMaj_conv
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -1169,6 +1185,15 @@ domination hyps fed to `convDensityAdd_deriv2_eq_gaussian` (itself `@audit:ok`, 
 (4) **`hpX_mass`/`hpX_mom` now genuinely unused** (the Gaussian `g_s` inside the convolution supplies
 all decay) — not load-bearing, kept only for caller compatibility (lint warns, harmless). NOT
 circular/false-statement/degenerate/load-bearing. `@audit:ok` confirmed.
+
+**Re-confirm after Wave 5 refactor (2026-05-31, commit `647015d`, fresh auditor): verdict ok
+(proof done) — STILL HOLDS.** GAP②'s pointwise content was extracted to the named lemma
+`convDensityAdd_deriv2_le_gaussHessMaj_conv`; the body is now a thin wrapper
+(`convKernel_envelope_integrable` for integrability + that named lemma for pointwise domination,
+L1187-1192), still 0 local sorry. `#print axioms` re-run = `[propext, Classical.choice, Quot.sound]`
+(sorryAx-free, machine-verified). The file's remaining sorrys are now only 2 (`_ibp_step`:1602 /
+`_chain_parametric`:1702) since `_chain_domination` reached proof-done this wave — GAP② does not call
+either. `@audit:ok` retained.
 @audit:ok -/
 private theorem convDensityAdd_deriv2_poly_moment_majorant
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -1278,7 +1303,21 @@ uses `convDensityAdd_deriv2_le_gaussHessMaj_conv` for `‖∂²p_s x‖ ≤ E x`
 `integrable_natPow_mul_exp_neg_mul_sq` (route I = deleted case-A defect) is NOT used. `#print axioms`
 = `[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified). `hpX_mass` remains
 unused (only `hpX_mom` is load-bearing for the integrability); kept for caller compatibility.
-0 sorry / 0 residual. -/
+0 sorry / 0 residual.
+
+**Independent honesty audit (2026-05-31, Wave 5, commit `647015d`, fresh auditor): verdict ok
+(proof done).** (1) **sorryAx-free machine-verified**: transient `#print axioms` + `lake env lean`
+gives `[propext, Classical.choice, Quot.sound]`, sorryAx ABSENT — confirms `_chain_domination` does
+NOT transitively call the file's 2 remaining sorrys (`_ibp_step`:1602 / `_chain_parametric`:1702).
+(2) **even-envelope soundness PASS**: `x² ≤ 2(x−y)²+2y²` (L1421) is exactly `(x−2y)² ≥ 0`, supplied
+by `sq_nonneg (x−2y)` — mathematically correct; no odd cross-term so only even Gaussian moments are
+needed (route I = `integrable_natPow_mul_exp_neg_mul_sq` confirmed ABSENT from the body). (3) **hpX_mom
+is regularity, NOT load-bearing**: it supplies `Integrable (y²·pX)` (heavy-tail / finite-variance
+control), genuinely consumed at L1322 (`hmomPX_int`) for the 2nd convolution envelope; the conclusion
+(existence of an integrable domination envelope) is NOT assumed by it — "load-bearing for the
+integrability" in the prose above means "genuinely consumed", not the honesty-sense load-bearing hyp.
+The 2nd goal (domination) is genuine via `convDensityAdd_deriv2_le_gaussHessMaj_conv` + `norm_mul`/
+`mul_le_mul` (L1434-1463), no sorry. @audit:ok -/
 private theorem debruijnIdentityV2_holds_assembled_chain_domination
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
