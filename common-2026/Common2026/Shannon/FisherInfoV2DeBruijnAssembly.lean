@@ -1130,7 +1130,17 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
     -- ⚠ `integrable_natPow_mul_exp_neg_mul_sq` is NOT usable here: hessBound decays only
     --   polynomially ~const/x⁴ (no Gaussian factor survives for polynomial-tail pX, judgment log #17).
     --   Route I (closed-form `x^k·exp(-x²/c)` majorant) is the deleted case-A defect.
-    sorry -- @residual(plan:epi-debruijn-pertime-closure)  -- joint envelope integrability core (route II Tonelli+moment)
+    -- STRUCTURAL NOTE (2026-05-31): GAP② is now proof-done internally with the *concrete* envelope
+    --   `hessBound x = ∫ y, pX y·gaussHessMaj t (x−y)`, but it returns an abstract `∃ bound`, so after
+    --   `obtain ⟨hessBound, …⟩` the concrete form is hidden and `(A+Bx²)·hessBound` integrability is not
+    --   derivable from `hHess_int` (= `Integrable hessBound`) alone. To close this goal genuinely the
+    --   next session should (a) expose GAP②'s concrete envelope (named def + pointwise/integrability
+    --   lemmas, both reused by GAP② and here), then (b) add a polynomial-weighted Tonelli helper
+    --   `Integrable (fun x => (A+Bx²)·∫ y, pX y·gaussHessMaj t (x−y))` (the `x`-integral
+    --   `∫_x (A+Bx²)·gaussHessMaj t (x−y) dx` is a degree-2 poly in `y` via gaussHessMaj's even
+    --   moments; the `y`-fibre then collapses to `c0·∫pX + c1·∫y·pX + c2·∫y²·pX < ∞` using
+    --   `hpX_mass`/`hpX_mom`, 1st moment via `2|y|≤1+y²`). ~100 lines; left as honest sorry.
+    sorry -- @residual(plan:epi-debruijn-pertime-closure)  -- joint envelope integrability core (route II Tonelli+moment; needs GAP② concrete-envelope exposure + poly-weighted Tonelli)
   · -- domination: `‖LogFactor · (1/2 · Hess)‖ ≤ (A + B·x²)·((1/2)·hessBound x)`, genuine via norm_mul.
     filter_upwards [hLog, hHess] with x hLogx hHessx
     intro s hs
