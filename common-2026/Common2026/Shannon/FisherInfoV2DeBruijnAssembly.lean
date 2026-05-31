@@ -492,6 +492,28 @@ with infinite variance (e.g. Cauchy) is honestly excluded by the regularity hyp 
 
 The envelope construction (STEP D bridge + Tonelli + g_s moment) is not yet implemented, so this
 remains an **honest sorry** to be discharged in Phase 5-G.
+
+Independent honesty audit (2026-05-31, fresh auditor, 案B-core split commit `1c194dd`): verdict
+honest_residual. **Statement-truth (case-A re-emergence check PASS)**: the restated conclusion
+`∃ bound, Integrable bound ∧ ∀ᵐ x ∀ s∈Ioo(t/2,2t), ‖∂²_x p_s x‖ ≤ bound x` is TRUE & satisfiable
+for finite-2nd-moment pX, and is qualitatively different from the deleted case-A Gaussian-tail
+`C(1+x²)exp(-x²/c')` (which asserted a *specific false decay form*). The envelope existential
+demands no concrete shape: the s-uniform candidate `sup_{s∈Ioo} ∫_y pX(y)·g_s(x-y)·|(x-y)²/s²−1/s| dy`
+is a genuine pointwise majorant (STEP-D kernel form `g_σ(u)·(u²/σ²−1/σ)` verified genuine at
+`FisherInfoV2DeBruijnPerTime.heatFlow_density_heat_equation_kernel_x_deriv2:290`, sorryAx-free) and is
+Lebesgue-integrable (s ranges over a compact-away-from-0 window so the g_s moments are bounded; the
+x-integral collapses to ∫pX·const + moments, all finite). **Not vacuous**: `Integrable bound` is a
+genuine constraint a non-integrable bound would fail. The judgment-log-#15 counterexample `(2/π)/(1+y²)²`
+(finite 2nd moment, polynomial `∂²p_s` decay) is now *inside* scope — polynomial `~1/x⁴` decay IS
+dominated by an integrable bound, so it is not a counterexample (independent re-check). Cauchy / infinite
+variance honestly excluded by `hpX_mom`. **Classification `plan:` correct** (NOT a new wall): the
+envelope-construction residual closes via Tonelli (`MeasureTheory.lintegral_lintegral_swap` /
+`Integrable.integral_prod_left` present in Mathlib) + g_s Gaussian moments + finite-2nd-moment — same-family
+plumbing, not a Mathlib gap; plan `docs/shannon/epi-debruijn-pertime-closure-plan.md` exists. All 5 pX hyps
+(incl. `hpX_mass`/`hpX_mom`) are regularity preconditions (positivity/measurability/integrability/normalization/
+finite 2nd moment), NOT load-bearing — the Hessian bound (the conclusion) is asserted by none of them. NOT
+circular, NOT false-statement, NOT degenerate. The prior `@audit:defect(false-statement)` +
+`@audit:retract-candidate` are correctly removed (statement now genuinely true). @residual kept.
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem convDensityAdd_deriv2_poly_moment_majorant
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -542,6 +564,26 @@ existential output is integrand-level domination. The honest residual is localiz
 poly-moment envelope (§5G-2b) and (b) the joint envelope integrability core (route II Tonelli+moment,
 first goal below); the domination goal (second) is closed genuinely by `norm_mul`/`mul_le_mul`. The
 `@residual` is kept (transitive over GAP② + the integrability core).
+
+Independent honesty audit (2026-05-31, fresh auditor, 案B-core split commit `1c194dd`): verdict
+honest_residual. **Vacuous-genuine RESOLVED**: the prior body (commit `cf88267`/`b53107a`,
+`@audit:defect(false-statement)`) "closed" the integrability locally via
+`integrable_natPow_mul_exp_neg_mul_sq` (route I), which rested on GAP②'s FALSE Gaussian-tail decay —
+vacuous-genuine. The 案B body now honestly leaves the integrability as `sorry` (first goal) and only
+closes the domination (second goal) genuinely. **Core-reconstruction test PASS (genuine wiring)**:
+granting the two helpers' outputs — GAP① `⟨A,B,…,hLog⟩` (polynomial majorant `A+Bx²` for the *log
+factor only*) and GAP② `⟨hessBound, hHess_int, hHess⟩` (integrable envelope for the *Hessian only*) —
+does NOT auto-discharge the conclusion: the conclusion needs the **product** `(A+Bx²)·(1/2)hessBound`
+to be integrable, and polynomial-growth × integrable-envelope is NOT auto-integrable from `hHess_int`
+alone; this is the genuine analytic core, correctly localized to the first-goal `sorry` (route II
+Tonelli + g_s moment, judgment log #17). The domination (second goal) genuinely consumes BOTH `hLog`
+and `hHess` via `mul_le_mul`. **`integrable_natPow_mul_exp_neg_mul_sq` is correctly NOT used** (route I
+= deleted case-A defect, would be false for polynomial-tail pX). **Classification `plan:` correct** for
+the integrability-core sorry: Tonelli + Gaussian moments + finite-2nd-moment are Mathlib-present
+(`lintegral_lintegral_swap` / `Integrable.integral_prod_left`) = same-family plumbing, not a wall; plan
+exists. All hyps are pX regularity, NOT load-bearing; the existential output is integrand-level
+domination (the genuine claim). NOT circular, NOT vacuous-genuine, NOT false-statement. The
+`@audit:defect(false-statement)` is correctly removed (statement true via 案B joint route). @residual kept.
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_domination
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
