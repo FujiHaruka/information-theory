@@ -677,7 +677,16 @@ This is the family-level lift promised by Phase B of
 general non-Gaussian case is externalized via `IsHeatFlowFamilyHyp`.
 
 (Returns `Type`, not `Prop`, because `IsRegularDeBruijnHypV2` carries a
-density witness as data; declared `noncomputable def` accordingly.) -/
+density witness as data; declared `noncomputable def` accordingly.)
+
+Independent honesty audit (2026-05-31, fresh auditor, commit `6648753`): verdict ok.
+All structure fields (`density_t_eq` / `pX_law` / `pX_mom`) are genuine (0 sorry); only
+regularity hypotheses (`hv : v ≠ 0`, measurability, `IndepFun`, law-pins) are used. The
+new §5G `pX_mom` field is discharged via `memLp_id_gaussianReal` / `MemLp.integrable_sq`
+/ `integrable_withDensity_iff` (sound). `#print axioms` on the full declaration =
+`[propext, Classical.choice, Quot.sound]` only (sorryAx-free, transitive proof done
+machine-verified).
+@audit:ok -/
 noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (_hX : Measurable X) (_hZ : Measurable Z)

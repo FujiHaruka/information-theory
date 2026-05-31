@@ -261,6 +261,9 @@ noncomputable def IsRegularDeBruijnHypV2.ofHeatFlow
   -- finite-variance source for `X`, so this is an honest regularity-precondition
   -- sorry, the moment analogue of the `pX_law` sorry above (holds whenever `X` has
   -- finite second moment). Not load-bearing (no Fisher/HasDerivAt core).
+  -- Independent honesty audit (2026-05-31, commit `6648753`): honest_residual,
+  -- classification correct (peer of the same constructor's `density_t_eq`/`pX_law`
+  -- sorries; rnDeriv route has no moment source = `plan:` deferral, not a Mathlib `wall:`).
   -- @residual(plan:epi-debruijn-pertime-closure)
   pX_mom := by sorry
 
