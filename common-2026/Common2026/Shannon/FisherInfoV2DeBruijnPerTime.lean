@@ -618,6 +618,158 @@ theorem heatFlow_density_heat_equation
   rw [hpathDeriv2_eq]
   exact hB
 
+/-! ## Phase 2c — Mathlib `deriv` spatial identification (de Bruijn IBP prerequisite) -/
+
+-- The heat-equation atom `heatFlow_density_heat_equation` identifies the spatial
+-- derivatives against *pinned abstract witnesses* `pathDeriv1`/`pathDeriv2`. The de Bruijn
+-- IBP step `debruijn_ibp_step` (`:693`) instead needs the spatial derivatives in Mathlib
+-- `deriv` form (`v := deriv (convDensityAdd pX g_t)`, `v' := deriv (deriv …)`). The two
+-- atoms below establish `HasDerivAt (convDensityAdd pX g_t) …` and
+-- `HasDerivAt (fun ξ => ∫ … ∂_x kernel) …` in Mathlib `deriv` form, plus the `deriv = ∫`
+-- corollaries. Body structure mirrors heat-eq STEP D `hpathDeriv1_eq`/`hpathDeriv2_eq`
+-- (gateway `.2` + `convDensityAdd = ∫ kernel` congruence). Domination hyp groups are the
+-- spatial groups of `heatFlow_density_heat_equation` (`:448-468`) reused verbatim.
+
+/-- **Phase 2c (genuine)**: the spatial (`x`-direction) derivative of the Gaussian
+convolution density `convDensityAdd pX g_t` (`g_t = 𝒩(0, t)` density, `t > 0`) in Mathlib
+`HasDerivAt` form:
+`HasDerivAt (convDensityAdd pX g_t) (∫ y, pX y · kernel t (x-y)·(-((x-y)/t))) x` for all `x`.
+
+This is the `deriv`-form analogue of the heat-eq atom's spatial 1st-derivative
+identification (STEP D `hpathDeriv1_eq`, `:565`), needed so the de Bruijn IBP step
+`debruijn_ibp_step` can pass `v := deriv (convDensityAdd pX g_t)` (a Mathlib `deriv`, not a
+pinned abstract witness).
+
+**Honesty**: the domination hyps (`boundξ1` / integrability / ae-measurability / Gaussian-tail
+norm bound `hbξ1`) are integrand-level regularity preconditions, in the exact shape the
+gateway `hasDerivAt_integral_of_dominated_loc_of_deriv_le` consumes (1:1 with the spatial
+group of `heatFlow_density_heat_equation` `:448-459` and with `convDensityAdd_hasDerivAt`
+`EPIConvDensity.lean:86`, both `@audit:ok`). They do NOT bundle the `HasDerivAt` conclusion:
+that is *derived* in the body from the genuine `@audit:ok` kernel 1st-deriv closed form
+chained through `ξ ↦ ξ - y` plus the gateway. The conclusion is a genuine `HasDerivAt`, not a
+hyp-bundled equality. -/
+theorem convDensityAdd_hasDerivAt_spatial
+    (pX : ℝ → ℝ) {t : ℝ} (ht : 0 < t) (x : ℝ)
+    (boundξ1 : ℝ → ℝ) (hboundξ1_int : Integrable boundξ1 volume)
+    (hFξ1_meas : ∀ ξ : ℝ,
+      AEStronglyMeasurable
+        (fun y => pX y * heatFlow_density_heat_equation_kernel t (ξ - y)) volume)
+    (hFξ1_int : ∀ ξ : ℝ,
+      Integrable (fun y => pX y * heatFlow_density_heat_equation_kernel t (ξ - y)) volume)
+    (hFξ1'_meas : ∀ ξ : ℝ, AEStronglyMeasurable
+      (fun y => pX y * (heatFlow_density_heat_equation_kernel t (ξ - y) * (-(((ξ - y)) / t)))) volume)
+    (hbξ1 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
+      ‖pX y * (heatFlow_density_heat_equation_kernel t (ξ - y) * (-((ξ - y) / t)))‖ ≤ boundξ1 y) :
+    HasDerivAt (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩))
+      (∫ y, pX y * (heatFlow_density_heat_equation_kernel t (x - y) * (-((x - y) / t))) ∂volume) x := by
+  -- `convDensityAdd pX g_t` agrees globally with `fun ξ => ∫ y, pX y · kernel t (ξ-y)` (t > 0).
+  have hconv_eq : convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)
+      = (fun ξ : ℝ => ∫ y, pX y * heatFlow_density_heat_equation_kernel t (ξ - y) ∂volume) := by
+    funext ξ
+    unfold convDensityAdd
+    refine integral_congr_ae ?_
+    filter_upwards with y
+    rw [heatFlow_density_heat_equation_kernel_eq ht (ξ - y)]
+  rw [hconv_eq]
+  -- per-y spatial 1st-derivative HasDerivAt (kernel `_x_deriv1` chained through `ξ ↦ ξ - y`).
+  have hdiff : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
+      HasDerivAt (fun ξ => pX y * heatFlow_density_heat_equation_kernel t (ξ - y))
+        (pX y * (heatFlow_density_heat_equation_kernel t (ξ - y) * (-((ξ - y) / t)))) ξ := by
+    filter_upwards with y
+    intro ξ _
+    have hk := heatFlow_density_heat_equation_kernel_x_deriv1 ht (ξ - y)
+    have hshift : HasDerivAt (fun ξ : ℝ => ξ - y) 1 ξ := by
+      simpa using (hasDerivAt_id ξ).sub_const y
+    have hcomp := hk.comp ξ hshift
+    simp only [mul_one] at hcomp
+    exact hcomp.const_mul (pX y)
+  have hgate :=
+    hasDerivAt_integral_of_dominated_loc_of_deriv_le
+      (F := fun ζ y => pX y * heatFlow_density_heat_equation_kernel t (ζ - y))
+      (F' := fun ζ y => pX y * (heatFlow_density_heat_equation_kernel t (ζ - y)
+        * (-((ζ - y) / t))))
+      (bound := boundξ1) (Filter.univ_mem)
+      (Filter.Eventually.of_forall hFξ1_meas) (hFξ1_int x) (hFξ1'_meas x)
+      hbξ1 hboundξ1_int hdiff
+  exact hgate.2
+
+/-- **Phase 2c corollary (genuine)**: `deriv` form of `convDensityAdd_hasDerivAt_spatial`.
+`deriv (convDensityAdd pX g_t) x = ∫ y, pX y · kernel t (x-y)·(-((x-y)/t))`. -/
+theorem convDensityAdd_deriv_spatial_eq
+    (pX : ℝ → ℝ) {t : ℝ} (ht : 0 < t) (x : ℝ)
+    (boundξ1 : ℝ → ℝ) (hboundξ1_int : Integrable boundξ1 volume)
+    (hFξ1_meas : ∀ ξ : ℝ,
+      AEStronglyMeasurable
+        (fun y => pX y * heatFlow_density_heat_equation_kernel t (ξ - y)) volume)
+    (hFξ1_int : ∀ ξ : ℝ,
+      Integrable (fun y => pX y * heatFlow_density_heat_equation_kernel t (ξ - y)) volume)
+    (hFξ1'_meas : ∀ ξ : ℝ, AEStronglyMeasurable
+      (fun y => pX y * (heatFlow_density_heat_equation_kernel t (ξ - y) * (-(((ξ - y)) / t)))) volume)
+    (hbξ1 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
+      ‖pX y * (heatFlow_density_heat_equation_kernel t (ξ - y) * (-((ξ - y) / t)))‖ ≤ boundξ1 y) :
+    deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)) x
+      = ∫ y, pX y * (heatFlow_density_heat_equation_kernel t (x - y) * (-((x - y) / t))) ∂volume :=
+  (convDensityAdd_hasDerivAt_spatial pX ht x boundξ1 hboundξ1_int
+    hFξ1_meas hFξ1_int hFξ1'_meas hbξ1).deriv
+
+/-- **Phase 2c (genuine)**: the spatial (`x`-direction) derivative of the *score-numerator*
+integral `fun ξ => ∫ y, pX y · kernel t (ξ-y)·(-((ξ-y)/t))` (= `∂_x convDensityAdd pX g_t`)
+in Mathlib `HasDerivAt` form:
+`HasDerivAt (fun ξ => ∫ y, pX y · kernel t (ξ-y)·(-((ξ-y)/t)))
+  (∫ y, pX y · kernel t (x-y)·((x-y)²/t² - 1/t)) x`.
+
+Composed with `convDensityAdd_hasDerivAt_spatial` this identifies the *second* spatial
+derivative `deriv (deriv (convDensityAdd pX g_t)) x` (needed by `debruijn_ibp_step` for
+`v' := deriv (deriv …)`).
+
+**Honesty**: identical structure to `heatFlow_density_heat_equation` STEP D2
+(`hpathDeriv2_eq`, `:607`). Domination hyps are the spatial 2nd-deriv group (`boundξ2` /
+integrability / ae-measurability / `hbξ2`), all integrand-level regularity preconditions in
+the gateway's shape; the `HasDerivAt` conclusion is *derived* from the `@audit:ok` kernel
+2nd-deriv closed form chained through `ξ ↦ ξ - y` + the gateway. Not load-bearing. -/
+theorem convDensityAdd_deriv_hasDerivAt_spatial
+    (pX : ℝ → ℝ) {t : ℝ} (ht : 0 < t) (x : ℝ)
+    (boundξ2 : ℝ → ℝ) (hboundξ2_int : Integrable boundξ2 volume)
+    (hFξ1'_meas : ∀ ξ : ℝ, AEStronglyMeasurable
+      (fun y => pX y * (heatFlow_density_heat_equation_kernel t (ξ - y) * (-(((ξ - y)) / t)))) volume)
+    (hFξ2_int : Integrable
+      (fun y => pX y * (heatFlow_density_heat_equation_kernel t (x - y) * (-((x - y) / t)))) volume)
+    (hFξ2'_meas : AEStronglyMeasurable
+      (fun y => pX y * (heatFlow_density_heat_equation_kernel t (x - y)
+        * ((x - y) ^ 2 / t ^ 2 - 1 / t))) volume)
+    (hbξ2 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
+      ‖pX y * (heatFlow_density_heat_equation_kernel t (ξ - y)
+        * ((ξ - y) ^ 2 / t ^ 2 - 1 / t))‖ ≤ boundξ2 y) :
+    HasDerivAt
+      (fun ξ : ℝ => ∫ y, pX y * (heatFlow_density_heat_equation_kernel t (ξ - y)
+        * (-((ξ - y) / t))) ∂volume)
+      (∫ y, pX y * (heatFlow_density_heat_equation_kernel t (x - y)
+        * ((x - y) ^ 2 / t ^ 2 - 1 / t)) ∂volume) x := by
+  -- per-y spatial 2nd-derivative HasDerivAt (kernel `_x_deriv2` chained through `ξ ↦ ξ - y`).
+  have hdiff : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
+      HasDerivAt (fun ξ => pX y * (heatFlow_density_heat_equation_kernel t (ξ - y)
+          * (-((ξ - y) / t))))
+        (pX y * (heatFlow_density_heat_equation_kernel t (ξ - y)
+          * ((ξ - y) ^ 2 / t ^ 2 - 1 / t))) ξ := by
+    filter_upwards with y
+    intro ξ _
+    have hk := heatFlow_density_heat_equation_kernel_x_deriv2 ht (ξ - y)
+    have hshift : HasDerivAt (fun ξ : ℝ => ξ - y) 1 ξ := by
+      simpa using (hasDerivAt_id ξ).sub_const y
+    have hcomp := hk.comp ξ hshift
+    simp only [mul_one] at hcomp
+    exact hcomp.const_mul (pX y)
+  have hgate :=
+    hasDerivAt_integral_of_dominated_loc_of_deriv_le
+      (F := fun ξ y => pX y * (heatFlow_density_heat_equation_kernel t (ξ - y)
+        * (-((ξ - y) / t))))
+      (F' := fun ξ y => pX y * (heatFlow_density_heat_equation_kernel t (ξ - y)
+        * ((ξ - y) ^ 2 / t ^ 2 - 1 / t)))
+      (bound := boundξ2) (Filter.univ_mem)
+      (Filter.Eventually.of_forall (fun ξ => hFξ1'_meas ξ)) hFξ2_int hFξ2'_meas
+      hbξ2 hboundξ2_int hdiff
+  exact hgate.2
+
 /-! ## Phase 3 — entropy parametric diff (L-PT-γ honest sorry) -/
 
 /-- **Phase 3 (L-PT-γ honest sorry)**: differentiation under the integral sign for the
