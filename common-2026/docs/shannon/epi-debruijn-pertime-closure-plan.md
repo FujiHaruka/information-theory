@@ -24,7 +24,7 @@ plan filename stem = `epi-debruijn-pertime-closure` → 再分類後の `@residu
 >
 > **残課題 (次 session)**:
 > 1. **Phase 2 main body closure** (L-PT-α 解除): kernel heat eq は genuine 済。残るのは σ-積分記号下微分 (gateway lemma を σ 方向で適用、被積分関数 σ微分 = `kernel_sigma_deriv`) + spatial 2nd diff の `pathDeriv2` 同定。各 step に domination bound `Integrable` 構成が要る (~80+ 行)。main signature に regularity hyp (domination/integrability) 追加が妥当 (Phase 3 と同型、load-bearing でない)。
-> 2. **Phase 5 assembly = 設計判断要**: `debruijnIdentityV2_holds` 本体を atom で組むには **`IsRegularDeBruijnHypV2` の拡張が必要**。現 structure は `Z_law` + `density_t` (時刻 t の密度) + `density_t_eq` のみで、**X 自身の Real 密度 witness `pX` (+ `Measurable pX`)** を持たない。Phase 1b は `pX` を要求するので、assembly 前に structure 拡張 (forward-looking debt の本格解消) が要る。consumer ripple (`EPIL3Integration` / `EPIStamDischarge` / `IsDeBruijnPathRegular.reg_t`) があるため lean-planner で ripple 設計してから着手。premature な assembly は避ける。
+> 2. **Phase 5 assembly = 設計完了 (§Phase 5 詳細設計, 2026-05-31)**: `debruijnIdentityV2_holds` 本体を atom で組む設計を確定。**`IsRegularDeBruijnHypV2` に `pX` 系 4 field 追加** (`pX`/`pX_nn`/`pX_meas`/`pX_law`、全て純 regularity、§5A)、**Phase 2 main に per-y domination hyp 追加** (Phase 3 同型、§5B)、**assembly 7 段 + atom 仮説 discharge 表** (§5C)、**consumer ripple 表** (Gaussian constructor 1 点に集約、新規 sorry 0 件、§5D)。Phase 5 proof done は Phase 2 main closure に gated。着手順は §5C 末尾 / 判断ログ #8。
 
 ## ゴール / Approach
 
@@ -233,9 +233,436 @@ theorem debruijnIdentityV2_holds
 - `#print axioms debruijnIdentityV2_holds` で `sorryAx` 非依存確認 →
   `@residual(plan:epi-debruijn-pertime-closure)` を `@audit:ok` に書換。
 - **独立 honesty 監査** 必須 (新規 genuine 化 = 起動条件)。
-- 下流 `debruijnIntegrationIdentity_holds` (`:377`) は transitive 依存のみ → 本壁 closure で
+- 下流 `debruijnIntegrationIdentity_holds` (`:419`) は transitive 依存のみ → 本壁 closure で
   自動 genuine 化 (consumer 側 `@residual` 不要、type-check 経由 transitive 追跡)。EPI moonshot
   唯一の残壁が閉じる。
+
+詳細設計は次節「## Phase 5 詳細設計」。
+
+---
+
+## Phase 5 詳細設計 (assembly + Phase 2 main closure に要する structure 拡張)
+
+> 2026-05-31 起草 (lean-planner)。verbatim 確認済 file:
+> `FisherInfoV2DeBruijn.lean:200-295/379-393/419-431`、
+> `FisherInfoV2DeBruijnPerTime.lean:69-525` (全 atom)、
+> `EPIL3Integration.lean:678-706`、`EPIStamDischarge.lean:251-286`、
+> `EPIConvDensity.lean:40-158`。
+
+### Approach (Phase 5 の解の全体形)
+
+`debruijnIdentityV2_holds` の body を atom (`pPath_eq_convDensityAdd` →
+`entropy_hasDerivAt_via_parametric` → `heatFlow_density_heat_equation` →
+`debruijn_ibp_step` → `fisher_from_logDeriv`) の合成として組む。assembly の障害は
+**「atom が要求する witness/regularity hyp を `IsRegularDeBruijnHypV2` が供給できない」**
+こと。現 structure は時刻 `t` の密度 witness `density_t : ℝ → ℝ` (+ pin `density_t_eq`) しか
+持たず、Phase 1b `pPath_eq_convDensityAdd` が要求する **X 自身の Real 密度 witness `pX`** と
+**その `withDensity` 法等式 `hpX_law`** を持たない。
+
+解の全体形は **2 軸**:
+
+1. **`IsRegularDeBruijnHypV2` を `pX`-witness 付きに拡張** (§5A)。`density_t` (時刻 t 密度) は
+   assembly 後の RHS `fisherInfoOfDensityReal density_t` 用に残し、`pX` (X 密度) を Phase 1b
+   入力用に追加する。両者は **Phase 1b の結論 (`density_t =ᵐ convDensityAdd pX g_t`)** で
+   橋渡しされる — この橋渡しを新 field `density_t_conv` として持たせ、assembly 段 1 を
+   1 行に圧縮する。
+2. **Phase 2 main `heatFlow_density_heat_equation` に domination/integrability regularity hyp を
+   追加** (§5B)。現 body sorry が隠している 2 つの「∫ 越し微分」step (σ方向 + spatial 2nd diff)
+   を genuine に閉じるための被積分関数レベル domination を、Phase 3 の `bound`/`hbound_int`/`hb`/
+   `hdiff` と同型で main signature に出す。これらは拡張 structure の `pX` から供給する。
+
+両軸とも **honesty 制約**: 追加 field / hyp は **regularity / definitional pin であって
+load-bearing でない** (X が密度 `pX` を持つ + その外形等式、被積分関数の微分・有界性のみ。
+`HasDerivAt`/Fisher core = 結論を bundle しない)。判定軸を各項目に付す (§5A-3 / §5B-2)。
+
+> **重要 (verbatim 確認で判明した想定外)**: 本タスク brief は「Phase 0 structure 拡張が未着手」
+> と仮定していたが、**Phase 0 は既にコード上 closed**。`IsRegularDeBruijnHypV2`
+> (`:200-226`) は既に 3 field (`Z_law` / `density_t` / `density_t_eq`)、`debruijnIdentityV2_holds`
+> (`:285-295`) は既に `_hX/_hZ/_hXZ` args 持ち、両者 `@audit:ok` (signature true 化済)。
+> したがって §5A の structure 拡張は **Phase 0 の `density_t_eq` pin の上に `pX` 系 field を
+> 積む増分**であり、false→true pivot のやり直しではない。
+
+---
+
+### §5A. `IsRegularDeBruijnHypV2` 拡張 — `pX`-witness 追加
+
+#### 5A-1. 現 structure (verbatim, `FisherInfoV2DeBruijn.lean:200-226`)
+
+```lean
+structure IsRegularDeBruijnHypV2 {Ω : Type*} [MeasurableSpace Ω]
+    (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] (t : ℝ) where
+  Z_law : P.map Z = gaussianReal 0 1
+  density_t : ℝ → ℝ
+  density_t_eq : ∀ x,
+    density_t x = ((P.map (gaussianConvolution X Z t)).rnDeriv volume x).toReal
+```
+
+`density_t` は **時刻 t の pushforward 密度** (assembly 後の RHS
+`fisherInfoOfDensityReal density_t` のキー)。`pX` (X 自身の密度) は不在。
+
+#### 5A-2. 拡張案 — 追加 4 field
+
+Phase 1b `pPath_eq_convDensityAdd` (`FisherInfoV2DeBruijnPerTime.lean:192-201` verbatim) が
+要求する witness を field 化する。verbatim signature:
+
+```lean
+theorem pPath_eq_convDensityAdd
+    (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
+    (hZ_law : P.map Z = gaussianReal 0 1)
+    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (hpX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x)))
+    {s : ℝ} (hs : 0 < s) :
+    (P.map (gaussianConvolution X Z s)).rnDeriv volume
+      =ᵐ[volume] fun z => ENNReal.ofReal (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩) z)
+```
+
+→ 追加 field:
+
+```lean
+structure IsRegularDeBruijnHypV2 ... (t : ℝ) where
+  Z_law : P.map Z = gaussianReal 0 1
+  density_t : ℝ → ℝ
+  density_t_eq : ∀ x,
+    density_t x = ((P.map (gaussianConvolution X Z t)).rnDeriv volume x).toReal
+  -- NEW: X 自身の Real 密度 witness (Phase 1b 入力)
+  pX : ℝ → ℝ
+  pX_nn : ∀ x, 0 ≤ pX x
+  pX_meas : Measurable pX
+  pX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x))
+  -- NEW: density_t と pX の関係 (Phase 1b の結論を pointwise 密度形に降ろした pin)
+  density_t_conv : ∀ x,
+    density_t x = convDensityAdd pX (gaussianPDFReal 0 ⟨t, le_of_lt (by exact_mod_cast ?)⟩) x
+```
+
+> **`density_t_conv` の `⟨t, _⟩` 引数の注意**: Phase 1b の Gaussian variance witness は
+> `⟨s, hs.le⟩ : ℝ≥0` (`hs : 0 < s`)。structure 内では `t` の正値性が field として直接無いため、
+> `density_t_conv` 単体では `⟨t, _⟩` を作れない。2 案:
+> - **案 A (推奨)**: `density_t_conv` を `0 < t` を仮定する全称形にしない (structure は
+>   固定 `t` で量化済だが `0 < t` は持たない)。代わりに `density_t_conv` を
+>   「`∀ (ht : 0 < t) x, density_t x = convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x`」と
+>   して `ht` を field-internal に受ける (consumer は `_ht` を渡せる)。
+> - **案 B**: structure に `ht_pos : 0 < t` field を足す。ただし `debruijnIdentityV2_holds` は
+>   既に `_ht : 0 < t` を別引数で受けており (`:289`)、二重持ちになるので非推奨。
+> 案 A 採用。`density_t_conv : ∀ (ht : 0 < t), ∀ x, density_t x = convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x`。
+
+#### 5A-3. honesty 判定 (各追加 field、監査向け)
+
+| field | regularity か load-bearing か | 根拠 (core-reconstruction test) |
+|---|---|---|
+| `pX` (data) | regularity (bare data) | 密度関数そのもの。`HasDerivAt`/Fisher を含まない。`density_t` と同列の bare witness |
+| `pX_nn` | regularity precondition | 密度の非負性。確率密度の自明な性質 |
+| `pX_meas` | regularity precondition | 可測性。Phase 1b で `hpX_meas.ennreal_ofReal` に使う (`FisherInfoV2DeBruijnPerTime.lean:222`)。`Z_law` と同列 |
+| `pX_law` | regularity precondition (外形等式) | `P.map X = withDensity (ofReal∘pX)` は「X が密度 pX を持つ」という外形等式。判定軸「前提条件か証明の核心か」→ 前者。`density_t_eq` (`= rnDeriv.toReal`) と同型の pin |
+| `density_t_conv` | regularity / definitional pin (外形等式) | `density_t =ᵐ convDensityAdd pX g_t` の pointwise 形。**これは Phase 1b の結論そのもの** — load-bearing 化リスクを精査要 (下記 ⚠) |
+
+⚠ **`density_t_conv` の load-bearing リスク精査**: `density_t_conv` は Phase 1b
+`pPath_eq_convDensityAdd` の結論 (`rnDeriv =ᵐ ofReal∘convDensityAdd`) を `.toReal` 経由で
+pointwise 密度等式に降ろしたもの。これを field 化すると「Phase 1b の結論を仮説に逃がす」=
+load-bearing に見えうる。**判定**: Phase 1b は **既に genuine (`@audit:ok`, 0 sorry)** で
+ある (`FisherInfoV2DeBruijnPerTime.lean:178-229`)。よって `density_t_conv` を field 化しても
+「未証明の核心を仮説化する」のではなく「**既に証明済の補題の結論を structure 経由で
+再供給する**」だけ。これは load-bearing 化ではない (核心は本物の sorry に残っていない)。
+**ただし honesty 上より clean な代替**:
+
+- **案 (i) 推奨 — field 化せず assembly body で `pPath_eq_convDensityAdd` を直接呼ぶ**。
+  structure に `pX`/`pX_nn`/`pX_meas`/`pX_law` の 4 field だけ足し、`density_t_conv` は
+  **足さない**。assembly 段 1 で `h_reg.pX`/`h_reg.pX_law` 等を `pPath_eq_convDensityAdd` に
+  渡して `density_t =ᵐ convDensityAdd ...` を**その場で導出**する (`density_t_eq` (rnDeriv pin)
+  + Phase 1b 結論 + `ENNReal.toReal_ofReal` で合成)。これなら Phase 1b 結論を field に
+  bundle せず、honesty 上最も clean。
+- **案 (ii) — `density_t_conv` を field 化**。assembly が 1 行短くなるが、上記 ⚠ の説明
+  docstring が必須。
+
+**§5A 最終推奨 = 案 (i)**: 追加 field は `pX`/`pX_nn`/`pX_meas`/`pX_law` の **4 つのみ**
+(全て純 regularity)。`density_t_conv` は field 化せず assembly body で導出。これにより
+structure 拡張は「X 密度 witness の regularity precondition 追加」だけになり、Phase 1b 結論の
+bundle 疑義を完全に回避する。
+
+#### 5A-4. 現 `density_t_eq` との二重 pin 関係の整理
+
+拡張後、`density_t` は 2 つの pin を持つ:
+
+- `density_t_eq` : `density_t x = (rnDeriv (P.map (X+√t·Z)) volume x).toReal` (時刻 t 密度 = 実 rnDeriv)
+- (案 (i) では body 導出) `density_t =ᵐ convDensityAdd pX g_t` (Phase 1b 経由)
+
+両者は **同じ密度の 2 表現** (rnDeriv 形 vs convolution 形) であり、Phase 1b
+`pPath_eq_convDensityAdd` が `rnDeriv =ᵐ ofReal∘convDensityAdd` で結ぶ。整合性:
+`density_t_eq` (rnDeriv.toReal) と Phase 1b (rnDeriv =ᵐ ofReal∘conv) を合成すると
+`density_t =ᵐ (ofReal∘conv).toReal = conv` (非負性 + `ENNReal.toReal_ofReal`)。**矛盾しない、
+むしろ assembly 段 1 = この合成**。docstring に「`density_t` は rnDeriv pin (`density_t_eq`)
+と conv 表現 (Phase 1b) の 2 表現を持ち、両者は Phase 1b で a.e. 一致」と明記。
+
+---
+
+### §5B. Phase 2 main `heatFlow_density_heat_equation` の regularity hyp 形
+
+#### 5B-1. 現 signature (verbatim, `FisherInfoV2DeBruijnPerTime.lean:412-426`)
+
+```lean
+theorem heatFlow_density_heat_equation
+    (pX : ℝ → ℝ)
+    (pPath pathDeriv1 pathDeriv2 : ℝ → ℝ → ℝ)
+    (hpPath : ∀ (σ : ℝ) (hσ : 0 < σ),
+      pPath σ = convDensityAdd pX (gaussianPDFReal 0 ⟨σ, hσ.le⟩))
+    (hpathDeriv1 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pPath σ ξ) (pathDeriv1 σ y) y)
+    (hpathDeriv2 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pathDeriv1 σ ξ) (pathDeriv2 σ y) y)
+    {s : ℝ} (hs : 0 < s) (x : ℝ) :
+    HasDerivAt (fun σ : ℝ => pPath σ x) ((1/2) * pathDeriv2 s x) s := by
+  sorry -- @residual(plan:epi-debruijn-pertime-closure)
+```
+
+現状の 3 pin (`hpPath`/`hpathDeriv1`/`hpathDeriv2`) は definitional pin (どの関数が
+`pPath`/`pathDeriv1`/`pathDeriv2` *である*か)。残 gap (body docstring `:400-409` verbatim):
+**(i) σ-積分記号下微分** `∂_σ pPath x = ∫ pX·∂_σ g_σ`、**(ii) spatial 2nd diff の `pathDeriv2`
+同定** `pathDeriv2 s x = ∫ pX·∂²_x g_σ`。各 step に Gaussian-tail domination `Integrable`
+構成が要る (~80+ 行)。kernel 群 7 件 (`kernel_{x_deriv1,x_deriv2,sigma_deriv,heat_eq}` 等、
+`:242-361`、全 `@audit:ok`) で `∂_σ g_σ = (1/2)∂²_u g_σ` は genuine 済 → 残るは ∫ 越し lift。
+
+#### 5B-2. 追加 hyp 設計 (Phase 3 / gateway atom と同型)
+
+「∫ 越し微分」を genuine に閉じるには `hasDerivAt_integral_of_dominated_loc_of_deriv_le`
+(gateway lemma) を **σ方向** と **spatial 方向** で 2 回適用する。各適用に必要な hyp は
+`convDensityAdd_hasDerivAt` (`EPIConvDensity.lean:86-104` verbatim、`@audit:ok`) の 7 hyp 群と
+同型。main signature に追加すべき hyp (**σ方向 lift 用**):
+
+```lean
+    -- σ方向 domination: ∂_σ (pX y · g_σ(x-y)) を σ-近傍で支配する integrable bound
+    (boundσ : ℝ → ℝ) (hboundσ_int : Integrable boundσ volume)
+    (hFσ_meas : ∀ᶠ σ in nhds s,
+      AEStronglyMeasurable (fun y => pX y * heatFlow_density_heat_equation_kernel σ (x - y)) volume)
+    (hFσ_int : Integrable (fun y => pX y * heatFlow_density_heat_equation_kernel s (x - y)) volume)
+    (hFσ'_meas : AEStronglyMeasurable
+      (fun y => pX y * ((1/2) * (heatFlow_density_heat_equation_kernel s (x-y) * ((x-y)^2/s^2 - 1/s)))) volume)
+    (hbσ : ∀ᵐ y ∂volume, ∀ σ ∈ Set.Ioi (0:ℝ),
+      ‖pX y * ((1/2) * (heatFlow_density_heat_equation_kernel σ (x-y) * ((x-y)^2/σ^2 - 1/σ)))‖ ≤ boundσ y)
+    -- spatial 方向 domination (pathDeriv2 同定用): 同型を spatial 2nd deriv で
+    (boundξ : ℝ → ℝ) (hboundξ_int : Integrable boundξ volume)
+    (hbξ : ∀ᵐ y ∂volume, ‖pX y * (heatFlow_density_heat_equation_kernel s (x-y) * ((x-y)^2/s^2 - 1/s))‖ ≤ boundξ y)
+```
+
+> 上記 hyp 名/形は **設計骨子** であり、実装時に gateway lemma の正確な引数順 (`hs`/`hF_meas`/
+> `hF_int`/`hF'_meas`/`h_bound`/`bound_integrable`/`h_diff`) に 1:1 で並べ直す。被積分関数の
+> σ微分値は kernel 群 `heatFlow_density_heat_equation_kernel_sigma_deriv` (`:307-310` verbatim、
+> `(1/2)·g_σ·(u²/σ²-1/σ)`)、spatial 2nd は `_x_deriv2` (`:286-298`、`g_σ·(u²/σ²-1/σ)`) を使う。
+> `h_diff` (per-y 被積分関数の σ微分の `HasDerivAt`) は kernel `_sigma_deriv` を `pX y ·` でスケール
+> して供給 (`.const_mul`)。
+
+#### 5B-3. honesty 判定 (各追加 hyp、監査向け)
+
+| hyp | regularity か load-bearing か | 根拠 |
+|---|---|---|
+| `boundσ`/`hboundσ_int` | regularity precondition | Gaussian-tail dominating function の integrability。Phase 3 `bound`/`hbound_int` (`:449-450` verbatim) と同型、gateway lemma の `bound_integrable` 引数 |
+| `hFσ_meas`/`hFσ_int`/`hFσ'_meas` | regularity precondition | 被積分関数 + その σ微分の (ae)可測性 / 基点可積分性。gateway lemma の `hF_meas`/`hF_int`/`hF'_meas` |
+| `hbσ`/`hbξ` | regularity precondition | **per-y 被積分関数** の σ微分 / spatial 2nd deriv の有界性 (domination)。**結論 (heat eq) を仮定していない** — `∂_σ pPath = (1/2)∂²_x pPath` という integral-level 等式は body で gateway lemma から *導出* される。判定軸: per-x/per-y の微分・有界性のみ = 前提条件 |
+| `boundξ`/`hboundξ_int` | regularity precondition | spatial 方向 domination の integrable bound |
+
+⚠ **load-bearing 回避の核**: heat eq 結論 `∂_σ pPath = (1/2)∂²_x pPath` を hyp 化**しない**
+(L-PT-α の禁止事項)。追加 hyp は全て **被積分関数レベルの domination/integrability** であり、
+kernel-level heat eq (`kernel_heat_eq`, genuine) を gateway lemma で ∫ 越しに lift する際の
+*前提条件*。判定軸「前提条件 (regularity) か証明の核心 (load-bearing) か」→ 前者。Phase 3
+`entropy_hasDerivAt_via_parametric` が同型の hyp 群で `@audit:ok` を得ている (`:448-464`) のが
+honesty 上の precedent。
+
+#### 5B-4. 拡張 structure からの供給
+
+assembly (§5C 段 4) で Phase 2 を呼ぶとき、上記 domination hyp を拡張 structure の `pX` から
+供給する。`boundσ`/`boundξ` は `pX y · (Gaussian-tail factor の上界)` の形 — `pX` 可積分
+(`hpX_int` を Phase 1b 同様 `pX_law` + 確率測度から導出) × Gaussian factor 上界
+(`gaussianPDFReal_le_prefactor` / `_x_deriv2` の closed form 有界性) で `Integrable.mul_bdd`
+(Phase 1b bridge `:164-171` と同型)。**ただし**: σ微分 factor `(u²/σ²-1/σ)` は σ→0 で発散する
+ため、σ-近傍を `Set.Ioi 0` でなく `Set.Ioo (s/2) (2s)` 等のコンパクト近傍に取り直して上界を
+有限化する必要がありうる (実装時の落とし穴、L-PT-α 範囲)。**撤退ライン L-PT-α 維持**: この
+domination 構成が ~80+ 行で session 内不可なら main body `sorry` + `@residual` 据置。
+
+---
+
+### §5C. Phase 5 assembly のステップ列 (擬似 Lean)
+
+`debruijnIdentityV2_holds` body (`FisherInfoV2DeBruijn.lean:285-295`) を atom で組む。
+現 signature (verbatim):
+
+```lean
+theorem debruijnIdentityV2_holds
+    (X Z : Ω → ℝ) (_hX : Measurable X) (_hZ : Measurable Z) (_hXZ : IndepFun X Z P)
+    {t : ℝ} (_ht : 0 < t) (h_reg : IsRegularDeBruijnHypV2 X Z P t) :
+    HasDerivAt (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
+      ((1/2) * fisherInfoOfDensityReal h_reg.density_t) t := by
+```
+
+assembly 擬似コード (段ごと):
+
+```lean
+  -- 段 1: density 同定 (Phase 1b)。h_reg.pX/pX_law から density_t の conv 表現を得る。
+  have h_dens : ∀ s, 0 < s →
+      (P.map (gaussianConvolution X Z s)).rnDeriv volume
+        =ᵐ[volume] fun z => ENNReal.ofReal (convDensityAdd h_reg.pX (gaussianPDFReal 0 ⟨s,_⟩) z) :=
+    fun s hs => pPath_eq_convDensityAdd X Z _hX _hZ _hXZ h_reg.Z_law
+      h_reg.pX h_reg.pX_nn h_reg.pX_meas h_reg.pX_law hs
+  -- pPath s := convDensityAdd h_reg.pX (gaussianPDFReal 0 ⟨s,_⟩) と置く。
+  -- density_t =ᵐ pPath t は h_dens t _ht + density_t_eq (rnDeriv pin) + toReal_ofReal で合成 (§5A-4)。
+
+  -- 段 2: entropy = ∫ negMulLog density (DifferentialEntropy lemma)。
+  --   differentialEntropy_eq_integral_density (DifferentialEntropy.lean:65) で
+  --   h(P.map (X+√s·Z)) = ∫ x, negMulLog (pPath s x) ∂volume に書下し。
+  --   要 hf_nn (density 非負 = convDensityAdd 非負 from pX_nn, gaussian_nn) + μ ≪ volume (s>0 で AC)。
+  have h_ent_eq : ∀ s, 0 < s →
+      differentialEntropy (P.map (gaussianConvolution X Z s)) = ∫ x, negMulLog (pPath s x) ∂volume := ...
+
+  -- 段 3: parametric diff (Phase 3)。entropy の s-微分を ∫ 越しに。
+  --   entropy_hasDerivAt_via_parametric pPath entDeriv bound (hbound_int ...) (hmeas ...) ...
+  --   結論: HasDerivAt (fun s => ∫ negMulLog (pPath s x)) (∫ entDeriv t x) t。
+  --   entDeriv t x := (d/ds) negMulLog (pPath s x)|_{s=t} = negMulLog'(pPath t x) · ∂_s pPath t x。
+  have h_param : HasDerivAt (fun s => ∫ x, negMulLog (pPath s x) ∂volume)
+      (∫ x, entDeriv t x ∂volume) t := entropy_hasDerivAt_via_parametric pPath entDeriv bound ...
+
+  -- 段 4: heat eq で ∂_σ pPath → (1/2) ∂²_x pPath (Phase 2)。
+  --   heatFlow_density_heat_equation h_reg.pX pPath pathDeriv1 pathDeriv2 hpPath hpathDeriv1 hpathDeriv2
+  --     (+ §5B domination hyp、h_reg.pX から供給) hs x。
+  --   → ∂_s pPath t x = (1/2) pathDeriv2 t x。これを entDeriv に代入して
+  --     ∫ entDeriv t x = ∫ negMulLog'(pPath t x) · (1/2) pathDeriv2 t x。
+  have h_heat : ∀ x, HasDerivAt (fun σ => pPath σ x) ((1/2) * pathDeriv2 t x) t :=
+    fun x => heatFlow_density_heat_equation h_reg.pX pPath pathDeriv1 pathDeriv2 ... _ht x
+
+  -- 段 5: IBP (Phase 4a)。∫ negMulLog'(p)·∂_s p →IBP→ -(1/2)∫ ∂_x(negMulLog'∘p)·∂_s p
+  --   = (1/2)∫ (∂_x p)²/p (negMulLog'' chain + sign)。
+  --   debruijn_ibp_step u v u' v' hu hv huv' hu'v huv で u=negMulLog'∘p, v=∂_s p 等を置く。
+  have h_ibp : ∫ x, u x * v' x = - ∫ x, u' x * v x := debruijn_ibp_step u v u' v' ...
+
+  -- 段 6: fisher congr (Phase 4b)。∫ (logDeriv p)²·p = fisherInfoOfDensityReal p。
+  --   fisher_from_logDeriv (pPath t) hp_nn hint。
+  have h_fisher : ∫ x, (logDeriv (pPath t) x)^2 * pPath t x ∂volume
+      = fisherInfoOfDensityReal (pPath t) := fisher_from_logDeriv (pPath t) ...
+
+  -- 段 7: 最終 congr。RHS を (1/2) * fisherInfoOfDensityReal h_reg.density_t に一致。
+  --   ∫ entDeriv t = (1/2)∫(∂_x p)²/p (段 5) = (1/2) fisherInfoOfDensityReal (pPath t) (段 6)
+  --   = (1/2) fisherInfoOfDensityReal h_reg.density_t (density_t =ᵐ pPath t from 段 1
+  --     + fisherInfoOfDensityReal の =ᵐ congr)。
+  --   h_param (段 3) の deriv 値を rewrite chain で RHS に一致させ、
+  --   h_ent_eq (段 2) で LHS の関数を entropy に戻して結論。
+  rw [...] -- congr chain
+  exact h_param.congr ... -- or convert
+```
+
+#### 各段の atom 仮説 discharge 対応表
+
+| 段 | atom | atom が要求する主要仮説 | discharge 元 |
+|---|---|---|---|
+| 1 | `pPath_eq_convDensityAdd` | `hX/hZ/hXZ` | `_hX/_hZ/_hXZ` (`debruijnIdentityV2_holds` args) |
+| 1 | 〃 | `hZ_law` | `h_reg.Z_law` |
+| 1 | 〃 | `pX/hpX_nn/hpX_meas/hpX_law` | **拡張 structure `h_reg.pX`/`.pX_nn`/`.pX_meas`/`.pX_law` (§5A)** |
+| 1 | 〃 | `hs : 0 < s` | `_ht` (s = t) |
+| 1 | density_t↔pPath 合成 | — | `h_reg.density_t_eq` (rnDeriv pin) + 段1結論 + `toReal_ofReal` (§5A-4) |
+| 2 | `differentialEntropy_eq_integral_density` | `hf_nn` (density 非負) | `convDensityAdd` 非負 = `h_reg.pX_nn` + `gaussianPDFReal_nonneg` |
+| 2 | 〃 | `μ ≪ volume` | `_ht : 0 < t` (Gaussian smoothing で AC、Phase 1b の `hv_ne` 経由) |
+| 3 | `entropy_hasDerivAt_via_parametric` | `bound`/`hbound_int` (Gaussian-tail) | `h_reg.pX` から構成 (`Integrable.mul_bdd` 同型) |
+| 3 | 〃 | `hmeas`/`hint`/`hderiv_meas` | 被積分関数 (ae)可測性 / 基点可積分性、`pX_meas` + kernel 可測性 |
+| 3 | 〃 | `hb`/`hdiff` (per-x 微分・有界) | kernel 群 + `pX` domination |
+| 4 (Ph2) | `heatFlow_density_heat_equation` | `hpPath`/`hpathDeriv1`/`hpathDeriv2` (定義 pin) | `pPath`/`pathDeriv1`/`pathDeriv2` の定義から (`hpPath` = `convDensityAdd h_reg.pX g_σ` 一致、`rfl`/`Phase 1b`) |
+| 4 (Ph2) | 〃 | §5B domination hyp (`boundσ`/`hbσ` 等) | **拡張 structure `h_reg.pX` から構成 (§5B-4)** |
+| 5 | `debruijn_ibp_step` | `hu`/`hv` (tsupport 全域 `HasDerivAt`) | density `pPath t` の global C¹ (`convDensityAdd_hasDerivAt` 経由、L-PT-δ) |
+| 5 | 〃 | `huv'`/`hu'v`/`huv` (integrability) | Gaussian-tail integrability、`h_reg.pX` domination |
+| 6 | `fisher_from_logDeriv` | `hp_nn` (density 非負) | `convDensityAdd` 非負 = `pX_nn` + gaussian_nn |
+| 6 | 〃 | `hint` (integrability) | Fisher 被積分関数の integrability、L-PT-δ 範囲 |
+| 7 | (最終 congr) | — | 段1-6 の have を rewrite chain で結合 |
+
+> **assembly の最大コスト段 = 段 4 (Phase 2 main、L-PT-α)**。Phase 2 main が honest sorry の
+> 間は assembly 全体も transitive sorry (段 4 の `heatFlow_density_heat_equation` body 経由)。
+> したがって **Phase 5 proof done は Phase 2 main closure に gated**。Phase 2 main を sorry の
+> まま assembly を組んでも `debruijnIdentityV2_holds` は段 4 の transitive sorry を持つため
+> `@audit:ok` には到達しない (type-check done 止まり)。**推奨着手順**: §5A structure 拡張 +
+> Gaussian constructor ripple (§5D) を先行 (type-check done で commit) → §5B Phase 2 main hyp
+> 追加 + domination 構成 (L-PT-α 解除トライ) → §5C assembly → §5 capstone congr + `@audit:ok`。
+
+---
+
+### §5D. consumer ripple 表 (structure 拡張で影響する file:line)
+
+§5A の structure 拡張 (`pX`/`pX_nn`/`pX_meas`/`pX_law` の 4 field 追加) は
+`IsRegularDeBruijnHypV2` の **constructor / structure literal を持つ全 site** に ripple する。
+verbatim 確認した影響箇所:
+
+| file:line | declaration | touch 内容 | 新 field 充足方法 |
+|---|---|---|---|
+| `FisherInfoV2DeBruijn.lean:200` | `IsRegularDeBruijnHypV2` (structure) | 4 field 追加 (§5A-2) + docstring に「`pX` 系は regularity precondition、二重 pin 整理 §5A-4」追記 | — |
+| `FisherInfoV2DeBruijn.lean:285` | `debruijnIdentityV2_holds` | body assembly (§5C)。signature 不変 (新 field は `h_reg` 経由で取得) | — |
+| `FisherInfoV2DeBruijn.lean:313` | `deBruijn_identity_v2` | pass-through (`:323` で `debruijnIdentityV2_holds X Z hX hZ hXZ ht h_reg` call)。**signature 不変** (新 field は `h_reg` に内包) | — (追従不要) |
+| `FisherInfoV2DeBruijn.lean:379` | `IsDeBruijnPathRegular` (structure) | `reg_t` field (`:385`) が返す `∃ h_reg : IsRegularDeBruijnHypV2, h_reg.density_t = fPath t` の existential witness 構成が新 field 込みになる。**構造変更不要** (existential 内で h_reg を作る consumer が新 field を埋める) | — (consumer 側) |
+| `FisherInfoV2DeBruijn.lean:419` | `debruijnIntegrationIdentity_holds` | pass-through (`:443` で `debruijnIdentityV2_holds X Z hX hZ hXZ ht.1 h_reg` call、h_reg は `h_path.reg_t` 由来)。**signature 不変** | — (追従不要) |
+| `EPIL3Integration.lean:678` | `isRegularDeBruijnHypV2_family_of_gaussian` | structure literal (`:693-706`) に 4 field 追加。Gaussian case の `pX` = `gaussianPDFReal m v` (X ∼ 𝒩(m,v) の密度) | 下記詳細 |
+| `EPIStamDischarge.lean:251` | `IsDeBruijnIntegrationHyp` (structure) の `reg_at` field (`:260`) | `reg_at : ∀ t, 0<t → IsRegularDeBruijnHypV2 X Z P t` の witness が新 field 込みに。**構造変更不要** (witness は `isRegularDeBruijnHypV2_family_of_gaussian` 経由 → そこで充足) | — (上流 constructor 側) |
+
+#### Gaussian constructor (`EPIL3Integration.lean:693-706`) の新 field 充足
+
+現 literal (verbatim, `:693-706`):
+
+```lean
+exact
+  { Z_law := hZ_law
+    density_t := gaussianPDFReal m (v + ⟨t, ht.le⟩)
+    density_t_eq := by sorry }   -- 既存 @residual(plan:epi-debruijn-pertime-closure)
+```
+
+> **verbatim 確認で判明した想定外**: Gaussian constructor の `density_t_eq` は既に
+> `by sorry` + `@residual(plan:epi-debruijn-pertime-closure)` (`:701-706`)。brief は「新 field を
+> どう埋めるか」を問うが、**既存 `density_t_eq` 自体がまだ sorry** であり、これも Phase 1 の
+> Gaussian 特殊形 (`gaussianConvolution_law_of_gaussian` + Gaussian rnDeriv) で closure 待ち。
+
+拡張後の literal:
+
+```lean
+exact
+  { Z_law := hZ_law
+    density_t := gaussianPDFReal m (v + ⟨t, ht.le⟩)
+    density_t_eq := by sorry   -- @residual(plan:epi-debruijn-pertime-closure) (既存)
+    -- NEW fields (Gaussian case):
+    pX := gaussianPDFReal m v                          -- X ∼ 𝒩(m,v) の密度
+    pX_nn := fun x => gaussianPDFReal_nonneg m v x      -- genuine
+    pX_meas := measurable_gaussianPDFReal m v           -- genuine
+    pX_law := by                                        -- P.map X = withDensity (ofReal∘gaussianPDFReal m v)
+      rw [_hX_law]                                       --   = gaussianReal m v
+      exact gaussianReal_of_var_ne_zero m _hv }          --   genuine (要 v ≠ 0、_hv 既受)
+```
+
+- `pX := gaussianPDFReal m v` (数値 verbatim 確認: X ∼ 𝒩(m,v) の Lebesgue 密度 = `gaussianPDFReal m v`、
+  Phase 1b の `gaussianReal_of_var_ne_zero` と整合)。
+- `pX_nn` / `pX_meas` は Mathlib 直結 (`gaussianPDFReal_nonneg` / `measurable_gaussianPDFReal`、
+  Phase 1b でも使用 `:167-170`)。
+- `pX_law` は `_hX_law : P.map X = gaussianReal m v` (`:683` verbatim、既受) +
+  `gaussianReal_of_var_ne_zero m _hv` (`𝒩(m,v) = withDensity (gaussianPDF m ⟨v,_⟩)`) で genuine。
+  **`gaussianPDF` (ENNReal 版) vs `ofReal∘gaussianPDFReal` の shape 整合**に注意 (Phase 1b
+  `:220` `gaussianReal_of_var_ne_zero 0 hv_ne` の使い方を参照、`gaussianPDF` 定義が
+  `ofReal∘gaussianPDFReal` か別形かを verbatim 確認してから埋める)。
+- `_hv : v ≠ 0` (`:682` 既受) を `pX_law` で使う (現状 underscore-prefix なので使用時に rename か
+  `_hv` のまま参照)。**ripple 注意**: `_hv` を使うと unused→used になり underscore 外す edit が要る。
+
+> 4 新 field のうち `pX`/`pX_nn`/`pX_meas`/`pX_law` は Gaussian case で **全て genuine 充足可**
+> (新規 sorry を生まない)。既存の `density_t_eq := by sorry` は不変 (Phase 1 Gaussian 特殊形で別途
+> closure)。したがって structure 拡張による Gaussian constructor の新規 sorry は **0 件**。
+
+#### 非 Gaussian consumer
+
+verbatim grep (`rg "IsRegularDeBruijnHypV2"`) で確認した structure literal を持つ site は
+**Gaussian constructor 1 件のみ** (`isRegularDeBruijnHypV2_family_of_gaussian`)。他の言及
+(`reg_at`/`reg_t`/`density_t` field 参照) は全て **field 抽出 (pass-through)** であり literal
+構成ではないため、4 field 追加で type-check が壊れるのは Gaussian constructor のみ。EPIStamDischarge
+`reg_at` (`:260`) と FisherInfoV2DeBruijn `reg_t` (`:385`) は existential/関数で
+`IsRegularDeBruijnHypV2` を *返す* が、その witness 生成は最終的に Gaussian constructor に
+帰着する (非 Gaussian の独立 constructor は現状不在) ため、ripple は Gaussian constructor 1 点に
+集約。
+
+---
+
+### §5E. Phase 5 詳細設計の撤退ライン整合
+
+§5B の Phase 2 main domination 構成は **既存 L-PT-α を維持** (~80+ 行で session 内不可なら
+main body `sorry` 据置)。§5A structure 拡張 + §5D Gaussian ripple は L-PT-α と独立に先行可
+(type-check done)。assembly §5C は Phase 2 main に transitive gated (上記 §5C 末尾の注記)。
+
+**全 Phase 共通禁止事項 (再掲・本詳細設計に適用)**: §5A の `pX` 系 4 field は純 regularity
+(load-bearing でない、§5A-3)。§5B の domination hyp は per-y 被積分関数の微分・有界性のみ
+(heat eq 結論を hyp 化しない、§5B-3)。`density_t_conv` の field 化は案 (i) で回避
+(Phase 1b 結論を bundle しない)。詰まったら `sorry` + `@residual(plan:epi-debruijn-pertime-closure)`
+(tier 2)。
 
 ---
 
@@ -291,3 +718,35 @@ theorem debruijnIdentityV2_holds
    forward-looking note (`FisherInfoV2DeBruijn.lean:232-242`) の (a)/(b) 二案のうち (a) 採用。
    structure field bundle (b) は consumer ripple が広い。Phase 0-b で復元、Phase 3 の
    dominating function 供給に使用。
+4. **Phase 5 詳細設計起草 + Phase 0 完了済の verbatim 確認** (2026-05-31, lean-planner):
+   §Phase 5 詳細設計 (§5A-5E) を起草。verbatim 確認で **Phase 0 は既にコード上 closed** と判明
+   (`IsRegularDeBruijnHypV2:200-226` が既に `density_t_eq` 持ち `@audit:ok`、
+   `debruijnIdentityV2_holds:285-295` が既に `_hX/_hZ/_hXZ` 持ち `@audit:ok`)。本 plan §Phase 0
+   本文は已完了工程の記述。したがって structure 拡張は false→true pivot のやり直しではなく
+   `density_t_eq` pin の上に `pX` 系 field を積む増分。
+5. **structure 拡張 = `pX` 系 4 field のみ、`density_t_conv` は field 化しない (案 (i))**
+   (2026-05-31): Phase 1b `pPath_eq_convDensityAdd` が要求する `pX`/`pX_nn`/`pX_meas`/`pX_law` を
+   `IsRegularDeBruijnHypV2` に追加 (全て純 regularity、§5A-3)。`density_t` と `pX` の関係
+   (`density_t =ᵐ convDensityAdd pX g_t`) は **field 化せず** assembly body で `pPath_eq_convDensityAdd`
+   (既 genuine `@audit:ok`) を直接呼んで導出する。理由: Phase 1b の結論を field に bundle すると
+   load-bearing 疑義 (既証明補題の再供給だが honesty 上 clean でない)。案 (i) で Phase 1b 結論の
+   bundle を完全回避 (§5A-3 ⚠)。
+6. **Phase 2 main domination hyp は Phase 3 / gateway atom と同型 (load-bearing でない)**
+   (2026-05-31): `heatFlow_density_heat_equation` の残 gap (∫ 越し σ微分 + spatial 2nd diff 同定) を
+   genuine 化するため main signature に per-y 被積分関数 domination hyp (`boundσ`/`hbσ`/`boundξ`/`hbξ`
+   等) を追加 (§5B-2)。heat eq 結論 `∂_σ pPath = (1/2)∂²_x pPath` は **hyp 化しない** (L-PT-α 禁止
+   事項)、被積分関数レベルの微分・有界性のみ。precedent = Phase 3 `entropy_hasDerivAt_via_parametric`
+   が同型 hyp 群で `@audit:ok` (§5B-3)。σ微分 factor `(u²/σ²-1/σ)` の σ→0 発散に注意 (コンパクト
+   σ-近傍を取る、実装時 L-PT-α 範囲、§5B-4)。
+7. **consumer ripple は Gaussian constructor 1 点に集約、新規 sorry 0 件** (2026-05-31):
+   `rg "IsRegularDeBruijnHypV2"` verbatim 確認で structure literal を持つ site は
+   `isRegularDeBruijnHypV2_family_of_gaussian` (`EPIL3Integration.lean:678`) のみ。他は全て field
+   抽出 pass-through。Gaussian case の `pX` = `gaussianPDFReal m v` (X∼𝒩(m,v) 密度)、4 新 field は
+   全て genuine 充足可 (`gaussianPDFReal_nonneg`/`measurable_gaussianPDFReal`/`gaussianReal_of_var_ne_zero`)。
+   ただし既存 `density_t_eq := by sorry` (`:706`) は不変 (Phase 1 Gaussian 特殊形で別途 closure 待ち、
+   想定外発見)。`_hv : v≠0` を `pX_law` で使うため underscore 外す edit 要 (§5D)。
+8. **Phase 5 proof done は Phase 2 main closure に gated** (2026-05-31): assembly §5C 段 4 が
+   `heatFlow_density_heat_equation` を呼ぶため、Phase 2 main が honest sorry の間は
+   `debruijnIdentityV2_holds` も transitive sorry。着手順 = §5A 拡張 + §5D ripple 先行 (type-check
+   done で commit) → §5B Phase 2 main hyp + domination (L-PT-α 解除トライ) → §5C assembly →
+   capstone congr + `@audit:ok`。
