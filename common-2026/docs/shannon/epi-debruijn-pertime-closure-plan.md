@@ -1338,3 +1338,23 @@ predicate 化 / `:True` slot / 循環 `:= h` / 退化 (rnDeriv pin 等)。詰ま
     変更ゆえ独立 honesty 監査再起動。**禁止**: log 因子単独 domination に戻す / univ 量化維持 / 結論 bundle。
     §5G-2 表 (`:1041-1043`) の「measurability 群は genuine、log-tail のみ sorry」分類は **本 defect で無効化**
     (full-entDeriv domination の Integrable 構成全体が L-PT-γ residual、~120-180 行)。
+12. **#2/#4 は general pX で true statement (追加 hyp 不要) と確定、だが #4 の Fisher integrability は
+    真の Mathlib 壁 → Phase 5-G 「真壁 0 件」評価を訂正** (2026-05-31, orchestrator + proof-pivot-advisor
+    独立確認): 先行調査 (false-statement 再発防止) で #2/#4 の satisfiability を general pX (重い裾 Cauchy
+    含む) で検証。**結論 = 両 statement とも true、現 signature (pX 系 regularity のみ) で正しい**、追加
+    regularity hyp (finite variance / finite Fisher of pX 等) は **不要** (Cauchy `pX~x⁻²` でも
+    `(∂_x p)²/p ~ x⁻⁴` integrable、`logDeriv p ~ x⁻¹`、Fisher 有限)。数学的根拠: convolution は Fisher を
+    減らす (`J(X+√t·Z) ≤ J(√t·Z) = 1/t < ∞`) ため **任意の確率密度 pX で Fisher 有限**。**ただし重要訂正**:
+    この convolution Fisher bound (Stam) は **Mathlib に皆無** (loogle `fisherInfo`/`Blachman` = Found 0、
+    `Stam` 誤ヒットのみ) かつ **repo にも構成的補題なし** (Stam 系は `IsStamInequalityHyp` 等 predicate
+    pass-through、`EPIStamInequalityBody.lean:45` 「標準形では存在しない」自認)。→ #4 の `fisher_from_logDeriv`
+    が要求する `hint : Integrable ((logDeriv p)²·p)` と `debruijn_ibp_step` の 3 integrability は **自作壁**
+    (Stam convolution Fisher bound 級、PR 級)。**Phase 5-G 判断ログ #10 の「真壁 (分類 c) を 1 件も含まず」は
+    楽観的すぎた** — Fisher integrability は真の Mathlib/repo 不在の壁。`fisherInfoOfDensityReal := (...).toReal`
+    は発散時 0 を返すため Fisher *値* の well-definedness には有限性不要だが、IBP/logDeriv 経由で実数積分と
+    *等式*接続する瞬間に integrability が load-bearing で復活する (値の定義可能性 ≠ 等式の証明可能性)。
+    **採用 = 案 A+B**: (A) #2/#4 の signature は不変 (true 確定、改変禁止)、#4 の residual を `plan:` から
+    **Fisher integrability 自作壁**として docstring に明記 (`wall:` 寄り、最終 slug は auditor)。(B) Fisher
+    integrability を **共有 sorry 補題 `convDensityAdd_fisher_integrable`** に切り出し (audit-tags「共有
+    Mathlib 壁」整合)、#4 を IBP 割当 + fisher congr の **genuine plumbing** にして残 sorry を named 壁補題に
+    局所化 (#5/#1 と同型の genuine-plumbing-over-named-wall 構造)。

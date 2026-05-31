@@ -163,6 +163,16 @@ i.e. a genuine Mathlib gap rather than a same-family closure plan.
 `hpX_nn`/`hpX_meas`/`hpX_int` are pure pX regularity preconditions; the integrability
 conclusion is the genuine claim. No load-bearing hypothesis bundled.
 
+Independent honesty audit (2026-05-31, fresh auditor, 案 B split commit): verdict
+honest_residual. Statement true for any probability density `pX` (incl. heavy-tailed Cauchy)
+by the Stam convolution Fisher bound `J(X+√t·Z) ≤ J(√t·Z) = 1/t < ∞` (proof-pivot-advisor +
+判断ログ #12 独立確認). Classification `wall:fisher-finiteness` correct: loogle `fisherInfo` /
+`Blachman` = Found 0 (`Stam` hits are `Std.Time.Timestamp`, unrelated), in-repo Stam machinery
+is predicate pass-through only — a genuine Mathlib/repo gap, not a same-family closure plan.
+Register entry (audit-tags.md L70) matches; semantic distinction vs `stam` (superadditivity =
+EPI conclusion) is honored. The 3 pX hyps are regularity preconditions; integrability is the
+claim (not bundled). @residual kept.
+
 @residual(wall:fisher-finiteness) -/
 private theorem convDensityAdd_fisher_integrable
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -186,6 +196,17 @@ the spatial 2nd derivative as a `HasDerivAt` (PR-level, plan L-PT-δ).
 
 `hpX_nn`/`hpX_meas`/`hpX_int` are pure pX regularity preconditions; the IBP equality is the
 genuine claim. No load-bearing hypothesis bundled.
+
+Independent honesty audit (2026-05-31, fresh auditor, 案 B split commit): verdict
+honest_residual. de Bruijn IBP identity is true (boundary terms vanish by Gaussian/heavy-tail
+decay). Classification `plan:` correct (NOT a new wall): the IBP core is the in-tree atom
+`debruijn_ibp_step` (`@audit:ok`, sorryAx-free via `integral_mul_deriv_eq_deriv_mul_of_integrable`);
+the residual is constructing that atom's preconditions (`tsupport`=ℝ full-support C¹ + the 3 IBP
+integrability hyps + 2nd-derivative `HasDerivAt` identification) = same-family plumbing, closeable
+under the named plan. The 3 pX hyps are regularity; the IBP equality is the claim (not bundled).
+Note for orchestrator: the atom's `Integrable (u'*v)` precondition (= `∫(logDeriv p)²·p` shape)
+overlaps the Fisher-finiteness wall — when both residuals close, consider whether the integrability
+can be sourced from `convDensityAdd_fisher_integrable` to avoid duplicate construction. @residual kept.
 
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step
@@ -216,7 +237,20 @@ The `p_t ≥ 0` precondition of `fisher_from_logDeriv` is `convDensityAdd` nonne
 
 `hentDeriv` pins `entDeriv` to the §5G-1 closed form (integrand-level identification, not the
 conclusion). The Fisher-equality conclusion is the genuine claim. The remaining honest `sorry`s
-are localized in the 2 named walls above (no local sorry here). -/
+are localized in the 2 named walls above (no local sorry here).
+
+Independent honesty audit (2026-05-31, fresh auditor, 案 B split commit): verdict
+honest_residual (transitive). 0 local sorry — the former monolithic body sorry is genuinely
+removed: the body is `integral_congr_ae hentDeriv` + `integral_const_mul` + the 2 named-wall
+rewrites (`_ibp_step` + `fisher_from_logDeriv` fed by `convDensityAdd_fisher_integrable`), all
+genuine plumbing. `#print axioms` shows `sorryAx` only via the 2 walls (`fisher_from_logDeriv`
+verified sorryAx-free; `integral_congr_ae`/`integral_const_mul` are Mathlib std). `fisher_from_logDeriv`'s
+`hp_nn` is discharged genuinely (`integral_nonneg` + `hpX_nn` + `gaussianPDFReal_nonneg`) and its
+`hint` is the Fisher-finiteness wall verbatim — a regularity precondition, NOT a bundled
+conclusion (core-reconstruction test: granting `hentDeriv` alone does not hand over `∫ entDeriv =
+(1/2)·fisher`; the two walls supply the substance). NOT circular, NOT load-bearing, NOT
+name-laundering (carries `@residual`, not `@audit:ok`). The transitive marker is compound (AND of
+the wall + plan walls below). @residual(wall:fisher-finiteness,plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume)
