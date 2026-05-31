@@ -403,7 +403,20 @@ is avoided), then the `1/2` is pulled out via the kernel σ-derivative closed fo
 `hpathDeriv1`/`hpathDeriv2` identify `pathDeriv2 s x = ∫ y, pX y · ∂²_x g_σ(x-y)`, which
 matches the σ-side via `heatFlow_density_heat_equation_kernel_heat_eq`. `#print axioms` =
 `[propext, Classical.choice, Quot.sound]` (sorryAx-free, transitive 0 sorry).
-Pending independent honesty audit before `@audit:ok`. -/
+
+**Independent honesty audit (2026-05-31, Wave6)**: ok (tier 1). core-reconstruction
+test passes — granting all added hyps (3 definitional pins + σ/spatial domination
+groups) does NOT hand the heat-equation equality `∂_σ pPath = (1/2)∂²_x pPath`: every
+added hyp is integrand-level (per-`y` integrability / ae-measurability / Gaussian-tail
+norm bound `‖pX y · kernel · (…)‖ ≤ bound y`), matching the gateway lemma
+`hasDerivAt_integral_of_dominated_loc_of_deriv_le`'s argument shape 1:1. The `(1/2)`
+factor and the σ↔spatial match are *derived* in STEP A–E from the genuine `@audit:ok`
+kernel σ-deriv closed form + kernel heat eq, not assumed. 3 pins
+(`hpPath`/`hpathDeriv1`/`hpathDeriv2`) are unchanged definitional bindings. `#print axioms`
+re-verified after `lake build` olean refresh = `[propext, Classical.choice, Quot.sound]`
+(no `sorryAx`). The b37b9ae false-statement relapse is not present (the conclusion is a
+genuine `HasDerivAt`, not a hyp-bundled equality).
+@audit:ok -/
 theorem heatFlow_density_heat_equation
     (pX : ℝ → ℝ)
     (pPath pathDeriv1 pathDeriv2 : ℝ → ℝ → ℝ)

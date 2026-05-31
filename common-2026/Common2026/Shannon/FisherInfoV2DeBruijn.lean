@@ -239,7 +239,16 @@ structure IsRegularDeBruijnHypV2 {Ω : Type*} [MeasurableSpace Ω]
   `= (rnDeriv (P.map (X+√t·Z)) volume).toReal`) and a convolution representation
   (`=ᵐ convDensityAdd pX g_t`, obtained in assembly via Phase 1b
   `pPath_eq_convDensityAdd`). The two are the same density in two shapes and agree
-  a.e. (assembly 段 1, §5A-4). -/
+  a.e. (assembly 段 1, §5A-4).
+
+  **Independent honesty audit (2026-05-31, Wave6)**: ok — all 4 `pX` fields are pure
+  regularity preconditions. `pX`=bare density data, `pX_nn`=nonnegativity,
+  `pX_meas`=measurability, `pX_law`=external-shape equation `P.map X = withDensity (ofReal∘pX)`
+  (same form as `Z_law` / `density_t_eq`). core-reconstruction: granting all 4 does not
+  yield the de Bruijn analytic core (`HasDerivAt`/heat eq/Fisher), which stays in
+  `debruijnIdentityV2_holds`'s `sorry`. Confirmed 案 (i) adopted: `density_t_conv` (Phase 1b
+  conclusion) is NOT field-ized, avoiding the conclusion-bundle疑義 (§5A-3 ⚠). The two-pin
+  relationship is documented above. @audit:ok (4 fields are genuine regularity). -/
   pX : ℝ → ℝ
   /-- Nonnegativity of the X density witness (regularity precondition). -/
   pX_nn : ∀ x, 0 ≤ pX x
