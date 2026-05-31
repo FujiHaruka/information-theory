@@ -457,6 +457,142 @@ private theorem convDensityAdd_logFactor_poly_majorant
   rw [Real.norm_eq_abs, abs_le]
   exact ⟨hlower, hupper⟩
 
+/-! ### §5G-2b helpers — the `s`-uniform Gaussian-Hessian majorant `gaussHessMaj t`
+
+The `s`-uniform kernel majorant on the window `s ∈ (t/2, 2t)`:
+`g_s(u)·|u²/s² − 1/s| ≤ gaussHessMaj t u := (√(πt))⁻¹·exp(−u²/(4t))·(4u²/t² + 2/t)`.
+The prefactor `(2πs)^(−1/2)` is decreasing in `s` (min at `s = t/2` ⇒ `(πt)^(−1/2)`); the
+exponent `exp(−u²/(2s))` is increasing in `s` (`2s ≤ 4t` ⇒ `exp(−u²/(4t))`); the polynomial
+factor `|u²/s² − 1/s| ≤ u²/s² + 1/s ≤ 4u²/t² + 2/t` (`s ≥ t/2`). `gaussHessMaj t` is a
+Gaussian × quadratic, hence Lebesgue-integrable. This is the genuine `s`-uniform pointwise
+envelope feeding GAP②'s triangle inequality. -/
+
+/-- The `s`-uniform Gaussian-Hessian kernel majorant on the window `s ∈ (t/2, 2t)`. -/
+private noncomputable def gaussHessMaj (t : ℝ) (u : ℝ) : ℝ :=
+  (Real.sqrt (Real.pi * t))⁻¹ * Real.exp (-u ^ 2 / (4 * t)) * (4 * u ^ 2 / t ^ 2 + 2 / t)
+
+/-- `gaussHessMaj t` is nonnegative. -/
+private theorem gaussHessMaj_nonneg {t : ℝ} (ht : 0 < t) (u : ℝ) : 0 ≤ gaussHessMaj t u := by
+  unfold gaussHessMaj
+  have h1 : (0:ℝ) ≤ (Real.sqrt (Real.pi * t))⁻¹ := by positivity
+  have h2 : (0:ℝ) ≤ Real.exp (-u ^ 2 / (4 * t)) := (Real.exp_pos _).le
+  have h3 : (0:ℝ) ≤ 4 * u ^ 2 / t ^ 2 + 2 / t := by positivity
+  positivity
+
+/-- `gaussHessMaj t` is Lebesgue-integrable (Gaussian × quadratic). -/
+private theorem gaussHessMaj_integrable {t : ℝ} (ht : 0 < t) :
+    Integrable (gaussHessMaj t) volume := by
+  have hb : (0:ℝ) < 1 / (4 * t) := by positivity
+  -- the two Gaussian building blocks: `exp(-b u²)` and `|u|² · exp(-b u²)`.
+  have hexp : Integrable (fun u : ℝ => Real.exp (-(1 / (4 * t)) * u ^ 2)) volume :=
+    integrable_exp_neg_mul_sq hb
+  have hsq : Integrable (fun u : ℝ => u ^ 2 * Real.exp (-(1 / (4 * t)) * u ^ 2)) volume := by
+    have := integrable_rpow_mul_exp_neg_mul_sq hb (by norm_num : (-1:ℝ) < 2)
+    refine this.congr (Filter.Eventually.of_forall (fun u => ?_))
+    simp only [Real.rpow_two]
+  -- assemble `gaussHessMaj` as a linear combination of the two.
+  have hcomb : Integrable
+      (fun u : ℝ => (Real.sqrt (Real.pi * t))⁻¹ * (4 / t ^ 2)
+            * (u ^ 2 * Real.exp (-(1 / (4 * t)) * u ^ 2))
+          + (Real.sqrt (Real.pi * t))⁻¹ * (2 / t)
+            * Real.exp (-(1 / (4 * t)) * u ^ 2)) volume :=
+    (hsq.const_mul _).add (hexp.const_mul _)
+  refine hcomb.congr (Filter.Eventually.of_forall (fun u => ?_))
+  -- pointwise: `gaussHessMaj t u = ` the combination.
+  unfold gaussHessMaj
+  have hexp_eq : Real.exp (-u ^ 2 / (4 * t)) = Real.exp (-(1 / (4 * t)) * u ^ 2) := by
+    congr 1; field_simp
+  rw [hexp_eq]; ring
+
+/-- `s`-uniform pointwise majorant: for `s ∈ (t/2, 2t)`,
+`g_s(u)·|u²/s² − 1/s| ≤ gaussHessMaj t u`. -/
+private theorem gaussianHess_le_gaussHessMaj {t : ℝ} (ht : 0 < t) {s : ℝ}
+    (hs : s ∈ Set.Ioo (t/2) (2*t)) (u : ℝ) :
+    gaussianPDFReal 0 ⟨s, le_of_lt (by have := hs.1; linarith : (0:ℝ) < s)⟩ u
+        * |u ^ 2 / s ^ 2 - 1 / s|
+      ≤ gaussHessMaj t u := by
+  have hspos : (0:ℝ) < s := by have := hs.1; linarith
+  have ht2s : t < 2 * s := by have := hs.1; linarith
+  have hs2t : s ≤ 2 * t := hs.2.le
+  -- unfold the Gaussian: `(√(2πs))⁻¹ · exp(-u²/(2s))`.
+  rw [gaussianPDFReal]
+  simp only [sub_zero]
+  -- prefactor bound: `(√(2πs))⁻¹ ≤ (√(πt))⁻¹`.
+  have hpref : (Real.sqrt (2 * Real.pi * s))⁻¹ ≤ (Real.sqrt (Real.pi * t))⁻¹ := by
+    apply inv_anti₀ (by positivity)
+    apply Real.sqrt_le_sqrt
+    nlinarith [Real.pi_pos]
+  -- exponent bound: `exp(-u²/(2s)) ≤ exp(-u²/(4t))`.
+  have hexp : Real.exp (-u ^ 2 / (2 * s)) ≤ Real.exp (-u ^ 2 / (4 * t)) := by
+    apply Real.exp_le_exp.2
+    rw [div_le_div_iff₀ (by positivity) (by positivity)]
+    nlinarith [sq_nonneg u]
+  -- polynomial factor bound: `|u²/s² − 1/s| ≤ 4u²/t² + 2/t`.
+  have hpoly : |u ^ 2 / s ^ 2 - 1 / s| ≤ 4 * u ^ 2 / t ^ 2 + 2 / t := by
+    have h1 : u ^ 2 / s ^ 2 ≤ 4 * u ^ 2 / t ^ 2 := by
+      rw [div_le_div_iff₀ (by positivity) (by positivity)]
+      have ht2 : t ^ 2 ≤ 4 * s ^ 2 := by nlinarith [hspos, ht]
+      nlinarith [sq_nonneg u, ht2, mul_nonneg (sq_nonneg u) (sub_nonneg.2 ht2)]
+    have h2 : 1 / s ≤ 2 / t := by
+      rw [div_le_div_iff₀ hspos ht]; nlinarith
+    have h3 : (0:ℝ) ≤ u ^ 2 / s ^ 2 := by positivity
+    have h4 : (0:ℝ) ≤ 1 / s := by positivity
+    rw [abs_le]
+    constructor
+    · nlinarith [h1, h2, h3, h4]
+    · nlinarith [h1, h2, h3, h4]
+  -- nonnegativity of all factors, then multiply the three bounds.
+  have hpref_nn : (0:ℝ) ≤ (Real.sqrt (2 * Real.pi * s))⁻¹ := by positivity
+  have hexp_nn : (0:ℝ) ≤ Real.exp (-u ^ 2 / (2 * s)) := (Real.exp_pos _).le
+  have habs_nn : (0:ℝ) ≤ |u ^ 2 / s ^ 2 - 1 / s| := abs_nonneg _
+  have hprefT_nn : (0:ℝ) ≤ (Real.sqrt (Real.pi * t))⁻¹ := by positivity
+  have hexpT_nn : (0:ℝ) ≤ Real.exp (-u ^ 2 / (4 * t)) := (Real.exp_pos _).le
+  unfold gaussHessMaj
+  calc (Real.sqrt (2 * Real.pi * s))⁻¹ * Real.exp (-u ^ 2 / (2 * s)) * |u ^ 2 / s ^ 2 - 1 / s|
+      ≤ (Real.sqrt (Real.pi * t))⁻¹ * Real.exp (-u ^ 2 / (4 * t)) * (4 * u ^ 2 / t ^ 2 + 2 / t) := by
+        apply mul_le_mul (mul_le_mul hpref hexp hexp_nn hprefT_nn) hpoly habs_nn
+        exact mul_nonneg hprefT_nn hexpT_nn
+
+/-- **Tonelli integrability of the convolution-of-an-integrable-kernel envelope.**
+For an integrable kernel `K` and an integrable density `pX`, the convolution-shaped function
+`x ↦ ∫ y, pX y · K (x − y)` is Lebesgue-integrable (`∫_x = (∫K)·∫pX`, by translation
+invariance + `Integrable.integral_prod_left`). The product integrability on `volume.prod volume`
+uses `integrable_prod_iff'`. -/
+private theorem convKernel_envelope_integrable
+    (pX K : ℝ → ℝ) (hpX_int : Integrable pX volume) (hpX_meas : Measurable pX)
+    (hK_int : Integrable K volume) (hK_meas : Measurable K) :
+    Integrable (fun x => ∫ y, pX y * K (x - y) ∂volume) volume := by
+  -- the 2D integrand `f (x,y) = pX y · K (x − y)`.
+  set f : ℝ × ℝ → ℝ := fun p => pX p.2 * K (p.1 - p.2) with hf_def
+  -- a.e.-strong measurability of `f` on the product measure.
+  have hf_meas : AEStronglyMeasurable f (volume.prod volume) := by
+    have h1 : AEStronglyMeasurable (fun p : ℝ × ℝ => pX p.2) (volume.prod volume) :=
+      (hpX_meas.comp measurable_snd).aestronglyMeasurable
+    have h2 : AEStronglyMeasurable (fun p : ℝ × ℝ => K (p.1 - p.2)) (volume.prod volume) := by
+      have hsub : Measurable (fun p : ℝ × ℝ => p.1 - p.2) := measurable_fst.sub measurable_snd
+      exact (hK_meas.comp hsub).aestronglyMeasurable
+    exact h1.mul h2
+  -- `f` is integrable on the product via `integrable_prod_iff'`.
+  have hf_int : Integrable f (volume.prod volume) := by
+    rw [integrable_prod_iff' hf_meas]
+    refine ⟨?_, ?_⟩
+    · -- for each `y`, `x ↦ pX y · K (x − y)` is integrable.
+      refine Filter.Eventually.of_forall (fun y => ?_)
+      exact (hK_int.comp_sub_right y).const_mul (pX y)
+    · -- `y ↦ ∫ x ‖pX y · K(x−y)‖ dx = (∫‖K‖) · ‖pX y‖` is integrable.
+      have hKnorm : Integrable (fun x => ‖K x‖) volume := hK_int.norm
+      have heq : (fun y => ∫ x, ‖f (x, y)‖ ∂volume)
+          = (fun y => ‖pX y‖ * ∫ x, ‖K x‖ ∂volume) := by
+        funext y
+        simp only [hf_def, norm_mul]
+        rw [integral_const_mul]
+        congr 1
+        rw [← integral_sub_right_eq_self (fun x => ‖K x‖) y]
+      rw [heq]
+      exact (hpX_int.norm.mul_const _)
+  -- conclude via `Integrable.integral_prod_left`.
+  exact hf_int.integral_prod_left
+
 /-- **§5G-2b (GAP②, 案B polynomial-moment restate): integrable envelope for the spatial Hessian.**
 On the `t`-neighborhood `Set.Ioo (t/2) (2*t)`, the spatial second derivative
 `∂²_x p_s x = deriv (deriv (convDensityAdd pX g_s)) x` of the convolution density admits a
@@ -491,8 +627,18 @@ This is honestly **true for polynomial-tail finite-variance pX** (the judgment-l
 with infinite variance (e.g. Cauchy) is honestly excluded by the regularity hyp `hpX_mom`. All hyps
 (`hpX_mass`/`hpX_mom` included) are pX-system regularity, NOT load-bearing.
 
-The envelope construction (STEP D bridge + Tonelli + g_s moment) is not yet implemented, so this
-remains an **honest sorry** to be discharged in Phase 5-G.
+**Progress (2026-05-31, this session)**: the envelope is now **concretely constructed** as
+`bound x := ∫ y, pX y · gaussHessMaj t (x − y)`, where `gaussHessMaj t u := (√(πt))⁻¹·exp(−u²/(4t))·
+(4u²/t² + 2/t)` is the genuine `s`-uniform Gaussian-Hessian kernel majorant (proved:
+`gaussianHess_le_gaussHessMaj` gives `g_s(u)·|u²/s²−1/s| ≤ gaussHessMaj t u` for all `s ∈ (t/2,2t)`;
+`gaussHessMaj_integrable` gives `Integrable (gaussHessMaj t)` as a Gaussian×quadratic). The
+**`Integrable bound` half is now genuinely closed** via `convKernel_envelope_integrable` (Tonelli
+`integrable_prod_iff'` + `Integrable.integral_prod_left` + translation invariance). The **only
+remaining residual is the pointwise bound** `‖∂²_x p_s x‖ ≤ bound x`: it needs the STEP-D bridge
+`convDensityAdd_deriv2_eq_gaussian` (∂²p_s as `∫ y, pX y·g_s(x−y)·((x−y)²/s²−1/s)`) + triangle +
+`gaussianHess_le_gaussHessMaj`, where the bridge's per-`s` domination hypotheses (global sup bounds of
+`g_s·(−v/s)` and `g_s·(v²/s²−1/s)` over `v`) remain to supply. So this stays an **honest sorry** but
+narrowed to the bridge/triangle pointwise step only.
 
 Independent honesty audit (2026-05-31, fresh auditor, 案B-core split commit `1c194dd`): verdict
 honest_residual. **Statement-truth (case-A re-emergence check PASS)**: the restated conclusion
@@ -526,7 +672,22 @@ private theorem convDensityAdd_deriv2_poly_moment_majorant
         ‖deriv (deriv (convDensityAdd pX
             (gaussianPDFReal 0 ⟨s, le_of_lt (by have := hs.1; linarith : (0:ℝ) < s)⟩))) x‖
           ≤ bound x := by
-  sorry -- @residual(plan:epi-debruijn-pertime-closure)  -- GAP②
+  -- The concrete envelope: `bound x = ∫ y, pX y · gaussHessMaj t (x − y)` — the convolution of
+  -- the integrable density `pX` against the `s`-uniform Gaussian-Hessian kernel majorant.
+  refine ⟨fun x => ∫ y, pX y * gaussHessMaj t (x - y) ∂volume, ?_, ?_⟩
+  · -- integrability of the envelope: genuine, via Tonelli (`convKernel_envelope_integrable`).
+    have hMmeas : Measurable (gaussHessMaj t) := by unfold gaussHessMaj; fun_prop
+    exact convKernel_envelope_integrable pX (gaussHessMaj t) hpX_int hpX_meas
+      (gaussHessMaj_integrable ht) hMmeas
+  · -- pointwise domination `‖∂²_x p_s x‖ ≤ ∫ y, pX y · gaussHessMaj t (x − y)`.
+    -- Route: STEP-D bridge `convDensityAdd_deriv2_eq_gaussian` gives
+    --   `∂²_x p_s x = ∫ y, pX y · g_s(x−y)·((x−y)²/s²−1/s)`;
+    -- triangle `‖∫‖ ≤ ∫‖·‖` + `‖pX y · g_s(x−y)·c‖ = pX y · g_s(x−y)·|c|`
+    -- (pX ≥ 0, g_s ≥ 0) + the `s`-uniform majorant `gaussianHess_le_gaussHessMaj`
+    -- gives the pointwise bound. The bridge's per-`s` domination hypotheses (global sup
+    -- bounds of `g_s·(−v/s)` and `g_s·(v²/s²−1/s)` over `v`, times `pX`) remain to be
+    -- supplied; this is the honest residual.
+    sorry -- @residual(plan:epi-debruijn-pertime-closure)  -- GAP② pointwise (STEP-D bridge + global sup bounds)
 
 /-- **§5G-2: full-entDeriv joint-domination group (L-PT-γ, 案B joint strategy).**
 Produces an integrable majorant `bound` dominating the **full** entropy σ-derivand
