@@ -1232,6 +1232,163 @@ predicate 化 / `:True` slot / 循環 `:= h` / 退化 (rnDeriv pin 等)。詰ま
 - Phase 0 で structure field 追加 → 下流 olean refresh が必要なら
   `lake build Common2026.Shannon.FisherInfoV2DeBruijn` 1 回。
 
+## §Phase 5-G case A: GAP② finite-2nd-moment restate 実装 brief 〔SUPERSEDED — 判断ログ #15〕
+
+> **⚠ 2026-05-31 RETRACTED (判断ログ #15)**: 本 brief が前提とする 案A (finite-2nd-moment で
+> GAP② Gaussian-tail statement が true 化) は独立 honesty 監査で **誤りと判明**。`gaussianPDFReal_le_prefactor`
+> は `g_s(x-y) ≤ 定数` (x について) で exp 因子を捨てるため prefactor ルートは多項式 majorant しか出さず、
+> polynomial-tail finite-2nd-moment pX (反例 `(2/π)/(1+y²)²`) で Gaussian-tail 結論を破る。正しい
+> precondition は sub-Gaussian / finite-MGF。本 brief は実装に使わない (歴史記録として残置)。新方針 = 判断ログ #15。
+>
+> 2026-05-31 起草 (lean-planner)。判断ログ #14 (採用 = 案A) を実装に落とす brief。
+> verbatim 確認済 signature: `FisherInfoV2DeBruijnAssembly.lean:498-507` (GAP②)、
+> `:580-590` (`_chain_domination`)、`:811-822` (`_chain_parametric`)、`:846-862`
+> (`_chain`)、`:977-1021` (top `debruijnIdentityV2_holds_assembled`)、
+> `:333-335` (GAP① `convDensityAdd_logFactor_poly_majorant` の `hpX_mass` 形)、
+> `FisherInfoV2DeBruijn.lean:202-258` (`IsRegularDeBruijnHypV2` 構造、`pX*` fields)。
+> Mathlib: `Integrable.mono'` (`L1Space/Integrable.lean`)、`Integrable.add`。
+
+### 確定した追加 hyp の Lean signature
+
+```lean
+(hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+```
+
+- **(a) mass `∫pX=1`**: 既存 `hpX_mass : (∫ y, pX y ∂volume) = 1` が GAP② consumer chain
+  (`_chain_domination` / `_chain_parametric` / `_chain` / top) には既に thread 済 (`:582`/
+  `:813`/`:848`/top body `:998`)。**GAP② 自身 (`:498`) の現 signature には `hpX_mass` が無い**
+  (引数は `pX hpX_nn hpX_meas hpX_int ht` の 5 つ) → 案A では GAP② に **`hpX_mass` + `hpX_mom`
+  の 2 hyp を新規追加**する (mass は prefactor 展開 `∫pX(y)(x-y)²dy` の `x²·∫pX` 項に必要)。
+- **(b) 2次モーメント `Integrable (y²·pX)`**: 新規 hyp `hpX_mom`。prefactor 展開の `∫y²·pX` 項。
+- **(c) 1次モーメント `Integrable (y·pX)`**: **独立 hyp 不要**。`2|y| ≤ 1 + y²` より
+  `|y·pX(y)| ≤ pX(y) + y²·pX(y)` (pointwise, `hpX_nn` 使用)、RHS は `hpX_int.add hpX_mom` で
+  integrable → `Integrable.mono'` で `Integrable (y·pX)` が従う。implementer が body 内で
+  helper `have hpX_mom1 : Integrable (fun y => y * pX y) volume := ...` として導出する
+  (LSP 第1戻りで `Integrable.mono'` の引数順 `(g_integrable) (f_aestronglyMeasurable) (ae_bound)`
+  を確認すべき点)。
+
+### threading 経路 (declaration 名 + 挿入位置)
+
+GAP② の consumer は `_chain_domination` (`:580`) **1 件のみ** (`rg` で確認)。`hpX_mom` を top まで
+通すには以下 4 declaration の signature に hyp を追加 + call site に実引数を 1 つ足す。`hpX_mass`
+は既存 thread を踏襲 (GAP② のみ新規受領)。**挿入位置は全て `hpX_mass`/`hpX_int` の直後**で揃える。
+
+| # | declaration | line | hyp 追加? | call site 修正 |
+|---|---|---|---|---|
+| 1 | `convDensityAdd_deriv2_tail_majorant` (GAP②) | `:498` | `hpX_mass` + `hpX_mom` 2 件追加 | (consumer 側で実引数を渡す) |
+| 2 | `debruijnIdentityV2_holds_assembled_chain_domination` | `:580` | `hpX_mom` 追加 (mass 既存) | `:599-600` GAP② call に `hpX_mass hpX_mom` 追記 |
+| 3 | `debruijnIdentityV2_holds_assembled_chain_parametric` | `:811` | `hpX_mom` 追加 (mass 既存) | body は `sorry` (`:822`) — call site 無し、signature のみ |
+| 4 | `debruijnIdentityV2_holds_assembled_chain` | `:846` | `hpX_mom` 追加 (mass 既存) | `:859-860` `_chain_parametric` call に `hpX_mom` 追記 |
+| 5 | top `debruijnIdentityV2_holds_assembled` | `:977` | **構造 field 追加** (下記) | `:1006-1007` `_chain` call に `hpX_mom` (= `h_reg.pX_mom`) 追記 |
+
+**top の hyp 供給 = 構造 field 追加**: top の signature は `(h_reg : IsRegularDeBruijnHypV2 X Z P t)`
+で、`pX` 系は全て `h_reg.pX*` field 経由 (`hpX_mass` も body 内 `:998` で `h_reg.pX_law` から導出)。
+よって `hpX_mom` も **`IsRegularDeBruijnHypV2` に新 field を追加**して供給する
+(`FisherInfoV2DeBruijn.lean:202-258`)。追加 field:
+
+```lean
+  /-- **Finite-second-moment regularity (§Phase 5-G case A, 2026-05-31)**: the X density
+  `pX` has finite second moment `∫ y²·pX(y) dy < ∞`. Regularity precondition (NOT
+  load-bearing): excludes heavy-tailed `pX` (e.g. Cauchy) for which the convolution-density
+  spatial-Hessian Gaussian-tail bound (GAP②) is false. de Bruijn の標準前提。 -/
+  pX_mom : Integrable (fun y => y ^ 2 * pX y) volume
+```
+
+top body の `_chain` call (`:1006-1007`) は `... hpX_int hpX_mass ht` を
+`... hpX_int hpX_mass h_reg.pX_mom ht` に変更 (hyp 順は signature と一致させる)。
+**implementer が LSP で確認すべき点**: `IsRegularDeBruijnHypV2` に field を追加すると全
+constructor (`n.ofHeatFlow` 等、`FisherInfoV2DeBruijnBody.lean`) が field 不足で型エラーになる →
+それらの構成側で `pX_mom` を供給する必要あり。供給元が Gaussian/特定構成のみなら本 brief の scope
+外 (別 wave、constructor 側は genuine に moment 有限性を埋めるか、構成が Gaussian 前提なら自明)。
+**この constructor 波及範囲は implementer が `rg 'IsRegularDeBruijnHypV2' Common2026/` +
+LSP 第1戻りで確認し、scope を orchestrator に報告**する (本 brief では top signature までを確定)。
+
+### GAP② が案A で TRUE & satisfiable になる根拠 (数式)
+
+GAP② の heat-eq STEP D 表示 `∂²_x p_s x = ∫ y, pX(y)·g_s(x-y)·((x-y)²/s² − 1/s) dy`。三角不等式 +
+`gaussianPDFReal_le_prefactor` (`g_s(x-y) ≤ pref(s)·exp(-(x-y)²/(2s))` 級) で majorant を取ると、
+支配項は `∫ pX(y)·(x-y)² dy`。これを展開すると
+`∫pX(y)(x-y)²dy = x²·∫pX − 2x·∫y·pX + ∫y²·pX`。案A の `hpX_mass` (`∫pX=1` < ∞)、`hpX_mom`
+(`∫y²·pX` < ∞)、導出した 1次モーメント (`∫y·pX` < ∞) により **3 項全て有限** → 多項式
+`A·x² + B·x + C` (有限係数) で押さえられ、Gaussian 因子 `exp(-x²/c')` を括り出した
+`C·(1+x²)·exp(-x²/c')` の結論形に収まる (多項式は `(1+x²)` に吸収可能、large x で `x²` 主導)。
+Cauchy では `∫y²·pX=∞` で hyp 不充足 → そもそも対象外 (statement が vacuously 適用されない、
+honest exclusion)。よって **finite-2nd-moment 前提下で statement は TRUE かつ satisfiable**。
+
+### honest sorry のまま残す箇所 vs genuine plumbing 箇所
+
+| 箇所 | 案A 後の状態 |
+|---|---|
+| GAP② `convDensityAdd_deriv2_tail_majorant` (`:498`) | **honest sorry 継続** (`@residual(plan:epi-debruijn-pertime-closure)`)。statement が true 化するので **defect でなくなる** が、body の Gaussian-tail majorant 構成 (STEP D bridge + prefactor + moment 展開) はまだ未実装 → honest sorry。Phase 5-G L-PT-γ/δ で genuine 化予定。 |
+| `_chain_domination` (`:580`) | **genuine plumbing 継続**。GAP② が true 化 → vacuous-genuine でなくなる。body の product-majorant integrability 証明 (`(A+Bx²)·C(1+x²)exp(-x²/c')` → `x^{0,2,4}·exp(-(1/c')x²)` の有限和) は **GAP② の結論型が不変** (`C·(1+x²)·exp(-x²/c')`) なので **body 不変で済む** (hyp 追加 + GAP② call の実引数追記のみ)。 |
+| `_chain_parametric` (`:811`) | **honest sorry 継続** (`@residual(plan:...)`)。hyp 追加のみ、body は依然 `sorry`。 |
+| `_chain` (`:846`) | **genuine plumbing 継続**。hyp 追加 + `_chain_parametric` call 実引数追記のみ。 |
+| top (`:977`) | **genuine plumbing 継続** (`@residual(plan:...)` transitive)。構造 field 追加 + `_chain` call 実引数追記。 |
+
+### 除去するタグ (GAP② が true 化したことで不要になる defect マーカー)
+
+GAP② docstring (`:475-497`):
+- **除去**: `@audit:defect(false-statement)` (`:495`)
+- **除去**: `@audit:retract-candidate(heavy-tail-pX-counterexample: ...)` (`:496`)
+- **保持**: `@residual(plan:epi-debruijn-pertime-closure)` (`:497`) — body はまだ sorry なので残す
+- **書換**: docstring の FALSE-STATEMENT DEFECT note (`:475-493`) を「案A restate 済: finite-2nd-moment
+  前提 (`hpX_mom`) 下で statement TRUE、Cauchy は hyp 不充足で対象外」の note に置換 (heavy-tail 反例
+  の記録は「なぜ regularity hyp が必要か」の根拠として 1-2 行残す)。
+
+`_chain_domination` docstring (`:565-577`):
+- **除去**: `@audit:defect(false-statement, transitive-via-GAP②)` (`:577`)
+- **書換**: DEFECT PROPAGATION note (`:565-577`) を削除し、genuine-wiring 評価に戻す
+  (「GAP② が finite-2nd-moment で true 化 → 本 wiring は genuine、vacuous でない」)。
+- **保持**: `@residual(plan:epi-debruijn-pertime-closure)` (`:579`) — transitive sorry (GAP②+`_chain_parametric`) が残るため。
+
+### 継承タグ語彙整合 inline check (CLAUDE.md「Brief content checklist」#2)
+
+GAP② / `_chain_domination` の docstring を編集後、`rg -n '@audit:|@residual|🟢ʰ'
+Common2026/Shannon/FisherInfoV2DeBruijnAssembly.lean` で deprecated タグ
+(`@audit:suspect/staged/defer/closed-by-successor`、散文 `🟢ʰ`) / 語彙外 slug が残っていないか
+列挙し orchestrator に報告。本 file は新規 defect マーカー除去がメインなので、除去後に
+`@audit:defect` / `@audit:retract-candidate` が 0 件になることを確認。
+
+### Sub-bound 引数表 (該当なし)
+
+本 file は `P_cb`/`P_target` 分離型 capacity predicate を扱わない (AWGN 系の話) ため該当なし。
+
+### 実装 step (順序付き)
+
+1. **GAP② signature 拡張** (`:498-501`): `hpX_int` の後に `(hpX_mass : (∫ y, pX y ∂volume) = 1)
+   (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)` を追加。body は `sorry` 継続。
+2. **GAP② docstring 整形** (`:475-497`): defect/retract タグ除去 + restate note 化 (上記)。
+3. **`_chain_domination` 拡張** (`:580-582`): `hpX_mass` の後に `hpX_mom` 追加。
+   call site (`:599-600`) を `convDensityAdd_deriv2_tail_majorant pX hpX_nn hpX_meas hpX_int
+   hpX_mass hpX_mom ht` に修正。docstring の DEFECT PROPAGATION note 除去 (上記)。body の
+   majorant 構成は **不変** (GAP② 結論型不変)。
+4. **`_chain_parametric` 拡張** (`:811-813`): `hpX_mass` の後に `hpX_mom` 追加。body は `sorry` 継続。
+5. **`_chain` 拡張** (`:846-848`): `hpX_mass` の後に `hpX_mom` 追加。call site (`:860`) を
+   `... hpX_int hpX_mass hpX_mom ht` に修正。
+6. **`IsRegularDeBruijnHypV2` field 追加** (`FisherInfoV2DeBruijn.lean:257` の `density_t_eq` 前
+   あたり、または末尾): `pX_mom` field (上記 signature)。
+7. **top call site** (`FisherInfoV2DeBruijnAssembly.lean:1006-1007`): `_chain` call に
+   `h_reg.pX_mom` を hyp 順通り追加 (`... hpX_int hpX_mass h_reg.pX_mom ht`)。
+8. **constructor 波及確認**: `rg 'IsRegularDeBruijnHypV2' Common2026/` で全構成側を列挙、field 不足
+   エラーを LSP で確認。構成側が `pX_mom` を供給できる範囲 (Gaussian 構成は自明、一般構成は別 wave)
+   を orchestrator に報告。本 wave の scope 内で埋まらなければ honest sorry / `@residual` で残す。
+9. **検証**: `lake env lean Common2026/Shannon/FisherInfoV2DeBruijn.lean` →
+   `lake build Common2026.Shannon.FisherInfoV2DeBruijn` (構造変更で olean refresh) →
+   `lake env lean Common2026/Shannon/FisherInfoV2DeBruijnAssembly.lean` が 0 errors
+   (sorry warning 許容、GAP②/`_chain_parametric`/fisher/IBP の既存 sorry のみ)。
+10. **語彙整合 check** (上記) + 残 `@residual` 件数を report。
+
+### 独立 honesty audit 起動条件
+
+本実装は **既存 sorry の signature を変更 (hyp 追加) + 構造 field 追加 + defect タグ除去**
+を行うため、CLAUDE.md「Independent honesty audit 起動条件」の **「既存 declaration の signature を
+変更して honesty 関連の意味が変わる」** に該当 → orchestrator は実装後に `honesty-auditor` を 1 件
+起動。監査スコープ: (i) `hpX_mom` が **regularity precondition** であって load-bearing でないこと
+(GAP② 結論を bundle していない、moment 有限性は前提条件)、(ii) GAP② の defect タグ除去が statement
+true 化に整合 (auditor が finite-2nd-moment 前提で statement TRUE を独立確認)、(iii)
+`_chain_domination` の genuine-wiring 評価復帰が正当 (vacuous でない)、(iv) `IsRegularDeBruijnHypV2.pX_mom`
+が他 field と同列の regularity field (`Z_law`/`pX_law` 系) であること。
+
 ## 判断ログ
 
 書く頻度: 方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
@@ -1383,3 +1540,69 @@ predicate 化 / `:True` slot / 循環 `:= h` / 退化 (rnDeriv pin 等)。詰ま
     sorry 分割は honesty を上げるが、**分割先が false だと「genuine plumbing 化」ラベルが defect を隠蔽する
     逆効果**になり得る (本件 = monolithic sorry を 2 named helper に factor した結果 false GAP② が "genuine
     wiring" の下に埋もれ 3 監査を通過)。
+14. 〔**SUPERSEDED by #15** — 案A は誤り。下記は歴史記録〕 **GAP② false-statement を案A (finite-2nd-moment regularity threading) で解消、案B 撤回**
+    (2026-05-31, lean-planner, 判断ログ #13 の後続決定 + orchestrator 決定の落とし込み): 判断ログ #13 で
+    提示した 案A / 案B のうち **案A を採用**。実装 brief = `§Phase 5-G case A` (本 plan、判断ログ直前)。
+    - **確定 hyp** = `(hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)` (有限 2 次モーメント)。
+      prefactor 展開 `∫pX(y)(x-y)²dy = x²·∫pX − 2x·∫y·pX + ∫y²·pX` の 3 項を有限化する。mass
+      `∫pX=1` (既存 `hpX_mass`) + `hpX_mom` で 1 次・2 次項が有限、1 次モーメント `Integrable (y·pX)`
+      は `2|y| ≤ 1+y²` ⇒ `|y·pX| ≤ pX + y²·pX` の pointwise 支配 + `Integrable.mono'` で **mass+2nd
+      から従う** (独立 hyp 不要、body 内導出)。GAP② 現 signature には `hpX_mass` が無いため、案A では
+      **GAP② に `hpX_mass`+`hpX_mom` の 2 hyp を新規追加**する (verbatim 確認: `:498-507` の引数は
+      `pX hpX_nn hpX_meas hpX_int ht` の 5 つ)。
+    - **threading**: GAP② consumer は `_chain_domination` (`:580`) 1 件のみ。`hpX_mom` を
+      `_chain_domination` → `_chain_parametric` → `_chain` → top の 4 declaration に追加。top は
+      `IsRegularDeBruijnHypV2` 経由なので **構造に `pX_mom` field を新規追加**して供給
+      (`FisherInfoV2DeBruijn.lean:202-258`、`Z_law`/`pX_law` と同列の regularity field)。構造変更で
+      全 constructor が field 不足になる波及範囲は implementer が確認・報告 (本 brief scope = top
+      signature まで)。
+    - **scope narrowing (明示)**: general pX → **finite-2nd-moment pX**。Cauchy 等 heavy-tail
+      (`∫y²·pX=∞`) は hyp 不充足で **対象外** (honest exclusion、vacuously 適用されない)。de Bruijn
+      identity の標準前提 (Cover-Thomas でも入力に有限分散を仮定) なので textbook 整合。EPI 本筋
+      (Gaussian / 有限分散 source) には影響なし。
+    - **案B を撤回した理由**: 案B = general pX 維持で `_chain_domination` を joint /
+      self-bounding (エントロピー有限性) 戦略に再設計。真の積 `(-log p_s)·∂²p_s ~ (log x)/x⁴` の可積分性
+      を分離積 (GAP①×GAP②) でなく joint で示す必要があり、(i) Mathlib に convolution-density の log×Hessian
+      joint bound 在庫が皆無 (新規自作壁、PR 級)、(ii) 高コスト・高リスク (再設計が `_chain_domination`
+      statement と整合する保証が無い)、(iii) 得られる一般性 (heavy-tail 込み) は de Bruijn の使用文脈で
+      不要。**案A は低コスト (hyp threading + 構造 1 field)・低リスク (GAP② 結論型不変 →
+      `_chain_domination` body 不変)・標準前提整合** で支配的。
+    - **タグ処理**: GAP② が finite-2nd-moment 前提で TRUE 化するため `@audit:defect(false-statement)` +
+      `@audit:retract-candidate(...)` を **除去** (body はまだ未実装なので `@residual(plan:...)` は継続)。
+      `_chain_domination` の DEFECT PROPAGATION note (`vacuous-genuine`) も除去し genuine-wiring 評価に戻す
+      (GAP② 結論型不変なので product-majorant integrability 証明は不変)。
+    - **独立監査**: signature 変更 (hyp 追加) + 構造 field 追加 + defect タグ除去のため、実装後に
+      `honesty-auditor` 起動必須 (`hpX_mom` が regularity precondition であり load-bearing でないこと、
+      GAP② true 化の整合、`_chain_domination` genuine 復帰の正当性を独立検証)。
+15. **案A は誤り (finite-2nd-moment は GAP② Gaussian-tail に不十分)、独立監査が捕捉 → 真の fork は
+    案A′ (sub-Gaussian/finite-MGF, cheap) vs 案B (joint, general, PR 級)** (2026-05-31, honesty-auditor
+    独立検算 + orchestrator): 案A 実装 (commit `23ea70a`: GAP②/`_chain_domination` に `hpX_mass`+`hpX_mom`
+    追加 + defect タグ除去) を独立 honesty 監査が **REJECT**。
+    - **根本原因 (planner の数式誤認)**: 判断ログ #14 の prefactor 論法は `gaussianPDFReal_le_prefactor`
+      の結論形を verbatim 確認せず記憶で「prefactor × Gaussian 級」と記述。実際の lemma
+      (`FisherInfoV2DeBruijnPerTime.lean:115-126`) は `g_s(x-y) ≤ pref(s) = (√(2πs))⁻¹` = **x について定数**に
+      bound し `exp(-(x-y)²/2s)` を**完全に捨てる**。よって prefactor ルートは**多項式 majorant `A·x²+B·x+C`**
+      しか出さない (finite-2nd-moment で有限だが Gaussian-tail `≤C(1+x²)exp(-x²/c')` を満たさない — large x で
+      RHS→0 < 多項式)。keep-Gaussian ルートは `exp(-x²/c')` 括り出しに finite MGF を要し polynomial-tail で ∞。
+      Gaussian decay の出所が論法から消えていた。CLAUDE.md「具体的数値・型予測の verbatim 確認」が **lemma 結論形**
+      にも適用されるべき実例。
+    - **反例検算 (auditor, polynomial-tail finite-2nd-moment)**: `pX(y) = (2/π)/(1+y²)²` は全 5 hyp 充足
+      (`∫pX=1`、`∫y²pX=π/2<∞` exact)。にもかかわらず真の `∂²ₓp_s` は polynomial ~const/x² 減衰
+      (数値: `I(x)·x²≈const`, x∈[20,300])、Gaussian-tail 結論を x=200 で既に破る。**finite-2nd-moment は
+      Cauchy を除外しても polynomial-tail (1/y⁴ 等) が依然反例。正しい precondition は sub-Gaussian/finite-MGF**
+      (finite-2nd-moment より遥かに強く全 polynomial-tail を除外)。
+    - **数学的整理**: 真の積 `(-log p_s)·∂²p_s` は (i) sub-Gaussian pX では `~x²·gaussian` 可積分
+      (分離積 GAP①×GAP② が機能)、(ii) finite-2nd-moment (polynomial-tail) pX では `~(log x)/x⁴` 可積分だが
+      **分離積では不可** (log 因子を x² で過大評価 × Hessian polynomial `~1/x²` = `x²·(1/x²)=const` 非可積分)。
+      分離積戦略は sub-Gaussian 専用、一般には joint domination が要る (判断ログ #13 の障害は案A で未解消)。
+    - **採用 = 撤退 (defect 復活) + 戦略 fork を user escalation**: auditor が GAP②/`_chain_domination` に
+      `@audit:defect(false-statement)` 復活済。真の選択肢は **案A′** (sub-Gaussian/finite-MGF hyp で
+      GAP② Gaussian-tail を true 化、分離積がそのまま機能、低コスト、ただし source を sub-Gaussian に限定 —
+      EPI 一般性を大きく損なう) vs **案B** (finite-2nd-moment or general pX + joint domination 戦略、標準
+      de Bruijn 一般性、Mathlib 在庫皆無の PR 級 = fisher-finiteness 壁と同格)。一般性 vs コストの scope
+      tradeoff で default なし → user 判断待ち。判断ログ #14 の「低コスト・低リスク・標準前提」評価は **無効**
+      (案A は statement false ゆえそもそも閉じない)。
+    - **教訓 (#13 の補強)**: convolution-density の spatial-deriv に Gaussian tail を主張する lemma は
+      **sub-Gaussian/finite-MGF を要求**する (finite-2nd-moment では不足)。監査 checklist の反例セットに
+      Cauchy (∫y²=∞) **に加えて** polynomial-tail finite-variance `(2/π)/(1+y²)²` を追加。planner の prefactor
+      論法は lemma 結論形の verbatim 確認を必須化。

@@ -494,6 +494,36 @@ The body Gaussian-tail majorant construction (STEP D bridge + `gaussianPDFReal_l
 moment expansion) is not yet implemented, so this remains an **honest sorry** to be discharged in
 Phase 5-G (L-PT-γ/δ).
 
+**INDEPENDENT HONESTY AUDIT (2026-05-31, fresh auditor, commit `23ea70a`): verdict false_statement
+(tier 5) — 案A does NOT fix the defect; it REPLACES the Cauchy counterexample with a polynomial-tail
+counterexample. The restate is REJECTED.** The added `hpX_mom` (finite 2nd moment) is insufficient
+for the `exp(-x²/c')` (Gaussian-tail) conclusion. Two mutually exclusive routes both fail:
+(1) **prefactor route** (the one the docstring/plan §1302-1308 actually describe): `gaussianPDFReal_le_prefactor`
+bounds `g_s(x-y) ≤ pref(s) = (√(2πs))⁻¹`, a CONSTANT in x — it DROPS the `exp(-(x-y)²/2s)` factor
+(verified at `FisherInfoV2DeBruijnPerTime.lean:115-126`; the plan's `pref(s)·exp(-(x-y)²/2s)級`
+parenthetical at §1303 is wishful, not what the lemma gives). This yields only a POLYNOMIAL majorant
+`A·x²+B·x+C` (finite under `hpX_mom`/`hpX_mass`, true), but a polynomial does NOT satisfy
+`≤ C(1+x²)exp(-x²/c')`: for any fixed C,c' the Gaussian RHS → 0 while the polynomial → ∞, so it fails
+for all large x. The plan's "多項式は (1+x²) に吸収可能" (§1308) is the error — absorption into `(1+x²)`
+is fine, but the `exp(-x²/c')` factor still kills the RHS below the polynomial.
+(2) **keep-Gaussian route**: to factor `exp(-x²/c')` out of `∫pX(y)g_s(x-y)(x-y)²dy` one needs the MGF
+`∫pX(y)exp(xy/s)dy < ∞` (the ORIGINAL defect note at the old `:483` was CORRECT), which is ∞ for any
+polynomial-tail pX, not only Cauchy.
+**Counterexample satisfying ALL hypotheses** (`hpX_nn`/`hpX_meas`/`hpX_int`/`hpX_mass`/`hpX_mom`):
+`pX(y) = (2/π)·1/(1+y²)²`. Verified: `∫pX = 1` (exact, `∫1/(1+y²)² = π/2`), `∫y²·pX = 1 < ∞` (exact,
+`∫y²/(1+y²)² = π/2`) so `hpX_mom` holds — yet its convolution-density 2nd derivative
+`∂²_x p_s(x) = ∫pX(y)g_s(x-y)((x-y)²/s²−1/s)dy` decays only POLYNOMIALLY `~const/x²` (numerically:
+`I(x)·x²` ≈ const ≈ 1e-5 over x∈[20,300]; `I(x) >> C(1+x²)exp(-x²/c')` already at x=200 for C=c'=1e3,
+gap widening to 1e-11 vs 1e-32 at x=300). So the Gaussian-tail conclusion is FALSE for this pX.
+Finite 2nd moment is NOT the right precondition; the conclusion would require a sub-Gaussian / finite-MGF
+tail condition (e.g. `∫pX(y)exp(a|y|)dy < ∞`), which is MUCH stronger and excludes all polynomial-tail
+densities. **Orchestrator action: this commit's defect-removal must be reverted (or the conclusion
+weakened to a polynomial majorant `‖∂²_x p_s x‖ ≤ A(1+x²)`, which IS provable under finite 2nd moment
+— but then `_chain_domination`'s separated-product integrability FAILS, exactly the §judgment-log-#13
+obstruction, so 案B joint strategy is the real fix). Mark restored below pending rewrite.**
+
+@audit:defect(false-statement)
+@audit:retract-candidate(finite-2nd-moment-insufficient-polynomial-tail-counterexample: GAP②-Gaussian-tail-false-for-pX∝1/(1+y²)²)
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem convDensityAdd_deriv2_tail_majorant
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -563,22 +593,27 @@ honest_residual. **Update**: GAP① (`convDensityAdd_logFactor_poly_majorant`) i
 regularity threaded to GAP①'s normalization need (NOT load-bearing). Body is genuine wiring (0 local
 sorry); the single remaining residual is GAP②. @residual kept (transitive over the GAP② plan wall).
 
-**GAP② restated TRUE (2026-05-31, §Phase 5-G case A, 案A, 判断ログ #14)**: the consumed helper GAP②
-(`convDensityAdd_deriv2_tail_majorant`) is **no longer a false-statement defect** — it now carries the
-finite-second-moment regularity hyps `hpX_mass` + `hpX_mom`, under which the Gaussian-tail Hessian
-bound is TRUE & satisfiable (heavy-tailed pX such as Cauchy are honestly excluded by the
-non-satisfiability of `hpX_mom`; see GAP② docstring). Consequently this body's genuine wiring /
-core-reconstruction PASS is **no longer vacuous-genuine**: the product-majorant integrability proof
-(`(A+Bx²)·C(1+x²)exp(-x²/c')` → finite sum of `x^{0,2,4}·exp(-(1/c')x²)`) now rests on a true Hessian
-decay bound. The `_chain_domination` STATEMENT (∃ integrable majorant over `Ioo(t/2,2t)`) is true
-under the threaded finite-second-moment regularity, and the GAP①×GAP② separated-product strategy is
-sound on that regularity class (the x² log-factor overestimate × the Gaussian Hessian bound gives a
-`poly × Gaussian` integrable majorant). The single remaining honest `sorry` is GAP② alone (its body
-construction is not yet implemented); the `@residual` here is therefore **transitive over the GAP②
-plan wall**. The product-majorant integrability body is **unchanged**: GAP②'s conclusion form
-(`C·(1+x²)·exp(-x²/c')`) is invariant under the hyp addition, so only the GAP② call site gains the
-`hpX_mass hpX_mom` actual arguments.
+**INDEPENDENT HONESTY AUDIT (2026-05-31, fresh auditor, commit `23ea70a`): the claim that GAP② is
+"restated TRUE" is REJECTED — verdict false_statement (transitive-via-GAP②), still tier 5.** The
+consumed helper GAP② (`convDensityAdd_deriv2_tail_majorant`) remains a false-statement defect even
+WITH `hpX_mass` + `hpX_mom`: finite 2nd moment is insufficient for its `exp(-x²/c')` Gaussian-tail
+Hessian conclusion (counterexample `pX(y) = (2/π)/(1+y²)²` satisfies all five hyps incl. `hpX_mom`
+but has only POLYNOMIAL `~1/x²` 2nd-derivative decay; see GAP② docstring audit note). Therefore this
+body's product-majorant integrability proof (`(A+Bx²)·C(1+x²)exp(-x²/c')` → finite sum of
+`x^{0,2,4}·exp(-(1/c')x²)`) is STILL **VACUOUS-GENUINE**: locally sorry-free but resting on GAP②'s
+false `exp(-x²/c')` Hessian decay. The `_chain_domination` STATEMENT (∃ integrable majorant over
+`Ioo(t/2,2t)`) is itself TRUE for general finite-2nd-moment pX (the true product
+`(-log p_s)·∂²p_s ~ (log x)/x²·...` is integrable), but it is **NOT provable via the GAP①×GAP②
+separated-product strategy** — GAP①'s `~x²` log-factor overestimate times any HONEST Hessian bound
+(only polynomial `~1/x²` for polynomial-tail pX) gives a NON-integrable `~const` product majorant.
+This is exactly the §judgment-log-#13 obstruction, which 案A did NOT remove (it only narrowed the
+class from "all pX" to "finite-2nd-moment pX", but the obstruction persists on polynomial-tail
+finite-2nd-moment pX). **DO NOT build further genuine claims downstream of this wiring until GAP② is
+rewritten — either weaken GAP②/`_chain_domination` to a polynomial majorant (then this separated body
+fails integrability) or adopt the 案B joint entropy-finiteness strategy.** Body type-checks (GAP②
+conclusion form invariant under the hyp addition) but type-check passing ≠ honest.
 
+@audit:defect(false-statement)
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_domination
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
