@@ -143,6 +143,15 @@ equation. The heat-equation equality `∂_σ pPath = (1/2) ∂²_x pPath` is the
 to be proven (body `sorry`) and is deliberately NOT supplied as a hypothesis — doing so
 would be load-bearing (bundling the proof core into a hypothesis), which is forbidden.
 
+**Independent audit (commit `69478a4`, re-audit of prior `b37b9ae` false_statement)**:
+signature confirmed a TRUE statement, NOT load-bearing. The Phase-0 false-statement
+defect is fully resolved — the old counterexample `pPath := fun σ _ => σ` now violates
+`hpPath` (a Gaussian-convolution density cannot be a nonzero constant in `x`), and the
+remaining free symbols `pX` / `pathDeriv1` parametrize true instances (the pins force
+`pathDeriv1`/`pathDeriv2` to be the unique spatial derivatives, and the conclusion's
+σ↔x heat-equation link is supplied by NONE of the three pins — it stays in the body).
+Verdict: honest_residual (body `sorry` retained, `@residual` kept).
+
 Mathlib has no Gaussian heat semigroup closed-form (`"heat"`/`"Mehler"`/
 `"OrnsteinUhlenbeck"`/`"FokkerPlanck"` all `Found 0`); this is the largest atom
 (~80-120 lines, plan §Phase 2). The route is density-side: differentiate the
