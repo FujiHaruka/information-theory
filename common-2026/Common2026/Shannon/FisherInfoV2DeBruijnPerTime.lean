@@ -200,7 +200,12 @@ theorem entropy_hasDerivAt_via_parametric
       HasDerivAt (fun s => negMulLog (pPath s x)) (entDeriv s x) s) :
     HasDerivAt (fun s => ∫ x, negMulLog (pPath s x) ∂volume)
       (∫ x, entDeriv t x ∂volume) t := by
-  sorry -- @residual(plan:epi-debruijn-pertime-closure) — parametric integral diff plumbing
+  have hgate :=
+    hasDerivAt_integral_of_dominated_loc_of_deriv_le
+      (F := fun s x => negMulLog (pPath s x))
+      (F' := fun s x => entDeriv s x)
+      (bound := bound) (Filter.univ_mem) hmeas hint hderiv_meas hb hbound_int hdiff
+  simpa only using hgate.2
 
 /-! ## Phase 4a — infinite-interval IBP (L-PT-δ honest sorry) -/
 
