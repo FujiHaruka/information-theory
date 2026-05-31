@@ -618,186 +618,6 @@ theorem heatFlow_density_heat_equation
   rw [hpathDeriv2_eq]
   exact hB
 
-/-! ## Phase 2c — Mathlib `deriv` spatial identification (de Bruijn IBP prerequisite) -/
-
--- The heat-equation atom `heatFlow_density_heat_equation` identifies the spatial
--- derivatives against *pinned abstract witnesses* `pathDeriv1`/`pathDeriv2`. The de Bruijn
--- IBP step `debruijn_ibp_step` (`:693`) instead needs the spatial derivatives in Mathlib
--- `deriv` form (`v := deriv (convDensityAdd pX g_t)`, `v' := deriv (deriv …)`). The two
--- atoms below establish `HasDerivAt (convDensityAdd pX g_t) …` and
--- `HasDerivAt (fun ξ => ∫ … ∂_x kernel) …` in Mathlib `deriv` form, plus the `deriv = ∫`
--- corollaries. Body structure mirrors heat-eq STEP D `hpathDeriv1_eq`/`hpathDeriv2_eq`
--- (gateway `.2` + `convDensityAdd = ∫ kernel` congruence). Domination hyp groups are the
--- spatial groups of `heatFlow_density_heat_equation` (`:448-468`) reused verbatim.
-
-/-- **Phase 2c (genuine)**: the spatial (`x`-direction) derivative of the Gaussian
-convolution density `convDensityAdd pX g_t` (`g_t = 𝒩(0, t)` density, `t > 0`) in Mathlib
-`HasDerivAt` form:
-`HasDerivAt (convDensityAdd pX g_t) (∫ y, pX y · kernel t (x-y)·(-((x-y)/t))) x` for all `x`.
-
-This is the `deriv`-form analogue of the heat-eq atom's spatial 1st-derivative
-identification (STEP D `hpathDeriv1_eq`, `:565`), needed so the de Bruijn IBP step
-`debruijn_ibp_step` can pass `v := deriv (convDensityAdd pX g_t)` (a Mathlib `deriv`, not a
-pinned abstract witness).
-
-**Honesty**: the domination hyps (`boundξ1` / integrability / ae-measurability / Gaussian-tail
-norm bound `hbξ1`) are integrand-level regularity preconditions, in the exact shape the
-gateway `hasDerivAt_integral_of_dominated_loc_of_deriv_le` consumes (1:1 with the spatial
-group of `heatFlow_density_heat_equation` `:448-459` and with `convDensityAdd_hasDerivAt`
-`EPIConvDensity.lean:86`, both `@audit:ok`). They do NOT bundle the `HasDerivAt` conclusion:
-that is *derived* in the body from the genuine `@audit:ok` kernel 1st-deriv closed form
-chained through `ξ ↦ ξ - y` plus the gateway. The conclusion is a genuine `HasDerivAt`, not a
-hyp-bundled equality.
-
-**Independent honesty audit (commit `d9ba34b`)**: genuine, NOT load-bearing. Core-reconstruction
-test applied jointly to the full hyp bundle (`boundξ1` / `hboundξ1_int` / `hFξ1_meas` / `hFξ1_int`
-/ `hFξ1'_meas` / `hbξ1`): granting all of them does NOT hand the composed `HasDerivAt` value —
-every hyp is integrand-level (per-`y`, `∀ξ`-quantified ae-measurability / integrability / Gaussian-
-tail norm bound `≤ boundξ1 y`), 1:1 with the gateway
-`hasDerivAt_integral_of_dominated_loc_of_deriv_le` arg shape and verbatim-identical to the spatial
-1st-deriv group of `heatFlow_density_heat_equation` (`:450-459`, `@audit:ok`). Body derives the
-conclusion (`hconv_eq` + `hdiff` from `@audit:ok` kernel `_x_deriv1` chained `ξ↦ξ-y` + `hgate.2`);
-no `:= h` circular, no `:True` slot, no degenerate def. `#print axioms` re-verified =
-`[propext, Classical.choice, Quot.sound]` (sorryAx-free). 0 sorry / 0 residual.
-@audit:ok -/
-theorem convDensityAdd_hasDerivAt_spatial
-    (pX : ℝ → ℝ) {t : ℝ} (ht : 0 < t) (x : ℝ)
-    (boundξ1 : ℝ → ℝ) (hboundξ1_int : Integrable boundξ1 volume)
-    (hFξ1_meas : ∀ ξ : ℝ,
-      AEStronglyMeasurable
-        (fun y => pX y * heatFlow_density_heat_equation_kernel t (ξ - y)) volume)
-    (hFξ1_int : ∀ ξ : ℝ,
-      Integrable (fun y => pX y * heatFlow_density_heat_equation_kernel t (ξ - y)) volume)
-    (hFξ1'_meas : ∀ ξ : ℝ, AEStronglyMeasurable
-      (fun y => pX y * (heatFlow_density_heat_equation_kernel t (ξ - y) * (-(((ξ - y)) / t)))) volume)
-    (hbξ1 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
-      ‖pX y * (heatFlow_density_heat_equation_kernel t (ξ - y) * (-((ξ - y) / t)))‖ ≤ boundξ1 y) :
-    HasDerivAt (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩))
-      (∫ y, pX y * (heatFlow_density_heat_equation_kernel t (x - y) * (-((x - y) / t))) ∂volume) x := by
-  -- `convDensityAdd pX g_t` agrees globally with `fun ξ => ∫ y, pX y · kernel t (ξ-y)` (t > 0).
-  have hconv_eq : convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)
-      = (fun ξ : ℝ => ∫ y, pX y * heatFlow_density_heat_equation_kernel t (ξ - y) ∂volume) := by
-    funext ξ
-    unfold convDensityAdd
-    refine integral_congr_ae ?_
-    filter_upwards with y
-    rw [heatFlow_density_heat_equation_kernel_eq ht (ξ - y)]
-  rw [hconv_eq]
-  -- per-y spatial 1st-derivative HasDerivAt (kernel `_x_deriv1` chained through `ξ ↦ ξ - y`).
-  have hdiff : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
-      HasDerivAt (fun ξ => pX y * heatFlow_density_heat_equation_kernel t (ξ - y))
-        (pX y * (heatFlow_density_heat_equation_kernel t (ξ - y) * (-((ξ - y) / t)))) ξ := by
-    filter_upwards with y
-    intro ξ _
-    have hk := heatFlow_density_heat_equation_kernel_x_deriv1 ht (ξ - y)
-    have hshift : HasDerivAt (fun ξ : ℝ => ξ - y) 1 ξ := by
-      simpa using (hasDerivAt_id ξ).sub_const y
-    have hcomp := hk.comp ξ hshift
-    simp only [mul_one] at hcomp
-    exact hcomp.const_mul (pX y)
-  have hgate :=
-    hasDerivAt_integral_of_dominated_loc_of_deriv_le
-      (F := fun ζ y => pX y * heatFlow_density_heat_equation_kernel t (ζ - y))
-      (F' := fun ζ y => pX y * (heatFlow_density_heat_equation_kernel t (ζ - y)
-        * (-((ζ - y) / t))))
-      (bound := boundξ1) (Filter.univ_mem)
-      (Filter.Eventually.of_forall hFξ1_meas) (hFξ1_int x) (hFξ1'_meas x)
-      hbξ1 hboundξ1_int hdiff
-  exact hgate.2
-
-/-- **Phase 2c corollary (genuine)**: `deriv` form of `convDensityAdd_hasDerivAt_spatial`.
-`deriv (convDensityAdd pX g_t) x = ∫ y, pX y · kernel t (x-y)·(-((x-y)/t))`.
-
-**Independent honesty audit (commit `d9ba34b`)**: genuine, NOT circular. Body is the standard
-`.deriv` projection of `convDensityAdd_hasDerivAt_spatial` (no `:= h`); same integrand-level
-domination group, conclusion converts the `HasDerivAt` to `deriv =`. `#print axioms` =
-`[propext, Classical.choice, Quot.sound]` (sorryAx-free). 0 sorry / 0 residual.
-@audit:ok -/
-theorem convDensityAdd_deriv_spatial_eq
-    (pX : ℝ → ℝ) {t : ℝ} (ht : 0 < t) (x : ℝ)
-    (boundξ1 : ℝ → ℝ) (hboundξ1_int : Integrable boundξ1 volume)
-    (hFξ1_meas : ∀ ξ : ℝ,
-      AEStronglyMeasurable
-        (fun y => pX y * heatFlow_density_heat_equation_kernel t (ξ - y)) volume)
-    (hFξ1_int : ∀ ξ : ℝ,
-      Integrable (fun y => pX y * heatFlow_density_heat_equation_kernel t (ξ - y)) volume)
-    (hFξ1'_meas : ∀ ξ : ℝ, AEStronglyMeasurable
-      (fun y => pX y * (heatFlow_density_heat_equation_kernel t (ξ - y) * (-(((ξ - y)) / t)))) volume)
-    (hbξ1 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
-      ‖pX y * (heatFlow_density_heat_equation_kernel t (ξ - y) * (-((ξ - y) / t)))‖ ≤ boundξ1 y) :
-    deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)) x
-      = ∫ y, pX y * (heatFlow_density_heat_equation_kernel t (x - y) * (-((x - y) / t))) ∂volume :=
-  (convDensityAdd_hasDerivAt_spatial pX ht x boundξ1 hboundξ1_int
-    hFξ1_meas hFξ1_int hFξ1'_meas hbξ1).deriv
-
-/-- **Phase 2c (genuine)**: the spatial (`x`-direction) derivative of the *score-numerator*
-integral `fun ξ => ∫ y, pX y · kernel t (ξ-y)·(-((ξ-y)/t))` (= `∂_x convDensityAdd pX g_t`)
-in Mathlib `HasDerivAt` form:
-`HasDerivAt (fun ξ => ∫ y, pX y · kernel t (ξ-y)·(-((ξ-y)/t)))
-  (∫ y, pX y · kernel t (x-y)·((x-y)²/t² - 1/t)) x`.
-
-Composed with `convDensityAdd_hasDerivAt_spatial` this identifies the *second* spatial
-derivative `deriv (deriv (convDensityAdd pX g_t)) x` (needed by `debruijn_ibp_step` for
-`v' := deriv (deriv …)`).
-
-**Honesty**: identical structure to `heatFlow_density_heat_equation` STEP D2
-(`hpathDeriv2_eq`, `:607`). Domination hyps are the spatial 2nd-deriv group (`boundξ2` /
-integrability / ae-measurability / `hbξ2`), all integrand-level regularity preconditions in
-the gateway's shape; the `HasDerivAt` conclusion is *derived* from the `@audit:ok` kernel
-2nd-deriv closed form chained through `ξ ↦ ξ - y` + the gateway. Not load-bearing.
-
-**Independent honesty audit (commit `d9ba34b`)**: genuine, NOT load-bearing. Core-reconstruction
-test applied jointly to the 2nd-deriv hyp bundle (`boundξ2` / `hboundξ2_int` / `hFξ1'_meas` /
-`hFξ2_int` / `hFξ2'_meas` / `hbξ2`): granting all does NOT hand the composed `HasDerivAt` value —
-every hyp is integrand-level regularity in the gateway's shape, verbatim-identical to the spatial
-2nd-deriv group of `heatFlow_density_heat_equation` (`:460-468`, `@audit:ok`). Body derives the
-conclusion (`hdiff` from `@audit:ok` kernel `_x_deriv2` chained `ξ↦ξ-y` + `hgate.2`), mirroring
-heat-eq STEP D2 `hpathDeriv2_eq`; no `:= h` circular, no `:True` slot, no degenerate def.
-`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free). 0 sorry / 0 residual.
-@audit:ok -/
-theorem convDensityAdd_deriv_hasDerivAt_spatial
-    (pX : ℝ → ℝ) {t : ℝ} (ht : 0 < t) (x : ℝ)
-    (boundξ2 : ℝ → ℝ) (hboundξ2_int : Integrable boundξ2 volume)
-    (hFξ1'_meas : ∀ ξ : ℝ, AEStronglyMeasurable
-      (fun y => pX y * (heatFlow_density_heat_equation_kernel t (ξ - y) * (-(((ξ - y)) / t)))) volume)
-    (hFξ2_int : Integrable
-      (fun y => pX y * (heatFlow_density_heat_equation_kernel t (x - y) * (-((x - y) / t)))) volume)
-    (hFξ2'_meas : AEStronglyMeasurable
-      (fun y => pX y * (heatFlow_density_heat_equation_kernel t (x - y)
-        * ((x - y) ^ 2 / t ^ 2 - 1 / t))) volume)
-    (hbξ2 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
-      ‖pX y * (heatFlow_density_heat_equation_kernel t (ξ - y)
-        * ((ξ - y) ^ 2 / t ^ 2 - 1 / t))‖ ≤ boundξ2 y) :
-    HasDerivAt
-      (fun ξ : ℝ => ∫ y, pX y * (heatFlow_density_heat_equation_kernel t (ξ - y)
-        * (-((ξ - y) / t))) ∂volume)
-      (∫ y, pX y * (heatFlow_density_heat_equation_kernel t (x - y)
-        * ((x - y) ^ 2 / t ^ 2 - 1 / t)) ∂volume) x := by
-  -- per-y spatial 2nd-derivative HasDerivAt (kernel `_x_deriv2` chained through `ξ ↦ ξ - y`).
-  have hdiff : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
-      HasDerivAt (fun ξ => pX y * (heatFlow_density_heat_equation_kernel t (ξ - y)
-          * (-((ξ - y) / t))))
-        (pX y * (heatFlow_density_heat_equation_kernel t (ξ - y)
-          * ((ξ - y) ^ 2 / t ^ 2 - 1 / t))) ξ := by
-    filter_upwards with y
-    intro ξ _
-    have hk := heatFlow_density_heat_equation_kernel_x_deriv2 ht (ξ - y)
-    have hshift : HasDerivAt (fun ξ : ℝ => ξ - y) 1 ξ := by
-      simpa using (hasDerivAt_id ξ).sub_const y
-    have hcomp := hk.comp ξ hshift
-    simp only [mul_one] at hcomp
-    exact hcomp.const_mul (pX y)
-  have hgate :=
-    hasDerivAt_integral_of_dominated_loc_of_deriv_le
-      (F := fun ξ y => pX y * (heatFlow_density_heat_equation_kernel t (ξ - y)
-        * (-((ξ - y) / t))))
-      (F' := fun ξ y => pX y * (heatFlow_density_heat_equation_kernel t (ξ - y)
-        * ((ξ - y) ^ 2 / t ^ 2 - 1 / t)))
-      (bound := boundξ2) (Filter.univ_mem)
-      (Filter.Eventually.of_forall (fun ξ => hFξ1'_meas ξ)) hFξ2_int hFξ2'_meas
-      hbξ2 hboundξ2_int hdiff
-  exact hgate.2
-
 /-! ## Phase 3 — entropy parametric diff (L-PT-γ honest sorry) -/
 
 /-- **Phase 3 (L-PT-γ honest sorry)**: differentiation under the integral sign for the
@@ -914,5 +734,195 @@ theorem fisher_from_logDeriv
     rw [← ENNReal.ofReal_mul (sq_nonneg _)]
   rw [hlint, ← ofReal_integral_eq_lintegral_ofReal hint hg_nn,
     ENNReal.toReal_ofReal (integral_nonneg fun x => mul_nonneg (sq_nonneg _) (hp_nn x))]
+
+/-! ## Phase GAP — convolution-density everywhere positivity + Gaussian lower bound
+
+Upstream analytic parts feeding GAP① (polynomial majorant of the `log` factor) and the
+`tsupport = ℝ` requirement of the de Bruijn IBP step `debruijn_ibp_step`. The Gaussian
+convolution density `convDensityAdd pX g_s` is everywhere strictly positive and bounded
+below by a shifted Gaussian, so its support is all of `ℝ`. -/
+
+/-- Integrability helper: `fun y => pX y * gaussianPDFReal 0 v (x - y)` is integrable
+(`pX` integrable × Gaussian factor bounded by its prefactor), reused by both GAP lemmas. -/
+private theorem convDensityAdd_integrand_integrable
+    (pX : ℝ → ℝ) (hpX_int : Integrable pX volume) (v : ℝ≥0) (x : ℝ) :
+    Integrable (fun y => pX y * gaussianPDFReal 0 v (x - y)) volume := by
+  refine hpX_int.mul_bdd (c := (Real.sqrt (2 * Real.pi * v))⁻¹) ?_ ?_
+  · exact ((measurable_gaussianPDFReal 0 v).comp
+      (measurable_const.sub measurable_id)).aestronglyMeasurable
+  · refine Filter.Eventually.of_forall (fun y => ?_)
+    rw [Real.norm_eq_abs, abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (x - y))]
+    exact gaussianPDFReal_le_prefactor 0 v (x - y)
+
+/-- **GAP lemma A (everywhere positivity, genuine)**: when `pX` is a nonnegative integrable
+density carrying positive mass (`0 < ∫ pX`), the Gaussian convolution density is strictly
+positive at every point `x`.
+
+The integrand `y ↦ pX y · g_s(x-y)` is nonnegative and integrable; its support equals the
+support of `pX` (the Gaussian factor `g_s` never vanishes, `s > 0`). Since `0 < ∫ pX` is
+equivalent to `0 < volume (support pX)` (`integral_pos_iff_support_of_nonneg`), the
+integrand also has positive-measure support, hence positive integral.
+
+**Genuine completion (0 sorry / 0 residual)**: `hpX_nn` / `hpX_int` / `hpX_mass` are
+regularity preconditions (a nonnegative integrable density with positive mass — for a
+genuine probability density `∫ pX = 1`). The strict positivity conclusion is *derived*,
+not assumed. Pending independent honesty audit. -/
+theorem convDensityAdd_pos
+    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
+    (hpX_mass : 0 < ∫ y, pX y ∂volume)
+    {s : ℝ} (hs : 0 < s) (x : ℝ) :
+    0 < convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩) x := by
+  have hv_ne : (⟨s, hs.le⟩ : ℝ≥0) ≠ 0 := by
+    intro h; exact hs.ne' (congrArg NNReal.toReal h)
+  -- variance witness for `gaussianPDFReal_pos`
+  set g : ℝ → ℝ := gaussianPDFReal 0 ⟨s, hs.le⟩ with hg_def
+  -- integrand `F y := pX y * g (x - y)`, nonnegative + integrable
+  set F : ℝ → ℝ := fun y => pX y * g (x - y) with hF_def
+  have hF_nn : 0 ≤ F := fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ (x - y))
+  have hF_int : Integrable F volume :=
+    convDensityAdd_integrand_integrable pX hpX_int ⟨s, hs.le⟩ x
+  -- support of F equals support of pX (the Gaussian factor never vanishes)
+  have hsupp : Function.support F = Function.support pX := by
+    ext y
+    simp only [Function.mem_support, hF_def, ne_eq, mul_eq_zero, not_or]
+    constructor
+    · exact fun h => h.1
+    · exact fun h => ⟨h, (gaussianPDFReal_pos 0 _ (x - y) hv_ne).ne'⟩
+  -- positive mass ⇒ positive-measure support of pX
+  have hpX_supp : 0 < volume (Function.support pX) :=
+    (integral_pos_iff_support_of_nonneg hpX_nn hpX_int).mp hpX_mass
+  -- hence positive-measure support of F ⇒ positive integral
+  have : 0 < ∫ y, F y ∂volume :=
+    (integral_pos_iff_support_of_nonneg hF_nn hF_int).mpr (hsupp ▸ hpX_supp)
+  simpa only [convDensityAdd, hF_def, hg_def] using this
+
+/-- Monotonicity of the centered Gaussian pdf in `|·|`: if `|u| ≤ |w|` then
+`g_v(w) ≤ g_v(u)` (the pdf decreases as the argument moves away from the mean `0`). -/
+private theorem gaussianPDFReal_antitone_abs
+    (v : ℝ≥0) {u w : ℝ} (huw : |u| ≤ |w|) :
+    gaussianPDFReal 0 v w ≤ gaussianPDFReal 0 v u := by
+  simp only [gaussianPDFReal, sub_zero]
+  have hpref_nn : 0 ≤ (Real.sqrt (2 * Real.pi * v))⁻¹ := by positivity
+  refine mul_le_mul_of_nonneg_left ?_ hpref_nn
+  rw [Real.exp_le_exp]
+  have hsq : u ^ 2 ≤ w ^ 2 := by
+    have := pow_le_pow_left₀ (abs_nonneg u) huw 2
+    rwa [sq_abs, sq_abs] at this
+  rcases eq_or_lt_of_le (show (0:ℝ) ≤ 2 * v from by positivity) with hv0 | hvpos
+  · rw [← hv0]; simp
+  · rw [neg_div, neg_div, neg_le_neg_iff]
+    gcongr
+
+/-- **GAP lemma B (Gaussian lower bound, genuine)**: the Gaussian convolution density is
+bounded below by a `(1/2)`-scaled shifted Gaussian. Concretely there is a radius `R > 0` with
+`convDensityAdd pX g_s x ≥ (1/2) · g_s (|x| + R)` for every `x`.
+
+Mathematical route (all steps genuine, 0 sorry / 0 residual):
+1. tightness: `∃ R > 0, ∫ y in Set.Icc (-R) R, pX y ≥ 1/2` (from `∫_{[-R,R]} pX → ∫ pX = 1`
+   via `tendsto_setIntegral_of_monotone` on the exhausting boxes `Icc (-n) n`, whose union is
+   `univ`; eventually `> 1/2`, extract a box with `n > 0`).
+2. `convDensityAdd ≥ ∫_{[-R,R]} pX y · g_s(x-y)` (rest of the nonnegative integrand dropped,
+   `setIntegral_le_integral`).
+3. `g_s` monotone-decreasing in `|·|` (`gaussianPDFReal_antitone_abs`): for `y ∈ [-R,R]`,
+   `|x - y| ≤ |x| + R` so `g_s(x-y) ≥ g_s(|x| + R)`, giving
+   `∫_{[-R,R]} pX y · g_s(x-y) ≥ g_s(|x|+R) · ∫_{[-R,R]} pX ≥ g_s(|x|+R) · (1/2)`.
+
+**Genuine completion**: `hpX_nn` / `hpX_int` / `hpX_mass` (`∫ pX = 1`, probability density)
+are regularity preconditions. The lower bound is *derived*, not bundled into a hypothesis.
+Pending independent honesty audit. -/
+theorem convDensityAdd_lower_bound_gaussian
+    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
+    (hpX_mass : (∫ y, pX y ∂volume) = 1)
+    {s : ℝ} (hs : 0 < s) :
+    ∃ R : ℝ, 0 < R ∧ ∀ x : ℝ,
+      (1/2) * gaussianPDFReal 0 ⟨s, hs.le⟩ (|x| + R)
+        ≤ convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩) x := by
+  classical
+  set g : ℝ → ℝ := gaussianPDFReal 0 ⟨s, hs.le⟩ with hg_def
+  -- STEP 1 (tightness): `∃ R > 0, ∫ y in Icc (-R) R, pX y ≥ 1/2`.
+  obtain ⟨R, hR_pos, hR_mass⟩ :
+      ∃ R : ℝ, 0 < R ∧ (1:ℝ)/2 ≤ ∫ y in Set.Icc (-R) R, pX y ∂volume := by
+    -- exhausting boxes `sN n := Icc (-n) n`, monotone, `⋃ = univ`.
+    set sN : ℕ → Set ℝ := fun n => Set.Icc (-(n:ℝ)) (n:ℝ) with hsN_def
+    have hsN_meas : ∀ n, MeasurableSet (sN n) := fun n => measurableSet_Icc
+    have hsN_mono : Monotone sN := by
+      intro m n hmn
+      apply Set.Icc_subset_Icc
+      · exact neg_le_neg (by exact_mod_cast hmn)
+      · exact_mod_cast hmn
+    have hsN_union : (⋃ n, sN n) = Set.univ := by
+      rw [Set.eq_univ_iff_forall]
+      intro y
+      obtain ⟨n, hn⟩ := exists_nat_ge |y|
+      refine Set.mem_iUnion.mpr ⟨n, ?_⟩
+      rw [hsN_def]
+      simp only [Set.mem_Icc]
+      have hy : |y| ≤ (n:ℝ) := hn
+      rw [abs_le] at hy
+      exact ⟨hy.1, hy.2⟩
+    -- integrability on `⋃ = univ`, and `∫ in univ pX = ∫ pX = 1`.
+    have hfi : IntegrableOn pX (⋃ n, sN n) volume := by
+      rw [hsN_union]; exact hpX_int.integrableOn
+    have htends := tendsto_setIntegral_of_monotone hsN_meas hsN_mono hfi
+    rw [hsN_union, setIntegral_univ, hpX_mass] at htends
+    -- eventually `∫ in sN n, pX > 1/2`; extract a large enough box.
+    have hev : ∀ᶠ n in Filter.atTop, (1:ℝ)/2 < ∫ y in sN n, pX y ∂volume := by
+      have h12 : (1:ℝ)/2 < 1 := by norm_num
+      exact htends.eventually (eventually_gt_nhds h12)
+    obtain ⟨N, hN⟩ := (hev.and (Filter.eventually_gt_atTop 0)).exists
+    refine ⟨(N:ℝ), by exact_mod_cast hN.2, ?_⟩
+    rw [hsN_def] at hN
+    exact hN.1.le
+  refine ⟨R, hR_pos, fun x => ?_⟩
+  -- Integrand `F y := pX y * g (x - y)` is nonnegative + integrable.
+  set F : ℝ → ℝ := fun y => pX y * g (x - y) with hF_def
+  have hF_nn : ∀ y, 0 ≤ F y := fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ (x - y))
+  have hF_int : Integrable F volume :=
+    convDensityAdd_integrand_integrable pX hpX_int ⟨s, hs.le⟩ x
+  -- STEP 2: drop the integral down to the box `Icc (-R) R`.
+  have hbox_le : (∫ y in Set.Icc (-R) R, F y ∂volume) ≤ ∫ y, F y ∂volume := by
+    apply setIntegral_le_integral hF_int
+    exact Filter.Eventually.of_forall hF_nn
+  -- STEP 3: on the box, `g (x-y) ≥ g (|x| + R)`, so
+  --   `∫_box F ≥ g(|x|+R) · ∫_box pX ≥ g(|x|+R) · (1/2)`.
+  have hbox_lb : (1/2) * g (|x| + R) ≤ ∫ y in Set.Icc (-R) R, F y ∂volume := by
+    -- on the box, `g (|x| + R) ≤ g (x - y) = g (x - y)` (monotonicity in `|·|`).
+    have hxR_nn : 0 ≤ |x| + R := add_nonneg (abs_nonneg x) hR_pos.le
+    -- pointwise lower bound of the integrand on the box: `pX y · g(|x|+R) ≤ F y`.
+    have hpt : ∀ y ∈ Set.Icc (-R) R, pX y * g (|x| + R) ≤ F y := by
+      intro y hy
+      have hy_abs : |x - y| ≤ |x| + R := by
+        have h1 : |x - y| ≤ |x| + |y| := abs_sub _ _
+        have h2 : |y| ≤ R := abs_le.mpr ⟨hy.1, hy.2⟩
+        linarith
+      have hmono : g (|x| + R) ≤ g (x - y) := by
+        rw [hg_def]
+        refine gaussianPDFReal_antitone_abs ⟨s, hs.le⟩ ?_
+        rwa [abs_of_nonneg hxR_nn]
+      exact mul_le_mul_of_nonneg_left hmono (hpX_nn y)
+    -- integrate the pointwise bound over the box.
+    have hpX_int_box : IntegrableOn pX (Set.Icc (-R) R) volume := hpX_int.integrableOn
+    have hlb_int : IntegrableOn (fun y => pX y * g (|x| + R)) (Set.Icc (-R) R) volume :=
+      hpX_int_box.mul_const _
+    have hF_int_box : IntegrableOn F (Set.Icc (-R) R) volume := hF_int.integrableOn
+    have hstep : (∫ y in Set.Icc (-R) R, pX y * g (|x| + R) ∂volume)
+        ≤ ∫ y in Set.Icc (-R) R, F y ∂volume := by
+      apply setIntegral_mono_on hlb_int hF_int_box measurableSet_Icc
+      exact hpt
+    -- pull `g(|x|+R)` out of the box integral.
+    rw [integral_mul_const] at hstep
+    -- `∫_box pX ≥ 1/2`, `g ≥ 0`, so `g(|x|+R)·(1/2) ≤ g(|x|+R)·∫_box pX ≤ ∫_box F`.
+    have hg_nn : 0 ≤ g (|x| + R) := by rw [hg_def]; exact gaussianPDFReal_nonneg 0 _ _
+    have hhalf : g (|x| + R) * (1/2) ≤ g (|x| + R) * ∫ y in Set.Icc (-R) R, pX y ∂volume :=
+      mul_le_mul_of_nonneg_left hR_mass hg_nn
+    calc (1/2) * g (|x| + R)
+        = g (|x| + R) * (1/2) := by ring
+      _ ≤ g (|x| + R) * ∫ y in Set.Icc (-R) R, pX y ∂volume := hhalf
+      _ = (∫ y in Set.Icc (-R) R, pX y ∂volume) * g (|x| + R) := by rw [mul_comm]
+      _ ≤ ∫ y in Set.Icc (-R) R, F y ∂volume := hstep
+  calc (1/2) * g (|x| + R)
+      ≤ ∫ y in Set.Icc (-R) R, F y ∂volume := hbox_lb
+    _ ≤ ∫ y, F y ∂volume := hbox_le
+    _ = convDensityAdd pX g x := rfl
 
 end Common2026.Shannon.FisherInfoV2

@@ -109,7 +109,14 @@ private theorem debruijnIdentityV2_holds_assembled_chain_entDeriv_formula
 
 /-- **Genuine integrability helper**: `x ↦ x^k · exp(-b·x²)` is Lebesgue integrable for any
 `k : ℕ` and `b > 0`. Bridges the Mathlib `rpow` lemma `integrable_rpow_mul_exp_neg_mul_sq`
-(which uses `x ^ (k:ℝ)`) to the `pow` (`ℕ`-exponent) form via `rpow_natCast`. -/
+(which uses `x ^ (k:ℝ)`) to the `pow` (`ℕ`-exponent) form via `rpow_natCast`.
+
+Independent honesty audit (2026-05-31, fresh auditor, §5G-2 wiring commit `cf88267`): verdict
+ok. 0 sorry; `#print axioms` confirms `[propext, Classical.choice, Quot.sound]` only
+(sorryAx-free). The bridge is genuine: `integrable_rpow_mul_exp_neg_mul_sq` exists in Mathlib
+(`Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral`, loogle confirmed), and the body
+is a `rpow_natCast` `funext`/`rwa` rewrite from `x^(k:ℝ)` to `x^k`. NOT circular, NOT
+degenerate. proof-done. @audit:ok -/
 private theorem integrable_natPow_mul_exp_neg_mul_sq {b : ℝ} (hb : 0 < b) (k : ℕ) :
     Integrable (fun x : ℝ => x ^ k * Real.exp (-b * x ^ 2)) volume := by
   have hk : (-1 : ℝ) < (k : ℝ) := by
@@ -139,6 +146,23 @@ All hyps are pX-system regularity; the existential output is a pointwise polynom
 The remaining honest `sorry` is the convolution-density Gaussian lower bound (Mathlib/repo
 absent — convolution lower bounds and Gaussian density lower bounds are both `Found 0`).
 
+Independent honesty audit (2026-05-31, fresh auditor, §5G-2 wiring commit `cf88267`): verdict
+honest_residual. **Signature honest**: all hyps are pX-system regularity (`hpX_nn`/`hpX_meas`/
+`hpX_int`) + `ht`; the conclusion is an existential pointwise polynomial bound, NOT bundled into
+a hypothesis (no `*Hypothesis` predicate, no conclusion-as-hyp). **Satisfiability TRUE**: on the
+bounded window `s ∈ Ioo (t/2, 2t)` (each `s > t/2 > 0`, compact away from 0/∞), the convolution
+density has a Gaussian lower bound `p_s x ≥ c·exp(-(|x|+R)²/(2s))` (positive mass of pX on a
+bounded set × Gaussian kernel value), so `-log p_s x ≤ A + B·x²` uniformly in `s`. The two
+false-statement defects caught earlier (judgment log #11: log factor alone + `∀ s∈univ` `s→∞`
+divergence, and `p⁻¹~exp(+x²)` blow-up via `one_sub_inv_le_log_of_pos`) are BOTH avoided here:
+the bound is `s`-uniform on the bounded `Ioo` window (no `s→∞`), and the route is "log of the
+lower bound" (`Real.log_le_log` + `Real.log_exp`), NOT `p⁻¹-1`. **Classification `plan:` correct**
+(NOT `wall:`): the Gaussian lower bound is an elementary self-contained integral lower-bound
+(positive mass × kernel minimum on bounded set), within plan analytic plumbing — distinct from
+the genuine Mathlib gap `wall:fisher-finiteness` (Stam convolution Fisher bound, PR-level). The
+loogle `Found 0` reflects "elementary but not in Mathlib", not a deep wall (judgment log #12
+separates #2/GAP from #4/Fisher; only #4 promoted toward `wall:`). @residual kept.
+
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem convDensityAdd_logFactor_poly_majorant
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -166,6 +190,18 @@ requires the `pathDeriv1/2` `HasDerivAt` preconditions (full-support C¹ plumbin
 L-PT-δ), which is the remaining honest `sorry`.
 
 All hyps are pX-system regularity; the existential output is a pointwise Gaussian-tail bound.
+
+Independent honesty audit (2026-05-31, fresh auditor, §5G-2 wiring commit `cf88267`): verdict
+honest_residual. **Signature honest**: hyps are pX-system regularity + `ht`; the conclusion is an
+existential pointwise Gaussian-tail bound, NOT bundled. **Satisfiability TRUE**: via the heat-eq
+STEP D identification `∂²_x p_s x = ∫ y, pX y · g_s(x-y)·((x-y)²/s² - 1/s)` (atom
+`heatFlow_density_heat_equation` STEP D + `heatFlow_density_heat_equation_kernel_x_deriv2`, both
+in-repo `@audit:ok`), the triangle inequality + Gaussian prefactor bound
+(`gaussianPDFReal_le_prefactor`, in-repo `:115`) give a Gaussian-tail bound `C·(1+x²)·exp(-x²/c')`
+uniform on the bounded window `s ∈ Ioo (t/2, 2t)`. **Classification `plan:` correct** (NOT `wall:`):
+the residual is the `deriv∘deriv → STEP-D bridge` (the `pathDeriv1/2 HasDerivAt` full-support C¹
+plumbing shared with L-PT-δ), assembled from in-repo `@audit:ok` atoms — same-family analytic
+plumbing, not a genuine Mathlib gap. @residual kept.
 
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem convDensityAdd_deriv2_tail_majorant
@@ -213,6 +249,22 @@ Gaussian lower bound + `deriv∘deriv` → STEP-D bridge, plan L-PT-γ/δ).
 All hyps are pX-system regularity; the existential output is integrand-level domination. The
 `@residual` is transitive (the sorries now live in the named §5G-2a/§5G-2b helpers), kept here
 so the file-level residual grep still reflects this declaration's dependency.
+
+Independent honesty audit (2026-05-31, fresh auditor, §5G-2 wiring commit `cf88267`): verdict
+honest_residual (transitive). **0 local sorry** — the former monolithic sorry is genuinely
+removed. **Genuine wiring (core-reconstruction test PASS)**: granting the two helpers' existential
+outputs (`⟨A,B,…⟩` log majorant, `⟨C,c',…⟩` Hessian majorant) does NOT auto-discharge the
+domination conclusion; the body genuinely constructs the product majorant
+`(A+B·x²)·((1/2)·C·(1+x²)·exp(-x²/c'))` then (i) proves its integrability by a `ring`-expansion
+into `x^{0,2,4}·exp(-(1/c')x²)` + 3× `integrable_natPow_mul_exp_neg_mul_sq` (`@audit:ok`,
+sorryAx-free), and (ii) proves the domination via `norm_mul` + `mul_le_mul` +
+`mul_le_mul_of_nonneg_left`. The helper outputs are `obtain`ed (genuinely consumed), NOT bundled
+as load-bearing hypotheses. `#print axioms` shows `sorryAx` present only transitively via GAP①/②
+(`convDensityAdd_logFactor_poly_majorant` / `convDensityAdd_deriv2_tail_majorant`), confirming the
+wiring itself adds no local sorry. NOT circular, NOT load-bearing, NOT name-laundering (carries
+`@residual`). The false-statement fix (judgment log #11: full-σ-derivand product over bounded
+`Ioo (t/2,2t)`, not log-factor-alone over `univ`) makes the dominated statement true and
+satisfiable. @residual kept (transitive over GAP①/② plan walls).
 
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_domination
