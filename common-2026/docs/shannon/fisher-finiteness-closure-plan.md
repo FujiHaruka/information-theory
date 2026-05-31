@@ -19,7 +19,85 @@
 - [ ] R-A Step 2: λ→0 極限で `J(p_t) ≤ 1/t` を取り出す 📋
 - [ ] R-A Step 3: `J(p_t) < ∞ → Integrable ((logDeriv p_t)²·p_t)` を `fisherInfoOfDensity` 有限性から復元 📋
 - [ ] R-A wire-up: `convDensityAdd_fisher_integrable` 本体を shared 補題呼出に置換 📋
+- [ ] **scope 拡張 (2026-05-31, judgment #16)**: shared 壁 `gaussianConv_fisher_le_inv_var` は **3 consumer を gate** すると判明 (案B joint domination 在庫 `epi-debruijn-gap2-caseB-joint-domination-inventory.md`)。新 file `FisherConvBound.lean` に集約し EPI per-time line 全体で reuse 📋
 - [ ] proof-log: yes (`docs/shannon/proof-log-fisher-finiteness.md`)
+
+## 共有壁の scope 拡張 — 1 壁 3 consumer (2026-05-31, 案B 在庫由来)
+
+> 起草 (lean-planner)。SoT: 案B joint domination 在庫
+> `docs/shannon/epi-debruijn-gap2-caseB-joint-domination-inventory.md` の critical overlap verdict。
+> 本計画の当初 scope は `convDensityAdd_fisher_integrable` (`:715`) 単独の closure だったが、
+> 案B joint domination 採用 (`epi-debruijn-pertime-closure-plan.md` 判断ログ #16) により
+> **同じ Stam convolution Fisher bound `J(pX∗g_s) ≤ 1/s` が EPI per-time line の 3 declaration を gate** する
+> ことが判明。集約点を `convDensityAdd_fisher_integrable` 内 sorry から **独立 shared sorry 補題
+> `gaussianConv_fisher_le_inv_var`** (新 file `FisherConvBound.lean`) に格上げする。
+
+### 3 consumer (verbatim 確認済、`FisherInfoV2DeBruijnAssembly.lean`)
+
+| consumer | file:line | 何に壁を使うか | 受け方 |
+|---|---|---|---|
+| `convDensityAdd_fisher_integrable` | `:715` (現 `@residual(wall:fisher-finiteness)`) | `Integrable ((logDeriv p_t)²·p_t)`。R-A Step 3 plumbing (有限性→可積分性) で壁の有限上界を `< ⊤` に使う | body 内 lemma call (`gaussianConv_fisher_le_inv_var ... ` → `< ⊤` → `Integrable`) |
+| `_chain_ibp_fisher` (`debruijnIdentityV2_holds_assembled_chain_ibp_fisher`) | `:792` (現 `@residual(wall:fisher-finiteness,plan:epi-debruijn-pertime-closure)`) | de Bruijn IBP→Fisher の (4) step で `fisher_from_logDeriv` の `hint : Integrable ((logDeriv p_t)²·p_t)` を供給。実体は `convDensityAdd_fisher_integrable` を呼んでいる (既に IBP→Fisher route で genuine plumbing 化済、`:771`) | `convDensityAdd_fisher_integrable` 経由 (transitive、壁を直接呼ばない) |
+| `_chain_domination` (`debruijnIdentityV2_holds_assembled_chain_domination`) | `:618` (現 `@audit:defect(false-statement)`) | **案B の新 consumer**。joint domination envelope の積分値有限性 (= pointwise envelope の存在保証) を `J(p_s) ≤ 2/t` (s∈Ioo(t/2,2t)) で確認 | body 内 lemma call (s-一様化: `s ≥ t/2` → `J(p_s) ≤ 1/(t/2) = 2/t`) |
+
+> **注 (案B 設計確定、判断ログ #16)**: `_chain_domination` は dominated-convergence gateway
+> (`entropy_hasDerivAt_via_parametric` の domination hyp) に供給する **pointwise envelope** `∃ bound,
+> ‖σ-derivand(s,x)‖ ≤ bound x (∀ s∈Ioo)` を要求する。これは IBP 後の積分値 (Fisher) **ではない** ので
+> `_chain_domination` 自体は IBP→Fisher route で書けない (IBP は積分値の等式、domination は pointwise)。
+> ただし pointwise envelope の **integrability の確認** (`Integrable bound`) に Fisher 有限性が効く
+> (在庫 §A-2 / 案B-i)。よって `_chain_domination` も同壁の consumer だが、`_chain_ibp_fisher` (積分値) と
+> 受け方が異なる (前者 = envelope integrability 確認、後者 = `fisher_from_logDeriv` hint)。
+
+### 集約方針 (audit-tags.md「共有 Mathlib 壁」整合)
+
+- **新 file `Common2026/Shannon/FisherConvBound.lean`** に `gaussianConv_fisher_le_inv_var` を立てる
+  (本計画 R-A skeleton 通り)。`Common2026.lean` に import 1 行追加。
+- 3 consumer は全て `gaussianConv_fisher_le_inv_var` を **lemma call** で受ける (仮説 bundle でなく)。
+  `_chain_ibp_fisher` は `convDensityAdd_fisher_integrable` 経由の transitive なので壁を直接呼ばず、
+  実 lemma call は `convDensityAdd_fisher_integrable` + `_chain_domination` の 2 箇所。
+- **壁 1 件 = sorry 1 件** (`FisherConvBound.lean` の `gaussianConv_fisher_le_inv_var` のみ)。
+  壁 closure 時に 3 consumer が一斉 genuine 化。
+
+### 確定 signature (verbatim Lean、結論型 verbatim 確認済)
+
+`fisherInfoOfDensity` の定義は `FisherInfoV2.lean:89` で verbatim 確認:
+```lean
+noncomputable def fisherInfoOfDensity (f : ℝ → ℝ) : ℝ≥0∞ :=
+  ∫⁻ x, ENNReal.ofReal ((logDeriv f x) ^ 2) * ENNReal.ofReal (f x) ∂volume
+-- 値域 ℝ≥0∞。fisherInfoOfDensityReal f := (fisherInfoOfDensity f).toReal (`:103`)
+```
+→ 壁の結論型は `fisherInfoOfDensity (...) ≤ ENNReal.ofReal (1/s)` (`ℝ≥0∞`)。有限性 `< ⊤` を
+`≤ ofReal(1/s) < ⊤` から直に出すための shape (Mathlib-shape-driven、本計画 R-A skeleton と一致)。
+
+```lean
+/-- **Shared Mathlib wall: Stam convolution Fisher bound** `J(pX ∗ g_s) ≤ 1/s`.
+任意確率密度 pX (重い裾含む) で成立。EPI per-time line の 3 consumer を gate
+(`convDensityAdd_fisher_integrable` / `_chain_ibp_fisher` via それ / `_chain_domination`)。
+@residual(wall:fisher-finiteness) -/
+theorem gaussianConv_fisher_le_inv_var
+    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (hpX_int : Integrable pX volume) {s : ℝ} (hs : 0 < s) :
+    fisherInfoOfDensity (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩))
+      ≤ ENNReal.ofReal (1 / s) := by
+  sorry -- @residual(wall:fisher-finiteness)
+```
+
+- 引数は **regularity precondition のみ** (`hpX_nn`/`hpX_meas`/`hpX_int`/`hs`)。結論 `≤ 1/s` が core。
+  load-bearing なし。
+- `_chain_domination` は `s ∈ Set.Ioo (t/2)(2*t)` で使うため、壁を `s` で呼んで `J(p_s) ≤ 1/s`、
+  `s ≥ t/2` の単調性で `1/s ≤ 2/t` に一様化 (壁 signature は単一 `s`、一様化は consumer 側)。
+
+### R-A route の sub-lemma 分解 (各 honest sorry、本計画 §「R-A Step 1/2/3」と整合)
+
+| sub-lemma | 結論 | honest sorry / genuine | 集約先 |
+|---|---|---|---|
+| (Step 1) density-level 凸 Fisher 上界 `J(p_s) ≤ λ²J(pX)+(1-λ)²(1/s)` | score-of-convolution 条件付き Cauchy-Schwarz | **honest sorry** (PR の核、`stam-step2-density` 核と重複可能性) | `FisherConvBound.lean` 内補助 or 壁 body |
+| (Step 2) λ→0 極限 `J(p_s) ≤ 1/s` | `stam_fisher_arith` λ最適化 / `ENNReal.tendsto_ofReal` | 重い裾で `0·∞` 不定形処理 (極限/右連続性) | 同上 |
+| (Step 3) 有限性→Integrable | `integrable_iff_lintegral_ofReal_lt_top` 系 | **genuine plumbing** (Mathlib 既存)、`convDensityAdd_fisher_integrable` body で実施 | consumer 側 (壁 file 外) |
+
+撤退ラインは本計画 既存「撤退ライン (A)」通り: 当該 session で R-A Step 1/2 が genuine 化不能なら
+`gaussianConv_fisher_le_inv_var` の body を `sorry` + `@residual(wall:fisher-finiteness)` 据置
+(壁 1 件局所化が最小成果、3 consumer は壁呼出のみで proof done に到達可)。
 
 ## 対象 wall (context)
 
@@ -317,3 +395,14 @@ Mathlib plumbing (Step 3、新規証明だが gap でない):
    `fisherInfoOfDensity` が `ℝ≥0∞` 値 (`FisherInfoV2.lean:89`)、有限性 `< ⊤` を `≤ ofReal(1/t)` から
    直接出すため (Mathlib-shape-driven)。`g_t` 分散 = t (t² でない)、noise Fisher = `1/t` を
    `fisherInfoOfMeasureV2_gaussianReal` で verbatim 確認済 (退化 case は `ht : 0<t` で排除、処理不要)。
+4. **(2026-05-31) scope 拡張 — shared 壁は 1 件で 3 consumer を gate** (案B joint domination 採用、
+   `epi-debruijn-pertime-closure-plan.md` 判断ログ #16 と同期): 当初 scope は
+   `convDensityAdd_fisher_integrable` 単独だったが、案B 在庫
+   (`epi-debruijn-gap2-caseB-joint-domination-inventory.md` critical overlap verdict) で
+   `gaussianConv_fisher_le_inv_var` (`J(pX∗g_s)≤1/s`) が EPI per-time line の **3 declaration**
+   (`convDensityAdd_fisher_integrable` `:715` / `_chain_ibp_fisher` `:792` via それ /
+   `_chain_domination` `:618`) を gate すると確定。集約点を新 file `FisherConvBound.lean` の
+   独立 shared sorry 補題に格上げ (上記「共有壁の scope 拡張」節)。`_chain_domination` は
+   pointwise envelope の integrability 確認に壁を使い、`_chain_ibp_fisher` は積分値 (`fisher_from_logDeriv`
+   hint) に使う — 同壁・別 use shape。verbatim 確認: `fisherInfoOfDensity` 結論型は `ℝ≥0∞`
+   (`FisherInfoV2.lean:89`)、当初設計の結論型 `≤ ENNReal.ofReal (1/s)` は変更不要。

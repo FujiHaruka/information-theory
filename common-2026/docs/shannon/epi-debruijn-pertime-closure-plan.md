@@ -18,7 +18,7 @@ plan filename stem = `epi-debruijn-pertime-closure` → 再分類後の `@residu
 - [x] Phase 2 — heat equation per-density ✅: kernel 群 7 件 + **main body `heatFlow_density_heat_equation` genuine closure ✅** (Wave6、commit `68f80e2`、`@audit:ok`、sorryAx 非依存)。σ-積分記号下微分 + spatial 2nd diff の pathDeriv2 同定を gateway lemma で genuine に lift (σ-近傍 `Set.Ioo (s/2)(2s)` で発散回避)。追加 domination/integrability hyp は全て per-y 被積分関数 regularity (Wave7 監査 core-reconstruction で load-bearing 否定)。3 pin 不変
 - [x] Phase 3 — entropy parametric diff ✅: `entropy_hasDerivAt_via_parametric` genuine ✅ (Wave1、`@audit:ok`)
 - [x] Phase 4 — 無限区間 IBP ✅: 4a `debruijn_ibp_step` + 4b `fisher_from_logDeriv` genuine ✅ (`@audit:ok`)
-- [~] Phase 5 — capstone assembly 🔄 (Wave6-9 + Phase5-F): **structure 拡張 (`IsRegularDeBruijnHypV2` に pX-witness 4 field) ✅** (Wave6)。**assembly = 新 file `FisherInfoV2DeBruijnAssembly.lean`** (import 循環回避)。`debruijnIdentityV2_holds_assembled` (元 wall と同 signature) を **6 genuine atom 合成で genuine 配線** ✅ (Wave8、7 段全て型整合確認)、`_entropy_eq` (段1-2) genuine `@audit:ok`。**Phase5-F (2026-05-31 resume、commit `9de3c02`): `density_t_eq` rnDeriv pin = false-statement defect 発見 (rnDeriv は Classical.choose 代表元で `logDeriv=0` a.e. → Fisher 0 退化 → RHS 0 固定、`density_t:=0` と同型の defect) → conv pin (`density_t = convDensityAdd pX g_t` smooth 代表元) に書換、独立監査 honest 確認。`_fisher_match` genuine closure ✅ (両辺 pointwise 一致、congr) + Gaussian constructor `density_t_eq` genuine 充足 ✅ (`convDensityAdd_gaussian_closed_form`、sorryAx 非依存)。** **Phase5-G (2026-05-31 orchestrator session): `_chain` を 5 sub-lemma に分割** — `_chain_entDeriv_formula` (#1) genuine `@audit:ok` + `_chain` 本体 (#5) genuine plumbing。**重要 defect 捕捉**: 初版 `_chain_domination` (#2) が false-statement (log 因子単独 + `∀ s∈univ` で s→∞ 発散 + ~x² 非可積分)、上流 atom `entropy_hasDerivAt_via_parametric` の `∀ s∈univ` が instantiate 不能で `@audit:ok` 誤り — proof-pivot-advisor 独立確認後、案 A で fix (#2 を full-entDeriv 積一体 + `Ioo (t/2)(2t)` 近傍の true statement に、atom を Ioo 弱化 genuine 維持)、独立再監査 ok。**残 2 named gap (true statement)**: #2 `_chain_domination` (full-entDeriv Gaussian-tail integrable majorant 構成 ~120-180 行、L-PT-γ)、#4 `_chain_ibp_fisher` (tsupport=ℝ C¹ + Gaussian-tail integrability ~50-80 行、L-PT-δ)。#3 `_chain_parametric` は #2/#4 + atom 供給後 genuine plumbing。元 `debruijnIdentityV2_holds` は wall sorry 据置 (assembled 版へのポインタ docstring 追記済、docstring honesty sign-off も conv-pin 根拠に改訂済)
+- [~] Phase 5 — capstone assembly 🔄 (Wave6-9 + Phase5-F): **structure 拡張 (`IsRegularDeBruijnHypV2` に pX-witness 4 field) ✅** (Wave6)。**assembly = 新 file `FisherInfoV2DeBruijnAssembly.lean`** (import 循環回避)。`debruijnIdentityV2_holds_assembled` (元 wall と同 signature) を **6 genuine atom 合成で genuine 配線** ✅ (Wave8、7 段全て型整合確認)、`_entropy_eq` (段1-2) genuine `@audit:ok`。**Phase5-F (2026-05-31 resume、commit `9de3c02`): `density_t_eq` rnDeriv pin = false-statement defect 発見 (rnDeriv は Classical.choose 代表元で `logDeriv=0` a.e. → Fisher 0 退化 → RHS 0 固定、`density_t:=0` と同型の defect) → conv pin (`density_t = convDensityAdd pX g_t` smooth 代表元) に書換、独立監査 honest 確認。`_fisher_match` genuine closure ✅ (両辺 pointwise 一致、congr) + Gaussian constructor `density_t_eq` genuine 充足 ✅ (`convDensityAdd_gaussian_closed_form`、sorryAx 非依存)。** **Phase5-G (2026-05-31 orchestrator session): `_chain` を 5 sub-lemma に分割** — `_chain_entDeriv_formula` (#1) genuine `@audit:ok` + `_chain` 本体 (#5) genuine plumbing。**重要 defect 捕捉**: 初版 `_chain_domination` (#2) が false-statement (log 因子単独 + `∀ s∈univ` で s→∞ 発散 + ~x² 非可積分)、上流 atom `entropy_hasDerivAt_via_parametric` の `∀ s∈univ` が instantiate 不能で `@audit:ok` 誤り — proof-pivot-advisor 独立確認後、案 A で fix (#2 を full-entDeriv 積一体 + `Ioo (t/2)(2t)` 近傍の true statement に、atom を Ioo 弱化 genuine 維持)、独立再監査 ok。**残 2 named gap (true statement)**: #2 `_chain_domination` (full-entDeriv Gaussian-tail integrable majorant 構成 ~120-180 行、L-PT-γ)、#4 `_chain_ibp_fisher` (tsupport=ℝ C¹ + Gaussian-tail integrability ~50-80 行、L-PT-δ)。#3 `_chain_parametric` は #2/#4 + atom 供給後 genuine plumbing。元 `debruijnIdentityV2_holds` は wall sorry 据置 (assembled 版へのポインタ docstring 追記済、docstring honesty sign-off も conv-pin 根拠に改訂済)。**case A→案B pivot (2026-05-31, 判断ログ #16)**: case A (finite-2nd-moment で GAP② Gaussian-tail を true 化) が独立監査で REJECT (polynomial-tail 反例)、user fork で **案B (joint domination)** 採用確定。実装 brief = §Phase 5-G case B。GAP② を polynomial-moment restate (Gaussian-tail 結論削除) + `_chain_domination` を joint envelope wiring + shared 壁 `gaussianConv_fisher_le_inv_var` (新 file `FisherConvBound.lean`、1 壁 3 consumer gate) に集約
 
 > **進捗サマリ (2026-05-31 orchestrator session、Wave1-9)**: atom file を 6 並列実装 (worktree) + 独立監査 4 round + 設計 planner 1 で前進。**全 6 atom genuine 化完了 (atom file 0 sorry / 全 `@audit:ok`)** — session 開始の 4 honest sorry を全消化 + Phase 2 main (最大コスト) も closure。structure を pX-witness 拡張、capstone assembly を新 file で **genuine 配線** (6 atom 合成が型整合で成立を実証)。`debruijnIdentityV2_holds_assembled` は **monolithic wall を 6 genuine atom + 2 named plan-closable gap に構造化**。
 >
@@ -1389,6 +1389,246 @@ true 化に整合 (auditor が finite-2nd-moment 前提で statement TRUE を独
 `_chain_domination` の genuine-wiring 評価復帰が正当 (vacuous でない)、(iv) `IsRegularDeBruijnHypV2.pX_mom`
 が他 field と同列の regularity field (`Z_law`/`pX_law` 系) であること。
 
+---
+
+## §Phase 5-G case B: joint domination 実装 brief 〔ACTIVE — 判断ログ #16〕
+
+> 2026-05-31 起草 (lean-planner)。判断ログ #15 で user fork が **案B (finite-2nd-moment + joint
+> domination)** に確定したことを受けた実装 brief。在庫 SoT:
+> `docs/shannon/epi-debruijn-gap2-caseB-joint-domination-inventory.md`。**case A brief (上記、SUPERSEDED)
+> を置き換える。** scope = finite-2nd-moment pX (Cauchy 等 heavy-tail は honest exclusion、ただし
+> polynomial-tail finite-variance `(2/π)/(1+y²)²` は **本 brief の対象内** — joint domination は
+> Gaussian-tail を主張しないので案A の polynomial-tail 反例が反例にならない)。
+> verbatim 確認済 file:line:
+> `FisherInfoV2DeBruijnAssembly.lean:528-538` (GAP②)、`:618-682` (`_chain_domination` 現 body)、
+> `:715-720` (`convDensityAdd_fisher_integrable`)、`:750-757` (`_chain_ibp_fisher_ibp_step`)、
+> `:792-...` (`_chain_ibp_fisher`、既に IBP→Fisher genuine plumbing 化済)、`:855-865` (`_chain_parametric`)、
+> `:1016-1085` (top `_chain` / assembled body)、`FisherInfoV2DeBruijnPerTime.lean:115-126`
+> (`gaussianPDFReal_le_prefactor` 結論 = x 定数)、`:693-699` (`debruijn_ibp_step` atom hyp)、
+> `:721-736` (`fisher_from_logDeriv`)、`FisherInfoV2.lean:89/103` (`fisherInfoOfDensity{Real}` 定義)、
+> `FisherInfoV2DeBruijn.lean:202-258` (`IsRegularDeBruijnHypV2` 現 fields)。
+
+### Approach (案B 解の全体形)
+
+案A が破綻したのは **分離積 (GAP① log-factor × GAP② Hessian)** で各因子を pointwise 上界しようとし、
+GAP② に Gaussian-tail (`exp(-x²/c')`) を要求したが polynomial-tail finite-variance pX で FALSE だった
+こと (判断ログ #15)。案B は分離積を捨て、**joint domination** に切替える:
+
+1. **GAP② を polynomial-moment envelope に書換** (撤回ではない、restate)。Gaussian-tail 結論
+   `≤ C(1+x²)exp(-x²/c')` を捨て、`g_s(x-y)` の Gaussian を **畳込内に保持** した honest envelope
+   `‖∂²_x p_s x‖ ≤ ∫ pX(y)·g_s(x-y)·|(x-y)²/s²-1/s| dy` (右辺は真、prefactor で Gaussian を落とさない)
+   を出す。これが在庫 §「自作必要 #3」の keep-Gaussian route。
+2. **`_chain_domination` body を joint envelope 構成に書換**。pointwise envelope の存在 (`∃ bound,
+   Integrable bound ∧ ‖σ-derivand‖ ≤ bound`) を、(a) log-factor の `~x²` 上界 (GAP① genuine 既存) ×
+   (b) GAP② polynomial-moment envelope の **積** が integrable であることで示す。積の integrability の
+   確認に **Fisher 有限性 `J(p_s) ≤ 2/t` (shared 壁)** を経由する (在庫 §A-2 / 案B-i)。
+3. **shared 壁 `gaussianConv_fisher_le_inv_var` (新 file `FisherConvBound.lean`)** を立て、
+   `_chain_domination` (integrability 確認) / `convDensityAdd_fisher_integrable` (R-A Step 3) /
+   `_chain_ibp_fisher` (transitive via 後者) の 3 consumer で共有。
+
+honesty 上の要: GAP② を Gaussian-tail false 結論のまま残して joint を積むと vacuous-genuine 罠
+(判断ログ #15 の auditor 既指摘) を再発する。**GAP② declaration の結論型を polynomial-moment 形に
+書換える (Gaussian-tail 結論を削除) のが必須前提**。撤退口は sorry + `@residual`、Gaussian-tail false
+結論の据置は禁止 (tier 5)。
+
+### ① GAP② 処理 = polynomial-moment restate (撤回でなく書換)
+
+**確定方針: 撤回ではなく polynomial-moment 書換**。根拠: `_chain_domination` の `∃ bound` は
+dominated-convergence gateway (`entropy_hasDerivAt_via_parametric` の domination hyp) に供給する
+**pointwise envelope** であり、IBP 後の積分値ではない (在庫 §A-2 + `_chain_ibp_fisher` が積分値側で
+別途 IBP→Fisher 化済を verbatim 確認)。よって Hessian の pointwise 上界は依然必要 → GAP② は不要にならず、
+結論型を honest 化 (Gaussian-tail → polynomial-moment) して残す。
+
+**GAP② signature diff (verbatim before/after)**:
+
+before (`:528-538`、現 `@audit:defect(false-statement)`):
+```lean
+private theorem convDensityAdd_deriv2_tail_majorant
+    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
+    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    {t : ℝ} (ht : 0 < t) :
+    ∃ C c' : ℝ, 0 < c' ∧ 0 ≤ C ∧
+      ∀ᵐ x ∂volume, ∀ s : ℝ, (hs : s ∈ Set.Ioo (t/2) (2*t)) →
+        ‖deriv (deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨s, _⟩))) x‖
+          ≤ C * (1 + x ^ 2) * Real.exp (-x ^ 2 / c')   -- ← Gaussian-tail FALSE
+```
+
+after (rename → `convDensityAdd_deriv2_poly_moment_majorant`、Gaussian-tail 結論を delete、
+polynomial × Gaussian-from-g_s の integrable envelope を ∃ で出す):
+```lean
+/-- **§5G-2b (案B, GAP② polynomial-moment restate)**: honest envelope for the spatial Hessian
+of the convolution density, keeping the `g_s` Gaussian inside the convolution (NOT dropped by a
+prefactor bound). For finite-2nd-moment pX the envelope `bound` is Lebesgue-integrable.
+@residual(plan:epi-debruijn-pertime-closure) -/
+private theorem convDensityAdd_deriv2_poly_moment_majorant
+    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
+    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    {t : ℝ} (ht : 0 < t) :
+    ∃ bound : ℝ → ℝ, Integrable bound volume ∧
+      ∀ᵐ x ∂volume, ∀ s : ℝ, (hs : s ∈ Set.Ioo (t/2) (2*t)) →
+        ‖deriv (deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨s, _⟩))) x‖ ≤ bound x := by
+  sorry -- @residual(plan:epi-debruijn-pertime-closure)
+```
+
+- `∃ C c'` (Gaussian-tail パラメータ) を `∃ bound : ℝ → ℝ, Integrable bound` に変える。結論型が
+  「pointwise Gaussian-tail 上界」から「integrable envelope の存在」に honest 化。これにより
+  polynomial-tail finite-variance pX (判断ログ #15 の反例 `(2/π)/(1+y²)²`) でも **真** になる
+  (envelope = `∫ pX(y)·g_s(x-y)·|(x-y)²/s²-1/s| dy` 自体が integrable、Gaussian decay は `g_s` から、
+  moment poly は `(x-y)²` を `hpX_mass`/`hpX_mom` で展開した finite-coeff から)。
+- `hpX_mom`/`hpX_mass` は **保持** (有限分散が envelope integrability に効く、regularity precondition)。
+- **defect タグ除去手順**: `:525-527` の `@audit:defect(false-statement)` +
+  `@audit:retract-candidate(...)` を削除、`@residual(plan:epi-debruijn-pertime-closure)` のみ残す
+  (Gaussian-tail false 結論を消したので statement が true 化 → defect でなくなる)。docstring 全文を
+  polynomial-moment restate の説明に書換 (case A の prefactor 論法 / Gaussian-tail 主張は全削除)。
+
+### ② `_chain_domination` body 書換設計 (擬似 Lean)
+
+現 body (`:636-682`、product-majorant が false GAP② を消費する vacuous-genuine) を、polynomial-moment
+envelope (GAP② restate) × log majorant (GAP① genuine) の **joint** product に置換する。
+
+```lean
+private theorem debruijnIdentityV2_holds_assembled_chain_domination
+    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
+    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    {t : ℝ} (ht : 0 < t) :
+    ∃ bound : ℝ → ℝ, Integrable bound volume ∧
+      (∀ᵐ x ∂volume, ∀ s : ℝ, (hs : s ∈ Set.Ioo (t/2) (2*t)) →
+        ‖(- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨s, _⟩) x) - 1)
+            * ((1/2) * deriv (deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨s, _⟩))) x)‖
+          ≤ bound x) := by
+  -- log-factor の ~x² 上界 (GAP① genuine 既存、signature 不変)
+  obtain ⟨A, B, hB_nn, hLog⟩ :=
+    convDensityAdd_logFactor_poly_majorant pX hpX_nn hpX_meas hpX_int hpX_mass ht
+  -- Hessian の polynomial-moment envelope (GAP② restate、integrable bound を ∃ で返す)
+  obtain ⟨hessBound, hHess_int, hHess⟩ :=
+    convDensityAdd_deriv2_poly_moment_majorant pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
+  -- joint envelope = (A + B·x²) · ((1/2)·hessBound x)
+  refine ⟨fun x => (A + B * x ^ 2) * ((1/2) * hessBound x), ?_, ?_⟩
+  · -- integrability via Tonelli + g_s モーメント (検証済正路、判断ログ #17):
+    --   ∫_x (A+Bx²)·(1/2)hessBound(x) dx
+    --     = (1/2)∫_x (A+Bx²) ∫_y pX(y)·g_s(x-y)·|(x-y)²/s²−1/s| dy dx     [hessBound 定義]
+    --     = (1/2)∫_y pX(y) · [∫_x (A+Bx²)·g_s(x-y)·|(x-y)²/s²−1/s| dx] dy   [Tonelli、非負]
+    --     = (1/2)∫_y pX(y) · K(y) dy                                          [K(y) は y の 2 次多項式]
+    --     = (1/2)(c0 + c1·∫y·pX + c2·∫y²·pX) < ∞                              [mass+1st+2nd moment 有限]
+    --   K(y)=∫_u(A+B(u+y)²)g_s(u)|u²/s²−1/s|du は置換 u=x-y + g_s の偶モーメント閉形で y の degree-2
+    --   多項式 (proof-pivot-advisor が pred=actual 全桁一致で検証)。1st moment は 2|y|≤1+y² で mass+2nd
+    --   から従属。⚠ `integrable_natPow_mul_exp_neg_mul_sq` は使わない (hessBound は x について多項式減衰
+    --   ~const/x⁴、Gaussian 因子は残らない — 旧 route I は案A defect の再来で削除済、判断ログ #17)。
+    sorry -- @residual(plan:epi-debruijn-pertime-closure)  ← joint envelope integrability の core (Tonelli+moment)
+  · -- domination: ‖LogFactor · (1/2·Hess)‖ ≤ (A+B·x²)·((1/2)·hessBound) (norm_mul + mul_le_mul、
+    --   GAP①/GAP② の各 pointwise 上界を filter_upwards で合成、現 body :660-682 と同型)
+    filter_upwards [hLog, hHess] with x hLogx hHessx
+    intro s hs
+    sorry -- @residual(plan:epi-debruijn-pertime-closure)  ← norm_mul plumbing (現 body 流用可)
+```
+
+> **設計上の核 (検証済、判断ログ #17 = proof-pivot-advisor mpmath 独立検算)**: joint envelope の
+> integrability (上記第 1 sorry) が案B の真の難所。**正路 = Tonelli + g_s モーメント** (上記 body コメント):
+> pointwise envelope `bound(x) = (A+Bx²)·(1/2)hessBound(x)` 自体を gateway に渡し、その `Integrable` を
+> 外積分側に Tonelli で流して `∫pX(y)·K(y)dy = c0+c1E[X]+c2E[X²] < ∞` (mass+1st+2nd moment) で閉じる。
+> closed-form pointwise envelope (`x^k·exp(-x²/c)` 形) を**経由してはいけない** — hessBound は x について
+> **多項式減衰 ~const/x⁴** (Gaussian 因子は heavy-tail pX が支配して消える、mpmath 検算: `x⁴·hessBound→0.616`,
+> `hessBound/pX(x)→0.968`)。
+> - **❌ 旧 route I (DELETED)**: 「hessBound を `x^{0,2,4}·exp(-(1/c)x²)` 形に取り `integrable_natPow_mul_exp_neg_mul_sq`
+>   で閉じる」は **FALSE = 案A defect 再来**。polynomial-tail pX `(2/π)/(1+y²)²` で hessBound が Gaussian
+>   減衰しないため `:1516` sorry が埋まらず漂流する。実装で絶対に採用しない。
+> - **Fisher 壁は `_chain_domination` には不要** (主張3 訂正): moment route は `J(p_s)≤1/s` を経由しない
+>   (Tonelli + g_s ガウス積分 + finite 2nd moment のみ)。shared 壁 `gaussianConv_fisher_le_inv_var` の
+>   consumer は `convDensityAdd_fisher_integrable` + `_chain_ibp_fisher` の **2 件** (在庫「1壁3consumer」
+>   は「1壁2consumer + `_chain_domination` は moment route で独立」に訂正)。
+
+> **domination majorant の gateway 適合確認 (在庫 verbatim)**: `_chain_domination` の `∃ bound` は
+> `_chain_parametric` (`:855`) が `entropy_hasDerivAt_via_parametric` atom (Ioo-version、`hb`/`hdiff` を
+> `Set.Ioo (t/2)(2*t)` 量化) の **domination hyp** に供給する。bound は `‖σ-derivand(s,x)‖ ≤ bound x
+> (∀ s∈Ioo)` を満たす integrable envelope であれば形は不問 (Gaussian-tail 形でなくてよい) — 在庫が
+> verbatim 確認済 (`hasDerivAt_integral_of_dominated_loc_of_deriv_le` の domination 形)。よって
+> polynomial × Gaussian-from-g_s 形で gateway を満たす。
+
+### ③ 順序付き実装 step (skeleton-driven)
+
+| step | 作業 | file | 検証コマンド |
+|---|---|---|---|
+| 0 | 新 file `FisherConvBound.lean` skeleton: `gaussianConv_fisher_le_inv_var` (honest sorry `@residual(wall:fisher-finiteness)`) + import + namespace。`Common2026.lean` に import 1 行追加 | `Common2026/Shannon/FisherConvBound.lean` (新) + `Common2026.lean` | `lake env lean Common2026/Shannon/FisherConvBound.lean` 0 errors (sorry warning 可) |
+| 1 | GAP② restate: `convDensityAdd_deriv2_tail_majorant` を `convDensityAdd_deriv2_poly_moment_majorant` に rename + 結論型を integrable envelope に書換 + defect タグ除去 (①) | `FisherInfoV2DeBruijnAssembly.lean:525-538` | `lake env lean Common2026/Shannon/FisherInfoV2DeBruijnAssembly.lean` |
+| 2 | `_chain_domination` body 書換 (②): GAP② restate を obtain + joint envelope の integrability/domination。defect タグ除去 (`:616-617`)、docstring を vacuous-genuine note → joint-domination note に書換 | 同上 `:528-682` | 同上 |
+| 3 | `_chain_ibp_fisher` / `convDensityAdd_fisher_integrable` を shared 壁呼出に rewire: `convDensityAdd_fisher_integrable` body の `sorry` を `gaussianConv_fisher_le_inv_var` 呼出 + R-A Step 3 plumbing に置換 (fisher-finiteness plan R-A Step 3)。`_chain_ibp_fisher` は既に `convDensityAdd_fisher_integrable` 経由なので transitive、変更不要 | `FisherInfoV2DeBruijnAssembly.lean:715`, import `FisherConvBound` | 同上 |
+| 4 | `hpX_mom` threading: `_chain_parametric` (`:855`) / `_chain` (`:886` 付近) / top assembled (`:1018`) / `IsRegularDeBruijnHypV2` (`pX_mom` field 新規追加) に `hpX_mom` を thread (案A が試みたが revert された threading の復元、ただし今度は statement true な GAP② restate を gate するので vacuous でない) | `FisherInfoV2DeBruijnAssembly.lean` + `FisherInfoV2DeBruijn.lean:202-258` | 両 file + 全 constructor ripple file |
+
+> **step 4 の構造 field**: `hpX_mom : Integrable (fun y => y^2 * pX y) volume` は top の
+> `pX_law` (`P.map X = withDensity ...`) **だけからは導出不能** (確率測度であることは有限分散を含意しない)。
+> よって `IsRegularDeBruijnHypV2` に `pX_mom` field 新規追加が必要 (verbatim 確認: 現 structure
+> `:202-258` は `Z_law`/`density_t`/`pX`/`pX_nn`/`pX_meas`/`pX_law`/`density_t_eq` の 7 field、
+> `pX_mom` 無し)。top assembled body は `hpX_mom := h_reg.pX_mom` で供給 (`hpX_int`/`hpX_mass` が
+> `pX_law` から body 内導出されているのとは異なり、`pX_mom` は field 直渡し)。全 constructor
+> (`rg 'IsRegularDeBruijnHypV2' Common2026/` で列挙) が field 不足になる ripple は implementer 確認・報告。
+> Gaussian constructor (`EPIL3Integration.lean`) は Gaussian source が有限分散なので `pX_mom` 充足可
+> (Gaussian の 2 次モーメント有限性補題、新規 sorry になるなら `@residual(plan:epi-debruijn-pertime-closure)`)。
+
+### signature diff まとめ (verbatim before/after)
+
+| declaration | before | after | 種別 |
+|---|---|---|---|
+| GAP② (`convDensityAdd_deriv2_tail_majorant` → `_poly_moment_majorant`) | `∃ C c', ... ≤ C(1+x²)exp(-x²/c')` (false) | `∃ bound, Integrable bound ∧ ... ≤ bound` (true) | rename + 結論型書換 |
+| `_chain_domination` | hyps 不変 (`hpX_mom` 既存)、body = false GAP② 消費 | body = polynomial-moment envelope joint domination | body 書換 + defect 除去 |
+| `gaussianConv_fisher_le_inv_var` (新) | — | `... ≤ ENNReal.ofReal (1/s)` | 新規 shared 壁 |
+| `convDensityAdd_fisher_integrable` | body `sorry` | body = 壁呼出 + R-A Step 3 plumbing | body 書換 (壁局所化) |
+| `_chain_parametric` / `_chain` / top | `hpX_mom` 無し | `hpX_mom` 追加 | hyp threading |
+| `IsRegularDeBruijnHypV2` | `pX_mom` field 無し | `pX_mom` field 追加 | structure 拡張 |
+
+### honest sorry vs genuine plumbing 区分表
+
+| 箇所 | 状態 | 根拠 |
+|---|---|---|
+| `gaussianConv_fisher_le_inv_var` (壁 body) | **honest sorry** `@residual(wall:fisher-finiteness)` | R-A Step 1/2 = density-level score Cauchy-Schwarz、Mathlib/repo 不在 (PR 級) |
+| GAP② `_poly_moment_majorant` body | **honest sorry** `@residual(plan:epi-debruijn-pertime-closure)` | STEP D bridge (`deriv∘deriv` → `∫ pX·∂²g_s`) + moment 展開、plan plumbing |
+| `_chain_domination` body 第 1 sorry (joint envelope integrability) | **honest sorry** `@residual(plan:epi-debruijn-pertime-closure)` (route II なら shared 壁経由で compound `@residual(plan:...,wall:fisher-finiteness)`) | route I の moment 展開 + `integrable_natPow_mul_exp` plumbing |
+| `_chain_domination` body 第 2 sorry (norm_mul domination) | **genuine plumbing** (現 body `:660-682` 流用、最終 0 sorry 目標) | `norm_mul` + `mul_le_mul`、GAP①/GAP② pointwise 上界の合成 |
+| `convDensityAdd_fisher_integrable` body (R-A Step 3) | **genuine plumbing** | `integrable_iff_lintegral_ofReal_lt_top` 系 (Mathlib 既存)、壁の有限上界を消費 |
+| `_chain_ibp_fisher` | **genuine plumbing 既存** (`:792`、変更不要) | 既に IBP→Fisher route で 2 named wall に局所化済 |
+| `hpX_mom` threading / `pX_mom` field | **genuine plumbing** (regularity 配線) | 有限分散の precondition 伝播、load-bearing でない |
+
+### Brief content checklist (CLAUDE.md)
+
+1. **Sub-bound 引数表** — 本 brief は `P_cb`/`P_target` 分離型 capacity predicate を扱わない
+   (rate-bound 引数 `R < (1/2)log(1+?/N)` 不在、EPI Fisher line) ため **該当なし**。
+2. **継承タグ整合 inline check** — GAP② / `_chain_domination` は git history からの body 復元でなく
+   in-place 書換だが、現 docstring に `@audit:defect(false-statement)` / `@audit:retract-candidate(...)`
+   (case A 由来) が残存。実装 step 1/2 で **これらを除去**する。貼付/書換後に
+   `rg -n '@audit:|@residual|🟢ʰ' Common2026/Shannon/FisherInfoV2DeBruijnAssembly.lean` で残存
+   deprecated タグ / 散文表現 / 語彙外 slug を列挙し orchestrator に報告。新 file `FisherConvBound.lean`
+   も同 grep。
+
+### 撤退ライン (案B)
+
+- **L-PT-γ′ (joint envelope)**: `_chain_domination` の joint envelope integrability (route I の
+  moment 展開) が当該 session で ~80 行超で書けない → 第 1 sorry を `@residual(plan:...)` 据置で
+  skeleton 完成、type-check done。GAP② restate (statement true) + body wiring が型整合すれば
+  defect は解消 (Gaussian-tail false 結論を消した時点で tier 5 → tier 2)。
+- **L-PT-ε (shared 壁)**: `gaussianConv_fisher_le_inv_var` の R-A route が genuine 化不能なら body
+  `sorry` + `@residual(wall:fisher-finiteness)` 据置で skeleton 完成 = type-check done
+  (proof done は別、3 consumer は壁呼出のみで proof done 到達可)。**これが最小成果**: GAP② restate +
+  `_chain_domination` joint-wiring + shared 壁局所化で **defect 解消 + sorry が全て honest tier 2 に**
+  (Gaussian-tail false の隠れ蓑が消える)。残 sorry は shared 壁 (`wall:fisher-finiteness`) + R-A
+  sub-lemma + GAP② STEP D bridge + joint envelope の plan plumbing に局所化される。
+
+### 独立 honesty audit 起動条件
+
+本実装は **新規 shared sorry 補題 `gaussianConv_fisher_le_inv_var` 追加** + **GAP②/`_chain_domination`
+の signature/body 変更 (defect 除去)** + **structure field 追加** を行うため、CLAUDE.md「Independent
+honesty audit 起動条件」の複数項目に該当 → orchestrator は実装後に `honesty-auditor` を 1 件起動。
+監査スコープ: (i) `gaussianConv_fisher_le_inv_var` が load-bearing でない (regularity 引数のみ、結論 =
+有限上界)、3 consumer が壁を **lemma call** で受けている (仮説 bundle でない) こと、(ii) GAP② restate が
+polynomial-tail finite-variance pX で **true** (Gaussian-tail false が消えた)、defect 除去が整合、
+(iii) `_chain_domination` の joint-wiring が vacuous-genuine でない (GAP② restate が true なので
+product-majorant が真の上界を消費)、(iv) `hpX_mom`/`IsRegularDeBruijnHypV2.pX_mom` が regularity field
+(有限分散 = 標準 de Bruijn 前提、load-bearing でない)、(v) compound `@residual` (route II 採用時) の
+classification 正しさ。
+
+---
+
 ## 判断ログ
 
 書く頻度: 方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
@@ -1606,3 +1846,65 @@ true 化に整合 (auditor が finite-2nd-moment 前提で statement TRUE を独
       **sub-Gaussian/finite-MGF を要求**する (finite-2nd-moment では不足)。監査 checklist の反例セットに
       Cauchy (∫y²=∞) **に加えて** polynomial-tail finite-variance `(2/π)/(1+y²)²` を追加。planner の prefactor
       論法は lemma 結論形の verbatim 確認を必須化。
+16. **案B (finite-2nd-moment + joint domination) 採用確定、共有壁集約 (1 壁 3 consumer) の発見、GAP②
+    polynomial-moment restate** (2026-05-31, lean-planner, 判断ログ #15 の user fork 結果 + 案B 在庫
+    `epi-debruijn-gap2-caseB-joint-domination-inventory.md` を実装 brief に落とし込み): 判断ログ #15 の
+    fork (案A′ sub-Gaussian cheap vs 案B joint general PR 級) で user が **案B** を選択。実装 brief =
+    `§Phase 5-G case B` (本 plan、判断ログ直前)。case A brief は SUPERSEDED として残置。
+    - **共有壁集約の発見 (最大の orchestration メリット)**: 在庫 critical overlap verdict で、案B の
+      `_chain_domination` joint envelope integrability が IBP 経由で `J(p_s) ≤ 1/s` (Stam convolution
+      Fisher bound) に帰着し、これが既存 `convDensityAdd_fisher_integrable` (`wall:fisher-finiteness`) の
+      依拠する壁と **同一**と確定。shared sorry 補題 `gaussianConv_fisher_le_inv_var`
+      (新 file `FisherConvBound.lean`、結論 `fisherInfoOfDensity (convDensityAdd pX g_s) ≤ ENNReal.ofReal (1/s)`、
+      `ℝ≥0∞` 結論型を `FisherInfoV2.lean:89` で verbatim 確認) **1 本で 3 consumer を gate**:
+      `convDensityAdd_fisher_integrable` (`:715`) / `_chain_ibp_fisher` (`:792`、後者経由 transitive) /
+      `_chain_domination` (`:618`、案B 新 consumer)。`fisher-finiteness-closure-plan.md` の scope を
+      単独 closure から共有壁集約に拡張 (同 plan 判断ログ #4 と同期)。
+    - **GAP② 処理 = polynomial-moment restate (撤回でなく書換)**: `_chain_domination` の `∃ bound` は
+      dominated-convergence gateway の **pointwise envelope** であり積分値 (Fisher) でない (`_chain_ibp_fisher`
+      が別途積分値側で IBP→Fisher genuine plumbing 化済を verbatim 確認) ため、Hessian の pointwise 上界は
+      依然必要 → GAP② は不要にならない。`convDensityAdd_deriv2_tail_majorant` を
+      `convDensityAdd_deriv2_poly_moment_majorant` に rename + 結論型を Gaussian-tail
+      `≤ C(1+x²)exp(-x²/c')` (false) から **integrable envelope `∃ bound, Integrable bound ∧ ‖∂²p_s‖ ≤ bound`**
+      (true、`g_s` Gaussian を畳込内保持) に書換。判断ログ #15 の polynomial-tail 反例 `(2/π)/(1+y²)²` は
+      Gaussian-tail を主張しない restate には反例にならない (envelope 自体が integrable)。
+      `@audit:defect(false-statement)` + `@audit:retract-candidate` を除去。
+    - **skeleton 構造 (4+1 step)**: ① 新 file `FisherConvBound.lean` shared 壁 → ② GAP② restate →
+      ③ `_chain_domination` body joint-wiring + defect 除去 → ④ `convDensityAdd_fisher_integrable` を
+      壁呼出 + R-A Step 3 plumbing に rewire → ⑤ `hpX_mom` threading (`_chain_parametric`/`_chain`/top +
+      `IsRegularDeBruijnHypV2.pX_mom` field、案A revert された threading の復元だが今度は true GAP② を gate)。
+    - **scope = finite-2nd-moment pX**: 判断ログ #15 で「案B = finite-2nd-moment or general pX + joint」と
+      記したが、本 brief は finite-2nd-moment scope で確定 (joint envelope integrability に有限分散が効く、
+      `pX_mom` field を structure 追加)。Cauchy (`∫y²=∞`) は honest exclusion だが polynomial-tail
+      finite-variance は対象内 (案A が除外した class を案B は含む — joint が Gaussian-tail を要求しないため)。
+    - **type-check done 到達性 verdict**: skeleton で type-check done に到達可 (残 sorry は shared 壁
+      `gaussianConv_fisher_le_inv_var` の R-A core + GAP② STEP D bridge + `_chain_domination` joint envelope
+      integrability の 3 箇所に局所化、すべて honest tier 2 `@residual`)。最小成果 = GAP② restate +
+      joint-wiring + 壁局所化で **defect 解消** (Gaussian-tail false の隠れ蓑が消え、全 sorry が tier 2 honest に)。
+17. **案B brief の route I は案A defect 再来 (FALSE)、正路 = Tonelli+moment、`_chain_domination` は Fisher 壁不要
+    (在庫「1壁3consumer」→「1壁2consumer」訂正)** (2026-05-31, proof-pivot-advisor mpmath 60桁独立検算 +
+    orchestrator): 判断ログ #16 の案B brief が `_chain_domination` joint envelope integrability の closure を
+    **route I (hessBound を `x^{0,2,4}·exp(-(1/c)x²)` Gaussian 形に取り `integrable_natPow_mul_exp_neg_mul_sq`
+    で閉じる)** と指定したが、独立検算で **FALSE** と判明。
+    - **route I = FALSE (案A defect 再来)**: hessBound(x) = `∫pX(y)g_s(x-y)|(x-y)²/s²−1/s|dy` は polynomial-tail
+      finite-variance pX `(2/π)/(1+y²)²` で **x について多項式減衰 ~const/x⁴** (mpmath: `x⁴·hessBound→0.616`,
+      `hessBound/pX(x)→0.968`)。Gaussian 因子 `exp(-x²/c)` は heavy-tail pX が g_s convolution の x-tail を
+      支配して**消える**。「g_s Gaussian を畳込内保持」しても**出力 envelope の x-tail は pX 側が支配** (保持 ≠
+      Gaussian-tail 出力)。closed-form Gaussian-poly pointwise envelope を経由しようとすると case A と同じ漂流。
+    - **正路 = route II (Tonelli + g_s moment、検証済 TRUE)**: pointwise envelope `(A+Bx²)·(1/2)hessBound(x)`
+      自体を gateway に渡し、その `Integrable` を Tonelli で外積分側に流す: `∫(A+Bx²)·hessBound dx =
+      ∫pX(y)·K(y)dy`、K(y)=`∫(A+B(u+y)²)g_s(u)|u²/s²−1/s|du` は y の **厳密 degree-2 多項式** (advisor pred=actual
+      全桁一致) → `c0+c1·E[X]+c2·E[X²] < ∞` (mass+1st+2nd moment、1st は `2|y|≤1+y²` で従属)。
+      `integrable_natPow_mul_exp_neg_mul_sq` は使わない。
+    - **`_chain_domination` は Fisher 壁不要 (在庫訂正)**: moment route は `J(p_s)≤1/s` を経由しない (Tonelli +
+      g_s ガウス積分 + finite 2nd moment のみ)。在庫の overlap verdict 「1壁3consumer」は誤り →
+      **「1壁2consumer」** (`gaussianConv_fisher_le_inv_var` の consumer は `convDensityAdd_fisher_integrable` +
+      `_chain_ibp_fisher` のみ、`_chain_domination` は moment route で独立 closure)。在庫
+      `epi-debruijn-gap2-caseB-joint-domination-inventory.md:143-153` 訂正済。
+    - **s-uniformity OK + 追加 hyp 不要 + closable**: 係数 `K0/s` (`K0=E|χ²₁−1|≈0.9678`) が `s∈Ioo` で
+      `≤2K0/t` 一様。案B は finite-2nd-moment で genuine に closable (隠れた壁なし)。撤退ライン発動 no。
+    - **教訓 (#15 の補強)**: convolution envelope の integrability は **Tonelli で外積分 (moment) 側に流す**のが
+      正路。pointwise closed-form (`x^k·exp(-x²/c)`) を経由してはいけない (heavy-tail pX が x-tail を支配)。
+      planner が brief 確定前に numerics で route を pin していれば防げた (在庫内で route I 推奨と「MGF 回避の
+      ため Fisher 経由」が既に矛盾しており in-mind 未確定の痕跡があった)。**設計の closure mechanism は実装前に
+      proof-pivot-advisor で numerics 検算する** を case B/今後の analytic 壁の標準手順に。
