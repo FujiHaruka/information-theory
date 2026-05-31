@@ -131,7 +131,11 @@ private theorem integrable_natPow_mul_exp_neg_mul_sq {b : ℝ} (hb : 0 < b) (k :
 
 /-- **Closed-form Gaussian pdf upper bound (genuine, Assembly-local).** The centered Gaussian
 density is bounded above by its normalizing prefactor `(√(2πv))⁻¹` (since `exp` of a
-nonpositive exponent is `≤ 1`). Re-proved here because the PerTime version is `private`. -/
+nonpositive exponent is `≤ 1`). Re-proved here because the PerTime version is `private`.
+
+Independent honesty audit (2026-05-31, commit `b53107a`): verdict ok. sorryAx-free
+(`[propext, Classical.choice, Quot.sound]`). Genuine standalone re-proof (`exp` of nonpositive
+exponent `≤ 1`), not an alias of the PerTime version. @audit:ok -/
 private theorem gaussianPDFReal_le_prefactor' (v : ℝ≥0) (u : ℝ) :
     gaussianPDFReal 0 v u ≤ (Real.sqrt (2 * Real.pi * v))⁻¹ := by
   rw [gaussianPDFReal]
@@ -147,7 +151,12 @@ private theorem gaussianPDFReal_le_prefactor' (v : ℝ≥0) (u : ℝ) :
 /-- **Convolution density upper bound (genuine, Assembly-local).** For a probability density
 `pX` (`∫ pX = 1`), the convolution density `p_s x = ∫ pX y · g_s(x-y)` is bounded above by the
 Gaussian prefactor `(√(2πs))⁻¹`, uniformly in `x`. (`p_s x ≤ ∫ pX y · prefactor =
-prefactor · ∫ pX = prefactor`.) Used for the lower side of the GAP① `‖·‖` bound. -/
+prefactor · ∫ pX = prefactor`.) Used for the lower side of the GAP① `‖·‖` bound.
+
+Independent honesty audit (2026-05-31, commit `b53107a`): verdict ok. sorryAx-free
+(`[propext, Classical.choice, Quot.sound]`). `hpX_nn`/`hpX_int`/`hpX_mass` are regularity; the upper
+bound is derived via `integral_mono` to the majorant `pX·pref` + `hpX_mass` (`∫(pX·pref)=pref·1`), NOT
+assumed. @audit:ok -/
 private theorem convDensityAdd_le_prefactor
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
     (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -173,7 +182,11 @@ private theorem convDensityAdd_le_prefactor
   rwa [integral_mul_const, hpX_mass, one_mul] at hle
 
 /-- Monotonicity of the centered Gaussian pdf in `|·|` (Assembly-local re-proof of the
-PerTime `private` version): if `|u| ≤ |w|` then `g_v(w) ≤ g_v(u)`. -/
+PerTime `private` version): if `|u| ≤ |w|` then `g_v(w) ≤ g_v(u)`.
+
+Independent honesty audit (2026-05-31, commit `b53107a`): verdict ok. sorryAx-free
+(`[propext, Classical.choice, Quot.sound]`). Genuine re-proof (monotone `exp` of `-u²/(2v)` in `|·|`,
+`v=0` branch handled), not an alias. @audit:ok -/
 private theorem gaussianPDFReal_antitone_abs'
     (v : ℝ≥0) {u w : ℝ} (huw : |u| ≤ |w|) :
     gaussianPDFReal 0 v w ≤ gaussianPDFReal 0 v u := by
@@ -193,7 +206,14 @@ private theorem gaussianPDFReal_antitone_abs'
 `s > 0` and `x`. The PerTime `convDensityAdd_lower_bound_gaussian` produces an `R` per `s`; for
 the `s`-uniform GAP① majorant the same tightness radius (`∫_{[-R,R]} pX ≥ 1/2`, which depends
 only on `pX`) must be reused across all `s`, so the tightness step is hoisted out and the per-`s`
-box-drop + Gaussian-monotonicity argument is applied with the common `R`. -/
+box-drop + Gaussian-monotonicity argument is applied with the common `R`.
+
+Independent honesty audit (2026-05-31, commit `b53107a`): verdict ok. sorryAx-free
+(`[propext, Classical.choice, Quot.sound]`). The `s`-uniform tightness hoist is genuine: STEP 1
+extracts a single `R` (depending only on `pX`) via `tendsto_setIntegral_of_monotone` over the monotone
+`Icc(-n,n)` exhaustion (using `hpX_mass:∫pX=1` to identify the limit as 1), then STEPs 2-3 apply the
+per-`s` box-drop + `gaussianPDFReal_antitone_abs'` with that common `R`. No circularity/degeneracy;
+hyps are pX regularity, the lower bound is derived. @audit:ok -/
 private theorem convDensityAdd_lower_bound_gaussian_uniformR
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
     (hpX_mass : (∫ y, pX y ∂volume) = 1) :
@@ -297,7 +317,19 @@ The route is "log of the lower bound" (`Real.log_le_log`+`Real.log_exp`), NOT `-
 `hpX_mass : ∫ pX = 1` is an honest probability-density regularity precondition (threaded from
 `debruijnIdentityV2_holds_assembled`, supplied via `(P.map X) univ = 1`); it feeds
 `convDensityAdd_lower_bound_gaussian_uniformR` / `_le_prefactor` / `_pos`. NOT load-bearing
-(the majorant inequality is derived, not assumed). `B ≥ 0` and the existential output are genuine. -/
+(the majorant inequality is derived, not assumed). `B ≥ 0` and the existential output are genuine.
+
+Independent honesty audit (2026-05-31, fresh auditor, GAP①+hpX_mass threading commit `b53107a`):
+verdict ok (proof-done). `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free,
+transitive 0 sorry; the file's 4 remaining sorrys at GAP②/fisher/IBP-step/_chain_parametric are NOT
+in this declaration's dependency cone). Signature honest: all hyps are pX-system regularity
+(`hpX_nn`/`hpX_int`/`hpX_mass:∫pX=1`) + `ht`; `_hpX_meas` unused. core-reconstruction test: granting
+all hyps does NOT hand over the majorant — it is derived by two-sided `abs_le` (upper via
+`convDensityAdd_lower_bound_gaussian_uniformR` + `Real.log_le_log` + closed-form log expansion; lower
+via `convDensityAdd_le_prefactor`). `hpX_mass` is consumed as genuine normalization (in `_le_prefactor`
+`∫(pX·pref)=pref`, in `_uniformR` tightness `∫_{[-R,R]}pX≥1/2`, in `convDensityAdd_pos` positive mass) =
+regularity precondition, NOT load-bearing. NOT circular/degenerate. proof-done.
+@audit:ok -/
 private theorem convDensityAdd_logFactor_poly_majorant
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (_hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -508,12 +540,17 @@ domination conclusion; the body genuinely constructs the product majorant
 into `x^{0,2,4}·exp(-(1/c')x²)` + 3× `integrable_natPow_mul_exp_neg_mul_sq` (`@audit:ok`,
 sorryAx-free), and (ii) proves the domination via `norm_mul` + `mul_le_mul` +
 `mul_le_mul_of_nonneg_left`. The helper outputs are `obtain`ed (genuinely consumed), NOT bundled
-as load-bearing hypotheses. `#print axioms` shows `sorryAx` present only transitively via GAP①/②
-(`convDensityAdd_logFactor_poly_majorant` / `convDensityAdd_deriv2_tail_majorant`), confirming the
-wiring itself adds no local sorry. NOT circular, NOT load-bearing, NOT name-laundering (carries
+as load-bearing hypotheses. NOT circular, NOT load-bearing, NOT name-laundering (carries
 `@residual`). The false-statement fix (judgment log #11: full-σ-derivand product over bounded
 `Ioo (t/2,2t)`, not log-factor-alone over `univ`) makes the dominated statement true and
-satisfiable. @residual kept (transitive over GAP①/② plan walls).
+satisfiable.
+
+Independent honesty audit (2026-05-31, fresh auditor, hpX_mass threading commit `b53107a`): verdict
+honest_residual. **Update**: GAP① (`convDensityAdd_logFactor_poly_majorant`) is now genuine
+(sorryAx-free, `@audit:ok` this commit), so the transitive `sorryAx` here comes **only** from GAP②
+(`convDensityAdd_deriv2_tail_majorant`, still `@residual(plan:…)`). The new `hpX_mass` hyp is honest
+regularity threaded to GAP①'s normalization need (NOT load-bearing). Body is genuine wiring (0 local
+sorry); the single remaining residual is GAP②. @residual kept (transitive over the GAP② plan wall).
 
 @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_domination
@@ -740,7 +777,13 @@ a.e.-over-`Ioo` `hdiff` plumbing + atom invocation is L-PT-γ scope), but the **
 satisfiable** (proof-pivot-advisor confirmed). The被微分関数 keeps the `max s 0` form to match
 `_chain` verbatim (`max s 0 = s` on the `t`-neighborhood).
 
-@residual(plan:epi-debruijn-pertime-closure) -/
+Independent honesty audit (2026-05-31, fresh auditor, hpX_mass threading commit `b53107a`): verdict
+honest_residual. The new `hpX_mass:∫pX=1` hyp is an honest regularity precondition threaded purely to
+supply the §5G-2 domination's GAP① subcall (`_chain_domination` → `convDensityAdd_logFactor_poly_majorant`,
+which needs normalization for the Gaussian lower/upper bounds); it does NOT change the residual's meaning
+(the body is still the parametric-diff / `hdiff`-over-Ioo plumbing sorry, L-PT-γ scope). Conclusion
+(`HasDerivAt` + Fisher value) is the genuine claim, not bundled. Classification `plan:` unchanged and
+correct. @residual kept. @residual(plan:epi-debruijn-pertime-closure) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_parametric
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
