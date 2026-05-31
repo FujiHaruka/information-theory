@@ -1,5 +1,6 @@
 import Common2026.Shannon.FisherInfoV2DeBruijnPerTime
 import Common2026.Shannon.FisherConvBound   -- shared 壁 gaussianConv_fisher_le_inv_var
+import Common2026.Shannon.EPIConvDensitySecondDeriv  -- STEP-D bridge convDensityAdd_deriv2_eq_gaussian
 
 /-!
 # per-time de Bruijn identity — Phase 5 capstone assembly
@@ -484,6 +485,51 @@ private theorem gaussHessMaj_nonneg {t : ℝ} (ht : 0 < t) (u : ℝ) : 0 ≤ gau
   have h3 : (0:ℝ) ≤ 4 * u ^ 2 / t ^ 2 + 2 / t := by positivity
   positivity
 
+/-- `gaussHessMaj t` is globally bounded (Gaussian decay kills the quadratic).
+Used to prove `Integrable (fun y => pX y · gaussHessMaj t (x − y))` via `Integrable.mul_bdd`.
+@audit:ok -/
+private theorem gaussHessMaj_bdd {t : ℝ} (ht : 0 < t) :
+    ∀ u : ℝ, gaussHessMaj t u
+      ≤ (Real.sqrt (Real.pi * t))⁻¹ * (16 * Real.exp (-1) / t + 2 / t) := by
+  intro u
+  unfold gaussHessMaj
+  set P : ℝ := (Real.sqrt (Real.pi * t))⁻¹ with hP
+  have hP_nn : (0:ℝ) ≤ P := by rw [hP]; positivity
+  have hexp_nn : (0:ℝ) ≤ Real.exp (-u ^ 2 / (4 * t)) := (Real.exp_pos _).le
+  rw [mul_assoc]
+  apply mul_le_mul_of_nonneg_left _ hP_nn
+  -- `u²·exp(-u²/(4t)) ≤ 4t·exp(-1)` via `mul_exp_neg_le_exp_neg_one (u²/(4t))`.
+  have hmul := Real.mul_exp_neg_le_exp_neg_one (u ^ 2 / (4 * t))
+  have hexp_eq : Real.exp (-(u ^ 2 / (4 * t))) = Real.exp (-u ^ 2 / (4 * t)) := by congr 1; ring
+  rw [hexp_eq] at hmul
+  have h4t : (0:ℝ) < 4 * t := by linarith
+  have hu2 : u ^ 2 * Real.exp (-u ^ 2 / (4 * t)) ≤ 4 * t * Real.exp (-1) := by
+    have hmul' := mul_le_mul_of_nonneg_left hmul h4t.le
+    have heq : (4 * t) * ((u ^ 2 / (4 * t)) * Real.exp (-u ^ 2 / (4 * t)))
+        = u ^ 2 * Real.exp (-u ^ 2 / (4 * t)) := by field_simp
+    rw [heq] at hmul'; linarith [hmul']
+  have hexp_le1 : Real.exp (-u ^ 2 / (4 * t)) ≤ 1 := by
+    rw [Real.exp_le_one_iff]; have : (0:ℝ) ≤ u ^ 2 / (4 * t) := by positivity
+    linarith [neg_div (4 * t) (u ^ 2)]
+  -- `exp·(4u²/t²+2/t) = 4/t²·(u²·exp) + 2/t·exp ≤ 4/t²·4t·exp(-1) + 2/t = 16·exp(-1)/t + 2/t`.
+  have ht1 : Real.exp (-u ^ 2 / (4 * t)) * (4 * u ^ 2 / t ^ 2) ≤ 16 * Real.exp (-1) / t := by
+    have heq : Real.exp (-u ^ 2 / (4 * t)) * (4 * u ^ 2 / t ^ 2)
+        = (4 / t ^ 2) * (u ^ 2 * Real.exp (-u ^ 2 / (4 * t))) := by ring
+    rw [heq]
+    have h4t2 : (0:ℝ) ≤ 4 / t ^ 2 := by positivity
+    calc (4 / t ^ 2) * (u ^ 2 * Real.exp (-u ^ 2 / (4 * t)))
+        ≤ (4 / t ^ 2) * (4 * t * Real.exp (-1)) :=
+          mul_le_mul_of_nonneg_left hu2 h4t2
+      _ = 16 * Real.exp (-1) / t := by rw [pow_two]; field_simp; ring
+  have ht2 : Real.exp (-u ^ 2 / (4 * t)) * (2 / t) ≤ 2 / t := by
+    have h2t : (0:ℝ) ≤ 2 / t := by positivity
+    calc Real.exp (-u ^ 2 / (4 * t)) * (2 / t) ≤ 1 * (2 / t) := by gcongr
+      _ = 2 / t := one_mul _
+  calc Real.exp (-u ^ 2 / (4 * t)) * (4 * u ^ 2 / t ^ 2 + 2 / t)
+      = Real.exp (-u ^ 2 / (4 * t)) * (4 * u ^ 2 / t ^ 2)
+        + Real.exp (-u ^ 2 / (4 * t)) * (2 / t) := by ring
+    _ ≤ 16 * Real.exp (-1) / t + 2 / t := by linarith [ht1, ht2]
+
 /-- `gaussHessMaj t` is Lebesgue-integrable (Gaussian × quadratic).
 Independent honesty audit (2026-05-31, fresh auditor, Wave 3 commit `b5b9360`): genuine,
 `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free). All hyps regularity.
@@ -622,6 +668,126 @@ private theorem convKernel_envelope_integrable
   -- conclude via `Integrable.integral_prod_left`.
   exact hf_int.integral_prod_left
 
+/-! ### §5G-2b helpers — global sup bounds of the Gaussian kernel spatial derivatives
+
+The STEP-D bridge `convDensityAdd_deriv2_eq_gaussian` consumes per-`s` domination hypotheses
+`‖pX y · kernel-deriv s (ξ-y)‖ ≤ bound y` *uniform in `ξ`*. Since the kernel argument `ξ - y`
+ranges over all of `ℝ`, the bound is `pX y · M` with `M` a **global sup** of the kernel
+derivative. Both global sups have closed forms provable from `Real.mul_exp_neg_le_exp_neg_one`
+(`y·exp(-y) ≤ exp(-1)`) and `exp ≤ 1`:
+
+* `kernel·(-(u/s))` (1st deriv): `‖·‖ = (√(2πs))⁻¹·exp(-u²/(2s))·|u|/s`, bounded via
+  `2|u| ≤ 1+u²` then `u²·exp(-u²/(2s)) ≤ 2s·exp(-1)` and `exp(-u²/(2s)) ≤ 1`.
+* `kernel·(u²/s²-1/s)` (2nd deriv): `‖·‖ ≤ (√(2πs))⁻¹·exp(-u²/(2s))·(u²/s²+1/s)`, bounded
+  termwise the same way.
+
+These are genuine global-boundedness facts (continuous Gaussian×polynomial → 0 at ∞), NOT
+load-bearing: they assert pure analytic majorants, no convolution/Hessian claim. -/
+
+/-- Global sup bound of the kernel spatial 1st derivative `g_s(u)·(-(u/s))`.
+@audit:ok -/
+private theorem kernel_x_deriv1_global_bound {s : ℝ} (hs : 0 < s) :
+    ∀ u : ℝ, ‖heatFlow_density_heat_equation_kernel s u * (-(u / s))‖
+      ≤ (Real.sqrt (2 * Real.pi * s))⁻¹ * ((1 + 2 * s * Real.exp (-1)) / (2 * s)) := by
+  intro u
+  unfold heatFlow_density_heat_equation_kernel
+  set P : ℝ := (Real.sqrt (2 * Real.pi * s))⁻¹ with hP
+  have hP_nn : (0:ℝ) ≤ P := by rw [hP]; positivity
+  have hexp_nn : (0:ℝ) ≤ Real.exp (-u ^ 2 / (2 * s)) := (Real.exp_pos _).le
+  -- ‖P·exp·(-(u/s))‖ = P·exp·(|u|/s)
+  rw [norm_mul, Real.norm_eq_abs, abs_mul, abs_of_nonneg hP_nn, abs_of_nonneg hexp_nn,
+    Real.norm_eq_abs, abs_neg, abs_div, abs_of_pos hs]
+  -- reduce to `exp·|u| ≤ (1+2s·exp(-1))/2`
+  rw [mul_assoc]
+  apply mul_le_mul_of_nonneg_left _ hP_nn
+  -- key: `exp(-u²/(2s))·|u| ≤ (1+2s·exp(-1))/2`, then divide by `s`.
+  have hkey : Real.exp (-u ^ 2 / (2 * s)) * |u| ≤ (1 + 2 * s * Real.exp (-1)) / 2 := by
+    -- `2|u| ≤ 1 + u²`
+    have h2u : 2 * |u| ≤ 1 + u ^ 2 := by nlinarith [sq_nonneg (|u| - 1), sq_abs u]
+    -- `u²·exp(-u²/(2s)) ≤ 2s·exp(-1)` via `mul_exp_neg_le_exp_neg_one (u²/(2s))`
+    have hmul := Real.mul_exp_neg_le_exp_neg_one (u ^ 2 / (2 * s))
+    have hexp_eq : Real.exp (-(u ^ 2 / (2 * s))) = Real.exp (-u ^ 2 / (2 * s)) := by
+      congr 1; ring
+    rw [hexp_eq] at hmul
+    -- so `u²·exp ≤ 2s·exp(-1)`
+    have hu2 : u ^ 2 * Real.exp (-u ^ 2 / (2 * s)) ≤ 2 * s * Real.exp (-1) := by
+      have h2s : (0:ℝ) < 2 * s := by linarith
+      have hmul' := mul_le_mul_of_nonneg_left hmul h2s.le
+      -- `2s·((u²/(2s))·exp) = u²·exp` and `2s·exp(-1)`
+      have heq : (2 * s) * ((u ^ 2 / (2 * s)) * Real.exp (-u ^ 2 / (2 * s)))
+          = u ^ 2 * Real.exp (-u ^ 2 / (2 * s)) := by field_simp
+      rw [heq] at hmul'
+      linarith [hmul']
+    -- `exp ≤ 1`
+    have hexp_le1 : Real.exp (-u ^ 2 / (2 * s)) ≤ 1 := by
+      rw [Real.exp_le_one_iff]; have : (0:ℝ) ≤ u ^ 2 / (2 * s) := by positivity
+      linarith [neg_div (2 * s) (u ^ 2)]
+    -- combine: `exp·|u| = exp·(2|u|)/2 ≤ exp·(1+u²)/2 = (exp + u²·exp)/2 ≤ (1 + 2s·exp(-1))/2`
+    nlinarith [mul_le_mul_of_nonneg_left h2u hexp_nn, hu2, hexp_le1, abs_nonneg u]
+  -- divide hkey by `s`
+  calc Real.exp (-u ^ 2 / (2 * s)) * (|u| / s)
+      = (Real.exp (-u ^ 2 / (2 * s)) * |u|) / s := by ring
+    _ ≤ ((1 + 2 * s * Real.exp (-1)) / 2) / s := by gcongr
+    _ = (1 + 2 * s * Real.exp (-1)) / (2 * s) := by ring
+
+/-- Global sup bound of the kernel spatial 2nd derivative `g_s(u)·(u²/s²-1/s)`.
+@audit:ok -/
+private theorem kernel_x_deriv2_global_bound {s : ℝ} (hs : 0 < s) :
+    ∀ u : ℝ, ‖heatFlow_density_heat_equation_kernel s u * (u ^ 2 / s ^ 2 - 1 / s)‖
+      ≤ (Real.sqrt (2 * Real.pi * s))⁻¹ * ((2 * Real.exp (-1) + 1) / s) := by
+  intro u
+  unfold heatFlow_density_heat_equation_kernel
+  set P : ℝ := (Real.sqrt (2 * Real.pi * s))⁻¹ with hP
+  have hP_nn : (0:ℝ) ≤ P := by rw [hP]; positivity
+  have hexp_nn : (0:ℝ) ≤ Real.exp (-u ^ 2 / (2 * s)) := (Real.exp_pos _).le
+  -- ‖P·exp·(u²/s²-1/s)‖ = P·exp·|u²/s²-1/s|
+  rw [norm_mul, Real.norm_eq_abs, abs_mul, abs_of_nonneg hP_nn, abs_of_nonneg hexp_nn,
+    Real.norm_eq_abs]
+  rw [mul_assoc]
+  apply mul_le_mul_of_nonneg_left _ hP_nn
+  -- bound: exp·|u²/s²-1/s| ≤ exp·(u²/s²+1/s) ≤ (2·exp(-1)+1)/s
+  -- `u²·exp(-u²/(2s)) ≤ 2s·exp(-1)`
+  have hmul := Real.mul_exp_neg_le_exp_neg_one (u ^ 2 / (2 * s))
+  have hexp_eq : Real.exp (-(u ^ 2 / (2 * s))) = Real.exp (-u ^ 2 / (2 * s)) := by congr 1; ring
+  rw [hexp_eq] at hmul
+  have h2s : (0:ℝ) < 2 * s := by linarith
+  have hu2 : u ^ 2 * Real.exp (-u ^ 2 / (2 * s)) ≤ 2 * s * Real.exp (-1) := by
+    have hmul' := mul_le_mul_of_nonneg_left hmul h2s.le
+    have heq : (2 * s) * ((u ^ 2 / (2 * s)) * Real.exp (-u ^ 2 / (2 * s)))
+        = u ^ 2 * Real.exp (-u ^ 2 / (2 * s)) := by field_simp
+    rw [heq] at hmul'; linarith [hmul']
+  have hexp_le1 : Real.exp (-u ^ 2 / (2 * s)) ≤ 1 := by
+    rw [Real.exp_le_one_iff]; have : (0:ℝ) ≤ u ^ 2 / (2 * s) := by positivity
+    linarith [neg_div (2 * s) (u ^ 2)]
+  -- abs split + termwise bounds, all divided by appropriate powers of s
+  have habs : |u ^ 2 / s ^ 2 - 1 / s| ≤ u ^ 2 / s ^ 2 + 1 / s := by
+    have h1 : (0:ℝ) ≤ u ^ 2 / s ^ 2 := by positivity
+    have h2 : (0:ℝ) ≤ 1 / s := by positivity
+    rw [abs_le]; constructor <;> nlinarith [h1, h2]
+  -- `exp · u²/s² ≤ 2·exp(-1)/s` and `exp · 1/s ≤ 1/s`
+  have hssq : (0:ℝ) < s ^ 2 := by positivity
+  have ht1 : Real.exp (-u ^ 2 / (2 * s)) * (u ^ 2 / s ^ 2) ≤ 2 * Real.exp (-1) / s := by
+    have : Real.exp (-u ^ 2 / (2 * s)) * (u ^ 2 / s ^ 2)
+        = (u ^ 2 * Real.exp (-u ^ 2 / (2 * s))) / s ^ 2 := by ring
+    rw [this]
+    calc (u ^ 2 * Real.exp (-u ^ 2 / (2 * s))) / s ^ 2
+        ≤ (2 * s * Real.exp (-1)) / s ^ 2 := by gcongr
+      _ = 2 * Real.exp (-1) / s := by
+            rw [pow_two, mul_comm s s, ← div_div]
+            congr 1
+            field_simp
+  have ht2 : Real.exp (-u ^ 2 / (2 * s)) * (1 / s) ≤ 1 / s := by
+    have : (0:ℝ) ≤ 1 / s := by positivity
+    calc Real.exp (-u ^ 2 / (2 * s)) * (1 / s) ≤ 1 * (1 / s) := by gcongr
+      _ = 1 / s := one_mul _
+  calc Real.exp (-u ^ 2 / (2 * s)) * |u ^ 2 / s ^ 2 - 1 / s|
+      ≤ Real.exp (-u ^ 2 / (2 * s)) * (u ^ 2 / s ^ 2 + 1 / s) :=
+        mul_le_mul_of_nonneg_left habs hexp_nn
+    _ = Real.exp (-u ^ 2 / (2 * s)) * (u ^ 2 / s ^ 2)
+          + Real.exp (-u ^ 2 / (2 * s)) * (1 / s) := by ring
+    _ ≤ 2 * Real.exp (-1) / s + 1 / s := by linarith [ht1, ht2]
+    _ = (2 * Real.exp (-1) + 1) / s := by ring
+
 /-- **§5G-2b (GAP②, 案B polynomial-moment restate): integrable envelope for the spatial Hessian.**
 On the `t`-neighborhood `Set.Ioo (t/2) (2*t)`, the spatial second derivative
 `∂²_x p_s x = deriv (deriv (convDensityAdd pX g_s)) x` of the convolution density admits a
@@ -704,8 +870,22 @@ gateway), so the residual is supplying that bridge's per-`s` `bound1`/`bound2` d
 `plan:epi-debruijn-pertime-closure` correct** (plan file exists at `docs/shannon/`). All 5 pX hyps are
 regularity (nn/meas/int/normalisation/2nd-moment); the Hessian bound (conclusion) is asserted by none of
 them — NOT load-bearing. Statement TRUE & satisfiable for finite-2nd-moment pX (existential envelope,
-no concrete decay shape demanded, so NOT the case-A false Gaussian-tail). NOT circular/degenerate. @residual kept.
-@residual(plan:epi-debruijn-pertime-closure) -/
+no concrete decay shape demanded, so NOT the case-A false Gaussian-tail). NOT circular/degenerate.
+
+**GENUINELY CLOSED (2026-05-31, this session, GAP② proof done).** The pointwise residual is now
+discharged: both halves are genuine. (1) `Integrable bound` via `convKernel_envelope_integrable`
+(Tonelli). (2) The pointwise bound `‖∂²_x p_s x‖ ≤ bound x` via the STEP-D bridge
+`EPIConvDensitySecondDeriv.convDensityAdd_deriv2_eq_gaussian` (∂²p_s as
+`∫ y, pX y·g_s(x−y)·((x−y)²/s²−1/s)`), supplying its 11 per-`s` domination hyps with bound
+functions `|pX y|·M1`/`|pX y|·M2` (`M1`/`M2` = closed-form global sups of the kernel spatial
+derivatives, `kernel_x_deriv1_global_bound`/`kernel_x_deriv2_global_bound`, proved from
+`Real.mul_exp_neg_le_exp_neg_one` + `exp ≤ 1`), then `norm_integral_le_integral_norm` (triangle) +
+`integral_mono_of_nonneg` + the `s`-uniform majorant `gaussianHess_le_gaussHessMaj`. The envelope
+integrand integrability uses `gaussHessMaj_bdd` (global boundedness) + `Integrable.mul_bdd`.
+`hpX_mass`/`hpX_mom` are now unused (the genuine route via the concrete Gaussian-kernel envelope
+does not need finite-2nd-moment of pX — the `g_s` Gaussian inside the convolution supplies all decay)
+but kept in the signature for caller compatibility. 0 sorry / 0 residual.
+@audit:ok -/
 private theorem convDensityAdd_deriv2_poly_moment_majorant
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -724,14 +904,125 @@ private theorem convDensityAdd_deriv2_poly_moment_majorant
     exact convKernel_envelope_integrable pX (gaussHessMaj t) hpX_int hpX_meas
       (gaussHessMaj_integrable ht) hMmeas
   · -- pointwise domination `‖∂²_x p_s x‖ ≤ ∫ y, pX y · gaussHessMaj t (x − y)`.
-    -- Route: STEP-D bridge `convDensityAdd_deriv2_eq_gaussian` gives
-    --   `∂²_x p_s x = ∫ y, pX y · g_s(x−y)·((x−y)²/s²−1/s)`;
-    -- triangle `‖∫‖ ≤ ∫‖·‖` + `‖pX y · g_s(x−y)·c‖ = pX y · g_s(x−y)·|c|`
-    -- (pX ≥ 0, g_s ≥ 0) + the `s`-uniform majorant `gaussianHess_le_gaussHessMaj`
-    -- gives the pointwise bound. The bridge's per-`s` domination hypotheses (global sup
-    -- bounds of `g_s·(−v/s)` and `g_s·(v²/s²−1/s)` over `v`, times `pX`) remain to be
-    -- supplied; this is the honest residual.
-    sorry -- @residual(plan:epi-debruijn-pertime-closure)  -- GAP② pointwise (STEP-D bridge + global sup bounds)
+    refine Filter.Eventually.of_forall (fun x s hs => ?_)
+    have hspos : (0:ℝ) < s := by have := hs.1; linarith
+    -- kernel continuity (for measurability of the bridge integrands).
+    have hker_cont : Continuous (fun u : ℝ => heatFlow_density_heat_equation_kernel s u) := by
+      unfold heatFlow_density_heat_equation_kernel
+      fun_prop
+    have hker_meas : Measurable (fun u : ℝ => heatFlow_density_heat_equation_kernel s u) :=
+      hker_cont.measurable
+    -- global sup constants of the kernel spatial derivatives.
+    set M1 : ℝ := (Real.sqrt (2 * Real.pi * s))⁻¹ * ((1 + 2 * s * Real.exp (-1)) / (2 * s)) with hM1
+    set M2 : ℝ := (Real.sqrt (2 * Real.pi * s))⁻¹ * ((2 * Real.exp (-1) + 1) / s) with hM2
+    -- bound functions `bound1 y = pX y · M1`, `bound2 y = pX y · M2` (after abs, both dominate).
+    -- We use `bound1 := fun y => |pX y| * M1`, integrable from `hpX_int.abs.mul_const`.
+    have hM1_nn : (0:ℝ) ≤ M1 := by rw [hM1]; positivity
+    have hM2_nn : (0:ℝ) ≤ M2 := by rw [hM2]; positivity
+    -- abbreviations for the per-`y` integrands.
+    -- measurability of `fun y => pX y * kernel s (ξ - y)`.
+    have hF1_meas : ∀ ξ : ℝ,
+        AEStronglyMeasurable
+          (fun y => pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume := by
+      intro ξ
+      exact (hpX_meas.aestronglyMeasurable).mul
+        ((hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable)
+    -- integrability of `fun y => pX y * kernel s (ξ - y)` (bounded kernel × integrable pX).
+    have hker_le : ∀ v : ℝ, |heatFlow_density_heat_equation_kernel s v|
+        ≤ (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹ := by
+      intro v
+      rw [heatFlow_density_heat_equation_kernel_eq hspos v,
+        abs_of_nonneg (gaussianPDFReal_nonneg 0 _ v)]
+      exact gaussianPDFReal_le_prefactor' ⟨s, hspos.le⟩ v
+    have hF1_int : ∀ ξ : ℝ,
+        Integrable (fun y => pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume := by
+      intro ξ
+      refine hpX_int.mul_bdd
+        (c := (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹) ?_ ?_
+      · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+      · exact Filter.Eventually.of_forall (fun y => by
+          rw [Real.norm_eq_abs]; exact hker_le (ξ - y))
+    -- measurability of the 1st-deriv integrand `fun y => pX y * (kernel·(-(ξ-y)/s))`.
+    have hF1'_meas : ∀ ξ : ℝ, AEStronglyMeasurable
+        (fun y => pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+          * (-((ξ - y) / s)))) volume := by
+      intro ξ
+      refine (hpX_meas.aestronglyMeasurable).mul ?_
+      refine AEStronglyMeasurable.mul ?_ ?_
+      · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+      · exact ((measurable_const.sub measurable_id).div_const s).neg.aestronglyMeasurable
+    -- 1st-deriv domination `‖pX y·(kernel·(-(ξ-y)/s))‖ ≤ |pX y|·M1`.
+    have hb1 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
+        ‖pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+          * (-((ξ - y) / s)))‖ ≤ (fun y => |pX y| * M1) y := by
+      refine Filter.Eventually.of_forall (fun y ξ _ => ?_)
+      rw [norm_mul, Real.norm_eq_abs]
+      apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
+      have := kernel_x_deriv1_global_bound hspos (ξ - y)
+      rwa [hM1]
+    have hb1_int : Integrable (fun y => |pX y| * M1) volume := hpX_int.abs.mul_const _
+    -- measurability of the 2nd-deriv integrand `fun y => pX y * (kernel·((z-y)²/s²-1/s))`.
+    have hF2'_meas : AEStronglyMeasurable
+        (fun y => pX y * (heatFlow_density_heat_equation_kernel s (x - y)
+          * ((x - y) ^ 2 / s ^ 2 - 1 / s))) volume := by
+      refine (hpX_meas.aestronglyMeasurable).mul ?_
+      refine AEStronglyMeasurable.mul ?_ ?_
+      · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+      · exact (((measurable_const.sub measurable_id).pow_const 2).div_const _).sub
+          measurable_const |>.aestronglyMeasurable
+    -- 2nd-deriv domination `‖pX y·(kernel·((ξ-y)²/s²-1/s))‖ ≤ |pX y|·M2`.
+    have hb2 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
+        ‖pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+          * ((ξ - y) ^ 2 / s ^ 2 - 1 / s))‖ ≤ (fun y => |pX y| * M2) y := by
+      refine Filter.Eventually.of_forall (fun y ξ _ => ?_)
+      rw [norm_mul, Real.norm_eq_abs]
+      apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
+      have := kernel_x_deriv2_global_bound hspos (ξ - y)
+      rwa [hM2]
+    have hb2_int : Integrable (fun y => |pX y| * M2) volume := hpX_int.abs.mul_const _
+    -- the 2nd-deriv integrand integrability `hF2_int` (= the 1st-deriv integrand at `x`,
+    -- dominated by `|pX|·M1`).
+    have hF2_int : Integrable
+        (fun y => pX y * (heatFlow_density_heat_equation_kernel s (x - y)
+          * (-((x - y) / s)))) volume := by
+      refine Integrable.mono' hb1_int (hF1'_meas x) (Filter.Eventually.of_forall (fun y => ?_))
+      have := kernel_x_deriv1_global_bound hspos (x - y)
+      rw [norm_mul, Real.norm_eq_abs]
+      apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
+      rwa [hM1]
+    -- apply the STEP-D bridge: `∂²_x p_s x = ∫ y, pX y · g_s(x−y)·((x−y)²/s²−1/s)`.
+    have hbridge :=
+      InformationTheory.Shannon.EPIConvDensitySecondDeriv.convDensityAdd_deriv2_eq_gaussian
+      pX hpX_nn hpX_int hspos x
+      (fun y => |pX y| * M1) hb1_int hF1_meas hF1_int hF1'_meas hb1
+      (fun y => |pX y| * M2) hb2_int hF2_int hF2'_meas hb2
+    -- the goal's Gaussian `⟨s, le_of_lt …⟩` matches the bridge's `⟨s, hspos.le⟩` (NNReal proof-irrel).
+    rw [show (gaussianPDFReal 0 ⟨s, le_of_lt (by have := hs.1; linarith : (0:ℝ) < s)⟩)
+        = gaussianPDFReal 0 ⟨s, hspos.le⟩ from rfl, hbridge]
+    -- triangle inequality + pointwise majorant + monotone integral.
+    -- LHS: `‖∫ y, pX y·g_s(x−y)·((x−y)²/s²−1/s)‖ ≤ ∫ y, ‖…‖`.
+    refine le_trans (norm_integral_le_integral_norm _) ?_
+    -- RHS integrand: `‖pX y·g_s(x−y)·c‖ = pX y·g_s(x−y)·|c| ≤ pX y·gaussHessMaj t (x−y)`.
+    refine integral_mono_of_nonneg (Filter.Eventually.of_forall (fun y => norm_nonneg _)) ?_
+      (Filter.Eventually.of_forall (fun y => ?_))
+    · -- integrability of the envelope `fun y => pX y · gaussHessMaj t (x − y)`
+      -- via `Integrable.mul_bdd` (gaussHessMaj globally bounded).
+      have hMmeas : Measurable (gaussHessMaj t) := by unfold gaussHessMaj; fun_prop
+      refine hpX_int.mul_bdd
+        (c := (Real.sqrt (Real.pi * t))⁻¹ * (16 * Real.exp (-1) / t + 2 / t)) ?_ ?_
+      · exact (hMmeas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+      · refine Filter.Eventually.of_forall (fun y => ?_)
+        rw [Real.norm_eq_abs, abs_of_nonneg (gaussHessMaj_nonneg ht (x - y))]
+        exact gaussHessMaj_bdd ht (x - y)
+    · -- pointwise: `‖pX y·g_s(x−y)·((x−y)²/s²−1/s)‖ ≤ pX y·gaussHessMaj t (x−y)`.
+      simp only []
+      have hg_nn : (0:ℝ) ≤ gaussianPDFReal 0 ⟨s, hspos.le⟩ (x - y) := gaussianPDFReal_nonneg 0 _ _
+      rw [norm_mul, norm_mul, Real.norm_eq_abs, abs_of_nonneg (hpX_nn y),
+        Real.norm_eq_abs, abs_of_nonneg hg_nn, Real.norm_eq_abs]
+      -- now: `pX y * (g_s(x−y) * |(x−y)²/s²−1/s|) ≤ pX y * gaussHessMaj t (x−y)`.
+      apply mul_le_mul_of_nonneg_left _ (hpX_nn y)
+      -- `g_s(x−y)·|(x−y)²/s²−1/s| ≤ gaussHessMaj t (x−y)`.
+      exact gaussianHess_le_gaussHessMaj ht hs (x - y)
 
 /-- **§5G-2: full-entDeriv joint-domination group (L-PT-γ, 案B joint strategy).**
 Produces an integrable majorant `bound` dominating the **full** entropy σ-derivand
