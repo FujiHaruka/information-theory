@@ -1039,111 +1039,15 @@ theorem csiszarLogRatioGap_antitoneOn_Ici_zero
   rw [h_deriv.deriv]
   exact h_le
 
-/-- **A-3 — `g'(t) ≤ 0` from 1-source Stam**.
-
-The A-2-3 right-hand side `g'(t) = entropyPower_sum · J_sum − entropyPower_X · J_X
-− entropyPower_Y · J_Y` (using the sister-density Fisher info witnesses
-`density_t` carried in each `IsDeBruijnRegularityHyp.reg_at t ht`) is `≤ 0`,
-assuming the 1-source Stam inequality
-`1 / J(X+G_X+Y+G_Y) ≥ 1 / J(X+G_X) + 1 / J(Y+G_Y)` (where `G_* := √t · Z_*`)
-holds at this specific `t`, and the three Fisher infos are strictly positive
-at this `t`.
-
-The Stam predicate is consumed at the **convolved** variables
-`X+√t·Z_X` and `Y+√t·Z_Y`. Their sum agrees pointwise with the sister
-A-2-3 base `X+Y+√t·(Z_X+Z_Y)` (by `ring`), letting the Fisher-info witnesses
-of the three sister `IsDeBruijnRegularityHyp` lift through to the Stam
-inequality on the corresponding mapped measures.
-
-**Cover-Thomas Lemma 17.7.3 (1-source form)**. The algebraic discharge from
-`1/J_sum ≥ 1/J_X + 1/J_Y` to `eP_sum · J_sum ≤ eP_X · J_X + eP_Y · J_Y`
-is the weight-bearing step. In the 1-source design the base measures are
-`t`-independent, so the chain-rule weight on `entropyPower` is single
-(`exp(2 · h)` ↦ `exp(2 · h) · 2 · (1/2) · J = entropyPower · J`), and the
-weighted Cauchy-Schwarz of Cover-Thomas eq.(17.43) may compress to
-`linarith` + `Real.exp` monotonicity. If that compression fails, the
-retreat line **L-Concl-A-ζ** (downgraded) externalises the weighted
-inequality as a 1-source predicate `IsCsiszarScalingWeightHyp1Source`.
-
-**⚠ FALSE-AS-FRAMED (2026-06-01, orchestrator + independent proof-pivot-advisor)**.
-The conclusion `eP_sum · J_sum ≤ eP_X · J_X + eP_Y · J_Y` (the DIFFERENCE-gap
-`g(t) = N_sum − N_X − N_Y` derivative) does **NOT** follow from the stated
-hypotheses (plain harmonic Stam `1/J_sum ≥ 1/J_X + 1/J_Y` + positivity +
-regularity). The entropy powers `N_i` are unconstrained positive reals as far as
-`h_stam` is concerned, so the inequality has an explicit counterexample (fix the
-`J`'s satisfying Stam, take `N_sum` huge / `N_X, N_Y` tiny — all hypotheses hold,
-conclusion fails). The classical Blachman/Dembo–Cover–Thomas EPI argument proves
-monotonicity of the **RATIO** `N_sum/(N_X+N_Y)`, i.e.
-`(N_X+N_Y)·J_sum ≤ N_X·J_X + N_Y·J_Y` (note `N_X+N_Y`, not `N_sum`). Since EPI
-gives `N_sum ≥ N_X+N_Y`, the difference form is strictly stronger and goes the
-wrong way. The RATIO form IS genuinely closable from plain Stam in-house
-(weights `α = N_X/(N_X+N_Y)`, `β = N_Y/(N_X+N_Y)`: harmonic Stam gives
-`J_sum ≤ α²J_X + β²J_Y ≤ αJ_X + βJ_Y = (N_X J_X + N_Y J_Y)/(N_X+N_Y)`, using
-`α²≤α`). **Fix = reframe `csiszarGap1Source` to the log-ratio form**
-(Mathlib-shape-driven), blast radius on the difference-gap chain
-(`csiszarGap_eq_one_source_via_rescale`, `csiszarGap1Source_antitoneOn_Ici_zero`,
-etc.). Tracked by successor plan (see `@audit:closed-by-successor`).
-
-The earlier `audit:PASS 2026-05-27` was a **false negative**: it verified
-non-circularity + non-bundling but NOT sufficiency (hypotheses ⊢ conclusion).
-Do NOT attempt to close this `sorry` as-stated — it is not closable.
-
-@audit:defect(false-statement) @audit:closed-by-successor(epi-csiszar-ratio-reframe-plan)
-Signature retained as defect marker pending the ratio reframe. -/
-theorem csiszarGap1Source_deriv_le_zero
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
-    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
-                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
-    (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
-    (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
-    {t : ℝ} (ht : 0 < t)
-    (hJX_pos : 0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
-                      ((h_reg_X.reg_at t ht).density_t))
-    (hJY_pos : 0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
-                      ((h_reg_Y.reg_at t ht).density_t))
-    (hJsum_pos : 0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
-                        ((h_reg_sum.reg_at t ht).density_t))
-    (h_stam : InformationTheory.Shannon.EPIStamDischarge.IsStamInequalityHyp
-                (fun ω => X ω + Real.sqrt t * Z_X ω)
-                (fun ω => Y ω + Real.sqrt t * Z_Y ω) P) :
-    entropyPower
-          (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω)))
-        * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
-            ((h_reg_sum.reg_at t ht).density_t)
-      - entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
-        * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
-            ((h_reg_X.reg_at t ht).density_t)
-      - entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω))
-        * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
-            ((h_reg_Y.reg_at t ht).density_t)
-      ≤ 0 := by
-  -- Derive `1/J_sum ≥ 1/J_X + 1/J_Y` from `h_stam`, applied at the three
-  -- convolved variables, with the sister-density Fisher info witnesses.
-  -- The connection `(fisherInfoOfMeasureV2 _ f).toReal = fisherInfoOfDensityReal f`
-  -- is `rfl` (both unfold to `(fisherInfoOfDensity f).toReal`).
-  -- The pointwise identity
-  --   (fun ω => (X ω + √t·Z_X ω) + (Y ω + √t·Z_Y ω))
-  --     = fun ω => X ω + Y ω + √t · (Z_X ω + Z_Y ω)
-  -- is `funext + ring`, so the `P.map` of either form agrees.
-  --
-  -- From the Stam harmonic-mean inequality and positivity, derive
-  --   J(X+Y+G) · (J(X+G_X) + J(Y+G_Y)) ≤ J(X+G_X) · J(Y+G_Y)
-  -- equivalently
-  --   J_sum ≤ (J_X · J_Y) / (J_X + J_Y)
-  -- (harmonic-mean ≤ each).
-  -- Combined with the Cover-Thomas Lemma 17.7.3 weighting argument
-  --   eP_sum · J_sum ≤ eP_X · J_X + eP_Y · J_Y
-  -- this gives the desired `≤ 0`.
-  --
-  -- The algebraic discharge from `1/J_sum ≥ 1/J_X + 1/J_Y` to the
-  -- weighted form is the Cover-Thomas eq.(17.43) Cauchy-Schwarz step;
-  -- in the 1-source design it may compress to `linarith` + `Real.exp`
-  -- monotonicity, but in the worst case factors out as a separate
-  -- staged predicate (L-Concl-A-ζ).
-  sorry
-  -- @audit:defect(false-statement) — difference-gap deriv NOT provable from plain Stam;
-  -- ratio reframe needed. @audit:closed-by-successor(epi-csiszar-ratio-reframe-plan)
+-- **A-3 (D3) DELETED (R-5 rewire, 2026-06-01)**: the difference-gap derivative
+-- bound `csiszarGap1Source_deriv_le_zero` was `@audit:defect(false-statement)` —
+-- `eP_sum·J_sum ≤ eP_X·J_X + eP_Y·J_Y` does NOT follow from plain harmonic Stam
+-- (`N_i` unconstrained; explicit counterexample `N_sum` huge / `N_X,N_Y` tiny).
+-- Its only consumer was the difference-version `csiszarGap1Source_antitoneOn_Ici_zero`
+-- (D6, also deleted). The genuine successor is R-3
+-- (`csiszarLogRatioGap_deriv_le_zero` : `J_sum − (N_X·J_X+N_Y·J_Y)/(N_X+N_Y) ≤ 0`),
+-- which IS closable from plain Stam (ratio weights `α,β` with `α²≤α`). The `@audit:closed-by-successor`
+-- pointer on this declaration is resolved by deletion (successor in place, R-3/R-5-c).
 
 /-! ## §2'''' — Phase A A-4: `AntitoneOn` lift + `IsStamToEPIScalingHyp` constructor
 
@@ -1223,59 +1127,14 @@ theorem csiszarGap1Source_differentiableOn_interior
     hX hZX hXZX hY hZY hYZY hXYZXY
     h_reg_sum h_reg_X h_reg_Y ht_pos).differentiableAt).differentiableWithinAt
 
-/-- **A-4-3**: `AntitoneOn (fun t => csiszarGap1Source X Y Z_X Z_Y P t) (Set.Ici 0)`,
-the 1-source EPI gap is antitone on the heat-flow ray `[0, ∞)`.
-
-Applies `antitoneOn_of_deriv_nonpos` with the convex domain `Set.Ici 0`
-(`convex_Ici`), the continuity from A-4-1, the differentiability from A-4-2,
-and the per-`t` `deriv ≤ 0` derived by combining A-2-3 (`HasDerivAt`) +
-A-3 (the RHS is `≤ 0` under per-`t` positivity + Stam hypotheses).
-
-The caller-side per-`t` hypotheses (`∀ t > 0, hJX_pos ∧ hJY_pos ∧ hJsum_pos
-∧ h_stam`) are required because A-3 (`csiszarGap1Source_deriv_le_zero`)
-operates pointwise in `t`. They are honest regularity / Stam hypotheses
-not bundled in the `IsDeBruijnRegularityHyp` structure. -/
-theorem csiszarGap1Source_antitoneOn_Ici_zero
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
-    (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
-    (hY : Measurable Y) (hZY : Measurable Z_Y) (hYZY : IndepFun Y Z_Y P)
-    (hXYZXY : IndepFun (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
-    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
-                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
-    (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
-    (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
-    (h_pos_stam : ∀ (t : ℝ) (ht : 0 < t),
-      (0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
-              ((h_reg_X.reg_at t ht).density_t)) ∧
-      (0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
-              ((h_reg_Y.reg_at t ht).density_t)) ∧
-      (0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
-              ((h_reg_sum.reg_at t ht).density_t)) ∧
-      InformationTheory.Shannon.EPIStamDischarge.IsStamInequalityHyp
-        (fun ω => X ω + Real.sqrt t * Z_X ω)
-        (fun ω => Y ω + Real.sqrt t * Z_Y ω) P) :
-    AntitoneOn (fun t : ℝ => csiszarGap1Source X Y Z_X Z_Y P t)
-      (Set.Ici (0 : ℝ)) := by
-  refine antitoneOn_of_deriv_nonpos (convex_Ici 0)
-    (csiszarGap1Source_continuousOn X Y Z_X Z_Y P h_reg_sum h_reg_X h_reg_Y)
-    (csiszarGap1Source_differentiableOn_interior X Y Z_X Z_Y P
-      hX hZX hXZX hY hZY hYZY hXYZXY
-      h_reg_sum h_reg_X h_reg_Y) ?_
-  intro t ht
-  rw [interior_Ici] at ht
-  have ht_pos : (0 : ℝ) < t := ht
-  obtain ⟨hJX_pos, hJY_pos, hJsum_pos, h_stam⟩ := h_pos_stam t ht_pos
-  -- A-2-3 gives `HasDerivAt (csiszarGap1Source ...) (RHS) t`.
-  have h_deriv := csiszarGap1Source_hasDerivAt X Y Z_X Z_Y P
-    hX hZX hXZX hY hZY hYZY hXYZXY
-    h_reg_sum h_reg_X h_reg_Y ht_pos
-  -- A-3 gives `RHS ≤ 0`.
-  have h_le := csiszarGap1Source_deriv_le_zero X Y Z_X Z_Y P
-    h_reg_sum h_reg_X h_reg_Y ht_pos hJX_pos hJY_pos hJsum_pos h_stam
-  -- Combine: `deriv (csiszarGap1Source ...) t = RHS ≤ 0`.
-  rw [h_deriv.deriv]
-  exact h_le
+-- **A-4-3 (D6) DELETED (R-5 rewire, 2026-06-01)**: the difference-version
+-- `csiszarGap1Source_antitoneOn_Ici_zero` transitively consumed the
+-- false-as-framed `csiszarGap1Source_deriv_le_zero` (D3, also deleted). Its only
+-- consumer was `isStamToEPIScalingHyp_of_stam_debruijn` (A-4-5), which now feeds
+-- the genuine ratio `AntitoneOn` from R-5-c
+-- (`csiszarLogRatioGap_antitoneOn_Ici_zero`) into the rescale lift. The lift
+-- (`csiszarGap_antitoneOn_Icc_zero_one`) took the 1-source `AntitoneOn` only as an
+-- unused carrier argument, so the difference-version is no longer reachable.
 
 /-- **A-4-4** (撤退 A-4-β 発火): rescale lift `AntitoneOn (... csiszarGap)
 (Set.Icc 0 1)` from the 1-source `AntitoneOn (Set.Ici 0)` via
@@ -1294,6 +1153,15 @@ A-4-rescale (lift 1-source `AntitoneOn (Set.Ici 0)` to 2-source
 `AntitoneOn (Set.Icc 0 1)` via `csiszarGap_eq_one_source_via_rescale`
 + `csiszarGap_at_one_eq_zero_of_gaussian_pair`).
 
+R-5 rewire (2026-06-01): the `_h_1source_anti` carrier argument now takes the
+**genuine ratio** `AntitoneOn (csiszarLogRatioGap ...) (Set.Ici 0)` (R-5-c) rather
+than the difference-version `csiszarGap1Source` `AntitoneOn` (the false-D3-dependent
+D6, deleted). The argument is unused in the (still `sorry`) body, so this is a
+type-only swap that removes the false-statement dependency. The conclusion is
+unchanged (2-source difference gap on `Set.Icc 0 1`); under M0-3 the ratio rescale
+is scale-invariant (`(1-s)` cancels inside `log`), so when this rescale `sorry` is
+closed it can be driven by the ratio chain.
+
 Signature stable; body deferred. -/
 theorem csiszarGap_antitoneOn_Icc_zero_one
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -1303,7 +1171,9 @@ theorem csiszarGap_antitoneOn_Icc_zero_one
     (hZXZY : IndepFun Z_X Z_Y P)
     (hZX_law : P.map Z_X = gaussianReal 0 1)
     (hZY_law : P.map Z_Y = gaussianReal 0 1)
-    (_h_1source_anti : AntitoneOn (fun t : ℝ => csiszarGap1Source X Y Z_X Z_Y P t)
+    (_h_1source_anti : AntitoneOn
+      (fun t : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
+        X Y Z_X Z_Y P t)
       (Set.Ici (0 : ℝ))) :
     AntitoneOn
       (fun s : ℝ =>
@@ -1384,7 +1254,14 @@ theorem isStamToEPIScalingHyp_of_stam_debruijn
   -- @residual(plan:epi-stam-to-conclusion-phaseA-plan)
   have hXYZXY : IndepFun (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P := by
     sorry
-  have h_anti1 := csiszarGap1Source_antitoneOn_Ici_zero X Y Z_X Z_Y P
+  -- R-5 rewire: feed the **genuine** ratio `AntitoneOn` (R-5-c,
+  -- `csiszarLogRatioGap_antitoneOn_Ici_zero`) instead of the difference-version
+  -- D6 (`csiszarGap1Source_antitoneOn_Ici_zero`), which transitively consumed the
+  -- false-as-framed `csiszarGap1Source_deriv_le_zero` (deleted). The rescale lift
+  -- `csiszarGap_antitoneOn_Icc_zero_one` only takes the 1-source `AntitoneOn` as an
+  -- (unused) carrier argument, so swapping to the ratio object removes the false
+  -- dependency without changing the lift's conclusion.
+  have h_anti1 := csiszarLogRatioGap_antitoneOn_Ici_zero X Y Z_X Z_Y P
     hX hZX_meas hXZX hY hZY_meas hYZY hXYZXY
     h_reg_sum h_reg_X h_reg_Y h_pos
   have h_anti2 := csiszarGap_antitoneOn_Icc_zero_one X Y Z_X Z_Y P
