@@ -1338,6 +1338,49 @@ noncomputable def csiszarGap1Source {Ω : Type*} [MeasurableSpace Ω]
     - entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
     - entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω))
 
+/-- **1-source Csiszár log-ratio gap** (genuine monotone object).
+
+`r(t) = log (N_sum t) − log (N_X t + N_Y t)` where
+`N_sum = entropyPower (P.map (X+Y+√t·(Z_X+Z_Y)))`,
+`N_X = entropyPower (P.map (X+√t·Z_X))`, `N_Y = entropyPower (P.map (Y+√t·Z_Y))`.
+
+This replaces the false-as-framed difference gap `csiszarGap1Source`
+(`csiszarGap1Source_deriv_le_zero` is `@audit:defect(false-statement)`): the
+log-ratio derivative `r'(t) = J_sum − (N_X·J_X + N_Y·J_Y)/(N_X+N_Y) ≤ 0` is
+genuinely closable from plain harmonic Stam (see
+`epi-csiszar-ratio-reframe-plan`). Both `log` arguments are strictly positive
+(`entropyPower_pos`, `add_pos`), so the gap is well-defined. -/
+noncomputable def csiszarLogRatioGap {Ω : Type*} [MeasurableSpace Ω]
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) (t : ℝ) : ℝ :=
+  Real.log (entropyPower (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω))))
+    - Real.log
+        (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
+          + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)))
+
+/-- **Endpoint `t = 0` of the log-ratio gap**: reduces to
+`log (eP(X+Y)) − log (eP X + eP Y)`, the form bridging to EPI
+(`r(0) ≥ 0 ⟺ entropyPower (X+Y) ≥ entropyPower X + entropyPower Y`). -/
+theorem csiszarLogRatioGap_at_zero {Ω : Type*} [MeasurableSpace Ω]
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) :
+    csiszarLogRatioGap X Y Z_X Z_Y P 0
+      = Real.log (entropyPower (P.map (fun ω => X ω + Y ω)))
+        - Real.log (entropyPower (P.map X) + entropyPower (P.map Y)) := by
+  unfold csiszarLogRatioGap
+  have h_sum_funext :
+      (fun ω => X ω + Y ω + Real.sqrt 0 * (Z_X ω + Z_Y ω))
+        = fun ω => X ω + Y ω := by
+    funext ω
+    simp [Real.sqrt_zero]
+  have h_X_funext :
+      (fun ω => X ω + Real.sqrt 0 * Z_X ω) = X := by
+    funext ω
+    simp [Real.sqrt_zero]
+  have h_Y_funext :
+      (fun ω => Y ω + Real.sqrt 0 * Z_Y ω) = Y := by
+    funext ω
+    simp [Real.sqrt_zero]
+  rw [h_sum_funext, h_X_funext, h_Y_funext]
+
 /-- **Rescale equivalence: 2-source `csiszarGap` ↔ 1-source `csiszarGap1Source`**
 (Phase D §13 A-0'-2).
 

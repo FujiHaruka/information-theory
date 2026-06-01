@@ -8,6 +8,7 @@ import Common2026.Shannon.DifferentialEntropy
 import Common2026.Shannon.HeatFlowPath
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
+import Mathlib.Analysis.SpecialFunctions.Log.Deriv
 import Mathlib.Analysis.SpecialFunctions.Pow.NNReal
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.Basic
@@ -658,6 +659,242 @@ theorem csiszar_ratio_deriv_le_zero_arith
     mul_pos hJX hJY, mul_pos hNX hJX, mul_pos hNY hJY,
     mul_nonneg (le_of_lt hNsum) (le_of_lt (mul_pos hJX hJY)),
     h_stam_poly, mul_le_mul_of_nonneg_right h_stam_poly (le_of_lt hNsum)]
+
+/-- **R-2 — log-ratio gap derivative**. The genuine monotone object
+`csiszarLogRatioGap` (`EPIL3Integration.lean`) has derivative
+
+  `(d/dt) csiszarLogRatioGap X Y Z_X Z_Y P t = J_sum − (N_X·J_X + N_Y·J_Y)/(N_X+N_Y)`
+
+at any `t > 0`, where `N_i = entropyPower (P.map path_i t)` and
+`J_i = fisherInfoOfDensityReal ((h_reg_i.reg_at t ht).density_t)`.
+
+Built from the three per-term `HasDerivAt (fun s => entropyPower (P.map path_i s))
+(N_i · J_i) t` (`csiszarGap1Source_hasDerivAt`'s building blocks via
+`entropyPower_hasDerivAt_of_diffEnt_hasDerivAt`), then `HasDerivAt.log` for the
+two log terms (`log N_sum`: deriv `(N_sum·J_sum)/N_sum = J_sum`; `log(N_X+N_Y)`:
+deriv `(N_X·J_X+N_Y·J_Y)/(N_X+N_Y)`), composed by `HasDerivAt.sub`.
+
+Honesty: `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free,
+the de Bruijn building block `deBruijn_identity_v2` is genuine); `h_reg_*` are
+regularity preconditions, no load-bearing bundling.
+@audit:ok -/
+theorem csiszarLogRatioGap_hasDerivAt
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
+    (hY : Measurable Y) (hZY : Measurable Z_Y) (hYZY : IndepFun Y Z_Y P)
+    (hXYZXY : IndepFun (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
+    {t : ℝ} (ht : 0 < t) :
+    HasDerivAt (fun s : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
+        X Y Z_X Z_Y P s)
+      (Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+            ((h_reg_sum.reg_at t ht).density_t)
+        - (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
+              * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                  ((h_reg_X.reg_at t ht).density_t)
+            + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω))
+              * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                  ((h_reg_Y.reg_at t ht).density_t))
+          / (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
+            + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)))) t := by
+  -- Per-term de Bruijn V2 derivatives (same building blocks as
+  -- `csiszarGap1Source_hasDerivAt`).
+  have h_dB_X :
+      HasDerivAt
+        (fun s : ℝ => Common2026.Shannon.differentialEntropy
+          (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z_X s)))
+        ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+          ((h_reg_X.reg_at t ht).density_t)) t :=
+    Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2 X Z_X hX hZX hXZX ht
+      (h_reg_X.reg_at t ht)
+  have h_dB_Y :
+      HasDerivAt
+        (fun s : ℝ => Common2026.Shannon.differentialEntropy
+          (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution Y Z_Y s)))
+        ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+          ((h_reg_Y.reg_at t ht).density_t)) t :=
+    Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2 Y Z_Y hY hZY hYZY ht
+      (h_reg_Y.reg_at t ht)
+  have h_dB_sum :
+      HasDerivAt
+        (fun s : ℝ => Common2026.Shannon.differentialEntropy
+          (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution
+                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) s)))
+        ((1/2) * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+          ((h_reg_sum.reg_at t ht).density_t)) t :=
+    Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2
+      (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω)
+      (hX.add hY) (hZX.add hZY) hXYZXY ht (h_reg_sum.reg_at t ht)
+  -- Lift to entropy-power form via the A-2-2 chain rule.
+  have h_eP_X := entropyPower_hasDerivAt_of_diffEnt_hasDerivAt h_dB_X
+  have h_eP_Y := entropyPower_hasDerivAt_of_diffEnt_hasDerivAt h_dB_Y
+  have h_eP_sum := entropyPower_hasDerivAt_of_diffEnt_hasDerivAt h_dB_sum
+  -- Abbreviations.
+  set J_X := Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+      ((h_reg_X.reg_at t ht).density_t) with hJX_def
+  set J_Y := Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+      ((h_reg_Y.reg_at t ht).density_t) with hJY_def
+  set J_sum := Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+      ((h_reg_sum.reg_at t ht).density_t) with hJsum_def
+  -- Normalize each per-term derivative to `entropyPower (P.map path_i) · J_i`.
+  -- `entropyPower μ = exp (2 * differentialEntropy μ)` is rfl, and
+  -- `gaussianConvolution X Z s = fun ω => X ω + √s · Z ω` is rfl, so the function
+  -- bodies already match `entropyPower (P.map (fun ω => ...))`. The derivative
+  -- value `exp(2h) * (2 * ((1/2) * J))` simplifies to `entropyPower · J`.
+  have hN_X :
+      HasDerivAt (fun s : ℝ => entropyPower (P.map (fun ω => X ω + Real.sqrt s * Z_X ω)))
+        (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω)) * J_X) t := by
+    have h_val :
+        entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω)) * J_X
+          = Real.exp (2 * Common2026.Shannon.differentialEntropy
+              (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z_X t)))
+            * (2 * ((1/2) * J_X)) := by
+      unfold entropyPower Common2026.Shannon.FisherInfoV2.gaussianConvolution
+      ring
+    rw [h_val]
+    exact h_eP_X
+  have hN_Y :
+      HasDerivAt (fun s : ℝ => entropyPower (P.map (fun ω => Y ω + Real.sqrt s * Z_Y ω)))
+        (entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)) * J_Y) t := by
+    have h_val :
+        entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)) * J_Y
+          = Real.exp (2 * Common2026.Shannon.differentialEntropy
+              (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution Y Z_Y t)))
+            * (2 * ((1/2) * J_Y)) := by
+      unfold entropyPower Common2026.Shannon.FisherInfoV2.gaussianConvolution
+      ring
+    rw [h_val]
+    exact h_eP_Y
+  have hN_sum :
+      HasDerivAt (fun s : ℝ => entropyPower
+          (P.map (fun ω => X ω + Y ω + Real.sqrt s * (Z_X ω + Z_Y ω))))
+        (entropyPower (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω))) * J_sum) t := by
+    have h_val :
+        entropyPower (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω))) * J_sum
+          = Real.exp (2 * Common2026.Shannon.differentialEntropy
+              (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution
+                        (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) t)))
+            * (2 * ((1/2) * J_sum)) := by
+      unfold entropyPower Common2026.Shannon.FisherInfoV2.gaussianConvolution
+      ring
+    rw [h_val]
+    exact h_eP_sum
+  -- Positivity of the entropy powers (for the `log` side conditions).
+  have hNX_pos : 0 < entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω)) :=
+    entropyPower_pos _
+  have hNY_pos : 0 < entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)) :=
+    entropyPower_pos _
+  have hNsum_pos : 0 < entropyPower
+      (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω))) := entropyPower_pos _
+  -- `log N_sum` derivative: `(N_sum · J_sum) / N_sum = J_sum`.
+  have h_log_sum :
+      HasDerivAt (fun s : ℝ => Real.log (entropyPower
+          (P.map (fun ω => X ω + Y ω + Real.sqrt s * (Z_X ω + Z_Y ω)))))
+        J_sum t := by
+    have h := hN_sum.log (ne_of_gt hNsum_pos)
+    rwa [mul_comm, mul_div_assoc, div_self (ne_of_gt hNsum_pos), mul_one] at h
+  -- `log (N_X + N_Y)` derivative: `(N_X·J_X + N_Y·J_Y)/(N_X+N_Y)`.
+  have h_add :
+      HasDerivAt (fun s : ℝ =>
+          entropyPower (P.map (fun ω => X ω + Real.sqrt s * Z_X ω))
+            + entropyPower (P.map (fun ω => Y ω + Real.sqrt s * Z_Y ω)))
+        (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω)) * J_X
+          + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)) * J_Y) t :=
+    hN_X.add hN_Y
+  have h_log_add :
+      HasDerivAt (fun s : ℝ => Real.log
+          (entropyPower (P.map (fun ω => X ω + Real.sqrt s * Z_X ω))
+            + entropyPower (P.map (fun ω => Y ω + Real.sqrt s * Z_Y ω))))
+        ((entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω)) * J_X
+            + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)) * J_Y)
+          / (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
+            + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)))) t :=
+    h_add.log (ne_of_gt (add_pos hNX_pos hNY_pos))
+  -- Combine via `.sub` and match the `csiszarLogRatioGap` body.
+  have h_combined := h_log_sum.sub h_log_add
+  unfold InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
+  exact h_combined
+
+/-- **R-3 — `r'(t) ≤ 0` from 1-source Stam** (genuine successor of the
+false-as-framed `csiszarGap1Source_deriv_le_zero`).
+
+The log-ratio gap derivative `J_sum − (N_X·J_X + N_Y·J_Y)/(N_X+N_Y) ≤ 0` follows
+from the 1-source Stam inequality (extracted as plain harmonic Stam
+`1/J_sum ≥ 1/J_X + 1/J_Y`) plus positivity, via the pure-arithmetic core
+`csiszar_ratio_deriv_le_zero_arith`. Unlike the difference-gap form, this RATIO
+form IS genuinely closable from plain Stam (weights `α = N_X/(N_X+N_Y)`,
+`β = N_Y/(N_X+N_Y)`, `α²≤α`).
+
+`h_stam` is the genuine Stam residual (Mathlib wall, separate `Prop` from EPI),
+`h_reg_*` are regularity preconditions — no load-bearing bundling.
+-- @audit:residual-ok(sufficiency-checked 2026-06-01): ratio 形 `(N_X+N_Y)` 分母で
+-- genuine (前任 difference 形 `N_sum` の反例は本形に無い)。arith core
+-- `csiszar_ratio_deriv_le_zero_arith` が plain Stam から閉じる (slack `N_X·J_X²+N_Y·J_Y²≥0`)。
+-- 残 gap = `h_stam`(IsStamInequalityHyp) から plain Stam を取り出す density-identification
+-- plumbing のみ (`plan:` 分類 correct、`wall:` ではない)。 -/
+theorem csiszarLogRatioGap_deriv_le_zero
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
+    {t : ℝ} (ht : 0 < t)
+    (hJX_pos : 0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                      ((h_reg_X.reg_at t ht).density_t))
+    (hJY_pos : 0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                      ((h_reg_Y.reg_at t ht).density_t))
+    (hJsum_pos : 0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                        ((h_reg_sum.reg_at t ht).density_t))
+    (h_stam : InformationTheory.Shannon.EPIStamDischarge.IsStamInequalityHyp
+                (fun ω => X ω + Real.sqrt t * Z_X ω)
+                (fun ω => Y ω + Real.sqrt t * Z_Y ω) P) :
+    Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+          ((h_reg_sum.reg_at t ht).density_t)
+        - (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
+              * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                  ((h_reg_X.reg_at t ht).density_t)
+            + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω))
+              * Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+                  ((h_reg_Y.reg_at t ht).density_t))
+          / (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
+            + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)))
+      ≤ 0 := by
+  -- Abbreviations for the three Fisher infos and two entropy powers.
+  set J_X := Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+      ((h_reg_X.reg_at t ht).density_t) with hJX_def
+  set J_Y := Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+      ((h_reg_Y.reg_at t ht).density_t) with hJY_def
+  set J_sum := Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+      ((h_reg_sum.reg_at t ht).density_t) with hJsum_def
+  set N_X := entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω)) with hNX_def
+  set N_Y := entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)) with hNY_def
+  -- Positivity of the entropy powers.
+  have hNX_pos : 0 < N_X := entropyPower_pos _
+  have hNY_pos : 0 < N_Y := entropyPower_pos _
+  -- Plain harmonic Stam `1/J_sum ≥ 1/J_X + 1/J_Y` extracted from `h_stam`.
+  -- `h_stam : IsStamInequalityHyp (X+√t·Z_X) (Y+√t·Z_Y) P` is the genuine Stam
+  -- residual; applying it requires identifying the three Fisher infos with the
+  -- `fisherInfoOfMeasureV2 (P.map _) _).toReal` slots at regular density witnesses
+  -- (`fisherInfoOfDensityReal f = (fisherInfoOfMeasureV2 _ f).toReal` is `rfl`),
+  -- and discharging its regularity preconditions (`IsRegularDensityV2`,
+  -- normalization `∫ f = 1`, the pointwise convolution constraint
+  -- `fXY = convDensityAdd fX fY`, and `IsBlachmanConvReady fX fY`). Those
+  -- density-identification inputs are not packaged by `IsDeBruijnRegularityHyp`
+  -- and exceed R-3's budget to assemble inline (L-Ratio-3-α). This is a genuine
+  -- algebra-atom plumbing gap, NOT a false statement (the difference-gap form was
+  -- false; this ratio form IS closable from plain Stam — see arith core
+  -- `csiszar_ratio_deriv_le_zero_arith`).
+  have h_plain_stam : 1 / J_sum ≥ 1 / J_X + 1 / J_Y := by
+    -- @residual(plan:epi-csiszar-ratio-reframe-plan)
+    sorry
+  -- The genuine arithmetic core closes the goal from plain Stam + positivity.
+  exact csiszar_ratio_deriv_le_zero_arith J_X J_Y J_sum N_X N_Y
+    hJX_pos hJY_pos hJsum_pos hNX_pos hNY_pos h_plain_stam
 
 /-- **A-3 — `g'(t) ≤ 0` from 1-source Stam**.
 
