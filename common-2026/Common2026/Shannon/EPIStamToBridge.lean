@@ -654,26 +654,31 @@ weighted Cauchy-Schwarz of Cover-Thomas eq.(17.43) may compress to
 retreat line **L-Concl-A-ζ** (downgraded) externalises the weighted
 inequality as a 1-source predicate `IsCsiszarScalingWeightHyp1Source`.
 
-audit:PASS 2026-05-27 by honesty-auditor (independent):
-- Signature non-circular: conclusion `eP_sum · J_sum - eP_X · J_X - eP_Y · J_Y ≤ 0`
-  differs from every hypothesis form (`IsStamInequalityHyp` outputs
-  `1/J_sum ≥ 1/J_X + 1/J_Y`; `IsDeBruijnRegularityHyp` is a regularity
-  structure carrying density / derivative witnesses; positivity hyps are
-  strict `0 <` Fisher info). No `:= h` shortcut available.
-- No `*Hypothesis` core-bundling: load-bearing content (algebraic discharge
-  from harmonic-mean Stam to weighted form) lives in the proof body
-  (`sorry`), not in a fresh hypothesis predicate.
-- Residual class `plan:epi-stam-to-conclusion-phaseA-A3` correct: plan file
-  `docs/shannon/epi-stam-to-conclusion-phaseA-plan.md` §A-3 (line 405) +
-  Sub-bound table line 740 describe the genuine discharge route + L-Concl-A-ζ
-  retreat. Class is `plan:*` (in-house algebraic step), not `wall:*`
-  (Mathlib gap) — both Stam inequality and `entropyPower` weighting are
-  in-house content, no Mathlib gap is being papered over.
+**⚠ FALSE-AS-FRAMED (2026-06-01, orchestrator + independent proof-pivot-advisor)**.
+The conclusion `eP_sum · J_sum ≤ eP_X · J_X + eP_Y · J_Y` (the DIFFERENCE-gap
+`g(t) = N_sum − N_X − N_Y` derivative) does **NOT** follow from the stated
+hypotheses (plain harmonic Stam `1/J_sum ≥ 1/J_X + 1/J_Y` + positivity +
+regularity). The entropy powers `N_i` are unconstrained positive reals as far as
+`h_stam` is concerned, so the inequality has an explicit counterexample (fix the
+`J`'s satisfying Stam, take `N_sum` huge / `N_X, N_Y` tiny — all hypotheses hold,
+conclusion fails). The classical Blachman/Dembo–Cover–Thomas EPI argument proves
+monotonicity of the **RATIO** `N_sum/(N_X+N_Y)`, i.e.
+`(N_X+N_Y)·J_sum ≤ N_X·J_X + N_Y·J_Y` (note `N_X+N_Y`, not `N_sum`). Since EPI
+gives `N_sum ≥ N_X+N_Y`, the difference form is strictly stronger and goes the
+wrong way. The RATIO form IS genuinely closable from plain Stam in-house
+(weights `α = N_X/(N_X+N_Y)`, `β = N_Y/(N_X+N_Y)`: harmonic Stam gives
+`J_sum ≤ α²J_X + β²J_Y ≤ αJ_X + βJ_Y = (N_X J_X + N_Y J_Y)/(N_X+N_Y)`, using
+`α²≤α`). **Fix = reframe `csiszarGap1Source` to the log-ratio form**
+(Mathlib-shape-driven), blast radius on the difference-gap chain
+(`csiszarGap_eq_one_source_via_rescale`, `csiszarGap1Source_antitoneOn_Ici_zero`,
+etc.). Tracked by successor plan (see `@audit:closed-by-successor`).
 
-Signature stable; body deferred as `sorry` with
-`@residual(plan:epi-stam-to-conclusion-phaseA-plan)` — sub-step A-3
-(weighted-form algebraic discharge from Stam harmonic-mean to
-`eP_sum · J_sum ≤ eP_X · J_X + eP_Y · J_Y`, see body comment). -/
+The earlier `audit:PASS 2026-05-27` was a **false negative**: it verified
+non-circularity + non-bundling but NOT sufficiency (hypotheses ⊢ conclusion).
+Do NOT attempt to close this `sorry` as-stated — it is not closable.
+
+@audit:defect(false-statement) @audit:closed-by-successor(epi-csiszar-ratio-reframe-plan)
+Signature retained as defect marker pending the ratio reframe. -/
 theorem csiszarGap1Source_deriv_le_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -726,7 +731,8 @@ theorem csiszarGap1Source_deriv_le_zero
   -- monotonicity, but in the worst case factors out as a separate
   -- staged predicate (L-Concl-A-ζ).
   sorry
-  -- @residual(plan:epi-stam-to-conclusion-phaseA-plan) -- sub-step A-3
+  -- @audit:defect(false-statement) — difference-gap deriv NOT provable from plain Stam;
+  -- ratio reframe needed. @audit:closed-by-successor(epi-csiszar-ratio-reframe-plan)
 
 /-! ## §2'''' — Phase A A-4: `AntitoneOn` lift + `IsStamToEPIScalingHyp` constructor
 
