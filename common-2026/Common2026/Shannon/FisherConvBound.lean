@@ -9,11 +9,13 @@ import Mathlib.MeasureTheory.Measure.Prod                    -- lintegral_linteg
 import Mathlib.Probability.Distributions.Gaussian.Real       -- variance_fun_id_gaussianReal / integral_gaussianReal_eq_integral_smul
 
 /-!
-# Shared Mathlib wall — Stam convolution Fisher bound `J(pX ∗ g_s) ≤ 1/s`
+# Stam convolution Fisher bound `J(pX ∗ g_s) ≤ 1/s` (GENUINELY CLOSED 2026-06-01)
 
-EPI per-time de Bruijn line の shared 壁集約点 (`wall:fisher-finiteness`,
+EPI per-time de Bruijn line の former shared 壁 (`wall:fisher-finiteness`,
 `docs/audit/audit-tags.md:70`)。Stam/Blachman の score-of-convolution monotonicity
 `J(X + √s·Z) ≤ J(√s·Z) = J(𝒩(0,s)) = 1/s` を任意確率密度 `pX` (重い裾含む) で述べる。
+**2026-06-01 closure**: pointwise Cauchy-Schwarz route で genuine 化 (sorryAx-free)。
+`gaussianConv_fisher_le_inv_var` 内 active `@residual(wall:fisher-finiteness)` は 0 件。
 
 ## closure route (pointwise Cauchy-Schwarz, 2026-06-01)
 
@@ -66,6 +68,25 @@ theorem integral_sq_mul_gaussianPDFReal {s : ℝ} (hs : 0 < s) :
         (integral_gaussianReal_eq_integral_smul (μ := 0) (f := fun u => u ^ 2) hv_ne).symm
     _ = ∫ u, (u - 0) ^ 2 ∂(gaussianReal 0 ⟨s, hs.le⟩) := by simp
     _ = s := by rw [hvar]
+
+/-- **Gaussian second moment integrability over `volume`**: `u ↦ u² · g_s(u)` is integrable
+(`u²` is `MemLp 2` under `gaussianReal 0 s`, transported to `volume` via the withDensity bridge). -/
+theorem integrable_sq_mul_gaussianPDFReal {s : ℝ} (hs : 0 < s) :
+    Integrable (fun u => u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u) volume := by
+  have hv_ne : (⟨s, hs.le⟩ : ℝ≥0) ≠ 0 := by
+    intro h; exact hs.ne' (congrArg NNReal.toReal h)
+  -- `u² = id² ∈ L²(gaussianReal)`, hence integrable under `gaussianReal`.
+  have hmem : MemLp (id : ℝ → ℝ) 2 (gaussianReal 0 ⟨s, hs.le⟩) := memLp_id_gaussianReal 2
+  have hsq_int : Integrable (fun u => u ^ 2) (gaussianReal 0 ⟨s, hs.le⟩) := by
+    have := (memLp_two_iff_integrable_sq (μ := gaussianReal 0 ⟨s, hs.le⟩)
+      (f := (id : ℝ → ℝ)) measurable_id.aestronglyMeasurable).mp hmem
+    simpa using this
+  -- transport to `volume` via `gaussianReal = volume.withDensity gaussianPDF`.
+  rw [gaussianReal_of_var_ne_zero _ hv_ne] at hsq_int
+  rw [integrable_withDensity_iff (measurable_gaussianPDF _ _)
+    (ae_of_all _ fun _ => gaussianPDF_lt_top)] at hsq_int
+  refine hsq_int.congr (Filter.Eventually.of_forall fun u => ?_)
+  simp only [gaussianPDF, ENNReal.toReal_ofReal (gaussianPDFReal_nonneg _ _ _)]
 
 /-- **Per-`x` second-moment integrability**: `y ↦ (x-y)² · pX y · g_s(x-y)` is integrable
 (`(x-y)² g_s(x-y)` is a bounded poly×Gaussian, hence `≤ C·|pX y|`, integrable). -/
@@ -351,18 +372,100 @@ theorem convLogDeriv_sq_mul_le
       ≤ p_s x * ∫ y, (x - y) ^ 2 * (pX y * g (x - y)) ∂volume := hCS
     _ = (∫ y, (x - y) ^ 2 * (pX y * g (x - y)) ∂volume) * p_s x := by ring
 
-/-- **Shared Mathlib wall: Stam convolution Fisher bound** `J(pX ∗ g_s) ≤ 1/s`.
+/-- **Stam convolution Fisher bound (GENUINELY CLOSED)** `J(pX ∗ g_s) ≤ 1/s`.
 任意確率密度 pX (重い裾含む) で成立。EPI per-time line の 2 consumer を gate
 (`convDensityAdd_fisher_integrable` / `_chain_ibp_fisher` via それ)。
 
-closure route: pointwise Cauchy-Schwarz (file docstring 参照)。
-@residual(wall:fisher-finiteness) -/
+**Closure (2026-06-01)**: former `wall:fisher-finiteness` 唯一 carrier、pointwise Cauchy-Schwarz
+route で genuine 化 (file docstring の 4 step)。`#print axioms` = `[propext, Classical.choice,
+Quot.sound]` (sorryAx-free)。証明の核は全て本 body 内 (Step1 deriv1 formula `convDensityAdd_deriv_eq`,
+Step2 CS `convScore_sq_le_pointwise`, Step3 per-point `convLogDeriv_sq_mul_le`, Step4 Tonelli +
+Gaussian moment `integral_sq_mul_gaussianPDFReal = s`)。`hpX_nn`/`hpX_meas`/`hpX_int`/`hpX_mass`/`hs`
+は全て pX regularity precondition (`hpX_mass : ∫pX=1` = probability density 正規化、load-bearing でない)。 -/
 theorem gaussianConv_fisher_le_inv_var
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
     {s : ℝ} (hs : 0 < s) :
     fisherInfoOfDensity (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩))
       ≤ ENNReal.ofReal (1 / s) := by
-  sorry -- @residual(wall:fisher-finiteness)
+  set g : ℝ → ℝ := gaussianPDFReal 0 ⟨s, hs.le⟩ with hg_def
+  set p_s : ℝ → ℝ := convDensityAdd pX g with hp_def
+  have hps_nn : ∀ x, 0 ≤ p_s x := fun x =>
+    integral_nonneg fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _)
+  -- second-moment integrand `K x y := (x-y)²·(pX y · g(x-y)) ≥ 0`.
+  set K : ℝ → ℝ → ℝ := fun x y => (x - y) ^ 2 * (pX y * g (x - y)) with hK_def
+  have hK_nn : ∀ x y, 0 ≤ K x y := fun x y =>
+    mul_nonneg (sq_nonneg _) (mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _))
+  have hK_int : ∀ x, Integrable (fun y => K x y) volume := fun x => by
+    simpa [hK_def, hg_def] using convSecondMoment_integrand_integrable pX hpX_meas hpX_int hs x
+  -- Step 3: merge the Fisher lintegrand to `ofReal((logDeriv)²·p_s)`.
+  have hmerge : fisherInfoOfDensity p_s
+      = ∫⁻ x, ENNReal.ofReal ((logDeriv p_s x) ^ 2 * p_s x) ∂volume := by
+    unfold fisherInfoOfDensity
+    refine lintegral_congr fun x => ?_
+    rw [← ENNReal.ofReal_mul (sq_nonneg _)]
+  rw [hmerge]
+  -- Step 3 bound: pointwise `≤ ofReal((1/s²)·∫ K x y dy)`.
+  have hpt : ∀ x, ENNReal.ofReal ((logDeriv p_s x) ^ 2 * p_s x)
+      ≤ ENNReal.ofReal ((1 / s ^ 2) * ∫ y, K x y ∂volume) := by
+    intro x
+    refine ENNReal.ofReal_le_ofReal ?_
+    have := convLogDeriv_sq_mul_le pX hpX_nn hpX_meas hpX_int hpX_mass hs x
+    rw [← hg_def, ← hp_def] at this
+    simpa [hK_def] using this
+  refine (lintegral_mono hpt).trans ?_
+  -- Step 4: convert to `ofReal(1/s²) · ∫⁻ x ofReal(∫ K x y dy)`, Tonelli, inner moment = s.
+  have hrw : ∀ x, ENNReal.ofReal ((1 / s ^ 2) * ∫ y, K x y ∂volume)
+      = ENNReal.ofReal (1 / s ^ 2) * ∫⁻ y, ENNReal.ofReal (K x y) ∂volume := by
+    intro x
+    rw [ENNReal.ofReal_mul (by positivity),
+      ofReal_integral_eq_lintegral_ofReal (hK_int x)
+        (Filter.Eventually.of_forall fun y => hK_nn x y)]
+  -- measurability of `(x,y) ↦ ofReal (K x y)` and the inner integral.
+  have hKofReal_meas : Measurable (fun p : ℝ × ℝ => ENNReal.ofReal (K p.1 p.2)) := by
+    refine ENNReal.measurable_ofReal.comp ?_
+    refine ((measurable_fst.sub measurable_snd).pow_const 2).mul ?_
+    exact (hpX_meas.comp measurable_snd).mul
+      ((measurable_gaussianPDFReal 0 ⟨s, hs.le⟩).comp (measurable_fst.sub measurable_snd))
+  simp_rw [hrw]
+  rw [lintegral_const_mul _ hKofReal_meas.lintegral_prod_right]
+  -- Tonelli swap: `∫⁻ x ∫⁻ y ofReal(K x y) = ∫⁻ y ∫⁻ x ofReal(K x y)`.
+  have hswap : (∫⁻ x, ∫⁻ y, ENNReal.ofReal (K x y) ∂volume ∂volume)
+      = ∫⁻ y, ∫⁻ x, ENNReal.ofReal (K x y) ∂volume ∂volume :=
+    lintegral_lintegral_swap hKofReal_meas.aemeasurable
+  rw [hswap]
+  -- shifted Gaussian-moment integrability: `x ↦ (x-y)²·g(x-y)` is integrable (for each y).
+  have hmom_int : Integrable (fun u => u ^ 2 * g u) volume := by
+    simpa [hg_def] using integrable_sq_mul_gaussianPDFReal hs
+  have hshift_int : ∀ y, Integrable (fun x => (x - y) ^ 2 * g (x - y)) volume := fun y =>
+    hmom_int.comp_sub_right y
+  -- shifted Gaussian moment value: `∫_x (x-y)²·g(x-y) = ∫ u²·g(u) = s`.
+  have hshift_val : ∀ y, (∫ x, (x - y) ^ 2 * g (x - y) ∂volume) = s := by
+    intro y
+    rw [integral_sub_right_eq_self (fun u => u ^ 2 * g u) y]
+    simpa [hg_def] using integral_sq_mul_gaussianPDFReal hs
+  -- inner moment: `∫⁻ x ofReal(K x y) = ofReal(pX y · s)`.
+  have hinner : ∀ y, (∫⁻ x, ENNReal.ofReal (K x y) ∂volume) = ENNReal.ofReal (pX y * s) := by
+    intro y
+    -- `K x y = pX y · ((x-y)²·g(x-y))`, so `∫_x K x y = pX y · ∫_x (x-y)²g(x-y) = pX y · s`.
+    have hxint : Integrable (fun x => K x y) volume := by
+      refine ((hshift_int y).const_mul (pX y)).congr (Filter.Eventually.of_forall fun x => ?_)
+      simp only [hK_def]; ring
+    rw [← ofReal_integral_eq_lintegral_ofReal hxint (Filter.Eventually.of_forall fun x => hK_nn x y)]
+    congr 1
+    rw [show (fun x => K x y) = (fun x => pX y * ((x - y) ^ 2 * g (x - y))) from by
+      funext x; simp only [hK_def]; ring, integral_const_mul, hshift_val y]
+  simp_rw [hinner]
+  -- `∫⁻ y ofReal(pX y · s) = ofReal(∫ pX·s) = ofReal(s·∫pX) = ofReal s` (hpX_mass).
+  have houter : (∫⁻ y, ENNReal.ofReal (pX y * s) ∂volume) = ENNReal.ofReal s := by
+    rw [← ofReal_integral_eq_lintegral_ofReal (hpX_int.mul_const s)
+      (Filter.Eventually.of_forall fun y => mul_nonneg (hpX_nn y) hs.le)]
+    congr 1
+    rw [integral_mul_const, hpX_mass, one_mul]
+  rw [houter]
+  -- `ofReal(1/s²)·ofReal(s) = ofReal(1/s²·s) = ofReal(1/s)`.
+  rw [← ENNReal.ofReal_mul (by positivity)]
+  refine le_of_eq (congrArg ENNReal.ofReal ?_)
+  field_simp
 
 end Common2026.Shannon.FisherInfoV2
