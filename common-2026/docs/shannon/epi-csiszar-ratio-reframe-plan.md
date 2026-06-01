@@ -17,7 +17,8 @@
 - [x] Phase R-1 — gap の log-ratio 再定義 (`csiszarLogRatioGap` 新 def) ✅ **genuine, proof-done** (`EPIL3Integration.lean:~1353`、`csiszarLogRatioGap_at_zero` `:1363` genuine)
 - [x] Phase R-2 — ratio derivative lemma 再述 (chain rule → `r'(t)` form) ✅ **genuine, `@audit:ok`** (`EPIStamToBridge.lean:681`、独立 `#print axioms` で sorryAx-free)
 - [x] Phase R-3 — genuine `r'(t) ≤ 0` 🚧 **type-check done (1 sorry)** (`EPIStamToBridge.lean:839`、arith core 配線 + 5 正値性 genuine、sufficiency 監査 PASS。残 sorry = `h_plain_stam` 抽出 `:892` のみ、`@residual(plan:epi-csiszar-ratio-reframe-plan)`)
-- [ ] **Phase R-3′ — density-identification bridge** (R-3 残 sorry `h_plain_stam` の closure。`IsStamInequalityHyp` consumer plumbing、Mathlib 壁ではない in-house bridge) 📋 🎯 **NEXT — R-3 closure の真のボトルネック**
+- [x] ~~**Phase R-3′ — density-identification bridge**~~ ❌ **撤退済 (2026-06-01 Wave 3、L-Ratio-3′-α 発火)** — bridge 案 infeasible 判明。M0′ verbatim 照合でルート A・B 両 infeasible 確定 (実装着手前)。詳細 → §Phase R-3′
+- [ ] **Phase R-3″ — `IsStamInequalityHyp` 結論形 pivot (predicate reshape)** 🎯 **NEXT** — R-3 残 sorry `h_plain_stam` の真の closure 路。bridge 構築ではなく predicate の witness ∀-量化結論形を measure-level 直接形に書換える def-pivot。**別 sub-plan へ委譲** (slug 案 `epi-stam-predicate-reshape-plan`)。当該 predicate を参照する全 producer/consumer の blast radius 精査が要る 📋
 - [ ] Phase R-4 — endpoint `r(1) = 0` (Gaussian saturation) + `r(0) ≥ 0 ⟺ EPI` の橋渡し 📋
 - [ ] Phase R-5 — `AntitoneOn` lift + 旧 difference-gap chain の再配線 (blast-radius 消化) 📋
 - [ ] Phase R-6 — auditor doctrine に「sufficiency (hyp ⊢ concl)」check 追加の提案 (docs-only) 📋
@@ -66,8 +67,10 @@ M0 在庫 ──▶ R-1 csiszarLogRatioGap 新 def ✅ genuine
                  │         │
                  │         └──▶ R-3 r'(t) ≤ 0  🚧 type-check done (arith core genuine, sufficiency PASS)
                  │                   │
-                 │                   └──▶ R-3′ density-identification bridge 🎯 NEXT
-                 │                            (h_plain_stam closure = IsStamInequalityHyp consumer plumbing)
+                 │                   ├──▶ R-3′ density-identification bridge ❌ 撤退 (L-Ratio-3′-α、bridge 案 infeasible)
+                 │                   │        (M0′ verbatim 照合: ルート A/B 両 infeasible、IsStamInequalityHyp witness ∀-量化結論形が赤フラグ)
+                 │                   └──▶ R-3″ IsStamInequalityHyp 結論形 pivot 🎯 NEXT (別 sub-plan へ委譲)
+                 │                            (predicate def 書換 = witness ∀-量化 → measure-level 直接形)
                  │
                  └──▶ R-4 endpoint r(1)=0 + r(0)≥0 ⟺ EPI 橋
                           │
@@ -76,8 +79,16 @@ R-6 (docs-only): auditor doctrine 強化提案
 ```
 
 R-1/R-2 genuine 完成、R-3 は arith core まで genuine (sufficiency 監査 PASS)。**残ボトルネック =
-R-3′**: R-3 の唯一の sorry `h_plain_stam` を `IsStamInequalityHyp` consumer plumbing で閉じる。
-これが整えば ratio monotonicity atom が完成し R-4/R-5 が unblock される。
+R-3 の唯一の sorry `h_plain_stam`**。当初これは「`IsStamInequalityHyp` consumer plumbing
+(bridge) で閉じる」(= R-3′) と見込んだが、**2026-06-01 Wave 3 で R-3′ bridge 案は撤退**
+(L-Ratio-3′-α 発火)。M0′ verbatim 照合でルート A (consumer plumbing) / ルート B (producer 直呼び)
+**両方 infeasible** と確定 — `IsStamInequalityHyp` の **witness ∀-量化 結論形が赤フラグ**で、
+consume するには 4 系統 (`IsRegularDensityV2`×2 / `∫=1`×2 / cross-source convolution 同定 /
+Blachman 19-field) が consumer に再浮上し、うち 2 つ (一般 density Blachman = Gaussian 専用 producer のみ
+≈Mathlib 壁級、cross-source convolution 同定 = single-source structure で原理的に表現不能) が
+closure 不能。真の closure 路は **R-3″ = `IsStamInequalityHyp` の結論形を measure-level 直接形に
+pivot する def 書換** (別 sub-plan へ委譲)。これが整えば ratio monotonicity atom が完成し R-4/R-5 が
+unblock される。
 
 ## 設計判断: redefine vs new def
 
@@ -359,9 +370,34 @@ convolution 同定も含まない** (verbatim 確認: 上記 4 field のみ、de
 | `∀ x, fXY x = convDensityAdd fX fY x` | ❌ DeBruijn は convolution 同定を持たない | **これが核**: path_sum の density が path_X / path_Y の density の畳み込みであること。独立性 `IndepFun path_X path_Y P` (R-3 では `Z_X, Z_Y` 独立 + X,Y 構造) から `convDensityAdd` 表示を出す |
 | `IsBlachmanConvReady fX fY` | ❌ DeBruijn は Blachman バンドルを持たない | Blachman 19-field を density から構成 (in-house、`isBlachmanConvReady_*` 系 producer があるか §5 で照合) |
 
-#### 5. ★ 重要な省略経路 — 既存 producer `isStamInequalityHyp_via_step3` を使う
+#### 5. ★ 省略経路 (当初の楽観) — 既存 producer `isStamInequalityHyp_via_step3`
 
-**gap table を直接埋める必要はおそらく無い**。in-tree に `IsStamInequalityHyp` の genuine producer が既にある:
+> **⚠️ 検証結果で訂正 (2026-06-01 Wave 3、L-Ratio-3′-α)**: 本節は起草時、producer 直呼び
+> (ルート B) が consumer 側の density 入力供給 (gap table ❌ 行) を **回避できる**という楽観を
+> 述べていた。M0′ verbatim 照合の結果 **この楽観は誤り** — `isStamInequalityHyp_via_step3` /
+> `isStamInequalityHyp_via_body` は `IsStamInequalityHyp X Y P` という **∀-量化 Prop を返すだけ**で、
+> producer を呼んでも `1/J_sum ≥ 1/J_X+1/J_Y` を取り出す **apply step は同一**。apply 時に
+> witness `(J_X J_Y J_sum fX fY fXY)` + 4 系統 antecedent (`IsRegularDensityV2`×2 / `∫=1`×2 /
+> convolution 同定 / Blachman) が consumer (R-3) に **再浮上する** (= ルート A と同じ ❌ 行)。
+> producer 内部は regularity 入力を `intro` してから使う設計だが、それらの入力はどこでも
+> discharge されず最終 consumer (R-3) 任せ。**ルート B もルート A と同じ apply 問題に帰着、
+> 回避不能**。詳細な root cause は §8 撤退ライン参照。
+>
+> **致命傷 2 点 (closure 不能)**:
+> 1. **cross-source convolution 同定** `density(path_sum) = convDensityAdd (density path_X) (density path_Y)`:
+>    該当 in-house 補題が **不在** (`EPIConvDensity*.lean` は Gaussian 微分系のみ)。さらに
+>    `IndepFun path_X path_Y P` を要するが **R-3 の仮説に存在しない** (上流 `_antitoneOn_Ici_zero`
+>    にはあるが R-3 まで thread されていない)。`IsDeBruijnRegularityHyp X Z P` は **single-source
+>    structure** なので、path_X と path_Y の独立性を要する cross-source convolution は field 追加でも
+>    **原理的に表現不能**。
+> 2. **一般 density `IsBlachmanConvReady`**: producer は `isBlachmanConvReady_gaussianPDFReal`
+>    (**Gaussian 専用**、`EPIBlachmanGaussianWitness.lean:335`) + `_symm` のみ。一般 path density 用
+>    producer は **不在**、>>60 行で実質 **Mathlib 壁相当**。
+>
+> `IsRegularDensityV2` / `∫=1` は `IsRegularDeBruijnHypV2.density_t` (+ `density_t_eq`) から導出余地
+> ありだが、上記 2 つが closure 不能なため bridge 案全体が頓挫。
+
+**(以下は起草時の楽観記述、履歴として残置)** in-tree に `IsStamInequalityHyp` の genuine producer が既にある:
 
 ```lean
 -- Common2026/Shannon/EPIStamStep3Body.lean:119  (@audit:ok, sorryAx-free)
@@ -407,7 +443,17 @@ producer 内に隠れているか consumer に出てくるかを M0′ で verba
 
 #### 6. Mathlib 壁か in-house plumbing か (判定)
 
-**in-house density-identification plumbing、Mathlib 不在の壁ではない** (独立 auditor 評価と一致)。
+> **⚠️ 注釈追加 (2026-06-01 Wave 3、L-Ratio-3′-α)**: 本節の「純 in-house plumbing、Mathlib 壁
+> ではない」判定は **partial に訂正**。M0′ verbatim 照合で、plumbing が closure 不能な 2 つの gap に
+> 接続していると判明: (a) **一般 density Blachman** (Gaussian 専用 producer のみ、一般 path density 用
+> producer 不在 → ~Mathlib 壁級)、(b) **cross-source convolution 同定** (single-source
+> `IsDeBruijnRegularityHyp` structure では path_X/path_Y 独立性を要する convolution が原理的に
+> 表現不能 + 該当 in-house 補題不在)。よって R-3′ は **純 plumbing ではなく**、`IsStamInequalityHyp`
+> の **結論形 def-pivot** が本筋 (R-3″ = 別 sub-plan)。R-3 の `@residual` 分類は **`plan:` のままで
+> 良い** (closure は def 書換 = plan 作業であり Mathlib 壁の新規追加ではない) が、接続先に壁級 gap が
+> あること + 真の closure 路が bridge ではなく predicate reshape であることを明記。
+
+**(以下は起草時判定、上記注釈で訂正)** in-house density-identification plumbing、Mathlib 不在の壁ではない (独立 auditor 評価と一致)。
 根拠:
 - `IsStamInequalityHyp` の core 不等式 `1/J_sum ≥ 1/J_X+1/J_Y` は既に `stam_step2_density_wall`
   経由で genuine 閉 (`@audit:ok`、Stam 壁 `stam-step2-density` は CLOSED 相当)。
@@ -417,9 +463,12 @@ producer 内に隠れているか consumer に出てくるかを M0′ で verba
 - → classification `@residual(plan:epi-csiszar-ratio-reframe-plan)` が **正しい** (`wall:` ではない)。
   本 plan が closure 担当。
 
-#### 7. Phase 詳細 (step)
+#### 7. Phase 詳細 (step) — ❌ 全 step 撤退 (M0′ で bridge infeasible 確定、R-3′-1/2/3 着手せず)
 
-- [ ] **M0′** — 在庫照合 (proof-log: no):
+> M0′ 在庫照合の結果ルート A・B 両 infeasible (§5 訂正 + §8 参照)。実装 step R-3′-1/2/3 は
+> **着手せず撤退**。後継は R-3″ (predicate reshape、別 sub-plan)。
+
+- [x] **M0′** — 在庫照合 (proof-log: no) ✅ **完了 → bridge infeasible 確定**:
   - `IsRegularDeBruijnHypV2` (`FisherInfoV2*`) を Read し、`.density_t` が `IsRegularDensityV2` を
     満たすか / `P.map path` の density である保証を持つかを verbatim 確認。
   - `isStamInequalityHyp_via_step3` / `_via_body` / `stam_step2_density_wall` の signature を Read し、
@@ -427,29 +476,74 @@ producer 内に隠れているか consumer に出てくるかを M0′ で verba
   - `IsStamInequalityHyp` を apply する既存パターン (producer 内部の `intro` 後の使い方) を読み、
     consumer 側 apply で残る ❌ 入力を確定。
   - ルート A / B のコスト比較 → どちらを採るか決定。
-- [ ] **R-3′-1** — (ルート B 採用時) `EPIStamToBridge.lean` に `import Common2026.Shannon.EPIStamStep3Body`
-    追加 (cycle 無し確認済)、`csiszarLogRatioGap_deriv_le_zero` の `h_stam` 引数を producer 呼出に
-    置換 or `h_plain_stam` を `h_stam` apply + producer-supplied regularity で genuine 化。
-- [ ] **R-3′-2** — (ルート A 採用時) gap table の ❌ 入力 (`IsRegularDensityV2` / `∫=1` /
-    convolution / Blachman) を `IsDeBruijnRegularityHyp` + `IndepFun` + `IsProbabilityMeasure P`
-    から供給する bridge 補題群を `EPIStamToBridge.lean` (or 新規 `EPIStamDensityBridge.lean`) に追加。
-- [ ] **R-3′-3** — `h_plain_stam` の `sorry` を除去、`csiszarLogRatioGap_deriv_le_zero` を 0 sorry に。
-    `#print axioms csiszarLogRatioGap_deriv_le_zero` で sorryAx-free 確認 → `@audit:ok` 申請
-    (独立 honesty audit 起動)。
+  - **結果 (2026-06-01 Wave 3)**: ルート A・B **両 infeasible**。ルート B (producer 直呼び) も
+    apply step で ❌ 入力が再浮上し、ルート A と同じ gap に帰着 (§5 訂正参照)。bridge 案全体が頓挫。
+- [ ] ~~**R-3′-1** (ルート B)~~ — ❌ 撤退 (producer 直呼びでも apply 問題回避不能)。
+- [ ] ~~**R-3′-2** (ルート A)~~ — ❌ 撤退 (cross-source convolution が single-source structure で
+    表現不能 + 一般 density Blachman producer 不在で gap 補題が組めない)。
+- [ ] ~~**R-3′-3** sorry 除去~~ — ❌ 撤退 (上記により `h_plain_stam` の `sorry` 据え置き継続)。
 
-#### 8. 撤退ライン L-Ratio-3′-α
+#### 8. 撤退ライン L-Ratio-3′-α — ★ **発火済 (2026-06-01 Wave 3)**
 
-- **bridge 組立が予算超過** (gap table ❌ 4 行のうち convolution 同定 or Blachman 構成が in-house
-  補題不在で >予算): `h_plain_stam` を `sorry` のまま据え置き、`@residual(plan:epi-csiszar-ratio-reframe-plan)`
-  継続。これは現状維持 (type-check done) であり honest。
-- **`IsDeBruijnRegularityHyp` 拡張が必要**: `density_t` が `P.map path` の density である保証や
-  convolution 構造が `IsDeBruijnRegularityHyp` の現 field から導けず、structure に field 追加が
-  必要と判明した場合 → bridge 作業を別 sub-plan に分離 (`epi-stam-density-bridge-plan` 等の新 slug)、
-  R-3 の `@residual` を新 slug に書換 (compound `@residual(plan:...,plan:...)` も可)。
-  structure 拡張は load-bearing field の混入リスク (honesty) があるため、追加 field は
-  **regularity precondition に限定** し、不等式核は producer (`stam_step2_density_wall`) 側に保つ。
-- **禁止**: `IsStamInequalityHyp` を仮説のまま R-3 signature に残し続ける形は **既に許容済**
-  (genuine residual)。しかし新規に `*Hypothesis` predicate を増やして core を bundle するのは禁止。
+**発火**: M0′ verbatim 照合の結果、bridge 案 (R-3′) は **ルート A・B 両 infeasible** と確定し撤退。
+当初の「bridge を組めば in-house plumbing で閉じる」前提が **誤り**と判明。
+
+- **root cause**: `IsStamInequalityHyp` の **witness ∀-量化 結論形** (`∀ J_X J_Y J_sum fX fY fXY,
+  (正値性) → (3 Fisher 同定) → IsRegularDensityV2 fX → IsRegularDensityV2 fY → ∫fX=1 → ∫fY=1 →
+  (∀x, fXY x = convDensityAdd fX fY x) → IsBlachmanConvReady fX fY → 1/J_sum ≥ 1/J_X+1/J_Y`)。
+  consume するには consumer (R-3) が全 witness 引数を供給せねばならず、4 系統
+  (`IsRegularDensityV2`×2 / `∫=1`×2 / cross-source convolution 同定 / Blachman 19-field) が
+  consumer に **再浮上**。producer 直呼び (ルート B) も apply step は同一で回避不能。
+- **closure 不能な 2 致命傷**: (a) cross-source convolution 同定 = single-source
+  `IsDeBruijnRegularityHyp` structure では path_X/path_Y 独立性を要する convolution が **原理的に
+  表現不能** + 該当 in-house 補題不在 + `IndepFun path_X path_Y P` が R-3 仮説に存在しない。
+  (b) 一般 density `IsBlachmanConvReady` = producer が Gaussian 専用 (`isBlachmanConvReady_gaussianPDFReal`)
+  のみで一般 path density 用 producer 不在 (≈Mathlib 壁級)。
+- **`IsDeBruijnRegularityHyp` field 追加では不十分**: convolution 同定は cross-source (2 source の
+  独立性) を要するため、single-source structure `IsDeBruijnRegularityHyp X Z P` の field では
+  原理的に表現不能。よって「structure 拡張で bridge を救う」起草時の代替案も無効。
+
+**撤退の帰結 (戦略転換)**: 真の closure 路は **bridge 構築ではなく `IsStamInequalityHyp` の結論形を
+measure-level 直接形に pivot する def 書換** (= R-3″、別 sub-plan)。詳細 → 次の §Phase R-3″。
+
+- **現状維持の honesty**: R-3 の `h_plain_stam` は `sorry` + `@residual(plan:epi-csiszar-ratio-reframe-plan)`
+  のまま据え置き (type-check done、honest)。R-3″ 着地までこの residual を保持。新規 `*Hypothesis`
+  predicate で core を bundle する撤退は **禁止**。
+
+### Phase R-3″ — `IsStamInequalityHyp` 結論形 pivot (predicate reshape) 🎯 NEXT (別 sub-plan へ委譲)
+
+> R-3′ bridge 案撤退 (L-Ratio-3′-α) の後継。R-3 残 sorry `h_plain_stam` の **真の closure 路**。
+> 実装は本 plan の scope を超えるため **別 sub-plan に委譲** (slug 案 `epi-stam-predicate-reshape-plan`)。
+
+proof-log: yes (別 sub-plan 側で)
+
+#### 戦略転換の核心
+
+当初 R-3′ は「2 predicate (`IsStamInequalityHyp` / `IsDeBruijnRegularityHyp`) 間の
+density-identification bridge を組めば in-house plumbing で閉じる」前提だった。これは **誤り**
+(L-Ratio-3′-α)。本筋は CLAUDE.md「Mathlib-shape-driven Definitions」赤フラグと整合する:
+
+- `IsStamInequalityHyp` の **witness ∀-量化 結論形が赤フラグ** — consumer に measure-level 結論を
+  density-witness 越しに量化した reshaping bridge を強いる shape。CLAUDE.md の「`f (compProd ...)` を
+  `∫⁻ ...` に変える bridge を探し始めたら redefine が筋」と同型の兆候。
+- honest closure の本筋は bridge 構築ではなく **`IsStamInequalityHyp` の結論形を measure-level
+  直接形 (`1/J_sum ≥ 1/J_X+1/J_Y` を witness 量化なしで `P.map path_i` の Fisher 情報に直接述べる形)
+  に pivot** すること。producer 側 (`stam_step2_density_wall`) は既に core 不等式を genuine に出して
+  いるので (`@audit:ok` sorryAx-free)、predicate の「出口形」を consumer が使える形に変える def 書換が筋。
+
+#### 委譲先 sub-plan に渡す要件 (blast radius 精査が必須)
+
+- `IsStamInequalityHyp` の def を touch するため、当該 predicate を **参照する全 producer / consumer の
+  blast radius** を精査する: producer (`isStamInequalityHyp_via_step3` / `_via_body` /
+  `stam_step2_density_wall` / `isStamInequalityHyp_symm`)、consumer (R-3
+  `csiszarLogRatioGap_deriv_le_zero` の `h_stam` 引数)、defeq pass-through (docstring 記載の
+  `EPIStamToBridge` / `EPIL3Integration`、および `IsStamInequalityResidual` との pivot defeq 整合)。
+- **honesty 制約**: reshape 後の結論形は **load-bearing predicate にならないこと** — measure-level
+  Fisher 情報 (`fisherInfoOfMeasureV2 (P.map path_i)`) を直接述べる genuine な不等式 Prop であり、
+  証明の核 (Stam 不等式) は引き続き producer (`stam_step2_density_wall`) の sorryAx-free body が持つ。
+  consumer は reshape された predicate を `regularity precondition` のみで apply できる形にする。
+- `@residual` slug: R-3 の `h_plain_stam` を新 sub-plan slug に書換 (`@residual(plan:epi-stam-predicate-reshape-plan)`)、
+  または bridge 撤退まで現 slug 継続 + 委譲を docstring 散文で明示 (orchestrator 判断)。
 
 ### Phase R-4 — endpoint + EPI 橋
 
@@ -531,3 +625,21 @@ conclusion) check」が欠落**していたため、本 defect (D3) は `audit:P
    `IsStamInequalityHyp X Y P` を `Measurable X/Y` + `IndepFun X Y P` のみから生成する。`EPIStamToBridge`
    は同 module を未 import だが cycle 無し (verbatim 確認) ので import 追加で producer 直呼びルート B が
    開ける可能性 → M0′ でルート A (consumer plumbing) と cost 比較し軽い方を採る。
+7. **(2026-06-01 Wave 3, 無編集撤退) R-3′ bridge 案撤退 (L-Ratio-3′-α 発火)、当初「bridge で閉じる」
+   前提が誤りと判明**: M0′ verbatim 照合で**ルート A (consumer plumbing) / ルート B (producer 直呼び)
+   両方 infeasible** と確定 (実装着手前の構造判定、commit なし)。判断ログ #6 の楽観 (producer 直呼びで
+   gap 回避) は誤り — `isStamInequalityHyp_via_step3` / `_via_body` は `IsStamInequalityHyp X Y P` という
+   **∀-量化 Prop を返すだけ**で、`1/J_sum ≥ 1/J_X+1/J_Y` を取り出す apply step は producer/consumer 共通。
+   apply 時に witness `(J_X J_Y J_sum fX fY fXY)` + 4 系統 antecedent が consumer (R-3) に再浮上。
+   **closure 不能な 2 致命傷**: (a) cross-source convolution 同定 = single-source
+   `IsDeBruijnRegularityHyp X Z P` structure では path_X/path_Y 独立性を要する convolution が原理的に
+   表現不能 + 在house 補題不在 + `IndepFun path_X path_Y P` が R-3 仮説に存在しない。(b) 一般 density
+   `IsBlachmanConvReady` producer が Gaussian 専用 (`isBlachmanConvReady_gaussianPDFReal`,
+   `EPIBlachmanGaussianWitness.lean:335`) のみ、一般 path density 用 producer 不在 (≈Mathlib 壁級)。
+   `IsDeBruijnRegularityHyp` field 追加でも cross-source convolution は救えない (single-source structure)。
+   **戦略転換**: `IsStamInequalityHyp` の **witness ∀-量化 結論形が赤フラグ** (CLAUDE.md
+   「Mathlib-shape-driven Definitions」の reshaping-bridge 兆候と同型)。本筋は bridge 構築ではなく
+   **`IsStamInequalityHyp` の結論形を measure-level 直接形に pivot する def 書換** = R-3″。
+   `IsStamInequalityHyp` を参照する全 producer/consumer/defeq pass-through の blast radius 精査を要する
+   ため **別 sub-plan に委譲** (slug 案 `epi-stam-predicate-reshape-plan`)。R-3 の `h_plain_stam` は
+   `sorry` + `@residual` 据え置き (type-check done、honest)。
