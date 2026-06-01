@@ -1,4 +1,5 @@
 import Mathlib.Probability.Kernel.CondDistrib
+import Mathlib.Probability.Independence.Conditional
 import Common2026.Meta.EntryPoint
 import Common2026.Shannon.MutualInfo
 import Common2026.Shannon.DPI
@@ -65,5 +66,60 @@ theorem mutualInfo_eq_of_sufficient
     rw [mutualInfo_comm μ θ Xs hθ hXs, mutualInfo_comm μ θ (fun ω => f (Xs ω)) hθ hfXs]
     exact h_markov
   exact le_antisymm h_le h_ge
+
+/-! ## Neyman-Fisher 因子分解形との同値 (WI-1.2)
+
+教科書 Cover-Thomas 2.9 の充足統計量は **因子分解形** で導入される:
+`p(x ∣ θ) = g(T(x), θ) · h(x)`、すなわち「`T(X)` を与えたとき `X` の条件付き分布が
+`θ` に依存しない」。測度論的には `condDistrib Xs (T, θ) = (condDistrib Xs T).prodMkRight`
+(`θ`-成分を足しても `X` の条件付き分布が変わらない) と書ける。
+
+markov-form (`IsSufficientStatistic`) との同値は Mathlib の条件付き独立性 ⟺ 各分解形の
+補題 (`condIndepFun_iff_*`, `Conditional.lean`) を経由して閉じる。直感的には両者とも
+「`X ⊥ θ ∣ T(X)`」という同一の条件付き独立性の別表現。 -/
+
+/-- 充足統計量 (因子分解形 / Neyman-Fisher): `T(X)` を与えたとき `X` の条件付き分布が
+`θ` に依存しない。`condDistrib Xs (T(X), θ) =ᵃᵉ (condDistrib Xs T(X)).prodMkRight Θ`。
+
+これは教科書の `p(x ∣ θ) = g(T(x), θ) h(x)` の測度論的エンコード
+(条件付き分布の `θ`-非依存性、在庫 §A-1)。 -/
+def IsSufficientStatisticFactorized
+    (μ : Measure Ω) [IsFiniteMeasure μ]
+    [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Θ] [Nonempty Θ]
+    (θ : Ω → Θ) (Xs : Ω → X) (f : X → T') : Prop :=
+  condDistrib Xs (fun ω => (f (Xs ω), θ ω)) μ
+    =ᵐ[μ.map (fun ω => (f (Xs ω), θ ω))]
+      (condDistrib Xs (fun ω => f (Xs ω)) μ).prodMkRight Θ
+
+/-- markov-form ⟺ 因子分解形 (Neyman-Fisher) の同値。両者とも `X ⊥ θ ∣ T(X)` を表す。
+
+戦略 (Mathlib 条件付き独立性経由):
+- (A) `IsSufficientStatistic` (γ-form joint factorization) ⟺ `Xs ⟂ᵢ[f∘Xs] θ`
+  via `condIndepFun_iff_map_prod_eq_prod_condDistrib_prod_condDistrib` + `compProd_eq_comp_prod`。
+- (B) `Xs ⟂ᵢ[f∘Xs] θ` ⟺ `θ ⟂ᵢ[f∘Xs] Xs` via `CondIndepFun.symm`。
+- (C) `θ ⟂ᵢ[f∘Xs] Xs` ⟺ 因子分解形 via `condIndepFun_iff_condDistrib_prod_ae_eq_prodMkRight`。 -/
+theorem isSufficient_iff_factorized
+    (μ : Measure Ω) [IsProbabilityMeasure μ] [StandardBorelSpace Ω]
+    [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Θ] [Nonempty Θ]
+    (θ : Ω → Θ) (Xs : Ω → X) {f : X → T'}
+    (hθ : Measurable θ) (hXs : Measurable Xs) (hf : Measurable f) :
+    IsSufficientStatistic μ θ Xs f ↔ IsSufficientStatisticFactorized μ θ Xs f := by
+  have hfXs : Measurable (fun ω => f (Xs ω)) := hf.comp hXs
+  -- (A) markov γ-form ⟺ condIndepFun `Xs ⟂ᵢ[f∘Xs] θ`
+  have hA : IsSufficientStatistic μ θ Xs f
+      ↔ Xs ⟂ᵢ[fun ω => f (Xs ω), hfXs; μ] θ := by
+    unfold IsSufficientStatistic IsMarkovChain
+    rw [condIndepFun_iff_map_prod_eq_prod_condDistrib_prod_condDistrib hXs hθ hfXs,
+        Measure.compProd_eq_comp_prod]
+  -- (B) condIndepFun の対称性
+  have hB : (Xs ⟂ᵢ[fun ω => f (Xs ω), hfXs; μ] θ)
+      ↔ (θ ⟂ᵢ[fun ω => f (Xs ω), hfXs; μ] Xs) :=
+    ⟨CondIndepFun.symm, CondIndepFun.symm⟩
+  -- (C) condIndepFun `θ ⟂ᵢ[f∘Xs] Xs` ⟺ 因子分解形 (β-form)
+  have hC : (θ ⟂ᵢ[fun ω => f (Xs ω), hfXs; μ] Xs)
+      ↔ IsSufficientStatisticFactorized μ θ Xs f := by
+    unfold IsSufficientStatisticFactorized
+    rw [condIndepFun_iff_condDistrib_prod_ae_eq_prodMkRight hXs hθ hfXs]
+  exact hA.trans (hB.trans hC)
 
 end InformationTheory.Shannon
