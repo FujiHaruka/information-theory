@@ -32,7 +32,8 @@ variable {T' : Type*} [MeasurableSpace T']
 すなわち statistic `T(X) = f(X)` が `Xs` と `θ` を分離する (`Xs ⊥ θ | T(X)`)。
 
 教科書の Neyman-Fisher 因子分解形 (条件付き分布が `θ` に非依存) との同値は
-将来の別補題 (Mathlib 壁、在庫 A-1 で sufficiency 定義 0 件確認)。 -/
+将来の別補題 (Mathlib 壁、在庫 A-1 で sufficiency 定義 0 件確認)。
+@audit:ok -/
 def IsSufficientStatistic
     (μ : Measure Ω) [IsFiniteMeasure μ]
     [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Θ] [Nonempty Θ]
@@ -42,7 +43,8 @@ def IsSufficientStatistic
 /-- Cover-Thomas 2.9: `T` が `θ` に対し sufficient ⟹ `I(θ; X) = I(θ; T(X))`.
 
 `IsSufficientStatistic` は markov-form の **構造前提** (precondition) であって、
-結論 `I(θ;X) = I(θ;T(X))` そのものではない (markov 等式 ≠ 相互情報量等式)。 -/
+結論 `I(θ;X) = I(θ;T(X))` そのものではない (markov 等式 ≠ 相互情報量等式)。
+@audit:ok -/
 @[entry_point]
 theorem mutualInfo_eq_of_sufficient
     (μ : Measure Ω) [IsProbabilityMeasure μ]

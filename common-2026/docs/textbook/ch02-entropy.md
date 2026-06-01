@@ -364,6 +364,65 @@ theorem condMutualInfo_eq_condEntropy_sub_condEntropy
 
 ---
 
+## 2.6 ジェンセン不等式と情報不等式 (Information Inequality)
+
+KL ダイバージェンス（相対エントロピー）の非負性 \(D(p \,\|\, q) \ge 0\)
+（Gibbs 不等式 / 情報不等式、Cover & Thomas Thm 2.6.3）。本ライブラリでは
+pmf 形 `klDivPmf P Q = ∑ₐ Q(a) · klFun(P(a)/Q(a))` に対し独立に形式化している。
+
+**Verified**: `klDivPmf_nonneg`
+(`Common2026/Shannon/CsiszarProjection.lean`,
+名前空間 `InformationTheory.Shannon.CsiszarProjection`)
+
+```lean
+lemma klDivPmf_nonneg (P Q : α → ℝ)
+    (hP : ∀ a, 0 ≤ P a) (hQ : ∀ a, 0 ≤ Q a) :
+    0 ≤ klDivPmf P Q
+```
+
+等号成立条件 \(D(p \,\|\, q) = 0 \iff p = q\)（full support の参照 pmf `Q` に対して）も
+形式化済み。
+
+**Verified**: `klDivPmf_eq_zero_iff_pmf`
+(`Common2026/Shannon/MaxEntropyConstrained.lean`)
+
+```lean
+lemma klDivPmf_eq_zero_iff_pmf
+    {P Q : α → ℝ} (hP : P ∈ stdSimplex ℝ α) (_hQ : Q ∈ stdSimplex ℝ α)
+    (hQ_pos : ∀ a, 0 < Q a) :
+    klDivPmf P Q = 0 ↔ P = Q
+```
+
+測度論版の \(I(X; Y) \ge 0\)（KL の `ℝ≥0∞` 値としての非負性）は 2.3 の
+`mutualInfo_nonneg` として既出。
+
+---
+
+## 2.7 対数和不等式 (Log-Sum Inequality)
+
+非負 \(a_i\) と正 \(b_i\) に対し
+\[
+\left(\sum_i a_i\right) \log\frac{\sum_i a_i}{\sum_i b_i}
+  \le \sum_i a_i \log\frac{a_i}{b_i}.
+\]
+\(x \mapsto x \log x\) の凸性（有限ジェンセン）から従う。情報不等式・DPI の基盤。
+
+**Verified**: `log_sum_inequality`
+(`Common2026/Shannon/LZ78ZivEntropyBridge.lean`, 名前空間 `InformationTheory.Shannon`)
+
+```lean
+theorem log_sum_inequality
+    {ι : Type*} (s : Finset ι) (a b : ι → ℝ)
+    (ha : ∀ i ∈ s, 0 ≤ a i) (hb : ∀ i ∈ s, 0 < b i) :
+    (∑ i ∈ s, a i) * Real.log ((∑ i ∈ s, a i) / (∑ i ∈ s, b i))
+      ≤ ∑ i ∈ s, a i * Real.log (a i / b i)
+```
+
+`negMulLog` 形（絶対連続条件 `b i = 0 → a i = 0` 付き）も
+`log_sum_inequality_negMulLog` (`Common2026/Fano/DPI.lean`) として形式化済み。
+
+---
+
 ## 2.8 データ処理不等式 (Data Processing Inequality)
 
 ### KL ダイバージェンスの単調性 (post-processing 不等式)
@@ -458,6 +517,48 @@ theorem mutualInfo_le_sum_per_letter_of_memoryless_strong
 
 ---
 
+## 2.9 充足統計量 (Sufficient Statistics)
+
+統計量 \(T(X)\) がパラメータ \(\theta\) に対し充足的 (sufficient) であるとは、
+\(X \to T(X) \to \theta\) がマルコフ連鎖をなすこと（同値に \(\theta \to T(X) \to X\)、
+すなわち \(X \perp \theta \mid T(X)\)）。このとき相互情報量は統計量を通しても保存される:
+\(I(\theta; X) = I(\theta; T(X))\)（Cover & Thomas Thm 2.9.1、DPI の等号版）。
+
+本ライブラリでは充足統計量を、教科書の Neyman-Fisher 因子分解形ではなく
+（それは `condDistrib` の \(\theta\)-非依存性経由で長い橋渡しを要するため）、
+`mutualInfo_le_of_markov` の結論形に直結する **マルコフ連鎖形**で定義する。
+
+**Verified (定義)**: `IsSufficientStatistic`
+(`Common2026/Shannon/SufficientStatistic.lean`, 名前空間 `InformationTheory.Shannon`)
+
+```lean
+def IsSufficientStatistic
+    (μ : Measure Ω) [IsFiniteMeasure μ]
+    [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Θ] [Nonempty Θ]
+    (θ : Ω → Θ) (Xs : Ω → X) (f : X → T') : Prop :=
+  IsMarkovChain μ Xs (fun ω => f (Xs ω)) θ
+```
+
+**Verified**: `mutualInfo_eq_of_sufficient`
+(`Common2026/Shannon/SufficientStatistic.lean`)
+
+```lean
+theorem mutualInfo_eq_of_sufficient
+    (μ : Measure Ω) [IsProbabilityMeasure μ]
+    [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Θ] [Nonempty Θ]
+    (θ : Ω → Θ) (Xs : Ω → X) {f : X → T'}
+    (hθ : Measurable θ) (hXs : Measurable Xs) (hf : Measurable f)
+    (hsuff : IsSufficientStatistic μ θ Xs f) :
+    mutualInfo μ θ Xs = mutualInfo μ θ (fun ω => f (Xs ω))
+```
+
+証明は 2.8 のデータ処理不等式（後処理版 `mutualInfo_le_of_postprocess` で
+\(I(\theta; T(X)) \le I(\theta; X)\)）と、マルコフ連鎖版 DPI
+（`mutualInfo_le_of_markov` で逆向き \(I(\theta; X) \le I(\theta; T(X))\)）を
+`le_antisymm` で合わせて得る。教科書の Neyman-Fisher 因子分解との同値は本章では未着手。
+
+---
+
 ## 2.10 ファノの不等式 (Fano's Inequality)
 
 復号誤り確率 \(P_e\) を、条件付きエントロピー \(H(X \mid Y)\) によって下から評価する。
@@ -519,16 +620,18 @@ theorem error_lower_bound (hcard : 2 ≤ Fintype.card X) {a : ℝ}
 Cover & Thomas Ch.2 のうち、本パイロットのスコープ（離散・有限アルファベット）内で
 **本章には対応する独立した定理を確認できなかった**項目を正直に記す。
 
-- **2.6 ジェンセン不等式と情報不等式 / \(D(p \,\|\, q) \ge 0\) の独立な定理化**:
-  KL 非負性は `entropy_le_log_card` 等の証明内部で `ENNReal.toReal_nonneg` /
-  `klDiv` の非負性として消費されており、Ch.2 範囲の独立 declaration としては
-  本章では未紐付け（本章では未形式化）。
-- **2.7 対数和不等式 (log-sum inequality)**: 本章スコープでは独立定理を未確認
-  （本章では未形式化）。
-- **2.9 充足統計量 (sufficient statistics)**: 本章では未形式化。
+- **2.9 充足統計量の Neyman-Fisher 因子分解形との同値**: 充足性のマルコフ連鎖形
+  (`IsSufficientStatistic`) と相互情報量保存 (`mutualInfo_eq_of_sufficient`) は
+  2.9 節に形式化済みだが、教科書の因子分解定義
+  \(p(x \mid \theta) = g(T(x), \theta)\, h(x)\) との同値（`condDistrib` の
+  \(\theta\)-非依存性経由）は本章では未形式化。
 - **2.10 ファノ不等式の系（誤り確率と \(H(X)\) の弱形 \(H(P_e) + P_e \log|\mathcal{X}| \ge H(X|Y)\)
   等の variant）**: コア形・測度論形・逆向き下界は形式化済みだが、
   すべての教科書系を網羅したわけではない。
+
+（初版で「未形式化」と記した 2.6 情報不等式 \(D(p\|q)\ge 0\)・2.7 対数和不等式は、
+その後の存在確認で既存定理 `klDivPmf_nonneg` / `klDivPmf_eq_zero_iff_pmf` /
+`log_sum_inequality` が見つかり、2.6・2.7 節として紐付け済み。）
 
 ---
 
