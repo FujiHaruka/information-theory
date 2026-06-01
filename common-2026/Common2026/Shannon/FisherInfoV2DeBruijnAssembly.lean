@@ -823,7 +823,10 @@ private theorem convKernel_envelope_integrable
 stated on the `convDensityAdd` shape so downstream `IsRegularDensityV2` producers can
 reuse it without leaking the `private` helper. Identical content; the `convDensityAdd`
 unfold makes the conclusion `Integrable (convDensityAdd pX K) volume`.
-@audit:ok — pure re-export, no new content. -/
+@audit:ok — pure re-export, no new content. Independent honesty audit (2026-06-01, fresh
+auditor) confirms the self-tag: body is `:= convKernel_envelope_integrable ...` (thin pass-through,
+conclusion defeq to that of the already-`@audit:ok` private helper), all four hyps regularity,
+sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`). -/
 theorem convDensityAdd_envelope_integrable
     (pX K : ℝ → ℝ) (hpX_int : Integrable pX volume) (hpX_meas : Measurable pX)
     (hK_int : Integrable K volume) (hK_meas : Measurable K) :

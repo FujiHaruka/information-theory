@@ -27,7 +27,13 @@ namespace InformationTheory.Shannon.EPIConvDensity
 open scoped NNReal
 
 /-- The convolution density of a normalized density `pX` against a Gaussian heat
-kernel `g_t` (`t > 0`) integrates to `1`. EPI A-5 precondition (2). -/
+kernel `g_t` (`t > 0`) integrates to `1`. EPI A-5 precondition (2).
+
+Independent honesty audit (2026-06-01, fresh auditor): verdict **ok**. The hard step
+`∫ conv = (∫pX)·(∫g)` is done in-body by Mathlib `integral_convolution`, not assumed;
+`∫ pX = 1` is the input probability-density normalization (regularity precondition).
+Sufficiency holds. sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`).
+@audit:ok -/
 theorem integral_convDensityAdd_gaussian_eq_one (pX : ℝ → ℝ) {t : ℝ} (ht : 0 < t)
     (hpX_int : Integrable pX volume)
     (hpX_norm : ∫ x, pX x ∂volume = 1) :
