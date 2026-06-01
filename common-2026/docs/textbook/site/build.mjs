@@ -23,15 +23,17 @@ const cssCdn = `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@
 
 const styles = `
 :root { color-scheme: light dark; }
+html { font-size: 18px; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Segoe UI", sans-serif;
+  font-size: 1rem;
   line-height: 1.85; margin: 0; padding: 0;
   background: #fbfbfa; color: #1a1a1a;
 }
 @media (prefers-color-scheme: dark) {
   body { background: #15171a; color: #e6e6e6; }
   a { color: #6cb6ff; }
-  blockquote { border-left-color: #3a4048; color: #aab; background: #1b1e22; }
+  blockquote { border-left-color: #333a42; color: #828a94; background: none; }
   code { background: #23262b; }
   hr { border-color: #2a2e34; }
   th, td { border-color: #2a2e34; }
@@ -41,7 +43,7 @@ h1 { font-size: 1.7rem; line-height: 1.4; border-bottom: 2px solid #ddd; padding
 h2 { font-size: 1.35rem; margin-top: 2.6rem; border-bottom: 1px solid #e3e3e3; padding-bottom: .3rem; }
 h3 { font-size: 1.12rem; margin-top: 1.9rem; }
 a { color: #0b67d0; }
-blockquote { border-left: 4px solid #d6d6d6; margin: 1.1rem 0; padding: .4rem 1rem; color: #555; background: #f4f4f3; border-radius: 0 4px 4px 0; }
+blockquote { border-left: 3px solid #e3e3e3; margin: 1.1rem 0; padding: .15rem 0 .15rem 1rem; color: #8a8a8a; background: none; }
 blockquote p { margin: .4rem 0; }
 code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .9em; background: #eee; padding: .12em .35em; border-radius: 4px; }
 pre code { display: block; padding: .8rem 1rem; overflow-x: auto; }
