@@ -214,3 +214,4 @@ import Common2026.Shannon.EPIConvDensitySecondDeriv
 import Common2026.Shannon.EPIBlachmanDensity
 import Common2026.Shannon.EPIBlachmanGaussianWitness
 import Common2026.Shannon.EPIConvDensityRegular
+import Common2026.Shannon.EPIBlachmanGeneralDensity
