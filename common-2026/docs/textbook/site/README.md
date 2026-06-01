@@ -1,6 +1,6 @@
 # 教科書パイロット 静的サイト (surge.sh)
 
-**公開 URL: https://common2026-ch2.surge.sh** （デプロイ済み）
+公開 URL: https://common2026-ch2.surge.sh （デプロイ済み）
 
 `docs/textbook/*.md` を **KaTeX でサーバー側レンダリング**した静的 HTML に変換し、
 surge.sh にホストする。数式はビルド時に HTML 化されるためクライアント JS 不要で、
