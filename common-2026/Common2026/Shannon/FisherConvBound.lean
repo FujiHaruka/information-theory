@@ -305,6 +305,52 @@ theorem convDensityAdd_deriv_eq
   exact InformationTheory.Shannon.EPIConvDensitySecondDeriv.convDensityAdd_deriv1_gaussian_eq
     pX hs (fun y => |pX y| * M1) hb1_int hF1_meas hF1_int hF1'_meas hb1
 
+/-- **Per-`x` Fisher integrand bound**: `(logDeriv p_s x)²·p_s x ≤ (1/s²)·∫ (x-y)² pX y g_s(x-y)`.
+Combines the Step-1 deriv formula, the pointwise CS, and division by `p_s x > 0`. -/
+theorem convLogDeriv_sq_mul_le
+    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
+    {s : ℝ} (hs : 0 < s) (x : ℝ) :
+    (logDeriv (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩)) x) ^ 2
+        * convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩) x
+      ≤ (1 / s ^ 2) * ∫ y, (x - y) ^ 2 * (pX y * gaussianPDFReal 0 ⟨s, hs.le⟩ (x - y)) ∂volume := by
+  set g : ℝ → ℝ := gaussianPDFReal 0 ⟨s, hs.le⟩ with hg_def
+  set p_s : ℝ → ℝ := convDensityAdd pX g with hp_def
+  -- positivity (`hpX_mass → 0 < ∫ pX`).
+  have hmass_pos : 0 < ∫ y, pX y ∂volume := by rw [hpX_mass]; norm_num
+  have hps_pos : 0 < p_s x :=
+    convDensityAdd_pos pX hpX_nn hpX_int hmass_pos hs x
+  -- deriv formula at `x`.
+  have hderiv : deriv p_s x = ∫ y, pX y * (g (x - y) * (-((x - y) / s))) ∂volume := by
+    rw [hp_def, hg_def, convDensityAdd_deriv_eq pX hpX_meas hpX_int hs]
+  -- `∫ pX·(g·(-(x-y)/s)) = -(1/s)·∫ pX (x-y) g`.
+  have hscore : ∫ y, pX y * (g (x - y) * (-((x - y) / s))) ∂volume
+      = -(1 / s) * ∫ y, pX y * (x - y) * g (x - y) ∂volume := by
+    rw [← integral_const_mul]
+    refine integral_congr_ae (Filter.Eventually.of_forall fun y => ?_)
+    field_simp
+  -- `(deriv p_s x)² = (1/s²)·(∫ pX (x-y) g)²`.
+  have hderiv_sq : (deriv p_s x) ^ 2
+      = (1 / s ^ 2) * (∫ y, pX y * (x - y) * g (x - y) ∂volume) ^ 2 := by
+    rw [hderiv, hscore]
+    rw [mul_pow, neg_pow]
+    rw [show ((-1 : ℝ)) ^ 2 = 1 from by norm_num, one_mul, div_pow, one_pow]
+  -- CS bound.
+  have hCS := convScore_sq_le_pointwise pX hpX_nn hpX_meas hpX_int hs x
+  rw [← hg_def, ← hp_def] at hCS
+  -- `logDeriv p_s x = deriv p_s x / p_s x`, so `(logDeriv)²·p_s = (deriv)²/p_s`.
+  have hlog : (logDeriv p_s x) ^ 2 * p_s x = (deriv p_s x) ^ 2 / p_s x := by
+    rw [logDeriv_apply, div_pow]
+    field_simp
+  rw [hlog, hderiv_sq]
+  -- `(1/s²)·(∫…)²/p_s ≤ (1/s²)·(∫(x-y)²pX g)`: use CS `(∫…)² ≤ p_s·∫(x-y)²pX g`.
+  rw [mul_div_assoc]
+  refine mul_le_mul_of_nonneg_left ?_ (by positivity)
+  rw [div_le_iff₀ hps_pos]
+  calc (∫ y, pX y * (x - y) * g (x - y) ∂volume) ^ 2
+      ≤ p_s x * ∫ y, (x - y) ^ 2 * (pX y * g (x - y)) ∂volume := hCS
+    _ = (∫ y, (x - y) ^ 2 * (pX y * g (x - y)) ∂volume) * p_s x := by ring
+
 /-- **Shared Mathlib wall: Stam convolution Fisher bound** `J(pX ∗ g_s) ≤ 1/s`.
 任意確率密度 pX (重い裾含む) で成立。EPI per-time line の 2 consumer を gate
 (`convDensityAdd_fisher_integrable` / `_chain_ibp_fisher` via それ)。
