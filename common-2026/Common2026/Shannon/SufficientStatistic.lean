@@ -82,7 +82,8 @@ markov-form (`IsSufficientStatistic`) との同値は Mathlib の条件付き独
 `θ` に依存しない。`condDistrib Xs (T(X), θ) =ᵃᵉ (condDistrib Xs T(X)).prodMkRight Θ`。
 
 これは教科書の `p(x ∣ θ) = g(T(x), θ) h(x)` の測度論的エンコード
-(条件付き分布の `θ`-非依存性、在庫 §A-1)。 -/
+(条件付き分布の `θ`-非依存性、在庫 §A-1)。
+@audit:ok -/
 def IsSufficientStatisticFactorized
     (μ : Measure Ω) [IsFiniteMeasure μ]
     [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Θ] [Nonempty Θ]
@@ -97,7 +98,8 @@ def IsSufficientStatisticFactorized
 - (A) `IsSufficientStatistic` (γ-form joint factorization) ⟺ `Xs ⟂ᵢ[f∘Xs] θ`
   via `condIndepFun_iff_map_prod_eq_prod_condDistrib_prod_condDistrib` + `compProd_eq_comp_prod`。
 - (B) `Xs ⟂ᵢ[f∘Xs] θ` ⟺ `θ ⟂ᵢ[f∘Xs] Xs` via `CondIndepFun.symm`。
-- (C) `θ ⟂ᵢ[f∘Xs] Xs` ⟺ 因子分解形 via `condIndepFun_iff_condDistrib_prod_ae_eq_prodMkRight`。 -/
+- (C) `θ ⟂ᵢ[f∘Xs] Xs` ⟺ 因子分解形 via `condIndepFun_iff_condDistrib_prod_ae_eq_prodMkRight`。
+@audit:ok -/
 theorem isSufficient_iff_factorized
     (μ : Measure Ω) [IsProbabilityMeasure μ] [StandardBorelSpace Ω]
     [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Θ] [Nonempty Θ]
