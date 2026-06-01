@@ -87,14 +87,15 @@ Mathlib の `HasCompactSupport.contDiff_convolution_right` は Gaussian が comp
 
 ## 進捗
 
-- [ ] G  共通基盤 gateway (pX integrable-only + Gaussian-kernel-smooth derivative) 📋
-- [ ] P2 `∫ convDensityAdd pX g_t = 1` 正規化 producer 📋
-- [ ] P1 `IsRegularDensityV2 (convDensityAdd pX g_t)` producer 📋
-- [ ] P3 `convDensityAdd_assoc` + X⊥Y 一般 pPath + density_sum 同定 (3) 📋
-- [ ] P4 非 Gaussian `IsBlachmanConvReady` producer (🟡 group 10 → 🔴 group 9) 📋
-- [ ] A-5 配線: 4 producer を `h_pos_stam` バンドルに供給、A-5 を genuine discharge 📋
+- [x] **G  共通基盤 gateway** (pX integrable-only + Gaussian-kernel-smooth derivative) ✅ `d29d73a` 0-sorry `@audit:ok`
+- [x] **P2 `∫ convDensityAdd pX g_t = 1`** 正規化 producer ✅ `be23622` 0-sorry sorryAx-free `@audit:ok` (Mathlib `integral_convolution` ルート)
+- [x] **P1 `IsRegularDensityV2 (convDensityAdd pX g_t)`** producer ✅ `68d3ac4` 6 field 全 genuine sorryAx-free `@audit:ok` (tail も DCT で閉鎖、retreat 無し)
+- [x] **P3 `convDensityAdd_assoc` + interchange bridge** ✅ `b3b0356` 10 補題 `@audit:ok` (Mathlib `convolution_assoc` 経由、有界性を第三因子のみに弱める設計)
+- [x] **P4 非 Gaussian `IsBlachmanConvReady` producer** ✅ `23ba687`+`b3b0356` **19/19 field genuine** sorryAx-free `@audit:ok` (`int_fisherZ` は P3 interchange bridge で variance-2t に lift し閉鎖)
+- [ ] A-5 配線: 4 producer を `h_pos_stam` バンドルに供給、A-5 を genuine discharge 📋 ← **次セッションの本丸**
 
-> **依存順 = G → P2 → P1 → (P3 並行) → P4 → A-5 配線**。P3 は G と独立で P2/P1 と並行可。
+> **G/P1/P2/P3/P4 全 landing 完了 (2026-06-01)。4 precondition (1)(2)(3)(4) 全てに genuine producer が揃った。** 残るは A-5 配線のみ。
+> 依存順だった `G → P2 → P1 → (P3 並行) → P4 → A-5 配線`、実績は P3 が P4 の `int_fisherZ` 閉鎖に load-bearing だったため `…→ P4(18/19) → P3 → P4(19/19) → A-5 配線` の順で進行。
 
 ## Phase 詳細
 

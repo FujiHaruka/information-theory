@@ -58,7 +58,13 @@ open Common2026.Shannon.FisherInfoV2
 `Integrable ((logDeriv (convDensityAdd pX g_t))² · convDensityAdd pX g_t)` — the
 `int_fisherX` shape. Reconstructed from the public Fisher-finiteness bound
 `gaussianConv_fisher_le_inv_var` (`J(p_t) ≤ 1/t < ⊤`), exactly mirroring the private
-`convDensityAdd_fisher_integrable` body. -/
+`convDensityAdd_fisher_integrable` body.
+@audit:ok — independent honesty audit (2026-06-01): hypotheses are all regularity
+(nonneg / Measurable / Integrable / mass `= 1` normalization); the Fisher-integrand
+integrability follows genuinely from the existing `@audit:ok` bound
+`gaussianConv_fisher_le_inv_var` (`J(p_t) < ⊤`) + `lintegral_ofReal_ne_top_iff_integrable`.
+No bundled core (the Fisher inequality is *imported* from a proved lemma, not a hypothesis).
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-confirmed). -/
 theorem convDensityAdd_fisher_integrand_integrable
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_norm : (∫ y, pX y ∂volume) = 1)
@@ -102,7 +108,9 @@ theorem convDensityAdd_fisher_integrand_integrable
   exact (lintegral_ofReal_ne_top_iff_integrable hg_aesm hg_nn).mp hfin.ne
 
 /-- Global boundedness of a conv-with-Gaussian density:
-`|convDensityAdd pX g_t z| ≤ (sup g_t) · ∫ pX`. -/
+`|convDensityAdd pX g_t z| ≤ (sup g_t) · ∫ pX`.
+@audit:ok — independent honesty audit (2026-06-01): constructive bound (`∫pX · Mg`),
+regularity hypotheses only, sorryAx-free transitively via the producer. -/
 theorem convDensityAdd_gaussian_bdd
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
     {t : ℝ} (ht : 0 < t) :
@@ -126,7 +134,9 @@ theorem convDensityAdd_gaussian_bdd
         · exact Filter.Eventually.of_forall hge
     _ = (∫ x, pX x ∂volume) * Mg := by rw [integral_mul_const]
 
-/-- `convDensityAdd pX g_t` is Lebesgue-integrable (envelope). -/
+/-- `convDensityAdd pX g_t` is Lebesgue-integrable (envelope).
+@audit:ok — independent honesty audit (2026-06-01): delegates to the proved
+`convDensityAdd_envelope_integrable`, regularity hypotheses only, sorryAx-free transitively. -/
 theorem convDensityAdd_gaussian_integrable
     (pX : ℝ → ℝ) (hpX_meas : Measurable pX) (hpX_int : Integrable pX volume)
     {t : ℝ} (ht : 0 < t) :
@@ -139,7 +149,10 @@ theorem convDensityAdd_gaussian_integrable
     (measurable_gaussianPDFReal 0 ⟨t, ht.le⟩)
 
 /-- `deriv (convDensityAdd pX g_t)` is globally bounded:
-`|deriv (convDensityAdd pX g_t) z| = |convDensityAdd pX (deriv g_t) z| ≤ (sup|deriv g_t|)·∫pX`. -/
+`|deriv (convDensityAdd pX g_t) z| = |convDensityAdd pX (deriv g_t) z| ≤ (sup|deriv g_t|)·∫pX`.
+@audit:ok — independent honesty audit (2026-06-01): constructive bound via
+`deriv_convDensityAdd_eq` (differentiation-under-integral) + global `deriv g_t` sup,
+regularity hypotheses only, sorryAx-free transitively. -/
 theorem convDensityAdd_gaussian_deriv_bdd
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
     {t : ℝ} (ht : 0 < t) :
@@ -170,7 +183,11 @@ theorem convDensityAdd_gaussian_deriv_bdd
 
 /-- **General convolution positivity.** If `fX`, `fY` are continuous, strictly
 positive everywhere, and the integrand `x ↦ fX x · fY (z - x)` is integrable, then the
-convolution density `convDensityAdd fX fY z` is strictly positive. -/
+convolution density `convDensityAdd fX fY z` is strictly positive.
+@audit:ok — independent honesty audit (2026-06-01): genuine positivity via
+`integral_pos_of_integrable_nonneg_nonzero` (continuous nonneg integrand, nonzero at 0);
+hypotheses are regularity (Continuous / pointwise positivity / Integrable), sorryAx-free
+transitively. -/
 theorem convDensityAdd_pos_of_pos_cont (fX fY : ℝ → ℝ)
     (hfX_cont : Continuous fX) (hfY_cont : Continuous fY)
     (hfX_pos : ∀ x, 0 < fX x) (hfY_pos : ∀ x, 0 < fY x)
@@ -186,7 +203,24 @@ theorem convDensityAdd_pos_of_pos_cont (fX fY : ℝ → ℝ)
 
 /-- **Non-Gaussian `IsBlachmanConvReady` producer** for EPI A-5 precondition (4).
 
-`fX := convDensityAdd pX g_t`, `fY := convDensityAdd pY g_t`. -/
+`fX := convDensityAdd pX g_t`, `fY := convDensityAdd pY g_t`.
+
+@audit:ok — independent honesty audit (2026-06-01): all 11 hypotheses are pure regularity
+on the *input* densities `pX`/`pY` (nonneg / Measurable / Integrable / `0 < mass` /
+`mass = 1`); none is an inequality / equality / Fisher core. The output is the 19-field
+`IsBlachmanConvReady` regularity bundle for the *convolved* densities — genuinely derived,
+not a circular `:= h` (the conclusion is about `convDensityAdd pX g_t` / `convDensityAdd pY g_t`,
+a distinct proposition from any hypothesis). The 19 fields are built from proved assets
+(`isRegularDensityV2_convDensityAdd_gaussian`, `gaussianConv_fisher_le_inv_var`,
+`measurePreserving_prod_sub_swap`), not from a load-bearing predicate. `int_fisherZ` closure
+is genuine: the 4-fold interchange bridge `convDensityAdd_convGaussian_interchange` identifies
+the conv-of-conv with `convDensityAdd (pX∗pY) g_{2t}` (real convolution associativity, traced)
+and closes via `convDensityAdd_fisher_integrand_integrable (pX∗pY) … (2t)` — sufficiency
+verified, no false framing. The two extra hypotheses `hpX_norm` / `hpY_norm` (`∫ = 1`) are
+genuine regularity preconditions required by `gaussianConv_fisher_le_inv_var`'s `mass = 1`
+argument (probability-density normalization, A-5-suppliable from `pX_law`), NOT load-bearing.
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-confirmed
+end-to-end through the full helper chain). -/
 theorem isBlachmanConvReady_convDensityAdd_gaussian (pX pY : ℝ → ℝ) {t : ℝ} (ht : 0 < t)
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX) (hpX_int : Integrable pX volume)
     (hpX_mass : 0 < ∫ x, pX x ∂volume) (hpX_norm : (∫ x, pX x ∂volume) = 1)

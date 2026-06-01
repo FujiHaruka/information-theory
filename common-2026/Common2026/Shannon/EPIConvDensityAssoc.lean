@@ -30,6 +30,15 @@ then closes Fisher integrability via `convDensityAdd_fisher_integrand_integrable
 `convDensityAdd_pXpY_nonneg` / `_measurable` / `_integrable` / `_integral_eq` — the
 `convDensityAdd (convDensityAdd pX pY) g_{2t}` arm needs `pX∗pY` to be a normalized
 probability density (nonneg, measurable, integrable, mass 1).
+
+@audit:ok (file-level, regularity helpers) — independent honesty audit (2026-06-01):
+`convolutionExistsAt_of_integrable_bdd`, `convDensityAdd_pXpY_measurable`,
+`convDensityAdd_bdd_of_integrable_bdd`, `convDensityAdd_pXpY_nonneg`,
+`convDensityAdd_pXpY_integrable`, `convDensityAdd_pXpY_integral_eq` are all constructive
+regularity lemmas (integrand integrability / measurability / global bound / nonneg / mass)
+with only regularity hypotheses; no circular / `:True` / bundled-core / degenerate shape.
+sorryAx-free transitively (the consuming `convDensityAdd_convGaussian_interchange` is
+machine-confirmed `[propext, Classical.choice, Quot.sound]`).
 -/
 
 namespace InformationTheory.Shannon.EPIConvDensity
@@ -38,7 +47,9 @@ open MeasureTheory Real ProbabilityTheory
 open scoped NNReal Convolution
 
 /-- **Convolution-density bridge**: `convDensityAdd a b = a ⋆[mul ℝ ℝ, volume] b`
-(definitional, via `ContinuousLinearMap.mul_apply'`). -/
+(definitional, via `ContinuousLinearMap.mul_apply'`).
+@audit:ok — independent honesty audit (2026-06-01): definitional unfold, no hypotheses,
+sorryAx-free (transitively via the consuming bridge). -/
 theorem convDensityAdd_eq_convolution (a b : ℝ → ℝ) :
     convDensityAdd a b = fun z => (convolution a b (ContinuousLinearMap.mul ℝ ℝ) volume) z := by
   funext z
@@ -96,7 +107,14 @@ theorem convDensityAdd_bdd_of_integrable_bdd (a b : ℝ → ℝ)
 Via the bridge `convDensityAdd = ⋆[mul ℝ ℝ, volume]` and Mathlib `convolution_assoc`.
 Requires nonneg + integrable data; only the **third** factor `c` need be bounded (so that
 the `‖b‖ ⋆ ‖c‖`-at-`x₀` existence holds everywhere). The `a ⋆ b` and `‖b‖ ⋆ ‖c‖` existence
-are a.e. from `Integrable.ae_convolution_exists` (`a`, `b` may both be unbounded `L¹`). -/
+are a.e. from `Integrable.ae_convolution_exists` (`a`, `b` may both be unbounded `L¹`).
+@audit:ok — independent honesty audit (2026-06-01): all hypotheses are regularity
+(nonneg / Integrable / Measurable / bounded-third-factor); the conclusion (assoc equality)
+follows genuinely from Mathlib `convolution_assoc` (loogle-confirmed present) with all four
+bilinear maps `= mul ℝ ℝ` and compatibility discharged by `ring`. The bounded-third-factor
+restriction is an honest *sufficient* condition for the `ConvolutionExistsAt` side conditions
+(a.e. existence via `Integrable.ae_convolution_exists`), not a false-as-framed weakening —
+no counterexample for the stated hypotheses. sorryAx-free (transitive via bridge). -/
 theorem convDensityAdd_assoc (a b c : ℝ → ℝ)
     (ha_nn : ∀ x, 0 ≤ a x) (ha_int : Integrable a volume) (ha_meas : Measurable a)
     (hb_nn : ∀ x, 0 ≤ b x) (hb_int : Integrable b volume) (hb_meas : Measurable b)
@@ -153,7 +171,10 @@ theorem convDensityAdd_pXpY_integral_eq (pX pY : ℝ → ℝ)
   exact MeasureTheory.integral_convolution
     (L := ContinuousLinearMap.mul ℝ ℝ) hpX_int hpY_int
 
-/-- **Variance-doubling**: `g_t ∗ g_t = g_{2t}` (`g_s = gaussianPDFReal 0 ⟨s, _⟩`). -/
+/-- **Variance-doubling**: `g_t ∗ g_t = g_{2t}` (`g_s = gaussianPDFReal 0 ⟨s, _⟩`).
+@audit:ok — independent honesty audit (2026-06-01): genuine consequence of
+`convDensityAdd_gaussian_closed_form` (`mX+mY = 0`, `vX+vY = ⟨2t,_⟩` via NNReal add),
+no hypotheses beyond `0 < t`, sorryAx-free (transitive via bridge). -/
 theorem convDensityAdd_gaussian_variance_double {t : ℝ} (ht : 0 < t) :
     convDensityAdd (gaussianPDFReal 0 ⟨t, ht.le⟩) (gaussianPDFReal 0 ⟨t, ht.le⟩)
       = gaussianPDFReal 0 ⟨2 * t, by positivity⟩ := by
@@ -168,7 +189,13 @@ theorem convDensityAdd_gaussian_variance_double {t : ℝ} (ht : 0 < t) :
   congr 1
 
 /-- **4-fold interchange bridge** (consumed by `int_fisherZ`):
-`conv(conv(pX,g_t), conv(pY,g_t)) = conv(conv(pX,pY), g_{2t})`. -/
+`conv(conv(pX,g_t), conv(pY,g_t)) = conv(conv(pX,pY), g_{2t})`.
+@audit:ok — independent honesty audit (2026-06-01): the equality follows genuinely from
+the algebraic rearrangement assoc(×3) + comm(×1) + variance-doubling `g_t ∗ g_t = g_{2t}`
+(`convDensityAdd_gaussian_variance_double`, traced step-by-step: (pX∗g)∗(pY∗g) → pX∗(g∗(pY∗g))
+→ pX∗((pY∗g)∗g) → pX∗(pY∗(g∗g)) → (pX∗pY)∗(g∗g) → (pX∗pY)∗g_{2t}). All hypotheses regularity
+(nonneg / Measurable / Integrable). `#print axioms` = `[propext, Classical.choice, Quot.sound]`
+(sorryAx-free, machine-confirmed). -/
 theorem convDensityAdd_convGaussian_interchange (pX pY : ℝ → ℝ) {t : ℝ} (ht : 0 < t)
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX) (hpX_int : Integrable pX volume)
     (hpY_nn : ∀ x, 0 ≤ pY x) (hpY_meas : Measurable pY) (hpY_int : Integrable pY volume) :
