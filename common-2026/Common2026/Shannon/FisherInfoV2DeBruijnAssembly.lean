@@ -1916,13 +1916,17 @@ original IBP equality unchanged. Compound `@residual` correctly reflects the AND
 + the entropy-finiteness wall (`huv'`/`huv`) + the Fisher-finiteness wall (`hu'v`). Carries
 `@residual` not `@audit:ok` (transitive sorry, honest). NOT circular, NOT load-bearing.
 
-Re-audit (2026-06-01, fresh auditor, commits `e0e81ba`/`c7df95f`): compound `@residual` UNCHANGED
-and still correct. The deriv-existence helpers `hu`/`hv` are now genuinely closed (`@audit:ok`), but
-the `plan:epi-debruijn-pertime-closure` arm remains live transitively via
-`debruijnIdentityV2_holds_assembled_chain_hdiff` (`:2088`, literal `sorry` at `:2100`) — only the
-narrative attribution of the `plan:` arm was refined (helpers → `_chain_hdiff`), the tag itself is
-not edited.
-@residual(plan:epi-debruijn-pertime-closure,wall:entropy-finiteness,wall:fisher-finiteness) -/
+Re-audit (2026-06-01, fresh auditor, commits `e0e81ba`/`c7df95f`): the deriv-existence helpers
+`hu`/`hv` are now genuinely closed (`@audit:ok`).
+
+**Wave 4b correction (2026-06-01)**: the `plan:epi-debruijn-pertime-closure` arm was a
+misattribution — this declaration's body (`debruijn_ibp_step` + the entropy-finiteness +
+Fisher-finiteness wall lemmas) does NOT call `debruijnIdentityV2_holds_assembled_chain_hdiff`
+(verified by reading the body: it uses `convDensityAdd_logFactor_deriv/deriv2_integrable` from
+`EntropyConvFinite`, `convDensityAdd_fisher_integrable`, and `debruijn_ibp_step`). With
+`_chain_hdiff` now closed anyway, the remaining transitive `sorryAx` is exclusively the two
+Mathlib walls. The stale `plan:` component is dropped.
+@residual(wall:entropy-finiteness,wall:fisher-finiteness) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -2029,8 +2033,13 @@ verified sorryAx-free; `integral_congr_ae`/`integral_const_mul` are Mathlib std)
 `hint` is the Fisher-finiteness wall verbatim — a regularity precondition, NOT a bundled
 conclusion (core-reconstruction test: granting `hentDeriv` alone does not hand over `∫ entDeriv =
 (1/2)·fisher`; the two walls supply the substance). NOT circular, NOT load-bearing, NOT
-name-laundering (carries `@residual`, not `@audit:ok`). The transitive marker is compound (AND of
-the wall + plan walls below). @residual(wall:fisher-finiteness,plan:epi-debruijn-pertime-closure) -/
+name-laundering (carries `@residual`, not `@audit:ok`).
+
+**Wave 4b correction (2026-06-01)**: the `plan:epi-debruijn-pertime-closure` component was stale
+— this body calls only `_chain_ibp_fisher_ibp_step` (entropy + Fisher walls) +
+`fisher_from_logDeriv` + `convDensityAdd_fisher_integrable` (Fisher wall), NOT `_chain_hdiff`
+(now closed anyway). The transitive `sorryAx` is exclusively the two Mathlib walls.
+@residual(wall:fisher-finiteness,wall:entropy-finiteness) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -2064,7 +2073,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher
   rw [fisher_from_logDeriv p_t hp_nn
     (convDensityAdd_fisher_integrable pX hpX_nn hpX_meas hpX_int ht)]
 
-/-- **§5G-3 hdiff plumbing (a.e.-over-Ioo per-`x` chain-rule, named honest sorry).**
+/-- **§5G-3 hdiff plumbing (a.e.-over-Ioo per-`x` chain-rule) — GENUINELY CLOSED (0 sorry).**
 The per-`x`, per-`s∈Ioo (t/2)(2*t)` chain-rule derivative of the entropy integrand
 `fun s => negMulLog (pPath s x)`, with value the §5G-1 closed form
 `entDerivFn s x = (- log (pPath s x) - 1)·((1/2)·∂²_x pPath_s x)`, where
@@ -2074,25 +2083,29 @@ This is the `hdiff` precondition of the parametric-diff atom `entropy_hasDerivAt
 The genuine derivation route is, for each `(x, s∈Ioo)`:
 (1) §5G-1 `_chain_entDeriv_formula` (the negMulLog chain rule, `@audit:ok`), fed the σ-derivative
     witness `hpath_deriv : HasDerivAt (fun σ => convDensityAdd pX g_{max σ 0} x) ((1/2)·∂²_x p_s x) s`;
-(2) that σ-derivative from `heatFlow_density_heat_equation` (`@audit:ok` atom), whose **11
-    integrand-level Gaussian-tail domination hyps** plus the two deriv pins (`convDensityAdd_hasDerivAt_self`
-    / `convDensityAdd_deriv_hasDerivAt_self`) must be supplied per-`x`.
+(2) that σ-derivative from `heatFlow_density_heat_equation` (`@audit:ok` atom), whose 11
+    integrand-level Gaussian-tail domination hyps plus the two deriv pins
+    (`convDensityAdd_hasDerivAt_self` / `convDensityAdd_deriv_hasDerivAt_self`, `@audit:ok`) are
+    supplied per-`x`.
 
-**Honest sorry (NOT a Mathlib gap)**: the residual is the per-`x` assembly of the heat-eq atom's
-11-hyp Gaussian-tail domination groups (which duplicate `_chain_domination`'s envelopes) — heavy
-`plan:` plumbing over the `@audit:ok` heat-eq atom + deriv-existence helpers, not a Mathlib wall.
-The conclusion is an integrand-level derivative-existence statement (regularity output for the atom);
-it does NOT bundle the composed `HasDerivAt`-of-the-integral conclusion. All hyps are pX regularity.
+**Closure (2026-06-01, Wave 4b)**: the former monolithic `sorry` is now fully discharged.
+- The two deriv pins `hpathDeriv1`/`hpathDeriv2` are built by σ-case-split: for `σ > 0` the
+  `max σ 0 = σ` reconciliation (`NNReal.eq`+`max_eq_left`) lets the Wave-4a deriv-existence
+  helpers `convDensityAdd_hasDerivAt_self` / `convDensityAdd_deriv_hasDerivAt_self` (`@audit:ok`)
+  apply; for `σ ≤ 0` the path `pPath σ = convDensityAdd pX g_0 = 0` (since `gaussianPDFReal 0 0 = 0`,
+  `gaussianPDFReal_zero_var`) is the zero constant, so the derivs are 0 (`hasDerivAt_const`).
+- The 11 heat-eq domination hyps are discharged genuinely: the σ-direction group via the
+  `s`-uniform Gaussian-Hessian majorant `gaussHessMaj s` at base `s` (the σ-window `Ioo (s/2)(2s)`
+  is exactly `gaussianHess_le_gaussHessMaj`'s window with `t := s`); the two spatial-direction
+  groups via the fixed-`s` global kernel bounds `kernel_x_deriv1/2_global_bound` (`@audit:ok`,
+  `bound = |pX|·M`, integrable via `Integrable.mul_const` / `mul_bdd`) — the same template as
+  the Wave-4a helpers.
+- The chain rule (B+C) composes via `_chain_entDeriv_formula` with the `max s 0 = s` log-factor
+  reconciliation; `pathDeriv2 s x` is defeq to the goal's `deriv (deriv (g_{max s 0})) x`.
 
-Independent honesty audit (2026-05-31, Wave fresh auditor, commit `20ecddc`): honest_residual.
-Conclusion is per-`x` `HasDerivAt (fun s => negMulLog (pPath s x)) (entDerivFn s x) s` — the value
-`entDerivFn s x` is the §5G-1 closed form (a *value*, not hyp ≡ conclusion), NOT circular, NOT the
-composed integral derivative. All hyps pX regularity (nonneg/meas/int/mass/2nd-moment). `plan:` (not
-`wall:`) correct: heat-eq atom `heatFlow_density_heat_equation` (PerTime:422) verified `#print axioms`
-sorryAx-free (`[propext, Classical.choice, Quot.sound]`); residual is per-`x` assembly of its 11
-domination hyps = `plan:` plumbing, not a Mathlib gap. Plan slug exists
-(`docs/shannon/epi-debruijn-pertime-closure-plan.md`).
-@residual(plan:epi-debruijn-pertime-closure) -/
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified;
+no transitive `sorryAx`). The conclusion is an integrand-level derivative-existence statement —
+NOT the composed `HasDerivAt`-of-the-integral, NOT hyp-bundled. All hyps pX regularity. -/
 private theorem debruijnIdentityV2_holds_assembled_chain_hdiff
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -2105,7 +2118,216 @@ private theorem debruijnIdentityV2_holds_assembled_chain_hdiff
         ((- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩) x) - 1)
           * ((1/2) * deriv (deriv (convDensityAdd pX
               (gaussianPDFReal 0 ⟨max s 0, le_max_right _ _⟩))) x)) s := by
-  sorry -- @residual(plan:epi-debruijn-pertime-closure)
+  classical
+  -- positive mass from `∫ pX = 1` (for `convDensityAdd_pos`).
+  have hpX_pos : 0 < ∫ y, pX y ∂volume := by rw [hpX_mass]; norm_num
+  -- the heat-flow path and its two spatial derivatives, in `max σ 0` form.
+  set pPath : ℝ → ℝ → ℝ :=
+    fun σ => convDensityAdd pX (gaussianPDFReal 0 ⟨max σ 0, le_max_right σ 0⟩) with hpPath_def
+  set pathDeriv1 : ℝ → ℝ → ℝ := fun σ y => deriv (pPath σ) y with hpathDeriv1_def
+  set pathDeriv2 : ℝ → ℝ → ℝ := fun σ y => deriv (deriv (pPath σ)) y with hpathDeriv2_def
+  -- definitional pin: on `σ > 0`, `max σ 0 = σ`, so `pPath σ = convDensityAdd pX g_σ`.
+  have hpPath_pos : ∀ (σ : ℝ) (hσ : 0 < σ),
+      pPath σ = convDensityAdd pX (gaussianPDFReal 0 ⟨σ, hσ.le⟩) := by
+    intro σ hσ
+    show convDensityAdd pX (gaussianPDFReal 0 ⟨max σ 0, le_max_right σ 0⟩)
+      = convDensityAdd pX (gaussianPDFReal 0 ⟨σ, hσ.le⟩)
+    have : (⟨max σ 0, le_max_right σ 0⟩ : ℝ≥0) = ⟨σ, hσ.le⟩ := by
+      apply NNReal.eq; exact max_eq_left hσ.le
+    rw [this]
+  -- definitional pin (degenerate σ ≤ 0): `pPath σ = 0` (const).
+  have hpPath_nonpos : ∀ (σ : ℝ), σ ≤ 0 → pPath σ = fun _ => (0 : ℝ) := by
+    intro σ hσ
+    show convDensityAdd pX (gaussianPDFReal 0 ⟨max σ 0, le_max_right σ 0⟩)
+      = fun _ => (0 : ℝ)
+    have hmax : (⟨max σ 0, le_max_right σ 0⟩ : ℝ≥0) = 0 := by
+      apply NNReal.eq
+      show max σ 0 = (0 : ℝ)
+      exact max_eq_right hσ
+    rw [hmax]
+    funext z
+    show (∫ y, pX y * gaussianPDFReal 0 0 (z - y) ∂volume) = 0
+    have hzero : (fun y => pX y * gaussianPDFReal 0 0 (z - y)) = fun _ => (0 : ℝ) := by
+      funext y; rw [gaussianPDFReal_zero_var]; simp
+    rw [hzero, integral_zero]
+  -- pin `hpathDeriv1`: spatial 1st derivative of `pPath σ`, for ALL σ.
+  have hpathDeriv1 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pPath σ ξ) (pathDeriv1 σ y) y := by
+    intro σ y
+    show HasDerivAt (fun ξ => pPath σ ξ) (deriv (pPath σ) y) y
+    rcases le_or_gt σ 0 with hσ | hσ
+    · -- σ ≤ 0: `pPath σ` is the zero function; deriv is 0.
+      rw [hpPath_nonpos σ hσ]
+      simpa using hasDerivAt_const y (0 : ℝ)
+    · -- σ > 0: use the Wave-4a deriv-existence helper.
+      rw [hpPath_pos σ hσ]
+      exact convDensityAdd_hasDerivAt_self pX hpX_nn hpX_meas hpX_int hσ y
+  -- pin `hpathDeriv2`: spatial 2nd derivative of `pPath σ`, for ALL σ.
+  have hpathDeriv2 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pathDeriv1 σ ξ) (pathDeriv2 σ y) y := by
+    intro σ y
+    show HasDerivAt (fun ξ => deriv (pPath σ) ξ) (deriv (deriv (pPath σ)) y) y
+    rcases le_or_gt σ 0 with hσ | hσ
+    · -- σ ≤ 0: `pPath σ = 0`, so `deriv (pPath σ) = 0` and the 2nd deriv is 0.
+      have hd1 : deriv (pPath σ) = fun _ => (0 : ℝ) := by
+        funext ξ; rw [hpPath_nonpos σ hσ]; simp
+      rw [hd1]
+      simpa using hasDerivAt_const y (0 : ℝ)
+    · -- σ > 0: differentiate `deriv (pPath σ) = deriv (convDensityAdd pX g_σ)`.
+      have hfun : (fun ξ => deriv (pPath σ) ξ)
+          = deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨σ, hσ.le⟩)) := by
+        rw [hpPath_pos σ hσ]
+      rw [hfun]
+      have hval : deriv (deriv (pPath σ)) y
+          = deriv (deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨σ, hσ.le⟩))) y := by
+        rw [hpPath_pos σ hσ]
+      rw [hval]
+      exact convDensityAdd_deriv_hasDerivAt_self pX hpX_nn hpX_meas hpX_int hσ y
+  -- the per-`x`, per-`s` derivative is now obtained by combining the heat-eq atom
+  -- (σ-derivative) with the §5G-1 negMulLog chain rule.
+  refine Filter.Eventually.of_forall (fun x s hs => ?_)
+  have hspos : (0:ℝ) < s := by have := hs.1; linarith
+  -- kernel continuity / measurability (shared by the domination groups).
+  have hker_cont : Continuous (fun u : ℝ => heatFlow_density_heat_equation_kernel s u) := by
+    unfold heatFlow_density_heat_equation_kernel; fun_prop
+  have hker_meas : Measurable (fun u : ℝ => heatFlow_density_heat_equation_kernel s u) :=
+    hker_cont.measurable
+  -- the kernel uniform sup bound `|kernel s v| ≤ (√(2πs))⁻¹`.
+  have hker_le : ∀ v : ℝ, |heatFlow_density_heat_equation_kernel s v|
+      ≤ (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹ := by
+    intro v
+    rw [heatFlow_density_heat_equation_kernel_eq hspos v,
+      abs_of_nonneg (gaussianPDFReal_nonneg 0 _ v)]
+    exact gaussianPDFReal_le_prefactor' ⟨s, hspos.le⟩ v
+  -- spatial 1st/2nd-derivative global-bound constants.
+  set Mξ1 : ℝ := (Real.sqrt (2 * Real.pi * s))⁻¹ * ((1 + 2 * s * Real.exp (-1)) / (2 * s)) with hMξ1
+  set Mξ2 : ℝ := (Real.sqrt (2 * Real.pi * s))⁻¹ * ((2 * Real.exp (-1) + 1) / s) with hMξ2
+  -- (A) σ-derivative pin from `heatFlow_density_heat_equation`.
+  have hpath_deriv : HasDerivAt (fun σ => pPath σ x) ((1/2) * pathDeriv2 s x) s := by
+    refine heatFlow_density_heat_equation pX pPath pathDeriv1 pathDeriv2
+      hpPath_pos hpathDeriv1 hpathDeriv2 hspos x
+      ?boundσ ?hboundσ_int ?hFσ_meas ?hFσ_int ?hFσ'_meas ?hbσ
+      ?boundξ1 ?hboundξ1_int ?hFξ1_meas ?hFξ1_int ?hFξ1'_meas ?hbξ1
+      ?boundξ2 ?hboundξ2_int ?hFξ2_int ?hFξ2'_meas ?hbξ2
+    -- σ-direction domination (`s`-uniform Gaussian-Hessian majorant `gaussHessMaj s`,
+    -- whose σ-window `Ioo (s/2)(2s)` matches `gaussianHess_le_gaussHessMaj` at base `s`).
+    case boundσ => exact fun y => pX y * gaussHessMaj s (x - y)
+    case hboundσ_int =>
+      -- `pX · (bounded gaussHessMaj s)` integrable via `mul_bdd`.
+      refine hpX_int.mul_bdd
+        (c := (Real.sqrt (Real.pi * s))⁻¹ * (16 * Real.exp (-1) / s + 2 / s)) ?_ ?_
+      · refine (Measurable.aestronglyMeasurable ?_)
+        have hM : Measurable (gaussHessMaj s) := by unfold gaussHessMaj; fun_prop
+        exact hM.comp (measurable_const.sub measurable_id)
+      · refine Filter.Eventually.of_forall (fun y => ?_)
+        rw [Real.norm_eq_abs, abs_of_nonneg (gaussHessMaj_nonneg hspos (x - y))]
+        exact gaussHessMaj_bdd hspos (x - y)
+    case hFσ_meas =>
+      -- a.e.-strong measurability of `y ↦ pX y · kernel σ (x-y)` for σ near `s`.
+      refine Filter.Eventually.of_forall (fun σ => ?_)
+      exact (hpX_meas.aestronglyMeasurable).mul
+        (((show Measurable (fun u : ℝ => heatFlow_density_heat_equation_kernel σ u) by
+            unfold heatFlow_density_heat_equation_kernel; fun_prop).comp
+          (measurable_const.sub measurable_id)).aestronglyMeasurable)
+    case hFσ_int =>
+      refine hpX_int.mul_bdd
+        (c := (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹) ?_ ?_
+      · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+      · exact Filter.Eventually.of_forall (fun y => by
+          rw [Real.norm_eq_abs]; exact hker_le (x - y))
+    case hFσ'_meas =>
+      refine (hpX_meas.aestronglyMeasurable).mul ?_
+      refine AEStronglyMeasurable.const_mul ?_ _
+      refine AEStronglyMeasurable.mul ?_ ?_
+      · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+      · exact (((measurable_const.sub measurable_id).pow_const 2).div_const _).sub
+          measurable_const |>.aestronglyMeasurable
+    case hbσ =>
+      -- `‖pX y · (1/2)·(kernel σ ·(…))‖ ≤ pX y · gaussHessMaj s (x-y)` on σ ∈ Ioo(s/2,2s).
+      refine Filter.Eventually.of_forall (fun y σ hσ => ?_)
+      have hσpos : (0:ℝ) < σ := by have := hσ.1; linarith
+      rw [norm_mul, Real.norm_eq_abs, abs_of_nonneg (hpX_nn y)]
+      apply mul_le_mul_of_nonneg_left _ (hpX_nn y)
+      -- the kernel equals the Gaussian pdf for σ>0; reuse the s-uniform Hessian majorant at base `s`.
+      rw [heatFlow_density_heat_equation_kernel_eq hσpos (x - y)]
+      have hmaj := gaussianHess_le_gaussHessMaj hspos hσ (x - y)
+      -- `‖(1/2)·(g_σ·(…))‖ = (1/2)·g_σ·|…| ≤ (1/2)·gaussHessMaj s ≤ gaussHessMaj s`.
+      have hg_nn : 0 ≤ gaussianPDFReal 0 ⟨σ, le_of_lt (by have := hσ.1; linarith : (0:ℝ) < σ)⟩ (x - y) :=
+        gaussianPDFReal_nonneg 0 _ _
+      have hgM_nn : 0 ≤ gaussHessMaj s (x - y) := gaussHessMaj_nonneg hspos (x - y)
+      rw [Real.norm_eq_abs, abs_mul, abs_of_nonneg (by norm_num : (0:ℝ) ≤ 1/2)]
+      have habs : |gaussianPDFReal 0 ⟨σ, hσpos.le⟩ (x - y) * ((x - y) ^ 2 / σ ^ 2 - 1 / σ)|
+          = gaussianPDFReal 0 ⟨σ, hσpos.le⟩ (x - y) * |(x - y) ^ 2 / σ ^ 2 - 1 / σ| := by
+        rw [abs_mul, abs_of_nonneg hg_nn]
+      rw [habs]
+      calc 1 / 2 * (gaussianPDFReal 0 ⟨σ, hσpos.le⟩ (x - y) * |(x - y) ^ 2 / σ ^ 2 - 1 / σ|)
+          ≤ 1 / 2 * gaussHessMaj s (x - y) := by
+            apply mul_le_mul_of_nonneg_left hmaj (by norm_num)
+        _ ≤ gaussHessMaj s (x - y) := by linarith [hgM_nn]
+    -- spatial-direction domination (fixed-s global bounds, Wave-4a route).
+    case boundξ1 => exact fun y => |pX y| * Mξ1
+    case hboundξ1_int => exact hpX_int.abs.mul_const _
+    case hFξ1_meas =>
+      intro ξ
+      exact (hpX_meas.aestronglyMeasurable).mul
+        ((hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable)
+    case hFξ1_int =>
+      intro ξ
+      refine hpX_int.mul_bdd
+        (c := (Real.sqrt (2 * Real.pi * (⟨s, hspos.le⟩ : ℝ≥0)))⁻¹) ?_ ?_
+      · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+      · exact Filter.Eventually.of_forall (fun y => by
+          rw [Real.norm_eq_abs]; exact hker_le (ξ - y))
+    case hFξ1'_meas =>
+      intro ξ
+      refine (hpX_meas.aestronglyMeasurable).mul ?_
+      refine AEStronglyMeasurable.mul ?_ ?_
+      · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+      · exact ((measurable_const.sub measurable_id).div_const s).neg.aestronglyMeasurable
+    case hbξ1 =>
+      refine Filter.Eventually.of_forall (fun y ξ _ => ?_)
+      rw [norm_mul, Real.norm_eq_abs]
+      apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
+      have := kernel_x_deriv1_global_bound hspos (ξ - y)
+      rwa [hMξ1]
+    case boundξ2 => exact fun y => |pX y| * Mξ2
+    case hboundξ2_int => exact hpX_int.abs.mul_const _
+    case hFξ2_int =>
+      have hbound_int : Integrable (fun y => |pX y| * Mξ1) volume := hpX_int.abs.mul_const _
+      refine hbound_int.mono' ?_ (Filter.Eventually.of_forall (fun y => ?_))
+      · refine (hpX_meas.aestronglyMeasurable).mul ?_
+        refine AEStronglyMeasurable.mul ?_ ?_
+        · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+        · exact ((measurable_const.sub measurable_id).div_const s).neg.aestronglyMeasurable
+      · rw [norm_mul, Real.norm_eq_abs]
+        apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
+        have := kernel_x_deriv1_global_bound hspos (x - y)
+        rwa [hMξ1]
+    case hFξ2'_meas =>
+      refine (hpX_meas.aestronglyMeasurable).mul ?_
+      refine AEStronglyMeasurable.mul ?_ ?_
+      · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+      · exact (((measurable_const.sub measurable_id).pow_const 2).div_const _).sub
+          measurable_const |>.aestronglyMeasurable
+    case hbξ2 =>
+      refine Filter.Eventually.of_forall (fun y ξ _ => ?_)
+      rw [norm_mul, Real.norm_eq_abs]
+      apply mul_le_mul_of_nonneg_left _ (abs_nonneg _)
+      have := kernel_x_deriv2_global_bound hspos (ξ - y)
+      rwa [hMξ2]
+  -- (B+C) chain rule: pin the `max s 0 = s` reconciliation then apply §5G-1.
+  have hmaxs : (⟨max s 0, le_max_right s 0⟩ : ℝ≥0) = ⟨s, hspos.le⟩ := by
+    apply NNReal.eq; exact max_eq_left hspos.le
+  have hpos : convDensityAdd pX (gaussianPDFReal 0 ⟨s, hspos.le⟩) x ≠ 0 :=
+    (convDensityAdd_pos pX hpX_nn hpX_int hpX_pos hspos x).ne'
+  -- `hpath_deriv : HasDerivAt (fun σ => pPath σ x) D s`; since `pPath σ x = conv g_{max σ 0} x`
+  -- definitionally, this is exactly the `hpath_deriv` shape §5G-1 expects.
+  have hchain := debruijnIdentityV2_holds_assembled_chain_entDeriv_formula
+    pX hspos x ((1/2) * pathDeriv2 s x) hpos hpath_deriv
+  -- `hchain` value: `(- log (conv g_{⟨s,_⟩} x) - 1) * ((1/2)·pathDeriv2 s x)`.
+  -- goal value: `(- log (conv g_{max s 0} x) - 1) * ((1/2)·deriv(deriv(conv g_{max s 0})) x)`.
+  -- the log factor: rewrite `⟨s,_⟩ → ⟨max s 0,_⟩` in hchain; `pathDeriv2 s x` is defeq to the
+  -- goal's deriv-deriv form.
+  rw [← hmaxs] at hchain
+  exact hchain
 
 /-- **§5G-3: parametric-diff composition.**
 The entropy integral `∫ negMulLog (pPath s ·)` has its `s`-derivative at `t` given by the
@@ -2156,7 +2378,12 @@ joint-measurability + `measurable_deriv`, no sorry/admit); 2nd goal `_chain_ibp_
 `hentDeriv` pin (`max t 0 = t`) — genuine. Conclusion `∃ entDeriv, HasDerivAt ∧ ∫ = (1/2)·fisher` is
 the genuine claim (NOT hyp-bundled, NOT weakened) — no name laundering. `@residual` correctly
 maintained (transitive sorry present, not falsely `@audit:ok`).
-@residual(plan:epi-debruijn-pertime-closure) -/
+
+**Wave 4b update (2026-06-01)**: `_chain_hdiff` (`hdiff` arm) is now genuinely closed (0 sorry,
+sorryAx-free). The remaining transitive `sorryAx` is exclusively via `_chain_ibp_fisher`'s two
+Mathlib walls `wall:fisher-finiteness` + `wall:entropy-finiteness`; the `plan:` component is
+dropped as stale.
+@residual(wall:fisher-finiteness,wall:entropy-finiteness) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_parametric
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -2287,7 +2514,13 @@ hypothesis — it is the genuine claim, derived from the sub-lemmas once the reg
 supplied. The `@residual` is transitive (the sorry now lives in the named §5G sub-lemmas),
 kept here so the file-level residual grep still reflects this declaration's dependency.
 
-@residual(plan:epi-debruijn-pertime-closure) -/
+**Wave 4b update (2026-06-01)**: `_chain_hdiff` (the former `plan:epi-debruijn-pertime-closure`
+plumbing leaf) is now genuinely closed (0 sorry, `#print axioms` sorryAx-free). The remaining
+transitive `sorryAx` of this declaration is now exclusively via the two Mathlib walls
+`wall:fisher-finiteness` (`gaussianConv_fisher_le_inv_var`, FisherConvBound.lean) and
+`wall:entropy-finiteness` (`EntropyConvFinite.lean`), used by `_chain_ibp_fisher`. The
+`plan:` component is dropped as stale.
+@residual(wall:fisher-finiteness,wall:entropy-finiteness) -/
 private theorem debruijnIdentityV2_holds_assembled_chain
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -2400,13 +2633,14 @@ The assembly threads through three named regularity-plumbing lemmas
 (`_entropy_eq` = 段 1-2, `_chain` = 段 2-7, `_fisher_match` = 段 1+7). After the conv-pin
 redesign (§Phase 5-F 案 1, 2026-05-31), `_entropy_eq` and `_fisher_match` are **genuine**
 (0 sorry) — `_fisher_match` closes by `funext` because the conv pin makes `density_t`
-*pointwise equal* to `convDensityAdd pX g_t`. The only remaining honest `sorry` +
-`@residual(plan:epi-debruijn-pertime-closure)` is `_chain` (段 2-7) for the concrete
-Gaussian-tail domination / `tsupport`-wide C¹ / integrability regularity (PR-level,
-plan L-PT-γ/δ). The atoms themselves are genuine.
+*pointwise equal* to `convDensityAdd pX g_t`. After the Wave 4b closure (2026-06-01), the
+`_chain` (段 2-7) plumbing leaf `_chain_hdiff` is also genuinely closed; the only remaining
+transitive `sorryAx` is now the two Mathlib walls `wall:fisher-finiteness` +
+`wall:entropy-finiteness` (de Bruijn IBP / Fisher integrability). The atoms themselves are
+genuine.
 
 Honesty sign-off (conv-pin redesign, 2026-05-31): verdict honest_residual (NOT
-proof-done — `_chain` sorry remains). (1) **Signature identical to wall
+proof-done — Mathlib-wall residual remains). (1) **Signature identical to wall
 `debruijnIdentityV2_holds`** (`FisherInfoV2DeBruijn.lean`): same conclusion `HasDerivAt
 (… differentialEntropy …) ((1/2)·fisherInfoOfDensityReal h_reg.density_t) t`, same hyps
 (`h_reg : IsRegularDeBruijnHypV2`); no weakening / no extra regularity added (the wall
@@ -2414,12 +2648,12 @@ uses underscore `_hX/_hZ/_hXZ/_ht`, the assembly genuinely consumes `hX/hZ/hXZ/h
 (2) **Body genuine**: real wiring (`_chain` deriv + `_eq` eventual-equality →
 `congr_of_eventuallyEq` → `rw [_fisher_match]`), no circular `:= h`, no degenerate.
 (3) **NOT name-laundering**: `_assembled` + same signature, but `#print axioms` confirms
-transitive `sorryAx` dependency (now via `_chain` only); docstring explicitly states it
-is NOT proof-done, with the remaining gap localized in the named `_chain` honest-sorry
-lemma. It carries `@residual` (not `@audit:ok`), so it does not claim completion.
-classification `plan:` correct (downstream of @audit:ok atoms = plumbing). @residual kept.
+transitive `sorryAx` dependency (now via the two Mathlib walls only).
 
-`@residual(plan:epi-debruijn-pertime-closure)` -/
+**Wave 4b update (2026-06-01)**: the `plan:epi-debruijn-pertime-closure` component is dropped
+as stale (its plumbing leaf `_chain_hdiff` is now genuinely closed). The remaining transitive
+`sorryAx` is exclusively `wall:fisher-finiteness` + `wall:entropy-finiteness`.
+@residual(wall:fisher-finiteness,wall:entropy-finiteness) -/
 theorem debruijnIdentityV2_holds_assembled
     {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ)
