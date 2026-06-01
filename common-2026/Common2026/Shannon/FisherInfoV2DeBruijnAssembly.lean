@@ -1559,7 +1559,8 @@ honest. `@residual(wall:fisher-finiteness)` kept.
 @residual(wall:fisher-finiteness) -/
 private theorem convDensityAdd_fisher_integrable
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_int : Integrable pX volume) {t : ℝ} (ht : 0 < t) :
+    (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
+    {t : ℝ} (ht : 0 < t) :
     Integrable (fun x => (logDeriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)) x)^2
       * convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x) volume := by
   set p_t : ℝ → ℝ := convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) with hp_def
@@ -1571,7 +1572,7 @@ private theorem convDensityAdd_fisher_integrable
     Filter.Eventually.of_forall fun x => mul_nonneg (sq_nonneg _) (hp_nn x)
   -- Step 3: shared Stam-convolution-Fisher wall `J(p_t) ≤ 1/t`.
   have hbound : fisherInfoOfDensity p_t ≤ ENNReal.ofReal (1 / t) :=
-    gaussianConv_fisher_le_inv_var pX hpX_nn hpX_meas hpX_int ht
+    gaussianConv_fisher_le_inv_var pX hpX_nn hpX_meas hpX_int hpX_mass ht
   -- Step 4: hence `J(p_t) < ⊤`.
   have hfin : fisherInfoOfDensity p_t < ⊤ :=
     lt_of_le_of_lt hbound ENNReal.ofReal_lt_top
@@ -2814,7 +2815,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step
         pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
   -- `hu'v = Integrable (u' * v)`: from the Fisher-finiteness wall (`(logDeriv)²·p_t`),
   --   since `u' x · v x = - logDeriv p_t x · deriv p_t x = -((logDeriv p_t x)²·p_t x)`.
-  have hfisher := convDensityAdd_fisher_integrable pX hpX_nn hpX_meas hpX_int ht
+  have hfisher := convDensityAdd_fisher_integrable pX hpX_nn hpX_meas hpX_int hpX_mass ht
   -- pointwise identity `u' x · v x = -((logDeriv p_t x)² · p_t x)`, derived once.
   have hpt_pointwise : ∀ x, (u' * v) x
       = -(logDeriv p_t x ^ 2 * p_t x) := by
@@ -2909,7 +2910,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher
   -- (4) Fisher value: `∫ (logDeriv p_t)²·p_t = fisherInfoOfDensityReal p_t`,
   --     integrability supplied by the Fisher-finiteness wall.
   rw [fisher_from_logDeriv p_t hp_nn
-    (convDensityAdd_fisher_integrable pX hpX_nn hpX_meas hpX_int ht)]
+    (convDensityAdd_fisher_integrable pX hpX_nn hpX_meas hpX_int hpX_mass ht)]
 
 /-- **§5G-3 hdiff plumbing (a.e.-over-Ioo per-`x` chain-rule) — GENUINELY CLOSED (0 sorry).**
 The per-`x`, per-`s∈Ioo (t/2)(2*t)` chain-rule derivative of the entropy integrand
