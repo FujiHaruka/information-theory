@@ -524,9 +524,10 @@ theorem mutualInfo_le_sum_per_letter_of_memoryless_strong
 すなわち \(X \perp \theta \mid T(X)\)）。このとき相互情報量は統計量を通しても保存される:
 \(I(\theta; X) = I(\theta; T(X))\)（Cover & Thomas Thm 2.9.1、DPI の等号版）。
 
-本ライブラリでは充足統計量を、教科書の Neyman-Fisher 因子分解形ではなく
-（それは `condDistrib` の \(\theta\)-非依存性経由で長い橋渡しを要するため）、
-`mutualInfo_le_of_markov` の結論形に直結する **マルコフ連鎖形**で定義する。
+本ライブラリでは充足統計量をまず、`mutualInfo_le_of_markov` の結論形に直結する
+**マルコフ連鎖形**で定義する（教科書の Neyman-Fisher 因子分解形を直接 def 化すると
+`condDistrib` の \(\theta\)-非依存性経由で長い橋渡しを要するため）。因子分解形との同値は
+別途、Mathlib の条件付き独立性補題を経由して形式化済み（後述 `isSufficient_iff_factorized`）。
 
 **Verified (定義)**: `IsSufficientStatistic`
 (`Common2026/Shannon/SufficientStatistic.lean`, 名前空間 `InformationTheory.Shannon`)
@@ -555,7 +556,46 @@ theorem mutualInfo_eq_of_sufficient
 証明は 2.8 のデータ処理不等式（後処理版 `mutualInfo_le_of_postprocess` で
 \(I(\theta; T(X)) \le I(\theta; X)\)）と、マルコフ連鎖版 DPI
 （`mutualInfo_le_of_markov` で逆向き \(I(\theta; X) \le I(\theta; T(X))\)）を
-`le_antisymm` で合わせて得る。教科書の Neyman-Fisher 因子分解との同値は本章では未着手。
+`le_antisymm` で合わせて得る。
+
+### Neyman-Fisher 因子分解形との同値
+
+教科書の充足性は因子分解 \(p(x \mid \theta) = g(T(x), \theta)\, h(x)\) で導入される。
+これは測度論的には「\(T(X)\) を与えたとき \(X\) の条件付き分布が \(\theta\) に依存しない」、
+すなわち \(\mathrm{condDistrib}(X \mid T(X), \theta) = \mathrm{condDistrib}(X \mid T(X))\)
+（\(\theta\)-成分を足しても変わらない）とエンコードできる。本ライブラリではこの因子分解形を
+`IsSufficientStatisticFactorized` として定義し、マルコフ連鎖形との**同値**を形式化した。
+両形式とも条件付き独立性 \(X \perp \theta \mid T(X)\) の別表現であり、同値は Mathlib の
+`condIndepFun_iff_*`（`Mathlib/Probability/Independence/Conditional.lean`）を経由して閉じる。
+
+**Verified (定義)**: `IsSufficientStatisticFactorized`
+(`Common2026/Shannon/SufficientStatistic.lean`)
+
+```lean
+def IsSufficientStatisticFactorized
+    (μ : Measure Ω) [IsFiniteMeasure μ]
+    [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Θ] [Nonempty Θ]
+    (θ : Ω → Θ) (Xs : Ω → X) (f : X → T') : Prop :=
+  condDistrib Xs (fun ω => (f (Xs ω), θ ω)) μ
+    =ᵐ[μ.map (fun ω => (f (Xs ω), θ ω))]
+      (condDistrib Xs (fun ω => f (Xs ω)) μ).prodMkRight Θ
+```
+
+**Verified**: `isSufficient_iff_factorized`
+(`Common2026/Shannon/SufficientStatistic.lean`)
+
+```lean
+theorem isSufficient_iff_factorized
+    (μ : Measure Ω) [IsProbabilityMeasure μ] [StandardBorelSpace Ω]
+    [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Θ] [Nonempty Θ]
+    (θ : Ω → Θ) (Xs : Ω → X) {f : X → T'}
+    (hθ : Measurable θ) (hXs : Measurable Xs) (hf : Measurable f) :
+    IsSufficientStatistic μ θ Xs f ↔ IsSufficientStatisticFactorized μ θ Xs f
+```
+
+同値定理は条件付き独立性の標準 Borel 機構（`condExpKernel` 経由）を使うため、
+マルコフ連鎖形単独の `mutualInfo_eq_of_sufficient` には不要だった
+\([\,\text{StandardBorelSpace } \Omega\,]\) を標本空間に課す（正当な regularity 前提）。
 
 ---
 
@@ -620,11 +660,6 @@ theorem error_lower_bound (hcard : 2 ≤ Fintype.card X) {a : ℝ}
 Cover & Thomas Ch.2 のうち、本パイロットのスコープ（離散・有限アルファベット）内で
 **本章には対応する独立した定理を確認できなかった**項目を正直に記す。
 
-- **2.9 充足統計量の Neyman-Fisher 因子分解形との同値**: 充足性のマルコフ連鎖形
-  (`IsSufficientStatistic`) と相互情報量保存 (`mutualInfo_eq_of_sufficient`) は
-  2.9 節に形式化済みだが、教科書の因子分解定義
-  \(p(x \mid \theta) = g(T(x), \theta)\, h(x)\) との同値（`condDistrib` の
-  \(\theta\)-非依存性経由）は本章では未形式化。
 - **2.10 ファノ不等式の系（誤り確率と \(H(X)\) の弱形 \(H(P_e) + P_e \log|\mathcal{X}| \ge H(X|Y)\)
   等の variant）**: コア形・測度論形・逆向き下界は形式化済みだが、
   すべての教科書系を網羅したわけではない。
