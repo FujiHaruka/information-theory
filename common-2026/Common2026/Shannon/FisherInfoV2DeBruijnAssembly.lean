@@ -2105,7 +2105,19 @@ The genuine derivation route is, for each `(x, s∈Ioo)`:
 
 `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified;
 no transitive `sorryAx`). The conclusion is an integrand-level derivative-existence statement —
-NOT the composed `HasDerivAt`-of-the-integral, NOT hyp-bundled. All hyps pX regularity. -/
+NOT the composed `HasDerivAt`-of-the-integral, NOT hyp-bundled. All hyps pX regularity.
+
+Independent honesty audit (2026-06-01, fresh auditor, commit `76afc39`): **proof-done, @audit:ok**.
+`#print axioms` re-verified = `[propext, Classical.choice, Quot.sound]` (no `sorryAx`, machine
+re-run via transient print + `lake env lean`). σ≤0 degenerate branch is HONEST (not a vacuous
+exfalso / false-statement exploit): `pPath σ = convDensityAdd pX g_0` evaluates to the genuine
+definitional value `0` via `gaussianPDFReal_zero_var` (var-0 Gaussian pdf = 0), and the σ≤0 pins
+feed the all-σ deriv-pin requirement of the `@audit:ok` atom `heatFlow_density_heat_equation`
+(its hpathDeriv1/2 are `∀ σ`); the actual conclusion is only used at `s > 0` (`hspos` from
+`hs.1`), so the degenerate branch is forced plumbing, not the load-bearing content. NOT circular
+(conclusion value = §5G-1 closed form computed from `heatFlow_density_heat_equation` +
+`_chain_entDeriv_formula`, not a hypothesis), NOT load-bearing (all hyps pX regularity), 0 local
+sorry. @audit:ok -/
 private theorem debruijnIdentityV2_holds_assembled_chain_hdiff
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
