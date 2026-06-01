@@ -23,20 +23,25 @@ deno run -A build.mjs       # → dist/index.html を生成
 
 ## デプロイ (surge)
 
-surge は初回にメール/パスワードでアカウント作成・ログインが必要（対話入力）。
-**この最終コマンドは自分のターミナルで実行する**：
+build と deploy を 1 つにしたスクリプトがある。いつでもこれ一発：
 
 ```bash
 cd docs/textbook/site
-deno run -A npm:surge ./dist common2026-ch2.surge.sh
+./deploy.sh
 ```
 
-- 初回は email / password を聞かれる（アカウントが無ければその場で作成される）。
-- ドメイン `common2026-ch2.surge.sh` は好きな名前に変えてよい（surge 全体で一意）。
-- 2 回目以降は同じコマンドで再デプロイ（上書き）。
-- ログイン済みなら非対話。トークン運用なら `SURGE_LOGIN` / `SURGE_TOKEN` 環境変数。
+`deploy.sh` の動作：
+- Deno で `build.mjs` を実行し `dist/` を再生成。
+- surge にデプロイ。**ログイン済み (`~/.netrc`) なら非対話**。未ログインなら
+  `surge-credentials.txt` の email/password で自動ログイン（expect 経由）。
+- デプロイ先ドメインは `surge-credentials.txt` の `domain=` で決まる
+  （現状 common2026-ch2.surge.sh）。変えたいときはこの行を編集。
 
-公開後の URL: `https://common2026-ch2.surge.sh`（指定したドメイン）。
+成功すると末尾に公開 URL を表示する。
+
+> 手動で叩く場合（スクリプトを使わないとき）:
+> `deno run -A npm:surge ./dist <domain>` 。初回はログイン済みでなければ
+> email/password を聞かれる。`SURGE_LOGIN` / `SURGE_TOKEN` 環境変数でも可。
 
 ## 公開範囲の注意
 
