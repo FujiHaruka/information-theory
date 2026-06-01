@@ -896,6 +896,149 @@ theorem csiszarLogRatioGap_deriv_le_zero
   exact csiszar_ratio_deriv_le_zero_arith J_X J_Y J_sum N_X N_Y
     hJX_pos hJY_pos hJsum_pos hNX_pos hNY_pos h_plain_stam
 
+/-- **R-4-b — EPI recovery bridge from `r(0) ≥ 0`**.
+
+The log-ratio gap at `t = 0` is `r(0) = log (eP(X+Y)) − log (eP X + eP Y)`
+(`csiszarLogRatioGap_at_zero`). Since both `eP(X+Y)` and `eP X + eP Y` are
+strictly positive (`entropyPower_pos`, `add_pos`), `0 ≤ r(0)` is equivalent to
+`eP X + eP Y ≤ eP(X+Y)` by `Real.log_le_log_iff`, i.e. the entropy power
+inequality.
+
+Genuine bridge — no `sorry`, no load-bearing hypotheses. -/
+theorem epi_of_csiszarLogRatioGap_zero_nonneg
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω)
+    (h_nonneg : 0 ≤ InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
+        X Y Z_X Z_Y P 0) :
+    entropyPower (P.map (fun ω => X ω + Y ω))
+      ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
+  rw [InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap_at_zero] at h_nonneg
+  -- `0 ≤ log A − log B` ⟺ `log B ≤ log A`.
+  have h_log_le : Real.log (entropyPower (P.map X) + entropyPower (P.map Y))
+      ≤ Real.log (entropyPower (P.map (fun ω => X ω + Y ω))) := by linarith
+  -- Positivity of both `log` arguments.
+  have hA_pos : 0 < entropyPower (P.map (fun ω => X ω + Y ω)) := entropyPower_pos _
+  have hB_pos : 0 < entropyPower (P.map X) + entropyPower (P.map Y) :=
+    add_pos (entropyPower_pos _) (entropyPower_pos _)
+  -- `log B ≤ log A ⟺ B ≤ A` (both positive).
+  rw [Real.log_le_log_iff hB_pos hA_pos] at h_log_le
+  exact h_log_le
+
+/-- **R-5-a — `csiszarLogRatioGap X Y Z_X Z_Y P` is differentiable on the
+interior `Set.Ioi 0 = interior (Set.Ici 0)`**, via R-2
+(`csiszarLogRatioGap_hasDerivAt`) + `HasDerivAt.differentiableAt`.
+
+Genuine: R-2 is `@audit:ok` (sorryAx-free), so this differentiability is
+transparently genuine. Mirrors the difference-version
+`csiszarGap1Source_differentiableOn_interior`. -/
+theorem csiszarLogRatioGap_differentiableOn_interior
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
+    (hY : Measurable Y) (hZY : Measurable Z_Y) (hYZY : IndepFun Y Z_Y P)
+    (hXYZXY : IndepFun (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P) :
+    DifferentiableOn ℝ
+      (fun t : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
+        X Y Z_X Z_Y P t)
+      (interior (Set.Ici (0 : ℝ))) := by
+  rw [interior_Ici]
+  intro t ht
+  have ht_pos : (0 : ℝ) < t := ht
+  exact ((csiszarLogRatioGap_hasDerivAt X Y Z_X Z_Y P
+    hX hZX hXZX hY hZY hYZY hXYZXY
+    h_reg_sum h_reg_X h_reg_Y ht_pos).differentiableAt).differentiableWithinAt
+
+/-- **R-5-b — `csiszarLogRatioGap X Y Z_X Z_Y P` is continuous on `Set.Ici 0`**.
+
+For `t > 0`, continuity follows from R-2 (`csiszarLogRatioGap_hasDerivAt`) via
+`HasDerivAt.continuousAt`. The endpoint `t = 0` requires continuity of the three
+`entropyPower (P.map ...)` terms along the heat-flow path as `√t → 0`. The
+`log` / `+` / `−` outer composition is continuous, so the analytic content is
+**the same G2 dominated-convergence wall** as the difference-version
+`csiszarGap1Source_continuousOn` (D4): per-`t` continuity of `entropyPower ∘ P.map`
+along the heat-flow path requires Lebesgue-dominated-convergence machinery not
+carried by the current `IsDeBruijnRegularityHyp` bundle.
+
+This is **NOT a new residual classification**: it inherits the existing G2
+continuity wall from D4 via the same closure plan
+`epi-stam-to-conclusion-phaseA-plan`. The ratio reframe does not worsen the
+continuity wall (`log` / `+` / `−` are continuous maps). -/
+theorem csiszarLogRatioGap_continuousOn
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P) :
+    ContinuousOn
+      (fun t : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
+        X Y Z_X Z_Y P t)
+      (Set.Ici (0 : ℝ)) := by
+  sorry
+  -- @residual(plan:epi-stam-to-conclusion-phaseA-plan) -- inherits the G2
+  -- continuity wall from `csiszarGap1Source_continuousOn` (D4); not a new
+  -- classification (log/+/− outer composition is continuous).
+
+/-- **R-5-c — `AntitoneOn (fun t => csiszarLogRatioGap X Y Z_X Z_Y P t) (Set.Ici 0)`**,
+the genuine log-ratio EPI gap is antitone on the heat-flow ray `[0, ∞)`.
+
+Mirrors the difference-version `csiszarGap1Source_antitoneOn_Ici_zero` (D6):
+applies `antitoneOn_of_deriv_nonpos` with the convex domain `Set.Ici 0`
+(`convex_Ici`), R-5-b (continuity), R-5-a (differentiability), and the per-`t`
+`deriv ≤ 0` from R-2 (`csiszarLogRatioGap_hasDerivAt.deriv`) + R-3
+(`csiszarLogRatioGap_deriv_le_zero`).
+
+Genuine assembly: this lemma carries **no new `@residual`**. It transitively
+inherits the G2 continuity wall (through R-5-b) and the plain-Stam extraction
+gap (through R-3); the assembly itself is genuine, exactly like D6's honesty
+structure. -/
+theorem csiszarLogRatioGap_antitoneOn_Ici_zero
+    {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
+    (hY : Measurable Y) (hZY : Measurable Z_Y) (hYZY : IndepFun Y Z_Y P)
+    (hXYZXY : IndepFun (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
+    (h_pos_stam : ∀ (t : ℝ) (ht : 0 < t),
+      (0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              ((h_reg_X.reg_at t ht).density_t)) ∧
+      (0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              ((h_reg_Y.reg_at t ht).density_t)) ∧
+      (0 < Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              ((h_reg_sum.reg_at t ht).density_t)) ∧
+      InformationTheory.Shannon.EPIStamDischarge.IsStamInequalityHyp
+        (fun ω => X ω + Real.sqrt t * Z_X ω)
+        (fun ω => Y ω + Real.sqrt t * Z_Y ω) P) :
+    AntitoneOn
+      (fun t : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
+        X Y Z_X Z_Y P t)
+      (Set.Ici (0 : ℝ)) := by
+  refine antitoneOn_of_deriv_nonpos (convex_Ici 0)
+    (csiszarLogRatioGap_continuousOn X Y Z_X Z_Y P h_reg_sum h_reg_X h_reg_Y)
+    (csiszarLogRatioGap_differentiableOn_interior X Y Z_X Z_Y P
+      hX hZX hXZX hY hZY hYZY hXYZXY
+      h_reg_sum h_reg_X h_reg_Y) ?_
+  intro t ht
+  rw [interior_Ici] at ht
+  have ht_pos : (0 : ℝ) < t := ht
+  obtain ⟨hJX_pos, hJY_pos, hJsum_pos, h_stam⟩ := h_pos_stam t ht_pos
+  -- R-2 gives `HasDerivAt (csiszarLogRatioGap ...) (RHS) t`.
+  have h_deriv := csiszarLogRatioGap_hasDerivAt X Y Z_X Z_Y P
+    hX hZX hXZX hY hZY hYZY hXYZXY
+    h_reg_sum h_reg_X h_reg_Y ht_pos
+  -- R-3 gives `RHS ≤ 0`.
+  have h_le := csiszarLogRatioGap_deriv_le_zero X Y Z_X Z_Y P
+    h_reg_sum h_reg_X h_reg_Y ht_pos hJX_pos hJY_pos hJsum_pos h_stam
+  rw [h_deriv.deriv]
+  exact h_le
+
 /-- **A-3 — `g'(t) ≤ 0` from 1-source Stam**.
 
 The A-2-3 right-hand side `g'(t) = entropyPower_sum · J_sum − entropyPower_X · J_X

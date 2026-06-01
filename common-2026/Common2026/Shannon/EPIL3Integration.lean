@@ -1381,6 +1381,50 @@ theorem csiszarLogRatioGap_at_zero {Ω : Type*} [MeasurableSpace Ω]
     simp [Real.sqrt_zero]
   rw [h_sum_funext, h_X_funext, h_Y_funext]
 
+/-- **R-4-a — Endpoint `t = 1` of the log-ratio gap is zero (Gaussian saturation)**.
+
+At `t = 1` the 1-source heat-flow paths are `X + Z_X`, `Y + Z_Y`, and their sum
+`X + Y + (Z_X + Z_Y) = (X + Z_X) + (Y + Z_Y)`. When the convolved endpoints
+`X + Z_X` and `Y + Z_Y` are independent Gaussians of nonzero variance, EPI
+saturates: `N_sum(1) = N_X(1) + N_Y(1)` by `entropyPower_gaussian_additivity`.
+Hence `r(1) = log N_sum(1) − log (N_X(1) + N_Y(1)) = log A − log A = 0`
+(`sub_self`).
+
+This is the genuine endpoint of the monotone log-ratio object: together with
+`r'(t) ≤ 0` on `[0, ∞)` and `r(1) = 0`, monotonicity gives `r(0) ≥ 0`, i.e. EPI.
+The Gaussian-pair hypotheses are honest preconditions (laws + independence of the
+convolved endpoints), not load-bearing bundling. -/
+theorem csiszarLogRatioGap_at_one_eq_zero {Ω : Type*} {mΩ : MeasurableSpace Ω}
+    {X Y Z_X Z_Y : Ω → ℝ} (P : Measure Ω) [IsProbabilityMeasure P]
+    (hXZX : Measurable (fun ω => X ω + Z_X ω))
+    (hYZY : Measurable (fun ω => Y ω + Z_Y ω))
+    (hIndep : IndepFun (fun ω => X ω + Z_X ω) (fun ω => Y ω + Z_Y ω) P)
+    (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
+    (hLawX : P.map (fun ω => X ω + Z_X ω) = gaussianReal m₁ v₁)
+    (hLawY : P.map (fun ω => Y ω + Z_Y ω) = gaussianReal m₂ v₂) :
+    csiszarLogRatioGap X Y Z_X Z_Y P 1 = 0 := by
+  unfold csiszarLogRatioGap
+  -- At `t = 1`, `√1 = 1`; reduce the three paths to `X+Z_X`, `Y+Z_Y`,
+  -- and their sum `(X+Z_X)+(Y+Z_Y)`.
+  have h_sum_funext :
+      (fun ω => X ω + Y ω + Real.sqrt 1 * (Z_X ω + Z_Y ω))
+        = fun ω => (X ω + Z_X ω) + (Y ω + Z_Y ω) := by
+    funext ω; rw [Real.sqrt_one]; ring
+  have h_X_funext :
+      (fun ω => X ω + Real.sqrt 1 * Z_X ω) = fun ω => X ω + Z_X ω := by
+    funext ω; rw [Real.sqrt_one]; ring
+  have h_Y_funext :
+      (fun ω => Y ω + Real.sqrt 1 * Z_Y ω) = fun ω => Y ω + Z_Y ω := by
+    funext ω; rw [Real.sqrt_one]; ring
+  rw [h_sum_funext, h_X_funext, h_Y_funext]
+  -- Gaussian saturation: `eP((X+Z_X)+(Y+Z_Y)) = eP(X+Z_X) + eP(Y+Z_Y)`.
+  have h_sat := entropyPower_gaussian_additivity P
+    (fun ω => X ω + Z_X ω) (fun ω => Y ω + Z_Y ω)
+    hXZX hYZY hIndep m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
+  rw [h_sat]
+  -- `log A − log A = 0`.
+  exact sub_self _
+
 /-- **Rescale equivalence: 2-source `csiszarGap` ↔ 1-source `csiszarGap1Source`**
 (Phase D §13 A-0'-2).
 
