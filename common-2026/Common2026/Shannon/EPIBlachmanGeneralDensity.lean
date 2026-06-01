@@ -1,6 +1,7 @@
 import Common2026.Shannon.EPIBlachmanDensity
 import Common2026.Shannon.EPIConvDensityRegular
 import Common2026.Shannon.EPIConvDensityNormalization
+import Common2026.Shannon.EPIConvDensityAssoc
 import Common2026.Shannon.FisherConvBound
 
 /-!
@@ -14,26 +15,29 @@ heat kernel (`t > 0`). The existing producer
 conv-with-Gaussian (general density) version.
 
 Set `fX := convDensityAdd pX g_t`, `fY := convDensityAdd pY g_t`. Both are
-conv-with-Gaussian densities. 18 of the 19 `IsBlachmanConvReady` fields are closed
-genuinely; only `int_fisherZ` retreats.
+conv-with-Gaussian densities. **All 19 `IsBlachmanConvReady` fields are closed genuinely**
+(19/19, no retreat).
 
-* **GENUINE (18 fields)**: `int_fX/fY`, `bdd_*`, `pos_pZ`, `int_X/int_Y`, `cond_int`,
-  `int_W`, `int_Wsq`, `int_inner`, `int_fisherX/int_fisherY`, `int_prod1/2/3` — closed
-  from the conv-with-Gaussian regularity assets (`isRegularDensityV2_convDensityAdd_gaussian`,
+* **GENUINE (18 conv-with-Gaussian fields)**: `int_fX/fY`, `bdd_*`, `pos_pZ`,
+  `int_X/int_Y`, `cond_int`, `int_W`, `int_Wsq`, `int_inner`, `int_fisherX/int_fisherY`,
+  `int_prod1/2/3` — closed from the conv-with-Gaussian regularity assets
+  (`isRegularDensityV2_convDensityAdd_gaussian`,
   `convDensityAdd_gaussian_bdd`/`_deriv_bdd`/`_integrable`, `convDensityAdd_pos_of_pos_cont`,
-  the Fisher-finiteness wall `gaussianConv_fisher_le_inv_var` via
+  the Fisher-finiteness bound `gaussianConv_fisher_le_inv_var` via
   `convDensityAdd_fisher_integrand_integrable`, and the shear
   `measurePreserving_prod_sub_swap` for the Tonelli product-measure terms). The key
   reduction is `logDeriv fX · fX = deriv fX` (strict positivity of `fX`), turning the
   linear-score fields into integrable·bounded products and the Fisher fields into
   shifted/sheared copies of `int_fisherX/int_fisherY`.
-* **🔴 RETREAT (1 field) — `int_fisherZ`**: Fisher integrability of the conv-of-conv
-  `convDensityAdd fX fY`. This equals `convDensityAdd (pX∗pY) g_{2t}` (convolution
-  associativity + `g_t ∗ g_t = g_{2t}`), which is conv-with-Gaussian (variance 2t) and
-  would then close via `convDensityAdd_fisher_integrand_integrable`. The missing piece is
-  the associativity rewrite `(pX∗g_t)∗(pY∗g_t) = (pX∗pY)∗g_{2t}` (`convDensityAdd_assoc` +
-  Gaussian variance combination, inventory §(3), not yet in-tree). Left as `sorry` +
-  `@residual(plan:epi-blachman-general-density-plan)`.
+* **GENUINE (`int_fisherZ`)**: Fisher integrability of the conv-of-conv
+  `convDensityAdd fX fY`. The 4-fold interchange bridge
+  `convDensityAdd_convGaussian_interchange` (`EPIConvDensityAssoc.lean`) identifies it with
+  `convDensityAdd (convDensityAdd pX pY) g_{2t}` (convolution associativity via Mathlib
+  `convolution_assoc` + `convDensityAdd_comm` + variance-doubling `g_t ∗ g_t = g_{2t}`),
+  which is conv-with-Gaussian (variance `2t`) and closes via
+  `convDensityAdd_fisher_integrand_integrable (pX∗pY) … (2t)`. The `pX∗pY` arm needs
+  `pX∗pY` to be a normalized probability density (nonneg / measurable / integrable / mass 1),
+  supplied by the `convDensityAdd_pXpY_*` helpers in `EPIConvDensityAssoc.lean`.
 
 `hpX_norm : ∫ pX = 1` / `hpY_norm` are added beyond the bare `hpX_mass` of the brief
 target signature: they are A-5-suppliable regularity (from `pX_law`'s probability
@@ -468,14 +472,26 @@ theorem isBlachmanConvReady_convDensityAdd_gaussian (pX pY : ℝ → ℝ) {t : �
     convDensityAdd_fisher_integrand_integrable pY hpY_nn hpY_meas hpY_int hpY_norm ht
   int_fisherZ := by
     -- Fisher integrability of the conv-of-conv `convDensityAdd fX fY`
-    -- (`fX = pX∗g_t`, `fY = pY∗g_t`). This equals `convDensityAdd (pX∗pY) g_{2t}`
-    -- (convolution associativity + `g_t ∗ g_t = g_{2t}`), which is conv-with-Gaussian
-    -- (variance 2t) and so would be closed by
-    -- `convDensityAdd_fisher_integrand_integrable (pX∗pY) … (2t)`. Missing piece: the
-    -- associativity rewrite `(pX∗g_t)∗(pY∗g_t) = (pX∗pY)∗g_{2t}` (`convDensityAdd_assoc`
-    -- + Gaussian variance combination) is not yet in-tree (inventory §(3)).
-    -- @residual(plan:epi-blachman-general-density-plan)
-    sorry
+    -- (`fX = pX∗g_t`, `fY = pY∗g_t`). The 4-fold interchange bridge identifies it with
+    -- `convDensityAdd (convDensityAdd pX pY) g_{2t}` (conv-with-Gaussian, variance 2t),
+    -- closed by `convDensityAdd_fisher_integrand_integrable (pX∗pY) … (2t)`.
+    rw [InformationTheory.Shannon.EPIConvDensity.convDensityAdd_convGaussian_interchange
+        pX pY ht hpX_nn hpX_meas hpX_int hpY_nn hpY_meas hpY_int]
+    -- `pX∗pY` is a normalized probability density (nonneg / measurable / integrable / mass 1).
+    have hPXY_nn : ∀ x, 0 ≤ convDensityAdd pX pY x :=
+      fun x => InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_nonneg
+        pX pY hpX_nn hpY_nn x
+    have hPXY_meas : Measurable (convDensityAdd pX pY) :=
+      InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_measurable
+        pX pY hpX_meas hpY_meas
+    have hPXY_int : Integrable (convDensityAdd pX pY) volume :=
+      InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_integrable
+        pX pY hpX_int hpX_meas hpY_int hpY_meas
+    have hPXY_norm : (∫ x, convDensityAdd pX pY x ∂volume) = 1 := by
+      rw [InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_integral_eq
+        pX pY hpX_int hpY_int, hpX_norm, hpY_norm, mul_one]
+    exact convDensityAdd_fisher_integrand_integrable (convDensityAdd pX pY)
+      hPXY_nn hPXY_meas hPXY_int hPXY_norm (t := 2 * t) (by positivity)
   int_prod1 := by
     set fX : ℝ → ℝ := convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) with hfX
     set fY : ℝ → ℝ := convDensityAdd pY (gaussianPDFReal 0 ⟨t, ht.le⟩) with hfY
