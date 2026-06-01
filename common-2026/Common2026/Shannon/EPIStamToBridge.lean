@@ -1,6 +1,7 @@
 import Common2026.Meta.EntryPoint
 import Common2026.Shannon.EntropyPowerInequality
 import Common2026.Shannon.EPIStamDischarge
+import Common2026.Shannon.FisherInfoV2DeBruijnGenuine
 import Common2026.Shannon.EPIL3Integration
 import Common2026.Shannon.EPIPlumbing
 import Common2026.Shannon.DifferentialEntropy

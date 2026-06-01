@@ -9,6 +9,7 @@ import Mathlib.Analysis.Calculus.Deriv.Comp
 import Mathlib.Analysis.Calculus.LogDeriv
 import Common2026.Shannon.FisherInfoV2
 import Common2026.Shannon.FisherInfoV2DeBruijn
+import Common2026.Shannon.FisherInfoV2DeBruijnGenuine
 import Common2026.Shannon.DifferentialEntropy
 
 /-!

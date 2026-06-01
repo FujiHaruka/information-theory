@@ -5,21 +5,25 @@ import Common2026.Shannon.EPIConvDensitySecondDeriv  -- STEP-D bridge convDensit
 /-!
 # per-time de Bruijn identity — Phase 5 capstone assembly
 
-`debruijnIdentityV2_holds` (`FisherInfoV2DeBruijn.lean`,
-`@residual(plan:epi-debruijn-pertime-closure)`) を一般 `X` で genuine 化する
+per-time de Bruijn identity を一般 `X` で genuine 化する
 **Phase 5 assembly** (`epi-debruijn-pertime-closure-plan.md` §Phase 5 詳細設計 §5C)。
 
-## import cycle 回避 (新 file 方式)
+## import cycle 回避 (新 file 方式) — 解決済 (2026-06-01)
 
 `FisherInfoV2DeBruijnPerTime.lean` (atom 供給元) は
 `import Common2026.Shannon.FisherInfoV2DeBruijn` している (atom が wall file の
 `gaussianConvolution` 等を使うため)。assembly は逆に atom を使うので、
-`FisherInfoV2DeBruijn.lean` の `debruijnIdentityV2_holds` body に直接書くと **import 循環**。
+`FisherInfoV2DeBruijn.lean` の本体に直接書くと **import 循環**。
 → 本 file (`FisherInfoV2DeBruijnAssembly.lean`) を atom file の下流に置き
-(`import FisherInfoV2DeBruijnPerTime` 合法、循環なし)、ここで同 signature の genuine theorem
-`debruijnIdentityV2_holds_assembled` を証明する。元の `debruijnIdentityV2_holds` は wall
-sorry のまま残し、本 file の `_assembled` が genuine 版 (plan §運用ルール「import cycle 注意」
-第一選択)。
+(`import FisherInfoV2DeBruijnPerTime` 合法、循環なし)、ここで genuine theorem
+`debruijnIdentityV2_holds_assembled` を証明する。
+
+**シム削除 (2026-06-01)**: 旧 per-time shim `debruijnIdentityV2_holds`
+(`FisherInfoV2DeBruijn.lean` の `sorry` body) は **削除済**。その 2 consumer
+(`deBruijn_identity_v2`, `debruijnIntegrationIdentity_holds`) は本 assembly の下流の
+新 file `FisherInfoV2DeBruijnGenuine.lean` に移設し、本 file の genuine sorryAx-free
+`_assembled` に delegate するよう書換 (Strategy B — relocate consumers downstream)。
+これで per-time de Bruijn の `sorry` はパイプラインから消えた。
 
 ## assembly 7 段 (plan §5C)
 
@@ -3506,10 +3510,12 @@ identity is now genuine end-to-end with NO remaining transitive `sorryAx`.
 @audit:ok — independent honesty audit (2026-06-01, fresh auditor, commit b5e13e2): genuine,
 proof-done, sorryAx-free. `#print axioms` = `[propext, Classical.choice, Quot.sound]` (transient
 `#print axioms` + `lake env lean` after `lake build` olean refresh; 0 sorryAx). Stale
-`@residual(wall:fisher-finiteness)` removed. NOTE: the same-signature shim
-`debruijnIdentityV2_holds` (FisherInfoV2DeBruijn.lean) keeps its sorry body purely due to the import
-cycle (atom file imports DeBruijn, so DeBruijn cannot call `_assembled`); see that decl's
-`@audit:superseded-by(debruijnIdentityV2_holds_assembled)` marker. -/
+`@residual(wall:fisher-finiteness)` removed. NOTE (2026-06-01, import cycle resolved): the
+same-signature per-time shim `debruijnIdentityV2_holds` (formerly in FisherInfoV2DeBruijn.lean) has
+been **deleted**, and its two consumers (`deBruijn_identity_v2`,
+`debruijnIntegrationIdentity_holds`) were relocated downstream of this assembly into
+`FisherInfoV2DeBruijnGenuine.lean`, where they now delegate to this genuine sorryAx-free
+`_assembled`. The de Bruijn pipeline therefore carries no per-time `sorry` anymore. -/
 theorem debruijnIdentityV2_holds_assembled
     {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ)

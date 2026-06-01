@@ -3,6 +3,7 @@ import Common2026.Shannon.EntropyPowerInequality
 import Common2026.Shannon.EPIPlumbing
 import Common2026.Shannon.FisherInfoV2
 import Common2026.Shannon.FisherInfoV2DeBruijn
+import Common2026.Shannon.FisherInfoV2DeBruijnGenuine
 import Common2026.Shannon.FisherInfoGaussian
 import Common2026.Shannon.DifferentialEntropy
 import Common2026.Shannon.EPIConvDensity

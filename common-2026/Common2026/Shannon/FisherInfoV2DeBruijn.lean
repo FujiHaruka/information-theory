@@ -40,7 +40,9 @@ retreat) to publish
 * `fisherInfoOfMeasureV2_gaussianReal` — Phase C Gaussian closed form `1/v` (V2)
 * `gaussianConvolution` — abbrev for `P.map (fun ω => X ω + √t · Z ω)` (heat-flow path)
 * `IsRegularDeBruijnHypV2` — Phase D V2 regularity predicate (RHS uses V2 fisher info)
-* `deBruijn_identity_v2` — Phase D de Bruijn identity (L-F1+L-F2 hypothesis pass-through, V2)
+* `deBruijn_identity_v2` — Phase D de Bruijn identity, V2 (MOVED to
+   `FisherInfoV2DeBruijnGenuine.lean`; now delegates to the genuine sorryAx-free
+   `debruijnIdentityV2_holds_assembled`)
 * `deBruijn_identity_v2_gaussian` — Gaussian discharge (hypothesis-free), the canonical
    Stage 2 publish target blocked under V1 by the representative-dependence flaw
 
@@ -264,128 +266,13 @@ structure IsRegularDeBruijnHypV2 {Ω : Type*} [MeasurableSpace Ω]
   `HasDerivAt` / Fisher analytic core. Same regularity series as `pX_law` / `density_t_eq`. -/
   pX_mom : Integrable (fun y => y ^ 2 * pX y) volume
 
-/-! ### Shared sorry 補題 — `debruijnIdentityV2_holds` (genuine wall closure point)
+-- moved to FisherInfoV2DeBruijnGenuine.lean (genuine, calls debruijnIdentityV2_holds_assembled):
+--   the per-time shim `debruijnIdentityV2_holds` and the consumer `deBruijn_identity_v2`.
+-- The shim is deleted (was `sorry` + `@residual(plan:epi-debruijn-pertime-closure)`); the
+-- genuine same-signature `debruijnIdentityV2_holds_assembled` (FisherInfoV2DeBruijnAssembly.lean,
+-- sorryAx-free) is now wired into the pipeline via FisherInfoV2DeBruijnGenuine.lean.
 
-Phase 2.B foundation step (`docs/shannon/epi-stam-fisher-epi-integrated-sweep-plan.md`
-§Phase 2.B) で `IsRegularDeBruijnHypV2` から `derivAt_entropy_eq_half_fisher_v2`
-field が削除され、本 lemma が `wall:debruijn-integration` (heat equation +
-dominated-bound + IBP の Mathlib 不在部) に対する **genuine wall closure point**
-に昇格した。Phase 2.A の no-op launder verdict (commit `a6ae83b`) を受けた
-field 削除 foundation の完了点。
-
-`deBruijn_identity_v2` / `deBruijn_identity_v2_of_heat_flow` /
-`deBruijn_identity_v2_of_heat_subhyp` すべての common closure point。
-集約 target は **wall:debruijn-integration**。
--/
-
-/-- **de Bruijn identity body — shared sorry 補題 (plan:epi-debruijn-pertime-closure)**.
-
-**Conv-pin redesign (2026-05-31, `epi-debruijn-pertime-closure-plan` §Phase 5-F 案 1)**:
-
-1. `IsRegularDeBruijnHypV2` の density-pin field `density_t_eq` を **rnDeriv pin から
-   conv pin に差し替えた** (`density_t x = convDensityAdd pX (gaussianPDFReal 0 ⟨t,ht.le⟩) x`)。
-   旧 rnDeriv pin (`density_t x = (rnDeriv (P.map (X+√t·Z)) volume x).toReal`) は
-   `Classical.choose` 代表元への pointwise pin で `logDeriv = 0` a.e. → `fisherInfoOfDensity = 0`
-   を強制し、RHS を `0` に退化させて命題を FALSE にしていた (`density_t := 0` と同型の
-   false-statement defect)。smooth 畳み込み代表元 `convDensityAdd pX g_t` に pin し直すと
-   `logDeriv` が genuine になり、RHS が正しい Fisher 値を取って命題は **true statement** になる。
-2. wall content (heat eq + IBP on density of `P.map (X + √t Z)`) に semantic 必要な
-   regularity hyp `_hX` / `_hZ` / `_hXZ` を underscore-prefixed args として復元 (Phase
-   2.B 段 1 で削除されていた forward-looking 負債、plan §0-b 案 (a))。
-
-**再分類根拠 (`wall:debruijn-integration` → `plan:epi-debruijn-pertime-closure`)**:
-Wave 1 独立再評価 (inventory §0/§12) で、これは「hard absence」ではなく「big plumbing」と
-確定した。Mathlib API は揃っている — 無限区間 IBP (`integral_mul_deriv_eq_deriv_mul_of_integrable`,
-`IntegralEqImproper.lean:1318`) は PRESENT、parametric diff
-(`hasDerivAt_integral_of_dominated_loc_of_deriv_le`) 完備、rnDeriv↔withDensity 軸
-完備、convolution density (`EPIConvDensity.lean` の `@audit:ok` 資産) 完備。唯一の
-Mathlib 不在は Gaussian heat semigroup closed-form だが density-route で迂回可
-(self-build 見積 ~250 行、Phase 1+ で closure 予定)。Gaussian case は
-`deBruijn_identity_v2_gaussian` で既に genuine。
-
-body は依然 `sorry` (解析核は Phase 1+ の別タスク)。命題は true、tier 2 honest 残課題。
-
-**Phase 5 assembly (2026-05-31)**: import 循環回避のため、6 genuine atom
-(`FisherInfoV2DeBruijnPerTime.lean`) を組んだ genuine 版 assembly は別 file
-`FisherInfoV2DeBruijnAssembly.debruijnIdentityV2_holds_assembled` (同 signature) にある
-(atom file が本 file を import するので、本 file から atom を import できない逆依存)。
-本 wall lemma 自身の body は wall sorry のまま残置 (循環回避)。assembly 版は main body が
-genuine で、残 gap は 2 named regularity-plumbing lemma (entropy-chain 段 2-7 +
-fisher value match) の honest sorry に局所化 (PR-level、plan L-PT-γ/δ)。
-
-Honesty sign-off (conv-pin redesign, 2026-05-31):
-(1) **signature true 化**: RHS は `fisherInfoOfDensityReal h_reg.density_t` で、
-`density_t_eq` が `density_t` を smooth 代表元 `convDensityAdd pX g_t` に pin する。旧
-rnDeriv pin は `logDeriv = 0` a.e. で RHS を `0` に退化させ命題を FALSE にしていたが、
-smooth conv 代表元では `logDeriv` が genuine で RHS が正しい Fisher 値を取るため命題は
-genuine な de Bruijn identity (true statement)。
-(2) **`density_t_eq` は regularity precondition (NOT load-bearing)**: core-
-reconstruction test — `density_t_eq` を granted しても `(d/dt)h = (1/2)J` (heat eq +
-IBP) は供給されない (pin は「witness = explicit smooth conv 関数」と言うだけで
-`HasDerivAt` を渡さない)。RHS は explicit smooth 関数で `HasDerivAt`/Fisher core を
-bundle しない。解析核は全て本 `sorry` body 内に残る。
-(3) **`wall:` → `plan:` 再分類を確認**: loogle 裏取りで IBP
-(`integral_mul_deriv_eq_deriv_mul_of_integrable`) + parametric diff
-(`hasDerivAt_integral_of_dominated_loc_of_deriv_le`) PRESENT、heat semigroup
-(`Mehler`/`heatKernel`/`OrnsteinUhlenbeck`) `Found 0`。唯一の不在は density-route で
-迂回可 (`convDensityAdd_hasDerivAt` = `@audit:ok` 資産)。docstring は「big not hard」と
-主張し「blocked by Mathlib」とは言わない → mathlib_wall_misuse ではない。plan
-`epi-debruijn-pertime-closure-plan.md` 実在 (6 Phase)。再分類妥当。
-
-**Superseded by genuine assembly (2026-06-01, commit b5e13e2)**: the same-signature genuine version
-`debruijnIdentityV2_holds_assembled` (`FisherInfoV2DeBruijnAssembly.lean`) now proves this exact
-conclusion **sorryAx-free** (`#print axioms` = `[propext, Classical.choice, Quot.sound]`; the fisher +
-entropy walls and `_chain_hdiff` are all genuinely closed). This shim keeps its `sorry` body purely
-because of the import cycle: the assembly's atom file (`FisherInfoV2DeBruijnPerTime.lean`) imports the
-present file, so the present file cannot call `_assembled`. The shim is NOT load-bearing (signature
-honest, `density_t_eq` is a regularity precondition per the conv-pin redesign) and is a true statement;
-it remains only as the import-cycle-side carrier for upstream consumers (FisherInfoV2DeBruijn.lean:374,
-:494). Independent honesty audit (2026-06-01, fresh auditor): `@residual(plan:...)` retained (local body
-is still `sorry`, type-check-wise not proof-done) + `@audit:superseded-by` added to record the genuine
-same-signature alternative.
-
-@residual(plan:epi-debruijn-pertime-closure) @audit:superseded-by(debruijnIdentityV2_holds_assembled) -/
-theorem debruijnIdentityV2_holds
-    {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
-    (X Z : Ω → ℝ)
-    (_hX : Measurable X) (_hZ : Measurable Z) (_hXZ : IndepFun X Z P)
-    {t : ℝ} (_ht : 0 < t)
-    (h_reg : IsRegularDeBruijnHypV2 X Z P t) :
-    HasDerivAt
-      (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
-      ((1/2) * fisherInfoOfDensityReal h_reg.density_t)
-      t := by
-  sorry -- @residual(plan:epi-debruijn-pertime-closure)
-
-/-- **de Bruijn identity (V2 form)**, honest pass-through to shared wall lemma.
-
-For `X ⊥ Z` with `Z ∼ 𝒩(0, 1)`,
-
-`(d/dt) h(X + √t · Z) = (1/2) · J(X + √t · Z)`,
-
-stated with **V2 Fisher information** (`fisherInfoOfDensityReal`) on the RHS.
-Unlike the V1 statement, the Gaussian case here can be fully discharged
-(`deBruijn_identity_v2_gaussian` below).
-
-**Phase 2.B 段 1 (2026-05-27、`epi-stam-fisher-epi-integrated-sweep-plan`
-§Phase 2.B)**: F1 field 削除完了 (`IsRegularDeBruijnHypV2` から
-`derivAt_entropy_eq_half_fisher_v2` field を削除) により、本 wrapper は
-honest pass-through (regularity hyp `h_reg` → shared wall lemma
-`debruijnIdentityV2_holds` (`wall:debruijn-integration`) 経由) に昇格。 -/
-@[entry_point]
-theorem deBruijn_identity_v2
-    {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
-    (X Z : Ω → ℝ)
-    (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
-    {t : ℝ} (ht : 0 < t)
-    (h_reg : IsRegularDeBruijnHypV2 X Z P t) :
-    HasDerivAt
-      (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
-      ((1/2) * fisherInfoOfDensityReal h_reg.density_t)
-      t :=
-  debruijnIdentityV2_holds X Z hX hZ hXZ ht h_reg
-
-/-! ### Shared sorry 補題 — `debruijnIntegrationIdentity_holds` (積分形, wall:debruijn-integration)
+/-! ### `debruijnIntegrationIdentity_holds` — moved to FisherInfoV2DeBruijnGenuine.lean (積分形)
 
 Cover-Thomas Lemma 17.7.2 の **積分形** (integration identity along the heat-flow path)。
 `debruijnIdentityV2_holds` は per-time の `HasDerivAt` を返すのみで、その deriv を FTC
@@ -409,18 +296,19 @@ interval 形が無い)。Gaussian 限定なら `bounded_T_ftc_gaussian` (`EPIL3I
 
 Phase 4 structural-closure precondition (`epi-debruijn-integration-phaseD-plan`
 follow-up): packages the FTC ingredients needed to integrate the per-time
-`debruijnIdentityV2_holds` derivative along the heat-flow path `(0, T)`. All
-four fields are **regularity preconditions** (which `X` is admissible / how
+`debruijnIdentityV2_holds_assembled` derivative along the heat-flow path `(0, T)`.
+All four fields are **regularity preconditions** (which `X` is admissible / how
 regular the heat-flow path is), NOT the de Bruijn analytic core — the core
-(heat equation + IBP) stays localized in the per-time wall lemma
-`debruijnIdentityV2_holds` (`@residual(wall:debruijn-integration)`), which each
-`reg_t` field invokes.
+(heat equation + IBP) is genuinely discharged by the per-time identity
+`debruijnIdentityV2_holds_assembled` (sorryAx-free, FisherInfoV2DeBruijnAssembly.lean),
+which the consumer `debruijnIntegrationIdentity_holds`
+(FisherInfoV2DeBruijnGenuine.lean) invokes per time-point via each `reg_t` field.
 
 * `fPath` — density witness path: `fPath t` is the density of
   `P.map (gaussianConvolution X Z t)`.
 * `reg_t` — per-time V2 de Bruijn regularity at each interior `t ∈ (0, T)`,
   with `density_t = fPath t` (so the per-time `HasDerivAt` value matches the
-  integrand). This is what feeds `debruijnIdentityV2_holds` per time-point.
+  integrand). This is what feeds `debruijnIdentityV2_holds_assembled` per time-point.
 * `cont` — continuity of the heat-flow entropy on the closed interval `[0, T]`
   (a path-regularity precondition; cf. the Gaussian instance
   `continuousOn_differentialEntropy_heat_flow_gaussian`).
@@ -434,8 +322,8 @@ integration identity directly — `reg_t` only supplies per-time
 `IsRegularDeBruijnHypV2` inputs (2 fields `Z_law` + `density_t`, the
 `derivAt_entropy_eq_half_fisher_v2` field having been removed Phase 2.B), so the
 de Bruijn analytic core `(d/dt)h = (1/2)J` (heat eq + IBP) is NOT bundled here;
-it is produced only by calling the per-time wall `debruijnIdentityV2_holds`
-(`@residual(wall:debruijn-integration)`) inside the consumer body. `cont` /
+it is produced only by calling the genuine per-time identity
+`debruijnIdentityV2_holds_assembled` (sorryAx-free) inside the consumer body. `cont` /
 `integrable` are standard FTC preconditions. Non-vacuous: Gaussian instance
 (`continuousOn_differentialEntropy_heat_flow_gaussian`, `bounded_T_ftc_gaussian`
 in EPIL3Integration) satisfies all fields. -/
@@ -455,84 +343,10 @@ structure IsDeBruijnPathRegular {Ω : Type*} [MeasurableSpace Ω]
   integrable : IntervalIntegrable
     (fun t => (1/2) * fisherInfoOfDensityReal (fPath t)) volume 0 T
 
-/-- **de Bruijn 積分恒等式 — 構造的 closure (per-time wall への reduction)**.
-
-per-time の `debruijnIdentityV2_holds` (`@residual(wall:debruijn-integration)`)
-を FTC (`intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le`) で積分した差分
-恒等式の存在形。Phase 4 structural closure (2026-05-31): 旧 independent `sorry`
-を path-regularity precondition `IsDeBruijnPathRegular` + FTC で genuine 化。本
-lemma 自身に local `sorry` は無く、唯一の wall (`debruijnIdentityV2_holds` の
-per-time sorry) に transitively 依存するだけ。
-
-`hT : 0 ≤ T` と path-regularity bundle `h_path` は regularity / 積分可能性の
-precondition であり、de Bruijn 不等式の核 (heat eq IBP) は per-time wall lemma
-側に残る (load-bearing bundling ではない)。
-
-Independent honesty audit (2026-05-31): body genuine — Step 1 calls the per-time
-wall `debruijnIdentityV2_holds` (`@residual(wall:debruijn-integration)`) for each
-`t ∈ Ioo 0 T`, Step 2 assembles via Mathlib FTC
-`intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le`, Steps 3-5 convert the
-interval integral to `Set.Ioo`/`Set.Ioc` and fix the boundary `f 0 = h(P.map X)`.
-No `:= sorry` / `:True` disguise. `h_path : IsDeBruijnPathRegular` is a genuine
-regularity precondition (not load-bearing — see that structure's audit note).
-Honesty improvement: this replaced 2 independent `sorry`s with a single
-transitive dependency on the per-time wall (`#print axioms` shows `sorryAx`
-solely via that wall + standard `propext`/`Classical.choice`/`Quot.sound`).
-Verdict honest_residual: local 0 sorry, transitive `wall:debruijn-integration`. -/
-theorem debruijnIntegrationIdentity_holds
-    {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
-    (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
-    (T : ℝ) (hT : 0 ≤ T)
-    (h_path : IsDeBruijnPathRegular X Z P T) :
-    ∃ (fPath : ℝ → ℝ → ℝ),
-      ∀ (h_X h_target : ℝ),
-        h_X = differentialEntropy (P.map X) →
-        h_target = differentialEntropy (P.map (gaussianConvolution X Z T)) →
-        h_target - h_X
-          = ∫ t in Set.Ioo 0 T, (1/2)
-            * (fisherInfoOfMeasureV2
-                (P.map (gaussianConvolution X Z t)) (fPath t)).toReal ∂volume := by
-  refine ⟨h_path.fPath, ?_⟩
-  intro h_X h_target hX_def htarget_def
-  -- The integrand `(1/2) * (fisherInfoOfMeasureV2 _ (fPath t)).toReal` is defeq to
-  -- `(1/2) * fisherInfoOfDensityReal (fPath t)`.
-  set f : ℝ → ℝ :=
-    fun s => differentialEntropy (P.map (gaussianConvolution X Z s)) with hf_def
-  set f' : ℝ → ℝ := fun t => (1/2) * fisherInfoOfDensityReal (h_path.fPath t) with hf'_def
-  -- Step 1: per-time `HasDerivAt f (f' t) t` for `t ∈ Ioo 0 T`, via the wall lemma.
-  have h_deriv : ∀ t ∈ Set.Ioo (0 : ℝ) T, HasDerivAt f (f' t) t := by
-    intro t ht
-    obtain ⟨h_reg, h_dens⟩ := h_path.reg_t t ht
-    have h := debruijnIdentityV2_holds X Z hX hZ hXZ ht.1 h_reg
-    -- `h : HasDerivAt f ((1/2) * fisherInfoOfDensityReal h_reg.density_t) t`.
-    rw [h_dens] at h
-    exact h
-  -- Step 2: Mathlib FTC.
-  have h_ftc : ∫ t in (0 : ℝ)..T, f' t = f T - f 0 :=
-    intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le hT h_path.cont h_deriv
-      h_path.integrable
-  -- Step 3: convert `intervalIntegral` (0..T) → `Set.Ioo 0 T ∂volume`.
-  have h_ioc : ∫ t in (0 : ℝ)..T, f' t = ∫ t in Set.Ioc (0 : ℝ) T, f' t ∂volume :=
-    intervalIntegral.integral_of_le hT
-  have h_ioo_eq_ioc :
-      ∫ t in Set.Ioc (0 : ℝ) T, f' t ∂volume = ∫ t in Set.Ioo (0 : ℝ) T, f' t ∂volume :=
-    MeasureTheory.integral_Ioc_eq_integral_Ioo
-  -- Step 4: boundary `f 0 = differentialEntropy (P.map X)`.
-  have h_f0 : f 0 = differentialEntropy (P.map X) := by
-    have h_path0 : gaussianConvolution X Z 0 = X := by
-      funext ω; simp [gaussianConvolution]
-    simp only [hf_def, h_path0]
-  -- Step 5: identify the goal integrand with `f'` (defeq).
-  have h_integrand :
-      (fun t => (1/2)
-        * (fisherInfoOfMeasureV2 (P.map (gaussianConvolution X Z t)) (h_path.fPath t)).toReal)
-      = f' := rfl
-  -- Assemble.
-  rw [hX_def, htarget_def]
-  show differentialEntropy (P.map (gaussianConvolution X Z T))
-        - differentialEntropy (P.map X)
-      = ∫ t in Set.Ioo 0 T, f' t ∂volume
-  rw [← h_f0, ← h_ftc, h_ioc, h_ioo_eq_ioc]
+-- moved to FisherInfoV2DeBruijnGenuine.lean (genuine, calls debruijnIdentityV2_holds_assembled):
+--   the consumer `debruijnIntegrationIdentity_holds` (de Bruijn integration identity along the
+--   heat-flow path). It now integrates the genuine sorryAx-free per-time identity via FTC, so it
+--   no longer carries a `@residual(wall:debruijn-integration)` transitive sorry.
 
 /-! ## Gaussian discharge — `deBruijn_identity_v2_gaussian` (hypothesis-free)
 
