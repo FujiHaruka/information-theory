@@ -222,6 +222,89 @@ theorem convScore_sq_le_pointwise
   rw [hconv_eq, mul_comm I0 I2]
   exact hRHS
 
+/-- **Step 1 deriv1 formula (per fixed `x`)**: `deriv p_s x = -(1/s)·∫ pX y (x-y) g_s(x-y)`.
+Reconstructs the 5 Gaussian-tail domination preconditions of `convDensityAdd_deriv1_gaussian_eq`
+from `hpX_meas`/`hpX_int`/`hs` only (mirrors `convDensityAdd_deriv_hasDerivAt_self`). -/
+theorem convDensityAdd_deriv_eq
+    (pX : ℝ → ℝ) (hpX_meas : Measurable pX) (hpX_int : Integrable pX volume)
+    {s : ℝ} (hs : 0 < s) :
+    deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩))
+      = fun ζ : ℝ => ∫ y, pX y * (gaussianPDFReal 0 ⟨s, hs.le⟩ (ζ - y)
+          * (-((ζ - y) / s))) ∂volume := by
+  -- kernel measurability + global bound for `kernel·(-(·/s))` (= `g_s(u)·(-u/s)`).
+  have hker_meas : Measurable (fun u : ℝ => heatFlow_density_heat_equation_kernel s u) := by
+    have : Continuous (fun u : ℝ => heatFlow_density_heat_equation_kernel s u) := by
+      unfold heatFlow_density_heat_equation_kernel; fun_prop
+    exact this.measurable
+  -- global bound `M1` for `|g_s(u)·(-u/s)|`: `(√2πs)⁻¹·(|u|exp(-u²/2s))/s`, `|u|exp(-u²/2s) ≤ √(s·exp(-1))`.
+  -- key: `|u|·exp(-u²/(2s)) ≤ √(s·exp(-1))` (square both sides; `(u²/s)exp(-u²/s) ≤ exp(-1)`).
+  have hum_bnd : ∀ u : ℝ, |u| * Real.exp (-u ^ 2 / (2 * s)) ≤ Real.sqrt (s * Real.exp (-1)) := by
+    intro u
+    rw [← Real.sqrt_sq (by positivity : (0:ℝ) ≤ |u| * Real.exp (-u ^ 2 / (2 * s)))]
+    refine Real.sqrt_le_sqrt ?_
+    have hexp := Real.mul_exp_neg_le_exp_neg_one (u ^ 2 / s)
+    have heq : (|u| * Real.exp (-u ^ 2 / (2 * s))) ^ 2
+        = s * ((u ^ 2 / s) * Real.exp (-(u ^ 2 / s))) := by
+      rw [mul_pow, sq_abs, ← Real.exp_nat_mul]
+      rw [show ((2 : ℕ) : ℝ) * (-u ^ 2 / (2 * s)) = -(u ^ 2 / s) from by push_cast; field_simp]
+      field_simp
+    rw [heq]
+    exact mul_le_mul_of_nonneg_left hexp hs.le
+  set M1 : ℝ := (Real.sqrt (2 * Real.pi * s))⁻¹ * (Real.sqrt (s * Real.exp (-1)) / s) with hM1
+  have hker_d1_bnd : ∀ u : ℝ,
+      |heatFlow_density_heat_equation_kernel s u * (-(u / s))| ≤ M1 := by
+    intro u
+    rw [heatFlow_density_heat_equation_kernel_eq hs u]
+    have hpref_nn : (0 : ℝ) ≤ (Real.sqrt (2 * Real.pi * s))⁻¹ := by positivity
+    have hcoe : ((⟨s, hs.le⟩ : ℝ≥0) : ℝ) = s := rfl
+    rw [gaussianPDFReal, sub_zero, hM1]
+    show |(Real.sqrt (2 * Real.pi * s))⁻¹ * Real.exp (-u ^ 2 / (2 * s)) * (-(u / s))|
+      ≤ (Real.sqrt (2 * Real.pi * s))⁻¹ * (Real.sqrt (s * Real.exp (-1)) / s)
+    -- factor the absolute value: `|(√2πs)⁻¹·exp·(-(u/s))| = (√2πs)⁻¹·exp·(|u|/s)`.
+    rw [abs_mul, abs_mul, abs_of_nonneg hpref_nn, abs_of_nonneg (Real.exp_nonneg _),
+      abs_neg, abs_div, abs_of_pos hs]
+    -- `(√2πs)⁻¹·(exp·(|u|/s)) ≤ (√2πs)⁻¹·(√(s exp(-1))/s)`
+    rw [show (Real.sqrt (2 * Real.pi * s))⁻¹ * Real.exp (-u ^ 2 / (2 * s)) * (|u| / s)
+          = (Real.sqrt (2 * Real.pi * s))⁻¹ * ((|u| * Real.exp (-u ^ 2 / (2 * s))) / s) from by ring]
+    refine mul_le_mul_of_nonneg_left ?_ hpref_nn
+    gcongr
+    exact hum_bnd u
+  -- build the 5 deriv1 hyps in kernel form.
+  have hF1_meas : ∀ ξ : ℝ,
+      AEStronglyMeasurable
+        (fun y => pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume := fun ξ =>
+    (hpX_meas.aestronglyMeasurable).mul
+      ((hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable)
+  have hker_le : ∀ v : ℝ, |heatFlow_density_heat_equation_kernel s v|
+      ≤ (Real.sqrt (2 * Real.pi * s))⁻¹ := by
+    intro v
+    rw [heatFlow_density_heat_equation_kernel_eq hs v, abs_of_nonneg (gaussianPDFReal_nonneg 0 _ v),
+      gaussianPDFReal, sub_zero]
+    refine mul_le_of_le_one_right (by positivity) (Real.exp_le_one_iff.mpr ?_)
+    rw [neg_div]; exact neg_nonpos.mpr (by positivity)
+  have hF1_int : ∀ ξ : ℝ,
+      Integrable (fun y => pX y * heatFlow_density_heat_equation_kernel s (ξ - y)) volume := by
+    intro ξ
+    refine hpX_int.mul_bdd (c := (Real.sqrt (2 * Real.pi * s))⁻¹) ?_ ?_
+    · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+    · exact Filter.Eventually.of_forall (fun y => by rw [Real.norm_eq_abs]; exact hker_le (ξ - y))
+  have hF1'_meas : ∀ ξ : ℝ, AEStronglyMeasurable
+      (fun y => pX y * (heatFlow_density_heat_equation_kernel s (ξ - y)
+        * (-((ξ - y) / s)))) volume := by
+    intro ξ
+    refine (hpX_meas.aestronglyMeasurable).mul (AEStronglyMeasurable.mul ?_ ?_)
+    · exact (hker_meas.comp (measurable_const.sub measurable_id)).aestronglyMeasurable
+    · exact ((measurable_const.sub measurable_id).div_const s).neg.aestronglyMeasurable
+  have hb1 : ∀ᵐ y ∂volume, ∀ ξ ∈ (Set.univ : Set ℝ),
+      ‖pX y * (heatFlow_density_heat_equation_kernel s (ξ - y) * (-((ξ - y) / s)))‖
+        ≤ (fun y => |pX y| * M1) y := by
+    refine Filter.Eventually.of_forall (fun y ξ _ => ?_)
+    rw [norm_mul, Real.norm_eq_abs]
+    exact mul_le_mul_of_nonneg_left (hker_d1_bnd (ξ - y)) (abs_nonneg _)
+  have hb1_int : Integrable (fun y => |pX y| * M1) volume := hpX_int.abs.mul_const _
+  exact InformationTheory.Shannon.EPIConvDensitySecondDeriv.convDensityAdd_deriv1_gaussian_eq
+    pX hs (fun y => |pX y| * M1) hb1_int hF1_meas hF1_int hF1'_meas hb1
+
 /-- **Shared Mathlib wall: Stam convolution Fisher bound** `J(pX ∗ g_s) ≤ 1/s`.
 任意確率密度 pX (重い裾含む) で成立。EPI per-time line の 2 consumer を gate
 (`convDensityAdd_fisher_integrable` / `_chain_ibp_fisher` via それ)。
