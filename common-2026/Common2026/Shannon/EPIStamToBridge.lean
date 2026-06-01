@@ -853,7 +853,26 @@ particular `h_blachman : IsBlachmanConvReady` is classified `@audit:ok` as a
 regularity precondition in `EPIStamDischarge`, NOT a load-bearing core. This is
 the honest closure path; the wall (a general-density Blachman producer for the
 non-Gaussian path density `convDensityAdd pX gaussian`) is pushed up to the
-callers as a `caller-supplied regularity precondition`, not injected here. -/
+callers as a `caller-supplied regularity precondition`, not injected here.
+
+@audit:ok — independent honesty audit (2026-06-01, commit `ba4353a`): all 4 checks
+PASS, `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free,
+0-sorry mechanically verified). (1) non-circular: conclusion
+`J_sum − (N_X·J_X+N_Y·J_Y)/(N_X+N_Y) ≤ 0` ≠ any hypothesis type. (2) NOT
+load-bearing: `h_stam : IsStamInequalityHyp` is the ∀-quantified genuine Stam
+PRODUCER (`@audit:ok`, producible from regularity alone via
+`isStamInequalityHyp_via_step3` → `stam_step2_density_wall` →
+`convex_fisher_bound_of_ready`, all sorryAx-free); the 6 new preconditions
+(`IsRegularDensityV2` smoothness, `∫=1` normalization, pointwise `convDensityAdd`
+structural id, 19-field `IsBlachmanConvReady` Integrable/bdd/pos bundle —
+`@audit:ok` regularity) are the producer's APPLY antecedents, none carries the
+inequality core. Core-reconstruction test: granting all 6 does NOT hand the Stam
+bound — `h_stam` is still required. (3) non-degenerate: no `:True`/vacuous shape.
+(4) sufficiency: the genuine RATIO form (NOT the false-as-framed difference form
+D3, correctly deleted) IS closable from plain harmonic Stam via the genuine
+arith core `csiszar_ratio_deriv_le_zero_arith` (`nlinarith`, `α²≤α` weights); the
+three Fisher `rfl` identifications hold since `fisherInfoOfMeasureV2` ignores its
+measure argument (`FisherInfoV2DeBruijn.lean:81`). -/
 theorem csiszarLogRatioGap_deriv_le_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]

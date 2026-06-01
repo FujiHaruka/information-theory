@@ -16,12 +16,12 @@
 - [ ] M0 在庫調査 (`Real.log` / `Real.exp` 単調性 + 商微分 + weighted Stam algebra の API 照合) 📋
 - [x] Phase R-1 — gap の log-ratio 再定義 (`csiszarLogRatioGap` 新 def) ✅ **genuine, proof-done** (`EPIL3Integration.lean:~1353`、`csiszarLogRatioGap_at_zero` `:1363` genuine)
 - [x] Phase R-2 — ratio derivative lemma 再述 (chain rule → `r'(t)` form) ✅ **genuine, `@audit:ok`** (`EPIStamToBridge.lean:681`、独立 `#print axioms` で sorryAx-free)
-- [x] Phase R-3 — genuine `r'(t) ≤ 0` 🚧 **type-check done (1 sorry)** (`EPIStamToBridge.lean:839`、arith core 配線 + 5 正値性 genuine、sufficiency 監査 PASS。残 sorry = `h_plain_stam` 抽出 `:892` のみ、`@residual(plan:epi-csiszar-ratio-reframe-plan)`)
+- [x] Phase R-3 — genuine `r'(t) ≤ 0` ✅ **genuine, proof-done, `@audit:ok`** (`EPIStamToBridge.lean:839`、R-3‴ 案 B で 0-sorry 化、commit `ba4353a`、独立 honesty 監査 4-check 全 PASS + `#print axioms` sorryAx-free 確認済)
 - [x] ~~**Phase R-3′ — density-identification bridge**~~ ❌ **撤退済 (2026-06-01 Wave 3、L-Ratio-3′-α 維持)** — bridge 案 infeasible 判明。bridge 撤退自体は維持。ただし **root cause は 2026-06-01 独立再検算で訂正** (旧「cross-source convolution が表現不能」→ 実は conv-pin 見落とし。真の root cause = path 独立性欠落 (under-hyp) + 一般 density Blachman 壁)。詳細 → §Phase R-3′
 - [x] ~~**Phase R-3″ — measure-level 直接形 reshape で閉じる**~~ ⚠️ **necessary but not sufficient に格下げ (2026-06-01 独立再検算)** — 事実 1 (`fisherInfoOfMeasureV2` が measure を無視 = density-keyed) より「measure-level 直接形」は名ばかりで density witness 不可避。reshape しても一般 density Blachman 壁は consumer に regularity precondition として残る (壁の移動であって消失ではない)。**単独では closure しない**。詳細 → §Phase R-3″
-- [ ] **Phase R-3‴ — honest closure 路 (案 B = R-3 signature に regularity precondition 追加)** 🎯 **NEXT** — R-3 signature に `IndepFun path_X path_Y P` + path density regularity preconditions (`IsRegularDensityV2` / `∫=1` / `IsBlachmanConvReady` / convolution 同定) を **caller 供給の regularity precondition** として追加し、`h_stam` を genuine apply して `h_plain_stam` を 0-sorry 化。壁は R-3 callers に押し上がるが各 precondition は regularity (非 load-bearing) なので honest。詳細 → §Phase R-3‴ 📋
+- [x] **Phase R-3‴ — honest closure 路 (案 B = R-3 signature に regularity precondition 追加)** ✅ **DONE (2026-06-01, commit `ba4353a`)** — R-3 に 6 件の path density regularity precondition (`IsRegularDensityV2`×2 / `∫=1`×2 / convolution 同定 `h_conv_id` / `IsBlachmanConvReady`) を **caller 供給 regularity** として追加し、`h_stam` を 3 path density witness (`.density_t`) で genuine apply → `h_plain_stam` 0-sorry 化。生の Stam 不等式は signature に入れず (案 C 回避)。3 Fisher 同定は `fisherInfoOfMeasureV2` measure-無視より `rfl`。`IndepFun path_X path_Y P` は `h_conv_id` precondition が under-hyp を直接吸収するため不要。R-5-c → D10 → A-5 の 4 層 caller 供給バンドルに同形 thread (新規 sorry 0)。独立 honesty 監査で 6 precondition = 非 load-bearing 確認。**一般 density Blachman 壁は chain 頂点 (A-5) の caller 供給 precondition に局所化** (新 wall `blachman-general-density` 候補、未整備)。
 - [ ] Phase R-4 — endpoint `r(1) = 0` (Gaussian saturation) + `r(0) ≥ 0 ⟺ EPI` の橋渡し 📋
-- [ ] Phase R-5 — `AntitoneOn` lift + 旧 difference-gap chain の再配線 (blast-radius 消化) 📋
+- [~] Phase R-5 — `AntitoneOn` lift + 旧 difference-gap chain の再配線 🚧 **大半 DONE (2026-06-01, commit `136ba61`)** — R-5-a/b/c (ratio continuousOn/differentiableOn/antitoneOn) landing 済。M0-3 scale 相殺 **CANCELS** 確認 (ratio scale 不変、`(1-s)` が log 内で相殺)。**偽 D3 + 偽 D6 削除**、D10 を genuine ratio antitoneOn (R-5-c) に再配線、`@audit:closed-by-successor` 解消。**残**: D7/D11 rescale の ratio 再配線は別 plan (`epi-stam-to-conclusion-phaseA-plan` G3) 所有 + D11 が 1-source antitone を dead carrier として捨てている判明 → headline には未影響、当該 plan で closure。
 - [ ] Phase R-6 — auditor doctrine に「sufficiency (hyp ⊢ concl)」check 追加の提案 (docs-only) 📋
 
 ## ゴール / Approach
@@ -936,3 +936,17 @@ conclusion) check」が欠落**していたため、本 defect (D3) は `audit:P
    Blachman 壁が apply step に残るため)。要検証 4 点 (regularity bridge 有無 / convolution 同定 derive /
    X⊥Y 上流有無) は implementer が verbatim 確認 (本 planner は fabricate せず precondition 明示追加で
    存在依存を回避)。
+
+9. **(2026-06-01, commit `ba4353a` + 独立監査) R-3‴ 案 B closure 完了、R-3 が genuine 0-sorry/`@audit:ok`**:
+   実装で案 D fallback に倒れず **案 B が成立**。Step 1 M0″ verbatim 判定: (a) `IsRegularDensityV2 (density_t)`
+   + (b) `∫ density_t = 1` は in-house producer 不在 (Gaussian witness のみ) → precondition 化、
+   (c) 3 Fisher 同定は `fisherInfoOfMeasureV2` measure-無視より `rfl` で genuine discharge。R-3 に 6 件
+   regularity precondition 追加 (`IsRegularDensityV2`×2 / `∫=1`×2 / `h_conv_id` convolution 同定 /
+   `IsBlachmanConvReady`) し `h_stam` を 3 path density witness で apply → `h_plain_stam` 0-sorry 化。
+   生 Stam 不等式は不挿入 (案 C 回避)。`IndepFun path_X path_Y P` は `h_conv_id` が under-hyp を直接吸収
+   するため不要となった (起草時案 B 想定より clean)。R-5-c → D10 → A-5 の 4 層 caller 供給バンドルに
+   同形 thread (新規 sorry 0、壁は thread のみで discharge なし)。**独立 honesty-auditor (fresh)** が
+   4-check 全 PASS + `#print axioms` sorryAx-free を確認、R-3 に `@audit:ok` 付与。語彙外タグ
+   `@audit:residual-ok(sufficiency-checked)` は削除。**帰結**: ratio monotonicity atom (R-2/R-3/R-4-b/R-5-c)
+   が genuine closed。一般 density Blachman 壁は R-3 から chain 頂点 (A-5 wrapper) の caller 供給
+   precondition に局所化 (新 wall `blachman-general-density` 候補、未整備 = 次の本丸)。
