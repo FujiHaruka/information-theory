@@ -819,6 +819,17 @@ private theorem convKernel_envelope_integrable
   -- conclude via `Integrable.integral_prod_left`.
   exact hf_int.integral_prod_left
 
+/-- **Public re-export** of the private Tonelli envelope `convKernel_envelope_integrable`,
+stated on the `convDensityAdd` shape so downstream `IsRegularDensityV2` producers can
+reuse it without leaking the `private` helper. Identical content; the `convDensityAdd`
+unfold makes the conclusion `Integrable (convDensityAdd pX K) volume`.
+@audit:ok — pure re-export, no new content. -/
+theorem convDensityAdd_envelope_integrable
+    (pX K : ℝ → ℝ) (hpX_int : Integrable pX volume) (hpX_meas : Measurable pX)
+    (hK_int : Integrable K volume) (hK_meas : Measurable K) :
+    Integrable (convDensityAdd pX K) volume :=
+  convKernel_envelope_integrable pX K hpX_int hpX_meas hK_int hK_meas
+
 /-! ### §5G-2b helpers — global sup bounds of the Gaussian kernel spatial derivatives
 
 The STEP-D bridge `convDensityAdd_deriv2_eq_gaussian` consumes per-`s` domination hypotheses
