@@ -831,11 +831,29 @@ form IS genuinely closable from plain Stam (weights `α = N_X/(N_X+N_Y)`,
 
 `h_stam` is the genuine Stam residual (Mathlib wall, separate `Prop` from EPI),
 `h_reg_*` are regularity preconditions — no load-bearing bundling.
--- @audit:residual-ok(sufficiency-checked 2026-06-01): ratio 形 `(N_X+N_Y)` 分母で
--- genuine (前任 difference 形 `N_sum` の反例は本形に無い)。arith core
--- `csiszar_ratio_deriv_le_zero_arith` が plain Stam から閉じる (slack `N_X·J_X²+N_Y·J_Y²≥0`)。
--- 残 gap = `h_stam`(IsStamInequalityHyp) から plain Stam を取り出す density-identification
--- plumbing のみ (`plan:` 分類 correct、`wall:` ではない)。 -/
+
+**Closure (案 B, R-3‴, 2026-06-01)**: the plain harmonic Stam
+`1/J_sum ≥ 1/J_X + 1/J_Y` is now extracted **genuinely** by applying `h_stam`
+(the ∀-quantified producer `Prop`) at the three path densities
+`f_i = (h_reg_*.reg_at t ht).density_t`. The application requires:
+* the three Fisher identifications `J_i = (fisherInfoOfMeasureV2 (P.map _) f_i).toReal`
+  — `rfl` since `fisherInfoOfMeasureV2 _ f = fisherInfoOfDensity f`
+  (`fisherInfoOfMeasureV2_def`) and `fisherInfoOfDensityReal f = (fisherInfoOfDensity f).toReal`;
+* the **caller-supplied regularity preconditions** below: `IsRegularDensityV2`
+  for the two summand path densities (`h_regdens_X`/`h_regdens_Y`), the
+  normalizations `∫ = 1` (`h_norm_X`/`h_norm_Y`), the pointwise convolution
+  identification (`h_conv_id`), and the Blachman-readiness bundle (`h_blachman`).
+
+The core inequality itself lives genuinely in the producer side
+(`stam_step2_density_wall` → `isStamInequalityHyp_via_body`, `@audit:ok`
+sorryAx-free); the consumer only supplies the regularity inputs to apply it.
+None of the new preconditions bundle the inequality core — they are smoothness /
+normalization / structural (convolution) / 19-field Blachman regularity. In
+particular `h_blachman : IsBlachmanConvReady` is classified `@audit:ok` as a
+regularity precondition in `EPIStamDischarge`, NOT a load-bearing core. This is
+the honest closure path; the wall (a general-density Blachman producer for the
+non-Gaussian path density `convDensityAdd pX gaussian`) is pushed up to the
+callers as a `caller-supplied regularity precondition`, not injected here. -/
 theorem csiszarLogRatioGap_deriv_le_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -852,7 +870,21 @@ theorem csiszarLogRatioGap_deriv_le_zero
                         ((h_reg_sum.reg_at t ht).density_t))
     (h_stam : InformationTheory.Shannon.EPIStamDischarge.IsStamInequalityHyp
                 (fun ω => X ω + Real.sqrt t * Z_X ω)
-                (fun ω => Y ω + Real.sqrt t * Z_Y ω) P) :
+                (fun ω => Y ω + Real.sqrt t * Z_Y ω) P)
+    -- ↓ 案 B (R-3‴): caller-supplied regularity preconditions for applying `h_stam`.
+    (h_regdens_X : Common2026.Shannon.FisherInfoV2.IsRegularDensityV2
+                      ((h_reg_X.reg_at t ht).density_t))
+    (h_regdens_Y : Common2026.Shannon.FisherInfoV2.IsRegularDensityV2
+                      ((h_reg_Y.reg_at t ht).density_t))
+    (h_norm_X : ∫ x, (h_reg_X.reg_at t ht).density_t x ∂MeasureTheory.volume = 1)
+    (h_norm_Y : ∫ x, (h_reg_Y.reg_at t ht).density_t x ∂MeasureTheory.volume = 1)
+    (h_conv_id : ∀ x, (h_reg_sum.reg_at t ht).density_t x
+                    = InformationTheory.Shannon.EPIConvDensity.convDensityAdd
+                        ((h_reg_X.reg_at t ht).density_t)
+                        ((h_reg_Y.reg_at t ht).density_t) x)
+    (h_blachman : InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady
+                    ((h_reg_X.reg_at t ht).density_t)
+                    ((h_reg_Y.reg_at t ht).density_t)) :
     Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal
           ((h_reg_sum.reg_at t ht).density_t)
         - (entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
@@ -876,22 +908,29 @@ theorem csiszarLogRatioGap_deriv_le_zero
   -- Positivity of the entropy powers.
   have hNX_pos : 0 < N_X := entropyPower_pos _
   have hNY_pos : 0 < N_Y := entropyPower_pos _
-  -- Plain harmonic Stam `1/J_sum ≥ 1/J_X + 1/J_Y` extracted from `h_stam`.
-  -- `h_stam : IsStamInequalityHyp (X+√t·Z_X) (Y+√t·Z_Y) P` is the genuine Stam
-  -- residual; applying it requires identifying the three Fisher infos with the
-  -- `fisherInfoOfMeasureV2 (P.map _) _).toReal` slots at regular density witnesses
-  -- (`fisherInfoOfDensityReal f = (fisherInfoOfMeasureV2 _ f).toReal` is `rfl`),
-  -- and discharging its regularity preconditions (`IsRegularDensityV2`,
-  -- normalization `∫ f = 1`, the pointwise convolution constraint
-  -- `fXY = convDensityAdd fX fY`, and `IsBlachmanConvReady fX fY`). Those
-  -- density-identification inputs are not packaged by `IsDeBruijnRegularityHyp`
-  -- and exceed R-3's budget to assemble inline (L-Ratio-3-α). This is a genuine
-  -- algebra-atom plumbing gap, NOT a false statement (the difference-gap form was
-  -- false; this ratio form IS closable from plain Stam — see arith core
-  -- `csiszar_ratio_deriv_le_zero_arith`).
+  -- Plain harmonic Stam `1/J_sum ≥ 1/J_X + 1/J_Y` extracted GENUINELY from
+  -- `h_stam` (案 B, R-3‴). We apply the ∀-quantified producer `Prop` at the three
+  -- path densities `f_i = (h_reg_*.reg_at t ht).density_t`. The Fisher
+  -- identifications `J_i = (fisherInfoOfMeasureV2 (P.map _) f_i).toReal` are `rfl`
+  -- (`fisherInfoOfMeasureV2 _ f = fisherInfoOfDensity f`,
+  -- `fisherInfoOfDensityReal f = (fisherInfoOfDensity f).toReal`); the remaining
+  -- regularity inputs are the caller-supplied preconditions.
   have h_plain_stam : 1 / J_sum ≥ 1 / J_X + 1 / J_Y := by
-    -- @residual(plan:epi-csiszar-ratio-reframe-plan)
-    sorry
+    refine h_stam J_X J_Y J_sum
+      ((h_reg_X.reg_at t ht).density_t)
+      ((h_reg_Y.reg_at t ht).density_t)
+      ((h_reg_sum.reg_at t ht).density_t)
+      hJX_pos hJY_pos hJsum_pos ?_ ?_ ?_ h_regdens_X h_regdens_Y
+      h_norm_X h_norm_Y h_conv_id h_blachman
+    · -- `J_X = (fisherInfoOfMeasureV2 (P.map (X+√t·Z_X)) fX).toReal`
+      rw [hJX_def]
+      rfl
+    · -- `J_Y = (fisherInfoOfMeasureV2 (P.map (Y+√t·Z_Y)) fY).toReal`
+      rw [hJY_def]
+      rfl
+    · -- `J_sum = (fisherInfoOfMeasureV2 (P.map ((X+√t·Z_X)+(Y+√t·Z_Y))) fXY).toReal`
+      rw [hJsum_def]
+      rfl
   -- The genuine arithmetic core closes the goal from plain Stam + positivity.
   exact csiszar_ratio_deriv_le_zero_arith J_X J_Y J_sum N_X N_Y
     hJX_pos hJY_pos hJsum_pos hNX_pos hNY_pos h_plain_stam
@@ -1015,7 +1054,21 @@ theorem csiszarLogRatioGap_antitoneOn_Ici_zero
               ((h_reg_sum.reg_at t ht).density_t)) ∧
       InformationTheory.Shannon.EPIStamDischarge.IsStamInequalityHyp
         (fun ω => X ω + Real.sqrt t * Z_X ω)
-        (fun ω => Y ω + Real.sqrt t * Z_Y ω) P) :
+        (fun ω => Y ω + Real.sqrt t * Z_Y ω) P ∧
+      -- ↓ 案 B (R-3‴): per-`t` caller-supplied regularity preconditions threaded to R-3.
+      Common2026.Shannon.FisherInfoV2.IsRegularDensityV2
+        ((h_reg_X.reg_at t ht).density_t) ∧
+      Common2026.Shannon.FisherInfoV2.IsRegularDensityV2
+        ((h_reg_Y.reg_at t ht).density_t) ∧
+      (∫ x, (h_reg_X.reg_at t ht).density_t x ∂MeasureTheory.volume = 1) ∧
+      (∫ x, (h_reg_Y.reg_at t ht).density_t x ∂MeasureTheory.volume = 1) ∧
+      (∀ x, (h_reg_sum.reg_at t ht).density_t x
+            = InformationTheory.Shannon.EPIConvDensity.convDensityAdd
+                ((h_reg_X.reg_at t ht).density_t)
+                ((h_reg_Y.reg_at t ht).density_t) x) ∧
+      InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady
+        ((h_reg_X.reg_at t ht).density_t)
+        ((h_reg_Y.reg_at t ht).density_t)) :
     AntitoneOn
       (fun t : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
         X Y Z_X Z_Y P t)
@@ -1028,7 +1081,8 @@ theorem csiszarLogRatioGap_antitoneOn_Ici_zero
   intro t ht
   rw [interior_Ici] at ht
   have ht_pos : (0 : ℝ) < t := ht
-  obtain ⟨hJX_pos, hJY_pos, hJsum_pos, h_stam⟩ := h_pos_stam t ht_pos
+  obtain ⟨hJX_pos, hJY_pos, hJsum_pos, h_stam, h_regdens_X, h_regdens_Y,
+          h_norm_X, h_norm_Y, h_conv_id, h_blachman⟩ := h_pos_stam t ht_pos
   -- R-2 gives `HasDerivAt (csiszarLogRatioGap ...) (RHS) t`.
   have h_deriv := csiszarLogRatioGap_hasDerivAt X Y Z_X Z_Y P
     hX hZX hXZX hY hZY hYZY hXYZXY
@@ -1036,6 +1090,7 @@ theorem csiszarLogRatioGap_antitoneOn_Ici_zero
   -- R-3 gives `RHS ≤ 0`.
   have h_le := csiszarLogRatioGap_deriv_le_zero X Y Z_X Z_Y P
     h_reg_sum h_reg_X h_reg_Y ht_pos hJX_pos hJY_pos hJsum_pos h_stam
+    h_regdens_X h_regdens_Y h_norm_X h_norm_Y h_conv_id h_blachman
   rw [h_deriv.deriv]
   exact h_le
 
@@ -1230,7 +1285,21 @@ theorem isStamToEPIScalingHyp_of_stam_debruijn
                       ((h_reg_sum.reg_at t ht).density_t)) ∧
               InformationTheory.Shannon.EPIStamDischarge.IsStamInequalityHyp
                 (fun ω => X ω + Real.sqrt t * Z_X ω)
-                (fun ω => Y ω + Real.sqrt t * Z_Y ω) P) :
+                (fun ω => Y ω + Real.sqrt t * Z_Y ω) P ∧
+              -- ↓ 案 B (R-3‴): caller-supplied regularity preconditions threaded to R-5-c → R-3.
+              Common2026.Shannon.FisherInfoV2.IsRegularDensityV2
+                ((h_reg_X.reg_at t ht).density_t) ∧
+              Common2026.Shannon.FisherInfoV2.IsRegularDensityV2
+                ((h_reg_Y.reg_at t ht).density_t) ∧
+              (∫ x, (h_reg_X.reg_at t ht).density_t x ∂MeasureTheory.volume = 1) ∧
+              (∫ x, (h_reg_Y.reg_at t ht).density_t x ∂MeasureTheory.volume = 1) ∧
+              (∀ x, (h_reg_sum.reg_at t ht).density_t x
+                    = InformationTheory.Shannon.EPIConvDensity.convDensityAdd
+                        ((h_reg_X.reg_at t ht).density_t)
+                        ((h_reg_Y.reg_at t ht).density_t) x) ∧
+              InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady
+                ((h_reg_X.reg_at t ht).density_t)
+                ((h_reg_Y.reg_at t ht).density_t)) :
     IsStamToEPIScalingHyp X Y P := by
   intro _h_stam
   obtain ⟨Z_X, Z_Y, hZX_meas, hZY_meas, hZX_law, hZY_law,
@@ -1331,7 +1400,21 @@ theorem isStamToEPIBridgeHyp_of_stam_debruijn
                       ((h_reg_sum.reg_at t ht).density_t)) ∧
               InformationTheory.Shannon.EPIStamDischarge.IsStamInequalityHyp
                 (fun ω => X ω + Real.sqrt t * Z_X ω)
-                (fun ω => Y ω + Real.sqrt t * Z_Y ω) P) :
+                (fun ω => Y ω + Real.sqrt t * Z_Y ω) P ∧
+              -- ↓ 案 B (R-3‴): caller-supplied regularity preconditions threaded to D10 → R-5-c → R-3.
+              Common2026.Shannon.FisherInfoV2.IsRegularDensityV2
+                ((h_reg_X.reg_at t ht).density_t) ∧
+              Common2026.Shannon.FisherInfoV2.IsRegularDensityV2
+                ((h_reg_Y.reg_at t ht).density_t) ∧
+              (∫ x, (h_reg_X.reg_at t ht).density_t x ∂MeasureTheory.volume = 1) ∧
+              (∫ x, (h_reg_Y.reg_at t ht).density_t x ∂MeasureTheory.volume = 1) ∧
+              (∀ x, (h_reg_sum.reg_at t ht).density_t x
+                    = InformationTheory.Shannon.EPIConvDensity.convDensityAdd
+                        ((h_reg_X.reg_at t ht).density_t)
+                        ((h_reg_Y.reg_at t ht).density_t) x) ∧
+              InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady
+                ((h_reg_X.reg_at t ht).density_t)
+                ((h_reg_Y.reg_at t ht).density_t)) :
     IsStamToEPIBridgeHyp X Y P := by
   have h_scaling := isStamToEPIScalingHyp_of_stam_debruijn
     hX hY h_noise h_reg h_pos_stam
