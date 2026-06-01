@@ -2709,7 +2709,14 @@ Fisher-finiteness wall lemmas) does NOT call `debruijnIdentityV2_holds_assembled
 `EntropyConvFinite`, `convDensityAdd_fisher_integrable`, and `debruijn_ibp_step`). With
 `_chain_hdiff` now closed anyway, the remaining transitive `sorryAx` is exclusively the two
 Mathlib walls. The stale `plan:` component is dropped.
-@residual(wall:entropy-finiteness,wall:fisher-finiteness) -/
+
+**Entropy-finiteness closed (2026-06-01)**: the 3 former `EntropyConvFinite.lean`
+`wall:entropy-finiteness` lemmas (`convDensityAdd_logFactor_deriv2/deriv_integrable`,
+`convDensityAdd_negMulLog_integrable`) are now genuinely closed in-file as Assembly plumbing onto
+`_chain_domination` / the Gaussian envelopes (orchestrator independent re-check: NOT a Mathlib
+wall). The only remaining transitive `sorryAx` is now `wall:fisher-finiteness`
+(`convDensityAdd_fisher_integrable`, FisherConvBound.lean).
+@residual(wall:fisher-finiteness) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -2823,7 +2830,9 @@ name-laundering (carries `@residual`, not `@audit:ok`).
 — this body calls only `_chain_ibp_fisher_ibp_step` (entropy + Fisher walls) +
 `fisher_from_logDeriv` + `convDensityAdd_fisher_integrable` (Fisher wall), NOT `_chain_hdiff`
 (now closed anyway). The transitive `sorryAx` is exclusively the two Mathlib walls.
-@residual(wall:fisher-finiteness,wall:entropy-finiteness) -/
+(entropy-finiteness wall genuinely closed 2026-06-01 as in-file Assembly plumbing; only the
+Fisher-finiteness wall remains as the transitive `sorryAx`.)
+@residual(wall:fisher-finiteness) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -3180,7 +3189,9 @@ maintained (transitive sorry present, not falsely `@audit:ok`).
 sorryAx-free). The remaining transitive `sorryAx` is exclusively via `_chain_ibp_fisher`'s two
 Mathlib walls `wall:fisher-finiteness` + `wall:entropy-finiteness`; the `plan:` component is
 dropped as stale.
-@residual(wall:fisher-finiteness,wall:entropy-finiteness) -/
+(entropy-finiteness wall genuinely closed 2026-06-01 as in-file Assembly plumbing; only the
+Fisher-finiteness wall remains as the transitive `sorryAx`.)
+@residual(wall:fisher-finiteness) -/
 private theorem debruijnIdentityV2_holds_assembled_chain_parametric
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -3317,7 +3328,9 @@ transitive `sorryAx` of this declaration is now exclusively via the two Mathlib 
 `wall:fisher-finiteness` (`gaussianConv_fisher_le_inv_var`, FisherConvBound.lean) and
 `wall:entropy-finiteness` (`EntropyConvFinite.lean`), used by `_chain_ibp_fisher`. The
 `plan:` component is dropped as stale.
-@residual(wall:fisher-finiteness,wall:entropy-finiteness) -/
+(entropy-finiteness wall genuinely closed 2026-06-01 as in-file Assembly plumbing; only the
+Fisher-finiteness wall remains as the transitive `sorryAx`.)
+@residual(wall:fisher-finiteness) -/
 private theorem debruijnIdentityV2_holds_assembled_chain
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -3450,7 +3463,9 @@ transitive `sorryAx` dependency (now via the two Mathlib walls only).
 **Wave 4b update (2026-06-01)**: the `plan:epi-debruijn-pertime-closure` component is dropped
 as stale (its plumbing leaf `_chain_hdiff` is now genuinely closed). The remaining transitive
 `sorryAx` is exclusively `wall:fisher-finiteness` + `wall:entropy-finiteness`.
-@residual(wall:fisher-finiteness,wall:entropy-finiteness) -/
+(entropy-finiteness wall genuinely closed 2026-06-01 as in-file Assembly plumbing; only the
+Fisher-finiteness wall remains as the transitive `sorryAx`.)
+@residual(wall:fisher-finiteness) -/
 theorem debruijnIdentityV2_holds_assembled
     {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ)
