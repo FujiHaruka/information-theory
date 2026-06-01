@@ -99,6 +99,16 @@ recommend the rewrite. The new system requires sorry-based residuals, not honest
 `@residual` が **無い** sorry を見つけたら `missing_residual_tag` verdict、orchestrator に
 タグ追加 (または signature 修正) を recommend。
 
+## ★ SUFFICIENCY CHECK (仮説 ⊢ 結論、非循環・非バンドルの上の 4 つ目の軸)
+
+非循環 (`:= h` でない) + 非バンドル (load-bearing でない) は honesty の **必要条件であって十分条件ではない**。両者を通っても、**仮説群から結論が semantic に follow しなければ** signature は嘘をついている (false-as-framed → tier 5 `false_statement` / `false-hypothesis`)。SoT = audit-tags.md「監査スコープ — honesty の 4 check」。
+
+- 結論が仮説群から **semantic に follow** するか独立判定する。最低でも **反例構成を 1 つ試みて棄却できるか** 確認する (free variable を degenerate / 境界 case に振る、出口補題の前提を外す等)。
+- derivative-of-gap / 不等式系の結論では特に「**差分形 `g'` か、比 (log) `g'` か**」を Stam 等の出口形と照合する。出口形 (Stam の score-of-convolution は比の形で出る等) を取り違えると、非循環・非バンドルでも偽の含意になる。
+- sufficiency が破れていれば `false_statement` (precondition 欠落で universally false) verdict、tier 5 として orchestrator に rewrite (仮説追加 or 結論を出口形に reframe + sorry 化) を recommend。
+
+**false-negative 警戒事例**: `csiszarGap1Source_deriv_le_zero` は audit:PASS 2026-05-27 を非循環・非バンドルのみで通過したが、差分形 gap derivative が plain Stam から出ない false-as-framed (sufficiency 欠落) だった。closure → `epi-csiszar-ratio-reframe-plan`。
+
 ## 3-tier reading
 
 - **Tier A** (signature + doc): form hypothesis. Enough for blatant defect / skip, NOT for `ok`.
@@ -223,6 +233,7 @@ verdict 返す前に self-check:
 
 - [ ] docstring の "honest", "genuine", "NOT load-bearing" 等の自己評価語を **疑って** code を読んだか
 - [ ] hypothesis bundle 全体に core-reconstruction test を適用したか (joint で判断)
+- [ ] **sufficiency check**: 仮説群から結論が semantic に follow するか、反例構成を 1 つ試みて棄却できるか確認したか (非循環・非バンドルは必要条件であって十分条件ではない。derivative-of-gap / 不等式は差分形 `g'` か比 (log) `g'` かを出口形と照合)。破れていれば tier 5 `false_statement`
 - [ ] consumer body / theorem body を実際に Read して silent leak がないか確認したか
 - [ ] Mathlib 不在主張 (`@residual(wall:...)`) は loogle で裏取りしたか
 - [ ] **`ok` (proof done) verdict は `#print axioms` で `sorryAx` 非依存を裏取りしたか** (transient `#print axioms` + `lake env lean`、`rg sorry` だけでは transitive sorry を見逃す。上記「proof-done 裏取り」参照)

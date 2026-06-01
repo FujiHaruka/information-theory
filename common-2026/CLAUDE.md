@@ -186,6 +186,7 @@ If the session is ad-hoc — opened with no prior handoff context, scope unrelat
 - **load-bearing hypothesis bundling**: 証明の核心を `*Hypothesis` / `*Reduction` / `IsXxxClaim` predicate にまとめて仮説として渡し、body は機械的展開だけにする (Stam / typicality / multi-user Fano 等)。regularity hyp (full-support / `IsFiniteMeasure` / measurability 等) は precondition なので OK。**この区別の判定軸 → 後述**
 - name laundering: 仮説が開いたままの定理を `*_discharged` / `*_full` / `*_unconditional` と命名
 - 「Mathlib 壁」の誤用: 実は選択 (big) を blocked (hard) と偽る
+- **under-hypothesized / insufficient signature**: 仮説群から結論が semantic に follow しない (非循環・非バンドルでも偽の含意を主張している)。非循環・非バンドルは honesty の **必要条件であって十分条件ではない**。例: 差分形 gap derivative が plain Stam から出ないのに結論している (`csiszarGap1Source_deriv_le_zero` の false-negative 事例、SoT → `docs/audit/audit-tags.md`「sufficiency check」)
 
 **作る側 (実装中)**: 行き詰まったら **`sorry` + `@residual(<class>:<slug>)`** で抜く (→ Skeleton-driven Development 手順 5、`docs/audit/audit-tags.md`)。仮説に核を bundling する撤退は禁止。type-check done で commit して次セッションに引き継ぐ。
 

@@ -45,3 +45,5 @@ orchestrator (main agent) が以下を観測したとき:
 ## 動作要約
 
 `docs/audit/honesty-auditor-core.md` の **TASK** セクションに従い、Tier A → B → (C) → verdict 決定 → tag 書込 (verdict が `ok` / `honest_residual` / `misclassified_residual` のとき) または orchestrator に rewrite recommend (verdict が tier 5 のとき)。詳細は honesty-auditor-core.md を Read。
+
+監査スコープは honesty の 4 check (SoT = `docs/audit/audit-tags.md`「監査スコープ — honesty の 4 check」): (1) 非循環、(2) 非バンドル (load-bearing)、(3) 退化/`:True`、(4) **sufficiency** (仮説 ⊢ 結論が semantic に follow するか、反例構成を 1 つ試みて棄却)。非循環・非バンドルは必要条件であって十分条件ではない — check 4 を欠くと false-as-framed (tier 5 `false_statement`) を通過させる (`csiszarGap1Source_deriv_le_zero` 事例)。判定 doctrine 本体は honesty-auditor-core.md「★ SUFFICIENCY CHECK」を Read。
