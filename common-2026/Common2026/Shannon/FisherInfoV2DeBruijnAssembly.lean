@@ -1889,7 +1889,17 @@ and the `(A+B·x²)`-weighted envelopes in B/C). -/
 `g_s(u)·|u/s| ≤ gaussGradMaj t u := (√(πt))⁻¹·exp(−u²/(4t))·(2|u|/t)`.
 The 1st-derivative analog of `gaussHessMaj`: the prefactor `(2πs)^(−1/2)` is decreasing in `s`
 (min at `s=t/2` ⇒ `(πt)^(−1/2)`); `exp(−u²/2s)` increasing in `s` (`2s ≤ 4t` ⇒ `exp(−u²/4t)`);
-`|u|/s ≤ 2|u|/t` (`s ≥ t/2`). A Gaussian × linear envelope, hence Lebesgue-integrable. -/
+`|u|/s ≤ 2|u|/t` (`s ≥ t/2`). A Gaussian × linear envelope, hence Lebesgue-integrable.
+
+Independent honesty audit (2026-06-01, fresh auditor, commit `a28430e`): the `gaussGradMaj` def +
+its helper group (`_nonneg`/`_bdd`/`_integrable`/`_polyWeight_integrable`/`_polyWeight_bdd`/
+`gaussianGrad_le_gaussGradMaj`/`convDensityAdd_deriv1_le_gaussGradMaj_conv`) are genuine and
+sorryAx-free (the integrable/bdd/grad-conv ones machine-verified `[propext, Classical.choice,
+Quot.sound]`, the rest transitively via callers). The def is NOT degenerate: a concrete
+Gaussian × linear envelope, integrability built on Mathlib `integrable_exp_neg_mul_sq` /
+`integrable_rpow_mul_exp_neg_mul_sq` and `Real.mul_exp_neg_le_exp_neg_one`, no vacuous-truth
+exploitation. The pointwise dominations are real `s`-uniform bounds (1st-deriv analog of the
+audited `gaussHessMaj` group). @audit:ok (group). -/
 private noncomputable def gaussGradMaj (t : ℝ) (u : ℝ) : ℝ :=
   (Real.sqrt (Real.pi * t))⁻¹ * Real.exp (-u ^ 2 / (4 * t)) * (2 * |u| / t)
 
@@ -2260,7 +2270,19 @@ private theorem convDensityAdd_deriv1_le_gaussGradMaj_conv
 Orchestrator independent re-check (2026-06-01): this is NOT a Mathlib wall (was
 `@residual(wall:entropy-finiteness)` in `EntropyConvFinite.lean`); it closes directly from the
 `@audit:ok` `_chain_domination` envelope instantiated at `s = t`. Relocated from
-`EntropyConvFinite.lean` (import-cycle: the closure asset lives here). -/
+`EntropyConvFinite.lean` (import-cycle: the closure asset lives here).
+
+Independent honesty audit (2026-06-01, fresh auditor, commit `a28430e`): verdict ok (proof done).
+Genuine, sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`, sorryAx ABSENT,
+machine-verified via transient `#print axioms` + `lake env lean`). Body genuinely depends on the
+`@audit:ok` `_chain_domination` envelope at `s = t` (`htmem : t ∈ Ioo (t/2)(2*t)`) — not vacuous:
+the half-Hessian integrand domination `hb_dom` is consumed for `Integrable.mono'`, then `×2` via
+`heq`. Signature honest: conclusion is `Integrable (...)` (regularity output); `hpX_mass`/`hpX_mom`
+are pX regularity preconditions threaded into `_chain_domination` (`hpX_mom` for the `y²·pX`
+moment envelope) — core-reconstruction test PASS: granting them does NOT hand over the de Bruijn
+identity, only the integrability. NOT circular (`:= h`), NOT load-bearing, NOT degenerate. No
+longer a Mathlib wall (entropy-finiteness genuinely closed as in-file Assembly plumbing).
+@audit:ok -/
 private theorem convDensityAdd_logFactor_deriv2_integrable
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -2324,7 +2346,18 @@ private theorem convDensityAdd_logFactor_deriv2_integrable
 Orchestrator independent re-check (2026-06-01): NOT a Mathlib wall; closes via the `log`-factor
 polynomial majorant (`convDensityAdd_logFactor_poly_majorant`, `@audit:ok`) + the gradient
 envelope `gaussGradMaj` (1st-derivative analog of `gaussHessMaj`). Relocated from
-`EntropyConvFinite.lean` (import-cycle). -/
+`EntropyConvFinite.lean` (import-cycle).
+
+Independent honesty audit (2026-06-01, fresh auditor, commit `a28430e`): verdict ok (proof done).
+Genuine, sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`, machine-verified).
+Body genuinely depends on the `@audit:ok` `convDensityAdd_logFactor_poly_majorant` (`hLog`,
+log-factor `‖-log p_t-1‖ ≤ A+B·x²`) + the new `gaussGradMaj` gradient envelope
+(`convDensityAdd_deriv1_le_gaussGradMaj_conv` for `‖∂p_t x‖ ≤ E x`, audited sorryAx-free below) +
+`hpX_mom` (`y²·pX` moment, consumed in `hEnv2_int`/`hfib2_int` via the `x²≤2(x-y)²+2y²` split) —
+not vacuous. Signature honest: conclusion `Integrable (...)`; `hpX_mass`/`hpX_mom` are regularity
+preconditions, core-reconstruction PASS. NOT circular, NOT load-bearing, NOT degenerate. No longer
+a Mathlib wall.
+@audit:ok -/
 private theorem convDensityAdd_logFactor_deriv_integrable
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -2468,7 +2501,18 @@ private theorem convDensityAdd_logFactor_deriv_integrable
 Orchestrator independent re-check (2026-06-01): NOT a Mathlib wall; closes via the `log`-factor
 polynomial majorant (`‖negMulLog p_t‖ = p_t·|log p_t| ≤ p_t·(A+1+B·x²)`) + `Integrable (x²·p_t)`
 (`hpX_mom`, Tonelli on `∫x²·p_t = E[X²]+t`). Relocated from `EntropyConvFinite.lean`
-(import-cycle). -/
+(import-cycle).
+
+Independent honesty audit (2026-06-01, fresh auditor, commit `a28430e`): verdict ok (proof done).
+Genuine, sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`, machine-verified).
+Body genuinely depends on the `@audit:ok` `convDensityAdd_logFactor_poly_majorant` (`hLog`,
+`|log p_t| ≤ A+1+B·x²`) + `hpX_mom` (`y²·pX` moment, consumed in `hx2p_int` to build the `x²·p_t`
+domination via two conv envelopes + `x²≤2(x-y)²+2y²`) + `convDensityAdd_pos` (strict positivity
+from `0<∫pX=1`) — not vacuous. Signature honest: conclusion `Integrable (negMulLog p_t)` (regularity
+output, = `h(X+√t·Z)` finite). `hpX_mass`/`hpX_mom` are regularity preconditions, core-reconstruction
+PASS (granting them yields the integrand domination, NOT a de Bruijn/Fisher result). NOT circular,
+NOT load-bearing, NOT degenerate. No longer a Mathlib wall.
+@audit:ok -/
 private theorem convDensityAdd_negMulLog_integrable
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
