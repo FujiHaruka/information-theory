@@ -1537,26 +1537,18 @@ is localized to `gaussianConv_fisher_le_inv_var`; this consumer carries no local
 `hpX_nn`/`hpX_meas`/`hpX_int` are pure pX regularity preconditions; the integrability
 conclusion is the genuine claim. No load-bearing hypothesis bundled.
 
-The `@residual` is now **transitive** (the wall sorry lives in the shared lemma, not here).
-Marker kept so the transitive dependency on the Fisher wall stays grep-visible until the wall
-is closed.
+**Wall CLOSED (2026-06-01, commit b5e13e2)**: the shared lemma `gaussianConv_fisher_le_inv_var`
+(`FisherConvBound.lean`) is now genuinely closed via pointwise Cauchy-Schwarz; the former
+`wall:fisher-finiteness` transitive `sorryAx` is gone. This consumer is now sorryAx-free.
 
-Independent honesty audit (2026-05-31, fresh auditor, Wave 2 rewire): verdict honest_residual
-(transitive). Body is genuine: 0 local sorry (`:694-741` contains no literal `sorry`); the wall
-is consumed as a *lemma call* `gaussianConv_fisher_le_inv_var pX …` (Step 3), NOT bundled as a
-hypothesis. Step-6 a.e.-strong-measurability is genuine plumbing, not circular/false: `hpt_meas`
-via `StronglyMeasurable.integral_prod_right` on the jointly-measurable integrand, `hlogderiv_meas`
-via `measurable_deriv` + `.div` (`logDeriv = deriv p_t / p_t`) — all Mathlib std, no conclusion
-assumed. `hpX_nn`/`hpX_meas`/`hpX_int` are pure pX regularity; the integrability conclusion is the
-genuine claim. `#print axioms` = `[propext, sorryAx, Classical.choice, Quot.sound]`, where the lone
-`sorryAx` is **transitive** via the shared wall `gaussianConv_fisher_le_inv_var`
-(`FisherConvBound.lean:73`, the sole `wall:fisher-finiteness` carrier). Wall aggregation verified:
-`rg wall:fisher-finiteness` shows exactly ONE real sorry (FisherConvBound.lean:73); this consumer
-and `…_chain_ibp_fisher` (`:844` call site) are transitive markers only. The transitive `@residual`
-is retained per audit-tags.md compound-syntax scenario 1 (transitive sorry の正式表現); docstring
-states the wall is localized to the shared lemma and this declaration carries no local sorry —
-honest. `@residual(wall:fisher-finiteness)` kept.
-@residual(wall:fisher-finiteness) -/
+@audit:ok — independent honesty audit (2026-06-01, fresh auditor, commit b5e13e2): genuine,
+sorryAx-free. `#print axioms` = `[propext, Classical.choice, Quot.sound]` (transient `#print axioms`
++ `lake env lean` after `lake build` olean refresh; 0 sorryAx). Body is genuine: 0 local sorry; the
+former wall is consumed as a *lemma call* `gaussianConv_fisher_le_inv_var pX …` (Step 3), NOT bundled
+as a hypothesis. Step-6 a.e.-strong-measurability is genuine plumbing (`StronglyMeasurable.integral_prod_right`
++ `measurable_deriv` + `.div`), no conclusion assumed. `hpX_nn`/`hpX_meas`/`hpX_int`/`hpX_mass` are pure
+pX regularity; the integrability conclusion is the genuine claim. Stale `@residual(wall:fisher-finiteness)`
+removed (the wall it referenced is now closed). -/
 private theorem convDensityAdd_fisher_integrable
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -2759,9 +2751,15 @@ Mathlib walls. The stale `plan:` component is dropped.
 `wall:entropy-finiteness` lemmas (`convDensityAdd_logFactor_deriv2/deriv_integrable`,
 `convDensityAdd_negMulLog_integrable`) are now genuinely closed in-file as Assembly plumbing onto
 `_chain_domination` / the Gaussian envelopes (orchestrator independent re-check: NOT a Mathlib
-wall). The only remaining transitive `sorryAx` is now `wall:fisher-finiteness`
-(`convDensityAdd_fisher_integrable`, FisherConvBound.lean).
-@residual(wall:fisher-finiteness) -/
+wall).
+
+**Fisher-finiteness wall CLOSED (2026-06-01, commit b5e13e2)**: `gaussianConv_fisher_le_inv_var`
+(FisherConvBound.lean) is now genuinely closed (pointwise Cauchy-Schwarz), so this declaration has
+NO remaining transitive `sorryAx`.
+
+@audit:ok — independent honesty audit (2026-06-01, fresh auditor, commit b5e13e2): genuine,
+sorryAx-free. `#print axioms` = `[propext, Classical.choice, Quot.sound]` (transient `#print axioms`
++ `lake env lean` after olean refresh; 0 sorryAx). Stale `@residual(wall:fisher-finiteness)` removed. -/
 private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher_ibp_step
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -2869,15 +2867,15 @@ verified sorryAx-free; `integral_congr_ae`/`integral_const_mul` are Mathlib std)
 `hint` is the Fisher-finiteness wall verbatim — a regularity precondition, NOT a bundled
 conclusion (core-reconstruction test: granting `hentDeriv` alone does not hand over `∫ entDeriv =
 (1/2)·fisher`; the two walls supply the substance). NOT circular, NOT load-bearing, NOT
-name-laundering (carries `@residual`, not `@audit:ok`).
+name-laundering.
 
-**Wave 4b correction (2026-06-01)**: the `plan:epi-debruijn-pertime-closure` component was stale
-— this body calls only `_chain_ibp_fisher_ibp_step` (entropy + Fisher walls) +
-`fisher_from_logDeriv` + `convDensityAdd_fisher_integrable` (Fisher wall), NOT `_chain_hdiff`
-(now closed anyway). The transitive `sorryAx` is exclusively the two Mathlib walls.
-(entropy-finiteness wall genuinely closed 2026-06-01 as in-file Assembly plumbing; only the
-Fisher-finiteness wall remains as the transitive `sorryAx`.)
-@residual(wall:fisher-finiteness) -/
+**Both walls CLOSED (2026-06-01, commit b5e13e2)**: entropy-finiteness closed in-file as Assembly
+plumbing; Fisher-finiteness (`gaussianConv_fisher_le_inv_var`, FisherConvBound.lean) genuinely
+closed via pointwise Cauchy-Schwarz. NO remaining transitive `sorryAx`.
+
+@audit:ok — independent honesty audit (2026-06-01, fresh auditor, commit b5e13e2): genuine,
+sorryAx-free. `#print axioms` = `[propext, Classical.choice, Quot.sound]` (transient `#print axioms`
++ `lake env lean` after olean refresh; 0 sorryAx). Stale `@residual(wall:fisher-finiteness)` removed. -/
 private theorem debruijnIdentityV2_holds_assembled_chain_ibp_fisher
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -3227,16 +3225,15 @@ from entropy-finiteness wall + `hb` from `_chain_domination` reconciled genuinel
 (`NNReal.eq`+`max_eq_left`, `s>0` on `Ioo` by linarith); `hmeas`/`hderiv_meas` genuine (Mathlib std
 joint-measurability + `measurable_deriv`, no sorry/admit); 2nd goal `_chain_ibp_fisher` applied with
 `hentDeriv` pin (`max t 0 = t`) — genuine. Conclusion `∃ entDeriv, HasDerivAt ∧ ∫ = (1/2)·fisher` is
-the genuine claim (NOT hyp-bundled, NOT weakened) — no name laundering. `@residual` correctly
-maintained (transitive sorry present, not falsely `@audit:ok`).
+the genuine claim (NOT hyp-bundled, NOT weakened) — no name laundering.
 
-**Wave 4b update (2026-06-01)**: `_chain_hdiff` (`hdiff` arm) is now genuinely closed (0 sorry,
-sorryAx-free). The remaining transitive `sorryAx` is exclusively via `_chain_ibp_fisher`'s two
-Mathlib walls `wall:fisher-finiteness` + `wall:entropy-finiteness`; the `plan:` component is
-dropped as stale.
-(entropy-finiteness wall genuinely closed 2026-06-01 as in-file Assembly plumbing; only the
-Fisher-finiteness wall remains as the transitive `sorryAx`.)
-@residual(wall:fisher-finiteness) -/
+**Both walls CLOSED (2026-06-01, commit b5e13e2)**: `_chain_hdiff` genuinely closed,
+entropy-finiteness closed in-file, and Fisher-finiteness (`gaussianConv_fisher_le_inv_var`)
+genuinely closed via pointwise Cauchy-Schwarz. NO remaining transitive `sorryAx`.
+
+@audit:ok — independent honesty audit (2026-06-01, fresh auditor, commit b5e13e2): genuine,
+sorryAx-free. `#print axioms` = `[propext, Classical.choice, Quot.sound]` (transient `#print axioms`
++ `lake env lean` after olean refresh; 0 sorryAx). Stale `@residual(wall:fisher-finiteness)` removed. -/
 private theorem debruijnIdentityV2_holds_assembled_chain_parametric
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -3364,18 +3361,16 @@ wall (`EntropyConvFinite.lean`), and the Fisher-finiteness wall (`convDensityAdd
 `pX`/`hpX_nn`/`hpX_meas`/`hpX_int` are pure regularity preconditions (X has a Lebesgue
 density `pX`). The conclusion (`HasDerivAt … (1/2) · fisher`) is NOT bundled into a
 hypothesis — it is the genuine claim, derived from the sub-lemmas once the regularity is
-supplied. The `@residual` is transitive (the sorry now lives in the named §5G sub-lemmas),
-kept here so the file-level residual grep still reflects this declaration's dependency.
+supplied.
 
-**Wave 4b update (2026-06-01)**: `_chain_hdiff` (the former `plan:epi-debruijn-pertime-closure`
-plumbing leaf) is now genuinely closed (0 sorry, `#print axioms` sorryAx-free). The remaining
-transitive `sorryAx` of this declaration is now exclusively via the two Mathlib walls
-`wall:fisher-finiteness` (`gaussianConv_fisher_le_inv_var`, FisherConvBound.lean) and
-`wall:entropy-finiteness` (`EntropyConvFinite.lean`), used by `_chain_ibp_fisher`. The
-`plan:` component is dropped as stale.
-(entropy-finiteness wall genuinely closed 2026-06-01 as in-file Assembly plumbing; only the
-Fisher-finiteness wall remains as the transitive `sorryAx`.)
-@residual(wall:fisher-finiteness) -/
+**All walls CLOSED (2026-06-01, commit b5e13e2)**: `_chain_hdiff` genuinely closed,
+entropy-finiteness closed in-file as Assembly plumbing, and Fisher-finiteness
+(`gaussianConv_fisher_le_inv_var`, FisherConvBound.lean) genuinely closed via pointwise
+Cauchy-Schwarz. NO remaining transitive `sorryAx`.
+
+@audit:ok — independent honesty audit (2026-06-01, fresh auditor, commit b5e13e2): genuine,
+sorryAx-free. `#print axioms` = `[propext, Classical.choice, Quot.sound]` (transient `#print axioms`
++ `lake env lean` after olean refresh; 0 sorryAx). Stale `@residual(wall:fisher-finiteness)` removed. -/
 private theorem debruijnIdentityV2_holds_assembled_chain
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -3494,23 +3489,27 @@ transitive `sorryAx` is now the two Mathlib walls `wall:fisher-finiteness` +
 `wall:entropy-finiteness` (de Bruijn IBP / Fisher integrability). The atoms themselves are
 genuine.
 
-Honesty sign-off (conv-pin redesign, 2026-05-31): verdict honest_residual (NOT
-proof-done — Mathlib-wall residual remains). (1) **Signature identical to wall
-`debruijnIdentityV2_holds`** (`FisherInfoV2DeBruijn.lean`): same conclusion `HasDerivAt
-(… differentialEntropy …) ((1/2)·fisherInfoOfDensityReal h_reg.density_t) t`, same hyps
-(`h_reg : IsRegularDeBruijnHypV2`); no weakening / no extra regularity added (the wall
-uses underscore `_hX/_hZ/_hXZ/_ht`, the assembly genuinely consumes `hX/hZ/hXZ/ht`).
+Honesty sign-off (conv-pin redesign, 2026-05-31 / closure update 2026-06-01):
+(1) **Signature identical to shim `debruijnIdentityV2_holds`** (`FisherInfoV2DeBruijn.lean`): same
+conclusion `HasDerivAt (… differentialEntropy …) ((1/2)·fisherInfoOfDensityReal h_reg.density_t) t`,
+same hyps (`h_reg : IsRegularDeBruijnHypV2`); no weakening / no extra regularity added (the shim uses
+underscore `_hX/_hZ/_hXZ/_ht`, this assembly genuinely consumes `hX/hZ/hXZ/ht`).
 (2) **Body genuine**: real wiring (`_chain` deriv + `_eq` eventual-equality →
 `congr_of_eventuallyEq` → `rw [_fisher_match]`), no circular `:= h`, no degenerate.
-(3) **NOT name-laundering**: `_assembled` + same signature, but `#print axioms` confirms
-transitive `sorryAx` dependency (now via the two Mathlib walls only).
+(3) **NOT name-laundering**: `_assembled` + same signature; `#print axioms` now confirms NO
+`sorryAx` dependency.
 
-**Wave 4b update (2026-06-01)**: the `plan:epi-debruijn-pertime-closure` component is dropped
-as stale (its plumbing leaf `_chain_hdiff` is now genuinely closed). The remaining transitive
-`sorryAx` is exclusively `wall:fisher-finiteness` + `wall:entropy-finiteness`.
-(entropy-finiteness wall genuinely closed 2026-06-01 as in-file Assembly plumbing; only the
-Fisher-finiteness wall remains as the transitive `sorryAx`.)
-@residual(wall:fisher-finiteness) -/
+**End-to-end CLOSED (2026-06-01, commit b5e13e2)**: with `_chain_hdiff`, entropy-finiteness, and
+Fisher-finiteness (`gaussianConv_fisher_le_inv_var`) all genuinely closed, the per-time de Bruijn
+identity is now genuine end-to-end with NO remaining transitive `sorryAx`.
+
+@audit:ok — independent honesty audit (2026-06-01, fresh auditor, commit b5e13e2): genuine,
+proof-done, sorryAx-free. `#print axioms` = `[propext, Classical.choice, Quot.sound]` (transient
+`#print axioms` + `lake env lean` after `lake build` olean refresh; 0 sorryAx). Stale
+`@residual(wall:fisher-finiteness)` removed. NOTE: the same-signature shim
+`debruijnIdentityV2_holds` (FisherInfoV2DeBruijn.lean) keeps its sorry body purely due to the import
+cycle (atom file imports DeBruijn, so DeBruijn cannot call `_assembled`); see that decl's
+`@audit:superseded-by(debruijnIdentityV2_holds_assembled)` marker. -/
 theorem debruijnIdentityV2_holds_assembled
     {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ)

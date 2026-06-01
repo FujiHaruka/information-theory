@@ -332,7 +332,19 @@ bundle しない。解析核は全て本 `sorry` body 内に残る。
 主張し「blocked by Mathlib」とは言わない → mathlib_wall_misuse ではない。plan
 `epi-debruijn-pertime-closure-plan.md` 実在 (6 Phase)。再分類妥当。
 
-`@residual(plan:epi-debruijn-pertime-closure)` -/
+**Superseded by genuine assembly (2026-06-01, commit b5e13e2)**: the same-signature genuine version
+`debruijnIdentityV2_holds_assembled` (`FisherInfoV2DeBruijnAssembly.lean`) now proves this exact
+conclusion **sorryAx-free** (`#print axioms` = `[propext, Classical.choice, Quot.sound]`; the fisher +
+entropy walls and `_chain_hdiff` are all genuinely closed). This shim keeps its `sorry` body purely
+because of the import cycle: the assembly's atom file (`FisherInfoV2DeBruijnPerTime.lean`) imports the
+present file, so the present file cannot call `_assembled`. The shim is NOT load-bearing (signature
+honest, `density_t_eq` is a regularity precondition per the conv-pin redesign) and is a true statement;
+it remains only as the import-cycle-side carrier for upstream consumers (FisherInfoV2DeBruijn.lean:374,
+:494). Independent honesty audit (2026-06-01, fresh auditor): `@residual(plan:...)` retained (local body
+is still `sorry`, type-check-wise not proof-done) + `@audit:superseded-by` added to record the genuine
+same-signature alternative.
+
+@residual(plan:epi-debruijn-pertime-closure) @audit:superseded-by(debruijnIdentityV2_holds_assembled) -/
 theorem debruijnIdentityV2_holds
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ)
