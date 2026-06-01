@@ -47,7 +47,7 @@ file:line + 性質を verbatim 列挙:
 
 | # | sorry | file:line | 種別 | 障害 |
 |---|---|---|---|---|
-| **G1** | `csiszarGap1Source_deriv_le_zero` (A-3) | `EPIStamToBridge.lean:727` | **assembly (algebra)** | `1/J_sum ≥ 1/J_X + 1/J_Y` (Stam) + 3項正値性 + `Real.exp` 単調性 から `eP_sum·J_sum − eP_X·J_X − eP_Y·J_Y ≤ 0`。Cover-Thomas eq.(17.43)。**Mathlib 壁ではない** — in-house の重み付き不等式、`nlinarith`/手動で閉じる見込み |
+| **G1** | `csiszarGap1Source_deriv_le_zero` (A-3) | `EPIStamToBridge.lean:682` | ⚠ **FALSE-AS-FRAMED → 後継 plan に移管** | difference-gap `eP_sum·J_sum ≤ eP_X·J_X + eP_Y·J_Y` は plain Stam から従わない (反例: `N_sum` 巨大/`N_X,N_Y` 微小、orchestrator + proof-pivot-advisor 確認 2026-06-01)。**G1 は当初謳われた「最 tractable な純 algebra FIRST step」ではない** — as-stated は closure 不能。fix = log-ratio gap への再frame → **[`epi-csiszar-ratio-reframe-plan.md`](epi-csiszar-ratio-reframe-plan.md)** (ratio 形 `r=log N_sum−log(N_X+N_Y)` の monotonicity は genuine、純 algebra で閉じる)。D3 行は `@audit:defect(false-statement) @audit:closed-by-successor(epi-csiszar-ratio-reframe-plan)` 済 |
 | **G2** | `csiszarGap1Source_continuousOn` (A-4-1) | `EPIStamToBridge.lean:783` | **真の Mathlib 壁 (寄り)** | `entropyPower ∘ P.map` の heat-flow path 上 `√t→0` 連続性。Lebesgue dominated convergence machinery が現 `IsDeBruijnRegularityHyp` bundle に無い。退避なら `@residual` 継続 |
 | **G3** | `csiszarGap_antitoneOn_Icc_zero_one` (A-4-4 rescale) | `EPIStamToBridge.lean:897` | **assembly (per-`s` AC/integrability 引数の materialize)** | 1-source `AntitoneOn (Ici 0)` を 2-source `AntitoneOn (Icc 0 1)` に持ち上げ。`csiszarGap_eq_one_source_via_rescale` (genuine) が `s∈Ico 0 1` ごとに 6 個の AC + integrability hyp を要求、これを uniform に供給する組立 |
 | **G4** | `IndepFun (X+Y) (Z_X+Z_Y)` joint independence | `EPIStamToBridge.lean:968` | **richness gap** | `IsStamScalingNoiseHyp` は pairwise indep のみ供給、4-tuple joint indep を供給しない。noise model 強化が closure |
@@ -55,10 +55,18 @@ file:line + 性質を verbatim 列挙:
 | W2 | `stamScalingNoise_exists` (shared sorry) | `EPIStamToBridge.lean:387` | richness | standard-normal pair の存在 (任意確率空間上の noise extension)。G4 と同根 |
 | W0 | `stamToEPIBridge_holds` (**headline**) | `EntropyPowerInequality.lean:252` | assembly | `IsStamInequalityResidual → IsEPIHyp`。`isStamToEPIBridgeHyp_of_scaling ∘ stamToEPIScaling_holds` で閉じる集約点 (defeq bridging 要) |
 
-**結論**: headline wall は 1 個の monolithic 壁ではなく、**genuine な構造補題チェーンの末端に残る
-G1 (algebra)・G2 (continuity, 真 Mathlib 壁)・G3 (rescale assembly)・G4/W2 (richness)** に分解済。
-最も tractable な FIRST step は **G1 (`csiszarGap1Source_deriv_le_zero`)** — 純 in-house algebra で
-Mathlib 壁を含まず、他 atom と独立に閉じられる (Phase A skeleton 参照)。
+**結論**: headline wall は 1 個の monolithic 壁ではなく、**構造補題チェーンの末端に残る
+G1 (⚠ false-as-framed)・G2 (continuity, 真 Mathlib 壁)・G3 (rescale assembly)・G4/W2 (richness)** に分解。
+
+> **⚠ G1 訂正 (2026-06-01)**: G1 (`csiszarGap1Source_deriv_le_zero`) は当初「純 in-house algebra の最
+> tractable FIRST step」と謳ったが、**difference-gap 形が FALSE-AS-FRAMED** であることが判明
+> (orchestrator + proof-pivot-advisor 独立確認)。plain Stam から `eP_sum·J_sum ≤ eP_X·J_X+eP_Y·J_Y`
+> は従わず (`N_i` 無制約、反例構成済)、as-stated は closure 不能。**G1 を FIRST step として着手しては
+> いけない**。genuine な後継 = log-ratio gap への再frame
+> ([`epi-csiszar-ratio-reframe-plan.md`](epi-csiszar-ratio-reframe-plan.md))。そちらの R-3
+> (`csiszarLogRatioGap_deriv_le_zero`、ratio 微分 `≤0`) が真の純 algebra FIRST tractable step。
+> 残る tractable atom は G3 (rescale assembly)・G2 (continuity 壁) で、これらは ratio 再frame と
+> 並行/後続で進められる。
 
 ### drift 警告 → **解消済 (2026-06-01, commit `7f6576b`)**
 
@@ -192,14 +200,16 @@ Gaussian saturation → bridge body discharge) は **すでに genuine に組ま
 verbatim 一致するよう Phase A で設計済)。よって closure は以下の依存順で進む:
 
 ```
-M0 (de Bruijn genuine wiring) ✅済 ──┐
-G1 algebra (deriv ≤ 0)  ────────────┤
-                                     ├──→ A-4-3 (genuine, 既存) ──→ G3 rescale ──→ W2/G4 richness ──→ W1 scaling_holds ──→ W0 headline
-G2 continuity (Mathlib 壁寄り)  ─────┘
+M0 (de Bruijn genuine wiring) ✅済 ─────────┐
+G1 ⚠ FALSE-AS-FRAMED → ratio 再frame plan ──┤  (R-3 ratio deriv ≤0 が genuine 後継)
+   epi-csiszar-ratio-reframe-plan           ├──→ A-4-3 (genuine, 既存) ──→ G3 rescale ──→ W2/G4 richness ──→ W1 scaling_holds ──→ W0 headline
+G2 continuity (Mathlib 壁寄り)  ────────────┘
 ```
 
-G1 が独立・最小・純 algebra で **最初に着手すべき**。G2 は唯一の真 Mathlib 壁候補で、退避時は
-`@residual(wall:...)` 継続 (closure を G1/G3/G4 と分離可能)。
+> **⚠ G1 訂正 (2026-06-01)**: G1 (difference-gap `deriv ≤ 0`) は FALSE-AS-FRAMED (closure 不能)。
+> genuine な純 algebra FIRST step は後継 [`epi-csiszar-ratio-reframe-plan.md`](epi-csiszar-ratio-reframe-plan.md)
+> の R-3 (log-ratio `r'≤0`)。G2 は唯一の真 Mathlib 壁候補で退避時 `@residual(wall:...)` 継続
+> (closure を ratio 再frame / G3 / G4 と分離可能)。
 
 ### M0 — 在庫調査 + de Bruijn genuine wiring 解消 (前提工程)
 
@@ -213,45 +223,33 @@ proof-log: no (調査のみ)
 3. **G2 Mathlib 在庫**: `entropyPower ∘ P.map` の heat-flow 連続性に使える DCT 系
    (`MeasureTheory.continuous_integral_of_dominated` 等) の有無を loogle で確認 → 不在なら真 wall 確定。
 
-### G1 — `csiszarGap1Source_deriv_le_zero` (最有力 FIRST step、純 algebra) 🎯
+### ~~G1 — `csiszarGap1Source_deriv_le_zero` (純 algebra FIRST step)~~ ⚠ FALSE-AS-FRAMED → 後継 plan に移管 🔄
 
-proof-log: yes
+proof-log: yes (後継 plan 側で記録)
 
-**位置**: `EPIStamToBridge.lean:727` (signature stable、body `sorry`)。
+**位置**: `EPIStamToBridge.lean:682` (signature は `@audit:defect(false-statement)` 形のまま残置、
+body `sorry`、`@audit:closed-by-successor(epi-csiszar-ratio-reframe-plan)`)。
 
-**intended signature** (現状維持、verbatim):
-```lean
-theorem csiszarGap1Source_deriv_le_zero
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
-    (h_reg_sum : …IsDeBruijnRegularityHyp (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
-    (h_reg_X : …IsDeBruijnRegularityHyp X Z_X P)
-    (h_reg_Y : …IsDeBruijnRegularityHyp Y Z_Y P)
-    {t : ℝ} (ht : 0 < t)
-    (hJX_pos : 0 < fisherInfoOfDensityReal ((h_reg_X.reg_at t ht).density_t))
-    (hJY_pos : 0 < fisherInfoOfDensityReal ((h_reg_Y.reg_at t ht).density_t))
-    (hJsum_pos : 0 < fisherInfoOfDensityReal ((h_reg_sum.reg_at t ht).density_t))
-    (h_stam : …IsStamInequalityHyp (fun ω => X ω + √t * Z_X ω) (fun ω => Y ω + √t * Z_Y ω) P) :
-    entropyPower (P.map (fun ω => X ω + Y ω + √t * (Z_X ω + Z_Y ω))) * J_sum
-      - entropyPower (P.map (fun ω => X ω + √t * Z_X ω)) * J_X
-      - entropyPower (P.map (fun ω => Y ω + √t * Z_Y ω)) * J_Y  ≤ 0
-```
+**⚠ 訂正 (2026-06-01)**: 当初この G1 を「最 tractable な純 algebra FIRST step」と謳ったが、
+**結論 (difference-gap `eP_sum·J_sum ≤ eP_X·J_X + eP_Y·J_Y`) が plain Stam から従わない =
+FALSE-AS-FRAMED** であることが判明 (orchestrator + 独立 proof-pivot-advisor)。
 
-**closure 手順** (assembly、Mathlib 壁なし):
-1. `h_stam` を 3 個の convolved 変数に適用 → `1/J_sum ≥ 1/J_X + 1/J_Y` を取り出す
-   (`(fisherInfoOfMeasureV2 _ f).toReal = fisherInfoOfDensityReal f` は `rfl`、pointwise sum 同定は
-   `funext + ring`)。
-2. 正値性 (`hJ*_pos`) で harmonic-mean を `J_sum · (J_X + J_Y) ≤ J_X · J_Y` に clear-denominators。
-3. **EP の符号同定**: 退化境界に注意 (§re-assessment 留意)。`entropyPower > 0` (`entropyPower_pos`)。
-   Cover-Thomas eq.(17.43) weighting `eP_sum·J_sum ≤ eP_X·J_X + eP_Y·J_Y` を `nlinarith` または
-   手動 `Real.exp` 単調性 + 重み付き不等式で閉じる。
-4. **honesty 留意**: `h_reg_*` は regularity precondition (load-bearing でない)、`h_stam` は EPI 結論と
-   別 Prop の genuine residual。`Y:=0` / `Z_Y:=0` 退化悪用は **禁止** (L-DBD-2-α、`entropyPower(dirac 0)=1`
-   ゆえ degenerate gap 罠あり、§re-assessment + parent 判断ログ参照)。
+- 障害の本質: chain rule は genuine (`d/dt N_i = N_i·J_i`) だが、差分微分
+  `g'(t) = N_sum·J_sum − N_X·J_X − N_Y·J_Y ≤ 0` は plain harmonic Stam `1/J_sum ≥ 1/J_X+1/J_Y` から
+  **従わない**。`N_i` が `h_stam` に対し無制約なため反例構成可能 (`N_sum` 巨大 / `N_X,N_Y` 微小で
+  全 hyp 成立・結論破綻)。当初の closure 手順 step 3 (Cover-Thomas eq.(17.43) weighting) は
+  difference 形では存在しない不等式を仮定していた。
+- 旧 `audit:PASS 2026-05-27` は **false negative**: 非循環 + 非bundling は verify したが
+  **sufficiency (hyp ⊢ concl) は未検証**だった。
+- **正しい fix = log-ratio gap への再frame**。`r(t)=log N_sum − log(N_X+N_Y)` の monotonicity
+  `r'(t)=J_sum − (N_X·J_X+N_Y·J_Y)/(N_X+N_Y) ≤ 0` は重み `α=N_X/(N_X+N_Y)` の weighted Stam
+  で genuine に閉じる (`α²≤α` を使う純 algebra、Mathlib 壁なし)。EPI 復元も equivalent
+  (`r(0)≥0 ⟺ EPI`、`r(1)=0` Gaussian saturation)。
 
-**撤退ライン L-Concl-A-ζ** (確率 15%): step 3 の Cauchy-Schwarz weight が `nlinarith` 吸収不可で
->50 行 → `sorry` + `@residual(plan:epi-stam-to-conclusion-plan)` 継続 (新規 predicate bundle は禁止、
-sorry のまま残す)。
+**移管先**: [`epi-csiszar-ratio-reframe-plan.md`](epi-csiszar-ratio-reframe-plan.md)。
+その Phase R-3 (`csiszarLogRatioGap_deriv_le_zero`) が genuine な純 algebra FIRST tractable step。
+**この G1 を直接埋めようとしてはいけない** — as-stated は closure 不能。後継 plan の R-5 で D3
+(本 lemma) は削除予定。
 
 ### G3 — `csiszarGap_antitoneOn_Icc_zero_one` (rescale assembly) 📋
 
