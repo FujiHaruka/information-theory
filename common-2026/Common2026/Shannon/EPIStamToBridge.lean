@@ -628,6 +628,37 @@ Members:
   `IsStamInequalityHyp` applied at the convolved variables.
 -/
 
+/-- **Ratio-gap derivative core (pure arithmetic)**. From plain harmonic Stam
+`1/J_sum ≥ 1/J_X + 1/J_Y` and positivity of the entropy powers `N_X, N_Y`, the
+log-ratio gap derivative `J_sum − (N_X·J_X + N_Y·J_Y)/(N_X+N_Y)` is `≤ 0`,
+equivalently `J_sum·(N_X+N_Y) ≤ N_X·J_X + N_Y·J_Y`. This is the genuine in-house
+content that replaces the false-as-framed difference-gap lemma
+`csiszarGap1Source_deriv_le_zero` (see its `@audit:defect` docstring); tracked by
+`epi-csiszar-ratio-reframe-plan`. -/
+theorem csiszar_ratio_deriv_le_zero_arith
+    (J_X J_Y J_sum N_X N_Y : ℝ)
+    (hJX : 0 < J_X) (hJY : 0 < J_Y) (hJsum : 0 < J_sum)
+    (hNX : 0 < N_X) (hNY : 0 < N_Y)
+    (h_stam : 1 / J_sum ≥ 1 / J_X + 1 / J_Y) :
+    J_sum - (N_X * J_X + N_Y * J_Y) / (N_X + N_Y) ≤ 0 := by
+  have hNsum : 0 < N_X + N_Y := add_pos hNX hNY
+  -- Clear the harmonic Stam inequality to a polynomial form:
+  -- `1/J_sum ≥ 1/J_X + 1/J_Y` ⟺ `J_X*J_Y ≥ J_sum*(J_X+J_Y)`.
+  have h_stam_poly : J_sum * (J_X + J_Y) ≤ J_X * J_Y := by
+    have h := h_stam
+    rw [ge_iff_le, div_add_div _ _ (ne_of_gt hJX) (ne_of_gt hJY)] at h
+    rw [div_le_div_iff₀ (by positivity) hJsum] at h
+    nlinarith [h]
+  -- Goal ⟺ `J_sum*(N_X+N_Y) ≤ N_X*J_X + N_Y*J_Y`.
+  rw [sub_nonpos, le_div_iff₀ hNsum]
+  -- After clearing `(J_X+J_Y)`: `J_X*J_Y*(N_X+N_Y) ≤ (N_X*J_X+N_Y*J_Y)*(J_X+J_Y)`,
+  -- whose difference is `N_X*J_X² + N_Y*J_Y² ≥ 0`.
+  nlinarith [mul_nonneg (le_of_lt hNX) (sq_nonneg (J_X - J_Y)),
+    mul_nonneg (le_of_lt hNY) (sq_nonneg (J_X - J_Y)),
+    mul_pos hJX hJY, mul_pos hNX hJX, mul_pos hNY hJY,
+    mul_nonneg (le_of_lt hNsum) (le_of_lt (mul_pos hJX hJY)),
+    h_stam_poly, mul_le_mul_of_nonneg_right h_stam_poly (le_of_lt hNsum)]
+
 /-- **A-3 — `g'(t) ≤ 0` from 1-source Stam**.
 
 The A-2-3 right-hand side `g'(t) = entropyPower_sum · J_sum − entropyPower_X · J_X
