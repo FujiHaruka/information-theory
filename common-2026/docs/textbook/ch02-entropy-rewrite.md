@@ -90,109 +90,73 @@ $-p(x)\log p(x) > 0$ となり矛盾。ゆえに各 $p(x)$ は $0$ または $1$
 
 ### 性質2：一様分布が最大化する（$H(X) \le \log|\mathcal X|$）
 
-> **この節について（Lean 準拠プロトタイプ）.** 本節は試験的に、**本文の証明を
-> 形式化（Lean）の証明とぴったり同じ筋道で書く**方針をとる。読者が本文を
-> ステップごとに追うと、各ステップがそのまま Lean のどの補題に対応するかが
-> 見えるようにし、さらに「**本文で展開する段**」と「**Mathlib に証明を委ねる段**
-> （＝信頼の底）」を明示的に区別する。他の節の、読みやすさを優先して形式化を
-> 脚注に退ける書き方と読み比べてほしい。なお対応する Lean 定義は自然対数を
-> 採るため、以下で $\log$ は自然対数（単位は nat）と読む。
+> **この節について（Lean 準拠プロトタイプ）.** 本節は試験的に、本文の証明を
+> 形式化（Lean）の証明と同じ筋道で書き、各ステップが Lean のどの補題に対応するかを
+> 末尾の脚注で示す。対応する Lean 定義は自然対数を採るため、以下で $\log$ は
+> 自然対数（単位は nat）と読む。
 
 **定理 2.1.5.** $|\mathcal X| = M$ のとき $H(X) \le \log M$。等号は $X$ が
 $\mathcal X$ 上で一様分布のときに限り成り立つ。
 
 「アルファベットの大きさが不確かさの上限を決め、その上限は均等に散らばったときに
-達成される」という主張である。多くの教科書はこれを対数の凹性に対する Jensen の
-不等式から直接示すが、**本ライブラリの形式化は別の筋道—相対エントロピーの
-非負性（Gibbs の不等式）—を通る**。ここでは本文をその形式化の筋道に合わせる。
+達成される」という主張である。証明は、エントロピーの被加数
+$\varphi(t) = -t\log t$ が **凹関数** であることに対する Jensen の不等式から
+ただちに従う。
 
-一様分布 $U(x) = 1/M$ を基準にとり、$X$ の分布を $P$ と書く。$P$ の $U$ に対する
-**相対エントロピー（KL ダイバージェンス）** を
+まず、$X$ の分布を $p(x)$ と書くと、エントロピーは定義からこの $\varphi$ の和である：
 $$
-D(P \,\|\, U) \;=\; \sum_{x} P(x)\,\log\frac{P(x)}{U(x)}
+H(X) \;=\; -\sum_{x} p(x)\log p(x) \;=\; \sum_{x} \varphi\big(p(x)\big),
+\qquad \varphi(t) := -t\log t.
 $$
-とする（2.6 節で正式に扱う量の先取りである）。
 
-**信頼の底：唯一の解析的原子.** この証明全体が依拠する「自分では展開しない事実」は
-ただ一つ、対数に関する次の初等的な不等式だけである。
+**信頼の底.** 証明が依拠する解析的事実はただ一つ、$\varphi(t) = -t\log t$ が
+$[0,\infty)$ 上で（$\varphi(0) := 0$ と定めて）**狭義凹**であることである。これは
+$x\log x$ の凸性という初等的事実で、接線不等式 $\log t \le t-1$ と同じ内容に帰着する。
+ここより下は展開しない（Mathlib `Real.strictConcaveOn_negMulLog`）。凹関数に対する
+**Jensen の不等式**
+$$
+\sum_{x} w_x\,\varphi(t_x) \;\le\; \varphi\Big(\sum_{x} w_x\,t_x\Big)
+\qquad \Big(w_x \ge 0,\ \textstyle\sum_x w_x = 1\Big)
+$$
+を道具として用いる（Mathlib `ConcaveOn.le_map_sum`）。
 
-> **(★)** 任意の $t > 0$ で $\log t \le t - 1$。等号は $t = 1$ のときに限る。
+**証明.** 重みを一様に $w_x = 1/M$、点を $t_x = p(x)$ ととって Jensen を適用する。
+各 $p(x) \ge 0$ は $\varphi$ の定義域 $[0,\infty)$ に入るので、質量 $0$ の記号を除外する
+必要はない。$\varphi$ の凹性（信頼の底）と $\sum_x p(x) = 1$ から
+$$
+\frac1M \sum_{x} \varphi\big(p(x)\big)
+  \;=\; \sum_{x} \frac1M\,\varphi\big(p(x)\big)
+  \;\le\; \varphi\Big(\sum_{x} \frac1M\,p(x)\Big)
+  \;=\; \varphi\Big(\frac1M\Big).
+$$
+左辺は $\tfrac1M H(X)$、右辺は
+$\varphi\!\left(\tfrac1M\right) = -\tfrac1M\log\tfrac1M = \tfrac1M\log M$。
+したがって $\tfrac1M H(X) \le \tfrac1M\log M$、両辺を $M$ 倍して
+$$
+H(X) \;\le\; \log M.
+$$
+等号条件は $\varphi$ が **狭義** 凹であることから従う。狭義凹関数の Jensen が等号に
+なるのは全ての点が等しいとき、すなわち $p(x)$ が $x$ によらず一定のときに限る。
+$\sum_x p(x) = 1$ と合わせて $p(x) = 1/M$、つまり $X$ が一様分布のときである。
+$\qquad\blacksquare$
+
+> **形式化.** 主定理 `entropy_le_log_card`、等号条件 `entropy_eq_log_card_iff`
+> (`Common2026/Shannon/MaxEntropy.lean`)。本文の各ステップがそのまま対応する。
+> エントロピーが $\sum_x \varphi(p(x))$ という有限和であること（$\varphi$ は Mathlib の
+> `Real.negMulLog`、$\mathcal X$ は有限型）は Lean では定義上の等式。$\varphi$ の凹性は
+> `Real.concaveOn_negMulLog`（狭義版 `Real.strictConcaveOn_negMulLog`、定義域は
+> $[0,\infty)$ ＝ `Set.Ici 0`）、Jensen の不等式は `ConcaveOn.le_map_sum`、等号条件は
+> `StrictConcaveOn.map_sum_eq_iff`。$\varphi$ が $t=0$ を含む $[0,\infty)$ で凹なので
+> $p(x)=0$ の記号を除外する「台」の処理が一切生じないのが、この筋道の利点である。
+> 最後に「全 singleton の質量が $1/M$」から測度の一致
+> $\mu.\mathrm{map}\,X = \mathrm{uniformOn}$ への橋渡しに `Measure.ext_of_singleton`
+> を用いる。
 >
-> これが本証明の **信頼境界** である。高校〜大学初年級で誰もが認める原子的事実で、
-> ここより下は展開しない（Mathlib `Real.log_le_sub_one_of_pos`）。
-
-以下の二段—代数的恒等式と Gibbs の不等式—は、いずれもこの (★) と有限和の
-足し算だけから本文内で完結する。多くの教科書が Mathlib にブラックボックスとして
-委ねがちな「相対エントロピーの非負性（Gibbs の不等式）」も、その等号条件も、ここでは
-(★) から自分の手で導く。これが本証明の数学的な心臓部である。
-
-**本文で展開する段①：代数的恒等式.** まず初等的な変形だけで次を示す。
-$U(x) = 1/M$ を代入すると、
-$$
-D(P\|U)
-  \;=\; \sum_{x} P(x)\log\frac{P(x)}{1/M}
-  \;=\; \underbrace{\sum_{x} P(x)\log P(x)}_{=\,-H(X)}
-    \;+\; \Big(\sum_{x} P(x)\Big)\log M
-  \;=\; \log M - H(X),
-$$
-最後の等号は $\sum_x P(x) = 1$ による。すなわち
-$$
-D(P\|U) \;=\; \log M - H(X)
-$$
-が成り立つ。形式化ではこの恒等式が補題 `klDiv_uniformOn_univ_toReal_eq`
-として、$(D(P\|U)).\mathrm{toReal} = \log M - H(X)$ の形で確立されている
-（測度論的な細部—絶対連続性 $P \ll U$ や $D(P\|U)$ の有限性—は、この補題の
-内部で処理される）。
-
-**本文で展開する段②：Gibbs の不等式.** 次に $D(P\|U) \ge 0$ を示す。$P(x) > 0$ と
-なる各 $x$ に対し (★) を $t = U(x)/P(x)$ で用いると
-$$
-\log\frac{U(x)}{P(x)} \;\le\; \frac{U(x)}{P(x)} - 1.
-$$
-両辺に $P(x) \ge 0$ を掛けて $x$ について和をとると、右辺が望遠鏡的にたたまれて
-$$
--D(P\|U)
-  \;=\; \sum_{x} P(x)\log\frac{U(x)}{P(x)}
-  \;\le\; \sum_{x}\Big(U(x) - P(x)\Big)
-  \;=\; \sum_{x} U(x) - \sum_{x} P(x)
-  \;=\; 1 - 1 \;=\; 0,
-$$
-すなわち $D(P\|U) \ge 0$（**Gibbs の不等式**）。これが「相対エントロピーの非負性」の
-中身そのものである。さらに (★) の等号条件より、この不等式が等号になるのは
-すべての $x$ で $U(x)/P(x) = 1$、すなわち $P = U$ のときに限る。
-
-**結論.** 段①の恒等式と段②の Gibbs 不等式を合わせると
-$$
-\log M - H(X) \;=\; D(P\|U) \;\ge\; 0
-\quad\Longrightarrow\quad H(X) \le \log M.
-$$
-これが主定理 `entropy_le_log_card` である。等号 $H(X) = \log M$ は
-$D(P\|U) = 0$ と同値で、段②の等号条件よりこれは $P = U$、すなわち $X$ が
-一様分布であることと同値である（`entropy_eq_log_card_iff`）。$\qquad\blacksquare$
-
-> **Jensen ルートとの関係.** 上で触れた Jensen 経由の証明も数学的には正しく、
-> Jensen の不等式自体も形式化されている（Mathlib `Mathlib.Analysis.Convex.Jensen`、
-> および本ライブラリの `Common2026/Fano/BinaryJensen.lean`、ただし後者は Fano
-> 不等式のために用いる）。しかし**この定理の Lean 証明が実際に通る筋道は上記の
-> 相対エントロピー経由**であって、Jensen 経由ではない。本節を相対エントロピーに
-> 合わせたのはそのためで、こうすると「本文の各ステップ＝検証済みの形式化の
-> ステップ」という対応が成立する。Jensen ルートで本文を書くと、その対応は
-> 崩れ、本文の証明は（正しくとも）Lean に裏打ちされない別個の議論になる。
-
-> **形式化と信頼境界の対応.** 主定理 `entropy_le_log_card`、等号条件
-> `entropy_eq_log_card_iff`、恒等式 `klDiv_uniformOn_univ_toReal_eq`
-> (`Common2026/Shannon/MaxEntropy.lean`)。形式化では相対エントロピーを Mathlib の
-> 測度論的な `klDiv`（$[0,\infty]$ 値、絶対連続かつ可積分でないとき $\infty$）で表すため、
-> 段②の Gibbs 不等式は次の経路でこの (★) に落ちる。本文の有限和版は Mathlib では
-> `integral_llr_add_sub_measure_univ_nonneg`（"Gibbs' inequality"）に対応し、それは
-> `klFun_nonneg`（$x\log x - x + 1 \ge 0$、$x\log x$ の狭義凸性、本質的に (★) と同じ内容）
-> から従う。注意すべきは、Lean 証明でこの Gibbs が実際に効くのは**恒等式ステップ**
-> `klDiv_uniformOn_univ_toReal_eq`（内部の `toReal_klDiv` で `ENNReal.ofReal` を
-> 剥がすところ）である点で、最終段の `klDiv.toReal ≥ 0` 自体は `ofReal` から自明に
-> 出るだけで数学的内容を持たない（だから本文の信頼境界は (KL1 という型の都合) ではなく
-> (★) に置く）。退化条件 `entropy_eq_log_card_iff` は Mathlib `klDiv_eq_zero_iff` を
-> 用い、その中身は (★) の**等号条件**（$\log t = t-1 \iff t = 1$、`klFun` の狭義凸性）
-> である。いずれの段も、たどっていけば信頼境界は (★) ただ一つに下りている。
+> 底にある解析的事実は $\varphi$ の凹性ただ一つで、これは $\log t \le t-1$
+> （`Real.log_le_sub_one_of_pos`）と同じ内容に帰着する。なお同じ主張を相対エントロピー
+> （KL ダイバージェンス）経由で述べた恒等式 $D(p\,\|\,\text{一様}) = \log M - H(X)$ も
+> `klDiv_uniformOn_univ_toReal_eq` として形式化されているが、上の主定理はそれには
+> 依存しない（Jensen から直接示している）。
 
 ---
 
