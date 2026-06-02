@@ -30,14 +30,6 @@ body {
   line-height: 1.85; margin: 0; padding: 0;
   background: #fbfbfa; color: #1a1a1a;
 }
-@media (prefers-color-scheme: dark) {
-  body { background: #15171a; color: #e6e6e6; }
-  a { color: #6cb6ff; }
-  blockquote { border-left-color: #333a42; color: #828a94; background: none; }
-  code { background: #23262b; }
-  hr { border-color: #2a2e34; }
-  th, td { border-color: #2a2e34; }
-}
 .container { max-width: 760px; margin: 0 auto; padding: 2.2rem 1.1rem 6rem; }
 h1 { font-size: 1.7rem; line-height: 1.4; border-bottom: 2px solid #ddd; padding-bottom: .5rem; }
 h2 { font-size: 1.35rem; margin-top: 2.6rem; border-bottom: 1px solid #e3e3e3; padding-bottom: .3rem; }
@@ -45,14 +37,25 @@ h3 { font-size: 1.12rem; margin-top: 1.9rem; }
 a { color: #0b67d0; }
 blockquote { border-left: 3px solid #e3e3e3; margin: 1.1rem 0; padding: .15rem 0 .15rem 1rem; color: #8a8a8a; background: none; }
 blockquote p { margin: .4rem 0; }
-code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .9em; background: #eee; padding: .12em .35em; border-radius: 4px; }
-pre code { display: block; padding: .8rem 1rem; overflow-x: auto; }
+code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .88em; background: rgba(0,0,0,.05); color: inherit; padding: .08em .3em; border-radius: 4px; }
+pre { background: #f4f4f2; border-radius: 6px; margin: 1rem 0; }
+pre code { display: block; padding: .8rem 1rem; overflow-x: auto; background: none; color: inherit; font-size: .85em; }
 hr { border: none; border-top: 1px solid #e0e0e0; margin: 2.4rem 0; }
 table { border-collapse: collapse; margin: 1rem 0; }
 th, td { border: 1px solid #ddd; padding: .4rem .7rem; }
 .katex-display { overflow-x: auto; overflow-y: hidden; padding: .2rem 0; }
 .katex { font-size: 1.04em; }
 .site-note { font-size: .82rem; color: #888; margin-top: 4rem; text-align: center; }
+@media (prefers-color-scheme: dark) {
+  body { background: #15171a; color: #e6e6e6; }
+  a { color: #6cb6ff; }
+  blockquote { border-left-color: #333a42; color: #9aa3ad; background: none; }
+  code { background: rgba(255,255,255,.08); color: inherit; }
+  pre { background: #1c1f24; }
+  pre code { background: none; color: #d7dce2; }
+  hr { border-color: #2a2e34; }
+  th, td { border-color: #2a2e34; }
+}
 `;
 
 function page({ title, bodyHtml }) {
