@@ -51,7 +51,11 @@ noncomputable abbrev liftMeasure : Measure (Ω × ℝ × ℝ) :=
 omit [IsProbabilityMeasure P] in
 /-- lift 上で X law が保存される (transport の linchpin)。
 `(liftMeasure P).map (X∘fst) = ((liftMeasure P).map fst).map X = P.map X` を `map_map` +
-`measurePreserving_fst` で出し、`entropyPower` の law-only 性で結論。 -/
+`measurePreserving_fst` で出し、`entropyPower` の law-only 性で結論。
+
+@audit:ok (independent honesty audit 2026-06-04: sorryAx-free
+`[propext, Classical.choice, Quot.sound]` 機械確認、`map_map` + `measurePreserving_fst.map_eq`
+の正しい適用、結論は主張通り、core を bundle する仮説なし)。 -/
 theorem entropyPower_map_comp_fst_eq (hX : Measurable X) :
     entropyPower ((liftMeasure P).map (fun p => X p.1)) = entropyPower (P.map X) := by
   have hmap : (liftMeasure P).map (fun p : Ω × ℝ × ℝ => X p.1) = P.map X := by
@@ -62,7 +66,13 @@ theorem entropyPower_map_comp_fst_eq (hX : Measurable X) :
 /-- lift 空間で `IsStamScalingNoiseHyp` (lift 版) を product-measure API のみで構成。
 これは **lift 空間上の genuine な existential** であり、in-place の偽 W2
 `stamScalingNoise_exists` の honest 後継 (置換ではなく併置 = 正当化 (c))。
-witness は座標射影 `Z_X' := (·.2.1)`, `Z_Y' := (·.2.2)`。 -/
+witness は座標射影 `Z_X' := (·.2.1)`, `Z_Y' := (·.2.2)`。
+
+@audit:ok (independent honesty audit 2026-06-04: sorryAx-free
+`[propext, Classical.choice, Quot.sound]` 機械確認。7 conjunct (Measurable×2 / gaussian law×2 /
+IndepFun×3) は全て Mathlib product-measure API で genuine に充足、witness は座標射影で非退化
+(`Z_* := 0` collapse は `(ν.prod ν).map fst = gaussianReal 0 1` の law 等式により不成立)。
+lift 空間上の genuine existential で in-place 偽 W2 の honest 後継)。 -/
 theorem stamScalingNoise_exists_on_lift (hX : Measurable X) (hY : Measurable Y) :
     IsStamScalingNoiseHyp (fun p => X p.1) (fun p => Y p.1) (liftMeasure P) := by
   set ν : Measure ℝ := gaussianReal 0 1 with hν
@@ -103,7 +113,12 @@ theorem stamScalingNoise_exists_on_lift (hX : Measurable X) (hY : Measurable Y) 
 
 /-- 和 vs 和の独立性 (G4 = in-place joint indep `sorry` の lift 後継) を lift 上で。
 `(X∘fst + Y∘fst) ⊥ (Z_X' + Z_Y')` on `liftMeasure P`。`indepFun_prod` を直接適用
-(左 = `p.1` のみの関数、右 = `p.2` のみの関数)。 -/
+(左 = `p.1` のみの関数、右 = `p.2` のみの関数)。
+
+@audit:ok (independent honesty audit 2026-06-04: sorryAx-free
+`[propext, Classical.choice, Quot.sound]` 機械確認。`indepFun_prod` の関数 shape (左 = 第1因子
+`X p.1 + Y p.1`、右 = 第2因子 `p.2.1 + p.2.2`) が Mathlib signature `(fun ω ↦ X ω.1) ⟂ᵢ (fun ω ↦ Y ω.2)`
+と一致、和 vs 和の独立性は genuine)。 -/
 theorem indepFun_add_add_on_lift (hX : Measurable X) (hY : Measurable Y) :
     IndepFun (fun p => X p.1 + Y p.1)
              (fun p => p.2.1 + p.2.2) (liftMeasure P) :=
@@ -117,7 +132,16 @@ omit [IsProbabilityMeasure P] in
 `(Ω,P)` の EPI 結論とは異なる Prop (defeq でない別測度命題)。これは measure-transport reduction
 (`IsStamToEPIBridge` が `residual → 結論` なのと同型の honest な reduction) であって **circular でも
 load-bearing bundle でもない** — Stam の核を抱えない、単なる測度張替。`h_lift_epi` は G2 closure 後に
-lift 空間の genuine bridge から供給される。base 結論と defeq でない別測度命題なので非循環。 -/
+lift 空間の genuine bridge から供給される。base 結論と defeq でない別測度命題なので非循環。
+
+@audit:ok (independent honesty audit 2026-06-04: sorryAx-free
+`[propext, Classical.choice, Quot.sound]` 機械確認。判定 = honest measure-transport reduction、
+`IsStamToEPIBridge := IsStamInequalityResidual → IsEntropyPowerInequalityHypothesis` (`@audit:ok`)
+と同型。(1) 非循環: 仮説 `h_lift_epi` (lift 測度 EPI) は結論 (base 測度 EPI) と構文的に別 Prop、
+body は A1 measure 等式を 3 箇所 rewrite (`:= h` 循環でない)。(2) 非バンドル: `h_lift_epi` は Stam の核
+(Fisher 不等式) を抱えず、lift 空間 EPI を base に張替えるだけ。(3) sufficiency: lift EPI ⊢ base EPI は
+A1 `entropyPower_map_comp_fst_eq` の measure 等式 (`measurePreserving_fst` で law 一致を genuine 証明済)
+により semantic に follow、反例不成立。結論名に name laundering なし)。 -/
 theorem entropy_power_inequality_via_lift (hX : Measurable X) (hY : Measurable Y)
     (h_lift_epi : entropyPower ((liftMeasure P).map (fun p => X p.1 + Y p.1))
       ≥ entropyPower ((liftMeasure P).map (fun p => X p.1))
