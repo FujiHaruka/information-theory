@@ -2826,4 +2826,32 @@ theorem algoet_cover_liminf_bound
       = fun i : ℤ => p.obs i.toNat ω from rfl]
   exact (blockLogAvgZ_natExt_eq μ p.toStationaryProcess n ω).symm
 
+/-! ## D.7 — Main theorem (hypothesis-free assembly) -/
+
+/-- **Shannon–McMillan–Breiman theorem** (Cover–Thomas 16.8.1).
+
+For a stationary ergodic process with finite alphabet `α`, the per-symbol
+negative log-likelihood `blockLogAvg μ p n` converges almost surely to the
+entropy rate `entropyRate μ p`.
+
+This is the hypothesis-free capstone: the four hypotheses of
+`shannon_mcmillan_breiman_of_sandwich` are discharged unconditionally by the
+Algoet–Cover sandwich bounds (`algoet_cover_liminf_bound`,
+`algoet_cover_limsup_bound`) and the a.s. boundedness lemmas
+(`blockLogAvg_bddAbove_ae`, `blockLogAvg_bddBelow_ae`), all of which rest on
+the Birkhoff ergodic theorem, the two-sided projective-limit construction
+(`InformationTheory.Probability.TwoSidedExtension`), and backward-martingale
+convergence. -/
+@[entry_point]
+theorem shannon_mcmillan_breiman
+    (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
+    ∀ᵐ ω ∂μ, Filter.Tendsto
+      (fun n => blockLogAvg μ p.toStationaryProcess n ω)
+      Filter.atTop (𝓝 (entropyRate μ p.toStationaryProcess)) :=
+  shannon_mcmillan_breiman_of_sandwich μ p
+    (algoet_cover_liminf_bound μ p)
+    (algoet_cover_limsup_bound μ p)
+    (blockLogAvg_bddAbove_ae μ p)
+    (blockLogAvg_bddBelow_ae μ p)
+
 end InformationTheory.Shannon

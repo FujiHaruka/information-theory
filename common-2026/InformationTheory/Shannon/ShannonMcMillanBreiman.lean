@@ -12,16 +12,21 @@ alphabet `α`, the per-symbol negative log-likelihood
 
   `-(1/n) log P(X_0, …, X_{n-1})`
 
-converges almost surely to the entropy rate `H`. The full proof needs the
-Birkhoff ergodic theorem (Phase C of the SMB moonshot, deferred to E-8'').
-This file packages the **sandwich form** of the conclusion: assuming
-`liminf ≥ H` and `limsup ≤ H` almost surely (the two halves of the
-Cover–Thomas 16.8 bound which Birkhoff supplies), we deduce a.s. convergence
-via `tendsto_of_le_liminf_of_limsup_le`.
+converges almost surely to the entropy rate `H`. This file packages the
+**sandwich form** of the conclusion: assuming `liminf ≥ H` and `limsup ≤ H`
+almost surely (the two halves of the Cover–Thomas 16.8 bound which Birkhoff
+supplies), we deduce a.s. convergence via `tendsto_of_le_liminf_of_limsup_le`.
+
+The hypothesis-free capstone `shannon_mcmillan_breiman` lives in
+`InformationTheory.Shannon.SMBAlgoetCover`: it discharges the two sandwich
+inequalities and a.s. boundedness unconditionally via the Algoet–Cover bounds
+(`algoet_cover_liminf_bound` / `algoet_cover_limsup_bound`), which rest on the
+Birkhoff ergodic theorem (`BirkhoffErgodic`), the two-sided projective-limit
+construction (`Probability.TwoSidedExtension`), and backward-martingale
+convergence.
 
 We also publish the **expected-value level** statement, which does **not**
-need Birkhoff and serves as the bridge that Phase D will lift to the a.s.
-statement once Phase C ships.
+need Birkhoff.
 
 ## Main definitions
 
