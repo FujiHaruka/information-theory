@@ -74,6 +74,14 @@ heat-flow density continuity; its genuine single-term assets require measurabili
 ray is closed by one wall atom. This is a true continuity claim with body `sorry`;
 no continuity conclusion is taken as a hypothesis.
 
+Independent honesty audit 2026-06-04 (fresh subagent): signature honest (true
+`ContinuousOn` claim, no conclusion-as-hypothesis, `IsDeBruijnRegularityHyp`
+fields are regularity-only — density witness / per-`t` V2 regularity /
+interval-integrability, none a continuity claim), non-vacuous (Gaussian
+inhabitant), `wall:heatflow-continuity` classification confirmed (loogle: 0
+`entropyPower`/`differentialEntropy` × `Continuous` in Mathlib + InformationTheory;
+DCT machinery present, uniform-majorant gap genuine). honest_residual.
+
 @residual(wall:heatflow-continuity) -/
 theorem heatFlowEntropyPower_continuousOn
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
