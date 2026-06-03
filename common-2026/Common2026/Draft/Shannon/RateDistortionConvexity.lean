@@ -147,7 +147,7 @@ is retained as a passive regularity hyp. Body retreated to `sorry`.
 
 `@residual(plan:rate-distortion-convexity-plan)`
 
-`@[entry_point]` status: staged (body is `sorry` + `@residual`). -/
+-/
 @[entry_point]
 theorem rateDistortionFunction_convexOn
     (d : α → β → ℝ) (P : Measure α) [IsProbabilityMeasure P]

@@ -94,7 +94,7 @@ distortion-compatibility / slack hypotheses remain. Body retreated to `sorry`.
 
 `@residual(plan:rate-distortion-achievability-phase-e-strong-plan)`
 
-`@[entry_point]` status: staged (body is `sorry` + `@residual`). -/
+-/
 @[entry_point]
 theorem rate_distortion_achievability_witness_form
     -- Source distribution and witness on the pmf side.

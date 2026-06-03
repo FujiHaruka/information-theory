@@ -294,7 +294,7 @@ because this wrapper is itself an independently published statement.
 
 `@residual(plan:rate-distortion-achievability-phase-e-strong-plan)`
 
-`@[entry_point]` status: staged (body is `sorry` + `@residual`). -/
+-/
 @[entry_point]
 theorem rate_distortion_achievability_partial_discharge
     (P_X_pmf : α → ℝ) (d : DistortionFn α β) {D : ℝ}

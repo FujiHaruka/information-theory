@@ -877,8 +877,7 @@ theorem parallelGaussianCapacity_achiever_mi {n : ℕ}
 /-- Backward-compatible alias for the genuine headline
 `parallel_gaussian_capacity_formula` (was the `_discharged` re-publish name).
 
-`@[entry_point]` status: staged (passes through `IsWaterFillingOptimal` /
-`IsParallelGaussianPerCoordRegularity` hypothesis predicates). -/
+-/
 @[entry_point, deprecated parallel_gaussian_capacity_formula (since := "2026-05-21")]
 theorem parallel_gaussian_capacity_formula_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)

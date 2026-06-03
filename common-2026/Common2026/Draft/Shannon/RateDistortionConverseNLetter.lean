@@ -271,7 +271,7 @@ into a precondition. Body retreated to `sorry`.
 
 `@residual(plan:rate-distortion-converse-plan)`
 
-`@[entry_point]` status: staged (body is `sorry` + `@residual`). -/
+-/
 @[entry_point]
 theorem rate_distortion_converse_n_letter_singleLetter
     [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
