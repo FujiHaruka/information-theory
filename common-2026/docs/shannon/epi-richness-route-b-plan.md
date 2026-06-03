@@ -13,14 +13,22 @@ proof-log: no (本計画は設計のみ。実装着手時に proof-log を別途
 
 ## 進捗
 
-- [ ] Phase 0 — 在庫照合 + 設計凍結 (B1/B2 推奨確定) 📋 → [`epi-richness-noise-inventory.md`](epi-richness-noise-inventory.md)
-- [ ] Phase 1 — `EPINoiseExtension.lean` skeleton 着地 (4 lemma stub + import) 📋
-- [ ] Phase 2 — lift law 保存補題 `entropyPower_map_comp_fst_eq` genuine fill 📋
-- [ ] Phase 3 — lift noise 構成補題 `stamScalingNoise_exists_on_lift` genuine fill 📋
-- [ ] Phase 4 — sum-vs-sum 独立補題 `indepFun_add_add_on_lift` genuine fill 📋
-- [ ] Phase 5 — EPI transport 本体 `entropy_power_inequality_via_lift` genuine fill 📋
-- [ ] Phase 6 — 偽 in-place `stamScalingNoise_exists` の honest マーク + wall register 訂正 📋
-- [ ] Phase 7 — verify + InformationTheory.lean 編入 + 独立 honesty audit 📋
+> **B1 DONE (2026-06-04、commit `8431a20` + audit commit)**: lift machinery 4 lemma 全て
+> genuine 0 sorry / `@audit:ok` (`#print axioms` sorryAx-free 機械確認、独立 honesty-auditor pass)。
+> Phase 4 は予測 (`iIndepFun_pi` + 因子化) より大幅に軽く `indepFun_prod` 直接 1 行で閉じた。
+> 偽 in-place W2 は `@audit:defect(false-statement) @audit:closed-by-successor(epi-richness-route-b-plan)`
+> でマーク (dirac 反例で独立検証済)。wall register 追記は**しない** (false-statement を wall と誤分類しないため)。
+> **残**: B2 (in-place re-wire で偽 lemma 完全除去) は headline を塞ぐ G2 待ちで保留。lift machinery は
+> G2 closure まで live consumer 0 (dead-code、docstring 正当化 3 点 + future B2 foundation)。
+
+- [x] Phase 0 — 在庫照合 + 設計凍結 (B1 採用) ✅ → [`epi-richness-noise-inventory.md`](epi-richness-noise-inventory.md)
+- [x] Phase 1 — `EPINoiseExtension.lean` skeleton 着地 ✅
+- [x] Phase 2 — lift law 保存補題 `entropyPower_map_comp_fst_eq` ✅ **genuine, `@audit:ok`**
+- [x] Phase 3 — lift noise 構成補題 `stamScalingNoise_exists_on_lift` ✅ **genuine, `@audit:ok`**
+- [x] Phase 4 — sum-vs-sum 独立補題 `indepFun_add_add_on_lift` ✅ **genuine, `@audit:ok`** (`indepFun_prod` 直接 1 行)
+- [x] Phase 5 — EPI transport 本体 `entropy_power_inequality_via_lift` ✅ **genuine (conditional transport 形), `@audit:ok`**
+- [x] Phase 6 — 偽 in-place `stamScalingNoise_exists` の honest マーク ✅ (wall register 追記は意図的に不実施)
+- [x] Phase 7 — verify (0 errors) + `InformationTheory.lean` 編入 + 独立 honesty audit (全 OK) ✅
 
 proof-log: no (設計のみ。実装 Phase で `docs/shannon/proof-log-epi-richness-route-b-*.md` を別途起こす)
 
