@@ -19,9 +19,9 @@ error 化し、(3) **full support 仮定を除去**して任意 `p, W` に対す
 - [x] Phase C — Full support 仮定除去 ✅ (2026-05-13、smoothing 経路で hp_pos 迂回)
 - [x] Phase D — 主定理 `shannon_noisy_channel_coding_theorem` 統合 ✅ (2026-05-13、`hW_pos` のみユーザ仮定、`hp_pos` smoothing 経路で内部処理)
 
-> 実態整合 (2026-05-20): DONE-HONEST-HYPS — `shannon_noisy_channel_coding_theorem` (`Common2026/Shannon/ChannelCodingShannonTheorem.lean:1011`) は `hW_pos : ∀ a b, 0 < (W a).real {b}` の正直な full-support 仮説 + `R < capacity W` のみで max-error 達成形を結論。ファイル全体で real-sorry **ゼロ** (`exists_capacity_achiever:317` / `mutualInfoOfChannel_restrict_to_support:816` も 0 sorry — 下記の "A.3 + C.1 documentation only sorry" 記述は stale で、現状の code には documentation sorry も残っていない)。`hW_pos` 除去版は後継 D-1' / D-1'' で完成 (`shannon_noisy_channel_coding_theorem_general_full`、下記参照)。
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — `shannon_noisy_channel_coding_theorem` (`InformationTheory/Shannon/ChannelCodingShannonTheorem.lean:1011`) は `hW_pos : ∀ a b, 0 < (W a).real {b}` の正直な full-support 仮説 + `R < capacity W` のみで max-error 達成形を結論。ファイル全体で real-sorry **ゼロ** (`exists_capacity_achiever:317` / `mutualInfoOfChannel_restrict_to_support:816` も 0 sorry — 下記の "A.3 + C.1 documentation only sorry" 記述は stale で、現状の code には documentation sorry も残っていない)。`hW_pos` 除去版は後継 D-1' / D-1'' で完成 (`shannon_noisy_channel_coding_theorem_general_full`、下記参照)。
 
-**完了サマリ (2026-05-13)**: `Common2026/Shannon/ChannelCodingShannonTheorem.lean` (918 行、13 declarations、D 主定理 0 sorry / A.3 + C.1 documentation only sorry)。Cover-Thomas 7.7.1 完全形:
+**完了サマリ (2026-05-13)**: `InformationTheory/Shannon/ChannelCodingShannonTheorem.lean` (918 行、13 declarations、D 主定理 0 sorry / A.3 + C.1 documentation only sorry)。Cover-Thomas 7.7.1 完全形:
 ```
 shannon_noisy_channel_coding_theorem
   (W : Channel α β) [IsMarkovKernel W]
@@ -90,7 +90,7 @@ shannon_noisy_channel_coding_theorem :
 
 **Bridge と既存資産の関係**:
 - 既存 `channel_coding_achievability` (1890 行) を **改変しない**。出発点は black-box。
-- 新規ファイル: `Common2026/Shannon/ChannelCodingShannonTheorem.lean` (~600-800 行)。
+- 新規ファイル: `InformationTheory/Shannon/ChannelCodingShannonTheorem.lean` (~600-800 行)。
 - 既存 `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ` (`ChannelCoding.lean:129`) を Phase A
   の連続性で活用 (entropy `Continuous` → MI `Continuous`)。
 - `MIChainRule.mutualInfo_iid_eq_nsmul` は本 plan では未使用 (n-channel は既存 achievability
@@ -105,7 +105,7 @@ shannon_noisy_channel_coding_theorem :
   + sub-code 構築 (`Code.subcode` 補助定義 or 直接 encoder restriction)。
 - **Phase C**: full support 緩和 ~200 行。sub-channel 切り出し補助補題 + 連続近似。
 - **Phase D**: 3 段合成 + 主定理本体 ~100 行。
-- 合計 ~700 行、新規 `Common2026/Shannon/ChannelCodingShannonTheorem.lean`。
+- 合計 ~700 行、新規 `InformationTheory/Shannon/ChannelCodingShannonTheorem.lean`。
 
 ## Phase 0 — 経路選択判断 📋
 
@@ -324,10 +324,10 @@ shannon_noisy_channel_coding_theorem :
   - 用途: Phase B.1 Markov inequality 対偶経路。
 
 **プロジェクト内既存**:
-- `mutualInfoOfChannel` (`Common2026/Shannon/ChannelCoding.lean:84`)
-- `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ` (`Common2026/Shannon/ChannelCoding.lean:129`)
-- `channel_coding_achievability` (`Common2026/Shannon/ChannelCodingAchievability.lean:1605`)
-- `Code.errorProbAt` / `Code.averageErrorProb` (`Common2026/Shannon/ChannelCoding.lean:204-213`)
+- `mutualInfoOfChannel` (`InformationTheory/Shannon/ChannelCoding.lean:84`)
+- `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ` (`InformationTheory/Shannon/ChannelCoding.lean:129`)
+- `channel_coding_achievability` (`InformationTheory/Shannon/ChannelCodingAchievability.lean:1605`)
+- `Code.errorProbAt` / `Code.averageErrorProb` (`InformationTheory/Shannon/ChannelCoding.lean:204-213`)
 
 **Mathlib gap 候補 (要新規実装)**:
 - `pmfToMeasure : (α → ℝ) → Measure α` (Sanov/Csiszár で類似 utility あるか要 rg 確認)

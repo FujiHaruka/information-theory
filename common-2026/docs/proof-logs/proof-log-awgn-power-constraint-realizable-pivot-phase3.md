@@ -10,11 +10,11 @@ Phase 2 (commit `9dcef00`) で 3 staged hyp を 1 bundle hyp `IsAwgnRandomCoding
 
 成果物:
 
-- `Common2026/Shannon/AWGNAchievabilityDischarge.lean` — 1641 行 (Phase 2 末 989 行 → +652 行)、`lake env lean` silent (0 sorry / 0 error / 0 warning) (proof log 内 `sorry` 文字列 10 件は全て docstring/コメント、活 sorry なし)
+- `InformationTheory/Shannon/AWGNAchievabilityDischarge.lean` — 1641 行 (Phase 2 末 989 行 → +652 行)、`lake env lean` silent (0 sorry / 0 error / 0 warning) (proof log 内 `sorry` 文字列 10 件は全て docstring/コメント、活 sorry なし)
 - `isAwgnTypicalityHypothesis` (`:961`) body: 旧 580 行 F-1 assembly を bundle destructure 前置 + `gaussianCodebook` の variance 引数 14 箇所 P→P' 書換 + power-side rate-bound 派生で復元
 - docstring の "Phase 3 blocker / currently sorry" 記述を Phase 3 完了形に更新
 
-`lake env lean Common2026/Shannon/AWGNAchievabilityDischarge.lean` 出力: 完全 silent、exit 0。
+`lake env lean InformationTheory/Shannon/AWGNAchievabilityDischarge.lean` 出力: 完全 silent、exit 0。
 
 ## 1. 問題のキャラクター
 
@@ -31,7 +31,7 @@ Phase 2 (commit `9dcef00`) で 3 staged hyp を 1 bundle hyp `IsAwgnRandomCoding
 
 ### (1) 旧 body 抽出と差分計画
 
-`git show 4d7e67e^:./Common2026/Shannon/AWGNAchievabilityDischarge.lean | sed -n '892,1483p' > /tmp/old-body.lean` で旧 body 592 行 (signature 7 + 本体 585) を確保。
+`git show 4d7e67e^:./InformationTheory/Shannon/AWGNAchievabilityDischarge.lean | sed -n '892,1483p' > /tmp/old-body.lean` で旧 body 592 行 (signature 7 + 本体 585) を確保。
 
 計画書の指示通り 4 つの mechanical 変換ポイントを事前列挙:
 
@@ -55,7 +55,7 @@ Edit 1 発で `theorem isAwgnTypicalityHypothesis ... := by\n  sorry` の `sorry
 `lake env lean` の第 1 戻りで唯一のエラー:
 
 ```
-Common2026/Shannon/AWGNAchievabilityDischarge.lean:1000:60: error: Application type mismatch:
+InformationTheory/Shannon/AWGNAchievabilityDischarge.lean:1000:60: error: Application type mismatch:
   argument hR''_lt_C has type R'' < C
   but is expected to have type R'' < 1 / 2 * Real.log (1 + P / ↑N)
 in: h_power' hε_pow_pos hR''_pos hR''_lt_C

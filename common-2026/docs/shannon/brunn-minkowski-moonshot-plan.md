@@ -1,7 +1,7 @@
 # T2-E Brunn-Minkowski (entropy form) — Moonshot Plan
 
 Cover-Thomas Theorem 17.9.2 (Brunn-Minkowski inequality, entropy form) を
-Lean 4 + Mathlib + Common2026 上で **statement-level pass-through publish** する。
+Lean 4 + Mathlib + InformationTheory 上で **statement-level pass-through publish** する。
 
 ## Context
 
@@ -26,10 +26,10 @@ measure) に対し、
 exp ((2/n) · h(X + Y)) ≥ exp ((2/n) · h(X)) + exp ((2/n) · h(Y))
 ```
 
-を Common2026 `Common2026/Shannon/BrunnMinkowski.lean` に publish。
+を InformationTheory `InformationTheory/Shannon/BrunnMinkowski.lean` に publish。
 
 > **実態整合 (2026-05-20): PASS-THROUGH (publish 済、L-BM1 conclusion-as-hypothesis retreat、0 sorry)** —
-> `Common2026/Shannon/BrunnMinkowski.lean` が主定理 `brunn_minkowski_entropy_inequality` (`:183`) を publish 済。
+> `InformationTheory/Shannon/BrunnMinkowski.lean` が主定理 `brunn_minkowski_entropy_inequality` (`:183`) を publish 済。
 > 本体は `IsBrunnMinkowskiEntropyHypothesis` (= BM 結論そのもの、`:132`) を受け取り `:= h_bm` (`:192`) で着地
 > = **conclusion-as-hypothesis retreat** (EPI L-EPI3 と同型)。補助 hyp `IsUniformOnEntropyLogVolHypothesis` (`:148`、
 > `h μ = Real.log vol`) と `IsMinkowskiSumMeasurableHypothesis` (`:161`、`MeasurableSet (A+B)`) は **`:= True`
@@ -57,7 +57,7 @@ exp ((2/n) · h(X + Y)) ≥ exp ((2/n) · h(X)) + exp ((2/n) · h(Y))
 1. **§A — `entropyPower_nDim` 定義**: `Real.exp ((2/n) · h μ)` 形を
    `Measure (Fin n → ℝ)` 上に定義。EPI が `Real.exp (2 · h μ)` と
    等価係数 `2 = 2/1` だったのに対し、`n`-dim では係数 `2/n` を担う
-   (Cover-Thomas Ch.17.9 conventions)。Common2026 には `n`-dim
+   (Cover-Thomas Ch.17.9 conventions)。InformationTheory には `n`-dim
    differential entropy が未定義のため、本 plan の `entropyPower_nDim`
    は `h : Measure (Fin n → ℝ) → ℝ` を **abstract scalar parameter
    として受け取る**: signature は将来の `differentialEntropy_nDim`
@@ -116,10 +116,10 @@ EPI 経由路は `brunn-minkowski-from-epi-discharge-plan.md` 別 plan に defer
 
 ## File breakdown
 
-### `Common2026/Shannon/BrunnMinkowski.lean` (予測 ~280-340 行)
+### `InformationTheory/Shannon/BrunnMinkowski.lean` (予測 ~280-340 行)
 
-- imports: `Common2026.Shannon.DifferentialEntropy`,
-  `Common2026.Shannon.EntropyPowerInequality`,
+- imports: `InformationTheory.Shannon.DifferentialEntropy`,
+  `InformationTheory.Shannon.EntropyPowerInequality`,
   `Mathlib.Analysis.SpecialFunctions.Exp`,
   `Mathlib.Analysis.SpecialFunctions.Log.Basic`,
   `Mathlib.Probability.Independence.Basic`,
@@ -144,10 +144,10 @@ EPI 経由路は `brunn-minkowski-from-epi-discharge-plan.md` 別 plan に defer
 
 ## 受入基準 (Definition of Done)
 
-- `lake env lean Common2026/Shannon/BrunnMinkowski.lean` silent (零 error, 零 warning, 零 sorry)
+- `lake env lean InformationTheory/Shannon/BrunnMinkowski.lean` silent (零 error, 零 warning, 零 sorry)
 - 主定理 `brunn_minkowski_entropy_inequality` が L-BM1 hypothesis pass-through で着地
 - 系 `brunn_minkowski_convex_body` が L-BM1+L-BM2+L-BM3 combination で着地
-- `Common2026.lean` に import 追加 (本 plan は親指示で **不変** 制約のため
+- `InformationTheory.lean` に import 追加 (本 plan は親指示で **不変** 制約のため
   追加 import は本 plan scope 外、後続 publish PR に塞ぐ)
 - `docs/textbook-roadmap.md` 不変 (本 plan は親指示で **不変** 制約)
 

@@ -17,7 +17,7 @@
 - [x] Phase C — 既存 D-1 を `W_smooth δ₀` に適用 + TV bound で error 差を抑制 ✅
 - [~] Phase D — 主定理は本 file から削除し D-1'' へ移管 (判断ログ 7、smoothing infra として publish)
 
-> 実態整合 (2026-05-20): DONE (smoothing infrastructure scope) — 本 plan は判断ログ 7 のとおり Phase D 主定理を削除し、Phase A-C の smoothing 機構を publish。実体は `Common2026/Shannon/ChannelCodingShannonTheoremGeneral.lean` (`Channel.smooth`、`errorProbAt_smooth_TV:611`、`exists_smooth_capacity_gt:305` 等、0 sorry)。主定理 `shannon_noisy_channel_coding_theorem_general` (`hW_pos` 除去版) は子 plan D-1'' で完全 discharge 済: `shannon_noisy_channel_coding_theorem_general_full` (`Common2026/Shannon/ChannelCodingShannonTheoremFullDischarge.lean:1588`、0 sorry、`hW_pos`/`h_passthrough` なし)。
+> 実態整合 (2026-05-20): DONE (smoothing infrastructure scope) — 本 plan は判断ログ 7 のとおり Phase D 主定理を削除し、Phase A-C の smoothing 機構を publish。実体は `InformationTheory/Shannon/ChannelCodingShannonTheoremGeneral.lean` (`Channel.smooth`、`errorProbAt_smooth_TV:611`、`exists_smooth_capacity_gt:305` 等、0 sorry)。主定理 `shannon_noisy_channel_coding_theorem_general` (`hW_pos` 除去版) は子 plan D-1'' で完全 discharge 済: `shannon_noisy_channel_coding_theorem_general_full` (`InformationTheory/Shannon/ChannelCodingShannonTheoremFullDischarge.lean:1588`、0 sorry、`hW_pos`/`h_passthrough` なし)。
 
 ## ゴール / Approach
 
@@ -62,7 +62,7 @@ theorem shannon_noisy_channel_coding_theorem_general
 
 **Bridge と既存資産の関係**:
 - 親 D-1 主定理 `shannon_noisy_channel_coding_theorem` (`:838`) を **改変せず** 1 回 call。
-- 新規ファイル: `Common2026/Shannon/ChannelCodingShannonTheoremGeneral.lean` (~200-280 行見込み)。
+- 新規ファイル: `InformationTheory/Shannon/ChannelCodingShannonTheoremGeneral.lean` (~200-280 行見込み)。
 - 親 plan の `continuous_mutualInfoOfChannel_left` の **右 W 引数版** を新規追加。
 
 ### 規模見積
@@ -85,7 +85,7 @@ theorem shannon_noisy_channel_coding_theorem_general
 - **`Real.continuous_negMulLog`**: 親 A.2 で使用済、Phase B でも再利用。
 - **`Real.continuous_log`** + `continuous_pi`: 連続性合成の基本。
 
-### 既存 Common2026 補題 (再利用)
+### 既存 InformationTheory 補題 (再利用)
 
 - `pmfToMeasure` + `pmfToMeasure_real_singleton` + `pmfToMeasure_isProbabilityMeasure`
   (`ChannelCodingShannonTheorem.lean:54, 74, 93`).
@@ -270,7 +270,7 @@ theorem shannon_noisy_channel_coding_theorem_general
 |---|---|---|
 | MUST | `Kernel.instAddCommMonoid` (pointwise add) | ✓ Mathlib |
 | MUST | `Real.continuous_negMulLog` | ✓ Mathlib |
-| MUST | `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ` | ✓ Common2026 |
+| MUST | `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ` | ✓ InformationTheory |
 | MUST | `Measure.pi` 線型差展開 (TV bound) | 手で構成、~30-50 行 |
 | SHOULD | `klDiv` の `W` 連続性 | ✗ 3-entropy 経由で迂回 |
 | SHOULD | `capacity W` の `W` 連続性 (sup-of-cont) | ✗ 固定 `p₀` 経由で迂回 |
@@ -339,6 +339,6 @@ theorem shannon_noisy_channel_coding_theorem_general
 ## 参考
 
 - 親 plan: [`channel-coding-shannon-theorem-plan.md`](./channel-coding-shannon-theorem-plan.md)
-- 親 D-1 実装: `Common2026/Shannon/ChannelCodingShannonTheorem.lean` (918 行)
-- 既存 achievability: `Common2026/Shannon/ChannelCodingAchievability.lean:1605`
+- 親 D-1 実装: `InformationTheory/Shannon/ChannelCodingShannonTheorem.lean` (918 行)
+- 既存 achievability: `InformationTheory/Shannon/ChannelCodingAchievability.lean:1605`
 - moonshot 雛形: [`docs/moonshot-plan-template.md`](../moonshot-plan-template.md)

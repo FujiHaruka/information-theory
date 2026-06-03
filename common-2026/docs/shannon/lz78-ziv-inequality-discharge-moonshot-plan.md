@@ -7,14 +7,14 @@
 > **Inventory**: 親 plan + `lz78-mathlib-inventory.md` の §1.1 / §4.2 を再利用、本 plan では新規 inventory なし
 >
 > **Predecessor / 再利用基盤** (publish 済、本 plan からは黒箱 reuse):
-> - `Common2026/Shannon/LempelZiv78.lean` (548 行, publish 済 2026-05-19) — `LZ78Phrase`, `LZ78Parsing`, `LZ78Parsing.count`, `IsZivInequalityPassthrough` predicate
+> - `InformationTheory/Shannon/LempelZiv78.lean` (548 行, publish 済 2026-05-19) — `LZ78Phrase`, `LZ78Parsing`, `LZ78Parsing.count`, `IsZivInequalityPassthrough` predicate
 > - Mathlib `List.length`, `Finset.card_image_le`, `Finset.card_le_univ`, `Fintype.card`
 >
 > **Pattern 雛形**:
-> - `Common2026/Shannon/WynerZivDischarge.lean` (T3-D L-WZ3 部分 discharge; 「最も取りやすい fragments を抽出」pattern の直接の雛形)
-> - `Common2026/Shannon/CramerLC2Discharge.lean` (T1-C 部分 discharge pattern)
+> - `InformationTheory/Shannon/WynerZivDischarge.lean` (T3-D L-WZ3 部分 discharge; 「最も取りやすい fragments を抽出」pattern の直接の雛形)
+> - `InformationTheory/Shannon/CramerLC2Discharge.lean` (T1-C 部分 discharge pattern)
 >
-> **Goal (短形)**: 新規 1 ファイル `Common2026/Shannon/LZ78ZivInequality.lean` で
+> **Goal (短形)**: 新規 1 ファイル `InformationTheory/Shannon/LZ78ZivInequality.lean` で
 > Cover-Thomas Lemma 13.5.5 (Ziv's inequality) の **combinatorial counting plumbing**
 > 部分を **0 sorry / 0 warning** で publish。**~300-600 行**、partial discharge
 > ラインは **L-LZ1-A (counting bound)** を確定発動。
@@ -31,7 +31,7 @@
 
 ## Status (2026-05-20)
 
-> 実態整合 (2026-05-20): DONE-HONEST-HYPS (partial counting layer) かつ headline passthrough は依然 FLAW-VACUOUS — file `Common2026/Shannon/LZ78ZivInequality.lean` (0 sorry) は **genuine な組み合わせ counting 補題** を publish 済: `LZ78Parsing.card_phraseSet_le_count` `:161`、`card_phraseSet_le_pow` `:204`、`card_phraseSet_le_succ_mul_card` `:236`、real-valued predicate `ZivCountingBound` `:280` + 派生補題。ただし bridge `IsZivInequalityPassthrough.ofZivCountingBound` (`:325`) の body は **`True.intro`** で、親 `IsZivInequalityPassthrough` は `lz78-moonshot-plan.md` で依然 `Prop := True` のまま — Ziv's inequality 本体は **discharge されていない** (plan の L-LZ1-A/B scope 通り、L-LZ1-C は撤退)。counting plumbing は実体あり、passthrough discharge は未達。
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS (partial counting layer) かつ headline passthrough は依然 FLAW-VACUOUS — file `InformationTheory/Shannon/LZ78ZivInequality.lean` (0 sorry) は **genuine な組み合わせ counting 補題** を publish 済: `LZ78Parsing.card_phraseSet_le_count` `:161`、`card_phraseSet_le_pow` `:204`、`card_phraseSet_le_succ_mul_card` `:236`、real-valued predicate `ZivCountingBound` `:280` + 派生補題。ただし bridge `IsZivInequalityPassthrough.ofZivCountingBound` (`:325`) の body は **`True.intro`** で、親 `IsZivInequalityPassthrough` は `lz78-moonshot-plan.md` で依然 `Prop := True` のまま — Ziv's inequality 本体は **discharge されていない** (plan の L-LZ1-A/B scope 通り、L-LZ1-C は撤退)。counting plumbing は実体あり、passthrough discharge は未達。
 
 **Phase 0 起草中**。親 plan `lz78-moonshot-plan.md` が完了 (LZ78.lean publish 済 2026-05-19)、本 plan は その直接の **部分 discharge** 後続。`IsZivInequalityPassthrough` の `True` placeholder を **完全置換しない**: combinatorial counting plumbing 部分のみを **新規の `ZivCountingBound` predicate** で publish + `.trivial`-type 構築可能 lemma で `IsZivInequalityPassthrough` への bridge を提供。
 
@@ -42,13 +42,13 @@
 - [ ] Phase B — `LZ78Parsing.count` combinatorial bounds (L-LZ1-A) 📋
 - [ ] Phase C — `ZivCountingBound` real-valued predicate (L-LZ1-B) 📋
 - [ ] Phase D — `IsZivInequalityPassthrough` への bridge constructor 📋
-- [ ] Phase V — `Common2026.lean` 編入 + clean check 📋
+- [ ] Phase V — `InformationTheory.lean` 編入 + clean check 📋
 
 ## ゴール / Approach
 
 ### 最終到達点 (Phase D 完成形)
 
-新規 1 ファイル `Common2026/Shannon/LZ78ZivInequality.lean` の主合流:
+新規 1 ファイル `InformationTheory/Shannon/LZ78ZivInequality.lean` の主合流:
 
 ```lean
 namespace InformationTheory.Shannon
@@ -137,20 +137,20 @@ shape** だけ与え、後続 discharge plan で `ZivCountingBound` を Prop-lev
 | Phase B | **200 行** | combinatorial counting bounds (L-LZ1-A) |
 | Phase C | **80 行** | `ZivCountingBound` predicate (L-LZ1-B) |
 | Phase D | **40 行** | `IsZivInequalityPassthrough` bridge constructor |
-| Phase V | **5 行** | `Common2026.lean` import 追記 |
+| Phase V | **5 行** | `InformationTheory.lean` import 追記 |
 | **累計** | **~400 行** | 1 ファイル合計 |
 
 ### ファイル構成
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   LZ78ZivInequality.lean   ← 新規 (~400 行)
                              ・LZ78Parsing.count_eq_length 系 thin
                              ・LZ78Phrase.card_image_bound (Fintype経由)
                              ・LZ78Parsing.distinctPhrases / その card bound
                              ・ZivCountingBound predicate
                              ・IsZivInequalityPassthrough bridge
-Common2026.lean            ← `import Common2026.Shannon.LZ78ZivInequality` 追記
+InformationTheory.lean            ← `import InformationTheory.Shannon.LZ78ZivInequality` 追記
 ```
 
 ## 撤退ライン
@@ -167,4 +167,4 @@ Common2026.lean            ← `import Common2026.Shannon.LZ78ZivInequality` 追
 
 ## 当面の next step
 
-1. Phase A skeleton 起草 → Phase B combinatorial bounds → Phase C predicate publish → Phase D bridge → Phase V `Common2026.lean` 編入
+1. Phase A skeleton 起草 → Phase B combinatorial bounds → Phase C predicate publish → Phase D bridge → Phase V `InformationTheory.lean` 編入

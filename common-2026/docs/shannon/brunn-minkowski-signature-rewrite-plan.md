@@ -17,7 +17,7 @@
 
 ### ゴール
 
-`Common2026/Shannon/BrunnMinkowskiFunctional.lean` の 2 declaration が現状 `@residual(defect:false-statement)` (tier 5) で残置している状態を、**第一選択 (signature 改変による linkage hypothesis 追加 + body sorry)** に移行する。両者とも Round 2 sorry-migration で「定義書換は abstract-vol convention の整合性を壊すため第二選択 fallback」と判定済 (Round 3 で `defect:circular` → `defect:false-statement` に reason 修正のみ実施)。本 plan はその第一選択完遂のための **独立 sweep**。
+`InformationTheory/Shannon/BrunnMinkowskiFunctional.lean` の 2 declaration が現状 `@residual(defect:false-statement)` (tier 5) で残置している状態を、**第一選択 (signature 改変による linkage hypothesis 追加 + body sorry)** に移行する。両者とも Round 2 sorry-migration で「定義書換は abstract-vol convention の整合性を壊すため第二選択 fallback」と判定済 (Round 3 で `defect:circular` → `defect:false-statement` に reason 修正のみ実施)。本 plan はその第一選択完遂のための **独立 sweep**。
 
 | # | file:line | decl 名 | 現状タグ | 残置理由 (Round 2/3 docstring 記録) |
 |---|---|---|---|---|
@@ -43,7 +43,7 @@
 
 ## SoT
 
-- **コード** (`docs/audit/audit-tags.md`「SoT 階層」): `Common2026/Shannon/BrunnMinkowskiFunctional.lean:509, :608` の `@residual` タグが現状の source of truth。本 plan 完了時に `@residual(defect:false-statement)` → `@residual(wall:<新規 wall name>)` または `@residual(plan:brunn-minkowski-signature-rewrite-plan)` に書換、signature を linkage hyp 形に改変。
+- **コード** (`docs/audit/audit-tags.md`「SoT 階層」): `InformationTheory/Shannon/BrunnMinkowskiFunctional.lean:509, :608` の `@residual` タグが現状の source of truth。本 plan 完了時に `@residual(defect:false-statement)` → `@residual(wall:<新規 wall name>)` または `@residual(plan:brunn-minkowski-signature-rewrite-plan)` に書換、signature を linkage hyp 形に改変。
 - **vocab register**: `docs/audit/audit-tags.md` Wall name register / Proposed (Phase 2 で promote 判断)。
 
 ## Phase 0 — 規模見積もり + verbatim 確認 (in-mind: docs-only) 📋
@@ -52,12 +52,12 @@
 
 - [ ] **0.1** 2 declaration の verbatim location 再確認 (line drift 防止):
   ```bash
-  rg -n 'theorem entropy_eq_logVolume_iff_uniform|theorem brunn_minkowski_linear_from_prekopa_leindler' Common2026/Shannon/BrunnMinkowskiFunctional.lean
+  rg -n 'theorem entropy_eq_logVolume_iff_uniform|theorem brunn_minkowski_linear_from_prekopa_leindler' InformationTheory/Shannon/BrunnMinkowskiFunctional.lean
   ```
   本 plan 起草時 (2026-05-26): `:509` + `:608`。
 - [ ] **0.2** Downstream consumer rg (verbatim 件数 → scope 確認):
   ```bash
-  rg -n 'entropy_eq_logVolume_iff_uniform|brunn_minkowski_linear_from_prekopa_leindler' Common2026/ --type lean
+  rg -n 'entropy_eq_logVolume_iff_uniform|brunn_minkowski_linear_from_prekopa_leindler' InformationTheory/ --type lean
   ```
   本 plan 起草時 verbatim 結果: **2 hits、両者とも自己定義行のみ** = file 内 / file 外 consumer 0 件。signature 改変の re-verify 範囲は `BrunnMinkowskiFunctional.lean` 単体に限定。
 - [ ] **0.3** 関連 linkage predicate の verbatim 確認:
@@ -133,8 +133,8 @@ theorem entropy_eq_logVolume_iff_uniform
 - [ ] **1.5** linker error (`Convex` / `volume` 未 import) 解消のために必要 import:
   - `Mathlib.Analysis.Convex.Basic` (既存 file の import 確認)
   - `Mathlib.MeasureTheory.Measure.Lebesgue.Basic` (`volume` for `Fin n → ℝ`)
-  - 既存 import の確認は **Phase 1.5 で verbatim 実施** (`rg '^import' Common2026/Shannon/BrunnMinkowskiFunctional.lean`)
-- [ ] **1.6** `lake env lean Common2026/Shannon/BrunnMinkowskiFunctional.lean` で type-check done 確認 (0 errors + 1 sorry warning)。Pattern A (stale olean) の懸念: signature 改変が広範な dependent に影響しないことが Phase 0.2 で確認済 (consumer 0 件) ゆえ `lake build` 不要。
+  - 既存 import の確認は **Phase 1.5 で verbatim 実施** (`rg '^import' InformationTheory/Shannon/BrunnMinkowskiFunctional.lean`)
+- [ ] **1.6** `lake env lean InformationTheory/Shannon/BrunnMinkowskiFunctional.lean` で type-check done 確認 (0 errors + 1 sorry warning)。Pattern A (stale olean) の懸念: signature 改変が広範な dependent に影響しないことが Phase 0.2 で確認済 (consumer 0 件) ゆえ `lake build` 不要。
 - [ ] **1.7** **Inline alert チェック**: signature 書換後の linkage hyp `hμ_uniform : (∀ s, μ s = volume (s ∩ A) / volume A)` が **conclusion-as-hypothesis ではない** ことを確認 — 結論 (`h μ = Real.log ...`) と全く異なる形 (`μ s = ...` という measure identification) ゆえ load-bearing predicate bundling ではない。**load-bearing 判定**: `IsUniformOnEntropyLogVolHypothesis` (= 結論型 verbatim) を avoid している判断を docstring に 1 行明示。
 - [ ] **1.8** Phase 1 完了時 honesty-auditor 独立起動 (`general-purpose` subagent w/ CORE doctrine inline)。判定 focus:
   - (a) 新 signature の linkage hyp `hμ_uniform` が conclusion-as-hypothesis ではないか
@@ -198,7 +198,7 @@ linkage: `volA / volB / volAB` の自由 real 引数を削除、Mathlib `Measure
 - [ ] **2.3** body は `sorry` 単独行。`@residual(wall:bm-additive-convex-body)` を docstring 末尾に付与 (新規 wall name)。
 - [ ] **2.4** 新規 wall name promote: `docs/audit/audit-tags.md` Wall name register に `bm-additive-convex-body` 新規 entry 追加 (Phase 1 と同じ promote 判定ロジック)。
 - [ ] **2.5** import 確認 + 必要なら追加 (`Mathlib.Analysis.Convex.Basic`, `Mathlib.MeasureTheory.Measure.Lebesgue.Basic`, `Mathlib.Algebra.Group.Pointwise.Set.Basic` for `A + B`).
-- [ ] **2.6** `lake env lean Common2026/Shannon/BrunnMinkowskiFunctional.lean` で type-check done (0 errors + 1 sorry warning + Phase 1 の 1 sorry = 計 2 sorry warnings)。
+- [ ] **2.6** `lake env lean InformationTheory/Shannon/BrunnMinkowskiFunctional.lean` で type-check done (0 errors + 1 sorry warning + Phase 1 の 1 sorry = 計 2 sorry warnings)。
 - [ ] **2.7** **Inline alert チェック**: 新 signature の hyp が **全て regularity** であることを確認 — `Convex` / `MeasurableSet` は precondition、結論型 (`(volume A).toReal + (volume B).toReal ≤ (volume (A + B)).toReal`) と全く異なる shape ゆえ load-bearing bundling ではない。
 - [ ] **2.8** Phase 2 完了時 honesty-auditor 独立起動。判定 focus:
   - (a) 新 signature の hyp が全て regularity (load-bearing ではない)
@@ -216,18 +216,18 @@ linkage: `volA / volB / volAB` の自由 real 引数を削除、Mathlib `Measure
 
 `proof-log: no` (mechanical verify)。
 
-- [ ] **V.1** `lake env lean Common2026/Shannon/BrunnMinkowskiFunctional.lean` 最終 0 errors 確認。
+- [ ] **V.1** `lake env lean InformationTheory/Shannon/BrunnMinkowskiFunctional.lean` 最終 0 errors 確認。
 - [ ] **V.2** タグ集計 (canonical declaration-direct grep, `docs/audit/sorry-migration-runbook.md` Pattern D):
   ```bash
-  rg -n '@residual\(defect:false-statement\)' Common2026/Shannon/BrunnMinkowskiFunctional.lean
+  rg -n '@residual\(defect:false-statement\)' InformationTheory/Shannon/BrunnMinkowskiFunctional.lean
   ```
   → 期待: **0 hits** (Phase 1 + Phase 2 で 2 件削減)。
   ```bash
-  rg -n '@residual\(wall:uniform-max-entropy-on-convex-body|@residual\(wall:bm-additive-convex-body' Common2026/Shannon/BrunnMinkowskiFunctional.lean
+  rg -n '@residual\(wall:uniform-max-entropy-on-convex-body|@residual\(wall:bm-additive-convex-body' InformationTheory/Shannon/BrunnMinkowskiFunctional.lean
   ```
   → 期待: **2 hits** (各 1 件)。
-- [ ] **V.3** downstream consumer chain re-verify: Phase 0.2 で 0 件確認済ゆえ単体 file 検証で十分だが、念のため `lake env lean Common2026/Shannon/BrunnMinkowskiConcavity.lean` + `Common2026/Shannon/BrunnMinkowskiClosure.lean` を spot-check (両者は `BrunnMinkowskiFunctional` を直接 / transitive に import、import side-effect の `unknown identifier` 等を弾く)。
-- [ ] **V.4** `Common2026.lean` の import 行は **変更なし** ことを確認 (本 plan は既存 file の signature 改変のみ、新 file 追加なし)。
+- [ ] **V.3** downstream consumer chain re-verify: Phase 0.2 で 0 件確認済ゆえ単体 file 検証で十分だが、念のため `lake env lean InformationTheory/Shannon/BrunnMinkowskiConcavity.lean` + `InformationTheory/Shannon/BrunnMinkowskiClosure.lean` を spot-check (両者は `BrunnMinkowskiFunctional` を直接 / transitive に import、import side-effect の `unknown identifier` 等を弾く)。
+- [ ] **V.4** `InformationTheory.lean` の import 行は **変更なし** ことを確認 (本 plan は既存 file の signature 改変のみ、新 file 追加なし)。
 - [ ] **V.5** handoff 更新: `.claude/handoff-sorry-migration.md` §「Round 2 残課題 follow-up」3 件目「BM `entropy_eq_logVolume_iff_uniform` + `brunn_minkowski_linear_from_prekopa_leindler` signature rewrite」を ✅ 完了 marker に置換、本 plan の終了 commit を参照する 1 行追記。
 - [ ] **V.6** sibling plan `brunn-minkowski-sorry-migration-plan.md` Phase 2.3 の「**第一選択 (定義書換)** を試みる」散文に「→ 本 task は `brunn-minkowski-signature-rewrite-plan.md` で完遂済 (2026-05-26)」の 1 行 cross-ref を追加 (sibling plan は touch しない判断もあり — Phase V で planner が判定)。
 

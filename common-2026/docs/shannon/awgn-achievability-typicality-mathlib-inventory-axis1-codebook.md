@@ -481,7 +481,7 @@ noncomputable def gaussianCodebook (M n : ℕ) (σ² : ℝ≥0) :
 ### 採用根拠
 
 1. **型整合**: `Fin M → Fin n → ℝ` は `AwgnCode.encoder : Fin M → (Fin n → ℝ)`
-   (`Common2026/Shannon/AWGN.lean:97-103`) と直接 defeq。Phase D の `awgn_extract_AwgnCode`
+   (`InformationTheory/Shannon/AWGN.lean:97-103`) と直接 defeq。Phase D の `awgn_extract_AwgnCode`
    で encoder 抽出が `id`-cast で済む。
 2. **型クラス無料**: サブ項目 1-2 で全 instance が `infer_instance` で起動。
    追加の `[BorelSpace _]` 等は不要。
@@ -539,15 +539,15 @@ coordinate-wise に起動できる場合 (`measurePreserving_eval` + 1-d
 ## 着手 skeleton (Phase A の最初の Write 候補)
 
 > 本 skeleton は **Phase A の出発点提案**。実装 agent は本ファイルを参照しつつ
-> 別ファイル `Common2026/Shannon/AWGNAchievabilityDischarge.lean` に Write する
+> 別ファイル `InformationTheory/Shannon/AWGNAchievabilityDischarge.lean` に Write する
 > (本 inventory file は read-only)。
 
 ```lean
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.Basic
 import Mathlib.MeasureTheory.Constructions.Pi
-import Common2026.Shannon.AWGN
-import Common2026.Shannon.AWGNAchievability
+import InformationTheory.Shannon.AWGN
+import InformationTheory.Shannon.AWGNAchievability
 
 namespace InformationTheory.Shannon.AWGN
 

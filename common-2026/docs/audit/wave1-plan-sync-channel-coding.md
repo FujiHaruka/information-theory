@@ -84,7 +84,7 @@
 - **整合性 a/b/c**:
   - **a. 件数整合**: ✓ — plan の主定理 2 本 (DF/CF) × 撤退ライン 4 本に対し、現実装は form-variant × witness API を含む 33 件展開。plan が掲げた 「L-RI1〜4 全 pass-through で publish」 と整合、ただし plan 上は witness API (`IsRelayDFBlockMarkovWitness`, `IsRelayCFBinningWitness`) や `RelayInnerBodyDischarge.lean` の存在自体に言及がなく、stale。
   - **b. 個別対応**: 33/33 が plan の L-RI1–4 撤退ラインに紐付き可。
-    **In-plan orphan: `RelayInnerBodyDischarge.lean` (15 件) / `RelayCFBinningBody.lean` (5 件) / `RelayDFBlockMarkovBody.lean` (4 件) という file 自体が plan の「Phase A–V」記述に登場しない**。Status 行は file 名を `Common2026/Shannon/RelayInnerBound.lean` のみ言及。下流の body-discharge layer が暗黙で追加された痕跡。
+    **In-plan orphan: `RelayInnerBodyDischarge.lean` (15 件) / `RelayCFBinningBody.lean` (5 件) / `RelayDFBlockMarkovBody.lean` (4 件) という file 自体が plan の「Phase A–V」記述に登場しない**。Status 行は file 名を `InformationTheory/Shannon/RelayInnerBound.lean` のみ言及。下流の body-discharge layer が暗黙で追加された痕跡。
   - **c. drop 漏れ**: ✓ なし — plan は「discharge 済」を主張していない。
 - **観察 / open question**:
   - **plan stale**: 進捗マーカー `[ ]` のまま、実装は完了。Status 一文で実態整合だが、Phase A–E が `[ ]` のままなのは misleading。`[x]` への置換 + body-discharge 兄弟 file 言及を plan に追記する価値あり。

@@ -6,13 +6,13 @@
 >
 > **対象 sorry 3 件 (同時 closure を期待、ENNReal 形 per-letter bound 経由)**:
 >
-> - `Common2026/Shannon/AWGNConverseDischarge.lean:395`
+> - `InformationTheory/Shannon/AWGNConverseDischarge.lean:395`
 >   `awgnConverseJoint_mutualInfo_ne_top` body
 >   (現タグ `@residual(plan:awgn-converse-aux-plan)`、wall 想定 `wall:multivariate-mi`)
-> - `Common2026/Shannon/AWGNConverseDischarge.lean:502`
+> - `InformationTheory/Shannon/AWGNConverseDischarge.lean:502`
 >   `awgn_dpi` body 内 inline `h_finite : (jointMIXnYn h_meas c) ≠ ∞`
 >   (現タグ `@residual(plan:awgn-converse-aux-plan)`、wall 想定 `wall:multivariate-mi`)
-> - `Common2026/Shannon/AWGNConverseDischarge.lean:1175`
+> - `InformationTheory/Shannon/AWGNConverseDischarge.lean:1175`
 >   `awgnConverseJoint_mutualInfo_ne_top_via_chain` body
 >   (現タグ `@residual(plan:awgn-converse-aux-plan)`、wall 想定 `wall:multivariate-mi`)
 >
@@ -147,7 +147,7 @@ private lemma awgn_per_letter_mi_ne_top
   -- M1 結果が `.toReal ≤ R` 形なので ne_top を直接得る lemma が無い退化境界 trap が
   -- M1 段階で残っている。
   -- 採用経路: per-letter MI の ne_top を **independent route** で立てる:
-  --   per-letter MI = klDiv (joint_i) (prod_i) (Common2026 `mutualInfo` def 経由)
+  --   per-letter MI = klDiv (joint_i) (prod_i) (InformationTheory `mutualInfo` def 経由)
   --   joint_i の AbsolutelyContinuous prod_i + integrable llr ⇒ `klDiv_ne_top`
   -- これは M1 結果に依存しない genuine route で、`differentialEntropy_le_gaussian_*`
   -- の `h_var_int` / `h_ent_int` (= bundle 内 `h_per_letter`) と同型の analytic primitive。
@@ -163,7 +163,7 @@ trap)。本 mini-plan 内で **independent route** で立てる必要がある:
    llr 前提) で discharge。per-letter は AWGN 1-d なので Gaussian convolution
    absolute continuity + bundle 内 `h_per_letter i` integrability から 2 前提 OK。
 
-2. **route (ii) — Common2026 `mutualInfo_ne_top` 拡張**:
+2. **route (ii) — InformationTheory `mutualInfo_ne_top` 拡張**:
    `MutualInfo.lean:197` を見ると `[Fintype X] [Fintype Y]` 両側要求、AWGN
    Y_i ∼ ℝ で reuse 不可。継続 reuse は不可だが、片側 Fintype 緩和の variant
    (= Mathlib にあるかも) を Phase 0 で loogle で確認。在庫不在なら route (i)
@@ -186,7 +186,7 @@ bridge 不要 ✅
 `mutualInfo μ Xs Yo ≠ ∞` 導出可。bridge 不要 ✅
 
 `klDiv_ne_top` の前提 (AbsolutelyContinuous + Integrable llr) の AWGN 1-d
-per-letter での充足は M0 で verbatim 確認 (`Common2026/Shannon/KullbackLeibler.lean`
+per-letter での充足は M0 で verbatim 確認 (`InformationTheory/Shannon/KullbackLeibler.lean`
 等を Read)。route (i) で進む場合の必須前提。
 
 ### 規模見積もり
@@ -206,7 +206,7 @@ T-MIF-1 / T-MIF-3 発動。
 
 ---
 
-## Mathlib + Common2026 在庫 (M0、verbatim、本 mini で利用するもの全列挙)
+## Mathlib + InformationTheory 在庫 (M0、verbatim、本 mini で利用するもの全列挙)
 
 CLAUDE.md「具体的数値・型予測の verbatim 確認」遵守。signature paraphrase 禁止、
 `[...]` 型クラス前提含む verbatim。
@@ -263,9 +263,9 @@ M3 で `(jointMIXnYn) ≠ ∞` から `(jointMIWYn) ≤ (jointMIXnYn)` 経由 `(
 (本 mini-plan case B では `ENNReal.ofReal` route を最終的に使わない見込み、
 Reserved fallback)
 
-### C. mutualInfo / DPI primitives (Common2026)
+### C. mutualInfo / DPI primitives (InformationTheory)
 
-**`Common2026/Shannon/CondMutualInfo.lean:385`** (verbatim Read 済):
+**`InformationTheory/Shannon/CondMutualInfo.lean:385`** (verbatim Read 済):
 
 ```lean
 @[entry_point]
@@ -288,7 +288,7 @@ theorem mutualInfo_le_of_markov
 (同上)。`Nonempty` も `[NeZero M]` から `Fin M` 自動、`Fin n → ℝ` は trivially
 nonempty (関数空間)。
 
-**`Common2026/Shannon/MutualInfo.lean:197`** (既存 `mutualInfo_ne_top`、AWGN
+**`InformationTheory/Shannon/MutualInfo.lean:197`** (既存 `mutualInfo_ne_top`、AWGN
 converse で reuse 不可):
 
 ```lean
@@ -306,9 +306,9 @@ theorem mutualInfo_ne_top
 (既存 inventory 判断 + plan §385 と一致)。本 mini-plan M1 で **route (i) klDiv
 経由** に進む根拠。
 
-### D. mutualInfo definition + klDiv ne_top (Common2026)
+### D. mutualInfo definition + klDiv ne_top (InformationTheory)
 
-**`Common2026/Shannon/MutualInfo.lean`** (mutualInfo definition、本 plan 起草時に
+**`InformationTheory/Shannon/MutualInfo.lean`** (mutualInfo definition、本 plan 起草時に
 Read で確認、verbatim):
 
 ```lean
@@ -334,17 +334,17 @@ M1 で per-letter MI = `klDiv (joint_i) (prod_i)` に unfold、AC + integrable l
 の 2 前提が AWGN 1-d でどう供給されるかは M0 で再 verbatim 確認:
 
 - AC `joint_i ≪ prod_i`: AWGN per-letter joint は `(uniform W) ⊗ AWGN kernel` で
-  prod marginals に AC、Gaussian convolution density 経由 (Common2026 既存
-  `Common2026/Shannon/MutualInfo.lean` 内 `map_pair_absolutelyContinuous_prod_marginals`
+  prod marginals に AC、Gaussian convolution density 経由 (InformationTheory 既存
+  `InformationTheory/Shannon/MutualInfo.lean` 内 `map_pair_absolutelyContinuous_prod_marginals`
   系の reuse 可否を M0 で確認)
 - Integrable llr: bundle 内 `h_per_letter i : Integrable (negMulLog ∘ rnDeriv)
   volume` から `llr ∘ ...` への形 bridge を別途要する場合あり (= ~10-30 行
   plumbing)。M0 で `Integrable (llr (joint_i) (prod_i)) (joint_i)` を直接立てる
-  Mathlib 在庫 / Common2026 既存補題を確認
+  Mathlib 在庫 / InformationTheory 既存補題を確認
 
-### E. Common2026 既存 mutualInfo helper (本 mini-plan で reuse 候補)
+### E. InformationTheory 既存 mutualInfo helper (本 mini-plan で reuse 候補)
 
-- `Common2026/Shannon/MutualInfo.lean:165-191` 周辺の
+- `InformationTheory/Shannon/MutualInfo.lean:165-191` 周辺の
   `map_pair_absolutelyContinuous_prod_marginals` / `integrable_llr_map_pair_prod_marginals`
   (本 plan 起草時 line 188-191 で `integrable_llr_*` 確認、Fintype 想定なので AWGN 1-d
   per-letter で reuse 可否は M0 で再 verbatim 確認、route (i) M1 規模を左右する)
@@ -393,13 +393,13 @@ M3 着手時に case A / case B を判定する。
 
 ## Phase 詳細
 
-### M0 — Mathlib + Common2026 verbatim 再確認 (~30 分、本 plan 起草時に主要確認済)
+### M0 — Mathlib + InformationTheory verbatim 再確認 (~30 分、本 plan 起草時に主要確認済)
 
 - [ ] `ENNReal.sum_ne_top` / `ENNReal.lt_top_of_sum_ne_top` (`BigOperators.lean:88-95`) 再確認 (起草時 verbatim 済)
 - [ ] `ENNReal.toReal_mono` / `ne_top_of_le_ne_top` (Real.lean:67) 再確認 (起草時済)
 - [ ] `mutualInfo_le_of_markov` ENNReal 形結論 (`CondMutualInfo.lean:385`) 型クラス前提再確認 (起草時済)
 - [ ] **新規必要 — `klDiv_ne_top` verbatim** (`Mathlib/InformationTheory/KullbackLeibler/Basic.lean`、本起草時には推定形): 完全 signature (`[IsFiniteMeasure μ]` / AC / integrable llr) verbatim 確認
-- [ ] **新規必要 — `Common2026/Shannon/MutualInfo.lean` 内 `mutualInfo` definition + 既存 AC / integrable llr helpers** (line 165-207 周辺) を per-letter (Y_i : ℝ) で reuse 可能かを判定 — Fintype 想定なら reuse 不可、route (i) M1 規模が +20-40 行
+- [ ] **新規必要 — `InformationTheory/Shannon/MutualInfo.lean` 内 `mutualInfo` definition + 既存 AC / integrable llr helpers** (line 165-207 周辺) を per-letter (Y_i : ℝ) で reuse 可能かを判定 — Fintype 想定なら reuse 不可、route (i) M1 規模が +20-40 行
 - [ ] **境界 case 確認** (CLAUDE.md「具体的数値・型予測の verbatim 確認」):
   - `perLetterInputSecondMoment c i = 0` の case で `(1/2) log(1+0/N) = 0`、
     per-letter MI ne_top 経路でこの退化境界が `klDiv = 0 ≠ ∞` で trivially 通る
@@ -434,11 +434,11 @@ M3 着手時に case A / case B を判定する。
   + 2 private helper (`perLetterJoint_absolutelyContinuous_prod` / `perLetterJoint_llr_integrable`):
   - `perLetterJoint_absolutelyContinuous_prod` (~10-30 行): per-letter joint
     `(awgnConverseJoint).map (fun ω => (c.encoder ω.1 i, ω.2 i))` が prod marginals
-    に AC、AWGN kernel の Gaussian density 経由 (Common2026 既存
+    に AC、AWGN kernel の Gaussian density 経由 (InformationTheory 既存
     `gaussianReal_absolutelyContinuous` + mixture 集約)
   - `perLetterJoint_llr_integrable` (~10-30 行): bundle 内 `h_per_letter i` から
     `Integrable (llr ...) (joint_i)` への bridge (M0 で在庫確認後、Mathlib /
-    Common2026 既存 helper で 1 行か手動展開 ~20 行)
+    InformationTheory 既存 helper で 1 行か手動展開 ~20 行)
 
 ### M2 — `awgnConverseJoint_jointMIXnYn_ne_top` (~5-30 行)
 
@@ -527,10 +527,10 @@ case A (signature 改変、3 sorry 全件 closure) or case B (1 sorry のみ clo
 
 ### M4 — verify + tag 解消 (~5 分)
 
-- [ ] `lake env lean Common2026/Shannon/AWGNConverseDischarge.lean` silent
+- [ ] `lake env lean InformationTheory/Shannon/AWGNConverseDischarge.lean` silent
 - [ ] case A 採用時: sorry 残数が 5 → 5 - 3 = 2 件 (`awgn_per_letter_mi_le_log_var`
       撤回後の他 sorry 件数は M1 完了時に 0 → 残 sorry は M2/M3 mini-plan の出口
-      数件、`rg -n "sorry" Common2026/Shannon/AWGNConverseDischarge.lean | wc -l` で
+      数件、`rg -n "sorry" InformationTheory/Shannon/AWGNConverseDischarge.lean | wc -l` で
       確認)
 - [ ] case B 採用時: sorry 残数 5 → 4 件 (line 1175 のみ消える、line 395 / 502 は
       retract-candidate tag 維持)
@@ -608,27 +608,27 @@ body が本質的に Mathlib 壁を 2 件以上 hit。
 
 ```bash
 # 1. file verify
-lake env lean Common2026/Shannon/AWGNConverseDischarge.lean
+lake env lean InformationTheory/Shannon/AWGNConverseDischarge.lean
 # expect: silent
 
 # 2. case A (3 sorry closure) 採用時
-rg -n "sorry" Common2026/Shannon/AWGNConverseDischarge.lean | wc -l
+rg -n "sorry" InformationTheory/Shannon/AWGNConverseDischarge.lean | wc -l
 # expect: 元 5 件 → M1 (`awgn-converse-c1b-gaussian-maxent` で 1 件解消) 後
 # 4 件 → さらに M2 (`awgn-converse-c1c-jensen` で 1 件解消) 後 3 件 →
 # 本 mini-plan で 3 件解消 → 0 件 (= `AWGNConverseDischarge.lean` 完全 0 sorry 達成)
 
 # 3. case B (1 sorry closure) 採用時
-rg -n "sorry" Common2026/Shannon/AWGNConverseDischarge.lean | wc -l
+rg -n "sorry" InformationTheory/Shannon/AWGNConverseDischarge.lean | wc -l
 # expect: 本 mini-plan で 1 件解消 → 2 件残置 (line 395 / line 502、retract-candidate
 # tag 付き)
 
 # 4. residual tag 残数確認
-rg -n "@residual\(plan:awgn-converse-aux-plan\)" Common2026/Shannon/AWGNConverseDischarge.lean | wc -l
+rg -n "@residual\(plan:awgn-converse-aux-plan\)" InformationTheory/Shannon/AWGNConverseDischarge.lean | wc -l
 # expect (case A): 0 件 (`wall:multivariate-mi` 完全 closure)
 # expect (case B): 2 件 (line 395 / line 502 のみ残置、retract-candidate tag に昇格)
 
 # 5. line 395 / line 502 / line 1175 周辺の sorry が消えたことを確認
-rg -n "sorry" Common2026/Shannon/AWGNConverseDischarge.lean
+rg -n "sorry" InformationTheory/Shannon/AWGNConverseDischarge.lean
 # expect (case A): 3 line すべて出力されない
 # expect (case B): line 1175 のみ出力されない、line 395 / line 502 は残存
 
@@ -686,7 +686,7 @@ rg -n "sorry" Common2026/Shannon/AWGNConverseDischarge.lean
 
 ## オーケストレータ注記
 
-- 実装 agent は `Common2026.lean` を編集しない (本 file は既に編入済)
+- 実装 agent は `InformationTheory.lean` を編集しない (本 file は既に編入済)
 - 並列 dispatch 中の場合: `lean-implementer` を `isolation: "worktree"` で起動
   (CLAUDE.md「Parallel orchestration」boilerplate 必須)。本 mini-plan は M2
   (`awgn-converse-c1c-jensen`) と同一 file 内別 declaration 編集なので、**並列

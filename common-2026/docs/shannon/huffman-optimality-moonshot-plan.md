@@ -7,13 +7,13 @@
 > **Inventory**: [`huffman-optimality-mathlib-inventory.md`](./huffman-optimality-mathlib-inventory.md)
 >
 > **先行実装 (T1-A 完了、不変として再利用)**:
-> - `Common2026/Shannon/Huffman.lean` (953 行 / 0 sorry) — `huffmanLength`, `huffmanLengthAux`,
+> - `InformationTheory/Shannon/Huffman.lean` (953 行 / 0 sorry) — `huffmanLength`, `huffmanLengthAux`,
 >   `huffmanStep` (Subtype + `HuffmanGrouping` invariant), `huffmanLengthAux_eq_step`,
 >   `huffmanLengthAux_step_merged`, `huffmanLengthAux_step_other`, `huffmanLengthAux_const_on_group`,
 >   `huffmanLength_pos`, `huffmanLength_kraft_le_one`, `exists_huffman_prefix_code`.
-> - `Common2026/Shannon/ShannonCode.lean` (`expectedLength`, `kraftSum`,
+> - `InformationTheory/Shannon/ShannonCode.lean` (`expectedLength`, `kraftSum`,
 >   `entropyD_le_expectedLength_of_kraft`).
-> - `Common2026/Shannon/ShannonCodeKraftReverse.lean` (`IsPrefixFree`, `exists_prefix_code_of_kraft`).
+> - `InformationTheory/Shannon/ShannonCodeKraftReverse.lean` (`IsPrefixFree`, `exists_prefix_code_of_kraft`).
 >
 > Cover & Thomas *Elements of Information Theory* 2nd ed. **Theorem 5.8.1** (Huffman optimality)
 > 主定理 (任意 Kraft-feasible 語長関数 `l` との比較形) の formalization。T1-A で publish 済の
@@ -22,12 +22,12 @@
 
 ## Status (2026-05-19)
 
-> 実態整合 (2026-05-20): DONE-HONEST-HYPS — 主定理 `huffmanLength_optimal_with_hypotheses` (`Common2026/Shannon/HuffmanOptimality.lean:1041`) は 2 つの **genuine analytic Prop hypothesis** (`SwapNormalizationHypothesis` `:759`、`HuffmanMergedIdentificationHypothesis` `:776` — どちらも `∀…∃…` の実質 Prop で `:= True` ではない) を引数で受けて `expectedLength P (huffmanLength P) ≤ expectedLength P l` を 0 sorry で証明。`exists_sibling_min_pair` (`:227`) も 0 sorry publish 済 (ただし判断ログ #2 で最深性条項は削除済)。hypothesis 引数なしの強形 `huffmanLength_optimal` は **未 publish** (全 variant が hypothesis を保持、T1-A'' へ)。pass-through (`Prop := True`) は不在。
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — 主定理 `huffmanLength_optimal_with_hypotheses` (`InformationTheory/Shannon/HuffmanOptimality.lean:1041`) は 2 つの **genuine analytic Prop hypothesis** (`SwapNormalizationHypothesis` `:759`、`HuffmanMergedIdentificationHypothesis` `:776` — どちらも `∀…∃…` の実質 Prop で `:= True` ではない) を引数で受けて `expectedLength P (huffmanLength P) ≤ expectedLength P l` を 0 sorry で証明。`exists_sibling_min_pair` (`:227`) も 0 sorry publish 済 (ただし判断ログ #2 で最深性条項は削除済)。hypothesis 引数なしの強形 `huffmanLength_optimal` は **未 publish** (全 variant が hypothesis を保持、T1-A'' へ)。pass-through (`Prop := True`) は不在。
 
 > **2026-05-24 Wave 1.5-c (集約)**: 本 plan の suspect 2 件 (`HuffmanOptimality.lean:778, :1028`) を含む Huffman 3-plan の **2 hypothesis 共有部分** を [`huffman-2hyp-vertical-reduction-plan.md`](./huffman-2hyp-vertical-reduction-plan.md) に集約。本 plan は archive 化せず継続 (weak form publish 完了の SoT)、新 plan は slug `staged(huffman-2hyp)` 等の集約 SoT として並走。詳細 → [`docs/audit/wave1-plan-sync-source-coding.md`](../audit/wave1-plan-sync-source-coding.md) §Recommendations 1+2。
 
 **T1-A' weak form publish ✅** — `huffmanLength_optimal_with_hypotheses` (case Y、0 sorry) を
-`Common2026/Shannon/HuffmanOptimality.lean` (1054 行) で publish。`Huffman.lean` に
+`InformationTheory/Shannon/HuffmanOptimality.lean` (1054 行) で publish。`Huffman.lean` に
 `huffmanLength_kraft_eq_one` (+14 行) を副産物として publish。**完全形 (hypothesis 2 件 discharge)**
 は後継 seed **T1-A''** に分離: `SwapNormalizationHypothesis` (Cover-Thomas Lemma 5.8.1 (i)
 Kraft = 1 shortening 込み swap normalization、~150-200 行) + `HuffmanMergedIdentificationHypothesis`
@@ -47,7 +47,7 @@ Kraft = 1 shortening 込み swap normalization、~150-200 行) + `HuffmanMergedI
 ### Goal (最終定理 signature)
 
 ```lean
--- 新規ファイル `Common2026/Shannon/HuffmanOptimality.lean` で publish
+-- 新規ファイル `InformationTheory/Shannon/HuffmanOptimality.lean` で publish
 namespace InformationTheory.Shannon.Huffman
 
 variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
@@ -215,7 +215,7 @@ T1-A 判断ログ #2-#4 の経験から、**「単一セッションで 0 sorry 
 
 ## File / module layout
 
-### 新規ファイル: `Common2026/Shannon/HuffmanOptimality.lean`
+### 新規ファイル: `InformationTheory/Shannon/HuffmanOptimality.lean`
 
 import 一覧 (inventory §「着手 skeleton」+ §C/§D/§E/§F の Mathlib path verbatim):
 
@@ -227,7 +227,7 @@ import Mathlib.Data.Finset.Image              -- Finset.image_erase
 import Mathlib.Data.Fintype.EquivFin          -- Fintype.equivOfCardEq (alt)
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic  -- sum_pair / mul_prod_erase / sum_attach / sum_image
 import Mathlib.MeasureTheory.Measure.Real     -- Measure.real (継承)
-import Common2026.Shannon.Huffman             -- T1-A 既存 API 全件
+import InformationTheory.Shannon.Huffman             -- T1-A 既存 API 全件
 ```
 
 **根拠**:
@@ -245,15 +245,15 @@ import Common2026.Shannon.Huffman             -- T1-A 既存 API 全件
   inventory §D).
 - `MeasureTheory.Measure.Real`: `Measure.real` (Subtype 上の measure 構成、
   `[MeasurableSingletonClass α']` 継承確認、inventory §F).
-- `Common2026.Shannon.Huffman`: T1-A 既存 API (`huffmanLength`, `huffmanLengthAux`,
+- `InformationTheory.Shannon.Huffman`: T1-A 既存 API (`huffmanLength`, `huffmanLengthAux`,
   `huffmanStep`, `huffmanLengthAux_step_merged`, `huffmanLengthAux_step_other`,
   `huffmanLengthAux_const_on_group`, `HuffmanGrouping` etc.) 全件 reuse.
 
-**`Common2026.lean` への追加**:
+**`InformationTheory.lean` への追加**:
 
 ```diff
- import Common2026.Shannon.Huffman
-+import Common2026.Shannon.HuffmanOptimality
+ import InformationTheory.Shannon.Huffman
++import InformationTheory.Shannon.HuffmanOptimality
 ```
 
 `Huffman.lean` 直後に挿入予定 (Phase 1 で具体位置確定)。
@@ -295,7 +295,7 @@ Phase 0 で 0.4 / 0.5 が negative ヒットした場合は **判断ログに #1
 
 ## Phase 1 — skeleton (`HuffmanOptimality.lean` 新規ファイル、全 sorry) 📋
 
-新規ファイル `Common2026/Shannon/HuffmanOptimality.lean` を Write、全 sorry で LSP silent
+新規ファイル `InformationTheory/Shannon/HuffmanOptimality.lean` を Write、全 sorry で LSP silent
 (sorry warning のみ) を確認。inventory §「着手 skeleton」(~50 行) をベースに、後続 Phase で
 追加予定の helper signature 群も sorry で立ち上げる。
 
@@ -307,8 +307,8 @@ Phase 0 で 0.4 / 0.5 が negative ヒットした場合は **判断ログに #1
 - [ ] **1.5** Phase 3 内部 helper (lift bridges): `mergedMeasure` (def, sorry placeholder),
   `mergedMeasure_real` (sorry), `huffmanLength_bridge_L` (sorry),
   `expectedLength_bridge_R` (sorry).
-- [ ] **1.6** `Common2026.lean` に `import Common2026.Shannon.HuffmanOptimality` 追記、
-  `lake env lean Common2026.lean` silent を確認.
+- [ ] **1.6** `InformationTheory.lean` に `import InformationTheory.Shannon.HuffmanOptimality` 追記、
+  `lake env lean InformationTheory.lean` silent を確認.
 
 skeleton 全体は ~80 行見込み (publish 面 2 件 + helper 6 件)。
 
@@ -332,7 +332,7 @@ inventory §B + §C の API で Cover-Thomas Lemma 5.8.1 を formalization。
 - [ ] **2.5** `exists_sibling_min_pair` 本体: 2.1-2.4 を合成. `huffmanStep (initMultiset P) ...`
   の最後の merge step で取り出される `(x1, x2)` ペアが「等深 + 最小確率」を満たすことを確認
   (~35 行).
-- [ ] **2.6** `lake env lean Common2026/Shannon/HuffmanOptimality.lean` silent (Phase 3 部分の
+- [ ] **2.6** `lake env lean InformationTheory/Shannon/HuffmanOptimality.lean` silent (Phase 3 部分の
   sorry は許容、Phase 2 部分のみ 0 sorry).
 
 **規模**: ~150 行 (helper ~85 行 + 本体 ~65 行).
@@ -423,7 +423,7 @@ lemma expectedLength_bridge_R
 
 ### Phase 3.5: verify (~5 行)
 
-- [ ] **3.5.1** `lake env lean Common2026/Shannon/HuffmanOptimality.lean` を Phase 2 + 3 部分
+- [ ] **3.5.1** `lake env lean InformationTheory/Shannon/HuffmanOptimality.lean` を Phase 2 + 3 部分
   で silent 確認 (Phase 4 主定理 sorry は許容).
 
 **規模**: ~250 行 (3.1: 30 + 3.2: 80 + 3.3: 60 + 3.4: 80 + 3.5: verify).
@@ -465,29 +465,29 @@ generalizing 確認で `Nat.strong_induction_on` が動かない場合は `s.car
 
 ## Phase 5 — verify + regression check 📋
 
-- [ ] **5.1** `lake env lean Common2026/Shannon/HuffmanOptimality.lean` を 0 sorry / 0 error /
+- [ ] **5.1** `lake env lean InformationTheory/Shannon/HuffmanOptimality.lean` を 0 sorry / 0 error /
   最小 warning で確認.
 - [ ] **5.2** regression check (既存 0-sorry ファイル):
-  - `Common2026/Shannon/Huffman.lean` (T1-A 完了形、953 行 / 0 sorry を維持).
-  - `Common2026/Shannon/ShannonCode.lean`.
-  - `Common2026/Shannon/ShannonCodeKraftReverse.lean`.
+  - `InformationTheory/Shannon/Huffman.lean` (T1-A 完了形、953 行 / 0 sorry を維持).
+  - `InformationTheory/Shannon/ShannonCode.lean`.
+  - `InformationTheory/Shannon/ShannonCodeKraftReverse.lean`.
   - いずれも `lake env lean` silent.
-- [ ] **5.3** `Common2026.lean` の import 追記済を確認、`lake build Common2026` で全 silent.
+- [ ] **5.3** `InformationTheory.lean` の import 追記済を確認、`lake build InformationTheory` で全 silent.
 - [ ] **5.4** `textbook-roadmap.md` の Ch.5 行を 🟢 へ昇格 (T1-A' 完了で Ch.5 完成判定).
 
 **規模**: 0 行 (verify のみ).
 
 ## 判定条件 (Definition of Done)
 
-`lake env lean Common2026/Shannon/HuffmanOptimality.lean` が **0 sorry / 0 error / 最小 warning**
+`lake env lean InformationTheory/Shannon/HuffmanOptimality.lean` が **0 sorry / 0 error / 最小 warning**
 で pass、かつ以下が全て満たされる:
 
 - [ ] `exists_sibling_min_pair` (Cover-Thomas Lemma 5.8.1) が publish.
 - [ ] `huffmanLength_optimal` (Cover-Thomas Theorem 5.8.1、任意 Kraft-feasible `l` 比較形) が
   publish.
-- [ ] T1-A 既存 `Common2026/Shannon/Huffman.lean` は **不変** (953 行 / 0 sorry).
+- [ ] T1-A 既存 `InformationTheory/Shannon/Huffman.lean` は **不変** (953 行 / 0 sorry).
 - [ ] 既存 `ShannonCode.lean` / `ShannonCodeKraftReverse.lean` に regression なし.
-- [ ] `Common2026.lean` に `import Common2026.Shannon.HuffmanOptimality` 追記済.
+- [ ] `InformationTheory.lean` に `import InformationTheory.Shannon.HuffmanOptimality` 追記済.
 - [ ] `textbook-roadmap.md` Ch.5 行 🟢 昇格.
 
 ## 撤退ライン
@@ -544,11 +544,11 @@ binary 完遂で Ch.5 終了。
 
 **Phase 1 skeleton を実装者に引き渡し**:
 
-> Phase 1 skeleton `Common2026/Shannon/HuffmanOptimality.lean` を新規 Write。
+> Phase 1 skeleton `InformationTheory/Shannon/HuffmanOptimality.lean` を新規 Write。
 > import + namespace + variable + `exists_sibling_min_pair` / `huffmanLength_optimal`
 > 主役 2 件 + Phase 2/3 helper 6 件を **全て `:= by sorry`** で立ち上げ、LSP silent
-> (sorry warning のみ) を確認。`Common2026.lean` に `import Common2026.Shannon.HuffmanOptimality`
-> を `import Common2026.Shannon.Huffman` 直後に追加し、`lake env lean Common2026.lean` silent
+> (sorry warning のみ) を確認。`InformationTheory.lean` に `import InformationTheory.Shannon.HuffmanOptimality`
+> を `import InformationTheory.Shannon.Huffman` 直後に追加し、`lake env lean InformationTheory.lean` silent
 > 確認まで。Phase 0 (在庫再確認 + 型クラス継承確認) は Phase 1 skeleton と並行 1 ターンで処理可。
 
 ## 参考
@@ -556,11 +556,11 @@ binary 完遂で Ch.5 終了。
 - Parent roadmap: [`textbook-roadmap.md`](../textbook-roadmap.md) §「Tier 1 — T1-A'」
 - Inventory: [`huffman-optimality-mathlib-inventory.md`](./huffman-optimality-mathlib-inventory.md)
 - 先行 plan (T1-A 完了 archive): [`huffman-moonshot-plan.md`](./huffman-moonshot-plan.md)
-- 先行実装 (T1-A): `Common2026/Shannon/Huffman.lean` (953 行 / 0 sorry).
-- 既存 `expectedLength`: `Common2026/Shannon/ShannonCode.lean:55`.
+- 先行実装 (T1-A): `InformationTheory/Shannon/Huffman.lean` (953 行 / 0 sorry).
+- 既存 `expectedLength`: `InformationTheory/Shannon/ShannonCode.lean:55`.
 - 既存 `IsPrefixFree` / `exists_prefix_code_of_kraft`:
-  `Common2026/Shannon/ShannonCodeKraftReverse.lean:47, :482`.
-- T1-A 既存 API (`Common2026/Shannon/Huffman.lean`):
+  `InformationTheory/Shannon/ShannonCodeKraftReverse.lean:47, :482`.
+- T1-A 既存 API (`InformationTheory/Shannon/Huffman.lean`):
   - `huffmanLength`: `:337`
   - `huffmanLengthAux`: `:278`
   - `huffmanLengthAux_eq_step`: `:305`

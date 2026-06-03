@@ -34,10 +34,10 @@
 1. **sorry / admit / axiom / unsafe grep** を 1 コマンドにまとめる:
 
    ```bash
-   rg -nw 'sorry|admit'  Common2026/  > /tmp/audit-sorry.txt
-   rg -nw 'axiom'         Common2026/  > /tmp/audit-axiom.txt
-   rg -nw 'unsafe'        Common2026/  > /tmp/audit-unsafe.txt
-   rg -nw '@\[ext\]|@\[simp\]|@\[reducible\]' Common2026/ > /tmp/audit-attrs.txt
+   rg -nw 'sorry|admit'  InformationTheory/  > /tmp/audit-sorry.txt
+   rg -nw 'axiom'         InformationTheory/  > /tmp/audit-axiom.txt
+   rg -nw 'unsafe'        InformationTheory/  > /tmp/audit-unsafe.txt
+   rg -nw '@\[ext\]|@\[simp\]|@\[reducible\]' InformationTheory/ > /tmp/audit-attrs.txt
    ```
 
    - コメント内の `sorry` (記述上の言及) は除外する。`-w` で word boundary を取ってから目視で精査。
@@ -70,7 +70,7 @@
 
 ### 抽出対象
 
-`Common2026.lean` の import 順で、以下のカテゴリ別に主定理を 1〜3 本ずつ列挙:
+`InformationTheory.lean` の import 順で、以下のカテゴリ別に主定理を 1〜3 本ずつ列挙:
 
 | カテゴリ | ファイル | 探す主定理名 (推定) |
 |---|---|---|
@@ -137,10 +137,10 @@ theorem ... :
 
 ### 作業
 
-1. **Audit 用 Lean ファイル** `Common2026/Audit/PrintAxioms.lean` を作成 (一時、コミット可):
+1. **Audit 用 Lean ファイル** `InformationTheory/Audit/PrintAxioms.lean` を作成 (一時、コミット可):
 
    ```lean
-   import Common2026
+   import InformationTheory
 
    -- Phase B カタログの主定理を全て #print axioms に通す
    #print axioms InformationTheory.Shannon.aep_ae
@@ -149,7 +149,7 @@ theorem ... :
    -- ... (Phase B で列挙した全主定理)
    ```
 
-2. `lake env lean Common2026/Audit/PrintAxioms.lean 2>&1 | tee /tmp/audit-axioms.txt` で出力を回収。
+2. `lake env lean InformationTheory/Audit/PrintAxioms.lean 2>&1 | tee /tmp/audit-axioms.txt` で出力を回収。
 
 3. 出力を各定理について次の 4 区分に分類:
 
@@ -163,7 +163,7 @@ theorem ... :
 ### 成果物
 
 - `audit-2026-05.md` §3「公理依存表」: 主定理 × 区分のテーブル。
-- `Common2026/Audit/PrintAxioms.lean` (audit 終了後、§Phase E で削除 or 保持を判断)。
+- `InformationTheory/Audit/PrintAxioms.lean` (audit 終了後、§Phase E で削除 or 保持を判断)。
 
 ### 引き継ぎポイント
 
@@ -269,13 +269,13 @@ Phase B のカタログを Cover-Thomas (および対応する標準 reference) 
 
 - [ ] `docs/audit-2026-05.md` の §1〜§5 が全て埋まっている
 - [ ] §5 で分岐 (A / B / C) が決定し、次フェーズ plan ファイルが新規作成されている
-- [ ] Phase C の `Common2026/Audit/PrintAxioms.lean` の保持/削除を判断 (clean なら削除、suspicious が残るなら保持)
+- [ ] Phase C の `InformationTheory/Audit/PrintAxioms.lean` の保持/削除を判断 (clean なら削除、suspicious が残るなら保持)
 - [ ] 主要 commit がすべて push 済み
 
 ## ガードレール (やらないこと)
 
 - **新規の補題 / theorem を書かない**。Phase D で 🔴 が見つかっても、修復は次フェーズ。
-- **statement の書き換えをしない**。Phase D で仮定の過剰さに気づいても、現物の `Common2026/` には触らず `audit-2026-05.md` にメモするだけ。
+- **statement の書き換えをしない**。Phase D で仮定の過剰さに気づいても、現物の `InformationTheory/` には触らず `audit-2026-05.md` にメモするだけ。
 - **大ファイル分割をしない**。これは別の方向で、棚卸し後に判断する。
 - **新しい moonshot を始めない**。棚卸し中に「これは next moonshot 候補」と気づいても、別 plan ファイル (`docs/audit-2026-05-followups.md`) に書き留めるだけ。
 

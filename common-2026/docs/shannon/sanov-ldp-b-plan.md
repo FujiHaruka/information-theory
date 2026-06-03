@@ -1,8 +1,8 @@
 # Sanov LDP B 形 (B-1') ムーンショット計画 🌙
 
-> **Status (2026-05-12)**: **LDP B 形 upper bound 完了 (Phase A〜E すべて 0 sorry)**。`Common2026/Shannon/SanovLDP.lean` (550 行)。lower bound + equality 形は **B-1'' に再 defer** (Mathlib `Continuous klDiv` 不在 + achievable type sequence 構築 + 多項係数 lower bound 合計 ~500-650 行)。既存 `Common2026/Shannon/Sanov.lean` (319 行、A 形完了) は touch せず並立 publish。
+> **Status (2026-05-12)**: **LDP B 形 upper bound 完了 (Phase A〜E すべて 0 sorry)**。`InformationTheory/Shannon/SanovLDP.lean` (550 行)。lower bound + equality 形は **B-1'' に再 defer** (Mathlib `Continuous klDiv` 不在 + achievable type sequence 構築 + 多項係数 lower bound 合計 ~500-650 行)。既存 `InformationTheory/Shannon/Sanov.lean` (319 行、A 形完了) は touch せず並立 publish。
 >
-> **実態整合 (2026-05-20): DONE-UNCOND** — upper bound 主定理 `sanov_ldp_upper_bound` は `Common2026/Shannon/SanovLDP.lean:471`、std binders (`hQpos` honest、`hD` は user-supplied D 下界仮定)、0 sorry。なお「B-1'' に再 defer」は stale: **equality 形は完了済** (`SanovLDPEquality.lean:1243` `sanov_ldp_equality`、[sanov-ldp-equality-plan.md](sanov-ldp-equality-plan.md))。
+> **実態整合 (2026-05-20): DONE-UNCOND** — upper bound 主定理 `sanov_ldp_upper_bound` は `InformationTheory/Shannon/SanovLDP.lean:471`、std binders (`hQpos` honest、`hD` は user-supplied D 下界仮定)、0 sorry。なお「B-1'' に再 defer」は stale: **equality 形は完了済** (`SanovLDPEquality.lean:1243` `sanov_ldp_equality`、[sanov-ldp-equality-plan.md](sanov-ldp-equality-plan.md))。
 
 ## 進捗
 
@@ -10,7 +10,7 @@
 - [x] Phase A — type 数 polynomial bound `|TypeCountIndex α n| = (n+1)^|α|` ✅
 - [x] Phase B — index 形 Sanov A `typeClassByCount_Qn_le` (`Q^n(T_c) ≤ exp(-n · klDivIndex c n Q)`) ✅
 - [x] Phase C — union form `typeClassByCount_union_Qn_le_inf` + 主定理 `sanov_ldp_upper_bound` ✅
-- [x] Phase D — verify (`lake env lean Common2026/Shannon/SanovLDP.lean` silent、0 sorry、0 警告) ✅
+- [x] Phase D — verify (`lake env lean InformationTheory/Shannon/SanovLDP.lean` silent、0 sorry、0 警告) ✅
 - [x] Phase E — doc 更新 ✅
 
 ## ゴール / Approach
@@ -113,7 +113,7 @@ Phase E : doc 更新                                                 ← 0.5 日
 | `Finset.sum_le_sum_of_subset_of_nonneg` | `Mathlib.Algebra.Order.BigOperators.Group.Finset` | union bound |
 | `MeasureTheory.measure_iUnion_le` | `Mathlib.MeasureTheory.Measure.Typeclasses.Finite` | finite union 測度 |
 | `MeasureTheory.measure_iUnion_fintype_le` | (or `measure_biUnion_finset_le`) | finite union |
-| 既存 `typeClass_Qn_le` (Sanov.lean:172) | `Common2026.Shannon.Sanov` | 主 lemma (A 形) |
+| 既存 `typeClass_Qn_le` (Sanov.lean:172) | `InformationTheory.Shannon.Sanov` | 主 lemma (A 形) |
 | 既存 `klDivSumForm` (Sanov.lean:73) | 同上 | KL form |
 
 **重要な signature verbatim**:
@@ -217,8 +217,8 @@ theorem sanov_ldp_upper_bound
 
 ## Phase D - verify
 
-- `lake env lean Common2026/Shannon/SanovLDP.lean` silent
-- `Common2026.lean` に `import Common2026.Shannon.SanovLDP` 追記
+- `lake env lean InformationTheory/Shannon/SanovLDP.lean` silent
+- `InformationTheory.lean` に `import InformationTheory.Shannon.SanovLDP` 追記
 
 ## Phase E - doc 更新
 
@@ -277,7 +277,7 @@ theorem sanov_ldp_upper_bound
 
 ## 実装結果サマリ (2026-05-12 完了時点)
 
-- **`Common2026/Shannon/SanovLDP.lean`**: 550 行、0 sorry、0 警告 (`lake env lean ...` silent)。
+- **`InformationTheory/Shannon/SanovLDP.lean`**: 550 行、0 sorry、0 警告 (`lake env lean ...` silent)。
 - **公開 API**:
   - `TypeCountIndex α n := α → Fin (n+1)` + `typeCountIndex_card : |·| = (n+1)^|α|`
     + Real cast 系。

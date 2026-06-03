@@ -2,7 +2,7 @@
 
 Generated: 2026-05-11T00:20:25.371Z
 Idle gap threshold: 5 min
-File prefix filter: `Common2026/Shannon/`
+File prefix filter: `InformationTheory/Shannon/`
 
 ## サマリー（合計）
 

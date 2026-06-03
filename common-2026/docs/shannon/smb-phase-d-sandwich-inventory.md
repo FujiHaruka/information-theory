@@ -13,7 +13,7 @@
 ## 主定理の最終形（再掲）
 
 discharge 対象は `shannon_mcmillan_breiman_of_sandwich` の 4 仮説
-(`Common2026/Shannon/ShannonMcMillanBreiman.lean:85-105`)。最終目標は
+(`InformationTheory/Shannon/ShannonMcMillanBreiman.lean:85-105`)。最終目標は
 **仮定なし `shannon_mcmillan_breiman`**:
 
 ```lean
@@ -46,13 +46,13 @@ take k → ∞ via entropyRate_eq_lim_condEntropy: H_k → entropyRate, ε → 0
 
 | 概念 | API (本 repo) | file:line | 状態 | Phase D での扱い |
 |---|---|---|---|---|
-| chain rule log identity | `log_block_eq_sum_pmfLogCond` | `Common2026/Shannon/SMBChainRule.lean:255` | ✅ 既存 (0 sorry) | `-log P_n(block_n ω) = ∑_{i<n} pmfLogCond p i ω` a.s. 真の log-likelihood 側 |
+| chain rule log identity | `log_block_eq_sum_pmfLogCond` | `InformationTheory/Shannon/SMBChainRule.lean:255` | ✅ 既存 (0 sorry) | `-log P_n(block_n ω) = ∑_{i<n} pmfLogCond p i ω` a.s. 真の log-likelihood 側 |
 | per-step cond log-likelihood | `pmfLogCond` | `SMBChainRule.lean:50` | ✅ 既存 | k-Markov 版 `pmfLogCondMarkov` の雛形 |
 | per-level integral 同定 | `integral_pmfLogCond_eq_conditionalEntropyTail` | `SMBChainRule.lean:304` | ✅ 既存 | `∫ pmfLogCond p l = H_l` |
 | integrability | `integrable_pmfLogCond` | `SMBChainRule.lean:357` | ✅ 既存 | Birkhoff の前提 |
 | **Birkhoff per-level** | `birkhoffAverage_pmfLogCond_tendsto` | `SMBChainRule.lean:401` | ✅ 既存 (0 sorry) | `(1/(n+1)) ∑_{i≤n} pmfLogCond p l (T^[i] ω) → H_l` a.s. — D.1 の心臓 |
-| Birkhoff (抽象) | `birkhoff_ergodic_ae` | `Common2026/Shannon/BirkhoffErgodic.lean:1031` | ✅ 既存 (0 sorry) | k-Markov 近似にも再適用 |
-| H_l → entropyRate | `entropyRate_eq_lim_condEntropy` | `Common2026/Shannon/EntropyRate.lean:466` | ✅ 既存 | k → ∞ の極限 |
+| Birkhoff (抽象) | `birkhoff_ergodic_ae` | `InformationTheory/Shannon/BirkhoffErgodic.lean:1031` | ✅ 既存 (0 sorry) | k-Markov 近似にも再適用 |
+| H_l → entropyRate | `entropyRate_eq_lim_condEntropy` | `InformationTheory/Shannon/EntropyRate.lean:466` | ✅ 既存 | k → ∞ の極限 |
 | tail antitone | `conditionalEntropyTail_antitone` | `EntropyRate.lean:264` | ✅ 既存 | H_k の単調性 (sandwich の符号制御) |
 | sandwich wrapper | `shannon_mcmillan_breiman_of_sandwich` | `ShannonMcMillanBreiman.lean:85` | ✅ 既存 | 4 仮説 → Tendsto |
 | blockLogAvg 定義 | `blockLogAvg` | `ShannonMcMillanBreiman.lean:55` | ✅ 既存 | `-(1/n) log P_n(block_n ω)` (LHS) |
@@ -228,13 +228,13 @@ lemma lintegral_rnDeriv_le : ∫⁻ x, μ.rnDeriv ν x ∂ν ≤ μ Set.univ
 
 ## 着手 skeleton
 
-`Common2026/Shannon/SMBSandwich.lean`（新規）の出だし:
+`InformationTheory/Shannon/SMBSandwich.lean`（新規）の出だし:
 
 ```lean
-import Common2026.Shannon.Stationary
-import Common2026.Shannon.EntropyRate
-import Common2026.Shannon.SMBChainRule
-import Common2026.Shannon.ShannonMcMillanBreiman
+import InformationTheory.Shannon.Stationary
+import InformationTheory.Shannon.EntropyRate
+import InformationTheory.Shannon.SMBChainRule
+import InformationTheory.Shannon.ShannonMcMillanBreiman
 import Mathlib.MeasureTheory.OuterMeasure.BorelCantelli
 import Mathlib.MeasureTheory.Integral.Lebesgue.Markov
 import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym

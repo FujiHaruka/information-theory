@@ -2,13 +2,13 @@
 
 > **Seed**: [`docs/moonshot-seeds.md`](../moonshot-seeds.md) Seed 3
 >
-> **Status (2026-05-10):** 起草。`Common2026/Shannon/{Converse, Bridge, Entropy, CondMutualInfo, DPI}.lean` + `Common2026/Fano/Measure.lean` 完成済を起点に、distributed source coding (Slepian–Wolf) の single-shot converse を分散版として組む。
+> **Status (2026-05-10):** 起草。`InformationTheory/Shannon/{Converse, Bridge, Entropy, CondMutualInfo, DPI}.lean` + `InformationTheory/Fano/Measure.lean` 完成済を起点に、distributed source coding (Slepian–Wolf) の single-shot converse を分散版として組む。
 >
-> 実態整合 (2026-05-20): **DONE-HONEST-HYPS — Phase A-C 完了表記は CODE と一致 (実装済)**。`Common2026/Shannon/SlepianWolf.lean` (23831 B, 0 sorry) に 3-bound single-shot converse 実装済。`slepian_wolf_converse_single_shot` (SlepianWolf.lean:449) は `slepian_wolf_converse_X`/`_Y`/`_sum` (それぞれ実証明 — side-info Fano + entropy chain rule) を `⟨_, _, _⟩` で束ねた実 converse (X/Y/sum bound、honest hyp `2 ≤ Fintype.card`)。FLAW なし。
+> 実態整合 (2026-05-20): **DONE-HONEST-HYPS — Phase A-C 完了表記は CODE と一致 (実装済)**。`InformationTheory/Shannon/SlepianWolf.lean` (23831 B, 0 sorry) に 3-bound single-shot converse 実装済。`slepian_wolf_converse_single_shot` (SlepianWolf.lean:449) は `slepian_wolf_converse_X`/`_Y`/`_sum` (それぞれ実証明 — side-info Fano + entropy chain rule) を `⟨_, _, _⟩` で束ねた実 converse (X/Y/sum bound、honest hyp `2 ≤ Fintype.card`)。FLAW なし。
 
 ## 進捗
 
-- [x] Phase 0 — Mathlib + 既存 Common2026 API インベントリ ✅ → [slepian-wolf-mathlib-inventory.md](slepian-wolf-mathlib-inventory.md)
+- [x] Phase 0 — Mathlib + 既存 InformationTheory API インベントリ ✅ → [slepian-wolf-mathlib-inventory.md](slepian-wolf-mathlib-inventory.md)
 - [x] Phase A — side info 入り Fano wrapper + `entropy_le_log_card` ✅ (2026-05-10)
 - [x] Phase B — 3 bound (X / Y / sum) の本体実装 ✅ (2026-05-10)
 - [x] Phase C — 3 bound 統合 + publish 形整理 ✅ (2026-05-10)
@@ -20,7 +20,7 @@
 **Approach**: 新規 plumbing を「**side info 入り Fano (= paired conditioner で既存 Fano を呼ぶ thin wrapper) + 任意 μ の `H(W) ≤ log |W|`**」の 2 本に局所化し、3 bound はそれぞれ entropy chain rule + side info Fano + conditioning monotonicity の 3 段組で導く。3 bound はまず別 theorem 3 本として実装し、Phase C で 1 statement (構造体 or `And`) に統合可否を判断する。
 
 ```
-Phase 0 : Mathlib + 既存 Common2026 API 在庫 (paired conditioner Fano が成立するか裏取り)
+Phase 0 : Mathlib + 既存 InformationTheory API 在庫 (paired conditioner Fano が成立するか裏取り)
           ─────────────────────────────────────────────────────────
 Phase A : side info Fano (wrapper) + entropy_le_log_card (新規 ~30〜50 行)
           ─────────────────────────────────────────────────────────
@@ -53,7 +53,7 @@ Y bound は X / Y を入れ替えた対称形。sum bound は chain rule `H(X,Y)
 ### ファイル構成 (Phase C 終了時)
 
 ```
-Common2026/
+InformationTheory/
   Shannon/
     SlepianWolf.lean          ← 新規。本 plan の主成果
                                 ・fano_inequality_with_side_info (Phase A wrapper)
@@ -64,7 +64,7 @@ Common2026/
                                 ・slepian_wolf_converse_single_shot (Phase C 統合形)
 ```
 
-`Common2026.lean` に `import Common2026.Shannon.SlepianWolf` を追記 (Converse の後)。
+`InformationTheory.lean` に `import InformationTheory.Shannon.SlepianWolf` を追記 (Converse の後)。
 
 ### 非ゴール
 
@@ -75,13 +75,13 @@ Common2026/
 
 ---
 
-## Phase 0 - Mathlib + 既存 Common2026 API インベントリ ✅
+## Phase 0 - Mathlib + 既存 InformationTheory API インベントリ ✅
 
 ### スコープ
 
 - 軸 1: `shannon_converse_single_shot` 既存形と「Slepian–Wolf へ直接転用できるか」の判定
 - 軸 2: side info 入り Fano が paired conditioner で出せるか (= 既存 `fano_inequality_measure_theoretic` の `Yo` 型が「任意の `MeasurableSpace`」になっているか)
-- 軸 3: chain rule + conditioning monotonicity 既存補題位置 (`Common2026/Shannon/Entropy.lean`)
+- 軸 3: chain rule + conditioning monotonicity 既存補題位置 (`InformationTheory/Shannon/Entropy.lean`)
 - 軸 4: encoder + 任意 μ の `H(W) ≤ log Fintype.card` の有無 (Loomis–Whitney の uniform 形式が代用可能か)
 - 軸 5: 二者ペア確率変数の plumbing (`Measurable.prodMk` / `Measure.map_prod_map` / `Fintype.card_prod`)
 
@@ -95,7 +95,7 @@ Common2026/
 
 - 「Mathlib に Slepian–Wolf converse は無い」を裏取り済み (loogle + rg)
 - side info Fano が paired conditioner で書ける見込みを inventory で確認 (新規補題不要を裏取り)
-- Phase A skeleton (`Common2026/Shannon/SlepianWolf.lean` の sorry-driven 出だし) が書ける状態
+- Phase A skeleton (`InformationTheory/Shannon/SlepianWolf.lean` の sorry-driven 出だし) が書ける状態
 
 ### 工数感
 
@@ -107,8 +107,8 @@ Common2026/
 
 - (a) **Mathlib に Slepian–Wolf 不在** (loogle 0 件)
 - (b) **side info Fano は paired conditioner で出る** — 既存 `fano_inequality_measure_theoretic` の `Yo` 型が「任意の `MeasurableSpace`」なので `Y × S` で呼べる。Phase A wrapper は ~15 行
-- (c) chain rule (`entropy_pair_eq_entropy_add_condEntropy`) + conditioning monotonicity (`condEntropy_le_condEntropy_of_pair`) は `Common2026/Shannon/Entropy.lean` 既存
-- (d) 任意 μ の `entropy μ Xs ≤ log (Fintype.card α)` は **Mathlib・Common2026 両方に不在**、Phase A で新規 (~30〜50 行、Gibbs 不等式 / `klDiv_nonneg` 経由)
+- (c) chain rule (`entropy_pair_eq_entropy_add_condEntropy`) + conditioning monotonicity (`condEntropy_le_condEntropy_of_pair`) は `InformationTheory/Shannon/Entropy.lean` 既存
+- (d) 任意 μ の `entropy μ Xs ≤ log (Fintype.card α)` は **Mathlib・InformationTheory 両方に不在**、Phase A で新規 (~30〜50 行、Gibbs 不等式 / `klDiv_nonneg` 経由)
 - (e) ペア plumbing は `Measurable.prodMk` + `Fintype.card_prod` で完備、新規ゼロ
 
 工数見立て: **2 週間以内 / 280〜450 行**。シード見積「2〜3 週間 / 400〜600 行」より下方修正。
@@ -159,21 +159,21 @@ end InformationTheory.MeasureFano
 
 ### Steps
 
-- [ ] `Common2026/Shannon/SlepianWolf.lean` を新設 (skeleton + 2 主補題 = sorry)
+- [ ] `InformationTheory/Shannon/SlepianWolf.lean` を新設 (skeleton + 2 主補題 = sorry)
 - [ ] `entropy_le_log_card` の証明
   - [ ] uniform measure `(Fintype.card α : ℝ≥0∞)⁻¹ • Measure.count` を target ν として `klDiv (μ.map Xs) ν ≥ 0` を `klDiv_nonneg` で取得
-  - [ ] `klDiv_discrete_toReal_eq_sum` (`Common2026/Shannon/Bridge.lean`) で展開し `entropy μ Xs - log (Fintype.card α) ≤ 0` に整形
+  - [ ] `klDiv_discrete_toReal_eq_sum` (`InformationTheory/Shannon/Bridge.lean`) で展開し `entropy μ Xs - log (Fintype.card α) ≤ 0` に整形
   - [ ] AC 仮定 `(μ.map Xs) ≪ (Fintype.card α)⁻¹ • Measure.count` を「uniform は full support」から自動 derive
 - [ ] `fano_inequality_with_side_info` の証明
   - [ ] `Yo' := fun ω => (Yo ω, Si ω) : Ω → Y × S` の measurability を `Measurable.prodMk` で 1 行
   - [ ] 既存 `fano_inequality_measure_theoretic μ Xs Yo' decoder` を直接呼ぶ
-- [ ] `Common2026.lean` に `import Common2026.Shannon.SlepianWolf` 追記
-- [ ] `lake env lean Common2026/Shannon/SlepianWolf.lean` silent
+- [ ] `InformationTheory.lean` に `import InformationTheory.Shannon.SlepianWolf` 追記
+- [ ] `lake env lean InformationTheory/Shannon/SlepianWolf.lean` silent
 
 ### Done 条件
 
 - 上記 2 補題が silent
-- `Common2026.lean` に import 追記済
+- `InformationTheory.lean` に import 追記済
 - skeleton-driven で `entropy_le_log_card` → `fano_inequality_with_side_info` の順に sorry を割る
 
 ### 工数感
@@ -265,7 +265,7 @@ log Mx
 - [ ] X bound 主定理 `slepian_wolf_converse_X` の skeleton (`:= by sorry`)
 - [ ] (X bound) Step 1: `log Mx ≥ entropy μ (eX ∘ Xs)` ─ Phase A の `entropy_le_log_card` を 1 回呼ぶ
 - [ ] (X bound) Step 2: `entropy μ (eX∘Xs) ≥ condEntropy μ (eX∘Xs) Ys` ─ 「H(W) ≥ H(W|Y)」を `mutualInfo_eq_entropy_sub_condEntropy` + `mutualInfo_nonneg` で示す helper を Phase B 内に立てる (~10 行)
-- [ ] (X bound) Step 3: chain rule で `condEntropy μ (eX∘Xs) Ys = entropy μ (eX∘Xs, Xs | Ys) - ...` に展開 ─ 既存 `entropy_pair_eq_entropy_add_condEntropy` の **条件付き版** が必要。**Phase B-3 の山場**: 条件付き chain rule (`H(X, Z | Y) = H(Z | Y) + H(X | Y, Z)`) が `Common2026/Shannon/CondMutualInfo.lean` の `mutualInfo_chain_rule` と関連、要確認 (新規補題 ~50 行になる可能性)
+- [ ] (X bound) Step 3: chain rule で `condEntropy μ (eX∘Xs) Ys = entropy μ (eX∘Xs, Xs | Ys) - ...` に展開 ─ 既存 `entropy_pair_eq_entropy_add_condEntropy` の **条件付き版** が必要。**Phase B-3 の山場**: 条件付き chain rule (`H(X, Z | Y) = H(Z | Y) + H(X | Y, Z)`) が `InformationTheory/Shannon/CondMutualInfo.lean` の `mutualInfo_chain_rule` と関連、要確認 (新規補題 ~50 行になる可能性)
 - [ ] (X bound) Step 4: `entropy μ (eX∘Xs, Xs | Ys) ≥ condEntropy μ Xs Ys` ─ 「より大きい RV の条件付き entropy はより大きい」、`entropy_pair_eq_entropy_add_condEntropy` + `condEntropy_nonneg` で導出
 - [ ] (X bound) Step 5: `condEntropy μ Xs (eX∘Xs, Ys) ≤ condEntropy μ Xs Ys` の代わりに、conditioner 増やしの正しい向き `condEntropy μ Xs (eX∘Xs, eY∘Ys, Ys) ≤ condEntropy μ Xs (eY∘Ys, Ys)` を使い、Phase A `fano_inequality_with_side_info` で `≤ δ(Pe)` に押さえる
 - [ ] (Y bound) `slepian_wolf_converse_Y` ─ X / Y 対称、X bound を **swap した argument permutation で写経 ~30 行**
@@ -333,7 +333,7 @@ end InformationTheory.Shannon
   - 推奨: **inline 維持**。`shannon_converse_single_shot` も `δ` 関数を立てていない先例
 - [ ] publish 形 docstring 整備 (Cover–Thomas 15.4 への参照、ベース定理の説明)
 - [ ] `slepian_wolf_converse_single_shot` 統合定理の証明 (3 個別定理を `⟨h1, h2, h3⟩` で組む形、~10 行)
-- [ ] `lake env lean Common2026/Shannon/SlepianWolf.lean` silent
+- [ ] `lake env lean InformationTheory/Shannon/SlepianWolf.lean` silent
 - [ ] proof-log 取得 (`docs/proof-logs/proof-log-slepian-wolf.md` + metrics)
 
 ### Done 条件
@@ -364,11 +364,11 @@ end InformationTheory.Shannon
 
 ## 当面の next step
 
-1. ~~**Phase 0 (Mathlib + 既存 Common2026 API インベントリ)**~~ ✅ 完 (2026-05-10)、`slepian-wolf-mathlib-inventory.md` 参照
+1. ~~**Phase 0 (Mathlib + 既存 InformationTheory API インベントリ)**~~ ✅ 完 (2026-05-10)、`slepian-wolf-mathlib-inventory.md` 参照
 2. **Phase A skeleton 作成** ← **次これ**
-   - `Common2026/Shannon/SlepianWolf.lean` 新設
+   - `InformationTheory/Shannon/SlepianWolf.lean` 新設
    - `entropy_le_log_card` + `fano_inequality_with_side_info` の 2 sorry 出だし
-   - `Common2026.lean` に import 追記
+   - `InformationTheory.lean` に import 追記
 3. **Phase A の 2 sorry 充填**
 4. **Phase B X bound 着手**
 5. **Phase B Y / sum bound + Phase C 統合**
@@ -383,10 +383,10 @@ end InformationTheory.Shannon
   - [Shannon encoder extensions (Phase 4-δ)](shannon-encoder-extensions-plan.md)
   - [Loomis–Whitney moonshot](loomis-whitney-moonshot-plan.md)
 - 既存実装:
-  - `Common2026/Shannon/Converse.lean:81` `shannon_converse_single_shot`
-  - `Common2026/Fano/Measure.lean:224` `fano_inequality_measure_theoretic`
-  - `Common2026/Shannon/Entropy.lean:41` `entropy_pair_eq_entropy_add_condEntropy`
-  - `Common2026/Shannon/Entropy.lean:240` `condEntropy_le_condEntropy_of_pair`
+  - `InformationTheory/Shannon/Converse.lean:81` `shannon_converse_single_shot`
+  - `InformationTheory/Fano/Measure.lean:224` `fano_inequality_measure_theoretic`
+  - `InformationTheory/Shannon/Entropy.lean:41` `entropy_pair_eq_entropy_add_condEntropy`
+  - `InformationTheory/Shannon/Entropy.lean:240` `condEntropy_le_condEntropy_of_pair`
 - M0 inventory: [`slepian-wolf-mathlib-inventory.md`](slepian-wolf-mathlib-inventory.md)
 
 ## 判断ログ
@@ -405,7 +405,7 @@ log Mx ≥ H(eX∘Xs)
        ≥ H(Xs | Ys) - δ(Pe)
 ```
 
-**問題**: 「条件付き chain rule」 `H(X, Z | Y) = H(Z | Y) + H(X | Y, Z)` が `Common2026/Shannon/Entropy.lean` に未整備、新規補題 ~50 行になる。
+**問題**: 「条件付き chain rule」 `H(X, Z | Y) = H(Z | Y) + H(X | Y, Z)` が `InformationTheory/Shannon/Entropy.lean` に未整備、新規補題 ~50 行になる。
 
 **ピボット**: `condMutualInfo_eq_condEntropy_sub_condEntropy` + `condMutualInfo_comm` の 2 本既存補題で同等の派生を実現できることを発見。
 

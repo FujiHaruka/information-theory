@@ -1,4 +1,4 @@
-# T2-D EPI (Entropy Power Inequality) — Mathlib + Common2026 在庫
+# T2-D EPI (Entropy Power Inequality) — Mathlib + InformationTheory 在庫
 
 > **Parent**: [`textbook-roadmap.md`](../textbook-roadmap.md) §「Tier 2 — T2-D.
 > Entropy Power Inequality」
@@ -60,26 +60,26 @@
 
 **結論**: EPI に関係する Fisher info → Stam inequality → de Bruijn integration → EPI の上流チェーンは Mathlib に存在しない。本 plan は **statement-level hypothesis pass-through 形**で publish するしかない。
 
-## §B — Common2026 在庫 (再利用予定 / 上流)
+## §B — InformationTheory 在庫 (再利用予定 / 上流)
 
 ### B.1 `DifferentialEntropy.lean` (1010 行、再利用)
 
 | ID | 位置 | full signature | 用途 |
 |---|---|---|---|
-| `differentialEntropy` | `Common2026/Shannon/DifferentialEntropy.lean:42` | `noncomputable def differentialEntropy (μ : Measure ℝ) : ℝ := ∫ x, Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume` | EPI の `h(·)` の本体 |
-| `differentialEntropy_gaussianReal` | `Common2026/Shannon/DifferentialEntropy.lean:406` | `theorem (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) : differentialEntropy (gaussianReal m v) = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v)` | Gaussian saturation case で EPI 等号性確認 |
-| `differentialEntropy_le_gaussian_of_variance_le` | `Common2026/Shannon/DifferentialEntropy.lean:510` | (Phase D 主定理) | EPI ↔ Gaussian saturating case の橋渡し (本 plan では使わず) |
-| `differentialEntropy_eq_gaussian_iff` | `Common2026/Shannon/DifferentialEntropy.lean:659` | (max entropy equality case) | (任意) |
+| `differentialEntropy` | `InformationTheory/Shannon/DifferentialEntropy.lean:42` | `noncomputable def differentialEntropy (μ : Measure ℝ) : ℝ := ∫ x, Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume` | EPI の `h(·)` の本体 |
+| `differentialEntropy_gaussianReal` | `InformationTheory/Shannon/DifferentialEntropy.lean:406` | `theorem (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) : differentialEntropy (gaussianReal m v) = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v)` | Gaussian saturation case で EPI 等号性確認 |
+| `differentialEntropy_le_gaussian_of_variance_le` | `InformationTheory/Shannon/DifferentialEntropy.lean:510` | (Phase D 主定理) | EPI ↔ Gaussian saturating case の橋渡し (本 plan では使わず) |
+| `differentialEntropy_eq_gaussian_iff` | `InformationTheory/Shannon/DifferentialEntropy.lean:659` | (max entropy equality case) | (任意) |
 
 ### B.2 `FisherInfo.lean` (236 行、上流 pass-through 接続)
 
 | ID | 位置 | full signature | 用途 (本 plan) |
 |---|---|---|---|
-| `fisherInfo` | `Common2026/Shannon/FisherInfo.lean:58` | `noncomputable def fisherInfo (μ : Measure ℝ) : ℝ≥0∞ := ...` | **本 plan 内では値に踏み込まない** (representative-dependence flaw あり、後続 plan で再定義) |
-| `fisherInfoReal` | `Common2026/Shannon/FisherInfo.lean:93` | `noncomputable def fisherInfoReal (μ : Measure ℝ) : ℝ := (fisherInfo μ).toReal` | 同上、値依存しない |
-| `IsRegularDensity` | `Common2026/Shannon/FisherInfo.lean:134` | `structure IsRegularDensity {Ω : Type*} [MeasurableSpace Ω] (X : Ω → ℝ) (P : Measure Ω) [HasPDF X P volume]` | L-EPI の regularity hypothesis として再利用 |
-| `IsRegularDeBruijnHyp` | `Common2026/Shannon/FisherInfo.lean:200` | `structure IsRegularDeBruijnHyp {Ω : Type*} [MeasurableSpace Ω] (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] [HasPDF X P volume] (t : ℝ) : Prop` | EPI の de Bruijn 経路 derivAt-step に上流接続 |
-| `deBruijn_identity` | `Common2026/Shannon/FisherInfo.lean:223` | `theorem deBruijn_identity ... (h_reg : IsRegularDeBruijnHyp X Z P t) : HasDerivAt (fun s => differentialEntropy (P.map (fun ω => X ω + Real.sqrt s * Z ω))) ((1/2) * (fisherInfo (P.map (fun ω => X ω + Real.sqrt t * Z ω))).toReal) t` | 本 plan の de Bruijn 経路で **statement-level に名前露出のみ** (本体 derivation には使わない) |
+| `fisherInfo` | `InformationTheory/Shannon/FisherInfo.lean:58` | `noncomputable def fisherInfo (μ : Measure ℝ) : ℝ≥0∞ := ...` | **本 plan 内では値に踏み込まない** (representative-dependence flaw あり、後続 plan で再定義) |
+| `fisherInfoReal` | `InformationTheory/Shannon/FisherInfo.lean:93` | `noncomputable def fisherInfoReal (μ : Measure ℝ) : ℝ := (fisherInfo μ).toReal` | 同上、値依存しない |
+| `IsRegularDensity` | `InformationTheory/Shannon/FisherInfo.lean:134` | `structure IsRegularDensity {Ω : Type*} [MeasurableSpace Ω] (X : Ω → ℝ) (P : Measure Ω) [HasPDF X P volume]` | L-EPI の regularity hypothesis として再利用 |
+| `IsRegularDeBruijnHyp` | `InformationTheory/Shannon/FisherInfo.lean:200` | `structure IsRegularDeBruijnHyp {Ω : Type*} [MeasurableSpace Ω] (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] [HasPDF X P volume] (t : ℝ) : Prop` | EPI の de Bruijn 経路 derivAt-step に上流接続 |
+| `deBruijn_identity` | `InformationTheory/Shannon/FisherInfo.lean:223` | `theorem deBruijn_identity ... (h_reg : IsRegularDeBruijnHyp X Z P t) : HasDerivAt (fun s => differentialEntropy (P.map (fun ω => X ω + Real.sqrt s * Z ω))) ((1/2) * (fisherInfo (P.map (fun ω => X ω + Real.sqrt t * Z ω))).toReal) t` | 本 plan の de Bruijn 経路で **statement-level に名前露出のみ** (本体 derivation には使わない) |
 
 **重要**: `fisherInfo` の値表 (`= 1/v` for Gaussian 等) は FisherInfoGaussian で blocked。
 本 plan では **`IsFisherInfoFor μ J : Prop`** という abstract predicate で `J` を
@@ -155,7 +155,7 @@ theorem entropy_power_inequality_gaussian_saturation
 ```
 
 → **これは `gaussianReal_add_gaussianReal_of_indepFun` + `differentialEntropy_gaussianReal`
-  + `Real.exp_log` の合成で fully discharge 可能** (Mathlib + Common2026 既存 API のみ、~30-60 行)。
+  + `Real.exp_log` の合成で fully discharge 可能** (Mathlib + InformationTheory 既存 API のみ、~30-60 行)。
 
 ## §D — 撤退ライン (採用予定)
 
@@ -203,7 +203,7 @@ theorem entropy_power_inequality_gaussian_saturation
 | `entropyPower`, `entropyPowerMeasure` + positivity + unfold + gaussianReal closed form | ~80-120 |
 | L-EPI1/L-EPI2/L-EPI3 predicates + docstrings | ~80-100 |
 | 主定理 `entropy_power_inequality` (L-EPI3 適用、本体 `:= h_epi`) | ~30-50 |
-| **Gaussian saturation case** corollary (full discharge、Mathlib + Common2026 既存のみ) | ~50-80 |
+| **Gaussian saturation case** corollary (full discharge、Mathlib + InformationTheory 既存のみ) | ~50-80 |
 | 補助 corollary 群 (monotonicity, multi-arg pass-through, scaling) | ~100-200 |
 | 合計 (Tier 2 = 全 corollary 込) | **~420-630** |
 | Tier 1 (主定理 + Gaussian sat + α-component) | **~300-450** |
@@ -213,15 +213,15 @@ theorem entropy_power_inequality_gaussian_saturation
 ## §G — Skeleton 概形 (Phase A 着手前 reference)
 
 ```lean
-import Common2026.Shannon.DifferentialEntropy
-import Common2026.Shannon.FisherInfo
+import InformationTheory.Shannon.DifferentialEntropy
+import InformationTheory.Shannon.FisherInfo
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.Basic
 
 namespace InformationTheory.Shannon.EntropyPowerInequality
 
-open MeasureTheory ProbabilityTheory Common2026.Shannon
+open MeasureTheory ProbabilityTheory InformationTheory.Shannon
 open scoped ENNReal NNReal Topology
 
 /-! ## §A — entropyPower 定義 + 基本性質 -/

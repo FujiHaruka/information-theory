@@ -5,9 +5,9 @@
 >   Channel + Cut-set bound」(inner bound 半部)
 >
 > **Predecessor seed (publish 済 2026-05-19、本 plan の対称項)**:
-> - `Common2026/Shannon/RelayCutset.lean` — T3-F outer bound (cut-set),
+> - `InformationTheory/Shannon/RelayCutset.lean` — T3-F outer bound (cut-set),
 >   386 行 / 0 sorry / 0 warning, L-RC1〜5 全 pass-through。
-> - `Common2026/Shannon/MultipleAccessChannel.lean` — T3-B, 637 行,
+> - `InformationTheory/Shannon/MultipleAccessChannel.lean` — T3-B, 637 行,
 >   **`mac_capacity_region_inner_bound` (achievability existence-form
 >   pass-through)** が本 plan 主定理 `relay_df_inner_bound` /
 >   `relay_cf_inner_bound` の直接の雛形。
@@ -15,7 +15,7 @@
 > **Inventory (Phase 0 を本 plan と並行起草)**:
 > [`relay-inner-bound-mathlib-inventory.md`](./relay-inner-bound-mathlib-inventory.md)
 >
-> **Goal (短形)**: 新規 1 ファイル `Common2026/Shannon/RelayInnerBound.lean`
+> **Goal (短形)**: 新規 1 ファイル `InformationTheory/Shannon/RelayInnerBound.lean`
 > で Cover-Thomas Theorem 15.10.2 (decode-and-forward inner bound) +
 > Theorem 15.10.3 (compress-and-forward inner bound) を **両方 statement-level
 > hypothesis pass-through** で publish。0 sorry / 0 warning、規模 ~350-500 行
@@ -50,7 +50,7 @@
 
 ## Status (2026-05-20)
 
-> 実態整合 (2026-05-20): **PASS-THROUGH (計画通り) — 全 Phase 実装済、plan の「Phase 0 完了予定 (起草中)」表記は STALE**。`Common2026/Shannon/RelayInnerBound.lean` (25699 B, 0 sorry) に両主定理 publish 済。`relay_df_inner_bound` (RelayInnerBound.lean:419) は `_h_in_df_region` + `_h_block_markov : True` `_h_sliding_window : True` + `h_existence : RelayDFInnerBoundExistence ...`、body `:= h_existence`、`relay_cf_inner_bound` (:531) は `_h_in_cf_region` + `_h_wz_binning : True` `_h_si_decode : True` + `h_existence : RelayCFInnerBoundExistence ...`、body `:= h_existence`。L-RI1〜4 全 pass-through (FLAW なし — 計画通り)。Common2026.lean に import 済。
+> 実態整合 (2026-05-20): **PASS-THROUGH (計画通り) — 全 Phase 実装済、plan の「Phase 0 完了予定 (起草中)」表記は STALE**。`InformationTheory/Shannon/RelayInnerBound.lean` (25699 B, 0 sorry) に両主定理 publish 済。`relay_df_inner_bound` (RelayInnerBound.lean:419) は `_h_in_df_region` + `_h_block_markov : True` `_h_sliding_window : True` + `h_existence : RelayDFInnerBoundExistence ...`、body `:= h_existence`、`relay_cf_inner_bound` (:531) は `_h_in_cf_region` + `_h_wz_binning : True` `_h_si_decode : True` + `h_existence : RelayCFInnerBoundExistence ...`、body `:= h_existence`。L-RI1〜4 全 pass-through (FLAW なし — 計画通り)。InformationTheory.lean に import 済。
 
 **Phase 0 完了予定 (起草中)** — outer bound (T3-F) + MAC inner bound (T3-B)
 の publish pattern 流用で signature 完全確定。本 plan は MAC achievability
@@ -60,12 +60,12 @@ channel structure 流用** で signature 同型に書ける。新 Mathlib API
 
 ## 進捗
 
-- [ ] Phase 0 — Mathlib + 既存 Common2026 在庫 + 設計確定 📋 → [`relay-inner-bound-mathlib-inventory.md`](./relay-inner-bound-mathlib-inventory.md)
+- [ ] Phase 0 — Mathlib + 既存 InformationTheory 在庫 + 設計確定 📋 → [`relay-inner-bound-mathlib-inventory.md`](./relay-inner-bound-mathlib-inventory.md)
 - [ ] Phase A — `InRelayDFRate` + `InRelayCFRate` + Existence defs + skeleton 📋
 - [ ] Phase B — DF inner bound 主定理 + helpers 📋
 - [ ] Phase C — CF inner bound 主定理 + helpers 📋
 - [ ] Phase D — docstring + cross-link comments 📋
-- [ ] Phase V — `lake env lean` clean (`Common2026.lean` 編入はオーケストレータ判断) 📋
+- [ ] Phase V — `lake env lean` clean (`InformationTheory.lean` 編入はオーケストレータ判断) 📋
 
 ## ゴール / Approach
 
@@ -74,7 +74,7 @@ channel structure 流用** で signature 同型に書ける。新 Mathlib API
 新規 1 ファイル合流形:
 
 ```lean
-import Common2026.Shannon.RelayCutset
+import InformationTheory.Shannon.RelayCutset
 
 namespace InformationTheory.Shannon
 
@@ -213,7 +213,7 @@ discharge 可能。
 ### Approach 図
 
 ```
-Phase 0  : Mathlib + Common2026 在庫 + 設計確定                          ← 完了予定 (本 plan 起草と並行)
+Phase 0  : Mathlib + InformationTheory 在庫 + 設計確定                          ← 完了予定 (本 plan 起草と並行)
            ────────────────────────────────────────────────────────────
 Phase A  : InRelayDFRate + InRelayCFRate + Existence defs + skeleton    ← ~100-150 行
            ────────────────────────────────────────────────────────────
@@ -238,13 +238,13 @@ Phase V  : lake env lean clean                                          ← ~5-1
 | Phase B | **120 行** | 100-150 | DF inner bound + helpers |
 | Phase C | **110 行** | 100-150 | CF inner bound + helpers |
 | Phase D | **60 行** | 50-80 | log-rate wrappers + two-side (outer combine) |
-| Phase V | **5 行** | 5-10 | verify only (Common2026.lean は外出し) |
+| Phase V | **5 行** | 5-10 | verify only (InformationTheory.lean は外出し) |
 | **累計** | **415 行** | **350-500** | 1 ファイル合計 |
 
 ### ファイル構成
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   RelayInnerBound.lean   ← 新規 (~400 行) — Cover-Thomas Ch.15.10.2 + 15.10.3
                             ・InRelayDFRate / InRelayCFRate (predicate structures)
                             ・RelayDFInnerBoundExistence / RelayCFInnerBoundExistence (defs)
@@ -269,10 +269,10 @@ Common2026/Shannon/
 
 完了済 (黒箱 reuse):
 
-- [x] `Common2026/Shannon/RelayCutset.lean:96` — `RelayChannel`
-- [x] `Common2026/Shannon/RelayCutset.lean:115` — `RelayCode`
-- [x] `Common2026/Shannon/MultipleAccessChannel.lean:531` — `MACInnerBoundExistence` (signature 直接の雛形)
-- [x] `Common2026/Shannon/MultipleAccessChannel.lean:567` — `mac_capacity_region_inner_bound` (主定理直接の雛形)
+- [x] `InformationTheory/Shannon/RelayCutset.lean:96` — `RelayChannel`
+- [x] `InformationTheory/Shannon/RelayCutset.lean:115` — `RelayCode`
+- [x] `InformationTheory/Shannon/MultipleAccessChannel.lean:531` — `MACInnerBoundExistence` (signature 直接の雛形)
+- [x] `InformationTheory/Shannon/MultipleAccessChannel.lean:567` — `mac_capacity_region_inner_bound` (主定理直接の雛形)
 - [x] Mathlib `Mathlib/Analysis/SpecialFunctions/Exp.lean` — `Real.exp`
 - [x] Mathlib `Mathlib/Order/MinMax.lean` — `min_le_iff`, `le_min`
 
@@ -333,7 +333,7 @@ Common2026/Shannon/
 - 親 seed: [`textbook-roadmap.md`](../textbook-roadmap.md) Tier 3 T3-F
 - 兄弟 plan (本 plan の直接の雛形):
   - [Relay cutset moonshot (T3-F outer bound)](relay-cutset-moonshot-plan.md)
-  - MAC publish (T3-B): `Common2026/Shannon/MultipleAccessChannel.lean`
+  - MAC publish (T3-B): `InformationTheory/Shannon/MultipleAccessChannel.lean`
 - 既存実装 (黒箱 reuse):
-  - `Common2026/Shannon/RelayCutset.lean:96, :115` — `RelayChannel`, `RelayCode`
-  - `Common2026/Shannon/MultipleAccessChannel.lean:531, :567` — MAC inner bound pattern
+  - `InformationTheory/Shannon/RelayCutset.lean:96, :115` — `RelayChannel`, `RelayCode`
+  - `InformationTheory/Shannon/MultipleAccessChannel.lean:531, :567` — MAC inner bound pattern

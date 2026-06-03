@@ -1,4 +1,4 @@
-# AWGN Achievability Typicality — Mathlib + Common2026 在庫 master synthesis
+# AWGN Achievability Typicality — Mathlib + InformationTheory 在庫 master synthesis
 
 > **親 plan**: [`awgn-achievability-typicality-plan.md`](awgn-achievability-typicality-plan.md)
 >
@@ -24,7 +24,7 @@
 **根拠** (Axis 2):
 
 - ✅ Mathlib 既存: `strong_law_ae_real` / `_Lp` (SLLN)、`memLp_id_gaussianReal'` / `variance_fun_id_gaussianReal` (1-d Gaussian moments)、`Filter.Tendsto.log`、`iIndepFun_pi`
-- 🔴 Mathlib + Common2026 ともに不在: **continuous AEP 本体** / **n-d differentialEntropy** / **continuous SMB (Shannon-McMillan-Breiman)**
+- 🔴 Mathlib + InformationTheory ともに不在: **continuous AEP 本体** / **n-d differentialEntropy** / **continuous SMB (Shannon-McMillan-Breiman)**
 - 規模影響: T-2 不採用ルート → Phase B 単独 ~390 行、Phase A-E 合計 750-810 行で T-4 (plan 2 分割) を高確率発動
 - T-2 採用ルート → Phase B ~50 行 (predicate のみ)、achievability core (codebook + union bound + expurgation) は Phase C-D で本物 discharge を維持
 
@@ -59,14 +59,14 @@ noncomputable def gaussianCodebook (M n : ℕ) (σ² : ℝ≥0) :
 typical set / AEP bound を `klDiv` 形で書く。具体的には:
 
 - joint $(X, Y)$ の typical set を `klDiv (joint^n) (marginal X ⊗ₘ Kernel)` 経由で表現
-- `klDiv_compProd_eq_add` (無条件等号) + Common2026 既存 `klDiv_pi_eq_sum` / `klDiv_gaussianReal_gaussianReal_eq` を活用
-- `mutualInfo := klDiv (joint) (prod marginal)` の Common2026 既存定義と直結
+- `klDiv_compProd_eq_add` (無条件等号) + InformationTheory 既存 `klDiv_pi_eq_sum` / `klDiv_gaussianReal_gaussianReal_eq` を活用
+- `mutualInfo := klDiv (joint) (prod marginal)` の InformationTheory 既存定義と直結
 
 **根拠** (Axis 3):
 
 - Option α (`rnDeriv` 形): `Measure.pi × Measure.rnDeriv` は loogle **0 declarations** → bridge 大量自作
 - Option β (`differentialEntropy` 形): 既存 `jointDifferentialEntropyPi_le_sum` が load-bearing `h_llr_split` (`@audit:suspect(differential-entropy-plan)`) を含む → 負債継承
-- **Option γ**: Mathlib + Common2026 既存で完全に乗る、負債を完全に断ち切れる唯一の経路
+- **Option γ**: Mathlib + InformationTheory 既存で完全に乗る、負債を完全に断ち切れる唯一の経路
 
 ## Cross-axis consistency analysis (T-2 採用ルート確認)
 
@@ -128,7 +128,7 @@ plan §「規模見積もり」の T-2 採用時下限値内、~500 行中央予
 
 - 判断ログ #1: T-2 採用、根拠 = Axis 2 で AEP 本体 / n-d differentialEntropy / continuous SMB 全て不在
 - 判断ログ #2: Option A (2 段 `Measure.pi`)、根拠 = Axis 1 で T-1 不発動 + `AwgnCode.encoder` と型 defeq
-- 判断ログ #3: Option γ (`klDiv` 形)、根拠 = Axis 3 で Option β 既存負債回避 + Mathlib + Common2026 完全 cover
+- 判断ログ #3: Option γ (`klDiv` 形)、根拠 = Axis 3 で Option β 既存負債回避 + Mathlib + InformationTheory 完全 cover
 - Phase C 失敗時 fallback の文言更新: 「`Classical.choice` 使用、measurability 別途 hyp 化」→「`Classical.choose` + `measurable_to_countable'` で genuine discharge」(Axis 5 結論)
 
 ## Phase A 着手判定
@@ -136,7 +136,7 @@ plan §「規模見積もり」の T-2 採用時下限値内、~500 行中央予
 GO 判定。理由:
 
 1. 3 判断全て確定、cross-axis 整合
-2. Mathlib 在庫 100% (Phase A は plumbing 中心、Phase B-D-E も Mathlib + Common2026 既存で乗る)
+2. Mathlib 在庫 100% (Phase A は plumbing 中心、Phase B-D-E も Mathlib + InformationTheory 既存で乗る)
 3. 規模見積 ~450 行 (中央)、plan T-4 (2 分割) 不発動
 4. trap warning 5 件は全て identified、Phase A 実装 agent への前提として明示可能
 5. honest 維持: T-2 採用は `IsContinuousAEPGaussian` の (a)/(b)/(c)/(d) 4 条件を満たす staged pattern

@@ -1,18 +1,18 @@
 # Hypercube edge-boundary entropy-sharp (B-2'') ムーンショット計画 🌙
 
-> オーケストレータ指示: B-2' (`hypercube-edge-boundary-plan.md`, `Common2026/Shannon/HypercubeEdgeBoundary.lean`,
+> オーケストレータ指示: B-2' (`hypercube-edge-boundary-plan.md`, `InformationTheory/Shannon/HypercubeEdgeBoundary.lean`,
 > 692 行, AM-GM 形 `2n|A|^{(n-1)/n} ≤ |∂_e A| + n|A|`) を起点に、
 > **entropy-sharp 形** `|A| · (n - log₂ |A|) ≤ |∂_e A|` (Harper / Han / Cover-Thomas 17 流)
 > を **条件付きエントロピー bridge** 経由で publish する。LW + AM-GM ではなく、
 > `uniformOn A` 上で `H(X_i | X_{≠i})` を fibre size 1/2 の point-wise 計算で取り、
 > chain rule + "conditioning reduces entropy" の 2 段で `Σ_i H(X_i|X_{≠i}) ≤ H(X) = log|A|`。
 > 既存 counting identity `edgeBoundary_count_eq` (`Σ_i 2|π_{≠i}(A)| = n|A| + |∂_e A|`)
-> を bridge に再利用、`Common2026/Shannon/HypercubeEdgeBoundary.lean` は touch しない。
+> を bridge に再利用、`InformationTheory/Shannon/HypercubeEdgeBoundary.lean` は touch しない。
 
 ## Status / 目標
 
 > **実態整合 (2026-05-20): DONE-UNCOND (publish 済、0 sorry)** —
-> 主結果 `edgeBoundary_entropy_sharp` (`Common2026/Shannon/HypercubeEdgeBoundarySharp.lean:627`) は
+> 主結果 `edgeBoundary_entropy_sharp` (`InformationTheory/Shannon/HypercubeEdgeBoundarySharp.lean:627`) は
 > 下記 signature と完全一致で実在、本体は genuine `by`-proof (pass-through なし)、`rg -nw sorry` 空振り。
 > 条件付きエントロピー bridge 経路 (`condEntropy_coord_eq` 系) で discharge 済。plan 下記 Phase は完了扱い。
 
@@ -69,21 +69,21 @@ theorem edgeBoundary_entropy_sharp {n : ℕ} {A : Finset (Fin n → Bool)}
    `log|A| / log 2 = logb 2 |A|`. 結果: `|∂_e A| ≥ |A|(n - logb 2 |A|)`.
 
 **Mathlib-shape-driven Definitions 節 (CLAUDE.md) の適用**:
-- 主に reuse する Mathlib/Common2026 API:
-  - `InformationTheory.Shannon.entropy` (`Common2026/Shannon/Bridge.lean:43`):
+- 主に reuse する Mathlib/InformationTheory API:
+  - `InformationTheory.Shannon.entropy` (`InformationTheory/Shannon/Bridge.lean:43`):
     `entropy μ Xs := ∑ x : X, Real.negMulLog ((μ.map Xs).real {x})`。
     型クラス `[Fintype X] [DecidableEq X] [Nonempty X] [MeasurableSpace X]
     [MeasurableSingletonClass X]`. 自然対数形。
   - `InformationTheory.MeasureFano.condEntropy`
-    (`Common2026/Fano/Measure.lean:68`):
+    (`InformationTheory/Fano/Measure.lean:68`):
     `condEntropy μ Xs Yo := ∫ y, ∑ x : X, Real.negMulLog
         ((condDistrib Xs Yo μ y).real {x}) ∂(μ.map Yo)`。
     型クラス `[MeasurableSpace Ω] [Fintype X] [DecidableEq X] [Nonempty X]
     [MeasurableSpace X] [MeasurableSingletonClass X] [MeasurableSpace Y]
     [IsFiniteMeasure μ]`.
-  - `jointEntropy_chain_rule` (`Common2026/Shannon/Han.lean:56`)
+  - `jointEntropy_chain_rule` (`InformationTheory/Shannon/Han.lean:56`)
     n 変数 chain rule 既存。`X_{< i}` 形 (`fun ω (j : Fin i.val) => Xs ⟨j.val, …⟩ ω`)。
-  - `condEntropy_subset_anti` (`Common2026/Shannon/HanD.lean:262`):
+  - `condEntropy_subset_anti` (`InformationTheory/Shannon/HanD.lean:262`):
     `T₁ ⊆ T₂ ⟹ condEntropy μ (Xs i) (fun ω (j : T₂) => Xs j.val ω)
       ≤ condEntropy μ (Xs i) (fun ω (j : T₁) => Xs j.val ω)`。
 - **shape 判断**:
@@ -103,14 +103,14 @@ theorem edgeBoundary_entropy_sharp {n : ℕ} {A : Finset (Fin n → Bool)}
 
 ## ファイル配置の判断
 
-**判断**: **候補 B (新規 `Common2026/Shannon/HypercubeEdgeBoundarySharp.lean` 並立 publish)** を採用。
+**判断**: **候補 B (新規 `InformationTheory/Shannon/HypercubeEdgeBoundarySharp.lean` 並立 publish)** を採用。
 
 理由:
 - B-2' (`HypercubeEdgeBoundary.lean`, 692 行) は **counting + LW + AM-GM** で完結、
   `uniformOn` / `condEntropy` / chain rule などの確率系 import を **持ち込んでいない**
-  (`import Common2026.Shannon.LoomisWhitney` のみ)。
+  (`import InformationTheory.Shannon.LoomisWhitney` のみ)。
 - B-2'' は `condEntropy` / `condEntropy_subset_anti` / `jointEntropy_chain_rule` を
-  使うため、`Common2026.Shannon.HanD` + `Common2026.Shannon.LoomisWhitney`
+  使うため、`InformationTheory.Shannon.HanD` + `InformationTheory.Shannon.LoomisWhitney`
   両方を import する必要がある。これを B-2' に追記すると **B-2' の依存表面が増えて
   上流 Mathlib PR 切り出し可能性が落ちる**。
 - B-5 / B-5' / B-8 / B-8' の前例に倣う (新 file 並立)。
@@ -123,10 +123,10 @@ theorem edgeBoundary_entropy_sharp {n : ℕ} {A : Finset (Fin n → Bool)}
 **新規 file の冒頭 import 案**:
 
 ```lean
-import Common2026.Shannon.HypercubeEdgeBoundary  -- B-2' counting identity 経由
-import Common2026.Shannon.HanD                    -- condEntropy_subset_anti
-import Common2026.Shannon.Han                     -- jointEntropy_chain_rule
-import Common2026.Shannon.LoomisWhitney           -- uniformOn + entropy_uniformOn_eq_log_card
+import InformationTheory.Shannon.HypercubeEdgeBoundary  -- B-2' counting identity 経由
+import InformationTheory.Shannon.HanD                    -- condEntropy_subset_anti
+import InformationTheory.Shannon.Han                     -- jointEntropy_chain_rule
+import InformationTheory.Shannon.LoomisWhitney           -- uniformOn + entropy_uniformOn_eq_log_card
                                                   -- (HanD 経由で transitively 取れる場合は省略)
 import Mathlib.Analysis.SpecialFunctions.Log.Base -- Real.logb 系
 ```
@@ -136,7 +136,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.Base -- Real.logb 系
 **must-verify before skeleton**:
 
 1. `InformationTheory.Shannon.entropy` full signature
-   (`Common2026/Shannon/Bridge.lean:43`、verbatim):
+   (`InformationTheory/Shannon/Bridge.lean:43`、verbatim):
    ```lean
    variable {Ω : Type*} [MeasurableSpace Ω]
    variable {X : Type*} [Fintype X] [DecidableEq X] [Nonempty X]
@@ -146,7 +146,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.Base -- Real.logb 系
    ```
 
 2. `InformationTheory.MeasureFano.condEntropy`
-   (`Common2026/Fano/Measure.lean:68`、verbatim):
+   (`InformationTheory/Fano/Measure.lean:68`、verbatim):
    ```lean
    variable {Ω : Type*} [MeasurableSpace Ω]
    variable {X : Type*} [Fintype X] [DecidableEq X] [Nonempty X]
@@ -158,7 +158,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.Base -- Real.logb 系
    ```
 
 3. `entropy_uniformOn_eq_log_card`
-   (`Common2026/Shannon/LoomisWhitney.lean:46`、verbatim):
+   (`InformationTheory/Shannon/LoomisWhitney.lean:46`、verbatim):
    ```lean
    theorem entropy_uniformOn_eq_log_card
        {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
@@ -167,7 +167,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.Base -- Real.logb 系
        entropy (uniformOn (A : Set β)) (id : β → β) = Real.log A.card
    ```
 
-4. `jointEntropy_chain_rule` (`Common2026/Shannon/Han.lean:56`、verbatim):
+4. `jointEntropy_chain_rule` (`InformationTheory/Shannon/Han.lean:56`、verbatim):
    ```lean
    variable {n : ℕ} {α : Type*}
      [Fintype α] [DecidableEq α] [Nonempty α]
@@ -183,7 +183,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.Base -- Real.logb 系
                  Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)
    ```
 
-5. `condEntropy_subset_anti` (`Common2026/Shannon/HanD.lean:262`、verbatim):
+5. `condEntropy_subset_anti` (`InformationTheory/Shannon/HanD.lean:262`、verbatim):
    ```lean
    theorem condEntropy_subset_anti
        (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -197,7 +197,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.Base -- Real.logb 系
 
 6. `Mathlib uniformOn` (`Mathlib.Probability.UniformOn`):
    - `uniformOn : Set α → Measure α` (本 PR 既存 import パス
-     `Common2026/Shannon/LoomisWhitney.lean:2`).
+     `InformationTheory/Shannon/LoomisWhitney.lean:2`).
    - `isProbabilityMeasure_uniformOn : (hf : s.Finite) → (h : s.Nonempty)
        → IsProbabilityMeasure (uniformOn s)`. (LW で使用済み)
    - `uniformOn_apply_finset` — Finset 形 で `(uniformOn ↑s) ↑t
@@ -206,7 +206,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.Base -- Real.logb 系
 7. `condDistrib` (`Mathlib.Probability.Kernel.CondDistrib`):
    - `condDistrib Xs Yo μ : Kernel Y X`、`StandardBorelSpace X` (X = Bool で satisfied).
    - `compProd_map_condDistrib : (μ.map (Xs, Yo)) = (μ.map Xs) ⊗ₘ condDistrib Yo Xs μ`
-     (`Common2026/Shannon/Entropy.lean:50` で使用済み)。
+     (`InformationTheory/Shannon/Entropy.lean:50` で使用済み)。
    - `condEntropy_coord_eq` の点別計算 (fibre Bern(1/2) or Dirac) のために,
      **`condDistrib (Xs i) X_{-i} μ_A y` の `Bool` 上の確率値** を
      `condDistrib_apply` (Mathlib `CondDistrib`) で `y`-fibre 上の積分形に展開する。
@@ -226,7 +226,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.Base -- Real.logb 系
 
 ## Phase A — uniformOn 確率測度上の skeleton statements 📋
 
-新規 `Common2026/Shannon/HypercubeEdgeBoundarySharp.lean` の **skeleton** (全て `:= by sorry`):
+新規 `InformationTheory/Shannon/HypercubeEdgeBoundarySharp.lean` の **skeleton** (全て `:= by sorry`):
 
 ```lean
 namespace InformationTheory.Shannon
@@ -372,10 +372,10 @@ theorem edgeBoundary_entropy_sharp {n : ℕ} {A : Finset (Fin n → Bool)}
 - seeds の言い値「~80–120 行」は **B-2' の counting identity を再利用済み**
   と前提しており妥当だが, fibre size の condDistrib 値計算 (Phase B) の
   Mathlib API 経路次第で +50 行の見込み。
-- **検証**: `lake env lean Common2026/Shannon/HypercubeEdgeBoundarySharp.lean`
+- **検証**: `lake env lean InformationTheory/Shannon/HypercubeEdgeBoundarySharp.lean`
   silent (0 sorry / 0 error / 0 warning).
-- `Common2026.lean` に
-  `import Common2026.Shannon.HypercubeEdgeBoundarySharp` 追記。
+- `InformationTheory.lean` に
+  `import InformationTheory.Shannon.HypercubeEdgeBoundarySharp` 追記。
 
 ## 判断ログ
 
@@ -387,7 +387,7 @@ theorem edgeBoundary_entropy_sharp {n : ℕ} {A : Finset (Fin n → Bool)}
    **statement は `Real.logb 2`** で publish。bridge は `Real.logb` 定義
    (`log / log 2`) で素朴に処理 (`Real.log_pos (1 < 2)` で除去可能).
 3. **condEntropy shape 選択**: 既存 `InformationTheory.MeasureFano.condEntropy`
-   (積分形, `Common2026/Fano/Measure.lean:68`) を採用。Mathlib に汎用 `condEntropy`
+   (積分形, `InformationTheory/Fano/Measure.lean:68`) を採用。Mathlib に汎用 `condEntropy`
    は無く, 本プロジェクトの def が唯一の selection。Kernel 形に書き換える motivation なし。
 4. **条件付け index reshape**: `Fin i.val ↪ univ.filter (· < i) ↪ univ.erase i ↪ {j // j ≠ i}`
    の 3 段 reshape を許容。各段で `MeasurableEquiv.piCongrLeft` +
@@ -412,11 +412,11 @@ theorem edgeBoundary_entropy_sharp {n : ℕ} {A : Finset (Fin n → Bool)}
     (μ_A.map X_{-i}) ⊗ₘ condDistrib (Xs i) X_{-i} μ_A` を取り、
     両辺の `({b} × {y})` mass を `Measure.compProd_apply_prod` で比較して
     `condDistrib y {b}` を **間接定義式** で取り出す (Phase A `entropy_pair_eq_entropy_add_condEntropy`,
-    `Common2026/Shannon/Entropy.lean:41` の `h_pair_real` パターン)。
+    `InformationTheory/Shannon/Entropy.lean:41` の `h_pair_real` パターン)。
 - **R2 (中)**: chain rule の summand `condEntropy μ (Xs i) (X_{< i})` と
   `condEntropy_subset_anti` の `condEntropy μ (Xs i) (X_{T₁ : Finset})` の
   reshape (`Fin i.val ≃ ↥(univ.filter (· < i))`) が HanD.lean
-  `condEntropy_chainSummand_bridge` (`Common2026/Shannon/HanD.lean:83`) の
+  `condEntropy_chainSummand_bridge` (`InformationTheory/Shannon/HanD.lean:83`) の
   逆向きで使えない場合。
   - **fallback**: HanD.lean の private lemma を public 化 (or 写経) +
     `{j // j ≠ i}` ↔ `↥(univ.erase i)` の equiv を新規 publish (B-2' Phase A の

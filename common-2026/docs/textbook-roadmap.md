@@ -5,7 +5,7 @@
 
 ## ゴール
 
-Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理から生成される教科書として publish。成果物 3 層 = (1) Verified library (`Common2026/`) + (2) Typed RV API (`H(X)` / `I(X;Y)` 等の書き味) + (3) markdown / LaTeX 原稿。
+Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理から生成される教科書として publish。成果物 3 層 = (1) Verified library (`InformationTheory/`) + (2) Typed RV API (`H(X)` / `I(X;Y)` 等の書き味) + (3) markdown / LaTeX 原稿。
 
 ## scope-out
 
@@ -69,8 +69,8 @@ Cover & Thomas (2nd ed.) **Ch.2–12, 15, 17** を Lean 形式化された定理
 - **Ch.9 ② Parallel Gaussian water-filling**: **完了 ✅ (2026-05-29)** — achiever + converse + headline すべて genuine、`parallel_gaussian_capacity_formula_minimal` sorryAx-free。最後の residual #5 joint log-density integrability を多変量 mixture density lift で genuine closure (3 者独立再裁定で wall→plan reclassify 後)。③ operational 符号化定理は scope-out (judgment #11)。**もはや scope 内 frontier ではない**
 - **Ch.15 Slepian-Wolf Full Rate Region**: **完了 ✅ (2026-05-30)** — Phase D/E (decomposition + 4 expectation bound) に加え Phase F (E.5 squeeze + F.3 headline assembly) を genuine closure。`slepian_wolf_full_rate_region_achievability` proof done、sorryAx-free。**もはや scope 内 frontier ではない** (旧「Phase E 確率上界収束のみ残」は誤り — 実際は headline assembly が未実装だった、2026-05-30 実コード確認で訂正)
 - **Ch.17 一般 EPI headline**: 唯一の残 frontier。**詳細状態 + 診断履歴は `docs/shannon/ch17-inequalities-status.md` に分離** (肥大化のため、2026-06-01)。要旨: 2026-06-01 に A-5 producer 層 4 種すべて genuine landing、残は A-5 配線 (tractable) + Stam-Blachman 最深壁 (score の condExp 表現、in-house closeable か Mathlib PR 待ちか未確定)。proof-done は未 (headline sorryAx 依存)。EPI 12 件 `@audit:ok` 降格・wall 集約 (2026-05-30) も同ファイル参照
-- **legacy migration は完了済 (frontier ではない)**: Common2026 に active な `@audit:suspect(`/`@audit:staged(`/`@audit:defer(` declaration タグは **0 件** (paren-pattern 確認、bareword ヒットは全て過去 migration の docstring 内文字列参照)。旧 roadmap「32 件」は stale claim
-- **未追跡 marker retro-tag (残)**: Ch.9 `IsTwoWDegreesOfFreedom` / Ch.11 `hoeffding_tradeoff_with_hypothesis` / Ch.15 judgment #3 circular 7 本 (Ch.5 `EqualizingPerm*` は Common2026 から削除済で対象外、Ch.17 `IsStamToEPIBridge` は 2026-05-30 sweep で処理済)
+- **legacy migration は完了済 (frontier ではない)**: InformationTheory に active な `@audit:suspect(`/`@audit:staged(`/`@audit:defer(` declaration タグは **0 件** (paren-pattern 確認、bareword ヒットは全て過去 migration の docstring 内文字列参照)。旧 roadmap「32 件」は stale claim
+- **未追跡 marker retro-tag (残)**: Ch.9 `IsTwoWDegreesOfFreedom` / Ch.11 `hoeffding_tradeoff_with_hypothesis` / Ch.15 judgment #3 circular 7 本 (Ch.5 `EqualizingPerm*` は InformationTheory から削除済で対象外、Ch.17 `IsStamToEPIBridge` は 2026-05-30 sweep で処理済)
 
 ## 教科書原稿 (層 3) / 次の一手
 

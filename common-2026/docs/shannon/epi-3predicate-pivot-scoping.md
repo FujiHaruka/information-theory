@@ -82,61 +82,61 @@ Date: 2026-05-30
 
 ## 2. import グラフ + cycle 判定 (最重要)
 
-### 各 file の import 行 (verbatim、`Common2026.*` のみ抜粋 + EPIConvDensity)
+### 各 file の import 行 (verbatim、`InformationTheory.*` のみ抜粋 + EPIConvDensity)
 
 ```
 EPIConvDensity.lean:
-  import Common2026.Shannon.FisherInfoV2          ← Common2026 依存はこれ 1 本のみ
+  import InformationTheory.Shannon.FisherInfoV2          ← InformationTheory 依存はこれ 1 本のみ
   import Mathlib.Analysis.Calculus.ParametricIntegral
   import Mathlib.Analysis.Calculus.LogDeriv
 
 EntropyPowerInequality.lean:
-  import Common2026.Meta.EntryPoint
-  import Common2026.Shannon.DifferentialEntropy
-  import Common2026.Shannon.FisherInfo
-  import Common2026.Shannon.FisherInfoV2
+  import InformationTheory.Meta.EntryPoint
+  import InformationTheory.Shannon.DifferentialEntropy
+  import InformationTheory.Shannon.FisherInfo
+  import InformationTheory.Shannon.FisherInfoV2
   (+ Mathlib)
   ※ FisherInfoV2DeBruijn を import しない / EPIConvDensity を import しない
 
 EPIStamInequalityBody.lean:
-  import Common2026.Shannon.EntropyPowerInequality
-  import Common2026.Shannon.EPIPlumbing
-  import Common2026.Shannon.EPIStamDischarge
-  import Common2026.Shannon.EPIL3Integration
-  import Common2026.Shannon.FisherInfoV2
-  import Common2026.Shannon.FisherInfoV2DeBruijn   ← 既に DeBruijn を import 済
-  import Common2026.Shannon.FisherInfoGaussian
-  import Common2026.Shannon.DifferentialEntropy
+  import InformationTheory.Shannon.EntropyPowerInequality
+  import InformationTheory.Shannon.EPIPlumbing
+  import InformationTheory.Shannon.EPIStamDischarge
+  import InformationTheory.Shannon.EPIL3Integration
+  import InformationTheory.Shannon.FisherInfoV2
+  import InformationTheory.Shannon.FisherInfoV2DeBruijn   ← 既に DeBruijn を import 済
+  import InformationTheory.Shannon.FisherInfoGaussian
+  import InformationTheory.Shannon.DifferentialEntropy
   (+ Mathlib)
   ※ EPIConvDensity を import しない
 
 EPIStamStep12Body.lean:
-  import Common2026.Shannon.EPIStamDischarge
-  import Common2026.Shannon.EPIStamInequalityBody   ← InequalityBody を import 済 (述語の依存元)
-  import Common2026.Shannon.FisherInfoV2
-  import Common2026.Shannon.FisherInfoV2DeBruijn
+  import InformationTheory.Shannon.EPIStamDischarge
+  import InformationTheory.Shannon.EPIStamInequalityBody   ← InequalityBody を import 済 (述語の依存元)
+  import InformationTheory.Shannon.FisherInfoV2
+  import InformationTheory.Shannon.FisherInfoV2DeBruijn
   (+ Mathlib Tactic)
   ※ EPIConvDensity を import しない
 
 FisherInfoV2DeBruijn.lean:
-  import Common2026.Shannon.FisherInfoV2          ← Common2026 依存はこれ 1 本のみ
+  import InformationTheory.Shannon.FisherInfoV2          ← InformationTheory 依存はこれ 1 本のみ
   (+ Mathlib)
 ```
 
 ### EPIConvDensity の依存方向 (cycle 判定の核心)
 
-- **EPIConvDensity は `Common2026.Shannon.FisherInfoV2` のみ** に依存 (+ Mathlib)。3 述語 file・EntropyPowerInequality・FisherInfoV2DeBruijn のいずれも **import しない**。葉に近い module。
-- `Common2026.lean` で EPIConvDensity は **最後尾 :206** (`import Common2026.Shannon.EPIScoreCrossTermOrth` の次)。root aggregator 順は依存を表さないが、最後尾 = 「誰も EPIConvDensity を import していない」傍証。
+- **EPIConvDensity は `InformationTheory.Shannon.FisherInfoV2` のみ** に依存 (+ Mathlib)。3 述語 file・EntropyPowerInequality・FisherInfoV2DeBruijn のいずれも **import しない**。葉に近い module。
+- `InformationTheory.lean` で EPIConvDensity は **最後尾 :206** (`import InformationTheory.Shannon.EPIScoreCrossTermOrth` の次)。root aggregator 順は依存を表さないが、最後尾 = 「誰も EPIConvDensity を import していない」傍証。
 
 ### cycle 判定 (3 述語ごと)
 
 | pivot 先 file | 追加 import | cycle? | 根拠 |
 |---|---|---|---|
-| `EntropyPowerInequality` | `import Common2026.Shannon.EPIConvDensity` | **CYCLE!** | **EPIConvDensity → FisherInfoV2、EntropyPowerInequality → FisherInfoV2** は OK だが、**EPIConvDensity を EntropyPowerInequality が import すると、EPIConvDensity が EntropyPowerInequality を (推移的に) import し返さないか?** → EPIConvDensity の依存は FisherInfoV2 のみで EntropyPowerInequality を引かない。よって **実は cycle にならない**。ただし下記「真の cycle 源」を参照。 |
+| `EntropyPowerInequality` | `import InformationTheory.Shannon.EPIConvDensity` | **CYCLE!** | **EPIConvDensity → FisherInfoV2、EntropyPowerInequality → FisherInfoV2** は OK だが、**EPIConvDensity を EntropyPowerInequality が import すると、EPIConvDensity が EntropyPowerInequality を (推移的に) import し返さないか?** → EPIConvDensity の依存は FisherInfoV2 のみで EntropyPowerInequality を引かない。よって **実は cycle にならない**。ただし下記「真の cycle 源」を参照。 |
 | `EPIStamInequalityBody` | `import …EPIConvDensity` | **NO cycle** | InequalityBody → (EntropyPowerInequality, FisherInfoV2DeBruijn, …)。EPIConvDensity → FisherInfoV2 のみ。InequalityBody を EPIConvDensity が引かない。一方向。 |
 | `EPIStamStep12Body` | `import …EPIConvDensity` | **NO cycle** | Step12Body → InequalityBody → …。EPIConvDensity は誰も引き返さない。 |
 
-**3 述語とも `import Common2026.Shannon.EPIConvDensity` 追加で cycle は生じない。** EPIConvDensity は FisherInfoV2 のみに依存する葉 module で、EPI 系を一切 import しない。
+**3 述語とも `import InformationTheory.Shannon.EPIConvDensity` 追加で cycle は生じない。** EPIConvDensity は FisherInfoV2 のみに依存する葉 module で、EPI 系を一切 import しない。
 
 ### docstring の cycle 注記 — verbatim + 実体検証
 
@@ -153,7 +153,7 @@ FisherInfoV2DeBruijn.lean:
 - **EPIConvDensity も同じ理由で安全**: EPIConvDensity → FisherInfoV2 のみ。EntropyPowerInequality が EPIConvDensity を import しても、EPIConvDensity は EntropyPowerInequality を引き返さない。**FisherInfoV2DeBruijn の cycle 警戒線とは独立**。
 
 ### cycle 回避策の要否
-**不要**。3 述語とも `import Common2026.Shannon.EPIConvDensity` を追加して `convDensityAdd` を直接参照でき、cycle は生じない。`IsStamInequalityResidual` は density-keyed (`fisherInfoOfDensityReal fXY`) なので、convolution 制約 `fXY =ᵐ[volume] convDensityAdd fX fY` は `fisherInfoOfDensityReal (convDensityAdd fX fY)` と整合し、FisherInfoV2DeBruijn を経由しないので注記の制約にも抵触しない。
+**不要**。3 述語とも `import InformationTheory.Shannon.EPIConvDensity` を追加して `convDensityAdd` を直接参照でき、cycle は生じない。`IsStamInequalityResidual` は density-keyed (`fisherInfoOfDensityReal fXY`) なので、convolution 制約 `fXY =ᵐ[volume] convDensityAdd fX fY` は `fisherInfoOfDensityReal (convDensityAdd fX fY)` と整合し、FisherInfoV2DeBruijn を経由しないので注記の制約にも抵触しない。
 
 ---
 
@@ -195,7 +195,7 @@ Stam の数学的内容 = `J(p_X ⋆ p_Y) ≤ harmonic mean`、すなわち opti
 ## サマリ — pivot 実装順序の推奨 + cycle リスク + 撤退ライン
 
 ### 実装順序 (推奨、producer→consumer 一方向で cycle 無し)
-1. **`EPIStamInequalityBody.lean`** (`import Common2026.Shannon.EPIConvDensity` 追加): `IsStamCauchySchwarzOptimal` (:269) に `(hconv : fXY =ᵐ[volume] EPIConvDensity.convDensityAdd fX fY)` + density regularity を注入。producer `stam_step2_density_wall` (:359) は `sorry` のまま (false-statement → genuine wall に再分類)。consumer (`stam_inequality_via_predicate_optimal` :387 / `isStamInequalityHyp_via_body` :410 / `_of_optimal` :463 / `_of_lambda_optimal` :503 / `_to_pipeline` :532 / `entropy_power_inequality_via_body` :574) は `intro`/引数に `hconv` 1 つ追加して透過。
+1. **`EPIStamInequalityBody.lean`** (`import InformationTheory.Shannon.EPIConvDensity` 追加): `IsStamCauchySchwarzOptimal` (:269) に `(hconv : fXY =ᵐ[volume] EPIConvDensity.convDensityAdd fX fY)` + density regularity を注入。producer `stam_step2_density_wall` (:359) は `sorry` のまま (false-statement → genuine wall に再分類)。consumer (`stam_inequality_via_predicate_optimal` :387 / `isStamInequalityHyp_via_body` :410 / `_of_optimal` :463 / `_of_lambda_optimal` :503 / `_to_pipeline` :532 / `entropy_power_inequality_via_body` :574) は `intro`/引数に `hconv` 1 つ追加して透過。
 2. **`EPIStamStep12Body.lean`** (同 import): `IsStamCondExpCSHyp` (:200) に同制約注入。consumer 6 件 (:215/:227/:234/:257/:278/:299/:313) は `hconv` 透過。`stamCauchySchwarzOptimal_of_condExpCSHyp` (:257) が CondExp→Optimal を繋ぐので両述語の制約が一致している必要あり (同一 `hconv` shape)。
 3. **`EntropyPowerInequality.lean`** (同 import): `IsStamInequalityResidual` (:190) に `fXY =ᵐ[volume] convDensityAdd fX fY` 注入 (density-keyed なので `fisherInfoOfDensityReal (convDensityAdd …)` で整合)。consumer (`IsStamToEPIBridge` :208 / `entropy_power_inequality` :261 / `_exp_form` :278 / §D :393 / `EPIPlumbing` :192,:267 / `EPIStamToBridge` :1109) は `hconv` 透過。
 4. **transitive consumer** (`EPIStamStep3Body.lean:121` `isStamInequalityHyp_via_step3`、`EPIStamDeBruijnConclusion.lean:169/203`): wall を内部呼出すだけなので、wall signature に `hconv` precondition が増えれば呼出側で供給。
@@ -203,7 +203,7 @@ Stam の数学的内容 = `J(p_X ⋆ p_Y) ≤ harmonic mean`、すなわち opti
 `stam_convex_fisher_bound_gaussian` (`StamGaussianBound.lean:77`) は **別系**、ripple 不要 (3 述語非参照)。
 
 ### cycle リスク
-**ゼロ。** EPIConvDensity は `FisherInfoV2` のみに依存する葉 module で、EPI 系 file を一切 import しない (root :206 最後尾)。3 述語 file への `import Common2026.Shannon.EPIConvDensity` は純粋に additive。docstring `:187-189` の cycle 警戒は **FisherInfoV2DeBruijn** 経由のものでEPIConvDensity とは独立。olean refresh のみ注意 (CLAUDE.md「After upstream edits」)。
+**ゼロ。** EPIConvDensity は `FisherInfoV2` のみに依存する葉 module で、EPI 系 file を一切 import しない (root :206 最後尾)。3 述語 file への `import InformationTheory.Shannon.EPIConvDensity` は純粋に additive。docstring `:187-189` の cycle 警戒は **FisherInfoV2DeBruijn** 経由のものでEPIConvDensity とは独立。olean refresh のみ注意 (CLAUDE.md「After upstream edits」)。
 
 ### 撤退ライン L-EPIW-3pre-α 該当性
 **該当しない (GO 方向)** — cycle が撤退条件なら本 pivot は安全。注意点:

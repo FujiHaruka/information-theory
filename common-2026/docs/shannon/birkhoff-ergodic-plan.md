@@ -1,10 +1,10 @@
 # Birkhoff 個別エルゴード定理 a.s. 自前実装計画 (E-8'' 経路 A)
 
 > 実態整合 (2026-05-20): DONE-UNCOND — headline `birkhoff_ergodic_ae` 完成済
-> (`Common2026/Shannon/BirkhoffErgodic.lean:1031`、0 sorry)。仮定は標準 typeclass のみ
+> (`InformationTheory/Shannon/BirkhoffErgodic.lean:1031`、0 sorry)。仮定は標準 typeclass のみ
 > (`[IsProbabilityMeasure μ]` + `MeasurePreserving T μ μ` + `Ergodic T μ` +
 > `Integrable f μ`)、pass-through なし。SMB 仮説なし形昇格も達成: 無条件
-> `shannon_mcmillan_breiman` は `Common2026/Shannon/SMBAlgoetCover.lean:2840`。
+> `shannon_mcmillan_breiman` は `InformationTheory/Shannon/SMBAlgoetCover.lean:2840`。
 >
 > **Status**: 2026-05-16 起草。
 > Phase C 撤退ログ (`shannon-mcmillan-breiman-phase-c-plan.md` §11) を受け、**経路 A (backward martingale 自前)** を採用。SMB 主定理仮説なし形への昇格を最終目標とする。
@@ -70,7 +70,7 @@ Petersen *Ergodic Theory* (2.2) Theorem: Birkhoff average `g_n := (1/n) S_n` 自
 
 ### Phase α: Backward filtration + 基本 API (~80 行)
 
-新規 file: `Common2026/Shannon/BackwardFiltration.lean`
+新規 file: `InformationTheory/Shannon/BackwardFiltration.lean`
 
 ```lean
 def backwardFiltration (T : Ω → Ω) (hT : Measurable T) : Filtration ℕᵒᵈ m₀ where
@@ -86,7 +86,7 @@ def tailSigma (T : Ω → Ω) (hT : Measurable T) : MeasurableSpace Ω :=
 
 ### Phase β: Backward martingale convergence (~250-300 行)
 
-新規 file: `Common2026/Shannon/BackwardMartingale.lean`
+新規 file: `InformationTheory/Shannon/BackwardMartingale.lean`
 
 **判断**: `ℕᵒᵈ` filtration 経路を採用 (Mathlib `Martingale` 定義を `ι := ℕᵒᵈ` で借用、~50 行節約)。
 
@@ -107,7 +107,7 @@ Mathlib gap: なし (全部 Mathlib 内補題で組める)。実装難易度: **
 
 ### Phase γ: Birkhoff 主定理 + ergodic discharge (~150-200 行)
 
-新規 file: `Common2026/Shannon/BirkhoffErgodic.lean`
+新規 file: `InformationTheory/Shannon/BirkhoffErgodic.lean`
 
 - **γ.1** Birkhoff average が backward martingale (~70 行): Petersen (2.2)。
   - 核心: `(f ∘ T^[i])` の `ℋ_n` (n≥i) 条件付期待値 → Hopf rearrangement で `g_n` に揃う。
@@ -152,7 +152,7 @@ Mathlib gap: `condExp_comp_T_lemma` (新規 PR 候補)。
 ## 7. 実装 file 構成
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   Stationary.lean                  ← 既存 119 行
   EntropyRate.lean                 ← 既存 498 行
   ShannonMcMillanBreiman.lean      ← 既存 179 行 (sandwich 形)
@@ -191,7 +191,7 @@ Common2026/Shannon/
 ## 10. 参考
 
 - 親 plan: `shannon-mcmillan-breiman-phase-c-plan.md` §11 撤退ログ
-- 既存 SMB sandwich: `Common2026/Shannon/ShannonMcMillanBreiman.lean:85`
+- 既存 SMB sandwich: `InformationTheory/Shannon/ShannonMcMillanBreiman.lean:85`
 - Mathlib forward convergence: `Mathlib/Probability/Martingale/Convergence.lean:209`
 - Mathlib forward upcrossing: `Mathlib/Probability/Martingale/Upcrossing.lean:617-800`
 - Ergodic discharge: `Mathlib/Dynamics/Ergodic/Function.lean:103`

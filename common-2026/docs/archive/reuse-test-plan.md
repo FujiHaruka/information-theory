@@ -82,7 +82,7 @@ theorem channel_coding_converse_iid
 
 ### Phase 2 — Lean 化試行 (~1〜2 日)
 
-- ターゲット theorem 1 本を `Common2026/Shannon/ChannelCodingConverse.lean` (新規) に skeleton で
+- ターゲット theorem 1 本を `InformationTheory/Shannon/ChannelCodingConverse.lean` (新規) に skeleton で
   書く。
 - `:= by sorry` 状態でまず compile 通過を確認 (signature 妥当性)。
 - 各証明 step を埋める。**新規 lemma ゼロ**が制約。
@@ -114,7 +114,7 @@ theorem channel_coding_converse_iid
 ## 終了条件 (Definition of Done)
 
 - [ ] `docs/reuse-test-2026-05.md` の §1〜§3 が埋まっている
-- [ ] `Common2026/Shannon/ChannelCodingConverse.lean` が存在し、`lake env lean` がパス
+- [ ] `InformationTheory/Shannon/ChannelCodingConverse.lean` が存在し、`lake env lean` がパス
       (sorry 残り 0 または 計上された bridge 候補のみ)
 - [ ] §3 で次のうちいずれかが宣言されている:
   - "合格: bridge 不要、既存 API のみで n-channel converse まで到達"

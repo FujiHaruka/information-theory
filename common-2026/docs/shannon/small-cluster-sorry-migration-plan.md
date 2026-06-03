@@ -104,7 +104,7 @@
   規約違反 (tier 4 defect-寄り)。後継 `isLZ78PerPathParsingFactorization_of_pos`
   (`StationaryKernel.lean:257`) が a.s. regularity 仮説のみから genuine 構成済の
   ため、`factor_of_complete_of_pos` は **closed-by-successor 路線で retract-candidate
-  化** (Phase 2.5)。consumer 0 件 (`rg -n 'factor_of_complete_of_pos\b' Common2026/`
+  化** (Phase 2.5)。consumer 0 件 (`rg -n 'factor_of_complete_of_pos\b' InformationTheory/`
   = 1 hit = 自身 definition のみ)。
 
 実 declaration suspect = **12 件**、内訳 P pattern 10 + closed-by-successor 2 件。
@@ -128,7 +128,7 @@
 
 ### Cross-family 検出 (runbook S1/S2/S3 三段階判定)
 
-各 file の `import` 確認 (`rg -n '^import Common2026' <file>`) + consumer 検出
+各 file の `import` 確認 (`rg -n '^import InformationTheory' <file>`) + consumer 検出
 (`rg -nl '<file の export>'`) の verbatim 結果:
 
 | file | import 関係 (in-tree consumer) | Stage | 判定 |
@@ -151,7 +151,7 @@ scope 内で完結可能。Round 3 sweep (EPI/Stam / AWGN) との衝突は **EPI
 
 本 plan の DoD は CLAUDE.md「Definition of Done — 2 段階」の **type-check done**:
 
-- 各 file `lake env lean Common2026/Shannon/<file>.lean` が 0 errors、
+- 各 file `lake env lean InformationTheory/Shannon/<file>.lean` が 0 errors、
 - 各新規 `sorry` に `@residual(<class>:<slug>)` タグ、
 - 各 Phase 完了時に `honesty-auditor` を起動して classification + signature
   honesty を独立検証。
@@ -212,7 +212,7 @@ pilot 7 family と同様、出現する subpattern を分類:
 
 - **パターン closed-by-successor (= retract-candidate via in-file successor)**:
   declaration の後継 unconditional 形が **同 file 内に既に存在**し、対象
-  declaration の consumer 0 件 (`rg -n '<decl>\b' Common2026/` で
+  declaration の consumer 0 件 (`rg -n '<decl>\b' InformationTheory/` で
   self-definition line のみ hit)。
   - 移行: `@audit:suspect` 削除 + `@audit:retract-candidate(load-bearing-predicate)`
     付与 + docstring に「後継 `<successor decl name>` (line N)」を明示。
@@ -258,14 +258,14 @@ CLAUDE.md「検証の誠実性」inline policy + runbook Pattern H に従い、p
 段階で著者明示済 HONESTY ALERT / FALSE predicate を集計:
 
 ```bash
-rg -n '⚠|HONESTY ALERT|FALSE' Common2026/Shannon/MultivariateDiffEntropy.lean \
-  Common2026/Shannon/WhittakerShannonFull.lean \
-  Common2026/Shannon/ContChannelMIDecomp.lean \
-  Common2026/Shannon/EPIConvolutionDensity.lean \
-  Common2026/Shannon/StationaryKernel.lean \
-  Common2026/Shannon/SeparationTheorem.lean \
-  Common2026/Shannon/BirkhoffErgodic.lean \
-  Common2026/Shannon/ChannelCodingConverseGeneralComplete.lean
+rg -n '⚠|HONESTY ALERT|FALSE' InformationTheory/Shannon/MultivariateDiffEntropy.lean \
+  InformationTheory/Shannon/WhittakerShannonFull.lean \
+  InformationTheory/Shannon/ContChannelMIDecomp.lean \
+  InformationTheory/Shannon/EPIConvolutionDensity.lean \
+  InformationTheory/Shannon/StationaryKernel.lean \
+  InformationTheory/Shannon/SeparationTheorem.lean \
+  InformationTheory/Shannon/BirkhoffErgodic.lean \
+  InformationTheory/Shannon/ChannelCodingConverseGeneralComplete.lean
 ```
 
 - `StationaryKernel.lean:130-140` の "false equality `boundary c = n`" /
@@ -301,7 +301,7 @@ tier 5 defect 該当 = 0 件、tier 4 legacy = 12 件 + 🟢ʰ prose 2 件 + 空
   行を実コード Read)。
 - [x] パターン分類 (P / closed-by-successor / V / C)。該当: P=10、closed-by-successor=2、
   V=0、C=0。
-- [x] cross-family 依存 確認 (`rg -n '^import Common2026' <file>` + consumer
+- [x] cross-family 依存 確認 (`rg -n '^import InformationTheory' <file>` + consumer
   検出 `rg -nl '<export>'`)。**S3 entanglement = 0 件、S1=4 / S2=2 /
   closed-by-successor=2**。
 - [x] 既存 sorry word-boundary 計数 `0` 件全 file 確定 (Pilot Pattern D 適用済)。
@@ -346,7 +346,7 @@ tier 5 defect 該当 = 0 件、tier 4 legacy = 12 件 + 🟢ʰ prose 2 件 + 空
 
 ### Phase 2.1 — MultivariateDiffEntropy (2 件、`multivariate-diffentropy-subadditivity-plan`) 📋
 
-対象 declarations (verbatim 確認、`Common2026/Shannon/MultivariateDiffEntropy.lean`):
+対象 declarations (verbatim 確認、`InformationTheory/Shannon/MultivariateDiffEntropy.lean`):
 
 | line | decl 名 | suspect の核 | パターン | 移行後 |
 |---|---|---|---|---|
@@ -369,7 +369,7 @@ tier 5 defect 該当 = 0 件、tier 4 legacy = 12 件 + 🟢ʰ prose 2 件 + 空
   Phase B "撤退条件" 記述。tag そのものではないので migration 対象外。ただし
   該当散文が "the residual discharge target" と書く部分は事実上維持 (本 plan
   で sorry 化することで discharge target の意味は変わらない)。
-- [ ] **2.1.4** `lake build Common2026.Shannon.MultivariateDiffEntropy` で olean
+- [ ] **2.1.4** `lake build InformationTheory.Shannon.MultivariateDiffEntropy` で olean
   refresh + dependent (`ParallelGaussianPerCoord` / `ParallelGaussianPerCoordRegularity`
   / `ContChannelMIDecomp` / `AWGNMIDecompBody` の caller) 再 verify (Pilot
   Pattern A)。S2 caller の type drift は Phase 2.x ripple で散文化対応。
@@ -378,13 +378,13 @@ tier 5 defect 該当 = 0 件、tier 4 legacy = 12 件 + 🟢ʰ prose 2 件 + 空
 - `MultivariateDiffEntropy.lean` で `@audit:suspect` declaration tag 0 件 (prose
   mention 2 件は維持)、`@residual(plan:multivariate-diffentropy-subadditivity-plan)`
   2 件、新規 sorry 2 件、
-- `lake env lean Common2026/Shannon/MultivariateDiffEntropy.lean` 0 errors。
+- `lake env lean InformationTheory/Shannon/MultivariateDiffEntropy.lean` 0 errors。
 
 **proof-log**: no (mechanical sorry 化、prose mention 維持の判断記録のみ判断ログ append)。
 
 ### Phase 2.2 — WhittakerShannonFull (2 件、`whittaker-shannon-partial-moonshot-plan`) 📋
 
-対象 declarations (verbatim 確認、`Common2026/Shannon/WhittakerShannonFull.lean`):
+対象 declarations (verbatim 確認、`InformationTheory/Shannon/WhittakerShannonFull.lean`):
 
 | line | decl 名 | suspect の核 | パターン | 移行後 |
 |---|---|---|---|---|
@@ -400,19 +400,19 @@ tier 5 defect 該当 = 0 件、tier 4 legacy = 12 件 + 🟢ʰ prose 2 件 + 空
     削除して `:= by sorry` + `@residual(plan:whittaker-shannon-partial-moonshot-plan)`。
 - [ ] **2.2.2** `shannon_hartley_via_full_bits` (line 394):
   - 同様、body `:= by sorry` + `@residual(plan:whittaker-shannon-partial-moonshot-plan)`。
-- [ ] **2.2.3** `lake build Common2026.Shannon.WhittakerShannonFull` で olean
+- [ ] **2.2.3** `lake build InformationTheory.Shannon.WhittakerShannonFull` で olean
   refresh + dependent (`WhittakerShannonPartial`) 再 verify (S1、影響範囲小)。
 
 **Phase 2.2 DoD**:
 - 2 件で `@audit:suspect` 0 件、`@residual(plan:whittaker-shannon-partial-moonshot-plan)`
   2 件、新規 sorry 2 件、
-- `lake env lean Common2026/Shannon/WhittakerShannonFull.lean` 0 errors。
+- `lake env lean InformationTheory/Shannon/WhittakerShannonFull.lean` 0 errors。
 
 **proof-log**: no (mechanical sorry 化)。
 
 ### Phase 2.3 — ContChannelMIDecomp (2 件、`awgn-mi-decomp-plan`) 📋
 
-対象 declarations (verbatim 確認、`Common2026/Shannon/ContChannelMIDecomp.lean`):
+対象 declarations (verbatim 確認、`InformationTheory/Shannon/ContChannelMIDecomp.lean`):
 
 | line | decl 名 | suspect の核 | パターン | 移行後 |
 |---|---|---|---|---|
@@ -436,7 +436,7 @@ tier 5 defect 該当 = 0 件、tier 4 legacy = 12 件 + 🟢ʰ prose 2 件 + 空
   「genuine 散文」("honest" / "load-bearing" を散文表現) に書換 (`audit-tags.md`
   Deprecated 表「散文 🟢ʰ → @audit:suspect 相当の移行レシピ」を本 plan で
   sorry-based 化済の散文に書換)。
-- [ ] **2.3.4** `lake build Common2026.Shannon.ContChannelMIDecomp` で olean
+- [ ] **2.3.4** `lake build InformationTheory.Shannon.ContChannelMIDecomp` で olean
   refresh + dependent (`AWGNMIDecompBody` / `ParallelGaussianPerCoord` /
   `ParallelGaussianPerCoordRegularity` / `MultivariateDiffEntropy`) 再 verify。
   S2 caller の type drift は Phase 2.x ripple で散文化対応。
@@ -444,14 +444,14 @@ tier 5 defect 該当 = 0 件、tier 4 legacy = 12 件 + 🟢ʰ prose 2 件 + 空
 **Phase 2.3 DoD**:
 - `ContChannelMIDecomp.lean` で `@audit:suspect` 0 件、🟢ʰ prose 0 件 (incidental
   migration)、`@residual(plan:awgn-mi-decomp-plan)` 2 件、新規 sorry 2 件、
-- `lake env lean Common2026/Shannon/ContChannelMIDecomp.lean` 0 errors。
+- `lake env lean InformationTheory/Shannon/ContChannelMIDecomp.lean` 0 errors。
 
 **proof-log**: yes (🟢ʰ prose incidental migration の判断記録 + 将来 AWGN
 sweep が re-touch する場合の方針を proof-log に明示)。
 
 ### Phase 2.4 — EPIConvolutionDensity (1 件、`epi-convolution-density-plan`) 📋
 
-対象 declaration (verbatim 確認、`Common2026/Shannon/EPIConvolutionDensity.lean`):
+対象 declaration (verbatim 確認、`InformationTheory/Shannon/EPIConvolutionDensity.lean`):
 
 | line | decl 名 | suspect の核 | パターン | 移行後 |
 |---|---|---|---|---|
@@ -462,7 +462,7 @@ sweep が re-touch する場合の方針を proof-log に明示)。
     `{f g : ℝ → ℝ} (z : ℝ)` (parameter)。
   - body: `rw [convDensityReal_def]; exact h_pos` を削除、`:= by sorry` +
     `@residual(plan:epi-convolution-density-plan)`。
-- [ ] **2.4.2** `lake env lean Common2026/Shannon/EPIConvolutionDensity.lean` 0
+- [ ] **2.4.2** `lake env lean InformationTheory/Shannon/EPIConvolutionDensity.lean` 0
   errors 確認。S1 (consumer = self のみ) のため dependent 再 verify 不要。
 - [ ] **2.4.3** **EPI/Stam cluster との独立性確認** (planner 段階で済、再
   確認用):
@@ -471,22 +471,22 @@ sweep が re-touch する場合の方針を proof-log に明示)。
     `EPIPlumbing` / `EPIStamToBridge` / `EPIStamDeBruijnConclusion` /
     `EPIStamDischarge`、`wall:stam` 集約 family) とは namespace + import で
     独立。
-  - `rg -n 'EPIConvolutionDensity' Common2026/Shannon/EPIStam*.lean
-    Common2026/Shannon/EPIL3Integration.lean Common2026/Shannon/EPIPlumbing.lean
-    Common2026/Shannon/EPIStamToBridge.lean Common2026/Shannon/EPIStamDeBruijnConclusion.lean
-    Common2026/Shannon/EPIStamDischarge.lean` で 0 hit 確認 (planner 段階確認済)。
+  - `rg -n 'EPIConvolutionDensity' InformationTheory/Shannon/EPIStam*.lean
+    InformationTheory/Shannon/EPIL3Integration.lean InformationTheory/Shannon/EPIPlumbing.lean
+    InformationTheory/Shannon/EPIStamToBridge.lean InformationTheory/Shannon/EPIStamDeBruijnConclusion.lean
+    InformationTheory/Shannon/EPIStamDischarge.lean` で 0 hit 確認 (planner 段階確認済)。
   - 本 plan scope 内で sweep 完結、Round 3 EPI/Stam sweep に escalate 不要。
 
 **Phase 2.4 DoD**:
 - `EPIConvolutionDensity.lean` で `@audit:suspect` 0 件、`@residual(plan:epi-convolution-density-plan)`
   1 件、新規 sorry 1 件、
-- `lake env lean Common2026/Shannon/EPIConvolutionDensity.lean` 0 errors。
+- `lake env lean InformationTheory/Shannon/EPIConvolutionDensity.lean` 0 errors。
 
 **proof-log**: no (mechanical sorry 化、EPI/Stam 独立性は本 plan docstring 明示済)。
 
 ### Phase 2.5 — StationaryKernel (1 件、closed-by-successor) 📋
 
-対象 declaration (verbatim 確認、`Common2026/Shannon/StationaryKernel.lean`):
+対象 declaration (verbatim 確認、`InformationTheory/Shannon/StationaryKernel.lean`):
 
 | line | decl 名 | suspect の核 | パターン | 移行後 |
 |---|---|---|---|---|
@@ -504,19 +504,19 @@ sweep が re-touch する場合の方針を proof-log に明示)。
   - body **改変なし** (constructive proof は維持、closed-by-successor 路線の
     bookkeeping のみ)、sorry 化なし。
 - [ ] **2.5.2** consumer 0 件の verbatim 再確認: `rg -n 'factor_of_complete_of_pos\b'
-  Common2026/` で self-definition 1 hit のみ。
+  InformationTheory/` で self-definition 1 hit のみ。
 
 **Phase 2.5 DoD**:
 - `StationaryKernel.lean` で `@audit:suspect` 0 件 (空 slug 含む)、`@audit:retract-candidate(load-bearing-predicate)`
   1 件、新規 sorry **0 件** (closed-by-successor 路線)、
-- `lake env lean Common2026/Shannon/StationaryKernel.lean` 0 errors。
+- `lake env lean InformationTheory/Shannon/StationaryKernel.lean` 0 errors。
 
 **proof-log**: yes (closed-by-successor 路線の判断記録 + 空 slug `@audit:suspect()`
 の slug 規約違反扱いの記録 + LZ78 cluster との関係明示)。
 
 ### Phase 2.6 — SeparationTheorem (1 件、`separation-theorem-moonshot-plan`) 📋
 
-対象 declaration (verbatim 確認、`Common2026/Shannon/SeparationTheorem.lean`):
+対象 declaration (verbatim 確認、`InformationTheory/Shannon/SeparationTheorem.lean`):
 
 | line | decl 名 | suspect の核 | パターン | 移行後 |
 |---|---|---|---|---|
@@ -531,19 +531,19 @@ sweep が re-touch する場合の方針を proof-log に明示)。
   - body: 既存の Step 1 (sourceError_tendsto_zero_of_composed) + Step 2
     (source_coding_converse) + Step 3 (liminf inequality via h_le) + 後続 sandwich
     削除、`:= by sorry` + `@residual(plan:separation-theorem-moonshot-plan)`。
-- [ ] **2.6.2** `lake build Common2026.Shannon.SeparationTheorem` で olean
+- [ ] **2.6.2** `lake build InformationTheory.Shannon.SeparationTheorem` で olean
   refresh。S1 (consumer = self) のため dependent 再 verify 不要。
 
 **Phase 2.6 DoD**:
 - `SeparationTheorem.lean` で `@audit:suspect` 0 件、`@residual(plan:separation-theorem-moonshot-plan)`
   1 件、新規 sorry 1 件、
-- `lake env lean Common2026/Shannon/SeparationTheorem.lean` 0 errors。
+- `lake env lean InformationTheory/Shannon/SeparationTheorem.lean` 0 errors。
 
 **proof-log**: no (mechanical sorry 化)。
 
 ### Phase 2.7 — BirkhoffErgodic (1 件、closed-by-successor) 📋
 
-対象 declaration (verbatim 確認、`Common2026/Shannon/BirkhoffErgodic.lean`):
+対象 declaration (verbatim 確認、`InformationTheory/Shannon/BirkhoffErgodic.lean`):
 
 | line | decl 名 | suspect の核 | パターン | 移行後 |
 |---|---|---|---|---|
@@ -555,17 +555,17 @@ sweep が re-touch する場合の方針を proof-log に明示)。
     付与 + 「Phase 2.7 retract-candidate: 後継 unconditional 版 `birkhoff_ergodic_ae`
     (line 1033) が Mathlib's `Ergodic.ae_eq_const_of_ae_eq_comp_ae` 経由で純構成的
     closure 済。本 wrapper は historical hypothesis-form pass-through で、consumer
-    0 件 (verbatim、`rg -n 'birkhoff_ergodic_ae_of_limit\b' Common2026/` で
+    0 件 (verbatim、`rg -n 'birkhoff_ergodic_ae_of_limit\b' InformationTheory/` で
     self-definition 1 hit のみ)」を明示。
   - body **改変なし** (constructive proof は維持、closed-by-successor 路線の
     bookkeeping のみ)、sorry 化なし。
 - [ ] **2.7.2** consumer 0 件の verbatim 再確認: `rg -n 'birkhoff_ergodic_ae_of_limit\b'
-  Common2026/` で self-definition 1 hit のみ。
+  InformationTheory/` で self-definition 1 hit のみ。
 
 **Phase 2.7 DoD**:
 - `BirkhoffErgodic.lean` で `@audit:suspect` 0 件、`@audit:retract-candidate(load-bearing-predicate)`
   1 件、新規 sorry **0 件** (closed-by-successor 路線)、
-- `lake env lean Common2026/Shannon/BirkhoffErgodic.lean` 0 errors。
+- `lake env lean InformationTheory/Shannon/BirkhoffErgodic.lean` 0 errors。
 
 **proof-log**: yes (closed-by-successor 路線の判断記録 — 後継 `birkhoff_ergodic_ae`
 が unconditional に discharge 済の事実は Phase 0 planner 段階で verbatim 確認、
@@ -573,7 +573,7 @@ sweep が re-touch する場合の方針を proof-log に明示)。
 
 ### Phase 2.8 — ChannelCodingConverseGeneralComplete (2 件、`channel-coding-shannon-theorem-full-plan`) 📋
 
-対象 declarations (verbatim 確認、`Common2026/Shannon/ChannelCodingConverseGeneralComplete.lean`):
+対象 declarations (verbatim 確認、`InformationTheory/Shannon/ChannelCodingConverseGeneralComplete.lean`):
 
 | line | decl 名 | suspect の核 | パターン | 移行後 |
 |---|---|---|---|---|
@@ -593,7 +593,7 @@ sweep が re-touch する場合の方針を proof-log に明示)。
     decoder / hMsg / hYs / hdecoder / hmarkov / h_memo / 他 standard regularity。
   - body: 既存の D-2 既存 chain-rule decomposition + Phase C per-summand bound +
     Fano sum + linarith 合成削除、`:= by sorry` + `@residual(plan:channel-coding-shannon-theorem-full-plan)`。
-- [ ] **2.8.3** `lake build Common2026.Shannon.ChannelCodingConverseGeneralComplete`
+- [ ] **2.8.3** `lake build InformationTheory.Shannon.ChannelCodingConverseGeneralComplete`
   で olean refresh + dependent (`ChannelCodingConverseGeneralStrong` /
   `ChannelCodingConverseMemorylessPure` / `CondEntropyMemoryless` /
   `SeparationTheorem`) 再 verify。S2 caller の type drift は Phase 2.x ripple
@@ -605,7 +605,7 @@ sweep が re-touch する場合の方針を proof-log に明示)。
 - `ChannelCodingConverseGeneralComplete.lean` で `@audit:suspect` 0 件、
   `@residual(plan:channel-coding-shannon-theorem-full-plan)` 2 件、新規 sorry 2
   件、
-- `lake env lean Common2026/Shannon/ChannelCodingConverseGeneralComplete.lean` 0
+- `lake env lean InformationTheory/Shannon/ChannelCodingConverseGeneralComplete.lean` 0
   errors。
 
 **proof-log**: no (mechanical sorry 化、ChannelCoding cluster の他 file との
@@ -633,9 +633,9 @@ Phase 2.1-2.8 の signature 改変結果として、以下 caller が transitive
 
 - [ ] **2.x.1** Phase 2.1 / 2.3 / 2.8 の caller drift を `rg -l` で列挙:
   ```bash
-  rg -l 'klDiv_pi_marginals_toReal_eq_sum_sub_joint|jointDifferentialEntropyPi_le_sum' Common2026/Shannon/ | grep -v MultivariateDiffEntropy
-  rg -l 'mutualInfoOfChannel_toReal_eq_diffEntropy_sub|awgn_capacity_closed_form_of_out' Common2026/Shannon/ | grep -v ContChannelMIDecomp
-  rg -l 'memoryless_per_summand_bound|channel_coding_converse_general_memoryless' Common2026/Shannon/ | grep -v ChannelCodingConverseGeneralComplete
+  rg -l 'klDiv_pi_marginals_toReal_eq_sum_sub_joint|jointDifferentialEntropyPi_le_sum' InformationTheory/Shannon/ | grep -v MultivariateDiffEntropy
+  rg -l 'mutualInfoOfChannel_toReal_eq_diffEntropy_sub|awgn_capacity_closed_form_of_out' InformationTheory/Shannon/ | grep -v ContChannelMIDecomp
+  rg -l 'memoryless_per_summand_bound|channel_coding_converse_general_memoryless' InformationTheory/Shannon/ | grep -v ChannelCodingConverseGeneralComplete
   ```
 
 - [ ] **2.x.2** 各 caller に transitive sorry が発生したか `lake env lean
@@ -696,14 +696,14 @@ Phase 2.1-2.8 の signature 改変結果として、以下 caller が transitive
 - [ ] **V.1** 全 8 file で `lake env lean` 確認 (signature 改変があった file は
   事前 olean refresh、Pilot Pattern A):
   ```bash
-  for f in Common2026/Shannon/MultivariateDiffEntropy.lean \
-           Common2026/Shannon/WhittakerShannonFull.lean \
-           Common2026/Shannon/ContChannelMIDecomp.lean \
-           Common2026/Shannon/EPIConvolutionDensity.lean \
-           Common2026/Shannon/StationaryKernel.lean \
-           Common2026/Shannon/SeparationTheorem.lean \
-           Common2026/Shannon/BirkhoffErgodic.lean \
-           Common2026/Shannon/ChannelCodingConverseGeneralComplete.lean; do
+  for f in InformationTheory/Shannon/MultivariateDiffEntropy.lean \
+           InformationTheory/Shannon/WhittakerShannonFull.lean \
+           InformationTheory/Shannon/ContChannelMIDecomp.lean \
+           InformationTheory/Shannon/EPIConvolutionDensity.lean \
+           InformationTheory/Shannon/StationaryKernel.lean \
+           InformationTheory/Shannon/SeparationTheorem.lean \
+           InformationTheory/Shannon/BirkhoffErgodic.lean \
+           InformationTheory/Shannon/ChannelCodingConverseGeneralComplete.lean; do
     echo "=== $f ==="
     lake env lean "$f"
   done
@@ -711,22 +711,22 @@ Phase 2.1-2.8 の signature 改変結果として、以下 caller が transitive
 
 - [ ] **V.2** 集計コマンド実行:
   ```bash
-  rg -c '@audit:suspect' Common2026/Shannon/{MultivariateDiffEntropy,WhittakerShannonFull,ContChannelMIDecomp,EPIConvolutionDensity,StationaryKernel,SeparationTheorem,BirkhoffErgodic,ChannelCodingConverseGeneralComplete}.lean | awk -F: '{s+=$2} END {print "declaration suspect:", s}'
+  rg -c '@audit:suspect' InformationTheory/Shannon/{MultivariateDiffEntropy,WhittakerShannonFull,ContChannelMIDecomp,EPIConvolutionDensity,StationaryKernel,SeparationTheorem,BirkhoffErgodic,ChannelCodingConverseGeneralComplete}.lean | awk -F: '{s+=$2} END {print "declaration suspect:", s}'
   # 期待: 2 (MultivariateDiffEntropy.lean の prose mention line 51 / 586 のみ、
   #       他 file は 0)。declaration tag は 0 件。
 
-  rg -c '@residual\(plan:multivariate-diffentropy-subadditivity-plan\)' Common2026/Shannon/MultivariateDiffEntropy.lean   # = 2
-  rg -c '@residual\(plan:whittaker-shannon-partial-moonshot-plan\)' Common2026/Shannon/WhittakerShannonFull.lean   # = 2
-  rg -c '@residual\(plan:awgn-mi-decomp-plan\)' Common2026/Shannon/ContChannelMIDecomp.lean   # = 2
-  rg -c '@residual\(plan:epi-convolution-density-plan\)' Common2026/Shannon/EPIConvolutionDensity.lean   # = 1
-  rg -c '@residual\(plan:separation-theorem-moonshot-plan\)' Common2026/Shannon/SeparationTheorem.lean   # = 1
-  rg -c '@residual\(plan:channel-coding-shannon-theorem-full-plan\)' Common2026/Shannon/ChannelCodingConverseGeneralComplete.lean   # = 2
+  rg -c '@residual\(plan:multivariate-diffentropy-subadditivity-plan\)' InformationTheory/Shannon/MultivariateDiffEntropy.lean   # = 2
+  rg -c '@residual\(plan:whittaker-shannon-partial-moonshot-plan\)' InformationTheory/Shannon/WhittakerShannonFull.lean   # = 2
+  rg -c '@residual\(plan:awgn-mi-decomp-plan\)' InformationTheory/Shannon/ContChannelMIDecomp.lean   # = 2
+  rg -c '@residual\(plan:epi-convolution-density-plan\)' InformationTheory/Shannon/EPIConvolutionDensity.lean   # = 1
+  rg -c '@residual\(plan:separation-theorem-moonshot-plan\)' InformationTheory/Shannon/SeparationTheorem.lean   # = 1
+  rg -c '@residual\(plan:channel-coding-shannon-theorem-full-plan\)' InformationTheory/Shannon/ChannelCodingConverseGeneralComplete.lean   # = 2
 
-  rg -c '@audit:retract-candidate' Common2026/Shannon/StationaryKernel.lean Common2026/Shannon/BirkhoffErgodic.lean   # = 1 + 1 = 2
+  rg -c '@audit:retract-candidate' InformationTheory/Shannon/StationaryKernel.lean InformationTheory/Shannon/BirkhoffErgodic.lean   # = 1 + 1 = 2
 
-  rg -c '🟢ʰ' Common2026/Shannon/ContChannelMIDecomp.lean   # = 0 (incidental migration 後)
+  rg -c '🟢ʰ' InformationTheory/Shannon/ContChannelMIDecomp.lean   # = 0 (incidental migration 後)
 
-  rg -nw 'sorry' Common2026/Shannon/{MultivariateDiffEntropy,WhittakerShannonFull,ContChannelMIDecomp,EPIConvolutionDensity,StationaryKernel,SeparationTheorem,BirkhoffErgodic,ChannelCodingConverseGeneralComplete}.lean | wc -l
+  rg -nw 'sorry' InformationTheory/Shannon/{MultivariateDiffEntropy,WhittakerShannonFull,ContChannelMIDecomp,EPIConvolutionDensity,StationaryKernel,SeparationTheorem,BirkhoffErgodic,ChannelCodingConverseGeneralComplete}.lean | wc -l
   # 期待: 10 件 (P pattern 各 1 sorry: MD 2 + WS 2 + CC 2 + EPI 1 + Sep 1 + ChC 2 = 10、
   #             closed-by-successor 2 件は sorry なし)
   ```
@@ -857,16 +857,16 @@ Phase 2.1-2.8 の signature 改変結果として、以下 caller が transitive
 
 書く頻度: 方針変更 / 撤退ライン発動 / 当初仮定の修正があったとき。append-only。
 
-1. **2026-05-26 plan 起草**: lean-planner (本 session、docs-only) が `Common2026/Shannon/{MultivariateDiffEntropy,WhittakerShannonFull,ContChannelMIDecomp,EPIConvolutionDensity,StationaryKernel,SeparationTheorem,BirkhoffErgodic,ChannelCodingConverseGeneralComplete}.lean` 8 file の legacy tag を verbatim 読込で per-declaration 分類。
+1. **2026-05-26 plan 起草**: lean-planner (本 session、docs-only) が `InformationTheory/Shannon/{MultivariateDiffEntropy,WhittakerShannonFull,ContChannelMIDecomp,EPIConvolutionDensity,StationaryKernel,SeparationTheorem,BirkhoffErgodic,ChannelCodingConverseGeneralComplete}.lean` 8 file の legacy tag を verbatim 読込で per-declaration 分類。
    - **計数誤差発見** (Pilot Pattern D 適用):
      - ブリーフ「14 + 2 🟢ʰ」は実測 declaration suspect 12 件 + prose mention 2 件
        + 🟢ʰ prose 2 件に修正 (`rg -nB1 -A2 '@audit:suspect'` verbatim 確認)。
      - ブリーフ MultivariateDiffEntropy "4 件" は declaration tag 2 件 + docstring 散文 mention 2 件 (line 51 = `@audit:superseded-by` 説明文中の引用 / line 586 = Phase B retention rationale)。declaration tag は line 237 / 302 の 2 件のみ。
      - ブリーフ ContChannelMIDecomp "🟢ʰ 2 件" は declaration tag ではなく docstring 内 prose marker (line 47 = "body 🟢ʰ genuine"、line 242 = "🟢ʰ honest") で declaration の 🟢ʰ tag ではない。
    - **既存 sorry 計数**: word-boundary `rg -nw 'sorry'` で全 file 0 hit 確定、実 sorry 0 件 (Pilot Pattern D 適用済)。
-   - **空 slug 発見** (planner 段階 inline 検出): `StationaryKernel.lean:115` `factor_of_complete_of_pos` の `@audit:suspect()` (slug 未指定、audit-tags.md 規約違反、tier 4-寄り)。後継 `isLZ78PerPathParsingFactorization_of_pos` (line 257) が a.s. regularity 仮説のみから genuine 構成済の事実を verbatim 確認、consumer 0 件 (`rg -n 'factor_of_complete_of_pos\b' Common2026/` = self-definition 1 hit のみ)。Phase 2.5 で closed-by-successor 路線で処理。
-   - **BirkhoffErgodic closed-by-successor 確認** (planner 段階 inline 検出): `birkhoff_ergodic_ae_of_limit` (line 1003) の後継 `birkhoff_ergodic_ae` (line 1033) が unconditional に in-file 構成済の事実を verbatim 確認 (line 1037-1107、Mathlib's `Ergodic.ae_eq_const_of_ae_eq_comp_ae` + 4-step proof で純構成的 closure)、consumer 0 件 (`rg -n 'birkhoff_ergodic_ae_of_limit\b' Common2026/` = self-definition 1 hit のみ)。Phase 2.7 で closed-by-successor 路線。
-   - **cross-family entanglement = S3 0 件確定**: 8 file の `import` を verbatim 確認、`Common2026/Shannon/<file>.lean` の export を `rg -nl` で consumer 検出。すべて S1 (4 件) / S2 (2 件) / closed-by-successor (2 件) で本 plan scope 内完結可能。**EPI/Stam cluster との独立性**: `EPIConvolutionDensity.lean` は namespace `InformationTheory.Shannon.EPIConvolutionDensity` + import は `FisherInfoV2` のみ、Round 3 EPI/Stam cluster (`EPIStam*` / `EPIL3Integration` / `EPIPlumbing` 等) との entanglement 0 件 verbatim 確認。
+   - **空 slug 発見** (planner 段階 inline 検出): `StationaryKernel.lean:115` `factor_of_complete_of_pos` の `@audit:suspect()` (slug 未指定、audit-tags.md 規約違反、tier 4-寄り)。後継 `isLZ78PerPathParsingFactorization_of_pos` (line 257) が a.s. regularity 仮説のみから genuine 構成済の事実を verbatim 確認、consumer 0 件 (`rg -n 'factor_of_complete_of_pos\b' InformationTheory/` = self-definition 1 hit のみ)。Phase 2.5 で closed-by-successor 路線で処理。
+   - **BirkhoffErgodic closed-by-successor 確認** (planner 段階 inline 検出): `birkhoff_ergodic_ae_of_limit` (line 1003) の後継 `birkhoff_ergodic_ae` (line 1033) が unconditional に in-file 構成済の事実を verbatim 確認 (line 1037-1107、Mathlib's `Ergodic.ae_eq_const_of_ae_eq_comp_ae` + 4-step proof で純構成的 closure)、consumer 0 件 (`rg -n 'birkhoff_ergodic_ae_of_limit\b' InformationTheory/` = self-definition 1 hit のみ)。Phase 2.7 で closed-by-successor 路線。
+   - **cross-family entanglement = S3 0 件確定**: 8 file の `import` を verbatim 確認、`InformationTheory/Shannon/<file>.lean` の export を `rg -nl` で consumer 検出。すべて S1 (4 件) / S2 (2 件) / closed-by-successor (2 件) で本 plan scope 内完結可能。**EPI/Stam cluster との独立性**: `EPIConvolutionDensity.lean` は namespace `InformationTheory.Shannon.EPIConvolutionDensity` + import は `FisherInfoV2` のみ、Round 3 EPI/Stam cluster (`EPIStam*` / `EPIL3Integration` / `EPIPlumbing` 等) との entanglement 0 件 verbatim 確認。
    - **戦略決定**: 8 file 1 plan 一括 sweep + Phase 2.x を file 単位に分離 (独立 dispatch 可能) + 共有 wall lemma 集約しない (`audit-tags.md` Wall register 未登録) + 並列実行は dispatch 可だが declaration 数が少ないため逐次でも 1 セッション完走可。Phase 順序: 0 → 1 (V/C cleanup 候補 0 件予測 → skip) → 1.4 audit-1 → 2.1-2.8 (file 単位 sweep、closed-by-successor 2 件含む) → 2.x ripple → 2.audit audit-2 → V verify。
 
 <!-- 後続セッションで判断変更があれば下記に追記 (append-only):

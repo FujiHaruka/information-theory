@@ -12,7 +12,7 @@
 
 ## Position
 
-- 対象定理: `Common2026/Shannon/AWGN.lean:123` `theorem mutualInfoOfChannel_gaussianInput_closed_form`
+- 対象定理: `InformationTheory/Shannon/AWGN.lean:123` `theorem mutualInfoOfChannel_gaussianInput_closed_form`
 - 当該 tag: `@audit:suspect(awgn-mi-bridge-plan)` (line 122)
 - 親 moonshot: [`awgn-moonshot-plan.md`](./awgn-moonshot-plan.md)
 - 関連 plan: `awgn-mi-decomp-plan.md` (隣接 MI 分解), `awgn-converse-aux-plan.md`
@@ -40,9 +40,9 @@
 ## Open questions
 
 - bridge `mutualInfoOfChannel = h(Y) − h(Y|X)` は Mathlib の `condMutualInfo` /
-  `condEntropy` の対応物が必要。`Common2026.Shannon.differentialEntropy` (現在 Shannon
+  `condEntropy` の対応物が必要。`InformationTheory.Shannon.differentialEntropy` (現在 Shannon
   family 内 def) と Mathlib `MeasureTheory.Entropy` の橋渡しの形が未確定。
-- `Common2026.Shannon.differentialEntropy` を Mathlib 形に rewrite するか、
+- `InformationTheory.Shannon.differentialEntropy` を Mathlib 形に rewrite するか、
   bridge lemma を増やすか、設計判断が要る。
 
 ## Closure criteria

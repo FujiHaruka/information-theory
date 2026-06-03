@@ -9,7 +9,7 @@
 > (撤退ライン L-DB-C-β、`EReal` lift + `Z_law` 追加 refactor 待ち)。
 > **Sister plan (drafted in parallel)**: `epi-debruijn-tail-reintroduction-plan.md`
 > (本 inventory と同期で起草中)。
-> **Retraction comment SoT**: `Common2026/Shannon/EPIL3Integration.lean:595-613` (コメント形)。
+> **Retraction comment SoT**: `InformationTheory/Shannon/EPIL3Integration.lean:595-613` (コメント形)。
 
 ## 一行サマリ
 
@@ -93,15 +93,15 @@
 
 ## C. Gaussian sub-entropy 発散 path
 
-### C-1. 本 repo 内既存 (Common2026.Shannon)
+### C-1. 本 repo 内既存 (InformationTheory.Shannon)
 
 | 名前 | file:line | 完全 signature (型クラス verbatim) | 結論形 (verbatim) | 状態 |
 |---|---|---|---|---|
-| `Common2026.Shannon.differentialEntropy` (定義) | `Common2026/Shannon/DifferentialEntropy.lean:42` | `noncomputable def differentialEntropy (μ : Measure ℝ) : ℝ := ∫ x, Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume` | `Measure ℝ → ℝ` | PRESENT |
-| **`Common2026.Shannon.differentialEntropy_gaussianReal`** | `Common2026/Shannon/DifferentialEntropy.lean:406` | `theorem differentialEntropy_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) : differentialEntropy (gaussianReal m v) = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v)` | `differentialEntropy (gaussianReal m v) = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v)` | PRESENT |
-| **`Common2026.Shannon.differentialEntropy_gaussianReal_heat_path`** | `Common2026/Shannon/FisherInfoV2DeBruijn.lean:332` | `theorem differentialEntropy_gaussianReal_heat_path (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) {s : ℝ} (hs : 0 ≤ s) : differentialEntropy (gaussianReal m (v + ⟨s, hs⟩)) = (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + s))` | `differentialEntropy (gaussianReal m (v + ⟨s, hs⟩)) = (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + s))` | PRESENT |
-| `Common2026.Shannon.FisherInfoV2.gaussianConvolution` (定義) | `Common2026/Shannon/FisherInfoV2DeBruijn.lean:154` | `noncomputable def gaussianConvolution {α : Type*} (X Z : α → ℝ) (t : ℝ) : α → ℝ := fun ω => X ω + Real.sqrt t * Z ω` | `(α → ℝ) → (α → ℝ) → ℝ → (α → ℝ)` | PRESENT |
-| `Common2026.Shannon.FisherInfoV2.gaussianConvolution_law_of_gaussian` | `Common2026/Shannon/FisherInfoV2DeBruijn.lean:172` | `theorem gaussianConvolution_law_of_gaussian {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P] {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z) ... ` (略、Gaussian + Gaussian conv. 加算則) | `P.map (gaussianConvolution X Z s) = gaussianReal m (v + ⟨s, hs⟩)` | PRESENT |
+| `InformationTheory.Shannon.differentialEntropy` (定義) | `InformationTheory/Shannon/DifferentialEntropy.lean:42` | `noncomputable def differentialEntropy (μ : Measure ℝ) : ℝ := ∫ x, Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume` | `Measure ℝ → ℝ` | PRESENT |
+| **`InformationTheory.Shannon.differentialEntropy_gaussianReal`** | `InformationTheory/Shannon/DifferentialEntropy.lean:406` | `theorem differentialEntropy_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) : differentialEntropy (gaussianReal m v) = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v)` | `differentialEntropy (gaussianReal m v) = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v)` | PRESENT |
+| **`InformationTheory.Shannon.differentialEntropy_gaussianReal_heat_path`** | `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:332` | `theorem differentialEntropy_gaussianReal_heat_path (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) {s : ℝ} (hs : 0 ≤ s) : differentialEntropy (gaussianReal m (v + ⟨s, hs⟩)) = (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + s))` | `differentialEntropy (gaussianReal m (v + ⟨s, hs⟩)) = (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + s))` | PRESENT |
+| `InformationTheory.Shannon.FisherInfoV2.gaussianConvolution` (定義) | `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:154` | `noncomputable def gaussianConvolution {α : Type*} (X Z : α → ℝ) (t : ℝ) : α → ℝ := fun ω => X ω + Real.sqrt t * Z ω` | `(α → ℝ) → (α → ℝ) → ℝ → (α → ℝ)` | PRESENT |
+| `InformationTheory.Shannon.FisherInfoV2.gaussianConvolution_law_of_gaussian` | `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:172` | `theorem gaussianConvolution_law_of_gaussian {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P] {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z) ... ` (略、Gaussian + Gaussian conv. 加算則) | `P.map (gaussianConvolution X Z s) = gaussianReal m (v + ⟨s, hs⟩)` | PRESENT |
 
 ### C-2. Mathlib `Real.log` の Tendsto
 
@@ -138,10 +138,10 @@
 
 | 名前 | file:line | 完全 signature (型クラス verbatim) | 結論形 (verbatim) | 状態 |
 |---|---|---|---|---|
-| `Common2026.Shannon.FisherInfoV2.gaussianConvolution_apply` | `Common2026/Shannon/FisherInfoV2DeBruijn.lean:158` | `@[simp] theorem gaussianConvolution_apply {α : Type*} (X Z : α → ℝ) (t : ℝ) (ω : α) : gaussianConvolution X Z t ω = X ω + Real.sqrt t * Z ω` | `gaussianConvolution X Z t ω = X ω + Real.sqrt t * Z ω` | PRESENT |
-| `Common2026.Shannon.FisherInfoV2.measurable_gaussianConvolution` | `Common2026/Shannon/FisherInfoV2DeBruijn.lean:162` | `theorem measurable_gaussianConvolution {Ω : Type*} [MeasurableSpace Ω] {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z) (t : ℝ) : Measurable (gaussianConvolution X Z t)` | `Measurable (gaussianConvolution X Z t)` | PRESENT |
-| `Common2026.Shannon.EPIL3Integration.gaussianConvolution_at_zero` | `Common2026/Shannon/EPIL3Integration.lean:618` | `theorem gaussianConvolution_at_zero {Ω : Type*} (X Z : Ω → ℝ) : Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z 0 = X` | `gaussianConvolution X Z 0 = X` | PRESENT |
-| `Common2026.Shannon.EPIL3Integration.differentialEntropy_gaussianConvolution_at_zero` | `Common2026/Shannon/EPIL3Integration.lean:631` | `theorem differentialEntropy_gaussianConvolution_at_zero {Ω : Type*} [MeasurableSpace Ω] (X Z : Ω → ℝ) (P : Measure Ω) : differentialEntropy (P.map (gaussianConvolution X Z 0)) = differentialEntropy (P.map X)` | `differentialEntropy (P.map (gaussianConvolution X Z 0)) = differentialEntropy (P.map X)` | PRESENT |
+| `InformationTheory.Shannon.FisherInfoV2.gaussianConvolution_apply` | `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:158` | `@[simp] theorem gaussianConvolution_apply {α : Type*} (X Z : α → ℝ) (t : ℝ) (ω : α) : gaussianConvolution X Z t ω = X ω + Real.sqrt t * Z ω` | `gaussianConvolution X Z t ω = X ω + Real.sqrt t * Z ω` | PRESENT |
+| `InformationTheory.Shannon.FisherInfoV2.measurable_gaussianConvolution` | `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:162` | `theorem measurable_gaussianConvolution {Ω : Type*} [MeasurableSpace Ω] {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z) (t : ℝ) : Measurable (gaussianConvolution X Z t)` | `Measurable (gaussianConvolution X Z t)` | PRESENT |
+| `InformationTheory.Shannon.EPIL3Integration.gaussianConvolution_at_zero` | `InformationTheory/Shannon/EPIL3Integration.lean:618` | `theorem gaussianConvolution_at_zero {Ω : Type*} (X Z : Ω → ℝ) : InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z 0 = X` | `gaussianConvolution X Z 0 = X` | PRESENT |
+| `InformationTheory.Shannon.EPIL3Integration.differentialEntropy_gaussianConvolution_at_zero` | `InformationTheory/Shannon/EPIL3Integration.lean:631` | `theorem differentialEntropy_gaussianConvolution_at_zero {Ω : Type*} [MeasurableSpace Ω] (X Z : Ω → ℝ) (P : Measure Ω) : differentialEntropy (P.map (gaussianConvolution X Z 0)) = differentialEntropy (P.map X)` | `differentialEntropy (P.map (gaussianConvolution X Z 0)) = differentialEntropy (P.map X)` | PRESENT |
 
 ### D-1. Gaussian + Gaussian convolution の variance 加算則
 
@@ -194,7 +194,7 @@
 
 ## H. 着手 skeleton
 
-`Common2026/Shannon/EPIL3Integration.lean` に既存 retract コメント (`:595-613`) の直後に追記:
+`InformationTheory/Shannon/EPIL3Integration.lean` に既存 retract コメント (`:595-613`) の直後に追記:
 
 ```lean
 import Mathlib.Topology.Instances.EReal.Lemmas
@@ -204,7 +204,7 @@ import Mathlib.Order.Filter.AtTopBot.Group
 
 -- (既存 imports は維持、EPIL3Integration.lean には大半既存)
 
-namespace Common2026.Shannon
+namespace InformationTheory.Shannon
 
 open MeasureTheory ProbabilityTheory Filter Topology
 
@@ -228,8 +228,8 @@ structure IsDeBruijnTailHyp
   tail_limit :
     Tendsto
       (fun T : ℝ => Real.toEReal
-        (Common2026.Shannon.differentialEntropy
-          (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z T))))
+        (InformationTheory.Shannon.differentialEntropy
+          (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z T))))
       atTop (𝓝 h_inf)
 
 /-- **Gaussian instance**: when `P.map X = gaussianReal m v` with `v ≠ 0` and
@@ -244,10 +244,10 @@ noncomputable def isDeBruijnTailHyp_of_gaussian
     IsDeBruijnTailHyp X Z P := by
   sorry  -- F-3, ~20 行 plumbing
 
-end Common2026.Shannon
+end InformationTheory.Shannon
 ```
 
-(上記は inventory 用 skeleton であって、`Common2026/Shannon/EPIL3Integration.lean` への直接編入は
+(上記は inventory 用 skeleton であって、`InformationTheory/Shannon/EPIL3Integration.lean` への直接編入は
 sister plan `epi-debruijn-tail-reintroduction-plan.md` Phase C-5 implementer の責務。)
 
 ---

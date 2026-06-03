@@ -2,13 +2,13 @@
 
 > ムーンショット全体計画は `docs/fano/fano-moonshot-plan.md`。本ファイルはその Phase 1 の詳細。
 >
-> 実態整合 (2026-05-20): DONE-UNCOND — Markov 形 `fano_inequality (hcard : 2 ≤ Fintype.card X) : P.condEntropy ≤ fanoBoundRHSOfAlphabet X P.errorProb` が `Common2026/Fano/Core.lean:424` に存在 (P : FiniteJointPMF X X、`hcore` なし)。DPI `condEntropy_le_pushforward_condEntropy` (`Common2026/Fano/DPI.lean:184`、`negMulLog` 凹性 + log-sum で実証) + Phase 0 復元 `fano_inequality_decode` (`DPI.lean:355`)。`lake env lean` silent、0 sorry。本 plan の全 milestone (P1-M0〜M5) 達成済。
+> 実態整合 (2026-05-20): DONE-UNCOND — Markov 形 `fano_inequality (hcard : 2 ≤ Fintype.card X) : P.condEntropy ≤ fanoBoundRHSOfAlphabet X P.errorProb` が `InformationTheory/Fano/Core.lean:424` に存在 (P : FiniteJointPMF X X、`hcore` なし)。DPI `condEntropy_le_pushforward_condEntropy` (`InformationTheory/Fano/DPI.lean:184`、`negMulLog` 凹性 + log-sum で実証) + Phase 0 復元 `fano_inequality_decode` (`DPI.lean:355`)。`lake env lean` silent、0 sorry。本 plan の全 milestone (P1-M0〜M5) 達成済。
 
 ## Context
 
 ### Phase 0 の現状
 
-`Common2026/Fano/Core.lean` に、外部仮定なしで通っている形：
+`InformationTheory/Fano/Core.lean` に、外部仮定なしで通っている形：
 
 ```
 H(X | Y) ≤ h(Pe) + Pe · log(|X| − 1)
@@ -70,7 +70,7 @@ H(X | X̂) ≤ h(Pe) + Pe · log(|X| − 1)
 Phase 1 終了時の状態：
 
 ```
-Common2026/
+InformationTheory/
   Fano.lean                  ← Markov 版 wrapper + Phase 0 形は decode wrapper として残す
   Fano/
     Entropy.lean             ← 不変
@@ -80,7 +80,7 @@ Common2026/
     DPI.lean                 ← 新規。Pushforward と data processing inequality
 ```
 
-`Common2026.lean`（library root）に `import Common2026.Fano.DPI` を追記。
+`InformationTheory.lean`（library root）に `import InformationTheory.Fano.DPI` を追記。
 
 ---
 
@@ -146,7 +146,7 @@ theorem fano_core (P : FiniteJointPMF X X̂) (hcard : 2 ≤ Fintype.card X) :
 `X̂` は型ではなく**変数名上の記号 / docstring 上の概念**として残す。
 
 **Done 条件**:
-- `lake env lean Common2026/Fano/Core.lean` が silent
+- `lake env lean InformationTheory/Fano/Core.lean` が silent
 - 主定理 `fano_core (P : FiniteJointPMF X X) ...` が通る
 - 旧 `Fano/Core.lean` の `decode : Y → X` 引数がコードベースから消えている
 
@@ -164,14 +164,14 @@ theorem fano_core (P : FiniteJointPMF X X̂) (hcard : 2 ≤ Fintype.card X) :
 座標非依存群（`fano_inequality_of_le_qaryEntropy` 等）は変更不要。
 
 **Done 条件**:
-- `lake env lean Common2026/Fano.lean` が silent
+- `lake env lean InformationTheory/Fano.lean` が silent
 - Markov 形の `fano_inequality` / `error_lower_bound` がトップレベルで使える状態
 
 ---
 
 ### P1-M3. Pushforward と DPI（1〜2 日）
 
-**新規ファイル `Common2026/Fano/DPI.lean`**。
+**新規ファイル `InformationTheory/Fano/DPI.lean`**。
 
 Phase 1 で唯一の非自明な数学的内容。
 
@@ -229,14 +229,14 @@ theorem condEntropy_le_pushforward_condEntropy
 - Jensen を「重み付き和の凹関数」に適用するときの `[Decidable]` instance 周り
 
 **Done 条件**:
-- `lake env lean Common2026/Fano/DPI.lean` が silent
+- `lake env lean InformationTheory/Fano/DPI.lean` が silent
 - `condEntropy_le_pushforward_condEntropy` の signature が上の通り
 
 ---
 
 ### P1-M4. Phase 0 形を Markov + DPI から復元（半日）
 
-`Common2026/Fano.lean` の末尾に Phase 0 互換 wrapper を追加：
+`InformationTheory/Fano.lean` の末尾に Phase 0 互換 wrapper を追加：
 
 ```lean
 namespace InformationTheory.FiniteJointPMF
@@ -275,12 +275,12 @@ theorem error_lower_bound_decode (P : FiniteJointPMF X Y) (decode : Y → X) ...
 
 ### P1-M5. クリーンアップ + proof-log + metrics（半日）
 
-- `Common2026.lean` に `import Common2026.Fano.DPI` を追記
+- `InformationTheory.lean` に `import InformationTheory.Fano.DPI` を追記
 - 全ファイル `lake env lean` で silent 確認:
-  - `Common2026/Fano.lean`
-  - `Common2026/Fano/Core.lean`
-  - `Common2026/Fano/DPI.lean`
-  - `Common2026/Fano/Entropy.lean` / `CondEntropy.lean` / `BinaryJensen.lean`（不変だが念のため）
+  - `InformationTheory/Fano.lean`
+  - `InformationTheory/Fano/Core.lean`
+  - `InformationTheory/Fano/DPI.lean`
+  - `InformationTheory/Fano/Entropy.lean` / `CondEntropy.lean` / `BinaryJensen.lean`（不変だが念のため）
 - 旧 `decode` 引数の残骸（コメントアウトされた古いコード等）を削除
 - `scripts/session_metrics.ts` を回して metrics を取得
 - `proof-log` skill を起動して `docs/proof-logs/proof-log-fano-phase1.md` と `docs/metrics/fano-phase1.{manifest,metrics}.{json,md}` を生成

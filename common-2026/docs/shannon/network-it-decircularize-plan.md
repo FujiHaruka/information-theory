@@ -46,26 +46,26 @@ slots the proof never touches. Convert each into a **sound landing**:
 
 **The decisive prior art** (read before any edit):
 
-1. `Common2026/Shannon/SlepianWolf.lean:217 / :293 / :361` —
+1. `InformationTheory/Shannon/SlepianWolf.lean:217 / :293 / :361` —
    `slepian_wolf_converse_X/_Y/_sum` are **genuinely** proved (not `:= h`). The
    skeleton is: `entropy_le_log_card` (log M ≥ H(E)) → `entropy_ge_condEntropy`
    (H(E) ≥ H(E|Y)) → `condMutualInfo_eq_condEntropy_sub_condEntropy` ×2 +
    `condMutualInfo_comm` (bridge) → `fano_inequality_with_side_info` /
    `fano_inequality_measure_theoretic` (H(·|·) ≤ binEntropy Pe + Pe·log(card−1)).
    These are the composable lemmas for **(A)**.
-2. `Common2026/Shannon/MACFanoConverseBody.lean:205` `macFanoEntropyData_of_measure`
+2. `InformationTheory/Shannon/MACFanoConverseBody.lean:205` `macFanoEntropyData_of_measure`
    and `:236` `macSingleFanoBound_of_measure` — **the per-user MAC Fano bound is
    ALREADY genuinely discharged** through `MeasureFano.fano_inequality_measure_theoretic`.
    `:294 mac_capacity_region_outer_bound_with_per_user_fano` already builds a
    non-circular per-user-genuine outer-bound landing. The de-circularization for MAC
    per-user is largely *promotion of an existing companion to be THE headline*.
-3. `Common2026/Shannon/MACL2Discharge.lean:132 MACSingleFanoBound`, `:169/:191
+3. `InformationTheory/Shannon/MACL2Discharge.lean:132 MACSingleFanoBound`, `:169/:191
    MACPerLetterChain₁/₂`, `:456 mac_capacity_region_outer_bound_with_full_fano_body`
    — shows where the residual still sits: the **per-letter chain rule** (`chain :
    I_marg ≤ n·I`) and the **joint-message Fano** (`MACFanoBound`) are still
    *structural* Props whose field is assumed, NOT derived. These are the honest-🟢ʰ
    slots that remain after the per-user genuine step.
-4. `Common2026/Shannon/ChannelCoding.lean:210 Code.averageErrorProb` (+ `:218
+4. `InformationTheory/Shannon/ChannelCoding.lean:210 Code.averageErrorProb` (+ `:218
    averageErrorProb_le_one`) — the error-probability machinery for the inner-bound
    predicate redefinition exists for `Code`; the MAC/BC/Relay code structures
    (`MACCode`/`BroadcastCode`/`RelayCode`) need an analogous `averageErrorProb` field
@@ -73,7 +73,7 @@ slots the proof never touches. Convert each into a **sound landing**:
 
 **IT residual is a real Mathlib gap** (audit-confirmed: 0 typicality lemmas, 0
 IT-Fano in Mathlib). The genuine Fano + entropy-chain primitives live in the project
-(`Common2026/Fano/Measure.lean`, `CondMutualInfo.lean`, `MIChainRule.lean`) and ARE
+(`InformationTheory/Fano/Measure.lean`, `CondMutualInfo.lean`, `MIChainRule.lean`) and ARE
 load-bearing in SlepianWolf — so outer bounds can be pushed to genuine where the
 reduction is single-user; the joint-typicality core stays honest.
 
@@ -105,7 +105,7 @@ from). No headline lands as a circular `:= h`.
 
 - [ ] Confirm `MeasureFano.fano_inequality_measure_theoretic` and
   `fano_inequality_with_side_info` signatures (full `[...]` prereqs verbatim) from
-  `Common2026/Fano/Measure.lean`; record arg order. These are the genuine-outer engine.
+  `InformationTheory/Fano/Measure.lean`; record arg order. These are the genuine-outer engine.
 - [ ] Confirm `entropy_le_log_card`, `entropy_ge_condEntropy`,
   `condMutualInfo_eq_condEntropy_sub_condEntropy`, `condMutualInfo_comm`,
   `mutualInfo_eq_entropy_sub_condEntropy`, `condEntropy_nonneg` namespaces/sigs.
@@ -158,8 +158,8 @@ Target `mac_capacity_region_outer_bound` (MultipleAccessChannel.lean:464).
   (MACFanoConverseBody.lean:205) so the per-user directions are *genuinely* Fano,
   not assumed. (`mac_capacity_region_outer_bound_with_per_user_fano`,
   MACFanoConverseBody.lean:294, is the existing template.)
-- [ ] Verify: `lake env lean Common2026/Shannon/MultipleAccessChannel.lean` then
-  `lake build Common2026.Shannon.MultipleAccessChannel` (olean refresh for the
+- [ ] Verify: `lake env lean InformationTheory/Shannon/MultipleAccessChannel.lean` then
+  `lake build InformationTheory.Shannon.MultipleAccessChannel` (olean refresh for the
   MACL2Discharge / MACFanoConverseBody dependents that reference the renamed headline).
 
 ### A.2 — keep `mac_capacity_region_outer_bound_three_bounds` / `_log_rate` honest
@@ -240,7 +240,7 @@ Target `bc_capacity_region_outer_bound` (BroadcastChannel.lean:472).
   `BCSingleFanoBound`, `BCCondFanoBound` structural Props; `bcFanoEntropyData_of_measure`
   genuine feeder for the R₂ direction (copy `macFanoEntropyData_of_measure`); a
   `bc_region_combine`-based body that derives `InBCCapacityRegion` from the two
-  direction bounds + cleanup. Put these in a new `Common2026/Shannon/BCL2Discharge.lean`
+  direction bounds + cleanup. Put these in a new `InformationTheory/Shannon/BCL2Discharge.lean`
   (do NOT bloat the headline file).
 - [ ] Body of the headline: derive R₂ ≤ I_u+ε from `h_fano₂`+`h_chain_u`+cleanup,
   R₁ ≤ I_xy+ε from `h_cond_fano₁`+`h_chain_xy`+cleanup, combine via `bc_region_combine`.
@@ -280,7 +280,7 @@ min Ib Im` (RelayCutset.lean:188); `relay_cutset_combine` (:294) genuinely deriv
       (h_cleanup_b …) (h_cleanup_m …) :
       R ≤ relayCutsetBound (Ib + ε) (Im + ε)
   ```
-- [ ] **New lemmas** (new `Common2026/Shannon/RelayCutsetL1Discharge.lean`):
+- [ ] **New lemmas** (new `InformationTheory/Shannon/RelayCutsetL1Discharge.lean`):
   `RelayBcastCutFano`, `RelayMacCutFano` structural Props (each `n·R ≤ I_marg + 1 +
   Pe·log M`, same shape as `MACSingleFanoBound`); per-cut body lemmas deriving `R ≤
   Ib+ε` / `R ≤ Im+ε`; headline body = `relay_cutset_combine` on the two.
@@ -340,7 +340,7 @@ Target `relay_cf_inner_bound` (RelayInnerBound.lean:531),
   Most are themselves discharge wrappers that *already have* the Fano/chain bodies in
   scope (MACL2Discharge, MACFanoConverseBody) — re-thread, do not re-prove.
 - [ ] For each touched file, `lake env lean <file>` clean (0 sorry / minimal warn),
-  then one `lake build Common2026.Shannon.<Module>` per upstream-renamed module to
+  then one `lake build InformationTheory.Shannon.<Module>` per upstream-renamed module to
   refresh dependents' oleans.
 - [ ] Update `docs/shannon/flaw-vacuous-review-2026-05-20.md`: the LOW/BY-DESIGN MAC/
   BC/Relay entry (§:189-200) — record the 7 headlines as **de-circularized** with

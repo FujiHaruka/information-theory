@@ -3,7 +3,7 @@
   "proof_log": "docs/proof-logs/proof-log-awgn-power-constraint-realizable-pivot-phase2.md",
   "generated_at": "2026-05-24T10:16:54.411Z",
   "filters": {
-    "file_prefix": "Common2026/Shannon/AWGNAchievabilityDischarge"
+    "file_prefix": "InformationTheory/Shannon/AWGNAchievabilityDischarge"
   },
   "idle_gap_minutes": 5,
   "sessions": [
@@ -36,7 +36,7 @@
       },
       "bash_total": 13,
       "edits_by_file": {
-        "Common2026/Shannon/AWGNAchievabilityDischarge.lean": 5
+        "InformationTheory/Shannon/AWGNAchievabilityDischarge.lean": 5
       },
       "writes_by_file": {
         "docs/metrics/awgn-power-constraint-realizable-pivot-phase2.manifest.json": 1
@@ -44,7 +44,7 @@
       "reads_by_file": {
         ".claude/handoff.md": 1,
         "docs/shannon/awgn-power-constraint-realizable-pivot-plan.md": 1,
-        "Common2026/Shannon/AWGNAchievabilityDischarge.lean": 9,
+        "InformationTheory/Shannon/AWGNAchievabilityDischarge.lean": 9,
         ".claude/skills/proof-log/references/template.md": 1,
         ".claude/skills/proof-log/references/writing-guide.md": 1
       },
@@ -90,7 +90,7 @@
     },
     "bash_total": 13,
     "edits_by_file": {
-      "Common2026/Shannon/AWGNAchievabilityDischarge.lean": 5
+      "InformationTheory/Shannon/AWGNAchievabilityDischarge.lean": 5
     },
     "writes_by_file": {
       "docs/metrics/awgn-power-constraint-realizable-pivot-phase2.manifest.json": 1
@@ -98,7 +98,7 @@
     "reads_by_file": {
       ".claude/handoff.md": 1,
       "docs/shannon/awgn-power-constraint-realizable-pivot-plan.md": 1,
-      "Common2026/Shannon/AWGNAchievabilityDischarge.lean": 9,
+      "InformationTheory/Shannon/AWGNAchievabilityDischarge.lean": 9,
       ".claude/skills/proof-log/references/template.md": 1,
       ".claude/skills/proof-log/references/writing-guide.md": 1
     },

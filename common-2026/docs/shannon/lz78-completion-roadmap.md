@@ -33,7 +33,7 @@
 ### M1 — converse UD-object 【✅ 済 (2026-05-21)】
 - **内容**: LZ78 符号化 (index, symbol) ストリームを定義し、**uniquely-decodable であることを証明** → Mathlib McMillan (`McMillanKraftBridge`) を**実 LZ78 code に適用** → 実コードの**期待値 converse `H_D ≤ E[lz]`** を genuine に。
 - **注意**: `lz78PhraseStrings` 自体は **prefix-complete で UD でない**。真の UD object は encoded stream (別構造、新規構築要)。`_nodup` は UD の必要条件にすぎず不十分。
-- **deliverable (実装済)**: `Common2026/Shannon/LZ78ConverseUDObject.lean` (sorryAx 非依存、`lake env lean` silent)。
+- **deliverable (実装済)**: `InformationTheory/Shannon/LZ78ConverseUDObject.lean` (sorryAx 非依存、`lake env lean` silent)。
   - `uniquelyDecodable_of_constantLength` — 定長コード ⟹ UD (汎用、Mathlib 未収録、本 M1 の数学的核)。
   - `boolEncode`/`finBoolCode` — fixed-width binary code、`m < 2^K` で injective。
   - `lz78TokenCode c : Fin (c+1) × α → List Bool` (width `K = bitLength c |α|`) の injective + UD + `lz78TokenCode_kraftSum_le_one` + `lz78TokenCode_entropyD_le_expectedLength` (= `entropyD 2 P ≤ E[L] = K`)。

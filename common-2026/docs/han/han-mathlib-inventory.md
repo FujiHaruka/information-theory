@@ -1,13 +1,13 @@
 # Han 不等式 — Mathlib + 既存 Shannon API インベントリ (Phase 0 / M0)
 
-> **Status (2026-05-10)**: Phase 0 (M0) 調査完了。次: Phase A skeleton (`Common2026/Shannon/Entropy.lean`) を sorry-driven で書き始める。
+> **Status (2026-05-10)**: Phase 0 (M0) 調査完了。次: Phase A skeleton (`InformationTheory/Shannon/Entropy.lean`) を sorry-driven で書き始める。
 >
 > 親計画: [`han-moonshot-plan.md`](han-moonshot-plan.md)
 
 ## 結論 (TL;DR)
 
 1. **Mathlib に Han / Shearer / 一般化エントロピー不等式は存在しない** ─ 計画破棄ラインはクリア。
-2. **既存 `Common2026/Shannon` API は n 変数化に耐える** ─ `Fin n → α` 上で必要な instance チェインはすべて Mathlib 既存 instance で自動発火する見込み。Phase B の最大想定リスクは消えた。
+2. **既存 `InformationTheory/Shannon` API は n 変数化に耐える** ─ `Fin n → α` 上で必要な instance チェインはすべて Mathlib 既存 instance で自動発火する見込み。Phase B の最大想定リスクは消えた。
 3. **Phase A 中間補題 `condMutualInfo_eq_condEntropy_sub_condEntropy` の所要量を 150〜200 行に再見積もり** ─ Bridge.lean の証明骨格を「fiber 上で呼ぶ」ことで写経不要。
 
 ---
@@ -35,14 +35,14 @@
 ### Mathlib InformationTheory 棚卸し (関連箇所)
 
 - `Hamming.lean` ─ Hamming 距離 (符号理論、情報理論ではない)
-- `KullbackLeibler/{Basic,ChainRule,...}` ─ KL 発散と chain rule (これは既に Common2026 が活用)
+- `KullbackLeibler/{Basic,ChainRule,...}` ─ KL 発散と chain rule (これは既に InformationTheory が活用)
 - `Coding/` ─ Kraft-McMillan 定理
 
-**Shannon 熵フレームワーク自体が Mathlib に未実装** (joint / marginal / conditional いずれも `Common2026/Shannon` が自前)。Han 不等式は完全自前。
+**Shannon 熵フレームワーク自体が Mathlib に未実装** (joint / marginal / conditional いずれも `InformationTheory/Shannon` が自前)。Han 不等式は完全自前。
 
 ---
 
-## (2) 既存 `Common2026/Shannon` API の n 変数耐性
+## (2) 既存 `InformationTheory/Shannon` API の n 変数耐性
 
 ### 主要 API インベントリ (Phase A / B から呼ぶもの)
 
@@ -185,9 +185,9 @@ Phase 0 結果を踏まえた **calling-card 級の更新は不要**。当初の
 
 ## (5) 次の一手 (Phase A 着手準備)
 
-1. `Common2026/Shannon/Entropy.lean` の skeleton を sorry-driven で書く
-   - 必要 import: `Common2026.Shannon.Bridge` + `Common2026.Shannon.CondMutualInfo` + 関連 Mathlib
+1. `InformationTheory/Shannon/Entropy.lean` の skeleton を sorry-driven で書く
+   - 必要 import: `InformationTheory.Shannon.Bridge` + `InformationTheory.Shannon.CondMutualInfo` + 関連 Mathlib
    - 主定理 3 つ (chain rule / 中間補題 / `condEntropy_le_condEntropy_of_pair`) を `:= by sorry` で並べる
-   - skeleton type-check (`lake env lean Common2026/Shannon/Entropy.lean`) で instance 発火を確認
+   - skeleton type-check (`lake env lean InformationTheory/Shannon/Entropy.lean`) で instance 発火を確認
 2. sorry を 1 つずつ割る順序: `entropy_pair_eq_entropy_add_condEntropy` → `condMutualInfo_eq_condEntropy_sub_condEntropy` → `condEntropy_le_condEntropy_of_pair`
 3. (中間補題に着手する直前に) `condEntropy` tower 補題の skeleton を別途追加

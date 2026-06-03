@@ -1,7 +1,7 @@
 # SMB: 2-sided stationary extension `μ_ℤ` サブ計画 🌙
 
 > 実態整合 (2026-05-20): DONE-UNCOND (別ファイル) — 2-sided 拡張は完成済だが、
-> 計画した `SMBSandwich.lean` ではなく `Common2026/Probability/TwoSidedExtension.lean`
+> 計画した `SMBSandwich.lean` ではなく `InformationTheory/Probability/TwoSidedExtension.lean`
 > (141 KB、real-sorry 0; line 46-52 の `sorry` 言及は古い doc コメントのみ) に実装。
 > 主要 decl: `μZ` (:348)、`shiftZ` (:393) + `measurePreserving_shiftZ` (:417)、
 > `ergodic_shiftZ` (:956)、`natProj` (:706) + `measurePreserving_natProj` (:727)、
@@ -20,7 +20,7 @@
 ## 進捗
 
 - [x] M0 — Mathlib 在庫 + Route 決定 (Route A vs B) ✅
-- [x] Phase A — file 構造 / namespace / imports ✅ (`Common2026/Probability/TwoSidedExtension.lean`)
+- [x] Phase A — file 構造 / namespace / imports ✅ (`InformationTheory/Probability/TwoSidedExtension.lean`)
 - [x] Phase B — cylinder + shifted finite-marginal の定義 ✅
 - [x] Phase C — projective consistency + σ-additivity ✅
 - [x] Phase D — Carathéodory 拡張で `μZ : Measure (ℤ → α)` 構成 ✅ (TwoSidedExtension.lean:348)
@@ -187,8 +187,8 @@ Phase C が最大の不確実性 (Mathlib 補題在庫次第で ±300 行)。
 |---|---|---|
 | `MeasureTheory.Integrable.tendsto_ae_condExp` | `Mathlib/Probability/Martingale/Convergence.lean:360` | **Levy upward** (`ℕ`-indexed `ℱ`) |
 | `MeasureTheory.tendsto_ae_condExp` | `Mathlib/Probability/Martingale/Convergence.lean:426` | upward (general `g`) |
-| `Common2026/Shannon/BackwardFiltration.lean` | 自前 | `Filtration ℕᵒᵈ` 構造、`backwardFiltration T hT` |
-| `Common2026/Shannon/BackwardMartingale.lean` | 自前 (837 行、0 sorry) | `BackwardMartingale.ae_tendsto` (Levy downward 経路) |
+| `InformationTheory/Shannon/BackwardFiltration.lean` | 自前 | `Filtration ℕᵒᵈ` 構造、`backwardFiltration T hT` |
+| `InformationTheory/Shannon/BackwardMartingale.lean` | 自前 (837 行、0 sorry) | `BackwardMartingale.ae_tendsto` (Levy downward 経路) |
 
 #### MissingMath (本サブ計画で自前必要)
 
@@ -229,20 +229,20 @@ Phase C が最大の不確実性 (Mathlib 補題在庫次第で ±300 行)。
 新規ファイル:
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   TwoSidedExtension.lean    ← Phase B〜F + G (~1100-1700 行)
   SMBLiminfDischarge.lean   ← Phase H 単独 (~200-300 行、TwoSidedExtension に depend)
 ```
 
-(`Common2026.lean` に 2 行 `import` 追加。)
+(`InformationTheory.lean` に 2 行 `import` 追加。)
 
 ### Skeleton
 
 ```lean
-import Common2026.Shannon.Stationary
-import Common2026.Shannon.EntropyRate
-import Common2026.Shannon.BackwardFiltration
-import Common2026.Shannon.BackwardMartingale
+import InformationTheory.Shannon.Stationary
+import InformationTheory.Shannon.EntropyRate
+import InformationTheory.Shannon.BackwardFiltration
+import InformationTheory.Shannon.BackwardMartingale
 import Mathlib.MeasureTheory.Constructions.Projective
 import Mathlib.MeasureTheory.Constructions.ProjectiveFamilyContent
 import Mathlib.MeasureTheory.Constructions.Cylinders
@@ -262,12 +262,12 @@ open scoped ENNReal Topology
   最小化 (`Mathlib` 直 import 不可、必要モジュールのみ)
 - [ ] **(A.2)** Phase B-F の主要 declaration を `:= by sorry` で sketch (LSP がエラーで
   ないことを確認、~100 行)
-- [ ] **(A.3)** `Common2026.lean` に `import` 行 2 本追加
+- [ ] **(A.3)** `InformationTheory.lean` に `import` 行 2 本追加
 
 ### Done 条件
 
-- `lake env lean Common2026/Shannon/TwoSidedExtension.lean` が `sorry` warning のみで silent
-- `Common2026.lean` import 追加で root もクリーン
+- `lake env lean InformationTheory/Shannon/TwoSidedExtension.lean` が `sorry` warning のみで silent
+- `InformationTheory.lean` import 追加で root もクリーン
 
 ### LOC 見積
 
@@ -348,7 +348,7 @@ end InformationTheory.Shannon.TwoSided
 | `MeasureTheory.isProbabilityMeasure_map` | `Mathlib/MeasureTheory/Measure/Map.lean` |
 | `MeasurableEquiv.piCongrLeft` | `Mathlib/MeasureTheory/MeasurableSpace/Constructions.lean` (近傍) |
 | `Finset.restrict` | `Mathlib/Data/Finset/Pi.lean` 周辺 |
-| `StationaryProcess.identDistrib_obs_zero` | `Common2026/Shannon/Stationary.lean:94` |
+| `StationaryProcess.identDistrib_obs_zero` | `InformationTheory/Shannon/Stationary.lean:94` |
 | `MeasurePreserving.iterate` | `Mathlib/Dynamics/Ergodic/MeasurePreserving.lean` |
 
 ### Done 条件
@@ -706,7 +706,7 @@ theorem integrable_pmfLogCondInfty : Integrable (pmfLogCondInfty μ p) (μZ μ p
 on deeper-and-deeper past, converges to `pmfLogCondInfty`.
 
 Direct application of `BackwardMartingale.ae_tendsto` (本プロジェクト
-`Common2026/Shannon/BackwardMartingale.lean`). -/
+`InformationTheory/Shannon/BackwardMartingale.lean`). -/
 theorem pmfLogCondPast_tendsto_pmfLogCondInfty :
     ∀ᵐ x ∂(μZ μ p),
       Tendsto (fun k => pmfLogCondPast μ p k x) atTop (𝓝 (pmfLogCondInfty μ p x))
@@ -752,8 +752,8 @@ end InformationTheory.Shannon.TwoSided
 | `MeasureTheory.Filtration` | `Mathlib/Probability/Process/Filtration.lean` |
 | `MeasureTheory.condExp` | `Mathlib/MeasureTheory/Function/ConditionalExpectation/Basic.lean` |
 | `MeasureTheory.tendsto_ae_condExp` (forward, 参考) | `Mathlib/Probability/Martingale/Convergence.lean:426` |
-| `BackwardMartingale.ae_tendsto` (本プロジェクト) | `Common2026/Shannon/BackwardMartingale.lean` |
-| `Common2026.Shannon.backwardMartingale_eq_condExp` | `Common2026/Shannon/BackwardMartingale.lean` |
+| `BackwardMartingale.ae_tendsto` (本プロジェクト) | `InformationTheory/Shannon/BackwardMartingale.lean` |
+| `InformationTheory.Shannon.backwardMartingale_eq_condExp` | `InformationTheory/Shannon/BackwardMartingale.lean` |
 
 ### Done 条件
 
@@ -829,7 +829,7 @@ end InformationTheory.Shannon.TwoSided
 |---|---|
 | `MeasureTheory.tendsto_integral_filter_of_dominated_convergence` (Fatou 系) | `Mathlib/MeasureTheory/Integral/Bochner/...` |
 | `Filter.liminf_le_liminf` | `Mathlib/Order/Filter/Basic.lean` 周辺 |
-| `Common2026.Shannon.birkhoff_ergodic_ae` | `Common2026/Shannon/BirkhoffErgodic.lean` |
+| `InformationTheory.Shannon.birkhoff_ergodic_ae` | `InformationTheory/Shannon/BirkhoffErgodic.lean` |
 
 ### Done 条件
 
@@ -995,14 +995,14 @@ end InformationTheory.Shannon.TwoSided
 - 親 plan: [`shannon-mcmillan-breiman-phase-d-plan.md`](shannon-mcmillan-breiman-phase-d-plan.md)
 - E-8 主 plan: [`shannon-mcmillan-breiman-plan.md`](shannon-mcmillan-breiman-plan.md)
 - 既存実装:
-  - `Common2026/Shannon/Stationary.lean` (Phase A)
-  - `Common2026/Shannon/EntropyRate.lean` (Phase B)
-  - `Common2026/Shannon/BackwardFiltration.lean` (Phase α)
-  - `Common2026/Shannon/BackwardMartingale.lean` (Phase β、Levy downward)
-  - `Common2026/Shannon/BirkhoffErgodic.lean` (Phase γ、自前 Birkhoff)
-  - `Common2026/Shannon/SMBChainRule.lean` (Phase C.1-C.2 + D-partial)
-  - `Common2026/Shannon/SMBAlgoetCover.lean` (Phase D, upper sandwich 進行中)
-  - `Common2026/Shannon/ShannonMcMillanBreiman.lean` (Phase D wrapper, 仮説形)
+  - `InformationTheory/Shannon/Stationary.lean` (Phase A)
+  - `InformationTheory/Shannon/EntropyRate.lean` (Phase B)
+  - `InformationTheory/Shannon/BackwardFiltration.lean` (Phase α)
+  - `InformationTheory/Shannon/BackwardMartingale.lean` (Phase β、Levy downward)
+  - `InformationTheory/Shannon/BirkhoffErgodic.lean` (Phase γ、自前 Birkhoff)
+  - `InformationTheory/Shannon/SMBChainRule.lean` (Phase C.1-C.2 + D-partial)
+  - `InformationTheory/Shannon/SMBAlgoetCover.lean` (Phase D, upper sandwich 進行中)
+  - `InformationTheory/Shannon/ShannonMcMillanBreiman.lean` (Phase D wrapper, 仮説形)
 - Mathlib 参考: `Mathlib/Probability/ProductMeasure.lean` (`infinitePi` 構成、
   Phase C テンプレ)
 - Algoet–Cover (1988) "A sandwich proof of the Shannon-McMillan-Breiman theorem"

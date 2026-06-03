@@ -1,6 +1,6 @@
 # EPI de Bruijn **per-time** identity — Mathlib API re-attack inventory
 
-> **Scope**: `debruijnIdentityV2_holds` (`Common2026/Shannon/FisherInfoV2DeBruijn.lean:245`,
+> **Scope**: `debruijnIdentityV2_holds` (`InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:245`,
 > `@residual(wall:debruijn-integration)`) を genuine 化するのに必要な Mathlib API の
 > 構造化在庫。**per-time** の de Bruijn 微分恒等式
 > `(d/dt) differentialEntropy(P.map(X+√t·Z)) = (1/2)·J(X+√t·Z)` (Cover-Thomas
@@ -15,7 +15,7 @@
 >
 > **Parent plan**: `epi-debruijn-integration-plan.md` Phase B (撤退ライン L-EPI2,
 > per-time wall は Gaussian 限定で genuine、一般 `X` は wall sorry)。
-> **Wall SoT**: `Common2026/Shannon/FisherInfoV2DeBruijn.lean:245`。
+> **Wall SoT**: `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:245`。
 
 ---
 
@@ -40,7 +40,7 @@ Mathlib に出揃っており、不在は Gaussian 専用 closed-form (heat kern
 
 ## 1. 主定理の最終形 (wall の verbatim 再掲)
 
-`Common2026/Shannon/FisherInfoV2DeBruijn.lean:245-254`:
+`InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:245-254`:
 
 ```lean
 theorem debruijnIdentityV2_holds
@@ -239,8 +239,8 @@ regularity が precondition (Gaussian-tail で自然だが、`density_t` には 
 
 | 概念 | Mathlib API | file:line | 状態 | per-time での扱い |
 |---|---|---|---|---|
-| entropy の withDensity 表現 | `Common2026.Shannon.differentialEntropy_eq_integral_withDensity` | `Common2026/Shannon/DifferentialEntropy.lean:51` | PRESENT (repo, 既出) | 段 2、`μ = volume.withDensity f` 形へ |
-| entropy の実数密度表現 | `Common2026.Shannon.differentialEntropy_eq_integral_density` | `Common2026/Shannon/DifferentialEntropy.lean:65` | PRESENT (repo) | 段 2、`-∫ f log f` 形 (negMulLog の符号付き) |
+| entropy の withDensity 表現 | `InformationTheory.Shannon.differentialEntropy_eq_integral_withDensity` | `InformationTheory/Shannon/DifferentialEntropy.lean:51` | PRESENT (repo, 既出) | 段 2、`μ = volume.withDensity f` 形へ |
+| entropy の実数密度表現 | `InformationTheory.Shannon.differentialEntropy_eq_integral_density` | `InformationTheory/Shannon/DifferentialEntropy.lean:65` | PRESENT (repo) | 段 2、`-∫ f log f` 形 (negMulLog の符号付き) |
 | `withDensity ∘ rnDeriv = μ` | `MeasureTheory.Measure.withDensity_rnDeriv_eq` | `Mathlib/MeasureTheory/Measure/Decomposition/RadonNikodym.lean` | PRESENT | `μ ≪ volume` 往復 |
 | `rnDeriv (withDensity f) = f` (ae) | `MeasureTheory.Measure.rnDeriv_withDensity` | `Mathlib/MeasureTheory/Measure/Decomposition/Lebesgue.lean` | PRESENT | 段 1-2 の核 (repo の `differentialEntropy_eq_integral_withDensity:57` で既使用) |
 | `rnDeriv_withDensity₀` (ae-meas 版) | `MeasureTheory.Measure.rnDeriv_withDensity₀` | `Mathlib/MeasureTheory/Measure/Decomposition/Lebesgue.lean` | PRESENT | f が ae-measurable のみの場合 |
@@ -273,12 +273,12 @@ have h := Measure.rnDeriv_withDensity (volume : Measure ℝ) hf  -- hf : Measura
 
 | 概念 | repo API | file:line | 状態 | per-time での扱い |
 |---|---|---|---|---|
-| 畳み込み密度 (Bochner ∫ 形) | `Common2026.Shannon.convDensityAdd` | `Common2026/Shannon/EPIConvDensity.lean:40` | PRESENT (`def`) | `pPath s = convDensityAdd p_X (gaussian density √s)` の同定 |
-| 畳み込み密度の z-微分被積分 | `convDensityAddDeriv` | `Common2026/Shannon/EPIConvDensity.lean:64` | PRESENT (`def`) | `∂_z (p_X x · p_Y(z-x)) = p_X x · p_Y'(z-x)` |
-| 畳み込み密度の HasDerivAt | `convDensityAdd_hasDerivAt` | `Common2026/Shannon/EPIConvDensity.lean:86` | **PRESENT (`@audit:ok`, sorryAx-free)** | `convDensityAdd` の z-微分 (parametric integral diff 経由) |
-| 畳み込み密度の logDeriv (score) | `convDensityAdd_logDeriv` | `Common2026/Shannon/EPIConvDensity.lean:113` | **PRESENT (`@audit:ok`)** | 段 6: `logDeriv p = (∫ p_X p_Y')/p` → Fisher info |
-| 公開 gateway | `convDensity_add_differentiable` | `Common2026/Shannon/EPIConvDensity.lean:140` | **PRESENT (`@audit:ok`)** | 上記 2 atom の bundle |
-| 畳み込み交換律 | `convDensityAdd_comm` | `Common2026/Shannon/EPIConvDensity.lean:45` | PRESENT (genuine) | 補助 |
+| 畳み込み密度 (Bochner ∫ 形) | `InformationTheory.Shannon.convDensityAdd` | `InformationTheory/Shannon/EPIConvDensity.lean:40` | PRESENT (`def`) | `pPath s = convDensityAdd p_X (gaussian density √s)` の同定 |
+| 畳み込み密度の z-微分被積分 | `convDensityAddDeriv` | `InformationTheory/Shannon/EPIConvDensity.lean:64` | PRESENT (`def`) | `∂_z (p_X x · p_Y(z-x)) = p_X x · p_Y'(z-x)` |
+| 畳み込み密度の HasDerivAt | `convDensityAdd_hasDerivAt` | `InformationTheory/Shannon/EPIConvDensity.lean:86` | **PRESENT (`@audit:ok`, sorryAx-free)** | `convDensityAdd` の z-微分 (parametric integral diff 経由) |
+| 畳み込み密度の logDeriv (score) | `convDensityAdd_logDeriv` | `InformationTheory/Shannon/EPIConvDensity.lean:113` | **PRESENT (`@audit:ok`)** | 段 6: `logDeriv p = (∫ p_X p_Y')/p` → Fisher info |
+| 公開 gateway | `convDensity_add_differentiable` | `InformationTheory/Shannon/EPIConvDensity.lean:140` | **PRESENT (`@audit:ok`)** | 上記 2 atom の bundle |
+| 畳み込み交換律 | `convDensityAdd_comm` | `InformationTheory/Shannon/EPIConvDensity.lean:45` | PRESENT (genuine) | 補助 |
 
 ### `convDensityAdd_hasDerivAt` 完全署名 (verbatim)
 
@@ -405,18 +405,18 @@ per-time wall は **plan 1〜2 本で closure 可能な candidate** であり、
 
 ## 11. 着手 skeleton
 
-`Common2026/Shannon/FisherInfoV2DeBruijnPerTime.lean` (新規、wall discharge 専用) の出だし:
+`InformationTheory/Shannon/FisherInfoV2DeBruijnPerTime.lean` (新規、wall discharge 専用) の出だし:
 
 ```lean
 import Mathlib.Analysis.Calculus.ParametricIntegral       -- hasDerivAt_integral_of_dominated_loc_of_deriv_le (軸1)
 import Mathlib.MeasureTheory.Integral.IntegralEqImproper   -- integral_mul_deriv_eq_deriv_mul (軸3, 無限区間 IBP)
 import Mathlib.MeasureTheory.Measure.Decomposition.Lebesgue -- rnDeriv_withDensity (軸4)
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog      -- Real.deriv_negMulLog (軸2 補)
-import Common2026.Shannon.EPIConvDensity                    -- convDensityAdd_hasDerivAt (軸5, @audit:ok)
-import Common2026.Shannon.FisherInfoV2DeBruijn              -- debruijnIdentityV2_holds (wall SoT), IsRegularDeBruijnHypV2
-import Common2026.Shannon.DifferentialEntropy              -- differentialEntropy_eq_integral_density (軸4)
+import InformationTheory.Shannon.EPIConvDensity                    -- convDensityAdd_hasDerivAt (軸5, @audit:ok)
+import InformationTheory.Shannon.FisherInfoV2DeBruijn              -- debruijnIdentityV2_holds (wall SoT), IsRegularDeBruijnHypV2
+import InformationTheory.Shannon.DifferentialEntropy              -- differentialEntropy_eq_integral_density (軸4)
 
-namespace Common2026.Shannon
+namespace InformationTheory.Shannon
 
 open MeasureTheory ProbabilityTheory Filter Topology Real
 
@@ -437,7 +437,7 @@ theorem debruijnIdentityV2_holds_pertime
       t := by
   sorry  -- @residual(wall:debruijn-integration) — 軸1-5 plumbing 段、~250 行
 
-end Common2026.Shannon
+end InformationTheory.Shannon
 ```
 
 (本 skeleton は inventory 用。実装は `lean-implementer` の責務であり、`density_t` への

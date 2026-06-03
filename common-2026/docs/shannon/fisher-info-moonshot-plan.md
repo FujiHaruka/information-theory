@@ -15,7 +15,7 @@
 - [x] Phase B — Tier 1 (L-F2 hypothesis pass-through、`IsRegularDensity` predicate)
 - [~] Phase C/D — L-F1 で `IsRegularDeBruijnHyp` field に吸収
 - [x] Phase E — `deBruijn_identity` (signature 完全形、本体 hypothesis pass-through)
-- [x] Phase V — `Common2026.lean` 編入
+- [x] Phase V — `InformationTheory.lean` 編入
 
 V1 (`FisherInfo.lean` 236 行) は 0 sorry / 0 warning だが `fisherInfo` の representative-dependence flaw により stale。実 deliverable は V2 (判断ログ #5)。
 
@@ -23,30 +23,30 @@ V1 (`FisherInfo.lean` 236 行) は 0 sorry / 0 warning だが `fisherInfo` の r
 
 ### Goal (V1 signature、stale)
 
-`Common2026/Shannon/FisherInfo.lean` で 4 主定理 publish:
+`InformationTheory/Shannon/FisherInfo.lean` で 4 主定理 publish:
 
 - `fisherInfo : Measure ℝ → ℝ≥0∞` (`logDeriv` shape-driven、`klDiv` 慣行で `ℝ≥0∞` 内蔵 + `.toReal` 公開)
 - `fisherInfo_gaussianReal (m hv) : fisherInfo (gaussianReal m v) = ENNReal.ofReal (1/v)` ← **V1 では NOT-PROVABLE (FLAW-VACUOUS)**
 - `integral_logDeriv_pdf_eq_zero (X h_reg) : ∫ logDeriv p · p = 0` (`IsRegularDensity` predicate 形)
 - `deBruijn_identity (X Z hXZ hZ_law h_reg ht) : HasDerivAt (fun s => h(X+√s·Z)) ((1/2)·J(X+√t·Z).toReal) t`
 
-verbatim signature → `Common2026/Shannon/FisherInfo.lean` (236 行)。
+verbatim signature → `InformationTheory/Shannon/FisherInfo.lean` (236 行)。
 
 ### Approach (overall strategy / shape of solution)
 
-Cover-Thomas 17.7 の **heat semigroup 経路は Mathlib 不在** (inventory §C-5)、代わりに **`logDeriv` + `HasPDF` + Gaussian convolution PDF identity + parametric integral differentiation** の 4 部品で組む。1-D scope (multivariate Fisher matrix scope-out)、Common2026 `DifferentialEntropy.lean` Gaussian インフラ最大再利用。
+Cover-Thomas 17.7 の **heat semigroup 経路は Mathlib 不在** (inventory §C-5)、代わりに **`logDeriv` + `HasPDF` + Gaussian convolution PDF identity + parametric integral differentiation** の 4 部品で組む。1-D scope (multivariate Fisher matrix scope-out)、InformationTheory `DifferentialEntropy.lean` Gaussian インフラ最大再利用。
 
 de Bruijn 5-step 分解 (inventory §G-5): D-1 measure convolution → D-2 PDF lconvolution → D-3 `d/ds`-step (parametric integral) → C heat equation + convolution 微分 → E IBP。
 
 **段階 ship**: Tier 0 (定義 + 基本性質、Phase A) / Tier 1 (+Gaussian + score 期待値 0、Phase B、**L-F3 撤退点**) / Tier 2 (+de Bruijn、Phase C-E)。中央予測 **~750 行** (inventory §G、上限 940 行)、L-F3 で ~280-360 行、L-F1 で ~600 行。
 
-**ファイル**: 新規 `Common2026/Shannon/FisherInfo.lean` + `Common2026.lean` import 追記。
+**ファイル**: 新規 `InformationTheory/Shannon/FisherInfo.lean` + `InformationTheory.lean` import 追記。
 
 ## 依存関係
 
 Mathlib (主要): `Analysis.Calculus.{LogDeriv, ParametricIntegral}`、`Analysis.SpecialFunctions.Log.Deriv` (`Real.deriv_log_comp_eq_logDeriv`)、`Probability.{Density, Distributions.Gaussian.Real, Independence.Basic}` (`IndepFun.pdf_add_eq_lconvolution_pdf'` 等)、`MeasureTheory.{Integral.IntegralEqImproper, Group.Convolution}`、`Analysis.{LConvolution, Convolution}`。lemma 詳細 → inventory §B-C。
 
-Common2026: `Shannon.DifferentialEntropy` (`differentialEntropy`, `_eq_integral_density`, `integrable_density_log_density_of_gaussian`, `log_gaussianPDFReal_eq`, `_gaussianReal`)。Chernoff/Sanov/Stein/Asymptotic は不要 (独立)。
+InformationTheory: `Shannon.DifferentialEntropy` (`differentialEntropy`, `_eq_integral_density`, `integrable_density_log_density_of_gaussian`, `log_gaussianPDFReal_eq`, `_gaussianReal`)。Chernoff/Sanov/Stein/Asymptotic は不要 (独立)。
 
 ---
 
@@ -58,13 +58,13 @@ Common2026: `Shannon.DifferentialEntropy` (`differentialEntropy`, `_eq_integral_
 
 ## Phase A-V (V1 publish 済、stale)
 
-全 Phase は V1 (`Common2026/Shannon/FisherInfo.lean` 236 行) で 0 sorry / 0 warning publish 済だが、`fisherInfo` の representative-dependence flaw により実 deliverable は V2。
+全 Phase は V1 (`InformationTheory/Shannon/FisherInfo.lean` 236 行) で 0 sorry / 0 warning publish 済だが、`fisherInfo` の representative-dependence flaw により実 deliverable は V2。
 
 - **Phase A (Tier 0)** — `fisherInfo` 定義 + `_nonneg` + `_eq_lintegral_logDeriv_sq` + `_dirac` + `differentialEntropy_map_eq_integral_pdf_log_pdf` (inventory §G-1, G-6)。
 - **Phase B (Tier 1, L-F2 適用)** — `IsRegularDensity` predicate (Phase 2026-05-19 で a.e.-representative 形に back-port、判断ログ #5) + `integral_logDeriv_pdf_eq_zero` (hypothesis pass-through)。`fisherInfo_gaussianReal = 1/v` は判断ログ #4 で `fisher-info-gaussian-plan.md` に分離後 #5 で flaw 発見。
 - **Phase C/D (L-F1 適用)** — heat-eq / convolution 微分 / parametric integral は `IsRegularDeBruijnHyp` field `derivAt_entropy_eq_half_fisher` に hypothesis として吸収 (実 chain は未実装)。
 - **Phase E** — `deBruijn_identity` signature 完全形 publish、本体は `:= h_reg.derivAt_entropy_eq_half_fisher` (pass-through)。
-- **Phase V** — `Common2026.lean` 編入済。
+- **Phase V** — `InformationTheory.lean` 編入済。
 
 詳細手順 (skeleton / lemma 別証明計画 / 落とし穴) は git 履歴の plan 旧版または inventory §G-1〜G-6 参照。再着手は V2 plan (`fisher-info-v2-*-plan.md`) で。
 

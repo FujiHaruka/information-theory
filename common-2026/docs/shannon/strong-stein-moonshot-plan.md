@@ -2,7 +2,7 @@
 
 (B-4 / moonshot-seeds.md, 2026-05-12 起草)
 
-> **実態整合 (2026-05-20): DONE-UNCOND** — Phase A〜C すべて完了。`Common2026/Shannon/StrongStein.lean:498` の `stein_strong_lemma` が strict `Tendsto (… → 𝓝 (klDiv P Q).toReal)` を std binders (`hMapJoint` 等は honest i.i.d. joint-law 仮定、pass-through なし) で discharge。`StrongStein.lean` 全体 0 sorry / 0 `:=True`。
+> **実態整合 (2026-05-20): DONE-UNCOND** — Phase A〜C すべて完了。`InformationTheory/Shannon/StrongStein.lean:498` の `stein_strong_lemma` が strict `Tendsto (… → 𝓝 (klDiv P Q).toReal)` を std binders (`hMapJoint` 等は honest i.i.d. joint-law 仮定、pass-through なし) で discharge。`StrongStein.lean` 全体 0 sorry / 0 `:=True`。
 
 ## 進捗
 
@@ -50,7 +50,7 @@ Q^n(B_n) ≥ exp(-n(K+δ)) · P^n(B_n ∩ T_n^δ)
 - Phase A: ~150 行 (per-point lower bound + 集合形)
 - Phase B: ~200 行 (`liminf` 形の strong converse、任意 test → typicality 経由)
 - Phase C: ~100 行 (Tendsto 主定理、既存 `stein_lemma` の liminf 側流用)
-- 合計 ~450-550 行、新規 `Common2026/Shannon/StrongStein.lean`。
+- 合計 ~450-550 行、新規 `InformationTheory/Shannon/StrongStein.lean`。
 - 既存 `Stein.lean` 改変なし、downstream 影響なし。
 
 ## Phase 0 — Mathlib + 既存 inventory + 経路判定 ✅

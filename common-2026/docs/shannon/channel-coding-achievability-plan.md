@@ -4,12 +4,12 @@
 >
 > **2026-05-12 状態 (二度目の更新)**: Phase A + Phase B-(a,b,c) 完了。Phase C (random codebook + averaging) + Phase D (主定理) は依然 deferred。Phase B-(c) (independent pair bound) は AEP 拡張 (`typicalSet_prob_le`) + `iIndepFun_iff_map_fun_eq_pi_map` 経由の point-wise factorization で完成 (B-3' 区切り)。
 >
-> 実態整合 (2026-05-20): DONE-HONEST-HYPS — Phase C+D は子 plan B-3'' (`channel-coding-phase-cd-plan.md`) で完全閉鎖済。主定理 `channel_coding_achievability` (`Common2026/Shannon/ChannelCodingAchievability.lean:1607`、0 sorry) が `(W p hp_pos hW_pos R hR ε')` で `∃ N, ∀ n ≥ N, ∃ M c, (c.averageErrorProb W).toReal < ε'` を結論。本ファイル (`ChannelCoding.lean`) は Phase B 3 bound のみ (B-3') で、Phase C/D は別ファイル。下記 Phase C/D の「deferred」記述は B-3'' で解消済 (stale)。
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — Phase C+D は子 plan B-3'' (`channel-coding-phase-cd-plan.md`) で完全閉鎖済。主定理 `channel_coding_achievability` (`InformationTheory/Shannon/ChannelCodingAchievability.lean:1607`、0 sorry) が `(W p hp_pos hW_pos R hR ε')` で `∃ N, ∀ n ≥ N, ∃ M c, (c.averageErrorProb W).toReal < ε'` を結論。本ファイル (`ChannelCoding.lean`) は Phase B 3 bound のみ (B-3') で、Phase C/D は別ファイル。下記 Phase C/D の「deferred」記述は B-3'' で解消済 (stale)。
 
 ## 進捗
 
-- [x] Phase 0 — Inventory (Mathlib + 既存 Common2026 探索) ✅ → [channel-coding-achievability-inventory.md](channel-coding-achievability-inventory.md)
-- [x] Phase A — Channel + Code 定義 ✅ (`Common2026/Shannon/ChannelCoding.lean`, 行 1-225, 約 200 行)
+- [x] Phase 0 — Inventory (Mathlib + 既存 InformationTheory 探索) ✅ → [channel-coding-achievability-inventory.md](channel-coding-achievability-inventory.md)
+- [x] Phase A — Channel + Code 定義 ✅ (`InformationTheory/Shannon/ChannelCoding.lean`, 行 1-225, 約 200 行)
 - [x] Phase B — Jointly typical set + 3 joint AEP bounds ✅
   - [x] (a) `jointlyTypicalSet_prob_tendsto_one` ✅
   - [x] (b) `jointlyTypicalSet_card_le` ✅
@@ -47,16 +47,16 @@
 
 要点:
 - **Mathlib に "channel" "capacity" 既存 API 無し** (loogle 確認: `Kernel`/`Std.Channel` の hit のみ、IT 用なし)。DMC は自前定義 `Channel α β := Kernel α β` (alias) または直接 `Kernel α β` を使う。Capacity 定義 `C := ⨆ p, I_p` も自前。
-- **再利用 (Common2026 内)**:
-  - `Common2026/Shannon/MIChainRule.lean`: `mutualInfo_iid_eq_nsmul` ★中核★
-  - `Common2026/Shannon/AEP.lean`: typical set / size bound / 確率 → 1 の単独版 (`X^n` のみ)。**Joint AEP は X 単独 AEP の構造をコピペ + 拡張** で書く (block ratio plumbing が 1 軸 → 3 軸に増える)。
-  - `Common2026/Shannon/MutualInfo.lean`: `klDiv_map_measurableEquiv`, `klDiv_prod_const_left`
-  - `Common2026/Shannon/Converse.lean`: encoder / decoder + `errorProb` の単一形は **`MeasureFano.errorProb`** で既に立っている。block 版 `errorProb` も同 namespace で追加可。
-  - `Common2026/Shannon/Pi.lean`: `MeasurableEquiv` reshape
+- **再利用 (InformationTheory 内)**:
+  - `InformationTheory/Shannon/MIChainRule.lean`: `mutualInfo_iid_eq_nsmul` ★中核★
+  - `InformationTheory/Shannon/AEP.lean`: typical set / size bound / 確率 → 1 の単独版 (`X^n` のみ)。**Joint AEP は X 単独 AEP の構造をコピペ + 拡張** で書く (block ratio plumbing が 1 軸 → 3 軸に増える)。
+  - `InformationTheory/Shannon/MutualInfo.lean`: `klDiv_map_measurableEquiv`, `klDiv_prod_const_left`
+  - `InformationTheory/Shannon/Converse.lean`: encoder / decoder + `errorProb` の単一形は **`MeasureFano.errorProb`** で既に立っている。block 版 `errorProb` も同 namespace で追加可。
+  - `InformationTheory/Shannon/Pi.lean`: `MeasurableEquiv` reshape
 
 ## Phase A — Channel + Code 定義 ✅
 
-**スコープ** (新規ファイル `Common2026/Shannon/ChannelCoding.lean`、~150-300 行を見積もる):
+**スコープ** (新規ファイル `InformationTheory/Shannon/ChannelCoding.lean`、~150-300 行を見積もる):
 
 定義:
 - `Channel α β := Kernel α β` (DMC 1-symbol). `[IsMarkovKernel W]` で Markov 制約。
@@ -74,7 +74,7 @@
 
 ## Phase B — Jointly typical set + 3 joint AEP bounds 🚧
 
-**スコープ** (`Common2026/Shannon/ChannelCoding.lean` Phase B 節、行 226-514、約 305 行):
+**スコープ** (`InformationTheory/Shannon/ChannelCoding.lean` Phase B 節、行 226-514、約 305 行):
 
 定義 (✅):
 - `jointSequence Xs Ys : ℕ → Ω → α × β` — 既存 AEP の `typicalSet` に joint 軸を渡すための reshape ヘルパー
@@ -87,7 +87,7 @@
 
 ### Phase B-(c) Approach
 
-**主補題シグネチャ** (`Common2026/Shannon/ChannelCoding.lean` 末尾):
+**主補題シグネチャ** (`InformationTheory/Shannon/ChannelCoding.lean` 末尾):
 
 ```lean
 theorem jointlyTypicalSet_indep_prob_le
@@ -116,7 +116,7 @@ theorem jointlyTypicalSet_indep_prob_le
 
 **Approach** (Phase B-(c) のみ):
 
-1. **新規 AEP 補題** `typicalSet_prob_le` (`Common2026/Shannon/AEP.lean` Phase G 節として追加, ~80 行):
+1. **新規 AEP 補題** `typicalSet_prob_le` (`InformationTheory/Shannon/AEP.lean` Phase G 節として追加, ~80 行):
    - 仮定: `iIndepFun (fun i => Xs i) μ` + `∀ i, IdentDistrib (Xs i) (Xs 0) μ μ` + `∀ x, 0 < (μ.map (Xs 0)).real {x}`.
    - 結論: `x ∈ typicalSet μ Xs n ε ⟹ (μ.map (jointRV Xs n)).real {x} ≤ Real.exp (- (n : ℝ) * (entropy μ (Xs 0) - ε))`.
    - 証明 plumbing:
@@ -135,7 +135,7 @@ theorem jointlyTypicalSet_indep_prob_le
 
 **`hidentZ` の不要性**: Phase B-(c) では joint 軸の identification は **使わない** (X 軸 / Y 軸の i.i.d.-ness で十分)。`hposZ` は `jointlyTypicalSet_card_le` (B-(b)) の signature が要求するため受け取る。
 
-**実装場所**: AEP 拡張 (~80 行) は **`Common2026/Shannon/AEP.lean` 末尾の Phase G 節**として追加 (file 分割せず)。本体 (Phase B-(c) ~150 行) は **既存 `ChannelCoding.lean` 末尾**に追加 (file 分割せず)。両 file が `lake env lean` clean を維持する。
+**実装場所**: AEP 拡張 (~80 行) は **`InformationTheory/Shannon/AEP.lean` 末尾の Phase G 節**として追加 (file 分割せず)。本体 (Phase B-(c) ~150 行) は **既存 `ChannelCoding.lean` 末尾**に追加 (file 分割せず)。両 file が `lake env lean` clean を維持する。
 
 撤退理由 (Phase B 完了時点で再 stop):
 - 残り Phase C + Phase D で 600-1000 行追加 (random codebook 上の確率空間構築 + main theorem の `n → ∞` 制御)。

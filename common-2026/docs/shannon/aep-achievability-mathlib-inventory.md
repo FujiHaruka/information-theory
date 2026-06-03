@@ -20,14 +20,14 @@
 
 ## 進捗
 
-- [x] 軸 1: typical set の 3 性質 (現行 `Common2026/Shannon/AEP.lean` Phase B/C verbatim 引用)
+- [x] 軸 1: typical set の 3 性質 (現行 `InformationTheory/Shannon/AEP.lean` Phase B/C verbatim 引用)
 - [x] 軸 2: `Finset` ↔ `Fin` 列挙 API (`Finset.equivFin`, `Set.Finite.toFinset` 系)
 - [x] 軸 3: `M_n = 2^⌈nR⌉` 構成 + `Real.log (M_n) / n → R` 漸近 (`Nat.ceil` API)
 - [x] 軸 4: errorProb の reuse (Phase D 形と Phase E achievability 形の整合)
 
 ## ゴール / Approach
 
-AEP Phase E (achievability) 着手前に、4 軸で **新規自前構築量 vs Mathlib / Common2026 既存資産** を固定する。
+AEP Phase E (achievability) 着手前に、4 軸で **新規自前構築量 vs Mathlib / InformationTheory 既存資産** を固定する。
 
 **結論先取り**:
 
@@ -42,7 +42,7 @@ AEP Phase E (achievability) 着手前に、4 軸で **新規自前構築量 vs M
 
 ### `measurableSet_typicalSet` (Phase B)
 
-- **file:line**: `Common2026/Shannon/AEP.lean:240`
+- **file:line**: `InformationTheory/Shannon/AEP.lean:240`
 - **完全署名 verbatim**:
   ```lean
   theorem measurableSet_typicalSet
@@ -55,7 +55,7 @@ AEP Phase E (achievability) 着手前に、4 軸で **新規自前構築量 vs M
 
 ### `typicalSet_card_le` (Phase C size bound)
 
-- **file:line**: `Common2026/Shannon/AEP.lean:257`
+- **file:line**: `InformationTheory/Shannon/AEP.lean:257`
 - **完全署名 verbatim**:
   ```lean
   theorem typicalSet_card_le
@@ -71,7 +71,7 @@ AEP Phase E (achievability) 着手前に、4 軸で **新規自前構築量 vs M
 
 ### `typicalSet_prob_tendsto_one` (Phase C 確率 → 1)
 
-- **file:line**: `Common2026/Shannon/AEP.lean:375`
+- **file:line**: `InformationTheory/Shannon/AEP.lean:375`
 - **完全署名 verbatim**:
   ```lean
   theorem typicalSet_prob_tendsto_one
@@ -165,7 +165,7 @@ decoder d_n : Fin M_n → (Fin n → α) :=
 
 ### `Real.log_pow` / `Real.log_exp` / `Real.exp_log`
 
-- **既存 Common2026 利用前例**: `AEP.lean` Phase B (`Real.exp_log (hpos x)` で 1 行)、Phase D Phase B (`Real.log_pow` Step E)
+- **既存 InformationTheory 利用前例**: `AEP.lean` Phase B (`Real.exp_log (hpos x)` で 1 行)、Phase D Phase B (`Real.log_pow` Step E)
 - **本 plan での用途**: rate 漸近 `log (Nat.ceil (Real.exp (n · R))) / n → R` の組成。
 
 ### `tendsto_one_div_atTop_nhds_zero_nat`
@@ -182,7 +182,7 @@ decoder d_n : Fin M_n → (Fin n → α) :=
 
 ### `MeasureFano.errorProb` (再掲、Phase D で確定済)
 
-- **file:line**: `Common2026/Fano/Measure.lean:73`
+- **file:line**: `InformationTheory/Fano/Measure.lean:73`
 - **本 plan での用途**: `errorProb μ (jointRV Xs n) (fun ω => c (jointRV Xs n ω)) d` 形を Phase D と完全に同形で使用。**Phase D は forall code で結論を出す、Phase E は exists code で同じ errorProb 形を構成**。
 
 ### Phase E 主定理の statement 形 (Phase D との対比)
@@ -234,11 +234,11 @@ theorem source_coding_achievability
 ## Definition of Done (本 inventory)
 
 - [x] 4 軸全て調査完了
-- [x] typical set 3 性質の verbatim 署名 + `[..]` プレリク確定 (`Common2026/Shannon/AEP.lean` の現行コードから引用)
+- [x] typical set 3 性質の verbatim 署名 + `[..]` プレリク確定 (`InformationTheory/Shannon/AEP.lean` の現行コードから引用)
 - [x] `Finset.equivFin` / `Finset.equivFinOfCardEq` の verbatim 署名確定、`Set.Finite.toFinset` 周辺 API 完備確認
 - [x] `Nat.ceil` API + `Real.exp` / `Real.log` 周辺の Phase D 既存 plumbing 確認、rate 漸近の組成パス確定
 - [x] errorProb は Phase D と同形で再利用、新規 formalism ゼロ
-- [x] Phase E skeleton (`Common2026/Shannon/AEP.lean` 末尾 append、`source_coding_achievability` 主定理 + 補助 4 本) が書ける状態
+- [x] Phase E skeleton (`InformationTheory/Shannon/AEP.lean` 末尾 append、`source_coding_achievability` 主定理 + 補助 4 本) が書ける状態
 
 ## 判断ログ
 

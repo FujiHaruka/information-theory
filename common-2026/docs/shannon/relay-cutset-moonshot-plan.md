@@ -7,16 +7,16 @@
 > [`relay-cutset-mathlib-inventory.md`](./relay-cutset-mathlib-inventory.md)
 >
 > **Predecessor / 再利用基盤** (publish 済、本 plan からは黒箱 reuse):
-> - `Common2026/Shannon/ChannelCoding.lean` — `Channel`, `Code`, `errorProbAt`, `averageErrorProb`
-> - `Common2026/Shannon/ChannelCodingConverseGeneralComplete.lean` — Fano + chain rule general converse pattern
-> - `Common2026/Shannon/CondMutualInfo.lean` — `condMutualInfo`, `mutualInfo_chain_rule`, `IsMarkovChain` (γ-form), `mutualInfo_le_of_markov`, `isMarkovChain_map_left`
-> - `Common2026/Shannon/MIChainRule.lean` — `mutualInfo_chain_rule_fin`
-> - `Common2026/Shannon/MutualInfo.lean` — `mutualInfo`, `mutualInfo_comm`, `mutualInfo_ne_top`
-> - `Common2026/Shannon/Fano/CondEntropy.lean` — `fano_inequality_measure_theoretic`
-> - `Common2026/Shannon/WynerZiv.lean`, `WynerZivAchievability.lean`, `WynerZivConverse.lean` — T3-D が完全踏襲する **statement-level hypothesis pass-through pattern** (本 plan の直接の雛形)
-> - `Common2026/Shannon/BlockwiseChannel.lean` — blockwise kernel abstraction (memoryless extension `pi`)
+> - `InformationTheory/Shannon/ChannelCoding.lean` — `Channel`, `Code`, `errorProbAt`, `averageErrorProb`
+> - `InformationTheory/Shannon/ChannelCodingConverseGeneralComplete.lean` — Fano + chain rule general converse pattern
+> - `InformationTheory/Shannon/CondMutualInfo.lean` — `condMutualInfo`, `mutualInfo_chain_rule`, `IsMarkovChain` (γ-form), `mutualInfo_le_of_markov`, `isMarkovChain_map_left`
+> - `InformationTheory/Shannon/MIChainRule.lean` — `mutualInfo_chain_rule_fin`
+> - `InformationTheory/Shannon/MutualInfo.lean` — `mutualInfo`, `mutualInfo_comm`, `mutualInfo_ne_top`
+> - `InformationTheory/Shannon/Fano/CondEntropy.lean` — `fano_inequality_measure_theoretic`
+> - `InformationTheory/Shannon/WynerZiv.lean`, `WynerZivAchievability.lean`, `WynerZivConverse.lean` — T3-D が完全踏襲する **statement-level hypothesis pass-through pattern** (本 plan の直接の雛形)
+> - `InformationTheory/Shannon/BlockwiseChannel.lean` — blockwise kernel abstraction (memoryless extension `pi`)
 >
-> **Goal (短形)**: 新規 1 ファイル `Common2026/Shannon/RelayCutset.lean` で Cover-Thomas
+> **Goal (短形)**: 新規 1 ファイル `InformationTheory/Shannon/RelayCutset.lean` で Cover-Thomas
 > Theorem 15.10.1 (cut-set outer bound for the relay channel) を **outer bound only**,
 > **statement-level hypothesis pass-through** で publish。**0 sorry / 0 warning**、
 > 規模 ~400-650 行 (中央 500、撤退ライン 4 本全発動下)。inner bound は完全 scope-out。
@@ -40,7 +40,7 @@
 
 ## Status (2026-05-19)
 
-> 実態整合 (2026-05-20): **PASS-THROUGH (計画通り) — 実装済、plan の「Phase 0 起草中」表記は STALE**。`Common2026/Shannon/RelayCutset.lean` (14918 B, 0 sorry) に `relay_cutset_outer_bound` (RelayCutset.lean:343) publish 済: `_h_csiszar : True` `_h_chain : True` + `h_rate_bound : R ≤ relayCutsetBound Ib Im` を取り body `:= h_rate_bound`。L-RC1〜5 全 pass-through (FLAW なし — 計画通り outer bound only)。
+> 実態整合 (2026-05-20): **PASS-THROUGH (計画通り) — 実装済、plan の「Phase 0 起草中」表記は STALE**。`InformationTheory/Shannon/RelayCutset.lean` (14918 B, 0 sorry) に `relay_cutset_outer_bound` (RelayCutset.lean:343) publish 済: `_h_csiszar : True` `_h_chain : True` + `h_rate_bound : R ≤ relayCutsetBound Ib Im` を取り body `:= h_rate_bound`。L-RC1〜5 全 pass-through (FLAW なし — 計画通り outer bound only)。
 
 **Phase 0 起草中** (`relay-cutset-mathlib-inventory.md`)。在庫から既存率 ~75%、自作必要
 5 件、撤退ライン 4 本全発動下で seed 規模 (600-1000 行) 内に収まると確定。最大の novel
@@ -51,12 +51,12 @@ publish pattern と signature 完全同型。
 
 ## 進捗
 
-- [ ] Phase 0 — Mathlib + 既存 Common2026 在庫 + 設計確定 📋 → [`relay-cutset-mathlib-inventory.md`](./relay-cutset-mathlib-inventory.md)
+- [ ] Phase 0 — Mathlib + 既存 InformationTheory 在庫 + 設計確定 📋 → [`relay-cutset-mathlib-inventory.md`](./relay-cutset-mathlib-inventory.md)
 - [ ] Phase A — `RelayChannel` + `RelayCode` + `relayCutsetBound` 定義 + skeleton 📋
 - [ ] Phase B — broadcast-cut / MAC-cut auxiliary lemmas (hypothesis pass-through) 📋
 - [ ] Phase C — `relay_cutset_outer_bound` 主定理 0 sorry publish 📋
 - [ ] Phase D — docstring + cross-link comments 📋
-- [ ] Phase V — `Common2026.lean` 編入 (オーケストレータ実施待ち) 📋
+- [ ] Phase V — `InformationTheory.lean` 編入 (オーケストレータ実施待ち) 📋
 
 ## ゴール / Approach
 
@@ -167,7 +167,7 @@ exists_isMaxOn` の plumbing 〜100 行を回避。
 ### Approach 図
 
 ```
-Phase 0  : Mathlib + Common2026 在庫 + 設計確定                          ← 完了予定 (本 plan 起草と並行)
+Phase 0  : Mathlib + InformationTheory 在庫 + 設計確定                          ← 完了予定 (本 plan 起草と並行)
            ────────────────────────────────────────────────────────────
 Phase A  : RelayChannel + RelayCode + relayCutsetBound 定義              ← ~150-200 行
            ←──── 撤退ライン L-RC4 (measurability bundle defer) ────────→
@@ -180,7 +180,7 @@ Phase C  : relay_cutset_outer_bound 主定理 0 sorry publish               ← 
            ←──── 撤退ライン L-RC3 (composite rate bound pass-through) →
            ────────────────────────────────────────────────────────────
 Phase D  : docstring + cross-link comments                              ← ~30-50 行
-Phase V  : lake env lean clean + Common2026.lean 編入                    ← ~5-10 行
+Phase V  : lake env lean clean + InformationTheory.lean 編入                    ← ~5-10 行
 ```
 
 ### 規模見積
@@ -192,7 +192,7 @@ Phase V  : lake env lean clean + Common2026.lean 編入                    ← ~
 | Phase B | **200 行** | 150-250 | `RelayCutset.lean` broadcast/MAC helpers |
 | Phase C | **125 行** | 100-150 | `RelayCutset.lean` main theorem + small wrappers |
 | Phase D | **40 行** | 30-50 | docstring + cross-link comments |
-| Phase V | **8 行** | 5-10 | `Common2026.lean` 追記 |
+| Phase V | **8 行** | 5-10 | `InformationTheory.lean` 追記 |
 | **累計** | **500 行** | **400-650** | 1 ファイル合計 (撤退ライン 4 本発動下) |
 
 撤退ライン 4 本を **全 discharge** する場合は **+750-1050 行** で総計 ~1150-1700 行
@@ -201,7 +201,7 @@ Phase V  : lake env lean clean + Common2026.lean 編入                    ← ~
 ### ファイル構成 (Phase C 完了想定 — 単一ファイル戦略)
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   RelayCutset.lean         ← 新規 (~500 行) — Cover-Thomas Ch.15.10 outer bound
                              ・RelayChannel abbreviation (Kernel-based)
                              ・RelayCode structure (encoder + relay + decoder)
@@ -209,7 +209,7 @@ Common2026/Shannon/
                              ・relay_cutset_outer_bound (主定理, hyp pass-through)
                              ・broadcast/MAC auxiliary lemmas (statement-level)
                              ・docstring + cross-links
-Common2026.lean            ← `import Common2026.Shannon.RelayCutset` 追記
+InformationTheory.lean            ← `import InformationTheory.Shannon.RelayCutset` 追記
 ```
 
 ### 単一ファイル戦略の判断根拠
@@ -228,25 +228,25 @@ Common2026.lean            ← `import Common2026.Shannon.RelayCutset` 追記
 
 完了済 (黒箱 reuse、本 plan で再証明しない):
 
-- [x] `Common2026/Shannon/CondMutualInfo.lean:46` — `condMutualInfo`
-- [x] `Common2026/Shannon/CondMutualInfo.lean:71` — `IsMarkovChain` (γ-form)
-- [x] `Common2026/Shannon/CondMutualInfo.lean:219` — `mutualInfo_chain_rule`
-- [x] `Common2026/Shannon/CondMutualInfo.lean:378` — `mutualInfo_le_of_markov`
-- [x] `Common2026/Shannon/CondMutualInfo.lean:652` — `isMarkovChain_map_left`
-- [x] `Common2026/Shannon/MIChainRule.lean:117` — `mutualInfo_chain_rule_fin`
-- [x] `Common2026/Shannon/MutualInfo.lean:36, :93, :192` — `mutualInfo`, `mutualInfo_comm`, `mutualInfo_ne_top`
-- [x] `Common2026/Shannon/ChannelCoding.lean:49, :151, :204, :210` — `Channel`, `Code`, `errorProbAt`, `averageErrorProb`
-- [x] `Common2026/Shannon/Fano/CondEntropy.lean` — `fano_inequality_measure_theoretic`
-- [x] `Common2026/Shannon/Bridge.lean:588` — `mutualInfo_eq_entropy_sub_condEntropy`
-- [x] `Common2026/Shannon/DPI.lean:139` — `mutualInfo_le_of_postprocess`
-- [x] `Common2026/Shannon/WynerZiv.lean` — T3-D の statement-level hypothesis pass-through pattern (本 plan 直接の雛形)
-- [x] `Common2026/Shannon/WynerZivConverse.lean:86` — `wyner_ziv_converse_n_letter` (signature 雛形)
+- [x] `InformationTheory/Shannon/CondMutualInfo.lean:46` — `condMutualInfo`
+- [x] `InformationTheory/Shannon/CondMutualInfo.lean:71` — `IsMarkovChain` (γ-form)
+- [x] `InformationTheory/Shannon/CondMutualInfo.lean:219` — `mutualInfo_chain_rule`
+- [x] `InformationTheory/Shannon/CondMutualInfo.lean:378` — `mutualInfo_le_of_markov`
+- [x] `InformationTheory/Shannon/CondMutualInfo.lean:652` — `isMarkovChain_map_left`
+- [x] `InformationTheory/Shannon/MIChainRule.lean:117` — `mutualInfo_chain_rule_fin`
+- [x] `InformationTheory/Shannon/MutualInfo.lean:36, :93, :192` — `mutualInfo`, `mutualInfo_comm`, `mutualInfo_ne_top`
+- [x] `InformationTheory/Shannon/ChannelCoding.lean:49, :151, :204, :210` — `Channel`, `Code`, `errorProbAt`, `averageErrorProb`
+- [x] `InformationTheory/Shannon/Fano/CondEntropy.lean` — `fano_inequality_measure_theoretic`
+- [x] `InformationTheory/Shannon/Bridge.lean:588` — `mutualInfo_eq_entropy_sub_condEntropy`
+- [x] `InformationTheory/Shannon/DPI.lean:139` — `mutualInfo_le_of_postprocess`
+- [x] `InformationTheory/Shannon/WynerZiv.lean` — T3-D の statement-level hypothesis pass-through pattern (本 plan 直接の雛形)
+- [x] `InformationTheory/Shannon/WynerZivConverse.lean:86` — `wyner_ziv_converse_n_letter` (signature 雛形)
 - [x] Mathlib `Mathlib/Probability/Kernel/{Defs,Basic,CondDistrib}.lean` — `Kernel`, `IsMarkovKernel`, `Kernel.const`, `Kernel.deterministic`
 - [x] Mathlib `Mathlib/Order/MinMax.lean` — `min_le_iff`, `le_min_iff`, `min_le_max`
 
 ---
 
-## Phase 0 — Mathlib + Common2026 在庫 + 設計確定 📋
+## Phase 0 — Mathlib + InformationTheory 在庫 + 設計確定 📋
 
 ### スコープ
 
@@ -279,7 +279,7 @@ Common2026.lean            ← `import Common2026.Shannon.RelayCutset` 追記
 - `relayCutsetBound` の scalar form 採用確定 (joint pmf `sSup` は外出し)
 - 撤退ライン 4 本 (L-RC1 / L-RC2 / L-RC3 / L-RC4) を inventory + 本 plan に append-only
   で記録
-- Phase A skeleton (`Common2026/Shannon/RelayCutset.lean` の sorry-driven 出だし
+- Phase A skeleton (`InformationTheory/Shannon/RelayCutset.lean` の sorry-driven 出だし
   85 行) が in inventory §7 として書き出し済
 
 ### 工数感
@@ -359,7 +359,7 @@ end InformationTheory.Shannon
 - `RelayCode` structure + `decodingRegion` helper publish
 - `relayCutsetBound` scalar form definition publish + 2 basic lemmas (`_le_left`,
   `_le_right`)
-- `lake env lean Common2026/Shannon/RelayCutset.lean` clean (Phase B/C は別 section
+- `lake env lean InformationTheory/Shannon/RelayCutset.lean` clean (Phase B/C は別 section
   で `sorry` を含む skeleton 可)
 
 ### ステップ
@@ -399,7 +399,7 @@ end InformationTheory.Shannon
   Phase C 主定理を `:= by sorry` で配置。signature 確定 (Phase C で `:= h_rate_bound`
   に置換)。
 
-- [ ] **A-5 `lake env lean Common2026/Shannon/RelayCutset.lean`** clean 確認 (Phase A
+- [ ] **A-5 `lake env lean InformationTheory/Shannon/RelayCutset.lean`** clean 確認 (Phase A
   完了、Phase B/C の forward declaration は sorry 許容)
 
 ### 工数感
@@ -479,7 +479,7 @@ end InformationTheory.Shannon
 - `relay_broadcast_cut` 0 sorry (statement-level pass-through)
 - `relay_mac_cut` 0 sorry (statement-level pass-through)
 - `relay_cutset_combine` 0 sorry (`le_min` 1 行)
-- `lake env lean Common2026/Shannon/RelayCutset.lean` clean (Phase C の forward
+- `lake env lean InformationTheory/Shannon/RelayCutset.lean` clean (Phase C の forward
   declaration は sorry 許容)
 
 ### ステップ
@@ -497,7 +497,7 @@ end InformationTheory.Shannon
 - [ ] **B-3 `relay_cutset_combine`** (~10-20 行):
   `le_min h_b h_m` で 1 行 close。
 
-- [ ] **B-4 `lake env lean Common2026/Shannon/RelayCutset.lean`** clean (Phase B 完了)
+- [ ] **B-4 `lake env lean InformationTheory/Shannon/RelayCutset.lean`** clean (Phase B 完了)
 
 ### 工数感
 
@@ -592,7 +592,7 @@ end InformationTheory.Shannon
 - `relay_cutset_outer_bound` 0 sorry (T3-D `wyner_ziv_converse_n_letter` の body と
   完全同型 `:= h_rate_bound`)
 - `relay_cutset_outer_bound_two_cuts` 0 sorry (2 cut hypothesis 形を内部で組み立て)
-- `lake env lean Common2026/Shannon/RelayCutset.lean` 完全 clean (0 sorry / 0 warning)
+- `lake env lean InformationTheory/Shannon/RelayCutset.lean` 完全 clean (0 sorry / 0 warning)
 
 ### ステップ
 
@@ -607,7 +607,7 @@ end InformationTheory.Shannon
   組み立て。具体的な callers (rate computation 系) は 2 cuts 形を直接消費する方が
   自然な場面が多い。
 
-- [ ] **C-3 `lake env lean Common2026/Shannon/RelayCutset.lean`** clean 確認
+- [ ] **C-3 `lake env lean InformationTheory/Shannon/RelayCutset.lean`** clean 確認
   (Phase C 完了、0 sorry / 0 warning)
 
 ### 工数感
@@ -655,7 +655,7 @@ pointer を docstring に。
 
 ---
 
-## Phase V — `lake env lean` clean + `Common2026.lean` 編入 📋
+## Phase V — `lake env lean` clean + `InformationTheory.lean` 編入 📋
 
 ### スコープ
 
@@ -663,27 +663,27 @@ pointer を docstring に。
 
 ### ステップ
 
-- [ ] **V-1 `Common2026.lean` 編入**: 既存の `import Common2026.Shannon.WynerZiv*` の
+- [ ] **V-1 `InformationTheory.lean` 編入**: 既存の `import InformationTheory.Shannon.WynerZiv*` の
   **後** に
   ```lean
-  import Common2026.Shannon.RelayCutset
+  import InformationTheory.Shannon.RelayCutset
   ```
   を追記 (オーケストレータが実施)。
 
-- [ ] **V-2 ファイル clean 確認**: `lake env lean Common2026/Shannon/RelayCutset.lean`
+- [ ] **V-2 ファイル clean 確認**: `lake env lean InformationTheory/Shannon/RelayCutset.lean`
   silent。
 
-- [ ] **V-3 全体回帰チェック**: `lake env lean Common2026.lean` clean を確認
-  (依存 file の olean refresh が必要な場合は `lake build Common2026.Shannon.RelayCutset`
+- [ ] **V-3 全体回帰チェック**: `lake env lean InformationTheory.lean` clean を確認
+  (依存 file の olean refresh が必要な場合は `lake build InformationTheory.Shannon.RelayCutset`
   1 回)。
 
 ### 工数感
 
-**0.1-0.2 セッション (~5-10 行 of Common2026.lean diff)**。proof-log: no。
+**0.1-0.2 セッション (~5-10 行 of InformationTheory.lean diff)**。proof-log: no。
 
 ### Done 条件
 
-- `Common2026.lean` に 1 ファイル import 追記済
+- `InformationTheory.lean` に 1 ファイル import 追記済
 - `RelayCutset.lean` 0 sorry / 0 warning / `lake env lean` silent
 - 主定理 2 件 (`relay_cutset_outer_bound`, `relay_cutset_outer_bound_two_cuts`) +
   abbreviation 1 件 (`RelayChannel`) + structure 1 件 (`RelayCode`) + scalar bound
@@ -780,21 +780,21 @@ pointer を docstring に。
 | **`RelayChannel α α_1 β β_1 := Kernel (α × α_1) (β × β_1)` abbrev が既存 `Channel α β := Kernel α β` と命名衝突** | 低 | 低 (rename で対応) | namespace `InformationTheory.Shannon.RelayCutset` 内に閉じ込めるか、abbrev 名を `Channel.Relay` 等に変更 |
 | **Phase B / C の hypothesis pass-through pattern を後続 discharge plan で具体 statement に置換する際に signature 拡張が大規模** | 中 | 中 (後続 plan で statement update が file 全体に影響) | T3-D Wyner-Ziv で確立済の pattern (`_h_csiszar : True` placeholder → 後続 discharge plan で `True` を実 statement に置換 + 主定理 statement を更新) を踏襲。本 plan 内では型整合のみ検査 |
 | **本 plan の 1 セッション目標 (in-context 完走) を超過** | 中 | 中 (実装が分割になる) | 撤退ライン L-RC1/2/3/4 + L-RC5 全発動で ~400-650 行に圧縮済。1 セッションで完走可能な規模 |
-| **`Common2026.lean` の import 順序で circular dependency** | 低 | 中 (file 移動が必要) | `RelayCutset.lean` は `Common2026.Shannon.{CondMutualInfo, MIChainRule, ChannelCoding}` のみ import、`WynerZiv*` には依存しない (pattern のみ流用、symbol は使わない) |
+| **`InformationTheory.lean` の import 順序で circular dependency** | 低 | 中 (file 移動が必要) | `RelayCutset.lean` は `InformationTheory.Shannon.{CondMutualInfo, MIChainRule, ChannelCoding}` のみ import、`WynerZiv*` には依存しない (pattern のみ流用、symbol は使わない) |
 
 ---
 
 ## 当面の next step
 
-1. **Phase 0 (Mathlib + Common2026 在庫 + 設計確定)** — `relay-cutset-mathlib-inventory.md`
+1. **Phase 0 (Mathlib + InformationTheory 在庫 + 設計確定)** — `relay-cutset-mathlib-inventory.md`
    本 plan と並行起草中。完了次第 Phase A 着手判定。
 2. **Phase A skeleton 作成** ← Phase 0 完了後の次これ
-   - `Common2026/Shannon/RelayCutset.lean` 新規 (在庫 §7 の 85 行 skeleton を基盤に)
+   - `InformationTheory/Shannon/RelayCutset.lean` 新規 (在庫 §7 の 85 行 skeleton を基盤に)
    - `RelayChannel` abbreviation + `RelayCode` structure + `relayCutsetBound` scalar form
    - Phase B/C/D の forward declaration を `:= by sorry` で配置
 3. **Phase B 補助補題 (broadcast/MAC cut hypothesis pass-through)** (~150-250 行)
 4. **Phase C 主定理 `relay_cutset_outer_bound` 0 sorry publish** (~100-150 行)
-5. **Phase D docstring 整地 + Phase V `Common2026.lean` 編入** (~0.3 セッション)
+5. **Phase D docstring 整地 + Phase V `InformationTheory.lean` 編入** (~0.3 セッション)
 
 ---
 
@@ -810,10 +810,10 @@ pointer を docstring に。
   - [MAC (T3-B)](docs/textbook-roadmap.md §Tier 3 T3-B) — 将来 inner bound DF 系で
     再利用予定 (本 plan scope 外)
 - 既存実装 (黒箱 reuse):
-  - `Common2026/Shannon/ChannelCoding.lean:49, :151` — `Channel`, `Code`
-  - `Common2026/Shannon/CondMutualInfo.lean:71, :219, :378, :652` — `IsMarkovChain`, `mutualInfo_chain_rule`, `mutualInfo_le_of_markov`, `isMarkovChain_map_left`
-  - `Common2026/Shannon/MIChainRule.lean:117` — `mutualInfo_chain_rule_fin`
-  - `Common2026/Shannon/WynerZivConverse.lean:86` — `wyner_ziv_converse_n_letter`
+  - `InformationTheory/Shannon/ChannelCoding.lean:49, :151` — `Channel`, `Code`
+  - `InformationTheory/Shannon/CondMutualInfo.lean:71, :219, :378, :652` — `IsMarkovChain`, `mutualInfo_chain_rule`, `mutualInfo_le_of_markov`, `isMarkovChain_map_left`
+  - `InformationTheory/Shannon/MIChainRule.lean:117` — `mutualInfo_chain_rule_fin`
+  - `InformationTheory/Shannon/WynerZivConverse.lean:86` — `wyner_ziv_converse_n_letter`
     (signature 完全雛形)
 
 ---
@@ -822,7 +822,7 @@ pointer を docstring に。
 
 本 plan は **plan ドキュメントのみ**。実装 agent への引き継ぎ事項:
 
-1. **実装 agent は `Common2026.lean` ルートを編集しない** — Phase V `Common2026.lean`
+1. **実装 agent は `InformationTheory.lean` ルートを編集しない** — Phase V `InformationTheory.lean`
    編入はオーケストレータが最後にまとめて行う (全 0 sorry 達成後)
 2. **実装 agent はコミットしない** — 各 Phase 完了時にオーケストレータがまとめて
    コミット
@@ -887,7 +887,7 @@ pointer を docstring に。
 
 6. **(2026-05-19) 単一ファイル戦略確定** — T3-D Wyner-Ziv は 3 ファイル分離だったが、
    T3-F outer bound only (4 撤退ライン全発動) は ~400-650 行で `lake env lean` 単一
-   file 5-10 秒の inner loop に収まる。分離不要。`Common2026/Shannon/RelayCutset.lean`
+   file 5-10 秒の inner loop に収まる。分離不要。`InformationTheory/Shannon/RelayCutset.lean`
    単一 file で publish。既存 `ChannelCodingConverseGeneralComplete.lean` (~520 行,
    Fano + chain rule general converse, 単一 file publish 済) と規模 / 構造同型。
 

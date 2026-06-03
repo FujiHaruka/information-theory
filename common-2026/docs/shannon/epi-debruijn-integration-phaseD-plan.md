@@ -29,7 +29,7 @@
 | 新 step | 内容 | 規模 |
 |---|---|---|
 | D-0 | Mathlib `entropyPower` / `Monotone` / `MonotoneOn` / `AntitoneOn` の結論形再確認 (Mathlib-shape-driven; inventory に追記する形) | ~20-30 行 (docs 追記) |
-| D-V | `lake env lean` silent 確認 + 親 plan 進捗ブロック更新 + `Common2026.lean` import 確認 | ~5-10 行 |
+| D-V | `lake env lean` silent 確認 + 親 plan 進捗ブロック更新 + `InformationTheory.lean` import 確認 | ~5-10 行 |
 
 ## ゴール / Approach
 
@@ -71,7 +71,7 @@ AntitoneOn
   (Set.Icc (0 : ℝ) 1)
 ```
 
-本 mini-plan の `g(t)` (または `gap_s`) を **同形式で記述**することで D-4 export lemma が型レベルで sister に直接渡る。親 plan §Phase D の暫定スケッチでは `g(t) := entropyPower (X+Y+√t·Z) - entropyPower (X+√t·Z) - entropyPower (Y+√t·Z)` (`√t · Z` 形) を採用していたが、これは sister の `heatFlowPath2 _ Z _ s = √(1-s) · _ + √s · Z` 形 (`Common2026/Shannon/HeatFlowPath.lean`) と shape が異なる。**本 mini-plan は sister 形 (`heatFlowPath2`) を採用** (Mathlib-shape-driven: 下流の `AntitoneOn` 結論形に直接合うように上流を選ぶ)。
+本 mini-plan の `g(t)` (または `gap_s`) を **同形式で記述**することで D-4 export lemma が型レベルで sister に直接渡る。親 plan §Phase D の暫定スケッチでは `g(t) := entropyPower (X+Y+√t·Z) - entropyPower (X+√t·Z) - entropyPower (Y+√t·Z)` (`√t · Z` 形) を採用していたが、これは sister の `heatFlowPath2 _ Z _ s = √(1-s) · _ + √s · Z` 形 (`InformationTheory/Shannon/HeatFlowPath.lean`) と shape が異なる。**本 mini-plan は sister 形 (`heatFlowPath2`) を採用** (Mathlib-shape-driven: 下流の `AntitoneOn` 結論形に直接合うように上流を選ぶ)。
 
 Phase C の bounded-T 積分恒等式は `√t · Z` 形 (`gaussianConvolution X Z T`) で書かれているため、D-2 で **`gaussianConvolution → heatFlowPath2` の shape 変換 bridge** が 1 件必要 (規模 ~10 行、`Real.sqrt_one_sub_sq` 系 reparametrization、または事実上 reparametrization なしに別 path として並走させる戦略も可)。
 
@@ -90,7 +90,7 @@ Phase C の bounded-T 積分恒等式は `√t · Z` 形 (`gaussianConvolution X
 | D-V | `lake env lean` silent + 親 plan 進捗ブロック更新 | ~5-10 | 7 |
 | **合計** | | **~95-160** | **~127** |
 
-中央予測 **~130 行**。`EPIL3Integration.lean` に §13 として追加するか、新規 file `Common2026/Shannon/EPIDeBruijnBridgeInput.lean` を切るかは D-0 の規模確認後に判断 (現状 `EPIL3Integration.lean` は 1104 行で更に追加するか分離するかは閾値判断、本 mini-plan の素朴な default は **`EPIL3Integration.lean` §13 として追加**)。
+中央予測 **~130 行**。`EPIL3Integration.lean` に §13 として追加するか、新規 file `InformationTheory/Shannon/EPIDeBruijnBridgeInput.lean` を切るかは D-0 の規模確認後に判断 (現状 `EPIL3Integration.lean` は 1104 行で更に追加するか分離するかは閾値判断、本 mini-plan の素朴な default は **`EPIL3Integration.lean` §13 として追加**)。
 
 ---
 
@@ -112,11 +112,11 @@ proof-log: yes (Phase D 完了時に `docs/shannon/proof-log-epi-debruijn-integr
 
 ### スコープ
 
-D-1 着手前に Mathlib + 既存 `Common2026/Shannon/` ファイルから以下 3 件の verbatim 確認:
+D-1 着手前に Mathlib + 既存 `InformationTheory/Shannon/` ファイルから以下 3 件の verbatim 確認:
 
 1. **`InformationTheory.Shannon.EntropyPowerInequality.entropyPower`** — `EntropyPowerInequality.lean:80` 前後の verbatim 定義 + sister `IsStamToEPIScalingHyp` body 内での使い方 (`EPIStamToBridge.lean:202-216`)
 2. **`Monotone` / `MonotoneOn` / `AntitoneOn` / `AntitoneOn.le_of_le_endpoint`** — Mathlib 結論形 verbatim、特に `AntitoneOn` の引数順 (`s ∈ Set.Icc 0 1`、`t ∈ Set.Icc 0 1`、`s ≤ t → f t ≤ f s`)
-3. **`heatFlowPath2`** — `Common2026/Shannon/HeatFlowPath.lean` の verbatim signature + `heatFlowPath2_zero` / `heatFlowPath2_one` lemma 群 + 既存 simp set
+3. **`heatFlowPath2`** — `InformationTheory/Shannon/HeatFlowPath.lean` の verbatim signature + `heatFlowPath2_zero` / `heatFlowPath2_one` lemma 群 + 既存 simp set
 
 ### Approach
 
@@ -126,7 +126,7 @@ D-0 はコード書込なし、`docs/shannon/epi-debruijn-integration-mathlib-in
 
 - [ ] **D-0-1**: `entropyPower` 定義 verbatim (`EntropyPowerInequality.lean:80` 付近、`entropyPower μ := Real.exp (2 * differentialEntropy μ)` 形を確認)、`Real.exp_pos` / `Real.exp_log` 等の同伴 lemma も verbatim
 - [ ] **D-0-2**: `AntitoneOn` Mathlib verbatim (`Mathlib/Order/Monotone/Basic.lean` 周辺)、特に `Set.Icc 0 1` 限定の reuse 補題 (`AntitoneOn.le_of_le_endpoint` 等)
-- [ ] **D-0-3**: `heatFlowPath2` (`Common2026/Shannon/HeatFlowPath.lean`) verbatim + 6 lemma (`heatFlowPath2_zero`, `heatFlowPath2_one`, `heatFlowPath2_law_of_gaussian` 等の F.1 6 件、Phase 0 `0d54e89` で landing) verbatim
+- [ ] **D-0-3**: `heatFlowPath2` (`InformationTheory/Shannon/HeatFlowPath.lean`) verbatim + 6 lemma (`heatFlowPath2_zero`, `heatFlowPath2_one`, `heatFlowPath2_law_of_gaussian` 等の F.1 6 件、Phase 0 `0d54e89` で landing) verbatim
 
 ### Done 条件
 
@@ -144,7 +144,7 @@ D-0 はコード書込なし、`docs/shannon/epi-debruijn-integration-mathlib-in
 
 ### スコープ
 
-`Common2026/Shannon/EPIL3Integration.lean` §13 (or 新規 file) に Csiszár scaling gap 関数 `g(s)` を定義 + 基本性質を準備:
+`InformationTheory/Shannon/EPIL3Integration.lean` §13 (or 新規 file) に Csiszár scaling gap 関数 `g(s)` を定義 + 基本性質を準備:
 
 ```lean
 /-- **Csiszár scaling gap function**.
@@ -278,7 +278,7 @@ theorem csiszarGap_shape_for_sister
 
 - [ ] **D-4-1**: `csiszarGap_shape_for_sister` `rfl` lemma 公開 (~5 行)
 - [ ] **D-4-2**: sister 入口 docstring (本 lemma + `IsStamToEPIScalingHyp` への consume path 案内、~10-15 行 docs)
-- [ ] **D-4-3** (任意 stretch): sister Phase A が Gaussian 限定で先行 closure 可能なら、本 mini-plan で **`AntitoneOn (csiszarGap ...) (Set.Icc 0 1)` の Gaussian 限定 discharge** を 1 件追加 (sister `Common2026/Shannon/EPIStamToBridge.lean:359-370` `isStamToEPIBridgeHyp_of_gaussian_via_scaling` の Gaussian path を borrow、~20-40 行) — これは sister Phase A の Gaussian 枝を本 mini-plan 内で先行 close する選択
+- [ ] **D-4-3** (任意 stretch): sister Phase A が Gaussian 限定で先行 closure 可能なら、本 mini-plan で **`AntitoneOn (csiszarGap ...) (Set.Icc 0 1)` の Gaussian 限定 discharge** を 1 件追加 (sister `InformationTheory/Shannon/EPIStamToBridge.lean:359-370` `isStamToEPIBridgeHyp_of_gaussian_via_scaling` の Gaussian path を borrow、~20-40 行) — これは sister Phase A の Gaussian 枝を本 mini-plan 内で先行 close する選択
 
 ### Done 条件
 
@@ -296,8 +296,8 @@ theorem csiszarGap_shape_for_sister
 
 ### スコープ
 
-- `lake env lean Common2026/Shannon/EPIL3Integration.lean` silent (0 error / 0 sorry / 警告最小限)
-- (新規 file を切った場合) `lake env lean Common2026/Shannon/EPIDeBruijnBridgeInput.lean` silent + `Common2026.lean` import 1 行追加
+- `lake env lean InformationTheory/Shannon/EPIL3Integration.lean` silent (0 error / 0 sorry / 警告最小限)
+- (新規 file を切った場合) `lake env lean InformationTheory/Shannon/EPIDeBruijnBridgeInput.lean` silent + `InformationTheory.lean` import 1 行追加
 - `docs/shannon/epi-debruijn-integration-plan.md` Phase D 進捗ブロックを `[x]` に更新、判断ログに「Phase D は本 mini-plan に委任」+「実装完了 commit hash」を追記
 - sister `docs/shannon/epi-stam-to-conclusion-plan.md` Phase A 進捗ブロックの「sister 待ち」status を更新 (本 mini-plan の D-4 出力が利用可能になった旨)、判断ログに 1 件追記
 - `docs/textbook-roadmap.md` T2-D de Bruijn 行を本 mini-plan 完了で進捗更新 (14 件降格は sister 完了後の cleanup なので **ここでは更新しない**)
@@ -322,7 +322,7 @@ theorem csiszarGap_shape_for_sister
 
 本 mini-plan 起草と同時に、sister `docs/shannon/epi-stam-to-conclusion-plan.md` Phase A の Done 条件 (line 507-517 付近) に以下 1 行を追記する補完 task が発生する:
 
-> **Phase A 完了後 post-merge cleanup**: `EPIL3Integration.lean` の 14 件 `@audit:suspect(epi-debruijn-integration-plan)` を `@audit:closed-by-successor(epi-stam-to-conclusion-plan)` に一括書換 (位置: line 120 / 134 / 210 / 224 / 239 / 253 / 268 / 283 / 316 / 365 / 378 / 401 / 458 / 485)。書換コマンド sketch: `sed -i 's/@audit:suspect(epi-debruijn-integration-plan)/@audit:closed-by-successor(epi-stam-to-conclusion-plan)/g'` (slug 末尾 `-plan` の有無は `docs/audit/audit-tags.md` 語彙に合わせる)。`lake env lean Common2026/Shannon/EPIL3Integration.lean` silent 確認。
+> **Phase A 完了後 post-merge cleanup**: `EPIL3Integration.lean` の 14 件 `@audit:suspect(epi-debruijn-integration-plan)` を `@audit:closed-by-successor(epi-stam-to-conclusion-plan)` に一括書換 (位置: line 120 / 134 / 210 / 224 / 239 / 253 / 268 / 283 / 316 / 365 / 378 / 401 / 458 / 485)。書換コマンド sketch: `sed -i 's/@audit:suspect(epi-debruijn-integration-plan)/@audit:closed-by-successor(epi-stam-to-conclusion-plan)/g'` (slug 末尾 `-plan` の有無は `docs/audit/audit-tags.md` 語彙に合わせる)。`lake env lean InformationTheory/Shannon/EPIL3Integration.lean` silent 確認。
 
 これは本 mini-plan 内で記述する必要はなく、sister plan 編集として 1 turn で完了する補完 task。**本 mini-plan の Done 条件には含めない**。
 
@@ -369,4 +369,4 @@ theorem csiszarGap_shape_for_sister
 
 1. **2026-05-25 mini-plan 起草**: 親 plan `epi-debruijn-integration-plan.md` §Phase D (line 393-453) の暫定記述を本 mini-plan に委任。option 2 (mini-plan 新規作成) を採用 (option 1 = 親 plan 内処理は同 family の 4 件 mini-plan 前例 (Phase 0, C-5 tail-reintroduction, regularity-refactor, integration phaseD) との整合性で却下)。Phase D-3 (14 件降格) は案 α (本 plan から削除、sister cleanup task に移管) を採用、理由は `EPIL3Integration.lean:547-557` §12 honesty note 3 が code 内 SoT で「14 件降格は sister 完了後の `closed-by-successor` 付与で本 plan 責務外」と既に明示しているため。D-1 の `csiszarGap` shape は親 plan 暫定の `√t · Z` 形ではなく sister `IsStamToEPIScalingHyp` の `heatFlowPath2` 形を採用 (Mathlib-shape-driven: 下流 sister の `AntitoneOn` 引数と type-level に一致させる)。新 step D-0 (Mathlib shape 在庫確認) + D-V (検証) を追加、合計 5 step (D-0/D-1/D-2/D-4/D-V) 構成、中央予測 ~130 行。実装着手前提条件はすべて満たし済 (sister 2 unblock 完了、Phase C-5 tail honest 再導入完了、Phase B regularity-refactor 完了、Phase 0 AntitoneOn signature 確定)。
 
-2. **2026-05-25 実装完了 + L-DBD-2-α 発火 (戦略 β → γ honest 降格)**: commit `15684b0` (worktree) で D-0 / D-1 / D-2 statement-only / D-4 / D-V を実装、`lake env lean Common2026/Shannon/EPIL3Integration.lean` silent。**Plan 予測誤り発見 (重要、sister Phase A 設計時参照)**: D-0 inventory で `differentialEntropy (Measure.dirac 0)` の Mathlib 値を verbatim 確認 → `differentialEntropy_dirac = 0` (`DifferentialEntropy.lean:147`、`-∞` ではない)、よって `entropyPower (Measure.dirac 0) = Real.exp (2 * 0) = 1` (Plan §D-2-2 の予測「`0`」は誤り)。これにより D-2 戦略 β `Y := 0` 退化検算: `heatFlowPath2 0 0 s = 0 pointwise` → `P.map (heatFlowPath2 0 0 s) = Measure.dirac 0` → `entropyPower (Dirac 0) = 1`、`csiszarGap X 0 Z_X 0 P s = entropyPower(...) - entropyPower(...) - 1 = -1` (定数!) → 定数関数は trivially `AntitoneOn` → **degenerate-definition exploitation 直撃** (CLAUDE.md「退化定義の悪用」defect tells) → 戦略 β 不可、戦略 γ (docs-only sister 委譲 stub) に honest 降格。L-DBD-2-α 発火条件は plan 想定 (`entropyPower (Dirac 0) = -∞` で `Real.exp` outside) と異なるが、撤退ライン slug は同じ。**sister Phase A 担当 implementer に申し送り**: 2-source 退化境界 (`Y := 0`、`Z_Y := 0` 等) の取扱いで `entropyPower (Dirac 0) = 1` を前提に設計すること。実装中 D-2 marker として `example : True := trivial` を一度書き出したが、CLAUDE.md `:True` defect tells に該当するため即削除し `/-! ... -/` 文書ブロックに置換 (honest 自己訂正)。新規 staged predicate なし → independent audit 起動条件非該当。実測行数 360 行 (Lean 185 + docs 175、見積 ~130 の +177%、D-0 完全 verbatim inventory + D-2 戦略 γ docstring 詳細化のため)。
+2. **2026-05-25 実装完了 + L-DBD-2-α 発火 (戦略 β → γ honest 降格)**: commit `15684b0` (worktree) で D-0 / D-1 / D-2 statement-only / D-4 / D-V を実装、`lake env lean InformationTheory/Shannon/EPIL3Integration.lean` silent。**Plan 予測誤り発見 (重要、sister Phase A 設計時参照)**: D-0 inventory で `differentialEntropy (Measure.dirac 0)` の Mathlib 値を verbatim 確認 → `differentialEntropy_dirac = 0` (`DifferentialEntropy.lean:147`、`-∞` ではない)、よって `entropyPower (Measure.dirac 0) = Real.exp (2 * 0) = 1` (Plan §D-2-2 の予測「`0`」は誤り)。これにより D-2 戦略 β `Y := 0` 退化検算: `heatFlowPath2 0 0 s = 0 pointwise` → `P.map (heatFlowPath2 0 0 s) = Measure.dirac 0` → `entropyPower (Dirac 0) = 1`、`csiszarGap X 0 Z_X 0 P s = entropyPower(...) - entropyPower(...) - 1 = -1` (定数!) → 定数関数は trivially `AntitoneOn` → **degenerate-definition exploitation 直撃** (CLAUDE.md「退化定義の悪用」defect tells) → 戦略 β 不可、戦略 γ (docs-only sister 委譲 stub) に honest 降格。L-DBD-2-α 発火条件は plan 想定 (`entropyPower (Dirac 0) = -∞` で `Real.exp` outside) と異なるが、撤退ライン slug は同じ。**sister Phase A 担当 implementer に申し送り**: 2-source 退化境界 (`Y := 0`、`Z_Y := 0` 等) の取扱いで `entropyPower (Dirac 0) = 1` を前提に設計すること。実装中 D-2 marker として `example : True := trivial` を一度書き出したが、CLAUDE.md `:True` defect tells に該当するため即削除し `/-! ... -/` 文書ブロックに置換 (honest 自己訂正)。新規 staged predicate なし → independent audit 起動条件非該当。実測行数 360 行 (Lean 185 + docs 175、見積 ~130 の +177%、D-0 完全 verbatim inventory + D-2 戦略 γ docstring 詳細化のため)。

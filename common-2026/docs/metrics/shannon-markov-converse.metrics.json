@@ -3,7 +3,7 @@
   "proof_log": "docs/proof-logs/proof-log-shannon-markov-converse.md",
   "generated_at": "2026-05-10T03:11:41.783Z",
   "filters": {
-    "file_prefix": "Common2026/Shannon"
+    "file_prefix": "InformationTheory/Shannon"
   },
   "idle_gap_minutes": 5,
   "sessions": [
@@ -37,7 +37,7 @@
       },
       "bash_total": 18,
       "edits_by_file": {
-        "Common2026/Shannon/Converse.lean": 2,
+        "InformationTheory/Shannon/Converse.lean": 2,
         "docs/shannon-encoder-extensions-plan.md": 2
       },
       "writes_by_file": {
@@ -47,9 +47,9 @@
       "reads_by_file": {
         ".claude/handoff.md": 1,
         "docs/shannon-encoder-extensions-plan.md": 1,
-        "Common2026/Shannon/Converse.lean": 1,
-        "Common2026/Shannon/DPI.lean": 1,
-        "Common2026/Shannon/MutualInfo.lean": 1,
+        "InformationTheory/Shannon/Converse.lean": 1,
+        "InformationTheory/Shannon/DPI.lean": 1,
+        "InformationTheory/Shannon/MutualInfo.lean": 1,
         "docs/shannon-mathlib-inventory.md": 1
       },
       "matched_edits": 2,
@@ -96,21 +96,21 @@
       },
       "bash_total": 65,
       "edits_by_file": {
-        "Common2026.lean": 1,
-        "Common2026/Shannon/CondMutualInfo.lean": 8,
-        "Common2026/Shannon/Converse.lean": 2
+        "InformationTheory.lean": 1,
+        "InformationTheory/Shannon/CondMutualInfo.lean": 8,
+        "InformationTheory/Shannon/Converse.lean": 2
       },
       "writes_by_file": {
-        "Common2026/Shannon/CondMutualInfo.lean": 1,
+        "InformationTheory/Shannon/CondMutualInfo.lean": 1,
         ".claude/handoff.md": 1
       },
       "reads_by_file": {
         ".claude/handoff.md": 1,
         "docs/shannon-condmi-inventory.md": 1,
-        "Common2026/Shannon/MutualInfo.lean": 1,
-        "Common2026.lean": 1,
-        "Common2026/Shannon/DPI.lean": 1,
-        "Common2026/Shannon/Converse.lean": 1,
+        "InformationTheory/Shannon/MutualInfo.lean": 1,
+        "InformationTheory.lean": 1,
+        "InformationTheory/Shannon/DPI.lean": 1,
+        "InformationTheory/Shannon/Converse.lean": 1,
         ".lake/packages/mathlib/Mathlib/Probability/Independence/Conditional.lean": 4,
         ".lake/packages/mathlib/Mathlib/Probability/Kernel/CondDistrib.lean": 2,
         ".lake/packages/mathlib/Mathlib/Probability/Kernel/Disintegration/StandardBorel.lean": 1,
@@ -165,14 +165,14 @@
       },
       "bash_total": 73,
       "edits_by_file": {
-        "Common2026/Shannon/MutualInfo.lean": 1,
-        "Common2026/Shannon/CondMutualInfo.lean": 12
+        "InformationTheory/Shannon/MutualInfo.lean": 1,
+        "InformationTheory/Shannon/CondMutualInfo.lean": 12
       },
       "writes_by_file": {},
       "reads_by_file": {
         ".claude/handoff.md": 1,
-        "Common2026/Shannon/CondMutualInfo.lean": 7,
-        "Common2026/Shannon/MutualInfo.lean": 1,
+        "InformationTheory/Shannon/CondMutualInfo.lean": 7,
+        "InformationTheory/Shannon/MutualInfo.lean": 1,
         ".lake/packages/mathlib/Mathlib/InformationTheory/KullbackLeibler/ChainRule.lean": 3,
         ".lake/packages/mathlib/Mathlib/Probability/Kernel/CondDistrib.lean": 2,
         ".lake/packages/mathlib/Mathlib/Probability/Kernel/Composition/MeasureCompProd.lean": 3,
@@ -230,26 +230,26 @@
     },
     "bash_total": 156,
     "edits_by_file": {
-      "Common2026/Shannon/Converse.lean": 4,
+      "InformationTheory/Shannon/Converse.lean": 4,
       "docs/shannon-encoder-extensions-plan.md": 2,
-      "Common2026.lean": 1,
-      "Common2026/Shannon/CondMutualInfo.lean": 20,
-      "Common2026/Shannon/MutualInfo.lean": 1
+      "InformationTheory.lean": 1,
+      "InformationTheory/Shannon/CondMutualInfo.lean": 20,
+      "InformationTheory/Shannon/MutualInfo.lean": 1
     },
     "writes_by_file": {
       "docs/shannon-condmi-inventory.md": 1,
       ".claude/handoff.md": 2,
-      "Common2026/Shannon/CondMutualInfo.lean": 1
+      "InformationTheory/Shannon/CondMutualInfo.lean": 1
     },
     "reads_by_file": {
       ".claude/handoff.md": 3,
       "docs/shannon-encoder-extensions-plan.md": 1,
-      "Common2026/Shannon/Converse.lean": 2,
-      "Common2026/Shannon/DPI.lean": 2,
-      "Common2026/Shannon/MutualInfo.lean": 3,
+      "InformationTheory/Shannon/Converse.lean": 2,
+      "InformationTheory/Shannon/DPI.lean": 2,
+      "InformationTheory/Shannon/MutualInfo.lean": 3,
       "docs/shannon-mathlib-inventory.md": 1,
       "docs/shannon-condmi-inventory.md": 1,
-      "Common2026.lean": 1,
+      "InformationTheory.lean": 1,
       ".lake/packages/mathlib/Mathlib/Probability/Independence/Conditional.lean": 4,
       ".lake/packages/mathlib/Mathlib/Probability/Kernel/CondDistrib.lean": 4,
       ".lake/packages/mathlib/Mathlib/Probability/Kernel/Disintegration/StandardBorel.lean": 1,
@@ -260,7 +260,7 @@
       ".lake/packages/mathlib/Mathlib/MeasureTheory/MeasurableSpace/Defs.lean": 1,
       ".lake/packages/mathlib/Mathlib/Probability/Kernel/Composition/MeasureComp.lean": 1,
       ".lake/packages/mathlib/Mathlib/Probability/Kernel/Composition/Prod.lean": 1,
-      "Common2026/Shannon/CondMutualInfo.lean": 7,
+      "InformationTheory/Shannon/CondMutualInfo.lean": 7,
       ".lake/packages/mathlib/Mathlib/MeasureTheory/MeasurableSpace/Embedding.lean": 2,
       ".lake/packages/mathlib/Mathlib/MeasureTheory/Measure/Prod.lean": 6,
       ".lake/packages/mathlib/Mathlib/MeasureTheory/Integral/Lebesgue/Basic.lean": 1,

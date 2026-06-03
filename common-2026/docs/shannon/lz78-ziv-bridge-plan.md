@@ -12,11 +12,11 @@
 > 全 signature・前提条件ボックス・着手 skeleton まで確定。
 >
 > **Predecessor / 再利用基盤** (publish 済、本 plan からは黒箱 reuse、GENUINE):
-> - `Common2026/Shannon/LZ78ZivInequality.lean` — 組み合わせ counting 層: `LZ78Parsing.card_phraseSet_le_pow` (`:204`), `card_phraseSet_le_count` (`:161`), `ZivCountingBound` (`:280`)。**counting は genuine、`IsZivInequalityPassthrough.of*` constructor は `True.intro` placeholder (本 plan の headline path は通らない)**。
-> - `Common2026/Shannon/LZ78ConverseAsymptotic.lean` — `IsLZ78PhraseCountAsymptotic` (`:120`), `lz78_phrase_count_asymptotic` (`:378`), `_n_div_log` (`:387`) — `c = O(n/log n)` 漸近 envelope、GENUINE。
-> - `Common2026/Shannon/LZ78PhraseCountAsymptoticBody.lean` — `IsZivCountingMulLogBound` (`:192`) `:= ∀ n, c·log c ≤ K·n`、`IsLZ78PhraseCountAsymptotic.of_mul_log_bound` (`:198`) — `c·log c ≤ Kn → c = O(n/log n)` 反転、GENUINE。
-> - `Common2026/Shannon/ShannonMcMillanBreiman.lean` — `blockLogAvg` def (`:55`) `:= -(1/n)·log Pₙ{block ω}`、`measurable_blockLogAvg` (`:61`)、`expected_blockLogAvg_eq` (`:116`)。`shannon_mcmillan_breiman` (`SMBAlgoetCover.lean:2840`) — `blockLogAvg → entropyRate` a.s.、GENUINE。
-> - `Common2026/Shannon/LZ78DistinctEncoding.lean` — `lz78DistinctEncodingLength` (`:128`), `lz78DistinctEncodingLength_eq` (`:133`) `:= c·bitLength c |α|`, `lz78Distinct_count_ofFn_le` (`:143`) `c ≤ n`, headline `lz78_two_sided_optimality_distinct_bdd_free` (`:412`) — GENUINE、本 plan の合流先。
+> - `InformationTheory/Shannon/LZ78ZivInequality.lean` — 組み合わせ counting 層: `LZ78Parsing.card_phraseSet_le_pow` (`:204`), `card_phraseSet_le_count` (`:161`), `ZivCountingBound` (`:280`)。**counting は genuine、`IsZivInequalityPassthrough.of*` constructor は `True.intro` placeholder (本 plan の headline path は通らない)**。
+> - `InformationTheory/Shannon/LZ78ConverseAsymptotic.lean` — `IsLZ78PhraseCountAsymptotic` (`:120`), `lz78_phrase_count_asymptotic` (`:378`), `_n_div_log` (`:387`) — `c = O(n/log n)` 漸近 envelope、GENUINE。
+> - `InformationTheory/Shannon/LZ78PhraseCountAsymptoticBody.lean` — `IsZivCountingMulLogBound` (`:192`) `:= ∀ n, c·log c ≤ K·n`、`IsLZ78PhraseCountAsymptotic.of_mul_log_bound` (`:198`) — `c·log c ≤ Kn → c = O(n/log n)` 反転、GENUINE。
+> - `InformationTheory/Shannon/ShannonMcMillanBreiman.lean` — `blockLogAvg` def (`:55`) `:= -(1/n)·log Pₙ{block ω}`、`measurable_blockLogAvg` (`:61`)、`expected_blockLogAvg_eq` (`:116`)。`shannon_mcmillan_breiman` (`SMBAlgoetCover.lean:2840`) — `blockLogAvg → entropyRate` a.s.、GENUINE。
+> - `InformationTheory/Shannon/LZ78DistinctEncoding.lean` — `lz78DistinctEncodingLength` (`:128`), `lz78DistinctEncodingLength_eq` (`:133`) `:= c·bitLength c |α|`, `lz78Distinct_count_ofFn_le` (`:143`) `c ≤ n`, headline `lz78_two_sided_optimality_distinct_bdd_free` (`:412`) — GENUINE、本 plan の合流先。
 > - Mathlib `Real.convexOn_mul_log` (`NegMulLog.lean:144`), `ConvexOn.map_sum_le` (`Jensen.lean:67`), `Real.strictConvexOn_mul_log` (`:137`)。
 >
 > **Pattern 雛形**:
@@ -26,7 +26,7 @@
 > **Goal (短形)**: `lz78_two_sided_optimality_distinct_bdd_free` (`LZ78DistinctEncoding.lean:412`)
 > が現在 honest hypothesis として受けている `h_achiev : IsLZ78AchievabilityChainHyp`
 > (Eq. 13.124) と `h_converse : IsLZ78ConverseChainHyp` (Eq. 13.130) の **両方を genuine 構成で discharge**。
-> 新規 1 ファイル `Common2026/Shannon/LZ78ZivEntropyBridge.lean` (~300–500 行) に
+> 新規 1 ファイル `InformationTheory/Shannon/LZ78ZivEntropyBridge.lean` (~300–500 行) に
 > per-path Ziv 不等式 `c·log c ≤ -log Pₙ{block ω}` を構築し、SMB-level `blockLogAvg`
 > へ橋渡し → 2 述語を `theorem` として返す。**0 sorry / 0 warning**。
 >
@@ -60,13 +60,13 @@
 - [ ] Phase 5 — `ziv_per_path_mul_log_le` (L-LZ-Z1、factorization + log-sum + counting bound) 📋
 - [ ] Phase 6 — assembly `isLZ78AchievabilityChainHyp_distinct` (L-LZ-Z4、limsup) 📋
 - [ ] Phase 7 — assembly `isLZ78ConverseChainHyp_distinct` (L-LZ-Z4、liminf 双対) 📋
-- [ ] Phase V — `Common2026.lean` 編入 + headline rewire + clean check 📋
+- [ ] Phase V — `InformationTheory.lean` 編入 + headline rewire + clean check 📋
 
 ## ゴール / Approach
 
 ### 最終到達点 (Phase 7 完成形)
 
-新規 1 ファイル `Common2026/Shannon/LZ78ZivEntropyBridge.lean` の主合流 (signature は inventory「着手 skeleton」line 384–414 と整合):
+新規 1 ファイル `InformationTheory/Shannon/LZ78ZivEntropyBridge.lean` の主合流 (signature は inventory「着手 skeleton」line 384–414 と整合):
 
 ```lean
 namespace InformationTheory.Shannon
@@ -174,13 +174,13 @@ Phase 0 で確認**。済まない場合 Phase 7 を Phase 6 と同格の独立 
 | Phase 5 | **150–300 行** | `ziv_per_path_mul_log_le` (factorization + log-sum + counting) | yes |
 | Phase 6 | **60–100 行** | `isLZ78AchievabilityChainHyp_distinct` (limsup assembly) | yes |
 | Phase 7 | **40–120 行** | `isLZ78ConverseChainHyp_distinct` (liminf 双対 or 独立下界) | yes |
-| Phase V | **5–15 行** | `Common2026.lean` import + headline rewire (hyp-free 系 publish) + clean check | no |
+| Phase V | **5–15 行** | `InformationTheory.lean` import + headline rewire (hyp-free 系 publish) + clean check | no |
 | **累計** | **~430–800 行** | 1 ファイル (Phase 4 が intractable なら ~280 行 + isolated honest hyp 1 本) | — |
 
 ### ファイル構成
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   LZ78ZivEntropyBridge.lean   ← 新規 (~430–800 行)
                                 ・log_sum_inequality                     (Z2、独立)
                                 ・blockLogAvg_eq_neg_log_blockProb       (Z3、独立)
@@ -191,7 +191,7 @@ Common2026/Shannon/
                                 ・isLZ78AchievabilityChainHyp_distinct   (Z4、limsup)
                                 ・isLZ78ConverseChainHyp_distinct        (Z4、liminf)
   LZ78DistinctEncoding.lean   ← (Phase V) hyp-free headline 系を追記 (任意、既存定理は不変)
-  Common2026.lean             ← `import Common2026.Shannon.LZ78ZivEntropyBridge` 追記
+  InformationTheory.lean             ← `import InformationTheory.Shannon.LZ78ZivEntropyBridge` 追記
 ```
 
 **既存 genuine 補題の signature は一切変更しない** (詳細 §Blast radius)。本 plan は新規補題の
@@ -227,7 +227,7 @@ skeleton-driven (CLAUDE.md): 全 def/定理を `:= by sorry` で並べ、namespa
 inventory「着手 skeleton」line 366–414 をベースに、factorization def/補題 (Phase 4) と converse 定理
 (Phase 7) と per-symbol helper (Z4) を追加。
 
-- [ ] imports (inventory line 367–372): `Common2026.Shannon.LZ78ZivInequality`,
+- [ ] imports (inventory line 367–372): `InformationTheory.Shannon.LZ78ZivInequality`,
       `LZ78ConverseAsymptotic`, `LZ78DistinctEncoding`, `ShannonMcMillanBreiman`,
       `Mathlib.Analysis.SpecialFunctions.Log.NegMulLog`, `Mathlib.Analysis.Convex.Jensen`。
       Phase 4 の compProd 経路を採るなら `Mathlib.Probability.Kernel.Composition.*` 系を追加。`import Mathlib` 禁止。
@@ -237,7 +237,7 @@ inventory「着手 skeleton」line 366–414 をベースに、factorization def
 - [ ] 全 7 declaration を `:= by sorry` で stub: `log_sum_inequality`, `blockLogAvg_eq_neg_log_blockProb`,
       `blockProb_eq_prod_condPhraseProb` (+ 必要なら `condPhraseProb` def), `ziv_per_path_mul_log_le`,
       `lz_per_symbol_le_blockLogAvg_add_smallo`, `isLZ78AchievabilityChainHyp_distinct`, `isLZ78ConverseChainHyp_distinct`。
-- [ ] **検証**: `lake env lean Common2026/Shannon/LZ78ZivEntropyBridge.lean` が sorry warning のみで type-check。LSP `<new-diagnostics>` を待つ。
+- [ ] **検証**: `lake env lean InformationTheory/Shannon/LZ78ZivEntropyBridge.lean` が sorry warning のみで type-check。LSP `<new-diagnostics>` を待つ。
 - **撤退ライン**: なし (skeleton のみ、確実)。
 
 ## Phase 2 - `log_sum_inequality` (L-LZ-Z2、独立) 📋
@@ -330,22 +330,22 @@ per-path Ziv → per-symbol bridge → limsup で `h_achiev`。
   部分縮退で、`h_converse` を「per-path coding 下界 (genuine、Cover–Thomas 13.130) を仮定して liminf 結論を返す」
   明示 signature にする。`Prop := True` は使わない。
 
-## Phase V - `Common2026.lean` 編入 + headline rewire + clean check 📋
+## Phase V - `InformationTheory.lean` 編入 + headline rewire + clean check 📋
 
-- [ ] `Common2026.lean` に `import Common2026.Shannon.LZ78ZivEntropyBridge` を追記 (`LZ78DistinctEncoding` import の後ろ)。
+- [ ] `InformationTheory.lean` に `import InformationTheory.Shannon.LZ78ZivEntropyBridge` を追記 (`LZ78DistinctEncoding` import の後ろ)。
 - [ ] **headline rewire**: `lz78_two_sided_optimality_distinct_bdd_free` の `h_achiev`/`h_converse` 引数を
       `isLZ78AchievabilityChainHyp_distinct μ p` / `isLZ78ConverseChainHyp_distinct μ p` で供給した
       **hyp-free 新 theorem** (`lz78_two_sided_optimality_distinct` 等の別名) を publish。**既存 `_bdd_free` 定理は signature 不変で残す** (下流 caller 互換)。
-- [ ] `lake env lean Common2026/Shannon/LZ78ZivEntropyBridge.lean` silent (0 error / 0 sorry / 0 warning)。
+- [ ] `lake env lean InformationTheory/Shannon/LZ78ZivEntropyBridge.lean` silent (0 error / 0 sorry / 0 warning)。
 - [ ] 既存 genuine 補題 (`card_phraseSet_le_pow`, `lz78DistinctEncodingLength_eq`, `blockLogAvg`, SMB 系) の
       signature が無変更であることを `rg` で横断確認 (新規追加のみ、§Blast radius)。
-- [ ] upstream olean refresh: 新 public symbol を `LZ78DistinctEncoding` 等が拾うなら `lake build Common2026.Shannon.LZ78ZivEntropyBridge` 一回。
+- [ ] upstream olean refresh: 新 public symbol を `LZ78DistinctEncoding` 等が拾うなら `lake build InformationTheory.Shannon.LZ78ZivEntropyBridge` 一回。
 
 ## Blast radius
 
-- **新規 lemma 投入先**: `Common2026/Shannon/LZ78ZivEntropyBridge.lean` (新規 1 ファイル) に全 7 declaration。
+- **新規 lemma 投入先**: `InformationTheory/Shannon/LZ78ZivEntropyBridge.lean` (新規 1 ファイル) に全 7 declaration。
   Phase 4 経路 2 を採ると `condPhraseProb` def も同ファイル。
-- **編集される既存ファイル**: `Common2026.lean` (import 1 行追記)。`LZ78DistinctEncoding.lean` は
+- **編集される既存ファイル**: `InformationTheory.lean` (import 1 行追記)。`LZ78DistinctEncoding.lean` は
   **任意** (Phase V の hyp-free 系を別名で追記する場合のみ、既存定理は不変)。
 - **signature 変更ゼロ確認**: 再利用する既存 genuine 補題 (`card_phraseSet_le_pow` `LZ78ZivInequality.lean:204`,
   `lz78DistinctEncodingLength_eq` `:133`, `lz78_phrase_count_asymptotic_n_div_log` `LZ78ConverseAsymptotic.lean:387`,
@@ -399,7 +399,7 @@ per-path Ziv → per-symbol bridge → limsup で `h_achiev`。
 3. Phase 2 (log-sum) + Phase 3 (restate) を独立に full discharge — 確実な前進を先取り
 4. Phase 4 (factorization、crux) full 試行 → ~200 行 / 1 セッションで判定 → 閉じなければ L-LZ-Z5 (isolated honest hyp) 発動
 5. Phase 5 (Ziv 本体) → Phase 6 (achiev limsup) → Phase 7 (converse liminf、双対 or 独立 / L-LZ-Z6 判定)
-6. Phase V `Common2026.lean` 編入 + hyp-free headline 系 publish + clean check
+6. Phase V `InformationTheory.lean` 編入 + hyp-free headline 系 publish + clean check
 
 ## 判断ログ
 

@@ -3,7 +3,7 @@
   "proof_log": "docs/proof-logs/proof-log-hand-pi-refactor.md",
   "generated_at": "2026-05-10T23:33:36.255Z",
   "filters": {
-    "file_prefix": "Common2026/Shannon/"
+    "file_prefix": "InformationTheory/Shannon/"
   },
   "idle_gap_minutes": 5,
   "sessions": [

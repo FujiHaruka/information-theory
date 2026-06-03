@@ -27,7 +27,7 @@
 - [ ] Phase A2 — a.s.-eventual Ziv core: `limsup (c·log₂c)/n ≤ entropyRate₂` a.s. の genuine 接続 (★ feasibility 核心) 📋
 - [ ] Phase A3 — `IsLZ78AchievabilityZivUpperBound` 構成 (a.s.-eventual 形 assembly) 📋
 - [ ] Phase A4 — headline 再配線 (achievability primitive discharge, 仮定 2→1) 📋
-- [ ] Phase V — `Common2026.lean` 編入 + `lake env lean` + `#print axioms` 📋
+- [ ] Phase V — `InformationTheory.lean` 編入 + `lake env lean` + `#print axioms` 📋
 
 ## 現況 (本 round で機械確定、本 plan の前提)
 
@@ -106,8 +106,8 @@ target: limsup (lz/n) ≤ entropyRate₂  ⟸  limsup (c·log₂c)/n ≤ entropy
   3. ergodic で **`-log Q_c(x^n)/n → H`** a.s.。`Q_c` は `Pₙ` と異なるが、stationarity +
      ergodicity で **同じ entropy rate `H` に収束** (CT の核心 Lemma)。これと SMB の
      `-log Pₙ/n → H` で `(c·log c)/n → H` を sandwich。
-  - **feasibility リスク (★最大)**: ステップ 3「`-log Q_c/n → H`」は Common2026 に
-    **不在の ergodic 補題** (tree-measure の AEP)。`Q_c` の定義も Common2026 に無い。
+  - **feasibility リスク (★最大)**: ステップ 3「`-log Q_c/n → H`」は InformationTheory に
+    **不在の ergodic 補題** (tree-measure の AEP)。`Q_c` の定義も InformationTheory に無い。
     SMB/Birkhoff/AEP は `Pₙ` (path block law) 専用で、tree-induced measure には直接効かない。
     library-scale の新規 ergodic 構築 (markov 近似 / k-th order entropy → entropy rate)。
 - **Route C (counting + SMB sandwich を直接)**:
@@ -171,7 +171,7 @@ constant process では消える (`H=0` で両辺 `→0`) が、**`Pₙ→1` fam
   必要** (これだけが `c` を source 統計に結びつける genuine な道)。
 
 **結論 (go/no-go)**: a.s.-eventual core は **数学的に TRUE** だが、その genuine 証明は
-**Route Q を要し、Route Q ステップ 3 (`-log Q_c/n → H`) が Common2026 不在の major gap**。
+**Route Q を要し、Route Q ステップ 3 (`-log Q_c/n → H`) が InformationTheory 不在の major gap**。
 counting 単独 (Route C) では `H` に到達できない。**M0 で Route Q ステップ 3 が既存
 SMB/Birkhoff から組めるか (= `Q_c` の AEP が `Pₙ` の SMB から derive できるか) を
 機械的に詰める。組めなければ撤退ライン (honest hyp 化)**。
@@ -192,7 +192,7 @@ SMB/Birkhoff から組めるか (= `Q_c` の AEP が `Pₙ` の SMB から deriv
 **Mathlib 壁 4 分類での判定** (textbook-roadmap.md「Mathlib 壁の 4 分類」):
 `-log Q_c/n → H` は **(b) 解析/ergodic の壁** (Stam 型と同類)。SMB は `Pₙ` 専用で、
 tree-induced measure `Q_c` の AEP は別の ergodic 議論 (markov 近似経由)。Mathlib にも
-Common2026 にも不在。**「選択 (big)」ではなく「未証明 (hard)」**。
+InformationTheory にも不在。**「選択 (big)」ではなく「未証明 (hard)」**。
 
 ### 判断 4 — 退化ケース (H=0, constant process) の整合
 
@@ -266,8 +266,8 @@ honesty: 退化ケースは **vacuous でなく genuine に成立** (`exfalso`/`
 
 ### Phase V — 編入 + 検証 📋
 
-- [ ] `Common2026.lean` に新規ファイル import 追記。
-- [ ] `lake env lean Common2026/Shannon/<new>.lean` silent (0 sorry / 0 warning)。
+- [ ] `InformationTheory.lean` に新規ファイル import 追記。
+- [ ] `lake env lean InformationTheory/Shannon/<new>.lean` silent (0 sorry / 0 warning)。
 - [ ] `#print axioms isLZ78AchievabilityZivUpperBound_aseventual` で sorryAx 非依存確認。
       Route Q go なら honest hyp は `hreg` のみ。no-go なら honest hyp (L-AS1) の docstring
       に「load-bearing / NOT a discharge」明示。
@@ -292,7 +292,7 @@ honesty: 退化ケースは **vacuous でなく genuine に成立** (`exfalso`/`
 - a.s.-eventual core (`limsup (c log₂c)/n ≤ H`) は **数学的に TRUE** (per-block FALSE と
   矛盾しない、退化ケースも整合)。しかし **counting 単独では `H` に到達不能** (定数 rate
   `K≠H`)。`H` への絞り込みには **tree-measure `Q_c` の AEP `-log Q_c/n → H` が本質的**。
-- **`-log Q_c/n → H` は Common2026 にも Mathlib にも不在の major ergodic 補題**
+- **`-log Q_c/n → H` は InformationTheory にも Mathlib にも不在の major ergodic 補題**
   (markov 近似 / k-th order entropy → entropy rate、textbook-roadmap「Mathlib 壁 (b)
   解析/ergodic」)。SMB は `Pₙ` (path block law) 専用で tree-induced measure には効かない。
 - **結論 = 慎重 (cautious go, gated on M0)**: per-block が偽だった以上 a.s.-eventual も
@@ -306,7 +306,7 @@ honesty: 退化ケースは **vacuous でなく genuine に成立** (`exfalso`/`
 
 **起草時の見立て**: per-block disproof と同じ source 統計の困難 (`c` を `Pₙ` に直接繋げない)
 が a.s.-eventual でも残る。tree-measure `Q_c` 経由は数学的に正しい道だが、その AEP は
-**SMB と独立な新規 ergodic 定理**で、Common2026 の既存機構では **直接組めない見込みが高い**
+**SMB と独立な新規 ergodic 定理**で、InformationTheory の既存機構では **直接組めない見込みが高い**
 (SMB は 2800 行の専用構築。`Q_c` AEP は同規模の別構築になりうる)。**したがって本 plan の
 最も確度の高い着地は「A1 (envelope reduction) を genuine に閉じ、`-log Q_c/n → H` を
 honest named hyp として A2 で明示する撤退ライン形」**。完全無仮説 achievability は M0 が
@@ -334,7 +334,7 @@ regularity (`hreg`: full-support cylinder 正値、ergodic) のみ。
 
 ## 検証
 
-- `lake env lean Common2026/Shannon/<new>.lean` が silent (0 sorry / 0 warning)。
+- `lake env lean InformationTheory/Shannon/<new>.lean` が silent (0 sorry / 0 warning)。
 - `#print axioms isLZ78AchievabilityZivUpperBound_aseventual` (or limsup 直接版) が
   `sorryAx` 非依存。
 - headline 再配線後 `#print axioms lz78_two_sided_optimality_distinct_aseventual` で残る
@@ -367,7 +367,7 @@ regularity (`hreg`: full-support cylinder 正値、ergodic) のみ。
    = `[propext, Classical.choice, Quot.sound]`。achievability の RHS (`-log₂Pₙ/n → H`) は
    無条件 genuine。残ギャップは LHS `(c log c)/n` を RHS に繋ぐ一点に局所化。
 3. **feasibility = cautious go (M0 gated)**: a.s.-eventual core は数学的に TRUE だが genuine
-   証明は tree-measure `Q_c` AEP (`-log Q_c/n → H`) を要し、これは Common2026/Mathlib 不在の
+   証明は tree-measure `Q_c` AEP (`-log Q_c/n → H`) を要し、これは InformationTheory/Mathlib 不在の
    major ergodic gap (壁分類 (b))。counting 単独では `H` に到達不能 (定数 rate `K≠H`)。
    起草時の見立てでは L-AS1 撤退 (`IsTreeInducedAEP` honest hyp + A1 genuine) が最も確度の高い
    着地。完全無仮説 achievability は M0 が `Q_c` AEP の既存機構 derive を go と出した場合のみ。

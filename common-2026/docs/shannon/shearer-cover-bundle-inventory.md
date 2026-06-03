@@ -13,8 +13,8 @@ Mathlib に Brascamp-Lieb / Loomis-Whitney / Boolean-cube isoperimetry の既存
 ## 再利用する既存補題
 
 ### Shearer engine
-- `Common2026.Shannon.HanDShearer.shearer_inequality`
-  - シグネチャ (verbatim from `Common2026/Shannon/HanDShearer.lean:41`):
+- `InformationTheory.Shannon.HanDShearer.shearer_inequality`
+  - シグネチャ (verbatim from `InformationTheory/Shannon/HanDShearer.lean:41`):
     ```
     theorem shearer_inequality
         {ι : Type*} [Fintype ι]
@@ -31,8 +31,8 @@ Mathlib に Brascamp-Lieb / Loomis-Whitney / Boolean-cube isoperimetry の既存
   - 結論形: `(k : ℝ) * jointEntropy μ Xs ≤ ∑ j : ι, jointEntropySubset μ Xs (S j)` — **任意 ι, 任意 S** で既に汎用。
 
 ### Entropy ≤ log #image
-- `Common2026.Shannon.entropy_le_log_image_card`
-  - シグネチャ (verbatim from `Common2026/Shannon/LoomisWhitney.lean:125`):
+- `InformationTheory.Shannon.entropy_le_log_image_card`
+  - シグネチャ (verbatim from `InformationTheory/Shannon/LoomisWhitney.lean:125`):
     ```
     theorem entropy_le_log_image_card
         {β γ : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
@@ -47,7 +47,7 @@ Mathlib に Brascamp-Lieb / Loomis-Whitney / Boolean-cube isoperimetry の既存
   - **任意の measurable `f : β → γ`** で適用可能。LW 専用ではない。
 
 ### Entropy of uniformOn = log #A
-- `Common2026.Shannon.entropy_uniformOn_eq_log_card` (`LoomisWhitney.lean:46`):
+- `InformationTheory.Shannon.entropy_uniformOn_eq_log_card` (`LoomisWhitney.lean:46`):
   ```
   theorem entropy_uniformOn_eq_log_card
       {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
@@ -57,7 +57,7 @@ Mathlib に Brascamp-Lieb / Loomis-Whitney / Boolean-cube isoperimetry の既存
   ```
 
 ### jointEntropySubset
-- `Common2026.Shannon.jointEntropySubset` (`HanD.lean:50`):
+- `InformationTheory.Shannon.jointEntropySubset` (`HanD.lean:50`):
   ```
   noncomputable def jointEntropySubset
       (μ : Measure Ω) (Xs : Fin n → Ω → α) (S : Finset (Fin n)) : ℝ :=

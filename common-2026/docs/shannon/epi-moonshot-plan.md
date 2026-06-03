@@ -18,7 +18,7 @@
 > - E-9 `DifferentialEntropy.lean` (Gaussian entropy + max entropy 完成)
 >
 > **Inventory**: [`epi-mathlib-inventory.md`](epi-mathlib-inventory.md) (Mathlib
-> + Common2026 在庫、自作要素 ~420-630 行、撤退ライン L-EPI1+L-EPI2+L-EPI3
+> + InformationTheory 在庫、自作要素 ~420-630 行、撤退ライン L-EPI1+L-EPI2+L-EPI3
 > 採用)
 >
 > **Status (2026-05-19)**: 着手前。inventory 完了済、本 plan は Phase 1 の成果物。
@@ -27,7 +27,7 @@
 > 規模 ~420-630 行内に着地、roadmap 中央 800-1200 行よりタイト)。
 >
 > **実態整合 (2026-05-20): PASS-THROUGH (publish 済、撤退ライン全採用、主定理 vacuous-safe だが核は仮定渡し)** —
-> `Common2026/Shannon/EntropyPowerInequality.lean` が全 Phase publish 済。主定理 `entropy_power_inequality`
+> `InformationTheory/Shannon/EntropyPowerInequality.lean` が全 Phase publish 済。主定理 `entropy_power_inequality`
 > (`:188`) は `IsEntropyPowerInequalityHypothesis` (= EPI 結論そのもの、`:168`) を受け取り本体 `:= h_epi` (`:197`) で着地
 > = **conclusion-as-hypothesis retreat**。`IsStamInequalityHypothesis` (`:138`) と `IsDeBruijnIntegrationHypothesis`
 > (`:152`) は両方 **`Prop := True` placeholder** (signature 露出のみ、本体未使用、`isStamInequalityHypothesis_trivial`
@@ -52,7 +52,7 @@
 > 詳細 → [`docs/audit/wave1-plan-sync-epi-bm.md`](../audit/wave1-plan-sync-epi-bm.md) §`epi-moonshot-plan`、
 > [`docs/audit/defect-inventory-2026-05-24.md`](../audit/defect-inventory-2026-05-24.md) §7.3 item #8。
 >
-> **Goal**: 新規ファイル `Common2026/Shannon/EntropyPowerInequality.lean` で
+> **Goal**: 新規ファイル `InformationTheory/Shannon/EntropyPowerInequality.lean` で
 > **Cover-Thomas Theorem 17.7.3** (`exp(2 h(X+Y)) ≥ exp(2 h(X)) + exp(2 h(Y))`)
 > を **hypothesis pass-through 形 (L-EPI1 + L-EPI2 + L-EPI3 三本)** で publish。
 >
@@ -67,7 +67,7 @@
 
 ## 進捗
 
-- [x] Phase 0 — Mathlib + Common2026 API 在庫 ✅ → [`epi-mathlib-inventory.md`](epi-mathlib-inventory.md)
+- [x] Phase 0 — Mathlib + InformationTheory API 在庫 ✅ → [`epi-mathlib-inventory.md`](epi-mathlib-inventory.md)
 - [ ] Phase A — `entropyPower`, `entropyPowerMeasure` + 基本性質 📋
 - [ ] Phase B — L-EPI1 + L-EPI2 + L-EPI3 predicate 定義 📋
 - [ ] Phase C — 主定理 `entropy_power_inequality` (L-EPI3 適用) 📋
@@ -198,7 +198,7 @@ F.4 IsRegularDensity
 ### Approach 図
 
 ```
-Phase 0 : Mathlib + Common2026 在庫                                ← 完了済 (inventory)
+Phase 0 : Mathlib + InformationTheory 在庫                                ← 完了済 (inventory)
           ──────────────────────────────────────────────────
 Phase A : entropyPower 定義 + Gaussian closed form                ← 0.5 session
                                                                    = Tier 0 (~80-120 行)
@@ -223,7 +223,7 @@ Phase V : verify (`lake env lean EntropyPowerInequality.lean`)    ← 0.25 sessi
 
 - **Tier 0** (~160-220 行, Phase A + B): `entropyPower` + `entropyPowerMeasure` +
   Gaussian closed form + L-EPI1/L-EPI2/L-EPI3 predicate 定義。Phase A + B 完了で
-  発生、`Common2026.lean` 編入 OK。partial publish 価値あり (定義 + predicate を
+  発生、`InformationTheory.lean` 編入 OK。partial publish 価値あり (定義 + predicate を
   hypothesis 形で公開、主定理は次フェーズ)。
 
 - **Tier 1** (~240-350 行, Phase A + B + C + D): + `entropy_power_inequality` 主定理
@@ -257,20 +257,20 @@ Phase V : verify (`lake env lean EntropyPowerInequality.lean`)    ← 0.25 sessi
 ### ファイル構成 (Phase V 完了想定)
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   EntropyPowerInequality.lean  ← 新規 (~385-625 行 = Tier 0 + 1 + 2)
   DifferentialEntropy.lean     ← 既存 1010 行、変更なし (E-9 完成、再利用元)
   FisherInfo.lean              ← 既存 236 行、変更なし (T2-F 完成、name 露出のみ参照)
   FisherInfoGaussian.lean      ← 既存 329 行、変更なし (本 plan は import せず)
   AWGN.lean                    ← 既存、変更なし
-Common2026.lean                ← `import Common2026.Shannon.EntropyPowerInequality` 追記
+InformationTheory.lean                ← `import InformationTheory.Shannon.EntropyPowerInequality` 追記
 ```
 
 **新規 import (`EntropyPowerInequality.lean`、CLAUDE.md `Import Policy` 厳守)**:
 
 ```lean
-import Common2026.Shannon.DifferentialEntropy
-import Common2026.Shannon.FisherInfo
+import InformationTheory.Shannon.DifferentialEntropy
+import InformationTheory.Shannon.FisherInfo
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.Basic
@@ -287,9 +287,9 @@ import Mathlib.Probability.Independence.Basic
   `Real.exp_log`, `Real.exp_add`, `Real.log_mul`
 - [x] **Mathlib `Probability.Independence.Basic`**: `IndepFun`,
   `IndepFun.map_add_eq_map_conv_map₀'` (内部で convolution lemma が呼び出す)
-- [x] **Common2026 E-9 `DifferentialEntropy.lean`**: `differentialEntropy`,
+- [x] **InformationTheory E-9 `DifferentialEntropy.lean`**: `differentialEntropy`,
   `differentialEntropy_gaussianReal`
-- [x] **Common2026 T2-F `FisherInfo.lean`**: `IsRegularDeBruijnHyp`,
+- [x] **InformationTheory T2-F `FisherInfo.lean`**: `IsRegularDeBruijnHyp`,
   `deBruijn_identity` (signature 露出のみ、本 plan の本体では呼ばない)
 
 **参考 (import しない / schema のみ参照)**:
@@ -301,7 +301,7 @@ import Mathlib.Probability.Independence.Basic
 
 ---
 
-## Phase 0 — Mathlib + Common2026 API 在庫 ✅
+## Phase 0 — Mathlib + InformationTheory API 在庫 ✅
 
 完了 ([`epi-mathlib-inventory.md`](epi-mathlib-inventory.md))。
 
@@ -337,7 +337,7 @@ inventory §H と同じ:
 
 ### スコープ
 
-`Common2026/Shannon/EntropyPowerInequality.lean` 新規作成 (Phase A 部分 ~80-120 行)。
+`InformationTheory/Shannon/EntropyPowerInequality.lean` 新規作成 (Phase A 部分 ~80-120 行)。
 
 - skeleton write (全主定理 `:= by sorry`)
 - `entropyPower` / `entropyPowerMeasure` 定義
@@ -346,9 +346,9 @@ inventory §H と同じ:
 
 ### Done 条件
 
-- `Common2026/Shannon/EntropyPowerInequality.lean` 新規作成 (skeleton)
+- `InformationTheory/Shannon/EntropyPowerInequality.lean` 新規作成 (skeleton)
 - Phase A 0 sorry (Phase B/C/D/E は `:= by sorry` 残し OK だが ASAP discharge)
-- `lake env lean Common2026/Shannon/EntropyPowerInequality.lean` clean
+- `lake env lean InformationTheory/Shannon/EntropyPowerInequality.lean` clean
 
 ### ステップ
 
@@ -495,13 +495,13 @@ inventory §H と同じ:
 `EntropyPowerInequality.lean` の Phase D 部分 (~50-80 行)。
 
 - `entropy_power_inequality_gaussian_saturation` (X, Y それぞれ Gaussian なら
-  EPI は等号成立、Mathlib + Common2026 既存 API のみで full discharge)
+  EPI は等号成立、Mathlib + InformationTheory 既存 API のみで full discharge)
 
 ### Done 条件
 
 - Gaussian saturation case 0 sorry / 0 warning
 - 撤退ラインを使わない (Mathlib `gaussianReal_add_gaussianReal_of_indepFun` +
-  Common2026 `differentialEntropy_gaussianReal` で完結)
+  InformationTheory `differentialEntropy_gaussianReal` で完結)
 
 ### ステップ
 
@@ -511,7 +511,7 @@ inventory §H と同じ:
   等号成立 `exp(2 h(X+Y)) = exp(2 h(X)) + exp(2 h(Y))`.
 
   Mathlib `gaussianReal_add_gaussianReal_of_indepFun` (sum is Gaussian) +
-  Common2026 `differentialEntropy_gaussianReal` (closed form `(1/2) log(2πe v)`)
+  InformationTheory `differentialEntropy_gaussianReal` (closed form `(1/2) log(2πe v)`)
   の合成で full discharge (撤退ラインなし)。 -/
   theorem entropy_power_inequality_gaussian_saturation
       {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -565,20 +565,20 @@ inventory §H と同じ:
 
 ---
 
-## Phase V — verify + Common2026.lean 編入 📋
+## Phase V — verify + InformationTheory.lean 編入 📋
 
 ### スコープ
 
-- `lake env lean Common2026/Shannon/EntropyPowerInequality.lean` clean (0 errors
+- `lake env lean InformationTheory/Shannon/EntropyPowerInequality.lean` clean (0 errors
   / 0 sorry / 警告最小限) を確認
-- `Common2026.lean` への `import Common2026.Shannon.EntropyPowerInequality` 追記
+- `InformationTheory.lean` への `import InformationTheory.Shannon.EntropyPowerInequality` 追記
 - `docs/textbook-roadmap.md` Ch.17 行のステータス更新 (T2-D 完了マーク)
 - `docs/moonshot-seeds.md` 冒頭 Status ブロックに本 seed の成果を append
 
 ### Done 条件
 
-- `lake env lean Common2026/Shannon/EntropyPowerInequality.lean` clean
-- `Common2026.lean` import 行追加
+- `lake env lean InformationTheory/Shannon/EntropyPowerInequality.lean` clean
+- `InformationTheory.lean` import 行追加
 - roadmap / seeds 更新
 
 ---

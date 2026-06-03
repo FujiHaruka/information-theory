@@ -1,13 +1,13 @@
 # Sanov LDP equality 形 (B-1'') ムーンショット計画 🌙
 
-> **Status (2026-05-12)**: deferred カード起草、未着手。B-1' upper bound (`Common2026/Shannon/SanovLDP.lean` 550 行) が touch せず並立する想定。本 plan は **open set 上の Sanov LDP equality 形** (Cover-Thomas Theorem 11.4.1 完全形) を 0 sorry で publish する設計図。
+> **Status (2026-05-12)**: deferred カード起草、未着手。B-1' upper bound (`InformationTheory/Shannon/SanovLDP.lean` 550 行) が touch せず並立する想定。本 plan は **open set 上の Sanov LDP equality 形** (Cover-Thomas Theorem 11.4.1 完全形) を 0 sorry で publish する設計図。
 >
-> **実態整合 (2026-05-20): DONE-UNCOND** — Status 行の「未着手」は完全に stale。**全 Phase A〜F 実装済**: `Common2026/Shannon/KLDivContinuous.lean` (Phase A、0 sorry) + `Common2026/Shannon/SanovLDPEquality.lean` (1243+ 行、Phase B〜E、0 sorry)。主定理 `sanov_ldp_equality` は `SanovLDPEquality.lean:1243` に strict `Tendsto (… → 𝓝 (-D))` で discharge、std binders (`h_in_E`/`h_minimizer` は honest な achievable-seq / minimizer 仮定、pass-through なし)。下界補題 `sanov_ldp_lower_bound_pointwise` + 上界 `sanov_ldp_upper_bound` の sandwich で着地。両 file 0 `:=True`。
+> **実態整合 (2026-05-20): DONE-UNCOND** — Status 行の「未着手」は完全に stale。**全 Phase A〜F 実装済**: `InformationTheory/Shannon/KLDivContinuous.lean` (Phase A、0 sorry) + `InformationTheory/Shannon/SanovLDPEquality.lean` (1243+ 行、Phase B〜E、0 sorry)。主定理 `sanov_ldp_equality` は `SanovLDPEquality.lean:1243` に strict `Tendsto (… → 𝓝 (-D))` で discharge、std binders (`h_in_E`/`h_minimizer` は honest な achievable-seq / minimizer 仮定、pass-through なし)。下界補題 `sanov_ldp_lower_bound_pointwise` + 上界 `sanov_ldp_upper_bound` の sandwich で着地。両 file 0 `:=True`。
 
 ## 進捗
 
 - [x] Phase 0 — Mathlib API インベントリ (`Continuous Real.log` / `Real.continuous_negMulLog` / `Nat.floor` / `tendsto_of_le_liminf_of_limsup_le`) ✅
-- [x] Phase A — `klDivIndex` の連続性 (`Common2026/Shannon/KLDivContinuous.lean` 独立 file) ✅
+- [x] Phase A — `klDivIndex` の連続性 (`InformationTheory/Shannon/KLDivContinuous.lean` 独立 file) ✅
 - [x] Phase B — achievable type sequence (`roundedTypeIndex P n` と `klDivIndex_tendsto`) ✅
 - [x] Phase C — `Q^n(T_c)` lower bound (多項係数 Stirling-free) ✅
 - [x] Phase D — `liminf` 形 lower bound on open `E°` ✅
@@ -59,9 +59,9 @@ theorem sanov_ldp_equality
 
 ### file 分割案
 
-- `Common2026/Shannon/KLDivContinuous.lean` (新規, Phase A、~100-150 行) — `Continuous (klDivSumForm_ofVec · Q)` を `Real.negMulLog` 連続性で。Mathlib 上流 PR 候補。
-- `Common2026/Shannon/SanovLDPEquality.lean` (新規, Phase B-E、~400-550 行) — achievable seq + lower bound + sandwich。`SanovLDP.lean` (B-1') / `KLDivContinuous.lean` (Phase A) を import で再利用。
-- 既存 `Common2026/Shannon/SanovLDP.lean` (B-1', 550 行) は touch せず。
+- `InformationTheory/Shannon/KLDivContinuous.lean` (新規, Phase A、~100-150 行) — `Continuous (klDivSumForm_ofVec · Q)` を `Real.negMulLog` 連続性で。Mathlib 上流 PR 候補。
+- `InformationTheory/Shannon/SanovLDPEquality.lean` (新規, Phase B-E、~400-550 行) — achievable seq + lower bound + sandwich。`SanovLDP.lean` (B-1') / `KLDivContinuous.lean` (Phase A) を import で再利用。
+- 既存 `InformationTheory/Shannon/SanovLDP.lean` (B-1', 550 行) は touch せず。
 
 合計新規行数 ~500-700 行。
 
@@ -138,7 +138,7 @@ noncomputable def klDivSumForm (P Q : Measure α) : ℝ :=
 
 **TBD**: `klDivSumForm` の入力を `Measure α` から `α → ℝ` に書き換えた変種 (`klDivSumForm_ofVec : (α → ℝ) → (α → ℝ) → ℝ`) を Phase A で定義する。これは `Measure α` 構造体の `topology` を介さずに `α → ℝ` の point-wise topology だけで連続性を取るため。既存 `klDivSumForm` (Measure 入力) との連絡は `klDivSumForm_eq_ofVec_pmf` (1-liner) を `Sanov.lean` を touch せずに本 file 内で publish。
 
-## Phase A - `klDivIndex` の連続性 (新規 file `Common2026/Shannon/KLDivContinuous.lean`)
+## Phase A - `klDivIndex` の連続性 (新規 file `InformationTheory/Shannon/KLDivContinuous.lean`)
 
 ### 目標 statement
 
@@ -378,9 +378,9 @@ theorem sanov_ldp_equality
 
 ## Phase F - verify + doc 更新
 
-- `lake env lean Common2026/Shannon/KLDivContinuous.lean` silent.
-- `lake env lean Common2026/Shannon/SanovLDPEquality.lean` silent.
-- `Common2026.lean` に 2 つの import 追記.
+- `lake env lean InformationTheory/Shannon/KLDivContinuous.lean` silent.
+- `lake env lean InformationTheory/Shannon/SanovLDPEquality.lean` silent.
+- `InformationTheory.lean` に 2 つの import 追記.
 - `docs/moonshot-seeds.md`:
   - B-1' 行に「LDP equality 形は B-1'' で完了」追記.
   - 参照リストに `docs/shannon/sanov-ldp-equality-plan.md` 追加.

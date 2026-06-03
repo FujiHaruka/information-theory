@@ -4,7 +4,7 @@
 
 > **Parent**: [`pinsker-moonshot-plan.md`](pinsker-moonshot-plan.md) — 弱形 (`TV ≤ √KL`, 定数 1, Bretagnolle-Huber 経路) を完了済。**本 plan は定数を `1/√2` まで強化** (Cover-Thomas 11.6 strict 形 `TV ≤ √(KL/2)`)。
 >
-> **実態整合 (2026-05-20): DONE-UNCOND** — Phase A〜B 完了。`Common2026/Shannon/PinskerSharp.lean:207` の `klFun_sharp_lower` (`∀ t ≥ 0, 3(t-1)² ≤ 2(t+2)·klFun t`) + `PinskerSharp.lean:306` の主定理 `tvNorm_le_sqrt_klDiv_div_two` (`Pinsker.tvNorm P Q ≤ Real.sqrt ((klDiv P Q).toReal / 2)`、定数 1/√2、std binders `hPQ : P ≪ Q`)。0 sorry / 0 `:=True`。実装結果サマリ (line 138 以降) も実態と一致。
+> **実態整合 (2026-05-20): DONE-UNCOND** — Phase A〜B 完了。`InformationTheory/Shannon/PinskerSharp.lean:207` の `klFun_sharp_lower` (`∀ t ≥ 0, 3(t-1)² ≤ 2(t+2)·klFun t`) + `PinskerSharp.lean:306` の主定理 `tvNorm_le_sqrt_klDiv_div_two` (`Pinsker.tvNorm P Q ≤ Real.sqrt ((klDiv P Q).toReal / 2)`、定数 1/√2、std binders `hPQ : P ≪ Q`)。0 sorry / 0 `:=True`。実装結果サマリ (line 138 以降) も実態と一致。
 
 ## 進捗
 
@@ -16,8 +16,8 @@
 
 **ゴール**: 有限アルファベット `α` 上の確率測度 `P, Q` (`P ≪ Q`) について
 `tvNorm P Q ≤ Real.sqrt ((klDiv P Q).toReal / 2)` を Lean 化。
-弱形 (`Common2026/Shannon/Pinsker.lean`、定数 1) はそのまま温存し、新規ファイル
-`Common2026/Shannon/PinskerSharp.lean` で sharp 版を独立 publish。
+弱形 (`InformationTheory/Shannon/Pinsker.lean`、定数 1) はそのまま温存し、新規ファイル
+`InformationTheory/Shannon/PinskerSharp.lean` で sharp 版を独立 publish。
 
 **Approach** (Csiszár-Kullback-Topsøe 古典経路):
 
@@ -42,7 +42,7 @@
    - `tvNorm² ≤ KL.toReal / 2` ⟹ `tvNorm ≤ √(KL.toReal/2)` (`Real.le_sqrt_of_sq_le`)
 
 **設計選択**:
-- 弱形 (`Common2026/Shannon/Pinsker.lean`) を **touch せず並列 publish**。`tvNorm` 定義は弱形と
+- 弱形 (`InformationTheory/Shannon/Pinsker.lean`) を **touch せず並列 publish**。`tvNorm` 定義は弱形と
   名前衝突を避けるため新ファイルでは弱形を **import + re-use** (`Pinsker.tvNorm`)。
 - Mathlib に `klFun(t) ≥ 3(t-1)²/(2(t+2))` 形は存在せず (loogle 0 件、`klFun_ge` で始まる sharp
   bound 系がない)、本 plan で独立に証明 → 将来 Mathlib 上流 PR 候補。
@@ -62,7 +62,7 @@
 - `monotoneOn_of_hasDerivWithinAt_nonneg` (`Calculus/Deriv/MeanValue.lean:426`)
 - `Finset.sum_sq_le_sum_mul_sum_of_sq_eq_mul` (Cauchy-Schwarz 一般形)
 - `Real.le_sqrt_of_sq_le`
-- 既存 `Common2026/Shannon/Pinsker.lean` の `tvNorm` 定義 + 弱形証明
+- 既存 `InformationTheory/Shannon/Pinsker.lean` の `tvNorm` 定義 + 弱形証明
 
 確認済 (loogle 0 件):
 
@@ -139,14 +139,14 @@ theorem tvNorm_le_sqrt_klDiv_div_two
 
 ## 実装結果サマリ (2026-05-12 完了)
 
-- **ファイル**: `Common2026/Shannon/PinskerSharp.lean` (429 行、新規)。弱形 `Pinsker.lean` (310 行) は
+- **ファイル**: `InformationTheory/Shannon/PinskerSharp.lean` (429 行、新規)。弱形 `Pinsker.lean` (310 行) は
   touch せず並立 publish。`tvNorm` 定義は弱形 namespace (`InformationTheory.Shannon.Pinsker.tvNorm`)
   からそのまま再利用。
 - **公開した主補題**:
   - `klFun_sharp_lower : ∀ t ≥ 0, 3 * (t - 1)^2 ≤ 2 * (t + 2) * klFun t` (点別 sharp Pinsker)
   - `tvNorm_le_sqrt_klDiv_div_two : tvNorm P Q ≤ Real.sqrt ((klDiv P Q).toReal / 2)`
     (主定理、有限 alphabet 上で `P ≪ Q` 確率測度に対し)
-- **検証**: `lake env lean Common2026/Shannon/PinskerSharp.lean` clean (0 error / 0 warning / 0 sorry)。
+- **検証**: `lake env lean InformationTheory/Shannon/PinskerSharp.lean` clean (0 error / 0 warning / 0 sorry)。
 - **Phase A 実装ノート**:
   - 当初 plan 通り `H(t) := 2(t+2)·klFun(t) - 3(t-1)²` の 3 段微分サインチェインで完走。Mathlib
     `Real.one_sub_inv_le_log_of_pos` (`1 - 1/t ≤ log t` for `t > 0`) のおかげで `H''(t) ≥ 0` が
@@ -166,7 +166,7 @@ theorem tvNorm_le_sqrt_klDiv_div_two
   - `Σ g = ∑ x, (p_x + 2·q_x) = 1 + 2 = 3` は `IsProbabilityMeasure` の `sum_measureReal_singleton`
     + `measure_univ` で。
 - **Mathlib 上流 PR 切り出し可能性**: `klFun_sharp_lower` は `Mathlib.InformationTheory.KullbackLeibler.KLFun`
-  の純粋拡張 (定義 `klFun` のみに依存、他の Common2026 シードへの依存なし)。`H` / `Hderiv` /
+  の純粋拡張 (定義 `klFun` のみに依存、他の InformationTheory シードへの依存なし)。`H` / `Hderiv` /
   `Hderiv2` を `private` 化して `klFun_sharp_lower` だけ public で出せば、独立 PR として
   Mathlib に提案可能。Phase B (`tvNorm_le_sqrt_klDiv_div_two`) は `tvNorm` 定義を Mathlib 風に
   整える (`MeasureTheory.tvDist` 等の既存 API があれば置換) 必要があるが、Phase A 部分のみで

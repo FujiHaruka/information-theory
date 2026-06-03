@@ -30,7 +30,7 @@ Phase C (converse) + Phase D (`Tendsto` 統合) 着手前に **Pi 化 chain rule
 **結論先取り**:
 
 - **軸 1 (Pi 化 chain rule) は完全不在** ─ `klDiv (Measure.pi μs) (Measure.pi νs)` 形は loogle 0 件、自前 induction 必須 (40〜80 行見積)。`klDiv_compProd_eq_add` + `klDiv_compProd_left` + `MeasurableEquiv.piFinSuccAbove` (`measurePreserving_piFinSuccAbove`) で組める
-- **軸 2 (DPI) は本 project 既存** ─ `Common2026/Shannon/DPI.lean` の `klDiv_map_le` が **`private`** で立っている (50〜100 行、Jensen + condExp で構築済み)。Phase C で **public 化 (or 別ファイルに公開コピー)** が必要
+- **軸 2 (DPI) は本 project 既存** ─ `InformationTheory/Shannon/DPI.lean` の `klDiv_map_le` が **`private`** で立っている (50〜100 行、Jensen + condExp で構築済み)。Phase C で **public 化 (or 別ファイルに公開コピー)** が必要
 - **軸 3 (log-sum 下界) は Mathlib 既存** ─ `mul_log_le_klDiv` / `mul_log_le_toReal_klDiv` (`Mathlib/InformationTheory/KullbackLeibler/Basic.lean:346,360`) で `μ.real univ * log(μ.real univ / ν.real univ) + ν.real univ - μ.real univ ≤ klDiv μ ν` が直接立つ。**Bernoulli 専用補題は不在**だが、上の log-sum 形を `Bernoulli(P^n s, P^n s^c)` vs `Bernoulli(Q^n s, Q^n s^c)` に直接適用すれば代用可
 - **軸 4 (`Tendsto` squeeze) は Mathlib 既存** ─ `tendsto_of_tendsto_of_tendsto_of_le_of_le` / `Filter.Tendsto.squeeze` (`Mathlib/Topology/Order/Basic.lean:230,237`)、`Tendsto.div_const` 系で `-(1/n) * log f n` の plumbing は組める
 - **軸 5 (finiteness) は achievability 内で立っている** ─ Phase A `integral_logLikelihoodRatio_under_P` が `(klDiv P Q).toReal` を期待値として算出する時点で `klDiv P Q ≠ ∞` を内部で使用、外部 hypothesis として明示するのが Phase C 入口の整理
@@ -102,9 +102,9 @@ Phase C (converse) + Phase D (`Tendsto` 統合) 着手前に **Pi 化 chain rule
 - **`[..]` プレリク verbatim**: `[Unique α]`
 - **本 plan での用途**: `Fin 1` (`Unique` インスタンス自動) で Pi 測度 = base measure。induction の base case で `klDiv (Measure.pi (fun _ : Fin 1 => P)) (Measure.pi (fun _ : Fin 1 => Q)) = klDiv P Q` を導出
 
-#### `Common2026.InformationTheory.Shannon.klDiv_map_measurableEquiv` (本 project 既存)
+#### `InformationTheory.InformationTheory.Shannon.klDiv_map_measurableEquiv` (本 project 既存)
 
-- **file:line**: `Common2026/Shannon/MutualInfo.lean:52`
+- **file:line**: `InformationTheory/Shannon/MutualInfo.lean:52`
 - **完全署名 verbatim**:
   ```lean
   theorem klDiv_map_measurableEquiv {α β : Type*}
@@ -115,9 +115,9 @@ Phase C (converse) + Phase D (`Tendsto` 統合) 着手前に **Pi 化 chain rule
 - **`[..]` プレリク verbatim**: `[MeasurableSpace α]` `[MeasurableSpace β]` `[IsFiniteMeasure μ]` `[IsFiniteMeasure ν]`
 - **本 plan での用途**: `piFinSuccAbove` 同型を介した `klDiv (Measure.pi μ) (klDiv ((μ i).prod (Measure.pi ...)))` の reshape
 
-#### `Common2026.InformationTheory.Shannon.klDiv_prod_const_left` (本 project 既存)
+#### `InformationTheory.InformationTheory.Shannon.klDiv_prod_const_left` (本 project 既存)
 
-- **file:line**: `Common2026/Shannon/MutualInfo.lean:80`
+- **file:line**: `InformationTheory/Shannon/MutualInfo.lean:80`
 - **完全署名 verbatim**:
   ```lean
   theorem klDiv_prod_const_left
@@ -160,9 +160,9 @@ theorem klDiv_pi_eq_n_smul
 
 ### 本 project 既存 (DPI.lean: 既に書かれている、要 public 化)
 
-#### `Common2026.InformationTheory.Shannon.klDiv_map_le` (現在 `private`)
+#### `InformationTheory.InformationTheory.Shannon.klDiv_map_le` (現在 `private`)
 
-- **file:line**: `Common2026/Shannon/DPI.lean:52`
+- **file:line**: `InformationTheory/Shannon/DPI.lean:52`
 - **完全署名 verbatim**:
   ```lean
   private theorem klDiv_map_le {α β : Type*}
@@ -184,7 +184,7 @@ theorem klDiv_pi_eq_n_smul
 - DPI で `klDiv (P^n.map f) (Q^n.map f) ≤ klDiv P^n Q^n`
 - **LHS は Bernoulli KL**: `(P^n s) * log(P^n s / Q^n s) + (P^n sᶜ) * log(P^n sᶜ / Q^n sᶜ)` (展開直接)
 
-**プランニング判断**: Bernoulli 専用 KL 補題は不要、上の log-sum 直接展開で済む。`klDiv (Measure on Bool)` を **discrete sum** で展開する `klDiv_discrete_toReal_eq_sum` 系は `Common2026/Shannon/Bridge.lean:207` に既存 (`private`)、これも公開化候補。
+**プランニング判断**: Bernoulli 専用 KL 補題は不要、上の log-sum 直接展開で済む。`klDiv (Measure on Bool)` を **discrete sum** で展開する `klDiv_discrete_toReal_eq_sum` 系は `InformationTheory/Shannon/Bridge.lean:207` に既存 (`private`)、これも公開化候補。
 
 ---
 
@@ -272,7 +272,7 @@ theorem klDiv_pi_eq_n_smul
 
 ### Phase A〜B での扱い
 
-- `Common2026/Shannon/Stein.lean:113` 内 `integral_logLikelihoodRatio_under_P` で:
+- `InformationTheory/Shannon/Stein.lean:113` 内 `integral_logLikelihoodRatio_under_P` で:
   ```lean
   have h_int_llr : Integrable (llr P Q) P := ...
   rw [toReal_klDiv hPQ h_int_llr]
@@ -300,7 +300,7 @@ theorem klDiv_pi_eq_n_smul
 | 軸 | 結論 | Phase 影響 |
 |---|---|---|
 | 1 Pi 化 chain rule | **Mathlib 不在** (loogle 0 件) → 自前 induction `klDiv_pi_eq_n_smul` 40〜80 行 (`klDiv_compProd_eq_add` + `klDiv_compProd_left` + `measurePreserving_piFinSuccAbove` で組む) | Phase A の山場 1 (本 plan Phase A) |
-| 2 DPI | **本 project 既存** (`Common2026/Shannon/DPI.lean:52` `klDiv_map_le`、現在 `private`) → public 化 1 行 + 直接適用 | Phase B (本 plan Phase B) は既存資産で 30〜60 行 |
+| 2 DPI | **本 project 既存** (`InformationTheory/Shannon/DPI.lean:52` `klDiv_map_le`、現在 `private`) → public 化 1 行 + 直接適用 | Phase B (本 plan Phase B) は既存資産で 30〜60 行 |
 | 3 log-sum 下界 | **Mathlib 既存** (`mul_log_le_toReal_klDiv`、`Mathlib/InformationTheory/KullbackLeibler/Basic.lean:346`) → 直接適用、Bernoulli 専用補題不要 | Phase B 30〜60 行 |
 | 4 `Tendsto` squeeze | **Mathlib 既存** (`tendsto_of_tendsto_of_tendsto_of_le_of_le`、`Mathlib/Topology/Order/Basic.lean:230`) → 標準 plumbing | Phase C 50〜100 行 |
 | 5 finiteness | **achievability で立つ** (Phase A 内部使用済み)、Phase C/D で追加 hypothesis 不要 | hypothesis セット流用 |
@@ -322,10 +322,10 @@ theorem klDiv_pi_eq_n_smul
 - [x] 5 軸全て調査完了
 - [x] `klDiv_compProd_eq_add` / `klDiv_compProd_left` の verbatim 署名 + `[..]` プレリク確定 (親 inventory 参照)
 - [x] `measurePreserving_piFinSuccAbove` の verbatim 署名 + `[..]` プレリク (`[∀ i, SigmaFinite (μ i)]`) 確定
-- [x] DPI は本 project 既存 (`Common2026/Shannon/DPI.lean:52`、`private` フラグ確認済) を確認、public 化方針確定
+- [x] DPI は本 project 既存 (`InformationTheory/Shannon/DPI.lean:52`、`private` フラグ確認済) を確認、public 化方針確定
 - [x] `mul_log_le_toReal_klDiv` の verbatim 署名 確定、Bernoulli 専用補題不要を確認
 - [x] `Tendsto` squeeze (`tendsto_of_tendsto_of_tendsto_of_le_of_le`) の verbatim 署名 確定
-- [x] Phase C skeleton (`Common2026/Shannon/Stein.lean` への append、または `Common2026/Shannon/SteinConverse.lean` 新ファイル) が書ける状態
+- [x] Phase C skeleton (`InformationTheory/Shannon/Stein.lean` への append、または `InformationTheory/Shannon/SteinConverse.lean` 新ファイル) が書ける状態
 
 ## 判断ログ
 

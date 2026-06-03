@@ -2,19 +2,19 @@
 
 > **Parent plan**: [`relay-inner-bound-moonshot-plan.md`](./relay-inner-bound-moonshot-plan.md)
 >
-> **Predecessor seed**: `Common2026/Shannon/RelayCutset.lean` (T3-F outer
+> **Predecessor seed**: `InformationTheory/Shannon/RelayCutset.lean` (T3-F outer
 > bound, 386 行, publish 2026-05-19).
 >
-> **Goal**: 既存 Common2026 + Mathlib 在庫を **relay inner bound (decode-and-
+> **Goal**: 既存 InformationTheory + Mathlib 在庫を **relay inner bound (decode-and-
 > forward / compress-and-forward)** の statement-level pass-through publish に
 > 必要な範囲で棚卸し、撤退ライン L-RI1〜L-RI4 全発動下で `RelayInnerBound.lean`
 > ~350-500 行 publish の足場を確定する。
 
-## 1. 既存 Common2026 在庫 (黒箱 reuse)
+## 1. 既存 InformationTheory 在庫 (黒箱 reuse)
 
 ### 1.1 Relay channel + relay code (T3-F outer bound 既存 publish からそのまま再利用)
 
-- **`Common2026/Shannon/RelayCutset.lean:96`** — `abbrev RelayChannel`
+- **`InformationTheory/Shannon/RelayCutset.lean:96`** — `abbrev RelayChannel`
   - 完全 signature:
     ```lean
     abbrev RelayChannel (α α₁ β β₁ : Type*)
@@ -27,7 +27,7 @@
   - 役割: 本 plan の主定理 signature で受ける channel kernel 型。本 plan で
     再定義しない (`RelayCutset` を import して reuse)。
 
-- **`Common2026/Shannon/RelayCutset.lean:115`** — `structure RelayCode`
+- **`InformationTheory/Shannon/RelayCutset.lean:115`** — `structure RelayCode`
   - 完全 signature:
     ```lean
     structure RelayCode (M n : ℕ) (α α₁ β β₁ : Type*)
@@ -42,7 +42,7 @@
     relay field の dependent type の applying は本 plan 内でも発生しない
     (L-RI1 + L-RI2 全発動下で causality は全部 hypothesis pass-through 化)。
 
-- **`Common2026/Shannon/RelayCutset.lean:188`** — `noncomputable def relayCutsetBound`
+- **`InformationTheory/Shannon/RelayCutset.lean:188`** — `noncomputable def relayCutsetBound`
   - 完全 signature: `relayCutsetBound (Ib Im : ℝ) : ℝ := min Ib Im`
   - 役割: 本 plan の inner bound では cutset bound 自体は使わない (DF/CF は
     Ib/Im とは別 4 数 / 5 数の min 構造)。ただし「outer bound と inner bound の
@@ -50,8 +50,8 @@
 
 ### 1.2 Mutual / conditional mutual information primitives (L-RI1〜4 と直交)
 
-- **`Common2026/Shannon/MutualInfo.lean:36`** — `mutualInfo (μ X Y : ...)`
-- **`Common2026/Shannon/CondMutualInfo.lean:46`** — `condMutualInfo`
+- **`InformationTheory/Shannon/MutualInfo.lean:36`** — `mutualInfo (μ X Y : ...)`
+- **`InformationTheory/Shannon/CondMutualInfo.lean:46`** — `condMutualInfo`
 
 本 plan の主定理 signature では mutual information value 自体は **scalar `ℝ`**
 で外から受ける形 (L-RI1/L-RI2/L-RI3/L-RI4 全発動下) なので、上記 primitive を
@@ -59,7 +59,7 @@
 
 ### 1.3 既存 inner bound publish pattern (本 plan 直接の雛形)
 
-- **`Common2026/Shannon/MultipleAccessChannel.lean:531`** —
+- **`InformationTheory/Shannon/MultipleAccessChannel.lean:531`** —
   `def MACInnerBoundExistence`
   - 完全 signature:
     ```lean
@@ -76,7 +76,7 @@
     `RelayCFInnerBoundExistence` の signature 直接の雛形**。`R₁, R₂` を
     relay の単一 rate `R` に縮退 + `MACCode` を `RelayCode` に置換するだけ。
 
-- **`Common2026/Shannon/MultipleAccessChannel.lean:567`** —
+- **`InformationTheory/Shannon/MultipleAccessChannel.lean:567`** —
   `theorem mac_capacity_region_inner_bound`
   - 完全 signature:
     ```lean
@@ -95,7 +95,7 @@
 
 ### 1.4 Outer bound (L-RC1〜5) との対称性
 
-- **`Common2026/Shannon/RelayCutset.lean:343`** —
+- **`InformationTheory/Shannon/RelayCutset.lean:343`** —
   `theorem relay_cutset_outer_bound`
   - signature の 7 引数 (`_hn`, `_c`, `R Ib Im`, `_h_csiszar`, `_h_chain`,
     `h_rate_bound`) は本 plan の inner bound 形と **数だけ揃える**:
@@ -218,7 +218,7 @@ MAC `MACInnerBoundExistence` と完全同形、`R₁, R₂` を単一 `R` に縮
 ## 5. ファイル構成
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   RelayInnerBound.lean   ← 新規 (~350-500 行)
     ・InRelayDFRate (structure, 2 不等式)
     ・InRelayCFRate (structure, 2 不等式)
@@ -230,7 +230,7 @@ Common2026/Shannon/
     ・log-rate form wrappers
 ```
 
-`Common2026.lean` は呼び出し側オーケストレータが import 追加 (本 plan 内では編集しない)。
+`InformationTheory.lean` は呼び出し側オーケストレータが import 追加 (本 plan 内では編集しない)。
 
 ## 6. 規模見積
 
@@ -249,7 +249,7 @@ inner loop。
 ## 7. Phase A skeleton (出だし)
 
 ```lean
-import Common2026.Shannon.RelayCutset
+import InformationTheory.Shannon.RelayCutset
 
 namespace InformationTheory.Shannon
 

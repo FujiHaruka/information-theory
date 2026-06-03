@@ -58,7 +58,7 @@ log|M| ≤ I(encoder ∘ Msg; Y^n).toReal + h(Pe) + Pe·log(|M|−1)   -- (A) sh
 
 #### `Shannon.shannon_converse_single_shot_markov_encoder`
 
-`Common2026/Shannon/Converse.lean:207`
+`InformationTheory/Shannon/Converse.lean:207`
 
 ```lean
 theorem shannon_converse_single_shot_markov_encoder
@@ -92,7 +92,7 @@ theorem shannon_converse_single_shot_markov_encoder
 
 #### `Shannon.mutualInfo_iid_eq_nsmul`
 
-`Common2026/Shannon/MIChainRule.lean:392`
+`InformationTheory/Shannon/MIChainRule.lean:392`
 
 ```lean
 theorem mutualInfo_iid_eq_nsmul
@@ -120,7 +120,7 @@ theorem mutualInfo_iid_eq_nsmul
 
 #### `Shannon.mutualInfo_chain_rule_fin`
 
-`Common2026/Shannon/MIChainRule.lean:117`
+`InformationTheory/Shannon/MIChainRule.lean:117`
 
 ```lean
 theorem mutualInfo_chain_rule_fin
@@ -144,7 +144,7 @@ theorem mutualInfo_chain_rule_fin
 
 #### `MeasureFano.fano_inequality_measure_theoretic`
 
-`Common2026/Fano/Measure.lean:224`
+`InformationTheory/Fano/Measure.lean:224`
 
 ```lean
 theorem fano_inequality_measure_theoretic
@@ -174,8 +174,8 @@ theorem fano_inequality_measure_theoretic
 
 ## §2 — Lean 化試行
 
-`Common2026/Shannon/ChannelCodingConverse.lean` (新規、85 行) に `channel_coding_converse_iid`
-1 本を定義。`lake env lean` 単独パス、`sorry` 残 0、Common2026.lean に import 追加済み。
+`InformationTheory/Shannon/ChannelCodingConverse.lean` (新規、85 行) に `channel_coding_converse_iid`
+1 本を定義。`lake env lean` 単独パス、`sorry` 残 0、InformationTheory.lean に import 追加済み。
 
 ### §2.1 証明本体 (要旨)
 

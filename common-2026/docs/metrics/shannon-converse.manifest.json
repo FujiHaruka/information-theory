@@ -8,6 +8,6 @@
       "note": "Phase 4-γ 本体作成セッション (再開→encoder版を試行→Markov仮定なしで不正と判明→encoderなし版に書き換え→entropy_of_uniform_msg helper追加→sorry ゼロまで)"
     }
   ],
-  "filters": { "file_prefix": "Common2026/Shannon/Converse" },
+  "filters": { "file_prefix": "InformationTheory/Shannon/Converse" },
   "idle_gap_minutes": 5
 }

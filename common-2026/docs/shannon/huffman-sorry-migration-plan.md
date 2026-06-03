@@ -23,7 +23,7 @@ Hoeffding pilot (`hoeffding-sorry-migration-plan.md`, commits `29dabff` / `51fca
 verbatim 確認 (2026-05-25):
 
 ```bash
-# rg -c '@audit:staged' Common2026/Shannon/Huffman*.lean
+# rg -c '@audit:staged' InformationTheory/Shannon/Huffman*.lean
 HuffmanT1APPrimeBody.lean:           15
 HuffmanSwapNormalizationBody.lean:    4
 HuffmanT1APPrimePartial.lean:         4
@@ -42,8 +42,8 @@ suspect / defer / 🟢ʰ: 0 / 0 / 0
 HuffmanOptimality.lean: 2 (両件とも @audit:staged と同居)
 
 # 既存 sorry 件数 (word-boundary 計数、Pattern D)
-$ rg -nw 'sorry' Common2026/Shannon/Huffman*.lean
-HuffmanT1APPrimePartial.lean:7:  "`Common2026/Shannon/HuffmanOptimality.lean` (T1-A' weak form publish, 1054 行 / 0 sorry)"
+$ rg -nw 'sorry' InformationTheory/Shannon/Huffman*.lean
+HuffmanT1APPrimePartial.lean:7:  "`InformationTheory/Shannon/HuffmanOptimality.lean` (T1-A' weak form publish, 1054 行 / 0 sorry)"
 HuffmanOptimality.lean:714:     "T1-A' 主定理を完全な 0 sorry で publish するために、..."
 # 2 hit はすべて docstring 内文字列、実 sorry 0 件 (Hoeffding pilot と同じ Pattern D)
 ```
@@ -77,7 +77,7 @@ slug は 2 種に集中:
 
 本 plan の DoD は `CLAUDE.md`「Definition of Done — 2 段階」の **type-check done**:
 
-- 各 file `lake env lean Common2026/Shannon/<file>.lean` が 0 errors、
+- 各 file `lake env lean InformationTheory/Shannon/<file>.lean` が 0 errors、
 - 各新規 `sorry` に `@residual(<class>:<slug>)` タグが付き、
 - 各 Phase 完了時に `honesty-auditor` を起動して classification を独立検証する。
 
@@ -114,7 +114,7 @@ staged の **`reason` (元の壁) は docstring 散文で保存**する。例: `
 
 2. **共有 sorry 補題に集約する**。Hoeffding は集約しなかったが、Huffman は集約する。理由:
    - 5 hypothesis predicate のうち上位 2 つ (`SwapNormalizationHypothesis` / `HuffmanMergedIdentificationHypothesis`) は **`HuffmanOptimality.lean:734` / `:758`** で abbrev 定義されており、本 plan migration 後の **唯一の closure 道筋** (`huffman-2hyp-vertical-reduction-plan` 完遂) は両 hypothesis を holds 化することに集約する。複数 file で同じ `Hyp1.holds` / `Hyp2.holds` を sorry 化すると wall の重複が起き、後続 plan 完遂で全 file を再 verify する必要が出る。
-   - 集約先として **新規 file `Common2026/Shannon/HuffmanWalls.lean`** を提案 (但し本 plan で書込みはしない、Phase 1.5 で skeleton 提案、実装 agent が判断)。alternative: 各 hypothesis predicate の直後 (= 既存 `HuffmanOptimality.lean` 内 or `HuffmanMergedIdentBody.lean` 内) に `*_holds : <Hyp> := by sorry` を 1 件追加する集約方式 (= shared wall lemma の最小実装、Hoeffding と同様の per-file 配置)。
+   - 集約先として **新規 file `InformationTheory/Shannon/HuffmanWalls.lean`** を提案 (但し本 plan で書込みはしない、Phase 1.5 で skeleton 提案、実装 agent が判断)。alternative: 各 hypothesis predicate の直後 (= 既存 `HuffmanOptimality.lean` 内 or `HuffmanMergedIdentBody.lean` 内) に `*_holds : <Hyp> := by sorry` を 1 件追加する集約方式 (= shared wall lemma の最小実装、Hoeffding と同様の per-file 配置)。
 
    `audit-tags.md`「Wall name register」拡張は **本 plan では行わない** (slug が `plan:` で揃うため不要)。後続 family (EPI/Stam 等) で wall register 拡張が必要なら別 PR。
 
@@ -175,13 +175,13 @@ staged の **`reason` (元の壁) は docstring 散文で保存**する。例: `
 - **Phase 2.2 — Predicate retreat (上流 wrapper)**: `huffmanLength_optimal_with_combined` / `huffmanLength_optimal_terminal` / `huffmanLength_optimal_modulo_aux_ident` 等の terminal wrapper を Phase 2.1 と同様に shared wall 経由に書換。
 - **Phase 2.3 — Predicate retract-candidate (中間 abbrev)**: 5 hypothesis predicate のうち全 consumer が Phase 2.1 / 2.2 で shared wall 経由になった場合、abbrev 定義に `@audit:retract-candidate(load-bearing-predicate)` を付与 (削除はしない、後続 plan 完遂時の interface 互換用)。
 - **Phase 2.4 — honesty-auditor #2**: Phase 2 全件 + predicate 監査。verdict 確認後 commit。
-- **Phase V — Verify**: 全 13 file (Huffman.lean 含む) `lake env lean` 0 errors、`Common2026.lean` import 不変。集計コマンドで確認。
+- **Phase V — Verify**: 全 13 file (Huffman.lean 含む) `lake env lean` 0 errors、`InformationTheory.lean` import 不変。集計コマンドで確認。
 
 Phase 順を選んだ理由: Phase 1 (低 risk) → Phase 1.5 (shared wall 設置) を先行することで、Phase 2.1 で `huffmanLength_optimal_with_hypotheses` の body 書換が **既存 sorry-free な wall** に依存できる (sorry-on-sorry の連鎖を Phase 1.5 で安全弁化)。逆順だと Phase 2 で signature 改変中に shared wall が未設置で各 wrapper の sorry が独立に発生し、後で集約する余計な refactor が発生する。
 
 ## 在庫: 30 件の `@audit:staged` の verbatim 分類
 
-verbatim 確認方法: `Common2026/Shannon/Huffman*.lean` 13 file を Read で
+verbatim 確認方法: `InformationTheory/Shannon/Huffman*.lean` 13 file を Read で
 `@audit:staged` 周辺 docstring + 直後 `theorem` signature + body 1-3 行を実コードから読み込み、
 「signature の hypothesis が load-bearing predicate か pure structural pass-through か」を 1 件ずつ判定。
 
@@ -293,7 +293,7 @@ verbatim 確認後の事前判定 (Phase 0 で auditor が refine):
 
 - [ ] **1.1** `HuffmanT1APPrimeBody.lean` Phase 1 候補 2 件 (`huffmanCombinedHypothesis_swap` / `huffmanCombinedHypothesis_ident`) の `@audit:staged` 削除。
   - `HuffmanCombinedHypothesis` は `abbrev := Hyp1 ∧ Hyp2` で `.1` / `.2` の field projection のみ。signature 改変不要、body 不変。
-  - `lake env lean Common2026/Shannon/HuffmanT1APPrimeBody.lean` で type-check done 確認。
+  - `lake env lean InformationTheory/Shannon/HuffmanT1APPrimeBody.lean` で type-check done 確認。
 - [ ] **1.2** `HuffmanSwapNormalizationBody.lean` Phase 1 候補 3-4 件 (`swapNormalizationHypothesis_of_equalizingPerm` / `equalizingPerm_of_swapTarget` / `swapNormalizationHypothesis_of_swapTarget` / `huffmanLength_optimal_via_equalizing_perm`) の `@audit:staged` 削除。
   - 偽 predicate (`EqualizingPermHypothesis` / `EqualizingSwapTargetHypothesis`) を仮説に取る vacuously-true 含意。body は構造的に sorry 不要。
   - 251 (`huffmanLength_optimal_via_equalizing_perm`) は body 内で `huffmanLength_optimal_with_hypotheses` を呼ぶため transitive sorry が Phase 2 完了後に生じる、docstring 散文で明示 (Pilot Pattern C)。
@@ -309,11 +309,11 @@ verbatim 確認後の事前判定 (Phase 0 で auditor が refine):
 
 実装 agent が以下 2 案から選択 (両方 OK、各 1 セッションで完走見込み):
 
-**案 A — 新規 file `Common2026/Shannon/HuffmanWalls.lean`** を Write:
+**案 A — 新規 file `InformationTheory/Shannon/HuffmanWalls.lean`** を Write:
 
 ```lean
-import Common2026.Shannon.HuffmanOptimality
-import Common2026.Shannon.HuffmanMergedIdentBody
+import InformationTheory.Shannon.HuffmanOptimality
+import InformationTheory.Shannon.HuffmanMergedIdentBody
 
 namespace InformationTheory.Shannon.Huffman
 
@@ -349,15 +349,15 @@ theorem merged_huffman_aux_ident_hypothesis_holds : MergedHuffmanAuxIdentHypothe
 end InformationTheory.Shannon.Huffman
 ```
 
-`Common2026.lean` に `import Common2026.Shannon.HuffmanWalls` 追加。3 件の direct sorry + 2 件の constructive composition で計 5 hypothesis predicate を集約。
+`InformationTheory.lean` に `import InformationTheory.Shannon.HuffmanWalls` 追加。3 件の direct sorry + 2 件の constructive composition で計 5 hypothesis predicate を集約。
 
-**案 B — Per-file `*_holds`**: 各 hypothesis predicate の **定義 file の直後** (= `HuffmanOptimality.lean` 内 `Hyp1` / `Hyp2` 定義の直後、`HuffmanMergedIdentBody.lean` 内 `MergedHuffmanAuxIdentHypothesis` 定義の直後) に `*_holds` を追加。`Common2026.lean` の import 不変。
+**案 B — Per-file `*_holds`**: 各 hypothesis predicate の **定義 file の直後** (= `HuffmanOptimality.lean` 内 `Hyp1` / `Hyp2` 定義の直後、`HuffmanMergedIdentBody.lean` 内 `MergedHuffmanAuxIdentHypothesis` 定義の直後) に `*_holds` を追加。`InformationTheory.lean` の import 不変。
 
 **判断**: 案 A を default、案 B は実装 agent が `HuffmanOptimality.lean` の規模 (1042 行) を考慮して file 内 augmentation を避けたい場合に選択可。
 
 - [ ] **1.5.1** 案 A or 案 B を選択、shared wall lemma 5 件を追加 (3 件 direct sorry + 2 件 constructive composition)。
 - [ ] **1.5.2** 各 sorry に `@residual(plan:huffman-2hyp-vertical-reduction)` (or `huffman-strong-form-completion` for aux-ident) を付与。
-- [ ] **1.5.3** `lake env lean Common2026/Shannon/HuffmanWalls.lean` (or 追加先 file) で type-check done 確認。
+- [ ] **1.5.3** `lake env lean InformationTheory/Shannon/HuffmanWalls.lean` (or 追加先 file) で type-check done 確認。
 
 **Phase 1.5 DoD**: 5 hypothesis predicate に `*_holds` lemma が対応、各々 `@residual` 付き sorry を 3 件保有 (2 件は constructive composition で sorry 不要)。
 
@@ -383,7 +383,7 @@ end InformationTheory.Shannon.Huffman
 - [ ] **2.1.2** `HuffmanOptimality.lean:778` `huffmanLength_optimal_aux_with_hypotheses` (private) も同様に signature 削除 + body 内の `h_swap` / `h_ident` 参照を shared wall に置換。body の 200+ 行 induction proof は構造不変、`h_swap` → `swap_normalization_hypothesis_holds` / `h_ident` → `huffman_merged_identification_hypothesis_holds` の **名前置換のみ**。
 - [ ] **2.1.3** `HuffmanStrongForm.lean:175` `huffmanLength_optimal_modulo_aux_ident` の signature から `h_aux` 削除、body 内の `huffmanMergedIdentification_of_aux h_aux` を `huffmanMergedIdentification_of_aux merged_huffman_aux_ident_hypothesis_holds` に置換。docstring の散文「**`h_aux` は load-bearing — NOT a discharge / NOT trivial.**」(166-173 行) を削除 (`@residual(plan:huffman-strong-form-completion)` がその意味を担う)。
 - [ ] **2.1.4** `HuffmanMergedIdentBody.lean:171` `huffmanLength_optimal_with_swap_and_aux` も同様に shared wall 経由に書換 (`h_swap` + `h_aux` 削除)。
-- [ ] **2.1.5** Phase 2.1 完了後、CLAUDE.md「After upstream edits」に従い `lake build Common2026.Shannon.HuffmanOptimality` + `Common2026.Shannon.HuffmanStrongForm` + `Common2026.Shannon.HuffmanMergedIdentBody` の **olean refresh** (Pilot Pattern A 対策)。dependent file (`HuffmanT1APPrimePartial.lean` / `HuffmanT1APPrimeBody.lean` / `HuffmanSwapStepChainBody.lean` / `HuffmanSwapNormalizationBody.lean`) を `lake env lean` で再 verify。
+- [ ] **2.1.5** Phase 2.1 完了後、CLAUDE.md「After upstream edits」に従い `lake build InformationTheory.Shannon.HuffmanOptimality` + `InformationTheory.Shannon.HuffmanStrongForm` + `InformationTheory.Shannon.HuffmanMergedIdentBody` の **olean refresh** (Pilot Pattern A 対策)。dependent file (`HuffmanT1APPrimePartial.lean` / `HuffmanT1APPrimeBody.lean` / `HuffmanSwapStepChainBody.lean` / `HuffmanSwapNormalizationBody.lean`) を `lake env lean` で再 verify。
 
 **Phase 2.1 DoD**: terminal declaration 4 件で signature 改変 + body shared wall 経由、`@audit:staged` 0 件、`@residual(plan:...)` 4 件、`lake env lean` 各 file 0 errors (新規 `sorry` 発生は **Phase 1.5 で設置済の shared wall に集約済**、本 Phase で新規 sorry 0 件)。
 
@@ -403,7 +403,7 @@ end InformationTheory.Shannon.Huffman
   / `huffman_merged_identification_hypothesis_holds`). No `@residual` tag —
   closure belongs to the wall lemmas.
   ```
-- [ ] **2.2.4** olean refresh (`lake build Common2026.Shannon.HuffmanT1APPrimeBody` / `HuffmanT1APPrimePartial` / `HuffmanSwapStepChainBody` / `HuffmanSwapNormalizationBody`) + dependent 再 verify。
+- [ ] **2.2.4** olean refresh (`lake build InformationTheory.Shannon.HuffmanT1APPrimeBody` / `HuffmanT1APPrimePartial` / `HuffmanSwapStepChainBody` / `HuffmanSwapNormalizationBody`) + dependent 再 verify。
 
 **Phase 2.2 DoD**: 22 件で signature 改変 (hypothesis 削除) + body shared wall 経由、`@audit:staged` 0 件、`@residual(plan:...)` 17-18 件 (Phase 2.1 + 2.2 合算)、`lake env lean` 各 file 0 errors。新規 sorry は Phase 1.5 の wall に集約済。
 
@@ -411,7 +411,7 @@ end InformationTheory.Shannon.Huffman
 
 ### Phase 2.3 — Predicate retract-candidate (5 hypothesis abbrev) 📋
 
-- [ ] **2.3.1** Phase 2.1 / 2.2 完了後、5 hypothesis predicate の利用者を `rg -n 'SwapNormalizationHypothesis|HuffmanMergedIdentificationHypothesis|HuffmanCombinedHypothesis|HuffmanChainCombinedHypothesis|MergedHuffmanAuxIdentHypothesis' Common2026/` で再確認。
+- [ ] **2.3.1** Phase 2.1 / 2.2 完了後、5 hypothesis predicate の利用者を `rg -n 'SwapNormalizationHypothesis|HuffmanMergedIdentificationHypothesis|HuffmanCombinedHypothesis|HuffmanChainCombinedHypothesis|MergedHuffmanAuxIdentHypothesis' InformationTheory/` で再確認。
 - [ ] **2.3.2** **依存ゼロ** (= 全 consumer が shared wall 経由に書換済) の predicate には `@audit:retract-candidate(load-bearing-predicate)` を docstring 末尾に付与 (削除はしない、後続 plan 完遂時の interface 互換用)。
 - [ ] **2.3.3** **依然依存あり** (= shared wall 経由でない consumer が残存) の predicate は「未決事項」セクション #1 参照 → user 判断仰ぐ。
 - [ ] **2.3.4** Pilot Pattern E (extract-only consumer 見落とし) に倣い、docstring に「all *hypothesis-form load-bearing* consumers were retreated to shared wall. N extract-only consumers remain (pass-through, no load-bearing claim injected): ...」と明示。
@@ -430,12 +430,12 @@ end InformationTheory.Shannon.Huffman
 - [ ] **V.1** 全 13 file (Huffman.lean 含む) で `lake env lean` 確認。Phase 2 で signature 改変があったため dependent file の olean refresh が必要 (CLAUDE.md「After upstream edits」参照、Pilot Pattern A)。
 - [ ] **V.2** 集計コマンド実行:
   ```bash
-  rg '@audit:staged' Common2026/Shannon/Huffman*.lean | wc -l                            # = 0
-  rg '@audit:closed-by-successor' Common2026/Shannon/Huffman*.lean | wc -l               # = 0
-  rg '@residual\(plan:huffman-2hyp-vertical-reduction\)' Common2026/Shannon/Huffman*.lean | wc -l
-  rg '@residual\(plan:huffman-strong-form-completion\)' Common2026/Shannon/Huffman*.lean | wc -l
-  rg -nw 'sorry' Common2026/Shannon/Huffman*.lean                                        # 期待値: 3 (shared wall direct sorry)
-  rg '@audit:retract-candidate' Common2026/Shannon/Huffman*.lean
+  rg '@audit:staged' InformationTheory/Shannon/Huffman*.lean | wc -l                            # = 0
+  rg '@audit:closed-by-successor' InformationTheory/Shannon/Huffman*.lean | wc -l               # = 0
+  rg '@residual\(plan:huffman-2hyp-vertical-reduction\)' InformationTheory/Shannon/Huffman*.lean | wc -l
+  rg '@residual\(plan:huffman-strong-form-completion\)' InformationTheory/Shannon/Huffman*.lean | wc -l
+  rg -nw 'sorry' InformationTheory/Shannon/Huffman*.lean                                        # 期待値: 3 (shared wall direct sorry)
+  rg '@audit:retract-candidate' InformationTheory/Shannon/Huffman*.lean
   ```
 - [ ] **V.3** `huffman-moonshot-plan.md` / `huffman-2hyp-vertical-reduction-plan.md` / `huffman-strong-form-completion-plan.md` 冒頭 banner 更新 (sorry-based 移行完了の追記)。
 - [ ] **V.4** Pilot 知見を `docs/audit/sorry-migration-runbook.md` または `.claude/handoff-sorry-migration.md` に反映:
@@ -458,14 +458,14 @@ Phase 1 の 8 件 (constructive C 候補) について auditor が「実際は P
 
 `HuffmanOptimality.lean:778` の private theorem は 200+ 行の non-trivial induction proof。body 内で `h_swap` / `h_ident` を多数回参照する `Nat.strong_induction_on generalizing` の context で、引数名を shared wall lemma 名 (`swap_normalization_hypothesis_holds` 等) に置換する mechanical rewrite が、Lean の binder scoping / universe variable で型 error を起こす可能性 (`SwapNormalizationHypothesis.{u}` の universe annotation の一致が必要)。
 
-**発動条件**: Phase 2.1.2 で `lake env lean Common2026/Shannon/HuffmanOptimality.lean` が rewrite 後に **3 ターン以上 error 残**。
+**発動条件**: Phase 2.1.2 で `lake env lean InformationTheory/Shannon/HuffmanOptimality.lean` が rewrite 後に **3 ターン以上 error 残**。
 **対応**: Phase 2.1.2 を pause、`huffmanLength_optimal_aux_with_hypotheses` の signature を **「Hyp1 / Hyp2 残存」のまま** にし、`huffmanLength_optimal_with_hypotheses` (line 1029、public wrapper) のみ shared wall 経由に書換。private 側は本 plan scope 外として handoff、後続 session で再 attempt。
 
 ### L-MIG-3 (Phase 2.2 で predicate 削除時に大量 caller drift)
 
 5 hypothesis predicate の使用箇所を Phase 2.3 で再確認後、依存先が **想定外に多い** (例: テストファイル / docs / 他 family の file から hypothesis 形で参照) なら、未決事項 #1 を user に escalate して **Phase 2.3 を中断** (Phase 2.1 / 2.2 は close 可)。
 
-**推定 caller 数**: `rg -c 'SwapNormalizationHypothesis' Common2026/` で本 plan 起草時点の依存数を 5+ file (= `HuffmanOptimality.lean` 定義 + 4-5 consumer file) と推定。Phase 2.2 完了後に再計測。
+**推定 caller 数**: `rg -c 'SwapNormalizationHypothesis' InformationTheory/` で本 plan 起草時点の依存数を 5+ file (= `HuffmanOptimality.lean` 定義 + 4-5 consumer file) と推定。Phase 2.2 完了後に再計測。
 
 ### L-MIG-4 (`huffman-2hyp-vertical-reduction-plan` 完遂と方向衝突)
 
@@ -483,7 +483,7 @@ Hoeffding pilot (L-MIG-4 同条件) と異なり、Huffman は **30 件 + 5 pred
 
 1. **5 hypothesis predicate の deprecate 方針**: Phase 2 で全 consumer が shared wall 経由になった場合、predicate 定義は (a) 削除する / (b) `@audit:retract-candidate(load-bearing-predicate)` 付きで残す / (c) public API として残し続ける、のどれを選ぶか。本 plan のデフォルトは (b)。user の確認待ち (`@audit:superseded-by` 候補が無いため、削除より retract-candidate 推奨)。**Auditor 判定対象**。
 
-2. **shared wall lemma の配置 (案 A 新規 file vs 案 B per-file augmentation)**: 本 plan のデフォルトは案 A (`Common2026/Shannon/HuffmanWalls.lean` 新規)。実装 agent が `HuffmanOptimality.lean` (1042 行) を更に膨らませたくない場合は案 A、Huffman 系全体の import graph を簡素に保ちたい場合は案 B (per-file)。**実装 agent 判断**。
+2. **shared wall lemma の配置 (案 A 新規 file vs 案 B per-file augmentation)**: 本 plan のデフォルトは案 A (`InformationTheory/Shannon/HuffmanWalls.lean` 新規)。実装 agent が `HuffmanOptimality.lean` (1042 行) を更に膨らませたくない場合は案 A、Huffman 系全体の import graph を簡素に保ちたい場合は案 B (per-file)。**実装 agent 判断**。
 
 3. **proof done を本 plan で目指さない方針の明示確認**: 本 plan の DoD は **type-check done** のみ。Hyp1 (swap normalization) と Hyp2 (huffman merged identification) の analytical closure は **未着手のまま**で本 plan は close する。`huffman-moonshot-plan.md` の Phase 4-5 scope-out 状態は変えない。user の合意確認のため明示。
 
@@ -495,7 +495,7 @@ Hoeffding pilot (L-MIG-4 同条件) と異なり、Huffman は **30 件 + 5 pred
 
 書く頻度: 方針変更 / 撤退ライン発動 / 当初仮定の修正があったとき。append-only。
 
-1. **2026-05-25 plan 起草**: lean-planner agent (本セッション) が `Common2026/Shannon/Huffman*.lean` 13 file の `@audit:staged` 30 件 + `@audit:closed-by-successor` 2 件 (重畳) を verbatim 読込で per-declaration 分類。「既存 sorry 2 件」(handoff の brief 記述) は Pattern D による誤計数で **実数 0 件** であることを `rg -nw 'sorry'` で確認 (2 hit は docstring 内の文字列 ``sorry`` / `0 sorry`)。pilot 戦略を「file 単位 sweep + shared wall 集約あり (5 hypothesis predicate のうち 3 件で direct sorry)」に確定。Approach の 2 軸決定 (Hoeffding と異なり集約あり) + パターン S → P/C resolve の判定根拠を在庫表で示した。
+1. **2026-05-25 plan 起草**: lean-planner agent (本セッション) が `InformationTheory/Shannon/Huffman*.lean` 13 file の `@audit:staged` 30 件 + `@audit:closed-by-successor` 2 件 (重畳) を verbatim 読込で per-declaration 分類。「既存 sorry 2 件」(handoff の brief 記述) は Pattern D による誤計数で **実数 0 件** であることを `rg -nw 'sorry'` で確認 (2 hit は docstring 内の文字列 ``sorry`` / `0 sorry`)。pilot 戦略を「file 単位 sweep + shared wall 集約あり (5 hypothesis predicate のうち 3 件で direct sorry)」に確定。Approach の 2 軸決定 (Hoeffding と異なり集約あり) + パターン S → P/C resolve の判定根拠を在庫表で示した。
 
    `@audit:staged` migration recipe の主要発見:
    - slug は **Mathlib 壁ではなく plan slug** (`huffman-2hyp` = `huffman-2hyp-vertical-reduction-plan` 略形、`huffman-aux-ident` = `huffman-strong-form-completion-plan` 略形)。class は `plan:` で揃え、`audit-tags.md`「Wall name register」拡張は本 plan で不要。

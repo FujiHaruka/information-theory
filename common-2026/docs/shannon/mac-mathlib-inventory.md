@@ -2,8 +2,8 @@
 
 > **Parent**: T3-B Multiple Access Channel (`docs/textbook-roadmap.md` §Tier 3, Cover–Thomas Ch.15.3)
 >
-> **Status (2026-05-19):** 起草。`rg` + 既存 Common2026 在庫 (`relay-cutset-mathlib-inventory.md`,
-> `wyner-ziv-mathlib-inventory.md`) + `Common2026/Shannon/{ChannelCoding, CondMutualInfo,
+> **Status (2026-05-19):** 起草。`rg` + 既存 InformationTheory 在庫 (`relay-cutset-mathlib-inventory.md`,
+> `wyner-ziv-mathlib-inventory.md`) + `InformationTheory/Shannon/{ChannelCoding, CondMutualInfo,
 > MutualInfo, MIChainRule, RelayCutset, WynerZiv*, SlepianWolf*}.lean` の機械的縦走査により、
 > 本定理 (capacity region characterization, 2-user, **outer + inner bound 両側**を hypothesis
 > pass-through 形で publish) の Lean 化に必要な 6 軸 (MAC channel kernel / multi-user code
@@ -11,11 +11,11 @@
 > multi-user / corner-point form) を確認。
 >
 > **本ファイルは在庫のみ**: 計画 / 実装は別 plan (`docs/shannon/mac-moonshot-plan.md`,
-> `Common2026/Shannon/MultipleAccessChannel.lean`) で別途立てる。
+> `InformationTheory/Shannon/MultipleAccessChannel.lean`) で別途立てる。
 
 ## サマリ (一行)
 
-T3-B の **capacity region characterization (2-user, 3 inequalities)** のうち、**既存 Common2026
+T3-B の **capacity region characterization (2-user, 3 inequalities)** のうち、**既存 InformationTheory
 / Mathlib で実体が既にある API は推定 80%** (MI / condMI / chain rule / `Code`-structure +
 `errorProb` plumbing + T3-F の `RelayChannel` / `RelayCode` 雛形 + T3-D の statement-level
 pass-through pattern が完備)、**自作必要なのは 4 件** (うち 3 件は T3-F Relay の
@@ -115,40 +115,40 @@ theorem mac_capacity_region_inner_bound
 
 ## 2. API 在庫テーブル (カテゴリごと)
 
-### 2.1 既存 Common2026 — そのまま流用可
+### 2.1 既存 InformationTheory — そのまま流用可
 
 | 概念 | API | file:line | 状態 | Phase での扱い |
 |---|---|---|---|---|
-| 相互情報量 `I(X;Y)` | `mutualInfo` | `Common2026/Shannon/MutualInfo.lean:36` | ✅ | 3 inequality 右辺 |
-| MI 対称性 | `mutualInfo_comm` | `Common2026/Shannon/MutualInfo.lean:93` | ✅ | 各 step で頻出 |
-| MI 有限性 | `mutualInfo_ne_top` | `Common2026/Shannon/MutualInfo.lean:192` | ✅ (`[Fintype X][Fintype Y]`) | converse の `ENNReal.toReal_mono` |
-| 条件付き MI `I(X;Y\|Z)` | `condMutualInfo` | `Common2026/Shannon/CondMutualInfo.lean:46` | ✅ (`[SBS X][SBS Y]`) | `I(X_1; Y \| X_2)`, `I(X_2; Y \| X_1)` に必須 |
-| 2 変数 MI chain rule | `mutualInfo_chain_rule` | `Common2026/Shannon/CondMutualInfo.lean:219` | ✅ | sum-rate `I(X_1, X_2; Y) = I(X_2; Y) + I(X_1; Y \| X_2)` |
-| n 変数 MI chain rule | `mutualInfo_chain_rule_fin` | `Common2026/Shannon/MIChainRule.lean:117` | ✅ | n-letter chain (per-letter sum) |
-| Markov chain (γ-form) | `IsMarkovChain` | `Common2026/Shannon/CondMutualInfo.lean:71` | ✅ | encoder の `W_k → X_k^n → ...` Markov |
-| Markov ⇒ MI bound (DPI) | `mutualInfo_le_of_markov` | `Common2026/Shannon/CondMutualInfo.lean:378` | ✅ | `I(W_k; Y^n) ≤ I(X_k^n; Y^n)` |
-| Markov post-processing | `isMarkovChain_map_left` | `Common2026/Shannon/CondMutualInfo.lean:652` | ✅ | encoder の deterministic Markov |
-| DPI (post-processing) | `mutualInfo_le_of_postprocess` | `Common2026/Shannon/DPI.lean:139` | ✅ | `I(W_k; hat W_k) ≤ I(W_k; Y^n)` |
-| MI ↔ entropy 橋 | `mutualInfoOfChannel`, `mutualInfo_eq_entropy_sub_condEntropy` | `Common2026/Shannon/Bridge.lean:588` | ✅ | 3 inequality の展開 |
-| Fano 不等式 (paired form) | `fano_inequality_measure_theoretic` | `Common2026/Fano/Measure.lean:224` | ✅ | `n·R_k ≤ I(W_k; Y^n) + n·ε_n` |
-| Channel structure (DMC) | `Channel α β := Kernel α β` | `Common2026/Shannon/ChannelCoding.lean:49` | ✅ | `MACChannel α₁ α₂ β := Kernel (α₁ × α₂) β` の雛形 |
-| Code structure | `Code M n α β` | `Common2026/Shannon/ChannelCoding.lean:151` | ✅ | `MACCode` 雛形 (encoder × 2 + decoder pair-output) |
-| Pointwise error prob | `Code.errorProbAt` | `Common2026/Shannon/ChannelCoding.lean:204` | ✅ | MAC 版 (joint message pair) は L-MAC1+L-MAC3 で pass-through |
-| Average error prob | `Code.averageErrorProb` | `Common2026/Shannon/ChannelCoding.lean:210` | ✅ | 同上、joint pair message |
-| Blockwise kernel | `BlockwiseChannel` ns | `Common2026/Shannon/BlockwiseChannel.lean` | ✅ | MAC `(α₁ × α₂) → β` の memoryless extension `Measure.pi (i ↦ W (x_1 i, x_2 i))` |
+| 相互情報量 `I(X;Y)` | `mutualInfo` | `InformationTheory/Shannon/MutualInfo.lean:36` | ✅ | 3 inequality 右辺 |
+| MI 対称性 | `mutualInfo_comm` | `InformationTheory/Shannon/MutualInfo.lean:93` | ✅ | 各 step で頻出 |
+| MI 有限性 | `mutualInfo_ne_top` | `InformationTheory/Shannon/MutualInfo.lean:192` | ✅ (`[Fintype X][Fintype Y]`) | converse の `ENNReal.toReal_mono` |
+| 条件付き MI `I(X;Y\|Z)` | `condMutualInfo` | `InformationTheory/Shannon/CondMutualInfo.lean:46` | ✅ (`[SBS X][SBS Y]`) | `I(X_1; Y \| X_2)`, `I(X_2; Y \| X_1)` に必須 |
+| 2 変数 MI chain rule | `mutualInfo_chain_rule` | `InformationTheory/Shannon/CondMutualInfo.lean:219` | ✅ | sum-rate `I(X_1, X_2; Y) = I(X_2; Y) + I(X_1; Y \| X_2)` |
+| n 変数 MI chain rule | `mutualInfo_chain_rule_fin` | `InformationTheory/Shannon/MIChainRule.lean:117` | ✅ | n-letter chain (per-letter sum) |
+| Markov chain (γ-form) | `IsMarkovChain` | `InformationTheory/Shannon/CondMutualInfo.lean:71` | ✅ | encoder の `W_k → X_k^n → ...` Markov |
+| Markov ⇒ MI bound (DPI) | `mutualInfo_le_of_markov` | `InformationTheory/Shannon/CondMutualInfo.lean:378` | ✅ | `I(W_k; Y^n) ≤ I(X_k^n; Y^n)` |
+| Markov post-processing | `isMarkovChain_map_left` | `InformationTheory/Shannon/CondMutualInfo.lean:652` | ✅ | encoder の deterministic Markov |
+| DPI (post-processing) | `mutualInfo_le_of_postprocess` | `InformationTheory/Shannon/DPI.lean:139` | ✅ | `I(W_k; hat W_k) ≤ I(W_k; Y^n)` |
+| MI ↔ entropy 橋 | `mutualInfoOfChannel`, `mutualInfo_eq_entropy_sub_condEntropy` | `InformationTheory/Shannon/Bridge.lean:588` | ✅ | 3 inequality の展開 |
+| Fano 不等式 (paired form) | `fano_inequality_measure_theoretic` | `InformationTheory/Fano/Measure.lean:224` | ✅ | `n·R_k ≤ I(W_k; Y^n) + n·ε_n` |
+| Channel structure (DMC) | `Channel α β := Kernel α β` | `InformationTheory/Shannon/ChannelCoding.lean:49` | ✅ | `MACChannel α₁ α₂ β := Kernel (α₁ × α₂) β` の雛形 |
+| Code structure | `Code M n α β` | `InformationTheory/Shannon/ChannelCoding.lean:151` | ✅ | `MACCode` 雛形 (encoder × 2 + decoder pair-output) |
+| Pointwise error prob | `Code.errorProbAt` | `InformationTheory/Shannon/ChannelCoding.lean:204` | ✅ | MAC 版 (joint message pair) は L-MAC1+L-MAC3 で pass-through |
+| Average error prob | `Code.averageErrorProb` | `InformationTheory/Shannon/ChannelCoding.lean:210` | ✅ | 同上、joint pair message |
+| Blockwise kernel | `BlockwiseChannel` ns | `InformationTheory/Shannon/BlockwiseChannel.lean` | ✅ | MAC `(α₁ × α₂) → β` の memoryless extension `Measure.pi (i ↦ W (x_1 i, x_2 i))` |
 
-### 2.2 既存 Common2026 — T3-F Relay / T3-D Wyner-Ziv で確立した hypothesis pass-through 雛形
+### 2.2 既存 InformationTheory — T3-F Relay / T3-D Wyner-Ziv で確立した hypothesis pass-through 雛形
 
 | 概念 | API | file:line | 状態 | MAC での扱い |
 |---|---|---|---|---|
-| Relay channel kernel (product domain) | `RelayChannel` | `Common2026/Shannon/RelayCutset.lean:96` | ✅ (`Kernel (α × α₁) (β × β₁)`) | **`MACChannel α₁ α₂ β := Kernel (α₁ × α₂) β` の直接の雛形** (domain product, codomain bare) |
-| Relay code structure | `RelayCode` | `Common2026/Shannon/RelayCutset.lean:115` | ✅ (encoder + relay + decoder) | **`MACCode` の直接の雛形** (encoder × 2 + decoder pair-output) |
-| 2-cut scalar bound | `relayCutsetBound` | `Common2026/Shannon/RelayCutset.lean:188` | ✅ (`min Ib Im`) | **`InMACCapacityRegion` の 3 inequality 述語形に拡張** (min ではなく `∧`) |
-| Outer bound passthrough | `relay_cutset_outer_bound` | `Common2026/Shannon/RelayCutset.lean:343` | ✅ (`_h_csiszar : True` + `_h_chain : True` + `h_rate_bound`) | **`mac_capacity_region_outer_bound` の signature 雛形** verbatim |
-| Two-cut combine | `relay_cutset_combine` | `Common2026/Shannon/RelayCutset.lean:294` | ✅ (`le_min`) | MAC では `And.intro` 3 段で combine (`mac_region_intro`) |
-| Log rate wrapper | `relay_cutset_outer_bound_log_rate` | `Common2026/Shannon/RelayCutset.lean:374` | ✅ (`Real.log M / n`) | `mac_capacity_region_log_rate` で同型 wrapper |
-| WynerZivConverse pass-through | `wyner_ziv_converse_n_letter` | `Common2026/Shannon/WynerZivConverse.lean:86` | ✅ (`_h_csiszar : True` + `_h_jensen : True` + `h_rate_bound`) | Achievability 側の `wyner_ziv_achievability_existence` も両側 publish pattern として参照 |
-| WynerZivAchievability pass-through | `wyner_ziv_achievability_existence` | `Common2026/Shannon/WynerZivAchievability.lean:78` | ✅ (`h_ach_existence` hypothesis 形) | **MAC inner-bound の existence 形 publish の雛形** |
+| Relay channel kernel (product domain) | `RelayChannel` | `InformationTheory/Shannon/RelayCutset.lean:96` | ✅ (`Kernel (α × α₁) (β × β₁)`) | **`MACChannel α₁ α₂ β := Kernel (α₁ × α₂) β` の直接の雛形** (domain product, codomain bare) |
+| Relay code structure | `RelayCode` | `InformationTheory/Shannon/RelayCutset.lean:115` | ✅ (encoder + relay + decoder) | **`MACCode` の直接の雛形** (encoder × 2 + decoder pair-output) |
+| 2-cut scalar bound | `relayCutsetBound` | `InformationTheory/Shannon/RelayCutset.lean:188` | ✅ (`min Ib Im`) | **`InMACCapacityRegion` の 3 inequality 述語形に拡張** (min ではなく `∧`) |
+| Outer bound passthrough | `relay_cutset_outer_bound` | `InformationTheory/Shannon/RelayCutset.lean:343` | ✅ (`_h_csiszar : True` + `_h_chain : True` + `h_rate_bound`) | **`mac_capacity_region_outer_bound` の signature 雛形** verbatim |
+| Two-cut combine | `relay_cutset_combine` | `InformationTheory/Shannon/RelayCutset.lean:294` | ✅ (`le_min`) | MAC では `And.intro` 3 段で combine (`mac_region_intro`) |
+| Log rate wrapper | `relay_cutset_outer_bound_log_rate` | `InformationTheory/Shannon/RelayCutset.lean:374` | ✅ (`Real.log M / n`) | `mac_capacity_region_log_rate` で同型 wrapper |
+| WynerZivConverse pass-through | `wyner_ziv_converse_n_letter` | `InformationTheory/Shannon/WynerZivConverse.lean:86` | ✅ (`_h_csiszar : True` + `_h_jensen : True` + `h_rate_bound`) | Achievability 側の `wyner_ziv_achievability_existence` も両側 publish pattern として参照 |
+| WynerZivAchievability pass-through | `wyner_ziv_achievability_existence` | `InformationTheory/Shannon/WynerZivAchievability.lean:78` | ✅ (`h_ach_existence` hypothesis 形) | **MAC inner-bound の existence 形 publish の雛形** |
 
 ### 2.3 Mathlib — Kernel / 多変数 channel 構造
 
@@ -163,18 +163,18 @@ theorem mac_capacity_region_inner_bound
 | `Real.exp_pos`, `Real.exp_nonneg` | (Mathlib `Real.exp`) | `Mathlib/Analysis/SpecialFunctions/Exp.lean` | ✅ | `M_k ≥ ⌈exp(n R_k)⌉` のスカラ操作 |
 | `And.intro`, `And.left`/`right` | (Lean core) | — | ✅ | 3 inequality combine |
 
-### 2.4 既存 Common2026 — pmf-form mutual info (使う場合の延長)
+### 2.4 既存 InformationTheory — pmf-form mutual info (使う場合の延長)
 
 | 概念 | API | file:line | 状態 | MAC での扱い |
 |---|---|---|---|---|
-| `mutualInfoPmf q : ℝ` | `mutualInfoPmf` | `Common2026/Shannon/RateDistortionAchievability.lean:261` | ✅ (`negMulLog`-base) | 本 plan は scalar form `I_1, I_2, I_both : ℝ` を直接受けるため使わない (L-MAC5 で外出し) |
-| `marginalFst/Snd` | `marginalFst`, `marginalSnd` | `Common2026/Shannon/RateDistortionAchievability.lean:~108` | ✅ | independent product `P_1 × P_2` から marginals (L-MAC4 で外出し) |
+| `mutualInfoPmf q : ℝ` | `mutualInfoPmf` | `InformationTheory/Shannon/RateDistortionAchievability.lean:261` | ✅ (`negMulLog`-base) | 本 plan は scalar form `I_1, I_2, I_both : ℝ` を直接受けるため使わない (L-MAC5 で外出し) |
+| `marginalFst/Snd` | `marginalFst`, `marginalSnd` | `InformationTheory/Shannon/RateDistortionAchievability.lean:~108` | ✅ | independent product `P_1 × P_2` から marginals (L-MAC4 で外出し) |
 
 ## 3. 主要前提条件ボックス (型クラス事故の起きやすい lemma)
 
 以下は **`[...]` 型クラス前提を見落とすと主定理 statement が引きずられる lemma 群**。MAC で頻出する 3 件を列挙：
 
-### 3.1 `condMutualInfo` (`Common2026/Shannon/CondMutualInfo.lean:46`)
+### 3.1 `condMutualInfo` (`InformationTheory/Shannon/CondMutualInfo.lean:46`)
 
 ```lean
 noncomputable def condMutualInfo
@@ -190,7 +190,7 @@ noncomputable def condMutualInfo
   同じ落とし穴 (L-MAC4 で外出し)。
 - **`Z = α_2` には SBS 不要** (条件付け side only)。
 
-### 3.2 `mutualInfo_chain_rule` (`Common2026/Shannon/CondMutualInfo.lean:219`)
+### 3.2 `mutualInfo_chain_rule` (`InformationTheory/Shannon/CondMutualInfo.lean:219`)
 
 ```lean
 theorem mutualInfo_chain_rule
@@ -207,7 +207,7 @@ theorem mutualInfo_chain_rule
 - sum-rate `I(X_1, X_2; Y) = I(X_2; Y) + I(X_1; Y | X_2)` 直接適用。**`[SBS α_1]`,
   `[SBS α_2]`, `[SBS β]` 全て要求**。本 plan では具体評価しないため hypothesis pass-through。
 
-### 3.3 `fano_inequality_measure_theoretic` (`Common2026/Fano/Measure.lean:224`)
+### 3.3 `fano_inequality_measure_theoretic` (`InformationTheory/Fano/Measure.lean:224`)
 
 - `[Fintype X]` + `errorProb` hypothesis のみ要求。MAC では `X := Fin M_1 × Fin M_2` (joint
   message pair) で受け、`errorProb (joint) ≤ ε_n` を hypothesis として受ければ流用可
@@ -416,16 +416,16 @@ MAC は 3 不等式が個別に必要で、3 つ並列の `And` よりも projec
 (`bound₁`, `bound₂`, `boundSum`) + intro helper (`mac_region_intro`) + 同値性
 (`InMACCapacityRegion_iff_and`) を補助補題で publish。
 
-## 7. 着手 skeleton (`Common2026/Shannon/MultipleAccessChannel.lean` 出だし)
+## 7. 着手 skeleton (`InformationTheory/Shannon/MultipleAccessChannel.lean` 出だし)
 
 > 30 行制限を遵守。Phase A 起点の最小骨格のみ。Phase B/C は同 file 内で展開予定
 > (T3-B の **撤退ライン 5 本全発動下** は ~1000-1500 行で単一 file 可能、T3-F の 386 行と
 > 同型構造、~3 倍の規模)。
 
 ```lean
-import Common2026.Shannon.ChannelCoding
-import Common2026.Shannon.CondMutualInfo
-import Common2026.Shannon.MIChainRule
+import InformationTheory.Shannon.ChannelCoding
+import InformationTheory.Shannon.CondMutualInfo
+import InformationTheory.Shannon.MIChainRule
 
 /-!
 # Multiple Access Channel (MAC) Capacity Region (T3-B)
@@ -542,7 +542,7 @@ hypothesis pass-through pattern を 2-user MAC に適用**。実質 ~300-500 行
 7. **2026-05-19 単一ファイル戦略確定**: T3-D は 3 ファイル分離だったが、T3-B 両側 hypothesis
    pass-through (5 撤退ライン全発動) は ~700-1150 行で `lake env lean` 1 ファイル内に収まる。
    T3-F (`RelayCutset.lean` 386 行) の~3 倍規模だが分離不要。
-   `Common2026/Shannon/MultipleAccessChannel.lean` 単一 file で publish。
+   `InformationTheory/Shannon/MultipleAccessChannel.lean` 単一 file で publish。
 
 8. **2026-05-19 corner-point form 採用確定**: `InMACCapacityRegion` は単一 `(I_1, I_2,
    I_both)` triple に対する 3 inequality 述語 (`structure ... : Prop`)。time-sharing 凸結合

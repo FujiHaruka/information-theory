@@ -2,8 +2,8 @@
 
 > Feasibility 調査 (2026-05-20)。撤退ライン参照元: `docs/textbook-roadmap.md` line 387–393
 > (T1-C Cramér L-D3 撤退) + `docs/shannon/cramer-lc2-ext-moonshot-plan.md`。
-> 在庫対象 gap: `Common2026/Shannon/CramerLC2PhaseC.lean:84` の `IsMeasureInfinitePiTiltedEq`
-> と `Common2026/Shannon/ChernoffPerTiltDischarge.lean:136` の `IsBayesErrorPerTiltLowerBound`。
+> 在庫対象 gap: `InformationTheory/Shannon/CramerLC2PhaseC.lean:84` の `IsMeasureInfinitePiTiltedEq`
+> と `InformationTheory/Shannon/ChernoffPerTiltDischarge.lean:136` の `IsBayesErrorPerTiltLowerBound`。
 >
 > 同種文書: `docs/shannon/cramer-mathlib-inventory.md`, `docs/shannon/chernoff-mathlib-inventory.md`。
 
@@ -21,7 +21,7 @@ verdict は **(c)** に近い **(b)/(c) 境界**: 部品は揃うが繋ぎが ~2
 
 ## 主定理の最終形 (再掲)
 
-`Common2026/Shannon/CramerLC2PhaseC.lean:84` の pass-through 述語 (= 撤退で抽象化した Mathlib gap):
+`InformationTheory/Shannon/CramerLC2PhaseC.lean:84` の pass-through 述語 (= 撤退で抽象化した Mathlib gap):
 
 ```lean
 def IsMeasureInfinitePiTiltedEq (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam : ℝ) : Prop :=
@@ -260,10 +260,10 @@ lemma setLIntegral_rnDeriv [HaveLebesgueDecomposition μ ν] [SFinite ν]
 
 ## 着手 skeleton (将来着手時の出発点、本調査では実装しない)
 
-`Common2026/Shannon/InfinitePiTiltedRN.lean` の出だし案:
+`InformationTheory/Shannon/InfinitePiTiltedRN.lean` の出だし案:
 
 ```lean
-import Common2026.Shannon.CramerLC2DischargeExt
+import InformationTheory.Shannon.CramerLC2DischargeExt
 import Mathlib.Probability.ProductMeasure
 import Mathlib.Probability.Moments.Tilted
 import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
@@ -307,4 +307,4 @@ theorem isMeasureInfinitePiTiltedEq_discharge
 end InformationTheory.Shannon.Cramer.Discharge
 ```
 
-`Common2026.lean` への import 追加は実装完了後。
+`InformationTheory.lean` への import 追加は実装完了後。

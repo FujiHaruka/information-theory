@@ -3,7 +3,7 @@
 > **sorry-based 移行完了 (2026-05-25、partial)** — `docs/shannon/cramer-sorry-migration-plan.md`
 > に従い、本 plan に属する 1 件の `@audit:suspect(cramer-chernoff-clt-closure-moonshot-plan)`
 > を `sorry + @residual(plan:cramer-chernoff-clt-closure-moonshot-plan)` に書換: 対象は
-> `Common2026/Shannon/CramerCLTClosure.cramer_lower_at` (load-bearing `h_slice` 仮説を削除、
+> `InformationTheory/Shannon/CramerCLTClosure.cramer_lower_at` (load-bearing `h_slice` 仮説を削除、
 > body は `sorry` 1 行)。**unconditional headline `cramer_lower_at_cgfDeriv_unconditional`**
 > (CramerCLTClosure.lean:523, suspect なし) は signature を維持しつつ body が
 > `cramer_lower_at` を呼ぶ 1 行に縮退 — constructive 経路 (boundary CLT + Phase 5 + tiltedHalfLine
@@ -13,7 +13,7 @@
 > 経由で消費されていたが、新 body では `cramer_lower_at` が `h_slice` を取らないため。判断ログ参照)。
 
 > 実態整合 (2026-05-20): **DONE-HONEST-HYPS — full closure 達成 (計画完遂)**。新 file
-> `Common2026/Shannon/CramerCLTClosure.lean` (0 sorry) に全 Phase publish 済:
+> `InformationTheory/Shannon/CramerCLTClosure.lean` (0 sorry) に全 Phase publish 済:
 > Phase 1 `gaussianReal_Ici_eq_half` (:45)、Phase 2-3 `tendsto_measure_Ici_of_tendsto_gaussian` (:90)
 > + `tiltedAmbient_clt` (:123) + `tiltedHalfLine_tendsto_half` (:162)、Phase 4
 > `tiltedWindow_eventually_large_of_boundary` (:254)、Phase 5 `isMeasureInfinitePiTiltedEq_at_of_window`
@@ -31,13 +31,13 @@
 > (~120-210 行、piece 別難度・鍵 lemma・file:line 済)
 >
 > **Predecessors (publish 済、変更なしで再利用)**:
-> - `Common2026/Shannon/InfinitePiTiltedChangeOfMeasure.lean` (530 行, 0 sorry):
+> - `InformationTheory/Shannon/InfinitePiTiltedChangeOfMeasure.lean` (530 行, 0 sorry):
 >   `IsTiltedWindowEventuallyLarge`, `isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge`,
 >   `tiltedMean_eq_deriv_cgf`, `tiltedWindow_eventually_large_of_interior`,
 >   `tiltedWindow_eventually_large_of_cgfDeriv_interior`, `cramer_lower_phaseC_residual_discharge`
-> - `Common2026/Shannon/CramerLC2Discharge.lean` (171 行): `iIndepFun_tilted_ambient`,
+> - `InformationTheory/Shannon/CramerLC2Discharge.lean` (171 行): `iIndepFun_tilted_ambient`,
 >   `identDistrib_tilted_ambient`, `bounded_eval_family`
-> - `Common2026/Shannon/CramerLC2DischargeExt.lean` (257 行): `tilted_lln_in_probability_real`,
+> - `InformationTheory/Shannon/CramerLC2DischargeExt.lean` (257 行): `tilted_lln_in_probability_real`,
 >   `isProbabilityMeasure_infinitePi_tilted_of_bounded`
 >
 > **Status (2026-05-20)**: 着手前。親 W-3 は **既に発動済** (現状コードは
@@ -60,8 +60,8 @@
 
 ### Goal (完成判定)
 
-新ファイル `Common2026/Shannon/CramerCltBoundaryClosure.lean` で 0-sorry、`lake env lean` clean、
-`Common2026.lean` に `import` 1 行追加。最終 publish:
+新ファイル `InformationTheory/Shannon/CramerCltBoundaryClosure.lean` で 0-sorry、`lake env lean` clean、
+`InformationTheory.lean` に `import` 1 行追加。最終 publish:
 
 1. `gaussianReal_Ici_eq_half` (Gaussian median): `(v ≠ 0) → gaussianReal 0 v {x | 0 ≤ x} = 1/2`。
 2. `tiltedWindow_eventually_large_of_boundary` (境界 per-instance): `a = m`、tilted 分散
@@ -408,24 +408,24 @@ proof-log: no
   (`h_coboundedBelow` は据え置きか、これも内部 discharge できるか着手時判断 — できなければ
   hypothesis として残す)
 - [ ] (オプション) `hVar` を `Λ'' > 0` 形に翻訳する糖衣 corollary (`variance_tilted_mul`)
-- [ ] `lake env lean Common2026/Shannon/CramerCltBoundaryClosure.lean` clean
-- [ ] `Common2026.lean` に `import Common2026.Shannon.CramerCltBoundaryClosure` 追記
+- [ ] `lake env lean InformationTheory/Shannon/CramerCltBoundaryClosure.lean` clean
+- [ ] `InformationTheory.lean` に `import InformationTheory.Shannon.CramerCltBoundaryClosure` 追記
 - [ ] 親 `infinitepi-tilted-rn-discharge-moonshot-plan.md` の W-3 を 🔄 → 部分達成 (境界 CLT closure
   済) に反映、本 plan §判断ログに着地形を追記
 
 ### Done 条件
 
-- end-to-end 定理が clean、`Common2026.lean` import 済、親 plan W-3 状態更新済。
+- end-to-end 定理が clean、`InformationTheory.lean` import 済、親 plan W-3 状態更新済。
 
 ## ファイル構成
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   InfinitePiTiltedChangeOfMeasure.lean   ← 既存 (530 行, 0 sorry, 変更なし)
   CramerLC2Discharge.lean                ← 既存 (171 行, 変更なし、plumbing 利用)
   CramerLC2DischargeExt.lean             ← 既存 (257 行, 変更なし、LLN + IsProbabilityMeasure 利用)
   CramerCltBoundaryClosure.lean          ← 新規 (~135-250 行, 0 sorry, 本 plan の publish 場所)
-Common2026.lean                          ← import 1 行追記
+InformationTheory.lean                          ← import 1 行追記
 docs/shannon/
   cramer-chernoff-clt-closure-mathlib-inventory.md  ← 既存 (predecessor、verdict GO)
   cramer-chernoff-clt-closure-moonshot-plan.md      ← 本ファイル (新規)

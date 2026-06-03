@@ -1,7 +1,7 @@
 # T2-B L-PG0 discharge: Parallel Gaussian kernel measurability
 
 > 実態整合 (2026-05-20): DONE-UNCOND — `isParallelGaussianKernelMeasurable` 完全証明済。
-> `Common2026/Shannon/ParallelGaussianL_PG0Discharge.lean:98`
+> `InformationTheory/Shannon/ParallelGaussianL_PG0Discharge.lean:98`
 > `theorem isParallelGaussianKernelMeasurable {n} (N : Fin n → ℝ≥0) : IsParallelGaussianKernelMeasurable N` を
 > `Measure.pi` pushforward + `measurable_measure_prodMk_left` の実証明 (`:= True` ではない、0 sorry) で discharge。
 > `parallel_gaussian_capacity_formula_PG0_discharged` (L157) で `h_parallel_meas` 引数を消去して再 publish 済
@@ -21,7 +21,7 @@ re-publish する。
 
 ## Context
 
-* 親 `Common2026/Shannon/ParallelGaussian.lean` (381 行、2026-05-19 publish)
+* 親 `InformationTheory/Shannon/ParallelGaussian.lean` (381 行、2026-05-19 publish)
   は L-PG0 を `h_parallel_meas : IsParallelGaussianKernelMeasurable N`
   hypothesis として外出ししている。L-PG0 が消えれば `IsParallelAwgnChannelMeasurable N`
   (= per-coord `IsAwgnChannelMeasurable (N i)`) から parallel kernel
@@ -84,7 +84,7 @@ pushforward" として書き直す。
 
 ## Per-file breakdown
 
-新規 `Common2026/Shannon/ParallelGaussianL_PG0Discharge.lean` (~150-250 行):
+新規 `InformationTheory/Shannon/ParallelGaussianL_PG0Discharge.lean` (~150-250 行):
 
 1. **`gaussianReal_pi_eq_zero_map`** — 上の "核心の観察":
    `Measure.pi (fun i => gaussianReal (x i) (N i)) = (Measure.pi (fun i => gaussianReal 0 (N i))).map (fun y i => x i + y i)`。
@@ -120,5 +120,5 @@ pushforward" として書き直す。
 ## 制約
 
 * 既存 `ParallelGaussian.lean` の signature 変更禁止 (述語名・引数名・順序保持)。
-* `Common2026.lean` / `docs/textbook-roadmap.md` 不変。
+* `InformationTheory.lean` / `docs/textbook-roadmap.md` 不変。
 * `import Mathlib` 禁止 — 必要な module を pinpoint import。

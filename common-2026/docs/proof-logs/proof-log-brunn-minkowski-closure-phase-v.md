@@ -6,18 +6,18 @@ parent plan: docs/shannon/brunn-minkowski-closure-plan.md (§Phase V, L248-258)
 
 ## 検証結果
 
-- `lake env lean Common2026/Shannon/BrunnMinkowskiClosure.lean` (worktree、parent
+- `lake env lean InformationTheory/Shannon/BrunnMinkowskiClosure.lean` (worktree、parent
   `.lake` symlink reuse): **silent** (exit 0、出力 0 行)。
   - error: 0
   - sorry: 0
   - warning: 0
 - file 規模: 973 行。
-- `Common2026.lean` 編入: 既に済 (Wave 3 で追加済、本 turn 無変更)。
+- `InformationTheory.lean` 編入: 既に済 (Wave 3 で追加済、本 turn 無変更)。
 
 ## `:= True` placeholder grep 結果
 
 ```
-rg -n 'Prop\s*:=\s*True' Common2026/Shannon/BrunnMinkowskiClosure.lean
+rg -n 'Prop\s*:=\s*True' InformationTheory/Shannon/BrunnMinkowskiClosure.lean
 → 0 hits
 ```
 
@@ -38,7 +38,7 @@ honest hyp はすべて実 `Prop` で定義されており、`:True` placeholder
 
 ### 1. `IsSlicePLReadyHyp` (Phase 1 残、regularity bundle)
 
-- def file:line: `Common2026/Shannon/BrunnMinkowskiClosure.lean:228`
+- def file:line: `InformationTheory/Shannon/BrunnMinkowskiClosure.lean:228`
 - 引用 site (consumer): `prekopa_leindler_nDim` (`:263`) の `h_ready` 引数。
 - Prop signature (verbatim):
 
@@ -77,9 +77,9 @@ honest hyp はすべて実 `Prop` で定義されており、`:True` placeholder
   3 本の equality hyp の形で持つ:
 
   ```lean
-  (hA_unif  : Common2026.Shannon.jointDifferentialEntropyPi (P.map X)         = Real.log volA)
-  (hB_unif  : Common2026.Shannon.jointDifferentialEntropyPi (P.map Y)         = Real.log volB)
-  (hAB_unif : Common2026.Shannon.jointDifferentialEntropyPi
+  (hA_unif  : InformationTheory.Shannon.jointDifferentialEntropyPi (P.map X)         = Real.log volA)
+  (hB_unif  : InformationTheory.Shannon.jointDifferentialEntropyPi (P.map Y)         = Real.log volB)
+  (hAB_unif : InformationTheory.Shannon.jointDifferentialEntropyPi
                 (P.map (fun ω => X ω + Y ω))                                  = Real.log volAB)
   ```
 - 配置 (3 consumer × 同型 3 本):
@@ -137,7 +137,7 @@ honest hyp はすべて実 `Prop` で定義されており、`:True` placeholder
 
 ## Phase V 完了判定
 
-- [x] `lake env lean Common2026/Shannon/BrunnMinkowskiClosure.lean` silent (0 error
+- [x] `lake env lean InformationTheory/Shannon/BrunnMinkowskiClosure.lean` silent (0 error
   / 0 sorry / 0 warning) — 本 turn 確認。
 - [x] 残存 honest hyp 列挙完了:
   - 1. `IsSlicePLReadyHyp` (Phase 1 残、regularity bundle、`@audit:suspect` 1 件) ×1

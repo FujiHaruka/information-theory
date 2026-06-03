@@ -1,8 +1,8 @@
-# T1-A'' Huffman Optimality Strong Form — Mathlib + Common2026 API Inventory
+# T1-A'' Huffman Optimality Strong Form — Mathlib + InformationTheory API Inventory
 
 > Parent: `docs/textbook-roadmap.md` § Tier 1 — **T1-A''. Huffman optimality (full discharge of 2 weak-form hypotheses)**
 > Predecessor: `docs/shannon/huffman-optimality-mathlib-inventory.md` (T1-A' inventory, ~440 行)
-> Existing artefact: `Common2026/Shannon/HuffmanOptimality.lean` (1054 行 / 0 sorry / weak form publish), `Common2026/Shannon/Huffman.lean` (961 行 / 0 sorry)
+> Existing artefact: `InformationTheory/Shannon/HuffmanOptimality.lean` (1054 行 / 0 sorry / weak form publish), `InformationTheory/Shannon/Huffman.lean` (961 行 / 0 sorry)
 > Goal: discharge `SwapNormalizationHypothesis` (`HuffmanOptimality.lean:759`) and `HuffmanMergedIdentificationHypothesis` (`HuffmanOptimality.lean:776`), then expose strong form `huffmanLength_optimal` (no hypothesis args).
 > Note: APIs already cataloged in the T1-A and T1-A' inventories are **not re-listed** unless their role specifically changes in T1-A''.
 
@@ -10,7 +10,7 @@
 
 ## 一行サマリ
 
-**T1-A'' で discharge する 2 hypothesis のうち Hypothesis 1 (SwapNormalization) は Mathlib 既存 API ~95% でカバー可、Hypothesis 2 (Identification) は Common2026 既存補題 (`huffmanLengthAux_step_merged` / `_step_other` / `_const_on_group`) ~85% でカバー可。新規に必要な API はすべて既存 (`Equiv.swap` + `Function.update` + `Tuple.bubble_sort_induction` + `huffmanLength_kraft_eq_one` + `swap_step_le`)。自前構築が必要なのは "shortening 操作" (Kraft = 1 のとき最長 codeword を 1 減らす変形 — Mathlib 不在、自前 ~40 行) と "`mergedMeasure ↔ initMultiset` の構造的同値" (1 step Huffman の identification — 自前 ~150 行)。撤退ラインは発動しない見込み。**最大の発見 (危険度高)**: `Tuple.bubble_sort_induction` は `Fin n → α` 専用、我々の `l : α → ℕ` (任意 `α : Type*` with `[Fintype α]`) に直接適用するには `Fintype.equivFin` 経由の **抽象 ↔ Fin** bridge ~30 行が必要。代案: bubble sort を使わず、**2-step swap を `(l a, l b)` を arg-pair で sort できるまで再帰** する直接 induction (~50 行)。
+**T1-A'' で discharge する 2 hypothesis のうち Hypothesis 1 (SwapNormalization) は Mathlib 既存 API ~95% でカバー可、Hypothesis 2 (Identification) は InformationTheory 既存補題 (`huffmanLengthAux_step_merged` / `_step_other` / `_const_on_group`) ~85% でカバー可。新規に必要な API はすべて既存 (`Equiv.swap` + `Function.update` + `Tuple.bubble_sort_induction` + `huffmanLength_kraft_eq_one` + `swap_step_le`)。自前構築が必要なのは "shortening 操作" (Kraft = 1 のとき最長 codeword を 1 減らす変形 — Mathlib 不在、自前 ~40 行) と "`mergedMeasure ↔ initMultiset` の構造的同値" (1 step Huffman の identification — 自前 ~150 行)。撤退ラインは発動しない見込み。**最大の発見 (危険度高)**: `Tuple.bubble_sort_induction` は `Fin n → α` 専用、我々の `l : α → ℕ` (任意 `α : Type*` with `[Fintype α]`) に直接適用するには `Fintype.equivFin` 経由の **抽象 ↔ Fin** bridge ~30 行が必要。代案: bubble sort を使わず、**2-step swap を `(l a, l b)` を arg-pair で sort できるまで再帰** する直接 induction (~50 行)。
 
 ---
 
@@ -37,16 +37,16 @@ theorem huffmanLength_optimal
 
 | name | file:line | role |
 | --- | --- | --- |
-| `swap_step_le` | `Common2026/Shannon/HuffmanOptimality.lean:650` | H1 main step。 (a, m) = (min-prob symbol, current longest position) で順次呼ぶ |
-| `mergedMeasure` | `Common2026/Shannon/HuffmanOptimality.lean:244` | H2 LHS の measure |
-| `mergedMeasure_real` | `Common2026/Shannon/HuffmanOptimality.lean:251` | H2 各 group の確率値 |
-| `mergedMeasure_isProbabilityMeasure` | `Common2026/Shannon/HuffmanOptimality.lean:550` | H2 [IsProbabilityMeasure] |
-| `mergedMeasure_pos` | `Common2026/Shannon/HuffmanOptimality.lean:624` | H2 huffmanLength_pos 前提 |
-| `SwapNormalizationHypothesis` | `Common2026/Shannon/HuffmanOptimality.lean:759-773` | **discharge 対象** (H1) |
-| `HuffmanMergedIdentificationHypothesis` | `Common2026/Shannon/HuffmanOptimality.lean:776-785` | **discharge 対象** (H2) |
-| `huffmanLength_optimal_with_hypotheses` | `Common2026/Shannon/HuffmanOptimality.lean:1041` | 主定理 entry。両 hypothesis を渡して強形を得る |
-| `huffmanLength_kraft_eq_one` | `Common2026/Shannon/Huffman.lean:924` | H1 Kraft = 1 contradiction |
-| `huffmanStep_initMultiset_sibling` (`private`) | `Common2026/Shannon/HuffmanOptimality.lean:66` | H2 で `(a, b)` が huffmanStep pick up された pair であることの identification |
+| `swap_step_le` | `InformationTheory/Shannon/HuffmanOptimality.lean:650` | H1 main step。 (a, m) = (min-prob symbol, current longest position) で順次呼ぶ |
+| `mergedMeasure` | `InformationTheory/Shannon/HuffmanOptimality.lean:244` | H2 LHS の measure |
+| `mergedMeasure_real` | `InformationTheory/Shannon/HuffmanOptimality.lean:251` | H2 各 group の確率値 |
+| `mergedMeasure_isProbabilityMeasure` | `InformationTheory/Shannon/HuffmanOptimality.lean:550` | H2 [IsProbabilityMeasure] |
+| `mergedMeasure_pos` | `InformationTheory/Shannon/HuffmanOptimality.lean:624` | H2 huffmanLength_pos 前提 |
+| `SwapNormalizationHypothesis` | `InformationTheory/Shannon/HuffmanOptimality.lean:759-773` | **discharge 対象** (H1) |
+| `HuffmanMergedIdentificationHypothesis` | `InformationTheory/Shannon/HuffmanOptimality.lean:776-785` | **discharge 対象** (H2) |
+| `huffmanLength_optimal_with_hypotheses` | `InformationTheory/Shannon/HuffmanOptimality.lean:1041` | 主定理 entry。両 hypothesis を渡して強形を得る |
+| `huffmanLength_kraft_eq_one` | `InformationTheory/Shannon/Huffman.lean:924` | H1 Kraft = 1 contradiction |
+| `huffmanStep_initMultiset_sibling` (`private`) | `InformationTheory/Shannon/HuffmanOptimality.lean:66` | H2 で `(a, b)` が huffmanStep pick up された pair であることの identification |
 
 ---
 
@@ -85,7 +85,7 @@ bubble sort 終了後、`l a ≠ l b` のときの shortening が必要。**Kraf
 
 | name | file:line | role |
 | --- | --- | --- |
-| `huffmanLength_kraft_eq_one` | `Common2026/Shannon/Huffman.lean:924` | H1 内で `ll = huffmanLength` のとき `l a = l b` 自動成立、一般 `ll` 側で slack 活用 |
+| `huffmanLength_kraft_eq_one` | `InformationTheory/Shannon/Huffman.lean:924` | H1 内で `ll = huffmanLength` のとき `l a = l b` 自動成立、一般 `ll` 側で slack 活用 |
 | `Function.update_apply` | `Mathlib/Logic/Function/Basic.lean:640` | shortening 後の各 `l' x` の値計算 |
 | `Function.update_idem` | `Mathlib/Logic/Function/Basic.lean:764` | 複数回 shortening の合成 |
 | `Function.update_comm` | `Mathlib/Logic/Function/Basic.lean:759` | reuse |
@@ -100,15 +100,15 @@ bubble sort 終了後、`l a ≠ l b` のときの shortening が必要。**Kraf
 
 | name | file:line | role |
 | --- | --- | --- |
-| `initMultiset` | `Common2026/Shannon/Huffman.lean:298` | `Multiset (Finset α × ℝ)`. 両側で計算 |
-| `initMultiset_huffmanGrouping` | `Common2026/Shannon/Huffman.lean:416` | HuffmanGrouping 保存 |
-| `huffmanStep_card_eq` | `Common2026/Shannon/Huffman.lean:251` | cardinality bridge |
-| `huffmanLengthAux_step_merged` | `Common2026/Shannon/Huffman.lean:614` | **本命**: `a ∈ merged` のとき +1 |
-| `huffmanLengthAux_step_other` | `Common2026/Shannon/Huffman.lean:625` | **本命**: `a ∉ merged` のとき不変 |
-| `huffmanLengthAux_step_eq_on_other_group` | `Common2026/Shannon/Huffman.lean:636` | other group 上で `s` と `s''` 値一致 |
-| `huffmanLengthAux_const_on_group` | `Common2026/Shannon/Huffman.lean:467` | **本命** |
-| `huffmanStep_orig_decomp` | `Common2026/Shannon/Huffman.lean:599` | `s = x1 ::ₘ x2 ::ₘ ee` |
-| `huffmanStep_initMultiset_sibling` | `Common2026/Shannon/HuffmanOptimality.lean:66` | `(a, b)` が huffmanStep pick up された pair |
+| `initMultiset` | `InformationTheory/Shannon/Huffman.lean:298` | `Multiset (Finset α × ℝ)`. 両側で計算 |
+| `initMultiset_huffmanGrouping` | `InformationTheory/Shannon/Huffman.lean:416` | HuffmanGrouping 保存 |
+| `huffmanStep_card_eq` | `InformationTheory/Shannon/Huffman.lean:251` | cardinality bridge |
+| `huffmanLengthAux_step_merged` | `InformationTheory/Shannon/Huffman.lean:614` | **本命**: `a ∈ merged` のとき +1 |
+| `huffmanLengthAux_step_other` | `InformationTheory/Shannon/Huffman.lean:625` | **本命**: `a ∉ merged` のとき不変 |
+| `huffmanLengthAux_step_eq_on_other_group` | `InformationTheory/Shannon/Huffman.lean:636` | other group 上で `s` と `s''` 値一致 |
+| `huffmanLengthAux_const_on_group` | `InformationTheory/Shannon/Huffman.lean:467` | **本命** |
+| `huffmanStep_orig_decomp` | `InformationTheory/Shannon/Huffman.lean:599` | `s = x1 ::ₘ x2 ::ₘ ee` |
+| `huffmanStep_initMultiset_sibling` | `InformationTheory/Shannon/HuffmanOptimality.lean:66` | `(a, b)` が huffmanStep pick up された pair |
 
 **Mathlib 側**:
 
@@ -173,7 +173,7 @@ bubble sort 終了後、`l a ≠ l b` のときの shortening が必要。**Kraf
 
 ## §H. 着手 skeleton
 
-`Common2026/Shannon/HuffmanOptimality.lean` 末尾 (現 1054 行) に追記推奨。新規 file 不要、同 namespace 内で完結。
+`InformationTheory/Shannon/HuffmanOptimality.lean` 末尾 (現 1054 行) に追記推奨。新規 file 不要、同 namespace 内で完結。
 
 ```lean
 /-! ### T1-A'' — 2 hypothesis discharge -/

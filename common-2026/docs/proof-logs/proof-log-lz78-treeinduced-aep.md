@@ -1,7 +1,7 @@
 # Proof log — LZ78 tree-induced `Q_c` AEP (route C, M0 gate + Q1–Q3)
 
 Plan: `docs/shannon/lz78-treeinduced-aep-plan.md`. Output:
-`Common2026/Shannon/LZ78TreeInducedAEP.lean` (genuine, sorryAx-free).
+`InformationTheory/Shannon/LZ78TreeInducedAEP.lean` (genuine, sorryAx-free).
 
 ## M0 gate — verdict and the honesty finding (read first)
 
@@ -60,7 +60,7 @@ term is bypassed entirely** by reducing to the existing `Pₙ` AEP.
 
 ## What was published (genuine, sorryAx-free)
 
-`Common2026/Shannon/LZ78TreeInducedAEP.lean`:
+`InformationTheory/Shannon/LZ78TreeInducedAEP.lean`:
 
 - `treeInducedProb` (`Q_c`) = `∏ⱼ condPhraseProb` (path-prefix coding measure)
   + `negLogbTreeInducedRate` = `(-log₂ Q_c)/n`.

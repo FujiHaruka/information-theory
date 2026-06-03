@@ -1,6 +1,6 @@
 # Han 不等式ムーンショット (Phase A/B/C) Lean 形式化 — ボトルネック分析
 
-将来「Pi 値の `MeasurableEquiv` reshape boilerplate を生成するエージェント」「`Fin n` の prefix / 補集合 / sum-product 分解の index 同型を自動構築するツール」「`set_option in` / docstring / private 修飾子の順序を静的に検査する linter」を作るためのベースライン記録。Han 不等式 (補集合形) を Mathlib + 既存 `Common2026/Shannon` API の上に **6 セッション**で完走した記録。
+将来「Pi 値の `MeasurableEquiv` reshape boilerplate を生成するエージェント」「`Fin n` の prefix / 補集合 / sum-product 分解の index 同型を自動構築するツール」「`set_option in` / docstring / private 修飾子の順序を静的に検査する linter」を作るためのベースライン記録。Han 不等式 (補集合形) を Mathlib + 既存 `InformationTheory/Shannon` API の上に **6 セッション**で完走した記録。
 
 **定量データ**: [docs/metrics/han-moonshot.metrics.md](../metrics/han-moonshot.metrics.md)
 
@@ -21,13 +21,13 @@ theorem han_inequality
 
 成果物:
 
-- `Common2026/Shannon/Entropy.lean` — Phase A の 4 主定理を実装、**250 行** (skeleton 98 行 → 充填 +152 行)、0 errors / 0 sorry
+- `InformationTheory/Shannon/Entropy.lean` — Phase A の 4 主定理を実装、**250 行** (skeleton 98 行 → 充填 +152 行)、0 errors / 0 sorry
   - `entropy_pair_eq_entropy_add_condEntropy` (chain rule、~70 行)
   - `condEntropy_tower` (補助補題、~40 行)
   - `condMutualInfo_eq_condEntropy_sub_condEntropy` (中間補題、~30 行)
   - `condEntropy_le_condEntropy_of_pair` (条件付けで減る、3 行)
   - 副産物: `mutualInfo_ne_top` / `condMutualInfo_ne_top` (有限性、`MutualInfo.lean` / `CondMutualInfo.lean` に追加)
-- `Common2026/Shannon/Han.lean` — Phase B + C を実装、**382 行**、0 errors / 0 sorry
+- `InformationTheory/Shannon/Han.lean` — Phase B + C を実装、**382 行**、0 errors / 0 sorry
   - `jointEntropy` / `jointEntropyExcept` (定義、~10 行)
   - `entropy_measurableEquiv_comp` (private helper、`MeasurableEquiv` で push-forward 不変、~30 行)
   - `jointEntropy_chain_rule` (Phase B、`Fin n` induction、~75 行)
@@ -38,7 +38,7 @@ theorem han_inequality
 - `docs/han/han-moonshot-plan.md` — 4 段プラン (Phase 0/A/B/C)
 - `docs/han/han-mathlib-inventory.md` — Phase 0 在庫調査
 
-`lake env lean Common2026/Shannon/Han.lean` 通過 (silent)。
+`lake env lean InformationTheory/Shannon/Han.lean` 通過 (silent)。
 
 ## 1. 問題のキャラクター
 
@@ -50,12 +50,12 @@ theorem han_inequality
 
 | Phase | 主要ファイル | 行数 (実装分) | 性格 |
 |---|---|---|---|
-| Phase 4-α (DPI) | `Common2026/Shannon/DPI.lean` | 168 行 | klDiv の DPI 接続 |
-| Phase 4-β (bridge) | `Common2026/Shannon/Bridge.lean` | 588 行 | KL ↔ entropy − condEntropy 同値 |
-| Phase 4-γ (Shannon converse) | `Common2026/Shannon/Converse.lean` | 124 行 | plumbing 層の組み合わせ |
-| Phase 4-δ-(b) (Markov encoder) | `Common2026/Shannon/CondMutualInfo.lean` | 353 行 | condMI 定義 + chain rule 自作 plumbing |
-| **Han Phase A (本回)** | **`Common2026/Shannon/Entropy.lean`** | **+152 行** | 2 変数 chain rule + 「条件付けで減る」 |
-| **Han Phase B+C (本回)** | **`Common2026/Shannon/Han.lean`** | **382 行** | n 変数 chain rule + Pi 値 reshape plumbing + Han |
+| Phase 4-α (DPI) | `InformationTheory/Shannon/DPI.lean` | 168 行 | klDiv の DPI 接続 |
+| Phase 4-β (bridge) | `InformationTheory/Shannon/Bridge.lean` | 588 行 | KL ↔ entropy − condEntropy 同値 |
+| Phase 4-γ (Shannon converse) | `InformationTheory/Shannon/Converse.lean` | 124 行 | plumbing 層の組み合わせ |
+| Phase 4-δ-(b) (Markov encoder) | `InformationTheory/Shannon/CondMutualInfo.lean` | 353 行 | condMI 定義 + chain rule 自作 plumbing |
+| **Han Phase A (本回)** | **`InformationTheory/Shannon/Entropy.lean`** | **+152 行** | 2 変数 chain rule + 「条件付けで減る」 |
+| **Han Phase B+C (本回)** | **`InformationTheory/Shannon/Han.lean`** | **382 行** | n 変数 chain rule + Pi 値 reshape plumbing + Han |
 
 ## 2. 数学的方針
 
@@ -107,7 +107,7 @@ H(Xs) - H(Xs except i) ≤ H(Xs i | prefix)
 
 ## 3. Mathlib 補題探索の実録
 
-Phase 0 在庫調査 (`docs/han/han-mathlib-inventory.md`) で chain rule / condDistrib 周辺は事前にマップ済。実装中に loogle を **Phase A だけで 44 回 / Phase B 13 回 / Phase C 7 回** 打って追加検索した (合計 64 回、`Common2026/Shannon/` への loogle 投入歴で最多級)。
+Phase 0 在庫調査 (`docs/han/han-mathlib-inventory.md`) で chain rule / condDistrib 周辺は事前にマップ済。実装中に loogle を **Phase A だけで 44 回 / Phase B 13 回 / Phase C 7 回** 打って追加検索した (合計 64 回、`InformationTheory/Shannon/` への loogle 投入歴で最多級)。
 
 **見つかった主要補題** (実際に使ったもの):
 

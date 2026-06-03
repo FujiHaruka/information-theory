@@ -3,13 +3,13 @@
 > 親計画: [`docs/shannon/epi-stam-to-conclusion-plan.md`](epi-stam-to-conclusion-plan.md) Phase 0.C-1 (line 325-333)。
 > 本ファイルは Phase 0.C-2 (signature 確定) 着手前の M0 在庫調査。
 >
-> **Status (2026-05-25, fresh inventory): heat-flow path 定義は Mathlib では裸 (OU semigroup / heat semigroup ともに `Found 0 declarations`)。一方、Common2026 プロジェクト内に既存の `gaussianConvolution X Z t := X + √t · Z` (FisherInfoV2DeBruijn.lean:154) と Gaussian heat kernel + `IsHeatFlowDensity` 構造が完備されており、これを Phase 0.C-1 の出発点として再利用すべき。**
+> **Status (2026-05-25, fresh inventory): heat-flow path 定義は Mathlib では裸 (OU semigroup / heat semigroup ともに `Found 0 declarations`)。一方、InformationTheory プロジェクト内に既存の `gaussianConvolution X Z t := X + √t · Z` (FisherInfoV2DeBruijn.lean:154) と Gaussian heat kernel + `IsHeatFlowDensity` 構造が完備されており、これを Phase 0.C-1 の出発点として再利用すべき。**
 >
 > **⚠️ Sign correction (2026-05-25 Phase 0 closure post-mortem)**: 以下 §B' / §G(b) の `MonotoneOn` 推奨は **sign error**。実装で確定した正しい符号は **`AntitoneOn (fun s => gap_s) (Set.Icc 0 1)`** (Csiszár scaling は gap が時間進行で 0 へ decreasing、`gap_0 ≥ gap_1 = 0` で EPI 結論)。`MonotoneOn` 採用 → `gap_0 ≤ gap_1 = 0` ⇒ `-EPI` で逆向き。`monotoneOn_of_deriv_nonneg` も `antitoneOn_of_deriv_nonpos` に読み替え。Phase 0 実装の最終形は `EPIStamToBridge.lean:170-188` 参照。
 
 ## 一行サマリ
 
-**heat-flow path API のうち Mathlib 既存実体は ~50% (Gaussian distribution / `Measure.conv` / `Monotone(On)` / `HasDerivAt` 系)、自作必要は heat-flow path の 2-source 形 `√(1-s)·X + √s·Z` のみ (~30-80 行)、ただし Common2026 既存の `gaussianConvolution X Z t = X + √t·Z` (1-source 形) を流用するか拡張する選択肢あり。撤退ライン L-Concl-0Sc-β (Mathlib 壁) は発動しない (壁ではなく既存資産で組める)、L-Concl-0Sc-α (案 2 退避) も発動不要 (規模 <300 行で genuine 化見込み)。**
+**heat-flow path API のうち Mathlib 既存実体は ~50% (Gaussian distribution / `Measure.conv` / `Monotone(On)` / `HasDerivAt` 系)、自作必要は heat-flow path の 2-source 形 `√(1-s)·X + √s·Z` のみ (~30-80 行)、ただし InformationTheory 既存の `gaussianConvolution X Z t = X + √t·Z` (1-source 形) を流用するか拡張する選択肢あり。撤退ライン L-Concl-0Sc-β (Mathlib 壁) は発動しない (壁ではなく既存資産で組める)、L-Concl-0Sc-α (案 2 退避) も発動不要 (規模 <300 行で genuine 化見込み)。**
 
 ---
 
@@ -74,23 +74,23 @@ gap_s := entropyPower(X_s+Y_s) - entropyPower(X_s) - entropyPower(Y_s)
 
 **重要**: heat-flow path に必要な OU semigroup / heat semigroup 一般論は Mathlib に**まったくない**。ただし Gaussian distribution + convolution の primitive は揃っているので、本 Phase で必要なのは「specific な 2-source heat-flow path `√(1-s)·X + √s·Z`」の自前構築 (`gaussianConvolution` の拡張) のみ。
 
-### A.3 Common2026 プロジェクト既存 (再利用候補)
+### A.3 InformationTheory プロジェクト既存 (再利用候補)
 
 | 概念 | プロジェクト API | file:line | 状態 | Phase 0.C-1 での扱い |
 |---|---|---|---|---|
-| **1-source heat-flow** | `noncomputable def gaussianConvolution {α : Type*} (X Z : α → ℝ) (t : ℝ) : α → ℝ := fun ω => X ω + Real.sqrt t * Z ω` | `Common2026/Shannon/FisherInfoV2DeBruijn.lean:154` | OK 既存 | **Phase 0.C-1 の出発点**: 1-source 形 `X + √t·Z`。本 Phase の 2-source `√(1-s)·X + √s·Z` への拡張ベース |
-| 1-source の law | `theorem gaussianConvolution_law_of_gaussian` ({Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P] {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P) {m : ℝ} {v : ℝ≥0} (hX_law : P.map X = gaussianReal m v) (hZ_law : P.map Z = gaussianReal 0 1) {t : ℝ} (ht : 0 ≤ t) : P.map (gaussianConvolution X Z t) = gaussianReal m (v + ⟨t, ht⟩)) | `Common2026/Shannon/FisherInfoV2DeBruijn.lean:172-220` | OK 既存 | Gaussian saturation 端点で再利用 |
-| measurability | `theorem measurable_gaussianConvolution {Ω : Type*} [MeasurableSpace Ω] {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z) (t : ℝ) : Measurable (gaussianConvolution X Z t)` | `Common2026/Shannon/FisherInfoV2DeBruijn.lean:162-166` | OK 既存 | 拡張版も同様に書ける |
-| heat kernel | `noncomputable def heatKernel (t : ℝ) (x : ℝ) : ℝ := if h : 0 < t then gaussianPDFReal 0 ⟨t, h.le⟩ x else 0` | `Common2026/Shannon/FisherInfoV2DeBruijnBody.lean:93` | OK 既存 | 密度レベル kernel |
-| heat kernel positivity | `theorem heatKernel_pos {t : ℝ} (ht : 0 < t) (x : ℝ) : 0 < heatKernel t x` | `Common2026/Shannon/FisherInfoV2DeBruijnBody.lean:110-118` | OK 既存 | — |
-| heat kernel measurability | `theorem measurable_heatKernel (t : ℝ) : Measurable (fun x => heatKernel t x)` | `Common2026/Shannon/FisherInfoV2DeBruijnBody.lean:121-125` | OK 既存 | — |
-| 空間 1階微分 | `theorem heatKernel_spatial_deriv {t : ℝ} (ht : 0 < t) (x : ℝ) : deriv (fun y => heatKernel t y) x = -(x / t) * heatKernel t x` | `Common2026/Shannon/FisherInfoV2HeatFlowBody.lean:94-102` | OK 既存 | — |
-| 空間 1階微分 HasDerivAt 形 | `theorem heatKernel_hasDerivAt_spatial {t : ℝ} (ht : 0 < t) (x : ℝ) : HasDerivAt (fun y => heatKernel t y) (-(x / t) * heatKernel t x) x` | `Common2026/Shannon/FisherInfoV2HeatFlowBody.lean:105-117` | OK 既存 | — |
-| 空間 Laplacian | `theorem heatKernel_spatial_laplacian {t : ℝ} (ht : 0 < t) (x : ℝ) : deriv (fun y => deriv (fun z => heatKernel t z) y) x = spatialLaplacianHeatKernel t x` | `Common2026/Shannon/FisherInfoV2HeatFlowBody.lean:130-148` | OK 既存 | — |
-| 時間 1階微分 | `theorem hasDerivAt_heatKernel_time {t : ℝ} (ht : 0 < t) (x : ℝ) : HasDerivAt (fun s => Common2026.Shannon.FisherInfoV2.heatKernel s x) ...` | `Common2026/Shannon/GaussianPDFVarianceDerivBody.lean:161` | OK 既存 (FisherInfoGaussianWitness で使用) | de Bruijn 系で参照 |
-| heat semigroup 合成則 (測度) | `theorem heatSemigroup_compose_law {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P] {Y₁ Y₂ : Ω → ℝ} (hindep : IndepFun Y₁ Y₂ P) {t₁ t₂ : ℝ} (ht₁ : 0 ≤ t₁) (ht₂ : 0 ≤ t₂) (hY₁ : P.map Y₁ = gaussianReal 0 ⟨t₁, ht₁⟩) (hY₂ : P.map Y₂ = gaussianReal 0 ⟨t₂, ht₂⟩) : P.map (Y₁ + Y₂) = gaussianReal 0 ⟨t₁ + t₂, add_nonneg ht₁ ht₂⟩` | `Common2026/Shannon/FisherInfoV2HeatFlowBody.lean:215-228` | OK 既存 | `√(1-s)·Z + √s·Z' ∼ 𝒩(0, 1)` の証明 (variance 加法) |
-| 密度予測 `IsHeatFlowDensity` | `structure IsHeatFlowDensity {Ω : Type*} [MeasurableSpace Ω] (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] (p : ℝ → ℝ → ℝ) : Prop where ...` | `Common2026/Shannon/FisherInfoV2DeBruijnBody.lean:155-170` | OK 既存 | `heat_equation` field carry 構造 |
-| Heat flow predicate witness | `IsHeatFlowDensity_of_sub_predicates`, `IsHeatTimeDerivHyp`, `IsHeatFlowConvolutionHyp` | `Common2026/Shannon/FisherInfoV2HeatFlowBody.lean:170-206` | OK 既存 | 必要なら再利用 |
+| **1-source heat-flow** | `noncomputable def gaussianConvolution {α : Type*} (X Z : α → ℝ) (t : ℝ) : α → ℝ := fun ω => X ω + Real.sqrt t * Z ω` | `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:154` | OK 既存 | **Phase 0.C-1 の出発点**: 1-source 形 `X + √t·Z`。本 Phase の 2-source `√(1-s)·X + √s·Z` への拡張ベース |
+| 1-source の law | `theorem gaussianConvolution_law_of_gaussian` ({Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P] {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P) {m : ℝ} {v : ℝ≥0} (hX_law : P.map X = gaussianReal m v) (hZ_law : P.map Z = gaussianReal 0 1) {t : ℝ} (ht : 0 ≤ t) : P.map (gaussianConvolution X Z t) = gaussianReal m (v + ⟨t, ht⟩)) | `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:172-220` | OK 既存 | Gaussian saturation 端点で再利用 |
+| measurability | `theorem measurable_gaussianConvolution {Ω : Type*} [MeasurableSpace Ω] {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z) (t : ℝ) : Measurable (gaussianConvolution X Z t)` | `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:162-166` | OK 既存 | 拡張版も同様に書ける |
+| heat kernel | `noncomputable def heatKernel (t : ℝ) (x : ℝ) : ℝ := if h : 0 < t then gaussianPDFReal 0 ⟨t, h.le⟩ x else 0` | `InformationTheory/Shannon/FisherInfoV2DeBruijnBody.lean:93` | OK 既存 | 密度レベル kernel |
+| heat kernel positivity | `theorem heatKernel_pos {t : ℝ} (ht : 0 < t) (x : ℝ) : 0 < heatKernel t x` | `InformationTheory/Shannon/FisherInfoV2DeBruijnBody.lean:110-118` | OK 既存 | — |
+| heat kernel measurability | `theorem measurable_heatKernel (t : ℝ) : Measurable (fun x => heatKernel t x)` | `InformationTheory/Shannon/FisherInfoV2DeBruijnBody.lean:121-125` | OK 既存 | — |
+| 空間 1階微分 | `theorem heatKernel_spatial_deriv {t : ℝ} (ht : 0 < t) (x : ℝ) : deriv (fun y => heatKernel t y) x = -(x / t) * heatKernel t x` | `InformationTheory/Shannon/FisherInfoV2HeatFlowBody.lean:94-102` | OK 既存 | — |
+| 空間 1階微分 HasDerivAt 形 | `theorem heatKernel_hasDerivAt_spatial {t : ℝ} (ht : 0 < t) (x : ℝ) : HasDerivAt (fun y => heatKernel t y) (-(x / t) * heatKernel t x) x` | `InformationTheory/Shannon/FisherInfoV2HeatFlowBody.lean:105-117` | OK 既存 | — |
+| 空間 Laplacian | `theorem heatKernel_spatial_laplacian {t : ℝ} (ht : 0 < t) (x : ℝ) : deriv (fun y => deriv (fun z => heatKernel t z) y) x = spatialLaplacianHeatKernel t x` | `InformationTheory/Shannon/FisherInfoV2HeatFlowBody.lean:130-148` | OK 既存 | — |
+| 時間 1階微分 | `theorem hasDerivAt_heatKernel_time {t : ℝ} (ht : 0 < t) (x : ℝ) : HasDerivAt (fun s => InformationTheory.Shannon.FisherInfoV2.heatKernel s x) ...` | `InformationTheory/Shannon/GaussianPDFVarianceDerivBody.lean:161` | OK 既存 (FisherInfoGaussianWitness で使用) | de Bruijn 系で参照 |
+| heat semigroup 合成則 (測度) | `theorem heatSemigroup_compose_law {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P] {Y₁ Y₂ : Ω → ℝ} (hindep : IndepFun Y₁ Y₂ P) {t₁ t₂ : ℝ} (ht₁ : 0 ≤ t₁) (ht₂ : 0 ≤ t₂) (hY₁ : P.map Y₁ = gaussianReal 0 ⟨t₁, ht₁⟩) (hY₂ : P.map Y₂ = gaussianReal 0 ⟨t₂, ht₂⟩) : P.map (Y₁ + Y₂) = gaussianReal 0 ⟨t₁ + t₂, add_nonneg ht₁ ht₂⟩` | `InformationTheory/Shannon/FisherInfoV2HeatFlowBody.lean:215-228` | OK 既存 | `√(1-s)·Z + √s·Z' ∼ 𝒩(0, 1)` の証明 (variance 加法) |
+| 密度予測 `IsHeatFlowDensity` | `structure IsHeatFlowDensity {Ω : Type*} [MeasurableSpace Ω] (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] (p : ℝ → ℝ → ℝ) : Prop where ...` | `InformationTheory/Shannon/FisherInfoV2DeBruijnBody.lean:155-170` | OK 既存 | `heat_equation` field carry 構造 |
+| Heat flow predicate witness | `IsHeatFlowDensity_of_sub_predicates`, `IsHeatTimeDerivHyp`, `IsHeatFlowConvolutionHyp` | `InformationTheory/Shannon/FisherInfoV2HeatFlowBody.lean:170-206` | OK 既存 | 必要なら再利用 |
 
 **鍵となる気づき**: `gaussianConvolution X Z t = X + √t · Z` (1-source) を 2-source 形 `√(1-s) · X + √s · Z` に拡張するのは ~30-50 行で済む。要再利用候補 (5 lemma):
 - `gaussianConvolution` def (15 行) → `heatFlowPath2 X Z s := √(1-s) · X + √s · Z` (15 行)
@@ -142,7 +142,7 @@ gap_s := entropyPower(X_s+Y_s) - entropyPower(X_s) - entropyPower(Y_s)
 | パラメータ微分 (積分下) | `theorem hasDerivAt_integral_of_dominated_loc_of_lip {F' : α → E} (hs : s ∈ 𝓝 x₀) (hF_meas : ∀ᶠ x in 𝓝 x₀, AEStronglyMeasurable (F x) μ) (hF_int : Integrable (F x₀) μ) (hF'_meas : AEStronglyMeasurable F' μ) (h_lipsch : ∀ᵐ a ∂μ, LipschitzOnWith (Real.nnabs <| bound a) (F · a) s) (bound_integrable : Integrable (bound : α → ℝ) μ) (h_diff : ∀ᵐ a ∂μ, HasDerivAt (F · a) (F' a) x₀) : Integrable F' μ ∧ HasDerivAt (fun x ↦ ∫ a, F x a ∂μ) (∫ a, F' a ∂μ) x₀` | `Mathlib/Analysis/Calculus/ParametricIntegral.lean:263-269` | OK 既存 | **重要**: heat-flow path 上の `differentialEntropy (P.map X_s)` を `s` で微分するための主道具 |
 | パラメータ微分 (bound 形) | `theorem hasDerivAt_integral_of_dominated_loc_of_deriv_le (hs : s ∈ 𝓝 x₀) (hF_meas : ∀ᶠ x in 𝓝 x₀, AEStronglyMeasurable (F x) μ) (hF_int : Integrable (F x₀) μ) {F' : 𝕜 → α → E} (hF'_meas : AEStronglyMeasurable (F' x₀) μ) (h_bound : ∀ᵐ a ∂μ, ∀ x ∈ s, ‖F' x a‖ ≤ bound a) (bound_integrable : Integrable bound μ) (h_diff : ∀ᵐ a ∂μ, ∀ x ∈ s, HasDerivAt (F · a) (F' x a) x) : Integrable (F' x₀) μ ∧ HasDerivAt (fun n ↦ ∫ a, F n a ∂μ) (∫ a, F' x₀ a ∂μ) x₀` | `Mathlib/Analysis/Calculus/ParametricIntegral.lean:289-294` | OK 既存 | 上記の deriv 上界形 |
 | `Real.exp` の deriv | `Real.hasDerivAt_exp` 系 (Mathlib `Real.exp_deriv` 系) | `Mathlib/Analysis/SpecialFunctions/Exp.lean` 周辺 | OK 既存 | `entropyPower = Real.exp (2 · h)` の chain rule |
-| de Bruijn identity (project) | `theorem deBruijn_identity_v2_of_heat_flow` (`Common2026.Shannon.FisherInfoV2`) | `Common2026/Shannon/FisherInfoV2DeBruijnBody.lean:244-254`, `FisherInfoV2DeBruijn.lean:247+` | OK 既存 (project, sister 完了済 part) | `d/ds h(X_s) = (1/2) J(X_s)` の本 project における discharge form |
+| de Bruijn identity (project) | `theorem deBruijn_identity_v2_of_heat_flow` (`InformationTheory.Shannon.FisherInfoV2`) | `InformationTheory/Shannon/FisherInfoV2DeBruijnBody.lean:244-254`, `FisherInfoV2DeBruijn.lean:247+` | OK 既存 (project, sister 完了済 part) | `d/ds h(X_s) = (1/2) J(X_s)` の本 project における discharge form |
 
 **注意 (HasDerivAt.sqrt の `hx : f x ≠ 0` 前提)**:
 - `heatFlowPath2 X Z s := √(1-s) · X + √s · Z` の `s` 微分は `s ∈ (0, 1)` でないと両 sqrt が differentiable でない。
@@ -164,19 +164,19 @@ gap_s := entropyPower(X_s+Y_s) - entropyPower(X_s) - entropyPower(Y_s)
 | `entropyPower` (Mathlib) | — | — | **Mathlib 不在** |
 | `fisherInfo` (Mathlib) | — | — | **Mathlib 不在** |
 
-### D.2 Common2026 プロジェクト側 (既存)
+### D.2 InformationTheory プロジェクト側 (既存)
 
 | 概念 | プロジェクト API | file:line | 状態 |
 |---|---|---|---|
-| `entropyPower` | `noncomputable def entropyPower (μ : Measure ℝ) : ℝ := Real.exp (2 * Common2026.Shannon.differentialEntropy μ)` | `Common2026/Shannon/EntropyPowerInequality.lean:93-94` | OK 既存 |
-| `entropyPower_pos` | `theorem entropyPower_pos (μ : Measure ℝ) : 0 < entropyPower μ` | `Common2026/Shannon/EntropyPowerInequality.lean:97-98` | OK 既存 |
-| `entropyPower_gaussianReal` | `theorem entropyPower_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) : entropyPower (gaussianReal m v) = 2 * Real.pi * Real.exp 1 * v` | `Common2026/Shannon/EntropyPowerInequality.lean:114-127` | OK 既存 |
-| `differentialEntropy` | `noncomputable def differentialEntropy (μ : Measure ℝ) : ℝ := ∫ x, Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume` | `Common2026/Shannon/DifferentialEntropy.lean:42` | OK 既存 |
-| `differentialEntropy_gaussianReal` | `theorem differentialEntropy_gaussianReal` (Phase C 主定理: `(1/2) log (2πe v)`) | `Common2026/Shannon/DifferentialEntropy.lean` (line 不詳、`rg` 検索可能) | OK 既存 |
-| `IsStamInequalityHyp` | `def IsStamInequalityHyp` (Stam の `1/J(X+Y) ≥ 1/J(X) + 1/J(Y)`) | `Common2026/Shannon/EPIStamDischarge.lean` | OK 既存 (sister sub-plan で扱う) |
-| `fisherInfoOfDensity` (V2) | `Common2026.Shannon.FisherInfoV2.fisherInfoOfDensity` | `Common2026/Shannon/FisherInfoV2.lean` | OK 既存 (V2、a.e.-class-invariant) |
-| de Bruijn identity V2 | `theorem deBruijn_identity_v2` 系 | `Common2026/Shannon/FisherInfoV2DeBruijn.lean` | OK 既存 (sister, Gaussian discharge 済) |
-| `entropy_power_inequality_gaussian_saturation` | (Phase D 主定理) | `Common2026/Shannon/EntropyPowerInequality.lean:226` | OK 既存 | s=1 端点 (両者 Gaussian) で gap = 0 |
+| `entropyPower` | `noncomputable def entropyPower (μ : Measure ℝ) : ℝ := Real.exp (2 * InformationTheory.Shannon.differentialEntropy μ)` | `InformationTheory/Shannon/EntropyPowerInequality.lean:93-94` | OK 既存 |
+| `entropyPower_pos` | `theorem entropyPower_pos (μ : Measure ℝ) : 0 < entropyPower μ` | `InformationTheory/Shannon/EntropyPowerInequality.lean:97-98` | OK 既存 |
+| `entropyPower_gaussianReal` | `theorem entropyPower_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) : entropyPower (gaussianReal m v) = 2 * Real.pi * Real.exp 1 * v` | `InformationTheory/Shannon/EntropyPowerInequality.lean:114-127` | OK 既存 |
+| `differentialEntropy` | `noncomputable def differentialEntropy (μ : Measure ℝ) : ℝ := ∫ x, Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume` | `InformationTheory/Shannon/DifferentialEntropy.lean:42` | OK 既存 |
+| `differentialEntropy_gaussianReal` | `theorem differentialEntropy_gaussianReal` (Phase C 主定理: `(1/2) log (2πe v)`) | `InformationTheory/Shannon/DifferentialEntropy.lean` (line 不詳、`rg` 検索可能) | OK 既存 |
+| `IsStamInequalityHyp` | `def IsStamInequalityHyp` (Stam の `1/J(X+Y) ≥ 1/J(X) + 1/J(Y)`) | `InformationTheory/Shannon/EPIStamDischarge.lean` | OK 既存 (sister sub-plan で扱う) |
+| `fisherInfoOfDensity` (V2) | `InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity` | `InformationTheory/Shannon/FisherInfoV2.lean` | OK 既存 (V2、a.e.-class-invariant) |
+| de Bruijn identity V2 | `theorem deBruijn_identity_v2` 系 | `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean` | OK 既存 (sister, Gaussian discharge 済) |
+| `entropy_power_inequality_gaussian_saturation` | (Phase D 主定理) | `InformationTheory/Shannon/EntropyPowerInequality.lean:226` | OK 既存 | s=1 端点 (両者 Gaussian) で gap = 0 |
 
 ---
 
@@ -239,7 +239,7 @@ gap_s := entropyPower(X_s+Y_s) - entropyPower(X_s) - entropyPower(Y_s)
 6. **gap_s の連続性** (Phase 0.C-2 で `MonotoneOn` の `ContinuousOn` 前提として必要) (~40 行)
 7. **gap_s の微分可能性 on `Ioo 0 1`** (Phase 0.C-2 の前提) (~50 行、`hasDerivAt_integral_of_dominated_loc_of_lip` 経由)
 
-**小計**: ~160 行 (新規 file `Common2026/Shannon/HeatFlowPath.lean` 想定、または既存 `FisherInfoV2DeBruijn.lean` 末尾追加)
+**小計**: ~160 行 (新規 file `InformationTheory/Shannon/HeatFlowPath.lean` 想定、または既存 `FisherInfoV2DeBruijn.lean` 末尾追加)
 
 ### F.2 推奨 (Phase 0.C-2 で再利用、ただし staged 可)
 
@@ -263,7 +263,7 @@ gap_s := entropyPower(X_s+Y_s) - entropyPower(X_s) - entropyPower(Y_s)
 **判定: 自作必要、ただし既存資産で軽量** (規模 ~160 行新規)
 
 - Mathlib に OU semigroup / heat semigroup 一般論 = **完全不在** (loogle / rg ともに 0 hit)
-- ただし Common2026 既存 `gaussianConvolution X Z t = X + √t · Z` (1-source 形) を 2-source `√(1-s) · X + √s · Z` に拡張するだけで Phase 0.C-1 の主要 def が組める
+- ただし InformationTheory 既存 `gaussianConvolution X Z t = X + √t · Z` (1-source 形) を 2-source `√(1-s) · X + √s · Z` に拡張するだけで Phase 0.C-1 の主要 def が組める
 - 既存 `heatKernel`, `IsHeatFlowDensity`, `heatSemigroup_compose_law` も再利用可
 - **規模見積もり: 160 行 (F.1) + 80-100 行 (F.2、staged 可) = 最大 260 行**、計画書 L-Concl-0Sc-α の 800 行閾値より十分小さい
 
@@ -298,7 +298,7 @@ gap_s := entropyPower(X_s+Y_s) - entropyPower(X_s) - entropyPower(Y_s)
 
 ## I. 着手 skeleton (Phase 0.C-1)
 
-`Common2026/Shannon/HeatFlowPath.lean` (新規 file 推奨、既存 `FisherInfoV2DeBruijn.lean` は de Bruijn 系で大規模 (412 行) のため別 file が clean):
+`InformationTheory/Shannon/HeatFlowPath.lean` (新規 file 推奨、既存 `FisherInfoV2DeBruijn.lean` は de Bruijn 系で大規模 (412 行) のため別 file が clean):
 
 ```lean
 import Mathlib.Probability.Distributions.Gaussian.Real
@@ -306,7 +306,7 @@ import Mathlib.Probability.Independence.Basic
 import Mathlib.MeasureTheory.MeasurableSpace.Basic
 import Mathlib.Analysis.SpecialFunctions.Sqrt
 import Mathlib.Analysis.SpecialFunctions.Pow.NNReal
-import Common2026.Shannon.FisherInfoV2DeBruijn  -- gaussianConvolution に並べる
+import InformationTheory.Shannon.FisherInfoV2DeBruijn  -- gaussianConvolution に並べる
 
 /-!
 # Heat-flow path (2-source) for EPI-Stam Csiszár scaling
@@ -328,7 +328,7 @@ The conclusion-form target is `MonotoneOn _ (Set.Icc 0 1)`, chosen so that
 `HasDerivAt.sqrt`'s `f x ≠ 0` premise on both `√(1-s)` and `√s`.
 -/
 
-namespace Common2026.Shannon
+namespace InformationTheory.Shannon
 
 open MeasureTheory ProbabilityTheory Real
 open scoped ENNReal NNReal
@@ -381,7 +381,7 @@ theorem heatFlowPath2_law_of_gaussian {Ω : Type*} {_mΩ : MeasurableSpace Ω}
       = gaussianReal (Real.sqrt (1 - s) * m) (.mk (1 - s) (by linarith) * v + ⟨s, hs0⟩) := by
   sorry  -- chain: gaussianReal_map_const_mul (×2) + gaussianReal_add_gaussianReal_of_indepFun
 
-end Common2026.Shannon
+end InformationTheory.Shannon
 ```
 
 最初の `sorry` (`heatFlowPath2_law`) を Phase 0.C-1 M1 で割る。Phase 0.C-2 で `IsStamToEPIScalingHyp` の signature を `MonotoneOn ... (Set.Icc 0 1)` 形に refactor し、`heatFlowPath2` を carry する形に書き直す。
@@ -393,7 +393,7 @@ end Common2026.Shannon
 | 項目 | 判定 |
 |---|---|
 | heat-flow path 用 Mathlib API 既存率 | **~50%** (Gaussian distribution / `Measure.conv` / `Monotone(On)` / `HasDerivAt` 系は完備、OU/heat semigroup 一般論は皆無) |
-| Common2026 既存資産による補完率 | **~80%** (`gaussianConvolution`, `heatKernel`, `IsHeatFlowDensity`, `heatSemigroup_compose_law` 全て再利用可) |
+| InformationTheory 既存資産による補完率 | **~80%** (`gaussianConvolution`, `heatKernel`, `IsHeatFlowDensity`, `heatSemigroup_compose_law` 全て再利用可) |
 | 自作必要 | F.1 = 6 件 ~160 行 (新規 file `HeatFlowPath.lean`)、F.2 = 1 件 80-100 行 (`gap_s` 微分式、staged 可) |
 | `MonotoneOn` 候補比較 | **候補A推奨** (`MonotoneOn (fun s => gap_s) (Set.Icc 0 1)`、Mathlib-shape-driven 完璧整合) |
 | 撤退ライン L-Concl-0Sc-α (>800 行) | **発動せず** (最大 260 行) |
@@ -405,10 +405,10 @@ end Common2026.Shannon
 
 ## K. 主要 file pointer (Phase 0.C-1 着手時の Read 推奨順)
 
-1. `Common2026/Shannon/EPIStamToBridge.lean:147-154` — refactor 対象 (現 `IsStamToEPIScalingHyp` 本体)
-2. `Common2026/Shannon/FisherInfoV2DeBruijn.lean:144-220` — 既存 `gaussianConvolution` (本 Phase の出発点)
-3. `Common2026/Shannon/FisherInfoV2DeBruijnBody.lean:85-170` — 既存 `heatKernel`, `IsHeatFlowDensity`
-4. `Common2026/Shannon/FisherInfoV2HeatFlowBody.lean:80-230` — 既存 spatial deriv, semigroup compose
+1. `InformationTheory/Shannon/EPIStamToBridge.lean:147-154` — refactor 対象 (現 `IsStamToEPIScalingHyp` 本体)
+2. `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:144-220` — 既存 `gaussianConvolution` (本 Phase の出発点)
+3. `InformationTheory/Shannon/FisherInfoV2DeBruijnBody.lean:85-170` — 既存 `heatKernel`, `IsHeatFlowDensity`
+4. `InformationTheory/Shannon/FisherInfoV2HeatFlowBody.lean:80-230` — 既存 spatial deriv, semigroup compose
 5. `Mathlib/Probability/Distributions/Gaussian/Real.lean:200-628` — Gaussian distribution + convolution APIs
 6. `Mathlib/Analysis/Calculus/Deriv/MeanValue.lean:374-437` — `monotoneOn_of_deriv_nonneg` 系
 7. `Mathlib/Analysis/SpecialFunctions/Sqrt.lean:75-100` — `HasDerivAt.sqrt`

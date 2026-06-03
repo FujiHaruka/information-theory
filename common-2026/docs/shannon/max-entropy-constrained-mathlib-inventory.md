@@ -1,4 +1,4 @@
-# T3-A Constrained Maximum Entropy — Mathlib + Common2026 在庫調査
+# T3-A Constrained Maximum Entropy — Mathlib + InformationTheory 在庫調査
 
 > 親計画: textbook roadmap T3-A (`docs/textbook-roadmap.md:206-213`)。
 >
@@ -90,7 +90,7 @@ linarith   -- ⟹ entropy μ X ≤ ψ(λ) - ∑ λ i * c i (+ log|α| 項相殺)
 
 **重要**: 多重制約 `f : Fin k → α → ℝ` 版の log-partition `ψ(λ) := log (∫ exp (∑ i, λ i * f i x) ∂ν₀)` は Mathlib に**専用名なし**。`Real.log (∫ x, Real.exp (∑ i, λ i * f i x) ∂ν₀)` を素で書くか、ローカル `def psi (λ : Fin k → ℝ) : ℝ := …` で導入する。
 
-### C. KL divergence — Csiszar 既存 (`Common2026/Shannon/CsiszarProjection.lean`)
+### C. KL divergence — Csiszar 既存 (`InformationTheory/Shannon/CsiszarProjection.lean`)
 
 | API | file:line | signature (verbatim) | Phase 扱い |
 |---|---|---|---|
@@ -118,20 +118,20 @@ linarith   -- ⟹ entropy μ X ≤ ψ(λ) - ∑ λ i * c i (+ log|α| 項相殺)
 
 **注 (`llr` ⇄ `Real.log rnDeriv` の翻訳)**: `llr μ ν x := Real.log (μ.rnDeriv ν x).toReal` (定義)。 `Tilted.lean:366` の `log_rnDeriv_tilted_left_self` で `llr P (μ.tilted f)` の閉形が直接出る。
 
-### E. 既存 Common2026 — 完全に再利用可能なテンプレ
+### E. 既存 InformationTheory — 完全に再利用可能なテンプレ
 
 | API | file:line | signature (verbatim) | Phase 扱い |
 |---|---|---|---|
-| **`entropy`** | `Common2026/Shannon/Bridge.lean:43` | `noncomputable def entropy (μ : Measure Ω) (Xs : Ω → X) : ℝ := ∑ x : X, Real.negMulLog ((μ.map Xs).real {x})` | 主定理 LHS |
-| `entropy_nonneg` | `Common2026/Shannon/Bridge.lean:47` | `(μ : Measure Ω) [IsProbabilityMeasure μ] (Xs : Ω → X) (hXs : Measurable Xs) : 0 ≤ entropy μ Xs` | 補助 |
-| **`klDiv_uniformOn_univ_toReal_eq`** | `Common2026/Shannon/MaxEntropy.lean:123` | `(μ : Measure Ω) [IsProbabilityMeasure μ] (X : Ω → α) (hX : Measurable X) : (klDiv (μ.map X) (uniformOn (Set.univ : Set α))).toReal = Real.log (Fintype.card α) - entropy μ X` | **T3-A 制約なし (uniform) 退化形**。`f := 0` で T3-A から出るはず |
-| **`entropy_le_log_card`** | `Common2026/Shannon/MaxEntropy.lean:229` | `(μ : Measure Ω) [IsProbabilityMeasure μ] (X : Ω → α) (hX : Measurable X) : entropy μ X ≤ Real.log (Fintype.card α)` | uniform 制約退化形 |
-| **`entropy_eq_log_card_iff`** | `Common2026/Shannon/MaxEntropy.lean:241` | `(μ : Measure Ω) [IsProbabilityMeasure μ] (X : Ω → α) (hX : Measurable X) : entropy μ X = Real.log (Fintype.card α) ↔ μ.map X = uniformOn (Set.univ : Set α)` | 退化形 uniqueness |
-| **`differentialEntropy_le_gaussian_of_variance_le`** | `Common2026/Shannon/DifferentialEntropy.lean:510` | `{μ : Measure ℝ} [IsProbabilityMeasure μ] (hμ : μ ≪ volume) (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) (h_mean : ∫ x, x ∂μ = m) (h_var : ∫ x, (x - m)^2 ∂μ ≤ (v : ℝ)) (h_var_int : Integrable (fun x => (x - m)^2) μ) (h_ent_int : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) : differentialEntropy μ ≤ (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v)` | **T3-A の連続版・variance 制約特例**。証明テンプレ写経で finite-alphabet 版が書ける (~150 行) |
-| **`differentialEntropy_eq_gaussian_iff`** | `Common2026/Shannon/DifferentialEntropy.lean:659` | `{μ : Measure ℝ} [IsProbabilityMeasure μ] (hμ : μ ≪ volume) (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) (h_mean : ∫ x, x ∂μ = m) (h_var : ∫ x, (x - m)^2 ∂μ = (v : ℝ)) (h_var_int : Integrable (fun x => (x - m)^2) μ) (h_ent_int : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) : differentialEntropy μ = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v) ↔ μ = gaussianReal m v` | uniqueness テンプレ (klDiv_eq_zero_iff 経由) |
-| **`klDivSumForm`** | `Common2026/Shannon/Sanov.lean:73` | `noncomputable def klDivSumForm (P Q : Measure α) : ℝ := ∑ a : α, P.real {a} * (Real.log (P.real {a}) - Real.log (Q.real {a}))` | Measure 形 sum 形 KL (T3-A pmf ↔ measure 翻訳橋) |
-| `klDivSumForm_eq_toReal_klDiv` | `Common2026/Shannon/Sanov.lean:252` | (前提付き; `P ≪ Q`, full support) | sum 形と `(klDiv P Q).toReal` の同値性 (private 確認要) |
-| **`klDivPmf_self_eq_zero`** | `Common2026/Shannon/Chernoff.lean:252` | `(P : α → ℝ) (hP_pos : ∀ a, 0 < P a) : klDivPmf P P = 0` | `tilted` 自身の KL = 0 用 |
+| **`entropy`** | `InformationTheory/Shannon/Bridge.lean:43` | `noncomputable def entropy (μ : Measure Ω) (Xs : Ω → X) : ℝ := ∑ x : X, Real.negMulLog ((μ.map Xs).real {x})` | 主定理 LHS |
+| `entropy_nonneg` | `InformationTheory/Shannon/Bridge.lean:47` | `(μ : Measure Ω) [IsProbabilityMeasure μ] (Xs : Ω → X) (hXs : Measurable Xs) : 0 ≤ entropy μ Xs` | 補助 |
+| **`klDiv_uniformOn_univ_toReal_eq`** | `InformationTheory/Shannon/MaxEntropy.lean:123` | `(μ : Measure Ω) [IsProbabilityMeasure μ] (X : Ω → α) (hX : Measurable X) : (klDiv (μ.map X) (uniformOn (Set.univ : Set α))).toReal = Real.log (Fintype.card α) - entropy μ X` | **T3-A 制約なし (uniform) 退化形**。`f := 0` で T3-A から出るはず |
+| **`entropy_le_log_card`** | `InformationTheory/Shannon/MaxEntropy.lean:229` | `(μ : Measure Ω) [IsProbabilityMeasure μ] (X : Ω → α) (hX : Measurable X) : entropy μ X ≤ Real.log (Fintype.card α)` | uniform 制約退化形 |
+| **`entropy_eq_log_card_iff`** | `InformationTheory/Shannon/MaxEntropy.lean:241` | `(μ : Measure Ω) [IsProbabilityMeasure μ] (X : Ω → α) (hX : Measurable X) : entropy μ X = Real.log (Fintype.card α) ↔ μ.map X = uniformOn (Set.univ : Set α)` | 退化形 uniqueness |
+| **`differentialEntropy_le_gaussian_of_variance_le`** | `InformationTheory/Shannon/DifferentialEntropy.lean:510` | `{μ : Measure ℝ} [IsProbabilityMeasure μ] (hμ : μ ≪ volume) (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) (h_mean : ∫ x, x ∂μ = m) (h_var : ∫ x, (x - m)^2 ∂μ ≤ (v : ℝ)) (h_var_int : Integrable (fun x => (x - m)^2) μ) (h_ent_int : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) : differentialEntropy μ ≤ (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v)` | **T3-A の連続版・variance 制約特例**。証明テンプレ写経で finite-alphabet 版が書ける (~150 行) |
+| **`differentialEntropy_eq_gaussian_iff`** | `InformationTheory/Shannon/DifferentialEntropy.lean:659` | `{μ : Measure ℝ} [IsProbabilityMeasure μ] (hμ : μ ≪ volume) (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) (h_mean : ∫ x, x ∂μ = m) (h_var : ∫ x, (x - m)^2 ∂μ = (v : ℝ)) (h_var_int : Integrable (fun x => (x - m)^2) μ) (h_ent_int : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) : differentialEntropy μ = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v) ↔ μ = gaussianReal m v` | uniqueness テンプレ (klDiv_eq_zero_iff 経由) |
+| **`klDivSumForm`** | `InformationTheory/Shannon/Sanov.lean:73` | `noncomputable def klDivSumForm (P Q : Measure α) : ℝ := ∑ a : α, P.real {a} * (Real.log (P.real {a}) - Real.log (Q.real {a}))` | Measure 形 sum 形 KL (T3-A pmf ↔ measure 翻訳橋) |
+| `klDivSumForm_eq_toReal_klDiv` | `InformationTheory/Shannon/Sanov.lean:252` | (前提付き; `P ≪ Q`, full support) | sum 形と `(klDiv P Q).toReal` の同値性 (private 確認要) |
+| **`klDivPmf_self_eq_zero`** | `InformationTheory/Shannon/Chernoff.lean:252` | `(P : α → ℝ) (hP_pos : ∀ a, 0 < P a) : klDivPmf P P = 0` | `tilted` 自身の KL = 0 用 |
 
 ### F. Constraint set / stdSimplex (`Mathlib/Analysis/Convex/StdSimplex.lean`)
 
@@ -142,7 +142,7 @@ linarith   -- ⟹ entropy μ X ≤ ψ(λ) - ∑ λ i * c i (+ log|α| 項相殺)
 | **`isCompact_stdSimplex`** | `StdSimplex.lean:187` | `[CompactIccSpace 𝕜] [IsOrderedAddMonoid 𝕜] : IsCompact (stdSimplex 𝕜 ι)` | 制約集合 K のコンパクト性 (closed subset of compact) |
 | `isClosed_stdSimplex` | `StdSimplex.lean:178` (defs L178+) | (closed under product topology) | K の closedness |
 | `stdSimplex_subset_Icc` | `StdSimplex.lean:74` | `[IsOrderedAddMonoid 𝕜] : stdSimplex 𝕜 ι ⊆ Icc 0 1` | atom mass bounds |
-| **`isCompact_of_subset_stdSimplex`** | `Common2026/Shannon/CsiszarProjection.lean:165` | `{K : Set (α → ℝ)} (hK_closed : IsClosed K) (hK_sub : K ⊆ stdSimplex ℝ α) : IsCompact K` | 制約集合のコンパクト性 (一発) |
+| **`isCompact_of_subset_stdSimplex`** | `InformationTheory/Shannon/CsiszarProjection.lean:165` | `{K : Set (α → ℝ)} (hK_closed : IsClosed K) (hK_sub : K ⊆ stdSimplex ℝ α) : IsCompact K` | 制約集合のコンパクト性 (一発) |
 
 ### G. Extreme value theorem (`Mathlib/Topology/Order/Compact.lean`)
 
@@ -303,7 +303,7 @@ T3-A 本体には不要だが、双対 `ψ*` (Legendre transform) を入れて F
 |---|---|
 | Exponential family ansatz | ✅ 100% (`Measure.tilted`) |
 | Log-partition ψ(λ) | 🟡 50% (`mgf`/`cgf` は scalar のみ、多変数版は self-derive) |
-| Csiszar projection 経路 (B) | ✅ 100% (Common2026) |
+| Csiszar projection 経路 (B) | ✅ 100% (InformationTheory) |
 | KL ≥ 0 (Gibbs) | ✅ 100% (`klDiv` ENNReal nonneg) |
 | KL identity (`tilted` 展開) | ❌ 0% (自作 ~40 行) |
 | Bochner / Fintype 積分翻訳 | ✅ 100% |
@@ -331,11 +331,11 @@ T3-A 本体には不要だが、双対 `ψ*` (Legendre transform) を入れて F
 
 ---
 
-## 着手 skeleton (`Common2026/Shannon/MaxEntropyConstrained.lean`)
+## 着手 skeleton (`InformationTheory/Shannon/MaxEntropyConstrained.lean`)
 
 ```lean
-import Common2026.Shannon.MaxEntropy
-import Common2026.Shannon.CsiszarProjection
+import InformationTheory.Shannon.MaxEntropy
+import InformationTheory.Shannon.CsiszarProjection
 import Mathlib.MeasureTheory.Measure.Tilted
 import Mathlib.Probability.Moments.Basic
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
@@ -438,9 +438,9 @@ theorem maxEntropy_constrained_eq_iff_tilted
 end InformationTheory.Shannon.MaxEntropyConstrained
 ```
 
-`Common2026.lean` への追加行:
+`InformationTheory.lean` への追加行:
 ```lean
-import Common2026.Shannon.MaxEntropyConstrained
+import InformationTheory.Shannon.MaxEntropyConstrained
 ```
 
 ---

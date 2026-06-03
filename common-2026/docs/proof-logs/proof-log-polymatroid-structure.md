@@ -10,9 +10,9 @@
 
 成果物:
 
-- `Common2026/Polymatroid/Basic.lean` (新規、47 行) — `structure Polymatroid` (rank : Finset ι → ℝ + 3 axiom) + `attribute [ext]`
-- `Common2026/Shannon/Polymatroid.lean` (+19 行) — `noncomputable def entropyPolymatroid : Polymatroid (Fin n)` を append、既存 4 主定理 (`jointEntropySubset_empty` / `_mono` / `_submodular`) で field 充足
-- `Common2026.lean` (+1 行) — `import Common2026.Polymatroid.Basic` 追記
+- `InformationTheory/Polymatroid/Basic.lean` (新規、47 行) — `structure Polymatroid` (rank : Finset ι → ℝ + 3 axiom) + `attribute [ext]`
+- `InformationTheory/Shannon/Polymatroid.lean` (+19 行) — `noncomputable def entropyPolymatroid : Polymatroid (Fin n)` を append、既存 4 主定理 (`jointEntropySubset_empty` / `_mono` / `_submodular`) で field 充足
+- `InformationTheory.lean` (+1 行) — `import InformationTheory.Polymatroid.Basic` 追記
 - 2 ファイル `lake env lean` silent、新規証明ゼロ、合計 67 行 (target 60-130 内)
 
 ## 1. 問題のキャラクター
@@ -25,7 +25,7 @@
 
 数学なし。設計判断のみ:
 
-- **(a) ディレクトリ位置**: `Common2026/Polymatroid/Basic.lean` (新規)。Polymatroid は combinatorial structure であり Shannon 専用ではない。`Shannon/` 配下に置くと Sanov 系 / matroid 系での再利用時に再 import が必要になる。
+- **(a) ディレクトリ位置**: `InformationTheory/Polymatroid/Basic.lean` (新規)。Polymatroid は combinatorial structure であり Shannon 専用ではない。`Shannon/` 配下に置くと Sanov 系 / matroid 系での再利用時に再 import が必要になる。
 - **(b) `class` vs `structure`**: `structure`。同 `ι` 上に複数 polymatroid (entropy / matroid rank) が共存可能、`synthInstance` の曖昧性を回避。Mathlib `Matroid` も同流儀。
 - **(c) `instance` vs `def`**: `noncomputable def entropyPolymatroid`。同上理由 + entropy は引数 (`μ`, `Xs`, `hXs`) を取るため term-level の `def` が自然。
 - **(d) 既存 4 主定理**: 無変更。`entropyPolymatroid` は wrapper、4 主定理は Polymatroid field の充足元として再利用。projection alias (`Polymatroid.rank_le_of_subset` 等) は demand-driven (現状 caller なし → Phase C 不要)。
@@ -78,7 +78,7 @@
 - **数学的アイデア**: 新規証明ゼロ。
 - **既存 4 主定理の再利用**: Track 1 (HanD Pi refactor) で plumbing が clean になっていたため、4 field の充足はすべて 1〜2 行の `fun ... => existing_theorem μ Xs hXs ...` で済んだ。Track 1 の前段整理が直接効いた。
 - **`structure` vs `class` 判断**: Mathlib `Matroid` を mirror した plan recommendation でほぼ即決。
-- **olean refresh**: `lake build Common2026.Polymatroid.Basic` 1 回で downstream (Shannon.Polymatroid) も clean。CLAUDE.md の upstream-edit policy 通り。
+- **olean refresh**: `lake build InformationTheory.Polymatroid.Basic` 1 回で downstream (Shannon.Polymatroid) も clean。CLAUDE.md の upstream-edit policy 通り。
 - **コンテキスト長**: orchestrator + subagent 委任で圧迫感なし。
 
 ## 6. ツール開発への示唆
@@ -96,4 +96,4 @@
 - 本 Track は Track 1 (HanD Pi refactor) と同 session 内のサブエージェント起動として実行。proof-log は Track 単位で分離、metrics は session 単位なので Track 2 単独抽出は不可 (定量は Track 1 metrics 参照)。
 - `attribute [ext] Polymatroid` は plan 通り追加。将来 `Polymatroid.ext` が「rank が等しい 2 polymatroid は等しい」結論として活用される想定。現状 caller なし。
 - 採らなかった代替案: `class IsPolymatroidRank (rank : Finset ι → ℝ)` style。`@[simps]` 経由の field accessor 自動生成 + 推論で entropy 自動 lift の利点はあるが、複数 polymatroid 共存 (entropy / matroid rank / Sanov 系) と `synthInstance` 曖昧性の理由で不採用。
-- 上流 PR 候補: 集合関数版 `Polymatroid` structure 自体は Mathlib に追加する価値あり。本 project の `Common2026/Polymatroid/Basic.lean` を Mathlib `Mathlib.Combinatorics.Polymatroid` として PR 化できる。
+- 上流 PR 候補: 集合関数版 `Polymatroid` structure 自体は Mathlib に追加する価値あり。本 project の `InformationTheory/Polymatroid/Basic.lean` を Mathlib `Mathlib.Combinatorics.Polymatroid` として PR 化できる。

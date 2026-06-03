@@ -1,7 +1,7 @@
 # 最大エントロピー ムーンショット計画 🌙 (B-6)
 
 > 実態整合 (2026-05-20): **DONE-UNCOND — 進捗ブロックの全 [x] が実態と一致 (この plan は正確)**。
-> `Common2026/Shannon/MaxEntropy.lean` (0 sorry) に Phase A `klDiv_uniformOn_univ_toReal_eq` (:123)、
+> `InformationTheory/Shannon/MaxEntropy.lean` (0 sorry) に Phase A `klDiv_uniformOn_univ_toReal_eq` (:123)、
 > Phase B `entropy_le_log_card` (:229)、Phase C `entropy_eq_log_card_iff` (:241) を honest に publish。
 > いずれも vacuous/pass-through なし。
 
@@ -9,7 +9,7 @@
 
 ## 進捗
 
-- [x] Phase 0 — Mathlib + 既存 Common2026 API インベントリ ✅
+- [x] Phase 0 — Mathlib + 既存 InformationTheory API インベントリ ✅
 - [x] Phase A — KL identity `klDiv P (uniformOn univ) = log |α| - entropy μ X` ✅
 - [x] Phase B — 主定理 `entropy μ X ≤ log |α|` (Gibbs 帰結) ✅
 - [x] Phase C — 等号条件 `entropy μ X = log |α| ↔ μ.map X = uniformOn univ` ✅
@@ -50,12 +50,12 @@
 - `MeasureTheory.integral_fintype`, `MeasureTheory.integral_add`
 - `Real.log_mul`, `Real.negMulLog`
 
-### Common2026 既存
+### InformationTheory 既存
 
-- `Common2026/Shannon/Bridge.lean:43` — `noncomputable def entropy (μ : Measure Ω) (Xs : Ω → X) : ℝ := ∑ x : X, Real.negMulLog ((μ.map Xs).real {x})`
-- `Common2026/Shannon/Bridge.lean:47` — `entropy_nonneg`
-- `Common2026/Shannon/Bridge.lean:216` — `private klDiv_discrete_toReal_eq_sum` (参考、本シードでは inline で別ルート)
-- `Common2026/Shannon/LoomisWhitney.lean` — `entropy_uniformOn_eq_log_card` (uniformOn-specific 形)、本シードの汎用版で代替可能だが既存依存があるので併存
+- `InformationTheory/Shannon/Bridge.lean:43` — `noncomputable def entropy (μ : Measure Ω) (Xs : Ω → X) : ℝ := ∑ x : X, Real.negMulLog ((μ.map Xs).real {x})`
+- `InformationTheory/Shannon/Bridge.lean:47` — `entropy_nonneg`
+- `InformationTheory/Shannon/Bridge.lean:216` — `private klDiv_discrete_toReal_eq_sum` (参考、本シードでは inline で別ルート)
+- `InformationTheory/Shannon/LoomisWhitney.lean` — `entropy_uniformOn_eq_log_card` (uniformOn-specific 形)、本シードの汎用版で代替可能だが既存依存があるので併存
 
 ## Phase A - KL identity 📋
 

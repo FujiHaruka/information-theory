@@ -1,26 +1,26 @@
 # Loomis–Whitney ムーンショット計画 🌙
 
-> **Status (2026-05-10): 起草。** Han Phase D 完了 (`Common2026/Shannon/HanD*.lean` の 8
-> 主定理が 0 sorry) と `Common2026/Shannon/Pi.lean` 切り出し直後の最初のムーンショット。
+> **Status (2026-05-10): 起草。** Han Phase D 完了 (`InformationTheory/Shannon/HanD*.lean` の 8
+> 主定理が 0 sorry) と `InformationTheory/Shannon/Pi.lean` 切り出し直後の最初のムーンショット。
 > Seed カード ([`docs/moonshot-seeds.md` Seed 1](../moonshot-seeds.md)) を母体に Phase 分解した。
 >
 > ゴールは textbook 形 Loomis–Whitney 不等式 $|A|^{n-1} \le \prod_{i} |\pi_i(A)|$ を、Han
 > Phase D の `shearer_inequality` を engine として情報理論的に証明すること。**情報理論外**
-> (純コンビ) の不等式が Lean で sorry なしに通る初の Common2026 demo になる。
+> (純コンビ) の不等式が Lean で sorry なしに通る初の InformationTheory demo になる。
 
 ## 進捗
 
-- [x] Phase 0 — Mathlib + 既存 Common2026 API インベントリ ✅ → [`loomis-whitney-mathlib-inventory.md`](loomis-whitney-mathlib-inventory.md)
+- [x] Phase 0 — Mathlib + 既存 InformationTheory API インベントリ ✅ → [`loomis-whitney-mathlib-inventory.md`](loomis-whitney-mathlib-inventory.md)
 - [x] Phase A — counting measure 上の entropy plumbing (`entropy_uniformOn_eq_log_card` / `entropy_le_log_image_card`) ✅
 - [x] Phase B — 射影 plumbing (`jointEntropySubset_le_log_projectionExcept_card`, `Pi.lean` の `entropy_measurableEquiv_comp` で reshape) ✅
 - [x] Phase C — Shearer 適用 + 射影像濃度との接続 (`loomis_whitney` 主定理) ✅
 
-**完了 (2026-05-10)**: `Common2026/Shannon/LoomisWhitney.lean` (444 行) が sorry ゼロで
+**完了 (2026-05-10)**: `InformationTheory/Shannon/LoomisWhitney.lean` (444 行) が sorry ゼロで
 `lake env lean` silent 通過 + `lake build` 全体緑通過。
 proof-log: [`docs/proof-logs/proof-log-loomis-whitney.md`](../proof-logs/proof-log-loomis-whitney.md)
 
 > **実態整合 (2026-05-20): DONE-UNCOND (plan は正確)** — 主定理 `loomis_whitney`
-> (`Common2026/Shannon/LoomisWhitney.lean:351`) は 0 sorry / pass-through なしで実在、Shearer engine 経由の
+> (`InformationTheory/Shannon/LoomisWhitney.lean:351`) は 0 sorry / pass-through なしで実在、Shearer engine 経由の
 > 純コンビ不等式を無条件証明。plan の Status と一致、修正不要。
 
 ## ゴール / Approach
@@ -42,7 +42,7 @@ $$
 ファイル構成 (Phase C 終了時):
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   HanDShearer.lean   ← 既存 (engine: shearer_inequality)
   Pi.lean            ← 既存 (entropy/condEntropy MeasurableEquiv 不変性)
   LoomisWhitney.lean ← 新規: entropy_uniformOn_eq_log_card,
@@ -50,19 +50,19 @@ Common2026/Shannon/
                         loomis_whitney
 ```
 
-`Common2026.lean` (library root) に `import Common2026.Shannon.LoomisWhitney` を追記。
+`InformationTheory.lean` (library root) に `import InformationTheory.Shannon.LoomisWhitney` を追記。
 
-## Phase 0 — Mathlib + 既存 Common2026 API インベントリ 📋
+## Phase 0 — Mathlib + 既存 InformationTheory API インベントリ 📋
 
 サブ計画: [`loomis-whitney-mathlib-inventory.md`](loomis-whitney-mathlib-inventory.md)
 
 - [ ] **軸 1: Loomis–Whitney 自体** — Mathlib に `loomis_whitney` 系の不等式が既存していないか確認。textbook 名 / 統計力学的命名 / `card_le_prod_card_image` 系
 - [ ] **軸 2: counting measure / uniformOn**: `MeasureTheory.Measure.count`, `ProbabilityTheory.uniformOn` の API 在庫。確率測度化条件 + `uniformOn_apply_finset` で singleton 質量 `1 / |A|` を取り出せるか
 - [ ] **軸 3: 一様分布 entropy ↔ 濃度** — `entropy μ Xs = log |A|` の橋渡し補題。`Real.log_pow` / `Real.negMulLog (1/N) = (log N) / N` の代数支援補題
-- [ ] **軸 4: 射影 (drop-one-coordinate)** — `Common2026.Shannon.Han.exceptIdxEquiv` / `MeasurableEquiv.piFinSuccAbove` / `Common2026.Shannon.Pi.entropy_measurableEquiv_comp` の流用可能性
+- [ ] **軸 4: 射影 (drop-one-coordinate)** — `InformationTheory.Shannon.Han.exceptIdxEquiv` / `MeasurableEquiv.piFinSuccAbove` / `InformationTheory.Shannon.Pi.entropy_measurableEquiv_comp` の流用可能性
 - [ ] **軸 5: `shearer_inequality`** — 本 plan 適用形 (`S i := {j ≠ i} : Finset (Fin n)`) のシグネチャと cover 条件 `∀ i, k ≤ #(univ.filter (fun j => i ∈ S j))` の評価。`k = n − 1` で通るか
 
-各軸で「Mathlib にあるか / ないか / 既存補題で代用可」を 1 行結論で記録。`Done` 条件は **「Phase A skeleton (`Common2026/Shannon/LoomisWhitney.lean` の sorry-driven 出だし) が書ける状態」**。
+各軸で「Mathlib にあるか / ないか / 既存補題で代用可」を 1 行結論で記録。`Done` 条件は **「Phase A skeleton (`InformationTheory/Shannon/LoomisWhitney.lean` の sorry-driven 出だし) が書ける状態」**。
 
 ## Phase A — counting measure 上の entropy plumbing 📋
 
@@ -109,8 +109,8 @@ end InformationTheory.Shannon.LoomisWhitney
   - `entropy μ f ≤ log #(image f univ)` の一般版 = "support の濃度の log を超えない"
   - 戦略: `(μ.map f).support ⊆ A.image f`、support 上の uniform 化 + `negMulLog` の凹性 (Jensen)、もしくは support に持って行ったあと Phase A 主補題で押し切る
   - **Mathlib に generic な "entropy ≤ log #support" は無い見込み (要 Phase 0 確認)**。あれば直接使う、無ければ `negMulLog` 凹性で 60〜80 行
-- [ ] `Common2026.lean` に `import Common2026.Shannon.LoomisWhitney` を追記
-- [ ] `lake env lean Common2026/Shannon/LoomisWhitney.lean` で silent 化
+- [ ] `InformationTheory.lean` に `import InformationTheory.Shannon.LoomisWhitney` を追記
+- [ ] `lake env lean InformationTheory/Shannon/LoomisWhitney.lean` で silent 化
 
 ### Done 条件
 
@@ -199,8 +199,8 @@ log の単調性 (Real.exp_log を経由) で
 
 ### Done 条件
 
-- `loomis_whitney` が `lake env lean Common2026/Shannon/LoomisWhitney.lean` で silent
-- `Common2026.lean` の import 確定
+- `loomis_whitney` が `lake env lean InformationTheory/Shannon/LoomisWhitney.lean` で silent
+- `InformationTheory.lean` の import 確定
 
 ### 工数感
 

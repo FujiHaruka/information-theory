@@ -2,7 +2,7 @@
 
 > 実態整合 (2026-05-20): **DONE — Phase 1-4 全達成、当初の「最低保証」を大きく超過**。進捗ブロックと
 > 判断ログが起草時のまま (Phase 0-V 全 [ ]、判断ログは起草 2 件のみ) で **重度に陳腐化**。実態:
-> - Phase 1 本丸 `pi_tilted_sum_eq_pi_tilted` ✅ `Common2026/Shannon/MeasurePiTiltedFactorization.lean:121`
+> - Phase 1 本丸 `pi_tilted_sum_eq_pi_tilted` ✅ `InformationTheory/Shannon/MeasurePiTiltedFactorization.lean:121`
 >   (0 sorry、独立 module 化も判断どおり)。fintype 版 `pi_tilted_sum_eq_pi_tilted_fintype` も
 >   `InfinitePiTiltedChangeOfMeasure.lean:106`。
 > - Phase 2-3 cylinder lift + change-of-measure ✅ `InfinitePiTiltedChangeOfMeasure.lean`:
@@ -30,7 +30,7 @@
 > - [`cramer-lc2-ext-moonshot-plan.md`](cramer-lc2-ext-moonshot-plan.md) §Approach (tilted LLN B-1/B-3 publish 済)
 > - [`chernoff-converse-moonshot-plan.md`](chernoff-converse-moonshot-plan.md) (Chernoff 側 `IsBayesErrorPerTiltLowerBound`)
 >
-> **対象 gap (frontier 最深)**: `Common2026/Shannon/CramerLC2PhaseC.lean:84` の pass-through 述語
+> **対象 gap (frontier 最深)**: `InformationTheory/Shannon/CramerLC2PhaseC.lean:84` の pass-through 述語
 >
 > ```lean
 > def IsMeasureInfinitePiTiltedEq (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam : ℝ) : Prop :=
@@ -221,7 +221,7 @@ lemma pi_tilted_sum_eq_pi_tilted {n : ℕ} {μ₀ : Measure Ω₀} [IsProbabilit
 
 ### 新ファイル / import / 検証
 
-- **新ファイル**: `Common2026/Shannon/MeasurePiTiltedFactorization.lean`
+- **新ファイル**: `InformationTheory/Shannon/MeasurePiTiltedFactorization.lean`
   (有限 `Measure.pi` tilt 因子分解 = Phase 1。汎用 Mathlib-PR 候補として Cramér 文脈から切り離した独立 module)。
   - imports (pinpoint, `import Mathlib` 禁止):
     `Mathlib.MeasureTheory.Constructions.Pi`, `Mathlib.MeasureTheory.Measure.Tilted`,
@@ -229,12 +229,12 @@ lemma pi_tilted_sum_eq_pi_tilted {n : ℕ} {μ₀ : Measure Ω₀} [IsProbabilit
     Cramér 文脈 helper (`isProbabilityMeasure_tilted_of_bounded` 等) は Phase 2-3 着手時のみ追加。
 - **Phase 2-4 配置判断**: Phase 1 を上記新 module に置いた上で、Phase 2-4 (cylinder lift + discharge) は
   - option (i): 同 module 末尾に追記 (Cramér 依存 import を追加)
-  - option (ii, 推奨): `Common2026/Shannon/CramerLC2PhaseC.lean` 末尾に `infinitePi_tilted_discharge` を追記し
+  - option (ii, 推奨): `InformationTheory/Shannon/CramerLC2PhaseC.lean` 末尾に `infinitePi_tilted_discharge` を追記し
     Phase 1 module を import (述語定義と discharge が同一ファイルで近接)。
   Phase 2 着手時 (Phase 1 完遂後) に確定。default option (ii)。
-- **`Common2026.lean`**: Phase 1 完遂時に `import Common2026.Shannon.MeasurePiTiltedFactorization` を追記。
+- **`InformationTheory.lean`**: Phase 1 完遂時に `import InformationTheory.Shannon.MeasurePiTiltedFactorization` を追記。
 - **検証ポイント**: 各 Phase 完了で `lake env lean <touched file>` silent (0 sorry / 0 warning)。
-  upstream 編集後 dependents は `lake build Common2026.<module>` で olean refresh (CLAUDE.md)。
+  upstream 編集後 dependents は `lake build InformationTheory.<module>` で olean refresh (CLAUDE.md)。
 
 ---
 
@@ -269,9 +269,9 @@ lemma pi_tilted_sum_eq_pi_tilted {n : ℕ} {μ₀ : Measure Ω₀} [IsProbabilit
 
 ### Done 条件
 
-- `Common2026/Shannon/MeasurePiTiltedFactorization.lean` 新規作成 + skeleton 全 `sorry` で type-check。
-- 1-A〜1-D 全 0-sorry。`lake env lean Common2026/Shannon/MeasurePiTiltedFactorization.lean` silent。
-- `Common2026.lean` に import 1 行追記。
+- `InformationTheory/Shannon/MeasurePiTiltedFactorization.lean` 新規作成 + skeleton 全 `sorry` で type-check。
+- 1-A〜1-D 全 0-sorry。`lake env lean InformationTheory/Shannon/MeasurePiTiltedFactorization.lean` silent。
+- `InformationTheory.lean` に import 1 行追記。
 
 ### ステップ
 
@@ -281,7 +281,7 @@ lemma pi_tilted_sum_eq_pi_tilted {n : ℕ} {μ₀ : Measure Ω₀} [IsProbabilit
 - [ ] **1-3 1-B `integral_exp_sum_pi_eq_prod`**: product 上の積分因子化 + `Finset.prod_const`。bounded ⇒ integrable は既存 `integrable_exp_mul_of_bounded` (Cramér) 流用可だが本 module 独立性のため自前 5 行で済ませる選択肢も。~25-40 行。
 - [ ] **1-4 1-C `setLIntegral_pi_prod_factor` (★核)**: box 上 ∏-integrand の lintegral 因子化。**Phase 1 の山場**。`Fin n` 帰納 (`Fin.cons` / `MeasurableEquiv.piFinSuccAbove` 経由) または `pi_pi` の lintegral 版を再構成。~60-100 行。
 - [ ] **1-5 1-D `pi_tilted_sum_eq_pi_tilted` (本丸)**: `Measure.pi_eq` を `μ' := LHS.tilted ...` に適用、box 上で `tilted_apply'` (左) と `pi_pi` (右) を 1-A/1-B/1-C で結ぶ。~30-50 行。
-- [ ] **1-6 verify**: `lake env lean` silent 確認、`Common2026.lean` import 追記。
+- [ ] **1-6 verify**: `lake env lean` silent 確認、`InformationTheory.lean` import 追記。
 
 ### 工数感
 

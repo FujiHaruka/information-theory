@@ -1,7 +1,7 @@
 # Channel coding achievability — Phase C + D (B-3'') ムーンショット計画 🌙
 
 > オーケストレータ指示: B-3 (`channel-coding-achievability-plan.md`,
-> `Common2026/Shannon/ChannelCoding.lean`, 659 行, Phase A + Phase B-(a,b,c) 完了)
+> `InformationTheory/Shannon/ChannelCoding.lean`, 659 行, Phase A + Phase B-(a,b,c) 完了)
 > を起点に、**Phase C (random codebook + averaging)** + **Phase D (主定理
 > `R < I ⟹ ∃ code, P_err → 0`)** を **新規ファイル** に並立 publish。Phase B 3 つの
 > joint AEP bound はそのまま黒箱として呼び、`ChannelCoding.lean` (659 行) は touch しない。
@@ -12,7 +12,7 @@
 
 **✅ `B-3''` 完全閉鎖 (2026-05-12、0 sorry)**。Phase C-(a)-(d) + Phase D-(a)-(b) 全段 publish 済。詳細は末尾「実装結果サマリ」。
 
-> 実態整合 (2026-05-20): DONE-HONEST-HYPS — `channel_coding_achievability` (`Common2026/Shannon/ChannelCodingAchievability.lean:1607`、0 sorry) を確認。signature は std typeclass binders + 正直な positivity 仮説 `hp_pos : ∀ a, 0 < p.real {a}` / `hW_pos : ∀ a b, 0 < (W a).real {b}` (full-support、後段 D-1 で smoothing 除去) のみ。pass-through Prop 仮説なし。下記 signature 例は `hW_pos` 追加前の旧形 (実装結果サマリ参照で訂正済)。
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — `channel_coding_achievability` (`InformationTheory/Shannon/ChannelCodingAchievability.lean:1607`、0 sorry) を確認。signature は std typeclass binders + 正直な positivity 仮説 `hp_pos : ∀ a, 0 < p.real {a}` / `hW_pos : ∀ a b, 0 < (W a).real {b}` (full-support、後段 D-1 で smoothing 除去) のみ。pass-through Prop 仮説なし。下記 signature 例は `hW_pos` 追加前の旧形 (実装結果サマリ参照で訂正済)。
 
 主結果 (Cover-Thomas Theorem 7.7.1 achievability 半分):
 
@@ -86,7 +86,7 @@ theorem channel_coding_achievability
 
 ### ファイル配置の判断
 
-**採用: (B) 新規 `Common2026/Shannon/ChannelCodingAchievability.lean` 並立 publish**。
+**採用: (B) 新規 `InformationTheory/Shannon/ChannelCodingAchievability.lean` 並立 publish**。
 
 理由:
 - B-1' / B-5' / B-8' / B-2'' の「親 file 不変 + 子 file 並立 publish」パターン。
@@ -96,7 +96,7 @@ theorem channel_coding_achievability
 
 ### 既存 ChannelCoding.lean の公開 API (verbatim)
 
-`Common2026/Shannon/ChannelCoding.lean` 公開 API (Phase C/D で全部呼ぶ):
+`InformationTheory/Shannon/ChannelCoding.lean` 公開 API (Phase C/D で全部呼ぶ):
 
 ```lean
 namespace InformationTheory.Shannon.ChannelCoding
@@ -418,7 +418,7 @@ theorem channel_coding_achievability
 
 ## 実装結果サマリ (2026-05-12 完全閉鎖時点)
 
-- **行数**: 1890 行 (`Common2026/Shannon/ChannelCodingAchievability.lean`、初期 362 → +1528)。
+- **行数**: 1890 行 (`InformationTheory/Shannon/ChannelCodingAchievability.lean`、初期 362 → +1528)。
 - **`lake env lean`**: 0 error / 0 sorry / unused-variable 警告のみ。
 - **完了範囲** (全段):
   - **Phase C-(a)** `Codebook` abbrev + `jointTypicalDecoder` + `codebookToCode` + `decode_eq_iff_unique`。
@@ -426,11 +426,11 @@ theorem channel_coding_achievability
   - **Phase C-(c)** `random_codebook_average_le` (probabilistic-method 形): `codebookMeasure p M n := Measure.pi (fun _ : Fin M => Measure.pi (fun _ : Fin n => p))` を導入、LHS を `∑ codebook, (codebookMeasure p M n).real {codebook} * (averageErrorProb).toReal` 形に restate。仮説 `h_match_X` / `h_match_Z` / `hindepZ_full` で abstract ambient と codebook law を coupling。内部で 3 つの private 補題 (`block_law_X_eq_pi_p` / `block_law_Y_eq_pi` / `block_joint_law_eq_pi`) で `iIndepFun + IdentDistrib + h_match_*` → `Measure.pi` 化、Fubini-collapse 補題 `codebook_marginal_one` / `codebook_marginal_two` で per-row 平均、`random_codebook_E1_swap` / `_E2_swap` で E1 (true-codeword non-JTS) / E2 (alias-codeword JTS) の Fubini swap。E2 で `jointlyTypicalSet_indep_prob_le` 適用。
   - **Phase C-(d)** `exists_codebook_le_avg`: `codebookMeasure`-weighted Finset sum 上の pigeonhole (`sum_measureReal_singleton` + `Finset.sum_lt_sum` + classical contradiction)。
   - **Phase D-(a)** rate-slack 算術 (`ε := (I - R) / 6`、`R + 3ε < I`、`0 < I - R - 3ε`) + `N := max (max N₁ N₂) 1`。
-  - **Phase D-(b)** `channel_coding_achievability` 主定理: `Common2026/Shannon/IIDProductInput.lean` の ready-made instance (`iidAmbientMeasure p W` + 全 `iIndepFun` / `IdentDistrib` / `μ.map = p` 等) を消費、`Common2026/Shannon/MIChainRule.lean` + `Common2026/Shannon/ChannelCoding.lean` 拡張の entropy-MI bridge (`mutualInfoOfChannel_eq_HX_add_HY_sub_HZ`) と `entropy_eq_of_identDistrib` を chain、E1 → 0 (`jointlyTypicalSet_prob_tendsto_one` + sandwich) + E2 → 0 (`Nat.ceil_lt_add_one` + `Real.tendsto_exp_neg_atTop_nhds_zero`)、最後に `random_codebook_average_le` + `exists_codebook_le_avg` で締め。channel positivity 仮説 `hW_pos : ∀ a y, 0 < (W a).real {y}` を signature に追加。
+  - **Phase D-(b)** `channel_coding_achievability` 主定理: `InformationTheory/Shannon/IIDProductInput.lean` の ready-made instance (`iidAmbientMeasure p W` + 全 `iIndepFun` / `IdentDistrib` / `μ.map = p` 等) を消費、`InformationTheory/Shannon/MIChainRule.lean` + `InformationTheory/Shannon/ChannelCoding.lean` 拡張の entropy-MI bridge (`mutualInfoOfChannel_eq_HX_add_HY_sub_HZ`) と `entropy_eq_of_identDistrib` を chain、E1 → 0 (`jointlyTypicalSet_prob_tendsto_one` + sandwich) + E2 → 0 (`Nat.ceil_lt_add_one` + `Real.tendsto_exp_neg_atTop_nhds_zero`)、最後に `random_codebook_average_le` + `exists_codebook_le_avg` で締め。channel positivity 仮説 `hW_pos : ∀ a y, 0 < (W a).real {y}` を signature に追加。
 - **precursor (本 plan で新規追加)**:
-  - `Common2026/Shannon/IIDProductInput.lean` (399 行、0 sorry): `Ω := ℕ → α × β` 上の `Measure.infinitePi (jointDistribution p W)` i.i.d. ambient bundle、`Function.eval i` の rfl-true 性質で `MeasurableEquiv` plumbing 不要、当初見積 ~150 行を 140 行で収まる。
-  - `Common2026/Shannon/MIChainRule.lean` 拡張 (475 行、+57): joint-distribution 上の `mutualInfo_eq_entropy_add_entropy_sub_jointEntropy` を publish。
-  - `Common2026/Shannon/ChannelCoding.lean` 拡張 (706 行、+47): channel-specialized `mutualInfoOfChannel_eq_mutualInfo_prod` + `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ` を publish。
+  - `InformationTheory/Shannon/IIDProductInput.lean` (399 行、0 sorry): `Ω := ℕ → α × β` 上の `Measure.infinitePi (jointDistribution p W)` i.i.d. ambient bundle、`Function.eval i` の rfl-true 性質で `MeasurableEquiv` plumbing 不要、当初見積 ~150 行を 140 行で収まる。
+  - `InformationTheory/Shannon/MIChainRule.lean` 拡張 (475 行、+57): joint-distribution 上の `mutualInfo_eq_entropy_add_entropy_sub_jointEntropy` を publish。
+  - `InformationTheory/Shannon/ChannelCoding.lean` 拡張 (706 行、+47): channel-specialized `mutualInfoOfChannel_eq_mutualInfo_prod` + `mutualInfoOfChannel_eq_HX_add_HY_sub_HZ` を publish。
 - **追加 signature 改変**:
   - 主定理 `channel_coding_achievability` に `hW_pos : ∀ a y, 0 < (W a).real {y}` 追加 (channel positivity)。
   - `random_codebook_E1_swap` / `random_codebook_average_le` に `hindepZ_full : iIndepFun (fun i : ℕ => jointSequence Xs Ys i) μ` 追加 (E1 swap が `block_joint_law_eq_pi` を消費するために mutual independence が必要)。

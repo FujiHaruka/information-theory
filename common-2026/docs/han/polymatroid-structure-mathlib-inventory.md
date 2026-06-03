@@ -224,7 +224,7 @@ rg -n "submodular_set|Set.Submodular" .lake/packages/mathlib/Mathlib/
 | `IsSubmodular` class 不在 | ✅ 確認済 | Prop 直書き |
 | `[DecidableEq ι]` のみで十分 | ✅ 確認済 | `[Fintype ι]` 不要 |
 
-→ **Phase A skeleton (`Common2026/Polymatroid/Basic.lean` の sorry-driven 出だし) を書ける状態**。
+→ **Phase A skeleton (`InformationTheory/Polymatroid/Basic.lean` の sorry-driven 出だし) を書ける状態**。
 
 ## 全体的な Phase A〜B 工数 (本 plan)
 

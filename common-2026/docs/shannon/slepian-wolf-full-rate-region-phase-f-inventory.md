@@ -2,7 +2,7 @@
 
 > Scope: implement the missing final assembly headline
 > `slepian_wolf_full_rate_region_achievability` in
-> `Common2026/Shannon/SlepianWolfFullRateRegion.lean`.
+> `InformationTheory/Shannon/SlepianWolfFullRateRegion.lean`.
 > Parent plan: [`slepian-wolf-full-rate-region-plan.md`](slepian-wolf-full-rate-region-plan.md).
 > Inventory only (2026-05-30).
 
@@ -125,7 +125,7 @@ private lemma exists_pair_le_of_binning_integral_le
 ```
 (内部で `MeasureTheory.exists_le_integral` (`Mathlib/.../Average.lean:594`, `[IsProbabilityMeasure μ]` + `Integrable f μ`) を 2 回適用。)
 
-## Phase F 用 Mathlib / Common2026 API
+## Phase F 用 Mathlib / InformationTheory API
 
 ### 指数 squeeze
 - `Real.tendsto_exp_neg_atTop_nhds_zero` (`Exp.lean:222`) : `Tendsto (fun x => exp (-x)) atTop (𝓝 0)`
@@ -142,7 +142,7 @@ lemma codebookSize_log_div_tendsto {R : ℝ} (hR : 0 < R) :
 ```
 `⌈exp(nR)⌉⁻¹ ≤ exp(−nR)` には `Nat.le_ceil` (= `exp(nR) ≤ ⌈·⌉`) + `inv_le_inv`。
 
-### condEntropy chain rule / bridge / swap (Common2026 既存)
+### condEntropy chain rule / bridge / swap (InformationTheory 既存)
 ```lean
 def MeasureFano.condEntropy (μ : Measure Ω) [IsFiniteMeasure μ] (Xs : Ω → X) (Yo : Ω → Y) : ℝ  -- Fano/Measure.lean:69
 theorem entropy_pair_eq_entropy_add_condEntropy (μ) [IsProbabilityMeasure μ] (Xs Yo) (hXs hYo) :

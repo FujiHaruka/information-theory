@@ -56,7 +56,7 @@ Mathlib base: `IndepFun.pdf_add_eq_lconvolution_pdf` (`Density.lean:356`) /
 | B Blachman score-of-convolution | Tier 0/1 完了。`EPIStamStep12Body.lean` 5 件 ok (line 214/253/273/295/309) |
 | C λ-opt + CS | `EPIStamInequalityBody.lean` 7 件 ok。`stam_lambda_min` 閉形で L-Stam-C-β 不要 |
 | D inverse-Fisher harmonic | `EPIStamDischarge.lean` 15 + `EPIStamToBridge.lean` 13/14 件 ok |
-| V verify + 編入 | 5 file `lake env lean` clean、`Common2026.lean` 編入済 |
+| V verify + 編入 | 5 file `lake env lean` clean、`InformationTheory.lean` 編入済 |
 
 残 1 件 `IsStamToEPIScalingHyp` は sister `epi-stam-to-conclusion-plan` Phase 0 所管 📋
 
@@ -64,7 +64,7 @@ Mathlib base: `IndepFun.pdf_add_eq_lconvolution_pdf` (`Density.lean:356`) /
 
 ## 残 1 件 — `IsStamToEPIScalingHyp` 📋
 
-- **location**: `Common2026/Shannon/EPIStamToBridge.lean:147` (`@audit:suspect(epi-stam-to-conclusion-plan)`)
+- **location**: `InformationTheory/Shannon/EPIStamToBridge.lean:147` (`@audit:suspect(epi-stam-to-conclusion-plan)`)
 - **defect 種別**: launder 疑い — predicate body は `g1 = 0` 固定で実は EPI 結論と同等、
   Csiszár scaling-monotonicity content 不在 (命名と内容の乖離)
 - **所管**: sister `epi-stam-to-conclusion-plan` Phase 0 (real `g1` 導入 or premise 分割)

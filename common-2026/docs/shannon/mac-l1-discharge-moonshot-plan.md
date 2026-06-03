@@ -3,13 +3,13 @@
 > **Parent**: T3-B Multiple Access Channel (`docs/textbook-roadmap.md` §Tier 3,
 > Cover-Thomas Ch.15.3, MAC achievability).
 >
-> 実態整合 (2026-05-20): **DONE-HONEST-HYPS (計画通り、partial discharge) — plan の「Drafting」表記は STALE**。`Common2026/Shannon/MACL1Discharge.lean` (26337 B, 0 sorry) に L-MAC1-A/B/C 実装済: `macJointlyTypicalSet_card_le` (MACL1Discharge.lean:204、実証明 — φ-injection で 3-tuple JTS を α₁×α₂×β 上の joint typical set に埋め込み `typicalSet_card_le` 適用)、`macJointlyTypicalSet_prob_tendsto_one` (:281、実証明 — 4 single-axis good event の交差 → 各 `typicalSet_prob_tendsto_one`)。publish-layer hook `mac_capacity_region_inner_bound_with_joint_typ_aep` (:532) は親の `:= h_existence` pass-through (計画通り、4-error-event Bonferroni body = L-MAC1-D は deferred)。FLAW なし。Common2026.lean に import 済。
+> 実態整合 (2026-05-20): **DONE-HONEST-HYPS (計画通り、partial discharge) — plan の「Drafting」表記は STALE**。`InformationTheory/Shannon/MACL1Discharge.lean` (26337 B, 0 sorry) に L-MAC1-A/B/C 実装済: `macJointlyTypicalSet_card_le` (MACL1Discharge.lean:204、実証明 — φ-injection で 3-tuple JTS を α₁×α₂×β 上の joint typical set に埋め込み `typicalSet_card_le` 適用)、`macJointlyTypicalSet_prob_tendsto_one` (:281、実証明 — 4 single-axis good event の交差 → 各 `typicalSet_prob_tendsto_one`)。publish-layer hook `mac_capacity_region_inner_bound_with_joint_typ_aep` (:532) は親の `:= h_existence` pass-through (計画通り、4-error-event Bonferroni body = L-MAC1-D は deferred)。FLAW なし。InformationTheory.lean に import 済。
 >
 > **Status (2026-05-20):** Drafting. Parent file `MultipleAccessChannel.lean`
 > (637 lines, 2026-05-19) is fully published in statement-level
 > hypothesis pass-through form with `_h_joint_typ : True` placeholder for
 > L-MAC1. This plan publishes a **partial discharge layer** —
-> `Common2026/Shannon/MACL1Discharge.lean` (~400-700 lines) — that
+> `InformationTheory/Shannon/MACL1Discharge.lean` (~400-700 lines) — that
 > introduces a concrete **3-tuple joint typical set** and proves the
 > AEP-style probability bound + cardinality bound for it, reusing the
 > existing 2-user `jointlyTypicalSet` plumbing from `ChannelCoding.lean`.
@@ -72,9 +72,9 @@ of* the present file.
 
 ## Per-file breakdown
 
-### File: `Common2026/Shannon/MACL1Discharge.lean`
+### File: `InformationTheory/Shannon/MACL1Discharge.lean`
 
-Imports: `Common2026.Shannon.MultipleAccessChannel`
+Imports: `InformationTheory.Shannon.MultipleAccessChannel`
 (brings `ChannelCoding` transitively).
 
 Namespace: `InformationTheory.Shannon`.
@@ -144,14 +144,14 @@ Namespace: `InformationTheory.Shannon`.
 
 ## Constraints
 
-- Do not modify `Common2026/Shannon/MultipleAccessChannel.lean`.
-- Do not touch `Common2026.lean` (publish-via-`lake env lean` only).
+- Do not modify `InformationTheory/Shannon/MultipleAccessChannel.lean`.
+- Do not touch `InformationTheory.lean` (publish-via-`lake env lean` only).
 - Do not touch `docs/textbook-roadmap.md`.
 - No `import Mathlib`.
 - 0 sorry / 0 warning / `lake env lean` silent.
 
 ## Definition of Done
 
-- `lake env lean Common2026/Shannon/MACL1Discharge.lean` silent.
+- `lake env lean InformationTheory/Shannon/MACL1Discharge.lean` silent.
 - 0 sorry, ≤ negligible warnings.
 - `wc -l` reported in the parent commit message.

@@ -1,7 +1,7 @@
 # EPI Blachman density route — Gaussian witness `IsBlachmanConvReady` 在庫調査
 
 > 親計画: [`docs/shannon/epi-wall-reattack-plan.md`](epi-wall-reattack-plan.md)（撤退ライン参照）。
-> 対象述語: `IsBlachmanConvReady` (`Common2026/Shannon/EPIBlachmanDensity.lean:708`, 20 field) + `IsRegularDensityV2` (`Common2026/Shannon/FisherInfoV2.lean:124`, 6 field)。
+> 対象述語: `IsBlachmanConvReady` (`InformationTheory/Shannon/EPIBlachmanDensity.lean:708`, 20 field) + `IsRegularDensityV2` (`InformationTheory/Shannon/FisherInfoV2.lean:124`, 6 field)。
 > 目的: `fX = gaussianPDFReal mX vX`, `fY = gaussianPDFReal mY vY` で両述語を満たす **proven inhabitant** を構築して density route の非vacuousness を機械確認する。
 > 本ファイルは inventory のみ。実装・計画起草はしない。
 
@@ -198,21 +198,21 @@ theorem convex_fisher_bound_of_ready (fX fY : ℝ → ℝ) (lam : ℝ)
 
 ## 着手 skeleton
 
-`Common2026/Shannon/EPIBlachmanGaussianWitness.lean` (private 補題依存のため `FisherInfoV2.lean`/`FisherInfoGaussian.lean` 拡張も選択肢) の出だし:
+`InformationTheory/Shannon/EPIBlachmanGaussianWitness.lean` (private 補題依存のため `FisherInfoV2.lean`/`FisherInfoGaussian.lean` 拡張も選択肢) の出だし:
 
 ```lean
-import Common2026.Meta.EntryPoint
+import InformationTheory.Meta.EntryPoint
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.MeasureTheory.Measure.WithDensity
 import Mathlib.MeasureTheory.Group.Prod
 import Mathlib.MeasureTheory.Integral.Prod
 import Mathlib.Analysis.LConvolution
-import Common2026.Shannon.FisherInfoV2          -- IsRegularDensityV2, fisherInfoOfDensity, private Gaussian 素材
-import Common2026.Shannon.FisherInfoGaussian    -- gaussianPDFReal 微分/tail/integrable 群
-import Common2026.Shannon.EPIConvDensity        -- convDensityAdd
-import Common2026.Shannon.EPIBlachmanDensity    -- IsBlachmanConvReady, condDensityX, scoreWeight
+import InformationTheory.Shannon.FisherInfoV2          -- IsRegularDensityV2, fisherInfoOfDensity, private Gaussian 素材
+import InformationTheory.Shannon.FisherInfoGaussian    -- gaussianPDFReal 微分/tail/integrable 群
+import InformationTheory.Shannon.EPIConvDensity        -- convDensityAdd
+import InformationTheory.Shannon.EPIBlachmanDensity    -- IsBlachmanConvReady, condDensityX, scoreWeight
 
-namespace Common2026.Shannon.EPIBlachmanGaussianWitness
+namespace InformationTheory.Shannon.EPIBlachmanGaussianWitness
 
 open MeasureTheory Real ProbabilityTheory
 open InformationTheory.Shannon.EPIConvDensity
@@ -229,7 +229,7 @@ theorem convDensityAdd_gaussian_closed_form
 
 /-- `IsRegularDensityV2 (gaussianPDFReal m v)` — 6 field 全直結。 -/
 theorem isRegularDensityV2_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) :
-    Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 (gaussianPDFReal m v) := by
+    InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 (gaussianPDFReal m v) := by
   sorry
 
 /-- **Gaussian witness**: density route の非vacuousness 確証。 -/
@@ -238,7 +238,7 @@ theorem isBlachmanConvReady_gaussianPDFReal
     IsBlachmanConvReady (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) := by
   sorry  -- 20 field 構築 (per-field テーブル参照)
 
-end Common2026.Shannon.EPIBlachmanGaussianWitness
+end InformationTheory.Shannon.EPIBlachmanGaussianWitness
 ```
 
 最初に埋めるのは `convDensityAdd_gaussian_closed_form` (linchpin) → `isRegularDensityV2_gaussianPDFReal` (6 field) → witness の 20 field を分類順 (既存直結 → 軽 → 重) で。

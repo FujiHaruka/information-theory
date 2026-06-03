@@ -1,7 +1,7 @@
 # I-3 Asymptotic / Exponent Framework サブ計画
 
 > **Parent**: [`../textbook-roadmap.md`](../textbook-roadmap.md) §「Tier ∞ — Infrastructure / I-3. Asymptotic / exponent framework」
-> 実態整合 (2026-05-20): DONE-UNCOND — Phase 1〜4 完了済 (進捗欄 📋 は STALE)。`Common2026/InformationTheory/Asymptotic.lean` に `DotEq` (`:43`、`IsLittleO` 実定義、`True` ではない) + `refl`/`symm`/`trans`/`mul`/`inv` + `dotEq_iff_tendsto_log_div` (`:116`) + `exp_decay_N_of_pos` (`:148`、constructive witness で実証) が存在。`lake env lean` silent、0 sorry。`dotEq_iff_tendsto_log_div` は `Common2026/Shannon/ChernoffInformation.lean` で実利用。
+> 実態整合 (2026-05-20): DONE-UNCOND — Phase 1〜4 完了済 (進捗欄 📋 は STALE)。`InformationTheory/InformationTheory/Asymptotic.lean` に `DotEq` (`:43`、`IsLittleO` 実定義、`True` ではない) + `refl`/`symm`/`trans`/`mul`/`inv` + `dotEq_iff_tendsto_log_div` (`:116`) + `exp_decay_N_of_pos` (`:148`、constructive witness で実証) が存在。`lake env lean` silent、0 sorry。`dotEq_iff_tendsto_log_div` は `InformationTheory/Shannon/ChernoffInformation.lean` で実利用。
 > **Status (2026-05-18)**: 起草。在庫調査 ([`asymptotic-mathlib-inventory.md`](asymptotic-mathlib-inventory.md)) 完了直後。
 > **規模**: 1 ファイル 80〜150 行、1〜2 セッション (合計 1.5〜3 時間)。新数学なし、新規 `def` 1 個 (`DotEq`) + 基本性質 lemma 4〜6 個 (`refl`/`symm`/`trans`/`mul`/`inv`) + closed-form rate extraction wrapper 1〜2 個 + `o(n)` notation 説明 docstring。
 
@@ -24,9 +24,9 @@
 ### 在庫調査の結論 (verbatim 再掲しない、in-essence 5 点)
 
 1. Mathlib `Asymptotics.IsBigO` / `IsLittleO` / `IsTheta` / `IsEquivalent` の **4 種述語 + notation** (`=O[l]`, `=o[l]`, `=Θ[l]`, `~[l]`) は **完備**。教科書 `O(n)` / `o(n)` / `Θ(n)` / `~` は **既存 1 行**で書ける (在庫 §A-1, §A-7)
-2. Mathlib `Analysis/Asymptotics/ExpGrowth.lean` (2025 新規) が `expGrowthInf` / `expGrowthSup` (`= liminf/limsup ((1/n) log u_n)`) を提供。**ただし型は `ℕ → ℝ≥0∞ → EReal`** で Common2026 inline (`ℝ` 値) と型が合わず、bridge cost が高い (在庫 §A-5)
-3. **教科書 `\doteq` に対応する単一述語は Mathlib に不在**。在庫 §C の 3 候補 (A=`Tendsto`, B=`IsLittleO`, C=`ExpGrowth`) のうち **候補 B (`(log a − log b) =o[atTop] (·:ℝ)`)** が Common2026 inline と型がマッチ、`IsLittleO` の代数 (`.add`, `.trans`, `.const_mul_left` 等) を直接活用可能
-4. **`Common2026/Shannon/AEPRate.lean` (905 行)** は既に I-3 相当の closed-form `N(g, ε')` 抽出 lemma を AEP / channel coding 特化で整備済み (`exp_neg_mul_lt_of_rate`, `channelCoding_E2_lt_of_rate`, `typicalSet_prob_ge_at_N`)。**ゼロからの新規実装ではなく "AEPRate を抽象層に持ち上げる" refactor 視点** が現実的だが、callsite migration は本 I-3 の範囲外 (ユーザー方針 §C-5)
+2. Mathlib `Analysis/Asymptotics/ExpGrowth.lean` (2025 新規) が `expGrowthInf` / `expGrowthSup` (`= liminf/limsup ((1/n) log u_n)`) を提供。**ただし型は `ℕ → ℝ≥0∞ → EReal`** で InformationTheory inline (`ℝ` 値) と型が合わず、bridge cost が高い (在庫 §A-5)
+3. **教科書 `\doteq` に対応する単一述語は Mathlib に不在**。在庫 §C の 3 候補 (A=`Tendsto`, B=`IsLittleO`, C=`ExpGrowth`) のうち **候補 B (`(log a − log b) =o[atTop] (·:ℝ)`)** が InformationTheory inline と型がマッチ、`IsLittleO` の代数 (`.add`, `.trans`, `.const_mul_left` 等) を直接活用可能
+4. **`InformationTheory/Shannon/AEPRate.lean` (905 行)** は既に I-3 相当の closed-form `N(g, ε')` 抽出 lemma を AEP / channel coding 特化で整備済み (`exp_neg_mul_lt_of_rate`, `channelCoding_E2_lt_of_rate`, `typicalSet_prob_ge_at_N`)。**ゼロからの新規実装ではなく "AEPRate を抽象層に持ち上げる" refactor 視点** が現実的だが、callsite migration は本 I-3 の範囲外 (ユーザー方針 §C-5)
 5. **危険箇所**: `IsLittleO.of_tendsto_div_atTop` / `isLittleO_iff_tendsto` は `[NormedField 𝕜]` section で `ℝ≥0∞` 値 sequence では直接使えない (在庫 §D)。`Asymptotics.IsEquivalent.log` は `g → atTop` 必須で `exp(-nD)` 系 (`→ 0`) には逆数経由でしか使えない (在庫 §D)
 
 ### 非ゴール
@@ -43,7 +43,7 @@
 **1 ファイル 1 namespace、全部 opt-in な notation + 述語 + closed-form wrapper 層**。既存 `AEPRate.lean` は不変。
 
 ```
-新規ファイル: Common2026/InformationTheory/Asymptotic.lean
+新規ファイル: InformationTheory/InformationTheory/Asymptotic.lean
 namespace : InformationTheory.Asymptotic
 中身:
   1. noncomputable def DotEq (a b : ℕ → ℝ) : Prop :=
@@ -57,7 +57,7 @@ namespace : InformationTheory.Asymptotic
 
 **「opt-in な notation 層」の意味**: notation は `scoped[InformationTheory.Asymptotic]` で限定 (I-1 と同じ流儀)。`open InformationTheory.Asymptotic` した callsite だけが `a ≐ b` を見る。既存 `AEPRate.lean` や `SanovLDPEquality.lean` 等 8 ファイルは `open` を追加しない限り影響を受けない (regression ゼロを保証)。
 
-**「薄い述語層」の意味**: `DotEq` は 1 行 `def` で Mathlib `IsLittleO` を呼ぶだけ。**新規 bridge lemma は最小限** (`dotEq_iff_tendsto_log_div` 1 本、Common2026 inline の `Tendsto ((1/n) log ...)` 形と接続するため必須)。`refl`/`symm`/`trans`/`mul`/`inv` 等の基本性質は `IsLittleO` の対応性質 (`IsLittleO.refl`, `.neg`, `.trans`, `.add` 等) を 1〜3 行で叩く。
+**「薄い述語層」の意味**: `DotEq` は 1 行 `def` で Mathlib `IsLittleO` を呼ぶだけ。**新規 bridge lemma は最小限** (`dotEq_iff_tendsto_log_div` 1 本、InformationTheory inline の `Tendsto ((1/n) log ...)` 形と接続するため必須)。`refl`/`symm`/`trans`/`mul`/`inv` 等の基本性質は `IsLittleO` の対応性質 (`IsLittleO.refl`, `.neg`, `.trans`, `.add` 等) を 1〜3 行で叩く。
 
 **closed-form rate extraction wrapper の位置付け**: 既存 `AEPRate.lean:323` の `exp_neg_mul_lt_of_rate` を **AEP/channel coding 非依存** に再定式化 (`exp_decay_N_of_pos`)。本 I-3 で publish するのは **wrapper の存在と署名のみ** で、既存 callsite migration は本タスクの範囲外。後続 seed (T1-B Chernoff, T1-C Cramér) が新規 callsite で `exp_decay_N_of_pos` を使う想定。**もし wrapper 充填中に既存 `exp_neg_mul_lt_of_rate` と signature が完全一致できず統合困難**と判明したら、撤退ライン §H-1 に従い本 I-3 は wrapper を含めず notation + `DotEq` def + 基本性質のみで close。
 
@@ -75,7 +75,7 @@ namespace : InformationTheory.Asymptotic
 
 理由 (在庫 §C-2 比較を再評価):
 
-- **Common2026 inline と型がマッチ**: 既存 8 ファイルは全て `a, b : ℕ → ℝ` 形で書かれており、`Real.log` の差を `IsLittleO` する形は **値域 `ℝ` のまま**で済む。候補 C (`ExpGrowth`) は `ℝ≥0∞ → EReal` の型変換 bridge が必要で cost が高い (在庫 §C-3)
+- **InformationTheory inline と型がマッチ**: 既存 8 ファイルは全て `a, b : ℕ → ℝ` 形で書かれており、`Real.log` の差を `IsLittleO` する形は **値域 `ℝ` のまま**で済む。候補 C (`ExpGrowth`) は `ℝ≥0∞ → EReal` の型変換 bridge が必要で cost が高い (在庫 §C-3)
 - **Mathlib API の代数が直接使える**: `IsLittleO.add`, `.sub`, `.const_mul_left`, `.trans` 等で `DotEq` の `refl`/`symm`/`trans`/`mul` (`a₁·a₂ ≐ b₁·b₂` if `a_i ≐ b_i`) / `inv` (`1/a ≐ 1/b` if `a ≐ b`) を **1〜3 行**で割れる
 - **候補 A (`Tendsto ((1/n) log (a/b)) → 0`) に対する優位**: 候補 A は `IsLittleO` 代数を使えず、`refl`/`symm`/`trans` を全部 `Tendsto` 補題 (`Tendsto.add`, `Tendsto.neg`) で書く必要があり手間が多い。**候補 A は in-essence "候補 B + 1 本 bridge" に等しく**、`dotEq_iff_tendsto_log_div` 1 本で同値性は確保される
 - **候補 C (`ExpGrowth`) に対する優位**: `ExpGrowth` は新規 (2025) で Mathlib 内 callsite が限定的、`ℝ≥0∞`/`EReal` 経由 bridge が 30〜50 行追加で必要。本 I-3 を 80〜150 行に収める観点で却下
@@ -90,7 +90,7 @@ namespace : InformationTheory.Asymptotic
 
 理由:
 
-- Common2026 inline 8 ファイルは **全て `ℝ` 値** で書かれている (在庫 §B: `μ.real {x}`, `(klDiv P Q).toReal`, `(...:ℝ).toReal`, `Real.exp (-(n:ℝ) * D)`)
+- InformationTheory inline 8 ファイルは **全て `ℝ` 値** で書かれている (在庫 §B: `μ.real {x}`, `(klDiv P Q).toReal`, `(...:ℝ).toReal`, `Real.exp (-(n:ℝ) * D)`)
 - `klDiv : ℝ≥0∞` 直で扱う場面 (`klDiv P Q < ∞` で `.toReal` を取らない) は **Stein / StrongStein では rate 部分のみ `.toReal` で `ℝ` に降ろしてから `Tendsto` する** 慣習が確立済み (在庫 §B #4)
 - `ℝ≥0∞` 値の `DotEq₂ (a b : ℕ → ℝ≥0∞)` を将来必要としたら、`DotEq a.toReal b.toReal + 有限性仮定` の形で 1 行 `abbrev` を後付で追加すれば良い。互換性は保たれる
 - I-1 `typed-rv-plan.md` §C-1 と同じ「1 形のみ publish、`₂` 版は後付」方針と整合
@@ -117,7 +117,7 @@ namespace : InformationTheory.Asymptotic
 - 教科書本文では「`f(n) = o(n)`」と書くが、Lean では `f =o[atTop] (·:ℝ)` で **完全に意味保存**、書き味の差は小さい
 - I-1 `typed-rv-plan.md` で「束ねクラスを作らない、Mathlib 慣習維持」と決めたのと同じ思想
 
-**docstring で代替**: `Common2026/InformationTheory/Asymptotic.lean` の冒頭 docstring で「教科書 `f(n) = o(n)` は Lean では `f =o[atTop] (fun n : ℕ => (n : ℝ))` で書ける、`o(1)` は `f =o[atTop] (fun _ => (1 : ℝ))`」と例示する (在庫 §A-7 末尾)。
+**docstring で代替**: `InformationTheory/InformationTheory/Asymptotic.lean` の冒頭 docstring で「教科書 `f(n) = o(n)` は Lean では `f =o[atTop] (fun n : ℕ => (n : ℝ))` で書ける、`o(1)` は `f =o[atTop] (fun _ => (1 : ℝ))`」と例示する (在庫 §A-7 末尾)。
 
 ### C-5. `AEPRate.lean` との関係 → **既存はそのまま残し、I-3 で抽象 wrapper を追加**
 
@@ -158,20 +158,20 @@ theorem exp_decay_N_of_pos {g ε' : ℝ} (hg : 0 < g) (hε' : 0 < ε') :
 
 ### 新規ファイル
 
-**`Common2026/InformationTheory/Asymptotic.lean`** (80〜150 行見込み)
+**`InformationTheory/InformationTheory/Asymptotic.lean`** (80〜150 行見込み)
 
-**配置先選択**: I-1 が `Common2026/Shannon/TypedRV.lean` (Shannon 配下) だったのに対し、I-3 は **`Common2026/InformationTheory/Asymptotic.lean` (InformationTheory 配下)** を採用。
+**配置先選択**: I-1 が `InformationTheory/Shannon/TypedRV.lean` (Shannon 配下) だったのに対し、I-3 は **`InformationTheory/InformationTheory/Asymptotic.lean` (InformationTheory 配下)** を採用。
 
 理由:
 
 - I-3 の `DotEq` / `exp_decay_N_of_pos` は **Shannon 専用ではなく、Sanov LDP / channel coding / rate distortion / Stein / Chernoff 等の幅広い情報理論 family に渡る汎用 wrapper**。`Shannon/` 配下に置くと「Shannon 系専用」と誤解される
-- `Common2026/InformationTheory/` 配下は **既存に類似の汎用層がない**ため、新規 namespace `InformationTheory.Asymptotic` を切る
+- `InformationTheory/InformationTheory/` 配下は **既存に類似の汎用層がない**ため、新規 namespace `InformationTheory.Asymptotic` を切る
 - 後続 seed (T2-A AWGN, T3-B MAC, T4-A LZ78) が `open InformationTheory.Asymptotic` 1 行で取り込めるよう、Shannon 階層から独立した位置に置く
 
-`Common2026.lean` (library root) に追記:
+`InformationTheory.lean` (library root) に追記:
 
 ```lean
-import Common2026.InformationTheory.Asymptotic
+import InformationTheory.InformationTheory.Asymptotic
 ```
 
 ### import 一覧 (在庫 §G 参照、`import Mathlib` 禁止)
@@ -202,7 +202,7 @@ import 6 個で済む見込み。Phase 1 着手時に **silent check** で確認
 
 ## E. Phase 1 — skeleton (sorry-driven 出だし)
 
-> 全項目を `:= by sorry` (notation は宣言だけ) で書き、`lake env lean Common2026/InformationTheory/Asymptotic.lean` が **silent + sorry warning のみ** になることを Phase 1 の Done 条件とする。
+> 全項目を `:= by sorry` (notation は宣言だけ) で書き、`lake env lean InformationTheory/InformationTheory/Asymptotic.lean` が **silent + sorry warning のみ** になることを Phase 1 の Done 条件とする。
 
 ```lean
 import Mathlib.Analysis.Asymptotics.Defs
@@ -286,7 +286,7 @@ end InformationTheory.Asymptotic
 | `DotEq.mul` | `Real.log_mul` で `log (a₁·a₂) = log a₁ + log a₂` に展開 + `IsLittleO.add` | `Log/Basic.lean:132` |
 | `DotEq.inv` | `Real.log_inv` で `log (1/a) = -log a` に展開 + `IsLittleO.neg_left` | `Log/Basic.lean` |
 | `dotEq_iff_tendsto_log_div` | `Real.log_div` + `isLittleO_iff_tendsto'` (`g = (·:ℝ)` 限定形) | `Log/Basic.lean:137`, `Asymptotics/Lemmas.lean:382` |
-| `exp_decay_N_of_pos` | `AEPRate.exp_neg_mul_lt_of_rate` を移植 | `Common2026/Shannon/AEPRate.lean:323` |
+| `exp_decay_N_of_pos` | `AEPRate.exp_neg_mul_lt_of_rate` を移植 | `InformationTheory/Shannon/AEPRate.lean:323` |
 
 **bridge ヘルパー (新規追加分)**: ゼロ件想定。在庫 §A〜D で確認した Mathlib API + 既存 `AEPRate.lean` 内コードで `exp_decay_N_of_pos` 含めて全て出る。**Phase 3 のサンプル `example` で 1 本足りないと判明したら、そこで追加判断する**。
 
@@ -296,9 +296,9 @@ end InformationTheory.Asymptotic
 
 ### Phase 1: skeleton + silent
 
-- 上記 E の内容を `Common2026/InformationTheory/Asymptotic.lean` に Write
-- `Common2026.lean` に `import Common2026.InformationTheory.Asymptotic` 追記
-- `lake env lean Common2026/InformationTheory/Asymptotic.lean` が silent + sorry warning のみ
+- 上記 E の内容を `InformationTheory/InformationTheory/Asymptotic.lean` に Write
+- `InformationTheory.lean` に `import InformationTheory.InformationTheory.Asymptotic` 追記
+- `lake env lean InformationTheory/InformationTheory/Asymptotic.lean` が silent + sorry warning のみ
 - **proof-log**: no (skeleton 段階)
 - 工数: 30 分
 
@@ -311,7 +311,7 @@ end InformationTheory.Asymptotic
 - `DotEq.inv`: `Real.log a⁻¹ = -Real.log a` (`log_inv`) で展開 → `IsLittleO.neg_left` + `IsLittleO.neg_right`
 - 工数: 30〜45 分 (各 lemma 5〜10 行、`positivity` / `linarith` / `ring` で割れる予定)
 - **proof-log**: no
-- Done: `lake env lean Common2026/InformationTheory/Asymptotic.lean` が silent、`DotEq.refl`/`symm`/`trans`/`mul`/`inv` の 5 つ全てが sorry-free
+- Done: `lake env lean InformationTheory/InformationTheory/Asymptotic.lean` が silent、`DotEq.refl`/`symm`/`trans`/`mul`/`inv` の 5 つ全てが sorry-free
 
 ### Phase 3: bridge + closed-form wrapper + サンプル `example`
 
@@ -320,7 +320,7 @@ end InformationTheory.Asymptotic
   - `←` 方向: 逆方向、`Tendsto ((1/n) * log (a/b)) → 0` → `IsLittleO`
   - 工数: 30〜45 分
 - **3-β**: `exp_decay_N_of_pos` 充填:
-  - 既存 `AEPRate.exp_neg_mul_lt_of_rate` (`Common2026/Shannon/AEPRate.lean:323`) の証明をコピー + family-agnostic に名前を中立化 (`g`, `ε'` は維持、§C-6)
+  - 既存 `AEPRate.exp_neg_mul_lt_of_rate` (`InformationTheory/Shannon/AEPRate.lean:323`) の証明をコピー + family-agnostic に名前を中立化 (`g`, `ε'` は維持、§C-6)
   - `N := ⌈max 0 (-Real.log ε' / g)⌉ + 1` を witness、`Real.exp_lt_iff_lt_log` 等で割る
   - 工数: 20〜30 分 (既存 30 行のコピー + 名前修正)
 - **3-γ**: notation 衝突確認 + 動作確認 `example`:
@@ -340,19 +340,19 @@ example {g ε' : ℝ} (hg : 0 < g) (hε' : 0 < ε') :
   - 衝突あり → 撤退ライン §H-2 (`≐[atTop]` 形に縮退)
 - 工数: 30〜45 分 (3-γ 全体)
 - **proof-log**: yes (notation 衝突有無 / `exp_decay_N_of_pos` の signature が `AEPRate` 既存と一致したか / bridge lemma の `→`/`←` 方向で詰まった箇所を記録)
-- Done: `lake env lean Common2026/InformationTheory/Asymptotic.lean` silent、`DotEq.refl`/`symm`/`trans`/`mul`/`inv`/`dotEq_iff_tendsto_log_div`/`exp_decay_N_of_pos` の **7 つ全て + 2 つの `example` が elaborate に通る**
+- Done: `lake env lean InformationTheory/InformationTheory/Asymptotic.lean` silent、`DotEq.refl`/`symm`/`trans`/`mul`/`inv`/`dotEq_iff_tendsto_log_div`/`exp_decay_N_of_pos` の **7 つ全て + 2 つの `example` が elaborate に通る**
 
 ### Phase 4: verify + regression check
 
-- `lake env lean Common2026/InformationTheory/Asymptotic.lean` 0 error / 0 sorry / warning 最小
+- `lake env lean InformationTheory/InformationTheory/Asymptotic.lean` 0 error / 0 sorry / warning 最小
 - 既存 0 sorry ファイルへの **regression なし**を確認:
-  - `lake env lean Common2026/Shannon/AEPRate.lean` silent (本 I-3 が `AEPRate` を import せずに済むことの確認、本 plan §D で `AEPRate` を import 候補から除外済み)
-  - `lake env lean Common2026/Shannon/AEP.lean` silent
-  - `lake env lean Common2026/Shannon/SanovLDPEquality.lean` silent
-  - `lake env lean Common2026/Shannon/StrongStein.lean` silent
-  - `lake env lean Common2026/Shannon/SMBAlgoetCover.lean` silent
-  - `lake env lean Common2026/Shannon/EntropyRate.lean` silent
-- (必要なら `lake build Common2026.InformationTheory.Asymptotic` で olean 焼き)
+  - `lake env lean InformationTheory/Shannon/AEPRate.lean` silent (本 I-3 が `AEPRate` を import せずに済むことの確認、本 plan §D で `AEPRate` を import 候補から除外済み)
+  - `lake env lean InformationTheory/Shannon/AEP.lean` silent
+  - `lake env lean InformationTheory/Shannon/SanovLDPEquality.lean` silent
+  - `lake env lean InformationTheory/Shannon/StrongStein.lean` silent
+  - `lake env lean InformationTheory/Shannon/SMBAlgoetCover.lean` silent
+  - `lake env lean InformationTheory/Shannon/EntropyRate.lean` silent
+- (必要なら `lake build InformationTheory.InformationTheory.Asymptotic` で olean 焼き)
 - 工数: 15〜30 分
 - **proof-log**: yes (合流 + メトリクス: 行数 / 新規 def 数 / 基本性質 lemma 数 / 衝突確認した識別子のメモ)
 - Done: 全ファイル silent、proof-log 完備
@@ -363,12 +363,12 @@ example {g ε' : ℝ} (hg : 0 < g) (hε' : 0 < ε') :
 
 ## G. 判定条件 (Definition of Done)
 
-1. `lake env lean Common2026/InformationTheory/Asymptotic.lean` が **0 error / 0 sorry / 警告最小** で silent
+1. `lake env lean InformationTheory/InformationTheory/Asymptotic.lean` が **0 error / 0 sorry / 警告最小** で silent
 2. **`DotEq` の `refl`/`symm`/`trans`/`mul`/`inv` 5 つすべてが動く** — Phase 2 充填済み
 3. **`dotEq_iff_tendsto_log_div` + `exp_decay_N_of_pos` が動く** — Phase 3 充填済み
 4. **notation `≐` が elaborate に通る** — Phase 3 末尾の `example` で 2 つの notation 使用箇所が silent
-5. **既存 0 sorry ファイルが regression なし** — 上記 §F Phase 4 の 6 ファイル + `Common2026/Shannon/Stein.lean` 等が `lake env lean` で silent
-6. `Common2026.lean` に `import Common2026.InformationTheory.Asymptotic` 追記済み
+5. **既存 0 sorry ファイルが regression なし** — 上記 §F Phase 4 の 6 ファイル + `InformationTheory/Shannon/Stein.lean` 等が `lake env lean` で silent
+6. `InformationTheory.lean` に `import InformationTheory.InformationTheory.Asymptotic` 追記済み
 7. proof-log (`docs/proof-log-asymptotic.md` 等) に **Phase 3 で確認した衝突有無 / `exp_decay_N_of_pos` の AEPRate との signature 一致確認 / 最終 lemma 名一覧 verbatim** を記録
 
 ---
@@ -458,7 +458,7 @@ MAC error probability rate と LZ78 asymptotic optimality (`L_n / n → H` の f
 書く頻度: Phase 中の方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
 
 1. **2026-05-18 起草**: 在庫調査 `asymptotic-mathlib-inventory.md` 完了後の plan 起草。設計判断 §C-1〜6 を確定:
-   - C-1 `DotEq` 表現方式 = **候補 B (`IsLittleO`)**: Common2026 inline (`ℝ` 値) と型がマッチ、Mathlib `IsLittleO` 代数を直接活用。候補 A (`Tendsto`) は in-essence 候補 B + 1 bridge と同等、候補 C (`ExpGrowth`) は `ℝ≥0∞`/`EReal` bridge cost で却下
+   - C-1 `DotEq` 表現方式 = **候補 B (`IsLittleO`)**: InformationTheory inline (`ℝ` 値) と型がマッチ、Mathlib `IsLittleO` 代数を直接活用。候補 A (`Tendsto`) は in-essence 候補 B + 1 bridge と同等、候補 C (`ExpGrowth`) は `ℝ≥0∞`/`EReal` bridge cost で却下
    - C-2 値域 = **`ℝ` 値主のみ publish**、`ℝ≥0∞` 版 alias は本 I-3 では追加しない (後付可)
    - C-3 notation = **`≐` (U+2250) を `scoped[InformationTheory.Asymptotic]` で precedence 50**。教科書 `\doteq` (TeX) と同じ Unicode、Mathlib `Asymptotics` notation と衝突なし
    - C-4 `o(n)` notation = **Mathlib `=o[atTop]` 直書きのまま**、新規 notation 追加しない (Mathlib 慣習維持、I-1 と同じ思想)

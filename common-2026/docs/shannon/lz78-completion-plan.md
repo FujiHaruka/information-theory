@@ -11,7 +11,7 @@
 > (削除しない、設計の prior として参照)。
 >
 > **Goal (短形)**: base-2 distinct headline `lz78_two_sided_optimality_distinct_genuine`
-> (`Common2026/Shannon/LZ78AchievabilityLimsup.lean:233`) が現在 honest 入力として受ける
+> (`InformationTheory/Shannon/LZ78AchievabilityLimsup.lean:233`) が現在 honest 入力として受ける
 > **2 named primitive** を genuine に discharge し、無仮定の base-2 headline を publish。
 > **標準B (無条件機械検証)**、**0 sorry / 0 warning**、`#print axioms` で sorryAx 非依存維持。
 
@@ -247,7 +247,7 @@ Core 2 は Kraft の O(1/n) 整数化 gap)。
 ### ファイル構成
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   LZ78ConverseAveraged.lean    ← 新規 (~580 行) — Core 2 群
                                  ・blockKraftSum_le_one                        (C2, Shannon-code 代用)
                                  ・(def blockShannonLength? — C2/C3 設計次第)
@@ -259,7 +259,7 @@ Common2026/Shannon/
                                  ・ziv_count_mul_log_le_neg_log_blockProb       (Z3, 組合せ Ziv)
                                  ・isLZ78AchievabilityZivUpperBound_distinct    (Z4, per-path slack)
   LZ78AchievabilityLimsup.lean ← (Phase V) 無仮定 headline 別名を追記 (任意、既存定理は不変)
-  Common2026.lean              ← import 2 行追記
+  InformationTheory.lean              ← import 2 行追記
 ```
 
 ---
@@ -320,7 +320,7 @@ Common2026/Shannon/
 
 skeleton-driven (CLAUDE.md): Core 2 群の全 def/定理を `:= by sorry` で並べ、namespace/imports/variable 確定。
 
-- [ ] imports: `Common2026.Shannon.ShannonCode` (Kraft 資産), `LZ78ConverseKraft`
+- [ ] imports: `InformationTheory.Shannon.ShannonCode` (Kraft 資産), `LZ78ConverseKraft`
       (`IsLZ78ConverseCodingLowerBound` structure + `shannon_mcmillan_breiman₂`),
       `LZ78ZivEntropyBridge` (`blockLogAvg₂`/`prefixBlockProb`/`entropyRate₂`),
       `LZ78DistinctEncoding` (`lz78DistinctEncodingLength`), `BirkhoffErgodic` (`birkhoff_ergodic_ae`),
@@ -331,7 +331,7 @@ skeleton-driven (CLAUDE.md): Core 2 群の全 def/定理を `:= by sorry` で並
 - [ ] variable: `{α Ω}` + 有限 alphabet instances + `[MeasurableSpace Ω]`。
 - [ ] 全 declaration を `:= by sorry` で stub: `blockKraftSum_le_one`, (必要なら `blockShannonLength` def),
       averaged 下界 lemma, `isLZ78ConverseCodingLowerBound_distinct`。
-- [ ] **検証**: `lake env lean Common2026/Shannon/LZ78ConverseAveraged.lean` が sorry warning のみ。
+- [ ] **検証**: `lake env lean InformationTheory/Shannon/LZ78ConverseAveraged.lean` が sorry warning のみ。
 - **撤退ライン**: なし (skeleton のみ)。proof-log: no。
 
 ---
@@ -410,7 +410,7 @@ C3 の per-path eventual 下界 + slack→0 を structure に詰め、`IsLZ78Con
 
 skeleton-driven: Core 1 群の全 def/定理を `:= by sorry` で並べ、namespace/imports/variable 確定。
 
-- [ ] imports: `Common2026.Shannon.LZ78ZivEntropyBridge` (`condPhraseProb`/`prefixBlockProb`/
+- [ ] imports: `InformationTheory.Shannon.LZ78ZivEntropyBridge` (`condPhraseProb`/`prefixBlockProb`/
       `parsingBoundary`/`log_sum_inequality`/`blockProb_neg_log_ge_sum`/base-2 層),
       `StationaryKernel` (`isLZ78PerPathParsingFactorization_of_pos`/`prefixBlockProb_antitone`),
       `LZ78ZivCountingBody` (boundedness envelope), `LZ78GreedyLongestPrefix` (`lz78PhraseStrings_nodup`),
@@ -421,7 +421,7 @@ skeleton-driven: Core 1 群の全 def/定理を `:= by sorry` で並べ、namesp
 - [ ] 全 declaration を `:= by sorry` で stub: (必要なら `parsingStratum` def),
       `condPhraseProb_stratumSum_le_one`, `ziv_count_mul_log_le_neg_log_blockProb`,
       `isLZ78AchievabilityZivUpperBound_distinct`。
-- [ ] **検証**: `lake env lean Common2026/Shannon/LZ78ZivCombinatorics.lean` が sorry warning のみ。
+- [ ] **検証**: `lake env lean InformationTheory/Shannon/LZ78ZivCombinatorics.lean` が sorry warning のみ。
 - **撤退ライン**: なし (skeleton のみ)。proof-log: no。
 
 ---
@@ -508,8 +508,8 @@ Z3 の `c·log₂c ≤ -log₂Pₙ` を per-symbol `lz/n ≤ blockLogAvg₂ + sl
       段階着地時 (片方の core のみ genuine) は、残った honest primitive を正直に明記した中間 headline を publish。
 - [ ] **`#print axioms lz78_two_sided_optimality_distinct`** で **sorryAx 非依存** を確認
       (`propext`/`Classical.choice`/`Quot.sound` のみ許容)。これが標準B の機械検証バー。
-- [ ] `Common2026.lean` に `import Common2026.Shannon.LZ78ConverseAveraged` と
-      `import Common2026.Shannon.LZ78ZivCombinatorics` を追記 (`LZ78AchievabilityLimsup` import の前後、
+- [ ] `InformationTheory.lean` に `import InformationTheory.Shannon.LZ78ConverseAveraged` と
+      `import InformationTheory.Shannon.LZ78ZivCombinatorics` を追記 (`LZ78AchievabilityLimsup` import の前後、
       依存順に)。
 - [ ] **検証**: `lake env lean` で 2 新規 file + headline file が silent (0 error / 0 sorry / 0 warning)。
       最後に `lake build` 一回で project-wide sanity (upstream olean refresh 兼)。
@@ -520,9 +520,9 @@ Z3 の `c·log₂c ≤ -log₂Pₙ` を per-symbol `lz/n ≤ blockLogAvg₂ + sl
 
 ## Blast radius
 
-- **新規 lemma 投入先**: `Common2026/Shannon/LZ78ConverseAveraged.lean` (新規, ~580 行, Core 2 群) +
-  `Common2026/Shannon/LZ78ZivCombinatorics.lean` (新規, ~580 行, Core 1 群)。
-- **編集される既存ファイル**: `Common2026.lean` (import 2 行追記)。`LZ78AchievabilityLimsup.lean` は
+- **新規 lemma 投入先**: `InformationTheory/Shannon/LZ78ConverseAveraged.lean` (新規, ~580 行, Core 2 群) +
+  `InformationTheory/Shannon/LZ78ZivCombinatorics.lean` (新規, ~580 行, Core 1 群)。
+- **編集される既存ファイル**: `InformationTheory.lean` (import 2 行追記)。`LZ78AchievabilityLimsup.lean` は
   **任意** (Phase V の無仮定 headline を別名で追記する場合のみ、既存定理は不変)。
 - **signature 変更ゼロ確認**: 再利用する既存 genuine 補題はすべて **黒箱 reuse、signature 不変**:
   - foundation: `blockProb_neg_log_ge_sum` (`LZ78ZivEntropyBridge.lean:225`), `log_sum_inequality` (`:69`),

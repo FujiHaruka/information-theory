@@ -16,7 +16,7 @@
 `docs/audit/sorry-migration-runbook.md`「並列実行候補 family」表で
 BrunnMinkowski は **Round 2 (中-大)** 候補。verbatim 再計数 (2026-05-25):
 
-- `Common2026/Shannon/BrunnMinkowski*.lean` 6 file の legacy marker 総計
+- `InformationTheory/Shannon/BrunnMinkowski*.lean` 6 file の legacy marker 総計
   **40 declaration** (runbook 推定 30 と spec 推定 46 の中間、`@audit:suspect` 中心)。
 - 内訳 (declaration-level、Bash `awk` で legacy marker → 直後 decl の対応抽出):
   - `BrunnMinkowskiFunctional.lean` — **13** (suspect 11、+ structure `IsPrekopaLeindlerHyp`
@@ -39,7 +39,7 @@ BrunnMinkowski は **Round 2 (中-大)** 候補。verbatim 再計数 (2026-05-25
 - `@audit:suspect(brunn-minkowski-moonshot-plan)` 3 件
 - 既存 `sorry` 1 件 (`BrunnMinkowskiLayerCakeBody.lean` word-boundary 計数で 1 hit、本 sweep で
   `@residual` 付与漏れの可能性。**Pattern D 適用、Inventory step で verbatim 再確認必須**)
-- 既存 `@residual` 0 件 (`rg '@residual' Common2026/Shannon/BrunnMinkowski*.lean` 結果)
+- 既存 `@residual` 0 件 (`rg '@residual' InformationTheory/Shannon/BrunnMinkowski*.lean` 結果)
 - 既存 HONESTY ALERT / FALSE は **検出 0 件** (Pattern H 安全)
 
 ### 上位 moonshot との関係 (重要)
@@ -70,7 +70,7 @@ publish 済** (suspect の load-bearing 部分は `IsUniformOnEntropyLogVol` 3 +
 
 本 plan の DoD は `CLAUDE.md`「Definition of Done — 2 段階」の **type-check done**:
 
-- 各 file `lake env lean Common2026/Shannon/<file>.lean` が 0 errors、
+- 各 file `lake env lean InformationTheory/Shannon/<file>.lean` が 0 errors、
 - 各新規 `sorry` に `@residual(<class>:<slug>)` タグが付き、
 - 各 Phase 完了時に honesty-auditor (or `general-purpose` SoT-brief) を起動して classification を独立検証。
 
@@ -209,7 +209,7 @@ Fubini 配線、凸体 Brunn-Minkowski の Mathlib 不在) の closure は本 pl
 
 ## 在庫: 40 件 declaration の verbatim 分類
 
-verbatim 確認方法: `Common2026/Shannon/BrunnMinkowski*.lean` を Read で legacy marker 周辺
+verbatim 確認方法: `InformationTheory/Shannon/BrunnMinkowski*.lean` を Read で legacy marker 周辺
 docstring + 直後 `theorem`/`def`/`structure` signature + body 1-3 行を実コードから読み込み。
 本 plan 起草時 (2026-05-25) の line 番号で記録、Phase 0 で実装時に再確認 (verbatim 確認義務)。
 
@@ -293,7 +293,7 @@ docstring + 直後 `theorem`/`def`/`structure` signature + body 1-3 行を実コ
   (`prekopa_leindler_1D_body` / `pl2_induction_scalar_combine` / `prekopa_leindler_induction_step` /
   `isPrekopaLeindlerHyp_of_1D_body` / `indicatorToConvexBody_of_1D_body`) の `@audit:suspect` 削除。
   - signature 改変なし、regularity hyp + structure constructor として保持。
-  - `lake env lean Common2026/Shannon/BrunnMinkowskiPLBody.lean` で type-check done 確認。
+  - `lake env lean InformationTheory/Shannon/BrunnMinkowskiPLBody.lean` で type-check done 確認。
   - **inline detection**: `IsPL2FubiniSliceHyp` (scalar 等式 placeholder) の load-bearing 判定は
     auditor 委任。closure plan 内で「実 Fubini 未接続の旧 placeholder」と明示済のため本 sweep では touch しない。
 - [ ] **1.2** `BrunnMinkowskiLayerCakeBody.lean` Phase 1 候補 2 件
@@ -363,7 +363,7 @@ docstring + 直後 `theorem`/`def`/`structure` signature + body 1-3 行を実コ
 
 - [ ] **2.4** predicate 定義側の処理 (`IsBrunnMinkowskiEntropyHypothesis` /
   `IsUniformOnEntropyLogVolHypothesis` / `IsMinkowskiSumMeasurableHypothesis` / `IsBMEntropyPowerVolumeHyp`):
-  - Phase 2.1-2.3 完了後、consumer 集計 (`rg -n 'IsBrunnMinkowskiEntropyHypothesis|IsUniformOnEntropyLogVolHypothesis|IsMinkowskiSumMeasurableHypothesis' Common2026/`)。
+  - Phase 2.1-2.3 完了後、consumer 集計 (`rg -n 'IsBrunnMinkowskiEntropyHypothesis|IsUniformOnEntropyLogVolHypothesis|IsMinkowskiSumMeasurableHypothesis' InformationTheory/`)。
   - **closure plan 領域** (`BrunnMinkowskiClosure.lean`) は除外。
   - **依存ゼロなら**: `@audit:retract-candidate(load-bearing-predicate)` を docstring 末尾に付与。
   - **依然依存ありなら**: 「未決事項」#1 → user 判断仰ぐ。
@@ -382,8 +382,8 @@ docstring + 直後 `theorem`/`def`/`structure` signature + body 1-3 行を実コ
   `sorry` 12-15 件 (境界 tier 5 4 件の判定次第)。
 - predicate `IsBrunnMinkowskiEntropyHypothesis` / `IsUniformOnEntropyLogVolHypothesis` /
   `IsMinkowskiSumMeasurableHypothesis` は `@audit:retract-candidate(load-bearing-predicate)` 付与。
-- `lake env lean` 各 file 0 errors、`Common2026.lean` の import 行は変更なし。
-- olean refresh (`lake build Common2026.Shannon.BrunnMinkowski`) を Phase 2.1 完了直後に実行
+- `lake env lean` 各 file 0 errors、`InformationTheory.lean` の import 行は変更なし。
+- olean refresh (`lake build InformationTheory.Shannon.BrunnMinkowski`) を Phase 2.1 完了直後に実行
   (`BrunnMinkowski.lean` signature 改変が広範な dependent (Concavity / Functional / Closure) に
   影響するため、Pilot Pattern A 適用)。
 
@@ -457,22 +457,22 @@ mechanical な tag 整理が一気に走るため)。
 
 - [ ] **V.1** 全 6 file で `lake env lean` 確認 (Phase 2-3 で signature 改変 + olean refresh が必要)。
   - **olean refresh 順** (依存方向、Pilot Pattern A):
-    1. `lake build Common2026.Shannon.BrunnMinkowski` (Phase 2.1 改変、Concavity / Functional / Closure が
+    1. `lake build InformationTheory.Shannon.BrunnMinkowski` (Phase 2.1 改変、Concavity / Functional / Closure が
        transitive 依存)
-    2. `lake build Common2026.Shannon.BrunnMinkowskiFunctional` (Phase 2.3 改変、PLBody / Concavity が依存)
-    3. `lake env lean Common2026/Shannon/BrunnMinkowskiConcavity.lean`
-    4. `lake env lean Common2026/Shannon/BrunnMinkowskiPLBody.lean`
-    5. `lake env lean Common2026/Shannon/BrunnMinkowskiLayerCakeBody.lean`
-    6. `lake env lean Common2026/Shannon/BrunnMinkowskiClosure.lean`
+    2. `lake build InformationTheory.Shannon.BrunnMinkowskiFunctional` (Phase 2.3 改変、PLBody / Concavity が依存)
+    3. `lake env lean InformationTheory/Shannon/BrunnMinkowskiConcavity.lean`
+    4. `lake env lean InformationTheory/Shannon/BrunnMinkowskiPLBody.lean`
+    5. `lake env lean InformationTheory/Shannon/BrunnMinkowskiLayerCakeBody.lean`
+    6. `lake env lean InformationTheory/Shannon/BrunnMinkowskiClosure.lean`
 - [ ] **V.2** 集計コマンド実行:
   ```bash
-  rg '@audit:suspect' Common2026/Shannon/BrunnMinkowski*.lean | wc -l      # = 0 (closure plan suspect 残置を除く)
-  rg '@audit:defect|@audit:defer|@audit:staged' Common2026/Shannon/BrunnMinkowski*.lean  # = closure plan 領域のみ
-  rg '@residual\(plan:brunn-minkowski-sorry-migration-plan\)' Common2026/Shannon/BrunnMinkowski*.lean | wc -l
-  rg '@residual\(defect:circular\)' Common2026/Shannon/BrunnMinkowski*.lean | wc -l
-  rg '@audit:retract-candidate\(load-bearing-predicate' Common2026/Shannon/BrunnMinkowski*.lean | wc -l
-  rg '@audit:retract-candidate\(closure-plan-completed\)' Common2026/Shannon/BrunnMinkowski*.lean | wc -l
-  rg -nw 'sorry' Common2026/Shannon/BrunnMinkowski*.lean
+  rg '@audit:suspect' InformationTheory/Shannon/BrunnMinkowski*.lean | wc -l      # = 0 (closure plan suspect 残置を除く)
+  rg '@audit:defect|@audit:defer|@audit:staged' InformationTheory/Shannon/BrunnMinkowski*.lean  # = closure plan 領域のみ
+  rg '@residual\(plan:brunn-minkowski-sorry-migration-plan\)' InformationTheory/Shannon/BrunnMinkowski*.lean | wc -l
+  rg '@residual\(defect:circular\)' InformationTheory/Shannon/BrunnMinkowski*.lean | wc -l
+  rg '@audit:retract-candidate\(load-bearing-predicate' InformationTheory/Shannon/BrunnMinkowski*.lean | wc -l
+  rg '@audit:retract-candidate\(closure-plan-completed\)' InformationTheory/Shannon/BrunnMinkowski*.lean | wc -l
+  rg -nw 'sorry' InformationTheory/Shannon/BrunnMinkowski*.lean
   ```
 - [ ] **V.3** 親 plan banner 更新:
   - `brunn-minkowski-moonshot-plan.md` 末尾「Full genuine closure (後続 plan)」節に本 plan へのポインタ追記
@@ -580,7 +580,7 @@ mechanical な tag 整理が一気に走るため)。
    で済ませるか、implementer の verbatim 確認 + auditor verdict 待ち。
 
 8. **declaration 数 (本 plan 40 件 vs spec 46 件)** — **closed 2026-05-25 (Round 2 closure F5)**:
-   `rg -c "@audit:suspect|@audit:staged|@audit:defer|@audit:defect|🟢ʰ" Common2026/Shannon/BrunnMinkowski*.lean`
+   `rg -c "@audit:suspect|@audit:staged|@audit:defer|@audit:defect|🟢ʰ" InformationTheory/Shannon/BrunnMinkowski*.lean`
    合計 = **46 marker 行** (suspect 34 + staged 1 + defer 2 + defect 2 + 🟢ʰ 10、ただし一部行は
    複数 marker overlap)。本 plan の 40 件は **distinct declaration count** で集計したもの。差分 6 件は
    同一 declaration 内の docstring + コメントに複数 marker 行を持つケース (例: docstring に suspect、
@@ -591,7 +591,7 @@ mechanical な tag 整理が一気に走るため)。
 
 書く頻度: 方針変更 / 撤退ライン発動 / 当初仮定の修正があったとき。append-only。
 
-1. **2026-05-25 plan 起草**: lean-planner agent が `Common2026/Shannon/BrunnMinkowski*.lean` 6 file の
+1. **2026-05-25 plan 起草**: lean-planner agent が `InformationTheory/Shannon/BrunnMinkowski*.lean` 6 file の
    legacy marker (suspect 28 + defer 2 + staged 1 + defect 2 + 散文 `🟢ʰ` 多数) を verbatim 読込で
    per-declaration 分類。declaration-level で 40 件と確定 (spec 46 件との差分は散文重複の可能性、
    未決事項 #8 で再確認)。Pattern P-1/P-2/V/C/structure/closure-plan-territory の 5 大カテゴリに分類。

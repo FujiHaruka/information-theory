@@ -1,7 +1,7 @@
 # Rate-distortion converse (single-shot) ムーンショット計画 🌙
 
 > 実態整合 (2026-05-20): DONE-UNCOND (single-shot) — headline `rate_distortion_converse_single_shot`
-> (`Common2026/Shannon/RateDistortionConverse.lean:133`) は DPI + Fano + max-entropy 連鎖の実証明 (0 sorry) で publish、
+> (`InformationTheory/Shannon/RateDistortionConverse.lean:133`) は DPI + Fano + max-entropy 連鎖の実証明 (0 sorry) で publish、
 > 副条件は `hMI_W_finite` (MI 有限性) のみで honest。E-4' `rate_distortion_converse_single_shot_specified` +
 > `rateDistortionFunction_antitone` (`RateDistortionConverseMonotone.lean:65,37`) も完了。
 > 後継 E-4'' (convexity + n-letter) は `rate-distortion-convexity-plan.md` 側に landing 済。
@@ -24,7 +24,7 @@ E-3 (achievability) は plan-only で並走。R(D) 定義 + distortion 定義は
 - [x] Phase C — 単発 converse (主定理) ✅
   - [x] **C.1** `rate_distortion_converse_single_shot`
 - [x] **E-4' MVP**: R(D) antitone + specified-distortion form ✅ (2026-05-14、
-      `Common2026/Shannon/RateDistortionConverseMonotone.lean` 151 行 0 sorry)
+      `InformationTheory/Shannon/RateDistortionConverseMonotone.lean` 151 行 0 sorry)
   - `rateDistortionFunction_antitone`: `D₁ ≤ D₂ ⟹ R(D₂) ≤ R(D₁)` (feasible set monotone)
   - `rate_distortion_converse_single_shot_specified`: `D̃ ≤ D ⟹ R(D).toReal ≤ log|M|`
     (親 single-shot 形 + monotonicity 合成)
@@ -33,7 +33,7 @@ E-3 (achievability) は plan-only で並走。R(D) 定義 + distortion 定義は
 
 ## 実装完了
 
-**実装ファイル**: [`Common2026/Shannon/RateDistortionConverse.lean`](../../Common2026/Shannon/RateDistortionConverse.lean) (213 行)
+**実装ファイル**: [`InformationTheory/Shannon/RateDistortionConverse.lean`](../../InformationTheory/Shannon/RateDistortionConverse.lean) (213 行)
 
 **主要 def + theorem**:
 - `expectedDistortion d ν`: 期待歪み (joint 上の積分)
@@ -42,11 +42,11 @@ E-3 (achievability) は plan-only で並走。R(D) 定義 + distortion 定義は
 - `rate_distortion_converse_single_shot`:
   `(R(D̃)).toReal ≤ Real.log |M|` where `D̃ = ∫ d(X, decoder(encoder X)) ∂μ`
 
-**Mathlib gap**: なし。既存 `Common2026/Shannon/` 資産で完結
+**Mathlib gap**: なし。既存 `InformationTheory/Shannon/` 資産で完結
 (`MaxEntropy.entropy_le_log_card` + `Bridge.mutualInfo_eq_entropy_sub_condEntropy` +
 `Pi.condEntropy_nonneg` + `DPI.mutualInfo_le_of_postprocess` + `MutualInfo.mutualInfo_comm`).
 
-**0 sorry 達成**: `lake env lean Common2026/Shannon/RateDistortionConverse.lean` silent。
+**0 sorry 達成**: `lake env lean InformationTheory/Shannon/RateDistortionConverse.lean` silent。
 
 ## ゴール / Approach
 
@@ -63,7 +63,7 @@ Real.log M ≥ (rateDistortionFunction (μ.map X) D̃).toReal
 
 ### 全体戦略 (Approach)
 
-**形 (shape)**: single-shot Shannon converse `Common2026/Shannon/Converse.lean` の
+**形 (shape)**: single-shot Shannon converse `InformationTheory/Shannon/Converse.lean` の
 **rate-distortion 鏡像**。Fano (誤り確率) の代わりに R(D) (期待歪み) で MI を
 下から押さえる。chain rule + Jensen 抜きで n=1 まで絞れば 0 sorry が現実的。
 
@@ -96,7 +96,7 @@ joint distribution の上の凸関数であるという解析的事実は ~1000 
 
 ## 既存資産の流用
 
-`Common2026/Shannon/` 既存資産 (本 plan が完全流用):
+`InformationTheory/Shannon/` 既存資産 (本 plan が完全流用):
 
 | 資産 | 用途 |
 |---|---|
@@ -228,7 +228,7 @@ Step 4 詳細:
 
 ## Mathlib gap
 
-なし。すべて既存 `Common2026/Shannon/` 資産で press できる見込み。
+なし。すべて既存 `InformationTheory/Shannon/` 資産で press できる見込み。
 新規補題は plan 内記載 4 個 (Phase A/B/C).
 
 ## 後継 (deferred)

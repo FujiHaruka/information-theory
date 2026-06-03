@@ -11,13 +11,13 @@
 > Hypothesis 1 (`SwapNormalizationHypothesis`) の周辺 plumbing / 1 通り完遂可能 partial 補題群を
 > **独立 publish** する縮小 scope 計画.
 >
-> 実態整合 (2026-05-20): DONE-HONEST-HYPS (partial、scope 通り) — `Common2026/Shannon/HuffmanT1APPrimePartial.lean` (0 sorry) に plan 記載の補題群を publish 済: `swap_step_le_pos` `:47` / `_kraft` `:58` / `_expectedLength_le` `:69` / `_values` `:81`、`swap_step_le_self` `:106`、`swap_compose_self_eq` `:147`、`SwapNormalizationHypothesis_trivial_when_eq` `:172` (`ll a = ll b` の trivial case のみ — `l_norm := ll` で自己 discharge)。これらは plumbing 補題で、`SwapNormalizationHypothesis` の **非自明 case は discharge されていない** (plan scope-out 通り)。pass-through (`Prop := True`) 不在。本 plan の縮小 scope DoD は達成。
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS (partial、scope 通り) — `InformationTheory/Shannon/HuffmanT1APPrimePartial.lean` (0 sorry) に plan 記載の補題群を publish 済: `swap_step_le_pos` `:47` / `_kraft` `:58` / `_expectedLength_le` `:69` / `_values` `:81`、`swap_step_le_self` `:106`、`swap_compose_self_eq` `:147`、`SwapNormalizationHypothesis_trivial_when_eq` `:172` (`ll a = ll b` の trivial case のみ — `l_norm := ll` で自己 discharge)。これらは plumbing 補題で、`SwapNormalizationHypothesis` の **非自明 case は discharge されていない** (plan scope-out 通り)。pass-through (`Prop := True`) 不在。本 plan の縮小 scope DoD は達成。
 
 > **2026-05-24 Wave 1.5-c (集約)**: 本 plan slug の suspect 19 件 (`HuffmanT1APPrimeBody.lean` 15 件 + `HuffmanT1APPrimePartial.lean` 4 件 — Section C / D / F / H / J / M + Wave 4-H/J/K/P の extractor / wrapper 群) は **plan scope を大幅に超えた publish** であり、Huffman 3-plan の **2 hypothesis 共有部分** を [`huffman-2hyp-vertical-reduction-plan.md`](./huffman-2hyp-vertical-reduction-plan.md) に集約済 (新 slug: 19 件 → `staged(huffman-2hyp)`)。本 plan は plumbing 補題 publish 完了の SoT として archive 化せず継続。詳細 → [`docs/audit/wave1-plan-sync-source-coding.md`](../audit/wave1-plan-sync-source-coding.md) §Recommendations 1+2。
 
 ## Goal (縮小)
 
-`Common2026/Shannon/HuffmanT1APPrimePartial.lean` を **新規 publish** (~150-300 行).
+`InformationTheory/Shannon/HuffmanT1APPrimePartial.lean` を **新規 publish** (~150-300 行).
 完全 hypothesis discharge は **scope-out** (judgement log #3 で「~550 行 / 4-6 セッション」と
 再判定済). 本 plan は Hypothesis 1 (`SwapNormalizationHypothesis`) の周辺で 1 セッション
 完遂可能な partial / plumbing 補題群を切り出して publish.
@@ -57,7 +57,7 @@ publish: 「`ll a = ll b` も含む trivial 系」を確定形で公開, single-
 
 ### 0 sorry 着地形 (本 plan 完遂時)
 
-`Common2026/Shannon/HuffmanT1APPrimePartial.lean` (~200 行 / 0 sorry / 0 warning) に以下を
+`InformationTheory/Shannon/HuffmanT1APPrimePartial.lean` (~200 行 / 0 sorry / 0 warning) に以下を
 publish:
 
 ```lean
@@ -88,9 +88,9 @@ discharge 予定**.
 
 ### 既存資産の不変性
 
-- `Common2026/Shannon/HuffmanOptimality.lean` (1054 行 / 0 sorry / weak form publish): **不変**.
-- `Common2026/Shannon/Huffman.lean` (961 行 / 0 sorry): **不変**.
-- `Common2026.lean`: 不変 (本 plan は新規 file 追加するが Common2026.lean は import 経路
+- `InformationTheory/Shannon/HuffmanOptimality.lean` (1054 行 / 0 sorry / weak form publish): **不変**.
+- `InformationTheory/Shannon/Huffman.lean` (961 行 / 0 sorry): **不変**.
+- `InformationTheory.lean`: 不変 (本 plan は新規 file 追加するが InformationTheory.lean は import 経路
   整備の trade-off 評価で **追記しない** — partial publish は ad-hoc 補題集の位置付け、
   公的 library API には昇格させない).
 - `docs/textbook-roadmap.md`: 不変 (T1-A''' で完全 discharge 達成時にステータス更新).

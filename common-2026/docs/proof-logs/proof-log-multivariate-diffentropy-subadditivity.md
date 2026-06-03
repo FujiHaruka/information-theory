@@ -3,7 +3,7 @@
 date: 2026-05-25
 agent: lean-implementer (parallel worktree)
 parent plan: `docs/shannon/multivariate-diffentropy-subadditivity-plan.md`
-touched file: `Common2026/Shannon/MultivariateDiffEntropy.lean`
+touched file: `InformationTheory/Shannon/MultivariateDiffEntropy.lean`
 
 ## summary of landing state
 
@@ -74,7 +74,7 @@ Estimated remaining work to land case A genuinely: another 2–3 turns to debug 
 
 ## Phase 3 — AWGN plan-side reflection
 
-`rg -nB1 'differential-entropy-plan' Common2026/Shannon/AWGNAchievabilityDischarge.lean` confirmed:
+`rg -nB1 'differential-entropy-plan' InformationTheory/Shannon/AWGNAchievabilityDischarge.lean` confirmed:
 - L31–32: prose docstring referencing `@audit:suspect(differential-entropy-plan)` in an *explanatory* narrative ("Option β goes through the suspect tag X; Option γ avoids it").
 - L116–117: similar prose narrative.
 
@@ -97,7 +97,7 @@ Final `@audit:` grep:
 ```
 (Lines 41 / 51 / 586 are docstring narrative references to tag names, not standalone tags.)
 
-`lake env lean Common2026/Shannon/MultivariateDiffEntropy.lean` → silent (0 error, 0 sorry, 0 warning).
+`lake env lean InformationTheory/Shannon/MultivariateDiffEntropy.lean` → silent (0 error, 0 sorry, 0 warning).
 
 ## meta — observations for the plan family
 

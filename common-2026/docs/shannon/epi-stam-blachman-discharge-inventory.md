@@ -1,6 +1,6 @@
 # EPI Stam/Blachman discharge — Mathlib feasibility 在庫
 
-> 調査対象: `entropy_power_inequality` (`Common2026/Shannon/EntropyPowerInequality.lean:188`)
+> 調査対象: `entropy_power_inequality` (`InformationTheory/Shannon/EntropyPowerInequality.lean:188`)
 > を Stam/Blachman 経路で **unconditional** にできるか。
 > 焦点: undischarged な "genuinely-irreducible Stam primitives" の正確な同定 +
 > Blachman score-of-convolution identity への Mathlib 支援の有無。
@@ -15,7 +15,7 @@
 という同一の measure-theoretic コアに帰着する。このコアを 1 セッションで埋めるのは不可能。理由：
 
 1. **Fisher 情報の抽象が flaw 上に乗っている。** 全 Stam primitive は **V1**
-   `Common2026.Shannon.fisherInfo` (`FisherInfo.lean:58`、`Measure.rnDeriv` =
+   `InformationTheory.Shannon.fisherInfo` (`FisherInfo.lean:58`、`Measure.rnDeriv` =
    `Classical.choose` 経由) を `.toReal` で参照する。V2 file 自身の docstring が明言する通り
    V1 は Gaussian で **0 を返す flaw** がある (`FisherInfoV2.lean:25-29`)。現状の Gaussian 全
    discharge (`*_of_gaussian_fisherInfo_zero`) は **この flaw を悪用**し、`0 < J_X` の前提を
@@ -80,7 +80,7 @@
 | `IsEntropyPowerInequalityHypothesis` | `EntropyPowerInequality.lean:168` | (EPI 結論 `entropyPower(X+Y) ≥ …` そのもの) | **= 結論** (L-EPI3 密輸) | `_of_gaussian` (saturation) |
 
 **`fisherInfo` 参照の致命的注記**: 上表で「(V1)」と記したものは全て
-`(Common2026.Shannon.fisherInfo (P.map X)).toReal` を参照 (V1、`FisherInfo.lean:58`)。
+`(InformationTheory.Shannon.fisherInfo (P.map X)).toReal` を参照 (V1、`FisherInfo.lean:58`)。
 **`fisherInfoOfDensity` (V2, `FisherInfoV2.lean:88`) を使う primitive は 1 本も無い。**
 V2 は Gaussian で `1/v` を正しく返す (`fisherInfoOfDensity_gaussianPDFReal`,
 `FisherInfoV2.lean:296`) が、Stam 鎖は V2 に接続されていない。
@@ -307,7 +307,7 @@ theorem hasDerivAt_integral_of_dominated_loc_of_deriv_le (hs : s ∈ 𝓝 x₀)
    — `condVar_ae_le_condExp_sq` (`CondVar.lean:127`) を score `g = λs_X+(1-λ)s_Y` に適用し、
    `p_Z` に対し全期待値を取り cross-term を独立性で落とす。**工数 60-150 行**。前提に #1,#2 必須。
 
-4. **V1→V2 fisherInfo 張り替え** — 全 Stam primitive の `Common2026.Shannon.fisherInfo`
+4. **V1→V2 fisherInfo 張り替え** — 全 Stam primitive の `InformationTheory.Shannon.fisherInfo`
    参照を `fisherInfoOfDensity (pdfReal ·)` に置換し、Gaussian discharge を flaw-vacuous から
    真の値 (`fisherInfoOfDensity_gaussianPDFReal = 1/v`) に切替。**工数 file 横断 50-120 行**。
    #1-3 を意味あるものにする**前提条件**。
@@ -351,12 +351,12 @@ unconditional に閉じている経路は Gaussian saturation (`entropy_power_in
 
 ## 着手 skeleton (もし最 tractable sub-target に着手するなら)
 
-`Common2026/Shannon/EPIBlachmanConvScore.lean` (新規) の出だし。
+`InformationTheory/Shannon/EPIBlachmanConvScore.lean` (新規) の出だし。
 **注意: 本ファイルは inventory 専用。以下は実装サブエージェント向けの参考 skeleton であり、
 本調査では一切実装しない。**
 
 ```lean
-import Common2026.Shannon.FisherInfoV2
+import InformationTheory.Shannon.FisherInfoV2
 import Mathlib.Probability.Density
 import Mathlib.Probability.Independence.Basic
 import Mathlib.Probability.Kernel.CondDistrib

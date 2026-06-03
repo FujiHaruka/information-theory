@@ -1,10 +1,10 @@
-# T4-A Arithmetic Coding — Mathlib + Common2026 在庫 (M0)
+# T4-A Arithmetic Coding — Mathlib + InformationTheory 在庫 (M0)
 
 > **Parent plan**: [`arithmetic-coding-moonshot-plan.md`](./arithmetic-coding-moonshot-plan.md)
 >
 > **親 seed**: [`textbook-roadmap.md`](../textbook-roadmap.md) §「Tier 4 — T4-A. Arithmetic Coding / Lempel-Ziv (LZ78) 漸近最適性」 (Ch.13 Universal Source Coding)。LZ78 側は publish 済 (`LempelZiv78.lean`)。本 seed は **arithmetic coding (Cover-Thomas 13.3, Shannon-Fano-Elias) 独立 publish**。
 >
-> **狙い**: 単一ファイル `Common2026/Shannon/ArithmeticCoding.lean` で Cover-Thomas Theorem 13.3.3 (Shannon-Fano-Elias / arithmetic coding) の **expected length sandwich** `H(X) ≤ E[L] ≤ H(X) + 2` を **statement-level hypothesis pass-through** で publish。**0 sorry / 0 warning**。
+> **狙い**: 単一ファイル `InformationTheory/Shannon/ArithmeticCoding.lean` で Cover-Thomas Theorem 13.3.3 (Shannon-Fano-Elias / arithmetic coding) の **expected length sandwich** `H(X) ≤ E[L] ≤ H(X) + 2` を **statement-level hypothesis pass-through** で publish。**0 sorry / 0 warning**。
 >
 > **scope**: 副次に prefix-free + unique-decodable 性。Mathlib に arithmetic coding 系 / cumulative-distribution truncation / binary expansion of `Real` の符号化補題は皆無。
 
@@ -14,15 +14,15 @@ Arithmetic coding (Cover-Thomas 13.3) の formal 構造 (累積分布 truncation
 
 * `loogle "arithmeticCoding"` / `loogle "ShannonFano"` / `find -iname "*arithmetic*"` の `Mathlib` 関連は **0 件** (`Mathlib.Algebra.Order.Floor.Semiring` / `Real.toNNRealRecursive` のような general 補題のみ)。
 * `Real.toBin` 系 / 累積分布の `⌈⌉`-truncation 系も Mathlib 無し。
-* 既存 `Common2026/Shannon/ShannonCode.lean` (Cover-Thomas 5.4 / 5.8.1) の `entropyD`, `expectedLength` 定義はそのまま再利用可能 (D-ary log で書かれているが、本 seed では `D = 2` 固定で natural-log 経由でも書けるので互換)。
+* 既存 `InformationTheory/Shannon/ShannonCode.lean` (Cover-Thomas 5.4 / 5.8.1) の `entropyD`, `expectedLength` 定義はそのまま再利用可能 (D-ary log で書かれているが、本 seed では `D = 2` 固定で natural-log 経由でも書けるので互換)。
 
 → 結論: **撤退ライン L-AC1 + L-AC2 + L-AC3 全採用**で seed 規模 ~400-600 行に着地。`LempelZiv78.lean` (548 行) の pass-through pattern と完全同型。LZ78 は achievability + converse の二重 pass-through (5 retreat lines) だったが、arithmetic coding は expected-length bound + prefix-free + unique-decodable の 3 つで凝縮できる。
 
 ---
 
-## 1. 既存 Common2026 在庫 (黒箱 reuse)
+## 1. 既存 InformationTheory 在庫 (黒箱 reuse)
 
-### 1.1 `Common2026/Shannon/ShannonCode.lean` (Cover-Thomas 5.4)
+### 1.1 `InformationTheory/Shannon/ShannonCode.lean` (Cover-Thomas 5.4)
 
 * **L43** `noncomputable def entropyD (D : ℝ) (P : Measure α) : ℝ := -∑ a : α, P.real {a} * Real.logb D (P.real {a})` — D-ary entropy
 * **L55** `noncomputable def expectedLength (P : Measure α) (l : α → ℕ) : ℝ := ∑ a : α, P.real {a} * (l a : ℝ)`
@@ -34,13 +34,13 @@ Arithmetic coding (Cover-Thomas 13.3) の formal 構造 (累積分布 truncation
 
 → Shannon code は `⌈-log p⌉` で `< H + 1` を達成。Arithmetic coding (Shannon-Fano-Elias) は `⌈-log p⌉ + 1` で **`≤ H + 2`** を達成 (累積分布 truncation の 1 bit overhead が乗る)。本 file は `entropyD`, `expectedLength` の定義を namespace 越しに re-use。
 
-### 1.2 `Common2026/Shannon/ShannonCodeKraftReverse.lean` (B-8')
+### 1.2 `InformationTheory/Shannon/ShannonCodeKraftReverse.lean` (B-8')
 
 * **L47** `def IsPrefixFree {D : ℕ} (c : α → List (Fin D)) : Prop := ∀ a b : α, a ≠ b → ¬ c a <+: c b`
 
 → 本 file の `arithmetic_coding_prefix_free` の statement で利用候補だが、arithmetic coding の codeword は `List Bool` (binary) なので、`IsPrefixFree` を `D = 2` で specialize するか、独立 `IsArithmeticPrefixFree` 述語を用意する。**L-AC2 hypothesis pass-through 形では `True` で済むので独立述語版**を採用 (signature 拡張余地のため)。
 
-### 1.3 `Common2026/Shannon/LempelZiv78.lean` (T4-A LZ78, 548 行)
+### 1.3 `InformationTheory/Shannon/LempelZiv78.lean` (T4-A LZ78, 548 行)
 
 * **§2 Passthrough predicates** — `IsZivInequalityPassthrough`, `IsLZ78ConversePassthrough`, `IsSMBSandwichPassthrough` の 3 つの `Prop := True` placeholder predicate (signature に `μ`, `p`, `lz78EncodingLength` を取って後方拡張可能)
 * **§4 Main theorem** — `lz78_asymptotic_optimality` の body は `:= h_rate_bound` (identity wrap)
@@ -138,7 +138,7 @@ theorem arithmetic_coding_expected_length_bounds
 ## 5. ファイル構成 (predicted)
 
 ```
-Common2026/Shannon/ArithmeticCoding.lean
+InformationTheory/Shannon/ArithmeticCoding.lean
 ├── §1. ArithmeticCode 構造体 + length 投影      ~30 行
 ├── §2. Passthrough predicates (3 retreat)       ~80 行
 ├── §3. 主定理 + 副次定理 (3 theorems)            ~100 行

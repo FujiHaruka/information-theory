@@ -71,7 +71,7 @@ ${cssCdn}
 <body>
 <div class="container">
 ${bodyHtml}
-<p class="site-note">Common2026 — 形式化検証つき情報理論教科書（パイロット）。数式は KaTeX で事前レンダリング。</p>
+<p class="site-note">InformationTheory — 形式化検証つき情報理論教科書（パイロット）。数式は KaTeX で事前レンダリング。</p>
 </div>
 </body>
 </html>`;

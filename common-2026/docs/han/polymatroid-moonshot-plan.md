@@ -1,10 +1,10 @@
 # Polymatroid Axioms (Submodularity of Entropy) ムーンショット計画 🌙
 
-> 実態整合 (2026-05-20): DONE-UNCOND — `jointEntropySubset_submodular` (`Common2026/Shannon/Polymatroid.lean:192`、3-piece disjoint 分解 + `condEntropy_le_condEntropy_of_pair` で実証、標準 binder のみ) + `jointEntropySubset_empty` / `jointEntropySubset_mono`。`lake env lean Common2026/Shannon/Polymatroid.lean` silent、0 sorry。Phase D は (D-b) で別 plan ([polymatroid-structure-plan.md](polymatroid-structure-plan.md)) 化済で実態一致。
+> 実態整合 (2026-05-20): DONE-UNCOND — `jointEntropySubset_submodular` (`InformationTheory/Shannon/Polymatroid.lean:192`、3-piece disjoint 分解 + `condEntropy_le_condEntropy_of_pair` で実証、標準 binder のみ) + `jointEntropySubset_empty` / `jointEntropySubset_mono`。`lake env lean InformationTheory/Shannon/Polymatroid.lean` silent、0 sorry。Phase D は (D-b) で別 plan ([polymatroid-structure-plan.md](polymatroid-structure-plan.md)) 化済で実態一致。
 > **Status (2026-05-11): Phase A〜C 完了 ✅ (288 行 / 0 sorry)。** Phase D は
 > 計画通り (D-b) **別 plan に切り出し** (本 plan は 3 性質単発 theorem で close)。
-> Han Phase D 完了 (`Common2026/Shannon/HanD*.lean` の 8 主定理が 0 sorry) と
-> `Common2026/Shannon/Pi.lean` 切り出し直後、Loomis–Whitney
+> Han Phase D 完了 (`InformationTheory/Shannon/HanD*.lean` の 8 主定理が 0 sorry) と
+> `InformationTheory/Shannon/Pi.lean` 切り出し直後、Loomis–Whitney
 > ([`docs/shannon/loomis-whitney-moonshot-plan.md`](../shannon/loomis-whitney-moonshot-plan.md))
 > 完了に続く 2 本目のムーンショット。
 > Seed カード ([`docs/moonshot-seeds.md` Seed 2](../moonshot-seeds.md)) を母体に Phase 分解した。
@@ -16,7 +16,7 @@
 
 ## 進捗
 
-- [x] Phase 0 — Mathlib + 既存 Common2026 API インベントリ ✅ → [`polymatroid-mathlib-inventory.md`](polymatroid-mathlib-inventory.md)
+- [x] Phase 0 — Mathlib + 既存 InformationTheory API インベントリ ✅ → [`polymatroid-mathlib-inventory.md`](polymatroid-mathlib-inventory.md)
 - [x] Phase A — `jointEntropySubset_empty = 0` (空集合からの entropy) ✅
 - [x] Phase B — monotonicity (`S ⊆ T ⇒ H(X_S) ≤ H(X_T)`) ✅
 - [x] Phase C — submodularity (`H(X_{S∪T}) + H(X_{S∩T}) ≤ H(X_S) + H(X_T)`) ✅
@@ -33,7 +33,7 @@
        ≤ jointEntropySubset μ Xs S + jointEntropySubset μ Xs T
 ```
 
-`Common2026/Shannon/Polymatroid.lean` (新規) で着地。`Polymatroid` structure 導入は Phase D で改めて判断する。
+`InformationTheory/Shannon/Polymatroid.lean` (新規) で着地。`Polymatroid` structure 導入は Phase D で改めて判断する。
 
 **Approach (戦略の shape)**:
 
@@ -65,7 +65,7 @@
 ファイル構成 (Phase C 終了時):
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   HanD.lean           ← 既存 (jointEntropySubset, subset chain rule, condEntropy_subset_anti)
   Pi.lean             ← 既存 (entropy/condEntropy MeasurableEquiv 不変性)
   Polymatroid.lean    ← 新規: jointEntropySubset_empty,
@@ -74,9 +74,9 @@ Common2026/Shannon/
                         (+ Phase D で structure 化なら Polymatroid def + instance)
 ```
 
-`Common2026.lean` (library root) に `import Common2026.Shannon.Polymatroid` を追記。
+`InformationTheory.lean` (library root) に `import InformationTheory.Shannon.Polymatroid` を追記。
 
-## Phase 0 — Mathlib + 既存 Common2026 API インベントリ 📋
+## Phase 0 — Mathlib + 既存 InformationTheory API インベントリ 📋
 
 サブ計画: [`polymatroid-mathlib-inventory.md`](polymatroid-mathlib-inventory.md)
 
@@ -89,7 +89,7 @@ Common2026/Shannon/
 - [ ] **軸 5: `condEntropy` non-increasing in conditioner** (本 project / Mathlib): 既存 `condEntropy_subset_anti` (HanD.lean) で submodularity に十分か、または `condEntropy_le_condEntropy_of_pair` (Entropy.lean) の別形が必要か。Phase C の核
 - [ ] **軸 6: monotonicity の既存補題** (本 project): `jointEntropySubset_mono` のような `S ⊆ T` 形が既存していないか確認 (Han Phase D / Loomis–Whitney 内で部分実装されているかも)
 
-各軸で「Mathlib にあるか / ないか / 既存補題で代用可」+ 採用シグネチャ verbatim を記録。`Done` 条件は **「Phase A skeleton (`Common2026/Shannon/Polymatroid.lean` の sorry-driven 出だし) が書ける状態」**。
+各軸で「Mathlib にあるか / ないか / 既存補題で代用可」+ 採用シグネチャ verbatim を記録。`Done` 条件は **「Phase A skeleton (`InformationTheory/Shannon/Polymatroid.lean` の sorry-driven 出だし) が書ける状態」**。
 
 ## Phase A — `jointEntropySubset_empty = 0` 📋
 
@@ -113,8 +113,8 @@ theorem jointEntropySubset_empty
 - [ ] `entropy μ X = 0` for `X : Ω → β` with `[Unique β]` の補題を写経:
   - `HanD.lean` の chain rule base case (`n = 0` 分岐) で同じ流儀。`Fintype.sum_unique` + `μ {default} = 1` (probability measure 経由) + `Real.negMulLog_one = 0`
   - 既に Han.lean 内で使った 5〜10 行パターン
-- [ ] `Common2026.lean` に `import Common2026.Shannon.Polymatroid` を追記
-- [ ] `lake env lean Common2026/Shannon/Polymatroid.lean` で silent 化
+- [ ] `InformationTheory.lean` に `import InformationTheory.Shannon.Polymatroid` を追記
+- [ ] `lake env lean InformationTheory/Shannon/Polymatroid.lean` で silent 化
 
 ### Done 条件
 
@@ -229,7 +229,7 @@ theorem jointEntropySubset_submodular
 
 ### Done 条件
 
-- `jointEntropySubset_submodular` が `lake env lean Common2026/Shannon/Polymatroid.lean` で silent
+- `jointEntropySubset_submodular` が `lake env lean InformationTheory/Shannon/Polymatroid.lean` で silent
 - Phase A / B が活性化 (chain rule + reshape を本 Phase で fully exercise)
 - Pi reshape が Phase D `subsetSplitMEquiv` 流儀の 2 段適用で済むか / 新規補助補題が必要か、判断ログに記録
 
@@ -245,7 +245,7 @@ theorem jointEntropySubset_submodular
    - **既存している** → 本 plan の 3 性質をそのインスタンスとして登録する独立 PR 候補。Phase D 内で完結
    - **不在** → 本 plan で `Polymatroid` def を新規導入するかどうかは独立判断
 2. **不在のときの選択肢**:
-   - (D-a) 軽量 `def Polymatroid` (構造体: `rank : Finset ι → ℝ` + 3 公理 prop) を `Common2026/Shannon/Polymatroid.lean` 末尾に追加。`jointEntropySubset` を `Polymatroid` インスタンスとして登録する `noncomputable instance` を組む
+   - (D-a) 軽量 `def Polymatroid` (構造体: `rank : Finset ι → ℝ` + 3 公理 prop) を `InformationTheory/Shannon/Polymatroid.lean` 末尾に追加。`jointEntropySubset` を `Polymatroid` インスタンスとして登録する `noncomputable instance` を組む
    - (D-b) `Polymatroid` 自体を独立 plan に切り出し (Mathlib upstream PR 候補)、本 plan は 3 性質単発 theorem で close
 3. **デフォルト**: (D-b)。本 plan の core delivery は 3 性質単発で十分、structure 化は副産物として Phase D 着手時に再評価。
 
@@ -296,7 +296,7 @@ D-a なら 1 日 (20〜40 行、structure + instance のみ)。D-b なら 0 日 
 
 ### 2026-05-11 Phase A〜C 完了, Phase D は (D-b) 採用
 
-- **着地**: `Common2026/Shannon/Polymatroid.lean` 288 行 / 0 sorry / 0 warning。
+- **着地**: `InformationTheory/Shannon/Polymatroid.lean` 288 行 / 0 sorry / 0 warning。
   `lake build` 緑通過。インベントリ再見積 195〜365 行の範囲内。
 - **Phase A**: HanD chain rule base case (`Han.lean:64-85`) の写経で `IsEmpty` 経由 →
   `Pi.uniqueOfIsEmpty` → `Real.negMulLog_one`。15 行で着地。リスクなし。

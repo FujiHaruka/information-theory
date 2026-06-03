@@ -54,7 +54,7 @@ consumer tag、(b) docstring/narrative の散文 mention、(c) `-empty-consumers
 
 `@audit:retract-candidate(load-bearing-predicate)` (-empty-consumers variant を含む) が
 **実 declaration の docstring** に付いているもの。種別 / 既存タグ / consumer 数を verbatim
-列挙。consumer 数は `rg -nc '<name>' Common2026/Shannon/` の全 file 合計 (hypothesis-form /
+列挙。consumer 数は `rg -nc '<name>' InformationTheory/Shannon/` の全 file 合計 (hypothesis-form /
 `.field` extract / 構成子 / docstring mention をまだ分離していない粗数。Phase 0-2 で分離)。
 
 | # | file:line | declaration | 種別 | 移行 Route | consumer 粗数 (全 file 合計) |
@@ -173,14 +173,14 @@ verbatim 確認した結論型:
 
 ### 表 C'' — Phase 0-5 import 依存方向照合 (2026-05-28 verbatim、cycle check)
 
-Common2026 内 import を verbatim 確認 (各 file の `^import` 行を Read)。依存 DAG (上流 → 下流):
+InformationTheory 内 import を verbatim 確認 (各 file の `^import` 行を Read)。依存 DAG (上流 → 下流):
 
 ```
 FisherInfoV2  →  FisherInfoV2DeBruijn  (debruijnIdentityV2_holds 提供)
               ↘  EntropyPowerInequality (stamToEPIBridge_holds 提供)
                     →  EPIStamDischarge  →  EPIL3Integration  →  EPIStamToBridge  →  EPIStamDeBruijnConclusion
                     →  EPIPlumbing      ↗                         ↑ EPIStamInequalityBody (IsEPIL3IntegratedPipeline 構成子)
-HeatFlowPath (最上流、Common2026 内 import は Meta.EntryPoint のみ)
+HeatFlowPath (最上流、InformationTheory 内 import は Meta.EntryPoint のみ)
 ```
 
 | consumer file | `debruijnIdentityV2_holds` 提供 file (`FisherInfoV2DeBruijn`) を import 済? | `stamToEPIBridge_holds` 提供 file (`EntropyPowerInequality`) を import 済? | cycle リスク |
@@ -211,7 +211,7 @@ HeatFlowPath (最上流、Common2026 内 import は Meta.EntryPoint のみ)
 
 ## Context — consumer graph + blast radius (verbatim、要 Phase 0 精査)
 
-`rg -nc '<predname>' Common2026/Shannon/` (2026-05-28) で確認した **重大な scope 境界
+`rg -nc '<predname>' InformationTheory/Shannon/` (2026-05-28) で確認した **重大な scope 境界
 findings**:
 
 ```
@@ -404,7 +404,7 @@ load-bearing」と述べる **mis-applied bookkeeping**。本 plan では (a) ta
       ```
       `@residual` slug は Phase 1-3 の判定に従う (デフォルト = plan slug `epi-stam-to-conclusion-phaseA-plan`、
       wall 化採用時のみ `wall:epi-noise-extension` + Proposed 表追加)。
-- [ ] **2-4**: `Common2026.lean` import は **無変更** (両補題とも既存 file に追加、新規 file 無し)。
+- [ ] **2-4**: `InformationTheory.lean` import は **無変更** (両補題とも既存 file に追加、新規 file 無し)。
 - [ ] **2-5**: 補充した 2 file (`FisherInfoV2DeBruijn.lean` / `EPIStamToBridge.lean`) を
       `lake env lean` で 0 errors / sorry warning のみ確認。
 
@@ -486,7 +486,7 @@ bundle field と独立に進められるため並列可能。
 - [ ] **3α-6**: §12 / §13 narrative tag (466 / 477 / 1028 / 1036) を整理
       (declaration が無い section comment、grep-aggregate 用 tag は削除して
       実 declaration tag のみ残す)
-- [ ] **3α-7**: `lake env lean Common2026/Shannon/EPIL3Integration.lean` 0 errors
+- [ ] **3α-7**: `lake env lean InformationTheory/Shannon/EPIL3Integration.lean` 0 errors
 
 ## Phase 3-β — `EPIStamToBridge` Stam-scaling 3 件 📋
 
@@ -502,8 +502,8 @@ bundle field と独立に進められるため並列可能。
 - [ ] **3β-3**: `IsStamScalingNoiseHyp` (#5、`:459`) wall 委任 (Phase 1-3 で確定した
       `csiszar` or 新規 wall)、`isStamScalingNoiseHyp_symm` 連動書換
 - [ ] **3β-4**: `HeatFlowPath.lean` の `IsStamToEPIScalingHyp` mention 1 件を整合
-- [ ] **3β-5**: `lake env lean Common2026/Shannon/EPIStamToBridge.lean`
-      + `lake env lean Common2026/Shannon/HeatFlowPath.lean` 0 errors
+- [ ] **3β-5**: `lake env lean InformationTheory/Shannon/EPIStamToBridge.lean`
+      + `lake env lean InformationTheory/Shannon/HeatFlowPath.lean` 0 errors
 
 ## Phase 3-γ — `EPIStamDischarge` de Bruijn 2 件 📋
 
@@ -518,7 +518,7 @@ bundle field と独立に進められるため並列可能。
 - [ ] **3γ-2**: `IsDeBruijnIntegrationHyp` (#2、`:286`、def `∃ fPath, ∫...`) を削除し、
       `debruijnIdentityV2_holds` の積分形を呼出。consumer (`EPIStamDischarge` 11 /
       `EPIL3Integration` 4 / `EntropyPowerInequality` 2) を書換
-- [ ] **3γ-3**: `lake env lean Common2026/Shannon/EPIStamDischarge.lean` 0 errors
+- [ ] **3γ-3**: `lake env lean InformationTheory/Shannon/EPIStamDischarge.lean` 0 errors
 
 ## Phase 3-δ — `EntropyPowerInequality` #6 + 残 empty-consumers 統合検証 📋
 
@@ -532,15 +532,15 @@ bundle field と独立に進められるため並列可能。
 - [ ] **3δ-2**: tag@350 narrative (既削除 decl の retraction comment) を確認のみ (touch 不要)
 - [ ] **3δ-3**: `EPIPlumbing.lean` の `entropy_power_inequality_three_arg` mention 3 件を
       新 signature に整合
-- [ ] **3δ-4**: `lake env lean Common2026/Shannon/EntropyPowerInequality.lean`
-      + `lake env lean Common2026/Shannon/EPIPlumbing.lean` 0 errors
+- [ ] **3δ-4**: `lake env lean InformationTheory/Shannon/EntropyPowerInequality.lean`
+      + `lake env lean InformationTheory/Shannon/EPIPlumbing.lean` 0 errors
 
 ## Phase V — closure 📋
 
 - [ ] **V-1**: 全 touched file の `lake env lean` 検証 0 errors:
       `EPIL3Integration` / `EPIStamToBridge` / `HeatFlowPath` / `EPIStamDischarge` /
       `EntropyPowerInequality` / `EPIPlumbing` (+ scope 拡張時 `EPIStamDeBruijnConclusion`
-      / `EPIStamInequalityBody`) / 補充時の wall file / `Common2026.lean`
+      / `EPIStamInequalityBody`) / 補充時の wall file / `InformationTheory.lean`
 - [ ] **V-2**: 各 file の `sorry` 件数を verbatim 確認:
       - **期待値**: consumer file は **0 migration-由来 sorry** (既存 wall lemma 呼出に
         置換、`@residual` を持たず proof done 判定可能)。残 sorry は本 plan 委任分
@@ -597,8 +597,8 @@ bundle field と独立に進められるため並列可能。
   では足りず、**新規 `EpiStamWalls.lean` 新設が必要**と判明 (補充先 file が import cycle に
   なる等)。
   **撤退**: AWGN M5 の `AwgnWalls.lean` precedent に倣い新規 file
-  `Common2026/Shannon/EpiStamWalls.lean` を新設、shared sorry 補題を集約。
-  `Common2026.lean` に import 1 行追加。wall name は既存 `debruijn-integration` / `csiszar`
+  `InformationTheory/Shannon/EpiStamWalls.lean` を新設、shared sorry 補題を集約。
+  `InformationTheory.lean` に import 1 行追加。wall name は既存 `debruijn-integration` / `csiszar`
   流用 (新規 wall name 増は別判定)。
 
 - **L-EPISC-5-honest-defect** — Phase 3 の consumer 書換中に **新規 honesty defect** 発見

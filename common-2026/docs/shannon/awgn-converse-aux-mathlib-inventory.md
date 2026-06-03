@@ -1,4 +1,4 @@
-# AWGN F-3 converse-aux — Mathlib + Common2026 在庫
+# AWGN F-3 converse-aux — Mathlib + InformationTheory 在庫
 
 > 親 plan: [`awgn-converse-aux-plan.md`](awgn-converse-aux-plan.md) (1043 行、`8ee2eea`)
 >
@@ -7,9 +7,9 @@
 
 ## 一行サマリ
 
-**Phase 0 判定 — Mathlib + Common2026 在庫率 ~75% / 自作必要 ~3 件 / T-FFC-2 と T-FFC-3 確定発動見込み**。
+**Phase 0 判定 — Mathlib + InformationTheory 在庫率 ~75% / 自作必要 ~3 件 / T-FFC-2 と T-FFC-3 確定発動見込み**。
 **最大発見 (危険度: 中)**: 既存 `shannon_converse_single_shot`
-(`Common2026/Shannon/Converse.lean:81`) が Fano + DPI + uniform-W + entropy chain
+(`InformationTheory/Shannon/Converse.lean:81`) が Fano + DPI + uniform-W + entropy chain
 を **1 補題に既に集約済み** で AWGN converse の **(a)+(b)+(d) 全 step を内包**。
 Y 側に `Fintype` 制約なし (Y := `Fin n → ℝ` で起動可) ⇒ 本 plan の Phase B-Fano
 + B-DPI 大部分は既存 1 補題呼出に圧縮可能。残るは **(c) memoryless chain rule の
@@ -59,15 +59,15 @@ linarith [Finset.sum_const, …]
 
 ## API 在庫テーブル
 
-### A. Fano (Common2026 既存、genuine 化可)
+### A. Fano (InformationTheory 既存、genuine 化可)
 
 | 概念 | API | file:line | 状態 | Phase での扱い |
 |---|---|---|---|---|
-| **Fano measure form** | `theorem fano_inequality_measure_theoretic (μ : Measure Ω) [IsProbabilityMeasure μ] (Xs : Ω → X) (Yo : Ω → Y) (decoder : Y → X) (hXs : Measurable Xs) (hYo : Measurable Yo) (hdec : Measurable decoder) (hcard : 2 ≤ Fintype.card X) : condEntropy μ Xs Yo ≤ Real.binEntropy (errorProb μ Xs Yo decoder) + errorProb μ Xs Yo decoder * Real.log ((Fintype.card X : ℝ) - 1)` | `Common2026/Fano/Measure.lean:226` | 🟢 | Y 側に型制約なし (`X` 側だけ `[Fintype X] [DecidableEq X] [Nonempty X] [MeasurableSpace X] [MeasurableSingletonClass X]` を section variable で要求)。本 plan で `X := Fin M, Y := Fin n → ℝ` で起動。Y のクラス要件は無いので `[StandardBorelSpace (Fin n → ℝ)]` 等の type-class 自動推論失敗 (T-FFC-1) は **発生しない見込み**。 |
-| **Fano `condEntropy` 定義** (Y 上 ∫) | `def condEntropy (μ : Measure Ω) [IsFiniteMeasure μ] (Xs : Ω → X) (Yo : Ω → Y) : ℝ := ∫ y, ∑ x : X, Real.negMulLog ((condDistrib Xs Yo μ y).real {x}) ∂(μ.map Yo)` | `Common2026/Fano/Measure.lean:69` | 🟢 | Y 側無制約、`X` 側のみ `[Fintype X] [MeasurableSpace X] [MeasurableSingletonClass X]` (section variable)。AWGN で `Y := Fin n → ℝ` は無条件 OK。 |
-| **Fano `errorProb` (Real)** | `def errorProb (μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y) (decoder : Y → X) : ℝ := μ.real {ω | Xs ω ≠ decoder (Yo ω)}` | `Common2026/Fano/Measure.lean:74` | 🟢 | `μ.real` 形 (Real)、本 plan 結論の `Pe : ℝ` と同型。 |
+| **Fano measure form** | `theorem fano_inequality_measure_theoretic (μ : Measure Ω) [IsProbabilityMeasure μ] (Xs : Ω → X) (Yo : Ω → Y) (decoder : Y → X) (hXs : Measurable Xs) (hYo : Measurable Yo) (hdec : Measurable decoder) (hcard : 2 ≤ Fintype.card X) : condEntropy μ Xs Yo ≤ Real.binEntropy (errorProb μ Xs Yo decoder) + errorProb μ Xs Yo decoder * Real.log ((Fintype.card X : ℝ) - 1)` | `InformationTheory/Fano/Measure.lean:226` | 🟢 | Y 側に型制約なし (`X` 側だけ `[Fintype X] [DecidableEq X] [Nonempty X] [MeasurableSpace X] [MeasurableSingletonClass X]` を section variable で要求)。本 plan で `X := Fin M, Y := Fin n → ℝ` で起動。Y のクラス要件は無いので `[StandardBorelSpace (Fin n → ℝ)]` 等の type-class 自動推論失敗 (T-FFC-1) は **発生しない見込み**。 |
+| **Fano `condEntropy` 定義** (Y 上 ∫) | `def condEntropy (μ : Measure Ω) [IsFiniteMeasure μ] (Xs : Ω → X) (Yo : Ω → Y) : ℝ := ∫ y, ∑ x : X, Real.negMulLog ((condDistrib Xs Yo μ y).real {x}) ∂(μ.map Yo)` | `InformationTheory/Fano/Measure.lean:69` | 🟢 | Y 側無制約、`X` 側のみ `[Fintype X] [MeasurableSpace X] [MeasurableSingletonClass X]` (section variable)。AWGN で `Y := Fin n → ℝ` は無条件 OK。 |
+| **Fano `errorProb` (Real)** | `def errorProb (μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y) (decoder : Y → X) : ℝ := μ.real {ω | Xs ω ≠ decoder (Yo ω)}` | `InformationTheory/Fano/Measure.lean:74` | 🟢 | `μ.real` 形 (Real)、本 plan 結論の `Pe : ℝ` と同型。 |
 
-**Section type-class** (`Common2026/Fano/Measure.lean:55-61` 周辺):
+**Section type-class** (`InformationTheory/Fano/Measure.lean:55-61` 周辺):
 
 ```
 variable {Ω : Type*} [MeasurableSpace Ω]
@@ -78,14 +78,14 @@ variable {Y : Type*} [MeasurableSpace Y]
 
 → `X := Fin M` (`M ≥ 2`) は `Fin.fintype` + `Fin.decidableEq` + `Fin.instMeasurableSpace` + `Fin.instMeasurableSingletonClass` ですべて自動 (Nonempty は `M ≥ 2` → `Fin M` Nonempty)。`Y := Fin n → ℝ` は `[MeasurableSpace (Fin n → ℝ)]` 自動 (`Pi.measurableSpace`)。**T-FFC-1 は発動しない**。
 
-### B. Single-shot Converse (Common2026 既存、**本 plan 最大発見**)
+### B. Single-shot Converse (InformationTheory 既存、**本 plan 最大発見**)
 
 | 概念 | API | file:line | 状態 | Phase での扱い |
 |---|---|---|---|---|
-| **★ Shannon single-shot converse** | `theorem shannon_converse_single_shot (μ : Measure Ω) [IsProbabilityMeasure μ] (Msg : Ω → M) (Yo : Ω → Y) (decoder : Y → M) (hMsg : Measurable Msg) (hYo : Measurable Yo) (hdecoder : Measurable decoder) (hMsg_uniform : μ.map Msg = (Fintype.card M : ℝ≥0∞)⁻¹ • Measure.count) (hcard : 2 ≤ Fintype.card M) (hMI_finite : mutualInfo μ Msg Yo ≠ ∞) : Real.log (Fintype.card M) ≤ (mutualInfo μ Msg Yo).toReal + Real.binEntropy (InformationTheory.MeasureFano.errorProb μ Msg Yo decoder) + InformationTheory.MeasureFano.errorProb μ Msg Yo decoder * Real.log ((Fintype.card M : ℝ) - 1)` | `Common2026/Shannon/Converse.lean:81` | 🟢 **核心** | **Fano + DPI + entropy chain + `H(W uniform) = log M` を 1 補題に集約**。本 plan の **Phase B-Fano + B-DPI を 1 行に圧縮**。**Y 側は無制約 `[MeasurableSpace Y]` のみ** ⇒ `Y := Fin n → ℝ` で直接起動可 (T-FFC-1 完全回避)。 |
-| **uniform W entropy = log M (helper)** | `private lemma entropy_of_uniform_msg (μ : Measure Ω) (Msg : Ω → M) (hMsg_uniform : μ.map Msg = (Fintype.card M : ℝ≥0∞)⁻¹ • Measure.count) : entropy μ Msg = Real.log (Fintype.card M)` | `Common2026/Shannon/Converse.lean:56` | 🟢 (private、`shannon_converse_single_shot` 内で吸収済) | 別途呼ばずに `shannon_converse_single_shot` 経由で消費。 |
+| **★ Shannon single-shot converse** | `theorem shannon_converse_single_shot (μ : Measure Ω) [IsProbabilityMeasure μ] (Msg : Ω → M) (Yo : Ω → Y) (decoder : Y → M) (hMsg : Measurable Msg) (hYo : Measurable Yo) (hdecoder : Measurable decoder) (hMsg_uniform : μ.map Msg = (Fintype.card M : ℝ≥0∞)⁻¹ • Measure.count) (hcard : 2 ≤ Fintype.card M) (hMI_finite : mutualInfo μ Msg Yo ≠ ∞) : Real.log (Fintype.card M) ≤ (mutualInfo μ Msg Yo).toReal + Real.binEntropy (InformationTheory.MeasureFano.errorProb μ Msg Yo decoder) + InformationTheory.MeasureFano.errorProb μ Msg Yo decoder * Real.log ((Fintype.card M : ℝ) - 1)` | `InformationTheory/Shannon/Converse.lean:81` | 🟢 **核心** | **Fano + DPI + entropy chain + `H(W uniform) = log M` を 1 補題に集約**。本 plan の **Phase B-Fano + B-DPI を 1 行に圧縮**。**Y 側は無制約 `[MeasurableSpace Y]` のみ** ⇒ `Y := Fin n → ℝ` で直接起動可 (T-FFC-1 完全回避)。 |
+| **uniform W entropy = log M (helper)** | `private lemma entropy_of_uniform_msg (μ : Measure Ω) (Msg : Ω → M) (hMsg_uniform : μ.map Msg = (Fintype.card M : ℝ≥0∞)⁻¹ • Measure.count) : entropy μ Msg = Real.log (Fintype.card M)` | `InformationTheory/Shannon/Converse.lean:56` | 🟢 (private、`shannon_converse_single_shot` 内で吸収済) | 別途呼ばずに `shannon_converse_single_shot` 経由で消費。 |
 
-**Section type-class** (`Common2026/Shannon/Converse.lean:48-51`):
+**Section type-class** (`InformationTheory/Shannon/Converse.lean:48-51`):
 
 ```
 variable {Ω : Type*} [MeasurableSpace Ω]
@@ -98,78 +98,78 @@ variable {Y : Type*} [MeasurableSpace Y]
 
 **注意 (重要)**: `shannon_converse_single_shot` の引数 `decoder : Y → M` は **measurable** (`hdecoder`) が必要、AWGN `c.decoder_meas` (`AWGN.lean:101`) で discharge 可。`hMI_finite : mutualInfo μ Msg Yo ≠ ∞` も必要 — `Msg = W : Ω → Fin M` (有限) + Y 無限の場合の MI finite 化は **separate 補題**で要確認 (本 plan Phase B-Fano 内の plumbing として ~10-20 行)。
 
-### C. Memoryless MI chain rule (Common2026 既存、**`Fintype α` 制約あり → AWGN α := ℝ で reuse 不可、staged 確定**)
+### C. Memoryless MI chain rule (InformationTheory 既存、**`Fintype α` 制約あり → AWGN α := ℝ で reuse 不可、staged 確定**)
 
 | 概念 | API | file:line | 状態 | Phase での扱い |
 |---|---|---|---|---|
-| **MI chain rule (memoryless, n-letter)** | `theorem mutualInfo_le_sum_per_letter_of_memoryless_strong (μ : Measure Ω) [IsProbabilityMeasure μ] (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β) (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i)) (h_per_letter_markov : ∀ i : Fin n, IsMarkovChain μ (fun ω j => Xs j ω) (Xs i) (Ys i)) (h_outputs_cond_indep : ∀ i : Fin n, IsMarkovChain μ (fun ω (j : {j : Fin n // j ≠ i}) => Ys j.val ω) (fun ω j => Xs j ω) (Ys i)) : (mutualInfo μ (fun ω j => Xs j ω) (fun ω j => Ys j ω)).toReal ≤ ∑ i : Fin n, (mutualInfo μ (Xs i) (Ys i)).toReal` | `Common2026/Shannon/CondEntropyMemoryless.lean:552` | 🔴 **AWGN α := ℝ で reuse 不可** | **Section variable に `[Fintype α] [Fintype β] [MeasurableSingletonClass α] [MeasurableSingletonClass β]` 等の有限性制約あり** (Bridge.lean entropy 定義の連鎖)。AWGN α := β := ℝ では発火しない ⇒ **T-FFC-3 staged 確定発動**。bundle `ContinuousMIChainRuleForConverse` に集約。 |
-| **MI chain rule (general n-letter, KL form)** | `theorem mutualInfo_chain_rule_fin {n : ℕ} (μ : Measure Ω) [IsProbabilityMeasure μ] [StandardBorelSpace Y] [Nonempty Y] (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (Yo : Ω → Y) (hYo : Measurable Yo) : mutualInfo μ (fun ω i => Xs i ω) Yo = ∑ i : Fin n, condMutualInfo μ (Xs i) Yo (fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)` | `Common2026/Shannon/MIChainRule.lean:93` | 🟡 部分利用可 | Section variable: `{α : Type*} [Fintype α] [MeasurableSpace α] [MeasurableSingletonClass α] [Nonempty α]` ⇒ **α := ℝ で発火しない**。`Y := Fin n → ℝ` ⇒ `[StandardBorelSpace (Fin n → ℝ)]` は Mathlib `instStandardBorelSpacePi` で自動充足見込み。AWGN converse での α := ℝ block は不可。 |
-| **MI additivity under product joint (iid → sum)** | `theorem mutualInfo_pi_eq_sum {n : ℕ} (μ : Measure Ω) [IsProbabilityMeasure μ] (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β) (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i)) (h_iid_joint : …) (h_iid_X : …) (h_iid_Y : …) : mutualInfo μ (fun ω i => Xs i ω) (fun ω i => Ys i ω) = ∑ i : Fin n, mutualInfo μ (Xs i) (Ys i)` | `Common2026/Shannon/MIChainRule.lean:318` | 🟡 部分利用可 | Section variable `{α β : Type*} [MeasurableSpace α] [MeasurableSpace β]` **無 Fintype** ⇒ **α := β := ℝ で発火可**。**ただし** `μ.map (fun ω i => (X_i ω, Y_i ω)) = Measure.pi (μ.map (X_i, Y_i))` の **iid joint 仮定** が必要 — AWGN converse は **コード由来の X^n は iid でない** (codebook 各 message ごとに固定の deterministic 行) ⇒ 直接 iid 仮定で起動不可。Markov chain 補題 (`mutualInfo_le_of_markov`) + chain rule + 加法性の組み合わせで bound に持っていく必要があり、これが Mathlib 壁の核。 |
-| **AWGN-agnostic continuous chain rule (predicate)** | `def IsContChannelMIDecompHyp (p : Measure ℝ) (W : Channel ℝ ℝ) : Prop := (mutualInfoOfChannel p W).toReal = differentialEntropy (outputDistribution p W) - (∫ x, differentialEntropy (W x) ∂p)` | `Common2026/Shannon/AWGNMIDecompBody.lean:147` | 🟡 (姉妹 `awgn-mi-decomp-plan.md` Phase 6 が discharge 予定) | これは **1 文字 chain rule** (`I(X;Y) = h(Y) - h(Y|X)`)、n 文字 chain rule の memoryless 加法性 (`I(X^n;Y^n) ≤ ∑ I(X_i;Y_i)`) ではない。本 plan の T-FFC-3 staged hyp と相補だが直接置換不可。 |
+| **MI chain rule (memoryless, n-letter)** | `theorem mutualInfo_le_sum_per_letter_of_memoryless_strong (μ : Measure Ω) [IsProbabilityMeasure μ] (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β) (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i)) (h_per_letter_markov : ∀ i : Fin n, IsMarkovChain μ (fun ω j => Xs j ω) (Xs i) (Ys i)) (h_outputs_cond_indep : ∀ i : Fin n, IsMarkovChain μ (fun ω (j : {j : Fin n // j ≠ i}) => Ys j.val ω) (fun ω j => Xs j ω) (Ys i)) : (mutualInfo μ (fun ω j => Xs j ω) (fun ω j => Ys j ω)).toReal ≤ ∑ i : Fin n, (mutualInfo μ (Xs i) (Ys i)).toReal` | `InformationTheory/Shannon/CondEntropyMemoryless.lean:552` | 🔴 **AWGN α := ℝ で reuse 不可** | **Section variable に `[Fintype α] [Fintype β] [MeasurableSingletonClass α] [MeasurableSingletonClass β]` 等の有限性制約あり** (Bridge.lean entropy 定義の連鎖)。AWGN α := β := ℝ では発火しない ⇒ **T-FFC-3 staged 確定発動**。bundle `ContinuousMIChainRuleForConverse` に集約。 |
+| **MI chain rule (general n-letter, KL form)** | `theorem mutualInfo_chain_rule_fin {n : ℕ} (μ : Measure Ω) [IsProbabilityMeasure μ] [StandardBorelSpace Y] [Nonempty Y] (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (Yo : Ω → Y) (hYo : Measurable Yo) : mutualInfo μ (fun ω i => Xs i ω) Yo = ∑ i : Fin n, condMutualInfo μ (Xs i) Yo (fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω)` | `InformationTheory/Shannon/MIChainRule.lean:93` | 🟡 部分利用可 | Section variable: `{α : Type*} [Fintype α] [MeasurableSpace α] [MeasurableSingletonClass α] [Nonempty α]` ⇒ **α := ℝ で発火しない**。`Y := Fin n → ℝ` ⇒ `[StandardBorelSpace (Fin n → ℝ)]` は Mathlib `instStandardBorelSpacePi` で自動充足見込み。AWGN converse での α := ℝ block は不可。 |
+| **MI additivity under product joint (iid → sum)** | `theorem mutualInfo_pi_eq_sum {n : ℕ} (μ : Measure Ω) [IsProbabilityMeasure μ] (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β) (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i)) (h_iid_joint : …) (h_iid_X : …) (h_iid_Y : …) : mutualInfo μ (fun ω i => Xs i ω) (fun ω i => Ys i ω) = ∑ i : Fin n, mutualInfo μ (Xs i) (Ys i)` | `InformationTheory/Shannon/MIChainRule.lean:318` | 🟡 部分利用可 | Section variable `{α β : Type*} [MeasurableSpace α] [MeasurableSpace β]` **無 Fintype** ⇒ **α := β := ℝ で発火可**。**ただし** `μ.map (fun ω i => (X_i ω, Y_i ω)) = Measure.pi (μ.map (X_i, Y_i))` の **iid joint 仮定** が必要 — AWGN converse は **コード由来の X^n は iid でない** (codebook 各 message ごとに固定の deterministic 行) ⇒ 直接 iid 仮定で起動不可。Markov chain 補題 (`mutualInfo_le_of_markov`) + chain rule + 加法性の組み合わせで bound に持っていく必要があり、これが Mathlib 壁の核。 |
+| **AWGN-agnostic continuous chain rule (predicate)** | `def IsContChannelMIDecompHyp (p : Measure ℝ) (W : Channel ℝ ℝ) : Prop := (mutualInfoOfChannel p W).toReal = differentialEntropy (outputDistribution p W) - (∫ x, differentialEntropy (W x) ∂p)` | `InformationTheory/Shannon/AWGNMIDecompBody.lean:147` | 🟡 (姉妹 `awgn-mi-decomp-plan.md` Phase 6 が discharge 予定) | これは **1 文字 chain rule** (`I(X;Y) = h(Y) - h(Y|X)`)、n 文字 chain rule の memoryless 加法性 (`I(X^n;Y^n) ≤ ∑ I(X_i;Y_i)`) ではない。本 plan の T-FFC-3 staged hyp と相補だが直接置換不可。 |
 
-**判定**: AWGN α := β := ℝ で **continuous MI memoryless chain rule** `I(X^n;Y^n) ≤ ∑ I(X_i;Y_i)` を **AWGN code (non-iid codebook) で genuine 化する** 補題は **Mathlib + Common2026 不在**。**T-FFC-3 staged 確定発動**。
+**判定**: AWGN α := β := ℝ で **continuous MI memoryless chain rule** `I(X^n;Y^n) ≤ ∑ I(X_i;Y_i)` を **AWGN code (non-iid codebook) で genuine 化する** 補題は **Mathlib + InformationTheory 不在**。**T-FFC-3 staged 確定発動**。
 
 ### D. DPI (data processing inequality)
 
 | 概念 | API | file:line | 状態 | Phase での扱い |
 |---|---|---|---|---|
-| **DPI postprocess** | `theorem mutualInfo_le_of_postprocess (μ : Measure Ω) [IsFiniteMeasure μ] (Xs : Ω → X) (Yo : Ω → Y) (hXs : Measurable Xs) (hYo : Measurable Yo) {f : Y → Z} (hf : Measurable f) : mutualInfo μ Xs (f ∘ Yo) ≤ mutualInfo μ Xs Yo` | `Common2026/Shannon/DPI.lean:142` | 🟢 | Section variable: `{Ω : Type*} [MeasurableSpace Ω] {X : Type*} [MeasurableSpace X] {Y : Type*} [MeasurableSpace Y] {Z : Type*} [MeasurableSpace Z]` ⇒ **無 Fintype、AWGN で直接 reuse 可**。`shannon_converse_single_shot` 内部で消費済。 |
-| **DPI via Markov chain** | `theorem mutualInfo_le_of_markov (μ : Measure Ω) [IsProbabilityMeasure μ] [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Y] [Nonempty Y] (Xs : Ω → X) (Zc : Ω → Z) (Yo : Ω → Y) (hXs : Measurable Xs) (hZc : Measurable Zc) (hYo : Measurable Yo) (hmarkov : IsMarkovChain μ Xs Zc Yo) : mutualInfo μ Xs Yo ≤ mutualInfo μ Zc Yo` | `Common2026/Shannon/CondMutualInfo.lean:385` | 🟢 | `X := Fin M`, `Y := Fin n → ℝ`, `Z := Fin n → ℝ` で起動可。X 側 StandardBorel は `Fin M` (`Finite.standardBorelSpace`)、Y 側 `Fin n → ℝ` (`instStandardBorelSpacePi`) 自動充足見込み。**Markov chain 仮定** `IsMarkovChain μ W X^n Y^n` は AWGN 通信路の自然な帰結 (encoder deterministic + channel memoryless)、bundle 内 staged にするか genuine 化するかは Phase 0 判定 #3。**判定: 在庫あり、genuine 化候補**。 |
+| **DPI postprocess** | `theorem mutualInfo_le_of_postprocess (μ : Measure Ω) [IsFiniteMeasure μ] (Xs : Ω → X) (Yo : Ω → Y) (hXs : Measurable Xs) (hYo : Measurable Yo) {f : Y → Z} (hf : Measurable f) : mutualInfo μ Xs (f ∘ Yo) ≤ mutualInfo μ Xs Yo` | `InformationTheory/Shannon/DPI.lean:142` | 🟢 | Section variable: `{Ω : Type*} [MeasurableSpace Ω] {X : Type*} [MeasurableSpace X] {Y : Type*} [MeasurableSpace Y] {Z : Type*} [MeasurableSpace Z]` ⇒ **無 Fintype、AWGN で直接 reuse 可**。`shannon_converse_single_shot` 内部で消費済。 |
+| **DPI via Markov chain** | `theorem mutualInfo_le_of_markov (μ : Measure Ω) [IsProbabilityMeasure μ] [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Y] [Nonempty Y] (Xs : Ω → X) (Zc : Ω → Z) (Yo : Ω → Y) (hXs : Measurable Xs) (hZc : Measurable Zc) (hYo : Measurable Yo) (hmarkov : IsMarkovChain μ Xs Zc Yo) : mutualInfo μ Xs Yo ≤ mutualInfo μ Zc Yo` | `InformationTheory/Shannon/CondMutualInfo.lean:385` | 🟢 | `X := Fin M`, `Y := Fin n → ℝ`, `Z := Fin n → ℝ` で起動可。X 側 StandardBorel は `Fin M` (`Finite.standardBorelSpace`)、Y 側 `Fin n → ℝ` (`instStandardBorelSpacePi`) 自動充足見込み。**Markov chain 仮定** `IsMarkovChain μ W X^n Y^n` は AWGN 通信路の自然な帰結 (encoder deterministic + channel memoryless)、bundle 内 staged にするか genuine 化するかは Phase 0 判定 #3。**判定: 在庫あり、genuine 化候補**。 |
 
-**DPI continuous 判定 (判断 #3)**: Common2026 既存補題で十分。`shannon_converse_single_shot` が DPI を吸収済み + 別途 `mutualInfo_le_of_markov` で Markov chain `W → X^n → Y^n` の DPI も処理可。**T-FFC-3 の DPI 側は staged 不要、本 plan で genuine 化可**。
+**DPI continuous 判定 (判断 #3)**: InformationTheory 既存補題で十分。`shannon_converse_single_shot` が DPI を吸収済み + 別途 `mutualInfo_le_of_markov` で Markov chain `W → X^n → Y^n` の DPI も処理可。**T-FFC-3 の DPI 側は staged 不要、本 plan で genuine 化可**。
 
-### E. Per-letter Gaussian max-entropy (Common2026 既存、3-of-4 hyp genuine、`h_ent_int` のみ Mathlib 壁)
+### E. Per-letter Gaussian max-entropy (InformationTheory 既存、3-of-4 hyp genuine、`h_ent_int` のみ Mathlib 壁)
 
 | 概念 | API | file:line | 状態 | Phase での扱い |
 |---|---|---|---|---|
-| **Gaussian max-entropy 4-hyp 形** | `theorem differentialEntropy_le_gaussian_of_variance_le {μ : Measure ℝ} [IsProbabilityMeasure μ] (hμ : μ ≪ volume) (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) (h_mean : ∫ x, x ∂μ = m) (h_var : ∫ x, (x - m)^2 ∂μ ≤ (v : ℝ)) (h_var_int : Integrable (fun x => (x - m)^2) μ) (h_ent_int : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) : differentialEntropy μ ≤ (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v)` | `Common2026/Shannon/DifferentialEntropy.lean:518` | 🟢 (3-of-4 genuine、`h_ent_int` のみ wall) | per-letter `μ := μ_{Y_i}` で起動。`hμ` は Gaussian convolution で genuine、`h_mean` `h_var` は AWGN code 由来 (power constraint)、`h_var_int` は Gaussian-mixture moment で genuine、**`h_ent_int` のみ Mathlib 壁** → **T-FFC-2 staged 確定発動** (bundle `PerLetterIntegrabilityForConverse`)。 |
-| **Gaussian closed form** | `theorem differentialEntropy_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) : differentialEntropy (gaussianReal m v) = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v)` | `Common2026/Shannon/DifferentialEntropy.lean:412` | 🟢 | `h(Z) = (1/2) log(2πeN)` を取るのに使用 (per-letter `h(Y_i\|X_i) = h(Z_i)`)。 |
-| **AWGN fibre ≪ volume** | `theorem awgnChannel_apply_absolutelyContinuous (N : ℝ≥0) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N) (x : ℝ) : (awgnChannel N h_meas) x ≪ volume` | `Common2026/Shannon/AWGNMIDecompBody.lean:103` | 🟢 | per-letter `Y_i\|X_i` density 表現に使う。 |
+| **Gaussian max-entropy 4-hyp 形** | `theorem differentialEntropy_le_gaussian_of_variance_le {μ : Measure ℝ} [IsProbabilityMeasure μ] (hμ : μ ≪ volume) (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) (h_mean : ∫ x, x ∂μ = m) (h_var : ∫ x, (x - m)^2 ∂μ ≤ (v : ℝ)) (h_var_int : Integrable (fun x => (x - m)^2) μ) (h_ent_int : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) : differentialEntropy μ ≤ (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v)` | `InformationTheory/Shannon/DifferentialEntropy.lean:518` | 🟢 (3-of-4 genuine、`h_ent_int` のみ wall) | per-letter `μ := μ_{Y_i}` で起動。`hμ` は Gaussian convolution で genuine、`h_mean` `h_var` は AWGN code 由来 (power constraint)、`h_var_int` は Gaussian-mixture moment で genuine、**`h_ent_int` のみ Mathlib 壁** → **T-FFC-2 staged 確定発動** (bundle `PerLetterIntegrabilityForConverse`)。 |
+| **Gaussian closed form** | `theorem differentialEntropy_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) : differentialEntropy (gaussianReal m v) = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v)` | `InformationTheory/Shannon/DifferentialEntropy.lean:412` | 🟢 | `h(Z) = (1/2) log(2πeN)` を取るのに使用 (per-letter `h(Y_i\|X_i) = h(Z_i)`)。 |
+| **AWGN fibre ≪ volume** | `theorem awgnChannel_apply_absolutelyContinuous (N : ℝ≥0) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N) (x : ℝ) : (awgnChannel N h_meas) x ≪ volume` | `InformationTheory/Shannon/AWGNMIDecompBody.lean:103` | 🟢 | per-letter `Y_i\|X_i` density 表現に使う。 |
 | **Mathlib: `gaussianReal_conv_gaussianReal`** | `lemma gaussianReal_conv_gaussianReal {m₁ m₂ : ℝ} {v₁ v₂ : ℝ≥0} : (gaussianReal m₁ v₁) ∗ (gaussianReal m₂ v₂) = gaussianReal (m₁ + m₂) (v₁ + v₂)` | `.lake/packages/mathlib/Mathlib/Probability/Distributions/Gaussian/Real.lean:613` | 🟢 | `μ_{Y_i} = μ_{X_i} ∗ N(0, N)` convolution 計算 (X_i は任意分布で OK、Y_i は X_i ∗ N(0,N) ⇒ Gaussian mixture)。**注**: `μ_{X_i}` は AWGN code 由来で **Gaussian と限らない** ⇒ 直接 `gaussianReal_conv_gaussianReal` 適用不可。`μ_{Y_i} = ∫ gaussianReal x N ∂μ_{X_i}(x)` の mixture density で扱う必要あり (T-FFC-2 staged で吸収するのが妥当)。 |
 | **Mathlib: `gaussianReal_add_gaussianReal_of_indepFun`** | `lemma gaussianReal_add_gaussianReal_of_indepFun {Ω} {mΩ : MeasurableSpace Ω} {P : Measure Ω} {m₁ m₂ : ℝ} {v₁ v₂ : ℝ≥0} {X Y : Ω → ℝ} (hXY : IndepFun X Y P) (hX : P.map X = gaussianReal m₁ v₁) (hY : P.map Y = gaussianReal m₂ v₂) : P.map (X + Y) = gaussianReal (m₁ + m₂) (v₁ + v₂)` | `.lake/packages/mathlib/Mathlib/Probability/Distributions/Gaussian/Real.lean:624` | 🟢 | 同上、typed RV 形。X_i 側は generic ⇒ direct reuse 不可、staged で。 |
 | **Mathlib: `variance_id_gaussianReal`** | `lemma variance_id_gaussianReal : Var[id; gaussianReal μ v] = v` | `.lake/packages/mathlib/Mathlib/Probability/Distributions/Gaussian/Real.lean:543` | 🟢 | per-letter Z_i variance = N の確認。 |
 | **Mathlib: `integral_id_gaussianReal`** | `lemma integral_id_gaussianReal : ∫ x, x ∂gaussianReal μ v = μ` | `.lake/packages/mathlib/Mathlib/Probability/Distributions/Gaussian/Real.lean:508` | 🟢 | per-letter Z_i mean = 0 の確認。 |
 | **Mathlib: `integral_rnDeriv_smul`** | `MeasureTheory.integral_rnDeriv_smul (from Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym)` | (Mathlib) | 🟢 | `∫ log (μ.rnDeriv vol).toReal ∂μ = -h(μ)` の証明に既に使用 (`DifferentialEntropy.lean:583`)。 |
 
-### F. AWGN code / channel (Common2026 既存)
+### F. AWGN code / channel (InformationTheory 既存)
 
 | 概念 | API | file:line | 状態 | Phase での扱い |
 |---|---|---|---|---|
-| **AWGN code** | `structure AwgnCode (M n : ℕ) (P : ℝ) where encoder : Fin M → (Fin n → ℝ); decoder : (Fin n → ℝ) → Fin M; decoder_meas : Measurable decoder; power_constraint : ∀ m : Fin M, (∑ i : Fin n, (encoder m i)^2) ≤ (n : ℝ) * P` | `Common2026/Shannon/AWGN.lean:98` | 🟢 | encoder deterministic、decoder measurable (T-FFC-1 plumbing 不要)、power constraint `∑ (X_i)² ≤ nP` 形 → per-letter `E[X_i²] ≤ P` (uniform W 上平均) で B-Gauss-1 に直結。 |
-| **AWGN channel kernel** | `noncomputable def awgnChannel (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) : Channel ℝ ℝ where toFun x := gaussianReal x N; measurable' := h_meas` + `instance awgnChannel.instIsMarkovKernel` (`AWGN.lean:83`) | `Common2026/Shannon/AWGN.lean:74-87` | 🟢 | `IsMarkovKernel` instance 自動、本 plan で頻用。 |
-| **AWGN measurability hyp** | `def IsAwgnChannelMeasurable (N : ℝ≥0) : Prop := Measurable (fun x : ℝ => gaussianReal x N)` | `Common2026/Shannon/AWGN.lean:64` | 🟢 (F-4 hypothesis 形、`awgn-f1-discharge-moonshot-plan.md` で discharge 済) | 本 plan は hypothesis として受け取り pass-through。 |
-| **AWGN code errorProbAt** | `noncomputable def errorProbAt (c : Code M n α β) (W : Channel α β) (m : Fin M) : ℝ≥0∞ := (Measure.pi (fun i => W (c.encoder m i))) (c.errorEvent m)` | `Common2026/Shannon/ChannelCoding.lean:195` | 🟢 (`ℝ≥0∞` 値) | **注意**: AWGN 結論の `Pe : ℝ` は `(c.toCode.errorProbAt ... m).toReal` の sum、Fano `errorProb : ℝ` は `μ.real {Xs ≠ decoder ∘ Yo}` 形。同値性 bridge は **uniform W on `Fin M` + product channel `Measure.pi (awgnChannel ...)`** から導出 (本 plan Phase B-Fano 内で ~20-40 行)。`shannon_converse_single_shot` が **Fano `errorProb` 形を返す** ⇒ AWGN `Pe` との bridge を Phase B-Fano 内で挟む必要あり。 |
-| **Code errorEvent** | `def errorEvent (c : Code M n α β) (m : Fin M) : Set (Fin n → β) := (c.decodingRegion m)ᶜ` | `Common2026/Shannon/ChannelCoding.lean:173` | 🟢 | `c.encoder m i` を入力した時の channel output の誤り集合。`errorProbAt` で使用。 |
-| **Code Channel definition** | `abbrev Channel (α β : Type*) [MeasurableSpace α] [MeasurableSpace β] := Kernel α β` | `Common2026/Shannon/ChannelCoding.lean:50` | 🟢 | `awgnChannel : Channel ℝ ℝ = Kernel ℝ ℝ`、本 plan で `Measure.pi (fun i => awgnChannel N h_meas (encoder m i))` 形を扱う。 |
-| **`outputDistribution`** | `noncomputable def outputDistribution (p : Measure α) (W : Channel α β) : Measure β := (jointDistribution p W).snd` | `Common2026/Shannon/ChannelCoding.lean:72` | 🟢 | per-letter `μ_{Y_i}` の表現に使う可能性 (in bundle `PerLetterIntegrabilityForConverse`)。 |
-| **`mutualInfoOfChannel`** | `noncomputable def mutualInfoOfChannel (p : Measure α) (W : Channel α β) : ℝ≥0∞ := klDiv (jointDistribution p W) (p.prod (outputDistribution p W))` | `Common2026/Shannon/ChannelCoding.lean:85` | 🟢 | 本 plan の per-letter `I(X_i; Y_i)` を `mutualInfoOfChannel` 形で扱うか、`mutualInfo μ X_i Y_i` (typed RV 形) で扱うかは Phase A 判断。後者の方が `shannon_converse_single_shot` 出力と整合。 |
+| **AWGN code** | `structure AwgnCode (M n : ℕ) (P : ℝ) where encoder : Fin M → (Fin n → ℝ); decoder : (Fin n → ℝ) → Fin M; decoder_meas : Measurable decoder; power_constraint : ∀ m : Fin M, (∑ i : Fin n, (encoder m i)^2) ≤ (n : ℝ) * P` | `InformationTheory/Shannon/AWGN.lean:98` | 🟢 | encoder deterministic、decoder measurable (T-FFC-1 plumbing 不要)、power constraint `∑ (X_i)² ≤ nP` 形 → per-letter `E[X_i²] ≤ P` (uniform W 上平均) で B-Gauss-1 に直結。 |
+| **AWGN channel kernel** | `noncomputable def awgnChannel (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) : Channel ℝ ℝ where toFun x := gaussianReal x N; measurable' := h_meas` + `instance awgnChannel.instIsMarkovKernel` (`AWGN.lean:83`) | `InformationTheory/Shannon/AWGN.lean:74-87` | 🟢 | `IsMarkovKernel` instance 自動、本 plan で頻用。 |
+| **AWGN measurability hyp** | `def IsAwgnChannelMeasurable (N : ℝ≥0) : Prop := Measurable (fun x : ℝ => gaussianReal x N)` | `InformationTheory/Shannon/AWGN.lean:64` | 🟢 (F-4 hypothesis 形、`awgn-f1-discharge-moonshot-plan.md` で discharge 済) | 本 plan は hypothesis として受け取り pass-through。 |
+| **AWGN code errorProbAt** | `noncomputable def errorProbAt (c : Code M n α β) (W : Channel α β) (m : Fin M) : ℝ≥0∞ := (Measure.pi (fun i => W (c.encoder m i))) (c.errorEvent m)` | `InformationTheory/Shannon/ChannelCoding.lean:195` | 🟢 (`ℝ≥0∞` 値) | **注意**: AWGN 結論の `Pe : ℝ` は `(c.toCode.errorProbAt ... m).toReal` の sum、Fano `errorProb : ℝ` は `μ.real {Xs ≠ decoder ∘ Yo}` 形。同値性 bridge は **uniform W on `Fin M` + product channel `Measure.pi (awgnChannel ...)`** から導出 (本 plan Phase B-Fano 内で ~20-40 行)。`shannon_converse_single_shot` が **Fano `errorProb` 形を返す** ⇒ AWGN `Pe` との bridge を Phase B-Fano 内で挟む必要あり。 |
+| **Code errorEvent** | `def errorEvent (c : Code M n α β) (m : Fin M) : Set (Fin n → β) := (c.decodingRegion m)ᶜ` | `InformationTheory/Shannon/ChannelCoding.lean:173` | 🟢 | `c.encoder m i` を入力した時の channel output の誤り集合。`errorProbAt` で使用。 |
+| **Code Channel definition** | `abbrev Channel (α β : Type*) [MeasurableSpace α] [MeasurableSpace β] := Kernel α β` | `InformationTheory/Shannon/ChannelCoding.lean:50` | 🟢 | `awgnChannel : Channel ℝ ℝ = Kernel ℝ ℝ`、本 plan で `Measure.pi (fun i => awgnChannel N h_meas (encoder m i))` 形を扱う。 |
+| **`outputDistribution`** | `noncomputable def outputDistribution (p : Measure α) (W : Channel α β) : Measure β := (jointDistribution p W).snd` | `InformationTheory/Shannon/ChannelCoding.lean:72` | 🟢 | per-letter `μ_{Y_i}` の表現に使う可能性 (in bundle `PerLetterIntegrabilityForConverse`)。 |
+| **`mutualInfoOfChannel`** | `noncomputable def mutualInfoOfChannel (p : Measure α) (W : Channel α β) : ℝ≥0∞ := klDiv (jointDistribution p W) (p.prod (outputDistribution p W))` | `InformationTheory/Shannon/ChannelCoding.lean:85` | 🟢 | 本 plan の per-letter `I(X_i; Y_i)` を `mutualInfoOfChannel` 形で扱うか、`mutualInfo μ X_i Y_i` (typed RV 形) で扱うかは Phase A 判断。後者の方が `shannon_converse_single_shot` 出力と整合。 |
 
-### G. Markov chain + condDistrib (Common2026 既存)
+### G. Markov chain + condDistrib (InformationTheory 既存)
 
 | 概念 | API | file:line | 状態 | Phase での扱い |
 |---|---|---|---|---|
-| **`IsMarkovChain` (γ-form)** | `def IsMarkovChain (μ : Measure Ω) [IsFiniteMeasure μ] [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Y] [Nonempty Y] (Xs : Ω → X) (Zc : Ω → Z) (Yo : Ω → Y) : Prop := μ.map (fun ω => (Zc ω, Xs ω, Yo ω)) = (μ.map Zc) ⊗ₘ ((condDistrib Xs Zc μ) ×ₖ (condDistrib Yo Zc μ))` | `Common2026/Shannon/CondMutualInfo.lean:73` | 🟢 | AWGN Markov chain `W → X^n → Y^n` を構築するのに使う。`[StandardBorelSpace X] [StandardBorelSpace Y]` が **X 側 = `Fin M`** (Finite) + **Y 側 = `Fin n → ℝ`** で自動充足見込み。 |
-| **mutualInfo chain rule (`I((Z,X);Y) = I(Z;Y) + I(X;Y\|Z)`)** | `theorem mutualInfo_chain_rule (μ : Measure Ω) [IsProbabilityMeasure μ] [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Y] [Nonempty Y] (Xs : Ω → X) (Yo : Ω → Y) (Zc : Ω → Z) (hXs : Measurable Xs) (hYo : Measurable Yo) (hZc : Measurable Zc) : mutualInfo μ (fun ω => (Zc ω, Xs ω)) Yo = mutualInfo μ Zc Yo + condMutualInfo μ Xs Yo Zc` | `Common2026/Shannon/CondMutualInfo.lean:222` | 🟢 | 2 変数 chain rule。AWGN converse の **メイン chain rule (n-letter)** には不足、しかし base case として有用。 |
+| **`IsMarkovChain` (γ-form)** | `def IsMarkovChain (μ : Measure Ω) [IsFiniteMeasure μ] [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Y] [Nonempty Y] (Xs : Ω → X) (Zc : Ω → Z) (Yo : Ω → Y) : Prop := μ.map (fun ω => (Zc ω, Xs ω, Yo ω)) = (μ.map Zc) ⊗ₘ ((condDistrib Xs Zc μ) ×ₖ (condDistrib Yo Zc μ))` | `InformationTheory/Shannon/CondMutualInfo.lean:73` | 🟢 | AWGN Markov chain `W → X^n → Y^n` を構築するのに使う。`[StandardBorelSpace X] [StandardBorelSpace Y]` が **X 側 = `Fin M`** (Finite) + **Y 側 = `Fin n → ℝ`** で自動充足見込み。 |
+| **mutualInfo chain rule (`I((Z,X);Y) = I(Z;Y) + I(X;Y\|Z)`)** | `theorem mutualInfo_chain_rule (μ : Measure Ω) [IsProbabilityMeasure μ] [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Y] [Nonempty Y] (Xs : Ω → X) (Yo : Ω → Y) (Zc : Ω → Z) (hXs : Measurable Xs) (hYo : Measurable Yo) (hZc : Measurable Zc) : mutualInfo μ (fun ω => (Zc ω, Xs ω)) Yo = mutualInfo μ Zc Yo + condMutualInfo μ Xs Yo Zc` | `InformationTheory/Shannon/CondMutualInfo.lean:222` | 🟢 | 2 変数 chain rule。AWGN converse の **メイン chain rule (n-letter)** には不足、しかし base case として有用。 |
 
 ---
 
 ## 主要前提条件ボックス (前提事故が起きやすい lemma)
 
-- **`fano_inequality_measure_theoretic` (`Common2026/Fano/Measure.lean:226`)**:
+- **`fano_inequality_measure_theoretic` (`InformationTheory/Fano/Measure.lean:226`)**:
   X 側 `[Fintype X] [DecidableEq X] [Nonempty X] [MeasurableSpace X] [MeasurableSingletonClass X]` (section variable)。`X := Fin M` (M ≥ 2 → Nonempty) で全自動充足。**Y 側無制約** ⇒ `Y := Fin n → ℝ` 直接 OK、T-FFC-1 plumbing 不要。
 
-- **`shannon_converse_single_shot` (`Common2026/Shannon/Converse.lean:81`)**:
+- **`shannon_converse_single_shot` (`InformationTheory/Shannon/Converse.lean:81`)**:
   M 側 `[Fintype M] [DecidableEq M] [Nonempty M] [MeasurableSpace M] [MeasurableSingletonClass M]`、**Y 側 `[MeasurableSpace Y]` のみ** (Fano と同型)。
   追加引数 `hMI_finite : mutualInfo μ Msg Yo ≠ ∞` (本 plan で **追加 plumbing ~10-20 行**)。
   `hMsg_uniform : μ.map Msg = (Fintype.card M : ℝ≥0∞)⁻¹ • Measure.count` (uniform W 表現は **`Measure.count` の scalar 倍**形、AWGN converse 構築時に明示)。
 
-- **`differentialEntropy_le_gaussian_of_variance_le` (`Common2026/Shannon/DifferentialEntropy.lean:518`)**:
+- **`differentialEntropy_le_gaussian_of_variance_le` (`InformationTheory/Shannon/DifferentialEntropy.lean:518`)**:
   4 hypotheses 全列挙: `hμ : μ ≪ volume`, `h_mean : ∫ x, x ∂μ = m`, `h_var : ∫ x, (x - m)^2 ∂μ ≤ (v : ℝ)`, `h_var_int : Integrable (fun x => (x - m)^2) μ`, `h_ent_int : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume`。**`h_ent_int` のみ Mathlib 壁** (negMulLog ∘ rnDeriv の vol-integrability は per-letter Gaussian mixture では Mathlib 標準補題不在) → T-FFC-2 staged 確定。
 
-- **`mutualInfo_le_of_markov` (`Common2026/Shannon/CondMutualInfo.lean:385`)**:
+- **`mutualInfo_le_of_markov` (`InformationTheory/Shannon/CondMutualInfo.lean:385`)**:
   3 RV `[StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Y] [Nonempty Y]` (Z 側無制約) + `IsMarkovChain μ Xs Zc Yo` 仮定。`Fin M` は Finite ⇒ StandardBorelSpace 自動、`Fin n → ℝ` は `instStandardBorelSpacePi` 自動 (要再 verbatim 確認、Mathlib 既存)。
 
-- **`mutualInfo_le_sum_per_letter_of_memoryless_strong` (`Common2026/Shannon/CondEntropyMemoryless.lean:552`)**:
+- **`mutualInfo_le_sum_per_letter_of_memoryless_strong` (`InformationTheory/Shannon/CondEntropyMemoryless.lean:552`)**:
   Section variable に **`[Fintype α] [Fintype β]` 等の有限性制約 (`Bridge.lean` entropy 定義の連鎖)** あり ⇒ **AWGN α := β := ℝ で reuse 不可** → **T-FFC-3 staged 確定**。
 
 ---
@@ -190,7 +190,7 @@ AWGN code (encoder deterministic、Markov chain `X_i ⫫ X_{j≠i} | Z_i` で AW
 
 ### 3. AWGN error probability ↔ Fano `errorProb` bridge
 
-`shannon_converse_single_shot` は **Fano `errorProb μ Msg Yo decoder : ℝ = μ.real {Msg ≠ decoder ∘ Yo}`** を返す。AWGN 結論の `Pe = (1/M) ∑ (c.toCode.errorProbAt (awgnChannel N h_meas) m).toReal` との同値性 bridge は **uniform W + product channel `Measure.pi (awgnChannel N h_meas ∘ encoder m)`** から構築可。Mathlib + Common2026 不在の bridge ⇒ **本 plan Phase B-Fano 内で自作 ~25-50 行**。
+`shannon_converse_single_shot` は **Fano `errorProb μ Msg Yo decoder : ℝ = μ.real {Msg ≠ decoder ∘ Yo}`** を返す。AWGN 結論の `Pe = (1/M) ∑ (c.toCode.errorProbAt (awgnChannel N h_meas) m).toReal` との同値性 bridge は **uniform W + product channel `Measure.pi (awgnChannel N h_meas ∘ encoder m)`** から構築可。Mathlib + InformationTheory 不在の bridge ⇒ **本 plan Phase B-Fano 内で自作 ~25-50 行**。
 
 **推奨実装**: probability-space `Ω := Fin M × (Fin n → ℝ)` (uniform on Fin M × product channel measure) を local 構成、`Msg := Prod.fst`, `Yo := Prod.snd`, `decoder := c.decoder` で `shannon_converse_single_shot` を起動。`Pe` 同値性は Fubini + `Measure.pi`-marginal の標準展開 (~25-40 行)。
 
@@ -245,7 +245,7 @@ AWGN code (encoder deterministic、Markov chain `X_i ⫫ X_{j≠i} | Z_i` で AW
 
 → **本 plan の bundle 内 `ContinuousMIChainRuleForConverse` staged hyp 確定発動**。
 
-**集約先 sorry 補題名候補** (orchestrator 検討): `Common2026/Shannon/ContinuousMIChainRule.lean` (新規) で `continuousMI_le_sum_per_letter_memoryless : (mutualInfo μ Xn Yn).toReal ≤ ∑ i, (mutualInfo μ (X i) (Y i)).toReal := sorry @residual(wall:mi-chain-cont)` 形の共有 sorry 補題化 (姉妹 `awgn-mi-decomp-plan.md` Phase 6 と統合可能、もしくは同 plan を本 plan より先に completion させる順序)。本 plan 内では bundle field に閉じ込めるのが最小コスト。
+**集約先 sorry 補題名候補** (orchestrator 検討): `InformationTheory/Shannon/ContinuousMIChainRule.lean` (新規) で `continuousMI_le_sum_per_letter_memoryless : (mutualInfo μ Xn Yn).toReal ≤ ∑ i, (mutualInfo μ (X i) (Y i)).toReal := sorry @residual(wall:mi-chain-cont)` 形の共有 sorry 補題化 (姉妹 `awgn-mi-decomp-plan.md` Phase 6 と統合可能、もしくは同 plan を本 plan より先に completion させる順序)。本 plan 内では bundle field に閉じ込めるのが最小コスト。
 
 ### 判断 #5: per-letter integrability `h_ent_int` の壁形式
 
@@ -292,20 +292,20 @@ AWGN code (encoder deterministic、Markov chain `X_i ⫫ X_{j≠i} | Z_i` で AW
 
 ---
 
-## 着手 skeleton (`Common2026/Shannon/AWGNConverseDischarge.lean`)
+## 着手 skeleton (`InformationTheory/Shannon/AWGNConverseDischarge.lean`)
 
 新規ファイルの **出だし 20-30 行** (本 plan Phase A の skeleton 部分、本 inventory は実装しないので **参考のみ**)。
 
 ```lean
-import Common2026.Meta.EntryPoint
-import Common2026.Shannon.AWGN
-import Common2026.Shannon.AWGNConverse          -- sorry 置換のため
-import Common2026.Shannon.Converse              -- shannon_converse_single_shot
-import Common2026.Shannon.MutualInfo            -- mutualInfo typed RV
-import Common2026.Shannon.CondMutualInfo        -- IsMarkovChain / mutualInfo_le_of_markov
-import Common2026.Shannon.DifferentialEntropy   -- differentialEntropy_le_gaussian_of_variance_le
-import Common2026.Shannon.ChannelCoding         -- errorProbAt / Channel / outputDistribution
-import Common2026.Fano.Measure                  -- errorProb / condEntropy / fano_inequality
+import InformationTheory.Meta.EntryPoint
+import InformationTheory.Shannon.AWGN
+import InformationTheory.Shannon.AWGNConverse          -- sorry 置換のため
+import InformationTheory.Shannon.Converse              -- shannon_converse_single_shot
+import InformationTheory.Shannon.MutualInfo            -- mutualInfo typed RV
+import InformationTheory.Shannon.CondMutualInfo        -- IsMarkovChain / mutualInfo_le_of_markov
+import InformationTheory.Shannon.DifferentialEntropy   -- differentialEntropy_le_gaussian_of_variance_le
+import InformationTheory.Shannon.ChannelCoding         -- errorProbAt / Channel / outputDistribution
+import InformationTheory.Fano.Measure                  -- errorProb / condEntropy / fano_inequality
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.MeasureTheory.Constructions.Pi
 
@@ -318,7 +318,7 @@ import Mathlib.MeasureTheory.Constructions.Pi
 3 sub-bound bundle `IsAwgnConverseFeasible`:
 * per-letter integrability (Mathlib 壁、staged) — `PerLetterIntegrabilityForConverse`
 * continuous MI memoryless chain rule (Mathlib 壁、staged) — `ContinuousMIChainRuleForConverse`
-* DPI via Markov chain `W → X^n → Y^n` (genuine、Common2026 既存補題で discharge) — `MarkovChainForConverse`
+* DPI via Markov chain `W → X^n → Y^n` (genuine、InformationTheory 既存補題で discharge) — `MarkovChainForConverse`
 -/
 
 namespace InformationTheory.Shannon.AWGN
@@ -374,29 +374,29 @@ end InformationTheory.Shannon.AWGN
 - `ProbabilityTheory.IndepFun` → Found 173 (多数)
 - `MeasureTheory.Measure.pi` → Found 127 (多数)
 
-### rg 探索 pattern (Common2026/) — 主要ヒット箇所
+### rg 探索 pattern (InformationTheory/) — 主要ヒット箇所
 
-- `mutualInfo_le_of_postprocess` → `Common2026/Shannon/DPI.lean:142`
-- `mutualInfo_le_of_markov` → `Common2026/Shannon/CondMutualInfo.lean:385`
-- `IsMarkovChain` → `Common2026/Shannon/CondMutualInfo.lean:73`
-- `mutualInfo_chain_rule\b` → `Common2026/Shannon/CondMutualInfo.lean:222`
-- `mutualInfo_chain_rule_fin` → `Common2026/Shannon/MIChainRule.lean:93` (Fintype α 制約)
-- `mutualInfo_pi_eq_sum` → `Common2026/Shannon/MIChainRule.lean:318` (iid joint 仮定必要)
-- `mutualInfo_le_sum_per_letter_of_memoryless_strong` → `Common2026/Shannon/CondEntropyMemoryless.lean:552` (Fintype α 制約)
-- `fano_inequality_measure_theoretic` → `Common2026/Fano/Measure.lean:226`
-- `shannon_converse_single_shot` → `Common2026/Shannon/Converse.lean:81`
-- `shannon_converse_single_shot_markov_encoder` → `Common2026/Shannon/Converse.lean:155` (encoder Markov chain 版、本 plan で参考可)
-- `differentialEntropy_le_gaussian_of_variance_le` → `Common2026/Shannon/DifferentialEntropy.lean:518`
-- `differentialEntropy_gaussianReal` → `Common2026/Shannon/DifferentialEntropy.lean:412`
-- `awgnChannel_apply_absolutelyContinuous` → `Common2026/Shannon/AWGNMIDecompBody.lean:103`
-- `entropy_of_uniform_msg` → `Common2026/Shannon/Converse.lean:56` (private)
-- `mutualInfo_eq_entropy_sub_condEntropy` → `Common2026/Shannon/Bridge.lean:588`
+- `mutualInfo_le_of_postprocess` → `InformationTheory/Shannon/DPI.lean:142`
+- `mutualInfo_le_of_markov` → `InformationTheory/Shannon/CondMutualInfo.lean:385`
+- `IsMarkovChain` → `InformationTheory/Shannon/CondMutualInfo.lean:73`
+- `mutualInfo_chain_rule\b` → `InformationTheory/Shannon/CondMutualInfo.lean:222`
+- `mutualInfo_chain_rule_fin` → `InformationTheory/Shannon/MIChainRule.lean:93` (Fintype α 制約)
+- `mutualInfo_pi_eq_sum` → `InformationTheory/Shannon/MIChainRule.lean:318` (iid joint 仮定必要)
+- `mutualInfo_le_sum_per_letter_of_memoryless_strong` → `InformationTheory/Shannon/CondEntropyMemoryless.lean:552` (Fintype α 制約)
+- `fano_inequality_measure_theoretic` → `InformationTheory/Fano/Measure.lean:226`
+- `shannon_converse_single_shot` → `InformationTheory/Shannon/Converse.lean:81`
+- `shannon_converse_single_shot_markov_encoder` → `InformationTheory/Shannon/Converse.lean:155` (encoder Markov chain 版、本 plan で参考可)
+- `differentialEntropy_le_gaussian_of_variance_le` → `InformationTheory/Shannon/DifferentialEntropy.lean:518`
+- `differentialEntropy_gaussianReal` → `InformationTheory/Shannon/DifferentialEntropy.lean:412`
+- `awgnChannel_apply_absolutelyContinuous` → `InformationTheory/Shannon/AWGNMIDecompBody.lean:103`
+- `entropy_of_uniform_msg` → `InformationTheory/Shannon/Converse.lean:56` (private)
+- `mutualInfo_eq_entropy_sub_condEntropy` → `InformationTheory/Shannon/Bridge.lean:588`
 
 ### 参考にしなかった (scope 外 / 無関係)
 
 - `IsContChannelMIDecompHyp` (`AWGNMIDecompBody.lean:147`) — 1 文字 chain rule、n 文字 chain rule とは独立
 - `channel_coding_converse_general_memoryless_strong` (`ChannelCodingConverseGeneralStrong.lean:276`) — `Fintype α` 制約で AWGN 非対応
-- `Common2026/Shannon/ChannelCodingConverseGeneralComplete.lean` — 同上
+- `InformationTheory/Shannon/ChannelCodingConverseGeneralComplete.lean` — 同上
 
 ### parent plan §Phase 0 verbatim 確認済補題 (本 inventory 再確認実施)
 

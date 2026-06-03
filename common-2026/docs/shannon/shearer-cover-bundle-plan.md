@@ -1,7 +1,7 @@
 # Shearer cover bundle (B-2 + B-9) ムーンショット計画 🌙
 
 > オーケストレータ指示: B-2 (Hypercube edge isoperimetry / Han-Bregman) + B-9 (Brascamp-Lieb 組合せ形) を bundle 実装。
-> 既存 `Common2026/Shannon/LoomisWhitney.lean` の Shearer 応用パターンを **任意 cover** に汎化。
+> 既存 `InformationTheory/Shannon/LoomisWhitney.lean` の Shearer 応用パターンを **任意 cover** に汎化。
 
 ## 進捗
 
@@ -12,7 +12,7 @@
 - [x] Phase D — LW refactor 判断 (見送り、既存 statement 維持) 🔄
 
 > **実態整合 (2026-05-20): DONE-UNCOND (publish 済、0 sorry、plan は正確)** —
-> `Common2026/Shannon/BrascampLieb.lean` が実在: `projectionSubset` (`:40`)、subset-entropy bound
+> `InformationTheory/Shannon/BrascampLieb.lean` が実在: `projectionSubset` (`:40`)、subset-entropy bound
 > `jointEntropySubset_le_log_projectionSubset_card` (`:52`)、主定理 `brascamp_lieb_finset`
 > (`:90`、`A.card ^ k ≤ ∏ i, (projectionSubset (S i) A).card`) はいずれも genuine `by`-proof
 > (Shearer + `uniformOn` 経由、pass-through なし)、`rg -nw sorry` 空振り。Phase A-D の `[x]` は実態と一致、修正不要。
@@ -29,7 +29,7 @@
 4. **Brascamp-Lieb main**: `μ := uniformOn A`, `Xs i ω := ω i`, Shearer 適用、両辺 log を bridge し log を剥がして自然数版へ。**LW と同じパターンで cover だけ任意化**。
 5. **Hypercube isoperimetry corollary**: singleton cover `S_i := {i}` (各 j を 1 回 cover) で BL は `|A| ≤ ∏ i, |π_{i}(A)|` (= 各成分の像の積) を与える。これは Han-Bregman bound の最も基本形。`α = Bool` を取ると Boolean cube 上の積上界として読める。
 
-**LW refactor は見送り** (Phase D 判断ログ参照): 既存 `loomis_whitney` のシグネチャは下流に晒されないが (`Common2026.lean` import のみ)、ローカル証明を一掃するメリットは薄く、新規 `brascamp_lieb_finset` の存在で十分。LW は `S i := univ.filter (· ≠ i)` の特殊形として **理論的に** corollary だが、**Lean ファイル上は独立** に保つ。
+**LW refactor は見送り** (Phase D 判断ログ参照): 既存 `loomis_whitney` のシグネチャは下流に晒されないが (`InformationTheory.lean` import のみ)、ローカル証明を一掃するメリットは薄く、新規 `brascamp_lieb_finset` の存在で十分。LW は `S i := univ.filter (· ≠ i)` の特殊形として **理論的に** corollary だが、**Lean ファイル上は独立** に保つ。
 
 ## Phase 0 - Mathlib inventory ✅
 
@@ -62,7 +62,7 @@ theorem brascamp_lieb_finset
 - [x] `projectionSubset` 定義
 - [x] `jointEntropySubset_le_log_projectionSubset_card` (任意 S 版)
 - [x] Shearer 適用 + log bridge + log 剥ぎ (LW pattern)
-- [x] `lake env lean Common2026/Shannon/BrascampLieb.lean` silent 通過
+- [x] `lake env lean InformationTheory/Shannon/BrascampLieb.lean` silent 通過
 
 ## Phase C - Hypercube edge isoperimetry corollary ✅
 
@@ -70,15 +70,15 @@ singleton cover `S i := {i}` で Brascamp-Lieb は `|A| ≤ ∏ i, |π_{i}(A)|` 
 
 `α = Bool` (Boolean cube) を渡せば `|π_i(A)| ≤ 2` なので `|A| ≤ 2^n` (自明)。**より有用な形**は: Han-Bregman 系の `|A|^{n-1} ≤ ∏_i |π_{-i}(A)|` (= LW) との重ね合わせで edge boundary の bound を出すが、Mathlib に `SimpleGraph.edgeBoundary` の Boolean cube 形が存在しないため、本 plan ではここまでで stop (corollary の statement を `projectionSubset {i}` 形に絞り、edge boundary の独立形式化は B-2' deferred として切り出した)。
 
-**B-2' edge-boundary 形 完了 (2026-05-12)** → [hypercube-edge-boundary-plan.md](hypercube-edge-boundary-plan.md): Boolean cube 上の coordinate-flip pair で `edgeBoundaryCount A` を直接組合せ的に定義し, counting identity `|∂_e A| + n |A| = 2 Σ |π_{≠i}(A)|` + LW + AM-GM で `2n · |A|^{(n-1)/n} ≤ |∂_e A| + n |A|` を `Common2026/Shannon/HypercubeEdgeBoundary.lean` (692 行) に publish 完了。`SimpleGraph` 構造は持ち込まず, `Sym2` も回避。
+**B-2' edge-boundary 形 完了 (2026-05-12)** → [hypercube-edge-boundary-plan.md](hypercube-edge-boundary-plan.md): Boolean cube 上の coordinate-flip pair で `edgeBoundaryCount A` を直接組合せ的に定義し, counting identity `|∂_e A| + n |A| = 2 Σ |π_{≠i}(A)|` + LW + AM-GM で `2n · |A|^{(n-1)/n} ≤ |∂_e A| + n |A|` を `InformationTheory/Shannon/HypercubeEdgeBoundary.lean` (692 行) に publish 完了。`SimpleGraph` 構造は持ち込まず, `Sym2` も回避。
 
 ## Phase D - LW refactor 判断 🔄 (見送り)
 
 判断: **LW は既存形を維持**。`brascamp_lieb_finset` (任意 cover 版) を `BrascampLieb.lean` に独立に置き、LW を corollary として書き直さない。理由:
 
-1. `LoomisWhitney.loomis_whitney` のシグネチャは既に下流 (Common2026.lean の import 順) に展開済み。
+1. `LoomisWhitney.loomis_whitney` のシグネチャは既に下流 (InformationTheory.lean の import 順) に展開済み。
 2. BL から LW を導く re-proof は 10-20 行で書けるが、既存 LW 証明 (444 行) を消すと history を見失う。新規 `BrascampLieb.lean` (BL + Hypercube corollary) と並立させる方が clean。
-3. `entropy_le_log_image_card` は **LoomisWhitney.lean に既存** で公開 namespace `InformationTheory.Shannon.entropy_le_log_image_card` として `BrascampLieb.lean` から `import Common2026.Shannon.LoomisWhitney` 経由で再利用可能。
+3. `entropy_le_log_image_card` は **LoomisWhitney.lean に既存** で公開 namespace `InformationTheory.Shannon.entropy_le_log_image_card` として `BrascampLieb.lean` から `import InformationTheory.Shannon.LoomisWhitney` 経由で再利用可能。
 
 ## 判断ログ
 

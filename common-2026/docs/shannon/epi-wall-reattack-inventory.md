@@ -307,11 +307,11 @@
 
 ## 着手 skeleton (★ cross-term orthogonality = 最 tractable な新規 sub-target)
 
-`Common2026/Shannon/EPIScoreCrossTermOrth.lean` (新規) の出だし。
+`InformationTheory/Shannon/EPIScoreCrossTermOrth.lean` (新規) の出だし。
 **注: 本ファイルは inventory 専用。以下は実装サブエージェント向け参考 skeleton であり、本調査では実装しない。**
 
 ```lean
-import Common2026.Shannon.FisherInfoV2
+import InformationTheory.Shannon.FisherInfoV2
 import Mathlib.Probability.Independence.Integration   -- IndepFun.integral_mul_eq_mul_integral
 import Mathlib.Probability.ConditionalExpectation      -- condExp_indep_eq
 import Mathlib.Probability.Density

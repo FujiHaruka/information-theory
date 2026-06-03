@@ -51,7 +51,7 @@ family は `fano` / `han` / `shannon` などのテーマ単位ディレクトリ
 - `docs/<family>/*-plan.md`
 
 触ってはいけない：
-- `Common2026/**.lean` → `lean-implementer` の仕事
+- `InformationTheory/**.lean` → `lean-implementer` の仕事
 - `docs/<family>/*-inventory.md` → `mathlib-inventory` の仕事
 - 過去の判断ログエントリの編集 → append-only
 

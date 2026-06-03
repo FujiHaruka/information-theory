@@ -3,7 +3,7 @@
 > Scope: the 4 path-density regularity preconditions newly localized into the
 > `h_pos_stam` per-`t` bundle of the EPI chain apex
 > `isStamToEPIBridgeHyp_of_stam_debruijn` / `isStamToEPIScalingHyp_of_stam_debruijn`
-> (`Common2026/Shannon/EPIStamToBridge.lean:1287-1322` / `1402-1322`), threaded by the
+> (`InformationTheory/Shannon/EPIStamToBridge.lean:1287-1322` / `1402-1322`), threaded by the
 > 2026-06-01 R-3‴ closure. End-to-end closure needs an A-5 producer that discharges them.
 > Read-only inventory; no implementation / plan authoring.
 
@@ -146,7 +146,7 @@ theorem isBlachmanConvReady_gaussianPDFReal
     {mX mY : ℝ} {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0) :
     IsBlachmanConvReady (gaussianPDFReal mX vX) (gaussianPDFReal mY vY)
 ```
-入力 `fX/fY` が **両方 Gaussian PDF**。ターゲットは `fX := convDensityAdd pX g_t`（非 Gaussian、X が Gaussian でない限り）。**非 Gaussian 用 producer は in-house に 0 件**（`rg "IsBlachmanConvReady" Common2026/Shannon/*.lean` → producer は Gaussian 1 件のみ）。
+入力 `fX/fY` が **両方 Gaussian PDF**。ターゲットは `fX := convDensityAdd pX g_t`（非 Gaussian、X が Gaussian でない限り）。**非 Gaussian 用 producer は in-house に 0 件**（`rg "IsBlachmanConvReady" InformationTheory/Shannon/*.lean` → producer は Gaussian 1 件のみ）。
 
 ### 19 field の分類（`EPIBlachmanDensity.lean:712-761`、verbatim field 名）
 
@@ -214,7 +214,7 @@ theorem isBlachmanConvReady_gaussianPDFReal
 調査の結果、**真の Mathlib 壁（原理的不在）は 0 件**。確認した「不在」は全て in-house で迂回済 or 迂回可能:
 
 - `HasCompactSupport.contDiff_convolution_right`（`Mathlib/Analysis/Calculus/ContDiff/Convolution.lean:423`）: **Gaussian heat kernel が compact support を持たないため適用不可**。ただし in-house parametric-integral gateway（`EPIConvDensity.lean`）で既に迂回済（同 file 冒頭 docstring `:14-24` が明記）。→ **Mathlib 壁ではなく既知の設計選択**。
-- 一般 density 用 `IsBlachmanConvReady` producer: in-house 不在だが、これは in-house の未実装であって Mathlib の責務外（`IsBlachmanConvReady` は Common2026 定義）。
+- 一般 density 用 `IsBlachmanConvReady` producer: in-house 不在だが、これは in-house の未実装であって Mathlib の責務外（`IsBlachmanConvReady` は InformationTheory 定義）。
 
 **shared sorry 補題化推奨**: (4) の非 Gaussian `IsBlachmanConvReady` producer は、もし 1 セッションで closeable でない場合、`sorry` + `@residual(plan:epi-stam-to-conclusion-phaseA-plan)` の **単一 shared 補題**（例: `isBlachmanConvReady_convDensityAdd_gaussian`）に集約し、A-5 wrapper から呼ぶ形を推奨。複数 file に散らさない（`docs/audit/audit-tags.md`「共有 Mathlib 壁: shared sorry 補題パターン」）。loogle 確認: `IsBlachmanConvReady` の非 Gaussian producer は `Found 0`（`rg` 確認、producer は Gaussian 1 件のみ）。
 

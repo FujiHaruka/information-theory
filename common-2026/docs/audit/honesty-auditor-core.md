@@ -115,7 +115,7 @@ recommend the rewrite. The new system requires sorry-based residuals, not honest
 - **Tier B** (READ THE BODY): `Read <module> --offset <line> --limit <body_lines+12>`.
   Catches circular / trivial / sorry / true_residual + actual hypothesis use.
 - **Tier C** (chase project-defined predicate hyps):
-  1. `rg -n --type lean '^\s*(def|abbrev|structure|class|inductive)\s+<Head>\b' Common2026`
+  1. `rg -n --type lean '^\s*(def|abbrev|structure|class|inductive)\s+<Head>\b' InformationTheory`
      — 0 hits = stdlib, skip.
   2. `Read <file> --offset <line> --limit 30` (more if structure).
   3. apply DOCTRINE. Undecidable → flag with note.
@@ -149,7 +149,7 @@ docstring が「Mathlib に X 不在」と主張 (`@residual(wall:...)` 含む) 
 2. **stale-olean 偽陽性の罠**: `#print axioms` を「対象を import する別 scratch」から走らせると、**import 先の olean が
    ソースより古い** (実装直後で未リフレッシュ) 場合に `sorryAx` を**誤検出**する。第一手 (対象 file に直書き +
    `lake env lean`) はこの罠を回避する。**import 先モジュールも同 commit で編集していた**場合のみ、先に
-   `lake build Common2026.<その import 先>` で olean をリフレッシュ (増分ビルド、依存はビルドするが **dependents は
+   `lake build InformationTheory.<その import 先>` で olean をリフレッシュ (増分ビルド、依存はビルドするが **dependents は
    ビルドしない** = 全体ビルドではない) してから第一手を実行。
 
 3. **判定**: axiom リストに `sorryAx` が出たら **`ok` にしない**。transitive sorry の所在を特定し `honest_residual`
@@ -245,7 +245,7 @@ verdict 返す前に self-check:
 
 ## 禁止事項
 
-- ファイル編集禁止な範囲: `Common2026/` 以下の **Lean code (def / theorem 本体 / signature)** は触らない。docstring 内のタグ行追記 / 修正のみ Edit OK
+- ファイル編集禁止な範囲: `InformationTheory/` 以下の **Lean code (def / theorem 本体 / signature)** は触らない。docstring 内のタグ行追記 / 修正のみ Edit OK
 - defect verdict (circular / load_bearing_hyp / false_statement 等) は auditor が修正しない — orchestrator に revert / rewrite recommend だけ返す
 - コミット禁止 (orchestrator が後で 1 commit)
 - 独自 verdict 語彙発明禁止 (audit-tags.md の語彙に限定)

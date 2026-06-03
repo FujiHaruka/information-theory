@@ -8,7 +8,7 @@
 ## Status / 目標
 
 > **実態整合 (2026-05-20): DONE-UNCOND (publish 済、0 sorry)** —
-> `Common2026/Shannon/HypercubeEdgeBoundary.lean` (~692 行) が全主目標を実在の定理として publish 済:
+> `InformationTheory/Shannon/HypercubeEdgeBoundary.lean` (~692 行) が全主目標を実在の定理として publish 済:
 > `edgeBoundaryCount` (`:69`)、counting identity `edgeBoundary_count_eq` (`:589`)、AM-GM bound
 > `edgeBoundary_ge_AMGM` (`:671`)、いずれも pass-through なし、`rg -nw sorry` 空振り (0 sorry)。
 > **命名差異 1 件**: 副目標の `internal_edges_eq` は実コードでは `internal_pair_count_eq_projection_sum`
@@ -56,7 +56,7 @@ AM-GM (`Real.inner_le_nnreal_inner_self` でなく `pow_arith_mean_le_arith_mean
 
 **判断**: SimpleGraph 構造に乗せると `Sym2` 経由の edge handling が増えるため, **directed pair `(x, i)` で counts する素朴な定義**を採用 (boundary edge `{x, x ⊕ e_i}` は `x ∈ A`, `x ⊕ e_i ∉ A` の唯一の `x` で代表される → unordered count に一致)。
 
-**既存 Common2026 補題で再利用予定**:
+**既存 InformationTheory 補題で再利用予定**:
 
 - `InformationTheory.Shannon.loomis_whitney` (`LoomisWhitney.lean:351`) — `A.card ^ (n-1) ≤ ∏ i, (projectionExcept i A).card`。
 - `InformationTheory.Shannon.projectionExcept` (`LoomisWhitney.lean:263`) — `(j : {j // j ≠ i}) → α` 値 projection.
@@ -64,7 +64,7 @@ AM-GM (`Real.inner_le_nnreal_inner_self` でなく `pow_arith_mean_le_arith_mean
 
 ## Phase A — `edgeBoundaryCount` / `internalEdgeCount` 定義 + identity ✅
 
-新規 `Common2026/Shannon/HypercubeEdgeBoundary.lean`:
+新規 `InformationTheory/Shannon/HypercubeEdgeBoundary.lean`:
 
 - [x] `def edgeBoundaryCount (A : Finset (Fin n → Bool)) : ℕ` — `(x, i)` 対の数で `x ∈ A`, `flipCoord i x ∉ A` を満たすもの。
 - [x] `def internalEdgePairCount (A : Finset (Fin n → Bool)) : ℕ` — `(x, i)` 対で `x ∈ A`, `flipCoord i x ∈ A`。`internal edges × 2` に等しい (各 unordered internal edge は両端点で 2 回 counts)。
@@ -87,8 +87,8 @@ AM-GM (`Real.inner_le_nnreal_inner_self` でなく `pow_arith_mean_le_arith_mean
 ## 見積行数 / 検証条件
 
 - 行数見積: 200〜300 行 (Phase A 定義 + 2 identity ~120 行, Phase B AM-GM corollary ~80 行, ヘッダ + namespace)。
-- 検証: `lake env lean Common2026/Shannon/HypercubeEdgeBoundary.lean` silent (0 sorry / 0 error)。
-- `Common2026.lean` に `import Common2026.Shannon.HypercubeEdgeBoundary` 追記。
+- 検証: `lake env lean InformationTheory/Shannon/HypercubeEdgeBoundary.lean` silent (0 sorry / 0 error)。
+- `InformationTheory.lean` に `import InformationTheory.Shannon.HypercubeEdgeBoundary` 追記。
 
 ## 判断ログ
 
@@ -98,7 +98,7 @@ AM-GM (`Real.inner_le_nnreal_inner_self` でなく `pow_arith_mean_le_arith_mean
 
 ## 実装結果サマリ
 
-- **行数**: 692 行 (`Common2026/Shannon/HypercubeEdgeBoundary.lean`)。Phase 0 inventory 完了 + 4 helper def (`flipCoord`, `projMap`, `extension`, `boundaryDirSet`) + 3 main theorem (`edge_total_count`, `two_sum_projection_eq`, `edgeBoundary_ge_AMGM`) + 2 補題 (`edgeBoundary_count_eq`, `internal_pair_count_eq_projection_sum`) + AM-GM corollary `sum_projection_card_ge_amgm`。
+- **行数**: 692 行 (`InformationTheory/Shannon/HypercubeEdgeBoundary.lean`)。Phase 0 inventory 完了 + 4 helper def (`flipCoord`, `projMap`, `extension`, `boundaryDirSet`) + 3 main theorem (`edge_total_count`, `two_sum_projection_eq`, `edgeBoundary_ge_AMGM`) + 2 補題 (`edgeBoundary_count_eq`, `internal_pair_count_eq_projection_sum`) + AM-GM corollary `sum_projection_card_ge_amgm`。
 - **graph 構造**: `SimpleGraph` 一切使わず, `(Fin n → Bool) × Fin n` 上の predicate `p.1 ∈ A ∧ flipCoord p.2 p.1 ∉ A` で edge boundary を組合せ的に publish。
 - **主補題 signature**:
   ```
@@ -107,5 +107,5 @@ AM-GM (`Real.inner_le_nnreal_inner_self` でなく `pow_arith_mean_le_arith_mean
         ≤ (edgeBoundaryCount A : ℝ) + n * A.card
   ```
   整数差を `+` で回避する形 (`|∂_e A| ≥ 2n |A|^{(n-1)/n} - n |A|` に等価)。
-- **検証**: `lake env lean Common2026/Shannon/HypercubeEdgeBoundary.lean` silent (0 sorry / 0 error / 0 warning)。
+- **検証**: `lake env lean InformationTheory/Shannon/HypercubeEdgeBoundary.lean` silent (0 sorry / 0 error / 0 warning)。
 - **Mathlib 上流 PR 切り出し可能性**: 中程度。`edgeBoundaryCount` の `SimpleGraph.edgeBoundary` 形への昇格は別 PR で着手すべき (n-fold `boxProd` of `K_2` で Boolean cube graph を構成 → `edgeBoundary` API を独立 PR、~150-250 行)。本 plan の `edgeBoundary_ge_AMGM` 等は Mathlib の `Combinatorics/Isoperimetric` 系新規ファイル候補。entropy-sharp 形 (B-2'') は独立 PR で着手判断。

@@ -1,11 +1,11 @@
-# Channel coding achievability — Mathlib + Common2026 在庫 (B-3 Phase 0)
+# Channel coding achievability — Mathlib + InformationTheory 在庫 (B-3 Phase 0)
 
 調査日 2026-05-12。Loogle index 経由 + `rg` 補助。
 
 ## Mathlib 不在 (新規定義が必要)
 
 - **`channel` / `channelCapacity` / `dmcCapacity`**: loogle で `"channel"` 文字列 86 件、すべて `Std.Channel` (sync primitive) で IT 用は無し。`"capacity"` 211 件、すべて `Array.emptyWithCapacity` 系。**Mathlib 情報理論 namespace に DMC / Capacity 定義は無い**。
-- **`jointlyTypical*`**: 文字列 hit 無し。Common2026 内も無し。
+- **`jointlyTypical*`**: 文字列 hit 無し。InformationTheory 内も無し。
 
 ## Mathlib 利用予定 API
 
@@ -32,9 +32,9 @@
 - `tendstoInMeasure_of_tendsto_ae`: a.s. ⇒ in-probability.
 - `strong_law_ae_real` (Mathlib): LLN.
 
-## Common2026 内 利用予定 API
+## InformationTheory 内 利用予定 API
 
-### `Common2026/Shannon/MIChainRule.lean` (B-7、本シードの直接前段)
+### `InformationTheory/Shannon/MIChainRule.lean` (B-7、本シードの直接前段)
 
 - **`mutualInfo_iid_eq_nsmul`** (`MIChainRule.lean:387`) ★中核★
 
@@ -65,7 +65,7 @@
 - `klDiv_prod_eq_add` (`MIChainRule.lean:249`): 2-product KL。
 - `mutualInfo_map_left_measurableEquiv` / `mutualInfo_map_right_measurableEquiv` (`MIChainRule.lean:38, 70`): reshape 不変性。
 
-### `Common2026/Shannon/AEP.lean`
+### `InformationTheory/Shannon/AEP.lean`
 
 - **`typicalSet`** (`AEP.lean:229`): 単独 typical set。Joint typical では `Fin n → (α × β)` を 1 軸に潰せばそのまま。
 - **`typicalSet_card_le`** (`AEP.lean:257`): `|T_ε^n| ≤ exp(n(H+ε))`. 同上で joint typical の size bound に転用可。
@@ -74,18 +74,18 @@
 - `pmfLog` / `logLikelihood` / `aep_ae` / `aep_inProbability`: 確率収束 plumbing。
 - `entropy_jointRV_eq_n_smul` (`AEP.lean:527`): `H(X^n) = n · H(X_0)` for i.i.d.
 
-### `Common2026/Shannon/MutualInfo.lean`
+### `InformationTheory/Shannon/MutualInfo.lean`
 
 - `mutualInfo (μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y) : ℝ≥0∞` (`MutualInfo.lean:36`)
 - `mutualInfo_nonneg`, `mutualInfo_comm`, `mutualInfo_eq_zero_iff_indep`, `mutualInfo_ne_top` (有限 alphabet)
 - `klDiv_map_measurableEquiv`, `klDiv_prod_const_left`
 
-### `Common2026/Shannon/Converse.lean` (双対参照)
+### `InformationTheory/Shannon/Converse.lean` (双対参照)
 
 - `errorProb` の単一形 (`InformationTheory.MeasureFano.errorProb`): block 版で再利用可。
 - `shannon_converse_single_shot` (`Converse.lean:81`): 「`log|M| ≤ I + h(P_e) + P_e · log(|M|-1)`」converse。本シード achievability の **双対**: encoder 付き形 (`shannon_converse_single_shot_injective_encoder`, `shannon_converse_single_shot_markov_encoder`) を見ると、encoder/decoder の Lean 化形が分かる。
 
-### `Common2026/Fano/Measure.lean` (errorProb)
+### `InformationTheory/Fano/Measure.lean` (errorProb)
 
 - `MeasureFano.errorProb (μ : Measure Ω) (Msg : Ω → M) (Yo : Ω → Y) (decoder : Y → M) : ℝ` — `μ.real {ω | Msg ω ≠ decoder (Yo ω)}` 形。**Block code の `errorProb` も同型で書ける** (Msg = m ∈ Fin M, Yo = (Fin n → β)).
 

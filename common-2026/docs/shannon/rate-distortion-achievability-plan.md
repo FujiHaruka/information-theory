@@ -1,7 +1,7 @@
 # Rate-distortion theorem achievability ムーンショット計画 🌙
 
 > 実態整合 (2026-05-20): DONE-HONEST-HYPS — Phase B-E すべて landing 済 (進捗の📋は stale)。
-> headline `rate_distortion_achievability` は `Common2026/Shannon/RateDistortionAchievabilityPhaseEStrongFinal.lean:1635`
+> headline `rate_distortion_achievability` は `InformationTheory/Shannon/RateDistortionAchievabilityPhaseEStrongFinal.lean:1635`
 > に strong-typicality track で publish 済 (0 sorry / 0 axiom)。Phase B の `jointlyTypicalSet_indep_prob_ge`
 > (`RateDistortionAchievabilityPhaseB.lean:616`) も実証明。残る honest pass-through hyp:
 > `h_jts_subset_dts` (strong-JTS⊆distortion-typical) + rate-gap/distortion-budget/KL-dominate 各条件 + `hqStar_pos`。
@@ -12,7 +12,7 @@
 > Cover-Thomas 10.5 achievability 半分。`R(D) := inf {I(X; X̂) : 𝔼 d(X, X̂) ≤ D}`
 > を新規定義し、`R > R(D) ⟹ ∃ code, 𝔼 d(X, X̂) ≤ D + ε` を formalize する。
 > Random codebook + joint typical encoder を **lossy mirror** で構成し、既存
-> `Common2026/Shannon/ChannelCodingAchievability.lean` (1890 行) の
+> `InformationTheory/Shannon/ChannelCodingAchievability.lean` (1890 行) の
 > `codebookMeasure` + Fubini-collapse 補題群 (`codebook_marginal_one` /
 > `codebook_marginal_two` / `random_codebook_average_le`) を流用する。
 > **最難関シード** (見積 ~2000 行 / 4-6 週)。
@@ -75,7 +75,7 @@ Cover-Thomas は textbook 形 `R(D) := inf_{p(x̂|x): 𝔼 d ≤ D} I(X; X̂)` (
   (`I(q) := mutualInfo` of `q` viewed as joint dist on `α × β`)。
 - 利点: `stdSimplex ℝ (α × β)` は finite-dim compact + convex、`I` は連続、constraint は
   linear (`q.fst = P_X` も `∑ q(a,b) g_i(a,b) = c_i` も linear)。
-  - 既存 `Common2026/Shannon/CsiszarProjection.lean` の `stdSimplex` machinery
+  - 既存 `InformationTheory/Shannon/CsiszarProjection.lean` の `stdSimplex` machinery
     (`isCompact_of_subset_stdSimplex`、`Convex` / `IsClosed` の plumbing) が直接
     使える。
   - **shape-driven**: `RDConstraint` を closed convex subset として書けば
@@ -148,11 +148,11 @@ encoder の **lossy mirror**:
   signature が**`α` polymorphic** であることが前提。本 plan は Phase 0 末で
   signature を verbatim 確認、`Type*` 直してあれば import only、そうでなければ
   precursor refactor (~100 行) で抽出。
-- 並立 publish: `Common2026/Shannon/RateDistortionAchievability.lean` を新規作成、
-  `Common2026/Shannon/ChannelCodingAchievability.lean` は touch しない。
+- 並立 publish: `InformationTheory/Shannon/RateDistortionAchievability.lean` を新規作成、
+  `InformationTheory/Shannon/ChannelCodingAchievability.lean` は touch しない。
   B-3'' / B-1' / B-5' / B-8' の前例どおり「親 file 不変 + 子 file 並立」。
 
-### 代替: (A) precursor で `Common2026/Shannon/RandomCodebookProbMethod.lean` を抽出
+### 代替: (A) precursor で `InformationTheory/Shannon/RandomCodebookProbMethod.lean` を抽出
 
 `ChannelCodingAchievability` 内の private `codebookMeasure` + 3 Fubini-collapse
 補題 (~400 行) を独立 file に refactor し、E-1 / E-3 / E-5'-deferred (binning) /
@@ -472,31 +472,31 @@ theorem rate_distortion_achievability
   - sig: `Filter.Tendsto (fun x => Real.exp (-x)) atTop (𝓝 0)`
   - 用途: Phase D.3
 
-### 既存 Common2026 (流用、verbatim 確認済)
+### 既存 InformationTheory (流用、verbatim 確認済)
 
-- `Common2026/Shannon/ChannelCoding.lean`:
+- `InformationTheory/Shannon/ChannelCoding.lean`:
   - `Channel α β := Kernel α β` (l. 49)
   - `jointlyTypicalSet μ Xs Ys n ε` (l. 301)
   - `mem_jointlyTypicalSet_iff` (l. 311)
   - `jointlyTypicalSet_prob_tendsto_one` (l. 402): `Pairwise … ⟂ᵢ[μ] …` 形仮定
   - `jointlyTypicalSet_indep_prob_le` (l. 573): independent product 上の typical
     集合確率 `≤ exp(-n(I - 3ε))`、本 plan で **lossy version** に転用 (cf. B.3.2)
-- `Common2026/Shannon/ChannelCodingAchievability.lean`:
+- `InformationTheory/Shannon/ChannelCodingAchievability.lean`:
   - `Codebook M n α := Fin M → (Fin n → α)` (l. 70、`α` polymorphic、Phase 0 で再確認)
   - `codebookMeasure p M n := Measure.pi (fun _ => Measure.pi (fun _ => p))` (l. 239)
   - `random_codebook_average_le` (l. 1229): channel coding 形だが Fubini-collapse
     structure は lossy mirror で再利用可。signature 内 private 補題
     `codebook_marginal_one` / `_two` も polymorphic か Phase 0 で要確認
   - `exists_codebook_le_avg` (l. 1477): verbatim mirror で Phase C.3 に再利用
-- `Common2026/Shannon/IIDProductInput.lean`:
+- `InformationTheory/Shannon/IIDProductInput.lean`:
   - `iidAmbientMeasure p W` (l. 48): joint distribution 上の i.i.d. ambient。本 plan
     では source-only `Measure.infinitePi P_X` 版が必要 (Phase C.1)
-- `Common2026/Shannon/MutualInfo.lean`:
+- `InformationTheory/Shannon/MutualInfo.lean`:
   - `mutualInfo` (l. 36): `klDiv ((μ.map (Xs, Yo)) ((μ.map Xs).prod (μ.map Yo)))` 形
   - `mutualInfo_nonneg` (l. 42)
   - `mutualInfo_ne_top` (l. 192)
   - `mutualInfo_comm` (l. 93)
-- `Common2026/Shannon/CsiszarProjection.lean`:
+- `InformationTheory/Shannon/CsiszarProjection.lean`:
   - `stdSimplex` machinery (compactness / closed / convex)
   - `isCompact_of_subset_stdSimplex` (汎用、Phase A.3.2 で直接使用)
 
@@ -504,13 +504,13 @@ theorem rate_distortion_achievability
 
 - [ ] **Gap 1**: `jointlyTypicalSet` ⟹ `blockDistortion ≤ 𝔼 d + δ` 補題
        (Phase B.2.1): 新規 `distortionTypicalSet` を定義し、`jointlyTypicalSet`
-       本体は touch しない (`Common2026/Shannon/ChannelCoding.lean` 不変)。
+       本体は touch しない (`InformationTheory/Shannon/ChannelCoding.lean` 不変)。
 - [ ] **Gap 2**: `mutualInfoPmf q` (pmf 直接形) と `MutualInfo.mutualInfo
        (joint dist measure)` の bridge: ~80 行、`klDivPmf_eq_log_diff_sum` の MI 対形。
-       `Common2026/Shannon/MutualInfo.lean` 拡張 (E-6 CsiszarProjection が
+       `InformationTheory/Shannon/MutualInfo.lean` 拡張 (E-6 CsiszarProjection が
        `klDivPmf` で書いた前例に整合)。
 - [ ] **Gap 3**: `iidAmbientSourceMeasure P_X` (source-only) を `IIDProductInput.lean`
-       に追加、または **新規** `Common2026/Shannon/IIDSourceInput.lean` (~80 行)。
+       に追加、または **新規** `InformationTheory/Shannon/IIDSourceInput.lean` (~80 行)。
 - [ ] **Gap 4**: `expectedDistortion` の連続性 / 凸性 (Phase A.3.1 で `RDConstraint`
        が closed を取るため、linear functional 連続性は自明)。
 
@@ -531,7 +531,7 @@ theorem rate_distortion_achievability
 
 <!-- 例 (起草時、未確定):
 1. **Phase 0 で `codebookMeasure` の α polymorphic 性が崩れていた場合**:
-   precursor refactor `Common2026/Shannon/RandomCodebookProbMethod.lean`
+   precursor refactor `InformationTheory/Shannon/RandomCodebookProbMethod.lean`
    抽出に switch、B-3'' (1890 行) の reverify を `lake build` で実走確認。
 2. **`R(D)` の定義 shape の最終確定**: `joint dist q ∈ stdSimplex` 形 vs
    `Kernel α β` 形 vs Cover-Thomas textbook conditional dist 形。stdSimplex 採用

@@ -169,7 +169,7 @@
 
 ## Phase 4-α 着手のための skeleton
 
-`Common2026/Shannon/MutualInfo.lean` の出だし:
+`InformationTheory/Shannon/MutualInfo.lean` の出だし:
 
 ```lean
 import Mathlib.InformationTheory.KullbackLeibler.Basic
@@ -212,7 +212,7 @@ theorem mutualInfo_eq_zero_iff_indep
 end InformationTheory.Shannon
 ```
 
-`Common2026/Shannon/DPI.lean` は `MutualInfo.lean` 完成後に着手。
+`InformationTheory/Shannon/DPI.lean` は `MutualInfo.lean` 完成後に着手。
 
 ---
 

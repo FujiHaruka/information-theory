@@ -2,7 +2,7 @@
 
 > Scope: the **Jensen log-poly majorant core** behind the 3
 > `sorry + @residual(wall:entropy-finiteness)` lemmas in
-> `Common2026/Shannon/EntropyConvFinite.lean` (A `_negMulLog`:95 / B `_logFactor_deriv`:72 /
+> `InformationTheory/Shannon/EntropyConvFinite.lean` (A `_negMulLog`:95 / B `_logFactor_deriv`:72 /
 > C `_logFactor_deriv2`:50). The brief proposed reducing all 3 to one shared core
 > `convDensityAdd_negLog_poly_majorant : -log p_t x ≤ A + B·x²` proved via Jensen
 > (`ConcaveOn.le_map_integral`). This inventory tests whether that Jensen core is *needed*.
@@ -27,7 +27,7 @@ route II (Tonelli + even Gaussian moment, `hpX_mom` 消費) により**既に閉
    `hpX_mass` を持たない → signature に `hpX_mass` (+ B/C は `hpX_mom`) 追加が必要。regularity
    precondition であり honesty defect ではない。
 2. **⚠ import cycle 確認済（決定的）**: `FisherInfoV2DeBruijnAssembly.lean:4` は
-   `import Common2026.Shannon.EntropyConvFinite` し、3 wall を `Assembly:1973/1978/2432` で呼ぶ。
+   `import InformationTheory.Shannon.EntropyConvFinite` し、3 wall を `Assembly:1973/1978/2432` で呼ぶ。
    即ち #1/#2/#3 (`@audit:ok` majorant) は wall の **下流** (Assembly) にある。
    → **EntropyConvFinite から Assembly を import すると循環**。配線 closure には
    #1/#2/#3 を Assembly から **両者の共通上流 file（または新規 shared file）へ移設**するか、
@@ -70,7 +70,7 @@ A (negMulLog) は `|negMulLog p_t| = p_t·|log p_t| ≤ p_t·(A + B·x²)`、
 
 ### A. 既存 repo 資産（決定的 — Jensen を不要にする本体）
 
-各 declaration は `Common2026/Shannon/FisherInfoV2DeBruijnAssembly.lean`。signature verbatim、
+各 declaration は `InformationTheory/Shannon/FisherInfoV2DeBruijnAssembly.lean`。signature verbatim、
 type-class 前提は無し（全て explicit arg）。全て `@audit:ok` / 0 local sorry / sorryAx-free。
 
 | # | declaration | file:line | 結論 verbatim | 状態 |
@@ -251,11 +251,11 @@ F 全体が不要。
 ## 着手 skeleton
 
 ```lean
--- ⚠ import Common2026.Shannon.FisherInfoV2DeBruijnAssembly は CYCLE のため不可:
+-- ⚠ import InformationTheory.Shannon.FisherInfoV2DeBruijnAssembly は CYCLE のため不可:
 --   Assembly:4 が EntropyConvFinite を import し 3 wall を呼ぶ (Assembly:1973/1978/2432)。
 -- → #1/#2/#3 + envelope 部品を shared 上流 file へ切り出してから import する（構造変更, plan 責務）:
-import Common2026.Shannon.ConvDensityMajorant   -- (仮) #1/#2/#3 を切り出した新規 shared file
--- 現状 EntropyConvFinite.lean:1 は import Common2026.Shannon.EPIConvDensity のみ。
+import InformationTheory.Shannon.ConvDensityMajorant   -- (仮) #1/#2/#3 を切り出した新規 shared file
+-- 現状 EntropyConvFinite.lean:1 は import InformationTheory.Shannon.EPIConvDensity のみ。
 
 namespace InformationTheory.Shannon.EntropyConvFinite
 
@@ -308,12 +308,12 @@ end InformationTheory.Shannon.EntropyConvFinite
    1 本自作（`gaussHessMaj` テンプレ ~60-100 行）。**wall B の工数はこれ次第**。
 2. **conv 2 次モーメント `∫ x²·p_t = E[X²]+t` の補題**が repo にあるか（wall A の `∫ p_t·Bx²` 評価用）。
 3. **import cycle = 確認済（CONFIRMED、skeleton の `import Assembly` は不可）**:
-   `FisherInfoV2DeBruijnAssembly.lean:4` が `import Common2026.Shannon.EntropyConvFinite` し、
+   `FisherInfoV2DeBruijnAssembly.lean:4` が `import InformationTheory.Shannon.EntropyConvFinite` し、
    3 wall を `Assembly:1973`（C）/`:1978`（B）/`:2432`（A）で実際に呼ぶ。よって #1/#2/#3 の
    `@audit:ok` majorant は wall の **下流**にあり、`EntropyConvFinite` から直接 import できない（循環）。
    **closure には構造変更が必須**: (a) #1/#2/#3 + envelope 部品（`gaussHessMaj` 系, `convKernel_envelope_integrable`,
    `convDensityAdd_le_prefactor`, `_lower_bound_gaussian_uniformR` 等）を Assembly から
-   `EntropyConvFinite` の上流（または新規 shared file, 例 `Common2026/Shannon/ConvDensityMajorant.lean`）へ
+   `EntropyConvFinite` の上流（または新規 shared file, 例 `InformationTheory/Shannon/ConvDensityMajorant.lean`）へ
    切り出し、Assembly と EntropyConvFinite の双方がそれを import する、または (b) 3 wall を Assembly 内へ移設。
    いずれも plan 側の構造判断。**上の skeleton の `import …Assembly` は cycle のため不可** — shared file 経由に
    差し替えること。

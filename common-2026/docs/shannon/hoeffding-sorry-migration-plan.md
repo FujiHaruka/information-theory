@@ -16,7 +16,7 @@
 
 - 対象 9 file (`HoeffdingTradeoff.lean` ほか) で `@audit:suspect` 19 件 (legacy tier 4)。
 - `@audit:staged` / `@audit:defer` / `@audit:closed-by-successor` / 散文 `🟢ʰ` は **0 件**。
-- **既存 `sorry` キーワードも 0 件** (verbatim 確認: `rg -nw 'sorry' Common2026/Shannon/Hoeffding*.lean` の 3 ヒットは全て docstring 内の文字列リテラル ``sorry`` または `0-sorry`)。
+- **既存 `sorry` キーワードも 0 件** (verbatim 確認: `rg -nw 'sorry' InformationTheory/Shannon/Hoeffding*.lean` の 3 ヒットは全て docstring 内の文字列リテラル ``sorry`` または `0-sorry`)。
   → ブリーフ「既存 sorry 3 件」は誤計数。実数は 0。
 - 移行対象がほぼ単一の plan slug (`hoeffding-tradeoff-moonshot-plan` 16 件 + `hoeffding-tradeoff-sandwich-plan` 3 件) に偏っており、`@residual(plan:...)` の対応関係を 1 対 1 で評価しやすい。
 - 「load-bearing predicate bundling 容認 → sorry-based 移行」の典型パターン (`IsHoeffdingLagrangeHyp` / `IsHoeffdingInteriorMinimizer` / `IsHoeffdingInteriorGradient`) を含み、tier 4 vs tier 5 の判定が実地で問われる。pilot 結果が WynerZiv / EPI / AWGN への移行レシピ拡張の参考になる。
@@ -36,7 +36,7 @@
 ### Honesty workflow と DoD
 
 本 plan の DoD は `CLAUDE.md`「Definition of Done — 2 段階」の **type-check done**:
-- 各 file `lake env lean Common2026/Shannon/<file>.lean` が 0 errors、
+- 各 file `lake env lean InformationTheory/Shannon/<file>.lean` が 0 errors、
 - 各新規 `sorry` に `@residual(<class>:<slug>)` タグが付き、
 - 各 Phase 完了時に `honesty-auditor` を起動して classification を独立検証する。
 
@@ -89,7 +89,7 @@ Phase 順を選んだ理由: Phase 1 (低 risk) を先行することで、Phase
 
 ## 在庫: 19 件の `@audit:suspect` の verbatim 分類
 
-verbatim 確認方法: `Common2026/Shannon/Hoeffding*.lean` を Read で
+verbatim 確認方法: `InformationTheory/Shannon/Hoeffding*.lean` を Read で
 `@audit:suspect` 周辺 docstring + 直後 `theorem` signature + body 1-3 行を実コードから読み込み、
 「signature の hypothesis が load-bearing か regularity か」を 1 件ずつ判定。
 
@@ -131,7 +131,7 @@ verbatim 確認方法: `Common2026/Shannon/Hoeffding*.lean` を Read で
 
 - [ ] **1.1** `HoeffdingSandwichBody.lean` Phase 1 候補 2 件 (`hoeffding_tradeoff_sandwich_via_predicate` / `hoeffding_tradeoff_sandwich_at_boundary_alpha_ge_kl`) の `@audit:suspect` 削除。
   - `IsHoeffdingMinimizerFullSupport` は `def := ∀ a, 0 < Qstar a` (verbatim 確認、file:127) → 純 regularity hyp。signature 改変不要。
-  - `lake env lean Common2026/Shannon/HoeffdingSandwichBody.lean` で type-check done 確認。
+  - `lake env lean InformationTheory/Shannon/HoeffdingSandwichBody.lean` で type-check done 確認。
 - [ ] **1.2** `HoeffdingLagrangeIVTBody.lean` Phase 1 候補 4 件 (`isHoeffdingTiltMinimal_realises` / `isHoeffdingLagrangeHyp_of_minimal` / `exists_isHoeffdingLagrangeHyp_of_minimal` / `isHoeffdingInteriorMinimizer_of_ivt`) の `@audit:suspect` 削除。
   - `IsHoeffdingTiltMinimal` は `IsMinOn` (`Prop`) で in-tree 構成的 closure (`HoeffdingMinimizerAttainment.lean:206`) が verbatim 存在。primitive predicate 扱い、load-bearing ではない。
   - `isHoeffdingInteriorMinimizer_of_ivt` の結論型は `IsHoeffdingInteriorMinimizer` (load-bearing predicate を **構築**する側)。Phase 2 で predicate 定義が `retract-candidate` 化された場合、本 wrapper の利用者は Phase 2 完了時点で消えている想定 (auditor が verify)。
@@ -157,7 +157,7 @@ verbatim 確認方法: `Common2026/Shannon/Hoeffding*.lean` を Read で
   - 変動 hyp は `hoeffding_tradeoff_sandwich_at_lagrange` のみで残る、それ以外は predicate 削除のみで signature 縮小。
 
 - [ ] **2.3** Predicate 定義側の処理 (`HoeffdingInteriorBody.lean:109/123` / `HoeffdingInteriorGradientBody.lean:222`):
-  - Phase 2.1 / 2.2 完了後、3 つの predicate (`IsHoeffdingInteriorGradient` / `IsHoeffdingInteriorMinimizer` / `IsHoeffdingLagrangeHyp`) の利用者を `rg -n 'IsHoeffdingInteriorGradient|IsHoeffdingInteriorMinimizer|IsHoeffdingLagrangeHyp' Common2026/` で再確認。
+  - Phase 2.1 / 2.2 完了後、3 つの predicate (`IsHoeffdingInteriorGradient` / `IsHoeffdingInteriorMinimizer` / `IsHoeffdingLagrangeHyp`) の利用者を `rg -n 'IsHoeffdingInteriorGradient|IsHoeffdingInteriorMinimizer|IsHoeffdingLagrangeHyp' InformationTheory/` で再確認。
   - **依存ゼロなら**: `@audit:retract-candidate(load-bearing-predicate)` を docstring 末尾に付与 (削除はしない、history record として残す)。
   - **依然依存ありなら**: 「未決事項」セクション #1 参照 → user 判断仰ぐ。
   - 同時に `IsKLGradientHyp` / `IsHoeffdingTiltMinimal` (Phase 1 で in-tree closure 確認済の primitive) は **触らない** — 構成的 lemma の primitive。
@@ -167,7 +167,7 @@ verbatim 確認方法: `Common2026/Shannon/Hoeffding*.lean` を Read で
 **Phase 2 DoD**:
 - 13 件で `@audit:suspect` 0 件、`@residual(plan:hoeffding-tradeoff-moonshot-plan)` タグ付き `sorry` 10-13 件 (V+P の 3 件は predicate 削除のみで sorry 不要かどうか auditor が判定)。
 - 3 つの load-bearing predicate が `@audit:retract-candidate` または「未決」マーク付き。
-- `lake env lean` 各 file 0 errors、`Common2026.lean` の import 行は変更なし (declaration 名は維持)。
+- `lake env lean` 各 file 0 errors、`InformationTheory.lean` の import 行は変更なし (declaration 名は維持)。
 
 **proof-log**: yes (`docs/shannon/proof-log-hoeffding-sorry-migration-phase2.md`)。理由: Phase 2 は signature 改変 + body `sorry` 化を 13 件で行うため、honest 判定境界 (V+P の 3 件で predicate 削除後に変動 hyp だけ残すべきか、それも `sorry` 化すべきか) の判定理由を残す。
 
@@ -176,9 +176,9 @@ verbatim 確認方法: `Common2026/Shannon/Hoeffding*.lean` を Read で
 - [ ] **V.1** 全 9 file で `lake env lean` 確認 (Phase 2 で signature 改変があったため dependent file の olean refresh が必要。CLAUDE.md「After upstream edits」参照)。
 - [ ] **V.2** 集計コマンド実行:
   ```bash
-  rg '@audit:suspect' Common2026/Shannon/Hoeffding*.lean | wc -l      # = 0
-  rg '@residual\(plan:hoeffding-tradeoff-moonshot-plan\)' Common2026/Shannon/Hoeffding*.lean | wc -l
-  rg -nw 'sorry' Common2026/Shannon/Hoeffding*.lean
+  rg '@audit:suspect' InformationTheory/Shannon/Hoeffding*.lean | wc -l      # = 0
+  rg '@residual\(plan:hoeffding-tradeoff-moonshot-plan\)' InformationTheory/Shannon/Hoeffding*.lean | wc -l
+  rg -nw 'sorry' InformationTheory/Shannon/Hoeffding*.lean
   ```
 - [ ] **V.3** `hoeffding-tradeoff-moonshot-plan.md` 冒頭 banner 更新 (sorry-based 移行完了の追記)。
 - [ ] **V.4** Pilot 知見を `.claude/handoff-sorry-migration.md` または後続 family plan 用テンプレートに反映:
@@ -204,7 +204,7 @@ verbatim 確認方法: `Common2026/Shannon/Hoeffding*.lean` を Read で
 
 書く頻度: 方針変更 / 撤退ライン発動 / 当初仮定の修正があったとき。append-only。
 
-1. **2026-05-25 plan 起草**: lean-planner agent (本セッション) が `Common2026/Shannon/Hoeffding*.lean` 9 file の `@audit:suspect` 19 件を verbatim 読込で per-declaration 分類。「既存 sorry 3 件」(handoff の brief 記述) は誤計数で **実数 0 件** であることを `rg -nw 'sorry'` で確認 (3 ヒットは docstring 内の文字列 ``sorry`` / `0-sorry`)。pilot 戦略を「file 単位 sweep + shared wall 集約なし (該当 wall 不在)」に確定。Approach の 2 軸決定根拠を在庫表で示した。
+1. **2026-05-25 plan 起草**: lean-planner agent (本セッション) が `InformationTheory/Shannon/Hoeffding*.lean` 9 file の `@audit:suspect` 19 件を verbatim 読込で per-declaration 分類。「既存 sorry 3 件」(handoff の brief 記述) は誤計数で **実数 0 件** であることを `rg -nw 'sorry'` で確認 (3 ヒットは docstring 内の文字列 ``sorry`` / `0-sorry`)。pilot 戦略を「file 単位 sweep + shared wall 集約なし (該当 wall 不在)」に確定。Approach の 2 軸決定根拠を在庫表で示した。
 
 2. **2026-05-25 Phase 1 完了**: 9 件タグ削除 + lake env lean 0 errors。honesty-auditor verdict `defect 0 / ok 8 / questionable 1` (#9 `isHoeffdingInteriorMinimizer_of_ivt`)、結論型が load-bearing predicate を返す唯一の declaration のため docstring に Phase 2 連動の retract-candidate note を追記して closure。L-MIG-1 (variational hyp の load-bearing 化) は発動せず。
 

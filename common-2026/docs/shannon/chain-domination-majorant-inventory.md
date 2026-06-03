@@ -1,6 +1,6 @@
 # `_chain_domination` Gaussian-tail majorant — Mathlib/repo API 在庫
 
-> 対象 sorry: `Common2026/Shannon/FisherInfoV2DeBruijnAssembly.lean:133-144`
+> 対象 sorry: `InformationTheory/Shannon/FisherInfoV2DeBruijnAssembly.lean:133-144`
 > `debruijnIdentityV2_holds_assembled_chain_domination` (`@residual(plan:epi-debruijn-pertime-closure)`)。
 > 親計画: `docs/shannon/epi-debruijn-pertime-closure-plan.md` (§Phase 5-G L-PT-γ)。
 > docs-only 調査。Lean compile / コード編集 / commit はしていない。
@@ -86,9 +86,9 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
 |---|---|---|---|---|
 | `gaussianPDFReal` 正値 | `lemma ProbabilityTheory.gaussianPDFReal_pos (μ : ℝ) (v : ℝ≥0) (x : ℝ) (hv : v ≠ 0) : 0 < gaussianPDFReal μ v x` | `Mathlib/Probability/Distributions/Gaussian/Real.lean:61` | ✅ 既存 | 核 factor の正値。`p_s x > 0` の素材だが、**畳込全体の explicit 下界ではない** |
 | `gaussianPDFReal` 非負 | `lemma ProbabilityTheory.gaussianPDFReal_nonneg (μ : ℝ) (v : ℝ≥0) (x : ℝ) : 0 ≤ gaussianPDFReal μ v x` | `Mathlib/Probability/Distributions/Gaussian/Real.lean:66` | ✅ 既存 | 同上 |
-| `gaussianPDFReal` 上界 (prefactor) | `private theorem gaussianPDFReal_le_prefactor (μ : ℝ) (v : ℝ≥0) (x : ℝ) : gaussianPDFReal μ v x ≤ (Real.sqrt (2 * Real.pi * v))⁻¹` | `Common2026/Shannon/FisherInfoV2DeBruijnPerTime.lean:115` | ✅ 既存 (repo, `@audit:ok`) | **上界のみ**（exp ≤ 1）。下界には使えない |
+| `gaussianPDFReal` 上界 (prefactor) | `private theorem gaussianPDFReal_le_prefactor (μ : ℝ) (v : ℝ≥0) (x : ℝ) : gaussianPDFReal μ v x ≤ (Real.sqrt (2 * Real.pi * v))⁻¹` | `InformationTheory/Shannon/FisherInfoV2DeBruijnPerTime.lean:115` | ✅ 既存 (repo, `@audit:ok`) | **上界のみ**（exp ≤ 1）。下界には使えない |
 | **畳込密度の下界 `p_s x ≥ c·exp(-(x²)/c')`** | — | — | ❌ **不在** (Mathlib + repo 共に) | **GAP①**。loogle `MeasureTheory.convolution, \|- _ ≤ _` → `convolution_mono_right_of_nonneg` / `dist_convolution_le` のみ（畳込密度の Gaussian 下界なし）。`gaussianPDFReal` の下界 lemma も無い |
-| `def convDensityAdd` | `noncomputable def convDensityAdd (pX pY : ℝ → ℝ) : ℝ → ℝ := fun z => ∫ x, pX x * pY (z - x) ∂volume` | `Common2026/Shannon/EPIConvDensity.lean:40` | ✅ 既存 (定義) | 下界証明の対象 |
+| `def convDensityAdd` | `noncomputable def convDensityAdd (pX pY : ℝ → ℝ) : ℝ → ℝ := fun z => ∫ x, pX x * pY (z - x) ∂volume` | `InformationTheory/Shannon/EPIConvDensity.lean:40` | ✅ 既存 (定義) | 下界証明の対象 |
 
 **GAP① 詳細**: `p_s x = ∫ y, pX y · g_s(x-y)` の下界が要る。教科書的下界は「`pX` がある有界区間に質量を持つ ⇒ `g_s` の値で下から押さえる」で `p_s x ≥ c·exp(-(|x|+R)²/2s)` 型。だが Mathlib に畳込下界 lemma が無く、repo にも無い。これを self-write する必要がある（`gaussianPDFReal_pos` + `integral_mono` + `pX` の質量正値から構成、~40-60 行）。**`pX` が full-support でないと一様下界が取れない退化点に注意** — `pX` の質量集合に依存する `c, R` を ∃ で出すか、`hpX_int` から probability density である事実（質量 1）を使う。
 
@@ -98,9 +98,9 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
 
 | 概念 | repo API | file:line | 状態 | 扱い |
 |---|---|---|---|---|
-| 畳込 2nd-deriv の積分同定 (heat-eq atom STEP D) | `theorem heatFlow_density_heat_equation (pX pPath pathDeriv1 pathDeriv2 : ℝ → ℝ → ℝ) (hpPath : ∀ (σ : ℝ) (hσ : 0 < σ), pPath σ = convDensityAdd pX (gaussianPDFReal 0 ⟨σ, hσ.le⟩)) (hpathDeriv1 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pPath σ ξ) (pathDeriv1 σ y) y) (hpathDeriv2 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pathDeriv1 σ ξ) (pathDeriv2 σ y) y) {s : ℝ} (hs : 0 < s) (x : ℝ) (boundσ : ℝ → ℝ) (hboundσ_int : Integrable boundσ volume) ... (boundξ1 boundξ2 : ℝ → ℝ) ... : HasDerivAt (fun σ : ℝ => pPath σ x) ((1/2) * pathDeriv2 s x) s` | `Common2026/Shannon/FisherInfoV2DeBruijnPerTime.lean:422` | ✅ 既存 (`@audit:ok`) | STEP D が `pathDeriv2 s x = ∫ y, pX y · g_s(x-y)·((x-y)²/s² - 1/s)` を同定（行 607-614）。**この同定形を流用すれば `deriv(deriv(...))` の積分形が手に入る** が、`pathDeriv2` を `deriv(deriv(...))` に橋渡しする `HasDerivAt.deriv` 経由の identification が要（plumbing） |
-| kernel 2nd-deriv 閉形 | `theorem heatFlow_density_heat_equation_kernel_x_deriv2 {σ : ℝ} (hσ : 0 < σ) (u : ℝ) : HasDerivAt (fun ξ : ℝ => heatFlow_density_heat_equation_kernel σ ξ * (-(ξ / σ))) (heatFlow_density_heat_equation_kernel σ u * (u ^ 2 / σ ^ 2 - 1 / σ)) u` | `Common2026/Shannon/FisherInfoV2DeBruijnPerTime.lean:290` | ✅ 既存 (`@audit:ok`) | `∂²_u g_σ(u) = g_σ(u)·(u²/σ² - 1/σ)`。被積分核の closed form。上界 `\|...\| ≤ prefactor·exp·(u²/σ²+1/σ)` の素 |
-| kernel σ↔spatial agreement | `theorem heatFlow_density_heat_equation_kernel_eq {σ : ℝ} (hσ : 0 < σ) (u : ℝ) : heatFlow_density_heat_equation_kernel σ u = gaussianPDFReal 0 ⟨σ, hσ.le⟩ u` | `Common2026/Shannon/FisherInfoV2DeBruijnPerTime.lean:254` | ✅ 既存 (`@audit:ok`) | explicit kernel ↔ `gaussianPDFReal` 橋渡し |
+| 畳込 2nd-deriv の積分同定 (heat-eq atom STEP D) | `theorem heatFlow_density_heat_equation (pX pPath pathDeriv1 pathDeriv2 : ℝ → ℝ → ℝ) (hpPath : ∀ (σ : ℝ) (hσ : 0 < σ), pPath σ = convDensityAdd pX (gaussianPDFReal 0 ⟨σ, hσ.le⟩)) (hpathDeriv1 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pPath σ ξ) (pathDeriv1 σ y) y) (hpathDeriv2 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pathDeriv1 σ ξ) (pathDeriv2 σ y) y) {s : ℝ} (hs : 0 < s) (x : ℝ) (boundσ : ℝ → ℝ) (hboundσ_int : Integrable boundσ volume) ... (boundξ1 boundξ2 : ℝ → ℝ) ... : HasDerivAt (fun σ : ℝ => pPath σ x) ((1/2) * pathDeriv2 s x) s` | `InformationTheory/Shannon/FisherInfoV2DeBruijnPerTime.lean:422` | ✅ 既存 (`@audit:ok`) | STEP D が `pathDeriv2 s x = ∫ y, pX y · g_s(x-y)·((x-y)²/s² - 1/s)` を同定（行 607-614）。**この同定形を流用すれば `deriv(deriv(...))` の積分形が手に入る** が、`pathDeriv2` を `deriv(deriv(...))` に橋渡しする `HasDerivAt.deriv` 経由の identification が要（plumbing） |
+| kernel 2nd-deriv 閉形 | `theorem heatFlow_density_heat_equation_kernel_x_deriv2 {σ : ℝ} (hσ : 0 < σ) (u : ℝ) : HasDerivAt (fun ξ : ℝ => heatFlow_density_heat_equation_kernel σ ξ * (-(ξ / σ))) (heatFlow_density_heat_equation_kernel σ u * (u ^ 2 / σ ^ 2 - 1 / σ)) u` | `InformationTheory/Shannon/FisherInfoV2DeBruijnPerTime.lean:290` | ✅ 既存 (`@audit:ok`) | `∂²_u g_σ(u) = g_σ(u)·(u²/σ² - 1/σ)`。被積分核の closed form。上界 `\|...\| ≤ prefactor·exp·(u²/σ²+1/σ)` の素 |
+| kernel σ↔spatial agreement | `theorem heatFlow_density_heat_equation_kernel_eq {σ : ℝ} (hσ : 0 < σ) (u : ℝ) : heatFlow_density_heat_equation_kernel σ u = gaussianPDFReal 0 ⟨σ, hσ.le⟩ u` | `InformationTheory/Shannon/FisherInfoV2DeBruijnPerTime.lean:254` | ✅ 既存 (`@audit:ok`) | explicit kernel ↔ `gaussianPDFReal` 橋渡し |
 | **`\|∂²_x p_s x\| ≤ Gaussian-tail majorant(s,x)`** | — | — | ❌ **不在** | **GAP②**。`∫ y, pX y·g_s(x-y)·((x-y)²/s²-1/s)` の `x` についての Gaussian-tail 上界（`s`一様、`Ioo(t/2,2t)`）を `\|...\| ≤ C·exp(-x²/c')·poly(x)` で出す lemma が無い。kernel closed form（E2）+ `Integrable.mul_bdd`（A）+ `integral_mono`/三角不等式から self-write（~50-80 行） |
 
 **GAP② 詳細**: 被支配量の Hess 因子を `deriv(deriv(convDensityAdd ...))` のまま扱うと裸の `deriv` で上界が取れない。まず `heatFlow_density_heat_equation` STEP D の同定形（`pathDeriv2 s x = ∫ y, pX y · g_s(x-y)·((x-y)²/s²-1/s)`）に `deriv(deriv(...)) = pathDeriv2 s x` を `HasDerivAt.deriv` で橋渡しし（atom が `pathDeriv1/2` を抽象 `ℝ→ℝ→ℝ` で取るので、`pPath := convDensityAdd ...`、`pathDeriv1 := deriv (convDensityAdd ...)`、`pathDeriv2 := deriv (deriv (convDensityAdd ...))` を instantiate する必要 — それ自体が `hpathDeriv1`/`hpathDeriv2` の `HasDerivAt` precondition discharge を要求し、これは plan L-PT-δ と同じ full-support C¹ wall に触れる）、その後 `|∫| ≤ ∫|·|` + kernel 上界 で Gaussian-tail majorant に落とす。
@@ -111,8 +111,8 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
 
 | 概念 | repo precedent | file:line | 状態 | 扱い |
 |---|---|---|---|---|
-| 同型 domination hyp 群の消費形 | `heatFlow_density_heat_equation` の `boundσ`/`boundξ1`/`boundξ2` 群 (`hbσ`/`hbξ1`/`hbξ2`: `∀ᵐ y, ∀ σ∈Ioo(s/2,2s), ‖pX y·...‖ ≤ boundσ y`) | `Common2026/Shannon/FisherInfoV2DeBruijnPerTime.lean:436-468` | ✅ 既存 (`@audit:ok`) | **これは「`bound y` を仮説で受け取って `hasDerivAt_integral_of_dominated_loc_of_deriv_le` に渡す」消費側**。本 sorry は逆に **`∃ bound` を構成して供給する側**。供給側 precedent は atom 内には無い（atom は供給を呼び元に委ねている = まさに L-PT-γ の残コスト）。本 sorry が atom の `boundσ`/`bound...` の供給責任を負う |
-| ガウス被積分核の `‖·‖ ≤ c` 有界化 | `pPath_eq_convDensityAdd_lconvolution_bridge` 内 `hint` (`hpX_int.mul_bdd ... gaussianPDFReal_le_prefactor`) | `Common2026/Shannon/FisherInfoV2DeBruijnPerTime.lean:168-175` | ✅ 既存 (`@audit:ok`) | **積 integrable 化の repo 既製レシピ**。majorant の Gaussian 因子吸収をこれと同型で組める |
+| 同型 domination hyp 群の消費形 | `heatFlow_density_heat_equation` の `boundσ`/`boundξ1`/`boundξ2` 群 (`hbσ`/`hbξ1`/`hbξ2`: `∀ᵐ y, ∀ σ∈Ioo(s/2,2s), ‖pX y·...‖ ≤ boundσ y`) | `InformationTheory/Shannon/FisherInfoV2DeBruijnPerTime.lean:436-468` | ✅ 既存 (`@audit:ok`) | **これは「`bound y` を仮説で受け取って `hasDerivAt_integral_of_dominated_loc_of_deriv_le` に渡す」消費側**。本 sorry は逆に **`∃ bound` を構成して供給する側**。供給側 precedent は atom 内には無い（atom は供給を呼び元に委ねている = まさに L-PT-γ の残コスト）。本 sorry が atom の `boundσ`/`bound...` の供給責任を負う |
+| ガウス被積分核の `‖·‖ ≤ c` 有界化 | `pPath_eq_convDensityAdd_lconvolution_bridge` 内 `hint` (`hpX_int.mul_bdd ... gaussianPDFReal_le_prefactor`) | `InformationTheory/Shannon/FisherInfoV2DeBruijnPerTime.lean:168-175` | ✅ 既存 (`@audit:ok`) | **積 integrable 化の repo 既製レシピ**。majorant の Gaussian 因子吸収をこれと同型で組める |
 | 並列積分の domination 構成 | `hasDerivAt_integral_of_dominated_loc_of_deriv_le {F F' : ℝ → α → E} (bound : α → ℝ) (hF'_int)... ` | `Mathlib/Analysis/Calculus/ParametricIntegral.lean:289` | ✅ 既存 | gateway。bound を `∃` で受ける形は呼び元（= 本 sorry）が満たす |
 
 ---
@@ -161,9 +161,9 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
 ## 着手 skeleton（参考、20-30 行）
 
 ```lean
-import Common2026.Shannon.FisherInfoV2DeBruijnPerTime
+import InformationTheory.Shannon.FisherInfoV2DeBruijnPerTime
 
-namespace Common2026.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfoV2
 
 open MeasureTheory ProbabilityTheory Filter Topology Real
 open scoped ENNReal NNReal

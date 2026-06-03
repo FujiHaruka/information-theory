@@ -5,7 +5,7 @@
 >
 > **位置づけ**: 親 plan は「Phase A-E 完走 (1485 行 / 0 sorry / silent)」 状態だが、predicate `IsAwgnPowerConstraintRealizable P N` (`AWGNAchievabilityDischarge.lean:735`) に **false-statement defect** (chi-square mass の unsatisfiable bound) が後から発覚し、2026-05-24 に code 上で `@audit:defect(false-statement)` タグ付与 + 3 consumers (`isAwgnTypicalityHypothesis` / `awgn_achievability_F1_via_staged_hyps` / `awgn_theorem_F4_discharged_F1_via_staged`) の docstring に **UPSTREAM DEFECT** ブロックを記入済 (commit `4d7e67e`)。本 sibling plan で **predicate を P' < P スラック付きの honest staged 形に reshape** し、consumer 側の最小書換で再封止する。**親 plan に積み上げる pivot session**、scope は「predicate 書換 + consumer 整合修正」のみ、achievability core (Phase A-D の本物 plumbing 580 行) は維持する。
 >
-> **Goal**: `IsAwgnPowerConstraintRealizable` を「**satisfiable** な honest staged hyp」 (parallel-gaussian / EPI と同型の Mathlib-壁 (b) staged) に reshape し、consumer 3 つを依存型整合させた上で `lake env lean Common2026/Shannon/AWGNAchievabilityDischarge.lean` を再 silent 化、`@audit:defect(false-statement)` タグを `@audit:staged(awgn-power-constraint-realizable-v2)` 等の honest staging に降格する。
+> **Goal**: `IsAwgnPowerConstraintRealizable` を「**satisfiable** な honest staged hyp」 (parallel-gaussian / EPI と同型の Mathlib-壁 (b) staged) に reshape し、consumer 3 つを依存型整合させた上で `lake env lean InformationTheory/Shannon/AWGNAchievabilityDischarge.lean` を再 silent 化、`@audit:defect(false-statement)` タグを `@audit:staged(awgn-power-constraint-realizable-v2)` 等の honest staging に降格する。
 >
 > **撤退ライン (本 plan 内)**: [P-1] predicate 内部に ∃ P' を入れる素朴版で consumer の `gaussianCodebook M n P.toNNReal` (現在 20 箇所超) を全部 P' 書換が必要になり 200 行超 → [P-2] 3 predicate を 1 bundle hyp に統合し consumer signature を縮約 / [P-3] consumer の Phase A 補題 (`gaussianCodebook_codeword_law` / `gaussianCodebook_indepFun_codewords` 等) が σsq parametric なので P' 書換は機械的、ただし `h_aep` / `h_rand` の signature 内 `P.toNNReal` も P' に動かす必要 / [P-4] 全部詰まったら honest staged のまま「predicate 内部の `n · P` を `n · (P − δ)` に弱める」非破壊 minimal fix のみで止める。**詳細 §撤退ライン**。
 >
@@ -49,7 +49,7 @@ isAwgnTypicalityHypothesis P N h_meas h_aep h_rand h_power
 
 **Option C の優位性**:
 
-- consumer の Phase A 補題は `(σsq : ℝ≥0)` を引数に取る (`Common2026/Shannon/AWGNAchievabilityDischarge.lean:50-93`)。`σsq := P.toNNReal` → `σsq := P'.toNNReal` 入れ替えは型整合する。
+- consumer の Phase A 補題は `(σsq : ℝ≥0)` を引数に取る (`InformationTheory/Shannon/AWGNAchievabilityDischarge.lean:50-93`)。`σsq := P.toNNReal` → `σsq := P'.toNNReal` 入れ替えは型整合する。
 - `awgn_exists_codebook_le_avg` (`:622`) も `σsq` 抽象、Phase D の expurgation chain は P 非依存。
 - consumer body の P-flow 改修点は `gaussianCodebook M n P.toNNReal` の 20+ 箇所を `P'.toNNReal` に置換、`PowSet` の target `n · P` は **`n · P` のまま** (codebook は P' で生成、constraint target は P で評価、ここに SLLN slack が乗る形)。
 - 3 hyp → 1 hyp に統合することで「3 つの P' が独立に選ばれて整合しない」というリスクを構造的に排除。
@@ -86,7 +86,7 @@ bundle predicate の結論形は「3 sub-mass bound の ∧」で、consumer の
 
 ## 影響範囲リスト
 
-### Code-side (touch 必要、`Common2026/Shannon/AWGNAchievabilityDischarge.lean`)
+### Code-side (touch 必要、`InformationTheory/Shannon/AWGNAchievabilityDischarge.lean`)
 
 **predicate 改修 (主):**
 
@@ -150,7 +150,7 @@ bundle predicate の結論形は「3 sub-mass bound の ∧」で、consumer の
 - [ ] **predicate 改修**: `IsAwgnRandomCodingFeasible` を新規 def、bundle 内に `∃ P' ∈ (0, P]` + 3 sub-bound (旧 IsContinuousAEPGaussian / IsAwgnRandomCodingBound / IsAwgnPowerConstraintRealizable に対応する形) を ∧ で並べる。`@audit:staged(awgn-random-coding-feasible)` タグ付与
 - [ ] 旧 `IsAwgnPowerConstraintRealizable` の docstring を defect → staged-v2 に降格、bundle predicate との関係を 1 段で示す
 - [ ] consumer 3 つ (`isAwgnTypicalityHypothesis` / `awgn_achievability_F1_via_staged_hyps` / `awgn_theorem_F4_discharged_F1_via_staged`) の signature を 3 hyp → 1 hyp に変更、body は **`sorry` 暫定** (Phase 3 で fill)
-- [ ] `lake env lean Common2026/Shannon/AWGNAchievabilityDischarge.lean` で skeleton が type-check (3 sorry warning が出る想定、error 0)
+- [ ] `lake env lean InformationTheory/Shannon/AWGNAchievabilityDischarge.lean` で skeleton が type-check (3 sorry warning が出る想定、error 0)
 - [ ] proof-log: yes (`proof-log-awgn-power-constraint-realizable-pivot-phase2.md`)
 
 ### Phase 3 — Consumer body の P' threading 📋
@@ -168,7 +168,7 @@ bundle predicate の結論形は「3 sub-mass bound の ∧」で、consumer の
 - [ ] **独立 honesty-auditor 起動** (CLAUDE.md「Independent honesty audit」必須条件): `subagent_type: "honesty-auditor"` で fresh subagent を回し、新 bundle predicate `IsAwgnRandomCodingFeasible` を honesty 4 条件で verify。verdict が `OK` なら closure、`questionable` なら docstring refine、`DEFECT` なら predicate 再構成
 - [ ] `scripts/audit_db.ts build` → `scan --check-db` で SoT-DB 整合確認
 - [ ] 親 plan `awgn-achievability-typicality-plan.md` の判断ログ #7 append、進捗ブロックを「✅ Phase E 完走 (predicate pivot 後)」に更新
-- [ ] `Common2026.lean` は既に編入済 (本 pivot で import 増減なし) なので変更なし
+- [ ] `InformationTheory.lean` は既に編入済 (本 pivot で import 増減なし) なので変更なし
 - [ ] proof-log: no
 
 ## 撤退ライン
@@ -203,7 +203,7 @@ bundle predicate の結論形は「3 sub-mass bound の ∧」で、consumer の
 
 完了後の状態:
 
-- `Common2026/Shannon/AWGNAchievabilityDischarge.lean` が `lake env lean` で silent
+- `InformationTheory/Shannon/AWGNAchievabilityDischarge.lean` が `lake env lean` で silent
 - `IsAwgnRandomCodingFeasible P N h_meas` (新 bundle predicate) が **honest staged** (4 条件遵守、`@audit:staged(awgn-random-coding-feasible)` タグ)
 - 旧 `IsAwgnPowerConstraintRealizable` は (i) 削除 / (ii) bundle alias / (iii) `@audit:staged(awgn-power-constraint-realizable-v2)` 降格、のいずれかで closure
 - `isAwgnTypicalityHypothesis` body が新 bundle hyp 1 本を consume する形 (旧 3 hyp 並列形は廃止)
@@ -224,7 +224,7 @@ bundle predicate の結論形は「3 sub-mass bound の ∧」で、consumer の
    実装は次 session で Phase 2 skeleton 起こしから着手 (predicate 改修 + consumer signature 改修、body は sorry 暫定)。
 
 2. **2026-05-24 — Phase 2 skeleton write 完了 + 独立 honesty audit clean** (本 session)。
-   実装結果 (`Common2026/Shannon/AWGNAchievabilityDischarge.lean` 989 行、−574 行 vs pivot 前、Phase 3 で body 復元予定):
+   実装結果 (`InformationTheory/Shannon/AWGNAchievabilityDischarge.lean` 989 行、−574 行 vs pivot 前、Phase 3 で body 復元予定):
    - 新規 `IsAwgnPowerConstraintHonest (P_cb P_target : ℝ) (N : ℝ≥0)` (line 815, `@audit:staged(awgn-power-constraint-honest)`) — codebook 生成 / constraint target 分離形
    - 新規 `IsAwgnRandomCodingFeasible (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)` (line 860, `@audit:staged(awgn-random-coding-feasible)`) — bundle、`∀ R, ∃ P' ∈ (0, P]` + rate margin + AEP + RandomCodingBound + PowerConstraintHonest
    - 旧 `IsAwgnPowerConstraintRealizable` (line 735) は **削除せず** orphan 化、`@audit:defect(false-statement)` タグ・body 完全不変で残置 (honesty record)。alias 化を試みたが honest predicate に degenerate instance を作ると依然 unsatisfiable で audit-tags rule に抵触するため放棄
@@ -236,7 +236,7 @@ bundle predicate の結論形は「3 sub-mass bound の ∧」で、consumer の
    - **Phase 3 着手準備**: bundle destructure `obtain ⟨P', hP'_pos, hP'_lt_P, hR_lt_P'C, h_aep', h_rand', h_power'⟩ := h_feasible hR_pos hR` を body 先頭に置き、580 行 assembly の `gaussianCodebook M n P.toNNReal` → `gaussianCodebook M n P'.toNNReal` を 15+ 箇所 sed、`PowSet` の `n · P` constraint target は不変
 
 3. **2026-05-24 — Phase 3 body fill 完了** (本 session, lean-implementer worktree isolation)。
-   実装結果 (`Common2026/Shannon/AWGNAchievabilityDischarge.lean` 1641 行 / 0 sorry / silent, commit `2ace40b`):
+   実装結果 (`InformationTheory/Shannon/AWGNAchievabilityDischarge.lean` 1641 行 / 0 sorry / silent, commit `2ace40b`):
    - 旧 body (`4d7e67e^:892-1483`) を git history から抽出、bundle 形に 4 変換を施して復元: (a) `obtain ⟨P', hP'_pos, hP'_lt_P, hR_lt_P'C, h_aep', h_rand', h_power'⟩ := h_feasible hR_pos hR` を `classical` 直後に挿入、(b) `set C := (1/2) log(1 + P/N)` → `P'` 側、(c) hyp 名 `h_aep` / `h_rand` / `h_power` → `h_*'`、(d) `gaussianCodebook M n P.toNNReal` → `P'.toNNReal` 14 箇所 + `awgn_exists_codebook_le_avg (σsq := P.toNNReal)` 呼出 1 箇所 = 計 15 sed
    - `PowSet := {c | ∀ m, ∑(c m i)² ≤ n · P}` の `n · P` constraint target、`awgn_extract_AwgnCode (P := P)` 呼出、`AwgnCode M_target n P` 型はすべて P 不変 (codebook 生成側のみ P' に切替、SLLN slack `P − P'` が constraint mass bound に乗る形)
    - **計画外の派生 (1 turn)**: `IsAwgnPowerConstraintHonest P' P N` (`:784`) の rate-bound 行 (`:786`) が `R < (1/2) log(1 + P_target/N)` (= P 側 capacity) を要求するが、bundle destructure で得られる `hR_lt_P'C` (= `hR_lt_C` after `set C`) は P' 側 capacity。`P' ≤ P` (bundle 自身が供給) + `Real.log_le_log` (もしくは `Real.log_le_log_iff`) で `(1/2) log(1+P'/N) ≤ (1/2) log(1+P/N)` を派生 → `hR''_lt_PC := lt_of_lt_of_le hR''_lt_C h_log_le` を作って `h_power' hε_pow_pos hR''_pos hR''_lt_PC` に渡す 20 行の追加。計画書 §Phase 3 詳細は mechanical 4 変換のみ列挙、本派生は LSP 第 1 戻りで即発覚
@@ -252,5 +252,5 @@ bundle predicate の結論形は「3 sub-mass bound の ∧」で、consumer の
    - **親 plan `awgn-achievability-typicality-plan.md` 判断ログ #7 append**: false-statement defect 発覚 → bundle pivot 採用 → Phase 2-3 実装 → 完了状態を 1 entry で総括、sibling plan へのリンク併記
    - **独立 honesty audit 起動判断**: skip。CLAUDE.md `Independent honesty audit` の起動条件は「(1) 新規 staged predicate 1 件以上の commit / (2) 新規 residual 作成 / (3) 既存 staged signature 変更」の 3 つ。Phase 3 は「既存 staged の継承使用」(Phase 2 で導入済の 2 predicate を body 内で消費するだけ) で 3 条件いずれにも非該当。Phase 2 で 1 度 fresh subagent が CORE doctrine inline で audit 済 (bundle predicate 2 件とも `load_bearing_hyp / honest 🟢ʰ` verdict)、Phase 3 body fill は consumer 側の mechanical 復元 + 1 turn 派生 (`Real.log_le_log` bridge) のみで新規 staging を作っていないため、Phase 2 audit verdict が継承維持される。本 Phase 3 body の inline honesty check (orchestrator 自身): bundle 3 sub-bound (`h_aep'` / `h_rand'` / `h_power'`) はすべて非自明に消費される (`hN_aep` / `hN_rand` / `hN_pow` の N₀ extract → `max` で `N₀_max` 構成 → 各 bound を `n ≥ N₀_max` で同時 invoke)、circular / degenerate / laundering なし
    - **`scripts/audit_db.ts` 整合確認**: 旧 audit-DB workflow は 2026-05-24 commit `e15db02` で `RETIRED`、code 内 `@audit:KIND(SLUG)` タグが唯一の SoT。本 Phase 4 では code タグ 2 件解除を直接 Edit、DB 操作は不要 (SoT-DB 整合は workflow 廃止により自動)
-   - **`Common2026.lean` import 増減なし**: pivot は 1 file 内 self-contained で完結、import 更新不要 (`grep "AWGNAchievabilityDischarge" Common2026.lean` で既存 1 行確認済)
+   - **`InformationTheory.lean` import 増減なし**: pivot は 1 file 内 self-contained で完結、import 更新不要 (`grep "AWGNAchievabilityDischarge" InformationTheory.lean` で既存 1 行確認済)
    - **Pivot plan 全体 closure**: 本 sibling plan `awgn-power-constraint-realizable-pivot-plan.md` は Phase 0-4 全完了、進捗ブロック全 `[x]` 化。親 plan の判断ログ #7 が本 pivot 結果を内包、以後親 plan 単独で AWGN F-1 plumbing の状態を追跡可能

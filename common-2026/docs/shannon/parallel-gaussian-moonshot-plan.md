@@ -21,7 +21,7 @@
 
 ## 進捗
 
-- [x] Phase 0 — Mathlib + Common2026 API 在庫 ✅
+- [x] Phase 0 — Mathlib + InformationTheory API 在庫 ✅
 - [x] Phase A — `parallelGaussianChannel` + `waterFillingPower` ✅
 - [x] Phase B — `parallelGaussianCapacity` 定義 + L-WF1/L-WF2/L-PG1 predicate ✅
 - [x] Phase C — 主定理 `parallel_gaussian_capacity_formula` ✅ (旧 pass-through、後に chain-rule plan で genuine 化)
@@ -62,7 +62,7 @@ power allocation (Mathlib 不在 → L-WF*/L-PG* 撤退ライン)。
 
 ### ファイル構成 (publish 後)
 
-新規 `Common2026/Shannon/ParallelGaussian.lean` (実績 ~430 行、roadmap 中央予測)。
+新規 `InformationTheory/Shannon/ParallelGaussian.lean` (実績 ~430 行、roadmap 中央予測)。
 import: `AWGN`, `AWGNMain`, `ChannelCoding`, `DifferentialEntropy`,
 `Mathlib.MeasureTheory.Constructions.Pi`, `Mathlib.Probability.Distributions.Gaussian.Real`。
 
@@ -70,9 +70,9 @@ import: `AWGN`, `AWGNMain`, `ChannelCoding`, `DifferentialEntropy`,
 
 - Mathlib: `Gaussian.Real` (`gaussianReal`, `gaussianPDF*`, `rnDeriv_*`, `*_conv_*`,
   `variance_id_*`)、`Constructions.Pi` (`Measure.pi`, `pi_pi`)
-- Common2026 T2-A: `AWGN.lean` 全 API (`awgnChannel`, `awgnCapacity*`,
+- InformationTheory T2-A: `AWGN.lean` 全 API (`awgnChannel`, `awgnCapacity*`,
   `mutualInfoOfChannel_gaussianInput_closed_form`)
-- Common2026: `ChannelCoding`, `DifferentialEntropy` (Phase D maxent ref)
+- InformationTheory: `ChannelCoding`, `DifferentialEntropy` (Phase D maxent ref)
 - 設計参考 (import せず): T2-A `AWGNAchievability/Converse`, T2-F `FisherInfo`,
   T1-B `Chernoff`, T1-C `Cramer` (F-* / L-* hypothesis pattern 流儀)
 

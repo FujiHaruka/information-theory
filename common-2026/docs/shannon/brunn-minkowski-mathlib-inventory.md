@@ -41,11 +41,11 @@ Cover-Thomas Theorem 17.9.2 (Brunn-Minkowski の entropy 形) を Lean に持ち
 - `Real.rpow_natCast : x ^ (n : ℕ) = x ^ (n : ℝ)` — `|A|^{1/n}` 形と
   自然指数の橋渡し (本 plan では未使用、`exp ((2/n) h)` 形で吸収)。
 
-### `differentialEntropy` 系 (Common2026 既存)
+### `differentialEntropy` 系 (InformationTheory 既存)
 
-- `Common2026.Shannon.differentialEntropy : Measure ℝ → ℝ`
+- `InformationTheory.Shannon.differentialEntropy : Measure ℝ → ℝ`
   - 1-D 限定。`Measure (Fin n → ℝ)` 上の n-dim differential entropy は
-    **Common2026 には未定義**。EPI も `ℝ` 上のみ。
+    **InformationTheory には未定義**。EPI も `ℝ` 上のみ。
   - 結果: 本 plan の主定理は **`n`-dim differential entropy を
     abstract scalar `h : Measure (Fin n → ℝ) → ℝ` の signature 引数**
     として受け取り、その上の Brunn-Minkowski 性質を hypothesis 化する。

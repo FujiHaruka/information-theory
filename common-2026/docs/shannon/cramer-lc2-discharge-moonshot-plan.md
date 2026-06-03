@@ -3,7 +3,7 @@
 > **sorry-based 移行完了 (2026-05-25)** — `docs/shannon/cramer-sorry-migration-plan.md`
 > に従い、本 plan に属する 4 件の `@audit:suspect(cramer-lc2-discharge-moonshot-plan)` を
 > `sorry + @residual(plan:cramer-lc2-discharge-moonshot-plan)` に書換。対象:
-> `Common2026/Shannon/CramerLC2PhaseC.lean` の 4 件 (`tilted_lower_from_predicate`
+> `InformationTheory/Shannon/CramerLC2PhaseC.lean` の 4 件 (`tilted_lower_from_predicate`
 > / `cramer_lower_phaseC_partial_discharge` / `cramer_lower_legendre_phaseC_partial_discharge`
 > / `cramer_tendsto_phaseC_partial_discharge`)。load-bearing predicate
 > `IsMeasureInfinitePiTiltedEq` (defined here) には
@@ -11,7 +11,7 @@
 > (`InfinitePiTiltedChangeOfMeasure.isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge`) のみ残存。
 
 > 実態整合 (2026-05-20): **本 plan は Phase A まで (L-D3 撤退) で正確 — 進捗ブロック記載どおり**。
-> `Common2026/Shannon/CramerLC2Discharge.lean` (0 sorry) に Phase A plumbing 6 補題 publish 済
+> `InformationTheory/Shannon/CramerLC2Discharge.lean` (0 sorry) に Phase A plumbing 6 補題 publish 済
 > (`cgf_eval_eq_cgf_base`:63 / `iIndepFun_tilted_ambient`:85 / `identDistrib_tilted_ambient`:98 等)。
 > 本 plan の `cramer_lower_discharged` (Phase C 完全 discharge) は**未 publish のまま**だが、後継チェーンで
 > 実質達成: Phase B は `cramer-lc2-ext` (`CramerLC2DischargeExt.lean` tilted LLN)、Phase C change-of-measure は
@@ -30,9 +30,9 @@
 >
 > **Predecessor (inventory)**: [`cramer-mathlib-inventory.md`](cramer-mathlib-inventory.md) §K LLN + §危険 4 (tilted 下 n-IID 再構築)
 >
-> **Status (2026-05-19)**: 着手前。親 Cramér plan は **L-C2 退避形** (`cramer_lower` の `h_tilted_lower` を hypothesis 引数として publish) で 0 sorry 完了済 (`Common2026/Shannon/Cramer.lean` 637 行)。本 plan はその `h_tilted_lower` を **Mathlib 標準 LLN + tilted IID plumbing** で完全証明し、`cramer_lower` / `cramer_lower_legendre` / `cramer_tendsto` を **hypothesis なし形** で再 publish するための後継 plan。
+> **Status (2026-05-19)**: 着手前。親 Cramér plan は **L-C2 退避形** (`cramer_lower` の `h_tilted_lower` を hypothesis 引数として publish) で 0 sorry 完了済 (`InformationTheory/Shannon/Cramer.lean` 637 行)。本 plan はその `h_tilted_lower` を **Mathlib 標準 LLN + tilted IID plumbing** で完全証明し、`cramer_lower` / `cramer_lower_legendre` / `cramer_tendsto` を **hypothesis なし形** で再 publish するための後継 plan。
 >
-> **Goal**: `Common2026/Shannon/Cramer.lean`（または分離ファイル）で
+> **Goal**: `InformationTheory/Shannon/Cramer.lean`（または分離ファイル）で
 >
 > ```lean
 > theorem cramer_lower_discharged [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
@@ -55,7 +55,7 @@
 ## 進捗
 
 - [x] Phase 0 — Mathlib LLN + tilted IID API 在庫再確認 ✅ (`strong_law_ae_real`, `iIndepFun_infinitePi`, `infinitePi_map_eval`, `mgf_map`, `tendstoInMeasure_of_tendsto_ae` 等を `Mathlib/Probability/StrongLaw.lean:598`, `Mathlib/Probability/Independence/InfinitePi.lean:103`, `Mathlib/Probability/ProductMeasure.lean:478`, `Mathlib/Probability/Moments/Basic.lean:214`, `Mathlib/MeasureTheory/Function/ConvergenceInMeasure.lean:223` で確認)
-- [x] Phase A — tilted measure 下 n-IID 構成 + IdentDistrib 継承 ✅ (`Common2026/Shannon/CramerLC2Discharge.lean` 171 行 publish)
+- [x] Phase A — tilted measure 下 n-IID 構成 + IdentDistrib 継承 ✅ (`InformationTheory/Shannon/CramerLC2Discharge.lean` 171 行 publish)
 - [ ] Phase B — Mathlib LLN を tilted ambient で起動 🔄 **L-D3 撤退** (型クラス検索詰まりで defer、§判断ログ #1)
 - [ ] Phase C — `cramer_lower` 再 publish (hypothesis なし形) + downstream wrapper 更新 🔄 **L-D3 撤退** (Phase B 撤退に伴い defer、§判断ログ #1)
 - [x] Phase V — verify + 親 plan L-C2 退避記録の discharge 完了反映 ✅ (Phase A までを publish、Phase B-C は後続 plan へ defer)
@@ -64,7 +64,7 @@
 
 ### Goal (最終定理 signature)
 
-親 plan の `cramer_lower` (`Common2026/Shannon/Cramer.lean:448`) は現状
+親 plan の `cramer_lower` (`InformationTheory/Shannon/Cramer.lean:448`) は現状
 
 ```lean
 theorem cramer_lower [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
@@ -158,20 +158,20 @@ strong_law_ae_real      μ-side
 
 ### ファイル構成 (Phase C 完了時の判断分岐)
 
-#### option (i) — `Common2026/Shannon/Cramer.lean` 末尾追記
+#### option (i) — `InformationTheory/Shannon/Cramer.lean` 末尾追記
 
 - 既存 637 行に + ~300-500 行で合計 ~950-1100 行
 - 利点: `cramer_lower` から `cramer_lower_discharged` への internal callsite が同ファイル内、`private` helper を共有可能
 - 欠点: 1 ファイルがやや長大、編集時の olean rebuild が重い
 
-#### option (ii, **推奨**) — `Common2026/Shannon/CramerLC2Discharge.lean` 新規
+#### option (ii, **推奨**) — `InformationTheory/Shannon/CramerLC2Discharge.lean` 新規
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   Cramer.lean                 ← 既存、変更最小（`cramer_lower_discharged` 等を
                                   別ファイルで定義し、re-export なしの素朴 publish）
   CramerLC2Discharge.lean     ← 新規 (~300-500 行)
-Common2026.lean               ← `import Common2026.Shannon.CramerLC2Discharge` 追記
+InformationTheory.lean               ← `import InformationTheory.Shannon.CramerLC2Discharge` 追記
 ```
 
 - 利点: 既存 Cramer.lean の olean を不変に保てる、L-C2 discharge を独立 module として概念的にも分離（後続 plan が import しやすい）
@@ -201,7 +201,7 @@ Common2026.lean               ← `import Common2026.Shannon.CramerLC2Discharge`
 - [x] **Mathlib `Probability.IdentDistrib`**: `IdentDistrib`, `IdentDistrib.integrable_iff`
 - [x] **Mathlib `Probability.Moments.Tilted`**: `tilted_mul_apply_cgf`, `integral_tilted_mul_self`, `variance_tilted_mul`
 - [x] **Mathlib `MeasureTheory.Measure.Tilted`**: `Measure.tilted`, `isProbabilityMeasure_tilted`, `tilted_absolutelyContinuous`, `absolutelyContinuous_tilted`, `rnDeriv_tilted_left_self`, `log_rnDeriv_tilted_left_self`
-- [x] **`Common2026/Shannon/Cramer.lean`** 既存補題（本 plan で **import + re-use**、再定義しない）:
+- [x] **`InformationTheory/Shannon/Cramer.lean`** 既存補題（本 plan で **import + re-use**、再定義しない）:
   - `legendre`, `cramerRate`, `legendre_apply_le`, `legendre_nonneg`, `cramerRate_apply_le`, `cramerRate_nonneg`
   - `integrable_exp_mul_of_bounded` (Phase A-1 / B-1 で tilted ambient 構築時に必須)
   - `cgf_sum_eq_nsmul`
@@ -214,8 +214,8 @@ Common2026.lean               ← `import Common2026.Shannon.CramerLC2Discharge`
 
 **参考 (import しない)**:
 
-- `Common2026/Shannon/SanovLDPEquality.lean` (親 plan 判断ログ #1 で Sanov 経由を不採用、本 plan も継承)
-- `Common2026/Shannon/IIDProductInput.lean` (より軽い `Measure.infinitePi (fun _ : ℕ => μ)` を直接使う、親 plan 判断ログ #4 と整合)
+- `InformationTheory/Shannon/SanovLDPEquality.lean` (親 plan 判断ログ #1 で Sanov 経由を不採用、本 plan も継承)
+- `InformationTheory/Shannon/IIDProductInput.lean` (より軽い `Measure.infinitePi (fun _ : ℕ => μ)` を直接使う、親 plan 判断ログ #4 と整合)
 
 ---
 
@@ -265,16 +265,16 @@ tilted single `μ_lam := μ.tilted (lam * X 0 ·)`（既に `isProbabilityMeasur
 
 ### Done 条件
 
-- `Common2026/Shannon/CramerLC2Discharge.lean` 新規作成（または `Cramer.lean` 末尾追記、Phase A-1 で確定）+ skeleton 全 `sorry` で type-check
+- `InformationTheory/Shannon/CramerLC2Discharge.lean` 新規作成（または `Cramer.lean` 末尾追記、Phase A-1 で確定）+ skeleton 全 `sorry` で type-check
 - `tilted_ambient` (`μ_lam^∞`) の `IsProbabilityMeasure` instance 自動 dispatch 確認
 - `pairwise_indepFun_tilted_ambient` ( `Pairwise ((· ⟂ᵢ[μ_lam^∞] ·) on Y)`)
 - `identDistrib_tilted_ambient` (`∀ i, IdentDistrib (Y i) (Y 0) μ_lam^∞ μ_lam^∞`)
 - `integrable_tilted_ambient` (`Integrable (Y 0) μ_lam^∞`)（bounded RV ⇒ 自動）
-- `lake env lean Common2026/Shannon/CramerLC2Discharge.lean` で Phase A 本体 + Phase B-C `sorry` skeleton が clean
+- `lake env lean InformationTheory/Shannon/CramerLC2Discharge.lean` で Phase A 本体 + Phase B-C `sorry` skeleton が clean
 
 ### ステップ
 
-- [ ] **A-0 ファイル配置判断 + skeleton**: option (i)（Cramer.lean 末尾）か option (ii)（CramerLC2Discharge.lean 新規）かを確定。default option (ii)。全主定理 + 補助補題を `:= by sorry` で並べた skeleton を Write、LSP 診断で type-check OK 確認（CLAUDE.md "Skeleton-driven Development"）。imports は §依存関係 の Mathlib リスト + `import Common2026.Shannon.Cramer`。
+- [ ] **A-0 ファイル配置判断 + skeleton**: option (i)（Cramer.lean 末尾）か option (ii)（CramerLC2Discharge.lean 新規）かを確定。default option (ii)。全主定理 + 補助補題を `:= by sorry` で並べた skeleton を Write、LSP 診断で type-check OK 確認（CLAUDE.md "Skeleton-driven Development"）。imports は §依存関係 の Mathlib リスト + `import InformationTheory.Shannon.Cramer`。
 
 - [ ] **A-1 tilted single の確率測度性 + 平均 (既存補題で済む)**:
   ```lean
@@ -336,7 +336,7 @@ tilted single `μ_lam := μ.tilted (lam * X 0 ·)`（既に `isProbabilityMeasur
   - bounded ⇒ `(integrable_const M).mono'` で integrable、Mathlib 標準 5-10 行
   - ~10-15 行
 
-- [ ] **A-6 verify**: `lake env lean Common2026/Shannon/CramerLC2Discharge.lean` で Phase A 本体が 0 sorry、Phase B-C は `sorry` 残し。
+- [ ] **A-6 verify**: `lake env lean InformationTheory/Shannon/CramerLC2Discharge.lean` で Phase A 本体が 0 sorry、Phase B-C は `sorry` 残し。
 
 ### 工数感
 
@@ -402,7 +402,7 @@ Phase A で揃えた 3 前提（`Pairwise IndepFun`, `IdentDistrib`, `Integrable
   - alternatively, dominated convergence + bounded indicator で直接 `tilted({|S̄_n - a| ≥ ε}) → 0`
   - ~30-50 行
 
-- [ ] **B-4 verify**: `lake env lean Common2026/Shannon/CramerLC2Discharge.lean` で Phase B 本体が 0 sorry、Phase C は `sorry` 残し。
+- [ ] **B-4 verify**: `lake env lean InformationTheory/Shannon/CramerLC2Discharge.lean` で Phase B 本体が 0 sorry、Phase C は `sorry` 残し。
 
 ### 工数感
 
@@ -504,7 +504,7 @@ Phase B の出力 `tilted_lln_in_probability` を Cramér change-of-measure で 
   - 親 plan `cramer_lower_legendre` / `cramer_tendsto` を base に、`h_tilted_lower` 引数を `h_deriv` 仮定 + 内部 `h_tilted_lower_from_lln` 起動で置き換え
   - ~20-30 行
 
-- [ ] **C-5 verify**: `lake env lean Common2026/Shannon/CramerLC2Discharge.lean` で Phase C 本体が 0 sorry。`Common2026.lean` に `import Common2026.Shannon.CramerLC2Discharge` を追記。
+- [ ] **C-5 verify**: `lake env lean InformationTheory/Shannon/CramerLC2Discharge.lean` で Phase C 本体が 0 sorry。`InformationTheory.lean` に `import InformationTheory.Shannon.CramerLC2Discharge` を追記。
 
 ### 工数感
 
@@ -522,9 +522,9 @@ Phase B の出力 `tilted_lln_in_probability` を Cramér change-of-measure で 
 
 ### スコープ
 
-- `lake env lean Common2026/Shannon/CramerLC2Discharge.lean` clean（0 sorry, 0 warning）
-- `lake env lean Common2026/Shannon/Cramer.lean` clean（変更ないが olean rebuild 後の retest）
-- `lake env lean Common2026.lean` clean
+- `lake env lean InformationTheory/Shannon/CramerLC2Discharge.lean` clean（0 sorry, 0 warning）
+- `lake env lean InformationTheory/Shannon/Cramer.lean` clean（変更ないが olean rebuild 後の retest）
+- `lake env lean InformationTheory.lean` clean
 - 親 plan `cramer-moonshot-plan.md` の Phase C 状態絵文字を **🔄 L-C2 縮退 publish** から **✅ L-C2 discharge 完了 (本 plan 参照)** に更新（取り消し線で旧記録残す、本 plan のリンク追加）
 - 親 plan §判断ログ #5（L-C2 退避記録）の直後に「discharge 完了 (本 plan)」を judgement #6 として **append-only** 追記
 - 本 plan の §進捗ブロックを全 ✅ に更新
@@ -634,7 +634,7 @@ CLAUDE.md "Mathlib-shape-driven Definitions" + "Subagent Inventory of Mathlib Le
 
 1. **(2026-05-19) L-D3 撤退発動 / Phase A のみ publish、Phase B-C は後続 plan へ defer**:
    - 当初: Phase A → B → C を 1 セッションで完遂、`cramer_lower_discharged` を hypothesis なし形で publish (中央予測 ~400 行)。
-   - 実態: Phase A の主要 helper (`cgf_eval_eq_cgf_base`, `iIndepFun_tilted_ambient`, `identDistrib_tilted_ambient`, `iIndepFun_eval_under_infinitePi`, `identDistrib_eval_under_infinitePi`, `bounded_eval_family`) を `Common2026/Shannon/CramerLC2Discharge.lean` 171 行で publish 達成 (0 sorry, 0 errors, 0 warnings)。
+   - 実態: Phase A の主要 helper (`cgf_eval_eq_cgf_base`, `iIndepFun_tilted_ambient`, `identDistrib_tilted_ambient`, `iIndepFun_eval_under_infinitePi`, `identDistrib_eval_under_infinitePi`, `bounded_eval_family`) を `InformationTheory/Shannon/CramerLC2Discharge.lean` 171 行で publish 達成 (0 sorry, 0 errors, 0 warnings)。
    - 撤退理由: Phase B の `tilted_lln_ae` 内 `strong_law_ae_real` 起動で **`IsProbabilityMeasure (Measure.infinitePi (fun _ : ℕ => μ₀.tilted ...))` instance の型クラス検索が repeatedly stuck**。`haveI` で `IsProbabilityMeasure (μ₀.tilted ...)` および `∀ i : ℕ, IsProbabilityMeasure ((fun _ : ℕ => μ₀.tilted ...) i)` を provide しても、`Measure.infinitePi` の Mathlib instance (`[hμ : ∀ i, IsProbabilityMeasure (μ i)]` 要求) との unification で metavariable が解消せず、複数の caller (`integrable_tilted_ambient`, `tilted_lln_ae`, `tilted_lln_in_probability`) で stuck が transient に伝播。Lean 4 の instance synthesis が `(fun _ : ℕ => ...) i` の beta reduction を一貫して走らせない動作と思われる。
    - 同 stuck を解消するには (a) `tiltedAmbient_isProbabilityMeasure` を `instance` 宣言として登録するための専用 type-class (e.g., `BoundedMeasurable Y`) を導入、または (b) `tilted_lln_ae` 全体を inline で書き下す、(c) Mathlib 側に `tilted` + `infinitePi` の compatibility instance を追加、のいずれかが必要。本セッションでは Phase A 完成段階で着地し、Phase B-C は後続 plan に持ち越し。
    - publish 範囲: 計画 §撤退ライン L-D3 (Phase A のみ独立 infrastructure として publish) と整合。`cramer_lower_discharged` / `cramer_lower_legendre_discharged` / `cramer_tendsto_discharged` は本 plan では publish せず、親 `cramer_lower` の L-C2 退避形 (hypothesis 引数あり) を継続。

@@ -119,7 +119,7 @@ promote 判定基準: (1) 該当 declaration が shared sorry 補題として 2+
 で隣接 wall 2 件 (`uniform-max-entropy-on-convex-body` + `bm-additive-convex-body`、
 commit `fe28966`) を正式 register 入りさせた折に本候補も再評価したが、現状 consumer
 は `BrunnMinkowskiClosure.lean` 1 file 内 docstring 言及 4 件のみ
-(`rg 'bm-convex-body-sqrt' Common2026/` で in-file 限定)、active
+(`rg 'bm-convex-body-sqrt' InformationTheory/` で in-file 限定)、active
 `@residual(wall:bm-convex-body-sqrt)` は **0 件** (load-bearing
 `IsBMEntropyPowerVolumeHyp` predicate が closure plan §G で honest hyp として保持中、
 sqrt 形 sorry はまだ書かれていない)。`cramer-sorry-migration-plan.md:722` での言及も
@@ -298,22 +298,22 @@ theorem wynerZivConvexity_of_condEntDiff : ... := by sorry
 
 ```bash
 # residual 全件 (= sorry の分類済件数の下限)
-rg "@residual" Common2026/ | wc -l
+rg "@residual" InformationTheory/ | wc -l
 
 # class 別ヒストグラム
-rg -o "@residual\([a-z]+:" Common2026/ | sort | uniq -c | sort -rn
+rg -o "@residual\([a-z]+:" InformationTheory/ | sort | uniq -c | sort -rn
 
 # compound @residual (comma-separated 2 件以上) の件数集計 (Round 4 正式提案)
-rg '@residual\([^)]*,[^)]*\)' Common2026/ | wc -l
+rg '@residual\([^)]*,[^)]*\)' InformationTheory/ | wc -l
 
 # 特定壁の影響範囲
 
 # 特定 plan の closure 待ち件数
-rg "@residual\(plan:epi-stam-closure\)" Common2026/
+rg "@residual\(plan:epi-stam-closure\)" InformationTheory/
 
 # tag 無し sorry (= 分類漏れ、CI で検出すべき)
 # ファイル単位: sorry を含むが @residual を 1 つも持たない file を列挙
-for f in $(rg -l "\bsorry\b" Common2026/); do
+for f in $(rg -l "\bsorry\b" InformationTheory/); do
   rg -q "@residual" "$f" || echo "$f"
 done
 
@@ -325,31 +325,31 @@ awk '
     if (!f) print FILENAME":"FNR":"$0
   }
   { prev[(pn++) % 3]=$0 }
-' $(rg -l "\bsorry\b" Common2026/)
+' $(rg -l "\bsorry\b" InformationTheory/)
 ```
 
 ### 完成状態の確認
 
 ```bash
 # audit pass 済件数
-rg "@audit:ok" Common2026/ | wc -l
+rg "@audit:ok" InformationTheory/ | wc -l
 
 # 残課題総数 (sorry + residual の整合確認用)
-rg "\bsorry\b" Common2026/ | wc -l
-rg "@residual" Common2026/ | wc -l
+rg "\bsorry\b" InformationTheory/ | wc -l
+rg "@residual" InformationTheory/ | wc -l
 ```
 
 ### plan からの逆検索
 
 ```bash
 # AWGN typicality plan は何件を抱えるか
-rg "@residual\(plan:awgn-achievability-typicality\)" Common2026/
+rg "@residual\(plan:awgn-achievability-typicality\)" InformationTheory/
 
 # 後続版に置き換え済の旧 declaration
-rg "@audit:superseded-by\(" Common2026/
+rg "@audit:superseded-by\(" InformationTheory/
 
 # 削除候補
-rg "@audit:retract-candidate\(" Common2026/
+rg "@audit:retract-candidate\(" InformationTheory/
 ```
 
 ### declaration-direct タグ検索の canonical pattern (Pattern D 発展形)
@@ -361,13 +361,13 @@ grep すると docstring sign-off note の **文字列リテラル参照** (例:
 
 ```bash
 # canonical per-family 件数集計 (推奨 one-liner)
-rg -c '@audit:suspect\(|@audit:staged\(|@audit:closed-by-successor\(' Common2026/<family pattern>
+rg -c '@audit:suspect\(|@audit:staged\(|@audit:closed-by-successor\(' InformationTheory/<family pattern>
 
 # 個別タグの canonical pattern
-rg '@audit:suspect\('             Common2026/
-rg '@audit:staged\('              Common2026/
-rg '@audit:closed-by-successor\(' Common2026/
-rg '@audit:retract-candidate\('   Common2026/
+rg '@audit:suspect\('             InformationTheory/
+rg '@audit:staged\('              InformationTheory/
+rg '@audit:closed-by-successor\(' InformationTheory/
+rg '@audit:retract-candidate\('   InformationTheory/
 ```
 
 **Pattern D 発展形の実例 4 件** (Round 3 Wave 3-A、各 planner が独立に発見):
@@ -412,7 +412,7 @@ planner / inventory に渡す前段の per-family 件数集計で必ず canonica
 同じ壁 (例: Stam の不等式) を複数 file から参照する場合、**各 use site で個別に `sorry` を書かない**。1 ヶ所に「shared sorry 補題」を立て、他は normal な lemma 呼び出しで使う:
 
 ```lean
--- Common2026/Shannon/EPIStamWalls.lean
+-- InformationTheory/Shannon/EPIStamWalls.lean
 /-- Stam の不等式。Mathlib 未収録、closure 待ち。
 @residual(wall:stam) -/
 theorem stamInequality

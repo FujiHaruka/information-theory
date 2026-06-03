@@ -8,9 +8,9 @@
 > - **T4-A Lempel-Ziv 78 漸近最適性** (L-LZ1〜L-LZ5 全 engage + L-LZ6 Arithmetic / L-LZ7 Kolmogorov scope-out): `LempelZiv78.lean` +548 行。`LZ78Phrase`/`LZ78Parsing` dictionary 型レベル encoding + `IsZivInequalityPassthrough` / `IsLZ78ConversePassthrough` / `IsSMBSandwichPassthrough` placeholder predicate (`Prop := True`) + `lz78_achievability_upper_bound` / `lz78_converse_lower_bound` + **`lz78_asymptotic_optimality` 主定理** + `_two_sided` (sandwich form) + `_of_bounds` (4 条件 conjunction)。**Ch.13 が初の 🟡 昇格** (前回まで 📋)。後継 discharge plan 候補 5 件。Mathlib に Trie / phrase counting 在庫皆無 (upstream PR 候補)。
 > - **I-1 Typed Random Variable API** (前 session 完遂、本 session は主補題層 +179 行 拡張): 詳細は次 Status ブロック参照。
 >
-> **集計**: 4 新規 Lean ファイル (Chernoff Information / EPI / MAC / LZ78) + I-1 拡張 1 ファイル = **+1952 行**、`Common2026.lean` に 4 import 追加、全 `lake env lean <file>` clean。Ch.11 / Ch.13 / Ch.15 / Ch.17 を 🟡 状態強化、特に Ch.13 は 📋 → 🟡 初昇格。Mathlib 上流 PR 候補 1 件 (`Mathlib.Combinatorics.Trie` 系 LZ phrase counting)、後継 discharge plan 候補 ~14 件 (T1-B 1 / T2-D 3 / T3-B 5 / T4-A 5)。撤退ラインは合計 16 本発動 (L-Ch1+2 / L-EPI1+2+3 / L-MAC1〜5 / L-LZ1〜5 + L-LZ6/7 scope-out)。
+> **集計**: 4 新規 Lean ファイル (Chernoff Information / EPI / MAC / LZ78) + I-1 拡張 1 ファイル = **+1952 行**、`InformationTheory.lean` に 4 import 追加、全 `lake env lean <file>` clean。Ch.11 / Ch.13 / Ch.15 / Ch.17 を 🟡 状態強化、特に Ch.13 は 📋 → 🟡 初昇格。Mathlib 上流 PR 候補 1 件 (`Mathlib.Combinatorics.Trie` 系 LZ phrase counting)、後継 discharge plan 候補 ~14 件 (T1-B 1 / T2-D 3 / T3-B 5 / T4-A 5)。撤退ラインは合計 16 本発動 (L-Ch1+2 / L-EPI1+2+3 / L-MAC1〜5 / L-LZ1〜5 + L-LZ6/7 scope-out)。
 >
-> **Status (2026-05-19, I-1 full-chain)**: Infrastructure seed **I-1 Typed Random Variable API** を full-chain (inventory + plan + skeleton + 主補題層拡張) で完遂 ✅。`Common2026/Shannon/TypedRV.lean` (363 行 / 0 sorry / 0 warning) publish。
+> **Status (2026-05-19, I-1 full-chain)**: Infrastructure seed **I-1 Typed Random Variable API** を full-chain (inventory + plan + skeleton + 主補題層拡張) で完遂 ✅。`InformationTheory/Shannon/TypedRV.lean` (363 行 / 0 sorry / 0 warning) publish。
 >
 > - **I-1 Typed Random Variable API** (core publish 2026-05-18 + 主補題層 2026-05-19): 新規 `def` 2 個 (`klDivRV`, `differentialEntropyRV`) + `abbrev` 1 個 (`Shannon.condEntropy` 再エクスポート) + notation 5 個 (`scoped[InformationTheory.Shannon]`、`notation3:max`、`H(μ; X)` / `H(μ; X | Y)` / `I(μ; X ; Y)` / `I(μ; X ; Y | Z)` / `D(μ; X ∥ Y)`) + 主補題 RV-form 層 10 lemma (`entropy_nonneg_rv`, `entropy_le_log_card_rv`, `mutualInfo_{nonneg,comm,eq_zero_iff_indep}_rv`, `condMutualInfo_{nonneg,comm}_rv`, `mutualInfo_chain_rule_rv`, `mutualInfo_le_of_postprocess_rv` (DPI typed), `klDivRV_self`, `klDivRV_nonneg`)。**新数学ゼロ / bridge lemma 新規追加ゼロ** — 全 RV-form 補題は既存 measure-form 補題への 1 行 alias で割れた。判断ログ §2-3 で `notation3:max` + `μ` 明示形に縮退、§5 で主補題 `_rv` suffix layer を追加。
 >
@@ -32,21 +32,21 @@
 > - **T3-D Wyner-Ziv** (L-WZ1/2/3 + L-WP-statement-pass): `WynerZiv.lean` 366 + `WynerZivAchievability.lean` 99 + `WynerZivConverse.lean` 132 = +597 行。Phase A 完全実装 (`WynerZivCode` structure + `wzMarginalXY/XU/YU` + `wzMutualInfoXU/YU` + `WynerZivConstraint` + `wynerZivRatePmf` + `wynerZivRatePmf_attained_slice` slice 形 + 連続性 5 本)。Phase B/C/D は statement-level pass-through で publish — random binning + 三項 jointly typical decoder + n-letter chain rule の本体 discharge は別 plan defer (`R_WZ(D)` 凸性は `_h_jensen : True` slot で hypothesis pass-through、判断ログ #6/#7)。
 > - **T1-A'' Huffman 2-hypothesis discharge** (no-op 再判定): judgement log #3 で前回 no-op (~550 行 / 4-6 セッション、1 セッション完遂不可) を再確認、Phase 0 probe のみ実施で着手前撤退。
 >
-> **集計**: 10 新規 Lean ファイル + 1 back-port = +1975 行、`Common2026.lean` に 11 import 追加、全 `lake env lean` clean。Mathlib 上流 PR 候補 2 件 (`Measure.infinitePi_const_isProbabilityMeasure`, `Measurable (fun x => gaussianReal x N)`) + 後継 plan 候補 4 件 (`fisherInfo` redefinition / `hoeffding-tradeoff-sandwich-plan` / `cramer-lc2-phase-bc-plan` / `wyner-ziv-body-discharge-plan` / `awgn-kernel-measurability-plan`) が副産物。Ch.5 / Ch.11 / Ch.17 は 🟡 のまま、Ch.9 は 🟡 昇格 (T2-A 主定理 hypothesis 形 publish)、Ch.15 は 🟡 のまま (T3-D statement-level pass-through publish)。
+> **集計**: 10 新規 Lean ファイル + 1 back-port = +1975 行、`InformationTheory.lean` に 11 import 追加、全 `lake env lean` clean。Mathlib 上流 PR 候補 2 件 (`Measure.infinitePi_const_isProbabilityMeasure`, `Measurable (fun x => gaussianReal x N)`) + 後継 plan 候補 4 件 (`fisherInfo` redefinition / `hoeffding-tradeoff-sandwich-plan` / `cramer-lc2-phase-bc-plan` / `wyner-ziv-body-discharge-plan` / `awgn-kernel-measurability-plan`) が副産物。Ch.5 / Ch.11 / Ch.17 は 🟡 のまま、Ch.9 は 🟡 昇格 (T2-A 主定理 hypothesis 形 publish)、Ch.15 は 🟡 のまま (T3-D statement-level pass-through publish)。
 >
-> **Status (2026-05-19, late)**: orchestrator session で **textbook roadmap Tier 1 後続 T1-A' Huffman 最適性 (Cover-Thomas Theorem 5.8.1, weak form) を 0 sorry で publish** ✅。`Common2026/Shannon/HuffmanOptimality.lean` (1054 行、0 sorry / 0 warning) で `huffmanLength_optimal_with_hypotheses` を **2 hypothesis pass-through 形** (`SwapNormalizationHypothesis` + `HuffmanMergedIdentificationHypothesis`、universe-polymorphic `abbrev Prop`) で publish。証明骨格 (Phase 4 `Nat.strong_induction_on` + Bridge L (sibling-driven 分解) + Bridge R (`(2 ≤ l a)` 強化 + positivity 結論) + `swap_step_le` ~96 行 helper + Phase 4 base case `card ≤ 2` + step case 合成) 完成。副産物として `Common2026/Shannon/Huffman.lean` に **`huffmanLength_kraft_eq_one`** (Kraft `= 1` 等号版、+14 行) を追加 publish (`kraftPerGroup_eq_one` + `kraftPerGroup_initMultiset_eq_kraft` 経由)。**判断ログ要点**: Phase 2 sibling 最深性 5 ターン進まず → 案 B pivot (signature から最深性条項削除、Phase 4 で `l` 側 swap で吸収、proof-pivot-advisor 相談 1 回)、Phase 3.3 で `huffmanLength (mergedMeasure ...)` (α' 型) vs T1-A `huffmanLengthAux_step_*` (α 型) の構造的不一致 → bridge L を sibling-driven 分解形に再 shape (case ii、proof-pivot-advisor 相談 2 回目)、Phase 3.4 で `0 < l' x` の `card α = 2 ∧ l ≡ 1` 反例 → Phase 4 base case を `card ≤ 2` 拡張で吸収 (case A)、Phase 4 swap normalization で 2-step swap 不十分 (実例 `l = (3,1,2)`、Kraft `= 1` が要) + `huffmanLength_mergedMeasure_eq` の signature バグ発見 (`h_sibling` 単独で反例) → 案 Y (weak form publish) 採用で 2 hypothesis を `abbrev Prop` 化、後継 T1-A'' (~300-400 行、Kraft = 1 shortening 込み swap normalization + α/α' structural correspondence identification) として分離 (`docs/textbook-roadmap.md` 参照)。Ch.5 行は 🟡 のまま、T1-A'' 完了で 🟢 昇格。
+> **Status (2026-05-19, late)**: orchestrator session で **textbook roadmap Tier 1 後続 T1-A' Huffman 最適性 (Cover-Thomas Theorem 5.8.1, weak form) を 0 sorry で publish** ✅。`InformationTheory/Shannon/HuffmanOptimality.lean` (1054 行、0 sorry / 0 warning) で `huffmanLength_optimal_with_hypotheses` を **2 hypothesis pass-through 形** (`SwapNormalizationHypothesis` + `HuffmanMergedIdentificationHypothesis`、universe-polymorphic `abbrev Prop`) で publish。証明骨格 (Phase 4 `Nat.strong_induction_on` + Bridge L (sibling-driven 分解) + Bridge R (`(2 ≤ l a)` 強化 + positivity 結論) + `swap_step_le` ~96 行 helper + Phase 4 base case `card ≤ 2` + step case 合成) 完成。副産物として `InformationTheory/Shannon/Huffman.lean` に **`huffmanLength_kraft_eq_one`** (Kraft `= 1` 等号版、+14 行) を追加 publish (`kraftPerGroup_eq_one` + `kraftPerGroup_initMultiset_eq_kraft` 経由)。**判断ログ要点**: Phase 2 sibling 最深性 5 ターン進まず → 案 B pivot (signature から最深性条項削除、Phase 4 で `l` 側 swap で吸収、proof-pivot-advisor 相談 1 回)、Phase 3.3 で `huffmanLength (mergedMeasure ...)` (α' 型) vs T1-A `huffmanLengthAux_step_*` (α 型) の構造的不一致 → bridge L を sibling-driven 分解形に再 shape (case ii、proof-pivot-advisor 相談 2 回目)、Phase 3.4 で `0 < l' x` の `card α = 2 ∧ l ≡ 1` 反例 → Phase 4 base case を `card ≤ 2` 拡張で吸収 (case A)、Phase 4 swap normalization で 2-step swap 不十分 (実例 `l = (3,1,2)`、Kraft `= 1` が要) + `huffmanLength_mergedMeasure_eq` の signature バグ発見 (`h_sibling` 単独で反例) → 案 Y (weak form publish) 採用で 2 hypothesis を `abbrev Prop` 化、後継 T1-A'' (~300-400 行、Kraft = 1 shortening 込み swap normalization + α/α' structural correspondence identification) として分離 (`docs/textbook-roadmap.md` 参照)。Ch.5 行は 🟡 のまま、T1-A'' 完了で 🟢 昇格。
 >
-> **Status (2026-05-19)**: orchestrator session で **textbook roadmap Tier 1 着手 1 本目 T1-A Huffman (Phase 3 完遂形) を 0 sorry で publish** ✅。`Common2026/Shannon/Huffman.lean` (953 行、0 sorry / 0 warning) で 4 件: `huffmanLength` (`Multiset (Finset α × ℝ)` 上の `Nat.strongRec on s.card` で再帰、`huffmanStep` を Subtype 化して `HuffmanGrouping` invariant `Nodup ∧ Nonempty ∧ Disjoint` を spec 焼き込み) + `huffmanLength_pos` + `huffmanLength_kraft_le_one` (`kraftPerGroup` weighted sum invariant 経路 ~310 行核) + `exists_huffman_prefix_code` (`ShannonCodeKraftReverse.exists_prefix_code_of_kraft` 経由副系)。**判断ログ要点**: Plan §C-5 `Multiset.strongInductionOn` は cons+erase で `<` 破綻 → `Nat.strongRec on s.card` pivot、§C-6 `huffmanStep` を `def` 本体に `Classical.choose` 裸書きすると `unfold` opaque 化 → Subtype 戻り値で spec 焼き込み、さらに Kraft 証明で `Nodup + Nonempty + Disjoint` の 3-tuple invariant を `HuffmanGrouping` で `huffmanStep` Subtype に propagate (proof-pivot-advisor 1 回相談)。**Phase 4-5 (sibling property + Cover-Thomas Theorem 5.8.1 主定理) は T1-A' に分離** (`docs/textbook-roadmap.md` 参照、~400-500 行追加見込み)。Ch.5 行は 🟡 のまま、T1-A' 完了で 🟢 昇格。
+> **Status (2026-05-19)**: orchestrator session で **textbook roadmap Tier 1 着手 1 本目 T1-A Huffman (Phase 3 完遂形) を 0 sorry で publish** ✅。`InformationTheory/Shannon/Huffman.lean` (953 行、0 sorry / 0 warning) で 4 件: `huffmanLength` (`Multiset (Finset α × ℝ)` 上の `Nat.strongRec on s.card` で再帰、`huffmanStep` を Subtype 化して `HuffmanGrouping` invariant `Nodup ∧ Nonempty ∧ Disjoint` を spec 焼き込み) + `huffmanLength_pos` + `huffmanLength_kraft_le_one` (`kraftPerGroup` weighted sum invariant 経路 ~310 行核) + `exists_huffman_prefix_code` (`ShannonCodeKraftReverse.exists_prefix_code_of_kraft` 経由副系)。**判断ログ要点**: Plan §C-5 `Multiset.strongInductionOn` は cons+erase で `<` 破綻 → `Nat.strongRec on s.card` pivot、§C-6 `huffmanStep` を `def` 本体に `Classical.choose` 裸書きすると `unfold` opaque 化 → Subtype 戻り値で spec 焼き込み、さらに Kraft 証明で `Nodup + Nonempty + Disjoint` の 3-tuple invariant を `HuffmanGrouping` で `huffmanStep` Subtype に propagate (proof-pivot-advisor 1 回相談)。**Phase 4-5 (sibling property + Cover-Thomas Theorem 5.8.1 主定理) は T1-A' に分離** (`docs/textbook-roadmap.md` 参照、~400-500 行追加見込み)。Ch.5 行は 🟡 のまま、T1-A' 完了で 🟢 昇格。
 >
-> **Status (2026-05-18)**: orchestrator session で **D-2'' pure 形 (Y-chain 経路、`IsMemorylessChannel` 単独)** 完全 discharge ✅。`Common2026/Shannon/ChannelCodingConverseMemorylessPure.lean` (690 行、0 sorry / 0 warning) で `channel_coding_converse_general_memoryless_pure` を publish — `IsMemorylessChannel` (γ-form 単一 Markov chain `(X^{≠i}, Y^{≠i}) → X_i → Y_i`) のみから Cover-Thomas Thm 7.9 結論 `log|M| ≤ ∑ I(X_i; Y_i).toReal + Fano` を導出。bridge 2 段: (1) `per_letter_markov_of_memoryless` (`isMarkovChain_bundle_left_with_conditioner` + `measurableEquivExtract` reshape 経由で `X^n → X_i → Y_i`)、(2) `outputs_cond_indep_of_memoryless` (graphoid weak union を新規 private `isMarkovChain_weakUnion_left_to_conditioner` + `cond_reshape_kernel_lemma` + `isMarkovChain_map_conditioner_measurableEquiv` の 3 補題で自前構築、`condDistrib_ae_eq_of_measure_eq_compProd` + `compProd_map_condDistrib` + `Measure.compProd_assoc'` + `ae_of_ae_map` 合成 ~350 行で `Y^{≠i} → X^n → Y_i`)。既存 `channel_coding_converse_general_memoryless_strong` (`IsMemorylessChannelStrong` 取り) を bridge 経由で内部呼び出し。**判断ログ**: D-2' の 3 仮説 pass-through 形は X-chain per-summand 路の hypothesis、`h_yother_zero` は encoder 任意で偽 (反例: `X_1 := X_0`)。本セッションで X-chain を捨てて Cover-Thomas textbook の Y-chain 経路 (entropy subadditivity + memoryless で `H(Y^n|X^n) = ∑ H(Y_i|X_i)`) に乗り換え、既存 `mutualInfo_le_sum_per_letter_of_memoryless_strong` (CondEntropyMemoryless.lean) を上流に再利用。**入力側 predicate (b1 案) は不要** — Y-chain は encoder-agnostic で `IsMemorylessChannel` 単独で動く。
+> **Status (2026-05-18)**: orchestrator session で **D-2'' pure 形 (Y-chain 経路、`IsMemorylessChannel` 単独)** 完全 discharge ✅。`InformationTheory/Shannon/ChannelCodingConverseMemorylessPure.lean` (690 行、0 sorry / 0 warning) で `channel_coding_converse_general_memoryless_pure` を publish — `IsMemorylessChannel` (γ-form 単一 Markov chain `(X^{≠i}, Y^{≠i}) → X_i → Y_i`) のみから Cover-Thomas Thm 7.9 結論 `log|M| ≤ ∑ I(X_i; Y_i).toReal + Fano` を導出。bridge 2 段: (1) `per_letter_markov_of_memoryless` (`isMarkovChain_bundle_left_with_conditioner` + `measurableEquivExtract` reshape 経由で `X^n → X_i → Y_i`)、(2) `outputs_cond_indep_of_memoryless` (graphoid weak union を新規 private `isMarkovChain_weakUnion_left_to_conditioner` + `cond_reshape_kernel_lemma` + `isMarkovChain_map_conditioner_measurableEquiv` の 3 補題で自前構築、`condDistrib_ae_eq_of_measure_eq_compProd` + `compProd_map_condDistrib` + `Measure.compProd_assoc'` + `ae_of_ae_map` 合成 ~350 行で `Y^{≠i} → X^n → Y_i`)。既存 `channel_coding_converse_general_memoryless_strong` (`IsMemorylessChannelStrong` 取り) を bridge 経由で内部呼び出し。**判断ログ**: D-2' の 3 仮説 pass-through 形は X-chain per-summand 路の hypothesis、`h_yother_zero` は encoder 任意で偽 (反例: `X_1 := X_0`)。本セッションで X-chain を捨てて Cover-Thomas textbook の Y-chain 経路 (entropy subadditivity + memoryless で `H(Y^n|X^n) = ∑ H(Y_i|X_i)`) に乗り換え、既存 `mutualInfo_le_sum_per_letter_of_memoryless_strong` (CondEntropyMemoryless.lean) を上流に再利用。**入力側 predicate (b1 案) は不要** — Y-chain は encoder-agnostic で `IsMemorylessChannel` 単独で動く。
 >
-> **Status (2026-05-16, late)**: orchestrator session で **SMB Phase C.1+C.2 + Phase D-partial (Birkhoff-per-level)** 追加完了 (`Common2026/Shannon/SMBChainRule.lean` 421 行、0 sorry / 0 warning)。`pmfLogCond μ p i ω := -log (cd (block_i ω)).real {obs i ω}` 定義 + 乗法 chain rule (ENNReal/Real) + a.s. positivity + **`log_block_eq_sum_pmfLogCond`** (a.s. log identity `-log P_n(block_n) = ∑_{i<n} pmfLogCond p i`) + **`integral_pmfLogCond_eq_conditionalEntropyTail`** (`∫ pmfLogCond p l dμ = H_l`) + integrability + **`birkhoffAverage_pmfLogCond_tendsto`** (per-level Birkhoff 適用、`(1/(n+1)) ∑_{i=0}^n pmfLogCond p l (T^[i] ω) → H_l` a.s.)。**残: Algoet-Cover sandwich** (~300-500 行、likelihood ratio Markov + Borel-Cantelli + sandwich) で `shannon_mcmillan_breiman_of_sandwich` の 4 仮説 discharge → 仮定なし `shannon_mcmillan_breiman` 主定理着地。詳細: [`docs/shannon/shannon-mcmillan-breiman-phase-d-plan.md`](shannon/shannon-mcmillan-breiman-phase-d-plan.md)。判断ログ: SMB は Levy 経路ではなく Algoet-Cover (Markov ineq + Birkhoff-per-level + Borel-Cantelli) が必要と判明、本セッションで Phase D.1 (Birkhoff-per-level) を独立 building block として publish。
+> **Status (2026-05-16, late)**: orchestrator session で **SMB Phase C.1+C.2 + Phase D-partial (Birkhoff-per-level)** 追加完了 (`InformationTheory/Shannon/SMBChainRule.lean` 421 行、0 sorry / 0 warning)。`pmfLogCond μ p i ω := -log (cd (block_i ω)).real {obs i ω}` 定義 + 乗法 chain rule (ENNReal/Real) + a.s. positivity + **`log_block_eq_sum_pmfLogCond`** (a.s. log identity `-log P_n(block_n) = ∑_{i<n} pmfLogCond p i`) + **`integral_pmfLogCond_eq_conditionalEntropyTail`** (`∫ pmfLogCond p l dμ = H_l`) + integrability + **`birkhoffAverage_pmfLogCond_tendsto`** (per-level Birkhoff 適用、`(1/(n+1)) ∑_{i=0}^n pmfLogCond p l (T^[i] ω) → H_l` a.s.)。**残: Algoet-Cover sandwich** (~300-500 行、likelihood ratio Markov + Borel-Cantelli + sandwich) で `shannon_mcmillan_breiman_of_sandwich` の 4 仮説 discharge → 仮定なし `shannon_mcmillan_breiman` 主定理着地。詳細: [`docs/shannon/shannon-mcmillan-breiman-phase-d-plan.md`](shannon/shannon-mcmillan-breiman-phase-d-plan.md)。判断ログ: SMB は Levy 経路ではなく Algoet-Cover (Markov ineq + Birkhoff-per-level + Borel-Cantelli) が必要と判明、本セッションで Phase D.1 (Birkhoff-per-level) を独立 building block として publish。
 >
 > **Status (2026-05-16)**: orchestrator session で **D-1'' Phase D parent surgery を完全 discharge** + **E-8'' Birkhoff 自前 3 Phase 部分完了** を順次達成。
 >
-> **D-1'' Phase D 完全 discharge ✅**: `Common2026/Shannon/AEPRate.lean` (525 → 831 行、+306 行、closed-form N 変種 5 本) + `Common2026/Shannon/ChannelCodingShannonTheoremFullDischarge.lean` (新規 1607 行) で **`shannon_noisy_channel_coding_theorem_general_full`** を **`hW_pos` 完全除去形** で publish。すべて 0 sorry / 0 warning。Phase D.0/D.0' uniform smooth capacity (両側 smoothing で `(p_full, W_smooth δ)` の MI > R を `δ ∈ (0, δ_B]` 全域で確保) → D.1 pmfLog δ-asymptotic bounds + `(log n)²/n → 0` 解析補題 → D.2 parent body inline copy + closed-form N (AEPRate `_at_N` 変種利用) → D.3 outer N construction (`δ_n := min(δ_B, ε/(16(n+1)))` で 2nδ_n < ε/4 確保、N(δ_n) = O((log n)²) ≪ n で eventually `≤ n`) → D.4 主定理 + TV bound glue。これにより 5 シード本体 + B 節 + C 節 + D-1/D-2/D-3/E-1〜E-10' + D-1' に続き **D-1'' (Shannon noisy channel coding theorem fully general、`hW_pos` 制約なし)** が完結、Cover-Thomas 7.7.1 完全形達成。
+> **D-1'' Phase D 完全 discharge ✅**: `InformationTheory/Shannon/AEPRate.lean` (525 → 831 行、+306 行、closed-form N 変種 5 本) + `InformationTheory/Shannon/ChannelCodingShannonTheoremFullDischarge.lean` (新規 1607 行) で **`shannon_noisy_channel_coding_theorem_general_full`** を **`hW_pos` 完全除去形** で publish。すべて 0 sorry / 0 warning。Phase D.0/D.0' uniform smooth capacity (両側 smoothing で `(p_full, W_smooth δ)` の MI > R を `δ ∈ (0, δ_B]` 全域で確保) → D.1 pmfLog δ-asymptotic bounds + `(log n)²/n → 0` 解析補題 → D.2 parent body inline copy + closed-form N (AEPRate `_at_N` 変種利用) → D.3 outer N construction (`δ_n := min(δ_B, ε/(16(n+1)))` で 2nδ_n < ε/4 確保、N(δ_n) = O((log n)²) ≪ n で eventually `≤ n`) → D.4 主定理 + TV bound glue。これにより 5 シード本体 + B 節 + C 節 + D-1/D-2/D-3/E-1〜E-10' + D-1' に続き **D-1'' (Shannon noisy channel coding theorem fully general、`hW_pos` 制約なし)** が完結、Cover-Thomas 7.7.1 完全形達成。
 >
-> **E-8'' Phase γ 完全完了 ✅ (2026-05-16)** — `Common2026/Shannon/BirkhoffErgodic.lean` (約 920 行、**0 sorry / 0 error**)。Garsia (1965) maximal ergodic inequality 経路で **Birkhoff individual ergodic theorem を汎用 `MeasurePreserving + Ergodic` で完全証明**。前段の backward-martingale Hopf 経路 (Williams §14.4) は **i.i.d. 専用**で、汎用設定では数学的に偽 (cyclic 反例: Ω = {0,1,2}, T(x) = (x+1) mod 3, f = id で `μ[f∘T | σ(S_3, S_4, …)] = f∘T ≠ f`)。`condExp_iterate_eq_condExp` は誤命題、Petersen Thm 2.2 を Hopf rearrangement identity と取り違えていた。Phase α/β (`BackwardFiltration.lean`/`BackwardMartingale.lean`、139+837 行、両方 0 sorry) は将来 i.i.d. SLLN 用に retain。**証明チェイン** (`BirkhoffErgodic.lean` 中): `maxPartialSum` + Garsia pointwise → **`maximal_ergodic_inequality`** (Mathlib gap 自前) → `maxPartialSum_meas_le` (Hardy 有限-n、`m · μ({M_n > 0}) ≤ ‖g‖₁`) → `maxPartialSum_meas_iUnion_le` (Hardy union 経由) → **`birkhoffAverageReal_ae_bddAbove`** (a.e. BddAbove、Archimedean) → **`birkhoff_neg_mean_sup_null`** (Banach principle、DCT) → **`birkhoffAverageReal_limsup_comp_T_ae`** (limsup の T-invariance、**Etemadi 不要**で `ae_bddAbove` を `f` と `-f` に適用して a.e. bounded、recursion `A_n(f, Tω) - A_{n+1}(f, ω) = (A_{n+1}(f,ω) - f(ω))/(n+1) → 0` で discharge、`limsup_add_const` と `limsup_nat_add` で合成) → **`birkhoffAverageReal_limsup_le_zero_of_int_neg`** (`Ergodic.ae_eq_const_of_ae_eq_comp_ae` + `frequently_lt_of_lt_limsup` で `c > 0` case を排除) → 上下 sandwich → **主定理 `birkhoff_ergodic_ae`** (rational-ε 経由 `Metric.tendsto_atTop`)。**次の deferred**: SMB 仮定なし形 (`shannon_mcmillan_breiman`) を `birkhoff_ergodic_ae` + `shannon_mcmillan_breiman_of_sandwich` 経由で組み立て。
+> **E-8'' Phase γ 完全完了 ✅ (2026-05-16)** — `InformationTheory/Shannon/BirkhoffErgodic.lean` (約 920 行、**0 sorry / 0 error**)。Garsia (1965) maximal ergodic inequality 経路で **Birkhoff individual ergodic theorem を汎用 `MeasurePreserving + Ergodic` で完全証明**。前段の backward-martingale Hopf 経路 (Williams §14.4) は **i.i.d. 専用**で、汎用設定では数学的に偽 (cyclic 反例: Ω = {0,1,2}, T(x) = (x+1) mod 3, f = id で `μ[f∘T | σ(S_3, S_4, …)] = f∘T ≠ f`)。`condExp_iterate_eq_condExp` は誤命題、Petersen Thm 2.2 を Hopf rearrangement identity と取り違えていた。Phase α/β (`BackwardFiltration.lean`/`BackwardMartingale.lean`、139+837 行、両方 0 sorry) は将来 i.i.d. SLLN 用に retain。**証明チェイン** (`BirkhoffErgodic.lean` 中): `maxPartialSum` + Garsia pointwise → **`maximal_ergodic_inequality`** (Mathlib gap 自前) → `maxPartialSum_meas_le` (Hardy 有限-n、`m · μ({M_n > 0}) ≤ ‖g‖₁`) → `maxPartialSum_meas_iUnion_le` (Hardy union 経由) → **`birkhoffAverageReal_ae_bddAbove`** (a.e. BddAbove、Archimedean) → **`birkhoff_neg_mean_sup_null`** (Banach principle、DCT) → **`birkhoffAverageReal_limsup_comp_T_ae`** (limsup の T-invariance、**Etemadi 不要**で `ae_bddAbove` を `f` と `-f` に適用して a.e. bounded、recursion `A_n(f, Tω) - A_{n+1}(f, ω) = (A_{n+1}(f,ω) - f(ω))/(n+1) → 0` で discharge、`limsup_add_const` と `limsup_nat_add` で合成) → **`birkhoffAverageReal_limsup_le_zero_of_int_neg`** (`Ergodic.ae_eq_const_of_ae_eq_comp_ae` + `frequently_lt_of_lt_limsup` で `c > 0` case を排除) → 上下 sandwich → **主定理 `birkhoff_ergodic_ae`** (rational-ε 経由 `Metric.tendsto_atTop`)。**次の deferred**: SMB 仮定なし形 (`shannon_mcmillan_breiman`) を `birkhoff_ergodic_ae` + `shannon_mcmillan_breiman_of_sandwich` 経由で組み立て。
 >
 > **残 deferred**: なし。D-2'' は **Y-chain 経路で完全 pure 形達成** (2026-05-18、上記)、E-3''' fully-discharged + SMB 仮定なし形 + D-1'' full + E-8'' Birkhoff 自前は全て本セッションまでに 0 sorry 着地済。**未実装 seed ゼロ**、proof body の sorry もゼロ。
 >
@@ -82,7 +82,7 @@
 
 - **D-1. Shannon noisy channel coding theorem (capacity reach + max error)** ✅ (2026-05-13) →
   [docs/shannon/channel-coding-shannon-theorem-plan.md](shannon/channel-coding-shannon-theorem-plan.md) —
-  Cover-Thomas 7.7.1 **完全形 (W full-support 仮定下の MVP)**。`Common2026/Shannon/ChannelCodingShannonTheorem.lean`
+  Cover-Thomas 7.7.1 **完全形 (W full-support 仮定下の MVP)**。`InformationTheory/Shannon/ChannelCodingShannonTheorem.lean`
   (918 行) で publish:
   - `capacity W := sSup {(mutualInfoOfChannel (pmfToMeasure p) W).toReal | p ∈ stdSimplex ℝ α}`
     + `capacity_bddAbove` (`entropy_le_log_card` 経由) + `capacity_lt_implies_exists_pmf`
@@ -112,7 +112,7 @@
   Phase B MI の `δ` 連続性 (3-entropy 展開 + `Real.continuous_negMulLog`) + `exists_smooth_capacity_gt`
   (固定 `p₀` 経由)、Phase C TV bound `errorProbAt_smooth_TV: |errorProbAt(W_smooth δ, c, m) − errorProbAt(W, c, m)| ≤ 2 n δ`
   を `Measure.pi` 上 `Fin.cons`-bijection + induction で tight 構成。
-  `Common2026/Shannon/ChannelCodingShannonTheoremGeneral.lean` (671 行)。
+  `InformationTheory/Shannon/ChannelCodingShannonTheoremGeneral.lean` (671 行)。
 
   **後継 `D-1''` deferred (~250-450 行)**: Phase D 主定理 `shannon_noisy_channel_coding_theorem_general`
   (`hW_pos` 完全除去) には parent D-1 の `N(δ)` δ-uniform 上界が必要。これは parent
@@ -122,12 +122,12 @@
   は D-1'' で本質的に再利用。判断ログ 6 で 4 戦略を評価 (撤退理由含む)。
 
   **D-1'' Step 1 着手 (2026-05-14、partial)**: AEP rate-uniform 化を
-  `Common2026/Shannon/AEPRate.lean` (293 行) で publish。`typicalSet_prob_ge_of_rate` は
+  `InformationTheory/Shannon/AEPRate.lean` (293 行) で publish。`typicalSet_prob_ge_of_rate` は
   Chebyshev (`ProbabilityTheory.meas_ge_le_variance_div_sq`) + pairwise variance sum
   (`ProbabilityTheory.IndepFun.variance_sum`) 経由で
   `n ≥ ⌈Var(pmfLog) / (η ε²)⌉ + 1 → μ {typicalSet} ≥ 1 - η` を closed-form で示す。
   これは parent surgery (戦略 3) の `N₁` (AEP block) closed-form 化に直接使える。
-  Phase D 主定理は `Common2026/Shannon/ChannelCodingShannonTheoremFull.lean` (73 行) に
+  Phase D 主定理は `InformationTheory/Shannon/ChannelCodingShannonTheoremFull.lean` (73 行) に
   statement のみ 1 sorry で保留。`N₂` (E2 exp decay) の closed-form 化 + 親 D-1 への合成は
   後続シードに deferred。
 
@@ -174,7 +174,7 @@
   任意の入力分布で `R > I(p; W) ⟹ ∃ error floor` を示す。expurgation/Fano + `mutualInfo_iid_eq_nsmul`
   で n-channel 形にスケール。audit-2026-05 §4 🟡 #8 として記録。
 
-  **本シードでは iid 仮定撤廃 + chain rule 分解段** を `Common2026/Shannon/ChannelCodingConverseGeneral.lean`
+  **本シードでは iid 仮定撤廃 + chain rule 分解段** を `InformationTheory/Shannon/ChannelCodingConverseGeneral.lean`
   (148 行) で publish: `channel_coding_converse_general_chainRule` は
   `log|M| ≤ ∑_i I(X_i; Y^n | X^{<i}).toReal + h(Pe) + Pe·log(|M|−1)` を任意 Markov encoder + 一様 Msg 下で
   bridge ゼロ (`shannon_converse_single_shot_markov_encoder` + `mutualInfo_chain_rule_fin`
@@ -183,7 +183,7 @@
   (~500 行追加見込み、Mathlib に conditional MI の memoryless reduction lemma 未確認)。
 
   **先行成果 (reuse-test-2026-05, 2026-05-13 完了)**: i.i.d. 入力下の converse n-variable 化を
-  bridge ゼロで実装、`Common2026/Shannon/ChannelCodingConverse.lean`
+  bridge ゼロで実装、`InformationTheory/Shannon/ChannelCodingConverse.lean`
   (`channel_coding_converse_iid` 1 本) として publish。`shannon_converse_single_shot_markov_encoder`
   + `mutualInfo_iid_eq_nsmul` の合成だけで到達。これは D-2 plan の出発点として直接利用可能。
 
@@ -201,7 +201,7 @@
 
   **D-2' (memoryless per-summand bound) 完了** (2026-05-14、撤退ライン MVP) →
   [docs/shannon/channel-coding-converse-general-d2-prime-plan.md](shannon/channel-coding-converse-general-d2-prime-plan.md) —
-  `Common2026/Shannon/ChannelCodingConverseGeneralComplete.lean` (578 行、0 sorry / 0 warning):
+  `InformationTheory/Shannon/ChannelCodingConverseGeneralComplete.lean` (578 行、0 sorry / 0 warning):
   - `IsMemorylessChannel μ Xs Ys`: 各 i で `IsMarkovChain μ ((X^{≠i}, Y^{≠i})) (X_i) (Y_i)`
   - `condMutualInfo_chain_rule_X_2var` + `_Y_2var`: 2 変数 conditional chain rule の新規補題
   - `memoryless_per_summand_bound`: per-summand 不等式 `condMI(X_i; Y^n | X^{<i}) ≤ MI(X_i; Y_i)` を
@@ -237,7 +237,7 @@
 
 - **D-3. AEP 完全形 (lower bound + 確率収束)** ✅ (2026-05-13) →
   [docs/shannon/aep-full-form-plan.md](shannon/aep-full-form-plan.md) — Cover-Thomas
-  3.1.2 **完全 4 帰結** を `Common2026/Shannon/AEP.lean` 末尾 (Phase H, 211 行追加) で
+  3.1.2 **完全 4 帰結** を `InformationTheory/Shannon/AEP.lean` 末尾 (Phase H, 211 行追加) で
   publish。3 補題:
   - `typicalSet_prob_ge`: 点別下界 `exp(-n(H+ε)) ≤ (μ.map (jointRV Xs n)).real {x}`
     for `x ∈ T_ε^n` (既存 `typicalSet_prob_le` の方向反転鏡像、上側不等式
@@ -263,7 +263,7 @@
 - **E-1. Channel coding strong converse (Wolfowitz, 単発 Verdú-Han 形)** ✅ (2026-05-13) →
   [docs/shannon/channel-coding-strong-converse-plan.md](shannon/channel-coding-strong-converse-plan.md) —
   Cover-Thomas 7.9 strong form の中核 **情報密度 (Verdú-Han) 単発下界** を
-  `Common2026/Shannon/ChannelCodingStrongConverse.lean` (380 行) で publish:
+  `InformationTheory/Shannon/ChannelCodingStrongConverse.lean` (380 行) で publish:
   - `highLLRSet W c Q threshold m`: codeword `m` の出力 LLR threshold 超え集合
     `{y | P_m^n.real {y} > exp(threshold) · Q.real {y}}` 定義。
   - `channelCoding_per_codeword_decomposition`: 任意 measurable `s` で
@@ -295,7 +295,7 @@
   (Cover-Thomas 11.1.3 size 下界、`H(c/n) := -∑ (c/n)·log(c/n)` 経験分布 entropy)。
   既存 `SanovLDPEquality.lean:705` `typeClassByCount_card_ge` (生形 `n^n / ∏ c^c`) に
   bridge identity `n^n / ∏ c^c = exp(n · H(c/n))` を加えるだけで取得。
-  `Common2026/Shannon/TypeClassLowerBound.lean` (181 行)、新規定義 `entropyByCount` 含む。
+  `InformationTheory/Shannon/TypeClassLowerBound.lean` (181 行)、新規定義 `entropyByCount` 含む。
   per-atom `c · log(c/n) = c · log c - c · log n` を `Nat.eq_zero_or_pos` 分岐 (`c = 0` で
   両辺 0、`c > 0` で `Real.log_div`) で proof、Stirling 依存なし。
   **横断 utility** として E-1 / E-5 / E-3 の前段に置く価値あり、`SanovLDPEquality`
@@ -303,7 +303,7 @@
 
 - **E-3. Rate-distortion theorem achievability Phase A 完全形** ✅ (2026-05-14、初回 skeleton MVP → 同日 Phase A 完全形) →
   [docs/shannon/rate-distortion-achievability-plan.md](shannon/rate-distortion-achievability-plan.md) —
-  Cover-Thomas 10.5。`Common2026/Shannon/RateDistortionAchievability.lean` (461 行、0 sorry / 0 warning):
+  Cover-Thomas 10.5。`InformationTheory/Shannon/RateDistortionAchievability.lean` (461 行、0 sorry / 0 warning):
   - Skeleton (120 行): `DistortionFn α β := α → β → NNReal`、`blockDistortion`、`LossyCode`、
     `LossyCode.expectedBlockDistortion`
   - **Phase A 完全形 (+341 行)**: pmf 直接形 `R(D)` の達成性まで:
@@ -330,13 +330,13 @@
   statement 着地点 (`RDConstraint`, `mutualInfoPmf`, `rateDistortionFunctionPmf`) が確定。
 
   **E-3' Phase B.1 ✅ (2026-05-14、joint-typical lossy encoder + bundling MVP)** →
-  `Common2026/Shannon/RateDistortionAchievabilityPhaseB.lean` (83 行、0 sorry / 0 warning):
+  `InformationTheory/Shannon/RateDistortionAchievabilityPhaseB.lean` (83 行、0 sorry / 0 warning):
   - `jointTypicalLossyEncoder μ Xs Ys hM ε c x`: `Classical.choose` で typical match `(x, c m) ∈ jointlyTypicalSet` の 1 つを選ぶ encoder。fallback `⟨0, hM⟩`。decoder 側 `jointTypicalDecoder` (`∃!` 要求) と対称、encoder は first match で十分なので `∃` ベース。
   - `lossyCodeOfCodebook`: `LossyCode M n α β` への bundling (`encoder := jointTypicalLossyEncoder`, `decoder := c`)
   - `jointTypicalLossyEncoder_spec_of_exists` / `_of_not_exists`: `dif_pos` / `dif_neg` 分岐の Classical.choose spec。
 
   **E-3' Phase B.3 ✅ (2026-05-14、distortionTypicalSet + WLLN-on-d + prob → 1 wrapper)** →
-  `Common2026/Shannon/RateDistortionAchievabilityPhaseB.lean` (479 行、0 sorry / 0 warning):
+  `InformationTheory/Shannon/RateDistortionAchievabilityPhaseB.lean` (479 行、0 sorry / 0 warning):
   - `expectedJointDistortion μ X Y d`: Bochner 積分形 `∫ ω, (d (X ω) (Y ω) : ℝ) ∂μ`
   - `distortionTypicalSet μ Xs Ys d n ε δ := jointlyTypicalSet ∩ {blockDistortion ≤ 𝔼 d + δ}` + 6 structure 補題 (`_subset_jointlyTypicalSet`, `mem_distortionTypicalSet_iff`, `blockDistortion_le_of_mem_distortionTypicalSet` (B.2.1), `_finite`, `measurableSet_distortionTypicalSet`)
   - **WLLN-on-distortion section**: `distortionRealFn d (a,b) := (d a b : ℝ)` (Fintype 上 `measurable_of_finite`) + `distortionRV Xs Ys d i ω := (d (Xs i ω) (Ys i ω) : ℝ)` (`distortionRV_eq_comp` で `jointSequence` 上の合成として分解)。
@@ -349,14 +349,14 @@
   Phase B.2.2 (`single_codeword_typical_match_prob`、`(1 - p_typ)^M` random codebook 形) は **`jointlyTypicalSet_indep_prob_ge`** (anti-direction、existing `_indep_prob_le` を lower bound に書き直す) を要求、次セッションへ。
 
   **E-3' Phase B.2.2 ✅ (2026-05-14、anti-direction joint-AEP indep probability)** →
-  `Common2026/Shannon/RateDistortionAchievabilityPhaseB.lean` (738 行、+259 行、0 sorry / 0 warning):
+  `InformationTheory/Shannon/RateDistortionAchievabilityPhaseB.lean` (738 行、+259 行、0 sorry / 0 warning):
   - `jointlyTypicalSet_card_ge` (private): joint-law 入力 `μ.real (joint event) ≥ 1-η` から、φ-image 経由で `typicalSet_prob_le` on Zs 経由で `|JTS| ≥ (1-η)·exp(n(HZ-ε))`
   - `jointlyTypicalSet_indep_prob_ge`: `_indep_prob_le` mirror、per-summand `typicalSet_prob_ge` (X, Y 軸) + `_card_ge` で product-law 下界 `(1-η)·exp(n(HZ-HX-HY-3ε))`
 
   **shape-driven 設計判断**: 入力 hypothesis は **joint-law** 形 (`μ.real {ω | (jX, jY) ∈ JTS} ≥ 1 - η`) を採用。これは `jointlyTypicalSet_prob_tendsto_one` が直接供給する形であり、product-law 形 (`(μX.prod μY).real JTS ≥ 1 - η`) では circular。φ-image (`Fin n → α × β`) で size lower bound を確立する経路により、新規 Mathlib 補題ゼロで完結。Phase C consumer (`single_codeword_typical_match_prob` の deterministic-encoder 形 → random codebook averaging 経由 `(1 - p_typ)^M` bound) は `_indep_prob_ge` を**直接呼び出すだけ**で実装可能、本 Phase は consumer-side semantics を持ち込まず純粋確率不等式として publish。
 
   **E-3' Phase C-1 ✅ (2026-05-14、deterministic-x random codebook lower bound)** →
-  `Common2026/Shannon/RateDistortionAchievabilityPhaseC.lean` (109 行、0 sorry / 0 warning):
+  `InformationTheory/Shannon/RateDistortionAchievabilityPhaseC.lean` (109 行、0 sorry / 0 warning):
   - `per_codeword_no_match_prob`: complement equality (`p.real {y | (x,y) ∉ JTS} = 1 - p.real {y | (x,y) ∈ JTS}`)
   - `codebook_indep_no_match_prob_eq`: `Measure.pi (fun _ : Fin M => p)` 上の no-match 確率 = `(1 - p_typ(x))^M` (`Measure.pi_pi` + `ENNReal.toReal_prod` + `Finset.prod_const`)
   - `single_codeword_typical_match_prob`: 主補題 `1 - (1 - p_typ(x))^M ≤ μ_codebook.real {c | ∃ m, (x, c m) ∈ JTS}`
@@ -375,7 +375,7 @@
   - `exists_codebook_low_avg`: `ChannelCodingAchievability.exists_codebook_le_avg` の lossy mirror、`f : Codebook M n β → ℝ` polymorphic 化 (channel-coding-specific `codebookToCode + averageErrorProb` 配管を抜く)。後段 Phase D で encoder-failure / expectedBlockDistortion 双方に再利用可。
 
   **E-3' Phase D MVP ✅ (2026-05-14、asymptotic decay + distortion decomposition)** →
-  `Common2026/Shannon/RateDistortionAchievabilityPhaseD.lean` (443 行、0 sorry / 0 warning):
+  `InformationTheory/Shannon/RateDistortionAchievabilityPhaseD.lean` (443 行、0 sorry / 0 warning):
   - `ceil_exp_mul_exp_neg_tendsto_atTop`: `R > θ ≥ 0 ⟹ ⌈exp(nR)⌉ · exp(-nθ) → ∞` (`Real.tendsto_exp_atTop`)
   - `exp_neg_tendsto_zero_of_tendsto_atTop`: `f → ∞ ⟹ exp(-f) → 0` (3 行、`tendsto_neg_atTop_atBot` + `Real.tendsto_exp_atBot.comp`)
   - `source_averaged_failure_tendsto_zero`: 上界 chain `failure_seq n ≤ exp(-M_n · (1-η) · exp(-n·θ))` + squeeze で `failure_seq → 0`
@@ -384,7 +384,7 @@
   - `source_avg_distortion_le_simpler`: codebook 固定、source `P_X` 上の Bochner 積分上界。**failure event は encoder-side** (`B := { x | (x, c(enc x)) ∉ distortionTypicalSet }`)、existence-form ではない (subagent shape-driven 判断、joint typical encoder は **joint typicality のみ保証**、distortion typicality を別途要求するため encoder-side に縮約するほうが直線的)。
 
   **E-3' Phase E MVP ✅ (2026-05-14、witness-form 主定理)** →
-  `Common2026/Shannon/RateDistortionAchievabilityPhaseE.lean` (291 行、0 sorry / 0 warning):
+  `InformationTheory/Shannon/RateDistortionAchievabilityPhaseE.lean` (291 行、0 sorry / 0 warning):
   - **主定理 `rate_distortion_achievability_witness_form`**: `mutualInfoPmf qStar < R` witness 形 + ambient `(μ, Xs, Ys)` + `failure_seq → 0` + `h_codebook_avg_failure` + `h_dist_eq` + `h_slack` を hypothesis として、`∃ N, ∀ n ≥ N, ∃ M ≥ ⌈exp(nR)⌉, ∃ c : LossyCode M n α β, c.expectedBlockDistortion (μ.map (Xs 0)) d ≤ D + ε'` を 5 ステップで証明 (`failure_seq → 0` から N 抽出 → `Mn := ⌈exp(nR)⌉` → Phase D.5 per-codebook 上界 → codebookMeasure 加重平均で `≤ Edδ + dMax · failure_seq n` → Phase C.3 pigeonhole)。
   - **撤退戦略 D 採用**: entropy bridge / iidAmbient 構築 / Phase B+C 合成 (`h_codebook_avg_failure`) / Phase D.4' 具体化 (`h_failure_tendsto_zero`) を **すべて hypothesis pass-through で迂回**、Cover-Thomas 10.5 achievability half の**証明構造そのもの** (Phase B/C/D bricks composition) を独立 publish。
 
@@ -394,11 +394,11 @@
   - **(3) `IIDProductInputJoint.lean`** (新規 225 行、12 補題): `iidAmbientJointMeasure (joint : Measure (α × β)) := Measure.infinitePi (fun _ => joint)` + `_map_iidXs/iidYs/jointSequence` + `_identDistrib_*` + `_iIndepFun_*` + `_*_real_singleton_pos` (要 `[Nonempty β]` for `joint.map Prod.fst` の singleton positivity)。`IIDProductInput.lean` (399 行、channel coding 用) は touch せず並立 publish (B-3'' 親不変原則継承)。
   - **(4-6 partial) `RateDistortionAchievabilityPhaseEDischarge.lean`** (新規 340 行): **主定理 `rate_distortion_achievability_partial_discharge`** を publish — `μ := rdAmbient qStar := iidAmbientJointMeasure (pmfToMeasure qStar)` を取り、Phase E witness form の **ambient / entropy / positivity / measurability hypothesis 全部** を internal discharge (`pmfToMeasure_map_fst/snd_real_singleton` + `rdAmbient_map_iidXs/iidYs/jointSequence` wrapper + `expectedJointDistortion_rdAmbient` distortion bridge)。
   - **残 2 hypothesis** (`h_codebook_avg_failure` + `h_failure_tendsto_zero`) は **strong typicality 範囲外**: Phase B が weak typicality (entropy only) で書かれているため、"joint typical かつ distortion bad" の product-law 確率 exp-bound は原理的不可。Cover-Thomas 10.5 で strong typicality が要求される箇所と一致。**E-3'''** deferred (Phase B 強化 ~300-500 行 or strong typicality joint form 新規実装 ~500-800 行)。
-  - **shape-driven 設計判断**: entropy 定義 (`Common2026/Shannon/Bridge.lean:43-44`) が既に `∑ a, Real.negMulLog ((μ.map Xs).real {a})` 形 (pmf 形そのもの) なので、bridge は `rfl` 1 行 + marginal identity 2 本で完結、`klDiv` ↔ `mutualInfoPmf` の重い変換が不要。`Common2026/Shannon/Bridge.lean` の既存 `mutualInfo_eq_entropy_sub_condEntropy` (line 588-595) は使わず、Phase A 内 entropy bridge で完結。
+  - **shape-driven 設計判断**: entropy 定義 (`InformationTheory/Shannon/Bridge.lean:43-44`) が既に `∑ a, Real.negMulLog ((μ.map Xs).real {a})` 形 (pmf 形そのもの) なので、bridge は `rfl` 1 行 + marginal identity 2 本で完結、`klDiv` ↔ `mutualInfoPmf` の重い変換が不要。`InformationTheory/Shannon/Bridge.lean` の既存 `mutualInfo_eq_entropy_sub_condEntropy` (line 588-595) は使わず、Phase A 内 entropy bridge で完結。
 
 - **E-4. Rate-distortion converse** ✅ (2026-05-13, **single-shot MVP**) →
   [docs/shannon/rate-distortion-converse-plan.md](shannon/rate-distortion-converse-plan.md) —
-  Cover-Thomas 10.4。`Common2026/Shannon/RateDistortionConverse.lean` (213 行) で
+  Cover-Thomas 10.4。`InformationTheory/Shannon/RateDistortionConverse.lean` (213 行) で
   `rate_distortion_converse_single_shot`: 任意の単発 lossy code `(encoder : α → M, decoder : M → β)`
   で `R(D̃).toReal ≤ log|M|` を `D̃ := 𝔼[d(X, decoder(encoder(X)))]` 実測歪み形で示す。
 
@@ -413,11 +413,11 @@
 
   **n-letter form** (`rate ≥ R(D)` for D ≥ D̃ + concavity/Jensen) は **E-4' deferred**
   (R(D) convexity + Jensen で ~500-1000 行追加見込み)。**MI 有限性は仮定** (一般 closure 別途)。
-  既存 Common2026 資産のみで Mathlib gap ゼロ。
+  既存 InformationTheory 資産のみで Mathlib gap ゼロ。
 
 - **E-4'. Rate-distortion converse monotonicity + specified-distortion form** ✅ (2026-05-14、MVP) →
   [docs/shannon/rate-distortion-converse-plan.md](shannon/rate-distortion-converse-plan.md) —
-  `Common2026/Shannon/RateDistortionConverseMonotone.lean` (151 行、0 sorry / 0 warning):
+  `InformationTheory/Shannon/RateDistortionConverseMonotone.lean` (151 行、0 sorry / 0 warning):
   - `rateDistortionFunction_antitone`: `D₁ ≤ D₂ ⟹ R(D₂) ≤ R(D₁)` (feasible set が D 大きいほど大きい
     ⟹ `iInf` antitone)
   - `rate_distortion_converse_single_shot_specified`: `∫ d(X, decoder(encoder X)) ∂μ ≤ D ⟹
@@ -425,7 +425,7 @@
 
 - **E-4''. Rate-distortion R(D) convexity + n-letter regulated form** ✅ (2026-05-14, **Phase A + B core MVP**) →
   [docs/shannon/rate-distortion-convexity-plan.md](shannon/rate-distortion-convexity-plan.md) —
-  `Common2026/Shannon/RateDistortionConvexity.lean` (256 行、0 sorry / 0 warning):
+  `InformationTheory/Shannon/RateDistortionConvexity.lean` (256 行、0 sorry / 0 warning):
   - **Phase A**: `mixtureMeasure λ ν₁ ν₂` (measure-level convex combination) + 4 補題
     (`mixtureMeasure_map_fst` / `mixtureMeasure_map_snd` の pushforward 線形性、
     `mixtureMeasure_map_fst_eq` で X-marginal `P` 保存、`expectedDistortion_mixtureMeasure`
@@ -439,7 +439,7 @@
     で処理。
 
   **後継 `E-4'''` 完結** (2026-05-14, **Step A-E 全段、有限アルファベット版 R(D) 凸性
-  仮説なし形完成**) → `Common2026/Shannon/RateDistortionConvexityDischarge.lean`
+  仮説なし形完成**) → `InformationTheory/Shannon/RateDistortionConvexityDischarge.lean`
   (788 行、0 sorry / 0 warning):
   - **Step A** (`klFun_weighted_two_point` + `klDivPmf_joint_convex_two_point`):
     per-atom 2 点 joint convexity (算術核) + 有限アルファベット pmf 形 2 点 joint convexity
@@ -464,7 +464,7 @@
     適用、無限側 + boundary `lam = 0/1` は mixtureMeasure simp + ENNReal.mul_top で trivial
     bound。`h_int_witness` は `Finset.sup'` で bounded 化 + `Integrable.mono'`
   **`E-4''C`** 実装完了 (2026-05-14, **n-letter converse MVP**) →
-  `Common2026/Shannon/RateDistortionConverseNLetter.lean` (393 行、0 sorry / 0 warning):
+  `InformationTheory/Shannon/RateDistortionConverseNLetter.lean` (393 行、0 sorry / 0 warning):
   - **Stage 1** `rate_distortion_converse_n_letter_block`:
     `rate_distortion_converse_single_shot_specified` を
     `(α := Fin n → α, β := Fin n → β, M := Fin M)` で **直接 instantiate**。
@@ -487,7 +487,7 @@
 
 - **E-5. Slepian–Wolf achievability** ✅ (2026-05-13, **退化点 MVP**) →
   [docs/shannon/slepian-wolf-achievability-plan.md](shannon/slepian-wolf-achievability-plan.md) —
-  Cover-Thomas 15.4。`Common2026/Shannon/SlepianWolfAchievability.lean` (310 行) で SW
+  Cover-Thomas 15.4。`InformationTheory/Shannon/SlepianWolfAchievability.lean` (310 行) で SW
   encoder pair の **退化点 corner-point 達成可能性 2 本**:
   - `slepian_wolf_achievability_corner_Y`: rate pair `(log|α|, R_Y)` for `R_Y > H(Y)`
     (X 側 trivial encoder + Y 側 `source_coding_achievability` AEP の合成)
@@ -507,7 +507,7 @@
 
 - **E-5'. Slepian–Wolf binning 機構 + 期待値 collapse MVP** ✅ (2026-05-14) →
   [docs/shannon/slepian-wolf-full-rate-region-plan.md](shannon/slepian-wolf-full-rate-region-plan.md) —
-  E-5 deferred 後継の **Phase A + B 基盤** を `Common2026/Shannon/SlepianWolfBinning.lean`
+  E-5 deferred 後継の **Phase A + B 基盤** を `InformationTheory/Shannon/SlepianWolfBinning.lean`
   (273 行、0 sorry / 0 warning) で publish:
   - `binningMeasure α n M := Measure.pi (fun _ : (Fin n → α) => uniformOn univ)` (Fintype 上 uniform pi)
   - `IsProbabilityMeasure` instance + `binningMeasure_singleton_real` (`(1/M)^{|α|^n}` singleton mass)
@@ -530,7 +530,7 @@
 
 - **E-6. Csiszár I-projection / Pythagorean inequality** ✅ (2026-05-13) →
   [docs/shannon/csiszar-projection-plan.md](shannon/csiszar-projection-plan.md) —
-  Cover-Thomas 11.6.1。凸閉集合 `K ⊆ stdSimplex ℝ α` 上で 3 主結果を `Common2026/Shannon/CsiszarProjection.lean`
+  Cover-Thomas 11.6.1。凸閉集合 `K ⊆ stdSimplex ℝ α` 上で 3 主結果を `InformationTheory/Shannon/CsiszarProjection.lean`
   (487 行) で publish:
   - `csiszar_projection_exists`: 閉非空 `K` + full-support reference `Q` で
     `∃ Q* ∈ K, IsMinOn (klDivPmf · Q) K Q*`
@@ -563,7 +563,7 @@
 
 - **E-7. Strong typicality** ✅ (2026-05-13) →
   [docs/shannon/strong-typicality-plan.md](shannon/strong-typicality-plan.md) —
-  Cover-Thomas 11.2。`Common2026/Shannon/StrongTypicality.lean` (614 行) で
+  Cover-Thomas 11.2。`InformationTheory/Shannon/StrongTypicality.lean` (614 行) で
   `stronglyTypicalSet := {x | ∀ a, |(typeCount x a : ℝ)/n - P(a)| ≤ ε}` を per-letter form で
   定義 + 3 主定理を **すべて 0 sorry** で publish:
   - `stronglyTypicalSet_prob_tendsto_one`: `μ {ω | jointRV ∈ A^*_ε} → 1`
@@ -585,7 +585,7 @@
 
 - **E-8. Shannon–McMillan–Breiman theorem (stationary ergodic AEP)** ✅ (2026-05-14、Phase A+B MVP) →
   [docs/shannon/shannon-mcmillan-breiman-plan.md](shannon/shannon-mcmillan-breiman-plan.md) —
-  Cover-Thomas 16.8 の **基盤 (定常過程 + entropy rate)** 完成。`Common2026/Shannon/Stationary.lean`
+  Cover-Thomas 16.8 の **基盤 (定常過程 + entropy rate)** 完成。`InformationTheory/Shannon/Stationary.lean`
   (119 行) + `EntropyRate.lean` (498 行) = 合計 617 行、0 sorry / 0 warning:
   - `StationaryProcess` / `ErgodicProcess` 構造体 (`MeasurePreserving T μ μ` + `X : Ω → α` + obs/blockRV)
   - `identDistrib_obs_zero` (定常性ラベル、`IdentDistrib (obs i) (obs 0)`)
@@ -604,7 +604,7 @@
   - `Probability/StrongLaw.lean` は **独立変数** 前提で ergodic 過程に流用不能。
   - 推奨経路: 別 deferred 切り出し — **`E-8''` Birkhoff a.s. 自前** (backward martingale 自前 ~400-600 行 / Mathlib PR 候補) + **`E-8'` を Birkhoff 仮説形 SMB に弱体化** (Phase D 本体 `~150-200 行`、Cover-Thomas 16.8 仮説形で主目的達成)。
 
-  **E-8' weakened (sandwich 形 + 期待値 bridge) ✅ (2026-05-14)** → `Common2026/Shannon/ShannonMcMillanBreiman.lean` (179 行、0 sorry / 0 warning):
+  **E-8' weakened (sandwich 形 + 期待値 bridge) ✅ (2026-05-14)** → `InformationTheory/Shannon/ShannonMcMillanBreiman.lean` (179 行、0 sorry / 0 warning):
   - `blockLogAvg μ p n ω := -(1/n) * log P_n({block_n ω})` 定義 + `measurable_blockLogAvg`
   - **`shannon_mcmillan_breiman_of_sandwich`** (Phase D wrapper): Cover-Thomas 16.8 の **`liminf ≥ entropyRate` + `limsup ≤ entropyRate` + 有界性 4 仮説** から `Tendsto blockLogAvg n → entropyRate` a.s. を `filter_upwards` + `tendsto_of_le_liminf_of_limsup_le` で 3 行 derive。Birkhoff (E-8'') が完成したら 4 仮説を全て供給して仮定なし形に昇格できる正面 wrapper。
   - **`expected_blockLogAvg_eq`** (期待値 sanity): `∫ ω, blockLogAvg μ p n ω ∂μ = blockEntropy μ p n / n` を `integral_map` + `integral_fintype` + `Real.negMulLog` rewrite + `ring` で。Birkhoff 不要、Phase B `entropy` 定義との bridge。
@@ -612,7 +612,7 @@
 
 - **E-9. Differential entropy + Gaussian max-entropy** ✅ (2026-05-13) →
   [docs/shannon/differential-entropy-plan.md](shannon/differential-entropy-plan.md) —
-  Cover-Thomas 8.1, 8.6.1, 9.6。`Common2026/Shannon/DifferentialEntropy.lean` (1010 行、
+  Cover-Thomas 8.1, 8.6.1, 9.6。`InformationTheory/Shannon/DifferentialEntropy.lean` (1010 行、
   13 declarations、0 sorry / 0 warning) で **Phase A-E 全段完了**:
   - Phase A: `differentialEntropy μ := ∫ x, Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume`
     + `differentialEntropy_eq_integral_density` + `integrable_density_log_density_of_gaussian` +
@@ -634,7 +634,7 @@
 
 - **E-10. DMC capacity is unchanged by feedback (C_FB = C)** ✅ (2026-05-13, **chain rule 段 + per-letter hypothesis MVP**) →
   [docs/shannon/dmc-feedback-capacity-plan.md](shannon/dmc-feedback-capacity-plan.md) —
-  Cover-Thomas 7.12。`Common2026/Shannon/ChannelCodingFeedback.lean` (297 行) で
+  Cover-Thomas 7.12。`InformationTheory/Shannon/ChannelCodingFeedback.lean` (297 行) で
   feedback 下 channel coding converse の **chain rule 段** を 0 sorry で publish:
   - `FeedbackCode M n α β`: 因果的 feedback 符号 (`encoder : ∀ i : Fin n, Fin M → (Fin i.val → β) → α`、
     type signature レベルで因果性を強制)
@@ -652,7 +652,7 @@
 
 - **E-10'. Feedback converse per-letter bound (`I(M; Y_i | Y^{<i}) ≤ I(X_i; Y_i)`)** ✅ (2026-05-14) →
   [docs/shannon/dmc-feedback-per-letter-bound-plan.md](shannon/dmc-feedback-per-letter-bound-plan.md) —
-  `Common2026/Shannon/ChannelCodingFeedbackComplete.lean` (198 行、0 sorry / 0 warning):
+  `InformationTheory/Shannon/ChannelCodingFeedbackComplete.lean` (198 行、0 sorry / 0 warning):
   - `IsMemorylessFeedback μ Msg Xs Ys := ∀ i, IsMarkovChain μ (Y^{<i}, Msg) X_i Y_i`
     (γ-form Markov、kernel W への参照なし)
   - `feedback_per_letter_bound`: per-letter 不等式の純粋証明
@@ -679,7 +679,7 @@
 - **E-5 退化点 MVP commit + E-5' deferred** (2026-05-13): Cover-Thomas 15.4 完全形 (3-bound rate region full `R_X > H(X|Y), R_Y > H(Y|X), R_X + R_Y > H(X, Y)`) は random binning + joint typicality decoder で **~2000 行規模** (`binningMeasure : Measure (α^n → Fin M_X)` Fubini machinery + conditional typical slice size bound + 4-term error decomposition + pigeonhole)。E-5 では **2 corner-point MVP** (`(log|α|, R_Y>H(Y))` + `(R_X>H(X), log|β|)`) を `source_coding_achievability` + 自明 encoder 合成で publish (310 行)、full rate region は **E-5' deferred** 後継カードに切り出し。**ChannelCodingAchievability の codebookMeasure 機構** (Phase C-(c) `random_codebook_average_le` の `Measure.pi` over `Fin M` × `Fin n` Fubini-collapse) は E-5' で **encoder-side 鏡像** (`Measure.pi` over `α^n` × `Fin M_X`) として転用可能、bin index の uniform 抽選 = codeword index 順列の本質的鏡像。E-5' 起草時はこの **mechanism reuse 観点** を判断ログに記録。
 - **強形/弱形ペア 4 種**: E-1 単発形 (2026-05-13 完了) で **Wolfowitz 鍵不等式** (`1 - Pe ≤ exp γ + (1/M) ∑_m P_m^n(highLLR_m)`) の Lean 化は達成。`Pe → 1` asymptotic 段 (WLLN-on-LLR 接続) は scope-deferred、D-1 (capacity 到達 achievability 強形) と pair で次の着手候補。両者を同時に組むと n-channel 設備 (`mutualInfo_iid_eq_nsmul`) + `IIDProductInput` ambient + `strong_law_ae_real` を共有して効率的。Pinsker (弱 B-5 / 強 B-5') / Stein (弱 + 強 B-4) / Sanov (A 形 B-1 + LDP B-1'/B-1'') の 3 ペアは弱形/強形共に完結済み。
 - **discrete → continuous の最大ジャンプ (E-9)**: 現状 42 本中 0 本が微分エントロピーに触れていない。Mathlib `MeasureTheory.gaussianReal` 整備度は読み込み未確認、Mathlib に `differentialEntropy` 自体が存在しないため**新規 Mathlib 上流 PR の母体**になりやすい。E-9 単独 publish → Gaussian channel capacity (将来 seed) → EPI (Cover-Thomas 17、将来 seed) の **3 段ロケット**で discrete 集から脱却。
-- **E-3 の機構流用 (Channel coding probabilistic-method)**: `ChannelCodingAchievability.lean` の `codebookMeasure` + `codebook_marginal_*` Fubini-collapse 補題群は **lossy source code の rate-distortion (E-3)** に **そのまま**転用可能 (codebook 上の random selection は同じ構造)。E-3 plan 起草時は plumbing を library 化 (`Common2026/Shannon/RandomCodebookProbMethod.lean` 抽出) するか直接 import するか方針判断。
+- **E-3 の機構流用 (Channel coding probabilistic-method)**: `ChannelCodingAchievability.lean` の `codebookMeasure` + `codebook_marginal_*` Fubini-collapse 補題群は **lossy source code の rate-distortion (E-3)** に **そのまま**転用可能 (codebook 上の random selection は同じ構造)。E-3 plan 起草時は plumbing を library 化 (`InformationTheory/Shannon/RandomCodebookProbMethod.lean` 抽出) するか直接 import するか方針判断。
 
 ---
 

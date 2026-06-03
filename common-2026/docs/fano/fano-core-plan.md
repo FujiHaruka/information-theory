@@ -1,10 +1,10 @@
 # Fano の不等式・本丸の証明計画
 
-> 実態整合 (2026-05-20): DONE-UNCOND — 本 plan のゴール (`hcore` 仮定を消す) は達成済。`fano_core (hcard : 2 ≤ Fintype.card X) : P.condEntropy ≤ Real.qaryEntropy (Fintype.card X) P.errorProb` が `Common2026/Fano/Core.lean:379` に存在し、外部 `hcore` なしで chain rule 2 通り + `H(E|X,Y)=0` から実証 (`fano_inequality` も `Core.lean:424` で `hcore` なし)。`lake env lean Common2026/Fano/Core.lean` silent、0 sorry。下記 Context 「hcore は仮説として外から渡されているだけ」は STALE。
+> 実態整合 (2026-05-20): DONE-UNCOND — 本 plan のゴール (`hcore` 仮定を消す) は達成済。`fano_core (hcard : 2 ≤ Fintype.card X) : P.condEntropy ≤ Real.qaryEntropy (Fintype.card X) P.errorProb` が `InformationTheory/Fano/Core.lean:379` に存在し、外部 `hcore` なしで chain rule 2 通り + `H(E|X,Y)=0` から実証 (`fano_inequality` も `Core.lean:424` で `hcore` なし)。`lake env lean InformationTheory/Fano/Core.lean` silent、0 sorry。下記 Context 「hcore は仮説として外から渡されているだけ」は STALE。
 
 ## Context
 
-`Common2026/Fano.lean` の現状：
+`InformationTheory/Fano.lean` の現状：
 
 - Mathlib の `Real.qaryEntropy` の上に **wrapper だけ**を作った状態。
 - 教科書 RHS への rename (`fanoBoundRHS`)、単調性に基づく逆向きの形 (`fano_error_lower_bound_of_lt_qaryEntropy`)、`FiniteJointPMF` 構造体と `jointEntropy` / `condEntropy` / `errorProb` の **定義**は揃っている。
@@ -46,15 +46,15 @@
 
 ## ファイル構成
 
-`Common2026/Fano.lean` を肥大化させない方針：
+`InformationTheory/Fano.lean` を肥大化させない方針：
 
-- `Common2026/Fano/Entropy.lean` — M1 の単項エントロピー基本性質
-- `Common2026/Fano/CondEntropy.lean` — M2 の同時/条件付きエントロピー代数
-- `Common2026/Fano/BinaryJensen.lean` — M3 の binary 限定 Jensen
-- `Common2026/Fano/Core.lean` — M4〜M6 の Fano 本体証明
-- `Common2026/Fano.lean` — 既存の wrapper 群はそのまま、`hcore` を `Core.lean` の定理で埋める
+- `InformationTheory/Fano/Entropy.lean` — M1 の単項エントロピー基本性質
+- `InformationTheory/Fano/CondEntropy.lean` — M2 の同時/条件付きエントロピー代数
+- `InformationTheory/Fano/BinaryJensen.lean` — M3 の binary 限定 Jensen
+- `InformationTheory/Fano/Core.lean` — M4〜M6 の Fano 本体証明
+- `InformationTheory/Fano.lean` — 既存の wrapper 群はそのまま、`hcore` を `Core.lean` の定理で埋める
 
-`Common2026.lean`（library root）に各ファイルの `import` を追記。
+`InformationTheory.lean`（library root）に各ファイルの `import` を追記。
 
 ## マイルストーン
 
@@ -67,13 +67,13 @@
   - `Real.negMulLog` 系列（`Mathlib.Analysis.SpecialFunctions.NegMulLog`）
   - `Real.binEntropy` の凹性 (`Real.strictConcaveOn_binEntropy` 等)
   - `Finset` 版 Jensen (`ConcaveOn.le_inner_smul` / `inner_le_*`)
-- 必要 import を `Common2026/Fano/Entropy.lean` のヘッダに固定。
+- 必要 import を `InformationTheory/Fano/Entropy.lean` のヘッダに固定。
 
 **Done 条件**：上記 API が手元に揃っており、M1 の最初の lemma が書き始められる状態。
 
 ### M1. 単項エントロピーの基本性質（1〜2 日）
 
-`Common2026/Fano/Entropy.lean` に：
+`InformationTheory/Fano/Entropy.lean` に：
 
 ```lean
 def entropyOfFn (μ : α → ℝ) : ℝ := ∑ a, (μ a).negMulLog
@@ -101,7 +101,7 @@ lemma entropyOfFn_eq_zero_of_isDirac
 
 ### M2. 同時/条件付きエントロピーの代数（2〜3 日）
 
-`Common2026/Fano/CondEntropy.lean` に：
+`InformationTheory/Fano/CondEntropy.lean` に：
 
 ```lean
 lemma condEntropy_nonneg (P : FiniteJointPMF X Y) : 0 ≤ P.condEntropy
@@ -131,7 +131,7 @@ lemma condEntropy_zero_of_deterministic
 
 ### M3. Binary 限定 Conditioning Reduces Entropy（2〜3 日）
 
-`Common2026/Fano/BinaryJensen.lean` に：
+`InformationTheory/Fano/BinaryJensen.lean` に：
 
 ```lean
 lemma binEntropy_jensen_finset
@@ -154,7 +154,7 @@ lemma binary_condEntropy_le
 
 ### M4. 誤り indicator のセットアップ（1 日）
 
-`Common2026/Fano/Core.lean` の前半に：
+`InformationTheory/Fano/Core.lean` の前半に：
 
 ```lean
 def errIndicator (decode : Y → X) : X → Y → Bool := fun x y => decide (x ≠ decode y)
@@ -177,7 +177,7 @@ lemma withErr_E_deterministic
 
 ### M5. Fano 分解の各項を抑える（2 日）
 
-`Common2026/Fano/Core.lean` 中盤に：
+`InformationTheory/Fano/Core.lean` 中盤に：
 
 ```lean
 -- (1) H(E | X, Y) = 0
@@ -204,7 +204,7 @@ lemma cond_entropy_X_given_EY_le
 
 ### M6. 組み立て（半日）
 
-`Common2026/Fano/Core.lean` 末尾に：
+`InformationTheory/Fano/Core.lean` 末尾に：
 
 ```lean
 theorem fano_core
@@ -215,13 +215,13 @@ theorem fano_core
   -- 既存の qaryEntropy_eq_fanoBoundRHS で締める
 ```
 
-そして `Common2026/Fano.lean` の `fano_inequality_of_core` / `error_lower_bound_of_core` の `hcore` 仮説を消し、`fano_core` を直接呼ぶ形にリファクタ。
+そして `InformationTheory/Fano.lean` の `fano_inequality_of_core` / `error_lower_bound_of_core` の `hcore` 仮説を消し、`fano_core` を直接呼ぶ形にリファクタ。
 
 **Done 条件**：
 
-- `lake env lean Common2026/Fano.lean` がクリーン通過
-- `lake env lean Common2026/Fano/Core.lean` がクリーン通過
-- `Common2026.lean` に新ファイル群を `import` 追記
+- `lake env lean InformationTheory/Fano.lean` がクリーン通過
+- `lake env lean InformationTheory/Fano/Core.lean` がクリーン通過
+- `InformationTheory.lean` に新ファイル群を `import` 追記
 - `lake build` 全体グリーン
 
 ## クリティカルパスとリスク

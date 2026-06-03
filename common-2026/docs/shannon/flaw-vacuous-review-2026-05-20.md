@@ -1,4 +1,4 @@
-# FLAW-VACUOUS review — `Common2026/Shannon/` — 2026-05-20
+# FLAW-VACUOUS review — `InformationTheory/Shannon/` — 2026-05-20
 
 Read-only deep review hunting for **vacuous proofs**: theorems that type-check and
 are "technically correct" while not actually proving their intended mathematical
@@ -47,11 +47,11 @@ vacuity, and trivial-value placeholder defs.
 
 
 **Files / declarations:**
-- `Common2026/Shannon/EPIStamStep12Body.lean:327` `isStamCondExpCSHyp_of_gaussian_fisherInfo_zero`
-- `Common2026/Shannon/EPIStamStep3Body.lean:271` `isStamTotalExpectation_of_gaussian_fisherInfo_zero`
-- `Common2026/Shannon/EPIStamInequalityBody.lean:307` `isStamCauchySchwarzOptimal_of_gaussian_fisherInfo_zero` (and the `IsStamInequalityHyp` form at :327)
-- `Common2026/Shannon/EPIStamDischarge.lean:277` `isStamInequalityHyp_of_fisherInfoReal_zero`; :132 `isStamInequalityHyp_of_fisher_info_zero`
-- `Common2026/Shannon/EPIL3Integration.lean:410` `isStamInequalityHyp_of_gaussian_v1_zero`
+- `InformationTheory/Shannon/EPIStamStep12Body.lean:327` `isStamCondExpCSHyp_of_gaussian_fisherInfo_zero`
+- `InformationTheory/Shannon/EPIStamStep3Body.lean:271` `isStamTotalExpectation_of_gaussian_fisherInfo_zero`
+- `InformationTheory/Shannon/EPIStamInequalityBody.lean:307` `isStamCauchySchwarzOptimal_of_gaussian_fisherInfo_zero` (and the `IsStamInequalityHyp` form at :327)
+- `InformationTheory/Shannon/EPIStamDischarge.lean:277` `isStamInequalityHyp_of_fisherInfoReal_zero`; :132 `isStamInequalityHyp_of_fisher_info_zero`
+- `InformationTheory/Shannon/EPIL3Integration.lean:410` `isStamInequalityHyp_of_gaussian_v1_zero`
 
 **Why flaw-vacuous.** The published Stam predicates are all guarded by a positivity
 precondition on the V1 Fisher information, e.g.
@@ -101,7 +101,7 @@ theorems are presented as the Gaussian instance of a real result.
 > `entropy_power_inequality_gaussian_saturation`, no Stam mention).
 
 
-**File / declaration:** `Common2026/Shannon/EPIStamDeBruijnConclusion.lean:269`
+**File / declaration:** `InformationTheory/Shannon/EPIStamDeBruijnConclusion.lean:269`
 `entropy_power_inequality_gaussian_via_stamDeBruijn` (and its pipeline witness
 `isEPIStamDeBruijnPipeline_of_gaussian:255`).
 
@@ -138,7 +138,7 @@ saturation *equality*, which is already and honestly available as
 
 ## MED-1 — `entropy_power_inequality` main theorem is conclusion-as-hypothesis (L-EPI3)
 
-**File / declaration:** `Common2026/Shannon/EntropyPowerInequality.lean:188`
+**File / declaration:** `InformationTheory/Shannon/EntropyPowerInequality.lean:188`
 `entropy_power_inequality` (Cover-Thomas Theorem 17.7.3).
 
 **Why flaw-vacuous.** Body is `:= h_epi`. The hypothesis
@@ -204,7 +204,7 @@ completeness; none should be "fixed" beyond eventually discharging them.
 ## Patterns checked that came up CLEAN
 
 - **Pattern 5 (trivial-value placeholder defs `:= 0/∅/fun _ => 0` used downstream
-  as meaningful):** none found in `Common2026/Shannon/`.
+  as meaningful):** none found in `InformationTheory/Shannon/`.
 - **Pattern 4 (contradictory/`False`-style vacuous hypotheses outside the Stam
   chain):** the only `exfalso`-on-precondition vacuity is the HIGH-1 cluster. All
   other `exfalso` uses (SlepianWolfFullRateRegion, SMBChainRule, LZ78GreedyParsing,

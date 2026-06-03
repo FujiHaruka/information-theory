@@ -2,7 +2,7 @@
 
 Generated: 2026-05-10T01:02:19.298Z
 Idle gap threshold: 5 min
-File prefix filter: `Common2026/Shannon/Converse`
+File prefix filter: `InformationTheory/Shannon/Converse`
 
 ## サマリー（合計）
 
@@ -49,8 +49,8 @@ File prefix filter: `Common2026/Shannon/Converse`
 | File | Edit | Write |
 |---|---|---|
 | `.claude/handoff.md` | 0 | 1 |
-| `Common2026.lean` | 1 | 0 |
-| `Common2026/Shannon/Converse.lean` | 3 | 1 |
+| `InformationTheory.lean` | 1 | 0 |
+| `InformationTheory/Shannon/Converse.lean` | 3 | 1 |
 
 ## トークン使用量
 

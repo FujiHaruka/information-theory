@@ -136,7 +136,7 @@ Phase A 完了後の Case γ shift では上流 sorry 化が EPI/Stam 各 EPI* f
 
 ## Phase V — verify + handoff 反映 📋
 
-- [ ] step 1 — `Common2026/Shannon/FisherInfo*.lean` 5 file の改変なし確認 (`git diff` / `git status` 差分 0)
+- [ ] step 1 — `InformationTheory/Shannon/FisherInfo*.lean` 5 file の改変なし確認 (`git diff` / `git status` 差分 0)
 - [ ] step 2 — `handoff-sorry-migration.md`「Next step → A」section に再起動 3 条件明示反映
 - [ ] step 3 — Case α 全降格判定を Round 4 全降格 family list に列挙 (orchestrator roster から外す)
 
@@ -177,8 +177,8 @@ Phase A 完了後再起動時に re-evaluate:
 - `docs/audit/audit-tags.md` — vocab SoT
 - `docs/shannon/chernoff-sorry-migration-plan.md` — Phase Z recipe reference
 - `docs/shannon/epi-stam-sorry-migration-plan.md` — (未起草) 前提条件
-- `Common2026/Shannon/FisherInfo*.lean` (5 file) — Phase A 完了後の状態を再 verify
-- `Common2026/Shannon/EPIStamDischarge.lean:97-205` — `IsStamInequalityHyp` / `IsRegularDeBruijnHypFamily` の Phase A 完了後 signature verbatim 確認
+- `InformationTheory/Shannon/FisherInfo*.lean` (5 file) — Phase A 完了後の状態を再 verify
+- `InformationTheory/Shannon/EPIStamDischarge.lean:97-205` — `IsStamInequalityHyp` / `IsRegularDeBruijnHypFamily` の Phase A 完了後 signature verbatim 確認
 
 ## 計数 — Phase 0 完了時の最終 verdict
 

@@ -1,6 +1,6 @@
 # D-1'' Phase D parent surgery — `h_passthrough` discharge
 
-`Common2026/Shannon/ChannelCodingShannonTheoremFull.lean:52` の hypothesis pass-through 形 (`h_passthrough` 仮定で smoothing infrastructure を glue するだけ) を内部 discharge し、**`hW_pos` 完全除去**の Shannon noisy channel coding theorem general 形を publish。
+`InformationTheory/Shannon/ChannelCodingShannonTheoremFull.lean:52` の hypothesis pass-through 形 (`h_passthrough` 仮定で smoothing infrastructure を glue するだけ) を内部 discharge し、**`hW_pos` 完全除去**の Shannon noisy channel coding theorem general 形を publish。
 
 親 plan: [D-1' Phase A-C plan](channel-coding-shannon-theorem-general-plan.md)、D-1 (full support 仮定下完全形): [D-1 plan](channel-coding-shannon-theorem-plan.md)。
 
@@ -15,7 +15,7 @@
 - [x] Phase D.3 — `δ_n := min(δ_B, ε/(8(n+1)))` choice + index assemble ✅
 - [x] Phase D.4 — 主定理 + `h_passthrough` discharge ✅
 
-> 実態整合 (2026-05-20): DONE-UNCOND — 進捗マーカーが起草時の `[ ]` のまま stale だった。Phase D は完全閉鎖済。証拠: `shannon_noisy_channel_coding_theorem_general_full` (`Common2026/Shannon/ChannelCodingShannonTheoremFullDischarge.lean:1588`、0 sorry) は `(W : Channel α β) [IsMarkovKernel W] (hR_pos : 0 < R) (hR : R < capacity W) (hε : 0 < ε)` のみで max-error 達成形を結論 — **`hW_pos` も `h_passthrough` も無し** (完全無条件)。内部で `exists_N_for_smooth_achievability_uniform` (two-layer smoothing) + `errorProbAt_smooth_TV` で組立。`Common2026.lean:62` に import 済。なお `ChannelCodingShannonTheoremFull.lean` の `shannon_noisy_channel_coding_theorem_general` は依然 `h_passthrough` 形 MVP として残るが、Discharge file の `_full` 版が無条件最終形。
+> 実態整合 (2026-05-20): DONE-UNCOND — 進捗マーカーが起草時の `[ ]` のまま stale だった。Phase D は完全閉鎖済。証拠: `shannon_noisy_channel_coding_theorem_general_full` (`InformationTheory/Shannon/ChannelCodingShannonTheoremFullDischarge.lean:1588`、0 sorry) は `(W : Channel α β) [IsMarkovKernel W] (hR_pos : 0 < R) (hR : R < capacity W) (hε : 0 < ε)` のみで max-error 達成形を結論 — **`hW_pos` も `h_passthrough` も無し** (完全無条件)。内部で `exists_N_for_smooth_achievability_uniform` (two-layer smoothing) + `errorProbAt_smooth_TV` で組立。`InformationTheory.lean:62` に import 済。なお `ChannelCodingShannonTheoremFull.lean` の `shannon_noisy_channel_coding_theorem_general` は依然 `h_passthrough` 形 MVP として残るが、Discharge file の `_full` 版が無条件最終形。
 >
 > 2026-05-24 Wave 1.5 retag: MVP 形 `shannon_noisy_channel_coding_theorem_general` (`ChannelCodingShannonTheoremFull.lean:53`) を `@audit:retract-candidate(superseded-by-full-discharge)` に再分類。`_full` 版が無条件 publish 済の事実をタグ側に明示。
 
@@ -247,7 +247,7 @@ theorem shannon_noisy_channel_coding_theorem_general_discharge
 | D.4 | 主定理 + discharge | 40-80 |
 | **合計** | | **~540-840 行** |
 
-新規 file: `Common2026/Shannon/ChannelCodingShannonTheoremFullDischarge.lean` (~600 行想定)。
+新規 file: `InformationTheory/Shannon/ChannelCodingShannonTheoremFullDischarge.lean` (~600 行想定)。
 
 ---
 
@@ -258,9 +258,9 @@ theorem shannon_noisy_channel_coding_theorem_general_discharge
 | `variance_le_sq_of_bounded` (`Probability/Moments/Variance.lean:499`) | ✓ Mathlib | Phase D.1 variance bound |
 | `Real.tendsto_log_div_pow_atTop` (`(log n)/n → 0`) | ✓ Mathlib 派生 | Phase D.1.7 |
 | `(p, δ)`-joint continuity of `mutualInfoOfChannel` | ✗ 新規 | Phase D.0' joint continuity |
-| `pSmooth`, `Channel.smooth` infrastructure | ✓ Common2026 | parent D-1 + D-1' Phase A |
-| `errorProbAt_smooth_TV` | ✓ Common2026 (D-1' Phase C) | Phase D.4 glue |
-| `channel_coding_achievability_max_error` | ✓ Common2026 (D-1) | average → max |
+| `pSmooth`, `Channel.smooth` infrastructure | ✓ InformationTheory | parent D-1 + D-1' Phase A |
+| `errorProbAt_smooth_TV` | ✓ InformationTheory (D-1' Phase C) | Phase D.4 glue |
+| `channel_coding_achievability_max_error` | ✓ InformationTheory (D-1) | average → max |
 
 **新規 Mathlib gap は 1 つだけ** (joint continuity)、~50 行で構成。
 
@@ -284,9 +284,9 @@ theorem shannon_noisy_channel_coding_theorem_general_discharge
 
 ## Critical Files for Implementation
 
-- `Common2026/Shannon/ChannelCodingShannonTheoremFull.lean` (D-1'' MVP、Phase D.4 で discharge)
-- `Common2026/Shannon/ChannelCodingShannonTheoremGeneral.lean` (Phase A-C + 拡張する Phase D.0)
-- `Common2026/Shannon/ChannelCodingAchievability.lean:1607-1797` (parent body コピー source)
-- `Common2026/Shannon/AEPRate.lean` (closed-form N₁/N₂ 部品)
-- `Common2026/Shannon/ChannelCodingShannonTheorem.lean` (D-1 `_max_error` wrapper + `pSmooth`)
-- 新規: `Common2026/Shannon/ChannelCodingShannonTheoremFullDischarge.lean`
+- `InformationTheory/Shannon/ChannelCodingShannonTheoremFull.lean` (D-1'' MVP、Phase D.4 で discharge)
+- `InformationTheory/Shannon/ChannelCodingShannonTheoremGeneral.lean` (Phase A-C + 拡張する Phase D.0)
+- `InformationTheory/Shannon/ChannelCodingAchievability.lean:1607-1797` (parent body コピー source)
+- `InformationTheory/Shannon/AEPRate.lean` (closed-form N₁/N₂ 部品)
+- `InformationTheory/Shannon/ChannelCodingShannonTheorem.lean` (D-1 `_max_error` wrapper + `pSmooth`)
+- 新規: `InformationTheory/Shannon/ChannelCodingShannonTheoremFullDischarge.lean`

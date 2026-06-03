@@ -7,18 +7,18 @@
 - Mathlib に **`Sanov`, `empiricalMeasure`, `LargeDeviation` 系は無い** (loogle で `Found 0 declarations`)。Method of types も独立 API なし。**全て自前構築**。
 - ただし**主定理は既存 Stein converse `steinTypicalSet_Q_prob_le` のロジック特化で 60–100 行**。type class 定義 + point-wise ratio plumbing 80–150 行。合計 **~200–300 行で A 形完成見込み**。
 
-## 既存基盤 (Common2026)
+## 既存基盤 (InformationTheory)
 
 | ファイル | 識別子 | 役割 |
 |---|---|---|
-| `Common2026/Shannon/Stein.lean:53` | `llrPmf P Q : α → ℝ` | `log P{x} - log Q{x}` — Sanov の point-wise ratio 評価で使う原型 |
-| `Common2026/Shannon/Stein.lean:341` | `steinTypicalSet_Q_prob_le` | **本テンプレ**: `Q^n(T) ≤ exp(-n(K-ε))` を「片側 inequality」で示す。Sanov A 形は **両側 equality** に特化 |
-| `Common2026/Shannon/Stein.lean:368` | `h_pi_singleton_Q : (Pi Q).real {x} = ∏ Q.real {x i}` (inline) | Pi-measure singleton の積分解 (Mathlib `Measure.pi_singleton` + `ENNReal.toReal_prod`) |
-| `Common2026/Shannon/Stein.lean:420` | `h_exp_neg_llr` (inline) | `exp(-llrPmf P Q x) = Q.real{x}/P.real{x}` |
-| `Common2026/Shannon/Stein.lean:430` | `h_prod_ratio` (inline) | `∏ Q/P = exp(-∑ llrPmf)` |
-| `Common2026/Shannon/MaxEntropy.lean:123` | `klDiv_uniformOn_univ_toReal_eq` | `(klDiv P U).toReal = ∫ llr P U ∂P` 経由で `klDiv.toReal` を finite alphabet sum に展開する **template** |
-| `Common2026/Shannon/MIChainRule.lean:268` | `klDiv_pi_eq_sum` | i.i.d. でない `Q^n` には不使用、ただし `Measure.pi` 同型変形のテンプレ |
-| `Common2026/Shannon/AEP.lean:229` | `typicalSet`, `typicalSet_card_le` | type class **size bound** との対比 (本 plan A 形は size bound を回避するが Phase D で必要になる場合の参照) |
+| `InformationTheory/Shannon/Stein.lean:53` | `llrPmf P Q : α → ℝ` | `log P{x} - log Q{x}` — Sanov の point-wise ratio 評価で使う原型 |
+| `InformationTheory/Shannon/Stein.lean:341` | `steinTypicalSet_Q_prob_le` | **本テンプレ**: `Q^n(T) ≤ exp(-n(K-ε))` を「片側 inequality」で示す。Sanov A 形は **両側 equality** に特化 |
+| `InformationTheory/Shannon/Stein.lean:368` | `h_pi_singleton_Q : (Pi Q).real {x} = ∏ Q.real {x i}` (inline) | Pi-measure singleton の積分解 (Mathlib `Measure.pi_singleton` + `ENNReal.toReal_prod`) |
+| `InformationTheory/Shannon/Stein.lean:420` | `h_exp_neg_llr` (inline) | `exp(-llrPmf P Q x) = Q.real{x}/P.real{x}` |
+| `InformationTheory/Shannon/Stein.lean:430` | `h_prod_ratio` (inline) | `∏ Q/P = exp(-∑ llrPmf)` |
+| `InformationTheory/Shannon/MaxEntropy.lean:123` | `klDiv_uniformOn_univ_toReal_eq` | `(klDiv P U).toReal = ∫ llr P U ∂P` 経由で `klDiv.toReal` を finite alphabet sum に展開する **template** |
+| `InformationTheory/Shannon/MIChainRule.lean:268` | `klDiv_pi_eq_sum` | i.i.d. でない `Q^n` には不使用、ただし `Measure.pi` 同型変形のテンプレ |
+| `InformationTheory/Shannon/AEP.lean:229` | `typicalSet`, `typicalSet_card_le` | type class **size bound** との対比 (本 plan A 形は size bound を回避するが Phase D で必要になる場合の参照) |
 
 ## 既存 Mathlib API (使用候補)
 

@@ -2,7 +2,7 @@
 
 > Frontier-gap feasibility scan (2026-05-20). Target: discharge the two pass-through
 > predicates `IsStamScoreConvHyp` + `IsStamCondExpCSHyp` in
-> `Common2026/Shannon/EPIStamStep12Body.lean` (L-S12-C, currently 未採用) to 0-sorry.
+> `InformationTheory/Shannon/EPIStamStep12Body.lean` (L-S12-C, currently 未採用) to 0-sorry.
 >
 > Sibling docs: [`shannon-mathlib-inventory.md`](shannon-mathlib-inventory.md),
 > roadmap [`../textbook-roadmap.md`](../textbook-roadmap.md) (line 710/719 names this gap).
@@ -23,8 +23,8 @@
 -- EPIStamStep12Body.lean:164  (Step 1, 現状: 純算術で trivial 可)
 def IsStamScoreConvHyp (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y : ℝ), 0 < J_X → 0 < J_Y →
-    J_X = (Common2026.Shannon.fisherInfo (P.map X)).toReal →
-    J_Y = (Common2026.Shannon.fisherInfo (P.map Y)).toReal →
+    J_X = (InformationTheory.Shannon.fisherInfo (P.map X)).toReal →
+    J_Y = (InformationTheory.Shannon.fisherInfo (P.map Y)).toReal →
     ∃ lam : ℝ, 0 ≤ lam ∧ lam ≤ 1 ∧ lam = J_Y / (J_X + J_Y)
 
 -- EPIStamStep12Body.lean:214  (Step 2, 現状: vacuous Gaussian or pass-through)
@@ -149,7 +149,7 @@ noncomputable def mconv (μ : Measure M) (ν : Measure M) : Measure M :=
 | condExp of independent var(`E[f(X)\|σ(Y)]=E[f(X)]`) | `condExp_indepFun` 系 | ❌ **不在** | loogle `unknown identifier 'condExp_indepFun'` / `'condExp_indep'` |
 | `logDeriv` of density(score) | `logDeriv` | ✅ 既存 | `Mathlib/Analysis/Calculus/LogDeriv.lean:34`(`logDeriv f = deriv f / f`)。score の素材は有る |
 
-### E. 既存 Common2026 足場 — 述語は本物の恒等式を**消費していない**(⚠ 接続なし)
+### E. 既存 InformationTheory 足場 — 述語は本物の恒等式を**消費していない**(⚠ 接続なし)
 
 | 概念 | 場所 file:line | 状態 | discharge での意味 |
 |---|---|---|---|
@@ -205,11 +205,11 @@ noncomputable def mconv (μ : Measure M) (ν : Measure M) : Measure M :=
 
 ## 着手 skeleton(縮退案 L-S12-C′ = Gaussian closed-form、GO 推奨経路)
 
-`Common2026/Shannon/EPIStamCondExpScoreGaussian.lean`:
+`InformationTheory/Shannon/EPIStamCondExpScoreGaussian.lean`:
 
 ```lean
-import Common2026.Shannon.EPIStamStep12Body
-import Common2026.Shannon.FisherInfoV2
+import InformationTheory.Shannon.EPIStamStep12Body
+import InformationTheory.Shannon.FisherInfoV2
 import Mathlib.Probability.Distributions.Gaussian.Real      -- gaussianReal_conv_gaussianReal
 import Mathlib.Tactic.Positivity
 import Mathlib.Tactic.Linarith
@@ -218,7 +218,7 @@ namespace InformationTheory.Shannon.EPIStamCondExpScoreGaussian
 
 open MeasureTheory ProbabilityTheory Real
 open scoped ENNReal NNReal
-open Common2026.Shannon.FisherInfoV2
+open InformationTheory.Shannon.FisherInfoV2
 open InformationTheory.Shannon.EPIStamStep12Body
 
 variable {Ω : Type*} [MeasurableSpace Ω]
@@ -237,9 +237,9 @@ theorem isStamCondExpCSHyp_of_gaussian_closedForm
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     {m₁ m₂ : ℝ} {v₁ v₂ : ℝ≥0} (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
     (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂)
-    (hFisherX : (Common2026.Shannon.fisherInfo (P.map X)).toReal = 1 / (v₁ : ℝ))
-    (hFisherY : (Common2026.Shannon.fisherInfo (P.map Y)).toReal = 1 / (v₂ : ℝ))
-    (hFisherSum : (Common2026.Shannon.fisherInfo
+    (hFisherX : (InformationTheory.Shannon.fisherInfo (P.map X)).toReal = 1 / (v₁ : ℝ))
+    (hFisherY : (InformationTheory.Shannon.fisherInfo (P.map Y)).toReal = 1 / (v₂ : ℝ))
+    (hFisherSum : (InformationTheory.Shannon.fisherInfo
         (P.map (fun ω => X ω + Y ω))).toReal = 1 / ((v₁ : ℝ) + v₂)) :
     IsStamCondExpCSHyp X Y P := by
   sorry  -- intro ...; rw [hFisherX, hFisherY, hFisherSum]; exact gaussian_convex_fisher_bound ...

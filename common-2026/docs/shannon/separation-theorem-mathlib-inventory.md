@@ -1,11 +1,11 @@
-# Shannon T3-E: Joint Source–Channel Coding (Separation Theorem) — Mathlib + Common2026 inventory
+# Shannon T3-E: Joint Source–Channel Coding (Separation Theorem) — Mathlib + InformationTheory inventory
 
 > **Scope**: textbook roadmap **Tier 3 T3-E**. Cover–Thomas Ch.5 (source) と Ch.7 (channel)
 > を統合する meta-定理。Stationary ergodic source の entropy rate `H(\mathcal{X}) < C` ⟺
 > source を asymptotically reliable に channel 経由再現可能。
 >
 > **本ファイルの目的**: 「composition なので新数学はない」という想定を **検証**し、既存
-> Common2026 資産 (source coding side / channel coding side) の **型シグネチャを verbatim
+> InformationTheory 資産 (source coding side / channel coding side) の **型シグネチャを verbatim
 > 取り出して直接合成可能か** を判定する。判定結果は § H **Composition の結合点** を参照。
 >
 > **Output 規約**: 各候補に **`file:line`** + **完全 signature verbatim** + **`[..]` 型クラス
@@ -14,7 +14,7 @@
 
 ## 一行サマリ
 
-**Composition 系定理として既存 Common2026 資産で 70–80 % が組める** が、**source–channel
+**Composition 系定理として既存 InformationTheory 資産で 70–80 % が組める** が、**source–channel
 インタフェース型が definition-level で 不整合**: source coding (`AEP.lean`) は
 `MeasureFano.errorProb μ (X^n) (c∘X^n) d` 形 (Ω 上 push), channel coding
 (`ChannelCoding.lean`) は `Code.errorProbAt c W m = Measure.pi (W ∘ encoder m)
@@ -97,7 +97,7 @@ sorry  -- composition error bound is the main novel 100–200 LoC
 
 ### A-1. AEP-based source coding achievability (Tendsto form)
 
-- **file:line**: `Common2026/Shannon/AEP.lean:1138`
+- **file:line**: `InformationTheory/Shannon/AEP.lean:1138`
 - **完全 signature verbatim**:
   ```lean
   theorem source_coding_achievability
@@ -125,7 +125,7 @@ sorry  -- composition error bound is the main novel 100–200 LoC
 
 ### A-2. AEP-based source coding converse (liminf form)
 
-- **file:line**: `Common2026/Shannon/AEP.lean:704`
+- **file:line**: `InformationTheory/Shannon/AEP.lean:704`
 - **完全 signature verbatim**:
   ```lean
   theorem source_coding_converse
@@ -155,7 +155,7 @@ sorry  -- composition error bound is the main novel 100–200 LoC
 
 ### A-3. Unified source coding theorem (両側等号)
 
-- **file:line**: `Common2026/Shannon/AEP.lean:1240`
+- **file:line**: `InformationTheory/Shannon/AEP.lean:1240`
 - **完全 signature verbatim**:
   ```lean
   theorem source_coding_theorem
@@ -174,7 +174,7 @@ sorry  -- composition error bound is the main novel 100–200 LoC
 
 ### A-4. `IsAchievableCode` predicate
 
-- **file:line**: `Common2026/Shannon/AEP.lean:1186`
+- **file:line**: `InformationTheory/Shannon/AEP.lean:1186`
 - **完全 signature verbatim**:
   ```lean
   structure IsAchievableCode
@@ -195,7 +195,7 @@ sorry  -- composition error bound is the main novel 100–200 LoC
 
 ### A-5. Per-n source coding bound (Slepian–Wolf 流儀 4-step)
 
-- **file:line**: `Common2026/Shannon/AEP.lean:580`
+- **file:line**: `InformationTheory/Shannon/AEP.lean:580`
 - **結論形 verbatim**:
   ```lean
   (n : ℝ) * entropy μ (Xs 0)
@@ -208,7 +208,7 @@ sorry  -- composition error bound is the main novel 100–200 LoC
 
 ### A-6. ShannonCode (single-shot, Kraft + length sandwich)
 
-- **file:line**: `Common2026/Shannon/ShannonCode.lean` (354 行)
+- **file:line**: `InformationTheory/Shannon/ShannonCode.lean` (354 行)
 - **Phase mapping (T3-E)**: T3-E で **使わない**。Shannon code は single-shot で
   `H ≤ E[L] < H + 1` を与える設計、AEP-based block code とは別系統。T3-E は AEP 経由が自然。
 
@@ -218,7 +218,7 @@ sorry  -- composition error bound is the main novel 100–200 LoC
 
 ### B-1. `shannon_noisy_channel_coding_theorem_general_full` (channel achievability, fully general)
 
-- **file:line**: `Common2026/Shannon/ChannelCodingShannonTheoremFullDischarge.lean:1588`
+- **file:line**: `InformationTheory/Shannon/ChannelCodingShannonTheoremFullDischarge.lean:1588`
 - **完全 signature verbatim**:
   ```lean
   theorem shannon_noisy_channel_coding_theorem_general_full
@@ -241,7 +241,7 @@ sorry  -- composition error bound is the main novel 100–200 LoC
 
 ### B-2. `shannon_noisy_channel_coding_theorem` (MVP, `hW_pos` 仮定付)
 
-- **file:line**: `Common2026/Shannon/ChannelCodingShannonTheorem.lean:1011`
+- **file:line**: `InformationTheory/Shannon/ChannelCodingShannonTheorem.lean:1011`
 - **完全 signature verbatim**:
   ```lean
   theorem shannon_noisy_channel_coding_theorem
@@ -258,12 +258,12 @@ sorry  -- composition error bound is the main novel 100–200 LoC
 
 ### B-3. `shannon_noisy_channel_coding_theorem_general` (hypothesis pass-through 形)
 
-- **file:line**: `Common2026/Shannon/ChannelCodingShannonTheoremFull.lean:52`
+- **file:line**: `InformationTheory/Shannon/ChannelCodingShannonTheoremFull.lean:52`
 - **Phase mapping (T3-E)**: B-1 が discharged 完全形のため **使わない**。
 
 ### B-4. `channel_coding_converse_general_memoryless_pure` (channel converse, semi-pure)
 
-- **file:line**: `Common2026/Shannon/ChannelCodingConverseMemorylessPure.lean:650`
+- **file:line**: `InformationTheory/Shannon/ChannelCodingConverseMemorylessPure.lean:650`
 - **完全 signature verbatim**:
   ```lean
   theorem channel_coding_converse_general_memoryless_pure
@@ -304,21 +304,21 @@ sorry  -- composition error bound is the main novel 100–200 LoC
 
 ### B-5. `channel_coding_converse_general_memoryless_strong` (D-2'' 形)
 
-- **file:line**: `Common2026/Shannon/ChannelCodingConverseGeneralStrong.lean:272`
+- **file:line**: `InformationTheory/Shannon/ChannelCodingConverseGeneralStrong.lean:272`
 - **Phase mapping (T3-E)**: B-4 (semi-pure) が B-5 を呼ぶ wrapper のため、**B-4 を使う**。
   ただし B-5 を直接使う場合は `IsMemorylessChannelStrong` (per-letter Markov + outputs cond indep)
   を caller 側で構築する。
 
 ### B-6. `channel_coding_converse_iid` (n-variable iid form)
 
-- **file:line**: `Common2026/Shannon/ChannelCodingConverse.lean:56`
+- **file:line**: `InformationTheory/Shannon/ChannelCodingConverse.lean:56`
 - **結論形 verbatim**: `Real.log (Fintype.card M) ≤ (n : ℝ) * I(X_0; Y_0).toReal + Fano`.
 - **Phase mapping (T3-E)**: T3-E composition では encoder が iid に限定されない (source-encoded
   index は iid でない) ため **使えない**。B-4 を使う。
 
 ### B-7. `capacity W` (channel capacity)
 
-- **file:line**: `Common2026/Shannon/ChannelCodingShannonTheorem.lean:102`
+- **file:line**: `InformationTheory/Shannon/ChannelCodingShannonTheorem.lean:102`
 - **完全 signature verbatim**:
   ```lean
   noncomputable def capacity (W : Channel α β) : ℝ :=
@@ -329,7 +329,7 @@ sorry  -- composition error bound is the main novel 100–200 LoC
 
 ### B-8. `capacity_lim_eq_capacity_of_memoryless` (per-letter / blockwise 同一性)
 
-- **file:line**: `Common2026/Shannon/BlockwiseChannel.lean:1181`
+- **file:line**: `InformationTheory/Shannon/BlockwiseChannel.lean:1181`
 - **結論形 verbatim**: `(BlockwiseChannel.ofMemoryless W).capacity_lim = capacity W`.
 - **Phase mapping (T3-E)**: T3-E は memoryless 前提で進めるので、**block 形 capacity との等価性
   は手元にある**。直接の composition では single-letter `capacity W` を使う。
@@ -421,7 +421,7 @@ errorProb measured per-message on:
 
 ### D-1. `StationaryProcess` (基本構造)
 
-- **file:line**: `Common2026/Shannon/Stationary.lean:45`
+- **file:line**: `InformationTheory/Shannon/Stationary.lean:45`
 - **完全 signature verbatim**:
   ```lean
   structure StationaryProcess (μ : Measure Ω) (α : Type*) [MeasurableSpace α] where
@@ -435,7 +435,7 @@ errorProb measured per-message on:
 
 ### D-2. `ErgodicProcess` (ergodic 強化)
 
-- **file:line**: `Common2026/Shannon/Stationary.lean:114`
+- **file:line**: `InformationTheory/Shannon/Stationary.lean:114`
 - **完全 signature verbatim**:
   ```lean
   structure ErgodicProcess (μ : Measure Ω) (α : Type*) [MeasurableSpace α]
@@ -445,7 +445,7 @@ errorProb measured per-message on:
 
 ### D-3. `entropyRate` (lim H_n / n)
 
-- **file:line**: `Common2026/Shannon/EntropyRate.lean:69`
+- **file:line**: `InformationTheory/Shannon/EntropyRate.lean:69`
 - **完全 signature verbatim**:
   ```lean
   noncomputable def entropyRate (μ : Measure Ω) (p : StationaryProcess μ α) : ℝ :=
@@ -458,7 +458,7 @@ errorProb measured per-message on:
 
 ### D-4. `entropyRate_exists_of_stationary` (限界存在)
 
-- **file:line**: `Common2026/Shannon/EntropyRate.lean:432`
+- **file:line**: `InformationTheory/Shannon/EntropyRate.lean:432`
 - **完全 signature verbatim**:
   ```lean
   theorem entropyRate_exists_of_stationary
@@ -470,13 +470,13 @@ errorProb measured per-message on:
 
 ### D-5. `entropyRate_eq_lim_condEntropy` (Cesàro 等価形)
 
-- **file:line**: `Common2026/Shannon/EntropyRate.lean:466`
+- **file:line**: `InformationTheory/Shannon/EntropyRate.lean:466`
 - **結論形 verbatim**:
   `Tendsto (conditionalEntropyTail μ p) atTop (𝓝 (entropyRate μ p))`.
 
 ### D-6. SMB (sandwich form, Birkhoff hypothesis-form)
 
-- **file:line**: `Common2026/Shannon/ShannonMcMillanBreiman.lean:85`
+- **file:line**: `InformationTheory/Shannon/ShannonMcMillanBreiman.lean:85`
 - **完全 signature verbatim**:
   ```lean
   theorem shannon_mcmillan_breiman_of_sandwich
@@ -507,7 +507,7 @@ errorProb measured per-message on:
 ### D-7. IID source と entropy rate の関係 — **不在**
 
 - **loogle query**: `entropyRate, iIndepFun` (`Found 0 declarations`)、`Pairwise IndepFun, entropy_rate` (同 0)
-- **`rg` 検索**: `Common2026/Shannon/EntropyRate.lean` `Stationary.lean` 内に IID specialize lemma なし。
+- **`rg` 検索**: `InformationTheory/Shannon/EntropyRate.lean` `Stationary.lean` 内に IID specialize lemma なし。
 - **判定**: IID `Xs : ℕ → Ω → α` (`iIndepFun` + `IdentDistrib`) を `StationaryProcess` として
   embed する canonical lemma は **不在**。自作する場合は `T := Function.shift` 風の左 shift
   作用と `μ := Measure.pi ...` の組み合わせで **+50–100 行**。
@@ -551,13 +551,13 @@ errorProb measured per-message on:
 
 ### F-1. `TypedRV.lean` (I-1, H(X) notation)
 
-- **file:line**: `Common2026/Shannon/TypedRV.lean:64–88`
+- **file:line**: `InformationTheory/Shannon/TypedRV.lean:64–88`
 - **decl**: `klDivRV`, `differentialEntropyRV` (continuous 系のみ)
 - **Phase mapping (T3-E)**: T3-E は **離散版** なので **使わない**。`entropy μ (Xs 0)` 直書きで十分。
 
 ### F-2. `Asymptotic.lean` (I-3, DotEq `≐` notation)
 
-- **file:line**: `Common2026/InformationTheory/Asymptotic.lean:43`
+- **file:line**: `InformationTheory/InformationTheory/Asymptotic.lean:43`
 - **完全 signature verbatim**:
   ```lean
   def DotEq (a b : ℕ → ℝ) : Prop :=
@@ -568,7 +568,7 @@ errorProb measured per-message on:
 
 ### F-3. `IIDProductInput.lean` (channel coding iid product)
 
-- **file:line**: `Common2026/Shannon/IIDProductInput.lean` (916 行)
+- **file:line**: `InformationTheory/Shannon/IIDProductInput.lean` (916 行)
 - **役割**: channel coding 内で `Measure.pi` を iid input として扱う infrastructure。
   既に B-1 が内部で使うので **T3-E では transitive に使われる** が **直接呼ぶ必要なし**。
 
@@ -648,7 +648,7 @@ errorProb measured per-message on:
   理由: converse 経路は B-4 と A-2 を呼ぶ glue が中心で +110 行程度。撤退する必要なし。
   ただし「uniform message bridge」(優先度 5) は workaround で済ませる。
 - **「composition 形式自前」は **発動 (確定)****。
-  Mathlib にも Common2026 にも `composeCode` 系の primitive **不在**を確認 (§ H の優先度 1–3)。
+  Mathlib にも InformationTheory にも `composeCode` 系の primitive **不在**を確認 (§ H の優先度 1–3)。
   これが T3-E の「新数学なし」概念に反して **唯一の novel 構造構築箇所**。
 
 ### I-3. 新規撤退ライン提案
@@ -667,13 +667,13 @@ errorProb measured per-message on:
 ## J. 着手 skeleton
 
 ```lean
-import Common2026.Shannon.AEP
-import Common2026.Shannon.AEPRate
-import Common2026.Shannon.ChannelCoding
-import Common2026.Shannon.ChannelCodingShannonTheorem
-import Common2026.Shannon.ChannelCodingShannonTheoremFullDischarge
-import Common2026.Shannon.ChannelCodingConverseMemorylessPure
-import Common2026.Shannon.BlockwiseChannel
+import InformationTheory.Shannon.AEP
+import InformationTheory.Shannon.AEPRate
+import InformationTheory.Shannon.ChannelCoding
+import InformationTheory.Shannon.ChannelCodingShannonTheorem
+import InformationTheory.Shannon.ChannelCodingShannonTheoremFullDischarge
+import InformationTheory.Shannon.ChannelCodingConverseMemorylessPure
+import InformationTheory.Shannon.BlockwiseChannel
 import Mathlib.Topology.Order.LiminfLimsup
 
 /-!
@@ -774,7 +774,7 @@ end InformationTheory.Shannon.JointSourceChannel
 | Tendsto ↔ liminf bridge | **partial** | `Filter.Tendsto.liminf_eq` (Mathlib) で組める |
 | Stationary ergodic 一般化 | **撤退** | SMB closing が deferred、IID 限定で publish |
 
-**Composition 全体既存率**: **約 70 %** (Mathlib + Common2026 既存合算)。残り 30 % が § H の
+**Composition 全体既存率**: **約 70 %** (Mathlib + InformationTheory 既存合算)。残り 30 % が § H の
 自作 4 件 (~160 行) + 撤退ライン B/C で更に縮減可能。
 
 ---
@@ -796,7 +796,7 @@ end InformationTheory.Shannon.JointSourceChannel
 ## M. もっとも危険な発見 (Top 3)
 
 1. **`composeCode` primitive 不在** (§ H 優先度 1–3): T3-E は「composition なので新数学なし」
-   と roadmap で見積もられていたが、Mathlib にも Common2026 にも source–channel composition の
+   と roadmap で見積もられていたが、Mathlib にも InformationTheory にも source–channel composition の
    primitive (encoder bundle composition + error event union bound) が **完全に存在しない**。
    ~160 行の novel 構造構築が必要。
 2. **B-4 (channel converse) の `hMsg_uniform` 仮説** (§ G、§ H 優先度 5): channel converse は

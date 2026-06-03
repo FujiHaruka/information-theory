@@ -1,16 +1,16 @@
 # Sanov の定理 (B-1) ムーンショット計画 🌙
 
-> **Status (2026-05-12)**: **A 形完了 (Phase A〜C すべて 0 sorry)**。`Common2026/Shannon/Sanov.lean` (319 行)。**B-1' (LDP upper bound) 完了** → [docs/shannon/sanov-ldp-b-plan.md](sanov-ldp-b-plan.md) で別 publish。**B-1'' deferred** = LDP equality 形 (`Tendsto` の双方向、`klDivIndex` 連続性 + achievable type sequence)。
+> **Status (2026-05-12)**: **A 形完了 (Phase A〜C すべて 0 sorry)**。`InformationTheory/Shannon/Sanov.lean` (319 行)。**B-1' (LDP upper bound) 完了** → [docs/shannon/sanov-ldp-b-plan.md](sanov-ldp-b-plan.md) で別 publish。**B-1'' deferred** = LDP equality 形 (`Tendsto` の双方向、`klDivIndex` 連続性 + achievable type sequence)。
 > **撤退ライン**: A 形 (`typeClass_Qn_le` + `.toReal` 形 `typeClass_Qn_le_klDiv`、Cover-Thomas 11.1.4) を 0 sorry で publish ✅。
 >
-> **実態整合 (2026-05-20): DONE-UNCOND** — A 形主定理 `typeClass_Qn_le` は `Common2026/Shannon/Sanov.lean:172`、std binders (full-support `hPpos`/`hQpos` は honest)、0 sorry。なお **B-1'' (LDP equality) は既に完了済**: `Common2026/Shannon/SanovLDPEquality.lean:1243` の `sanov_ldp_equality` (deferred ではない、[sanov-ldp-equality-plan.md](sanov-ldp-equality-plan.md) 参照)。本 Status 行の「B-1'' deferred」は stale。
+> **実態整合 (2026-05-20): DONE-UNCOND** — A 形主定理 `typeClass_Qn_le` は `InformationTheory/Shannon/Sanov.lean:172`、std binders (full-support `hPpos`/`hQpos` は honest)、0 sorry。なお **B-1'' (LDP equality) は既に完了済**: `InformationTheory/Shannon/SanovLDPEquality.lean:1243` の `sanov_ldp_equality` (deferred ではない、[sanov-ldp-equality-plan.md](sanov-ldp-equality-plan.md) 参照)。本 Status 行の「B-1'' deferred」は stale。
 
 ## 進捗
 
 - [x] Phase 0 — Mathlib delta + 既存 plumbing インベントリ ✅ → [`sanov-mathlib-inventory.md`](sanov-mathlib-inventory.md)
 - [x] Phase A — type class 定義 (`typeClass P n`) + 基本補題 (`typeCount`, `measurableSet_typeClass`, `sum_llrPmf_eq_of_mem_typeClass` aggregation, `typeClass_prod_ratio` per-point ratio) ✅
 - [x] Phase B — Sanov A 形主定理 `typeClass_Qn_le`: `Q^n(T(P)) ≤ exp(-n · klDivSumForm P Q)` + `.toReal` 形 corollary `typeClass_Qn_le_klDiv` (経由補題 `klDivSumForm_eq_toReal_klDiv`) ✅
-- [x] Phase C — verify (`lake env lean Common2026/Shannon/Sanov.lean` silent) ✅
+- [x] Phase C — verify (`lake env lean InformationTheory/Shannon/Sanov.lean` silent) ✅
 - [ ] (Deferred B-1') Phase D — LDP B 形完全版 (`(1/n) log Q^n({ω | empirical_n ∈ E}) → -inf D(P‖Q)`): type 列挙 `𝒫_n` (多項係数) + `(n+1)^{|α|} = exp(o(n))` plumbing + `inf` の `Tendsto`。追加 ~600-1000 行見積。📋
 
 ## ゴール / Approach
@@ -70,8 +70,8 @@ Q^n(T(P̂)) = ∑_{x ∈ T(P̂)} Q^n({x})
    - `Q^n(T) = ∑_{x ∈ T} Q^n({x}) ≤ ∑_{x ∈ T} P̂^n({x}) · exp(-n·D) = P̂^n(T) · exp(-n·D) ≤ exp(-n·D)`
    - **60〜100 行**
 3. **(Phase C) verify + 配線**:
-   - `Common2026.lean` に `import Common2026.Shannon.Sanov` 追記
-   - `lake env lean Common2026/Shannon/Sanov.lean` silent
+   - `InformationTheory.lean` に `import InformationTheory.Shannon.Sanov` 追記
+   - `lake env lean InformationTheory/Shannon/Sanov.lean` silent
    - `docs/moonshot-seeds.md` B-1 にポインタ `→ docs/shannon/sanov-moonshot-plan.md`
 
 **Approach 図**:
@@ -90,8 +90,8 @@ Phase C  : verify + 配線                                          ← 0.5 日
 
 **ファイル構成 (Phase C 終了時想定)**:
 
-- `Common2026/Shannon/Sanov.lean` (新規、 namespace `InformationTheory.Shannon`、想定 250〜400 行)
-- `Common2026.lean` に 1 行 import 追記
+- `InformationTheory/Shannon/Sanov.lean` (新規、 namespace `InformationTheory.Shannon`、想定 250〜400 行)
+- `InformationTheory.lean` に 1 行 import 追記
 
 ## Phase 0 - Mathlib delta + 既存 plumbing インベントリ ✅
 
@@ -182,8 +182,8 @@ Q^n(T)         = ∑_{x ∈ T} Q^n({x})                                         
 
 ## Phase C - verify + 配線 📋
 
-- `Common2026.lean` に `import Common2026.Shannon.Sanov` 追記
-- `lake env lean Common2026/Shannon/Sanov.lean` silent
+- `InformationTheory.lean` に `import InformationTheory.Shannon.Sanov` 追記
+- `lake env lean InformationTheory/Shannon/Sanov.lean` silent
 - `docs/moonshot-seeds.md` 冒頭 Status と B-1 セクションに pointer
 
 ## (Optional) Phase D - LDP A 形系 📋 deferred 候補

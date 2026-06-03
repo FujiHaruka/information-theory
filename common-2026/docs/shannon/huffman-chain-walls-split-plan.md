@@ -35,27 +35,27 @@
 
 audit agent `a961ba4e002bd9f28` (今 session、Huffman sorry-migration audit) verdict 抜粋:
 
-> 上流 4 件 (`HuffmanOptimality.lean:804/:1058` + `HuffmanStrongForm.lean:183` + `HuffmanMergedIdentBody.lean:192`)、下流 17 件 (`HuffmanT1APPrimeBody.lean` 13 件 + `HuffmanT1APPrimePartial.lean` 4 件) で **`h_swap` / `h_ident` / `h_aux` の load-bearing hypothesis 引数が signature に残置**。docstring の `@residual(plan:huffman-2hyp-vertical-reduction)` 単独タグでは `Common2026/CLAUDE.md`「検証の誠実性」の **load-bearing hypothesis bundling = Tier 5 defect** に該当 (核心が `h_swap` / `h_ident` / `h_aux` という predicate hypothesis に bundling されており、body は機械的展開だけ)。Tier 2 (sorry + `@residual`) に降ろすには signature 改変が必須だが、親 plan は import cycle 制約で断念した。本構造は実質的に「`@audit:staged` から名前を変えた tier 4 staged」であり、改善でなく語彙の置換にとどまる。
+> 上流 4 件 (`HuffmanOptimality.lean:804/:1058` + `HuffmanStrongForm.lean:183` + `HuffmanMergedIdentBody.lean:192`)、下流 17 件 (`HuffmanT1APPrimeBody.lean` 13 件 + `HuffmanT1APPrimePartial.lean` 4 件) で **`h_swap` / `h_ident` / `h_aux` の load-bearing hypothesis 引数が signature に残置**。docstring の `@residual(plan:huffman-2hyp-vertical-reduction)` 単独タグでは `InformationTheory/CLAUDE.md`「検証の誠実性」の **load-bearing hypothesis bundling = Tier 5 defect** に該当 (核心が `h_swap` / `h_ident` / `h_aux` という predicate hypothesis に bundling されており、body は機械的展開だけ)。Tier 2 (sorry + `@residual`) に降ろすには signature 改変が必須だが、親 plan は import cycle 制約で断念した。本構造は実質的に「`@audit:staged` から名前を変えた tier 4 staged」であり、改善でなく語彙の置換にとどまる。
 
 ### 3. 現 `HuffmanWalls.lean` の import chain (verbatim)
 
 ```
 HuffmanWalls.lean (line 1-2)
-  import Common2026.Shannon.HuffmanStrongForm
-  import Common2026.Shannon.HuffmanSwapStepChainBody
+  import InformationTheory.Shannon.HuffmanStrongForm
+  import InformationTheory.Shannon.HuffmanSwapStepChainBody
 
 HuffmanStrongForm.lean (line 1-3)
-  import Common2026.Shannon.HuffmanOptimality           ← HuffmanOptimality は上流
-  import Common2026.Shannon.HuffmanSwapNormCompletion
-  import Common2026.Shannon.HuffmanMergedIdentBody
+  import InformationTheory.Shannon.HuffmanOptimality           ← HuffmanOptimality は上流
+  import InformationTheory.Shannon.HuffmanSwapNormCompletion
+  import InformationTheory.Shannon.HuffmanMergedIdentBody
 
 HuffmanSwapStepChainBody.lean (line 1-4)
-  import Common2026.Shannon.HuffmanOptimality           ← 同上
-  import Common2026.Shannon.HuffmanT1APPrimePartial
-  import Common2026.Shannon.HuffmanT1APPrimeBody
+  import InformationTheory.Shannon.HuffmanOptimality           ← 同上
+  import InformationTheory.Shannon.HuffmanT1APPrimePartial
+  import InformationTheory.Shannon.HuffmanT1APPrimeBody
 
 HuffmanOptimality.lean (line 1-8)
-  import Mathlib.* ; import Common2026.Shannon.Huffman  ← HuffmanWalls 非依存
+  import Mathlib.* ; import InformationTheory.Shannon.Huffman  ← HuffmanWalls 非依存
 ```
 
 したがって現 chain は
@@ -208,9 +208,9 @@ HuffmanStrongForm
 
 ### Phase 1 — `HuffmanChainWalls.lean` 新規 file 作成 + predicate move
 
-- [ ] **1.1** `Common2026/Shannon/HuffmanChainWalls.lean` を Write。skeleton:
+- [ ] **1.1** `InformationTheory/Shannon/HuffmanChainWalls.lean` を Write。skeleton:
   ```lean
-  import Common2026.Shannon.Huffman   -- huffmanLength, huffmanLengthAux, mergedMeasure 等の基礎
+  import InformationTheory.Shannon.Huffman   -- huffmanLength, huffmanLengthAux, mergedMeasure 等の基礎
 
   namespace InformationTheory.Shannon.Huffman
   universe u
@@ -244,12 +244,12 @@ HuffmanStrongForm
 
   end InformationTheory.Shannon.Huffman
   ```
-- [ ] **1.2** `HuffmanOptimality.lean` から `SwapNormalizationHypothesis` / `HuffmanMergedIdentificationHypothesis` の **abbrev 定義を削除** (`import Common2026.Shannon.HuffmanChainWalls` を 1 行追加、本来 file 内 `:759` まわり / `:775` の 2 abbrev block 削除)。docstring は `HuffmanChainWalls.lean` 側に move 済なので問題なし。
+- [ ] **1.2** `HuffmanOptimality.lean` から `SwapNormalizationHypothesis` / `HuffmanMergedIdentificationHypothesis` の **abbrev 定義を削除** (`import InformationTheory.Shannon.HuffmanChainWalls` を 1 行追加、本来 file 内 `:759` まわり / `:775` の 2 abbrev block 削除)。docstring は `HuffmanChainWalls.lean` 側に move 済なので問題なし。
 - [ ] **1.3** `HuffmanMergedIdentBody.lean` から `MergedHuffmanAuxIdentHypothesis` の **abbrev 定義を削除** (`HuffmanChainWalls` import は `HuffmanOptimality` 経由で自動)。
 - [ ] **1.4** `HuffmanT1APPrimeBody.lean` から `HuffmanCombinedHypothesis` の **abbrev 定義を削除** (同上)。
 - [ ] **1.5** `HuffmanSwapStepChainBody.lean` から `HuffmanChainCombinedHypothesis` の **abbrev 定義を削除** (同上)。
-- [ ] **1.6** `Common2026.lean` に `import Common2026.Shannon.HuffmanChainWalls` を追加 (`HuffmanOptimality` import 行の **直前**、L256 まわり)。
-- [ ] **1.7** `lake env lean Common2026/Shannon/HuffmanChainWalls.lean` + `HuffmanOptimality.lean` + `HuffmanMergedIdentBody.lean` + `HuffmanT1APPrimeBody.lean` + `HuffmanSwapStepChainBody.lean` を sequential に再 verify (CLAUDE.md 「After upstream edits」、`lake build Common2026.Shannon.HuffmanChainWalls` で olean refresh も併用)。
+- [ ] **1.6** `InformationTheory.lean` に `import InformationTheory.Shannon.HuffmanChainWalls` を追加 (`HuffmanOptimality` import 行の **直前**、L256 まわり)。
+- [ ] **1.7** `lake env lean InformationTheory/Shannon/HuffmanChainWalls.lean` + `HuffmanOptimality.lean` + `HuffmanMergedIdentBody.lean` + `HuffmanT1APPrimeBody.lean` + `HuffmanSwapStepChainBody.lean` を sequential に再 verify (CLAUDE.md 「After upstream edits」、`lake build InformationTheory.Shannon.HuffmanChainWalls` で olean refresh も併用)。
 
 **Phase 1 DoD**: 5 predicate が `HuffmanChainWalls.lean` 1 ヶ所に集約、5 wall lemma が direct sorry × 3 (Hyp1 + Hyp2 + Hyp_aux) + constructive composition × 2 (Combined + ChainCombined)、`lake env lean` 5 file が 0 errors (`sorry` warning は許容)。
 
@@ -271,7 +271,7 @@ HuffmanStrongForm
 - [ ] **2.4** `HuffmanMergedIdentBody.lean:192` `huffmanLength_optimal_with_swap_and_aux`:
   - signature から `(h_swap : SwapNormalizationHypothesis.{u})` / `(h_aux : MergedHuffmanAuxIdentHypothesis.{u})` を削除。
   - body を `huffmanLength_optimal_with_hypotheses P hP l hl_pos hl_kraft` に置換。
-- [ ] **2.5** 全 4 件で olean refresh (`lake build Common2026.Shannon.HuffmanOptimality` 等) 後、 `lake env lean` で 0 errors 確認。
+- [ ] **2.5** 全 4 件で olean refresh (`lake build InformationTheory.Shannon.HuffmanOptimality` 等) 後、 `lake env lean` で 0 errors 確認。
 
 **Phase 2 DoD**: 上流 4 件で signature から load-bearing hypothesis 削除、body 内呼出が wall lemma 経由、`lake env lean` 0 errors。
 
@@ -295,11 +295,11 @@ HuffmanStrongForm
 
 - [ ] **4.1** 21 wrapper の docstring 末尾 `@residual(plan:huffman-2hyp-vertical-reduction)` (or `huffman-strong-form-completion`) 単独タグを **削除** (sorry なしになるため honest bookkeeping 不要)。`@audit:ok` は付与しない (wall lemma に sorry が残り transitive proof done 未達のため)。代わりに docstring 散文で「wall lemma `HuffmanChainWalls.swap_normalization_hypothesis_holds` 等が closure を担当」と明示。
 - [ ] **4.2** 5 predicate の `@audit:retract-candidate(load-bearing-predicate)` タグを **削除** (5 predicate は genuine な命題で、wall lemma が closure すれば自動的に proved、retract 候補ではなくなる)。代わりに「`HuffmanChainWalls.lean` 内 wall lemma が discharge を担当」散文を docstring に保存。
-- [ ] **4.3** 旧 `Common2026/Shannon/HuffmanWalls.lean` の現状確認:
+- [ ] **4.3** 旧 `InformationTheory/Shannon/HuffmanWalls.lean` の現状確認:
   - Hyp1 wall (`swap_normalization_proof` direct alias、`@audit:ok`、現状 line 49-55) → 本 plan で `HuffmanChainWalls.swap_normalization_hypothesis_holds` (sorry) に置換済 → 旧 wall lemma は **dead code** に。
   - Hyp2 / Hyp_aux wall (sorry + `@residual`、line 60-70) → 本 plan で `HuffmanChainWalls` に同等品を新設済 → dead code。
   - combined / chain combined wall (constructive composition、line 75-83) → 同上、dead code。
-  - 判断: `HuffmanWalls.lean` 全 wall lemma を `HuffmanChainWalls` に **完全移行済** として、`HuffmanWalls.lean` を **削除** (`Common2026.lean` の `import Common2026.Shannon.HuffmanWalls` 行 L256 も削除)。
+  - 判断: `HuffmanWalls.lean` 全 wall lemma を `HuffmanChainWalls` に **完全移行済** として、`HuffmanWalls.lean` を **削除** (`InformationTheory.lean` の `import InformationTheory.Shannon.HuffmanWalls` 行 L256 も削除)。
 - [ ] **4.4** Hyp1 wall の constructive 化を後続 plan に handoff:
   - 別 plan `docs/shannon/huffman-chain-walls-hyp1-bridge-plan.md` (本 plan 完了後に起草) で `HuffmanStrongForm.lean` 末尾に `swap_normalization_hypothesis_holds_eq_proof : @swap_normalization_hypothesis_holds = swap_normalization_proof := rfl` 等の bridge lemma + `HuffmanChainWalls.lean` 内 sorry の constructive 置換を行う。本 plan scope 外。
 - [ ] **4.5** Phase 4 全 file (主に `HuffmanT1APPrimeBody` / `HuffmanT1APPrimePartial` / `HuffmanStrongForm` / `HuffmanMergedIdentBody` / `HuffmanOptimality`) で `lake env lean` 0 errors。
@@ -323,13 +323,13 @@ HuffmanStrongForm
 - [ ] **V.1** 全 13 file (Huffman.lean 含む) で `lake env lean` 確認 (`HuffmanWalls.lean` は削除済なら除外)。
 - [ ] **V.2** 集計コマンド:
   ```bash
-  rg -nw 'sorry' Common2026/Shannon/Huffman*.lean | wc -l               # 期待値: 3 (HuffmanChainWalls 内 wall 3 件)
-  rg '@residual\(plan:huffman-2hyp-vertical-reduction\)' Common2026/Shannon/Huffman*.lean | wc -l   # 期待値: 2 (HuffmanChainWalls 内 Hyp1 + Hyp2)
-  rg '@residual\(plan:huffman-strong-form-completion\)' Common2026/Shannon/Huffman*.lean | wc -l    # 期待値: 1 (HuffmanChainWalls 内 Hyp_aux)
-  rg '@audit:retract-candidate' Common2026/Shannon/Huffman*.lean | wc -l                           # 期待値: 0 (predicate retract タグ削除済)
-  rg 'load-bearing.*hypothesis' Common2026/Shannon/Huffman*.lean | wc -l                          # 期待値: 散文ゼロ
+  rg -nw 'sorry' InformationTheory/Shannon/Huffman*.lean | wc -l               # 期待値: 3 (HuffmanChainWalls 内 wall 3 件)
+  rg '@residual\(plan:huffman-2hyp-vertical-reduction\)' InformationTheory/Shannon/Huffman*.lean | wc -l   # 期待値: 2 (HuffmanChainWalls 内 Hyp1 + Hyp2)
+  rg '@residual\(plan:huffman-strong-form-completion\)' InformationTheory/Shannon/Huffman*.lean | wc -l    # 期待値: 1 (HuffmanChainWalls 内 Hyp_aux)
+  rg '@audit:retract-candidate' InformationTheory/Shannon/Huffman*.lean | wc -l                           # 期待値: 0 (predicate retract タグ削除済)
+  rg 'load-bearing.*hypothesis' InformationTheory/Shannon/Huffman*.lean | wc -l                          # 期待値: 散文ゼロ
   # 21 wrapper の signature 改変確認: 各 file で h_swap / h_ident / h_aux が `theorem` の binder list に出現しないこと
-  rg -n '(h_swap|h_ident|h_aux)\s*:\s*(SwapNormalization|HuffmanMergedIdent|MergedHuffmanAux)' Common2026/Shannon/Huffman*.lean
+  rg -n '(h_swap|h_ident|h_aux)\s*:\s*(SwapNormalization|HuffmanMergedIdent|MergedHuffmanAux)' InformationTheory/Shannon/Huffman*.lean
   # 期待値: ゼロ件
   ```
 - [ ] **V.3** `huffman-sorry-migration-plan.md` 冒頭 banner に「**L-MIG-4 拡張発動の構造的 fix 完了**: `HuffmanChainWalls.lean` 分離により上流 4 + 下流 17 = 21 wrapper を完全 Tier 2 化、`huffman-chain-walls-split-plan.md` 参照」を追記。
@@ -341,9 +341,9 @@ HuffmanStrongForm
 
 ### L-MIG-CW-1 (predicate move で他 family から参照あり)
 
-5 predicate (`SwapNormalizationHypothesis` / `HuffmanMergedIdentificationHypothesis` / `MergedHuffmanAuxIdentHypothesis` / `HuffmanCombinedHypothesis` / `HuffmanChainCombinedHypothesis`) のいずれかが Huffman 以外 (= 他 family、`Common2026/Han/` / `Common2026/Shannon/AWGN*.lean` 等) から参照されていたら、predicate move (= 定義位置の移動) は他 family の use site を壊す risk あり。
+5 predicate (`SwapNormalizationHypothesis` / `HuffmanMergedIdentificationHypothesis` / `MergedHuffmanAuxIdentHypothesis` / `HuffmanCombinedHypothesis` / `HuffmanChainCombinedHypothesis`) のいずれかが Huffman 以外 (= 他 family、`InformationTheory/Han/` / `InformationTheory/Shannon/AWGN*.lean` 等) から参照されていたら、predicate move (= 定義位置の移動) は他 family の use site を壊す risk あり。
 
-**発動条件**: Phase 0.2 で `rg -n '<predicate name>' Common2026/ | grep -v Huffman` が **1 件以上** 出力する。
+**発動条件**: Phase 0.2 で `rg -n '<predicate name>' InformationTheory/ | grep -v Huffman` が **1 件以上** 出力する。
 
 **対応**: 該当 predicate の move を放棄、`HuffmanChainWalls.lean` 側に **alias 定義**:
 ```lean
@@ -360,7 +360,7 @@ abbrev SwapNormalizationHypothesis : Prop := _root_.InformationTheory.Shannon.Hu
 - 旧 `h_swap : SwapNormalizationHypothesis.{u}` は **明示的に universe `u` 注釈** あり。wall lemma は `theorem ... : SwapNormalizationHypothesis.{u}` 形で同様に universe `u` 注釈付き → 置換後の universe 推論で `u` が `Type u` 外に逃げる risk。
 - induction motor は `Nat.strong_induction_on generalizing α with` で `α` / `P` / `l` を `generalizing` するが、wall lemma 側の universe `u` は `α : Type u` の `u` と同期する必要があり、`generalizing` 後に universe variable が free になる可能性。
 
-**発動条件**: Phase 2.1 で `lake env lean Common2026/Shannon/HuffmanOptimality.lean` が rewrite 後に **3 ターン以上 error 残**。typical error: `universe mismatch` / `failed to synthesize SwapNormalizationHypothesis.{?u}`。
+**発動条件**: Phase 2.1 で `lake env lean InformationTheory/Shannon/HuffmanOptimality.lean` が rewrite 後に **3 ターン以上 error 残**。typical error: `universe mismatch` / `failed to synthesize SwapNormalizationHypothesis.{?u}`。
 
 **対応**: Phase 2.1 を pause、`huffmanLength_optimal_aux_with_hypotheses` (private induction motor) のみ **signature 不変・body 内で wall 呼出のために `have h_swap := swap_normalization_hypothesis_holds; have h_ident := huffman_merged_identification_hypothesis_holds` を冒頭に挿入** する代替策に降格 (= signature には引数残置だが、wall 由来の値を local hypothesis として bind して旧 body と互換)。
 
@@ -391,7 +391,7 @@ L-MIG-CW-3 case 2 発動時の expected DoD: 下流 17 件 Tier 2 化、上流 4
 1. **`HuffmanCombinedHypothesis` / `HuffmanChainCombinedHypothesis` の abbrev move 方針**: 本 plan §「predicate 移動」表で **5 件全 move** をデフォルトとしたが、abbrev `:= And` 形は consumer file に残しても import 問題を起こさない。consumer file 内に残す案 (`HuffmanT1APPrimeBody.lean:524` / `HuffmanSwapStepChainBody.lean:322` のまま) も検討余地あり。実装 agent が Phase 1 で判断:
    - 残す → `HuffmanChainWalls.lean` 側で alias (`abbrev HuffmanCombinedHypothesis := _root_.InformationTheory.Shannon.Huffman.HuffmanCombinedHypothesis`) または `HuffmanCombinedHypothesis.holds` を本 file 内で declaration 作成、5 件統一の honest さは保たれる。
    - 全 move → 集約感は高いが下流 file の abbrev 定義 1 行を削除する手間あり。
-2. **既存 `HuffmanWalls.lean` 内の 2 件 sorry (Hyp2 + Hyp_aux) は本 plan で touch しない**: Phase 4.3 で `HuffmanWalls.lean` 全 wall lemma が `HuffmanChainWalls` に移行済として **削除** をデフォルト。代替: 削除せず empty `namespace InformationTheory.Shannon.Huffman end` skeleton として残置 (`Common2026.lean` の import 行を保つ) も可。実装 agent 判断 + Phase 0 inventory で再評価。
+2. **既存 `HuffmanWalls.lean` 内の 2 件 sorry (Hyp2 + Hyp_aux) は本 plan で touch しない**: Phase 4.3 で `HuffmanWalls.lean` 全 wall lemma が `HuffmanChainWalls` に移行済として **削除** をデフォルト。代替: 削除せず empty `namespace InformationTheory.Shannon.Huffman end` skeleton として残置 (`InformationTheory.lean` の import 行を保つ) も可。実装 agent 判断 + Phase 0 inventory で再評価。
 3. **cross-family ripple (Hoeffding / WynerZiv 系で同様 predicate 移動戦略が必要か)**: 本 plan scope **外**。別 family の sorry-migration plan で同様の L-MIG-4 拡張発動 (= import cycle で signature 改変断念) が観察された場合、本 plan を template に同様の `<family>ChainWalls.lean` 分離 plan を別途起草。runbook (`docs/audit/sorry-migration-runbook.md`)「失敗パターン」に Pattern I (= load-bearing hyp 残置の構造的 fix としての ChainWalls 分離) として追記候補。
 4. **Phase 2.1 / 2.2 順序**: 本 plan §「signature 改変順序」で「**上流 4 件先行 → 下流 17 件後続**」に再整理した。brief 内ユーザ指示の「下流先行」と異なる。下流先行案では下流 17 件が `huffmanLength_optimal_with_hypotheses` (上流) を新 signature で呼ぶことができず詰む。Approach 採用前に user に判断仰ぐべき項目 (本 plan は上流先行 default、user が他意あれば反証 OK)。
 5. **Hyp1 wall の constructive 復活 plan**: L-MIG-CW-3 で言及した別 plan (`huffman-chain-walls-hyp1-bridge-plan.md`) は本 plan 完了後に起草、scope は (a) `HuffmanStrongForm.lean` 末尾に bridge lemma `swap_normalization_hypothesis_holds_eq_proof` 追加 + (b) `HuffmanChainWalls.lean` 内 Hyp1 sorry を `swap_normalization_proof` への constructive alias に置換 (import 方向は逆だが etale な等式 lemma で bridging)。実現可能性は別途検証要。

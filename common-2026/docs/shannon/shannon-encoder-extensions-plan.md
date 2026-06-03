@@ -3,7 +3,7 @@
 > **Parent**: [`shannon-moonshot-plan.md`](shannon-moonshot-plan.md) Phase 4-γ 結果セクションで deferred とした「encoder 付き版」を 2 形式で完成させるサブ計画。
 > **Status (2026-05-10)**: Phase 4-δ-(a) **完了** (commit d4bec7c)。Phase 4-δ-(b) は inventory 完了 (`docs/shannon/shannon-condmi-inventory.md`)、skeleton 着手前。
 
-> 実態整合 (2026-05-20): 両 Phase とも DONE-HONEST-HYPS (plan の (b) 「skeleton 着手前」記述は stale)。(a) `shannon_converse_single_shot_injective_encoder` (`Common2026/Shannon/Converse.lean:141`、`hencoder_inj : Function.Injective encoder` 仮定) と (b) `shannon_converse_single_shot_markov_encoder` (`:207`、`hmarkov : IsMarkovChain μ Msg (encoder ∘ Msg) Yo` 仮定) がいずれも 0 sorry で publish 済 (`CondMutualInfo.lean` も存在)。仮定は genuine analytic (injectivity / Markov chain)、pass-through 不在。
+> 実態整合 (2026-05-20): 両 Phase とも DONE-HONEST-HYPS (plan の (b) 「skeleton 着手前」記述は stale)。(a) `shannon_converse_single_shot_injective_encoder` (`InformationTheory/Shannon/Converse.lean:141`、`hencoder_inj : Function.Injective encoder` 仮定) と (b) `shannon_converse_single_shot_markov_encoder` (`:207`、`hmarkov : IsMarkovChain μ Msg (encoder ∘ Msg) Yo` 仮定) がいずれも 0 sorry で publish 済 (`CondMutualInfo.lean` も存在)。仮定は genuine analytic (injectivity / Markov chain)、pass-through 不在。
 
 ## Context
 
@@ -84,8 +84,8 @@ I(Msg; Yo) = I(Yo; Msg)                              -- mutualInfo_comm
 
 ### Done 条件
 
-- `Common2026/Shannon/Converse.lean` 末尾に `shannon_converse_single_shot_injective_encoder` を追加 (~40 行)
-- `lake env lean Common2026/Shannon/Converse.lean` silent
+- `InformationTheory/Shannon/Converse.lean` 末尾に `shannon_converse_single_shot_injective_encoder` を追加 (~40 行)
+- `lake env lean InformationTheory/Shannon/Converse.lean` silent
 - 既存 `shannon_converse_single_shot` を改変しない (純拡張)
 
 ### 工数感
@@ -169,12 +169,12 @@ I(Msg; Yo) ≤ I(Msg, encoder∘Msg; Yo)                 -- DPI (postprocess Pro
 ### ファイル構成
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   CondMutualInfo.lean   ← 新設、本フェーズの主役 (定義 + chain rule + Markov 系)
   Converse.lean         ← shannon_converse_single_shot_markov_encoder を末尾に追加
 ```
 
-`Common2026.lean` に `import Common2026.Shannon.CondMutualInfo` を追記 (Converse の前)。
+`InformationTheory.lean` に `import InformationTheory.Shannon.CondMutualInfo` を追記 (Converse の前)。
 
 ### Done 条件
 
@@ -191,7 +191,7 @@ Common2026/Shannon/
 ## ファイル構成 (Phase 4-δ 終了時)
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   MutualInfo.lean         ← Phase 4-α、不変
   DPI.lean                ← Phase 4-α、不変
   Bridge.lean             ← Phase 4-β、不変
@@ -218,7 +218,7 @@ Common2026/Shannon/
 3. ~~**(a) の sorry を埋めて silent**~~ ✅ 一発で silent (~30 行)
 4. ~~**Phase 4-δ-(b) の inventory**~~ ✅ `docs/shannon/shannon-condmi-inventory.md` に subagent 3 並列の結果を統合 (2026-05-10)
 5. **Phase 4-δ-(b) skeleton 作成** ← **次これ**
-   - `Common2026/Shannon/CondMutualInfo.lean` 新設
+   - `InformationTheory/Shannon/CondMutualInfo.lean` 新設
    - `condMutualInfo` 定義 + `IsMarkovChain` 定義 (β 形式 = condDistrib 等式形) + chain rule + Markov 系 2 つ + DPI for Prod.fst の skeleton (5 sorry)
    - inventory §着手順 #1〜#5 を順次充填
 6. **(b) Converse.lean に主応用** — `shannon_converse_single_shot_markov_encoder` を末尾に追加
@@ -230,6 +230,6 @@ Common2026/Shannon/
 
 - 親計画: [`shannon-moonshot-plan.md`](shannon-moonshot-plan.md) — Phase 4-γ 結果セクションに deferred 経緯
 - Phase 4-γ proof-log: [`proof-log-shannon-converse.md`](proof-logs/proof-log-shannon-converse.md) §2「設計判断: encoder を引数から落とした」
-- Phase 4-α DPI: `Common2026/Shannon/DPI.lean:139` `mutualInfo_le_of_postprocess`
-- Phase 4-α MI: `Common2026/Shannon/MutualInfo.lean:36` `mutualInfo` / `:93` `mutualInfo_comm`
-- Phase 4-γ converse: `Common2026/Shannon/Converse.lean:80` `shannon_converse_single_shot`
+- Phase 4-α DPI: `InformationTheory/Shannon/DPI.lean:139` `mutualInfo_le_of_postprocess`
+- Phase 4-α MI: `InformationTheory/Shannon/MutualInfo.lean:36` `mutualInfo` / `:93` `mutualInfo_comm`
+- Phase 4-γ converse: `InformationTheory/Shannon/Converse.lean:80` `shannon_converse_single_shot`

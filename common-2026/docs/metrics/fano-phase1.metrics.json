@@ -3,7 +3,7 @@
   "proof_log": "docs/proof-logs/proof-log-fano-phase1.md",
   "generated_at": "2026-05-08T12:39:14.224Z",
   "filters": {
-    "file_prefix": "Common2026/Fano"
+    "file_prefix": "InformationTheory/Fano"
   },
   "idle_gap_minutes": 5,
   "sessions": [
@@ -36,28 +36,28 @@
       },
       "bash_total": 48,
       "edits_by_file": {
-        "Common2026/Fano.lean": 1,
-        "Common2026/Fano/DPI.lean": 10,
-        "Common2026.lean": 1,
+        "InformationTheory/Fano.lean": 1,
+        "InformationTheory/Fano/DPI.lean": 10,
+        "InformationTheory.lean": 1,
         "docs/metrics/fano-phase1.manifest.json": 1
       },
       "writes_by_file": {
-        "Common2026/Fano/Core.lean": 1,
-        "Common2026/Fano/DPI.lean": 1,
+        "InformationTheory/Fano/Core.lean": 1,
+        "InformationTheory/Fano/DPI.lean": 1,
         "docs/metrics/fano-phase1.manifest.json": 1,
         "docs/proof-log-fano-phase1.md": 1
       },
       "reads_by_file": {
         "docs/fano-phase1-plan.md": 1,
-        "Common2026/Fano": 1,
-        "Common2026/Fano.lean": 2,
-        "Common2026/Fano/Core.lean": 2,
-        "Common2026/Fano/Entropy.lean": 1,
-        "Common2026/Fano/CondEntropy.lean": 1,
-        "Common2026/Fano/BinaryJensen.lean": 1,
-        "Common2026.lean": 1,
+        "InformationTheory/Fano": 1,
+        "InformationTheory/Fano.lean": 2,
+        "InformationTheory/Fano/Core.lean": 2,
+        "InformationTheory/Fano/Entropy.lean": 1,
+        "InformationTheory/Fano/CondEntropy.lean": 1,
+        "InformationTheory/Fano/BinaryJensen.lean": 1,
+        "InformationTheory.lean": 1,
         "docs/fano-moonshot-plan.md": 1,
-        "Common2026/Fano/DPI.lean": 2,
+        "InformationTheory/Fano/DPI.lean": 2,
         "docs/metrics/fano-phase1.metrics.md": 1,
         ".claude/skills/proof-log/references/template.md": 1
       },
@@ -103,28 +103,28 @@
     },
     "bash_total": 48,
     "edits_by_file": {
-      "Common2026/Fano.lean": 1,
-      "Common2026/Fano/DPI.lean": 10,
-      "Common2026.lean": 1,
+      "InformationTheory/Fano.lean": 1,
+      "InformationTheory/Fano/DPI.lean": 10,
+      "InformationTheory.lean": 1,
       "docs/metrics/fano-phase1.manifest.json": 1
     },
     "writes_by_file": {
-      "Common2026/Fano/Core.lean": 1,
-      "Common2026/Fano/DPI.lean": 1,
+      "InformationTheory/Fano/Core.lean": 1,
+      "InformationTheory/Fano/DPI.lean": 1,
       "docs/metrics/fano-phase1.manifest.json": 1,
       "docs/proof-log-fano-phase1.md": 1
     },
     "reads_by_file": {
       "docs/fano-phase1-plan.md": 1,
-      "Common2026/Fano": 1,
-      "Common2026/Fano.lean": 2,
-      "Common2026/Fano/Core.lean": 2,
-      "Common2026/Fano/Entropy.lean": 1,
-      "Common2026/Fano/CondEntropy.lean": 1,
-      "Common2026/Fano/BinaryJensen.lean": 1,
-      "Common2026.lean": 1,
+      "InformationTheory/Fano": 1,
+      "InformationTheory/Fano.lean": 2,
+      "InformationTheory/Fano/Core.lean": 2,
+      "InformationTheory/Fano/Entropy.lean": 1,
+      "InformationTheory/Fano/CondEntropy.lean": 1,
+      "InformationTheory/Fano/BinaryJensen.lean": 1,
+      "InformationTheory.lean": 1,
       "docs/fano-moonshot-plan.md": 1,
-      "Common2026/Fano/DPI.lean": 2,
+      "InformationTheory/Fano/DPI.lean": 2,
       "docs/metrics/fano-phase1.metrics.md": 1,
       ".claude/skills/proof-log/references/template.md": 1
     },

@@ -3,13 +3,13 @@
   "proof_log": "docs/proof-logs/proof-log-han-moonshot.md",
   "generated_at": "2026-05-10T07:07:17.770Z",
   "filters": {
-    "file_prefix": "Common2026/Shannon"
+    "file_prefix": "InformationTheory/Shannon"
   },
   "idle_gap_minutes": 5,
   "sessions": [
     {
       "id": "6146225d-3de4-4c5c-a6ee-8a9060de9a3b",
-      "note": "Phase A skeleton: Common2026/Shannon/Entropy.lean に 4 主定理 (entropy_pair_eq_entropy_add_condEntropy / condEntropy_tower / condEntropy_le_condEntropy_of_pair / condMutualInfo_eq_condEntropy_sub_condEntropy) を sorry-driven で配置 + instance チェイン裏取り。",
+      "note": "Phase A skeleton: InformationTheory/Shannon/Entropy.lean に 4 主定理 (entropy_pair_eq_entropy_add_condEntropy / condEntropy_tower / condEntropy_le_condEntropy_of_pair / condMutualInfo_eq_condEntropy_sub_condEntropy) を sorry-driven で配置 + instance チェイン裏取り。",
       "start": "2026-05-10T04:13:27.499Z",
       "end": "2026-05-10T04:19:14.619Z",
       "wall_time_seconds": 347,
@@ -33,18 +33,18 @@
       },
       "bash_total": 6,
       "edits_by_file": {
-        "Common2026.lean": 1
+        "InformationTheory.lean": 1
       },
       "writes_by_file": {
-        "Common2026/Shannon/Entropy.lean": 1
+        "InformationTheory/Shannon/Entropy.lean": 1
       },
       "reads_by_file": {
         ".claude/handoff.md": 1,
         "docs/han-mathlib-inventory.md": 1,
-        "Common2026/Shannon/Bridge.lean": 2,
-        "Common2026/Shannon/CondMutualInfo.lean": 1,
-        "Common2026/Fano/Measure.lean": 1,
-        "Common2026.lean": 1
+        "InformationTheory/Shannon/Bridge.lean": 2,
+        "InformationTheory/Shannon/CondMutualInfo.lean": 1,
+        "InformationTheory/Fano/Measure.lean": 1,
+        "InformationTheory.lean": 1
       },
       "matched_edits": 0,
       "matched_writes": 1,
@@ -89,22 +89,22 @@
       },
       "bash_total": 46,
       "edits_by_file": {
-        "Common2026/Shannon/Entropy.lean": 4
+        "InformationTheory/Shannon/Entropy.lean": 4
       },
       "writes_by_file": {
         ".claude/handoff.md": 1
       },
       "reads_by_file": {
         ".claude/handoff.md": 1,
-        "Common2026/Shannon/Entropy.lean": 3,
+        "InformationTheory/Shannon/Entropy.lean": 3,
         "docs/han-mathlib-inventory.md": 1,
-        "Common2026/Shannon/Bridge.lean": 1,
-        "Common2026/Fano/Measure.lean": 1,
+        "InformationTheory/Shannon/Bridge.lean": 1,
+        "InformationTheory/Fano/Measure.lean": 1,
         ".lake/packages/mathlib/Mathlib/MeasureTheory/Integral/Lebesgue/Countable.lean": 1,
         ".lake/packages/mathlib/Mathlib/MeasureTheory/Integral/Bochner/SumMeasure.lean": 1,
         ".lake/packages/mathlib/Mathlib/Probability/Kernel/CondDistrib.lean": 1,
         ".lake/packages/mathlib/Mathlib/Probability/Kernel/Composition/IntegralCompProd.lean": 2,
-        "Common2026/Shannon/CondMutualInfo.lean": 1,
+        "InformationTheory/Shannon/CondMutualInfo.lean": 1,
         ".lake/packages/mathlib/Mathlib/InformationTheory/KullbackLeibler/ChainRule.lean": 1
       },
       "matched_edits": 4,
@@ -149,21 +149,21 @@
       },
       "bash_total": 73,
       "edits_by_file": {
-        "Common2026/Shannon/MutualInfo.lean": 1,
-        "Common2026/Shannon/CondMutualInfo.lean": 3,
-        "Common2026/Shannon/Entropy.lean": 1
+        "InformationTheory/Shannon/MutualInfo.lean": 1,
+        "InformationTheory/Shannon/CondMutualInfo.lean": 3,
+        "InformationTheory/Shannon/Entropy.lean": 1
       },
       "writes_by_file": {},
       "reads_by_file": {
         ".claude/handoff.md": 1,
-        "Common2026/Shannon/Entropy.lean": 3,
-        "Common2026/Shannon/Bridge.lean": 7,
-        "Common2026/Shannon/CondMutualInfo.lean": 5,
-        "Common2026/Shannon/MutualInfo.lean": 4,
+        "InformationTheory/Shannon/Entropy.lean": 3,
+        "InformationTheory/Shannon/Bridge.lean": 7,
+        "InformationTheory/Shannon/CondMutualInfo.lean": 5,
+        "InformationTheory/Shannon/MutualInfo.lean": 4,
         ".lake/packages/mathlib/Mathlib/Probability/Kernel/Composition/Lemmas.lean": 1,
         ".lake/packages/mathlib/Mathlib/Probability/Kernel/Composition/Prod.lean": 1,
         ".lake/packages/mathlib/Mathlib/Probability/Kernel/CondDistrib.lean": 2,
-        "Common2026/Shannon/Converse.lean": 1,
+        "InformationTheory/Shannon/Converse.lean": 1,
         ".lake/packages/mathlib/Mathlib/MeasureTheory/Measure/MeasureSpace.lean": 1,
         ".lake/packages/mathlib/Mathlib/InformationTheory/KullbackLeibler/ChainRule.lean": 1,
         ".lake/packages/mathlib/Mathlib/Probability/Kernel/Composition/AbsolutelyContinuous.lean": 1,
@@ -187,7 +187,7 @@
     },
     {
       "id": "f93c8e27-ac98-4921-a0c3-9004bdb163a4",
-      "note": "Phase B skeleton: Common2026/Shannon/Han.lean を新規作成 (65 行)。jointEntropy 定義 (entropy の Fin n → α 値ラッパ) + n 変数 chain rule を sorry-driven で配置。",
+      "note": "Phase B skeleton: InformationTheory/Shannon/Han.lean を新規作成 (65 行)。jointEntropy 定義 (entropy の Fin n → α 値ラッパ) + n 変数 chain rule を sorry-driven で配置。",
       "start": "2026-05-10T05:24:59.344Z",
       "end": "2026-05-10T05:44:02.809Z",
       "wall_time_seconds": 1143,
@@ -211,16 +211,16 @@
       },
       "bash_total": 5,
       "edits_by_file": {
-        "Common2026.lean": 1
+        "InformationTheory.lean": 1
       },
       "writes_by_file": {
-        "Common2026/Shannon/Han.lean": 1
+        "InformationTheory/Shannon/Han.lean": 1
       },
       "reads_by_file": {
         ".claude/handoff.md": 1,
         "docs/han-moonshot-plan.md": 1,
-        "Common2026/Shannon/Entropy.lean": 1,
-        "Common2026.lean": 1
+        "InformationTheory/Shannon/Entropy.lean": 1,
+        "InformationTheory.lean": 1
       },
       "matched_edits": 0,
       "matched_writes": 1,
@@ -265,14 +265,14 @@
       },
       "bash_total": 43,
       "edits_by_file": {
-        "Common2026/Shannon/Han.lean": 13
+        "InformationTheory/Shannon/Han.lean": 13
       },
       "writes_by_file": {},
       "reads_by_file": {
         ".claude/handoff.md": 1,
-        "Common2026/Shannon/Han.lean": 3,
-        "Common2026/Shannon/Entropy.lean": 1,
-        "Common2026/Shannon/Bridge.lean": 1,
+        "InformationTheory/Shannon/Han.lean": 3,
+        "InformationTheory/Shannon/Entropy.lean": 1,
+        "InformationTheory/Shannon/Bridge.lean": 1,
         ".lake/packages/mathlib/Mathlib/MeasureTheory/MeasurableSpace/Embedding.lean": 1,
         ".lake/packages/mathlib/Mathlib/Data/Fin/Tuple/Basic.lean": 1
       },
@@ -317,7 +317,7 @@
       },
       "bash_total": 37,
       "edits_by_file": {
-        "Common2026/Shannon/Han.lean": 23
+        "InformationTheory/Shannon/Han.lean": 23
       },
       "writes_by_file": {
         ".claude/handoff.md": 1
@@ -325,9 +325,9 @@
       "reads_by_file": {
         ".claude/handoff.md": 1,
         "docs/han-moonshot-plan.md": 1,
-        "Common2026/Shannon/Han.lean": 8,
+        "InformationTheory/Shannon/Han.lean": 8,
         "docs/han-mathlib-inventory.md": 1,
-        "Common2026/Shannon/Entropy.lean": 2,
+        "InformationTheory/Shannon/Entropy.lean": 2,
         ".lake/packages/mathlib/Mathlib/Logic/Equiv/Prod.lean": 1,
         ".lake/packages/mathlib/Mathlib/MeasureTheory/MeasurableSpace/Embedding.lean": 2
       },
@@ -376,40 +376,40 @@
     },
     "bash_total": 210,
     "edits_by_file": {
-      "Common2026.lean": 2,
-      "Common2026/Shannon/Entropy.lean": 5,
-      "Common2026/Shannon/MutualInfo.lean": 1,
-      "Common2026/Shannon/CondMutualInfo.lean": 3,
-      "Common2026/Shannon/Han.lean": 36
+      "InformationTheory.lean": 2,
+      "InformationTheory/Shannon/Entropy.lean": 5,
+      "InformationTheory/Shannon/MutualInfo.lean": 1,
+      "InformationTheory/Shannon/CondMutualInfo.lean": 3,
+      "InformationTheory/Shannon/Han.lean": 36
     },
     "writes_by_file": {
-      "Common2026/Shannon/Entropy.lean": 1,
+      "InformationTheory/Shannon/Entropy.lean": 1,
       ".claude/handoff.md": 2,
-      "Common2026/Shannon/Han.lean": 1
+      "InformationTheory/Shannon/Han.lean": 1
     },
     "reads_by_file": {
       ".claude/handoff.md": 6,
       "docs/han-mathlib-inventory.md": 3,
-      "Common2026/Shannon/Bridge.lean": 11,
-      "Common2026/Shannon/CondMutualInfo.lean": 7,
-      "Common2026/Fano/Measure.lean": 2,
-      "Common2026.lean": 2,
-      "Common2026/Shannon/Entropy.lean": 10,
+      "InformationTheory/Shannon/Bridge.lean": 11,
+      "InformationTheory/Shannon/CondMutualInfo.lean": 7,
+      "InformationTheory/Fano/Measure.lean": 2,
+      "InformationTheory.lean": 2,
+      "InformationTheory/Shannon/Entropy.lean": 10,
       ".lake/packages/mathlib/Mathlib/MeasureTheory/Integral/Lebesgue/Countable.lean": 1,
       ".lake/packages/mathlib/Mathlib/MeasureTheory/Integral/Bochner/SumMeasure.lean": 1,
       ".lake/packages/mathlib/Mathlib/Probability/Kernel/CondDistrib.lean": 3,
       ".lake/packages/mathlib/Mathlib/Probability/Kernel/Composition/IntegralCompProd.lean": 2,
       ".lake/packages/mathlib/Mathlib/InformationTheory/KullbackLeibler/ChainRule.lean": 2,
-      "Common2026/Shannon/MutualInfo.lean": 4,
+      "InformationTheory/Shannon/MutualInfo.lean": 4,
       ".lake/packages/mathlib/Mathlib/Probability/Kernel/Composition/Lemmas.lean": 1,
       ".lake/packages/mathlib/Mathlib/Probability/Kernel/Composition/Prod.lean": 1,
-      "Common2026/Shannon/Converse.lean": 1,
+      "InformationTheory/Shannon/Converse.lean": 1,
       ".lake/packages/mathlib/Mathlib/MeasureTheory/Measure/MeasureSpace.lean": 1,
       ".lake/packages/mathlib/Mathlib/Probability/Kernel/Composition/AbsolutelyContinuous.lean": 1,
       ".lake/packages/mathlib/Mathlib/MeasureTheory/Constructions/Polish/Basic.lean": 1,
       ".lake/packages/mathlib/Mathlib/MeasureTheory/MeasurableSpace/Embedding.lean": 4,
       "docs/han-moonshot-plan.md": 3,
-      "Common2026/Shannon/Han.lean": 11,
+      "InformationTheory/Shannon/Han.lean": 11,
       ".lake/packages/mathlib/Mathlib/Data/Fin/Tuple/Basic.lean": 1,
       ".lake/packages/mathlib/Mathlib/Logic/Equiv/Prod.lean": 1
     },

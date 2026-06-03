@@ -1,4 +1,4 @@
-# T1-C Cramér's Theorem — Mathlib + Common2026 在庫調査
+# T1-C Cramér's Theorem — Mathlib + InformationTheory 在庫調査
 
 > Tier 1 roadmap T1-C ([Cover-Thomas Ch.11.4/11.6] Cramér の大偏差定理) のための inventory。
 > 入力指示: `docs/shannon/cramer-mathlib-inventory.md` 新規作成、既存基盤 (Sanov LDP equality + Chernoff Tier 0 + IID infrastructure) からどこまで再利用できるかを構造化テーブルで書き出す。
@@ -140,27 +140,27 @@ theorem cramer_lower
 
 ⚠ **重要な「不在」**: `Mathlib` には **`klDiv (μ.tilted (λ * X ·)) μ = λ * (μ.tilted ...)[X] - cgf X μ λ` という KL-of-tilted 恒等式が存在しない**。これは Cramér lower bound (tilted 経路) で必須なので **自前 10〜30 行**。素材は揃っている (`log_rnDeriv_tilted_left_self` + `klDiv` の RN-form 定義)。loogle 確認: `Found 0 declarations mentioning MeasureTheory.Measure.tilted and InformationTheory.klDiv`。
 
-### G. **IID infrastructure (Mathlib + Common2026)**
+### G. **IID infrastructure (Mathlib + InformationTheory)**
 
 | 補題 | file:line | Full signature (verbatim) | Phase での扱い |
 |---|---|---|---|
 | **`iIndepFun_infinitePi`** | `Mathlib/Probability/Independence/InfinitePi.lean:103` | `lemma iIndepFun_infinitePi {Ω : ι → Type*} {mΩ : ∀ i, MeasurableSpace (Ω i)} {P : (i : ι) → Measure (Ω i)} [∀ i, IsProbabilityMeasure (P i)] {X : (i : ι) → Ω i → 𝓧 i} (mX : ∀ i, Measurable (X i)) : iIndepFun (fun i ω ↦ X i (ω i)) (infinitePi P)` | IID measure 構築 |
 | `Measure.infinitePi` | `Mathlib/Probability/ProductMeasure.lean:?` | `(P : (i : ι) → Measure (Ω i)) → Measure (∀ i, Ω i)` | n-IID の自然な ambient |
 | `Measure.infinitePi_map_eval` | (同上) | `(i : ι) → (Measure.infinitePi P).map (fun ω => ω i) = P i` | 各座標の周辺は `P i` |
-| **`iidAmbientMeasure`** | `Common2026/Shannon/IIDProductInput.lean:48` | `noncomputable def iidAmbientMeasure (p : Measure α) (W : Channel α β) : Measure (ℕ → α × β) := Measure.infinitePi (fun _ : ℕ => jointDistribution p W)` | **既存 IID infrastructure** (channel coding 用、Cramér では Channel を identity に specialize) |
+| **`iidAmbientMeasure`** | `InformationTheory/Shannon/IIDProductInput.lean:48` | `noncomputable def iidAmbientMeasure (p : Measure α) (W : Channel α β) : Measure (ℕ → α × β) := Measure.infinitePi (fun _ : ℕ => jointDistribution p W)` | **既存 IID infrastructure** (channel coding 用、Cramér では Channel を identity に specialize) |
 | `iidAmbient_iIndepFun_iidXs` | `IIDProductInput.lean:169` | `iIndepFun (fun i : ℕ => iidXs i) (iidAmbientMeasure p W)` | `Xs` の IID |
 | `iidAmbient_identDistrib_iidXs` | `IIDProductInput.lean:136` | `IdentDistrib (iidXs i) (iidXs 0) (iidAmbientMeasure p W) (iidAmbientMeasure p W)` | 同分布 |
 
 ⚠ **Cramér 専用 ambient の必要性**: 既存 `iidAmbientMeasure` は `α × β` (channel I/O ペア) 用。Cramér では `Y` チャンネル出力不要なので、**より軽い ambient `Measure.infinitePi (fun _ : ℕ => p)` を直接使う**べき (~10 行 plumbing)。`jointDistribution p (Channel.constLaw ν)` で潰す手もあるが冗長。
 
-### H. **Sanov LDP equality (既存 Common2026)** — Cramér への bridge 経路
+### H. **Sanov LDP equality (既存 InformationTheory)** — Cramér への bridge 経路
 
 | 補題 | file:line | Full signature (verbatim) | Phase での扱い |
 |---|---|---|---|
-| **`sanov_ldp_equality`** | `Common2026/Shannon/SanovLDPEquality.lean:1243` | `theorem sanov_ldp_equality (Q : Measure α) [IsProbabilityMeasure Q] (hQpos : ∀ a : α, 0 < Q.real {a}) (P : α → ℝ) (hP_prob : (∑ a, P a) = 1) (hP_full : ∀ a, 0 < P a) (E : ∀ n, Finset (TypeCountIndex α n)) (h_in_E : ∀ᶠ n : ℕ in atTop, roundedTypeIndex P n ∈ E n) (h_minimizer : ∀ n, ∀ c ∈ E n, klDivSumForm_ofVec P (fun a => Q.real {a}) ≤ klDivIndex (fun a => (c a : ℕ)) n Q) : Tendsto (fun n : ℕ => (1 / (n : ℝ)) * Real.log (((Measure.pi (fun _ : Fin n => Q)) (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal)) atTop (𝓝 (-(klDivSumForm_ofVec P (fun a => Q.real {a}))))` | **Sanov LDP**: 経験分布の **集合形** `Q^n(⋃ T_c)` の指数。Cramér の sample-mean 形ではない |
+| **`sanov_ldp_equality`** | `InformationTheory/Shannon/SanovLDPEquality.lean:1243` | `theorem sanov_ldp_equality (Q : Measure α) [IsProbabilityMeasure Q] (hQpos : ∀ a : α, 0 < Q.real {a}) (P : α → ℝ) (hP_prob : (∑ a, P a) = 1) (hP_full : ∀ a, 0 < P a) (E : ∀ n, Finset (TypeCountIndex α n)) (h_in_E : ∀ᶠ n : ℕ in atTop, roundedTypeIndex P n ∈ E n) (h_minimizer : ∀ n, ∀ c ∈ E n, klDivSumForm_ofVec P (fun a => Q.real {a}) ≤ klDivIndex (fun a => (c a : ℕ)) n Q) : Tendsto (fun n : ℕ => (1 / (n : ℝ)) * Real.log (((Measure.pi (fun _ : Fin n => Q)) (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal)) atTop (𝓝 (-(klDivSumForm_ofVec P (fun a => Q.real {a}))))` | **Sanov LDP**: 経験分布の **集合形** `Q^n(⋃ T_c)` の指数。Cramér の sample-mean 形ではない |
 | `sanov_ldp_lower_bound_pointwise` | `SanovLDPEquality.lean:1071` | lower (liminf ≥ -D) | 分離して使えるか確認要 |
-| `sanov_ldp_upper_bound` | `Common2026/Shannon/SanovLDP.lean:471` | `theorem sanov_ldp_upper_bound (Q : Measure α) [IsProbabilityMeasure Q] (hQpos : ∀ a : α, 0 < Q.real {a}) (E : ∀ n, Finset (TypeCountIndex α n)) (D : ℝ) (hD : ∀ n, ∀ c ∈ E n, D ≤ klDivIndex (fun a => (c a : ℕ)) n Q) {ε : ℝ} (hε : 0 < ε) : ∃ N, ∀ n ≥ N, 0 < n → 0 < ((Measure.pi (fun _ : Fin n => Q)) (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal → (1 / (n : ℝ)) * Real.log (...) ≤ -D + ε` | Sanov upper |
-| `klDivSumForm_ofVec` | `Common2026/Shannon/KLDivContinuous.lean:31` | `noncomputable def klDivSumForm_ofVec (p q : α → ℝ) : ℝ := ∑ a : α, p a * (Real.log (p a) - Real.log (q a))` | finite-alphabet KL |
+| `sanov_ldp_upper_bound` | `InformationTheory/Shannon/SanovLDP.lean:471` | `theorem sanov_ldp_upper_bound (Q : Measure α) [IsProbabilityMeasure Q] (hQpos : ∀ a : α, 0 < Q.real {a}) (E : ∀ n, Finset (TypeCountIndex α n)) (D : ℝ) (hD : ∀ n, ∀ c ∈ E n, D ≤ klDivIndex (fun a => (c a : ℕ)) n Q) {ε : ℝ} (hε : 0 < ε) : ∃ N, ∀ n ≥ N, 0 < n → 0 < ((Measure.pi (fun _ : Fin n => Q)) (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal → (1 / (n : ℝ)) * Real.log (...) ≤ -D + ε` | Sanov upper |
+| `klDivSumForm_ofVec` | `InformationTheory/Shannon/KLDivContinuous.lean:31` | `noncomputable def klDivSumForm_ofVec (p q : α → ℝ) : ℝ := ∑ a : α, p a * (Real.log (p a) - Real.log (q a))` | finite-alphabet KL |
 
 **Sanov → Cramér bridge の難しさ (重要発見)**:
 教科書では Cramér = Sanov の contraction principle (push-forward によるrate function 計算) と説明される。しかし **既存 `sanov_ldp_equality` は集合形** `Q^n(⋃ c ∈ E n, T_c)` で、ここから sample mean 形 `Q^n({x | a ≤ (∑ f(x_i))/n})` への reshape は:
@@ -168,12 +168,12 @@ theorem cramer_lower
 2. `klDivSumForm_ofVec P (Q.real ∘ singleton)` を `Λ^*(a)` に置換する `inf_{p : E_p[f] ≥ a} KL(p ‖ Q) = Λ^*(a)` の同一視 (Donsker-Varadhan 双対公式) を別補題で書く
 の **2 段階の reshape が必要**で、各々 ~80〜150 行。一方 **`cgf` 直接経路 (Chernoff + tilted)** は ~80〜120 行で終わる。**結論: Sanov 経由でなく直接経路を採用** (roadmap 「contraction principle 経由 reshape」は不推奨)。
 
-### I. **Chernoff Tier 0 既存 (Common2026)** — Cramér rate function との関係
+### I. **Chernoff Tier 0 既存 (InformationTheory)** — Cramér rate function との関係
 
 | 補題 | file:line | Full signature (verbatim) | Phase での扱い |
 |---|---|---|---|
-| **`chernoffZSum`** | `Common2026/Shannon/Chernoff.lean:61` | `noncomputable def chernoffZSum (P₁ P₂ : α → ℝ) (lam : ℝ) : ℝ := ∑ a : α, (P₁ a) ^ (1 - lam) * (P₂ a) ^ lam` | **Chernoff partition function `Z(λ)`**。textbook 11.9.1 形 |
-| `chernoffInfo` | `Common2026/Shannon/Chernoff.lean:67` | `noncomputable def chernoffInfo (P₁ P₂ : α → ℝ) : ℝ := -(sInf ((fun lam : ℝ => Real.log (chernoffZSum P₁ P₂ lam)) '' Set.Icc (0:ℝ) 1))` | hypothesis testing 用 (Cramér とは別物だが Legendre 達成性証明の参考にできる) |
+| **`chernoffZSum`** | `InformationTheory/Shannon/Chernoff.lean:61` | `noncomputable def chernoffZSum (P₁ P₂ : α → ℝ) (lam : ℝ) : ℝ := ∑ a : α, (P₁ a) ^ (1 - lam) * (P₂ a) ^ lam` | **Chernoff partition function `Z(λ)`**。textbook 11.9.1 形 |
+| `chernoffInfo` | `InformationTheory/Shannon/Chernoff.lean:67` | `noncomputable def chernoffInfo (P₁ P₂ : α → ℝ) : ℝ := -(sInf ((fun lam : ℝ => Real.log (chernoffZSum P₁ P₂ lam)) '' Set.Icc (0:ℝ) 1))` | hypothesis testing 用 (Cramér とは別物だが Legendre 達成性証明の参考にできる) |
 | `chernoffZSum_continuous` | `Chernoff.lean:124` | `Continuous (fun lam : ℝ => chernoffZSum P₁ P₂ lam)` | Legendre `sSup` 達成性のテンプレ |
 | `chernoffInfo_attained` | `Chernoff.lean:161` | `∃ lam ∈ Set.Icc (0:ℝ) 1, chernoffInfo = -log Z(lam)` | compact + continuous `IsCompact.exists_sInf_image_eq` |
 
@@ -343,7 +343,7 @@ T1-C は roadmap 「~300〜500 行」「Sanov LDP 完成からほぼ含意」と
 
 ---
 
-## 着手 skeleton (`Common2026/Shannon/Cramer.lean`)
+## 着手 skeleton (`InformationTheory/Shannon/Cramer.lean`)
 
 ```lean
 import Mathlib.Probability.Moments.Basic
@@ -356,8 +356,8 @@ import Mathlib.Probability.ProductMeasure
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Order.LiminfLimsup
-import Common2026.InformationTheory.Asymptotic
--- intentionally NOT importing Common2026.Shannon.Sanov*: direct cgf/tilted route
+import InformationTheory.InformationTheory.Asymptotic
+-- intentionally NOT importing InformationTheory.Shannon.Sanov*: direct cgf/tilted route
 
 /-!
 # Cramér's theorem (T1-C, finite-alphabet specialization)
@@ -435,7 +435,7 @@ end InformationTheory.Shannon.Cramer
 ## 既存率推定 (一覧)
 
 - **Mathlib 既存**: CGF / MGF / tilted / Chernoff bound / IID cgf-sum / IdentDistrib / Measure.infinitePi — **80%** が直接呼べる
-- **Common2026 既存**: IID infrastructure (`IIDProductInput`, 簡略形を取れば部分流用)、Asymptotic `DotEq`、Chernoff `IsCompact.exists_sInf_image_eq` テンプレ — **10%** 補助
+- **InformationTheory 既存**: IID infrastructure (`IIDProductInput`, 簡略形を取れば部分流用)、Asymptotic `DotEq`、Chernoff `IsCompact.exists_sInf_image_eq` テンプレ — **10%** 補助
 - **自作必須**: Legendre transform 定義 + 性質、KL-of-tilted、Cramér 主定理 2 本 — **10%** (= 自作要 ~6 件、合計 300〜400 行)
 
 **最終結論**: roadmap 「300〜500 行」「Sanov LDP からほぼ含意」 → 修正 **「300〜400 行」「Sanov LDP は使わず `cgf`/`tilted` 直接経路」**。撤退ライン発動なし、ただし lower bound 苦戦時の縮退案 L-C1〜L-C3 を予防的に明記推奨。

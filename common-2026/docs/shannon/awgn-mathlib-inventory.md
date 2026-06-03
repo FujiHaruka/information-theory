@@ -1,15 +1,15 @@
 # T2-A AWGN Channel Capacity のための Mathlib インフラ在庫調査
 
 > 親 seed: [`docs/textbook-roadmap.md`](../textbook-roadmap.md) T2-A 項。  
-> 出力先: Lean 実装は `Common2026/Shannon/AWGN.lean`（新規）。  
+> 出力先: Lean 実装は `InformationTheory/Shannon/AWGN.lean`（新規）。  
 > 規約: `CLAUDE.md` の "Subagent Inventory of Mathlib Lemmas" + "Mathlib-shape-driven Definitions" に従う。
 >
 > **Status (2026-05-19)**: 着手前在庫。本ファイルは Phase 1 (在庫調査) の成果物。Phase 2 (plan 起草) は `lean-planner` サブエージェントへ。
 
 ## 一行サマリ
 
-**Gaussian の closed-form 補題（密度・平均・分散・畳み込み・rnDeriv）はほぼ 100 % Mathlib に既存（10/10）。Common2026 側に `differentialEntropy`／Gaussian max-entropy／`mutualInfo`／`capacity`／discrete `shannon_noisy_channel_coding_theorem_general_full` まで揃っている。**  
-**ただし「(a) continuous channel kernel = `Kernel ℝ ℝ` の AWGN 具体化」「(b) power constraint `𝔼[X²] ≤ P` を input 分布側で書いた `awgnCapacity P N` 定義」「(c) joint typical set / sphere packing on `ℝⁿ`」「(d) Pinsker / Fano + chain rule の continuous 版」の 4 ピースは Mathlib 不在 + Common2026 不在で、いずれも自作必須。**  
+**Gaussian の closed-form 補題（密度・平均・分散・畳み込み・rnDeriv）はほぼ 100 % Mathlib に既存（10/10）。InformationTheory 側に `differentialEntropy`／Gaussian max-entropy／`mutualInfo`／`capacity`／discrete `shannon_noisy_channel_coding_theorem_general_full` まで揃っている。**  
+**ただし「(a) continuous channel kernel = `Kernel ℝ ℝ` の AWGN 具体化」「(b) power constraint `𝔼[X²] ≤ P` を input 分布側で書いた `awgnCapacity P N` 定義」「(c) joint typical set / sphere packing on `ℝⁿ`」「(d) Pinsker / Fano + chain rule の continuous 版」の 4 ピースは Mathlib 不在 + InformationTheory 不在で、いずれも自作必須。**  
 撤退ラインは 2 本（後述）うち少なくとも 1 本（achievability 連続版を hypothesis pass-through 化）に触れる蓋然性が高い。
 
 ---
@@ -77,9 +77,9 @@ have h_I := mutualInfo_le_of_gaussian_input  -- I(X;Y) = (1/2) log(1+P/N) when X
 | `integral_id_gaussianReal` | `@[simp] lemma integral_id_gaussianReal : ∫ x, x ∂gaussianReal μ v = μ` | `Real.lean:508` | ✅ 既存 | input mean = 0 を bundle するときに使う |
 | `variance_id_gaussianReal` | `@[simp] lemma variance_id_gaussianReal : Var[id; gaussianReal μ v] = v` | `Real.lean:543` | ✅ 既存 | power constraint `E[X²] ≤ P` を `v ≤ P` (mean 0 のとき) に翻訳 |
 | `variance_fun_id_gaussianReal` | `@[simp] lemma variance_fun_id_gaussianReal : Var[fun x ↦ x; gaussianReal μ v] = v` | `Real.lean:518` | ✅ 既存 | 上の `id` 版 |
-| `integrable_gaussianPDFReal` | (`Mathlib/Probability/Distributions/Gaussian/Real.lean` 130 行付近、Common2026 既出依存) | `Real.lean:~130` | ✅ 既存 | Bochner Jensen の可積分性に必要 |
+| `integrable_gaussianPDFReal` | (`Mathlib/Probability/Distributions/Gaussian/Real.lean` 130 行付近、InformationTheory 既出依存) | `Real.lean:~130` | ✅ 既存 | Bochner Jensen の可積分性に必要 |
 | `memLp_id_gaussianReal'` | `lemma memLp_id_gaussianReal' (p : ℝ≥0∞) (hp : p ≠ ∞) : MemLp id p (gaussianReal μ v)` | `Real.lean:553` | ✅ 既存 | n 次モーメント可積分性 |
-| `integral_gaussianReal_eq_integral_smul` | `lemma integral_gaussianReal_eq_integral_smul {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] {μ : ℝ} {v : ℝ≥0} {f : ℝ → E} (hv : v ≠ 0) : ∫ x, f x ∂(gaussianReal μ v) = ∫ x, gaussianPDFReal μ v x • f x` | `Real.lean:249` | ✅ 既存 | (Common2026 既出) Gaussian 積分 → Lebesgue 積分の橋渡し |
+| `integral_gaussianReal_eq_integral_smul` | `lemma integral_gaussianReal_eq_integral_smul {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] {μ : ℝ} {v : ℝ≥0} {f : ℝ → E} (hv : v ≠ 0) : ∫ x, f x ∂(gaussianReal μ v) = ∫ x, gaussianPDFReal μ v x • f x` | `Real.lean:249` | ✅ 既存 | (InformationTheory 既出) Gaussian 積分 → Lebesgue 積分の橋渡し |
 
 ### A.3 — Gaussian の畳み込み + 加法（AWGN の本質：`Y = X + Z`）
 
@@ -105,13 +105,13 @@ have h_I := mutualInfo_le_of_gaussian_input  -- I(X;Y) = (1/2) log(1+P/N) when X
 
 ---
 
-## B. Common2026 既存資産（DifferentialEntropy + ChannelCoding）
+## B. InformationTheory 既存資産（DifferentialEntropy + ChannelCoding）
 
-### B.1 — `Common2026/Shannon/DifferentialEntropy.lean`（1010 行）
+### B.1 — `InformationTheory/Shannon/DifferentialEntropy.lean`（1010 行）
 
 | 概念 | API | file:line | 状態 | T2-A での扱い |
 |---|---|---|---|---|
-| `differentialEntropy` | `noncomputable def differentialEntropy (μ : Measure ℝ) : ℝ := ∫ x, Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume` | `Common2026/Shannon/DifferentialEntropy.lean:42` | ✅ 既存 | continuous entropy 主軸 |
+| `differentialEntropy` | `noncomputable def differentialEntropy (μ : Measure ℝ) : ℝ := ∫ x, Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume` | `InformationTheory/Shannon/DifferentialEntropy.lean:42` | ✅ 既存 | continuous entropy 主軸 |
 | `differentialEntropy_eq_integral_withDensity` | `theorem differentialEntropy_eq_integral_withDensity {f : ℝ → ℝ≥0∞} (hf : Measurable f) : differentialEntropy (volume.withDensity f) = ∫ x, Real.negMulLog (f x).toReal ∂volume` | `DifferentialEntropy.lean:47` | ✅ 既存 | `gaussianReal = volume.withDensity (gaussianPDF μ v)` 経由で展開 |
 | `differentialEntropy_eq_integral_density` | `theorem differentialEntropy_eq_integral_density {f : ℝ → ℝ} (hf : Measurable f) (hf_nn : ∀ x, 0 ≤ f x) (μ : Measure ℝ) (hμ : μ = volume.withDensity (fun x => ENNReal.ofReal (f x))) : differentialEntropy μ = -∫ x, f x * Real.log (f x) ∂volume` | `DifferentialEntropy.lean:60` | ✅ 既存 | `f log f` 直書き形 |
 | `differentialEntropy_dirac` | `theorem differentialEntropy_dirac (m : ℝ) : differentialEntropy (Measure.dirac m) = 0` | `DifferentialEntropy.lean:149` | ✅ 既存 | degenerate (v=0) 退化形 |
@@ -128,20 +128,20 @@ have h_I := mutualInfo_le_of_gaussian_input  -- I(X;Y) = (1/2) log(1+P/N) when X
 
 | 概念 | API | file:line | 状態 | T2-A での扱い |
 |---|---|---|---|---|
-| `Channel α β := Kernel α β` | `abbrev Channel (α β : Type*) [MeasurableSpace α] [MeasurableSpace β] := Kernel α β` | `Common2026/Shannon/ChannelCoding.lean:49` | ✅ 既存 | **AWGN: `Channel ℝ ℝ` で type-class 整合**。`α := ℝ` (input), `β := ℝ` (output) |
+| `Channel α β := Kernel α β` | `abbrev Channel (α β : Type*) [MeasurableSpace α] [MeasurableSpace β] := Kernel α β` | `InformationTheory/Shannon/ChannelCoding.lean:49` | ✅ 既存 | **AWGN: `Channel ℝ ℝ` で type-class 整合**。`α := ℝ` (input), `β := ℝ` (output) |
 | `jointDistribution p W` | `noncomputable def jointDistribution (p : Measure α) (W : Channel α β) : Measure (α × β) := p ⊗ₘ W` | `ChannelCoding.lean:54` | ✅ 既存 | `(X, Y)` の joint。AWGN でも同じ |
 | `outputDistribution p W` | `noncomputable def outputDistribution (p : Measure α) (W : Channel α β) : Measure β := (jointDistribution p W).snd` | `ChannelCoding.lean:71` | ✅ 既存 | Y の marginal。`X ∼ 𝒩(0,P)` + AWGN `N` で `(p ⊗ₘ W).snd = 𝒩(0, P+N)` |
 | `mutualInfoOfChannel p W` | `noncomputable def mutualInfoOfChannel (p : Measure α) (W : Channel α β) : ℝ≥0∞ := klDiv (jointDistribution p W) (p.prod (outputDistribution p W))` | `ChannelCoding.lean:84` | ✅ 既存 | `I(X; Y)` 形 (AWGN にも適用可) |
 | **`Code M n α β`** | `structure Code (M n : ℕ) (α β : Type*) [MeasurableSpace α] [MeasurableSpace β] where encoder : Fin M → (Fin n → α); decoder : (Fin n → β) → Fin M` | `ChannelCoding.lean:151` | ✅ 既存・**要拡張** | discrete 想定: encoder/decoder に measurability 不要 (finite α）。**AWGN では `α := ℝ` で `measurable encoder` が自動で出ない**。bundle に measurability 追加 or `AwgnCode` 新規構造 |
 | `Code.errorProbAt`, `averageErrorProb` | `ChannelCoding.lean:204, 210` | ✅ 既存 | そのまま再利用可能 |
-| **`capacity W`** | `noncomputable def capacity (W : Channel α β) : ℝ := sSup ((fun p : α → ℝ => (mutualInfoOfChannel (pmfToMeasure p) W).toReal) '' stdSimplex ℝ α)` | `Common2026/Shannon/ChannelCodingShannonTheorem.lean:102` | ✅ 既存・**要 specialize** | **discrete 想定 (`stdSimplex ℝ α` は `α : Fintype` 前提)**。AWGN では `α := ℝ` で `stdSimplex ℝ ℝ` は無意味なので**新規 `awgnCapacity P N : ℝ` を立てる**必要あり |
-| `shannon_noisy_channel_coding_theorem_general_full` | `theorem shannon_noisy_channel_coding_theorem_general_full (W : Channel α β) [IsMarkovKernel W] {R : ℝ} (hR_pos : 0 < R) (hR : R < capacity W) {ε : ℝ} (hε : 0 < ε) : ∃ N : ℕ, ∀ n, N ≤ n → ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M) (c : Code M n α β), ∀ m, (c.errorProbAt W m).toReal < ε` 前提 `[Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]` + `β` 同様 | `Common2026/Shannon/ChannelCodingShannonTheoremFullDischarge.lean:1588` | ✅ 既存・**型クラス壁** | **`[Fintype α]` 必須。AWGN では `α := ℝ` で適用不可。** 連続版を別途証明する必要あり |
+| **`capacity W`** | `noncomputable def capacity (W : Channel α β) : ℝ := sSup ((fun p : α → ℝ => (mutualInfoOfChannel (pmfToMeasure p) W).toReal) '' stdSimplex ℝ α)` | `InformationTheory/Shannon/ChannelCodingShannonTheorem.lean:102` | ✅ 既存・**要 specialize** | **discrete 想定 (`stdSimplex ℝ α` は `α : Fintype` 前提)**。AWGN では `α := ℝ` で `stdSimplex ℝ ℝ` は無意味なので**新規 `awgnCapacity P N : ℝ` を立てる**必要あり |
+| `shannon_noisy_channel_coding_theorem_general_full` | `theorem shannon_noisy_channel_coding_theorem_general_full (W : Channel α β) [IsMarkovKernel W] {R : ℝ} (hR_pos : 0 < R) (hR : R < capacity W) {ε : ℝ} (hε : 0 < ε) : ∃ N : ℕ, ∀ n, N ≤ n → ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M) (c : Code M n α β), ∀ m, (c.errorProbAt W m).toReal < ε` 前提 `[Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]` + `β` 同様 | `InformationTheory/Shannon/ChannelCodingShannonTheoremFullDischarge.lean:1588` | ✅ 既存・**型クラス壁** | **`[Fintype α]` 必須。AWGN では `α := ℝ` で適用不可。** 連続版を別途証明する必要あり |
 
 ### B.3 — `BlockwiseChannel` 抽象（I-2 General DMC capacity）
 
 | 概念 | API | file:line | 状態 | T2-A での扱い |
 |---|---|---|---|---|
-| `BlockwiseChannel α β` | `def BlockwiseChannel (α β : Type*) [MeasurableSpace α] [MeasurableSpace β] : Type _ := (n : ℕ) → Kernel (Fin n → α) (Fin n → β)` | `Common2026/Shannon/BlockwiseChannel.lean:60` | ✅ 既存 | **AWGN を BlockwiseChannel として記述する選択肢。** `α := β := ℝ` で型クラス整合 (`ℝ : MeasurableSpace`) |
+| `BlockwiseChannel α β` | `def BlockwiseChannel (α β : Type*) [MeasurableSpace α] [MeasurableSpace β] : Type _ := (n : ℕ) → Kernel (Fin n → α) (Fin n → β)` | `InformationTheory/Shannon/BlockwiseChannel.lean:60` | ✅ 既存 | **AWGN を BlockwiseChannel として記述する選択肢。** `α := β := ℝ` で型クラス整合 (`ℝ : MeasurableSpace`) |
 | `Channel.toBlock W n` | `noncomputable def Channel.toBlock (W : Channel α β) [IsMarkovKernel W] (n : ℕ) : Kernel (Fin n → α) (Fin n → β)` | `BlockwiseChannel.lean:74` | ✅ 既存 | memoryless extension `W^{⊗n}`。AWGN の `W` に `IsMarkovKernel` を付ければ自動構築 |
 | `BlockwiseChannel.capacityN W n` | `noncomputable def BlockwiseChannel.capacityN (W : BlockwiseChannel α β) (n : ℕ) : ℝ≥0∞ := sSup ((fun p : Measure (Fin n → α) => mutualInfoOfChannel p (W n)) '' { p : Measure (Fin n → α) | IsProbabilityMeasure p })` | `BlockwiseChannel.lean:124` | ✅ 既存・**要拡張** | **無制約 `sup`。AWGN は `E[‖X‖²] ≤ n·P` 制約付き sup** が必要 → `BlockwiseChannel.capacityN_costConstrained` を新規導入 or `awgnCapacity P N` を直接定義 |
 | `BlockwiseChannel.capacity_lim W` | `noncomputable def BlockwiseChannel.capacity_lim (W : BlockwiseChannel α β) : ℝ := Filter.atTop.limUnder (fun n : ℕ => (W.capacityN n).toReal / n)` | `BlockwiseChannel.lean:134` | ✅ 既存 | per-letter limit。AWGN memoryless では `capacity_lim = (1/2) log(1+P/N)` |
@@ -151,16 +151,16 @@ have h_I := mutualInfo_le_of_gaussian_input  -- I(X;Y) = (1/2) log(1+P/N) when X
 
 | 概念 | API | file:line | 状態 | T2-A での扱い |
 |---|---|---|---|---|
-| `differentialEntropyRV μ X` | `noncomputable def differentialEntropyRV {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) (X : Ω → ℝ) : ℝ := Common2026.Shannon.differentialEntropy (μ.map X)` | `Common2026/Shannon/TypedRV.lean:81` | ✅ 既存 | `h(X)` を `Ω → ℝ` random variable で書ける |
-| `mutualInfo μ Xs Yo` | `noncomputable def mutualInfo (μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y) : ℝ≥0∞ := klDiv (μ.map (fun ω => (Xs ω, Yo ω))) ((μ.map Xs).prod (μ.map Yo))` | `Common2026/Shannon/MutualInfo.lean:36` | ✅ 既存 | `I(X;Y)` for general type X, Y。AWGN では X = Y = ℝ で直接適用可 |
-| `klDivRV μ X Y` | `Common2026/Shannon/TypedRV.lean:64` | ✅ 既存 | (T2-A では未使用) |
+| `differentialEntropyRV μ X` | `noncomputable def differentialEntropyRV {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) (X : Ω → ℝ) : ℝ := InformationTheory.Shannon.differentialEntropy (μ.map X)` | `InformationTheory/Shannon/TypedRV.lean:81` | ✅ 既存 | `h(X)` を `Ω → ℝ` random variable で書ける |
+| `mutualInfo μ Xs Yo` | `noncomputable def mutualInfo (μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y) : ℝ≥0∞ := klDiv (μ.map (fun ω => (Xs ω, Yo ω))) ((μ.map Xs).prod (μ.map Yo))` | `InformationTheory/Shannon/MutualInfo.lean:36` | ✅ 既存 | `I(X;Y)` for general type X, Y。AWGN では X = Y = ℝ で直接適用可 |
+| `klDivRV μ X Y` | `InformationTheory/Shannon/TypedRV.lean:64` | ✅ 既存 | (T2-A では未使用) |
 
 ### B.5 — FisherInfo + de Bruijn (T2-F)
 
 | 概念 | API | file:line | 状態 | T2-A での扱い |
 |---|---|---|---|---|
-| `fisherInfo μ` | `noncomputable def fisherInfo (μ : Measure ℝ) : ℝ≥0∞ := ∫⁻ x, ENNReal.ofReal ((logDeriv (fun y => (μ.rnDeriv volume y).toReal) x) ^ 2) * μ.rnDeriv volume x ∂volume` | `Common2026/Shannon/FisherInfo.lean:58` | ✅ 既存 | (T2-A では直接使わない、T2-D EPI で必要) |
-| `IsRegularDeBruijnHyp` + `deBruijn_identity` | `Common2026/Shannon/FisherInfo.lean:186, 209` | ✅ 既存 (hypothesis pass-through 形) | (T2-A では未使用、reference のみ) |
+| `fisherInfo μ` | `noncomputable def fisherInfo (μ : Measure ℝ) : ℝ≥0∞ := ∫⁻ x, ENNReal.ofReal ((logDeriv (fun y => (μ.rnDeriv volume y).toReal) x) ^ 2) * μ.rnDeriv volume x ∂volume` | `InformationTheory/Shannon/FisherInfo.lean:58` | ✅ 既存 | (T2-A では直接使わない、T2-D EPI で必要) |
+| `IsRegularDeBruijnHyp` + `deBruijn_identity` | `InformationTheory/Shannon/FisherInfo.lean:186, 209` | ✅ 既存 (hypothesis pass-through 形) | (T2-A では未使用、reference のみ) |
 
 ---
 
@@ -187,7 +187,7 @@ have h_I := mutualInfo_le_of_gaussian_input  -- I(X;Y) = (1/2) log(1+P/N) when X
 |---|---|---|---|---|
 | `IndepFun X Y μ` | `def IndepFun {β γ} {_mΩ : MeasurableSpace Ω} [MeasurableSpace β] [MeasurableSpace γ] (f : Ω → β) (g : Ω → γ) (μ : Measure Ω := by volume_tac) : Prop := Kernel.IndepFun f g (Kernel.const Unit μ) (Measure.dirac () : Measure Unit)` | `Mathlib/Probability/Independence/Basic.lean:144` | ✅ 既存 | `X ⟂ Z` を typed RV 形で表現 (AWGN の noise 独立) |
 | `variance X μ` | `def variance : ℝ := (evariance X μ).toReal` (`evariance := ∫⁻ ω, ‖X ω - μ[X]‖ₑ ^ 2 ∂μ`) | `Mathlib/Probability/Moments/Variance.lean:63` (`evariance:58`) | ✅ 既存 | power constraint `Var[X; μ] ≤ P` (mean 0 の前提を bundle すれば `𝔼[X²] ≤ P`) |
-| `variance_eq_integral` | `lemma variance_eq_integral (hX : AEMeasurable X μ) : Var[X; μ] = ∫ ω, (X ω - μ[X]) ^ 2 ∂μ` | `Variance.lean:154` | ✅ 既存 | Bochner integral 形 (Common2026 既出) |
+| `variance_eq_integral` | `lemma variance_eq_integral (hX : AEMeasurable X μ) : Var[X; μ] = ∫ ω, (X ω - μ[X]) ^ 2 ∂μ` | `Variance.lean:154` | ✅ 既存 | Bochner integral 形 (InformationTheory 既出) |
 | `Measure.conv` (additive `∗`) | `@[to_additive] noncomputable def mconv (μ ν : Measure M) : Measure M := Measure.map (fun x : M × M ↦ x.1 * x.2) (μ.prod ν)` → additive version `Measure.conv` via `to_additive` | `Mathlib/MeasureTheory/Group/Convolution.lean:35` | ✅ 既存 | `gaussianReal_conv_gaussianReal` 経由で `Y` の law を直接計算 |
 
 ### C.3 — `condDistrib` / disintegration（converse の continuous Fano で必要）
@@ -197,7 +197,7 @@ have h_I := mutualInfo_le_of_gaussian_input  -- I(X;Y) = (1/2) log(1+P/N) when X
 | `condDistrib Y X μ` | `noncomputable irreducible_def condDistrib {_ : MeasurableSpace α} [MeasurableSpace β] (Y : α → Ω) (X : α → β) (μ : Measure α) [IsFiniteMeasure μ] : Kernel β Ω` 前提 `[MeasurableSpace Ω] [StandardBorelSpace Ω] [Nonempty Ω]` (file-top variable; 出力側 `Ω` に要求) | `Mathlib/Probability/Kernel/CondDistrib.lean:64` (file-top variable `Mathlib/Probability/Kernel/CondDistrib.lean:54-55`) | ✅ 既存 | **converse で `condDistrib (Y i) (Y^{<i}, X^{i}) μ` 等を取るときに必要**。Ω = ℝ は `[StandardBorelSpace ℝ]` 自動充足 |
 | `compProd_map_condDistrib` | `lemma compProd_map_condDistrib (hY : AEMeasurable Y μ) : (μ.map X) ⊗ₘ condDistrib Y X μ = μ.map fun a ↦ (X a, Y a)` 前提 (file-top): `[MeasurableSpace Ω] [StandardBorelSpace Ω] [Nonempty Ω] [IsFiniteMeasure μ]` | `CondDistrib.lean:82` | ✅ 既存 | joint = marg ⊗ condKernel の disintegration |
 | `instIsMarkovKernelCondDistrib` | `instance [MeasurableSpace β] : IsMarkovKernel (condDistrib Y X μ)` 前提同上 | `CondDistrib.lean:68` | ✅ 既存 | condKernel が Markov 自動 |
-| `Measure.condKernel` | `Mathlib/Probability/Kernel/Disintegration/StandardBorel.lean:361` (Common2026 過去調査済) | ✅ 既存 | 同上の measure 版 |
+| `Measure.condKernel` | `Mathlib/Probability/Kernel/Disintegration/StandardBorel.lean:361` (InformationTheory 過去調査済) | ✅ 既存 | 同上の measure 版 |
 
 **重要な前提条件ボックス**（事故の起きやすい lemma 群）:
 
@@ -209,7 +209,7 @@ have h_I := mutualInfo_le_of_gaussian_input  -- I(X;Y) = (1/2) log(1+P/N) when X
 
 ---
 
-## D. AWGN 用に **不在** の Mathlib / Common2026 API（自作必須）
+## D. AWGN 用に **不在** の Mathlib / InformationTheory API（自作必須）
 
 優先度順、推定行数付き。
 
@@ -234,7 +234,7 @@ noncomputable def awgnChannel (N : ℝ≥0) : Channel ℝ ℝ where
 
 ### D.2 — Power constraint 付き `awgnCapacity P N : ℝ` 定義
 
-**現状**: `Common2026/Shannon/ChannelCodingShannonTheorem.lean:102` の `capacity W` は **`stdSimplex ℝ α`**（`Fintype α` 想定）でとる。AWGN では continuous な input 分布全体上で電力制約付き sup を取る。
+**現状**: `InformationTheory/Shannon/ChannelCodingShannonTheorem.lean:102` の `capacity W` は **`stdSimplex ℝ α`**（`Fintype α` 想定）でとる。AWGN では continuous な input 分布全体上で電力制約付き sup を取る。
 
 **Mathlib-shape-driven な推奨定義**:
 ```lean
@@ -275,7 +275,7 @@ theorem mutualInfoOfChannel_gaussianReal_awgnChannel
 -- ⇒ I = (1/2) [log(2πe(P+N)) - log(2πeN)] = (1/2) log((P+N)/N) = (1/2) log(1+P/N)
 ```
 
-ただし `mutualInfo` の現定義は KL 形（`klDiv (μ.map (X,Y)) ((μ.map X).prod (μ.map Y))`）なので、`I = h(Y) - h(Y|X)` 形に書き換える橋渡し補題が**現状 Common2026 に不在**。**ここが最大の plumbing リスク**（"Mathlib-shape-driven Definitions" 規約のレッドフラグ: 「`f (compProd ...)` を `∫⁻ ... ∂` に直す bridge」を探すパターン）。
+ただし `mutualInfo` の現定義は KL 形（`klDiv (μ.map (X,Y)) ((μ.map X).prod (μ.map Y))`）なので、`I = h(Y) - h(Y|X)` 形に書き換える橋渡し補題が**現状 InformationTheory に不在**。**ここが最大の plumbing リスク**（"Mathlib-shape-driven Definitions" 規約のレッドフラグ: 「`f (compProd ...)` を `∫⁻ ... ∂` に直す bridge」を探すパターン）。
 
 → **撤退ライン候補**：`mutualInfo_of_gaussian_input_eq` を hypothesis pass-through 形で publish し、bridge 補題は別 plan (`mi-continuous-bridge-plan.md`) で分離する。
 
@@ -283,14 +283,14 @@ theorem mutualInfoOfChannel_gaussianReal_awgnChannel
 
 ### D.4 — Continuous joint typical set / achievability
 
-**現状**: `Common2026/Shannon/ChannelCodingAchievability.lean:301` の `jointlyTypicalSet` は **`[Fintype α] [Fintype β]` 想定**。Cover-Thomas 8.6 の continuous joint typicality (sphere packing 経由) は完全に不在。
+**現状**: `InformationTheory/Shannon/ChannelCodingAchievability.lean:301` の `jointlyTypicalSet` は **`[Fintype α] [Fintype β]` 想定**。Cover-Thomas 8.6 の continuous joint typicality (sphere packing 経由) は完全に不在。
 
 **選択肢**:
 
 1. **Sphere packing 経路** (Cover-Thomas 9.2): codebook を Gaussian i.i.d. でサンプル → typical set ≈ `Fin n → ℝ` の球殻 `B(0, √(nP))` の表面 → 球殻の体積比から `2^{n(R-C)}` decay。
    - Mathlib 在庫: `Metric.sphere`（既存）、`EuclideanSpace ℝ (Fin n)` の volume measure（`Mathlib/MeasureTheory/Measure/Lebesgue/EuclideanSpace.lean` ある）。
    - 不在: 球殻の volume formula（`(π^{n/2} / Γ(n/2+1)) · r^n` の closed form）が Mathlib に直接形では不在の可能性大。
-2. **Strong typicality 経路** (Gaussian PDF の log を取って AEP): `Common2026/Shannon/StrongTypicality.lean` の discrete 版を `pdf log pdf` で再構築。
+2. **Strong typicality 経路** (Gaussian PDF の log を取って AEP): `InformationTheory/Shannon/StrongTypicality.lean` の discrete 版を `pdf log pdf` で再構築。
 3. **直接 Gallager 形** (random coding exponent): 連続版を `klDiv_compProd_eq_add` で書く。
 
 **推奨**: 当面 **撤退ライン 1** を採用し、achievability 半分は `hypothesisAchievability : ∀ ε > 0, ∃ codebook, average_error ≤ ε` という命題形 hypothesis を bundle して pass-through で publish。Bridge は別 plan。
@@ -299,11 +299,11 @@ theorem mutualInfoOfChannel_gaussianReal_awgnChannel
 
 ### D.5 — Continuous Fano / converse
 
-**現状**: `Common2026/Shannon/ChannelCodingConverseGeneralComplete.lean:474` の `channel_coding_converse_general_memoryless` は **`[Fintype α] [Fintype β]`** + **`[MeasurableSingletonClass α]`** 想定。Continuous 版は不在。
+**現状**: `InformationTheory/Shannon/ChannelCodingConverseGeneralComplete.lean:474` の `channel_coding_converse_general_memoryless` は **`[Fintype α] [Fintype β]`** + **`[MeasurableSingletonClass α]`** 想定。Continuous 版は不在。
 
 **戦略**:
 - Fano の連続化は **Cover-Thomas 2.10**: `H(W | Y) ≤ binEntropy(Pe) + Pe log(|W|-1)` の `W` 側を message space `Fin M`（依然 discrete）に保つ。`Y^n : Fin n → ℝ` は連続側だが、Fano の `Y` 側引数は decoder の output range なので問題なし。
-- すなわち `fano_inequality_measure_theoretic` (`Common2026/Fano/Measure.lean`) を `X := Fin M`, `Y := Fin n → ℝ` で **そのまま再利用できる**（`X` 側に `Fintype + MeasurableSingletonClass`、`Y` 側に制約なし、という Fano Phase 3 の構造に合致）。
+- すなわち `fano_inequality_measure_theoretic` (`InformationTheory/Fano/Measure.lean`) を `X := Fin M`, `Y := Fin n → ℝ` で **そのまま再利用できる**（`X` 側に `Fintype + MeasurableSingletonClass`、`Y` 側に制約なし、という Fano Phase 3 の構造に合致）。
 - Chain rule per-letter は `condMutualInfo_chain_rule_X_2var` + `memoryless_per_summand_bound` (`ChannelCodingConverseGeneralComplete.lean:215, 371`) を再利用可。ただし `[StandardBorelSpace X]` `[StandardBorelSpace Y]` のため continuous X, Y で適用可。
 - Per-letter max-entropy bound: `differentialEntropy_le_gaussian_of_variance_le` を `Y_i ∼ μ_{Y_i}` に適用し、`Var[Y_i] ≤ P + N` （input power constraint + indep noise variance）から `h(Y_i) ≤ (1/2) log(2πe(P+N))`。
 
@@ -326,7 +326,7 @@ structure AwgnCode (M n : ℕ) where
 
 ### D.7 — Pinsker 連続版 / KL → TV bound
 
-**現状**: `Common2026/Shannon/Pinsker.lean` は discrete 想定が主。Achievability の error 評価で `klDiv` から TV を取り出す箇所で必要。
+**現状**: `InformationTheory/Shannon/Pinsker.lean` は discrete 想定が主。Achievability の error 評価で `klDiv` から TV を取り出す箇所で必要。
 
 **判定**: T2-A 本体では未必要（achievability を hypothesis 形に丸めるなら回避）。優先度低。
 
@@ -400,29 +400,29 @@ theorem awgnCapacity_eq_of_h_minus_h_bridge
 
 1. **`condDistrib` の `[StandardBorelSpace Ω]` は出力側に課される**（`Mathlib/Probability/Kernel/CondDistrib.lean:54-55` file-top variable）。Converse の chain rule で `condDistrib (X i) (Y^n, X^{<i}) μ` のような形を組むとき、**取り出し対象 = ℝ** には自動 instance あり (OK) だが、**条件付け側 = `(Fin n → ℝ) × (Fin i → ℝ)`** に `[Nonempty]` が要る場面で `Fin n → ℝ` が `Nonempty` 自動推論されるか要確認。Fano Phase 3 の経験で `[Fintype X]` 側に課される誤解があった例あり。
 
-2. **`Code M n α β` の decoder measurability**（`Common2026/Shannon/ChannelCoding.lean:151`）が **bundle field に入っていない**。`α = ℝ` で `[MeasurableSingletonClass ℝ]` が偽（連続）なので、`measurable_of_finite` などで自動充足できない。AWGN 専用に `AwgnCode` 構造を新規定義する必要あり（B.2 で既述）。これを後回しにすると achievability で `c.errorProbAt` が `Measure.real {...}` 計算時に立ち往生する。
+2. **`Code M n α β` の decoder measurability**（`InformationTheory/Shannon/ChannelCoding.lean:151`）が **bundle field に入っていない**。`α = ℝ` で `[MeasurableSingletonClass ℝ]` が偽（連続）なので、`measurable_of_finite` などで自動充足できない。AWGN 専用に `AwgnCode` 構造を新規定義する必要あり（B.2 で既述）。これを後回しにすると achievability で `c.errorProbAt` が `Measure.real {...}` 計算時に立ち往生する。
 
-3. **`mutualInfoOfChannel p W` の `IsMarkovKernel W` 要求** (`ChannelCoding.lean:62-67` の instance) は `awgnChannel N` を `IsMarkovKernel` インスタンスに昇格させる必要。`gaussianReal x N` が `IsProbabilityMeasure` (∀ x) は `instIsProbabilityMeasureGaussianReal` で自動だが、**`Channel ℝ ℝ` を `Kernel.mk` で組むと measurability proof obligation** が出る。`awgnChannel.measurable'` を埋める段階で `Measurable.measure_of_isPiSystem_of_isProbabilityMeasure` か `gaussianReal_apply` ベース手書きが必要 (`Common2026/Shannon/BlockwiseChannel.lean:77-95` の `Channel.toBlock` の measurability proof を参考にする)。
+3. **`mutualInfoOfChannel p W` の `IsMarkovKernel W` 要求** (`ChannelCoding.lean:62-67` の instance) は `awgnChannel N` を `IsMarkovKernel` インスタンスに昇格させる必要。`gaussianReal x N` が `IsProbabilityMeasure` (∀ x) は `instIsProbabilityMeasureGaussianReal` で自動だが、**`Channel ℝ ℝ` を `Kernel.mk` で組むと measurability proof obligation** が出る。`awgnChannel.measurable'` を埋める段階で `Measurable.measure_of_isPiSystem_of_isProbabilityMeasure` か `gaussianReal_apply` ベース手書きが必要 (`InformationTheory/Shannon/BlockwiseChannel.lean:77-95` の `Channel.toBlock` の measurability proof を参考にする)。
 
 4. **`differentialEntropy_le_gaussian_of_variance_le` の 4 hypothesis** (`DifferentialEntropy.lean:510`) のうち、特に **`h_ent_int : Integrable (negMulLog ((rnDeriv μ vol) .toReal)) volume`** が `μ` (任意の input 法則の image) で discharge できない可能性。converse で per-letter `Y_i` の law にこれを要求するとき、`Y_i` の rnDeriv が積分可能な状態 (Gaussian-like tail) を bundle するための事前準備（output `Y_i = X_i + Z_i` の law が「平均 + 二次モーメント有限」を満たすだけでは足りない場合がある）。F-3 撤退ライン候補。
 
-5. **`mutualInfo` 定義の "Mathlib-shape-driven" レッドフラグ**（`Common2026/Shannon/MutualInfo.lean:36`）。現在 `mutualInfo μ X Y := klDiv (μ.map (X,Y)) ((μ.map X).prod (μ.map Y))` で KL 形。Gaussian-input AWGN の closed form `(1/2) log(1+P/N)` を取り出すために `I = h(Y) - h(Y|X) = h(Y) - h(Z)` 形へ翻訳する bridge 補題が **Common2026 に不在**。直接 `klDiv` から展開する経路は 200-400 行のリスク。Mathlib-shape-driven 原則からは「`differentialEntropy_diff` ベースの定義変更」もありうるが、後方互換性 (`MutualInfo.lean` の既存 lemma 群、Shannon main theorem の `mutualInfoOfChannel`) を壊すと回帰が広範囲。**撤退ライン F-2 が一番現実的**。
+5. **`mutualInfo` 定義の "Mathlib-shape-driven" レッドフラグ**（`InformationTheory/Shannon/MutualInfo.lean:36`）。現在 `mutualInfo μ X Y := klDiv (μ.map (X,Y)) ((μ.map X).prod (μ.map Y))` で KL 形。Gaussian-input AWGN の closed form `(1/2) log(1+P/N)` を取り出すために `I = h(Y) - h(Y|X) = h(Y) - h(Z)` 形へ翻訳する bridge 補題が **InformationTheory に不在**。直接 `klDiv` から展開する経路は 200-400 行のリスク。Mathlib-shape-driven 原則からは「`differentialEntropy_diff` ベースの定義変更」もありうるが、後方互換性 (`MutualInfo.lean` の既存 lemma 群、Shannon main theorem の `mutualInfoOfChannel`) を壊すと回帰が広範囲。**撤退ライン F-2 が一番現実的**。
 
 ---
 
-## H. 着手 skeleton（`Common2026/Shannon/AWGN.lean`）
+## H. 着手 skeleton（`InformationTheory/Shannon/AWGN.lean`）
 
 > 規約: 「Skeleton-driven Development」(`CLAUDE.md`)。本 skeleton 自体はファイルを作成しない。実装着手時に `lean-implementer` サブエージェントが本 skeleton を Write し、`:= by sorry` を 1 つずつ埋めていく。
 
 ```lean
-import Common2026.Shannon.ChannelCoding
-import Common2026.Shannon.ChannelCodingShannonTheoremFullDischarge
-import Common2026.Shannon.BlockwiseChannel
-import Common2026.Shannon.DifferentialEntropy
-import Common2026.Shannon.MutualInfo
-import Common2026.Shannon.MIChainRule
-import Common2026.Shannon.CondMutualInfo
-import Common2026.Fano.Measure
+import InformationTheory.Shannon.ChannelCoding
+import InformationTheory.Shannon.ChannelCodingShannonTheoremFullDischarge
+import InformationTheory.Shannon.BlockwiseChannel
+import InformationTheory.Shannon.DifferentialEntropy
+import InformationTheory.Shannon.MutualInfo
+import InformationTheory.Shannon.MIChainRule
+import InformationTheory.Shannon.CondMutualInfo
+import InformationTheory.Fano.Measure
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Distributions.Gaussian.Basic
 import Mathlib.Probability.Independence.Basic
@@ -504,8 +504,8 @@ theorem mutualInfoOfChannel_gaussianInput_closed_form
     (h_bridge :
         (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
             (gaussianReal 0 P) (awgnChannel N)).toReal
-          = Common2026.Shannon.differentialEntropy (gaussianReal 0 (P + N))
-              - Common2026.Shannon.differentialEntropy (gaussianReal 0 N)) :
+          = InformationTheory.Shannon.differentialEntropy (gaussianReal 0 (P + N))
+              - InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N)) :
     (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
         (gaussianReal 0 P) (awgnChannel N)).toReal
       = (1/2) * Real.log (1 + (P : ℝ) / (N : ℝ)) := by sorry
@@ -579,7 +579,7 @@ theorem awgn_achievability
 /-- **Per-letter Gaussian max-entropy bound for the AWGN output**. For the i-th output
 `Y_i = X_i + Z_i` with `E[X_i²] ≤ P` and `Z_i ⟂ X_i, Z_i ∼ 𝒩(0, N)`, we have
 `h(Y_i) ≤ (1/2) log(2πe(P+N))`. Derived from
-`Common2026.Shannon.differentialEntropy_le_gaussian_of_variance_le`.
+`InformationTheory.Shannon.differentialEntropy_le_gaussian_of_variance_le`.
 
 撤退ライン F-3 候補: 4-hypothesis form. -/
 theorem differentialEntropy_Yi_le_max_entropy_AWGN
@@ -590,12 +590,12 @@ theorem differentialEntropy_Yi_le_max_entropy_AWGN
     (h_var_int : Integrable (fun y => y^2) μ)
     (h_ent_int : Integrable
         (fun y => Real.negMulLog ((μ.rnDeriv volume y).toReal)) volume) :
-    Common2026.Shannon.differentialEntropy μ
+    InformationTheory.Shannon.differentialEntropy μ
       ≤ (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (P + N)) := by sorry
 
 /-- **Converse half**: any code with `E[X_i²] ≤ P` and average error → 0 has rate
 ≤ `(1/2) log(1 + P/N)`. Modeled on `channel_coding_converse_general_memoryless`
-(`Common2026/Shannon/ChannelCodingConverseGeneralComplete.lean:474`) with
+(`InformationTheory/Shannon/ChannelCodingConverseGeneralComplete.lean:474`) with
 `α := β := ℝ` and per-letter max-entropy substitution. -/
 theorem awgn_converse
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
@@ -635,7 +635,7 @@ end InformationTheory.Shannon.AWGN
 
 - **インベントリ**: 本ファイル `docs/shannon/awgn-mathlib-inventory.md`
 - **Gaussian 精密計算は 100% Mathlib 既存** — `gaussianReal_conv_gaussianReal`, `gaussianReal_add_gaussianReal_of_indepFun`, `variance_id_gaussianReal`, `rnDeriv_gaussianReal` ですべて足りる
-- **continuous entropy + max-entropy は Common2026 既存** — `differentialEntropy_gaussianReal` (`= (1/2) log(2πev)`) と `differentialEntropy_le_gaussian_of_variance_le` (4-hypothesis 形) が converse の per-letter bound そのまま
+- **continuous entropy + max-entropy は InformationTheory 既存** — `differentialEntropy_gaussianReal` (`= (1/2) log(2πev)`) と `differentialEntropy_le_gaussian_of_variance_le` (4-hypothesis 形) が converse の per-letter bound そのまま
 - **AWGN 専用 6 ピース（`awgnChannel`, `AwgnCode`, MI closed form bridge, `awgnCapacity` 定義 + 等号, achievability, converse）が自作必要**
 - **最大リスク**: discrete `Code` の measurability bundle 不在 (`α := ℝ` で `MeasurableSingletonClass` 偽), `mutualInfo` の KL 形 vs `h(Y) - h(Y|X)` 形の bridge 補題不在 (200-400 行リスク, 撤退 F-2 で回避可)
 - **撤退ライン候補 3 本** (F-1 achievability hypothesis, F-2 MI bridge hypothesis, F-3 per-letter ent_int hypothesis)

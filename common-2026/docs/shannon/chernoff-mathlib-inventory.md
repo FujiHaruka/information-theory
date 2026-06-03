@@ -1,16 +1,16 @@
-# Chernoff Information (T1-B, sandwich Tendsto) Mathlib + Common2026 inventory
+# Chernoff Information (T1-B, sandwich Tendsto) Mathlib + InformationTheory inventory
 
 > Source materials: `docs/textbook-roadmap.md` §T1-B (lines 126–133).
 > Predecessor inventories: `docs/shannon/chernoff-hoeffding-mathlib-inventory.md`
 > (T1-B/D 合同, ~652 行) — 本 inventory はそこから **T1-B 独立 sandwich Tendsto publish** に
 > 必要な範囲だけを抽出 + 本セッション固有の項目を追補する。
 > Predecessor plan: `docs/shannon/chernoff-hoeffding-moonshot-plan.md` (T1-B/D 合同, archive 化済)。
-> Predecessor publish: `Common2026/Shannon/Chernoff.lean` (1066 行, 0 sorry, **achievability side まで完了**, converse defer)。
+> Predecessor publish: `InformationTheory/Shannon/Chernoff.lean` (1066 行, 0 sorry, **achievability side まで完了**, converse defer)。
 
 ## 一行サマリ
 
 **T1-B 独立 sandwich Tendsto** (`Tendsto rate (𝓝 chernoffInfo)`) を publish するために必要な API は
-`Common2026.Shannon.Chernoff` 既存 publish (Phase A + D + C achievability) に **Mathlib
+`InformationTheory.Shannon.Chernoff` 既存 publish (Phase A + D + C achievability) に **Mathlib
 `tendsto_of_le_liminf_of_limsup_le` 1 本 + hypothesis pass-through (converse + boundedness)** を
 追加するだけで完結。自前 plumbing 不要 (`chernoffInfo` / `bayesErrorMinPmf` /
 `chernoff_lemma_achievability` を黒箱で再利用)。**撤退ライン L-Ch1〜L-Ch3** は converse side の
@@ -19,7 +19,7 @@
 
 | 数値 | 値 |
 |---|---|
-| 既存 API カバレッジ (sandwich Tendsto に限る) | **100%** (Mathlib + Common2026 既存 publish) |
+| 既存 API カバレッジ (sandwich Tendsto に限る) | **100%** (Mathlib + InformationTheory 既存 publish) |
 | 自作必要な top-level | **1 種** (`chernoff_lemma_tendsto`, sandwich hypothesis pass-through wrapper) |
 | 規模見積もり | **~500 行** (撤退ライン L-Ch1+L-Ch2+L-Ch3 全採用形) |
 | 撤退ライン発動 (現時点) | **No** (Mathlib gap なし) |
@@ -63,11 +63,11 @@ theorem chernoff_lemma_tendsto
 ## ファイル構成
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   Chernoff.lean                ← 既存 (1066 行, 変更なし — 黒箱で再利用)
   ChernoffInformation.lean     ← 新規 (sandwich Tendsto publish, ~500 行)
   HoeffdingTradeoff.lean       ← 既存 (sandwich pattern の雛形)
-Common2026.lean                ← `import Common2026.Shannon.ChernoffInformation` を追記
+InformationTheory.lean                ← `import InformationTheory.Shannon.ChernoffInformation` を追記
 docs/shannon/
   chernoff-mathlib-inventory.md      ← 本ファイル (新規)
   chernoff-moonshot-plan.md          ← 新規 (T1-B 独立 plan)
@@ -77,22 +77,22 @@ docs/shannon/
 
 ---
 
-## A. 既存 Common2026 publish 再利用枠 (黒箱)
+## A. 既存 InformationTheory publish 再利用枠 (黒箱)
 
 | Symbol | file:line | full signature | conclusion (verbatim) |
 |---|---|---|---|
-| `Chernoff.chernoffZSum` | `Common2026/Shannon/Chernoff.lean:63` | `noncomputable def chernoffZSum (P₁ P₂ : α → ℝ) (lam : ℝ) : ℝ` (`variable [Fintype α] [DecidableEq α]`) | `∑ a : α, (P₁ a) ^ (1 - lam) * (P₂ a) ^ lam` |
-| `Chernoff.chernoffInfo` | `Common2026/Shannon/Chernoff.lean:69` | `noncomputable def chernoffInfo (P₁ P₂ : α → ℝ) : ℝ` (`variable [Fintype α] [DecidableEq α]`) | `-(sInf ((fun lam : ℝ => Real.log (chernoffZSum P₁ P₂ lam)) '' Set.Icc (0:ℝ) 1))` |
-| `Chernoff.chernoffInfo_attained` | `Common2026/Shannon/Chernoff.lean:163` | `theorem chernoffInfo_attained (P₁ P₂ : α → ℝ) [Nonempty α] (hP₁ : ∀ a, 0 < P₁ a) (hP₂ : ∀ a, 0 < P₂ a) : ...` | `∃ lam ∈ Set.Icc (0:ℝ) 1, chernoffInfo P₁ P₂ = -(Real.log (chernoffZSum P₁ P₂ lam))` |
-| `Chernoff.chernoffInfo_nonneg` | `Common2026/Shannon/Chernoff.lean:183` | `theorem chernoffInfo_nonneg ...` | `0 ≤ chernoffInfo P₁ P₂` |
-| `Chernoff.chernoffInfo_symm` | `Common2026/Shannon/Chernoff.lean:234` | `theorem chernoffInfo_symm (P₁ P₂ : α → ℝ) : ...` | `chernoffInfo P₁ P₂ = chernoffInfo P₂ P₁` (with the standard convention swap) |
-| `Chernoff.bayesErrorMinPmf` | `Common2026/Shannon/Chernoff.lean:691` | `noncomputable def bayesErrorMinPmf (P₁ P₂ : α → ℝ) (n : ℕ) : ℝ` (`variable [Fintype α] [DecidableEq α]`) | `(1/2) * ∑ x : Fin n → α, min (∏ i, P₁ (x i)) (∏ i, P₂ (x i))` |
-| `Chernoff.bayesErrorMinPmf_pos` | `Common2026/Shannon/Chernoff.lean:807` | `lemma bayesErrorMinPmf_pos (P₁ P₂ : α → ℝ) [Nonempty α] (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) (n : ℕ) : ...` | `0 < bayesErrorMinPmf P₁ P₂ n` |
-| `Chernoff.bayesErrorMinPmf_le_half_Z_pow` | `Common2026/Shannon/Chernoff.lean:779` | `theorem bayesErrorMinPmf_le_half_Z_pow ... (lam_mem : lam ∈ Set.Icc (0:ℝ) 1) (n : ℕ) : ...` | `bayesErrorMinPmf P₁ P₂ n ≤ (1/2) * chernoffZSum P₁ P₂ lam ^ n` |
-| `Chernoff.chernoffZSum_pos` | `Common2026/Shannon/Chernoff.lean:112` | `lemma chernoffZSum_pos (P₁ P₂ : α → ℝ) [Nonempty α] (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) (lam : ℝ) : ...` | `0 < chernoffZSum P₁ P₂ lam` |
-| `Chernoff.chernoff_achievability` | `Common2026/Shannon/Chernoff.lean:1004` | `theorem chernoff_achievability (P₁ P₂ : α → ℝ) [Nonempty α] (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) : ...` | `chernoffInfo P₁ P₂ ≤ Filter.liminf (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) atTop` |
-| `Chernoff.chernoff_lemma_achievability` | `Common2026/Shannon/Chernoff.lean:1059` | (alias of `chernoff_achievability`, same signature) | (alias, same conclusion) |
-| `Chernoff.chernoff_rate_ge_chernoffInfo_eventually` | `Common2026/Shannon/Chernoff.lean:883` | `lemma chernoff_rate_ge_chernoffInfo_eventually (P₁ P₂ : α → ℝ) [Nonempty α] (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) : ...` | `∀ᶠ n : ℕ in atTop, -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n) ≥ chernoffInfo P₁ P₂ + Real.log 2 / n` |
+| `Chernoff.chernoffZSum` | `InformationTheory/Shannon/Chernoff.lean:63` | `noncomputable def chernoffZSum (P₁ P₂ : α → ℝ) (lam : ℝ) : ℝ` (`variable [Fintype α] [DecidableEq α]`) | `∑ a : α, (P₁ a) ^ (1 - lam) * (P₂ a) ^ lam` |
+| `Chernoff.chernoffInfo` | `InformationTheory/Shannon/Chernoff.lean:69` | `noncomputable def chernoffInfo (P₁ P₂ : α → ℝ) : ℝ` (`variable [Fintype α] [DecidableEq α]`) | `-(sInf ((fun lam : ℝ => Real.log (chernoffZSum P₁ P₂ lam)) '' Set.Icc (0:ℝ) 1))` |
+| `Chernoff.chernoffInfo_attained` | `InformationTheory/Shannon/Chernoff.lean:163` | `theorem chernoffInfo_attained (P₁ P₂ : α → ℝ) [Nonempty α] (hP₁ : ∀ a, 0 < P₁ a) (hP₂ : ∀ a, 0 < P₂ a) : ...` | `∃ lam ∈ Set.Icc (0:ℝ) 1, chernoffInfo P₁ P₂ = -(Real.log (chernoffZSum P₁ P₂ lam))` |
+| `Chernoff.chernoffInfo_nonneg` | `InformationTheory/Shannon/Chernoff.lean:183` | `theorem chernoffInfo_nonneg ...` | `0 ≤ chernoffInfo P₁ P₂` |
+| `Chernoff.chernoffInfo_symm` | `InformationTheory/Shannon/Chernoff.lean:234` | `theorem chernoffInfo_symm (P₁ P₂ : α → ℝ) : ...` | `chernoffInfo P₁ P₂ = chernoffInfo P₂ P₁` (with the standard convention swap) |
+| `Chernoff.bayesErrorMinPmf` | `InformationTheory/Shannon/Chernoff.lean:691` | `noncomputable def bayesErrorMinPmf (P₁ P₂ : α → ℝ) (n : ℕ) : ℝ` (`variable [Fintype α] [DecidableEq α]`) | `(1/2) * ∑ x : Fin n → α, min (∏ i, P₁ (x i)) (∏ i, P₂ (x i))` |
+| `Chernoff.bayesErrorMinPmf_pos` | `InformationTheory/Shannon/Chernoff.lean:807` | `lemma bayesErrorMinPmf_pos (P₁ P₂ : α → ℝ) [Nonempty α] (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) (n : ℕ) : ...` | `0 < bayesErrorMinPmf P₁ P₂ n` |
+| `Chernoff.bayesErrorMinPmf_le_half_Z_pow` | `InformationTheory/Shannon/Chernoff.lean:779` | `theorem bayesErrorMinPmf_le_half_Z_pow ... (lam_mem : lam ∈ Set.Icc (0:ℝ) 1) (n : ℕ) : ...` | `bayesErrorMinPmf P₁ P₂ n ≤ (1/2) * chernoffZSum P₁ P₂ lam ^ n` |
+| `Chernoff.chernoffZSum_pos` | `InformationTheory/Shannon/Chernoff.lean:112` | `lemma chernoffZSum_pos (P₁ P₂ : α → ℝ) [Nonempty α] (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) (lam : ℝ) : ...` | `0 < chernoffZSum P₁ P₂ lam` |
+| `Chernoff.chernoff_achievability` | `InformationTheory/Shannon/Chernoff.lean:1004` | `theorem chernoff_achievability (P₁ P₂ : α → ℝ) [Nonempty α] (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) : ...` | `chernoffInfo P₁ P₂ ≤ Filter.liminf (fun n : ℕ => -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n)) atTop` |
+| `Chernoff.chernoff_lemma_achievability` | `InformationTheory/Shannon/Chernoff.lean:1059` | (alias of `chernoff_achievability`, same signature) | (alias, same conclusion) |
+| `Chernoff.chernoff_rate_ge_chernoffInfo_eventually` | `InformationTheory/Shannon/Chernoff.lean:883` | `lemma chernoff_rate_ge_chernoffInfo_eventually (P₁ P₂ : α → ℝ) [Nonempty α] (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a) : ...` | `∀ᶠ n : ℕ in atTop, -((1 : ℝ) / n) * Real.log (bayesErrorMinPmf P₁ P₂ n) ≥ chernoffInfo P₁ P₂ + Real.log 2 / n` |
 
 注: `Chernoff.chernoff_rate_le_aux_upper` (`Chernoff.lean:898`) は **`private`** で公開されないが、その中身
 (uniform upper bound: `∃ M, ∀ᶠ n, rate n ≤ M`) を本 plan 内で再構築可能 (撤退ライン L-Ch2 自前再構築路線)。

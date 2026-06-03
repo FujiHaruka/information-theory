@@ -1,6 +1,6 @@
 # Wyner–Ziv body discharge — moonshot plan
 
-> 実態整合 (2026-05-20): **DONE-HONEST-HYPS (計画通り、plumbing layer 独立 publish) — plan の「着手中」表記は STALE、実装完了**。`Common2026/Shannon/WynerZivDischarge.lean` (16230 B, 0 sorry) に計画通りの plumbing publish 済: `wynerZivRatePmf_antitone` (WynerZivDischarge.lean:126、D-antitone 実証明)、`WynerZivConstraint_mono_in_D` (:77)、affinity blocks `wzMarginalXY_add`/`_smul` (:157,:165)、`wzExpectedDistortion_add`/`_smul` (:172,:181)、`convex_stdSimplex_wynerZiv` (:199)、bddBelow specialization (:228) 等。L-WZ3 凸性主定理本体は本 plan scope 外 (計画通り、別 plan `wyner-ziv-convexity-discharge` で discharge)。FLAW なし。Common2026.lean に import 済。
+> 実態整合 (2026-05-20): **DONE-HONEST-HYPS (計画通り、plumbing layer 独立 publish) — plan の「着手中」表記は STALE、実装完了**。`InformationTheory/Shannon/WynerZivDischarge.lean` (16230 B, 0 sorry) に計画通りの plumbing publish 済: `wynerZivRatePmf_antitone` (WynerZivDischarge.lean:126、D-antitone 実証明)、`WynerZivConstraint_mono_in_D` (:77)、affinity blocks `wzMarginalXY_add`/`_smul` (:157,:165)、`wzExpectedDistortion_add`/`_smul` (:172,:181)、`convex_stdSimplex_wynerZiv` (:199)、bddBelow specialization (:228) 等。L-WZ3 凸性主定理本体は本 plan scope 外 (計画通り、別 plan `wyner-ziv-convexity-discharge` で discharge)。FLAW なし。InformationTheory.lean に import 済。
 >
 > **Status**: 着手中。target は **L-WZ3 partial discharge** + 関連 plumbing
 > 補題群 (D-antitone / 上界 / Constraint set 構造)。撤退ラインは満たさず、
@@ -49,7 +49,7 @@ q(x,y,u') * Σ q(x,y',u)` で non-affine** であることが致命的:
 3. **`wzExpectedDistortion` の `q`-affinity** (固定 `f` で `q` に対し線形) を独立 publish
    — L-WZ3 凸性の build block の一つ。Markov constraint と独立に成立。
 4. **`wzMarginalXY` の `q`-affinity** を独立 publish — もう一つの build block
-5. **`stdSimplex` 凸性 を `Common2026` namespace に re-export wrap** (再使用便宜)
+5. **`stdSimplex` 凸性 を `InformationTheory` namespace に re-export wrap** (再使用便宜)
 6. **`wynerZivRatePmf` の上界**: 任意の `R_WZ(D) ≤ log(Fintype.card U)`
    (`I(X;U) ≤ log|U|` + `I(Y;U) ≥ 0` を独立に出す。これは
    `RateDistortion` の `mutualInfo ≤ logCard` パターン踏襲)
@@ -66,11 +66,11 @@ q(x,y,u') * Σ q(x,y',u)` で non-affine** であることが致命的:
 
 ## File layout
 
-新規ファイル `Common2026/Shannon/WynerZivDischarge.lean` のみ。
-`Common2026.lean` は不変 (seed の制約)。本 file は CLI `lake build` target に
-乗らないが、`lake env lean Common2026/Shannon/WynerZivDischarge.lean` で
+新規ファイル `InformationTheory/Shannon/WynerZivDischarge.lean` のみ。
+`InformationTheory.lean` は不変 (seed の制約)。本 file は CLI `lake build` target に
+乗らないが、`lake env lean InformationTheory/Shannon/WynerZivDischarge.lean` で
 file-level に clean 検証可能。downstream で本 file の補題を使う場合は
-明示的に `import Common2026.Shannon.WynerZivDischarge` で取り込む。
+明示的に `import InformationTheory.Shannon.WynerZivDischarge` で取り込む。
 
 ## Lemma roadmap
 
@@ -138,7 +138,7 @@ lemma convex_stdSimplex_wynerZiv :
 -- -Real.log (Fintype.card U) (since I(X;U) ≥ 0 and I(Y;U) ≤ log |U|).
 -- 当初は具体的 lower bound (-log |U|) を出す予定だったが、
 -- mutualInfoPmf ≤ log |U| の inventory が
--- Common2026 内に整っていない (mutualInfoPmf は entropy 形定義、
+-- InformationTheory 内に整っていない (mutualInfoPmf は entropy 形定義、
 -- max entropy bound への bridge ~30 行が要)。代わりに **constraint set
 -- が `stdSimplex ℝ (α × β × U)` という compact set の subset** であることを
 -- 使い、`continuous_wzObjective` から自動的に bddBelow を導く形にする。

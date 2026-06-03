@@ -9,7 +9,7 @@
 -->
 
 > 実態整合 (2026-05-20): DONE-HONEST-HYPS — `source_coding_achievability` 完成済
-> (`Common2026/Shannon/AEP.lean:1138`、0 sorry)。仮定は `iIndepFun` / `IdentDistrib` /
+> (`InformationTheory/Shannon/AEP.lean:1138`、0 sorry)。仮定は `iIndepFun` / `IdentDistrib` /
 > `hpos : ∀ x, 0 < (μ.map (Xs 0)).real {x}` の i.i.d. 標準形のみ (pass-through なし)。
 > 結論は `Tendsto (log M_n / n) (𝓝 R) ∧ Tendsto errorProb (𝓝 0)`。Phase F の
 > `source_coding_theorem` (両側等号、AEP.lean:1240) も完成。
@@ -20,13 +20,13 @@
 > の見積 100〜300 行 / 低リスク / 0.5〜1 週間 を起点に膨らませた。
 >
 > Phase D (`source_coding_converse`) が完了済 ([`aep-source-coding-plan.md`](aep-source-coding-plan.md)、
-> `Common2026/Shannon/AEP.lean` で 0 sorry)、本 plan はその自然な後続。
+> `InformationTheory/Shannon/AEP.lean` で 0 sorry)、本 plan はその自然な後続。
 >
 > **撤退ライン**: Phase A (encoder/decoder def + round-trip) 緑通過時点で **typical set ↔ Fin M_n bijection の構成補題** が独立に立つ。Phase B/C で詰まる場合は Phase A のみ publish して残りを次セッションへ。
 
 ## 進捗
 
-- [x] Phase 0 — Mathlib + 既存 Common2026 API インベントリ ✅ → [`aep-achievability-mathlib-inventory.md`](aep-achievability-mathlib-inventory.md)
+- [x] Phase 0 — Mathlib + 既存 InformationTheory API インベントリ ✅ → [`aep-achievability-mathlib-inventory.md`](aep-achievability-mathlib-inventory.md)
 - [x] Phase A — encoder / decoder 構成 + round-trip lemma (`d_n ∘ c_n = id` on typicalSet) ✅ (AEP.lean: `aepEncoder` / `aepDecoder`)
 - [x] Phase B — error rate bound (`error ⊆ ∁ typicalSet` + Tendsto 0) ✅ (`aep_errorProb_tendsto_zero`)
 - [x] Phase C — rate Tendsto (`log M_n / n → R`) + 主定理組成 ✅ (`source_coding_achievability`, AEP.lean:1138)
@@ -61,7 +61,7 @@
 **Approach 図**:
 
 ```
-Phase 0  : Mathlib + Common2026 API インベントリ              ← 完 (本 plan + inventory 起草)
+Phase 0  : Mathlib + InformationTheory API インベントリ              ← 完 (本 plan + inventory 起草)
            ──────────────────────────────────────────
 Phase A  : encoder / decoder 構成 + round-trip lemma          ← 山場 1、60〜100 行、2〜3 日
            ──────────────────────────────────────────
@@ -75,7 +75,7 @@ Phase D  : lake env lean silent + proof-log + metrics           ← verify、半
 **ファイル構成**:
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   AEP.lean             ← Phase A〜D 既存 (800 行)
                        ← 本 plan は **末尾 append**
                           (Phase A〜C in achievability 部分、120〜220 行)
@@ -89,7 +89,7 @@ AEP.lean は現在 800 行。Phase E +120〜220 行 = 920〜1020 行。**判断*
 
 ---
 
-## Phase 0 — Mathlib + 既存 Common2026 API インベントリ ✅
+## Phase 0 — Mathlib + 既存 InformationTheory API インベントリ ✅
 
 ### スコープ
 
@@ -175,7 +175,7 @@ end InformationTheory.Shannon
 
 ### Done 条件
 
-- [ ] 上記 5 項目が `lake env lean Common2026/Shannon/AEP.lean` で silent
+- [ ] 上記 5 項目が `lake env lean InformationTheory/Shannon/AEP.lean` で silent
 - [ ] skeleton-driven で A.1 → A.2 → A.3 → A.4 → A.5 の sorry を割る順序
 
 ### 工数感
@@ -304,7 +304,7 @@ end InformationTheory.Shannon
 ### 撤退ライン (Phase C 内)
 
 - C.1 上界 squeeze で `log (exp(nR) + 1) - n · R → 0` の Mathlib 既存補題が薄い → `log (1 + x) ≤ x` (`Real.log_one_add_le_iff`?) を使う 自前 lemma で 5〜10 行追加
-- C.1 で `R ≤ 0` の corner case が破綻 → `entropy_nonneg` (要既存確認、無ければ Common2026 内自前) で `R > 0` を確保、Phase E は `R > 0` 内部 derive で Cover-Thomas 教科書範囲を維持
+- C.1 で `R ≤ 0` の corner case が破綻 → `entropy_nonneg` (要既存確認、無ければ InformationTheory 内自前) で `R > 0` を確保、Phase E は `R > 0` 内部 derive で Cover-Thomas 教科書範囲を維持
 
 ---
 
@@ -312,8 +312,8 @@ end InformationTheory.Shannon
 
 ### スコープ
 
-- [ ] `lake env lean Common2026/Shannon/AEP.lean` silent
-- [ ] `lake build Common2026.Shannon.AEP` 緑通過 (依存 module の olean refresh 確認)
+- [ ] `lake env lean InformationTheory/Shannon/AEP.lean` silent
+- [ ] `lake build InformationTheory.Shannon.AEP` 緑通過 (依存 module の olean refresh 確認)
 - [ ] proof-log: `docs/proof-logs/proof-log-aep-achievability.md` 起票
 - [ ] metrics: `scripts/session_metrics.ts` 実行 + `docs/metrics/aep-achievability.{manifest,metrics}.{json,md}` 出力
 - [ ] `docs/moonshot-seeds.md` の "Seed 4 → A. AEP Phase E" 項目を ✅ 更新 (Phase F unified 形 deferred 化判断)
@@ -337,7 +337,7 @@ end InformationTheory.Shannon
 | Phase A の A.5 (round-trip) で 2〜3 日溶ける | `Finset.equivFin.symm.left_inv` plumbing が `simp` で通らない | 1 段ずつ `Equiv.symm_apply_apply` で rewrite (+10〜20 行) |
 | Phase B の B.2 (Tendsto squeeze) で詰まる | `errorProb` の `.real` cast 往復が plumbing-heavy | `Tendsto.of_tendsto_of_tendsto_of_le_of_le` 直接呼び (+5〜10 行) |
 | Phase C の C.1 (上界 squeeze) で詰まる | `log (exp + 1) → ...` Mathlib 補題が薄い | 自前 `log_one_add_le` で +5〜10 行 |
-| Phase C の C.1 で `R > 0` corner case 破綻 | `entropy_nonneg` 不在 | 既存 `negMulLog ≥ 0` から自前 5 行で `entropy_nonneg`、Common2026/Shannon/Bridge.lean に append |
+| Phase C の C.1 で `R > 0` corner case 破綻 | `entropy_nonneg` 不在 | 既存 `negMulLog ≥ 0` から自前 5 行で `entropy_nonneg`、InformationTheory/Shannon/Bridge.lean に append |
 | **Phase A 完了 (= encoder/decoder + round-trip)** | `aepDecoder_aepEncoder_of_mem_typicalSet` silent | **★ 撤退ライン: 「typical set ↔ Fin M_n bijection plumbing」が独立 publish 可能 ★**。Phase B/C を別 plan に切り出すかは Phase A 完了時点で判断 |
 | Phase B 完了 (= error rate) | `aep_errorProb_tendsto_zero` silent | 撤退判断不要、Phase C へ |
 | Phase C 完了 (= 主定理) | `source_coding_achievability` silent | 完成 |
@@ -364,7 +364,7 @@ end InformationTheory.Shannon
 ## 当面の next step
 
 1. ✅ **Phase 0 (本 plan + inventory 起草)** — 完 (2026-05-11)
-2. **Phase A skeleton** — `Common2026/Shannon/AEP.lean` 末尾に `codebookSize` / `aepEncoder` / `aepDecoder` / `aepDecoder_aepEncoder_of_mem_typicalSet` を `:= by sorry` で append、緑通過確認 ← **次これ**
+2. **Phase A skeleton** — `InformationTheory/Shannon/AEP.lean` 末尾に `codebookSize` / `aepEncoder` / `aepDecoder` / `aepDecoder_aepEncoder_of_mem_typicalSet` を `:= by sorry` で append、緑通過確認 ← **次これ**
 3. **Phase A 完で Phase B 着手判定** — round-trip silent なら Phase B (error rate Tendsto)
 4. **Phase B 完で Phase C 着手判定** — `aep_errorProb_tendsto_zero` silent なら Phase C (主定理 + rate Tendsto)
 5. **Phase C 完 = 完成**: proof-log + metrics 取得、Phase F (unified `liminf = entropy` 統合形) を別 plan に切り出すかは本 plan 完了時に判断

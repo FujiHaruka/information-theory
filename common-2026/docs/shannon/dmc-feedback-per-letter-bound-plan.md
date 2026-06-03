@@ -16,9 +16,9 @@ I(Msg; Y_i | Y^{<i}) ≤ I(X_i; Y_i)
 - [x] Phase C — `feedback_per_letter_bound` ✅ (2026-05-14、`mutualInfo_le_of_markov` 1 段 + chain rule + nonneg で完走)
 - [x] Phase D — `channel_coding_feedback_converse_memoryless` ✅ (2026-05-14、既存 E-10 主定理に `h_per_letter` を construct して結論)
 
-> 実態整合 (2026-05-20): DONE-HONEST-HYPS — `feedback_per_letter_bound` (`Common2026/Shannon/ChannelCodingFeedbackComplete.lean:116`、0 sorry) は `h_memo : IsMemorylessFeedback μ Msg Xs Ys` (γ-form Markov chain 述語、pass-through Prop でない) から per-letter 不等式を派生。主定理 `channel_coding_feedback_converse_memoryless` (`:171`) が E-10 主定理に `h_per_letter` を construct して完全形を結論。
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — `feedback_per_letter_bound` (`InformationTheory/Shannon/ChannelCodingFeedbackComplete.lean:116`、0 sorry) は `h_memo : IsMemorylessFeedback μ Msg Xs Ys` (γ-form Markov chain 述語、pass-through Prop でない) から per-letter 不等式を派生。主定理 `channel_coding_feedback_converse_memoryless` (`:171`) が E-10 主定理に `h_per_letter` を construct して完全形を結論。
 
-**完了サマリ (2026-05-14)**: `Common2026/Shannon/ChannelCodingFeedbackComplete.lean` (198 行、4 declarations、0 sorry / 0 warning)。Plan 見積 280-400 行を ~50% 削減。Phase A の RV 順を `(Y^{<i}, Msg)` (chain rule LHS の `(Zc, Xs)` と一致) に揃えたことで Step 3 swap が 0 行に。CondMutualInfo.lean 新規補題 0 行 (既存 `IsMarkovChain` + `mutualInfo_le_of_markov` + `mutualInfo_chain_rule` + `mutualInfo_nonneg` のみ)。Cover-Thomas 7.12 が `h_per_letter` 仮説を剥がした完全形で完走。
+**完了サマリ (2026-05-14)**: `InformationTheory/Shannon/ChannelCodingFeedbackComplete.lean` (198 行、4 declarations、0 sorry / 0 warning)。Plan 見積 280-400 行を ~50% 削減。Phase A の RV 順を `(Y^{<i}, Msg)` (chain rule LHS の `(Zc, Xs)` と一致) に揃えたことで Step 3 swap が 0 行に。CondMutualInfo.lean 新規補題 0 行 (既存 `IsMarkovChain` + `mutualInfo_le_of_markov` + `mutualInfo_chain_rule` + `mutualInfo_nonneg` のみ)。Cover-Thomas 7.12 が `h_per_letter` 仮説を剥がした完全形で完走。
 
 ## ゴール / Approach
 
@@ -64,7 +64,7 @@ I((Y^{<i}, Msg); Y_i) = I(Y^{<i}; Y_i) + I(Msg; Y_i | Y^{<i})  -- mutualInfo_cha
 - **Phase B**: 0 行目標 (既存資産で十分の想定)
 - **Phase C**: per-letter bound 本体 ~150-200 行
 - **Phase D**: 主定理 `channel_coding_feedback_converse_memoryless` ~50-80 行
-- 合計 **~280-400 行**、新規ファイル 1 つ (`Common2026/Shannon/ChannelCodingFeedbackComplete.lean`) または既存 `ChannelCodingFeedback.lean` に追記
+- 合計 **~280-400 行**、新規ファイル 1 つ (`InformationTheory/Shannon/ChannelCodingFeedbackComplete.lean`) または既存 `ChannelCodingFeedback.lean` に追記
 
 ### MVP scope と scope-deferred
 
@@ -114,9 +114,9 @@ I((Y^{<i}, Msg); Y_i) = I(Y^{<i}; Y_i) + I(Msg; Y_i | Y^{<i})  -- mutualInfo_cha
        prodMkRight γ κ ca = κ ca.fst := rfl
    ```
 
-### 既存 Common2026 補題
+### 既存 InformationTheory 補題
 
-1. **`Shannon.mutualInfo_chain_rule`** (`Common2026/Shannon/CondMutualInfo.lean:219`)
+1. **`Shannon.mutualInfo_chain_rule`** (`InformationTheory/Shannon/CondMutualInfo.lean:219`)
    ```
    theorem mutualInfo_chain_rule
        (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -127,7 +127,7 @@ I((Y^{<i}, Msg); Y_i) = I(Y^{<i}; Y_i) + I(Msg; Y_i | Y^{<i})  -- mutualInfo_cha
          = mutualInfo μ Zc Yo + condMutualInfo μ Xs Yo Zc
    ```
 
-2. **`Shannon.IsMarkovChain`** (`Common2026/Shannon/CondMutualInfo.lean:71`)
+2. **`Shannon.IsMarkovChain`** (`InformationTheory/Shannon/CondMutualInfo.lean:71`)
    ```
    def IsMarkovChain (μ : Measure Ω) [IsFiniteMeasure μ]
        [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Y] [Nonempty Y]
@@ -136,7 +136,7 @@ I((Y^{<i}, Msg); Y_i) = I(Y^{<i}; Y_i) + I(Msg; Y_i | Y^{<i})  -- mutualInfo_cha
        = (μ.map Zc) ⊗ₘ ((condDistrib Xs Zc μ) ×ₖ (condDistrib Yo Zc μ))
    ```
 
-3. **`Shannon.mutualInfo_le_of_markov`** (`Common2026/Shannon/CondMutualInfo.lean:378`)
+3. **`Shannon.mutualInfo_le_of_markov`** (`InformationTheory/Shannon/CondMutualInfo.lean:378`)
    ```
    theorem mutualInfo_le_of_markov
        (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -147,10 +147,10 @@ I((Y^{<i}, Msg); Y_i) = I(Y^{<i}; Y_i) + I(Msg; Y_i | Y^{<i})  -- mutualInfo_cha
        mutualInfo μ Xs Yo ≤ mutualInfo μ Zc Yo
    ```
 
-4. **`Shannon.mutualInfo_nonneg`** (`Common2026/Shannon/MutualInfo.lean:42`)
+4. **`Shannon.mutualInfo_nonneg`** (`InformationTheory/Shannon/MutualInfo.lean:42`)
    - `0 ≤ mutualInfo μ Xs Yo`。Step 2 で使用。
 
-5. **`Shannon.mutualInfo_map_left_measurableEquiv`** (`Common2026/Shannon/MIChainRule.lean:43`)
+5. **`Shannon.mutualInfo_map_left_measurableEquiv`** (`InformationTheory/Shannon/MIChainRule.lean:43`)
    - 左 RV を MeasurableEquiv で書き換える。Step 3 で `(Msg, Y^{<i})` ↔ `(Y^{<i}, Msg)` swap に使う可能性。
 
 ### Mathlib 不在 (本 plan で自作)
@@ -180,7 +180,7 @@ def IsMemorylessFeedback
 
 ### Phase A — checklist
 
-- [ ] (A.1) `IsMemorylessFeedback` def を `Common2026/Shannon/ChannelCodingFeedbackComplete.lean` 新規 file (または `ChannelCodingFeedback.lean` 追記) で導入
+- [ ] (A.1) `IsMemorylessFeedback` def を `InformationTheory/Shannon/ChannelCodingFeedbackComplete.lean` 新規 file (または `ChannelCodingFeedback.lean` 追記) で導入
 - [ ] (A.2) 各 i での `IsMarkovChain` を取り出す accessor lemma (5 行)
 
 ## Phase B — CondMutualInfo.lean 補助補題

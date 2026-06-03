@@ -4,10 +4,10 @@
 >
 > **消費者 (撤退ライン発動元)**:
 > - `docs/shannon/parallel-gaussian-chain-rule-plan.md` §撤退ライン **D-1** (`IsParallelGaussianMISuperadditive` honest 仮定化 / Risk #1「subadditivity が Mathlib にない」)
-> - `Common2026/Shannon/ParallelGaussianPerCoord.lean:173` `IsParallelGaussianPerCoordRegularity.max_ent` (現状 honest 仮定で D-1 を pass-through)
+> - `InformationTheory/Shannon/ParallelGaussianPerCoord.lean:173` `IsParallelGaussianPerCoordRegularity.max_ent` (現状 honest 仮定で D-1 を pass-through)
 > - 親: `docs/shannon/parallel-gaussian-moonshot-plan.md` §撤退ライン **L-PG1**、`docs/shannon/awgn-moonshot-plan.md` §撤退ライン F-2/F-3
 >
-> **既存資産の発見点**: `Common2026/Shannon/MutualInfo.lean` / `MIChainRule.lean` (測度 RV 版 `mutualInfo` + KL product 加法 `klDiv_pi_eq_sum`) と `ContChannelMIDecomp.lean` (MI→差分エントロピー bridge) が **subadditivity の核となる素材を既に持っている**。
+> **既存資産の発見点**: `InformationTheory/Shannon/MutualInfo.lean` / `MIChainRule.lean` (測度 RV 版 `mutualInfo` + KL product 加法 `klDiv_pi_eq_sum`) と `ContChannelMIDecomp.lean` (MI→差分エントロピー bridge) が **subadditivity の核となる素材を既に持っている**。
 
 ## 一行サマリ
 
@@ -65,7 +65,7 @@ linarith [h_mi_nn, h_bridge]
 
 | 概念 | API (file:line) | signature `[...]` verbatim | 結論 verbatim | 状態 |
 |---|---|---|---|---|
-| 1-D 差分エントロピー | `Common2026.Shannon.differentialEntropy` `Common2026/Shannon/DifferentialEntropy.lean:42` | `(μ : Measure ℝ) : ℝ` | `:= ∫ x, Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume` | ✅ 既存。**1-D 専用 (codomain `Measure ℝ`)** |
+| 1-D 差分エントロピー | `InformationTheory.Shannon.differentialEntropy` `InformationTheory/Shannon/DifferentialEntropy.lean:42` | `(μ : Measure ℝ) : ℝ` | `:= ∫ x, Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume` | ✅ 既存。**1-D 専用 (codomain `Measure ℝ`)** |
 | density 直書き形 | `differentialEntropy_eq_integral_density` `DifferentialEntropy.lean:60` | `{f : ℝ → ℝ} (hf : Measurable f) (hf_nn : ∀ x, 0 ≤ f x) (μ : Measure ℝ) (hμ : μ = volume.withDensity (fun x => ENNReal.ofReal (f x)))` | `differentialEntropy μ = -∫ x, f x * Real.log (f x) ∂volume` | ✅ 既存。bridge の出口形 |
 | withDensity 形 | `differentialEntropy_eq_integral_withDensity` `DifferentialEntropy.lean:47` | `{f : ℝ → ℝ≥0∞} (hf : Measurable f)` | `differentialEntropy (volume.withDensity f) = ∫ x, Real.negMulLog (f x).toReal ∂volume` | ✅ 既存 |
 | Gaussian 値 | `differentialEntropy_gaussianReal` `DifferentialEntropy.lean:406` | `(m : ℝ) {v : ℝ≥0} (hv : v ≠ 0)` | `differentialEntropy (gaussianReal m v) = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v)` | ✅ 既存。per-coord 値 |
@@ -96,9 +96,9 @@ linarith [h_mi_nn, h_bridge]
 | KL = 0 ⟺ 等値 | `InformationTheory.klDiv_eq_zero_iff` `KullbackLeibler/Basic.lean:377` | `[IsFiniteMeasure μ] [IsFiniteMeasure ν]` | `klDiv μ ν = 0 ↔ μ = ν` | ✅ 既存。**等号 (独立 ⇒ subadd の等号) 用** |
 | KL chain rule | `InformationTheory.klDiv_compProd_eq_add` `KullbackLeibler/ChainRule.lean:204` | `(μ ν κ η)` (kernel compProd 形、**型クラス前提なし**) | `klDiv (μ ⊗ₘ κ) (ν ⊗ₘ η) = klDiv μ ν + klDiv (μ ⊗ₘ κ) (μ ⊗ₘ η)` | ✅ 既存 |
 | KL prod 加法 (左) | `InformationTheory.klDiv_compProd_left` `ChainRule.lean:182` (`@[simp]`) | `(μ ν κ)` | `klDiv (μ ⊗ₘ κ) (ν ⊗ₘ κ) = klDiv μ ν` | ✅ 既存 |
-| **KL prod 加法** | `InformationTheory.Shannon.klDiv_prod_eq_add` (project) `Common2026/Shannon/MIChainRule.lean:254` | `{α' β'} [MeasurableSpace α'] [MeasurableSpace β'] (μ₁ μ₂ : Measure α') [IsProbabilityMeasure μ₁] [IsProbabilityMeasure μ₂] (ν₁ ν₂ : Measure β') [IsProbabilityMeasure ν₁] [IsProbabilityMeasure ν₂]` | `klDiv (μ₁.prod ν₁) (μ₂.prod ν₂) = klDiv μ₁ μ₂ + klDiv ν₁ ν₂` | ✅ **project 既存** |
+| **KL prod 加法** | `InformationTheory.Shannon.klDiv_prod_eq_add` (project) `InformationTheory/Shannon/MIChainRule.lean:254` | `{α' β'} [MeasurableSpace α'] [MeasurableSpace β'] (μ₁ μ₂ : Measure α') [IsProbabilityMeasure μ₁] [IsProbabilityMeasure μ₂] (ν₁ ν₂ : Measure β') [IsProbabilityMeasure ν₁] [IsProbabilityMeasure ν₂]` | `klDiv (μ₁.prod ν₁) (μ₂.prod ν₂) = klDiv μ₁ μ₂ + klDiv ν₁ ν₂` | ✅ **project 既存** |
 | **KL pi 加法** | `InformationTheory.Shannon.klDiv_pi_eq_sum` `MIChainRule.lean:273` | `{n : ℕ} {α' : Fin n → Type*} [∀ i, MeasurableSpace (α' i)] (μs νs : ∀ i, Measure (α' i)) [∀ i, IsProbabilityMeasure (μs i)] [∀ i, IsProbabilityMeasure (νs i)]` | `klDiv (Measure.pi μs) (Measure.pi νs) = ∑ i : Fin n, klDiv (μs i) (νs i)` | ✅ **project 既存。n 変数 total-correlation の核** |
-| mutualInfo (RV 版) | `InformationTheory.Shannon.mutualInfo` `Common2026/Shannon/MutualInfo.lean:36` | `(μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y) : ℝ≥0∞` | `:= klDiv (μ.map (fun ω => (Xs ω, Yo ω))) ((μ.map Xs).prod (μ.map Yo))` | ✅ 既存。**joint vs ∏marginal = total correlation** |
+| mutualInfo (RV 版) | `InformationTheory.Shannon.mutualInfo` `InformationTheory/Shannon/MutualInfo.lean:36` | `(μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y) : ℝ≥0∞` | `:= klDiv (μ.map (fun ω => (Xs ω, Yo ω))) ((μ.map Xs).prod (μ.map Yo))` | ✅ 既存。**joint vs ∏marginal = total correlation** |
 | mutualInfo 非負 | `mutualInfo_nonneg` `MutualInfo.lean:42` | `(μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y)` | `0 ≤ mutualInfo μ Xs Yo := bot_le` | ✅ 既存・自明 |
 | mutualInfo pi 加法 | `mutualInfo_pi_eq_sum` `MIChainRule.lean:341` | `{n} (μ) [IsProbabilityMeasure μ] (Xs Ys : Fin n → Ω → _) (hXs hYs : ∀ i, Measurable _) + 3 i.i.d. factorization 仮定` | `mutualInfo μ (fun ω i => Xs i ω) (fun ω i => Ys i ω) = ∑ i, mutualInfo μ (Xs i) (Ys i)` | ✅ 既存。**product 入力での `=` (achiever 側)** |
 
@@ -106,7 +106,7 @@ linarith [h_mi_nn, h_bridge]
 
 | 概念 | API (file:line) | signature `[...]` verbatim (抜粋) | 結論 verbatim | 状態 |
 |---|---|---|---|---|
-| **MI → 差分エントロピー差** (1-D channel bridge、**手本**) | `Common2026.Shannon.mutualInfoOfChannel_toReal_eq_diffEntropy_sub` `Common2026/Shannon/ContChannelMIDecomp.lean:223` | `(hW_ac : ∀ x, W x ≪ volume) (hq_ac : outputDistribution p W ≪ volume) (h_joint_ac : (p ⊗ₘ W) ≪ p.prod (outputDistribution p W)) (h_llr_split : … =ᵐ[p ⊗ₘ W] …) (h_int_fibre_joint : Integrable …) (h_int_out_joint : Integrable …) (h_int_out_marg : Integrable …)` | `(mutualInfoOfChannel p W).toReal = differentialEntropy (outputDistribution p W) − (∫ x, differentialEntropy (W x) ∂p)` | ✅ 既存。**bridge の構造手本 (honest 4-5 仮定込み)**。subadd 用 bridge はこれの「両座標差分エントロピー」版 |
+| **MI → 差分エントロピー差** (1-D channel bridge、**手本**) | `InformationTheory.Shannon.mutualInfoOfChannel_toReal_eq_diffEntropy_sub` `InformationTheory/Shannon/ContChannelMIDecomp.lean:223` | `(hW_ac : ∀ x, W x ≪ volume) (hq_ac : outputDistribution p W ≪ volume) (h_joint_ac : (p ⊗ₘ W) ≪ p.prod (outputDistribution p W)) (h_llr_split : … =ᵐ[p ⊗ₘ W] …) (h_int_fibre_joint : Integrable …) (h_int_out_joint : Integrable …) (h_int_out_marg : Integrable …)` | `(mutualInfoOfChannel p W).toReal = differentialEntropy (outputDistribution p W) − (∫ x, differentialEntropy (W x) ∂p)` | ✅ 既存。**bridge の構造手本 (honest 4-5 仮定込み)**。subadd 用 bridge はこれの「両座標差分エントロピー」版 |
 | KL → llr 積分 | `InformationTheory.toReal_klDiv_of_measure_eq` `KullbackLeibler/Basic.lean:164` | `(h : μ ≪ ν) (h_eq : μ univ = ν univ)` | `(klDiv μ ν).toReal = ∫ x, llr μ ν x ∂μ` | ✅ 既存。bridge step 1 |
 | rnDeriv chain rule | `MeasureTheory.Measure.rnDeriv_mul_rnDeriv` `Decomposition/RadonNikodym.lean` | `(hμν : μ ≪ ν)` | `μ.rnDeriv ν * ν.rnDeriv volume =ᵐ[volume] μ.rnDeriv volume` | ✅ 既存。density split に使用 (1-D maxent で実証済) |
 | `negMulLog` 凹性 | `Real.concaveOn_negMulLog` `Mathlib/Analysis/SpecialFunctions/Log/NegMulLog.lean:227` | — | `ConcaveOn ℝ (Set.Ici 0) negMulLog` | ✅ 既存。代替経路 (条件付き Jensen) 用 |
@@ -175,18 +175,18 @@ linarith [h_mi_nn, h_bridge]
 
 ## 着手 skeleton
 
-`Common2026/Shannon/MultivariateDiffEntropy.lean` (新規) の出だし:
+`InformationTheory/Shannon/MultivariateDiffEntropy.lean` (新規) の出だし:
 
 ```lean
 import Mathlib.MeasureTheory.Measure.Prod
 import Mathlib.MeasureTheory.Measure.WithDensity
 import Mathlib.MeasureTheory.Integral.Prod
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
-import Common2026.Shannon.DifferentialEntropy
-import Common2026.Shannon.MutualInfo
-import Common2026.Shannon.MIChainRule
+import InformationTheory.Shannon.DifferentialEntropy
+import InformationTheory.Shannon.MutualInfo
+import InformationTheory.Shannon.MIChainRule
 
-namespace Common2026.Shannon
+namespace InformationTheory.Shannon
 
 open MeasureTheory Real ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal Real
@@ -221,7 +221,7 @@ theorem jointDifferentialEntropy_le_sum
   have h_bridge := totalCorrelation_toReal_eq_sum_sub_joint hμ h_fst_ac h_snd_ac h_density_split h_int
   linarith [h_nn, h_bridge]
 
-end Common2026.Shannon
+end InformationTheory.Shannon
 ```
 
 n 変数版 (`Measure (Fin n → ℝ)`, 消費者要求形) は同 file に `jointDifferentialEntropyPi` + `klDiv_pi_eq_sum` 経由で追加。`pi_withDensity` 不在の壁 (#4) は Phase 0 で 2 変数 induction 帰着可否を判定。
@@ -410,10 +410,10 @@ lemma _root_.MeasurableEmbedding.map_withDensity_rnDeriv (hf : MeasurableEmbeddi
 ### 着手 skeleton
 
 ```lean
--- Common2026/Draft/Shannon/MultivariateDiffEntropy.lean (既存 file 拡張)
+-- InformationTheory/Draft/Shannon/MultivariateDiffEntropy.lean (既存 file 拡張)
 -- 既存 imports (L1-11) に追加不要 (Map / WithDensity / Pi / RadonNikodym 既存)
 
-namespace Common2026.Shannon
+namespace InformationTheory.Shannon
 open MeasureTheory Real ProbabilityTheory InformationTheory
 open scoped ENNReal NNReal Real
 
@@ -436,7 +436,7 @@ theorem jointDifferentialEntropyPi_le_sum_v2
   sorry  -- @residual(plan:multivariate-diffentropy-subadditivity-plan)
          -- piFinSuccAbove reshape + withDensity_map_equiv + 2 変数 _v2 + 帰納仮定
 
-end Common2026.Shannon
+end InformationTheory.Shannon
 ```
 
 ### ゲート判定

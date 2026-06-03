@@ -2,7 +2,7 @@
 
 Generated: 2026-05-08T12:39:14.224Z
 Idle gap threshold: 5 min
-File prefix filter: `Common2026/Fano`
+File prefix filter: `InformationTheory/Fano`
 
 ## サマリー（合計）
 
@@ -49,10 +49,10 @@ File prefix filter: `Common2026/Fano`
 
 | File | Edit | Write |
 |---|---|---|
-| `Common2026.lean` | 1 | 0 |
-| `Common2026/Fano.lean` | 1 | 0 |
-| `Common2026/Fano/Core.lean` | 0 | 1 |
-| `Common2026/Fano/DPI.lean` | 10 | 1 |
+| `InformationTheory.lean` | 1 | 0 |
+| `InformationTheory/Fano.lean` | 1 | 0 |
+| `InformationTheory/Fano/Core.lean` | 0 | 1 |
+| `InformationTheory/Fano/DPI.lean` | 10 | 1 |
 | `docs/metrics/fano-phase1.manifest.json` | 1 | 1 |
 | `docs/proof-log-fano-phase1.md` | 0 | 1 |
 

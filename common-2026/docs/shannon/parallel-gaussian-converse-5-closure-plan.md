@@ -5,7 +5,7 @@
 > `parallelOutput_joint_logDensity_integrable` のみ。本 sub-plan はその #5 専用 closure 計画。
 > **Inventory (SoT)**: [`parallel-gaussian-converse-multivariate-mi-api-inventory.md`](parallel-gaussian-converse-multivariate-mi-api-inventory.md)
 > — 全建材マップ・skeleton・落とし穴の verbatim 在庫。本 plan はそれを実行可能な Phase 分解 + 撤退口に変換したもの。
-> **1-D 手本 (SoT)**: `Common2026/Draft/Shannon/AwgnCapacityConverseMaxent.lean` Phase 6 (`:333-714`)。
+> **1-D 手本 (SoT)**: `InformationTheory/Draft/Shannon/AwgnCapacityConverseMaxent.lean` Phase 6 (`:333-714`)。
 
 <!--
 記法: 状態絵文字 📋/🚧/✅/🔄、取り消し線で廃止 Phase、判断ログ append-only。
@@ -32,7 +32,7 @@ commit `07da6b8` (実装) + `bc72889` (docstring cleanup)。
 
 ### ゴール
 
-`Common2026/Shannon/ParallelGaussianConverse.lean:1093`
+`InformationTheory/Shannon/ParallelGaussianConverse.lean:1093`
 `parallelOutput_joint_logDensity_integrable` の唯一の `sorry` を消す。signature は変更しない
 (clean な `Integrable` claim + regularity precondition `0 ≤ P` / `hN` / `hp`、load-bearing hyp 無し)。
 consumer は同 file 内 2 件 (`:1570`/`:1722`) なので、本体 genuine 化で converse 全体が transitive に genuine 化する。
@@ -76,10 +76,10 @@ Phase 3 (★下界) が最重量・最大リスクなので独立 Phase + 独立
 
 ### ファイル構成
 
-新規 declaration は全て既存 `Common2026/Shannon/ParallelGaussianConverse.lean` 内に追加
+新規 declaration は全て既存 `InformationTheory/Shannon/ParallelGaussianConverse.lean` 内に追加
 (#5 本体・consumer・既存建材が全て同 file。`private` 共有のため別 file 化しない)。
 import 追加が要る場合のみ (在庫「着手 skeleton」: `Mathlib.Analysis.LConvolution` /
-`Mathlib.MeasureTheory.Integral.Lebesgue.Markov` 等)。`Common2026.lean` への新規 import 行は不要 (既存 file 拡張)。
+`Mathlib.MeasureTheory.Integral.Lebesgue.Markov` 等)。`InformationTheory.lean` への新規 import 行は不要 (既存 file 拡張)。
 
 ---
 

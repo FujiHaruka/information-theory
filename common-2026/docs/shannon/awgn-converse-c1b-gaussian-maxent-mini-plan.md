@@ -9,7 +9,7 @@
 ## ステータス
 
 - **Slug**: `awgn-converse-c1b-gaussian-maxent`
-- **対象 sorry 1 件**: `Common2026/Shannon/AWGNConverseDischarge.lean:616`
+- **対象 sorry 1 件**: `InformationTheory/Shannon/AWGNConverseDischarge.lean:616`
   `awgn_per_letter_mi_le_log_var` (現在 `@residual(plan:awgn-converse-aux-plan)`)
 - **規模見込**: ~80-150 行 analytic work (親 §C-1b 内訳通り)
 - **Mathlib 壁深度**: medium (`h_var_int` / `h_ent_int` の per-letter 充足が深度の上限要因)
@@ -20,14 +20,14 @@
 ## 進捗
 
 - [ ] M0 在庫確認 — Mathlib `differentialEntropy_le_gaussian_of_variance_le` 4 hyp +
-      `gaussianReal_*` convolution / mean / variance + Common2026 `perLetterYLaw` 形 verbatim 📋
+      `gaussianReal_*` convolution / mean / variance + InformationTheory `perLetterYLaw` 形 verbatim 📋
 - [ ] M1-Skeleton — `awgn_per_letter_mi_le_log_var` body の have-chain skeleton +
       per-letter helper signature 起草 (`sorry` 残置で型整合) 📋
 - [ ] M2-Hyp供給 — 4 hyp (`hμ`/`h_mean`/`h_var`/`h_var_int`) を per-letter 形で genuine
       化 (`h_ent_int` は bundle destructure) 📋
 - [ ] M3-Discharge — `differentialEntropy_le_gaussian_of_variance_le` 適用 + F-2
       bridge `h_mi_bridge_per_letter` + 結論型整形 `(1/2) log(1 + Var/N)` 📋
-- [ ] M4-Verify — `lake env lean Common2026/Shannon/AWGNConverseDischarge.lean` silent
+- [ ] M4-Verify — `lake env lean InformationTheory/Shannon/AWGNConverseDischarge.lean` silent
       + 当該 declaration 0 sorry / 0 @residual 📋
 
 ## ゴール / Approach
@@ -35,7 +35,7 @@
 ### Goal (target signature 再掲、変更不可)
 
 ```lean
--- Common2026/Shannon/AWGNConverseDischarge.lean:603-616 (現状)
+-- InformationTheory/Shannon/AWGNConverseDischarge.lean:603-616 (現状)
 theorem awgn_per_letter_mi_le_log_var
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -43,8 +43,8 @@ theorem awgn_per_letter_mi_le_log_var
     (h_per_letter : PerLetterIntegrabilityForConverse P N h_meas c)
     (h_mi_bridge_per_letter :
         ∀ i : Fin n, (perLetterMI h_meas c i).toReal
-          = Common2026.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
-            - Common2026.Shannon.differentialEntropy
+          = InformationTheory.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
+            - InformationTheory.Shannon.differentialEntropy
                 (ProbabilityTheory.gaussianReal 0 N))
     (i : Fin n) :
     (perLetterMI h_meas c i).toReal
@@ -100,14 +100,14 @@ gaussianReal (c.encoder m i) N` であることに依存。Mathlib 直接 lemma 
 ~30-60 行の self-derive が要る (mean-zero noise + independence)。失敗時は別 `sorry` +
 `@residual(plan:awgn-converse-aux-plan)` で T-FFC-2 staged を 1 件追加 (規模超過 mitigation、§撤退ライン参照)。
 
-## Mathlib + Common2026 在庫 (M0、verbatim、本 mini で利用するもの全列挙)
+## Mathlib + InformationTheory 在庫 (M0、verbatim、本 mini で利用するもの全列挙)
 
 CLAUDE.md「具体的数値・型予測の verbatim 確認」遵守。signature は paraphrase 禁止、`[...]`
 型クラス前提含む verbatim。
 
 ### 主用 — `differentialEntropy_le_gaussian_of_variance_le`
 
-**Common2026/Shannon/DifferentialEntropy.lean:518**:
+**InformationTheory/Shannon/DifferentialEntropy.lean:518**:
 
 ```lean
 @[entry_point]
@@ -158,7 +158,7 @@ theorem differentialEntropy_le_gaussian_of_variance_le
 - `variance_fun_id_gaussianReal` (in `Mathlib/Probability/Distributions/Gaussian/Basic.lean`、
   M0 で正確 line 確認) — `Var[id; gaussianReal m v] = v`
 
-### Common2026 内 在庫
+### InformationTheory 内 在庫
 
 - `perLetterYLaw` `AWGNConverseDischarge.lean:104`:
   `(awgnConverseJoint h_meas c).map (fun ω => ω.2 i) : Measure ℝ`
@@ -227,7 +227,7 @@ mechanical assembly。
   - `private lemma perLetterYLaw_mean (h_meas) (c) (i) : ∫ y, y ∂(perLetterYLaw h_meas c i) = (1/M) ∑ₘ c.encoder m i`
   - `private lemma perLetterYLaw_variance_le (h_meas) (c) (i) (hN) : ∫ y, (y - mean)² ∂... ≤ perLetterInputSecondMoment c i + N`
   - `private lemma perLetterYLaw_var_integrable (h_meas) (c) (i) : Integrable (fun y => (y - mean)²) (perLetterYLaw h_meas c i)`
-- [ ] `lake env lean Common2026/Shannon/AWGNConverseDischarge.lean` 0 errors (sorry warning のみ)
+- [ ] `lake env lean InformationTheory/Shannon/AWGNConverseDischarge.lean` 0 errors (sorry warning のみ)
 
 ### M2 — Hyp 供給 (~60-90 分)
 
@@ -259,7 +259,7 @@ mechanical assembly。
 
 ### M4 — Verify
 
-- [ ] `lake env lean Common2026/Shannon/AWGNConverseDischarge.lean` silent
+- [ ] `lake env lean InformationTheory/Shannon/AWGNConverseDischarge.lean` silent
       (0 errors、当該 declaration 0 sorry / 0 @residual)
 - [ ] 当該 declaration の docstring から `@residual(plan:awgn-converse-aux-plan)` を **除去**
 - [ ] 親 plan `awgn-converse-aux-plan.md` 進捗ブロック M1 ✅ 反映 (orchestrator 側で実施)
@@ -291,14 +291,14 @@ mechanical assembly。
 ## 検証手順
 
 ```bash
-lake env lean Common2026/Shannon/AWGNConverseDischarge.lean
+lake env lean InformationTheory/Shannon/AWGNConverseDischarge.lean
 ```
 
 期待出力 (M4 完了時):
 
 - `0 errors`、`0 sorry` warning (当該 declaration `awgn_per_letter_mi_le_log_var`)
 - 残置 sorry は他 declaration の `@residual(plan:awgn-converse-aux-plan)` (= C-1c / C-5 / etc.)
-- `rg -n '@residual|@audit:' Common2026/Shannon/AWGNConverseDischarge.lean` で当該行が
+- `rg -n '@residual|@audit:' InformationTheory/Shannon/AWGNConverseDischarge.lean` で当該行が
   消えていることを確認
 
 ## 完了判定 (本 mini)
@@ -323,8 +323,8 @@ lake env lean Common2026/Shannon/AWGNConverseDischarge.lean
 
 ## オーケストレータ注記
 
-- 実装 agent は **`Common2026/Shannon/AWGNConverseDischarge.lean` 1 file のみ** 編集
-  (`Common2026.lean` 編集なし、本 file は既に編入済)
+- 実装 agent は **`InformationTheory/Shannon/AWGNConverseDischarge.lean` 1 file のみ** 編集
+  (`InformationTheory.lean` 編集なし、本 file は既に編入済)
 - 本 mini と #M2 / #M3 は **同一 file** 内の別 declaration を触るため、**並列実行時は
   worktree 隔離必須** (CLAUDE.md `Parallel orchestration` 規律)。逐次 dispatch なら隔離不要。
 - M1-b / M1-fallback 発動時は **bundle predicate signature 変更を伴うため Phase A

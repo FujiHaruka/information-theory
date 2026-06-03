@@ -8,6 +8,6 @@
       "note": "オーケストレータ + 3 subagent (planning + 1st implementation + pivot implementation) で Phase 0/1/2/3/4 実行。Plan で想定していた -30〜-45 行は届かず net -12 行で着地、構造目標 (Mathlib bridge 3 lemma 追加 / subsetIdxEquiv 撤去 / submodular 本体無変更 / 4 ファイル silent) は全達成。"
     }
   ],
-  "filters": { "file_prefix": "Common2026/Shannon/" },
+  "filters": { "file_prefix": "InformationTheory/Shannon/" },
   "idle_gap_minutes": 5
 }

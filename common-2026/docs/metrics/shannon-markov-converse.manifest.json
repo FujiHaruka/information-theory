@@ -18,6 +18,6 @@
       "note": "Phase 4-δ-(b) 残り sorry である mutualInfo_chain_rule の充填。 H(X,Y) を二度展開する経路 + condEntropy 内の swap pair を解消する補助 swap_condEntropy 系で完了。"
     }
   ],
-  "filters": { "file_prefix": "Common2026/Shannon" },
+  "filters": { "file_prefix": "InformationTheory/Shannon" },
   "idle_gap_minutes": 5
 }

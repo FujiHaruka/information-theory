@@ -1,7 +1,7 @@
 # Pi 値 measurable 構造 plumbing 切り出し判断
 
 着手日: 2026-05-10
-切り出し先: `Common2026/Shannon/Pi.lean`
+切り出し先: `InformationTheory/Shannon/Pi.lean`
 背景: `docs/moonshot-seeds.md` 横断観察 — 5 本のムーンショット (Loomis–Whitney /
 Slepian–Wolf / AEP / Stein / Polymatroid) 全てで Pi 値 RV の reshape plumbing が
 再利用される。`Han.lean` / `HanD.lean` の中で散発的に育っているものを上流に上げる。
@@ -20,12 +20,12 @@ Slepian–Wolf / AEP / Stein / Polymatroid) 全てで Pi 値 RV の reshape plum
 
 ## 切り出し方針
 
-- `Common2026/Shannon/Pi.lean` を新規作成、import 元は `Common2026.Shannon.Entropy`
+- `InformationTheory/Shannon/Pi.lean` を新規作成、import 元は `InformationTheory.Shannon.Entropy`
   のみ (chain rule `entropy_pair_eq_entropy_add_condEntropy` が
   `condEntropy_measurableEquiv_comp` の証明に必要なため)。
 - namespace は元と同じ `InformationTheory.Shannon` を維持。
-- `Han.lean` から該当 2 補題を削除し、`import Common2026.Shannon.Pi` を追加。
-- `Common2026.lean` の Shannon ブロック先頭付近に `import Common2026.Shannon.Pi`
+- `Han.lean` から該当 2 補題を削除し、`import InformationTheory.Shannon.Pi` を追加。
+- `InformationTheory.lean` の Shannon ブロック先頭付近に `import InformationTheory.Shannon.Pi`
   を追加 (依存順は `Entropy → Pi → Han → HanD`)。
 
 ## 切り出さない理由 (補足)

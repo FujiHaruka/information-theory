@@ -54,7 +54,7 @@ docstring 内 `@audit:KIND(SLUG)` タグの slug 集約 + 既存 3 plan の stat
 
 ### 2 load-bearing hypothesis (本 plan SoT)
 
-1. **`SwapNormalizationHypothesis`** (`Common2026/Shannon/HuffmanOptimality.lean:759`)
+1. **`SwapNormalizationHypothesis`** (`InformationTheory/Shannon/HuffmanOptimality.lean:759`)
    - Cover-Thomas Lemma 5.8.1 (i) Kraft = 1 shortening 込み swap normalization.
    - genuine analytic Prop (`∀…∃…` で `:= True` ではない).
    - 縦分解候補: `EqualizingPermHypothesis` (FALSE と判定済、`HuffmanSwapNormalizationBody.lean:`
@@ -64,7 +64,7 @@ docstring 内 `@audit:KIND(SLUG)` タグの slug 集約 + 既存 3 plan の stat
      `HuffmanStrongForm.lean:176` `huffmanLength_optimal_modulo_aux_ident` で T1-A' weak form
      から **strong form (Hyp1 free)** への昇格に既に使われている).
 
-2. **`HuffmanMergedIdentificationHypothesis`** (`Common2026/Shannon/HuffmanOptimality.lean:776`)
+2. **`HuffmanMergedIdentificationHypothesis`** (`InformationTheory/Shannon/HuffmanOptimality.lean:776`)
    - α/α' (`{y // y ≠ b}` Subtype) structural correspondence — `huffmanLength` 再帰の
      2 carrier 間整合.
    - 縦分解 primitive: `MergedHuffmanAuxIdentHypothesis` (`HuffmanMergedAuxIdent.lean`) で
@@ -76,7 +76,7 @@ docstring 内 `@audit:KIND(SLUG)` タグの slug 集約 + 既存 3 plan の stat
 
 ### 1 vertical reduction primitive
 
-- **`MergedHuffmanAuxIdentHypothesis`** (`Common2026/Shannon/HuffmanMergedAuxIdent.lean`)
+- **`MergedHuffmanAuxIdentHypothesis`** (`InformationTheory/Shannon/HuffmanMergedAuxIdent.lean`)
   - 原 `HuffmanMergedIdentificationHypothesis` を `huffmanLength` (measure 層) ではなく
     `huffmanLengthAux` (multiset 層) の combinatorial 恒等式に下げた primitive.
   - 縦分解 publish: `huffmanMergedIdentification_of_aux`
@@ -128,7 +128,7 @@ source: [`wave1-plan-sync-source-coding.md`](../audit/wave1-plan-sync-source-cod
 - [x] 30 declaration の slug 集約完了 (本 plan stub 生成と同 commit)
 - [x] 既存 3 plan の Status block 注記完了 (cross-ref 明示)
 - [x] `audit-tags.md` 語彙拡張 (`closed-by-successor` / `superseded-by`) 追加完了
-- [x] 触った各 `.lean` ファイルで `lake env lean Common2026/Shannon/Huffman*.lean` silent
+- [x] 触った各 `.lean` ファイルで `lake env lean InformationTheory/Shannon/Huffman*.lean` silent
 
 ### 中期 (Phase 起草後)
 

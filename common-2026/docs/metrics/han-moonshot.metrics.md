@@ -2,7 +2,7 @@
 
 Generated: 2026-05-10T07:07:17.770Z
 Idle gap threshold: 5 min
-File prefix filter: `Common2026/Shannon`
+File prefix filter: `InformationTheory/Shannon`
 
 ## サマリー（合計）
 
@@ -53,11 +53,11 @@ File prefix filter: `Common2026/Shannon`
 | File | Edit | Write |
 |---|---|---|
 | `.claude/handoff.md` | 0 | 2 |
-| `Common2026.lean` | 2 | 0 |
-| `Common2026/Shannon/CondMutualInfo.lean` | 3 | 0 |
-| `Common2026/Shannon/Entropy.lean` | 5 | 1 |
-| `Common2026/Shannon/Han.lean` | 36 | 1 |
-| `Common2026/Shannon/MutualInfo.lean` | 1 | 0 |
+| `InformationTheory.lean` | 2 | 0 |
+| `InformationTheory/Shannon/CondMutualInfo.lean` | 3 | 0 |
+| `InformationTheory/Shannon/Entropy.lean` | 5 | 1 |
+| `InformationTheory/Shannon/Han.lean` | 36 | 1 |
+| `InformationTheory/Shannon/MutualInfo.lean` | 1 | 0 |
 
 ## トークン使用量
 
@@ -72,10 +72,10 @@ File prefix filter: `Common2026/Shannon`
 
 | Session | Note | Start | Wall | Active | Turns | ToolCalls | Bash | Edit | Write | Errors |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `6146225d` | Phase A skeleton: Common2026/Shannon/Entropy.lean に 4 主定理 (entropy_pair_eq_entropy_add_condEntropy / condEntropy_tower / condEntropy_le_condEntropy_of_pair / condMutualInfo_eq_condEntropy_sub_condEntropy) を sorry-driven で配置 + instance チェイン裏取り。 | 2026-05-10T04:13:27.499Z | 5m 47s | 5m 47s | 21 | 20 | 6 | 1 | 1 | 1 |
+| `6146225d` | Phase A skeleton: InformationTheory/Shannon/Entropy.lean に 4 主定理 (entropy_pair_eq_entropy_add_condEntropy / condEntropy_tower / condEntropy_le_condEntropy_of_pair / condMutualInfo_eq_condEntropy_sub_condEntropy) を sorry-driven で配置 + instance チェイン裏取り。 | 2026-05-10T04:13:27.499Z | 5m 47s | 5m 47s | 21 | 20 | 6 | 1 | 1 | 1 |
 | `ef18b6e8` | Phase A 充填 1/4: chain rule (entropy_pair_eq_entropy_add_condEntropy ~70 行) + tower (condEntropy_tower ~40 行) + monotonicity (condEntropy_le_condEntropy_of_pair, 中間補題依存 linarith)。中間補題 (condMutualInfo_eq_condEntropy_sub_condEntropy) は sorry 残し。compProd_map_condDistrib + Real.negMulLog_mul + integral_fintype 経由。 | 2026-05-10T04:21:17.705Z | 25m 44s | 25m 44s | 54 | 83 | 46 | 4 | 1 | 2 |
 | `d219a097` | Phase A 充填 2/4: middle lemma (condMutualInfo_eq_condEntropy_sub_condEntropy)。mutualInfo_chain_rule + Bridge × 2 + condMutualInfo_comm 経由で埋める。fiber 展開ルートは却下。mutualInfo_ne_top / condMutualInfo_ne_top を新設し ENNReal.toReal_add の有限性を確保。 | 2026-05-10T04:47:39.673Z | 33m 39s | 33m 39s | 104 | 115 | 73 | 5 | 0 | 2 |
-| `f93c8e27` | Phase B skeleton: Common2026/Shannon/Han.lean を新規作成 (65 行)。jointEntropy 定義 (entropy の Fin n → α 値ラッパ) + n 変数 chain rule を sorry-driven で配置。 | 2026-05-10T05:24:59.344Z | 19m 3s | 10m 42s | 11 | 19 | 5 | 1 | 1 | 1 |
+| `f93c8e27` | Phase B skeleton: InformationTheory/Shannon/Han.lean を新規作成 (65 行)。jointEntropy 定義 (entropy の Fin n → α 値ラッパ) + n 変数 chain rule を sorry-driven で配置。 | 2026-05-10T05:24:59.344Z | 19m 3s | 10m 42s | 11 | 19 | 5 | 1 | 1 | 1 |
 | `54e6d8b7` | Phase B 充填: jointEntropy_chain_rule_finRange の充填。Fin n の prefix induction で n 変数 chain rule を組む。 | 2026-05-10T06:02:57.745Z | 27m 35s | 21m 37s | 55 | 70 | 43 | 13 | 0 | 0 |
 | `060eaadf` | Phase C 充填: Han の不等式本体 (han_inequality)。exceptIdxEquiv / fullIdxEquiv (index 同型 2 本) + exceptSplitMEquiv / piExceptMEquiv / fullSplitMEquiv (Pi 値 MeasurableEquiv 3 本) + han_single_bound (各 i での個別不等式) を経由して主定理。退化ケース (n = 0, 1) も同じ証明で通過 (hn : 1 ≤ n は不要だった)。 | 2026-05-10T06:35:27.574Z | 26m 49s | 26m 49s | 71 | 92 | 37 | 23 | 1 | 0 |
 

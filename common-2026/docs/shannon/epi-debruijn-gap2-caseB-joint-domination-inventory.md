@@ -1,6 +1,6 @@
 # EPI de Bruijn GAP② 案B (finite-2nd-moment + joint domination) — Mathlib/repo API 在庫
 
-> **対象**: `Common2026/Shannon/FisherInfoV2DeBruijnAssembly.lean` の `_chain_domination`
+> **対象**: `InformationTheory/Shannon/FisherInfoV2DeBruijnAssembly.lean` の `_chain_domination`
 > (`:618`、現 `@audit:defect(false-statement)` + `@residual(plan:epi-debruijn-pertime-closure)`)
 > が要求する σ-derivand domination を、分離積 (GAP① log-factor × GAP② Gaussian-Hessian) を捨てて
 > **真の σ-derivand 積を joint で dominate** する案B (finite-2nd-moment + joint domination) の在庫。
@@ -66,18 +66,18 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
 
 | 概念 | API | file:line | 状態 | 案B での扱い |
 |---|---|---|---|---|
-| 畳込 2nd-deriv の積分同定 | `theorem heatFlow_density_heat_equation (pX pPath pathDeriv1 pathDeriv2 : ℝ → ℝ → ℝ) (hpPath : ∀ (σ : ℝ) (hσ : 0 < σ), pPath σ = convDensityAdd pX (gaussianPDFReal 0 ⟨σ, hσ.le⟩)) (hpathDeriv1 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pPath σ ξ) (pathDeriv1 σ y) y) (hpathDeriv2 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pathDeriv1 σ ξ) (pathDeriv2 σ y) y) {s : ℝ} (hs : 0 < s) (x : ℝ) (boundσ ... boundξ1 boundξ2 : ℝ → ℝ) ... : HasDerivAt (fun σ : ℝ => pPath σ x) ((1/2) * pathDeriv2 s x) s` | `Common2026/Shannon/FisherInfoV2DeBruijnPerTime.lean:422` | ✅ 既存 (`@audit:ok`) | STEP D が `pathDeriv2 s x = ∫ y, pX y·g_s(x-y)·((x-y)²/s² - 1/s)` を同定。`deriv(deriv(convDensityAdd ...)) = pathDeriv2` の橋渡しは `hpathDeriv1/2` の `HasDerivAt` precondition (full-support C¹) 経由 |
-| kernel 2nd-deriv 閉形 | `theorem heatFlow_density_heat_equation_kernel_x_deriv2 {σ : ℝ} (hσ : 0 < σ) (u : ℝ) : HasDerivAt (fun ξ : ℝ => heatFlow_density_heat_equation_kernel σ ξ * (-(ξ / σ))) (heatFlow_density_heat_equation_kernel σ u * (u ^ 2 / σ ^ 2 - 1 / σ)) u` | `Common2026/Shannon/FisherInfoV2DeBruijnPerTime.lean:290` | ✅ 既存 (`@audit:ok`) | `∂²_u g_σ(u) = g_σ(u)·(u²/σ²-1/σ)`。被積分核閉形 |
-| `convDensityAddDeriv` 定義 | `noncomputable def convDensityAddDeriv (pX pY : ℝ → ℝ) : ℝ → ℝ → ℝ := fun z x => pX x * deriv pY (z - x)` | `Common2026/Shannon/EPIConvDensity.lean:64` | ✅ 既存 | z-微分被積分核 |
+| 畳込 2nd-deriv の積分同定 | `theorem heatFlow_density_heat_equation (pX pPath pathDeriv1 pathDeriv2 : ℝ → ℝ → ℝ) (hpPath : ∀ (σ : ℝ) (hσ : 0 < σ), pPath σ = convDensityAdd pX (gaussianPDFReal 0 ⟨σ, hσ.le⟩)) (hpathDeriv1 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pPath σ ξ) (pathDeriv1 σ y) y) (hpathDeriv2 : ∀ σ y : ℝ, HasDerivAt (fun ξ => pathDeriv1 σ ξ) (pathDeriv2 σ y) y) {s : ℝ} (hs : 0 < s) (x : ℝ) (boundσ ... boundξ1 boundξ2 : ℝ → ℝ) ... : HasDerivAt (fun σ : ℝ => pPath σ x) ((1/2) * pathDeriv2 s x) s` | `InformationTheory/Shannon/FisherInfoV2DeBruijnPerTime.lean:422` | ✅ 既存 (`@audit:ok`) | STEP D が `pathDeriv2 s x = ∫ y, pX y·g_s(x-y)·((x-y)²/s² - 1/s)` を同定。`deriv(deriv(convDensityAdd ...)) = pathDeriv2` の橋渡しは `hpathDeriv1/2` の `HasDerivAt` precondition (full-support C¹) 経由 |
+| kernel 2nd-deriv 閉形 | `theorem heatFlow_density_heat_equation_kernel_x_deriv2 {σ : ℝ} (hσ : 0 < σ) (u : ℝ) : HasDerivAt (fun ξ : ℝ => heatFlow_density_heat_equation_kernel σ ξ * (-(ξ / σ))) (heatFlow_density_heat_equation_kernel σ u * (u ^ 2 / σ ^ 2 - 1 / σ)) u` | `InformationTheory/Shannon/FisherInfoV2DeBruijnPerTime.lean:290` | ✅ 既存 (`@audit:ok`) | `∂²_u g_σ(u) = g_σ(u)·(u²/σ²-1/σ)`。被積分核閉形 |
+| `convDensityAddDeriv` 定義 | `noncomputable def convDensityAddDeriv (pX pY : ℝ → ℝ) : ℝ → ℝ → ℝ := fun z x => pX x * deriv pY (z - x)` | `InformationTheory/Shannon/EPIConvDensity.lean:64` | ✅ 既存 | z-微分被積分核 |
 | **`∂²_x(pX∗g_s) = pX∗∂²_x g_s` の Mathlib 直結 lemma** | — | — | ❌ **不在** | loogle `HasDerivAt (MeasureTheory.convolution _ _ _ _)` → **Found 2、両方 `HasCompactSupport.hasDerivAt_convolution_{right,left}` (compact support 前提)**。g_s は compact support でない → Mathlib convolution-微分 API は直接適用不可。repo は heat-eq STEP D 経由で自作迂回 (上記) |
 
 ### A-2. σ-derivand の積分有限性 = Fisher 有限性 (joint の核、IBP 経由)
 
 | 概念 | API | file:line | 状態 | 案B での扱い |
 |---|---|---|---|---|
-| de Bruijn IBP step (`∫(-log p-1)·∂²p = ∫(logDeriv p)²·p`) | `theorem debruijn_ibp_step ...` (atom) | `Common2026/Shannon/FisherInfoV2DeBruijnPerTime.lean:693` | ✅ 既存 (`@audit:ok`) | σ-derivand の積分値を Fisher 形に変換。**joint domination の概念的根拠** (積分値 = J(p_s)) |
-| `∫(logDeriv p)²·p = fisherInfoOfDensityReal p` | `theorem fisher_from_logDeriv ...` (atom) | `Common2026/Shannon/FisherInfoV2DeBruijnPerTime.lean:721` | ✅ 既存 (`@audit:ok`) | logDeriv² 形 → Fisher 値。`hint : Integrable ((logDeriv p)²·p)` を要求 (= fisher-finiteness 壁) |
-| logDeriv 表現 (score of conv) | `theorem convDensityAdd_logDeriv (pX pY : ℝ → ℝ) (z₀ : ℝ) {s : Set ℝ} {bound : ℝ → ℝ} (hs : s ∈ nhds z₀) (hF_meas : ...) (hF_int : Integrable (fun x => pX x * pY (z₀ - x)) volume) (hF'_meas : ...) (h_bound : ...) (bound_integrable : Integrable bound volume) (h_diff : ...) : logDeriv (convDensityAdd pX pY) z₀ = (∫ x, convDensityAddDeriv pX pY z₀ x ∂volume) / convDensityAdd pX pY z₀` | `Common2026/Shannon/EPIConvDensity.lean:113` | ✅ 既存 (`@audit:ok`) | `logDeriv p_s(z) = (∫ pX·g_s'(z-x))/p_s(z)` (Blachman 接続点) |
+| de Bruijn IBP step (`∫(-log p-1)·∂²p = ∫(logDeriv p)²·p`) | `theorem debruijn_ibp_step ...` (atom) | `InformationTheory/Shannon/FisherInfoV2DeBruijnPerTime.lean:693` | ✅ 既存 (`@audit:ok`) | σ-derivand の積分値を Fisher 形に変換。**joint domination の概念的根拠** (積分値 = J(p_s)) |
+| `∫(logDeriv p)²·p = fisherInfoOfDensityReal p` | `theorem fisher_from_logDeriv ...` (atom) | `InformationTheory/Shannon/FisherInfoV2DeBruijnPerTime.lean:721` | ✅ 既存 (`@audit:ok`) | logDeriv² 形 → Fisher 値。`hint : Integrable ((logDeriv p)²·p)` を要求 (= fisher-finiteness 壁) |
+| logDeriv 表現 (score of conv) | `theorem convDensityAdd_logDeriv (pX pY : ℝ → ℝ) (z₀ : ℝ) {s : Set ℝ} {bound : ℝ → ℝ} (hs : s ∈ nhds z₀) (hF_meas : ...) (hF_int : Integrable (fun x => pX x * pY (z₀ - x)) volume) (hF'_meas : ...) (h_bound : ...) (bound_integrable : Integrable bound volume) (h_diff : ...) : logDeriv (convDensityAdd pX pY) z₀ = (∫ x, convDensityAddDeriv pX pY z₀ x ∂volume) / convDensityAdd pX pY z₀` | `InformationTheory/Shannon/EPIConvDensity.lean:113` | ✅ 既存 (`@audit:ok`) | `logDeriv p_s(z) = (∫ pX·g_s'(z-x))/p_s(z)` (Blachman 接続点) |
 | **`J(pX∗g_s) ≤ 1/s` (Stam convolution Fisher bound)** | — | — | ❌ **不在** | **案B の核壁**。下記 §C (fisher-finiteness と同一壁) |
 
 ---
@@ -90,10 +90,10 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
 | 可積分 × 有界 = 可積分 | `theorem Integrable.mul_bdd {f g : α → 𝕜} {c : ℝ} (hf : Integrable f μ) (hg : AEStronglyMeasurable g μ) (hg_bound : ∀ᵐ x ∂μ, ‖g x‖ ≤ c) : Integrable (fun x => f x * g x) μ` | `Mathlib/MeasureTheory/Function/L1Space/Integrable.lean:1070` | ✅ 既存 | repo 先例 `PerTime.lean:170`。Gaussian factor を prefactor で有界化 |
 | 有界 × 可積分 = 可積分 | `theorem Integrable.bdd_mul {f g : α → 𝕜} {c : ℝ} (hg : Integrable g μ) (hf : AEStronglyMeasurable f μ) (hf_bound : ∀ᵐ x ∂μ, ‖f x‖ ≤ c) : Integrable (fun x => f x * g x) μ` | `Mathlib/MeasureTheory/Function/L1Space/Integrable.lean:1063` | ✅ 既存 | 因子順違い |
 | 有限 lintegral → Integrable | `theorem MeasureTheory.lintegral_ofReal_ne_top_iff_integrable {f : α → ℝ} (hf : AEMeasurable f μ) (hf' : 0 ≤ᵐ[μ] f) : (∫⁻ x, ENNReal.ofReal (f x) ∂μ) ≠ ⊤ ↔ Integrable f μ` | `Mathlib/MeasureTheory/Function/L1Space/Integrable.lean` (loogle `Found 13`、`lintegral_ofReal_ne_top_iff_integrable` 該当) | ✅ 既存 | Fisher 有限 `< ⊤` → 被積分関数 Integrable の round-trip (entropy-finiteness 経由のとき) |
-| `x^k·exp(-b x²)` 可積分 (repo bridge) | `private theorem integrable_natPow_mul_exp_neg_mul_sq {b : ℝ} (hb : 0 < b) (k : ℕ) : Integrable (fun x : ℝ => x ^ k * Real.exp (-b * x ^ 2)) volume` | `Common2026/Shannon/FisherInfoV2DeBruijnAssembly.lean:120` | ✅ 既存 (`@audit:ok`) | poly×Gaussian envelope の最終 integrability (Mathlib `integrable_rpow_mul_exp_neg_mul_sq` `GaussianIntegral.lean:109` の `rpow`→`pow` bridge) |
-| `convDensityAdd` 上界 (prefactor) | `private theorem convDensityAdd_le_prefactor (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1) {s : ℝ} (hs : 0 < s) (x : ℝ) : convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩) x ≤ (Real.sqrt (2 * Real.pi * (⟨s, hs.le⟩ : ℝ≥0)))⁻¹` | `Common2026/Shannon/FisherInfoV2DeBruijnAssembly.lean:160` | ✅ 既存 (`@audit:ok`) | `p_s ≤ pref` 一様上界 |
-| `convDensityAdd` Gaussian 下界 (s-一様 R) | `private theorem convDensityAdd_lower_bound_gaussian_uniformR (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1) : ∃ R : ℝ, 0 < R ∧ ∀ (s : ℝ) (hs : 0 < s) (x : ℝ), (1/2) * gaussianPDFReal 0 ⟨s, hs.le⟩ (|x| + R) ≤ convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩) x` | `Common2026/Shannon/FisherInfoV2DeBruijnAssembly.lean:217` | ✅ 既存 (`@audit:ok`) | `p_s ≥ (1/2)g_s(|x|+R)` 一様下界。GAP① log majorant の素 (`-log p_s ≤ A+Bx²`) — 案B でも log-factor 上界に再利用可 |
-| log factor 多項式 majorant (GAP①、genuine) | `private theorem convDensityAdd_logFactor_poly_majorant (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (_hpX_meas : Measurable pX) (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1) {t : ℝ} (ht : 0 < t) : ∃ A B : ℝ, 0 ≤ B ∧ ∀ᵐ x ∂volume, ∀ s : ℝ, (hs : s ∈ Set.Ioo (t/2) (2*t)) → ‖- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨s, _⟩) x) - 1‖ ≤ A + B * x ^ 2` | `Common2026/Shannon/FisherInfoV2DeBruijnAssembly.lean:333` | ✅ 既存 (`@audit:ok`, 0 sorry) | **案B でも生きる**: log factor の `~x²` 上界は真。問題は GAP② 側だった。joint では「log² との積を Fisher 経由で抑える」ので、この `~x²` 上界が `(logDeriv)²` の代替として `J(p_s)` finiteness と組み合わさる |
+| `x^k·exp(-b x²)` 可積分 (repo bridge) | `private theorem integrable_natPow_mul_exp_neg_mul_sq {b : ℝ} (hb : 0 < b) (k : ℕ) : Integrable (fun x : ℝ => x ^ k * Real.exp (-b * x ^ 2)) volume` | `InformationTheory/Shannon/FisherInfoV2DeBruijnAssembly.lean:120` | ✅ 既存 (`@audit:ok`) | poly×Gaussian envelope の最終 integrability (Mathlib `integrable_rpow_mul_exp_neg_mul_sq` `GaussianIntegral.lean:109` の `rpow`→`pow` bridge) |
+| `convDensityAdd` 上界 (prefactor) | `private theorem convDensityAdd_le_prefactor (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1) {s : ℝ} (hs : 0 < s) (x : ℝ) : convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩) x ≤ (Real.sqrt (2 * Real.pi * (⟨s, hs.le⟩ : ℝ≥0)))⁻¹` | `InformationTheory/Shannon/FisherInfoV2DeBruijnAssembly.lean:160` | ✅ 既存 (`@audit:ok`) | `p_s ≤ pref` 一様上界 |
+| `convDensityAdd` Gaussian 下界 (s-一様 R) | `private theorem convDensityAdd_lower_bound_gaussian_uniformR (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1) : ∃ R : ℝ, 0 < R ∧ ∀ (s : ℝ) (hs : 0 < s) (x : ℝ), (1/2) * gaussianPDFReal 0 ⟨s, hs.le⟩ (|x| + R) ≤ convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩) x` | `InformationTheory/Shannon/FisherInfoV2DeBruijnAssembly.lean:217` | ✅ 既存 (`@audit:ok`) | `p_s ≥ (1/2)g_s(|x|+R)` 一様下界。GAP① log majorant の素 (`-log p_s ≤ A+Bx²`) — 案B でも log-factor 上界に再利用可 |
+| log factor 多項式 majorant (GAP①、genuine) | `private theorem convDensityAdd_logFactor_poly_majorant (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (_hpX_meas : Measurable pX) (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1) {t : ℝ} (ht : 0 < t) : ∃ A B : ℝ, 0 ≤ B ∧ ∀ᵐ x ∂volume, ∀ s : ℝ, (hs : s ∈ Set.Ioo (t/2) (2*t)) → ‖- Real.log (convDensityAdd pX (gaussianPDFReal 0 ⟨s, _⟩) x) - 1‖ ≤ A + B * x ^ 2` | `InformationTheory/Shannon/FisherInfoV2DeBruijnAssembly.lean:333` | ✅ 既存 (`@audit:ok`, 0 sorry) | **案B でも生きる**: log factor の `~x²` 上界は真。問題は GAP② 側だった。joint では「log² との積を Fisher 経由で抑える」ので、この `~x²` 上界が `(logDeriv)²` の代替として `J(p_s)` finiteness と組み合わさる |
 
 ---
 
@@ -102,9 +102,9 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
 | 概念 | Mathlib/repo API | file:line | 状態 | 案B での扱い |
 |---|---|---|---|---|
 | **`fisherInfoOfDensity (pX∗g_s) ≤ 1/s`** (Stam) | — | — | ❌ **不在** | **案B の核壁**。loogle `"fisherInfo"` / `"Blachman"` / `"deBruijn"` = いずれも `Found 0 declarations`。Mathlib に Fisher info 概念自体が無い |
-| Fisher integrability wall (consumer) | `private theorem convDensityAdd_fisher_integrable (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX) (hpX_int : Integrable pX volume) {t : ℝ} (ht : 0 < t) : Integrable (fun x => (logDeriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)) x)^2 * convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x) volume` | `Common2026/Shannon/FisherInfoV2DeBruijnAssembly.lean:715` | ❌ sorry (`@residual(wall:fisher-finiteness)`) | **★案B が共有する壁** (下記 overlap verdict)。本壁は `J(X+√tZ)≤1/t` の有限性に依拠 |
-| Stam 算術核 (両 Gaussian) | `theorem stam_fisher_arith (a b lam : ℝ) (ha : 0 < a) (hb : 0 < b) (hlo : 0 ≤ lam) (hhi : lam ≤ 1) : 1 / (a + b) ≤ lam ^ 2 / a + (1 - lam) ^ 2 / b` | `Common2026/Shannon/StamGaussianBound.lean:58` | ✅ 既存 (`@entry_point`) | building block。density 一般化の λ 最適化に再利用 (一般 pX には直接使えない) |
-| Gaussian 凸 Fisher 上界 (両 Gaussian instance) | `theorem stam_convex_fisher_bound_gaussian (m₁ m₂ : ℝ) {v₁ v₂ : ℝ≥0} (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0) (lam : ℝ) (hlo : 0 ≤ lam) (hhi : lam ≤ 1) : (fisherInfoOfMeasureV2 (gaussianReal (m₁ + m₂) (v₁ + v₂)) (gaussianPDFReal (m₁ + m₂) (v₁ + v₂))).toReal ≤ lam ^ 2 * (fisherInfoOfMeasureV2 (gaussianReal m₁ v₁) (gaussianPDFReal m₁ v₁)).toReal + (1 - lam) ^ 2 * (fisherInfoOfMeasureV2 (gaussianReal m₂ v₂) (gaussianPDFReal m₂ v₂)).toReal` | `Common2026/Shannon/StamGaussianBound.lean:77` | ✅ 既存 (`@entry_point`, genuine) | **両被加数 Gaussian instance のみ** — 一般 pX (X+√sZ) には使えない (X が任意密度)。building block 止まり |
+| Fisher integrability wall (consumer) | `private theorem convDensityAdd_fisher_integrable (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX) (hpX_int : Integrable pX volume) {t : ℝ} (ht : 0 < t) : Integrable (fun x => (logDeriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)) x)^2 * convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x) volume` | `InformationTheory/Shannon/FisherInfoV2DeBruijnAssembly.lean:715` | ❌ sorry (`@residual(wall:fisher-finiteness)`) | **★案B が共有する壁** (下記 overlap verdict)。本壁は `J(X+√tZ)≤1/t` の有限性に依拠 |
+| Stam 算術核 (両 Gaussian) | `theorem stam_fisher_arith (a b lam : ℝ) (ha : 0 < a) (hb : 0 < b) (hlo : 0 ≤ lam) (hhi : lam ≤ 1) : 1 / (a + b) ≤ lam ^ 2 / a + (1 - lam) ^ 2 / b` | `InformationTheory/Shannon/StamGaussianBound.lean:58` | ✅ 既存 (`@entry_point`) | building block。density 一般化の λ 最適化に再利用 (一般 pX には直接使えない) |
+| Gaussian 凸 Fisher 上界 (両 Gaussian instance) | `theorem stam_convex_fisher_bound_gaussian (m₁ m₂ : ℝ) {v₁ v₂ : ℝ≥0} (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0) (lam : ℝ) (hlo : 0 ≤ lam) (hhi : lam ≤ 1) : (fisherInfoOfMeasureV2 (gaussianReal (m₁ + m₂) (v₁ + v₂)) (gaussianPDFReal (m₁ + m₂) (v₁ + v₂))).toReal ≤ lam ^ 2 * (fisherInfoOfMeasureV2 (gaussianReal m₁ v₁) (gaussianPDFReal m₁ v₁)).toReal + (1 - lam) ^ 2 * (fisherInfoOfMeasureV2 (gaussianReal m₂ v₂) (gaussianPDFReal m₂ v₂)).toReal` | `InformationTheory/Shannon/StamGaussianBound.lean:77` | ✅ 既存 (`@entry_point`, genuine) | **両被加数 Gaussian instance のみ** — 一般 pX (X+√sZ) には使えない (X が任意密度)。building block 止まり |
 | repo Stam predicate 群 | `IsStamScoreConvolution` / `IsStamCauchySchwarz` / `IsStamInequalityHyp` (`EPIStamInequalityBody.lean` / `EPIStamStep3Body.lean`) | — | ⚠ predicate pass-through | load-bearing predicate を仮説に取る wrapper。density-level genuine な `J(X+Z)≤J(Z)` 補題は **repo 不在** (fisher-finiteness plan `:52-59` verbatim 確認済) |
 
 **核壁の内容**: 案B の joint domination は最終的に「σ-derivand の積分越し微分を正当化する integrable envelope」を要求するが、その envelope の存在 ⇔ σ-derivand `(-log p_s)·∂²p_s` が s-一様に積分可能 ⇔ (IBP 後) `J(p_s) = ∫(logDeriv p_s)²·p_s < ∞` ⇔ `J(X+√sZ) ≤ 1/s`。**この `J(X+√sZ) ≤ 1/s` が Mathlib/repo 不在の真壁**。
@@ -157,7 +157,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
 1. 案B joint domination の σ-derivand 積分有限性は、IBP (`debruijn_ibp_step`、`@audit:ok`) で `∫(-log p_s -1)·∂²p_s = ∫(logDeriv p_s)²·p_s = J(p_s)` に変換され、有限性は `J(p_s) ≤ J(√sZ) = 1/s` に帰着する。
 2. これは `convDensityAdd_fisher_integrable` (`:715`, `@residual(wall:fisher-finiteness)`) が依拠する `J(X+√tZ) ≤ 1/t` と**同一の Stam convolution Fisher bound** (時刻が `t` 固定 vs `s ∈ Ioo` 一様という違いのみ、後者は `s ≥ t/2` で `J(p_s) ≤ 2/t` に一様化)。
 
-**帰結 (orchestration)**: 案B と fisher-finiteness は **shared sorry 補題 1 本 `gaussianConv_fisher_le_inv_var`** (fisher-finiteness plan `:162` の R-A 補題、引数 regularity のみ、結論 `fisherInfoOfDensity (convDensityAdd pX g_s) ≤ ENNReal.ofReal (1/s)`) で **両方 gate できる**。`convDensityAdd_fisher_integrable` (Step 3 plumbing) と `_chain_domination` (joint envelope 構成) は両方ともこの 1 補題を lemma call する consumer になる。`docs/audit/audit-tags.md`「共有 Mathlib 壁: shared sorry 補題パターン」(`:396`) に従い、壁を 1 補題に集約 (新 file `Common2026/Shannon/FisherConvBound.lean` 候補、fisher-finiteness plan R-A skeleton 通り)。
+**帰結 (orchestration)**: 案B と fisher-finiteness は **shared sorry 補題 1 本 `gaussianConv_fisher_le_inv_var`** (fisher-finiteness plan `:162` の R-A 補題、引数 regularity のみ、結論 `fisherInfoOfDensity (convDensityAdd pX g_s) ≤ ENNReal.ofReal (1/s)`) で **両方 gate できる**。`convDensityAdd_fisher_integrable` (Step 3 plumbing) と `_chain_domination` (joint envelope 構成) は両方ともこの 1 補題を lemma call する consumer になる。`docs/audit/audit-tags.md`「共有 Mathlib 壁: shared sorry 補題パターン」(`:396`) に従い、壁を 1 補題に集約 (新 file `InformationTheory/Shannon/FisherConvBound.lean` 候補、fisher-finiteness plan R-A skeleton 通り)。
 
 **注意 (誤った非共有判定の回避)**: case A の分離積 (GAP①×GAP②) は Fisher 経由を使わず pointwise Gaussian-tail を主張したため fisher 壁と「別物」に見えた。案B が分離積を捨てて joint (= Fisher 経由) に切り替えたことで、初めて fisher 壁との core 共有が露呈する。この共有の発見が案B 採用の最大の orchestration メリット (壁の重複排除)。
 
@@ -190,16 +190,16 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
 **joint envelope を 2 named sub-lemma + 1 shared 壁に分解** (分離積 GAP①×GAP② は破棄):
 
 ```lean
-import Common2026.Shannon.FisherInfoV2DeBruijnPerTime
+import InformationTheory.Shannon.FisherInfoV2DeBruijnPerTime
 
-namespace Common2026.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfoV2
 
 open MeasureTheory ProbabilityTheory Filter Topology Real
 open scoped ENNReal NNReal
 open InformationTheory.Shannon.EPIConvDensity (convDensityAdd)
 
 -- 【核壁・共有】Stam convolution Fisher bound (= fisher-finiteness R-A 補題)
--- 新 file Common2026/Shannon/FisherConvBound.lean に集約推奨 (fisher-finiteness と 1 本共有)
+-- 新 file InformationTheory/Shannon/FisherConvBound.lean に集約推奨 (fisher-finiteness と 1 本共有)
 theorem gaussianConv_fisher_le_inv_var
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) {s : ℝ} (hs : 0 < s) :
@@ -246,12 +246,12 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
 > の 3 箇所。下記は shared 壁 file の出だし。
 
 ```lean
-import Common2026.Shannon.EPIConvDensity
-import Common2026.Shannon.FisherInfoV2
-import Common2026.Shannon.FisherInfoV2DeBruijn  -- V2 Gaussian 閉形 J(𝒩(0,s))=1/s
-import Common2026.Shannon.StamGaussianBound      -- stam_fisher_arith
+import InformationTheory.Shannon.EPIConvDensity
+import InformationTheory.Shannon.FisherInfoV2
+import InformationTheory.Shannon.FisherInfoV2DeBruijn  -- V2 Gaussian 閉形 J(𝒩(0,s))=1/s
+import InformationTheory.Shannon.StamGaussianBound      -- stam_fisher_arith
 
-namespace Common2026.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfoV2
 
 open MeasureTheory ProbabilityTheory
 open scoped ENNReal NNReal
@@ -267,7 +267,7 @@ theorem gaussianConv_fisher_le_inv_var
       ≤ ENNReal.ofReal (1 / s) := by
   sorry -- @residual(wall:fisher-finiteness)
 
-end Common2026.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfoV2
 ```
 
 (独立 honesty 監査必須: 新規 shared sorry 補題追加 + `_chain_domination` / `convDensityAdd_fisher_integrable` の body 書換は CLAUDE.md「Independent honesty audit」起動条件該当。`gaussianConv_fisher_le_inv_var` が load-bearing でない (regularity 引数のみ、結論 = 有限上界) こと、両 consumer が壁を lemma call で受けていることを fresh auditor が確認。GAP② の Gaussian-tail false 結論が撤回 or polynomial-moment 化されたことも確認。)

@@ -1,7 +1,7 @@
 # I-1 Typed Random Variable API サブ計画
 
 > **Parent**: [`../textbook-roadmap.md`](../textbook-roadmap.md) §「Tier ∞ — Infrastructure / I-1. Typed Random Variable API」
-> 実態整合 (2026-05-20): DONE-UNCOND — Phase 1〜5 完了済 (進捗欄 📋 は STALE)。`Common2026/Shannon/TypedRV.lean` に `klDivRV` (`:66`) / `differentialEntropyRV` (`:83`) / `condEntropy` re-export + notation 5 つ (`μ` 明示形に縮退、判断ログ 3) + `_def` lemma (`rfl`) + Phase 5 typed-form 主補題層が存在。`lake env lean Common2026/Shannon/TypedRV.lean` silent、0 sorry。新数学なし、全 alias は既存 measure-form への薄い wrapper。
+> 実態整合 (2026-05-20): DONE-UNCOND — Phase 1〜5 完了済 (進捗欄 📋 は STALE)。`InformationTheory/Shannon/TypedRV.lean` に `klDivRV` (`:66`) / `differentialEntropyRV` (`:83`) / `condEntropy` re-export + notation 5 つ (`μ` 明示形に縮退、判断ログ 3) + `_def` lemma (`rfl`) + Phase 5 typed-form 主補題層が存在。`lake env lean InformationTheory/Shannon/TypedRV.lean` silent、0 sorry。新数学なし、全 alias は既存 measure-form への薄い wrapper。
 > **Status (2026-05-18)**: 起草。在庫調査 ([`typed-rv-mathlib-inventory.md`](typed-rv-mathlib-inventory.md)) 完了直後。
 > **規模**: 1 ファイル 50〜80 行、1〜2 セッション (合計 1〜3 時間)。新数学なし、新規 `def` 2 個 + `abbrev` 1 個 + notation 5 行 + サンプル `example` 1 個。
 
@@ -21,9 +21,9 @@
 
 ### 在庫調査の結論 (verbatim 再掲しない、in-essence 5 点)
 
-1. 既存 `Common2026/Shannon/` の measure-theoretic API は **すでに 100% typed RV 形** で書かれており、新規 `def` はほぼ不要 (在庫 §A, §E)
+1. 既存 `InformationTheory/Shannon/` の measure-theoretic API は **すでに 100% typed RV 形** で書かれており、新規 `def` はほぼ不要 (在庫 §A, §E)
 2. **新規必要**: `klDivRV` 1 本 (`klDiv (μ.map X) (μ.map Y)`) + `differentialEntropyRV` 1 本 (`differentialEntropy (μ.map X)`) + notation 5 行 + `MeasureFano.condEntropy` を `Shannon` namespace に re-export する `abbrev` 1 行 (在庫 §F)
-3. **bridge lemma 新規追加ゼロ件** で済む見込み。Mathlib `Measure.map_apply`, `isProbabilityMeasure_map`, `integral_map`, `compProd_map_condDistrib` + 既存 Common2026 `klDiv_map_measurableEquiv` で足りる (在庫 §C)
+3. **bridge lemma 新規追加ゼロ件** で済む見込み。Mathlib `Measure.map_apply`, `isProbabilityMeasure_map`, `integral_map`, `compProd_map_condDistrib` + 既存 InformationTheory `klDiv_map_measurableEquiv` で足りる (在庫 §C)
 4. **撤退ラインの発動シナリオは現状不明** — 在庫側に乖離が見えない (在庫 §G)
 5. **callsite migration は本タスクの範囲外** (ユーザー確認済)。既存 `entropy μ X` 形の呼び出しはそのまま残す。本タスクが追加するのは **opt-in な notation 層 + 2 個の thin alias** のみ
 
@@ -41,7 +41,7 @@
 **1 ファイル 1 namespace、全部 opt-in な再エクスポート + 薄い alias 層**。internal は不変。
 
 ```
-新規ファイル: Common2026/Shannon/TypedRV.lean
+新規ファイル: InformationTheory/Shannon/TypedRV.lean
 namespace : InformationTheory.Shannon
 中身:
   1. abbrev condEntropy := @MeasureFano.condEntropy   -- 再エクスポート
@@ -56,7 +56,7 @@ namespace : InformationTheory.Shannon
 
 **「薄い alias 層」の意味**: `klDivRV` / `differentialEntropyRV` は 1 行 `def` で内部 measure-theoretic API を呼ぶだけ。それぞれ 1 行 `_def` 補題 (定義展開) を添えて、後続 seed が `simp [klDivRV]` または `rw [klDivRV_def]` で measure 形に降ろせるようにする。
 
-**bridge lemma の新規追加なし**: 在庫 §C で確認した既存 Mathlib + Common2026 補題 (`Measure.map_apply`, `isProbabilityMeasure_map`, `integral_map`, `klDiv_map_measurableEquiv`) で後続 seed が必要なものは全部出る。本タスクで新規 bridge を立てる予定なし。**もし Phase 3 で notation を使う `example` を書く中で bridge が 1 本足りないと判明したら**、その 1 本だけ Phase 3 末に追加し、本計画の Phase 4 を再評価する。
+**bridge lemma の新規追加なし**: 在庫 §C で確認した既存 Mathlib + InformationTheory 補題 (`Measure.map_apply`, `isProbabilityMeasure_map`, `integral_map`, `klDiv_map_measurableEquiv`) で後続 seed が必要なものは全部出る。本タスクで新規 bridge を立てる予定なし。**もし Phase 3 で notation を使う `example` を書く中で bridge が 1 本足りないと判明したら**、その 1 本だけ Phase 3 末に追加し、本計画の Phase 4 を再評価する。
 
 ---
 
@@ -71,7 +71,7 @@ namespace : InformationTheory.Shannon
 理由:
 
 - 教科書 (Cover-Thomas) の `D(X‖Y)` は通常 1 測度版 (`P_X`, `P_Y` を同じ ambient `μ` から `Ω → α` で作る形)
-- 2 測度版 `klDiv (μ.map X) (ν.map Y)` は `IdentDistrib` 風の hypothesis testing 系で要る場面があるが、現状 Common2026 で hypothesis testing 系の callsite が typed RV 形を要求していない (Stein / Sanov / Chernoff いずれも `klDiv μ ν` 直で書かれている)
+- 2 測度版 `klDiv (μ.map X) (ν.map Y)` は `IdentDistrib` 風の hypothesis testing 系で要る場面があるが、現状 InformationTheory で hypothesis testing 系の callsite が typed RV 形を要求していない (Stein / Sanov / Chernoff いずれも `klDiv μ ν` 直で書かれている)
 - 2 測度版を出すと「どちらが `μ`, どちらが `ν` か」の引数順問題が notation 設計に伝搬する。教科書本文の `D(X‖Y)` は **2 つの分布** を比較するだけで、それらが共通 ambient から来るか別 ambient から来るかは表現しない
 - もし将来 2 測度版が必要になった場合、`klDivRV` とは別名で `klDivRV₂` 等を後付け追加すれば良い。互換性は保たれる
 
@@ -122,22 +122,22 @@ scoped[InformationTheory.Shannon] notation3:50 "D(" X " ‖ " Y ")"   => klDivRV
 
 ### 新規ファイル
 
-**`Common2026/Shannon/TypedRV.lean`** (50〜80 行見込み)
+**`InformationTheory/Shannon/TypedRV.lean`** (50〜80 行見込み)
 
-`Common2026.lean` (library root) に追記:
+`InformationTheory.lean` (library root) に追記:
 
 ```lean
-import Common2026.Shannon.TypedRV
+import InformationTheory.Shannon.TypedRV
 ```
 
 ### import 一覧 (在庫 §H 参照、`import Mathlib` 禁止)
 
 ```lean
-import Common2026.Shannon.Bridge              -- entropy
-import Common2026.Shannon.MutualInfo          -- mutualInfo
-import Common2026.Shannon.CondMutualInfo      -- condMutualInfo, IsMarkovChain
-import Common2026.Fano.Measure                -- MeasureFano.condEntropy
-import Common2026.Shannon.DifferentialEntropy -- differentialEntropy (measure form)
+import InformationTheory.Shannon.Bridge              -- entropy
+import InformationTheory.Shannon.MutualInfo          -- mutualInfo
+import InformationTheory.Shannon.CondMutualInfo      -- condMutualInfo, IsMarkovChain
+import InformationTheory.Fano.Measure                -- MeasureFano.condEntropy
+import InformationTheory.Shannon.DifferentialEntropy -- differentialEntropy (measure form)
 import Mathlib.InformationTheory.KullbackLeibler.Basic -- klDiv
 ```
 
@@ -149,14 +149,14 @@ import Mathlib.InformationTheory.KullbackLeibler.Basic -- klDiv
 
 ## E. Phase 1 — skeleton (sorry-driven 出だし)
 
-> 全項目を `:= by sorry` (notation は宣言だけ) で書き、`lake env lean Common2026/Shannon/TypedRV.lean` が **silent + sorry warning のみ** になることを Phase 1 の Done 条件とする。
+> 全項目を `:= by sorry` (notation は宣言だけ) で書き、`lake env lean InformationTheory/Shannon/TypedRV.lean` が **silent + sorry warning のみ** になることを Phase 1 の Done 条件とする。
 
 ```lean
-import Common2026.Shannon.Bridge
-import Common2026.Shannon.MutualInfo
-import Common2026.Shannon.CondMutualInfo
-import Common2026.Fano.Measure
-import Common2026.Shannon.DifferentialEntropy
+import InformationTheory.Shannon.Bridge
+import InformationTheory.Shannon.MutualInfo
+import InformationTheory.Shannon.CondMutualInfo
+import InformationTheory.Fano.Measure
+import InformationTheory.Shannon.DifferentialEntropy
 import Mathlib.InformationTheory.KullbackLeibler.Basic
 
 namespace InformationTheory.Shannon
@@ -199,15 +199,15 @@ end InformationTheory.Shannon
 
 | 項目 | 既存定義 / 補題 | file:line |
 |---|---|---|
-| `condEntropy` abbrev | `InformationTheory.MeasureFano.condEntropy` | `Common2026/Fano/Measure.lean:68` |
+| `condEntropy` abbrev | `InformationTheory.MeasureFano.condEntropy` | `InformationTheory/Fano/Measure.lean:68` |
 | `klDivRV` def | `klDiv` (Mathlib) | `Mathlib/InformationTheory/KullbackLeibler/Basic.lean:57` |
 | `klDivRV_def` | `rfl` で済む (定義展開) | — |
-| `differentialEntropyRV` def | `differentialEntropy` | `Common2026/Shannon/DifferentialEntropy.lean:42` |
+| `differentialEntropyRV` def | `differentialEntropy` | `InformationTheory/Shannon/DifferentialEntropy.lean:42` |
 | `differentialEntropyRV_def` | `rfl` で済む | — |
-| notation `H(X)` | `entropy` | `Common2026/Shannon/Bridge.lean:43` |
-| notation `H(X|Y)` | `condEntropy` (= 上記 abbrev) | `Common2026/Fano/Measure.lean:68` 経由 |
-| notation `I(X;Y)` | `mutualInfo` | `Common2026/Shannon/MutualInfo.lean:36` |
-| notation `I(X;Y|Z)` | `condMutualInfo` | `Common2026/Shannon/CondMutualInfo.lean:46` |
+| notation `H(X)` | `entropy` | `InformationTheory/Shannon/Bridge.lean:43` |
+| notation `H(X|Y)` | `condEntropy` (= 上記 abbrev) | `InformationTheory/Fano/Measure.lean:68` 経由 |
+| notation `I(X;Y)` | `mutualInfo` | `InformationTheory/Shannon/MutualInfo.lean:36` |
+| notation `I(X;Y|Z)` | `condMutualInfo` | `InformationTheory/Shannon/CondMutualInfo.lean:46` |
 | notation `D(X‖Y)` | `klDivRV` (新規) | 本ファイル |
 
 **bridge ヘルパー (新規追加分)**: ゼロ件。在庫 §C で確認した既存 bridge (`Measure.map_apply`, `isProbabilityMeasure_map`, `integral_map`, `klDiv_map_measurableEquiv`) で十分。**Phase 3 のサンプル `example` で 1 本足りないと判明したら、そこで追加判断する**。
@@ -217,9 +217,9 @@ end InformationTheory.Shannon
 ## F. Phase 切り分け
 
 ### Phase 1: skeleton + silent
-- 上記 E の内容を `Common2026/Shannon/TypedRV.lean` に Write
-- `Common2026.lean` に `import Common2026.Shannon.TypedRV` 追記
-- `lake env lean Common2026/Shannon/TypedRV.lean` が silent + sorry warning のみ
+- 上記 E の内容を `InformationTheory/Shannon/TypedRV.lean` に Write
+- `InformationTheory.lean` に `import InformationTheory.Shannon.TypedRV` 追記
+- `lake env lean InformationTheory/Shannon/TypedRV.lean` が silent + sorry warning のみ
 - **proof-log**: no (skeleton 段階)
 - 工数: 30 分
 
@@ -228,7 +228,7 @@ end InformationTheory.Shannon
 - `abbrev condEntropy` は Phase 1 で既に sorry-free (定義のみ、補題なし)
 - 工数: 15 分
 - **proof-log**: no
-- Done: `lake env lean Common2026/Shannon/TypedRV.lean` が silent + sorry 0 個
+- Done: `lake env lean InformationTheory/Shannon/TypedRV.lean` が silent + sorry 0 個
 
 ### Phase 3: notation 宣言 + 1 文字衝突解消 + サンプル `example`
 - まず `rg`/`loogle` で **`H` / `I` / `D` の 1 文字識別子の衝突**を確認:
@@ -236,7 +236,7 @@ end InformationTheory.Shannon
   - `loogle "H _"` も併用
   - 衝突なし → notation 宣言をそのまま投入
   - 衝突あり → 撤退ライン §H-2 (添字付き `Hₛ` / `Iₛ` / `Dₛ` または `H[X]` / `I[X;Y]` / `D[X‖Y]` への縮退)
-- notation 宣言を `Common2026/Shannon/TypedRV.lean` に追加
+- notation 宣言を `InformationTheory/Shannon/TypedRV.lean` に追加
 - **動作確認 `example` を 1 個書く**:
 
 ```lean
@@ -251,17 +251,17 @@ example {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasur
 (または `H(X | Y)` / `I(X;Y)` / `D(X‖Y)` のいずれか 1 つで似た形。最低 1 つの notation が動くことを示せばよい)
 - 工数: 30〜60 分 (衝突確認 + notation 投入 + example で消耗)
 - **proof-log**: yes (notation 設計の確定 / 衝突有無 / `notation3` で `μ` placeholder が効いたか効かなかったかを記録)
-- Done: `lake env lean Common2026/Shannon/TypedRV.lean` silent、`H(X)` / `H(X|Y)` / `I(X;Y)` / `I(X;Y|Z)` / `D(X‖Y)` の **5 つ全ての notation が elaborate に通る**
+- Done: `lake env lean InformationTheory/Shannon/TypedRV.lean` silent、`H(X)` / `H(X|Y)` / `I(X;Y)` / `I(X;Y|Z)` / `D(X‖Y)` の **5 つ全ての notation が elaborate に通る**
 
 ### Phase 4: verify + regression check
-- `lake env lean Common2026/Shannon/TypedRV.lean` 0 error / 0 sorry / warning 最小
+- `lake env lean InformationTheory/Shannon/TypedRV.lean` 0 error / 0 sorry / warning 最小
 - 既存 0 sorry ファイルへの **regression なし**を確認:
-  - `lake env lean Common2026/Shannon/Bridge.lean` silent
-  - `lake env lean Common2026/Shannon/MutualInfo.lean` silent
-  - `lake env lean Common2026/Shannon/CondMutualInfo.lean` silent
-  - `lake env lean Common2026/Fano/Measure.lean` silent
-  - `lake env lean Common2026/Shannon/DifferentialEntropy.lean` silent
-- (必要なら `lake build Common2026.Shannon.TypedRV` で olean 焼き)
+  - `lake env lean InformationTheory/Shannon/Bridge.lean` silent
+  - `lake env lean InformationTheory/Shannon/MutualInfo.lean` silent
+  - `lake env lean InformationTheory/Shannon/CondMutualInfo.lean` silent
+  - `lake env lean InformationTheory/Fano/Measure.lean` silent
+  - `lake env lean InformationTheory/Shannon/DifferentialEntropy.lean` silent
+- (必要なら `lake build InformationTheory.Shannon.TypedRV` で olean 焼き)
 - 工数: 15〜30 分
 - **proof-log**: yes (合流 + メトリクス: 行数 / 新規 def 数 / notation 数 / Phase 3 で衝突確認した識別子のメモ)
 - Done: 全ファイル silent、proof-log 完備
@@ -272,10 +272,10 @@ example {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasur
 
 ## G. 判定条件 (Definition of Done)
 
-1. `lake env lean Common2026/Shannon/TypedRV.lean` が **0 error / 0 sorry / 警告最小** で silent
-2. **notation 5 つすべて (`H(X)` / `H(X|Y)` / `I(X;Y)` / `I(X;Y|Z)` / `D(X‖Y)`) が動く** — `Common2026/Shannon/TypedRV.lean` 末尾の `example` ブロックで証明済み (`open InformationTheory.Shannon` 下)
-3. **既存 0 sorry ファイルが regression なし** — 上記 §F Phase 4 の 5 ファイル + `Common2026/Shannon/Han.lean` / `HanD.lean` / `AEP.lean` 等が `lake env lean` で silent
-4. `Common2026.lean` に `import Common2026.Shannon.TypedRV` 追記済み
+1. `lake env lean InformationTheory/Shannon/TypedRV.lean` が **0 error / 0 sorry / 警告最小** で silent
+2. **notation 5 つすべて (`H(X)` / `H(X|Y)` / `I(X;Y)` / `I(X;Y|Z)` / `D(X‖Y)`) が動く** — `InformationTheory/Shannon/TypedRV.lean` 末尾の `example` ブロックで証明済み (`open InformationTheory.Shannon` 下)
+3. **既存 0 sorry ファイルが regression なし** — 上記 §F Phase 4 の 5 ファイル + `InformationTheory/Shannon/Han.lean` / `HanD.lean` / `AEP.lean` 等が `lake env lean` で silent
+4. `InformationTheory.lean` に `import InformationTheory.Shannon.TypedRV` 追記済み
 5. proof-log (`docs/proof-log-typed-rv.md` 等) に **Phase 3 で確認した衝突有無 / `notation3` の `μ` placeholder 挙動 / 採用した最終 notation の verbatim** を記録
 
 ---
@@ -376,7 +376,7 @@ noncomputable def capacity_lim (W : BlockwiseChannel α β) : ℝ :=
    
    教科書 `H(X)` から `H(μ; X)` への 1 段増だが、Mathlib `IndepFun` `X ⟂ᵢ[μ] Y` precedent と整合。**`D(X ‖ Y)` の `‖` (U+2016) は norm token `‖x‖` と衝突するため `∥` (U+2225 Parallel To) に置換**。editor 表示は近似だが意味は完全保存。
 
-4. **2026-05-18 Phase 4 verify 完了**: `lake env lean Common2026/Shannon/TypedRV.lean` silent (184 行 / 0 sorry / 0 error)。regression check 7 ファイル (`Bridge` / `MutualInfo` / `CondMutualInfo` / `Fano/Measure` / `DifferentialEntropy` / `Han` / `AEP`) 全て exit 0、warning は既存のもののみ (本タスク起因 0)。bridge lemma 新規追加ゼロを維持。判断ログ 2, 3 で確定した notation 形 (5 つ) を最終採用。
+4. **2026-05-18 Phase 4 verify 完了**: `lake env lean InformationTheory/Shannon/TypedRV.lean` silent (184 行 / 0 sorry / 0 error)。regression check 7 ファイル (`Bridge` / `MutualInfo` / `CondMutualInfo` / `Fano/Measure` / `DifferentialEntropy` / `Han` / `AEP`) 全て exit 0、warning は既存のもののみ (本タスク起因 0)。bridge lemma 新規追加ゼロを維持。判断ログ 2, 3 で確定した notation 形 (5 つ) を最終採用。
 
 5. **2026-05-19 Phase 5 — typed-form main lemma 層拡張**: orchestrator から I-1 を「full-chain で 1 セッション完遂」依頼が来た時点で、core publish (notation 5 個 + alias 2 個 + abbrev 1 個 + `_def` lemma 2 個) は既に完了。教科書本文と一対一対応する **typed-form 主補題** (`mutualInfo_comm`, `entropy_nonneg`, `entropy_le_log_card`, `mutualInfo_chain_rule`, `mutualInfo_le_of_postprocess` 等) を `InformationTheory.Shannon` namespace 直下に **無印 RV-form** で並べる layer を追加。実装は全て既存 measure-form 補題への 1 行 alias (`:= mutualInfo_comm μ X Y hX hY`) — 新数学ゼロ、`rfl` / direct call のみ。本 Phase で publish される lemma セット:
 
@@ -387,6 +387,6 @@ noncomputable def capacity_lim (W : BlockwiseChannel α β) : ℝ :=
    - `mutualInfo_le_of_postprocess_rv` (typed DPI)
    - `klDivRV_self`, `klDivRV_nonneg` (signature 自明だが教科書 `D(X‖X) = 0` のため publish)
 
-   layer 名規約: 既存 `Common2026/Shannon/...` 補題は **削除・rename しない**、本 file は wrapper を追加するだけ。`_rv` suffix で「typed RV form」を示すが、`InformationTheory.Shannon` namespace 内では `condEntropy` のような名前衝突が起きるため、衝突がある場合は `_rv` で逃がす、ない場合は無印で再公開する (例: `mutualInfo_comm` は measure-form と RV-form で型クラスが完全に同じなため逃がす必要なし — abbrev で再公開はせず `_rv` 名で publish)。
+   layer 名規約: 既存 `InformationTheory/Shannon/...` 補題は **削除・rename しない**、本 file は wrapper を追加するだけ。`_rv` suffix で「typed RV form」を示すが、`InformationTheory.Shannon` namespace 内では `condEntropy` のような名前衝突が起きるため、衝突がある場合は `_rv` で逃がす、ない場合は無印で再公開する (例: `mutualInfo_comm` は measure-form と RV-form で型クラスが完全に同じなため逃がす必要なし — abbrev で再公開はせず `_rv` 名で publish)。
 
    規模見積もり: +~150-250 行 / 10-15 lemma。本 Phase の Done 条件は core publish と同じ (`lake env lean` clean / 0 sorry / 0 warning / regression なし)。撤退ライン §H-1〜4 は同等に適用、特に L-RV1 (alias 1 本が rfl で割れない場合は `unfold + simp [...]` に fallback、3 ターン進まないなら hypothesis pass-through に逃がし bridge は plan defer) を新規導入。

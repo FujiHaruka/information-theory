@@ -9,7 +9,7 @@
 -->
 
 > 実態整合 (2026-05-20): DONE-HONEST-HYPS — 全 Phase 完了。Phase D weak converse =
-> `source_coding_converse` (`Common2026/Shannon/AEP.lean:704`)、Phase E achievability =
+> `source_coding_converse` (`InformationTheory/Shannon/AEP.lean:704`)、Phase E achievability =
 > `source_coding_achievability` (AEP.lean:1138)、両側等号 `source_coding_theorem`
 > (AEP.lean:1240)。AEP.lean 全体 0 sorry、仮定は i.i.d. 標準形 (`iIndepFun`/`IdentDistrib`/`hpos`) のみ。
 >
@@ -18,7 +18,7 @@
 
 ## 進捗
 
-- [x] Phase 0 — Mathlib + 既存 Common2026 API インベントリ ✅ → [`aep-mathlib-inventory.md`](aep-mathlib-inventory.md)
+- [x] Phase 0 — Mathlib + 既存 InformationTheory API インベントリ ✅ → [`aep-mathlib-inventory.md`](aep-mathlib-inventory.md)
 - [x] Phase A — i.i.d. 列の formal definition + Pi 値 plumbing ✅ (= `jointRV` 定義 + 基本 `Measurable` のみ、Pi 構築は Phase B/C で実需要が出るまで保留 / 結局 B では不要、C.3 でのみ要)
 - [x] Phase B — probability AEP (`P{|−(1/n) log P(X^n) − H(X)| ≥ ε} → 0`) ✅
 - [x] Phase C — typical set `T_ε^n` ✅ (`measurableSet_typicalSet` ✅ / `typicalSet_prob_tendsto_one` ✅ / `typicalSet_card_le` ✅ — `[∀ x, P(x) > 0]` 仮定追加で完了)  ⬅ **撤退ラインはここ — Phase A〜C 完了 = AEP 単体 publish ライン到達**
@@ -42,7 +42,7 @@
 **Approach 図**:
 
 ```
-Phase 0  : Mathlib + Common2026 API インベントリ              ← 1 ターン
+Phase 0  : Mathlib + InformationTheory API インベントリ              ← 1 ターン
            ──────────────────────────────────────────
 Phase A  : i.i.d. 列の formal definition + Pi 値 joint law    ← 1〜1.5 週
            ──────────────────────────────────────────
@@ -59,17 +59,17 @@ Phase E  : achievability (rate > H で error → 0)              ← 0.5〜1 週
 **ファイル構成 (Phase E 終了時想定)**:
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   AEP.lean             ← Phase A (i.i.d. plumbing) + Phase B (probability AEP)
   TypicalSet.lean      ← Phase C
   SourceCoding.lean    ← Phase D (converse) + Phase E (achievability)
 ```
 
-撤退時 (Phase A〜C 完) は `Common2026/Shannon/AEP.lean` + `Common2026/Shannon/TypicalSet.lean` で close。
+撤退時 (Phase A〜C 完) は `InformationTheory/Shannon/AEP.lean` + `InformationTheory/Shannon/TypicalSet.lean` で close。
 
 ---
 
-## Phase 0 — Mathlib + 既存 Common2026 API インベントリ
+## Phase 0 — Mathlib + 既存 InformationTheory API インベントリ
 
 ### スコープ
 
@@ -84,7 +84,7 @@ Common2026/Shannon/
 
 - 「強法則 `strong_law_ae_real` の verbatim 署名」が inventory に記録 → ✅ 起草段階で確定
 - 「AEP / typical set / 源符号化定理は Mathlib 不在」を裏取り → ✅ `rg` 0 件確認
-- Phase A skeleton (`Common2026/Shannon/AEP.lean` の sorry-driven 出だし) が書ける状態 → 本 plan 起草時点で **GO**
+- Phase A skeleton (`InformationTheory/Shannon/AEP.lean` の sorry-driven 出だし) が書ける状態 → 本 plan 起草時点で **GO**
 
 ### 工数感
 
@@ -123,14 +123,14 @@ end InformationTheory.Shannon
 ### 鍵となる作業
 
 - [ ] **(A.1) `jointRV` 定義** + 基本 Measurable 性 (`Measurable.pi` で `hXs` から組む)
-- [ ] **(A.2) `iIndepFun (fun i (ω : Ω) => Xs i ω)` の `Pairwise IndepFun` 同値 lift** ─ Mathlib に既存補題があれば呼ぶ、無ければ自前 (`Common2026/Shannon/Han.lean` 周辺の `IndepFun` 利用前例があるか確認)
+- [ ] **(A.2) `iIndepFun (fun i (ω : Ω) => Xs i ω)` の `Pairwise IndepFun` 同値 lift** ─ Mathlib に既存補題があれば呼ぶ、無ければ自前 (`InformationTheory/Shannon/Han.lean` 周辺の `IndepFun` 利用前例があるか確認)
 - [ ] **(A.3) `map_jointRV_eq_pi` 本体** ─ `iIndepFun_iff_map_fun_eq_infinitePi_map` (`Mathlib/Probability/Independence/InfinitePi.lean:79`) を経由するか、`IdentDistrib.pi` (`Mathlib/Probability/IdentDistribIndep.lean:57`) + finite Pi reshape のいずれか。**最大の plumbing 不確実性** (40〜80 行見積もり)
 - [ ] **(A.4) `(Fin n → α)` の `Fintype` / `MeasurableSpace` / `MeasurableSingletonClass` instance**: 自動発火確認 (Han Phase D 前例より GO 見込み)
-- [ ] **(A.5) `Common2026.lean` に `import Common2026.Shannon.AEP` 追記**
+- [ ] **(A.5) `InformationTheory.lean` に `import InformationTheory.Shannon.AEP` 追記**
 
 ### Done 条件
 
-- 上記 5 項目が `lake env lean Common2026/Shannon/AEP.lean` で silent
+- 上記 5 項目が `lake env lean InformationTheory/Shannon/AEP.lean` で silent
 - skeleton-driven で `jointRV` 定義 → `map_jointRV_eq_pi` の sorry を割る順序
 
 ### 工数感
@@ -281,7 +281,7 @@ end InformationTheory.Shannon
 
 ### **★★★ Phase A〜C 完了 = AEP 単体 publish ライン ★★★**
 
-ここで `Common2026/Shannon/AEP.lean` + `Common2026/Shannon/TypicalSet.lean` が立ち、教科書 AEP (Cover-Thomas Theorem 3.1.1〜3.1.2) の **standard 3 主定理** が形式化された状態。**Phase D 不達でもムーンショット成立。** proof-log + metrics 取得 + 別 plan に Phase D 切り出しの判断はここで実施。
+ここで `InformationTheory/Shannon/AEP.lean` + `InformationTheory/Shannon/TypicalSet.lean` が立ち、教科書 AEP (Cover-Thomas Theorem 3.1.1〜3.1.2) の **standard 3 主定理** が形式化された状態。**Phase D 不達でもムーンショット成立。** proof-log + metrics 取得 + 別 plan に Phase D 切り出しの判断はここで実施。
 
 ---
 
@@ -416,7 +416,7 @@ end InformationTheory.Shannon
 ## 当面の next step
 
 1. ✅ **Phase 0 (本 plan + inventory 起草)** — 完 (2026-05-10)
-2. **Phase A skeleton** — `Common2026/Shannon/AEP.lean` を sorry-driven で書き始め、`jointRV` + `map_jointRV_eq_pi` の sorry を割る ← **次これ**
+2. **Phase A skeleton** — `InformationTheory/Shannon/AEP.lean` を sorry-driven で書き始め、`jointRV` + `map_jointRV_eq_pi` の sorry を割る ← **次これ**
 3. **Phase A 完で Phase B 着手判定** — `map_jointRV_eq_pi` が silent なら Phase B (probability AEP)
 4. **Phase B 完で Phase C 着手判定** — Phase B が plumbing 山場 1 なので、ここを越えれば撤退ラインまでは見える
 5. **Phase C 完 = 撤退ライン到達**: proof-log + metrics 取得、Phase D を別 plan に切り出すか継続するかをここで判断

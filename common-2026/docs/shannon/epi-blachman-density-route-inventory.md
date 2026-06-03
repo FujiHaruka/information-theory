@@ -11,7 +11,7 @@
 > **API 部品** (積分 CS / Tonelli / IBP の `[...]` 前提 verbatim) のみ消費し、S1/S3/S4 の condExp 戦略記述は
 > 無視すること。atom 分解 (A/B/C → Phase 3a-d) は plan §Phase 3 が SoT。
 
-> 調査対象: `stam_step2_density_wall` (`Common2026/Shannon/EPIStamInequalityBody.lean:376`,
+> 調査対象: `stam_step2_density_wall` (`InformationTheory/Shannon/EPIStamInequalityBody.lean:376`,
 > `@residual(wall:stam-blachman)`) を **密度レベルで条件付き密度を Bochner ∫ 明示書き下す経路**
 > で closure するのに必要な Mathlib API の在庫を取る。
 >
@@ -230,28 +230,28 @@ theorem integral_mul_deriv_eq_deriv_mul_of_integrable
 - 引数: `hu`/`hv` (tsupport 上の `HasDerivAt`), `huv'`/`hu'v`/`huv` (3 つの `Integrable`)。
 - 結論形 (逐語): `∫ (x : ℝ), u x * v' x = - ∫ (x : ℝ), u' x * v x`。
 
-### カテゴリ 4 — Common2026 内 FisherInfoV2 / score 既存補題
+### カテゴリ 4 — InformationTheory 内 FisherInfoV2 / score 既存補題
 
-| 概念 | Common2026 API | file:line | 状態 | 本経路での扱い |
+| 概念 | InformationTheory API | file:line | 状態 | 本経路での扱い |
 |---|---|---|---|---|
-| Fisher info (`∫⁻` 形) | `FisherInfoV2.fisherInfoOfDensity (f : ℝ → ℝ) : ℝ≥0∞` | `Common2026/Shannon/FisherInfoV2.lean:89` | ✅ 自前 | `J(f)` の本体。`= ∫⁻ ofReal((logDeriv f x)²)·ofReal(f x) dx` |
-| Fisher info (measure 形, phantom μ) | `FisherInfoV2.fisherInfoOfMeasureV2 (_μ) (f) : ℝ≥0∞` | `Common2026/Shannon/FisherInfoV2DeBruijn.lean:77` | ✅ 自前 | `:= fisherInfoOfDensity f` (測度引数は使われない)。wall predicate が参照 |
-| 正則密度 predicate | `FisherInfoV2.IsRegularDensityV2 (f : ℝ → ℝ) : Prop` | `Common2026/Shannon/FisherInfoV2.lean:124` | ✅ 自前 (`@audit:ok` 文脈) | regularity precondition (diff/pos/tail/integrable_deriv/integral_deriv=0)。wall hyp |
-| score 期待値 = 0 | `FisherInfoV2.integral_logDeriv_density_eq_zero` | `Common2026/Shannon/FisherInfoV2.lean:158` | ✅ 自前 `@audit:ok` | **S4 の cross-term/約分**: `∫ logDeriv f · f = 0` |
-| Gaussian closed form | `FisherInfoV2.fisherInfoOfDensity_gaussianPDFReal` | `Common2026/Shannon/FisherInfoV2.lean:273` | ✅ 自前 `@audit:ok` | `= ofReal(1/v)`。saturation 等号確認に使う |
-| 畳み込み密度 (∫ 形) | `EPIConvDensity.convDensityAdd (pX pY : ℝ→ℝ)` | `Common2026/Shannon/EPIConvDensity.lean:40` | ✅ 自前 | `:= fun z => ∫ x, pX x · pY (z-x) ∂volume`。wall の `hconv` 制約対象 |
-| 畳み込み密度の導関数 | `EPIConvDensity.convDensityAddDeriv` | `Common2026/Shannon/EPIConvDensity.lean:64` | ✅ 自前 | `:= fun z x => pX x · deriv pY (z-x)` |
-| **畳み込み密度の微分可能性 (S1 左辺)** | `EPIConvDensity.convDensityAdd_hasDerivAt` | `Common2026/Shannon/EPIConvDensity.lean:86` | ✅ 自前 **`@audit:ok`** | **本 pivot の決定打**。`HasDerivAt (convDensityAdd pX pY) (∫ x, convDensityAddDeriv …) z₀` |
-| **畳み込み密度の logDeriv (S1 左辺, score)** | `EPIConvDensity.convDensityAdd_logDeriv` | `Common2026/Shannon/EPIConvDensity.lean:113` | ✅ 自前 **`@audit:ok`** | `logDeriv (convDensityAdd …) z₀ = (∫ x, convDensityAddDeriv …) / convDensityAdd … z₀` |
+| Fisher info (`∫⁻` 形) | `FisherInfoV2.fisherInfoOfDensity (f : ℝ → ℝ) : ℝ≥0∞` | `InformationTheory/Shannon/FisherInfoV2.lean:89` | ✅ 自前 | `J(f)` の本体。`= ∫⁻ ofReal((logDeriv f x)²)·ofReal(f x) dx` |
+| Fisher info (measure 形, phantom μ) | `FisherInfoV2.fisherInfoOfMeasureV2 (_μ) (f) : ℝ≥0∞` | `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:77` | ✅ 自前 | `:= fisherInfoOfDensity f` (測度引数は使われない)。wall predicate が参照 |
+| 正則密度 predicate | `FisherInfoV2.IsRegularDensityV2 (f : ℝ → ℝ) : Prop` | `InformationTheory/Shannon/FisherInfoV2.lean:124` | ✅ 自前 (`@audit:ok` 文脈) | regularity precondition (diff/pos/tail/integrable_deriv/integral_deriv=0)。wall hyp |
+| score 期待値 = 0 | `FisherInfoV2.integral_logDeriv_density_eq_zero` | `InformationTheory/Shannon/FisherInfoV2.lean:158` | ✅ 自前 `@audit:ok` | **S4 の cross-term/約分**: `∫ logDeriv f · f = 0` |
+| Gaussian closed form | `FisherInfoV2.fisherInfoOfDensity_gaussianPDFReal` | `InformationTheory/Shannon/FisherInfoV2.lean:273` | ✅ 自前 `@audit:ok` | `= ofReal(1/v)`。saturation 等号確認に使う |
+| 畳み込み密度 (∫ 形) | `EPIConvDensity.convDensityAdd (pX pY : ℝ→ℝ)` | `InformationTheory/Shannon/EPIConvDensity.lean:40` | ✅ 自前 | `:= fun z => ∫ x, pX x · pY (z-x) ∂volume`。wall の `hconv` 制約対象 |
+| 畳み込み密度の導関数 | `EPIConvDensity.convDensityAddDeriv` | `InformationTheory/Shannon/EPIConvDensity.lean:64` | ✅ 自前 | `:= fun z x => pX x · deriv pY (z-x)` |
+| **畳み込み密度の微分可能性 (S1 左辺)** | `EPIConvDensity.convDensityAdd_hasDerivAt` | `InformationTheory/Shannon/EPIConvDensity.lean:86` | ✅ 自前 **`@audit:ok`** | **本 pivot の決定打**。`HasDerivAt (convDensityAdd pX pY) (∫ x, convDensityAddDeriv …) z₀` |
+| **畳み込み密度の logDeriv (S1 左辺, score)** | `EPIConvDensity.convDensityAdd_logDeriv` | `InformationTheory/Shannon/EPIConvDensity.lean:113` | ✅ 自前 **`@audit:ok`** | `logDeriv (convDensityAdd …) z₀ = (∫ x, convDensityAddDeriv …) / convDensityAdd … z₀` |
 | score 関数 | `logDeriv (f := deriv f / f)` | `Mathlib/Analysis/Calculus/LogDeriv.lean:34` | ✅ Mathlib | score primitive、上記が消費 |
 
 ### カテゴリ 5 — λ 最適化 (完済、Mathlib 不要)
 
-| 概念 | Common2026 API | file:line | 状態 | 本経路での扱い |
+| 概念 | InformationTheory API | file:line | 状態 | 本経路での扱い |
 |---|---|---|---|---|
-| `min_λ λ²a+(1-λ)²b = ab/(a+b)` | `EPIStamInequalityBody.stam_lambda_min` | `Common2026/Shannon/EPIStamInequalityBody.lean:204` | ✅ 自前 `@audit:ok` | **S5 完済** (`field_simp;ring`) |
-| `∀λ: ab/(a+b) ≤ λ²a+(1-λ)²b` | `EPIStamInequalityBody.stam_lambda_lower_bound` | `Common2026/Shannon/EPIStamInequalityBody.lean:216` | ✅ 自前 `@audit:ok` | S5 下界 (`(λ-b/(a+b))²(a+b)≥0`) |
-| 逆形 Stam 算術 | `EPIStamInequalityBody.stam_inverse_form_of_harmonic_mean` (周辺) | `Common2026/Shannon/EPIStamInequalityBody.lean:232+` | ✅ 自前 `@audit:ok` | `c ≤ ab/(a+b) ⇒ 1/c ≥ 1/a+1/b` |
+| `min_λ λ²a+(1-λ)²b = ab/(a+b)` | `EPIStamInequalityBody.stam_lambda_min` | `InformationTheory/Shannon/EPIStamInequalityBody.lean:204` | ✅ 自前 `@audit:ok` | **S5 完済** (`field_simp;ring`) |
+| `∀λ: ab/(a+b) ≤ λ²a+(1-λ)²b` | `EPIStamInequalityBody.stam_lambda_lower_bound` | `InformationTheory/Shannon/EPIStamInequalityBody.lean:216` | ✅ 自前 `@audit:ok` | S5 下界 (`(λ-b/(a+b))²(a+b)≥0`) |
+| 逆形 Stam 算術 | `EPIStamInequalityBody.stam_inverse_form_of_harmonic_mean` (周辺) | `InformationTheory/Shannon/EPIStamInequalityBody.lean:232+` | ✅ 自前 `@audit:ok` | `c ≤ ab/(a+b) ⇒ 1/c ≥ 1/a+1/b` |
 
 → S5 は Mathlib に既製の二次最小値補題を**探す必要なし**。`linarith`/`nlinarith`/`field_simp` で完結済。
 
@@ -319,7 +319,7 @@ theorem condExp_ae_eq_integral_condDistrib_id [NormedSpace ℝ F] [CompleteSpace
    `logDeriv (convDensityAdd fX fY) z = E[s_X(X) | X+Y=z]` を `convDensityAdd_logDeriv`
    (`EPIConvDensity.lean:113`、左辺供給済) + `condExp_ae_eq_integral_condDistrib_id`
    (`CondDistrib.lean:438`、右辺 condExp 積分形) で結ぶ。
-   - 推奨実装: 新規 `Common2026/Shannon/EPIBlachmanConvScore.lean`。`convDensityAdd_logDeriv` の
+   - 推奨実装: 新規 `InformationTheory/Shannon/EPIBlachmanConvScore.lean`。`convDensityAdd_logDeriv` の
      `(∫ x, fX x · fY'(z-x)) / p_Z(z)` を、`p_Z(z) = ∫ fX(x)fY(z-x)dx` で割った重み付き積分を
      `condDistrib id (X+Y) P` の積分に同定 (disintegration / pushforward 計算)。
    - 工数: ~80-150 行。**落とし穴**: `[StandardBorelSpace]` 前提漏れ (上記ボックス)、`Integrable f μ` の
@@ -351,7 +351,7 @@ theorem condExp_ae_eq_integral_condDistrib_id [NormedSpace ℝ F] [CompleteSpace
 |---|---|---|
 | Blachman score-of-convolution 恒等式 (S1 の核) | `"Blachman"` → **Found 0** | **`stam_step2_density_wall` (`EPIStamInequalityBody.lean:376`, `@residual(wall:stam-blachman)`) に集約済 (推奨維持)**。S2-S5 を ship しても S1 が closure できなければ同 wall の `sorry` に残す |
 | Stam 不等式 (Mathlib 側) | `"_Stam"` → **Found 0** | 同上 wall に集約 |
-| Fisher information (Mathlib 側定義) | `"fisherInformation"` → Found 0, `"fisherInfo"`(前任) → unknown identifier | Common2026 自前 `fisherInfoOfDensity` で代替 (壁ではない) |
+| Fisher information (Mathlib 側定義) | `"fisherInformation"` → Found 0, `"fisherInfo"`(前任) → unknown identifier | InformationTheory 自前 `fisherInfoOfDensity` で代替 (壁ではない) |
 | 畳み込みの導関数 (`deriv_convolution`) | `"deriv_convolution"` → **Found 0** | gateway `convDensityAddDeriv`/`convDensityAdd_hasDerivAt` で**回避済** (壁ではない) |
 | `lconvolution` 微分可能性 | `"lconvolution"`+`Differentiable` → **Found 0** | `convDensityAdd` (∫ 形) を gateway で別途微分可能化済、本経路で**回避** (壁ではない) |
 | `condExp ∧ convolution density` 同時補題 | `condExp`(171 lemmas) / `condDistrib`(51 lemmas) は在だが convolution 密度と結ぶ hook 不在 | S1 self-build に内包 (`wall:stam-blachman` に集約) |
@@ -391,12 +391,12 @@ bundle するのは tier 5 load-bearing で禁止 — `epi-wall-reattack-plan.md
 
 ## 着手 skeleton
 
-`Common2026/Shannon/EPIBlachmanConvScore.lean` (新規) の出だし。
+`InformationTheory/Shannon/EPIBlachmanConvScore.lean` (新規) の出だし。
 **注意: 本ファイルは inventory 専用。以下は実装サブエージェント向け参考であり、本調査では一切実装しない。**
 
 ```lean
-import Common2026.Shannon.EPIConvDensity          -- convDensityAdd_logDeriv (S1 左辺)
-import Common2026.Shannon.FisherInfoV2            -- fisherInfoOfDensity / IsRegularDensityV2 / integral_logDeriv_density_eq_zero
+import InformationTheory.Shannon.EPIConvDensity          -- convDensityAdd_logDeriv (S1 左辺)
+import InformationTheory.Shannon.FisherInfoV2            -- fisherInfoOfDensity / IsRegularDensityV2 / integral_logDeriv_density_eq_zero
 import Mathlib.Probability.Kernel.CondDistrib     -- condExp_ae_eq_integral_condDistrib_id (S1 右辺)
 import Mathlib.MeasureTheory.Function.ConditionalExpectation.CondJensen  -- ConvexOn.map_condExp_le (S3)
 import Mathlib.MeasureTheory.Function.ConditionalExpectation.Basic       -- integral_condExp (S4)
@@ -427,8 +427,8 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 theorem blachman_score_eq_condExp
     {X Y : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P] {fX fY : ℝ → ℝ}
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (hregX : Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fX)
-    (hregY : Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fY) :
+    (hregX : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fX)
+    (hregY : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fY) :
     True := by   -- 真の結論型は disintegration 橋確定後に固定 (skeleton placeholder)
   sorry  -- @residual(wall:stam-blachman)
 

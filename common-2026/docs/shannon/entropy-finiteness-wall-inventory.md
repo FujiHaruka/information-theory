@@ -1,7 +1,7 @@
 # Entropy-finiteness wall — closure feasibility inventory
 
 > Scope: the 3 `sorry + @residual(wall:entropy-finiteness)` lemmas in
-> `Common2026/Shannon/EntropyConvFinite.lean` (de Bruijn per-time row, system W).
+> `InformationTheory/Shannon/EntropyConvFinite.lean` (de Bruijn per-time row, system W).
 > Goal: decide the **signature** (do they need a finite-variance hypothesis?) and inventory
 > the Mathlib + repo API available for closing them. **Inventory only — no implementation, no plan.**
 
@@ -130,7 +130,7 @@ exact Integrable.mono' henv … (a.e. bound via hub + Gaussian-tail of p_t)   --
 
 | 概念 | Mathlib API | file:line | 状態 | 扱い |
 |---|---|---|---|---|
-| `differentialEntropy` (測度版) | — | — | ❌ **Mathlib 不在** (loogle: `unknown identifier 'MeasureTheory.differentialEntropy'`) | repo 自前 `Common2026/Shannon/DifferentialEntropy.lean` のみ。Mathlib に有限性補題無し |
+| `differentialEntropy` (測度版) | — | — | ❌ **Mathlib 不在** (loogle: `unknown identifier 'MeasureTheory.differentialEntropy'`) | repo 自前 `InformationTheory/Shannon/DifferentialEntropy.lean` のみ。Mathlib に有限性補題無し |
 | `differentialEntropy (conv …)` 有限性 | — | — | ❌ **不在** (`wall:entropy-finiteness` の本体) | 自作核。PR 候補 |
 | max-entropy bound `h ≤ ½log(2πe Var)` | — | — | ❌ 不在 | 本 wall では使わない (可積分性が目的, 値上界でない) |
 
@@ -247,7 +247,7 @@ A はそれ無しで閉じるので別。`docs/audit/audit-tags.md`「共有 Mat
 ## 着手 skeleton (signature 確定版)
 
 ```lean
-import Common2026.Shannon.EPIConvDensity
+import InformationTheory.Shannon.EPIConvDensity
 -- 既存資産は同一 family file 群 (Assembly / PerTime / FisherConvBound) に存在。
 -- shared 補助補題を本 file に置くか Assembly に置くかは実装判断。
 

@@ -14,7 +14,7 @@
 
 ## 主目的の最終形 (再掲)
 
-`Common2026/Shannon/InfinitePiTiltedChangeOfMeasure.lean` に既存の interior 補題:
+`InformationTheory/Shannon/InfinitePiTiltedChangeOfMeasure.lean` に既存の interior 補題:
 
 ```lean
 theorem tiltedWindow_eventually_large_of_cgfDeriv_interior
@@ -153,7 +153,7 @@ lemma gaussianReal_map_neg : (gaussianReal μ v).map (fun x ↦ -x) = gaussianRe
 `gaussianReal 0 v {0 ≤ ·} = gaussianReal 0 v {· ≤ 0}`。両者の和は `{0≤·} ∪ {·≤0} = univ` (= 1)、交わり `{0}` は no atoms で 0。⇒ `2·(half-line) = 1` ⇒ `= 1/2`。
 **落とし穴**: (i) ℝ≥0∞ 算術 (`2 * x = 1 → x = 1/2`、`ENNReal.eq_div_of...`)、(ii) `map` 下の measure 値の引き戻し (`Measure.map_apply` + 可測 `{0≤·}` の preimage が `{·≤0}`)、(iii) `{0≤·} ∪ {·≤0} = univ`・`∩ = {0}` の集合計算。推定 **40-70 行**。Gaussian cdf 経由 (`ProbabilityTheory.cdf`) は `cdf gaussian 1/2` lemma が `Found 0` なので **逆に高コスト** — symmetry-by-map 経路が最短。
 
-### 4. tilted ambient の CLT 前提供給 (既存 `Common2026/Shannon/`)
+### 4. tilted ambient の CLT 前提供給 (既存 `InformationTheory/Shannon/`)
 
 | 概念 | 既存 API | file:line | 状態 | CLT への適合 |
 |---|---|---|---|---|
@@ -287,10 +287,10 @@ rw [hW_real] at hn; exact hn   -- 最後に「1/2 ≤ window.real」を使うだ
 
 ## 着手 skeleton
 
-`Common2026/Shannon/CramerCltBoundaryClosure.lean` (新規) の出だし:
+`InformationTheory/Shannon/CramerCltBoundaryClosure.lean` (新規) の出だし:
 
 ```lean
-import Common2026.Shannon.InfinitePiTiltedChangeOfMeasure
+import InformationTheory.Shannon.InfinitePiTiltedChangeOfMeasure
 import Mathlib.Probability.CentralLimitTheorem
 import Mathlib.MeasureTheory.Measure.Portmanteau
 

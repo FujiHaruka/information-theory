@@ -61,7 +61,7 @@
 
 | 補題名 | file:line | signature 要点 | 状態 | δ-(b) での扱い |
 |---|---|---|---|---|
-| **`condEntropy` (Measure 版)** | `Common2026/Fano/Measure.lean:68` | `∫ y, ∑ x, negMulLog ((condDistrib Xs Yo μ y).real {x}) ∂(μ.map Yo)` (自作) | ✅ | Phase 3 Fano 既存。condMI を `H − H|·` 経由で書く道もあるが、KL 直接の方が短いはず |
+| **`condEntropy` (Measure 版)** | `InformationTheory/Fano/Measure.lean:68` | `∫ y, ∑ x, negMulLog ((condDistrib Xs Yo μ y).real {x}) ∂(μ.map Yo)` (自作) | ✅ | Phase 3 Fano 既存。condMI を `H − H|·` 経由で書く道もあるが、KL 直接の方が短いはず |
 | **`condMutualInfo`** | — | (`I(X; Y \| Z)`) | ❌ | **自作必須**。3〜5 行 (klDiv の `condDistrib` 形を `μ.map Z` で積分) |
 | `Mathlib/InformationTheory/` 内の Shannon 系 | — | entropy / mutualInfo / channelCapacity | ❌ | Phase 4-M0 で確認済、不在 |
 
@@ -128,12 +128,12 @@ def IsMarkovChain (μ : Measure Ω) (Msg : Ω → M) (Z : Ω → X) (Yo : Ω →
 
 ## 着手順 (Phase 4-δ-(b) skeleton)
 
-1. **`Common2026/Shannon/CondMutualInfo.lean` 新設** — `condMutualInfo` 定義 + 基本性質 (nonneg) を `:= sorry` skeleton で
+1. **`InformationTheory/Shannon/CondMutualInfo.lean` 新設** — `condMutualInfo` 定義 + 基本性質 (nonneg) を `:= sorry` skeleton で
 2. **`IsMarkovChain` 定義** — β 形式で同じファイルに
 3. **chain rule** — `klDiv_compProd_eq_add` を経由する形で skeleton (sorry 1 個)
 4. **`condMutualInfo_eq_zero_of_markov`** — sorry 1 個
 5. **`mutualInfo_le_of_markov`** — chain rule + condMI = 0 + DPI for Prod.fst を合成
-6. **`Common2026/Shannon/Converse.lean` 末尾に `shannon_converse_single_shot_markov_encoder`** — `mutualInfo_le_of_markov` + 既存 `shannon_converse_single_shot` の合成
+6. **`InformationTheory/Shannon/Converse.lean` 末尾に `shannon_converse_single_shot_markov_encoder`** — `mutualInfo_le_of_markov` + 既存 `shannon_converse_single_shot` の合成
 
 各ステップで `lake env lean` silent を確認しながら進める。
 

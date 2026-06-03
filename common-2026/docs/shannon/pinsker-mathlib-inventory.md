@@ -121,12 +121,12 @@
 
 - **`MeasureTheory.integral_fintype`** — Bochner ∫ on Fintype を Finset.sum に展開
 
-## 6. 既存 Common2026 API
+## 6. 既存 InformationTheory API
 
-- **`Common2026/Shannon/MaxEntropy.lean:123`** — Bochner per-element rnDeriv 識別パターンの完全実例
+- **`InformationTheory/Shannon/MaxEntropy.lean:123`** — Bochner per-element rnDeriv 識別パターンの完全実例
   (Pinsker でほぼ同形を踏襲、`P.real{x} / Q.real{x}` で書き換える)
 
-- **`Common2026/Shannon/Bridge.lean:216`** — `klDiv_discrete_toReal_eq_sum` (private、参考のみ)
+- **`InformationTheory/Shannon/Bridge.lean:216`** — `klDiv_discrete_toReal_eq_sum` (private、参考のみ)
 
 ## 7. 検証済 0 件 (loogle)
 

@@ -163,7 +163,7 @@ A-2-3 出力に 1-source Stam `1/J(X+Y+G) ≥ 1/J(X+G_X) + 1/J(Y+G_Y)` を harmo
 | **L-Concl-A-β** (親継承 / A-0'-4 / A-4-β) | A-0'-4 / A-4 | Gaussian limit `t→∞` で 0 が non-Gaussian で破綻、rescale `s=1` 端点接続失敗 | `IsEPIGaussianLimitHyp` | **active** (A-4-4 で発火、`@residual(...A4-rescale)` 残置) |
 | **L-Concl-A-γ** (A-1) | A-1 | `IsStamScalingNoiseHyp` staged のまま伝播 | `IsStamScalingNoiseHyp` | active |
 | ~~**L-Concl-A-δ**~~ | ~~A-2~~ | ~~2-source `heatFlowPath2` reparametrize で scaling 補正項キャンセル失敗~~ | — | **resolved 2026-05-25** by 撤退判定 (c) (1-source alias で根本回避) |
-| **L-Concl-A-ε** (A-2-2、解釈変更) | A-2-2 | `entropyPower_hasDerivAt_of_diffEnt_hasDerivAt` Mathlib/Common2026 不在で >30 行 | `IsEntropyPowerChainRuleHyp` | active (発火確率 30%) |
+| **L-Concl-A-ε** (A-2-2、解釈変更) | A-2-2 | `entropyPower_hasDerivAt_of_diffEnt_hasDerivAt` Mathlib/InformationTheory 不在で >30 行 | `IsEntropyPowerChainRuleHyp` | active (発火確率 30%) |
 | **L-Concl-A-ζ** (A-3、格下げ) | A-3-2 | 1-source でも Cauchy-Schwarz weight が `linarith` 吸収不可で >50 行 | `IsCsiszarScalingWeightHyp1Source` | **格下げ** (発火確率 15%) |
 | **L-Concl-A-η** (A-0') | A-0'-2 | `entropyPower_const_mul` 不在で >30 行 | `IsEntropyPowerScaleHyp` | active (確率 30%) |
 | **L-Concl-A-θ** (新規、A-4-1、2026-05-27) | A-4-1 | `csiszarGap1Source_continuousOn` の `t=0` 端点接続が現行 regularity bundle で carry されず、A-4 budget 超え | (signature 内 `sorry`、新規 staged 化なし) | **active 発火確定** (`@residual(...A4-continuity)` `EPIStamToBridge.lean:809`) |
@@ -177,7 +177,7 @@ A-2-3 出力に 1-source Stam `1/J(X+Y+G) ≥ 1/J(X+G_X) + 1/J(Y+G_Y)` を harmo
 新規 file: `docs/shannon/epi-stam-to-conclusion-phaseA-mathlib-inventory.md`。A-1 / A-2 / A-3 / A-4 の Mathlib 候補 API を CLAUDE.md `Subagent Inventory of Mathlib Lemmas` 規律 (file:line + 完全 signature [`[...]` verbatim] + 引数型 + 結論 form verbatim) で記録:
 
 1. A-0' 用: `entropyPower_const_mul` (rg)、`differentialEntropy_const_mul` (rg)、`Real.sqrt_div_self'` / `Real.sqrt_mul` (loogle) — 不在で L-Concl-A-η 規模見積もり
-2. A-1 用: `MeasureTheory.AtomlessProbability` (loogle)、Common2026 `StandardNoise.lean` (rg)、`Measure.exists_indep_pair` (loogle)
+2. A-1 用: `MeasureTheory.AtomlessProbability` (loogle)、InformationTheory `StandardNoise.lean` (rg)、`Measure.exists_indep_pair` (loogle)
 3. A-2 用: `Real.hasDerivAt_exp` / `HasDerivAt.{exp,comp,sub}` 各 signature verbatim、de Bruijn V2 `derivAt_entropy_eq_half_fisher_v2` (`FisherInfoV2DeBruijn.lean:245`)、`entropyPower_hasDerivAt_of_diffEnt_hasDerivAt` 不在判定
 4. A-3 用: `linarith` 吸収可能性 → 不在時 `Real.inner_mul_le_norm` / `Real.add_sq_le_sq_mul_sq` (loogle)
 5. A-4 用: `antitoneOn_of_deriv_nonpos` の verbatim signature + file:line (Phase 0 inventory は `monotoneOn_of_deriv_nonneg` のみ、Mathlib `Analysis/Calculus/Deriv/MeanValue.lean`)、`convex_Ici` / `convex_Icc`、`AntitoneOn.{comp,congr}`

@@ -5,7 +5,7 @@
 
 ## Position
 
-- 対象定理: `Common2026/Shannon/BrunnMinkowskiFunctional.lean:210`
+- 対象定理: `InformationTheory/Shannon/BrunnMinkowskiFunctional.lean:210`
   `theorem prekopa_leindler_inequality`
 - 当該 tag: `@audit:suspect(prekopa-leindler-induction-plan)` (line 209)
 - 親 moonshot: [`brunn-minkowski-moonshot-plan.md`](./brunn-minkowski-moonshot-plan.md)

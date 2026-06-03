@@ -1,7 +1,7 @@
 # MI chain rule ムーンショット計画 🌙 (B-7)
 
 > 実態整合 (2026-05-20): DONE-HONEST-HYPS — 両 headline 完成済、0 sorry。
-> 一般 chain rule `mutualInfo_chain_rule_fin` (`Common2026/Shannon/MIChainRule.lean:117`、
+> 一般 chain rule `mutualInfo_chain_rule_fin` (`InformationTheory/Shannon/MIChainRule.lean:117`、
 > 標準 `[StandardBorelSpace Y] [Nonempty Y]` + measurability 仮定のみ)、i.i.d. corollary
 > `mutualInfo_iid_eq_nsmul` (MIChainRule.lean:392、`I(X^n;Y^n) = n • I(X_0;Y_0)`、
 > i.i.d. 分布等式 (`μ.map = Measure.pi …` + copy 仮定) の honest 形)。pass-through なし。
@@ -10,11 +10,11 @@
 
 ## 進捗
 
-- [x] Phase 0 — Mathlib + 既存 Common2026 API インベントリ ✅ → [mi-chain-rule-inventory.md](mi-chain-rule-inventory.md)
+- [x] Phase 0 — Mathlib + 既存 InformationTheory API インベントリ ✅ → [mi-chain-rule-inventory.md](mi-chain-rule-inventory.md)
 - [x] Phase A — `mutualInfo` の MeasurableEquiv 不変性 (joint reshape 用 plumbing) ✅
 - [x] Phase B — n 変数 chain rule `mutualInfo_chain_rule_fin` の induction ✅
 - [x] Phase C — i.i.d. corollary `mutualInfo_iid_eq_nsmul`: 独立 `(X_i, Y_i)` 同分布で `I(X^n; Y^n) = n · I(X_0; Y_0)` ✅
-- [x] Phase D — `Common2026.lean` 配線 + 検証 ✅
+- [x] Phase D — `InformationTheory.lean` 配線 + 検証 ✅
 
 ## ゴール / Approach
 
@@ -42,17 +42,17 @@
 
 **スコープ警戒**: 既存 `mutualInfo_chain_rule` の 2 変数形が `[StandardBorelSpace X] [Nonempty X]` を Xs 側に要求 → n 変数化で 各 step の `Xs i` (= α) 側に SBS を課す必要あり。`α` 有限 alphabet (Fintype + MeasurableSingletonClass + DecidableEq) で SBS は **自動 derive 可能か?** → Phase 0 で確認。NG なら明示的に `[StandardBorelSpace α]` を仮定に追加。
 
-## Phase 0 - Mathlib + 既存 Common2026 インベントリ ✅
+## Phase 0 - Mathlib + 既存 InformationTheory インベントリ ✅
 
 成果: [mi-chain-rule-inventory.md](mi-chain-rule-inventory.md)
 
 主な確認事項:
 
-- [x] Mathlib に `mutualInfo`/`condMutualInfo` の chain rule なし (Common2026 自作必須)。
+- [x] Mathlib に `mutualInfo`/`condMutualInfo` の chain rule なし (InformationTheory 自作必須)。
 - [x] 既存 `mutualInfo_chain_rule` (`CondMutualInfo.lean:219`) の完全シグネチャ verbatim 記録。
 - [x] `klDiv_compProd_eq_add` (`Mathlib/InformationTheory/KullbackLeibler/ChainRule.lean:204`) で 2 重 compProd の plumbing は確立。
 - [x] `Fintype α` + `MeasurableSingletonClass α` で `StandardBorelSpace α` の自動 derive 可否確認。
-- [x] `Common2026.Shannon.Han.jointEntropy_chain_rule` のシグネチャ (n 変数 induction の参考形)。
+- [x] `InformationTheory.Shannon.Han.jointEntropy_chain_rule` のシグネチャ (n 変数 induction の参考形)。
 
 ## Phase A - mutualInfo の MeasurableEquiv 不変性 (左引数 reshape) ✅
 
@@ -125,10 +125,10 @@ theorem mutualInfo_iid_eq_nsmul
 
 ## Phase D - 配線 + 検証 ✅
 
-- [x] `Common2026/Shannon/MIChainRule.lean` 新規 file 作成。
-- [x] `Common2026.lean` に `import Common2026.Shannon.MIChainRule` 追記。
-- [x] `lake env lean Common2026/Shannon/MIChainRule.lean` silent 通過確認。
-- [x] `Common2026/Shannon/CondMutualInfo.lean` は無改変 (新規 file で完結)。
+- [x] `InformationTheory/Shannon/MIChainRule.lean` 新規 file 作成。
+- [x] `InformationTheory.lean` に `import InformationTheory.Shannon.MIChainRule` 追記。
+- [x] `lake env lean InformationTheory/Shannon/MIChainRule.lean` silent 通過確認。
+- [x] `InformationTheory/Shannon/CondMutualInfo.lean` は無改変 (新規 file で完結)。
 
 ## 判断ログ
 

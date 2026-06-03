@@ -1,7 +1,7 @@
 # AWGN fibre-rnDeriv joint-measurability — feasibility inventory
 
 > **Goal**: discharge the two residual honest hypotheses of `isContChannelMIDecompHyp_awgn` /
-> `isAwgnMIDecomp_of_densitySplit` (`Common2026/Shannon/ContChannelMIDecomp.lean` ~L421 / ~L496):
+> `isAwgnMIDecomp_of_densitySplit` (`InformationTheory/Shannon/ContChannelMIDecomp.lean` ~L421 / ~L496):
 > `h_meas_fibre : Measurable (fun z : ℝ × ℝ => ((awgnChannel N h_meas) z.1).rnDeriv volume z.2)`
 > and `h_int_fibre_joint`. Both reduce to the **measure-form parameterized Gaussian rnDeriv**
 > `fun z => (gaussianReal z.1 N).rnDeriv volume z.2`.
@@ -274,7 +274,7 @@ theorem llr_compProd_prod_split
 
 ---
 
-## 着手 skeleton（`Common2026/Shannon/ContChannelMIDecomp.lean` 拡張、Route B）
+## 着手 skeleton（`InformationTheory/Shannon/ContChannelMIDecomp.lean` 拡張、Route B）
 
 ```lean
 -- 既存 imports に追加不要（Gaussian/Real, Kernel/Composition は既に間接 import 済のはず。

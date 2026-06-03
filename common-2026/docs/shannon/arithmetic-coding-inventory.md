@@ -1,8 +1,8 @@
-# Arithmetic Coding (Shannon-Fano-Elias) genuine 化 — Mathlib + Common2026 API 在庫
+# Arithmetic Coding (Shannon-Fano-Elias) genuine 化 — Mathlib + InformationTheory API 在庫
 
 > **Family**: Shannon / **Scope**: T4-A arithmetic coding (Cover-Thomas Ch.13.3) の genuine 構成置換調査
 >
-> **対象ファイル**: `Common2026/Shannon/ArithmeticCoding.lean` (現 288 行、完全 pass-through)
+> **対象ファイル**: `InformationTheory/Shannon/ArithmeticCoding.lean` (現 288 行、完全 pass-through)
 >
 > **親計画**: [`arithmetic-coding-moonshot-plan.md`](./arithmetic-coding-moonshot-plan.md) / 先行 M0 在庫: [`arithmetic-coding-mathlib-inventory.md`](./arithmetic-coding-mathlib-inventory.md)
 >
@@ -62,7 +62,7 @@ theorem arithmeticCode_prefix_free (P : Measure α) (hP : ∀ a, 0 < P.real {a})
 
 ## ブロック A — 既存 common-2026 機構 (再利用元)
 
-### A1. `Common2026/Shannon/ShannonCode.lean` (Cover-Thomas 5.4 / 5.8.1)
+### A1. `InformationTheory/Shannon/ShannonCode.lean` (Cover-Thomas 5.4 / 5.8.1)
 
 | 概念 | API | file:line | 状態 | genuine 化での扱い |
 |---|---|---|---|---|
@@ -114,7 +114,7 @@ theorem arithmeticCode_prefix_free (P : Measure α) (hP : ∀ a, 0 < P.real {a})
   - 結論形 (verbatim): `expectedLength P (shannonLength D P) < entropyD D P + 1`
   - 上界 lift: `expectedLength P (fun a => shannonLength D P a + 1) = expectedLength P (shannonLength D P) + (Σ P(a)·1) = expectedLength P (shannonLength D P) + 1 < (H+1)+1 = H+2`。`Σ_a P.real{a} = 1` の補題は ShannonCode 内に同型のものが複数回展開済 (`MeasureTheory.sum_measureReal_singleton`)。
 
-### A2. `Common2026/Shannon/ShannonCodeKraftReverse.lean` (B-8' — **genuine prefix-code 構成、本調査の最重要発見**)
+### A2. `InformationTheory/Shannon/ShannonCodeKraftReverse.lean` (B-8' — **genuine prefix-code 構成、本調査の最重要発見**)
 
 **この file が「ブロック B の hard part」を既に解決している。** 累積分布を実数二進展開ではなく **整数 slot (`slotStart : ℕ`)** で扱い、MSB-first base-`D` digit expansion でコードを生成、prefix-free を整数除算の代数で証明済。
 
@@ -345,11 +345,11 @@ theorem arithmeticCode_prefix_free (P : Measure α) (hP : ∀ a, 0 < P.real {a})
 
 ## 着手 skeleton
 
-`Common2026/Shannon/ArithmeticCoding.lean` の genuine 版 出だし (現 file を置換):
+`InformationTheory/Shannon/ArithmeticCoding.lean` の genuine 版 出だし (現 file を置換):
 
 ```lean
-import Common2026.Shannon.ShannonCode
-import Common2026.Shannon.ShannonCodeKraftReverse
+import InformationTheory.Shannon.ShannonCode
+import InformationTheory.Shannon.ShannonCodeKraftReverse
 import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 import Mathlib.Logic.Equiv.Defs
 

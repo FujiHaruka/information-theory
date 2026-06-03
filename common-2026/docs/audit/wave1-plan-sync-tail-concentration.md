@@ -70,7 +70,7 @@
 
 ### `wyner-ziv-discharge-moonshot-plan` (13 件)
 
-**Plan Status** (header 注記): **DONE-HONEST-HYPS (計画通り、plumbing layer 独立 publish)** — plan の「着手中」表記は STALE、実装完了。`WynerZivDischarge.lean` (0 sorry, Common2026.lean 編入済) に計画通りの plumbing publish 済。FLAW なし。
+**Plan Status** (header 注記): **DONE-HONEST-HYPS (計画通り、plumbing layer 独立 publish)** — plan の「着手中」表記は STALE、実装完了。`WynerZivDischarge.lean` (0 sorry, InformationTheory.lean 編入済) に計画通りの plumbing publish 済。FLAW なし。
 
 **File 別集計** (13 件):
 
@@ -156,7 +156,7 @@
 
 ### `wyner-ziv-convexity-discharge-moonshot-plan` (5 件)
 
-**Plan Status** (header 注記): **DONE-UNCOND (L-WZ3 凸性 full discharge 達成) — plan の「実装未着手 / Phase 1-6 全 `[ ]`」表記は STALE、実装完了**。`WynerZivCondEntDiffConvexBody.lean` (0 sorry, `True` placeholder なし)。主定理 `wynerZivCondEntDiffConvex_holds` (:354) は唯一の honest hyp `h_pmf_nn : ∀p, 0 ≤ P_XY p` の下で **無条件 (第一目標) 証明**。unconditional rate wrapper `wynerZivRateFactorizable_convex_in_D_unconditional` (:372) で `_of_condEntDiff` の `h_core` を消去。FLAW なし。Common2026.lean 編入済。
+**Plan Status** (header 注記): **DONE-UNCOND (L-WZ3 凸性 full discharge 達成) — plan の「実装未着手 / Phase 1-6 全 `[ ]`」表記は STALE、実装完了**。`WynerZivCondEntDiffConvexBody.lean` (0 sorry, `True` placeholder なし)。主定理 `wynerZivCondEntDiffConvex_holds` (:354) は唯一の honest hyp `h_pmf_nn : ∀p, 0 ≤ P_XY p` の下で **無条件 (第一目標) 証明**。unconditional rate wrapper `wynerZivRateFactorizable_convex_in_D_unconditional` (:372) で `_of_condEntDiff` の `h_core` を消去。FLAW なし。InformationTheory.lean 編入済。
 
 **File 別集計** (5 件):
 
@@ -321,7 +321,7 @@
 
 ### `birkhoff-ergodic-plan` (1 件)
 
-**Plan Status** (header 注記): **DONE-UNCOND — headline `birkhoff_ergodic_ae` 完成済** (`BirkhoffErgodic.lean:1031`、0 sorry)。仮定は標準 typeclass のみ (`[IsProbabilityMeasure μ]` + `MeasurePreserving T μ μ` + `Ergodic T μ` + `Integrable f μ`)、pass-through なし。SMB 仮説なし形昇格も達成: 無条件 `shannon_mcmillan_breiman` は `Common2026/Shannon/SMBAlgoetCover.lean:2840`。
+**Plan Status** (header 注記): **DONE-UNCOND — headline `birkhoff_ergodic_ae` 完成済** (`BirkhoffErgodic.lean:1031`、0 sorry)。仮定は標準 typeclass のみ (`[IsProbabilityMeasure μ]` + `MeasurePreserving T μ μ` + `Ergodic T μ` + `Integrable f μ`)、pass-through なし。SMB 仮説なし形昇格も達成: 無条件 `shannon_mcmillan_breiman` は `InformationTheory/Shannon/SMBAlgoetCover.lean:2840`。
 
 **File 別**: `BirkhoffErgodic.lean:1002` (1 件, `birkhoff_ergodic_ae_of_limit` — intermediate helper、headline `birkhoff_ergodic_ae` は :1031 で別物)
 

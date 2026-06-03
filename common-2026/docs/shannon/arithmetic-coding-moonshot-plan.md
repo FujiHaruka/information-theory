@@ -7,14 +7,14 @@
 > [`arithmetic-coding-mathlib-inventory.md`](./arithmetic-coding-mathlib-inventory.md)
 >
 > **Predecessor / 再利用基盤** (publish 済、本 plan からは黒箱 reuse):
-> - `Common2026/Shannon/ShannonCode.lean` — `entropyD`, `expectedLength`, Shannon code `< H + 1` sandwich
-> - `Common2026/Shannon/ShannonCodeKraftReverse.lean` — `IsPrefixFree`, Kraft 逆方向 prefix code 構成
+> - `InformationTheory/Shannon/ShannonCode.lean` — `entropyD`, `expectedLength`, Shannon code `< H + 1` sandwich
+> - `InformationTheory/Shannon/ShannonCodeKraftReverse.lean` — `IsPrefixFree`, Kraft 逆方向 prefix code 構成
 >
 > **Pattern 雛形**:
-> - `Common2026/Shannon/LempelZiv78.lean` (T4-A LZ78; 5 hypothesis pass-through 全発動 pattern、主定理 body `:= h_rate_bound` の 1 行 wrap)
-> - `Common2026/Shannon/ShannonHartley.lean` (T2-C; 3 hypothesis pass-through pattern, より近い retreat 数)
+> - `InformationTheory/Shannon/LempelZiv78.lean` (T4-A LZ78; 5 hypothesis pass-through 全発動 pattern、主定理 body `:= h_rate_bound` の 1 行 wrap)
+> - `InformationTheory/Shannon/ShannonHartley.lean` (T2-C; 3 hypothesis pass-through pattern, より近い retreat 数)
 >
-> **Goal (短形)**: 新規 1 ファイル `Common2026/Shannon/ArithmeticCoding.lean` で Cover-Thomas Theorem 13.3.3 (Shannon-Fano-Elias / arithmetic coding) の **expected length sandwich** `H(X) ≤ E[L] ≤ H(X) + 2` を **statement-level hypothesis pass-through** で publish。**0 sorry / 0 warning**、規模 ~300-500 行 (中央 400、撤退ライン 3 本全発動下)。
+> **Goal (短形)**: 新規 1 ファイル `InformationTheory/Shannon/ArithmeticCoding.lean` で Cover-Thomas Theorem 13.3.3 (Shannon-Fano-Elias / arithmetic coding) の **expected length sandwich** `H(X) ≤ E[L] ≤ H(X) + 2` を **statement-level hypothesis pass-through** で publish。**0 sorry / 0 warning**、規模 ~300-500 行 (中央 400、撤退ライン 3 本全発動下)。
 >
 > **撤退ライン (確定発動 3 本)**:
 > [L-AC1] cumulative-distribution truncation を `IsCumulativeTruncationPassthrough : Prop := True` で statement-level pass-through /
@@ -23,9 +23,9 @@
 
 ## Status (2026-05-20)
 
-> 実態整合 (2026-05-20): PASS-THROUGH / FLAW-VACUOUS — file `Common2026/Shannon/ArithmeticCoding.lean` は publish 済 (0 sorry) だが headline `arithmetic_coding_expected_length_bounds` (`:249`) の body は **`:= h_bound` の conclusion-as-hypothesis retreat** (結論 `H ≤ E[L] ∧ E[L] ≤ H+2` をそのまま hypothesis `h_bound` で受けて返す)。さらに 3 predicate (`IsCumulativeTruncationPassthrough` `:157`、`IsArithmeticPrefixFreePassthrough` `:176`、`IsArithmeticExpectedLengthPassthrough` `:201`) はすべて **`: Prop := True`**。副次定理も同型 (`arithmetic_coding_prefix_free` `:= h_pf_real` `:265`、`arithmetic_coding_unique_decodable` `:= h_ud` `:276`)。Cover-Thomas 13.3 の数学的内容 (累積分布 truncation + Shannon-Fano-Elias 上界) は一切証明されていない (plan 設計通りの確定 pass-through)。
+> 実態整合 (2026-05-20): PASS-THROUGH / FLAW-VACUOUS — file `InformationTheory/Shannon/ArithmeticCoding.lean` は publish 済 (0 sorry) だが headline `arithmetic_coding_expected_length_bounds` (`:249`) の body は **`:= h_bound` の conclusion-as-hypothesis retreat** (結論 `H ≤ E[L] ∧ E[L] ≤ H+2` をそのまま hypothesis `h_bound` で受けて返す)。さらに 3 predicate (`IsCumulativeTruncationPassthrough` `:157`、`IsArithmeticPrefixFreePassthrough` `:176`、`IsArithmeticExpectedLengthPassthrough` `:201`) はすべて **`: Prop := True`**。副次定理も同型 (`arithmetic_coding_prefix_free` `:= h_pf_real` `:265`、`arithmetic_coding_unique_decodable` `:= h_ud` `:276`)。Cover-Thomas 13.3 の数学的内容 (累積分布 truncation + Shannon-Fano-Elias 上界) は一切証明されていない (plan 設計通りの確定 pass-through)。
 
-**Phase 0 起草中** (`arithmetic-coding-mathlib-inventory.md` と並行起草)。**Mathlib 在庫 ZERO** (arithmetic coding / Shannon-Fano-Elias / cumulative-distribution truncation / `Real.toBin` 系は皆無)、既存 `Common2026/Shannon/ShannonCode.lean` の `entropyD`, `expectedLength` 定義のみ黒箱 reuse。撤退ライン 3 本全発動下で seed 規模 ~400 行に着地、1 セッションで完走可能と確定。LZ78 の `h_rate_bound := identity wrap` pattern と完全同型 (LZ78 5 retreats → arithmetic coding 3 retreats の凝縮版)。
+**Phase 0 起草中** (`arithmetic-coding-mathlib-inventory.md` と並行起草)。**Mathlib 在庫 ZERO** (arithmetic coding / Shannon-Fano-Elias / cumulative-distribution truncation / `Real.toBin` 系は皆無)、既存 `InformationTheory/Shannon/ShannonCode.lean` の `entropyD`, `expectedLength` 定義のみ黒箱 reuse。撤退ライン 3 本全発動下で seed 規模 ~400 行に着地、1 セッションで完走可能と確定。LZ78 の `h_rate_bound := identity wrap` pattern と完全同型 (LZ78 5 retreats → arithmetic coding 3 retreats の凝縮版)。
 
 ## Approach
 
@@ -49,17 +49,17 @@
 
 ## 進捗
 
-- [ ] Phase 0 — Mathlib + Common2026 在庫 + 設計確定 (本 plan + inventory) 📋
+- [ ] Phase 0 — Mathlib + InformationTheory 在庫 + 設計確定 (本 plan + inventory) 📋
 - [ ] Phase A — `ArithmeticCode` 構造体 + `length` 投影 + 3 つの passthrough predicate skeleton 📋
 - [ ] Phase B — `arithmetic_coding_expected_length_bounds` 主定理 0 sorry publish 📋
 - [ ] Phase C — `arithmetic_coding_prefix_free` + `arithmetic_coding_unique_decodable` 副次 publish 📋
 - [ ] Phase D — docstring + cross-link comments 📋
-- [ ] Phase V — `Common2026.lean` 編入 + commit 📋
+- [ ] Phase V — `InformationTheory.lean` 編入 + commit 📋
 
 ## Skeleton (Phase A)
 
 ```lean
-import Common2026.Shannon.ShannonCode
+import InformationTheory.Shannon.ShannonCode
 import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 
 namespace InformationTheory.Shannon.ArithmeticCoding
@@ -104,8 +104,8 @@ end InformationTheory.Shannon.ArithmeticCoding
 
 ## Verification
 
-* `lake env lean Common2026/Shannon/ArithmeticCoding.lean` silent (0 errors, 0 sorry, 0 warning)
-* `Common2026.lean` 編入後 `lake build` の delta は 1 ファイル分
+* `lake env lean InformationTheory/Shannon/ArithmeticCoding.lean` silent (0 errors, 0 sorry, 0 warning)
+* `InformationTheory.lean` 編入後 `lake build` の delta は 1 ファイル分
 
 ---
 

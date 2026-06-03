@@ -16,13 +16,13 @@ Pe ≤ ε のもとで:
 
 成果物:
 
-- `Common2026/Shannon/SlepianWolf.lean` — 511 行、0 errors / 0 sorry
+- `InformationTheory/Shannon/SlepianWolf.lean` — 511 行、0 errors / 0 sorry
   - Phase A: `entropy_le_log_card`、`fano_inequality_with_side_info`、`entropy_ge_condEntropy`、`condEntropy_nonneg` (新規 helper)
   - Phase B: `slepian_wolf_converse_X / _Y / _sum`
   - Phase C: `slepian_wolf_converse_single_shot` (3 bound `And` 統合)
-- `Common2026.lean` に `import Common2026.Shannon.SlepianWolf` 追記
+- `InformationTheory.lean` に `import InformationTheory.Shannon.SlepianWolf` 追記
 
-`lake env lean Common2026/Shannon/SlepianWolf.lean` silent、`lake build` 全体緑通過。
+`lake env lean InformationTheory/Shannon/SlepianWolf.lean` silent、`lake build` 全体緑通過。
 
 ## 1. 質的観察 3 点
 
@@ -52,7 +52,7 @@ side info Fano wrapper を書いたとき、`fano_inequality_with_side_info μ X
 
 ### (C) `entropy_le_log_card` (任意 μ 版) の Mathlib・project 不在、Jensen で 50 行
 
-Mathlib `Mathlib.InformationTheory.KullbackLeibler.*` には Gibbs 不等式 (`klDiv ≥ 0`) はあるが、それを「`entropy ≤ log |α|`」に翻訳した補題は不在。Common2026 にも `entropy_le_log_image_card` (uniform 専用、`Common2026/Shannon/LoomisWhitney.lean:125`) しか無い。
+Mathlib `Mathlib.InformationTheory.KullbackLeibler.*` には Gibbs 不等式 (`klDiv ≥ 0`) はあるが、それを「`entropy ≤ log |α|`」に翻訳した補題は不在。InformationTheory にも `entropy_le_log_image_card` (uniform 専用、`InformationTheory/Shannon/LoomisWhitney.lean:125`) しか無い。
 
 **戦略採用**: uniform 版の証明を写経し、uniform 仮定だけ落とす。具体的には `Real.concaveOn_negMulLog` を `Fintype.univ` 全域で `ConcaveOn.le_map_sum` に適用、weights = `1 / N`、mean = `(∑ p) / N = 1 / N` (∑ p = 1 from `IsProbabilityMeasure`)、`negMulLog (1/N) = log N / N` で整形。50 行で通った。
 
@@ -79,9 +79,9 @@ Mathlib `Mathlib.InformationTheory.KullbackLeibler.*` には Gibbs 不等式 (`k
 
 ## 4. 詰まらなかった理由 (寄与の大きい既存資産)
 
-- `Common2026/Shannon/Bridge.lean` の `mutualInfo_eq_entropy_sub_condEntropy` (588 行投入済)
-- `Common2026/Shannon/Entropy.lean` の `condMutualInfo_eq_condEntropy_sub_condEntropy` + `condMutualInfo_comm` (条件付き chain rule の代替)
-- `Common2026/Fano/Measure.lean` の `fano_inequality_measure_theoretic` (Yo 引数の任意 MeasurableSpace 性が paired conditioner ルートの根拠)
-- `Common2026/Shannon/LoomisWhitney.lean` の `entropy_le_log_image_card` (証明テンプレを写経できた)
+- `InformationTheory/Shannon/Bridge.lean` の `mutualInfo_eq_entropy_sub_condEntropy` (588 行投入済)
+- `InformationTheory/Shannon/Entropy.lean` の `condMutualInfo_eq_condEntropy_sub_condEntropy` + `condMutualInfo_comm` (条件付き chain rule の代替)
+- `InformationTheory/Fano/Measure.lean` の `fano_inequality_measure_theoretic` (Yo 引数の任意 MeasurableSpace 性が paired conditioner ルートの根拠)
+- `InformationTheory/Shannon/LoomisWhitney.lean` の `entropy_le_log_image_card` (証明テンプレを写経できた)
 
 これらが揃っていなかったら Phase B だけで数日かかる規模。**「依存資産が手に入ったタイミング」が新規 moonshot の着手判定に最も効く** という観察は、Han / Loomis-Whitney の各 proof-log でも同様に出ている。

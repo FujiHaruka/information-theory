@@ -30,7 +30,7 @@ proof-log: yes (C3 の carrier-crossing が core risk、迷走しやすいので
 
 ### Goal (最終定理 signature)
 
-`Common2026/Shannon/HuffmanOptimality.lean` 末尾追記:
+`InformationTheory/Shannon/HuffmanOptimality.lean` 末尾追記:
 
 ```lean
 /-- **Cover–Thomas Theorem 5.8.1 (strong form)** — hypothesis 引数なし. -/
@@ -364,7 +364,7 @@ A=B が carrier を意識せず従う。これが C3 の core lemma で、最大
 
 - [ ] **R-a**: FALSE 5 件の retract 手順 (§下「FALSE wall の retract 手順」)。
 - [ ] **R-b**: 触れた全 file `lake env lean <file>` silent。`Huffman.lean` を編集する場合
-      (C1/C2 追記) は `lake build Common2026.Shannon.Huffman` で olean refresh 後、下流
+      (C1/C2 追記) は `lake build InformationTheory.Shannon.Huffman` で olean refresh 後、下流
       Huffman* file を個別検証。
 - [ ] **R-c**: `#print axioms huffmanLength_optimal` で `sorryAx` 非依存確認
       (`Classical.choice` / `propext` / `Quot.sound` のみ許容 = 標準B 達成)。
@@ -385,7 +385,7 @@ A=B が carrier を意識せず従う。これが C3 の core lemma で、最大
 **手順**:
 1. Phase M で新 headline `huffmanLength_optimal` が hypothesis なしで閉じたことを確認。
 2. 各 FALSE declaration の term-level consumer を `rg` で再確認 (docstring 言及は除外、
-   `rg -n "<name>" Common2026/ | grep -v "^.*--"` で declaration 参照のみ)。
+   `rg -n "<name>" InformationTheory/ | grep -v "^.*--"` で declaration 参照のみ)。
 3. consumer 0 件のもの (#3 は確認済) は削除。consumer が weak-form API として残るもの
    (#1/#2) は abbrev を残し、tag を `@audit:retract-candidate(false-hypothesis)
    @audit:closed-by-successor(huffman-cost-level-optimality)` に更新 (slug を本 plan に

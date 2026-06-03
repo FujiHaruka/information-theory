@@ -182,7 +182,7 @@ subset-form ラッパー `subsetSplitMEquiv (T₁ ⊆ T₂)` を Pi.lean 内に 
 
 #### 詳細
 
-##### Site 1: `Common2026/Shannon/HanD.lean:278` (`condEntropy_subset_anti`)
+##### Site 1: `InformationTheory/Shannon/HanD.lean:278` (`condEntropy_subset_anti`)
 - **コンテキスト**: subset 版 conditioning monotonicity (`T₁ ⊆ T₂ ⟹ H(X_i | X_{T₂}) ≤ H(X_i | X_{T₁})`)
 - **使い方**:
   ```
@@ -197,7 +197,7 @@ subset-form ラッパー `subsetSplitMEquiv (T₁ ⊆ T₂)` を Pi.lean 内に 
 - **API 入力 shape**: `T₁ ⊆ T₂` (subset form 必須)。`Disjoint T₁ T₂` ではない
 - **refactor 戦略**: subset-form ラッパー (Pi.lean の `subsetSplitMEquiv` を温存) で **無変更**
 
-##### Site 2: `Common2026/Shannon/Polymatroid.lean:84` (`jointEntropySubset_mono`)
+##### Site 2: `InformationTheory/Shannon/Polymatroid.lean:84` (`jointEntropySubset_mono`)
 - **コンテキスト**: monotonicity (`S ⊆ T ⟹ H(X_S) ≤ H(X_T)`)
 - **使い方**: Site 1 と同 pattern、`hT := h : S ⊆ T`
 - **下流**: `entropy_measurableEquiv_comp` で entropy reshape → pair chain rule → `condEntropy_nonneg`
@@ -206,7 +206,7 @@ subset-form ラッパー `subsetSplitMEquiv (T₁ ⊆ T₂)` を Pi.lean 内に 
   `jointEntropySubset_disjoint_union` ヘルパー (Site 3) を直接呼ぶ簡略化も可
   (`hd := Finset.disjoint_sdiff`, `hU := Finset.union_sdiff_of_subset h` を 2 行作って渡す)
 
-##### Site 3: `Common2026/Shannon/Polymatroid.lean:142` (`jointEntropySubset_disjoint_union`)
+##### Site 3: `InformationTheory/Shannon/Polymatroid.lean:142` (`jointEntropySubset_disjoint_union`)
 - **コンテキスト**: helper、premise が `Disjoint s t` + `s ∪ t = U`
 - **使い方**: `hsU : s ⊆ U` を `hU ▸ Finset.subset_union_left` で derive、`htU : U \ s = t` を
   `hU` + disjoint で derive、subsetSplitMEquiv (subset form) を呼ぶ
@@ -216,7 +216,7 @@ subset-form ラッパー `subsetSplitMEquiv (T₁ ⊆ T₂)` を Pi.lean 内に 
   `subst hU` 一発で `↥(s ∪ t) → α` ↔ `↥U → α` の cast を消せる
   (現状 `subst htU` で逆方向 cast を消しているのと対称)
 
-##### Site 4: `Common2026/Shannon/Polymatroid.lean:186` (`condEntropy_reshape_disjoint_union`)
+##### Site 4: `InformationTheory/Shannon/Polymatroid.lean:186` (`condEntropy_reshape_disjoint_union`)
 - **コンテキスト**: helper、conditioner 側 reshape
 - **使い方**: Site 3 と同じ derive
 - **下流**: `condEntropy_measurableEquiv_comp` で conditioner reshape

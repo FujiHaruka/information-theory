@@ -33,7 +33,7 @@
 - [ ] Phase D — achievability chain Eq.13.124 の entropy-level 接続 📋
 - [ ] Phase E — converse chain Eq.13.130 の Kraft → a.s. liminf 接続 📋
 - [ ] Phase F — headline 無仮定 publish `lz78_two_sided_optimality_greedy_impl_unconditional` 📋
-- [ ] Phase V — `Common2026.lean` 編入 + roadmap 更新 📋
+- [ ] Phase V — `InformationTheory.lean` 編入 + roadmap 更新 📋
 
 ## ゴール / Approach
 
@@ -160,7 +160,7 @@ Phase E  : converse chain Eq.13.130 Kraft → a.s. liminf 接続                
                  IsLZ78ConverseChainHyp を honest 仮定維持
              ──────────────────────────────────────────────────────────────
 Phase F  : headline 無仮定 publish                                            ← ~50-150 行
-Phase V  : Common2026.lean 編入 + roadmap                                     ← ~10-30 行
+Phase V  : InformationTheory.lean 編入 + roadmap                                     ← ~10-30 行
 ```
 
 ### 規模見積
@@ -174,7 +174,7 @@ Phase V  : Common2026.lean 編入 + roadmap                                     
 | Phase D | **320 行** | 250-400 | yes | `LZ78AchievabilityChain.lean` 新規 (Eq.13.124) |
 | Phase E | **280 行** | 200-350 | yes | `LZ78ConverseChain.lean` 新規 (Eq.13.130) |
 | Phase F | **100 行** | 50-150 | no | `LZ78FinalGlue.lean` 拡張 (無仮定 headline) |
-| Phase V | **20 行** | 10-30 | no | `Common2026.lean` + roadmap |
+| Phase V | **20 行** | 10-30 | no | `InformationTheory.lean` + roadmap |
 | **累計** | **~1470 行** | **1060-1880** | — | 3 新規 file + 2 拡張 |
 
 ---
@@ -549,10 +549,10 @@ Phase C + D + E がすべて genuine discharge できた場合、
 
 ---
 
-## Phase V — `Common2026.lean` 編入 + roadmap 更新 📋
+## Phase V — `InformationTheory.lean` 編入 + roadmap 更新 📋
 
 - [ ] 新規 file (`LZ78ZivCountingBody.lean` / `LZ78AchievabilityChain.lean` /
-      `LZ78ConverseChain.lean`) の import を `Common2026.lean` に追記。
+      `LZ78ConverseChain.lean`) の import を `InformationTheory.lean` に追記。
 - [ ] 各 file `lake env lean` clean 確認。
 - [ ] `docs/textbook-roadmap.md` Ch.13 行を 🟡 → 🟢 (full closure 達成時) or honest 仮定数を更新。
 
@@ -597,14 +597,14 @@ Phase A → B → C は逐次依存。
 - 親 seed: [`lz78-moonshot-plan.md`](./lz78-moonshot-plan.md)
 - 兄弟 discharge: [`lz78-ziv-inequality-discharge-moonshot-plan.md`](./lz78-ziv-inequality-discharge-moonshot-plan.md)
 - 既存 genuine 資産 (file:line):
-  - `Common2026/Shannon/LZ78SMBSandwich.lean:388` — `lz78_smb_sandwich_ergodic` (無条件 SMB)
-  - `Common2026/Shannon/LZ78ZivInequality.lean:204` — `card_phraseSet_le_pow` (counting Nat genuine)
-  - `Common2026/Shannon/LZ78PhraseCountAsymptoticBody.lean:107` — `isBigO_natCast_div_log_of_mul_log_le` (inversion genuine)
-  - `Common2026/Shannon/LZ78GreedyParsingImpl.lean:233, :277, :311` — greedy parse / count=n / bdd_below genuine
-  - `Common2026/Shannon/LZ78ConverseDischarge.lean:106, :201` — `IsLZ78ConverseChainHyp` / pmfBased wrapper
-  - `Common2026/Shannon/LZ78FinalGlue.lean:118, :385` — `IsLZ78AchievabilityChainHyp` / headline
-- Kraft reuse 候補: `Common2026/Shannon/ShannonCode.lean` (`entropyD_le_expectedLength_of_kraft`,
-  `kraftSum`), `Common2026/Shannon/ShannonCodeKraftReverse.lean`
+  - `InformationTheory/Shannon/LZ78SMBSandwich.lean:388` — `lz78_smb_sandwich_ergodic` (無条件 SMB)
+  - `InformationTheory/Shannon/LZ78ZivInequality.lean:204` — `card_phraseSet_le_pow` (counting Nat genuine)
+  - `InformationTheory/Shannon/LZ78PhraseCountAsymptoticBody.lean:107` — `isBigO_natCast_div_log_of_mul_log_le` (inversion genuine)
+  - `InformationTheory/Shannon/LZ78GreedyParsingImpl.lean:233, :277, :311` — greedy parse / count=n / bdd_below genuine
+  - `InformationTheory/Shannon/LZ78ConverseDischarge.lean:106, :201` — `IsLZ78ConverseChainHyp` / pmfBased wrapper
+  - `InformationTheory/Shannon/LZ78FinalGlue.lean:118, :385` — `IsLZ78AchievabilityChainHyp` / headline
+- Kraft reuse 候補: `InformationTheory/Shannon/ShannonCode.lean` (`entropyD_le_expectedLength_of_kraft`,
+  `kraftSum`), `InformationTheory/Shannon/ShannonCodeKraftReverse.lean`
 
 ---
 

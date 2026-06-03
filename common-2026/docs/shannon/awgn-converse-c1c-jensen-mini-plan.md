@@ -4,7 +4,7 @@
 >
 > **Slug**: `awgn-converse-c1c-jensen`
 >
-> **対象 sorry**: `Common2026/Shannon/AWGNConverseDischarge.lean:624` `sum_log_one_add_le_n_log_one_add_avg`、現タグ `@residual(plan:awgn-converse-aux-plan)` (`wall:jensen-affine-subst` 想定での Phase C retreat)
+> **対象 sorry**: `InformationTheory/Shannon/AWGNConverseDischarge.lean:624` `sum_log_one_add_le_n_log_one_add_avg`、現タグ `@residual(plan:awgn-converse-aux-plan)` (`wall:jensen-affine-subst` 想定での Phase C retreat)
 >
 > **Status (2026-05-27)**: 起草。Phase C dispatch (Wave 6) で `ConcaveOn.le_map_sum` の affine substitution 段 (`smul`/`mul` normalization friction) が実装中に発火、`sorry` retreat で commit。本 mini-plan は後続 1 session でその sorry を analytic body で discharge する。
 
@@ -19,7 +19,7 @@
 
 ### Goal (target signature、verbatim)
 
-`Common2026/Shannon/AWGNConverseDischarge.lean:624-637` の `sorry` を埋める:
+`InformationTheory/Shannon/AWGNConverseDischarge.lean:624-637` の `sorry` を埋める:
 
 ```lean
 theorem sum_log_one_add_le_n_log_one_add_avg
@@ -187,13 +187,13 @@ theorem ConcaveOn.smul {c : 𝕜} (hc : 0 ≤ c) (hf : ConcaveOn 𝕜 s f) :
 
 (注: `ConcaveOn.smul` は image 側 scalar、domain 側 scaling は `comp_affineMap` 経由)
 
-### E. Common2026 既存 concavity 補題在庫 (`DifferentialEntropy.lean`)
+### E. InformationTheory 既存 concavity 補題在庫 (`DifferentialEntropy.lean`)
 
 `rg -n "strictConcaveOn|concaveOn|ConcaveOn|le_map_sum"` で `DifferentialEntropy.lean` 内に該当補題は **0 件** (Phase 0 grep 結果)。Phase 1 helper は新規追加。
 
 ### F. Loogle で「Real.log composition concavity」を確認
 
-`./.lake/packages/loogle/.lake/build/bin/loogle --read-index .lake/build/loogle.index "Real.log, ConcaveOn"` — 既存 `Real.log(1 + ·)` / `Real.log(1 + ·/N)` 専用 concavity 補題は **不在** (Phase 0 確認、Mathlib + Common2026 双方)。Phase 1 helper 新規追加で重複なし ✅
+`./.lake/packages/loogle/.lake/build/bin/loogle --read-index .lake/build/loogle.index "Real.log, ConcaveOn"` — 既存 `Real.log(1 + ·)` / `Real.log(1 + ·/N)` 専用 concavity 補題は **不在** (Phase 0 確認、Mathlib + InformationTheory 双方)。Phase 1 helper 新規追加で重複なし ✅
 
 ---
 
@@ -201,7 +201,7 @@ theorem ConcaveOn.smul {c : 𝕜} (hc : 0 ≤ c) (hf : ConcaveOn 𝕜 s f) :
 
 ### スコープ
 
-`Common2026/Shannon/DifferentialEntropy.lean` 末尾 or 適切な section に helper 追加 (~20 行)。
+`InformationTheory/Shannon/DifferentialEntropy.lean` 末尾 or 適切な section に helper 追加 (~20 行)。
 
 ```lean
 theorem concaveOn_log_one_add_div {N : ℝ} (hN_pos : 0 < N) :
@@ -227,7 +227,7 @@ theorem concaveOn_log_one_add_div {N : ℝ} (hN_pos : 0 < N) :
 ### Done 条件
 
 - [ ] `concaveOn_log_one_add_div` publish、0 sorry
-- [ ] `lake env lean Common2026/Shannon/DifferentialEntropy.lean` silent
+- [ ] `lake env lean InformationTheory/Shannon/DifferentialEntropy.lean` silent
 
 ### proof-log
 
@@ -240,7 +240,7 @@ no (helper 1 件、規模小)
 ### 失敗時 fallback
 
 - `AffineMap` 構築 friction → helper 内で `ConcaveOn` の definition unfold + 直接 `convex_combination` 検証 (~30-40 行に拡張)。`AffineMap` 路と等価。
-- helper の配置先が `DifferentialEntropy.lean` で違和感 (analytic Jensen 補題、entropy と無関係) → 新規 file `Common2026/Analysis/LogConcavity.lean` (~25 行) 作成 + `Common2026.lean` に 1 行 import 追加。判断ログで記録。
+- helper の配置先が `DifferentialEntropy.lean` で違和感 (analytic Jensen 補題、entropy と無関係) → 新規 file `InformationTheory/Analysis/LogConcavity.lean` (~25 行) 作成 + `InformationTheory.lean` に 1 行 import 追加。判断ログで記録。
 
 ---
 
@@ -248,7 +248,7 @@ no (helper 1 件、規模小)
 
 ### スコープ
 
-`Common2026/Shannon/AWGNConverseDischarge.lean:624-637` の `sorry` を fill (~30-50 行)。
+`InformationTheory/Shannon/AWGNConverseDischarge.lean:624-637` の `sorry` を fill (~30-50 行)。
 
 skeleton (本 plan 起草段階の sketch、実装時に refine):
 
@@ -293,8 +293,8 @@ theorem sum_log_one_add_le_n_log_one_add_avg
 ### Done 条件
 
 - [ ] `sum_log_one_add_le_n_log_one_add_avg` body 0 sorry
-- [ ] `Common2026/Shannon/AWGNConverseDischarge.lean:624` の `@residual(plan:awgn-converse-aux-plan)` タグ削除 (該当 line 関連)
-- [ ] `lake env lean Common2026/Shannon/AWGNConverseDischarge.lean` silent
+- [ ] `InformationTheory/Shannon/AWGNConverseDischarge.lean:624` の `@residual(plan:awgn-converse-aux-plan)` タグ削除 (該当 line 関連)
+- [ ] `lake env lean InformationTheory/Shannon/AWGNConverseDischarge.lean` silent
 - [ ] 既存 `sum_log_one_add_le_n_log_one_add_avg` 呼出側 (`awgn_sum_per_letter_mi_le_n_capacity:681`) signature 無変更維持確認
 
 ### proof-log
@@ -316,10 +316,10 @@ yes (`proof-log-awgn-converse-c1c-jensen.md`)。実装時に `smul`/`mul` normal
 
 ### スコープ
 
-- `lake env lean Common2026/Shannon/DifferentialEntropy.lean` silent
-- `lake env lean Common2026/Shannon/AWGNConverseDischarge.lean` silent
+- `lake env lean InformationTheory/Shannon/DifferentialEntropy.lean` silent
+- `lake env lean InformationTheory/Shannon/AWGNConverseDischarge.lean` silent
 - 当該 declaration (line 624) の `@residual(plan:awgn-converse-aux-plan)` タグ削除確認 (`sum_log_one_add_le_n_log_one_add_avg` body 内に sorry 残置がないこと)
-- `rg -n "@residual\(plan:awgn-converse-aux-plan\)" Common2026/Shannon/AWGNConverseDischarge.lean` で残数を親 plan 判断ログ #6 の 5 → 4 件に減ったことを確認
+- `rg -n "@residual\(plan:awgn-converse-aux-plan\)" InformationTheory/Shannon/AWGNConverseDischarge.lean` で残数を親 plan 判断ログ #6 の 5 → 4 件に減ったことを確認
 - 親 plan `awgn-converse-aux-plan.md` 判断ログ #6「後続セッション送り (2)」を完了マーク + 本 mini-plan へ pointer
 - 独立 honesty audit subagent 起動: helper `concaveOn_log_one_add_div` 1 件 + 本体 1 件 body fill のため、新規 `sorry` 導入は無しだが既存 sorry 解消 commit は audit 対象 (CLAUDE.md「Independent honesty audit」起動条件は **新規 sorry 導入** だが、Phase C audit verdict 引き継ぎとして「sorry 解消 commit」も verify 推奨)
 
@@ -377,19 +377,19 @@ no。
 
 ```bash
 # 1. helper verify
-lake env lean Common2026/Shannon/DifferentialEntropy.lean
+lake env lean InformationTheory/Shannon/DifferentialEntropy.lean
 # expect: silent (0 errors, 0 warnings or sorry-無関係 warning のみ)
 
 # 2. 本体 verify
-lake env lean Common2026/Shannon/AWGNConverseDischarge.lean
+lake env lean InformationTheory/Shannon/AWGNConverseDischarge.lean
 # expect: silent (sorry 残数 5 → 4 件、line 624 解消)
 
 # 3. residual tag 残数確認
-rg -n "@residual\(plan:awgn-converse-aux-plan\)" Common2026/Shannon/AWGNConverseDischarge.lean | wc -l
+rg -n "@residual\(plan:awgn-converse-aux-plan\)" InformationTheory/Shannon/AWGNConverseDischarge.lean | wc -l
 # expect: 4 (親 plan 判断ログ #6 の 5 件から 1 件減)
 
 # 4. line 624 周辺の sorry が消えたことを確認
-rg -n "sorry" Common2026/Shannon/AWGNConverseDischarge.lean
+rg -n "sorry" InformationTheory/Shannon/AWGNConverseDischarge.lean
 # expect: line 624 が出力されない (他 4 件残存は OK)
 
 # 5. honesty audit (orchestrator が実装後 dispatch)
@@ -418,7 +418,7 @@ rg -n "sorry" Common2026/Shannon/AWGNConverseDischarge.lean
 
 ## オーケストレータ注記
 
-- 実装 agent は `Common2026.lean` を編集しない (helper を `DifferentialEntropy.lean` に追加する場合は既存 import 経路に乗るので import 追加不要、新規 file 作成 fallback の場合は orchestrator が 1 行追加)
+- 実装 agent は `InformationTheory.lean` を編集しない (helper を `DifferentialEntropy.lean` に追加する場合は既存 import 経路に乗るので import 追加不要、新規 file 作成 fallback の場合は orchestrator が 1 行追加)
 - 並列 dispatch 中の場合: `lean-implementer` を `isolation: "worktree"` で起動 (CLAUDE.md「Parallel orchestration」boilerplate 必須)
 - 単独 dispatch の場合: worktree 省略 + main 直接
 - 完了後の commit は autonomous (CLAUDE.md「Commits」)

@@ -1,7 +1,7 @@
 # Rate-distortion convexity + n-letter regulated-distortion form (E-4'' deferred)
 
 > 実態整合 (2026-05-20): DONE — Phase B 主補題 + 有限アルファベット discharge 完了。
-> `rateDistortionFunction_convexOn` (`Common2026/Shannon/RateDistortionConvexity.lean:136`) は
+> `rateDistortionFunction_convexOn` (`InformationTheory/Shannon/RateDistortionConvexity.lean:136`) は
 > `h_klDiv_conv` (joint-klDiv convexity = Mathlib gap) を honest hyp 化した subnormal 形 (0 sorry)。
 > その hyp は `rateDistortionFunction_convexOn_pmf` (`RateDistortionConvexityDischarge.lean:694`、`[Fintype α] [Fintype β]`)
 > が **完全 discharge** → 有限アルファベットでは DONE-UNCOND (0 sorry / 0 axiom)。
@@ -9,7 +9,7 @@
 > (`n_block`/`n_singleLetter`) は `RateDistortionConverseNLetter.lean` に別途 landing 済 (本 plan scope 外)。
 
 E-4'' シードカード ([`docs/moonshot-seeds.md`](../moonshot-seeds.md))、E-4 / E-4' の後継。
-親シード: `Common2026/Shannon/RateDistortionConverseMonotone.lean` (151 行、E-4' 完了)。
+親シード: `InformationTheory/Shannon/RateDistortionConverseMonotone.lean` (151 行、E-4' 完了)。
 
 Cover-Thomas 10.4 の **n-letter 規定歪み形** converse:
 ```
@@ -135,8 +135,8 @@ Step 5 (bridge): R_pmf(D) = rateDistortionFunction d P D (有限 α, β 下で r
 | `Finset.sum_le_sum` + `mul_add` | basic | per-atom 凸性集約 |
 | `ConvexOn.smul_le_sum` (の片側) | `Analysis/Convex/Jensen.lean` | Jensen 不等式 finite 形 |
 | `klDiv_eq_lintegral_klFun_of_ac` | `KullbackLeibler/Basic.lean` | KL ↔ klFun-積分 bridge |
-| `mutualInfo` def | `Common2026/Shannon/MutualInfo.lean:36` | 既存 R(D) との接続 |
-| `mutualInfo_pi_eq_sum` | `Common2026/Shannon/MIChainRule.lean:341` | Phase C n-letter 鎖 |
+| `mutualInfo` def | `InformationTheory/Shannon/MutualInfo.lean:36` | 既存 R(D) との接続 |
+| `mutualInfo_pi_eq_sum` | `InformationTheory/Shannon/MIChainRule.lean:341` | Phase C n-letter 鎖 |
 
 ### Mathlib gap
 
@@ -274,7 +274,7 @@ log|M| ≥ H(W) ≥ I(X^n; X̂^n) = ∑ I(X_i; X̂_i)
 - `ENNReal.iInf_add`, `ENNReal.add_iInf`: iInf-level 加算交換 ✓
 - `ENNReal.ofReal_add` + `ENNReal.ofReal_mul`: ofReal 算術 ✓
 - `Finset.sum_le_sum`: per-atom 集約 ✓
-- `mutualInfo_pi_eq_sum` (Common2026 既存): Phase C chain rule ✓
+- `mutualInfo_pi_eq_sum` (InformationTheory 既存): Phase C chain rule ✓
 - `convexOn_klFun.2`: `f(λa + (1-λ)b) ≤ λ f(a) + (1-λ) f(b)` 形 ✓
 
 ## 既存 plan / カード相互参照
@@ -297,7 +297,7 @@ E-3' (~1800 行) と E-4' (~151 行) の中間 scale、`CsiszarProjection.lean` 
 ### 採用経路
 
 - **Phase A+B core 完成**, **Phase C 全 deferred**, **Phase B specialization (log-sum 経由
-  klDiv joint convexity discharge) も deferred**。`Common2026/Shannon/RateDistortionConvexity.lean`
+  klDiv joint convexity discharge) も deferred**。`InformationTheory/Shannon/RateDistortionConvexity.lean`
   **256 行 / 0 sorry / 0 warning**。
 - **Phase A** (`mixtureMeasure` + marginal / distortion / feasibility 保存): 5 補題、
   `Measure.map_add` / `Measure.map_smul` / `integral_add_measure` / `integral_smul_measure`

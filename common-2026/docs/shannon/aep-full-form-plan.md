@@ -5,7 +5,7 @@
 > に下界 + サイズ下界を補完し、Cover-Thomas (1)〜(4) の全 4 帰結を publish。
 >
 > 実態整合 (2026-05-20): DONE-HONEST-HYPS — 両 headline 完成済。
-> `typicalSet_prob_ge` (`Common2026/Shannon/AEP.lean:1403`、点別下界 `exp(-n(H+ε)) ≤ p(x)`)、
+> `typicalSet_prob_ge` (`InformationTheory/Shannon/AEP.lean:1403`、点別下界 `exp(-n(H+ε)) ≤ p(x)`)、
 > `typicalSet_card_ge` (AEP.lean:1492、`(1-η)·exp(n(H-ε)) ≤ |T|`)、
 > `typicalSet_card_ge_eventually` (AEP.lean:1554) いずれも 0 sorry、
 > 仮定は `iIndepFun` / `IdentDistrib` / `hpos` の i.i.d. 標準形のみ (pass-through なし)。
@@ -41,7 +41,7 @@
 + `typicalSet_prob_tendsto_one` で n が十分大きいときに `μ(T) ≥ 1 - η` を取り、
 **任意の `η > 0`** に対する size 下界 `|T| ≥ (1-η)·exp(n(H-ε))` を導出。
 
-新規ファイルではなく既存 `Common2026/Shannon/AEP.lean` 末尾に追加 (Phase G として既存
+新規ファイルではなく既存 `InformationTheory/Shannon/AEP.lean` 末尾に追加 (Phase G として既存
 `typicalSet_prob_le` と並立)。
 
 ## Phase 0 — 既存資産の棚卸し ✅

@@ -30,7 +30,7 @@
 - [ ] Phase 4 — `sanov_ldp_equality` 配線 + KL 橋 + sign flip 📋
 - [ ] Phase 5 — Qstar via `exists_hoeffding_minimizer_full_support` 📋
 - [ ] Phase 6 — headline Tendsto 統合 📋
-- [ ] Phase V — clean check + `Common2026.lean` 編入 📋
+- [ ] Phase V — clean check + `InformationTheory.lean` 編入 📋
 
 proof-log: Phase 3 (complement type-union + Type-I) のみ yes (最大の novel piece)。
 他 Phase は既存資産 reuse 中心のため no。
@@ -120,14 +120,14 @@ Phase 3 : complement type-union + Sanov-upper で Type-I → 0                  
 Phase 4 : sanov_ldp_equality 配線 + KL 橋 + sign flip                              ← 0.5 セッション (40-60 行)
 Phase 5 : Qstar via exists_hoeffding_minimizer_full_support                        ← 0.25 セッション (15-25 行)
 Phase 6 : headline Tendsto 統合 (Type-II rate Tendsto から E2 へ整地)              ← 0.25 セッション (20-30 行)
-Phase V : clean check + Common2026.lean 編入 (オーケストレータ)                    ← 5 分
+Phase V : clean check + InformationTheory.lean 編入 (オーケストレータ)                    ← 5 分
 ```
 
 合計見積もり **1-2 セッション**。Phase 2/3 が統合リスク 2 点を抱えるが各々壁ではない。
 
 ### ファイル構成
 
-新規 `Common2026/Shannon/HoeffdingTradeoffExp.lean`。import:
+新規 `InformationTheory/Shannon/HoeffdingTradeoffExp.lean`。import:
 `SanovLDPEquality` (sanov_ldp_equality / lower / roundedTypeIndex), `SanovLDP`
 (sanov_ldp_upper_bound / typeClassByCount / klDivIndex / TypeCountIndex),
 `HoeffdingSandwichDischarge` (exists_hoeffding_minimizer_full_support / hoeffding_minimizer_ge),
@@ -172,7 +172,7 @@ Phase V : clean check + Common2026.lean 編入 (オーケストレータ)       
 
 ### Done 条件
 
-skeleton が `lake env lean Common2026/Shannon/HoeffdingTradeoffExp.lean` で sorry warning のみ
+skeleton が `lake env lean InformationTheory/Shannon/HoeffdingTradeoffExp.lean` で sorry warning のみ
 (error 0)。残 sorry は基本性質 3 本 + `h_in_E` + Type-I + 主定理。
 
 ### 撤退条件
@@ -445,12 +445,12 @@ sign flip / 整地が想定外に絡む: `Filter.Tendsto.congr'` で eventually 
 
 ---
 
-## Phase V — clean check + `Common2026.lean` 編入 (オーケストレータ) 📋
+## Phase V — clean check + `InformationTheory.lean` 編入 (オーケストレータ) 📋
 
-- [ ] V-1 `lake env lean Common2026/Shannon/HoeffdingTradeoffExp.lean` silent (0 sorry / 0 error)。
-- [ ] V-2 `Common2026.lean` に `import Common2026.Shannon.HoeffdingTradeoffExp` 追記
+- [ ] V-1 `lake env lean InformationTheory/Shannon/HoeffdingTradeoffExp.lean` silent (0 sorry / 0 error)。
+- [ ] V-2 `InformationTheory.lean` に `import InformationTheory.Shannon.HoeffdingTradeoffExp` 追記
   (既存 Hoeffding import 群の直後)。
-- [ ] V-3 `lake env lean Common2026.lean` で全体 silent 確認。
+- [ ] V-3 `lake env lean InformationTheory.lean` で全体 silent 確認。
 - [ ] V-4 本 plan 進捗ブロックを `✅` に更新、判断ログに publish 完了 append。
   親 plan `hoeffding-tradeoff-moonshot-plan.md` / `hoeffding-tradeoff-sandwich-plan.md` 判断ログ #4 に
   「指数 level 再定義で full genuine closure 達成」の cross-pointer を append。

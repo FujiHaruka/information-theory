@@ -9,7 +9,7 @@
 -->
 
 > 実態整合 (2026-05-20): DONE-HONEST-HYPS — headline `source_coding_converse`
-> 完成済 (`Common2026/Shannon/AEP.lean:704`、0 sorry)。仮定は `iIndepFun` /
+> 完成済 (`InformationTheory/Shannon/AEP.lean:704`、0 sorry)。仮定は `iIndepFun` /
 > `IdentDistrib` / `hcard : 2 ≤ Fintype.card α` + `hPe_to_zero` (誤り率→0) +
 > `hM_bdd` (rate 上界) の honest 形のみ、pass-through なし。結論
 > `entropy μ (Xs 0) ≤ liminf (log M_n / n) atTop`。
@@ -23,7 +23,7 @@
 
 ## 進捗
 
-- [x] Phase 0 — Mathlib + 既存 Common2026 API インベントリ ✅ → [`aep-source-coding-mathlib-inventory.md`](aep-source-coding-mathlib-inventory.md)
+- [x] Phase 0 — Mathlib + 既存 InformationTheory API インベントリ ✅ → [`aep-source-coding-mathlib-inventory.md`](aep-source-coding-mathlib-inventory.md)
 - [x] Phase A — i.i.d. block entropy chain rule (`H(X^n) = n · H(X)` + 補助 2 本) ✅
 - [x] Phase B — per-n converse bound (Slepian–Wolf 流儀の 4-step) ✅
 - [x] Phase C — `Filter.liminf` 形主定理 (`source_coding_converse`, AEP.lean:704) ✅
@@ -48,7 +48,7 @@
 **Approach 図**:
 
 ```
-Phase 0  : Mathlib + Common2026 API インベントリ              ← 完 (本 plan + inventory 起草)
+Phase 0  : Mathlib + InformationTheory API インベントリ              ← 完 (本 plan + inventory 起草)
            ──────────────────────────────────────────
 Phase A  : i.i.d. block entropy chain rule (H(X^n) = n · H(X))  ← 山場 1、80〜150 行、3〜5 日
            ──────────────────────────────────────────
@@ -62,7 +62,7 @@ Phase D  : lake env lean silent + proof-log + metrics           ← verify、半
 **ファイル構成**:
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   AEP.lean             ← Phase A〜C 既存 (432 行)
                        ← 本 plan は **末尾 append** (Phase A〜C in source-coding 部分)、
                           ファイル分割は line 数が 800〜1000 を超えたら検討
@@ -71,7 +71,7 @@ Common2026/Shannon/
 または:
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   AEP.lean             ← Phase A〜C 既存 (432 行)
   SourceCoding.lean    ← 本 plan の Phase A〜C (新ファイル)
 ```
@@ -80,7 +80,7 @@ Common2026/Shannon/
 
 ---
 
-## Phase 0 — Mathlib + 既存 Common2026 API インベントリ ✅
+## Phase 0 — Mathlib + 既存 InformationTheory API インベントリ ✅
 
 ### スコープ
 
@@ -90,7 +90,7 @@ Common2026/Shannon/
 
 - **Filter.liminf API** は Mathlib 完備 (`Filter.Tendsto.liminf_eq` / `liminf_le_liminf`)、自前補題不要
 - **`Pairwise IndepFun → iIndepFun` 変換は不可** (Bernstein counterexample)、Phase D は `iIndepFun` 仮定を新規追加
-- **Pi 化 entropy chain rule (`H(X^n) = n · H(X)`) は Common2026 / Mathlib 共に不在**、自前 80〜150 行
+- **Pi 化 entropy chain rule (`H(X^n) = n · H(X)`) は InformationTheory / Mathlib 共に不在**、自前 80〜150 行
 - **ソース符号化 formalism は Mathlib 不在**、既存 `MeasureFano.errorProb` を直接利用 (`SourceCode` 構造体は不要)
 - **`shannon_converse_single_shot` は uniform 仮定により直接呼び不可**、骨格再演に必要な 4 部品 (`entropy_le_log_card` / `mutualInfo_eq_entropy_sub_condEntropy` / `mutualInfo_le_of_postprocess` / `fano_inequality_measure_theoretic`) はすべて既存
 
@@ -147,7 +147,7 @@ end InformationTheory.Shannon
 
 ### 鍵となる作業
 
-- [ ] **(A.1) `condEntropy_eq_entropy_of_indepFun`** ─ 戦略: `mutualInfo_eq_entropy_sub_condEntropy μ X Y hX hY` で `(mutualInfo μ X Y).toReal = entropy μ X − condEntropy μ X Y`、`mutualInfo_eq_zero_iff_indep` (`Common2026/Shannon/MutualInfo.lean:109`、両方向の片向き) で `mutualInfo μ X Y = 0` ⟹ `entropy μ X − condEntropy μ X Y = 0`。**注意**: `mutualInfo_eq_zero_iff_indep` の正確な statement が双方向か片方向かを確認。`X ⟂ᵢ[μ] Y → mutualInfo μ X Y = 0` 方向が必要。30〜50 行
+- [ ] **(A.1) `condEntropy_eq_entropy_of_indepFun`** ─ 戦略: `mutualInfo_eq_entropy_sub_condEntropy μ X Y hX hY` で `(mutualInfo μ X Y).toReal = entropy μ X − condEntropy μ X Y`、`mutualInfo_eq_zero_iff_indep` (`InformationTheory/Shannon/MutualInfo.lean:109`、両方向の片向き) で `mutualInfo μ X Y = 0` ⟹ `entropy μ X − condEntropy μ X Y = 0`。**注意**: `mutualInfo_eq_zero_iff_indep` の正確な statement が双方向か片方向かを確認。`X ⟂ᵢ[μ] Y → mutualInfo μ X Y = 0` 方向が必要。30〜50 行
 - [ ] **(A.2) `entropy_eq_of_identDistrib`** ─ 戦略: `entropy` の定義 `∑ x : α, Real.negMulLog ((μ.map X).real {x})`、`IdentDistrib.map_eq : μ.map X = ν.map Y`、点ごと書き換え。10〜20 行。**注意**: `IdentDistrib` の `map_eq` field は `AEMeasurable` 仮定下でも成立、entropy の定義は `(μ.map X).real {x}` という measure-real 値のみ使うので `Measurable` vs `AEMeasurable` 区別不要
 - [ ] **(A.3) `entropy_jointRV_eq_n_smul` の zero case (`n = 0`)** ─ `jointRV Xs 0 : Ω → (Fin 0 → α)`、codomain は `Unique` (Pi.uniqueOfIsEmpty)、entropy = `negMulLog 1 = 0`、RHS = `0 · H = 0`。Han Phase B `jointEntropy_chain_rule` の base case と同形 (5〜15 行)
 - [ ] **(A.4) `entropy_jointRV_eq_n_smul` の successor case (`n + 1`)** ─ 戦略 (主路線):
@@ -161,7 +161,7 @@ end InformationTheory.Shannon
 
 ### Done 条件
 
-- [ ] 上記 4 項目が `lake env lean Common2026/Shannon/AEP.lean` (or 新ファイル) で silent
+- [ ] 上記 4 項目が `lake env lean InformationTheory/Shannon/AEP.lean` (or 新ファイル) で silent
 - [ ] skeleton-driven で A.1 → A.2 → A.3 → A.4 の sorry を割る順序
 
 ### 工数感
@@ -308,8 +308,8 @@ end InformationTheory.Shannon
 
 ### スコープ
 
-- [ ] `lake env lean Common2026/Shannon/AEP.lean` (or 新ファイル) silent
-- [ ] `lake build Common2026.Shannon.AEP` (or 新ファイル) 緑通過 (依存 module の olean refresh 確認)
+- [ ] `lake env lean InformationTheory/Shannon/AEP.lean` (or 新ファイル) silent
+- [ ] `lake build InformationTheory.Shannon.AEP` (or 新ファイル) 緑通過 (依存 module の olean refresh 確認)
 - [ ] proof-log: `docs/proof-logs/proof-log-aep-source-coding.md` 起票
 - [ ] metrics: `scripts/session_metrics.ts` 実行 + `docs/metrics/aep-source-coding.{manifest,metrics}.{json,md}` 出力
 - [ ] `docs/moonshot-seeds.md` の "Seed 4 → A. AEP Phase D" 項目を ✅ 更新 + Phase E (achievability) 切り出し方針確認
@@ -360,7 +360,7 @@ end InformationTheory.Shannon
 ## 当面の next step
 
 1. ✅ **Phase 0 (本 plan + inventory 起草)** — 完 (2026-05-11)
-2. **Phase A skeleton** — `Common2026/Shannon/AEP.lean` (or 新ファイル `Common2026/Shannon/SourceCoding.lean`) の末尾に `condEntropy_eq_entropy_of_indepFun` / `entropy_eq_of_identDistrib` / `entropy_jointRV_eq_n_smul` を `:= by sorry` で append、緑通過確認 ← **次これ**
+2. **Phase A skeleton** — `InformationTheory/Shannon/AEP.lean` (or 新ファイル `InformationTheory/Shannon/SourceCoding.lean`) の末尾に `condEntropy_eq_entropy_of_indepFun` / `entropy_eq_of_identDistrib` / `entropy_jointRV_eq_n_smul` を `:= by sorry` で append、緑通過確認 ← **次これ**
 3. **Phase A 完で Phase B 着手判定** — `entropy_jointRV_eq_n_smul` が silent なら Phase B (per-n bound、Slepian–Wolf 流儀 4-step)
 4. **Phase B 完で Phase C 着手判定** — `source_coding_per_n_bound` silent なら Phase C (主定理 + Filter.liminf)
 5. **Phase C 完 = 完成**: proof-log + metrics 取得、Phase E (achievability) を別 plan に切り出すかは本 plan 完了時に判断
@@ -376,7 +376,7 @@ end InformationTheory.Shannon
 - **`SourceCode` 構造体は導入しない**: inventory 軸 4 で確認、既存 `MeasureFano.errorProb` を直接利用。`SourceCode` ラッパーは plumbing コスト + 命名衝突リスク、Slepian–Wolf converse の流儀 (encoder / decoder を直接引数で受ける) と整合
 - **`shannon_converse_single_shot` 直接呼びは諦める**: inventory 軸 5 で確認、uniform `Msg` 仮定が `X^n` で破綻 (Xs 0 が uniform でなければ `X^n` も非 uniform)。代わりに **骨格再演** (Slepian–Wolf converse `slepian_wolf_converse_X` と同形の 4-step assembly) を採用
 - **i.i.d. 仮定を `Pairwise IndepFun` から `iIndepFun` に強化**: inventory 軸 2 で確認、`H(X^n) = n · H(X)` には mutual independence が必要 (Bernstein counterexample)。AEP Phase A〜C は `iIndepFun.indepFun` で自動 lift できるので caller 負担は仮定 1 本の置換のみ
-- **ファイル分割は Phase A 着手時に判断**: AEP.lean が 432 行、Phase A〜C で +210〜350 行 = 642〜782 行。800 行を超えそうなら `Common2026/Shannon/SourceCoding.lean` 新ファイル、`import Common2026.Shannon.AEP` で受ける
+- **ファイル分割は Phase A 着手時に判断**: AEP.lean が 432 行、Phase A〜C で +210〜350 行 = 642〜782 行。800 行を超えそうなら `InformationTheory/Shannon/SourceCoding.lean` 新ファイル、`import InformationTheory.Shannon.AEP` で受ける
 - **Phase A の代替路線 (`Han.jointEntropy_chain_rule` 直接利用)** を撤退ラインに準備: A.4 Step 3 (Pi 値 reshape) で詰まる場合の主路線として、induction 不要で済む可能性が高い (Phase A 着手時に主路線・代替路線のどちらがクリーンか実装後判断)
 
 ### 2026-05-11 — 実装完了 (Phase A〜D ✅)

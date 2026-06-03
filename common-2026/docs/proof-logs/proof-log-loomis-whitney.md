@@ -1,13 +1,13 @@
 # Loomis–Whitney 不等式 Lean 形式化 — ボトルネック分析
 
-`Common2026/Shannon/HanDShearer.lean:41` の `shearer_inequality` を engine として、
+`InformationTheory/Shannon/HanDShearer.lean:41` の `shearer_inequality` を engine として、
 情報理論ルートで textbook 形 Loomis–Whitney $|A|^{n-1} \le \prod_i |\pi_i(A)|$ を Lean 4 で
-証明した記録。Common2026 で初めて **情報理論外 (純コンビ) の不等式** が sorry なしに
+証明した記録。InformationTheory で初めて **情報理論外 (純コンビ) の不等式** が sorry なしに
 通った demo。本 proof-log は質的観察に絞る (定量データは `scripts/session_metrics.ts` 任せ)。
 
 ## 0. 対象問題と成果物
 
-**最終定理** (`Common2026/Shannon/LoomisWhitney.lean`):
+**最終定理** (`InformationTheory/Shannon/LoomisWhitney.lean`):
 
 ```lean
 theorem loomis_whitney
@@ -22,23 +22,23 @@ theorem loomis_whitney
 
 成果物:
 
-- `Common2026/Shannon/LoomisWhitney.lean` — 444 行、0 errors / 0 sorry
+- `InformationTheory/Shannon/LoomisWhitney.lean` — 444 行、0 errors / 0 sorry
   - `entropy_uniformOn_eq_log_card` (Phase A、~40 行)
   - `entropy_le_log_image_card` (Phase A、~80 行)
   - `projectionExcept` (def)
   - `jointEntropySubset_le_log_projectionExcept_card` (Phase B、~55 行)
   - `loomis_whitney` (主定理、Phase C、~85 行)
-- `Common2026.lean` に `import Common2026.Shannon.LoomisWhitney` 追記
+- `InformationTheory.lean` に `import InformationTheory.Shannon.LoomisWhitney` 追記
 - `docs/shannon/loomis-whitney-moonshot-plan.md` ✅ + 判断ログ追記
 - `docs/shannon/loomis-whitney-mathlib-inventory.md` (事前 inventory、本ターンでは更新なし)
 
-`lake env lean Common2026/Shannon/LoomisWhitney.lean` silent / `lake build` 全体緑通過
+`lake env lean InformationTheory/Shannon/LoomisWhitney.lean` silent / `lake build` 全体緑通過
 (2752 jobs)。
 
 ## 1. 問題のキャラクター
 
 「**engine (Shearer) 既製 + 確率論 ↔ 集合論翻訳 plumbing が支配項**」型。`shearer_inequality`
-が既に `Common2026.Shannon.HanDShearer` で完走しているため、本ターンの Lean 作業は
+が既に `InformationTheory.Shannon.HanDShearer` で完走しているため、本ターンの Lean 作業は
 2 つの **境界面** だけだった:
 
 1. **入力境界**: `μ := uniformOn A`、`Xs i ω := ω i` を Shearer に渡せる形に整える
@@ -121,7 +121,7 @@ true_and, and_true, S, Finset.mem_filter]` に絞り、最後の `j ≠ i ↔ i 
   明記してあり、本 plan では着手しない。Mathlib API (`MeasurableEquiv.piCongrLeft`,
   `MeasurableEquiv.piCongrRight`) は揃っているので、必要になれば 30 行追加で済む見込み。
 - **応用例**: Brunn–Minkowski / discrete isoperimetric の Loomis–Whitney 経由証明を
-  Common2026 で展開する余地あり。Seed カードに記録しておくべき (= 次のムーンショット候補)。
+  InformationTheory で展開する余地あり。Seed カードに記録しておくべき (= 次のムーンショット候補)。
 
 ## 6. 振り返り (4 行)
 

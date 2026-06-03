@@ -11,7 +11,7 @@
 ## 1. ターン構造を取る
 
 ```bash
-deno run -A scripts/session_metrics.ts --turns <session-id> --file-prefix Common2026/<prefix>
+deno run -A scripts/session_metrics.ts --turns <session-id> --file-prefix InformationTheory/<prefix>
 ```
 
 各ターンの user prompt（先頭80文字）が見えるので、「探索」「設計」「実装」「リファクタ」のどのフェーズだったかをラベル付けできる。
@@ -91,8 +91,8 @@ jq -r '
 ## 7. git で最終形を確認
 
 ```bash
-git log --oneline Common2026/<prefix>*
-git diff <最初のコミット>~..<最後のコミット> -- Common2026/<prefix>*
+git log --oneline InformationTheory/<prefix>*
+git diff <最初のコミット>~..<最後のコミット> -- InformationTheory/<prefix>*
 ```
 
 JSONL の Edit 系列と git diff を突き合わせると「途中で書いて消した部分」が見える（中間 Edit にあって最終 commit にないもの）。

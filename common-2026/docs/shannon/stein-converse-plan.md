@@ -11,7 +11,7 @@
 > **Status (2026-05-11)**: 起草。シードカード [moonshot-seeds.md A 節 Stein converse](../moonshot-seeds.md#a-直接-deferred-本セッションの撤退ラインに従って分離) を膨らませた 1〜1.5 週間ムーンショット。**親 plan**: [`stein-moonshot-plan.md`](stein-moonshot-plan.md) (Phase A〜B = achievability 完了 / Phase C/D を本 plan に切り出し)。
 > **撤退ライン**: 本 plan 全体の Definition of Done = `stein_lemma` 0 sorry。途中撤退は **Phase A (Pi 化 chain rule) のみ完了 + Phase B/C は別セッションへ繰越** (achievability 単体で publish ライン到達済みのため converse 不達でも全体破綻はしない)。
 >
-> **実態整合 (2026-05-20): DONE-UNCOND (sandwich 形に着地)** — Phase A〜D すべて完了。`Common2026/Shannon/Stein.lean:1390` の `stein_lemma` は **liminf/limsup sandwich** (`K ≤ liminf ∧ limsup ≤ K/(1-ε)`) で discharge (Goal 部の strict `Tendsto` 形ではない、判断ログ 2026-05-11 参照)。converse は `stein_converse_finite_n` (Stein.lean:975、std binders、`_hPpos`/`_hε` は未使用だが honest binder)。`Stein.lean` 全体 0 sorry / 0 `:=True`。strict `Tendsto` 形は `strong-stein-moonshot-plan.md` の `stein_strong_lemma` で別途達成済。
+> **実態整合 (2026-05-20): DONE-UNCOND (sandwich 形に着地)** — Phase A〜D すべて完了。`InformationTheory/Shannon/Stein.lean:1390` の `stein_lemma` は **liminf/limsup sandwich** (`K ≤ liminf ∧ limsup ≤ K/(1-ε)`) で discharge (Goal 部の strict `Tendsto` 形ではない、判断ログ 2026-05-11 参照)。converse は `stein_converse_finite_n` (Stein.lean:975、std binders、`_hPpos`/`_hε` は未使用だが honest binder)。`Stein.lean` 全体 0 sorry / 0 `:=True`。strict `Tendsto` 形は `strong-stein-moonshot-plan.md` の `stein_strong_lemma` で別途達成済。
 
 ## 進捗
 
@@ -19,7 +19,7 @@
 - [x] Phase A — Pi 化 KL chain rule `klDiv_pi_eq_n_smul` ✅
 - [x] Phase B — Stein converse (任意検定 → Bernoulli reduction → log-sum 下界 → `-(1/n) log Q^n s ≤ klDiv P Q / (1-ε) + log 2/(n(1-ε))`) ✅
 - [x] Phase C — `liminf/limsup` sandwich 形 `stein_lemma` ✅ (strict `Tendsto → K` は strong converse 必要、本 plan の DPI + log-sum で残る `1/(1-ε)` 補正のため liminf/limsup sandwich `K ≤ liminf ≤ limsup ≤ K/(1-ε)` の形で着地)
-- [x] Phase D — verify (`lake env lean Common2026/Shannon/Stein.lean` silent) ✅
+- [x] Phase D — verify (`lake env lean InformationTheory/Shannon/Stein.lean` silent) ✅
 
 ## ゴール / Approach
 
@@ -55,7 +55,7 @@ theorem stein_lemma
 2. **(Phase B) Stein converse — Bernoulli reduction + log-sum 下界**:
    - 任意検定 `s : Set (Fin n → α)`、`MeasurableSet s`、`P^n sᶜ ≤ ε` (= α-level)
    - `f := fun x => decide (x ∈ s) : (Fin n → α) → Bool` (検定 = Bool への post-processing)
-   - DPI `klDiv_map_le` (Common2026/Shannon/DPI.lean:52、現在 `private` → public 化) で `klDiv ((P^n).map f) ((Q^n).map f) ≤ klDiv P^n Q^n`
+   - DPI `klDiv_map_le` (InformationTheory/Shannon/DPI.lean:52、現在 `private` → public 化) で `klDiv ((P^n).map f) ((Q^n).map f) ≤ klDiv P^n Q^n`
    - LHS = `klDiv (Bernoulli (P^n s)) (Bernoulli (Q^n s))` (Bool 上の確率測度の KL)
    - **Mathlib `mul_log_le_toReal_klDiv`** (`Mathlib/InformationTheory/KullbackLeibler/Basic.lean:346`) を **Bool 上の Bernoulli (μ := Bernoulli(P^n s), ν := Bernoulli(Q^n s))** に直接適用して **log-sum 形下界** を得る:
      `(P^n s) * log(P^n s / Q^n s) + (P^n sᶜ) * log(P^n sᶜ / Q^n sᶜ) ≤ klDiv (Bernoulli(P^n s)) (Bernoulli(Q^n s))`
@@ -82,7 +82,7 @@ Phase D  : verify (silent / lake build 緑)                         ← 0.5 日
 **ファイル構成 (Phase D 終了時想定)**:
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   Stein.lean              ← 親 plan で確立済 (Phase A〜B 626 行)、本 plan で +400〜500 行 append
   AEP.lean                ← 既存、変更なし
   DPI.lean                ← `klDiv_map_le` を `private` → 公開化 (1 行 diff)
@@ -106,7 +106,7 @@ Common2026/Shannon/
 ### Done 条件 (確定済)
 
 - 軸 1 (Pi 化 chain rule) → Mathlib 不在を loogle / rg 0 件で確認、自前 induction 40〜80 行見積
-- 軸 2 (DPI) → Common2026 既存 `klDiv_map_le` (`Common2026/Shannon/DPI.lean:52`、`private`) を確認、public 化方針確定
+- 軸 2 (DPI) → InformationTheory 既存 `klDiv_map_le` (`InformationTheory/Shannon/DPI.lean:52`、`private`) を確認、public 化方針確定
 - 軸 3 (log-sum 下界) → Mathlib `mul_log_le_toReal_klDiv` の verbatim 署名 確定、Bernoulli 専用補題不要を確認
 - 軸 4 (Tendsto squeeze) → `tendsto_of_tendsto_of_tendsto_of_le_of_le` の verbatim 署名 確定
 - 軸 5 (finiteness) → achievability の hypothesis セットで立つことを確認
@@ -142,16 +142,16 @@ end InformationTheory.Shannon
 - [ ] **(A.2) `klDiv_pi_succ`** ─ `klDiv (Pi^{n+1} P) (Pi^{n+1} Q) = klDiv P Q + klDiv (Pi^n P) (Pi^n Q)`:
   - `measurePreserving_piFinSuccAbove (fun _ => P) (0 : Fin (n+1))` で `Measure.pi P^{n+1} ≃ P.prod (Measure.pi P^n)` (measure-preserving)
   - 同型は `Fin (n+1) → α ≃ᵐ α × (Fin n → α)`
-  - `klDiv_map_measurableEquiv` (Common2026 既存、`MutualInfo.lean:52`) で `klDiv (Pi^{n+1} P) (Pi^{n+1} Q) = klDiv (P.prod (Pi^n P)) (Q.prod (Pi^n Q))`
+  - `klDiv_map_measurableEquiv` (InformationTheory 既存、`MutualInfo.lean:52`) で `klDiv (Pi^{n+1} P) (Pi^{n+1} Q) = klDiv (P.prod (Pi^n P)) (Q.prod (Pi^n Q))`
   - `Measure.compProd_const` (= `μ ⊗ₘ Kernel.const _ ν = μ.prod ν`) で `klDiv (P ⊗ₘ Kernel.const _ (Pi^n P)) (Q ⊗ₘ Kernel.const _ (Pi^n Q))`
   - `klDiv_compProd_eq_add` で `= klDiv P Q + klDiv (P ⊗ₘ Kernel.const _ (Pi^n P)) (P ⊗ₘ Kernel.const _ (Pi^n Q))`
-  - 第 2 項を `compProd_const` で `klDiv (P.prod (Pi^n P)) (P.prod (Pi^n Q))`、`klDiv_prod_const_left` (Common2026 既存、`MutualInfo.lean:80`) で `klDiv (Pi^n P) (Pi^n Q)`
+  - 第 2 項を `compProd_const` で `klDiv (P.prod (Pi^n P)) (P.prod (Pi^n Q))`、`klDiv_prod_const_left` (InformationTheory 既存、`MutualInfo.lean:80`) で `klDiv (Pi^n P) (Pi^n Q)`
   - 25〜45 行
 - [ ] **(A.3) `klDiv_pi_eq_n_smul`** ─ `Nat.rec` (or `Nat.le_induction`) で A.1 + A.2 を結ぶ。`(n+1 : ℝ≥0∞) * klDiv = klDiv + n * klDiv` の整理。10〜20 行
 
 ### Done 条件
 
-- 上記 3 項目が `lake env lean Common2026/Shannon/Stein.lean` で silent
+- 上記 3 項目が `lake env lean InformationTheory/Shannon/Stein.lean` で silent
 - skeleton-driven で `klDiv_pi_zero` → `klDiv_pi_succ` → `klDiv_pi_eq_n_smul` の sorry を割る順序
 
 ### 工数感
@@ -190,12 +190,12 @@ end InformationTheory.Shannon
 
 ### 鍵となる作業
 
-- [ ] **(B.0) `klDiv_map_le` の public 化** ─ `Common2026/Shannon/DPI.lean:52` の `private` を外し公開化、または `Stein.lean` で `import Common2026.Shannon.DPI` + 別名 reexport (1 行 diff、純粋に visibility 変更)。**他の依存ファイル (`MutualInfo.lean`、`Bridge.lean` 等) への影響無し** (現状 `klDiv_map_le` は同ファイル内 1 箇所 `mutualInfo_le_of_postprocess:166` で使用、`private` を外しても破綻しない)。1〜2 行
+- [ ] **(B.0) `klDiv_map_le` の public 化** ─ `InformationTheory/Shannon/DPI.lean:52` の `private` を外し公開化、または `Stein.lean` で `import InformationTheory.Shannon.DPI` + 別名 reexport (1 行 diff、純粋に visibility 変更)。**他の依存ファイル (`MutualInfo.lean`、`Bridge.lean` 等) への影響無し** (現状 `klDiv_map_le` は同ファイル内 1 箇所 `mutualInfo_le_of_postprocess:166` で使用、`private` を外しても破綻しない)。1〜2 行
 - [ ] **(B.1) Bernoulli reduction の検定 → Bool 翻訳** ─ `f := fun x => decide (x ∈ s) : (Fin n → α) → Bool`、`hf : Measurable f` (= `s` の indicator は `Measurable s` から)、`(Pi P).map f` と `(Pi Q).map f` の Bool 上の確率測度を構築。20〜40 行
 - [ ] **(B.2) DPI 適用** ─ B.0 の `klDiv_map_le hf (Pi P) (Pi Q)` で `klDiv ((Pi P).map f) ((Pi Q).map f) ≤ klDiv (Pi P) (Pi Q)`。Phase A の `klDiv_pi_eq_n_smul` で右辺 `= n · klDiv P Q`。10〜20 行
 - [ ] **(B.3) log-sum 下界の Bernoulli への適用** ─ `μ := (Pi P).map f` (= Bool 上、masses `(P^n s, P^n s^c)`)、`ν := (Pi Q).map f` (= Bool 上、masses `(Q^n s, Q^n s^c)`) として `mul_log_le_toReal_klDiv hμν h_int_llr` を呼ぶ。`hμν : μ ≪ ν` は `hPQ` から map 経由で導出 (Pi 版の `hPQ.pi`)。`μ.real univ = (P^n s) + (P^n s^c) = 1`、`ν.real univ = 1` (Bernoulli は確率測度)。**結果**: `1 * log(1/1) + 1 - 1 = 0 ≤ klDiv μ ν` ─ これは trivially `0 ≤ KL` で意味なし!! **本来必要なのは 2 点の Bernoulli を `Bool` ではなく直接 `Fintype 2` 上の sum 形 KL `(P^n s) log(P^n s / Q^n s) + (P^n s^c) log(P^n s^c / Q^n s^c)` で展開**すること。**実装路線**:
   - `klDiv_map_le hf (Pi P) (Pi Q)` で LHS は Bool 上の確率測度同士の KL。
-  - **Bool 上の KL を sum 形に展開**: `klDiv μ_Bool ν_Bool = (μ_Bool {true}).toReal * log(μ_Bool {true} / ν_Bool {true}) + (μ_Bool {false}).toReal * log(μ_Bool {false} / ν_Bool {false})` (Bool は Fintype 2、`Common2026/Shannon/Bridge.lean:207` の `klDiv_discrete_toReal_eq_sum` を public 化 or 直接 inline 展開)
+  - **Bool 上の KL を sum 形に展開**: `klDiv μ_Bool ν_Bool = (μ_Bool {true}).toReal * log(μ_Bool {true} / ν_Bool {true}) + (μ_Bool {false}).toReal * log(μ_Bool {false} / ν_Bool {false})` (Bool は Fintype 2、`InformationTheory/Shannon/Bridge.lean:207` の `klDiv_discrete_toReal_eq_sum` を public 化 or 直接 inline 展開)
   - `μ_Bool {true} = P^n s`、`ν_Bool {true} = Q^n s`、`μ_Bool {false} = P^n s^c`、`ν_Bool {false} = Q^n s^c`
   - 80〜120 行 (sum 形展開 + 各項の `log` の正/負の handling)
 - [ ] **(B.4) α-level + log の往復** ─ `P^n s = 1 - P^n s^c ≥ 1 - ε`、`P^n s^c ≤ ε` から sum 形の各項を bound:
@@ -290,9 +290,9 @@ end InformationTheory.Shannon
 
 ### スコープ
 
-- [ ] `lake env lean Common2026/Shannon/Stein.lean` silent (warning 0、error 0、sorry 0)
+- [ ] `lake env lean InformationTheory/Shannon/Stein.lean` silent (warning 0、error 0、sorry 0)
 - [ ] `lake build` 緑通過
-- [ ] `Common2026/Shannon/DPI.lean` silent (B.0 の public 化 diff の影響確認)
+- [ ] `InformationTheory/Shannon/DPI.lean` silent (B.0 の public 化 diff の影響確認)
 - [ ] proof-log: `docs/proof-logs/proof-log-stein-converse.md` 作成
 - [ ] metrics: `docs/metrics/stein-converse.{manifest,metrics}.{json,md}` 取得 (`scripts/session_metrics.ts`)
 - [ ] 親 plan `stein-moonshot-plan.md` の Phase C/D 進捗を ✅ に更新、本 plan へのポインタを追加
@@ -341,7 +341,7 @@ end InformationTheory.Shannon
 ## 当面の next step
 
 1. ✅ **Phase 0 (本 plan + inventory 起草)** — 完 (2026-05-11)
-2. **Phase A skeleton** — `Common2026/Shannon/Stein.lean` の末尾に `klDiv_pi_zero` / `klDiv_pi_succ` / `klDiv_pi_eq_n_smul` を `:= by sorry` で append、緑通過確認 ← **次これ**
+2. **Phase A skeleton** — `InformationTheory/Shannon/Stein.lean` の末尾に `klDiv_pi_zero` / `klDiv_pi_succ` / `klDiv_pi_eq_n_smul` を `:= by sorry` で append、緑通過確認 ← **次これ**
 3. **Phase A 完で Phase B 着手判定** — `klDiv_pi_eq_n_smul` が silent なら Phase B (Bernoulli reduction)
 4. **Phase B 完で Phase C 着手判定** — `stein_converse` が silent なら Phase C (Tendsto 統合)
 5. **Phase C 完 → Phase D verify** で本 plan 全体 close

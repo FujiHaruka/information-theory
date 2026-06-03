@@ -2,7 +2,7 @@
 
 > 実態整合 (2026-05-20): DONE-HONEST-HYPS — 当 plan が閉じる対象だった `codebookAvgFailure_tendsto_zero` の
 > 単一 sorry は**解消済** (weak-encoder track は数学的に行き詰まったため strong-encoder track に移行)。
-> headline `rate_distortion_achievability` (`Common2026/Shannon/RateDistortionAchievabilityPhaseEStrongFinal.lean:1635`)
+> headline `rate_distortion_achievability` (`InformationTheory/Shannon/RateDistortionAchievabilityPhaseEStrongFinal.lean:1635`)
 > は 0 sorry / 0 axiom で publish。核 `codebookAvgFailureStrong_tendsto_zero` (同 file L735) も実証明。
 > 残る hyp 群 (`h_jts_subset_dts` strong-JTS⊆distortion-typical bridge、rate-gap/distortion-budget/KL-dominate 各条件、
 > `hqStar_pos`) は honest pass-through。`RateDistortionAchievabilityPhaseEStrong.lean:955` の "sorry" 言及は履歴コメントのみ (実 sorry なし)。
@@ -26,7 +26,7 @@
 
 ### ゴール
 
-`Common2026/Shannon/RateDistortionAchievabilityPhaseEStrong.lean:890` の単一 `sorry`:
+`InformationTheory/Shannon/RateDistortionAchievabilityPhaseEStrong.lean:890` の単一 `sorry`:
 
 ```lean
 lemma codebookAvgFailure_tendsto_zero
@@ -97,25 +97,25 @@ lemma codebookAvgFailure_tendsto_zero
 
 #### M0 で確認したい既存 API (構造化形式)
 
-- `stronglyTypicalSet_card_ge_eventually` — `Common2026/Shannon/StrongTypicality.lean:503`:
+- `stronglyTypicalSet_card_ge_eventually` — `InformationTheory/Shannon/StrongTypicality.lean:503`:
   - sig: `(μ : Measure Ω) (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (hindep_full : iIndepFun (fun i => Xs i) μ) (hindep_pair : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j) (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ) (hpos : ∀ a : α, 0 < (μ.map (Xs 0)).real {a}) {ε δ η : ℝ} (hε : 0 < ε) (hδ : 0 < δ) (hη : 0 < η) : ∃ N : ℕ, ∀ n ≥ N, (1 - η) * Real.exp ((n : ℝ) * (entropy μ (Xs 0) - ε * logSumAbs μ Xs - δ)) ≤ ((stronglyTypicalSet μ Xs n ε).toFinite.toFinset.card : ℝ)`
   - 用途: Phase S1 で `α × β` 軸 (joint sequence) に instantiate して conditional slice の **lower envelope**
-- `typicalSet_prob_ge` — `Common2026/Shannon/AEP.lean:1403`:
+- `typicalSet_prob_ge` — `InformationTheory/Shannon/AEP.lean:1403`:
   - sig: `(μ : Measure Ω) [IsProbabilityMeasure μ] (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (hindep_full : iIndepFun (fun i => Xs i) μ) (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ) (hpos : ∀ a : α, 0 < (μ.map (Xs 0)).real {a}) (n : ℕ) (x : Fin n → α) (hx : x ∈ typicalSet μ Xs n ε) : Real.exp (-(n : ℝ) * (entropy μ (Xs 0) + ε)) ≤ (μ.map (jointRV Xs n)).real {x}`
   - 用途: Phase S2 per-fiber 質量 lower bound (Y 側)
-- `typicalSet_prob_le` — `Common2026/Shannon/AEP.lean:1279`:
+- `typicalSet_prob_le` — `InformationTheory/Shannon/AEP.lean:1279`:
   - sig: `(μ : Measure Ω) [IsProbabilityMeasure μ] (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (hindep_full : iIndepFun (fun i => Xs i) μ) (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ) (hpos : ∀ a : α, 0 < (μ.map (Xs 0)).real {a}) (n : ℕ) (x : Fin n → α) (hx : x ∈ typicalSet μ Xs n ε) : (μ.map (jointRV Xs n)).real {x} ≤ Real.exp (-(n : ℝ) * (entropy μ (Xs 0) - ε))`
   - 用途: Phase S1 conditional slice の per-fiber 上界 (X 側、scaling factor 用)
-- `jointStronglyTypicalSet_implies_distortion_le` — `Common2026/Shannon/RateDistortionAchievabilityPhaseEStrong.lean:282`:
+- `jointStronglyTypicalSet_implies_distortion_le` — `InformationTheory/Shannon/RateDistortionAchievabilityPhaseEStrong.lean:282`:
   - sig: `(μ : Measure Ω) [IsProbabilityMeasure μ] (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β) (d : DistortionFn α β) {n : ℕ} {ε δ : ℝ} (hε : 0 ≤ ε) (h_slack : ε * ∑ p : α × β, ((d p.1 p.2 : NNReal) : ℝ) ≤ δ) (x : Fin n → α) (y : Fin n → β) (hxy : (x, y) ∈ jointStronglyTypicalSet μ Xs Ys n ε) : blockDistortion d n x y ≤ expectedDistortionPmf d (fun p => (μ.map (jointSequence Xs Ys 0)).real {p}) + δ`
   - 用途: Phase S3、strong encoder の choice が distortionTypicalSet に入ることを示す
-- `stronglyTypicalSet_prob_tendsto_one` — `Common2026/Shannon/StrongTypicality.lean:212`:
+- `stronglyTypicalSet_prob_tendsto_one` — `InformationTheory/Shannon/StrongTypicality.lean:212`:
   - sig: `(μ : Measure Ω) [IsProbabilityMeasure μ] (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j) (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ) {ε : ℝ} (hε : 0 < ε) : Tendsto (fun n : ℕ => μ {ω | jointRV Xs n ω ∈ stronglyTypicalSet μ Xs n ε}) atTop (𝓝 1)`
   - 用途: Phase S5 で `Pr[X^n ∉ A^*] → 0`
-- `source_averaged_failure_tendsto_zero` — `Common2026/Shannon/RateDistortionAchievabilityPhaseD.lean:102`:
+- `source_averaged_failure_tendsto_zero` — `InformationTheory/Shannon/RateDistortionAchievabilityPhaseD.lean:102`:
   - sig: `(θ R η : ℝ) (hRθ : θ < R) (hη_pos : 0 < η) (hη_lt : η < 1) (hθ_nn : 0 ≤ θ) (M : ℕ → ℕ) (hM_lb : ∀ n : ℕ, Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M n) (failure_seq : ℕ → ℝ) (h_failure_le : ∀ n : ℕ, failure_seq n ≤ Real.exp (-(M n : ℝ) * ((1 - η) * Real.exp (-(n : ℝ) * θ)))) (h_failure_nn : ∀ n : ℕ, 0 ≤ failure_seq n) : Filter.Tendsto failure_seq Filter.atTop (𝓝 0)`
   - 用途: Phase S5 主たる asymptotic 詰め。`θ := mutualInfoPmf qStar + δ`、`R := R` のまま、`M := M_n`、`failure_seq n := source-typical 上の E2 failure`
-- `one_sub_pow_le_exp_neg_mul` — `Common2026/Shannon/RateDistortionAchievabilityPhaseC.lean:121`:
+- `one_sub_pow_le_exp_neg_mul` — `InformationTheory/Shannon/RateDistortionAchievabilityPhaseC.lean:121`:
   - sig: `(M : ℕ) {t : ℝ} (_h0 : 0 ≤ t) (h1 : t ≤ 1) : (1 - t) ^ M ≤ Real.exp (-(M : ℝ) * t)`
   - 用途: Phase S4 で per-codeword failure prob → exp 形
 
@@ -361,7 +361,7 @@ lemma codebookAvgFailure_tendsto_zero ... : Tendsto (fun n => codebookAvgFailure
 
 ## File layout
 
-**全変更を `Common2026/Shannon/RateDistortionAchievabilityPhaseEStrong.lean` に追加** (現行 980 LOC → 推定 1750 LOC):
+**全変更を `InformationTheory/Shannon/RateDistortionAchievabilityPhaseEStrong.lean` に追加** (現行 980 LOC → 推定 1750 LOC):
 
 - 既存 Phase α-ζ-η はそのまま (980 LOC)
 - Phase B' (~80 LOC) を Phase ε の直前に挿入
@@ -382,23 +382,23 @@ lemma codebookAvgFailure_tendsto_zero ... : Tendsto (fun n => codebookAvgFailure
 
 ## Mathlib API needed
 
-**既存 Common2026 (流用)**:
-- `Common2026/Shannon/StrongTypicality.lean:212` `stronglyTypicalSet_prob_tendsto_one`
-- `Common2026/Shannon/StrongTypicality.lean:437` `stronglyTypicalSet_subset_typicalSet`
-- `Common2026/Shannon/StrongTypicality.lean:456` `stronglyTypicalSet_card_le`
-- `Common2026/Shannon/StrongTypicality.lean:503` `stronglyTypicalSet_card_ge_eventually`
-- `Common2026/Shannon/AEP.lean:1279` `typicalSet_prob_le`
-- `Common2026/Shannon/AEP.lean:1403` `typicalSet_prob_ge`
-- `Common2026/Shannon/RateDistortionAchievabilityPhaseEStrong.lean:111` `jointStronglyTypicalSet_joint_axis_subset`
-- `Common2026/Shannon/RateDistortionAchievabilityPhaseEStrong.lean:132` `jointStronglyTypicalSet_prob_tendsto_one`
-- `Common2026/Shannon/RateDistortionAchievabilityPhaseEStrong.lean:282` `jointStronglyTypicalSet_implies_distortion_le`
-- `Common2026/Shannon/RateDistortionAchievabilityPhaseEStrong.lean:374` `jointStronglyTypicalSet_implies_X_stronglyTypical`
-- `Common2026/Shannon/RateDistortionAchievabilityPhaseEStrong.lean:457` `jointStronglyTypicalSet_implies_Y_stronglyTypical`
-- `Common2026/Shannon/RateDistortionAchievabilityPhaseB.lean:115` `distortionTypicalSet` (定義 + iff)
-- `Common2026/Shannon/RateDistortionAchievabilityPhaseC.lean:121` `one_sub_pow_le_exp_neg_mul`
-- `Common2026/Shannon/RateDistortionAchievabilityPhaseC.lean:42` `per_codeword_no_match_prob`
-- `Common2026/Shannon/RateDistortionAchievabilityPhaseC.lean:59` `codebook_indep_no_match_prob_eq`
-- `Common2026/Shannon/RateDistortionAchievabilityPhaseD.lean:102` `source_averaged_failure_tendsto_zero`
+**既存 InformationTheory (流用)**:
+- `InformationTheory/Shannon/StrongTypicality.lean:212` `stronglyTypicalSet_prob_tendsto_one`
+- `InformationTheory/Shannon/StrongTypicality.lean:437` `stronglyTypicalSet_subset_typicalSet`
+- `InformationTheory/Shannon/StrongTypicality.lean:456` `stronglyTypicalSet_card_le`
+- `InformationTheory/Shannon/StrongTypicality.lean:503` `stronglyTypicalSet_card_ge_eventually`
+- `InformationTheory/Shannon/AEP.lean:1279` `typicalSet_prob_le`
+- `InformationTheory/Shannon/AEP.lean:1403` `typicalSet_prob_ge`
+- `InformationTheory/Shannon/RateDistortionAchievabilityPhaseEStrong.lean:111` `jointStronglyTypicalSet_joint_axis_subset`
+- `InformationTheory/Shannon/RateDistortionAchievabilityPhaseEStrong.lean:132` `jointStronglyTypicalSet_prob_tendsto_one`
+- `InformationTheory/Shannon/RateDistortionAchievabilityPhaseEStrong.lean:282` `jointStronglyTypicalSet_implies_distortion_le`
+- `InformationTheory/Shannon/RateDistortionAchievabilityPhaseEStrong.lean:374` `jointStronglyTypicalSet_implies_X_stronglyTypical`
+- `InformationTheory/Shannon/RateDistortionAchievabilityPhaseEStrong.lean:457` `jointStronglyTypicalSet_implies_Y_stronglyTypical`
+- `InformationTheory/Shannon/RateDistortionAchievabilityPhaseB.lean:115` `distortionTypicalSet` (定義 + iff)
+- `InformationTheory/Shannon/RateDistortionAchievabilityPhaseC.lean:121` `one_sub_pow_le_exp_neg_mul`
+- `InformationTheory/Shannon/RateDistortionAchievabilityPhaseC.lean:42` `per_codeword_no_match_prob`
+- `InformationTheory/Shannon/RateDistortionAchievabilityPhaseC.lean:59` `codebook_indep_no_match_prob_eq`
+- `InformationTheory/Shannon/RateDistortionAchievabilityPhaseD.lean:102` `source_averaged_failure_tendsto_zero`
 
 **Mathlib (流用、loogle で signature verify 推奨)**:
 - `Mathlib.MeasureTheory.Measure.Prod.prod_apply` — Phase S1.5, S4 で section と product 化を行き来

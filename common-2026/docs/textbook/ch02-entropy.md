@@ -5,7 +5,7 @@
 > 本章は Cover & Thomas *Elements of Information Theory* (2nd ed.) Chapter 2 を
 > 題材に、**検証済み Lean 定理を骨格にした教科書原稿**が成立するかを検証する
 > パイロットである。本文の各主要結果には
-> 「**Verified**: `定理名` (`Common2026/...`)」という形で、その命題に対応する
+> 「**Verified**: `定理名` (`InformationTheory/...`)」という形で、その命題に対応する
 > Lean 4 + Mathlib の formal declaration を紐付けてある。
 >
 > **検証強度の注記** — 本章で `**Verified**` と記した定理はすべて、
@@ -22,7 +22,7 @@
 > （pmf を直接扱わず measure-theoretic 形式）。`μ` は確率測度
 > `[IsProbabilityMeasure μ]`、アルファベット `X` は有限型 `[Fintype X]`
 > （連続版の差分エントロピーは Ch.8、本章では離散のみ）。
-> 対応する Lean library は `Common2026/Shannon/` および `Common2026/Fano/`。
+> 対応する Lean library は `InformationTheory/Shannon/` および `InformationTheory/Fano/`。
 
 ---
 
@@ -37,7 +37,7 @@ H(X) = -\sum_{x \in \mathcal{X}} p(x) \log p(x).
 本ライブラリでは `negMulLog p = -p \log p` を用いて、像測度 `μ.map Xs` の各 atom
 質量の和として定義する。
 
-**Verified (定義)**: `entropy` (`Common2026/Shannon/Bridge.lean`)
+**Verified (定義)**: `entropy` (`InformationTheory/Shannon/Bridge.lean`)
 
 ```lean
 noncomputable def entropy (μ : Measure Ω) (Xs : Ω → X) : ℝ :=
@@ -48,7 +48,7 @@ noncomputable def entropy (μ : Measure Ω) (Xs : Ω → X) : ℝ :=
 
 \(0 \le p(x) \le 1\) より各項 `negMulLog p ≥ 0`、ゆえに \(H(X) \ge 0\)。
 
-**Verified**: `entropy_nonneg` (`Common2026/Shannon/Bridge.lean`)
+**Verified**: `entropy_nonneg` (`InformationTheory/Shannon/Bridge.lean`)
 
 ```lean
 lemma entropy_nonneg (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -61,7 +61,7 @@ lemma entropy_nonneg (μ : Measure Ω) [IsProbabilityMeasure μ]
 \(D(P \,\|\, U) \ge 0\)（一様分布 \(U\) への KL ダイバージェンスの非負性、Gibbs 不等式）
 の帰結である。
 
-**Verified**: `entropy_le_log_card` (`Common2026/Shannon/MaxEntropy.lean`)
+**Verified**: `entropy_le_log_card` (`InformationTheory/Shannon/MaxEntropy.lean`)
 
 ```lean
 theorem entropy_le_log_card
@@ -72,7 +72,7 @@ theorem entropy_le_log_card
 
 等号成立条件（像測度が一様分布であること）も形式化済み。
 
-**Verified**: `entropy_eq_log_card_iff` (`Common2026/Shannon/MaxEntropy.lean`)
+**Verified**: `entropy_eq_log_card_iff` (`InformationTheory/Shannon/MaxEntropy.lean`)
 
 ```lean
 theorem entropy_eq_log_card_iff
@@ -96,7 +96,7 @@ H(X \mid Y) = \sum_y p(y) H(X \mid Y = y)
 本ライブラリでは条件付き分布 `condDistrib Xs Yo μ y : Measure X` に対する各 \(y\) ごとの
 離散エントロピーを、周辺 `μ.map Yo` で積分した形で定義する。
 
-**Verified (定義)**: `condEntropy` (`Common2026/Fano/Measure.lean`,
+**Verified (定義)**: `condEntropy` (`InformationTheory/Fano/Measure.lean`,
 名前空間 `InformationTheory.MeasureFano`)
 
 ```lean
@@ -111,7 +111,7 @@ def condEntropy (μ : Measure Ω) [IsFiniteMeasure μ]
 周辺エントロピーと条件付きエントロピーの和に分解される。
 
 **Verified**: `entropy_pair_eq_entropy_add_condEntropy`
-(`Common2026/Shannon/Entropy.lean`)
+(`InformationTheory/Shannon/Entropy.lean`)
 
 ```lean
 theorem entropy_pair_eq_entropy_add_condEntropy
@@ -128,7 +128,7 @@ theorem entropy_pair_eq_entropy_add_condEntropy
 の系)。本ライブラリでは条件付き相互情報量の非負性から導く。
 
 **Verified**: `condEntropy_le_condEntropy_of_pair`
-(`Common2026/Shannon/Entropy.lean`)
+(`InformationTheory/Shannon/Entropy.lean`)
 
 ```lean
 theorem condEntropy_le_condEntropy_of_pair
@@ -151,7 +151,7 @@ I(X; Y) = \sum_{x,y} p(x,y) \log \frac{p(x,y)}{p(x)p(y)}
 本ライブラリでは、結合分布の周辺積に対する KL ダイバージェンスとして
 （Mathlib の `klDiv` を用いて）直接定義する。`ℝ≥0∞` 値である点に注意。
 
-**Verified (定義)**: `mutualInfo` (`Common2026/Shannon/MutualInfo.lean`)
+**Verified (定義)**: `mutualInfo` (`InformationTheory/Shannon/MutualInfo.lean`)
 
 ```lean
 noncomputable def mutualInfo
@@ -164,7 +164,7 @@ noncomputable def mutualInfo
 
 \(I(X; Y) \ge 0\)。`klDiv` が `ℝ≥0∞` 値であるため、定義から直ちに従う。
 
-**Verified**: `mutualInfo_nonneg` (`Common2026/Shannon/MutualInfo.lean`)
+**Verified**: `mutualInfo_nonneg` (`InformationTheory/Shannon/MutualInfo.lean`)
 
 ```lean
 theorem mutualInfo_nonneg (μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y) :
@@ -173,7 +173,7 @@ theorem mutualInfo_nonneg (μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y) :
 
 \(I(X; Y) = I(Y; X)\)（対称性）。
 
-**Verified**: `mutualInfo_comm` (`Common2026/Shannon/MutualInfo.lean`)
+**Verified**: `mutualInfo_comm` (`InformationTheory/Shannon/MutualInfo.lean`)
 
 ```lean
 theorem mutualInfo_comm
@@ -184,7 +184,7 @@ theorem mutualInfo_comm
 
 有限アルファベット上では \(I(X; Y) < \infty\)（`≠ ∞`）。
 
-**Verified**: `mutualInfo_ne_top` (`Common2026/Shannon/MutualInfo.lean`)
+**Verified**: `mutualInfo_ne_top` (`InformationTheory/Shannon/MutualInfo.lean`)
 
 ```lean
 theorem mutualInfo_ne_top
@@ -200,7 +200,7 @@ theorem mutualInfo_ne_top
 
 相互情報量がゼロであることと独立であることは同値。
 
-**Verified**: `mutualInfo_eq_zero_iff_indep` (`Common2026/Shannon/MutualInfo.lean`)
+**Verified**: `mutualInfo_eq_zero_iff_indep` (`InformationTheory/Shannon/MutualInfo.lean`)
 
 ```lean
 theorem mutualInfo_eq_zero_iff_indep
@@ -217,7 +217,7 @@ theorem mutualInfo_eq_zero_iff_indep
 （`mutualInfo` が `ℝ≥0∞` 値、`entropy`/`condEntropy` が `ℝ` 値のため）。
 
 **Verified**: `mutualInfo_eq_entropy_sub_condEntropy`
-(`Common2026/Shannon/Bridge.lean`)
+(`InformationTheory/Shannon/Bridge.lean`)
 
 ```lean
 theorem mutualInfo_eq_entropy_sub_condEntropy
@@ -232,7 +232,7 @@ theorem mutualInfo_eq_entropy_sub_condEntropy
 \(I(X; Y) = H(X) + H(Y) - H(X, Y)\) が得られる。
 
 **Verified**: `mutualInfo_eq_entropy_add_entropy_sub_jointEntropy`
-(`Common2026/Shannon/MIChainRule.lean`)
+(`InformationTheory/Shannon/MIChainRule.lean`)
 
 ```lean
 theorem mutualInfo_eq_entropy_add_entropy_sub_jointEntropy
@@ -251,7 +251,7 @@ theorem mutualInfo_eq_entropy_add_entropy_sub_jointEntropy
 I(Z, X; Y) = I(Z; Y) + I(X; Y \mid Z).
 \]
 
-**Verified**: `mutualInfo_chain_rule` (`Common2026/Shannon/CondMutualInfo.lean`)
+**Verified**: `mutualInfo_chain_rule` (`InformationTheory/Shannon/CondMutualInfo.lean`)
 
 ```lean
 theorem mutualInfo_chain_rule
@@ -271,7 +271,7 @@ I(X_0, \dots, X_{n-1}; Y) = \sum_{i} I(X_i; Y \mid X_0, \dots, X_{i-1}).
 \]
 `Fin n` 添字の確率変数列に対する完全形。
 
-**Verified**: `mutualInfo_chain_rule_fin` (`Common2026/Shannon/MIChainRule.lean`)
+**Verified**: `mutualInfo_chain_rule_fin` (`InformationTheory/Shannon/MIChainRule.lean`)
 
 ```lean
 theorem mutualInfo_chain_rule_fin
@@ -291,7 +291,7 @@ theorem mutualInfo_chain_rule_fin
 
 \(n\) 組の同分布な独立ペアでは \(I(X^n; Y^n) = n\, I(X_0; Y_0)\)。
 
-**Verified**: `mutualInfo_iid_eq_nsmul` (`Common2026/Shannon/MIChainRule.lean`)
+**Verified**: `mutualInfo_iid_eq_nsmul` (`InformationTheory/Shannon/MIChainRule.lean`)
 
 ```lean
 theorem mutualInfo_iid_eq_nsmul
@@ -308,7 +308,7 @@ theorem mutualInfo_iid_eq_nsmul
 `MIChainRule.lean:370` を参照。）
 
 積分布上の相互情報量が各成分の和になる一般形も形式化済み:
-**Verified**: `mutualInfo_pi_eq_sum` (`Common2026/Shannon/MIChainRule.lean`)。
+**Verified**: `mutualInfo_pi_eq_sum` (`InformationTheory/Shannon/MIChainRule.lean`)。
 
 ---
 
@@ -320,7 +320,7 @@ I(X; Y \mid Z) = \sum_z p(z)\, D\!\left(p(x,y \mid z) \,\big\|\, p(x \mid z) p(y
 
 本ライブラリでは条件付き分布カーネルの compProd 形 KL として定義する。
 
-**Verified (定義)**: `condMutualInfo` (`Common2026/Shannon/CondMutualInfo.lean`)
+**Verified (定義)**: `condMutualInfo` (`InformationTheory/Shannon/CondMutualInfo.lean`)
 
 ```lean
 noncomputable def condMutualInfo
@@ -334,7 +334,7 @@ noncomputable def condMutualInfo
 
 ### 性質: 非負性・対称性
 
-**Verified**: `condMutualInfo_nonneg` (`Common2026/Shannon/CondMutualInfo.lean`)
+**Verified**: `condMutualInfo_nonneg` (`InformationTheory/Shannon/CondMutualInfo.lean`)
 
 ```lean
 theorem condMutualInfo_nonneg
@@ -344,13 +344,13 @@ theorem condMutualInfo_nonneg
     0 ≤ condMutualInfo μ Xs Yo Zc
 ```
 
-**Verified**: `condMutualInfo_comm` (`Common2026/Shannon/CondMutualInfo.lean`):
+**Verified**: `condMutualInfo_comm` (`InformationTheory/Shannon/CondMutualInfo.lean`):
 \(I(X; Y \mid Z) = I(Y; X \mid Z)\)。
 
 ### entropy 表現 \(I(X; Z \mid Y) = H(X \mid Y) - H(X \mid Y, Z)\)
 
 **Verified**: `condMutualInfo_eq_condEntropy_sub_condEntropy`
-(`Common2026/Shannon/Entropy.lean`)
+(`InformationTheory/Shannon/Entropy.lean`)
 
 ```lean
 theorem condMutualInfo_eq_condEntropy_sub_condEntropy
@@ -371,7 +371,7 @@ KL ダイバージェンス（相対エントロピー）の非負性 \(D(p \,\|
 pmf 形 `klDivPmf P Q = ∑ₐ Q(a) · klFun(P(a)/Q(a))` に対し独立に形式化している。
 
 **Verified**: `klDivPmf_nonneg`
-(`Common2026/Shannon/CsiszarProjection.lean`,
+(`InformationTheory/Shannon/CsiszarProjection.lean`,
 名前空間 `InformationTheory.Shannon.CsiszarProjection`)
 
 ```lean
@@ -384,7 +384,7 @@ lemma klDivPmf_nonneg (P Q : α → ℝ)
 形式化済み。
 
 **Verified**: `klDivPmf_eq_zero_iff_pmf`
-(`Common2026/Shannon/MaxEntropyConstrained.lean`)
+(`InformationTheory/Shannon/MaxEntropyConstrained.lean`)
 
 ```lean
 lemma klDivPmf_eq_zero_iff_pmf
@@ -408,7 +408,7 @@ lemma klDivPmf_eq_zero_iff_pmf
 \(x \mapsto x \log x\) の凸性（有限ジェンセン）から従う。情報不等式・DPI の基盤。
 
 **Verified**: `log_sum_inequality`
-(`Common2026/Shannon/LZ78ZivEntropyBridge.lean`, 名前空間 `InformationTheory.Shannon`)
+(`InformationTheory/Shannon/LZ78ZivEntropyBridge.lean`, 名前空間 `InformationTheory.Shannon`)
 
 ```lean
 theorem log_sum_inequality
@@ -419,7 +419,7 @@ theorem log_sum_inequality
 ```
 
 `negMulLog` 形（絶対連続条件 `b i = 0 → a i = 0` 付き）も
-`log_sum_inequality_negMulLog` (`Common2026/Fano/DPI.lean`) として形式化済み。
+`log_sum_inequality_negMulLog` (`InformationTheory/Fano/DPI.lean`) として形式化済み。
 
 ---
 
@@ -431,7 +431,7 @@ theorem log_sum_inequality
 \(D(\mu \circ f^{-1} \,\|\, \nu \circ f^{-1}) \le D(\mu \,\|\, \nu)\)。
 DPI の基盤となる plumbing 定理。
 
-**Verified**: `klDiv_map_le` (`Common2026/Shannon/DPI.lean`)
+**Verified**: `klDiv_map_le` (`InformationTheory/Shannon/DPI.lean`)
 
 ```lean
 theorem klDiv_map_le {α β : Type*}
@@ -446,7 +446,7 @@ theorem klDiv_map_le {α β : Type*}
 \(Y\) を後処理 \(f\) に通すと相互情報量は増えない:
 \(I(X; f(Y)) \le I(X; Y)\)。
 
-**Verified**: `mutualInfo_le_of_postprocess` (`Common2026/Shannon/DPI.lean`)
+**Verified**: `mutualInfo_le_of_postprocess` (`InformationTheory/Shannon/DPI.lean`)
 
 ```lean
 theorem mutualInfo_le_of_postprocess
@@ -461,7 +461,7 @@ theorem mutualInfo_le_of_postprocess
 マルコフ連鎖 \(X \to Z \to Y\) のもとで、相互情報量は「中継変数」を超えない。
 本ライブラリではマルコフ連鎖を結合分布の条件付き独立分解として定義する。
 
-**Verified (定義)**: `IsMarkovChain` (`Common2026/Shannon/CondMutualInfo.lean`)
+**Verified (定義)**: `IsMarkovChain` (`InformationTheory/Shannon/CondMutualInfo.lean`)
 
 ```lean
 def IsMarkovChain (μ : Measure Ω) [IsFiniteMeasure μ]
@@ -472,10 +472,10 @@ def IsMarkovChain (μ : Measure Ω) [IsFiniteMeasure μ]
 ```
 
 **Verified**: マルコフ連鎖下の条件付き相互情報量ゼロ
-`condMutualInfo_eq_zero_of_markov` (`Common2026/Shannon/CondMutualInfo.lean`):
+`condMutualInfo_eq_zero_of_markov` (`InformationTheory/Shannon/CondMutualInfo.lean`):
 \(I(X; Y \mid Z) = 0\)。
 
-**Verified**: `mutualInfo_le_of_markov` (`Common2026/Shannon/CondMutualInfo.lean`)
+**Verified**: `mutualInfo_le_of_markov` (`InformationTheory/Shannon/CondMutualInfo.lean`)
 
 ```lean
 theorem mutualInfo_le_of_markov
@@ -494,7 +494,7 @@ DPI の応用として、記憶のない (memoryless) 通信路では
 （Cover & Thomas Thm 7.2.1 系、本章で先取り形式化済み）。
 
 **Verified**: `mutualInfo_le_sum_per_letter_of_memoryless_strong`
-(`Common2026/Shannon/CondEntropyMemoryless.lean`)
+(`InformationTheory/Shannon/CondEntropyMemoryless.lean`)
 
 ```lean
 theorem mutualInfo_le_sum_per_letter_of_memoryless_strong
@@ -530,7 +530,7 @@ theorem mutualInfo_le_sum_per_letter_of_memoryless_strong
 別途、Mathlib の条件付き独立性補題を経由して形式化済み（後述 `isSufficient_iff_factorized`）。
 
 **Verified (定義)**: `IsSufficientStatistic`
-(`Common2026/Shannon/SufficientStatistic.lean`, 名前空間 `InformationTheory.Shannon`)
+(`InformationTheory/Shannon/SufficientStatistic.lean`, 名前空間 `InformationTheory.Shannon`)
 
 ```lean
 def IsSufficientStatistic
@@ -541,7 +541,7 @@ def IsSufficientStatistic
 ```
 
 **Verified**: `mutualInfo_eq_of_sufficient`
-(`Common2026/Shannon/SufficientStatistic.lean`)
+(`InformationTheory/Shannon/SufficientStatistic.lean`)
 
 ```lean
 theorem mutualInfo_eq_of_sufficient
@@ -569,7 +569,7 @@ theorem mutualInfo_eq_of_sufficient
 `condIndepFun_iff_*`（`Mathlib/Probability/Independence/Conditional.lean`）を経由して閉じる。
 
 **Verified (定義)**: `IsSufficientStatisticFactorized`
-(`Common2026/Shannon/SufficientStatistic.lean`)
+(`InformationTheory/Shannon/SufficientStatistic.lean`)
 
 ```lean
 def IsSufficientStatisticFactorized
@@ -582,7 +582,7 @@ def IsSufficientStatisticFactorized
 ```
 
 **Verified**: `isSufficient_iff_factorized`
-(`Common2026/Shannon/SufficientStatistic.lean`)
+(`InformationTheory/Shannon/SufficientStatistic.lean`)
 
 ```lean
 theorem isSufficient_iff_factorized
@@ -611,7 +611,7 @@ H(X \mid Y) \le H_b(P_e) + P_e \log(|\mathcal{X}| - 1),
 ### 測度論版（決定論的復号器）
 
 **Verified**: `fano_inequality_measure_theoretic`
-(`Common2026/Fano/Measure.lean`, 名前空間 `InformationTheory.MeasureFano`)
+(`InformationTheory/Fano/Measure.lean`, 名前空間 `InformationTheory.MeasureFano`)
 
 ```lean
 theorem fano_inequality_measure_theoretic
@@ -631,7 +631,7 @@ theorem fano_inequality_measure_theoretic
 
 有限結合 pmf `FiniteJointPMF X X` に対する基本形（`qaryEntropy` 形）:
 
-**Verified**: `fano_core` / `fano_inequality` (`Common2026/Fano/Core.lean`)
+**Verified**: `fano_core` / `fano_inequality` (`InformationTheory/Fano/Core.lean`)
 
 ```lean
 theorem fano_core (hcard : 2 ≤ Fintype.card X) :
@@ -643,7 +643,7 @@ theorem fano_inequality (hcard : 2 ≤ Fintype.card X) :
 
 ファノの不等式の逆向き（誤り確率の strict 下界）も形式化済み:
 
-**Verified**: `error_lower_bound` (`Common2026/Fano/Core.lean`)
+**Verified**: `error_lower_bound` (`InformationTheory/Fano/Core.lean`)
 
 ```lean
 theorem error_lower_bound (hcard : 2 ≤ Fintype.card X) {a : ℝ}
@@ -696,7 +696,7 @@ Cover & Thomas Ch.2 のうち、本パイロットのスコープ（離散・有
    完全式はソース行番号参照に逃がした。原稿層では「式の核」と
    「regularity 仮定の束」を分離表示する仕組みが要りそう。
 
-5. **`condEntropy` が `Common2026/Fano/` 名前空間に居る**: Ch.2 中核の
+5. **`condEntropy` が `InformationTheory/Fano/` 名前空間に居る**: Ch.2 中核の
    条件付きエントロピー定義が `InformationTheory.MeasureFano.condEntropy` という
    一見 Ch.7/Fano 寄りの名前空間にある。章 ↔ ファイルの対応が 1:1 でないため、
    原稿生成の「章 → 紐付け定理」マッピングは roadmap だけでなく

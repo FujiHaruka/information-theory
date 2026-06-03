@@ -2,7 +2,7 @@
 
 Generated: 2026-05-24T10:16:54.411Z
 Idle gap threshold: 5 min
-File prefix filter: `Common2026/Shannon/AWGNAchievabilityDischarge`
+File prefix filter: `InformationTheory/Shannon/AWGNAchievabilityDischarge`
 
 ## サマリー（合計）
 
@@ -49,7 +49,7 @@ File prefix filter: `Common2026/Shannon/AWGNAchievabilityDischarge`
 
 | File | Edit | Write |
 |---|---|---|
-| `Common2026/Shannon/AWGNAchievabilityDischarge.lean` | 5 | 0 |
+| `InformationTheory/Shannon/AWGNAchievabilityDischarge.lean` | 5 | 0 |
 | `docs/metrics/awgn-power-constraint-realizable-pivot-phase2.manifest.json` | 0 | 1 |
 
 ## トークン使用量

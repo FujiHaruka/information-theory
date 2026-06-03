@@ -1,6 +1,6 @@
 # Type-class size lower bound (E-2) ムーンショット計画 🌙
 
-> 実態整合 (2026-05-20): DONE-UNCOND — `typeClassByCount_card_ge_entropy` (`Common2026/Shannon/TypeClassLowerBound.lean:139`、`(c)(hc_sum : Σ c = n) : ((n+1)^|α|)⁻¹ · exp(n · entropyByCount c n) ≤ |T_c|`) を 0 sorry で証明、`entropyByCount` `:38` + bridge identity `pow_div_prod_pow_eq_exp_n_entropyByCount` 経由で既存 `typeClassByCount_card_ge` を rewrite。pass-through / `Prop := True` 不在。
+> 実態整合 (2026-05-20): DONE-UNCOND — `typeClassByCount_card_ge_entropy` (`InformationTheory/Shannon/TypeClassLowerBound.lean:139`、`(c)(hc_sum : Σ c = n) : ((n+1)^|α|)⁻¹ · exp(n · entropyByCount c n) ≤ |T_c|`) を 0 sorry で証明、`entropyByCount` `:38` + bridge identity `pow_div_prod_pow_eq_exp_n_entropyByCount` 経由で既存 `typeClassByCount_card_ge` を rewrite。pass-through / `Prop := True` 不在。
 
 > **シード由来**: `docs/moonshot-seeds.md` §E.E-2 (2026-05-13 起草)
 > Cover-Thomas 11.1.3 size lower bound — `|T(P)| ≥ (n+1)^{-|α|} · exp(n·H(P))`。
@@ -12,7 +12,7 @@
 - [x] Phase 0 — 起草: 既存 `typeClassByCount_card_ge` (生形) の確認 ✅
 - [x] Phase 1 — `entropyByCount` 定義 + bridge identity ✅
 - [x] Phase 2 — entropy 形 main theorem ✅
-- [x] Phase 3 — Common2026.lean 登録 + seeds.md 更新 ✅
+- [x] Phase 3 — InformationTheory.lean 登録 + seeds.md 更新 ✅
 
 ## ゴール / Approach
 
@@ -30,7 +30,7 @@ n^n / ∏ c(a)^{c(a)} = exp(n · H(c/n))
 
 ### Approach
 
-1. **新規 file** `Common2026/Shannon/TypeClassLowerBound.lean` を作成 (`SanovLDPEquality`
+1. **新規 file** `InformationTheory/Shannon/TypeClassLowerBound.lean` を作成 (`SanovLDPEquality`
    1394 行に追加でなく分離 — downstream import を軽くする)。
 2. **`entropyByCount` 定義**: `klDivIndex` の `Q = uniformOn` 特殊化ではなく直接定義
    (`klDivIndex` は asymmetric で uniform 代入時 plumbing 重い、独立定義の方が短い)。
@@ -62,7 +62,7 @@ Bridge identity の proof outline:
     (`Nat.eq_zero_or_pos`: `c = 0` 側は両辺 0、`c > 0` 側は `Real.log_div` 標準)
   - `∑ c · log n = n · log n` via `∑ c = n` (cast 経由)
 
-実装: `Common2026/Shannon/TypeClassLowerBound.lean` (181 行)。
+実装: `InformationTheory/Shannon/TypeClassLowerBound.lean` (181 行)。
 
 ## Phase 2 — entropy 形 main theorem ✅
 
@@ -80,7 +80,7 @@ theorem typeClassByCount_card_ge_entropy
 
 ## Phase 3 — 登録 + seeds.md 更新 ✅
 
-- `Common2026.lean` に `import Common2026.Shannon.TypeClassLowerBound` 追加。
+- `InformationTheory.lean` に `import InformationTheory.Shannon.TypeClassLowerBound` 追加。
 - `docs/moonshot-seeds.md` E-2 行を ✅ + plan pointer に更新。
 
 ## 判断ログ

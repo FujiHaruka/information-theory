@@ -15,7 +15,7 @@
 
 成果物:
 
-- `Common2026/<file>.lean` — N 行、0 errors / 0 warnings / 0 sorry
+- `InformationTheory/<file>.lean` — N 行、0 errors / 0 warnings / 0 sorry
 - ...
 - `lake build` 通過
 

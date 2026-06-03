@@ -1,12 +1,12 @@
 # Shannon コード (B-8) ムーンショット計画 🌙
 
-> 実態整合 (2026-05-20): DONE-UNCOND — `shannonCode_expected_length_bounds` (`Common2026/Shannon/ShannonCode.lean:345`) ほか `shannonLength_kraft_le_one` `:129`、`entropyD_le_expectedLength_of_kraft` `:164`、`expectedLength_shannon_lt_entropyD_add_one` `:261` が 0 sorry で publish。標準 typeclass binder のみ、pass-through / `Prop := True` 不在。
+> 実態整合 (2026-05-20): DONE-UNCOND — `shannonCode_expected_length_bounds` (`InformationTheory/Shannon/ShannonCode.lean:345`) ほか `shannonLength_kraft_le_one` `:129`、`entropyD_le_expectedLength_of_kraft` `:164`、`expectedLength_shannon_lt_entropyD_add_one` `:261` が 0 sorry で publish。標準 typeclass binder のみ、pass-through / `Prop := True` 不在。
 
-> Status (2026-05-12): **完了 ✅** (期待長 sandwich、語長水準)。シードカード [B-8](../moonshot-seeds.md#b-追加-2026-05-11-起草既存-5-シード--b-1b-4-を踏まえた後続) を膨らませた本命。**Kraft 逆向き (prefix code 存在構成) は別 plan で完了**: [shannon-code-kraft-reverse-plan.md](shannon-code-kraft-reverse-plan.md) (B-8', `Common2026/Shannon/ShannonCodeKraftReverse.lean` 498 行、Shannon-Fano D-進数構成)。
+> Status (2026-05-12): **完了 ✅** (期待長 sandwich、語長水準)。シードカード [B-8](../moonshot-seeds.md#b-追加-2026-05-11-起草既存-5-シード--b-1b-4-を踏まえた後続) を膨らませた本命。**Kraft 逆向き (prefix code 存在構成) は別 plan で完了**: [shannon-code-kraft-reverse-plan.md](shannon-code-kraft-reverse-plan.md) (B-8', `InformationTheory/Shannon/ShannonCodeKraftReverse.lean` 498 行、Shannon-Fano D-進数構成)。
 
 ## 進捗
 
-- [x] Phase 0 — Mathlib + 既存 Common2026 API インベントリ ✅ → [`shannon-code-mathlib-inventory.md`](shannon-code-mathlib-inventory.md)
+- [x] Phase 0 — Mathlib + 既存 InformationTheory API インベントリ ✅ → [`shannon-code-mathlib-inventory.md`](shannon-code-mathlib-inventory.md)
 - [x] Phase A — D-ary entropy `entropyD` + Shannon 語長 `shannonLength` + 期待長 `expectedLength` 定義
 - [x] Phase B — Shannon 語長の Kraft 充足 `shannonLength_kraft_le_one`: `Σ D^{-l(a)} ≤ 1`
 - [x] Phase C — 期待長下界 `entropyD_le_expectedLength_of_kraft`: 任意 lengths が Kraft 充足 ⟹ `H_D(P) ≤ E[L]` (Gibbs)
@@ -43,7 +43,7 @@ Mathlib の符号 → 語長の bridge は本シードでは不要。
 **ファイル構成**:
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   ShannonCode.lean   ← 全部
 ```
 

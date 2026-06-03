@@ -18,7 +18,7 @@
 
 ### ゴール
 
-`Common2026/Shannon/WynerZiv{Achievability,Converse}.lean` に残置している **3 件の tier 5 defect** (`@residual(defect:circular)` / `@residual(defect:false-statement)`) を tier 2 (`sorry` + `@residual(wall:...)` または `@residual(plan:...)`) まで **2 段昇格** する。`wynerziv-phase2-predicate-removal-plan.md` Phase 2.x で全 11 declaration を honest_residual (tier 2) 化したのと同方針、ただし対象が「load-bearing predicate consumer」ではなく「signature 自体が defect」の 3 件。
+`InformationTheory/Shannon/WynerZiv{Achievability,Converse}.lean` に残置している **3 件の tier 5 defect** (`@residual(defect:circular)` / `@residual(defect:false-statement)`) を tier 2 (`sorry` + `@residual(wall:...)` または `@residual(plan:...)`) まで **2 段昇格** する。`wynerziv-phase2-predicate-removal-plan.md` Phase 2.x で全 11 declaration を honest_residual (tier 2) 化したのと同方針、ただし対象が「load-bearing predicate consumer」ではなく「signature 自体が defect」の 3 件。
 
 BM Wave 6 commit `fe28966` (`docs/shannon/brunn-minkowski-signature-rewrite-plan.md` Phase 1+2) と完全に同型構造の sweep:
 
@@ -39,7 +39,7 @@ BM Wave 6 commit `fe28966` (`docs/shannon/brunn-minkowski-signature-rewrite-plan
 Phase 0 verbatim 確認 (本 plan 起草時 2026-05-26):
 
 ```bash
-rg -n 'wyner_ziv_achievability_rate|wyner_ziv_achievability_existence|wyner_ziv_converse_rate' Common2026/ --type lean
+rg -n 'wyner_ziv_achievability_rate|wyner_ziv_achievability_existence|wyner_ziv_converse_rate' InformationTheory/ --type lean
 ```
 
 結果: **Lean 本体 caller 0 件** (3 declaration とも自己定義 + docstring 言及のみ)。
@@ -78,7 +78,7 @@ BM Wave 6 では `wall:uniform-max-entropy-on-convex-body` + `wall:bm-additive-c
 
 ## SoT
 
-- **コード**: `Common2026/Shannon/WynerZivAchievability.lean:77, :104` + `Common2026/Shannon/WynerZivConverse.lean:253` の `@residual` タグが現状の source of truth。本 plan 完了時に `defect:circular` / `defect:false-statement` → `plan:wyner-ziv-discharge-moonshot-plan` に書換、signature を linkage hyp 形に改変。
+- **コード**: `InformationTheory/Shannon/WynerZivAchievability.lean:77, :104` + `InformationTheory/Shannon/WynerZivConverse.lean:253` の `@residual` タグが現状の source of truth。本 plan 完了時に `defect:circular` / `defect:false-statement` → `plan:wyner-ziv-discharge-moonshot-plan` に書換、signature を linkage hyp 形に改変。
 - **vocab register**: `docs/audit/audit-tags.md` の既存 Defect kind 語彙 (`circular` / `false-statement`) + `@residual(plan:wyner-ziv-discharge-moonshot-plan)` (既存 slug、新規 promote なし)。
 - **honesty 階層**: Tier 5 → Tier 2 (2 段昇格) は BM Wave 6 で同型実証済 (commit `fe28966`)。
 
@@ -88,13 +88,13 @@ BM Wave 6 では `wall:uniform-max-entropy-on-convex-body` + `wall:bm-additive-c
 
 - [ ] **0.1** 3 declaration の verbatim location 再確認 (line drift 防止):
   ```bash
-  rg -n 'theorem wyner_ziv_achievability_rate|theorem wyner_ziv_achievability_existence|theorem wyner_ziv_converse_rate' Common2026/Shannon/WynerZiv*.lean
+  rg -n 'theorem wyner_ziv_achievability_rate|theorem wyner_ziv_achievability_existence|theorem wyner_ziv_converse_rate' InformationTheory/Shannon/WynerZiv*.lean
   ```
   本 plan 起草時 (2026-05-26): `WynerZivAchievability.lean:77` + `:104` + `WynerZivConverse.lean:253`。
 
 - [ ] **0.2** Downstream consumer rg (verbatim 件数 → scope 確認):
   ```bash
-  rg -n 'wyner_ziv_achievability_rate|wyner_ziv_achievability_existence|wyner_ziv_converse_rate' Common2026/ --type lean
+  rg -n 'wyner_ziv_achievability_rate|wyner_ziv_achievability_existence|wyner_ziv_converse_rate' InformationTheory/ --type lean
   ```
   本 plan 起草時 verbatim 結果 (上記 Approach §「中核 observation」表 verbatim):
   - **Lean 本体 caller 0 件** (3 declaration とも自己定義 + docstring 言及のみ)
@@ -204,7 +204,7 @@ linkage hypothesis として **`(h_R_gt : R > wynerZivRatePmf U P_XY d D)`** を
   - (α) 採用時: 「Phase D-3 tier5-defect-discharge — signature rewrite で `(h_R_gt : R > wynerZivRatePmf ...)` を追加、`le_of_lt` で proof done 化。`@residual(defect:false-statement)` を削除、Tier 1 `@audit:ok` 移行 candidate (auditor verdict 待ち)。」
   - (β) 採用時: 「Phase D-3 tier5-defect-discharge — signature rewrite で precondition `(h_R_gt : ...)` を追加、`<` から `≤` lift は本来 trivial だが、achievability 本体の closure (random binning + AEP) が完了するまで body は `sorry` のまま、`@residual(plan:wyner-ziv-discharge-moonshot-plan)` で集約。」
 
-- [ ] **1.5** `lake env lean Common2026/Shannon/WynerZivAchievability.lean` で type-check done 確認:
+- [ ] **1.5** `lake env lean InformationTheory/Shannon/WynerZivAchievability.lean` で type-check done 確認:
   - (α) 採用時: 0 errors、0 sorry warning (proof done)
   - (β) 採用時: 0 errors、1 sorry warning
 
@@ -276,7 +276,7 @@ theorem wyner_ziv_achievability_existence
   に書換 (signature 改変ゼロ、body `sorry` 維持、tier 5 → tier 2 1 段昇格)。
   ```
 
-- [ ] **2.3** `lake env lean Common2026/Shannon/WynerZivAchievability.lean` 0 errors 確認 (1 sorry warning + Phase 1 の sorry 件数に応じて累計 1-2 sorry warning)。signature 改変ゼロ → Pattern A 不発。
+- [ ] **2.3** `lake env lean InformationTheory/Shannon/WynerZivAchievability.lean` 0 errors 確認 (1 sorry warning + Phase 1 の sorry 件数に応じて累計 1-2 sorry warning)。signature 改変ゼロ → Pattern A 不発。
 
 - [ ] **2.4** **Inline alert チェック**: タグ書換のみ、signature は既に well-formed (Phase 0.4 で `defect:circular` は **stale** と verify 済) → tier 5 → tier 2 1 段昇格、新規 honesty issue なし。
 
@@ -356,7 +356,7 @@ theorem wyner_ziv_converse_rate
 - [ ] **3.4** docstring 末尾の `@residual` タグを書換:
   - `@residual(defect:false-statement)` → `@residual(plan:wyner-ziv-discharge-moonshot-plan)`
 
-- [ ] **3.5** `lake env lean Common2026/Shannon/WynerZivConverse.lean` 0 errors 確認 (1 sorry warning + 既存 `wyner_ziv_converse_existence` の sorry warning で計 2 sorry warning)。Pattern A 不発 (Phase 0.2 で consumer 0 件確認済)。
+- [ ] **3.5** `lake env lean InformationTheory/Shannon/WynerZivConverse.lean` 0 errors 確認 (1 sorry warning + 既存 `wyner_ziv_converse_existence` の sorry warning で計 2 sorry warning)。Pattern A 不発 (Phase 0.2 で consumer 0 件確認済)。
 
 - [ ] **3.6** **Inline alert チェック**:
   - linkage hyp `h_M_le : (M : ℝ) ≤ Real.exp ((n : ℝ) * R)` は **operational rate の標準形** (`_existence` form の結論内部式と verbatim 整合)、conclusion-as-hypothesis ではない (結論 `R ≤ R_WZ(D)` は rate-vs-rate ordering、hyp は size-vs-exp(rate) inequality で型が異なる)
@@ -380,27 +380,27 @@ theorem wyner_ziv_converse_rate
 
 - [ ] **V.1** 全 WynerZiv*.lean file (本 plan 影響 2 file 中心) で `lake env lean` 確認:
   ```bash
-  lake env lean Common2026/Shannon/WynerZivAchievability.lean
-  lake env lean Common2026/Shannon/WynerZivConverse.lean
+  lake env lean InformationTheory/Shannon/WynerZivAchievability.lean
+  lake env lean InformationTheory/Shannon/WynerZivConverse.lean
   ```
   期待: 両 file 0 errors、累計 sorry warning 件数は Phase 1 (α/β) + Phase 2 + Phase 3 に応じて 2-3 件。
 
 - [ ] **V.2** タグ集計 (canonical declaration-direct grep, `docs/audit/sorry-migration-runbook.md` Pattern D):
   ```bash
-  rg -n '@residual\(defect:false-statement\)|@residual\(defect:circular\)' Common2026/Shannon/WynerZiv*.lean
+  rg -n '@residual\(defect:false-statement\)|@residual\(defect:circular\)' InformationTheory/Shannon/WynerZiv*.lean
   ```
   → 期待: **0 hits** (3 件全削減)。
 
   ```bash
-  rg -n '@residual\(plan:wyner-ziv-discharge-moonshot-plan\)' Common2026/Shannon/WynerZiv*.lean | wc -l
+  rg -n '@residual\(plan:wyner-ziv-discharge-moonshot-plan\)' InformationTheory/Shannon/WynerZiv*.lean | wc -l
   ```
   → 期待: WynerZiv Phase 2.x 完了状態の 15 件 + 本 plan 追加 2 件 (Phase 2 `_existence` + Phase 3 `_converse_rate`) = **17 件**、Phase 1 (α) 採用時は Phase 1 で減算 → 16 件 (但し Phase 1 では `@residual(defect:false-statement)` 削除 + 新規 `@residual` 不付与なので、Phase 2.x 完了 15 + 本 plan Phase 2 +1 + Phase 3 +1 = 17 件のまま、Phase 1 削除分は 16 件)。
   Phase 1 (β) 採用時: 15 + 3 = **18 件**。
 
 - [ ] **V.3** `lake env lean` で BM Wave 6 と同様の sanity check:
   ```bash
-  lake env lean Common2026/Shannon/WynerZiv.lean
-  lake env lean Common2026/Shannon/WynerZivAchievabilityBridge.lean
+  lake env lean InformationTheory/Shannon/WynerZiv.lean
+  lake env lean InformationTheory/Shannon/WynerZivAchievabilityBridge.lean
   ```
   Phase 0.2 で consumer 0 件確認済 → これらは未 touch だが、import side-effect での `unknown identifier` 等を弾く spot-check。
 

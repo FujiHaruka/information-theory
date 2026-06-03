@@ -23,18 +23,18 @@ shannon_converse_single_shot_markov_encoder
 
 成果物:
 
-- `Common2026/Shannon/CondMutualInfo.lean` — **新規 353 行**、0 errors / 0 sorry
+- `InformationTheory/Shannon/CondMutualInfo.lean` — **新規 353 行**、0 errors / 0 sorry
   - `condMutualInfo` (compProd 形定義)
   - `IsMarkovChain` (γ-form: joint factorization)
   - `mutualInfo_chain_rule` (3 重 compProd plumbing 経由)
   - `condMutualInfo_eq_zero_of_markov`
   - `mutualInfo_le_of_markov` (`I(X; Y) ≤ I(Z; Y)` under `X → Z → Y`)
   - 補助 `permZXY_ZYX` / `permZYX_Z_XY` (`MeasurableEquiv` 2 本)、`product_map_perm_eq_compProd` / `factored_map_perm_eq_compProd_prod` (private plumbing 補題 2 本)
-- `Common2026/Shannon/Converse.lean` — `shannon_converse_single_shot_markov_encoder` を末尾追記 (240 行)
-- `Common2026/Shannon/MutualInfo.lean` — `klDiv_map_measurableEquiv` を `private` から public に格上げ (1 行 diff)
+- `InformationTheory/Shannon/Converse.lean` — `shannon_converse_single_shot_markov_encoder` を末尾追記 (240 行)
+- `InformationTheory/Shannon/MutualInfo.lean` — `klDiv_map_measurableEquiv` を `private` から public に格上げ (1 行 diff)
 - `docs/shannon/shannon-condmi-inventory.md` — Phase 4-δ-(b) 着手前の Mathlib 在庫調査 (146 行、subagent 3 並列で 1 ターン)
 
-`lake env lean Common2026/Shannon/CondMutualInfo.lean` / `Converse.lean` ともに silent。`lake build Common2026.Shannon.CondMutualInfo Common2026.Shannon.Converse` 通過。
+`lake env lean InformationTheory/Shannon/CondMutualInfo.lean` / `Converse.lean` ともに silent。`lake build InformationTheory.Shannon.CondMutualInfo InformationTheory.Shannon.Converse` 通過。
 
 ## 1. 問題のキャラクター
 
@@ -44,10 +44,10 @@ shannon_converse_single_shot_markov_encoder
 
 | Phase | 主要ファイル | 行数 | 性格 |
 |---|---|---|---|
-| Phase 4-α (DPI) | `Common2026/Shannon/DPI.lean` | 168 行 | klDiv の DPI 接続 |
-| Phase 4-β (bridge) | `Common2026/Shannon/Bridge.lean` | 588 行 | KL ↔ entropy − condEntropy 同値 |
-| Phase 4-γ (本体) | `Common2026/Shannon/Converse.lean` | 124 行 → 240 行 | plumbing 層の組み合わせ (Markov 版で +116 行) |
-| **Phase 4-δ-(b) (本回)** | **`Common2026/Shannon/CondMutualInfo.lean`** | **353 行** | condMI 定義 + chain rule 自作 plumbing |
+| Phase 4-α (DPI) | `InformationTheory/Shannon/DPI.lean` | 168 行 | klDiv の DPI 接続 |
+| Phase 4-β (bridge) | `InformationTheory/Shannon/Bridge.lean` | 588 行 | KL ↔ entropy − condEntropy 同値 |
+| Phase 4-γ (本体) | `InformationTheory/Shannon/Converse.lean` | 124 行 → 240 行 | plumbing 層の組み合わせ (Markov 版で +116 行) |
+| **Phase 4-δ-(b) (本回)** | **`InformationTheory/Shannon/CondMutualInfo.lean`** | **353 行** | condMI 定義 + chain rule 自作 plumbing |
 
 ## 2. 数学的方針
 

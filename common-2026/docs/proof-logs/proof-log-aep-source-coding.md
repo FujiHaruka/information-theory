@@ -17,8 +17,8 @@
 
 成果物:
 
-- `Common2026/Shannon/AEP.lean` (+368 行 → 累計 ~800 行) — Phase A: `entropy_jointRV_eq_n_smul` (Pi 化 entropy chain rule、Han route) / Phase B: Slepian-Wolf 流儀 4-step skeleton 再演 (Step C DPI 省略) / Phase C: `source_coding_weak_converse_aep` (`Filter.liminf` 形主定理)
-- `lake env lean Common2026/Shannon/AEP.lean` silent / `lake build Common2026.Shannon.AEP` 緑
+- `InformationTheory/Shannon/AEP.lean` (+368 行 → 累計 ~800 行) — Phase A: `entropy_jointRV_eq_n_smul` (Pi 化 entropy chain rule、Han route) / Phase B: Slepian-Wolf 流儀 4-step skeleton 再演 (Step C DPI 省略) / Phase C: `source_coding_weak_converse_aep` (`Filter.liminf` 形主定理)
+- `lake env lean InformationTheory/Shannon/AEP.lean` silent / `lake build InformationTheory.Shannon.AEP` 緑
 - 行数 +368 は plan target 210〜350 を 18 行超過、ceiling 450 内 (主因は §4.1 の `IsCoboundedUnder` discharge plumbing)
 
 ## 1. 問題のキャラクター
@@ -38,7 +38,7 @@
 
 ### Phase B: Slepian-Wolf 流儀 4-step skeleton
 
-`shannon_converse_single_shot` 3 form は uniform `Msg` 仮定が `X^n` で破綻。代わりに `slepian_wolf_converse_X` (`Common2026/Shannon/SlepianWolf.lean:217`) と同形の 4-step を `X^n` 上で再演:
+`shannon_converse_single_shot` 3 form は uniform `Msg` 仮定が `X^n` で破綻。代わりに `slepian_wolf_converse_X` (`InformationTheory/Shannon/SlepianWolf.lean:217`) と同形の 4-step を `X^n` 上で再演:
 
 1. `H(X^n) ≤ H(Y^n) + H(X^n | Y^n)` — `mutualInfo_eq_entropy_sub_condEntropy` bridge
 2. `H(Y^n) ≤ log M_n` — `entropy_le_log_card`
@@ -57,19 +57,19 @@ Slepian-Wolf converse とは bound 形が異なり、**Step C (DPI postprocess) 
 
 | 必要だったもの | クエリ | 試行 | 結果 |
 |---|---|---|---|
-| Pi 化 entropy chain rule (`H(X^n) = n · H(X)`) | loogle `entropy.*Measure.pi`, rg | 3 | **Mathlib + Common2026 両方不在**。自前構築 |
+| Pi 化 entropy chain rule (`H(X^n) = n · H(X)`) | loogle `entropy.*Measure.pi`, rg | 3 | **Mathlib + InformationTheory 両方不在**。自前構築 |
 | `Filter.liminf_le_liminf` | loogle `Filter.liminf_le_liminf` | 1 | `Mathlib/Order/LiminfLimsup.lean:205` |
 | `IsCoboundedUnder.of_frequently_le` | loogle `IsCoboundedUnder.of_frequently` | 1 | 既存 |
 | `iIndepFun.indepFun_finset` | loogle | 1 | `Mathlib/Probability/Independence/Basic.lean:839` |
-| `entropy_eq_of_identDistrib` | rg Common2026 | 1 | 既存 (`MeasureFano.entropy_eq_of_identDistrib`) |
-| `condEntropy_eq_entropy_of_indepFun` | rg Common2026 | 1 | 不在、Phase A で自前構築 (mutualInfo bridge + `mutualInfo_eq_zero_iff_indep`) |
+| `entropy_eq_of_identDistrib` | rg InformationTheory | 1 | 既存 (`MeasureFano.entropy_eq_of_identDistrib`) |
+| `condEntropy_eq_entropy_of_indepFun` | rg InformationTheory | 1 | 不在、Phase A で自前構築 (mutualInfo bridge + `mutualInfo_eq_zero_iff_indep`) |
 | `Tendsto.mul_const` (real) | loogle, rg | 2 | `Filter.Tendsto.mul_const` 不在 (`ENNReal.Tendsto.mul_const` のみ)、`.mul tendsto_const_nhds` で代替 |
 | `binEntropy_continuous` | loogle | 1 | Mathlib 既存 |
 
 「Mathlib に無かった」もの:
 
-- **Pi 化 entropy chain rule** (`H((Xs i)_{i:Fin n}) = n · H(Xs 0)` for i.i.d.) — Mathlib + Common2026 両方不在。Han route (既存 `jointEntropy_chain_rule_finRange` + `condEntropy_eq_entropy_of_indepFun` 自前 + `entropy_eq_of_identDistrib` 既存) で 80 行構築。**Track 3 の `klDiv_pi_eq_n_smul` (98 行) とペアで上流 PR 候補** (両者とも `MeasurableEquiv.piFinSuccAbove` + Pi reshape を使う)。
-- **`condEntropy_eq_entropy_of_indepFun`** (X ⫫ Y ⇒ `H(X | Y) = H(X)`) — Common2026 不在、Phase A で自前構築。`mutualInfo_eq_zero_iff_indep` + `mutualInfo_eq_entropy_sub_condEntropy` で 10 行。**上流 PR 候補**。
+- **Pi 化 entropy chain rule** (`H((Xs i)_{i:Fin n}) = n · H(Xs 0)` for i.i.d.) — Mathlib + InformationTheory 両方不在。Han route (既存 `jointEntropy_chain_rule_finRange` + `condEntropy_eq_entropy_of_indepFun` 自前 + `entropy_eq_of_identDistrib` 既存) で 80 行構築。**Track 3 の `klDiv_pi_eq_n_smul` (98 行) とペアで上流 PR 候補** (両者とも `MeasurableEquiv.piFinSuccAbove` + Pi reshape を使う)。
+- **`condEntropy_eq_entropy_of_indepFun`** (X ⫫ Y ⇒ `H(X | Y) = H(X)`) — InformationTheory 不在、Phase A で自前構築。`mutualInfo_eq_zero_iff_indep` + `mutualInfo_eq_entropy_sub_condEntropy` で 10 行。**上流 PR 候補**。
 - **`Filter.Tendsto.mul_const`** (実数値) — `ENNReal.Tendsto.mul_const` は存在するが実数値版は名前で見つからず。`.mul tendsto_const_nhds` で組成可能なため critical ではないが、混乱 source。
 
 ## 4. 試行錯誤と後戻り
@@ -82,7 +82,7 @@ Slepian-Wolf converse とは bound 形が異なり、**Step C (DPI postprocess) 
 
 **抜け方**: theorem signature に `hM_bdd : ∃ R, ∀ n, log M_n / n ≤ R` (rate-bounded 仮定) を追加し、`IsCoboundedUnder.of_frequently_le` で discharge。
 
-**教訓**: Mathlib `Filter.liminf` の cobounded semantics は plan inventory 段階で見落とされやすい。Plan の Phase 0 inventory 軸 1 「Filter.liminf 完備」記述は cobounded condition を言及していなかった (本 proof-log 執筆時に plan 判断ログに amend 追記済)。代案 `EReal.liminf` 化 (`EReal` は完備順序で `sSup ℝ = +∞`) は statement 全体に coercion 波及するため不採用。**実用 (`M_n = 2^⌈nR⌉` rate-bounded codes) では `hM_bdd` は caller 1 行で trivial に提供可**。Common2026 既存の Slepian-Wolf converse / Stein converse も同様に rate-bounded 仮定下の statement で一貫する形式化スタイル。
+**教訓**: Mathlib `Filter.liminf` の cobounded semantics は plan inventory 段階で見落とされやすい。Plan の Phase 0 inventory 軸 1 「Filter.liminf 完備」記述は cobounded condition を言及していなかった (本 proof-log 執筆時に plan 判断ログに amend 追記済)。代案 `EReal.liminf` 化 (`EReal` は完備順序で `sSup ℝ = +∞`) は statement 全体に coercion 波及するため不採用。**実用 (`M_n = 2^⌈nR⌉` rate-bounded codes) では `hM_bdd` は caller 1 行で trivial に提供可**。InformationTheory 既存の Slepian-Wolf converse / Stein converse も同様に rate-bounded 仮定下の statement で一貫する形式化スタイル。
 
 ### 4.2 Pi 値 reshape を `ℕ`-indexed `Xs` 上で実施
 
@@ -116,7 +116,7 @@ Slepian-Wolf converse とは bound 形が異なり、**Step C (DPI postprocess) 
 
 - **数学的アイデア**: Cover-Thomas 5.4.1 の標準論法、新規ゼロ。
 - **AEP Phase A〜C plumbing 再利用**: `aep_ae` / typical set 3 性質は Phase D で直接呼ばず、`H(X^n) = n · H(X)` から組み立てたため独立に動いた。
-- **`fano_inequality_measure_theoretic` の発火**: Common2026 既存、引数 4 つで一発。
+- **`fano_inequality_measure_theoretic` の発火**: InformationTheory 既存、引数 4 つで一発。
 - **`binEntropy_continuous` + `tendsto_one_div_atTop_nhds_zero_nat`**: Mathlib に揃っており `δ_n → 0` の証明は標準パーツの組み合わせで済んだ。
 - **Han route の選択**: 撤退ライン準備していた direct 帰納より plumbing が薄く第一選択になった (実装前判断は Phase A 着手後に subagent が即決)。
 - **コンテキスト長**: 1M context + subagent 委任で圧迫感なし。

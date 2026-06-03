@@ -1,7 +1,7 @@
 # AWGN F-1 (kernel measurability) discharge ムーンショット計画 🌙 (T2-A follow-up)
 
 > 実態整合 (2026-05-20): DONE-UNCOND — `isAwgnChannelMeasurable` 完全証明済。
-> `Common2026/Shannon/AWGNF1Discharge.lean:60` `theorem isAwgnChannelMeasurable (N : ℝ≥0) : IsAwgnChannelMeasurable N` を
+> `InformationTheory/Shannon/AWGNF1Discharge.lean:60` `theorem isAwgnChannelMeasurable (N : ℝ≥0) : IsAwgnChannelMeasurable N` を
 > `gaussianReal_map_const_add` + `measurable_measure_prodMk_left` の実 Mathlib 証明 (`:= True` ではない、0 sorry) で discharge。
 > `awgn_theorem_F1_discharged` (L100) は `h_meas` 引数を消去して再 publish 済 (残りの F-2/F-3 系 hyp は honest pass-through で継続)。
 
@@ -32,13 +32,13 @@
 >
 > **Status (2026-05-20)**: 着手前。親 AWGN plan は **F-1 + F-2 + F-3 + F-4 退避形**
 > (`awgn_channel_coding_theorem` の signature で全部 hypothesis pass-through) で
-> 0 sorry 完了済 (`Common2026/Shannon/AWGN.lean` 275 行 + `AWGNAchievability.lean` 72 行 +
+> 0 sorry 完了済 (`InformationTheory/Shannon/AWGN.lean` 275 行 + `AWGNAchievability.lean` 72 行 +
 > `AWGNConverse.lean` 94 行 + `AWGNMain.lean` 107 行)。本 plan はその `h_meas`
 > (= `IsAwgnChannelMeasurable N`) を **Mathlib `gaussianReal_map_const_add` ×
 > Giry-monad measurability** で完全証明し、`awgn_channel_coding_theorem` を **`h_meas`
 > 引数なし形**で再 publish するための後継 plan。
 >
-> **Goal**: `Common2026/Shannon/AWGNF1Discharge.lean` 新規 publish で
+> **Goal**: `InformationTheory/Shannon/AWGNF1Discharge.lean` 新規 publish で
 >
 > ```lean
 > theorem isAwgnChannelMeasurable (N : ℝ≥0) : IsAwgnChannelMeasurable N := …
@@ -80,7 +80,7 @@
 ## 進捗
 
 - [x] Phase 0 — Mathlib measurability API 在庫再確認 ✅ (`measurable_measure_prodMk_left` (root namespace) + `gaussianReal_map_const_add` + `Measure.measurable_of_measurable_coe` で確定)
-- [x] Phase A — `isAwgnChannelMeasurable` 本体補題 publish ✅ (`Common2026/Shannon/AWGNF1Discharge.lean` 148 行)
+- [x] Phase A — `isAwgnChannelMeasurable` 本体補題 publish ✅ (`InformationTheory/Shannon/AWGNF1Discharge.lean` 148 行)
 - [x] Phase B — `awgn_theorem_F1_discharged` + `awgn_capacity_closed_form_F1_discharged` 再 publish ✅ (同 file 内 wrapper)
 - [x] Phase V — verify ✅ (`lake env lean` silent, exit 0, 0 sorry, 0 warning)
 - 2026-05-24 Wave 1.5 retag: F-1 plan は閉、残 4 wrapper の `@audit:suspect(awgn-f1-discharge-moonshot-plan)` を F-2/F-3 担当 plan slug (`awgn-moonshot-plan` / `awgn-mi-bridge-plan` / `awgn-achievability-typicality-plan` / `awgn-converse-aux-plan`) に張替。
@@ -89,7 +89,7 @@
 
 ### Goal (最終定理 signature)
 
-親 plan の `awgn_channel_coding_theorem` (`Common2026/Shannon/AWGNMain.lean:59`) は現状
+親 plan の `awgn_channel_coding_theorem` (`InformationTheory/Shannon/AWGNMain.lean:59`) は現状
 
 ```lean
 theorem awgn_channel_coding_theorem
@@ -269,9 +269,9 @@ theorem awgn_theorem_F1_discharged
         (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
             (gaussianReal 0 P.toNNReal)
             (awgnChannel N (isAwgnChannelMeasurable N))).toReal
-          = Common2026.Shannon.differentialEntropy
+          = InformationTheory.Shannon.differentialEntropy
               (gaussianReal 0 (P.toNNReal + N))
-            - Common2026.Shannon.differentialEntropy (gaussianReal 0 N))
+            - InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N))
     (h_converse : IsAwgnConverseHypothesis P N (isAwgnChannelMeasurable N))
     {R : ℝ} (hR_pos : 0 < R) (hR_lt_C : R < (1/2) * Real.log (1 + P / (N : ℝ)))
     {ε : ℝ} (hε : 0 < ε) :
@@ -299,11 +299,11 @@ theorem awgn_capacity_closed_form_F1_discharged
 
 ### Phase V — verify + 親 plan 反映
 
-- [x] `lake env lean Common2026/Shannon/AWGNF1Discharge.lean` silent ✅
+- [x] `lake env lean InformationTheory/Shannon/AWGNF1Discharge.lean` silent ✅
 - [x] `wc -l` 148 行 (Phase A 本体 + Phase B + Header 内訳) ✅
 - [ ] 親 `awgn-moonshot-plan.md` §撤退ライン F-4 に「discharge 完了 → 本 plan」追記
-- [ ] `Common2026.lean` への import 追加は **seed 制約により defer**
-  (`Common2026.lean` 不変。downstream で必要になった時点で別 commit)
+- [ ] `InformationTheory.lean` への import 追加は **seed 制約により defer**
+  (`InformationTheory.lean` 不変。downstream で必要になった時点で別 commit)
 
 ## 撤退ライン
 
@@ -400,12 +400,12 @@ RHS は **definitionally equal** to `(gaussianReal 0 N) (Prod.mk x ⁻¹' {p | p
 
 ## 関連ファイル
 
-- `Common2026/Shannon/AWGN.lean` (`IsAwgnChannelMeasurable` 述語、`awgnChannel` 定義、
+- `InformationTheory/Shannon/AWGN.lean` (`IsAwgnChannelMeasurable` 述語、`awgnChannel` 定義、
   `awgnCapacity` + `awgnCapacity_eq` (F-2 退避形))
-- `Common2026/Shannon/AWGNAchievability.lean` (`IsAwgnTypicalityHypothesis` + 親
+- `InformationTheory/Shannon/AWGNAchievability.lean` (`IsAwgnTypicalityHypothesis` + 親
   achievability)
-- `Common2026/Shannon/AWGNConverse.lean` (`IsAwgnConverseHypothesis` + 親 converse)
-- `Common2026/Shannon/AWGNMain.lean` (`awgn_channel_coding_theorem` + `awgn_capacity_
+- `InformationTheory/Shannon/AWGNConverse.lean` (`IsAwgnConverseHypothesis` + 親 converse)
+- `InformationTheory/Shannon/AWGNMain.lean` (`awgn_channel_coding_theorem` + `awgn_capacity_
   closed_form` — 親主定理 2 本)
 - `Mathlib/Probability/Distributions/Gaussian/Real.lean` (`gaussianReal_map_const_add`
   + `instIsProbabilityMeasureGaussianReal`)

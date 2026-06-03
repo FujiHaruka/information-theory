@@ -13,7 +13,7 @@
 - [ ] Phase 2 — prob ↔ 幾何 bridge 🔄 (skip — 判断ログ #4 参照、entropy 形を `IsUniformOnEntropyLogVol` honest hyp 経由で済ませたため Phase 2 自体は不要に)
 - [x] Phase 3 — max-entropy + `h` 特化 🔄 (Jensen 積分形 `ConcaveOn.le_map_integral` は Mathlib 在庫 OK だが本実装は **採用せず** — 判断ログ #4: `IsUniformOnEntropyLogVol` 3 本を honest hyp で外出しして `jointDifferentialEntropyPi` 特化 `brunn_minkowski_entropy_jointPi` (§G L493) を閉じる方針へ pivot)
 - [x] Phase 4 — entropy 形 headline restate ✅ (`brunn_minkowski_entropy_inequality_genuine` (§G L531) + `brunn_minkowski_entropy_inequality_scaledMul` (§H L695) の 2 形を publish、旧抽象 `h` 版は signature 保持で残置)
-- [ ] Phase V — clean 🚧 (`lake env lean Common2026/Shannon/BrunnMinkowskiClosure.lean` silent + 残 honest hyp 棚卸し未着手。`@audit:suspect(brunn-minkowski-closure-plan)` 残 2 件 = `brunn_minkowski_volume_indicator` L372 + `brunn_minkowski_entropy_jointPi` L492)
+- [ ] Phase V — clean 🚧 (`lake env lean InformationTheory/Shannon/BrunnMinkowskiClosure.lean` silent + 残 honest hyp 棚卸し未着手。`@audit:suspect(brunn-minkowski-closure-plan)` 残 2 件 = `brunn_minkowski_volume_indicator` L372 + `brunn_minkowski_entropy_jointPi` L492)
 
 ## ゴール / Approach
 
@@ -27,7 +27,7 @@
 
 3. **prob ↔ 幾何 bridge を作る (Phase 2)**。確率変数 `X, Y : Ω → (Fin n → ℝ)` の和 `X+Y` の分布 (`P.map (X+Y)`) と、密度の superlevel-set の Minkowski 和の体積 BM を結ぶ層。独立 → 密度の畳み込み → log-concave 密度の superlevel set は凸体 → n-dim PL (Phase 1) の凸体特殊化を適用。
 
-4. **max-entropy + h 特化 (Phase 3)**。headline の抽象 `h` を `Common2026.Shannon.jointDifferentialEntropyPi` (`MultivariateDiffEntropy.lean:58`) に特化する。entropy 形 BM は「体積 BM (n-dim PL) + uniform 分布が固定 support 上で max-entropy を達成 (`h(μ) ≤ log vol(supp)`, Jensen)」から導出する。`jointDifferentialEntropyPi_le_sum` (subadditivity, genuine 構造) も同 file に既存で entropy 側の足場になる。
+4. **max-entropy + h 特化 (Phase 3)**。headline の抽象 `h` を `InformationTheory.Shannon.jointDifferentialEntropyPi` (`MultivariateDiffEntropy.lean:58`) に特化する。entropy 形 BM は「体積 BM (n-dim PL) + uniform 分布が固定 support 上で max-entropy を達成 (`h(μ) ≤ log vol(supp)`, Jensen)」から導出する。`jointDifferentialEntropyPi_le_sum` (subadditivity, genuine 構造) も同 file に既存で entropy 側の足場になる。
 
 5. **段階着地**。3 bridge は**独立**。Phase 1 だけ閉じれば **体積版 BM (n-dim PL) は閉じる** (entropy 版は別)。Phase 3 の `h` 特化は signature 変更を伴うため、headline を `jointDifferentialEntropyPi` 版に restate する**新定理として publish** し (Phase 4)、旧抽象 `h` 版 (`brunn_minkowski_entropy_inequality`) は deprecated として残す (取り消し線にはせず、過去参照のため signature 保持)。
 
@@ -35,7 +35,7 @@
 - n-dim PL の**結論形を、entropy 接続 (Phase 3) が要求する形に合わせる**。すなわち体積比の log-concavity `vol((1-λ)A+λB) ≥ vol(A)^{1-λ} vol(B)^λ` (multiplicative form) を主結論とする。これは `prekopa_leindler_1D_superlevel_discharged` の結論形 `intF^λ * intG^(1-λ) ≤ intH` と同形であり、`Real.mul_rpow` / `Real.rpow_natCast` で entropy power `exp((2/n)h)` に直結する。textbook の additive form `|A+B|^{1/n} ≥ |A|^{1/n}+|B|^{1/n}` は別の equivalence lemma (AM-GM via `bm_additive_to_multiplicative`, genuine 既存) で派生させる。
 - Fubini の slice split は **`Fin (n+1) → ℝ` vs `ℝ × (Fin n → ℝ)`** の `MeasurableEquiv` (`MeasurableEquiv.piFinSuccAbove` / `piSplitAt` 系) を使う。`jointDifferentialEntropyPi` は `Fin n → ℝ` 上に既に定義されており、Phase 3 の接続が `volume_pi` / `Measure.pi` の product 構造を直接使えるよう、PL も `Fin n → ℝ` で組む (EuclideanSpace を避ける、`MultivariateDiffEntropy.lean` 設計判断と一致)。
 
-**新規ファイル**: `Common2026/Shannon/BrunnMinkowskiClosure.lean` (想定 ~400-600 行)。完了時 `Common2026.lean` に import 1 行追加。
+**新規ファイル**: `InformationTheory/Shannon/BrunnMinkowskiClosure.lean` (想定 ~400-600 行)。完了時 `InformationTheory.lean` に import 1 行追加。
 
 **proof-log**: 全 Phase で `proof-log: yes` (Fubini 配線は試行錯誤が予想されるため、判断ログだけでなく `docs/proof-logs/proof-log-brunn-minkowski-closure.md` に手数ログを残す)。
 
@@ -93,7 +93,7 @@ Phase 1 の Fubini 配線および Phase 3 Jensen 積分形に必要な Mathlib 
 namespace InformationTheory.Shannon.BrunnMinkowski
 -- imports: BrunnMinkowskiLayerCakeBody, BrunnMinkowskiPLBody,
 --   BrunnMinkowski1DSuperlevelBody, BrunnMinkowskiConcavity,
---   Common2026.Shannon.MultivariateDiffEntropy,
+--   InformationTheory.Shannon.MultivariateDiffEntropy,
 --   Mathlib.MeasureTheory.Constructions.Pi,
 --   Mathlib.MeasureTheory.Integral.Prod
 
@@ -116,7 +116,7 @@ theorem brunn_minkowski_entropy_inequality_genuine ... := by sorry  -- restate
 
 ### Done 条件
 
-- skeleton が `lake env lean Common2026/Shannon/BrunnMinkowskiClosure.lean` で sorry warning のみ (error 0)。
+- skeleton が `lake env lean InformationTheory/Shannon/BrunnMinkowskiClosure.lean` で sorry warning のみ (error 0)。
 - 上記 base case 補題群の signature が確定し、各 Phase の入口/出口の型が繋がることを確認。
 - Fubini split の `MeasurableEquiv` が Mathlib に存在することを loogle で確認 (gap 不在の確証)。
 
@@ -235,7 +235,7 @@ Phase 0 loogle で Jensen 積分形 `ConcaveOn.le_map_integral` (`Mathlib/Analys
 - [x] **`brunn_minkowski_entropy_inequality_genuine` (§G L531)**: `h := jointDifferentialEntropyPi` 固定版の headline、Phase 3 `brunn_minkowski_entropy_jointPi` への 1 行 forward。honest hyp = uniform 3 + sqrt BM 1。**抽象 `h` の `h_bm` pass-through を経由しない**。
 - [x] **`brunn_minkowski_entropy_inequality_scaledMul` (§H L695)**: 同結論を、geometric honest hyp を sqrt 形 `IsBMEntropyPowerVolumeHyp` から **より primitive** な `IsBMScaledMulHyp` (Cover-Thomas 17.9.2 出発点) に **縮約** した版。`bm_scaledMul_to_sqrt` (§H L589, genuine λ-最適化) を内部で消費。
 - [x] **抽象 `h` 旧版**: `BrunnMinkowski.brunn_minkowski_entropy_inequality` (`:192`) は signature 保持で残置 (取り消し線にせず)。`@[deprecated]` 付与は本 plan scope では未実施 (BM.lean 編集は別 PR 候補、判断ログ 2026-05-24 #5)。
-- [x] `Common2026.lean` に `import Common2026.Shannon.BrunnMinkowskiClosure` 追記済 (file 存在 + 973 行で参照済)。
+- [x] `InformationTheory.lean` に `import InformationTheory.Shannon.BrunnMinkowskiClosure` 追記済 (file 存在 + 973 行で参照済)。
 
 ### Done 条件 ✅
 
@@ -249,7 +249,7 @@ Phase 0 loogle で Jensen 積分形 `ConcaveOn.le_map_integral` (`Mathlib/Analys
 
 `proof-log: docs/proof-logs/proof-log-brunn-minkowski-closure-phase-v.md`。
 
-- [x] `lake env lean Common2026/Shannon/BrunnMinkowskiClosure.lean` silent (0 error / 0 sorry / 0 warning) — 2026-05-25 worktree (`.lake` parent symlink reuse) で confirm、exit 0 / 出力 0 行。
+- [x] `lake env lean InformationTheory/Shannon/BrunnMinkowskiClosure.lean` silent (0 error / 0 sorry / 0 warning) — 2026-05-25 worktree (`.lake` parent symlink reuse) で confirm、exit 0 / 出力 0 行。
 - [x] 残存 honest hypothesis 棚卸し (proof-log §「残存 honest hyp 棚卸し」に verbatim signature 列挙):
   - **§Phase 1 残**: `IsSlicePLReadyHyp` (§D L228、regularity bundle 7-conjunction、`@audit:suspect(brunn-minkowski-closure-plan)` L372) ×1。consumer: `prekopa_leindler_nDim` (`:263`)。
   - **§Phase 3 残 (load-bearing)**: uniform=log-vol equality hyp (`hA_unif/hB_unif/hAB_unif : jointDifferentialEntropyPi (P.map ·) = Real.log vol·`)。**実装は standalone `def IsUniformOnEntropyLogVol` ではなく 3 consumer (`brunn_minkowski_entropy_jointPi` L499-502 / `..._inequality_genuine` L538-541 / `..._inequality_scaledMul` L701-704) に equality hyp として inline**。`@audit:suspect(brunn-minkowski-closure-plan)` L492。Jensen 積分形 discharge は別 sub-plan へ deferred。
@@ -273,7 +273,7 @@ Phase 0 loogle で Jensen 積分形 `ConcaveOn.le_map_integral` (`Mathlib/Analys
 
 - **本 plan の前提診断**: 親 moonshot は pass-through publish 済 (`brunn_minkowski_entropy_inequality := h_bm`、抽象 `h`)。本 closure plan はその L-BM1 を genuine 化する**別 plan** として起草。親に取り消し線は付けず、ポインタ追記のみ。
 - **gap は Fubini 配線、Mathlib 壁ではない**と診断: 1D PL (`prekopa_leindler_1D_superlevel_discharged`) / 1D 測度 BM (`one_dim_bm_scaled`) / AM-GM (`weighted_amgm_lambda`) / layer-cake (Mathlib `Integrable.integral_eq_integral_meas_le`) はすべて genuine 閉。`IsPL2FubiniSliceHyp` (`BrunnMinkowskiPLBody.lean:239`) のみ scalar 等式 placeholder で実 Fubini 未接続。唯一の隠れ gap 候補は `MeasurableEquiv.piFinSuccAbove` の measure 整合 (Phase 0 loogle 確認事項)。
-- **h 特化先確定**: 抽象 `h` を `Common2026.Shannon.jointDifferentialEntropyPi` (`MultivariateDiffEntropy.lean:58`, 今 session 構築) に特化。`jointDifferentialEntropyPi_le_sum` (subadditivity, genuine 構造) が entropy 側足場。h 特化は signature 変更ゆえ新定理 restate (Phase 4)、旧版 deprecate。
+- **h 特化先確定**: 抽象 `h` を `InformationTheory.Shannon.jointDifferentialEntropyPi` (`MultivariateDiffEntropy.lean:58`, 今 session 構築) に特化。`jointDifferentialEntropyPi_le_sum` (subadditivity, genuine 構造) が entropy 側足場。h 特化は signature 変更ゆえ新定理 restate (Phase 4)、旧版 deprecate。
 - **Mathlib-shape 判断**: n-dim PL の結論形を multiplicative form `vol(λA+(1-λ)B) ≥ vol(A)^λ vol(B)^(1-λ)` に固定 (1D PL の結論形 `intF^λ*intG^(1-λ)≤intH` と同形、entropy power `exp((2/n)h)` に `Real.mul_rpow` で直結)。textbook additive form は `bm_additive_to_multiplicative` (genuine 既存) で派生。
 
 ### 2026-05-24 Wave 2 planner refine: Phase 0 verbatim inventory + Phase 1 Fubini tactic sketch + Phase 3 Jensen 積分形 Mathlib 確認 + multivariate subadditivity sub-plan 分離

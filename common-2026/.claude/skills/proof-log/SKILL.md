@@ -21,7 +21,7 @@ Lean 形式化のボトルネックを記録し、claude code 自身の自動証
 
 ### 1. 対象ファイル prefix を確認
 
-ユーザーから対象ファイル群を確認する。例: `Common2026/Shannon/Han.lean` 系列なら prefix は `Common2026/Shannon/Han`。
+ユーザーから対象ファイル群を確認する。例: `InformationTheory/Shannon/Han.lean` 系列なら prefix は `InformationTheory/Shannon/Han`。
 
 ### 2. セッションとコア解答ターンを特定
 

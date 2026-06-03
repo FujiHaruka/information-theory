@@ -91,7 +91,7 @@ since `gaussianConvolution X Z 0 = X` pointwise (`X ω + √0 · Z ω = X ω`).
 
 ## A-6 — V2 sub-predicate: `IsRegularDeBruijnHypV2`
 
-**File**: `Common2026/Shannon/FisherInfoV2DeBruijn.lean:236`
+**File**: `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:236`
 
 ```lean
 structure IsRegularDeBruijnHypV2 {Ω : Type*} [MeasurableSpace Ω]
@@ -114,7 +114,7 @@ structure IsRegularDeBruijnHypV2 {Ω : Type*} [MeasurableSpace Ω]
 
 ## A-7 — V2 Gaussian deBruijn discharge: `deBruijn_identity_v2_gaussian`
 
-**File**: `Common2026/Shannon/FisherInfoV2DeBruijn.lean:360`
+**File**: `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:360`
 
 ```lean
 theorem deBruijn_identity_v2_gaussian
@@ -140,7 +140,7 @@ theorem deBruijn_identity_v2_gaussian
 
 ## A-8 — `gaussianConvolution_law_of_gaussian`
 
-**File**: `Common2026/Shannon/FisherInfoV2DeBruijn.lean:172`
+**File**: `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:172`
 
 ```lean
 theorem gaussianConvolution_law_of_gaussian
@@ -161,7 +161,7 @@ a Gaussian for boundary computations.
 
 ## A-9 — `gaussianConvolution` abbrev + simp
 
-**File**: `Common2026/Shannon/FisherInfoV2DeBruijn.lean:154`
+**File**: `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:154`
 
 ```lean
 noncomputable def gaussianConvolution {α : Type*} (X Z : α → ℝ) (t : ℝ) : α → ℝ :=
@@ -177,7 +177,7 @@ noncomputable def gaussianConvolution {α : Type*} (X Z : α → ℝ) (t : ℝ) 
 
 ## A-10 — `differentialEntropy_gaussianReal_heat_path`
 
-**File**: `Common2026/Shannon/FisherInfoV2DeBruijn.lean:332`
+**File**: `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:332`
 
 ```lean
 theorem differentialEntropy_gaussianReal_heat_path
@@ -192,7 +192,7 @@ theorem differentialEntropy_gaussianReal_heat_path
 
 ## A-11 — `hasDerivAt_half_log_gaussian_entropy`
 
-**File**: `Common2026/Shannon/FisherInfoV2DeBruijn.lean:290`
+**File**: `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:290`
 
 ```lean
 theorem hasDerivAt_half_log_gaussian_entropy
@@ -209,7 +209,7 @@ theorem hasDerivAt_half_log_gaussian_entropy
 
 ## A-12 — `fisherInfoOfMeasureV2Real_gaussianReal` / `fisherInfoOfDensityReal_gaussianPDFReal`
 
-**File**: `Common2026/Shannon/FisherInfoV2.lean:332` / `FisherInfoV2DeBruijn.lean:126`
+**File**: `InformationTheory/Shannon/FisherInfoV2.lean:332` / `FisherInfoV2DeBruijn.lean:126`
 
 ```lean
 theorem fisherInfoOfDensityReal_gaussianPDFReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
@@ -303,11 +303,11 @@ typeclass prerequisites and conclusion form copied verbatim.
 
 ### D-0-1 — `entropyPower` definition + Gaussian closed form
 
-* `Common2026/Shannon/EntropyPowerInequality.lean:93`
+* `InformationTheory/Shannon/EntropyPowerInequality.lean:93`
 
   ```lean
   noncomputable def entropyPower (μ : Measure ℝ) : ℝ :=
-    Real.exp (2 * Common2026.Shannon.differentialEntropy μ)
+    Real.exp (2 * InformationTheory.Shannon.differentialEntropy μ)
   ```
 
   Namespace: `InformationTheory.Shannon.EntropyPowerInequality.entropyPower`.
@@ -316,14 +316,14 @@ typeclass prerequisites and conclusion form copied verbatim.
   always `> 0`; never `-∞` / `0` even for singular `μ` (`Real.exp` is on
   `ℝ → ℝ`, not `EReal`).
 
-* `Common2026/Shannon/EntropyPowerInequality.lean:97`
+* `InformationTheory/Shannon/EntropyPowerInequality.lean:97`
 
   ```lean
   theorem entropyPower_pos (μ : Measure ℝ) : 0 < entropyPower μ :=
     Real.exp_pos _
   ```
 
-* `Common2026/Shannon/EntropyPowerInequality.lean:270-277`
+* `InformationTheory/Shannon/EntropyPowerInequality.lean:270-277`
 
   ```lean
   theorem entropy_power_inequality_gaussian_saturation
@@ -362,36 +362,36 @@ typeclass prerequisites and conclusion form copied verbatim.
   This is the **sign convention** locked by sister (Csiszár gap decreases
   along heat-flow path, so `AntitoneOn` not `MonotoneOn`).
 
-### D-0-3 — `heatFlowPath2` + endpoint lemmas (`Common2026/Shannon/HeatFlowPath.lean`)
+### D-0-3 — `heatFlowPath2` + endpoint lemmas (`InformationTheory/Shannon/HeatFlowPath.lean`)
 
-* `Common2026/Shannon/HeatFlowPath.lean:35`
+* `InformationTheory/Shannon/HeatFlowPath.lean:35`
 
   ```lean
   noncomputable def heatFlowPath2 {α : Type*} (X Z : α → ℝ) (s : ℝ) : α → ℝ :=
     fun ω => Real.sqrt (1 - s) * X ω + Real.sqrt s * Z ω
   ```
 
-  Namespace: `Common2026.Shannon.heatFlowPath2`. Used by D-1
+  Namespace: `InformationTheory.Shannon.heatFlowPath2`. Used by D-1
   `csiszarGap` verbatim (same module exposes it; we re-`open
-  Common2026.Shannon (heatFlowPath2 heatFlowPath2_zero heatFlowPath2_one)`
+  InformationTheory.Shannon (heatFlowPath2 heatFlowPath2_zero heatFlowPath2_one)`
   in EPIL3Integration §13 to match sister's existing usage pattern at
   `EPIStamToBridge.lean:106-107`).
 
-* `Common2026/Shannon/HeatFlowPath.lean:49`
+* `InformationTheory/Shannon/HeatFlowPath.lean:49`
 
   ```lean
   theorem heatFlowPath2_zero {α : Type*} (X Z : α → ℝ) :
       heatFlowPath2 X Z 0 = X
   ```
 
-* `Common2026/Shannon/HeatFlowPath.lean:55`
+* `InformationTheory/Shannon/HeatFlowPath.lean:55`
 
   ```lean
   theorem heatFlowPath2_one {α : Type*} (X Z : α → ℝ) :
       heatFlowPath2 X Z 1 = Z
   ```
 
-* `Common2026/Shannon/HeatFlowPath.lean:42`
+* `InformationTheory/Shannon/HeatFlowPath.lean:42`
 
   ```lean
   theorem measurable_heatFlowPath2 {Ω : Type*} [MeasurableSpace Ω]
@@ -401,7 +401,7 @@ typeclass prerequisites and conclusion form copied verbatim.
 
 ### D-0-4 — Verbatim sister `AntitoneOn` lambda body (D-1 `csiszarGap` shape target)
 
-From `Common2026/Shannon/EPIStamToBridge.lean:210-216`:
+From `InformationTheory/Shannon/EPIStamToBridge.lean:210-216`:
 
 ```lean
 AntitoneOn
@@ -424,7 +424,7 @@ body must use `+` between two functions (not the eta-expanded form) so
 
 ### D-0-5 — Honesty check on `Y := 0`, `Z_Y := 0` degeneration (D-2 strategy β feasibility)
 
-`Common2026/Shannon/DifferentialEntropy.lean:147-159`:
+`InformationTheory/Shannon/DifferentialEntropy.lean:147-159`:
 
 ```lean
 theorem differentialEntropy_dirac (m : ℝ) :

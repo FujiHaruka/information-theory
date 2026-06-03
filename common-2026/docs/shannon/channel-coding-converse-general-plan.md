@@ -9,7 +9,7 @@
 - [x] Phase B — chain rule 代入 + toReal 分配 ✅
 - [x] Phase C — 主定理 `channel_coding_converse_general_chainRule` 完成 ✅
 
-> 実態整合 (2026-05-20): DONE (chain-rule scope) — `channel_coding_converse_general_chainRule` (`Common2026/Shannon/ChannelCodingConverseGeneral.lean:73`、0 sorry) が IID 仮定なしの一般入力 chain-rule 形 `log|M| ≤ ∑ I(X_i; Y^n | X^{<i}).toReal + Fano` を結論。memoryless per-summand bound は予定どおり後継 D-2' / D-2'' (`ChannelCodingConverseGeneralComplete.lean` / `ChannelCodingConverseMemorylessPure.lean`) で完成済。
+> 実態整合 (2026-05-20): DONE (chain-rule scope) — `channel_coding_converse_general_chainRule` (`InformationTheory/Shannon/ChannelCodingConverseGeneral.lean:73`、0 sorry) が IID 仮定なしの一般入力 chain-rule 形 `log|M| ≤ ∑ I(X_i; Y^n | X^{<i}).toReal + Fano` を結論。memoryless per-summand bound は予定どおり後継 D-2' / D-2'' (`ChannelCodingConverseGeneralComplete.lean` / `ChannelCodingConverseMemorylessPure.lean`) で完成済。
 
 ## ゴール / Approach
 
@@ -56,15 +56,15 @@ log |M| ≤ ∑ I(X_i; Y^n | X^{<i}).toReal + h(Pe) + Pe · log(|M| − 1)
 
 ### 既存資産の流用
 
-- `Common2026/Shannon/ChannelCodingConverse.lean` (122 行): 既存 IID 版の n-channel
+- `InformationTheory/Shannon/ChannelCodingConverse.lean` (122 行): 既存 IID 版の n-channel
   scaling 構造をそのまま流用。Step 1 は完全同形。
-- `Common2026/Shannon/Converse.lean` `shannon_converse_single_shot_markov_encoder`: Step 1。
-- `Common2026/Shannon/MIChainRule.lean` `mutualInfo_chain_rule_fin`: Step 2。
-- `Common2026/Shannon/CondMutualInfo.lean` `condMutualInfo_ne_top`: Step 3 の summand 有限性。
+- `InformationTheory/Shannon/Converse.lean` `shannon_converse_single_shot_markov_encoder`: Step 1。
+- `InformationTheory/Shannon/MIChainRule.lean` `mutualInfo_chain_rule_fin`: Step 2。
+- `InformationTheory/Shannon/CondMutualInfo.lean` `condMutualInfo_ne_top`: Step 3 の summand 有限性。
 
 ### 規模見積
 
-- 新規 `Common2026/Shannon/ChannelCodingConverseGeneral.lean` ~120-150 行。
+- 新規 `InformationTheory/Shannon/ChannelCodingConverseGeneral.lean` ~120-150 行。
 - 主定理 1 本: `channel_coding_converse_general_chainRule`。
 - 既存 `ChannelCodingConverse.lean` (122 行) と並立、touch なし。
 
@@ -92,7 +92,7 @@ log |M| ≤ ∑ I(X_i; Y^n | X^{<i}).toReal + h(Pe) + Pe · log(|M| − 1)
 
 ## Phase A — Skeleton + finiteness lemma
 
-- [x] 新規ファイル `Common2026/Shannon/ChannelCodingConverseGeneral.lean` 雛形 (import + namespace
+- [x] 新規ファイル `InformationTheory/Shannon/ChannelCodingConverseGeneral.lean` 雛形 (import + namespace
   + 主定理 signature `:= by sorry`)。
 - [x] Lean が compile 通る (sorry warning のみ) ことを確認。
 - [x] `condMutualInfo_ne_top` の prerequisites (StandardBorel / Nonempty for `Fin i.val → α`
@@ -111,7 +111,7 @@ log |M| ≤ ∑ I(X_i; Y^n | X^{<i}).toReal + h(Pe) + Pe · log(|M| − 1)
 - [x] 主定理名: `channel_coding_converse_general_chainRule`。
 - [x] signature: 既存 IID 版から `h_iid_*` / `h_copy_*` 系の IID 仮説を **全削除**、Markov encoder
   仮説と uniform Msg 仮説のみ残す。
-- [x] `lake env lean Common2026/Shannon/ChannelCodingConverseGeneral.lean` で silent output。
+- [x] `lake env lean InformationTheory/Shannon/ChannelCodingConverseGeneral.lean` で silent output。
 
 ## 判断ログ
 

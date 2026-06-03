@@ -2,7 +2,7 @@
 
 > Scope: discharging the two honest hypotheses of
 > `lz78_two_sided_optimality_distinct_bdd_free`
-> (`Common2026/Shannon/LZ78DistinctEncoding.lean:412`):
+> (`InformationTheory/Shannon/LZ78DistinctEncoding.lean:412`):
 > `h_achiev : IsLZ78AchievabilityChainHyp` and
 > `h_converse : IsLZ78ConverseChainHyp`.
 > The SMB / ergodic layer (`blockLogAvg ↔ entropyRate`) is **already genuine**
@@ -43,7 +43,7 @@ existing pieces."
 
 ## 主定理の最終形（再掲）
 
-`Common2026/Shannon/LZ78DistinctEncoding.lean:412`:
+`InformationTheory/Shannon/LZ78DistinctEncoding.lean:412`:
 
 ```lean
 theorem lz78_two_sided_optimality_distinct_bdd_free
@@ -95,19 +95,19 @@ Mathlib → **0 hits**. `loogle "ProbabilityTheory.entropy"` →
 
 | 概念 | API | file:line | 状態 | LZ78-Ziv での扱い |
 |---|---|---|---|---|
-| base Shannon entropy `H(X)` (over μ) | `entropy` | `Common2026/Shannon/Entropy.lean` (def imported from `Pi`/`MeasureFano`; used `:20+`) | GENUINE | **expectation-level only** — wrong level for per-path Ziv |
-| cond. entropy `H(X\|Y)` (over μ) | `MeasureFano.condEntropy` | `Common2026/Fano/Measure.lean:68` | GENUINE | expectation-level |
-| 2-var chain rule `H(X,Y)=H(X)+H(Y\|X)` | `entropy_pair_eq_entropy_add_condEntropy` | `Common2026/Shannon/Entropy.lean:41` | GENUINE | base case of n-var chain |
-| **n-var chain rule** `H(X₀,…,X_{n-1})=Σ H(Xᵢ\|X₀..X_{i-1})` | `jointEntropy_chain_rule` | `Common2026/Shannon/Han.lean:56` | GENUINE | **fixed `Fin n`, NOT random `c`; expectation-level** |
-| Han subadditivity-family `(n-1)H(Xs)≤Σ H(Xs except i)` | `han_inequality` | `Common2026/Shannon/Han.lean:330` | GENUINE | wrong shape (Han, not `H≤ΣH`) |
-| conditioning reduces entropy `H(X\|Y)≤H(X)` | `entropy_ge_condEntropy` | `Common2026/Shannon/SlepianWolf.lean:164` | GENUINE | the step that turns chain rule → subadditivity |
-| `H(X\|Y,Z)≤H(X\|Y)` | `condEntropy_le_condEntropy_of_pair` | `Common2026/Shannon/Entropy.lean:240` | GENUINE | same |
-| subset chain rule `H(X_S)=Σ_{i∈S} H(Xᵢ\|X_{S∩<i})` | `jointEntropySubset_chain_rule` | `Common2026/Shannon/HanD.lean:191` | GENUINE | over a `Finset`, still expectation-level + fixed index space |
+| base Shannon entropy `H(X)` (over μ) | `entropy` | `InformationTheory/Shannon/Entropy.lean` (def imported from `Pi`/`MeasureFano`; used `:20+`) | GENUINE | **expectation-level only** — wrong level for per-path Ziv |
+| cond. entropy `H(X\|Y)` (over μ) | `MeasureFano.condEntropy` | `InformationTheory/Fano/Measure.lean:68` | GENUINE | expectation-level |
+| 2-var chain rule `H(X,Y)=H(X)+H(Y\|X)` | `entropy_pair_eq_entropy_add_condEntropy` | `InformationTheory/Shannon/Entropy.lean:41` | GENUINE | base case of n-var chain |
+| **n-var chain rule** `H(X₀,…,X_{n-1})=Σ H(Xᵢ\|X₀..X_{i-1})` | `jointEntropy_chain_rule` | `InformationTheory/Shannon/Han.lean:56` | GENUINE | **fixed `Fin n`, NOT random `c`; expectation-level** |
+| Han subadditivity-family `(n-1)H(Xs)≤Σ H(Xs except i)` | `han_inequality` | `InformationTheory/Shannon/Han.lean:330` | GENUINE | wrong shape (Han, not `H≤ΣH`) |
+| conditioning reduces entropy `H(X\|Y)≤H(X)` | `entropy_ge_condEntropy` | `InformationTheory/Shannon/SlepianWolf.lean:164` | GENUINE | the step that turns chain rule → subadditivity |
+| `H(X\|Y,Z)≤H(X\|Y)` | `condEntropy_le_condEntropy_of_pair` | `InformationTheory/Shannon/Entropy.lean:240` | GENUINE | same |
+| subset chain rule `H(X_S)=Σ_{i∈S} H(Xᵢ\|X_{S∩<i})` | `jointEntropySubset_chain_rule` | `InformationTheory/Shannon/HanD.lean:191` | GENUINE | over a `Finset`, still expectation-level + fixed index space |
 | **per-sample subadditivity `H≤Σ Hᵢ` over RANDOM `c`** | — | — | ❌ **不在** | the core need |
 
 #### `jointEntropy_chain_rule` (full signature, verbatim)
 
-`Common2026/Shannon/Han.lean:56` — context vars at `:36-39`
+`InformationTheory/Shannon/Han.lean:56` — context vars at `:36-39`
 `{n : ℕ} {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
 [MeasurableSingletonClass α] {Ω : Type*} [MeasurableSpace Ω]`:
 
@@ -137,7 +137,7 @@ Conclusion (verbatim): see above — `jointEntropy μ Xs = ∑ i : Fin n, …con
 
 #### `entropy_ge_condEntropy` (full signature, verbatim)
 
-`Common2026/Shannon/SlepianWolf.lean:164`:
+`InformationTheory/Shannon/SlepianWolf.lean:164`:
 ```lean
 theorem entropy_ge_condEntropy
     {Ω : Type*} [MeasurableSpace Ω]
@@ -155,7 +155,7 @@ type of `Ws`; `Y` only needs `[MeasurableSpace Y]`.
 
 #### `condEntropy_le_condEntropy_of_pair` (verbatim)
 
-`Common2026/Shannon/Entropy.lean:240` — context `{X,Y,Z}` each
+`InformationTheory/Shannon/Entropy.lean:240` — context `{X,Y,Z}` each
 `[Fintype _] [DecidableEq _] [Nonempty _] [MeasurableSpace _]
 [MeasurableSingletonClass _]`, `{Ω} [MeasurableSpace Ω]`:
 ```lean
@@ -177,7 +177,7 @@ theorem condEntropy_le_condEntropy_of_pair
 | **finset Jensen (convex)** | `ConvexOn.map_sum_le` | `Mathlib/Analysis/Convex/Jensen.lean:67` | GENUINE |
 | finset Jensen (concave) | `ConcaveOn.le_map_sum` | `Mathlib/Analysis/Convex/Jensen.lean:73` | GENUINE |
 | **packaged log-sum ineq** `Σaᵢlog(aᵢ/bᵢ)≥(Σaᵢ)log(Σaᵢ/Σbᵢ)` | — | — | ❌ **不在 (Mathlib + project)** |
-| project log-sum (`sum_negMulLog_…`) | `sum_negMulLog_sub_le_sum_mul_log_card` | `Common2026/Fano/Core.lean:85` | GENUINE but **different inequality** (entropy ≤ log card, not log-sum) |
+| project log-sum (`sum_negMulLog_…`) | `sum_negMulLog_sub_le_sum_mul_log_card` | `InformationTheory/Fano/Core.lean:85` | GENUINE but **different inequality** (entropy ≤ log card, not log-sum) |
 
 `rg 'log_sum|logSum'` over Mathlib → 0 packaged lemmas; project hits
 (`ConditionalMethodOfTypes.logSumAbs`, …) are unrelated `Σ\|log\|` magnitudes.
@@ -249,7 +249,7 @@ envelope and `lz78DistinctEncodingLength_eq`, this yields
 
 ### Q4 — `blockLogAvg` ↔ block-probability
 
-`blockLogAvg` definition (verbatim), `Common2026/Shannon/ShannonMcMillanBreiman.lean:55`
+`blockLogAvg` definition (verbatim), `InformationTheory/Shannon/ShannonMcMillanBreiman.lean:55`
 — context `{Ω}[MeasurableSpace Ω] {α}[Fintype α][DecidableEq α][Nonempty α]
 [MeasurableSpace α][MeasurableSingletonClass α]`:
 ```lean
@@ -361,13 +361,13 @@ status quo.
 
 ## 着手 skeleton
 
-`Common2026/Shannon/LZ78ZivEntropyBridge.lean` の出だし:
+`InformationTheory/Shannon/LZ78ZivEntropyBridge.lean` の出だし:
 
 ```lean
-import Common2026.Shannon.LZ78ZivInequality
-import Common2026.Shannon.LZ78ConverseAsymptotic
-import Common2026.Shannon.LZ78DistinctEncoding
-import Common2026.Shannon.ShannonMcMillanBreiman
+import InformationTheory.Shannon.LZ78ZivInequality
+import InformationTheory.Shannon.LZ78ConverseAsymptotic
+import InformationTheory.Shannon.LZ78DistinctEncoding
+import InformationTheory.Shannon.ShannonMcMillanBreiman
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import Mathlib.Analysis.Convex.Jensen
 

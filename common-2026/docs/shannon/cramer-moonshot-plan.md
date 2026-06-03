@@ -3,9 +3,9 @@
 > **sorry-based 移行完了 (2026-05-25)** — `docs/shannon/cramer-sorry-migration-plan.md`
 > に従い、本 plan に属する 8 件の `@audit:suspect(cramer-moonshot-plan)` を
 > `sorry + @residual(plan:cramer-moonshot-plan)` に書換 (load-bearing hypothesis を
-> signature から削除、body は `sorry` 1 行)。対象: `Common2026/Shannon/Cramer.lean` の
+> signature から削除、body は `sorry` 1 行)。対象: `InformationTheory/Shannon/Cramer.lean` の
 > 4 件 (`cramer_upper_legendre` / `cramer_lower` / `cramer_lower_legendre` / `cramer_tendsto`)
-> + `Common2026/Shannon/CramerPhaseDGapWorkaround.lean` の 4 件
+> + `InformationTheory/Shannon/CramerPhaseDGapWorkaround.lean` の 4 件
 > (`isMeasureInfinitePiTiltedEq_of_cylinder_density` / `cramer_lower_phase_d_via_cylinder`
 > / `cramer_tendsto_phase_d_via_cylinder` / `IsCramerChernoffNLetterRNUnified.cramerPhaseC`)。
 > 3 つの load-bearing predicate (`IsMeasureInfinitePiTiltedEq` / `IsCramerNLetterRNCylinder`
@@ -17,7 +17,7 @@
 > 6 declaration で `hlam_opt` を signature に **戻し**、`cramer_upper_legendre` は constructive
 > 経路で完全 **proof done** 化。net residual: 13 → 7 件 (本 plan 側 residual は 8 → 5 件)。
 
-> 実態整合 (2026-05-20): **進捗ブロック記載どおり (この plan は正確)**。`Common2026/Shannon/Cramer.lean`
+> 実態整合 (2026-05-20): **進捗ブロック記載どおり (この plan は正確)**。`InformationTheory/Shannon/Cramer.lean`
 > (0 sorry) に `cramer_upper` (:272, DONE-HONEST-HYPS: h_pos+h_cobdd)、`cramer_lower` (:448,
 > DONE-HONEST-HYPS: `h_tilted_lower` 残置形 L-C2)、`cramer_lower_legendre` (:557)、`cramer_tendsto`
 > (:589, sandwich) を publish。`cramer_lower` の `h_tilted_lower` 残置は L-C2 撤退どおりだが、後継チェーンで
@@ -34,27 +34,27 @@
 
 > **Parent**: [`textbook-roadmap.md`](../textbook-roadmap.md) §「Tier 1 — T1-C. Cramér's Theorem」
 >
-> **Predecessor (inventory)**: [`cramer-mathlib-inventory.md`](cramer-mathlib-inventory.md) (Mathlib 80% / Common2026 10% / 自作 10%、見積 300〜400 行)
+> **Predecessor (inventory)**: [`cramer-mathlib-inventory.md`](cramer-mathlib-inventory.md) (Mathlib 80% / InformationTheory 10% / 自作 10%、見積 300〜400 行)
 >
 > **Status (2026-05-19)**: 着手前。inventory 完了済、自作要素 5 件 (`legendre` 定義 + 基本性質 / `cramerRate` wrapper / KL-of-tilted 恒等式 / `cramer_upper` / `cramer_lower`) を確定。**Mathlib `cgf` + `Measure.tilted` 直接経路**を採用 (Sanov contraction principle 経由は不採用、判断ログ #1)。**finite-alphabet 系の `bounded RV` 仮定**で `integrableExpSet = univ` を確保 (`interior` 境界処理を回避、判断ログ #3)。
 >
-> **Goal**: 新規ファイル `Common2026/Shannon/Cramer.lean` で **Cover-Thomas Theorem 11.4.1** (Cramér の大偏差定理、IID 和の sample mean upper-tail rate = Legendre transform of CGF) を **`Tendsto` / `limsup` / `liminf` 形**で publish。
+> **Goal**: 新規ファイル `InformationTheory/Shannon/Cramer.lean` で **Cover-Thomas Theorem 11.4.1** (Cramér の大偏差定理、IID 和の sample mean upper-tail rate = Legendre transform of CGF) を **`Tendsto` / `limsup` / `liminf` 形**で publish。
 >
 > **撤退ライン**: [L-C1] upper bound のみ publish / [L-C2] lower bound を仮定形で publish / [L-C3] finite-alphabet `α → ℝ` 専用形に限定 (詳細 §撤退ライン)。
 
 ## 進捗
 
-- [x] Phase 0 — Mathlib + Common2026 API 在庫 ✅ → [`cramer-mathlib-inventory.md`](cramer-mathlib-inventory.md)
+- [x] Phase 0 — Mathlib + InformationTheory API 在庫 ✅ → [`cramer-mathlib-inventory.md`](cramer-mathlib-inventory.md)
 - [x] Phase A — `legendre` + `cramerRate` 定義 + 基本性質 + skeleton ✅ (Tier 0, 2026-05-19)
 - [x] Phase B — Cramér upper bound (per-n Chernoff + log form + limsup form + Legendre form, i.i.d. strengthening) ✅ (Tier 1–3, 2026-05-19)
 - [x] Phase C — Cramér lower bound 🔄 L-C2 縮退 publish (2026-05-19): bounded-RV plumbing (`mem_interior_integrableExpSet_of_bounded` / `isProbabilityMeasure_tilted_of_bounded` / `integral_tilted_eq_deriv_cgf`) + `klDiv_tilted_eq` (KL-of-tilted 恒等式) + `cramer_lower` / `cramer_lower_legendre` (`h_tilted_lower` 仮定形、tilted 下 n-IID LLN は別 plan に defer)。後継 plan `cramer-lc2-discharge-moonshot-plan.md` で Phase A scaffolding (`CramerLC2Discharge.lean` 171 行) を追加 publish (2026-05-19、judgement #6)、Phase B-C は L-D3 撤退で後続 plan へ defer。
-- [x] Phase D — 主定理 wrapper ✅ (2026-05-19): `cramer_tendsto` sandwich (`cramer_upper_legendre` + `cramer_lower_legendre`)、`Common2026.lean` 編入済 (Phase D-4)
+- [x] Phase D — 主定理 wrapper ✅ (2026-05-19): `cramer_tendsto` sandwich (`cramer_upper_legendre` + `cramer_lower_legendre`)、`InformationTheory.lean` 編入済 (Phase D-4)
 
 ## ゴール / Approach
 
 ### Goal (最終定理 signature)
 
-新規ファイル `Common2026/Shannon/Cramer.lean` で 1〜3 主定理 publish:
+新規ファイル `InformationTheory/Shannon/Cramer.lean` で 1〜3 主定理 publish:
 
 ```lean
 namespace InformationTheory.Shannon.Cramer
@@ -132,7 +132,7 @@ statement 形 (`Tendsto` 直書き vs `DotEq` corollary、achievability / conver
 ### Approach 図
 
 ```
-Phase 0 : Mathlib + Common2026 API 在庫                       ← 完了済 (inventory)
+Phase 0 : Mathlib + InformationTheory API 在庫                       ← 完了済 (inventory)
           ──────────────────────────────────────────────
 Phase A : skeleton + `legendre` + `cramerRate` 定義 + 基本性質 ← 0.5-0.75 session (1-1.5h)
                                                                 = Tier 0 (~100 行) baseline
@@ -145,7 +145,7 @@ Phase C : Cramér lower bound (tilted change-of-measure)       ← 1-1.5 session
                                                                 = Tier 2 (~400 行) 理想形
           ←──── 撤退ライン L-C2 (lower 仮定形 publish) ──────→
           ──────────────────────────────────────────────
-Phase D : 主定理 wrapper + Common2026 編入                    ← 0.25 session (0.5h)
+Phase D : 主定理 wrapper + InformationTheory 編入                    ← 0.25 session (0.5h)
 ```
 
 ### 段階的 ship 設計 (Tier 0 / 1 / 2 / 3)
@@ -174,13 +174,13 @@ Phase D : 主定理 wrapper + Common2026 編入                    ← 0.25 sess
 ### ファイル構成 (Phase D 完了想定)
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   Cramer.lean                ← 新規 (T1-C 一括 publish、~400 行)
   Chernoff.lean              ← 既存、変更なし (`chernoffInfo_attained` の `IsCompact.exists_sInf_image_eq`
                                   テンプレ流用、import なしで参考のみ — 互いに無依存に保つ)
-Common2026/InformationTheory/
+InformationTheory/InformationTheory/
   Asymptotic.lean            ← 既存、変更なし (`DotEq` notation 利用、Phase D で optional corollary 用)
-Common2026.lean              ← `import Common2026.Shannon.Cramer` を追記 (Phase D)
+InformationTheory.lean              ← `import InformationTheory.Shannon.Cramer` を追記 (Phase D)
 ```
 
 **Sanov 関連の不依存**: `SanovLDP.lean` / `SanovLDPEquality.lean` は **import しない** (判断ログ #1 経路選択により Sanov contraction principle を経由しない)。同様に `Stein.lean` / `CsiszarProjection.lean` も不要。**新規 import は Mathlib `Probability.Moments.*` + `Probability.Independence.InfinitePi` + `Probability.IdentDistrib` + `MeasureTheory.Measure.Tilted` のみ** (CLAUDE.md `Import Policy` 厳守、`import Mathlib` は使わない)。
@@ -198,23 +198,23 @@ Common2026.lean              ← `import Common2026.Shannon.Cramer` を追記 (P
 - [x] **Mathlib `Probability.ProductMeasure`**: `Measure.infinitePi`, `Measure.infinitePi_map_eval`
 - [x] **Mathlib `Probability.StrongLaw` 系**: LLN (Phase C で in-probability 弱形を Chebyshev で代替する場合は不要)
 - [x] **Mathlib `Topology.Order.Compact`**: `IsCompact.exists_sSup_image_eq` (Tier 3 達成性用、Tier 2 では未使用)
-- [x] `Common2026/InformationTheory/Asymptotic.lean` (`DotEq` notation、Phase D optional corollary 用)
+- [x] `InformationTheory/InformationTheory/Asymptotic.lean` (`DotEq` notation、Phase D optional corollary 用)
 
 **参考 (import しない)**:
 
-- `Common2026/Shannon/Chernoff.lean` (`chernoffInfo_attained` の `IsCompact.exists_sInf_image_eq` 戦略はテンプレ流用するが、`chernoffZSum ≠ mgf` であり **互いに別物**)
-- `Common2026/Shannon/SanovLDPEquality.lean`, `Common2026/Shannon/SanovLDP.lean` (経路選択により不使用、判断ログ #1)
-- `Common2026/Shannon/IIDProductInput.lean` (より軽い `Measure.infinitePi (fun _ => μ)` を直接使う、in-place ~10 行 plumbing、判断ログ #4)
+- `InformationTheory/Shannon/Chernoff.lean` (`chernoffInfo_attained` の `IsCompact.exists_sInf_image_eq` 戦略はテンプレ流用するが、`chernoffZSum ≠ mgf` であり **互いに別物**)
+- `InformationTheory/Shannon/SanovLDPEquality.lean`, `InformationTheory/Shannon/SanovLDP.lean` (経路選択により不使用、判断ログ #1)
+- `InformationTheory/Shannon/IIDProductInput.lean` (より軽い `Measure.infinitePi (fun _ => μ)` を直接使う、in-place ~10 行 plumbing、判断ログ #4)
 
 ---
 
-## Phase 0 — Mathlib + Common2026 API 在庫 ✅
+## Phase 0 — Mathlib + InformationTheory API 在庫 ✅
 
 完了 ([`cramer-mathlib-inventory.md`](cramer-mathlib-inventory.md), 441 行)。
 
 主結論:
 
-- **既存 API カバレッジ 80% (Mathlib) + 10% (Common2026 補助)**: `cgf` / `iIndepFun.cgf_sum` / `measure_ge_le_exp_cgf` / `Measure.tilted` / `integral_tilted_mul_self` / `variance_tilted_mul` で主要部品が完備
+- **既存 API カバレッジ 80% (Mathlib) + 10% (InformationTheory 補助)**: `cgf` / `iIndepFun.cgf_sum` / `measure_ge_le_exp_cgf` / `Measure.tilted` / `integral_tilted_mul_self` / `variance_tilted_mul` で主要部品が完備
 - **自作 5 件**: `legendre` 定義 (~10), `legendre_nonneg` (~20), `cgf_sum_eq_nsmul` (~25), Cramér upper (~100), KL-of-tilted (~40), Cramér lower (~150) — 合計 **~350-540 行**
 - **撤退ライン現時点で発動なし**、新規撤退ライン 3 件 (L-C1〜L-C3) を本 plan に追加 (§撤退ライン)
 - **Sanov contraction principle 経由は不採用** (reshape +120 行コスト回避、判断ログ #1)
@@ -232,13 +232,13 @@ Common2026.lean              ← `import Common2026.Shannon.Cramer` を追記 (P
 
 ### Done 条件
 
-- `Common2026/Shannon/Cramer.lean` 新規作成 + library root 編入準備 (`Common2026.lean` には Phase D で追記)
+- `InformationTheory/Shannon/Cramer.lean` 新規作成 + library root 編入準備 (`InformationTheory.lean` には Phase D で追記)
 - `legendre Λ a := sSup ((fun lam : ℝ => lam * a - Λ lam) '' Set.univ)` 定義
 - `cramerRate X μ a := legendre (cgf X μ) a` wrapper
 - `legendre_apply_le` (`lam * a - Λ lam ≤ legendre Λ a` if BddAbove)
 - `legendre_nonneg` (`Λ 0 = 0` 経由で `legendre Λ a ≥ 0` if BddAbove)
 - `cgf_sum_eq_nsmul` (n-IID + IdentDistrib で `cgf (∑ X_i) μ t = n · cgf (X 0) μ t`)
-- `lake env lean Common2026/Shannon/Cramer.lean` で Phase A 本体 + Phase B-D `sorry` skeleton が clean
+- `lake env lean InformationTheory/Shannon/Cramer.lean` で Phase A 本体 + Phase B-D `sorry` skeleton が clean
 
 ### ステップ
 
@@ -289,7 +289,7 @@ Common2026.lean              ← `import Common2026.Shannon.Cramer` を追記 (P
   - `Finset.sum_const` + `nsmul_eq_mul` で `n · cgf (X 0) μ t`
   - ~20-30 行 (`h_int i` から `Integrable (fun ω => exp (t * X i ω)) μ` を抜き出す plumbing 含む)
 
-- [ ] **A-6 統合 verify**: `lake env lean Common2026/Shannon/Cramer.lean` clean。Phase B-D は `sorry` 残し。
+- [ ] **A-6 統合 verify**: `lake env lean InformationTheory/Shannon/Cramer.lean` clean。Phase B-D は `sorry` 残し。
 
 ### 工数感
 
@@ -374,7 +374,7 @@ Common2026.lean              ← `import Common2026.Shannon.Cramer` を追記 (P
   - **`μ.real {ω | n · a ≤ S_n}` が 0 となる `n` の扱い**: `log 0 = 0` (Mathlib convention) でも `(1/n) · 0 = 0`、上界 `-legendre Λ a` が `≤ 0` 維持なら問題なし。`legendre Λ a ≥ 0` (A-4) で OK。
   - ~20-30 行
 
-- [ ] **B-6 verify**: `lake env lean Common2026/Shannon/Cramer.lean` clean、Phase B 本体 0 sorry、Phase C-D は `sorry` 残し。**Tier 1 publish 候補時点** = L-C1 撤退ラインで切るならここで `Common2026.lean` 編入 (Phase D-4 を前倒し)。
+- [ ] **B-6 verify**: `lake env lean InformationTheory/Shannon/Cramer.lean` clean、Phase B 本体 0 sorry、Phase C-D は `sorry` 残し。**Tier 1 publish 候補時点** = L-C1 撤退ラインで切るならここで `InformationTheory.lean` 編入 (Phase D-4 を前倒し)。
 
 ### 工数感
 
@@ -459,7 +459,7 @@ Common2026.lean              ← `import Common2026.Shannon.Cramer` を追記 (P
   - 「`ε` を取って `n → ∞` を取って `ε → 0`」の二重極限を `Filter.liminf` の monotonicity で正当化
   - ~30-50 行
 
-- [ ] **C-6 verify**: `lake env lean Common2026/Shannon/Cramer.lean` clean、Phase C 本体 0 sorry。
+- [ ] **C-6 verify**: `lake env lean InformationTheory/Shannon/Cramer.lean` clean、Phase C 本体 0 sorry。
 
 ### 工数感
 
@@ -476,7 +476,7 @@ Common2026.lean              ← `import Common2026.Shannon.Cramer` を追記 (P
 
 ### スコープ
 
-`cramer_upper` (Phase B) + `cramer_lower` (Phase C) を sandwich して `cramer_tendsto` (optional) を作り、`Common2026.lean` に編入。
+`cramer_upper` (Phase B) + `cramer_lower` (Phase C) を sandwich して `cramer_tendsto` (optional) を作り、`InformationTheory.lean` に編入。
 
 **proof-log**: no (skeleton 揃ったあとの整地)。
 
@@ -484,9 +484,9 @@ Common2026.lean              ← `import Common2026.Shannon.Cramer` を追記 (P
 
 - `cramer_tendsto` `Tendsto` 形 publish (Phase B + C sandwich)
 - (任意) `cramer_dotEq` corollary (`μ.real {n*a ≤ S_n} ≐ exp(-n · cramerRate (X 0) μ a)`)
-- `Common2026.lean` 更新 (`import Common2026.Shannon.Cramer`)
-- `lake env lean Common2026/Shannon/Cramer.lean` clean (0 sorry, 0 warning)
-- `lake env lean Common2026.lean` clean (library root)
+- `InformationTheory.lean` 更新 (`import InformationTheory.Shannon.Cramer`)
+- `lake env lean InformationTheory/Shannon/Cramer.lean` clean (0 sorry, 0 warning)
+- `lake env lean InformationTheory.lean` clean (library root)
 
 ### ステップ
 
@@ -511,11 +511,11 @@ Common2026.lean              ← `import Common2026.Shannon.Cramer` を追記 (P
   - `dotEq_iff_tendsto_log_div` (`Asymptotic.lean:116`) 経由で `μ.real {...} ≐ exp(-n · cramerRate ...)` を提示
   - ~5-10 行
 
-- [ ] **D-3 final verify**: `lake env lean Common2026/Shannon/Cramer.lean` clean (0 sorry, 0 warning)
+- [ ] **D-3 final verify**: `lake env lean InformationTheory/Shannon/Cramer.lean` clean (0 sorry, 0 warning)
 
 - [ ] **D-4 library root 編入**:
-  - `Common2026.lean` に `import Common2026.Shannon.Cramer` 追記
-  - `lake env lean Common2026.lean` clean 確認
+  - `InformationTheory.lean` に `import InformationTheory.Shannon.Cramer` 追記
+  - `lake env lean InformationTheory.lean` clean 確認
   - ~2-3 行
 
 ### 工数感
@@ -582,7 +582,7 @@ Common2026.lean              ← `import Common2026.Shannon.Cramer` を追記 (P
 
 書く頻度: Phase 中の方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
 
-6. **(2026-05-19) L-C2 後継 discharge plan は Phase A scaffolding まで完了、Phase B-C は後続 plan へ defer (L-D3 撤退)**: 後継 plan `cramer-lc2-discharge-moonshot-plan.md` で `cramer_lower_discharged` (`h_tilted_lower` 仮定なし形) の完全 publish を目指したが、本セッションで Phase A (tilted IID plumbing: `cgf_eval_eq_cgf_base`, `iIndepFun_tilted_ambient`, `identDistrib_tilted_ambient`, `iIndepFun_eval_under_infinitePi`, `identDistrib_eval_under_infinitePi`, `bounded_eval_family`) を `Common2026/Shannon/CramerLC2Discharge.lean` 171 行で publish 達成 (0 sorry, 0 errors, 0 warnings)。一方 Phase B (`strong_law_ae_real` 起動 + in-probability LLN) は **`IsProbabilityMeasure (Measure.infinitePi (fun _ : ℕ => μ₀.tilted ...))` instance の型クラス検索が repeatedly stuck** で詰まり、後続 plan に defer (詳細は後継 plan §判断ログ #1)。本親 plan の `cramer_lower` の **L-C2 退避形 (hypothesis 引数あり) は引き続き有効**、`cramer_lower_discharged` の publish は未達。Phase A scaffolding は後続 plan が import して B/C を継続可能な形で publish。
+6. **(2026-05-19) L-C2 後継 discharge plan は Phase A scaffolding まで完了、Phase B-C は後続 plan へ defer (L-D3 撤退)**: 後継 plan `cramer-lc2-discharge-moonshot-plan.md` で `cramer_lower_discharged` (`h_tilted_lower` 仮定なし形) の完全 publish を目指したが、本セッションで Phase A (tilted IID plumbing: `cgf_eval_eq_cgf_base`, `iIndepFun_tilted_ambient`, `identDistrib_tilted_ambient`, `iIndepFun_eval_under_infinitePi`, `identDistrib_eval_under_infinitePi`, `bounded_eval_family`) を `InformationTheory/Shannon/CramerLC2Discharge.lean` 171 行で publish 達成 (0 sorry, 0 errors, 0 warnings)。一方 Phase B (`strong_law_ae_real` 起動 + in-probability LLN) は **`IsProbabilityMeasure (Measure.infinitePi (fun _ : ℕ => μ₀.tilted ...))` instance の型クラス検索が repeatedly stuck** で詰まり、後続 plan に defer (詳細は後継 plan §判断ログ #1)。本親 plan の `cramer_lower` の **L-C2 退避形 (hypothesis 引数あり) は引き続き有効**、`cramer_lower_discharged` の publish は未達。Phase A scaffolding は後続 plan が import して B/C を継続可能な形で publish。
 
 5. **(2026-05-19) Phase C で撤退ライン L-C2 発動、`cramer_lower` を `h_tilted_lower` 仮定形 publish**: Phase C-1 (`klDiv_tilted_eq` KL-of-tilted 恒等式) と Phase C-2 (`mem_interior_integrableExpSet_of_bounded` / `isProbabilityMeasure_tilted_of_bounded` / `integral_tilted_eq_deriv_cgf` の bounded-RV plumbing) は完走。一方 Phase C-3 (tilted 下 LLN: `(infinitePi μ).tilted (∑ lam * X i)` と `infinitePi (μ.tilted ...)` の n-IID 再構築) は Mathlib に直接 lemma が無く、1 session 内では完了不能。撤退ライン L-C2 発動: `cramer_lower` / `cramer_lower_legendre` の signature に「tilted-下 Chernoff lower bound」を hypothesis `h_tilted_lower` として外出し、tilted-LLN の整備は別 plan (`cramer-tilted-lln-plan.md`) へ defer。これで Cover-Thomas 11.4.1 の **statement 完成形** (`cramer_tendsto` sandwich) は publish 確保。最終 637 行、Tier 2 = 0 sorry。
 
@@ -590,7 +590,7 @@ Common2026.lean              ← `import Common2026.Shannon.Cramer` を追記 (P
 
 1. **(2026-05-19) Sanov contraction principle 経路を不採用、Mathlib `cgf` + `Measure.tilted` 直接経路を採用**: roadmap §T1-C は「`SanovLDPEquality.lean` からほぼ含意」「Sanov LDP からの contraction principle 経由 reshape ~200 行」と見積もるが、inventory §H の **Sanov → Cramér bridge 難しさ分析** で「集合形 `Q^n(⋃ T_c)` から sample mean 形 `Q^n({x | a ≤ S̄_n})` への reshape が 2 段 (E_n 構成 + Donsker-Varadhan 双対) で各 80-150 行」と判明。一方 Mathlib `cgf` + `iIndepFun.cgf_sum` + `measure_ge_le_exp_cgf` + `Measure.tilted` が完備で、Cramér upper bound は **~80-120 行**、lower bound は **~120-180 行**で書ける。**Sanov を再利用しないことで -120 行**、加えて `SanovLDPEquality` / `SanovLDP` / `KLDivContinuous` / `CsiszarProjection` を **import 不要** で `Cramer.lean` を独立 file として保てる (CLAUDE.md `Import Policy` 厳守)。
 
-2. **(2026-05-19) statement 形は `Tendsto` 直書きを main、`DotEq` を corollary に**: Common2026 既存 Stein / Sanov / Pinsker / Chernoff の主定理が全て `Tendsto` 直書き形を採用 (`stein_lemma`, `stein_strong_lemma`, `sanov_ldp_equality`, `chernoff_lemma` (T1-B plan の予定形))、Asymptotic.lean の `DotEq` は **wrapper notation** として後付け corollary 化する style が確立。本 plan も同 style: `cramer_upper` / `cramer_lower` / `cramer_tendsto` を main, `cramer_dotEq` を任意 corollary。Phase D で `dotEq_iff_tendsto_log_div` (`Asymptotic.lean:116`) を呼ぶだけで往復。
+2. **(2026-05-19) statement 形は `Tendsto` 直書きを main、`DotEq` を corollary に**: InformationTheory 既存 Stein / Sanov / Pinsker / Chernoff の主定理が全て `Tendsto` 直書き形を採用 (`stein_lemma`, `stein_strong_lemma`, `sanov_ldp_equality`, `chernoff_lemma` (T1-B plan の予定形))、Asymptotic.lean の `DotEq` は **wrapper notation** として後付け corollary 化する style が確立。本 plan も同 style: `cramer_upper` / `cramer_lower` / `cramer_tendsto` を main, `cramer_dotEq` を任意 corollary。Phase D で `dotEq_iff_tendsto_log_div` (`Asymptotic.lean:116`) を呼ぶだけで往復。
 
 3. **(2026-05-19) finite-alphabet specialization (bounded RV) を採用、`integrableExpSet = univ` で `interior` 境界処理を回避**: inventory §E + §危険 1 で「`integral_tilted_mul_self` / `deriv_cgf` / `variance_tilted_mul` の `interior (integrableExpSet X μ)` 前提が一般 RV 形で +50-100 行 plumbing」「bounded RV では `integrableExpSet = univ` で `interior = univ` ⇒ 自明化」と特定済。本 plan は **`h_bdd : ∃ M, ∀ i ω, |X i ω| ≤ M` 仮定を signature に追加**して finite-alphabet (= textbook Cover-Thomas Theorem 11.4.1 の前提と同じ) に specialize。Tier 3 で一般 RV 形を別 plan (`cramer-general-plan.md`) に切り出す想定。
 

@@ -1,25 +1,25 @@
 # AWGN per-letter MI bridge — Mathlib API 在庫調査
 
 > 発注元: `docs/shannon/awgn-mi-bridge-plan.md`（stub の TODO「`differentialEntropy` の Mathlib 対応物 inventory を先行依頼」）。
-> 対象 sorry: `Common2026/Shannon/AWGNConverse.lean:86-93` の `awgn_converse` body 内 `h_mi_bridge_per_letter`（`@residual(plan:awgn-mi-bridge-plan)`）。
+> 対象 sorry: `InformationTheory/Shannon/AWGNConverse.lean:86-93` の `awgn_converse` body 内 `h_mi_bridge_per_letter`（`@residual(plan:awgn-mi-bridge-plan)`）。
 > Created: 2026-05-28。
 
 ## 一行サマリ
 
-**bridge を構成する道具のうち実体（Bochner 積分・klDiv chain rule・rnDeriv・Gaussian PDF）はほぼ 100% Mathlib + Common2026 既存。だが「連続版 MI = `h(Y) − h(Y|X)`（density-level chain rule）」という結論形そのものは Mathlib 不在で、これが唯一の真の壁（既存率: 部品 ~90% / 結論形 0%）。** 自作必要は実質 1 件（連続 MI chain rule 補題）＋ per-letter mixture を `compProd` 形に乗せる橋渡し 1 件。撤退ライン発動: **No**（既存 `wall:awgn-mi-decomp` の枠内）。**最大の surprise: この壁は本 task 専用ではなく、`AWGNMIDecompBody.lean` の `IsContChannelMIDecompHyp`（load-bearing predicate、tier 4）として既に別経路で「Mathlib 不在」と判定済み — shared sorry 補題への集約が強く推奨される。**
+**bridge を構成する道具のうち実体（Bochner 積分・klDiv chain rule・rnDeriv・Gaussian PDF）はほぼ 100% Mathlib + InformationTheory 既存。だが「連続版 MI = `h(Y) − h(Y|X)`（density-level chain rule）」という結論形そのものは Mathlib 不在で、これが唯一の真の壁（既存率: 部品 ~90% / 結論形 0%）。** 自作必要は実質 1 件（連続 MI chain rule 補題）＋ per-letter mixture を `compProd` 形に乗せる橋渡し 1 件。撤退ライン発動: **No**（既存 `wall:awgn-mi-decomp` の枠内）。**最大の surprise: この壁は本 task 専用ではなく、`AWGNMIDecompBody.lean` の `IsContChannelMIDecompHyp`（load-bearing predicate、tier 4）として既に別経路で「Mathlib 不在」と判定済み — shared sorry 補題への集約が強く推奨される。**
 
 ---
 
 ## 主定理の最終形（再掲）
 
-`Common2026/Shannon/AWGNConverse.lean:86-93`（body 内 honest residual）:
+`InformationTheory/Shannon/AWGNConverse.lean:86-93`（body 内 honest residual）:
 
 ```lean
 have h_mi_bridge_per_letter :
     ∀ {M n : ℕ} [NeZero M] (_hM : 2 ≤ M) (c : AwgnCode M n P), ∀ i : Fin n,
       (perLetterMI h_meas c i).toReal
-        = Common2026.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
-          - Common2026.Shannon.differentialEntropy
+        = InformationTheory.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
+          - InformationTheory.Shannon.differentialEntropy
               (ProbabilityTheory.gaussianReal 0 N) := by
   sorry  -- @residual(plan:awgn-mi-bridge-plan)
 ```
@@ -42,7 +42,7 @@ I(X_i; Y_i) = KL( P_{X_i,Y_i} ‖ P_{X_i} ⊗ P_{Y_i} )
   = h(perLetterYLaw)  − h(𝒩(0,N))         -- 各 fibre h(𝒩(x,N)) = h(𝒩(0,N)) (mean 不変)
 ```
 
-最終の「各 fibre `h(𝒩(x,N)) = h(𝒩(0,N))`」だけは **既に Common2026 で genuine 証明済**（`differentialEntropy_awgnChannel_apply_eq_noise` `AWGNMIBridge.lean:108`）。残りの (1)〜density 展開〜畳み込みが壁。
+最終の「各 fibre `h(𝒩(x,N)) = h(𝒩(0,N))`」だけは **既に InformationTheory で genuine 証明済**（`differentialEntropy_awgnChannel_apply_eq_noise` `AWGNMIBridge.lean:108`）。残りの (1)〜density 展開〜畳み込みが壁。
 
 ---
 
@@ -50,15 +50,15 @@ I(X_i; Y_i) = KL( P_{X_i,Y_i} ‖ P_{X_i} ⊗ P_{Y_i} )
 
 ### A. `differentialEntropy` の Mathlib 対応物（軸 1）
 
-調査結論: **Mathlib に連続版 differential entropy の def は存在しない**（loogle `differentialEntropy` / `MeasureTheory.differentialEntropy` → `unknown identifier`）。Common2026 自前 def が唯一。Mathlib にある関連の primitive は以下。
+調査結論: **Mathlib に連続版 differential entropy の def は存在しない**（loogle `differentialEntropy` / `MeasureTheory.differentialEntropy` → `unknown identifier`）。InformationTheory 自前 def が唯一。Mathlib にある関連の primitive は以下。
 
-| 概念 | Mathlib / Common2026 API | file:line | 状態 | bridge での扱い |
+| 概念 | Mathlib / InformationTheory API | file:line | 状態 | bridge での扱い |
 |---|---|---|---|---|
-| 微分エントロピー def 本体 | `Common2026.Shannon.differentialEntropy (μ : Measure ℝ) : ℝ := ∫ x, Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume` | `DifferentialEntropy.lean:45` | ✅ Common2026 自前（Mathlib 不在） | bridge RHS の両項。density 形 `differentialEntropy_eq_integral_density` で `-∫ f log f` に展開できる |
+| 微分エントロピー def 本体 | `InformationTheory.Shannon.differentialEntropy (μ : Measure ℝ) : ℝ := ∫ x, Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume` | `DifferentialEntropy.lean:45` | ✅ InformationTheory 自前（Mathlib 不在） | bridge RHS の両項。density 形 `differentialEntropy_eq_integral_density` で `-∫ f log f` に展開できる |
 | Mathlib 連続版 differential entropy | — | — | ❌ **Mathlib 不在**（loogle `Found 0` 相当、`unknown identifier 'differentialEntropy'`） | 自前 def を使い続ける一択 |
 | `-x log x` 被積分関数 | `Real.negMulLog (x : ℝ) : ℝ := -x * Real.log x` | `Mathlib/Analysis/SpecialFunctions/Log/NegMulLog.lean:164` | ✅ 既存 | 被積分関数。`negMulLog 0 = 0` で台の境界自動処理 |
-| density 形書換 | `Common2026.Shannon.differentialEntropy_eq_integral_density {f : ℝ → ℝ} (hf : Measurable f) (hf_nn : ∀ x, 0 ≤ f x) (μ : Measure ℝ) (hμ : μ = volume.withDensity (fun x => ENNReal.ofReal (f x))) : differentialEntropy μ = -∫ x, f x * Real.log (f x) ∂volume` | `DifferentialEntropy.lean:65` | ✅ 既存 | chain rule density 展開を `differentialEntropy` 結論形に畳む出口 |
-| Gaussian 値 | `Common2026.Shannon.differentialEntropy_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) : differentialEntropy (gaussianReal m v) = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v)` | `DifferentialEntropy.lean:414` | ✅ 既存 | `h(𝒩(0,N))` の数値化（下流 max-entropy 側で使用、bridge 自体では不要） |
+| density 形書換 | `InformationTheory.Shannon.differentialEntropy_eq_integral_density {f : ℝ → ℝ} (hf : Measurable f) (hf_nn : ∀ x, 0 ≤ f x) (μ : Measure ℝ) (hμ : μ = volume.withDensity (fun x => ENNReal.ofReal (f x))) : differentialEntropy μ = -∫ x, f x * Real.log (f x) ∂volume` | `DifferentialEntropy.lean:65` | ✅ 既存 | chain rule density 展開を `differentialEntropy` 結論形に畳む出口 |
+| Gaussian 値 | `InformationTheory.Shannon.differentialEntropy_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) : differentialEntropy (gaussianReal m v) = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * v)` | `DifferentialEntropy.lean:414` | ✅ 既存 | `h(𝒩(0,N))` の数値化（下流 max-entropy 側で使用、bridge 自体では不要） |
 | 平均不変性（AWGN fibre） | `differentialEntropy_awgnChannel_apply_eq_noise (N : ℝ≥0) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N) (x : ℝ) : differentialEntropy ((awgnChannel N h_meas) x) = differentialEntropy (gaussianReal 0 N)` | `AWGNMIBridge.lean:108` | ✅ 既存（genuine） | **条件 entropy `∫ h(𝒩(x,N)) dp = h(𝒩(0,N))` の核**。fibre 毎の平均シフト不変を Mathlib 直結で証明済 |
 
 判定（軸 1）: **NEGATIVE**（Mathlib に対応 def なし）／ ただし自前 def + 既存補題群で bridge の RHS 側はすべて表現可能。`differentialEntropy` を Mathlib 形に rewrite する選択肢は「Mathlib に rewrite 先が無い」ので消滅（→ 設計判断で後述）。
@@ -69,8 +69,8 @@ I(X_i; Y_i) = KL( P_{X_i,Y_i} ‖ P_{X_i} ⊗ P_{Y_i} )
 
 | 概念 | API | file:line | 状態 | bridge での扱い |
 |---|---|---|---|---|
-| Common2026 MI（KL 形） | `InformationTheory.Shannon.mutualInfo (μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y) : ℝ≥0∞ := klDiv (μ.map (fun ω => (Xs ω, Yo ω))) ((μ.map Xs).prod (μ.map Yo))` | `MutualInfo.lean:37` | ✅ Common2026 自前 | `perLetterMI` の実体。型クラス前提なし（`[MeasurableSpace Ω/X/Y]` のみ、`MutualInfo.lean:31-33`） |
-| Common2026 channel MI | `InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel (p : Measure α) (W : Channel α β) : ℝ≥0∞ := klDiv (jointDistribution p W) (p.prod (outputDistribution p W))` | `ChannelCoding.lean:85` | ✅ Common2026 自前 | `IsContChannelMIDecompHyp` 側で使用。`perLetterMI` は `mutualInfo` 形なので直接は別物 |
+| InformationTheory MI（KL 形） | `InformationTheory.Shannon.mutualInfo (μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y) : ℝ≥0∞ := klDiv (μ.map (fun ω => (Xs ω, Yo ω))) ((μ.map Xs).prod (μ.map Yo))` | `MutualInfo.lean:37` | ✅ InformationTheory 自前 | `perLetterMI` の実体。型クラス前提なし（`[MeasurableSpace Ω/X/Y]` のみ、`MutualInfo.lean:31-33`） |
+| InformationTheory channel MI | `InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel (p : Measure α) (W : Channel α β) : ℝ≥0∞ := klDiv (jointDistribution p W) (p.prod (outputDistribution p W))` | `ChannelCoding.lean:85` | ✅ InformationTheory 自前 | `IsContChannelMIDecompHyp` 側で使用。`perLetterMI` は `mutualInfo` 形なので直接は別物 |
 | **Mathlib KL chain rule** | `InformationTheory.klDiv_compProd_eq_add : klDiv (μ ⊗ₘ κ) (ν ⊗ₘ η) = klDiv μ ν + klDiv (μ ⊗ₘ κ) (μ ⊗ₘ η)` | `Mathlib/InformationTheory/KullbackLeibler/ChainRule.lean:204` | ✅ 既存 | **bridge の足場**。第二項 `klDiv (μ ⊗ₘ κ) (μ ⊗ₘ η)` = 条件 KL。型クラス前提（下記ボックス）に注意 |
 | **Mathlib KL compProd 左不変** | `InformationTheory.klDiv_compProd_left : klDiv (μ ⊗ₘ κ) (ν ⊗ₘ κ) = klDiv μ ν` | `Mathlib/InformationTheory/KullbackLeibler/ChainRule.lean:182` | ✅ 既存 | 同 kernel 約分。条件 KL の reshape に使う候補 |
 | KL → ∫ llr 展開 | `InformationTheory.toReal_klDiv_of_measure_eq` ほか | `Mathlib/InformationTheory/KullbackLeibler/Basic.lean`（`DifferentialEntropy.lean:543` で使用実績） | ✅ 既存 | `klDiv.toReal = ∫ llr ∂μ` の Real 化（`μ.univ = ν.univ` 前提） |
@@ -79,7 +79,7 @@ I(X_i; Y_i) = KL( P_{X_i,Y_i} ‖ P_{X_i} ⊗ P_{Y_i} )
 | **Mathlib `mutualInfo` (連続)** | — | — | ❌ **Mathlib 不在**（loogle `ProbabilityTheory.mutualInfo` → `unknown identifier`） | 自前 `mutualInfo` を使う |
 | **連続 MI = h(Y)−h(Y\|X) 結論形** | — | — | ❌ **Mathlib 不在** | bridge の本体。自作（下記 wall） |
 
-判定（軸 2）: **PARTIAL**。klDiv の compProd chain rule（`klDiv_compProd_eq_add` / `klDiv_compProd_left`）と density 展開の primitive（rnDeriv chain / ∫ llr / integral_rnDeriv_smul）はすべて Mathlib + Common2026 にある。**欠けているのは「これらを束ねて `I = h(Y) − h(Y|X)` の density 等式に到達する補題そのもの」**。
+判定（軸 2）: **PARTIAL**。klDiv の compProd chain rule（`klDiv_compProd_eq_add` / `klDiv_compProd_left`）と density 展開の primitive（rnDeriv chain / ∫ llr / integral_rnDeriv_smul）はすべて Mathlib + InformationTheory にある。**欠けているのは「これらを束ねて `I = h(Y) − h(Y|X)` の density 等式に到達する補題そのもの」**。
 
 ### C. AWGN 特化 — per-letter mixture を chain rule に乗せる橋渡し（軸 3）
 
@@ -101,7 +101,7 @@ I(X_i; Y_i) = KL( P_{X_i,Y_i} ‖ P_{X_i} ⊗ P_{Y_i} )
 | 概念 | API | file:line | 状態 | bridge での扱い |
 |---|---|---|---|---|
 | Mathlib `condEntropy`（連続/測度版） | — | — | ❌ **Mathlib 不在**（loogle `ProbabilityTheory.condEntropy` → `unknown identifier`） | 自前 `∫ x, differentialEntropy (W x) ∂p` で条件 entropy を表現（`IsContChannelMIDecompHyp` の右第二項がまさにこの形） |
-| Common2026 離散 `mutualInfo_eq_entropy_sub_condEntropy` | `InformationTheory.Shannon.mutualInfo_eq_entropy_sub_condEntropy` | `Bridge.lean:588` | ✅ 既存だが**離散専用** | discrete analogue。連続版の参照点のみ |
+| InformationTheory 離散 `mutualInfo_eq_entropy_sub_condEntropy` | `InformationTheory.Shannon.mutualInfo_eq_entropy_sub_condEntropy` | `Bridge.lean:588` | ✅ 既存だが**離散専用** | discrete analogue。連続版の参照点のみ |
 | `condDistrib` + `klDiv` 連携 | — | — | ❌ **Mathlib 不在**（loogle `ProbabilityTheory.condDistrib, InformationTheory.klDiv` → `Found 0 declarations`） | Mathlib に「条件分布で書いた KL」は無い。compProd 形で迂回するしかない |
 
 判定（軸 2 補助）: **NEGATIVE**。Mathlib は条件エントロピー / 条件 MI を連続測度上で提供しない。条件 entropy は本プロジェクト流儀（fibre 微分エントロピーの積分 `∫ h(W x) dp`）で表すしかなく、これは既に `IsContChannelMIDecompHyp` 右第二項として確立済。
@@ -188,8 +188,8 @@ I(X_i; Y_i) = KL( P_{X_i,Y_i} ‖ P_{X_i} ⊗ P_{Y_i} )
 > 本 task は **既存 file 拡張**（新規 file 推奨ではない）。shared 壁補題は AWGN 非依存なので `AWGNMIDecompBody.lean`（既に `IsContChannelMIDecompHyp` が住む）または専用 `AwgnWalls.lean`（converse 壁の集約先、`AWGNConverseDischarge.lean:138` 参照）への追加が筋。以下は shared 壁補題 + per-letter 橋渡しの skeleton。
 
 ```lean
-import Common2026.Meta.EntryPoint
-import Common2026.Shannon.AWGNMIBridge          -- IsContChannelMIDecompHyp / differentialEntropy_awgnChannel_apply_eq_noise
+import InformationTheory.Meta.EntryPoint
+import InformationTheory.Shannon.AWGNMIBridge          -- IsContChannelMIDecompHyp / differentialEntropy_awgnChannel_apply_eq_noise
 import Mathlib.InformationTheory.KullbackLeibler.ChainRule  -- klDiv_compProd_eq_add / klDiv_compProd_left
 
 namespace InformationTheory.Shannon.AWGN
@@ -206,9 +206,9 @@ theorem contChannelMIDecomp_holds
     (p : Measure ℝ) [IsProbabilityMeasure p]
     (W : InformationTheory.Shannon.ChannelCoding.Channel ℝ ℝ) [IsMarkovKernel W] :
     (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel p W).toReal
-      = Common2026.Shannon.differentialEntropy
+      = InformationTheory.Shannon.differentialEntropy
           (InformationTheory.Shannon.ChannelCoding.outputDistribution p W)
-        - (∫ x, Common2026.Shannon.differentialEntropy (W x) ∂p) := by
+        - (∫ x, InformationTheory.Shannon.differentialEntropy (W x) ∂p) := by
   sorry  -- @residual(wall:awgn-mi-decomp)
 
 /-- per-letter bridge: shared 壁補題 + mixture→compProd 橋渡し + fibre entropy 不変
@@ -218,8 +218,8 @@ theorem awgn_per_letter_mi_bridge
     {P : ℝ} {N : ℝ≥0} (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) (i : Fin n) :
     (perLetterMI h_meas c i).toReal
-      = Common2026.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
-        - Common2026.Shannon.differentialEntropy (gaussianReal 0 N) := by
+      = InformationTheory.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
+        - InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N) := by
   sorry  -- @residual(plan:awgn-mi-bridge-plan)
 
 end InformationTheory.Shannon.AWGN

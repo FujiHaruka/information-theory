@@ -21,7 +21,7 @@
 
 ## ゴール / Approach
 
-5 軸の調査結果を **Phase A skeleton (`Common2026/Shannon/LoomisWhitney.lean` の sorry-driven 出だし) が書ける状態** に持っていく。各軸で「Mathlib にあるか / ないか / 既存補題で代用可」の 1 行結論 + 採用する具体補題シグネチャを verbatim 記録。
+5 軸の調査結果を **Phase A skeleton (`InformationTheory/Shannon/LoomisWhitney.lean` の sorry-driven 出だし) が書ける状態** に持っていく。各軸で「Mathlib にあるか / ないか / 既存補題で代用可」の 1 行結論 + 採用する具体補題シグネチャを verbatim 記録。
 
 ## Phase 詳細
 
@@ -210,12 +210,12 @@ theorem entropy_uniformOn_eq_log_card
 
 #### 結論 (1 行)
 
-**Common2026 既存 `Common2026.Shannon.Pi.entropy_measurableEquiv_comp` で reshape 可能。`Han.lean` の `exceptIdxEquiv` (`Fin n` の `i` 抜き subtype と `Fin (n-1)` の同型) はそのまま流用、`Mathlib.MeasureTheory.MeasurableSpace.Embedding.piCongrLeft` で押し上げる。**
+**InformationTheory 既存 `InformationTheory.Shannon.Pi.entropy_measurableEquiv_comp` で reshape 可能。`Han.lean` の `exceptIdxEquiv` (`Fin n` の `i` 抜き subtype と `Fin (n-1)` の同型) はそのまま流用、`Mathlib.MeasureTheory.MeasurableSpace.Embedding.piCongrLeft` で押し上げる。**
 
-#### 採用候補 (既存 Common2026 補題)
+#### 採用候補 (既存 InformationTheory 補題)
 
 ##### `InformationTheory.Shannon.entropy_measurableEquiv_comp`
-- **位置**: `Common2026/Shannon/Pi.lean:35`
+- **位置**: `InformationTheory/Shannon/Pi.lean:35`
 - **シグネチャ**:
   ```
   lemma entropy_measurableEquiv_comp
@@ -247,7 +247,7 @@ theorem entropy_uniformOn_eq_log_card
 - **使い所**: Phase B で index 同型 (`{j : Fin n // j ≠ i} ≃ ↥(univ.filter (· ≠ i))` 等) を Pi 値の MeasurableEquiv に持ち上げる
 
 ##### `InformationTheory.Shannon.exceptIdxEquiv` (本 project)
-- **位置**: `Common2026/Shannon/Han.lean:151`
+- **位置**: `InformationTheory/Shannon/Han.lean:151`
 - **シグネチャ**:
   ```
   private def exceptIdxEquiv {n : ℕ} (i : Fin n) :
@@ -259,7 +259,7 @@ theorem entropy_uniformOn_eq_log_card
 - 既に Han Phase D で `orderEmbOfFin S : Fin S.card ↪o Fin n` の reshape pattern が確立済み (`HanD.lean` 全体)。Phase B `S i := univ.filter (· ≠ i)` は `S.card = n - 1` なので `orderEmbOfFin` で `Fin (n-1) ↪ Fin n` を得る経路もある
 
 #### `MeasurableEquiv.piFinSuccAbove` (drop-one-coordinate の Mathlib 直対応)
-- **位置**: 既に `Common2026/Shannon/Han.lean:102` で使用実績あり (検索: `MeasurableEquiv.piFinSuccAbove`)
+- **位置**: 既に `InformationTheory/Shannon/Han.lean:102` で使用実績あり (検索: `MeasurableEquiv.piFinSuccAbove`)
 - **使い所**: 本 plan ではあえて使わず、Phase D が確立した `{j // j ≠ i}` subtype 経路を流用する想定。`piFinSuccAbove` は cast index `i = Fin.last n` 縛りで一般 `i` には reshape 1 段足りない
 
 #### Phase 影響
@@ -277,7 +277,7 @@ Phase B の主な作業は **既存 reshape plumbing の流用 (新規 Measurabl
 #### 採用候補
 
 ##### `InformationTheory.Shannon.shearer_inequality` (本 project)
-- **位置**: `Common2026/Shannon/HanDShearer.lean:41`
+- **位置**: `InformationTheory/Shannon/HanDShearer.lean:41`
 - **シグネチャ** (型クラス前提を `[...]` 込みで verbatim):
   ```
   theorem shearer_inequality
@@ -325,7 +325,7 @@ Phase B の主な作業は **既存 reshape plumbing の流用 (新規 Measurabl
 #### 関連 `jointEntropy` / `jointEntropySubset` 定義
 
 ##### `InformationTheory.Shannon.jointEntropy`
-- **位置**: `Common2026/Shannon/Han.lean:42`
+- **位置**: `InformationTheory/Shannon/Han.lean:42`
 - **シグネチャ**:
   ```
   noncomputable def jointEntropy
@@ -335,7 +335,7 @@ Phase B の主な作業は **既存 reshape plumbing の流用 (新規 Measurabl
 - **使い所**: Phase C `μ := uniformOn A`, `Xs i ω := ω i` で `jointEntropy μ Xs = entropy μ (fun ω i => ω i) = entropy μ id`。Phase A の `entropy_uniformOn_eq_log_card` で `log #A` に潰れる
 
 ##### `InformationTheory.Shannon.jointEntropySubset`
-- **位置**: `Common2026/Shannon/HanD.lean` (主定義)
+- **位置**: `InformationTheory/Shannon/HanD.lean` (主定義)
 - **シグネチャ** (本体では `omit` でいくつかの instance を抜いている可能性、実機検証):
   ```
   noncomputable def jointEntropySubset

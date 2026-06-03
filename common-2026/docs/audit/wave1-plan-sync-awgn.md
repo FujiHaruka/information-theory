@@ -39,17 +39,17 @@ plan と実 residual の位置がズレている) を 2 件検出 (Recommendatio
 - **code suspect 一覧**:
   | # | file:line | declaration | load-bearing hyp | plan 内対応 | close ROI |
   |---|---|---|---|---|---|
-  | 1 | `Common2026/Shannon/AWGN.lean:212` | `theorem awgnCapacity_ge_gaussian` | `h_bridge_gauss`, `h_bdd` (F-2) | plan §撤退ライン F-2 | medium |
-  | 2 | `Common2026/Shannon/AWGN.lean:236` | `theorem awgnCapacity_le_gaussian` | `h_max_ent` (F-2 max-ent) | plan §撤退ライン F-2 | low (max-ent = Mathlib 壁 (b)) |
-  | 3 | `Common2026/Shannon/AWGN.lean:260` | `theorem awgnCapacity_eq` | `h_bridge_gauss`, `h_bdd`, `h_max_ent` (F-2 sandwich) | plan §撤退ライン F-2 (Goal signature L88-91) | low |
-  | 4 | `Common2026/Shannon/AWGNMain.lean:59` | `theorem awgn_channel_coding_theorem` | `h_meas` ✅ done, `h_typicality` F-1, `h_mi_bridge` F-2, `h_converse` F-3 | plan §Goal L114-121 + §撤退ライン F-1-F-3 | low (3 hyp 残) |
-  | 5 | `Common2026/Shannon/AWGNMain.lean:88` | `theorem awgn_capacity_closed_form` | `h_bridge_gauss`, `h_bdd`, `h_max_ent` (F-2) | plan §Goal L88-91 + §撤退ライン F-2 | low |
-  | 6 | `Common2026/Shannon/AWGNBindConvBody.lean:139` | `theorem awgn_theorem_of_typicality_converse_bindconv_discharged` | `h_typicality` F-1, `h_decomp` F-2', `h_converse` F-3 (bind/conv 部分済) | plan 内記述なし (post-plan 派生 wrapper、§撤退ライン F-2 sub-layer) | low |
-  | 7 | `Common2026/Shannon/AWGNBindConvBody.lean:166` | `theorem awgn_capacity_closed_form_of_maxent_bindconv_discharged` | `h_decomp`, `h_bdd`, `h_max_ent` (F-2 ↓ + max-ent) | plan 内記述なし (post-plan 派生 wrapper) | low |
-  | 8 | `Common2026/Shannon/AWGNAchievabilityDischarge.lean:581` | `theorem awgn_avg_error_union_bound` | `h_aep : IsContinuousAEPGaussian`, `h_rand : IsAwgnRandomCodingBound` (2 staged) | plan 内記述なし (post-pivot Phase 3 派生、6ec2064 で suspect 化) | low (Mathlib 壁 (b) AEP + chi² SLLN) |
-  | 9 | `Common2026/Shannon/AWGNAchievabilityDischarge.lean:960` | `theorem isAwgnTypicalityHypothesis` | `h_feasible : IsAwgnRandomCodingFeasible` (bundled 1-hyp) | plan 内記述なし (Phase 2 pivot 派生、bundle 3→1 hyp) | low |
-  | 10 | `Common2026/Shannon/AWGNAchievabilityDischarge.lean:1586` | `theorem awgn_achievability_F1_via_staged_hyps` | `h_feasible` (bundle) | plan 内記述なし (post-pivot wrapper) | low |
-  | 11 | `Common2026/Shannon/AWGNAchievabilityDischarge.lean:1618` | `theorem awgn_theorem_F4_discharged_F1_via_staged` | `h_feasible` (bundle), `h_mi_bridge` F-2, `h_converse` F-3 | plan 内記述なし (post-pivot wrapper) | low |
+  | 1 | `InformationTheory/Shannon/AWGN.lean:212` | `theorem awgnCapacity_ge_gaussian` | `h_bridge_gauss`, `h_bdd` (F-2) | plan §撤退ライン F-2 | medium |
+  | 2 | `InformationTheory/Shannon/AWGN.lean:236` | `theorem awgnCapacity_le_gaussian` | `h_max_ent` (F-2 max-ent) | plan §撤退ライン F-2 | low (max-ent = Mathlib 壁 (b)) |
+  | 3 | `InformationTheory/Shannon/AWGN.lean:260` | `theorem awgnCapacity_eq` | `h_bridge_gauss`, `h_bdd`, `h_max_ent` (F-2 sandwich) | plan §撤退ライン F-2 (Goal signature L88-91) | low |
+  | 4 | `InformationTheory/Shannon/AWGNMain.lean:59` | `theorem awgn_channel_coding_theorem` | `h_meas` ✅ done, `h_typicality` F-1, `h_mi_bridge` F-2, `h_converse` F-3 | plan §Goal L114-121 + §撤退ライン F-1-F-3 | low (3 hyp 残) |
+  | 5 | `InformationTheory/Shannon/AWGNMain.lean:88` | `theorem awgn_capacity_closed_form` | `h_bridge_gauss`, `h_bdd`, `h_max_ent` (F-2) | plan §Goal L88-91 + §撤退ライン F-2 | low |
+  | 6 | `InformationTheory/Shannon/AWGNBindConvBody.lean:139` | `theorem awgn_theorem_of_typicality_converse_bindconv_discharged` | `h_typicality` F-1, `h_decomp` F-2', `h_converse` F-3 (bind/conv 部分済) | plan 内記述なし (post-plan 派生 wrapper、§撤退ライン F-2 sub-layer) | low |
+  | 7 | `InformationTheory/Shannon/AWGNBindConvBody.lean:166` | `theorem awgn_capacity_closed_form_of_maxent_bindconv_discharged` | `h_decomp`, `h_bdd`, `h_max_ent` (F-2 ↓ + max-ent) | plan 内記述なし (post-plan 派生 wrapper) | low |
+  | 8 | `InformationTheory/Shannon/AWGNAchievabilityDischarge.lean:581` | `theorem awgn_avg_error_union_bound` | `h_aep : IsContinuousAEPGaussian`, `h_rand : IsAwgnRandomCodingBound` (2 staged) | plan 内記述なし (post-pivot Phase 3 派生、6ec2064 で suspect 化) | low (Mathlib 壁 (b) AEP + chi² SLLN) |
+  | 9 | `InformationTheory/Shannon/AWGNAchievabilityDischarge.lean:960` | `theorem isAwgnTypicalityHypothesis` | `h_feasible : IsAwgnRandomCodingFeasible` (bundled 1-hyp) | plan 内記述なし (Phase 2 pivot 派生、bundle 3→1 hyp) | low |
+  | 10 | `InformationTheory/Shannon/AWGNAchievabilityDischarge.lean:1586` | `theorem awgn_achievability_F1_via_staged_hyps` | `h_feasible` (bundle) | plan 内記述なし (post-pivot wrapper) | low |
+  | 11 | `InformationTheory/Shannon/AWGNAchievabilityDischarge.lean:1618` | `theorem awgn_theorem_F4_discharged_F1_via_staged` | `h_feasible` (bundle), `h_mi_bridge` F-2, `h_converse` F-3 | plan 内記述なし (post-pivot wrapper) | low |
 - **整合性 a (件数)**: partial。plan §撤退ライン には F-1 / F-2 / F-3 / F-4 (4 staged
   hyp) の言及があるが、code 側 11 suspect の **6 件 (rows 6-11)** は plan 起草時には
   存在しなかった **post-plan 派生 wrapper / Phase 2 pivot 産物**。plan が
@@ -85,15 +85,15 @@ plan と実 residual の位置がズレている) を 2 件検出 (Recommendatio
 - **code suspect 一覧**:
   | # | file:line | declaration | load-bearing hyp | plan 内対応 | close ROI |
   |---|---|---|---|---|---|
-  | 1 | `Common2026/Shannon/AWGNMIDecompBody.lean:161` | `theorem awgn_midecomp_of_cont_chain` | `h_chain : IsContChannelMIDecompHyp` | plan §接続点 L17 + §Goal 段 1/段 2 全体 (Phase 7) | medium |
-  | 2 | `Common2026/Shannon/AWGNMIBridge.lean:191` | `theorem awgn_mi_bridge_of_primitives` | `h_out`, `h_decomp`, `h_cond` (3 primitive、`h_cond` は post-discharge) | plan 関連 (上流 primitive `IsAwgnMIDecomp` の chain) | medium |
-  | 3 | `Common2026/Shannon/AWGNMIBridge.lean:223` | `theorem awgn_theorem_F2_discharged` | `h_typicality` F-1, `h_out`, `h_decomp` (2 primitive), `h_converse` F-3 | plan 関連 (F-2 中間段) | low |
-  | 4 | `Common2026/Shannon/AWGNMIBridge.lean:256` | `theorem awgn_mi_gaussian_closed_form_of_primitives` | `h_out`, `h_decomp` | plan 関連 | medium |
-  | 5 | `Common2026/Shannon/AWGNMIBridge.lean:290` | `theorem awgn_capacity_closed_form_F2_discharged` | `h_out`, `h_decomp`, `h_bdd`, `h_max_ent` | plan 関連 (F-2 中間段) | low |
-  | 6 | `Common2026/Shannon/AWGNMIBridgeDischarge.lean:133` | `theorem awgn_theorem_of_typicality_converse_bindconv` | `h_typicality`, `h_bridge : IsAwgnBindEqConv`, `h_decomp`, `h_converse` | plan §依存関係 `IsContChannelMIDecompHyp` 経由 | low |
-  | 7 | `Common2026/Shannon/AWGNMIBridgeDischarge.lean:161` | `theorem awgn_capacity_closed_form_of_maxent_bindconv` | `h_bridge`, `h_decomp`, `h_bdd`, `h_max_ent` | plan §依存関係 | low |
-  | 8 | `Common2026/Shannon/ContChannelMIDecomp.lean:247` | `theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub` | `hW_ac`, `hq_ac`, `h_joint_ac`, `g`, `hg_ae`, `h_llr_split`, `h_int_fibre_joint`, `h_int_out_joint`, `h_int_out_marg` (honest #1-#6, 段 1 一般 body) | plan §Goal 段 1 (L43-66) + Phase 1-6 全体 | medium (Phase 6 着地済? 要確認、tag が残るなら未) |
-  | 9 | `Common2026/Shannon/ContChannelMIDecomp.lean:649` | `theorem awgn_capacity_closed_form_of_out` | `h_out`, `h_bdd`, `h_max_ent` (F-2 ↓ + max-ent) | plan 関連 (段 2 wrapper) | low |
+  | 1 | `InformationTheory/Shannon/AWGNMIDecompBody.lean:161` | `theorem awgn_midecomp_of_cont_chain` | `h_chain : IsContChannelMIDecompHyp` | plan §接続点 L17 + §Goal 段 1/段 2 全体 (Phase 7) | medium |
+  | 2 | `InformationTheory/Shannon/AWGNMIBridge.lean:191` | `theorem awgn_mi_bridge_of_primitives` | `h_out`, `h_decomp`, `h_cond` (3 primitive、`h_cond` は post-discharge) | plan 関連 (上流 primitive `IsAwgnMIDecomp` の chain) | medium |
+  | 3 | `InformationTheory/Shannon/AWGNMIBridge.lean:223` | `theorem awgn_theorem_F2_discharged` | `h_typicality` F-1, `h_out`, `h_decomp` (2 primitive), `h_converse` F-3 | plan 関連 (F-2 中間段) | low |
+  | 4 | `InformationTheory/Shannon/AWGNMIBridge.lean:256` | `theorem awgn_mi_gaussian_closed_form_of_primitives` | `h_out`, `h_decomp` | plan 関連 | medium |
+  | 5 | `InformationTheory/Shannon/AWGNMIBridge.lean:290` | `theorem awgn_capacity_closed_form_F2_discharged` | `h_out`, `h_decomp`, `h_bdd`, `h_max_ent` | plan 関連 (F-2 中間段) | low |
+  | 6 | `InformationTheory/Shannon/AWGNMIBridgeDischarge.lean:133` | `theorem awgn_theorem_of_typicality_converse_bindconv` | `h_typicality`, `h_bridge : IsAwgnBindEqConv`, `h_decomp`, `h_converse` | plan §依存関係 `IsContChannelMIDecompHyp` 経由 | low |
+  | 7 | `InformationTheory/Shannon/AWGNMIBridgeDischarge.lean:161` | `theorem awgn_capacity_closed_form_of_maxent_bindconv` | `h_bridge`, `h_decomp`, `h_bdd`, `h_max_ent` | plan §依存関係 | low |
+  | 8 | `InformationTheory/Shannon/ContChannelMIDecomp.lean:247` | `theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub` | `hW_ac`, `hq_ac`, `h_joint_ac`, `g`, `hg_ae`, `h_llr_split`, `h_int_fibre_joint`, `h_int_out_joint`, `h_int_out_marg` (honest #1-#6, 段 1 一般 body) | plan §Goal 段 1 (L43-66) + Phase 1-6 全体 | medium (Phase 6 着地済? 要確認、tag が残るなら未) |
+  | 9 | `InformationTheory/Shannon/ContChannelMIDecomp.lean:649` | `theorem awgn_capacity_closed_form_of_out` | `h_out`, `h_bdd`, `h_max_ent` (F-2 ↓ + max-ent) | plan 関連 (段 2 wrapper) | low |
 - **整合性 a (件数)**: yes (partial)。plan §Goal は 2 段構成 (段 1 一般 body +
   段 2 AWGN instance + Phase 8 rnDeriv proxy)、code 側 9 suspect は段 1/段 2/wrapper
   すべての residual 連鎖。plan の 8 Phase 全部が 📋 (未着手) なのに code 側で
@@ -125,10 +125,10 @@ plan と実 residual の位置がズレている) を 2 件検出 (Recommendatio
 - **code suspect 一覧**:
   | # | file:line | declaration | load-bearing hyp | plan 内対応 | close ROI |
   |---|---|---|---|---|---|
-  | 1 | `Common2026/Shannon/AWGNF1Discharge.lean:101` | `theorem awgn_theorem_F1_discharged` | `h_typicality` F-1 (achievability), `h_mi_bridge` F-2, `h_converse` F-3 (= F-1 plan 外の残 hyp) | plan §Goal L41-65 (再 publish wrapper) | low (F-1 plan は閉、残 hyp は他 plan) |
-  | 2 | `Common2026/Shannon/AWGNF1Discharge.lean:129` | `theorem awgn_capacity_closed_form_F1_discharged` | `h_bridge_gauss`, `h_bdd`, `h_max_ent` (F-2 系) | plan §Goal L67 (副産物 capacity 再 publish) | low |
-  | 3 | `Common2026/Shannon/AWGNF2F3Discharge.lean:273` | `theorem awgn_theorem_of_F2F3_hypotheses` | `h_F2 : IsAwgnF2DecodingHypothesis`, `h_F3_per_letter`, `h_F3_chain`, `h_mi_bridge` (F-2 + F-3 残) | plan 内記述なし (post-plan 派生 wrapper) | low |
-  | 4 | `Common2026/Shannon/AWGNF2F3Discharge.lean:311` | `theorem awgn_capacity_closed_form_of_maxent_hypotheses` | `h_bridge_gauss`, `h_bdd`, `h_max_ent` (F-2 系) | plan 内記述なし | low |
+  | 1 | `InformationTheory/Shannon/AWGNF1Discharge.lean:101` | `theorem awgn_theorem_F1_discharged` | `h_typicality` F-1 (achievability), `h_mi_bridge` F-2, `h_converse` F-3 (= F-1 plan 外の残 hyp) | plan §Goal L41-65 (再 publish wrapper) | low (F-1 plan は閉、残 hyp は他 plan) |
+  | 2 | `InformationTheory/Shannon/AWGNF1Discharge.lean:129` | `theorem awgn_capacity_closed_form_F1_discharged` | `h_bridge_gauss`, `h_bdd`, `h_max_ent` (F-2 系) | plan §Goal L67 (副産物 capacity 再 publish) | low |
+  | 3 | `InformationTheory/Shannon/AWGNF2F3Discharge.lean:273` | `theorem awgn_theorem_of_F2F3_hypotheses` | `h_F2 : IsAwgnF2DecodingHypothesis`, `h_F3_per_letter`, `h_F3_chain`, `h_mi_bridge` (F-2 + F-3 残) | plan 内記述なし (post-plan 派生 wrapper) | low |
+  | 4 | `InformationTheory/Shannon/AWGNF2F3Discharge.lean:311` | `theorem awgn_capacity_closed_form_of_maxent_hypotheses` | `h_bridge_gauss`, `h_bdd`, `h_max_ent` (F-2 系) | plan 内記述なし | low |
 - **整合性 a (件数)**: **mismatch**。plan は F-1 layer (kernel measurability)
   の discharge を完了し本来「suspect 0 件」が期待される状態。4 件は本 plan 外の
   hyp (F-2 / F-3 等) を pass-through する派生 wrapper に貼り付いている。
@@ -162,7 +162,7 @@ plan と実 residual の位置がズレている) を 2 件検出 (Recommendatio
 - **code suspect 一覧**:
   | # | file:line | declaration | load-bearing hyp | plan 内対応 | close ROI |
   |---|---|---|---|---|---|
-  | 1 | `Common2026/Shannon/AWGNConverse.lean:91` | `theorem awgn_converse` | `h_converseBound_lbh : IsAwgnConverseHypothesis P N h_meas` (circular — hyp = conclusion) | plan §Position L9 + §Motivation 全段 (bundle 5 piece 内訳) | low (Mathlib 壁 (b) 解析: continuous SMB + per-letter Gaussian max-ent) |
+  | 1 | `InformationTheory/Shannon/AWGNConverse.lean:91` | `theorem awgn_converse` | `h_converseBound_lbh : IsAwgnConverseHypothesis P N h_meas` (circular — hyp = conclusion) | plan §Position L9 + §Motivation 全段 (bundle 5 piece 内訳) | low (Mathlib 壁 (b) 解析: continuous SMB + per-letter Gaussian max-ent) |
 - **整合性 a (件数)**: yes (1 = 1)。
 - **整合性 b (in-plan orphan)**: 0 件 (plan が tag と 1-to-1 対応で書かれている)。
 - **整合性 c (drop 漏れ)**: 0 件 (plan 未着手で「discharge 済」表記なし、code
@@ -185,11 +185,11 @@ plan と実 residual の位置がズレている) を 2 件検出 (Recommendatio
 - **code suspect 一覧**:
   | # | file:line | declaration | load-bearing hyp | plan 内対応 | close ROI |
   |---|---|---|---|---|---|
-  | 1 | `Common2026/Shannon/AWGN.lean:122` | `theorem mutualInfoOfChannel_gaussianInput_closed_form` | `h_bridge` (= `mutualInfoOfChannel ... = h(P+N) − h(N)` の textbook 形 ≡ 結論の前段) | plan §Position L8 + §Motivation 全段 | medium (`Common2026.Shannon.differentialEntropy` と Mathlib `condEntropy` の bridge 作成、~150-250 行見込み) |
+  | 1 | `InformationTheory/Shannon/AWGN.lean:122` | `theorem mutualInfoOfChannel_gaussianInput_closed_form` | `h_bridge` (= `mutualInfoOfChannel ... = h(P+N) − h(N)` の textbook 形 ≡ 結論の前段) | plan §Position L8 + §Motivation 全段 | medium (`InformationTheory.Shannon.differentialEntropy` と Mathlib `condEntropy` の bridge 作成、~150-250 行見込み) |
 - **整合性 a (件数)**: yes (1 = 1)。
 - **整合性 b (in-plan orphan)**: 0 件。
 - **整合性 c (drop 漏れ)**: 0 件 (plan 未着手で「discharge 済」表記なし)。
-- **観察 / open question**: plan §Open questions「`Common2026.Shannon.differentialEntropy`
+- **観察 / open question**: plan §Open questions「`InformationTheory.Shannon.differentialEntropy`
   を Mathlib 形に rewrite するか、bridge lemma を増やすか、設計判断が要る」が
   未確定。`lean-planner` セッションで最初の判断点。隣接 `awgn-mi-decomp-plan`
   の段 1 (一般 body `IsContChannelMIDecompHyp`) と内容が重なる
@@ -252,7 +252,7 @@ medium ROI 候補 (近 session で着手検討):
 
 1. **`awgn-mi-bridge-plan` の Phase 設計 + 着手**: 隣接の `awgn-mi-decomp-plan`
    段 1 (既 publish) からの距離が近い (差分は `h(Y) − h(Y|X)` 形を Mathlib
-   `condEntropy` 表記との bridge へ写すだけ)。**「`Common2026.Shannon.differentialEntropy`
+   `condEntropy` 表記との bridge へ写すだけ)。**「`InformationTheory.Shannon.differentialEntropy`
    と Mathlib `MeasureTheory.Entropy` の対応物 inventory」を mathlib-inventory に
    先行依頼** (plan §TODO L49-50 で明示)。
 2. **`awgn-f1-discharge-moonshot-plan` 系 4 suspect の tag retag patch**: §2-1

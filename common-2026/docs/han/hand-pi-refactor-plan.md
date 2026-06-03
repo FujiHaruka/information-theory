@@ -1,12 +1,12 @@
 # HanD / Pi reshape refactor: `MeasurableEquiv.piFinsetUnion` 統合 計画 🧹
 
-> 実態整合 (2026-05-20): DONE (Phase 1〜4 + 判断ログの追加撤去まで完了)。`Common2026/Shannon/Pi.lean` から `subsetIdxEquiv` は完全消失 (`rg` 0 hits)、subset-form `subsetSplitMEquiv` も撤去済。現存 API は `subsetSplitMEquivAux` (`Pi.lean:160`) + `MeasurableEquiv.piFinsetUnion_apply_left/right` (`Pi.lean:138,148`) に集約。`lake env lean Common2026/Shannon/Pi.lean` silent。これは refactor plan で新規 headline thm なし。
+> 実態整合 (2026-05-20): DONE (Phase 1〜4 + 判断ログの追加撤去まで完了)。`InformationTheory/Shannon/Pi.lean` から `subsetIdxEquiv` は完全消失 (`rg` 0 hits)、subset-form `subsetSplitMEquiv` も撤去済。現存 API は `subsetSplitMEquivAux` (`Pi.lean:160`) + `MeasurableEquiv.piFinsetUnion_apply_left/right` (`Pi.lean:138,148`) に集約。`lake env lean InformationTheory/Shannon/Pi.lean` silent。これは refactor plan で新規 headline thm なし。
 > **Status (2026-05-11)**: 起草。Polymatroid moonshot (`docs/han/polymatroid-moonshot-plan.md`)
 > 完了直後の **C 横断改善** ([`docs/moonshot-seeds.md` §C](../moonshot-seeds.md))
 > から派生。ムーンショット級の新規証明ではなく、**plumbing tightening** (= 自前
 > `MeasurableEquiv` を Mathlib 上流補題で subsume する保守 refactor)。
 >
-> ゴールは `Common2026/Shannon/Pi.lean` 内の自前 `subsetIdxEquiv` /
+> ゴールは `InformationTheory/Shannon/Pi.lean` 内の自前 `subsetIdxEquiv` /
 > `subsetSplitMEquiv` / `subsetSplitMEquiv_apply` (合計 50+ 行) を Mathlib
 > `MeasurableEquiv.piFinsetUnion` ベースに書き直し、call site (HanD ×1 +
 > Polymatroid ×3) を破壊しないこと。
@@ -21,7 +21,7 @@
 
 ## ゴール / Approach
 
-**ゴール (1〜2 行)**: `Common2026/Shannon/Pi.lean` の自前 reshape 補題 (`subsetIdxEquiv` / `subsetSplitMEquiv` / `subsetSplitMEquiv_apply`、合計 50+ 行) を Mathlib `MeasurableEquiv.piFinsetUnion` ベースの薄い (5〜15 行) ラッパーに置換する。HanD `condEntropy_subset_anti` と Polymatroid 3 主定理 (`jointEntropySubset_mono` / `jointEntropySubset_disjoint_union` / `condEntropy_reshape_disjoint_union`) は `lake env lean` で 0 sorry / 0 error を維持する。
+**ゴール (1〜2 行)**: `InformationTheory/Shannon/Pi.lean` の自前 reshape 補題 (`subsetIdxEquiv` / `subsetSplitMEquiv` / `subsetSplitMEquiv_apply`、合計 50+ 行) を Mathlib `MeasurableEquiv.piFinsetUnion` ベースの薄い (5〜15 行) ラッパーに置換する。HanD `condEntropy_subset_anti` と Polymatroid 3 主定理 (`jointEntropySubset_mono` / `jointEntropySubset_disjoint_union` / `condEntropy_reshape_disjoint_union`) は `lake env lean` で 0 sorry / 0 error を維持する。
 
 ### Approach (戦略の shape — 全体)
 
@@ -48,7 +48,7 @@
 ファイル変更マップ:
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   Pi.lean              ← 内部実装書き換え (subsetIdxEquiv 削除、subsetSplitMEquiv 薄化、apply lemma 短縮)
   HanD.lean            ← 無変更 (call site は subset-form ラッパー経由)
   Polymatroid.lean     ← 内部実装書き換え (disjoint_union 系 2 本のみ。本体 submodular は無変更)
@@ -67,7 +67,7 @@ Common2026/Shannon/
 
 ## Phase 1 — Pi.lean に Mathlib ベースの薄いラッパーを追加 📋
 
-ターゲット: `Common2026/Shannon/Pi.lean` 内の自前 plumbing を Mathlib `MeasurableEquiv.piFinsetUnion` 上に再構築。subset-form API (`subsetSplitMEquiv (h : T₁ ⊆ T₂)`) は維持。
+ターゲット: `InformationTheory/Shannon/Pi.lean` 内の自前 plumbing を Mathlib `MeasurableEquiv.piFinsetUnion` 上に再構築。subset-form API (`subsetSplitMEquiv (h : T₁ ⊆ T₂)`) は維持。
 
 ### スコープ (Pi.lean に追加 / 書き換える宣言)
 
@@ -118,7 +118,7 @@ lemma subsetSplitMEquiv_apply
 
 ### 鍵となる作業
 
-- [ ] `MeasurableEquiv.coe_piFinsetUnion` を 1 行 (`rfl`) で書き、smoke test (`lake env lean Common2026/Shannon/Pi.lean`)
+- [ ] `MeasurableEquiv.coe_piFinsetUnion` を 1 行 (`rfl`) で書き、smoke test (`lake env lean InformationTheory/Shannon/Pi.lean`)
 - [ ] `MeasurableEquiv.piFinsetUnion_apply_left` / `_right` を 2〜4 行ずつで Equiv 版から導出
 - [ ] subset-form `subsetSplitMEquiv` 内部を Mathlib + cast に書き換え。`MeasurableEquiv.cast` の入手 (Mathlib 既存) または `piCongrLeft` 経由で代替する判断
 - [ ] subset-form `subsetSplitMEquiv_apply` 内部を Mathlib `_left/_right` 経由に書き換え (5〜15 行に圧縮)
@@ -126,8 +126,8 @@ lemma subsetSplitMEquiv_apply
 
 ### Done 条件
 
-- `lake env lean Common2026/Shannon/Pi.lean` が silent (0 error / 0 sorry / 既存 warning レベル維持)
-- `lake env lean Common2026/Shannon/HanD.lean` も silent (call site 無変更で動作することを確認)
+- `lake env lean InformationTheory/Shannon/Pi.lean` が silent (0 error / 0 sorry / 既存 warning レベル維持)
+- `lake env lean InformationTheory/Shannon/HanD.lean` も silent (call site 無変更で動作することを確認)
 - 新規 lemma `coe_piFinsetUnion` / `piFinsetUnion_apply_left/_right` が Pi.lean docstring に追加 (任意)
 - 行数: Pi.lean は **+10 〜 -20 行 (cast/apply 実装の出来による)**
 
@@ -141,7 +141,7 @@ lemma subsetSplitMEquiv_apply
 
 ## Phase 2 — Polymatroid 内 `disjoint_union` ヘルパーを Mathlib 直接化 📋
 
-ターゲット: `Common2026/Shannon/Polymatroid.lean` の `jointEntropySubset_disjoint_union` (line 123) と `condEntropy_reshape_disjoint_union` (line 166) の **内部実装** を Mathlib `MeasurableEquiv.piFinsetUnion` 直接呼び出しに書き換え。**API シグネチャは無変更**。
+ターゲット: `InformationTheory/Shannon/Polymatroid.lean` の `jointEntropySubset_disjoint_union` (line 123) と `condEntropy_reshape_disjoint_union` (line 166) の **内部実装** を Mathlib `MeasurableEquiv.piFinsetUnion` 直接呼び出しに書き換え。**API シグネチャは無変更**。
 
 ### スコープ (Polymatroid.lean 内の書き換え)
 
@@ -193,7 +193,7 @@ theorem jointEntropySubset_disjoint_union
 
 ### Done 条件
 
-- `lake env lean Common2026/Shannon/Polymatroid.lean` が silent (0 error / 0 sorry)
+- `lake env lean InformationTheory/Shannon/Polymatroid.lean` が silent (0 error / 0 sorry)
 - 行数: Polymatroid.lean は **-10 〜 -20 行** (`htU` derive とかの中間 step が消える)
 - `jointEntropySubset_submodular` の本体 proof は完全無変更 (回帰なし)
 
@@ -216,13 +216,13 @@ theorem jointEntropySubset_disjoint_union
 
 ### 鍵となる作業
 
-- [x] `rg "subsetIdxEquiv" Common2026/` で 0 件確認
+- [x] `rg "subsetIdxEquiv" InformationTheory/` で 0 件確認
 - [x] `subsetIdxEquiv` def を削除
 - [x] subset 形 `subsetSplitMEquiv` / `subsetSplitMEquiv_apply` を撤去し
   call site 2 ヶ所を `subsetSplitMEquivAux` 直接呼び出しに改修
   (`Finset.disjoint_sdiff` + `Finset.union_sdiff_of_subset h` を inline)
 - [x] Pi.lean docstring から subset 形への言及を削除、aux 集約方針を明記
-- [x] `lake env lean Common2026/Shannon/{Pi,HanD,Polymatroid,SlepianWolf}.lean`
+- [x] `lake env lean InformationTheory/Shannon/{Pi,HanD,Polymatroid,SlepianWolf}.lean`
   全て silent
 
 ### Done 条件
@@ -244,12 +244,12 @@ theorem jointEntropySubset_disjoint_union
 
 ### 鍵となる作業
 
-- [ ] `lake env lean Common2026/Shannon/Pi.lean` (silent)
-- [ ] `lake env lean Common2026/Shannon/HanD.lean` (silent)
-- [ ] `lake env lean Common2026/Shannon/Polymatroid.lean` (silent)
-- [ ] (任意) `lake env lean Common2026/Shannon/SlepianWolf.lean` — Pi.lean を import している ([`docs/moonshot-seeds.md` §C](../moonshot-seeds.md) に記載) ので念のため確認
-- [ ] (任意) `lake build Common2026.Shannon.Polymatroid` で olean 再生成、依存先全体に effect が無いことを smoke test
-- [ ] 行数差分: `git diff --stat Common2026/Shannon/{Pi,HanD,Polymatroid}.lean` で実測 vs 見積比較
+- [ ] `lake env lean InformationTheory/Shannon/Pi.lean` (silent)
+- [ ] `lake env lean InformationTheory/Shannon/HanD.lean` (silent)
+- [ ] `lake env lean InformationTheory/Shannon/Polymatroid.lean` (silent)
+- [ ] (任意) `lake env lean InformationTheory/Shannon/SlepianWolf.lean` — Pi.lean を import している ([`docs/moonshot-seeds.md` §C](../moonshot-seeds.md) に記載) ので念のため確認
+- [ ] (任意) `lake build InformationTheory.Shannon.Polymatroid` で olean 再生成、依存先全体に effect が無いことを smoke test
+- [ ] 行数差分: `git diff --stat InformationTheory/Shannon/{Pi,HanD,Polymatroid}.lean` で実測 vs 見積比較
 
 ### Done 条件
 
@@ -280,13 +280,13 @@ theorem jointEntropySubset_disjoint_union
 
 ## Definition of Done
 
-1. `Common2026/Shannon/Pi.lean` から自前 `subsetIdxEquiv` が **削除済** (Phase 3 完了時)、**かつ** subset 形 `subsetSplitMEquiv` / `subsetSplitMEquiv_apply` も撤去済 (call site 2 ヶ所を `subsetSplitMEquivAux` 直接呼び出しに改修)。Pi.lean の Pi reshape API は `subsetSplitMEquivAux` + 3 本の `MeasurableEquiv.piFinsetUnion_*` bridge に集約。
-2. `Common2026/Shannon/Pi.lean` に `MeasurableEquiv.coe_piFinsetUnion` + `MeasurableEquiv.piFinsetUnion_apply_left` + `MeasurableEquiv.piFinsetUnion_apply_right` (or 同等の Mathlib bridge) が追加済。
+1. `InformationTheory/Shannon/Pi.lean` から自前 `subsetIdxEquiv` が **削除済** (Phase 3 完了時)、**かつ** subset 形 `subsetSplitMEquiv` / `subsetSplitMEquiv_apply` も撤去済 (call site 2 ヶ所を `subsetSplitMEquivAux` 直接呼び出しに改修)。Pi.lean の Pi reshape API は `subsetSplitMEquivAux` + 3 本の `MeasurableEquiv.piFinsetUnion_*` bridge に集約。
+2. `InformationTheory/Shannon/Pi.lean` に `MeasurableEquiv.coe_piFinsetUnion` + `MeasurableEquiv.piFinsetUnion_apply_left` + `MeasurableEquiv.piFinsetUnion_apply_right` (or 同等の Mathlib bridge) が追加済。
 3. `lake env lean` が **3 ファイル全て silent**:
-   - `Common2026/Shannon/Pi.lean`
-   - `Common2026/Shannon/HanD.lean`
-   - `Common2026/Shannon/Polymatroid.lean`
-4. `Common2026/Shannon/Polymatroid.lean` の `jointEntropySubset_submodular` 本体 proof は **無変更** (回帰なし)。
+   - `InformationTheory/Shannon/Pi.lean`
+   - `InformationTheory/Shannon/HanD.lean`
+   - `InformationTheory/Shannon/Polymatroid.lean`
+4. `InformationTheory/Shannon/Polymatroid.lean` の `jointEntropySubset_submodular` 本体 proof は **無変更** (回帰なし)。
 5. `git diff --stat` で 3 ファイル合計 **-30 〜 -45 行 純減** (撤退ライン適用時は -10 〜 -25 行)。
 6. proof-log (`docs/proof-logs/proof-log-hand-pi-refactor.md`) に: Mathlib `piFinsetUnion` の coe / apply 周りで詰まった部分、subst 戦略の defeq 観察、Pi.lean の docstring 設計判断を記録。
 
@@ -314,7 +314,7 @@ Phase 1〜4 完了直後、構造的ゴール (Mathlib `MeasurableEquiv.piFinset
   2 行追加 (Disjoint/union 引数の inline 構築) は subset-form ラッパー全体
   (def + apply lemma + docstring) の維持コストより明確に小さい。Polymatroid
   `jointEntropySubset_disjoint_union` / `condEntropy_reshape_disjoint_union` は
-  既に aux 直接呼び出し (Phase 2) のため、subset-form 撤去で `Common2026.Shannon.Pi`
+  既に aux 直接呼び出し (Phase 2) のため、subset-form 撤去で `InformationTheory.Shannon.Pi`
   の API 表面が `subsetSplitMEquivAux` 1 本に集約され、上流可読性も向上。
 - **DoD #1 / #5 反映**: DoD #1 (`subsetIdxEquiv` 削除) は既に達成 (Phase 3 完了時)。
   本判断で **追加で `subsetSplitMEquiv` (subset 形) も撤去**。DoD #5 の数値目標

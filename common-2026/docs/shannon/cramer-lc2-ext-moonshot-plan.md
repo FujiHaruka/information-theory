@@ -1,7 +1,7 @@
 # Cramér L-C2 extension ムーンショット計画 🌙 (T1-C follow-up extension)
 
 > 実態整合 (2026-05-20): **DONE-HONEST-HYPS (Phase A'+B-1+B-3 完遂)** — 計画通り完了。
-> `Common2026/Shannon/CramerLC2DischargeExt.lean` (0 sorry) に全 publish 済: Phase A' bypass 補題
+> `InformationTheory/Shannon/CramerLC2DischargeExt.lean` (0 sorry) に全 publish 済: Phase A' bypass 補題
 > `isProbabilityMeasure_infinitePi_tilted_of_bounded` (:85) / `pairwise_indepFun_tilted_ambient` (:99) /
 > `integrable_eval_under_infinitePi_tilted` (:111) / `integral_eval_under_infinitePi_tilted` (:132)、
 > Phase B-1 `tilted_lln_ae` (:165)、Phase B-3 `tilted_lln_in_probability` (:205) + `.real` 形 corollary
@@ -10,7 +10,7 @@
 
 > **Parent**: [`cramer-lc2-discharge-moonshot-plan.md`](cramer-lc2-discharge-moonshot-plan.md) (Phase A まで publish 済、Phase B-C が L-D3 撤退状態)
 >
-> **Predecessor (publish)**: `Common2026/Shannon/CramerLC2Discharge.lean` (171 行、Phase A tilted IID plumbing 6 補題)
+> **Predecessor (publish)**: `InformationTheory/Shannon/CramerLC2Discharge.lean` (171 行、Phase A tilted IID plumbing 6 補題)
 >
 > **Status (2026-05-20)**: 着手前。`cramer-lc2-discharge` の Phase A は完了済 (`CramerLC2Discharge.lean`)。Phase B `strong_law_ae_real` 起動は前セッションで「`IsProbabilityMeasure (Measure.infinitePi (fun _ : ℕ => μ₀.tilted ...))` の typeclass synthesis が beta-reduction で詰まる」という構造的障害で defer された。本 plan はその障害を **bypass 補題** で迂回し、Phase B (tilted LLN 起動 + in-probability 化) を publish する。
 >
@@ -30,7 +30,7 @@
 
 ### Goal (最終定理 signature 群)
 
-`Common2026/Shannon/CramerLC2DischargeExt.lean` (新規) で以下を publish:
+`InformationTheory/Shannon/CramerLC2DischargeExt.lean` (新規) で以下を publish:
 
 ```lean
 -- Phase A' (Mathlib PR-candidate, beta-redex bypass)
@@ -155,7 +155,7 @@ Phase B-3 (in-probability 化):
 
 ### ファイル構成
 
-`Common2026/Shannon/CramerLC2DischargeExt.lean` 新規 (`CramerLC2Discharge.lean` を import、再エクスポートなしの素朴 publish)。
+`InformationTheory/Shannon/CramerLC2DischargeExt.lean` 新規 (`CramerLC2Discharge.lean` を import、再エクスポートなしの素朴 publish)。
 
 ## Phase 0 — Mathlib API 再確認 📋
 
@@ -213,9 +213,9 @@ Phase A' で揃えた 3 前提を `strong_law_ae_real` に渡す。`tilted_lln_a
 
 ### スコープ
 
-- `lake env lean Common2026/Shannon/CramerLC2DischargeExt.lean` clean
+- `lake env lean InformationTheory/Shannon/CramerLC2DischargeExt.lean` clean
 - 親 plan `cramer-lc2-discharge-moonshot-plan.md` の Phase B 進捗を 🔄 → 🟡 (B-1 + B-3 部分達成) に更新
-- `Common2026.lean` に `import Common2026.Shannon.CramerLC2DischargeExt` 追記
+- `InformationTheory.lean` に `import InformationTheory.Shannon.CramerLC2DischargeExt` 追記
 
 ### 後継 plan 候補
 

@@ -1,6 +1,6 @@
 # Chernoff converse — band-mass discharge Mathlib 在庫調査
 
-> 対象: `Common2026/Shannon/ChernoffSanovDischarge.lean` の honest load-bearing 仮説
+> 対象: `InformationTheory/Shannon/ChernoffSanovDischarge.lean` の honest load-bearing 仮説
 > `IsChernoffBandMassToOne` (`:243`) を genuine に discharge するための Mathlib インフラ調査。
 > 親計画: [`chernoff-converse-sanov-discharge-plan.md`](chernoff-converse-sanov-discharge-plan.md)
 > (撤退ライン L-SD1 / L-SD2)。同種文書: [`chernoff-mathlib-inventory.md`](chernoff-mathlib-inventory.md)。
@@ -352,13 +352,13 @@ name laundering 禁止 (`*_discharged` 不可)。本来は plumbing なので退
 
 ## 着手 skeleton
 
-`Common2026/Shannon/ChernoffBandMassDischarge.lean` の出だし (imports は既存
+`InformationTheory/Shannon/ChernoffBandMassDischarge.lean` の出だし (imports は既存
 `CramerLC2Discharge` / `CramerLC2PhaseC` の stack を踏襲):
 
 ```lean
-import Common2026.Shannon.ChernoffSanovDischarge
-import Common2026.Shannon.ChernoffPerTiltSanov
-import Common2026.Shannon.Chernoff
+import InformationTheory.Shannon.ChernoffSanovDischarge
+import InformationTheory.Shannon.ChernoffPerTiltSanov
+import InformationTheory.Shannon.Chernoff
 import Mathlib.Probability.StrongLaw
 import Mathlib.Probability.Independence.InfinitePi
 import Mathlib.Probability.ProductMeasure

@@ -23,7 +23,7 @@ plan filename stem = `parallel-gaussian-headline-honest-restructure-plan` →
 
 ### ゴール
 
-`Common2026/Shannon/ParallelGaussianPerCoordRegularity.lean` の 2 declaration を、現状の
+`InformationTheory/Shannon/ParallelGaussianPerCoordRegularity.lean` の 2 declaration を、現状の
 **load-bearing hypothesis packaging** (tier 5) から **sorry + `@residual`** (tier 2) に書き換え、
 プロジェクトの honesty バー (標準B、proof done = 0 sorry かつ 0 residual) と整合する正直な中間状態に落とす。
 
@@ -43,7 +43,7 @@ plan filename stem = `parallel-gaussian-headline-honest-restructure-plan` →
 ただ drop して全 body を `sorry` にするのではなく、**file 内に既に存在する genuine reduction chain を body
 で本当に呼び出し**、Mathlib/未証明の核心部分でだけ sorry を立てる。
 
-決定的な観察: 親ファイル `Common2026/Draft/Shannon/ParallelGaussianPerCoord.lean` には
+決定的な観察: 親ファイル `InformationTheory/Draft/Shannon/ParallelGaussianPerCoord.lean` には
 **load-bearing hyp の 3 つ全てを genuine に供給できる reduction chain が既に揃っている**:
 
 | 現 headline の load-bearing hyp | 親ファイルの genuine reduction で何に帰着するか |
@@ -163,7 +163,7 @@ docstring 末尾に「load-bearing hyp を drop、converse 核は `wall:multivar
 
 ### R3 — `@[entry_point]` 再判定 + caller 影響確認 📋
 
-- [ ] **`@[entry_point]` の意味を確認済**: `Common2026/Meta/EntryPoint.lean` より、`@[entry_point]` は
+- [ ] **`@[entry_point]` の意味を確認済**: `InformationTheory/Meta/EntryPoint.lean` より、`@[entry_point]` は
   **orphan-detection の BFS root マーカーのみ**。coverage / completion metric ではない (監査の「coverage metric
   inflation」懸念は EntryPoint の役割誤認、ただし sorry-based 後も entry_point の妥当性は判断する)。
 - [ ] **caller 確認済 (verbatim)**: `rg` で両 declaration の external caller は **0 件**

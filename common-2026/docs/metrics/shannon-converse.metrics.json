@@ -3,7 +3,7 @@
   "proof_log": "docs/proof-logs/proof-log-shannon-converse.md",
   "generated_at": "2026-05-10T01:02:19.298Z",
   "filters": {
-    "file_prefix": "Common2026/Shannon/Converse"
+    "file_prefix": "InformationTheory/Shannon/Converse"
   },
   "idle_gap_minutes": 5,
   "sessions": [
@@ -35,22 +35,22 @@
       },
       "bash_total": 18,
       "edits_by_file": {
-        "Common2026.lean": 1,
-        "Common2026/Shannon/Converse.lean": 3
+        "InformationTheory.lean": 1,
+        "InformationTheory/Shannon/Converse.lean": 3
       },
       "writes_by_file": {
-        "Common2026/Shannon/Converse.lean": 1,
+        "InformationTheory/Shannon/Converse.lean": 1,
         ".claude/handoff.md": 1
       },
       "reads_by_file": {
         ".claude/handoff.md": 1,
         "docs/shannon-moonshot-plan.md": 1,
-        "Common2026.lean": 1,
-        "Common2026/Shannon/MutualInfo.lean": 1,
-        "Common2026/Shannon/DPI.lean": 1,
-        "Common2026/Fano/Measure.lean": 1,
-        "Common2026/Shannon/Bridge.lean": 2,
-        "Common2026/Shannon/Converse.lean": 1
+        "InformationTheory.lean": 1,
+        "InformationTheory/Shannon/MutualInfo.lean": 1,
+        "InformationTheory/Shannon/DPI.lean": 1,
+        "InformationTheory/Fano/Measure.lean": 1,
+        "InformationTheory/Shannon/Bridge.lean": 2,
+        "InformationTheory/Shannon/Converse.lean": 1
       },
       "matched_edits": 3,
       "matched_writes": 1,
@@ -93,22 +93,22 @@
     },
     "bash_total": 18,
     "edits_by_file": {
-      "Common2026.lean": 1,
-      "Common2026/Shannon/Converse.lean": 3
+      "InformationTheory.lean": 1,
+      "InformationTheory/Shannon/Converse.lean": 3
     },
     "writes_by_file": {
-      "Common2026/Shannon/Converse.lean": 1,
+      "InformationTheory/Shannon/Converse.lean": 1,
       ".claude/handoff.md": 1
     },
     "reads_by_file": {
       ".claude/handoff.md": 1,
       "docs/shannon-moonshot-plan.md": 1,
-      "Common2026.lean": 1,
-      "Common2026/Shannon/MutualInfo.lean": 1,
-      "Common2026/Shannon/DPI.lean": 1,
-      "Common2026/Fano/Measure.lean": 1,
-      "Common2026/Shannon/Bridge.lean": 2,
-      "Common2026/Shannon/Converse.lean": 1
+      "InformationTheory.lean": 1,
+      "InformationTheory/Shannon/MutualInfo.lean": 1,
+      "InformationTheory/Shannon/DPI.lean": 1,
+      "InformationTheory/Fano/Measure.lean": 1,
+      "InformationTheory/Shannon/Bridge.lean": 2,
+      "InformationTheory/Shannon/Converse.lean": 1
     },
     "matched_edits": 3,
     "matched_writes": 1,

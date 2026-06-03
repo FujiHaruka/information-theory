@@ -3,7 +3,7 @@
   "proof_log": "docs/proof-logs/proof-log-stein-converse.md",
   "generated_at": "2026-05-11T00:20:25.371Z",
   "filters": {
-    "file_prefix": "Common2026/Shannon/"
+    "file_prefix": "InformationTheory/Shannon/"
   },
   "idle_gap_minutes": 5,
   "sessions": [

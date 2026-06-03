@@ -77,13 +77,13 @@ Mathlib の `HasCompactSupport.contDiff_convolution_right` は Gaussian が comp
 
 | Phase | file | 役割 |
 |---|---|---|
-| G | `Common2026/Shannon/EPIConvDensityGaussianGateway.lean` (新規) | `pX` integrable-only + Gaussian-kernel-smooth 版 derivative gateway |
-| P2 | `Common2026/Shannon/EPIConvDensityNormalization.lean` (新規) | (2) `∫ convDensityAdd pX g_t = 1` |
-| P3 | `Common2026/Shannon/EPIConvDensityAssoc.lean` (新規) | (3) `convDensityAdd_assoc` + X⊥Y 一般版 `pPath` + 同定 |
-| P1 | `Common2026/Shannon/EPIConvDensityRegular.lean` (新規) | (1) `IsRegularDensityV2 (convDensityAdd pX g_t)` producer |
-| P4 | `Common2026/Shannon/EPIBlachmanGeneralDensity.lean` (新規) | (4) 非 Gaussian `IsBlachmanConvReady` producer |
+| G | `InformationTheory/Shannon/EPIConvDensityGaussianGateway.lean` (新規) | `pX` integrable-only + Gaussian-kernel-smooth 版 derivative gateway |
+| P2 | `InformationTheory/Shannon/EPIConvDensityNormalization.lean` (新規) | (2) `∫ convDensityAdd pX g_t = 1` |
+| P3 | `InformationTheory/Shannon/EPIConvDensityAssoc.lean` (新規) | (3) `convDensityAdd_assoc` + X⊥Y 一般版 `pPath` + 同定 |
+| P1 | `InformationTheory/Shannon/EPIConvDensityRegular.lean` (新規) | (1) `IsRegularDensityV2 (convDensityAdd pX g_t)` producer |
+| P4 | `InformationTheory/Shannon/EPIBlachmanGeneralDensity.lean` (新規) | (4) 非 Gaussian `IsBlachmanConvReady` producer |
 
-各 Phase landing 時に `Common2026.lean` へ import 1 行追加。import policy: pinpoint (`import Mathlib` 禁止)。
+各 Phase landing 時に `InformationTheory.lean` へ import 1 行追加。import policy: pinpoint (`import Mathlib` 禁止)。
 
 ## 進捗
 

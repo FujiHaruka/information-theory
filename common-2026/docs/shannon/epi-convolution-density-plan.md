@@ -10,17 +10,17 @@
 > 「`hasDerivAt_integral_of_dominated_loc_of_deriv_le` (`ParametricIntegral.lean:289`)、`condExp`、
 > `condDistrib` は存在」。
 >
-> **Consumer (将来)**: `Common2026/Shannon/FisherInfoV2.lean` の
+> **Consumer (将来)**: `InformationTheory/Shannon/FisherInfoV2.lean` の
 > `fisherInfoOfDensity (f : ℝ → ℝ) := ∫⁻ (logDeriv f)² · f` — 本 brick が出す密度 / score を
 > このまま食わせられる shape にする。
 >
-> **新ファイル**: `Common2026/Shannon/EPIConvolutionDensity.lean` (新規, 0-sorry を狙う)。
+> **新ファイル**: `InformationTheory/Shannon/EPIConvolutionDensity.lean` (新規, 0-sorry を狙う)。
 >
 > **Status (2026-05-20)**: 着手前。本 plan は計画のみ。proof-log: yes (Phase 2 lconvolution bridge は
 > 失敗確率が高く判断ログ必須)。
 >
-> **実態整合 (2026-05-20): DONE-UNCOND (全 Phase 完了、0 sorry)** — `Common2026/Shannon/EPIConvolutionDensity.lean`
-> (201 行、`Common2026.lean:227` で import 済) が全 deliverable を publish 済。Phase 1 `convDensityReal`
+> **実態整合 (2026-05-20): DONE-UNCOND (全 Phase 完了、0 sorry)** — `InformationTheory/Shannon/EPIConvolutionDensity.lean`
+> (201 行、`InformationTheory.lean:227` で import 済) が全 deliverable を publish 済。Phase 1 `convDensityReal`
 > (`:57`) / Phase 3 `hasDerivAt_convDensityReal` (`:79`、honest 解析仮定) / Phase 4 `logDeriv_convDensityReal`
 > (`:108`) は計画通り。**Phase 2 (riskiest) は L-Conv-2 へ撤退せず無条件 discharge**:
 > `pdf_add_toReal_ae_eq_convDensityReal` (`:180`、`IndepFun` 下で 0 sorry) + `convDensityReal_toReal_pdf_eq_lconvolution`
@@ -36,7 +36,7 @@
 - [ ] Phase 3 — 積分記号下微分: `hasDerivAt_convDensityReal` (純 Mathlib calculus) 📋
 - [ ] Phase 4 — `logDeriv_convDensityReal` score 表現 (純算術、Phase 3 依存) 📋
 - [ ] Phase 2 — **lconvolution↔real bridge**: 和の密度 = `convDensityReal` (riskiest) 📋
-- [ ] Phase 5 — skeleton 整地 + verify + `Common2026.lean` import + 親反映 📋
+- [ ] Phase 5 — skeleton 整地 + verify + `InformationTheory.lean` import + 親反映 📋
 
 > **依存順 = Phase 1 → 3 → 4 → 2 → 5。** Phase 番号は親計画との対応を保つため非単調 (在庫の
 > 自作要素番号 #1 が本 brick、その内部で純算術 3,4 を bridge 2 より先に埋める)。
@@ -45,7 +45,7 @@
 
 ### Goal (完成判定)
 
-新ファイル `Common2026/Shannon/EPIConvolutionDensity.lean` で以下を publish。Phase 1,3,4 は
+新ファイル `InformationTheory/Shannon/EPIConvolutionDensity.lean` で以下を publish。Phase 1,3,4 は
 **0-sorry 確定 deliverable** (generic `(f, g)`)。Phase 2 (pdf-of-sum 同定) は **0-sorry を狙うが、
 walls したら named hypothesis に縮退** (撤退ライン L-Conv-2)。
 
@@ -238,17 +238,17 @@ theorem pdf_add_toReal_ae_eq_convDensityReal
 ### Phase 5 — 整地 + verify + 反映 📋  (proof-log: no)
 
 - skeleton-driven: Phase 1 → 3 → 4 → 2 の順で 1 sorry ずつ。各 fill 後 `lake env lean
-  Common2026/Shannon/EPIConvolutionDensity.lean` が silent。
+  InformationTheory/Shannon/EPIConvolutionDensity.lean` が silent。
 - import (pinpoint, `import Mathlib` 禁止):
   ```
-  import Common2026.Shannon.FisherInfoV2
+  import InformationTheory.Shannon.FisherInfoV2
   import Mathlib.Probability.Density
   import Mathlib.Probability.Independence.Basic
   import Mathlib.Analysis.LConvolution
   import Mathlib.Analysis.Calculus.ParametricIntegral
   import Mathlib.Analysis.Calculus.LogDeriv
   ```
-- `Common2026.lean` に `import Common2026.Shannon.EPIConvolutionDensity` 1 行追加。
+- `InformationTheory.lean` に `import InformationTheory.Shannon.EPIConvolutionDensity` 1 行追加。
 - 親 `epi-moonshot-plan.md` の Blachman 節に「conv-density brick 完成、`IsStamScoreConvolution`
   実体化の前提整地」を判断ログで反映 (本 plan は親本文を編集しない、append-only ログのみ)。
 

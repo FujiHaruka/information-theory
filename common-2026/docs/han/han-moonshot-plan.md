@@ -1,15 +1,15 @@
 # Han 不等式・ムーンショット計画 🌙
 
-> 実態整合 (2026-05-20): DONE-UNCOND — `han_inequality` (`Common2026/Shannon/Han.lean:330`、binder は `[IsProbabilityMeasure μ]` + `Measurable` のみ、pass-through 仮定なし) / `jointEntropy_chain_rule` (`Han.lean:56`)。`lake env lean Common2026/Shannon/Han.lean` silent 再確認、0 sorry。
-> **Status (2026-05-10): Phase A / B / C 全完了 (zero sorry)。** `Common2026/Shannon/Han.lean` で `han_inequality` が `lake env lean` を silent 通過。Phase A 4 主定理 (`Common2026/Shannon/Entropy.lean`) + Phase B `jointEntropy_chain_rule` + Phase C 本体 + plumbing (Pi reshape `MeasurableEquiv` 3 本 / index 同型 2 本)。退化ケース (`n = 0, 1`) も同じ証明で通過し、当初想定の `hn : 1 ≤ n` 仮定は不要と判明 (削除済)。proof-log は [`proof-log-han-moonshot.md`](proof-logs/proof-log-han-moonshot.md)。
+> 実態整合 (2026-05-20): DONE-UNCOND — `han_inequality` (`InformationTheory/Shannon/Han.lean:330`、binder は `[IsProbabilityMeasure μ]` + `Measurable` のみ、pass-through 仮定なし) / `jointEntropy_chain_rule` (`Han.lean:56`)。`lake env lean InformationTheory/Shannon/Han.lean` silent 再確認、0 sorry。
+> **Status (2026-05-10): Phase A / B / C 全完了 (zero sorry)。** `InformationTheory/Shannon/Han.lean` で `han_inequality` が `lake env lean` を silent 通過。Phase A 4 主定理 (`InformationTheory/Shannon/Entropy.lean`) + Phase B `jointEntropy_chain_rule` + Phase C 本体 + plumbing (Pi reshape `MeasurableEquiv` 3 本 / index 同型 2 本)。退化ケース (`n = 0, 1`) も同じ証明で通過し、当初想定の `hn : 1 ≤ n` 仮定は不要と判明 (削除済)。proof-log は [`proof-log-han-moonshot.md`](proof-logs/proof-log-han-moonshot.md)。
 >
-> ゴールは **Han の不等式 (補集合形)** を Mathlib + 既存 `Common2026/Shannon` API の上に形式化し、そのプロセスで「次のムーンショットに渡せる共通化候補」を浮き上がらせること。
+> ゴールは **Han の不等式 (補集合形)** を Mathlib + 既存 `InformationTheory/Shannon` API の上に形式化し、そのプロセスで「次のムーンショットに渡せる共通化候補」を浮き上がらせること。
 
 ## Context
 
 ### モチベーション
 
-Shannon converse 達成時点で `Common2026/Shannon/` には `mutualInfo` / `condMutualInfo` / `entropy` / `condEntropy` / DPI / chain rule (2 変数) / Markov chain といった主要 API が出揃っている。これらは「Shannon converse という単一の応用例」を支えるためにのみ書かれており、**第二の応用で擦ってみないと、どれが本当に再利用される/どれを抽象化すべきかが定まらない**。
+Shannon converse 達成時点で `InformationTheory/Shannon/` には `mutualInfo` / `condMutualInfo` / `entropy` / `condEntropy` / DPI / chain rule (2 変数) / Markov chain といった主要 API が出揃っている。これらは「Shannon converse という単一の応用例」を支えるためにのみ書かれており、**第二の応用で擦ってみないと、どれが本当に再利用される/どれを抽象化すべきかが定まらない**。
 
 Han の不等式は次の理由で「第二の応用」として最適:
 
@@ -18,7 +18,7 @@ Han の不等式は次の理由で「第二の応用」として最適:
 3. **n 変数化 (`Fin n`) という未踏の軸を 1 本だけ追加する** — これは Shannon converse / encoder 拡張が手を付けなかった軸。ここで詰まったハマりどころがそのまま「次のムーンショット (例: Slepian-Wolf converse, source coding converse) で必要になる n 変数 chain rule の再利用素材」になる。
 4. **撤退してもダメージが小さい** — 自前定義 + 1 主定理という小さなスコープで、撤退ラインを途中（Phase B / Phase C 境界）に設けやすい。
 
-つまり Han は「ムーンショット感の小さい純応用」と引き換えに、**`Common2026/Shannon` の n 変数拡張を独立に検証する** 役を引き受ける。
+つまり Han は「ムーンショット感の小さい純応用」と引き換えに、**`InformationTheory/Shannon` の n 変数拡張を独立に検証する** 役を引き受ける。
 
 ### Han の不等式（補集合形）
 
@@ -93,20 +93,20 @@ Phase C  : Han 不等式 🌙                                    ← Phase A + B
 
 ### なぜ 4 段に分けるか
 
-1. **Phase A 単独で価値がある** — 「`Common2026/Shannon/Entropy.lean` に 2 変数 chain rule と『条件付けでエントロピーは減る』を整備した」という独立した成果として publish 可能。Han に届かなくても次の Slepian-Wolf / source coding に直接流用できる素材
+1. **Phase A 単独で価値がある** — 「`InformationTheory/Shannon/Entropy.lean` に 2 変数 chain rule と『条件付けでエントロピーは減る』を整備した」という独立した成果として publish 可能。Han に届かなくても次の Slepian-Wolf / source coding に直接流用できる素材
 2. **Phase B が技術的山場** — `Fin n` の prefix / complement / induction を Lean で扱う部分。ここが想定外に重ければ Phase C 着手前に判断できる
 3. **Phase C は組み合わせのみ** — Phase A + B が片付けば 50〜100 行で Han 本体は通る見込み
-4. **Phase 0 (M0) で「Mathlib に既存 Han がないこと」「既存 `Common2026/Shannon` に何が足りないか」を 1 ターンで明文化** することで、Phase A 着手時の不確実性を潰す
+4. **Phase 0 (M0) で「Mathlib に既存 Han がないこと」「既存 `InformationTheory/Shannon` に何が足りないか」を 1 ターンで明文化** することで、Phase A 着手時の不確実性を潰す
 
 ### ファイル構成 (Phase C 終了時)
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   Entropy.lean        ← Phase A: 2 変数 chain rule + 条件付けでエントロピーは減る
   Han.lean            ← Phase B + C: jointEntropy (Fin n), n 変数 chain rule, Han
 ```
 
-`Common2026.lean` (library root) に対応する `import Common2026.Shannon.{Entropy,Han}` を順次追記。
+`InformationTheory.lean` (library root) に対応する `import InformationTheory.Shannon.{Entropy,Han}` を順次追記。
 
 ---
 
@@ -115,7 +115,7 @@ Common2026/Shannon/
 ### スコープ
 
 - **Mathlib 側に Han / Shearer / 一般化エントロピー不等式が既に存在しないか確認** (`InformationTheory/Shannon/`, `InformationTheory/KullbackLeibler/`, 念のため `Combinatorics/`)
-- **既存 `Common2026/Shannon/*.lean` の n 変数耐性レビュー**:
+- **既存 `InformationTheory/Shannon/*.lean` の n 変数耐性レビュー**:
   - `entropy` を `Ω → (Fin n → α)` に instantiate したとき必要な instance チェイン (`Pi.fintype`, `MeasurableSpace.pi`, `MeasurableSingletonClass`) が自動で発火するか
   - `mutualInfo` を `(Fin n → α)`-値 RV に適用するときの障害物
   - `condMutualInfo_nonneg` の signature が `H(X|Y,Z) ≤ H(X|Y)` の形に乗るか
@@ -129,7 +129,7 @@ Common2026/Shannon/
 ### Done 条件
 
 - 「Mathlib に Han 不等式は無い」を裏取り済み (loogle + rg)
-- Phase A の skeleton (`Common2026/Shannon/Entropy.lean` の sorry-driven 出だし) が書ける状態
+- Phase A の skeleton (`InformationTheory/Shannon/Entropy.lean` の sorry-driven 出だし) が書ける状態
 
 ### 工数感
 
@@ -176,8 +176,8 @@ end InformationTheory.Shannon
 
 ### Done 条件
 
-- 上記 2 定理が `lake env lean Common2026/Shannon/Entropy.lean` で silent
-- `Common2026.lean` に `import Common2026.Shannon.Entropy` 追記
+- 上記 2 定理が `lake env lean InformationTheory/Shannon/Entropy.lean` で silent
+- `InformationTheory.lean` に `import InformationTheory.Shannon.Entropy` 追記
 - skeleton-driven で `entropy_pair_eq_entropy_add_condEntropy` → `condMutualInfo_eq_condEntropy_sub_condEntropy` → `condEntropy_le_condEntropy_of_pair` の順に sorry を割っていく
 
 ### 工数感
@@ -230,8 +230,8 @@ end InformationTheory.Shannon
 
 ### Done 条件
 
-- `jointEntropy_chain_rule` が `lake env lean Common2026/Shannon/Han.lean` で silent
-- Phase A に依存。`import Common2026.Shannon.Entropy` を含む
+- `jointEntropy_chain_rule` が `lake env lean InformationTheory/Shannon/Han.lean` で silent
+- Phase A に依存。`import InformationTheory.Shannon.Entropy` を含む
 - skeleton: 定義 → `n = 0` / `n = 1` の sanity → induction step の順に sorry を割る
 
 ### 工数感
@@ -285,7 +285,7 @@ end InformationTheory.Shannon
 
 ### Done 条件
 
-- `han_inequality` が `lake env lean Common2026/Shannon/Han.lean` で silent
+- `han_inequality` が `lake env lean InformationTheory/Shannon/Han.lean` で silent
 - Phase A + B がすべて activated (主定理が `entropy_pair_eq_entropy_add_condEntropy`, `condEntropy_le_condEntropy_of_pair`, `jointEntropy_chain_rule` を直接呼ぶ)
 - `n = 0, 1` 退化ケース (両辺 0) も同じ証明で追加処理なしに通った (`hn : 1 ≤ n` 不要が判明し statement から削除)
 
@@ -304,7 +304,7 @@ end InformationTheory.Shannon
   → Phase C を `n = 3` / `n = 4` 固定の concrete 形に縮める。一般 n は将来課題に
 - **Phase C の補集合 / prefix 変換で詰まる**場合
   → `n` 一般化を諦め `n = 3` 形 `2 H(X,Y,Z) ≤ H(X,Y) + H(Y,Z) + H(X,Z)` で publish。subset / Shearer 拡張は別計画に
-- どのケースも「Han に届かなかった」ではなく **「`Common2026/Shannon` の n 変数化で詰まった具体ポイント」をデータとして残す**
+- どのケースも「Han に届かなかった」ではなく **「`InformationTheory/Shannon` の n 変数化で詰まった具体ポイント」をデータとして残す**
 
 ---
 
@@ -312,13 +312,13 @@ end InformationTheory.Shannon
 
 1. ~~**Phase 0 着手** — Mathlib + 既存 Shannon API インベントリ調査 (subagent 1 本 + ローカル `loogle` / `rg`)~~ ✅ 2026-05-10 完了 → [`han-mathlib-inventory.md`](han-mathlib-inventory.md)
 2. ~~Phase 0 結果を見て、本計画書の Approach / Phase A 節を必要に応じて更新~~ ✅ Phase A 工数感 (150〜200 行) / Phase B 最大リスク (instance 自動発火 confirm 済) 反映
-3. ~~**Phase A skeleton + 充填**~~ ✅ 2026-05-10 完了 (`Common2026/Shannon/Entropy.lean` に 4 主定理: chain rule / tower / middle lemma / 「条件付けで減る」)
-4. ~~**Phase B skeleton + 充填**~~ ✅ 2026-05-10 完了 (`jointEntropy` 定義 + n 変数 chain rule。`Common2026/Shannon/Han.lean`)
+3. ~~**Phase A skeleton + 充填**~~ ✅ 2026-05-10 完了 (`InformationTheory/Shannon/Entropy.lean` に 4 主定理: chain rule / tower / middle lemma / 「条件付けで減る」)
+4. ~~**Phase B skeleton + 充填**~~ ✅ 2026-05-10 完了 (`jointEntropy` 定義 + n 変数 chain rule。`InformationTheory/Shannon/Han.lean`)
 5. ~~**Phase C 充填**~~ ✅ 2026-05-10 完了 (`han_inequality` 本体。`hn : 1 ≤ n` 不要が判明し削除、index 同型 2 本 + Pi reshape `MeasurableEquiv` 3 本 + `han_single_bound` を投入)
 6. ~~**proof-log 作成**~~ ✅ 2026-05-10 完了 → [`proof-log-han-moonshot.md`](proof-logs/proof-log-han-moonshot.md)
 
 ### ムーンショット完了後の方向 (user 判断)
 
 - **Phase D (subset average / Shearer)**: 「非ゴール」(line 41-45) に置いた拡張を別 plan に切り出す候補。Han 本体の `han_single_bound` パターンが再利用できるかが見どころ。
-- **Slepian-Wolf converse** (撤退ライン側にあった代替): n 変数 chain rule + Markov chain converse の組み合わせで、`Common2026/Shannon/Converse.lean` の延長として書ける見込み
-- **`Common2026/Shannon` の API 整理**: Han で擦った結果 `MeasurableEquiv.piCongrLeft` + `sumPiEquivProdPi` + `funUnique` の 3 点セットや、`entropy_measurableEquiv_comp` のような plumbing は次のムーンショットでも使う。Shannon 本体に上げるかは proof-log 観察を踏まえて検討
+- **Slepian-Wolf converse** (撤退ライン側にあった代替): n 変数 chain rule + Markov chain converse の組み合わせで、`InformationTheory/Shannon/Converse.lean` の延長として書ける見込み
+- **`InformationTheory/Shannon` の API 整理**: Han で擦った結果 `MeasurableEquiv.piCongrLeft` + `sumPiEquivProdPi` + `funUnique` の 3 点セットや、`entropy_measurableEquiv_comp` のような plumbing は次のムーンショットでも使う。Shannon 本体に上げるかは proof-log 観察を踏まえて検討

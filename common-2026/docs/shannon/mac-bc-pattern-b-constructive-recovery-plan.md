@@ -31,8 +31,8 @@ Chernoff sweep (`chernoff-sorry-migration-plan.md` L497-521) では **19 declara
 **Sub-step**:
 
 - [ ] **0.1** 両 declaration の verbatim 確認 (本 plan の冒頭 §「verbatim signature + body」転記済、Phase 0 実施時は実コードと再照合)
-  - `Common2026/Shannon/MultipleAccessChannel.lean:645-651` (`mac_capacity_region_outer_bound_three_bounds`、`sorry` body)
-  - `Common2026/Shannon/BroadcastChannel.lean:640-652` (`bc_capacity_region_outer_bound_corner_limit`、`sorry` body)
+  - `InformationTheory/Shannon/MultipleAccessChannel.lean:645-651` (`mac_capacity_region_outer_bound_three_bounds`、`sorry` body)
+  - `InformationTheory/Shannon/BroadcastChannel.lean:640-652` (`bc_capacity_region_outer_bound_corner_limit`、`sorry` body)
 - [ ] **0.2** 必要部品 (Pattern B 適用後 body の依存先) の verbatim 確認:
   - `mac_region_combine` (`MultipleAccessChannel.lean:517`、`@residual` なし = 既に proof done)
   - `bc_capacity_region_outer_bound` (`BroadcastChannel.lean:618`、Wave 6 で proof done 化済 + Wave 7 で `@audit:ok` 付与)
@@ -47,7 +47,7 @@ Chernoff sweep (`chernoff-sorry-migration-plan.md` L497-521) では **19 declara
 
 ## Phase 1 — MAC `_three_bounds` constructive recovery 📋
 
-**対象**: `Common2026/Shannon/MultipleAccessChannel.lean:645-651`
+**対象**: `InformationTheory/Shannon/MultipleAccessChannel.lean:645-651`
 
 **現状 body** (verbatim):
 
@@ -80,7 +80,7 @@ theorem mac_capacity_region_outer_bound_three_bounds
 - [ ] **1.1** signature 維持で body を `mac_region_combine R₁ R₂ I₁ I₂ Iboth h₁ h₂ hs` に置換。
 - [ ] **1.2** docstring 末尾の `@residual(plan:mac-bc-sorry-migration-plan)` 行を削除 (Pattern B closure で `@residual` 不要、Phase V で `@audit:ok` 付与候補)。
 - [ ] **1.3** docstring 散文に「Pattern B constructive recovery via `mac_region_combine`」の 1 行 trail を追加 (Wave 7 BC audit `@audit:ok` 散文と同体裁、`docs/shannon/mac-bc-pattern-b-constructive-recovery-plan` への back-reference)。
-- [ ] **1.4** `lake env lean Common2026/Shannon/MultipleAccessChannel.lean` で 0 errors + `sorry` 警告消失を確認。
+- [ ] **1.4** `lake env lean InformationTheory/Shannon/MultipleAccessChannel.lean` で 0 errors + `sorry` 警告消失を確認。
 
 **撤退ライン**:
 
@@ -89,7 +89,7 @@ theorem mac_capacity_region_outer_bound_three_bounds
 
 ## Phase 2 — BC `_corner_limit` constructive recovery 📋
 
-**対象**: `Common2026/Shannon/BroadcastChannel.lean:640-652`
+**対象**: `InformationTheory/Shannon/BroadcastChannel.lean:640-652`
 
 **現状 body** (verbatim):
 
@@ -136,7 +136,7 @@ theorem bc_capacity_region_outer_bound_corner_limit
 - [ ] **2.1** signature 維持で body を上記 `have h := bc_capacity_region_outer_bound ...` + `exact ⟨..., ...⟩` に置換。
 - [ ] **2.2** docstring 末尾の `@residual(plan:mac-bc-sorry-migration-plan)` 行を削除。
 - [ ] **2.3** docstring 散文に「Pattern B constructive recovery via `bc_capacity_region_outer_bound` + `ε ≤ 0` corner limit、MAC peer `mac_capacity_region_outer_bound_corner_limit` body と同型」trail を追加。
-- [ ] **2.4** `lake env lean Common2026/Shannon/BroadcastChannel.lean` で 0 errors + `sorry` 警告消失を確認。
+- [ ] **2.4** `lake env lean InformationTheory/Shannon/BroadcastChannel.lean` で 0 errors + `sorry` 警告消失を確認。
 
 **撤退ライン**:
 
@@ -146,8 +146,8 @@ theorem bc_capacity_region_outer_bound_corner_limit
 
 ## Phase V — verify + honesty audit 📋
 
-- [ ] **V.1** `lake env lean Common2026/Shannon/MultipleAccessChannel.lean` + `lake env lean Common2026/Shannon/BroadcastChannel.lean` 0 errors、新規 `sorry` 警告 0 件 (両 file の他 declaration の既存 sorry はそのまま、本 plan scope 外)。
-- [ ] **V.2** `rg -n '@residual|@audit:' Common2026/Shannon/MultipleAccessChannel.lean Common2026/Shannon/BroadcastChannel.lean` で本 2 declaration から `@residual` 消失を確認。
+- [ ] **V.1** `lake env lean InformationTheory/Shannon/MultipleAccessChannel.lean` + `lake env lean InformationTheory/Shannon/BroadcastChannel.lean` 0 errors、新規 `sorry` 警告 0 件 (両 file の他 declaration の既存 sorry はそのまま、本 plan scope 外)。
+- [ ] **V.2** `rg -n '@residual|@audit:' InformationTheory/Shannon/MultipleAccessChannel.lean InformationTheory/Shannon/BroadcastChannel.lean` で本 2 declaration から `@residual` 消失を確認。
 - [ ] **V.3** 独立 `honesty-auditor` (or `general-purpose` CORE 内蔵 prompt) を 1 件 dispatch:
   - 入力: 2 declaration の `file:line` + 親 plan + 本 plan path + commit hash
   - 監査スコープ: (a) Pattern B constructive recovery body が genuine か (循環 `:= h` でないか、`*Hypothesis` 核 bundling でないか、退化定義悪用でないか)、(b) MAC `_three_bounds` の `h₁ / h₂ / hs` は **precondition** か **load-bearing claim** か (= 結論 `InMACCapacityRegion` を構築する **constructor の構成要素** であり、Mathlib 結論型を再パッケージする pass-through、load-bearing claim とは異なる ↔ Chernoff plan の `limsup rate ≤ -log Z(λ)` 型と対比して honest 判断)

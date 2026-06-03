@@ -1,9 +1,9 @@
 # Proof log — AEP (Phase A〜C 完了)
 
 > **Parent plan**: [`docs/shannon/aep-moonshot-plan.md`](../shannon/aep-moonshot-plan.md)
-> **File**: [`Common2026/Shannon/AEP.lean`](../../Common2026/Shannon/AEP.lean) (約 415 行)
+> **File**: [`InformationTheory/Shannon/AEP.lean`](../../InformationTheory/Shannon/AEP.lean) (約 415 行)
 > **Status**: Phase A ✅ / Phase B ✅ / Phase C ✅ (`measurableSet_typicalSet` ✅ / `typicalSet_prob_tendsto_one` ✅ / `typicalSet_card_le` ✅ — 第 2 セッションで `[∀ x, P(x) > 0]` 仮定追加で完了)
-> **Verification**: `lake env lean Common2026/Shannon/AEP.lean` silent (0 sorry) / `lake build` 全体緑通過
+> **Verification**: `lake env lean InformationTheory/Shannon/AEP.lean` silent (0 sorry) / `lake build` 全体緑通過
 
 ## 質的観察
 

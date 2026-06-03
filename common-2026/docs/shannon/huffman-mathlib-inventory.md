@@ -7,7 +7,7 @@
 ## 一行サマリ
 
 **Huffman 木 / prefix-code structure / sibling-property / 最適性 induction の本体は Mathlib 完全不在**
-(`Huffman` `PrefixCode` `Tree (Fin D)` がいずれも `Found 0`)。一方で **(i) Common2026 側の `IsPrefixFree` + `shannonFanoCode` ペア + `expectedLength` + `entropyD_le_expectedLength_of_kraft` + `exists_prefix_code_of_kraft` は完成済み 0-sorry**、**(ii) Mathlib 側 `InformationTheory.kraft_mcmillan_inequality` (`UniquelyDecodable` over `Finset (List α)` 形) も完成済み**、**(iii) priority-queue / argmin / sort / strong-induction の周辺 API (List.argmin, Finset.exists_min_image, Multiset.sort, Multiset.strongInductionOn, Finset.induction) は揃っている**。よって T1-A の自作必要箇所は：
+(`Huffman` `PrefixCode` `Tree (Fin D)` がいずれも `Found 0`)。一方で **(i) InformationTheory 側の `IsPrefixFree` + `shannonFanoCode` ペア + `expectedLength` + `entropyD_le_expectedLength_of_kraft` + `exists_prefix_code_of_kraft` は完成済み 0-sorry**、**(ii) Mathlib 側 `InformationTheory.kraft_mcmillan_inequality` (`UniquelyDecodable` over `Finset (List α)` 形) も完成済み**、**(iii) priority-queue / argmin / sort / strong-induction の周辺 API (List.argmin, Finset.exists_min_image, Multiset.sort, Multiset.strongInductionOn, Finset.induction) は揃っている**。よって T1-A の自作必要箇所は：
 
 1. Huffman 木表現 + `huffmanCode : (Fin n → ℝ) → α → List (Fin 2)` 構成 (~150 行)
 2. sibling property (Cover-Thomas Lemma 5.8.1: 「最小 2 確率の codeword は同じ最深 leaf の兄弟である」) (~150 行)
@@ -16,7 +16,7 @@
 
 合計 ~500-700 行 (roadmap 規模見積もりと一致)。
 
-**最大の発見**: Mathlib `kraft_mcmillan_inequality` は **`Finset (List α)` (codeword 集合) 水準** で publish されている。一方 `Common2026/Shannon/ShannonCode.lean` の `kraftSum` は **`α → ℕ` (語長関数) 水準**。Huffman の最適性ステートメントを書く際に **どちらの抽象水準を選ぶか** が最初の design judgement。 KraftReverse 既存 (`exists_prefix_code_of_kraft`) は `α → ℕ` 水準で構成しているので、自然な路線は語長水準で `expectedLength p l` 形に揃え、最後に prefix-code を `exists_prefix_code_of_kraft` で取り出す方式。
+**最大の発見**: Mathlib `kraft_mcmillan_inequality` は **`Finset (List α)` (codeword 集合) 水準** で publish されている。一方 `InformationTheory/Shannon/ShannonCode.lean` の `kraftSum` は **`α → ℕ` (語長関数) 水準**。Huffman の最適性ステートメントを書く際に **どちらの抽象水準を選ぶか** が最初の design judgement。 KraftReverse 既存 (`exists_prefix_code_of_kraft`) は `α → ℕ` 水準で構成しているので、自然な路線は語長水準で `expectedLength p l` 形に揃え、最後に prefix-code を `exists_prefix_code_of_kraft` で取り出す方式。
 
 **撤退ライン**: roadmap 提示の 500-700 行を上回るリスクは「sibling property を多倍数アルファベット (D-ary, D ≥ 2) に一般化しようとした場合」のみ。binary (D=2) 限定で着手し、D-ary 拡張は **stretch goal** に切り出す方針なら撤退ライン非発動の見込み。
 
@@ -74,20 +74,20 @@ end InformationTheory.Shannon.Huffman
 
 ## API 在庫テーブル
 
-### §A. 既存 Common2026 資産 (基盤)
+### §A. 既存 InformationTheory 資産 (基盤)
 
 | name | file:line | signature (verbatim, `[...]` 含む) | 結論形 (verbatim) | T1-A での扱い |
 | --- | --- | --- | --- | --- |
-| `entropyD` | `Common2026/Shannon/ShannonCode.lean:45` | `noncomputable def entropyD (D : ℝ) (P : Measure α) : ℝ` (variable `{α : Type*} [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]`) | `:= -∑ a : α, P.real {a} * Real.logb D (P.real {a})` | reuse (lower bound H ≤ E[L] で Shannon 最適性を読み替え可、しかし Huffman 主張は **任意 l との比較**で entropy を経由しないので必須ではない) |
-| `shannonLength` | `Common2026/Shannon/ShannonCode.lean:51` | `noncomputable def shannonLength (D : ℝ) (P : Measure α) (a : α) : ℕ` (同 variable) | `:= ⌈- Real.logb D (P.real {a})⌉₊` | non-reuse (Huffman 語長は別構成) |
-| `expectedLength` | `Common2026/Shannon/ShannonCode.lean:55` | `noncomputable def expectedLength (P : Measure α) (l : α → ℕ) : ℝ` (同 variable) | `:= ∑ a : α, P.real {a} * (l a : ℝ)` | **reuse 確定** (Huffman 主定理の比較対象 metric)。ただし入力が `Measure α` であることに注意 — `pmf : α → ℝ` 路線にするなら別 def が要る (下記 §F-3 参照) |
-| `kraftSum` | `Common2026/Shannon/ShannonCode.lean:59` | `noncomputable def kraftSum (D : ℝ) (l : α → ℕ) : ℝ` (同 variable) | `:= ∑ a : α, (D : ℝ) ^ (-(l a : ℤ))` | reuse (Huffman 語長の Kraft 充足を結語で主張) |
-| `shannonCode_expected_length_bounds` | `Common2026/Shannon/ShannonCode.lean:345` | `theorem shannonCode_expected_length_bounds {D : ℝ} (hD : 1 < D) (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a : α, 0 < P.real {a})` | `: entropyD D P ≤ expectedLength P (shannonLength D P) ∧ expectedLength P (shannonLength D P) < entropyD D P + 1` | non-reuse 本体 (Shannon code の sandwich) だが、`entropyD_le_expectedLength_of_kraft` が Gibbs 下界として Huffman の任意 l との比較に **使える** |
-| `entropyD_le_expectedLength_of_kraft` | `Common2026/Shannon/ShannonCode.lean:164` | `theorem entropyD_le_expectedLength_of_kraft {D : ℝ} (hD : 1 < D) (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a : α, 0 < P.real {a}) (l : α → ℕ) (h_kraft : kraftSum D l ≤ 1)` | `: entropyD D P ≤ expectedLength P l` | reuse (Gibbs 下界, Huffman 上界が `H + 1` 以下なので **Huffman ≤ Shannon → entropy ≤ Huffman** の chain で entropy ≤ Huffman ≤ Shannon を結べる) |
-| `IsPrefixFree` | `Common2026/Shannon/ShannonCodeKraftReverse.lean:47` | `def IsPrefixFree {D : ℕ} (c : α → List (Fin D)) : Prop` (variable `{α : Type*} [Fintype α] [DecidableEq α]`) | `:= ∀ a b : α, a ≠ b → ¬ c a <+: c b` | reuse 確定 (Huffman code の prefix-free 性主張 + injective とのペア) |
-| `exists_prefix_code_of_kraft` | `Common2026/Shannon/ShannonCodeKraftReverse.lean:482` | `theorem exists_prefix_code_of_kraft {D : ℕ} (hD : 2 ≤ D) (l : α → ℕ) (hl : ∀ a, 0 < l a) (hk : ∑ a : α, ((D : ℝ)) ^ (-(l a : ℤ)) ≤ 1)` | `: ∃ c : α → List (Fin D), Function.Injective c ∧ (∀ a, (c a).length = l a) ∧ IsPrefixFree c` | reuse 確定 (Huffman 語長 → Huffman prefix code の構成 bridge) |
-| `shannonFanoCode` | `Common2026/Shannon/ShannonCodeKraftReverse.lean:319` | `noncomputable def shannonFanoCode {D : ℕ} [NeZero D] (l : α → ℕ) (L : ℕ) (a : α) : List (Fin D)` | `:= toBaseDLen D (l a) (slotStart D l L (sortedIndex l a) / D ^ (L - l a))` | non-reuse (Huffman は別構成だが、KraftReverse の `exists_prefix_code_of_kraft` 経由で Huffman 語長 → 何らかの prefix code 存在を結ぶ手段になる) |
-| `commonDepth` | `Common2026/Shannon/ShannonCodeKraftReverse.lean:475` | `noncomputable def commonDepth (l : α → ℕ) : ℕ` | `:= Finset.univ.sup l` | reuse (Huffman 木の最大深度を読み替える際の bridge) |
+| `entropyD` | `InformationTheory/Shannon/ShannonCode.lean:45` | `noncomputable def entropyD (D : ℝ) (P : Measure α) : ℝ` (variable `{α : Type*} [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]`) | `:= -∑ a : α, P.real {a} * Real.logb D (P.real {a})` | reuse (lower bound H ≤ E[L] で Shannon 最適性を読み替え可、しかし Huffman 主張は **任意 l との比較**で entropy を経由しないので必須ではない) |
+| `shannonLength` | `InformationTheory/Shannon/ShannonCode.lean:51` | `noncomputable def shannonLength (D : ℝ) (P : Measure α) (a : α) : ℕ` (同 variable) | `:= ⌈- Real.logb D (P.real {a})⌉₊` | non-reuse (Huffman 語長は別構成) |
+| `expectedLength` | `InformationTheory/Shannon/ShannonCode.lean:55` | `noncomputable def expectedLength (P : Measure α) (l : α → ℕ) : ℝ` (同 variable) | `:= ∑ a : α, P.real {a} * (l a : ℝ)` | **reuse 確定** (Huffman 主定理の比較対象 metric)。ただし入力が `Measure α` であることに注意 — `pmf : α → ℝ` 路線にするなら別 def が要る (下記 §F-3 参照) |
+| `kraftSum` | `InformationTheory/Shannon/ShannonCode.lean:59` | `noncomputable def kraftSum (D : ℝ) (l : α → ℕ) : ℝ` (同 variable) | `:= ∑ a : α, (D : ℝ) ^ (-(l a : ℤ))` | reuse (Huffman 語長の Kraft 充足を結語で主張) |
+| `shannonCode_expected_length_bounds` | `InformationTheory/Shannon/ShannonCode.lean:345` | `theorem shannonCode_expected_length_bounds {D : ℝ} (hD : 1 < D) (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a : α, 0 < P.real {a})` | `: entropyD D P ≤ expectedLength P (shannonLength D P) ∧ expectedLength P (shannonLength D P) < entropyD D P + 1` | non-reuse 本体 (Shannon code の sandwich) だが、`entropyD_le_expectedLength_of_kraft` が Gibbs 下界として Huffman の任意 l との比較に **使える** |
+| `entropyD_le_expectedLength_of_kraft` | `InformationTheory/Shannon/ShannonCode.lean:164` | `theorem entropyD_le_expectedLength_of_kraft {D : ℝ} (hD : 1 < D) (P : Measure α) [IsProbabilityMeasure P] (hP : ∀ a : α, 0 < P.real {a}) (l : α → ℕ) (h_kraft : kraftSum D l ≤ 1)` | `: entropyD D P ≤ expectedLength P l` | reuse (Gibbs 下界, Huffman 上界が `H + 1` 以下なので **Huffman ≤ Shannon → entropy ≤ Huffman** の chain で entropy ≤ Huffman ≤ Shannon を結べる) |
+| `IsPrefixFree` | `InformationTheory/Shannon/ShannonCodeKraftReverse.lean:47` | `def IsPrefixFree {D : ℕ} (c : α → List (Fin D)) : Prop` (variable `{α : Type*} [Fintype α] [DecidableEq α]`) | `:= ∀ a b : α, a ≠ b → ¬ c a <+: c b` | reuse 確定 (Huffman code の prefix-free 性主張 + injective とのペア) |
+| `exists_prefix_code_of_kraft` | `InformationTheory/Shannon/ShannonCodeKraftReverse.lean:482` | `theorem exists_prefix_code_of_kraft {D : ℕ} (hD : 2 ≤ D) (l : α → ℕ) (hl : ∀ a, 0 < l a) (hk : ∑ a : α, ((D : ℝ)) ^ (-(l a : ℤ)) ≤ 1)` | `: ∃ c : α → List (Fin D), Function.Injective c ∧ (∀ a, (c a).length = l a) ∧ IsPrefixFree c` | reuse 確定 (Huffman 語長 → Huffman prefix code の構成 bridge) |
+| `shannonFanoCode` | `InformationTheory/Shannon/ShannonCodeKraftReverse.lean:319` | `noncomputable def shannonFanoCode {D : ℕ} [NeZero D] (l : α → ℕ) (L : ℕ) (a : α) : List (Fin D)` | `:= toBaseDLen D (l a) (slotStart D l L (sortedIndex l a) / D ^ (L - l a))` | non-reuse (Huffman は別構成だが、KraftReverse の `exists_prefix_code_of_kraft` 経由で Huffman 語長 → 何らかの prefix code 存在を結ぶ手段になる) |
+| `commonDepth` | `InformationTheory/Shannon/ShannonCodeKraftReverse.lean:475` | `noncomputable def commonDepth (l : α → ℕ) : ℕ` | `:= Finset.univ.sup l` | reuse (Huffman 木の最大深度を読み替える際の bridge) |
 
 **`pmf : α → ℝ` vs `Measure α` の不整合**: roadmap 提示 statement は `pmf : Fin n → ℝ` だが、既存 `expectedLength` / `entropyD` は `Measure α` 引数。**§F-3 で要 design judgement**。
 
@@ -98,8 +98,8 @@ end InformationTheory.Shannon.Huffman
 | `Huffman` | — | Found 0 declarations | — | **完全不在**、自作必須 |
 | `PrefixCode` | — | Found 0 declarations | — | **完全不在**、自作 (KraftReverse 既存 `IsPrefixFree` で代用可) |
 | `BinaryTree` / `Tree (Fin 2)` | — | (Mathlib `rg "BinaryTree"` も `rg "Tree Bool"` も hit 0) | — | **完全不在**、自作 (構造体 `inductive HuffmanTree (α : Type*) : Type*` を新規定義) |
-| `InformationTheory.UniquelyDecodable` | `Mathlib/InformationTheory/Coding/UniquelyDecodable.lean:35` | `def UniquelyDecodable (S : Set (List α)) : Prop` (variable `{α : Type*}`) | `:= ∀ (L₁ L₂ : List (List α)), (∀ w ∈ L₁, w ∈ S) → (∀ w ∈ L₂, w ∈ S) → L₁.flatten = L₂.flatten → L₁ = L₂` | (informational) Mathlib 流の prefix-code 仕様、Huffman 主張は Common2026 `IsPrefixFree` 路線でよく、UniquelyDecodable は強すぎる |
-| `InformationTheory.kraft_mcmillan_inequality` | `Mathlib/InformationTheory/Coding/KraftMcMillan.lean:149` | `public theorem kraft_mcmillan_inequality {S : Finset (List α)} [Fintype α] [Nonempty α] (h : UniquelyDecodable (S : Set (List α)))` | `: ∑ w ∈ S, (1 / Fintype.card α : ℝ) ^ w.length ≤ 1` | (informational) `Finset (List α)` 表現での Kraft 不等式版 — Common2026 `kraftSum` の `α → ℕ` 表現との **直接交換は不可能** (要 bridge ~50 行)。Huffman 内では Common2026 既存 `kraftSum` で完結し、Mathlib 版は呼ばない |
+| `InformationTheory.UniquelyDecodable` | `Mathlib/InformationTheory/Coding/UniquelyDecodable.lean:35` | `def UniquelyDecodable (S : Set (List α)) : Prop` (variable `{α : Type*}`) | `:= ∀ (L₁ L₂ : List (List α)), (∀ w ∈ L₁, w ∈ S) → (∀ w ∈ L₂, w ∈ S) → L₁.flatten = L₂.flatten → L₁ = L₂` | (informational) Mathlib 流の prefix-code 仕様、Huffman 主張は InformationTheory `IsPrefixFree` 路線でよく、UniquelyDecodable は強すぎる |
+| `InformationTheory.kraft_mcmillan_inequality` | `Mathlib/InformationTheory/Coding/KraftMcMillan.lean:149` | `public theorem kraft_mcmillan_inequality {S : Finset (List α)} [Fintype α] [Nonempty α] (h : UniquelyDecodable (S : Set (List α)))` | `: ∑ w ∈ S, (1 / Fintype.card α : ℝ) ^ w.length ≤ 1` | (informational) `Finset (List α)` 表現での Kraft 不等式版 — InformationTheory `kraftSum` の `α → ℕ` 表現との **直接交換は不可能** (要 bridge ~50 行)。Huffman 内では InformationTheory 既存 `kraftSum` で完結し、Mathlib 版は呼ばない |
 
 ### §C. Mathlib API — sibling property 補助 (priority queue / argmin)
 
@@ -143,9 +143,9 @@ priority-queue は Mathlib 未提供 (`rg "PriorityQueue"` hit 0)。**「`Finset
 
 | name | file:line | signature | 結論形 | T1-A での扱い |
 | --- | --- | --- | --- | --- |
-| `InformationTheory.kraft_mcmillan_inequality` | `Mathlib/InformationTheory/Coding/KraftMcMillan.lean:149` | `public theorem kraft_mcmillan_inequality {S : Finset (List α)} [Fintype α] [Nonempty α] (h : UniquelyDecodable (S : Set (List α)))` | `: ∑ w ∈ S, (1 / Fintype.card α : ℝ) ^ w.length ≤ 1` | informational のみ。Common2026 路線 (`α → ℕ` 語長) で Huffman を書く前提なら不要 |
+| `InformationTheory.kraft_mcmillan_inequality` | `Mathlib/InformationTheory/Coding/KraftMcMillan.lean:149` | `public theorem kraft_mcmillan_inequality {S : Finset (List α)} [Fintype α] [Nonempty α] (h : UniquelyDecodable (S : Set (List α)))` | `: ∑ w ∈ S, (1 / Fintype.card α : ℝ) ^ w.length ≤ 1` | informational のみ。InformationTheory 路線 (`α → ℕ` 語長) で Huffman を書く前提なら不要 |
 | `InformationTheory.UniquelyDecodable.epsilon_not_mem` | `Mathlib/InformationTheory/Coding/UniquelyDecodable.lean:47` | `lemma UniquelyDecodable.epsilon_not_mem (h : UniquelyDecodable S) : [] ∉ S` | `: [] ∉ S` | (informational) Huffman 主張は ε ∉ code として既に `0 < l a` 仮定で書ける |
-| `InformationTheory.Shannon.ShannonCodeKraftReverse.exists_prefix_code_of_kraft` | `Common2026/Shannon/ShannonCodeKraftReverse.lean:482` | (再掲、§A 参照) | (再掲) | **reuse 確定**: Huffman 語長関数 → Huffman prefix code 存在 |
+| `InformationTheory.Shannon.ShannonCodeKraftReverse.exists_prefix_code_of_kraft` | `InformationTheory/Shannon/ShannonCodeKraftReverse.lean:482` | (再掲、§A 参照) | (再掲) | **reuse 確定**: Huffman 語長関数 → Huffman prefix code 存在 |
 
 ---
 
@@ -157,7 +157,7 @@ priority-queue は Mathlib 未提供 (`rg "PriorityQueue"` hit 0)。**「`Finset
 - `Finset.sum_le_sum`: `[OrderedAddCommMonoid N]` 必須 → `ℝ` 上 OK。
 - `exists_prefix_code_of_kraft`: `D ≥ 2` 仮定 → Huffman binary なら `D = 2` で OK。
 - `entropyD_le_expectedLength_of_kraft`: `[IsProbabilityMeasure P]` + `full support (∀ a, 0 < P.real {a})` 必須 → roadmap statement の `pmf` が **full support か否か** が境界条件 (§F-3 参照)。
-- `Common2026 expectedLength`: 引数が `Measure α` → roadmap `pmf : Fin n → ℝ` と整合させるなら **新 def `expectedLengthOfPmf (p : α → ℝ) (l : α → ℕ) : ℝ := ∑ a, p a * l a` を導入し、`Measure α` 版との同値補題を 1 行で結ぶ** のが最低コスト (§F-3)。
+- `InformationTheory expectedLength`: 引数が `Measure α` → roadmap `pmf : Fin n → ℝ` と整合させるなら **新 def `expectedLengthOfPmf (p : α → ℝ) (l : α → ℕ) : ℝ := ∑ a, p a * l a` を導入し、`Measure α` 版との同値補題を 1 行で結ぶ** のが最低コスト (§F-3)。
 
 ---
 
@@ -226,7 +226,7 @@ roadmap statement の `pmf : Fin n → ℝ` と整合させるには **2 路線*
 
 | 路線 | 実装 | 工数 |
 | --- | --- | --- |
-| (i) `Measure α` で統一 | `pmf` を `Measure α` (with `[IsProbabilityMeasure]`) に lift してから既存 `expectedLength` を呼ぶ。`Common2026/Shannon/ShannonCode.lean` の API を 100% 再利用 | bridge 補題 0 行 (既存 entropy 等が直接結合) |
+| (i) `Measure α` で統一 | `pmf` を `Measure α` (with `[IsProbabilityMeasure]`) に lift してから既存 `expectedLength` を呼ぶ。`InformationTheory/Shannon/ShannonCode.lean` の API を 100% 再利用 | bridge 補題 0 行 (既存 entropy 等が直接結合) |
 | (ii) 新 def `expectedLengthOfPmf (p : α → ℝ) (l : α → ℕ) : ℝ := ∑ a, p a * l a` | 既存 `expectedLength` との同値補題 1 件 (~5 行) + 全ての主定理を新 def で書き直し | ~30 行追加 |
 
 **推奨**: (i) (`Measure α` 統一)。`Measure.real {a}` 経由で書けば既存 Gibbs lower bound (`entropyD_le_expectedLength_of_kraft`) との結合が無コスト。roadmap statement の `pmf` 表記は **expository convention** と読み替え、Lean signature は `(P : Measure α) [IsProbabilityMeasure P]` 形で publish。
@@ -264,7 +264,7 @@ theorem exists_sibling_min_pair_in_optimal_code
 
 ---
 
-## 着手 skeleton (`Common2026/Shannon/Huffman.lean`, ~30 行)
+## 着手 skeleton (`InformationTheory/Shannon/Huffman.lean`, ~30 行)
 
 ```lean
 import Mathlib.Analysis.SpecialFunctions.Log.Base
@@ -275,8 +275,8 @@ import Mathlib.Data.Multiset.Sort
 import Mathlib.Data.Finset.Max
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
-import Common2026.Shannon.ShannonCode
-import Common2026.Shannon.ShannonCodeKraftReverse
+import InformationTheory.Shannon.ShannonCode
+import InformationTheory.Shannon.ShannonCodeKraftReverse
 
 /-!
 # Huffman 最適性
@@ -337,16 +337,16 @@ theorem exists_huffman_prefix_code
 end InformationTheory.Shannon.Huffman
 ```
 
-`Common2026.lean` に append する import 行:
+`InformationTheory.lean` に append する import 行:
 ```lean
-import Common2026.Shannon.Huffman
+import InformationTheory.Shannon.Huffman
 ```
 
 ---
 
 ## 既存率 / 自作見積もりサマリ
 
-- **既存 API 利用率**: 補助 lemma (sort / argmin / induction / sum_le_sum / Kraft 逆向き) は **100% Mathlib + Common2026 既存**で揃っている。
+- **既存 API 利用率**: 補助 lemma (sort / argmin / induction / sum_le_sum / Kraft 逆向き) は **100% Mathlib + InformationTheory 既存**で揃っている。
 - **自作必要 (主要定義 + 主要定理)**: **6 件** (`huffmanLength` def, `huffmanLength_kraft_le_one`, `huffmanLength_pos`, `exists_sibling_min_pair`, `huffmanLength_optimal`, `exists_huffman_prefix_code`)
 - **撤退ライン発動**: **no** (binary + full support + Multiset 構成 + KraftReverse 既存 reuse で 700 行以内に収まる見込み)
-- **最も危険な発見**: Mathlib `kraft_mcmillan_inequality` の signature が `Finset (List α)` (codeword 集合) 水準なのに対し、Common2026 `kraftSum` は `α → ℕ` (語長関数) 水準で、**直接の交換が不可能**。Huffman を `α → ℕ` 路線で書く前提なら不問だが、もし途中で Mathlib の Kraft 不等式 (有限 codeword 集合) を呼ぶ羽目になると **bridge ~50 行が新規に発生**。Huffman 主定理を `α → ℕ` 水準で完結させる方針 (= 推奨 §F-3 の (i) 路線) を planner で確定させること。
+- **最も危険な発見**: Mathlib `kraft_mcmillan_inequality` の signature が `Finset (List α)` (codeword 集合) 水準なのに対し、InformationTheory `kraftSum` は `α → ℕ` (語長関数) 水準で、**直接の交換が不可能**。Huffman を `α → ℕ` 路線で書く前提なら不問だが、もし途中で Mathlib の Kraft 不等式 (有限 codeword 集合) を呼ぶ羽目になると **bridge ~50 行が新規に発生**。Huffman 主定理を `α → ℕ` 水準で完結させる方針 (= 推奨 §F-3 の (i) 路線) を planner で確定させること。

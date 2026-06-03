@@ -15,11 +15,11 @@
 > （実現可能性 **(ii) 自作 real-analysis 補題 5〜6 本 / 200〜300 行**、API file:line + signature + 型クラス前提 verbatim、着手 skeleton 草案 L249-300）
 >
 > **対象壁**: `@residual(wall:awgn-capacity-converse-maxent)`
-> (`docs/audit/audit-tags.md` Wall name register `:75`、`Common2026/Draft/Shannon/ContChannelMIDecomp.lean:692`
+> (`docs/audit/audit-tags.md` Wall name register `:75`、`InformationTheory/Draft/Shannon/ContChannelMIDecomp.lean:692`
 > `awgn_capacity_closed_form_of_out` body 内 `h_max_ent` の `sorry`)
 >
 > **隣接壁 (集約対象)**: `@residual(wall:awgn-per-letter-integrability)`
-> (`Common2026/Shannon/AwgnWalls.lean:251` `awgnPerLetterIntegrability_holds`)。**同型の Mathlib gap** =
+> (`InformationTheory/Shannon/AwgnWalls.lean:251` `awgnPerLetterIntegrability_holds`)。**同型の Mathlib gap** =
 > Gaussian mixture 出力 log-density 可積分性 (`differentialEntropy_le_gaussian_of_variance_le` の `h_ent_int`,
 > `DifferentialEntropy.lean:518`)。Phase 3 で 1 本の shared sorry 補題に集約候補 (条件は撤退ライン参照)。
 
@@ -42,7 +42,7 @@
   - [x] 6c — `|log f_q| ≤ c₀ + c₁·y²` 結合 + `Integrable.mono'` ✅ (`outputMixtureDensity_log_abs_le`)
   - [x] 6d — joint lift (`p⊗ₘW` 形 / volume 形) ✅
 - [x] Phase 7 — 最終結線 `awgn_per_input_mi_le_log` + `awgn_capacity_closed_form_genuine` publish ✅
-- [x] Phase V — verify + `Common2026.lean` import 済 + 旧 `_of_out` wrapper 削除 (superseded) + wall register CLOSED ✅
+- [x] Phase V — verify + `InformationTheory.lean` import 済 + 旧 `_of_out` wrapper 削除 (superseded) + wall register CLOSED ✅
 
 ### 計画外で判明した重要事項 (実装中)
 - **🔴 constraint-set false-statement defect (tier-5)**: 着手前の `awgnCapacity` constraint set は Bochner `∫x²∂p≤P` で、
@@ -58,8 +58,8 @@
 
 ### Goal (最終定理 signature)
 
-`Common2026/Draft/Shannon/ContChannelMIDecomp.lean:687-692` の body-`have` `h_max_ent` を、新規 file
-`Common2026/Draft/Shannon/AwgnCapacityConverseMaxent.lean` の補題で genuine に供給する:
+`InformationTheory/Draft/Shannon/ContChannelMIDecomp.lean:687-692` の body-`have` `h_max_ent` を、新規 file
+`InformationTheory/Draft/Shannon/AwgnCapacityConverseMaxent.lean` の補題で genuine に供給する:
 
 ```lean
 /-- 本壁の最終結論 (`awgn_capacity_closed_form_of_out` の `h_max_ent` を供給). -/
@@ -174,11 +174,11 @@ hard 判定) で、これがクリアできれば残り (上界 / 結合 / lift)
 ### ファイル構成
 
 ```
-Common2026/Draft/Shannon/
+InformationTheory/Draft/Shannon/
   ContChannelMIDecomp.lean        ← 既存。awgn_capacity_closed_form_of_out (:670) の :692 sorry を
                                      awgn_per_input_mi_le_log 呼出に置換 (Phase 7、本 file 末尾 import 注意)
   AwgnCapacityConverseMaxent.lean ← 新規 (~255-400 行)。#1-#6 + 最終結線
-Common2026.lean                   ← import Common2026.Draft.Shannon.AwgnCapacityConverseMaxent 追記
+InformationTheory.lean                   ← import InformationTheory.Draft.Shannon.AwgnCapacityConverseMaxent 追記
 ```
 
 **import 順注意**: `AwgnCapacityConverseMaxent.lean` は `ContChannelMIDecomp.lean` を import する (chain rule
@@ -271,7 +271,7 @@ inventory は十分詳細だが、着手前に 4 点を verbatim verify (CLAUDE.
 「依存方向の verbatim 確認」):
 
 1. **import 方向 (★最重要、循環回避)**: `ContChannelMIDecomp.lean:692` への結線が forward reference になるため、
-   ファイル構成 §の (a)/(b) どちらを取るか確定。`rg "import.*ContChannelMIDecomp\|import.*AwgnCapacity" Common2026.lean`
+   ファイル構成 §の (a)/(b) どちらを取るか確定。`rg "import.*ContChannelMIDecomp\|import.*AwgnCapacity" InformationTheory.lean`
    + 新 file が `ContChannelMIDecomp` を import するときの cycle 有無を `lake env lean` で実機確認。
 2. **chain rule の proxy 形 9 引数の正確な型**: `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` (`:276-289`) を Read し、
    `h_int_fibre`/`h_int_out` の被積分関数の正確な形 (`fun z : ℝ × ℝ => Real.log (g z).toReal` /
@@ -286,13 +286,13 @@ inventory は十分詳細だが、着手前に 4 点を verbatim verify (CLAUDE.
 
 ### 成果物
 
-- skeleton `Common2026/Draft/Shannon/AwgnCapacityConverseMaxent.lean` (inventory §着手 skeleton L249-300 base、
+- skeleton `InformationTheory/Draft/Shannon/AwgnCapacityConverseMaxent.lean` (inventory §着手 skeleton L249-300 base、
   4 補題 + 最終結線 を `:= by sorry`、全 `sorry` で type-check、各 `sorry` に `@residual(wall:awgn-capacity-converse-maxent)`)
 - 本計画書への反映 (import 方向確定 → ファイル構成 §更新、判断ログ #1 候補)
 
 ### Done 条件
 
-- skeleton が `lake env lean Common2026/Draft/Shannon/AwgnCapacityConverseMaxent.lean` で sorry warning のみ
+- skeleton が `lake env lean InformationTheory/Draft/Shannon/AwgnCapacityConverseMaxent.lean` で sorry warning のみ
   (全 補題の statement が型クラス前提込みで通る、import cycle なし)
 - 上記 4 点が Read + loogle で裏取り済 (特に import 方向と max-entropy の `m`/`v` 数値)
 
@@ -509,9 +509,9 @@ Phase 0 確定形で)。
 
 ### スコープ
 
-`lake env lean Common2026/Draft/Shannon/AwgnCapacityConverseMaxent.lean` clean 確認、
-`lake env lean Common2026/Draft/Shannon/ContChannelMIDecomp.lean` (結線後 olean refresh 含む) 確認、
-`Common2026.lean` import 追記、親 plan `awgn-moonshot-plan.md` §撤退ライン F-3 の「single-letter capacity converse
+`lake env lean InformationTheory/Draft/Shannon/AwgnCapacityConverseMaxent.lean` clean 確認、
+`lake env lean InformationTheory/Draft/Shannon/ContChannelMIDecomp.lean` (結線後 olean refresh 含む) 確認、
+`InformationTheory.lean` import 追記、親 plan `awgn-moonshot-plan.md` §撤退ライン F-3 の「single-letter capacity converse
 gap を closure した」旨を反映する指示を記録 (実装は lean-implementer、本 plan は反映指示のみ)。L-CONV-3 (隣接壁集約)
 判断を記録。
 

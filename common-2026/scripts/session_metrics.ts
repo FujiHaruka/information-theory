@@ -15,7 +15,7 @@
 //       "prompt_ids": ["444dfbd8", "e386bbf9"],   // optional, prefix match supported
 //       "note": "作成セッション"
 //     }],
-//     "filters": { "file_prefix": "Common2026/Shannon/ChannelCoding" },
+//     "filters": { "file_prefix": "InformationTheory/Shannon/ChannelCoding" },
 //     "idle_gap_minutes": 5,
 //     "logs_dir": "/Users/.../-Users-..."  // optional override
 //   }

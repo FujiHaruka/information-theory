@@ -8,6 +8,6 @@
       "note": "Phase 2 skeleton write — predicate 2 件追加 + consumer 3 件 signature 縮約 + body 568 行を sed 削除 → sorry に置換"
     }
   ],
-  "filters": { "file_prefix": "Common2026/Shannon/AWGNAchievabilityDischarge" },
+  "filters": { "file_prefix": "InformationTheory/Shannon/AWGNAchievabilityDischarge" },
   "idle_gap_minutes": 5
 }

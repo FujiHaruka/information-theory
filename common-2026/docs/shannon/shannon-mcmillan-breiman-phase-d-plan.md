@@ -1,7 +1,7 @@
 # Shannon–McMillan–Breiman Phase D 完了計画 🌙
 
 > ⚠️ **SUPERSEDED (2026-05-20)**: 無条件 `shannon_mcmillan_breiman` は既に
-> `Common2026/Shannon/SMBAlgoetCover.lean` (2852 行、0 sorry、`Common2026.lean:133` で import 済)
+> `InformationTheory/Shannon/SMBAlgoetCover.lean` (2852 行、0 sorry、`InformationTheory.lean:133` で import 済)
 > で **完成済み** — limsup/liminf 両方向 + two-sided extension 経由の liminf まで full discharge。
 > 本ファイルの下記 D.1'-D.5 (新規 `SMBSandwich.lean` 想定) は **着手不要**。`SMBAlgoetCover.lean`
 > が plan より先に完遂していたことを後から確認。以下は履歴として残す。
@@ -28,7 +28,7 @@
 - **E-8' weakened** — `shannon_mcmillan_breiman_of_sandwich`
   (`ShannonMcMillanBreiman.lean` 179 行、4 仮説 pass-through 形)
 - **Phase C.1+C.2** ✅ (2026-05-16、本 plan 着手で publish)
-  → `Common2026/Shannon/SMBChainRule.lean` (421 行、0 sorry / 0 warning):
+  → `InformationTheory/Shannon/SMBChainRule.lean` (421 行、0 sorry / 0 warning):
   - `pmfLogCond μ p i ω := -log (cd (block_i ω)).real {obs i ω}` + measurability
   - `block_measure_succ_singleton_eq` (ENNReal 乗法 chain rule)
   - `block_measure_succ_singleton_real_eq` (Real 版)
@@ -96,8 +96,8 @@
 
 ## Phase D.2-D.5 実装計画 (2026-05-20)
 
-> 対象 file: **`Common2026/Shannon/SMBSandwich.lean`** (新規)。`Common2026.lean` に
-> `import Common2026.Shannon.SMBSandwich` を 1 行追加して完了。
+> 対象 file: **`InformationTheory/Shannon/SMBSandwich.lean`** (新規)。`InformationTheory.lean` に
+> `import InformationTheory.Shannon.SMBSandwich` を 1 行追加して完了。
 > proof-log: **yes** (`docs/shannon/proof-log-smb-sandwich.md` を D.2/D.4 の crux で更新)。
 > 実装者は本節だけを真実として作業する。signature は在庫
 > [`smb-phase-d-sandwich-inventory.md`](smb-phase-d-sandwich-inventory.md) の verbatim を踏襲。
@@ -387,6 +387,6 @@ theorem shannon_mcmillan_breiman
 
 - 親 plan: [`shannon-mcmillan-breiman-plan.md`](shannon-mcmillan-breiman-plan.md)
 - E-8' weak: [`shannon-mcmillan-breiman-phase-c-plan.md`](shannon-mcmillan-breiman-phase-c-plan.md)
-- 実装: `Common2026/Shannon/SMBChainRule.lean`
+- 実装: `InformationTheory/Shannon/SMBChainRule.lean`
 - Algoet–Cover (1988): "A sandwich proof of the Shannon-McMillan-Breiman theorem"
   (Annals of Probability)

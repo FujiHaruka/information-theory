@@ -2,7 +2,7 @@
 
 Generated: 2026-05-10T03:11:41.783Z
 Idle gap threshold: 5 min
-File prefix filter: `Common2026/Shannon`
+File prefix filter: `InformationTheory/Shannon`
 
 ## サマリー（合計）
 
@@ -56,10 +56,10 @@ File prefix filter: `Common2026/Shannon`
 | File | Edit | Write |
 |---|---|---|
 | `.claude/handoff.md` | 0 | 2 |
-| `Common2026.lean` | 1 | 0 |
-| `Common2026/Shannon/CondMutualInfo.lean` | 20 | 1 |
-| `Common2026/Shannon/Converse.lean` | 4 | 0 |
-| `Common2026/Shannon/MutualInfo.lean` | 1 | 0 |
+| `InformationTheory.lean` | 1 | 0 |
+| `InformationTheory/Shannon/CondMutualInfo.lean` | 20 | 1 |
+| `InformationTheory/Shannon/Converse.lean` | 4 | 0 |
+| `InformationTheory/Shannon/MutualInfo.lean` | 1 | 0 |
 | `docs/shannon-condmi-inventory.md` | 0 | 1 |
 | `docs/shannon-encoder-extensions-plan.md` | 2 | 0 |
 

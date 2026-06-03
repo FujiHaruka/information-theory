@@ -1,6 +1,6 @@
 # Stam Fisher 壁 `gaussianConv_fisher_le_inv_var` — pointwise Cauchy-Schwarz route 在庫調査
 
-> 対象壁: `Common2026/Shannon/FisherConvBound.lean:73` `gaussianConv_fisher_le_inv_var`
+> 対象壁: `InformationTheory/Shannon/FisherConvBound.lean:73` `gaussianConv_fisher_le_inv_var`
 > (`@residual(wall:fisher-finiteness)`、共有 Stam convolution Fisher 壁の唯一の sorry carrier)。
 > 親 closure plan: [`docs/shannon/fisher-finiteness-closure-plan.md`](fisher-finiteness-closure-plan.md)
 > 本ファイルは **inventory のみ**。実装・計画起草はしない。
@@ -259,20 +259,20 @@ closure plan ([`fisher-finiteness-closure-plan.md`](fisher-finiteness-closure-pl
 
 ## 着手 skeleton
 
-`Common2026/Shannon/FisherConvBound.lean` 内 (壁 declaration の body を pointwise-CS route に置換)。
+`InformationTheory/Shannon/FisherConvBound.lean` 内 (壁 declaration の body を pointwise-CS route に置換)。
 import は既存 (`EPIConvDensity` / `FisherInfoV2` / `FisherInfoV2DeBruijn` / `StamGaussianBound`) に加え
 Hölder / Gaussian variance / Prod 用を追加:
 
 ```lean
-import Common2026.Shannon.EPIConvDensity
-import Common2026.Shannon.EPIConvDensitySecondDeriv         -- convDensityAdd_deriv1_gaussian_eq
-import Common2026.Shannon.FisherInfoV2
-import Common2026.Shannon.FisherInfoV2DeBruijnPerTime       -- convDensityAdd_pos / fisher_from_logDeriv
+import InformationTheory.Shannon.EPIConvDensity
+import InformationTheory.Shannon.EPIConvDensitySecondDeriv         -- convDensityAdd_deriv1_gaussian_eq
+import InformationTheory.Shannon.FisherInfoV2
+import InformationTheory.Shannon.FisherInfoV2DeBruijnPerTime       -- convDensityAdd_pos / fisher_from_logDeriv
 import Mathlib.MeasureTheory.Integral.Bochner.Basic         -- integral_mul_(norm_)le_Lp_mul_Lq(_of_nonneg)
 import Mathlib.MeasureTheory.Measure.Prod                   -- lintegral_lintegral_swap
 import Mathlib.Probability.Distributions.Gaussian.Real      -- variance_fun_id_gaussianReal / integral_gaussianReal_eq_integral_smul
 
-namespace Common2026.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfoV2
 
 open MeasureTheory ProbabilityTheory
 open scoped ENNReal NNReal
@@ -301,7 +301,7 @@ theorem gaussianConv_fisher_le_inv_var
       ≤ ENNReal.ofReal (1 / s) := by
   sorry -- @residual(wall:fisher-finiteness)  -- closure target: Step1 deriv1 + Step2 CS + Step3 lintegrand + Step4 Tonelli/moment
 
-end Common2026.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfoV2
 ```
 
 > **注**: `hpX_mass` 追加は壁 signature 改変 (判定 (d))。実装時は `convDensityAdd_fisher_integrable`

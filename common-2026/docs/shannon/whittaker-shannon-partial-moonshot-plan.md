@@ -1,11 +1,11 @@
 # T2-C-WS: Whittaker-Shannon sampling partial publish moonshot plan
 
 **Status**: planned (2026-05-20)
-**Target file**: `Common2026/Shannon/WhittakerShannonPartial.lean`
-**Companion**: `Common2026/Shannon/ShannonHartley.lean` (327 行, L-SH1+L-SH2+L-SH3 pass-through, signature freeze)
+**Target file**: `InformationTheory/Shannon/WhittakerShannonPartial.lean`
+**Companion**: `InformationTheory/Shannon/ShannonHartley.lean` (327 行, L-SH1+L-SH2+L-SH3 pass-through, signature freeze)
 
 > 実態整合 (2026-05-20): DONE (L-WS-A scope) + FLAW-VACUOUS → **RESOLVED (2026-05-20)**。
-> `Common2026/Shannon/WhittakerShannonPartial.lean` は **sinc 基本性質群** (`sincN_int_eq_kronecker` L140,
+> `InformationTheory/Shannon/WhittakerShannonPartial.lean` は **sinc 基本性質群** (`sincN_int_eq_kronecker` L140,
 > `whittaker_shannon_sample_collapse` L165, `whittaker_shannon_collapsed_value` L235) を実証明で publish 済 (0 sorry) —
 > これは genuine、不変。
 >
@@ -83,7 +83,7 @@ supplies (just as L-SH1/2/3 do for the main theorem).
 
 ## File-level breakdown
 
-`Common2026/Shannon/WhittakerShannonPartial.lean` (~400-500 行, target).
+`InformationTheory/Shannon/WhittakerShannonPartial.lean` (~400-500 行, target).
 
 ### §A. Imports + module header (~20 行)
 
@@ -95,7 +95,7 @@ supplies (just as L-SH1/2/3 do for the main theorem).
   `measurable_sinc`, `stronglyMeasurable_sinc`, `integrable_sinc`).
 - `import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic` (for
   `Real.sin_int_mul_pi`, `Real.pi_pos`, `Real.pi_ne_zero`).
-- `import Common2026.Shannon.ShannonHartley` (for `IsBandlimitedSamplingHypothesis`,
+- `import InformationTheory.Shannon.ShannonHartley` (for `IsBandlimitedSamplingHypothesis`,
   `IsBandlimitedKernel` re-export to chain the discharge).
 
 ### §B. Normalized sinc (`sincN`) and the half-Mathlib bridge (~80 行)
@@ -267,7 +267,7 @@ for future discharge.
 
 Per `CLAUDE.md`:
 
-1. **Primary**: `lake env lean Common2026/Shannon/WhittakerShannonPartial.lean`
+1. **Primary**: `lake env lean InformationTheory/Shannon/WhittakerShannonPartial.lean`
    silent = clean.
 2. After Write, wait for LSP `<new-diagnostics>` reminder; confirm
    skeleton has only `sorry` warnings (zero errors).
@@ -277,10 +277,10 @@ Per `CLAUDE.md`:
 
 ## Acceptance criteria
 
-- `wc -l Common2026/Shannon/WhittakerShannonPartial.lean` ≥ 400 行.
+- `wc -l InformationTheory/Shannon/WhittakerShannonPartial.lean` ≥ 400 行.
 - 0 `sorry`, 0 warning, `lake env lean` silent.
 - `ShannonHartley.lean` is **unchanged** (signature freeze respected).
-- `Common2026.lean` and `docs/textbook-roadmap.md` **unchanged**.
+- `InformationTheory.lean` and `docs/textbook-roadmap.md` **unchanged**.
 - One commit on the worktree branch:
   `feat(T2-C-WS): Whittaker-Shannon sampling partial publish`.
 

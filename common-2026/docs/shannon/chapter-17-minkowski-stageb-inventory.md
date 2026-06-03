@@ -1,7 +1,7 @@
 # Ch.17 Minkowski determinant inequality — Stage B (simultaneous-diagonalization) Mathlib inventory
 
 > **Parent inventory**: [`chapter-17-minkowski-inventory.md`](chapter-17-minkowski-inventory.md) (4-軸 sweep, 自作が必要な要素 優先度 2 line 533 が「行列 sqrt / `PosDef.inv` 未確認」と flag)
-> **Target file**: `Common2026/Shannon/MinkowskiDet.lean` (Stage A landed: `det_rpow_le_arith_mean_eigenvalues` genuine 0-sorry + `minkowskiDeterminantInequality` sorry + `@residual(wall:minkowski-det-posdef)`)
+> **Target file**: `InformationTheory/Shannon/MinkowskiDet.lean` (Stage A landed: `det_rpow_le_arith_mean_eigenvalues` genuine 0-sorry + `minkowskiDeterminantInequality` sorry + `@residual(wall:minkowski-det-posdef)`)
 > **Date**: 2026-05-28
 > **Subagent**: `mathlib-inventory` (docs-only, no Lean touched)
 
@@ -15,7 +15,7 @@
 
 ## 主定理の最終形 (再掲、実コード verbatim)
 
-`Common2026/Shannon/MinkowskiDet.lean:89-94` (verbatim):
+`InformationTheory/Shannon/MinkowskiDet.lean:89-94` (verbatim):
 
 ```lean
 theorem minkowskiDeterminantInequality
@@ -352,7 +352,7 @@ theorem det_eq_prod_eigenvalues : det A = ∏ i, (hA.eigenvalues i : 𝕜) := by
   - `loogle "Real.rpow, _ + _, _ ≤ _, Matrix.det"` → **`Found 0 declarations mentioning Real.rpow, LE.le, HAdd.hAdd, and Matrix.det`**
   - `loogle "Matrix.det, Matrix.det, Matrix.det"` → 458 件の `Matrix.det` 系を列挙、**Minkowski 形 (3-det superadditive rpow) は 0 件**
 - **判定**: 主定理は Mathlib に literally 不在。`@residual(wall:minkowski-det-posdef)` の wall classification は **正しい**。ただし **「big (選択) wall」ではなく「組める wall」**: 全 5 軸の構成材料 (PosDef.inv / CFC.sqrt / congruence iff / det_mul / det_eq_prod_eigenvalues) は揃っているので、~70-110 行で genuine 化が可能。`docs/audit/audit-tags.md`「Mathlib 壁の 4 分類」上は **hard (textbook-effort) であって blocked ではない**
-- **shared sorry 補題への集約**: ✅ 既に `Common2026/Shannon/MinkowskiDet.lean` の単一 `minkowskiDeterminantInequality` に集約済 (新規散在なし)。Stage B で genuine 化すれば `@residual` 解消 → `proof done`
+- **shared sorry 補題への集約**: ✅ 既に `InformationTheory/Shannon/MinkowskiDet.lean` の単一 `minkowskiDeterminantInequality` に集約済 (新規散在なし)。Stage B で genuine 化すれば `@residual` 解消 → `proof done`
 
 ### 真に Mathlib 不在の sub-component (Stage B 内部で自作、wall ではなく plumbing)
 
@@ -383,7 +383,7 @@ theorem det_eq_prod_eigenvalues : det A = ∏ i, (hA.eigenvalues i : 𝕜) := by
 import Mathlib.Analysis.Matrix.Order
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
 
-namespace Common2026.Shannon
+namespace InformationTheory.Shannon
 
 open scoped Matrix MatrixOrder   -- ⚠️ MatrixOrder scoped instance 必須 (CFC.sqrt / 0 ≤ M 用)
 open Finset
@@ -404,7 +404,7 @@ theorem det_add_eq_det_mul_det_one_add {n : Type*} [Fintype n] [DecidableEq n]
 -- 既存 `minkowskiDeterminantInequality := by sorry` (line 89) を上記 2 helper +
 -- 優先度 2 eigenvalue-shift + Stage A `det_rpow_le_arith_mean_eigenvalues` で fill
 
-end Common2026.Shannon
+end InformationTheory.Shannon
 ```
 
 注意:
@@ -446,4 +446,4 @@ end Common2026.Shannon
 
 ---
 
-> Stage B inventory 終了。次フェーズは `Common2026/Shannon/MinkowskiDet.lean` の `minkowskiDeterminantInequality` sorry を上記 Phase B-1〜B-4 で genuine 化する `lean-implementer` dispatch。
+> Stage B inventory 終了。次フェーズは `InformationTheory/Shannon/MinkowskiDet.lean` の `minkowskiDeterminantInequality` sorry を上記 Phase B-1〜B-4 で genuine 化する `lean-implementer` dispatch。

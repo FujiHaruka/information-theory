@@ -1,6 +1,6 @@
 # T3-A Constrained Maximum Entropy ムーンショット計画 🌙
 
-> 実態整合 (2026-05-20): DONE-HONEST-HYPS — Tier 2 完了通り。`Common2026/Shannon/MaxEntropyConstrained.lean` (0 sorry)。
+> 実態整合 (2026-05-20): DONE-HONEST-HYPS — Tier 2 完了通り。`InformationTheory/Shannon/MaxEntropyConstrained.lean` (0 sorry)。
 > headline `entropy_le_gibbs_of_constraints` (L248) + `entropy_eq_gibbs_iff_of_constraints` は
 > 実 Gibbs/KL 不等式証明 (`klDivPmf_nonneg` + `klDivPmf_self_eq_zero` + 核 identity `klDivPmf_gibbsPmf_eq` L140)。
 > exponential-family ansatz の `lam` + `h_gibbs_constraints` (ansatz が moment 制約を満たす) は計画通り honest pass-through
@@ -12,17 +12,17 @@
 > **Inventory (Phase 0 完了)**: [`max-entropy-constrained-mathlib-inventory.md`](./max-entropy-constrained-mathlib-inventory.md)
 >
 > **Predecessor / 再利用基盤** (全て publish 済、本 plan からは黒箱 reuse):
-> - `Common2026/Shannon/MaxEntropy.lean` (269 行) — `entropy_le_log_card`, `entropy_eq_log_card_iff`,
+> - `InformationTheory/Shannon/MaxEntropy.lean` (269 行) — `entropy_le_log_card`, `entropy_eq_log_card_iff`,
 >   `klDiv_uniformOn_univ_toReal_eq` (uniform 退化形 identity、本 plan のテンプレ source)
-> - `Common2026/Shannon/CsiszarProjection.lean` (488 行) — `klDivPmf`, `klDivPmf_nonneg`,
+> - `InformationTheory/Shannon/CsiszarProjection.lean` (488 行) — `klDivPmf`, `klDivPmf_nonneg`,
 >   `klDivPmf_strictConvexOn_left`, `csiszar_projection_exists`, `csiszar_projection_unique`,
 >   `csiszar_pythagoras_inequality`, `continuous_klDivPmf_left`
-> - `Common2026/Shannon/Chernoff.lean` Tier 0 — `klDivPmf_self_eq_zero` (`P → 0 < P a → klDivPmf P P = 0`)
-> - `Common2026/Shannon/DifferentialEntropy.lean:510-787` — `differentialEntropy_le_gaussian_of_variance_le`
+> - `InformationTheory/Shannon/Chernoff.lean` Tier 0 — `klDivPmf_self_eq_zero` (`P → 0 < P a → klDivPmf P P = 0`)
+> - `InformationTheory/Shannon/DifferentialEntropy.lean:510-787` — `differentialEntropy_le_gaussian_of_variance_le`
 >   + `differentialEntropy_eq_gaussian_iff`、**variance 制約特例 = T3-A pmf 形の連続版テンプレ写経 source**
-> - `Common2026/Shannon/Bridge.lean:43` — `entropy μ X := ∑ x, Real.negMulLog ((μ.map X).real {x})`
+> - `InformationTheory/Shannon/Bridge.lean:43` — `entropy μ X := ∑ x, Real.negMulLog ((μ.map X).real {x})`
 >
-> **Goal (短形)**: 新規ファイル `Common2026/Shannon/MaxEntropyConstrained.lean` で
+> **Goal (短形)**: 新規ファイル `InformationTheory/Shannon/MaxEntropyConstrained.lean` で
 > Cover-Thomas Theorem 12.1.1 (Constrained Maximum Entropy) の **pmf 形主定理** を、
 > exponential family ansatz `λ : Fin k → ℝ` を **外から受け取る pass-through 形** で publish する。
 > **0 sorry / 0 warning**、Tier 1 baseline ~200 行、Tier 2 (uniqueness 込み) ~280 行。
@@ -32,12 +32,12 @@
 
 ## Status (2026-05-19)
 
-**Phase 0 (Mathlib + Common2026 在庫) 完了** — inventory で「**既存率 ~80%、KKT 不要、規模 ~250-350 行
+**Phase 0 (Mathlib + InformationTheory 在庫) 完了** — inventory で「**既存率 ~80%、KKT 不要、規模 ~250-350 行
 (親計画 400-700 は過大評価)**」を確定。Tier 1 (主定理上界) → Tier 2 (uniqueness) → (任意) Tier 3
 (特例展開) の段階的 publish 設計で着手準備完了。
 
 **2026-05-19 更新**: **Tier 2 (Phase A + B + C + D) 完成、0 sorry / 0 warning publish**。
-`Common2026/Shannon/MaxEntropyConstrained.lean` (~361 行) で
+`InformationTheory/Shannon/MaxEntropyConstrained.lean` (~361 行) で
 `gibbsPmf` + `gibbsPmf_mem_stdSimplex` + `entropy_le_gibbs_of_constraints` +
 `entropy_eq_gibbs_iff_of_constraints` の 4 件を主定理として publish。
 規模見積もり ~280 行に対して +30% (制約: Phase B-1 核 identity の手書き展開 ~90 行が
@@ -45,7 +45,7 @@
 
 ## 進捗
 
-- [x] Phase 0 — Mathlib + Common2026 在庫 ✅ → [`max-entropy-constrained-mathlib-inventory.md`](./max-entropy-constrained-mathlib-inventory.md)
+- [x] Phase 0 — Mathlib + InformationTheory 在庫 ✅ → [`max-entropy-constrained-mathlib-inventory.md`](./max-entropy-constrained-mathlib-inventory.md)
 - [x] Phase A — `gibbsPmf` 定義 + 基本性質 (Tier 0, ~80 行) ✅
 - [x] Phase B — Gibbs 不等式主定理 (Tier 1 baseline, +~140 行) ✅
 - [x] Phase C — Uniqueness (Tier 2 理想, +~80 行) ✅
@@ -56,7 +56,7 @@
 
 ### 最終到達点 (Tier 2 完成形)
 
-新規ファイル `Common2026/Shannon/MaxEntropyConstrained.lean` で 4 件 publish:
+新規ファイル `InformationTheory/Shannon/MaxEntropyConstrained.lean` で 4 件 publish:
 
 ```lean
 namespace InformationTheory.Shannon.MaxEntropyConstrained
@@ -158,12 +158,12 @@ klDivPmf Q (gibbsPmf f λ) = -H(Q) - ⟨λ, 𝔼_Q[f]⟩ + log Z(λ)
 3. **Phase C**: Tier 1 等式バージョンに `csiszar_projection_unique` + strict convexity を
    被せて P = gibbs 一意性。または直接 strict Jensen
    (`Real.strictConcaveOn_negMulLog` + `StrictConcaveOn.lt_map_sum`) 経路で替えが効く。
-4. **Phase D**: 主定理 statement の文言整地 + docstring + `Common2026.lean` 編入 + 仕上げ。
+4. **Phase D**: 主定理 statement の文言整地 + docstring + `InformationTheory.lean` 編入 + 仕上げ。
 
 ### Approach 図
 
 ```
-Phase 0  : Mathlib + Common2026 在庫                            ← 完了済
+Phase 0  : Mathlib + InformationTheory 在庫                            ← 完了済
            ────────────────────────────────────────────────
 Phase A  : gibbsPmf 定義 + 基本性質 (positivity, stdSimplex)    ← 0.3 セッション (Tier 0 baseline)
 Phase B  : klDivPmf_gibbsPmf_eq identity + Tier 1 主定理        ← 0.5-0.7 セッション
@@ -190,7 +190,7 @@ Phase D  : 主定理 wrapper + library 編入                        ← 0.1-0.2
 ### ファイル構成 (Phase D 完了想定)
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   MaxEntropyConstrained.lean ← 新規 (~280 行 Tier 2 / ~200 行 Tier 1 baseline)
   MaxEntropy.lean            ← 既存、変更なし (uniform 退化形、Phase B identity 整理時に
                                `klDiv_uniformOn_univ_toReal_eq` の証明テクニックを写経)
@@ -200,22 +200,22 @@ Common2026/Shannon/
   DifferentialEntropy.lean   ← 既存、変更なし (Phase D 写経 source、
                                `differentialEntropy_le_gaussian_of_variance_le` 証明構造)
   Bridge.lean                ← 既存、変更なし (entropy)
-Common2026.lean              ← `import Common2026.Shannon.MaxEntropyConstrained` 追記
+InformationTheory.lean              ← `import InformationTheory.Shannon.MaxEntropyConstrained` 追記
 ```
 
 ## 依存関係
 
 完了済 (黒箱 reuse、本 plan で再証明しない):
 
-- [x] `Common2026/Shannon/MaxEntropy.lean` — `entropy_le_log_card`, `entropy_eq_log_card_iff`,
+- [x] `InformationTheory/Shannon/MaxEntropy.lean` — `entropy_le_log_card`, `entropy_eq_log_card_iff`,
   `klDiv_uniformOn_univ_toReal_eq` (uniform 制約退化形、本 plan は **f := 0 で T3-A から再導出可**
   だが、既存版を黒箱として残す。再導出は Phase E stretch)
-- [x] `Common2026/Shannon/CsiszarProjection.lean` — `klDivPmf`, `klDivPmf_nonneg`,
+- [x] `InformationTheory/Shannon/CsiszarProjection.lean` — `klDivPmf`, `klDivPmf_nonneg`,
   `klDivPmf_strictConvexOn_left` (Tier 2 uniqueness の strict 凸性源), `csiszar_projection_exists`,
   `csiszar_projection_unique` (Tier 2 で reference Q = gibbs を取り直して呼ぶ)
-- [x] `Common2026/Shannon/Chernoff.lean` Tier 0 — `klDivPmf_self_eq_zero`
+- [x] `InformationTheory/Shannon/Chernoff.lean` Tier 0 — `klDivPmf_self_eq_zero`
   (Tier 1 で `gibbsPmf` 自身の KL = 0 を即取り)
-- [x] `Common2026/Shannon/DifferentialEntropy.lean:510-787` — `differentialEntropy_le_gaussian_of_variance_le`,
+- [x] `InformationTheory/Shannon/DifferentialEntropy.lean:510-787` — `differentialEntropy_le_gaussian_of_variance_le`,
   `differentialEntropy_eq_gaussian_iff` (**Phase B / C のテンプレ写経 source**:
   `volume → uniformOn univ` で pmf 形に縮める同じ証明構造)
 - [x] Mathlib `Real.exp`, `Real.log`, `Real.negMulLog` (`Mathlib/Analysis/SpecialFunctions/`)
@@ -228,7 +228,7 @@ Common2026.lean              ← `import Common2026.Shannon.MaxEntropyConstraine
 
 ---
 
-## Phase 0 — Mathlib + Common2026 API 在庫 ✅
+## Phase 0 — Mathlib + InformationTheory API 在庫 ✅
 
 完了 (`docs/shannon/max-entropy-constrained-mathlib-inventory.md`, 454 行)。
 
@@ -255,7 +255,7 @@ algebraic 操作の足場を完成させる。
 
 - `gibbsPmf` 定義 publish
 - `gibbsPmf_pos` (各 `x` で `0 < gibbsPmf f λ x`)、`gibbsPmf_sum_eq_one`、`gibbsPmf_mem_stdSimplex`
-- `lake env lean Common2026/Shannon/MaxEntropyConstrained.lean` で skeleton clean
+- `lake env lean InformationTheory/Shannon/MaxEntropyConstrained.lean` で skeleton clean
   (Phase B / C / D は `sorry` 残し)
 - 主定理 `entropy_le_gibbs_of_constraints` / `entropy_eq_gibbs_iff_of_constraints` は
   skeleton `:= by sorry` のまま
@@ -263,7 +263,7 @@ algebraic 操作の足場を完成させる。
 ### ステップ
 
 - [ ] **A-0 skeleton**: `MaxEntropyConstrained.lean` 新規ファイルに全主定理 + 補助補題を
-  `:= by sorry` で並べた skeleton を Write。`import Common2026.Shannon.{MaxEntropy,
+  `:= by sorry` で並べた skeleton を Write。`import InformationTheory.Shannon.{MaxEntropy,
   CsiszarProjection, Chernoff}` + namespace + `open` を整備。LSP 診断で type-check OK 確認
   (CLAUDE.md "Skeleton-driven Development")。
 
@@ -343,7 +343,7 @@ Tier 1 主定理 `entropy_le_gibbs_of_constraints` を合成する。
 
 - `klDivPmf_gibbsPmf_eq` lemma (核 identity)
 - `entropy_le_gibbs_of_constraints` 主定理 0 sorry
-- `lake env lean Common2026/Shannon/MaxEntropyConstrained.lean` clean (Phase C / D は sorry 残し可)
+- `lake env lean InformationTheory/Shannon/MaxEntropyConstrained.lean` clean (Phase C / D は sorry 残し可)
 - Tier 1 baseline として **そのまま公開可能** な形に到達 (撤退ライン L-S1 trigger 時 close 可)
 
 ### ステップ
@@ -432,7 +432,7 @@ Tier 1 等式バージョン (`entropy_eq_gibbs_iff_of_constraints`) を `csisza
 
 - `entropy_eq_gibbs_iff_of_constraints` 0 sorry
 - (任意) `klDivPmf_eq_zero_iff_pmf` local lemma (`klDivPmf P Q = 0 ↔ P = Q` for full-support Q)
-- `lake env lean Common2026/Shannon/MaxEntropyConstrained.lean` clean
+- `lake env lean InformationTheory/Shannon/MaxEntropyConstrained.lean` clean
 
 ### ステップ
 
@@ -499,12 +499,12 @@ Tier 1 等式バージョン (`entropy_eq_gibbs_iff_of_constraints`) を `csisza
 ### スコープ
 
 主定理 statement の文言整地 (docstring、Tier 1 / Tier 2 の関係、textbook reference) +
-`Common2026.lean` 編入 + 仕上げ。
+`InformationTheory.lean` 編入 + 仕上げ。
 
 ### Done 条件
 
-- `Common2026.lean` に `import Common2026.Shannon.MaxEntropyConstrained` 追記
-- `lake env lean Common2026.lean` clean
+- `InformationTheory.lean` に `import InformationTheory.Shannon.MaxEntropyConstrained` 追記
+- `lake env lean InformationTheory.lean` clean
 - 主定理 4 件 (gibbsPmf def / gibbsPmf_mem_stdSimplex / entropy_le_gibbs_of_constraints /
   entropy_eq_gibbs_iff_of_constraints) 全て 0 sorry / 0 warning
 - (任意) `chernoff_lemma` 系 + `csiszar_pythagoras_inequality` との cross-link コメント
@@ -514,9 +514,9 @@ Tier 1 等式バージョン (`entropy_eq_gibbs_iff_of_constraints`) を `csisza
 - [ ] **D-1 docstring 整地**: 各主定理に Cover-Thomas Theorem 12.1.1 reference + Tier 1 / Tier 2
   関係 + Mathlib `Measure.tilted` を使わない理由 (本 plan 判断ログ #1 への pointer) を docstring
   に記載
-- [ ] **D-2 `Common2026.lean` 編入**: `import Common2026.Shannon.MaxEntropyConstrained` 追記
-- [ ] **D-3 最終 verify**: `lake env lean Common2026.lean` clean 確認 + `Common2026/Shannon/`
-  全体回帰チェック (`lake env lean Common2026/Shannon/MaxEntropy.lean` 等が dependent 経由で
+- [ ] **D-2 `InformationTheory.lean` 編入**: `import InformationTheory.Shannon.MaxEntropyConstrained` 追記
+- [ ] **D-3 最終 verify**: `lake env lean InformationTheory.lean` clean 確認 + `InformationTheory/Shannon/`
+  全体回帰チェック (`lake env lean InformationTheory/Shannon/MaxEntropy.lean` 等が dependent 経由で
   壊れていないか)
 - [ ] **D-4 cross-link コメント** (任意): `MaxEntropy.lean` の `entropy_le_log_card` docstring に
   「constraint なし `f = 0` 特例として `entropy_le_gibbs_of_constraints` の系」コメントを追記。
@@ -529,7 +529,7 @@ Tier 1 等式バージョン (`entropy_eq_gibbs_iff_of_constraints`) を `csisza
 ### 失敗時 fallback
 
 - **D-3 で dependent 経由 break** → 該当 file に oleans refresh
-  (`lake build Common2026.Shannon.MaxEntropyConstrained` 1 回)。CLAUDE.md "After upstream edits"
+  (`lake build InformationTheory.Shannon.MaxEntropyConstrained` 1 回)。CLAUDE.md "After upstream edits"
   節参照。
 
 ---
@@ -683,7 +683,7 @@ Tier 1 等式バージョン (`entropy_eq_gibbs_iff_of_constraints`) を `csisza
        検討していたが、**Mathlib `klFun_eq_zero_iff` (`KLFun.lean:151`) を per-term 適用する方が直接的**
        で ~30 行で済む。strict convexity への依存ゼロ。
    - Phase C-2 (Tier 2 uniqueness) は B-1 identity 再利用 + C-1 + `linarith` で ~40 行。
-   - Phase D は `Common2026.lean` への import 行 1 行追加のみ (docstring は最初から書いてある)。
+   - Phase D は `InformationTheory.lean` への import 行 1 行追加のみ (docstring は最初から書いてある)。
    - 全体として「**最初の手筋 (Gibbs + Csiszár `klDivPmf` pmf 直接ルート + ansatz pass-through)
      で 0 sorry / 0 warning に到達**」。**Phase E (Tier 3 特例展開) は本セッション 未着手、別 plan で対応想定**。
 

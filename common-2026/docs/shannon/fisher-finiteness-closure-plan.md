@@ -50,8 +50,8 @@
 
 ### 集約方針 (audit-tags.md「共有 Mathlib 壁」整合)
 
-- **新 file `Common2026/Shannon/FisherConvBound.lean`** に `gaussianConv_fisher_le_inv_var` を立てる
-  (本計画 R-A skeleton 通り)。`Common2026.lean` に import 1 行追加。
+- **新 file `InformationTheory/Shannon/FisherConvBound.lean`** に `gaussianConv_fisher_le_inv_var` を立てる
+  (本計画 R-A skeleton 通り)。`InformationTheory.lean` に import 1 行追加。
 - 3 consumer は全て `gaussianConv_fisher_le_inv_var` を **lemma call** で受ける (仮説 bundle でなく)。
   `_chain_ibp_fisher` は `convDensityAdd_fisher_integrable` 経由の transitive なので壁を直接呼ばず、
   実 lemma call は `convDensityAdd_fisher_integrable` + `_chain_domination` の 2 箇所。
@@ -103,7 +103,7 @@ theorem gaussianConv_fisher_le_inv_var
 
 ### 現状
 
-`Common2026/Shannon/FisherInfoV2DeBruijnAssembly.lean:177-182` の private theorem:
+`InformationTheory/Shannon/FisherInfoV2DeBruijnAssembly.lean:177-182` の private theorem:
 
 ```lean
 private theorem convDensityAdd_fisher_integrable
@@ -231,7 +231,7 @@ Step 1 を `@residual(wall:stam-step2-density)` の shared sorry 補題に逃が
 ### R-A skeleton: shared sorry 補題を立てる
 
 新規 shared sorry 補題 (集約先、`FisherInfoV2DeBruijnAssembly.lean` 内 or 新 file
-`Common2026/Shannon/FisherConvBound.lean`):
+`InformationTheory/Shannon/FisherConvBound.lean`):
 
 ```lean
 /-- Gaussian 畳み込み密度の Fisher 有限上界 `J(pX ∗ g_t) ≤ 1/t`。
@@ -259,7 +259,7 @@ theorem gaussianConv_fisher_le_inv_var
 必要 building block (verbatim):
 
 - **score-of-convolution 表現** (repo, `@audit:ok`):
-  `Common2026/Shannon/EPIConvDensity.lean:113`
+  `InformationTheory/Shannon/EPIConvDensity.lean:113`
   ```
   theorem convDensityAdd_logDeriv
       (pX pY : ℝ → ℝ) (z₀ : ℝ) {s : Set ℝ} {bound : ℝ → ℝ}
@@ -273,7 +273,7 @@ theorem gaussianConv_fisher_le_inv_var
       logDeriv (convDensityAdd pX pY) z₀ = (∫ x, convDensityAddDeriv pX pY z₀ x ∂volume) / convDensityAdd pX pY z₀
   ```
   これで `logDeriv p_t (z) = (∫ pX x · g_t'(z-x)) / p_t(z)` を得る (Blachman 接続点)。
-- **算術核** (repo): `Common2026/Shannon/StamGaussianBound.lean:58`
+- **算術核** (repo): `InformationTheory/Shannon/StamGaussianBound.lean:58`
   ```
   theorem stam_fisher_arith (a b lam : ℝ) (ha : 0 < a) (hb : 0 < b) (hlo : 0 ≤ lam) (hhi : lam ≤ 1) :
       1 / (a + b) ≤ lam ^ 2 / a + (1 - lam) ^ 2 / b
@@ -333,7 +333,7 @@ private theorem convDensityAdd_fisher_integrable ... := by
 
 - `convDensityAdd_fisher_integrable` の body を Step 3 の形に置換。
 - `gaussianConv_fisher_le_inv_var` を新規追加 (同 file `FisherInfoV2DeBruijnAssembly.lean` 上部、
-  または新 file `FisherConvBound.lean` + `Common2026.lean` import 1 行)。
+  または新 file `FisherConvBound.lean` + `InformationTheory.lean` import 1 行)。
 - 既存 docstring (`:146-176`) の wall 説明・honesty audit note は維持 (壁 slug 不変)。
 - **独立 honesty audit 必須** (CLAUDE.md「Independent honesty audit」): 新規 shared sorry 補題追加 +
   既存 declaration の body 変更で起動条件該当。`gaussianConv_fisher_le_inv_var` が

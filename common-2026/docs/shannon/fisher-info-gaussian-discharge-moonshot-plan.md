@@ -4,8 +4,8 @@
 
 > **Parent**: [`fisher-info-moonshot-plan.md`](fisher-info-moonshot-plan.md) §Tier 2 (L-F1+L-F2 hypothesis pass-through の Gaussian 限定 discharge seed)
 > **Predecessor**: [`fisher-info-mathlib-inventory.md`](fisher-info-mathlib-inventory.md) §C-4/C-5/F/G-2/G-5
-> **既存実装**: [`Common2026/Shannon/FisherInfo.lean`](../../Common2026/Shannon/FisherInfo.lean) (222 行、0 sorry、L-F1+L-F2 hypothesis pass-through publish 済)
-> **Goal**: `gaussianReal m v` で L-F1+L-F2 discharge、`deBruijn_identity_gaussian` / `integral_logDeriv_pdf_eq_zero_gaussian` / `fisherInfo_gaussianReal = 1/v` を `Common2026/Shannon/FisherInfoGaussian.lean` で publish
+> **既存実装**: [`InformationTheory/Shannon/FisherInfo.lean`](../../InformationTheory/Shannon/FisherInfo.lean) (222 行、0 sorry、L-F1+L-F2 hypothesis pass-through publish 済)
+> **Goal**: `gaussianReal m v` で L-F1+L-F2 discharge、`deBruijn_identity_gaussian` / `integral_logDeriv_pdf_eq_zero_gaussian` / `fisherInfo_gaussianReal = 1/v` を `InformationTheory/Shannon/FisherInfoGaussian.lean` で publish
 > **撤退ライン**: [L-G1] scale-restricted form / [L-G2] Gaussian semigroup variance-shift / [L-G3] Phase A+B のみ部分 publish (詳細 §撤退ライン)
 
 ## 進捗
@@ -17,7 +17,7 @@
 
 ## ゴール / Approach
 
-### Goal (publish 済 signature) — `Common2026/Shannon/FisherInfoGaussian.lean`
+### Goal (publish 済 signature) — `InformationTheory/Shannon/FisherInfoGaussian.lean`
 
 達成済 (Stage 1 publish, L-G3 撤退):
 - `isRegularDensity_gaussianReal_of_law` (Phase A) — L-F2 hypothesis discharge
@@ -35,12 +35,12 @@
 
 ### ファイル構成
 
-新規 `Common2026/Shannon/FisherInfoGaussian.lean` (~370 行)、`FisherInfo.lean` は a.e.-representative back-port のため +14 行。Library root `Common2026.lean` に import 1 行追加。`import Mathlib` 禁止、pinpoint import 厳守。
+新規 `InformationTheory/Shannon/FisherInfoGaussian.lean` (~370 行)、`FisherInfo.lean` は a.e.-representative back-port のため +14 行。Library root `InformationTheory.lean` に import 1 行追加。`import Mathlib` 禁止、pinpoint import 厳守。
 
 ## 依存関係 (anchor)
 
-- `Common2026/Shannon/FisherInfo.lean` (222 行 → 236 行 with back-port) — `IsRegularDensity` / `IsRegularDeBruijnHyp` / `integral_logDeriv_pdf_eq_zero` / `deBruijn_identity`
-- `Common2026/Shannon/DifferentialEntropy.lean` (1010 行) — `log_gaussianPDFReal_eq` (:391), `differentialEntropy_gaussianReal` (:406)
+- `InformationTheory/Shannon/FisherInfo.lean` (222 行 → 236 行 with back-port) — `IsRegularDensity` / `IsRegularDeBruijnHyp` / `integral_logDeriv_pdf_eq_zero` / `deBruijn_identity`
+- `InformationTheory/Shannon/DifferentialEntropy.lean` (1010 行) — `log_gaussianPDFReal_eq` (:391), `differentialEntropy_gaussianReal` (:406)
 - Mathlib `Probability/Distributions/Gaussian/Real.lean` — `gaussianPDFReal_pos` (:61), `rnDeriv_gaussianReal` (:240), `variance_fun_id_gaussianReal` (:518), `gaussianReal_add_gaussianReal_of_indepFun` (:624)
 - Mathlib `Analysis.SpecialFunctions.Log.Deriv` — `Real.hasDerivAt_log` (:52), `Real.deriv_log_comp_eq_logDeriv` (:134), `HasDerivAt.log` (:112)
 - Mathlib `Probability.Independence.Basic` — `IndepFun.comp`
@@ -72,7 +72,7 @@
 
 書く頻度: Phase 中の方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
 
-1. **(2026-05-19) (Phase 0 / A-2) `IsRegularDensity` の a.e.-representative back-port (L-P1 確定)**: Phase A-2 で予測した「`IsRegularDensity.diff` field が pdf の pointwise differentiability を要求するが `pdf X P volume` は ae 等式しか出ない」問題が `pdf_def` + `rnDeriv_gaussianReal` の経路確認で確定。`FisherInfo.lean` の `IsRegularDensity` を **a.e.-representative 形** (新 field `density : ℝ → ℝ`, `pdf_ae_eq : (pdf X P volume).toReal =ᵐ density`、他 field は `density` を参照) に back-port、`structure ... : Prop` を `structure ...` (非 Prop) に変更。`integral_logDeriv_pdf_eq_zero` も結論を `h_reg.density` 経由に書き換え、a.e.-representative の pointwise 性質で証明完走。`FisherInfo.lean` 222 行 → 236 行 (+14 行)。`Common2026.Shannon.FisherInfo` の `IsRegularDensity` consumer は `integral_logDeriv_pdf_eq_zero` のみで、外部から `IsRegularDensity` 自体を使う publish なしのため互換性 break なし。
+1. **(2026-05-19) (Phase 0 / A-2) `IsRegularDensity` の a.e.-representative back-port (L-P1 確定)**: Phase A-2 で予測した「`IsRegularDensity.diff` field が pdf の pointwise differentiability を要求するが `pdf X P volume` は ae 等式しか出ない」問題が `pdf_def` + `rnDeriv_gaussianReal` の経路確認で確定。`FisherInfo.lean` の `IsRegularDensity` を **a.e.-representative 形** (新 field `density : ℝ → ℝ`, `pdf_ae_eq : (pdf X P volume).toReal =ᵐ density`、他 field は `density` を参照) に back-port、`structure ... : Prop` を `structure ...` (非 Prop) に変更。`integral_logDeriv_pdf_eq_zero` も結論を `h_reg.density` 経由に書き換え、a.e.-representative の pointwise 性質で証明完走。`FisherInfo.lean` 222 行 → 236 行 (+14 行)。`InformationTheory.Shannon.FisherInfo` の `IsRegularDensity` consumer は `integral_logDeriv_pdf_eq_zero` のみで、外部から `IsRegularDensity` 自体を使う publish なしのため互換性 break なし。
 
 2. **(2026-05-19) (Phase B-3) L-G3 撤退発動 — `fisherInfo` 定義の representative-依存性 flaw**: Phase B-3 の `fisherInfo (gaussianReal m v) = 1/v` 着手中に、`fisherInfo` 定義の本質的な flaw を発見。`FisherInfo.lean:58` の `fisherInfo μ := ∫⁻ x, ofReal((logDeriv (fun y => (μ.rnDeriv volume y).toReal) x)^2) * μ.rnDeriv volume x ∂volume` は **`Measure.rnDeriv` の opaque representative** に依存。`Measure.rnDeriv` は `Classical.choose` で定義され (`Mathlib/MeasureTheory/Measure/Decomposition/Lebesgue.lean:80`)、`rnDeriv_gaussianReal` も `=ᵐ` の ae 等式しか提供しない。実際の representative は generic に non-differentiable で `logDeriv ((rnDeriv).toReal) = 0` ae、ゆえに `fisherInfo (gaussianReal m v) = 0` (mathematical な `1/v` ではなく)。
    - L-G3 撤退発動: Phase B-3 / C / D を skip、Stage 1 publish (Phase A + Phase B-1/B-2 = `IsRegularDensity` instance + `integral_logDeriv_pdf_eq_zero_gaussian` wrapper + helpers) で着地。

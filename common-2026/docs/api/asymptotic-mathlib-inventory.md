@@ -4,7 +4,7 @@
 > ("各 proof で inline に書いている exponent / rate 表現を集約", "`\doteq`, `o(n)` notation,
 > exponent function 共通 API", 規模 ~300-500 行) 着手前の事実列挙。
 >
-> **実装も計画起草もしない**。「いま何があるか」「Common2026 のどこで inline 書きしているか」
+> **実装も計画起草もしない**。「いま何があるか」「InformationTheory のどこで inline 書きしているか」
 > 「教科書 `\doteq` を表現する最有力 Mathlib API は何か」を構造化テーブルで書き出す。
 
 ---
@@ -19,7 +19,7 @@
 や `(fun n => Real.log (u n / v n)) =o[atTop] (fun n => (n : ℝ))` 等の組合せで再現
 することになる。
 
-**Common2026 内の inline 表現は 2 系統に分裂している**:
+**InformationTheory 内の inline 表現は 2 系統に分裂している**:
 
 1. **`Tendsto (fun n => (1/n) * Real.log ...) atTop (𝓝 (-C))`** 形 (AEP, SMB, Stein,
    Sanov LDP) — 教科書 `\doteq` の **rate 形** 値そのもの。8 ファイル横断。
@@ -33,12 +33,12 @@
 **乖離の度合いを定量的に**:
 
 - big-O / little-o 系: **既存率 100%**。Mathlib `Asymptotics` namespace + 3 notation
-  (`=O[l]`, `=o[l]`, `=Θ[l]`) で全て揃っている。Common2026 内に `IsBigO` / `IsLittleO`
-  を使った既存 callsite は **見当たらず** (`rg "IsBigO|IsLittleO|=O\[|=o\[" Common2026/`
+  (`=O[l]`, `=o[l]`, `=Θ[l]`) で全て揃っている。InformationTheory 内に `IsBigO` / `IsLittleO`
+  を使った既存 callsite は **見当たらず** (`rg "IsBigO|IsLittleO|=O\[|=o\[" InformationTheory/`
   で 0 件) — 統合の余地が大きい。
 - exponent rate 系 (`Tendsto ((1/n) log) → -C`): **既存率 0%**。Mathlib 側に**直接対応する単一述語が無い**。
   最近 (2025) 追加された `ExpGrowth.expGrowthInf / expGrowthSup` (`Mathlib/Analysis/Asymptotics/
-  ExpGrowth.lean`) が **EReal 値版で最も近い** が、Common2026 の値域 `ℝ` 形 inline 表現と
+  ExpGrowth.lean`) が **EReal 値版で最も近い** が、InformationTheory の値域 `ℝ` 形 inline 表現と
   そのままでは型が合わない (要 `EReal.toReal` 経由 bridge)。
 - `\doteq` (textbook exponent equality): **既存率 0%** — 名前付き述語は不在。3 つの候補
   (`Tendsto (fun n => (1/n) log (u/v)) → 0` / `IsLittleO atTop (log u - log v) (·:ℝ)` /
@@ -52,7 +52,7 @@
 1. **`ExpGrowth.expGrowthSup` (`Mathlib/Analysis/Asymptotics/ExpGrowth.lean:41`) は
    2025 年新規追加**で、`ℕ → ℝ≥0∞` 上の `limsup (log (u n) / n)` を `EReal` で返す。
    教科書 `\doteq` の右辺 (rate) に最も近い既存定義。**ただし値域は `EReal`、入力は
-   `ℝ≥0∞`** で、Common2026 inline (`ℝ` 値) と型が合わず、`EReal.toReal` + 正値性条件の
+   `ℝ≥0∞`** で、InformationTheory inline (`ℝ` 値) と型が合わず、`EReal.toReal` + 正値性条件の
    bridge が要る。これを使うか自作するかが最大の設計判断。
 2. **`IsBigO` / `IsLittleO` の値域は normed group**で抽象。`f =o[atTop] (fun n => (n : ℝ))`
    は **`f` が `ℝ → E` で `‖f n‖ / n → 0`** を意味する。教科書の `\doteq` を `IsLittleO`
@@ -63,14 +63,14 @@
    log を扱う bridge が一発で得られる。
 4. **`Metric.tendsto_atTop` (`Mathlib/Topology/MetricSpace/Pseudo/Defs.lean:901`) は
    `Tendsto u atTop (𝓝 a) ↔ ∀ ε > 0, ∃ N, ∀ n ≥ N, dist (u n) a < ε`** の同値形を提供。
-   Common2026 内で **7 ファイルが既にこれを使用**しており、closed-form `N` extraction の
+   InformationTheory 内で **7 ファイルが既にこれを使用**しており、closed-form `N` extraction の
    "標準入口" として確立済み。I-3 wrapper はこの周りに薄く被せる形でよい。
 5. **`AEPRate.lean` (905 行) は既に I-3 相当の機能を AEP 特化で持っている** —
    `exp_neg_mul_lt_of_rate`, `channelCoding_E2_lt_of_rate`, `typicalSet_prob_ge_at_N` 等の
    closed-form `N` lemma が並ぶ。I-3 では (a) これらを family-agnostic に再定式化、
    (b) channel coding / rate distortion / Sanov 系で **重複する `N(g, ε')` extraction を
    1 本化**、が中核作業になる。
-6. **教科書 `o(n)` 表記は `=o[atTop] (·:ℝ)` 形でそのまま書ける**が、Common2026 内では
+6. **教科書 `o(n)` 表記は `=o[atTop] (·:ℝ)` 形でそのまま書ける**が、InformationTheory 内では
    **コメント・docstring に "o(n)" / "o(1)" 文字列が散見されるのみ** (`SanovLDP.lean:11`,
    `:470`, `StrongStein.lean:27`, `Stein.lean:1388`) で、**Lean 式中で `=o[atTop]` を使った
    箇所はゼロ**。すなわち教科書記法を notation で導入するだけで既存 callsite を一切壊さない。
@@ -163,7 +163,7 @@
 
 **重要な制約 (verbatim)**:
 
-- **値域は `EReal`、入力は `ℕ → ℝ≥0∞`** (`expGrowthInf : (ℕ → ℝ≥0∞) → EReal`)。Common2026
+- **値域は `EReal`、入力は `ℕ → ℝ≥0∞`** (`expGrowthInf : (ℕ → ℝ≥0∞) → EReal`)。InformationTheory
   inline (例えば `Tendsto (fun n => (1/n) * Real.log P_n) atTop (𝓝 (-C))` の左辺の値域は
   `ℝ`) と直接型が合わない。bridge には `ENNReal.ofReal` で持ち上げる or `EReal.toReal` で
   落とす形が必要、しかも符号の取り扱い (`Real.log P_n` は `P_n < 1` で負) で `log` 関数の
@@ -175,7 +175,7 @@
   `"ExpGrowth.expGrowthSup, Tendsto"` → 0 件。`expGrowthInf u = expGrowthSup u = c` が
   `Tendsto ((fun n => log (u n) / n)) atTop (𝓝 c)` に同値、という単一補題が未整備。
 - `LinearGrowth` 側は **より一般的な `R : [ConditionallyCompleteLattice R] [Div R] [NatCast R]`**
-  上で同型の定義 (`liminf (u n / n)`)。これも Common2026 inline (`Tendsto (fun n => (1/n)
+  上で同型の定義 (`liminf (u n / n)`)。これも InformationTheory inline (`Tendsto (fun n => (1/n)
   * Real.log P_n)` の値そのもの) と型が一致しない (`limsup` / `liminf` 形なので)。
 
 ### A-6. Real / ENNReal の log / exp
@@ -204,7 +204,7 @@
 
 **重要な制約 (verbatim)**:
 
-- **`Real.log` は `x ≤ 0` で `0` を返す** (Mathlib 規約)。Common2026 inline は `μ.real {x}`
+- **`Real.log` は `x ≤ 0` で `0` を返す** (Mathlib 規約)。InformationTheory inline は `μ.real {x}`
   形で `≥ 0` だが `= 0` がありうる箇所では `Real.log 0 = 0` の事故が出る。`AEP.lean`,
   `SanovLDP.lean` 等は `hQpos`, `hPpos` で `> 0` を別途仮定して回避している。
 - **`ENNReal.log` は `0 ↦ ⊥`, `⊤ ↦ ⊤`** で `±∞` 値を取る。`expGrowth*` を使う場合
@@ -232,20 +232,20 @@
 
 ---
 
-## B. Common2026 内 inline 漸近表現 (代表 10 箇所)
+## B. InformationTheory 内 inline 漸近表現 (代表 10 箇所)
 
 | # | ファイル | 行 | 表現 (verbatim) | 親 theorem | カテゴリ |
 |---|---|---|---|---|---|
-| 1 | `Common2026/Shannon/AEP.lean` | 162-165 | `∀ᵐ ω ∂μ, Tendsto (fun n : ℕ => (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n) atTop (𝓝 (entropy μ (Xs 0)))` | `aep_ae` | LLN 形 (a.s. 収束) |
-| 2 | `Common2026/Shannon/AEP.lean` | 190-194 | `Tendsto (fun n : ℕ => μ {ω | ε ≤ \|((∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n) - entropy μ (Xs 0)\|}) atTop (𝓝 0)` | `aep_inProbability` | 確率収束 (measure → 0) |
-| 3 | `Common2026/Shannon/SMBAlgoetCover.lean` | 2840-2845 | `∀ᵐ ω ∂μ, Filter.Tendsto (fun n => blockLogAvg μ p.toStationaryProcess n ω) Filter.atTop (𝓝 (entropyRate μ p.toStationaryProcess))` (blockLogAvg = `-(1/n) * log P_n({block_n ω})`) | `shannon_mcmillan_breiman` | a.s. rate |
-| 4 | `Common2026/Shannon/StrongStein.lean` | 509-512 | `Tendsto (fun n : ℕ => -((1 : ℝ) / n) * Real.log (steinOptimalBeta P Q n ε)) atTop (𝓝 (klDiv P Q).toReal)` | `stein_strong_lemma` | exponent rate 形 (典型) |
-| 5 | `Common2026/Shannon/Stein.lean` | 1390-1409 | `(klDiv P Q).toReal ≤ Filter.liminf (fun n : ℕ => -((1 : ℝ) / n) * Real.log (steinOptimalBeta P Q n ε)) Filter.atTop ∧ Filter.limsup (fun n : ℕ => -((1 : ℝ) / n) * Real.log (steinOptimalBeta P Q n ε)) Filter.atTop ≤ (klDiv P Q).toReal / (1 - ε)` | `stein_lemma` | sandwich 形 (`liminf ≤ limsup`) |
-| 6 | `Common2026/Shannon/SanovLDPEquality.lean` | 1253-1257 | `Tendsto (fun n : ℕ => (1 / (n : ℝ)) * Real.log (((Measure.pi (fun _ : Fin n => Q)) (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal)) atTop (𝓝 (-(klDivSumForm_ofVec P (fun a => Q.real {a}))))` | `sanov_ldp_equality` | exponent rate 形 |
-| 7 | `Common2026/Shannon/EntropyRate.lean` | 432-434 | `∃ H : ℝ, Tendsto (fun n : ℕ => blockEntropy μ p n / n) atTop (𝓝 H)` | `entropyRate_exists_of_stationary` | 平均的 (per-letter) rate; 値存在 |
-| 8 | `Common2026/Shannon/EntropyRate.lean` | 466-468 | `Tendsto (conditionalEntropyTail μ p) atTop (𝓝 (entropyRate μ p))` | `entropyRate_eq_lim_condEntropy` | tail 収束 |
-| 9 | `Common2026/Shannon/AEPRate.lean` | 323-324 | `∃ N : ℕ, ∀ n ≥ N, Real.exp (- (n : ℝ) * g) < ε'` | `exp_neg_mul_lt_of_rate` | closed-form N extraction |
-| 10 | `Common2026/Shannon/AEPRate.lean` | 361-365 | `∃ N : ℕ, ∀ n ≥ N, ((Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) - 1) * Real.exp ((n : ℝ) * (-I + 3 * ε)) < ε'` | `channelCoding_E2_lt_of_rate` | closed-form N for channel coding |
+| 1 | `InformationTheory/Shannon/AEP.lean` | 162-165 | `∀ᵐ ω ∂μ, Tendsto (fun n : ℕ => (∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n) atTop (𝓝 (entropy μ (Xs 0)))` | `aep_ae` | LLN 形 (a.s. 収束) |
+| 2 | `InformationTheory/Shannon/AEP.lean` | 190-194 | `Tendsto (fun n : ℕ => μ {ω | ε ≤ \|((∑ i ∈ Finset.range n, logLikelihood μ Xs i ω) / n) - entropy μ (Xs 0)\|}) atTop (𝓝 0)` | `aep_inProbability` | 確率収束 (measure → 0) |
+| 3 | `InformationTheory/Shannon/SMBAlgoetCover.lean` | 2840-2845 | `∀ᵐ ω ∂μ, Filter.Tendsto (fun n => blockLogAvg μ p.toStationaryProcess n ω) Filter.atTop (𝓝 (entropyRate μ p.toStationaryProcess))` (blockLogAvg = `-(1/n) * log P_n({block_n ω})`) | `shannon_mcmillan_breiman` | a.s. rate |
+| 4 | `InformationTheory/Shannon/StrongStein.lean` | 509-512 | `Tendsto (fun n : ℕ => -((1 : ℝ) / n) * Real.log (steinOptimalBeta P Q n ε)) atTop (𝓝 (klDiv P Q).toReal)` | `stein_strong_lemma` | exponent rate 形 (典型) |
+| 5 | `InformationTheory/Shannon/Stein.lean` | 1390-1409 | `(klDiv P Q).toReal ≤ Filter.liminf (fun n : ℕ => -((1 : ℝ) / n) * Real.log (steinOptimalBeta P Q n ε)) Filter.atTop ∧ Filter.limsup (fun n : ℕ => -((1 : ℝ) / n) * Real.log (steinOptimalBeta P Q n ε)) Filter.atTop ≤ (klDiv P Q).toReal / (1 - ε)` | `stein_lemma` | sandwich 形 (`liminf ≤ limsup`) |
+| 6 | `InformationTheory/Shannon/SanovLDPEquality.lean` | 1253-1257 | `Tendsto (fun n : ℕ => (1 / (n : ℝ)) * Real.log (((Measure.pi (fun _ : Fin n => Q)) (⋃ c ∈ E n, typeClassByCount (α := α) (fun a => (c a : ℕ)))).toReal)) atTop (𝓝 (-(klDivSumForm_ofVec P (fun a => Q.real {a}))))` | `sanov_ldp_equality` | exponent rate 形 |
+| 7 | `InformationTheory/Shannon/EntropyRate.lean` | 432-434 | `∃ H : ℝ, Tendsto (fun n : ℕ => blockEntropy μ p n / n) atTop (𝓝 H)` | `entropyRate_exists_of_stationary` | 平均的 (per-letter) rate; 値存在 |
+| 8 | `InformationTheory/Shannon/EntropyRate.lean` | 466-468 | `Tendsto (conditionalEntropyTail μ p) atTop (𝓝 (entropyRate μ p))` | `entropyRate_eq_lim_condEntropy` | tail 収束 |
+| 9 | `InformationTheory/Shannon/AEPRate.lean` | 323-324 | `∃ N : ℕ, ∀ n ≥ N, Real.exp (- (n : ℝ) * g) < ε'` | `exp_neg_mul_lt_of_rate` | closed-form N extraction |
+| 10 | `InformationTheory/Shannon/AEPRate.lean` | 361-365 | `∃ N : ℕ, ∀ n ≥ N, ((Nat.ceil (Real.exp ((n : ℝ) * R)) : ℝ) - 1) * Real.exp ((n : ℝ) * (-I + 3 * ε)) < ε'` | `channelCoding_E2_lt_of_rate` | closed-form N for channel coding |
 
 **観察 — 共通形と揺れ**:
 
@@ -286,7 +286,7 @@ def DotEq (a b : ℕ → ℝ) : Prop :=
   Tendsto (fun n : ℕ => (1 / (n : ℝ)) * Real.log (a n / b n)) atTop (𝓝 0)
 ```
 
-- **長所**: Common2026 inline 表現 #4, #6 と **直接型が合う**。`a/b` の log は
+- **長所**: InformationTheory inline 表現 #4, #6 と **直接型が合う**。`a/b` の log は
   `Real.log_div` で `log a - log b` に展開可能。
 - **短所**: `a_n, b_n > 0` の前提を述語の中に書かないと `Real.log` の 0 値で事故。
 - **依存**: 既存 lemma で全て構成可能 (`Real.log_div`, `tendsto.div_atTop`, `Real.log`)。
@@ -314,7 +314,7 @@ def DotEq (a b : ℕ → ℝ≥0∞) : Prop :=
 
 - **長所**: Mathlib `ExpGrowth` の豊富な計算 lemma (`expGrowthInf_pow`,
   `expGrowthInf_const`, `expGrowthInf_exp`, `expGrowth*_mul_le` 等) を直接活用できる。
-- **短所**: **値域が `ℕ → ℝ≥0∞`** で、Common2026 inline (`ℝ` 値) と型が合わない。
+- **短所**: **値域が `ℕ → ℝ≥0∞`** で、InformationTheory inline (`ℝ` 値) と型が合わない。
   `ENNReal.ofReal` で持ち上げる bridge が必要。さらに値域は `EReal` で、教科書の rate
   値 (`ℝ`) との往復に `EReal.toReal` が要る。
 - **依存**: `Mathlib/Analysis/Asymptotics/ExpGrowth.lean` (2025 年新規, まだ Mathlib 内
@@ -322,9 +322,9 @@ def DotEq (a b : ℕ → ℝ≥0∞) : Prop :=
 
 ### C-4. 推奨 (個別判断はしない、事実列挙のみ)
 
-3 候補のうち **最も Mathlib API 採用率が高いのは候補 B** (`=o[atTop]`)。Common2026 inline
+3 候補のうち **最も Mathlib API 採用率が高いのは候補 B** (`=o[atTop]`)。InformationTheory inline
 形 (`Tendsto ((1/n) log ...) → 0` または `0`) との bridge は **1 補題** で済む。`ExpGrowth`
-は **`ℝ≥0∞` 値の場合に限り**強力。Common2026 はすべて `ℝ` 値で書かれているので、
+は **`ℝ≥0∞` 値の場合に限り**強力。InformationTheory はすべて `ℝ` 値で書かれているので、
 `ExpGrowth` 採用は型変換 cost が大きい。
 
 「教科書 `\doteq` を Mathlib で表現する自然な API」と問われれば、**現状の Mathlib に単一の
@@ -341,10 +341,10 @@ def DotEq (a b : ℕ → ℝ≥0∞) : Prop :=
 - **`Asymptotics.IsEquivalent.log` は `g → atTop` 必須** (`Mathlib/Analysis/Asymptotics/
   SpecificAsymptotics.lean:134`)。教科書 `\doteq` で `a_n, b_n → 0` (`exp(-n D)` 系) を
   扱う場合は直接適用不可。`1/a_n` を取って `→ atTop` 側に持っていく必要がある。
-- **`ExpGrowth.expGrowth*` は `ℕ → ℝ≥0∞` のみ**。`u : ℕ → ℝ` (Common2026 inline の形)
+- **`ExpGrowth.expGrowth*` は `ℕ → ℝ≥0∞` のみ**。`u : ℕ → ℝ` (InformationTheory inline の形)
   には適用不可。`ENNReal.ofReal` で持ち上げる際、**`u n` が `≤ 0` の場合 `ofReal 0 = 0`
   に縮退**し `log 0 = ⊥` で `expGrowthInf` が `⊥` に潰れる事故が起こる。
-- **`Real.log` は `x ≤ 0` で `0`** を返す Mathlib 規約。Common2026 内では `Real.log P_n.real`
+- **`Real.log` は `x ≤ 0` で `0`** を返す Mathlib 規約。InformationTheory 内では `Real.log P_n.real`
   の形が頻発し、`P_n.real = 0` のとき `Real.log 0 = 0` で式が壊れる。**既存ファイルは
   `hPpos`, `hQpos`, `hP_full` で `> 0` を明示仮定**している (`SanovLDP.lean:473`,
   `:1245`)。
@@ -404,7 +404,7 @@ theorem exp_neg_mul_lt_of_pos {g ε' : ℝ} (hg : 0 < g) (hε' : 0 < ε') :
 
 - **工数**: 既存の `AEPRate.lean:323-352` (30 行) をそのまま移植。ファイル横断の重複
   callsite (`AEPRate.lean`, `RateDistortionAchievabilityPhaseEStrongFinal.lean:428`,
-  `Common2026/Probability/TwoSidedExtension.lean:1584`, `SanovLDPEquality.lean:265`,
+  `InformationTheory/Probability/TwoSidedExtension.lean:1584`, `SanovLDPEquality.lean:265`,
   `BirkhoffErgodic.lean:1087`, `ConditionalMethodOfTypes.lean:1465`) を 1 本に統合する作業
   込みで 50〜100 行。
 - **落とし穴**: 既存 callsite の signature と完全一致するか確認 — `g`, `ε'` の名前は
@@ -465,7 +465,7 @@ notation:50 f:50 " =o(1)" => f =o[atTop] (fun _ : ℕ => (1 : ℝ))
 > **編集境界**: 本ファイルは在庫調査のみ。skeleton は計画起草 (`lean-planner`) と実装
 > (`lean-implementer`) の参考用としてだけ示す。本サブエージェントは Lean ファイルを書かない。
 
-`Common2026/Asymptotic/Framework.lean` (仮称) の出だし:
+`InformationTheory/Asymptotic/Framework.lean` (仮称) の出だし:
 
 ```lean
 import Mathlib.Analysis.Asymptotics.Defs              -- IsLittleO, IsBigO, =o[atTop]
@@ -514,11 +514,11 @@ end InformationTheory.Asymptotic
 - **Mathlib `Asymptotics` 系 (`IsBigO`, `IsLittleO`, `IsTheta`, `IsEquivalent`) は完備**で
   notation も揃う。教科書 `O(n)`, `o(n)`, `Θ(n)`, `~` をすべて 1 行で記述可能。
 - **`ExpGrowth.expGrowthInf` / `expGrowthSup`** (2025 年新規) が教科書 `\doteq` の右辺に
-  近い概念を提供するが、**`ℕ → ℝ≥0∞` → `EReal`** で Common2026 inline の `ℝ` 値表現と
+  近い概念を提供するが、**`ℕ → ℝ≥0∞` → `EReal`** で InformationTheory inline の `ℝ` 値表現と
   型が合わない。bridge cost が高い。
 - **教科書 `\doteq` (`a_n ≐ b_n`) に対応する単一述語は Mathlib に不在**。`=o[atTop]` +
   `Real.log` の組合せで再現するのが現実的 (推奨候補 B)。
-- **Common2026 内の漸近表現は 2 系統に分かれている**: (a) `Tendsto ((1/n) log) → -C` の
+- **InformationTheory 内の漸近表現は 2 系統に分かれている**: (a) `Tendsto ((1/n) log) → -C` の
   exponent rate 形 (AEP, SMB, Stein, Sanov LDP の 6〜8 ファイル)、(b) `∃ N, ∀ n ≥ N, ...`
   の closed-form N extraction 形 (`AEPRate.lean` 905 行 + 7 ファイル横断 `Metric.tendsto_atTop`
   callsite)。
@@ -553,11 +553,11 @@ end InformationTheory.Asymptotic
 - `Mathlib/Topology/MetricSpace/Pseudo/Defs.lean:901` — `Metric.tendsto_atTop` (ε-N 抽出)
 - `Mathlib/Topology/Order/LiminfLimsup.lean:299, :306` — `tendsto_of_liminf_eq_limsup`,
   `tendsto_of_le_liminf_of_limsup_le` (sandwich)
-- `Common2026/Shannon/AEPRate.lean` — 905 行、closed-form `N` lemma 集 (I-3 の前駆体)
-- `Common2026/Shannon/AEP.lean:162, :190` — AEP a.s. / probability rate
-- `Common2026/Shannon/SMBAlgoetCover.lean:2840` — `shannon_mcmillan_breiman` rate
-- `Common2026/Shannon/StrongStein.lean:498` — `stein_strong_lemma` (Tendsto → K)
-- `Common2026/Shannon/Stein.lean:1390` — `stein_lemma` (sandwich form)
-- `Common2026/Shannon/SanovLDPEquality.lean:1243` — `sanov_ldp_equality` rate
-- `Common2026/Shannon/EntropyRate.lean:432, :466` — `entropyRate_exists_of_stationary`,
+- `InformationTheory/Shannon/AEPRate.lean` — 905 行、closed-form `N` lemma 集 (I-3 の前駆体)
+- `InformationTheory/Shannon/AEP.lean:162, :190` — AEP a.s. / probability rate
+- `InformationTheory/Shannon/SMBAlgoetCover.lean:2840` — `shannon_mcmillan_breiman` rate
+- `InformationTheory/Shannon/StrongStein.lean:498` — `stein_strong_lemma` (Tendsto → K)
+- `InformationTheory/Shannon/Stein.lean:1390` — `stein_lemma` (sandwich form)
+- `InformationTheory/Shannon/SanovLDPEquality.lean:1243` — `sanov_ldp_equality` rate
+- `InformationTheory/Shannon/EntropyRate.lean:432, :466` — `entropyRate_exists_of_stationary`,
   `entropyRate_eq_lim_condEntropy`

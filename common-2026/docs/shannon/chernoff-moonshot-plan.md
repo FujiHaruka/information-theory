@@ -1,7 +1,7 @@
 # Chernoff Information sandwich Tendsto ムーンショット計画 🌙 (T1-B 独立)
 
 > 実態整合 (2026-05-20): **DONE-HONEST-HYPS (L-Ch1+L-Ch2 採用形)** — 計画通り完了。headline
-> `chernoff_lemma_tendsto` は `Common2026/Shannon/ChernoffInformation.lean:124` に存在 (0 sorry)。
+> `chernoff_lemma_tendsto` は `InformationTheory/Shannon/ChernoffInformation.lean:124` に存在 (0 sorry)。
 > `h_converse` (limsup ≤ chernoffInfo) + `h_bdd_le` を honest hypothesis として取り、achievability
 > (既存 `chernoff_lemma_achievability`) + bdd-ge internal discharge (`chernoff_rate_isBoundedUnder_ge`)
 > と sandwich (`tendsto_of_le_liminf_of_limsup_le`)。`h_converse` は後継 `chernoff-converse` plan で
@@ -11,9 +11,9 @@
 > **Status (2026-05-19)**: T1-B (Chernoff information, Cover-Thomas Theorem 11.9.1) 独立で
 > **sandwich `Tendsto` 形** を publish するための plan。先行 plan
 > [`chernoff-hoeffding-moonshot-plan.md`](chernoff-hoeffding-moonshot-plan.md) が T1-B/D 合同で
-> Phase A残 + D残 + Phase C achievability まで完了させた (`Common2026/Shannon/Chernoff.lean`,
+> Phase A残 + D残 + Phase C achievability まで完了させた (`InformationTheory/Shannon/Chernoff.lean`,
 > 1066 行, 0 sorry) ところを、本 plan で **converse を hypothesis として外出し** して
-> sandwich `Tendsto` を publish する。スコープは新規 file `Common2026/Shannon/ChernoffInformation.lean`
+> sandwich `Tendsto` を publish する。スコープは新規 file `InformationTheory/Shannon/ChernoffInformation.lean`
 > (~500 行) に閉じ込め、既存 `Chernoff.lean` を黒箱で再利用する `HoeffdingTradeoff.lean`
 > (`hoeffding_tradeoff_with_hypothesis`) と同型の publish pattern を採用する。
 >
@@ -29,18 +29,18 @@
 
 ## 進捗
 
-- [x] Phase 0 — Mathlib + Common2026 API 在庫 ✅ → [`chernoff-mathlib-inventory.md`](chernoff-mathlib-inventory.md)
+- [x] Phase 0 — Mathlib + InformationTheory API 在庫 ✅ → [`chernoff-mathlib-inventory.md`](chernoff-mathlib-inventory.md)
 - [ ] Phase 1 — `ChernoffInformation.lean` skeleton (sorries) 📋
 - [ ] Phase 2 — bdd-ge internal discharge (`IsBoundedUnder (· ≥ ·)`) 📋
 - [ ] Phase 3 — bdd-le internal discharge (`IsBoundedUnder (· ≤ ·)`, optional, L-Ch2 解除) 📋
 - [ ] Phase 4 — sandwich Tendsto wrapper (`chernoff_lemma_tendsto`) 📋
-- [ ] Phase 5 — DotEq corollary + Common2026 編入 + roadmap 更新 📋
+- [ ] Phase 5 — DotEq corollary + InformationTheory 編入 + roadmap 更新 📋
 
 ## ゴール / Approach
 
 ### 最終到達点
 
-新規 file `Common2026/Shannon/ChernoffInformation.lean` で:
+新規 file `InformationTheory/Shannon/ChernoffInformation.lean` で:
 
 ```lean
 /-- **Cover-Thomas Theorem 11.9.1** (sandwich Tendsto, hypothesis pass-through form).
@@ -86,7 +86,7 @@ theorem chernoff_lemma_tendsto
 ### Approach 図
 
 ```
-Phase 0  : Mathlib + Common2026 API 在庫          ← 完了済 (in inventory)
+Phase 0  : Mathlib + InformationTheory API 在庫          ← 完了済 (in inventory)
            ────────────────────────────────────────────
 Phase 1  : Skeleton (sorries 6-8 個)              ← 0.15 セッション (~10 min)
 Phase 2  : bdd-ge internal discharge              ← 0.1 セッション (~10 min)
@@ -112,13 +112,13 @@ Phase 5  : DotEq corollary + library 編入         ← 0.1 セッション (~10
 ### ファイル構成
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   Chernoff.lean                ← 既存 (1066 行, 0 sorry, 変更なし)
   ChernoffInformation.lean     ← 新規 (~500 行, 0 sorry)
   HoeffdingTradeoff.lean       ← 既存 (sandwich pattern 雛形)
-Common2026/InformationTheory/
+InformationTheory/InformationTheory/
   Asymptotic.lean              ← 既存 (`DotEq` notation 利用)
-Common2026.lean                ← `import Common2026.Shannon.ChernoffInformation` 追記
+InformationTheory.lean                ← `import InformationTheory.Shannon.ChernoffInformation` 追記
 docs/shannon/
   chernoff-mathlib-inventory.md ← 新規
   chernoff-moonshot-plan.md     ← 本ファイル (新規)
@@ -130,14 +130,14 @@ docs/shannon/
 
 完了済 (再利用可、本 plan 直接依存):
 
-- [x] `Common2026/Shannon/Chernoff.lean` (`chernoffInfo`, `chernoffInfo_attained`,
+- [x] `InformationTheory/Shannon/Chernoff.lean` (`chernoffInfo`, `chernoffInfo_attained`,
   `chernoffInfo_nonneg`, `chernoffInfo_symm`, `bayesErrorMinPmf`, `bayesErrorMinPmf_pos`,
   `bayesErrorMinPmf_le_half_Z_pow`, `chernoffZSum`, `chernoffZSum_pos`,
   `chernoff_achievability`, `chernoff_lemma_achievability`,
   `chernoff_rate_ge_chernoffInfo_eventually`)
-- [x] `Common2026/Shannon/HoeffdingTradeoff.lean` (sandwich Tendsto pattern 雛形,
+- [x] `InformationTheory/Shannon/HoeffdingTradeoff.lean` (sandwich Tendsto pattern 雛形,
   `hoeffding_tradeoff_with_hypothesis`)
-- [x] `Common2026/InformationTheory/Asymptotic.lean` (`DotEq`, `dotEq_iff_tendsto_log_div`)
+- [x] `InformationTheory/InformationTheory/Asymptotic.lean` (`DotEq`, `dotEq_iff_tendsto_log_div`)
 - [x] Mathlib `Mathlib.Topology.Order.LiminfLimsup.tendsto_of_le_liminf_of_limsup_le`
 - [x] Mathlib `Mathlib.Order.Filter.IsBounded.IsBoundedUnder`
 
@@ -154,8 +154,8 @@ docs/shannon/
 
 - [ ] **1-1 imports + namespace**:
   ```lean
-  import Common2026.Shannon.Chernoff
-  import Common2026.InformationTheory.Asymptotic
+  import InformationTheory.Shannon.Chernoff
+  import InformationTheory.InformationTheory.Asymptotic
   import Mathlib.Topology.Order.LiminfLimsup
   import Mathlib.Order.Filter.IsBounded
   namespace InformationTheory.Shannon.ChernoffInformation
@@ -273,7 +273,7 @@ skeleton (sorry のみ) で `lake env lean ChernoffInformation.lean` clean (sorr
 ### スコープ
 
 `bayesErrorMinPmf P₁ P₂ n ≐ exp(-n · chernoffInfo P₁ P₂)` の `DotEq` 形を corollary として publish。
-`Common2026.lean` に `import` 追加、`textbook-roadmap.md` Ch.11 行更新。
+`InformationTheory.lean` に `import` 追加、`textbook-roadmap.md` Ch.11 行更新。
 
 ### ステップ
 
@@ -286,22 +286,22 @@ skeleton (sorry のみ) で `lake env lean ChernoffInformation.lean` clean (sorr
   ```
   証明は `dotEq_iff_tendsto_log_div` (`Asymptotic.lean:116`) 経由。
 
-- [ ] **5-2 `Common2026.lean` 編入**:
+- [ ] **5-2 `InformationTheory.lean` 編入**:
   ```lean
-  import Common2026.Shannon.ChernoffInformation
+  import InformationTheory.Shannon.ChernoffInformation
   ```
   を `Chernoff.lean` の直下 (line 91 付近) に追記。
 
 - [ ] **5-3 `textbook-roadmap.md` 更新**:
   Ch.11 行の「代表定理」欄に `chernoff_lemma_tendsto` を append、Tier 1 §T1-B カードに
-  publish 情報 (`Common2026/Shannon/ChernoffInformation.lean` / 行数 / 0 sorry) を append。
+  publish 情報 (`InformationTheory/Shannon/ChernoffInformation.lean` / 行数 / 0 sorry) を append。
 
 - [ ] **5-4 `moonshot-seeds.md` Status 更新**:
   T1-B Chernoff Tendsto 形 publish について 1 段落 (行数 / 主定理 / 採用撤退ライン) を append。
 
 ### 工数感
 
-~30-50 行 (DotEq corollary 30 + Common2026 編入 5 + roadmap 更新 docs 側)。proof-log `no`。
+~30-50 行 (DotEq corollary 30 + InformationTheory 編入 5 + roadmap 更新 docs 側)。proof-log `no`。
 
 ---
 

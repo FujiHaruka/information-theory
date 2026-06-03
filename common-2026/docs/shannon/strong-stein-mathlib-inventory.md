@@ -12,7 +12,7 @@
 
 ### B. Pinsker 経由 (B-5 で publish 済の `tvNorm_le_sqrt_klDiv`)
 
-- `Common2026.Shannon.Pinsker.tvNorm_le_sqrt_klDiv` (Pinsker.lean:118) — 弱形
+- `InformationTheory.Shannon.Pinsker.tvNorm_le_sqrt_klDiv` (Pinsker.lean:118) — 弱形
   `tvNorm P Q ≤ √(klDiv P Q).toReal` (定数 1)。
 - 評価: TV/KL の翻訳でしかなく、現行 converse の `Pn(s) * (-log Qn s) ≥ (1-ε) * (-log Qn s)`
   の DPI 経由の `1/(1-ε)` factor を解消しない。**却下**。
@@ -20,11 +20,11 @@
 ### C. LLR typicality (採用)
 
 - 既存 plumbing が完備:
-  - `Common2026.Shannon.Stein.stein_inProbability` (Stein.lean:213) — WLLN on LLR。
-  - `Common2026.Shannon.Stein.steinTypicalSet` (Stein.lean:257) — `{ x | |S/n - K| < δ }`。
-  - `Common2026.Shannon.Stein.steinTypicalSet_P_prob_tendsto_one` (Stein.lean:275) —
+  - `InformationTheory.Shannon.Stein.stein_inProbability` (Stein.lean:213) — WLLN on LLR。
+  - `InformationTheory.Shannon.Stein.steinTypicalSet` (Stein.lean:257) — `{ x | |S/n - K| < δ }`。
+  - `InformationTheory.Shannon.Stein.steinTypicalSet_P_prob_tendsto_one` (Stein.lean:275) —
     `P^n(T_n^δ) → 1`。
-  - `Common2026.Shannon.Stein.steinTypicalSet_Q_prob_le` (Stein.lean:341) —
+  - `InformationTheory.Shannon.Stein.steinTypicalSet_Q_prob_le` (Stein.lean:341) —
     `Q^n(T_n^δ) ≤ exp(-n(K-δ))` (achievability 側、point-wise LLR 下側を使用)。
 - 新規構築:
   - **Q-side lower bound (symmetric)**: LLR 上側 `S/n < K + δ` を使い、
@@ -65,7 +65,7 @@
 
 ## 既存 Stein.lean からの参照リスト
 
-すべて `InformationTheory.Shannon` namespace、`Common2026/Shannon/Stein.lean`:
+すべて `InformationTheory.Shannon` namespace、`InformationTheory/Shannon/Stein.lean`:
 
 | 補題 | 行 | 用途 |
 |------|----|------|

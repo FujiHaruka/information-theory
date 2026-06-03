@@ -8,6 +8,6 @@
       "note": "Phase 1 実装ターン: Fano/Core.lean を Markov 形にリファクタ、Fano.lean の wrapper 追従、Fano/DPI.lean を新規追加 (log-sum 不等式 / pushforward / DPI / Phase 0 wrapper)。"
     }
   ],
-  "filters": { "file_prefix": "Common2026/Fano" },
+  "filters": { "file_prefix": "InformationTheory/Fano" },
   "idle_gap_minutes": 5
 }

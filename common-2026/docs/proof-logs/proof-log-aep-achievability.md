@@ -17,8 +17,8 @@
 
 成果物:
 
-- `Common2026/Shannon/AEP.lean` (+373 行 → 累計 ~1170 行) — Phase A: encoder/decoder via `Finset.equivFin` + `Fin.castLE` (typical set ↔ `Fin (Finset.card T)` ↔ `Fin M_n` 経由) / Phase B: error rate `Tendsto _ (𝓝 0)` (`typicalSet_prob_tendsto_one` complement squeeze) / Phase C: `codebookSize_log_div_tendsto : Tendsto (log M_n / n) atTop (𝓝 R)` (`Real.log_exp` round-trip + `log(1+exp(-nR))` 有界性) / 主定理 `source_coding_achievability`
-- `Common2026/Shannon/Bridge.lean` (+9 行) — `entropy_nonneg` (`[IsProbabilityMeasure μ]` + `Measurable Xs` 仮定、`Measure.isProbabilityMeasure_map` + `measureReal_le_one` 経由)
+- `InformationTheory/Shannon/AEP.lean` (+373 行 → 累計 ~1170 行) — Phase A: encoder/decoder via `Finset.equivFin` + `Fin.castLE` (typical set ↔ `Fin (Finset.card T)` ↔ `Fin M_n` 経由) / Phase B: error rate `Tendsto _ (𝓝 0)` (`typicalSet_prob_tendsto_one` complement squeeze) / Phase C: `codebookSize_log_div_tendsto : Tendsto (log M_n / n) atTop (𝓝 R)` (`Real.log_exp` round-trip + `log(1+exp(-nR))` 有界性) / 主定理 `source_coding_achievability`
+- `InformationTheory/Shannon/Bridge.lean` (+9 行) — `entropy_nonneg` (`[IsProbabilityMeasure μ]` + `Measurable Xs` 仮定、`Measure.isProbabilityMeasure_map` + `measureReal_le_one` 経由)
 - 2 ファイル `lake env lean` silent
 - 行数 +373 (target 120〜220 を 150 行超過、ceiling 350 を 32 行超過、subagent judgment で全 Phase 完成)
 - 両側等号 unified statement (`inf_{achievable codes} liminf (log M_n / n) = entropy μ X`) は Phase F sub-plan に分離
@@ -35,7 +35,7 @@
 
 ### Phase A: encoder/decoder 構成
 
-typical set `T_ε^n` (`Common2026/Shannon/AEP.lean` Phase B 既存) を有限集合化 (`(typicalSet ...).toFinite.toFinset`)、`Finset.equivFin` で `↑T_ε^n ≃ Fin (Finset.card T)`、`Fin.castLE` で `Fin (Finset.card T) → Fin M_n` (`typicalSet_card_le` で `Finset.card T ≤ M_n` を確保、`R > H + ε` ⇒ `M_n = Nat.ceil (exp (n*R)) ≥ exp (n*(H+ε)) ≥ Finset.card T`)。decoder は逆向き + `Classical.arbitrary` fallback (out-of-range index)。
+typical set `T_ε^n` (`InformationTheory/Shannon/AEP.lean` Phase B 既存) を有限集合化 (`(typicalSet ...).toFinite.toFinset`)、`Finset.equivFin` で `↑T_ε^n ≃ Fin (Finset.card T)`、`Fin.castLE` で `Fin (Finset.card T) → Fin M_n` (`typicalSet_card_le` で `Finset.card T ≤ M_n` を確保、`R > H + ε` ⇒ `M_n = Nat.ceil (exp (n*R)) ≥ exp (n*(H+ε)) ≥ Finset.card T`)。decoder は逆向き + `Classical.arbitrary` fallback (out-of-range index)。
 
 ### Phase B: error rate
 
@@ -58,7 +58,7 @@ typical set `T_ε^n` (`Common2026/Shannon/AEP.lean` Phase B 既存) を有限集
 | `Finset.equivFin` | loogle | 1 | Mathlib 既存 |
 | `Fin.castLE` + `.val` 透過性 | loogle, rg | 2 | Mathlib 既存、ただし `Fin.ext` 経由が必要 |
 | `Set.Finite.toFinset` | loogle | 1 | Mathlib 既存 |
-| `entropy_nonneg` | rg Common2026/ | 1 | **不在**、Bridge.lean に 7 行 append |
+| `entropy_nonneg` | rg InformationTheory/ | 1 | **不在**、Bridge.lean に 7 行 append |
 | `Real.log_exp` | loogle | 1 | Mathlib 既存 (`Real.log_exp : log (exp x) = x`) |
 | `Nat.ceil_lt_add_one` | loogle | 1 | Mathlib 既存 |
 | `tendsto_one_minus` | loogle | 1 | `Filter.Tendsto.const_sub` で代替 |
@@ -68,7 +68,7 @@ typical set `T_ε^n` (`Common2026/Shannon/AEP.lean` Phase B 既存) を有限集
 
 「Mathlib に無かった」もの:
 
-- **`entropy_nonneg`** — Common2026 `Bridge.lean` に追加 (7 行)。`[IsProbabilityMeasure μ]` + `Measurable Xs` で `μ.map Xs` も `IsProbabilityMeasure` (Mathlib `Measure.isProbabilityMeasure_map`) → `measureReal_le_one` で各 fiber 確率が ≤ 1 → `negMulLog ≥ 0` → entropy ≥ 0。**Measurability 仮定が必須なのが surprise** (`measureReal_le_one` が `[IsZeroOrProbabilityMeasure]` を要求、`map` の保存に measurability が必要)。Pure な `(μ : Measure Ω) (Xs : Ω → X) [IsProbabilityMeasure μ] : 0 ≤ entropy μ Xs` は手書きすると数十行になる (Measure.real ≤ 1 を直接 measurability free に証明)。
+- **`entropy_nonneg`** — InformationTheory `Bridge.lean` に追加 (7 行)。`[IsProbabilityMeasure μ]` + `Measurable Xs` で `μ.map Xs` も `IsProbabilityMeasure` (Mathlib `Measure.isProbabilityMeasure_map`) → `measureReal_le_one` で各 fiber 確率が ≤ 1 → `negMulLog ≥ 0` → entropy ≥ 0。**Measurability 仮定が必須なのが surprise** (`measureReal_le_one` が `[IsZeroOrProbabilityMeasure]` を要求、`map` の保存に measurability が必要)。Pure な `(μ : Measure Ω) (Xs : Ω → X) [IsProbabilityMeasure μ] : 0 ≤ entropy μ Xs` は手書きすると数十行になる (Measure.real ≤ 1 を直接 measurability free に証明)。
 - **`Filter.Tendsto.mul_const`** (実数値) — Track 4 同様、名前で見つからず `.mul tendsto_const_nhds` で代替。
 
 ## 4. 試行錯誤と後戻り
@@ -83,7 +83,7 @@ typical set `T_ε^n` (`Common2026/Shannon/AEP.lean` Phase B 既存) を有限集
 
 ### 4.2 `errorProb` の subset orientation 罠
 
-**症状**: error event を `{ω | decoder (Yo ω) ≠ Xs ω}` で書いていたが、`Common2026/Shannon/Converse.lean` の `errorProb` は `{ω | Xs ω ≠ decoder (Yo ω)}` 形 (LHS と RHS の順序)。
+**症状**: error event を `{ω | decoder (Yo ω) ≠ Xs ω}` で書いていたが、`InformationTheory/Shannon/Converse.lean` の `errorProb` は `{ω | Xs ω ≠ decoder (Yo ω)}` 形 (LHS と RHS の順序)。
 
 **抜け方**: subset 判定を反転、`Xs ω ≠ decoder (Yo ω)` 形に統一。
 
@@ -135,7 +135,7 @@ typical set `T_ε^n` (`Common2026/Shannon/AEP.lean` Phase B 既存) を有限集
 ## 7. 補足
 
 - 本 Track は orchestration (Track 1 → ... → Track 5) の **最終 Track**。同 session / 同 prompt_id 内のサブエージェント起動として実行。proof-log は Track 単位で分離、metrics は session 単位なので Track 5 単独抽出は不可。
-- 上流 PR 候補 (本 Track 由来): `entropy_nonneg` の Mathlib `MeasureTheory.Measure` 系への lift (現状は `Common2026/Shannon/Bridge.lean` 単体)、`Filter.Tendsto.mul_const` (実数値) の命名整理。
+- 上流 PR 候補 (本 Track 由来): `entropy_nonneg` の Mathlib `MeasureTheory.Measure` 系への lift (現状は `InformationTheory/Shannon/Bridge.lean` 単体)、`Filter.Tendsto.mul_const` (実数値) の命名整理。
 - 行数 ceiling 超過 (350 → 382): `codebookSize_log_div_tendsto` (Phase C) で plan 25-45 行を 80 行に超過。Plan が `log(exp(nR)+1)` の decomposition + `|log(1+exp(-nR))| ≤ log 2` 有界性を underestimate。subagent judgment で「by margin」と続行、結果 0 sorry / 回帰なし。
 - 両側等号 unified statement (`inf_{achievable codes} liminf (log M_n / n) = entropy μ X`) は Phase F sub-plan として `docs/moonshot-seeds.md` A セクションに新規 deferred 登録 (50〜100 行 / 低リスク、新規数学なし、起点完備)。
 - 採らなかった代替案: (i) measurability free `entropy_nonneg` (数十行手書き、scope 過剰)、(ii) random coding argument (確率論的 achievability、Cover-Thomas Ch 7 channel coding 流儀)、本 Track は constructive (deterministic typical set encoder) のみ採用 (achievability source coding の標準形)、(iii) Phase D + E 一体化 unified statement、Phase F に分離。

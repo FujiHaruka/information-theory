@@ -26,7 +26,7 @@
 - [~] Phase 2 — converse `h_limsup ≤ E2` 🔄 boundary case (`klDivPmf P₂ P₁ ≤ alpha`、E2=0 collapse) のみ genuine (`hoeffding_tradeoff_achievability_at_boundary`)。一般 α は DEF-FLAW で偽のため不可。
 - [x] ~~Phase 3 — achievability via Sanov lower + Type-I AEP~~ 🔄 **無効化** (DEF-FLAW: 定数 α では Sanov lower が tradeoff 曲線に接続しない)
 - [x] ~~Phase 4 — 3-case 統合して headline hypothesis-free~~ 🔄 **無効化** (headline が偽)。honest wrapper `hoeffding_tradeoff_of_asymptotics` (変分 2 不等式を明示仮説、`:= True`/sorry なし) で着地。
-- [x] Phase V — clean check + `Common2026.lean` 編入 ✅ (`HoeffdingSandwichDischarge.lean` 202 行, 0 sorry)
+- [x] Phase V — clean check + `InformationTheory.lean` 編入 ✅ (`HoeffdingSandwichDischarge.lean` 202 行, 0 sorry)
 
 proof-log: 不要になった (Phase 3 無効化)。代わりに DEF-FLAW を判断ログ #4 に記録。
 
@@ -113,12 +113,12 @@ Phase 2 : converse h_limsup (Stein strong + Pythagoras)                   ← 1.
 Phase 3 : achievability h_liminf (Sanov lower + Type-I AEP)               ← 1.5 セッション (120-180 行)
            ←─── 撤退ライン L-H4-FB (boundary-only に縮退) ───→
 Phase 4 : headline hypothesis-free (sandwich wrapper に流し込み)          ← 0.25 セッション (10-20 行)
-Phase V : clean check + Common2026.lean 編入 (オーケストレータ)            ← 5 分
+Phase V : clean check + InformationTheory.lean 編入 (オーケストレータ)            ← 5 分
 ```
 
 ### ファイル構成
 
-新規 `Common2026/Shannon/HoeffdingSandwichDischarge.lean` を想定 (在庫 §着手 skeleton 準拠)。
+新規 `InformationTheory/Shannon/HoeffdingSandwichDischarge.lean` を想定 (在庫 §着手 skeleton 準拠)。
 既存 `HoeffdingSandwichBody.lean` 拡張でも可だが、(1) Sanov/Stein/AEP の重い import が
 sandwich body に波及するのを避ける、(2) Phase 単位で分離検証したい、の 2 理由で **新規ファイル推奨**。
 import は在庫 §着手 skeleton の 9 本 + 構成的 machinery (`HoeffdingMinimizerAttainment`,
@@ -152,7 +152,7 @@ skeleton 4 本 (`exists_hoeffding_minimizer_full_support` / `hoeffding_tradeoff_
 
 ### Done 条件
 
-skeleton が `lake env lean Common2026/Shannon/HoeffdingSandwichDischarge.lean` で sorry warning のみ。
+skeleton が `lake env lean InformationTheory/Shannon/HoeffdingSandwichDischarge.lean` で sorry warning のみ。
 残 sorry は `exists_hoeffding_minimizer_full_support` / `converse` / `achievability` の 3 本のみ
 (headline は Phase 0 で close 済)。
 
@@ -341,16 +341,16 @@ Phase 2 (`converse`) + Phase 3 (`achievability`) を `hoeffding_tradeoff_sandwic
 ### Done 条件
 
 `hoeffding_tradeoff` が 0-sorry hypothesis-free。ファイル全体が
-`lake env lean Common2026/Shannon/HoeffdingSandwichDischarge.lean` で silent。
+`lake env lean InformationTheory/Shannon/HoeffdingSandwichDischarge.lean` で silent。
 
 ---
 
-## Phase V — clean check + `Common2026.lean` 編入 (オーケストレータ) 📋
+## Phase V — clean check + `InformationTheory.lean` 編入 (オーケストレータ) 📋
 
-- [ ] V-1 `lake env lean Common2026/Shannon/HoeffdingSandwichDischarge.lean` silent (0 sorry / 0 error)。
-- [ ] V-2 `Common2026.lean` に `import Common2026.Shannon.HoeffdingSandwichDischarge` 追記
+- [ ] V-1 `lake env lean InformationTheory/Shannon/HoeffdingSandwichDischarge.lean` silent (0 sorry / 0 error)。
+- [ ] V-2 `InformationTheory.lean` に `import InformationTheory.Shannon.HoeffdingSandwichDischarge` 追記
   (既存 Hoeffding import 群の直後)。
-- [ ] V-3 `lake env lean Common2026.lean` で全体 silent 確認。
+- [ ] V-3 `lake env lean InformationTheory.lean` で全体 silent 確認。
 - [ ] V-4 本 plan 進捗ブロックを `✅` に更新、判断ログに publish 完了 append。
   親 plan `hoeffding-tradeoff-moonshot-plan.md` の Phase C/D を `✅` (or 縮退範囲を記録) に更新。
 

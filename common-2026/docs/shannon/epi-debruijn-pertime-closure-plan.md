@@ -4,7 +4,7 @@
 > (撤退ライン L-EPI2 = de Bruijn integration の genuine discharge、per-time wall は
 > その下流の解析核)。grandparent: [`epi-moonshot-plan.md`](epi-moonshot-plan.md)。
 > **Inventory**: [`epi-debruijn-pertime-reattack-inventory.md`](epi-debruijn-pertime-reattack-inventory.md)。
-> **Wall SoT**: `Common2026/Shannon/FisherInfoV2DeBruijn.lean:245` (`debruijnIdentityV2_holds`)。
+> **Wall SoT**: `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:245` (`debruijnIdentityV2_holds`)。
 
 <!--
 記法は subplan-template と同じ (状態絵文字 📋🚧✅🔄 / 取り消し線 / 判断ログ append-only)。
@@ -30,7 +30,7 @@ plan filename stem = `epi-debruijn-pertime-closure` → 再分類後の `@residu
 ## ゴール / Approach
 
 **ゴール**: EPI moonshot の唯一の残壁 `debruijnIdentityV2_holds`
-(`Common2026/Shannon/FisherInfoV2DeBruijn.lean:245`、現 `@residual(wall:debruijn-integration)`) を
+(`InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:245`、現 `@residual(wall:debruijn-integration)`) を
 一般 `X` で genuine 化し、`@audit:ok` に到達する (Gaussian case は `deBruijn_identity_v2_gaussian`
 で既に genuine)。
 
@@ -156,7 +156,7 @@ theorem debruijnIdentityV2_holds
 - 使用 Mathlib/repo lemma (inventory verbatim):
   - `MeasureTheory.map_eq_withDensity_pdf` (`Mathlib/Probability/Density.lean`、軸4)
   - `MeasureTheory.Measure.rnDeriv_withDensity` (`.../Lebesgue.lean`、結論 `=ᵐ[volume]`、軸4)
-  - `Common2026.Shannon.convDensityAdd` (`EPIConvDensity.lean:40`、Bochner ∫ 形、軸5)
+  - `InformationTheory.Shannon.convDensityAdd` (`EPIConvDensity.lean:40`、Bochner ∫ 形、軸5)
 - 落とし穴 (inventory §5/§7): 独立和の密度 = 畳み込みの Mathlib 直結 lemma 不在 →
   `convDensityAdd` (Bochner ∫) との shape 整合を repo 側で立てる。`rnDeriv_withDensity` は
   ae 等式 → pointwise が要る箇所は `HasDerivAt.congr_of_eventuallyEq` 経由。
@@ -889,7 +889,7 @@ session 内に解けない場合は、当該 step を `sorry` + `@residual(plan:
 1. **structure field 差替 + 順序移動** (`FisherInfoV2DeBruijn.lean:200-278`): `pX` 系 4 field を
    `density_t` の後・`density_t_eq` の前に移動 (forward-reference 解消) → `density_t_eq` を conv pin に
    差替 → defect docstring (`:226-243`) 除去、regularity verdict 再付与。`lake env lean` + 下流 olean
-   refresh (`lake build Common2026.Shannon.FisherInfoV2DeBruijn` 1 回)。
+   refresh (`lake build InformationTheory.Shannon.FisherInfoV2DeBruijn` 1 回)。
 2. **Gaussian constructor genuine 充足** (`EPIL3Integration.lean:706`): `density_t_eq := by`
    `intro ht x; rw [convDensityAdd_gaussian_closed_form _hv ht_ne, add_zero]` (§5F-5)。`_hv` underscore
    外す。
@@ -1227,10 +1227,10 @@ predicate 化 / `:True` slot / 循環 `:= h` / 退化 (rnDeriv pin 等)。詰ま
 | 1-4 | type-check done (各 atom)。`sorry` 残置は `@residual(plan:epi-debruijn-pertime-closure)` タグ付き | 新規 shared sorry 補題追加時のみ要 |
 | 5 | proof done (`debruijnIdentityV2_holds` 0 sorry / 0 @residual、`#print axioms` で sorryAx 非依存) | **要** (新規 genuine 化、`@audit:ok` 付与判定) |
 
-- inner loop は `lake env lean Common2026/Shannon/FisherInfoV2DeBruijnPerTime.lean`
+- inner loop は `lake env lean InformationTheory/Shannon/FisherInfoV2DeBruijnPerTime.lean`
   (新 file) + ripple file 個別。`lake build` は使わない (CLAUDE.md「Verification」)。
 - Phase 0 で structure field 追加 → 下流 olean refresh が必要なら
-  `lake build Common2026.Shannon.FisherInfoV2DeBruijn` 1 回。
+  `lake build InformationTheory.Shannon.FisherInfoV2DeBruijn` 1 回。
 
 ## §Phase 5-G case A: GAP② finite-2nd-moment restate 実装 brief 〔SUPERSEDED — 判断ログ #15〕
 
@@ -1300,7 +1300,7 @@ top body の `_chain` call (`:1006-1007`) は `... hpX_int hpX_mass ht` を
 constructor (`n.ofHeatFlow` 等、`FisherInfoV2DeBruijnBody.lean`) が field 不足で型エラーになる →
 それらの構成側で `pX_mom` を供給する必要あり。供給元が Gaussian/特定構成のみなら本 brief の scope
 外 (別 wave、constructor 側は genuine に moment 有限性を埋めるか、構成が Gaussian 前提なら自明)。
-**この constructor 波及範囲は implementer が `rg 'IsRegularDeBruijnHypV2' Common2026/` +
+**この constructor 波及範囲は implementer が `rg 'IsRegularDeBruijnHypV2' InformationTheory/` +
 LSP 第1戻りで確認し、scope を orchestrator に報告**する (本 brief では top signature までを確定)。
 
 ### GAP② が案A で TRUE & satisfiable になる根拠 (数式)
@@ -1344,7 +1344,7 @@ GAP② docstring (`:475-497`):
 ### 継承タグ語彙整合 inline check (CLAUDE.md「Brief content checklist」#2)
 
 GAP② / `_chain_domination` の docstring を編集後、`rg -n '@audit:|@residual|🟢ʰ'
-Common2026/Shannon/FisherInfoV2DeBruijnAssembly.lean` で deprecated タグ
+InformationTheory/Shannon/FisherInfoV2DeBruijnAssembly.lean` で deprecated タグ
 (`@audit:suspect/staged/defer/closed-by-successor`、散文 `🟢ʰ`) / 語彙外 slug が残っていないか
 列挙し orchestrator に報告。本 file は新規 defect マーカー除去がメインなので、除去後に
 `@audit:defect` / `@audit:retract-candidate` が 0 件になることを確認。
@@ -1369,12 +1369,12 @@ Common2026/Shannon/FisherInfoV2DeBruijnAssembly.lean` で deprecated タグ
    あたり、または末尾): `pX_mom` field (上記 signature)。
 7. **top call site** (`FisherInfoV2DeBruijnAssembly.lean:1006-1007`): `_chain` call に
    `h_reg.pX_mom` を hyp 順通り追加 (`... hpX_int hpX_mass h_reg.pX_mom ht`)。
-8. **constructor 波及確認**: `rg 'IsRegularDeBruijnHypV2' Common2026/` で全構成側を列挙、field 不足
+8. **constructor 波及確認**: `rg 'IsRegularDeBruijnHypV2' InformationTheory/` で全構成側を列挙、field 不足
    エラーを LSP で確認。構成側が `pX_mom` を供給できる範囲 (Gaussian 構成は自明、一般構成は別 wave)
    を orchestrator に報告。本 wave の scope 内で埋まらなければ honest sorry / `@residual` で残す。
-9. **検証**: `lake env lean Common2026/Shannon/FisherInfoV2DeBruijn.lean` →
-   `lake build Common2026.Shannon.FisherInfoV2DeBruijn` (構造変更で olean refresh) →
-   `lake env lean Common2026/Shannon/FisherInfoV2DeBruijnAssembly.lean` が 0 errors
+9. **検証**: `lake env lean InformationTheory/Shannon/FisherInfoV2DeBruijn.lean` →
+   `lake build InformationTheory.Shannon.FisherInfoV2DeBruijn` (構造変更で olean refresh) →
+   `lake env lean InformationTheory/Shannon/FisherInfoV2DeBruijnAssembly.lean` が 0 errors
    (sorry warning 許容、GAP②/`_chain_parametric`/fisher/IBP の既存 sorry のみ)。
 10. **語彙整合 check** (上記) + 残 `@residual` 件数を report。
 
@@ -1551,8 +1551,8 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
 
 | step | 作業 | file | 検証コマンド |
 |---|---|---|---|
-| 0 | 新 file `FisherConvBound.lean` skeleton: `gaussianConv_fisher_le_inv_var` (honest sorry `@residual(wall:fisher-finiteness)`) + import + namespace。`Common2026.lean` に import 1 行追加 | `Common2026/Shannon/FisherConvBound.lean` (新) + `Common2026.lean` | `lake env lean Common2026/Shannon/FisherConvBound.lean` 0 errors (sorry warning 可) |
-| 1 | GAP② restate: `convDensityAdd_deriv2_tail_majorant` を `convDensityAdd_deriv2_poly_moment_majorant` に rename + 結論型を integrable envelope に書換 + defect タグ除去 (①) | `FisherInfoV2DeBruijnAssembly.lean:525-538` | `lake env lean Common2026/Shannon/FisherInfoV2DeBruijnAssembly.lean` |
+| 0 | 新 file `FisherConvBound.lean` skeleton: `gaussianConv_fisher_le_inv_var` (honest sorry `@residual(wall:fisher-finiteness)`) + import + namespace。`InformationTheory.lean` に import 1 行追加 | `InformationTheory/Shannon/FisherConvBound.lean` (新) + `InformationTheory.lean` | `lake env lean InformationTheory/Shannon/FisherConvBound.lean` 0 errors (sorry warning 可) |
+| 1 | GAP② restate: `convDensityAdd_deriv2_tail_majorant` を `convDensityAdd_deriv2_poly_moment_majorant` に rename + 結論型を integrable envelope に書換 + defect タグ除去 (①) | `FisherInfoV2DeBruijnAssembly.lean:525-538` | `lake env lean InformationTheory/Shannon/FisherInfoV2DeBruijnAssembly.lean` |
 | 2 | `_chain_domination` body 書換 (②): GAP② restate を obtain + joint envelope の integrability/domination。defect タグ除去 (`:616-617`)、docstring を vacuous-genuine note → joint-domination note に書換 | 同上 `:528-682` | 同上 |
 | 3 | `_chain_ibp_fisher` / `convDensityAdd_fisher_integrable` を shared 壁呼出に rewire: `convDensityAdd_fisher_integrable` body の `sorry` を `gaussianConv_fisher_le_inv_var` 呼出 + R-A Step 3 plumbing に置換 (fisher-finiteness plan R-A Step 3)。`_chain_ibp_fisher` は既に `convDensityAdd_fisher_integrable` 経由なので transitive、変更不要 | `FisherInfoV2DeBruijnAssembly.lean:715`, import `FisherConvBound` | 同上 |
 | 4 | `hpX_mom` threading: `_chain_parametric` (`:855`) / `_chain` (`:886` 付近) / top assembled (`:1018`) / `IsRegularDeBruijnHypV2` (`pX_mom` field 新規追加) に `hpX_mom` を thread (案A が試みたが revert された threading の復元、ただし今度は statement true な GAP② restate を gate するので vacuous でない) | `FisherInfoV2DeBruijnAssembly.lean` + `FisherInfoV2DeBruijn.lean:202-258` | 両 file + 全 constructor ripple file |
@@ -1563,7 +1563,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
 > `:202-258` は `Z_law`/`density_t`/`pX`/`pX_nn`/`pX_meas`/`pX_law`/`density_t_eq` の 7 field、
 > `pX_mom` 無し)。top assembled body は `hpX_mom := h_reg.pX_mom` で供給 (`hpX_int`/`hpX_mass` が
 > `pX_law` から body 内導出されているのとは異なり、`pX_mom` は field 直渡し)。全 constructor
-> (`rg 'IsRegularDeBruijnHypV2' Common2026/` で列挙) が field 不足になる ripple は implementer 確認・報告。
+> (`rg 'IsRegularDeBruijnHypV2' InformationTheory/` で列挙) が field 不足になる ripple は implementer 確認・報告。
 > Gaussian constructor (`EPIL3Integration.lean`) は Gaussian source が有限分散なので `pX_mom` 充足可
 > (Gaussian の 2 次モーメント有限性補題、新規 sorry になるなら `@residual(plan:epi-debruijn-pertime-closure)`)。
 
@@ -1597,7 +1597,7 @@ private theorem debruijnIdentityV2_holds_assembled_chain_domination
 2. **継承タグ整合 inline check** — GAP② / `_chain_domination` は git history からの body 復元でなく
    in-place 書換だが、現 docstring に `@audit:defect(false-statement)` / `@audit:retract-candidate(...)`
    (case A 由来) が残存。実装 step 1/2 で **これらを除去**する。貼付/書換後に
-   `rg -n '@audit:|@residual|🟢ʰ' Common2026/Shannon/FisherInfoV2DeBruijnAssembly.lean` で残存
+   `rg -n '@audit:|@residual|🟢ʰ' InformationTheory/Shannon/FisherInfoV2DeBruijnAssembly.lean` で残存
    deprecated タグ / 散文表現 / 語彙外 slug を列挙し orchestrator に報告。新 file `FisherConvBound.lean`
    も同 grep。
 

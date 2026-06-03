@@ -16,12 +16,12 @@ log |M| ≤ I(Msg; Yo).toReal + h(Pe) + Pe · log(|M| − 1)
 
 成果物:
 
-- `Common2026/Shannon/Converse.lean` — 124 行、0 errors / 0 sorry
+- `InformationTheory/Shannon/Converse.lean` — 124 行、0 errors / 0 sorry
   - 主定理: `shannon_converse_single_shot`
   - 補助補題 (private): `entropy_of_uniform_msg : entropy μ Msg = log |M|`
-- `Common2026.lean` に `import Common2026.Shannon.Converse` を追記
+- `InformationTheory.lean` に `import InformationTheory.Shannon.Converse` を追記
 
-`lake env lean Common2026/Shannon/Converse.lean` silent (上流 `Bridge.lean` 由来の `unusedSectionVars` 警告のみ)、`lake build Common2026.Shannon.Converse` 通過。
+`lake env lean InformationTheory/Shannon/Converse.lean` silent (上流 `Bridge.lean` 由来の `unusedSectionVars` 警告のみ)、`lake build InformationTheory.Shannon.Converse` 通過。
 
 ## 1. 問題のキャラクター
 
@@ -31,10 +31,10 @@ log |M| ≤ I(Msg; Yo).toReal + h(Pe) + Pe · log(|M| − 1)
 
 | Phase | 主要ファイル | 行数 | 新規補題の中核 | 性格 |
 |---|---|---|---|---|
-| Phase 3 (Fano Measure) | `Common2026/Fano/Measure.lean` | 数百行 | `fano_inequality_measure_theoretic` | 測度論経由の重実装 |
-| Phase 4-α (DPI) | `Common2026/Shannon/DPI.lean` | 168 行 | `mutualInfo_le_of_postprocess` | klDiv の DPI 接続 |
-| Phase 4-β (bridge) | `Common2026/Shannon/Bridge.lean` | 588 行 | `mutualInfo_eq_entropy_sub_condEntropy` | KL ↔ entropy − condEntropy 同値 |
-| **Phase 4-γ (本回)** | `Common2026/Shannon/Converse.lean` | **124 行** | (組み合わせのみ) | **plumbing** |
+| Phase 3 (Fano Measure) | `InformationTheory/Fano/Measure.lean` | 数百行 | `fano_inequality_measure_theoretic` | 測度論経由の重実装 |
+| Phase 4-α (DPI) | `InformationTheory/Shannon/DPI.lean` | 168 行 | `mutualInfo_le_of_postprocess` | klDiv の DPI 接続 |
+| Phase 4-β (bridge) | `InformationTheory/Shannon/Bridge.lean` | 588 行 | `mutualInfo_eq_entropy_sub_condEntropy` | KL ↔ entropy − condEntropy 同値 |
+| **Phase 4-γ (本回)** | `InformationTheory/Shannon/Converse.lean` | **124 行** | (組み合わせのみ) | **plumbing** |
 
 ## 2. 数学的方針
 
@@ -102,7 +102,7 @@ mutualInfo μ Xs (f ∘ Yo) ≤ mutualInfo μ Xs Yo
 
 ### 4.2 `lake` バイナリが PATH に無い
 
-**症状**: 最初の `lake env lean Common2026/Shannon/Converse.lean` が `Exit code 127: zsh: command not found: lake` で失敗。
+**症状**: 最初の `lake env lean InformationTheory/Shannon/Converse.lean` が `Exit code 127: zsh: command not found: lake` で失敗。
 
 **原因**: zsh のサブシェルが `~/.zshrc` を読まない構成で、`elan` の PATH 追記が効いていなかった。
 
@@ -114,17 +114,17 @@ mutualInfo μ Xs (f ∘ Yo) ≤ mutualInfo μ Xs Yo
 
 ### 4.3 上流 `Bridge.lean` の `.olean` が空でビルドエラー
 
-**症状**: PATH 修正後の最初の `lake env lean Common2026/Shannon/Converse.lean` が
+**症状**: PATH 修正後の最初の `lake env lean InformationTheory/Shannon/Converse.lean` が
 
 ```
-error: object file '.../Bridge.olean' of module Common2026.Shannon.Bridge does not exist
+error: object file '.../Bridge.olean' of module InformationTheory.Shannon.Bridge does not exist
 ```
 
 で失敗。
 
 **原因**: 前回セッション (Phase 4-β 完成セッション) で `Bridge.lean` を書いた直後にビルドが走らずコミットされ、ローカルの `.lake/build/` には `.olean` が無い状態だった。`lake env lean` は依存 `.olean` を探すだけで再ビルドしない。
 
-**抜け方**: `lake build Common2026.Shannon.Bridge` を 1 回挟み、再度 `lake env lean Common2026/Shannon/Converse.lean` で silent。
+**抜け方**: `lake build InformationTheory.Shannon.Bridge` を 1 回挟み、再度 `lake env lean InformationTheory/Shannon/Converse.lean` で silent。
 
 **教訓**: 
 - これは Phase 1 の proof-log でも記録した「LSP shows stale errors after upstream edits」の親戚。**git pull / セッション開始時に「直近編集された上流 `.lean` の `.olean` 存在を確認する」プリチェックがあれば事故を未然に防げる**
@@ -149,7 +149,7 @@ error: object file '.../Bridge.olean' of module Common2026.Shannon.Bridge does n
 - **`errorProb μ Msg (decoder ∘ Yo) (id : M → M) = Pe` の同値**: `id ∘` と `(f ∘ g) ω = f (g ω)` がいずれも definitional reduction なので `rfl` 1 行。Phase 3 Fano の引数を再構成して `Pe` と一致させる作業を「面倒な等式変形が要りそう」と身構えていたが、Lean の reducible 性で完全に消えた
 - **数学的アイデア**: 教科書的な Shannon converse の証明そのまま。新規発想は不要
 - **コンテキスト長**: 1M context、proof body 50 行 + helper 20 行 + 既存ファイル参照、何ら圧迫感なし
-- **ビルド時間**: `lake build Common2026.Shannon.Bridge` は 4 秒、`lake build Common2026.Shannon.Converse` は数秒。Phase 4-β を warm 状態で持ち越せていた
+- **ビルド時間**: `lake build InformationTheory.Shannon.Bridge` は 4 秒、`lake build InformationTheory.Shannon.Converse` は数秒。Phase 4-β を warm 状態で持ち越せていた
 
 ## 6. ツール開発への示唆
 

@@ -1,7 +1,7 @@
 # AWGN single-letter capacity converse (max-entropy 壁) — Mathlib API 在庫調査
 
 > 対象 wall: `@residual(wall:awgn-capacity-converse-maxent)`
-> (`docs/audit/audit-tags.md` Wall name register、`Common2026/Draft/Shannon/ContChannelMIDecomp.lean:670` `awgn_capacity_closed_form_of_out` body 内 `h_max_ent` の `sorry`)
+> (`docs/audit/audit-tags.md` Wall name register、`InformationTheory/Draft/Shannon/ContChannelMIDecomp.lean:670` `awgn_capacity_closed_form_of_out` body 内 `h_max_ent` の `sorry`)
 > 親計画: `docs/shannon/awgn-moonshot-plan.md` (撤退ライン F-3) / 隣接 `docs/shannon/awgn-converse-c1b-gaussian-maxent-mini-plan.md`
 > 同種文書: `docs/shannon/awgn-mi-decomp-inventory.md` / `docs/shannon/awgn-converse-aux-mathlib-inventory.md`
 
@@ -15,7 +15,7 @@
 
 ## 主定理の最終形 (再掲)
 
-`Common2026/Draft/Shannon/ContChannelMIDecomp.lean:670-702` `awgn_capacity_closed_form_of_out`、その body 内の唯一の `sorry` (L692) が本壁:
+`InformationTheory/Draft/Shannon/ContChannelMIDecomp.lean:670-702` `awgn_capacity_closed_form_of_out`、その body 内の唯一の `sorry` (L692) が本壁:
 
 ```lean
 -- h_max_ent (closed form converse の核): ∀ 確率測度 p with ∫x²∂p ≤ P,
@@ -60,7 +60,7 @@ linarith [...] -- log algebra (既存 mutualInfoOfChannel_gaussianInput_closed_f
 | 概念 | Mathlib API | file:line | 状態 | 本壁での扱い |
 |---|---|---|---|---|
 | 測度畳み込み (加法形) | `MeasureTheory.Measure.conv` | `Mathlib/MeasureTheory/Group/Convolution.lean:35` (`@[to_additive]` of `mconv`) | ✅ 既存 | 出力 `q` を `p ∗ 𝒩(0,N)` で表す本体 |
-| Giry-bind = 畳み込み | `bind_eq_conv_of_translation_kernel` (in-tree) | `Common2026/Shannon/AWGNBindConvBody.lean:78` | ✅ 既存 (genuine) | `κ ∘ₘ p = p ∗ ν`、**任意 SFinite `p`** で成立 (Gaussian 入力に限らない) |
+| Giry-bind = 畳み込み | `bind_eq_conv_of_translation_kernel` (in-tree) | `InformationTheory/Shannon/AWGNBindConvBody.lean:78` | ✅ 既存 (genuine) | `κ ∘ₘ p = p ∗ ν`、**任意 SFinite `p`** で成立 (Gaussian 入力に限らない) |
 | compProd の snd = composition | `MeasureTheory.Measure.snd_compProd` | `Mathlib/Probability/Kernel/Composition/MeasureComp.lean` | ✅ 既存 | `outputDistribution p W = (p⊗ₘW).snd = W ∘ₘ p` を `p ∗ 𝒩(0,N)` に橋渡し |
 | **畳み込みの rnDeriv = pdf の Lebesgue 畳み込み** | `MeasureTheory.rnDeriv_conv` (加法形) | `Mathlib/MeasureTheory/Measure/Decomposition/RadonNikodym.lean:653` (`@[to_additive]` of `rnDeriv_mconv`) | ✅ **既存 (最重要)** | mixture 出力密度の構造を与える。下記 signature 注意 |
 | 畳み込み = withDensity(lconv rnDeriv) | `MeasureTheory.conv_eq_withDensity_lconvolution_rnDeriv` | `RadonNikodym.lean:638` (`@[to_additive]` of `mconv_eq_withDensity_mlconvolution_rnDeriv`) | ✅ 既存 | 同上、withDensity 形 |
@@ -97,7 +97,7 @@ theorem rnDeriv_mconv [SFinite μ] {ν₁ ν₂ : Measure G} [IsFiniteMeasure ν
 | 可積分性の優関数比較 | `MeasureTheory.Integrable.mono` | `Mathlib/MeasureTheory/Function/L1Space/Integrable.lean` | ✅ 既存 | `|log f| ≤ (二次式)` で押さえる |
 | 可積分性の優関数比較 (norm 形) | `MeasureTheory.Integrable.mono'` | `L1Space/Integrable.lean` | ✅ 既存 | 同上 |
 | 有界 × 可積分 = 可積分 | `MeasureTheory.Integrable.bdd_mul` / `.bdd_mul'` | `L1Space/Integrable.lean` | ✅ 既存 | 補助 |
-| Gaussian log-pdf は Gaussian 法則で可積分 (in-tree) | `integrable_log_gaussianPDFReal_gaussianReal` | `Common2026/Draft/Shannon/ContChannelMIDecomp.lean:404` | ✅ 既存 (genuine) | **fibre 側 `h_int_fibre` を供給** (AWGN fibre `W x = 𝒩(x,N)`)。output 側 `h_int_out` には直接使えない (mixture) |
+| Gaussian log-pdf は Gaussian 法則で可積分 (in-tree) | `integrable_log_gaussianPDFReal_gaussianReal` | `InformationTheory/Draft/Shannon/ContChannelMIDecomp.lean:404` | ✅ 既存 (genuine) | **fibre 側 `h_int_fibre` を供給** (AWGN fibre `W x = 𝒩(x,N)`)。output 側 `h_int_out` には直接使えない (mixture) |
 | 二次差分 `(y−m)²` は Gaussian 法則で可積分 (in-tree) | `integrable_sq_sub_gaussianReal` | `ContChannelMIDecomp.lean:387` | ✅ 既存 (genuine) | `h_var_int` 系・log の二次優関数の素材 |
 
 **重要 (上界・下界の符号)**:
@@ -142,7 +142,7 @@ theorem variance_le_expectation_sq [IsProbabilityMeasure μ] {X : Ω → ℝ}
 | klDiv 上界 (variational 形) | — | — | ❌ **不在** (loogle `InformationTheory.klDiv _ _, (_ ≤ _)` → `mul_log_le_klDiv` 等 **下界 (Pinsker)** のみ 3 件) | 別ルート不可 |
 | klDiv chain rule (compProd 形) | `InformationTheory.klDiv_compProd_eq_add` | `Mathlib/InformationTheory/KullbackLeibler/ChainRule.lean:204` | ✅ 既存 | 既に in-tree MI decomp で消費済 (再利用不要) |
 | **in-tree MI = entropy 差分解** | `mutualInfoOfChannel_toReal_eq_diffEntropy_sub` | `ContChannelMIDecomp.lean:276` | ✅ **既存 (genuine, 0 sorry, `@audit:ok`)** | **本壁の主役**。下記前提ボックス参照 |
-| **in-tree Gaussian max-entropy** | `differentialEntropy_le_gaussian_of_variance_le` | `Common2026/Shannon/DifferentialEntropy.lean:520` | ✅ **既存 (4 hyp 形)** | **本壁の主役**。下記前提ボックス参照 |
+| **in-tree Gaussian max-entropy** | `differentialEntropy_le_gaussian_of_variance_le` | `InformationTheory/Shannon/DifferentialEntropy.lean:520` | ✅ **既存 (4 hyp 形)** | **本壁の主役**。下記前提ボックス参照 |
 | in-tree Gaussian 微分エントロピー閉形 | `differentialEntropy_gaussianReal` | `DifferentialEntropy.lean` (使用 `:162`) | ✅ 既存 | `h(𝒩(0,v)) = (1/2)log(2πev)`、fibre entropy 計算 |
 
 **結論 D**: Mathlib には MI 上界・DPI・variational 形が一切無いため、converse を「MI を直接上から押さえる」別ルートで出すことは**不可能**。in-tree の entropy 差分解 (genuine 完成済) を経由する一本道。素材は B/C に揃っている。
@@ -244,7 +244,7 @@ import 追加 (上記自作で新規に要るもの): `Mathlib.MeasureTheory.Mea
 
 ## 着手 skeleton
 
-`Common2026/Draft/Shannon/AwgnCapacityConverseMaxent.lean` の出だし (新規 file 想定。既存 `ContChannelMIDecomp.lean` 内 helper として書く案もある):
+`InformationTheory/Draft/Shannon/AwgnCapacityConverseMaxent.lean` の出だし (新規 file 想定。既存 `ContChannelMIDecomp.lean` 内 helper として書く案もある):
 
 ```lean
 import Mathlib.MeasureTheory.Group.Convolution
@@ -252,11 +252,11 @@ import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
 import Mathlib.Analysis.LConvolution
 import Mathlib.Probability.Moments.Variance
 import Mathlib.Probability.Distributions.Gaussian.Real
-import Common2026.Shannon.DifferentialEntropy
-import Common2026.Shannon.ChannelCoding
-import Common2026.Shannon.AWGN
-import Common2026.Shannon.AWGNBindConvBody
-import Common2026.Draft.Shannon.ContChannelMIDecomp
+import InformationTheory.Shannon.DifferentialEntropy
+import InformationTheory.Shannon.ChannelCoding
+import InformationTheory.Shannon.AWGN
+import InformationTheory.Shannon.AWGNBindConvBody
+import InformationTheory.Draft.Shannon.ContChannelMIDecomp
 
 namespace InformationTheory.Shannon.AWGN
 

@@ -1,7 +1,7 @@
 # Strong typicality (E-7) ムーンショット計画 🌙
 
 > 実態整合 (2026-05-20): DONE-HONEST-HYPS — 3 headline 完成済、0 sorry。
-> `stronglyTypicalSet_prob_tendsto_one` (`Common2026/Shannon/StrongTypicality.lean:212`)、
+> `stronglyTypicalSet_prob_tendsto_one` (`InformationTheory/Shannon/StrongTypicality.lean:212`)、
 > `stronglyTypicalSet_card_le` (:456、size 上界)、`stronglyTypicalSet_card_ge_eventually`
 > (:503、size 下界 eventually 形)。仮定は i.i.d. 標準形 (`iIndepFun`/`Pairwise IndepFun`/
 > `IdentDistrib`/`hpos`) のみ、pass-through なし。joint version は当初計画通り scope deferred。
@@ -19,7 +19,7 @@
 - [x] Phase 2 — WLLN 経由の `P^n(A^*) → 1` ✅
 - [x] Phase 3 — Strong → Weak bridge (entropy concentration) ✅
 - [x] Phase 4 — Size sandwich (`card_le` + `card_ge_eventually`) ✅
-- [x] Phase 5 — Common2026.lean 登録 + seeds.md 更新 ✅
+- [x] Phase 5 — InformationTheory.lean 登録 + seeds.md 更新 ✅
 
 ## ゴール / Approach
 
@@ -188,7 +188,7 @@ pmf 値が上界を持つことを Phase 3 経由で確保 → `μ(A^*) ≤ |A^*
 
 ## Phase 5 — 登録 + seeds.md 更新 ✅
 
-- `Common2026.lean` に `import Common2026.Shannon.StrongTypicality` 追加。
+- `InformationTheory.lean` に `import InformationTheory.Shannon.StrongTypicality` 追加。
 - `docs/moonshot-seeds.md` E-7 行を ✅ + plan pointer に更新、冒頭サマリ文も同期。
 
 ## 判断ログ
@@ -215,7 +215,7 @@ pmf 値が上界を持つことを Phase 3 経由で確保 → `μ(A^*) ≤ |A^*
 
 ## 実装完了 (2026-05-13)
 
-`Common2026/Shannon/StrongTypicality.lean` (614 行) で全 5 Phase を **0 sorry** で publish。
+`InformationTheory/Shannon/StrongTypicality.lean` (614 行) で全 5 Phase を **0 sorry** で publish。
 
 ### 公開された主要 lemma
 

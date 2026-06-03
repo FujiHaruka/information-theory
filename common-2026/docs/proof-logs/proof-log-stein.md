@@ -2,9 +2,9 @@
 
 > **Parent plan**: [`docs/shannon/stein-moonshot-plan.md`](../shannon/stein-moonshot-plan.md)
 > **Inventory**: [`docs/shannon/stein-mathlib-inventory.md`](../shannon/stein-mathlib-inventory.md)
-> **File**: [`Common2026/Shannon/Stein.lean`](../../Common2026/Shannon/Stein.lean) (625 行)
+> **File**: [`InformationTheory/Shannon/Stein.lean`](../../InformationTheory/Shannon/Stein.lean) (625 行)
 > **Status**: Phase A ✅ / Phase B ✅ (= **Stein achievability publish ライン到達**)。Phase C/D は別 plan に切り出し
-> **Verification**: `lake env lean Common2026/Shannon/Stein.lean` silent (warning 0 / error 0 / sorry 0) / `lake build` 全体緑通過
+> **Verification**: `lake env lean InformationTheory/Shannon/Stein.lean` silent (warning 0 / error 0 / sorry 0) / `lake build` 全体緑通過
 
 ## 質的観察
 
@@ -67,7 +67,7 @@ Mathlib `Measure.pi_singleton : Measure.pi μ {f} = ∏ i, μ i {f i}` (`Mathlib
 
 ## 次セッションへの引継ぎ
 
-`Common2026/Shannon/Stein.lean` の**末尾** (line 627 付近、`stein_achievability` の直後) に Phase C 着手の sorry-driven skeleton を追加するのが自然な続き。作業順:
+`InformationTheory/Shannon/Stein.lean` の**末尾** (line 627 付近、`stein_achievability` の直後) に Phase C 着手の sorry-driven skeleton を追加するのが自然な続き。作業順:
 
 1. `klDiv_pi_eq_n_smul` を Phase C の前段で実装 (`Mathlib/InformationTheory/KullbackLeibler/ChainRule.lean` の `klDiv_compProd_eq_add` + `klDiv_compProd_left` + `MeasurableEquiv.piFinSuccAbove` で induction、計画 Phase A.7 参照)
 2. `stein_converse` (`stein_achievability` の dual statement) skeleton を sorry-driven で書く
@@ -86,6 +86,6 @@ Mathlib `Measure.pi_singleton : Measure.pi μ {f} = ∏ i, μ i {f i}` (`Mathlib
 
 **次セッションへの追加引継ぎ (Phase C/D 切り出し plan)**:
 - 別 plan (例: `docs/shannon/stein-converse-moonshot-plan.md`) を起こし、Phase C/D を 1〜2 週見積で独立 attack
-- 起点ファイルは本シードの成果物 `Common2026/Shannon/Stein.lean` (626 行、Phase A〜B 緑) を `import` または直接 append
+- 起点ファイルは本シードの成果物 `InformationTheory/Shannon/Stein.lean` (626 行、Phase A〜B 緑) を `import` または直接 append
 - A.7 `klDiv_pi_eq_n_smul` は別 plan の Phase 0 として独立に組む
 - 撤退ラインは別 plan 内で再設計 (本シードの撤退ライン = Phase A〜B 完了 = 既達)

@@ -5,7 +5,7 @@
     {
       "id": "6146225d-3de4-4c5c-a6ee-8a9060de9a3b",
       "prompt_ids": ["290862d7"],
-      "note": "Phase A skeleton: Common2026/Shannon/Entropy.lean に 4 主定理 (entropy_pair_eq_entropy_add_condEntropy / condEntropy_tower / condEntropy_le_condEntropy_of_pair / condMutualInfo_eq_condEntropy_sub_condEntropy) を sorry-driven で配置 + instance チェイン裏取り。"
+      "note": "Phase A skeleton: InformationTheory/Shannon/Entropy.lean に 4 主定理 (entropy_pair_eq_entropy_add_condEntropy / condEntropy_tower / condEntropy_le_condEntropy_of_pair / condMutualInfo_eq_condEntropy_sub_condEntropy) を sorry-driven で配置 + instance チェイン裏取り。"
     },
     {
       "id": "ef18b6e8-bbae-4763-a7eb-a3076468c750",
@@ -20,7 +20,7 @@
     {
       "id": "f93c8e27-ac98-4921-a0c3-9004bdb163a4",
       "prompt_ids": ["91603b01"],
-      "note": "Phase B skeleton: Common2026/Shannon/Han.lean を新規作成 (65 行)。jointEntropy 定義 (entropy の Fin n → α 値ラッパ) + n 変数 chain rule を sorry-driven で配置。"
+      "note": "Phase B skeleton: InformationTheory/Shannon/Han.lean を新規作成 (65 行)。jointEntropy 定義 (entropy の Fin n → α 値ラッパ) + n 変数 chain rule を sorry-driven で配置。"
     },
     {
       "id": "54e6d8b7-2159-4203-b14f-3dadadd749f2",
@@ -33,6 +33,6 @@
       "note": "Phase C 充填: Han の不等式本体 (han_inequality)。exceptIdxEquiv / fullIdxEquiv (index 同型 2 本) + exceptSplitMEquiv / piExceptMEquiv / fullSplitMEquiv (Pi 値 MeasurableEquiv 3 本) + han_single_bound (各 i での個別不等式) を経由して主定理。退化ケース (n = 0, 1) も同じ証明で通過 (hn : 1 ≤ n は不要だった)。"
     }
   ],
-  "filters": { "file_prefix": "Common2026/Shannon" },
+  "filters": { "file_prefix": "InformationTheory/Shannon" },
   "idle_gap_minutes": 5
 }

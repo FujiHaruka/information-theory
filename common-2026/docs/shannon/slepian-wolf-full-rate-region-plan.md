@@ -13,17 +13,17 @@ decoder 経路で publish する。E-5 退化点 MVP
 publish 済の `swErrorProb` 定義 + 2 corner-point 結果を **boundary check** として
 そのまま再利用。
 
-> **オーケストレータ指示**: 本 plan は `Common2026/Shannon/SlepianWolfAchievability.lean`
+> **オーケストレータ指示**: 本 plan は `InformationTheory/Shannon/SlepianWolfAchievability.lean`
 > (310 行、E-5 corner MVP) を touch せず、新規 file
-> `Common2026/Shannon/SlepianWolfFullRateRegion.lean` に **並立 publish**。
+> `InformationTheory/Shannon/SlepianWolfFullRateRegion.lean` に **並立 publish**。
 > `ChannelCodingAchievability.lean` (1890 行、`codebookMeasure` Phase C-(c)
 > `random_codebook_average_le`) を **encoder-side 鏡像** として参照するか、共通
-> plumbing を `Common2026/Shannon/UniformPiMeasure.lean` などへ切り出す
+> plumbing を `InformationTheory/Shannon/UniformPiMeasure.lean` などへ切り出す
 > (Phase 0 判断)。B-3'' で前例化した「親 file 不変 + 子 file 並立 publish」パターン
 > の SW 版。
 
 > ⚠️ **実態整合 (2026-05-30、上書き修正)**: 旧「DONE-UNCOND (headline `:1956` publish 済)」表記は **STALE / 誤り**。
-> 実コード verbatim 確認で `Common2026/Shannon/SlepianWolfFullRateRegion.lean` は **1902 行 (`:1956` 不在)、
+> 実コード verbatim 確認で `InformationTheory/Shannon/SlepianWolfFullRateRegion.lean` は **1902 行 (`:1956` 不在)、
 > headline `slepian_wolf_full_rate_region_achievability` は未 declare** (docstring `:1428` でロードマップ言及のみ)。
 > **実装済 (0 sorry)** = Phase A–E の全 building block + F.1 total expectation (`swErrorProb_total_expectation_le:1455`)
 > + F.2 pigeonhole (`exists_pair_le_of_binning_integral_le:1873`) + condEntropy bridge (`:1442`)。
@@ -41,7 +41,7 @@ publish 済の `swErrorProb` 定義 + 2 corner-point 結果を **boundary check*
 - [x] Phase E — Per-term expectation bound ✅ (E0 tendsto `:293` + EX `:465` + EY `:865` + EXY `:1206`、全 0 sorry)
 - [x] Phase F — **✅ 完了 (2026-05-30)**: E.5 squeeze (`tendsto_exp_mul_codebookSize_inv`/`_inv₂` + `codebookSize_inv_le_exp_neg`) + F.3 headline `slepian_wolf_full_rate_region_achievability` (`:1992`) genuine assembly。**proof done (0 sorry / 0 @residual、`#print axioms` sorryAx-free、honesty audit 全 `@audit:ok`、連結 gap 独立確認済)**。F.4 boundary は core 非依存で省略。在庫 → `slepian-wolf-full-rate-region-phase-f-inventory.md`
 
-**MVP 完了サマリ (2026-05-14)**: `Common2026/Shannon/SlepianWolfBinning.lean` (273 行、0 sorry / 0 warning):
+**MVP 完了サマリ (2026-05-14)**: `InformationTheory/Shannon/SlepianWolfBinning.lean` (273 行、0 sorry / 0 warning):
 - `binningMeasure α n M := Measure.pi (fun _ => uniformOn (univ : Set (Fin M)))`
 - `IsProbabilityMeasure` instance
 - `binningMeasure_singleton_real`: `(1/M)^{|α|^n}` singleton mass
@@ -146,7 +146,7 @@ noncomputable def binningMeasure (α : Type*) [Fintype α] (n M : ℕ) :
 
 ### 判断選択肢
 
-- **(A) 共通 plumbing 抽出**: `Common2026/Shannon/UniformPiMeasure.lean` に
+- **(A) 共通 plumbing 抽出**: `InformationTheory/Shannon/UniformPiMeasure.lean` に
   `uniformPiOnFun [Fintype I] [Fintype J] : Measure (I → J)` + Fubini-collapse 補題群を
   publish。`ChannelCodingAchievability` も refactor して呼び替え。
   **コスト**: refactor ~200 行 + 既存 oleans 強制再ビルド (`ChannelCodingAchievability` は
@@ -169,7 +169,7 @@ noncomputable def binningMeasure (α : Type*) [Fintype α] (n M : ℕ) :
 - [ ] **0.1** `binningMeasure` の Mathlib API inventory (loogle):
   - `MeasureTheory.Measure.pi` + `Fintype` 上の `uniformOn`。
   - 既存 `ChannelCodingAchievability` `codebookMeasure` instances (`IsProbabilityMeasure`)。
-- [ ] **0.2** ファイル配置決定: 新規 `Common2026/Shannon/SlepianWolfFullRateRegion.lean`
+- [ ] **0.2** ファイル配置決定: 新規 `InformationTheory/Shannon/SlepianWolfFullRateRegion.lean`
   vs 既存 `SlepianWolfAchievability.lean` に追記 (B-3'' precedent → 新規)。
 - [ ] **0.3** 判断 (A/B/C) 仮 commit (judgmental, 後で revise 可)。
 
@@ -454,7 +454,7 @@ theorem slepian_wolf_full_rate_region_achievability
 
 ### Typical Set Fiber 系 (Phase C、Mathlib gap 多数)
 
-- [ ] `InformationTheory.Shannon.jointlyTypicalSet` (`Common2026/Shannon/ChannelCoding.lean:301`).
+- [ ] `InformationTheory.Shannon.jointlyTypicalSet` (`InformationTheory/Shannon/ChannelCoding.lean:301`).
 - [ ] `InformationTheory.Shannon.jointlyTypicalSet_card_le` (`ChannelCoding.lean:340`):
   ```
   ((jointlyTypicalSet μ Xs Ys n ε).toFinite.toFinset.card : ℝ) ≤
@@ -476,7 +476,7 @@ theorem slepian_wolf_full_rate_region_achievability
 ### Conditional entropy (Phase C-(C.5), Phase F)
 
 - [ ] `InformationTheory.MeasureFano.condEntropy` (既存使用)。
-- [ ] `mutualInfo_eq_entropy_sub_condEntropy` (`Common2026/Shannon/MIChainRule.lean`).
+- [ ] `mutualInfo_eq_entropy_sub_condEntropy` (`InformationTheory/Shannon/MIChainRule.lean`).
 - [ ] **chain rule**: `H(X,Y) = H(Y) + H(X|Y)` の Lean 表現確認。
 
 ## 規模見積
@@ -598,7 +598,7 @@ measure の **product coupling** が必要。Phase E 起草時に `h_match_X`, `
 - **R3 (Phase E)**: 4 個の Fubini swap (binning × ambient × AEP-fiber) で `Measure.pi`
   と `Measure.prod` の interplay が `ChannelCodingAchievability.random_codebook_E2_swap`
   以上に重くなる場合。**Fallback**: 共通 plumbing
-  `Common2026/Shannon/UniformPiMeasure.lean` を切り出し、`codebookMeasure` も refactor
+  `InformationTheory/Shannon/UniformPiMeasure.lean` を切り出し、`codebookMeasure` も refactor
   して symbol 共有 (Phase 0 判断 (A) へ promotion)。
 - **R4 (規模超過)**: 全体が 2500 行を超えた場合、Phase E-{XY} を deferred 後継
   カードへ切り出し、`R_X > H(X|Y) ∧ R_Y > H(Y|X)` だけ publish (sum bound は別)。

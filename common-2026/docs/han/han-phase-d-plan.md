@@ -1,7 +1,7 @@
 # Han Phase D ロードマップ: subset average → Shearer 🌙
 
-> 実態整合 (2026-05-20): DONE-UNCOND (Phase A〜C 全完了)。`han_inequality_subset` (`Common2026/Shannon/HanD.lean:387`) / `subset_average_chain` (`HanDAverage.lean:171`) / `shearer_inequality` (`HanDShearer.lean:41`) いずれも標準 typeclass binder のみ、pass-through 仮定なし、0 sorry。下記「next step」の ✅ 完了記録は実態と一致。
-> **Status (2026-05-10): 起草。** Han 不等式ムーンショット ([han-moonshot-plan.md](han-moonshot-plan.md)) Phase A/B/C 完了 (`Common2026/Shannon/Han.lean` zero sorry) を受けた後継。
+> 実態整合 (2026-05-20): DONE-UNCOND (Phase A〜C 全完了)。`han_inequality_subset` (`InformationTheory/Shannon/HanD.lean:387`) / `subset_average_chain` (`HanDAverage.lean:171`) / `shearer_inequality` (`HanDShearer.lean:41`) いずれも標準 typeclass binder のみ、pass-through 仮定なし、0 sorry。下記「next step」の ✅ 完了記録は実態と一致。
+> **Status (2026-05-10): 起草。** Han 不等式ムーンショット ([han-moonshot-plan.md](han-moonshot-plan.md)) Phase A/B/C 完了 (`InformationTheory/Shannon/Han.lean` zero sorry) を受けた後継。
 >
 > ゴールは **Han 1978 原論文の subset average 形 ($H_1 \ge H_2 \ge \cdots \ge H_n$)** をまず形式化し、続けて **Shearer の不等式** ($k$-cover 条件下 $k \cdot H(X_{[n]}) \le \sum_j H(X_{S_j})$) に lift すること。中間 abort 可能で、D-1 (subset average) 完了時点で publish 価値あり。
 
@@ -9,7 +9,7 @@
 
 ### モチベーション
 
-Han 完了 (補集合形 $(n-1) H(X_{[n]}) \le \sum_i H(X_{[n]\setminus\{i\}})$) で `Common2026/Shannon/Han.lean` の主定理 + Pi 値 plumbing (`MeasurableEquiv.piCongrLeft` + `sumPiEquivProdPi` + `funUnique` 3 点セット、index 同型 `exceptIdxEquiv` / `fullIdxEquiv`) が整備された。**しかし subset 版 (`Finset (Fin n)` 上の jointEntropy) には踏み込んでいない** — Han の RHS は「特定の `i` を除いた」固定形だけだったため。
+Han 完了 (補集合形 $(n-1) H(X_{[n]}) \le \sum_i H(X_{[n]\setminus\{i\}})$) で `InformationTheory/Shannon/Han.lean` の主定理 + Pi 値 plumbing (`MeasurableEquiv.piCongrLeft` + `sumPiEquivProdPi` + `funUnique` 3 点セット、index 同型 `exceptIdxEquiv` / `fullIdxEquiv`) が整備された。**しかし subset 版 (`Finset (Fin n)` 上の jointEntropy) には踏み込んでいない** — Han の RHS は「特定の `i` を除いた」固定形だけだったため。
 
 Phase D で `jointEntropySubset μ Xs S` (`S : Finset (Fin n)`) を導入すると以下が顕在化する:
 
@@ -100,14 +100,14 @@ Han Phase B の `jointEntropy_chain_rule` は `Fin n` 全体に対する chain r
 ### ファイル構成 (Phase C 終了時)
 
 ```
-Common2026/Shannon/
+InformationTheory/Shannon/
   Entropy.lean        ← 既存 (Phase A 主定理)
   Han.lean            ← 既存 (Phase B/C 主定理 + Pi reshape plumbing)
   HanD.lean           ← 新規: jointEntropySubset, subset chain rule,
                         subset_average_chain, shearer_inequality
 ```
 
-`Common2026.lean` (library root) に `import Common2026.Shannon.HanD` を追記。
+`InformationTheory.lean` (library root) に `import InformationTheory.Shannon.HanD` を追記。
 
 ---
 
@@ -116,7 +116,7 @@ Common2026/Shannon/
 ### スコープ
 
 - **Mathlib 側に subset average / Shearer / 任意 covering 形のエントロピー不等式が既に存在しないか確認** (`InformationTheory/Shannon/`、`InformationTheory/KullbackLeibler/`、`Combinatorics/Entropy*` 等)
-- **既存 `Common2026/Shannon/Han.lean` の subset 適用耐性レビュー**:
+- **既存 `InformationTheory/Shannon/Han.lean` の subset 適用耐性レビュー**:
   - `han_inequality` を `Xs ∘ Finset.orderEmbOfFin S` 等で subfamily restrict する際の boilerplate
   - `(i : S) → α` (`S : Finset (Fin n)`) の `Fintype` / `MeasurableSpace` / `MeasurableSingletonClass` instance 自動発火
   - 既存 `entropy_measurableEquiv_comp` を subset の reshape (例: `(i : S) → α ≃ᵐ Fin S.card → α`) に流用可能か
@@ -132,7 +132,7 @@ Common2026/Shannon/
 ### Done 条件
 
 - 「Mathlib に subset average / Shearer は無い」を裏取り済み (loogle + rg)
-- Phase A skeleton (`Common2026/Shannon/HanD.lean` の sorry-driven 出だし) が書ける状態
+- Phase A skeleton (`InformationTheory/Shannon/HanD.lean` の sorry-driven 出だし) が書ける状態
 - subset の Pi 値 instance 自動発火 / 手動補完が必要かの判定済み
 
 ### 工数感
@@ -206,17 +206,17 @@ end InformationTheory.Shannon
 1. **`jointEntropySubset` の定義 + 基本性質** — `S = univ` で `jointEntropy` に一致 / `S = {i}` で `entropy μ (Xs i)` に一致 / `Equiv` reshape による invariance (Han Phase C の `entropy_measurableEquiv_comp` 流用)
 2. **subset 版 chain rule** — `Finset.induction_on` で `S` を空集合から 1 元ずつ追加。Han Phase A の `entropy_pair_eq_entropy_add_condEntropy` を各段で呼ぶ。**最大の plumbing リスクは `S.filter (· < i)` 上の Pi 値と「`S` を 1 元拡張したときの prefix」の整合性**。Han Phase B `jointEntropy_chain_rule` の `Fin (n+1) → α` に対する induction は完了済みなので、それの subset generalization
 3. **subset 版 conditioning monotonicity** — `T₂ = T₁ ∪ (T₂ \ T₁)` の 2 分解 + Han Phase A `condEntropy_le_condEntropy_of_pair` の subset 版 induction。要素を 1 つずつ T₁ に追加する induction が自然
-4. **`han_inequality_subset` (Han の subset wrapper)** — `S` の `Finset.orderEmbOfFin S rfl : Fin S.card ↪o Fin n` で埋め込み → `Xs' k ω := Xs (orderEmbOfFin S rfl k) ω` を作って既存 `han_inequality` を `Xs'` に適用 → 両辺を subset 版に reshape (LHS = `(Fin S.card → α) ≃ᵐ (↑S → α)`、RHS = index `Finset.sum_bij`)。`Common2026/Shannon/Han.lean` の `entropy_measurableEquiv_comp` (line 52-77) と `piExceptMEquiv` 流儀をそのまま流用。**Phase A の山場 plumbing、見積もり 50〜70 行** (LHS reshape 20〜30 + RHS reshape 30〜40)。詳細: `docs/han/han-phase-d-mathlib-inventory.md` 軸 (d)
+4. **`han_inequality_subset` (Han の subset wrapper)** — `S` の `Finset.orderEmbOfFin S rfl : Fin S.card ↪o Fin n` で埋め込み → `Xs' k ω := Xs (orderEmbOfFin S rfl k) ω` を作って既存 `han_inequality` を `Xs'` に適用 → 両辺を subset 版に reshape (LHS = `(Fin S.card → α) ≃ᵐ (↑S → α)`、RHS = index `Finset.sum_bij`)。`InformationTheory/Shannon/Han.lean` の `entropy_measurableEquiv_comp` (line 52-77) と `piExceptMEquiv` 流儀をそのまま流用。**Phase A の山場 plumbing、見積もり 50〜70 行** (LHS reshape 20〜30 + RHS reshape 30〜40)。詳細: `docs/han/han-phase-d-mathlib-inventory.md` 軸 (d)
 
 ### Done 条件
 
-- 上記 4 項目が `lake env lean Common2026/Shannon/HanD.lean` で silent
-- `Common2026.lean` に `import Common2026.Shannon.HanD` 追記
+- 上記 4 項目が `lake env lean InformationTheory/Shannon/HanD.lean` で silent
+- `InformationTheory.lean` に `import InformationTheory.Shannon.HanD` 追記
 - skeleton-driven で `jointEntropySubset` 定義 → `chain_rule` → `condEntropy_subset_anti` → `han_inequality_subset` の順に sorry を割る
 
 ### Status (2026-05-10)
 
-**Phase A 完了** (HEAD `bbfa250`)。`Common2026/Shannon/HanD.lean` で 4 主定理すべて 0 sorry:
+**Phase A 完了** (HEAD `bbfa250`)。`InformationTheory/Shannon/HanD.lean` で 4 主定理すべて 0 sorry:
 
 - `jointEntropySubset_univ` ─ `piCongrLeft` で `(↥univ → α) ≃ᵐ (Fin n → α)` を構成し
   `entropy_measurableEquiv_comp` で reshape (~ 25 行)
@@ -363,7 +363,7 @@ end InformationTheory.Shannon
 
 ### Done 条件
 
-- `shearer_inequality` が `lake env lean Common2026/Shannon/HanD.lean` で silent
+- `shearer_inequality` が `lake env lean InformationTheory/Shannon/HanD.lean` で silent
 - Phase A の subset chain rule + monotonicity を活性化 (Han 本体は呼ばれない)
 - $H(X_i \mid X_{<i}) \ge 0$ (= `condEntropy_nonneg`) が直接利用可能か確認 (Han Phase A の周辺で立っているはず)
 
@@ -380,15 +380,15 @@ end InformationTheory.Shannon
 - **Phase B の二重和 reindex で詰まる**場合 → 連鎖 ($H_k \ge H_{k+1}$ 一般 $k$) を諦め単発 $k=1$ ($H_1 \ge H_2$ = 「pairwise 平均が 1 変数平均以下」) で publish + Phase C 着手
 - **Phase B 完了 / Phase C 着手前で打ち切り判断**: D-1 (Han 1978 textbook 主結果) 単独で publish 価値あり。proof-log を取って Phase C は後日とする
 - **Phase C で詰まる**場合 → Shearer は別 plan に切り出し、本 plan は D-1 までで close
-- どのケースも「D-2 に届かなかった」ではなく **「`Common2026/Shannon` の subset 化で詰まった具体ポイント」をデータとして残す**
+- どのケースも「D-2 に届かなかった」ではなく **「`InformationTheory/Shannon` の subset 化で詰まった具体ポイント」をデータとして残す**
 
 ---
 
 ## 当面の next step
 
 1. ~~**Phase 0 (D)**~~ ✅ **完 (2026-05-10)**
-2. ~~**Phase A skeleton + 4 sorry-fill**~~ ✅ **完 (2026-05-10、HEAD `bbfa250`)**。`Common2026/Shannon/HanD.lean` の 4 主定理すべて 0 sorry
-3. ~~**Phase B (D-1 subset average chain)**~~ ✅ **完 (2026-05-10、HEAD `1088bfc`)**。`Common2026/Shannon/HanDAverage.lean` の 3 主定理 + 1 helper すべて 0 sorry
-4. ~~**Phase C (D-2 Shearer)**~~ ✅ **完 (2026-05-10)**。`Common2026/Shannon/HanDShearer.lean` の `shearer_inequality` が 0 sorry。Phase D 完結 (累計 8 主定理 0 sorry)。
+2. ~~**Phase A skeleton + 4 sorry-fill**~~ ✅ **完 (2026-05-10、HEAD `bbfa250`)**。`InformationTheory/Shannon/HanD.lean` の 4 主定理すべて 0 sorry
+3. ~~**Phase B (D-1 subset average chain)**~~ ✅ **完 (2026-05-10、HEAD `1088bfc`)**。`InformationTheory/Shannon/HanDAverage.lean` の 3 主定理 + 1 helper すべて 0 sorry
+4. ~~**Phase C (D-2 Shearer)**~~ ✅ **完 (2026-05-10)**。`InformationTheory/Shannon/HanDShearer.lean` の `shearer_inequality` が 0 sorry。Phase D 完結 (累計 8 主定理 0 sorry)。
    - 戦略: Phase A chain rule + monotonicity を全部 `S = univ` 形に揃え、Phase B chain rule (`Fin i.val` 形) は呼ばずに reshape 1 段で済ませた。
    - `condEntropy_nonneg` は Mathlib にも本 project にも無かったので unfold して手書き (`integral_nonneg` + `Real.negMulLog_nonneg`)。再利用するなら別ファイルに切り出す検討余地あり。

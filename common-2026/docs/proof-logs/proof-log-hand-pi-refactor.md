@@ -6,13 +6,13 @@
 
 ## 0. 対象問題と成果物
 
-`Common2026/Shannon/Pi.lean` 内の自前 `subsetIdxEquiv` / `subsetSplitMEquiv` / `subsetSplitMEquiv_apply` (計 50+ 行) を Mathlib 上流補題 `MeasurableEquiv.piFinsetUnion` ベースに置換する保守 refactor。Polymatroid moonshot (`docs/han/polymatroid-moonshot-plan.md`) の inventory で派生した「Mathlib 標準補題で自前 plumbing を subsume できる可能性」(C 横断改善) の本実装。
+`InformationTheory/Shannon/Pi.lean` 内の自前 `subsetIdxEquiv` / `subsetSplitMEquiv` / `subsetSplitMEquiv_apply` (計 50+ 行) を Mathlib 上流補題 `MeasurableEquiv.piFinsetUnion` ベースに置換する保守 refactor。Polymatroid moonshot (`docs/han/polymatroid-moonshot-plan.md`) の inventory で派生した「Mathlib 標準補題で自前 plumbing を subsume できる可能性」(C 横断改善) の本実装。
 
 成果物:
 
-- `Common2026/Shannon/Pi.lean` — `MeasurableEquiv.coe_piFinsetUnion` / `_apply_left` / `_apply_right` の 3 bridge lemma を追加、`subsetSplitMEquivAux` (disjoint+union 形) に統一、subset-form 撤去
-- `Common2026/Shannon/HanD.lean` — `condEntropy_subset_anti` の call site を `Finset.disjoint_sdiff` + `Finset.union_sdiff_of_subset h` の 2 行 inline 導出に書き換え
-- `Common2026/Shannon/Polymatroid.lean` — `jointEntropySubset_mono` / `jointEntropySubset_disjoint_union` / `condEntropy_reshape_disjoint_union` を aux 直接呼び出しに migrate
+- `InformationTheory/Shannon/Pi.lean` — `MeasurableEquiv.coe_piFinsetUnion` / `_apply_left` / `_apply_right` の 3 bridge lemma を追加、`subsetSplitMEquivAux` (disjoint+union 形) に統一、subset-form 撤去
+- `InformationTheory/Shannon/HanD.lean` — `condEntropy_subset_anti` の call site を `Finset.disjoint_sdiff` + `Finset.union_sdiff_of_subset h` の 2 行 inline 導出に書き換え
+- `InformationTheory/Shannon/Polymatroid.lean` — `jointEntropySubset_mono` / `jointEntropySubset_disjoint_union` / `condEntropy_reshape_disjoint_union` を aux 直接呼び出しに migrate
 - 4 ファイル (上記 3 + 依存先 `SlepianWolf.lean`) すべて `lake env lean` silent (0 errors / 0 warnings / 0 sorry)
 - 行数差分: net **-12 行** (target -30〜-45 行は未達、後述)
 

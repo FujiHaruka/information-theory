@@ -1,6 +1,6 @@
 # Hoeffding tradeoff sandwich discharge — 既存資産在庫調査
 
-> 対象: `HoeffdingTradeoff.hoeffding_tradeoff_with_hypothesis` (`Common2026/Shannon/HoeffdingTradeoff.lean:296`)
+> 対象: `HoeffdingTradeoff.hoeffding_tradeoff_with_hypothesis` (`InformationTheory/Shannon/HoeffdingTradeoff.lean:296`)
 > の hypothesis-free 化に残る 2 本の漸近不等式 `h_liminf` (achievability) / `h_limsup` (converse) を
 > discharge するための **既存プロジェクト資産 (Sanov/Stein/Csiszar/AEP)** の再利用可能 API 在庫。
 > 親計画: [`hoeffding-tradeoff-moonshot-plan.md`](hoeffding-tradeoff-moonshot-plan.md) (Phase C/D + 撤退ライン L-H4, L-HP1〜3)。
@@ -207,15 +207,15 @@ have := stein_strong_lemma (P := Qstar_meas) (Q := P₂_meas) ...               
 ## 着手 skeleton
 
 ```lean
--- Common2026/Shannon/HoeffdingSandwichDischarge.lean
-import Common2026.Shannon.HoeffdingTradeoff
-import Common2026.Shannon.HoeffdingSandwich
-import Common2026.Shannon.HoeffdingSandwichBody
-import Common2026.Shannon.Chernoff
-import Common2026.Shannon.CsiszarProjection
-import Common2026.Shannon.SanovLDPEquality
-import Common2026.Shannon.StrongStein
-import Common2026.Shannon.KLDivContinuous
+-- InformationTheory/Shannon/HoeffdingSandwichDischarge.lean
+import InformationTheory.Shannon.HoeffdingTradeoff
+import InformationTheory.Shannon.HoeffdingSandwich
+import InformationTheory.Shannon.HoeffdingSandwichBody
+import InformationTheory.Shannon.Chernoff
+import InformationTheory.Shannon.CsiszarProjection
+import InformationTheory.Shannon.SanovLDPEquality
+import InformationTheory.Shannon.StrongStein
+import InformationTheory.Shannon.KLDivContinuous
 import Mathlib.Topology.Order.LiminfLimsup
 
 namespace InformationTheory.Shannon.HoeffdingSandwichDischarge
