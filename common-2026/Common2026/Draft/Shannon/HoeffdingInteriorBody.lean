@@ -1,4 +1,5 @@
 import Common2026.Shannon.HoeffdingSandwichBody
+import Common2026.Meta.EntryPoint
 
 /-!
 # T1-D Hoeffding tradeoff — interior body extension (L-H4-FS interior)
@@ -182,6 +183,7 @@ This is the principal hand-off from the wave7 interior layer to the wave6
 sandwich body layer: callers who can supply
 `IsHoeffdingInteriorMinimizer` (e.g. via the textbook Lagrangian construction)
 get the `IsHoeffdingMinimizerFullSupport` flag immediately. -/
+@[entry_point]
 lemma isHoeffdingMinimizerFullSupport_of_interior
     {P₁ P₂ : α → ℝ} {alpha : ℝ} {Qstar : α → ℝ}
     (h : IsHoeffdingInteriorMinimizer P₁ P₂ alpha Qstar) :
@@ -195,6 +197,7 @@ infimum, conclude `IsHoeffdingMinimizerFullSupport`.
 This is the alternative entry point: callers with the textbook gradient
 argument (via `IsHoeffdingInteriorGradient`) plus the standard
 `hoeffdingE2_attained` witness directly recover the full-support flag. -/
+@[entry_point]
 lemma isHoeffdingMinimizerFullSupport_of_gradient
     {P₁ P₂ : α → ℝ} {alpha : ℝ}
     (h_grad : IsHoeffdingInteriorGradient P₁ P₂ alpha)
@@ -219,6 +222,7 @@ interior regime.
 `IsHoeffdingInteriorGradient` hypothesis was previously bundled and is now
 retreated; the genuine `HasDerivAt` / Lagrangian-tilt discharge is deferred to
 `hoeffding-tradeoff-moonshot-plan` Phase B. -/
+@[entry_point]
 theorem isHoeffdingInteriorMinimizer_of_gradient
     (P₁ P₂ : α → ℝ)
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -265,6 +269,7 @@ lemma IsHoeffdingInteriorMinimizer.isMinOn
 `IsHoeffdingInteriorMinimizer Qstar`, the Pythagorean inequality
 (`csiszar_pythagoras_inequality`) holds against any other
 full-support `P ∈ K(α)`. -/
+@[entry_point]
 theorem csiszar_pythagoras_at_interior
     (P₁ P₂ : α → ℝ)
     (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -294,6 +299,7 @@ extraction, mirroring `hoeffdingE2_minimizer_at_boundary_alpha_ge_kl`
 `@residual(plan:hoeffding-tradeoff-moonshot-plan)` — the predicate-form
 `IsHoeffdingInteriorGradient` hypothesis was previously bundled and is now
 retreated. -/
+@[entry_point]
 theorem hoeffdingE2_interior_minimizer_via_predicates
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1)
@@ -308,6 +314,7 @@ theorem hoeffdingE2_interior_minimizer_via_predicates
 /-- **L-H4-FS interior, hypothesis-form discharge**: at interior `α`, the
 `hoeffding_minimizer_ge` consumer of `HoeffdingTradeoff.lean` accepts the
 interior minimizer directly without an external full-support hypothesis. -/
+@[entry_point]
 theorem hoeffding_minimizer_ge_at_interior
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)

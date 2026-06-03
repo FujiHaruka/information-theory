@@ -7,6 +7,7 @@ import Mathlib.MeasureTheory.Measure.Tilted
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Order.LiminfLimsup
+import Common2026.Meta.EntryPoint
 
 /-!
 # Cramér's theorem (T1-C, Tier 0 baseline)
@@ -75,6 +76,7 @@ lemma legendre_nonneg (Λ : ℝ → ℝ) (hΛ0 : Λ 0 = 0) (a : ℝ)
   simpa [hΛ0] using h
 
 /-- Cramér rate-function version of `legendre_apply_le`. -/
+@[entry_point]
 lemma cramerRate_apply_le (X : Ω → ℝ) (μ : Measure Ω) (a : ℝ)
     (h_bdd : BddAbove ((fun lam : ℝ => lam * a - cgf X μ lam) '' Set.univ))
     (lam : ℝ) :
@@ -83,6 +85,7 @@ lemma cramerRate_apply_le (X : Ω → ℝ) (μ : Measure Ω) (a : ℝ)
 
 /-- Cramér rate function is non-negative whenever the Legendre supremum exists
 for a probability measure (then `cgf X μ 0 = 0`). -/
+@[entry_point]
 lemma cramerRate_nonneg [IsProbabilityMeasure μ] (X : Ω → ℝ) (a : ℝ)
     (h_bdd : BddAbove ((fun lam : ℝ => lam * a - cgf X μ lam) '' Set.univ)) :
     0 ≤ cramerRate X μ a :=
@@ -368,6 +371,7 @@ lemma isProbabilityMeasure_tilted_of_bounded [IsProbabilityMeasure μ]
 /-- **Tilted mean equals `Λ'(lam)`** (Phase C-2). For a bounded RV `Y`, the
 expectation of `Y` under `μ.tilted (lam * Y ·)` equals the first derivative of
 `cgf Y μ` at `lam`. -/
+@[entry_point]
 lemma integral_tilted_eq_deriv_cgf [IsProbabilityMeasure μ]
     {Y : Ω → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) :
     ∫ ω, Y ω ∂(μ.tilted (fun ω => lam * Y ω)) = deriv (cgf Y μ) lam :=
@@ -384,6 +388,7 @@ and `μ` admits the closed form
 
 We work directly with the `∫ log (rnDeriv)` representation rather than the
 `ℝ≥0∞`-valued `klDiv` to keep the algebraic identity transparent. -/
+@[entry_point]
 lemma klDiv_tilted_eq [IsProbabilityMeasure μ] (X : Ω → ℝ) (hX_meas : Measurable X)
     (h_bdd : ∃ M, ∀ ω, |X ω| ≤ M)
     (lam : ℝ) :
@@ -503,6 +508,7 @@ sandwich of `cramer_upper_legendre` (Phase B) and `cramer_lower_legendre`
 L-MIG-1: `hlam_opt` restored as regularity precondition (audit-2 verdict).
 Transitive sorry via `cramer_lower` (P-1 撤退、tilted-LLN plumbing pending in
 `cramer-moonshot-plan` Phase C). -/
+@[entry_point]
 theorem cramer_tendsto [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ}
     (h_indep : iIndepFun X μ) (h_meas : ∀ i, Measurable (X i))
     (h_ident : ∀ i, IdentDistrib (X i) (X 0) μ μ)

@@ -1,6 +1,7 @@
 import Common2026.Shannon.HoeffdingTradeoff
 import Common2026.Shannon.HoeffdingSandwich
 import Common2026.Shannon.MaxEntropyConstrained
+import Common2026.Meta.EntryPoint
 
 /-!
 # T1-D Hoeffding tradeoff — sandwich body completion (residual 2 hypotheses)
@@ -234,6 +235,7 @@ lemma hoeffdingE2_minimizer_at_boundary_alpha_ge_kl
 /-- **`hoeffding_minimizer_ge` via predicate**: variant of
 `HoeffdingTradeoff.hoeffding_minimizer_ge` taking
 `IsHoeffdingMinimizerFullSupport` instead of raw `hQs_pos`. -/
+@[entry_point]
 lemma hoeffding_minimizer_ge_via_predicate
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)

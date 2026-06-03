@@ -1,4 +1,5 @@
 import Common2026.Draft.Shannon.HoeffdingInteriorGradientBody
+import Common2026.Meta.EntryPoint
 import Mathlib.Topology.Order.IntermediateValue
 
 /-!
@@ -249,6 +250,7 @@ theorem isHoeffdingLagrangeHyp_of_minimal
 together with the minimality primitive at that `lam`, a full
 `IsHoeffdingLagrangeHyp` exists. The minimality hypothesis is quantified over
 the (otherwise unknown) IVT witness. -/
+@[entry_point]
 theorem exists_isHoeffdingLagrangeHyp_of_minimal
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
@@ -281,6 +283,7 @@ inlined / removed alongside the predicate. The two `IsHoeffdingTiltMinimal`
 sub-bridges (`isHoeffdingTiltMinimal_realises` /
 `isHoeffdingLagrangeHyp_of_minimal`) are unaffected — they target a primitive
 discharged in `HoeffdingMinimizerAttainment.lean`. -/
+@[entry_point]
 theorem isHoeffdingInteriorMinimizer_of_ivt
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     {alpha lam : ℝ}

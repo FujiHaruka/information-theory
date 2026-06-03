@@ -1,4 +1,5 @@
 import Common2026.Draft.Shannon.HoeffdingInteriorBody
+import Common2026.Meta.EntryPoint
 
 /-!
 # T1-D Hoeffding tradeoff — interior gradient body (L-H4-FS-grad / Lagrange tilt)
@@ -200,6 +201,7 @@ structure IsKLGradientHyp
 /-- **Gradient discharge for the tilt family**: the closed-form tilt
 `hoeffdingTilt P₁ P₂ lam` satisfies `IsKLGradientHyp`. This is the internal
 discharge of the gradient sub-predicate (no hypothesis on `alpha`). -/
+@[entry_point]
 theorem isKLGradientHyp_tilt
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (alpha lam : ℝ) :
@@ -246,6 +248,7 @@ infimum-attainment discharges are deferred to
 `hoeffding-tradeoff-moonshot-plan` Phase B. Full support is constructive
 (`hoeffdingTilt_pos`) and lives in `IsHoeffdingMinimizerFullSupport.of_pos`
 elsewhere. -/
+@[entry_point]
 theorem isHoeffdingInteriorMinimizer_of_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     {alpha lam : ℝ} :
@@ -259,6 +262,7 @@ Transitive `sorry` via `isHoeffdingInteriorMinimizer_of_lagrange`. No
 `@residual` tag is attached — the closure responsibility belongs to the
 upstream declaration. The existential introduction (`⟨hoeffdingTilt ..., ...⟩`)
 is itself constructive. -/
+@[entry_point]
 theorem isHoeffdingInteriorMinimizer_exists_of_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     {alpha lam : ℝ} :
@@ -273,6 +277,7 @@ wave6 `IsHoeffdingMinimizerFullSupport` predicate. This is purely constructive
 — `hoeffdingTilt_pos` discharges full support directly from `hP₁_pos` /
 `hP₂_pos`, so no Lagrange hypothesis is needed. The Phase 2 retreat of the
 predicate-form `IsHoeffdingLagrangeHyp` does not touch this lemma. -/
+@[entry_point]
 theorem isHoeffdingMinimizerFullSupport_of_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (lam : ℝ) :
@@ -289,6 +294,7 @@ lying in `K(α)`.
 `@residual(plan:hoeffding-tradeoff-moonshot-plan)` — the IVT constraint-match
 + infimum-attainment content was previously bundled as
 `IsHoeffdingLagrangeHyp` and is now retreated. -/
+@[entry_point]
 theorem hoeffdingE2_interior_minimizer_via_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     {alpha lam : ℝ} :
@@ -305,6 +311,7 @@ full-support `P ∈ K(α)`.
 
 `@residual(plan:hoeffding-tradeoff-moonshot-plan)` — depends on the retreated
 `isHoeffdingInteriorMinimizer_of_lagrange` (the tilt-realises-infimum step). -/
+@[entry_point]
 theorem csiszar_pythagoras_at_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₂_sum : ∑ a, P₂ a = 1)

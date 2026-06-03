@@ -6,6 +6,7 @@ import Mathlib.Probability.Independence.InfinitePi
 import Mathlib.Probability.ProductMeasure
 import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 import Mathlib.MeasureTheory.Measure.Tilted
+import Common2026.Meta.EntryPoint
 
 /-!
 # Cramér L-C2 Phase C partial discharge (T1-C follow-up Phase C)
@@ -114,6 +115,7 @@ n-letter Radon–Nikodym derivative identification of the tilted infinite
 product. Closure deferred to `cramer-lc2-discharge-moonshot-plan` (Phase B/C).
 
 `@residual(plan:cramer-lc2-discharge-moonshot-plan)` -/
+@[entry_point]
 lemma tilted_lower_from_predicate
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ}
@@ -202,6 +204,7 @@ Sandwich of `cramer_upper_legendre` (constructive) and
 `cramer_lower_legendre_phaseC_partial_discharge` (transitive sorry via
 `cramer_lower_phaseC_partial_discharge`, n-letter RN-deriv identification
 gap in `cramer-lc2-discharge-moonshot-plan`). -/
+@[entry_point]
 theorem cramer_tendsto_phaseC_partial_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
@@ -286,6 +289,7 @@ predicate's interface. They are kept minimal and trivial. -/
 choice of `μ₀`, the consequent inequality is parameterized by `a` and `ε`. The
 following helper records the predicate's defining shape `∀ a ε, ... ∃ C ...`
 for downstream callers who want to inline the construction. -/
+@[entry_point]
 lemma isMeasureInfinitePiTiltedEq_iff (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (lam : ℝ) :
     IsMeasureInfinitePiTiltedEq μ₀ Y lam ↔
       ∀ a ε : ℝ, 0 < ε →

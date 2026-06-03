@@ -1,4 +1,5 @@
 import Common2026.Draft.Shannon.HoeffdingLagrangeIVTBody
+import Common2026.Meta.EntryPoint
 
 /-!
 # S18 Hoeffding I-projection minimizer attainment — `IsHoeffdingTiltMinimal` discharge
@@ -304,6 +305,7 @@ constraint-match + I-projection minimality halves are themselves constructive
 (`isHoeffdingLagrangeHyp_of_constraint_eq`); only the bridge into the wave7
 predicate is currently retreated. The hypothesis signature is preserved so
 callers continue to compile. -/
+@[entry_point]
 theorem isHoeffdingInteriorMinimizer_of_constraint_eq
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (_hP₁_sum : ∑ a, P₁ a = 1) (_hP₂_sum : ∑ a, P₂ a = 1)

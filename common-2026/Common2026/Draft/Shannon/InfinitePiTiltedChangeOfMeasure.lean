@@ -2,6 +2,7 @@ import Common2026.Shannon.MeasurePiTiltedFactorization
 import Common2026.Shannon.CramerLC2DischargeExt
 import Common2026.Draft.Shannon.CramerLC2PhaseC
 import Mathlib.Probability.ProductMeasure
+import Common2026.Meta.EntryPoint
 
 /-!
 # infinitePi-tilted change-of-measure (Cramér Phase C, Phases 2–4)
@@ -103,6 +104,7 @@ theorem integral_exp_sum_pi_eq_pow_fintype {ι : Type*} [Fintype ι]
 /-- **Fintype tilt factorization**: the tilt of a finite (`Fintype`) product
 measure by the sum exponent factors as the product of per-coordinate tilts.
 Generalizes `pi_tilted_sum_eq_pi_tilted`. -/
+@[entry_point]
 theorem pi_tilted_sum_eq_pi_tilted_fintype {ι : Type*} [Fintype ι]
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (lam : ℝ) :
@@ -290,6 +292,7 @@ def IsTiltedWindowEventuallyLarge (μ₀ : Measure Ω₀) (Y : Ω₀ → ℝ) (l
 n-letter RN-deriv predicate `IsMeasureInfinitePiTiltedEq`. The change-of-measure
 lower bound (Phase 3) plus the cylinder lift (Phase 2) reduce the predicate to
 the eventual largeness of the tilted window mass, discharged here with `C = 1/2`. -/
+@[entry_point]
 theorem isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ) (hlam : 0 ≤ lam)
@@ -373,6 +376,7 @@ now belongs entirely to the upstream `cramer_lower_phaseC_partial_discharge`
 (`@residual(plan:cramer-lc2-discharge-moonshot-plan)`).
 
 `@audit:closed-by-successor(cramer-chernoff-clt-closure-moonshot-plan)` -/
+@[entry_point]
 theorem cramer_lower_phaseC_residual_discharge
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY_meas : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M)
@@ -529,6 +533,7 @@ The only residual gap left after this lemma is the **CLT boundary** case
 there requires a central-limit-theorem refinement, not the law of large numbers.
 The interior `a < deriv (cgf Y μ₀) lam < a + ε` is fully discharged here, with
 the window mass tending to `1`. -/
+@[entry_point]
 theorem tiltedWindow_eventually_large_of_cgfDeriv_interior
     {μ₀ : Measure Ω₀} [IsProbabilityMeasure μ₀]
     {Y : Ω₀ → ℝ} (hY : Measurable Y) (h_bdd : ∃ M, ∀ ω, |Y ω| ≤ M) (lam : ℝ)

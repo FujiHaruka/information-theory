@@ -1,5 +1,6 @@
 import Common2026.Shannon.HoeffdingTradeoff
 import Common2026.Shannon.Chernoff
+import Common2026.Meta.EntryPoint
 import Mathlib.Order.Filter.IsBounded
 
 /-!
@@ -74,6 +75,7 @@ Derivation:
 * if the infimum is `0`, `Real.log 0 = 0`, so the rate is `0`.
 
 In both cases `rate n ≥ 0`. -/
+@[entry_point]
 lemma hoeffding_rate_isBoundedUnder_ge
     (P₁ P₂ : α → ℝ) (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
     (hP₂_nn : ∀ a, 0 ≤ P₂ a) {alpha : ℝ} (h_alpha_nn : 0 ≤ alpha) :
