@@ -253,9 +253,17 @@ $$
 平均した $H(X\mid Y)$ は $H(X)$ を超えない（「条件付けは平均的に不確かさを
 減らす」、後述）。
 
-> **形式化上の注記.** 本ライブラリでは条件付き分布を測度論的な
+> **形式化上の注記（本章共通）.** 本ライブラリでは条件付き分布を測度論的な
 > `condDistrib`（条件付き分布カーネル）で表し、各 $y$ ごとの離散エントロピーを
 > 周辺分布 $p(y)$ で積分した形で定義する。定義 2.2.2 の最右辺と一致する。
+>
+> この「条件付き量＝核 `condDistrib` 上の積分」という実現は本章を通じて一貫する。
+> したがって、本文が条件付き量の証明で行う「片方の変数について**先に和をとる**」
+> 操作は、形式化では被積分関数の**可積分性**（有界・可測）の確認を伴う積分計算に
+> 対応する。チェイン則（定理 2.2.3）と相互情報量のエントロピー表現（定理 2.3.4）の
+> 形式化は、いずれもこの「和 ↔ 積分」の対応の上に乗っており、本文では一行で済む
+> 和の入れ替えが、形式化では disintegration（`compProd_map_condDistrib`）と
+> 可積分性補題に置き換わる。以降この点は個別には繰り返さない。
 >
 > **形式化**: `condEntropy`
 > (`InformationTheory/Fano/Measure.lean`, 名前空間 `InformationTheory.MeasureFano`)
@@ -293,7 +301,13 @@ $$
 > **形式化上の注記.** 形式化では結合エントロピーをペア確率変数
 > $\omega \mapsto (X(\omega), Y(\omega))$ のエントロピーとして表し、定理 2.2.3 を
 > その分解として証明している（添字の都合で $H(X,Y) = H(X) + H(Y\mid X)$ の
-> 役割配置になっている）。
+> 役割配置になっている）。本文の証明は対数を分解して $(x,y)$ について和をとり、
+> 「$y$ について先に和をとって $p(x)$ にする」だけで進むが、形式化では上記の
+> 共通注記のとおり、結合測度を $\mu.\mathrm{map}\,X$ と核 `condDistrib` に
+> disintegrate し、$H(Y\mid X)$ を周辺上の積分として扱うため、内側スライスの
+> 可積分性（$[0, \log|\mathcal Y|]$ 程度の有界性と可測性）の確認が証明の実質を
+> 占める。本文の一行（和の入れ替え）が形式化では最も重い部分になる、という
+> ギャップは定理 2.1.5 と同質である。
 >
 > **形式化**: `entropy_pair_eq_entropy_add_condEntropy`
 > (`InformationTheory/Shannon/Entropy.lean`)
@@ -364,6 +378,17 @@ $$
 である相互情報量も非負。等号 $D(p(x,y)\|p(x)p(y)) = 0$ は、相対エントロピーの
 等号条件より $p(x,y) = p(x)p(y)$、すなわち独立と同値である。$\qquad\blacksquare$
 
+> **形式化上の注記.** 本文の非負性の証明は情報不等式（相対エントロピーの非負性、
+> 2.6 節）を引く正攻法だが、形式化での重みの置きどころは本文と非対称である。形式化では
+> 相互情報量が拡張非負実数 $\mathbb R_{\ge 0}^{\infty}$ 値なので、**非負性は型から自明に
+> 従い**（`mutualInfo_nonneg` の証明は「型の最小元以上」一語）、情報不等式は使わない。
+> 情報不等式の実質的な内容は、むしろ**等号条件の側**（$I(X;Y)=0 \iff$ 独立）に現れる。
+> こちらの形式化 `mutualInfo_eq_zero_iff_indep` は、KL の等号条件
+> （`klDiv_eq_zero_iff`）と独立の特徴づけ（`indepFun_iff_map_prod_eq_prod_map_map`）の
+> 非自明な合成であり、本文で「独立と同値」と一行で述べる箇所こそ形式化では中身がある。
+> 2.5 節以降で同型の等号条件（条件付き独立など）を扱うときも、叙述は等号条件側を
+> 厚くするのが形式化との対応上は自然である。
+>
 > **形式化**: 非負性 `mutualInfo_nonneg`、独立との同値
 > `mutualInfo_eq_zero_iff_indep` (`InformationTheory/Shannon/MutualInfo.lean`)
 
@@ -372,10 +397,21 @@ $$
 *証明.* 定義式の $\dfrac{p(x,y)}{p(x)p(y)}$ は $x, y$ の入れ替えで不変だから。
 $\qquad\blacksquare$
 
+> **形式化上の注記.** 本文は「式 $\dfrac{p(x,y)}{p(x)p(y)}$ が入れ替えで不変」と
+> 一目で済ませるが、形式化では測度同型 `MeasurableEquiv.prodComm` に沿った
+> pushforward になり、しかも「KL は測度同型で値を保つ」という Mathlib 非搭載の
+> 自作補題 `klDiv_map_measurableEquiv` を要する。見れば自明な対称性が、形式化では
+> 不変性定理の輸送になる例である。
+>
 > **形式化**: `mutualInfo_comm` (`InformationTheory/Shannon/MutualInfo.lean`)
 
 有限アルファベット上では $I(X;Y) < \infty$ も成り立つ（各項が有限で和が有限）。
 
+> **形式化上の注記.** 本文では「各項が有限で和が有限」と一行で済む有限性だが、
+> 形式化では結合分布が周辺積に絶対連続であること
+> （`map_pair_absolutelyContinuous_prod_marginals`）と対数尤度比の可積分性を経て
+> `klDiv_ne_top` に帰着する、実質的な測度論の補題になる。
+>
 > **形式化**: `mutualInfo_ne_top` (`InformationTheory/Shannon/MutualInfo.lean`)
 
 ### エントロピーとの関係
@@ -409,7 +445,10 @@ $\qquad\blacksquare$
 > **形式化上の注記.** 形式化では $I(X;Y)$ が $\mathbb R_{\ge 0}^{\infty}$ 値、
 > $H, H(\cdot\mid\cdot)$ が実数値なので、橋渡し定理は左辺に `.toReal` を付けた
 > 等式として述べる。これは型をまたぐための技術的処理であり、数学的内容は
-> 定理 2.3.4 と同一である。
+> 定理 2.3.4 と同一である。なお本文の証明は対数を分解して $H(X)$ と $H(X\mid Y)$ を
+> 読み取るが、形式化では 2.2 節冒頭の共通注記のとおり $H(X\mid Y)$ が
+> $\mu.\mathrm{map}\,Y$ 上の積分であり、「$y$ について和をとって $H(X)$ になる」
+> ステップは積分の補題（`integral_condDistrib_real_singleton_eq`）に対応する。
 >
 > **形式化**: `mutualInfo_eq_entropy_sub_condEntropy`
 > (`InformationTheory/Shannon/Bridge.lean`)、対称形
