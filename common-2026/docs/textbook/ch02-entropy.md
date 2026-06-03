@@ -1,705 +1,790 @@
 # 第2章 エントロピー・相互情報量・データ処理不等式
 
-> **このファイルについて (パイロット原稿)**
->
+> **この章の読み方.**
 > 本章は Cover & Thomas *Elements of Information Theory* (2nd ed.) Chapter 2 を
-> 題材に、**検証済み Lean 定理を骨格にした教科書原稿**が成立するかを検証する
-> パイロットである。本文の各主要結果には
-> 「**Verified**: `定理名` (`InformationTheory/...`)」という形で、その命題に対応する
-> Lean 4 + Mathlib の formal declaration を紐付けてある。
+> 題材にした、独立して通読できる教科書原稿である。Lean を一切知らなくても
+> 読み通せることを目標とし、各概念は動機づけ・定義・例・直感（「きもち」）・証明を
+> 自然言語と数式で展開する。
 >
-> **検証強度の注記** — 本章で `**Verified**` と記した定理はすべて、
-> 本プロジェクトの完成判定 **proof done**（当該 declaration を含むファイルが
-> `0 sorry` かつ `0 @residual`、すなわち無条件機械検証済み）を満たす。
-> 紐付けた定理が属するファイル
-> (`Entropy.lean` / `MutualInfo.lean` / `MIChainRule.lean` /
-> `CondMutualInfo.lean` / `DPI.lean` / `CondEntropyMemoryless.lean` /
-> `Bridge.lean` / `MaxEntropy.lean` / `Fano/Measure.lean` / `Fano/Core.lean`)
-> は本パイロット作成時点で `sorry` / `@residual` を含まない。
+> **形式化との関係（重要）.** 本章で「**形式化**: `定理名`」と添えた主要結果は、
+> すべて Lean 4 + Mathlib による**無条件の機械検証済み定理**に対応している
+> （本プロジェクトの完成判定 *proof done*＝当該ファイルが `0 sorry` かつ
+> `0 @residual`）。つまり、紐付けた定理が数学的に正しいことは形式化が保証する。
 >
-> **形式化の枠組み** — 本ライブラリでは確率変数を測度空間 `(Ω, μ)` 上の可測写像
-> `Xs : Ω → X` として表現し、エントロピー等は像測度 `μ.map Xs` を通じて定義する
-> （pmf を直接扱わず measure-theoretic 形式）。`μ` は確率測度
-> `[IsProbabilityMeasure μ]`、アルファベット `X` は有限型 `[Fintype X]`
-> （連続版の差分エントロピーは Ch.8、本章では離散のみ）。
-> 対応する Lean library は `InformationTheory/Shannon/` および `InformationTheory/Fano/`。
+> 一方で、**本文に書く証明は人間が理解しやすい順序で書いており、Lean の形式化が
+> たどる証明ルートと必ずしも一致しない**。教科書としてボトムアップに積み上げる
+> 自然さと、形式化としての証明しやすさのあいだにはギャップがあるため、本章は
+> 証明レベルでの完全一致を目指さない。両者のルートが実質的に食い違う箇所は、
+> その都度「形式化上の注記」で正直に断る。保証されるのは**定理の正しさ**であって、
+> 紙の上の証明手順が Lean の証明手順と同一であること、ではない。
+>
+> **範囲.** 離散・有限アルファベットに限る。確率変数 $X$ は有限集合 $\mathcal X$ に
+> 値をとり、その分布を $p(x) = \Pr[X = x]$ と書く。対数 $\log$ の底は任意だが、
+> 底を 2 にとれば単位はビット、自然対数なら nat である（特記する箇所以外、底は
+> 固定しなくてよい）。形式化では確率変数を測度空間上の可測写像として表し、分布は
+> 像測度を通じて与える。対応する Lean ライブラリは `InformationTheory/Shannon/`
+> および `InformationTheory/Fano/`。
 
 ---
 
-## 2.1 エントロピー (Entropy)
+## 2.1 エントロピー
 
-離散確率変数 \(X\)（有限アルファベット \(\mathcal{X}\) に値をとる）のエントロピーは
+### 動機
 
-\[
-H(X) = -\sum_{x \in \mathcal{X}} p(x) \log p(x).
-\]
+確率変数 $X$ を観測する前、その結果にはどれだけの「不確かさ」があるだろうか。
+あるいは観測したとき、私たちはどれだけの「情報」を得るのだろうか。エントロピーは、
+この素朴な問いに一つの定量的な答えを与える量である。
 
-本ライブラリでは `negMulLog p = -p \log p` を用いて、像測度 `μ.map Xs` の各 atom
-質量の和として定義する。
+良い不確かさの尺度に何を期待するか、条件を並べてみよう。確実な事象（ある値を
+確率 1 でとる）は不確かさ 0 であってほしい。とりうる値が多く、かつそれらが
+均等に起こりやすいほど不確かさは大きいはずだ。そして独立な二つの実験を同時に
+行ったときの不確かさは、それぞれの不確かさの和であってほしい（加法性）。
+Shannon は、これらの自然な要請を満たす尺度が本質的に一通りに定まることを示した。
+それが次のエントロピーである。
 
-**Verified (定義)**: `entropy` (`InformationTheory/Shannon/Bridge.lean`)
+### 定義
 
-```lean
-noncomputable def entropy (μ : Measure Ω) (Xs : Ω → X) : ℝ :=
-  ∑ x : X, Real.negMulLog ((μ.map Xs).real {x})
-```
+**定義 2.1.1（エントロピー）.** 有限アルファベット $\mathcal X$ 上に分布する
+離散確率変数 $X$（分布 $p(x)$）の **エントロピー** を
+$$
+H(X) \;=\; -\sum_{x \in \mathcal X} p(x) \log p(x)
+$$
+で定める。$p(x) = 0$ の項は $p \log p \to 0$（$p \downarrow 0$）にならい
+$0 \log 0 = 0$ と約束する。
 
-### 性質: 非負性
+エントロピーは $X$ の値そのものではなく分布 $p$ のみに依存する量であることに
+注意したい。記号 $H(X)$ は慣用だが、より正確には $H(p)$ と書くべき汎関数である。
 
-\(0 \le p(x) \le 1\) より各項 `negMulLog p ≥ 0`、ゆえに \(H(X) \ge 0\)。
+> **形式化上の注記.** 本ライブラリでは $-p\log p$ を一つの関数 `negMulLog p` として
+> 扱い、$0 \log 0 = 0$ はこの関数の定義（$p = 0$ で値 0）に組み込んである。確率変数は
+> 測度空間上の可測写像として表現し、分布 $p$ は像測度を通じて与えられる。
+>
+> **形式化**: `entropy` (`InformationTheory/Shannon/Bridge.lean`)
 
-**Verified**: `entropy_nonneg` (`InformationTheory/Shannon/Bridge.lean`)
+### 例
 
-```lean
-lemma entropy_nonneg (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : Ω → X) (hXs : Measurable Xs) : 0 ≤ entropy μ Xs
-```
+**例 2.1.2（ベルヌーイ分布）.** $X$ が確率 $p$ で $1$、確率 $1-p$ で $0$ を
+とるとき、
+$$
+H(X) \;=\; -p \log p - (1-p)\log(1-p) \;=:\; H_b(p).
+$$
+この $H_b$ を **二値エントロピー関数** と呼ぶ。$H_b(0) = H_b(1) = 0$
+（結果が確定していて不確かさがない）であり、$p = 1/2$ で最大値 $\log 2$ を
+とる（最も予測しづらい公平なコイン）。$H_b$ は $[0,1]$ 上で凹かつ
+$p = 1/2$ を軸に左右対称である。二値エントロピーは 2.10 節のファノの不等式で
+ふたたび主役として現れる。
 
-### 性質: 一様分布での上界 \(H(X) \le \log|\mathcal{X}|\)
+**例 2.1.3（一様分布）.** $X$ が $\mathcal X$（要素数 $|\mathcal X| = M$）上で
+一様、すなわち各 $x$ で $p(x) = 1/M$ のとき、
+$$
+H(X) \;=\; -\sum_{x} \frac1M \log \frac1M \;=\; \log M.
+$$
+あとで見るように（定理 2.1.5）、これは要素数 $M$ のアルファベット上で達成可能な
+エントロピーの **最大値** である。
 
-エントロピーはアルファベットサイズの対数を超えない。これは
-\(D(P \,\|\, U) \ge 0\)（一様分布 \(U\) への KL ダイバージェンスの非負性、Gibbs 不等式）
-の帰結である。
+### 性質1：非負性
 
-**Verified**: `entropy_le_log_card` (`InformationTheory/Shannon/MaxEntropy.lean`)
+**命題 2.1.4.** 任意の離散確率変数 $X$ について $H(X) \ge 0$。等号は $X$ が
+ある一点に確率 1 で集中するときに限り成り立つ。
 
-```lean
-theorem entropy_le_log_card
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (X : Ω → α) (hX : Measurable X) :
-    entropy μ X ≤ Real.log (Fintype.card α)
-```
+*証明.* 各 $x$ について $0 \le p(x) \le 1$ だから $\log p(x) \le 0$、
+したがって $-p(x)\log p(x) \ge 0$。和をとっても非負である（$p(x) = 0$ の項は
+約束により 0）。
 
-等号成立条件（像測度が一様分布であること）も形式化済み。
+等号 $H(X) = 0$ は、非負項の和が 0 であることだから、すべての $x$ で
+$-p(x)\log p(x) = 0$ を要する。$0 < p(x) < 1$ の $x$ があれば
+$-p(x)\log p(x) > 0$ となり矛盾。ゆえに各 $p(x)$ は $0$ または $1$ であり、
+総和が 1 という条件と合わせると、ちょうど一つの $x$ で $p(x) = 1$。$\qquad\blacksquare$
 
-**Verified**: `entropy_eq_log_card_iff` (`InformationTheory/Shannon/MaxEntropy.lean`)
+直感的には「不確かさが負になることはなく、不確かさ 0 とは結果が確定していること」
+という当然の事実を述べている。
 
-```lean
-theorem entropy_eq_log_card_iff
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (X : Ω → α) (hX : Measurable X) :
-    entropy μ X = Real.log (Fintype.card α)
-      ↔ μ.map X = uniformOn (Set.univ : Set α)
-```
+> **形式化**: `entropy_nonneg` (`InformationTheory/Shannon/Bridge.lean`)
+
+### 性質2：一様分布が最大化する（$H(X) \le \log|\mathcal X|$）
+
+**定理 2.1.5.** $|\mathcal X| = M$ のとき $H(X) \le \log M$。等号は $X$ が
+$\mathcal X$ 上で一様分布のときに限り成り立つ。
+
+「アルファベットの大きさが不確かさの上限を決め、その上限は均等に散らばったときに
+達成される」という主張である。これは情報理論で繰り返し使われる基本的な上界で、
+たとえば「$M$ 個の記号で送れる情報量は 1 記号あたり高々 $\log M$」という
+符号化の素朴な限界を裏づける。
+
+本書では、この定理を**予備知識なしの数学的帰納法**で証明する。必要な解析的事実は
+たった一つ、被加数 $\varphi(t) = -t\log t$ が**凹関数**であること（下に張り出さず、
+弦が常にグラフの下に来ること）だけである。Jensen の不等式のような道具を既知として
+持ち込まず、その有限版を帰納法でその場で組み立てる。
+
+**信頼の底（唯一の解析的事実）.** $\varphi(t) = -t\log t$（$\varphi(0):=0$）は
+$[0,\infty)$ 上で**狭義凹**である。実際 $t>0$ で $\varphi''(t) = -1/t < 0$ なので
+グラフは上に凸（＝凹関数）で、相異なる 2 点を結ぶ弦は端点以外でグラフより真に
+下に来る。これは $\log t \le t-1$（等号は $t=1$）という初等的事実と同じ内容である。
+以下、この一点だけを認め、残りはすべて帰納法で導く。凹性を 2 点の形で書くと、
+$a,b \in [0,\infty)$ と $\lambda \in [0,1]$ に対して
+$$
+\varphi\big(\lambda a + (1-\lambda) b\big)
+  \;\ge\; \lambda\,\varphi(a) + (1-\lambda)\,\varphi(b),
+\tag{$\ast$}
+$$
+であり、$a \ne b$ かつ $0 < \lambda < 1$ のとき不等号は狭義である。
+
+**補題 2.1.6（有限 Jensen の不等式・帰納法版）.** $\varphi$ を区間 $I$ 上の凹関数と
+する。有限個の点 $t_1,\dots,t_n \in I$ と重み $w_1,\dots,w_n \ge 0$
+（$\sum_i w_i = 1$）に対して
+$$
+\sum_{i=1}^n w_i\,\varphi(t_i) \;\le\; \varphi\Big(\sum_{i=1}^n w_i\,t_i\Big).
+$$
+さらに $\varphi$ が狭義凹なら、等号は正の重みをもつ点 $t_i$ がすべて互いに
+等しいとき、かつそのときに限る。
+
+*証明（$n$ についての数学的帰納法）.*
+
+**基底 $n=1$.** $w_1 = 1$ なので両辺とも $\varphi(t_1)$。等号成立、しかも条件も自明。
+
+**基底 $n=2$.** これはまさに凹性の 2 点形 $(\ast)$ そのもの（$\lambda = w_1$、
+$1-\lambda = w_2$）。狭義凹なら $t_1 \ne t_2$ かつ両重み正で狭義不等号。
+
+**帰納段階 $n \to n+1$.** $n$ 点で補題が成り立つと仮定する。重み
+$w_1,\dots,w_{n+1} \ge 0$（和 1）が与えられたとき、もし $w_{n+1} = 1$ なら他は 0 で
+両辺 $\varphi(t_{n+1})$ となり成立。そうでなければ
+$W := 1 - w_{n+1} = \sum_{i=1}^n w_i > 0$ とおき、$v_i := w_i / W$
+（$i = 1,\dots,n$、$\sum_i v_i = 1$）と正規化する。内側の凸結合
+$s := \sum_{i=1}^n v_i t_i$ は $I$ に属する（区間は凸結合で閉じている）。全体の重心は
+$$
+\sum_{i=1}^{n+1} w_i t_i \;=\; W\,s + w_{n+1}\,t_{n+1}
+$$
+と 2 点 $s, t_{n+1}$ の凸結合（重み $W, w_{n+1}$）に書ける。ここで 2 点凹性 $(\ast)$ と
+**$n$ 点への帰納法の仮定** $\varphi(s) \ge \sum_{i=1}^n v_i \varphi(t_i)$ を順に使うと
+$$
+\varphi\Big(\sum_{i=1}^{n+1} w_i t_i\Big)
+  \;\ge\; W\,\varphi(s) + w_{n+1}\,\varphi(t_{n+1})
+  \;\ge\; W\sum_{i=1}^n v_i \varphi(t_i) + w_{n+1}\varphi(t_{n+1})
+  \;=\; \sum_{i=1}^{n+1} w_i \varphi(t_i),
+$$
+最後の等号は $W v_i = w_i$ による。これで $n+1$ 点でも不等式が成り立つ。
+
+**等号条件（狭義凹）.** 上の連鎖で 2 箇所の $\ge$ がいずれも等号になるときのみ全体が
+等号になる。第 1 の $(\ast)$ が等号 ⟺（$w_{n+1}>0$ なら）$s = t_{n+1}$。第 2 の
+帰納法の不等式が等号 ⟺ 正の重みをもつ $t_i\ (i\le n)$ が互いに等しい。両者を合わせ、
+正の重みをもつ点がすべて一致することと等号成立が同値になる。$\qquad\square$
+
+**証明（定理 2.1.5）.** エントロピーは定義から $\varphi$ の和である：
+$$
+H(X) \;=\; -\sum_{x} p(x)\log p(x) \;=\; \sum_{x} \varphi\big(p(x)\big).
+$$
+補題 2.1.6 を、重み $w_x = 1/M$（一様）、点 $t_x = p(x)$ ととって適用する。各 $p(x) \ge 0$
+は $\varphi$ の定義域 $[0,\infty)$ に入るので、質量 0 の記号を場合分けして除く必要も
+ない。$\sum_x (1/M) p(x) = 1/M$ だから
+$$
+\frac1M \sum_{x} \varphi\big(p(x)\big)
+  \;\le\; \varphi\Big(\sum_{x} \frac1M\,p(x)\Big)
+  \;=\; \varphi\Big(\frac1M\Big)
+  \;=\; -\frac1M\log\frac1M \;=\; \frac1M\log M.
+$$
+両辺を $M$ 倍すれば $H(X) \le \log M$。等号は $\varphi$ が**狭義**凹なので、補題の等号
+条件により、正の重み（ここではすべての $x$ で $w_x = 1/M > 0$）をもつ点 $p(x)$ が
+$x$ によらず一定のとき、すなわち $\sum_x p(x)=1$ と合わせて $p(x) = 1/M$、つまり
+$X$ が一様分布のときに限る。$\qquad\blacksquare$
+
+> **形式化上の注記（証明ルートの相違）.** 本文は有限 Jensen を**点の個数に関する
+> 帰納法**で組み立てた。これに対し Lean の形式化 `entropy_le_log_card` は、Mathlib の
+> 凹関数ライブラリ（ハイポグラフの凸性と凸結合の所属に基づく `ConcaveOn.le_map_sum`、
+> 等号条件は `StrictConcaveOn.map_sum_eq_iff`、凹性は `Real.strictConcaveOn_negMulLog`）を
+> そのまま呼び出す**別ルート**で同じ定理を証明している。最後に「全記号の質量が $1/M$」
+> から像測度の一致 $\mu.\mathrm{map}\,X = \mathrm{uniformOn}$ への橋渡しに
+> `Measure.ext_of_singleton` を用いる。証明手順は本文と Lean で異なるが、**結論である
+> 定理は同一**であり、形式化はその正しさを無条件に保証する。底にある解析的事実が
+> $\varphi$ の凹性ただ一つ（$\log t \le t-1$ と同値）である点は両者で共通する。なお
+> $D(p\,\|\,\text{一様}) = \log M - H(X)$ という相対エントロピー経由の別証明
+> （`klDiv_uniformOn_univ_toReal_eq`）も形式化されているが、本文の帰納法も Lean の主定理も
+> それには依存しない。
+>
+> **形式化**: 主定理 `entropy_le_log_card`、等号条件 `entropy_eq_log_card_iff`
+> (`InformationTheory/Shannon/MaxEntropy.lean`)
 
 ---
 
 ## 2.2 結合エントロピー・条件付きエントロピーとチェイン則
 
-### 条件付きエントロピー (Conditional Entropy)
+### 結合エントロピー
 
-\[
-H(X \mid Y) = \sum_y p(y) H(X \mid Y = y)
-            = -\sum_{x,y} p(x,y) \log p(x \mid y).
-\]
+二つの確率変数を同時に考えるとき、対 $(X, Y)$ を一つの確率変数とみなせば、
+そのエントロピーがそのまま結合エントロピーである。
 
-本ライブラリでは条件付き分布 `condDistrib Xs Yo μ y : Measure X` に対する各 \(y\) ごとの
-離散エントロピーを、周辺 `μ.map Yo` で積分した形で定義する。
+**定義 2.2.1（結合エントロピー）.** 同時分布 $p(x,y)$ をもつ $(X, Y)$ の
+**結合エントロピー** を
+$$
+H(X, Y) \;=\; -\sum_{x,y} p(x,y) \log p(x,y)
+$$
+と定める。これは対 $(X,Y)$ を値域 $\mathcal X \times \mathcal Y$ の単一の確率変数と
+みたときの定義 2.1.1 そのものであり、新しい概念ではない。
 
-**Verified (定義)**: `condEntropy` (`InformationTheory/Fano/Measure.lean`,
-名前空間 `InformationTheory.MeasureFano`)
+### 条件付きエントロピー
 
-```lean
-def condEntropy (μ : Measure Ω) [IsFiniteMeasure μ]
-    (Xs : Ω → X) (Yo : Ω → Y) : ℝ :=
-  ∫ y, ∑ x : X, Real.negMulLog ((condDistrib Xs Yo μ y).real {x}) ∂(μ.map Yo)
-```
+$Y = y$ を観測したあと、$X$ になお残る不確かさは、条件付き分布 $p(x \mid y)$ の
+エントロピー $H(X \mid Y=y) = -\sum_x p(x\mid y)\log p(x\mid y)$ で測れる。これを
+$Y$ の分布で平均したものが条件付きエントロピーである。
 
-### チェイン則 \(H(X, Y) = H(X) + H(Y \mid X)\)
+**定義 2.2.2（条件付きエントロピー）.**
+$$
+H(X \mid Y) \;=\; \sum_y p(y)\, H(X \mid Y = y)
+  \;=\; -\sum_{x,y} p(x,y)\log p(x\mid y).
+$$
+最後の等号は $p(x,y) = p(y)\,p(x\mid y)$ による書き換えである。$H(X\mid Y)$ は
+「$Y$ を知ったうえでなお $X$ に残る平均的な不確かさ」と読む。$H(X\mid Y=y)$ を特定の
+$y$ ごとにみれば $H(X)$ より大きくなることもあり得るが、$y$ について平均した
+$H(X\mid Y)$ は $H(X)$ を超えない（「条件付けは平均的に不確かさを減らす」、後述）。
 
-結合エントロピー（ペア確率変数 `(Xs, Yo)` のエントロピー）が
-周辺エントロピーと条件付きエントロピーの和に分解される。
+> **形式化上の注記（本章共通）.** 本ライブラリでは条件付き分布を測度論的な
+> `condDistrib`（条件付き分布カーネル）で表し、各 $y$ ごとの離散エントロピーを周辺分布
+> $p(y)$ で積分した形で定義する。定義 2.2.2 の最右辺と一致する。
+>
+> この「条件付き量＝核 `condDistrib` 上の積分」という実現は本章を通じて一貫する。
+> したがって、本文が条件付き量の証明で行う「片方の変数について**先に和をとる**」操作は、
+> 形式化では被積分関数の**可積分性**（有界・可測）の確認を伴う積分計算に対応する。
+> チェイン則（定理 2.2.3）と相互情報量のエントロピー表現（定理 2.3.4）の形式化は、いずれも
+> この「和 ↔ 積分」の対応の上に乗っており、本文では一行で済む和の入れ替えが、形式化では
+> disintegration（`compProd_map_condDistrib`）と可積分性補題に置き換わる。以降この点は
+> 個別には繰り返さない。
+>
+> **形式化**: `condEntropy`
+> (`InformationTheory/Fano/Measure.lean`, 名前空間 `InformationTheory.MeasureFano`)
 
-**Verified**: `entropy_pair_eq_entropy_add_condEntropy`
-(`InformationTheory/Shannon/Entropy.lean`)
+### チェイン則
 
-```lean
-theorem entropy_pair_eq_entropy_add_condEntropy
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : Ω → X) (Yo : Ω → Y)
-    (hXs : Measurable Xs) (hYo : Measurable Yo) :
-    entropy μ (fun ω => (Xs ω, Yo ω))
-      = entropy μ Xs + InformationTheory.MeasureFano.condEntropy μ Yo Xs
-```
+**定理 2.2.3（チェイン則）.**
+$$
+H(X, Y) \;=\; H(X) + H(Y \mid X).
+$$
 
-### 条件付けでエントロピーは増えない \(H(X \mid Y, Z) \le H(X \mid Y)\)
+「対 $(X,Y)$ の不確かさは、まず $X$ の不確かさ、次に $X$ を知ったうえでの $Y$ の
+不確かさ、の和に分解できる」という、エントロピーのもっとも基本的な構造である。
 
-「条件 (conditioning) は平均エントロピーを減らす」(Cover & Thomas Thm 2.6.5
-の系)。本ライブラリでは条件付き相互情報量の非負性から導く。
+*証明.* 同時分布の連鎖律 $p(x,y) = p(x)\,p(y\mid x)$ の両辺の対数をとると
+$\log p(x,y) = \log p(x) + \log p(y\mid x)$。両辺に $-p(x,y)$ を掛けて $(x,y)$ について
+和をとる：
+$$
+H(X,Y) \;=\; -\sum_{x,y} p(x,y)\log p(x)
+  \;-\; \sum_{x,y} p(x,y)\log p(y\mid x).
+$$
+第 2 項は定義 2.2.2 によりちょうど $H(Y\mid X)$。第 1 項は $y$ について先に和をとると
+$\sum_y p(x,y) = p(x)$ だから $-\sum_{x} p(x)\log p(x) = H(X)$。合わせて
+$H(X,Y) = H(X) + H(Y\mid X)$。$\qquad\blacksquare$
 
-**Verified**: `condEntropy_le_condEntropy_of_pair`
-(`InformationTheory/Shannon/Entropy.lean`)
+対称に $H(X,Y) = H(Y) + H(X\mid Y)$ も成り立つ（証明で $X$ と $Y$ の役割を入れ替える
+だけ）。両式を見比べると $H(X) - H(X\mid Y) = H(Y) - H(Y\mid X)$、すなわち「$Y$ を
+知って減る $X$ の不確かさ」と「$X$ を知って減る $Y$ の不確かさ」は等しい。この共通の量が
+次節の相互情報量 $I(X;Y)$ である。
 
-```lean
-theorem condEntropy_le_condEntropy_of_pair
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : Ω → X) (Yo : Ω → Y) (Zo : Ω → Z)
-    (hXs : Measurable Xs) (hYo : Measurable Yo) (hZo : Measurable Zo) :
-    InformationTheory.MeasureFano.condEntropy μ Xs (fun ω => (Yo ω, Zo ω))
-      ≤ InformationTheory.MeasureFano.condEntropy μ Xs Yo
-```
+> **形式化上の注記.** 形式化では結合エントロピーをペア確率変数
+> $\omega \mapsto (X(\omega), Y(\omega))$ のエントロピーとして表し、定理 2.2.3 をその分解
+> として証明している（添字の都合で $H(X,Y) = H(X) + H(Y\mid X)$ の役割配置になっている）。
+> 本文の「$y$ について先に和をとって $p(x)$ にする」一行が、形式化では上記の共通注記の
+> とおり結合測度を $\mu.\mathrm{map}\,X$ と核 `condDistrib` に disintegrate し、内側
+> スライスの可積分性を確認する最も重い部分になる。証明の難所が本文と形式化で入れ替わる例。
+>
+> **形式化**: `entropy_pair_eq_entropy_add_condEntropy`
+> (`InformationTheory/Shannon/Entropy.lean`)
 
----
+### 条件付けは不確かさを増やさない
 
-## 2.3 相互情報量 (Mutual Information)
+**定理 2.2.4（条件付けの単調性）.**
+$$
+H(X \mid Y, Z) \;\le\; H(X \mid Y).
+$$
+すなわち、すでに $Y$ を知っているところへさらに $Z$ を加えても、$X$ に残る平均的な
+不確かさは増えない。$Y$ を自明な定数にとれば $H(X\mid Z)\le H(X)$ という基本形を得る。
 
-\[
-I(X; Y) = \sum_{x,y} p(x,y) \log \frac{p(x,y)}{p(x)p(y)}
-        = D\!\left(p(x,y) \,\big\|\, p(x)p(y)\right).
-\]
+この不等式は「平均的に」という但し書きが本質的である。特定の観測値 $Z = z$ のもとでは
+$H(X\mid Y, Z=z) > H(X\mid Y)$ となること（個別の観測がかえって混乱を増す状況）は
+あり得る。しかし $Z$ について平均すると、情報は決して不確かさを増やさない。
 
-本ライブラリでは、結合分布の周辺積に対する KL ダイバージェンスとして
-（Mathlib の `klDiv` を用いて）直接定義する。`ℝ≥0∞` 値である点に注意。
+*証明.* 後述の条件付き相互情報量 $I(X; Z\mid Y)$ は相対エントロピーの平均として定義され、
+つねに非負である（2.5・2.6 節）。一方その entropy 表現（定理 2.5.4）は
+$I(X; Z \mid Y) = H(X \mid Y) - H(X \mid Y, Z)$ であった。左辺 $\ge 0$ より移項して主張を
+得る。$\qquad\blacksquare$
 
-**Verified (定義)**: `mutualInfo` (`InformationTheory/Shannon/MutualInfo.lean`)
-
-```lean
-noncomputable def mutualInfo
-    (μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y) : ℝ≥0∞ :=
-  klDiv (μ.map (fun ω => (Xs ω, Yo ω)))
-        ((μ.map Xs).prod (μ.map Yo))
-```
-
-### 性質: 非負性・対称性・有限性
-
-\(I(X; Y) \ge 0\)。`klDiv` が `ℝ≥0∞` 値であるため、定義から直ちに従う。
-
-**Verified**: `mutualInfo_nonneg` (`InformationTheory/Shannon/MutualInfo.lean`)
-
-```lean
-theorem mutualInfo_nonneg (μ : Measure Ω) (Xs : Ω → X) (Yo : Ω → Y) :
-    0 ≤ mutualInfo μ Xs Yo
-```
-
-\(I(X; Y) = I(Y; X)\)（対称性）。
-
-**Verified**: `mutualInfo_comm` (`InformationTheory/Shannon/MutualInfo.lean`)
-
-```lean
-theorem mutualInfo_comm
-    (μ : Measure Ω) [IsFiniteMeasure μ] (Xs : Ω → X) (Yo : Ω → Y)
-    (hXs : Measurable Xs) (hYo : Measurable Yo) :
-    mutualInfo μ Xs Yo = mutualInfo μ Yo Xs
-```
-
-有限アルファベット上では \(I(X; Y) < \infty\)（`≠ ∞`）。
-
-**Verified**: `mutualInfo_ne_top` (`InformationTheory/Shannon/MutualInfo.lean`)
-
-```lean
-theorem mutualInfo_ne_top
-    [Fintype X] [MeasurableSingletonClass X]
-    [Fintype Y] [MeasurableSingletonClass Y]
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : Ω → X) (Yo : Ω → Y)
-    (hXs : Measurable Xs) (hYo : Measurable Yo) :
-    mutualInfo μ Xs Yo ≠ ∞
-```
-
-### \(I(X; Y) = 0 \iff X \perp Y\)
-
-相互情報量がゼロであることと独立であることは同値。
-
-**Verified**: `mutualInfo_eq_zero_iff_indep` (`InformationTheory/Shannon/MutualInfo.lean`)
-
-```lean
-theorem mutualInfo_eq_zero_iff_indep
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : Ω → X) (Yo : Ω → Y)
-    (hXs : Measurable Xs) (hYo : Measurable Yo) :
-    mutualInfo μ Xs Yo = 0 ↔ IndepFun Xs Yo μ
-```
-
-### エントロピーと相互情報量の関係 \(I(X; Y) = H(X) - H(X \mid Y)\)
-
-相互情報量を、KL 形式の定義から `H(X) - H(X|Y)` という entropy 表現に橋渡しする。
-本ライブラリの主要な「橋 (bridge)」定理。`.toReal` をとって実数として等式を述べる
-（`mutualInfo` が `ℝ≥0∞` 値、`entropy`/`condEntropy` が `ℝ` 値のため）。
-
-**Verified**: `mutualInfo_eq_entropy_sub_condEntropy`
-(`InformationTheory/Shannon/Bridge.lean`)
-
-```lean
-theorem mutualInfo_eq_entropy_sub_condEntropy
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : Ω → X) (Yo : Ω → Y)
-    (hXs : Measurable Xs) (hYo : Measurable Yo) :
-    (mutualInfo μ Xs Yo).toReal
-      = entropy μ Xs - InformationTheory.MeasureFano.condEntropy μ Xs Yo
-```
-
-これと 2.2 のチェイン則を組み合わせると、対称形
-\(I(X; Y) = H(X) + H(Y) - H(X, Y)\) が得られる。
-
-**Verified**: `mutualInfo_eq_entropy_add_entropy_sub_jointEntropy`
-(`InformationTheory/Shannon/MIChainRule.lean`)
-
-```lean
-theorem mutualInfo_eq_entropy_add_entropy_sub_jointEntropy
-    (joint : Measure (α × β)) [IsProbabilityMeasure joint] :
-    (mutualInfo joint Prod.fst Prod.snd).toReal
-      = entropy joint Prod.fst + entropy joint Prod.snd - entropy joint id
-```
+> **形式化**: `condEntropy_le_condEntropy_of_pair`
+> (`InformationTheory/Shannon/Entropy.lean`)。証明はここでの説明どおり、条件付き
+> 相互情報量の非負性から導いている。
 
 ---
 
-## 2.4 エントロピー・相互情報量のチェイン則 (Chain Rules)
+## 2.3 相互情報量
 
-### 相互情報量のチェイン則 (2 変数 → 1 個追加)
+### 動機と定義
 
-\[
-I(Z, X; Y) = I(Z; Y) + I(X; Y \mid Z).
-\]
+2.2 節の終わりで、「$Y$ を知って減る $X$ の不確かさ」$H(X) - H(X\mid Y)$ が $X, Y$ に
+ついて対称な量であることを見た。これは「一方の変数が他方について持っている情報量」を
+測る自然な量であり、相互情報量と呼ばれる。
 
-**Verified**: `mutualInfo_chain_rule` (`InformationTheory/Shannon/CondMutualInfo.lean`)
+**定義 2.3.1（相互情報量）.** 同時分布 $p(x,y)$、周辺分布 $p(x), p(y)$ をもつ
+$(X, Y)$ について、
+$$
+I(X; Y) \;=\; \sum_{x,y} p(x,y) \log \frac{p(x,y)}{p(x)\,p(y)}
+  \;=\; D\big(p(x,y)\,\big\|\,p(x)p(y)\big).
+$$
+右端は同時分布 $p(x,y)$ と「もし独立だったら」の分布 $p(x)p(y)$ との相対エントロピー
+（KL ダイバージェンス、2.6 節）である。つまり相互情報量とは、**同時分布が独立から
+どれだけ隔たっているか** を相対エントロピーで測った量にほかならない。
 
-```lean
-theorem mutualInfo_chain_rule
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    [StandardBorelSpace X] [Nonempty X]
-    [StandardBorelSpace Y] [Nonempty Y]
-    (Xs : Ω → X) (Yo : Ω → Y) (Zc : Ω → Z)
-    (hXs : Measurable Xs) (hYo : Measurable Yo) (hZc : Measurable Zc) :
-    mutualInfo μ (fun ω => (Zc ω, Xs ω)) Yo
-      = mutualInfo μ Zc Yo + condMutualInfo μ Xs Yo Zc
-```
+> **形式化上の注記.** 本ライブラリは相互情報量を、いまの「同時分布と周辺積との KL
+> ダイバージェンス」という形でそのまま定義する（Mathlib の `klDiv` を用いる）。KL
+> ダイバージェンスは $\mathbb R_{\ge 0}^{\infty}$（拡張非負実数）値なので、相互情報量も
+> 同じ型をとる。エントロピー表現（後述）との橋渡しでは `.toReal` で実数に落とす一手間が
+> 入るが、これは型をまたぐ技術処理で、数学的内容は変わらない。
+>
+> **形式化**: `mutualInfo` (`InformationTheory/Shannon/MutualInfo.lean`)
 
-### 相互情報量のチェイン則 (\(n\) 変数版)
+### 基本性質
 
-\[
-I(X_0, \dots, X_{n-1}; Y) = \sum_{i} I(X_i; Y \mid X_0, \dots, X_{i-1}).
-\]
-`Fin n` 添字の確率変数列に対する完全形。
+**命題 2.3.2.** $I(X; Y) \ge 0$、かつ $I(X; Y) = 0$ は $X$ と $Y$ が独立であることと
+同値。
 
-**Verified**: `mutualInfo_chain_rule_fin` (`InformationTheory/Shannon/MIChainRule.lean`)
+*証明.* 相対エントロピーは常に非負（2.6 節、情報不等式）なので、その特別な場合である
+相互情報量も非負。等号 $D(p(x,y)\|p(x)p(y)) = 0$ は、相対エントロピーの等号条件より
+$p(x,y) = p(x)p(y)$、すなわち独立と同値である。$\qquad\blacksquare$
 
-```lean
-theorem mutualInfo_chain_rule_fin
-    {n : ℕ}
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    [StandardBorelSpace Y] [Nonempty Y]
-    (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
-    (Yo : Ω → Y) (hYo : Measurable Yo) :
-    mutualInfo μ (fun ω i => Xs i ω) Yo
-      = ∑ i : Fin n, ...   -- 各 prefix 条件付き相互情報量の和
-```
+> **形式化上の注記.** 本文の非負性は情報不等式を引く正攻法だが、形式化では重みの
+> 置きどころが本文と非対称になる。形式化では相互情報量が拡張非負実数値なので**非負性は
+> 型から自明**（`mutualInfo_nonneg` の中身は「最小元以上」一語）で、情報不等式は使わない。
+> 実質的な内容は**等号条件の側**（$I(X;Y)=0 \iff$ 独立）に移り、こちらの
+> `mutualInfo_eq_zero_iff_indep` は KL の等号条件（`klDiv_eq_zero_iff`）と独立の特徴づけ
+> （`indepFun_iff_map_prod_eq_prod_map_map`）の非自明な合成になる。本文で一行の「独立と
+> 同値」が形式化では中身をもつ。
+>
+> **形式化**: 非負性 `mutualInfo_nonneg`、独立との同値 `mutualInfo_eq_zero_iff_indep`
+> (`InformationTheory/Shannon/MutualInfo.lean`)
 
-（右辺は各 \(i\) における prefix 条件付き相互情報量の有限和。完全な右辺式は
-ソース `MIChainRule.lean:93` を参照。）
+**命題 2.3.3（対称性）.** $I(X; Y) = I(Y; X)$。
 
-### 独立・同分布 (i.i.d.) ペアでの加法性
+*証明.* 定義式の $\dfrac{p(x,y)}{p(x)p(y)}$ は $x, y$ の入れ替えで不変だから。
+$\qquad\blacksquare$
 
-\(n\) 組の同分布な独立ペアでは \(I(X^n; Y^n) = n\, I(X_0; Y_0)\)。
+> **形式化上の注記.** 見れば自明な対称性が、形式化では測度同型
+> `MeasurableEquiv.prodComm` に沿った pushforward になり、「KL は測度同型で値を保つ」と
+> いう自作補題 `klDiv_map_measurableEquiv` を要する。
+>
+> **形式化**: `mutualInfo_comm` (`InformationTheory/Shannon/MutualInfo.lean`)
 
-**Verified**: `mutualInfo_iid_eq_nsmul` (`InformationTheory/Shannon/MIChainRule.lean`)
+有限アルファベット上では $I(X;Y) < \infty$ も成り立つ（各項が有限で和が有限）。
 
-```lean
-theorem mutualInfo_iid_eq_nsmul
-    {n : ℕ} (hn : 0 < n)
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
-    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (h_iid_joint : ...) (h_iid_X : ...) (h_iid_Y : ...) :
-    ...   -- I(X^n; Y^n) = n • I(X_0; Y_0)
-```
+> **形式化**: `mutualInfo_ne_top` (`InformationTheory/Shannon/MutualInfo.lean`)。
+> 本文一行の有限性が、形式化では結合分布の周辺積への絶対連続性と対数尤度比の可積分性を
+> 経て `klDiv_ne_top` に帰着する測度論の補題になる。
 
-（積測度分解 `h_iid_*` を仮定として要求。これらは i.i.d. 構造を表す regularity 仮定
-であり、結論の核心を抱えさせるものではない。完全な式はソース
-`MIChainRule.lean:370` を参照。）
+### エントロピーとの関係
 
-積分布上の相互情報量が各成分の和になる一般形も形式化済み:
-**Verified**: `mutualInfo_pi_eq_sum` (`InformationTheory/Shannon/MIChainRule.lean`)。
+**定理 2.3.4.**
+$$
+I(X; Y) \;=\; H(X) - H(X \mid Y) \;=\; H(Y) - H(Y \mid X)
+  \;=\; H(X) + H(Y) - H(X, Y).
+$$
 
----
+これが相互情報量の「正体」を示す中心的な等式群である。最初の表現は「$Y$ を知ることで
+減る $X$ の不確かさ」、対称形 $H(X)+H(Y)-H(X,Y)$ は「別々に測った不確かさの和から、
+まとめて測った不確かさを引いた重複分」と読める。
 
-## 2.5 条件付き相互情報量 (Conditional Mutual Information)
+*証明.* 定義 2.3.1 の対数を $p(x,y) = p(x\mid y)p(y)$ を使って分解する：
+$$
+I(X;Y) = \sum_{x,y} p(x,y)\log\frac{p(x\mid y)}{p(x)}
+       = \underbrace{-\sum_{x,y}p(x,y)\log p(x)}_{=\,H(X)}
+         \;-\;\underbrace{\Big(-\sum_{x,y}p(x,y)\log p(x\mid y)\Big)}_{=\,H(X\mid Y)}.
+$$
+第 1 項は $y$ について先に和をとって $H(X)$、第 2 項は定義 2.2.2 により $H(X\mid Y)$。
+よって $I(X;Y) = H(X) - H(X\mid Y)$。対称性（命題 2.3.3）から
+$I(X;Y) = H(Y) - H(Y\mid X)$ も従う。最後にチェイン則（定理 2.2.3）で
+$H(X\mid Y) = H(X,Y) - H(Y)$ を代入すれば $I(X;Y) = H(X)+H(Y)-H(X,Y)$。$\qquad\blacksquare$
 
-\[
-I(X; Y \mid Z) = \sum_z p(z)\, D\!\left(p(x,y \mid z) \,\big\|\, p(x \mid z) p(y \mid z)\right).
-\]
+特別な場合として $Y = X$ をとると $H(X\mid X) = 0$ より $I(X;X) = H(X)$。このため
+相互情報量はしばしば「自己情報量」としてのエントロピーを含む一般化とみなされる。
 
-本ライブラリでは条件付き分布カーネルの compProd 形 KL として定義する。
-
-**Verified (定義)**: `condMutualInfo` (`InformationTheory/Shannon/CondMutualInfo.lean`)
-
-```lean
-noncomputable def condMutualInfo
-    (μ : Measure Ω) [IsFiniteMeasure μ]
-    [StandardBorelSpace X] [Nonempty X]
-    [StandardBorelSpace Y] [Nonempty Y]
-    (Xs : Ω → X) (Yo : Ω → Y) (Zc : Ω → Z) : ℝ≥0∞ :=
-  klDiv ((μ.map Zc) ⊗ₘ condDistrib (fun ω => (Xs ω, Yo ω)) Zc μ)
-        ((μ.map Zc) ⊗ₘ ((condDistrib Xs Zc μ) ×ₖ (condDistrib Yo Zc μ)))
-```
-
-### 性質: 非負性・対称性
-
-**Verified**: `condMutualInfo_nonneg` (`InformationTheory/Shannon/CondMutualInfo.lean`)
-
-```lean
-theorem condMutualInfo_nonneg
-    (μ : Measure Ω) [IsFiniteMeasure μ]
-    [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Y] [Nonempty Y]
-    (Xs : Ω → X) (Yo : Ω → Y) (Zc : Ω → Z) :
-    0 ≤ condMutualInfo μ Xs Yo Zc
-```
-
-**Verified**: `condMutualInfo_comm` (`InformationTheory/Shannon/CondMutualInfo.lean`):
-\(I(X; Y \mid Z) = I(Y; X \mid Z)\)。
-
-### entropy 表現 \(I(X; Z \mid Y) = H(X \mid Y) - H(X \mid Y, Z)\)
-
-**Verified**: `condMutualInfo_eq_condEntropy_sub_condEntropy`
-(`InformationTheory/Shannon/Entropy.lean`)
-
-```lean
-theorem condMutualInfo_eq_condEntropy_sub_condEntropy
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : Ω → X) (Yo : Ω → Y) (Zo : Ω → Z)
-    (hXs : Measurable Xs) (hYo : Measurable Yo) (hZo : Measurable Zo) :
-    (condMutualInfo μ Xs Zo Yo).toReal
-      = InformationTheory.MeasureFano.condEntropy μ Xs Yo
-        - InformationTheory.MeasureFano.condEntropy μ Xs (fun ω => (Yo ω, Zo ω))
-```
+> **形式化上の注記.** 形式化では $I(X;Y)$ が拡張非負実数値、$H, H(\cdot\mid\cdot)$ が
+> 実数値なので、橋渡し定理は左辺に `.toReal` を付けた等式として述べる。数学的内容は
+> 定理 2.3.4 と同一。本文の「$y$ について和をとって $H(X)$」は、共通注記のとおり
+> $\mu.\mathrm{map}\,Y$ 上の積分補題（`integral_condDistrib_real_singleton_eq`）に対応する。
+>
+> **形式化**: `mutualInfo_eq_entropy_sub_condEntropy`
+> (`InformationTheory/Shannon/Bridge.lean`)、対称形
+> `mutualInfo_eq_entropy_add_entropy_sub_jointEntropy`
+> (`InformationTheory/Shannon/MIChainRule.lean`)
 
 ---
 
-## 2.6 ジェンセン不等式と情報不等式 (Information Inequality)
+## 2.4 エントロピー・相互情報量のチェイン則
 
-KL ダイバージェンス（相対エントロピー）の非負性 \(D(p \,\|\, q) \ge 0\)
-（Gibbs 不等式 / 情報不等式、Cover & Thomas Thm 2.6.3）。本ライブラリでは
-pmf 形 `klDivPmf P Q = ∑ₐ Q(a) · klFun(P(a)/Q(a))` に対し独立に形式化している。
+### 動機
 
-**Verified**: `klDivPmf_nonneg`
-(`InformationTheory/Shannon/CsiszarProjection.lean`,
-名前空間 `InformationTheory.Shannon.CsiszarProjection`)
+2.2 節のチェイン則は変数 2 個の話だった。実際の情報源や通信路は多数の変数
+$X_1, X_2, \dots, X_n$ を扱う。それらが一つの $Y$ について持つ情報を、変数を一つずつ
+積み上げる形で分解できると、長いブロックの解析が「1 文字ずつの寄与の足し算」に
+還元できて非常に便利である。これがチェイン則の一般化の動機であり、後の通信路容量
+（第 7 章）の議論を支える土台になる。
 
-```lean
-lemma klDivPmf_nonneg (P Q : α → ℝ)
-    (hP : ∀ a, 0 ≤ P a) (hQ : ∀ a, 0 ≤ Q a) :
-    0 ≤ klDivPmf P Q
-```
+### 相互情報量のチェイン則（1 個追加）
 
-等号成立条件 \(D(p \,\|\, q) = 0 \iff p = q\)（full support の参照 pmf `Q` に対して）も
-形式化済み。
+**定理 2.4.1.**
+$$
+I(Z, X; Y) \;=\; I(Z; Y) + I(X; Y \mid Z).
+$$
+「対 $(Z,X)$ が $Y$ について持つ情報は、まず $Z$ が $Y$ について持つ情報、次に $Z$ を
+知ったうえで $X$ が $Y$ について追加で持つ情報、の和」と読む。右辺第 2 項は次節で扱う
+**条件付き相互情報量** $I(X; Y \mid Z)$ である。
 
-**Verified**: `klDivPmf_eq_zero_iff_pmf`
-(`InformationTheory/Shannon/MaxEntropyConstrained.lean`)
+*証明（きもち）.* 定理 2.3.4 の entropy 表現を使うと
+$I(Z,X;Y) = H(Z,X) - H(Z,X\mid Y)$、これにエントロピーのチェイン則
+$H(Z,X) = H(Z)+H(X\mid Z)$ と条件付き版を当てはめて整理すれば、$I(Z;Y)$ と
+$I(X;Y\mid Z)$ に分かれる。要するに「2.3 の橋渡し ＋ 2.2 のチェイン則」を 2 回使うだけで、
+新しい解析は要らない。$\qquad\blacksquare$
 
-```lean
-lemma klDivPmf_eq_zero_iff_pmf
-    {P Q : α → ℝ} (hP : P ∈ stdSimplex ℝ α) (_hQ : Q ∈ stdSimplex ℝ α)
-    (hQ_pos : ∀ a, 0 < Q a) :
-    klDivPmf P Q = 0 ↔ P = Q
-```
+> **形式化**: `mutualInfo_chain_rule` (`InformationTheory/Shannon/CondMutualInfo.lean`)。
+> 形式化では $X, Y$ に標準ボレル空間（`StandardBorelSpace`）を課す。これは条件付き分布
+> カーネルを取り扱うための正当な regularity 前提で、定理の核心ではない。
 
-測度論版の \(I(X; Y) \ge 0\)（KL の `ℝ≥0∞` 値としての非負性）は 2.3 の
-`mutualInfo_nonneg` として既出。
+### $n$ 変数版
 
----
+定理 2.4.1 を繰り返し適用すると、$n$ 個の変数列に対する完全形が得られる。
 
-## 2.7 対数和不等式 (Log-Sum Inequality)
+**定理 2.4.2（$n$ 変数チェイン則）.**
+$$
+I(X_0, \dots, X_{n-1}; Y)
+  \;=\; \sum_{i=0}^{n-1} I\big(X_i; Y \mid X_0, \dots, X_{i-1}\big).
+$$
+各項は「先頭 $i$ 個をすでに知ったうえで、$X_i$ が $Y$ について追加で与える情報」である。
+全体の情報量が、変数を 1 個ずつ足したときの増分の総和に等しい、という分解になっている。
 
-非負 \(a_i\) と正 \(b_i\) に対し
-\[
-\left(\sum_i a_i\right) \log\frac{\sum_i a_i}{\sum_i b_i}
-  \le \sum_i a_i \log\frac{a_i}{b_i}.
-\]
-\(x \mapsto x \log x\) の凸性（有限ジェンセン）から従う。情報不等式・DPI の基盤。
+> **形式化**: `mutualInfo_chain_rule_fin` (`InformationTheory/Shannon/MIChainRule.lean`)。
+> `Fin n` 添字の確率変数列に対する完全形。右辺は各 $i$ における prefix 条件付き相互情報量の
+> 有限和で、verbatim の右辺式はソース `MIChainRule.lean:93` を参照。
 
-**Verified**: `log_sum_inequality`
-(`InformationTheory/Shannon/LZ78ZivEntropyBridge.lean`, 名前空間 `InformationTheory.Shannon`)
+### 独立・同分布（i.i.d.）での加法性
 
-```lean
-theorem log_sum_inequality
-    {ι : Type*} (s : Finset ι) (a b : ι → ℝ)
-    (ha : ∀ i ∈ s, 0 ≤ a i) (hb : ∀ i ∈ s, 0 < b i) :
-    (∑ i ∈ s, a i) * Real.log ((∑ i ∈ s, a i) / (∑ i ∈ s, b i))
-      ≤ ∑ i ∈ s, a i * Real.log (a i / b i)
-```
+実用上もっとも重要な特別な場合は、$n$ 組の同分布な独立ペア
+$(X_0, Y_0), \dots, (X_{n-1}, Y_{n-1})$ である。各条件付き項が条件を落とせて、
 
-`negMulLog` 形（絶対連続条件 `b i = 0 → a i = 0` 付き）も
-`log_sum_inequality_negMulLog` (`InformationTheory/Fano/DPI.lean`) として形式化済み。
+**定理 2.4.3（i.i.d. 加法性）.**
+$$
+I(X^n; Y^n) \;=\; n\, I(X_0; Y_0).
+$$
 
----
+**何がうれしいか.** 1 ブロック ($n$ 文字) を通じて運べる情報量が、1 文字あたりの情報量の
+ちょうど $n$ 倍になる。情報を「文字あたりレート」で測ってよいという、符号化定理の
+根拠の一つである。逆に、もし相関や記憶があればこの等式は不等式に崩れ、その「ずれ」が
+通信路容量の議論で効いてくる。
 
-## 2.8 データ処理不等式 (Data Processing Inequality)
-
-### KL ダイバージェンスの単調性 (post-processing 不等式)
-
-任意の可測写像 \(f\) による push-forward で KL ダイバージェンスは増えない:
-\(D(\mu \circ f^{-1} \,\|\, \nu \circ f^{-1}) \le D(\mu \,\|\, \nu)\)。
-DPI の基盤となる plumbing 定理。
-
-**Verified**: `klDiv_map_le` (`InformationTheory/Shannon/DPI.lean`)
-
-```lean
-theorem klDiv_map_le {α β : Type*}
-    [MeasurableSpace α] [MeasurableSpace β]
-    {f : α → β} (hf : Measurable f)
-    (μ ν : Measure α) [IsFiniteMeasure μ] [IsFiniteMeasure ν] :
-    klDiv (μ.map f) (ν.map f) ≤ klDiv μ ν
-```
-
-### 相互情報量のデータ処理不等式 (post-processing)
-
-\(Y\) を後処理 \(f\) に通すと相互情報量は増えない:
-\(I(X; f(Y)) \le I(X; Y)\)。
-
-**Verified**: `mutualInfo_le_of_postprocess` (`InformationTheory/Shannon/DPI.lean`)
-
-```lean
-theorem mutualInfo_le_of_postprocess
-    (μ : Measure Ω) [IsFiniteMeasure μ]
-    (Xs : Ω → X) (Yo : Ω → Y) (hXs : Measurable Xs) (hYo : Measurable Yo)
-    {f : Y → Z} (hf : Measurable f) :
-    mutualInfo μ Xs (f ∘ Yo) ≤ mutualInfo μ Xs Yo
-```
-
-### マルコフ連鎖版 DPI \(X \to Z \to Y \implies I(X; Y) \le I(Z; Y)\)
-
-マルコフ連鎖 \(X \to Z \to Y\) のもとで、相互情報量は「中継変数」を超えない。
-本ライブラリではマルコフ連鎖を結合分布の条件付き独立分解として定義する。
-
-**Verified (定義)**: `IsMarkovChain` (`InformationTheory/Shannon/CondMutualInfo.lean`)
-
-```lean
-def IsMarkovChain (μ : Measure Ω) [IsFiniteMeasure μ]
-    [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Y] [Nonempty Y]
-    (Xs : Ω → X) (Zc : Ω → Z) (Yo : Ω → Y) : Prop :=
-  μ.map (fun ω => (Zc ω, Xs ω, Yo ω))
-    = (μ.map Zc) ⊗ₘ ((condDistrib Xs Zc μ) ×ₖ (condDistrib Yo Zc μ))
-```
-
-**Verified**: マルコフ連鎖下の条件付き相互情報量ゼロ
-`condMutualInfo_eq_zero_of_markov` (`InformationTheory/Shannon/CondMutualInfo.lean`):
-\(I(X; Y \mid Z) = 0\)。
-
-**Verified**: `mutualInfo_le_of_markov` (`InformationTheory/Shannon/CondMutualInfo.lean`)
-
-```lean
-theorem mutualInfo_le_of_markov
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Y] [Nonempty Y]
-    (Xs : Ω → X) (Zc : Ω → Z) (Yo : Ω → Y)
-    (hXs : Measurable Xs) (hZc : Measurable Zc) (hYo : Measurable Yo)
-    (hmarkov : IsMarkovChain μ Xs Zc Yo) :
-    mutualInfo μ Xs Yo ≤ mutualInfo μ Zc Yo
-```
-
-### 記憶のない通信路における per-letter 分解
-
-DPI の応用として、記憶のない (memoryless) 通信路では
-\(I(X^n; Y^n) \le \sum_i I(X_i; Y_i)\) が成り立つ
-（Cover & Thomas Thm 7.2.1 系、本章で先取り形式化済み）。
-
-**Verified**: `mutualInfo_le_sum_per_letter_of_memoryless_strong`
-(`InformationTheory/Shannon/CondEntropyMemoryless.lean`)
-
-```lean
-theorem mutualInfo_le_sum_per_letter_of_memoryless_strong
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
-    (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
-    (h_per_letter_markov : ∀ i : Fin n,
-      IsMarkovChain μ (fun ω j => Xs j ω) (Xs i) (Ys i))
-    (h_outputs_cond_indep : ∀ i : Fin n,
-      IsMarkovChain μ
-        (fun ω (j : {j : Fin n // j ≠ i}) => Ys j.val ω)
-        (fun ω j => Xs j ω)
-        (Ys i)) :
-    (mutualInfo μ (fun ω j => Xs j ω) (fun ω j => Ys j ω)).toReal
-      ≤ ∑ i : Fin n, (mutualInfo μ (Xs i) (Ys i)).toReal
-```
-
-（2 つの `IsMarkovChain` 仮定は memoryless 通信路の構造そのものを表す
-前提条件であり、呼び出し側が `IsMemorylessChannelStrong` 構造から取り出す。）
+> **形式化**: `mutualInfo_iid_eq_nsmul` (`InformationTheory/Shannon/MIChainRule.lean`)。
+> 一般形 `mutualInfo_pi_eq_sum` もある。形式化では i.i.d. 構造を積測度の分解仮定
+> $h_{\mathrm{iid}}$ として要求する。これは「独立同分布である」という前提条件を表すもので、
+> 結論の核心を仮定に抱えさせるものではない。完全式はソース `MIChainRule.lean:370` を参照。
 
 ---
 
-## 2.9 充足統計量 (Sufficient Statistics)
+## 2.5 条件付き相互情報量
 
-統計量 \(T(X)\) がパラメータ \(\theta\) に対し充足的 (sufficient) であるとは、
-\(X \to T(X) \to \theta\) がマルコフ連鎖をなすこと（同値に \(\theta \to T(X) \to X\)、
-すなわち \(X \perp \theta \mid T(X)\)）。このとき相互情報量は統計量を通しても保存される:
-\(I(\theta; X) = I(\theta; T(X))\)（Cover & Thomas Thm 2.9.1、DPI の等号版）。
+### 動機と定義
 
-本ライブラリでは充足統計量をまず、`mutualInfo_le_of_markov` の結論形に直結する
-**マルコフ連鎖形**で定義する（教科書の Neyman-Fisher 因子分解形を直接 def 化すると
-`condDistrib` の \(\theta\)-非依存性経由で長い橋渡しを要するため）。因子分解形との同値は
-別途、Mathlib の条件付き独立性補題を経由して形式化済み（後述 `isSufficient_iff_factorized`）。
+2.4 節のチェイン則に現れた $I(X; Y \mid Z)$ を正面から定義しよう。これは「$Z$ を
+すでに知っているという条件のもとで、$X$ と $Y$ がなお共有している情報量」である。
+各 $z$ ごとに $X, Y$ の相互情報量を測り、$z$ について平均する。
 
-**Verified (定義)**: `IsSufficientStatistic`
-(`InformationTheory/Shannon/SufficientStatistic.lean`, 名前空間 `InformationTheory.Shannon`)
+**定義 2.5.1（条件付き相互情報量）.**
+$$
+I(X; Y \mid Z)
+  \;=\; \sum_z p(z)\, D\big(p(x,y \mid z)\,\big\|\,p(x\mid z)\,p(y\mid z)\big).
+$$
+各 $z$ で「$Z=z$ のもとでの同時分布」が「$Z=z$ のもとで独立だったら」の分布から
+どれだけ離れているかを測り、$Z$ で平均した量である。
 
-```lean
-def IsSufficientStatistic
-    (μ : Measure Ω) [IsFiniteMeasure μ]
-    [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Θ] [Nonempty Θ]
-    (θ : Ω → Θ) (Xs : Ω → X) (f : X → T') : Prop :=
-  IsMarkovChain μ Xs (fun ω => f (Xs ω)) θ
-```
+> **形式化上の注記.** 本ライブラリは条件付き分布カーネルの compProd 形に対する KL として
+> 定義する（`klDiv` の引数に $\mu.\mathrm{map}\,Z$ と核の合成積を渡す）。値は拡張非負実数。
+>
+> **形式化**: `condMutualInfo` (`InformationTheory/Shannon/CondMutualInfo.lean`)
 
-**Verified**: `mutualInfo_eq_of_sufficient`
-(`InformationTheory/Shannon/SufficientStatistic.lean`)
+### 基本性質
 
-```lean
-theorem mutualInfo_eq_of_sufficient
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Θ] [Nonempty Θ]
-    (θ : Ω → Θ) (Xs : Ω → X) {f : X → T'}
-    (hθ : Measurable θ) (hXs : Measurable Xs) (hf : Measurable f)
-    (hsuff : IsSufficientStatistic μ θ Xs f) :
-    mutualInfo μ θ Xs = mutualInfo μ θ (fun ω => f (Xs ω))
-```
+**命題 2.5.2.** $I(X; Y \mid Z) \ge 0$。また $I(X; Y \mid Z) = I(Y; X \mid Z)$（対称性）。
 
-証明は 2.8 のデータ処理不等式（後処理版 `mutualInfo_le_of_postprocess` で
-\(I(\theta; T(X)) \le I(\theta; X)\)）と、マルコフ連鎖版 DPI
-（`mutualInfo_le_of_markov` で逆向き \(I(\theta; X) \le I(\theta; T(X))\)）を
-`le_antisymm` で合わせて得る。
+非負性は各 $z$ で相対エントロピーが非負（2.6 節）であることの平均から、対称性は
+2.3.3 と同様に各 $z$ で成り立つことから従う。
 
-### Neyman-Fisher 因子分解形との同値
+> **形式化**: 非負性 `condMutualInfo_nonneg`、対称性 `condMutualInfo_comm`
+> (`InformationTheory/Shannon/CondMutualInfo.lean`)。非負性は無条件相互情報量と同じく
+> 拡張非負実数値であることからほぼ型レベルで従う。
 
-教科書の充足性は因子分解 \(p(x \mid \theta) = g(T(x), \theta)\, h(x)\) で導入される。
-これは測度論的には「\(T(X)\) を与えたとき \(X\) の条件付き分布が \(\theta\) に依存しない」、
-すなわち \(\mathrm{condDistrib}(X \mid T(X), \theta) = \mathrm{condDistrib}(X \mid T(X))\)
-（\(\theta\)-成分を足しても変わらない）とエンコードできる。本ライブラリではこの因子分解形を
-`IsSufficientStatisticFactorized` として定義し、マルコフ連鎖形との**同値**を形式化した。
-両形式とも条件付き独立性 \(X \perp \theta \mid T(X)\) の別表現であり、同値は Mathlib の
-`condIndepFun_iff_*`（`Mathlib/Probability/Independence/Conditional.lean`）を経由して閉じる。
+### エントロピー表現
 
-**Verified (定義)**: `IsSufficientStatisticFactorized`
-(`InformationTheory/Shannon/SufficientStatistic.lean`)
+**定理 2.5.4.**
+$$
+I(X; Z \mid Y) \;=\; H(X \mid Y) - H(X \mid Y, Z).
+$$
+無条件版（定理 2.3.4）の $I(X;Z) = H(X) - H(X\mid Z)$ を、すべて「$Y$ を知った
+うえで」に読み替えたものである。この等式の左辺が非負であることが、2.2 節の条件付けの
+単調性（定理 2.2.4）$H(X\mid Y,Z) \le H(X\mid Y)$ をそのまま与える。
 
-```lean
-def IsSufficientStatisticFactorized
-    (μ : Measure Ω) [IsFiniteMeasure μ]
-    [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Θ] [Nonempty Θ]
-    (θ : Ω → Θ) (Xs : Ω → X) (f : X → T') : Prop :=
-  condDistrib Xs (fun ω => (f (Xs ω), θ ω)) μ
-    =ᵐ[μ.map (fun ω => (f (Xs ω), θ ω))]
-      (condDistrib Xs (fun ω => f (Xs ω)) μ).prodMkRight Θ
-```
+*証明（きもち）.* 定理 2.3.4 の導出を、すべての分布を $Y$ で条件付けた版で繰り返す
+だけ。各 $y$ ごとに無条件の議論が成り立ち、$y$ について平均すれば条件付き版になる。
+$\qquad\blacksquare$
 
-**Verified**: `isSufficient_iff_factorized`
-(`InformationTheory/Shannon/SufficientStatistic.lean`)
-
-```lean
-theorem isSufficient_iff_factorized
-    (μ : Measure Ω) [IsProbabilityMeasure μ] [StandardBorelSpace Ω]
-    [StandardBorelSpace X] [Nonempty X] [StandardBorelSpace Θ] [Nonempty Θ]
-    (θ : Ω → Θ) (Xs : Ω → X) {f : X → T'}
-    (hθ : Measurable θ) (hXs : Measurable Xs) (hf : Measurable f) :
-    IsSufficientStatistic μ θ Xs f ↔ IsSufficientStatisticFactorized μ θ Xs f
-```
-
-同値定理は条件付き独立性の標準 Borel 機構（`condExpKernel` 経由）を使うため、
-マルコフ連鎖形単独の `mutualInfo_eq_of_sufficient` には不要だった
-\([\,\text{StandardBorelSpace } \Omega\,]\) を標本空間に課す（正当な regularity 前提）。
+> **形式化**: `condMutualInfo_eq_condEntropy_sub_condEntropy`
+> (`InformationTheory/Shannon/Entropy.lean`)。形式化では左辺に `.toReal` を付けた等式
+> として述べる（条件付き相互情報量が拡張非負実数値、条件付きエントロピーが実数値のため）。
 
 ---
 
-## 2.10 ファノの不等式 (Fano's Inequality)
+## 2.6 情報不等式（ジェンセンと相対エントロピー）
 
-復号誤り確率 \(P_e\) を、条件付きエントロピー \(H(X \mid Y)\) によって下から評価する。
-\[
-H(X \mid Y) \le H_b(P_e) + P_e \log(|\mathcal{X}| - 1),
-\]
-ここで \(H_b\) は二値エントロピー。本ライブラリは pmf 形と measure-theoretic 形の
-両方を形式化している。
+### 動機
 
-### 測度論版（決定論的復号器）
+ここまで非負性を「2.6 節の情報不等式から従う」と先送りしてきた。その情報不等式とは、
+相対エントロピー（KL ダイバージェンス）の非負性
+$$
+D(p \,\|\, q) \;=\; \sum_x p(x)\log\frac{p(x)}{q(x)} \;\ge\; 0
+$$
+である（Gibbs の不等式）。相対エントロピーは「真の分布 $p$ を、誤った想定 $q$ で
+記述したときに払う符号長の超過分」と読める量で、それが負にならない——誤った想定は
+得をしない——というのが情報不等式の意味である。相互情報量・データ処理不等式・最大
+エントロピーなど、本章のほぼすべての不等式がここに帰着する、いわば屋台骨である。
 
-**Verified**: `fano_inequality_measure_theoretic`
-(`InformationTheory/Fano/Measure.lean`, 名前空間 `InformationTheory.MeasureFano`)
+### 情報不等式
 
-```lean
-theorem fano_inequality_measure_theoretic
-    (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : Ω → X) (Yo : Ω → Y) (decoder : Y → X)
-    (hXs : Measurable Xs) (hYo : Measurable Yo) (hdec : Measurable decoder)
-    (hcard : 2 ≤ Fintype.card X) :
-    condEntropy μ Xs Yo ≤
-      Real.binEntropy (errorProb μ Xs Yo decoder)
-        + errorProb μ Xs Yo decoder * Real.log ((Fintype.card X : ℝ) - 1)
-```
+**定理 2.6.1（情報不等式 / Gibbs）.** 同じアルファベット上の分布 $p, q$ について
+$D(p\,\|\,q) \ge 0$。等号は $p = q$ のとき、かつそのときに限る（$q$ が全点で正のとき）。
 
-ここで `errorProb μ Xs Yo decoder = μ.real {ω | Xs ω ≠ decoder (Yo ω)}` は
-復号誤り確率 \(P_e\)、`Real.binEntropy` は二値エントロピー \(H_b\)。
+*証明.* 初等的な対数不等式 $\log t \le t - 1$（等号 $t=1$）を $t = q(x)/p(x)$ に
+当てはめる。$p(x) > 0$ の各 $x$ で
+$$
+p(x)\log\frac{q(x)}{p(x)} \;\le\; p(x)\Big(\frac{q(x)}{p(x)} - 1\Big) \;=\; q(x) - p(x).
+$$
+両辺を $x$ について和をとると、右辺は $\sum_x q(x) - \sum_x p(x) = 1 - 1 = 0$。左辺は
+$-D(p\,\|\,q)$ だから、$-D(p\,\|\,q) \le 0$、すなわち $D(p\,\|\,q) \ge 0$。等号は
+各 $x$ で $\log t = t-1$、つまり $q(x)/p(x) = 1$、すなわち $p = q$ のときに限る。
+$\qquad\blacksquare$
 
-### pmf 版（コア定理）と誤り確率の下界
+2.1.5 の「信頼の底」と同じ初等不等式 $\log t \le t-1$ ただ一つから出ている点に注目
+したい。$\varphi(t) = -t\log t$ の凹性も情報不等式も、結局はこの一枚の不等式の別の顔である。
 
-有限結合 pmf `FiniteJointPMF X X` に対する基本形（`qaryEntropy` 形）:
+相互情報量の非負性（命題 2.3.2）は、$p \leftarrow p(x,y)$、$q \leftarrow p(x)p(y)$ と
+おいた情報不等式の特別な場合にほかならない。
 
-**Verified**: `fano_core` / `fano_inequality` (`InformationTheory/Fano/Core.lean`)
-
-```lean
-theorem fano_core (hcard : 2 ≤ Fintype.card X) :
-    P.condEntropy ≤ Real.qaryEntropy (Fintype.card X) P.errorProb
-
-theorem fano_inequality (hcard : 2 ≤ Fintype.card X) :
-    P.condEntropy ≤ fanoBoundRHSOfAlphabet X P.errorProb
-```
-
-ファノの不等式の逆向き（誤り確率の strict 下界）も形式化済み:
-
-**Verified**: `error_lower_bound` (`InformationTheory/Fano/Core.lean`)
-
-```lean
-theorem error_lower_bound (hcard : 2 ≤ Fintype.card X) {a : ℝ}
-    (ha0 : 0 ≤ a) (ha1 : a ≤ 1 - 1 / (Fintype.card X : ℝ))
-    (hPe1 : P.errorProb ≤ 1 - 1 / (Fintype.card X : ℝ))
-    (haH : Real.qaryEntropy (Fintype.card X) a < P.condEntropy) :
-    a < P.errorProb
-```
+> **形式化上の注記.** 本ライブラリは pmf 形
+> $\mathrm{klDivPmf}\,P\,Q = \sum_a Q(a)\cdot \mathrm{klFun}(P(a)/Q(a))$ に対して非負性を
+> 独立に形式化している。測度論版の $I(X;Y)\ge 0$ は 2.3 節で述べたとおり、拡張非負実数値
+> であることからほぼ型レベルで従う別ルートで得る。
+>
+> **形式化**: 非負性 `klDivPmf_nonneg`
+> (`InformationTheory/Shannon/CsiszarProjection.lean`)、等号条件
+> `klDivPmf_eq_zero_iff_pmf` (`InformationTheory/Shannon/MaxEntropyConstrained.lean`、
+> 参照分布 $Q$ が全点正のとき $\mathrm{klDivPmf}\,P\,Q = 0 \iff P = Q$)
 
 ---
 
-## 本章で未形式化の項目
+## 2.7 対数和不等式
 
-Cover & Thomas Ch.2 のうち、本パイロットのスコープ（離散・有限アルファベット）内で
-**本章には対応する独立した定理を確認できなかった**項目を正直に記す。
+### 動機ときもち
 
-- **2.10 ファノ不等式の系（誤り確率と \(H(X)\) の弱形 \(H(P_e) + P_e \log|\mathcal{X}| \ge H(X|Y)\)
-  等の variant）**: コア形・測度論形・逆向き下界は形式化済みだが、
-  すべての教科書系を網羅したわけではない。
+情報不等式の「部品」をもう一つ独立に切り出しておくと、後の証明が楽になる。非負の
+$a_i$ と正の $b_i$ に対し、「比をまとめてから測る」より「個別に測って足す」ほうが
+大きい、という不等式である。
 
-（初版で「未形式化」と記した 2.6 情報不等式 \(D(p\|q)\ge 0\)・2.7 対数和不等式は、
-その後の存在確認で既存定理 `klDivPmf_nonneg` / `klDivPmf_eq_zero_iff_pmf` /
-`log_sum_inequality` が見つかり、2.6・2.7 節として紐付け済み。）
+**定理 2.7.1（対数和不等式）.** 非負 $a_i$ と正 $b_i$（$i=1,\dots,n$）に対し
+$$
+\Big(\sum_i a_i\Big) \log\frac{\sum_i a_i}{\sum_i b_i}
+  \;\le\; \sum_i a_i \log\frac{a_i}{b_i}.
+$$
+等号は、すべての比 $a_i/b_i$ が等しいときに限る。
+
+**きもち.** これは $t \mapsto t\log t$ の凸性（＝ $\varphi = -t\log t$ の凹性、2.1.5 の
+信頼の底）を、重み $b_i$ つきで述べ直したものである。情報不等式や、相対エントロピーが
+「まとめる」操作で減ること（次節のデータ処理不等式の心臓部）が、この一枚から従う。
+
+*証明（きもち）.* $b := \sum_i b_i$ と正規化し、$\lambda_i = b_i/b$、$t_i = a_i/b_i$ と
+おく。$t\log t$ の凸性に対する有限 Jensen（補題 2.1.6 の凸版）を重み $\lambda_i$、点 $t_i$
+に適用すると、左辺と右辺がちょうど主張の不等式の両辺に対応する。$\qquad\blacksquare$
+
+> **形式化**: `log_sum_inequality`
+> (`InformationTheory/Shannon/LZ78ZivEntropyBridge.lean`, 名前空間
+> `InformationTheory.Shannon`)。絶対連続条件 $b_i = 0 \Rightarrow a_i = 0$ を許す
+> `negMulLog` 形 `log_sum_inequality_negMulLog` (`InformationTheory/Fano/DPI.lean`) もある。
 
 ---
 
-## パイロットとしての所見（原稿生成の課題）
+## 2.8 データ処理不等式
 
-本パイロットで顕在化した、prose ↔ formal statement の乖離と原稿化の課題を記録する。
+### 動機
 
-1. **値の型の不一致（`ℝ≥0∞` vs `ℝ`）が prose を分断する**:
-   `mutualInfo` / `condMutualInfo` は `klDiv` の `ℝ≥0∞` 値だが、`entropy` /
-   `condEntropy` は `ℝ` 値。橋渡し定理（例 `mutualInfo_eq_entropy_sub_condEntropy`）は
-   左辺に `.toReal` が付く。教科書 prose は両者を素朴に「\(=\)」で結ぶため、
-   原稿側で「`.toReal` をとった等式」という注釈が毎回必要になる。
+「データをいじっても、もとになかった情報は生まれない」——これは情報理論の格率の
+一つである。受け取った $Y$ にどんな後処理 $f$ を施しても、$X$ について新たに知れる
+ことは増えない。形式的には相互情報量の単調性として述べられ、推定・統計的決定・
+通信路符号化の限界を支配する。本節ではこれを段階的に組み立てる。
 
-2. **マルコフ連鎖の定義が「条件付き独立分解」形で、教科書の \(X \to Z \to Y\)
-   記法と表層が異なる**: `IsMarkovChain` は結合分布の compProd 等式
-   (`μ.map (Z,X,Y) = (μ.map Z) ⊗ₘ (K_X ×ₖ K_Y)`) で定義される。
-   教科書の「マルコフ連鎖」直感とのギャップは原稿で 1 行補足が要る。
+### KL ダイバージェンスの単調性（土台）
 
-3. **DPI の標準形 \(I(X;Y) \le I(X;Z)\)（\(X\to Z\to Y\)）と、本ライブラリの
-   `mutualInfo_le_of_markov` の結論 \(I(X;Y) \le I(Z;Y)\) は引数配置が異なる**。
-   どちらも DPI の正しい一形態だが、教科書の「どの版か」を原稿で明示しないと
-   読者が取り違える。
+**定理 2.8.1.** 任意の可測写像 $f$ による push-forward で相対エントロピーは増えない：
+$$
+D\big(\mu\circ f^{-1} \,\big\|\, \nu\circ f^{-1}\big) \;\le\; D(\mu\,\|\,\nu).
+$$
+「分布を $f$ で粗くまとめると、二つの分布の見分けはつきにくくなる（区別の情報が減る）」
+という、2.7 節の対数和不等式の直接の帰結である。これがデータ処理不等式すべての土台になる。
 
-4. **チェイン則 \(n\) 変数版・i.i.d. 加法性は右辺が長大で、原稿に verbatim 転記
-   しづらい**: `mutualInfo_chain_rule_fin` / `mutualInfo_iid_eq_nsmul` は
-   `Fin n` 和・積測度仮定 (`h_iid_*`) を含み、本文には骨子のみ転記して
-   完全式はソース行番号参照に逃がした。原稿層では「式の核」と
-   「regularity 仮定の束」を分離表示する仕組みが要りそう。
+> **形式化**: `klDiv_map_le` (`InformationTheory/Shannon/DPI.lean`)
 
-5. **`condEntropy` が `InformationTheory/Fano/` 名前空間に居る**: Ch.2 中核の
-   条件付きエントロピー定義が `InformationTheory.MeasureFano.condEntropy` という
-   一見 Ch.7/Fano 寄りの名前空間にある。章 ↔ ファイルの対応が 1:1 でないため、
-   原稿生成の「章 → 紐付け定理」マッピングは roadmap だけでなく
-   実コードの名前空間横断 grep が必須（本パイロットでも `n_measure_theoretic`
-   という roadmap 想起名は実在せず、実体は `fano_inequality_measure_theoretic`
-   だった）。
+### 後処理は相互情報量を増やさない
+
+**定理 2.8.2（後処理不等式）.** $Y$ を後処理 $f$ に通すと相互情報量は増えない：
+$$
+I\big(X; f(Y)\big) \;\le\; I(X; Y).
+$$
+
+*証明（きもち）.* 相互情報量は同時分布と周辺積との相対エントロピー。$(x,y) \mapsto (x, f(y))$
+という写像で push-forward すると、定理 2.8.1 により相対エントロピーは減る。これがそのまま
+$I(X;f(Y)) \le I(X;Y)$ を与える。$\qquad\blacksquare$
+
+> **形式化**: `mutualInfo_le_of_postprocess` (`InformationTheory/Shannon/DPI.lean`)
+
+### マルコフ連鎖版
+
+**定理 2.8.3（データ処理不等式・マルコフ版）.** $X \to Z \to Y$ がマルコフ連鎖
+（$Z$ を与えると $X$ と $Y$ が条件付き独立）のとき、
+$$
+I(X; Y) \;\le\; I(Z; Y).
+$$
+「$X$ の情報が中継変数 $Z$ を経由してしか $Y$ に届かないなら、$Y$ が $X$ について持つ
+情報は $Z$ が持つ情報を超えない」。中継地点がボトルネックになる、という直感そのものである。
+
+*証明（きもち）.* チェイン則（定理 2.4.1）を二通りに展開して $I(X,Z;Y)$ を挟む。
+マルコフ条件は条件付き相互情報量 $I(X;Y\mid Z) = 0$ を意味するので、その分だけ
+$I(X;Y)$ が $I(Z;Y)$ に届かない。条件付き相互情報量の非負性（命題 2.5.2）が効く。
+$\qquad\blacksquare$
+
+> **形式化上の注記.** 形式化はマルコフ連鎖を、結合分布の条件付き独立分解
+> $\mu.\mathrm{map}(Z,X,Y) = (\mu.\mathrm{map}\,Z) \otimes ((K_X) \times (K_Y))$ という
+> compProd 等式 `IsMarkovChain` で定義する。教科書の矢印記法 $X\to Z\to Y$ とは表層が
+> 異なるが、内容は「$Z$ を与えたとき $X \perp Y$」で同じ。まずマルコフ下で
+> $I(X;Y\mid Z)=0$（`condMutualInfo_eq_zero_of_markov`）を示し、そこから本定理を導く。
+> なお本ライブラリの結論は $I(X;Y) \le I(Z;Y)$ の形（中継 $Z$ を $Y$ 側と組む配置）で、
+> 教科書でよく見る $I(X;Y) \le I(X;Z)$ とは引数配置が異なるが、どちらも DPI の正しい一形態
+> である。
+>
+> **形式化**: 定義 `IsMarkovChain`、本定理 `mutualInfo_le_of_markov`
+> (`InformationTheory/Shannon/CondMutualInfo.lean`)
+
+### 応用：記憶のない通信路の per-letter 分解
+
+DPI の代表的な応用として、記憶のない（memoryless）通信路では、$n$ 文字をまとめて
+送ったときの相互情報量が 1 文字ずつの寄与の和を超えない：
+$$
+I(X^n; Y^n) \;\le\; \sum_{i} I(X_i; Y_i).
+$$
+これは通信路容量が「1 文字あたり」で決まることの根拠で、第 7 章を先取りする結果である。
+
+> **形式化**: `mutualInfo_le_sum_per_letter_of_memoryless_strong`
+> (`InformationTheory/Shannon/CondEntropyMemoryless.lean`)。形式化では memoryless 構造を
+> 二つの `IsMarkovChain` 仮定（各文字の入力が他文字を経由しないこと、出力が条件付き独立で
+> あること）として与える。これらは通信路の構造そのものを表す前提条件で、結論の核心を
+> 仮定に抱えさせるものではない。
+
+---
+
+## 2.9 充足統計量
+
+### 動機
+
+データ $X$ からパラメータ $\theta$ を推定するとき、$X$ を要約した統計量 $T(X)$ だけ
+持っていれば $\theta$ について $X$ と同じだけ分かる、という状況がある。このとき $T$ を
+**充足統計量** という。「生データを捨てて要約だけ残しても情報が落ちない」境界を
+特徴づける概念で、データ処理不等式の等号版として自然に位置づく。
+
+**定義 2.9.1（充足統計量）.** 統計量 $T(X)$ が $\theta$ に対し**充足的**であるとは、
+$\theta \to T(X) \to X$ がマルコフ連鎖をなすこと（同値に $X \perp \theta \mid T(X)$）。
+
+### 情報の保存
+
+**定理 2.9.2.** $T$ が充足的なら
+$$
+I(\theta; X) \;=\; I\big(\theta; T(X)\big).
+$$
+
+*証明.* 一般に後処理不等式（定理 2.8.2）から $I(\theta; T(X)) \le I(\theta; X)$。一方、
+充足性すなわちマルコフ連鎖から DPI のマルコフ版（定理 2.8.3）が逆向き
+$I(\theta; X) \le I(\theta; T(X))$ を与える。両者を挟めば等号。$\qquad\blacksquare$
+
+**きもち.** 一般のデータ処理は情報を減らしうる（$\le$）。充足統計量はその等号がちょうど
+成り立つ「情報を一切落とさない要約」である。十分統計量を使えば、推定の議論を低次元の
+$T(X)$ 上で行ってよい、という実用上の御利益がある。
+
+> **形式化上の注記.** 教科書は充足性を因子分解 $p(x\mid\theta) = g(T(x),\theta)\,h(x)$
+> （Neyman–Fisher）で導入することが多い。本ライブラリは、定理 2.8.3 の結論に直結する
+> **マルコフ連鎖形**でまず定義し（因子分解形を直接 def 化すると条件付き分布の
+> $\theta$-非依存性を経由する長い橋渡しを要するため）、因子分解形
+> `IsSufficientStatisticFactorized` との**同値** `isSufficient_iff_factorized` を別途
+> 形式化している。同値は Mathlib の条件付き独立性補題（標準ボレル機構）を経由する。
+>
+> **形式化**: 定義 `IsSufficientStatistic`、情報保存 `mutualInfo_eq_of_sufficient`、
+> 因子分解形との同値 `isSufficient_iff_factorized`
+> (`InformationTheory/Shannon/SufficientStatistic.lean`)
+
+---
+
+## 2.10 ファノの不等式
+
+### 動機
+
+$Y$ を観測して $X$ を推定（復号）したい。$Y$ から $X$ を当てる復号器
+$\hat X = g(Y)$ の誤り確率を $P_e = \Pr[\hat X \neq X]$ とする。直感的に、$X$ に
+残る不確かさ $H(X\mid Y)$ が大きければ、どんな復号器でも誤りはそう小さくできない
+はずだ。ファノの不等式はこの直感を定量化し、**誤り確率を条件付きエントロピーで下から
+評価する**。通信路符号化の逆定理（容量を超えるレートでは誤りが消えない）の証明で
+中心的役割を果たす。
+
+**定理 2.10.1（ファノの不等式）.** $|\mathcal X| \ge 2$ のとき
+$$
+H(X \mid Y) \;\le\; H_b(P_e) + P_e \log\big(|\mathcal X| - 1\big),
+$$
+ここで $H_b$ は二値エントロピー関数（例 2.1.2）。
+
+**きもち.** 右辺を読み解くと、$X$ に残る不確かさは「誤ったか否か」の 1 ビット
+$H_b(P_e)$ と、「誤ったとき、残り $|\mathcal X|-1$ 個のどれか」の不確かさ
+$P_e \log(|\mathcal X|-1)$ で説明しきれる、という上限になっている。裏返せば、
+$H(X\mid Y)$ が大きいのに $P_e$ を小さく保つことはできない。$H(X\mid Y) \to$ 大
+なら $P_e$ も下から押し上げられる。
+
+*証明（きもち）.* 誤り指示変数 $E = \mathbf 1[\hat X \neq X]$ を導入する。チェイン則で
+$H(X, E \mid Y)$ を二通りに展開し、$E$ が $X, Y$ から決まること（$H(E\mid X,Y)=0$）と、
+条件付けの単調性（定理 2.2.4）、および「誤った $|\mathcal X|-1$ 通り」に対する
+2.1.5 型の上界 $H(X\mid Y, E) \le P_e\log(|\mathcal X|-1)$ を組み合わせる。$\qquad\blacksquare$
+
+### 形式化されている諸形
+
+本ライブラリは pmf 形と測度論形の両方を形式化している。
+
+**測度論版（決定論的復号器）.** 復号器 $g : \mathcal Y \to \mathcal X$ と
+誤り確率 $P_e = \mu\{\omega : X(\omega) \neq g(Y(\omega))\}$ に対し、定理 2.10.1 を
+$H(X\mid Y) \le H_b(P_e) + P_e\log(|\mathcal X|-1)$ の形で述べる。
+
+> **形式化**: `fano_inequality_measure_theoretic`
+> (`InformationTheory/Fano/Measure.lean`, 名前空間 `InformationTheory.MeasureFano`)
+
+**pmf コア版.** 有限結合 pmf に対する基本形（$\mathrm{qaryEntropy}$ 形）。
+
+> **形式化**: `fano_core` / `fano_inequality` (`InformationTheory/Fano/Core.lean`)
+
+**逆向き（誤り確率の下界）.** ファノの不等式を裏返すと、$H(X\mid Y)$ が大きいときに
+$P_e$ が下から評価される。条件付きエントロピーが二値エントロピー境界を超えるなら、
+誤り確率は対応する閾値より真に大きい。
+
+> **形式化**: `error_lower_bound` (`InformationTheory/Fano/Core.lean`)
+
+---
+
+## この章で扱わなかったこと（正直な注記）
+
+- 本章のスコープは離散・有限アルファベットである。連続分布の差分エントロピーは
+  第 8 章で扱う。
+- ファノの不等式は、コア形・測度論形・逆向き下界を形式化したが、教科書に現れる
+  すべての系（誤り確率と $H(X)$ を直接結ぶ弱形など）を網羅したわけではない。
+- 本章の「形式化」ポインタが指す定理は、いずれも無条件の機械検証済み
+  （`0 sorry` / `0 @residual`）である。一方、各証明の**叙述**は人間の理解を優先して
+  書いており、Lean がたどるルートと食い違う箇所は本文中の「形式化上の注記」で
+  その都度断った。保証されるのは定理の正しさであり、紙の証明手順と Lean の証明手順が
+  同一であること、ではない。

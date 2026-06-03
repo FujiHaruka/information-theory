@@ -15,7 +15,7 @@ md.use(katex, { throwOnError: false });
 
 // --- pages to build (slug → source markdown) ---
 const pages = [
-  { slug: 'index', title: '第2章 エントロピー・相互情報量・データ処理不等式（書き直し版）', src: 'ch02-entropy-rewrite.md' },
+  { slug: 'index', title: '第2章 エントロピー・相互情報量・データ処理不等式', src: 'ch02-entropy.md' },
 ];
 
 // CSS version pinned to match the KaTeX used for server-side rendering (0.16.47).

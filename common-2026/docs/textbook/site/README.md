@@ -18,7 +18,7 @@ cd docs/textbook/site
 deno run -A build.mjs       # → dist/index.html を生成
 ```
 
-ビルド対象ページは `build.mjs` の `pages` 配列で管理（現状 `ch02-entropy-rewrite.md`
+ビルド対象ページは `build.mjs` の `pages` 配列で管理（現状 `ch02-entropy.md`
 のみ）。新しい章を足すときはここに `{ slug, title, src }` を追加する。
 
 ## デプロイ (surge)
