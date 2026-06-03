@@ -38,9 +38,10 @@ into Step 4 — is left implicit (folded inline into
 The genuine analytic content of Step 2-3 — the conditional Cauchy-Schwarz
 integrated against `p_Z` to give the convex Fisher bound
 `J(Z) ≤ λ² J(X) + (1-λ)² J(Y)` and its λ-optimum
-`J(Z) ≤ J(X)J(Y)/(J(X)+J(Y))` — is localized to the **single shared sorry
-lemma** `EPIStamInequalityBody.stam_step2_density_wall`
-(`@residual(wall:stam-step2-density)`), which takes regularity preconditions
+`J(Z) ≤ J(X)J(Y)/(J(X)+J(Y))` — is localized to the **single lemma**
+`EPIStamInequalityBody.stam_step2_density_wall`, now **genuinely closed**
+(0-sorry, sorryAx-free; `wall:stam-step2-density` is [CLOSED 2026-06-04] via
+`convex_fisher_bound_of_ready`), which takes regularity preconditions
 only. The earlier design carried this content as load-bearing predicates
 (`IsStamTotalExpectation` ∀λ bound, `IsStamFisherCoupling` alias); those were
 removed in the wall-consolidation pass (`epi-stam-wall-consolidation-plan`)
@@ -60,7 +61,7 @@ The deliverables are:
 
 * `stam_optimal_lambda_mem_unit` (§1) — optimal-λ membership (arithmetic)
 * `isStamInequalityHyp_via_step3` (§4) — Stam signature from regularity via the
-  shared wall `stam_step2_density_wall`
+  genuine (sorryAx-free) `stam_step2_density_wall`
 * `stam_coupling_saturates` (§5) — Gaussian saturation equality witness (arithmetic)
 * `epi_via_stam_step3_gaussian` (§6) — pipeline integration (via Gaussian saturation)
 -/
@@ -94,17 +95,18 @@ The former Step-3 chain carried the genuine analytic content as a **load-bearing
 `IsStamTotalExpectation` predicate (the ∀λ convex Fisher bound) plus an
 `IsStamFisherCoupling` intermediate alias of `IsStamCauchySchwarz`. The
 wall-consolidation pass (`epi-stam-wall-consolidation-plan`) removed those: the
-genuine Step 2-3 analytic core is now localized to the single shared sorry lemma
-`EPIStamInequalityBody.stam_step2_density_wall` (regularity preconditions only),
-and the load-bearing predicates are deleted (they were isolated, with zero
-cross-file consumers). -/
+genuine Step 2-3 analytic core is now localized to the single genuine (sorryAx-free)
+lemma `EPIStamInequalityBody.stam_step2_density_wall` (regularity preconditions
+only; `wall:stam-step2-density` is [CLOSED 2026-06-04]), and the load-bearing
+predicates are deleted (they were isolated, with zero cross-file consumers). -/
 
 /-- **Full Step 1 → 4 chain to the genuine Stam signature** (the deliverable).
 
 Produces the genuine `IsStamInequalityHyp` (Cover-Thomas Lemma 17.7.2 真
 signature) from regularity preconditions alone: the genuine Step 2-3 convex
-Fisher bound is supplied internally by the shared sorry wall lemma
-`stam_step2_density_wall`, and Steps 2/4 are discharged arithmetically by
+Fisher bound is supplied internally by the genuine (sorryAx-free) lemma
+`stam_step2_density_wall` (`wall:stam-step2-density` is [CLOSED 2026-06-04]),
+and Steps 2/4 are discharged arithmetically by
 `isStamInequalityHyp_via_body`. This carries **no** load-bearing analytic
 hypothesis — only measurability / independence / probability measure.
 
@@ -114,7 +116,9 @@ Update 2026-05-31 (owner-level pivot, epi-wall-reattack-plan): `stam_step2_densi
 with `IsStamInequalityResidual` to carry the pointwise convolution constraint +
 `IsBlachmanConvReady` bundle, closing the former regularity-precondition signature gap.
 This wrapper is therefore **sorryAx-free** — it produces a genuine `IsStamInequalityHyp`.
-(Verify: `#print axioms isStamInequalityHyp_via_step3`.) -/
+(2026-06-04 audit: `#print axioms isStamInequalityHyp_via_step3` =
+`[propext, Classical.choice, Quot.sound]` confirmed.)
+@audit:ok -/
 @[entry_point]
 theorem isStamInequalityHyp_via_step3 {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

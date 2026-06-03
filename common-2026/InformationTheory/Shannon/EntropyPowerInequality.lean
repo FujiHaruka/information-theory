@@ -45,9 +45,10 @@ T3-F と同流儀)。
 * **L-EPI2 (de Bruijn integration)**: heat-flow path 上の EPI integration
   identity は T2-F `IsRegularDeBruijnHyp` を `[0, ∞)` 上で積分する形で扱う。
   旧 placeholder `IsDeBruijnIntegrationHypothesis := True` (Phase 3 Wave 2
-  retract 済) は廃止。Discharge plan `epi-debruijn-integration-plan.md`
-  (未着手) + Phase 2.B `wall:debruijn-integration` 集約 (`debruijnIdentityV2_holds`
-  shared sorry 補題、`FisherInfoV2DeBruijn.lean`) で closure 予定。
+  retract 済) は廃止。`wall:debruijn-integration` は **[CLOSED 2026-06-04]**
+  — genuine (sorryAx-free) `debruijnIdentityV2_holds_assembled`
+  (`FisherInfoV2DeBruijnAssembly.lean`) に集約され、旧 shared sorry 補題
+  `debruijnIdentityV2_holds` は削除済。
 * **L-EPI3 (EPI conclusion、核心 retreat)**: `IsEntropyPowerInequalityHypothesis
   X Y P : Prop` を EPI 結論そのものとし、主定理本体は `:= h_epi` で着地。
   Discharge plan `epi-stam-to-conclusion-plan.md` で L-EPI1 + L-EPI2 から
@@ -72,7 +73,7 @@ T3-F と同流儀)。
 * `entropyPower_pos`, `entropyPower_gaussianReal` — Tier 0 補助
 * `IsEntropyPowerInequalityHypothesis` — Phase B L-EPI3 predicate
   (L-EPI1 / L-EPI2 placeholder `Prop := True` 形は Phase 3 Wave 2 retract 済、
-  genuine 代替は `IsStamInequalityResidual` (L-EPI1) + Phase 2.B `wall:debruijn-integration` 集約 (L-EPI2))
+  genuine 代替は `IsStamInequalityResidual` (L-EPI1) + genuine `debruijnIdentityV2_holds_assembled` (L-EPI2、`wall:debruijn-integration` は [CLOSED 2026-06-04]))
 * `entropy_power_inequality` — Phase C 主定理 (L-EPI3 適用形)
 * `entropy_power_inequality_exp_form` — Cover-Thomas 露出形 (Real.exp 展開)
 * `entropyPower_gaussian_additivity` — Phase D, full discharge (Cover-Thomas Ch.17 用語整合)
@@ -151,9 +152,10 @@ theorem entropyPower_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
 -- (retracted, Phase 3 Wave 2, 2026-05-27) `IsDeBruijnIntegrationHypothesis := True`
 -- (旧 L-EPI2 placeholder, defect-kind prop-true) was retracted: its sole
 -- call site was `epi_via_stam_main_eq` as an unused `_h_db` argument, which
--- has been removed; Phase 2.B `wall:debruijn-integration` aggregation
--- (`debruijnIdentityV2_holds` shared sorry in `FisherInfoV2DeBruijn.lean`)
--- supersedes the placeholder.
+-- has been removed; the de Bruijn identity is now the genuine (sorryAx-free)
+-- `debruijnIdentityV2_holds_assembled` (`FisherInfoV2DeBruijnAssembly.lean`;
+-- `wall:debruijn-integration` is [CLOSED 2026-06-04]), which supersedes the
+-- placeholder.
 
 /-- **L-EPI3 (EPI conclusion predicate)**: EPI 結論
 

@@ -23,10 +23,11 @@ The EPI proof pieces have been progressively discharged across waves:
   `EPIStamInequalityBody.lean` (`stam_lambda_min`, `stam_lambda_lower_bound`,
   `stam_inverse_form_of_harmonic_mean`). The genuine Step 2-3 analytic core (the
   conditional Cauchy-Schwarz + convex Fisher bound) is localized to the single
-  shared sorry lemma `EPIStamInequalityBody.stam_step2_density_wall`
-  (`@residual(wall:stam-step2-density)`, regularity preconditions only). The chain
-  `isStamInequalityHyp_via_step3` discharges `IsStamInequalityHyp` from regularity
-  alone via that shared wall.
+  lemma `EPIStamInequalityBody.stam_step2_density_wall`, which is now **genuinely
+  closed** (0-sorry, sorryAx-free; `wall:stam-step2-density` is [CLOSED
+  2026-06-04] via `convex_fisher_bound_of_ready`; regularity preconditions only).
+  The chain `isStamInequalityHyp_via_step3` discharges `IsStamInequalityHyp` from
+  regularity alone via that lemma.
 * **de Bruijn identity** (V2). `deBruijn_identity_v2` gives, from
   `IsRegularDeBruijnHypV2`, the heat-flow derivative
   `(d/dt) h(X + √t · Z) = (1/2) · J(g_t)`, with the Gaussian case
@@ -42,9 +43,10 @@ The Wave-7 `IsEPIScalingDecomposedPipeline` (`EPIStamToBridge.lean`) decomposed
 the bridge into `scaling`/`limit`, but its `stam` field was a *black-box*
 `IsStamInequalityHyp`. This file wires the discharged pieces two ways:
 
-1. **Stam from regularity via the shared wall** (§2). The genuine Step 2-3
-   analytic core is localized to the shared sorry lemma `stam_step2_density_wall`
-   (`@residual(wall:stam-step2-density)`); `isStamInequalityHyp_of_primitives`
+1. **Stam from regularity via the (now genuine) wall lemma** (§2). The genuine
+   Step 2-3 analytic core is localized to `stam_step2_density_wall`, now genuinely
+   closed (0-sorry, sorryAx-free; `wall:stam-step2-density` is [CLOSED
+   2026-06-04]); `isStamInequalityHyp_of_primitives`
    derives `IsStamInequalityHyp` from regularity preconditions alone (no
    load-bearing analytic hypothesis). The earlier design carried this content as
    load-bearing predicates (`IsStamScoreConvolution` + `IsStamTotalExpectation`
@@ -154,8 +156,10 @@ theorem isEPIGapMonotoneHyp_of_deBruijnV2
 
 Produces the genuine `IsStamInequalityHyp` from measurability / independence /
 probability measure alone, delegating the genuine Step 2-3 analytic core to the
-shared sorry wall lemma `stam_step2_density_wall`
-(`@residual(wall:stam-step2-density)`) via `isStamInequalityHyp_via_step3`.
+now-genuine (sorryAx-free) lemma `stam_step2_density_wall`
+(`wall:stam-step2-density` is [CLOSED 2026-06-04]) via
+`isStamInequalityHyp_via_step3`. `#print axioms isStamInequalityHyp_of_primitives`
+= `[propext, Classical.choice, Quot.sound]` (sorryAx-free, 2026-06-04 audit).
 
 This replaces the former load-bearing version that chained two Stam-wall
 predicates (`IsStamScoreConvolution`, `IsStamTotalExpectation`); those predicates
@@ -194,17 +198,18 @@ Produces the EPI conclusion from measurability / independence / probability
 measure alone, deriving the Stam inequality via the shared wall and feeding it
 through the integrated pipeline. Carries **no** load-bearing analytic hypothesis.
 
-This wrapper is **not** proof done: it depends transitively on `sorryAx` (via
-`isStamInequalityHyp_of_primitives`). The genuine residual now lives in
-`isStamInequalityHyp_via_body` (`@residual(plan:epi-wall-reattack-plan)`).
-Update 2026-05-31 (Phase 3d): `stam_step2_density_wall` is **genuinely closed**
-(0-sorry, `#print axioms` sorryAx-free) via `convex_fisher_bound_of_ready`;
-`IsStamCauchySchwarzOptimal` is a provable (non-false) Prop. The prior
-"false-statement defect / universally FALSE" note is obsolete. The remaining
-transitive `sorry` is the regularity-precondition signature gap on the published
-`IsStamInequalityHyp` (`isStamInequalityHyp_via_body`), a clean owner-level pivot
-tracked under `epi-wall-reattack-plan`, not a Mathlib wall. Transitive consumer
-(no local `sorry`), so no active `@residual` here. -/
+This wrapper is **not** proof done: it depends transitively on `sorryAx`. Update
+2026-06-04 (audit): the Stam side is now fully genuine —
+`isStamInequalityHyp_of_primitives` is sorryAx-free (`stam_step2_density_wall` /
+`wall:stam-step2-density` is [CLOSED 2026-06-04] via
+`convex_fisher_bound_of_ready`). The remaining transitive `sorry` does **not**
+come from the Stam wall; it comes from the Stam→EPI bridge
+`entropy_power_inequality_integrated` → `entropy_power_inequality` →
+`EntropyPowerInequality.stamToEPIBridge_holds`
+(`@residual(plan:epi-stam-to-conclusion-plan)`). `IsStamCauchySchwarzOptimal` is a
+provable (non-false) Prop; the prior "false-statement defect / universally FALSE"
+note is obsolete. Transitive consumer (no local `sorry`), so no active `@residual`
+here. -/
 @[entry_point]
 theorem entropy_power_inequality_via_stamDeBruijn
     {Ω : Type*} {mΩ : MeasurableSpace Ω}

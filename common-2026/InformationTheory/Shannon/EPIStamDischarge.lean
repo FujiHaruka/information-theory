@@ -191,9 +191,9 @@ this `structure` carries genuine `HasDerivAt` content via `reg_at` +
 plan: `docs/shannon/epi-debruijn-integration-plan.md`. Active consumers
 exist across `EPIStamDischarge` / `EPIStamToBridge` / `EPIL3Integration`,
 so this is **not** a candidate for outright deletion — the tag flags it
-for eventual decomposition into a regularity precondition + shared
-`@residual(wall:debruijn-integration)` lemma once consumers can carry
-caller-supplied density data directly.)
+for eventual decomposition into a regularity precondition + the genuine
+de Bruijn lemma (`wall:debruijn-integration` is now [CLOSED 2026-06-04])
+once consumers can carry caller-supplied density data directly.)
 
 **Resolved 2026-05-25** (Wave 3 third batch): former
 `Integrable ... (volume.restrict (Set.Ioi 0))` field was unsatisfiable even for
@@ -223,8 +223,9 @@ to `(reg_at t ht).density_t`. Consequently, picking `density_path := 0`
 forces `(reg_at t ht).density_t = 0` via `density_t_eq`, which forces the
 RHS of `deBruijn_identity_v2 X Z ht (reg_at t ht)` (Phase 2.B foundation
 removed the `derivAt_entropy_eq_half_fisher_v2` field; the V2 de Bruijn
-identity is now delivered by the shared lemma
-`debruijnIdentityV2_holds`, `@residual(wall:debruijn-integration)`) to
+identity is now delivered by the genuine (sorryAx-free)
+`debruijnIdentityV2_holds_assembled`; `wall:debruijn-integration` is [CLOSED
+2026-06-04]) to
 `(1/2) * fisherInfoOfDensityReal 0 = 0`; for the Gaussian instance the LHS
 is `HasDerivAt (fun s => h(𝒩(m, v+s))) (1/(2(v+t))) t` with
 `1/(2(v+t)) ≠ 0`, contradicting the pinned `0`. Thus the degenerate witness
@@ -266,8 +267,8 @@ structure IsDeBruijnRegularityHyp {Ω : Type*} [MeasurableSpace Ω]
   `density_path = 0` forces `(reg_at t ht).density_t = 0` and hence
   `deBruijn_identity_v2 X Z ht (reg_at t ht)`'s RHS to `0` (Phase 2.B
   foundation removed the `derivAt_entropy_eq_half_fisher_v2` field; V2
-  de Bruijn is now delivered by shared lemma `debruijnIdentityV2_holds`,
-  `@residual(wall:debruijn-integration)`), which contradicts the true
+  de Bruijn is now delivered by the genuine `debruijnIdentityV2_holds_assembled`,
+  `wall:debruijn-integration` is [CLOSED 2026-06-04]), which contradicts the true
   Gaussian derivative `1/(2(v+t)) ≠ 0`. -/
   density_t_eq : ∀ t : ℝ, ∀ ht : 0 < t,
     (reg_at t ht).density_t = density_path t
@@ -319,9 +320,10 @@ general witness `isDeBruijnIntegrationHyp_holds` (below) produces the predicate
 (given `0 ≤ T` + a `IsDeBruijnPathRegular` path-regularity precondition) by
 delegating to the upstream lemma `debruijnIntegrationIdentity_holds`
 (`FisherInfoV2DeBruijn.lean`). Phase 4 reduced that lemma's former independent
-`sorry` to the per-time wall `debruijnIdentityV2_holds`
-(`@residual(wall:debruijn-integration)`) via FTC, so the `sorry` is now
-localized to the single per-time wall lemma, not duplicated at any use site.)
+`sorry` to the per-time de Bruijn identity via FTC; that per-time identity is
+now the genuine (sorryAx-free) `debruijnIdentityV2_holds_assembled`
+(`wall:debruijn-integration` is [CLOSED 2026-06-04]), so no de Bruijn `sorry`
+remains at any use site.)
 
 **Resolved 2026-05-25** (Wave 3 third batch): former `∀ fPath` quantification
 collapsed via `fPath := fun _ _ ↦ 0` (because
@@ -379,14 +381,15 @@ holds whenever `0 ≤ T` and the heat-flow path is regular
 (`IsDeBruijnPathRegular`), by delegation to the structurally-closed lemma
 `debruijnIntegrationIdentity_holds` (Phase 4 structural closure 2026-05-31).
 
-The integration identity is now genuinely reduced to the per-time wall
-`debruijnIdentityV2_holds` (`@residual(wall:debruijn-integration)`) via FTC: the
+The integration identity is now genuinely reduced to the per-time de Bruijn
+identity (genuine `debruijnIdentityV2_holds_assembled`,
+`wall:debruijn-integration` is [CLOSED 2026-06-04]) via FTC: the
 upstream lemma carries **no local `sorry`**, only a path-regularity /
 integrability precondition `h_path` (which `X` admissible, how regular the
 path) plus `0 ≤ T`. The de Bruijn analytic core (heat eq + IBP) lives solely in
-the per-time wall lemma, not in any hypothesis bundle here.
+the genuine per-time identity lemma, not in any hypothesis bundle here.
 
-The wall lemma's existential is stated with `gaussianConvolution X Z t`, which is
+The per-time lemma's existential is stated with `gaussianConvolution X Z t`, which is
 definitionally `fun ω => X ω + √t · Z ω` (the heat-flow path used by the predicate
 body), so the witness threads through directly. -/
 @[entry_point]

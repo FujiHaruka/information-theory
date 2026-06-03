@@ -426,8 +426,9 @@ This subsection computes the `HasDerivAt` of the 1-source Csiszár scaling gap
 the V2 de Bruijn identity (`deBruijn_identity_v2`,
 `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:272`; Phase 2.B foundation
 removed the inline `IsRegularDeBruijnHypV2.derivAt_entropy_eq_half_fisher_v2`
-field, the identity is now delivered by shared lemma `debruijnIdentityV2_holds`
-carrying `@residual(wall:debruijn-integration)`) to the three mapped measures
+field, the identity is now delivered by the genuine (sorryAx-free)
+`debruijnIdentityV2_holds_assembled`; `wall:debruijn-integration` is [CLOSED
+2026-06-04]) to the three mapped measures
 `P.map (X + √t · Z_X)`, `P.map (Y + √t · Z_Y)`, `P.map ((X+Y) + √t · (Z_X+Z_Y))`,
 composed with `Real.exp` via a one-line chain rule helper.
 
@@ -481,13 +482,14 @@ The result is consumed by Phase A A-3 (1-source Stam reduction to `≤ 0`).
 The bases `X`, `Y`, `X + Y` are `t`-independent so no scaling-correction term
 appears (L-Concl-A-δ avoidance via the 1-source design).
 
-NOTE (2026-05-30 audit): 以前の `@audit:ok` は tier-1 誤付与だった。body は
-`FisherInfoV2.deBruijn_identity_v2` を 3 回呼ぶため、transitive に
-`debruijnIdentityV2_holds` (`@residual(wall:debruijn-integration)`,
-`FisherInfoV2DeBruijn.lean`) の `sorry` を消費する (`#print axioms` で `sorryAx`
-依存を確認)。proof-done ではない。derivative computation 自体は genuine reduction
-(三 `IsDeBruijnRegularityHyp` は regularity precondition、core ではない)。
-transitive consumer のため `@residual` は付けない (sorry は wall 補題が保持)。 -/
+UPDATE (2026-06-04 audit): `wall:debruijn-integration` が [CLOSED 2026-06-04]
+(genuine `debruijnIdentityV2_holds_assembled` に置換) されたため、本 theorem は
+transitive sorry を消費しなくなった。`#print axioms
+csiszarGap1Source_hasDerivAt` = `[propext, Classical.choice, Quot.sound]`
+(sorryAx-free、本監査 2026-06-04 機械確認)。derivative computation は genuine
+reduction (三 `IsDeBruijnRegularityHyp` は regularity precondition、core ではない)。
+proof done。
+@audit:ok -/
 theorem csiszarGap1Source_hasDerivAt
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -1351,8 +1353,9 @@ theorem isStamToEPIScalingHyp_of_stam_debruijn
     h_reg Z_X Z_Y hZX_meas hZY_meas hZX_law hZY_law hXZX hYZY hZXZY
   have h_pos := h_pos_stam Z_X Z_Y hZX_meas hZY_meas hZX_law hZY_law
     hXZX hYZY hZXZY h_reg_sum h_reg_X h_reg_Y
-  -- `IndepFun (X+Y) (Z_X+Z_Y) P` is consumed by the per-time de Bruijn wall
-  -- (`debruijnIdentityV2_holds` via A-2-3) as a regularity precondition. It is a
+  -- `IndepFun (X+Y) (Z_X+Z_Y) P` is consumed by the per-time de Bruijn identity
+  -- (genuine `debruijnIdentityV2_holds_assembled` via A-2-3; `wall:debruijn-integration`
+  -- is [CLOSED 2026-06-04]) as a regularity precondition. It is a
   -- genuine fact under the noise-richness coupling but is NOT derivable from the
   -- pairwise independences `IndepFun X Z_X` / `IndepFun Y Z_Y` / `IndepFun Z_X Z_Y`
   -- that `IsStamScalingNoiseHyp` supplies (joint 4-tuple independence is needed).
@@ -1402,14 +1405,16 @@ Honesty notes:
   richness hypothesis, the three `IsDeBruijnRegularityHyp` carry density /
   derivative regularity.
 
-NOTE (2026-05-30 audit): 以前の `@audit:ok` は tier-1 誤付与だった。constructor
-自体は fresh sorry を持たないが、body は `isStamToEPIScalingHyp_of_stam_debruijn`
-を経由するため、transitive に shared sorry 補題 `stamToEPIScaling_holds` /
-`stamScalingNoise_exists` (`@residual(plan:epi-stam-to-conclusion-phaseA-plan)`,
-本 file) + `debruijnIdentityV2_holds` (`@residual(wall:debruijn-integration)`) の
-`sorry` を消費する (`#print axioms` で `sorryAx` 依存を確認)。proof-done ではない。
-constructor は genuine (non-circular、non-laundering)。transitive consumer のため
-`@residual` は付けない (sorry は被呼出補題が保持)。 -/
+NOTE (2026-06-04 audit): `wall:debruijn-integration` は [CLOSED 2026-06-04]
+(genuine `debruijnIdentityV2_holds_assembled`)、de Bruijn 経路はもはや sorry を
+持たない。constructor 自体は fresh sorry を持たないが、body は
+`isStamToEPIScalingHyp_of_stam_debruijn` を経由するため、transitive に
+phaseA plan の sorry (`hXYZXY` joint independence /
+`@residual(plan:epi-stam-to-conclusion-phaseA-plan)`、本 file) を消費する
+(`#print axioms` で `sorryAx` 依存を確認)。proof-done ではないが、残る sorry は
+**de Bruijn wall ではなく Stam-to-conclusion phaseA plan 側**。constructor は
+genuine (non-circular、non-laundering)。transitive consumer のため `@residual`
+は付けない (sorry は被呼出補題が保持)。 -/
 @[entry_point]
 theorem isStamToEPIBridgeHyp_of_stam_debruijn
     {Ω : Type*} {mΩ : MeasurableSpace Ω}

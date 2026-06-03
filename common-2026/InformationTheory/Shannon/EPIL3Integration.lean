@@ -474,8 +474,9 @@ predicate `IsHeatFlowFamilyHyp` (and its Gaussian constructor) was **deleted**
 in the Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`,
 task 3α-3): it had 0 active consumers; the genuine `HasDerivAt` content is
 available through `FisherInfoV2.deBruijn_identity_v2_gaussian` directly, and a
-non-Gaussian extension should route through `wall:debruijn-integration` rather
-than a load-bearing structure. A second predicate
+non-Gaussian extension should route through the genuine de Bruijn lemma
+`debruijnIdentityV2_holds_assembled` (`wall:debruijn-integration` is [CLOSED
+2026-06-04]) rather than a load-bearing structure. A second predicate
 `IsDeBruijnTailHyp` (intended for the `T → ∞` tail-analysis externalization)
 was attempted in the Wave 3 third batch and then **retracted** in the same
 batch by the independent honesty audit
@@ -495,10 +496,10 @@ a pending plan-level task (Phase C-5).
    `@audit:retract-candidate(load-bearing-predicate)` (Tier 3 bookkeeping,
    `EPIStamDischarge.lean`), and the analytic core is no longer threaded as a
    load-bearing hypothesis: a general witness `isDeBruijnIntegrationHyp_holds`
-   produces the predicate by delegating to the shared sorry lemma
-   `debruijnIntegrationIdentity_holds` (`@residual(wall:debruijn-integration)`,
-   `FisherInfoV2DeBruijn.lean`). (Stale prose cleanup, honesty audit 2026-05-28:
-   the prior wording cited a now-superseded `@audit:staged` tag.) The standalone
+   produces the predicate by delegating to the genuine (sorryAx-free) lemma
+   `debruijnIntegrationIdentity_holds` (`FisherInfoV2DeBruijn.lean`), whose
+   per-time core is now `debruijnIdentityV2_holds_assembled`
+   (`wall:debruijn-integration` is [CLOSED 2026-06-04]). The standalone
    Gaussian-case statements below (`bounded_T_ftc_gaussian`) still bypass the
    predicate because the genuine bridge from the bounded-T identity to a
    `∃ fPath` witness is sister-plan responsibility
@@ -539,8 +540,9 @@ a pending plan-level task (Phase C-5).
 -- constructor `isHeatFlowFamilyHyp_of_gaussian` (also deleted below). This is
 -- the `-empty-consumers` pure-delete sister to `34e17bc` / `37284f1`. A
 -- non-Gaussian heat-flow regularity extension that re-introduces a load-bearing
--- consumer should be re-introduced via `wall:debruijn-integration`
--- (shared sorry lemma `debruijnIdentityV2_holds`), not a load-bearing structure.
+-- consumer should be re-introduced via the genuine de Bruijn lemma
+-- `debruijnIdentityV2_holds_assembled` (`wall:debruijn-integration` is [CLOSED
+-- 2026-06-04]), not a load-bearing structure.
 
 -- (retracted 2026-05-25, Wave 3 third batch independent audit) **De Bruijn
 -- tail-analysis hypothesis** `IsDeBruijnTailHyp X Z P`.
@@ -717,7 +719,8 @@ noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
   -- Phase 2.B 段 1 (foundation): `IsRegularDeBruijnHypV2` is now 2-field
   -- (regularity only). The `derivAt_entropy_eq_half_fisher_v2` field used to
   -- be filled here via `deBruijn_identity_v2_gaussian`; that discharge is
-  -- now downstream (via `debruijnIdentityV2_holds` / shared wall lemma).
+  -- now downstream (via the genuine `debruijnIdentityV2_holds_assembled`;
+  -- `wall:debruijn-integration` is [CLOSED 2026-06-04]).
   exact
     { Z_law := hZ_law
       density_t := gaussianPDFReal m (v + ⟨t, ht.le⟩)
@@ -1290,8 +1293,8 @@ Reparametrizing the 2-source form by `t := s/(1-s)` and pulling out the
 scale factor `√(1-s)` yields a 1-source equivalent form whose base is
 `t`-independent — the sister Phase A consumes this 1-source form to apply
 de Bruijn V2 directly (the per-`t` derivative is now delivered by the
-shared lemma `debruijnIdentityV2_holds` carrying
-`@residual(wall:debruijn-integration)`; Phase 2.B foundation removed the
+genuine `debruijnIdentityV2_holds_assembled`; `wall:debruijn-integration`
+is [CLOSED 2026-06-04]; Phase 2.B foundation removed the
 inline `derivAt_entropy_eq_half_fisher_v2` field from
 `IsRegularDeBruijnHypV2`) without scaling-correction-term cancellation
 problems (L-Concl-A-δ avoided at the source).
@@ -1338,8 +1341,8 @@ respectively), unlike the 2-source `csiszarGap` whose base `√(1-s) · X`
 is `s`-dependent. This shape directly matches the conclusion form of
 the V2 de Bruijn identity `deBruijn_identity_v2` (Phase 2.B foundation
 removed the inline `derivAt_entropy_eq_half_fisher_v2` field, the
-identity is now delivered by shared lemma `debruijnIdentityV2_holds`,
-`@residual(wall:debruijn-integration)`) keyed to `gaussianConvolution`,
+identity is now delivered by the genuine `debruijnIdentityV2_holds_assembled`,
+`wall:debruijn-integration` is [CLOSED 2026-06-04]) keyed to `gaussianConvolution`,
 enabling sister Phase A to compute `d/dt gap_t` without
 scaling-correction-term cancellation problems (L-Concl-A-δ avoidance).
 

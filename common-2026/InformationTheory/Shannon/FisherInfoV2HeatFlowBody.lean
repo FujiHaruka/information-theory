@@ -219,17 +219,18 @@ decomposition.
 **Phase 2.B 段 2 (2026-05-27、`epi-stam-fisher-epi-integrated-sweep-plan`
 §Phase 2.B 段 2)**: L3 (`deBruijn_identity_v2_of_heat_flow`) が
 honest pass-through (`IsRegularDeBruijnHypV2.ofHeatFlow` constructor +
-`deBruijn_identity_v2` wall:debruijn-integration 経由) 化されたため、本 D5 も
-transitive pass-through に昇格。`h_ibp` 引数は caller compat 維持 (L3 と同様
-unused、`_h_ibp` underscore prefix)。
+genuine `deBruijn_identity_v2`、`wall:debruijn-integration` は [CLOSED
+2026-06-04]) 化されたため、本 D5 も transitive pass-through に昇格。`h_ibp`
+引数は caller compat 維持 (L3 と同様 unused、`_h_ibp` underscore prefix)。
 
-NOTE (2026-05-30 audit): 以前の `@audit:ok` は tier-1 誤付与だった。本 lemma は
-`deBruijn_identity_v2_of_heat_flow` を経由し、さらにその先で `deBruijn_identity_v2`
-→ shared sorry 補題 `debruijnIdentityV2_holds`
-(`@residual(wall:debruijn-integration)`, `FisherInfoV2DeBruijn.lean`) の `sorry`
-を消費する (`#print axioms` で `sorryAx` 依存を確認)。proof-done ではない。
-pass-through 自体は honest。transitive consumer のため `@residual` は付けない
-(sorry は wall 補題が保持)。 -/
+NOTE (2026-06-04 audit): `deBruijn_identity_v2` 自体は genuine (sorryAx-free、
+`debruijnIdentityV2_holds_assembled` 経由)、`wall:debruijn-integration` は
+[CLOSED 2026-06-04]。本 lemma が `#print axioms` で `sorryAx` 依存に見えるのは、
+`deBruijn_identity_v2_of_heat_flow` → `IsRegularDeBruijnHypV2.ofHeatFlow`
+constructor の 3 field (`@residual(plan:epi-debruijn-pertime-closure)`) を
+transitive に消費するため。残る sorry は **de Bruijn wall ではなく per-time
+closure plan 側**。pass-through 自体は honest。transitive consumer のため
+`@residual` は付けない (sorry は `ofHeatFlow` constructor が保持)。 -/
 @[entry_point]
 theorem deBruijn_identity_v2_of_heat_subhyp
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]

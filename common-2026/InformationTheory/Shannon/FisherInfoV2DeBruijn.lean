@@ -199,8 +199,9 @@ be bundled here as a third load-bearing field, but Phase 2.A audit
 (commit `a6ae83b`) flagged that arrangement as load-bearing hypothesis
 bundling (the field was `wall:debruijn-integration` smuggled into a
 regularity predicate). The de Bruijn identity core proof is now
-集約 (consolidated) into `debruijnIdentityV2_holds`
-(`wall:debruijn-integration`) as a genuine wall closure point. -/
+集約 (consolidated) into the genuine (sorryAx-free)
+`debruijnIdentityV2_holds_assembled` (FisherInfoV2DeBruijnAssembly.lean;
+`wall:debruijn-integration` is [CLOSED 2026-06-04]) as a genuine closure point. -/
 structure IsRegularDeBruijnHypV2 {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω)
     [IsProbabilityMeasure P]
@@ -275,7 +276,7 @@ structure IsRegularDeBruijnHypV2 {Ω : Type*} [MeasurableSpace Ω]
 /-! ### `debruijnIntegrationIdentity_holds` — moved to FisherInfoV2DeBruijnGenuine.lean (積分形)
 
 Cover-Thomas Lemma 17.7.2 の **積分形** (integration identity along the heat-flow path)。
-`debruijnIdentityV2_holds` は per-time の `HasDerivAt` を返すのみで、その deriv を FTC
+per-time identity `debruijnIdentityV2_holds_assembled` (genuine sorryAx-free) は per-time の `HasDerivAt` を返すのみで、その deriv を FTC
 (`intervalIntegral`) で積分して得られる差分恒等式
 
     `h(X + √T·Z) − h(X) = ∫_0^T (1/2)·J(X + √t·Z) dt`

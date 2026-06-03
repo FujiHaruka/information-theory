@@ -9,8 +9,9 @@ import Mathlib.MeasureTheory.Group.Integral           -- integral_sub_left_eq_se
 
 `p_Z(z) = ∫ x, p_X(x) · p_Y(z - x) ∂volume` (sum density of independent `X, Y`),
 its pointwise differentiability, and the `logDeriv p_Z` representation. This is
-the common foundational helper that both EPI walls
-(`wall:stam-step2-density` / `wall:debruijn-integration`) consume.
+the common foundational helper that both former EPI walls
+(`wall:stam-step2-density` / `wall:debruijn-integration`, both now [CLOSED
+2026-06-04] — genuine, sorryAx-free) consume.
 
 ## Why the parametric-integral route (not `HasCompactSupport`)
 

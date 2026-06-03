@@ -602,12 +602,13 @@ theorem isStamInequalityHyp_via_body_to_pipeline
 The former load-bearing Step-2 hypothesis `(h_cs_opt : IsStamCauchySchwarzOptimal
 X Y P)` (a tier-5 honesty defect — Step 2 was *assumed*) has been removed: the
 optimal Cauchy-Schwarz / convex Fisher bound is now supplied internally by the
-shared sorry lemma `stam_step2_density_wall`.
+genuine (sorryAx-free) lemma `stam_step2_density_wall` (`wall:stam-step2-density`
+is [CLOSED 2026-06-04]).
 The Step-1 score-convolution predicate is constructed unconditionally via
 `isStamScoreConvolution_intro` (cosmetic slot). The public signature therefore
 carries **no** load-bearing Step-2 analytic hypothesis — only regularity
 (measurability / independence / probability measure) — with the Step-2 obligation
-localized to the shared sorry lemma `stam_step2_density_wall`.
+localized to (and genuinely discharged by) `stam_step2_density_wall`.
 
 Update 2026-05-31 (owner-level pivot, epi-wall-reattack-plan): `stam_step2_density_wall`
 **and** `isStamInequalityHyp_via_body` are now **both genuinely closed** (0-sorry,

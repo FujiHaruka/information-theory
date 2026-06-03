@@ -192,8 +192,11 @@ conclusions of the IBP argument.
 (`def IsIBPHypothesis ... := HasDerivAt ((1/2) * fisherInfoOfDensityReal (p t)) t`)
 であり、conclusion-type を predicate に lifting した name-laundering pattern。
 段 2 完了で本 sweep 内 (`FisherInfoV2*` family) の全実 consumer (L3/D5) が
-`_h_ibp` underscore-prefixed unused 引数になり、wall content は
-`debruijnIdentityV2_holds` (`wall:debruijn-integration`) に集約済。
+`_h_ibp` underscore-prefixed unused 引数になった。de Bruijn identity の本体は
+genuine (sorryAx-free) な `debruijnIdentityV2_holds_assembled`
+(`FisherInfoV2DeBruijnAssembly.lean:3535`) に集約され、`wall:debruijn-integration`
+は **[CLOSED 2026-06-04]** (旧 shared sorry 補題 `debruijnIdentityV2_holds` は
+削除済)。
 
 本 sweep では retract 断行せず alias 維持。`FisherDeBruijnGaussianWitness.lean:43/51`
 に散文 documentation 言及あり (実コード reference 0 件、docstring 散文のみ)。
@@ -222,8 +225,9 @@ signature-file `deBruijn_identity_v2` shape. -/
 Phase 2.B 段 1 (foundation): `IsRegularDeBruijnHypV2` is now 2-field
 (`Z_law` + `density_t`), so the constructor only needs the heat-flow
 density predicate. The IBP hypothesis is no longer carried here — it is
-discharged downstream by the shared wall lemma
-`debruijnIdentityV2_holds` (`wall:debruijn-integration`). -/
+discharged downstream by the genuine (sorryAx-free)
+`debruijnIdentityV2_holds_assembled` (`FisherInfoV2DeBruijnAssembly.lean`;
+`wall:debruijn-integration` is [CLOSED 2026-06-04]). -/
 @[entry_point]
 noncomputable def IsRegularDeBruijnHypV2.ofHeatFlow
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
@@ -283,8 +287,8 @@ information of `p t` on the RHS.
 §Phase 2.B 段 2)**: 旧 body `h_ibp` (literal alias of
 `IsIBPHypothesis X Z P p t := HasDerivAt ... ((1/2) * fisherInfoOfDensityReal (p t)) t`
 への 1 段 indirection) を解消し、`IsRegularDeBruijnHypV2.ofHeatFlow`
-constructor + `deBruijn_identity_v2` (wall:debruijn-integration 経由 shared
-sorry 補題 `debruijnIdentityV2_holds`) への honest pass-through に書換。
+constructor + `deBruijn_identity_v2` (genuine `debruijnIdentityV2_holds_assembled`
+経由、`wall:debruijn-integration` は [CLOSED 2026-06-04]) への honest pass-through に書換。
 constructor `ofHeatFlow` を本 declaration の上に移動済 (forward reference
 不可のため)。
 
@@ -293,12 +297,15 @@ constructor `ofHeatFlow` を本 declaration の上に移動済 (forward referenc
 predicate-form literal alias (D1) として残存し、`@audit:retract-candidate`
 を別途付与する段 3 task に委譲。
 
-NOTE (2026-05-30 audit): 以前の `@audit:ok` は tier-1 誤付与だった。body は
-`deBruijn_identity_v2` への honest pass-through だが、その先で shared sorry 補題
-`debruijnIdentityV2_holds` (`@residual(wall:debruijn-integration)`,
-`FisherInfoV2DeBruijn.lean`) の `sorry` を transitive に消費する (`#print axioms`
-で `sorryAx` 依存を確認)。proof-done ではない。pass-through 自体は honest。
-transitive consumer のため `@residual` は付けない (sorry は wall 補題が保持)。 -/
+NOTE (2026-06-04 audit): `deBruijn_identity_v2` 自体は genuine (sorryAx-free、
+`debruijnIdentityV2_holds_assembled` 経由)。`wall:debruijn-integration` は
+[CLOSED 2026-06-04]。ただし本 theorem は `IsRegularDeBruijnHypV2.ofHeatFlow`
+constructor を呼び、その 3 field (`density_t_eq`/`pX_law`/`pX_mom`,
+`@residual(plan:epi-debruijn-pertime-closure)`) が real sorry を保持するため、
+`#print axioms` は依然 `sorryAx` 依存 (transitive)。よって proof-done ではないが、
+残る sorry は **de Bruijn wall ではなく per-time closure plan 側**。pass-through
+自体は honest。transitive consumer のため本 theorem には `@residual` を付けない
+(sorry は `ofHeatFlow` constructor が保持)。 -/
 @[entry_point]
 theorem deBruijn_identity_v2_of_heat_flow
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
