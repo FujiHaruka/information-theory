@@ -2,6 +2,7 @@ import Mathlib.Logic.Equiv.Basic
 import Common2026.Shannon.HuffmanOptimality
 import Common2026.Shannon.HuffmanT1APPrimePartial
 import Common2026.Shannon.HuffmanT1APPrimeBody
+import Common2026.Meta.EntryPoint
 
 /-!
 # T1-A'' Huffman SwapStepLe chain body 拡張 (Wave 9)
@@ -58,6 +59,7 @@ universe u
 omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- **permutation chain の Kraft 不変性 (2-step)**: 2 つの permutation `σ τ` を合成しても
 Kraft 和は不変. `kraft_sum_perm_eq` (wave6) の chain composition. -/
+@[entry_point]
 theorem kraft_sum_perm_chain2_eq
     (l : α → ℕ) (σ τ : α ≃ α) :
     (∑ x : α, ((2 : ℝ)) ^ (-((l ∘ σ ∘ τ) x : ℤ)))
@@ -75,6 +77,7 @@ theorem kraft_sum_perm_chain2_eq
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- **permutation chain の expectedLength 不変性 (2-step, pointwise-eq)**: 2 permutation の
 合成 `σ ∘ τ` で `∀ x, l (σ (τ x)) = l x` が成立するとき expectedLength は不変. -/
+@[entry_point]
 theorem expectedLength_perm_chain2_invariant
     (P : Measure α) [IsProbabilityMeasure P]
     (l : α → ℕ) (σ τ : α ≃ α)
@@ -90,6 +93,7 @@ theorem expectedLength_perm_chain2_invariant
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- **permutation chain の expectedLength `≤` 形**: 上記等式の `≤` 形. -/
+@[entry_point]
 theorem expectedLength_perm_chain2_le
     (P : Measure α) [IsProbabilityMeasure P]
     (l : α → ℕ) (σ τ : α ≃ α)
@@ -103,6 +107,7 @@ theorem expectedLength_perm_chain2_le
 /-- **chain sub-predicate (Kraft preserving)**: 任意 permutation `σ` で Kraft 和が
 `≤ 1` を維持する形の primitive predicate. `SwapStepLeChainHypothesis` の Kraft 部分を
 分離した sub-predicate. -/
+@[entry_point]
 abbrev PermChainKraftPreserving : Prop :=
   ∀ {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β]
     (ll : β → ℕ) (σ : β ≃ β),
@@ -111,6 +116,7 @@ abbrev PermChainKraftPreserving : Prop :=
 
 /-- **chain sub-predicate (Kraft preserving) の discharge**: `PermChainKraftPreserving` は
 任意 permutation の sum invariance (`Equiv.sum_comp`) で完全 discharge できる. -/
+@[entry_point]
 theorem permChainKraftPreserving_holds :
     PermChainKraftPreserving.{u} := by
   intro β _ _ _ ll σ h_kraft
@@ -122,6 +128,7 @@ theorem permChainKraftPreserving_holds :
 
 /-- **chain sub-predicate (expectedLength preserving, pointwise-eq)**: permutation `σ` が
 `∀ x, ll (σ x) = ll x` を満たすとき expectedLength を不変に保つ形の primitive predicate. -/
+@[entry_point]
 abbrev PermChainExpectedLengthPreserving : Prop :=
   ∀ {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -133,6 +140,7 @@ abbrev PermChainExpectedLengthPreserving : Prop :=
 
 /-- **chain sub-predicate (expectedLength preserving) の discharge**: pointwise-eq の下で
 expectedLength は不変なので `≤` は完全 discharge できる. -/
+@[entry_point]
 theorem permChainExpectedLengthPreserving_holds :
     PermChainExpectedLengthPreserving.{u} := by
   intro β _ _ _ _ _ Q _ ll σ h_eq_pt
@@ -148,11 +156,13 @@ theorem permChainExpectedLengthPreserving_holds :
 
 /-- **2 sub-predicate の合成形**: `PermChainKraftPreserving` と
 `PermChainExpectedLengthPreserving` を `And` で 1 命題に combine. -/
+@[entry_point]
 abbrev PermChainCombined : Prop :=
   PermChainKraftPreserving.{u} ∧ PermChainExpectedLengthPreserving.{u}
 
 /-- **合成 predicate の discharge**: 両 sub-predicate がそれぞれ discharge できるので
 `And` も成立. -/
+@[entry_point]
 theorem permChainCombined_holds :
     PermChainCombined.{u} :=
   ⟨permChainKraftPreserving_holds, permChainExpectedLengthPreserving_holds⟩
@@ -160,6 +170,7 @@ theorem permChainCombined_holds :
 /-- **`SwapStepLeChainHypothesis` を sub-predicate 経由で discharge**: 2 sub-predicate を
 仮定しつつ、`l_chain := ll` (= identity chain) を witness にして discharge. trivial chain
 (0-step) でも全条件が pass-through するので、sub-predicate を明示的に経由した再構成形. -/
+@[entry_point]
 theorem swapStepLeChainHypothesis_via_subpredicates
     (_h_kraft : PermChainKraftPreserving.{u})
     (_h_exp : PermChainExpectedLengthPreserving.{u}) :
@@ -172,6 +183,7 @@ theorem swapStepLeChainHypothesis_via_subpredicates
 omit [Nonempty α] [MeasurableSingletonClass α] in
 /-- **2-step swap chain の expectedLength 不変 (pointwise eq swaps)**: 2 つの swap が
 それぞれ `ll a = ll b` 型の値等しい pair であるとき、合成後も expectedLength は不変. -/
+@[entry_point]
 theorem expectedLength_swap_chain2_eq
     (P : Measure α) [IsProbabilityMeasure P]
     (ll : α → ℕ) (a b c d : α)
@@ -201,6 +213,7 @@ theorem expectedLength_swap_chain2_eq
 omit [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- **2-step swap chain の Kraft 不変 (任意 pair)**: swap の Kraft 不変性は値に依らないので
 任意 pair の 2-step chain で Kraft 和は不変. -/
+@[entry_point]
 theorem kraft_sum_swap_chain2_eq
     (ll : α → ℕ) (a b c d : α) :
     (∑ x : α, ((2 : ℝ)) ^ (-((ll ∘ Equiv.swap a b ∘ Equiv.swap c d) x : ℤ)))
@@ -211,6 +224,7 @@ omit [Nonempty α] [MeasurableSingletonClass α] in
 /-- **2-step swap normalization lift**: `ll a = ll b ∧ ll c = ll d` の下で、2 swap を
 合成した `ll'` も positivity / Kraft / expectedLength 全条件を満たす. n-step lift の
 代表 case (n = 2). -/
+@[entry_point]
 theorem swap_normalization_chain2_lift
     (P : Measure α) [IsProbabilityMeasure P]
     (ll : α → ℕ) (hll_pos : ∀ x, 0 < ll x)
@@ -232,6 +246,7 @@ theorem swap_normalization_chain2_lift
 /-- **chain hypothesis discharge corollary (poly)**: `SwapStepLeChainHypothesis` を
 sub-predicate discharge 経由で得る universe-polymorphic corollary. wave6 の
 `swapStepLeChainHypothesis_holds` の sub-predicate 版 re-derivation. -/
+@[entry_point]
 theorem swapStepLeChainHypothesis_holds_via_subpredicates :
     SwapStepLeChainHypothesis.{u} :=
   swapStepLeChainHypothesis_via_subpredicates
@@ -251,12 +266,14 @@ independent audit (2026-05-30): 第 2 conjunct `HuffmanMergedIdentificationHypot
 `false-hypothesis` に確定。consumer wrapper (`huffmanLength_optimal_with_chain_combined` /
 `_via_chain_lift`) は hypothesis 形のまま残るが false premise を渡す vacuously-true wrapper。
 @audit:defect(false-statement) @audit:retract-candidate(false-hypothesis) @audit:closed-by-successor(huffman-strong-form-completion) -/
+@[entry_point]
 abbrev HuffmanChainCombinedHypothesis : Prop :=
   SwapNormalizationHypothesis.{u} ∧ HuffmanMergedIdentificationHypothesis.{u}
     ∧ SwapStepLeChainHypothesis.{u}
 
 /-- **triple → 2-way reduce**: chain hypothesis を捨てて `HuffmanCombinedHypothesis` に
 reduce. chain は常に成立するので情報損失なし. -/
+@[entry_point]
 theorem huffmanChainCombined_reduce
     (h : HuffmanChainCombinedHypothesis.{u}) :
     HuffmanCombinedHypothesis.{u} :=
@@ -264,12 +281,14 @@ theorem huffmanChainCombined_reduce
 
 /-- **2-way → triple lift**: `HuffmanCombinedHypothesis` に常成立 chain hypothesis を
 付加して triple に lift. -/
+@[entry_point]
 theorem huffmanChainCombined_lift
     (h : HuffmanCombinedHypothesis.{u}) :
     HuffmanChainCombinedHypothesis.{u} :=
   ⟨h.1, h.2, swapStepLeChainHypothesis_holds⟩
 
 /-- **triple ↔ 2-way 同値**: chain hypothesis は常成立なので triple と 2-way は同値. -/
+@[entry_point]
 theorem huffmanChainCombined_iff :
     HuffmanChainCombinedHypothesis.{u} ↔ HuffmanCombinedHypothesis.{u} :=
   ⟨huffmanChainCombined_reduce, huffmanChainCombined_lift⟩
@@ -282,6 +301,7 @@ Transitive `sorry` via `huffmanLength_optimal_with_hypotheses` (Phase 2 wall 経
 本 wrapper には `@residual` タグを付与しない — closure 責任は
 `HuffmanWalls.huffman_merged_identification_hypothesis_holds`
 (`@residual(plan:huffman-2hyp-vertical-reduction)`) が保有。 -/
+@[entry_point]
 theorem huffmanLength_optimal_with_chain_combined
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -302,6 +322,7 @@ Transitive `sorry` via `huffmanLength_optimal_with_hypotheses` (chain hypothesis
 `HuffmanCombinedHypothesis` consumer の transitive)。本 wrapper には `@residual` タグを付与
 しない — closure 責任は `HuffmanWalls.huffman_merged_identification_hypothesis_holds`
 (`@residual(plan:huffman-2hyp-vertical-reduction)`) が保有。 -/
+@[entry_point]
 theorem huffmanLength_optimal_via_chain_lift
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -318,6 +339,7 @@ theorem huffmanLength_optimal_via_chain_lift
 /-- **triple hypothesis を成立 chain で 2 引数化**: 2 hypothesis から triple を作って
 そのまま reduce する round-trip が identity になることの sanity. client が triple ↔ 2-way
 を自由に行き来できることを保証. -/
+@[entry_point]
 theorem huffmanChainCombined_roundtrip
     (h : HuffmanCombinedHypothesis.{u}) :
     huffmanChainCombined_reduce (huffmanChainCombined_lift h) = h := rfl

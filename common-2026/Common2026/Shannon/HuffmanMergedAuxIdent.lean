@@ -428,6 +428,7 @@ lemma huffmanLengthAux_relabel {γ : Type*} [DecidableEq γ] [LinearOrder γ] (e
 cornerstone の genuine な適用例であり、carrier-crossing の subtype 部分を解消する。 -/
 
 /-- subtype 包含 `{y // y ≠ b} ↪ β`. -/
+@[entry_point]
 def subtypeNeEmbedding (b : α) : { y : α // y ≠ b } ↪ α :=
   Function.Embedding.subtype _
 

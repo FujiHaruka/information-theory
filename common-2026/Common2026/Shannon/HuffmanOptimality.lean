@@ -46,6 +46,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty �
 omit [MeasurableSingletonClass α] in
 /-- **Helper (Phase 2.1)**: `huffmanLength P` の最深 leaf が取れる. `Fintype.card α ≥ 1` から
 `Finset.univ.Nonempty` で `Finset.exists_max_image` を起動. -/
+@[entry_point]
 theorem exists_deepest_leaf (P : Measure α) (_h_card : 1 ≤ Fintype.card α) :
     ∃ a : α, ∀ c : α, huffmanLength P c ≤ huffmanLength P a := by
   classical

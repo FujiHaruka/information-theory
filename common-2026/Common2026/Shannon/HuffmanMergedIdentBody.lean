@@ -75,6 +75,7 @@ omit [LinearOrder α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- **grouping 不変量**: `mergedInitMultiset Q a b` は `HuffmanGrouping` を満たす
 (各 singleton group が Nodup / Nonempty / 相互 disjoint). `huffmanLengthAux` を
 本 multiset 上で展開する際に必須となる前提. -/
+@[entry_point]
 lemma mergedInitMultiset_huffmanGrouping
     (Q : Measure α) (a b : α) :
     HuffmanGrouping (mergedInitMultiset Q a b) := by

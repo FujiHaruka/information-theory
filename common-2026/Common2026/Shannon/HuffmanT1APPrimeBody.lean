@@ -54,6 +54,7 @@ explicit に与える形.
 
 実用上は `n = 0` (= 何もしない) と `n = 1` (= 1 swap) を主に使う. 本 file では `n = 0`
 case のみ trivial discharge を publish. -/
+@[entry_point]
 abbrev SwapStepLeChainHypothesis : Prop :=
   ∀ {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -70,6 +71,7 @@ abbrev SwapStepLeChainHypothesis : Prop :=
 /-- **`SwapStepLeChainHypothesis` の trivial discharge** (= `l_chain := ll` で全条件 pass-through).
 これは `SwapStepLeChainHypothesis` を **完全 discharge する** (任意 `ll, pair` で成立する) 形.
 weakened な primitive hypothesis なので discharge 自体は trivial. -/
+@[entry_point]
 theorem swapStepLeChainHypothesis_holds :
     SwapStepLeChainHypothesis.{u} := by
   intro β _ _ _ _ _ Q _ ll hll_pos hll_kraft _pair
@@ -89,6 +91,7 @@ identification が成立する場合の form を作る側で使う sibling prope
 `mergedMeasure Q b a hba` ≠ `mergedMeasure Q a b hab` のため一般的 swap 形は scope-out.
 本 lemma は sibling property の symm を `huffmanLength Q b = huffmanLength Q a` 形で再公開
 する命名 alias. -/
+@[entry_point]
 theorem huffmanLength_sibling_eq_iff
     {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
@@ -103,6 +106,7 @@ trivial_when_eq` 経由で `h_swap` を消費した形で `huffmanLength_optimal
 を呼び出すパターン. 仮定で `ll a = ll b` (sibling at `(a, b)`) の場合の直接呼び出し形.
 
 @residual(plan:huffman-2hyp-vertical-reduction) -/
+@[entry_point]
 theorem huffmanLength_optimal_via_partial_swap_when_eq
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -120,6 +124,7 @@ theorem huffmanLength_optimal_via_partial_swap_when_eq
 は主定理 internal の swap normalization step で生成されるので external 仮定にはしない.
 
 @residual(plan:huffman-2hyp-vertical-reduction) -/
+@[entry_point]
 theorem huffmanLength_optimal_wrapper_explicit
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -181,12 +186,14 @@ independent audit (2026-05-30): 第 2 conjunct `HuffmanMergedIdentificationHypot
 wrapper (`huffmanLength_optimal_with_combined` / `_terminal` ほか) は hypothesis 形のまま残るが
 false premise を渡す vacuously-true wrapper。closure は cost-level pivot 完遂時。
 @audit:defect(false-statement) @audit:retract-candidate(false-hypothesis) @audit:closed-by-successor(huffman-strong-form-completion) -/
+@[entry_point]
 abbrev HuffmanCombinedHypothesis : Prop :=
   SwapNormalizationHypothesis.{u} ∧ HuffmanMergedIdentificationHypothesis.{u}
 
 /-- **combined hypothesis から主定理を 1-arg で呼ぶ wrapper**.
 
 @residual(plan:huffman-2hyp-vertical-reduction) -/
+@[entry_point]
 theorem huffmanLength_optimal_with_combined
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
@@ -207,6 +214,7 @@ theorem huffmanLength_optimal_with_combined
 得られる terminal step.
 
 @residual(plan:huffman-2hyp-vertical-reduction) -/
+@[entry_point]
 theorem huffmanLength_optimal_terminal
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
