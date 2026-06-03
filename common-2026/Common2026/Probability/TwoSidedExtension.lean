@@ -409,6 +409,7 @@ theorem measurable_shiftZ : Measurable (shiftZ : (∀ _ : ℤ, α) → _) :=
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- The inverse shift is measurable. -/
+@[entry_point]
 theorem measurable_shiftZSymm : Measurable (shiftZSymm : (∀ _ : ℤ, α) → _) :=
   measurable_pi_iff.mpr (fun i => measurable_pi_apply (i - 1))
 
@@ -490,6 +491,7 @@ theorem measurePreserving_shiftZ :
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
   [MeasurableSingletonClass α] [IsProbabilityMeasure μ] in
 /-- `shiftZSymm` is the left-inverse of `shiftZ`. -/
+@[entry_point]
 theorem leftInverse_shiftZSymm :
     Function.LeftInverse (shiftZSymm (α := α)) shiftZ := by
   intro x; funext i; simp [shiftZ, shiftZSymm]
@@ -497,6 +499,7 @@ theorem leftInverse_shiftZSymm :
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
   [MeasurableSingletonClass α] [IsProbabilityMeasure μ] in
 /-- `shiftZSymm` is the right-inverse of `shiftZ`. -/
+@[entry_point]
 theorem rightInverse_shiftZSymm :
     Function.RightInverse (shiftZSymm (α := α)) shiftZ := by
   intro x; funext i; simp [shiftZ, shiftZSymm]
@@ -809,6 +812,7 @@ omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [IsProbabilityMeasure μ] in
 /-- Preimage under `shiftZ^[k]` preserves measurable cylinders: the preimage of
 a `measurableCylinders` element is again in `measurableCylinders`. -/
+@[entry_point]
 lemma shiftZ_iterate_preimage_mem_measurableCylinders (k : ℕ)
     {t : Set (∀ _ : ℤ, α)} (ht : t ∈ measurableCylinders (fun _ : ℤ => α)) :
     shiftZ^[k] ⁻¹' t ∈ measurableCylinders (fun _ : ℤ => α) := by
@@ -867,12 +871,14 @@ depending only on coordinates `i ≥ 0`. -/
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [IsProbabilityMeasure μ] in
 /-- `posSigma ≤ pi`. -/
+@[entry_point]
 lemma posSigma_le_pi : posSigma (α := α) ≤ MeasurableSpace.pi :=
   cylinderEvents_le_pi
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
   [IsProbabilityMeasure μ] in
 /-- `natProj` is measurable from `posSigma` to `pi` on `ℕ → α`. -/
+@[entry_point]
 lemma measurable_natProj_posSigma :
     Measurable[posSigma (α := α)] (natProj (α := α)) := by
   rw [@measurable_pi_iff]
