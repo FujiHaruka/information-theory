@@ -346,15 +346,19 @@ in disguise (concerns noise existence, not an entropy-power inequality).
 this `def` is a *genuine existential richness statement* (no circular /
 `:True` / vacuous shape — the `P.map _ = gaussianReal 0 1` conjuncts rule
 out the `Z_* := 0` collapse). It is no longer a *load-bearing hypothesis*:
-the noise-extension witness is now supplied by the shared sorry lemma
+the noise-extension witness was being supplied by the lemma
 `stamScalingNoise_exists` (below) rather than threaded as a caller
-`(h_noise : IsStamScalingNoiseHyp ...)` argument. The Mathlib wall
-(noise extension on an arbitrary probability space, `MeasureTheory.IsAtomless`
--style extension not yet upstream — loogle/rg 0 hits, confirmed 2026-05-25)
-lives in that lemma's `sorry` body under
-`@residual(plan:epi-stam-to-conclusion-phaseA-plan)` (L-Concl-A-γ). Hence
-the predicate carries **no** `@residual` / `@audit:retract-candidate` tag of
-its own — the residual is localized to `stamScalingNoise_exists`. -/
+`(h_noise : IsStamScalingNoiseHyp ...)` argument.
+
+**Update (2026-06-04, `epi-richness-route-b-plan` Phase 6)**: the predicate
+itself is a fine genuine existential, but the **in-place** instantiation
+`stamScalingNoise_exists` (claiming it holds on *any* `(Ω, P)`) is
+**provably false** on atomic measures (not a Mathlib wall — see that lemma's
+docstring + `@audit:defect(false-statement)`). The honest route B successor
+that *does* hold is `EPINoiseExtension.stamScalingNoise_exists_on_lift`
+(on the lift space `Ω × ℝ × ℝ`, 0 sorry). This predicate carries **no**
+`@residual` / `@audit:*` tag of its own — the defect is localized to the
+in-place `stamScalingNoise_exists`. -/
 def IsStamScalingNoiseHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∃ (Z_X Z_Y : Ω → ℝ),
@@ -362,29 +366,39 @@ def IsStamScalingNoiseHyp {Ω : Type*} [MeasurableSpace Ω]
     P.map Z_X = gaussianReal 0 1 ∧ P.map Z_Y = gaussianReal 0 1 ∧
     IndepFun X Z_X P ∧ IndepFun Y Z_Y P ∧ IndepFun Z_X Z_Y P
 
-/-- **Shared sorry lemma — noise-extension richness exists** (Cluster C
-Group 2 Tier 2 migration, 2026-05-28).
+/-- **FALSE in-place statement — honest defect marker** (Phase 6 of
+`epi-richness-route-b-plan`, 2026-06-04).
 
-On any probability space `(Ω, P)` there exist two standard-normal random
-variables `Z_X, Z_Y : Ω → ℝ`, each independent of its paired original
-variable (`IndepFun X Z_X P`, `IndepFun Y Z_Y P`) and jointly independent
-(`IndepFun Z_X Z_Y P`). This is the Cover-Thomas Ch.17 Csiszár-coupling
-implicit assumption "the probability space carries enough auxiliary
-randomness".
+Claims that on **any** probability space `(Ω, P)` there exist two
+standard-normal `Z_X, Z_Y : Ω → ℝ` with `P.map Z_X = gaussianReal 0 1` etc.
+This in-place existential is **provably false**, not "hard": e.g. `Ω = Unit`,
+`P = Measure.dirac ()` satisfies `[IsProbabilityMeasure P]`, but every
+measurable `Z_X : Unit → ℝ` is constant, so `P.map Z_X = Measure.dirac (Z_X ())
+≠ gaussianReal 0 1`. Hence the `sorry` below is a `false-statement` defect —
+no Mathlib noise-extension constructor could ever discharge it (the previous
+docstring's "Mathlib upstream constructor / `IsAtomless` richness instance
+待ち" framing was **misleading**: the statement is false on atomic measures,
+so it is not a Mathlib wall).
 
-**Mathlib wall**: there is no Mathlib API to extend an arbitrary
-probability measure with two fresh jointly independent standard normals
-independent of a pre-existing pair (loogle/rg 0 hits, 2026-05-25:
-`ProbabilityTheory.exists_iIndepFun`, `MeasureTheory.Measure.IsAtomless`,
-`exists_measurable_indepFun` all `unknown identifier`). Genuine discharge
-requires either a Mathlib upstream noise-extension constructor or an
-`IsAtomless`-style richness instance on `(Ω, P)`.
+**Honest successor (route B, lift form)**:
+`InformationTheory.Shannon.EPINoiseExtension.stamScalingNoise_exists_on_lift`
+proves the genuine existential on the **lift space** `Ω × ℝ × ℝ`
+(`liftMeasure P = P.prod ((gaussianReal 0 1).prod (gaussianReal 0 1))`) with
+coordinate-projection witnesses, 0 sorry, from Mathlib product-measure API
+only. `entropyPower`'s law-only property + `IsStamInequalityResidual`'s
+carrier-free defeq then transport EPI from the lift to `(Ω, P)`
+(`entropy_power_inequality_via_lift`).
 
-This consolidates the wall into one `sorry` so consumers (the bridge /
-scaling constructors) call it as a normal lemma rather than threading a
-load-bearing `(h_noise : IsStamScalingNoiseHyp ...)` hypothesis.
+**Why the first-choice fix (rewrite the def so `sorry` lives only in a proof
+body) does not apply here**: the defect is in the **statement shape itself**
+(`IsStamScalingNoiseHyp X Y P` is the in-place existential). The honest fix is
+not a rewrite of *this* declaration but a *different* declaration on the lift
+space (the successor above), kept side-by-side (addition, not replacement —
+B1 scope). The in-place signature is left in place (defect-marked) because
+changing it ripples into the consumer `isStamToEPIScalingHyp_of_stam_debruijn`
+destructure (`:1291`), which is out of B1 scope (G2-blocked, no ROI).
 
-@residual(plan:epi-stam-to-conclusion-phaseA-plan) -- L-Concl-A-γ -/
+@audit:defect(false-statement) @audit:closed-by-successor(epi-richness-route-b-plan) -/
 theorem stamScalingNoise_exists {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] :
     IsStamScalingNoiseHyp X Y P := by
