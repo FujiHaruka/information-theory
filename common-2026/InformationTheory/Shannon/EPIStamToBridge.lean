@@ -1027,47 +1027,45 @@ theorem csiszarLogRatioGap_differentiableOn_interior
     hX hZX hXZX hY hZY hYZY hXYZXY
     h_reg_sum h_reg_X h_reg_Y ht_pos).differentiableAt).differentiableWithinAt
 
-/-- **R-5-b — `csiszarLogRatioGap X Y Z_X Z_Y P` is continuous on `Set.Ici 0`**.
+-- **R-5-b (full-ray `ContinuousOn (Set.Ici 0)`) DELETED (surface shrink, 2026-06-04)**:
+-- the full-ray continuity consumed the wall atom three times along *every* ray
+-- point. After the surface shrink it had no consumer (R-5-c now derives interior
+-- `AntitoneOn` from differentiability and re-attaches the endpoint via the
+-- endpoint-only `csiszarLogRatioGap_continuousWithinAt_zero` below). Removing it
+-- confines the wall to the single endpoint.
 
-The gap is `log (eP_sum) − log (eP_X + eP_Y)` over the three heat-flow
-entropy-power terms `eP_* = entropyPower (P.map (· + √t·Z))`. Each term is
-`ContinuousOn (Set.Ici 0)` via the shared atom
-`heatFlowEntropyPower_continuousOn` (`EPIG2HeatFlowContinuity.lean`,
-`wall:heatflow-continuity`). The outer `log` / `+` / `−` composition is genuine
-(`ContinuousOn.log` with `entropyPower_pos` / `add_pos` for the `≠ 0` premises,
-`ContinuousOn.sub`).
+/-- **R-5-b' — endpoint continuity `ContinuousWithinAt (Set.Ioi 0) 0` of
+`csiszarLogRatioGap X Y Z_X Z_Y P`**.
+
+The endpoint (`t = 0⁺`) version of R-5-b, mirroring the full-ray composition but
+using the shrunk shared atom `heatFlowEntropyPower_continuousWithinAt_zero`
+(`wall:heatflow-continuity`, endpoint only) three times, then the genuine
+`ContinuousWithinAt.log` / `.add` / `.sub` composition (with `entropyPower_pos` /
+`add_pos` discharging the `≠ 0` premises).
 
 This consumer carries **no `@residual`**: the only `sorry` lives in the shared
-`wall:heatflow-continuity` lemma (per the shared-wall pattern). The wall is the
-`t = 0⁺`-uniform integrable majorant for `negMulLog (f_t)`, not derivable from
-`IsDeBruijnRegularityHyp` (GATE NO-GO 2026-06-03, see the wall lemma docstring).
-This corrects the earlier `@residual(plan:epi-stam-to-conclusion-phaseA-plan)`
-misclassification — the obstruction is a genuine Mathlib wall, not a plan
-sub-step. -/
-theorem csiszarLogRatioGap_continuousOn
+`wall:heatflow-continuity` lemma, now confined to the single endpoint. The
+interior `t > 0` continuity is supplied genuinely by R-5-a
+(`csiszarLogRatioGap_differentiableOn_interior`, `.continuousOn`) on the consumer
+side (R-5-c). -/
+theorem csiszarLogRatioGap_continuousWithinAt_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
                     (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
     (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
     (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P) :
-    ContinuousOn
+    ContinuousWithinAt
       (fun t : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
         X Y Z_X Z_Y P t)
-      (Set.Ici (0 : ℝ)) := by
-  -- Each of the three `entropyPower (P.map (· + √t·Z))` terms is `ContinuousOn`
-  -- via the shared `wall:heatflow-continuity` atom; the outer `log/+/−`
-  -- composition is genuine (no new `@residual` on this consumer).
-  have h_sum := heatFlowEntropyPower_continuousOn
+      (Set.Ioi (0 : ℝ)) 0 := by
+  have h_sum := heatFlowEntropyPower_continuousWithinAt_zero
     (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P h_reg_sum
-  have h_X := heatFlowEntropyPower_continuousOn X Z_X P h_reg_X
-  have h_Y := heatFlowEntropyPower_continuousOn Y Z_Y P h_reg_Y
+  have h_X := heatFlowEntropyPower_continuousWithinAt_zero X Z_X P h_reg_X
+  have h_Y := heatFlowEntropyPower_continuousWithinAt_zero Y Z_Y P h_reg_Y
   unfold InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
-  refine ContinuousOn.sub (h_sum.log ?_) ((h_X.add h_Y).log ?_)
-  · intro t _
-    exact (entropyPower_pos _).ne'
-  · intro t _
-    exact (add_pos (entropyPower_pos _) (entropyPower_pos _)).ne'
+  exact (h_sum.log (entropyPower_pos _).ne').sub
+    ((h_X.add h_Y).log (add_pos (entropyPower_pos _) (entropyPower_pos _)).ne')
 
 /-- **R-5-c — `AntitoneOn (fun t => csiszarLogRatioGap X Y Z_X Z_Y P t) (Set.Ici 0)`**,
 the genuine log-ratio EPI gap is antitone on the heat-flow ray `[0, ∞)`.
@@ -1120,26 +1118,45 @@ theorem csiszarLogRatioGap_antitoneOn_Ici_zero
       (fun t : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
         X Y Z_X Z_Y P t)
       (Set.Ici (0 : ℝ)) := by
-  refine antitoneOn_of_deriv_nonpos (convex_Ici 0)
-    (csiszarLogRatioGap_continuousOn X Y Z_X Z_Y P h_reg_sum h_reg_X h_reg_Y)
-    (csiszarLogRatioGap_differentiableOn_interior X Y Z_X Z_Y P
+  -- **Surface shrink (2026-06-04)**: derive `AntitoneOn` on the *interior*
+  -- `Set.Ioi 0` genuinely (continuity there is `differentiableOn.continuousOn`,
+  -- **no wall**), then re-attach the endpoint `0` via the endpoint-only wall atom
+  -- `csiszarLogRatioGap_continuousWithinAt_zero` + `AntitoneOn.insert_of_continuousWithinAt`.
+  set f := fun t : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
+    X Y Z_X Z_Y P t with hf_def
+  -- Genuine interior differentiability (= continuity) on `Set.Ioi 0`.
+  have h_diff_Ioi : DifferentiableOn ℝ f (Set.Ioi 0) := by
+    have := csiszarLogRatioGap_differentiableOn_interior X Y Z_X Z_Y P
+      hX hZX hXZX hY hZY hYZY hXYZXY h_reg_sum h_reg_X h_reg_Y
+    rwa [interior_Ici] at this
+  -- `AntitoneOn f (Set.Ioi 0)`, genuine (no wall): continuity on `Ioi 0` is the
+  -- interior differentiability, `interior (Ioi 0) = Ioi 0`, deriv ≤ 0 from R-2 + R-3.
+  have h_anti_Ioi : AntitoneOn f (Set.Ioi 0) := by
+    refine antitoneOn_of_deriv_nonpos (convex_Ioi 0) h_diff_Ioi.continuousOn
+      (by rw [interior_Ioi]; exact h_diff_Ioi) ?_
+    intro t ht
+    rw [interior_Ioi] at ht
+    have ht_pos : (0 : ℝ) < t := ht
+    obtain ⟨hJX_pos, hJY_pos, hJsum_pos, h_stam, h_regdens_X, h_regdens_Y,
+            h_norm_X, h_norm_Y, h_conv_id, h_blachman⟩ := h_pos_stam t ht_pos
+    have h_deriv := csiszarLogRatioGap_hasDerivAt X Y Z_X Z_Y P
       hX hZX hXZX hY hZY hYZY hXYZXY
-      h_reg_sum h_reg_X h_reg_Y) ?_
-  intro t ht
-  rw [interior_Ici] at ht
-  have ht_pos : (0 : ℝ) < t := ht
-  obtain ⟨hJX_pos, hJY_pos, hJsum_pos, h_stam, h_regdens_X, h_regdens_Y,
-          h_norm_X, h_norm_Y, h_conv_id, h_blachman⟩ := h_pos_stam t ht_pos
-  -- R-2 gives `HasDerivAt (csiszarLogRatioGap ...) (RHS) t`.
-  have h_deriv := csiszarLogRatioGap_hasDerivAt X Y Z_X Z_Y P
-    hX hZX hXZX hY hZY hYZY hXYZXY
-    h_reg_sum h_reg_X h_reg_Y ht_pos
-  -- R-3 gives `RHS ≤ 0`.
-  have h_le := csiszarLogRatioGap_deriv_le_zero X Y Z_X Z_Y P
-    h_reg_sum h_reg_X h_reg_Y ht_pos hJX_pos hJY_pos hJsum_pos h_stam
-    h_regdens_X h_regdens_Y h_norm_X h_norm_Y h_conv_id h_blachman
-  rw [h_deriv.deriv]
-  exact h_le
+      h_reg_sum h_reg_X h_reg_Y ht_pos
+    have h_le := csiszarLogRatioGap_deriv_le_zero X Y Z_X Z_Y P
+      h_reg_sum h_reg_X h_reg_Y ht_pos hJX_pos hJY_pos hJsum_pos h_stam
+      h_regdens_X h_regdens_Y h_norm_X h_norm_Y h_conv_id h_blachman
+    rw [h_deriv.deriv]
+    exact h_le
+  -- Endpoint `0` is a (left) cluster point of `Set.Ioi 0`.
+  have h_cluster : ClusterPt (0 : ℝ) (Filter.principal (Set.Ioi 0)) := by
+    rw [← mem_closure_iff_clusterPt, closure_Ioi]
+    exact Set.self_mem_Ici
+  -- Endpoint continuity from the shrunk wall atom (R-5-b').
+  have h_cont_zero : ContinuousWithinAt f (Set.Ioi 0) 0 :=
+    csiszarLogRatioGap_continuousWithinAt_zero X Y Z_X Z_Y P h_reg_sum h_reg_X h_reg_Y
+  -- Insert the endpoint: `insert 0 (Ioi 0) = Ici 0`.
+  have := h_anti_Ioi.insert_of_continuousWithinAt h_cluster h_cont_zero
+  rwa [Set.Ioi_insert] at this
 
 -- **A-3 (D3) DELETED (R-5 rewire, 2026-06-01)**: the difference-gap derivative
 -- bound `csiszarGap1Source_deriv_le_zero` was `@audit:defect(false-statement)` —
@@ -1176,37 +1193,13 @@ Members:
   combining `IsStamScalingNoiseHyp` witness extraction + A-4-4.
 -/
 
-/-- **A-4-1**: `csiszarGap1Source X Y Z_X Z_Y P` is continuous on `Set.Ici 0`.
-
-The difference gap `eP_sum − eP_X − eP_Y` over the three heat-flow
-entropy-power terms `eP_* = entropyPower (P.map (· + √t·Z))`. Each term is
-`ContinuousOn (Set.Ici 0)` via the shared atom
-`heatFlowEntropyPower_continuousOn` (`EPIG2HeatFlowContinuity.lean`,
-`wall:heatflow-continuity`); the outer `−` / `−` composition is genuine
-(`ContinuousOn.sub`, no positivity premise needed for the difference form).
-
-This consumer carries **no `@residual`**: the only `sorry` lives in the shared
-`wall:heatflow-continuity` lemma. **NOTE (確定事実 2)**: this difference version
-is dead code — its only consumer (`csiszarGap1Source_antitoneOn_Ici_zero`, D6) was
-deleted in the R-5 rewire; the live continuity consumer is the ratio version
-`csiszarLogRatioGap_continuousOn` (R-5-b, feeds R-5-c). It is wired to the same
-shared wall so the wall stays at one `sorry`. -/
-theorem csiszarGap1Source_continuousOn
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
-    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
-                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
-    (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
-    (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P) :
-    ContinuousOn (fun t : ℝ => csiszarGap1Source X Y Z_X Z_Y P t) (Set.Ici (0 : ℝ)) := by
-  -- Difference version: outer `−`/`−` composition over the same three
-  -- `wall:heatflow-continuity` atoms (no log, hence no positivity premise).
-  have h_sum := heatFlowEntropyPower_continuousOn
-    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P h_reg_sum
-  have h_X := heatFlowEntropyPower_continuousOn X Z_X P h_reg_X
-  have h_Y := heatFlowEntropyPower_continuousOn Y Z_Y P h_reg_Y
-  unfold InformationTheory.Shannon.EPIL3Integration.csiszarGap1Source
-  exact (h_sum.sub h_X).sub h_Y
+-- **A-4-1 (`csiszarGap1Source_continuousOn`) DELETED (surface shrink, 2026-06-04)**:
+-- dead code (difference version). Its only consumer
+-- (`csiszarGap1Source_antitoneOn_Ici_zero`, D6) was deleted in the R-5 rewire,
+-- leaving zero live consumers (`@audit:retract-candidate(no-live-consumer)`). It
+-- consumed the old full-ray wall atom `heatFlowEntropyPower_continuousOn`, which
+-- no longer exists after the surface shrink, so deletion is the lowest-risk
+-- handling per the plan (Step 5-b, retract dead code).
 
 /-- **A-4-2**: `csiszarGap1Source X Y Z_X Z_Y P` is differentiable on the
 interior `Set.Ioi 0 = interior (Set.Ici 0)`, via A-2-3 + `HasDerivAt.differentiableAt`. -/
