@@ -116,7 +116,7 @@ InformationTheory/Shannon/
   Chernoff.lean                ← 既存 (1066 行, 0 sorry, 変更なし)
   ChernoffInformation.lean     ← 新規 (~500 行, 0 sorry)
   HoeffdingTradeoff.lean       ← 既存 (sandwich pattern 雛形)
-InformationTheory/InformationTheory/
+InformationTheory/
   Asymptotic.lean              ← 既存 (`DotEq` notation 利用)
 InformationTheory.lean                ← `import InformationTheory.Shannon.ChernoffInformation` 追記
 docs/shannon/
@@ -137,7 +137,7 @@ docs/shannon/
   `chernoff_rate_ge_chernoffInfo_eventually`)
 - [x] `InformationTheory/Shannon/HoeffdingTradeoff.lean` (sandwich Tendsto pattern 雛形,
   `hoeffding_tradeoff_with_hypothesis`)
-- [x] `InformationTheory/InformationTheory/Asymptotic.lean` (`DotEq`, `dotEq_iff_tendsto_log_div`)
+- [x] `InformationTheory/Asymptotic.lean` (`DotEq`, `dotEq_iff_tendsto_log_div`)
 - [x] Mathlib `Mathlib.Topology.Order.LiminfLimsup.tendsto_of_le_liminf_of_limsup_le`
 - [x] Mathlib `Mathlib.Order.Filter.IsBounded.IsBoundedUnder`
 
@@ -155,7 +155,7 @@ docs/shannon/
 - [ ] **1-1 imports + namespace**:
   ```lean
   import InformationTheory.Shannon.Chernoff
-  import InformationTheory.InformationTheory.Asymptotic
+  import InformationTheory.Asymptotic
   import Mathlib.Topology.Order.LiminfLimsup
   import Mathlib.Order.Filter.IsBounded
   namespace InformationTheory.Shannon.ChernoffInformation

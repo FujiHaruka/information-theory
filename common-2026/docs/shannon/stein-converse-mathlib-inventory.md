@@ -102,7 +102,7 @@ Phase C (converse) + Phase D (`Tendsto` 統合) 着手前に **Pi 化 chain rule
 - **`[..]` プレリク verbatim**: `[Unique α]`
 - **本 plan での用途**: `Fin 1` (`Unique` インスタンス自動) で Pi 測度 = base measure。induction の base case で `klDiv (Measure.pi (fun _ : Fin 1 => P)) (Measure.pi (fun _ : Fin 1 => Q)) = klDiv P Q` を導出
 
-#### `InformationTheory.InformationTheory.Shannon.klDiv_map_measurableEquiv` (本 project 既存)
+#### `InformationTheory.Shannon.klDiv_map_measurableEquiv` (本 project 既存)
 
 - **file:line**: `InformationTheory/Shannon/MutualInfo.lean:52`
 - **完全署名 verbatim**:
@@ -115,7 +115,7 @@ Phase C (converse) + Phase D (`Tendsto` 統合) 着手前に **Pi 化 chain rule
 - **`[..]` プレリク verbatim**: `[MeasurableSpace α]` `[MeasurableSpace β]` `[IsFiniteMeasure μ]` `[IsFiniteMeasure ν]`
 - **本 plan での用途**: `piFinSuccAbove` 同型を介した `klDiv (Measure.pi μ) (klDiv ((μ i).prod (Measure.pi ...)))` の reshape
 
-#### `InformationTheory.InformationTheory.Shannon.klDiv_prod_const_left` (本 project 既存)
+#### `InformationTheory.Shannon.klDiv_prod_const_left` (本 project 既存)
 
 - **file:line**: `InformationTheory/Shannon/MutualInfo.lean:80`
 - **完全署名 verbatim**:
@@ -160,7 +160,7 @@ theorem klDiv_pi_eq_n_smul
 
 ### 本 project 既存 (DPI.lean: 既に書かれている、要 public 化)
 
-#### `InformationTheory.InformationTheory.Shannon.klDiv_map_le` (現在 `private`)
+#### `InformationTheory.Shannon.klDiv_map_le` (現在 `private`)
 
 - **file:line**: `InformationTheory/Shannon/DPI.lean:52`
 - **完全署名 verbatim**:

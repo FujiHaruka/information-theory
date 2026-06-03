@@ -161,7 +161,7 @@ theorem hoeffding_tradeoff
 | `IsCompact.exists_isMinOn` | `theorem ...` | `Mathlib/Topology/Order/Compact.lean:228` | `theorem IsCompact.exists_isMinOn [ClosedIicTopology α] {s : Set β} (hs : IsCompact s) (ne_s : s.Nonempty) {f : β → α} (hf : ContinuousOn f s) : ∃ x ∈ s, IsMinOn f s x` (under `variable {α : Type*} {β : Type*} [TopologicalSpace α] [LinearOrder α] [TopologicalSpace β]`) | Qstar 取り出し (既使用) |
 | `IsCompact.exists_sInf_image_eq` | `theorem ...` | `Mathlib/Topology/Order/Compact.lean:417` | `theorem IsCompact.exists_sInf_image_eq [ClosedIicTopology α] {s : Set β} (hs : IsCompact s) (ne_s : s.Nonempty) {f : β → α} (hf : ContinuousOn f s) : ∃ x ∈ s, sInf (f '' s) = f x` | `hoeffdingE2 = klDivPmf Qstar P₂` 形での Qstar 取り出し (既使用) |
 
-### F. Asymptotic / log-rate notation (`InformationTheory/InformationTheory/Asymptotic.lean`)
+### F. Asymptotic / log-rate notation (`InformationTheory/Asymptotic.lean`)
 
 | 概念 | API | file:line | signature (verbatim) | T1-D での扱い |
 |---|---|---|---|---|
@@ -462,7 +462,7 @@ import InformationTheory.Shannon.StrongStein
 import InformationTheory.Shannon.SanovLDPEquality
 import InformationTheory.Shannon.CsiszarProjection
 import InformationTheory.Shannon.KLDivContinuous
-import InformationTheory.InformationTheory.Asymptotic
+import InformationTheory.Asymptotic
 import Mathlib.MeasureTheory.Measure.Tilted
 import Mathlib.MeasureTheory.Measure.LogLikelihoodRatio
 import Mathlib.Probability.ProbabilityMassFunction.Basic

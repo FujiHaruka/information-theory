@@ -257,7 +257,7 @@ theorem hoeffding_tradeoff_lemma
 
 | 概念 | InformationTheory API / file:line | 状態 | T1-B/D での扱い |
 |---|---|---|---|
-| `DotEq` (= `\doteq`) | `def DotEq (a b : ℕ → ℝ) : Prop := (fun n : ℕ => Real.log (a n) - Real.log (b n)) =o[atTop] (fun n : ℕ => (n : ℝ))` — `InformationTheory/InformationTheory/Asymptotic.lean:43` (notation `a ≐ b` in scoped `InformationTheory.Asymptotic`) | ✅ 既存 | **T1-B Chernoff statement** `P_e^{(n)} ≐ exp(-n · chernoffInfo)` を expose する notation |
+| `DotEq` (= `\doteq`) | `def DotEq (a b : ℕ → ℝ) : Prop := (fun n : ℕ => Real.log (a n) - Real.log (b n)) =o[atTop] (fun n : ℕ => (n : ℝ))` — `InformationTheory/Asymptotic.lean:43` (notation `a ≐ b` in scoped `InformationTheory.Asymptotic`) | ✅ 既存 | **T1-B Chernoff statement** `P_e^{(n)} ≐ exp(-n · chernoffInfo)` を expose する notation |
 | `DotEq.refl/symm/trans` | `Asymptotic.lean:49/57/66` | ✅ 既存 | Chernoff statement の同等変形 |
 | `DotEq.mul / inv` | `Asymptotic.lean:78/100` | ✅ 既存 | polynomial-factor の吸収 |
 | `dotEq_iff_tendsto_log_div` | `lemma dotEq_iff_tendsto_log_div (a b : ℕ → ℝ) (hPos : ∀ n, 0 < a n ∧ 0 < b n) : a ≐ b ↔ Tendsto (fun n : ℕ => (1 / (n : ℝ)) * Real.log (a n / b n)) atTop (𝓝 0)` — `Asymptotic.lean:116` | ✅ 既存 | Chernoff `Tendsto` ↔ `≐` の往復 |
@@ -494,7 +494,7 @@ import InformationTheory.Shannon.StrongStein
 import InformationTheory.Shannon.SanovLDPEquality
 import InformationTheory.Shannon.CsiszarProjection
 import InformationTheory.Shannon.KLDivContinuous
-import InformationTheory.InformationTheory.Asymptotic
+import InformationTheory.Asymptotic
 import Mathlib.MeasureTheory.Measure.Tilted
 import Mathlib.MeasureTheory.Measure.LogLikelihoodRatio
 import Mathlib.Analysis.MeanInequalities         -- Real.inner_le_Lp_mul_Lq_of_nonneg

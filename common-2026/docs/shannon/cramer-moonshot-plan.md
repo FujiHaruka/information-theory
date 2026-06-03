@@ -178,7 +178,7 @@ InformationTheory/Shannon/
   Cramer.lean                ← 新規 (T1-C 一括 publish、~400 行)
   Chernoff.lean              ← 既存、変更なし (`chernoffInfo_attained` の `IsCompact.exists_sInf_image_eq`
                                   テンプレ流用、import なしで参考のみ — 互いに無依存に保つ)
-InformationTheory/InformationTheory/
+InformationTheory/
   Asymptotic.lean            ← 既存、変更なし (`DotEq` notation 利用、Phase D で optional corollary 用)
 InformationTheory.lean              ← `import InformationTheory.Shannon.Cramer` を追記 (Phase D)
 ```
@@ -198,7 +198,7 @@ InformationTheory.lean              ← `import InformationTheory.Shannon.Cramer
 - [x] **Mathlib `Probability.ProductMeasure`**: `Measure.infinitePi`, `Measure.infinitePi_map_eval`
 - [x] **Mathlib `Probability.StrongLaw` 系**: LLN (Phase C で in-probability 弱形を Chebyshev で代替する場合は不要)
 - [x] **Mathlib `Topology.Order.Compact`**: `IsCompact.exists_sSup_image_eq` (Tier 3 達成性用、Tier 2 では未使用)
-- [x] `InformationTheory/InformationTheory/Asymptotic.lean` (`DotEq` notation、Phase D optional corollary 用)
+- [x] `InformationTheory/Asymptotic.lean` (`DotEq` notation、Phase D optional corollary 用)
 
 **参考 (import しない)**:
 

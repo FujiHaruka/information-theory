@@ -2,7 +2,7 @@
 
 > **Parent**: [`textbook-roadmap.md`](../textbook-roadmap.md) §「Tier ∞ — Infrastructure / I-2」
 > **Inventory**: [`general-dmc-mathlib-inventory.md`](./general-dmc-mathlib-inventory.md)
-> **先行**: I-1 (`InformationTheory/Shannon/TypedRV.lean`) / I-3 (`InformationTheory/InformationTheory/Asymptotic.lean`)
+> **先行**: I-1 (`InformationTheory/Shannon/TypedRV.lean`) / I-3 (`InformationTheory/Asymptotic.lean`)
 >
 > Cover & Thomas 7.7 (information capacity の operational definition と memoryless 場合の
 > 単一 letter 形への一致) の formalization。後続の T2-A AWGN / T3-B MAC / T3-C BC が
@@ -485,7 +485,7 @@ I-2 の `capacity_lim` 形 publish により、これら seed の **converse 経
 - Parent roadmap: [`textbook-roadmap.md`](../textbook-roadmap.md)
 - Inventory: [`general-dmc-mathlib-inventory.md`](./general-dmc-mathlib-inventory.md)
 - 先行 I-1: `InformationTheory/Shannon/TypedRV.lean`
-- 先行 I-3: `InformationTheory/InformationTheory/Asymptotic.lean`
+- 先行 I-3: `InformationTheory/Asymptotic.lean`
 - 既存 `capacity W`: `InformationTheory/Shannon/ChannelCodingShannonTheorem.lean:102`
 - 既存 i.i.d. MI 等式: `InformationTheory/Shannon/MIChainRule.lean:392`
 - 既存 memoryless MI 上界: `InformationTheory/Shannon/CondEntropyMemoryless.lean:546`

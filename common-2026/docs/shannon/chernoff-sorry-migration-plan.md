@@ -94,7 +94,7 @@ Chernoff の特徴:
    - `ChernoffBandMassDischarge.lean:7` の `import CramerLC2Discharge` (sweep scope **外**、
      successor file 本人)
    - 本 sweep scope 内: `ChernoffPerTiltSanov.lean:5` + `ChernoffPerTiltDischarge.lean:4`
-     の `import InformationTheory.InformationTheory.Asymptotic` (= utility import、family
+     の `import InformationTheory.Asymptotic` (= utility import、family
      entanglement ではない)
    - **family 外 (Cramér) との結合は本 sweep scope 外 file (`ChernoffBandMassDischarge`)
      にのみ存在** → 本 plan の Phase 2.x ripple では考慮不要、未決事項 escalate 不要。
@@ -483,10 +483,10 @@ plan は既に existing で、Mathlib gap (`isChernoffBandMassToOne_of_interior_
 |---|---|---|---|
 | `ChernoffConverse.lean:1` | `import InformationTheory.Shannon.Chernoff` | family 内 (S0) | scope 内 |
 | `ChernoffConverse.lean:2` | `import InformationTheory.Shannon.ChernoffInformation` | family 内 (S0) | scope 内 |
-| `ChernoffPerTiltDischarge.lean:1-4` | family 内 + `import InformationTheory.InformationTheory.Asymptotic` | family 内 + S1 (utility) | scope 内 (DotEq) |
-| `ChernoffPerTiltSanov.lean:1-5` | family 内 + `InformationTheory.InformationTheory.Asymptotic` | 同上 | scope 内 |
+| `ChernoffPerTiltDischarge.lean:1-4` | family 内 + `import InformationTheory.Asymptotic` | family 内 + S1 (utility) | scope 内 (DotEq) |
+| `ChernoffPerTiltSanov.lean:1-5` | family 内 + `InformationTheory.Asymptotic` | 同上 | scope 内 |
 | `ChernoffSanovDischarge.lean:1-5` | family 内 + Mathlib のみ | scope 内 | scope 内 |
-| `ChernoffInformation.lean:1-2` | family 内 + `InformationTheory.InformationTheory.Asymptotic` | 同上 | scope 内 |
+| `ChernoffInformation.lean:1-2` | family 内 + `InformationTheory.Asymptotic` | 同上 | scope 内 |
 | (scope 外参考) `ChernoffBandMassDischarge.lean:7` | `import InformationTheory.Shannon.CramerLC2Discharge` | **S2 (cross-family Cramér)** | **本 sweep scope 外** — successor file で sweep 対象外 |
 
 **結論**: 本 sweep scope (5 file) 内に **family 外 import 0 件** (utility import

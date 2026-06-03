@@ -148,7 +148,7 @@ InformationTheory/Shannon/
   SanovLDPEquality.lean      ← 既存 1243 行 (sanov_ldp_equality, 変更なし)
   CsiszarProjection.lean     ← 既存 487 行 (klDivPmf + Pythagoras, 変更なし)
   KLDivContinuous.lean       ← 既存 (klDivSumForm_ofVec, 変更なし)
-InformationTheory/InformationTheory/
+InformationTheory/
   Asymptotic.lean            ← 既存 (DotEq notation, 変更なし)
 InformationTheory.lean              ← `import InformationTheory.Shannon.HoeffdingTradeoff` を追記 (Phase V, オーケストレータ)
 ```
@@ -188,7 +188,7 @@ InformationTheory.lean              ← `import InformationTheory.Shannon.Hoeffd
   - **`sanov_ldp_equality`** (本 plan の Phase C/E の主機械)
 - [x] `InformationTheory/Shannon/KLDivContinuous.lean`
   - `klDivSumForm_ofVec` (Csiszar `klDivPmf` ↔ Sanov `klDivIndex` の bridge primitive)
-- [x] `InformationTheory/InformationTheory/Asymptotic.lean`
+- [x] `InformationTheory/Asymptotic.lean`
   - `DotEq`, `dotEq_iff_tendsto_log_div`, `exp_decay_N_of_pos`
 - [x] Mathlib `Measure.tilted` family, `LogLikelihoodRatio` family, `KullbackLeibler` family,
   `Probability.ProbabilityMassFunction.Basic` (`PMF.toMeasure`),
@@ -273,7 +273,7 @@ InformationTheory.lean              ← `import InformationTheory.Shannon.Hoeffd
 - [ ] **A-0 skeleton Write** (CLAUDE.md §「Skeleton-driven Development」):
   - 在庫 §着手 skeleton (line 454-645) をテンプレに、判断 #1 の bridge 方針を反映して Write
   - import 行: `InformationTheory.Shannon.Chernoff` / `Stein` / `StrongStein` / `SanovLDPEquality` /
-    `CsiszarProjection` / `KLDivContinuous` / `InformationTheory.InformationTheory.Asymptotic` /
+    `CsiszarProjection` / `KLDivContinuous` / `InformationTheory.Asymptotic` /
     `Mathlib.Probability.ProbabilityMassFunction.{Basic,Constructions}` /
     `Mathlib.Topology.Order.{LiminfLimsup,Compact}`
   - namespace: `InformationTheory.Shannon.HoeffdingTradeoff`

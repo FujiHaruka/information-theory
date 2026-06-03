@@ -133,7 +133,7 @@ import InformationTheory.Probability.TwoSidedExtension
 -- Typed Random Variable API (I-1)
 import InformationTheory.Shannon.TypedRV
 -- Asymptotic / exponent framework (I-3)
-import InformationTheory.InformationTheory.Asymptotic
+import InformationTheory.Asymptotic
 -- Wave5 parallel-10 publish
 import InformationTheory.Shannon.EPIStamDischarge
 import InformationTheory.Shannon.MaxEntropyConstrainedKKT

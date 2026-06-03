@@ -356,7 +356,7 @@ import Mathlib.Probability.ProductMeasure
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Order.LiminfLimsup
-import InformationTheory.InformationTheory.Asymptotic
+import InformationTheory.Asymptotic
 -- intentionally NOT importing InformationTheory.Shannon.Sanov*: direct cgf/tilted route
 
 /-!

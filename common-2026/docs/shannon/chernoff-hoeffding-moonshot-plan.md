@@ -134,7 +134,7 @@ InformationTheory/Shannon/
   CsiszarProjection.lean     ← 既存、変更なし
   KLDivContinuous.lean       ← 既存、変更なし
   Pinsker.lean               ← 既存、変更なし (本 plan 直接依存なし)
-InformationTheory/InformationTheory/
+InformationTheory/
   Asymptotic.lean            ← 既存、変更なし (`DotEq` notation 利用)
 InformationTheory.lean              ← `import InformationTheory.Shannon.Chernoff` を追記
 ```
@@ -151,7 +151,7 @@ InformationTheory.lean              ← `import InformationTheory.Shannon.Cherno
 - [x] `InformationTheory/Shannon/CsiszarProjection.lean` (`klDivPmf`, `klDivPmf_strictConvexOn_left`, `csiszar_projection_exists`, `csiszar_projection_unique`, `csiszar_pythagoras_inequality`)
 - [x] `InformationTheory/Shannon/KLDivContinuous.lean` (`klDivSumForm_ofVec`, `klDivSumForm_ofVec_continuous`)
 - [x] `InformationTheory/Shannon/Pinsker.lean` (本 plan 直接依存なし、tilted mediator が必要なら間接)
-- [x] `InformationTheory/InformationTheory/Asymptotic.lean` (`DotEq`, `dotEq_iff_tendsto_log_div`, `exp_decay_N_of_pos`)
+- [x] `InformationTheory/Asymptotic.lean` (`DotEq`, `dotEq_iff_tendsto_log_div`, `exp_decay_N_of_pos`)
 - [x] Mathlib `Measure.tilted` family (`tilted`, `tilted_apply`, `isProbabilityMeasure_tilted`, `tilted_tilted`, `integral_tilted`, `integral_exp_tilted`, `rnDeriv_tilted_left/right`)
 - [x] Mathlib `LogLikelihoodRatio` family (`llr_tilted_left/right`, `integral_llr_tilted_left/right`, `integrable_llr_tilted_left`)
 - [x] Mathlib `KullbackLeibler` family (`klDiv`, `klFun`, `convexOn_klFun`, `klDiv_eq_zero_iff`, `klDiv_compProd_eq_add`, `klDiv_compProd_left`)

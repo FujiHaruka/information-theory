@@ -557,7 +557,7 @@ errorProb measured per-message on:
 
 ### F-2. `Asymptotic.lean` (I-3, DotEq `≐` notation)
 
-- **file:line**: `InformationTheory/InformationTheory/Asymptotic.lean:43`
+- **file:line**: `InformationTheory/Asymptotic.lean:43`
 - **完全 signature verbatim**:
   ```lean
   def DotEq (a b : ℕ → ℝ) : Prop :=
