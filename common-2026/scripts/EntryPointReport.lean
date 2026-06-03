@@ -128,17 +128,39 @@ def groupByModule (env : Environment) (names : Array Name) :
     m := m.insert modName (cur.push n)
   return m
 
-/-- module グループを名前順にソートして行に展開（kind 注記付き）。 -/
+/-- Name の component を文字列リストに展開。 -/
+def comps (n : Name) : List String := n.components.map (·.toString)
+
+/-- 2 つの文字列リストの共通 prefix（component 単位）。 -/
+def commonPre : List String → List String → List String
+  | [], _ => []
+  | _, [] => []
+  | a :: as, b :: bs => if a == b then a :: commonPre as bs else []
+
+/-- module グループを名前順にソートして行に展開。
+    フルパス冗長を避けるため、グループ内 decl の共通 namespace を header に
+    1 度だけ出し、各行は相対名（共通部分を除いた末尾）だけにする。 -/
 def renderGroups (env : Environment) (names : Array Name) : Array String := Id.run do
   let grouped := groupByModule env names
   let modSorted := grouped.toList.toArray.qsort (fun a b => a.1.toString < b.1.toString)
   let mut lines : Array String := #[]
   for (modName, ds) in modSorted do
-    lines := lines.push s!"--- {modName} ({ds.size}) ---"
+    -- 各 decl の namespace（末尾 base name を除く）の共通 prefix
+    let nss := ds.map (fun n => (comps n).dropLast)
+    let common := match nss[0]? with
+      | none   => []
+      | some h => nss.foldl (fun acc xs => commonPre acc xs) h
+    let modShort := modName.replacePrefix `Common2026 Name.anonymous
+    let nsStr := String.intercalate "." common
+    let header :=
+      if common.isEmpty then s!"--- {modShort} ({ds.size}) ---"
+      else s!"--- {modShort}  [{nsStr}] ({ds.size}) ---"
+    lines := lines.push header
     let dsSorted := ds.qsort (fun a b => a.toString < b.toString)
     for n in dsSorted do
+      let rel := String.intercalate "." ((comps n).drop common.length)
       let kind := if isThm env n then "" else "  [def]"
-      lines := lines.push s!"  {n}{kind}"
+      lines := lines.push s!"  {rel}{kind}"
     lines := lines.push ""
   return lines
 
