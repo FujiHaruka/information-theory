@@ -1,6 +1,6 @@
 name = "common-2026"
 version = "0.1.0"
-defaultTargets = ["Common2026"]
+defaultTargets = ["InformationTheory"]
 
 [[require]]
 name = "loogle"
@@ -12,4 +12,4 @@ name = "mathlib"
 scope = "leanprover-community"
 
 [[lean_lib]]
-name = "Common2026"
+name = "InformationTheory"

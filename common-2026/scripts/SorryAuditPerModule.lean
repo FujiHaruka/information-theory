@@ -16,7 +16,7 @@
     lake env lean scripts/SorryAuditPerModule.lean
 -/
 import Lean
-import Common2026
+import InformationTheory
 
 open Lean
 
@@ -39,7 +39,7 @@ def hasOwnSorry (env : Environment) (n : Name) : Bool :=
 def audit : MetaM (Std.HashMap Name ModCounts) := do
   let env ← getEnv
   let moduleNames := env.allImportedModuleNames
-  let prefix' : Name := `Common2026
+  let prefix' : Name := `InformationTheory
   let mut acc : Std.HashMap Name ModCounts := {}
   for (n, info) in env.constants.toList do
     let some modIdx := env.getModuleIdxFor? n | continue

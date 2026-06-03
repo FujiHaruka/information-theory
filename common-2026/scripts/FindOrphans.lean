@@ -26,8 +26,8 @@
 -/
 import Lean
 import Lean.Meta.Tactic.Simp.SimpTheorems
-import Common2026
-import Common2026.Meta.EntryPoint
+import InformationTheory
+import InformationTheory.Meta.EntryPoint
 
 open Lean Lean.Meta
 
@@ -39,7 +39,7 @@ def isInCommon2026 (env : Environment) (n : Name) : Bool :=
   | none => false
   | some idx =>
     let modName := env.allImportedModuleNames[idx.toNat]!
-    (`Common2026 : Name).isPrefixOf modName
+    (`InformationTheory : Name).isPrefixOf modName
 
 /-- declaration の type / body Expr に直接出現する定数名集合。 -/
 def refsOf (env : Environment) (n : Name) : NameSet :=

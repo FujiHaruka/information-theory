@@ -24,8 +24,8 @@
     lake env lean scripts/EntryPointReport.lean
 -/
 import Lean
-import Common2026
-import Common2026.Meta.EntryPoint
+import InformationTheory
+import InformationTheory.Meta.EntryPoint
 
 open Lean
 
@@ -37,7 +37,7 @@ def isInCommon2026 (env : Environment) (n : Name) : Bool :=
   | none => false
   | some idx =>
     let modName := env.allImportedModuleNames[idx.toNat]!
-    (`Common2026 : Name).isPrefixOf modName
+    (`InformationTheory : Name).isPrefixOf modName
 
 /-- declaration の type / body Expr に直接出現する定数名集合。 -/
 def refsOf (env : Environment) (n : Name) : NameSet :=
@@ -150,7 +150,7 @@ def renderGroups (env : Environment) (names : Array Name) : Array String := Id.r
     let common := match nss[0]? with
       | none   => []
       | some h => nss.foldl (fun acc xs => commonPre acc xs) h
-    let modShort := modName.replacePrefix `Common2026 Name.anonymous
+    let modShort := modName.replacePrefix `InformationTheory Name.anonymous
     let nsStr := String.intercalate "." common
     let header :=
       if common.isEmpty then s!"--- {modShort} ({ds.size}) ---"

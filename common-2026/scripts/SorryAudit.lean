@@ -17,7 +17,7 @@
   Per-module 内訳は `scripts/SorryAuditPerModule.lean`。
 -/
 import Lean
-import Common2026
+import InformationTheory
 
 open Lean
 
@@ -50,7 +50,7 @@ def hasOwnSorry (env : Environment) (n : Name) : Bool :=
 def audit : MetaM Counts := do
   let env ← getEnv
   let moduleNames := env.allImportedModuleNames
-  let prefix' : Name := `Common2026
+  let prefix' : Name := `InformationTheory
   let mut c : Counts := {}
   for (n, info) in env.constants.toList do
     c := { c with envTotal := c.envTotal + 1 }
