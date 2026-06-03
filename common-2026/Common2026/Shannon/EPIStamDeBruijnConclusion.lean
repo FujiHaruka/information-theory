@@ -205,6 +205,7 @@ transitive `sorry` is the regularity-precondition signature gap on the published
 `IsStamInequalityHyp` (`isStamInequalityHyp_via_body`), a clean owner-level pivot
 tracked under `epi-wall-reattack-plan`, not a Mathlib wall. Transitive consumer
 (no local `sorry`), so no active `@residual` here. -/
+@[entry_point]
 theorem entropy_power_inequality_via_stamDeBruijn
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

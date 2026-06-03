@@ -234,6 +234,7 @@ pair, not from any caller-supplied limit hypothesis. Renamed from
 `isStamToEPIBridgeHyp_of_scaling_limit` accordingly.
 
 `@audit:ok` -/
+@[entry_point]
 theorem isStamToEPIBridgeHyp_of_scaling
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]
@@ -873,6 +874,7 @@ D3, correctly deleted) IS closable from plain harmonic Stam via the genuine
 arith core `csiszar_ratio_deriv_le_zero_arith` (`nlinarith`, `α²≤α` weights); the
 three Fisher `rfl` identifications hold since `fisherInfoOfMeasureV2` ignores its
 measure argument (`FisherInfoV2DeBruijn.lean:81`). -/
+@[entry_point]
 theorem csiszarLogRatioGap_deriv_le_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -1237,6 +1239,7 @@ is scale-invariant (`(1-s)` cancels inside `log`), so when this rescale `sorry` 
 closed it can be driven by the ratio chain.
 
 Signature stable; body deferred. -/
+@[entry_point]
 theorem csiszarGap_antitoneOn_Icc_zero_one
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -1271,6 +1274,7 @@ the existential conclusion of `IsStamToEPIScalingHyp`.
 Signature carries A-4 directly to `_of_stam_debruijn`; consumer Phase A-5
 chains into `isStamToEPIBridgeHyp_of_scaling` (the bridge body discharge
 needs only the scaling predicate; the `s = 1` endpoint is internal). -/
+@[entry_point]
 theorem isStamToEPIScalingHyp_of_stam_debruijn
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     {X Y : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]
@@ -1386,6 +1390,7 @@ NOTE (2026-05-30 audit): 以前の `@audit:ok` は tier-1 誤付与だった。c
 `sorry` を消費する (`#print axioms` で `sorryAx` 依存を確認)。proof-done ではない。
 constructor は genuine (non-circular、non-laundering)。transitive consumer のため
 `@residual` は付けない (sorry は被呼出補題が保持)。 -/
+@[entry_point]
 theorem isStamToEPIBridgeHyp_of_stam_debruijn
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     {X Y : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]
@@ -1468,6 +1473,7 @@ witness construction in scope); we route directly through Gaussian
 saturation instead.
 
 `@audit:ok` -/
+@[entry_point]
 theorem isStamToEPIBridgeHyp_of_gaussian_via_scaling
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -1530,6 +1536,7 @@ so the only remaining inputs are regularity (`hX`, `hY`) + the genuine Stam wall
 (density-keyed `fisherInfoOfDensityReal`) is defeq via `fisherInfoOfMeasureV2_def`.
 
 @residual(plan:epi-stam-to-conclusion-phaseA-plan) -- transitive via `stamToEPIScaling_holds` -/
+@[entry_point]
 theorem entropy_power_inequality_unconditional
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

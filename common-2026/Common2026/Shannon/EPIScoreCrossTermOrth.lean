@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.FisherInfoV2
 import Mathlib.Probability.Independence.Integration   -- IndepFun.integral_fun_mul_eq_mul_integral
 import Mathlib.Probability.Independence.Basic          -- IndepFun.comp
@@ -42,6 +43,7 @@ mean (`E[sX∘X]=0`), distinct from the conclusion `E[sX·sY]=0` — not circula
 `IndepFun.comp` + `IndepFun.integral_fun_mul_eq_mul_integral` used correctly.
 `#print axioms` = [propext, Classical.choice, Quot.sound] (sorryAx-free).
 @audit:ok -/
+@[entry_point]
 theorem score_cross_term_eq_zero
     {X Y : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]
     {sX sY : ℝ → ℝ}

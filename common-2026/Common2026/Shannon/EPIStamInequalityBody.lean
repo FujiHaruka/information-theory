@@ -489,6 +489,7 @@ in §6 below). -/
 /-- **Stam-to-EPI bridge via body discharge** (Gaussian case): combine
 the body-derived Stam inequality with the Stam-to-EPI bridge from
 `EPIStamDischarge.isStamToEPIBridgeHyp_of_gaussian`. -/
+@[entry_point]
 theorem isStamToEPIBridgeHyp_via_body_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -588,6 +589,7 @@ the pipeline is built from the genuine Stam residual alone (the Stam→EPI bridg
 discharged internally by consumers via `stamToEPIBridge_holds`).
 
 `@audit:ok` -/
+@[entry_point]
 theorem isStamInequalityHyp_via_body_to_pipeline
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}

@@ -389,6 +389,7 @@ the per-time wall lemma, not in any hypothesis bundle here.
 The wall lemma's existential is stated with `gaussianConvolution X Z t`, which is
 definitionally `fun ω => X ω + √t · Z ω` (the heat-flow path used by the predicate
 body), so the witness threads through directly. -/
+@[entry_point]
 theorem isDeBruijnIntegrationHyp_holds
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
@@ -535,6 +536,7 @@ theorem epi_via_stam_gaussian
 /-- Symmetric form of `epi_via_stam`.
 
 `@audit:ok` -/
+@[entry_point]
 theorem epi_via_stam_symm
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     {P : Measure Ω}
@@ -827,6 +829,7 @@ EPI hypotheses)**: shows that the Stam-pipeline 3-arg form composes with
 `entropy_power_inequality_three_arg`.
 
 `@audit:ok` -/
+@[entry_point]
 theorem epi_via_stam_three_arg_normalized
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -864,6 +867,7 @@ NOTE (2026-05-30 audit): body は `entropy_power_inequality` を呼び `_h_bridg
 の `sorry` を消費する (`#print axioms` で `sorryAx` 依存を確認)。proof-done でなく、
 以前の `@audit:ok` は tier-1 誤付与だった。reduction は honest。transitive consumer
 のため `@residual` は付けない。 -/
+@[entry_point]
 theorem epi_via_stam_main_eq
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
