@@ -5,6 +5,16 @@ Entry points total : 814
 
 ==================== PROVEN (sorry-free) ====================
 
+--- Asymptotic  [InformationTheory.Asymptotic] (8) ---
+  DotEq  [def]
+  DotEq.inv
+  DotEq.mul
+  DotEq.refl
+  DotEq.symm
+  DotEq.trans
+  dotEq_iff_tendsto_log_div
+  exp_decay_N_of_pos
+
 --- Draft.Shannon.AwgnCapacityConverseMaxent  [InformationTheory.Shannon.AWGN] (7) ---
   awgn_capacity_closed_form_genuine
   awgn_per_input_mi_le_log
@@ -93,16 +103,6 @@ Entry points total : 814
 
 --- Fano.Measure  [InformationTheory.MeasureFano] (1) ---
   fano_inequality_measure_theoretic
-
---- InformationTheory.Asymptotic  [InformationTheory.Asymptotic] (8) ---
-  DotEq  [def]
-  DotEq.inv
-  DotEq.mul
-  DotEq.refl
-  DotEq.symm
-  DotEq.trans
-  dotEq_iff_tendsto_log_div
-  exp_decay_N_of_pos
 
 --- Polymatroid.Basic  [Combinatorics] (1) ---
   Polymatroid  [def]
