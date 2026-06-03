@@ -109,20 +109,72 @@ H(X) \;=\; -\sum_{x} p(x)\log p(x) \;=\; \sum_{x} \varphi\big(p(x)\big),
 \qquad \varphi(t) := -t\log t.
 $$
 
-**信頼の底.** 証明が依拠する解析的事実はただ一つ、$\varphi(t) = -t\log t$ が
-$[0,\infty)$ 上で（$\varphi(0) := 0$ と定めて）**狭義凹**であることである。これは
+**信頼の底.** 証明が依拠する純粋に**解析的**な事実はただ一つ、$\varphi(t) = -t\log t$
+が $[0,\infty)$ 上で（$\varphi(0) := 0$ と定めて）**狭義凹**であることである。これは
 $x\log x$ の凸性という初等的事実で、接線不等式 $\log t \le t-1$ と同じ内容に帰着する。
-ここより下は展開しない（Mathlib `Real.strictConcaveOn_negMulLog`）。凹関数に対する
-**Jensen の不等式**
-$$
-\sum_{x} w_x\,\varphi(t_x) \;\le\; \varphi\Big(\sum_{x} w_x\,t_x\Big)
-\qquad \Big(w_x \ge 0,\ \textstyle\sum_x w_x = 1\Big)
-$$
-を道具として用いる（Mathlib `ConcaveOn.le_map_sum`）。
+ここより下は展開しない（Mathlib `Real.strictConcaveOn_negMulLog`）。もう一つの道具で
+ある凹関数の **Jensen の不等式** は、それ自体は非自明だが新たな解析を要さず、二つの初等的
+事実——(a) 凹関数の**ハイポグラフ**（グラフの下側領域）が**凸集合**であること、(b) 凸集合は
+有限個の点の凸結合をすべて含むこと——に帰着する。以下では、形式化（Mathlib）が採る筋を
+そのままなぞって補題として証明する。
 
-**証明.** 重みを一様に $w_x = 1/M$、点を $t_x = p(x)$ ととって Jensen を適用する。
+**補題（有限 Jensen の不等式）.** $\varphi$ を区間 $I$ 上の凹関数とする。有限個の点
+$t_1, \dots, t_n \in I$ と重み $w_1, \dots, w_n \ge 0$（$\sum_i w_i = 1$）に対して
+$$
+\sum_{i} w_i\,\varphi(t_i) \;\le\; \varphi\Big(\sum_{i} w_i\,t_i\Big).
+$$
+さらに $\varphi$ が $I$ 上で**狭義**凹ならば、等号が成り立つのは、正の重み $w_i > 0$ を
+もつ点 $t_i$ がすべて互いに等しいとき、かつそのときに限る。
+
+**証明.** 形式化（Mathlib）と同じ筋でたどる。$\varphi$ の**ハイポグラフ**
+$$
+\operatorname{hyp}\varphi \;:=\; \{(t, y) \in \mathbb R^2 : t \in I,\ y \le \varphi(t)\}
+$$
+を考える。「$\varphi$ が $I$ 上で凹」であることは「$\operatorname{hyp}\varphi$ が平面の
+**凸集合**である」ことと同値である（凹性の定義の幾何的言い換え。Mathlib では
+`ConcaveOn` ⟺ `Convex (hypograph)`）。
+
+*不等式.* 各点 $\big(t_i, \varphi(t_i)\big)$ は（第 2 座標が等号で）$\operatorname{hyp}\varphi$
+に属する。凸集合は有限個の点の凸結合をすべて含む（Mathlib `Convex.centerMass_mem`）から、
+重み $w_i$ による凸結合
+$$
+\sum_i w_i\,\big(t_i, \varphi(t_i)\big)
+  \;=\; \Big(\sum_i w_i t_i,\ \sum_i w_i\,\varphi(t_i)\Big)
+$$
+もまた $\operatorname{hyp}\varphi$ に属する。ハイポグラフの定義より、その第 2 座標は
+第 1 座標における $\varphi$ 値以下、すなわち
+$\sum_i w_i\,\varphi(t_i) \le \varphi\big(\sum_i w_i t_i\big)$。
+
+*等号条件（$\varphi$ 狭義凹）.* 正の重みの点がすべて共通値に等しければ両辺一致で、等号は
+明らか。逆を**背理法**で示す。$\varphi$ 狭義凹・全 $w_i > 0$・等号成立を仮定したうえで、
+ある 2 点が相異なる（$t_j \ne t_k$）と仮定して矛盾を導く。この 2 点を取り出し、
+$c := w_j + w_k > 0$ とおいて両者を 1 点
+$q := \tfrac{w_j}{c} t_j + \tfrac{w_k}{c} t_k$ に融合する。残りの添字を
+$u := \{\,i : i \ne j, k\,\}$ とし、重み $c$ をもつ点 $q$ と族 $(w_i, t_i)_{i \in u}$ から
+なる凸結合に**すでに示した不等式**を適用すると（総重み $c + \sum_{u} w_i = 1$）
+$$
+c\,\varphi(q) + \sum_{i \in u} w_i\,\varphi(t_i)
+  \;\le\; \varphi\Big(c\,q + \sum_{i \in u} w_i t_i\Big)
+  \;=\; \varphi\Big(\sum_i w_i t_i\Big).
+$$
+一方 $t_j \ne t_k$ と狭義凹性から、**2 点厳密不等式**
+$$
+\varphi(q)
+  \;>\; \tfrac{w_j}{c}\,\varphi(t_j) + \tfrac{w_k}{c}\,\varphi(t_k)
+$$
+が成り立つ。両辺を $c$ 倍して上式へ代入すれば
+$$
+\sum_i w_i\,\varphi(t_i)
+  \;=\; w_j\varphi(t_j) + w_k\varphi(t_k) + \sum_{i \in u} w_i\varphi(t_i)
+  \;<\; c\,\varphi(q) + \sum_{i \in u} w_i\varphi(t_i)
+  \;\le\; \varphi\Big(\sum_i w_i t_i\Big)
+$$
+となり厳密不等式が出るが、これは等号の仮定に反する。ゆえにすべての点が等しい。
+$\qquad\square$
+
+**証明（定理 2.1.5）.** 上の補題で重みを一様に $w_x = 1/M$、点を $t_x = p(x)$ ととる。
 各 $p(x) \ge 0$ は $\varphi$ の定義域 $[0,\infty)$ に入るので、質量 $0$ の記号を除外する
-必要はない。$\varphi$ の凹性（信頼の底）と $\sum_x p(x) = 1$ から
+必要はない。$\varphi$ の凹性と $\sum_x p(x) = 1$ から
 $$
 \frac1M \sum_{x} \varphi\big(p(x)\big)
   \;=\; \sum_{x} \frac1M\,\varphi\big(p(x)\big)
@@ -146,7 +198,14 @@ $\qquad\blacksquare$
 > `Real.negMulLog`、$\mathcal X$ は有限型）は Lean では定義上の等式。$\varphi$ の凹性は
 > `Real.concaveOn_negMulLog`（狭義版 `Real.strictConcaveOn_negMulLog`、定義域は
 > $[0,\infty)$ ＝ `Set.Ici 0`）、Jensen の不等式は `ConcaveOn.le_map_sum`、等号条件は
-> `StrictConcaveOn.map_sum_eq_iff`。$\varphi$ が $t=0$ を含む $[0,\infty)$ で凹なので
+> `StrictConcaveOn.map_sum_eq_iff`。本文の補題証明は **Mathlib と同じ筋**をなぞっている：
+> 不等式はハイポグラフ（凹側）／エピグラフ（凸側）の凸性と凸結合の所属
+> （`Convex.centerMass_mem`、`ConvexOn.map_centerMass_le` 経由）、等号条件は相異なる 2 点を
+> 取り出す狭義 Jensen（`StrictConcaveOn.lt_map_sum`）からの背理法（`eq_of_map_sum_eq`）。
+> 本文がハイポグラフ／2 点ウィットネスで書かれているのはこの対応を保つためである。
+> 唯一そこに帰着しきれない「凸集合が有限凸結合を含む」部分（`Convex.centerMass_mem`）が
+> 実質的な帰納の在処で、Mathlib でも独立補題として因数分解されている。
+> $\varphi$ が $t=0$ を含む $[0,\infty)$ で凹なので
 > $p(x)=0$ の記号を除外する「台」の処理が一切生じないのが、この筋道の利点である。
 > 最後に「全 singleton の質量が $1/M$」から測度の一致
 > $\mu.\mathrm{map}\,X = \mathrm{uniformOn}$ への橋渡しに `Measure.ext_of_singleton`
