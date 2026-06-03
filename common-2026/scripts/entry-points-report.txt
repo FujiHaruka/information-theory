@@ -1,0 +1,1234 @@
+==== Common2026 証明済み主定理一覧 (@[entry_point], sorry-free) ====
+Entry points total : 814
+  proven           : 740
+  staged           : 74
+
+==================== PROVEN (sorry-free) ====================
+
+--- Common2026.Draft.Shannon.AwgnCapacityConverseMaxent (7) ---
+  InformationTheory.Shannon.AWGN.awgn_capacity_closed_form_genuine
+  InformationTheory.Shannon.AWGN.awgn_per_input_mi_le_log
+  InformationTheory.Shannon.AWGN.capacity_log_diff
+  InformationTheory.Shannon.AWGN.fibre_absolutelyContinuous_output_general
+  InformationTheory.Shannon.AWGN.integrable_log_proxy_fibre_compProd_general
+  InformationTheory.Shannon.AWGN.output_secondMoment_eq
+  InformationTheory.Shannon.AWGN.output_variance_le
+
+--- Common2026.Draft.Shannon.ChannelCodingConverseGeneralComplete (2) ---
+  InformationTheory.Shannon.ChannelCodingConverseGeneral.IsMemorylessChannel.markovChain
+  InformationTheory.Shannon.ChannelCodingConverseGeneral.condMutualInfo_le_of_markov_joint
+
+--- Common2026.Draft.Shannon.Cramer (4) ---
+  InformationTheory.Shannon.Cramer.cramerRate_apply_le
+  InformationTheory.Shannon.Cramer.cramerRate_nonneg
+  InformationTheory.Shannon.Cramer.integral_tilted_eq_deriv_cgf
+  InformationTheory.Shannon.Cramer.klDiv_tilted_eq
+
+--- Common2026.Draft.Shannon.CramerLC2PhaseC (1) ---
+  InformationTheory.Shannon.Cramer.Discharge.isMeasureInfinitePiTiltedEq_iff
+
+--- Common2026.Draft.Shannon.HoeffdingInteriorBody (4) ---
+  InformationTheory.Shannon.HoeffdingInteriorBody.csiszar_pythagoras_at_interior
+  InformationTheory.Shannon.HoeffdingInteriorBody.hoeffding_minimizer_ge_at_interior
+  InformationTheory.Shannon.HoeffdingInteriorBody.isHoeffdingMinimizerFullSupport_of_gradient
+  InformationTheory.Shannon.HoeffdingInteriorBody.isHoeffdingMinimizerFullSupport_of_interior
+
+--- Common2026.Draft.Shannon.HoeffdingInteriorGradientBody (2) ---
+  InformationTheory.Shannon.HoeffdingInteriorGradientBody.isHoeffdingMinimizerFullSupport_of_lagrange
+  InformationTheory.Shannon.HoeffdingInteriorGradientBody.isKLGradientHyp_tilt
+
+--- Common2026.Draft.Shannon.HoeffdingLagrangeIVTBody (1) ---
+  InformationTheory.Shannon.HoeffdingLagrangeIVTBody.exists_isHoeffdingLagrangeHyp_of_minimal
+
+--- Common2026.Draft.Shannon.HuffmanWalls (1) ---
+  InformationTheory.Shannon.Huffman.swap_normalization_hypothesis_holds
+
+--- Common2026.Draft.Shannon.InfinitePiTiltedChangeOfMeasure (3) ---
+  InformationTheory.Shannon.Cramer.Discharge.isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge
+  InformationTheory.Shannon.Cramer.Discharge.pi_tilted_sum_eq_pi_tilted_fintype
+  InformationTheory.Shannon.Cramer.Discharge.tiltedWindow_eventually_large_of_cgfDeriv_interior
+
+--- Common2026.Draft.Shannon.MultivariateDiffEntropy (3) ---
+  Common2026.Shannon.jointDifferentialEntropyPi_le_sum
+  Common2026.Shannon.jointDifferentialEntropy_le_sum_v2
+  Common2026.Shannon.klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2
+
+--- Common2026.Draft.Shannon.ParallelGaussianPerCoord (1) ---
+  InformationTheory.Shannon.ParallelGaussian.parallel_gaussian_capacity_formula_discharged
+
+--- Common2026.Draft.Shannon.RateDistortionAchievabilityPhaseEDischarge (1) ---
+  InformationTheory.Shannon.pmfToMeasure_real_singleton_pos
+
+--- Common2026.Draft.Shannon.RateDistortionConverseNLetter (3) ---
+  InformationTheory.Shannon.mutualInfo_block_le_log_card
+  InformationTheory.Shannon.rateDistortionFunction_le_mutualInfo_perLetter
+  InformationTheory.Shannon.rate_distortion_converse_n_letter_block
+
+--- Common2026.Draft.Shannon.RateDistortionConvexity (3) ---
+  InformationTheory.Shannon.mixtureMeasure_feasible
+  InformationTheory.Shannon.mixtureMeasure_map_fst
+  InformationTheory.Shannon.mixtureMeasure_map_snd
+
+--- Common2026.Fano (4) ---
+  InformationTheory.fanoBoundRHS_eq_qaryEntropy
+  InformationTheory.fano_error_lower_bound_of_alphabet
+  InformationTheory.fano_error_lower_bound_of_lt_fanoBoundRHS
+  InformationTheory.fano_inequality_of_alphabet
+
+--- Common2026.Fano.Core (3) ---
+  InformationTheory.FiniteJointPMF.error_lower_bound
+  InformationTheory.FiniteJointPMF.fano_core
+  InformationTheory.FiniteJointPMF.fano_inequality
+
+--- Common2026.Fano.DPI (4) ---
+  InformationTheory.FiniteJointPMF.condEntropy_le_pushforward_condEntropy
+  InformationTheory.FiniteJointPMF.error_lower_bound_decode
+  InformationTheory.FiniteJointPMF.fano_inequality_decode
+  InformationTheory.FiniteJointPMF.fano_inequality_decode'
+
+--- Common2026.Fano.Entropy (3) ---
+  InformationTheory.entropyOfFn_eq_zero_of_isDirac
+  InformationTheory.entropyOfFn_le_log_card
+  InformationTheory.entropyOfFn_nonneg
+
+--- Common2026.Fano.Measure (1) ---
+  InformationTheory.MeasureFano.fano_inequality_measure_theoretic
+
+--- Common2026.InformationTheory.Asymptotic (8) ---
+  InformationTheory.Asymptotic.DotEq  [def]
+  InformationTheory.Asymptotic.DotEq.inv
+  InformationTheory.Asymptotic.DotEq.mul
+  InformationTheory.Asymptotic.DotEq.refl
+  InformationTheory.Asymptotic.DotEq.symm
+  InformationTheory.Asymptotic.DotEq.trans
+  InformationTheory.Asymptotic.dotEq_iff_tendsto_log_div
+  InformationTheory.Asymptotic.exp_decay_N_of_pos
+
+--- Common2026.Polymatroid.Basic (1) ---
+  Combinatorics.Polymatroid  [def]
+
+--- Common2026.Probability.TwoSidedExtension (34) ---
+  InformationTheory.Shannon.TwoSided.condExp_comp_measurePreserving
+  InformationTheory.Shannon.TwoSided.condProbInfty  [def]
+  InformationTheory.Shannon.TwoSided.condProbPast  [def]
+  InformationTheory.Shannon.TwoSided.condProbPast_tendsto_condProbInfty
+  InformationTheory.Shannon.TwoSided.ergodic_shiftN
+  InformationTheory.Shannon.TwoSided.ergodic_shiftZ
+  InformationTheory.Shannon.TwoSided.forwardEmbed  [def]
+  InformationTheory.Shannon.TwoSided.integrable_condProbPast
+  InformationTheory.Shannon.TwoSided.integrable_pmfLogCondInfty
+  InformationTheory.Shannon.TwoSided.integrable_pmfLogCondPast
+  InformationTheory.Shannon.TwoSided.integral_pmfLogCondInfty_eq_entropyRate
+  InformationTheory.Shannon.TwoSided.integral_pmfLogCondPast_eq_conditionalEntropyTail
+  InformationTheory.Shannon.TwoSided.isProjectiveLimit_μZ
+  InformationTheory.Shannon.TwoSided.isProjectiveMeasureFamily_shiftedMarginal
+  InformationTheory.Shannon.TwoSided.joint_pastBlock_coord0_eq
+  InformationTheory.Shannon.TwoSided.leftInverse_shiftZSymm
+  InformationTheory.Shannon.TwoSided.martingale_condProbPast
+  InformationTheory.Shannon.TwoSided.measurable_natProj_posSigma
+  InformationTheory.Shannon.TwoSided.measurable_shiftZSymm
+  InformationTheory.Shannon.TwoSided.measurePreserving_forwardEmbed
+  InformationTheory.Shannon.TwoSided.measurePreserving_shiftZ
+  InformationTheory.Shannon.TwoSided.pastFiltration  [def]
+  InformationTheory.Shannon.TwoSided.pmfLogCondInfty  [def]
+  InformationTheory.Shannon.TwoSided.pmfLogCondPast  [def]
+  InformationTheory.Shannon.TwoSided.pmfLogCondPast_tendsto_pmfLogCondInfty
+  InformationTheory.Shannon.TwoSided.posSigma_le_pi
+  InformationTheory.Shannon.TwoSided.rightInverse_shiftZSymm
+  InformationTheory.Shannon.TwoSided.shiftZ  [def]
+  InformationTheory.Shannon.TwoSided.shiftZ_iterate_preimage_mem_measurableCylinders
+  InformationTheory.Shannon.TwoSided.shiftedMarginal_eq_of_shift
+  InformationTheory.Shannon.TwoSided.μZ  [def]
+  InformationTheory.Shannon.TwoSided.μZ_block_cylinder_eq
+  InformationTheory.Shannon.TwoSided.μZ_cylinder
+  InformationTheory.Shannon.TwoSided.μZ_nat_proj_eq
+
+--- Common2026.Shannon.AEP (16) ---
+  InformationTheory.Shannon.aep_ae
+  InformationTheory.Shannon.aep_inProbability
+  InformationTheory.Shannon.entropy_jointRV_eq_n_smul
+  InformationTheory.Shannon.entropy_le_of_mem_achievableRates
+  InformationTheory.Shannon.logLikelihood_eq_comp
+  InformationTheory.Shannon.measurableSet_typicalSet
+  InformationTheory.Shannon.mem_achievableRates_of_gt_entropy
+  InformationTheory.Shannon.source_coding_achievability
+  InformationTheory.Shannon.source_coding_converse
+  InformationTheory.Shannon.source_coding_per_n_bound
+  InformationTheory.Shannon.source_coding_theorem
+  InformationTheory.Shannon.typicalSet_card_ge
+  InformationTheory.Shannon.typicalSet_card_le
+  InformationTheory.Shannon.typicalSet_prob_ge
+  InformationTheory.Shannon.typicalSet_prob_le
+  InformationTheory.Shannon.typicalSet_prob_tendsto_one
+
+--- Common2026.Shannon.AEPRate (9) ---
+  InformationTheory.Shannon.channelCoding_E2_lt_at_N
+  InformationTheory.Shannon.channelCoding_E2_lt_of_rate
+  InformationTheory.Shannon.exp_neg_mul_lt_at_N
+  InformationTheory.Shannon.exp_neg_mul_lt_of_rate
+  InformationTheory.Shannon.jointlyTypicalSet_prob_ge_at_N_le
+  InformationTheory.Shannon.jointlyTypicalSet_prob_ge_of_rate
+  InformationTheory.Shannon.typicalSet_prob_ge_at_N
+  InformationTheory.Shannon.typicalSet_prob_ge_at_N_le
+  InformationTheory.Shannon.typicalSet_prob_ge_of_rate
+
+--- Common2026.Shannon.AWGN (3) ---
+  InformationTheory.Shannon.AWGN.awgnCapacity_eq
+  InformationTheory.Shannon.AWGN.awgnCapacity_ge_gaussian
+  InformationTheory.Shannon.AWGN.awgnCapacity_le_gaussian
+
+--- Common2026.Shannon.AWGNAchievabilityDischarge (7) ---
+  InformationTheory.Shannon.AWGN.awgnPowerWitness_exists
+  InformationTheory.Shannon.AWGN.awgn_exists_codebook_le_avg
+  InformationTheory.Shannon.AWGN.awgn_expurgate_worst_half
+  InformationTheory.Shannon.AWGN.awgn_extract_AwgnCode
+  InformationTheory.Shannon.AWGN.gaussianCodebook_codeword_law
+  InformationTheory.Shannon.AWGN.gaussianCodebook_indepFun_codewords
+  InformationTheory.Shannon.AWGN.jointTypicalDecoder_measurable
+
+--- Common2026.Shannon.AWGNBindConvBody (3) ---
+  InformationTheory.Shannon.AWGN.awgn_capacity_closed_form_of_maxent_bindconv_discharged
+  InformationTheory.Shannon.AWGN.bind_eq_conv_of_translation_kernel
+  InformationTheory.Shannon.AWGN.isAwgnBindEqConv_discharged
+
+--- Common2026.Shannon.AWGNConverseDischarge (9) ---
+  InformationTheory.Shannon.AWGN.awgnConverseJoint_mutualInfo_ne_top_via_chain
+  InformationTheory.Shannon.AWGN.awgn_converse_single_shot_call
+  InformationTheory.Shannon.AWGN.awgn_per_letter_input_power_avg
+  InformationTheory.Shannon.AWGN.jointMIWYn  [def]
+  InformationTheory.Shannon.AWGN.jointMIXnYn  [def]
+  InformationTheory.Shannon.AWGN.perLetterInputSecondMoment  [def]
+  InformationTheory.Shannon.AWGN.perLetterMI  [def]
+  InformationTheory.Shannon.AWGN.perLetterYLaw  [def]
+  InformationTheory.Shannon.AWGN.sum_log_one_add_le_n_log_one_add_avg
+
+--- Common2026.Shannon.AWGNF1Discharge (2) ---
+  InformationTheory.Shannon.AWGN.awgn_capacity_closed_form_F1_discharged
+  InformationTheory.Shannon.AWGN.isAwgnChannelMeasurable
+
+--- Common2026.Shannon.AWGNF2F3Discharge (4) ---
+  InformationTheory.Shannon.AWGN.AWGNJointlyTypicalSet_measurable
+  InformationTheory.Shannon.AWGN.AWGNJointlyTypicalSet_subset_of_le_ε
+  InformationTheory.Shannon.AWGN.AWGNJointlyTypicalSet_zero
+  InformationTheory.Shannon.AWGN.awgn_capacity_closed_form_of_maxent_hypotheses
+
+--- Common2026.Shannon.AWGNMIBridge (4) ---
+  InformationTheory.Shannon.AWGN.awgn_capacity_closed_form_F2_discharged
+  InformationTheory.Shannon.AWGN.awgn_cond_entropy_eq_noise_entropy_of_const
+  InformationTheory.Shannon.AWGN.awgn_mi_bridge_of_primitives
+  InformationTheory.Shannon.AWGN.awgn_mi_gaussian_closed_form_of_primitives
+
+--- Common2026.Shannon.AWGNMIBridgeDischarge (2) ---
+  InformationTheory.Shannon.AWGN.awgn_capacity_closed_form_of_maxent_bindconv
+  InformationTheory.Shannon.AWGN.awgn_output_gaussian_of_bind_eq_conv
+
+--- Common2026.Shannon.AWGNMIClosedForm (1) ---
+  InformationTheory.Shannon.AWGN.mutualInfoOfChannel_gaussianInput_closed_form'
+
+--- Common2026.Shannon.AWGNMIDecompBody (4) ---
+  InformationTheory.Shannon.AWGN.awgnChannel_apply_absolutelyContinuous
+  InformationTheory.Shannon.AWGN.awgn_midecomp_of_cont_chain
+  InformationTheory.Shannon.AWGN.awgn_output_absolutelyContinuous_of_outputGaussian
+  InformationTheory.Shannon.AWGN.cont_chain_of_awgn_midecomp
+
+--- Common2026.Shannon.AWGNMain (1) ---
+  InformationTheory.Shannon.AWGN.awgn_capacity_closed_form
+
+--- Common2026.Shannon.ArithmeticCoding (3) ---
+  InformationTheory.Shannon.ArithmeticCoding.arithmeticCode_expected_length_bounds
+  InformationTheory.Shannon.ArithmeticCoding.arithmeticCode_prefix_free
+  InformationTheory.Shannon.ArithmeticCoding.arithmeticCode_unique_decodable
+
+--- Common2026.Shannon.BackwardFiltration (5) ---
+  InformationTheory.Shannon.backwardFiltration  [def]
+  InformationTheory.Shannon.comap_T_tailSigma_le
+  InformationTheory.Shannon.tailSigma  [def]
+  InformationTheory.Shannon.tailSigma_le
+  InformationTheory.Shannon.tailSigma_le_comap_iterate
+
+--- Common2026.Shannon.BackwardMartingale (4) ---
+  InformationTheory.Shannon.BackwardMartingale.ae_tendsto
+  InformationTheory.Shannon.BackwardMartingale.eLpNorm_one_le
+  InformationTheory.Shannon.BackwardMartingale.integrable
+  InformationTheory.Shannon.BackwardMartingale.upcrossings_ae_lt_top
+
+--- Common2026.Shannon.BirkhoffErgodic (5) ---
+  InformationTheory.Shannon.birkhoff_ergodic_ae
+  InformationTheory.Shannon.birkhoff_ergodic_ae_of_limit
+  InformationTheory.Shannon.integral_birkhoffAverageReal_eq
+  InformationTheory.Shannon.integral_comp_iterate_eq
+  InformationTheory.Shannon.maximal_ergodic_inequality
+
+--- Common2026.Shannon.BlockwiseChannel (5) ---
+  InformationTheory.Shannon.ChannelCoding.BlockwiseChannel.capacityN  [def]
+  InformationTheory.Shannon.ChannelCoding.BlockwiseChannel.capacityN_nonneg
+  InformationTheory.Shannon.ChannelCoding.BlockwiseChannel.capacity_lim  [def]
+  InformationTheory.Shannon.ChannelCoding.capacityN_ofMemoryless_eq
+  InformationTheory.Shannon.ChannelCoding.capacity_lim_eq_capacity_of_memoryless
+
+--- Common2026.Shannon.BrascampLieb (2) ---
+  InformationTheory.Shannon.brascamp_lieb_finset
+  InformationTheory.Shannon.hypercube_product_projection_bound
+
+--- Common2026.Shannon.ChannelCoding (5) ---
+  InformationTheory.Shannon.ChannelCoding.Code.averageErrorProb_le_one
+  InformationTheory.Shannon.ChannelCoding.jointlyTypicalSet_card_le
+  InformationTheory.Shannon.ChannelCoding.jointlyTypicalSet_indep_prob_le
+  InformationTheory.Shannon.ChannelCoding.jointlyTypicalSet_prob_tendsto_one
+  InformationTheory.Shannon.ChannelCoding.mem_jointlyTypicalSet_iff
+
+--- Common2026.Shannon.ChannelCodingAchievability (1) ---
+  InformationTheory.Shannon.ChannelCoding.channel_coding_achievability
+
+--- Common2026.Shannon.ChannelCodingConverse (1) ---
+  InformationTheory.Shannon.channel_coding_converse_iid
+
+--- Common2026.Shannon.ChannelCodingConverseGeneral (1) ---
+  InformationTheory.Shannon.channel_coding_converse_general_chainRule
+
+--- Common2026.Shannon.ChannelCodingConverseGeneralStrong (3) ---
+  InformationTheory.Shannon.ChannelCodingConverseGeneral.channel_coding_converse_general_memoryless_strong
+  InformationTheory.Shannon.ChannelCodingConverseGeneral.h_markov_xprefix_of_strong
+  InformationTheory.Shannon.ChannelCodingConverseGeneral.h_split_of_strong
+
+--- Common2026.Shannon.ChannelCodingConverseMemorylessPure (1) ---
+  InformationTheory.Shannon.ChannelCodingConverseGeneral.channel_coding_converse_general_memoryless_pure
+
+--- Common2026.Shannon.ChannelCodingFeedback (2) ---
+  InformationTheory.Shannon.ChannelCodingFeedback.channel_coding_feedback_converse
+  InformationTheory.Shannon.ChannelCodingFeedback.mutualInfo_chain_rule_Y_axis_fin
+
+--- Common2026.Shannon.ChannelCodingFeedbackComplete (1) ---
+  InformationTheory.Shannon.ChannelCodingFeedback.channel_coding_feedback_converse_memoryless
+
+--- Common2026.Shannon.ChannelCodingShannonTheorem (6) ---
+  InformationTheory.Shannon.ChannelCoding.Code_lift_from_subtype  [def]
+  InformationTheory.Shannon.ChannelCoding.capacity_nonneg
+  InformationTheory.Shannon.ChannelCoding.channel_coding_achievability_max_error
+  InformationTheory.Shannon.ChannelCoding.exists_capacity_achiever
+  InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel_restrict_to_support
+  InformationTheory.Shannon.ChannelCoding.shannon_noisy_channel_coding_theorem
+
+--- Common2026.Shannon.ChannelCodingShannonTheoremFull (1) ---
+  InformationTheory.Shannon.ChannelCoding.shannon_noisy_channel_coding_theorem_general
+
+--- Common2026.Shannon.ChannelCodingShannonTheoremFullDischarge (2) ---
+  InformationTheory.Shannon.ChannelCoding.exists_smooth_capacity_gt_uniform
+  InformationTheory.Shannon.ChannelCoding.shannon_noisy_channel_coding_theorem_general_full
+
+--- Common2026.Shannon.ChannelCodingShannonTheoremGeneral (1) ---
+  InformationTheory.Shannon.ChannelCoding.errorProbAt_smooth_TV
+
+--- Common2026.Shannon.ChannelCodingStrongConverse (2) ---
+  InformationTheory.Shannon.ChannelCoding.channelCoding_average_success_le
+  InformationTheory.Shannon.ChannelCoding.channelCoding_per_codeword_decomposition
+
+--- Common2026.Shannon.Chernoff (9) ---
+  InformationTheory.Shannon.Chernoff.bayesErrorMinPmf_le_half_Z_pow
+  InformationTheory.Shannon.Chernoff.chernoffInfo_attained
+  InformationTheory.Shannon.Chernoff.chernoffInfo_nonneg
+  InformationTheory.Shannon.Chernoff.chernoffZSum_swap
+  InformationTheory.Shannon.Chernoff.chernoff_lemma_achievability
+  InformationTheory.Shannon.Chernoff.convexOn_chernoffLogZ
+  InformationTheory.Shannon.Chernoff.hoeffdingE2_attained
+  InformationTheory.Shannon.Chernoff.hoeffdingE2_nonneg
+  InformationTheory.Shannon.Chernoff.hoeffdingE2_unique
+
+--- Common2026.Shannon.CondEntropyMemoryless (5) ---
+  InformationTheory.Shannon.condEntropy_drop_irrelevant_of_markov
+  InformationTheory.Shannon.condEntropy_pi_chain_rule
+  InformationTheory.Shannon.condEntropy_pi_eq_sum_of_memoryless_strong
+  InformationTheory.Shannon.entropy_pi_le_sum_entropy
+  InformationTheory.Shannon.mutualInfo_le_sum_per_letter_of_memoryless_strong
+
+--- Common2026.Shannon.CondMutualInfo (9) ---
+  InformationTheory.Shannon.condMutualInfo_comm
+  InformationTheory.Shannon.condMutualInfo_eq_zero_of_markov
+  InformationTheory.Shannon.condMutualInfo_map_left_measurableEquiv
+  InformationTheory.Shannon.condMutualInfo_map_middle_measurableEquiv
+  InformationTheory.Shannon.condMutualInfo_ne_top
+  InformationTheory.Shannon.condMutualInfo_nonneg
+  InformationTheory.Shannon.isMarkovChain_map_left
+  InformationTheory.Shannon.mutualInfo_chain_rule
+  InformationTheory.Shannon.mutualInfo_le_of_markov
+
+--- Common2026.Shannon.ConditionalMethodOfTypes (2) ---
+  InformationTheory.Shannon.conditionalStronglyTypicalSlice_mass_ge
+  InformationTheory.Shannon.conditionalTypeClass_xMarginal
+
+--- Common2026.Shannon.CramerLC2Discharge (1) ---
+  InformationTheory.Shannon.Cramer.Discharge.cgf_eval_eq_cgf_base
+
+--- Common2026.Shannon.CramerLC2DischargeExt (4) ---
+  InformationTheory.Shannon.Cramer.Discharge.isProbabilityMeasure_infinitePi_tilted_of_bounded
+  InformationTheory.Shannon.Cramer.Discharge.tilted_lln_ae
+  InformationTheory.Shannon.Cramer.Discharge.tilted_lln_in_probability
+  InformationTheory.Shannon.Cramer.Discharge.tilted_lln_in_probability_real
+
+--- Common2026.Shannon.CsiszarProjection (3) ---
+  InformationTheory.Shannon.CsiszarProjection.csiszar_projection_exists
+  InformationTheory.Shannon.CsiszarProjection.csiszar_projection_unique
+  InformationTheory.Shannon.CsiszarProjection.csiszar_pythagoras_inequality
+
+--- Common2026.Shannon.DPI (2) ---
+  InformationTheory.Shannon.klDiv_map_le
+  InformationTheory.Shannon.mutualInfo_le_of_postprocess
+
+--- Common2026.Shannon.DifferentialEntropy (9) ---
+  Common2026.Shannon.concaveOn_log_one_add_div
+  Common2026.Shannon.differentialEntropy_dirac
+  Common2026.Shannon.differentialEntropy_eq_integral_density
+  Common2026.Shannon.differentialEntropy_eq_integral_withDensity
+  Common2026.Shannon.differentialEntropy_gaussianReal
+  Common2026.Shannon.differentialEntropy_gaussianReal_std
+  Common2026.Shannon.differentialEntropy_le_gaussian_of_variance_le
+  Common2026.Shannon.differentialEntropy_map_affine
+  Common2026.Shannon.klDiv_gaussianReal_gaussianReal_eq
+
+--- Common2026.Shannon.EPIBlachmanGaussianWitness (11) ---
+  Common2026.Shannon.EPIBlachmanGaussianWitness.bdd_deriv_gaussianPDFReal
+  Common2026.Shannon.EPIBlachmanGaussianWitness.bdd_gaussianPDFReal
+  Common2026.Shannon.EPIBlachmanGaussianWitness.continuous_deriv_gaussianPDFReal
+  Common2026.Shannon.EPIBlachmanGaussianWitness.convDensityAdd_gaussian_closed_form
+  Common2026.Shannon.EPIBlachmanGaussianWitness.convex_fisher_bound_gaussian_via_density_route
+  Common2026.Shannon.EPIBlachmanGaussianWitness.convex_fisher_bound_gaussian_via_density_route_closed_form
+  Common2026.Shannon.EPIBlachmanGaussianWitness.gaussianPDFReal_le
+  Common2026.Shannon.EPIBlachmanGaussianWitness.integrable_logDeriv_mul_gaussianPDFReal
+  Common2026.Shannon.EPIBlachmanGaussianWitness.isBlachmanConvReady_gaussianPDFReal
+  Common2026.Shannon.EPIBlachmanGaussianWitness.isRegularDensityV2_gaussianPDFReal
+  Common2026.Shannon.EPIBlachmanGaussianWitness.mul_exp_neg_sq_le
+
+--- Common2026.Shannon.EPIConvDensity (2) ---
+  InformationTheory.Shannon.EPIConvDensity.convDensityAdd_logDeriv
+  InformationTheory.Shannon.EPIConvDensity.convDensity_add_differentiable
+
+--- Common2026.Shannon.EPIL3Integration (23) ---
+  InformationTheory.Shannon.EPIL3Integration.IsEPIL3IntegratedPipeline  [def]
+  InformationTheory.Shannon.EPIL3Integration.bounded_T_ftc_gaussian
+  InformationTheory.Shannon.EPIL3Integration.csiszarGap  [def]
+  InformationTheory.Shannon.EPIL3Integration.csiszarGap1Source  [def]
+  InformationTheory.Shannon.EPIL3Integration.csiszarGap1Source_at_zero
+  InformationTheory.Shannon.EPIL3Integration.csiszarGap1Source_shape_for_sister
+  InformationTheory.Shannon.EPIL3Integration.csiszarGap_at_one_eq_zero_of_gaussian_pair
+  InformationTheory.Shannon.EPIL3Integration.csiszarGap_at_zero
+  InformationTheory.Shannon.EPIL3Integration.csiszarGap_eq_one_source_via_rescale
+  InformationTheory.Shannon.EPIL3Integration.csiszarGap_shape_for_sister
+  InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap  [def]
+  InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap_at_one_eq_zero
+  InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap_at_zero
+  InformationTheory.Shannon.EPIL3Integration.differentialEntropy_gaussianConvolution_of_gaussian
+  InformationTheory.Shannon.EPIL3Integration.entropy_power_inequality_gaussian_full
+  InformationTheory.Shannon.EPIL3Integration.gaussianConvolution_at_zero
+  InformationTheory.Shannon.EPIL3Integration.hasDerivAt_differentialEntropy_heat_flow_gaussian
+  InformationTheory.Shannon.EPIL3Integration.integrated_pipeline_roundtrip
+  InformationTheory.Shannon.EPIL3Integration.isDeBruijnTailHyp_of_gaussian  [def]
+  InformationTheory.Shannon.EPIL3Integration.isEPIL3IntegratedPipeline_of_gaussian
+  InformationTheory.Shannon.EPIL3Integration.isEPIL3IntegratedPipeline_of_stam
+  InformationTheory.Shannon.EPIL3Integration.isEPIL3IntegratedPipeline_symm
+  InformationTheory.Shannon.EPIL3Integration.isRegularDeBruijnHypV2_family_of_gaussian  [def]
+
+--- Common2026.Shannon.EPIPlumbing (10) ---
+  InformationTheory.Shannon.EntropyPowerInequality.entropyPower_div_two_pi_e_gaussianReal
+  InformationTheory.Shannon.EntropyPowerInequality.entropyPower_eq_of_differentialEntropy_eq
+  InformationTheory.Shannon.EntropyPowerInequality.entropyPower_le_of_differentialEntropy_le
+  InformationTheory.Shannon.EntropyPowerInequality.entropyPower_lt_of_differentialEntropy_lt
+  InformationTheory.Shannon.EntropyPowerInequality.entropyPower_map_add_const_eq_self
+  InformationTheory.Shannon.EntropyPowerInequality.entropyPower_map_affine
+  InformationTheory.Shannon.EntropyPowerInequality.entropyPower_map_mul_const
+  InformationTheory.Shannon.EntropyPowerInequality.entropyPower_ne_zero
+  InformationTheory.Shannon.EntropyPowerInequality.gaussianEntropyPowerConst_pos
+  InformationTheory.Shannon.EntropyPowerInequality.log_entropyPower
+
+--- Common2026.Shannon.EPIScoreCrossTermOrth (1) ---
+  InformationTheory.Shannon.EPIScoreCrossTermOrth.score_cross_term_eq_zero
+
+--- Common2026.Shannon.EPIStamDeBruijnConclusion (6) ---
+  InformationTheory.Shannon.EPIStamDeBruijnConclusion.deBruijn_deriv_nonneg
+  InformationTheory.Shannon.EPIStamDeBruijnConclusion.deBruijn_gap_deriv_nonneg_gaussian
+  InformationTheory.Shannon.EPIStamDeBruijnConclusion.entropy_power_inequality_gaussian_full'
+  InformationTheory.Shannon.EPIStamDeBruijnConclusion.isEPIGapMonotoneHyp_discharge
+  InformationTheory.Shannon.EPIStamDeBruijnConclusion.isEPIGapMonotoneHyp_of_deBruijnV2
+  InformationTheory.Shannon.EPIStamDeBruijnConclusion.isStamInequalityHyp_of_primitives
+
+--- Common2026.Shannon.EPIStamDischarge (8) ---
+  InformationTheory.Shannon.EPIStamDischarge.entropyPower_gaussian_sum_eq
+  InformationTheory.Shannon.EPIStamDischarge.epi_via_stam
+  InformationTheory.Shannon.EPIStamDischarge.epi_via_stam_four_arg
+  InformationTheory.Shannon.EPIStamDischarge.epi_via_stam_gaussian
+  InformationTheory.Shannon.EPIStamDischarge.epi_via_stam_symm
+  InformationTheory.Shannon.EPIStamDischarge.epi_via_stam_three_arg
+  InformationTheory.Shannon.EPIStamDischarge.epi_via_stam_three_arg_normalized
+  InformationTheory.Shannon.EPIStamDischarge.isDeBruijnIntegrationHyp_holds
+
+--- Common2026.Shannon.EPIStamInequalityBody (9) ---
+  InformationTheory.Shannon.EPIStamInequalityBody.epi_via_stam_body_gaussian
+  InformationTheory.Shannon.EPIStamInequalityBody.isStamInequalityHyp_via_body
+  InformationTheory.Shannon.EPIStamInequalityBody.isStamInequalityHyp_via_body_to_pipeline
+  InformationTheory.Shannon.EPIStamInequalityBody.isStamScoreConvolution_intro
+  InformationTheory.Shannon.EPIStamInequalityBody.isStamToEPIBridgeHyp_via_body_gaussian
+  InformationTheory.Shannon.EPIStamInequalityBody.stam_inequality_via_predicate_optimal
+  InformationTheory.Shannon.EPIStamInequalityBody.stam_inverse_form_of_harmonic_mean
+  InformationTheory.Shannon.EPIStamInequalityBody.stam_lambda_lower_bound
+  InformationTheory.Shannon.EPIStamInequalityBody.stam_lambda_min
+
+--- Common2026.Shannon.EPIStamStep12Body (16) ---
+  InformationTheory.Shannon.EPIStamStep12Body.isStamCauchySchwarz_of_condExpCSHyp
+  InformationTheory.Shannon.EPIStamStep12Body.isStamCauchySchwarz_of_step12
+  InformationTheory.Shannon.EPIStamStep12Body.isStamCondExpCSHyp_congr
+  InformationTheory.Shannon.EPIStamStep12Body.isStamCondExpCSHyp_symm
+  InformationTheory.Shannon.EPIStamStep12Body.isStamInequalityHyp_of_step12
+  InformationTheory.Shannon.EPIStamStep12Body.isStamScoreConvHyp_intro
+  InformationTheory.Shannon.EPIStamStep12Body.isStamScoreConvHyp_of_gaussian
+  InformationTheory.Shannon.EPIStamStep12Body.stamCauchySchwarzOptimal_of_condExpCSHyp
+  InformationTheory.Shannon.EPIStamStep12Body.stamCauchySchwarzOptimal_of_step12
+  InformationTheory.Shannon.EPIStamStep12Body.stam_convex_cs
+  InformationTheory.Shannon.EPIStamStep12Body.stam_convex_cs_at_one
+  InformationTheory.Shannon.EPIStamStep12Body.stam_convex_cs_at_zero
+  InformationTheory.Shannon.EPIStamStep12Body.stam_jensen_gap
+  InformationTheory.Shannon.EPIStamStep12Body.stam_jensen_sq_le
+  InformationTheory.Shannon.EPIStamStep12Body.stam_two_point_cs
+  InformationTheory.Shannon.EPIStamStep12Body.stam_two_point_cs_diag
+
+--- Common2026.Shannon.EPIStamStep3Body (4) ---
+  InformationTheory.Shannon.EPIStamStep3Body.epi_via_stam_step3_gaussian
+  InformationTheory.Shannon.EPIStamStep3Body.isStamInequalityHyp_via_step3
+  InformationTheory.Shannon.EPIStamStep3Body.stam_coupling_saturates
+  InformationTheory.Shannon.EPIStamStep3Body.stam_optimal_lambda_mem_unit
+
+--- Common2026.Shannon.EPIStamToBridge (4) ---
+  InformationTheory.Shannon.EPIStamToBridge.csiszarLogRatioGap_deriv_le_zero
+  InformationTheory.Shannon.EPIStamToBridge.entropyPower_hasDerivAt_of_diffEnt_hasDerivAt
+  InformationTheory.Shannon.EPIStamToBridge.isStamToEPIBridgeHyp_of_gaussian_via_scaling
+  InformationTheory.Shannon.EPIStamToBridge.isStamToEPIBridgeHyp_of_scaling
+
+--- Common2026.Shannon.Entropy (4) ---
+  InformationTheory.Shannon.condEntropy_le_condEntropy_of_pair
+  InformationTheory.Shannon.condEntropy_tower
+  InformationTheory.Shannon.condMutualInfo_eq_condEntropy_sub_condEntropy
+  InformationTheory.Shannon.entropy_pair_eq_entropy_add_condEntropy
+
+--- Common2026.Shannon.EntropyPowerInequality (6) ---
+  InformationTheory.Shannon.EntropyPowerInequality.entropyPower_gaussianReal
+  InformationTheory.Shannon.EntropyPowerInequality.entropyPower_gaussian_additivity
+  InformationTheory.Shannon.EntropyPowerInequality.entropyPower_map_add_const
+  InformationTheory.Shannon.EntropyPowerInequality.entropyPower_nonneg
+  InformationTheory.Shannon.EntropyPowerInequality.entropyPower_pos
+  InformationTheory.Shannon.EntropyPowerInequality.isEntropyPowerInequalityHypothesis_of_gaussian
+
+--- Common2026.Shannon.EntropyRate (3) ---
+  InformationTheory.Shannon.entropyRate  [def]
+  InformationTheory.Shannon.entropyRate_eq_lim_condEntropy
+  InformationTheory.Shannon.entropyRate_exists_of_stationary
+
+--- Common2026.Shannon.FisherInfo (1) ---
+  Common2026.Shannon.integral_logDeriv_pdf_eq_zero
+
+--- Common2026.Shannon.FisherInfoGaussian (9) ---
+  Common2026.Shannon.deriv_gaussianPDFReal
+  Common2026.Shannon.differentiable_gaussianPDFReal
+  Common2026.Shannon.integrable_deriv_gaussianPDFReal
+  Common2026.Shannon.integral_deriv_gaussianPDFReal_eq_zero
+  Common2026.Shannon.isRegularDensity_gaussianReal_of_law  [def]
+  Common2026.Shannon.logDeriv_gaussianPDFReal
+  Common2026.Shannon.pdf_toReal_ae_eq_gaussianPDFReal
+  Common2026.Shannon.tendsto_gaussianPDFReal_atBot
+  Common2026.Shannon.tendsto_gaussianPDFReal_atTop
+
+--- Common2026.Shannon.FisherInfoV2 (5) ---
+  Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal_nonneg
+  Common2026.Shannon.FisherInfoV2.fisherInfoOfDensity_gaussianPDFReal
+  Common2026.Shannon.FisherInfoV2.fisherInfoOfDensity_nonneg
+  Common2026.Shannon.FisherInfoV2.fisherInfoOfDensity_zero
+  Common2026.Shannon.FisherInfoV2.integral_logDeriv_density_eq_zero
+
+--- Common2026.Shannon.FisherInfoV2DeBruijn (8) ---
+  Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2_gaussian
+  Common2026.Shannon.FisherInfoV2.differentialEntropy_gaussianReal_heat_path
+  Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2Real_def
+  Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2Real_gaussianReal
+  Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2_def
+  Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2_gaussianReal
+  Common2026.Shannon.FisherInfoV2.gaussianConvolution_law_of_gaussian
+  Common2026.Shannon.FisherInfoV2.hasDerivAt_half_log_gaussian_entropy
+
+--- Common2026.Shannon.FisherInfoV2DeBruijnAssembly (1) ---
+  Common2026.Shannon.FisherInfoV2.convDensityAdd_envelope_integrable
+
+--- Common2026.Shannon.FisherInfoV2DeBruijnBody (4) ---
+  Common2026.Shannon.FisherInfoV2.IsHeatFlowDensity.heat_equation_spec
+  Common2026.Shannon.FisherInfoV2.IsHeatFlowDensity.laplacian  [def]
+  Common2026.Shannon.FisherInfoV2.heatKernel_nonneg
+  Common2026.Shannon.FisherInfoV2.measurable_heatKernel
+
+--- Common2026.Shannon.FisherInfoV2DeBruijnGenuine (2) ---
+  Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2
+  Common2026.Shannon.FisherInfoV2.debruijnIntegrationIdentity_holds
+
+--- Common2026.Shannon.FisherInfoV2DeBruijnPerTime (2) ---
+  Common2026.Shannon.FisherInfoV2.convDensityAdd_lower_bound_gaussian
+  Common2026.Shannon.FisherInfoV2.heatFlow_density_heat_equation_kernel_heat_eq
+
+--- Common2026.Shannon.FisherInfoV2HeatFlowBody (5) ---
+  Common2026.Shannon.FisherInfoV2.IsHeatFlowDensity_of_sub_predicates  [def]
+  Common2026.Shannon.FisherInfoV2.heatKernel_hasDerivAt_spatial
+  Common2026.Shannon.FisherInfoV2.heatKernel_spatial_deriv
+  Common2026.Shannon.FisherInfoV2.heatKernel_spatial_laplacian
+  Common2026.Shannon.FisherInfoV2.isHeatSpatialDerivHyp_gaussian
+
+--- Common2026.Shannon.GaussianPDFVarianceDerivBody (6) ---
+  Common2026.Shannon.gaussianPDFRealVar_eq_gaussianPDFReal
+  Common2026.Shannon.hasDerivAt_gaussianExp_variance
+  Common2026.Shannon.hasDerivAt_gaussianNorm_variance
+  Common2026.Shannon.hasDerivAt_gaussianPDFRealVar_variance
+  Common2026.Shannon.hasDerivAt_heatKernel_time
+  Common2026.Shannon.isHeatTimeDerivHyp_gaussian
+
+--- Common2026.Shannon.GeneralDMC (7) ---
+  InformationTheory.Shannon.GeneralDMC.Channel  [def]
+  InformationTheory.Shannon.GeneralDMC.capacityRate  [def]
+  InformationTheory.Shannon.GeneralDMC.capacityRate_ofMemoryless_eventually_const
+  InformationTheory.Shannon.GeneralDMC.capacity_lim  [def]
+  InformationTheory.Shannon.GeneralDMC.capacity_lim_eq_capacity_of_memoryless
+  InformationTheory.Shannon.GeneralDMC.capacity_lim_pass_through_of_eventually_const
+  InformationTheory.Shannon.GeneralDMC.capacity_lim_tendsto_of_memoryless
+
+--- Common2026.Shannon.Han (2) ---
+  InformationTheory.Shannon.han_inequality
+  InformationTheory.Shannon.jointEntropy_chain_rule
+
+--- Common2026.Shannon.HanD (3) ---
+  InformationTheory.Shannon.condEntropy_subset_anti
+  InformationTheory.Shannon.han_inequality_subset
+  InformationTheory.Shannon.jointEntropySubset_chain_rule
+
+--- Common2026.Shannon.HanDShearer (1) ---
+  InformationTheory.Shannon.shearer_inequality
+
+--- Common2026.Shannon.HeatFlowPath (4) ---
+  Common2026.Shannon.heatFlowPath2_law
+  Common2026.Shannon.heatFlowPath2_one
+  Common2026.Shannon.heatFlowPath2_zero
+  Common2026.Shannon.measurable_heatFlowPath2
+
+--- Common2026.Shannon.HoeffdingSandwich (1) ---
+  InformationTheory.Shannon.HoeffdingSandwich.hoeffding_rate_isBoundedUnder_ge
+
+--- Common2026.Shannon.HoeffdingSandwichBody (1) ---
+  InformationTheory.Shannon.HoeffdingSandwichBody.hoeffding_minimizer_ge_via_predicate
+
+--- Common2026.Shannon.HoeffdingSandwichDischarge (1) ---
+  InformationTheory.Shannon.HoeffdingSandwichDischarge.hoeffding_tradeoff_achievability_at_boundary
+
+--- Common2026.Shannon.HoeffdingTradeoff (2) ---
+  InformationTheory.Shannon.HoeffdingTradeoff.hoeffdingConstraintSet_convex
+  InformationTheory.Shannon.HoeffdingTradeoff.hoeffding_minimizer_ge
+
+--- Common2026.Shannon.HoeffdingTradeoffExp (1) ---
+  InformationTheory.Shannon.HoeffdingTradeoffExp.hoeffding_tradeoff_exp
+
+--- Common2026.Shannon.Huffman (8) ---
+  InformationTheory.Shannon.Huffman.exists_huffman_prefix_code
+  InformationTheory.Shannon.Huffman.groupKey_injective
+  InformationTheory.Shannon.Huffman.huffmanLength_kraft_eq_one
+  InformationTheory.Shannon.Huffman.huffmanLength_kraft_le_one
+  InformationTheory.Shannon.Huffman.huffmanStep_key_min_fst
+  InformationTheory.Shannon.Huffman.huffmanStep_key_min_snd
+  InformationTheory.Shannon.Huffman.huffmanStep_min_fst
+  InformationTheory.Shannon.Huffman.huffmanStep_min_snd
+
+--- Common2026.Shannon.HuffmanColexDeterminism (1) ---
+  InformationTheory.Shannon.Huffman.huffmanLengthAux_relabel_det
+
+--- Common2026.Shannon.HuffmanMergedAuxIdent (2) ---
+  InformationTheory.Shannon.Huffman.huffmanLengthAux_relabel
+  InformationTheory.Shannon.Huffman.subtypeNeEmbedding  [def]
+
+--- Common2026.Shannon.HuffmanMergedIdentBody (2) ---
+  InformationTheory.Shannon.Huffman.huffmanMergedIdentification_of_aux
+  InformationTheory.Shannon.Huffman.mergedInitMultiset_huffmanGrouping
+
+--- Common2026.Shannon.HuffmanOptimality (2) ---
+  InformationTheory.Shannon.Huffman.exists_deepest_leaf
+  InformationTheory.Shannon.Huffman.exists_sibling_min_pair
+
+--- Common2026.Shannon.HuffmanStrongForm (4) ---
+  InformationTheory.Shannon.Huffman.huffmanLength_optimal
+  InformationTheory.Shannon.Huffman.huffmanLength_optimal_modulo_aux_ident
+  InformationTheory.Shannon.Huffman.swap_normalization_proof
+  InformationTheory.Shannon.Huffman.swap_normalization_strong
+
+--- Common2026.Shannon.HuffmanSwapNormCompletion (1) ---
+  InformationTheory.Shannon.Huffman.shorten_to_kraft_one
+
+--- Common2026.Shannon.HuffmanSwapNormProof (3) ---
+  InformationTheory.Shannon.Huffman.exists_two_equal_longest
+  InformationTheory.Shannon.Huffman.kraft_one_nat_sum
+  InformationTheory.Shannon.Huffman.strict_kraft_one_implies_pairing
+
+--- Common2026.Shannon.HuffmanSwapStepChainBody (21) ---
+  InformationTheory.Shannon.Huffman.HuffmanChainCombinedHypothesis  [def]
+  InformationTheory.Shannon.Huffman.PermChainCombined  [def]
+  InformationTheory.Shannon.Huffman.PermChainExpectedLengthPreserving  [def]
+  InformationTheory.Shannon.Huffman.PermChainKraftPreserving  [def]
+  InformationTheory.Shannon.Huffman.expectedLength_perm_chain2_invariant
+  InformationTheory.Shannon.Huffman.expectedLength_perm_chain2_le
+  InformationTheory.Shannon.Huffman.expectedLength_swap_chain2_eq
+  InformationTheory.Shannon.Huffman.huffmanChainCombined_iff
+  InformationTheory.Shannon.Huffman.huffmanChainCombined_lift
+  InformationTheory.Shannon.Huffman.huffmanChainCombined_reduce
+  InformationTheory.Shannon.Huffman.huffmanChainCombined_roundtrip
+  InformationTheory.Shannon.Huffman.huffmanLength_optimal_via_chain_lift
+  InformationTheory.Shannon.Huffman.huffmanLength_optimal_with_chain_combined
+  InformationTheory.Shannon.Huffman.kraft_sum_perm_chain2_eq
+  InformationTheory.Shannon.Huffman.kraft_sum_swap_chain2_eq
+  InformationTheory.Shannon.Huffman.permChainCombined_holds
+  InformationTheory.Shannon.Huffman.permChainExpectedLengthPreserving_holds
+  InformationTheory.Shannon.Huffman.permChainKraftPreserving_holds
+  InformationTheory.Shannon.Huffman.swapStepLeChainHypothesis_holds_via_subpredicates
+  InformationTheory.Shannon.Huffman.swapStepLeChainHypothesis_via_subpredicates
+  InformationTheory.Shannon.Huffman.swap_normalization_chain2_lift
+
+--- Common2026.Shannon.HuffmanT1APPrimeBody (10) ---
+  InformationTheory.Shannon.Huffman.HuffmanCombinedHypothesis  [def]
+  InformationTheory.Shannon.Huffman.SwapStepLeChainHypothesis  [def]
+  InformationTheory.Shannon.Huffman.expectedLength_perm_invariant_when_l_eq
+  InformationTheory.Shannon.Huffman.huffmanLength_optimal_terminal
+  InformationTheory.Shannon.Huffman.huffmanLength_optimal_via_partial_swap_when_eq
+  InformationTheory.Shannon.Huffman.huffmanLength_optimal_with_combined
+  InformationTheory.Shannon.Huffman.huffmanLength_optimal_wrapper_explicit
+  InformationTheory.Shannon.Huffman.huffmanLength_sibling_eq_iff
+  InformationTheory.Shannon.Huffman.kraft_sum_perm_eq
+  InformationTheory.Shannon.Huffman.swapStepLeChainHypothesis_holds
+
+--- Common2026.Shannon.HuffmanT1APPrimePartial (9) ---
+  InformationTheory.Shannon.Huffman.SwapNormalizationHypothesis_trivial_when_eq
+  InformationTheory.Shannon.Huffman.huffmanLength_optimal_with_combined_hypothesis
+  InformationTheory.Shannon.Huffman.huffmanLength_optimal_with_hypotheses_at
+  InformationTheory.Shannon.Huffman.huffmanLength_optimal_with_hypotheses_contra
+  InformationTheory.Shannon.Huffman.huffmanLength_optimal_with_pair_hypothesis
+  InformationTheory.Shannon.Huffman.swap_apply_left'
+  InformationTheory.Shannon.Huffman.swap_apply_right'
+  InformationTheory.Shannon.Huffman.swap_step_le_self
+  InformationTheory.Shannon.Huffman.swap_step_le_self_comp
+
+--- Common2026.Shannon.HypercubeEdgeBoundary (6) ---
+  InformationTheory.Shannon.edgeBoundary_ge_AMGM
+  InformationTheory.Shannon.edge_total_count
+  InformationTheory.Shannon.flipCoord_mem_iff
+  InformationTheory.Shannon.internalEdgePairCount  [def]
+  InformationTheory.Shannon.internal_pair_count_eq_projection_sum
+  InformationTheory.Shannon.sum_projection_card_ge_amgm
+
+--- Common2026.Shannon.HypercubeEdgeBoundarySharp (1) ---
+  InformationTheory.Shannon.edgeBoundary_entropy_sharp
+
+--- Common2026.Shannon.IIDProductInputJoint (1) ---
+  InformationTheory.Shannon.iidAmbientJoint_joint_real_singleton_pos
+
+--- Common2026.Shannon.KLDivContinuous (1) ---
+  InformationTheory.Shannon.klDivSumForm_ofVec_continuous
+
+--- Common2026.Shannon.LZ78ConverseAsymptotic (10) ---
+  InformationTheory.Shannon.IsLZ78PhraseCountAsymptotic.of_passthrough
+  InformationTheory.Shannon.IsLZ78PhraseCountSandwich.lower
+  InformationTheory.Shannon.IsLZ78PhraseCountSandwich.mk
+  InformationTheory.Shannon.IsLZ78PhraseCountSandwich.upper
+  InformationTheory.Shannon.IsZivCountingAsymptoticBound.add_nonneg
+  InformationTheory.Shannon.IsZivCountingAsymptoticBound.mono
+  InformationTheory.Shannon.IsZivCountingAsymptoticBound.of_pointwise_count
+  InformationTheory.Shannon.lz78_phrase_count_asymptotic
+  InformationTheory.Shannon.lz78_phrase_count_asymptotic_linear
+  InformationTheory.Shannon.lz78_phrase_count_asymptotic_n_div_log
+
+--- Common2026.Shannon.LZ78ConverseUDObject (3) ---
+  InformationTheory.Shannon.lz78TokenCode_entropyD_le_expectedLength
+  InformationTheory.Shannon.uniquelyDecodable_lz78TokenCode
+  InformationTheory.uniquelyDecodable_of_constantLength
+
+--- Common2026.Shannon.LZ78GreedyLongestPrefix (3) ---
+  InformationTheory.Shannon.lz78PhraseStrings_count_le
+  InformationTheory.Shannon.lz78PhraseStrings_nodup
+  InformationTheory.Shannon.lz78PhraseStrings_total_length_le
+
+--- Common2026.Shannon.LZ78GreedyParsing (12) ---
+  InformationTheory.Shannon.IsLZ78CountBoundPassthrough.id
+  InformationTheory.Shannon.IsLZ78CountBoundPassthrough.mono
+  InformationTheory.Shannon.IsLZ78EncodingLengthBoundPassthrough.canonical
+  InformationTheory.Shannon.IsLZ78EncodingLengthBoundPassthrough.mono
+  InformationTheory.Shannon.lz78GreedyPhraseCount_ofFn_le
+  InformationTheory.Shannon.lz78RootPhrases  [def]
+  InformationTheory.Shannon.lz78_asymptotic_optimality_with_greedy_encoding
+  InformationTheory.Shannon.lz78_encoding_length_div_n_le
+  InformationTheory.Shannon.lz78_encoding_length_le_n_log_n_plus_const
+  InformationTheory.Shannon.lz78_encoding_length_le_n_mul_bitLength
+  InformationTheory.Shannon.lz78_encoding_length_per_symbol_le
+  InformationTheory.Shannon.lz78_encoding_length_real_per_symbol_le
+
+--- Common2026.Shannon.LZ78GreedyParsingImpl (7) ---
+  InformationTheory.Shannon.IsLZ78ImplEncodingLengthBoundPassthrough.canonical
+  InformationTheory.Shannon.IsLZ78ImplEncodingLengthBoundPassthrough.mono
+  InformationTheory.Shannon.lz78GreedyParse_count_le
+  InformationTheory.Shannon.lz78_asymptotic_optimality_with_greedy_impl
+  InformationTheory.Shannon.lz78_impl_encoding_length_le_n_log_n_plus_const
+  InformationTheory.Shannon.lz78_impl_encoding_length_per_symbol_le
+  InformationTheory.Shannon.lz78_impl_encoding_length_per_symbol_nonneg
+
+--- Common2026.Shannon.LZ78PhraseCountAsymptoticBody (3) ---
+  InformationTheory.Shannon.IsLZ78PhraseCountSandwich.of_mul_log_bound
+  InformationTheory.Shannon.isBigO_natCast_div_log_of_mul_log_le
+  InformationTheory.Shannon.lz78_phrase_count_asymptotic_of_mul_log
+
+--- Common2026.Shannon.LZ78ZivCountingBody (2) ---
+  InformationTheory.Shannon.lz78PhraseStrings_count_isBigO
+  InformationTheory.Shannon.lz78PhraseStrings_mul_log_le
+
+--- Common2026.Shannon.LZ78ZivEntropyBridge (4) ---
+  InformationTheory.Shannon.blockLogAvg_eq_neg_log_blockProb
+  InformationTheory.Shannon.blockProb_neg_log_ge_sum
+  InformationTheory.Shannon.log_sum_inequality
+  InformationTheory.Shannon.log_two_pos
+
+--- Common2026.Shannon.LZ78ZivInequality (5) ---
+  InformationTheory.Shannon.LZ78Parsing.card_phraseSet_le_pow
+  InformationTheory.Shannon.LZ78Parsing.count_eq_length'
+  InformationTheory.Shannon.ZivCountingBound.add_nonneg
+  InformationTheory.Shannon.ZivCountingBound.mono
+  InformationTheory.Shannon.ZivCountingBound.of_passthrough
+
+--- Common2026.Shannon.LempelZiv78 (5) ---
+  InformationTheory.Shannon.IsLZ78ConversePassthrough  [def]
+  InformationTheory.Shannon.IsSMBSandwichPassthrough  [def]
+  InformationTheory.Shannon.lz78_asymptotic_optimality
+  InformationTheory.Shannon.lz78_asymptotic_optimality_of_bounds
+  InformationTheory.Shannon.lz78_asymptotic_optimality_two_sided
+
+--- Common2026.Shannon.LoomisWhitney (3) ---
+  InformationTheory.Shannon.entropy_le_log_image_card
+  InformationTheory.Shannon.entropy_uniformOn_eq_log_card
+  InformationTheory.Shannon.loomis_whitney
+
+--- Common2026.Shannon.MIChainRule (5) ---
+  InformationTheory.Shannon.mutualInfo_chain_rule_fin
+  InformationTheory.Shannon.mutualInfo_eq_entropy_add_entropy_sub_jointEntropy
+  InformationTheory.Shannon.mutualInfo_iid_eq_nsmul
+  InformationTheory.Shannon.mutualInfo_map_left_measurableEquiv
+  InformationTheory.Shannon.mutualInfo_pi_eq_sum
+
+--- Common2026.Shannon.MaxEntropy (3) ---
+  InformationTheory.Shannon.MaxEntropy.entropy_eq_log_card_iff
+  InformationTheory.Shannon.MaxEntropy.entropy_le_log_card
+  InformationTheory.Shannon.MaxEntropy.klDiv_uniformOn_univ_toReal_eq
+
+--- Common2026.Shannon.MaxEntropyConstrained (5) ---
+  InformationTheory.Shannon.MaxEntropyConstrained.entropy_eq_gibbs_iff_of_constraints
+  InformationTheory.Shannon.MaxEntropyConstrained.entropy_gibbsPmf_bool_eq_binEntropy
+  InformationTheory.Shannon.MaxEntropyConstrained.entropy_gibbsPmf_zero_eq_log_card
+  InformationTheory.Shannon.MaxEntropyConstrained.entropy_le_gibbs_of_constraints
+  InformationTheory.Shannon.MaxEntropyConstrained.gibbsPmf_linearFeature_eq_geometric
+
+--- Common2026.Shannon.MaxEntropyConstrainedKKT (11) ---
+  InformationTheory.Shannon.MaxEntropyConstrainedKKT.KKT_moment_match_iff_gibbs_moment_match
+  InformationTheory.Shannon.MaxEntropyConstrainedKKT.entropy_expFamilyDist_eq_legendre
+  InformationTheory.Shannon.MaxEntropyConstrainedKKT.entropy_le_logPartition_sub_inner
+  InformationTheory.Shannon.MaxEntropyConstrainedKKT.entropy_le_logPartition_sub_inner_of_KKT
+  InformationTheory.Shannon.MaxEntropyConstrainedKKT.expFamilyDist_lam_zero_eq
+  InformationTheory.Shannon.MaxEntropyConstrainedKKT.expFamilyDist_mem_stdSimplex
+  InformationTheory.Shannon.MaxEntropyConstrainedKKT.expFamilyDist_pos
+  InformationTheory.Shannon.MaxEntropyConstrainedKKT.expFamily_maximizes_entropy
+  InformationTheory.Shannon.MaxEntropyConstrainedKKT.expFamily_maximizes_entropy_of_KKT
+  InformationTheory.Shannon.MaxEntropyConstrainedKKT.expFamily_unique
+  InformationTheory.Shannon.MaxEntropyConstrainedKKT.expFamily_unique_of_KKT
+
+--- Common2026.Shannon.McMillanKraftBridge (2) ---
+  InformationTheory.Shannon.ShannonCode.entropyD_le_expectedLength_of_uniquelyDecodable
+  InformationTheory.Shannon.ShannonCode.kraftSum_le_one_of_uniquelyDecodable
+
+--- Common2026.Shannon.MeasurePiTiltedFactorization (4) ---
+  InformationTheory.Shannon.Cramer.Discharge.integral_exp_sum_pi_eq_pow
+  InformationTheory.Shannon.Cramer.Discharge.lintegral_pi_prod
+  InformationTheory.Shannon.Cramer.Discharge.pi_tilted_sum_eq_pi_tilted
+  InformationTheory.Shannon.Cramer.Discharge.setLIntegral_pi_prod_factor
+
+--- Common2026.Shannon.MinkowskiDet (2) ---
+  Common2026.Shannon.det_rpow_le_arith_mean_eigenvalues
+  Common2026.Shannon.minkowskiDeterminantInequality
+
+--- Common2026.Shannon.MutualInfo (4) ---
+  InformationTheory.Shannon.mutualInfo_comm
+  InformationTheory.Shannon.mutualInfo_eq_zero_iff_indep
+  InformationTheory.Shannon.mutualInfo_ne_top
+  InformationTheory.Shannon.mutualInfo_nonneg
+
+--- Common2026.Shannon.ParallelGaussianKKT (1) ---
+  InformationTheory.Shannon.ParallelGaussian.exists_waterFillingKKT_of_pos
+
+--- Common2026.Shannon.ParallelGaussianPerCoordRegularity (2) ---
+  InformationTheory.Shannon.ParallelGaussian.isParallelGaussianPerCoordRegularity_of_pieces
+  InformationTheory.Shannon.ParallelGaussian.parallel_gaussian_capacity_formula_minimal
+
+--- Common2026.Shannon.ParallelGaussianWFCertBody (1) ---
+  InformationTheory.Shannon.ParallelGaussian.ConcaveOn.le_tangent_of_hasDerivAt
+
+--- Common2026.Shannon.Pinsker (2) ---
+  InformationTheory.Shannon.Pinsker.klFun_ge_sub_sqrt_sq
+  InformationTheory.Shannon.Pinsker.tvNorm_le_sqrt_klDiv
+
+--- Common2026.Shannon.PinskerSharp (2) ---
+  InformationTheory.Shannon.PinskerSharp.klFun_sharp_lower
+  InformationTheory.Shannon.PinskerSharp.tvNorm_le_sqrt_klDiv_div_two
+
+--- Common2026.Shannon.Polymatroid (4) ---
+  InformationTheory.Shannon.entropyPolymatroid  [def]
+  InformationTheory.Shannon.jointEntropySubset_empty
+  InformationTheory.Shannon.jointEntropySubset_mono
+  InformationTheory.Shannon.jointEntropySubset_submodular
+
+--- Common2026.Shannon.RateDistortionAchievability (3) ---
+  InformationTheory.Shannon.LossyCode.expectedBlockDistortion_nonneg
+  InformationTheory.Shannon.rateDistortionFunctionPmf  [def]
+  InformationTheory.Shannon.rateDistortionFunctionPmf_attained
+
+--- Common2026.Shannon.RateDistortionAchievabilityPhaseB (3) ---
+  InformationTheory.Shannon.jointTypicalLossyEncoder  [def]
+  InformationTheory.Shannon.jointlyTypicalSet_indep_prob_ge
+  InformationTheory.Shannon.lossyCodeOfCodebook  [def]
+
+--- Common2026.Shannon.RateDistortionAchievabilityPhaseC (1) ---
+  InformationTheory.Shannon.encoder_failure_prob_le_exp_neg_M_avg
+
+--- Common2026.Shannon.RateDistortionAchievabilityPhaseD (1) ---
+  InformationTheory.Shannon.source_avg_distortion_le_simpler
+
+--- Common2026.Shannon.RateDistortionAchievabilityPhaseEStrong (6) ---
+  InformationTheory.Shannon.jointStronglyTypicalSet_finite
+  InformationTheory.Shannon.jointStronglyTypicalSet_implies_X_stronglyTypical
+  InformationTheory.Shannon.jointStronglyTypicalSet_implies_Y_stronglyTypical
+  InformationTheory.Shannon.jointStronglyTypicalSet_indep_prob_ge
+  InformationTheory.Shannon.typeCount_joint_sum_fst
+  InformationTheory.Shannon.typeCount_joint_sum_snd
+
+--- Common2026.Shannon.RateDistortionAchievabilityPhaseEStrongFinal (2) ---
+  InformationTheory.Shannon.rate_distortion_achievability
+  InformationTheory.Shannon.rate_distortion_achievability_strong
+
+--- Common2026.Shannon.RateDistortionConverse (1) ---
+  InformationTheory.Shannon.rate_distortion_converse_single_shot
+
+--- Common2026.Shannon.RateDistortionConverseMonotone (2) ---
+  InformationTheory.Shannon.rateDistortionFunction_antitone
+  InformationTheory.Shannon.rate_distortion_converse_single_shot_specified
+
+--- Common2026.Shannon.SMBAlgoetCover (8) ---
+  InformationTheory.Shannon.algoet_cover_liminf_bound
+  InformationTheory.Shannon.algoet_cover_limsup_bound
+  InformationTheory.Shannon.birkhoffAverage_pmfLogCondInfty_tendsto
+  InformationTheory.Shannon.blockLogAvg_bddAbove_ae
+  InformationTheory.Shannon.blockLogAvg_bddBelow_ae
+  InformationTheory.Shannon.liminf_blockLogAvgZ_ge_entropyRate
+  InformationTheory.Shannon.limsup_blockLogAvg_le_condEntropyTail
+  InformationTheory.Shannon.negLogQk_div_tendsto_condEntropyTail
+
+--- Common2026.Shannon.SMBChainRule (7) ---
+  InformationTheory.Shannon.birkhoffAverage_pmfLogCond_tendsto
+  InformationTheory.Shannon.block_measure_succ_singleton_eq
+  InformationTheory.Shannon.block_measure_succ_singleton_real_eq
+  InformationTheory.Shannon.block_singleton_pos_ae_at
+  InformationTheory.Shannon.block_singleton_pos_ae_upTo
+  InformationTheory.Shannon.integral_pmfLogCond_eq_conditionalEntropyTail
+  InformationTheory.Shannon.pmfLogCond  [def]
+
+--- Common2026.Shannon.Sanov (3) ---
+  InformationTheory.Shannon.klDivSumForm_eq_toReal_klDiv
+  InformationTheory.Shannon.typeClass_Qn_le
+  InformationTheory.Shannon.typeClass_Qn_le_klDiv
+
+--- Common2026.Shannon.SanovLDP (3) ---
+  InformationTheory.Shannon.sanov_ldp_upper_bound
+  InformationTheory.Shannon.typeClassByCount_Qn_le
+  InformationTheory.Shannon.typeClassByCount_union_Qn_le_inf
+
+--- Common2026.Shannon.SanovLDPEquality (1) ---
+  InformationTheory.Shannon.sanov_ldp_equality
+
+--- Common2026.Shannon.ShannonCode (4) ---
+  InformationTheory.Shannon.ShannonCode.entropyD_le_expectedLength_of_kraft
+  InformationTheory.Shannon.ShannonCode.expectedLength_shannon_lt_entropyD_add_one
+  InformationTheory.Shannon.ShannonCode.shannonCode_expected_length_bounds
+  InformationTheory.Shannon.ShannonCode.shannonLength_kraft_le_one
+
+--- Common2026.Shannon.ShannonCodeKraftReverse (1) ---
+  InformationTheory.Shannon.ShannonCodeKraftReverse.exists_prefix_code_of_kraft
+
+--- Common2026.Shannon.ShannonHartley (1) ---
+  InformationTheory.Shannon.ShannonHartley.shannon_hartley_formula
+
+--- Common2026.Shannon.ShannonMcMillanBreiman (3) ---
+  InformationTheory.Shannon.expected_blockLogAvg_eq
+  InformationTheory.Shannon.measurable_blockLogAvg
+  InformationTheory.Shannon.shannon_mcmillan_breiman_of_sandwich
+
+--- Common2026.Shannon.SlepianWolf (6) ---
+  InformationTheory.Shannon.entropy_ge_condEntropy
+  InformationTheory.Shannon.entropy_le_log_card
+  InformationTheory.Shannon.fano_inequality_with_side_info
+  InformationTheory.Shannon.slepian_wolf_converse_X
+  InformationTheory.Shannon.slepian_wolf_converse_Y
+  InformationTheory.Shannon.slepian_wolf_converse_sum
+
+--- Common2026.Shannon.SlepianWolfAchievability (3) ---
+  InformationTheory.Shannon.slepian_wolf_achievability_via_Y_aep
+  InformationTheory.Shannon.swTrivialDecoder  [def]
+  InformationTheory.Shannon.swTrivialEncoderY  [def]
+
+--- Common2026.Shannon.SlepianWolfBinning (2) ---
+  InformationTheory.Shannon.binningMeasure_singleton_real
+  InformationTheory.Shannon.binning_collision_prob
+
+--- Common2026.Shannon.SlepianWolfConditionalTypicalSlice (1) ---
+  InformationTheory.Shannon.ChannelCoding.conditionalTypicalSlice_card_le
+
+--- Common2026.Shannon.SlepianWolfFullRateRegion (7) ---
+  InformationTheory.Shannon.ChannelCoding.slepian_wolf_full_rate_region_achievability
+  InformationTheory.Shannon.ChannelCoding.swErrorProb_le_E0_plus_EX_plus_EY_plus_EXY
+  InformationTheory.Shannon.ChannelCoding.swError_E0_prob_tendsto_zero
+  InformationTheory.Shannon.ChannelCoding.swError_EXY_strict_expectation_le
+  InformationTheory.Shannon.ChannelCoding.swError_EXY_subset_union
+  InformationTheory.Shannon.ChannelCoding.swError_EX_expectation_le
+  InformationTheory.Shannon.ChannelCoding.swError_EY_expectation_le
+
+--- Common2026.Shannon.StamGaussianBound (2) ---
+  Common2026.Shannon.FisherInfoV2.stam_convex_fisher_bound_gaussian
+  Common2026.Shannon.FisherInfoV2.stam_fisher_arith
+
+--- Common2026.Shannon.StationaryKernel (5) ---
+  InformationTheory.Shannon.blockProb_le_prod_condPhraseProb
+  InformationTheory.Shannon.parsingBoundary_complete_le
+  InformationTheory.Shannon.parsingBoundary_le_n
+  InformationTheory.Shannon.prefixBlockProb_antitone
+  InformationTheory.Shannon.prod_condPhraseProb_telescope
+
+--- Common2026.Shannon.Stein (10) ---
+  InformationTheory.Shannon.logLikelihoodRatio_eq_comp
+  InformationTheory.Shannon.steinOptimalBeta  [def]
+  InformationTheory.Shannon.steinOptimalBeta_le_one
+  InformationTheory.Shannon.steinOptimalBeta_log_ge_of_achievability
+  InformationTheory.Shannon.steinOptimalBeta_log_le_of_converse
+  InformationTheory.Shannon.steinOptimalBeta_nonneg
+  InformationTheory.Shannon.stein_achievability
+  InformationTheory.Shannon.stein_converse_finite_n
+  InformationTheory.Shannon.stein_inProbability
+  InformationTheory.Shannon.stein_strong_law
+
+--- Common2026.Shannon.StrongStein (1) ---
+  InformationTheory.Shannon.StrongStein.steinOptimalBeta_log_le_of_strong_converse
+
+--- Common2026.Shannon.StrongTypicality (3) ---
+  InformationTheory.Shannon.measurableSet_stronglyTypicalSet
+  InformationTheory.Shannon.stronglyTypicalSet_card_ge_eventually
+  InformationTheory.Shannon.stronglyTypicalSet_prob_tendsto_one
+
+--- Common2026.Shannon.SufficientStatistic (1) ---
+  InformationTheory.Shannon.mutualInfo_eq_of_sufficient
+
+--- Common2026.Shannon.TypeClassLowerBound (2) ---
+  InformationTheory.Shannon.entropyByCount  [def]
+  InformationTheory.Shannon.pow_div_prod_pow_eq_exp_n_entropyByCount
+
+--- Common2026.Shannon.TypedRV (7) ---
+  InformationTheory.Shannon.condEntropy  [def]
+  InformationTheory.Shannon.differentialEntropyRV  [def]
+  InformationTheory.Shannon.entropy_nonneg_rv
+  InformationTheory.Shannon.klDivRV  [def]
+  InformationTheory.Shannon.klDivRV_def
+  InformationTheory.Shannon.mutualInfo_comm_rv
+  InformationTheory.Shannon.mutualInfo_le_of_postprocess_rv
+
+--- Common2026.Shannon.WhittakerShannonPartial (10) ---
+  InformationTheory.Shannon.WhittakerShannonPartial.Continuous.sincN
+  InformationTheory.Shannon.WhittakerShannonPartial.Measurable.sincN
+  InformationTheory.Shannon.WhittakerShannonPartial.continuous_sincN
+  InformationTheory.Shannon.WhittakerShannonPartial.continuous_sincN_sample_term
+  InformationTheory.Shannon.WhittakerShannonPartial.measurable_sincN
+  InformationTheory.Shannon.WhittakerShannonPartial.neg_one_le_sincN
+  InformationTheory.Shannon.WhittakerShannonPartial.sincN_int_eq_kronecker
+  InformationTheory.Shannon.WhittakerShannonPartial.sincN_int_eq_zero
+  InformationTheory.Shannon.WhittakerShannonPartial.sincN_le_one
+  InformationTheory.Shannon.WhittakerShannonPartial.whittaker_shannon_sample_collapse
+
+--- Common2026.Shannon.WynerZiv (7) ---
+  InformationTheory.Shannon.WynerZivCode.expectedBlockDistortion_nonneg
+  InformationTheory.Shannon.continuous_wzObjective
+  InformationTheory.Shannon.mem_WynerZivConstraint_iff
+  InformationTheory.Shannon.wynerZivRatePmf_attained_slice
+  InformationTheory.Shannon.wynerZivRatePmf_image_bddBelow_of_objective
+  InformationTheory.Shannon.wynerZivRatePmf_le_of_feasible
+  InformationTheory.Shannon.wyner_ziv_tendsto
+
+--- Common2026.Shannon.WynerZivCondEntDiffConvexBody (3) ---
+  InformationTheory.Shannon.wynerZivCondEntDiffConvex_holds
+  InformationTheory.Shannon.wynerZivRateFactorizable_convex_in_D_unconditional
+  InformationTheory.Shannon.wzMarginalXU_smul_add
+
+--- Common2026.Shannon.WynerZivConvexityBody (5) ---
+  InformationTheory.Shannon.IsWynerZivFactorizable_iff
+  InformationTheory.Shannon.WynerZivFactorizableConstraint_convex_combination
+  InformationTheory.Shannon.WynerZivFactorizableConstraint_mono_in_D
+  InformationTheory.Shannon.mem_WynerZivFactorizableConstraint_iff
+  InformationTheory.Shannon.wynerZivRateFactorizable_antitone
+
+--- Common2026.Shannon.WynerZivDischarge (9) ---
+  InformationTheory.Shannon.WynerZivConstraint_mono_in_D
+  InformationTheory.Shannon.convex_stdSimplex_wynerZiv
+  InformationTheory.Shannon.stdSimplex_convex_combination_mem
+  InformationTheory.Shannon.wynerZivConstraint_fst_subset_stdSimplex
+  InformationTheory.Shannon.wynerZivRatePmf_antitone
+  InformationTheory.Shannon.wynerZivRatePmf_antitone_of_feasible
+  InformationTheory.Shannon.wzMarginalXY_add
+  InformationTheory.Shannon.wzMarginalXY_convex_combination
+  InformationTheory.Shannon.wzMarginalXY_smul
+
+--- Common2026.Shannon.WynerZivObjectiveConvexityBody (2) ---
+  InformationTheory.Shannon.wynerZivRateFactorizable_convex_in_D_of_condEntDiff
+  InformationTheory.Shannon.wzObjective_convex_of_condEntDiff
+
+==================== STAGED (uses sorryAx) ==================
+（@[entry_point] だが推移閉包に sorry を含む = 未完成の主定理）
+
+--- Common2026.Draft.Shannon.ChannelCodingConverseGeneralComplete (2) ---
+  InformationTheory.Shannon.ChannelCodingConverseGeneral.channel_coding_converse_general_memoryless
+  InformationTheory.Shannon.ChannelCodingConverseGeneral.memoryless_per_summand_bound
+
+--- Common2026.Draft.Shannon.Cramer (1) ---
+  InformationTheory.Shannon.Cramer.cramer_tendsto
+
+--- Common2026.Draft.Shannon.CramerLC2PhaseC (2) ---
+  InformationTheory.Shannon.Cramer.Discharge.cramer_tendsto_phaseC_partial_discharge
+  InformationTheory.Shannon.Cramer.Discharge.tilted_lower_from_predicate
+
+--- Common2026.Draft.Shannon.HoeffdingInteriorBody (2) ---
+  InformationTheory.Shannon.HoeffdingInteriorBody.hoeffdingE2_interior_minimizer_via_predicates
+  InformationTheory.Shannon.HoeffdingInteriorBody.isHoeffdingInteriorMinimizer_of_gradient
+
+--- Common2026.Draft.Shannon.HoeffdingInteriorGradientBody (4) ---
+  InformationTheory.Shannon.HoeffdingInteriorGradientBody.csiszar_pythagoras_at_lagrange
+  InformationTheory.Shannon.HoeffdingInteriorGradientBody.hoeffdingE2_interior_minimizer_via_lagrange
+  InformationTheory.Shannon.HoeffdingInteriorGradientBody.isHoeffdingInteriorMinimizer_exists_of_lagrange
+  InformationTheory.Shannon.HoeffdingInteriorGradientBody.isHoeffdingInteriorMinimizer_of_lagrange
+
+--- Common2026.Draft.Shannon.HoeffdingLagrangeIVTBody (1) ---
+  InformationTheory.Shannon.HoeffdingLagrangeIVTBody.isHoeffdingInteriorMinimizer_of_ivt
+
+--- Common2026.Draft.Shannon.HoeffdingMinimizerAttainment (1) ---
+  InformationTheory.Shannon.HoeffdingMinimizerAttainment.isHoeffdingInteriorMinimizer_of_constraint_eq
+
+--- Common2026.Draft.Shannon.HuffmanWalls (4) ---
+  InformationTheory.Shannon.Huffman.huffman_chain_combined_hypothesis_holds
+  InformationTheory.Shannon.Huffman.huffman_combined_hypothesis_holds
+  InformationTheory.Shannon.Huffman.huffman_merged_identification_hypothesis_holds
+  InformationTheory.Shannon.Huffman.merged_huffman_aux_ident_hypothesis_holds
+
+--- Common2026.Draft.Shannon.InfinitePiTiltedChangeOfMeasure (1) ---
+  InformationTheory.Shannon.Cramer.Discharge.cramer_lower_phaseC_residual_discharge
+
+--- Common2026.Draft.Shannon.RateDistortionAchievabilityPhaseE (1) ---
+  InformationTheory.Shannon.rate_distortion_achievability_witness_form
+
+--- Common2026.Draft.Shannon.RateDistortionAchievabilityPhaseEDischarge (1) ---
+  InformationTheory.Shannon.rate_distortion_achievability_partial_discharge
+
+--- Common2026.Draft.Shannon.RateDistortionConverseNLetter (1) ---
+  InformationTheory.Shannon.rate_distortion_converse_n_letter_singleLetter
+
+--- Common2026.Draft.Shannon.RateDistortionConvexity (1) ---
+  InformationTheory.Shannon.rateDistortionFunction_convexOn
+
+--- Common2026.Shannon.AWGNAchievabilityDischarge (4) ---
+  InformationTheory.Shannon.AWGN.awgn_achievability_F1_via_staged_hyps
+  InformationTheory.Shannon.AWGN.awgn_avg_error_union_bound
+  InformationTheory.Shannon.AWGN.awgn_theorem_F4_discharged_F1_via_staged
+  InformationTheory.Shannon.AWGN.isAwgnTypicalityHypothesis
+
+--- Common2026.Shannon.AWGNBindConvBody (1) ---
+  InformationTheory.Shannon.AWGN.awgn_theorem_of_typicality_converse_bindconv_discharged
+
+--- Common2026.Shannon.AWGNConverse (1) ---
+  InformationTheory.Shannon.AWGN.awgn_converse
+
+--- Common2026.Shannon.AWGNConverseDischarge (6) ---
+  InformationTheory.Shannon.AWGN.awgn_chain_rule
+  InformationTheory.Shannon.AWGN.awgn_converse_F3_discharged
+  InformationTheory.Shannon.AWGN.awgn_dpi
+  InformationTheory.Shannon.AWGN.awgn_per_letter_mi_le_log_var
+  InformationTheory.Shannon.AWGN.awgn_sum_per_letter_mi_le_n_capacity
+  InformationTheory.Shannon.AWGN.isAwgnConverseFeasible_discharger
+
+--- Common2026.Shannon.AWGNF1Discharge (1) ---
+  InformationTheory.Shannon.AWGN.awgn_theorem_F1_discharged
+
+--- Common2026.Shannon.AWGNF2F3Discharge (1) ---
+  InformationTheory.Shannon.AWGN.awgn_theorem_of_F2F3_hypotheses
+
+--- Common2026.Shannon.AWGNMIBridge (1) ---
+  InformationTheory.Shannon.AWGN.awgn_theorem_F2_discharged
+
+--- Common2026.Shannon.AWGNMIBridgeDischarge (1) ---
+  InformationTheory.Shannon.AWGN.awgn_theorem_of_typicality_converse_bindconv
+
+--- Common2026.Shannon.AWGNMain (1) ---
+  InformationTheory.Shannon.AWGN.awgn_channel_coding_theorem
+
+--- Common2026.Shannon.AwgnWalls (3) ---
+  InformationTheory.Shannon.AWGN.awgnContinuousMIChainRule_holds
+  InformationTheory.Shannon.AWGN.awgnConverseMarkov_holds
+  InformationTheory.Shannon.AWGN.awgnPerLetterIntegrability_holds
+
+--- Common2026.Shannon.EPIL3Integration (11) ---
+  InformationTheory.Shannon.EPIL3Integration.entropy_power_inequality_exp_form_integrated
+  InformationTheory.Shannon.EPIL3Integration.entropy_power_inequality_exp_form_reduced
+  InformationTheory.Shannon.EPIL3Integration.entropy_power_inequality_four_arg_integrated
+  InformationTheory.Shannon.EPIL3Integration.entropy_power_inequality_gaussian_via_pipeline
+  InformationTheory.Shannon.EPIL3Integration.entropy_power_inequality_integrated
+  InformationTheory.Shannon.EPIL3Integration.entropy_power_inequality_log_form_integrated
+  InformationTheory.Shannon.EPIL3Integration.entropy_power_inequality_normalized_integrated
+  InformationTheory.Shannon.EPIL3Integration.entropy_power_inequality_reduced
+  InformationTheory.Shannon.EPIL3Integration.entropy_power_inequality_three_arg_integrated
+  InformationTheory.Shannon.EPIL3Integration.entropy_power_inequality_three_forms_equiv
+  InformationTheory.Shannon.EPIL3Integration.epi_l3_of_integrated_pipeline
+
+--- Common2026.Shannon.EPIPlumbing (2) ---
+  InformationTheory.Shannon.EntropyPowerInequality.entropy_power_inequality_normalized
+  InformationTheory.Shannon.EntropyPowerInequality.two_differentialEntropy_ge_log_sum
+
+--- Common2026.Shannon.EPIStamDeBruijnConclusion (1) ---
+  InformationTheory.Shannon.EPIStamDeBruijnConclusion.entropy_power_inequality_via_stamDeBruijn
+
+--- Common2026.Shannon.EPIStamDischarge (6) ---
+  InformationTheory.Shannon.EPIStamDischarge.entropy_exp_form_via_stam
+  InformationTheory.Shannon.EPIStamDischarge.entropy_log_form_via_stam
+  InformationTheory.Shannon.EPIStamDischarge.entropy_normalized_form_via_stam
+  InformationTheory.Shannon.EPIStamDischarge.entropy_power_inequality_via_stam_gaussian
+  InformationTheory.Shannon.EPIStamDischarge.epi_via_stam_main
+  InformationTheory.Shannon.EPIStamDischarge.epi_via_stam_main_eq
+
+--- Common2026.Shannon.EPIStamInequalityBody (1) ---
+  InformationTheory.Shannon.EPIStamInequalityBody.entropy_power_inequality_via_body
+
+--- Common2026.Shannon.EPIStamToBridge (4) ---
+  InformationTheory.Shannon.EPIStamToBridge.csiszarGap_antitoneOn_Icc_zero_one
+  InformationTheory.Shannon.EPIStamToBridge.entropy_power_inequality_unconditional
+  InformationTheory.Shannon.EPIStamToBridge.isStamToEPIBridgeHyp_of_stam_debruijn
+  InformationTheory.Shannon.EPIStamToBridge.isStamToEPIScalingHyp_of_stam_debruijn
+
+--- Common2026.Shannon.EntropyPowerInequality (3) ---
+  InformationTheory.Shannon.EntropyPowerInequality.entropy_power_inequality
+  InformationTheory.Shannon.EntropyPowerInequality.entropy_power_inequality_exp_form
+  InformationTheory.Shannon.EntropyPowerInequality.entropy_power_inequality_log_form
+
+--- Common2026.Shannon.FisherInfoV2DeBruijnBody (2) ---
+  Common2026.Shannon.FisherInfoV2.IsRegularDeBruijnHypV2.ofHeatFlow  [def]
+  Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2_of_heat_flow
+
+--- Common2026.Shannon.FisherInfoV2HeatFlowBody (2) ---
+  Common2026.Shannon.FisherInfoV2.IsRegularDeBruijnHypV2.ofHeatSubhyp  [def]
+  Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2_of_heat_subhyp
+
