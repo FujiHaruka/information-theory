@@ -251,6 +251,23 @@ available regularity（`IsDeBruijnRegularityHyp` の `pX`/`density_t`/conv envel
 category 4）。詰まったら端点 atom のみ `sorry` + `@residual(wall:heatflow-continuity)`、内部
 G2-1 は genuine 部分達成として分離公開（honest 命名）。
 
+### 推奨次手（2026-06-04 更新）
+
+de Bruijn genuine 化後の 4 角度再評価（判断ログ #3）を踏まえた、次に G2 を attack する際の
+**推奨アタック順**（proof-pivot-advisor 気づき）:
+
+- **次手: full DCT（R5 Vitali）より先に「sum 項片側 USC」ルートを撃つ**。判断ログ #3 の
+  「3 項 → sum 項 1 個」reduction が genuine に成立するため、`differentialEntropy` の sum 項
+  `t→0⁺` **上半連続性（USC）** のみを攻める片側ルートが、R5 Vitali（full DCT、特大 150–250 行、
+  既存 `epi-g2-main-closure-inventory.md` 参照）の両側 majorant より弱い片側条件で済む可能性がある。
+  USC 攻略は Fatou（`lintegral` の LSC、Mathlib `VitaliCaratheodory.lean` に 4 件）で直接攻める。
+- **最初の GATE = reverse-Fatou 障害を撃つ**: ただし判断ログ #3 の reverse-Fatou 障害
+  （`φ(p)=−p log p` の上界 `1/e` が無限測度 `volume` 上で非可積分）が **最初の GATE** になる。
+  この GATE を最初に撃ち、抜けられなければ R5 Vitali（full DCT）に戻る。
+- **規模見積り不変**: いずれのルートでも multi-session 規模は変わらない。本壁は de Bruijn
+  genuine 化後も残る唯一の真 Mathlib 壁（`wall:heatflow-continuity`）であり、closure には
+  Mathlib 側の vanishing-Gaussian entropy 連続性 machinery が要る。
+
 ## 段階 ship（DoD 2 段階）
 
 - **G2-1（内部、易）**: 既存 genuine 資産の機械的合成。単独 commit 可（type-check done）。
@@ -274,3 +291,45 @@ G2-1 は genuine 部分達成として分離公開（honest 命名）。
    は t-uniform にならない。GATE の核は「pointwise t-uniform envelope を pX 側 / `max s 0` clamp
    envelope から組めるか」に縮退する。L¹ mass 保存（`‖pX∗g_t‖₁=‖pX‖₁`）は一様だが DCT は pointwise
    bound 要求なので不十分、という drift 注意点を G2-2-b に明記。
+
+3. **de Bruijn genuine 化後の G2 迂回再評価（2026-06-04、全 NO-GO）**: EPI 壁の最新 honest state
+   が変わった（per-time de Bruijn `FisherInfoV2.deBruijn_identity_v2` /
+   `debruijnIdentityV2_holds_assembled` が sorryAx-free 化、`wall:debruijn-integration` /
+   `wall:stam-step2-density` が CLOSED 化、commit `5ca9b14`、audit-tags.md register 更新済）。これにより
+   EPI で残る真 Mathlib 壁は **G2 `wall:heatflow-continuity` 唯一**。この新 state を前提に、既存
+   `epi-g2-main-closure-inventory.md` の代替 6 ルートとは異なる新角度で G2 迂回を 4 角度
+   再評価（proof-pivot-advisor 再評価 + orchestrator 独立検算）。**全角度 NO-GO だが reduction
+   の一部は genuine に成立**:
+
+   - **角度1 — de Bruijn FTC 直接積分ルート: NO-GO**。genuine per-time de Bruijn を
+     `t∈(0,∞)` で FTC 積分し
+     `differentialEntropy(X+√T·Z) − differentialEntropy(X+√ε·Z) = ∫_ε^T (1/2)J dt` を得て
+     `ε→0⁺` 極限を狙う案。**致命的障害**: Fisher bound は `gaussianConv_fisher_le_inv_var`
+     （`FisherConvBound.lean:405`、`J(t) ≤ 1/t` のみ）で、被積分 `(1/2)J(t)` の majorant
+     `1/(2t)` が **t=0⁺ で非可積分**（`∫_0 1/t dt = log T − log ε → +∞`）。de Bruijn が
+     出さない「`J(t)` の t→0⁺ 可積分 majorant（= entropy が有限極限に収束）」が要り、これは
+     entropy 端点連続性と同値の情報量。FTC は内部を genuine に積分するだけで端点情報を生成しない。
+
+   - **角度2/3 — antitone 端点を片側半連続に弱化: 理論上 reduction 成立、closure には至らず**
+     （orchestrator 独立検算、記録価値あり）:
+     - antitone 引数は `r(0) ≥ r(1) = 0` を `AntitoneOn r (Ici 0)` の 0/1 評価で得る。
+       `r(0) ≥ 0` には full continuity 不要で **`r` の t=0 での上半連続性（USC）のみで十分**
+       （USC ⟹ `r(0) ≥ limsup_{t→0⁺} r(t) ≥ liminf ≥ 0`、∵ `r(t)≥0` on (0,1] は interior
+       antitone + `r(1)=0` で genuine）。
+     - `r = log eP_sum − log(eP_X + eP_Y)` の USC を分解: log eP_sum の USC = `h_sum` の USC、
+       `−log(eP_X+eP_Y)` の USC = `h_X`,`h_Y` の **LSC**。
+     - **de Bruijn 単調性で X,Y 項は無料化**: de Bruijn `dh/dt = (1/2)J ≥ 0` ⟹ `h` は `t`
+       単調増加。単調増加関数 `g` は `g(0) ≤ g(0⁺)` なので **LSC は t=0 で自動成立**（易しい
+       方向）。よって `h_X`,`h_Y` 項の必要条件（LSC）は monotonicity から free。
+     - **残る壁は sum 項の USC のみ**: `h_sum` の USC = `g(0) ≥ g(0⁺)` =（単調性 `g(0)≤g(0⁺)`
+       と合わせて）`g(0)=g(0⁺)` = **連続性そのもの**。すなわち 3 項 full continuity が **sum 項
+       1 個の連続性（USC）に縮小**するが、sum 項の連続性は既存共有壁補題と同難度。
+     - **reverse-Fatou で USC を出せるか: NO-GO**。`φ(p)=−p log p` は `φ ≤ 1/e` で上から有界
+       だが、`1/e` は `volume`（無限測度）上で非可積分のため reverse-Fatou（上からの dominated
+       convergence）が効かない。USC は依然 time-uniform 可積分性を要し壁を移送するのみ。
+
+   **結論**: de Bruijn genuine 化後も G2 端点連続性は不可避。**ただし「3 項 → sum 項 1 個」
+   reduction は genuine に成立**するので、将来 closure を attack する際は (a) `h_X`,`h_Y` を
+   monotonicity-LSC で free にし、(b) sum 項のみ USC/連続性を attack する形に共有壁補題
+   `heatFlowEntropyPower_continuousWithinAt` の使われ方を組み替えられる（wall sorry 件数は 1 の
+   ままだが invocation が sum 項に集約され、X/Y 項が genuine 化）。
