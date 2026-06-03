@@ -1390,6 +1390,7 @@ lemma condProbPast_tendsto_condProbInfty (a : α) :
 
 omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- `condProbPast a k` is integrable. -/
+@[entry_point]
 lemma integrable_condProbPast (a : α) (k : ℕ) :
     Integrable (condProbPast μ p a k) (μZ μ p) :=
   integrable_condExp
@@ -2700,6 +2701,7 @@ condExp w.r.t. `shifted(negPastSigma)`. -/
 section MeasurePreservingCondExp
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+@[entry_point]
 lemma condExp_comp_measurePreserving
     {Ω₁ Ω₂ : Type*} [m₁ : MeasurableSpace Ω₁] [m₂ : MeasurableSpace Ω₂]
     {μ₁ : Measure Ω₁} {μ₂ : Measure Ω₂} [IsFiniteMeasure μ₁] [IsFiniteMeasure μ₂]
