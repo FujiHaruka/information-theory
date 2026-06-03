@@ -210,7 +210,26 @@ predicate is genuinely closed (0-sorry, sorryAx-free). No honesty defect.
 @audit:ok — independent honesty audit (2026-05-31): SOUND Prop, no load-bearing /
 circular / `:True` field. NON-vacuity CAVEAT: the gating `IsBlachmanConvReady fX fY`
 hyp has no in-tree witness yet (Gaussian instance unwired); non-vacuousness pending the
-Gaussian witness (`epi-wall-reattack-plan`). -/
+Gaussian witness (`epi-wall-reattack-plan`).
+
+@audit:ok — re-audit 2026-06-04 (independent, triggered by a `wall:stam-blachman`
+load-bearing-predicate report): MISREPORT REBUTTED. (1) This predicate is NOT injected as
+an open load-bearing hyp into a closed theorem: its consumers
+(`isStamCauchySchwarz_of_condExpCSHyp` / `stamCauchySchwarzOptimal_of_condExpCSHyp` /
+`isStamInequalityHyp_of_step12` …) are genuine sorryAx-free IMPLICATION wrappers
+(`#print axioms` = `[propext, Classical.choice, Quot.sound]`, machine-verified transiently
+2026-06-04), and the predicate is genuinely DISCHARGED from regularity alone by
+`EPIStamInequalityBody.stam_step2_density_wall` → `convex_fisher_bound_of_ready` → genuine
+`convex_fisher_bound` (all `@audit:ok`, sorryAx-free). So it is a sound intermediate API
+Prop with an in-tree producer, NOT an un-dischargeable load-bearing wall. (2) Zero
+load-bearing reach into the EPI main theorem: `EntropyPowerInequality.entropy_power_inequality`
+routes through `IsStamInequalityResidual` + `stamToEPIBridge_holds`, never through
+`IsStamCondExpCSHyp` (0 references in `EntropyPowerInequality.lean`); the entire
+`IsStamCondExpCSHyp` consumer cluster has ZERO live cross-file call sites (refs are
+docstring mentions only) — it is dead-ish API-completeness scaffolding. (3) The
+`wall:stam-blachman` in the report is the condExp-route score-of-convolution wall narrated
+in `EPIScoreCrossTermOrth.lean`, a DISTINCT (and bypassed-by-density-route) concern; it is
+prose, not an active `@residual` carried by any sorry on this declaration. No defect. -/
 def IsStamCondExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →

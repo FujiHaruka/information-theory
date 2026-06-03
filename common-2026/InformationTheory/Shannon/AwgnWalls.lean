@@ -58,7 +58,9 @@ open scoped ENNReal NNReal BigOperators Topology
 chain rule `I(X;Y) = h(Y) − h(Y|X)` — was **closed 2026-05-28**: it is now assembled
 genuinely from local helpers in
 `InformationTheory.Draft.Shannon.ContChannelMIDecomp.mutualInfoOfChannel_toReal_eq_diffEntropy_sub`
-(0 sorry), so no shared wall is needed and this file's wall count is 6.) -/
+(0 sorry), so no shared wall is needed. This file's active wall count is now **5**
+(Wall 1-5): Wall 6 `awgn-converse-markov-regularity` was **genuine-closed 2026-06-04**
+(`awgnConverseMarkov_holds` is sorryAx-free, see its docstring).) -/
 
 /-- **Continuous AEP for n-dim Gaussian** (Phase B-0 wall, 旧 `IsContinuousAEPGaussian`).
 
@@ -299,7 +301,10 @@ joint factorization, **genuine closure** (旧 wall `awgn-converse-markov-regular
 `compProd_map_condDistrib` で吸収、triple-joint factorization を `ext_of_lintegral` +
 `h_marginalA` reduction で検証する (precedent:
 `BlockwiseChannel.isMarkovChain_per_letter_input`)。`#print axioms` は sorryAx-free
-(`[propext, Classical.choice, Quot.sound]`、本 session 機械確認)。 -/
+(`[propext, Classical.choice, Quot.sound]`、本 session 機械確認)。
+
+@audit:ok (2026-06-04: orchestrator が genuine 化後 fresh olean で `#print axioms`
+sorryAx-free を独立再確認、signature 不変・honest) -/
 @[entry_point]
 theorem awgnConverseMarkov_holds
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
