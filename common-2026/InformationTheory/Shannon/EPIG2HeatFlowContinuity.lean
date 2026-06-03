@@ -77,7 +77,13 @@ interior `AntitoneOn (Set.Ioi 0)`.
 
 Mathlib has the monotone version only; this is its dual via `OrderDual.toDual`
 (an order-reversing homeomorphism on `β`), which sends `AntitoneOn f s` to
-`MonotoneOn (toDual ∘ f) s` and preserves `ContinuousWithinAt`. -/
+`MonotoneOn (toDual ∘ f) s` and preserves `ContinuousWithinAt`.
+
+Independent honesty audit 2026-06-04 (fresh subagent): genuine 0 sorry, sorryAx-free
+(`#print axioms` = `[propext, Classical.choice, Quot.sound]`)、循環なし (body は
+Mathlib `MonotoneOn.insert_of_continuousWithinAt` の OrderDual mirror、`:= h` でない)、
+型クラス制約 (`OrderClosedTopology β` 等) は monotone 版と整合。
+@audit:ok -/
 theorem _root_.AntitoneOn.insert_of_continuousWithinAt
     {α β : Type*} [TopologicalSpace α] [LinearOrder α] [OrderTopology α]
     [TopologicalSpace β] [LinearOrder β] [OrderClosedTopology β]
@@ -115,6 +121,17 @@ interval-integrability), none a continuity claim.
 Surface shrink (2026-06-04): the predecessor `heatFlowEntropyPower_continuousOn`
 claimed the full ray `ContinuousOn (Set.Ici 0)`; this version shrinks the residual
 to the single endpoint, with the interior recovered genuinely on the consumer side.
+
+Independent honesty audit 2026-06-04 (fresh subagent, post-shrink): 端点
+`ContinuousWithinAt (Set.Ioi 0) 0` 縮小後も signature honest (連続性結論を hyp に
+bundle せず、`IsDeBruijnRegularityHyp` は density/per-`t` V2 regularity/interval-
+integrability の regularity-only) / classification `wall:heatflow-continuity` 確認
+(loogle: `entropyPower`/`differentialEntropy` 0 decls in Mathlib、DCT
+`continuousWithinAt_of_dominated` は present = 壁は uniform majorant のみ) / 非空虚
+(Gaussian inhabitant) / interior `t > 0` は consumer 側 (R-5-c) で
+`differentiableOn.continuousOn` genuine。shared sorry 1 件に集約 (consumer
+`csiszarLogRatioGap_continuousWithinAt_zero` / `_antitoneOn_Ici_zero` は own
+`@residual` 無し、sorryAx は本壁経由の transitive のみ機械確認)。
 
 @residual(wall:heatflow-continuity) -/
 theorem heatFlowEntropyPower_continuousWithinAt_zero
