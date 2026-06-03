@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.FisherInfoV2DeBruijnAssembly
 
 /-!
@@ -80,6 +81,7 @@ convert the interval integral to `Set.Ioo`/`Set.Ioc` and fix the boundary
 `f 0 = h(P.map X)`. No `:= sorry` / `:True` disguise. `h_path : IsDeBruijnPathRegular`
 is a genuine regularity precondition (not load-bearing — see that structure's
 audit note in `FisherInfoV2DeBruijn.lean`). -/
+@[entry_point]
 theorem debruijnIntegrationIdentity_holds
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)

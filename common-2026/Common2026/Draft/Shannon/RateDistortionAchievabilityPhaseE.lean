@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.RateDistortionAchievabilityPhaseD
 
 /-!
@@ -91,7 +92,10 @@ mathematical core of random-coding achievability and must be closed by the
 Phase E strong plan, not absorbed as preconditions. The passive ambient /
 distortion-compatibility / slack hypotheses remain. Body retreated to `sorry`.
 
-`@residual(plan:rate-distortion-achievability-phase-e-strong-plan)` -/
+`@residual(plan:rate-distortion-achievability-phase-e-strong-plan)`
+
+`@[entry_point]` status: staged (body is `sorry` + `@residual`). -/
+@[entry_point]
 theorem rate_distortion_achievability_witness_form
     -- Source distribution and witness on the pmf side.
     (P_X_pmf : α → ℝ) (d : DistortionFn α β) {D : ℝ}

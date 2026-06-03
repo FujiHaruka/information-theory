@@ -744,6 +744,7 @@ split is produced internally by `llr_split_from_density_factorize`, so the
 honest `h_llr_split` argument is no longer required. The remaining hypotheses
 are regularity (absolute continuity + Bochner integrability of three
 log-density observables). -/
+@[entry_point]
 theorem klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2
     {μ : Measure (ℝ × ℝ)} [IsProbabilityMeasure μ]
     (h_fst_ac : (μ.map Prod.fst) ≪ volume)

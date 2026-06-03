@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.RateDistortionConverseMonotone
 import Common2026.Shannon.RateDistortionAchievability
 import Common2026.Shannon.RateDistortionConvexityDischarge
@@ -67,6 +68,7 @@ This is a direct `(α := Fin n → α, β := Fin n → β, M := Fin M)` instanti
 distortion measure. The proof packages the lossy code into the
 `(encoder, decoder)` shape required by the parent theorem and routes the
 i.i.d. source through `Measure.pi`. -/
+@[entry_point]
 theorem rate_distortion_converse_n_letter_block
     [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
     [Fintype β] [MeasurableSingletonClass β]
@@ -150,6 +152,7 @@ the mutual information between `X^n` and the reconstruction
 
 Same DPI + max-entropy chain as `rate_distortion_converse_single_shot`'s steps 1-3,
 extracted as a standalone lemma. -/
+@[entry_point]
 lemma mutualInfo_block_le_log_card
     [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
     [Fintype β] [MeasurableSingletonClass β]
@@ -204,6 +207,7 @@ is feasible for the per-letter `R(Dt)` at threshold
 `R(Dt) ≤ klDiv ν_i ((ν_i.map fst).prod (ν_i.map snd)) = mutualInfo μ (Xs i) (X̂s i)`.
 
 This is the per-letter analogue of the chain used in `rate_distortion_converse_single_shot`. -/
+@[entry_point]
 lemma rateDistortionFunction_le_mutualInfo_perLetter
     {α' β' : Type*} [MeasurableSpace α'] [MeasurableSpace β']
     (μ : Measure Ω) (X : Ω → α') (Xh : Ω → β')
@@ -265,7 +269,10 @@ identity, on toReal) have been removed; both are mathematically substantial
 Mathlib-gap content that must be closed by the converse plan, not absorbed
 into a precondition. Body retreated to `sorry`.
 
-`@residual(plan:rate-distortion-converse-plan)` -/
+`@residual(plan:rate-distortion-converse-plan)`
+
+`@[entry_point]` status: staged (body is `sorry` + `@residual`). -/
+@[entry_point]
 theorem rate_distortion_converse_n_letter_singleLetter
     [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
     [Fintype β] [MeasurableSingletonClass β]

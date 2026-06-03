@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.EPIConvDensity
 import Common2026.Shannon.FisherInfoV2DeBruijn
 import Common2026.Shannon.DifferentialEntropy
@@ -356,6 +357,7 @@ derivative is `g·(u²/σ²-1/σ)`, both non-trivially nonzero (e.g. `-1/σ ≠ 
 the heat-equation link `∂_σ = (1/2)∂²_u` is a real identity (not both ≡ 0). Assembled from
 the two genuine kernel-derivative lemmas. sorryAx-free, 0 sorry / 0 residual.
 @audit:ok -/
+@[entry_point]
 theorem heatFlow_density_heat_equation_kernel_heat_eq
     {σ : ℝ} (hσ : 0 < σ) (u : ℝ) :
     HasDerivAt (fun τ : ℝ => heatFlow_density_heat_equation_kernel τ u)
@@ -862,6 +864,7 @@ genuine steps — tightness via `tendsto_setIntegral_of_monotone` (real Mathlib,
 circular / `:True` / degenerate / load-bearing hyp. `#print axioms` = `[propext,
 Classical.choice, Quot.sound]` (sorryAx-free).
 @audit:ok -/
+@[entry_point]
 theorem convDensityAdd_lower_bound_gaussian
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
     (hpX_mass : (∫ y, pX y ∂volume) = 1)

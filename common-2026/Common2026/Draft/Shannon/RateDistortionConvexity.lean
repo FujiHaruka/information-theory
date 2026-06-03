@@ -1,4 +1,5 @@
 import Common2026.Shannon.RateDistortionConverseMonotone
+import Common2026.Meta.EntryPoint
 
 /-!
 # Rate-distortion convexity (E-4'' Phase A + B core)
@@ -46,6 +47,7 @@ noncomputable def mixtureMeasure
   ENNReal.ofReal lam • ν₁ + ENNReal.ofReal (1 - lam) • ν₂
 
 /-- `Prod.fst` pushforward of a convex combination is the convex combination of pushforwards. -/
+@[entry_point]
 theorem mixtureMeasure_map_fst
     (lam : ℝ) (ν₁ ν₂ : Measure (α × β)) :
     (mixtureMeasure lam ν₁ ν₂).map Prod.fst
@@ -56,6 +58,7 @@ theorem mixtureMeasure_map_fst
       Measure.map_smul, Measure.map_smul]
 
 /-- `Prod.snd` pushforward of a convex combination is the convex combination of pushforwards. -/
+@[entry_point]
 theorem mixtureMeasure_map_snd
     (lam : ℝ) (ν₁ ν₂ : Measure (α × β)) :
     (mixtureMeasure lam ν₁ ν₂).map Prod.snd
@@ -100,6 +103,7 @@ theorem expectedDistortion_mixtureMeasure
 /-- Feasibility is preserved under convex combinations: if `ν₁` is feasible at `D₁`
 and `ν₂` is feasible at `D₂`, then `mixtureMeasure λ ν₁ ν₂` is feasible at
 `λ D₁ + (1-λ) D₂`. -/
+@[entry_point]
 theorem mixtureMeasure_feasible
     {lam : ℝ} (hlam₀ : 0 ≤ lam) (hlam₁ : lam ≤ 1)
     (P : Measure α) (d : α → β → ℝ)
@@ -141,7 +145,10 @@ closed by the convexity plan, not absorbed as a precondition. The regularity
 hypothesis `h_int_witness` (integrability of `d` on every feasible witness)
 is retained as a passive regularity hyp. Body retreated to `sorry`.
 
-`@residual(plan:rate-distortion-convexity-plan)` -/
+`@residual(plan:rate-distortion-convexity-plan)`
+
+`@[entry_point]` status: staged (body is `sorry` + `@residual`). -/
+@[entry_point]
 theorem rateDistortionFunction_convexOn
     (d : α → β → ℝ) (P : Measure α) [IsProbabilityMeasure P]
     {lam : ℝ} (hlam₀ : 0 ≤ lam) (hlam₁ : lam ≤ 1) (D₁ D₂ : ℝ)

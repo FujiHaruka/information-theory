@@ -8,6 +8,7 @@ import Mathlib.Analysis.Matrix.Order
 import Mathlib.Analysis.MeanInequalities
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Analysis.SpecialFunctions.ContinuousFunctionalCalculus.Rpow.Basic
+import Common2026.Meta.EntryPoint
 
 /-!
 # Minkowski determinant inequality (Cover-Thomas Theorem 17.9.1)
@@ -40,6 +41,7 @@ This is the genuine building block for the Minkowski determinant inequality
 (Cover-Thomas 17.9.1): it is the `p = 1/n ≤ 1` direction of weighted AM-GM applied
 to the eigenvalues, using `det A = ∏ᵢ λᵢ(A)`. Fully proved (no `sorry`).
 @audit:ok -/
+@[entry_point]
 theorem det_rpow_le_arith_mean_eigenvalues
     {n : Type*} [Fintype n] [DecidableEq n] [Nonempty n]
     {A : Matrix n n ℝ} (hA : A.PosDef) :
@@ -198,6 +200,7 @@ by `IsUnit.posDef_star_left_conjugate_iff`). Then `A + B = R * (1 + S) * R`, so
 (`geom_mean_superadditive` with `a ≡ 1`, `b = μ`) and multiply through by
 `(det A)^(1/n)`.
 @audit:ok -/
+@[entry_point]
 theorem minkowskiDeterminantInequality
     {n : Type*} [Fintype n] [DecidableEq n] [Nonempty n]
     {A B : Matrix n n ℝ} (hA : A.PosDef) (hB : B.PosDef) :

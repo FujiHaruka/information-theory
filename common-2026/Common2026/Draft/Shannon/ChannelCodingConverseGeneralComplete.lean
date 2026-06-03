@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ChannelCodingConverseGeneral
 import Common2026.Shannon.CondMutualInfo
 import Common2026.Shannon.MIChainRule
@@ -99,6 +100,7 @@ def IsMemorylessChannel (μ : Measure Ω) [IsFiniteMeasure μ]
       (Xs i) (Ys i)
 
 /-- Accessor: extract the `i`-th Markov chain from `IsMemorylessChannel`. -/
+@[entry_point]
 lemma IsMemorylessChannel.markovChain (μ : Measure Ω) [IsFiniteMeasure μ]
     {Xs : Fin n → Ω → α} {Ys : Fin n → Ω → β}
     (h : IsMemorylessChannel μ Xs Ys) (i : Fin n) :
@@ -146,6 +148,7 @@ property unless it is also conditionally compatible (hence the augmented form).
   - `I((Wc, Xs); Yo) ≤ I((Wc, Zc); Yo)`
 * Subtract `I(Wc; Yo)` from both sides (allowed by `I(Wc; Yo) ≠ ∞` and
   `ENNReal.add_le_add_iff_left`). -/
+@[entry_point]
 theorem condMutualInfo_le_of_markov_joint
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Zc : Ω → Z) (Yo : Ω → Y) (Wc : Ω → W)
@@ -370,6 +373,7 @@ the `condMutualInfo` reshape lemma are not yet in `CondMutualInfo.lean`, this le
 takes them as hypotheses. Phase D's wiring is independent of how these are obtained.
 
 @residual(plan:channel-coding-shannon-theorem-full-plan) -/
+@[entry_point]
 theorem memoryless_per_summand_bound
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
@@ -417,6 +421,7 @@ The Phase C lemma in its current form takes three derived facts as hypotheses
 3. `linarith` to finish (Fano terms identical on both sides).
 
 @residual(plan:channel-coding-shannon-theorem-full-plan) -/
+@[entry_point]
 theorem channel_coding_converse_general_memoryless
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Msg : Ω → M) (encoder : M → Fin n → α)

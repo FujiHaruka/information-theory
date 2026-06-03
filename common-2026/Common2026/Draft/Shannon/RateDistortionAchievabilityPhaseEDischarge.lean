@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Draft.Shannon.RateDistortionAchievabilityPhaseE
 import Common2026.Shannon.IIDProductInputJoint
 import Common2026.Shannon.ChannelCodingShannonTheorem
@@ -139,6 +140,7 @@ lemma pmfToMeasure_map_snd_real_singleton
 /-! ## Positivity of joint pmf carries to `pmfToMeasure` singletons -/
 
 /-- If every `qStar p > 0`, then `(pmfToMeasure qStar).real {p} > 0`. -/
+@[entry_point]
 lemma pmfToMeasure_real_singleton_pos
     {q : α × β → ℝ} (hq : q ∈ stdSimplex ℝ (α × β))
     (hq_pos : ∀ p : α × β, 0 < q p) (p : α × β) :
@@ -290,7 +292,10 @@ retreated to `sorry`; the prior body was a delegation to the (now sorry'd)
 upstream, so this is also transitively `sorry`. Tagging with `@residual` here
 because this wrapper is itself an independently published statement.
 
-`@residual(plan:rate-distortion-achievability-phase-e-strong-plan)` -/
+`@residual(plan:rate-distortion-achievability-phase-e-strong-plan)`
+
+`@[entry_point]` status: staged (body is `sorry` + `@residual`). -/
+@[entry_point]
 theorem rate_distortion_achievability_partial_discharge
     (P_X_pmf : α → ℝ) (d : DistortionFn α β) {D : ℝ}
     (qStar : α × β → ℝ) (hqStar_mem : qStar ∈ RDConstraint P_X_pmf d D)

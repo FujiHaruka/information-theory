@@ -102,6 +102,7 @@ theorem heatKernel_def_gaussianPDFReal {t : ℝ} (ht : 0 < t) (x : ℝ) :
   rw [dif_pos ht]
 
 /-- The heat kernel is non-negative. -/
+@[entry_point]
 theorem heatKernel_nonneg (t x : ℝ) : 0 ≤ heatKernel t x := by
   unfold heatKernel
   split_ifs with h
@@ -109,6 +110,7 @@ theorem heatKernel_nonneg (t x : ℝ) : 0 ≤ heatKernel t x := by
   · exact le_refl 0
 
 /-- The heat kernel is measurable. -/
+@[entry_point]
 theorem measurable_heatKernel (t : ℝ) : Measurable (fun x => heatKernel t x) := by
   unfold heatKernel
   split_ifs with h
@@ -151,12 +153,14 @@ structure IsHeatFlowDensity {Ω : Type*} [MeasurableSpace Ω]
     HasDerivAt (fun s => p s x) ((1/2) * Δp t x) t
 
 /-- Accessor: the spatial laplacian witness from `heat_equation`. -/
+@[entry_point]
 noncomputable def IsHeatFlowDensity.laplacian {Ω : Type*} [MeasurableSpace Ω]
     {X Z : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P] {p : ℝ → ℝ → ℝ}
     (h : IsHeatFlowDensity X Z P p) : ℝ → ℝ → ℝ :=
   h.heat_equation.choose
 
 /-- The laplacian witness satisfies the heat equation `∂_t p = (1/2) · Δp`. -/
+@[entry_point]
 theorem IsHeatFlowDensity.heat_equation_spec {Ω : Type*} [MeasurableSpace Ω]
     {X Z : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P] {p : ℝ → ℝ → ℝ}
     (h : IsHeatFlowDensity X Z P p) :

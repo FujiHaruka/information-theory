@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.ParallelGaussian
 import Common2026.Shannon.ParallelGaussianKKT
 import Common2026.Draft.Shannon.ContChannelMIDecomp
@@ -874,8 +875,11 @@ theorem parallelGaussianCapacity_achiever_mi {n : ℕ}
     (fun i _ => awgn_perCoord_mi_closed_form (Q i) (N i) (hN i) (h_meas i))
 
 /-- Backward-compatible alias for the genuine headline
-`parallel_gaussian_capacity_formula` (was the `_discharged` re-publish name). -/
-@[deprecated parallel_gaussian_capacity_formula (since := "2026-05-21")]
+`parallel_gaussian_capacity_formula` (was the `_discharged` re-publish name).
+
+`@[entry_point]` status: staged (passes through `IsWaterFillingOptimal` /
+`IsParallelGaussianPerCoordRegularity` hypothesis predicates). -/
+@[entry_point, deprecated parallel_gaussian_capacity_formula (since := "2026-05-21")]
 theorem parallel_gaussian_capacity_formula_discharged {n : ℕ}
     (P : ℝ) (hP : 0 < P) (N : Fin (n + 1) → ℝ≥0) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (h_meas : IsParallelAwgnChannelMeasurable N)

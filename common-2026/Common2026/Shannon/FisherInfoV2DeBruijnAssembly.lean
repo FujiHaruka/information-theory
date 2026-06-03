@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.FisherInfoV2DeBruijnPerTime
 import Common2026.Shannon.FisherConvBound   -- shared 壁 gaussianConv_fisher_le_inv_var
 import Common2026.Shannon.EPIConvDensitySecondDeriv  -- STEP-D bridge convDensityAdd_deriv2_eq_gaussian
@@ -827,6 +828,7 @@ unfold makes the conclusion `Integrable (convDensityAdd pX K) volume`.
 auditor) confirms the self-tag: body is `:= convKernel_envelope_integrable ...` (thin pass-through,
 conclusion defeq to that of the already-`@audit:ok` private helper), all four hyps regularity,
 sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`). -/
+@[entry_point]
 theorem convDensityAdd_envelope_integrable
     (pX K : ℝ → ℝ) (hpX_int : Integrable pX volume) (hpX_meas : Measurable pX)
     (hK_int : Integrable K volume) (hK_meas : Measurable K) :

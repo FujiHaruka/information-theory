@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.AWGN
 import Common2026.Shannon.AwgnWalls
 import Common2026.Shannon.Converse
@@ -105,6 +106,7 @@ instance awgnConverseJoint.instIsProbabilityMeasure
 
 /-- per-letter `Y_i` 周辺分布 (uniform `W` 上の `encoder ∘ W` marginal を AWGN で
 convolve)。`(1/M) ∑ₘ AWGN_{c.encoder m i}` の閉じた形 (= mixture of Gaussians)。 -/
+@[entry_point]
 noncomputable def perLetterYLaw
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (c : AwgnCode M n P) (i : Fin n) : Measure ℝ :=
@@ -112,6 +114,7 @@ noncomputable def perLetterYLaw
 
 /-- per-letter mutual information `I(X_i; Y_i)` on the canonical joint
 `awgnConverseJoint c h_meas`, with `X_i ω := c.encoder ω.1 i` and `Y_i ω := ω.2 i`. -/
+@[entry_point]
 noncomputable def perLetterMI
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (c : AwgnCode M n P) (i : Fin n) : ℝ≥0∞ :=
@@ -119,12 +122,14 @@ noncomputable def perLetterMI
     (fun ω => c.encoder ω.1 i) (fun ω => ω.2 i)
 
 /-- Joint MI `I(W; Y^n)` (message vs. channel output block). -/
+@[entry_point]
 noncomputable def jointMIWYn
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (c : AwgnCode M n P) : ℝ≥0∞ :=
   mutualInfo (awgnConverseJoint h_meas c) Prod.fst Prod.snd
 
 /-- Joint MI `I(X^n; Y^n)` (channel input block vs. channel output block). -/
+@[entry_point]
 noncomputable def jointMIXnYn
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (c : AwgnCode M n P) : ℝ≥0∞ :=
@@ -365,6 +370,7 @@ private lemma awgnConverseJoint_mutualInfo_ne_top
 Pe bridge (T-FFC-5、`errorProbAt` ↔ Fano `errorProb` の同値性、private helper
 `awgn_errorProb_eq_fano_errorProb` に切出し) + MI-finite plumbing (private helper
 `awgnConverseJoint_mutualInfo_ne_top` に切出し) を経由。 -/
+@[entry_point]
 theorem awgn_converse_single_shot_call
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (hM : 2 ≤ M) (c : AwgnCode M n P)
@@ -432,6 +438,7 @@ Chain side: shared sorry 補題 `awgnContinuousMIChainRule_holds` (`AwgnWalls.le
 Markov factorization は shared sorry 補題 `awgnConverseMarkov_holds`
 (`AwgnWalls.lean`、wall `awgn-converse-markov-regularity`、Route B / L-AWGNM5-1-α)
 から取得 (`converseJointInline` ≡ `awgnConverseJoint` defeq で接続)。 -/
+@[entry_point]
 theorem awgn_dpi
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
@@ -481,6 +488,7 @@ theorem awgn_dpi
 `awgnContinuousMIChainRule_holds` (`AwgnWalls.lean`、wall
 `awgn-continuous-mi-chain-rule`) から取得 (`converseJointInline` ≡ `awgnConverseJoint`
 defeq、`jointMIXnYn` / `perLetterMI` unfold で結論一致)。 -/
+@[entry_point]
 theorem awgn_chain_rule
     (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (c : AwgnCode M n P) :
@@ -498,6 +506,7 @@ per-message 形からは genuine 化不能の false-statement defect) は本 com
 = (1/M) ∑_m (c.encoder m i)²`。Uniform message 上で input letter `X_i = c.encoder W i`
 の 2 次モーメント。`power_constraint` (per-message block 形) と `1/n ∑_i` avg で
 `(1/n) ∑_i perLetterInputSecondMoment c i ≤ P` が genuine に出る (`awgn_per_letter_input_power_avg`)。 -/
+@[entry_point]
 noncomputable def perLetterInputSecondMoment
     {M n : ℕ} {P : ℝ} (c : AwgnCode M n P) (i : Fin n) : ℝ :=
   (1 / (M : ℝ)) * ∑ m : Fin M, (c.encoder m i) ^ 2
@@ -506,6 +515,7 @@ noncomputable def perLetterInputSecondMoment
 
 `(1/n) ∑ᵢ E[X_i²] ≤ P` を `power_constraint` (per-message form `∑ᵢ (encoder m i)² ≤ n·P`)
 から Fubini swap (∑ᵢ ∑ₘ = ∑ₘ ∑ᵢ) で genuine 化。 -/
+@[entry_point]
 theorem awgn_per_letter_input_power_avg
     {M n : ℕ} (hM_pos : 0 < M) (hn_pos : 0 < n) {P : ℝ}
     (c : AwgnCode M n P) :
@@ -864,6 +874,7 @@ Per-letter `I(X_i; Y_i) ≤ (1/2) log(1 + perLetterInputSecondMoment c i / N)`
                      = (1/2) log(1 + S²/N)                              -- arithmetic
 ```
 where `v_Y := (perLetterInputSecondMoment c i + N).toNNReal`. -/
+@[entry_point]
 theorem awgn_per_letter_mi_le_log_var
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -973,6 +984,7 @@ strictConcaveOn_log_Ioi`) ⇒ `fun x => Real.log (1 + x/N)` concave on `Ici 0` (
 with affine increasing map, packaged as `concaveOn_log_one_add_div` in
 `DifferentialEntropy.lean`). Apply `ConcaveOn.le_map_sum` with uniform weights
 `wᵢ := 1/n`. -/
+@[entry_point]
 theorem sum_log_one_add_le_n_log_one_add_avg
     {n : ℕ} (hn_pos : 0 < n)
     (N : ℝ) (hN_pos : 0 < N)
@@ -1035,6 +1047,7 @@ theorem sum_log_one_add_le_n_log_one_add_avg
 
 C-1a + C-1b + C-1c の合成: per-letter MI bound (variance 形) + per-letter variance
 average ≤ P + Jensen for log(1+x/N) concavity. -/
+@[entry_point]
 theorem awgn_sum_per_letter_mi_le_n_capacity
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -1123,6 +1136,7 @@ theorem awgn_sum_per_letter_mi_le_n_capacity
 `I(W; Y^n) ≤ I(X^n; Y^n) ≤ ∑ᵢ I(X_i; Y_i) ≤ n · (1/2) log(1+P/N) < ∞` で両 MI が ≠ ∞。
 sibling helpers `awgnConverseJoint_mutualInfo_ne_top` / `awgn_dpi` 内 `(jointMIXnYn).≠ ∞`
 の二つ共通の MI-finiteness wall を一括 discharge。 -/
+@[entry_point]
 theorem awgnConverseJoint_mutualInfo_ne_top_via_chain
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)
@@ -1153,6 +1167,7 @@ continuous MI chain rule / Markov) は `AwgnWalls.lean` の shared sorry 補題
 `awgn_sum_per_letter_mi_le_n_capacity` 内部から呼ぶ普通の lemma call に縮約した
 (Tier 3 → Tier 2)。残る hyp `h_mi_bridge_per_letter` は per-letter MI = `h(Y_i) - h(Z)`
 の bridge (F-2 closure 待ち、`awgn-mi-bridge-plan.md`)、本 file scope では 0 sorry。 -/
+@[entry_point]
 theorem isAwgnConverseFeasible_discharger
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)

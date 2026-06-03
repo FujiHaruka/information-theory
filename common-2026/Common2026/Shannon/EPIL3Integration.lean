@@ -113,6 +113,7 @@ sorry lemma `EntropyPowerInequality.stamToEPIBridge_holds`
 `bridge : IsStamToEPIBridgeHyp` predicate hypothesis (Cluster C Tier-3 → Tier-2
 migration, `epi-stam-cluster-c-sorry-migration-plan`, route L-EPISC-3-α: the
 bundle structure is retained but its load-bearing bridge field is removed). -/
+@[entry_point]
 structure IsEPIL3IntegratedPipeline {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop where
   /-- Stam inequality (Cover-Thomas Lemma 17.7.2) genuine signature. -/
@@ -127,6 +128,7 @@ structure IsEPIL3IntegratedPipeline {Ω : Type*} [MeasurableSpace Ω]
 (`epi-stam-cluster-c-sorry-migration-plan`), so this wrapper no longer threads a
 bridge predicate hypothesis; the Mathlib wall is localized in
 `stamToEPIBridge_holds`. -/
+@[entry_point]
 theorem epi_l3_of_integrated_pipeline
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -147,6 +149,7 @@ is discharged internally via the shared sorry lemma
 `EntropyPowerInequality.stamToEPIBridge_holds`
 (`@residual(plan:epi-stam-to-conclusion-plan)`), threaded through
 `entropy_power_inequality`. -/
+@[entry_point]
 theorem entropy_power_inequality_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -179,6 +182,7 @@ artefact for Gaussians and asserted nothing about Stam — was removed. There is
 vacuous back-door: the Stam half is a genuine non-circular hypothesis here. The
 genuine hypothesis-free Gaussian EPI (no Stam claim at all) is
 `entropy_power_inequality_gaussian_full`. -/
+@[entry_point]
 theorem isEPIL3IntegratedPipeline_of_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -195,6 +199,7 @@ theorem isEPIL3IntegratedPipeline_of_gaussian
 
 /-- **Gaussian EPI via integrated pipeline** — the canonical Gaussian saturation
 case routed through the integrated pipeline. -/
+@[entry_point]
 theorem entropy_power_inequality_gaussian_via_pipeline
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -217,6 +222,7 @@ Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
 Stam→EPI bridge is discharged internally via the shared sorry lemma
 `stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
 `entropy_power_inequality_integrated` header. -/
+@[entry_point]
 theorem entropy_power_inequality_log_form_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -235,6 +241,7 @@ Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
 Stam→EPI bridge is discharged internally via the shared sorry lemma
 `stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
 `entropy_power_inequality_integrated` header. -/
+@[entry_point]
 theorem entropy_power_inequality_exp_form_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -254,6 +261,7 @@ Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
 Stam→EPI bridge is discharged internally via the shared sorry lemma
 `stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
 `entropy_power_inequality_integrated` header. -/
+@[entry_point]
 theorem entropy_power_inequality_normalized_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -274,6 +282,7 @@ Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
 Stam→EPI bridge is discharged internally via the shared sorry lemma
 `stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
 `entropy_power_inequality_integrated` header. -/
+@[entry_point]
 theorem entropy_power_inequality_three_arg_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -293,6 +302,7 @@ Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
 Stam→EPI bridge is discharged internally via the shared sorry lemma
 `stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
 `entropy_power_inequality_integrated` header. -/
+@[entry_point]
 theorem entropy_power_inequality_four_arg_integrated
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -312,6 +322,7 @@ theorem entropy_power_inequality_four_arg_integrated
 
 /-- **Symmetry of integrated pipeline**: `IsEPIL3IntegratedPipeline X Y P`
 implies `IsEPIL3IntegratedPipeline Y X P`. -/
+@[entry_point]
 theorem isEPIL3IntegratedPipeline_symm
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -325,6 +336,7 @@ After the Cluster C Tier-2 migration the bundle no longer carries a `bridge`
 field, so the pipeline is built from the genuine Stam residual alone; the
 Stam→EPI bridge is discharged internally by consumers via
 `stamToEPIBridge_holds`. -/
+@[entry_point]
 theorem isEPIL3IntegratedPipeline_of_stam
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -350,6 +362,7 @@ Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
 Stam→EPI bridge is discharged internally via the shared sorry lemma
 `stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
 `entropy_power_inequality_integrated` header. -/
+@[entry_point]
 theorem entropy_power_inequality_reduced
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -367,6 +380,7 @@ Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
 Stam→EPI bridge is discharged internally via the shared sorry lemma
 `stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
 `entropy_power_inequality_integrated` header. -/
+@[entry_point]
 theorem entropy_power_inequality_exp_form_reduced
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -414,6 +428,7 @@ theorem entropy_power_inequality_gaussian_full
 /-- **Round-trip**: building a pipeline from the Stam residual and then
 extracting it yields the original. (The bundle no longer carries a `bridge`
 field after the Cluster C Tier-2 migration.) -/
+@[entry_point]
 theorem integrated_pipeline_roundtrip
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y : Ω → ℝ} {P : Measure Ω}
@@ -430,6 +445,7 @@ Cluster C Tier-2 migration (`epi-stam-cluster-c-sorry-migration-plan`), and the
 Stam→EPI bridge is discharged internally via the shared sorry lemma
 `stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`). See the
 `entropy_power_inequality_integrated` header. -/
+@[entry_point]
 theorem entropy_power_inequality_three_forms_equiv
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
@@ -687,6 +703,7 @@ new §5G `pX_mom` field is discharged via `memLp_id_gaussianReal` / `MemLp.integ
 `[propext, Classical.choice, Quot.sound]` only (sorryAx-free, transitive proof done
 machine-verified).
 @audit:ok -/
+@[entry_point]
 noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (_hX : Measurable X) (_hZ : Measurable Z)
@@ -792,6 +809,7 @@ already gives the closed form `(1/2) log (2π e (v + T))`):
 * scale by `(1/2) > 0` via `Tendsto.const_mul_atTop`;
 * congr with the closed-form identity on `[0, ∞)` via `Tendsto.congr'`;
 * lift to `EReal` via `EReal.tendsto_coe_nhds_top_iff.mpr`. -/
+@[entry_point]
 noncomputable def isDeBruijnTailHyp_of_gaussian
     {Ω : Type*} {mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z)
@@ -1107,6 +1125,7 @@ inline (`:1478`) and feeds the rescale lift `csiszarGap_antitoneOn_Icc_zero_one`
 that consumer is a separate sub-plan (A-4-rescale), not a defect in the
 definition here. Body is a transparent `entropyPower - entropyPower - entropyPower`
 identification, no `Prop`-level claim bundling. -/
+@[entry_point]
 noncomputable def csiszarGap {Ω : Type*} [MeasurableSpace Ω]
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) (s : ℝ) : ℝ :=
   entropyPower (P.map (heatFlowPath2 X Z_X s + heatFlowPath2 Y Z_Y s))
@@ -1124,6 +1143,7 @@ tactic proof (`unfold csiszarGap` + `funext` + `simp [heatFlowPath2_zero]`
 entropyPower (X+Y) - entropyPower X - entropyPower Y` is the honest
 endpoint identification. Structurally identical to the 1-source sister
 `csiszarGap1Source_at_zero` (`:1490`, `@audit:ok` per Phase A cleanup). -/
+@[entry_point]
 theorem csiszarGap_at_zero {Ω : Type*} [MeasurableSpace Ω]
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) :
     csiszarGap X Y Z_X Z_Y P 0
@@ -1151,6 +1171,7 @@ hypothesis-borne `Z_X, Z_Y ∼ 𝒩(0, 1)` + independence. Referenced by Phase A
 A-4-4 (`Common2026/Shannon/EPIStamToBridge.lean:912`, docstring) as the
 `s = 1` endpoint connection in the rescale lift; A-4-4's pending `sorry`
 is a separate sub-plan, not a defect here. -/
+@[entry_point]
 theorem csiszarGap_at_one_eq_zero_of_gaussian_pair
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     {X Y Z_X Z_Y : Ω → ℝ} (P : Measure Ω) [IsProbabilityMeasure P]
@@ -1247,6 +1268,7 @@ holds because the equation `(fun s => csiszarGap …) = (fun s => entropyPower �
 `Prop`-level claim about analytic properties. Structurally identical to the
 1-source sister `csiszarGap1Source_shape_for_sister` (`:1579`, `@audit:ok`
 per Phase A cleanup). -/
+@[entry_point]
 theorem csiszarGap_shape_for_sister
     {Ω : Type*} [MeasurableSpace Ω]
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) :
@@ -1332,6 +1354,7 @@ completed the sister-side consumption of this alias; A-0' shape contracts
 land via `csiszarGap_eq_one_source_via_rescale` (A-0'-2) and the
 A-5 chain `isStamToEPIScalingHyp_of_stam_debruijn` in
 `Common2026/Shannon/EPIStamToBridge.lean:926`. -/
+@[entry_point]
 noncomputable def csiszarGap1Source {Ω : Type*} [MeasurableSpace Ω]
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) (t : ℝ) : ℝ :=
   entropyPower (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω)))
@@ -1350,6 +1373,7 @@ log-ratio derivative `r'(t) = J_sum − (N_X·J_X + N_Y·J_Y)/(N_X+N_Y) ≤ 0` i
 genuinely closable from plain harmonic Stam (see
 `epi-csiszar-ratio-reframe-plan`). Both `log` arguments are strictly positive
 (`entropyPower_pos`, `add_pos`), so the gap is well-defined. -/
+@[entry_point]
 noncomputable def csiszarLogRatioGap {Ω : Type*} [MeasurableSpace Ω]
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) (t : ℝ) : ℝ :=
   Real.log (entropyPower (P.map (fun ω => X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω))))
@@ -1360,6 +1384,7 @@ noncomputable def csiszarLogRatioGap {Ω : Type*} [MeasurableSpace Ω]
 /-- **Endpoint `t = 0` of the log-ratio gap**: reduces to
 `log (eP(X+Y)) − log (eP X + eP Y)`, the form bridging to EPI
 (`r(0) ≥ 0 ⟺ entropyPower (X+Y) ≥ entropyPower X + entropyPower Y`). -/
+@[entry_point]
 theorem csiszarLogRatioGap_at_zero {Ω : Type*} [MeasurableSpace Ω]
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) :
     csiszarLogRatioGap X Y Z_X Z_Y P 0
@@ -1394,6 +1419,7 @@ This is the genuine endpoint of the monotone log-ratio object: together with
 `r'(t) ≤ 0` on `[0, ∞)` and `r(1) = 0`, monotonicity gives `r(0) ≥ 0`, i.e. EPI.
 The Gaussian-pair hypotheses are honest preconditions (laws + independence of the
 convolved endpoints), not load-bearing bundling. -/
+@[entry_point]
 theorem csiszarLogRatioGap_at_one_eq_zero {Ω : Type*} {mΩ : MeasurableSpace Ω}
     {X Y Z_X Z_Y : Ω → ℝ} (P : Measure Ω) [IsProbabilityMeasure P]
     (hXZX : Measurable (fun ω => X ω + Z_X ω))
@@ -1449,6 +1475,7 @@ completed the consumption of this equivalence in
 `csiszarGap_antitoneOn_Icc_zero_one` (`Common2026/Shannon/EPIStamToBridge.lean:893`).
 The 6 carrier hypotheses (`h_ac_*`, `h_int_*`) are regularity preconditions,
 not load-bearing predicates. -/
+@[entry_point]
 theorem csiszarGap_eq_one_source_via_rescale
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -1628,6 +1655,7 @@ at the path start reduces to the EPI gap for the original `(X, Y)` (since
 consumed this endpoint identification in the antitonicity chain
 (`Common2026/Shannon/EPIStamToBridge.lean` A-3/A-4); body is a verbatim
 `Real.sqrt 0 = 0` reduction. -/
+@[entry_point]
 theorem csiszarGap1Source_at_zero {Ω : Type*} [MeasurableSpace Ω]
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) :
     csiszarGap1Source X Y Z_X Z_Y P 0
@@ -1677,6 +1705,7 @@ via `csiszarGap_eq_one_source_via_rescale` (A-0'-2).
 `@audit:ok` — Phase A (2026-05-27, `epi-stam-to-conclusion-phaseA-plan`)
 consumed this shape contract in sister derivative computations
 (`Common2026/Shannon/EPIStamToBridge.lean` A-2/A-3); body is `rfl`. -/
+@[entry_point]
 theorem csiszarGap1Source_shape_for_sister
     {Ω : Type*} [MeasurableSpace Ω]
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) :

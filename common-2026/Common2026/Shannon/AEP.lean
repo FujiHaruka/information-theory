@@ -87,6 +87,7 @@ noncomputable def logLikelihood
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (i : ℕ) : Ω → ℝ :=
   fun ω => pmfLog μ Xs (Xs i ω)
 
+@[entry_point]
 lemma logLikelihood_eq_comp (μ : Measure Ω) (Xs : ℕ → Ω → α) (i : ℕ) :
     logLikelihood μ Xs i = pmfLog μ Xs ∘ Xs i := rfl
 

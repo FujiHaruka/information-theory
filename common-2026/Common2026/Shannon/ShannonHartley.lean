@@ -1,4 +1,5 @@
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
+import Common2026.Meta.EntryPoint
 
 /-!
 # T2-C: Bandlimited Channel / Shannon-Hartley formula
@@ -166,6 +167,7 @@ support in Mathlib.
 
 `@audit:retract-candidate(load-bearing-predicate) @audit:closed-by-successor(whittaker-shannon-partial-moonshot-plan) @residual(plan:whittaker-shannon-partial-moonshot-plan)`
 -/
+@[entry_point]
 theorem shannon_hartley_formula
     (W N₀ P : ℝ) (hW : 0 < W) (hN₀ : 0 < N₀) (hP : 0 ≤ P)
     (C : ℝ)

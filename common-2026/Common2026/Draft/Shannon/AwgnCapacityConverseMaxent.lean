@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Mathlib.MeasureTheory.Group.Convolution
 import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
 import Mathlib.Analysis.LConvolution
@@ -102,6 +103,7 @@ theorem outputDistribution_awgn_eq_conv
 `(1/2)log(2πe(P+N)) − (1/2)log(2πeN) = (1/2)log(1+P/N)`.
 Follows the in-tree Gaussian-input MI closed-form log-algebra (same step inlined
 in `AWGNMIBridge.awgn_mi_gaussian_closed_form_of_primitives`). -/
+@[entry_point]
 theorem capacity_log_diff (hP : 0 < P) (hN : (N : ℝ) ≠ 0) :
     (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * (P + (N : ℝ)))
         - (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ))
@@ -202,6 +204,7 @@ theorem output_sq_sub_integrable
 /-- Second moment of the mixture output: `∫ y² ∂(p ∗ 𝒩(0,N)) = ∫ x² ∂p + N`.
 Via `integral_conv` (the output is `(p.prod 𝒩).map (·+·)`) and the fibre identity
 `∫ z, (x + z)² ∂𝒩(0,N) = x² + N`. -/
+@[entry_point]
 theorem output_secondMoment_eq
     (h_meas : IsAwgnChannelMeasurable N) (hN : N ≠ 0)
     (p : Measure ℝ) [IsProbabilityMeasure p]
@@ -229,6 +232,7 @@ theorem output_secondMoment_eq
 `∫ (y − m)² ∂q = Var(Y) ≤ P + N`. Supplies `h_var`.
 
 `hp_2mom_int` is a regularity precondition (see `output_sq_sub_integrable`). -/
+@[entry_point]
 theorem output_variance_le
     (h_meas : IsAwgnChannelMeasurable N) (hN : N ≠ 0)
     (p : Measure ℝ) [IsProbabilityMeasure p]
@@ -257,6 +261,7 @@ The output `q = p ∗ 𝒩(0,N)` is full-support (positive density everywhere) s
 `𝒩(0,N) ≪ volume`, so each `𝒩(x,N) ≪ q`. The in-tree
 `awgnChannel_apply_absolutelyContinuous_output` is Gaussian-input-only and not
 reusable here. Supplies `hWx_q`. -/
+@[entry_point]
 theorem fibre_absolutelyContinuous_output_general
     (h_meas : IsAwgnChannelMeasurable N) (hN : N ≠ 0)
     (p : Measure ℝ) [IsProbabilityMeasure p] (x : ℝ) :
@@ -299,6 +304,7 @@ The proof never uses that `p` is Gaussian, only that it is a probability measure
 it is the general-`p` counterpart of the in-tree
 `ContChannelMIDecomp.integrable_log_proxy_fibre_compProd` (Gaussian-input only). Supplies
 `h_int_fibre` for the chain rule with a general input. -/
+@[entry_point]
 theorem integrable_log_proxy_fibre_compProd_general
     (h_meas : IsAwgnChannelMeasurable N) (hN : N ≠ 0)
     (p : Measure ℝ) [IsProbabilityMeasure p] :
@@ -739,6 +745,7 @@ false. The output log-density integrability hypotheses (`h_int_out` / `h_ent_int
 discharged genuinely by `outputDistribution_logDensity_integrable[_joint]` (Phase 6) —
 no load-bearing hypothesis is introduced.
 @audit:ok -/
+@[entry_point]
 theorem awgn_per_input_mi_le_log
     (hP : 0 < P) (hN : (N : ℝ) ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
     (p : Measure ℝ) [IsProbabilityMeasure p] (hp : p ∈ awgnPowerConstraintSet P) :
@@ -859,6 +866,7 @@ is now genuinely discharged via the convolution density representation, the Gaus
 upper/lower bounds, and the finite-second-moment domination. The whole AWGN
 single-letter capacity converse (Cover-Thomas 9.1) is complete.
 @audit:ok -/
+@[entry_point]
 theorem awgn_capacity_closed_form_genuine
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0) :
     awgnCapacity P N (isAwgnChannelMeasurable N)

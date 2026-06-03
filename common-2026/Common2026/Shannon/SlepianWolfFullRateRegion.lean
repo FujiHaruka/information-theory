@@ -2001,6 +2001,7 @@ E.5 squeeze with the conclusion decoder matching the `B n`-bounded witness; the 
 transitive tree is `sorryAx`-free (`#print axioms` = `[propext, Classical.choice,
 Quot.sound]`).
 @audit:ok -/
+@[entry_point]
 theorem slepian_wolf_full_rate_region_achievability
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)

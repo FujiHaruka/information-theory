@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.FisherInfoV2
 import Mathlib.Analysis.Calculus.ParametricIntegral   -- hasDerivAt_integral_of_dominated_loc_of_deriv_le
 import Mathlib.Analysis.Calculus.LogDeriv
@@ -110,6 +111,7 @@ This is the Blachman / Fisher connection point.
 Independent audit 2026-05-30: genuine, sorryAx-free
 (`#print axioms` = [propext, Classical.choice, Quot.sound]).
 @audit:ok -/
+@[entry_point]
 theorem convDensityAdd_logDeriv
     (pX pY : ℝ → ℝ) (z₀ : ℝ) {s : Set ℝ} {bound : ℝ → ℝ}
     (hs : s ∈ nhds z₀)
@@ -137,6 +139,7 @@ atoms above for downstream walls (Phase 3 Blachman / Phase 4 de Bruijn).
 Independent audit 2026-05-30: genuine, sorryAx-free.
 `#print axioms` = [propext, Classical.choice, Quot.sound].
 @audit:ok -/
+@[entry_point]
 theorem convDensity_add_differentiable
     (pX pY : ℝ → ℝ) (z₀ : ℝ) {s : Set ℝ} {bound : ℝ → ℝ}
     (hs : s ∈ nhds z₀)

@@ -1,3 +1,4 @@
+import Common2026.Meta.EntryPoint
 import Common2026.Shannon.AWGN
 import Common2026.Shannon.AWGNConverseDischarge
 
@@ -71,6 +72,7 @@ upstream Mathlib wall `wall:multivariate-mi` (`AWGNConverseDischarge.lean`,
 remain transitively in their own files.
 
 @residual(plan:awgn-mi-bridge-plan) -/
+@[entry_point]
 theorem awgn_converse
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)

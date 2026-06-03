@@ -36,6 +36,7 @@ open scoped ENNReal NNReal
 from `exp(-(x-μ)²/(2v)) ≤ 1`.
 @audit:ok — independent honesty audit (2026-05-31): 0-sorry genuine, sorryAx-free
 (`#print axioms` → [propext, Classical.choice, Quot.sound]). -/
+@[entry_point]
 theorem gaussianPDFReal_le (μ : ℝ) (v : ℝ≥0) (x : ℝ) :
     gaussianPDFReal μ v x ≤ (Real.sqrt (2 * Real.pi * v))⁻¹ := by
   rw [gaussianPDFReal_def]
@@ -51,6 +52,7 @@ theorem gaussianPDFReal_le (μ : ℝ) (v : ℝ≥0) (x : ℝ) :
 
 /-- Boundedness of `gaussianPDFReal μ v`.
 @audit:ok — independent honesty audit (2026-05-31): 0-sorry genuine, sorryAx-free. -/
+@[entry_point]
 theorem bdd_gaussianPDFReal (μ : ℝ) (v : ℝ≥0) :
     ∃ M : ℝ, ∀ w, |gaussianPDFReal μ v w| ≤ M :=
   ⟨(Real.sqrt (2 * Real.pi * v))⁻¹, fun w => by
@@ -62,6 +64,7 @@ Proof: with `u = s/√v ≥ 0`, the claim is `u ≤ exp(u²/2)`, which follows f
 `u ≤ 1 + u²/2 ≤ exp(u²/2)`.
 @audit:ok — independent honesty audit (2026-05-31): elementary bound genuine
 (`u ≤ 1+u²/2` via `(u-1)²≥0`, `1+t ≤ exp t` via `add_one_le_exp`); sorryAx-free. -/
+@[entry_point]
 theorem mul_exp_neg_sq_le {v : ℝ} (hv : 0 < v) {s : ℝ} (hs : 0 ≤ s) :
     s * Real.exp (-s ^ 2 / (2 * v)) ≤ Real.sqrt v := by
   have hsv : 0 < Real.sqrt v := Real.sqrt_pos.mpr hv
@@ -95,6 +98,7 @@ theorem mul_exp_neg_sq_le {v : ℝ} (hv : 0 < v) {s : ℝ} (hs : 0 ≤ s) :
 /-- Continuity of `deriv (gaussianPDFReal m v)` via its closed form
 `-(x-m)/v · gaussianPDFReal m v x`.
 @audit:ok — independent honesty audit (2026-05-31): 0-sorry genuine, sorryAx-free. -/
+@[entry_point]
 theorem continuous_deriv_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) :
     Continuous (deriv (gaussianPDFReal m v)) := by
   have heq : deriv (gaussianPDFReal m v)
@@ -108,6 +112,7 @@ theorem continuous_deriv_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) 
 `deriv f w = -(w-m)/v · f w`, and `|w-m| · exp(-(w-m)²/(2v)) ≤ √v`
 (by `mul_exp_neg_sq_le`), so the derivative is uniformly bounded.
 @audit:ok — independent honesty audit (2026-05-31): 0-sorry genuine, sorryAx-free. -/
+@[entry_point]
 theorem bdd_deriv_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) :
     ∃ M : ℝ, ∀ w, |deriv (gaussianPDFReal m v) w| ≤ M := by
   have hv_pos : (0 : ℝ) < v := by
@@ -138,6 +143,7 @@ theorem bdd_deriv_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) :
 Since `logDeriv f · f = -(x-m)/v · f`, this is `-(1/v)` times
 `integrable_sub_mul_gaussianPDFReal`.
 @audit:ok — independent honesty audit (2026-05-31): 0-sorry genuine, sorryAx-free. -/
+@[entry_point]
 theorem integrable_logDeriv_mul_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) :
     Integrable (fun x => logDeriv (gaussianPDFReal m v) x * gaussianPDFReal m v x) volume := by
   refine ((Common2026.Shannon.integrable_sub_mul_gaussianPDFReal m hv).const_mul
@@ -165,6 +171,7 @@ a.e.→pointwise via `Continuous.ae_eq_iff_eq`) reconstructs the stated pointwis
 closed form; no field is the conclusion-as-hypothesis. All cited Mathlib lemmas
 verified present (loogle/rg). `#print axioms` → [propext, Classical.choice, Quot.sound]
 (sorryAx-free, transitive 0 sorry). -/
+@[entry_point]
 theorem convDensityAdd_gaussian_closed_form
     {mX mY : ℝ} {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0) :
     convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal mY vY)
@@ -272,6 +279,7 @@ existing Gaussian regularity lemmas in `FisherInfoGaussian`.
 `tail_bot`/`tail_top`/`integrable_deriv`/`integral_deriv_eq_zero`) are pure regularity
 claims discharged by existing Gaussian lemmas, no core bundled. `#print axioms` →
 [propext, Classical.choice, Quot.sound] (sorryAx-free). -/
+@[entry_point]
 theorem isRegularDensityV2_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) :
     IsRegularDensityV2 (gaussianPDFReal m v) where
   diff := Common2026.Shannon.differentiable_gaussianPDFReal m v
@@ -332,6 +340,7 @@ genuinely fires end-to-end on Gaussian densities through this witness (the witne
 longer an isolated existence proof). The upstream density-route predicates
 (`IsStamCauchySchwarzOptimal` / `IsStamCondExpCSHyp`) do not yet have a wired Gaussian
 inhabitant lemma — that remains the final density-route closure step. -/
+@[entry_point]
 theorem isBlachmanConvReady_gaussianPDFReal
     {mX mY : ℝ} {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0) :
     IsBlachmanConvReady (gaussianPDFReal mX vX) (gaussianPDFReal mY vY) where
@@ -735,6 +744,7 @@ application of the `@audit:ok` core `convex_fisher_bound_of_ready`; the only
 hypotheses are regularity (`vX,vY ≠ 0`, `0 ≤ lam ≤ 1`), none carries the inequality
 core (structurally bundle-incapable). `#print axioms` →
 [propext, Classical.choice, Quot.sound] (sorryAx-free, transitive 0 sorry). -/
+@[entry_point]
 theorem convex_fisher_bound_gaussian_via_density_route
     (mX mY : ℝ) {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0)
     (lam : ℝ) (hlo : 0 ≤ lam) (hhi : lam ≤ 1) :
@@ -763,6 +773,7 @@ agreement claim is accurately scoped — same `1/(vX+vY) ≤ λ²/vX+(1-λ)²/vY
 content* as `stam_convex_fisher_bound_gaussian` (which goes through `stam_fisher_arith`),
 not a definitional identity of `fisherInfoOfDensity` vs `fisherInfoOfMeasureV2`.
 `#print axioms` → [propext, Classical.choice, Quot.sound] (sorryAx-free). -/
+@[entry_point]
 theorem convex_fisher_bound_gaussian_via_density_route_closed_form
     (mX mY : ℝ) {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0)
     (lam : ℝ) (hlo : 0 ≤ lam) (hhi : lam ≤ 1) :

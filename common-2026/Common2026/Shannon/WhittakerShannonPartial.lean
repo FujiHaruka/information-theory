@@ -85,18 +85,20 @@ noncomputable def sincN (x : ℝ) : ℝ := Real.sinc (Real.pi * x)
 @[simp] theorem sincN_zero : sincN 0 = 1 := by
   unfold sincN; simp
 
+@[entry_point]
 theorem sincN_le_one (x : ℝ) : sincN x ≤ 1 := by
   unfold sincN; exact Real.sinc_le_one _
 
+@[entry_point]
 theorem neg_one_le_sincN (x : ℝ) : -1 ≤ sincN x := by
   unfold sincN; exact Real.neg_one_le_sinc _
 
-@[fun_prop]
+@[entry_point, fun_prop]
 theorem continuous_sincN : Continuous sincN := by
   unfold sincN
   exact Real.continuous_sinc.comp (continuous_const.mul continuous_id)
 
-@[fun_prop]
+@[entry_point, fun_prop]
 theorem measurable_sincN : Measurable sincN :=
   continuous_sincN.measurable
 
@@ -140,6 +142,7 @@ series term `sincN(2W·t - n)` evaluates to `δ_{n,n₀}` (`1` if `n = n₀`,
 This is the rigorous form of "only the `n = n₀` term survives" — the
 information-theoretic content driving the Whittaker-Shannon series
 collapse at sample points. -/
+@[entry_point]
 theorem whittaker_shannon_sample_collapse
     (W : ℝ) (hW : 0 < W) (n n₀ : ℤ) :
     sincN ((2 * W) * ((n₀ : ℝ) / (2 * W)) - (n : ℝ))
@@ -162,14 +165,14 @@ theorem whittaker_shannon_sample_collapse
 /-! ## §H — Auxiliary algebraic / measurability corollaries. -/
 
 /-- Composition: `sincN ∘ f` is measurable if `f` is. -/
-@[fun_prop]
+@[entry_point, fun_prop]
 theorem Measurable.sincN {α : Type*} [MeasurableSpace α]
     {f : α → ℝ} (hf : Measurable f) :
     Measurable (fun x => sincN (f x)) :=
   measurable_sincN.comp hf
 
 /-- Composition: `sincN ∘ f` is continuous if `f` is. -/
-@[fun_prop]
+@[entry_point, fun_prop]
 theorem Continuous.sincN {α : Type*} [TopologicalSpace α]
     {f : α → ℝ} (hf : Continuous f) :
     Continuous (fun x => sincN (f x)) :=
@@ -179,7 +182,7 @@ theorem Continuous.sincN {α : Type*} [TopologicalSpace α]
 
 /-- The sample-rate-scaled sinc `sincN (2W·t - n)` is **continuous in `t`**
 for any fixed integer `n` and positive `W`. -/
-@[fun_prop]
+@[entry_point, fun_prop]
 theorem continuous_sincN_sample_term (W : ℝ) (n : ℤ) :
     Continuous (fun t : ℝ => sincN ((2 * W) * t - (n : ℝ))) := by
   fun_prop
