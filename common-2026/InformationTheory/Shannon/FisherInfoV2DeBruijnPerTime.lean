@@ -49,7 +49,7 @@ Phase 5 (capstone) は本 file では着手しない — genuine 版
 本 file は atom 群を供給するだけ (plan §Phase 5 参照)。
 -/
 
-namespace Common2026.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfoV2
 
 open MeasureTheory ProbabilityTheory Filter Topology Real
 open scoped ENNReal NNReal
@@ -960,4 +960,4 @@ theorem convDensityAdd_lower_bound_gaussian
     _ ≤ ∫ y, F y ∂volume := hbox_le
     _ = convDensityAdd pX g x := rfl
 
-end Common2026.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfoV2

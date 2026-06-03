@@ -317,7 +317,7 @@ theorem integrable_log_proxy_fibre_compProd_general
   have h_eq : (fun z : ℝ × ℝ => Real.log (gaussianPDF z.1 N z.2).toReal)
       = fun z => c₀ + c₁ * (z.2 - z.1) ^ 2 := by
     funext z
-    rw [toReal_gaussianPDF, Common2026.Shannon.log_gaussianPDFReal_eq z.1 hN z.2, hc₀, hc₁]
+    rw [toReal_gaussianPDF, InformationTheory.Shannon.log_gaussianPDFReal_eq z.1 hN z.2, hc₀, hc₁]
     ring
   rw [h_eq]
   have h_sq : Integrable (fun z : ℝ × ℝ => (z.2 - z.1) ^ 2) (p ⊗ₘ W) := by
@@ -799,18 +799,18 @@ theorem awgn_per_input_mi_le_log
   -- STEP 1: chain rule `MI.toReal = h(q) − ∫ h(W x) ∂p`
   have h_chain :
       (ChannelCoding.mutualInfoOfChannel p W).toReal
-        = Common2026.Shannon.differentialEntropy q
-          - ∫ x, Common2026.Shannon.differentialEntropy (W x) ∂p :=
+        = InformationTheory.Shannon.differentialEntropy q
+          - ∫ x, InformationTheory.Shannon.differentialEntropy (W x) ∂p :=
     ChannelCoding.mutualInfoOfChannel_toReal_eq_diffEntropy_sub
       hW_ac hWx_q hq_vol h_joint_ac g hg_meas hg_ae h_int_fibre h_int_out
   -- STEP 2: fibre entropy is the constant `(1/2) log(2πeN)`
   have h_fibre_ent :
-      ∫ x, Common2026.Shannon.differentialEntropy (W x) ∂p
+      ∫ x, InformationTheory.Shannon.differentialEntropy (W x) ∂p
         = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ)) := by
-    have h_const : (fun x => Common2026.Shannon.differentialEntropy (W x))
+    have h_const : (fun x => InformationTheory.Shannon.differentialEntropy (W x))
         = fun _ => (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ)) := by
       funext x
-      rw [hW_def, awgnChannel_apply, Common2026.Shannon.differentialEntropy_gaussianReal x hN_NN]
+      rw [hW_def, awgnChannel_apply, InformationTheory.Shannon.differentialEntropy_gaussianReal x hN_NN]
     rw [h_const, integral_const, probReal_univ]
     simp
   -- STEP 3: max-entropy bound on `h(q)` with `m := ∫ y ∂q`, `v := (P+N).toNNReal`
@@ -830,9 +830,9 @@ theorem awgn_per_input_mi_le_log
       Integrable (fun y => Real.negMulLog ((q.rnDeriv volume y).toReal)) volume := by
     rw [hq_def]; exact outputDistribution_logDensity_integrable hP.le hN_NN h_meas p hp
   have h_maxent :
-      Common2026.Shannon.differentialEntropy q
+      InformationTheory.Shannon.differentialEntropy q
         ≤ (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (v : ℝ)) :=
-    Common2026.Shannon.differentialEntropy_le_gaussian_of_variance_le
+    InformationTheory.Shannon.differentialEntropy_le_gaussian_of_variance_le
       hq_vol m hv_ne rfl h_var h_var_int h_ent_int
   -- STEP 4+5: assemble `MI ≤ (1/2)log(2πe(P+N)) − (1/2)log(2πeN) = (1/2)log(1+P/N)`.
   rw [h_chain, h_fibre_ent]
@@ -841,7 +841,7 @@ theorem awgn_per_input_mi_le_log
           - (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ))
         = (1/2) * Real.log (1 + P / (N : ℝ)) :=
     capacity_log_diff hP hN
-  calc Common2026.Shannon.differentialEntropy q
+  calc InformationTheory.Shannon.differentialEntropy q
         - (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ))
       ≤ (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (v : ℝ))
           - (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ)) := by

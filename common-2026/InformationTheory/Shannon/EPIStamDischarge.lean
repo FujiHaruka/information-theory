@@ -17,7 +17,7 @@ import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 /-!
 # T2-D-S: Entropy Power Inequality — Stam inequality + de Bruijn integration 経路 discharge
 
-`Common2026/Shannon/EntropyPowerInequality.lean` (T2-D, 347 行) の主定理
+`InformationTheory/Shannon/EntropyPowerInequality.lean` (T2-D, 347 行) の主定理
 `entropy_power_inequality` は L-EPI1 + L-EPI2 + L-EPI3 三本立て hypothesis
 pass-through pattern で publish 済。本 file は **Stam inequality + de Bruijn
 integration 経路** で L-EPI1 / L-EPI2 を真の signature に格上げし、合成 wrapper
@@ -126,12 +126,12 @@ honest type-identity, not sorry concealment. @audit:ok -/
 def IsStamInequalityHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
-    J_X = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
-    J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
-    J_sum = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+    J_X = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
+    J_Y = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
+    J_sum = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
               (P.map (fun ω => X ω + Y ω)) fXY).toReal →
-    Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fX →
-    Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fY →
+    InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fX →
+    InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fY →
     (∫ x, fX x ∂MeasureTheory.volume = 1) →
     (∫ x, fY x ∂MeasureTheory.volume = 1) →
     (∀ x, fXY x =
@@ -258,7 +258,7 @@ structure IsDeBruijnRegularityHyp {Ω : Type*} [MeasurableSpace Ω]
   sense (V2 form, RHS keyed on V2 Fisher info; `IsRegularDeBruijnHypV2` carries
   its own internal `density_t` witness — that internal witness is pinned to
   the top-level `density_path t` by `density_t_eq` below). -/
-  reg_at : ∀ t : ℝ, 0 < t → Common2026.Shannon.FisherInfoV2.IsRegularDeBruijnHypV2 X Z P t
+  reg_at : ∀ t : ℝ, 0 < t → InformationTheory.Shannon.FisherInfoV2.IsRegularDeBruijnHypV2 X Z P t
   /-- Pin the V2-internal `density_t` of `reg_at t ht` to the top-level
   `density_path t`. Without this pin, the previous structure had two
   independent existentials and `density_path := fun _ _ ↦ 0` trivially
@@ -282,7 +282,7 @@ structure IsDeBruijnRegularityHyp {Ω : Type*} [MeasurableSpace Ω]
     ∀ T : ℝ, 0 < T →
       IntervalIntegrable
         (fun t : ℝ => (1/2)
-          * (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+          * (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
               (P.map (fun ω => X ω + Real.sqrt t * Z ω)) (density_path t)).toReal)
         volume 0 T
 
@@ -339,12 +339,12 @@ def IsDeBruijnIntegrationHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) (T : ℝ) : Prop :=
   ∃ (fPath : ℝ → ℝ → ℝ),
     ∀ (h_X h_target : ℝ),
-      h_X = Common2026.Shannon.differentialEntropy (P.map X) →
-      h_target = Common2026.Shannon.differentialEntropy
+      h_X = InformationTheory.Shannon.differentialEntropy (P.map X) →
+      h_target = InformationTheory.Shannon.differentialEntropy
                   (P.map (fun ω => X ω + Real.sqrt T * Z ω)) →
       h_target - h_X
         = ∫ t in Set.Ioo 0 T, (1/2)
-          * (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+          * (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
               (P.map (fun ω => X ω + Real.sqrt t * Z ω)) (fPath t)).toReal ∂volume
 
 /-- Trivial degenerate case: when `T ≤ 0` the integration interval `(0, T)` is
@@ -354,8 +354,8 @@ theorem isDeBruijnIntegrationHyp_at_zero
     {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω)
     (h_boundary :
-      Common2026.Shannon.differentialEntropy (P.map X) =
-        Common2026.Shannon.differentialEntropy
+      InformationTheory.Shannon.differentialEntropy (P.map X) =
+        InformationTheory.Shannon.differentialEntropy
           (P.map (fun ω => X ω + Real.sqrt 0 * Z ω))) :
     IsDeBruijnIntegrationHyp X Z P 0 := by
   refine ⟨fun _ _ => 0, ?_⟩
@@ -394,9 +394,9 @@ theorem isDeBruijnIntegrationHyp_holds
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
     (T : ℝ) (hT : 0 ≤ T)
-    (h_path : Common2026.Shannon.FisherInfoV2.IsDeBruijnPathRegular X Z P T) :
+    (h_path : InformationTheory.Shannon.FisherInfoV2.IsDeBruijnPathRegular X Z P T) :
     IsDeBruijnIntegrationHyp X Z P T :=
-  Common2026.Shannon.FisherInfoV2.debruijnIntegrationIdentity_holds X Z hX hZ hXZ T hT h_path
+  InformationTheory.Shannon.FisherInfoV2.debruijnIntegrationIdentity_holds X Z hX hZ hXZ T hT h_path
 
 -- (retracted, wave-1) `isDeBruijnIntegrationHypothesis_of_deBruijnIntegrationHyp`
 -- produced `IsDeBruijnIntegrationHypothesis` (formerly `:= True` placeholder)
@@ -602,25 +602,25 @@ is translation-invariant) is in the downstream discharge plan. -/
 theorem isStamInequalityHyp_of_fisherInfo_eq
     {Ω : Type*} [MeasurableSpace Ω]
     {X Y X' Y' : Ω → ℝ} {P : Measure Ω}
-    (hJX : ∀ f : ℝ → ℝ, Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) f
-          = Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X') f)
-    (hJY : ∀ f : ℝ → ℝ, Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) f
-          = Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y') f)
+    (hJX : ∀ f : ℝ → ℝ, InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) f
+          = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X') f)
+    (hJY : ∀ f : ℝ → ℝ, InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) f
+          = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y') f)
     (hJsum : ∀ f : ℝ → ℝ,
-        Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map (fun ω => X ω + Y ω)) f
-          = Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+        InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map (fun ω => X ω + Y ω)) f
+          = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
               (P.map (fun ω => X' ω + Y' ω)) f)
     (h : IsStamInequalityHyp X Y P) :
     IsStamInequalityHyp X' Y' P := by
   intro J_X J_Y J_sum fX fY fXY hJX_pos hJY_pos hJsum_pos hJX_def hJY_def hJsum_def
   have hJX_def' :
-      J_X = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal := by
+      J_X = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal := by
     rw [hJX_def, hJX]
   have hJY_def' :
-      J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal := by
+      J_Y = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal := by
     rw [hJY_def, hJY]
   have hJsum_def' :
-      J_sum = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+      J_sum = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
               (P.map (fun ω => X ω + Y ω)) fXY).toReal := by
     rw [hJsum_def, hJsum]
   exact h J_X J_Y J_sum fX fY fXY hJX_pos hJY_pos hJsum_pos hJX_def' hJY_def' hJsum_def'
@@ -725,7 +725,7 @@ theorem entropy_log_form_via_stam
     (hXY : IndepFun X Y P)
     (h_stam : IsStamInequalityHyp X Y P)
     (_h_bridge : IsStamToEPIBridgeHyp X Y P) :
-    Common2026.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
+    InformationTheory.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
       ≥ (1/2) * Real.log
           (entropyPower (P.map X) + entropyPower (P.map Y)) :=
   entropy_power_inequality_log_form P X Y hX hY hXY h_stam
@@ -746,10 +746,10 @@ theorem entropy_exp_form_via_stam
     (hXY : IndepFun X Y P)
     (h_stam : IsStamInequalityHyp X Y P)
     (_h_bridge : IsStamToEPIBridgeHyp X Y P) :
-    Real.exp (2 * Common2026.Shannon.differentialEntropy
+    Real.exp (2 * InformationTheory.Shannon.differentialEntropy
               (P.map (fun ω => X ω + Y ω)))
-      ≥ Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map X))
-        + Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map Y)) :=
+      ≥ Real.exp (2 * InformationTheory.Shannon.differentialEntropy (P.map X))
+        + Real.exp (2 * InformationTheory.Shannon.differentialEntropy (P.map Y)) :=
   entropy_power_inequality_exp_form P X Y hX hY hXY h_stam
 
 /-- **Normalized `(2πe)⁻¹` form via Stam pipeline**: Cover-Thomas Ch.17 流儀

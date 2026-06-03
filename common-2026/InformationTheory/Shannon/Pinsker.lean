@@ -7,7 +7,7 @@ import Mathlib.InformationTheory.KullbackLeibler.KLFun
 /-!
 # Pinsker 不等式 (TV と KL の bridge)
 
-Common2026 B-5 ムーンショット ([`docs/shannon/pinsker-moonshot-plan.md`])。
+InformationTheory B-5 ムーンショット ([`docs/shannon/pinsker-moonshot-plan.md`])。
 
 有限アルファベット `α` 上の確率測度 `P, Q` (`P ≪ Q`) について
 `tvNorm P Q ≤ √((klDiv P Q).toReal)` を Lean 化。

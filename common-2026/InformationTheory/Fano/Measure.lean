@@ -28,7 +28,7 @@ randomized decoder `Ω → X` への一般化は Phase 3.5 として今後の課
 `DiscreteMeasurableSpace → StandardBorelSpace` が自動で derive される。したがって
 `Y` の側に追加の制約は不要 (Phase 2 インベントリ調査時の予測との差分)。
 
-Phase 1 (`Common2026/Fano/Core.lean`) の離散 Fano を `y : Y` ごとに pointwise 適用し、
+Phase 1 (`InformationTheory/Fano/Core.lean`) の離散 Fano を `y : Y` ごとに pointwise 適用し、
 `P_Yo = μ.map Yo` 上で Bochner Jensen により積分形に集約する戦略。詳細は
 `docs/fano/fano-mathlib-inventory.md`。
 

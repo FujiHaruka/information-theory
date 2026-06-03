@@ -1,13 +1,13 @@
 /-
   scripts/SorryAuditPerModule.lean — per-module sorry 内訳
 
-  `SorryAudit.lean` の集計版を **module 単位** に分解して出力する。Common2026/Draft/
+  `SorryAudit.lean` の集計版を **module 単位** に分解して出力する。InformationTheory/Draft/
   への file 移動候補リストを得るための入力。
 
   ## 出力
 
     PER-MODULE TABLE  Module                              total clean own trans
-    MOVE LIST         Common2026/Draft/ へ移すべき module path 一覧
+    MOVE LIST         InformationTheory/Draft/ へ移すべき module path 一覧
                       (own > 0 または trans > 0 のもの)
     KEEP LIST         main 側に残す module path (clean のみ)
 
@@ -20,7 +20,7 @@ import InformationTheory
 
 open Lean
 
-namespace Common2026.SorryAuditPerModule
+namespace Tooling.SorryAuditPerModule
 
 structure ModCounts where
   clean : Nat := 0
@@ -60,13 +60,13 @@ def audit : MetaM (Std.HashMap Name ModCounts) := do
     acc := acc.insert modName next
   return acc
 
-/-- `Common2026.Foo.Bar` → `Common2026/Foo/Bar.lean` -/
+/-- `InformationTheory.Foo.Bar` → `InformationTheory/Foo/Bar.lean` -/
 def moduleToPath (n : Name) : String :=
   n.toString.replace "." "/" ++ ".lean"
 
-end Common2026.SorryAuditPerModule
+end Tooling.SorryAuditPerModule
 
-open Common2026.SorryAuditPerModule in
+open Tooling.SorryAuditPerModule in
 #eval! show MetaM Unit from do
   let acc ← audit
   -- sort by module name (lex)

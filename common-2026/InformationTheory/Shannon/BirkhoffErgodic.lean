@@ -1011,7 +1011,7 @@ together with the rational-`ε` sandwich
 `birkhoff_eventually_lt_integral_add` / `birkhoff_eventually_gt_integral_sub`.
 The 4-hypothesis pack `(hg_meas / hg_inv / hg_int / hg_lim)` carried here is a
 historical pass-through form (load-bearing on the a.e. limit data); it has
-**0 in-tree consumers** (`rg -n 'birkhoff_ergodic_ae_of_limit\b' Common2026/`
+**0 in-tree consumers** (`rg -n 'birkhoff_ergodic_ae_of_limit\b' InformationTheory/`
 yields only the self-definition). -/
 @[entry_point]
 theorem birkhoff_ergodic_ae_of_limit

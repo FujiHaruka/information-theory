@@ -279,7 +279,7 @@ The parallel Gaussian capacity equals the per-coordinate sum
 optimal) water level `ν`. Bundles in one predicate:
 
 (a) chain rule `I(X^n; Y^n) = ∑_i I(X_i; Y_i)` for memoryless parallel channel
-    (Common2026 `MIChainRule` per-coord specialization),
+    (InformationTheory `MIChainRule` per-coord specialization),
 (b) per-coordinate F-2 MI bridge + max-entropy + bddAbove (T2-A
     `awgnCapacity_eq` applied per coordinate),
 (c) variance partition feasibility (`∑_i ∫ x_i² ∂p ≤ P` ⇒ allocation exists with
@@ -311,7 +311,7 @@ equality). The wrapper added no derivation — it only exposed L-WF1 / L-WF2 in 
 signature as decorative load (`hP`, `hN`, `h_kkt`, `h_unique` were never consumed
 by the body) — and was retracted alongside its PG0-closed and active-form
 siblings. Callers consume `IsParallelGaussianPerCoordReduction` directly via
-def-unfolding (see `Common2026/Shannon/ParallelGaussianKKT.lean` etc.). The
+def-unfolding (see `InformationTheory/Shannon/ParallelGaussianKKT.lean` etc.). The
 genuine, hypothesis-free headline lives in
 `ParallelGaussianPerCoord.parallel_gaussian_capacity_formula`. -/
 

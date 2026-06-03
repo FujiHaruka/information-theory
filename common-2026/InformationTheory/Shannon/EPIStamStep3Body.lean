@@ -14,7 +14,7 @@ import Mathlib.Probability.Independence.Basic
 /-!
 # W9-S3 T2-D: Stam inequality body — **Step 3** (Cauchy-Schwarz → symmetric Fisher coupling) discharge
 
-`Common2026/Shannon/EPIStamInequalityBody.lean` (Wave 7, 515 行) splits the
+`InformationTheory/Shannon/EPIStamInequalityBody.lean` (Wave 7, 515 行) splits the
 1-dimensional Stam inequality proof (Cover-Thomas Lemma 17.7.2 / Stam 1959 /
 Blachman 1965) into four steps:
 

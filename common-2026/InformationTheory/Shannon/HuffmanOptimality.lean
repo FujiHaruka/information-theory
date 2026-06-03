@@ -11,7 +11,7 @@ import InformationTheory.Shannon.Huffman
 /-!
 # Huffman 最適性 主定理 (T1-A' Cover-Thomas Theorem 5.8.1)
 
-T1-A (`Common2026/Shannon/Huffman.lean`) で publish された `huffmanLength` の **最適性**
+T1-A (`InformationTheory/Shannon/Huffman.lean`) で publish された `huffmanLength` の **最適性**
 (任意 Kraft-feasible 語長関数 `l` との比較形) を、sibling property + n → n-1 induction で
 証明する。
 

@@ -18,7 +18,7 @@ structure (Matroid rank exists at `ℕ∞`-value, see
 
 The canonical example is the joint entropy of a finite collection of
 random variables (`InformationTheory.Shannon.entropyPolymatroid` in
-`Common2026/Shannon/Polymatroid.lean`).
+`InformationTheory/Shannon/Polymatroid.lean`).
 -/
 
 namespace Combinatorics

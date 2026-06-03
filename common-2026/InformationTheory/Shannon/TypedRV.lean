@@ -87,7 +87,7 @@ lemma klDivRV_def
 noncomputable def differentialEntropyRV
     {Ω : Type*} [MeasurableSpace Ω]
     (μ : Measure Ω) (X : Ω → ℝ) : ℝ :=
-  Common2026.Shannon.differentialEntropy (μ.map X)
+  InformationTheory.Shannon.differentialEntropy (μ.map X)
 
 /-! ## Notation
 

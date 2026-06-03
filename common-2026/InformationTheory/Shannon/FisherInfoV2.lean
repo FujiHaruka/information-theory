@@ -14,12 +14,12 @@ import Mathlib.Probability.Moments.Variance
 /-!
 # Fisher information V2 — density-as-input re-definition (T2-F follow-up, Stage 2)
 
-Common2026 T2-F follow-up (parent: `fisher-info-gaussian-discharge-moonshot-plan.md`
+InformationTheory T2-F follow-up (parent: `fisher-info-gaussian-discharge-moonshot-plan.md`
 判断ログ #2, 2026-05-19).
 
 ## Why a V2
 
-The original `Common2026.Shannon.fisherInfo` published in `FisherInfo.lean:58`
+The original `InformationTheory.Shannon.fisherInfo` published in `FisherInfo.lean:58`
 takes the density via `(μ.rnDeriv volume y).toReal`. `Measure.rnDeriv` is defined
 via `Classical.choose` of the Lebesgue decomposition, so for `μ := gaussianReal m v`
 the chosen representative is generically non-differentiable on a co-null set,
@@ -40,9 +40,9 @@ noncomputable def fisherInfoOfDensity (f : ℝ → ℝ) : ℝ≥0∞ :=
 Then `fisherInfoOfDensity (gaussianPDFReal m v) = ENNReal.ofReal (1/v)` is
 provable (Phase B-3 below).
 
-The existing `Common2026.Shannon.fisherInfo` and `FisherInfo.lean` /
+The existing `InformationTheory.Shannon.fisherInfo` and `FisherInfo.lean` /
 `FisherInfoGaussian.lean` API are left untouched — V2 lives in a parallel
-namespace `Common2026.Shannon.FisherInfoV2` and re-publishes Phase A/B-1/B-2
+namespace `InformationTheory.Shannon.FisherInfoV2` and re-publishes Phase A/B-1/B-2
 analogues on top of the new definition (per task spec).
 
 ## 主シグネチャ
@@ -64,7 +64,7 @@ analogues on top of the new definition (per task spec).
 - L-FV2-D (本 file scope-out): 既存 `FisherInfo.lean` の置換 (parallel publish のみ)
 -/
 
-namespace Common2026.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfoV2
 
 set_option linter.unusedSectionVars false
 
@@ -82,7 +82,7 @@ Density-as-input form (撤退ライン L-FV2-A): the density is an *explicit
 argument*, not derived through `Measure.rnDeriv` (which is `Classical.choose`'d
 and hence yields a generically non-differentiable representative). This
 sidesteps the representative-dependence flaw of the V1 definition
-`Common2026.Shannon.fisherInfo` (`FisherInfo.lean:58`).
+`InformationTheory.Shannon.fisherInfo` (`FisherInfo.lean:58`).
 
 Returns `ℝ≥0∞` to capture `J = +∞` for irregular families. Use
 `fisherInfoOfDensityReal` or `.toReal` to project to `ℝ` when finite. -/
@@ -110,7 +110,7 @@ theorem fisherInfoOfDensityReal_nonneg (f : ℝ → ℝ) : 0 ≤ fisherInfoOfDen
 
 /-- **Regular density predicate V2** (density-as-input form, L-FV2-A).
 
-This is the V2 analogue of `Common2026.Shannon.IsRegularDensity` from
+This is the V2 analogue of `InformationTheory.Shannon.IsRegularDensity` from
 `FisherInfo.lean`, but with **the density `f` as the primary input** rather than
 extracted via `Classical.choose` from `Measure.rnDeriv`. This is what makes
 Phase B-3 (Gaussian closed-form) provable in V2 but not V1.
@@ -144,7 +144,7 @@ structure IsRegularDensityV2 (f : ℝ → ℝ) : Prop where
 For a regular density `f`,
 `∫ (logDeriv f)(x) · f(x) dx = ∫ f'(x) dx = f(∞) - f(-∞) = 0`.
 
-This is the V2 analogue of `Common2026.Shannon.integral_logDeriv_pdf_eq_zero`
+This is the V2 analogue of `InformationTheory.Shannon.integral_logDeriv_pdf_eq_zero`
 from `FisherInfo.lean` — the proof structure is identical, but stated cleanly
 on the explicit density `f`.
 
@@ -288,7 +288,7 @@ theorem fisherInfoOfDensity_gaussianPDFReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 
     have h_pdf_nn : 0 ≤ gaussianPDFReal m v x := (gaussianPDFReal_pos m v x hv).le
     rw [← ENNReal.ofReal_mul h_sq_nn]
     congr 1
-    rw [Common2026.Shannon.logDeriv_gaussianPDFReal hv]
+    rw [InformationTheory.Shannon.logDeriv_gaussianPDFReal hv]
     ring
   rw [lintegral_congr h_pointwise]
   -- Step 2: convert `∫⁻ ofReal g = ofReal (∫ g)` using non-negativity + integrability.
@@ -313,14 +313,14 @@ theorem fisherInfoOfDensityReal_gaussianPDFReal (m : ℝ) {v : ℝ≥0} (hv : v 
   rw [fisherInfoOfDensity_gaussianPDFReal m hv]
   rw [ENNReal.toReal_ofReal (by positivity)]
 
-/-! ## Phase C — bridge to V1 `Common2026.Shannon.IsRegularDensity`
+/-! ## Phase C — bridge to V1 `InformationTheory.Shannon.IsRegularDensity`
 
 For backwards-compatibility, every V1 `IsRegularDensity` instance (which is
 keyed by a random variable `X` and pinned to the density representative
 `density` field) induces a V2 `IsRegularDensityV2` on the very same density
 function. This lets callers that have already discharged V1 (notably Gaussian
-via `Common2026.Shannon.isRegularDensity_gaussianReal_of_law`) lift to V2 for
+via `InformationTheory.Shannon.isRegularDensity_gaussianReal_of_law`) lift to V2 for
 free and obtain the Fisher info closed form.
 -/
 
-end Common2026.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfoV2

@@ -10,7 +10,7 @@ import InformationTheory.Shannon.DifferentialEntropy
 /-!
 # Fisher information — Gaussian discharge (T2-F follow-up, Stage 1)
 
-Common2026 T2-F follow-up
+InformationTheory T2-F follow-up
 ([`docs/shannon/fisher-info-gaussian-discharge-moonshot-plan.md`]).
 
 Discharges the **L-F2** hypothesis pass-through of `FisherInfo.lean` for the
@@ -37,7 +37,7 @@ documented at the end of this file. They are deferred to a follow-up seed that
 first redefines `fisherInfo` to depend only on the a.e.-class of the density.
 -/
 
-namespace Common2026.Shannon
+namespace InformationTheory.Shannon
 
 set_option linter.unusedSectionVars false
 
@@ -328,4 +328,4 @@ discharge) are blocked by the same `fisherInfo` flaw — the
 `(1/2) * 0 = 0`, while the LHS derivative is `1/(2(v+t)) > 0` — irreconcilable.
 These phases are deferred to a follow-up that first fixes `fisherInfo`. -/
 
-end Common2026.Shannon
+end InformationTheory.Shannon

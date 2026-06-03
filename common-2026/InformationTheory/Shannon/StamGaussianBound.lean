@@ -7,11 +7,11 @@ import Mathlib.Tactic.Positivity
 /-!
 # Stam convex Fisher bound — non-vacuous Gaussian instance (L-S12-C′)
 
-Common2026 EPI (Ch.17) follow-up to the Stam inequality core
+InformationTheory EPI (Ch.17) follow-up to the Stam inequality core
 `J(X+Y) ≤ λ² J(X) + (1-λ)² J(Y)`.
 
 The pre-existing Gaussian discharge `isStamCondExpCSHyp_of_gaussian_fisherInfo_zero`
-(`Common2026/Shannon/EPIStamStep12Body.lean:327`) is **vacuous**: it exploits the
+(`InformationTheory/Shannon/EPIStamStep12Body.lean:327`) is **vacuous**: it exploits the
 V1 representative-dependence bug under which `fisherInfo` degenerates to `0` on a
 Gaussian law, so the precondition `0 < J_X` is contradicted and the ∀λ bound holds
 for no informative reason. It asserts *nothing* about Stam actually holding for
@@ -19,7 +19,7 @@ Gaussians.
 
 This file replaces that vacuous discharge with the **correct, non-vacuous Gaussian
 instance**, keyed on the V2 Fisher information `fisherInfoOfMeasureV2`
-(`Common2026/Shannon/FisherInfoV2DeBruijn.lean:124`) which evaluates to the true
+(`InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:124`) which evaluates to the true
 closed form `1/v` rather than the V1 `0` ghost. The proof reduces the convex Fisher
 bound to a pure real-arithmetic kernel
 `1/(a+b) ≤ λ²/a + (1-λ)²/b` whose equality is saturated at `λ* = a/(a+b)`
@@ -38,7 +38,7 @@ Bruijn machinery) and is deliberately out of scope here.
   `gaussianReal_add_gaussianReal_of_indepFun`
 -/
 
-namespace Common2026.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfoV2
 
 set_option linter.unusedSectionVars false
 set_option linter.unusedVariables false
@@ -97,4 +97,4 @@ theorem stam_convex_fisher_bound_gaussian
   rw [mul_one_div, mul_one_div]
   exact this
 
-end Common2026.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfoV2

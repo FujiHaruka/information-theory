@@ -9,7 +9,7 @@ import Mathlib.InformationTheory.Coding.UniquelyDecodable
 This file wires **Mathlib's genuine `InformationTheory.kraft_mcmillan_inequality`**
 (uniquely-decodable code `⟹ ∑ D^{-|w|} ≤ 1`, a fully-proved counting theorem
 in `Mathlib/InformationTheory/Coding/KraftMcMillan.lean`) into this project's
-per-symbol Kraft / Gibbs framework (`Common2026/Shannon/ShannonCode.lean`).
+per-symbol Kraft / Gibbs framework (`InformationTheory/Shannon/ShannonCode.lean`).
 
 The result is a genuine **expectation-level source-coding converse**: for any
 finite-alphabet source `P` whose codeword assignment `c : α → List β` is

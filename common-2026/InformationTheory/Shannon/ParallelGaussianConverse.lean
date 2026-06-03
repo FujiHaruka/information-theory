@@ -137,7 +137,7 @@ set_option linter.unusedSectionVars false
 
 open MeasureTheory ProbabilityTheory InformationTheory
 open InformationTheory.Shannon.ChannelCoding
-open Common2026.Shannon
+open InformationTheory.Shannon
 open scoped ENNReal NNReal BigOperators
 
 /-! ## M0 — `CountableOrCountablyGenerated` instance check (transient) -/
@@ -152,7 +152,7 @@ example {n : ℕ} :
 `μ i ≪ volume` (each a probability measure, so `SigmaFinite`), then the product measure
 `Measure.pi μ ≪ (volume : Measure (Fin n → ℝ))`. Built from `withDensity_rnDeriv_eq`
 (write each `μ i = volume.withDensity (rnDeriv (μ i) volume)`), the `n`-variable
-`pi_withDensity_fin` (Common2026), and `withDensity_absolutelyContinuous`. Mathlib has no
+`pi_withDensity_fin` (InformationTheory), and `withDensity_absolutelyContinuous`. Mathlib has no
 direct `Measure.pi _ ≪ Measure.pi _` lemma (loogle: 0 declarations), so this is self-built.
 
 Genuine, sorryAx-free (`#print axioms` = [propext, Classical.choice, Quot.sound]).
@@ -399,7 +399,7 @@ The 1-D `ContChannelMIDecomp.mutualInfoOfChannel_toReal_eq_diffEntropy_sub` is
 hardwired to `Measure ℝ` / `differentialEntropy`. We re-derive the same chain over
 a generic measurable space `β` (with a `SigmaFinite` reference measure `vol`),
 producing the entropy in raw `∫ log(rnDeriv) ∂` form, then specialize to
-`β = Fin n → ℝ`, `vol = volume`. Every step uses only generic Mathlib / Common2026
+`β = Fin n → ℝ`, `vol = volume`. Every step uses only generic Mathlib / InformationTheory
 lemmas (`InformationTheory.toReal_klDiv_of_measure_eq`, `rnDeriv_compProd_fibre`,
 `integral_log_rnDeriv_self_eq_neg`), so the lift is mechanical. -/
 

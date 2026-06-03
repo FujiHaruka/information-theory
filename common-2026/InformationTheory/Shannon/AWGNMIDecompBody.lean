@@ -4,7 +4,7 @@ import InformationTheory.Shannon.AWGNMIBridgeDischarge
 /-!
 # W9-G1 T2-A AWGN MI bridge: body discharge of `IsAwgnMIDecomp`
 
-Wave6 `Common2026/Shannon/AWGNMIBridge.lean` reduced the AWGN MI bridge
+Wave6 `InformationTheory/Shannon/AWGNMIBridge.lean` reduced the AWGN MI bridge
 (Cover-Thomas 9.2.1, `I(X;Y) = h(Y) − h(Y|X)`) to three primitive predicates.
 Wave7 `AWGNMIBridgeDischarge.lean` body-discharged `IsAwgnOutputGaussian`
 (via the bind/conv bridge) and `IsAwgnCondEntropyEqNoise` is already fully
@@ -147,9 +147,9 @@ in the follow-up `awgn-mi-decomp-plan.md`. -/
 def IsContChannelMIDecompHyp
     (p : Measure ℝ) (W : InformationTheory.Shannon.ChannelCoding.Channel ℝ ℝ) : Prop :=
   (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel p W).toReal
-    = Common2026.Shannon.differentialEntropy
+    = InformationTheory.Shannon.differentialEntropy
         (InformationTheory.Shannon.ChannelCoding.outputDistribution p W)
-      - (∫ x, Common2026.Shannon.differentialEntropy (W x) ∂p)
+      - (∫ x, InformationTheory.Shannon.differentialEntropy (W x) ∂p)
 
 /-! ## Phase C — Combinator: abstract chain rule → `IsAwgnMIDecomp` -/
 

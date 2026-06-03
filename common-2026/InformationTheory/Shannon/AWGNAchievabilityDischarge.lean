@@ -30,7 +30,7 @@ Phase C / D / E は `sorry` skeleton で頭出しする。
 * 判断 #1: **T-2 採用** — `IsContinuousAEPGaussian` regularity hyp 化 (continuous
   SMB / n-d differentialEntropy の Mathlib 不在を staged にする)
 * 判断 #2: **Option A** (2 段 `Measure.pi`) — `AwgnCode.encoder` と型 defeq
-* 判断 #3: **Option γ** (`klDiv` 形) — Common2026 既存 `klDiv_*` 資産で完備、
+* 判断 #3: **Option γ** (`klDiv` 形) — InformationTheory 既存 `klDiv_*` 資産で完備、
   Option β `differentialEntropy` の `@audit:suspect(differential-entropy-plan)`
   負債継承を回避
 
@@ -112,7 +112,7 @@ theorem gaussianCodebook_indepFun_codewords (M n : ℕ) (σsq : ℝ≥0)
 The load-bearing predicate `IsContinuousAEPGaussian` was **removed** in the
 AWGN M5 Tier 3 → Tier 2 sorry-based migration (Phase 3-β, plan
 `docs/shannon/awgn-m5-sorry-migration-plan.md`). Its analytic content is now the
-shared sorry 補題 `continuousAepGaussian_holds` in `Common2026/Shannon/AwgnWalls.lean`
+shared sorry 補題 `continuousAepGaussian_holds` in `InformationTheory/Shannon/AwgnWalls.lean`
 (`@residual(wall:awgn-continuous-aep-gaussian)`). Consumers in this file call that
 lemma directly instead of taking a predicate hypothesis. -/
 
@@ -453,7 +453,7 @@ is `≤ 2ε` for all `M ≤ ⌈exp(n R)⌉` once `n` is large enough.
 h_meas` were removed. The body now calls the shared sorry 補題
 `continuousAepGaussian_holds P N` (typical-set existence) and
 `awgnRandomCodingBound_holds P N h_meas` (integral bound) in
-`Common2026/Shannon/AwgnWalls.lean`. The latter is stated for an abstract
+`InformationTheory/Shannon/AwgnWalls.lean`. The latter is stated for an abstract
 measurable `decoder`; here we instantiate it at `jointTypicalDecoder A` and
 bridge the set shape `errorEvent ≡ {y | decoder y ≠ m}` and the measure shape
 `gaussianCodebook ≡ Measure.pi (Measure.pi ...)`. This theorem is therefore a
@@ -590,7 +590,7 @@ sorry-based migration (Phase 3-β, plan
 
 * The power-constraint analytic content (chi-square SLLN on `gaussianCodebook`,
   `P_cb < P_target` slack ⇒ mass `≥ 1 - ε`) is now the shared sorry 補題
-  `awgnPowerConstraintHonest_holds` in `Common2026/Shannon/AwgnWalls.lean`
+  `awgnPowerConstraintHonest_holds` in `InformationTheory/Shannon/AwgnWalls.lean`
   (`@residual(wall:awgn-power-constraint-honest)`).
 * The bundle's only genuine (non-wall) content was the shared slack witness
   `∃ P' ∈ (0, P]` with `R < capacity(P')`. The 3 sub-bounds at `P'` are now
@@ -1459,9 +1459,9 @@ theorem awgn_theorem_F4_discharged_F1_via_staged
         (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
             (gaussianReal 0 P.toNNReal)
             (awgnChannel N (isAwgnChannelMeasurable N))).toReal
-          = Common2026.Shannon.differentialEntropy
+          = InformationTheory.Shannon.differentialEntropy
               (gaussianReal 0 (P.toNNReal + N))
-            - Common2026.Shannon.differentialEntropy (gaussianReal 0 N))
+            - InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N))
     {R : ℝ} (hR_pos : 0 < R) (hR_lt_C : R < (1/2) * Real.log (1 + P / (N : ℝ)))
     {ε : ℝ} (hε : 0 < ε) :
     ∃ N₀ : ℕ, ∀ n, N₀ ≤ n →

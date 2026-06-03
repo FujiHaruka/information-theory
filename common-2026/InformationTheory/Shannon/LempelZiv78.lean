@@ -62,7 +62,7 @@ strategy as `RelayCutset.lean` (T3-F):
   log-likelihood to the entropy rate) is published as
   `IsSMBSandwichPassthrough μ p : Prop :=
    ∀ᵐ ω, Tendsto (blockLogAvg μ p n) atTop (𝓝 (entropyRate μ p))`. This is
-  the bridge to `Common2026/Shannon/ShannonMcMillanBreiman.lean`'s
+  the bridge to `InformationTheory/Shannon/ShannonMcMillanBreiman.lean`'s
   `shannon_mcmillan_breiman_of_sandwich`, which itself takes the two
   sandwich inequalities as hypotheses (those in turn are discharged by
   Birkhoff + the SMB chain rule). Discharge plan:
@@ -92,9 +92,9 @@ Out of scope (separate seeds):
 
 ## Re-use of existing infrastructure
 
-`Common2026/Shannon/Stationary.lean` (StationaryProcess / ErgodicProcess /
-blockRV), `Common2026/Shannon/EntropyRate.lean` (`entropyRate`,
-`entropyRate_exists_of_stationary`), and `Common2026/Shannon/
+`InformationTheory/Shannon/Stationary.lean` (StationaryProcess / ErgodicProcess /
+blockRV), `InformationTheory/Shannon/EntropyRate.lean` (`entropyRate`,
+`entropyRate_exists_of_stationary`), and `InformationTheory/Shannon/
 ShannonMcMillanBreiman.lean` (`blockLogAvg`,
 `shannon_mcmillan_breiman_of_sandwich`, `tendsto_expected_blockLogAvg`)
 are imported and re-used as **black boxes**: the present file does not
@@ -304,7 +304,7 @@ Asserts that the per-block negative log-likelihood
 `blockLogAvg μ p n ω` converges almost surely to `entropyRate μ p`. This
 is *Shannon–McMillan–Breiman in its a.s. form*; the existing publish
 `shannon_mcmillan_breiman_of_sandwich` in
-`Common2026/Shannon/ShannonMcMillanBreiman.lean` takes the two sandwich
+`InformationTheory/Shannon/ShannonMcMillanBreiman.lean` takes the two sandwich
 inequalities (`liminf ≥ H`, `limsup ≤ H`) and the two boundedness
 hypotheses as input, and the present predicate stands in for the *output*
 of that sandwich combine. The body is now the genuine a.s. Tendsto

@@ -5,7 +5,7 @@ import InformationTheory.Meta.EntryPoint
 /-!
 # T1-A'' Huffman 最適性 partial / plumbing 補題群
 
-`Common2026/Shannon/HuffmanOptimality.lean` (T1-A' weak form publish, 1054 行 / 0 sorry) の
+`InformationTheory/Shannon/HuffmanOptimality.lean` (T1-A' weak form publish, 1054 行 / 0 sorry) の
 `swap_step_le` (`:650`) 周辺の **extractor / trivial-case 補題群** を独立 publish.
 
 完全な hypothesis discharge (T1-A'' full scope) は

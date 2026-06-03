@@ -56,7 +56,7 @@ Everything else (positivity, measurability, spatial second derivative, time
 derivative, the heat equation, the de Bruijn combinator glue) is internal.
 -/
 
-namespace Common2026.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfoV2
 
 set_option linter.unusedSectionVars false
 
@@ -71,4 +71,4 @@ open scoped ENNReal NNReal Real
 
 /-! ## Final glue — Gaussian de Bruijn witness (heat-flow side discharged) -/
 
-end Common2026.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfoV2

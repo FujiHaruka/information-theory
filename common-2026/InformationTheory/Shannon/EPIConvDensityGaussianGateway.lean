@@ -6,7 +6,7 @@ import InformationTheory.Shannon.FisherInfoV2
 
 `convDensityAdd_hasDerivAt_of_integrable_smoothKernel` is the `fX`-integrable-only
 variant of `convDensityAdd_hasDerivAt_of_regular`
-(`Common2026/Shannon/EPIConvDensity.lean:187`). The smoothness regularity on `fX`
+(`InformationTheory/Shannon/EPIConvDensity.lean:187`). The smoothness regularity on `fX`
 is dropped: differentiation is carried entirely by the Gaussian kernel `fY`
 (`hregY : IsRegularDensityV2 fY` + bounded `fY` / `deriv fY`). `fX` only needs
 `Integrable fX volume`, used for `aestronglyMeasurable` (via
@@ -40,7 +40,7 @@ is a regularity precondition, not load-bearing. sorryAx-free (`#print axioms` =
 @audit:ok -/
 theorem convDensityAdd_hasDerivAt_of_integrable_smoothKernel (fX fY : ℝ → ℝ) (z₀ : ℝ)
     (hX_int : Integrable fX volume)
-    (hregY : Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fY)
+    (hregY : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fY)
     (hY_bdd : ∃ M : ℝ, ∀ w, |fY w| ≤ M)
     (hY'_bdd : ∃ M : ℝ, ∀ w, |deriv fY w| ≤ M) :
     HasDerivAt (InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY)
@@ -124,7 +124,7 @@ corollary of the audited `HasDerivAt` producer; same regularity hyps, no bundlin
 @audit:ok -/
 theorem convDensityAdd_differentiable_of_integrable_smoothKernel (fX fY : ℝ → ℝ)
     (hX_int : Integrable fX volume)
-    (hregY : Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fY)
+    (hregY : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fY)
     (hY_bdd : ∃ M : ℝ, ∀ w, |fY w| ≤ M)
     (hY'_bdd : ∃ M : ℝ, ∀ w, |deriv fY w| ≤ M) :
     Differentiable ℝ (InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY) :=

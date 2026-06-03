@@ -21,13 +21,13 @@ import Mathlib.Order.Filter.AtTopBot.Group
 /-!
 # T2-D-I: Entropy Power Inequality — L-EPI3 final integration
 
-`Common2026/Shannon/EntropyPowerInequality.lean` (T2-D, 347 行) の主定理
+`InformationTheory/Shannon/EntropyPowerInequality.lean` (T2-D, 347 行) の主定理
 `entropy_power_inequality` は L-EPI1 + L-EPI2 + L-EPI3 三本立て hypothesis
 pass-through pattern で publish 済。Wave 5 で
 
-* `Common2026/Shannon/EPIPlumbing.lean` (319 行)
-* `Common2026/Shannon/EPIStamDischarge.lean` (755 行)
-* `Common2026/Shannon/FisherInfoV2DeBruijn.lean` (452 行)
+* `InformationTheory/Shannon/EPIPlumbing.lean` (319 行)
+* `InformationTheory/Shannon/EPIStamDischarge.lean` (755 行)
+* `InformationTheory/Shannon/FisherInfoV2DeBruijn.lean` (452 行)
 
 の三本柱が揃ったので、本 file はこれら building blocks を **integrate** し、
 L-EPI3 を取り出す **integrated pipeline** を整える。
@@ -44,7 +44,7 @@ L-EPI3 を取り出す **integrated pipeline** を整える。
   load-bearing field ではなくなり (Cluster C Tier-2 migration、
   `epi-stam-cluster-c-sorry-migration-plan` route L-EPISC-3-α)、consumer が
   shared sorry 補題 `stamToEPIBridge_holds` で内部 discharge する。
-* §2 — **integrated 主定理**: integrated pipeline → EPI。`Common2026/Shannon/EPIStamDischarge.lean`
+* §2 — **integrated 主定理**: integrated pipeline → EPI。`InformationTheory/Shannon/EPIStamDischarge.lean`
   の `epi_via_stam_main` を packaging。
 * §3 — **Gaussian EPI**: `X, Y` がともに Gaussian なら EPI は等号で成立
   (`entropyPower_gaussian_additivity` 直行)。integrated pipeline 形は
@@ -99,7 +99,7 @@ open scoped ENNReal NNReal Topology
 open InformationTheory.Shannon.EntropyPowerInequality
 open InformationTheory.Shannon.EPIStamDischarge
 open InformationTheory.Shannon.EPIConvDensity (convDensityAdd)
-open Common2026.Shannon.EPIBlachmanGaussianWitness (convDensityAdd_gaussian_closed_form)
+open InformationTheory.Shannon.EPIBlachmanGaussianWitness (convDensityAdd_gaussian_closed_form)
 
 /-! ## §1 — Integrated pipeline predicate -/
 
@@ -229,7 +229,7 @@ theorem entropy_power_inequality_log_form_integrated
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
     (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
-    Common2026.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
+    InformationTheory.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
       ≥ (1/2) * Real.log
           (entropyPower (P.map X) + entropyPower (P.map Y)) :=
   entropy_power_inequality_log_form P X Y hX hY hXY h_pipeline.stam
@@ -248,10 +248,10 @@ theorem entropy_power_inequality_exp_form_integrated
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
     (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
-    Real.exp (2 * Common2026.Shannon.differentialEntropy
+    Real.exp (2 * InformationTheory.Shannon.differentialEntropy
               (P.map (fun ω => X ω + Y ω)))
-      ≥ Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map X))
-        + Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map Y)) :=
+      ≥ Real.exp (2 * InformationTheory.Shannon.differentialEntropy (P.map X))
+        + Real.exp (2 * InformationTheory.Shannon.differentialEntropy (P.map Y)) :=
   entropy_power_inequality_exp_form P X Y hX hY hXY h_pipeline.stam
 
 /-- **EPI normalized `(2πe)⁻¹` form via integrated pipeline** (Cover-Thomas Ch.17).
@@ -387,10 +387,10 @@ theorem entropy_power_inequality_exp_form_reduced
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
     (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
-    Real.exp (2 * Common2026.Shannon.differentialEntropy
+    Real.exp (2 * InformationTheory.Shannon.differentialEntropy
               (P.map (fun ω => X ω + Y ω)))
-      ≥ Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map X))
-        + Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map Y)) :=
+      ≥ Real.exp (2 * InformationTheory.Shannon.differentialEntropy (P.map X))
+        + Real.exp (2 * InformationTheory.Shannon.differentialEntropy (P.map Y)) :=
   entropy_power_inequality_exp_form_integrated P X Y hX hY hXY h_pipeline
 
 /-! ## §8 — Composability with `EPIPlumbing` translation invariance -/
@@ -454,10 +454,10 @@ theorem entropy_power_inequality_three_forms_equiv
     (h_pipeline : IsEPIL3IntegratedPipeline X Y P) :
     (entropyPower (P.map (fun ω => X ω + Y ω))
         ≥ entropyPower (P.map X) + entropyPower (P.map Y))
-    ∧ (Real.exp (2 * Common2026.Shannon.differentialEntropy
+    ∧ (Real.exp (2 * InformationTheory.Shannon.differentialEntropy
                 (P.map (fun ω => X ω + Y ω)))
-        ≥ Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map X))
-          + Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map Y)))
+        ≥ Real.exp (2 * InformationTheory.Shannon.differentialEntropy (P.map X))
+          + Real.exp (2 * InformationTheory.Shannon.differentialEntropy (P.map Y)))
     ∧ (entropyPower (P.map (fun ω => X ω + Y ω)) / gaussianEntropyPowerConst
         ≥ entropyPower (P.map X) / gaussianEntropyPowerConst
           + entropyPower (P.map Y) / gaussianEntropyPowerConst) :=
@@ -640,8 +640,8 @@ structure IsDeBruijnTailHyp {Ω : Type*} [MeasurableSpace Ω]
   tail_limit :
     Tendsto
       (fun T : ℝ => Real.toEReal
-        (Common2026.Shannon.differentialEntropy
-          (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z T))))
+        (InformationTheory.Shannon.differentialEntropy
+          (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z T))))
       atTop (𝓝 h_inf)
 
 -- (Gaussian discharge `isDeBruijnTailHyp_of_gaussian` is deferred until after
@@ -653,23 +653,23 @@ structure IsDeBruijnTailHyp {Ω : Type*} [MeasurableSpace Ω]
 /-- `gaussianConvolution X Z 0 = X` pointwise (uses `Real.sqrt 0 = 0`). -/
 @[entry_point]
 theorem gaussianConvolution_at_zero {Ω : Type*} (X Z : Ω → ℝ) :
-    Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z 0 = X := by
+    InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z 0 = X := by
   funext ω
-  simp [Common2026.Shannon.FisherInfoV2.gaussianConvolution]
+  simp [InformationTheory.Shannon.FisherInfoV2.gaussianConvolution]
 
 /-- `P.map (gaussianConvolution X Z 0) = P.map X`. -/
 theorem map_gaussianConvolution_at_zero {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) :
-    P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z 0) = P.map X := by
+    P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z 0) = P.map X := by
   rw [gaussianConvolution_at_zero]
 
 /-- `differentialEntropy (P.map (gaussianConvolution X Z 0)) =
 differentialEntropy (P.map X)`. -/
 theorem differentialEntropy_gaussianConvolution_at_zero
     {Ω : Type*} [MeasurableSpace Ω] (X Z : Ω → ℝ) (P : Measure Ω) :
-    Common2026.Shannon.differentialEntropy
-      (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z 0))
-      = Common2026.Shannon.differentialEntropy (P.map X) := by
+    InformationTheory.Shannon.differentialEntropy
+      (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z 0))
+      = InformationTheory.Shannon.differentialEntropy (P.map X) := by
   rw [map_gaussianConvolution_at_zero]
 
 /-! ### Phase B-4 — Gaussian per-time-point V2 family lift -/
@@ -712,7 +712,7 @@ noncomputable def isRegularDeBruijnHypV2_family_of_gaussian
     (_hX_law : P.map X = gaussianReal m v)
     (hZ_law : P.map Z = gaussianReal 0 1) :
     ∀ t : ℝ, 0 < t →
-      Common2026.Shannon.FisherInfoV2.IsRegularDeBruijnHypV2 X Z P t := by
+      InformationTheory.Shannon.FisherInfoV2.IsRegularDeBruijnHypV2 X Z P t := by
   intro t ht
   -- Phase 2.B 段 1 (foundation): `IsRegularDeBruijnHypV2` is now 2-field
   -- (regularity only). The `derivAt_entropy_eq_half_fisher_v2` field used to
@@ -777,12 +777,12 @@ theorem differentialEntropy_gaussianConvolution_of_gaussian
     (hX_law : P.map X = gaussianReal m v)
     (hZ_law : P.map Z = gaussianReal 0 1)
     {T : ℝ} (hT : 0 ≤ T) :
-    Common2026.Shannon.differentialEntropy
-      (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z T))
+    InformationTheory.Shannon.differentialEntropy
+      (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z T))
       = (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + T)) := by
-  rw [Common2026.Shannon.FisherInfoV2.gaussianConvolution_law_of_gaussian
+  rw [InformationTheory.Shannon.FisherInfoV2.gaussianConvolution_law_of_gaussian
         hX hZ hXZ hX_law hZ_law hT]
-  exact Common2026.Shannon.FisherInfoV2.differentialEntropy_gaussianReal_heat_path
+  exact InformationTheory.Shannon.FisherInfoV2.differentialEntropy_gaussianReal_heat_path
     m hv hT
 
 /-! ### Phase C-5 — Gaussian discharge of `IsDeBruijnTailHyp` (honest)
@@ -846,8 +846,8 @@ noncomputable def isDeBruijnTailHyp_of_gaussian
       Tendsto.const_mul_atTop hhalf_pos h_log
     -- Congr with entropy form on `T ≥ 0`.
     have h_entropy : Tendsto
-        (fun T : ℝ => Common2026.Shannon.differentialEntropy
-            (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z T))) atTop atTop := by
+        (fun T : ℝ => InformationTheory.Shannon.differentialEntropy
+            (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z T))) atTop atTop := by
       refine h_closed.congr' ?_
       filter_upwards [Filter.eventually_ge_atTop (0 : ℝ)] with T hT
       exact
@@ -881,8 +881,8 @@ theorem hasDerivAt_differentialEntropy_heat_flow_gaussian
     (hZ_law : P.map Z = gaussianReal 0 1)
     {s : ℝ} (hs : 0 < s) :
     HasDerivAt
-      (fun s' => Common2026.Shannon.differentialEntropy
-                  (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z s')))
+      (fun s' => InformationTheory.Shannon.differentialEntropy
+                  (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z s')))
       (1 / (2 * ((v : ℝ) + s))) s := by
   -- Step 1: re-derive the LHS identification (same approach as
   -- `deBruijn_identity_v2_gaussian`'s proof). We want
@@ -894,8 +894,8 @@ theorem hasDerivAt_differentialEntropy_heat_flow_gaussian
       exact lt_of_le_of_ne v.coe_nonneg (Ne.symm this)
     linarith
   have h_pos_nbhd : ∀ᶠ s' in nhds s, (0 : ℝ) < s' := eventually_gt_nhds hs
-  have h_eventually : (fun s' => Common2026.Shannon.differentialEntropy
-        (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z s')))
+  have h_eventually : (fun s' => InformationTheory.Shannon.differentialEntropy
+        (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z s')))
         =ᶠ[nhds s] (fun s' => (1/2 : ℝ) * Real.log
             (2 * Real.pi * Real.exp 1 * ((v : ℝ) + s'))) := by
     refine h_pos_nbhd.mono fun s' hs' => ?_
@@ -903,7 +903,7 @@ theorem hasDerivAt_differentialEntropy_heat_flow_gaussian
       hX hZ hXZ hv hX_law hZ_law hs'.le
   -- Step 2: derivative of the log form.
   have h_log_deriv :=
-    Common2026.Shannon.FisherInfoV2.hasDerivAt_half_log_gaussian_entropy
+    InformationTheory.Shannon.FisherInfoV2.hasDerivAt_half_log_gaussian_entropy
       (v := v) (s := s) hvs_pos
   -- Transfer. `congr_of_eventuallyEq` expects `f_entropy =ᶠ f_log`, which is
   -- our `h_eventually` (no `.symm` needed).
@@ -938,14 +938,14 @@ theorem continuousOn_differentialEntropy_heat_flow_gaussian
     (hZ_law : P.map Z = gaussianReal 0 1)
     {T : ℝ} (hT : 0 ≤ T) :
     ContinuousOn
-      (fun s' => Common2026.Shannon.differentialEntropy
-                  (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z s')))
+      (fun s' => InformationTheory.Shannon.differentialEntropy
+                  (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z s')))
       (Set.Icc 0 T) := by
   -- For `s' ∈ [0, T]` (so `s' ≥ 0`), the entropy equals the closed form
   -- `(1/2) log (2π e (v + s'))`, which is continuous.
   have h_eq_on : Set.EqOn
-      (fun s' => Common2026.Shannon.differentialEntropy
-        (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z s')))
+      (fun s' => InformationTheory.Shannon.differentialEntropy
+        (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z s')))
       (fun s' => (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * ((v : ℝ) + s')))
       (Set.Icc 0 T) := by
     intro s' hs'
@@ -1009,12 +1009,12 @@ theorem bounded_T_ftc_gaussian
     (hX_law : P.map X = gaussianReal m v)
     (hZ_law : P.map Z = gaussianReal 0 1)
     {T : ℝ} (hT : 0 ≤ T) :
-    Common2026.Shannon.differentialEntropy
-        (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z T))
-      - Common2026.Shannon.differentialEntropy (P.map X)
+    InformationTheory.Shannon.differentialEntropy
+        (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z T))
+      - InformationTheory.Shannon.differentialEntropy (P.map X)
       = ∫ t in Set.Ioo 0 T, 1 / (2 * ((v : ℝ) + t)) ∂volume := by
-  set f : ℝ → ℝ := fun s => Common2026.Shannon.differentialEntropy
-    (P.map (Common2026.Shannon.FisherInfoV2.gaussianConvolution X Z s)) with hf_def
+  set f : ℝ → ℝ := fun s => InformationTheory.Shannon.differentialEntropy
+    (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z s)) with hf_def
   set f' : ℝ → ℝ := fun s => 1 / (2 * ((v : ℝ) + s)) with hf'_def
   -- Step 1: continuity of `f` on `[0, T]`.
   have h_cont : ContinuousOn f (Set.Icc 0 T) :=
@@ -1037,7 +1037,7 @@ theorem bounded_T_ftc_gaussian
       ∫ s in (0 : ℝ)..T, f' s = f T - f 0 :=
     intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le hT h_cont h_deriv h_int
   -- Step 5: `f 0 = differentialEntropy (P.map X)` (boundary).
-  have h_f0 : f 0 = Common2026.Shannon.differentialEntropy (P.map X) := by
+  have h_f0 : f 0 = InformationTheory.Shannon.differentialEntropy (P.map X) := by
     simp [hf_def, differentialEntropy_gaussianConvolution_at_zero]
   -- Step 6: convert `∫ s in 0..T, f' s` → `∫ s in Set.Ioo 0 T, f' s ∂volume`.
   -- Use `intervalIntegral.integral_of_le` then `integral_Ioc_eq_integral_Ioo`.
@@ -1093,22 +1093,22 @@ Scope (per the Phase D mini-plan):
   `csiszarGap` shape for sister consumption.
 -/
 
-open Common2026.Shannon (heatFlowPath2 heatFlowPath2_zero heatFlowPath2_one
+open InformationTheory.Shannon (heatFlowPath2 heatFlowPath2_zero heatFlowPath2_one
   measurable_heatFlowPath2)
 
 /-- **Csiszár scaling gap function** (Phase D D-1-1 of
 `epi-debruijn-integration-phaseD-plan.md`).
 
 `csiszarGap X Y Z_X Z_Y P s` is the EPI gap at heat-flow path parameter
-`s ∈ [0, 1]` along the path `Common2026.Shannon.heatFlowPath2`:
+`s ∈ [0, 1]` along the path `InformationTheory.Shannon.heatFlowPath2`:
 
   `gap_s := entropyPower (P.map (heatFlowPath2 X Z_X s + heatFlowPath2 Y Z_Y s))
             − entropyPower (P.map (heatFlowPath2 X Z_X s))
             − entropyPower (P.map (heatFlowPath2 Y Z_Y s))`
 
 **Shape contract**: the body matches verbatim the lambda body of
-`Common2026.Shannon.IsStamToEPIScalingHyp`'s `AntitoneOn` argument
-(`Common2026/Shannon/EPIStamToBridge.lean:210-216`); the `rfl` lemma
+`InformationTheory.Shannon.IsStamToEPIScalingHyp`'s `AntitoneOn` argument
+(`InformationTheory/Shannon/EPIStamToBridge.lean:210-216`); the `rfl` lemma
 `csiszarGap_shape_for_sister` (D-4) confirms this. Sister
 `epi-stam-to-conclusion-plan` Phase A consumes this shape directly
 to discharge `IsStamToEPIScalingHyp` honestly.
@@ -1121,7 +1121,7 @@ required at the predicate level.
 consumes this definition transitively via `csiszarGap_eq_one_source_via_rescale`
 (A-0'-2, `:1311`, `@audit:ok`), which unfolds `csiszarGap csiszarGap1Source`
 inline (`:1478`) and feeds the rescale lift `csiszarGap_antitoneOn_Icc_zero_one`
-(`Common2026/Shannon/EPIStamToBridge.lean:912`). The pending `sorry` in
+(`InformationTheory/Shannon/EPIStamToBridge.lean:912`). The pending `sorry` in
 that consumer is a separate sub-plan (A-4-rescale), not a defect in the
 definition here. Body is a transparent `entropyPower - entropyPower - entropyPower`
 identification, no `Prop`-level claim bundling. -/
@@ -1135,7 +1135,7 @@ noncomputable def csiszarGap {Ω : Type*} [MeasurableSpace Ω]
 /-- **Endpoint at `s = 0`** (Phase D D-1-2). The Csiszár gap at the path
 start reduces to the EPI gap for the original `X, Y` (since
 `heatFlowPath2 X Z_X 0 = X` and `heatFlowPath2 Y Z_Y 0 = Y` by
-`Common2026.Shannon.heatFlowPath2_zero`).
+`InformationTheory.Shannon.heatFlowPath2_zero`).
 
 `@audit:ok` — 2026-05-27 independent honesty audit. Body is a genuine
 tactic proof (`unfold csiszarGap` + `funext` + `simp [heatFlowPath2_zero]`
@@ -1168,7 +1168,7 @@ Gaussian-saturation discharge via
 `= 0` is **not** a degenerate-definition exploit: it follows from the
 genuine equality case of EPI for independent standard normals, with
 hypothesis-borne `Z_X, Z_Y ∼ 𝒩(0, 1)` + independence. Referenced by Phase A
-A-4-4 (`Common2026/Shannon/EPIStamToBridge.lean:912`, docstring) as the
+A-4-4 (`InformationTheory/Shannon/EPIStamToBridge.lean:912`, docstring) as the
 `s = 1` endpoint connection in the rescale lift; A-4-4's pending `sorry`
 is a separate sub-plan, not a defect here. -/
 @[entry_point]
@@ -1208,7 +1208,7 @@ via the degeneration `Y := 0`, `Z_Y := 0`. The D-0 honesty check
 * `Y = 0, Z_Y = 0` makes `heatFlowPath2 0 0 s = 0` pointwise.
 * `P.map 0 = Measure.dirac 0`, and
   `entropyPower (Measure.dirac 0) = Real.exp (2 · 0) = 1` (via
-  `Common2026/Shannon/DifferentialEntropy.lean:147` `differentialEntropy_dirac`).
+  `InformationTheory/Shannon/DifferentialEntropy.lean:147` `differentialEntropy_dirac`).
 * So `csiszarGap X 0 Z_X 0 P s
     = entropyPower (P.map (heatFlowPath2 X Z_X s))
       − entropyPower (P.map (heatFlowPath2 X Z_X s)) − 1
@@ -1249,8 +1249,8 @@ degenerate-definition exploit that this note documents the rejection of.
 
 The `csiszarGap` (D-1-1) body matches verbatim the lambda body of the
 `AntitoneOn` argument of
-`Common2026.Shannon.IsStamToEPIScalingHyp`
-(`Common2026/Shannon/EPIStamToBridge.lean:210-216`). This `rfl` lemma
+`InformationTheory.Shannon.IsStamToEPIScalingHyp`
+(`InformationTheory/Shannon/EPIStamToBridge.lean:210-216`). This `rfl` lemma
 exposes that verbatim match so that sister Phase A can `simp` or
 `rw [← csiszarGap_shape_for_sister]` to re-express the sister predicate's
 internal `AntitoneOn` argument as `csiszarGap`, enabling structural
@@ -1284,7 +1284,7 @@ theorem csiszarGap_shape_for_sister
 The Phase D 2-source `csiszarGap` body is keyed to `heatFlowPath2 X Z s`
 (`s ∈ [0, 1]`, base `√(1-s)·X` is `s`-dependent), which does not align with the
 1-source form of de Bruijn V2 `derivAt_entropy_eq_half_fisher_v2`
-(`Common2026/Shannon/FisherInfoV2DeBruijn.lean:245`, keyed to
+(`InformationTheory/Shannon/FisherInfoV2DeBruijn.lean:245`, keyed to
 `gaussianConvolution X Z t = X + √t·Z`, base `X` is `t`-independent).
 Reparametrizing the 2-source form by `t := s/(1-s)` and pulling out the
 scale factor `√(1-s)` yields a 1-source equivalent form whose base is
@@ -1306,7 +1306,7 @@ Members:
 * A-0'-2 `csiszarGap_eq_one_source_via_rescale` — equivalence
   `csiszarGap _ s = (1-s) · csiszarGap1Source _ (s/(1-s))` for `s ∈ Set.Ico 0 1`,
   using `entropyPower_map_mul_const` (Phase B-2 lift,
-  `Common2026/Shannon/EPIPlumbing.lean:130`). Caller-side absolute continuity
+  `InformationTheory/Shannon/EPIPlumbing.lean:130`). Caller-side absolute continuity
   and entropy-integrand integrability hypotheses are passed as direct lemma
   arguments (honest pass-through, option (b) per the dispatch brief).
 * A-0'-3 `csiszarGap1Source_at_zero` — endpoint at `t = 0` reduces to the EPI
@@ -1326,7 +1326,7 @@ Members:
 sister `epi-stam-to-conclusion-plan` Phase A consumer).
 
 `csiszarGap1Source X Y Z_X Z_Y P t` is the EPI gap along the 1-source
-heat-flow path `Common2026.Shannon.FisherInfoV2.gaussianConvolution _ _ t`
+heat-flow path `InformationTheory.Shannon.FisherInfoV2.gaussianConvolution _ _ t`
 (`= _ + √t · _`, `t ∈ [0, ∞)`):
 
   `gap_t := entropyPower (P.map (X + Y + √t · (Z_X + Z_Y)))
@@ -1353,7 +1353,7 @@ no honesty audit at the predicate level.
 completed the sister-side consumption of this alias; A-0' shape contracts
 land via `csiszarGap_eq_one_source_via_rescale` (A-0'-2) and the
 A-5 chain `isStamToEPIScalingHyp_of_stam_debruijn` in
-`Common2026/Shannon/EPIStamToBridge.lean:926`. -/
+`InformationTheory/Shannon/EPIStamToBridge.lean:926`. -/
 @[entry_point]
 noncomputable def csiszarGap1Source {Ω : Type*} [MeasurableSpace Ω]
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) (t : ℝ) : ℝ :=
@@ -1458,7 +1458,7 @@ For `s ∈ Set.Ico 0 1`, the 2-source heat-flow path
 `heatFlowPath2 X Z s = √(1-s) · X + √s · Z` factors as
 `√(1-s) · (X + √(s/(1-s)) · Z) = √(1-s) · gaussianConvolution X Z (s/(1-s))`.
 Pulling out the scalar factor `√(1-s)` via `entropyPower_map_mul_const`
-(Phase B-2 lift, `Common2026/Shannon/EPIPlumbing.lean:130`,
+(Phase B-2 lift, `InformationTheory/Shannon/EPIPlumbing.lean:130`,
 `entropyPower (μ.map (· * c)) = c² · entropyPower μ`) yields the rescale
 equivalence `gap(s) = (1-s) · gap1Source(s/(1-s))`.
 
@@ -1472,7 +1472,7 @@ A-0'-2 integrability bridge resolution: option (b)).
 
 `@audit:ok` — Phase A A-4 (2026-05-27, `epi-stam-to-conclusion-phaseA-plan`)
 completed the consumption of this equivalence in
-`csiszarGap_antitoneOn_Icc_zero_one` (`Common2026/Shannon/EPIStamToBridge.lean:893`).
+`csiszarGap_antitoneOn_Icc_zero_one` (`InformationTheory/Shannon/EPIStamToBridge.lean:893`).
 The 6 carrier hypotheses (`h_ac_*`, `h_int_*`) are regularity preconditions,
 not load-bearing predicates. -/
 @[entry_point]
@@ -1546,7 +1546,7 @@ theorem csiszarGap_eq_one_source_via_rescale
         = (fun ω => Real.sqrt (1 - s) *
               (X ω + Y ω + Real.sqrt t * (Z_X ω + Z_Y ω))) := by
     funext ω
-    simp only [Pi.add_apply, Common2026.Shannon.heatFlowPath2_apply]
+    simp only [Pi.add_apply, InformationTheory.Shannon.heatFlowPath2_apply]
     have h_assoc : Real.sqrt (1 - s) * (Real.sqrt t * (Z_X ω + Z_Y ω))
         = Real.sqrt s * Z_X ω + Real.sqrt s * Z_Y ω := by
       rw [← mul_assoc, h_sqrt_mul_t]; ring
@@ -1560,7 +1560,7 @@ theorem csiszarGap_eq_one_source_via_rescale
       heatFlowPath2 X Z_X s
         = (fun ω => Real.sqrt (1 - s) * (X ω + Real.sqrt t * Z_X ω)) := by
     funext ω
-    simp only [Common2026.Shannon.heatFlowPath2_apply]
+    simp only [InformationTheory.Shannon.heatFlowPath2_apply]
     have h_assoc : Real.sqrt (1 - s) * (Real.sqrt t * Z_X ω) = Real.sqrt s * Z_X ω := by
       rw [← mul_assoc, h_sqrt_mul_t]
     have h_rhs_expand : Real.sqrt (1 - s) * (X ω + Real.sqrt t * Z_X ω)
@@ -1570,7 +1570,7 @@ theorem csiszarGap_eq_one_source_via_rescale
       heatFlowPath2 Y Z_Y s
         = (fun ω => Real.sqrt (1 - s) * (Y ω + Real.sqrt t * Z_Y ω)) := by
     funext ω
-    simp only [Common2026.Shannon.heatFlowPath2_apply]
+    simp only [InformationTheory.Shannon.heatFlowPath2_apply]
     have h_assoc : Real.sqrt (1 - s) * (Real.sqrt t * Z_Y ω) = Real.sqrt s * Z_Y ω := by
       rw [← mul_assoc, h_sqrt_mul_t]
     have h_rhs_expand : Real.sqrt (1 - s) * (Y ω + Real.sqrt t * Z_Y ω)
@@ -1653,7 +1653,7 @@ at the path start reduces to the EPI gap for the original `(X, Y)` (since
 
 `@audit:ok` — Phase A (2026-05-27, `epi-stam-to-conclusion-phaseA-plan`)
 consumed this endpoint identification in the antitonicity chain
-(`Common2026/Shannon/EPIStamToBridge.lean` A-3/A-4); body is a verbatim
+(`InformationTheory/Shannon/EPIStamToBridge.lean` A-3/A-4); body is a verbatim
 `Real.sqrt 0 = 0` reduction. -/
 @[entry_point]
 theorem csiszarGap1Source_at_zero {Ω : Type*} [MeasurableSpace Ω]
@@ -1704,7 +1704,7 @@ via `csiszarGap_eq_one_source_via_rescale` (A-0'-2).
 
 `@audit:ok` — Phase A (2026-05-27, `epi-stam-to-conclusion-phaseA-plan`)
 consumed this shape contract in sister derivative computations
-(`Common2026/Shannon/EPIStamToBridge.lean` A-2/A-3); body is `rfl`. -/
+(`InformationTheory/Shannon/EPIStamToBridge.lean` A-2/A-3); body is `rfl`. -/
 @[entry_point]
 theorem csiszarGap1Source_shape_for_sister
     {Ω : Type*} [MeasurableSpace Ω]

@@ -12,7 +12,7 @@ specified jointly rather than as `(p ⊗ₘ W)`.
 
 The coordinate random variables `iidXs`, `iidYs` and the joint sequence
 `jointSequence iidXs iidYs` are **reused verbatim** from
-`Common2026.Shannon.IIDProductInput`; only the underlying product measure
+`InformationTheory.Shannon.IIDProductInput`; only the underlying product measure
 differs (`Measure.infinitePi (fun _ => joint)` instead of
 `Measure.infinitePi (fun _ => jointDistribution p W)`).
 -/

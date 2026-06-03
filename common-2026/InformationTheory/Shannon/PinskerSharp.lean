@@ -7,12 +7,12 @@ import Mathlib.Analysis.SpecialFunctions.Log.Basic
 /-!
 # シャープ Pinsker 不等式 (定数 1/√2)
 
-Common2026 B-5' ムーンショット ([`docs/shannon/pinsker-sharp-moonshot-plan.md`])。
+InformationTheory B-5' ムーンショット ([`docs/shannon/pinsker-sharp-moonshot-plan.md`])。
 
 有限アルファベット `α` 上の確率測度 `P, Q` (`P ≪ Q`) について
 `tvNorm P Q ≤ √((klDiv P Q).toReal / 2)` を Lean 化 (Cover-Thomas 11.6 strict 形)。
 
-弱形 (`Common2026/Shannon/Pinsker.lean` の `tvNorm_le_sqrt_klDiv`, 定数 1, Bretagnolle-Huber 経路)
+弱形 (`InformationTheory/Shannon/Pinsker.lean` の `tvNorm_le_sqrt_klDiv`, 定数 1, Bretagnolle-Huber 経路)
 は touch せず、本ファイルで sharp 版を独立 publish。`tvNorm` 定義は弱形と共有 (`Pinsker.tvNorm`)。
 
 ## 主定理

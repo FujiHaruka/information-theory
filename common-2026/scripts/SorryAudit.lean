@@ -1,7 +1,7 @@
 /-
   scripts/SorryAudit.lean — sorry 影響範囲監査 (aggregate)
 
-  `Common2026/*.lean` (Draft/ 含む) の全 thm / def を `Lean.collectAxioms` で走査し、
+  `InformationTheory/*.lean` (Draft/ 含む) の全 thm / def を `Lean.collectAxioms` で走査し、
   `sorryAx` への推移的依存を 3 分類して count する。
 
   ## 出力
@@ -21,11 +21,11 @@ import InformationTheory
 
 open Lean
 
-namespace Common2026.SorryAudit
+namespace Tooling.SorryAudit
 
 structure Counts where
   envTotal         : Nat := 0  -- env.constants 全 visit 数 (Mathlib 込み)
-  inCommon2026     : Nat := 0  -- そのうち Common2026/*.lean で定義
+  inInformationTheory     : Nat := 0  -- そのうち InformationTheory/*.lean で定義
   internalFiltered : Nat := 0  -- そのうち isInternal で除外
   thmCount         : Nat := 0  -- そのうち theorem / lemma
   defCount         : Nat := 0  -- そのうち def / abbrev
@@ -44,7 +44,7 @@ def hasOwnSorry (env : Environment) (n : Name) : Bool :=
   | some (.axiomInfo v)  => v.type.hasSorry
   | _                    => false
 
-/-- `Common2026/*.lean` で定義された declaration を `getModuleIdxFor?` 経由で識別。
+/-- `InformationTheory/*.lean` で定義された declaration を `getModuleIdxFor?` 経由で識別。
     namespace prefix は project 全体で統一されていない (`InformationTheory.*` / `MACCode` 等
     多数) ため、module path で filter する。 -/
 def audit : MetaM Counts := do
@@ -54,11 +54,11 @@ def audit : MetaM Counts := do
   let mut c : Counts := {}
   for (n, info) in env.constants.toList do
     c := { c with envTotal := c.envTotal + 1 }
-    -- declaration が `Common2026/*.lean` で定義されたか
+    -- declaration が `InformationTheory/*.lean` で定義されたか
     let some modIdx := env.getModuleIdxFor? n | continue
     let modName := moduleNames[modIdx.toNat]!
     unless prefix'.isPrefixOf modName do continue
-    c := { c with inCommon2026 := c.inCommon2026 + 1 }
+    c := { c with inInformationTheory := c.inInformationTheory + 1 }
     if n.isInternal then
       c := { c with internalFiltered := c.internalFiltered + 1 }
       continue
@@ -82,15 +82,15 @@ def audit : MetaM Counts := do
       c := { c with sorryFree := c.sorryFree + 1 }
   return c
 
-end Common2026.SorryAudit
+end Tooling.SorryAudit
 
-open Common2026.SorryAudit in
+open Tooling.SorryAudit in
 #eval! show MetaM Unit from do
   let c ← audit
   let total := c.thmCount + c.defCount
-  IO.println s!"==== Common2026 sorry audit ===="
+  IO.println s!"==== InformationTheory sorry audit ===="
   IO.println s!"env.constants total                : {c.envTotal}"
-  IO.println s!"  defined in Common2026/*.lean     : {c.inCommon2026}"
+  IO.println s!"  defined in InformationTheory/*.lean     : {c.inInformationTheory}"
   IO.println s!"    internal (auto-gen) excluded   : {c.internalFiltered}"
   IO.println s!"    theorems                       : {c.thmCount}"
   IO.println s!"    definitions                    : {c.defCount}"

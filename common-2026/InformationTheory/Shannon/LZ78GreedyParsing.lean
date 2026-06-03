@@ -23,7 +23,7 @@ present file lays the **structural plumbing** for L-LZ4 discharge so
 that downstream callers can plug `lz78GreedyEncodingLength` into the
 parent `lz78EncodingLength` parameter slot of
 `lz78_asymptotic_optimality`
-(`Common2026/Shannon/LempelZiv78.lean`).
+(`InformationTheory/Shannon/LempelZiv78.lean`).
 
 ## File layout
 
@@ -75,7 +75,7 @@ parent `lz78EncodingLength` parameter slot of
 ## Pattern source
 
 This file follows the **partial-discharge layering** pattern of
-`Common2026/Shannon/LZ78ZivInequality.lean` (L-LZ1-A/B/C/D layering):
+`InformationTheory/Shannon/LZ78ZivInequality.lean` (L-LZ1-A/B/C/D layering):
 publish the tractable layers (concrete parsing + per-phrase + summed
 bit-length + the `count ≤ n` weak bound) as concrete theorems, expose
 deferred layers (sharper count-vs-n combinatorial bound) as hypothesis

@@ -93,22 +93,22 @@ Used inside `awgn_cond_entropy_eq_noise_entropy_of_const` to bring every fibre
 `awgnChannel N x = gaussianReal x N` to the noise-only form `gaussianReal 0 N`. -/
 theorem differentialEntropy_gaussianReal_mean_invariant
     (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
-    Common2026.Shannon.differentialEntropy (gaussianReal m v)
-      = Common2026.Shannon.differentialEntropy (gaussianReal 0 v) := by
-  have h1 : Common2026.Shannon.differentialEntropy (gaussianReal m v)
+    InformationTheory.Shannon.differentialEntropy (gaussianReal m v)
+      = InformationTheory.Shannon.differentialEntropy (gaussianReal 0 v) := by
+  have h1 : InformationTheory.Shannon.differentialEntropy (gaussianReal m v)
       = (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * v) :=
-    Common2026.Shannon.differentialEntropy_gaussianReal m hv
-  have h2 : Common2026.Shannon.differentialEntropy (gaussianReal 0 v)
+    InformationTheory.Shannon.differentialEntropy_gaussianReal m hv
+  have h2 : InformationTheory.Shannon.differentialEntropy (gaussianReal 0 v)
       = (1/2 : ℝ) * Real.log (2 * Real.pi * Real.exp 1 * v) :=
-    Common2026.Shannon.differentialEntropy_gaussianReal 0 hv
+    InformationTheory.Shannon.differentialEntropy_gaussianReal 0 hv
   rw [h1, h2]
 
 /-- Pointwise version on AWGN fibre: each fibre `awgnChannel N x = gaussianReal x N`
 has the same differential entropy as the noise alone. -/
 theorem differentialEntropy_awgnChannel_apply_eq_noise
     (N : ℝ≥0) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N) (x : ℝ) :
-    Common2026.Shannon.differentialEntropy ((awgnChannel N h_meas) x)
-      = Common2026.Shannon.differentialEntropy (gaussianReal 0 N) := by
+    InformationTheory.Shannon.differentialEntropy ((awgnChannel N h_meas) x)
+      = InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N) := by
   rw [awgnChannel_apply]
   exact differentialEntropy_gaussianReal_mean_invariant x hN
 
@@ -135,10 +135,10 @@ This is the continuous analogue of
 def IsAwgnMIDecomp (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) : Prop :=
   (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
       (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas)).toReal
-    = Common2026.Shannon.differentialEntropy
+    = InformationTheory.Shannon.differentialEntropy
         (InformationTheory.Shannon.ChannelCoding.outputDistribution
           (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas))
-      - (∫ x, Common2026.Shannon.differentialEntropy ((awgnChannel N h_meas) x)
+      - (∫ x, InformationTheory.Shannon.differentialEntropy ((awgnChannel N h_meas) x)
             ∂(gaussianReal 0 P.toNNReal))
 
 /-- **Primitive predicate 3: conditional entropy equals noise entropy.**
@@ -152,9 +152,9 @@ collapse is proved as `awgn_cond_entropy_eq_noise_entropy_of_const` below;
 this `def` is kept as a named hypothesis purely for symmetry with the
 deferred discharge structure. -/
 def IsAwgnCondEntropyEqNoise (P : ℝ) (N : ℝ≥0) (h_meas : IsAwgnChannelMeasurable N) : Prop :=
-  (∫ x, Common2026.Shannon.differentialEntropy ((awgnChannel N h_meas) x)
+  (∫ x, InformationTheory.Shannon.differentialEntropy ((awgnChannel N h_meas) x)
         ∂(gaussianReal 0 P.toNNReal))
-    = Common2026.Shannon.differentialEntropy (gaussianReal 0 N)
+    = InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N)
 
 /-! ## Phase C — Discharge of primitive 3 (`IsAwgnCondEntropyEqNoise`) -/
 
@@ -169,8 +169,8 @@ theorem awgn_cond_entropy_eq_noise_entropy_of_const
   unfold IsAwgnCondEntropyEqNoise
   -- The integrand is the constant `h(𝒩(0, N))`.
   have h_const : ∀ x,
-      Common2026.Shannon.differentialEntropy ((awgnChannel N h_meas) x)
-        = Common2026.Shannon.differentialEntropy (gaussianReal 0 N) :=
+      InformationTheory.Shannon.differentialEntropy ((awgnChannel N h_meas) x)
+        = InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N) :=
     fun x => differentialEntropy_awgnChannel_apply_eq_noise N hN h_meas x
   -- ∫ const ∂(gaussianReal 0 P) = const · (gaussianReal 0 P).real univ = const · 1.
   rw [integral_congr_ae (Filter.Eventually.of_forall (fun x => h_const x))]
@@ -199,9 +199,9 @@ theorem awgn_mi_bridge_of_primitives
     (h_cond : IsAwgnCondEntropyEqNoise P N h_meas) :
     (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
         (gaussianReal 0 P.toNNReal) (awgnChannel N h_meas)).toReal
-      = Common2026.Shannon.differentialEntropy
+      = InformationTheory.Shannon.differentialEntropy
             (gaussianReal 0 (P.toNNReal + N))
-        - Common2026.Shannon.differentialEntropy (gaussianReal 0 N) := by
+        - InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N) := by
   -- Step 1: MI decomposition.
   rw [h_decomp]
   -- Step 2: rewrite output marginal via primitive 1.
@@ -294,8 +294,8 @@ theorem awgn_mi_gaussian_closed_form_of_primitives
       linarith
     rw [hP_toNN] at hP0
     exact hP_pos.ne' hP0
-  rw [Common2026.Shannon.differentialEntropy_gaussianReal 0 hPN_NN,
-      Common2026.Shannon.differentialEntropy_gaussianReal 0 hN_NN]
+  rw [InformationTheory.Shannon.differentialEntropy_gaussianReal 0 hPN_NN,
+      InformationTheory.Shannon.differentialEntropy_gaussianReal 0 hN_NN]
   -- Step 3: pure log algebra: (1/2)[log(2πe(P+N)) - log(2πeN)] = (1/2) log((P+N)/N)
   --                          = (1/2) log(1 + P/N).
   have hN_pos : (0 : ℝ) < N := by

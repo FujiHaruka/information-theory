@@ -26,7 +26,7 @@ The conclusion-form target is `MonotoneOn _ (Set.Icc 0 1)`, chosen so that
 `HasDerivAt.sqrt`'s `f x ≠ 0` premise on both `√(1-s)` and `√s`.
 -/
 
-namespace Common2026.Shannon
+namespace InformationTheory.Shannon
 
 open MeasureTheory ProbabilityTheory Real
 open scoped ENNReal NNReal MeasureTheory
@@ -103,4 +103,4 @@ theorem heatFlowPath2_law {Ω : Type*} {_mΩ : MeasurableSpace Ω}
     measurable_const.mul hZ
   rw [h_indep.map_add_eq_map_conv_map h_meas_X h_meas_Z, h_sqrtZ_map]
 
-end Common2026.Shannon
+end InformationTheory.Shannon

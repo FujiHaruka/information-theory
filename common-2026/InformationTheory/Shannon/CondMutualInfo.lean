@@ -20,7 +20,7 @@ Shannon ムーンショット ([`docs/shannon/shannon-moonshot-plan.md`](../../.
 を参照。Markov 定式化は **β 形式** (condDistrib 等式形) を採用、Mathlib
 `condIndepFun_iff_condDistrib_prod_ae_eq_prodMkRight` (`Conditional.lean:867`) と直結する。
 
-主応用: `Common2026/Shannon/Converse.lean` 末尾の `shannon_converse_single_shot_markov_encoder`
+主応用: `InformationTheory/Shannon/Converse.lean` 末尾の `shannon_converse_single_shot_markov_encoder`
 (Markov chain `Msg → encoder ∘ Msg → Yo` ⇒ `I(Msg; Yo) ≤ I(encoder ∘ Msg; Yo)` で encoder を
 含む single-shot converse を導く)。
 -/

@@ -8,7 +8,7 @@ import Mathlib.MeasureTheory.Measure.Dirac
 /-!
 # 最大エントロピー (Gibbs 不等式)
 
-Common2026 B-6 ムーンショット ([`docs/shannon/max-entropy-moonshot-plan.md`])。
+InformationTheory B-6 ムーンショット ([`docs/shannon/max-entropy-moonshot-plan.md`])。
 
 有限アルファベット `α` 上の確率変数 `X : Ω → α` について、
 `entropy μ X ≤ Real.log (Fintype.card α)`、

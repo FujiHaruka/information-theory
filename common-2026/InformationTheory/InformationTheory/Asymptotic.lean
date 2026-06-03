@@ -24,7 +24,7 @@ wrapper を提供する漸近系 / rate 系 API 層。
 - notation `≐` は `scoped[InformationTheory.Asymptotic]` で限定。`open InformationTheory.Asymptotic`
   した callsite だけが見る
 - positivity hypothesis は述語に組み込まず、bridge / mul / inv の引数で要求する
-- 既存 `Common2026/Shannon/AEPRate.lean` (905 行) は不変。本ファイルは抽象 wrapper
+- 既存 `InformationTheory/Shannon/AEPRate.lean` (905 行) は不変。本ファイルは抽象 wrapper
   `exp_decay_N_of_pos` を追加するのみ、callsite migration は範囲外
 -/
 
@@ -150,7 +150,7 @@ lemma dotEq_iff_tendsto_log_div (a b : ℕ → ℝ) (hPos : ∀ n, 0 < a n ∧ 0
 /-- **Closed-form `N` for `exp(-n·g) < ε'`** (rate extraction wrapper).
   For `g, ε' > 0`, the witness `N := ⌈max 0 (-Real.log ε' / g)⌉ + 1` works.
 
-  既存 `Common2026/Shannon/AEPRate.lean:323` の `exp_neg_mul_lt_of_rate` の
+  既存 `InformationTheory/Shannon/AEPRate.lean:323` の `exp_neg_mul_lt_of_rate` の
   family-agnostic 版。本 I-3 では abstract wrapper のみ publish、既存 callsite
   migration は本タスク範囲外。 -/
 @[entry_point]

@@ -102,7 +102,7 @@ open InformationTheory.Shannon.EPIL3Integration
 open InformationTheory.Shannon.EPIStamToBridge
 open InformationTheory.Shannon.EPIStamInequalityBody
 open InformationTheory.Shannon.EPIStamStep3Body
-open Common2026.Shannon.FisherInfoV2
+open InformationTheory.Shannon.FisherInfoV2
 
 /-! ## §1 — de Bruijn gap-monotonicity engine -/
 

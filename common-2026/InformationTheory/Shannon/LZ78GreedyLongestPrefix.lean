@@ -8,7 +8,7 @@ import Mathlib.Data.List.Basic
 /-!
 # LZ78 longest-prefix greedy parsing — Phase A: distinct-phrase invariant (T4-A)
 
-`Common2026/Shannon/LZ78GreedyParsingImpl.lean` published a structurally
+`InformationTheory/Shannon/LZ78GreedyParsingImpl.lean` published a structurally
 valid LZ78 parsing whose worker `lz78GreedyParseAux` is, on inspection,
 **one-symbol-per-step** (it always feeds the dictionary the singleton
 `[s]`, so every phrase consumes exactly one symbol and `count = n`,

@@ -8,7 +8,7 @@ import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 /-!
 # Cramér L-C2 discharge (T1-C follow-up) — Phase A scaffolding (L-D3 retreat)
 
-The parent file `Common2026/Shannon/Cramer.lean` publishes `cramer_lower`,
+The parent file `InformationTheory/Shannon/Cramer.lean` publishes `cramer_lower`,
 `cramer_lower_legendre`, and `cramer_tendsto` in **L-C2 hypothesis-form**: the
 caller must supply `h_tilted_lower`, a tilted-side lower bound on the upper
 tail probability of an i.i.d. sample sum.

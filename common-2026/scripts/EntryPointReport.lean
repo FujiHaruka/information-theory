@@ -1,8 +1,8 @@
 /-
   scripts/EntryPointReport.lean — 証明済み主定理カタログ
 
-  `@[entry_point]` (`Common2026/Meta/EntryPoint.lean`) でマークされた
-  `Common2026.*` 配下の主定理を列挙し、**proven**（sorry に依存しない）と
+  `@[entry_point]` (`InformationTheory/Meta/EntryPoint.lean`) でマークされた
+  `InformationTheory.*` 配下の主定理を列挙し、**proven**（sorry に依存しない）と
   **staged**（推移閉包に `sorryAx` を含む）に分けて module 単位でレポートする。
 
   `@[entry_point]` は orphan 検出の BFS root マーカーであって「証明完成」を
@@ -11,10 +11,10 @@
 
   ## 判定方法（sorry 伝播の固定点）
 
-  Mathlib は sorry-free なので、`sorryAx` への依存は必ず `Common2026.*`
-  declaration を経由する。各 Common2026 decl について
+  Mathlib は sorry-free なので、`sorryAx` への依存は必ず `InformationTheory.*`
+  declaration を経由する。各 InformationTheory decl について
     - 自身の body/type が `sorryAx` を直接参照するか（= 直接 sorry）
-    - どの Common2026 decl を参照するか（伝播辺）
+    - どの InformationTheory decl を参照するか（伝播辺）
   を集め、直接 sorry 集合から逆辺を BFS して「sorry に到達する」decl 全体
   （tainted）を求める。entry_point のうち tainted を staged、残りを proven
   とする。`collectAxioms` を decl 毎に呼ぶより 1 パスで安い。
@@ -29,10 +29,10 @@ import InformationTheory.Meta.EntryPoint
 
 open Lean
 
-namespace Common2026.EntryPointReport
+namespace Tooling.EntryPointReport
 
-/-- declaration が `Common2026/*.lean` で定義されたか（FindOrphans 流儀）。 -/
-def isInCommon2026 (env : Environment) (n : Name) : Bool :=
+/-- declaration が `InformationTheory/*.lean` で定義されたか（FindOrphans 流儀）。 -/
+def isInInformationTheory (env : Environment) (n : Name) : Bool :=
   match env.getModuleIdxFor? n with
   | none => false
   | some idx =>
@@ -78,20 +78,20 @@ structure Report where
 def run : MetaM Report := do
   let env ← getEnv
   let sorryName : Name := `sorryAx
-  -- Step 1: Common2026 decl を走査し、entry_point / 直接 sorry / 逆辺を収集
+  -- Step 1: InformationTheory decl を走査し、entry_point / 直接 sorry / 逆辺を収集
   let mut entryPoints : Array Name := #[]
   let mut directSorry : Array Name := #[]
   let mut revAdj : Std.HashMap Name (Array Name) := {}
   for (n, _) in env.constants.toList do
-    unless isInCommon2026 env n do continue
+    unless isInInformationTheory env n do continue
     if n.isInternal then continue
-    if Common2026.Meta.entryPointAttr.hasTag env n then
+    if InformationTheory.Meta.entryPointAttr.hasTag env n then
       entryPoints := entryPoints.push n
     let refs := refsOf env n
     if refs.contains sorryName then
       directSorry := directSorry.push n
     for r in refs.toList do
-      if isInCommon2026 env r && ! r.isInternal then
+      if isInInformationTheory env r && ! r.isInternal then
         let cur := revAdj.getD r #[]
         revAdj := revAdj.insert r (cur.push n)
   -- Step 2: 直接 sorry 集合から逆辺を BFS して tainted（sorry 到達）を確定
@@ -164,22 +164,22 @@ def renderGroups (env : Environment) (names : Array Name) : Array String := Id.r
     lines := lines.push ""
   return lines
 
-end Common2026.EntryPointReport
+end Tooling.EntryPointReport
 
 /-- 詳細レポートの出力先（project root からの相対 path）。 -/
 def reportPath : System.FilePath := "scripts/entry-points-report.txt"
 
-open Common2026.EntryPointReport in
+open Tooling.EntryPointReport in
 #eval! show MetaM Unit from do
   let env ← getEnv
   let r ← run
-  IO.println "==== Common2026 main-theorem catalogue (@[entry_point]) ===="
+  IO.println "==== InformationTheory main-theorem catalogue (@[entry_point]) ===="
   IO.println s!"Entry points (主定理マーク)  : {r.total}"
   IO.println s!"  proven (sorry-free)       : {r.provenCount}"
   IO.println s!"  staged (uses sorryAx)     : {r.stagedCount}"
   IO.println s!"Detailed report             : {reportPath}"
   let mut lines : Array String := #[]
-  lines := lines.push "==== Common2026 証明済み主定理一覧 (@[entry_point], sorry-free) ===="
+  lines := lines.push "==== InformationTheory 証明済み主定理一覧 (@[entry_point], sorry-free) ===="
   lines := lines.push s!"Entry points total : {r.total}"
   lines := lines.push s!"  proven           : {r.provenCount}"
   lines := lines.push s!"  staged           : {r.stagedCount}"

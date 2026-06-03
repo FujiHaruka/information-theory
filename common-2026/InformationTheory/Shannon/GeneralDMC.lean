@@ -59,7 +59,7 @@ the relevant hypothesis as an explicit argument), per the plan.
 
 * `docs/shannon/general-dmc-plan.md`
 * `docs/shannon/general-dmc-mathlib-inventory.md`
-* `Common2026/Shannon/BlockwiseChannel.lean`
+* `InformationTheory/Shannon/BlockwiseChannel.lean`
 -/
 
 namespace InformationTheory.Shannon.GeneralDMC

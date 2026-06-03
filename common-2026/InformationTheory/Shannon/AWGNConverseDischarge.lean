@@ -20,7 +20,7 @@ Gaussian max-entropy + sum-form integration) を組み立てる。
 `IsAwgnConverseFeasible` + 3 sub-bound predicate
 (`PerLetterIntegrabilityForConverse` / `ContinuousMIChainRuleForConverse` /
 `MarkovChainForConverse`) を削除し、各 analytic content を
-`Common2026/Shannon/AwgnWalls.lean` の shared sorry 補題に格上げ (Tier 3 →
+`InformationTheory/Shannon/AwgnWalls.lean` の shared sorry 補題に格上げ (Tier 3 →
 Tier 2)。consumer は wall 補題を呼ぶ普通の lemma call に縮約 (本 file scope は
 0 sorry、残る Mathlib 壁は AwgnWalls.lean 側の sorry に集約)。
 
@@ -140,7 +140,7 @@ noncomputable def jointMIXnYn
 **2026-05-28 Phase 3-α (`awgn-m5-sorry-migration-plan.md`)**: 旧 3 sub-bound predicate
 (`PerLetterIntegrabilityForConverse` / `ContinuousMIChainRuleForConverse` /
 `MarkovChainForConverse`) + bundle `IsAwgnConverseFeasible` を削除し、各 analytic
-content を `Common2026/Shannon/AwgnWalls.lean` の shared sorry 補題に格上げした
+content を `InformationTheory/Shannon/AwgnWalls.lean` の shared sorry 補題に格上げした
 (Tier 3 `@audit:retract-candidate(load-bearing-predicate)` → Tier 2 `sorry` +
 `@residual(wall:…)`)。consumer (`isAwgnConverseFeasible_discharger` /
 `awgn_converse_F3_discharged`) は wall 補題を呼ぶ普通の lemma call に縮約。
@@ -157,7 +157,7 @@ content を `Common2026/Shannon/AwgnWalls.lean` の shared sorry 補題に格上
 
 /-! ## Phase B-Fano skeleton (本 commit は signature + sorry のみ)
 
-`shannon_converse_single_shot` (`Common2026/Shannon/Converse.lean:81`) を
+`shannon_converse_single_shot` (`InformationTheory/Shannon/Converse.lean:81`) を
 `X := Fin M, Y := Fin n → ℝ, decoder := c.decoder, μ := awgnConverseJoint c h_meas`
 で 1 行呼出。Fano + DPI postprocess + entropy chain + `H(W uniform) = log M` を
 集約。 -/
@@ -321,7 +321,7 @@ private lemma awgn_errorProb_eq_fano_errorProb
 Both require the analytic content of (a) joint AC w.r.t. product of marginals
 when `Y = Fin n → ℝ` is continuous, and (b) llr integrability at n-dim — which is
 the classical Mathlib wall for continuous-Y mutual information finiteness.
-Common2026 既存 `mutualInfo_ne_top` (`MutualInfo.lean:197`) は **両側 `[Fintype]`
+InformationTheory 既存 `mutualInfo_ne_top` (`MutualInfo.lean:197`) は **両側 `[Fintype]`
 要求** で AWGN converse `Y := Fin n → ℝ` (continuous) で reuse 不可。
 
 The per-letter `klDiv_ne_top` (`Mathlib InformationTheory.klDiv_ne_top`) route via
@@ -881,8 +881,8 @@ theorem awgn_per_letter_mi_le_log_var
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P)
     (h_mi_bridge_per_letter :
         ∀ i : Fin n, (perLetterMI h_meas c i).toReal
-          = Common2026.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
-            - Common2026.Shannon.differentialEntropy
+          = InformationTheory.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
+            - InformationTheory.Shannon.differentialEntropy
                 (ProbabilityTheory.gaussianReal 0 N))
     (i : Fin n) :
     (perLetterMI h_meas c i).toReal
@@ -937,15 +937,15 @@ theorem awgn_per_letter_mi_le_log_var
         MeasureTheory.volume := awgnPerLetterIntegrability_holds h_meas c i
   -- Apply Gaussian max-entropy upper bound.
   have h_max_ent :
-      Common2026.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
+      InformationTheory.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
         ≤ (1 / 2) * Real.log (2 * Real.pi * Real.exp 1 * (v : ℝ)) :=
-    Common2026.Shannon.differentialEntropy_le_gaussian_of_variance_le
+    InformationTheory.Shannon.differentialEntropy_le_gaussian_of_variance_le
       h_mu_ac m hv_ne h_mean h_var h_var_int h_ent_int
   -- `h(gaussianReal 0 N) = (1/2) log(2πe N)`.
   have h_gauss_ent :
-      Common2026.Shannon.differentialEntropy (ProbabilityTheory.gaussianReal 0 N)
+      InformationTheory.Shannon.differentialEntropy (ProbabilityTheory.gaussianReal 0 N)
         = (1 / 2) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ)) :=
-    Common2026.Shannon.differentialEntropy_gaussianReal 0 hN_ne_nnreal
+    InformationTheory.Shannon.differentialEntropy_gaussianReal 0 hN_ne_nnreal
   -- Combine via bridge.
   rw [h_mi_bridge_per_letter i, h_gauss_ent]
   -- Goal: h(Y) - (1/2) log(2πeN) ≤ (1/2) log(1 + S²/N).
@@ -969,7 +969,7 @@ theorem awgn_per_letter_mi_le_log_var
     linarith
   -- Chain: h(Y) - h(Z) ≤ (1/2) log(2πe·v) - (1/2) log(2πe·N)
   --       = (1/2) log(v/N) = (1/2) log(1 + S²/N).
-  calc Common2026.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
+  calc InformationTheory.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
         - (1 / 2) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ))
       ≤ (1 / 2) * Real.log (2 * Real.pi * Real.exp 1 * (v : ℝ))
         - (1 / 2) * Real.log (2 * Real.pi * Real.exp 1 * (N : ℝ)) := by linarith
@@ -994,7 +994,7 @@ theorem sum_log_one_add_le_n_log_one_add_avg
   -- `f x := log(1 + x/N)` is concave on `Ici 0`.
   set f : ℝ → ℝ := fun x => Real.log (1 + x / N) with hf_def
   have hf_concave : ConcaveOn ℝ (Set.Ici (0 : ℝ)) f :=
-    Common2026.Shannon.concaveOn_log_one_add_div hN_pos
+    InformationTheory.Shannon.concaveOn_log_one_add_div hN_pos
   have hn_real_pos : (0 : ℝ) < (n : ℝ) := by exact_mod_cast hn_pos
   have hn_ne : (n : ℝ) ≠ 0 := ne_of_gt hn_real_pos
   -- Uniform weights `wᵢ := 1/n`.
@@ -1054,8 +1054,8 @@ theorem awgn_sum_per_letter_mi_le_n_capacity
     {M n : ℕ} [NeZero M] (hn_pos : 0 < n) (c : AwgnCode M n P)
     (h_mi_bridge_per_letter :
         ∀ i : Fin n, (perLetterMI h_meas c i).toReal
-          = Common2026.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
-            - Common2026.Shannon.differentialEntropy
+          = InformationTheory.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
+            - InformationTheory.Shannon.differentialEntropy
                 (ProbabilityTheory.gaussianReal 0 N)) :
     ∑ i : Fin n, (perLetterMI h_meas c i).toReal
       ≤ (n : ℝ) * ((1 / 2) * Real.log (1 + P / (N : ℝ))) := by
@@ -1174,8 +1174,8 @@ theorem isAwgnConverseFeasible_discharger
     (h_mi_bridge_per_letter :
         ∀ {M n : ℕ} [NeZero M] (_hM : 2 ≤ M) (c : AwgnCode M n P), ∀ i : Fin n,
           (perLetterMI h_meas c i).toReal
-            = Common2026.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
-              - Common2026.Shannon.differentialEntropy
+            = InformationTheory.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
+              - InformationTheory.Shannon.differentialEntropy
                   (ProbabilityTheory.gaussianReal 0 N))
     {M n : ℕ} [NeZero M] (hM : 2 ≤ M) (hn_pos : 0 < n) (c : AwgnCode M n P)
     (Pe : ℝ) (hPe : Pe = ((1 / M : ℝ) * ∑ m : Fin M,
@@ -1218,8 +1218,8 @@ theorem awgn_converse_F3_discharged
     (h_mi_bridge_per_letter :
         ∀ {M n : ℕ} [NeZero M] (_hM : 2 ≤ M) (c : AwgnCode M n P), ∀ i : Fin n,
           (perLetterMI h_meas c i).toReal
-            = Common2026.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
-              - Common2026.Shannon.differentialEntropy
+            = InformationTheory.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
+              - InformationTheory.Shannon.differentialEntropy
                   (ProbabilityTheory.gaussianReal 0 N))
     {M n : ℕ} (hM : 2 ≤ M) (hn_pos : 0 < n) (c : AwgnCode M n P)
     (Pe : ℝ) (hPe : Pe = ((1 / M : ℝ) * ∑ m : Fin M,

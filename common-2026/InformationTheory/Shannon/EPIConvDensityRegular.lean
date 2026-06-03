@@ -11,7 +11,7 @@ For an arbitrary probability density `pX` (nonnegativity + measurability +
 integrability + positive mass) and the Gaussian heat kernel
 `g_t = gaussianPDFReal 0 ⟨t, _⟩` (`t > 0`), the convolution density
 `convDensityAdd pX g_t` is a *regular density* in the V2 sense
-(`Common2026.Shannon.FisherInfoV2.IsRegularDensityV2`).
+(`InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2`).
 
 All six fields are discharged from existing `@audit:ok` infrastructure:
 
@@ -26,7 +26,7 @@ All six fields are discharged from existing `@audit:ok` infrastructure:
 All hypotheses on `pX` are regularity preconditions (no load-bearing core).
 -/
 
-namespace Common2026.Shannon.EPIConvDensityRegular
+namespace InformationTheory.Shannon.EPIConvDensityRegular
 
 open MeasureTheory Real ProbabilityTheory
 open scoped NNReal
@@ -121,8 +121,8 @@ theorem deriv_convDensityAdd_eq {pX : ℝ → ℝ} {t : ℝ} (ht : 0 < t)
   have hv_ne : (⟨t, ht.le⟩ : ℝ≥0) ≠ 0 := by
     intro h; exact ht.ne' (congrArg NNReal.toReal h)
   set g : ℝ → ℝ := gaussianPDFReal 0 ⟨t, ht.le⟩ with hg
-  have hregY : Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 g :=
-    Common2026.Shannon.EPIBlachmanGaussianWitness.isRegularDensityV2_gaussianPDFReal hv_ne
+  have hregY : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 g :=
+    InformationTheory.Shannon.EPIBlachmanGaussianWitness.isRegularDensityV2_gaussianPDFReal hv_ne
   have hY_bdd : ∃ M : ℝ, ∀ w, |g w| ≤ M :=
     ⟨_, gaussianPDFReal_abs_le ⟨t, ht.le⟩⟩
   have hY'_bdd : ∃ M : ℝ, ∀ w, |deriv g w| ≤ M := deriv_gaussianPDFReal_abs_le hv_ne
@@ -170,7 +170,7 @@ theorem tendsto_convDensityAdd_gaussian_zero {pX : ℝ → ℝ} {v : ℝ≥0}
   have hF_meas : ∀ᶠ z in l, AEStronglyMeasurable (fun x => pX x * g (z - x)) volume := by
     refine Filter.Eventually.of_forall (fun z => ?_)
     have hg_cont : Continuous g := by
-      rw [hg]; exact (Common2026.Shannon.differentiable_gaussianPDFReal 0 v).continuous
+      rw [hg]; exact (InformationTheory.Shannon.differentiable_gaussianPDFReal 0 v).continuous
     exact hpX_int.aestronglyMeasurable.mul
       ((hg_cont.comp (continuous_const.sub continuous_id)).aestronglyMeasurable)
   have hbound : ∀ᶠ z in l, ∀ᵐ x ∂volume, ‖pX x * g (z - x)‖ ≤ pX x * M := by
@@ -204,20 +204,20 @@ theorem isRegularDensityV2_convDensityAdd_gaussian (pX : ℝ → ℝ) {t : ℝ} 
     (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume)
     (hpX_mass : 0 < ∫ x, pX x ∂volume) :
-    Common2026.Shannon.FisherInfoV2.IsRegularDensityV2
+    InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
       (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
         (ProbabilityTheory.gaussianPDFReal 0 ⟨t, ht.le⟩)) := by
   have hv_ne : (⟨t, ht.le⟩ : ℝ≥0) ≠ 0 := by
     intro h; exact ht.ne' (congrArg NNReal.toReal h)
   set g : ℝ → ℝ := gaussianPDFReal 0 ⟨t, ht.le⟩ with hg
-  have hregY : Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 g :=
-    Common2026.Shannon.EPIBlachmanGaussianWitness.isRegularDensityV2_gaussianPDFReal hv_ne
+  have hregY : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 g :=
+    InformationTheory.Shannon.EPIBlachmanGaussianWitness.isRegularDensityV2_gaussianPDFReal hv_ne
   have hY_bdd : ∃ M : ℝ, ∀ w, |g w| ≤ M :=
     ⟨_, gaussianPDFReal_abs_le ⟨t, ht.le⟩⟩
   have hY'_bdd : ∃ M : ℝ, ∀ w, |deriv g w| ≤ M := deriv_gaussianPDFReal_abs_le hv_ne
   -- `deriv g` integrability + measurability (for the envelope)
   have hg'_int : Integrable (deriv g) volume :=
-    Common2026.Shannon.integrable_deriv_gaussianPDFReal 0 hv_ne
+    InformationTheory.Shannon.integrable_deriv_gaussianPDFReal 0 hv_ne
   have hg'_meas : Measurable (deriv g) := measurable_deriv g
   -- derivative identification
   have hderiv_eq : deriv (convDensityAdd pX g) = convDensityAdd pX (deriv g) :=
@@ -235,7 +235,7 @@ theorem isRegularDensityV2_convDensityAdd_gaussian (pX : ℝ → ℝ) {t : ℝ} 
         pX g hpX_int hregY hY_bdd hY'_bdd
   · -- pos
     intro x
-    exact Common2026.Shannon.FisherInfoV2.convDensityAdd_pos
+    exact InformationTheory.Shannon.FisherInfoV2.convDensityAdd_pos
       pX hpX_nn hpX_int hpX_mass ht x
   · -- tail_bot
     exact tendsto_convDensityAdd_gaussian_zero hv_ne hpX_nn hpX_int (Or.inr Filter.tendsto_id)
@@ -243,7 +243,7 @@ theorem isRegularDensityV2_convDensityAdd_gaussian (pX : ℝ → ℝ) {t : ℝ} 
     exact tendsto_convDensityAdd_gaussian_zero hv_ne hpX_nn hpX_int (Or.inl Filter.tendsto_id)
   · -- integrable_deriv
     rw [hderiv_eq]
-    exact Common2026.Shannon.FisherInfoV2.convDensityAdd_envelope_integrable
+    exact InformationTheory.Shannon.FisherInfoV2.convDensityAdd_envelope_integrable
       pX (deriv g) hpX_int hpX_meas hg'_int hg'_meas
   · -- integral_deriv_eq_zero
     rw [hderiv_eq]
@@ -280,8 +280,8 @@ theorem isRegularDensityV2_convDensityAdd_gaussian (pX : ℝ → ℝ) {t : ℝ} 
       intro x
       simp only [hf]
       rw [integral_const_mul, integral_sub_right_eq_self (fun z => deriv g z) x,
-        Common2026.Shannon.integral_deriv_gaussianPDFReal_eq_zero 0 hv_ne, mul_zero]
+        InformationTheory.Shannon.integral_deriv_gaussianPDFReal_eq_zero 0 hv_ne, mul_zero]
     simp_rw [hinner]
     exact integral_zero _ _
 
-end Common2026.Shannon.EPIConvDensityRegular
+end InformationTheory.Shannon.EPIConvDensityRegular

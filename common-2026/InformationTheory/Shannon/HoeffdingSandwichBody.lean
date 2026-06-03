@@ -53,7 +53,7 @@ Per the L-H4 retreat lines:
 
 * **Retreat L-H4-FB** (boundary full discharge): for **boundary values of α**
   — namely `α = 0` and `α ≥ klDivPmf P₂ P₁` — we **fully discharge** the
-  full-support claim from already-published Mathlib + Common2026 API:
+  full-support claim from already-published Mathlib + InformationTheory API:
 
   - `α = 0`: `klDivPmf Q P₁ ≤ 0` combined with `klDivPmf_nonneg` forces
     `klDivPmf Q P₁ = 0`. By `klDivPmf_eq_zero_iff_pmf`, `Q = P₁`. Hence the
@@ -128,7 +128,7 @@ requires a `HasDerivAt` + `Real.log` singularity computation on the directional
 derivative of `klDivPmf · P₂` at a `0`-atom (~30-50 行).
 
 For **boundary** values of `α` (namely `α = 0` and `α ≥ klDivPmf P₂ P₁`), the
-predicate is fully discharged from existing Mathlib + Common2026 API
+predicate is fully discharged from existing Mathlib + InformationTheory API
 (see Phase 2 below). -/
 def IsHoeffdingMinimizerFullSupport (Qstar : α → ℝ) : Prop :=
   ∀ a, 0 < Qstar a

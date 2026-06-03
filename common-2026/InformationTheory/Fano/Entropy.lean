@@ -11,7 +11,7 @@ support-restricted maximum-entropy bound (Jensen on `Real.negMulLog`), the
 universe-wide specialization, and the Dirac-collapse identity.
 
 > **Formalism boundary (2026-05-10)**: `entropyOfFn` は **PMF 形** (関数
-> `α → ℝ` の和) で、Phase 1 Fano core (`Common2026/Fano/Core.lean`) 専用です。
+> `α → ℝ` の和) で、Phase 1 Fano core (`InformationTheory/Fano/Core.lean`) 専用です。
 > Shannon converse / Han / measure-theoretic Fano では **測度形**
 > `Shannon.Bridge.entropy μ Xs := ∑ x, Real.negMulLog ((μ.map Xs).real {x})`
 > を使用します。両者は parallel formalism、相互依存なし。

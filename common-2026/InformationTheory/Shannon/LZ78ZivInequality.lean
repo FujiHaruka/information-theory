@@ -13,7 +13,7 @@ This file publishes the **combinatorial counting plumbing** layer of
 Ziv's inequality (Cover–Thomas Lemma 13.5.5; the upper-bound half of the
 LZ78 asymptotic optimality theorem). It is a **partial discharge** of
 the `IsZivInequalityPassthrough` placeholder published in
-`Common2026/Shannon/LempelZiv78.lean` (2026-05-19): the *combinatorial*
+`InformationTheory/Shannon/LempelZiv78.lean` (2026-05-19): the *combinatorial*
 layer (Nat-level phrase-space cardinality bound) is fully discharged
 here as concrete `theorem`s, while the *entropy* layer
 (`H(X^n) ≤ Σ H(phrase_i)`) and the *log-sum* layer (final Ziv form)
@@ -49,7 +49,7 @@ remain in scope of future discharge plans.
 ## Pattern source
 
 The "extract the most tractable fragments" pattern is the same as
-`Common2026/Shannon/WynerZivDischarge.lean` (T3-D L-WZ3 partial discharge):
+`InformationTheory/Shannon/WynerZivDischarge.lean` (T3-D L-WZ3 partial discharge):
 the parent placeholder is *not* fully discharged; the file publishes the
 fragments that are tractable now plus a real-valued predicate exposing
 the layered shape, with `.trivial` bridges to the parent placeholder.

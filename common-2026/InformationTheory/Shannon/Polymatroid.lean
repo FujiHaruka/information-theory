@@ -266,7 +266,7 @@ Joint entropy as a `Combinatorics.Polymatroid` term: the four polymatroid
 axioms are exactly the three theorems above (`jointEntropySubset_empty` /
 `jointEntropySubset_mono` / `jointEntropySubset_submodular`), repackaged
 into the `Polymatroid` structure introduced in
-`Common2026/Polymatroid/Basic.lean`. -/
+`InformationTheory/Polymatroid/Basic.lean`. -/
 
 /-- Joint entropy as a polymatroid rank function. -/
 @[entry_point]

@@ -1,4 +1,4 @@
-==== Common2026 証明済み主定理一覧 (@[entry_point], sorry-free) ====
+==== InformationTheory 証明済み主定理一覧 (@[entry_point], sorry-free) ====
 Entry points total : 814
   proven           : 740
   staged           : 74
@@ -48,7 +48,7 @@ Entry points total : 814
   pi_tilted_sum_eq_pi_tilted_fintype
   tiltedWindow_eventually_large_of_cgfDeriv_interior
 
---- Draft.Shannon.MultivariateDiffEntropy  [Common2026.Shannon] (3) ---
+--- Draft.Shannon.MultivariateDiffEntropy  [InformationTheory.Shannon] (3) ---
   jointDifferentialEntropyPi_le_sum
   jointDifferentialEntropy_le_sum_v2
   klDiv_prod_marginals_toReal_eq_sum_sub_joint_v2
@@ -374,7 +374,7 @@ Entry points total : 814
   klDiv_map_le
   mutualInfo_le_of_postprocess
 
---- Shannon.DifferentialEntropy  [Common2026.Shannon] (9) ---
+--- Shannon.DifferentialEntropy  [InformationTheory.Shannon] (9) ---
   concaveOn_log_one_add_div
   differentialEntropy_dirac
   differentialEntropy_eq_integral_density
@@ -385,7 +385,7 @@ Entry points total : 814
   differentialEntropy_map_affine
   klDiv_gaussianReal_gaussianReal_eq
 
---- Shannon.EPIBlachmanGaussianWitness  [Common2026.Shannon.EPIBlachmanGaussianWitness] (11) ---
+--- Shannon.EPIBlachmanGaussianWitness  [InformationTheory.Shannon.EPIBlachmanGaussianWitness] (11) ---
   bdd_deriv_gaussianPDFReal
   bdd_gaussianPDFReal
   continuous_deriv_gaussianPDFReal
@@ -520,10 +520,10 @@ Entry points total : 814
   entropyRate_eq_lim_condEntropy
   entropyRate_exists_of_stationary
 
---- Shannon.FisherInfo  [Common2026.Shannon] (1) ---
+--- Shannon.FisherInfo  [InformationTheory.Shannon] (1) ---
   integral_logDeriv_pdf_eq_zero
 
---- Shannon.FisherInfoGaussian  [Common2026.Shannon] (9) ---
+--- Shannon.FisherInfoGaussian  [InformationTheory.Shannon] (9) ---
   deriv_gaussianPDFReal
   differentiable_gaussianPDFReal
   integrable_deriv_gaussianPDFReal
@@ -534,14 +534,14 @@ Entry points total : 814
   tendsto_gaussianPDFReal_atBot
   tendsto_gaussianPDFReal_atTop
 
---- Shannon.FisherInfoV2  [Common2026.Shannon.FisherInfoV2] (5) ---
+--- Shannon.FisherInfoV2  [InformationTheory.Shannon.FisherInfoV2] (5) ---
   fisherInfoOfDensityReal_nonneg
   fisherInfoOfDensity_gaussianPDFReal
   fisherInfoOfDensity_nonneg
   fisherInfoOfDensity_zero
   integral_logDeriv_density_eq_zero
 
---- Shannon.FisherInfoV2DeBruijn  [Common2026.Shannon.FisherInfoV2] (8) ---
+--- Shannon.FisherInfoV2DeBruijn  [InformationTheory.Shannon.FisherInfoV2] (8) ---
   deBruijn_identity_v2_gaussian
   differentialEntropy_gaussianReal_heat_path
   fisherInfoOfMeasureV2Real_def
@@ -551,31 +551,31 @@ Entry points total : 814
   gaussianConvolution_law_of_gaussian
   hasDerivAt_half_log_gaussian_entropy
 
---- Shannon.FisherInfoV2DeBruijnAssembly  [Common2026.Shannon.FisherInfoV2] (1) ---
+--- Shannon.FisherInfoV2DeBruijnAssembly  [InformationTheory.Shannon.FisherInfoV2] (1) ---
   convDensityAdd_envelope_integrable
 
---- Shannon.FisherInfoV2DeBruijnBody  [Common2026.Shannon.FisherInfoV2] (4) ---
+--- Shannon.FisherInfoV2DeBruijnBody  [InformationTheory.Shannon.FisherInfoV2] (4) ---
   IsHeatFlowDensity.heat_equation_spec
   IsHeatFlowDensity.laplacian  [def]
   heatKernel_nonneg
   measurable_heatKernel
 
---- Shannon.FisherInfoV2DeBruijnGenuine  [Common2026.Shannon.FisherInfoV2] (2) ---
+--- Shannon.FisherInfoV2DeBruijnGenuine  [InformationTheory.Shannon.FisherInfoV2] (2) ---
   deBruijn_identity_v2
   debruijnIntegrationIdentity_holds
 
---- Shannon.FisherInfoV2DeBruijnPerTime  [Common2026.Shannon.FisherInfoV2] (2) ---
+--- Shannon.FisherInfoV2DeBruijnPerTime  [InformationTheory.Shannon.FisherInfoV2] (2) ---
   convDensityAdd_lower_bound_gaussian
   heatFlow_density_heat_equation_kernel_heat_eq
 
---- Shannon.FisherInfoV2HeatFlowBody  [Common2026.Shannon.FisherInfoV2] (5) ---
+--- Shannon.FisherInfoV2HeatFlowBody  [InformationTheory.Shannon.FisherInfoV2] (5) ---
   IsHeatFlowDensity_of_sub_predicates  [def]
   heatKernel_hasDerivAt_spatial
   heatKernel_spatial_deriv
   heatKernel_spatial_laplacian
   isHeatSpatialDerivHyp_gaussian
 
---- Shannon.GaussianPDFVarianceDerivBody  [Common2026.Shannon] (6) ---
+--- Shannon.GaussianPDFVarianceDerivBody  [InformationTheory.Shannon] (6) ---
   gaussianPDFRealVar_eq_gaussianPDFReal
   hasDerivAt_gaussianExp_variance
   hasDerivAt_gaussianNorm_variance
@@ -604,7 +604,7 @@ Entry points total : 814
 --- Shannon.HanDShearer  [InformationTheory.Shannon] (1) ---
   shearer_inequality
 
---- Shannon.HeatFlowPath  [Common2026.Shannon] (4) ---
+--- Shannon.HeatFlowPath  [InformationTheory.Shannon] (4) ---
   heatFlowPath2_law
   heatFlowPath2_one
   heatFlowPath2_zero
@@ -849,7 +849,7 @@ Entry points total : 814
   pi_tilted_sum_eq_pi_tilted
   setLIntegral_pi_prod_factor
 
---- Shannon.MinkowskiDet  [Common2026.Shannon] (2) ---
+--- Shannon.MinkowskiDet  [InformationTheory.Shannon] (2) ---
   det_rpow_le_arith_mean_eigenvalues
   minkowskiDeterminantInequality
 
@@ -996,7 +996,7 @@ Entry points total : 814
   swError_EX_expectation_le
   swError_EY_expectation_le
 
---- Shannon.StamGaussianBound  [Common2026.Shannon.FisherInfoV2] (2) ---
+--- Shannon.StamGaussianBound  [InformationTheory.Shannon.FisherInfoV2] (2) ---
   stam_convex_fisher_bound_gaussian
   stam_fisher_arith
 
@@ -1224,11 +1224,11 @@ Entry points total : 814
   entropy_power_inequality_exp_form
   entropy_power_inequality_log_form
 
---- Shannon.FisherInfoV2DeBruijnBody  [Common2026.Shannon.FisherInfoV2] (2) ---
+--- Shannon.FisherInfoV2DeBruijnBody  [InformationTheory.Shannon.FisherInfoV2] (2) ---
   IsRegularDeBruijnHypV2.ofHeatFlow  [def]
   deBruijn_identity_v2_of_heat_flow
 
---- Shannon.FisherInfoV2HeatFlowBody  [Common2026.Shannon.FisherInfoV2] (2) ---
+--- Shannon.FisherInfoV2HeatFlowBody  [InformationTheory.Shannon.FisherInfoV2] (2) ---
   IsRegularDeBruijnHypV2.ofHeatSubhyp  [def]
   deBruijn_identity_v2_of_heat_subhyp
 

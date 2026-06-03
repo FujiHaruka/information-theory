@@ -10,7 +10,7 @@ import Mathlib.Probability.Independence.InfinitePi
 
 [B-3'' Phase C+D plan](../../../docs/shannon/channel-coding-phase-cd-plan.md).
 
-Phase A+B are completed in `Common2026/Shannon/ChannelCoding.lean` (659 行).
+Phase A+B are completed in `InformationTheory/Shannon/ChannelCoding.lean` (659 行).
 This file adds:
 
 * **Phase C** (random codebook + averaging argument): Codebook + joint typical

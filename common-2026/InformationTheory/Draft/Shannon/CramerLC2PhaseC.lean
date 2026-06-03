@@ -11,7 +11,7 @@ import InformationTheory.Meta.EntryPoint
 /-!
 # Cramér L-C2 Phase C partial discharge (T1-C follow-up Phase C)
 
-This file extends `Common2026/Shannon/CramerLC2DischargeExt.lean` (Phase A/B
+This file extends `InformationTheory/Shannon/CramerLC2DischargeExt.lean` (Phase A/B
 plumbing + tilted LLN) with the **Phase C partial discharge** of the
 `h_tilted_lower` hypothesis of `Cramer.cramer_lower`.
 
@@ -87,13 +87,13 @@ not yet in Mathlib.
 load-bearing* consumers were retreated to `sorry + @residual(...)` in the
 2026-05-25 Cramér sorry-migration sweep (Phase 2.1–2.4). Three producer-side
 constructors remain:
-* `Common2026.Shannon.InfinitePiTiltedChangeOfMeasure.isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge`
+* `InformationTheory.Shannon.InfinitePiTiltedChangeOfMeasure.isMeasureInfinitePiTiltedEq_of_tiltedWindowLarge`
   — constructive producer from the residual window-largeness predicate
   `IsTiltedWindowEventuallyLarge`; sorry-free (body uses `Measure.infinitePi`
   cylinder lift + Phase 3 change-of-measure).
-* `Common2026.Shannon.CramerPhaseDGapWorkaround.isMeasureInfinitePiTiltedEq_of_cylinder_density`
+* `InformationTheory.Shannon.CramerPhaseDGapWorkaround.isMeasureInfinitePiTiltedEq_of_cylinder_density`
   — sorry'd unconditional producer (`@residual(plan:cramer-moonshot-plan)`).
-* `Common2026.Shannon.CramerPhaseDGapWorkaround.IsCramerChernoffNLetterRNUnified.cramerPhaseC`
+* `InformationTheory.Shannon.CramerPhaseDGapWorkaround.IsCramerChernoffNLetterRNUnified.cramerPhaseC`
   — sorry'd unconditional projection (the load-bearing
   `IsCramerChernoffNLetterRNUnified` argument was removed in the 2026-05-25
   sweep; the lemma now duplicates `_of_cylinder_density`'s claim modulo

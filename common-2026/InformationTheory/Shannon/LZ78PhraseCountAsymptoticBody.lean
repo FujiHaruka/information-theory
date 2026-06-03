@@ -11,7 +11,7 @@ import Mathlib.Order.Filter.AtTopBot.Basic
 # LZ78 phrase-count asymptotic envelope — genuine `IsBigO` discharge (S3 wave10)
 
 This file discharges the predicate `IsLZ78PhraseCountAsymptotic p B`
-(published in `Common2026/Shannon/LZ78ConverseAsymptotic.lean`) with
+(published in `InformationTheory/Shannon/LZ78ConverseAsymptotic.lean`) with
 **genuine real-analysis content** rather than a hypothesis pass-through.
 
 The target predicate unfolds to

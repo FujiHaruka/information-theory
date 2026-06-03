@@ -12,7 +12,7 @@ import Mathlib.Probability.Independence.Basic
 /-!
 # Fisher information V2 — Phase C bridge + Phase D de Bruijn identity (T2-F follow-up)
 
-Common2026 T2-F follow-up (parents:
+InformationTheory T2-F follow-up (parents:
 * `docs/shannon/fisher-info-moonshot-plan.md` Phase E (`deBruijn_identity` Tier 2)
 * `docs/shannon/fisher-info-gaussian-discharge-moonshot-plan.md` Phase C / D
    (L-G3 retreat 2026-05-19)).
@@ -57,7 +57,7 @@ retreat) to publish
 * **L-FV2D-C** (未採用): full general-`X` discharge via Cover-Thomas Phase C/D heat-eq.
 -/
 
-namespace Common2026.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfoV2
 
 set_option linter.unusedSectionVars false
 
@@ -75,7 +75,7 @@ Takes a measure `μ : Measure ℝ` together with an explicit smooth density witn
 to `μ.rnDeriv volume` syntactically — it is the caller's responsibility to
 verify the relevant a.e.-equality if needed (cf. `fisherInfoOfMeasureV2_eq_of_pdf_ae_eq`).
 
-This is the V2 analogue of `Common2026.Shannon.fisherInfo` from `FisherInfo.lean`,
+This is the V2 analogue of `InformationTheory.Shannon.fisherInfo` from `FisherInfo.lean`,
 but with the V1 representative-dependence flaw eliminated: the caller picks the
 representative explicitly. -/
 noncomputable def fisherInfoOfMeasureV2 (_μ : Measure ℝ) (f : ℝ → ℝ) : ℝ≥0∞ :=
@@ -186,7 +186,7 @@ theorem gaussianConvolution_law_of_gaussian
 
 /-- **V2 de Bruijn identity regularity predicate**.
 
-V2 analogue of `Common2026.Shannon.IsRegularDeBruijnHyp` (`FisherInfo.lean:200`).
+V2 analogue of `InformationTheory.Shannon.IsRegularDeBruijnHyp` (`FisherInfo.lean:200`).
 The key difference: the RHS uses **V2 fisher info** (`fisherInfoOfDensity` of an
 explicit density witness), so the Gaussian case actually evaluates to `1/v`
 rather than the V1 ghost `0`. Bundles a density witness `density_t : ℝ → ℝ`
@@ -423,7 +423,7 @@ theorem differentialEntropy_gaussianReal_heat_path
     have : (v : ℝ) + s = 0 := by
       convert h_coe using 1
     linarith
-  rw [Common2026.Shannon.differentialEntropy_gaussianReal m hvs_nn]
+  rw [InformationTheory.Shannon.differentialEntropy_gaussianReal m hvs_nn]
   -- The `(v + ⟨s, hs⟩ : ℝ≥0).toReal = (v : ℝ) + s` step.
   rw [show ((v + ⟨s, hs⟩ : ℝ≥0) : ℝ) = (v : ℝ) + s from NNReal.coe_add v ⟨s, hs⟩]
 
@@ -502,4 +502,4 @@ theorem deBruijn_identity_v2_gaussian
   rw [h_eq_rhs]
   exact h_deriv'
 
-end Common2026.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfoV2

@@ -75,7 +75,7 @@ exactly like the conclusion expected by `HasDerivAt.congr_of_eventuallyEq` (so
 it composes with `deBruijn_identity_v2`'s LHS without bridging gymnastics).
 -/
 
-namespace Common2026.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfoV2
 
 set_option linter.unusedSectionVars false
 
@@ -341,4 +341,4 @@ discharge of the Gaussian de Bruijn identity is already complete, we expose
 the Gaussian IBP instance via the conclusion of `deBruijn_identity_v2_gaussian`
 directly. -/
 
-end Common2026.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfoV2

@@ -1,5 +1,5 @@
 /-
-Copyright (c) 2026 Common2026 contributors. All rights reserved.
+Copyright (c) 2026 InformationTheory contributors. All rights reserved.
 -/
 import Mathlib.LinearAlgebra.Matrix.PosDef
 import Mathlib.Analysis.Matrix.PosDef
@@ -26,7 +26,7 @@ superadditivity bound (`geom_mean_superadditive`).
 
 -/
 
-namespace Common2026.Shannon
+namespace InformationTheory.Shannon
 
 open scoped Matrix MatrixOrder
 open Finset
@@ -282,4 +282,4 @@ theorem minkowskiDeterminantInequality
   rw [hp]
   exact hstep
 
-end Common2026.Shannon
+end InformationTheory.Shannon

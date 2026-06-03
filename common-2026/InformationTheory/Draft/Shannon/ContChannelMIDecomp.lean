@@ -85,7 +85,7 @@ the output term (`μ := outputDistribution p W`) in the assembly below.
 theorem integral_log_rnDeriv_eq_neg_diffEntropy
     (μ : Measure ℝ) [SigmaFinite μ] (hμ : μ ≪ volume) :
     ∫ y, Real.log (μ.rnDeriv volume y).toReal ∂μ
-      = -Common2026.Shannon.differentialEntropy μ := by
+      = -InformationTheory.Shannon.differentialEntropy μ := by
   set f : ℝ → ℝ≥0∞ := μ.rnDeriv volume with hf_def
   have hf_meas : Measurable f := Measure.measurable_rnDeriv _ _
   have hf_lt_top : ∀ᵐ y ∂(volume : Measure ℝ), f y < ∞ := Measure.rnDeriv_lt_top _ _
@@ -97,8 +97,8 @@ theorem integral_log_rnDeriv_eq_neg_diffEntropy
         integral_withDensity_eq_integral_toReal_smul hf_meas hf_lt_top _
     _ = ∫ y, (f y).toReal * Real.log (f y).toReal ∂volume := by
         simp only [smul_eq_mul]
-    _ = -Common2026.Shannon.differentialEntropy μ := by
-        unfold Common2026.Shannon.differentialEntropy
+    _ = -InformationTheory.Shannon.differentialEntropy μ := by
+        unfold InformationTheory.Shannon.differentialEntropy
         rw [← integral_neg]
         refine integral_congr_ae (Filter.Eventually.of_forall (fun y => ?_))
         rw [Real.negMulLog_def]
@@ -111,7 +111,7 @@ general `integral_log_rnDeriv_eq_neg_diffEntropy`. -/
 theorem integral_log_density_fibre
     (x : ℝ) (hWx : W x ≪ volume) :
     ∫ y, Real.log ((W x).rnDeriv volume y).toReal ∂(W x)
-      = -Common2026.Shannon.differentialEntropy (W x) :=
+      = -InformationTheory.Shannon.differentialEntropy (W x) :=
   integral_log_rnDeriv_eq_neg_diffEntropy (W x) hWx
 
 /-- **Proxy form of the fibre differential-entropy identification** (Route B).
@@ -124,7 +124,7 @@ theorem integral_log_proxy_fibre
     (x : ℝ) (hWx : W x ≪ volume) {g : ℝ × ℝ → ℝ≥0∞}
     (hg_ae : (fun y => (W x).rnDeriv volume y) =ᵐ[W x] fun y => g (x, y)) :
     ∫ y, Real.log (g (x, y)).toReal ∂(W x)
-      = -Common2026.Shannon.differentialEntropy (W x) := by
+      = -InformationTheory.Shannon.differentialEntropy (W x) := by
   rw [← integral_log_density_fibre x hWx]
   refine integral_congr_ae ?_
   filter_upwards [hg_ae] with y hy
@@ -285,8 +285,8 @@ theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub
         (fun z : ℝ × ℝ => Real.log
             ((outputDistribution p W).rnDeriv volume z.2).toReal) (p ⊗ₘ W)) :
     (mutualInfoOfChannel p W).toReal
-      = Common2026.Shannon.differentialEntropy (outputDistribution p W)
-        - (∫ x, Common2026.Shannon.differentialEntropy (W x) ∂p) := by
+      = InformationTheory.Shannon.differentialEntropy (outputDistribution p W)
+        - (∫ x, InformationTheory.Shannon.differentialEntropy (W x) ∂p) := by
   set q := outputDistribution p W with hq_def
   -- `p.prod q` is a probability measure (product of two probability measures)
   have hq_vol : q ≪ volume := hq_ac
@@ -306,7 +306,7 @@ theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub
   -- Phase 4: fibre term `∫ z, log (g z).toReal ∂(p⊗ₘW) = -∫ x, h(W x) ∂p`.
   have h_fibre :
       (∫ z, Real.log (g z).toReal ∂(p ⊗ₘ W))
-        = -(∫ x, Common2026.Shannon.differentialEntropy (W x) ∂p) := by
+        = -(∫ x, InformationTheory.Shannon.differentialEntropy (W x) ∂p) := by
     rw [Measure.integral_compProd h_int_fibre]
     rw [← integral_neg]
     refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
@@ -314,7 +314,7 @@ theorem mutualInfoOfChannel_toReal_eq_diffEntropy_sub
   -- Phase 5: output term `∫ z, log f_q(z.2) ∂(p⊗ₘW) = -h(q)`.
   have h_out :
       (∫ z, Real.log (q.rnDeriv volume z.2).toReal ∂(p ⊗ₘ W))
-        = -Common2026.Shannon.differentialEntropy q := by
+        = -InformationTheory.Shannon.differentialEntropy q := by
     -- reduce the joint integral to the output marginal `q = (p⊗ₘW).map snd`
     have h_eq : q = (p ⊗ₘ W).map Prod.snd := rfl
     have h_int_joint :
@@ -409,7 +409,7 @@ theorem integrable_log_gaussianPDFReal_gaussianReal
       = fun y => (-(1/2) * Real.log (2 * Real.pi * v))
           + (-(1 / (2 * (v : ℝ)))) * (y - m) ^ 2 := by
     funext y
-    rw [Common2026.Shannon.log_gaussianPDFReal_eq m hv y]
+    rw [InformationTheory.Shannon.log_gaussianPDFReal_eq m hv y]
     ring
   rw [h_eq]
   exact (integrable_const _).add
@@ -470,7 +470,7 @@ theorem integrable_log_proxy_fibre_compProd
   have h_eq : (fun z : ℝ × ℝ => Real.log (gaussianPDF z.1 N z.2).toReal)
       = fun z => c₀ + c₁ * (z.2 - z.1) ^ 2 := by
     funext z
-    rw [toReal_gaussianPDF, Common2026.Shannon.log_gaussianPDFReal_eq z.1 hN z.2, hc₀, hc₁]
+    rw [toReal_gaussianPDF, InformationTheory.Shannon.log_gaussianPDFReal_eq z.1 hN z.2, hc₀, hc₁]
     ring
   rw [h_eq]
   -- the `(z.2 − z.1)²` term is integrable against the joint via compProd-iff

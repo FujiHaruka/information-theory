@@ -39,7 +39,7 @@ namespace InformationTheory.Shannon.EPIConvDensitySecondDeriv
 
 open MeasureTheory Real ProbabilityTheory
 open InformationTheory.Shannon.EPIConvDensity
-open Common2026.Shannon.FisherInfoV2
+open InformationTheory.Shannon.FisherInfoV2
 
 /-- **Spatial first-derivative identification (as a function).** Under
 Gaussian-tail domination preconditions, the spatial first derivative of the

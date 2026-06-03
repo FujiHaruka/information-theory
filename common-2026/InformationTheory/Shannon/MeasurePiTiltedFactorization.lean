@@ -10,7 +10,7 @@ import InformationTheory.Meta.EntryPoint
 
 This file builds the **finite-product tilt factorization** lemma that is the
 missing first piece for the `IsMeasureInfinitePiTiltedEq` discharge of
-`Common2026/Shannon/CramerLC2PhaseC.lean`.
+`InformationTheory/Shannon/CramerLC2PhaseC.lean`.
 
 The key result is `pi_tilted_sum_eq_pi_tilted`:
 ```

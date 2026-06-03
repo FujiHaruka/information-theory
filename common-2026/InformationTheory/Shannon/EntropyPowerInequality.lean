@@ -62,7 +62,7 @@ T3-F と同流儀)。
   主定理本体を `:= h_epi` の 1 行で着地させる (T2-B L-PG1 / T2-C L-SH3
   と同流儀)。
 * Gaussian saturation case は Mathlib
-  `gaussianReal_add_gaussianReal_of_indepFun` + Common2026
+  `gaussianReal_add_gaussianReal_of_indepFun` + InformationTheory
   `differentialEntropy_gaussianReal` の合成で **full discharge** (撤退
   ラインなし)。
 
@@ -92,14 +92,14 @@ open scoped ENNReal NNReal Topology
 
 /-- **Entropy power** of a measure `μ` on `ℝ`.
 
-`entropyPower μ := exp (2 · h(μ))` where `h` is `Common2026.Shannon.differentialEntropy`.
+`entropyPower μ := exp (2 · h(μ))` where `h` is `InformationTheory.Shannon.differentialEntropy`.
 
 Cover-Thomas Ch.17 の `N(X) := (2πe)⁻¹ · exp(2 h(X))` と係数差のみ; 本 file
 は `exp (2 h(μ))` 直書きで採用する (Mathlib-shape-driven, EPI signature
 `exp(2 h(X+Y)) ≥ exp(2 h(X)) + exp(2 h(Y))` に直結)。係数 `(2πe)` の付替は
 scaling corollary で扱える。 -/
 noncomputable def entropyPower (μ : Measure ℝ) : ℝ :=
-  Real.exp (2 * Common2026.Shannon.differentialEntropy μ)
+  Real.exp (2 * InformationTheory.Shannon.differentialEntropy μ)
 
 /-- Entropy power is strictly positive.
 
@@ -127,7 +127,7 @@ so `entropyPower (𝒩(m,v)) = exp(2 · (1/2) log(2πe v)) = exp(log(2πe v)) = 
 theorem entropyPower_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     entropyPower (gaussianReal m v) = 2 * Real.pi * Real.exp 1 * v := by
   unfold entropyPower
-  rw [Common2026.Shannon.differentialEntropy_gaussianReal m hv]
+  rw [InformationTheory.Shannon.differentialEntropy_gaussianReal m hv]
   have h_simplify :
       (2 : ℝ) * ((1/2) * Real.log (2 * Real.pi * Real.exp 1 * (v : ℝ)))
         = Real.log (2 * Real.pi * Real.exp 1 * (v : ℝ)) := by ring
@@ -209,11 +209,11 @@ Non-vacuous: Gaussian `isBlachmanConvReady_gaussianPDFReal` inhabits the gating 
 def IsStamInequalityResidual {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
-    J_X = Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal fX →
-    J_Y = Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal fY →
-    J_sum = Common2026.Shannon.FisherInfoV2.fisherInfoOfDensityReal fXY →
-    Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fX →
-    Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fY →
+    J_X = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal fX →
+    J_Y = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal fY →
+    J_sum = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal fXY →
+    InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fX →
+    InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fY →
     (∫ x, fX x ∂MeasureTheory.volume = 1) →
     (∫ x, fY x ∂MeasureTheory.volume = 1) →
     (∀ x, fXY x =
@@ -306,10 +306,10 @@ theorem entropy_power_inequality_exp_form {Ω : Type*} {mΩ : MeasurableSpace Ω
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
     (h_stam : IsStamInequalityResidual X Y P) :
-    Real.exp (2 * Common2026.Shannon.differentialEntropy
+    Real.exp (2 * InformationTheory.Shannon.differentialEntropy
               (P.map (fun ω => X ω + Y ω)))
-      ≥ Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map X))
-        + Real.exp (2 * Common2026.Shannon.differentialEntropy (P.map Y)) := by
+      ≥ Real.exp (2 * InformationTheory.Shannon.differentialEntropy (P.map X))
+        + Real.exp (2 * InformationTheory.Shannon.differentialEntropy (P.map Y)) := by
   have h := entropy_power_inequality P X Y hX hY hXY h_stam
   simpa [entropyPower] using h
 
@@ -319,7 +319,7 @@ theorem entropy_power_inequality_exp_form {Ω : Type*} {mΩ : MeasurableSpace Ω
 なら EPI は **等号成立** `exp(2 h(X+Y)) = exp(2 h(X)) + exp(2 h(Y))`.
 
 撤退ラインなしで full discharge (Mathlib `gaussianReal_add_gaussianReal_of_indepFun`
-が sum の law を Gaussian と特定 + Common2026 `differentialEntropy_gaussianReal`
+が sum の law を Gaussian と特定 + InformationTheory `differentialEntropy_gaussianReal`
 が closed form を与える)。
 
 これにより L-EPI3 hypothesis は **Gaussian の場合 trivially provable**
@@ -380,7 +380,7 @@ theorem isEntropyPowerInequalityHypothesis_of_gaussian
 -- (retracted 2026-05-28, EPI-Stam Cluster C+D sweep) `isStamToEPIBridge_of_epi`
 -- was a trivial pass-through `IsEntropyPowerInequalityHypothesis X Y P →
 -- IsStamToEPIBridge X Y P := fun _ => h_epi` with **0 consumers** (verified
--- via `rg -n 'isStamToEPIBridge_of_epi' Common2026/` returning only the
+-- via `rg -n 'isStamToEPIBridge_of_epi' InformationTheory/` returning only the
 -- declaration line). It carried `@audit:retract-candidate(load-bearing-predicate)`
 -- + `@audit:closed-by-successor(epi-stam-to-conclusion-plan)`; the discharge
 -- path it provided (Gaussian-saturation → bridge) is now publicly available
@@ -392,7 +392,7 @@ theorem isEntropyPowerInequalityHypothesis_of_gaussian
 
 /-- **Translation invariance of entropy power**: for `μ ≪ volume` and
 σ-finite `μ`, `entropyPower (μ.map (· + a)) = entropyPower μ`. The hypothesis
-matches `Common2026.Shannon.differentialEntropy_map_add_const`.
+matches `InformationTheory.Shannon.differentialEntropy_map_add_const`.
 
 @audit:ok -/
 @[entry_point]
@@ -400,7 +400,7 @@ theorem entropyPower_map_add_const {μ : Measure ℝ} (hμ : μ ≪ volume)
     [SigmaFinite μ] (a : ℝ) :
     entropyPower (μ.map (· + a)) = entropyPower μ := by
   unfold entropyPower
-  rw [Common2026.Shannon.differentialEntropy_map_add_const hμ]
+  rw [InformationTheory.Shannon.differentialEntropy_map_add_const hμ]
 
 /-- **EPI in log form** (Cover-Thomas Ch.17 alternative signature).
 
@@ -417,7 +417,7 @@ theorem entropy_power_inequality_log_form {Ω : Type*} {mΩ : MeasurableSpace Ω
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
     (h_stam : IsStamInequalityResidual X Y P) :
-    Common2026.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
+    InformationTheory.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
       ≥ (1/2) * Real.log
           (entropyPower (P.map X) + entropyPower (P.map Y)) := by
   -- The EPI core inequality.
@@ -434,7 +434,7 @@ theorem entropy_power_inequality_log_form {Ω : Type*} {mΩ : MeasurableSpace Ω
   -- LHS log = 2 * h(X+Y) (from `log_exp`).
   have h_lhs_log :
       Real.log (entropyPower (P.map (fun ω => X ω + Y ω)))
-        = 2 * Common2026.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω)) := by
+        = 2 * InformationTheory.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω)) := by
     unfold entropyPower
     rw [Real.log_exp]
   rw [h_lhs_log] at h_log

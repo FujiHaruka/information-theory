@@ -5,7 +5,7 @@ import Mathlib.MeasureTheory.Group.Convolution
 /-!
 # W9-S1 T2-A: body discharge of `IsAwgnBindEqConv`
 
-Wave7 で publish した `Common2026/Shannon/AWGNMIBridgeDischarge.lean` は
+Wave7 で publish した `InformationTheory/Shannon/AWGNMIBridgeDischarge.lean` は
 `IsAwgnOutputGaussian` を named hypothesis `IsAwgnBindEqConv` に縮減した:
 
 ```

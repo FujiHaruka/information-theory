@@ -181,7 +181,7 @@ Consequences for the two variational inequalities:
 * **converse** `limsup rate ≤ hoeffdingE2 alpha`: would require
   `limsup rate ≤ E₂(alpha)`, contradicted at every `alpha` by the limits above.
 
-This file is kept (with its `Common2026.lean` import) as this documentation plus
+This file is kept (with its `InformationTheory.lean` import) as this documentation plus
 the two genuine declarations that survive: the constructive minimizer
 `exists_hoeffding_minimizer_full_support` (consumed by `HoeffdingTradeoffExp.lean`)
 and the boundary achievability `hoeffding_tradeoff_achievability_at_boundary`. -/

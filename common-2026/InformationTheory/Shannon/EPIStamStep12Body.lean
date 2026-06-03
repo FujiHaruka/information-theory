@@ -11,7 +11,7 @@ import Mathlib.Tactic.Ring
 /-!
 # W9-S2 T2-D: Stam inequality Step 1 (score-convolution) + Step 2 (Cauchy-Schwarz) body
 
-`Common2026/Shannon/EPIStamInequalityBody.lean` (Wave 7) introduced the 4-step
+`InformationTheory/Shannon/EPIStamInequalityBody.lean` (Wave 7) introduced the 4-step
 Stam-inequality proof skeleton (Cover-Thomas Lemma 17.7.2 / Blachman 1965):
 
 1. **Step 1 — score-convolution** (Blachman): `s_Z(z) = E[s_X(X) | X+Y = z]`.
@@ -31,7 +31,7 @@ honestly-named hypothesis field.
 ## Approach
 
 The genuine bottleneck is that the project's Fisher information abstraction
-(`Common2026.Shannon.FisherInfoV2.fisherInfoOfDensity f = ∫⁻ (logDeriv f)² · f`)
+(`InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity f = ∫⁻ (logDeriv f)² · f`)
 has **no conditional-expectation hooks**: there is no joint measure on `ℝ × ℝ`,
 no sum-level sub-σ-algebra, and no `condExp`-of-score lemma tying `logDeriv` of a
 convolution density to a conditional expectation. Building that apparatus is a
@@ -161,8 +161,8 @@ replaces — the witness it produces is exactly the one the proof needs. -/
 def IsStamScoreConvHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y : ℝ) (fX fY : ℝ → ℝ), 0 < J_X → 0 < J_Y →
-    J_X = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
-    J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
+    J_X = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
+    J_Y = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
     ∃ lam : ℝ, 0 ≤ lam ∧ lam ≤ 1 ∧ lam = J_Y / (J_X + J_Y)
 
 /-- The score-convolution typed predicate is genuinely provable: the optimal
@@ -214,12 +214,12 @@ Gaussian witness (`epi-wall-reattack-plan`). -/
 def IsStamCondExpCSHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∀ (J_X J_Y J_sum : ℝ) (fX fY fXY : ℝ → ℝ), 0 < J_X → 0 < J_Y → 0 < J_sum →
-    J_X = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
-    J_Y = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
-    J_sum = (Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
+    J_X = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map X) fX).toReal →
+    J_Y = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2 (P.map Y) fY).toReal →
+    J_sum = (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2
               (P.map (fun ω => X ω + Y ω)) fXY).toReal →
-    Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fX →
-    Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fY →
+    InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fX →
+    InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fY →
     (∫ x, fX x ∂MeasureTheory.volume = 1) →
     (∫ x, fY x ∂MeasureTheory.volume = 1) →
     (∀ x, fXY x =
@@ -362,7 +362,7 @@ Step 2 vacuously by `exfalso`-ing the `0 < J_X` precondition against the buggy V
 holding and was removed. The genuine Gaussian EPI runs via
 `entropyPower_gaussian_additivity`; the genuine *non-vacuous* Gaussian
 convex Fisher bound (keyed on the V2 Fisher information) is
-`Common2026.Shannon.FisherInfoV2.stam_convex_fisher_bound_gaussian`
+`InformationTheory.Shannon.FisherInfoV2.stam_convex_fisher_bound_gaussian`
 (`StamGaussianBound.lean`).
 
 Step 1 (`IsStamScoreConvHyp`) is a witness-construction predicate and discharges

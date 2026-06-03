@@ -5,7 +5,7 @@ import InformationTheory.Meta.EntryPoint
 /-!
 # Huffman — shared wall lemmas (sorry-based migration aggregation)
 
-`Common2026/Shannon/Huffman*.lean` 全体の load-bearing hypothesis predicate を **1 ヶ所に
+`InformationTheory/Shannon/Huffman*.lean` 全体の load-bearing hypothesis predicate を **1 ヶ所に
 集約した shared wall lemma 群**. 各 consumer wrapper は本 file の wall lemma を呼ぶことで
 hypothesis 引数を削除でき、新規 sorry を作らずに済む。closure 責任は本 file の wall lemma
 の `@residual(plan:...)` タグが一元的に保有する。

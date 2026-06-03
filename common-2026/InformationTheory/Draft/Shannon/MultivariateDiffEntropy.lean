@@ -56,7 +56,7 @@ genuine. The bridge from `KL` to entropies needs the Bayes density split
   (absolute continuity + Bochner integrability of the log-density observables).
 -/
 
-namespace Common2026.Shannon
+namespace InformationTheory.Shannon
 
 set_option linter.unusedSectionVars false
 
@@ -815,4 +815,4 @@ finally `pi_marginals_eq_volume_withDensity` (`n`-variable analogue of the Phase
 "~250-line reshape friction" reported on withdrawal turned out to be a single
 missing helper (`withDensity_map_equiv`, ~13 lines). -/
 
-end Common2026.Shannon
+end InformationTheory.Shannon

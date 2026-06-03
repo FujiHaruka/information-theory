@@ -8,7 +8,7 @@ import Mathlib.Data.List.Range
 /-!
 # LZ78 longest-prefix-match greedy parsing — L-LZ4-E discharge (T4-A)
 
-`Common2026/Shannon/LZ78GreedyParsing.lean` published the **worst-case
+`InformationTheory/Shannon/LZ78GreedyParsing.lean` published the **worst-case
 one-symbol-per-phrase** parsing `lz78OneSymbolParsing` and explicitly
 deferred the *genuine* longest-prefix-match greedy parse to L-LZ4-E.
 This file discharges L-LZ4-E: it implements the real Cover–Thomas

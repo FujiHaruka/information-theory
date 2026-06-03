@@ -34,7 +34,7 @@ the direct combination: `(I(X^n; Y^n)).toReal ≤ ∑ (I(X_i; Y_i)).toReal`.
 
 The two Markov axioms of `IsMemorylessChannelStrong` are taken as hypotheses
 (not as a single structure) to keep this file an upstream building block of
-`Common2026/Shannon/ChannelCodingConverseGeneralStrong.lean`, which defines that
+`InformationTheory/Shannon/ChannelCodingConverseGeneralStrong.lean`, which defines that
 structure and supplies its two fields when invoking the theorem here.
 -/
 

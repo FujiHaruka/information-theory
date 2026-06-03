@@ -5,7 +5,7 @@ import Mathlib.Probability.UniformOn
 /-!
 # Loomis–Whitney 不等式 (情報理論的証明)
 
-Common2026 の最初のムーンショット ([`docs/shannon/loomis-whitney-moonshot-plan.md`])。
+InformationTheory の最初のムーンショット ([`docs/shannon/loomis-whitney-moonshot-plan.md`])。
 Han Phase D の `shearer_inequality` を engine として、
 任意 `n` の有限族 `α : Type` 上の有限部分集合 `A : Finset (Fin n → α)` に対する
 $|A|^{n-1} \le \prod_{i : \text{Fin}\,n} |\pi_i(A)|$ を sorry なしで証明する。

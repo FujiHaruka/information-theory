@@ -32,7 +32,7 @@ spatial derivatives in closed form (both **internally discharged**).
 ## 内容
 
 * `heatKernel_spatial_deriv` — closed form of `∂_x g_t`: equals `-(x/t)·g_t x`,
-  the `m = 0` specialization of `Common2026.Shannon.deriv_gaussianPDFReal`.
+  the `m = 0` specialization of `InformationTheory.Shannon.deriv_gaussianPDFReal`.
   **(internal discharge)**
 * `heatKernel_hasDerivAt_spatial` — the `HasDerivAt` form, via
   `differentiable_gaussianPDFReal`. **(internal discharge)**
@@ -71,7 +71,7 @@ spatial derivatives in closed form (both **internally discharged**).
   discharged in `heatSemigroup_compose_law`.
 -/
 
-namespace Common2026.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfoV2
 
 set_option linter.unusedSectionVars false
 
@@ -91,13 +91,13 @@ theorem heatKernel_variance_ne_zero {t : ℝ} (ht : 0 < t) :
 /-- **First spatial derivative of the heat kernel** (`m = 0` case).
 
 `∂_x g_t(x) = -(x / t) · g_t(x)`, the `m = 0` specialization of
-`Common2026.Shannon.deriv_gaussianPDFReal`. -/
+`InformationTheory.Shannon.deriv_gaussianPDFReal`. -/
 @[entry_point]
 theorem heatKernel_spatial_deriv {t : ℝ} (ht : 0 < t) (x : ℝ) :
     deriv (fun y => heatKernel t y) x = -(x / t) * heatKernel t x := by
   have hfun : (fun y => heatKernel t y) = gaussianPDFReal 0 ⟨t, ht.le⟩ := by
     funext y; exact heatKernel_def_gaussianPDFReal ht y
-  rw [hfun, Common2026.Shannon.deriv_gaussianPDFReal (heatKernel_variance_ne_zero ht) x,
+  rw [hfun, InformationTheory.Shannon.deriv_gaussianPDFReal (heatKernel_variance_ne_zero ht) x,
     heatKernel_def_gaussianPDFReal ht x]
   show -((x : ℝ) - 0) / t * gaussianPDFReal 0 ⟨t, ht.le⟩ x
      = -(x / t) * gaussianPDFReal 0 ⟨t, ht.le⟩ x
@@ -111,13 +111,13 @@ theorem heatKernel_hasDerivAt_spatial {t : ℝ} (ht : 0 < t) (x : ℝ) :
     funext y; exact heatKernel_def_gaussianPDFReal ht y
   rw [hfun]
   have hval : -(x / t) * heatKernel t x = deriv (gaussianPDFReal 0 ⟨t, ht.le⟩) x := by
-    rw [Common2026.Shannon.deriv_gaussianPDFReal (heatKernel_variance_ne_zero ht) x,
+    rw [InformationTheory.Shannon.deriv_gaussianPDFReal (heatKernel_variance_ne_zero ht) x,
       heatKernel_def_gaussianPDFReal ht x]
     show -(x / t) * gaussianPDFReal 0 ⟨t, ht.le⟩ x
        = -((x : ℝ) - 0) / t * gaussianPDFReal 0 ⟨t, ht.le⟩ x
     ring
   rw [hval]
-  exact (Common2026.Shannon.differentiable_gaussianPDFReal 0 ⟨t, ht.le⟩).differentiableAt.hasDerivAt
+  exact (InformationTheory.Shannon.differentiable_gaussianPDFReal 0 ⟨t, ht.le⟩).differentiableAt.hasDerivAt
 
 /-- **Spatial Laplacian of the heat kernel** (closed form).
 
@@ -267,4 +267,4 @@ noncomputable def IsRegularDeBruijnHypV2.ofHeatSubhyp
   IsRegularDeBruijnHypV2.ofHeatFlow hX hZ hXZ ht
     (IsHeatFlowDensity_of_sub_predicates h_conv h_time)
 
-end Common2026.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfoV2

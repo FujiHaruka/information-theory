@@ -58,7 +58,7 @@ matching the residual honest hypotheses of the 1-D `awgnCapacity_eq`
   multivariate differential entropy + subadditivity not present in `DifferentialEntropy`).
 
 The last is the planned **D-1 wall**: differential-entropy subadditivity for
-`Fin (n+1)`-dimensional outputs is absent from both Mathlib and Common2026
+`Fin (n+1)`-dimensional outputs is absent from both Mathlib and InformationTheory
 (`DifferentialEntropy.differentialEntropy : Measure ℝ → ℝ` is 1-D only), so the
 correlated-input upper bound is exposed as a named honest hypothesis. No `sorry`.
 -/
@@ -202,7 +202,7 @@ structure IsParallelGaussianPerCoordRegularity {n : ℕ} (P : ℝ)
   bounded by the *free*-allocation per-coord sum, evaluated at any feasible split
   `P'`. This is the D-1 wall (MI superadditivity + per-coord max-entropy + per-coord
   variance allocation), honest because multivariate differential-entropy
-  subadditivity is absent from Mathlib/Common2026. -/
+  subadditivity is absent from Mathlib/InformationTheory. -/
   max_ent :
     ∀ p ∈ parallelGaussianPowerConstraintSet P,
       ∃ P' : Fin n → ℝ, (∀ i, 0 ≤ P' i) ∧ (∑ i : Fin n, P' i ≤ P) ∧
@@ -271,14 +271,14 @@ theorem parallelGaussianCapacity_le_sum {n : ℕ} (P : ℝ)
 The honest `IsParallelGaussianPerCoordRegularity.max_ent` previously bundled
 *three* facts on faith: (a) MI superadditivity (= output differential-entropy
 subadditivity `h(Yⁿ) ≤ ∑ h(Yᵢ)`), (b) per-coord max-entropy, (c) variance
-allocation. With `Common2026.Shannon.jointDifferentialEntropyPi_le_sum` now
+allocation. With `InformationTheory.Shannon.jointDifferentialEntropyPi_le_sum` now
 **genuine**, (a) is no longer a hypothesis. The lemma below derives the `max_ent`
 bound from genuine subadditivity plus the *isolated, smaller* honest pieces — the
 channel↔RV multivariate MI decomposition and the per-coord
 `h(Yᵢ) − h(Yᵢ|Xᵢ) ≤ (1/2) log(1 + P'ᵢ/Nᵢ)` bound — neither of which is the
 subadditivity that this foundation now supplies. -/
 
-open Common2026.Shannon in
+open InformationTheory.Shannon in
 /-- **`max_ent` from genuine subadditivity.** Let `μ_Y := outputDistribution`-style
 joint output law on `Fin n → ℝ`, `μᵢ := μ_Y.map (· i)` its coordinate marginals, and
 write the channel MI as `h(Yⁿ) − condTerm` (the honest multivariate channel↔RV
@@ -497,7 +497,7 @@ theorem lintegral_fin_nat_prod_eq_prod {n : ℕ} {E : Fin n → Type*}
               rw [n_ih (fun i ↦ μ i.succ) (fun i ↦ f i.succ) (fun i ↦ hf _)]
         _ = ∏ i, ∫⁻ x, f i x ∂(μ i) := by rw [Fin.prod_univ_succ]
 
-open Common2026.Shannon InformationTheory.Shannon.AWGN in
+open InformationTheory.Shannon InformationTheory.Shannon.AWGN in
 /-- **compProd-of-`Measure.pi` factorization (genuine, `wall:multivariate-mi` core).**
 The channel joint `gaussianProductInput Q ⊗ₘ parallelGaussianChannel N` factors as
 the `Measure.pi` of the per-coordinate joints `gaussianReal 0 (Qᵢ) ⊗ₘ awgnChannel Nᵢ`,
@@ -576,7 +576,7 @@ theorem gaussianProductInput_compProd_parallelGaussianChannel_eq_pi {n : ℕ}
   rw [← hkey, Measure.map_map e.measurable e.symm.measurable]
   simp
 
-open Common2026.Shannon InformationTheory.Shannon.AWGN in
+open InformationTheory.Shannon InformationTheory.Shannon.AWGN in
 /-- **Per-channel MI decomposition of the product achiever (genuine).**
 The channel mutual information of the independent-Gaussian product input through
 the parallel Gaussian channel equals the sum of the per-coordinate single-channel
@@ -687,7 +687,7 @@ theorem parallelGaussian_achiever_mi_eq_sum_perChannel_enn {n : ℕ}
     have : (fun z : ℝ × ℝ => (z.1, z.2)) = id := by funext z; rfl
     rw [this, Measure.map_id]
 
-open Common2026.Shannon InformationTheory.Shannon.AWGN in
+open InformationTheory.Shannon InformationTheory.Shannon.AWGN in
 /-- **AWGN single-channel mutual information is finite.** The channel MI of the
 Gaussian input through a single AWGN channel is a finite ENNReal (`≠ ⊤`).
 
@@ -783,7 +783,7 @@ theorem awgn_mutualInfoOfChannel_ne_top (N : ℝ≥0) (hN : N ≠ 0)
   refine (h_int_fibre_joint.sub h_int_out_joint).congr ?_
   exact (h_llr_split).symm
 
-open Common2026.Shannon InformationTheory.Shannon.AWGN in
+open InformationTheory.Shannon InformationTheory.Shannon.AWGN in
 /-- **Per-channel MI decomposition of the product achiever (`.toReal` form).**
 `.toReal` of the genuine ENNReal additivity
 `parallelGaussian_achiever_mi_eq_sum_perChannel_enn` (the multivariate decomposition
@@ -801,7 +801,7 @@ theorem parallelGaussian_achiever_mi_eq_sum_perChannel {n : ℕ}
   rw [parallelGaussian_achiever_mi_eq_sum_perChannel_enn Q N h_meas h_parallel_meas]
   rw [ENNReal.toReal_sum (fun i _ => awgn_mutualInfoOfChannel_ne_top (N i) (hN i) (h_meas i) (Q i))]
 
-open Common2026.Shannon InformationTheory.Shannon.AWGN in
+open InformationTheory.Shannon InformationTheory.Shannon.AWGN in
 /-- **Per-coordinate AWGN MI closed form (genuine, all variances).** For a single
 AWGN sub-channel, the Gaussian-input mutual information equals
 `(1/2)·log(1 + Q/N)`, with no positivity hypothesis on the input variance `Q`.
@@ -851,7 +851,7 @@ theorem awgn_perCoord_mi_closed_form (Q N : ℝ≥0) (hN : N ≠ 0)
     rw [hQ_cast] at h
     exact h
 
-open Common2026.Shannon InformationTheory.Shannon.AWGN in
+open InformationTheory.Shannon InformationTheory.Shannon.AWGN in
 /-- **`achiever_mi` genuine reduction (L-PG1 Phase 2).** The achiever MI value
 equals the per-coordinate water-filling sum, assembled from the genuine
 structural per-channel decomposition `parallelGaussian_achiever_mi_eq_sum_perChannel`

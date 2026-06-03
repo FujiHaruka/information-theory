@@ -42,7 +42,7 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 
 /-! ## Pi reshape plumbing
 
-`subsetSplitMEquivAux` / `subsetSplitMEquivAux_apply` は `Common2026.Shannon.Pi` に
+`subsetSplitMEquivAux` / `subsetSplitMEquivAux_apply` は `InformationTheory.Shannon.Pi` に
 集約 (Han → Pi で transitively 見える)。subset 形 (`T₁ ⊆ T₂`) は
 `Finset.disjoint_sdiff` + `Finset.union_sdiff_of_subset h` を inline で渡す。 -/
 

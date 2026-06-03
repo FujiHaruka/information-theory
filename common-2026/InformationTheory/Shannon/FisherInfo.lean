@@ -10,7 +10,7 @@ import InformationTheory.Shannon.DifferentialEntropy
 /-!
 # Fisher information density helpers (T2-F)
 
-Common2026 T2-F ムーンショット ([`docs/shannon/fisher-info-moonshot-plan.md`])。
+InformationTheory T2-F ムーンショット ([`docs/shannon/fisher-info-moonshot-plan.md`])。
 
 **V1 `fisherInfo` was DELETED on 2026-05-20** (representative-dependence flaw:
 returned `0` for Gaussians). The correct Fisher information lives in
@@ -37,7 +37,7 @@ helpers below.
 the buggy V1 `fisherInfo`. Replaced by `FisherInfoV2` / `FisherInfoV2DeBruijn`.
 -/
 
-namespace Common2026.Shannon
+namespace InformationTheory.Shannon
 
 set_option linter.unusedSectionVars false
 
@@ -54,9 +54,9 @@ representative of `μ.rnDeriv volume`, which is non-differentiable a.e., so
 `logDeriv` collapsed to `0` a.e. — giving the wrong value `fisherInfo (gaussianReal
 m v) = 0` instead of `1/v` (representative-dependence flaw, see
 `FisherInfoGaussian.lean` Judgement #2). The correct, a.e.-class-invariant version
-is `Common2026.Shannon.FisherInfoV2.fisherInfoOfDensity` (gives `1/v` for
+is `InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity` (gives `1/v` for
 Gaussians), with the measure-keyed wrapper
-`Common2026.Shannon.FisherInfoV2.fisherInfoOfMeasureV2` in `FisherInfoV2DeBruijn.lean`.
+`InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2` in `FisherInfoV2DeBruijn.lean`.
 The EPI/Stam scaffolding predicates were migrated to `fisherInfoOfMeasureV2`. -/
 
 /-! ## Phase B — Score function 期待値 0 (Tier 1, L-F2 適用形) -/
@@ -141,10 +141,10 @@ theorem integral_logDeriv_pdf_eq_zero
 The V1 `IsRegularDeBruijnHyp` predicate and `deBruijn_identity` theorem were
 **deleted** on 2026-05-20: their RHS used the (deleted, buggy) V1 `fisherInfo`,
 which evaluates to `0` for Gaussians. The correct V2 equivalents
-`Common2026.Shannon.FisherInfoV2.IsRegularDeBruijnHypV2` and
-`Common2026.Shannon.FisherInfoV2.deBruijn_identity_v2` (RHS keyed on
+`InformationTheory.Shannon.FisherInfoV2.IsRegularDeBruijnHypV2` and
+`InformationTheory.Shannon.FisherInfoV2.deBruijn_identity_v2` (RHS keyed on
 `fisherInfoOfDensityReal`, evaluating to `1/v` for Gaussians) live in
 `FisherInfoV2DeBruijn.lean`, together with the hypothesis-free Gaussian discharge
 `deBruijn_identity_v2_gaussian`. -/
 
-end Common2026.Shannon
+end InformationTheory.Shannon

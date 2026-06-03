@@ -7,7 +7,7 @@ import Mathlib.Analysis.SpecialFunctions.Log.Basic
 /-!
 # T2-D-P: Entropy Power Inequality — Plumbing補題群 (partial publish)
 
-`Common2026/Shannon/EntropyPowerInequality.lean` (T2-D, 347 行) で publish 済の
+`InformationTheory/Shannon/EntropyPowerInequality.lean` (T2-D, 347 行) で publish 済の
 `entropyPower μ := Real.exp (2 · h(μ))` 周りの **plumbing 補題群** を本 file で
 独立 publish する。Stam inequality / de Bruijn integration 本体 (L-EPI1 / L-EPI2
 discharge) は **scope-out** — 本 file は
@@ -65,7 +65,7 @@ theorem entropyPower_ne_zero (μ : Measure ℝ) : entropyPower μ ≠ 0 :=
 /-- `Real.log (entropyPower μ) = 2 · h(μ)`. -/
 @[entry_point]
 theorem log_entropyPower (μ : Measure ℝ) :
-    Real.log (entropyPower μ) = 2 * Common2026.Shannon.differentialEntropy μ := by
+    Real.log (entropyPower μ) = 2 * InformationTheory.Shannon.differentialEntropy μ := by
   unfold entropyPower
   exact Real.log_exp _
 
@@ -75,8 +75,8 @@ theorem log_entropyPower (μ : Measure ℝ) :
 coincide. -/
 @[entry_point]
 theorem entropyPower_eq_of_differentialEntropy_eq {μ ν : Measure ℝ}
-    (h : Common2026.Shannon.differentialEntropy μ
-          = Common2026.Shannon.differentialEntropy ν) :
+    (h : InformationTheory.Shannon.differentialEntropy μ
+          = InformationTheory.Shannon.differentialEntropy ν) :
     entropyPower μ = entropyPower ν := by
   unfold entropyPower
   rw [h]
@@ -84,8 +84,8 @@ theorem entropyPower_eq_of_differentialEntropy_eq {μ ν : Measure ℝ}
 /-- Monotonicity (≤): `h(μ) ≤ h(ν) ⟹ entropyPower μ ≤ entropyPower ν`. -/
 @[entry_point]
 theorem entropyPower_le_of_differentialEntropy_le {μ ν : Measure ℝ}
-    (h : Common2026.Shannon.differentialEntropy μ
-          ≤ Common2026.Shannon.differentialEntropy ν) :
+    (h : InformationTheory.Shannon.differentialEntropy μ
+          ≤ InformationTheory.Shannon.differentialEntropy ν) :
     entropyPower μ ≤ entropyPower ν := by
   unfold entropyPower
   refine Real.exp_le_exp.mpr ?_
@@ -94,8 +94,8 @@ theorem entropyPower_le_of_differentialEntropy_le {μ ν : Measure ℝ}
 /-- Strict monotonicity (<): `h(μ) < h(ν) ⟹ entropyPower μ < entropyPower ν`. -/
 @[entry_point]
 theorem entropyPower_lt_of_differentialEntropy_lt {μ ν : Measure ℝ}
-    (h : Common2026.Shannon.differentialEntropy μ
-          < Common2026.Shannon.differentialEntropy ν) :
+    (h : InformationTheory.Shannon.differentialEntropy μ
+          < InformationTheory.Shannon.differentialEntropy ν) :
     entropyPower μ < entropyPower ν := by
   unfold entropyPower
   refine Real.exp_lt_exp.mpr ?_
@@ -124,7 +124,7 @@ theorem entropyPower_div_two_pi_e_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v �
 /-! ## §4 — Phase B (translation / scaling / affine) lift to `entropyPower` -/
 
 /-- Phase B-1 lift: `entropyPower (μ.map (· + a)) = entropyPower μ`. This is the
-`entropyPower` companion to `Common2026.Shannon.differentialEntropy_map_add_const`. -/
+`entropyPower` companion to `InformationTheory.Shannon.differentialEntropy_map_add_const`. -/
 @[entry_point]
 theorem entropyPower_map_add_const_eq_self
     {μ : Measure ℝ} (hμ : μ ≪ volume) [SigmaFinite μ] (a : ℝ) :
@@ -138,10 +138,10 @@ theorem entropyPower_map_mul_const
     (h_ent_int : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
     entropyPower (μ.map (· * c)) = c^2 * entropyPower μ := by
   unfold entropyPower
-  rw [Common2026.Shannon.differentialEntropy_map_mul_const hμ hc h_ent_int]
+  rw [InformationTheory.Shannon.differentialEntropy_map_mul_const hμ hc h_ent_int]
   -- exp(2 (h(μ) + log|c|)) = exp(2 h(μ)) * exp(2 log|c|) = exp(2 h(μ)) * |c|^2 = c² * exp(2 h(μ))
-  rw [show (2 : ℝ) * (Common2026.Shannon.differentialEntropy μ + Real.log |c|)
-        = 2 * Common2026.Shannon.differentialEntropy μ + 2 * Real.log |c| from by ring]
+  rw [show (2 : ℝ) * (InformationTheory.Shannon.differentialEntropy μ + Real.log |c|)
+        = 2 * InformationTheory.Shannon.differentialEntropy μ + 2 * Real.log |c| from by ring]
   rw [Real.exp_add]
   have h_abs_pos : (0 : ℝ) < |c| := abs_pos.mpr hc
   have h_log : Real.exp (2 * Real.log |c|) = c^2 := by
@@ -162,9 +162,9 @@ theorem entropyPower_map_affine
     (h_ent_int : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
     entropyPower (μ.map (fun x => a * x + b)) = a^2 * entropyPower μ := by
   unfold entropyPower
-  rw [Common2026.Shannon.differentialEntropy_map_affine hμ ha b h_ent_int]
-  rw [show (2 : ℝ) * (Common2026.Shannon.differentialEntropy μ + Real.log |a|)
-        = 2 * Common2026.Shannon.differentialEntropy μ + 2 * Real.log |a| from by ring]
+  rw [InformationTheory.Shannon.differentialEntropy_map_affine hμ ha b h_ent_int]
+  rw [show (2 : ℝ) * (InformationTheory.Shannon.differentialEntropy μ + Real.log |a|)
+        = 2 * InformationTheory.Shannon.differentialEntropy μ + 2 * Real.log |a| from by ring]
   rw [Real.exp_add]
   have h_log : Real.exp (2 * Real.log |a|) = a^2 := by
     rw [show (2 : ℝ) * Real.log |a| = Real.log (|a| ^ 2) from by
@@ -265,7 +265,7 @@ theorem two_differentialEntropy_ge_log_sum
     (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
     (h_stam : IsStamInequalityResidual X Y P) :
-    2 * Common2026.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
+    2 * InformationTheory.Shannon.differentialEntropy (P.map (fun ω => X ω + Y ω))
       ≥ Real.log (entropyPower (P.map X) + entropyPower (P.map Y)) := by
   have h_epi' : entropyPower (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) :=

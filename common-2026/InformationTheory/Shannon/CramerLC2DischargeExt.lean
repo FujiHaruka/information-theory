@@ -8,7 +8,7 @@ import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 /-!
 # Cramér L-C2 extension (T1-C follow-up follow-up) — Phase A' + B-1 + B-3
 
-This file extends `Common2026/Shannon/CramerLC2Discharge.lean` (Phase A) with the
+This file extends `InformationTheory/Shannon/CramerLC2Discharge.lean` (Phase A) with the
 **Phase B partial discharge** needed for Cover-Thomas Theorem 11.4.1's lower
 bound.
 

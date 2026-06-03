@@ -8,7 +8,7 @@ import Mathlib.Topology.Order.Compact
 /-!
 # Csiszár I-projection / Pythagorean inequality
 
-Common2026 E-6 ムーンショット ([`docs/shannon/csiszar-projection-plan.md`])。
+InformationTheory E-6 ムーンショット ([`docs/shannon/csiszar-projection-plan.md`])。
 
 有限アルファベット `α` 上の確率 pmf `Q : α → ℝ` (full support) と凸閉集合
 `K ⊆ stdSimplex ℝ α` について

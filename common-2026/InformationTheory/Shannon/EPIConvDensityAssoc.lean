@@ -160,7 +160,7 @@ theorem convDensityAdd_pXpY_integrable (pX pY : ℝ → ℝ)
     (hpX_int : Integrable pX volume) (hpX_meas : Measurable pX)
     (hpY_int : Integrable pY volume) (hpY_meas : Measurable pY) :
     Integrable (convDensityAdd pX pY) volume :=
-  Common2026.Shannon.FisherInfoV2.convDensityAdd_envelope_integrable
+  InformationTheory.Shannon.FisherInfoV2.convDensityAdd_envelope_integrable
     pX pY hpX_int hpX_meas hpY_int hpY_meas
 
 /-- `∫ convDensityAdd pX pY = (∫ pX)·(∫ pY)`; with both normalized, `= 1`. -/
@@ -184,7 +184,7 @@ theorem convDensityAdd_gaussian_variance_double {t : ℝ} (ht : 0 < t) :
     ext
     show t + t = 2 * t
     ring
-  rw [Common2026.Shannon.EPIBlachmanGaussianWitness.convDensityAdd_gaussian_closed_form hv_ne hv_ne,
+  rw [InformationTheory.Shannon.EPIBlachmanGaussianWitness.convDensityAdd_gaussian_closed_form hv_ne hv_ne,
     add_zero]
   congr 1
 
@@ -211,7 +211,7 @@ theorem convDensityAdd_convGaussian_interchange (pX pY : ℝ → ℝ) {t : ℝ} 
   have hg_meas : Measurable g := measurable_gaussianPDFReal _ _
   have hg_int : Integrable g volume := integrable_gaussianPDFReal _ _
   have hg_bdd : ∃ M, ∀ x, |g x| ≤ M :=
-    Common2026.Shannon.EPIBlachmanGaussianWitness.bdd_gaussianPDFReal _ _
+    InformationTheory.Shannon.EPIBlachmanGaussianWitness.bdd_gaussianPDFReal _ _
   -- regularity of `pY ∗ g`
   have hpYg_nn : ∀ x, 0 ≤ convDensityAdd pY g x :=
     fun x => convDensityAdd_pXpY_nonneg pY g hpY_nn hg_nn x

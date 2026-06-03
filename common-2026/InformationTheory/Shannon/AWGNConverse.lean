@@ -9,7 +9,7 @@ Cover-Thomas Ch.9.1.2 (converse) を **Tier 2 (`sorry + @residual`) 形** で pu
 
 Converse 経路は標準的に:
 1. Fano: `log M ≤ I(W; Ŵ) + binEntropy(Pe) + Pe·log(M-1)` を `fano_inequality_measure_theoretic`
-   (`Common2026/Fano/Measure.lean`) で `X := Fin M`, `Y := (Fin n → ℝ)` 再利用。
+   (`InformationTheory/Fano/Measure.lean`) で `X := Fin M`, `Y := (Fin n → ℝ)` 再利用。
 2. Data processing: `I(W; Ŵ) ≤ I(X^n; Y^n)` (encoder/decoder の関数性).
 3. Chain rule + memoryless: `I(X^n; Y^n) ≤ ∑ I(X_i; Y_i)`.
 4. Per-letter max-entropy (`differentialEntropy_le_gaussian_of_variance_le`,
@@ -88,8 +88,8 @@ theorem awgn_converse
   have h_mi_bridge_per_letter :
       ∀ {M n : ℕ} [NeZero M] (_hM : 2 ≤ M) (c : AwgnCode M n P), ∀ i : Fin n,
         (perLetterMI h_meas c i).toReal
-          = Common2026.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
-            - Common2026.Shannon.differentialEntropy
+          = InformationTheory.Shannon.differentialEntropy (perLetterYLaw h_meas c i)
+            - InformationTheory.Shannon.differentialEntropy
                 (ProbabilityTheory.gaussianReal 0 N) := by
     -- @residual(plan:awgn-mi-bridge-plan)
     sorry

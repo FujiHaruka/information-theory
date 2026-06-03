@@ -22,10 +22,10 @@ convolution closed form `convDensityAdd (gaussianPDFReal mX vX) (gaussianPDFReal
 = gaussianPDFReal (mX+mY) (vX+vY)`, which the `int_fisherZ` field needs.
 -/
 
-namespace Common2026.Shannon.EPIBlachmanGaussianWitness
+namespace InformationTheory.Shannon.EPIBlachmanGaussianWitness
 
 open MeasureTheory Real ProbabilityTheory
-open Common2026.Shannon.FisherInfoV2
+open InformationTheory.Shannon.FisherInfoV2
 open InformationTheory.Shannon.EPIConvDensity
 open InformationTheory.Shannon.EPIBlachmanDensity
 open scoped ENNReal NNReal
@@ -103,10 +103,10 @@ theorem continuous_deriv_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) 
     Continuous (deriv (gaussianPDFReal m v)) := by
   have heq : deriv (gaussianPDFReal m v)
       = fun x => -(x - m) / (v : ℝ) * gaussianPDFReal m v x := by
-    funext x; exact Common2026.Shannon.deriv_gaussianPDFReal hv x
+    funext x; exact InformationTheory.Shannon.deriv_gaussianPDFReal hv x
   rw [heq]
   have h1 : Continuous (fun x : ℝ => -(x - m) / (v : ℝ)) := by fun_prop
-  exact h1.mul (Common2026.Shannon.differentiable_gaussianPDFReal m v).continuous
+  exact h1.mul (InformationTheory.Shannon.differentiable_gaussianPDFReal m v).continuous
 
 /-- Boundedness of `deriv (gaussianPDFReal m v)`.
 `deriv f w = -(w-m)/v · f w`, and `|w-m| · exp(-(w-m)²/(2v)) ≤ √v`
@@ -119,7 +119,7 @@ theorem bdd_deriv_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) :
     have := (NNReal.coe_pos).mpr (pos_of_ne_zero hv)
     simpa using this
   refine ⟨(v : ℝ)⁻¹ * (Real.sqrt (2 * Real.pi * v))⁻¹ * Real.sqrt v, fun w => ?_⟩
-  rw [Common2026.Shannon.deriv_gaussianPDFReal hv, gaussianPDFReal_def]
+  rw [InformationTheory.Shannon.deriv_gaussianPDFReal hv, gaussianPDFReal_def]
   have habs : |(-(w - m) / (v : ℝ)) *
       ((Real.sqrt (2 * Real.pi * v))⁻¹ * Real.exp (-(w - m) ^ 2 / (2 * v)))|
       = ((v : ℝ)⁻¹ * (Real.sqrt (2 * Real.pi * v))⁻¹)
@@ -146,9 +146,9 @@ Since `logDeriv f · f = -(x-m)/v · f`, this is `-(1/v)` times
 @[entry_point]
 theorem integrable_logDeriv_mul_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) :
     Integrable (fun x => logDeriv (gaussianPDFReal m v) x * gaussianPDFReal m v x) volume := by
-  refine ((Common2026.Shannon.integrable_sub_mul_gaussianPDFReal m hv).const_mul
+  refine ((InformationTheory.Shannon.integrable_sub_mul_gaussianPDFReal m hv).const_mul
     (-(v : ℝ)⁻¹)).congr (Filter.Eventually.of_forall fun x => ?_)
-  simp only [Common2026.Shannon.logDeriv_gaussianPDFReal hv]
+  simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hv]
   ring
 
 /-! ## 段0 — linchpin: density-level Gaussian convolution closed form -/
@@ -253,8 +253,8 @@ theorem convDensityAdd_gaussian_closed_form
       (fun z => ?_) (fun z => Filter.Eventually.of_forall fun a => ?_)
       ((integrable_gaussianPDFReal mX vX).const_mul C)
       (Filter.Eventually.of_forall fun a => ?_)
-    · exact (Common2026.Shannon.differentiable_gaussianPDFReal mX vX).continuous.aestronglyMeasurable.mul
-        (((Common2026.Shannon.differentiable_gaussianPDFReal mY vY).continuous.comp
+    · exact (InformationTheory.Shannon.differentiable_gaussianPDFReal mX vX).continuous.aestronglyMeasurable.mul
+        (((InformationTheory.Shannon.differentiable_gaussianPDFReal mY vY).continuous.comp
           (continuous_const.sub continuous_id)).aestronglyMeasurable)
     · -- ‖fX a * fY (z - a)‖ ≤ C * fX a
       rw [Real.norm_eq_abs, abs_mul, abs_of_nonneg (gaussianPDFReal_nonneg _ _ _)]
@@ -265,10 +265,10 @@ theorem convDensityAdd_gaussian_closed_form
         _ = C * gaussianPDFReal mX vX a := by ring
     · -- continuity in z of a ↦ fX a * fY (z - a)
       exact continuous_const.mul
-        ((Common2026.Shannon.differentiable_gaussianPDFReal mY vY).continuous.comp
+        ((InformationTheory.Shannon.differentiable_gaussianPDFReal mY vY).continuous.comp
           (continuous_id.sub continuous_const))
   exact (h_cont_conv.ae_eq_iff_eq volume
-    (Common2026.Shannon.differentiable_gaussianPDFReal (mX + mY) (vX + vY)).continuous).mp h_ae_real
+    (InformationTheory.Shannon.differentiable_gaussianPDFReal (mX + mY) (vX + vY)).continuous).mp h_ae_real
 
 /-! ## 段1 — `IsRegularDensityV2 (gaussianPDFReal m v)` (6 fields, all direct) -/
 
@@ -282,12 +282,12 @@ claims discharged by existing Gaussian lemmas, no core bundled. `#print axioms` 
 @[entry_point]
 theorem isRegularDensityV2_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) :
     IsRegularDensityV2 (gaussianPDFReal m v) where
-  diff := Common2026.Shannon.differentiable_gaussianPDFReal m v
+  diff := InformationTheory.Shannon.differentiable_gaussianPDFReal m v
   pos := fun x => gaussianPDFReal_pos m v x hv
-  tail_bot := Common2026.Shannon.tendsto_gaussianPDFReal_atBot m hv
-  tail_top := Common2026.Shannon.tendsto_gaussianPDFReal_atTop m hv
-  integrable_deriv := Common2026.Shannon.integrable_deriv_gaussianPDFReal m hv
-  integral_deriv_eq_zero := Common2026.Shannon.integral_deriv_gaussianPDFReal_eq_zero m hv
+  tail_bot := InformationTheory.Shannon.tendsto_gaussianPDFReal_atBot m hv
+  tail_top := InformationTheory.Shannon.tendsto_gaussianPDFReal_atTop m hv
+  integrable_deriv := InformationTheory.Shannon.integrable_deriv_gaussianPDFReal m hv
+  integral_deriv_eq_zero := InformationTheory.Shannon.integral_deriv_gaussianPDFReal_eq_zero m hv
 
 /-! ## 段2/段3 — `IsBlachmanConvReady` Gaussian witness (19 fields) -/
 
@@ -431,7 +431,7 @@ theorem isBlachmanConvReady_gaussianPDFReal
         (logDeriv (gaussianPDFReal mX vX) x) ^ 2 * gaussianPDFReal mX vX x) volume := by
       refine (integrable_logDeriv_sq_mul_gaussianPDFReal mX hvX).congr
         (Filter.Eventually.of_forall fun x => ?_)
-      simp only [Common2026.Shannon.logDeriv_gaussianPDFReal hvX, neg_div]; ring
+      simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvX, neg_div]; ring
     have hT1 : Integrable (fun x =>
         (logDeriv (gaussianPDFReal mX vX) x) ^ 2 * gaussianPDFReal mX vX x
           * gaussianPDFReal mY vY (z - x)) volume :=
@@ -442,8 +442,8 @@ theorem isBlachmanConvReady_gaussianPDFReal
     have hderivY_eq : ∀ w, logDeriv (gaussianPDFReal mY vY) w * gaussianPDFReal mY vY w
         = deriv (gaussianPDFReal mY vY) w := by
       intro w
-      rw [Common2026.Shannon.logDeriv_gaussianPDFReal hvY,
-        Common2026.Shannon.deriv_gaussianPDFReal hvY]
+      rw [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvY,
+        InformationTheory.Shannon.deriv_gaussianPDFReal hvY]
     have hT2meas : AEStronglyMeasurable
         (fun x => logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x))
         volume := by
@@ -467,7 +467,7 @@ theorem isBlachmanConvReady_gaussianPDFReal
         (logDeriv (gaussianPDFReal mY vY) w) ^ 2 * gaussianPDFReal mY vY w) volume := by
       refine (integrable_logDeriv_sq_mul_gaussianPDFReal mY hvY).congr
         (Filter.Eventually.of_forall fun w => ?_)
-      simp only [Common2026.Shannon.logDeriv_gaussianPDFReal hvY, neg_div]; ring
+      simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvY, neg_div]; ring
     have hT3base : Integrable (fun x =>
         (logDeriv (gaussianPDFReal mY vY) (z - x)) ^ 2 * gaussianPDFReal mY vY (z - x)) volume :=
       hT3pre.comp_sub_left z
@@ -497,7 +497,7 @@ theorem isBlachmanConvReady_gaussianPDFReal
           (logDeriv (gaussianPDFReal mX vX) a) ^ 2 * gaussianPDFReal mX vX a) volume := by
         refine (integrable_logDeriv_sq_mul_gaussianPDFReal mX hvX).congr
           (Filter.Eventually.of_forall fun a => ?_)
-        simp only [Common2026.Shannon.logDeriv_gaussianPDFReal hvX, neg_div]; ring
+        simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvX, neg_div]; ring
       have hcomp := (measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
         (ν := (volume : Measure ℝ))).integrable_comp_of_integrable
         (hA.mul_prod (integrable_gaussianPDFReal mY vY))
@@ -511,7 +511,7 @@ theorem isBlachmanConvReady_gaussianPDFReal
           (logDeriv (gaussianPDFReal mY vY) b) ^ 2 * gaussianPDFReal mY vY b) volume := by
         refine (integrable_logDeriv_sq_mul_gaussianPDFReal mY hvY).congr
           (Filter.Eventually.of_forall fun b => ?_)
-        simp only [Common2026.Shannon.logDeriv_gaussianPDFReal hvY, neg_div]; ring
+        simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvY, neg_div]; ring
       have hcomp := (measurePreserving_prod_sub_swap (μ := (volume : Measure ℝ))
         (ν := (volume : Measure ℝ))).integrable_comp_of_integrable
         ((integrable_gaussianPDFReal mX vX).mul_prod hB)
@@ -552,14 +552,14 @@ theorem isBlachmanConvReady_gaussianPDFReal
           (logDeriv (gaussianPDFReal mX vX) x) ^ 2 * gaussianPDFReal mX vX x) volume := by
         refine (integrable_logDeriv_sq_mul_gaussianPDFReal mX hvX).congr
           (Filter.Eventually.of_forall fun a => ?_)
-        simp only [Common2026.Shannon.logDeriv_gaussianPDFReal hvX, neg_div]; ring
+        simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvX, neg_div]; ring
       exact hbase.mul_bdd ((measurable_gaussianPDFReal mY vY).comp
         (measurable_const.sub measurable_id)).aestronglyMeasurable (c := CfY)
         (Filter.Eventually.of_forall fun x => by simpa [Real.norm_eq_abs] using hCfY (z - x))
     have hderivY_eq : ∀ w, logDeriv (gaussianPDFReal mY vY) w * gaussianPDFReal mY vY w
         = deriv (gaussianPDFReal mY vY) w := fun w => by
-      rw [Common2026.Shannon.logDeriv_gaussianPDFReal hvY,
-        Common2026.Shannon.deriv_gaussianPDFReal hvY]
+      rw [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvY,
+        InformationTheory.Shannon.deriv_gaussianPDFReal hvY]
     have hg3 : Integrable (fun x =>
         logDeriv (gaussianPDFReal mX vX) x * gaussianPDFReal mX vX x
           * (logDeriv (gaussianPDFReal mY vY) (z - x) * gaussianPDFReal mY vY (z - x))) volume := by
@@ -583,7 +583,7 @@ theorem isBlachmanConvReady_gaussianPDFReal
           (logDeriv (gaussianPDFReal mY vY) w) ^ 2 * gaussianPDFReal mY vY w) volume := by
         refine (integrable_logDeriv_sq_mul_gaussianPDFReal mY hvY).congr
           (Filter.Eventually.of_forall fun b => ?_)
-        simp only [Common2026.Shannon.logDeriv_gaussianPDFReal hvY, neg_div]; ring
+        simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvY, neg_div]; ring
       have hbase : Integrable (fun x =>
           (logDeriv (gaussianPDFReal mY vY) (z - x)) ^ 2 * gaussianPDFReal mY vY (z - x)) volume :=
         hpre.comp_sub_left z
@@ -643,19 +643,19 @@ theorem isBlachmanConvReady_gaussianPDFReal
   int_fisherX := by
     refine (integrable_logDeriv_sq_mul_gaussianPDFReal mX hvX).congr
       (Filter.Eventually.of_forall fun x => ?_)
-    simp only [Common2026.Shannon.logDeriv_gaussianPDFReal hvX, neg_div]
+    simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvX, neg_div]
     ring
   int_fisherY := by
     refine (integrable_logDeriv_sq_mul_gaussianPDFReal mY hvY).congr
       (Filter.Eventually.of_forall fun x => ?_)
-    simp only [Common2026.Shannon.logDeriv_gaussianPDFReal hvY, neg_div]
+    simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvY, neg_div]
     ring
   int_fisherZ := by
     have hvXY : vX + vY ≠ 0 := fun h => hvX (add_eq_zero.mp h).1
     rw [convDensityAdd_gaussian_closed_form hvX hvY]
     refine (integrable_logDeriv_sq_mul_gaussianPDFReal (mX + mY) hvXY).congr
       (Filter.Eventually.of_forall fun x => ?_)
-    simp only [Common2026.Shannon.logDeriv_gaussianPDFReal hvXY, neg_div]
+    simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvXY, neg_div]
     ring
   int_prod1 := by
     -- shear `(z,x) ↦ (x, z - x)` separates `fY(z-x)`:
@@ -664,7 +664,7 @@ theorem isBlachmanConvReady_gaussianPDFReal
         (logDeriv (gaussianPDFReal mX vX) a) ^ 2 * gaussianPDFReal mX vX a) volume := by
       refine (integrable_logDeriv_sq_mul_gaussianPDFReal mX hvX).congr
         (Filter.Eventually.of_forall fun a => ?_)
-      simp only [Common2026.Shannon.logDeriv_gaussianPDFReal hvX, neg_div]; ring
+      simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvX, neg_div]; ring
     have hB : Integrable (fun b => gaussianPDFReal mY vY b) volume :=
       integrable_gaussianPDFReal mY vY
     have hsep : Integrable
@@ -684,7 +684,7 @@ theorem isBlachmanConvReady_gaussianPDFReal
         (logDeriv (gaussianPDFReal mY vY) b) ^ 2 * gaussianPDFReal mY vY b) volume := by
       refine (integrable_logDeriv_sq_mul_gaussianPDFReal mY hvY).congr
         (Filter.Eventually.of_forall fun b => ?_)
-      simp only [Common2026.Shannon.logDeriv_gaussianPDFReal hvY, neg_div]; ring
+      simp only [InformationTheory.Shannon.logDeriv_gaussianPDFReal hvY, neg_div]; ring
     have hsep : Integrable
         (fun p : ℝ × ℝ =>
           gaussianPDFReal mX vX p.1
@@ -790,4 +790,4 @@ theorem convex_fisher_bound_gaussian_via_density_route_closed_form
     NNReal.coe_add] at hbnd
   exact hbnd
 
-end Common2026.Shannon.EPIBlachmanGaussianWitness
+end InformationTheory.Shannon.EPIBlachmanGaussianWitness

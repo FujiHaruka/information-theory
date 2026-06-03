@@ -10,7 +10,7 @@ import InformationTheory.Meta.EntryPoint
 This file builds on the finite `Measure.pi` tilt factorization
 (`MeasurePiTiltedFactorization.pi_tilted_sum_eq_pi_tilted`) to discharge — or
 maximally shrink — the `IsMeasureInfinitePiTiltedEq` predicate of
-`Common2026/Shannon/CramerLC2PhaseC.lean`.
+`InformationTheory/Shannon/CramerLC2PhaseC.lean`.
 
 ## Outline
 

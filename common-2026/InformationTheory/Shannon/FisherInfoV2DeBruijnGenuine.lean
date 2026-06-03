@@ -26,7 +26,7 @@ The surviving definitions (`gaussianConvolution`, `IsRegularDeBruijnHypV2`,
 `FisherInfoV2DeBruijn.lean` and are available here transitively.
 -/
 
-namespace Common2026.Shannon.FisherInfoV2
+namespace InformationTheory.Shannon.FisherInfoV2
 
 set_option linter.unusedSectionVars false
 
@@ -137,4 +137,4 @@ theorem debruijnIntegrationIdentity_holds
       = ∫ t in Set.Ioo 0 T, f' t ∂volume
   rw [← h_f0, ← h_ftc, h_ioc, h_ioo_eq_ioc]
 
-end Common2026.Shannon.FisherInfoV2
+end InformationTheory.Shannon.FisherInfoV2

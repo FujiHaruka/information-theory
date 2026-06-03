@@ -9,7 +9,7 @@ import Mathlib.Analysis.Convex.Function
 /-!
 # Differential entropy + Gaussian max-entropy (E-9)
 
-Common2026 E-9 ムーンショット ([`docs/shannon/differential-entropy-plan.md`])。
+InformationTheory E-9 ムーンショット ([`docs/shannon/differential-entropy-plan.md`])。
 
 Cover-Thomas 8.1 (微分エントロピー定義), 8.6.1 (translation / scaling), 9.6
 (Gaussian max-entropy)。`differentialEntropy μ := ∫ x, Real.negMulLog
@@ -27,7 +27,7 @@ Cover-Thomas 8.1 (微分エントロピー定義), 8.6.1 (translation / scaling)
 * `klDiv_gaussianReal_gaussianReal_eq` — Phase E 1 KL closed-form
 -/
 
-namespace Common2026.Shannon
+namespace InformationTheory.Shannon
 
 set_option linter.unusedSectionVars false
 
@@ -921,4 +921,4 @@ theorem concaveOn_log_one_add_div {N : ℝ} (hN_pos : 0 < N) :
   rw [h_combo] at h_jensen
   exact h_jensen
 
-end Common2026.Shannon
+end InformationTheory.Shannon

@@ -4,7 +4,7 @@ import InformationTheory.Shannon.AWGNMIBridge
 /-!
 # T2-A AWGN MI bridge: body discharge of `IsAwgnOutputGaussian`
 
-Wave6 で publish した `Common2026/Shannon/AWGNMIBridge.lean` の 3 個の primitive
+Wave6 で publish した `InformationTheory/Shannon/AWGNMIBridge.lean` の 3 個の primitive
 predicate のうち、本 file は **`IsAwgnOutputGaussian` の body discharge** を行う。
 
 ```

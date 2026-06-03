@@ -42,7 +42,7 @@ coding theorem to the additive white Gaussian noise channel.
 * `awgnChannel N : Channel ℝ ℝ` は `toFun x := gaussianReal x N` で直接定義
   (`gaussianReal_conv_gaussianReal` (`m₁+m₂, v₁+v₂`) の結論形に直結)。
 * `awgnCapacity P N : ℝ` は `sSup` 直書き
-  (`Common2026/Shannon/ChannelCodingShannonTheorem.lean` の `stdSimplex` 形は
+  (`InformationTheory/Shannon/ChannelCodingShannonTheorem.lean` の `stdSimplex` 形は
   `Fintype α` 想定で AWGN 不適用)。
 -/
 

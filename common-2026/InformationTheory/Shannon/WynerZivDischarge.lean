@@ -26,7 +26,7 @@ plus surrounding plumbing.
   which is non-affine and blocks the full L-WZ3 discharge in the present
   scope.
 * **`convex_stdSimplex` re-export** — a one-line wrapper namespaced under
-  Common2026.
+  InformationTheory.
 * **Constraint image ⊆ `stdSimplex` projection** — the natural pmf-level
   containment that suffices to derive `BddBelow` of the Wyner–Ziv objective
   image automatically (compactness of the simplex + continuity of the

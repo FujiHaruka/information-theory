@@ -8,7 +8,7 @@ import Mathlib.MeasureTheory.MeasurableSpace.Embedding
 
 [D-2'' ムーンショット plan](../../../docs/shannon/channel-coding-converse-general-d2-double-prime-plan.md)
 の Phase B。`channel_coding_converse_general_memoryless_strong` は **Cover-Thomas Thm 7.9
-のエントロピー劣加法経路** (`Common2026/Shannon/CondEntropyMemoryless.lean`) を通じて
+のエントロピー劣加法経路** (`InformationTheory/Shannon/CondEntropyMemoryless.lean`) を通じて
 `IsMemorylessChannelStrong` から直接導出する。D-2' hypothesis-form (3 仮説経由) は
 `h_yother_zero` が encoder 任意では偽 (反例: `X_1 := X_0`) のため、Cover-Thomas の
 劣加法 (`H(Y^n) ≤ ∑ H(Y_i)`) ＋ 強 memoryless `H(Y^n|X^n) = ∑ H(Y_i|X_i)` 経路に切り替えた。
@@ -238,7 +238,7 @@ unconstrained, so `Y^{≠i} ⊥/ X_i | Y_i` in general.
 
 The fix is the entropy-subadditivity route of Cover-Thomas Thm 7.9
 (see `mutualInfo_le_sum_per_letter_of_memoryless_strong` in the next section,
-backed by `Common2026/Shannon/CondEntropyMemoryless.lean`), which bypasses
+backed by `InformationTheory/Shannon/CondEntropyMemoryless.lean`), which bypasses
 `h_yother_zero` entirely and works for any encoder. -/
 
 end Discharge

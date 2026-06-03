@@ -9,9 +9,9 @@ rather than committing to a structured PMF type, because every chain rule
 becomes a `ring` identity at this level.
 
 > **Formalism boundary (2026-05-10)**: 本ファイルは Phase 1 Fano core proof
-> (`Common2026/Fano/Core.lean`) 専用の **PMF 形** entropy/condEntropy 群です。
-> Shannon converse / Han / measure-theoretic Fano (`Common2026/Fano/Measure.lean`,
-> `Common2026/Shannon/*`) で使われる **測度形** entropy (`Shannon.Bridge.entropy`)
+> (`InformationTheory/Fano/Core.lean`) 専用の **PMF 形** entropy/condEntropy 群です。
+> Shannon converse / Han / measure-theoretic Fano (`InformationTheory/Fano/Measure.lean`,
+> `InformationTheory/Shannon/*`) で使われる **測度形** entropy (`Shannon.Bridge.entropy`)
 > および `InformationTheory.MeasureFano.condEntropy` とは parallel formalism
 > であり、相互依存はありません。新規ムーンショットは測度形を使用してください。
 > 詳細: `docs/moonshot-seeds.md` の横断観察セクション。

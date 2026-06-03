@@ -188,8 +188,8 @@ bounded; PDF integrable). `#print axioms` = [propext, Classical.choice, Quot.sou
 (sorryAx-free, machine-checked). 0 sorry / 0 @residual.
 @audit:ok -/
 theorem convDensityAdd_hasDerivAt_of_regular (fX fY : ℝ → ℝ) (z₀ : ℝ)
-    (hregX : Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fX)
-    (hregY : Common2026.Shannon.FisherInfoV2.IsRegularDensityV2 fY)
+    (hregX : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fX)
+    (hregY : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fY)
     (hX_int : Integrable fX volume)
     (hY_bdd : ∃ M : ℝ, ∀ w, |fY w| ≤ M)
     (hY'_bdd : ∃ M : ℝ, ∀ w, |deriv fY w| ≤ M) :

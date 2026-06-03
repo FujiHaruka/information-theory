@@ -41,7 +41,7 @@ namespace InformationTheory.Shannon.EPIBlachmanDensity
 
 open MeasureTheory Real
 open scoped ENNReal NNReal
-open Common2026.Shannon.FisherInfoV2
+open InformationTheory.Shannon.FisherInfoV2
 open InformationTheory.Shannon.EPIConvDensity
 
 /-- **Conditional density** `p_{X|Z}(x|z) := fX(x) · fY(z - x) / p_Z(z)`, where

@@ -202,9 +202,9 @@ theorem awgn_theorem_of_F2F3_hypotheses
         (InformationTheory.Shannon.ChannelCoding.mutualInfoOfChannel
             (gaussianReal 0 P.toNNReal)
             (awgnChannel N (isAwgnChannelMeasurable N))).toReal
-          = Common2026.Shannon.differentialEntropy
+          = InformationTheory.Shannon.differentialEntropy
               (gaussianReal 0 (P.toNNReal + N))
-            - Common2026.Shannon.differentialEntropy (gaussianReal 0 N))
+            - InformationTheory.Shannon.differentialEntropy (gaussianReal 0 N))
     {R : ℝ} (hR_pos : 0 < R) (hR_lt_C : R < (1/2) * Real.log (1 + P / (N : ℝ)))
     {ε : ℝ} (hε : 0 < ε) :
     ∃ N₀ : ℕ, ∀ n, N₀ ≤ n →
