@@ -262,6 +262,7 @@ LZ78 achievability / converse bounds, being genuinely bit-based
 
 omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- `0 < Real.log 2` — the unit-conversion constant between nats and bits. -/
+@[entry_point]
 theorem log_two_pos : (0 : ℝ) < Real.log 2 := Real.log_pos (by norm_num)
 
 end InformationTheory.Shannon

@@ -286,6 +286,7 @@ placeholder); the proof of this a.s. statement is delegated to
 (Barron a.s. lift) として research-level upstream に scope-out 済** (Mathlib 測度論
 基盤の新規研究貢献を要する)。`lz78-residual-discharge-plan` (旧 successor 計画) は
 archive 化、本 def は statement-only publish 形式を維持する。 -/
+@[entry_point]
 def IsLZ78ConversePassthrough
     (μ : Measure Ω) (p : StationaryProcess μ α)
     (lz78EncodingLength : ∀ n, (Fin n → α) → ℕ) : Prop :=
@@ -320,6 +321,7 @@ chain rule.
 AEP) / M4 (Barron a.s. lift) として research-level upstream に scope-out 済**
 (Mathlib 測度論基盤の新規研究貢献を要する)。`lz78-residual-discharge-plan` (旧
 successor 計画) は archive 化、本 def は statement-only publish 形式を維持する。 -/
+@[entry_point]
 def IsSMBSandwichPassthrough
     (μ : Measure Ω) (p : StationaryProcess μ α) : Prop :=
   ∀ᵐ ω ∂μ,

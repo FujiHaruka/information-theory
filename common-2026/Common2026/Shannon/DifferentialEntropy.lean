@@ -886,6 +886,7 @@ Affine-substitution concavity used by AWGN converse C-1c
 Built by composing `Real.strictConcaveOn_log_Ioi.concaveOn` (concavity of `Real.log`
 on `Ioi 0`) with the affine map `x ↦ 1 + x/N`, then restricting via `ConcaveOn.subset`
 to `Ici 0` (since `1 + x/N ≥ 1 > 0` for `x ≥ 0`). -/
+@[entry_point]
 theorem concaveOn_log_one_add_div {N : ℝ} (hN_pos : 0 < N) :
     ConcaveOn ℝ (Set.Ici (0 : ℝ)) (fun x => Real.log (1 + x / N)) := by
   -- Direct proof from the definition of `ConcaveOn`.

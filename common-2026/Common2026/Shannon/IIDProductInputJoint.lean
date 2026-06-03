@@ -1,4 +1,5 @@
 import Common2026.Shannon.IIDProductInput
+import Common2026.Meta.EntryPoint
 
 /-!
 # i.i.d. ambient `(μ, Xs, Ys)` from a joint distribution (E-3' rate-distortion variant)
@@ -196,6 +197,7 @@ lemma iidAmbientJoint_iidYs_real_singleton_pos
 
 omit [Fintype α] [DecidableEq α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [MeasurableSingletonClass β] in
+@[entry_point]
 lemma iidAmbientJoint_joint_real_singleton_pos
     (joint : Measure (α × β)) [IsProbabilityMeasure joint]
     (h_joint_pos : ∀ p : α × β, 0 < joint.real {p}) (q : α × β) :

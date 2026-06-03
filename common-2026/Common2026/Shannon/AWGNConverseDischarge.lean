@@ -1211,6 +1211,7 @@ theorem isAwgnConverseFeasible_discharger
 IsAwgnConverseFeasible` を除去 (Tier 3 → Tier 2、analytic content は `AwgnWalls.lean`
 shared sorry 補題に集約)。残る hyp `h_mi_bridge_per_letter` は F-2 closure 待ちの
 per-letter MI bridge (`awgn-mi-bridge-plan.md`)、本 file scope では 0 sorry。 -/
+@[entry_point]
 theorem awgn_converse_F3_discharged
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N)

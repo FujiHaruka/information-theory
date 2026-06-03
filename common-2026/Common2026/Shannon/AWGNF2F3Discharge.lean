@@ -88,6 +88,7 @@ def AWGNJointlyTypicalSet (n : ℕ) (P N ε : ℝ) :
         ∧ (∑ i : Fin n, (p.2 i)^2) ≤ (n : ℝ) * (P + N + ε) := Iff.rfl
 
 /-- Trivial case: at `n = 0`, every pair is jointly typical. -/
+@[entry_point]
 lemma AWGNJointlyTypicalSet_zero (P N ε : ℝ) :
     AWGNJointlyTypicalSet 0 P N ε = Set.univ := by
   ext p
@@ -194,6 +195,7 @@ concrete hypotheses.
 * F-3 (converse)     → `awgn-converse-aux-plan.md`
 
 `@audit:closed-by-successor(awgn-achievability-typicality-plan)` -/
+@[entry_point]
 theorem awgn_theorem_of_F2F3_hypotheses
     (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_mi_bridge :
@@ -227,6 +229,7 @@ closed here; this re-publishes
 `AWGNF1Discharge.awgn_capacity_closed_form_F1_discharged` unchanged in content.
 
 `@audit:closed-by-successor(awgn-converse-aux-plan)` -/
+@[entry_point]
 theorem awgn_capacity_closed_form_of_maxent_hypotheses
     (P : ℝ) (hP : 0 ≤ P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)
     (h_bridge_gauss :

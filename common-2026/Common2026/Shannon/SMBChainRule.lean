@@ -204,6 +204,7 @@ lemma block_singleton_pos_ae_at
 
 omit [DecidableEq α] [Nonempty α] in
 /-- A.s., the singleton mass at every prefix `block_i ω` (for `i ≤ n`) is positive. -/
+@[entry_point]
 lemma block_singleton_pos_ae_upTo
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (p : StationaryProcess μ α) (n : ℕ) :

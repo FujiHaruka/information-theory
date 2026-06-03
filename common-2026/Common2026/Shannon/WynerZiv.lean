@@ -200,6 +200,7 @@ def WynerZivConstraint
         ∧ wzExpectedDistortion U d qf.1 qf.2 ≤ D}
 
 /-- Membership unfold for `WynerZivConstraint`. -/
+@[entry_point]
 lemma mem_WynerZivConstraint_iff
     {P_XY : α × β → ℝ} {d : α → γ → ℝ} {D : ℝ}
     {qf : (α × β × U → ℝ) × (U × β → γ)} :

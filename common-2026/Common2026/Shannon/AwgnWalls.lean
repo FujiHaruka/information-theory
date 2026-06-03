@@ -248,6 +248,7 @@ mixture's log-density (`h_ent_int` of `differentialEntropy_le_gaussian_of_varian
 `DifferentialEntropy.lean:518`) is absent.
 
 @residual(wall:awgn-per-letter-integrability) -/
+@[entry_point]
 theorem awgnPerLetterIntegrability_holds
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (c : AwgnCode M n P) :
@@ -270,6 +271,7 @@ Mathlib 壁 T-FFC-3).
 Consumer-side `unfold jointMIXnYn perLetterMI awgnConverseJoint` で defeq.
 
 @residual(wall:awgn-continuous-mi-chain-rule) -/
+@[entry_point]
 theorem awgnContinuousMIChainRule_holds
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} (c : AwgnCode M n P) :
@@ -296,6 +298,7 @@ session の bridge 上限を超える (encoder 非単射時の `condDistrib W (e
 defeq に接続。
 
 @residual(wall:awgn-converse-markov-regularity) -/
+@[entry_point]
 theorem awgnConverseMarkov_holds
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)
     {M n : ℕ} [NeZero M] (c : AwgnCode M n P) :
