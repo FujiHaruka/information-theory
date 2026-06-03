@@ -6,6 +6,7 @@ import InformationTheory.Shannon.EPIL3Integration
 import InformationTheory.Shannon.EPIPlumbing
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.HeatFlowPath
+import InformationTheory.Shannon.EPIG2HeatFlowContinuity
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Analysis.SpecialFunctions.Log.Deriv
@@ -1014,19 +1015,21 @@ theorem csiszarLogRatioGap_differentiableOn_interior
 
 /-- **R-5-b — `csiszarLogRatioGap X Y Z_X Z_Y P` is continuous on `Set.Ici 0`**.
 
-For `t > 0`, continuity follows from R-2 (`csiszarLogRatioGap_hasDerivAt`) via
-`HasDerivAt.continuousAt`. The endpoint `t = 0` requires continuity of the three
-`entropyPower (P.map ...)` terms along the heat-flow path as `√t → 0`. The
-`log` / `+` / `−` outer composition is continuous, so the analytic content is
-**the same G2 dominated-convergence wall** as the difference-version
-`csiszarGap1Source_continuousOn` (D4): per-`t` continuity of `entropyPower ∘ P.map`
-along the heat-flow path requires Lebesgue-dominated-convergence machinery not
-carried by the current `IsDeBruijnRegularityHyp` bundle.
+The gap is `log (eP_sum) − log (eP_X + eP_Y)` over the three heat-flow
+entropy-power terms `eP_* = entropyPower (P.map (· + √t·Z))`. Each term is
+`ContinuousOn (Set.Ici 0)` via the shared atom
+`heatFlowEntropyPower_continuousOn` (`EPIG2HeatFlowContinuity.lean`,
+`wall:heatflow-continuity`). The outer `log` / `+` / `−` composition is genuine
+(`ContinuousOn.log` with `entropyPower_pos` / `add_pos` for the `≠ 0` premises,
+`ContinuousOn.sub`).
 
-This is **NOT a new residual classification**: it inherits the existing G2
-continuity wall from D4 via the same closure plan
-`epi-stam-to-conclusion-phaseA-plan`. The ratio reframe does not worsen the
-continuity wall (`log` / `+` / `−` are continuous maps). -/
+This consumer carries **no `@residual`**: the only `sorry` lives in the shared
+`wall:heatflow-continuity` lemma (per the shared-wall pattern). The wall is the
+`t = 0⁺`-uniform integrable majorant for `negMulLog (f_t)`, not derivable from
+`IsDeBruijnRegularityHyp` (GATE NO-GO 2026-06-03, see the wall lemma docstring).
+This corrects the earlier `@residual(plan:epi-stam-to-conclusion-phaseA-plan)`
+misclassification — the obstruction is a genuine Mathlib wall, not a plan
+sub-step. -/
 theorem csiszarLogRatioGap_continuousOn
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -1038,10 +1041,19 @@ theorem csiszarLogRatioGap_continuousOn
       (fun t : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
         X Y Z_X Z_Y P t)
       (Set.Ici (0 : ℝ)) := by
-  sorry
-  -- @residual(plan:epi-stam-to-conclusion-phaseA-plan) -- inherits the G2
-  -- continuity wall from `csiszarGap1Source_continuousOn` (D4); not a new
-  -- classification (log/+/− outer composition is continuous).
+  -- Each of the three `entropyPower (P.map (· + √t·Z))` terms is `ContinuousOn`
+  -- via the shared `wall:heatflow-continuity` atom; the outer `log/+/−`
+  -- composition is genuine (no new `@residual` on this consumer).
+  have h_sum := heatFlowEntropyPower_continuousOn
+    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P h_reg_sum
+  have h_X := heatFlowEntropyPower_continuousOn X Z_X P h_reg_X
+  have h_Y := heatFlowEntropyPower_continuousOn Y Z_Y P h_reg_Y
+  unfold InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
+  refine ContinuousOn.sub (h_sum.log ?_) ((h_X.add h_Y).log ?_)
+  · intro t _
+    exact (entropyPower_pos _).ne'
+  · intro t _
+    exact (add_pos (entropyPower_pos _) (entropyPower_pos _)).ne'
 
 /-- **R-5-c — `AntitoneOn (fun t => csiszarLogRatioGap X Y Z_X Z_Y P t) (Set.Ici 0)`**,
 the genuine log-ratio EPI gap is antitone on the heat-flow ray `[0, ∞)`.
@@ -1152,24 +1164,19 @@ Members:
 
 /-- **A-4-1**: `csiszarGap1Source X Y Z_X Z_Y P` is continuous on `Set.Ici 0`.
 
-For `t > 0`, continuity follows from `csiszarGap1Source_hasDerivAt`
-(A-2-3) via `HasDerivAt.continuousAt`. The endpoint `t = 0` is connected
-by the closed-form `csiszarGap1Source_at_zero` (A-0'-3) together with
-the fact that the three `entropyPower (P.map ...)` terms vary continuously
-as `√t → 0` (this last continuity is the analytic content; we package it
-behind `sorry` because the per-`t` continuity of `entropyPower ∘ P.map`
-along the heat-flow path requires Lebesgue-dominated-convergence machinery
-that is **not** carried by the current `IsDeBruijnRegularityHyp` bundle,
-and exceeds A-4's 25-40 line budget to build inline). A future sub-plan
-will close this either via a `ContinuousOn entropyPower_heatflow` InformationTheory
-lemma or by tightening `IsDeBruijnRegularityHyp` to include path-continuity
-of the density derivative.
+The difference gap `eP_sum − eP_X − eP_Y` over the three heat-flow
+entropy-power terms `eP_* = entropyPower (P.map (· + √t·Z))`. Each term is
+`ContinuousOn (Set.Ici 0)` via the shared atom
+`heatFlowEntropyPower_continuousOn` (`EPIG2HeatFlowContinuity.lean`,
+`wall:heatflow-continuity`); the outer `−` / `−` composition is genuine
+(`ContinuousOn.sub`, no positivity premise needed for the difference form).
 
-Signature stable; body deferred as `sorry` with
-`@residual(plan:epi-stam-to-conclusion-phaseA-plan)` — sub-step
-A-4-continuity (per-`t` continuity of `entropyPower ∘ P.map` along the
-heat-flow path, requires Lebesgue-dominated-convergence machinery beyond
-the current `IsDeBruijnRegularityHyp` bundle). -/
+This consumer carries **no `@residual`**: the only `sorry` lives in the shared
+`wall:heatflow-continuity` lemma. **NOTE (確定事実 2)**: this difference version
+is dead code — its only consumer (`csiszarGap1Source_antitoneOn_Ici_zero`, D6) was
+deleted in the R-5 rewire; the live continuity consumer is the ratio version
+`csiszarLogRatioGap_continuousOn` (R-5-b, feeds R-5-c). It is wired to the same
+shared wall so the wall stays at one `sorry`. -/
 theorem csiszarGap1Source_continuousOn
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -1178,8 +1185,14 @@ theorem csiszarGap1Source_continuousOn
     (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
     (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P) :
     ContinuousOn (fun t : ℝ => csiszarGap1Source X Y Z_X Z_Y P t) (Set.Ici (0 : ℝ)) := by
-  sorry
-  -- @residual(plan:epi-stam-to-conclusion-phaseA-plan) -- sub-step A-4-continuity
+  -- Difference version: outer `−`/`−` composition over the same three
+  -- `wall:heatflow-continuity` atoms (no log, hence no positivity premise).
+  have h_sum := heatFlowEntropyPower_continuousOn
+    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P h_reg_sum
+  have h_X := heatFlowEntropyPower_continuousOn X Z_X P h_reg_X
+  have h_Y := heatFlowEntropyPower_continuousOn Y Z_Y P h_reg_Y
+  unfold InformationTheory.Shannon.EPIL3Integration.csiszarGap1Source
+  exact (h_sum.sub h_X).sub h_Y
 
 /-- **A-4-2**: `csiszarGap1Source X Y Z_X Z_Y P` is differentiable on the
 interior `Set.Ioi 0 = interior (Set.Ici 0)`, via A-2-3 + `HasDerivAt.differentiableAt`. -/
