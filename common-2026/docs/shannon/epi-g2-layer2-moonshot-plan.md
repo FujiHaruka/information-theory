@@ -14,15 +14,20 @@
 
 ## 進捗
 
-- [ ] Phase 0 — 列特徴付けブリッジの API 在庫確定 📋
-- [ ] Phase 1 — 層1 L¹ mollifier 収束 (`wall:approx-identity-L1` 切出 + 先行 ship) 📋
-- [ ] Phase 2 — `UnifIntegrable` / `UnifTight` witness 構成 📋
-- [ ] Phase 3 — 層2 machinery genuine 化 (列化 + Vitali + L¹→積分 + exp 再合成) 📋
-- [ ] Phase 4 — 壁補題 closure / proof-done 結線 📋
-- [ ] Phase 5 — 密度同定ブリッジ署名設計 📋
+- [x] Phase 0 — 列特徴付けブリッジ ✅ (層2補題 `differentialEntropy_convDensity_integral_tendsto` 内で `tendsto_iff_seq_tendsto` 結線済)
+- [ ] Phase 1 — 層1 L¹ mollifier 収束 (`wall:approx-identity-L1`) 📋 **← 唯一の残壁 (genuine moonshot)**
+- [ ] Phase 2 — `UnifIntegrable` / `UnifTight` witness 構成 📋 (`wall:approx-identity-L1` 配下、`negMulLog_convDensity_unif*`/`_tendsto_ae`)
+- [x] Phase 3 — 層2 machinery genuine 化 ✅ (`differentialEntropy_convDensity_integral_tendsto` own sorry 0、Vitali + L¹→積分)
+- [x] Phase 4 — 壁補題 closure ✅ (`heatFlowEntropyPower_continuousWithinAt_zero` を `@residual(wall:approx-identity-L1)` 単独化)
+- [x] Phase 5 — 密度同定ブリッジ署名設計 + 実装 ✅ (下記サブ、5-C のみ残=site park 済で壁補題に影響なし)
+  - [x] 5-A v_Z 一般化 atom (N(0,2) 和 instance 対応) / [x] 5-B `IsHeatFlowEndpointRegular` + 壁補題 `key` genuine 化
+  - [x] 5-D consumer threading + site 密度witness park / [x] 5-E plumbing genuine 化 / [x] 5-F under-hyp 補題削除 + `hpX_ent` precondition 化
+  - [ ] 5-C `p_{X+Y}=convDensityAdd pX pY` 同定 atom 📋 (上流密度供給時に必要、壁補題 closure には不要)
+  - 独立 honesty audit 全 PASS (5-B/5-D 4観点 + 5-E/5-F 7観点、defect 0)
 
-proof-log: Phase 1〜3 は yes (新規 analytic content、判断記録の価値大)。Phase 0/4 は no。
-Phase 5 は signature 設計 yes (precondition bundle / N(0,2) reparam の判断記録)。
+**現状**: 壁補題 `heatFlowEntropyPower_continuousWithinAt_zero` は `wall:approx-identity-L1` (層1 L¹収束 moonshot) **単独**に縮小。proof-done (`@audit:ok`) は Phase 1 (層1) genuine 化を待つ。
+
+proof-log: Phase 1〜2 は yes (残 analytic moonshot)。Phase 0/3/4/5 は完了。
 
 ## ゴール / Approach
 
