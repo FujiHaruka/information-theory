@@ -25,11 +25,12 @@
   (`@audit:ok`)。残壁 = negMulLog tail bridge (`@residual(wall:approx-identity-L1)`)。
   **finding (2026-06-04)**: 一般 L¹ pX (Gauss より薄い裾) で `|log f_n| ≲ 1+x²` 不成立 → 2次モーメント
   route で tail を n-一様駆動不可。UI の de la VP core と **本質同一の wall** (将来 shared sorry 集約候補)。
-- [ ] Phase C — UI witness (`negMulLog_convDensity_unifIntegrable`、`EPIVitaliUI.lean:324`) 🚧 大幅前進。
-  **Step 1-3 genuine ✅** (`withDensity` 確率測度 framing + `differentialEntropy μ_n = ∫negMulLog f_n` 同定 +
-  maxent 上界、`@audit:ok` 2 / honest_residual)。主witness own body 0 sorry (de la VP core へ genuine 還元)。
-  残: de la Vallée-Poussin core (`:293` wall) + moment integrability 2 本 (`:118/:131` plan-class、closeable)。
-  `hpX_mass` precondition 追加 (確率測度 framing 用、layer-2 から threading)。真 moonshot から「橋 1 本 + plumbing」に縮小。
+- [ ] Phase C — UI witness (`negMulLog_convDensity_unifIntegrable`、`EPIVitaliUI.lean`) 🚧 framing 全 genuine。
+  **Step 1-3 + moment integrability 全 genuine ✅** (`withDensity` 確率測度 framing + `differentialEntropy μ_n =
+  ∫negMulLog f_n` 同定 + maxent 上界 + `convDensityAdd_gaussian_sq/id_integrable` 全 `@audit:ok`、独立監査 PASS)。
+  主witness own body 0 sorry (de la VP core へ genuine 還元)。**plan-residual 全除去**。
+  **残 = de la Vallée-Poussin core 1 本のみ** (`negMulLog_convDensity_indicatorTail_uniform`、`@residual(wall:
+  approx-identity-L1)` = 真 moonshot、判断ログ 9)。`hpX_mass` precondition 追加済 (layer-2 から threading)。
 - [x] Phase S — signature threading + 独立 honesty audit ✅ **部分 PASS 2026-06-04**。`hu_bdd : BddAbove (Set.range u)`
   を UT/UI witness に追加 (under-hypothesized 修正、`u→∞` で UnifTight/UnifIntegrable は genuine に偽)、
   layer-2 で `hv_bdd` を genuine 供給。独立 honesty-auditor が precondition (regularity、非 load-bearing) と PASS。
