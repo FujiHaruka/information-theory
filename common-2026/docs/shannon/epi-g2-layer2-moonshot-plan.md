@@ -15,7 +15,7 @@
 ## 進捗
 
 - [x] Phase 0 — 列特徴付けブリッジ ✅ (層2補題 `differentialEntropy_convDensity_integral_tendsto` 内で `tendsto_iff_seq_tendsto` 結線済)
-- [ ] Phase 1 — 層1 L¹ mollifier 収束 (`wall:approx-identity-L1`) 📋 **← 残壁本体 (genuine moonshot)** → [`epi-g2-vitali-closure-plan.md`](epi-g2-vitali-closure-plan.md) §層1
+- [x] Phase 1 — 層1 L¹ mollifier 収束 ✅ **CLOSED 2026-06-04** (`convDensityAdd_tendsto_L1_zero`、新 file `InformationTheory/Shannon/EPIApproxIdentityL1.lean`、11 decl 全 `@audit:ok`、sorryAx-free、独立 audit PASS。平行移動連続 + 連続 Minkowski Fubini + Gauss 集中 DCT)
 - [ ] Phase 2 — 3 Vitali witness 構成 (UI / UT / ae) 📋 (`wall:approx-identity-L1` 配下、`negMulLog_convDensity_unif*`/`_tendsto_ae`) → **[`epi-g2-vitali-closure-plan.md`](epi-g2-vitali-closure-plan.md) に精密設計を分離 (2026-06-04)**
 - [x] Phase 3 — 層2 machinery genuine 化 ✅ (`differentialEntropy_convDensity_integral_tendsto` own sorry 0、Vitali + L¹→積分)
 - [x] Phase 4 — 壁補題 closure ✅ (`heatFlowEntropyPower_continuousWithinAt_zero` を `@residual(wall:approx-identity-L1)` 単独化)
@@ -25,9 +25,9 @@
   - [ ] 5-C `p_{X+Y}=convDensityAdd pX pY` 同定 atom 📋 (上流密度供給時に必要、壁補題 closure には不要)
   - 独立 honesty audit 全 PASS (5-B/5-D 4観点 + 5-E/5-F 7観点、defect 0)
 
-**現状**: 壁補題 `heatFlowEntropyPower_continuousWithinAt_zero` は `wall:approx-identity-L1` (層1 L¹収束 moonshot) **単独**に縮小。proof-done (`@audit:ok`) は Phase 1 (層1) genuine 化を待つ。
+**現状**: 壁補題 `heatFlowEntropyPower_continuousWithinAt_zero` は `wall:approx-identity-L1` **単独**に縮小。その active residual は **3 Vitali witness (UI/UT/ae) のみ** (Phase 1 の密度 L¹ 収束は CLOSED)。proof-done (`@audit:ok`) は Phase 2 (3 witness) genuine 化を待つ。
 
-proof-log: Phase 1〜2 は yes (残 analytic moonshot)。Phase 0/3/4/5 は完了。
+proof-log: Phase 2 は yes (残 analytic moonshot、UI が最難)。Phase 0/1/3/4/5 は完了。
 
 ## ゴール / Approach
 

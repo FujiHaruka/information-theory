@@ -21,12 +21,12 @@
 - [ ] Phase B — UT witness (`negMulLog_convDensity_unifTight`) 📋
 - [ ] Phase C — UI witness (`negMulLog_convDensity_unifIntegrable`) 📋 **← 最難 (maxent 橋)**
 - [ ] Phase S — signature 変更の threading + 独立 honesty audit 📋 (UI/場合により UT に precondition 追加時)
-- [ ] 層1 — `convDensityAdd_tendsto_L1_zero` 本体 (別 dispatch 進行中、ae の足場) 📋
+- [x] 層1 — `convDensityAdd_tendsto_L1_zero` 本体 ✅ **CLOSED 2026-06-04** (`EPIApproxIdentityL1.lean`、genuine、sorryAx-free、独立 audit PASS。ae の足場 = 密度 a.e. 収束部分列の供給源)
 
 **現状**: 層2 machinery `differentialEntropy_convDensity_integral_tendsto`
-(`EPIG2HeatFlowContinuity.lean:206`、own-sorry 0、verbatim 確認済) は 3 witness +
-層1 補題の **transitive sorry のみ**で閉じる。3 witness が genuine 化されれば壁は層1
-`convDensityAdd_tendsto_L1_zero` 1 本に完全集約 (surface shrink 最終形)。撤退ライン発火 no
+(`EPIG2HeatFlowContinuity.lean:206`、own-sorry 0、verbatim 確認済) は **3 witness の
+transitive sorry のみ**で閉じる (層1 密度 L¹ 収束は CLOSED)。3 witness が genuine 化されれば
+壁 `wall:approx-identity-L1` は完全 closure (EPI G2 端点連続性 done)。撤退ライン発火 no
 (Vitali machinery `tendsto_Lp_of_tendsto_ae` は `[IsFiniteMeasure]` 非要求で `volume` で通る)。
 
 proof-log: Phase A/B/C は yes (各 witness の genuine 化 / signature 変更を記録)。Phase S は yes。
