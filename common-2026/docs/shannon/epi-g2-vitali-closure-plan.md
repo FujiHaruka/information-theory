@@ -390,6 +390,20 @@ maxent / `pPath_eq_convDensityAdd` 呼出 (genuine 補題の適用) は bundling
    (`:357`) が同じ device を使っているのが手掛かり。層2 の signature/結論型は不変、own-sorry 0 維持。
    surface = ae/UT/UI 3 本 → UT/UI 2 本 (+ second_moment plan-class) に縮小。
 
+9. **(2026-06-04 advisor NO-GO) de la VP wall は precondition 追加では閉じない = 真 moonshot 確定**:
+   独立 proof-pivot-advisor が「`hpX_ent : Integrable (negMulLog pX)` (h(X)<∞) を UI/UT witness に追加すれば
+   de la VP wall closure」案を **NO-GO** と判定。理由: maxent は `∫negMulLog f_n` の**符号付き上界のみ**供給、
+   hpX_ent で下界を足しても (そもそも下界 = entropy 単調性 `h(X+√tZ) ≥ h(X)` は in-tree 不在、de Bruijn 積分
+   自作要)、`∫negMulLog f_n` を一様 band に挟むだけで de la VP が要求する **superlinear-moment 一様有界**
+   (`∫G(|negMulLog f_n|) ≤ M`、G superlinear) には届かない。**`∫|f|≤M` と `∫G(|f|)≤M` の区別が本質 gap、
+   precondition では埋まらない**。**撤退ライン 2 (precondition で吸収) は誤り → 撤退ライン 3 (真 moonshot) が
+   正しい着地**。在庫 `epi-g2-ui-bridge-inventory.md` の「maxent + 撤退ライン 2 で吸収」楽観は訂正対象。
+   Scheffé 迂回 (UI 不要で L¹ 収束) も Mathlib に純粋 Scheffé 不在 (`tendsto_Lp_of_tendsto_ae` は UI+UT 必須)、
+   UI/UT 迂回不能。**唯一の将来 genuine ルート** = de Bruijn identity 積分で `differentialEntropy(P.map(X+√sZ))`
+   monotone を in-tree 化 (素材 `deBruijn_deriv_nonneg` `EPIStamDeBruijnConclusion.lean:132`) → maxent と組んで
+   `∫|negMulLog f_n|` 一様 → さらに superlinear moment 自作 (100-200 行 + monotone 化が別 wall 級)。本 session 対象外。
+   **honest 着地 = UI/UT を `@residual(wall:approx-identity-L1)` で park 継続** (独立 audit 済、仮説束化禁止)。
+
 8. **(2026-06-04 実装) UI を真 moonshot から「橋 1 本 + plumbing」に縮小、EPIG2 own-file sorry-free 達成**:
    UI witness を `EPIVitaliUI.lean` に集約。確率測度 framing は **option (b) `withDensity` 直構成** (X,Z,P 不要、
    `pPath_eq_convDensityAdd` 迂回) で genuine 化: `μ_n := volume.withDensity (ofReal∘f_n)` が確率測度

@@ -17,6 +17,13 @@
 
 ---
 
+> **⚠ 訂正 (2026-06-04 advisor NO-GO)**: 本 inventory は当初「maxent 上界 + 撤退ライン 2 (precondition 追加)
+> で de la VP wall を吸収」と楽観したが、独立 proof-pivot-advisor が **NO-GO** と判定。maxent は `∫negMulLog f_n`
+> の**符号付き上界のみ**供給し、de la VP が要求する **superlinear-moment 一様有界** (`∫G(|negMulLog|)≤M`、
+> G superlinear) には届かない (`∫|f|≤M` ≠ `∫G(|f|)≤M`)。hpX_ent (h(X)<∞) precondition を足しても埋まらず、
+> **撤退ライン 3 (真 moonshot)** が正しい着地。詳細 → `epi-g2-vitali-closure-plan.md` 判断ログ 9。以下の
+> 「条件付き GO」「撤退ライン 2 で吸収」記述は **この訂正で上書き** (履歴として残置)。
+
 ## 一行サマリ — **(B) 素材はあるが自作橋要**
 
 **de la Vallée-Poussin 定理 (`∫ G(|f_i|)` 一様有界 → UnifIntegrable、G superlinear) は Mathlib 全域に
