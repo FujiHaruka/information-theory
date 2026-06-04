@@ -130,6 +130,21 @@ content is exactly the absent conditional-KL integral form).
 
 All hypotheses are preconditions (regularity / absolute continuity), not load-bearing.
 
+Independent honesty audit 2026-06-04 (commit 0162576, fresh auditor): verdict
+`honest_residual`, `wall:cond-diff-entropy` classification confirmed. (1) Non-circular:
+no hypothesis has type ≡ conclusion. (2) Non-bundle: `hX`/`hZ`/`hX_ac` are genuine
+regularity/absolute-continuity preconditions; granting them does NOT hand over the KL
+identity, and they do NOT pre-suppose `condDifferentialEntropy_le` or `klDiv ≥ 0` (the
+claim is the equality MI = KL, not the downstream monotonicity inequality). (3) Not
+degenerate (substantive equality). (4) Sufficiency: the classical continuous
+`I(X;Z) = h(X) − h(X|Z) = D(P_{Z,X} ‖ P_Z ⊗ P_X)` identity is genuinely true under
+these preconditions. TODO verbatim re-confirmed at `KullbackLeibler.ChainRule.lean:74-77`
+("Add a version of the chain rule for the integral form of the conditional KL
+divergence"); `klDiv_compProd_eq_add` (ChainRule.lean:204) decomposes the FIRST marginal,
+which is `μ.map Z` on both sides here, so it collapses to `0 + klDiv` and does not supply
+the needed integral form. loogle backstop: `InformationTheory.mutualInfo` unknown,
+`condDistrib ∩ klDiv` Found 0.
+
 @residual(wall:cond-diff-entropy) -/
 theorem differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv
     {Ω α : Type*} [MeasurableSpace Ω] [MeasurableSpace α]
