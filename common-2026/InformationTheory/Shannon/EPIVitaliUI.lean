@@ -128,20 +128,20 @@ theorem differentialEntropy_convDensityAdd_gaussian_eq {pX : ℝ → ℝ}
   filter_upwards [hrn] with x hx
   rw [hx, ENNReal.toReal_ofReal (hf_nn x)]
 
-/-- **Second-moment integrability of `f_t` (helper, in-tree absent).**
-`x ↦ x² · f_t(x)` is `volume`-integrable. Same Tonelli/measurability plumbing scope as
-`convDensityAdd_second_moment` (value version). Parked for the closure plan.
+/-- **Second-moment integrability of `f_t` (helper, GENUINELY CLOSED).**
+`x ↦ x² · f_t(x)` is `volume`-integrable. Genuine via the same lintegral-Tonelli chain
+that closes `convDensityAdd_second_moment` (value version): lift the nonneg integrand
+`K x y := x²·(pX y · g(x-y))` to `ℝ≥0∞`, swap with `lintegral_lintegral_swap`, collapse
+the inner integral via the inline Gaussian shift moment `∫ x, x²·g(x-y) = y²+t`
+(reconstructed from `∫ g = 1`, `∫ x·g = 0`, `∫ x²·g = t`, all public API), then the
+outer lintegral is finite from `hpX_mom`+`hpX_int`; the `Integrable` conclusion follows
+from AEStronglyMeasurable + finite norm-lintegral.
 
-Independent honesty audit 2026-06-04 (fresh subagent, commit 825154f): honest_residual,
-classification CORRECT. The `plan:` (not `wall:`) class is justified — this is the
-integrability sub-fact of the SAME lintegral-Tonelli chain that genuinely closes
-`convDensityAdd_second_moment` (the value version, `@audit:ok`, sorryAx-free): that
-proof already establishes Bochner LHS integrability internally (`hLHS_int`, from
-finiteness of the lintegral chain). So this helper is plumbing closable by the plan's
-own machinery, NOT a Mathlib-absent wall. Plan `epi-g2-vitali-closure-plan` tracks
-`convDensityAdd_second_moment` in scope (Phase B/C). Signature is honest: all `hpX_*`
-are regularity preconditions, conclusion is an `Integrable` output (no value bundled).
-@residual(plan:epi-g2-vitali-closure-plan) -/
+`#print axioms = [propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-checked
+2026-06-04 with fresh olean). All `hpX_*` are pX regularity preconditions; the conclusion
+is an `Integrable` output, not bundled into any hypothesis. NOT load-bearing / circular /
+degenerate. Closes one of the two `plan:epi-g2-vitali-closure-plan` moment residuals.
+@audit:ok -/
 theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume)
@@ -292,16 +292,19 @@ theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
   rw [houter]
   exact ENNReal.ofReal_lt_top
 
-/-- **First-moment integrability of `f_t` (helper, in-tree absent).**
-`x ↦ x · f_t(x)` is `volume`-integrable. Same Tonelli/measurability plumbing scope as
-`convDensityAdd_second_moment` (value version). Parked for the closure plan.
+/-- **First-moment integrability of `f_t` (helper, GENUINELY CLOSED).**
+`x ↦ x · f_t(x)` is `volume`-integrable. Genuine via majorant domination
+(`Integrable.mono'`): since `f_t ≥ 0` and `|x| ≤ (1 + x²)/2`, we have
+`‖x·f_t x‖ = |x|·f_t x ≤ (f_t x + x²·f_t x)/2`, and the majorant is integrable from
+`f_t` integrability (`convDensityAdd_pXpY_integrable`) + second-moment integrability
+(`convDensityAdd_gaussian_sq_integrable`, above). No Gaussian absolute-moment computation
+needed.
 
-Independent honesty audit 2026-06-04 (fresh subagent, commit 825154f): honest_residual,
-classification CORRECT (same reasoning as `convDensityAdd_gaussian_sq_integrable`): the
-first-moment integrability `x ↦ x·f_t` is the companion sub-fact of the plan-tracked
-Tonelli/second-moment chain, closable by the plan's own machinery, NOT a Mathlib wall.
-`plan:` correct, signature honest (regularity preconditions + `Integrable` output).
-@residual(plan:epi-g2-vitali-closure-plan) -/
+`#print axioms = [propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-checked
+2026-06-04 with fresh olean). All `hpX_*` are pX regularity preconditions; the conclusion
+is an `Integrable` output, not bundled into any hypothesis. NOT load-bearing / circular /
+degenerate. Closes the second `plan:epi-g2-vitali-closure-plan` moment residual.
+@audit:ok -/
 theorem convDensityAdd_gaussian_id_integrable {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume)
@@ -330,23 +333,21 @@ theorem convDensityAdd_gaussian_id_integrable {pX : ℝ → ℝ}
           mul_le_mul_of_nonneg_right habs_le (hp_nn x)
       _ = (p_t x + x ^ 2 * p_t x) / 2 := by ring
 
-/-- **Maxent upper bound (Step 3).** The entropy integral `∫ negMulLog f_t` is bounded
-above by the Gaussian max-entropy `(1/2) log(2πe·V)` with `V = (∫ x² pX) + t`. Genuine
-via `differentialEntropy_le_gaussian_of_variance_le` on `μ_t`. The variance moments are
-supplied by `convDensityAdd_second_moment` (value) and the moment-integrability helpers
-(parked); the maxent application itself is a genuine reduction.
+/-- **Maxent upper bound (Step 3, GENUINELY CLOSED).** The entropy integral
+`∫ negMulLog f_t` is bounded above by the Gaussian max-entropy `(1/2) log(2πe·V)` with
+`V = (∫ x² pX) + t`. Genuine via `differentialEntropy_le_gaussian_of_variance_le` on
+`μ_t`. The variance moments are supplied by `convDensityAdd_second_moment` (value) and
+the now-genuine moment-integrability helpers `convDensityAdd_gaussian_sq_integrable` /
+`_id_integrable`; the maxent application itself is a genuine reduction.
 
-Independent honesty audit 2026-06-04 (fresh subagent, commit 825154f): honest_residual
-(transitive only). Own body is `sorry`-free; the maxent application
-(`differentialEntropy_le_gaussian_of_variance_le`, an `@entry_point` lemma) is a
-genuine reduction — the variance bound is built from `convDensityAdd_second_moment`
-(genuine) via `withDensity` moment transfer, NOT bundled into a hypothesis. The only
-`sorryAx` in `#print axioms` is transitive, through the parked moment-integrability
-helpers `convDensityAdd_gaussian_sq_integrable` / `_id_integrable`
-(`plan:epi-g2-vitali-closure-plan`). `hV`/`hV0` constrain the auxiliary variance
-majorant `V` (regularity for the maxent application, not a bundled entropy value).
-NOT `@audit:ok` only because of the transitive plan residuals. NOT load-bearing /
-circular; sufficiency holds (maxent inequality follows from the variance bound). -/
+`#print axioms = [propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-checked
+2026-06-04 with fresh olean, after closing the two moment-integrability helpers). Own
+body is `sorry`-free; the variance bound is built from `convDensityAdd_second_moment`
+(genuine) via `withDensity` moment transfer, NOT bundled into a hypothesis. `hV`/`hV0`
+constrain the auxiliary variance majorant `V` (regularity for the maxent application,
+not a bundled entropy value). NOT load-bearing / circular; sufficiency holds (maxent
+inequality follows from the variance bound).
+@audit:ok -/
 theorem negMulLog_convDensityAdd_gaussian_entropy_upper {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
