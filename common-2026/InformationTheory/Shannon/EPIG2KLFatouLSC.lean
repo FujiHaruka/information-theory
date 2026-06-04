@@ -346,6 +346,202 @@ theorem negMulLog_convDensity_limsup_le {pX : ℝ → ℝ}
           (convDensityAdd pX (gaussianPDFReal 0 ⟨u n, (hu_pos n).le⟩) x) ∂volume)
         atTop
       ≤ ∫ x, Real.negMulLog (pX x) ∂volume := by
-  sorry  -- @residual(wall:kl-lower-semicontinuous)  ※W1–W4 genuine, 残=bridge precondition plumbing
+  classical
+  -- Reference Gaussian `g` (density) and `γ` (measure), the smoothed densities `f_n`,
+  -- and the corresponding measures `μ_n`, `μ`.
+  set g : ℝ → ℝ := gaussianPDFReal 0 σ2 with hg_def
+  set γ : Measure ℝ := gaussianReal 0 σ2 with hγ_def
+  set f : ℕ → ℝ → ℝ :=
+    fun n => convDensityAdd pX (gaussianPDFReal 0 ⟨u n, (hu_pos n).le⟩) with hf_def
+  set μn : ℕ → Measure ℝ :=
+    fun n => volume.withDensity (fun x => ENNReal.ofReal (f n x)) with hμn_def
+  set μ : Measure ℝ := volume.withDensity (fun x => ENNReal.ofReal (pX x)) with hμ_def
+  -- Positivity of `g` (σ² ≠ 0).
+  have hg_pos : ∀ x, 0 < g x := fun x => gaussianPDFReal_pos 0 σ2 x hσ
+  have hg_meas : Measurable g := measurable_gaussianPDFReal _ _
+  have hg_int : Integrable g volume := integrable_gaussianPDFReal _ _
+  -- `γ = volume.withDensity (ofReal ∘ g)` (σ² ≠ 0, so not a Dirac).
+  have hγ_wd : γ = volume.withDensity (fun x => ENNReal.ofReal (g x)) := by
+    rw [hγ_def, hg_def, gaussianReal_of_var_ne_zero 0 hσ]
+    rfl
+  -- Regularity of each `f n`: nonneg, measurable, integrable, mass 1.
+  have hf_nn : ∀ n x, 0 ≤ f n x := fun n x =>
+    convDensityAdd_pXpY_nonneg pX _ hpX_nn (fun y => gaussianPDFReal_nonneg _ _ y) x
+  have hf_meas : ∀ n, Measurable (f n) := fun n =>
+    convDensityAdd_pXpY_measurable pX _ hpX_meas (measurable_gaussianPDFReal _ _)
+  have hf_int : ∀ n, Integrable (f n) volume := fun n =>
+    convDensityAdd_pXpY_integrable pX _ hpX_int hpX_meas
+      (integrable_gaussianPDFReal _ _) (measurable_gaussianPDFReal _ _)
+  have hgn_ne : ∀ n, (⟨u n, (hu_pos n).le⟩ : ℝ≥0) ≠ 0 := fun n => by
+    intro h; exact (hu_pos n).ne' (congrArg NNReal.toReal h)
+  have hf_mass : ∀ n, (∫ x, f n x ∂volume) = 1 := fun n => by
+    rw [hf_def, convDensityAdd_pXpY_integral_eq pX _ hpX_int (integrable_gaussianPDFReal _ _),
+      integral_gaussianPDFReal_eq_one 0 (hgn_ne n), hpX_mass, mul_one]
+  -- Probability-measure instances.
+  have hμn_prob : ∀ n, IsProbabilityMeasure (μn n) := fun n => by
+    constructor
+    rw [hμn_def, withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ,
+      ← ofReal_integral_eq_lintegral_ofReal (hf_int n) (ae_of_all _ (hf_nn n)),
+      hf_mass n, ENNReal.ofReal_one]
+  have hμ_prob : IsProbabilityMeasure μ := by
+    constructor
+    rw [hμ_def, withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ,
+      ← ofReal_integral_eq_lintegral_ofReal hpX_int (ae_of_all _ hpX_nn),
+      hpX_mass, ENNReal.ofReal_one]
+  have hγ_prob : IsProbabilityMeasure γ := by
+    rw [hγ_def]; infer_instance
+  -- Absolute continuity preconditions for the bridge / W1.
+  have hμn_v : ∀ n, μn n ≪ volume := fun n => by
+    rw [hμn_def]; exact withDensity_absolutelyContinuous _ _
+  have hμ_v : μ ≪ volume := by rw [hμ_def]; exact withDensity_absolutelyContinuous _ _
+  have hγ_v : γ ≪ volume := by rw [hγ_def]; exact gaussianReal_absolutelyContinuous 0 hσ
+  have hv_γ : volume ≪ γ := by rw [hγ_def]; exact gaussianReal_absolutelyContinuous' 0 hσ
+  have hμn_γ : ∀ n, μn n ≪ γ := fun n => (hμn_v n).trans hv_γ
+  have hμ_γ : μ ≪ γ := hμ_v.trans hv_γ
+  -- The volume-density of `γ` equals `g`, a.e.
+  have hγ_rnDeriv : γ.rnDeriv volume =ᵐ[volume] fun x => ENNReal.ofReal (g x) := by
+    rw [hγ_wd]; exact Measure.rnDeriv_withDensity volume hg_meas.ennreal_ofReal
+  -- The volume-density of `μn n` equals `f n`, a.e.; same for `μ` / `pX`.
+  have hμn_rnDeriv : ∀ n, (μn n).rnDeriv volume =ᵐ[volume] fun x => ENNReal.ofReal (f n x) :=
+    fun n => by rw [hμn_def]; exact Measure.rnDeriv_withDensity volume (hf_meas n).ennreal_ofReal
+  have hμ_rnDeriv : μ.rnDeriv volume =ᵐ[volume] fun x => ENNReal.ofReal (pX x) := by
+    rw [hμ_def]; exact Measure.rnDeriv_withDensity volume hpX_meas.ennreal_ofReal
+  -- Cross-term integrability for each `n` (against `log g`, a quadratic).
+  have hcross_int : ∀ n, Integrable
+      (fun x => f n x * Real.log (g x)) volume := fun n => by
+    have hpt : (fun x => f n x * Real.log (g x))
+        = fun x => (- Real.log (Real.sqrt (2 * π * σ2))) * f n x
+            - (1 / (2 * σ2)) * (x ^ 2 * f n x) := by
+      funext x; rw [hg_def, log_gaussianPDFReal_zero hσ x]; ring
+    rw [hpt]
+    exact ((hf_int n).const_mul _).sub
+      ((convDensityAdd_gaussian_sq_integrable hpX_nn hpX_meas hpX_int hpX_mom (hu_pos n)).const_mul _)
+  have hcross_int_μ : Integrable (fun x => pX x * Real.log (g x)) volume := by
+    have hpt : (fun x => pX x * Real.log (g x))
+        = fun x => (- Real.log (Real.sqrt (2 * π * σ2))) * pX x
+            - (1 / (2 * σ2)) * (x ^ 2 * pX x) := by
+      funext x; rw [hg_def, log_gaussianPDFReal_zero hσ x]; ring
+    rw [hpt]; exact (hpX_int.const_mul _).sub (hpX_mom.const_mul _)
+  -- The `log f` integrability for each `n` (= negMulLog integrability, up to sign).
+  have hlogp_int : ∀ n, Integrable
+      (fun x => f n x * Real.log (f n x)) volume := fun n => by
+    have hng := InformationTheory.Shannon.FisherInfoV2.convDensityAdd_negMulLog_integrable
+      pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom (hu_pos n)
+    have hpt : (fun x => f n x * Real.log (f n x))
+        = fun x => - Real.negMulLog (f n x) := by
+      funext x; rw [Real.negMulLog_def]; ring
+    rw [hpt]; exact hng.neg
+  -- The `log p` integrability for `μ = pX`.
+  have hlogp_int_μ : Integrable (fun x => pX x * Real.log (pX x)) volume := by
+    have hpt : (fun x => pX x * Real.log (pX x)) = fun x => - Real.negMulLog (pX x) := by
+      funext x; rw [Real.negMulLog_def]; ring
+    rw [hpt]; exact hpX_ent.neg
+  -- Cross-term in the bridge's density shape (rnDeriv form), rewritten to `f n · log g`.
+  have hcross_density : ∀ n, Integrable
+      (fun x => ((μn n).rnDeriv volume x).toReal
+        * Real.log ((γ.rnDeriv volume x).toReal)) volume := fun n => by
+    apply (hcross_int n).congr
+    filter_upwards [hμn_rnDeriv n, hγ_rnDeriv] with x hx hxg
+    rw [hx, hxg, ENNReal.toReal_ofReal (hf_nn n x), ENNReal.toReal_ofReal (hg_pos x).le]
+  have hlogp_density : ∀ n, Integrable
+      (fun x => ((μn n).rnDeriv volume x).toReal
+        * Real.log (((μn n).rnDeriv volume x).toReal)) volume := fun n => by
+    apply (hlogp_int n).congr
+    filter_upwards [hμn_rnDeriv n] with x hx
+    rw [hx, ENNReal.toReal_ofReal (hf_nn n x)]
+  have hcross_density_μ : Integrable
+      (fun x => (μ.rnDeriv volume x).toReal
+        * Real.log ((γ.rnDeriv volume x).toReal)) volume := by
+    apply hcross_int_μ.congr
+    filter_upwards [hμ_rnDeriv, hγ_rnDeriv] with x hx hxg
+    rw [hx, hxg, ENNReal.toReal_ofReal (hpX_nn x), ENNReal.toReal_ofReal (hg_pos x).le]
+  have hlogp_density_μ : Integrable
+      (fun x => (μ.rnDeriv volume x).toReal
+        * Real.log ((μ.rnDeriv volume x).toReal)) volume := by
+    apply hlogp_int_μ.congr
+    filter_upwards [hμ_rnDeriv] with x hx
+    rw [hx, ENNReal.toReal_ofReal (hpX_nn x)]
+  -- Equal-mass conditions (all probability measures).
+  have hmass_n : ∀ n, (μn n) Set.univ = γ Set.univ := fun n => by
+    rw [(hμn_prob n).measure_univ, hγ_prob.measure_univ]
+  have hmass_μ : μ Set.univ = γ Set.univ := by
+    rw [hμ_prob.measure_univ, hγ_prob.measure_univ]
+  -- The bridge, instantiated for each `n` and for `μ`.
+  have hbridge_n : ∀ n, (klDiv (μn n) γ).toReal
+      = - differentialEntropy (μn n)
+        - ∫ x, ((μn n).rnDeriv volume x).toReal
+            * Real.log ((γ.rnDeriv volume x).toReal) ∂volume := fun n =>
+    haveI := hμn_prob n
+    klDiv_toReal_eq_neg_differentialEntropy_sub_cross (μn n) γ (hμn_v n) hγ_v (hμn_γ n)
+      (hmass_n n) (hlogp_density n) (hcross_density n)
+  have hbridge_μ : (klDiv μ γ).toReal
+      = - differentialEntropy μ
+        - ∫ x, (μ.rnDeriv volume x).toReal
+            * Real.log ((γ.rnDeriv volume x).toReal) ∂volume :=
+    klDiv_toReal_eq_neg_differentialEntropy_sub_cross μ γ hμ_v hγ_v hμ_γ
+      hmass_μ hlogp_density_μ hcross_density_μ
+  -- Identify the differential entropies with the negMulLog integrals.
+  have hent_n : ∀ n, differentialEntropy (μn n) = ∫ x, Real.negMulLog (f n x) ∂volume := fun n => by
+    rw [hμn_def, differentialEntropy_eq_integral_withDensity (hf_meas n).ennreal_ofReal]
+    refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+    simp only [ENNReal.toReal_ofReal (hf_nn n x)]
+  have hent_μ : differentialEntropy μ = ∫ x, Real.negMulLog (pX x) ∂volume := by
+    rw [hμ_def, differentialEntropy_eq_integral_withDensity hpX_meas.ennreal_ofReal]
+    refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+    simp only [ENNReal.toReal_ofReal (hpX_nn x)]
+  -- Identify the bridge's cross-term (rnDeriv form) with `∫ f n · log g` and `∫ pX · log g`.
+  have hcross_eq_n : ∀ n,
+      (∫ x, ((μn n).rnDeriv volume x).toReal * Real.log ((γ.rnDeriv volume x).toReal) ∂volume)
+        = ∫ x, f n x * Real.log (g x) ∂volume := fun n =>
+    integral_congr_ae (by
+      filter_upwards [hμn_rnDeriv n, hγ_rnDeriv] with x hx hxg
+      rw [hx, hxg, ENNReal.toReal_ofReal (hf_nn n x), ENNReal.toReal_ofReal (hg_pos x).le])
+  have hcross_eq_μ :
+      (∫ x, (μ.rnDeriv volume x).toReal * Real.log ((γ.rnDeriv volume x).toReal) ∂volume)
+        = ∫ x, pX x * Real.log (g x) ∂volume :=
+    integral_congr_ae (by
+      filter_upwards [hμ_rnDeriv, hγ_rnDeriv] with x hx hxg
+      rw [hx, hxg, ENNReal.toReal_ofReal (hpX_nn x), ENNReal.toReal_ofReal (hg_pos x).le])
+  -- Abbreviate the entropy / KL-toReal / cross sequences.
+  set h_n : ℕ → ℝ := fun n => ∫ x, Real.negMulLog (f n x) ∂volume with hh_def
+  set KLr : ℕ → ℝ := fun n => (klDiv (μn n) γ).toReal with hKLr_def
+  set cross_n : ℕ → ℝ := fun n => ∫ x, f n x * Real.log (g x) ∂volume with hcr_def
+  set crossμ : ℝ := ∫ x, pX x * Real.log (g x) ∂volume with hcrμ_def
+  -- Per-`n` rearrangement: `h_n n = - KLr n - cross_n n`.
+  have hhn_eq : ∀ n, h_n n = - KLr n - cross_n n := fun n => by
+    have := hbridge_n n
+    rw [hent_n n, hcross_eq_n n] at this
+    rw [hh_def, hKLr_def, hcr_def]
+    linarith [this]
+  -- `h(pX) = - KLr_μ - crossμ`.
+  have hhμ_eq : (∫ x, Real.negMulLog (pX x) ∂volume) = - (klDiv μ γ).toReal - crossμ := by
+    have := hbridge_μ
+    rw [hent_μ, hcross_eq_μ] at this
+    rw [hcrμ_def]; linarith [this]
+  -- W3: cross-term convergence (full sequence) `cross_n → crossμ`.
+  have hu_lim' : Tendsto u atTop (𝓝 0) := hu_lim.mono_right nhdsWithin_le_nhds
+  have hcross_tendsto : Tendsto cross_n atTop (𝓝 crossμ) := by
+    have hw3 := cross_term_tendsto hpX_nn hpX_meas hpX_int hpX_mom hσ u hu_pos hu_lim'
+    simpa only [hcr_def, hg_def, hcrμ_def] using hw3
+  -- **The toReal-level limsup bound on the entropies** (W1 `klDiv_le_liminf_of_ae_tendsto`
+  -- transferred to `toReal`, threaded with the boundedness needed to convert the ℝ≥0∞
+  -- liminf to a real limsup, plus the W4 subsequence promotion). This is the only
+  -- remaining residual: the toReal / subsequence / boundedness plumbing on top of the
+  -- genuine W1–W4 bridge. The genuine pieces below it (bridge per-`n`, entropy
+  -- identification, cross-term limit, probability-measure framing) are all wired in.
+  --
+  -- Concretely this is `limsup h_n ≤ - (klDiv μ γ).toReal - crossμ`: from
+  -- `h_n n = - KLr n - cross_n n` (`hhn_eq`, genuine bridge), `KLr n ≥ 0`, the W1 bound
+  -- `(klDiv μ γ).toReal ≤ liminf KLr` along the a.e.-convergent W4 subsequence, the W3
+  -- limit `cross_n → crossμ`, and the boundedness of `h_n` above (= `- KLr n ≤ 0`).
+  -- @residual(wall:kl-lower-semicontinuous)
+  have hKL_limsup : Filter.limsup h_n atTop ≤ - (klDiv μ γ).toReal - crossμ := by
+    sorry
+  -- Assemble: rewrite the goal limsup into `h_n`, apply the toReal bound, and close the
+  -- final equation through the genuine bridge `hhμ_eq`.
+  calc Filter.limsup (fun n => ∫ x, Real.negMulLog (f n x) ∂volume) atTop
+      = Filter.limsup h_n atTop := rfl
+    _ ≤ - (klDiv μ γ).toReal - crossμ := hKL_limsup
+    _ = ∫ x, Real.negMulLog (pX x) ∂volume := hhμ_eq.symm
 
 end InformationTheory.EPIG2KLFatou
