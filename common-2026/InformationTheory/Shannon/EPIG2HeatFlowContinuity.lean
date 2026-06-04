@@ -64,8 +64,9 @@ the fields available in `IsDeBruijnRegularityHyp`:
 
 `entropyPower` / `differentialEntropy` continuity is absent in both Mathlib and
 InformationTheory (loogle: 0 declarations). The endpoint atom is therefore parked
-as a shared sorry lemma `heatFlowEntropyPower_continuousWithinAt_zero` with
-`@residual(wall:heatflow-continuity)`. The DCT machinery
+as a shared sorry lemma `heatFlowEntropyPower_continuousWithinAt_zero` under the
+(now SUPERSEDED) wall name `heatflow-continuity` — see the wall register; the live
+residual is `wall:approx-identity-L1`. The DCT machinery
 (`continuousWithinAt_of_dominated`) itself is fully present in Mathlib; the wall
 is the uniform majorant only.
 -/
