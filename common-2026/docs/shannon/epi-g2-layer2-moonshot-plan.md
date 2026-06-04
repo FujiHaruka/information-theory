@@ -19,8 +19,10 @@
 - [ ] Phase 2 — `UnifIntegrable` / `UnifTight` witness 構成 📋
 - [ ] Phase 3 — 層2 machinery genuine 化 (列化 + Vitali + L¹→積分 + exp 再合成) 📋
 - [ ] Phase 4 — 壁補題 closure / proof-done 結線 📋
+- [ ] Phase 5 — 密度同定ブリッジ署名設計 📋
 
 proof-log: Phase 1〜3 は yes (新規 analytic content、判断記録の価値大)。Phase 0/4 は no。
+Phase 5 は signature 設計 yes (precondition bundle / N(0,2) reparam の判断記録)。
 
 ## ゴール / Approach
 
@@ -255,6 +257,236 @@ regularity) は honesty OK。**連続性結論を bundle するのは禁止** (l
 - **撤退口**: Phase 1 が moonshot のまま残る場合、本 Phase は「surface shrink 完了
   (層2 genuine + 層1 壁集約)」で着地。完全 closure は層1 closure を待つ。
 
+## Phase 5 — 密度同定ブリッジ署名設計 📋
+
+> **対象 sorry**: `heatFlowEntropyPower_continuousWithinAt_zero` 内 `key` (`EPIG2HeatFlowContinuity.lean:423`)。
+> 唯一の direct sorry。現タグ `@residual(wall:approx-identity-L1,plan:epi-g2-layer2-moonshot-plan)`。
+> **本 Phase の成果物は本 plan 内 signature 設計のみ** (実装は別 session)。
+
+### ゴール
+
+層2 machinery `differentialEntropy_convDensity_integral_tendsto` (genuine、`EPIG2HeatFlowContinuity.lean:244`)
+の結論
+`Tendsto (fun t => ∫ negMulLog (convDensityAdd pX (gaussianPDFReal 0 t.toNNReal) x)) (𝓝[Ioi 0] 0) (𝓝 (∫ negMulLog pX))`
+を、壁補題 `key` が必要とする
+`ContinuousWithinAt (fun t => differentialEntropy (P.map (X + √t·Z))) (Ioi 0) 0`
+に橋渡しする。橋の核 = `differentialEntropy (P.map (X+√t·Z)) = ∫ negMulLog (convDensityAdd pX g_{ct})`
+の **密度同定** (`pPath_eq_convDensityAdd`、`FisherInfoV2DeBruijnPerTime.lean:199`、`@audit:ok`)。
+本 Phase は「橋を通すために壁補題 / consumer に追加すべき precondition の署名」を確定する
+(実装でなく設計)。
+
+### Approach (橋の解の shape)
+
+密度同定ブリッジは 4 つの genuine 部品の合成で、欠けるのは **入力署名 (precondition)** だけ:
+
+```text
+differentialEntropy (P.map (X + √t·Z))                    [壁補題 key の inner 結論]
+  │ (B-1) 密度同定: pPath_eq_convDensityAdd
+  │   rnDeriv (P.map (X+√t·Z)) =ᵐ ofReal ∘ convDensityAdd pX g_{ct}     ← @audit:ok 既存
+  │   要 precondition: Measurable X, Measurable Z, IndepFun X Z, P.map Z = N(0,v_Z), 密度 witness pX
+  ▼
+∫ negMulLog ((rnDeriv …).toReal)  = ∫ negMulLog (convDensityAdd pX g_{ct})  [differentialEntropy 定義 + a.e. 書換]
+  │ (B-2) integral_congr_ae (rnDeriv の a.e. 同定を ∫ に持込む)            ← genuine plumbing
+  ▼ (各 t > 0 でこの等式; t は filter 𝓝[Ioi 0] 0 を走る)
+fun t => ∫ negMulLog (convDensityAdd pX g_{ct})  →(t→0⁺)  ∫ negMulLog pX     [層2 machinery]
+  │ (B-3) differentialEntropy_convDensity_integral_tendsto                 ← genuine (層2)
+  ▼
+∫ negMulLog pX  = differentialEntropy (P.map X)   [t=0 端点の値同定]        ← genuine plumbing
+  │ (B-4) ContinuousWithinAt 化: 値の Tendsto を ContinuousWithinAt に翻訳
+  ▼
+ContinuousWithinAt (fun t => differentialEntropy (P.map (X+√t·Z))) (Ioi 0) 0  [key 結論]
+```
+
+橋の **唯一の設計課題は B-1 の入力署名**: `pPath_eq_convDensityAdd` が要求する
+`Measurable X` / `Measurable Z` / `IndepFun X Z P` / `P.map Z = gaussianReal 0 v_Z` / 密度 witness `pX`
+を、壁補題 `heatFlowEntropyPower_continuousWithinAt_zero` がどう受け取るか。現状の
+`h_reg : IsDeBruijnRegularityHyp X Z P` (4 field = `density_path` / `reg_at` / `density_t_eq` /
+`integrable_deriv`、`EPIStamDischarge.lean:251-289` verbatim 確認) は **これらを 1 つも持たない**。
+→ **新規 precondition bundle `IsHeatFlowEndpointRegular X Z P` を導入**し、壁補題署名に追加する
+(下記 課題3)。全 field は precondition (regularity / 入力分布の素性) であり、連続性結論を bundle
+**しない** (honesty: load-bearing 化禁止、課題5)。
+
+加えて B-3 (層2) の畳込み分散が `gaussianPDFReal 0 t.toNNReal` (= 分散 t) 固定なのに対し、
+B-1 (密度同定) の畳込み分散は `t · v_Z` になる (Z の分散 `v_Z` 倍)。この **分散整合** が
+課題1 (N(0,2) 落とし穴) の核心。
+
+### 課題1 — N(0,2) 落とし穴と分散整合 (実コード確認済 → 結論)
+
+**実コード確認**:
+- `gaussianConvolution X Z t := fun ω => X ω + √t · Z ω` (`FisherInfoV2DeBruijn.lean:127`、verbatim)。
+  entropyPower path の literal `fun ω => X ω + Real.sqrt t * Z ω` と **defeq** (課題2 で詳述)。
+- `pPath_eq_convDensityAdd` は `hZ_law : P.map Z = gaussianReal 0 1` を **ハードコード**
+  (`FisherInfoV2DeBruijnPerTime.lean:202`)、結論の畳込みは `gaussianPDFReal 0 ⟨s, hs.le⟩`
+  (= 分散 s = path param)。
+- 内部の `gaussianConvolution_law_conv` (`PerTime.lean:76`) も `hZ_law = N(0,1)` で、`√s·Z ∼ N(0,s)`
+  を経由 (`gaussianReal_map_const_mul` 適用)。
+- Mathlib `gaussianReal_map_const_mul` (`Mathlib/Probability/Distributions/Gaussian/Real.lean:298`、
+  verbatim): `(gaussianReal μ v).map (c·) = gaussianReal (c·μ) (⟨c², _⟩ · v)`。
+  → 一般の `Z ∼ N(0, v_Z)` に対し `√t·Z ∼ N(0, t·v_Z)`。
+- Mathlib `gaussianReal_add_gaussianReal_of_indepFun` (`Real.lean:624`、verbatim):
+  `IndepFun X Y → P.map X = N(m₁,v₁) → P.map Y = N(m₂,v₂) → P.map (X+Y) = N(m₁+m₂, v₁+v₂)`。
+
+**call site `:1350-1351` (`isStamToEPIScalingHyp_of_stam_debruijn`、verbatim 確認) の供給**:
+`obtain` で `hZX_law : P.map Z_X = gaussianReal 0 1`、`hZY_law : P.map Z_Y = gaussianReal 0 1`
+が **両方 N(0,1)**。よって:
+- **単独 instance `(X, Z_X)` / `(Y, Z_Y)`**: Z 標準 N(0,1) → `√t·Z ∼ N(0,t)` →
+  `pPath_eq_convDensityAdd` が **そのまま適用可** (畳込み分散 = t、層2 B-3 と一致)。**GO**。
+- **和 instance `(X+Y, Z_X+Z_Y)`**: `gaussianReal_add_gaussianReal_of_indepFun` で
+  `Z_X+Z_Y ∼ N(0, 1+1) = N(0,2)`。`pPath_eq_convDensityAdd` の `hZ_law = N(0,1)` を
+  **満たさない** → そのままでは呼べない。`√t·(Z_X+Z_Y) ∼ N(0, 2t)` で、畳込み分散が **2t**
+  になり層2 B-3 の分散 t と **不一致**。**これが N(0,2) 壁** (和 instance 限定)。
+
+**結論 (GO/要追加 atom)**: 和 instance のために以下いずれか。**第一候補は (i-b) 一般化 atom 新規追加**。
+
+| 案 | 内容 | 評価 |
+|---|---|---|
+| **(i-a)** 壁補題の `Z` 標準化を consumer 義務に | consumer が `Z_X+Z_Y` でなく標準化済 noise を渡す再構成 | consumer chain (`csiszarLogRatioGap_*`) が `Z_X+Z_Y` literal を deep に使うため波及大、**非推奨** |
+| **(i-b)** `pPath_eq_convDensityAdd` を `hZ_law : P.map Z = gaussianReal 0 v_Z` (v_Z 任意) へ一般化 | atom 改変。結論を `convDensityAdd pX (gaussianPDFReal 0 ⟨t·v_Z, _⟩)` に。`gaussianConvolution_law_conv` も同様一般化 | **別 atom 改変 = 別 Phase に切る** (下記 Phase 5-A)。`gaussianReal_map_const_mul` が一般 v で既に成立するので機構は変わらず、`hZ_law` 緩和 + 分散項 `t·v_Z` 差替の mechanical refactor |
+| **(i-c)** 層2 machinery を分散 `c·t` パラメタ化 | `differentialEntropy_convDensity_integral_tendsto` の `t.toNNReal` を `(c·t).toNNReal` に | 層2 は genuine だが分散固定。`g_{ct}` も t→0⁺ で近似単位元なので原理 OK だが層2 再 genuine 化コスト |
+
+**判断**: **(i-b) + 層2 側の分散整合**。和 instance の畳込み分散 `2t` に対し、層2 B-3 を
+分散 `2t` (= `c·t`, c=2) で呼べる形にするか、あるいは「`gaussianPDFReal 0 ⟨2t,_⟩` も
+`gaussianPDFReal 0 ⟨t',_⟩` の `t' := 2t` 再パラメタで層2 に乗る」を確認する。後者は
+`t→0⁺ ⟺ 2t→0⁺` (`𝓝[Ioi 0] 0` での連続な reparam) なので **層2 を改変せず `t' := 2t` 変数変換で
+吸収できる見込み** (Phase 5-A で verbatim 確認: 層2 結論の filter を `2t` 列に pullback)。
+これが成れば (i-c) の層2 再 genuine 化は不要、(i-b) atom 一般化のみで足りる。
+
+→ **要追加 atom = (i-b) の `pPath_eq_convDensityAdd` v_Z 一般化版** (Phase 5-A、`@audit:ok` atom の
+mechanical 一般化、`pPath_eq_convDensityAdd_var` 等)。N(0,2) は v_Z=2 の特例として吸収。
+
+### 課題2 — `gaussianConvolution X Z s` vs `X + √s·Z` の橋渡し (実コード確認済 → GO)
+
+**実コード確認**: `gaussianConvolution X Z t := fun ω => X ω + Real.sqrt t * Z ω`
+(`FisherInfoV2DeBruijn.lean:127`、verbatim)。entropyPower path の literal は
+`fun ω => X ω + Real.sqrt t * Z ω` (`EPIG2HeatFlowContinuity.lean:406`、verbatim)。
+両者は **構文的に同一 (defeq)**。
+
+既存 bridge 在庫: `gaussianConvolution_at_zero` / `map_gaussianConvolution_at_zero`
+(`EPIL3Integration.lean:657/663`) は `t=0` 端点用。`gaussianConvolution X Z s` 形での
+`pPath_eq_convDensityAdd` 適用は **literal path と defeq なので追加 bridge lemma 不要**
+(`show` / `simp only [gaussianConvolution]` で書換、または `rfl` で defeq 解消)。
+
+**結論 GO**: 橋渡し補題は新規不要。`P.map (fun ω => X ω + √t·Z ω) = P.map (gaussianConvolution X Z t)`
+は定義展開 1 行。Phase 5-B 実装時に `simp only [← gaussianConvolution]` 等で噛ませる。
+
+### 課題3 — precondition bundle 設計 (`IsHeatFlowEndpointRegular`)
+
+新規 structure を導入し、壁補題署名の `h_reg : IsDeBruijnRegularityHyp` を **置換 or 併記**する。
+bundle する field は **すべて precondition (regularity / 入力分布の素性)**:
+
+```text
+structure IsHeatFlowEndpointRegular (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] where
+  hX_meas    : Measurable X                                       -- B-1 (pPath_eq_convDensityAdd)
+  hZ_meas    : Measurable Z                                       -- B-1
+  hXZ_indep  : IndepFun X Z P                                     -- B-1
+  v_Z        : ℝ≥0                                                -- Z の分散 (N(0,2) 一般化、課題1)
+  hv_Z_pos   : 0 < v_Z
+  hZ_law     : P.map Z = gaussianReal 0 v_Z                       -- B-1 (一般化版、v_Z 任意)
+  pX         : ℝ → ℝ                                              -- X の密度 witness
+  hpX_nn     : ∀ x, 0 ≤ pX x                                      -- 密度正則性
+  hpX_meas   : Measurable pX                                      -- 密度正則性
+  hpX_law    : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x))  -- B-1
+  hpX_int    : Integrable pX volume                              -- 層2 (B-3) precondition
+  hpX_mass   : (∫ y, pX y ∂volume) = 1                           -- 層2 (B-3、確率密度正規化)
+  hpX_mom    : Integrable (fun y => y ^ 2 * pX y) volume          -- 層2 (B-3、有限2次モーメント)
+```
+
+**honesty 判定 (課題5 と連動)**: 全 field は precondition。`hX_meas`/`hZ_meas`/`hXZ_indep`/`hZ_law`
+= 入力確率変数の素性 (de Bruijn の正当な前提、Cover-Thomas 17.7.2 の `X ⊥ Z`, `Z` Gaussian)。
+`pX` + 4 正則性 (`nn`/`meas`/`law`/`int`/`mass`/`mom`) = 入力密度 `P.map X` の存在 + 有限2次モーメント。
+**連続性結論を hyp に取らない** (`ContinuousWithinAt …` を field にしない)。load-bearing でない。
+
+**`h_reg : IsDeBruijnRegularityHyp` を外せるか**: 端点連続性 (key) の証明は **density-level L¹ 収束
+(層1) + 層2 machinery + B-1 密度同定** のみで閉じ、`IsDeBruijnRegularityHyp` の de Bruijn 内部正則性
+(`reg_at` の V2 Fisher / `integrable_deriv` の interval 可積分) を **使わない**見込み (層2 結論の
+入力は `pX` の `nn/meas/int/mass/mom` のみ、verbatim 確認: `differentialEntropy_convDensity_integral_tendsto`
+の hyp は `hpX_nn/meas/int/mass/mom` の 5 つだけ、`EPIG2HeatFlowContinuity.lean:244-247`)。
+→ **壁補題から `h_reg : IsDeBruijnRegularityHyp` を外し `IsHeatFlowEndpointRegular` に置換できる**
+見込み。ただし「外せる」の最終確認は Phase 5-B 実装時 (key body が `h_reg` field を一切参照せず
+閉じることを LSP で確認)。**設計判断 = 置換** (併記でなく)。
+
+**consumer への影響**: 置換すると `csiszarLogRatioGap_continuousWithinAt_zero`
+(`EPIStamToBridge.lean:1053`、3 instance 呼出) の引数が `IsHeatFlowEndpointRegular` に変わる
+→ さらに `_antitoneOn_Ici_zero` → site `:1379` まで threading (課題4)。
+
+### 課題4 — threading map (各段で precondition をどう供給するか)
+
+**verbatim 確認した consumer chain** (orchestrator brief + 本 session 再照合):
+
+| 段 | declaration:line | 現状の保有 hyp | 新 precondition 供給元 |
+|---|---|---|---|
+| 壁補題 | `heatFlowEntropyPower_continuousWithinAt_zero` (EPIG2:401) | `h_reg : IsDeBruijnRegularityHyp X Z P` | → `IsHeatFlowEndpointRegular X Z P` に置換 |
+| R-5-b | `csiszarLogRatioGap_continuousWithinAt_zero` (ToBridge:1053) | `h_reg_sum/X/Y` の 3 本のみ | → `IsHeatFlowEndpointRegular` の 3 本に置換、3 instance に渡す |
+| R-5-c | `csiszarLogRatioGap_antitoneOn_Ici_zero` (ToBridge:1085) | **既に** `hX/hZX/hXZX/hY/hZY/hYZY/hXYZXY` (meas + 全 indep) + `h_reg_*` 3 本 | meas/indep は既存、不足分 (`pX`/`pY`/`v_Z`/`hZ_law`/密度正則) を追加 hyp |
+| site | `isStamToEPIScalingHyp_of_stam_debruijn` (ToBridge:1300、obtain `:1350`) | `Z_X Z_Y`, `hZX_meas hZY_meas`, **`hZX_law hZY_law : N(0,1)`**, `hXZX hYZY hZXZY`, `hX hY` | `IsHeatFlowEndpointRegular` 構築。**欠けるのは pX/pY (X,Y の密度) のみ** |
+
+**各 instance の `IsHeatFlowEndpointRegular` 構築**:
+- 単独 `(X, Z_X)`: `hX`/`hZX_meas`/`hXZX`/`hZX_law (v_Z=1)` は site で揃う。`pX` (X の密度) のみ上流 EPI
+  precondition から供給要 (下記)。
+- 単独 `(Y, Z_Y)`: 同様、`pY` 要供給。
+- 和 `(X+Y, Z_X+Z_Y)`: meas = `(hX.add hY)`/`(hZX_meas.add hZY_meas)`、indep = `hXYZXY`
+  (site `:1370` で別 parked sorry `plan:epi-stam-to-conclusion-phaseA-plan` 由来、本 plan の責務外)、
+  `hZ_law (v_Z=2)` = `gaussianReal_add_gaussianReal_of_indepFun hZXZY hZX_law hZY_law` (genuine 1 行)、
+  密度 `p_{X+Y}` = **`convDensityAdd pX pY`** の同定要 (下記)。
+
+**新規に上流で要供給する precondition (= 本 Phase が確定する EPI precondition 追加)**:
+1. **`pX` / `pY`** (X, Y の Real 密度 witness + `nn/meas/law/int/mass/mom`)。`IsStamScalingNoiseHyp` /
+   その上流 (`stamScalingNoise_exists` の所在 = Stam-to-conclusion line) に密度 witness を追加する。
+   これは EPI の **正当な precondition** (入力 X, Y が密度を持つ = de Bruijn / EPI の標準仮定)。上流追加は
+   honesty OK (orchestrator brief 確認)。
+2. **`p_{X+Y} = convDensityAdd pX pY`** の同定。和 instance の密度 witness。`X ⊥ Y` 下で
+   sum の密度 = 畳込み `convDensityAdd pX pY` は標準事実。**この同定補題が在庫にあるか要確認**
+   (Phase 5-C): `pPath_eq_convDensityAdd` の `s→0` 類比、または `IndepFun.map_add_eq_map_conv_map`
+   + `conv_withDensity_eq_lconvolution` で density level に落とす (`PerTime.lean:223-236` と同型機構)。
+   無ければ新規 atom (genuine、`X ⊥ Y` + 両密度から `convDensityAdd` 同定、`pPath` と同じ素材)。
+   **ただし `X ⊥ Y` (IndepFun X Y P) が site で揃うか要確認** — site は `hXZX/hYZY/hZXZY` は持つが
+   `IndepFun X Y` は明示的に無い (Phase 5-C で確認、無ければ上流 noise model に追加 precondition)。
+
+**threading 工数感**: 各段の hyp 追加 + 受渡しは mechanical。site での `IsHeatFlowEndpointRegular`
+構築 3 本が主 (各 5〜15 行)。`p_{X+Y}` 同定が新規 atom なら +30〜60 行 (Phase 5-C)。
+
+### 課題5 — honesty (precondition のみ、`@residual` 分類、audit 起動)
+
+- **全追加は precondition**: `IsHeatFlowEndpointRegular` の field、上流 `pX`/`pY`/密度正則は
+  すべて regularity / 入力分布の素性。**連続性結論 / L¹ 収束 / 密度同定の核を `*Hypothesis`
+  predicate に bundle しない** (tier 5 禁止)。`pPath_eq_convDensityAdd` は `@audit:ok` の genuine
+  同定補題であり、それを **呼ぶ** のは bundling でない (precondition から genuine に導出)。
+- **`@residual` 分類の帰結**: 本 Phase 完了で `key` の direct sorry は密度同定 B-1〜B-4 の genuine
+  合成に置換され消える。残る transitive sorry は層2 (`differentialEntropy_convDensity_integral_tendsto`)
+  経由の **`wall:approx-identity-L1` のみ** (層1)。よって壁補題タグは現
+  `@residual(wall:approx-identity-L1,plan:epi-g2-layer2-moonshot-plan)` から **`plan:` 部が消え
+  `@residual(wall:approx-identity-L1)` 単独** になる (compound の plan item が closure)。
+  site `:1370` の `hXYZXY` sorry (`plan:epi-stam-to-conclusion-phaseA-plan`) は **本 plan の責務外**
+  (別 line)。
+- **独立 honesty-auditor 起動 (必須)**: 本 Phase の実装は壁補題 + R-5-b + R-5-c + site の
+  **signature 変更** (`IsDeBruijnRegularityHyp` → `IsHeatFlowEndpointRegular` 置換、上流 precondition
+  追加) を伴う。CLAUDE.md 起動条件「既存 declaration の signature を変更して honesty 関連の意味が
+  変わる」に該当 → 実装 session で **`honesty-auditor` を 1 件起動**する (新 structure が
+  load-bearing でないこと、`@residual` 再分類の正しさ、`p_{X+Y}` 同定 atom が genuine であることを
+  独立 verify)。
+
+### Phase 5 サブ分割 (1-session 最小単位 + 撤退口 + 工数感)
+
+| サブ | 内容 | genuine か | 工数 | 1-session ship | 撤退口 |
+|---|---|---|---:|---|---|
+| **5-A** | `pPath_eq_convDensityAdd` の v_Z 一般化 atom (`_var` 版) + 層2 の `t' := 2t` reparam 吸収確認 | genuine (mechanical 一般化) | 30〜60 | ✅ 単独可 | 層2 reparam が効かない → (i-c) 層2 分散パラメタ化に降格 (+1 turn) |
+| **5-B** | `IsHeatFlowEndpointRegular` structure 導入 + 壁補題 `key` の B-1〜B-4 genuine 結線 (`h_reg` 外し) | genuine (5-A 完 + 層1 park 後) | 40〜80 | ✅ 5-A 後 | key が `h_reg` field を要すると判明 → `IsDeBruijnRegularityHyp` 併記に戻す (signature 拡大) |
+| **5-C** | `p_{X+Y} = convDensityAdd pX pY` 同定 (在庫確認 → 無ければ新規 atom) + `IndepFun X Y` 供給確認 | genuine | 30〜60 (新規 atom 時) | △ 在庫あれば不要 | `IndepFun X Y` が site で出ない → 上流 noise model に precondition 追加 (signature 変更 + audit) |
+| **5-D** | threading: R-5-b / R-5-c / site の signature 置換 + `IsHeatFlowEndpointRegular` 構築 3 本 | genuine | 40〜80 | △ 5-B/5-C 後 | site で `pX`/`pY` 供給不能 → 上流 (`stamScalingNoise_exists`) に密度 witness 追加 (別 line 連携) |
+
+**最小有意単位 (優先順)**:
+1. **5-A** (v_Z 一般化 atom) — 完全 genuine、単独 ship 可。N(0,2) 障害を先に潰す。
+2. **5-B** (壁補題結線) — 層1 (Phase 1) park 後なら `key` の direct sorry を密度同定の genuine 合成に
+   置換。これで壁補題の `@residual` から `plan:` 部が消える (surface shrink 完了の主目標)。
+3. **5-C/5-D** (threading + 上流 precondition) — consumer chain 全段に precondition を流す。
+   `pX`/`pY` の上流供給は Stam-to-conclusion line との連携 (別 plan 連携、site `:1370` の
+   joint-indep sorry と同じ owner)。
+
+**全 Phase 5 を通した撤退口**: いずれの段も詰まったら `sorry` + `@residual` (5-A/5-B は
+`wall:approx-identity-L1`、上流 precondition 不能なら `plan:epi-g2-layer2-moonshot-plan` or
+`plan:epi-stam-to-conclusion-phaseA-plan`)。**precondition の bundling 撤退は禁止**
+(新 structure に連続性 / 密度同定の核を込めない)。
+
 ## 工数現実性 / 1-session 最小単位
 
 在庫見積り 160〜315 行を Phase 別按分:
@@ -321,3 +553,24 @@ regularity) は honesty OK。**連続性結論を bundle するのは禁止** (l
    `Filter.tendsto_iff_seq_tendsto` (`CountablyGenerated.lean:97`、orchestrator verbatim 確認) で
    解決。`𝓝[Ioi 0] 0` の `IsCountablyGenerated` instance 確認を Phase 0 のタスクに明示
    (ℝ 第一可算で存在見込み)。「自明」で流さない。
+
+4. **(Phase 5 起草、2026-06-04) N(0,2) 落とし穴 = 和 instance 限定と判定**: 実コード verbatim
+   確認 (`pPath_eq_convDensityAdd` の `hZ_law = N(0,1)` ハードコード `PerTime.lean:202`、
+   `gaussianReal_map_const_mul` `Mathlib Real.lean:298`、`gaussianReal_add_gaussianReal_of_indepFun`
+   `Real.lean:624`、site `:1350` の `hZX_law/hZY_law = N(0,1)`) の結果、**単独 instance は Z 標準
+   N(0,1) で密度同定 atom がそのまま適用可 (GO)、和 instance のみ `Z_X+Z_Y ∼ N(0,2)` で畳込み分散が
+   2t になり atom hyp と不一致**。要追加 atom = `pPath_eq_convDensityAdd` の v_Z 一般化版 (5-A)。
+   層2 の分散固定 (t) は `t' := 2t` reparam で吸収する設計 (`𝓝[Ioi 0] 0` での連続 reparam、
+   層2 改変回避見込み)。当初 brief の「v 一般化が別 atom 改変か既存で済むか判断」は **別 Phase
+   (5-A) に切る** と確定。
+
+5. **(Phase 5 起草) `gaussianConvolution` bridge は不要と判定**: `gaussianConvolution X Z t :=
+   fun ω => X ω + √t·Z ω` (`FisherInfoV2DeBruijn.lean:127`) が entropyPower path の literal
+   (`EPIG2:406`) と **defeq**。橋渡し補題新規不要、定義展開 1 行で吸収 (GO)。
+
+6. **(Phase 5 起草) precondition bundle 設計 = `IsDeBruijnRegularityHyp` 置換**: 端点連続性 (key)
+   は層1+層2+密度同定で閉じ de Bruijn 内部正則性 (`reg_at`/`integrable_deriv`) を使わない見込み
+   (層2 hyp は `pX` の `nn/meas/int/mass/mom` 5 つのみ、`EPIG2:244-247` verbatim)。よって壁補題から
+   `h_reg : IsDeBruijnRegularityHyp` を **外し** `IsHeatFlowEndpointRegular` (meas/indep/Z_law/密度
+   witness + 正則性、全 precondition) に **置換**する設計。「外せる」最終確認は 5-B 実装時 LSP。
+   signature 変更につき実装 session で独立 `honesty-auditor` 起動必須。
