@@ -1414,20 +1414,20 @@ theorem isStamToEPIScalingHyp_of_stam_debruijn
     { hX_meas := hX, hZ_meas := hZX_meas, hXZ_indep := hXZX,
       v_Z := 1, hv_Z_pos := one_pos, hZ_law := hZX_law,
       pX := sorry, hpX_nn := sorry, hpX_meas := sorry, hpX_law := sorry,
-      hpX_int := sorry, hpX_mass := sorry, hpX_mom := sorry }
+      hpX_int := sorry, hpX_mass := sorry, hpX_mom := sorry, hpX_ent := sorry }
   -- @residual(plan:epi-stam-to-conclusion-phaseA-plan)
   have h_endpt_Y : InformationTheory.Shannon.IsHeatFlowEndpointRegular Y Z_Y P :=
     { hX_meas := hY, hZ_meas := hZY_meas, hXZ_indep := hYZY,
       v_Z := 1, hv_Z_pos := one_pos, hZ_law := hZY_law,
       pX := sorry, hpX_nn := sorry, hpX_meas := sorry, hpX_law := sorry,
-      hpX_int := sorry, hpX_mass := sorry, hpX_mom := sorry }
+      hpX_int := sorry, hpX_mass := sorry, hpX_mom := sorry, hpX_ent := sorry }
   -- @residual(plan:epi-stam-to-conclusion-phaseA-plan)
   have h_endpt_sum : InformationTheory.Shannon.IsHeatFlowEndpointRegular
       (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P :=
     { hX_meas := hX.add hY, hZ_meas := hZX_meas.add hZY_meas, hXZ_indep := hXYZXY,
       v_Z := 2, hv_Z_pos := two_pos, hZ_law := hZsum_law,
       pX := sorry, hpX_nn := sorry, hpX_meas := sorry, hpX_law := sorry,
-      hpX_int := sorry, hpX_mass := sorry, hpX_mom := sorry }
+      hpX_int := sorry, hpX_mass := sorry, hpX_mom := sorry, hpX_ent := sorry }
   -- R-5 rewire: feed the **genuine** ratio `AntitoneOn` (R-5-c,
   -- `csiszarLogRatioGap_antitoneOn_Ici_zero`) instead of the difference-version
   -- D6 (`csiszarGap1Source_antitoneOn_Ici_zero`), which transitively consumed the

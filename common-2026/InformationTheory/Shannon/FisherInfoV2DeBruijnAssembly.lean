@@ -2526,7 +2526,7 @@ output, = `h(X+√t·Z)` finite). `hpX_mass`/`hpX_mom` are regularity preconditi
 PASS (granting them yields the integrand domination, NOT a de Bruijn/Fisher result). NOT circular,
 NOT load-bearing, NOT degenerate. No longer a Mathlib wall.
 @audit:ok -/
-private theorem convDensityAdd_negMulLog_integrable
+theorem convDensityAdd_negMulLog_integrable
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
     (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume) {t : ℝ} (ht : 0 < t) :
