@@ -338,7 +338,19 @@ the layer-2 machinery `differentialEntropy_convDensity_integral_tendsto`
 is recovered with the endpoint value `differentialEntropy (P.map X) = ∫ negMulLog pX`
 (B-4). All fields are preconditions (regularity / input-distribution data); no
 continuity conclusion is bundled. The only residuals are transitive (layer-2
-`wall:approx-identity-L1`); this helper itself adds no `@residual`. -/
+`wall:approx-identity-L1`); this helper itself adds no `@residual`.
+
+Independent honesty audit 2026-06-04 (fresh subagent, commit fa0fe3f): PASS.
+Own body (lines 354-413) is `sorry`-free — verified by mapping the file's 6
+`sorry` warnings to the parked layer-1/layer-2 witness lemmas only (94/137/167/
+186/203/221), none in this helper. `#print axioms` shows `sorryAx` purely
+transitive through those parked lemmas (NOT in the helper's own derivation). The
+density bridge call (`pPath_eq_convDensityAdd`, `@audit:ok`) matches signatures
+verbatim; `differentialEntropy_convDensity_integral_tendsto.comp h_reparam` is a
+genuine `t' := t·v_Z` reparam. Sufficiency holds: conclusion follows from the
+regularity hypotheses (no free-variable counterexample — singular `P.map X` is
+excluded by the `hpX_law` density witness). NOT circular / load-bearing /
+degenerate. Not `@audit:ok` only because of the transitive layer-1 sorries. -/
 theorem heatFlowDifferentialEntropy_continuousWithinAt_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω} (X Z : Ω → ℝ) (P : Measure Ω)
     [IsProbabilityMeasure P]
@@ -459,7 +471,14 @@ bridge (`pPath_eq_convDensityAdd`) and the layer-2 machinery
 continuity / L¹-convergence / density-identification conclusion. This is NOT a
 load-bearing hypothesis bundle — the analytic content is discharged genuinely by
 `heatFlowDifferentialEntropy_continuousWithinAt_zero`, which only *consumes* these
-fields as inputs (cf. `audit-tags.md` "non-bundle check"). -/
+fields as inputs (cf. `audit-tags.md` "non-bundle check").
+
+Independent honesty audit 2026-06-04 (fresh subagent, commit fa0fe3f): PASS. All
+13 fields checked individually — measurability / independence / Gaussian noise law
+/ Real density witness data — every one is a precondition. No field has type
+`ContinuousWithinAt …` / a limit / an L¹-convergence / a density-identification
+equality; the structure carries no conclusion atom. Not load-bearing (tier 5),
+not degenerate. The wall lemma consumes the bundle as inputs to the genuine helper. -/
 structure IsHeatFlowEndpointRegular {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] where
   hX_meas : Measurable X
@@ -517,6 +536,24 @@ machinery's parked lemmas in this file: the approximate-identity L¹ convergence
 finiteness (`negMulLog_integrable_of_density` /
 `convDensityAdd_negMulLog_integrable_pub`, `plan:epi-g2-layer2-moonshot-plan`
 落とし穴2 / plumbing). The compound reflects both transitive owners.
+
+Independent honesty audit 2026-06-04 (fresh subagent, commit fa0fe3f): PASS as
+`honest_residual` with the compound classification verified correct. (a) Own body
+(lines 532-548) is genuine delegation: `key` from
+`heatFlowDifferentialEntropy_continuousWithinAt_zero` (own sorry 0) +
+`entropyPower = exp ∘ (2·differentialEntropy)` lift via `.const_smul.rexp`. The
+former direct density-identification `sorry` is genuinely gone (replaced by the
+helper). (b) `plan:epi-g2-layer2-moonshot-plan` correctly migrated from the closed
+density bridge to the limit-density entropy-finiteness obligation
+(`negMulLog_integrable_of_density`, plan 落とし穴2) + private-asset plumbing
+(`convDensityAdd_negMulLog_integrable_pub`, genuine `@audit:ok` asset at
+FisherInfoV2DeBruijnAssembly.lean:2529, only `private`-blocked). Verified distinct
+from CLOSED register `wall:entropy-finiteness` (smoothed `t>0` form). (c)
+`wall:approx-identity-L1` confirmed transitive via the 4 parked Vitali witnesses;
+loogle (`MeasureTheory.convolution, MeasureTheory.eLpNorm`) = 0 declarations, so
+the general-L¹ approximate-identity convergence is a genuine Mathlib gap (in
+register). Signature change `IsDeBruijnRegularityHyp → IsHeatFlowEndpointRegular`
+is honest (audited PASS above). NOT load-bearing / circular / wall-misuse.
 
 @residual(wall:approx-identity-L1,plan:epi-g2-layer2-moonshot-plan) -/
 theorem heatFlowEntropyPower_continuousWithinAt_zero

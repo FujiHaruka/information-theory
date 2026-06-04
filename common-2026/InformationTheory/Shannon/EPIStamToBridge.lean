@@ -1300,7 +1300,26 @@ the existential conclusion of `IsStamToEPIScalingHyp`.
 
 Signature carries A-4 directly to `_of_stam_debruijn`; consumer Phase A-5
 chains into `isStamToEPIBridgeHyp_of_scaling` (the bridge body discharge
-needs only the scaling predicate; the `s = 1` endpoint is internal). -/
+needs only the scaling predicate; the `s = 1` endpoint is internal).
+
+Independent honesty audit 2026-06-04 (fresh subagent, commit fa0fe3f): PASS as
+`honest_residual`. Body holds 22 sorries: 1 joint-independence
+(`hXYZXY`, line 1376) + 21 density-witness (3 × `IsHeatFlowEndpointRegular`
+instances × 7 fields `pX`/`hpX_nn`/`hpX_meas`/`hpX_law`/`hpX_int`/`hpX_mass`/
+`hpX_mom`), all `@residual(plan:epi-stam-to-conclusion-phaseA-plan)`.
+Classification verified: (a) sorry is confined to density-witness fields — every
+NON-density field is filled genuinely (meas/indep from available hyps; `v_Z`
+literal 1/1/2; `hZ_law` from `hZX_law`/`hZY_law` directly, and the sum's
+`hZsum_law` GENUINELY via `gaussianReal_add_gaussianReal_of_indepFun` +
+`norm_num` to `𝒩(0,2)`). The sorry does NOT spread to the whole structure
+(honesty: available data not hidden). (b) A Real density witness for `P.map X` /
+`P.map Y` / `P.map (X+Y)` is genuine input-distribution precondition data, not a
+conclusion — it is NOT derivable from `Measurable X` + `IsProbabilityMeasure P`
+(a discrete/singular input law has no Real volume-density), so this is a genuine
+precondition gap, correctly `plan:`-classified (NOT load-bearing). (c) Same plan
+owner as the pre-existing joint-independence sorry (noise/density model lives on
+the Stam-to-conclusion line `IsStamScalingNoiseHyp` / `stamScalingNoise_exists`,
+not the de Bruijn per-time analytic plan); owner consistency confirmed. -/
 @[entry_point]
 theorem isStamToEPIScalingHyp_of_stam_debruijn
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
