@@ -15,8 +15,8 @@
 ## 進捗
 
 - [x] Phase 0 — 列特徴付けブリッジ ✅ (層2補題 `differentialEntropy_convDensity_integral_tendsto` 内で `tendsto_iff_seq_tendsto` 結線済)
-- [ ] Phase 1 — 層1 L¹ mollifier 収束 (`wall:approx-identity-L1`) 📋 **← 唯一の残壁 (genuine moonshot)**
-- [ ] Phase 2 — `UnifIntegrable` / `UnifTight` witness 構成 📋 (`wall:approx-identity-L1` 配下、`negMulLog_convDensity_unif*`/`_tendsto_ae`)
+- [ ] Phase 1 — 層1 L¹ mollifier 収束 (`wall:approx-identity-L1`) 📋 **← 残壁本体 (genuine moonshot)** → [`epi-g2-vitali-closure-plan.md`](epi-g2-vitali-closure-plan.md) §層1
+- [ ] Phase 2 — 3 Vitali witness 構成 (UI / UT / ae) 📋 (`wall:approx-identity-L1` 配下、`negMulLog_convDensity_unif*`/`_tendsto_ae`) → **[`epi-g2-vitali-closure-plan.md`](epi-g2-vitali-closure-plan.md) に精密設計を分離 (2026-06-04)**
 - [x] Phase 3 — 層2 machinery genuine 化 ✅ (`differentialEntropy_convDensity_integral_tendsto` own sorry 0、Vitali + L¹→積分)
 - [x] Phase 4 — 壁補題 closure ✅ (`heatFlowEntropyPower_continuousWithinAt_zero` を `@residual(wall:approx-identity-L1)` 単独化)
 - [x] Phase 5 — 密度同定ブリッジ署名設計 + 実装 ✅ (下記サブ、5-C のみ残=site park 済で壁補題に影響なし)
@@ -152,6 +152,12 @@ Phase 2 で判断 (判断ログ)。**UI/UT を `*Hypothesis` predicate に bundl
   現状は Proposed wall 扱い、初出は本 plan。
 
 ## Phase 2 — `UnifIntegrable` / `UnifTight` witness 構成 📋
+
+> **分離 (2026-06-04)**: 本 Phase は 3 witness (UI / UT / ae) の精密設計を
+> [`epi-g2-vitali-closure-plan.md`](epi-g2-vitali-closure-plan.md) に切り出した。本節は
+> 概要 (witness 別 closure 見込み) のみ残し、各 witness の Phase A/B/C・signature 変更・
+> 撤退ラインは新 closure plan を SoT とする。一次根拠は
+> [`epi-g2-vitali-witness-inventory.md`](epi-g2-vitali-witness-inventory.md)。
 
 - **入力**: 層1 L¹ 収束 (Phase 1) + `pX_mom` (有限2次モーメント)。
 - **出力結論型** (verbatim、在庫カテゴリ1):
@@ -579,3 +585,15 @@ structure IsHeatFlowEndpointRegular (X Z : Ω → ℝ) (P : Measure Ω) [IsProba
    `h_reg : IsDeBruijnRegularityHyp` を **外し** `IsHeatFlowEndpointRegular` (meas/indep/Z_law/密度
    witness + 正則性、全 precondition) に **置換**する設計。「外せる」最終確認は 5-B 実装時 LSP。
    signature 変更につき実装 session で独立 `honesty-auditor` 起動必須。
+
+7. **(2026-06-04) Phase 2 (3 Vitali witness) を独立 closure plan に分離**: 親 plan の Phase 0-5
+   が完結構造 (層2 machinery genuine + 壁補題 closure + 密度同定 bridge genuine) に達したため、残る
+   3 witness (`negMulLog_convDensity_unifIntegrable`/`_unifTight`/`_tendsto_ae`、全て
+   `@residual(wall:approx-identity-L1)`) の精密設計を [`epi-g2-vitali-closure-plan.md`](epi-g2-vitali-closure-plan.md)
+   に切り出した。inventory (`epi-g2-vitali-witness-inventory.md`) の確定 positive 発見を反映: (i) maxent
+   上界 `differentialEntropy_le_gaussian_of_variance_le` (`DifferentialEntropy.lean:520`, in-tree
+   `@entry_point`) が UI witness を真 moonshot から「橋1本」に縮小、ただし `[IsProbabilityMeasure μ]`
+   要求で witness signature に `X,Z,P,v_Z,hZ_law` precondition 追加が必要 (verbatim 確認済、honesty OK)。
+   (ii) UT は `mul_meas_ge_le_lintegral` (測度非依存) で `volume` 上 Chebyshev 回避可能 (`meas_ge_le_variance_div_sq`
+   は `[IsFiniteMeasure]` 要求で直適用不可)。(iii) ae は full列 vs 部分列 gap が signature 設計課題。
+   難易度ランク (advisor): ae ≪ UT < UI。撤退ライン発火 no。本親 plan の Phase 1/2 は新 closure plan を SoT とする。

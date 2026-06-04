@@ -160,7 +160,8 @@ theorem eLpNorm_integral_le_lintegral
 private noncomputable def translL1 (pX : ℝ → ℝ) (y : ℝ) : ℝ≥0∞ :=
   eLpNorm (fun z => pX (z - y) - pX z) 1 volume
 
-/-- ガウス核 `g_v` の prefactor 一様上界 `g_v y ≤ (√(2πv))⁻¹` (elementary)。 -/
+/-- ガウス核 `g_v` の prefactor 一様上界 `g_v y ≤ (√(2πv))⁻¹` (elementary)。
+@audit:ok -/
 private theorem gaussianPDFReal_le_pref (v : ℝ≥0) (y : ℝ) :
     gaussianPDFReal 0 v y ≤ (Real.sqrt (2 * Real.pi * v))⁻¹ := by
   rw [gaussianPDFReal_def]
@@ -233,7 +234,10 @@ private theorem convDensityAdd_eLpNorm_le_psi
         rw [Real.enorm_eq_ofReal (hg_nn y)]
 
 /-- **Gaussian 二次モーメント** `∫ u² · g_s u = s` (`g_s = gaussianPDFReal 0 ⟨s,_⟩`、分散 `s`)。
-`variance_fun_id_gaussianReal` + `integral_gaussianReal_eq_integral_smul` (Mathlib)。 -/
+`variance_fun_id_gaussianReal` + `integral_gaussianReal_eq_integral_smul` (Mathlib)。
+NOTE: `FisherConvBound.integral_sq_mul_gaussianPDFReal` (`:56`, `@audit:ok`) と同一証明の
+local 複製 (heavy import 回避目的)。将来 dedup 候補 (共通 lemma を軽量 module に切出し)。
+@audit:ok -/
 private theorem integral_sq_mul_gaussianPDFReal_local {s : ℝ} (hs : 0 < s) :
     ∫ u, u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u ∂volume = s := by
   have hv_ne : (⟨s, hs.le⟩ : ℝ≥0) ≠ 0 := by
@@ -251,7 +255,8 @@ private theorem integral_sq_mul_gaussianPDFReal_local {s : ℝ} (hs : 0 < s) :
     _ = s := by rw [hvar]
 
 /-- **Gaussian 二次モーメント可積分性** `Integrable (u ↦ u² · g_s u)`。
-`u² = id² ∈ L²(gaussianReal)` を withDensity 橋で `volume` に移送。 -/
+`u² = id² ∈ L²(gaussianReal)` を withDensity 橋で `volume` に移送。
+@audit:ok -/
 private theorem integrable_sq_mul_gaussianPDFReal_local {s : ℝ} (hs : 0 < s) :
     Integrable (fun u => u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u) volume := by
   have hv_ne : (⟨s, hs.le⟩ : ℝ≥0) ≠ 0 := by
@@ -268,7 +273,8 @@ private theorem integrable_sq_mul_gaussianPDFReal_local {s : ℝ} (hs : 0 < s) :
   simp only [gaussianPDF, ENNReal.toReal_ofReal (gaussianPDFReal_nonneg _ _ _)]
 
 /-- **Gaussian tail (Chebyshev)**: `∫⁻_{δ ≤ |y|} ofReal(g_t y) ≤ ofReal (t / δ²)`。
-`{δ ≤ |y|}` 上 `1 ≤ y²/δ²` を使い、二次モーメント `∫ y² g_t = t` で押さえる。 -/
+`{δ ≤ |y|}` 上 `1 ≤ y²/δ²` を使い、二次モーメント `∫ y² g_t = t` で押さえる。
+@audit:ok -/
 private theorem gaussianTail_lintegral_le {t δ : ℝ} (ht : 0 < t) (hδ : 0 < δ) :
     ∫⁻ y in {y : ℝ | δ ≤ |y|}, ENNReal.ofReal (gaussianPDFReal 0 t.toNNReal y) ∂volume
       ≤ ENNReal.ofReal (t / δ ^ 2) := by
