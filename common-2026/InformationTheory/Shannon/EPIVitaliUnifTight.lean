@@ -111,6 +111,14 @@ second-moment integrability `x ↦ x²·g_t(x-y)` is established by the substitu
 (sorryAx-free, machine-checked 2026-06-04 with fresh olean). All `hpX_*` are pX
 regularity preconditions; the conclusion is a second-moment EQUALITY reconstructed
 from the convolution structure, not bundled into any hypothesis. NOT load-bearing.
+
+Independent honesty audit 2026-06-04 (fresh subagent, commit 825154f): `@audit:ok`
+promotion CONFIRMED. Re-verified sorryAx-free: `#print axioms = [propext,
+Classical.choice, Quot.sound]` (machine-checked, transient `#print` + `lake env lean`).
+Body Read in full: genuine lintegral-Tonelli (`lintegral_lintegral_swap` over the
+`ℝ≥0∞`-lifted nonneg integrand `K x y = x²·(pX y · g(x-y))`, inner collapse via the
+genuine `integral_sq_mul_gaussianPDFReal_shift`, outer integral against `pX·(y²+t)`),
+no hidden wall, the second-moment value is reconstructed not asserted. Promotion just.
 @audit:ok -/
 theorem convDensityAdd_second_moment
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -269,6 +277,13 @@ For a bounded positive variance sequence `u`, the second moments
 
 Genuine, sorry-free: combines `convDensityAdd_second_moment` (Tonelli, closed
 above) with `hu_bdd` (regularity) and `∫ pX ≥ 0`.
+
+Independent honesty audit 2026-06-04 (fresh subagent, commit 825154f): `@audit:ok`
+CONFIRMED. sorryAx-free (`#print axioms = [propext, Classical.choice, Quot.sound]`,
+machine-checked). The conclusion is an EXISTENTIAL n-uniform bound `∃ V, ∀ n, … ≤ V`
+(output), produced by instantiating `V := ∫x²pX + (∫pX)·B` from `hu_bdd`'s upper bound
+`B` and monotonicity — no core value bundled into a hypothesis. `hu_bdd` is regularity
+on the input variance sequence. NOT load-bearing.
 @audit:ok -/
 theorem convDensityAdd_second_moment_unif_bdd
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)

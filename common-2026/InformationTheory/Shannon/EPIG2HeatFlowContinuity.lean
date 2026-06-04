@@ -177,7 +177,19 @@ a.e. core is NOT hidden in a hypothesis — it is rebuilt from the genuine subse
 witness, so the removed full-sequence ae witness's substance is not laundered
 elsewhere. All hypotheses are regularity/normalisation (hpX_nn/meas/int/mass/mom/
 ent). NOT circular / load-bearing / degenerate; sufficiency holds. Not `@audit:ok`
-only because of the transitive layer-1 sorries (UI/UT). -/
+only because of the transitive layer-1 sorries (UI/UT).
+
+Independent honesty audit 2026-06-04 (fresh subagent, commit 825154f): delegation
+CONFIRMED honest. After 825154f the UI witness lives in `EPIVitaliUI.lean`
+(`negMulLog_convDensity_unifIntegrable`, hpX_mass added); the `hui :=
+negMulLog_convDensity_unifIntegrable … hpX_mass …` and `hut :=
+negMulLog_convDensity_unifTight …` calls (`:236`/`:238`) are genuine applications with
+the regularity preconditions threaded from this signature (`hpX_mass` consumed, not
+laundered). Own body verified `sorry`-free (0 tactic `sorry` tokens in the whole file;
+the 12 `rg sorry` hits are docstring text). The Vitali subsequence route
+(`tendsto_of_subseq_tendsto` + `tendsto_Lp_of_tendsto_ae` + `tendsto_integral_of_L1'`)
+is genuine machinery; residual is transitive through the UI/UT `wall:approx-identity-L1`
+only. -/
 theorem differentialEntropy_convDensity_integral_tendsto
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)

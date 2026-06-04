@@ -66,7 +66,17 @@ theorem convDensityAdd_gaussian_nonneg {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤
     (fun y => gaussianPDFReal_nonneg 0 ⟨t, ht.le⟩ y) x
 
 /-- The smoothed-density measure `μ_t := volume.withDensity (ofReal ∘ f_t)` is a
-probability measure (Step 2). Genuine via `integral_convDensityAdd_gaussian_eq_one`. -/
+probability measure (Step 2). Genuine via `integral_convDensityAdd_gaussian_eq_one`.
+
+Independent honesty audit 2026-06-04 (fresh subagent, commit 825154f): genuine,
+own sorry 0, `#print axioms = [propext, Classical.choice, Quot.sound]` (sorryAx-free,
+machine-checked). The probability-measure conclusion is reconstructed from
+`withDensity_apply` + `ofReal_integral_eq_lintegral_ofReal` + the genuine mass
+identity `integral_convDensityAdd_gaussian_eq_one`; no measure value is bundled into
+a hypothesis. All `hpX_*` are pX regularity preconditions; `hpX_mass : ∫ pX = 1` is
+the probability-density normalisation (regularity, not load-bearing). NOT circular /
+load-bearing / degenerate.
+@audit:ok -/
 theorem convDensityAdd_gaussian_isProbabilityMeasure {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -89,7 +99,15 @@ theorem convDensityAdd_gaussian_isProbabilityMeasure {pX : ℝ → ℝ}
   simp
 
 /-- The differential entropy of the smoothed-density measure equals the entropy
-integral of the density (Step 2). Genuine via `rnDeriv_withDensity`. -/
+integral of the density (Step 2). Genuine via `rnDeriv_withDensity`.
+
+Independent honesty audit 2026-06-04 (fresh subagent, commit 825154f): genuine,
+own sorry 0, `#print axioms = [propext, Classical.choice, Quot.sound]` (sorryAx-free,
+machine-checked). The entropy-integral identity is reconstructed from
+`Measure.rnDeriv_withDensity` + `ENNReal.toReal_ofReal` pushed through
+`integral_congr_ae`; no entropy value is bundled into a hypothesis. `hpX_meas`/`hpX_nn`
+are regularity preconditions. NOT circular / load-bearing / degenerate.
+@audit:ok -/
 theorem differentialEntropy_convDensityAdd_gaussian_eq {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     {t : ℝ} (ht : 0 < t) :
@@ -114,6 +132,15 @@ theorem differentialEntropy_convDensityAdd_gaussian_eq {pX : ℝ → ℝ}
 `x ↦ x² · f_t(x)` is `volume`-integrable. Same Tonelli/measurability plumbing scope as
 `convDensityAdd_second_moment` (value version). Parked for the closure plan.
 
+Independent honesty audit 2026-06-04 (fresh subagent, commit 825154f): honest_residual,
+classification CORRECT. The `plan:` (not `wall:`) class is justified — this is the
+integrability sub-fact of the SAME lintegral-Tonelli chain that genuinely closes
+`convDensityAdd_second_moment` (the value version, `@audit:ok`, sorryAx-free): that
+proof already establishes Bochner LHS integrability internally (`hLHS_int`, from
+finiteness of the lintegral chain). So this helper is plumbing closable by the plan's
+own machinery, NOT a Mathlib-absent wall. Plan `epi-g2-vitali-closure-plan` tracks
+`convDensityAdd_second_moment` in scope (Phase B/C). Signature is honest: all `hpX_*`
+are regularity preconditions, conclusion is an `Integrable` output (no value bundled).
 @residual(plan:epi-g2-vitali-closure-plan) -/
 theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -127,6 +154,11 @@ theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
 `x ↦ x · f_t(x)` is `volume`-integrable. Same Tonelli/measurability plumbing scope as
 `convDensityAdd_second_moment` (value version). Parked for the closure plan.
 
+Independent honesty audit 2026-06-04 (fresh subagent, commit 825154f): honest_residual,
+classification CORRECT (same reasoning as `convDensityAdd_gaussian_sq_integrable`): the
+first-moment integrability `x ↦ x·f_t` is the companion sub-fact of the plan-tracked
+Tonelli/second-moment chain, closable by the plan's own machinery, NOT a Mathlib wall.
+`plan:` correct, signature honest (regularity preconditions + `Integrable` output).
 @residual(plan:epi-g2-vitali-closure-plan) -/
 theorem convDensityAdd_gaussian_id_integrable {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -140,7 +172,19 @@ theorem convDensityAdd_gaussian_id_integrable {pX : ℝ → ℝ}
 above by the Gaussian max-entropy `(1/2) log(2πe·V)` with `V = (∫ x² pX) + t`. Genuine
 via `differentialEntropy_le_gaussian_of_variance_le` on `μ_t`. The variance moments are
 supplied by `convDensityAdd_second_moment` (value) and the moment-integrability helpers
-(parked); the maxent application itself is a genuine reduction. -/
+(parked); the maxent application itself is a genuine reduction.
+
+Independent honesty audit 2026-06-04 (fresh subagent, commit 825154f): honest_residual
+(transitive only). Own body is `sorry`-free; the maxent application
+(`differentialEntropy_le_gaussian_of_variance_le`, an `@entry_point` lemma) is a
+genuine reduction — the variance bound is built from `convDensityAdd_second_moment`
+(genuine) via `withDensity` moment transfer, NOT bundled into a hypothesis. The only
+`sorryAx` in `#print axioms` is transitive, through the parked moment-integrability
+helpers `convDensityAdd_gaussian_sq_integrable` / `_id_integrable`
+(`plan:epi-g2-vitali-closure-plan`). `hV`/`hV0` constrain the auxiliary variance
+majorant `V` (regularity for the maxent application, not a bundled entropy value).
+NOT `@audit:ok` only because of the transitive plan residuals. NOT load-bearing /
+circular; sufficiency holds (maxent inequality follows from the variance bound). -/
 theorem negMulLog_convDensityAdd_gaussian_entropy_upper {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -289,6 +333,15 @@ uniformly, but the de la Vallée-Poussin step — turning a uniform bound on
 loogle: 0 hits for any de la Vallée-Poussin / superlinear-moment → UnifIntegrable
 lemma). Parked as the approximate-identity wall.
 
+Independent honesty audit 2026-06-04 (fresh subagent, commit 825154f): honest_residual,
+`wall:approx-identity-L1` classification CORRECT. The wall is loogle-confirmed Mathlib-
+absent: `Real.negMulLog` + `MeasureTheory.Integrable` = 0 declarations;
+`MeasureTheory.UnifTight` returns only structural lemmas (`aeeq`/`neg`/`const`/`finite`),
+no de la Vallée-Poussin superlinear-moment constructor. Signature is honest: the
+conclusion is the genuine intermediate proposition "uniform indicator-tail eLpNorm ≤ ε"
+(a tail-smallness statement), NOT the `UnifIntegrable` conclusion bundled as a
+hypothesis — `negMulLog_convDensity_unifIntegrable` genuinely reduces TO this via
+`unifIntegrable_of`. All `hpX_*`/`hu_*` are regularity preconditions. NOT load-bearing.
 @residual(wall:approx-identity-L1) -/
 theorem negMulLog_convDensity_indicatorTail_uniform
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -320,7 +373,21 @@ la Vallée-Poussin bridge core `negMulLog_convDensity_indicatorTail_uniform`
 NOT load-bearing: this body is the genuine Step-1 reduction. Its only own residual is
 transitive, through the parked de la Vallée-Poussin bridge core
 (`wall:approx-identity-L1`); the framing/maxent helpers (Steps 2-3) are genuine modulo
-the parked moment-integrability plumbing (`plan:epi-g2-vitali-closure-plan`). -/
+the parked moment-integrability plumbing (`plan:epi-g2-vitali-closure-plan`).
+
+Independent honesty audit 2026-06-04 (fresh subagent, commit 825154f): honest_residual
+(transitive only), PASS. Own body is the genuine Step-1 reduction: `unifIntegrable_of`
+(`[IsFiniteMeasure]`-free, so valid on infinite `volume`) discharges the
+AEStronglyMeasurable side via `continuous_negMulLog.comp_aestronglyMeasurable`, and
+delegates the uniform indicator-tail input genuinely to the parked de la Vallée-Poussin
+core `negMulLog_convDensity_indicatorTail_uniform`. The `UnifIntegrable` conclusion is
+NOT bundled into any hypothesis — it is genuinely reconstructed by the constructor; the
+single hard step (uniform tail) is the parked core, a genuine intermediate proposition
+(not the UI conclusion). `#print axioms` carries `sorryAx` purely transitively through
+that wall. `hpX_mass : ∫ pX = 1` (probability framing) and `hu_bdd` are regularity
+preconditions, not load-bearing. "genuine but transitive residual" is the honest
+shape (audit-tags.md tier 2 / transitive-sorry): own sorry 0, residual via the parked
+core. NOT load-bearing / circular / degenerate; sufficiency holds. -/
 theorem negMulLog_convDensity_unifIntegrable
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
