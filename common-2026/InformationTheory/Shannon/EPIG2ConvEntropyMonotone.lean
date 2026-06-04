@@ -5,6 +5,8 @@ import Mathlib.Probability.Kernel.Composition.MapComap
 import Mathlib.Probability.Kernel.Composition.MeasureCompProd
 import Mathlib.Probability.Independence.Basic
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
+import Mathlib.InformationTheory.KullbackLeibler.Basic
+import Mathlib.Probability.Kernel.Composition.Lemmas
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.EPIConvDensity
 import InformationTheory.Shannon.FisherInfoV2DeBruijnPerTime
@@ -51,15 +53,27 @@ wall), but the `condDistrib` machinery exists, so a genuine construction is poss
   *buildable* (mis-classified as a wall); this closure resolves that — it carries no
   `@residual` tag.
 
-* `condDifferentialEntropy_le` (conditioning reduces entropy) carries
-  `@residual(wall:cond-diff-entropy)` — its genuine proof requires the differential
-  mutual-information non-negativity `I(W;Z) = h(W) − h(W|Z) = KL(joint ‖ product) ≥ 0`,
-  which is not yet assembled in-tree at the differential-entropy level. The continuous
-  `mutualInfo` concept is absent from Mathlib (loogle `mutualInfo` = Found 0, `klDiv ∩
-  condDistrib` = Found 0, re-confirmed 2026-06-04), and the bridge converting
-  `klDiv(joint ‖ product).toReal` into the differential-entropy difference `h(X) − h(X|Z)`
-  must be constructed from scratch (`llr` ↔ `negMulLog`-integral disintegration, estimated
-  ~150-300 lines = a separate Phase).
+* `condDifferentialEntropy_le` (conditioning reduces entropy) is now **genuine modulo
+  a single bridge lemma**. The non-negativity step is genuinely proved here: the entropy
+  difference `h(X) − h(X|Z)` is identified with `(klDiv joint product).toReal`, which is
+  `≥ 0` by `ENNReal.toReal_nonneg` (`klDiv` is `ℝ≥0∞`-valued), so `h(X|Z) ≤ h(X)` follows
+  by `sub_nonneg`/`linarith`. The remaining `sorry` is isolated in the bridge lemma
+  `differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv`, which carries
+  `@residual(wall:cond-diff-entropy)`. `condDifferentialEntropy_le` inherits the tag
+  transitively (own body sorry-free apart from the bridge call).
+
+  The parked content is the differential-MI = KL identity
+  `h(X) − h(X|Z) = (klDiv (μ_Z ⊗ₘ condDistrib X Z μ) (μ_Z ⊗ₘ const (μ.map X))).toReal`.
+  The continuous `mutualInfo` concept is absent from Mathlib (loogle `mutualInfo` =
+  Found 0, `klDiv ∩ condDistrib` = Found 0, re-confirmed 2026-06-04), and the bridge
+  reduces to the **conditional-KL integral form**
+  `(klDiv (μ_Z ⊗ₘ κ) (μ_Z ⊗ₘ const μ_X)).toReal = ∫ z, (klDiv (κ z) μ_X).toReal ∂μ_Z` —
+  an explicit unaddressed Mathlib TODO (`KullbackLeibler.ChainRule.lean:74-77`). Note the
+  in-tree chain rule `klDiv_compProd_eq_add` decomposes the *first* marginal, which is
+  `μ_Z` on both sides here, so it collapses to the trivial `0 + KL`; the genuine content
+  is exactly the absent integral-form conditional KL plus the per-fibre density expansion
+  `(klDiv (κ z) μ_X).toReal = −h(κ z) − ∫ p_z log q_X` and a Fubini marginal identification
+  (estimated ~150-300 lines = a separate Phase).
 
 The `wall:` class here means "Mathlib-absent obstruction requiring an in-tree
 construction" (the project's `wall:` register sense, e.g. the now-closed
@@ -89,12 +103,52 @@ noncomputable def condDifferentialEntropy
     (X : Ω → ℝ) (Z : Ω → α) (μ : Measure Ω) [IsFiniteMeasure μ] : ℝ :=
   ∫ z, differentialEntropy ((condDistrib X Z μ) z) ∂(μ.map Z)
 
+/-- **Differential mutual information as a Kullback-Leibler divergence**:
+
+  `h(X) − h(X | Z) = KL(joint ‖ product).toReal`,
+
+where `joint := (μ.map Z) ⊗ₘ condDistrib X Z μ` (the law of `(Z, X)`, by
+`compProd_map_condDistrib`) and `product := (μ.map Z) ⊗ₘ Kernel.const _ (μ.map X)`
+(`= (μ.map Z).prod (μ.map X)`, by `Measure.compProd_const`). This is the
+differential-entropy-level statement of `I(X;Z) = h(X) − h(X|Z)`.
+
+This is the single remaining gap of the conditioning-reduces-entropy route. The
+structural reduction `condDifferentialEntropy_le ← klDiv ≥ 0` (type-trivial via
+`ENNReal.toReal_nonneg`) is genuine and lives in `condDifferentialEntropy_le`; the
+content parked here is the bridge converting `klDiv(joint ‖ product).toReal` into
+the differential-entropy difference, which requires the **conditional-KL integral
+form** `(klDiv (μ_Z ⊗ₘ κ) (μ_Z ⊗ₘ const μ_X)).toReal = ∫ z, (klDiv (κ z) μ_X).toReal ∂μ_Z`
+— explicitly an unaddressed Mathlib TODO (`KullbackLeibler.ChainRule.lean:74-77`,
+"Add a version of the chain rule for the integral form of the conditional KL
+divergence") — followed by the per-fibre density expansion
+`(klDiv (κ z) μ_X).toReal = −h(κ z) − ∫ p_z · log q_X` (needs `κ z ≪ volume` a.e. `z`,
+from the disintegration) and a Fubini marginal identification
+`∫_z ∫ p_z log q_X ∂μ_Z = ∫ q_X log q_X = −h(X)`. Estimated a separate ~150-300 line
+Phase (the `klDiv_compProd_eq_add` chain rule decomposes the *first* marginal, which
+here is `μ_Z` on both sides, so it collapses to the trivial `0 + KL`; the genuine
+content is exactly the absent conditional-KL integral form).
+
+All hypotheses are preconditions (regularity / absolute continuity), not load-bearing.
+
+@residual(wall:cond-diff-entropy) -/
+theorem differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv
+    {Ω α : Type*} [MeasurableSpace Ω] [MeasurableSpace α]
+    (X : Ω → ℝ) (Z : Ω → α) (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (hX : Measurable X) (hZ : Measurable Z) (hX_ac : (μ.map X) ≪ volume) :
+    differentialEntropy (μ.map X) - condDifferentialEntropy X Z μ
+      = (klDiv ((μ.map Z) ⊗ₘ condDistrib X Z μ)
+          ((μ.map Z) ⊗ₘ Kernel.const α (μ.map X))).toReal := by
+  sorry
+
 /-- **Conditioning reduces (differential) entropy**: `h(X | Z) ≤ h(X)`.
 
 The differential analogue of `I(X;Z) = h(X) − h(X|Z) = KL(joint ‖ product) ≥ 0`.
-Mathlib has `condDistrib` and `klDiv` (the latter `ℝ≥0∞`-valued, so non-negative by
-type), but the bridge `I(X;Z) = h(X) − h(X|Z)` at the differential-entropy level is
-not assembled in-tree; this lemma is the genuine gap.
+This proof is **genuine** modulo the single bridge
+`differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv`: once the entropy
+difference is identified with `(klDiv joint product).toReal`, non-negativity is
+type-trivial (`ENNReal.toReal_nonneg`, since `klDiv` is `ℝ≥0∞`-valued), so the
+conditioning-reduces-entropy inequality follows by `sub_nonneg`. The remaining sorry
+is inherited transitively from the bridge lemma (hence the `@residual` tag below).
 
 The hypotheses are all preconditions (regularity / absolute continuity), not
 load-bearing: `hX_ac : μ.map X ≪ volume` ensures `h(X)` reflects the density, and
@@ -112,7 +166,11 @@ theorem condDifferentialEntropy_le
     (X : Ω → ℝ) (Z : Ω → α) (μ : Measure Ω) [IsProbabilityMeasure μ]
     (hX : Measurable X) (hZ : Measurable Z) (hX_ac : (μ.map X) ≪ volume) :
     condDifferentialEntropy X Z μ ≤ differentialEntropy (μ.map X) := by
-  sorry
+  have hbridge := differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv
+    X Z μ hX hZ hX_ac
+  have hnn : 0 ≤ differentialEntropy (μ.map X) - condDifferentialEntropy X Z μ := by
+    rw [hbridge]; exact ENNReal.toReal_nonneg
+  linarith
 
 /-- The z-dependent affine-shift kernel `κ z := νX.map (· + c·z)`, built as a genuine
 `Kernel ℝ ℝ`. Construction: push the parametrised pairing `z ↦ νX.map (Prod.mk z)`
