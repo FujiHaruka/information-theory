@@ -10,6 +10,8 @@ import Mathlib.Probability.Kernel.Composition.Lemmas
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.EPIConvDensity
 import InformationTheory.Shannon.FisherInfoV2DeBruijnPerTime
+import InformationTheory.Shannon.CondKLIntegral
+import InformationTheory.Shannon.EPIG2BridgeDensityHelpers
 
 /-!
 # EPI G2 — (β) Convolution does not decrease differential entropy
@@ -42,46 +44,33 @@ This is a **reusable, EPI-line-wide asset**: continuous conditional differential
 entropy + conditioning-reduces-entropy are absent from Mathlib (genuine gap, not a
 wall), but the `condDistrib` machinery exists, so a genuine construction is possible.
 
-## Residual status
+## Status — fully closed (0 sorry / 0 residual, sorryAx-free)
 
-* `condDifferentialEntropy_indep_add_eq` (independent-sum fibre identification) is
-  **genuinely closed** (0 sorry / 0 residual, sorryAx-free): the affine-shift kernel
-  `affineShiftKernel` is built in-tree, the compProd identity `prod_map_affine_eq_compProd`
-  is proved by `compProd_apply`/`prod_apply`/`map_apply`, and the fibre identification
-  follows from `condDistrib_ae_eq_of_measure_eq_compProd` + `differentialEntropy_map_add_const`.
-  The in-tree inventory (`epi-g2-cond-diff-entropy-inventory.md`) flagged this lemma as
-  *buildable* (mis-classified as a wall); this closure resolves that — it carries no
-  `@residual` tag.
+The whole (β) chain is now **genuinely closed**. The former `wall:cond-diff-entropy`
+bridge `differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv` is assembled
+from three genuinely-proved components:
 
-* `condDifferentialEntropy_le` (conditioning reduces entropy) is now **genuine modulo
-  a single bridge lemma**. The non-negativity step is genuinely proved here: the entropy
-  difference `h(X) − h(X|Z)` is identified with `(klDiv joint product).toReal`, which is
-  `≥ 0` by `ENNReal.toReal_nonneg` (`klDiv` is `ℝ≥0∞`-valued), so `h(X|Z) ≤ h(X)` follows
-  by `sub_nonneg`/`linarith`. The remaining `sorry` is isolated in the bridge lemma
-  `differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv`, which carries
-  `@residual(wall:cond-diff-entropy)`. `condDifferentialEntropy_le` inherits the tag
-  transitively (own body sorry-free apart from the bridge call).
+* (a) `InformationTheory.klDiv_compProd_const_toReal_integral` (`CondKLIntegral.lean`,
+  which fills the Mathlib `ChainRule.lean:74-77` TODO) turns the joint KL `toReal` into
+  the `μ_Z`-average of fibrewise KL `∫ z, (klDiv (κ z) μ_X).toReal ∂μ_Z`;
+* (b) `klDiv_toReal_eq_neg_differentialEntropy_sub_cross` (`EPIG2BridgeDensityHelpers.lean`)
+  expands each fibre into `−h(κ z) − ∫ p_z · log q_X`;
+* (c) `integral_condDistrib_density_marginal_eq` (`EPIG2BridgeDensityHelpers.lean`)
+  identifies the `μ_Z`-average of the cross term with `∫ q_X · log q_X = −h(μ_X)` (Fubini
+  marginal).
 
-  The parked content is the differential-MI = KL identity
-  `h(X) − h(X|Z) = (klDiv (μ_Z ⊗ₘ condDistrib X Z μ) (μ_Z ⊗ₘ const (μ.map X))).toReal`.
-  The continuous `mutualInfo` concept is absent from Mathlib (loogle `mutualInfo` =
-  Found 0, `klDiv ∩ condDistrib` = Found 0, re-confirmed 2026-06-04), and the bridge
-  reduces to the **conditional-KL integral form**
-  `(klDiv (μ_Z ⊗ₘ κ) (μ_Z ⊗ₘ const μ_X)).toReal = ∫ z, (klDiv (κ z) μ_X).toReal ∂μ_Z` —
-  an explicit unaddressed Mathlib TODO (`KullbackLeibler.ChainRule.lean:74-77`). Note the
-  in-tree chain rule `klDiv_compProd_eq_add` decomposes the *first* marginal, which is
-  `μ_Z` on both sides here, so it collapses to the trivial `0 + KL`; the genuine content
-  is exactly the absent integral-form conditional KL plus the per-fibre density expansion
-  `(klDiv (κ z) μ_X).toReal = −h(κ z) − ∫ p_z log q_X` and a Fubini marginal identification
-  (estimated ~150-300 lines = a separate Phase).
+Assembling (a)+(b)+(c) gives `RHS = −h(X|Z) − (−h(X)) = h(X) − h(X|Z)`, the bridge.
+`condDifferentialEntropy_le` then follows by `ENNReal.toReal_nonneg`. The regularity /
+integrability preconditions (joint `≪`, per-fibre `≪`, the `μ_Z`-integrability of the
+fibre entropy and the cross term, the marginal log-density integrability) are threaded
+through as honest preconditions (absolute continuity / KL finiteness), not load-bearing
+bundles; the downstream device form `differentialEntropy_indep_gaussian_add_ge` and
+density form `negMulLog_convDensity_entropy_ge` thread them at the heat-flow path
+`W := X + √s·Z` with conclusions unchanged.
 
-The `wall:` class here means "Mathlib-absent obstruction requiring an in-tree
-construction" (the project's `wall:` register sense, e.g. the now-closed
-`fisher-finiteness` / `entropy-finiteness`), NOT "long-term moonshot". The obstruction
-is closeable; `wall:` is chosen over `plan:` because this is a shared, EPI-line-wide /
-textbook-wide reusable asset aggregated here as a shared sorry lemma, not a single-plan
-deferral. Independent honesty audit 2026-06-04: classification confirmed (sorry-based
-residual, signature honest, `IndepFun` a genuine precondition not a load-bearing bundle).
+`condDifferentialEntropy_indep_add_eq` (independent-sum fibre identification) was already
+genuinely closed via the affine-shift kernel `affineShiftKernel`. All declarations here
+are now sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`).
 -/
 
 namespace InformationTheory.Shannon
@@ -112,77 +101,152 @@ where `joint := (μ.map Z) ⊗ₘ condDistrib X Z μ` (the law of `(Z, X)`, by
 (`= (μ.map Z).prod (μ.map X)`, by `Measure.compProd_const`). This is the
 differential-entropy-level statement of `I(X;Z) = h(X) − h(X|Z)`.
 
-This is the single remaining gap of the conditioning-reduces-entropy route. The
-structural reduction `condDifferentialEntropy_le ← klDiv ≥ 0` (type-trivial via
-`ENNReal.toReal_nonneg`) is genuine and lives in `condDifferentialEntropy_le`; the
-content parked here is the bridge converting `klDiv(joint ‖ product).toReal` into
-the differential-entropy difference, which requires the **conditional-KL integral
-form** `(klDiv (μ_Z ⊗ₘ κ) (μ_Z ⊗ₘ const μ_X)).toReal = ∫ z, (klDiv (κ z) μ_X).toReal ∂μ_Z`
-— explicitly an unaddressed Mathlib TODO (`KullbackLeibler.ChainRule.lean:74-77`,
-"Add a version of the chain rule for the integral form of the conditional KL
-divergence") — followed by the per-fibre density expansion
-`(klDiv (κ z) μ_X).toReal = −h(κ z) − ∫ p_z · log q_X` (needs `κ z ≪ volume` a.e. `z`,
-from the disintegration) and a Fubini marginal identification
-`∫_z ∫ p_z log q_X ∂μ_Z = ∫ q_X log q_X = −h(X)`. Estimated a separate ~150-300 line
-Phase (the `klDiv_compProd_eq_add` chain rule decomposes the *first* marginal, which
-here is `μ_Z` on both sides, so it collapses to the trivial `0 + KL`; the genuine
-content is exactly the absent conditional-KL integral form).
+**Genuinely closed** (0 sorry / 0 residual, sorryAx-free), assembled from three
+genuinely-proved components, with the regularity / integrability hypotheses threaded
+as honest preconditions:
 
-All hypotheses are preconditions (regularity / absolute continuity), not load-bearing.
+* (a) `InformationTheory.klDiv_compProd_const_toReal_integral` (`CondKLIntegral.lean`,
+  filling the Mathlib `ChainRule.lean:74-77` TODO) turns the joint KL `toReal` into the
+  `μ_Z`-average of the fibrewise KL `∫ z, (klDiv (κ z) μ_X).toReal ∂μ_Z`;
+* (b) `klDiv_toReal_eq_neg_differentialEntropy_sub_cross`
+  (`EPIG2BridgeDensityHelpers.lean`) expands each fibre into
+  `−h(κ z) − ∫ p_z · log q_X`;
+* (c) `integral_condDistrib_density_marginal_eq` (`EPIG2BridgeDensityHelpers.lean`)
+  identifies `∫_z ∫ p_z log q_X ∂μ_Z = ∫ q_X log q_X = −h(μ_X)` (Fubini marginal).
 
-Independent honesty audit 2026-06-04 (commit 0162576, fresh auditor): verdict
-`honest_residual`, `wall:cond-diff-entropy` classification confirmed. (1) Non-circular:
-no hypothesis has type ≡ conclusion. (2) Non-bundle: `hX`/`hZ`/`hX_ac` are genuine
-regularity/absolute-continuity preconditions; granting them does NOT hand over the KL
-identity, and they do NOT pre-suppose `condDifferentialEntropy_le` or `klDiv ≥ 0` (the
-claim is the equality MI = KL, not the downstream monotonicity inequality). (3) Not
-degenerate (substantive equality). (4) Sufficiency: the classical continuous
-`I(X;Z) = h(X) − h(X|Z) = D(P_{Z,X} ‖ P_Z ⊗ P_X)` identity is genuinely true under
-these preconditions. TODO verbatim re-confirmed at `KullbackLeibler.ChainRule.lean:74-77`
-("Add a version of the chain rule for the integral form of the conditional KL
-divergence"); `klDiv_compProd_eq_add` (ChainRule.lean:204) decomposes the FIRST marginal,
-which is `μ.map Z` on both sides here, so it collapses to `0 + klDiv` and does not supply
-the needed integral form. loogle backstop: `InformationTheory.mutualInfo` unknown,
-`condDistrib ∩ klDiv` Found 0.
+Assembling: `RHS = −h(X|Z) − (−h(X)) = h(X) − h(X|Z)`. The classical continuous
+`I(X;Z) = h(X) − h(X|Z) = D(P_{Z,X} ‖ P_Z ⊗ P_X)` identity, now genuine in-tree.
 
-@residual(wall:cond-diff-entropy) -/
+All added hypotheses are regularity preconditions (absolute continuity, per-fibre
+absolute continuity, equal mass via Markov, integrability = KL finiteness), not
+load-bearing bundles. The equal-mass condition `κ z univ = μ_X univ` is discharged
+internally (both probability measures). `@audit:ok` -/
 theorem differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv
     {Ω α : Type*} [MeasurableSpace Ω] [MeasurableSpace α]
     (X : Ω → ℝ) (Z : Ω → α) (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (hX : Measurable X) (hZ : Measurable Z) (hX_ac : (μ.map X) ≪ volume) :
+    (hX : Measurable X) (hZ : Measurable Z) (hX_ac : (μ.map X) ≪ volume)
+    -- (a) joint absolute continuity + joint llr integrability
+    (h_ac : (μ.map Z) ⊗ₘ condDistrib X Z μ ≪ (μ.map Z) ⊗ₘ Kernel.const α (μ.map X))
+    (h_int : Integrable
+      (llr ((μ.map Z) ⊗ₘ condDistrib X Z μ) ((μ.map Z) ⊗ₘ Kernel.const α (μ.map X)))
+      ((μ.map Z) ⊗ₘ condDistrib X Z μ))
+    -- (b) per-fibre regularity (a.e. `z`)
+    (hκ_v : ∀ᵐ z ∂(μ.map Z), condDistrib X Z μ z ≪ volume)
+    (hκ_logp_int : ∀ᵐ z ∂(μ.map Z), Integrable
+      (fun x => ((condDistrib X Z μ z).rnDeriv volume x).toReal
+        * Real.log (((condDistrib X Z μ z).rnDeriv volume x).toReal)) volume)
+    (hκ_cross_int : ∀ᵐ z ∂(μ.map Z), Integrable
+      (fun x => ((condDistrib X Z μ z).rnDeriv volume x).toReal
+        * Real.log (((μ.map X).rnDeriv volume x).toReal)) volume)
+    -- outer `μ_Z`-integrability of the two split pieces
+    (h_fibreEnt_int : Integrable
+      (fun z => differentialEntropy (condDistrib X Z μ z)) (μ.map Z))
+    (h_cross_int : Integrable
+      (fun z => ∫ x, ((condDistrib X Z μ z).rnDeriv volume x).toReal
+        * Real.log (((μ.map X).rnDeriv volume x).toReal) ∂volume) (μ.map Z))
+    -- (c) marginal log-density integrability
+    (h_logq_int : Integrable
+      (fun x => Real.log (((μ.map X).rnDeriv volume x).toReal)) (μ.map X)) :
     differentialEntropy (μ.map X) - condDifferentialEntropy X Z μ
       = (klDiv ((μ.map Z) ⊗ₘ condDistrib X Z μ)
           ((μ.map Z) ⊗ₘ Kernel.const α (μ.map X))).toReal := by
-  sorry
+  haveI : IsProbabilityMeasure (μ.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
+  haveI : IsProbabilityMeasure (μ.map Z) := Measure.isProbabilityMeasure_map hZ.aemeasurable
+  set μZ := μ.map Z with hμZ
+  set κ := condDistrib X Z μ with hκ
+  set ν := μ.map X with hν
+  -- a.e. fibrewise absolute continuity `κ z ≪ ν`, from the joint absolute continuity.
+  have hκν : ∀ᵐ z ∂μZ, κ z ≪ Kernel.const α ν z := by
+    have := Measure.absolutelyContinuous_compProd_right_iff.mp h_ac
+    simpa using this
+  have hκν' : ∀ᵐ z ∂μZ, κ z ≪ ν := by
+    filter_upwards [hκν] with z hz; simpa using hz
+  -- (a): RHS = `∫ z, (klDiv (κ z) ν).toReal ∂μZ`.
+  have hstepA : (klDiv (μZ ⊗ₘ κ) (μZ ⊗ₘ Kernel.const α ν)).toReal
+      = ∫ z, (klDiv (κ z) ν).toReal ∂μZ :=
+    InformationTheory.klDiv_compProd_const_toReal_integral h_ac h_int
+  -- (b): per-fibre, `(klDiv (κ z) ν).toReal = −h(κ z) − cross_z`.
+  have hstepB : ∀ᵐ z ∂μZ, (klDiv (κ z) ν).toReal
+      = - differentialEntropy (κ z)
+        - ∫ x, ((κ z).rnDeriv volume x).toReal
+            * Real.log ((ν.rnDeriv volume x).toReal) ∂volume := by
+    filter_upwards [hκ_v, hκν', hκ_logp_int, hκ_cross_int] with z hzv hzν hzlogp hzcross
+    have hmass : (κ z) Set.univ = ν Set.univ := by
+      rw [measure_univ, measure_univ]
+    exact klDiv_toReal_eq_neg_differentialEntropy_sub_cross (κ z) ν hzv hX_ac hzν hmass
+      hzlogp hzcross
+  -- Average (b) over `μZ` and split the integral.
+  have hstepBint : ∫ z, (klDiv (κ z) ν).toReal ∂μZ
+      = - condDifferentialEntropy X Z μ
+        - ∫ z, (∫ x, ((κ z).rnDeriv volume x).toReal
+              * Real.log ((ν.rnDeriv volume x).toReal) ∂volume) ∂μZ := by
+    rw [integral_congr_ae hstepB]
+    have hsplit : ∫ z, (- differentialEntropy (κ z)
+            - ∫ x, ((κ z).rnDeriv volume x).toReal
+                * Real.log ((ν.rnDeriv volume x).toReal) ∂volume) ∂μZ
+        = (∫ z, - differentialEntropy (κ z) ∂μZ)
+          - ∫ z, (∫ x, ((κ z).rnDeriv volume x).toReal
+                * Real.log ((ν.rnDeriv volume x).toReal) ∂volume) ∂μZ :=
+      integral_sub h_fibreEnt_int.neg h_cross_int
+    rw [hsplit, integral_neg]
+    rfl
+  -- (c): `∫_z cross_z ∂μZ = ∫ x, qX·log qX = −h(ν)`.
+  have hstepC : ∫ z, (∫ x, ((κ z).rnDeriv volume x).toReal
+              * Real.log ((ν.rnDeriv volume x).toReal) ∂volume) ∂μZ
+      = ∫ x, (ν.rnDeriv volume x).toReal
+            * Real.log ((ν.rnDeriv volume x).toReal) ∂volume :=
+    integral_condDistrib_density_marginal_eq X Z μ hX hZ hX_ac hκ_v h_logq_int
+  -- `h(ν) = −∫ qX·log qX`.
+  have hent : differentialEntropy ν
+      = - ∫ x, (ν.rnDeriv volume x).toReal
+            * Real.log ((ν.rnDeriv volume x).toReal) ∂volume := by
+    unfold differentialEntropy
+    rw [← integral_neg]
+    refine integral_congr_ae (Filter.Eventually.of_forall (fun x => ?_))
+    simp only [Real.negMulLog_def]; ring
+  -- Assemble.
+  rw [hstepA, hstepBint, hstepC, hent]
+  ring
 
 /-- **Conditioning reduces (differential) entropy**: `h(X | Z) ≤ h(X)`.
 
 The differential analogue of `I(X;Z) = h(X) − h(X|Z) = KL(joint ‖ product) ≥ 0`.
-This proof is **genuine** modulo the single bridge
-`differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv`: once the entropy
-difference is identified with `(klDiv joint product).toReal`, non-negativity is
-type-trivial (`ENNReal.toReal_nonneg`, since `klDiv` is `ℝ≥0∞`-valued), so the
-conditioning-reduces-entropy inequality follows by `sub_nonneg`. The remaining sorry
-is inherited transitively from the bridge lemma (hence the `@residual` tag below).
+This proof is **genuine** (0 sorry / 0 residual, sorryAx-free): the bridge
+`differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv` identifies the entropy
+difference with `(klDiv joint product).toReal`, whose non-negativity is type-trivial
+(`ENNReal.toReal_nonneg`, since `klDiv` is `ℝ≥0∞`-valued), so the
+conditioning-reduces-entropy inequality follows by `sub_nonneg`.
 
-The hypotheses are all preconditions (regularity / absolute continuity), not
-load-bearing: `hX_ac : μ.map X ≪ volume` ensures `h(X)` reflects the density, and
-measurability is structural.
-
-Independent honesty audit 2026-06-04: `wall:cond-diff-entropy` classification
-confirmed (loogle backstop: `mutualInfo` continuous absent, `condDistrib ∩ klDiv`
-Found 0; `wall:` over `plan:` justified as a shared, EPI-line-wide reusable asset).
-Signature honest: `hX_ac` is a genuine absolute-continuity precondition, not a
-load-bearing bundle; conclusion is not vacuous.
-
-@residual(wall:cond-diff-entropy) -/
+The hypotheses are all preconditions (regularity / absolute continuity / integrability =
+KL finiteness), not load-bearing: `hX_ac : μ.map X ≪ volume` ensures `h(X)` reflects the
+density, measurability is structural, and the bridge's regularity / integrability
+preconditions are threaded through unchanged. `@audit:ok` -/
 theorem condDifferentialEntropy_le
     {Ω α : Type*} [MeasurableSpace Ω] [MeasurableSpace α]
     (X : Ω → ℝ) (Z : Ω → α) (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (hX : Measurable X) (hZ : Measurable Z) (hX_ac : (μ.map X) ≪ volume) :
+    (hX : Measurable X) (hZ : Measurable Z) (hX_ac : (μ.map X) ≪ volume)
+    (h_ac : (μ.map Z) ⊗ₘ condDistrib X Z μ ≪ (μ.map Z) ⊗ₘ Kernel.const α (μ.map X))
+    (h_int : Integrable
+      (llr ((μ.map Z) ⊗ₘ condDistrib X Z μ) ((μ.map Z) ⊗ₘ Kernel.const α (μ.map X)))
+      ((μ.map Z) ⊗ₘ condDistrib X Z μ))
+    (hκ_v : ∀ᵐ z ∂(μ.map Z), condDistrib X Z μ z ≪ volume)
+    (hκ_logp_int : ∀ᵐ z ∂(μ.map Z), Integrable
+      (fun x => ((condDistrib X Z μ z).rnDeriv volume x).toReal
+        * Real.log (((condDistrib X Z μ z).rnDeriv volume x).toReal)) volume)
+    (hκ_cross_int : ∀ᵐ z ∂(μ.map Z), Integrable
+      (fun x => ((condDistrib X Z μ z).rnDeriv volume x).toReal
+        * Real.log (((μ.map X).rnDeriv volume x).toReal)) volume)
+    (h_fibreEnt_int : Integrable
+      (fun z => differentialEntropy (condDistrib X Z μ z)) (μ.map Z))
+    (h_cross_int : Integrable
+      (fun z => ∫ x, ((condDistrib X Z μ z).rnDeriv volume x).toReal
+        * Real.log (((μ.map X).rnDeriv volume x).toReal) ∂volume) (μ.map Z))
+    (h_logq_int : Integrable
+      (fun x => Real.log (((μ.map X).rnDeriv volume x).toReal)) (μ.map X)) :
     condDifferentialEntropy X Z μ ≤ differentialEntropy (μ.map X) := by
   have hbridge := differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv
-    X Z μ hX hZ hX_ac
+    X Z μ hX hZ hX_ac h_ac h_int hκ_v hκ_logp_int hκ_cross_int h_fibreEnt_int
+    h_cross_int h_logq_int
   have hnn : 0 ≤ differentialEntropy (μ.map X) - condDifferentialEntropy X Z μ := by
     rw [hbridge]; exact ENNReal.toReal_nonneg
   linarith
@@ -307,17 +371,38 @@ stated through an underlying independent pair `X ⊥ Z` with `Z` Gaussian.
 
 All hypotheses are regularity preconditions (the fields of
 `IsHeatFlowEndpointRegular`): measurability, independence, the noise law, and the
-absolute continuity of `μ.map X`. The own body is sorry-free; the only sorry is
-inherited transitively from `condDifferentialEntropy_le` (hence the tag below, not
-`@audit:ok`).
-
-@residual(wall:cond-diff-entropy) -/
+absolute continuity of `μ.map X`. The bridge regularity / integrability preconditions
+(stated at the heat-flow path `W := X + √s·Z`) are threaded through unchanged. **Genuine**
+(0 sorry / 0 residual, sorryAx-free): `condDifferentialEntropy_le` is now genuinely
+closed. `@audit:ok` -/
 theorem differentialEntropy_indep_gaussian_add_ge
     {Ω : Type*} [MeasurableSpace Ω] (X Z : Ω → ℝ) (μ : Measure Ω)
     [IsProbabilityMeasure μ] (s : ℝ) (hs : 0 < s)
     (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z μ)
     (hX_ac : (μ.map X) ≪ volume)
-    (hW_ac : (μ.map (fun ω => X ω + Real.sqrt s * Z ω)) ≪ volume) :
+    (hW_ac : (μ.map (fun ω => X ω + Real.sqrt s * Z ω)) ≪ volume)
+    (h_ac : (μ.map Z) ⊗ₘ condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ
+        ≪ (μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map (fun ω => X ω + Real.sqrt s * Z ω)))
+    (h_int : Integrable
+      (llr ((μ.map Z) ⊗ₘ condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ)
+        ((μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map (fun ω => X ω + Real.sqrt s * Z ω))))
+      ((μ.map Z) ⊗ₘ condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ))
+    (hκ_v : ∀ᵐ z ∂(μ.map Z),
+      condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z ≪ volume)
+    (hκ_logp_int : ∀ᵐ z ∂(μ.map Z), Integrable
+      (fun x => ((condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z).rnDeriv volume x).toReal
+        * Real.log (((condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z).rnDeriv volume x).toReal)) volume)
+    (hκ_cross_int : ∀ᵐ z ∂(μ.map Z), Integrable
+      (fun x => ((condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z).rnDeriv volume x).toReal
+        * Real.log (((μ.map (fun ω => X ω + Real.sqrt s * Z ω)).rnDeriv volume x).toReal)) volume)
+    (h_fibreEnt_int : Integrable
+      (fun z => differentialEntropy (condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z)) (μ.map Z))
+    (h_cross_int : Integrable
+      (fun z => ∫ x, ((condDistrib (fun ω => X ω + Real.sqrt s * Z ω) Z μ z).rnDeriv volume x).toReal
+        * Real.log (((μ.map (fun ω => X ω + Real.sqrt s * Z ω)).rnDeriv volume x).toReal) ∂volume) (μ.map Z))
+    (h_logq_int : Integrable
+      (fun x => Real.log (((μ.map (fun ω => X ω + Real.sqrt s * Z ω)).rnDeriv volume x).toReal))
+      (μ.map (fun ω => X ω + Real.sqrt s * Z ω))) :
     differentialEntropy (μ.map X)
       ≤ differentialEntropy (μ.map (fun ω => X ω + Real.sqrt s * Z ω)) := by
   -- `W := X + √s·Z`. Conditioning on `Z` reduces entropy, and the fibre is `h(X)`.
@@ -326,7 +411,8 @@ theorem differentialEntropy_indep_gaussian_add_ge
   have h_fibre : condDifferentialEntropy W Z μ = differentialEntropy (μ.map X) :=
     condDifferentialEntropy_indep_add_eq X Z μ (Real.sqrt s) hX hZ hXZ hX_ac
   have h_le : condDifferentialEntropy W Z μ ≤ differentialEntropy (μ.map W) :=
-    condDifferentialEntropy_le W Z μ hW_meas hZ hW_ac
+    condDifferentialEntropy_le W Z μ hW_meas hZ hW_ac h_ac h_int hκ_v hκ_logp_int
+      hκ_cross_int h_fibreEnt_int h_cross_int h_logq_int
   rw [← h_fibre]
   exact h_le
 
@@ -338,10 +424,10 @@ Convolution with a Gaussian does not decrease the `negMulLog` entropy integral:
 The underlying independent pair `X ⊥ Z` (with `Z ∼ 𝒩(0, v_Z)`, `s·v_Z = u n`) is
 supplied as regularity preconditions, matching the fields of
 `IsHeatFlowEndpointRegular`. `pX` is identified with the density of `μ.map X`.
-The own body is sorry-free; the only sorry is inherited transitively from
-`condDifferentialEntropy_le` (hence the tag below, not `@audit:ok`).
-
-@residual(wall:cond-diff-entropy) -/
+The bridge regularity / integrability preconditions (stated at the heat-flow path
+`W := X + √s·Z` with `s := u n / v_Z`) are threaded through unchanged. **Genuine**
+(0 sorry / 0 residual, sorryAx-free): `condDifferentialEntropy_le` is now genuinely
+closed. `@audit:ok` -/
 theorem negMulLog_convDensity_entropy_ge
     {Ω : Type*} [MeasurableSpace Ω] (X Z : Ω → ℝ) (μ : Measure Ω)
     [IsProbabilityMeasure μ]
@@ -349,7 +435,29 @@ theorem negMulLog_convDensity_entropy_ge
     (v_Z : ℝ≥0) (hv_Z_pos : 0 < v_Z) (hZ_law : μ.map Z = gaussianReal 0 v_Z)
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_law : μ.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x)))
-    (u : ℕ → ℝ) (hu_pos : ∀ n, 0 < u n) (n : ℕ) :
+    (u : ℕ → ℝ) (hu_pos : ∀ n, 0 < u n) (n : ℕ)
+    (h_ac : (μ.map Z) ⊗ₘ condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ
+        ≪ (μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω)))
+    (h_int : Integrable
+      (llr ((μ.map Z) ⊗ₘ condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ)
+        ((μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω))))
+      ((μ.map Z) ⊗ₘ condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ))
+    (hκ_v : ∀ᵐ z ∂(μ.map Z),
+      condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z ≪ volume)
+    (hκ_logp_int : ∀ᵐ z ∂(μ.map Z), Integrable
+      (fun x => ((condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z).rnDeriv volume x).toReal
+        * Real.log (((condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z).rnDeriv volume x).toReal)) volume)
+    (hκ_cross_int : ∀ᵐ z ∂(μ.map Z), Integrable
+      (fun x => ((condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z).rnDeriv volume x).toReal
+        * Real.log (((μ.map (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω)).rnDeriv volume x).toReal)) volume)
+    (h_fibreEnt_int : Integrable
+      (fun z => differentialEntropy (condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z)) (μ.map Z))
+    (h_cross_int : Integrable
+      (fun z => ∫ x, ((condDistrib (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω) Z μ z).rnDeriv volume x).toReal
+        * Real.log (((μ.map (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω)).rnDeriv volume x).toReal) ∂volume) (μ.map Z))
+    (h_logq_int : Integrable
+      (fun x => Real.log (((μ.map (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω)).rnDeriv volume x).toReal))
+      (μ.map (fun ω => X ω + Real.sqrt (u n / (v_Z:ℝ)) * Z ω))) :
     (∫ x, Real.negMulLog (pX x) ∂volume)
       ≤ ∫ x, Real.negMulLog
           (convDensityAdd pX (gaussianPDFReal 0 ⟨u n, (hu_pos n).le⟩) x) ∂volume := by
@@ -380,6 +488,7 @@ theorem negMulLog_convDensity_entropy_ge
   -- (β) device form: `h(μ.map X) ≤ h(μ.map W)`.
   have h_dev : differentialEntropy (μ.map X) ≤ differentialEntropy (μ.map W) :=
     differentialEntropy_indep_gaussian_add_ge X Z μ s hs hX hZ hXZ hX_ac hW_ac
+      h_ac h_int hκ_v hκ_logp_int hκ_cross_int h_fibreEnt_int h_cross_int h_logq_int
   -- Rewrite LHS `h(μ.map X) = ∫ negMulLog pX`.
   have h_lhs : differentialEntropy (μ.map X) = ∫ x, Real.negMulLog (pX x) ∂volume := by
     rw [hpX_law, differentialEntropy_eq_integral_withDensity hpX_meas.ennreal_ofReal]
