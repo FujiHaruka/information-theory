@@ -99,6 +99,7 @@ import InformationTheory.Shannon.CramerLC2DischargeExt
 import InformationTheory.Shannon.HoeffdingTradeoff
 import InformationTheory.Shannon.HoeffdingSandwich
 import InformationTheory.Shannon.DifferentialEntropy
+import InformationTheory.Shannon.DeLaValleePoussin
 import InformationTheory.Shannon.FisherInfo
 import InformationTheory.Shannon.FisherInfoGaussian
 import InformationTheory.Shannon.FisherInfoV2
