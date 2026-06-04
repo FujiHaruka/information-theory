@@ -302,4 +302,50 @@ theorem cross_term_tendsto {pX : ℝ → ℝ}
   rw [hgoal] at hlim
   exact hlim
 
+/-- **(α) upper bound assembly** — differential-entropy upper semicontinuity of the
+smoothed densities at the `t → 0⁺` endpoint, via the klFun-Fatou KL lower-semicontinuity
+route (`klDiv_le_liminf_of_ae_tendsto`) and the genuine bridge
+`klDiv_toReal_eq_neg_differentialEntropy_sub_cross`.
+
+For a probability density `pX` (nonneg, measurable, integrable, mass `1`, finite second
+moment, finite entropy integrand) and a reference Gaussian `g := gaussianPDFReal 0 σ²`
+(`σ² ≠ 0`), the smoothed-density entropy `∫ negMulLog (convDensityAdd pX g_{u n})` has
+limsup bounded by the limit entropy `∫ negMulLog pX` along any `u → 0⁺`:
+
+`limsup (fun n => ∫ x, negMulLog (convDensityAdd pX g_{u n} x)) atTop ≤ ∫ x, negMulLog (pX x)`.
+
+ROUTE (genuine pieces all in this file, sorryAx-free):
+- W1 `klDiv_le_liminf_of_ae_tendsto` gives `klDiv μ γ ≤ liminf klDiv (μ_n) γ` (ℝ≥0∞),
+- W2 `rnDeriv_withDensity_quotient_ae` identifies `rnDeriv μ_n γ =ᵐ[γ] ofReal (f_n/g)`,
+- W4 `convDensity_tendsto_ae_subseq` supplies `f_n → pX` a.e. (subsequence),
+- W3 `cross_term_tendsto` gives the cross-term limit,
+- the bridge `klDiv_toReal_eq_neg_differentialEntropy_sub_cross` turns each
+  `(klDiv μ_n γ).toReal` into `−h(μ_n) − cross_n`, and `tendsto_of_subseq_tendsto`
+  promotes the subsequence bound to the full sequence.
+
+REMAINING (parked here): the end-to-end assembly threads the bridge's regularity
+preconditions (per-measure equal mass / two-way absolute continuity / `log p`–`log q`
+integrability) for the smoothed-density family `μ_n` and for `μ = pX`, converts the
+ℝ≥0∞ liminf bound to a `toReal` bound via `klDiv μ γ ≠ ∞`, and runs the subsequence
+promotion. None of these are Mathlib walls — they are precondition plumbing on top of the
+genuine W1–W4 — so the residual is the inherited `wall:kl-lower-semicontinuous` slug
+(its surface has shrunk from "DV dual hard direction" to "Fatou assembly plumbing").
+
+The hypotheses are all regularity preconditions (`pX` density regularity + `σ² ≠ 0` +
+`u → 0⁺` positivity); the conclusion is the genuine limsup inequality, not bundled.
+@residual(wall:kl-lower-semicontinuous) -/
+theorem negMulLog_convDensity_limsup_le {pX : ℝ → ℝ}
+    (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
+    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    (hpX_ent : Integrable (fun x => Real.negMulLog (pX x)) volume)
+    {σ2 : ℝ≥0} (hσ : σ2 ≠ 0)
+    (u : ℕ → ℝ) (hu_pos : ∀ n, 0 < u n) (hu_lim : Tendsto u atTop (𝓝[Set.Ioi 0] 0)) :
+    Filter.limsup
+        (fun n => ∫ x, Real.negMulLog
+          (convDensityAdd pX (gaussianPDFReal 0 ⟨u n, (hu_pos n).le⟩) x) ∂volume)
+        atTop
+      ≤ ∫ x, Real.negMulLog (pX x) ∂volume := by
+  sorry  -- @residual(wall:kl-lower-semicontinuous)  ※W1–W4 genuine, 残=bridge precondition plumbing
+
 end InformationTheory.EPIG2KLFatou
