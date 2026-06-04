@@ -56,7 +56,19 @@ Genuine route: layer-1 L¹ convergence `convDensityAdd_tendsto_L1_zero`
 (`@audit:ok`, sorryAx-free) reparameterised to the sequence `u` via `hu_lim`,
 then `tendstoInMeasure_of_tendsto_eLpNorm` (Lp → measure) and
 `TendstoInMeasure.exists_seq_tendsto_ae` (measure → a.e. subsequence), and finally
-the continuous map `Real.negMulLog` composed pointwise. No own `sorry`. -/
+the continuous map `Real.negMulLog` composed pointwise. No own `sorry`.
+
+Independent honesty audit 2026-06-04 (fresh subagent, commit 36fc577): PASS.
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-
+checked transient `#print axioms` + `lake env lean`). Body has no `sorry`. Conclusion
+(subsequence a.e. convergence) follows genuinely from the layer-1 L¹ asset
+`convDensityAdd_tendsto_L1_zero` (`@audit:ok`) via Lp→measure→a.e.-subsequence +
+continuous `negMulLog` composition — no circular `:= h`, no load-bearing hypothesis
+(all hpX_* are regularity preconditions; `hu_lim` is the input filter), no degenerate
+shape, sufficiency holds. The `StrictMono ns` subsequence framing is honest (Mathlib
+has only subsequence a.e. lemmas from measure convergence for this kernel) and the
+layer-2 consumer consumes it via `tendsto_of_subseq_tendsto`.
+@audit:ok -/
 theorem negMulLog_convDensity_tendsto_ae_subseq
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume)

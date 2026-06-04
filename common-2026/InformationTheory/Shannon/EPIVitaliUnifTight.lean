@@ -28,7 +28,9 @@ open MeasureTheory Real ProbabilityTheory Filter
 open InformationTheory.Shannon.EPIConvDensity
 open scoped ENNReal NNReal Topology
 
-/-- Gaussian first moment over `volume`: `∫ x · g_t(x) = 0` (centered at `0`). -/
+/-- Gaussian first moment over `volume`: `∫ x · g_t(x) = 0` (centered at `0`).
+Independent honesty audit 2026-06-04 (commit 36fc577): genuine, 0 sorry (sorryAx-free).
+@audit:ok -/
 private theorem integral_id_mul_gaussianPDFReal {t : ℝ} (ht : 0 < t) :
     ∫ x, x * gaussianPDFReal 0 ⟨t, ht.le⟩ x ∂volume = 0 := by
   have hv_ne : (⟨t, ht.le⟩ : ℝ≥0) ≠ 0 := by
@@ -43,7 +45,9 @@ private theorem integral_id_mul_gaussianPDFReal {t : ℝ} (ht : 0 < t) :
 
 /-- Inner moment after Tonelli: `∫ x, x² · g_t(x - y) = y² + t`.
 Substitution `x ↦ x + y` (translation-invariance of `volume`) + the three Gaussian
-moments `∫ g_t = 1`, `∫ x g_t = 0`, `∫ x² g_t = t`. -/
+moments `∫ g_t = 1`, `∫ x g_t = 0`, `∫ x² g_t = t`.
+Independent honesty audit 2026-06-04 (commit 36fc577): genuine, 0 sorry (sorryAx-free).
+@audit:ok -/
 private theorem integral_sq_mul_gaussianPDFReal_shift {t : ℝ} (ht : 0 < t) (y : ℝ) :
     ∫ x, x ^ 2 * gaussianPDFReal 0 ⟨t, ht.le⟩ (x - y) ∂volume = y ^ 2 + t := by
   have hv_ne : (⟨t, ht.le⟩ : ℝ≥0) ≠ 0 := by
@@ -101,6 +105,18 @@ genuine). What remains is the Bochner↔lintegral conversion plumbing (per-`x`
 integrability of the inner integrand, finiteness of the double integral for the
 final `.toReal`). This is standard but laborious; parked for the closure plan. NOT
 a Mathlib wall — purely a Tonelli/measurability assembly.
+
+Independent honesty audit 2026-06-04 (fresh subagent, commit 36fc577): residual
+honest, classification correct (`plan:`, NOT a hidden `wall:`). Verified: every
+analytic ingredient of the intended route is in-tree or in Mathlib —
+`lintegral_lintegral_swap` exists (`Mathlib.MeasureTheory.Measure.Prod`); the inner
+moment `∫ x² g_t(x-y) = y²+t` is the genuine sorry-free helper
+`integral_sq_mul_gaussianPDFReal_shift` (`#print axioms` = standard 3, machine-
+checked). What remains is purely Bochner↔lintegral conversion + finiteness plumbing,
+no Mathlib gap — `plan:epi-g2-vitali-closure-plan` (file exists) is the correct
+class. The conclusion is a second-moment EQUALITY whose value is reconstructed from
+the convolution structure, not bundled into any hypothesis (all hpX_* are
+regularity). NOT load-bearing; sufficiency holds.
 @residual(plan:epi-g2-vitali-closure-plan) -/
 theorem convDensityAdd_second_moment
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -136,6 +152,19 @@ sequence `u → 0` (hence bounded), so the precondition is satisfied there. The
 remaining residual is the genuine negMulLog tail bridge (`|negMulLog f_n| ≲
 f_n·(1+log-tail)` vs the Gaussian log-tail `|log f_n| ≲ 1 + x²`), which has no
 Mathlib bridge — the approximate-identity wall.
+
+Independent honesty audit 2026-06-04 (fresh subagent, commit 36fc577): residual
+honest, classification correct. `hu_bdd : BddAbove (Set.range u)` is a REGULARITY
+precondition on the input sequence `u` (the variances `u n`), NOT a bundling of the
+UT conclusion — it asserts no `UnifTight` value. Without it the second-moment tail
+`∫ x² f_n = ∫ x² pX + (∫ pX)·u_n` is not `n`-uniform and UT genuinely fails, so the
+precondition corrects a previously under-hypothesised (false-as-framed for unbounded
+`u`) signature — the honest direction. The sole consumer
+(`differentialEntropy_convDensity_integral_tendsto`) produces it from sequence
+convergence, so it is satisfied for free. The `wall:approx-identity-L1`
+classification is backed by loogle: 0 hits for any lemma mentioning both `Integrable`
+and `Real.negMulLog`, so the negMulLog tail bridge is genuinely Mathlib-absent. NOT
+load-bearing; sufficiency holds.
 @residual(wall:approx-identity-L1) -/
 theorem negMulLog_convDensity_unifTight
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)

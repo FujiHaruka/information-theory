@@ -149,6 +149,18 @@ uniform-integrability tail estimate genuinely fails; the previous signature was
 under-hypothesised. The sole consumer instantiates with a convergent `u → 0` (hence
 bounded), so the precondition is satisfied there.
 
+Independent honesty audit 2026-06-04 (fresh subagent, commit 36fc577): residual
+honest, classification correct. `hu_bdd : BddAbove (Set.range u)` is a REGULARITY
+precondition on the input sequence `u` (boundedness of the variances `u n`), NOT a
+bundling of the UI conclusion — it asserts no `UnifIntegrable` value and is
+genuinely *produced* by the sole consumer from sequence convergence
+(`(hv_lim.mono_right nhdsWithin_le_nhds).bddAbove_range`). It corrects a previously
+under-hypothesised (false-as-framed for unbounded `u`) signature, the honest
+direction. The `wall:approx-identity-L1` classification is backed: loogle confirms no
+Mathlib lemma mentioning both `Integrable` and `Real.negMulLog` (0 hits) and the
+abstract `UnifIntegrable` API has no Gaussian-conv-density specialisation — the
+negMulLog tail bridge is genuinely Mathlib-absent. Body sorry is the only own-file
+sorry. NOT load-bearing.
 @residual(wall:approx-identity-L1) -/
 theorem negMulLog_convDensity_unifIntegrable
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -176,7 +188,22 @@ This is the genuine Phase-3 machinery: sequentialisation of `𝓝[Ioi 0] 0`
 L¹→integral (`tendsto_integral_of_L1'`, measure/filter-free). No own `sorry`; the
 only residual is the parked layer-1 / UI / UT approximate-identity machinery it
 consumes (`wall:approx-identity-L1`). The former limit-density entropy-finiteness
-residual is now the `hpX_ent` precondition (plan Phase 5-F, not a residual). -/
+residual is now the `hpX_ent` precondition (plan Phase 5-F, not a residual).
+
+Independent honesty audit 2026-06-04 (fresh subagent, commit 36fc577): PASS (no own
+residual; transitive only). Machine-checked: own body is `sorry`-free (`#print
+axioms` = `[propext, sorryAx, Classical.choice, Quot.sound]` where `sorryAx` is
+purely transitive through the consumed UI/UT witnesses; the sole own-file `sorry` is
+the UI witness `:153`, NOT this body). The 2026-06-04 subsequence-route rewrite is
+genuine: a.e. convergence is reconstructed from the genuine
+`negMulLog_convDensity_tendsto_ae_subseq` (`@audit:ok`, sorryAx-free) via
+`tendsto_of_subseq_tendsto` + `tendsto_Lp_of_tendsto_ae`, with UI/UT restricted to
+the reindexed family `fun i => F (ns (ms i))` (trivial `∀ i` reindex, no leak). The
+a.e. core is NOT hidden in a hypothesis — it is rebuilt from the genuine subsequence
+witness, so the removed full-sequence ae witness's substance is not laundered
+elsewhere. All hypotheses are regularity/normalisation (hpX_nn/meas/int/mass/mom/
+ent). NOT circular / load-bearing / degenerate; sufficiency holds. Not `@audit:ok`
+only because of the transitive layer-1 sorries (UI/UT). -/
 theorem differentialEntropy_convDensity_integral_tendsto
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
