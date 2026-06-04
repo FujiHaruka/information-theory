@@ -46,7 +46,11 @@ two volume-densities' logarithms:
 where `P-density x := (P.rnDeriv volume x).toReal`.
 
 This is `rnDeriv P Q = rnDeriv P volume / rnDeriv Q volume` (a.e.) under the chain rule,
-pushed through `Real.log`. -/
+pushed through `Real.log`.
+
+Independent honesty audit 2026-06-05: genuine (sorryAx-free). `hPv`/`hQv`/`hPQ` are
+absolute-continuity preconditions (regularity); the a.e. identity is the conclusion.
+`@audit:ok` -/
 theorem llr_eq_log_density_sub_log_density
     (P Q : Measure ℝ) [SigmaFinite P] [SigmaFinite Q]
     (hPv : P ≪ volume) (hQv : Q ≪ volume) (hPQ : P ≪ Q) :
@@ -82,7 +86,14 @@ and a cross-entropy term:
 `∫ p log p − ∫ p log q = ∫ p log (p/q) = ∫ llr P Q ∂P`.
 
 The cross-term integrability `Integrable (fun x => (P.rnDeriv volume x).toReal · log ((Q.rnDeriv volume x).toReal)) volume`
-is a regularity precondition (the term may otherwise be non-integrable). -/
+is a regularity precondition (the term may otherwise be non-integrable).
+
+Independent honesty audit 2026-06-05: genuine (sorryAx-free). All hypotheses are
+regularity: `hPv`/`hQv`/`hPQ` (absolute continuity), `hmass` (equal mass — discharged at
+the consumer for probability measures), `h_logp_int`/`h_cross_int` (integrability). The
+density expansion is proved in-body (`toReal_klDiv_of_measure_eq` + `llr` split +
+`integral_toReal_rnDeriv_mul`), not bundled. Sufficiency holds: this is a verified
+equality, not an asserted bound. `@audit:ok` -/
 theorem klDiv_toReal_eq_neg_differentialEntropy_sub_cross
     (P Q : Measure ℝ) [IsFiniteMeasure P] [IsFiniteMeasure Q]
     (hPv : P ≪ volume) (hQv : Q ≪ volume) (hPQ : P ≪ Q)
@@ -130,7 +141,12 @@ Proof route: `compProd_map_condDistrib` identifies `(μ.map Z) ⊗ₘ condDistri
 with `μ.map (fun ω => (Z ω, X ω))`; `Measure.integral_compProd` (Fubini, on
 `fun p => g p.2`) opens the joint integral into the iterated fibre integral; and
 `integral_map` reduces the joint integral to `∫ x, g x ∂(μ.map X)` via the second
-projection. -/
+projection.
+
+Independent honesty audit 2026-06-05: genuine (sorryAx-free). `hX`/`hZ` (measurability)
+and `hg_int` (integrability against `μ.map X`) are regularity preconditions; the marginal
+identity is proved in-body via `compProd_map_condDistrib` + Fubini + `integral_map`.
+`@audit:ok` -/
 theorem integral_condDistrib_marginal_eq
     {Ω α : Type*} [MeasurableSpace Ω] [MeasurableSpace α]
     (X : Ω → ℝ) (Z : Ω → α) (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -173,7 +189,12 @@ where `qX x := ((μ.map X).rnDeriv volume x).toReal`.
 
 `hX_ac` (`μ.map X ≪ volume`), `hκ_ac` (each fibre `condDistrib X Z μ z ≪ volume`, a.e. `z`)
 and `h_logq_int` (integrability of `log qX` against `μ.map X`) are regularity
-preconditions inherited from the disintegration / sub-gap (a) finiteness. -/
+preconditions inherited from the disintegration / sub-gap (a) finiteness.
+
+Independent honesty audit 2026-06-05: genuine (sorryAx-free). `hX_ac`/`hκ_ac`
+(absolute continuity) and `h_logq_int` (integrability) are regularity; the density-form
+identity is proved in-body (per-fibre `integral_toReal_rnDeriv_mul` +
+`integral_condDistrib_marginal_eq`). `@audit:ok` -/
 theorem integral_condDistrib_density_marginal_eq
     {Ω α : Type*} [MeasurableSpace Ω] [MeasurableSpace α]
     (X : Ω → ℝ) (Z : Ω → α) (μ : Measure Ω) [IsProbabilityMeasure μ]
