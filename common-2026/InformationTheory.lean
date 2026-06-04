@@ -159,6 +159,8 @@ import InformationTheory.Shannon.HoeffdingSandwichBody
 import InformationTheory.Shannon.WynerZivConvexityBody
 -- Wave7 parallel-10 + gap-close
 import InformationTheory.Shannon.AWGNMIBridgeDischarge
+import InformationTheory.Shannon.CondKLIntegral
+import InformationTheory.Shannon.EPIG2BridgeDensityHelpers
 import InformationTheory.Shannon.EPIG2ConvEntropyMonotone
 import InformationTheory.Shannon.EPIG2HeatFlowContinuity
 import InformationTheory.Shannon.EPIG2KLVariationalLower
