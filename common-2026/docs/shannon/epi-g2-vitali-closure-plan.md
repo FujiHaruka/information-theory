@@ -20,10 +20,16 @@
 - [x] Phase A — ae witness ✅ **CLOSED 2026-06-04 (genuine 除去)**。full列 ae witness は層2 を部分列ルート
   (`tendsto_of_subseq_tendsto`) に書換えて **genuine に除去**。代替 = `negMulLog_convDensity_tendsto_ae_subseq`
   (`EPIVitaliAE.lean`、`@audit:ok`、sorryAx-free)。壁から消滅、surface shrink。
-- [ ] Phase B — UT witness (`negMulLog_convDensity_unifTight`、`EPIVitaliUnifTight.lean`) 🚧 honesty fix 済
-  (`hu_bdd` 追加、under-hypothesized 修正)、本体 = negMulLog tail bridge (wall) 試行中
-- [ ] Phase C — UI witness (`negMulLog_convDensity_unifIntegrable`、`EPIVitaliUI.lean`) 🚧 honesty fix 済
-  (`hu_bdd`)、withDensity framing + maxent は genuine 試行中、de la Vallée-Poussin core (wall) **← 最難**
+- [ ] Phase B — UT witness (`negMulLog_convDensity_unifTight`、`EPIVitaliUnifTight.lean:345`) 🚧 honesty fix 済
+  (`hu_bdd`)。`convDensityAdd_second_moment` + `_unif_bdd` (n-一様 2次モーメント上界) は **genuine closure ✅**
+  (`@audit:ok`)。残壁 = negMulLog tail bridge (`@residual(wall:approx-identity-L1)`)。
+  **finding (2026-06-04)**: 一般 L¹ pX (Gauss より薄い裾) で `|log f_n| ≲ 1+x²` 不成立 → 2次モーメント
+  route で tail を n-一様駆動不可。UI の de la VP core と **本質同一の wall** (将来 shared sorry 集約候補)。
+- [ ] Phase C — UI witness (`negMulLog_convDensity_unifIntegrable`、`EPIVitaliUI.lean:324`) 🚧 大幅前進。
+  **Step 1-3 genuine ✅** (`withDensity` 確率測度 framing + `differentialEntropy μ_n = ∫negMulLog f_n` 同定 +
+  maxent 上界、`@audit:ok` 2 / honest_residual)。主witness own body 0 sorry (de la VP core へ genuine 還元)。
+  残: de la Vallée-Poussin core (`:293` wall) + moment integrability 2 本 (`:118/:131` plan-class、closeable)。
+  `hpX_mass` precondition 追加 (確率測度 framing 用、layer-2 から threading)。真 moonshot から「橋 1 本 + plumbing」に縮小。
 - [x] Phase S — signature threading + 独立 honesty audit ✅ **部分 PASS 2026-06-04**。`hu_bdd : BddAbove (Set.range u)`
   を UT/UI witness に追加 (under-hypothesized 修正、`u→∞` で UnifTight/UnifIntegrable は genuine に偽)、
   layer-2 で `hv_bdd` を genuine 供給。独立 honesty-auditor が precondition (regularity、非 load-bearing) と PASS。
@@ -383,6 +389,18 @@ maxent / `pPath_eq_convDensityAdd` 呼出 (genuine 補題の適用) は bundling
    gap (Mathlib 不在) を **完全に迂回**、ae witness は壁から消滅。Mathlib 自身の `tendsto_Lp_of_tendstoInMeasure`
    (`:357`) が同じ device を使っているのが手掛かり。層2 の signature/結論型は不変、own-sorry 0 維持。
    surface = ae/UT/UI 3 本 → UT/UI 2 本 (+ second_moment plan-class) に縮小。
+
+8. **(2026-06-04 実装) UI を真 moonshot から「橋 1 本 + plumbing」に縮小、EPIG2 own-file sorry-free 達成**:
+   UI witness を `EPIVitaliUI.lean` に集約。確率測度 framing は **option (b) `withDensity` 直構成** (X,Z,P 不要、
+   `pPath_eq_convDensityAdd` 迂回) で genuine 化: `μ_n := volume.withDensity (ofReal∘f_n)` が確率測度
+   (`∫f_n=1` は in-tree `integral_convDensityAdd_gaussian_eq_one`) + `≪volume` + `rnDeriv_withDensity` で
+   `differentialEntropy μ_n = ∫negMulLog f_n`。maxent `differentialEntropy_le_gaussian_of_variance_le`
+   (`@entry_point`) 適用で `∫negMulLog f_n` 一様上界 (variance `≤ ∫x²f_n = ∫x²pX+t` を `convDensityAdd_second_moment`
+   から、`hu_bdd` で n-一様)。UI 主witness は `unifIntegrable_of` で de la VP core (`indicatorTail_uniform`、parked)
+   へ genuine 還元、own body 0 sorry。**残壁は de la VP core 1 本 (UI) + negMulLog tail 1 本 (UT、本質同一)**。
+   UT/UI 集約で EPIG2 layer-2 が両 witness を delegation 呼出、**EPIG2HeatFlowContinuity.lean は own-file
+   sorry-free** に (全壁が Vitali ファイルに集約)。`hpX_mass` を UI に追加 (確率測度 framing、layer-2 threading)。
+   独立 honesty-auditor PASS (9 decl)。
 
 7. **(2026-06-04 honesty) UT/UI witness は `hu_bdd` 欠落で under-hypothesized (genuine に偽) と判明 → 修正**:
    UT/UI witness の元 signature は `u : ℕ → ℝ` (hu_pos のみ) で、`u n → ∞` のとき密度分散 `∫x²f_n = ∫x²pX +
