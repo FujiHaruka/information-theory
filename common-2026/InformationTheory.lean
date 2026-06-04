@@ -161,6 +161,7 @@ import InformationTheory.Shannon.WynerZivConvexityBody
 import InformationTheory.Shannon.AWGNMIBridgeDischarge
 import InformationTheory.Shannon.EPIG2ConvEntropyMonotone
 import InformationTheory.Shannon.EPIG2HeatFlowContinuity
+import InformationTheory.Shannon.EPIG2KLVariationalLower
 import InformationTheory.Shannon.EPIStamToBridge
 import InformationTheory.Shannon.EPINoiseExtension
 import InformationTheory.Shannon.EPIStamInequalityBody
