@@ -41,7 +41,9 @@ variable {α : Type*} {mα : MeasurableSpace α} {μ ν : Measure α}
 `∫ exp (g x − llr μ ν x) ∂μ ≤ ∫ exp (g x) ∂ν`。
 `llr = log (rnDeriv).toReal`, `rnDeriv > 0` μ-a.e. ゆえ被積分関数は μ-a.e.
 `exp (g x) · (rnDeriv μ ν x).toReal⁻¹` に等しく、`integral_toReal_rnDeriv_mul` で
-`ν` 上の積分に移すと `exp (g x) · 𝟙 {rnDeriv ≠ 0}` となり、`exp ≥ 0` で `∫ exp g ∂ν` に押さえられる。 -/
+`ν` 上の積分に移すと `exp (g x) · 𝟙 {rnDeriv ≠ 0}` となり、`exp ≥ 0` で `∫ exp g ∂ν` に押さえられる。
+
+@audit:ok -/
 theorem integral_exp_sub_llr_le [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (hμν : μ ≪ ν) {g : α → ℝ} (hg_meas : Measurable g) {C : ℝ} (hg_bdd : ∀ x, |g x| ≤ C) :
     ∫ x, Real.exp (g x - llr μ ν x) ∂μ ≤ ∫ x, Real.exp (g x) ∂ν := by
@@ -96,7 +98,9 @@ theorem integral_exp_sub_llr_le [IsProbabilityMeasure μ] [IsProbabilityMeasure 
 これは Donsker–Varadhan 変分公式 `KL = sup_g (∫g dμ − log∫exp g dν)` の **easy direction**
 (各 `g` で下界、sup は取らない)。Phase 2b の hard direction (sup 到達) は
 `docs/shannon/epi-g2-general-sandwich-moonshot-plan.md` §2b で `wall:kl-lower-semicontinuous`
-として park 中であり本 file の射程外。-/
+として park 中であり本 file の射程外。
+
+@audit:ok -/
 theorem klDiv_variational_lower_bound [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (hμν : μ ≪ ν) (h_int : Integrable (llr μ ν) μ)
     {g : α → ℝ} (hg_meas : Measurable g) {C : ℝ} (hg_bdd : ∀ x, |g x| ≤ C) :

@@ -100,6 +100,12 @@ The hypotheses are all preconditions (regularity / absolute continuity), not
 load-bearing: `hX_ac : μ.map X ≪ volume` ensures `h(X)` reflects the density, and
 measurability is structural.
 
+Independent honesty audit 2026-06-04: `wall:cond-diff-entropy` classification
+confirmed (loogle backstop: `mutualInfo` continuous absent, `condDistrib ∩ klDiv`
+Found 0; `wall:` over `plan:` justified as a shared, EPI-line-wide reusable asset).
+Signature honest: `hX_ac` is a genuine absolute-continuity precondition, not a
+load-bearing bundle; conclusion is not vacuous.
+
 @residual(wall:cond-diff-entropy) -/
 theorem condDifferentialEntropy_le
     {Ω α : Type*} [MeasurableSpace Ω] [MeasurableSpace α]
@@ -111,7 +117,9 @@ theorem condDifferentialEntropy_le
 /-- The z-dependent affine-shift kernel `κ z := νX.map (· + c·z)`, built as a genuine
 `Kernel ℝ ℝ`. Construction: push the parametrised pairing `z ↦ νX.map (Prod.mk z)`
 (measurable by `Measurable.map_prodMk_left`) through the measurable affine map
-`(z, x) ↦ x + c·z`. -/
+`(z, x) ↦ x + c·z`.
+
+@audit:ok -/
 noncomputable def affineShiftKernel (νX : Measure ℝ) [SFinite νX] (c : ℝ) : Kernel ℝ ℝ where
   toFun z := νX.map (fun x => x + c * z)
   measurable' := by
@@ -139,7 +147,9 @@ instance affineShiftKernel.instIsMarkov (νX : Measure ℝ) [IsProbabilityMeasur
 
 /-- Plumbing core (buildable, **not** a Mathlib wall): the pushforward of the product
 measure `νZ ⊗ νX` through the affine map `g (z, x) = (z, x + c·z)` equals the composition
-product of `νZ` with the z-dependent affine-shift kernel `affineShiftKernel νX c`. -/
+product of `νZ` with the z-dependent affine-shift kernel `affineShiftKernel νX c`.
+
+@audit:ok -/
 theorem prod_map_affine_eq_compProd
     (νZ νX : Measure ℝ) [SFinite νZ] [IsProbabilityMeasure νX] (c : ℝ) :
     (νZ.prod νX).map (fun p : ℝ × ℝ => (p.1, p.2 + c * p.1))
@@ -175,7 +185,9 @@ in-tree via:
 
 The hypotheses are all preconditions: `IndepFun X Z μ` is a genuine independence
 precondition (not a load-bearing bundle), `hX_ac` is absolute continuity, measurability
-is structural. -/
+is structural.
+
+@audit:ok -/
 theorem condDifferentialEntropy_indep_add_eq
     {Ω : Type*} [MeasurableSpace Ω] (X Z : Ω → ℝ) (μ : Measure Ω)
     [IsProbabilityMeasure μ] (c : ℝ)
@@ -222,7 +234,11 @@ stated through an underlying independent pair `X ⊥ Z` with `Z` Gaussian.
 
 All hypotheses are regularity preconditions (the fields of
 `IsHeatFlowEndpointRegular`): measurability, independence, the noise law, and the
-absolute continuity of `μ.map X`. -/
+absolute continuity of `μ.map X`. The own body is sorry-free; the only sorry is
+inherited transitively from `condDifferentialEntropy_le` (hence the tag below, not
+`@audit:ok`).
+
+@residual(wall:cond-diff-entropy) -/
 theorem differentialEntropy_indep_gaussian_add_ge
     {Ω : Type*} [MeasurableSpace Ω] (X Z : Ω → ℝ) (μ : Measure Ω)
     [IsProbabilityMeasure μ] (s : ℝ) (hs : 0 < s)
@@ -248,7 +264,11 @@ Convolution with a Gaussian does not decrease the `negMulLog` entropy integral:
 
 The underlying independent pair `X ⊥ Z` (with `Z ∼ 𝒩(0, v_Z)`, `s·v_Z = u n`) is
 supplied as regularity preconditions, matching the fields of
-`IsHeatFlowEndpointRegular`. `pX` is identified with the density of `μ.map X`. -/
+`IsHeatFlowEndpointRegular`. `pX` is identified with the density of `μ.map X`.
+The own body is sorry-free; the only sorry is inherited transitively from
+`condDifferentialEntropy_le` (hence the tag below, not `@audit:ok`).
+
+@residual(wall:cond-diff-entropy) -/
 theorem negMulLog_convDensity_entropy_ge
     {Ω : Type*} [MeasurableSpace Ω] (X Z : Ω → ℝ) (μ : Measure Ω)
     [IsProbabilityMeasure μ]
