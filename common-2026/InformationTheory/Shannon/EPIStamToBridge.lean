@@ -1053,18 +1053,18 @@ side (R-5-c). -/
 theorem csiszarLogRatioGap_continuousWithinAt_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
-    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+    (h_endpt_sum : InformationTheory.Shannon.IsHeatFlowEndpointRegular
                     (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
-    (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
-    (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P) :
+    (h_endpt_X : InformationTheory.Shannon.IsHeatFlowEndpointRegular X Z_X P)
+    (h_endpt_Y : InformationTheory.Shannon.IsHeatFlowEndpointRegular Y Z_Y P) :
     ContinuousWithinAt
       (fun t : ℝ => InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
         X Y Z_X Z_Y P t)
       (Set.Ioi (0 : ℝ)) 0 := by
   have h_sum := heatFlowEntropyPower_continuousWithinAt_zero
-    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P h_reg_sum
-  have h_X := heatFlowEntropyPower_continuousWithinAt_zero X Z_X P h_reg_X
-  have h_Y := heatFlowEntropyPower_continuousWithinAt_zero Y Z_Y P h_reg_Y
+    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P h_endpt_sum
+  have h_X := heatFlowEntropyPower_continuousWithinAt_zero X Z_X P h_endpt_X
+  have h_Y := heatFlowEntropyPower_continuousWithinAt_zero Y Z_Y P h_endpt_Y
   unfold InformationTheory.Shannon.EPIL3Integration.csiszarLogRatioGap
   exact (h_sum.log (entropyPower_pos _).ne').sub
     ((h_X.add h_Y).log (add_pos (entropyPower_pos _) (entropyPower_pos _)).ne')
@@ -1092,6 +1092,10 @@ theorem csiszarLogRatioGap_antitoneOn_Ici_zero
                     (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
     (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
     (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
+    (h_endpt_sum : InformationTheory.Shannon.IsHeatFlowEndpointRegular
+                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (h_endpt_X : InformationTheory.Shannon.IsHeatFlowEndpointRegular X Z_X P)
+    (h_endpt_Y : InformationTheory.Shannon.IsHeatFlowEndpointRegular Y Z_Y P)
     (h_pos_stam : ∀ (t : ℝ) (ht : 0 < t),
       (0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
               ((h_reg_X.reg_at t ht).density_t)) ∧
@@ -1155,7 +1159,8 @@ theorem csiszarLogRatioGap_antitoneOn_Ici_zero
     exact Set.self_mem_Ici
   -- Endpoint continuity from the shrunk wall atom (R-5-b').
   have h_cont_zero : ContinuousWithinAt f (Set.Ioi 0) 0 :=
-    csiszarLogRatioGap_continuousWithinAt_zero X Y Z_X Z_Y P h_reg_sum h_reg_X h_reg_Y
+    csiszarLogRatioGap_continuousWithinAt_zero X Y Z_X Z_Y P
+      h_endpt_sum h_endpt_X h_endpt_Y
   -- Insert the endpoint: `insert 0 (Ioi 0) = Ici 0`.
   have := h_anti_Ioi.insert_of_continuousWithinAt h_cluster h_cont_zero
   rwa [Set.Ioi_insert] at this
@@ -1369,6 +1374,41 @@ theorem isStamToEPIScalingHyp_of_stam_debruijn
   -- @residual(plan:epi-stam-to-conclusion-phaseA-plan)
   have hXYZXY : IndepFun (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P := by
     sorry
+  -- **Heat-flow endpoint regularity bundles** (plan Phase 5-D/5-E). The noise-law
+  -- fields are all available at this site (standard 𝒩(0,1) for the singletons, and
+  -- 𝒩(0,2) for the sum via `gaussianReal_add_gaussianReal_of_indepFun`). The only
+  -- parked fields are the Real density witnesses `pX`/`pY`/`p_{X+Y}` of the input
+  -- laws `P.map X` / `P.map Y` / `P.map (X+Y)`: those are an upstream EPI
+  -- precondition (the input distributions' density witnesses live on the
+  -- Stam-to-conclusion noise/density model line, not this G2 continuity line), so
+  -- they are parked here with the same owner as the joint-independence `sorry`
+  -- above. Every non-density field is filled genuinely from available facts, so the
+  -- `sorry` does not spread to the whole structure (honesty: available data not hidden).
+  have hZsum_law : P.map (fun ω => Z_X ω + Z_Y ω) = gaussianReal 0 2 := by
+    have h := gaussianReal_add_gaussianReal_of_indepFun hZXZY hZX_law hZY_law
+    have he : (Z_X + Z_Y) = (fun ω => Z_X ω + Z_Y ω) := rfl
+    rw [he] at h
+    rw [h]
+    norm_num
+  -- @residual(plan:epi-stam-to-conclusion-phaseA-plan)
+  have h_endpt_X : InformationTheory.Shannon.IsHeatFlowEndpointRegular X Z_X P :=
+    { hX_meas := hX, hZ_meas := hZX_meas, hXZ_indep := hXZX,
+      v_Z := 1, hv_Z_pos := one_pos, hZ_law := hZX_law,
+      pX := sorry, hpX_nn := sorry, hpX_meas := sorry, hpX_law := sorry,
+      hpX_int := sorry, hpX_mass := sorry, hpX_mom := sorry }
+  -- @residual(plan:epi-stam-to-conclusion-phaseA-plan)
+  have h_endpt_Y : InformationTheory.Shannon.IsHeatFlowEndpointRegular Y Z_Y P :=
+    { hX_meas := hY, hZ_meas := hZY_meas, hXZ_indep := hYZY,
+      v_Z := 1, hv_Z_pos := one_pos, hZ_law := hZY_law,
+      pX := sorry, hpX_nn := sorry, hpX_meas := sorry, hpX_law := sorry,
+      hpX_int := sorry, hpX_mass := sorry, hpX_mom := sorry }
+  -- @residual(plan:epi-stam-to-conclusion-phaseA-plan)
+  have h_endpt_sum : InformationTheory.Shannon.IsHeatFlowEndpointRegular
+      (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P :=
+    { hX_meas := hX.add hY, hZ_meas := hZX_meas.add hZY_meas, hXZ_indep := hXYZXY,
+      v_Z := 2, hv_Z_pos := two_pos, hZ_law := hZsum_law,
+      pX := sorry, hpX_nn := sorry, hpX_meas := sorry, hpX_law := sorry,
+      hpX_int := sorry, hpX_mass := sorry, hpX_mom := sorry }
   -- R-5 rewire: feed the **genuine** ratio `AntitoneOn` (R-5-c,
   -- `csiszarLogRatioGap_antitoneOn_Ici_zero`) instead of the difference-version
   -- D6 (`csiszarGap1Source_antitoneOn_Ici_zero`), which transitively consumed the
@@ -1378,7 +1418,7 @@ theorem isStamToEPIScalingHyp_of_stam_debruijn
   -- dependency without changing the lift's conclusion.
   have h_anti1 := csiszarLogRatioGap_antitoneOn_Ici_zero X Y Z_X Z_Y P
     hX hZX_meas hXZX hY hZY_meas hYZY hXYZXY
-    h_reg_sum h_reg_X h_reg_Y h_pos
+    h_reg_sum h_reg_X h_reg_Y h_endpt_sum h_endpt_X h_endpt_Y h_pos
   have h_anti2 := csiszarGap_antitoneOn_Icc_zero_one X Y Z_X Z_Y P
     hX hY hZX_meas hZY_meas hZXZY hZX_law hZY_law h_anti1
   exact ⟨Z_X, Z_Y, hZX_meas, hZY_meas, hZX_law, hZY_law, hXZX, hYZY, hZXZY, h_anti2⟩
