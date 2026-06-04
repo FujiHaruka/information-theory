@@ -1,6 +1,9 @@
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Kernel.CondDistrib
+import Mathlib.Probability.Kernel.Composition.MapComap
+import Mathlib.Probability.Kernel.Composition.MeasureCompProd
+import Mathlib.Probability.Independence.Basic
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.EPIConvDensity
@@ -39,20 +42,32 @@ wall), but the `condDistrib` machinery exists, so a genuine construction is poss
 
 ## Residual status
 
-`condDifferentialEntropy_le` (conditioning reduces entropy) carries
-`@residual(wall:cond-diff-entropy)` — its genuine proof requires the differential
-mutual-information non-negativity `I(W;Z) = KL(joint ‖ product) ≥ 0`, which is not
-yet assembled in-tree at the differential-entropy level.
+* `condDifferentialEntropy_indep_add_eq` (independent-sum fibre identification) is
+  **genuinely closed** (0 sorry / 0 residual, sorryAx-free): the affine-shift kernel
+  `affineShiftKernel` is built in-tree, the compProd identity `prod_map_affine_eq_compProd`
+  is proved by `compProd_apply`/`prod_apply`/`map_apply`, and the fibre identification
+  follows from `condDistrib_ae_eq_of_measure_eq_compProd` + `differentialEntropy_map_add_const`.
+  The in-tree inventory (`epi-g2-cond-diff-entropy-inventory.md`) flagged this lemma as
+  *buildable* (mis-classified as a wall); this closure resolves that — it carries no
+  `@residual` tag.
+
+* `condDifferentialEntropy_le` (conditioning reduces entropy) carries
+  `@residual(wall:cond-diff-entropy)` — its genuine proof requires the differential
+  mutual-information non-negativity `I(W;Z) = h(W) − h(W|Z) = KL(joint ‖ product) ≥ 0`,
+  which is not yet assembled in-tree at the differential-entropy level. The continuous
+  `mutualInfo` concept is absent from Mathlib (loogle `mutualInfo` = Found 0, `klDiv ∩
+  condDistrib` = Found 0, re-confirmed 2026-06-04), and the bridge converting
+  `klDiv(joint ‖ product).toReal` into the differential-entropy difference `h(X) − h(X|Z)`
+  must be constructed from scratch (`llr` ↔ `negMulLog`-integral disintegration, estimated
+  ~150-300 lines = a separate Phase).
 
 The `wall:` class here means "Mathlib-absent obstruction requiring an in-tree
 construction" (the project's `wall:` register sense, e.g. the now-closed
-`fisher-finiteness` / `entropy-finiteness`), NOT "long-term moonshot". The
-obstruction is closeable (a genuine construction path is identified in the docstring
-of `condDifferentialEntropy_indep_add_eq`); `wall:` is chosen over `plan:` because
-this is a shared, EPI-line-wide / textbook-wide reusable asset aggregated here as a
-shared sorry lemma, not a single-plan deferral. Independent honesty audit 2026-06-04:
-classification confirmed (sorry-based residuals, signatures honest, `IndepFun` a
-genuine precondition not a load-bearing bundle).
+`fisher-finiteness` / `entropy-finiteness`), NOT "long-term moonshot". The obstruction
+is closeable; `wall:` is chosen over `plan:` because this is a shared, EPI-line-wide /
+textbook-wide reusable asset aggregated here as a shared sorry lemma, not a single-plan
+deferral. Independent honesty audit 2026-06-04: classification confirmed (sorry-based
+residual, signature honest, `IndepFun` a genuine precondition not a load-bearing bundle).
 -/
 
 namespace InformationTheory.Shannon
@@ -93,6 +108,51 @@ theorem condDifferentialEntropy_le
     condDifferentialEntropy X Z μ ≤ differentialEntropy (μ.map X) := by
   sorry
 
+/-- The z-dependent affine-shift kernel `κ z := νX.map (· + c·z)`, built as a genuine
+`Kernel ℝ ℝ`. Construction: push the parametrised pairing `z ↦ νX.map (Prod.mk z)`
+(measurable by `Measurable.map_prodMk_left`) through the measurable affine map
+`(z, x) ↦ x + c·z`. -/
+noncomputable def affineShiftKernel (νX : Measure ℝ) [SFinite νX] (c : ℝ) : Kernel ℝ ℝ where
+  toFun z := νX.map (fun x => x + c * z)
+  measurable' := by
+    have h1 : Measurable fun z : ℝ => νX.map (Prod.mk z) :=
+      Measurable.map_prodMk_left (ν := νX)
+    have h2 : Measurable fun p : ℝ × ℝ => p.2 + c * p.1 := by fun_prop
+    have heq : (fun z : ℝ => νX.map (fun x => x + c * z))
+        = fun z : ℝ => (νX.map (Prod.mk z)).map (fun p : ℝ × ℝ => p.2 + c * p.1) := by
+      funext z
+      rw [Measure.map_map h2 measurable_prodMk_left]
+      rfl
+    rw [heq]
+    exact (Measure.measurable_map _ h2).comp h1
+
+@[simp]
+lemma affineShiftKernel_apply (νX : Measure ℝ) [SFinite νX] (c z : ℝ) :
+    affineShiftKernel νX c z = νX.map (fun x => x + c * z) := rfl
+
+instance affineShiftKernel.instIsMarkov (νX : Measure ℝ) [IsProbabilityMeasure νX] (c : ℝ) :
+    IsMarkovKernel (affineShiftKernel νX c) := by
+  refine ⟨fun z => ?_⟩
+  rw [affineShiftKernel_apply]
+  have : Measurable fun x : ℝ => x + c * z := by fun_prop
+  exact Measure.isProbabilityMeasure_map this.aemeasurable
+
+/-- Plumbing core (buildable, **not** a Mathlib wall): the pushforward of the product
+measure `νZ ⊗ νX` through the affine map `g (z, x) = (z, x + c·z)` equals the composition
+product of `νZ` with the z-dependent affine-shift kernel `affineShiftKernel νX c`. -/
+theorem prod_map_affine_eq_compProd
+    (νZ νX : Measure ℝ) [SFinite νZ] [IsProbabilityMeasure νX] (c : ℝ) :
+    (νZ.prod νX).map (fun p : ℝ × ℝ => (p.1, p.2 + c * p.1))
+      = νZ ⊗ₘ (affineShiftKernel νX c) := by
+  have hg : Measurable fun p : ℝ × ℝ => (p.1, p.2 + c * p.1) := by fun_prop
+  ext s hs
+  rw [Measure.map_apply hg hs, Measure.prod_apply (hg hs), Measure.compProd_apply hs]
+  refine lintegral_congr fun z => ?_
+  rw [affineShiftKernel_apply]
+  have hshift : Measurable fun x : ℝ => x + c * z := by fun_prop
+  rw [Measure.map_apply hshift (measurable_prodMk_left hs)]
+  congr 1
+
 /-- **Independent-sum fibre identification**: for `X ⊥ Z`,
 `h(X + c·Z | Z) = h(X)`.
 
@@ -101,24 +161,21 @@ Conditioned on `Z = z`, the variable `fun ω => X ω + c · Z ω` is the constan
 (`differentialEntropy_map_add_const`). Averaging the constant `h(X)` over the
 probability law `μ.map Z` reproduces `h(X)`.
 
-The mathematical content is genuine (the shift invariance + averaging-a-constant
-are in-tree), but the **fibre identification**
-`condDistrib (X + c·Z) Z μ z =ᵐ[μ.map Z] (μ.map X).map (· + c·z)` is the missing
-in-tree step. The genuine construction path identified (for a follow-up closure):
+**Genuine (0 sorry / 0 residual)**, sorryAx-free. The fibre identification
+`condDistrib (X + c·Z) Z μ =ᵐ[μ.map Z] affineShiftKernel (μ.map X) c` is assembled
+in-tree via:
 
 1. `indepFun_iff_map_prod_eq_prod_map_map` gives
-   `μ.map (fun ω => (Z ω, X ω + c·Z ω)) = ((μ.map Z).prod (μ.map X)).map g`
-   with `g (z, x) = (z, x + c·z)` (push the product joint through the affine map).
-2. Show `((μ.map Z).prod (μ.map X)).map g = (μ.map Z) ⊗ₘ κ` with the kernel
-   `κ z := (μ.map X).map (· + c·z)` (compProd-vs-prod with an affine, conditioning-
-   dependent reparametrisation; requires `κ` measurable as a `Kernel ℝ ℝ`).
-3. `compProd_map_condDistrib` + `condDistrib_ae_eq_of_measure_eq_compProd` then give
-   `condDistrib (X + c·Z) Z μ =ᵐ[μ.map Z] κ`.
+   `μ.map (fun ω => (Z ω, X ω)) = (μ.map Z).prod (μ.map X)` (independence).
+2. Push the product through the affine map `g (z, x) = (z, x + c·z)` and identify it
+   with `(μ.map Z) ⊗ₘ (affineShiftKernel (μ.map X) c)` (`prod_map_affine_eq_compProd`,
+   the z-dependent affine-shift kernel built genuinely above).
+3. `condDistrib_ae_eq_of_measure_eq_compProd` then gives the fibre identification, and
+   `differentialEntropy_map_add_const` discharges each fibre to `h(μ.map X)`.
 
-Steps 2-3 need the kernel `κ` built with the affine shift measurable in `z` and the
-compProd identity; this measure-theoretic plumbing is not yet in-tree.
-
-@residual(wall:cond-diff-entropy) -/
+The hypotheses are all preconditions: `IndepFun X Z μ` is a genuine independence
+precondition (not a load-bearing bundle), `hX_ac` is absolute continuity, measurability
+is structural. -/
 theorem condDifferentialEntropy_indep_add_eq
     {Ω : Type*} [MeasurableSpace Ω] (X Z : Ω → ℝ) (μ : Measure Ω)
     [IsProbabilityMeasure μ] (c : ℝ)
@@ -126,7 +183,35 @@ theorem condDifferentialEntropy_indep_add_eq
     (hX_ac : (μ.map X) ≪ volume) :
     condDifferentialEntropy (fun ω => X ω + c * Z ω) Z μ
       = differentialEntropy (μ.map X) := by
-  sorry
+  set W : Ω → ℝ := fun ω => X ω + c * Z ω with hW_def
+  have hW : Measurable W := hX.add ((measurable_const).mul hZ)
+  -- Output and conditioning laws are probability measures.
+  haveI : IsProbabilityMeasure (μ.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
+  haveI : IsProbabilityMeasure (μ.map Z) := Measure.isProbabilityMeasure_map hZ.aemeasurable
+  have hsf : SigmaFinite (μ.map X) := inferInstance
+  -- Step 1: joint `(Z, X)` is the product law (independence).
+  have hZX : IndepFun Z X μ := hXZ.symm
+  have hjoint_ZX : μ.map (fun ω => (Z ω, X ω)) = (μ.map Z).prod (μ.map X) :=
+    (indepFun_iff_map_prod_eq_prod_map_map hZ.aemeasurable hX.aemeasurable).mp hZX
+  -- Step 1': push the product through the affine map `g (z, x) = (z, x + c·z)`.
+  have hg : Measurable fun p : ℝ × ℝ => (p.1, p.2 + c * p.1) := by fun_prop
+  have hjoint_ZW : μ.map (fun ω => (Z ω, W ω))
+      = (μ.map Z) ⊗ₘ (affineShiftKernel (μ.map X) c) := by
+    have hcomp : (fun ω => (Z ω, W ω))
+        = (fun p : ℝ × ℝ => (p.1, p.2 + c * p.1)) ∘ (fun ω => (Z ω, X ω)) := by
+      funext ω; simp [hW_def]
+    rw [hcomp, ← Measure.map_map hg (hZ.prodMk hX), hjoint_ZX,
+      prod_map_affine_eq_compProd]
+  -- Step 2: uniqueness of the regular conditional distribution.
+  have hae : condDistrib W Z μ =ᵐ[μ.map Z] affineShiftKernel (μ.map X) c :=
+    condDistrib_ae_eq_of_measure_eq_compProd Z hW.aemeasurable hjoint_ZW
+  -- Step 3: rewrite the fibre integral, then apply translation invariance fibrewise.
+  unfold condDifferentialEntropy
+  rw [integral_congr_ae (g := fun _ => differentialEntropy (μ.map X)) ?_]
+  · rw [integral_const, probReal_univ, one_smul]
+  · filter_upwards [hae] with z hz
+    rw [hz, affineShiftKernel_apply]
+    exact differentialEntropy_map_add_const hX_ac (c * z)
 
 set_option linter.unusedVariables false in
 /-- **(β) device form** — convolution does not decrease differential entropy,
