@@ -72,3 +72,48 @@ subsequence→full promotion (`tendsto_of_subseq_tendsto`, confirmed to exist at
   `Filter.tendsto_of_subseq_tendsto`.
 - `rnDeriv_withDensity` (bare in Mathlib) lives in `Decomposition/Lebesgue.lean:590` (not
   `RadonNikodym.lean` as one might guess); `rnDeriv_withDensity_right` is in `RadonNikodym.lean:168`.
+
+## 2026-06-05 (session 2) — assembly genuine scaffolding fill
+
+Filled the assembly body up to a single parked analytic step. Genuine (now wired in):
+- bridge `klDiv_toReal_eq_neg_differentialEntropy_sub_cross` per-`n` and for `μ` (mass /
+  two-way ac / log p / cross integrability all discharged);
+- probability-measure framing of `μ_n`, `μ`, `γ` (mass-1 via
+  `ofReal_integral_eq_lintegral_ofReal` + `convDensityAdd_pXpY_integral_eq`);
+- `differentialEntropy ↔ ∫ negMulLog` identification (`differentialEntropy_eq_integral_withDensity`);
+- cross-term density-form ↔ `∫ f_n · log g` identification (rnDeriv collapse with `ENNReal.toReal_ofReal`);
+- W3 cross-term limit `cross_n → crossμ` hooked via `cross_term_tendsto`;
+- final `= ∫ negMulLog pX` through the genuine `hhμ_eq` bridge equation.
+
+`#print axioms negMulLog_convDensity_limsup_le` = `[propext, sorryAx, Classical.choice,
+Quot.sound]` (one parked sorry); W1–W4 remain sorryAx-free (re-confirmed).
+
+### Parked step (single sorry, `@residual(wall:kl-lower-semicontinuous)`, inherited slug)
+`hKL_limsup : limsup h_n ≤ -(klDiv μ γ).toReal - crossμ`. This is the ℝ≥0∞→toReal
+transfer of W1 + W4 subsequence promotion + boundedness, NOT a Mathlib wall.
+
+### 落とし穴 (proof-log material)
+- **toReal/limsup algebra friction**: ℝ has NO `limsup_neg` / `liminf_neg` (only
+  `EReal.limsup_neg` / `EReal.liminf_neg` exist). The `limsup_const_sub` / `limsup_sub_const`
+  in `Topology/Algebra/Order/LiminfLimsup.lean` require `[OrderedSub R]`, which `ℝ` lacks.
+  So `limsup(c - x_n) = c - liminf x_n` is NOT a one-liner on ℝ. The antitone-map route
+  `Antitone.map_liminf_of_continuousAt` (`neg (liminf a) = limsup (neg ∘ a)`) is the usable
+  substitute but needs cobounded/bounded instances.
+- **boundedness is the true gap, not LSC**: converting the ℝ≥0∞ Fatou liminf to a real
+  liminf needs `KLr := (klDiv μ_n γ).toReal` bounded ABOVE (= `h_n` bounded BELOW = the (β)
+  lower bound `h(μ_n) ≥ h(pX)`). `KLr ≥ 0` is free (`ENNReal.toReal_nonneg`) but the upper
+  bound is not — it is exactly the (β) `negMulLog_convDensity_entropy_ge` content, which
+  requires an Ω-level `X ⊥ Z` construction (no `pX`-only wrapper exists). Folding this into
+  the single parked step keeps the genuine scaffolding intact under the one-sorry budget.
+- **subsequence direction trap**: W4 gives a.e. density convergence along ONE subsequence,
+  so W1 yields `KLr_μ ≤ liminf along that subseq` — but the goal needs the FULL-sequence
+  liminf bound `KLr_μ ≤ liminf_n KLr`. Full liminf ≤ any subsequence liminf (wrong way), so
+  a genuine close needs the subsequence-principle ("every subseq has a further subseq with
+  liminf ≥ L ⟹ full liminf ≥ L"), not a direct W1 application.
+- `convDensityAdd_negMulLog_integrable` is `public` in `FisherInfoV2DeBruijnAssembly`
+  (namespace `InformationTheory.Shannon.FisherInfoV2`), transitively imported via
+  `EPIConvDensityAssoc` — used directly to avoid importing `EPIG2HeatFlowContinuity` (which
+  carries the `wall:approx-identity-L1` residual).
+- `differentialEntropy_eq_integral_withDensity` leaves `(ofReal (f x)).toReal.negMulLog`;
+  `rw [ENNReal.toReal_ofReal …]` fails to match under the `.negMulLog` dot-notation —
+  `simp only [ENNReal.toReal_ofReal …]` works.
