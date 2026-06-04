@@ -141,6 +141,15 @@ from AEStronglyMeasurable + finite norm-lintegral.
 2026-06-04 with fresh olean). All `hpX_*` are pX regularity preconditions; the conclusion
 is an `Integrable` output, not bundled into any hypothesis. NOT load-bearing / circular /
 degenerate. Closes one of the two `plan:epi-g2-vitali-closure-plan` moment residuals.
+
+Independent honesty audit 2026-06-04 (fresh subagent, commit `3ce6f51`): `plan:` →
+`@audit:ok` promotion CONFIRMED. `#print axioms` = `[propext, Classical.choice,
+Quot.sound]` (sorryAx-free, fresh olean via `lake build` refresh + `lake env lean`). Body
+Tonelli chain is genuine (lintegral lift → swap → inline Gaussian shift moment `∫x²g(x-y)
+=y²+t` from public API → finite outer). No hidden wall, no circularity (this is the
+primitive; `_id_integrable` dominates via it, not vice versa). Sufficiency holds (`hpX_mom`
+supplies the 2nd moment the conclusion needs). `hpX_*` regularity, conclusion is
+`Integrable` output.
 @audit:ok -/
 theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -304,6 +313,13 @@ needed.
 2026-06-04 with fresh olean). All `hpX_*` are pX regularity preconditions; the conclusion
 is an `Integrable` output, not bundled into any hypothesis. NOT load-bearing / circular /
 degenerate. Closes the second `plan:epi-g2-vitali-closure-plan` moment residual.
+
+Independent honesty audit 2026-06-04 (fresh subagent, commit `3ce6f51`): `plan:` →
+`@audit:ok` promotion CONFIRMED. `#print axioms` = `[propext, Classical.choice,
+Quot.sound]` (sorryAx-free, fresh olean). Majorant `(f_t + x²·f_t)/2` is genuine: `f_t`
+integrable (`convDensityAdd_pXpY_integrable`) + sq version (`_sq_integrable`, just
+promoted, sorryAx-free). No circular dependency. Sufficiency holds (`|x| ≤ (1+x²)/2`
+domination is correct). `hpX_*` regularity, conclusion is `Integrable` output.
 @audit:ok -/
 theorem convDensityAdd_gaussian_id_integrable {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -347,6 +363,17 @@ body is `sorry`-free; the variance bound is built from `convDensityAdd_second_mo
 constrain the auxiliary variance majorant `V` (regularity for the maxent application,
 not a bundled entropy value). NOT load-bearing / circular; sufficiency holds (maxent
 inequality follows from the variance bound).
+
+Independent honesty audit 2026-06-04 (fresh subagent, commit `3ce6f51`): transitive
+`@audit:ok` promotion CONFIRMED. `#print axioms` = `[propext, Classical.choice,
+Quot.sound]` (sorryAx-free, fresh olean) — the two moment helpers' closure genuinely
+discharged the transitive residuals, and the entropy-integrand `hbase` consumer
+`FisherInfoV2.convDensityAdd_negMulLog_integrable` is itself `@audit:ok` (entropy-finiteness
+wall CLOSED). Maxent application `differentialEntropy_le_gaussian_of_variance_le`
+(DifferentialEntropy.lean:520) is genuine (no sorry leaked). Sufficiency holds: conclusion
+is the Gaussian maxent bound, follows from `h_var : ∫(x-m)² ∂μ ≤ V`; `hV`/`hV0` constrain
+the auxiliary majorant `V`, not the entropy value. Conclusion is an upper-bound inequality,
+not bundled into any hypothesis.
 @audit:ok -/
 theorem negMulLog_convDensityAdd_gaussian_entropy_upper {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
