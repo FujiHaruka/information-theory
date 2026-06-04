@@ -16,6 +16,8 @@ import InformationTheory.Shannon.EPIStamDischarge
 import InformationTheory.Shannon.EPIConvDensity
 import InformationTheory.Shannon.FisherInfoV2DeBruijnPerTime
 import InformationTheory.Shannon.FisherInfoV2DeBruijnAssembly
+import InformationTheory.Shannon.EPIVitaliAE
+import InformationTheory.Shannon.EPIVitaliUnifTight
 
 /-!
 # G2: heat-flow entropy-power continuity at the endpoint `t = 0⁺`
@@ -140,51 +142,23 @@ free), modulo the `UnifIntegrable` / `UnifTight` witnesses (parked). -/
 /-- **Layer 2 UI witness (parked).** Uniform integrability of the entropy
 integrands along any sequence `u : ℕ → ℝ` with `u n > 0`. Vitali input `hui`.
 
+HONESTY FIX (2026-06-04): the precondition `hu_bdd : BddAbove (Set.range u)` is added
+(matching the UT witness `negMulLog_convDensity_unifTight`). Without it (`sup u n =
+∞`) the variance `∫ x² f_n = ∫ x² pX + (∫ pX)·u n` is not `n`-uniform and the
+uniform-integrability tail estimate genuinely fails; the previous signature was
+under-hypothesised. The sole consumer instantiates with a convergent `u → 0` (hence
+bounded), so the precondition is satisfied there.
+
 @residual(wall:approx-identity-L1) -/
 theorem negMulLog_convDensity_unifIntegrable
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume)
     (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
-    (u : ℕ → ℝ) (hu_pos : ∀ n, 0 < u n) :
+    (u : ℕ → ℝ) (hu_pos : ∀ n, 0 < u n) (hu_bdd : BddAbove (Set.range u)) :
     UnifIntegrable
       (fun n => fun x =>
         Real.negMulLog (convDensityAdd pX (gaussianPDFReal 0 ⟨u n, (hu_pos n).le⟩) x))
       1 volume := by
-  sorry
-
-/-- **Layer 2 UT witness (parked).** Uniform tightness of the entropy integrands
-along any sequence `u : ℕ → ℝ` with `u n > 0`. Vitali input `hut` (the additional
-hypothesis that makes Vitali work on the infinite-measure space `volume`). The
-finite second moment `pX_mom` is expected to drive the tail estimate.
-
-@residual(wall:approx-identity-L1) -/
-theorem negMulLog_convDensity_unifTight
-    {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_int : Integrable pX volume)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
-    (u : ℕ → ℝ) (hu_pos : ∀ n, 0 < u n) :
-    UnifTight
-      (fun n => fun x =>
-        Real.negMulLog (convDensityAdd pX (gaussianPDFReal 0 ⟨u n, (hu_pos n).le⟩) x))
-      1 volume := by
-  sorry
-
-/-- **Layer 2 a.e. pointwise convergence (parked).** Along any sequence
-`u → 0⁺`, the entropy integrands converge `negMulLog (convDensityAdd pX g_{u n}) →
-negMulLog pX` a.e. Follows from the layer-1 L¹ convergence via an a.e.-convergent
-subsequence; parked together with layer 1 as the same approximate-identity content
-threaded through `Real.continuous_negMulLog`.
-
-@residual(wall:approx-identity-L1) -/
-theorem negMulLog_convDensity_tendsto_ae
-    {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_int : Integrable pX volume)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
-    (u : ℕ → ℝ) (hu_pos : ∀ n, 0 < u n) (hu_lim : Tendsto u atTop (𝓝[Set.Ioi 0] 0)) :
-    ∀ᵐ x ∂volume,
-      Tendsto (fun n =>
-        Real.negMulLog (convDensityAdd pX (gaussianPDFReal 0 ⟨u n, (hu_pos n).le⟩) x))
-        atTop (𝓝 (Real.negMulLog (pX x))) := by
   sorry
 
 /-- **Layer 2 (genuine lifting machinery).** Density-level entropy-integral
@@ -250,18 +224,47 @@ theorem differentialEntropy_convDensity_integral_tendsto
   have hg' : MemLp g 1 volume := by
     rw [hg_def]
     exact memLp_one_iff_integrable.mpr hpX_ent
+  -- `v → 0⁺`: agrees with `u` eventually, and `u → 0⁺`.
+  have hv_lim : Tendsto v atTop (𝓝[Set.Ioi 0] 0) :=
+    hu_lim.congr' (hv_eq.mono fun n hn => hn.symm)
+  -- `v` converges, hence its range is bounded above (supplies `hu_bdd` to the
+  -- UI/UT witnesses, whose tail estimates require boundedness of the variances).
+  have hv_bdd : BddAbove (Set.range v) :=
+    (hv_lim.mono_right nhdsWithin_le_nhds).bddAbove_range
   have hui : UnifIntegrable F 1 volume :=
-    negMulLog_convDensity_unifIntegrable hpX_nn hpX_meas hpX_int hpX_mom v hv_pos
+    negMulLog_convDensity_unifIntegrable hpX_nn hpX_meas hpX_int hpX_mom v hv_pos hv_bdd
   have hut : UnifTight F 1 volume :=
-    negMulLog_convDensity_unifTight hpX_nn hpX_meas hpX_int hpX_mom v hv_pos
-  have hfg : ∀ᵐ x ∂volume, Tendsto (fun n => F n x) atTop (𝓝 (g x)) := by
-    -- `v → 0⁺`: agrees with `u` eventually, and `u → 0⁺`.
-    have hv_lim : Tendsto v atTop (𝓝[Set.Ioi 0] 0) :=
-      hu_lim.congr' (hv_eq.mono fun n hn => hn.symm)
-    exact negMulLog_convDensity_tendsto_ae hpX_nn hpX_meas hpX_int hpX_mom v hv_pos hv_lim
+    negMulLog_convDensity_unifTight hpX_nn hpX_meas hpX_int hpX_mom v hv_pos hv_bdd
+  -- Vitali via the subsequence route: `tendsto_Lp_of_tendsto_ae` needs full-sequence
+  -- a.e. convergence, which we only have along subsequences (the genuine ae witness
+  -- `negMulLog_convDensity_tendsto_ae_subseq`). Use `tendsto_of_subseq_tendsto`: it
+  -- suffices that every subsequence has a further subsequence converging in L¹.
   have hVitali :
-      Tendsto (fun n => eLpNorm (F n - g) 1 volume) atTop (𝓝 0) :=
-    tendsto_Lp_of_tendsto_ae (le_refl 1) (by simp) haef hg' hui hut hfg
+      Tendsto (fun n => eLpNorm (F n - g) 1 volume) atTop (𝓝 0) := by
+    refine tendsto_of_subseq_tendsto fun ns hns => ?_
+    -- `v ∘ ns → 0⁺` too.
+    have hvns_pos : ∀ k, 0 < v (ns k) := fun k => hv_pos (ns k)
+    have hvns_lim : Tendsto (fun k => v (ns k)) atTop (𝓝[Set.Ioi 0] 0) :=
+      hv_lim.comp hns
+    obtain ⟨ms, _hms_mono, hms_ae⟩ :=
+      negMulLog_convDensity_tendsto_ae_subseq hpX_nn hpX_meas hpX_int hpX_mom
+        (fun k => v (ns k)) hvns_pos hvns_lim
+    refine ⟨ms, ?_⟩
+    -- a.e. convergence of the reindexed family `F (ns (ms i))`.
+    have hae : ∀ᵐ x ∂volume,
+        Tendsto (fun i => F (ns (ms i)) x) atTop (𝓝 (g x)) := by
+      filter_upwards [hms_ae] with x hx
+      simpa only [hF_def, hg_def] using hx
+    -- Restrict UI / UT to the subsequence `i ↦ F (ns (ms i))` (reindexing is trivial
+    -- since both quantifiers are `∀ i`).
+    refine tendsto_Lp_of_tendsto_ae (le_refl 1) (by simp)
+      (fun i => haef (ns (ms i))) hg' ?_ ?_ hae
+    · intro ε hε
+      obtain ⟨δ, hδ, hδ'⟩ := hui hε
+      exact ⟨δ, hδ, fun i s hs hμs => hδ' (ns (ms i)) s hs hμs⟩
+    · intro ε hε
+      obtain ⟨s, hμs, hsε⟩ := hut hε
+      exact ⟨s, hμs, fun i => hsε (ns (ms i))⟩
   -- L¹→integral: `∫ F n → ∫ g`.
   have hfi : Integrable g volume := by
     rw [hg_def]
@@ -302,10 +305,13 @@ continuity conclusion is bundled. The only residuals are transitive (layer-2
 `wall:approx-identity-L1`); this helper itself adds no `@residual`.
 
 Independent honesty audit 2026-06-04 (fresh subagent, commit fa0fe3f): PASS.
-Own body (lines 354-413) is `sorry`-free — verified by mapping the file's 6
-`sorry` warnings to the parked layer-1/layer-2 witness lemmas only (94/137/167/
-186/203/221), none in this helper. `#print axioms` shows `sorryAx` purely
-transitive through those parked lemmas (NOT in the helper's own derivation). The
+Own body is `sorry`-free. After the 2026-06-04 layer-2 subsequence-route rewrite,
+the file's only `sorry` warning is the single parked layer-2 UI witness
+`negMulLog_convDensity_unifIntegrable` (`wall:approx-identity-L1`); the UT and
+a.e.-convergence witnesses are now consumed from `EPIVitaliUnifTight.lean`
+(UT, parked) and the genuine `EPIVitaliAE.negMulLog_convDensity_tendsto_ae_subseq`
+(0 sorry). `#print axioms` shows `sorryAx` purely transitive through the remaining
+UI witness (NOT in the helper's own derivation). The
 density bridge call (`pPath_eq_convDensityAdd`, `@audit:ok`) matches signatures
 verbatim; `differentialEntropy_convDensity_integral_tendsto.comp h_reparam` is a
 genuine `t' := t·v_Z` reparam. Sufficiency holds: conclusion follows from the
