@@ -18,10 +18,28 @@ rg "^- \[ \]" で残タスク横断 grep、rg "🔄" でピボット箇所だけ
 
 ## 進捗
 
-- [ ] Phase 0 — 接続 lemma の verbatim 再確認（Read のみ） 📋
-- [ ] Phase 1 — (β) 下界: 畳み込みでエントロピー非減少（★最優先・壁なし buildable・再利用資産） 📋
-- [ ] Phase 2 — (α) 上界: KL/相対エントロピー下半連続性 = Donsker-Varadhan（★本体 wall、最難） 📋
-- [ ] Phase 3 — 層2 載せ替え + UI/UT witness 削除 + 独立 honesty audit 📋
+- [x] Phase 0 — 接続 lemma の verbatim 再確認（Read のみ） ✅
+- [~] Phase 1 — (β) 下界: 畳み込みでエントロピー非減少 🚧（補題2 fibre 同定 genuine ✅、補題1 conditioning 減少 = 単一 bridge 補題に surface shrink 🚧）
+- [~] Phase 2 — (α) 上界: KL-LSC = Donsker-Varadhan 🚧（2a easy direction genuine ✅、2b hard direction = 真 moonshot park、2c 未着手）
+- [ ] Phase 3 — 層2 載せ替え + UI/UT witness 削除 + 独立 honesty audit 📋（(α)+(β) 両方 genuine 後）
+
+> **進捗スナップショット (2026-06-04 multi-round session)**:
+> - **Phase 2a ✅ genuine DONE**: `EPIG2KLVariationalLower.lean`、`klDiv_variational_lower_bound` +
+>   `integral_exp_sub_llr_le`、sorryAx-free、独立監査 PASS。在庫の悲観評価 (tilted-measure KL chain
+>   rule 不在) を Jensen-on-exp + RN change-of-measure で迂回し genuine close。一般 KL 変分下界として
+>   再利用可能な独立資産 (Phase 2c の LSC 組立や他 family の KL 評価から呼べる)。
+> - **Phase 1 (β) 補題2 ✅ genuine DONE**: `condDifferentialEntropy_indep_add_eq` (fibre 同定)、
+>   sorryAx-free、独立監査 PASS。z 依存アフィン kernel `affineShiftKernel` +
+>   `prod_map_affine_eq_compProd` + `condDistrib_ae_eq_of_measure_eq_compProd` 一意性で
+>   在庫の「wall 誤分類」を解消。
+> - **Phase 1 (β) 補題1 🚧 surface shrink**: `condDifferentialEntropy_le` own body は genuine
+>   (klDiv≥0 型自明 + linarith)。残壁を単一 bridge 補題
+>   `differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv` (微分 MI = KL 恒等式) に隔離。
+>   **残 sub-gap = 条件付き KL 積分形** `(klDiv (μ_Z⊗ₘκ) (μ_Z⊗ₘconst μ_X)).toReal = ∫ z, (klDiv (κ z) μ_X).toReal ∂μ_Z`
+>   (= Mathlib 明示 TODO `KullbackLeibler/ChainRule.lean:74-77`、`klDiv_compProd_eq_add` は第一周辺
+>   分解形で周辺共通の本件には効かず collapse) **+ per-fibre 密度展開 + Fubini marginal 同定**。
+>   `@residual(wall:cond-diff-entropy)` 維持、独立監査 PASS (循環なし・分類 honest)。**次手 = この
+>   条件付き KL 積分形を自作 (Mathlib upstream PR 候補)、~150-300 行。これが閉じれば (β) 全体 genuine**。
 
 ## ゴール
 
@@ -435,6 +453,21 @@ regularity field）は OK。
 ## 判断ログ
 
 書く頻度: Phase 中の方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
+
+6. **(2026-06-04 multi-round session) 実装結果 = Phase 2a + 補題2 genuine、補題1 = bridge 1 本に shrink**:
+   オーケストレーター 5 ラウンド (在庫 → Phase 2a → 補題2 → 監査 → 補題1 → 監査) を実行。
+   (a) **Phase 2a (DV easy direction) genuine 化が在庫予測を上回った**: 在庫 §結論は「easy direction も
+   採用見送り (tilted-measure KL chain rule 不在)」だったが、実装は **chain rule を迂回**し
+   `ConvexOn.map_integral_le` (exp の Jensen) + `integral_toReal_rnDeriv_mul` (RN change-of-measure) で
+   genuine close。**在庫の工数/可否評価は経路に依存し、別経路で覆りうる教訓**。
+   (b) **補題2 fibre 同定の compProd 同定が在庫見積 (40-60 行) を大幅短縮 (実質 8 行)**: `g(z,x)=(z,x+cz)`
+   と kernel preimage が Lean 上で**定義的に一致**し `congr 1` 一発。在庫は measure-theoretic plumbing を
+   保守的に過大評価する傾向。
+   (c) **補題1 conditioning 減少は完全 genuine に至らず、単一 bridge 補題に surface shrink**: 残壁 =
+   条件付き KL 積分形 (Mathlib 明示 TODO `ChainRule.lean:74-77`、`klDiv_compProd_eq_add` は周辺共通の
+   本件で collapse して効かない)。non-negativity ステップ (klDiv≥0 型自明) は genuine 隔離済。
+   `wall:cond-diff-entropy` 維持、独立監査 PASS。**次手 = 条件付き KL 積分形を自作 (Mathlib upstream PR
+   候補)、これが (β) 完全 genuine 化の単一残壁**。
 
 1. **(起草、2026-06-04) Phase 1 (β) を最優先にする設計判断**: サンドイッチの 2 刃のうち (β) 下界
    （畳み込みエントロピー非減少）は **壁なし buildable・再利用資産** であり、(α) 上界（KL-LSC）が真の
