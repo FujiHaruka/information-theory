@@ -422,6 +422,19 @@ maxent / `pPath_eq_convDensityAdd` 呼出 (genuine 補題の適用) は bundling
     + 2 witness の結論型が genuinely 異なる (UI = 値しきい値 tail、UT = 空間 tail) ため、機械的集約は
     false-statement defect (tier 5) リスクあり → 急がず park のまま据え置き、集約は将来 closure 設計時に同時実施。
 
+11. **(2026-06-04 サンドイッチ・ルート否定 → de la VP 機構自作 moonshot 起草)**: de la VP wall を UnifIntegrable
+    迂回で閉じる**サンドイッチ分解** (上界 = `∫f log f` の L¹-LSC / 下界 = `h(f_n)≥h(pX)` 畳み込み非減少) を
+    fresh inventory + fresh advisor で評価 (`docs/shannon/epi-g2-sandwich-inventory.md`)。結論 = **採用見送り**。
+    (α) 上界: advisor 案の envelope `f log f ≥ f-1` は **R 上で非可積分** (`∫1=∞`、tail で `f_n log f_n-f_n+1→1`)
+    のため Fatou (`lintegral_liminf_le`) が vacuous。厳密には (α) は `negMulLog` 負部 `(f log f)₋` の n-一様
+    可積分 = **de la VP wall と数学的に同型**を再要求 → 壁を回避しない。(β) 下界: EPI 経由は `stamToEPIBridge_holds`
+    (`plan:epi-stam-to-conclusion-plan`、open) + Stam line を transitive 消費、条件付き differential entropy は
+    in-tree/Mathlib 完全不在。**3 逃げ道 (precondition / de Bruijn積分 / サンドイッチ) 全否定 → de la VP wall は
+    genuine・不可避と確定**。**方針転換**: 近道探しを終え、de la Vallée-Poussin 機構**自作 moonshot** を起草
+    (`docs/shannon/epi-g2-delavp-moonshot-plan.md`)。Phase 1 = de la VP 判定法の汎用補題化 (superlinear-moment →
+    UnifIntegrable、`unifIntegrable_of` の上、tractable・genuine・再利用可) で不透明 UI/UT 壁を 1 点の解析ターゲット
+    (superlinear moment 構成 = Phase 2、本物の moonshot 核) に絞り込む。
+
 8. **(2026-06-04 実装) UI を真 moonshot から「橋 1 本 + plumbing」に縮小、EPIG2 own-file sorry-free 達成**:
    UI witness を `EPIVitaliUI.lean` に集約。確率測度 framing は **option (b) `withDensity` 直構成** (X,Z,P 不要、
    `pPath_eq_convDensityAdd` 迂回) で genuine 化: `μ_n := volume.withDensity (ofReal∘f_n)` が確率測度
