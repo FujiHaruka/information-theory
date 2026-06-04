@@ -43,6 +43,16 @@ wall), but the `condDistrib` machinery exists, so a genuine construction is poss
 `@residual(wall:cond-diff-entropy)` — its genuine proof requires the differential
 mutual-information non-negativity `I(W;Z) = KL(joint ‖ product) ≥ 0`, which is not
 yet assembled in-tree at the differential-entropy level.
+
+The `wall:` class here means "Mathlib-absent obstruction requiring an in-tree
+construction" (the project's `wall:` register sense, e.g. the now-closed
+`fisher-finiteness` / `entropy-finiteness`), NOT "long-term moonshot". The
+obstruction is closeable (a genuine construction path is identified in the docstring
+of `condDifferentialEntropy_indep_add_eq`); `wall:` is chosen over `plan:` because
+this is a shared, EPI-line-wide / textbook-wide reusable asset aggregated here as a
+shared sorry lemma, not a single-plan deferral. Independent honesty audit 2026-06-04:
+classification confirmed (sorry-based residuals, signatures honest, `IndepFun` a
+genuine precondition not a load-bearing bundle).
 -/
 
 namespace InformationTheory.Shannon
