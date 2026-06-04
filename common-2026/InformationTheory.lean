@@ -163,6 +163,7 @@ import InformationTheory.Shannon.CondKLIntegral
 import InformationTheory.Shannon.EPIG2BridgeDensityHelpers
 import InformationTheory.Shannon.EPIG2ConvEntropyMonotone
 import InformationTheory.Shannon.EPIG2HeatFlowContinuity
+import InformationTheory.Shannon.EPIG2KLFatouLSC
 import InformationTheory.Shannon.EPIG2KLVariationalLower
 import InformationTheory.Shannon.EPIStamToBridge
 import InformationTheory.Shannon.EPINoiseExtension
