@@ -78,29 +78,14 @@ open InformationTheory.Shannon.EntropyPowerInequality
 open InformationTheory.Shannon.EPIConvDensity
 open scoped ENNReal NNReal Topology
 
-/-! ## Layer 1 — approximate-identity L¹ convergence (parked wall)
+/-! ## Layer 1 — approximate-identity L¹ convergence (moved)
 
-The single genuine-Mathlib-gap that the layer-2 machinery rests on. Parked as a
-shared sorry lemma so the layer-2 lifting (`differentialEntropy` integral
-convergence) closes genuinely on top of it. -/
-
-/-- **Layer 1 (approximate-identity L¹ convergence, moonshot core).**
-The heat-kernel smoothing `convDensityAdd pX g_t` of an L¹ + finite-second-moment
-density `pX` converges to `pX` in `L¹(volume)` as the variance `t → 0⁺`. This is
-the standard approximate-identity L¹ convergence; Mathlib's
-`convolution_tendsto_right` is pointwise/bump-only (no general L¹ `pX`), and
-`tendsto_convDensityAdd_gaussian_zero` is the spatial tail `z → ±∞` (a different
-limit). A true Mathlib gap.
-
-@residual(wall:approx-identity-L1) -/
-theorem convDensityAdd_tendsto_L1_zero
-    {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_int : Integrable pX volume)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume) :
-    Tendsto (fun t : ℝ =>
-      eLpNorm (convDensityAdd pX (gaussianPDFReal 0 t.toNNReal) - pX) 1 volume)
-      (𝓝[Set.Ioi 0] 0) (𝓝 0) := by
-  sorry
+The density-level approximate-identity L¹ convergence `convDensityAdd pX g_t → pX`
+in `L¹(volume)` as `t → 0⁺` now lives in `EPIApproxIdentityL1.lean` as
+`convDensityAdd_tendsto_L1_zero` (with its genuine translation-continuity /
+continuous-Minkowski / difference-representation helpers). It is not consumed by
+the layer-2 machinery below (which goes through the Vitali UI/UT/ae witnesses), so
+this file no longer carries a (formerly orphan, duplicate) copy. -/
 
 /-! ## Layer 1' — entropy finiteness of the limit density (now a precondition)
 

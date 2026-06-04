@@ -44,9 +44,10 @@ theorem measurePreserving_subRightCM (y : ℝ) :
     MeasurePreserving (subRightCM y) volume volume :=
   measurePreserving_sub_right volume y
 
-/-- **層1 補助 (genuine 目標)**: L¹ 平行移動連続性。
+/-- **層1 補助 (genuine)**: L¹ 平行移動連続性。
 `y ↦ eLpNorm (fun x => pX (x - y) - pX x) 1 volume` は `y → 0` で `→ 0`。
-`Lp.compMeasurePreserving_continuous` + `measurePreserving_sub_right` の翻訳。 -/
+`Lp.compMeasurePreserving_continuous` + `measurePreserving_sub_right` の翻訳。
+@audit:ok -/
 theorem translation_continuous_L1
     {pX : ℝ → ℝ} (hpX_int : Integrable pX volume) :
     Tendsto (fun y : ℝ => eLpNorm (fun x => pX (x - y) - pX x) 1 volume) (𝓝 0) (𝓝 0) := by
@@ -94,7 +95,8 @@ theorem translation_continuous_L1
   simp only [Function.comp_apply, subRightCM, ContinuousMap.coe_mk, sub_zero]
   rw [hcx, hcyx]
 
-/-- **層1 補助 (genuine 目標)**: 平行移動 L¹ ノルムの有界性 `≤ 2 ‖pX‖₁`。 -/
+/-- **層1 補助 (genuine)**: 平行移動 L¹ ノルムの有界性 `≤ 2 ‖pX‖₁`。
+@audit:ok -/
 theorem translation_eLpNorm_bound
     {pX : ℝ → ℝ} (hpX_int : Integrable pX volume) (y : ℝ) :
     eLpNorm (fun x => pX (x - y) - pX x) 1 volume ≤ 2 * eLpNorm pX 1 volume := by
@@ -115,7 +117,8 @@ theorem translation_eLpNorm_bound
 
 /-- **層1 補助 (genuine)**: 差分表示。`∫ g = 1` のとき
 `(pX ∗ g − pX)(z) = ∫ y, (pX(z−y) − pX(z)) · g y`。
-`hi1`/`hi2` は被積分の可積分性 (regularity precondition)。 -/
+`hi1`/`hi2` は被積分の可積分性 (regularity precondition)。
+@audit:ok -/
 theorem convDensityAdd_sub_self_eq
     {pX : ℝ → ℝ} (g : ℝ → ℝ) (hg_one : ∫ y, g y = 1) (z : ℝ)
     (hi1 : Integrable (fun y => pX (z - y) * g y) volume)
@@ -137,7 +140,8 @@ theorem convDensityAdd_sub_self_eq
 
 /-- **層1 補助 (genuine)**: 連続版 Minkowski (L¹, Fubini 迂回, ℝ≥0∞ 形)。
 `‖∫ y, F(·,y) dν‖₁ ≤ ∫⁻ y, ‖F(·,y)‖₁ dν`。`norm_integral_le_lintegral_norm` (enorm 形) +
-`lintegral_lintegral_swap` (Tonelli) で初等。`hF` は joint 可測性 (regularity precondition)。 -/
+`lintegral_lintegral_swap` (Tonelli) で初等。`hF` は joint 可測性 (regularity precondition)。
+@audit:ok -/
 theorem eLpNorm_integral_le_lintegral
     (F : ℝ → ℝ → ℝ) (ν : Measure ℝ) [SFinite ν]
     (hF : AEMeasurable (Function.uncurry F) (volume.prod ν)) :
@@ -154,6 +158,9 @@ theorem eLpNorm_integral_le_lintegral
 
 /-- **層1 核命題 (壁、組上げで genuine 化目標)**: 近似単位元 L¹ 収束。
 平行移動連続 + 連続 Minkowski + Gauss 集中 (二次モーメント DCT) の組上げ。
+仮説 hpX_nn/meas/int/mom は density regularity precondition (load-bearing でない、
+結論の核を bundle していない)。wall 分類 honest (loogle: convolution+eLpNorm(+Tendsto)
+= Found 0、独立 audit 2026-06-04 機械確認)。
 @residual(wall:approx-identity-L1) -/
 theorem convDensityAdd_tendsto_L1_zero
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
