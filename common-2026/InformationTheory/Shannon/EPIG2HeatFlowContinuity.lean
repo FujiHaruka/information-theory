@@ -105,8 +105,18 @@ theorem convDensityAdd_tendsto_L1_zero
 `MemLp`/`Integrable` input by the Vitali (`tendsto_Lp_of_tendsto_ae`) and the
 L¹→integral (`tendsto_integral_of_L1'`) machinery. It does **not** follow from the
 L¹ + finite-second-moment regularity of `pX` (a concentrated density can have
-`∫ negMulLog pX = −∞`). A separate finiteness wall, distinct from the
-approximate-identity L¹ wall above. -/
+`∫ negMulLog pX = −∞`). This is the *limit-density* (`t = 0`, `pX` itself) entropy
+finiteness — distinct both from the approximate-identity L¹ wall above and from
+the register's `wall:entropy-finiteness` (which is the **smoothed** density
+`pX ∗ g_t` at `t > 0`, already CLOSED 2026-06-01). The plan (落とし穴2) owns its
+closure: add an `Integrable (negMulLog pX)` regularity precondition (option a) or
+derive it (option b). Classified as `plan:` not `wall:`: closure path is a
+plan-level precondition/derivation decision, not a Mathlib gap.
+
+Audit 2026-06-04 (fresh subagent): reclassified `wall:entropy-finiteness` →
+`plan:epi-g2-layer2-moonshot-plan`. The register's `entropy-finiteness` is the
+smoothed-density (`t > 0`) form (CLOSED); this limit-density (`t = 0`) finiteness
+is plan-owned (落とし穴2, options a/b/c, closure path unsettled). -/
 
 /-- **Layer 1' (entropy finiteness of the limit density).**
 `negMulLog pX` is `volume`-integrable (i.e. the differential entropy `h(X)` of the
@@ -116,7 +126,13 @@ machinery. Not derivable from L¹ + finite second moment alone (loogle:
 `convDensityAdd_negMulLog_integrable` is the `t > 0` smoothed-density form only,
 not `pX` itself at `t = 0`).
 
-@residual(wall:entropy-finiteness) -/
+Audit 2026-06-04 (fresh subagent): reclassified `wall:entropy-finiteness` →
+`plan:epi-g2-layer2-moonshot-plan`. This limit-density (`t = 0`, `pX` itself)
+entropy finiteness is distinct from the register's `wall:entropy-finiteness`
+(smoothed `t > 0` density, CLOSED). It is plan-owned (落とし穴2: add an
+`Integrable (negMulLog pX)` regularity precondition or derive it), not a Mathlib
+wall — closure is a plan-level precondition decision.
+@residual(plan:epi-g2-layer2-moonshot-plan) -/
 theorem negMulLog_integrable_of_density
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume)
@@ -140,7 +156,13 @@ is a `private` genuine asset in `FisherInfoV2DeBruijnAssembly.lean:2529`
 because the asset is file-scoped; closing it is pure plumbing (make the Assembly
 version public, or relocate), no new analytic content.
 
-@residual(wall:entropy-finiteness) -/
+Audit 2026-06-04 (fresh subagent): reclassified `wall:entropy-finiteness` →
+`plan:epi-g2-layer2-moonshot-plan`. NOT a Mathlib wall — the analytic content is a
+genuine in-tree `@audit:ok` asset (smoothed-density entropy finiteness, register's
+`entropy-finiteness` is CLOSED). The only obstacle is `private` file-scope; closure
+is plan-managed plumbing (plan Phase 3 / inventory §plumbing, "5〜15 行 純 plumbing").
+A `wall:` tag would falsely claim a Mathlib gap.
+@residual(plan:epi-g2-layer2-moonshot-plan) -/
 theorem convDensityAdd_negMulLog_integrable_pub
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -351,6 +373,14 @@ Surface shrink (2026-06-04): the predecessor `heatFlowEntropyPower_continuousOn`
 claimed the full ray `ContinuousOn (Set.Ici 0)`; this version shrinks the residual
 to the single endpoint, with the interior recovered genuinely on the consumer side.
 
+Audit 2026-06-04 (fresh subagent): the compound `@residual` dropped
+`wall:entropy-finiteness` (misclassified — that register wall is the smoothed
+`t > 0` density form, already CLOSED; the limit-density `t = 0` finiteness it
+actually relies on is plan-owned 落とし穴2). The remaining direct `sorry` is the
+density-identification bridge (a `plan:` signature change), consuming
+`differentialEntropy_convDensity_integral_tendsto` whose only un-CLOSED wall is
+`wall:approx-identity-L1`. Compound (AND) = those two.
+
 Layer-2 genuine machinery (2026-06-04): the density-level entropy-integral
 convergence `differentialEntropy_convDensity_integral_tendsto` is now **genuine**
 (Vitali `tendsto_Lp_of_tendsto_ae` + L¹→integral `tendsto_integral_of_L1'`, both
@@ -367,7 +397,7 @@ to this signature would break that consumer, so the bridge is parked pending a
 signature change in a follow-up plan. Once threaded, the wall lemma closes
 genuinely against `differentialEntropy_convDensity_integral_tendsto`.
 
-@residual(wall:approx-identity-L1,wall:entropy-finiteness,plan:epi-g2-layer2-moonshot-plan) -/
+@residual(wall:approx-identity-L1,plan:epi-g2-layer2-moonshot-plan) -/
 theorem heatFlowEntropyPower_continuousWithinAt_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -389,7 +419,7 @@ theorem heatFlowEntropyPower_continuousWithinAt_zero
     -- pushforward density with `convDensityAdd pX g_t` (`pPath_eq_convDensityAdd`),
     -- which needs `Measurable X`, `Measurable Z`, `IndepFun X Z P` — not carried by
     -- `IsDeBruijnRegularityHyp` and not supplied by the live consumer. Parked.
-    -- @residual(wall:approx-identity-L1,wall:entropy-finiteness,plan:epi-g2-layer2-moonshot-plan)
+    -- @residual(wall:approx-identity-L1,plan:epi-g2-layer2-moonshot-plan)
     sorry
   have hcomp :
       ContinuousWithinAt
