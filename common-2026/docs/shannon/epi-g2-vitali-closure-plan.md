@@ -405,6 +405,23 @@ maxent / `pPath_eq_convDensityAdd` 呼出 (genuine 補題の適用) は bundling
    `∫|negMulLog f_n|` 一様 → さらに superlinear moment 自作 (100-200 行 + monotone 化が別 wall 級)。本 session 対象外。
    **honest 着地 = UI/UT を `@residual(wall:approx-identity-L1)` で park 継続** (独立 audit 済、仮説束化禁止)。
 
+10. **(2026-06-04 三重独立追認 + de Bruijn route 訂正)**: orchestrator が fresh `mathlib-inventory` +
+    fresh `proof-pivot-advisor` を**別角度で並列起動**し、判断ログ 9 の真 moonshot 判定を独立に再検証。
+    両 agent とも tractable route の有無に明確に **NO** を回答 (在庫 `epi-g2-delavp-recheck-inventory.md` に
+    記録)。loogle authoritative: `UnifIntegrable, ConvexOn` = Found 0、`negMulLog, Integrable` = Found 0、
+    Mathlib 全体で "Vallée-Poussin"/"Scheff" = 0 file。**重要訂正**: 判断ログ 9 が「唯一の将来 genuine ルート」と
+    した `deBruijn_deriv_nonneg` (`EPIStamDeBruijnConclusion.lean:132`) 積分 route は本壁に対して**カテゴリ違い
+    (dead end)**。`:132` の結論は `0 ≤ (1/2)·fisherInfoOfDensityReal f` という **pointwise 導関数符号のみ**で、
+    s 積分しても得られるのは entropy **値**の単調性 (`h(X)≤h(X+√tZ)`、しかも積分済み形は in-tree **0 hits**で
+    ftc-2 + 端点連続性 + Fisher info 経路可積分という別 moonshot 前置が要る)。entropy 値の単調性は UnifTight が
+    要求する「tail eLpNorm の n-一様 smallness」には変換できない。**よって de Bruijn route で本壁は閉じない** —
+    将来ルートは de la VP 機構そのもの (superlinear-moment → UnifIntegrable 構築) を **in-tree 自作 or Mathlib
+    upstream PR** するしかなく、これは複数 session の真 moonshot。**honest 着地 = park 継続を三重独立で確定**。
+    付随発見 (両 agent 一致): 2 witness を 1 本の shared sorry 補題に集約すれば surface 2→1 縮小可。ただし
+    inventory agent の caution「bookkeeping 集約と数学的可解性は別問題、集約前に集約命題の closability 再判定要」
+    + 2 witness の結論型が genuinely 異なる (UI = 値しきい値 tail、UT = 空間 tail) ため、機械的集約は
+    false-statement defect (tier 5) リスクあり → 急がず park のまま据え置き、集約は将来 closure 設計時に同時実施。
+
 8. **(2026-06-04 実装) UI を真 moonshot から「橋 1 本 + plumbing」に縮小、EPIG2 own-file sorry-free 達成**:
    UI witness を `EPIVitaliUI.lean` に集約。確率測度 framing は **option (b) `withDensity` 直構成** (X,Z,P 不要、
    `pPath_eq_convDensityAdd` 迂回) で genuine 化: `μ_n := volume.withDensity (ofReal∘f_n)` が確率測度
