@@ -3445,13 +3445,18 @@ private theorem debruijnIdentityV2_holds_assembled_entropy_eq
   filter_upwards [eventually_gt_nhds ht] with s hs
   -- at `s > 0`: `max s 0 = s`.
   have hmax : max s 0 = s := max_eq_left hs.le
-  -- Phase 1b: `rnDeriv (P.map (X+√s·Z)) =ᵐ ofReal∘convDensityAdd pX g_s`.
-  have h1b := pPath_eq_convDensityAdd X Z hX hZ hXZ hZ_law pX hpX_nn hpX_meas hpX_law hs
+  -- Phase 1b (now general noise variance): instantiate at `v_Z := 1` (recovers `s·1 = s`).
+  have h1b := pPath_eq_convDensityAdd X Z hX hZ hXZ (1 : ℝ≥0) one_pos hZ_law
+    pX hpX_nn hpX_meas hpX_law hs
   -- unfold differentialEntropy = ∫ negMulLog ((rnDeriv).toReal).
   unfold differentialEntropy
   -- rewrite the variance witness `⟨max s 0, _⟩` to `⟨s, hs.le⟩`.
   have hwit : (⟨max s 0, le_max_right s 0⟩ : ℝ≥0) = ⟨s, hs.le⟩ := by
     apply NNReal.eq; exact hmax
+  -- the Phase 1b result variance `⟨s·1, _⟩` equals `⟨s, hs.le⟩` (`s·1 = s`).
+  have hwit1 : (⟨s * (1 : ℝ≥0), by positivity⟩ : ℝ≥0) = ⟨s, hs.le⟩ := by
+    apply NNReal.eq; simp
+  rw [hwit1] at h1b
   rw [hwit]
   -- congr the two integrands a.e. via Phase 1b + `toReal_ofReal` (convDensityAdd ≥ 0).
   refine integral_congr_ae ?_

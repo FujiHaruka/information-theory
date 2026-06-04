@@ -24,11 +24,12 @@ Phase 0 (false→true signature pivot) は親 file `FisherInfoV2DeBruijn.lean` �
 本 file は plan `epi-debruijn-pertime-closure-plan.md` の Phase 1-5 atom を提供:
 
 * **Phase 1a** `gaussianConvolution_law_conv` — **genuine**: 法 (law) の畳み込み分解
-  `P.map (X + √s·Z) = (P.map X) ∗ gaussianReal 0 ⟨s, _⟩` (`IndepFun.map_add_eq_map_conv_map`
-  + `gaussianConvolution_law_of_gaussian` と同型の `√s·Z` law 計算)。density witness 不要、
-  全 `X` で成立。
+  `P.map (X + √s·Z) = (P.map X) ∗ gaussianReal 0 ⟨s·v_Z, _⟩` (Z ∼ 𝒩(0, v_Z)、任意分散;
+  `IndepFun.map_add_eq_map_conv_map` + `√s·Z ∼ 𝒩(0, s·v_Z)`)。density witness 不要、
+  全 `X` で成立。`v_Z := 1` で旧 `s` 分散形を回復。
 * **Phase 1b** `pPath_eq_convDensityAdd` — density 同定 (**genuine** `@audit:ok`, L-PT-β closed):
-  `(P.map (X+√s·Z)).rnDeriv volume =ᵐ convDensityAdd p_X (gaussianPDFReal 0 √s)`。
+  `(P.map (X+√s·Z)).rnDeriv volume =ᵐ convDensityAdd p_X (gaussianPDFReal 0 ⟨s·v_Z, _⟩)`
+  (Z ∼ 𝒩(0, v_Z)、任意分散、`v_Z := 1` で旧形回復)。
   Phase 1a + `gaussianReal_of_var_ne_zero` + `conv_withDensity_eq_lconvolution` +
   bridge `pPath_eq_convDensityAdd_lconvolution_bridge` (`∫⁻ → ofReal ∫`)。bridge の per-z
   可積分性は `Integrable.mul_bdd` (pX 可積分 × Gaussian 有界 `gaussianPDFReal_le_prefactor`)、
@@ -60,29 +61,33 @@ variable {Ω : Type*} {_mΩ : MeasurableSpace Ω}
 
 /-! ## Phase 1a — law factorization (genuine) -/
 
-/-- **Phase 1a (genuine)**: the law of the heat-flow path `X + √s·Z` factors as the
-convolution of the law of `X` with the Gaussian `𝒩(0, s)`.
+/-- **Phase 1a (genuine, general noise variance)**: the law of the heat-flow path
+`X + √s·Z` factors as the convolution of the law of `X` with the Gaussian `𝒩(0, s·v_Z)`,
+when `Z ∼ 𝒩(0, v_Z)`.
 
-`P.map (gaussianConvolution X Z s) = (P.map X) ∗ gaussianReal 0 ⟨s, hs⟩`.
+`P.map (gaussianConvolution X Z s) = (P.map X) ∗ gaussianReal 0 ⟨s·v_Z, _⟩`.
 
 This is the foundational measure-level step of the density identification (Phase 1b):
-the density of the LHS is the convolution of `p_X` with the `𝒩(0, s)` density. Holds
-for **arbitrary** `X` (no density witness needed) — only `Z ∼ 𝒩(0, 1)` is used.
+the density of the LHS is the convolution of `p_X` with the `𝒩(0, s·v_Z)` density. Holds
+for **arbitrary** `X` (no density witness needed) — only `Z ∼ 𝒩(0, v_Z)` is used.
+The `v_Z` generalization is needed because the sum instance `(X+Y, Z_X+Z_Y)` has noise
+`Z ∼ 𝒩(0, 2)`. The former `v_Z = 1` form is recovered with `s·1 = s`.
 
-Proof mirrors `gaussianConvolution_law_of_gaussian` (`FisherInfoV2DeBruijn.lean:131`)
-for the `√s·Z` law computation, then `IndepFun.map_add_eq_map_conv_map`.
+`√s·Z ∼ 𝒩(0, (√s)²·v_Z) = 𝒩(0, s·v_Z)` (`gaussianReal_map_const_mul`), then
+`IndepFun.map_add_eq_map_conv_map`.
 
 @audit:ok -/
 theorem gaussianConvolution_law_conv
     {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
-    (hZ_law : P.map Z = gaussianReal 0 1)
+    (v_Z : ℝ≥0) (hZ_law : P.map Z = gaussianReal 0 v_Z)
     {s : ℝ} (hs : 0 ≤ s) :
     P.map (gaussianConvolution X Z s)
-      = (P.map X) ∗ gaussianReal 0 ⟨s, hs⟩ := by
-  -- Step 1: law of `√s · Z` is `𝒩(0, s)` (mirrors `gaussianConvolution_law_of_gaussian`).
+      = (P.map X) ∗ gaussianReal 0 ⟨s * v_Z, by positivity⟩ := by
+  -- Step 1: law of `√s · Z` is `𝒩(0, s·v_Z)` (mirrors `gaussianConvolution_law_of_gaussian`).
   have h_sqrt_sq : (Real.sqrt s) ^ 2 = s := Real.sq_sqrt hs
-  have h_sqrtZ_map : Measure.map (fun ω => Real.sqrt s * Z ω) P = gaussianReal 0 ⟨s, hs⟩ := by
+  have h_sqrtZ_map : Measure.map (fun ω => Real.sqrt s * Z ω) P
+      = gaussianReal 0 ⟨s * v_Z, by positivity⟩ := by
     have h_compose : Measure.map (fun ω => Real.sqrt s * Z ω) P
         = (P.map Z).map (fun y => Real.sqrt s * y) := by
       have h_meas_mul : Measurable (fun y : ℝ => Real.sqrt s * y) :=
@@ -92,7 +97,11 @@ theorem gaussianConvolution_law_conv
     rw [h_compose, hZ_law, gaussianReal_map_const_mul]
     congr 1
     · ring
-    · rw [mul_one]; apply NNReal.eq; exact h_sqrt_sq
+    · -- `⟨(√s)², _⟩ * v_Z = ⟨s·v_Z, _⟩` in `ℝ≥0`.
+      apply NNReal.eq
+      simp only [NNReal.coe_mul, NNReal.coe_mk]
+      rw [h_sqrt_sq]
+      rfl
   -- Step 2: independence `X ⊥ (√s · Z)`.
   have h_indep_X_sqrtZ : IndepFun X (fun ω => Real.sqrt s * Z ω) P :=
     hXZ.comp measurable_id (measurable_const.mul measurable_id)
@@ -182,34 +191,42 @@ private theorem pPath_eq_convDensityAdd_lconvolution_bridge
   rw [← ofReal_integral_eq_lintegral_ofReal hint hnn]
   rfl
 
-/-- **Phase 1b (genuine, L-PT-β closed)**: when `P.map X` has a Real density witness `pX`
-(`P.map X = volume.withDensity (ENNReal.ofReal ∘ pX)`), the density of the heat-flow
-path `X + √s·Z` is a.e. equal to `convDensityAdd pX (gaussianPDFReal 0 ⟨s,_⟩)`.
+/-- **Phase 1b (genuine, L-PT-β closed, general noise variance)**: when `P.map X` has a
+Real density witness `pX` (`P.map X = volume.withDensity (ENNReal.ofReal ∘ pX)`) and
+`Z ∼ 𝒩(0, v_Z)` with `v_Z > 0`, the density of the heat-flow path `X + √s·Z` is a.e.
+equal to `convDensityAdd pX (gaussianPDFReal 0 ⟨s·v_Z,_⟩)`.
 
-Foundation chain (all Mathlib-direct): Phase 1a (`gaussianConvolution_law_conv`) +
-`gaussianReal_of_var_ne_zero` (`𝒩(0,s) = volume.withDensity (gaussianPDF 0 ⟨s,_⟩)`) +
+The `v_Z` generalization is needed because the sum instance `(X+Y, Z_X+Z_Y)` has noise
+`Z ∼ 𝒩(0, 2)`. The former `v_Z = 1` form is recovered with `s·1 = s`.
+
+Foundation chain (all Mathlib-direct): Phase 1a (`gaussianConvolution_law_conv`, now with
+general `v_Z`, gives `(P.map X) ∗ 𝒩(0, s·v_Z)`) +
+`gaussianReal_of_var_ne_zero` (`𝒩(0,s·v_Z) = volume.withDensity (gaussianPDF 0 ⟨s·v_Z,_⟩)`) +
 `conv_withDensity_eq_lconvolution` (conv of two `withDensity` = `withDensity` of the
-lconvolution `∫⁻`) + the `∫⁻ → ofReal ∫` bridge `pPath_eq_convDensityAdd_lconvolution_bridge`.
+lconvolution `∫⁻`) + the `∫⁻ → ofReal ∫` bridge `pPath_eq_convDensityAdd_lconvolution_bridge`
+(generic in its variance argument: instantiated at `s·v_Z`).
 
 Both former residuals are now genuine: `hf_meas` is `hpX_meas.ennreal_ofReal` (regularity hyp
 `hpX_meas : Measurable pX`), and the bridge's per-`z` integrability is discharged by
 `Integrable pX volume`, derived here from `hpX_law` + `P` probability (`∫⁻ ofReal(pX) =
-(P.map X) univ = 1 < ∞`). `hpX_meas` is a pure regularity precondition (NOT load-bearing).
+(P.map X) univ = 1 < ∞`). `hpX_meas` is a pure regularity precondition (NOT load-bearing),
+as are `v_Z`/`hv_Z_pos`/`hZ_law` (noise-law preconditions).
 @audit:ok -/
 theorem pPath_eq_convDensityAdd
     {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z) (hXZ : IndepFun X Z P)
-    (hZ_law : P.map Z = gaussianReal 0 1)
+    (v_Z : ℝ≥0) (hv_Z_pos : 0 < v_Z) (hZ_law : P.map Z = gaussianReal 0 v_Z)
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x)))
     {s : ℝ} (hs : 0 < s) :
     (P.map (gaussianConvolution X Z s)).rnDeriv volume
       =ᵐ[volume] fun z => ENNReal.ofReal
-        (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩) z) := by
-  -- variance witness `⟨s, hs.le⟩ : ℝ≥0` is nonzero (so the Gaussian is volume-AC).
-  have hv_ne : (⟨s, hs.le⟩ : ℝ≥0) ≠ 0 := by
+        (convDensityAdd pX (gaussianPDFReal 0 ⟨s * v_Z, by positivity⟩) z) := by
+  -- variance witness `⟨s·v_Z, _⟩ : ℝ≥0` is nonzero (so the Gaussian is volume-AC).
+  have hsv_pos : 0 < s * v_Z := mul_pos hs hv_Z_pos
+  have hv_ne : (⟨s * v_Z, by positivity⟩ : ℝ≥0) ≠ 0 := by
     intro h
-    exact hs.ne' (congrArg NNReal.toReal h)
+    exact hsv_pos.ne' (congrArg NNReal.toReal h)
   -- `pX` is a genuine probability density ⇒ `Integrable pX volume` (used by the bridge).
   --   `∫⁻ ofReal(pX) = (volume.withDensity (ofReal∘pX)) univ = (P.map X) univ = P univ = 1`.
   have hpX_int : Integrable pX volume := by
@@ -219,21 +236,24 @@ theorem pPath_eq_convDensityAdd
       rw [hpX_law, withDensity_apply _ MeasurableSet.univ, setLIntegral_univ]
     rw [hlint, Measure.map_apply hX MeasurableSet.univ, Set.preimage_univ, measure_univ]
     exact ENNReal.one_lt_top
-  -- Step 1 (Phase 1a): law of `X + √s·Z` is the convolution `(P.map X) ∗ 𝒩(0,s)`.
-  rw [gaussianConvolution_law_conv X Z hX hZ hXZ hZ_law hs.le]
+  -- Step 1 (Phase 1a): law of `X + √s·Z` is the convolution `(P.map X) ∗ 𝒩(0, s·v_Z)`.
+  rw [gaussianConvolution_law_conv X Z hX hZ hXZ v_Z hZ_law hs.le]
   -- Step 2: write both factors as `volume.withDensity _`.
   --   `P.map X = volume.withDensity (ofReal ∘ pX)`  (hyp)
-  --   `𝒩(0,s) = volume.withDensity (gaussianPDF 0 ⟨s,_⟩)`  (gaussianReal_of_var_ne_zero)
+  --   `𝒩(0, s·v_Z) = volume.withDensity (gaussianPDF 0 ⟨s·v_Z,_⟩)`  (gaussianReal_of_var_ne_zero)
   rw [hpX_law, gaussianReal_of_var_ne_zero 0 hv_ne]
   -- Step 3: conv of two `withDensity` = `withDensity` of the lconvolution `∫⁻`.
   have hf_meas : Measurable (fun x => ENNReal.ofReal (pX x)) := hpX_meas.ennreal_ofReal
-  have hg_meas : Measurable (gaussianPDF 0 (⟨s, hs.le⟩ : ℝ≥0)) := measurable_gaussianPDF 0 _
+  have hg_meas : Measurable (gaussianPDF 0 (⟨s * v_Z, by positivity⟩ : ℝ≥0)) :=
+    measurable_gaussianPDF 0 _
   rw [MeasureTheory.conv_withDensity_eq_lconvolution hf_meas hg_meas]
   -- Step 4: `rnDeriv (withDensity h) =ᵐ h`, then identify the lconvolution density with
-  --   `ofReal ∘ convDensityAdd` via the `∫⁻ → ofReal ∫` bridge (L-PT-β).
+  --   `ofReal ∘ convDensityAdd` via the `∫⁻ → ofReal ∫` bridge (L-PT-β), instantiated at
+  --   variance `s·v_Z` (the bridge is generic in its variance argument).
   refine (Measure.rnDeriv_withDensity volume
     (MeasureTheory.measurable_lconvolution volume hf_meas hg_meas)).trans ?_
-  exact pPath_eq_convDensityAdd_lconvolution_bridge pX hpX_nn hpX_int s hs.le hv_ne
+  exact pPath_eq_convDensityAdd_lconvolution_bridge pX hpX_nn hpX_int (s * v_Z)
+    (by positivity) hv_ne
 
 /-! ## Phase 2 — heat equation per-density (L-PT-α honest sorry, max cost) -/
 
