@@ -17,10 +17,17 @@
 
 ## 進捗
 
-- [ ] Phase A — ae witness (`negMulLog_convDensity_tendsto_ae`) 📋 **← 最 tractable**
-- [ ] Phase B — UT witness (`negMulLog_convDensity_unifTight`) 📋
-- [ ] Phase C — UI witness (`negMulLog_convDensity_unifIntegrable`) 📋 **← 最難 (maxent 橋)**
-- [ ] Phase S — signature 変更の threading + 独立 honesty audit 📋 (UI/場合により UT に precondition 追加時)
+- [x] Phase A — ae witness ✅ **CLOSED 2026-06-04 (genuine 除去)**。full列 ae witness は層2 を部分列ルート
+  (`tendsto_of_subseq_tendsto`) に書換えて **genuine に除去**。代替 = `negMulLog_convDensity_tendsto_ae_subseq`
+  (`EPIVitaliAE.lean`、`@audit:ok`、sorryAx-free)。壁から消滅、surface shrink。
+- [ ] Phase B — UT witness (`negMulLog_convDensity_unifTight`、`EPIVitaliUnifTight.lean`) 🚧 honesty fix 済
+  (`hu_bdd` 追加、under-hypothesized 修正)、本体 = negMulLog tail bridge (wall) 試行中
+- [ ] Phase C — UI witness (`negMulLog_convDensity_unifIntegrable`、`EPIVitaliUI.lean`) 🚧 honesty fix 済
+  (`hu_bdd`)、withDensity framing + maxent は genuine 試行中、de la Vallée-Poussin core (wall) **← 最難**
+- [x] Phase S — signature threading + 独立 honesty audit ✅ **部分 PASS 2026-06-04**。`hu_bdd : BddAbove (Set.range u)`
+  を UT/UI witness に追加 (under-hypothesized 修正、`u→∞` で UnifTight/UnifIntegrable は genuine に偽)、
+  layer-2 で `hv_bdd` を genuine 供給。独立 honesty-auditor が precondition (regularity、非 load-bearing) と PASS。
+  (UI の `hpX_mass` 追加が確定したら再 audit 要)
 - [x] 層1 — `convDensityAdd_tendsto_L1_zero` 本体 ✅ **CLOSED 2026-06-04** (`EPIApproxIdentityL1.lean`、genuine、sorryAx-free、独立 audit PASS。ae の足場 = 密度 a.e. 収束部分列の供給源)
 
 **現状**: 層2 machinery `differentialEntropy_convDensity_integral_tendsto`
@@ -365,3 +372,23 @@ maxent / `pPath_eq_convDensityAdd` 呼出 (genuine 補題の適用) は bundling
 5. **(起草) 密度 L¹ 収束は UI/UT の足場にならないことを明示**: `negMulLog` 非 Lipschitz ゆえ、層1 の
    密度 L¹ 収束は `negMulLog` 合成後の L¹ 収束を自動では与えない (在庫が Vitali ルートを選んだ真因)。
    層1 は ae witness の足場 (部分列 ae) のみ供給。UI は maxent 上界、UT は二次モーメント tail を独立に組む。
+
+6. **(2026-06-04 実装) Phase A ae witness を full列要求でなく部分列ルートで genuine 除去**: 当初 Phase A は
+   full列 ae witness を park し、(a) Gauss 核 Lebesgue 点直接証明 or (b) 層2 を `TendstoInMeasure` 入力に
+   書換、で解決する設計だった。実装で **Mathlib `tendsto_of_subseq_tendsto` (`CountablyGenerated.lean:138`)
+   を層2 で直接使う第三の道** が判明: 層2 `differentialEntropy_convDensity_integral_tendsto` の Vitali
+   ブロックを「各部分列 `ns` に対し更なる部分列 `ms` で `tendsto_Lp_of_tendsto_ae` を適用」に書換え、
+   genuine 部分列補題 `negMulLog_convDensity_tendsto_ae_subseq` (`EPIVitaliAE.lean`、層1 → tendstoInMeasure →
+   exists_seq_tendsto_ae → negMulLog 合成、`@audit:ok`、sorryAx-free) を供給源にした。これで full列 ae の
+   gap (Mathlib 不在) を **完全に迂回**、ae witness は壁から消滅。Mathlib 自身の `tendsto_Lp_of_tendstoInMeasure`
+   (`:357`) が同じ device を使っているのが手掛かり。層2 の signature/結論型は不変、own-sorry 0 維持。
+   surface = ae/UT/UI 3 本 → UT/UI 2 本 (+ second_moment plan-class) に縮小。
+
+7. **(2026-06-04 honesty) UT/UI witness は `hu_bdd` 欠落で under-hypothesized (genuine に偽) と判明 → 修正**:
+   UT/UI witness の元 signature は `u : ℕ → ℝ` (hu_pos のみ) で、`u n → ∞` のとき密度分散 `∫x²f_n = ∫x²pX +
+   (∫pX)·u n` が n 非一様 → UnifTight/UnifIntegrable は **genuine に偽** (質量が遠方へ逃げ tail 一様性が
+   崩れる)。これは CLAUDE.md「under-hypothesized / insufficient signature」defect。`hu_bdd : BddAbove
+   (Set.range u)` precondition を追加して修正 (regularity、非 load-bearing)。唯一の consumer (layer-2、
+   `u→0` 列) は収束列ゆえ `(hv_lim.mono_right nhdsWithin_le_nhds).bddAbove_range` で genuine 供給。
+   独立 honesty-auditor PASS。**parked sorry でも signature が偽を主張していたら honesty defect** という
+   教訓 (sorry は「未証明」を意味するが「statement が真」を保証しない)。
