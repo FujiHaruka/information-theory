@@ -19,9 +19,9 @@ rg "^- \[ \]" で残タスク横断 grep、rg "🔄" でピボット箇所だけ
 ## 進捗
 
 - [x] Phase 0 — 接続 lemma の verbatim 再確認（Read のみ） ✅
-- [~] Phase 1 — (β) 下界: 畳み込みでエントロピー非減少 🚧（補題2 fibre 同定 genuine ✅、補題1 conditioning 減少 = 単一 bridge 補題に surface shrink 🚧）
+- [x] **Phase 1 — (β) 下界: 畳み込みでエントロピー非減少 ✅ DONE (genuine, sorryAx-free, 独立監査 PASS)**
 - [~] Phase 2 — (α) 上界: KL-LSC = Donsker-Varadhan 🚧（2a easy direction genuine ✅、2b hard direction = 真 moonshot park、2c 未着手）
-- [ ] Phase 3 — 層2 載せ替え + UI/UT witness 削除 + 独立 honesty audit 📋（(α)+(β) 両方 genuine 後）
+- [ ] Phase 3 — 層2 載せ替え + UI/UT witness 削除 + 独立 honesty audit 📋（(α) = 2b park ゆえ未完、層2 据置）
 
 > **進捗スナップショット (2026-06-04 multi-round session)**:
 > - **Phase 2a ✅ genuine DONE**: `EPIG2KLVariationalLower.lean`、`klDiv_variational_lower_bound` +
@@ -32,14 +32,18 @@ rg "^- \[ \]" で残タスク横断 grep、rg "🔄" でピボット箇所だけ
 >   sorryAx-free、独立監査 PASS。z 依存アフィン kernel `affineShiftKernel` +
 >   `prod_map_affine_eq_compProd` + `condDistrib_ae_eq_of_measure_eq_compProd` 一意性で
 >   在庫の「wall 誤分類」を解消。
-> - **Phase 1 (β) 補題1 🚧 surface shrink**: `condDifferentialEntropy_le` own body は genuine
->   (klDiv≥0 型自明 + linarith)。残壁を単一 bridge 補題
->   `differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv` (微分 MI = KL 恒等式) に隔離。
->   **残 sub-gap = 条件付き KL 積分形** `(klDiv (μ_Z⊗ₘκ) (μ_Z⊗ₘconst μ_X)).toReal = ∫ z, (klDiv (κ z) μ_X).toReal ∂μ_Z`
->   (= Mathlib 明示 TODO `KullbackLeibler/ChainRule.lean:74-77`、`klDiv_compProd_eq_add` は第一周辺
->   分解形で周辺共通の本件には効かず collapse) **+ per-fibre 密度展開 + Fubini marginal 同定**。
->   `@residual(wall:cond-diff-entropy)` 維持、独立監査 PASS (循環なし・分類 honest)。**次手 = この
->   条件付き KL 積分形を自作 (Mathlib upstream PR 候補)、~150-300 行。これが閉じれば (β) 全体 genuine**。
+> - **Phase 1 (β) ✅ 完全 DONE (genuine, sorryAx-free, 独立監査 14 宣言 PASS)**: bridge 補題
+>   `differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv` を 3 sub-gap の並列実装 + assembly で
+>   genuine close → `condDifferentialEntropy_le` (conditioning reduces) + device/密度形
+>   `negMulLog_convDensity_entropy_ge` (= layer-2 (β) ターゲット) 全 sorryAx-free。**cond-diff-entropy
+>   wall CLOSED** (active residual 0 件)。新規 reusable 資産 (EPI line / 教科書全体):
+>   - `CondKLIntegral.lean` — **条件付き KL の積分形** `(klDiv (μ⊗ₘκ)(μ⊗ₘη)).toReal = ∫ z, (klDiv (κz)(ηz)).toReal ∂μ`
+>     (一般版 + const 版)。Mathlib 明示 TODO (`ChainRule.lean:74-77`) を充足、`compProd_withDensity` slice
+>     同定で plumbing 解決。**Mathlib upstream PR 候補**。
+>   - `EPIG2BridgeDensityHelpers.lean` — per-fibre 密度展開 `(klDiv P Q).toReal = −h(P) − ∫ p log q` +
+>     condDistrib marginal-Fubini 同定 (g-一般 core + density wrapper)。
+>   - assembly が threading した precondition は全て regularity (独立監査が 1 つずつ load-bearing 判定 →
+>     全 regularity、vacuous なし)。
 
 ## ゴール
 
