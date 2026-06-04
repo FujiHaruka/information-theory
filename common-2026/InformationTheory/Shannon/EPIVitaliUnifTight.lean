@@ -92,32 +92,26 @@ private theorem integral_sq_mul_gaussianPDFReal_shift {t : ℝ} (ht : 0 < t) (y 
     integral_id_mul_gaussianPDFReal ht, integral_gaussianPDFReal_eq_one 0 hv_ne]
   ring
 
-/-- **Convolution-density second moment** (helper, in-tree absent).
+/-- **Convolution-density second moment (GENUINELY CLOSED)**.
 For `f_t = pX ∗ g_t` (Gaussian kernel of variance `t`):
 `∫ x², (convDensityAdd pX g_t) ∂volume = (∫ x², pX) + (∫ pX) · t`.
 
-The intended proof is genuine and wall-free: lintegral-Tonelli on the nonneg
-integrand `x² · pX(y) · g_t(x-y)` (`lintegral_lintegral_swap`, no prod-integrability
-needed since the integrand is `ℝ≥0∞`-valued), then the inner moment
-`integral_sq_mul_gaussianPDFReal_shift = y² + t`, then `∫ y² pX + (∫ pX)·t`. The two
-Gaussian inner moments are already discharged above (`integral_sq_mul_gaussianPDFReal_shift`,
-genuine). What remains is the Bochner↔lintegral conversion plumbing (per-`x`
-integrability of the inner integrand, finiteness of the double integral for the
-final `.toReal`). This is standard but laborious; parked for the closure plan. NOT
-a Mathlib wall — purely a Tonelli/measurability assembly.
+Genuine, wall-free proof via lintegral-Tonelli (2026-06-04): lift the nonneg
+integrand `K x y := x² · (pX y · g_t(x-y)) ≥ 0` to `ℝ≥0∞` (`ofReal_integral_eq_lintegral_ofReal`),
+swap with `lintegral_lintegral_swap` (no prod-integrability needed since the
+integrand is `ℝ≥0∞`-valued), collapse the inner integral via the genuine helper
+`integral_sq_mul_gaussianPDFReal_shift` (`∫ x, x²·g_t(x-y) = y²+t`), then integrate
+in `y` against `pX·(y²+t)` (integrable from `hpX_mom`+`hpX_int`). The Bochner LHS
+integrability is recovered from finiteness of the lintegral chain, and both sides
+are equal by injectivity of `ENNReal.ofReal` on nonnegatives. The shifted
+second-moment integrability `x ↦ x²·g_t(x-y)` is established by the substitution
+`x = u+y` and the three Gaussian moments `∫ g_t`, `∫ u·g_t`, `∫ u²·g_t`.
 
-Independent honesty audit 2026-06-04 (fresh subagent, commit 36fc577): residual
-honest, classification correct (`plan:`, NOT a hidden `wall:`). Verified: every
-analytic ingredient of the intended route is in-tree or in Mathlib —
-`lintegral_lintegral_swap` exists (`Mathlib.MeasureTheory.Measure.Prod`); the inner
-moment `∫ x² g_t(x-y) = y²+t` is the genuine sorry-free helper
-`integral_sq_mul_gaussianPDFReal_shift` (`#print axioms` = standard 3, machine-
-checked). What remains is purely Bochner↔lintegral conversion + finiteness plumbing,
-no Mathlib gap — `plan:epi-g2-vitali-closure-plan` (file exists) is the correct
-class. The conclusion is a second-moment EQUALITY whose value is reconstructed from
-the convolution structure, not bundled into any hypothesis (all hpX_* are
-regularity). NOT load-bearing; sufficiency holds.
-@residual(plan:epi-g2-vitali-closure-plan) -/
+`#print axioms convDensityAdd_second_moment = [propext, Classical.choice, Quot.sound]`
+(sorryAx-free, machine-checked 2026-06-04 with fresh olean). All `hpX_*` are pX
+regularity preconditions; the conclusion is a second-moment EQUALITY reconstructed
+from the convolution structure, not bundled into any hypothesis. NOT load-bearing.
+@audit:ok -/
 theorem convDensityAdd_second_moment
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume)
@@ -125,7 +119,172 @@ theorem convDensityAdd_second_moment
     {t : ℝ} (ht : 0 < t) :
     ∫ x, x ^ 2 * convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x ∂volume
       = (∫ x, x ^ 2 * pX x ∂volume) + (∫ y, pX y ∂volume) * t := by
-  sorry
+  set g : ℝ → ℝ := gaussianPDFReal 0 ⟨t, ht.le⟩ with hg_def
+  set p_t : ℝ → ℝ := convDensityAdd pX g with hp_def
+  -- The nonneg double-integrand `K x y := x² · (pX y · g (x - y)) ≥ 0`.
+  set K : ℝ → ℝ → ℝ := fun x y => x ^ 2 * (pX y * g (x - y)) with hK_def
+  have hK_nn : ∀ x y, 0 ≤ K x y := fun x y =>
+    mul_nonneg (sq_nonneg _) (mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _))
+  -- joint measurability of `(x,y) ↦ ofReal (K x y)`.
+  have hKofReal_meas : Measurable (fun p : ℝ × ℝ => ENNReal.ofReal (K p.1 p.2)) := by
+    refine ENNReal.measurable_ofReal.comp ?_
+    refine (measurable_fst.pow_const 2).mul ?_
+    exact (hpX_meas.comp measurable_snd).mul
+      ((measurable_gaussianPDFReal 0 ⟨t, ht.le⟩).comp (measurable_fst.sub measurable_snd))
+  -- `p_t x ≥ 0`.
+  have hp_nn : ∀ x, 0 ≤ p_t x := fun x =>
+    integral_nonneg fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg 0 _ _)
+  -- inner integrand `y ↦ pX y · g (x - y)` is integrable (convolution integrand).
+  have hconv_int : ∀ x, Integrable (fun y => pX y * g (x - y)) volume := fun x => by
+    refine hpX_int.mul_bdd (c := (Real.sqrt (2 * Real.pi * (⟨t, ht.le⟩ : ℝ≥0)))⁻¹) ?_ ?_
+    · exact ((measurable_gaussianPDFReal 0 ⟨t, ht.le⟩).comp
+        (measurable_const.sub measurable_id)).aestronglyMeasurable
+    · refine Filter.Eventually.of_forall (fun y => ?_)
+      rw [Real.norm_eq_abs, abs_of_nonneg (gaussianPDFReal_nonneg 0 _ (x - y))]
+      show gaussianPDFReal 0 ⟨t, ht.le⟩ (x - y) ≤ _
+      rw [gaussianPDFReal]
+      refine mul_le_of_le_one_right (by positivity) (Real.exp_le_one_iff.mpr ?_)
+      rw [neg_div]; exact neg_nonpos.mpr (by positivity)
+  -- The shifted second-moment integrability for fixed `y`: `x ↦ x²·g(x-y)`.
+  have hsq_mom_int : Integrable (fun u => u ^ 2 * g u) volume := by
+    simpa [hg_def] using
+      InformationTheory.Shannon.FisherInfoV2.integrable_sq_mul_gaussianPDFReal ht
+  -- ── Step A: lift LHS to a double lintegral over `(x,y)`. ──
+  -- `∫ x, x²·p_t x = ∫ x, ∫ y, K x y` (linearity of inner integral), and both sides nonneg.
+  have hLHS_inner : ∀ x, x ^ 2 * p_t x = ∫ y, K x y ∂volume := by
+    intro x
+    rw [hp_def]; unfold convDensityAdd
+    rw [← integral_const_mul]
+  -- `∫⁻ x ofReal(x²·p_t x) = ∫⁻ x ∫⁻ y ofReal(K x y)` (each inner integral nonneg & integrable).
+  have hLHS_lint : (∫⁻ x, ENNReal.ofReal (x ^ 2 * p_t x) ∂volume)
+      = ∫⁻ x, ∫⁻ y, ENNReal.ofReal (K x y) ∂volume ∂volume := by
+    refine lintegral_congr fun x => ?_
+    rw [hLHS_inner x]
+    refine ofReal_integral_eq_lintegral_ofReal ?_ (Filter.Eventually.of_forall fun y => hK_nn x y)
+    -- `y ↦ K x y = x²·(pX y · g(x-y))` integrable = const·(conv integrand).
+    refine ((hconv_int x).const_mul (x ^ 2)).congr (Filter.Eventually.of_forall fun y => ?_)
+    simp only [hK_def]
+  -- ── Step B: Tonelli swap + inner Gaussian moment `∫_x x²·g(x-y) = y²+t`. ──
+  have hswap : (∫⁻ x, ∫⁻ y, ENNReal.ofReal (K x y) ∂volume ∂volume)
+      = ∫⁻ y, ∫⁻ x, ENNReal.ofReal (K x y) ∂volume ∂volume :=
+    lintegral_lintegral_swap hKofReal_meas.aemeasurable
+  -- `x ↦ x²·g(x-y)` integrable: substitute `x = u+y`, expand `(u+y)² = u²+2uy+y²`,
+  -- each term integrable against `g`.
+  have hg_int : Integrable g volume := by
+    rw [hg_def]; exact integrable_gaussianPDFReal 0 ⟨t, ht.le⟩
+  have hid_g_int : Integrable (fun u => u * g u) volume := by
+    have hmem : MemLp (id : ℝ → ℝ) 1 (gaussianReal 0 ⟨t, ht.le⟩) := memLp_id_gaussianReal 1
+    have hv_ne : (⟨t, ht.le⟩ : ℝ≥0) ≠ 0 := by
+      intro h; exact ht.ne' (congrArg NNReal.toReal h)
+    have hid_g : Integrable (fun u => u) (gaussianReal 0 ⟨t, ht.le⟩) := by
+      have := (memLp_one_iff_integrable (μ := gaussianReal 0 ⟨t, ht.le⟩)
+        (f := (id : ℝ → ℝ))).mp hmem
+      simpa using this
+    rw [gaussianReal_of_var_ne_zero _ hv_ne] at hid_g
+    rw [integrable_withDensity_iff (measurable_gaussianPDF _ _)
+      (ae_of_all _ fun _ => gaussianPDF_lt_top)] at hid_g
+    refine hid_g.congr (Filter.Eventually.of_forall fun u => ?_)
+    simp only [hg_def, gaussianPDF, ENNReal.toReal_ofReal (gaussianPDFReal_nonneg _ _ _)]
+  have hsq_shift_int : ∀ y, Integrable (fun x => x ^ 2 * g (x - y)) volume := by
+    intro y
+    -- after `x = u + y`: `(u+y)²·g(u) = u²g(u) + 2y·(u g(u)) + y²·g(u)`.
+    have hexp : Integrable (fun u => (u + y) ^ 2 * g u) volume := by
+      have : Integrable
+          (fun u => u ^ 2 * g u + 2 * y * (u * g u) + y ^ 2 * g u) volume :=
+        (hsq_mom_int.add (hid_g_int.const_mul (2 * y))).add (hg_int.const_mul (y ^ 2))
+      refine this.congr (Filter.Eventually.of_forall fun u => ?_); ring
+    have := hexp.comp_sub_right y
+    refine this.congr (Filter.Eventually.of_forall fun x => ?_)
+    simp only [sub_add_cancel]
+  -- inner moment: `∫⁻ x ofReal(K x y) = ofReal(pX y · (y²+t))`.
+  have hxint : ∀ y, Integrable (fun x => K x y) volume := fun y => by
+    refine ((hsq_shift_int y).const_mul (pX y)).congr
+      (Filter.Eventually.of_forall fun x => ?_)
+    simp only [hK_def]; ring
+  have hinner : ∀ y, (∫⁻ x, ENNReal.ofReal (K x y) ∂volume)
+      = ENNReal.ofReal (pX y * (y ^ 2 + t)) := by
+    intro y
+    rw [← ofReal_integral_eq_lintegral_ofReal (hxint y)
+      (Filter.Eventually.of_forall fun x => hK_nn x y)]
+    congr 1
+    rw [show (fun x => K x y) = (fun x => pX y * (x ^ 2 * g (x - y))) from by
+      funext x; simp only [hK_def]; ring, integral_const_mul]
+    rw [hg_def, integral_sq_mul_gaussianPDFReal_shift ht y]
+  -- ── Step C: outer integral over `y`. ──
+  -- `∫⁻ y ofReal(pX y·(y²+t)) = ofReal(∫ y pX y·(y²+t))` (integrable: hpX_mom + hpX_int).
+  have hpX_polymom_int : Integrable (fun y => pX y * (y ^ 2 + t)) volume := by
+    have : Integrable (fun y => y ^ 2 * pX y + pX y * t) volume :=
+      hpX_mom.add (hpX_int.mul_const t)
+    refine this.congr (Filter.Eventually.of_forall fun y => ?_); ring
+  have houter : (∫⁻ y, ENNReal.ofReal (pX y * (y ^ 2 + t)) ∂volume)
+      = ENNReal.ofReal (∫ y, pX y * (y ^ 2 + t) ∂volume) :=
+    (ofReal_integral_eq_lintegral_ofReal hpX_polymom_int
+      (Filter.Eventually.of_forall fun y =>
+        mul_nonneg (hpX_nn y) (by positivity))).symm
+  -- ── Assemble: both sides equal via `ofReal_integral` on LHS. ──
+  -- The Bochner LHS `∫ x, x²·p_t x` is integrable (we get it from finiteness of the lintegral).
+  have hLHS_int : Integrable (fun x => x ^ 2 * p_t x) volume := by
+    -- AE-measurable + finite lintegral of its norm.
+    have hmeas : AEStronglyMeasurable (fun x => x ^ 2 * p_t x) volume := by
+      refine (measurable_id.pow_const 2).aestronglyMeasurable.mul ?_
+      rw [hp_def]
+      exact (convDensityAdd_pXpY_measurable pX g hpX_meas
+        (measurable_gaussianPDFReal 0 ⟨t, ht.le⟩)).aestronglyMeasurable
+    refine ⟨hmeas, ?_⟩
+    rw [hasFiniteIntegral_iff_enorm]
+    -- `∫⁻ ‖x²·p_t x‖ₑ = ∫⁻ ofReal(x²·p_t x)` (nonneg), then = ofReal finite.
+    have hnorm : (fun x => (‖x ^ 2 * p_t x‖ₑ : ℝ≥0∞))
+        = (fun x => ENNReal.ofReal (x ^ 2 * p_t x)) := by
+      funext x
+      rw [Real.enorm_eq_ofReal (mul_nonneg (sq_nonneg _) (hp_nn x))]
+    rw [hnorm, hLHS_lint, hswap]
+    simp_rw [hinner]
+    rw [houter]
+    exact ENNReal.ofReal_lt_top
+  -- Use injectivity of `ofReal` on nonneg reals.
+  have hgoal_lint : ENNReal.ofReal (∫ x, x ^ 2 * p_t x ∂volume)
+      = ENNReal.ofReal (∫ y, pX y * (y ^ 2 + t) ∂volume) := by
+    rw [ofReal_integral_eq_lintegral_ofReal hLHS_int
+      (Filter.Eventually.of_forall fun x => mul_nonneg (sq_nonneg _) (hp_nn x))]
+    rw [hLHS_lint, hswap]
+    simp_rw [hinner]
+    rw [houter]
+  have hLHS_nn : 0 ≤ ∫ x, x ^ 2 * p_t x ∂volume :=
+    integral_nonneg fun x => mul_nonneg (sq_nonneg _) (hp_nn x)
+  have hRHS_nn : 0 ≤ ∫ y, pX y * (y ^ 2 + t) ∂volume :=
+    integral_nonneg fun y => mul_nonneg (hpX_nn y) (by positivity)
+  have hval : (∫ x, x ^ 2 * p_t x ∂volume) = ∫ y, pX y * (y ^ 2 + t) ∂volume :=
+    (ENNReal.ofReal_eq_ofReal_iff hLHS_nn hRHS_nn).mp hgoal_lint
+  rw [hval]
+  -- Final RHS reshape: `∫ y pX y·(y²+t) = ∫ y²pX + (∫pX)·t`.
+  rw [show (fun y => pX y * (y ^ 2 + t)) = (fun y => y ^ 2 * pX y + pX y * t) from by
+    funext y; ring]
+  rw [integral_add hpX_mom (hpX_int.mul_const t), integral_mul_const]
+
+/-- **Uniform second-moment bound (GENUINE sub-structure of the UT witness).**
+For a bounded positive variance sequence `u`, the second moments
+`∫ x², f_n = ∫ x² pX + (∫ pX)·u n` are uniformly bounded by
+`V := (∫ x² pX) + (∫ pX)·B` where `B` is any upper bound of `u`. This is the
+`n`-uniform majorant that drives the (parked) negMulLog tail estimate.
+
+Genuine, sorry-free: combines `convDensityAdd_second_moment` (Tonelli, closed
+above) with `hu_bdd` (regularity) and `∫ pX ≥ 0`.
+@audit:ok -/
+theorem convDensityAdd_second_moment_unif_bdd
+    {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (hpX_int : Integrable pX volume)
+    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    (u : ℕ → ℝ) (hu_pos : ∀ n, 0 < u n) (hu_bdd : BddAbove (Set.range u)) :
+    ∃ V : ℝ, ∀ n,
+      ∫ x, x ^ 2 * convDensityAdd pX (gaussianPDFReal 0 ⟨u n, (hu_pos n).le⟩) x ∂volume ≤ V := by
+  obtain ⟨B, hB⟩ := hu_bdd
+  have hB_nn : ∀ n, u n ≤ B := fun n => hB ⟨n, rfl⟩
+  have hmass_nn : 0 ≤ ∫ y, pX y ∂volume := integral_nonneg hpX_nn
+  refine ⟨(∫ x, x ^ 2 * pX x ∂volume) + (∫ y, pX y ∂volume) * B, fun n => ?_⟩
+  rw [convDensityAdd_second_moment hpX_nn hpX_meas hpX_int hpX_mom (hu_pos n)]
+  have : (∫ y, pX y ∂volume) * u n ≤ (∫ y, pX y ∂volume) * B :=
+    mul_le_mul_of_nonneg_left (hB_nn n) hmass_nn
+  linarith
 
 /-- **Layer 2 UT witness (genuine).** Uniform tightness of the entropy integrands
 along any sequence `u : ℕ → ℝ` with `u n > 0`. Vitali input `hut`.
@@ -140,6 +299,23 @@ crux — bounding this uniformly in `n` by the second-moment tail of `f_n`
 requires an elementary `|negMulLog t|`-vs-`t·(1+log-tail)` estimate combined with
 the Gaussian log-tail `|log f_n(x)| ≲ 1 + x²`. There is no Mathlib bridge for this
 (inventory category C / 自作 #2). Parked as the approximate-identity wall.
+
+GENUINE-ATTEMPT FINDING (2026-06-04): the `s = Icc (-R) R` reduction and the
+`n`-uniform second-moment majorant are now genuine (see
+`convDensityAdd_second_moment_unif_bdd`, sorry-free, which supplies a uniform
+`V ≥ ∫ x² f_n`). The remaining core is the negMulLog tail bridge, which was attempted
+and found genuinely wall-bound: the heuristic `|log f_n(x)| ≲ 1 + x²` does NOT hold
+for a general L¹ density `pX`. The upper bound `f_n(x) ≤ (2π u n)^{-1/2}` is uniform,
+but a matching LOWER bound `f_n(x) ≳ exp(-c x²)` (needed to keep `-log f_n ≲ x²`) can
+fail: a `pX` with thinner-than-Gaussian tails makes `(pX ∗ g_{u n})(x)` decay faster
+than any `exp(-c x²)`, so `-log f_n(x)` grows super-polynomially and no `1 + x²`
+envelope exists. Hence `-f_n log f_n` is NOT controlled by the second-moment tail of
+`f_n` alone, and the tail integral cannot be driven to `0` uniformly in `n` by the
+second-moment route. loogle re-confirmed (2026-06-04): 0 Mathlib lemmas mentioning
+both `Integrable`/`_ ≤ _` and `Real.negMulLog`, and no `UnifTight` constructor from an
+integrable majorant. Genuinely Mathlib-absent — honest park as the approx-identity
+wall (the closure plan `epi-g2-vitali-closure-plan` Phase B addresses UT via a
+maxent-bound framing, not the second-moment route attempted here).
 
 HONESTY FIX (2026-06-04): the second moment `∫ x² f_n = ∫ x² pX + (∫ pX)·u n` is
 uniform in `n` only when `u` is bounded. Without it (`sup u n = ∞`) the tail mass

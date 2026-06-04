@@ -213,6 +213,7 @@ import InformationTheory.Shannon.EPIScoreCrossTermOrth
 import InformationTheory.Shannon.EPIApproxIdentityL1
 import InformationTheory.Shannon.EPIVitaliAE
 import InformationTheory.Shannon.EPIVitaliUnifTight
+import InformationTheory.Shannon.EPIVitaliUI
 import InformationTheory.Shannon.EPIConvDensity
 import InformationTheory.Shannon.EPIConvDensityNormalization
 import InformationTheory.Shannon.EPIConvDensityGaussianGateway

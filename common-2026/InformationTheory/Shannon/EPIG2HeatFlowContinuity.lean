@@ -18,6 +18,7 @@ import InformationTheory.Shannon.FisherInfoV2DeBruijnPerTime
 import InformationTheory.Shannon.FisherInfoV2DeBruijnAssembly
 import InformationTheory.Shannon.EPIVitaliAE
 import InformationTheory.Shannon.EPIVitaliUnifTight
+import InformationTheory.Shannon.EPIVitaliUI
 
 /-!
 # G2: heat-flow entropy-power continuity at the endpoint `t = 0⁺`
@@ -139,39 +140,12 @@ density convergence to entropy-integral convergence is genuine Mathlib machinery
 (`tendsto_Lp_of_tendsto_ae` + `tendsto_integral_of_L1'`, both `[IsFiniteMeasure]`-
 free), modulo the `UnifIntegrable` / `UnifTight` witnesses (parked). -/
 
-/-- **Layer 2 UI witness (parked).** Uniform integrability of the entropy
-integrands along any sequence `u : ℕ → ℝ` with `u n > 0`. Vitali input `hui`.
-
-HONESTY FIX (2026-06-04): the precondition `hu_bdd : BddAbove (Set.range u)` is added
-(matching the UT witness `negMulLog_convDensity_unifTight`). Without it (`sup u n =
-∞`) the variance `∫ x² f_n = ∫ x² pX + (∫ pX)·u n` is not `n`-uniform and the
-uniform-integrability tail estimate genuinely fails; the previous signature was
-under-hypothesised. The sole consumer instantiates with a convergent `u → 0` (hence
-bounded), so the precondition is satisfied there.
-
-Independent honesty audit 2026-06-04 (fresh subagent, commit 36fc577): residual
-honest, classification correct. `hu_bdd : BddAbove (Set.range u)` is a REGULARITY
-precondition on the input sequence `u` (boundedness of the variances `u n`), NOT a
-bundling of the UI conclusion — it asserts no `UnifIntegrable` value and is
-genuinely *produced* by the sole consumer from sequence convergence
-(`(hv_lim.mono_right nhdsWithin_le_nhds).bddAbove_range`). It corrects a previously
-under-hypothesised (false-as-framed for unbounded `u`) signature, the honest
-direction. The `wall:approx-identity-L1` classification is backed: loogle confirms no
-Mathlib lemma mentioning both `Integrable` and `Real.negMulLog` (0 hits) and the
-abstract `UnifIntegrable` API has no Gaussian-conv-density specialisation — the
-negMulLog tail bridge is genuinely Mathlib-absent. Body sorry is the only own-file
-sorry. NOT load-bearing.
-@residual(wall:approx-identity-L1) -/
-theorem negMulLog_convDensity_unifIntegrable
-    {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_int : Integrable pX volume)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
-    (u : ℕ → ℝ) (hu_pos : ∀ n, 0 < u n) (hu_bdd : BddAbove (Set.range u)) :
-    UnifIntegrable
-      (fun n => fun x =>
-        Real.negMulLog (convDensityAdd pX (gaussianPDFReal 0 ⟨u n, (hu_pos n).le⟩) x))
-      1 volume := by
-  sorry
+/-! The UI witness `negMulLog_convDensity_unifIntegrable` now lives in
+`EPIVitaliUI.lean` (genuine `withDensity` probability framing + Gaussian
+maximum-entropy upper bound; only the de la Vallée-Poussin indicator-tail core
+parked under `wall:approx-identity-L1`). It carries the extra regularity
+precondition `hpX_mass : (∫ y, pX y) = 1` (needed for the probability framing,
+supplied by the layer-2 consumer). Consumed below by the layer-2 machinery. -/
 
 /-- **Layer 2 (genuine lifting machinery).** Density-level entropy-integral
 convergence: given the parked layer-1 input (approximate-identity L¹ convergence),
@@ -259,7 +233,7 @@ theorem differentialEntropy_convDensity_integral_tendsto
   have hv_bdd : BddAbove (Set.range v) :=
     (hv_lim.mono_right nhdsWithin_le_nhds).bddAbove_range
   have hui : UnifIntegrable F 1 volume :=
-    negMulLog_convDensity_unifIntegrable hpX_nn hpX_meas hpX_int hpX_mom v hv_pos hv_bdd
+    negMulLog_convDensity_unifIntegrable hpX_nn hpX_meas hpX_int hpX_mass hpX_mom v hv_pos hv_bdd
   have hut : UnifTight F 1 volume :=
     negMulLog_convDensity_unifTight hpX_nn hpX_meas hpX_int hpX_mom v hv_pos hv_bdd
   -- Vitali via the subsequence route: `tendsto_Lp_of_tendsto_ae` needs full-sequence
