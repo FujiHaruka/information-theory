@@ -975,3 +975,22 @@ conclusion) check」が欠落**していたため、本 defect (D3) は `audit:P
       ratio 路を別途完成、の 2 択。どちらも mechanical refactor ではなく実作業。proof-pivot-advisor の
       「G3 transitively false-dependent → ratio reframe」verdict は **verbatim check で訂正** (監査の単一ルート
       過大評価、memory `feedback_independent_wall_recheck`)。
+
+11. **(2026-06-05, 独立壁再確認 — 事実 3(b) `wall:blachman-general-density` を FALSE WALL と訂正)**:
+    本 plan 事実 3(b) (`:93, :113`) 「一般 density `IsBlachmanConvReady` producer は in-house 不在
+    (rg/loogle Found 0)、非 Gaussian path 密度用 producer 無し ≈ Mathlib 壁級」は **実コードと矛盾、撤回**。
+    一般密度 producer `isBlachmanConvReady_convDensityAdd_gaussian`
+    (`EPIBlachmanGeneralDensity.lean:224`、19/19 field genuine、`lake env lean` clean、`#print axioms`
+    sorryAx-free、`@audit:ok` commit `84ecb97`) が実在し、任意 a.c. 密度 pX/pY (regularity のみ) から
+    per-`t` の `IsBlachmanConvReady (conv pX g_t) (conv pY g_t)` を供給する。本 plan の wall 判定は producer
+    landing (同日 commit `b3b0356`/`84ecb97`) が判定**後**だった drift。詳細独立 inventory →
+    `epi-blachman-general-density-recheck-inventory.md`。
+    - **帰結**: 案 D fallback の `@residual(...,wall:blachman-general-density)` compound 書換 (`:227, :623,
+      :699, :806`) は前提が消えるため **不要**。EPIStamInequalityBody.lean 等の「CAVEAT: in-tree witness
+      yet (Gaussian only)」コメントは **stale** (incidental 訂正候補)。
+    - **判断ログ 10 の G3 closure 2 択のうち (a) が本線確定**: difference G3 rescale の 6 per-`s`
+      AC/integrability + s=1 端点 assembly は、Blachman 壁が消えたため pure assembly に縮小 (entropic CLT
+      でも Blachman でもない)。新規 closure plan `epi-case1-difference-g3-closure-plan` を起草、case 1 を
+      方針 X (a.c.+有限分散+有限エントロピー precondition) で headline `stamToEPIBridge_holds` まで genuine
+      化する順序付き計画に展開。本 plan の役割 (G1 ratio reframe CLOSED) は変わらず、G3 difference 側を後継
+      plan に委譲。
