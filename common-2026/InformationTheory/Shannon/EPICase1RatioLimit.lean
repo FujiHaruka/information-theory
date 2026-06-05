@@ -180,7 +180,16 @@ This is a **regularity** bundle (IndepFun / a.c. / fibre integrabilities / mean 
 variance-bound + integrabilities), **NOT** load-bearing: it never contains the
 conclusion `Tendsto … N(B)` nor either envelope inequality — those are derived in
 `entropyPower_rescaled_path_tendsto` by calling the genuine lemmas with these
-preconditions. -/
+preconditions.
+
+Independent honesty audit 2026-06-05: non-load-bearing AFFIRMED. Each conjunct was
+matched verbatim to a regularity precondition of `differentialEntropy_add_ge_of_indep`
+(lower bundle, X:=B Y:=A/√t) or `differentialEntropy_le_gaussian_of_variance_le`
+(upper bundle). The variance-bound conjunct `∫(x-m)² ≤ varA/t + v_B` is the standard
+`h_var` max-entropy input (not the squeeze core): `varA` is pinned `≥ Var A` by the
+all-t requirement and the squeeze limit `N(B)` is independent of `varA`'s value. Not
+vacuous (real constraints, satisfiable by Gaussian-smoothed a.c. paths, falsifiable by
+non-a.c. paths; conclusion nontrivial via the separate `hB_law`/`hv_B`). -/
 def IsRescaledPathRegular (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (varA : ℝ) (v_B : ℝ≥0) : Prop :=
   (∀ t : ℝ, 0 < t →
@@ -267,10 +276,19 @@ by genuine Mathlib / in-tree lemmas, and their common limit is computed here.
 makes the upper envelope `varA/t + v_B` an explicit decaying-to-`v_B` function whose
 limit is proved genuinely; it is **not** the conclusion bundled in.
 
-@audit:ok candidate (pending independent audit): own body genuine, preconditions are
-regularity (IndepFun / a.c. / fibre integrability / mean+variance-bound), none
-load-bearing. The two envelopes come from genuine `differentialEntropy_add_ge_of_indep`
-and `differentialEntropy_le_gaussian_of_variance_le`. -/
+@audit:ok (independent honesty audit 2026-06-05: own body + transitive sorryAx-free
+[propext, Classical.choice, Quot.sound]. `IsRescaledPathRegular` bundle is regularity,
+NOT load-bearing — its conjuncts match verbatim the regularity preconditions of the two
+genuine envelope lemmas (lower: `differentialEntropy_add_ge_of_indep` X:=B,Y:=A/√t, 10
+IndepFun/≪/Integrable slots; upper: `differentialEntropy_le_gaussian_of_variance_le`
+ac/var-bound/integrabilities) and contains neither envelope inequality nor the conclusion.
+Variance-bound conjunct `∫(x-m)² ≤ varA/t + v_B` is the standard `h_var` input of the
+genuine max-entropy lemma: `varA` (only `0 ≤ varA`) is pinned `≥ Var A` by requiring the
+bound to hold for all t (real-measure regularity datum), and the limit `N(B) = 2πe·v_B`
+is computed independently of `varA` (since varA/t → 0) — `varA` sets only the decay rate,
+not the limit, so it does not smuggle the conclusion. Vacuity: conclusion is nontrivial
+via separate `hB_law`/`hv_B` (N(B) = 2πe·v_B ≠ 0). Sufficiency: squeeze of constant lower
++ decaying upper to common limit N(B) is semantically valid.) -/
 theorem entropyPower_rescaled_path_tendsto
     (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hA : Measurable A) (hB : Measurable B)
@@ -388,11 +406,15 @@ Genuine analytic glue — **own body is `sorry`-free**, and now **transitively
 sorryAx-free** (§3 `entropyPower_rescaled_path_tendsto` is genuinely closed):
 `#print axioms` = `[propext, Classical.choice, Quot.sound]`.
 
-@audit:ok candidate (pending independent audit): own body genuine + §3 closed; the
-threaded `h_scale_X/Y/sum` are regularity preconditions of `entropyPower_path_scaling`
-(a.c. + negMulLog integrability), `hZX_law`/`hZY_law`/`hZXZY_indep`/`hZX_ac`/`hZY_ac`/
-`hZXZY_ac` are noise regularity, `varX/Y/S` + `h_reg_X/Y/S` are §3's regularity bundles
-threaded transparently — no EPI/Stam core bundled. -/
+@audit:ok (independent honesty audit 2026-06-05: own body + transitive sorryAx-free
+[propext, Classical.choice, Quot.sound]. `h_scale_X/Y/sum` are regularity preconditions of
+`entropyPower_path_scaling` (a.c. + negMulLog integrability), `hZX_law`/`hZY_law`/
+`hZXZY_indep`/`hZX_ac`/`hZY_ac`/`hZXZY_ac` are noise Gaussian regularity, `varX/Y/S` +
+`h_reg_X/Y/S` are §3's `IsRescaledPathRegular` bundles (audited non-load-bearing, see §3)
+threaded transparently. The deliverable is genuine analytic glue (scaling cancellation via
+log_mul, three §3 path limits, Gaussian additivity, log-continuity composition → R t → 0);
+no EPI/Stam core is bundled. Sufficiency holds: both log arguments converge to N(Z_X)+N(Z_Y)
+[via §3 + `entropyPower_gaussian_additivity`], so log-ratio gap → 0.) -/
 theorem csiszarLogRatioGap_tendsto_zero_atTop
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y)
