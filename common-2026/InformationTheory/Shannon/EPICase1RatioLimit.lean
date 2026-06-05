@@ -1853,41 +1853,40 @@ fields use the genuine convolution density. The `pX` series is a regularity prec
 (`X` has a Lebesgue density + finite variance), discharged genuinely from `hX_ac`/`h_mom_X`.
 
 The `integrable_deriv` field — interval-integrability of `t ↦ (1/2)·J(density_t)` on `[0,T]`
-— is the genuine residual: `gaussianConv_fisher_le_inv_var` bounds `J(pX∗g_t) ≤ 1/t`, which
-is *not* interval-integrable near `t = 0` (`∫₀ᵀ 1/t dt = +∞`), so the available upper bound is
-too weak to discharge the field for a general input `X`. The precise root cause is
-**under-hypothesization, not a Mathlib wall**: by de Bruijn, `∫₀ᵀ (1/2)J(pX∗g_t) dt =
-h(X+√T·Z) − h(X)`, which is finite iff `h(X) > −∞`; the producer's earlier preconditions
-(`hX_ac` + finite second moment `h_mom_X`) do NOT force finite differential entropy / finite
-Fisher of `X`, so the integral can genuinely diverge for some a.c. finite-2nd-moment `X`.
+— is now closed by **design (b)** (strengthened input regularity), with only the
+`t`-measurability of the integrand remaining parked.
 
-**Precondition now threaded (2026-06-05)**: `h_fisher_X : fisherInfoOfDensity pX ≠ ∞`
-(`pX = (P.map X).rnDeriv volume`), a *finite-Fisher regularity precondition* — NOT
-load-bearing (it does not bundle the de Bruijn analytic core; it merely asserts the input's
-Fisher information is finite). With it, the honest closure route is:
+**Closure (2026-06-05, design (b))**. Three input-regularity preconditions are now threaded
+(`hreg_pX`, `hnorm_pX`, `hready_pX` — see signature below), together with the earlier
+`h_fisher_X`. They state that `pX = (P.map X).rnDeriv volume` is a *regular* L¹ density
+(`IsRegularDensityV2 pX`: differentiable + strictly positive + tails → 0 + integrable
+derivative), is normalized (`∫ pX = 1`), and satisfies the `Integrable`/boundedness/positivity
+bundle `IsBlachmanConvReady pX (gaussianPDFReal 0 v)` against every centered Gaussian
+(`h_fisher_X` adds finiteness of the input's Fisher info). **None of these encode the
+Fisher-monotonicity / de Bruijn inequality core** — they are regularity preconditions, NOT
+load-bearing.
 
-1. **Fisher monotonicity (Stam)** `J(pX∗g_t) ≤ J(pX)` for every `t ≥ 0` (convolution with a
-   Gaussian only decreases Fisher information). Combined with the precondition this gives a
-   *uniform* bound `(1/2)·J(density_t).toReal ≤ (1/2)·J(pX).toReal` on `[0,T]`, finite and
-   `t`-independent. The monotonicity content is now **landed genuinely** as the sorryAx-free
-   `fisherInfoOfDensity_convDensityAdd_le` (PB-2b, = `convex_fisher_bound_of_ready` at `lam = 1`).
-   It is **NOT instantiable for the producer's general `pX`**, however: it requires
-   `IsRegularDensityV2 pX` (differentiable + strictly positive everywhere + tails → 0) and the
-   boundedness fields of `IsBlachmanConvReady pX g_t` (bounded `pX`, bounded `deriv pX`), none of
-   which a general L¹ a.c. density with finite second moment need satisfy. (`gaussianConv_fisher_le_inv_var`
-   gives only the `t`-dependent `≤ 1/t`; loogle confirms Mathlib has no general `fisherInfo` /
-   `Blachman` API.) Closing the field thus needs Fisher monotonicity for *general* L¹ `pX`
-   (genuine score-of-convolution work, a Mathlib gap) **or** a strengthened input-regularity
-   precondition on `X` (regular density + bounded derivative) so PB-2b applies directly.
-2. **`t`-measurability** of `t ↦ J(density_t).toReal` (AEStronglyMeasurable on `Ι 0 T`), needed
-   by `Measure.integrableOn_of_bounded`. Also a separate analytic obstacle.
+With them the bound is now **GENUINE**:
 
-Both pieces are tracked in the owning plan. The monotonicity *lemma* is now landed
-(`fisherInfoOfDensity_convDensityAdd_le`, PB-2b, genuine) but the remaining mathematical
-content for *this* producer is the regularity gap: either general-`pX` Fisher monotonicity or a
-strengthened input-regularity precondition (see piece 1 above). The rest of the group is
-genuine, and the finite-Fisher precondition is now in place so PB-6 can thread it to the case-1
-wrapper.
+1. **Fisher monotonicity (Stam), genuine.** For every `t ∈ Ioc 0 T`, `t.toNNReal ≠ 0`, so
+   `g_t := gaussianPDFReal 0 t.toNNReal` is a regular normalized density
+   (`isRegularDensityV2_gaussianPDFReal`, `integral_gaussianPDFReal_eq_one`). PB-2b
+   (`fisherInfoOfDensity_convDensityAdd_le`, sorryAx-free, = `convex_fisher_bound_of_ready` at
+   `lam = 1`) then fires directly on `fX := pX`, `fY := g_t`, giving the *uniform* bound
+   `(1/2)·J(density_t).toReal ≤ (1/2)·J(pX).toReal =: C` on `Ioc 0 T`, finite and `t`-independent.
+   (The bridge `fisherInfoOfMeasureV2 _ f = fisherInfoOfDensity f` is `rfl`, so the measure
+   argument is dropped; the integrand reduces to `(1/2)·J(convDensityAdd pX g_t).toReal`.) This
+   replaces the previous full park, where the entire field was a single `sorry` because PB-2b was
+   deemed not instantiable for a general L¹ `pX` — the design-(b) preconditions make it
+   instantiable, and the bound is now machine-checked with no `sorry`.
+2. **`t`-measurability** of `t ↦ J(density_t).toReal` (AEStronglyMeasurable on `Ι 0 T`), required
+   by `Measure.integrableOn_of_bounded`. The `(t,x)`-jointly measurable
+   `logDeriv (convDensityAdd pX g_t)` feeding the `fisherInfoOfDensity` lintegral has no direct
+   Mathlib parameter-measurability lemma; this is the **sole remaining residual** (parked,
+   `@residual(plan:epi-case1-debruijn-producer-plan)`).
+
+The rest of the group is genuine, and the finite-Fisher precondition is in place so PB-6 can
+thread it to the case-1 wrapper.
 
 @residual(plan:epi-case1-debruijn-producer-plan)
 @audit-note: independent honesty audit (2026-06-05, fresh auditor, commit c0cd760).
@@ -1906,17 +1905,32 @@ correct home (resolve by threading the precondition). NOTE: the plan (`:403-404`
 predicted this field closes via `gaussianConv_fisher_le_inv_var` claiming `J ≤ 1/t` is
 "continuous bounded" on `[0,T]` — that prediction is mathematically WRONG (`1/t` is unbounded
 at `t=0`); the implementer correctly caught the drift and parked instead.
-UPDATE 2026-06-05: the finite-Fisher regularity precondition `h_fisher_X` is now threaded
-(see docstring above for the two remaining closure pieces — Stam monotonicity + t-measurability);
-`integrable_deriv` remains the sole sorry. `h_fisher_X` is a regularity precondition (asserts only
-finiteness of the input's Fisher info), NOT load-bearing. -/
+UPDATE 2026-06-05 (design (b)): the uniform Fisher-monotonicity bound is now GENUINE (PB-2b
+`fisherInfoOfDensity_convDensityAdd_le` fires on `pX`/`g_t` via the threaded input-regularity
+preconditions `hreg_pX`/`hnorm_pX`/`hready_pX`/`h_fisher_X`). The `integrable_deriv` field is no
+longer fully parked: its sole remaining `sorry` is the `t`-measurability of the integrand
+(AEStronglyMeasurable on `Ι 0 T`), a separate plumbing obstacle (no direct Mathlib
+parameter-measurability lemma for the `logDeriv (convDensityAdd …)` lintegral). All four added
+preconditions are regularity (regular density / normalization / Integrable-boundedness bundle /
+finite Fisher), NOT load-bearing — they do not encode the inequality core. -/
 noncomputable def isDeBruijnRegularityHyp_of_methodX_unitnoise
     (X Z_X : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
     (hZX_law : P.map Z_X = gaussianReal 0 1)
     (hX_ac : (P.map X) ≪ volume) (h_mom_X : Integrable (fun ω => (X ω) ^ 2) P)
     (h_fisher_X : InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity
-        (fun x => ((P.map X).rnDeriv volume x).toReal) ≠ ∞) :
+        (fun x => ((P.map X).rnDeriv volume x).toReal) ≠ ∞)
+    -- Design (b) input-regularity preconditions (regularity, NOT load-bearing):
+    -- they assert only that the input density `pX` is a *regular* L¹ density (differentiable,
+    -- strictly positive, tails → 0, integrable derivative), is normalized, and satisfies the
+    -- `Integrable`/boundedness/positivity bundle `IsBlachmanConvReady` against any centered
+    -- Gaussian. None of them encode the de Bruijn / Fisher-monotonicity inequality core.
+    (hreg_pX : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
+        (fun x => ((P.map X).rnDeriv volume x).toReal))
+    (hnorm_pX : ∫ x, ((P.map X).rnDeriv volume x).toReal ∂volume = 1)
+    (hready_pX : ∀ v : ℝ≥0, v ≠ 0 →
+        InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady
+          (fun x => ((P.map X).rnDeriv volume x).toReal) (gaussianPDFReal 0 v)) :
     InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P := by
   classical
   -- Real density witness for `X` from a.c.
@@ -1964,20 +1978,56 @@ noncomputable def isDeBruijnRegularityHyp_of_methodX_unitnoise
     have : t.toNNReal = (⟨t, ht.le⟩ : ℝ≥0) := by
       apply NNReal.eq; exact Real.coe_toNNReal t ht.le
     rw [this]
-  · -- integrable_deriv: the uniform-bound route is `(1/2)·J(density_t) ≤ (1/2)·J(pX)` for all
-    -- `t`, finite by `h_fisher_X`, giving an `IntervalIntegrable` constant majorant on `[0,T]`.
-    -- The Fisher-monotonicity content is now genuinely landed as the sorryAx-free lemma
-    -- `fisherInfoOfDensity_convDensityAdd_le` (PB-2b above, = `convex_fisher_bound_of_ready`
-    -- at `lam = 1`). It is, however, NOT instantiable here: it requires `IsRegularDensityV2 pX`
-    -- (differentiable + strictly positive everywhere + tails → 0) and the boundedness fields of
-    -- `IsBlachmanConvReady pX g_t` (`pX`, `deriv pX` bounded). The producer's `pX =
-    -- (P.map X).rnDeriv volume` is a *general* L¹ a.c. density with finite second moment and need
-    -- NOT satisfy any of these. The remaining mathematical content is therefore Fisher
-    -- monotonicity for *general* L¹ densities (genuine score-of-convolution work, a Mathlib gap),
-    -- or a strengthened input-regularity precondition on `X` so PB-2b applies. Plus
-    -- (2) t-measurability of the integrand. `h_fisher_X` is in place for the bound's RHS.
+  · -- integrable_deriv: design (b) — strengthen the input regularity so PB-2b
+    -- (`fisherInfoOfDensity_convDensityAdd_le`) applies directly, giving the uniform bound
+    -- `(1/2)·J(density_t).toReal ≤ (1/2)·J(pX).toReal =: C` for every `t ∈ Ioc 0 T`.
+    -- The bound is GENUINE (no sorry); the only remaining residual is the `t`-measurability of
+    -- the integrand, parked separately.
     intro T hT
-    -- @residual(plan:epi-case1-debruijn-producer-plan)
-    sorry
+    -- bridge (item 1): `fisherInfoOfMeasureV2 _ f = fisherInfoOfDensity f` (rfl, measure dropped).
+    simp only [InformationTheory.Shannon.FisherInfoV2.fisherInfoOfMeasureV2_def]
+    set C : ℝ := (1 / 2) *
+      (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity pX).toReal with hC_def
+    -- uniform pointwise bound on `Ioc 0 T`: each `t > 0` gives `t.toNNReal ≠ 0`, so the Gaussian
+    -- `g_t := gaussianPDFReal 0 t.toNNReal` is a regular normalized density, and PB-2b fires.
+    have hbound : ∀ t ∈ Set.Ioc (0 : ℝ) T,
+        (1 / 2) * (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity
+            (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
+              (gaussianPDFReal 0 t.toNNReal))).toReal ≤ C := by
+      intro t ht
+      have htpos : 0 < t := ht.1
+      have hv_ne : t.toNNReal ≠ 0 := by
+        simp only [ne_eq, Real.toNNReal_eq_zero, not_le]; exact htpos
+      have hregY : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
+          (gaussianPDFReal 0 t.toNNReal) :=
+        InformationTheory.Shannon.EPIBlachmanGaussianWitness.isRegularDensityV2_gaussianPDFReal hv_ne
+      have hnormY : ∫ x, gaussianPDFReal 0 t.toNNReal x ∂volume = 1 :=
+        ProbabilityTheory.integral_gaussianPDFReal_eq_one 0 hv_ne
+      have hmono := fisherInfoOfDensity_convDensityAdd_le pX (gaussianPDFReal 0 t.toNNReal)
+        hreg_pX hregY hnorm_pX hnormY (hready_pX _ hv_ne)
+      simp only [hC_def]
+      exact mul_le_mul_of_nonneg_left hmono (by norm_num)
+    rw [intervalIntegrable_iff_integrableOn_Ioc_of_le hT.le]
+    refine MeasureTheory.Measure.integrableOn_of_bounded
+      (by
+        simp only [ne_eq]
+        exact (measure_Ioc_lt_top).ne)
+      ?_meas (M := C) ?_bdd
+    · -- `t`-measurability of `t ↦ (1/2)·J(convDensityAdd pX g_t).toReal`: the `(t,x)`-jointly
+      -- measurable `logDeriv (convDensityAdd pX (gaussianPDFReal 0 t.toNNReal))` feeding the
+      -- `fisherInfoOfDensity` lintegral has no direct Mathlib parameter-measurability lemma.
+      -- The bound above is genuine; this is the sole remaining analytic obstacle.
+      -- @residual(plan:epi-case1-debruijn-producer-plan)
+      sorry
+    · -- pointwise bound from the genuine `hbound`, transported to the `Ioc`-restricted measure.
+      refine (ae_restrict_iff' measurableSet_Ioc).mpr (Filter.Eventually.of_forall ?_)
+      intro t ht
+      have hnn : (0 : ℝ) ≤ (1 / 2) *
+          (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity
+            (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
+              (gaussianPDFReal 0 t.toNNReal))).toReal :=
+        mul_nonneg (by norm_num) ENNReal.toReal_nonneg
+      rw [Real.norm_of_nonneg hnn]
+      exact hbound t ht
 
 end InformationTheory.Shannon.EPICase1RatioLimit
