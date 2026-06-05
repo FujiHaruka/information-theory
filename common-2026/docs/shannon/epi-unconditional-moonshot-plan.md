@@ -226,7 +226,7 @@ Gaussian saturation / L-EPI1 Stam / L-EPI2 de Bruijn。残 sorry (G3 rescale / a
 
 | # | sub-plan slug | スコープ | 依存 | 状態 |
 |---|---|---|---|---|
-| S1 | `epi-entropypower-retype-plan` | 柱 1: (a)(b) 二層定義導入 (`differentialEntropyExt : Measure ℝ → EReal`、新 `entropyPower : Measure ℝ → ℝ≥0∞`) + (a)→(b) coercion bridge lemma 群。a.c./特異 判定述語。`EReal.toENNReal_bot` 整合。 | Phase 0 (在庫確定) | 📋 |
+| S1 | `epi-entropypower-retype-plan` | 柱 1: (a)(b) 二層定義導入 (`differentialEntropyExt : Measure ℝ → EReal`、新 `entropyPower : Measure ℝ → ℝ≥0∞`) + (a)→(b) coercion bridge lemma 群。a.c./特異 判定述語。`EReal.toENNReal_bot` 整合。 | Phase 0 (在庫確定) | 📋 **plan 起草済** ([`epi-entropypower-retype-plan.md`](epi-entropypower-retype-plan.md)、Phase A–D) |
 | S2 | `epi-downstream-report-plan` | 柱 1 cont.: 36-file の `differentialEntropy`/`entropyPower` 参照を (a)(b) いずれが必要か分類し re-port。statement-層 shim + import 順序の DAG。AWGN/Fisher/de Bruijn は (a) のまま不変であることを検証する re-port。 | S1 | 📋 |
 | S3 | `epi-singular-mixed-case-plan` | 柱 2: case 2 (混合) + case 3 (両特異) の新規補題。`condDifferentialEntropy_le` + `condDifferentialEntropy_indep_add_eq` から ℝ≥0∞ `N(X+Y) ≥ N(X)` への lift。case 3 は `zero_le` 自明。3-case 判定 + dispatch。 | S1、S2 (statement 型) | 📋 |
 | — | (case 1 a.c. core closure) | 柱 3: 既存 plan 群を**流用** (新規 sub-plan を作らない)。`epi-stam-to-conclusion-plan` / `epi-csiszar-ratio-reframe-plan` / `epi-richness-route-b-plan` / `epi-g2-*` が SoT。 | (進行中) | 既存 |
