@@ -433,6 +433,22 @@ site §3).
   entropy-finiteness identification bridge + second-moment transport, exceeding the
   bridge budget of this lemma.
 
+Independent honesty audit 2026-06-05 (honest_residual AFFIRMED): (1) `h_var_bound`
+pass-through (`refine ⟨hμ_ac, h_var_bound t ht, …⟩`) is NOT circular `:= h`: its type ≡
+ONE conjunct of the constructed regularity bundle, not the theorem's conclusion. The
+conclusion is the whole `IsRescaledPathRegular` bundle (regularity, def-site `@audit:ok`);
+the substantive analytic content (squeeze / `N → N(B)`) lives entirely in the separate
+`@audit:ok` consumer `entropyPower_rescaled_path_tendsto`. The variance bound is a method-X
+regularity precondition (`Var A < ∞`) the closure plan explicitly acknowledges as
+un-dischargeable in route X (honest naming `_of_methodX`, NOT `_unconditional`) —
+regularity transport, not conclusion smuggling. (2) Genuine conjuncts (`h_indep`/`hW_ac`/
+`hμ_ac`/`h_fibre_ae`/`hκ_v`) verified non-circular: built from `hAB.comp` /
+`map_add_absolutelyContinuous` / `condDistrib_ae_eq_of_measure_eq_compProd` +
+`prod_map_affine_eq_compProd` (`EPIG2ConvEntropyMonotone.lean`, all `@audit:ok`). (3) 9
+parked sorrys all `@residual(plan:epi-case1-difference-g3-closure-plan)` (plan exists),
+classification correct: all are integrability / a.c. regularity obligations (Gaussian-fibre
+tractable), none load-bearing. (4) `#print axioms` = sorryAx present (type-check done, NOT
+proof done — expected). No deprecated tags / out-of-vocab slugs.
 @residual(plan:epi-case1-difference-g3-closure-plan) -/
 theorem isRescaledPathRegular_of_methodX
     (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
