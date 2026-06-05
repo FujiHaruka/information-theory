@@ -27,23 +27,29 @@ We **instantiate the canonical product space** `Ω := ℝ × ℝ`,
 `μ.map X = withDensity pX`, `μ.map Z = gaussianReal 0 v_Z`, and the 8 preconditions are
 discharged here (or honestly parked).
 
-## Status — type-check done (3 sorry / 3 residual)
+## Status — type-check done (1 sorry / 1 residual)
 
-Of the 8 per-`n` preconditions of the Ω-level (β) lower bound, **5 are discharged
+Of the 8 per-`n` preconditions of the Ω-level (β) lower bound, **7 are discharged
 genuinely** here from the canonical construction:
 
 * per-fibre absolute continuity, `p log p` integrability, fibre-entropy integrability
   (translation invariance: each fibre is a translate `pX(· − √s·z)` of `μ.map X`);
 * joint absolute continuity (per-fibre `≪ volume ≪ μ.map W`, the marginal having a
   strictly positive density);
+* the **two cross terms** (per-fibre (5) + outer (7)): now genuinely closed via the
+  `s`-uniform polynomial majorant `|log p_t| ≤ A + B·x²`
+  (`convDensityAdd_logFactor_poly_majorant`, made public in
+  `FisherInfoV2DeBruijnAssembly`) integrated against `pX`'s translate moments
+  (helpers `hLog` / `hfib_eq` / `hfib_dom_int` in the proof body);
 * marginal log-density integrability (`∫ negMulLog p_t < ∞`, the genuine
   `convDensityAdd_negMulLog_integrable`).
 
-The **3 remaining preconditions are parked** (`@residual(plan:...)`): the two cross
-terms (per-fibre + outer) and the joint llr integrability (KL finiteness). They couple
-the fibre density with `log p_t` and need the `s`-uniform polynomial majorant
-`|log p_t| ≤ A + B·x²` (currently `private` in `FisherInfoV2DeBruijnAssembly`) integrated
-against `pX`'s second moment. Closure plan:
+The **1 remaining precondition is parked** (`@residual(plan:...)`): the joint llr
+integrability `h_int` (= KL finiteness `D(joint ‖ product) < ∞`). This is a separate
+compProd / per-fibre chain-rule assembly (`rnDeriv_compProd_eq_kernel_rnDeriv` +
+`rnDeriv_mul_rnDeriv` + the `llr` value identity `log((κ_z).rnDeriv (μ.map W)) =ᵐ[κ_z]
+log q_z − log p_t`), reducing to the already-discharged fibre/outer integrabilities; it
+is NOT blocked by the (former) private majorant. Closure plan:
 `docs/shannon/epi-g2-general-sandwich-moonshot-plan.md` Phase 1.
 -/
 
@@ -323,16 +329,6 @@ theorem negMulLog_convDensity_entropy_ge_density
     refine Measure.AbsolutelyContinuous.compProd_right ?_
     filter_upwards [hκ_v] with z hz
     simpa using hz.trans vol_ac_W
-  -- (2) joint llr integrability (= KL finiteness `D(joint ‖ product) < ∞`).  This is the
-  -- genuine analytic core: `∫ p_z(x) · log(p_z(x)/p_t(x))` averaged over `μ.map Z`, which
-  -- decomposes into the (4) fibre-entropy term and the (5)/(7) cross terms; it needs the
-  -- same coupled `log p_t` majorant analysis as the cross terms.
-  -- @residual(plan:epi-g2-general-sandwich-moonshot-plan)
-  have h_int : Integrable
-      (llr ((μ.map Z) ⊗ₘ condDistrib W Z μ)
-        ((μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map W)))
-      ((μ.map Z) ⊗ₘ condDistrib W Z μ) := by
-    sorry
   -- (4) per-fibre `p log p` integrability: transport along the translation, then
   -- identify with `∫ pX log pX = -∫ negMulLog pX` (`hpX_ent`).
   have h_pXlogpX : Integrable
@@ -497,6 +493,18 @@ theorem negMulLog_convDensity_entropy_ge_density
     filter_upwards [hqW] with x hx
     rw [hx, ENNReal.toReal_ofReal (hp_t_nn x)]
     simp only [Pi.neg_apply, Real.negMulLog, neg_neg, neg_mul]
+  -- (2) joint llr integrability (= KL finiteness `D(joint ‖ product) < ∞`).  This is a
+  -- separate compProd/chain-rule assembly (NOT the private-majorant blocker that (5)/(7)
+  -- needed): the joint `rnDeriv` factorises per-fibre into `(κ_z).rnDeriv (μ.map W)` whose
+  -- log a.e.[κ_z] equals `log q_z − log p_t`, and `integrable_compProd_iff` reduces to the
+  -- already-discharged fibre/outer integrabilities.  Parked: the per-fibre chain-rule
+  -- (`rnDeriv_mul_rnDeriv`) + reciprocal + `llr` value identity is a sizeable assembly.
+  -- @residual(plan:epi-g2-general-sandwich-moonshot-plan)
+  have h_int : Integrable
+      (llr ((μ.map Z) ⊗ₘ condDistrib W Z μ)
+        ((μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map W)))
+      ((μ.map Z) ⊗ₘ condDistrib W Z μ) := by
+    sorry
   -- Instantiate the genuine Ω-level (β) lower bound.
   exact negMulLog_convDensity_entropy_ge X Z μ hX hZ hXZ v_Z hv_Z_pos hZ_law
     hpX_nn hpX_meas hpX_law u hu_pos n
