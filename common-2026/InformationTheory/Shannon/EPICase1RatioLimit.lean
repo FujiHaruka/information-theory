@@ -568,9 +568,18 @@ Stam core is supplied genuinely inside the two pillars; the conclusion
 `N(X+Y) ≥ N(X)+N(Y)` is not encoded in any hypothesis. Honest naming
 (`_of_regular`, not bare `_unconditional`): the regularity preconditions are real.
 
-@audit:ok candidate (pending independent audit): genuine assembly of two `@audit:ok`
-pillars through one `@audit:ok` bridge; own body `sorry`-free; preconditions are the
-union of the two pillars' regularity hypotheses, threaded transparently. -/
+@audit:ok (independent honesty audit 2026-06-05): genuine assembly of two `@audit:ok`
+pillars through one `@audit:ok` bridge; own body `sorry`-free and **transitively
+sorryAx-free** (`#print axioms` = [propext, Classical.choice, Quot.sound]; the
+antitone pillar's stale "G2 continuity wall" docstring note refers to walls CLOSED
+2026-06-05 per audit-tags register). Over-claim check: conclusion is verbatim the
+case-1 EPI `N(X+Y) ≥ N(X)+N(Y)`, no weaker substitute. Non-load-bearing AFFIRMED via
+core-reconstruction test: the ~30 preconditions are the union of the two pillars'
+regularity bundles; granting them (incl. the per-`t` `h_pos_stam` whose
+`IsStamInequalityHyp` is itself genuinely provable, `wall:stam-step2-density` CLOSED)
+does NOT hand the EPI conclusion — that requires the pillars' genuine de Bruijn
+integration + scaling squeeze, neither encoded in any hypothesis. Sufficiency: body
+threads pillar args in matching order and composes via §1 bridge. -/
 theorem entropyPower_add_ge_case1_of_regular
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     -- independence (pairwise + joint), shared by both pillars
