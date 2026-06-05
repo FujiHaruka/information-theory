@@ -546,22 +546,32 @@ load-bearing) and the `convDensityAdd` path-density identification (`pPath_eq_co
   exceeding the bridge budget here. Gaussian-fibre tractable but needs a cross-entropy
   tail-control lemma not yet in tree.
 
-Independent honesty audit 2026-06-05 (honest_residual AFFIRMED): (1) `h_var_bound`
+Independent honesty audit 2026-06-05 (B(i)-cont commit, honest_residual AFFIRMED,
+machine-verified): (1) Both new private helpers `map_div_sqrt_absolutelyContinuous` /
+`rescaledInput_density_witness` are sorryAx-free (`#print axioms` =
+[propext, Classical.choice, Quot.sound]); hence the 6 newly-closed conjuncts' transitive
+assets (`convDensityAdd_negMulLog_integrable_pub` / `pPath_eq_convDensityAdd` /
+`convDensityAdd_pos` / `integrable_density_log_density_of_gaussian` /
+`differentialEntropy_gaussianReal`) carry NO hidden sorry. The helpers are genuine
+a.c./density-witness plumbing (scaling-preserves-a.c. + Real density extraction with full
+regularity), non-circular. (2) `hA_ac : P.map A ≪ volume` is a case-1 a.c. regularity
+precondition, NOT load-bearing: it is consumed only to derive `P.map (A/√t) ≪ volume` and
+the density witness, never an entropy-power inequality / the conclusion. (3) `h_var_bound`
 pass-through (`refine ⟨hμ_ac, h_var_bound t ht, …⟩`) is NOT circular `:= h`: its type ≡
-ONE conjunct of the constructed regularity bundle, not the theorem's conclusion. The
-conclusion is the whole `IsRescaledPathRegular` bundle (regularity, def-site `@audit:ok`);
-the substantive analytic content (squeeze / `N → N(B)`) lives entirely in the separate
-`@audit:ok` consumer `entropyPower_rescaled_path_tendsto`. The variance bound is a method-X
-regularity precondition (`Var A < ∞`) the closure plan explicitly acknowledges as
-un-dischargeable in route X (honest naming `_of_methodX`, NOT `_unconditional`) —
-regularity transport, not conclusion smuggling. (2) Genuine conjuncts (`h_indep`/`hW_ac`/
-`hμ_ac`/`h_fibre_ae`/`hκ_v`) verified non-circular: built from `hAB.comp` /
-`map_add_absolutelyContinuous` / `condDistrib_ae_eq_of_measure_eq_compProd` +
-`prod_map_affine_eq_compProd` (`EPIG2ConvEntropyMonotone.lean`, all `@audit:ok`). (3) The
-3 remaining parked sorrys all carry `@residual(plan:epi-case1-difference-g3-closure-plan)`
-(plan exists), classification correct: all are conditional-KL integrability regularity
-obligations, none load-bearing. (4) `#print axioms` = sorryAx present (type-check done, NOT
-proof done — expected). No deprecated tags / out-of-vocab slugs.
+ONE conjunct of the constructed regularity bundle, not the theorem's conclusion (the whole
+`IsRescaledPathRegular` bundle, def-site `@audit:ok` regularity; the substantive squeeze
+`N → N(B)` lives in the separate `@audit:ok` consumer `entropyPower_rescaled_path_tendsto`).
+Honest naming `_of_methodX`, NOT `_unconditional`. (4) Genuine conjuncts (`h_indep`/`hW_ac`/
+`hμ_ac`/`h_fibre_ae`/`hκ_v` + the 6 newly closed) verified non-circular: built from
+`hAB.comp` / `map_add_absolutelyContinuous` / `condDistrib_ae_eq_of_measure_eq_compProd` +
+`prod_map_affine_eq_compProd` (`EPIG2ConvEntropyMonotone.lean`, all `@audit:ok`). (5) The
+3 remaining parked sorrys (def-site conjuncts: llr-integrable / per-z cross-entropy
+integrand / z-averaged cross-term) all carry `@residual(plan:epi-case1-difference-g3-closure-plan)`
+(plan exists, scopes the per-`s`/per-`t` conditional-KL integrability supply). Classification
+correct: all are `Integrable (...)` regularity obligations (genuine cross-entropy
+tail-control of the closed-form-free convolution density vs Gaussian fibres), none encode
+the EPI conclusion, none load-bearing. (6) `#print axioms` = sorryAx present on the theorem
+(type-check done, NOT proof done — expected, 3 park). No deprecated tags / out-of-vocab slugs.
 @residual(plan:epi-case1-difference-g3-closure-plan) -/
 theorem isRescaledPathRegular_of_methodX
     (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
