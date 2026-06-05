@@ -653,7 +653,25 @@ log-ratio gap derivative `J_sum − (N_X·J_X + N_Y·J_Y)/(N_X+N_Y)` is `≤ 0`,
 equivalently `J_sum·(N_X+N_Y) ≤ N_X·J_X + N_Y·J_Y`. This is the genuine in-house
 content that replaces the false-as-framed difference-gap lemma
 `csiszarGap1Source_deriv_le_zero` (see its `@audit:defect` docstring); tracked by
-`epi-csiszar-ratio-reframe-plan`. -/
+`epi-csiszar-ratio-reframe-plan`.
+
+Scope note (GS-A3' probe 2026-06-06): this is the **factor-1** abstract arith
+(coefficient `1` on `J_sum`). It is a true real-arithmetic inequality over the
+free variables (verbatim-reproduced as the probe's `factor1_arith`, compiles
+clean). It does NOT assert anything about a variance-2 sum: the analogous
+**factor-2** statement `2·J_sum − (…) ≤ 0` is FALSE from plain harmonic Stam +
+positivity (probe `factor2_arith_FALSE`, counterexample `J_X=2,J_Y=1,J_sum=2/3,
+N_X=1,N_Y=3`). The factor mismatch for the genuine 𝒩(0,2) sum coupling lives in
+the de Bruijn lift / `Z_law` precondition, NOT in this lemma; this lemma is
+honest as an abstract factor-1 inequality.
+
+@audit:ok — independent honesty audit (2026-06-06, fresh auditor). 4 checks PASS:
+(1) non-circular — conclusion is a real inequality, no hypothesis ≡ conclusion;
+(2) non-bundled — `h_stam` is plain harmonic Stam over free reals, not a bundled
+inequality core; `nlinarith` does the work from `h_stam` + `sq_nonneg`; (3) not
+degenerate; (4) sufficiency — `factor1_arith` is provable from the hypotheses (GS-
+A3' probe verbatim). `#print axioms` = `[propext, Classical.choice, Quot.sound]`
+(sorryAx-free, mechanically confirmed). -/
 theorem csiszar_ratio_deriv_le_zero_arith
     (J_X J_Y J_sum N_X N_Y : ℝ)
     (hJX : 0 < J_X) (hJY : 0 < J_Y) (hJsum : 0 < J_sum)
@@ -695,7 +713,34 @@ deriv `(N_X·J_X+N_Y·J_Y)/(N_X+N_Y)`), composed by `HasDerivAt.sub`.
 Honesty: `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free,
 the de Bruijn building block `deBruijn_identity_v2` is genuine); `h_reg_*` are
 regularity preconditions, no load-bearing bundling.
-@audit:ok -/
+
+GS-A3' scope limitation (probe 2026-06-06, independent audit). This is an
+**honest conditional theorem**, but its conclusion is the **factor-1** derivative
+`J_sum − (…)` (coefficient `1` on `J_sum`). That value is correct only *under the
+hypotheses as stated*: `h_reg_sum.reg_at t ht` carries `IsRegularDeBruijnHypV2`'s
+`Z_law` field, which asserts `P.map (Z_X+Z_Y) = gaussianReal 0 1`
+(`deBruijn_identity_v2` is "for `Z ∼ 𝒩(0,1)`", yielding factor `(1/2)` → lifted
+`J_sum`). For the **genuine** sum coupling where `Z_X,Z_Y ∼ 𝒩(0,1)` are
+independent, the true sum law is `gaussianReal 0 2`, so `Z_law(sum)=𝒩(0,1)` is
+FALSE and `h_reg_sum` is **uninhabitable** in that setting — and the genuine
+variance-2 derivative would be `2·J_sum − (…)`. Hence this factor-1 derivative is
+NOT usable to discharge sum-EPI: the parked `false-statement` defect lives in the
+sum producer (`EPICase1SumProducer.lean`, `@audit:defect(false-statement)` +
+`@audit:closed-by-successor`), NOT here. As a conditional implication this theorem
+is genuinely TRUE (no internal inconsistency in the hypotheses → no vacuous-truth
+escape, per the producer audit), non-circular, and non-bundled (`Z_law` is a
+precondition on the noise distribution, not a bundled derivative value); the
+defect is correctly localized to the producer. Honest closure of the sum line
+requires `IsRegularDeBruijnHypV2`'s `Z_law` general-variance refactor (successor
+`epi-case1-debruijn-genvar-struct-plan`; GS-A3' showed all single-`t` routes are
+blocked by a non-local co-monotonicity obligation, not weight tuning).
+
+@audit:ok — independent honesty audit (2026-06-06, fresh auditor): 4 checks PASS
+as a conditional theorem (non-circular / non-bundled — `Z_law` is a noise-law
+precondition / not degenerate / sufficiency — factor-1 follows correctly under the
+stated `Z_law=𝒩(0,1)` hypothesis). `#print axioms` = `[propext, Classical.choice,
+Quot.sound]` (sorryAx-free, mechanically confirmed). Tag retained; defect is in the
+producer, not this consumer. -/
 theorem csiszarLogRatioGap_hasDerivAt
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
