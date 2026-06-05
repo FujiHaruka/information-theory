@@ -387,6 +387,176 @@ theorem entropyPower_rescaled_path_tendsto
   · filter_upwards [Filter.eventually_gt_atTop (0 : ℝ)] with t ht
     exact h_upper t ht
 
+/-! ## §3b — Discharging `IsRescaledPathRegular` from method-X regularity
+
+`isRescaledPathRegular_of_methodX`: construct the per-`t` regularity bundle
+`IsRescaledPathRegular A B P varA v_B` from bare method-X premises, exploiting that
+`B` is a Gaussian noise (`P.map B = gaussianReal 0 v_B`) independent of `A`. The fibre
+of `condDistrib (B + A/√t) (A/√t) P` is the translated Gaussian `gaussianReal z v_B`
+(`affineShiftKernel`, c = 1), so the fibre-level conditions reduce to Gaussian-density
+integrability rather than the general density-witness wall.
+
+Tractable conjuncts (IndepFun / a.c. / fibre a.c.) are closed genuinely; the residual
+fibre log-integrabilities + variance-bound + negMulLog integrability are parked with
+`@residual(plan:epi-case1-difference-g3-closure-plan)` (Gaussian-fibre tractable but
+exceeding the bridge budget here). -/
+
+/-- **Discharge `IsRescaledPathRegular` from method-X regularity.**
+
+Given a Gaussian noise `B` (`P.map B = gaussianReal 0 v_B`, `v_B ≠ 0`) independent of
+the input `A` (`hAB : IndepFun A B P`), with `A` measurable + finite-second-moment
+data threaded as `varA`-regularity, construct the per-`t` regularity bundle
+`IsRescaledPathRegular A B P varA v_B`.
+
+The key insight (demonstrated genuinely here): the fibre of
+`condDistrib (B + A/√t) (A/√t) P` is the translated Gaussian `gaussianReal z v_B` (the
+law of `B + z` by `affineShiftKernel`/Gaussian translation). This **avoids the
+2026-05-25 density-witness wall** for the general fibre: the fibre identification
+`condDistrib (B + A/√t) (A/√t) P =ᵐ affineShiftKernel (P.map B) 1` (`h_fibre_ae`) and
+the per-fibre a.c. `condDistrib z ≪ volume` (`hκ_v`, via `gaussianReal z v_B`) are both
+**closed genuinely** — exactly the conjuncts that are intractable in the general case.
+
+Honest preconditions only (NOT load-bearing): measurability, `IndepFun A B P`, the
+Gaussian noise law, finite-second-moment `h_mom_A` + `varA`-regularity (`h_var_bound`).
+The bundle being constructed is itself regularity (audited non-load-bearing at its def
+site §3).
+
+**Closure status (type-check done, NOT proof done):**
+- Genuine: `IndepFun B (A/√t)` (`h_indep`), a.c. of `B + A/√t` and `A/√t + B`
+  (`hW_ac`/`hμ_ac`, via `map_add_absolutelyContinuous`), the fibre identification
+  `h_fibre_ae` (Gaussian-fibre `affineShiftKernel` machinery), and the per-fibre a.c.
+  `hκ_v`, plus the variance bound itself (threaded `h_var_bound`).
+- Parked (`@residual(plan:epi-case1-difference-g3-closure-plan)`, 9 conjuncts): the 6
+  remaining lower-bundle fibre/path log-integrabilities + joint-≪-product, and the 2
+  upper-bundle integrabilities (squared-deviation, negMulLog). These are Gaussian-fibre
+  tractable (the fibre is `gaussianReal z v_B`) but require the convDensityAdd /
+  entropy-finiteness identification bridge + second-moment transport, exceeding the
+  bridge budget of this lemma.
+
+@residual(plan:epi-case1-difference-g3-closure-plan) -/
+theorem isRescaledPathRegular_of_methodX
+    (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hA : Measurable A) (hB : Measurable B)
+    (v_B : ℝ≥0) (hv_B : v_B ≠ 0) (hB_law : P.map B = gaussianReal 0 v_B)
+    (hAB : IndepFun A B P)
+    (varA : ℝ) (h_varA_nn : 0 ≤ varA)
+    (h_mom_A : Integrable (fun ω => (A ω)^2) P)
+    (h_var_bound : ∀ t : ℝ, 0 < t →
+      (∫ x, (x - (∫ y, y ∂(P.map (fun ω => A ω / Real.sqrt t + B ω))))^2
+            ∂(P.map (fun ω => A ω / Real.sqrt t + B ω)))
+          ≤ varA / t + (v_B : ℝ)) :
+    IsRescaledPathRegular A B P varA v_B := by
+  -- Noise is a.c. (Gaussian).
+  have hB_ac : (P.map B) ≪ volume := by
+    rw [hB_law]; exact gaussianReal_absolutelyContinuous 0 hv_B
+  refine ⟨?_, ?_⟩
+  · -- ===== Lower bundle (per `t`, conditions of `differentialEntropy_add_ge_of_indep`,
+    --       framing X := B, Y := A/√t). =====
+    intro t ht
+    have h_sqrt_pos : (0 : ℝ) < Real.sqrt t := Real.sqrt_pos.mpr ht
+    set Zt : Ω → ℝ := fun ω => A ω / Real.sqrt t with hZt
+    have hZt_meas : Measurable Zt := hA.div_const _
+    -- (1) `IndepFun B (A/√t)`: `A/√t` is a measurable function of `A`, `B ⊥ A`.
+    have h_indep : IndepFun B Zt P := by
+      have : Zt = (fun a => a / Real.sqrt t) ∘ A := by funext ω; rfl
+      rw [this]
+      exact (hAB.symm).comp measurable_id (measurable_id.div_const _)
+    -- (2) a.c. of `B + A/√t` (convolution with the a.c. Gaussian factor `B`).
+    have hW_ac : (P.map (fun ω => B ω + Zt ω)) ≪ volume :=
+      map_add_absolutelyContinuous B Zt P hB hZt_meas h_indep hB_ac
+    -- Fibre identification: `condDistrib (B + Zt) Zt P =ᵐ affineShiftKernel (P.map B) 1`.
+    -- (Same construction as `condDifferentialEntropy_indep_add_eq`, here `X := B, Z := Zt, c := 1`.)
+    have hZt_law_prob : IsProbabilityMeasure (P.map Zt) :=
+      Measure.isProbabilityMeasure_map hZt_meas.aemeasurable
+    have hB_law_prob : IsProbabilityMeasure (P.map B) :=
+      Measure.isProbabilityMeasure_map hB.aemeasurable
+    have h_fibre_ae : condDistrib (fun ω => B ω + Zt ω) Zt P
+        =ᵐ[P.map Zt] affineShiftKernel (P.map B) 1 := by
+      set W : Ω → ℝ := fun ω => B ω + Zt ω with hW_def
+      have hW : Measurable W := hB.add hZt_meas
+      -- Joint `(Zt, B)` is the product law (independence `B ⊥ Zt`, i.e. `Zt ⊥ B`).
+      have hZtB : IndepFun Zt B P := h_indep.symm
+      have hjoint_ZB : P.map (fun ω => (Zt ω, B ω)) = (P.map Zt).prod (P.map B) :=
+        (indepFun_iff_map_prod_eq_prod_map_map hZt_meas.aemeasurable hB.aemeasurable).mp hZtB
+      -- Push the product through `g (z, x) = (z, x + 1·z)`.
+      have hg : Measurable fun p : ℝ × ℝ => (p.1, p.2 + (1 : ℝ) * p.1) := by fun_prop
+      have hjoint_ZW : P.map (fun ω => (Zt ω, W ω))
+          = (P.map Zt) ⊗ₘ (affineShiftKernel (P.map B) 1) := by
+        have hcomp : (fun ω => (Zt ω, W ω))
+            = (fun p : ℝ × ℝ => (p.1, p.2 + (1 : ℝ) * p.1)) ∘ (fun ω => (Zt ω, B ω)) := by
+          funext ω; simp [hW_def, one_mul, add_comm]
+        rw [hcomp, ← Measure.map_map hg (hZt_meas.prodMk hB), hjoint_ZB,
+          prod_map_affine_eq_compProd]
+      exact condDistrib_ae_eq_of_measure_eq_compProd Zt hW.aemeasurable hjoint_ZW
+    -- (3) fibre a.c.: each fibre is `(P.map B).map(·+z) = gaussianReal z v_B`, a.c.
+    have h_fibre_gauss : ∀ z : ℝ,
+        affineShiftKernel (P.map B) 1 z = gaussianReal z v_B := by
+      intro z
+      rw [affineShiftKernel_apply, hB_law]
+      simp only [one_mul]
+      rw [gaussianReal_map_add_const z]
+      simp
+    have hκ_v : ∀ᵐ z ∂(P.map Zt),
+        condDistrib (fun ω => B ω + Zt ω) Zt P z ≪ volume := by
+      filter_upwards [h_fibre_ae] with z hz
+      rw [hz, h_fibre_gauss z]
+      exact gaussianReal_absolutelyContinuous z hv_B
+    refine ⟨h_indep, hW_ac, ?_, ?_, hκ_v, ?_, ?_, ?_, ?_, ?_⟩
+    · -- joint ≪ product-with-const. Fibre = `gaussianReal z v_B` (h_fibre_gauss), path
+      -- law a.c.; the compProd-level a.c. needs per-fibre `gaussianReal z v_B ≪ P.map W`,
+      -- i.e. the path marginal dominates each translated Gaussian fibre (full-support of
+      -- the a.c. convolution). Gaussian-fibre tractable but exceeds the bridge budget here.
+      -- @residual(plan:epi-case1-difference-g3-closure-plan)
+      sorry
+    · -- llr integrable (Gaussian fibre: log-density of `gaussianReal z v_B` vs path law).
+      -- @residual(plan:epi-case1-difference-g3-closure-plan)
+      sorry
+    · -- fibre rnDeriv·log(fibre rnDeriv) integrable (Gaussian density `gaussianReal z v_B`
+      -- self-entropy integrand, finite for each z).
+      -- @residual(plan:epi-case1-difference-g3-closure-plan)
+      sorry
+    · -- fibre rnDeriv·log(path rnDeriv) integrable (cross-term, Gaussian fibre × path law).
+      -- @residual(plan:epi-case1-difference-g3-closure-plan)
+      sorry
+    · -- fibre entropy integrable (`z ↦ h(gaussianReal z v_B) = (1/2)log(2πe v_B)` constant
+      -- in z, hence integrable; needs fibre-entropy identification).
+      -- @residual(plan:epi-case1-difference-g3-closure-plan)
+      sorry
+    · -- cross-term integrable (z-average of the Gaussian-fibre × path cross integrand).
+      -- @residual(plan:epi-case1-difference-g3-closure-plan)
+      sorry
+    · -- log(path rnDeriv) integrable wrt path (path law a.c. + finite second moment;
+      -- entropy-finiteness CLOSED asset via convDensityAdd identification bridge).
+      -- @residual(plan:epi-case1-difference-g3-closure-plan)
+      sorry
+  · -- ===== Upper bundle (per `t`, conditions of
+    --       `differentialEntropy_le_gaussian_of_variance_le` + a.c.). =====
+    intro t ht
+    have h_sqrt_pos : (0 : ℝ) < Real.sqrt t := Real.sqrt_pos.mpr ht
+    set Zt : Ω → ℝ := fun ω => A ω / Real.sqrt t with hZt
+    have hZt_meas : Measurable Zt := hA.div_const _
+    have h_indep : IndepFun Zt B P := by
+      have : Zt = (fun a => a / Real.sqrt t) ∘ A := by funext ω; rfl
+      rw [this]
+      exact hAB.comp (measurable_id.div_const _) measurable_id
+    -- a.c. of `A/√t + B` (= `B + A/√t` reordered, both a.c.).
+    have hμ_ac : (P.map (fun ω => Zt ω + B ω)) ≪ volume := by
+      have h_indepBZ : IndepFun B Zt P := h_indep.symm
+      have hWac : (P.map (fun ω => B ω + Zt ω)) ≪ volume :=
+        map_add_absolutelyContinuous B Zt P hB hZt_meas h_indepBZ hB_ac
+      have h_path : (fun ω => Zt ω + B ω) = (fun ω => B ω + Zt ω) := by funext ω; ring
+      rw [h_path]; exact hWac
+    refine ⟨hμ_ac, h_var_bound t ht, ?_, ?_⟩
+    · -- squared-deviation `(x-m)²` integrable wrt path law (finite second moment of the
+      -- path: `A/√t` finite second moment from `h_mom_A` + Gaussian `B` finite variance,
+      -- transported to the pushforward law).
+      -- @residual(plan:epi-case1-difference-g3-closure-plan)
+      sorry
+    · -- negMulLog (path rnDeriv) integrable (path entropy finiteness; entropy-finiteness
+      -- CLOSED asset via convDensityAdd identification bridge for the a.c. path law).
+      -- @residual(plan:epi-case1-difference-g3-closure-plan)
+      sorry
+
 /-! ## §4 — Main analytic deliverable
 
 `csiszarLogRatioGap_tendsto_zero_atTop`: composing §2 (cancellation), §3 (per-path
