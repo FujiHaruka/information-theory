@@ -748,7 +748,11 @@ variable {Ω : Type*}
 
 /-- Second-moment integrability of the centred Gaussian density: `y²·g_v(y)` is
 `volume`-integrable.  Via `∫ y²·g_v = ∫ y² ∂(gaussianReal 0 v)` (finite by
-`memLp_id_gaussianReal 2`). -/
+`memLp_id_gaussianReal 2`).
+
+Independent honesty audit 2026-06-05: PASS — genuine (no sorry), pure regularity output
+(second-moment integrability), `#print axioms` = `[propext, Classical.choice, Quot.sound]`.
+@audit:ok -/
 theorem integrable_sq_mul_gaussianPDFReal {v : ℝ≥0} (hv : v ≠ 0) :
     Integrable (fun y => y ^ 2 * gaussianPDFReal 0 v y) volume := by
   -- `Integrable (y²) (gaussianReal 0 v)` from `MemLp id 2`.
@@ -771,7 +775,15 @@ theorem integrable_sq_mul_gaussianPDFReal {v : ℝ≥0} (hv : v ≠ 0) :
 
 /-- Per-fibre cross-term integrability: the (shifted) fibre density `q(·−c)` times the
 log of the convolution target `g = convDensityAdd pX g_v` is `volume`-integrable.
-Dominated by `q(x−c)·((A+1)+B·x²)` via the polynomial majorant of `log g`. -/
+Dominated by `q(x−c)·((A+1)+B·x²)` via the polynomial majorant of `log g`.
+
+Independent honesty audit 2026-06-05: PASS — genuine (no sorry). Conclusion (an
+`Integrable` regularity output) follows from the hypotheses by `Integrable.mono'` against
+the genuine majorant `convDensityAdd_logFactor_poly_majorant` (`@audit:ok`); no hypothesis
+restates the conclusion or bundles an EPI/entropy claim — `q` is a free density argument
+(instantiated at the Gaussian fibre by the consumer), so `hq_mom`/`hq_int` etc. are
+preconditions, not load-bearing. `#print axioms` = `[propext, Classical.choice, Quot.sound]`.
+@audit:ok -/
 theorem convCrossEntropy_perFibre_integrable
     (q pX : ℝ → ℝ) (hq_nn : ∀ x, 0 ≤ q x) (hq_meas : Measurable q)
     (hq_int : Integrable q volume) (hq_mom : Integrable (fun y => y ^ 2 * q y) volume)
@@ -841,7 +853,15 @@ theorem convCrossEntropy_perFibre_integrable
 
 /-- `z`-averaged cross-term integrability: averaging the per-fibre cross integral over a
 measure `νZ` with finite second moment yields an integrable function of `z`.  The shift
-is `c(z) = √s·z`; bounded by `(A+1) + 2B·M2q + 2B·s·z²` (gaussian-style moment control). -/
+is `c(z) = √s·z`; bounded by `(A+1) + 2B·M2q + 2B·s·z²` (gaussian-style moment control).
+
+Independent honesty audit 2026-06-05: PASS — genuine (no sorry). The `z`-averaged
+`Integrable` conclusion follows by `Integrable.mono'` against a degree-2 polynomial
+`H(z)`, integrable over `νZ` precisely because `hνZ_sq` (finite second moment) is supplied
+as a precondition; all hypotheses are regularity/integrability obligations on the free
+density `q` and the convolution target, none encodes the conclusion. `#print axioms` =
+`[propext, Classical.choice, Quot.sound]`.
+@audit:ok -/
 theorem convCrossEntropy_zAvg_integrable
     (q pX : ℝ → ℝ) (hq_nn : ∀ x, 0 ≤ q x) (hq_meas : Measurable q)
     (hq_int : Integrable q volume) (hq_mass : (∫ y, q y ∂volume) = 1)
@@ -983,7 +1003,27 @@ kernel `κ = condDistrib W Z μ` whose fibres a.e.-equal the (shifted) density `
 and whose marginal `μ.map W` has density `g`, with the polynomial majorant
 `|log g| ≤ (A+1)+B·x²`, the joint `llr` of the compProd vs. the product-with-const is
 `(μ.map Z) ⊗ₘ κ`-integrable.  All hypotheses are genuine regularity/integrability
-obligations (none encodes the EPI conclusion). -/
+obligations (none encodes the EPI conclusion).
+
+Independent honesty audit 2026-06-05: PASS (sufficiency check applied — the 4th honesty
+axis beyond non-circular / non-bundled). The conclusion (KL-finiteness `D(joint‖product)
+< ∞`, a regularity output) follows from the hypotheses via `integrable_compProd_iff`:
+branch (a) reuses `hκ_logp_int + hκ_cross_int` through the density split
+`llr_eq_log_density_sub_log_density`; branch (b) dominates the outer `∫‖log p_z − log
+p_t‖∂κz` by `C0 + (A+1) + 2B·M2 + 2B·s·z²` (`hq_abs_ent` → `C0`, `hLog` → polynomial,
+`hZ_sq` → Gaussian integrability of `z²`). Each hypothesis discharges an actual obligation;
+none is a restatement of the conclusion or an EPI inequality. Crucially `q` and `g` are
+*decoupled free arguments* — the consumer (EPI case-1) instantiates `q` at the **Gaussian
+fibre** `gaussianPDFReal 0 v_B` (since the conditioning variable is the input `Zt` and the
+fibre is the translated Gaussian), so `hq_abs_ent` is Gaussian self-entropy (genuinely
+finite via `integrable_density_log_density_of_gaussian`), NOT the input-density entropy
+`hpX_ent`. This vindicates the implementer's pivot over the inventory's `hpX_ent`
+prediction: the `hpX_ent` requirement was an artefact of the `_density` template (where the
+fibre is `pX`), not intrinsic — the abstract `q` lets the consumer pick whichever side is
+Gaussian. Non-circular (no hypothesis ≡ conclusion), non-bundled (no `*Hypothesis`
+predicate), satisfiable (consumer supplies a genuine instance). `#print axioms` = `[propext,
+Classical.choice, Quot.sound]`.
+@audit:ok -/
 theorem convJointLlr_integrable
     {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Z W : Ω → ℝ)
