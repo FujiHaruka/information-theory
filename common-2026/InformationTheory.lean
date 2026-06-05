@@ -114,6 +114,7 @@ import InformationTheory.Shannon.AwgnWalls
 import InformationTheory.Shannon.ParallelGaussian
 import InformationTheory.Shannon.ParallelGaussianL_PG0Discharge
 import InformationTheory.Shannon.EntropyPowerExt
+import InformationTheory.Shannon.EPIUncondMixedCase
 import InformationTheory.Shannon.EntropyPowerInequality
 import InformationTheory.Shannon.EPIPlumbing
 import InformationTheory.Shannon.ShannonHartley
