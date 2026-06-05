@@ -18,7 +18,7 @@ rg "^- \[ \]" で残タスク横断 grep、rg "🔄" でピボット箇所だけ
 |---|---|
 | 新規行数オーダー | **~1500–2500 行** (定義二層 + coercion bridge ~300、downstream re-port ~800–1400、3-case assembly ~400–600) |
 | touch file 数 | **~38–40 file** (`differentialEntropy` 36 file + `entropyPower` 11 file、重複あり実数 ~40)。ただし下層 (a) Real workhorse を温存する設計のため、大半は **statement 層だけの shim 経由 re-port** に圧縮可能 |
-| 最大の wall 候補 | **(W-A) a.c. EPI core** (既存 `stamToEPIBridge_holds` 系の残 sorry。本 plan の責務外、既存 plan 群で進行)。**(W-B) 混合 case の `N(X+Y) ≥ N(X)`** — soft だが「特異 Z を足しても a.c. 部のエントロピーが下がらない」を ℝ≥0∞ 上で組む新規 plumbing。**(W-C) ⊥ → entropyPower=0 の coercion 整合** (EReal `⊥`/`Real.exp` 不在ゆえ ℝ≥0∞ 直定義が必要、§Phase 0 で在庫確定) |
+| 最大の wall 候補 | **(W-A) a.c. EPI core** (既存 `stamToEPIBridge_holds` 系の残 sorry。本 plan の責務外、既存 plan 群で進行)。先行調査で **有限分散+有限エントロピーの隠れ regularity が判明** (発見 3) → 射程縮小、要スコープ判断。**(W-B) 混合 case** — 先行調査で **GO/soft 確定** (発見 2、既存 2 補題 + convolution-a.c. 3 行)。**(W-C) coercion 整合** — 先行調査で **解決** (発見 1、`EReal.exp` 実在で非分岐定義可)。真の残 wall は方針 Y を取る場合の **entropy power 弱収束 半連続性** (Mathlib 完全不在、新規) のみ |
 
 **致命的前提 (実コード verbatim 確認済、§Phase 0 の出発点)**: 現定義のままだと無条件 EPI は
 **literally FALSE**。`differentialEntropy (Measure.dirac m) = 0` (`DifferentialEntropy.lean:155`
@@ -28,6 +28,73 @@ rg "^- \[ \]" で残タスク横断 grep、rg "🔄" でピボット箇所だけ
 矛盾。根本原因: `differentialEntropy` が rnDeriv の a.c. 部のみ見て `negMulLog 0 = 0` のため
 特異測度で `0` に退化 (`-∞` にならない)。現条件付き定理が `h_stam` を load-bearing に持つのは
 この退化反例を除外するため。
+
+## 先行調査の結論 (2026-06-05、wall 3 本 verbatim 裏取り済)
+
+3 inventory で壁候補を先行調査。結論を計画に反映。
+
+### 発見 1 (定義 shape, W-C) — GO、設計が簡素化
+`docs/shannon/epi-uncond-entropypower-retype-inventory.md`。
+- **`Real.exp` ℝ≥0∞ 版不在の前提は覆る**: `EReal.exp : EReal → ℝ≥0∞` が実在
+  (`Mathlib/Analysis/SpecialFunctions/Log/ERealExp.lean`、loogle 48 宣言、orchestrator 裏取り済)。
+  `EReal.exp_bot : exp ⊥ = 0`、`EReal.exp_coe : exp ↑x = ENNReal.ofReal (Real.exp x)`、
+  `EReal.exp_monotone` [gcongr]、`EReal.exp_top`。
+  ⇒ **`entropyPower μ := EReal.exp (2 * differentialEntropyExt μ)` の非分岐定義**が可能。
+  case-split は `differentialEntropyExt : EReal` 側に一元化 (特異で `⊥`、a.c. で `↑(workhorse)`)。
+- **a.c. 判定の definitional 化 GO**: `Decidable (μ ≪ volume)` は不在だが、Mathlib `klDiv`
+  (`Mathlib/InformationTheory/KullbackLeibler/Basic.lean:55-58`) が `open Classical in` +
+  `irreducible_def` + `if μ ≪ ν then ... else ...` を実運用する precedent。
+  `haveLebesgueDecomposition_of_sigmaFinite` (priority 100 instance) が確率測度 on ℝ で自動発火。
+- 新規 primitive 自作 0、bridge ~6 本 (~30-40 行)。新撤退ライン候補 L-Uncond-0-δ:
+  `EReal.mul` の `2 * ⊥` / `(2:EReal) * ↑x` 挙動が想定外なら ℝ≥0∞ 直接 case-split 定義へ退避。
+
+### 発見 2 (混合 case, W-B) — GO、soft、隠れ壁なし
+`docs/shannon/epi-uncond-mixed-case-inventory.md`。
+- 混合 case core `h(X) ≤ h(X+Y)` は既存 genuine 2 補題
+  (`condDifferentialEntropy_le` `:224` + `condDifferentialEntropy_indep_add_eq` `:328`、両 `@audit:ok`)
+  の `c=1` 合成で **そのまま typecheck**。残る穴は `μ.map(X+Y) ≪ volume` の 1 点のみ。
+- その 1 点 (`X a.c. ⟹ X+Y a.c.`) は Mathlib に存在: `IndepFun.map_add_eq_map_conv_map` →
+  `Measure.conv_comm` → `Measure.conv_absolutelyContinuous` の **3 行で 0 sorry** (撤退ライン不発)。
+  注意: `conv_absolutelyContinuous` は a.c. 因子を右に要求する非対称形 → `conv_comm` を 1 段噛ます。
+- ℝ≥0∞ lift は `Real.exp_le_exp` + `ENNReal.ofReal_le_ofReal` 標準。`[StandardBorelSpace]` 不要。
+- blocker (壁でない): `condDifferentialEntropy_le` の integrability precondition 8 本の threading 量。
+  Gaussian 版 `differentialEntropy_indep_gaussian_add_ge` `:378` が同型 threading の雛形。非 load-bearing。
+
+### 発見 3 (a.c. core, W-A) — ⚠ 「無条件」の射程を縮める。要スコープ判断
+`docs/shannon/epi-uncond-ac-density-witness-inventory.md`。
+- **verdict: case-1 (両 a.c.) EPI は「真に一般 a.c.」では閉じない。有限分散 + 有限微分エントロピーを隠し持つ。**
+- assembly `isStamToEPIScalingHyp_of_stam_debruijn` の density-witness は **生入力**
+  `P.map X` / `P.map Y` / `P.map (X+Y)` に課される (`EPIStamToBridge.lean:1413/1419/1425`、
+  heat-flow 平滑後ではない — wall lemma endpoint は t→0⁺ で平滑が消える生入力点)。
+- `IsHeatFlowEndpointRegular` (`EPIG2HeatFlowContinuity.lean`) は **8 density field**
+  (`pX`/`hpX_nn`/`hpX_meas`/`hpX_law`/`hpX_int`/`hpX_mass`/`hpX_mom`/`hpX_ent`)。
+  assembly の density sorry は **8×3 = 24 個** が正 (旧記載「21」「7 field」は assembly docstring
+  `:1307` の `hpX_ent` 脱落由来の誤り、本計画で訂正)。
+  - `hpX_mom`: `Integrable (fun y => y^2 * pX y) volume` = **有限 2 次 moment (有限分散)**。a.c. から自動で出ない (Cauchy 反例)。
+  - `hpX_ent`: `Integrable (fun x => Real.negMulLog (pX x)) volume` = **有限微分エントロピー**。a.c.+有限分散からも出ない。project が「L¹+2次moment ⟹ negMulLog 可積分」を **false-as-stated と判定して削除済** (`EPIG2HeatFlowContinuity.lean:485` 周辺 docstring) ⇒ honest な追加前提として持つしかない (`@residual(wall:...)` 不可)。
+  - 残 6 field は a.c.+確率測度から R-N で自動。
+- 余波: `fisherInfo`/`differentialEntropy` は project-local (Mathlib 不在、loogle unknown)。将来 upstream 時 scope 大。
+
+### ⇒ 達成可能な「無条件」の honest な射程 (要ユーザー判断)
+退化トラップ除去 (特異入力 → entropyPower 0) は cases 2/3 で**追加前提なし**に達成できる (発見 1+2)。
+しかし a.c. ブランチの heat-flow/de Bruijn 証明路は **有限分散 + 有限微分エントロピー**を本質的に要求する (発見 3)。
+これは証明技法由来 (Fisher info が heat path 上で有限である必要) で、ただ落とすことはできない。よって:
+
+- **方針 X (regularity-scoped, 推奨)**: `h_stam` と密度 predicate 仮説束を除去するが、a.c. 入力に
+  **有限分散 + 有限微分エントロピー**を honest な regularity precondition として残す。教科書 EPI の標準射程
+  (densities + finite variance 前提) と一致。本計画の Phase 構造はこれを前提に組める = 達成可能。
+- **方針 Y (truly hypothesis-free)**: さらに有限分散も除く。任意 a.c. を有限分散で近似し極限を取る
+  truncation/approximation 論法が要る。だが entropy power の弱収束下半連続性は **Mathlib 完全不在**
+  (発見 3 + epi-g2-main-closure-inventory「entropy/KL 半連続性 loogle Found 0」) で、これ自体が新規 wall。
+  別 moonshot 規模、しかも genuine Mathlib 壁を含む。
+
+→ Phase 3/5 の最終 signature をどちらに置くかをユーザーに確認後、確定する (下記 §スコープ判断)。
+
+## スコープ判断 (open、ユーザー確認待ち)
+
+最終主定理に有限分散 + 有限微分エントロピーの regularity precondition を残すか (方針 X)、
+truncation 論法で除く別 moonshot を積むか (方針 Y)。撤退ライン L-Uncond-3-scope =
+「方針 Y が semicontinuity wall で詰まったら方針 X に縮退して honest に着地」。
 
 ## 進捗
 
@@ -63,11 +130,16 @@ field (ℝ) を要求** するため EReal/ℝ≥0∞ を載せられない (下
 - **(a) Real 値 workhorse** — `differentialEntropy : Measure ℝ → ℝ` (現定義を**そのまま温存**、改名のみ検討)。a.c. 測度 / 密度の微分エントロピー。de Bruijn `HasDerivAt` / Stam / AWGN translation invariance が主役として使う。**触らない (= 既存 genuine 資産を保護)**。
 - **(b) EReal / ℝ≥0∞ 上位レイヤ** — 任意測度に対する `differentialEntropyExt : Measure ℝ → EReal` (a.c. ブランチで (a) から coerce、特異ブランチで `⊥`) + `entropyPower : Measure ℝ → ℝ≥0∞` (a.c. ブランチで (a) から、特異で `0`)。**EPI 主定理の statement だけ (b)**。
 
-**Mathlib-shape-driven**: (b) の coercion / 算術は dominant Mathlib lemma の結論形に合わせる。
-§Phase 0 で確定する候補 (在庫照合済の一部):
-- `EReal.toENNReal` (`Mathlib.Data.EReal.Basic`、32 lemmas) + `EReal.toENNReal_bot : (⊥ : EReal).toENNReal = 0` ← **特異 → entropyPower=0 の正規ルート**。
-- `EReal.coe_add` 存在 (Real → EReal 和の保存)。
-- ⚠ **要在庫調査 (Phase 0 inventory)**: `Real.exp` の EReal/ℝ≥0∞ 版は **Mathlib 不在** (loogle `Real.exp, EReal` = Found 0、`ENNReal.exp` = unknown identifier)。よって `entropyPower` を ℝ≥0∞ で素朴に `exp(2h)` 定義できない。**設計分岐**: (i) `entropyPower μ := (differentialEntropyExt μ).toENNReal`-経由ではなく、a.c. case を `ENNReal.ofReal (Real.exp (2 * differentialEntropy μ))`、特異 case を `0` で **case-split 定義**にする (Real の exp を a.c. 枝内で使う)。(ii) `negMulLog` の EReal 版も不在 (loogle Found 0) なので (a)→(b) coercion 専用で組む。
+**Mathlib-shape-driven** (先行調査 発見 1 で確定、2026-06-05):
+- **`entropyPower μ := EReal.exp (2 * differentialEntropyExt μ)` の非分岐定義を採用** (第一候補)。
+  `EReal.exp : EReal → ℝ≥0∞` 実在 (`Mathlib/Analysis/SpecialFunctions/Log/ERealExp.lean`)、
+  `exp_bot : exp ⊥ = 0` (特異 → entropyPower 0 自動)、`exp_coe : exp ↑x = ENNReal.ofReal (Real.exp x)`
+  (a.c. → Real workhorse と一致)、`exp_monotone` [gcongr] (EPI 不等式の lift に直結)。
+  case-split は `differentialEntropyExt : EReal` 側のみ。
+- `differentialEntropyExt μ := if μ ≪ volume then ↑(differentialEntropy μ) else (⊥ : EReal)`。
+  a.c. 判定の definitional 化は `klDiv` precedent (`open Classical in` + `irreducible_def`) で GO。
+- 退避 (L-Uncond-0-δ): `EReal.mul` の `2 * ⊥` 挙動が想定外なら ℝ≥0∞ 直接 case-split
+  `if μ ≪ volume then ENNReal.ofReal (Real.exp (2 * differentialEntropy μ)) else 0` へ。
 
 #### 柱 2: 3-case 分岐 (無条件成立の構造)
 
