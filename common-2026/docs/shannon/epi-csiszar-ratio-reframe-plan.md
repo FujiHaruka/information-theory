@@ -20,7 +20,7 @@
 - [x] ~~**Phase R-3′ — density-identification bridge**~~ ❌ **撤退済 (2026-06-01 Wave 3、L-Ratio-3′-α 維持)** — bridge 案 infeasible 判明。bridge 撤退自体は維持。ただし **root cause は 2026-06-01 独立再検算で訂正** (旧「cross-source convolution が表現不能」→ 実は conv-pin 見落とし。真の root cause = path 独立性欠落 (under-hyp) + 一般 density Blachman 壁)。詳細 → §Phase R-3′
 - [x] ~~**Phase R-3″ — measure-level 直接形 reshape で閉じる**~~ ⚠️ **necessary but not sufficient に格下げ (2026-06-01 独立再検算)** — 事実 1 (`fisherInfoOfMeasureV2` が measure を無視 = density-keyed) より「measure-level 直接形」は名ばかりで density witness 不可避。reshape しても一般 density Blachman 壁は consumer に regularity precondition として残る (壁の移動であって消失ではない)。**単独では closure しない**。詳細 → §Phase R-3″
 - [x] **Phase R-3‴ — honest closure 路 (案 B = R-3 signature に regularity precondition 追加)** ✅ **DONE (2026-06-01, commit `ba4353a`)** — R-3 に 6 件の path density regularity precondition (`IsRegularDensityV2`×2 / `∫=1`×2 / convolution 同定 `h_conv_id` / `IsBlachmanConvReady`) を **caller 供給 regularity** として追加し、`h_stam` を 3 path density witness (`.density_t`) で genuine apply → `h_plain_stam` 0-sorry 化。生の Stam 不等式は signature に入れず (案 C 回避)。3 Fisher 同定は `fisherInfoOfMeasureV2` measure-無視より `rfl`。`IndepFun path_X path_Y P` は `h_conv_id` precondition が under-hyp を直接吸収するため不要。R-5-c → D10 → A-5 の 4 層 caller 供給バンドルに同形 thread (新規 sorry 0)。独立 honesty 監査で 6 precondition = 非 load-bearing 確認。**一般 density Blachman 壁は chain 頂点 (A-5) の caller 供給 precondition に局所化** (新 wall `blachman-general-density` 候補、未整備)。
-- [x] Phase R-4 — endpoint `r(1) = 0` (Gaussian saturation) + `r(0) ≥ 0 ⟺ EPI` の橋渡し ✅ **DONE (genuine, proof-done)** — 実コードに既存・sorryAx-free 実測確認 (2026-06-03 orchestrator)。`csiszarLogRatioGap_at_zero` (`EPIL3Integration.lean:1388`) / `csiszarLogRatioGap_at_one_eq_zero` (`:1423`) / `epi_of_csiszarLogRatioGap_zero_nonneg` (`EPIStamToBridge.lean:968`、`#print axioms` = `[propext, Classical.choice, Quot.sound]` のみ) の 3 部品で完結。endpoint は `entropyPower_gaussian_additivity` (`EntropyPowerInequality.lean:331`, genuine) 経由。**進捗 drift 訂正**: 旧「未着手 📋」は stale checkbox、closure 判定前に `#print axioms` 実測してなかった。
+- [~] Phase R-4 — endpoint `r(1) = 0` (Gaussian saturation) + `r(0) ≥ 0 ⟺ EPI` の橋渡し ⚠️ **3 部品は sorryAx-free だが「ratio chain が r(1)=0 経由で一般 EPI を閉じる」は FALSE-AS-STATED (2026-06-05 verbatim 訂正)** — `epi_of_csiszarLogRatioGap_zero_nonneg` (`EPIStamToBridge.lean:985`、`0 ≤ r(0) → EPI`) + `csiszarLogRatioGap_at_zero` (`:1388`) は genuine。**だが `csiszarLogRatioGap_at_one_eq_zero` (`:1426`) は `hLawX : P.map (X+Z_X) = gaussianReal m₁ v₁` / `hLawY` を要求** = `X+Z_X`・`Y+Z_Y` が **Gaussian であることが前提**。bridge body の入力 `X, Y` は任意なので `X+Z_X` は非 Gaussian → **`r(1)=0` は一般入力で成立しない**。ratio gap は convolution path `X+√t·Z` を使い `t→∞` でしか saturate しない (t=1 は pure Gaussian 端点ではない)。⇒ `csiszarLogRatioGap_at_one_eq_zero` は **consumer 0 件・bridge に適用不能** な「正しい補題だが端点が違う」状態。一般 EPI の genuine ratio 路は **存在しない `r(t)→0 (t→∞)` 極限補題**を要する (未着手 wall)。**一般入力の genuine saturation は difference-form** (`heatFlowPath2 X Z s = √(1-s)X+√s Z`、s=1 で pure `Z` → `entropyPower_gaussian_additivity` genuine) が正しいアーキで、それが現 bridge body (`isStamToEPIBridgeHyp_of_scaling`, `@audit:ok`) の経路。詳細 → 判断ログ 2026-06-05。
 - [~] Phase R-5 — `AntitoneOn` lift + 旧 difference-gap chain の再配線 🚧 **大半 DONE (2026-06-01, commit `136ba61`)** — R-5-a/b/c (ratio continuousOn/differentiableOn/antitoneOn) landing 済。M0-3 scale 相殺 **CANCELS** 確認 (ratio scale 不変、`(1-s)` が log 内で相殺)。**偽 D3 + 偽 D6 削除**、D10 を genuine ratio antitoneOn (R-5-c) に再配線、`@audit:closed-by-successor` 解消。**残**: D7/D11 rescale の ratio 再配線は別 plan (`epi-stam-to-conclusion-phaseA-plan` G3) 所有 + D11 が 1-source antitone を dead carrier として捨てている判明 → headline には未影響、当該 plan で closure。
 - [ ] Phase R-6 — auditor doctrine に「sufficiency (hyp ⊢ concl)」check 追加の提案 (docs-only) 📋
 
@@ -950,3 +950,28 @@ conclusion) check」が欠落**していたため、本 defect (D3) は `audit:P
    `@audit:residual-ok(sufficiency-checked)` は削除。**帰結**: ratio monotonicity atom (R-2/R-3/R-4-b/R-5-c)
    が genuine closed。一般 density Blachman 壁は R-3 から chain 頂点 (A-5 wrapper) の caller 供給
    precondition に局所化 (新 wall `blachman-general-density` 候補、未整備 = 次の本丸)。
+
+10. **(2026-06-05, orchestrator + lean-implementer verbatim 確認) R-4 「ratio 経由で一般 EPI 閉鎖」が FALSE-AS-STATED と判明 + bridge の ratio-reframe 試行を中止**:
+    case1 G3 (`csiszarGap_antitoneOn_Icc_zero_one` difference sorry) の honest closure として
+    「predicate `IsStamToEPIScalingHyp` を difference→ratio 張替 + bridge body を ratio EPI 復元路に
+    再配線」を実装試行したが、**verbatim signature 照合で前提が偽と判明、無編集で中止** (build 健全維持)。
+    - 根因: `csiszarLogRatioGap_at_one_eq_zero` (`EPIL3Integration.lean:1426`) は
+      `hLawX : P.map (X+Z_X) = gaussianReal m₁ v₁` / `hLawY` を要求 = **`X+Z_X`・`Y+Z_Y` が Gaussian**。
+      bridge body の入力 `X,Y` は任意 → `X+Z_X` 非 Gaussian → `r(1)=0` 不成立。ratio gap は
+      convolution path `X+√t·Z` で `t→∞` でしか saturate せず、`t=1` は pure Gaussian 端点でない。
+    - `csiszarLogRatioGap_at_one_eq_zero` は sorryAx-free だが **consumer 0 件・bridge 適用不能**
+      (「正しいが端点が違う補題」)。`0 sorry` per-lemma check では捕まらない gap、
+      hLawX precondition と bridge の available facts を照合して初めて露見 (R-6 sufficiency check の実例)。
+    - **G3 の正しい理解**: G3 difference sorry は **false-dependent ではない**。G3 は既に genuine ratio
+      antitone (`csiszarLogRatioGap_antitoneOn_Ici_zero`, R-5-c) を carrier 引数に取っており、その sorry は
+      **difference-from-ratio rescale** (`csiszarGap_eq_one_source_via_rescale` の per-`s` 6 AC/integrability
+      仮説 + `(1-s)` scale 簿記) = 正当な tier-2 residual。一般入力の genuine saturation は **difference-form**
+      (`heatFlowPath2 = √(1-s)X+√s Z`、s=1 で pure `Z` → `entropyPower_gaussian_additivity`) が正しいアーキで、
+      それが現 bridge body `isStamToEPIBridgeHyp_of_scaling` (`@audit:ok`) の経路。**bridge を ratio 化しては
+      いけない** (pure-Gaussian 端点を失う)。
+    - **帰結**: R-5 の「D7/D11 rescale を ratio 再配線」方針のうち **bridge body の ratio 化は誤り** (difference
+      アーキを保つ)。G3 の honest closure 路は (a) rescale の 6 per-`s` AC/integrability precondition を
+      discharge (当初 retreat した ~25-40 行 scope 超過)、または (b) 新規 `r(t)→0 (t→∞)` 極限補題を建てて
+      ratio 路を別途完成、の 2 択。どちらも mechanical refactor ではなく実作業。proof-pivot-advisor の
+      「G3 transitively false-dependent → ratio reframe」verdict は **verbatim check で訂正** (監査の単一ルート
+      過大評価、memory `feedback_independent_wall_recheck`)。
