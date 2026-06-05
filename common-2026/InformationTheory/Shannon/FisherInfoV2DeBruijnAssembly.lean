@@ -336,8 +336,11 @@ all hyps does NOT hand over the majorant — it is derived by two-sided `abs_le`
 via `convDensityAdd_le_prefactor`). `hpX_mass` is consumed as genuine normalization (in `_le_prefactor`
 `∫(pX·pref)=pref`, in `_uniformR` tightness `∫_{[-R,R]}pX≥1/2`, in `convDensityAdd_pos` positive mass) =
 regularity precondition, NOT load-bearing. NOT circular/degenerate. proof-done.
+Made public (formerly `private`) so the EPI G2 (β) density-form cross-term /
+llr integrability consumers (`EPIG2ConvEntropyDensity.lean`) can use it directly;
+visibility-only change, body and `@audit:ok` status unchanged.
 @audit:ok -/
-private theorem convDensityAdd_logFactor_poly_majorant
+theorem convDensityAdd_logFactor_poly_majorant
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (_hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
     {t : ℝ} (ht : 0 < t) :

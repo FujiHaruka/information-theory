@@ -51,7 +51,8 @@ Route: `Measure.rnDeriv_withDensity` collapses each withDensity rnDeriv to its d
 on the `volume` axis, `rnDeriv_withDensity_right` inverts the right withDensity, and the
 base is transferred `=ᵐ[volume] ⟹ =ᵐ[γ]` through `volume ≪ γ` (`g > 0`).
 
-`hf_meas`/`hg_meas`/`hf_nn`/`hg_pos`/`hf_int`/`hg_int` are regularity preconditions. -/
+`hf_meas`/`hg_meas`/`hf_nn`/`hg_pos`/`hf_int`/`hg_int` are regularity preconditions.
+@audit:ok -/
 theorem rnDeriv_withDensity_quotient_ae
     {f g : ℝ → ℝ} (hf_meas : Measurable f) (hg_meas : Measurable g)
     (hf_nn : ∀ x, 0 ≤ f x) (hg_pos : ∀ x, 0 < g x)
@@ -102,7 +103,8 @@ lifted by `ENNReal.ofReal`), and discharge the pointwise liminf bound via contin
 `klFun` composed with the a.e. convergence.
 
 `hμ_ac`/`hμn_ac` (absolute continuity) and `h_ae` (a.e. convergence input) are
-preconditions; the conclusion is the genuine LSC inequality (not bundled). -/
+preconditions; the conclusion is the genuine LSC inequality (not bundled).
+@audit:ok -/
 theorem klDiv_le_liminf_of_ae_tendsto
     (γ : Measure ℝ) [IsFiniteMeasure γ]
     (μ : Measure ℝ) (μ_n : ℕ → Measure ℝ) [IsFiniteMeasure μ] [∀ n, IsFiniteMeasure (μ_n n)]
@@ -158,7 +160,8 @@ layer-1 L¹ convergence `convDensityAdd_tendsto_L1_zero` (`@audit:ok`, sorryAx-f
 `tendstoInMeasure_of_tendsto_eLpNorm` (Lp → measure) →
 `TendstoInMeasure.exists_seq_tendsto_ae` (measure → a.e. subsequence). No own `sorry`.
 
-All `hpX_*` are regularity preconditions; `hu_lim` is the input filter. -/
+All `hpX_*` are regularity preconditions; `hu_lim` is the input filter.
+@audit:ok -/
 theorem convDensity_tendsto_ae_subseq
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume)
@@ -194,7 +197,8 @@ theorem convDensity_tendsto_ae_subseq
 
 /-- **log of the Gaussian density** as a quadratic (verbatim from the `gaussianPDFReal`
 definition `(√(2πv))⁻¹ · exp(-(x-μ)²/(2v))`). For `v ≠ 0` and `μ = 0`:
-`log (gaussianPDFReal 0 v x) = - log (√(2πv)) - x² / (2v)`. -/
+`log (gaussianPDFReal 0 v x) = - log (√(2πv)) - x² / (2v)`.
+@audit:ok -/
 theorem log_gaussianPDFReal_zero {v : ℝ≥0} (hv : v ≠ 0) (x : ℝ) :
     Real.log (gaussianPDFReal 0 v x)
       = - Real.log (Real.sqrt (2 * π * v)) - x ^ 2 / (2 * v) := by
@@ -212,7 +216,8 @@ theorem log_gaussianPDFReal_zero {v : ℝ≥0} (hv : v ≠ 0) (x : ℝ) :
 With `g := gaussianPDFReal 0 σ²` (`σ² ≠ 0`) and `f_t := convDensityAdd pX g_t` (`t > 0`),
 the cross integral `∫ f_t · log g` is an *affine* function of `t`:
 `∫ x, f_t x · log (g x) = c₀ · 1 − (1/(2σ²)) · (M2(pX) + (∫pX)·t)`,
-where `c₀ = − log (√(2πσ²))` and `M2(pX) = ∫ x²·pX`. -/
+where `c₀ = − log (√(2πσ²))` and `M2(pX) = ∫ x²·pX`.
+@audit:ok -/
 theorem cross_term_closed_form {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume)
@@ -249,7 +254,8 @@ theorem cross_term_closed_form {pX : ℝ → ℝ}
   ring
 
 /-- **Limit of the marginal cross-term** `∫ pX · log g` in the same expanded form.
-With `g := gaussianPDFReal 0 σ²`, `∫ x, pX x · log (g x) = c₀·(∫pX) − (1/(2σ²))·M2(pX)`. -/
+With `g := gaussianPDFReal 0 σ²`, `∫ x, pX x · log (g x) = c₀·(∫pX) − (1/(2σ²))·M2(pX)`.
+@audit:ok -/
 theorem pX_cross_term_expand {pX : ℝ → ℝ}
     (hpX_int : Integrable pX volume)
     (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
@@ -266,7 +272,8 @@ theorem pX_cross_term_expand {pX : ℝ → ℝ}
 
 /-- **W3 — cross-term convergence** `∫ f_n · log g → ∫ pX · log g` as `u_n → 0⁺`.
 Combines the affine closed form `cross_term_closed_form` (in `t`) with the marginal
-expansion `pX_cross_term_expand`; the difference is `−(1/(2σ²))·(∫pX)·u_n → 0`. -/
+expansion `pX_cross_term_expand`; the difference is `−(1/(2σ²))·(∫pX)·u_n → 0`.
+@audit:ok -/
 theorem cross_term_tendsto {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume)
@@ -328,12 +335,24 @@ preconditions (per-measure equal mass / two-way absolute continuity / `log p`–
 integrability) for the smoothed-density family `μ_n` and for `μ = pX`, converts the
 ℝ≥0∞ liminf bound to a `toReal` bound via `klDiv μ γ ≠ ∞`, and runs the subsequence
 promotion. None of these are Mathlib walls — they are precondition plumbing on top of the
-genuine W1–W4 — so the residual is the inherited `wall:kl-lower-semicontinuous` slug
-(its surface has shrunk from "DV dual hard direction" to "Fatou assembly plumbing").
+genuine W1–W4 — so the residual is reclassified to
+`plan:epi-g2-general-sandwich-moonshot-plan` (its surface has shrunk from the parked "DV
+dual hard direction" wall to "Fatou assembly plumbing", closing within the parent plan).
+
+AUDIT 2026-06-05 (independent honesty audit): W1–W4 + helpers all `@audit:ok`
+(`#print axioms` = `[propext, Classical.choice, Quot.sound]`, sorryAx-free; no circular /
+bundling / degeneracy; sufficiency PASS — W1's Fatou applies `klFun ≥ 0` correctly to the
+a.e. limit). The assembly signature is honest: the parked `hKL_limsup` step is a local
+`have`, the conclusion `limsup ≤ ∫ negMulLog pX` is unchanged, hypotheses are all `pX`
+regularity + `σ² ≠ 0` + `u → 0⁺` positivity (no load-bearing hyp). Residual
+RECLASSIFIED `wall:kl-lower-semicontinuous` → `plan:...moonshot-plan`: the remaining work
+(toReal via `klDiv_ne_top`, `klDiv_nonneg`, W1 + W3 + W4, `tendsto_of_subseq_tendsto`
+promotion) uses only existing Mathlib/in-tree parts — not a genuine Mathlib absence, so
+`wall:` overstated the gap (`misclassified_residual`).
 
 The hypotheses are all regularity preconditions (`pX` density regularity + `σ² ≠ 0` +
 `u → 0⁺` positivity); the conclusion is the genuine limsup inequality, not bundled.
-@residual(wall:kl-lower-semicontinuous) -/
+@residual(plan:epi-g2-general-sandwich-moonshot-plan) -/
 theorem negMulLog_convDensity_limsup_le {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -534,7 +553,7 @@ theorem negMulLog_convDensity_limsup_le {pX : ℝ → ℝ}
   -- `h_n n = - KLr n - cross_n n` (`hhn_eq`, genuine bridge), `KLr n ≥ 0`, the W1 bound
   -- `(klDiv μ γ).toReal ≤ liminf KLr` along the a.e.-convergent W4 subsequence, the W3
   -- limit `cross_n → crossμ`, and the boundedness of `h_n` above (= `- KLr n ≤ 0`).
-  -- @residual(wall:kl-lower-semicontinuous)
+  -- @residual(plan:epi-g2-general-sandwich-moonshot-plan)
   have hKL_limsup : Filter.limsup h_n atTop ≤ - (klDiv μ γ).toReal - crossμ := by
     sorry
   -- Assemble: rewrite the goal limsup into `h_n`, apply the toReal bound, and close the
