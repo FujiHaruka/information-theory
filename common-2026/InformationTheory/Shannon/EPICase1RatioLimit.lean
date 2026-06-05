@@ -1424,10 +1424,20 @@ theorem entropyPower_add_ge_case1_of_regular
   -- Order-limit bridge §1: antitone + `R t → 0` ⟹ EPI.
   exact epi_of_csiszarLogRatioGap_tendsto X Y Z_X Z_Y P h_anti h_lim
 
-/-- **Case-1 EPI under method-X regularity** (entropic-CLT-free).
+/-- **Case-1 EPI under method-X regularity** (entropic-CLT-free, unit-noise form).
 `N(P.map(X+Y)) ≥ N(P.map X) + N(P.map Y)` for a.c. inputs, reduced to **method-X
-regularity** (a.c. inputs + finite second moments + Gaussian noise laws + 4-tuple
-independence) **plus de Bruijn per-time regularity**.
+regularity** (a.c. inputs + finite second moments + **standard-normal** `𝒩(0,1)`
+noise laws + 4-tuple independence) **plus de Bruijn per-time regularity**.
+
+**PB-1 unit-noise restate (2026-06-05, `epi-case1-debruijn-producer-plan`)**: the noise
+laws were generalized `gaussianReal 0 v_X`/`gaussianReal 0 v_Y` (`v_X v_Y` arbitrary
+nonzero). Since the conclusion `N(X+Y) ≥ N(X)+N(Y)` does not mention the noise, the noise
+is an auxiliary variable and fixing it to `𝒩(0,1)` loses no generality. This is required
+so the de Bruijn producers (`isDeBruijnRegularityHyp_of_methodX_unitnoise`) — whose
+`IsRegularDeBruijnHypV2.Z_law` hardcodes `gaussianReal 0 1` — can actually supply the
+threaded `IsDeBruijnRegularityHyp` group (previously vacuous for `v_X ≠ 1`). The body
+re-introduces `v_X v_Y := (1 : ℝ≥0)` existentially to keep the `_of_regular` plumbing
+(general `v_B` on the §4 saturation side) unchanged.
 
 This wrapper discharges the supply-able preconditions of
 `entropyPower_add_ge_case1_of_regular` from clean method-X data:
@@ -1477,10 +1487,11 @@ theorem entropyPower_add_ge_case1_of_methodX
     (hXY_ac : (P.map (fun ω => X ω + Y ω)) ≪ volume)
     (h_mom_X : Integrable (fun ω => (X ω)^2) P)
     (h_mom_Y : Integrable (fun ω => (Y ω)^2) P)
-    -- method-X: noise Gaussian law + nonzero variance
-    (v_X v_Y : ℝ≥0) (hv_X : v_X ≠ 0) (hv_Y : v_Y ≠ 0)
-    (hZX_law : P.map Z_X = gaussianReal 0 v_X)
-    (hZY_law : P.map Z_Y = gaussianReal 0 v_Y)
+    -- method-X: noise standard-normal law (unit variance, PB-1 restate — the noise is an
+    -- auxiliary variable absent from the conclusion, so fixing it to `𝒩(0,1)` loses no
+    -- generality and aligns with the de Bruijn group's unit-variance requirement)
+    (hZX_law : P.map Z_X = gaussianReal 0 1)
+    (hZY_law : P.map Z_Y = gaussianReal 0 1)
     -- method-X: 4-tuple joint independence (inputs/noise all independent)
     (h_iIndep : iIndepFun ![X, Y, Z_X, Z_Y] P)
     -- de Bruijn per-time regularity (cross-plan thread, NOT supply-able)
@@ -1519,6 +1530,16 @@ theorem entropyPower_add_ge_case1_of_methodX
     entropyPower (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
   classical
+  -- PB-1: unit-noise restate. The noise variances are fixed to `1`; the §4 saturation
+  -- side (`entropyPower_rescaled_path_tendsto`) takes a general `v_B`, so `v_X = v_Y = 1`
+  -- and `v_sum = 1 + 1 = 2` flow through `_of_regular` unchanged. We rebind the unit laws
+  -- to the `gaussianReal 0 v_X` shape the body expects (defeq `v_X := (1 : ℝ≥0)`).
+  obtain ⟨v_X, hv_X, hZX_law⟩ :
+      ∃ v : ℝ≥0, v ≠ 0 ∧ P.map Z_X = gaussianReal 0 v :=
+    ⟨1, one_ne_zero, hZX_law⟩
+  obtain ⟨v_Y, hv_Y, hZY_law⟩ :
+      ∃ v : ℝ≥0, v ≠ 0 ∧ P.map Z_Y = gaussianReal 0 v :=
+    ⟨1, one_ne_zero, hZY_law⟩
   -- ===== C-3a: extract the four individual independences from the 4-tuple. =====
   -- Pointwise reduction of the `![X,Y,Z_X,Z_Y]` family entries.
   have hf_meas : ∀ i, Measurable (![X, Y, Z_X, Z_Y] i) := by
@@ -1707,5 +1728,114 @@ theorem entropyPower_add_ge_case1_of_methodX
     h_reg_sum h_reg_X' h_reg_Y' h_endpt_sum h_endpt_X h_endpt_Y h_pos_stam
     h_scale_X h_scale_Y h_scale_sum varX varY varS h_varX_nn h_varY_nn h_varS_nn
     h_reg_X h_reg_Y h_reg_S
+
+/-! ## PB-2 — path-identification reduction (B-0) -/
+
+/-- **Path-identification (B-0)**: the standardized noise `Z' = Z/√v` (`v > 0`) on the
+time-reparametrized path `X + √(t·v)·Z'` agrees *pointwise* (everywhere, not just a.e.)
+with the original path `X + √t·Z`. Used to bridge the sum-instance's `𝒩(0,2)` noise to a
+unit `W`. The hypothesis `0 < v` is required (`√v ≠ 0`); the `v = 0` degeneracy (division
+by `√0 = 0`) is excluded. -/
+theorem gaussianConvolution_rescale_eq {α : Type*}
+    (X Z : α → ℝ) (v : ℝ) (hv : 0 < v) (t : ℝ) (ht : 0 ≤ t) :
+    InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X
+        (fun ω => Z ω / Real.sqrt v) (t * v)
+      = InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z t := by
+  funext ω
+  unfold InformationTheory.Shannon.FisherInfoV2.gaussianConvolution
+  rw [Real.sqrt_mul ht v]
+  have hsv : Real.sqrt v ≠ 0 := (Real.sqrt_ne_zero' (x := v)).mpr hv
+  field_simp
+
+/-- **Path-identification, `P.map` form**: the laws of the standardized time-reparam path
+and the original path coincide (consequence of the pointwise identity). -/
+theorem map_gaussianConvolution_rescale_eq {α : Type*} [MeasurableSpace α]
+    (P : Measure α) (X Z : α → ℝ) (v : ℝ) (hv : 0 < v) (t : ℝ) (ht : 0 ≤ t) :
+    P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X
+        (fun ω => Z ω / Real.sqrt v) (t * v))
+      = P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z t) := by
+  rw [gaussianConvolution_rescale_eq X Z v hv t ht]
+
+/-! ## PB-3 — `IsDeBruijnRegularityHyp` producer (X / Y, unit-noise direct)
+
+The de Bruijn regularity group threaded by the case-1 wrapper is produced from method-X
+input regularity. Since PB-1 fixes the noise to `𝒩(0,1)`, the unit-variance `Z_law`
+required by `IsRegularDeBruijnHypV2` is satisfied directly (no reparametrization needed for
+the X / Y singletons; the sum-instance `𝒩(0,2)` is the only reparam case, deferred to a
+later wave). The `pX`-witness fields are the same plumbing as `IsRegularDeBruijnHypV2.ofHeatFlow`
+(`FisherInfoV2DeBruijnBody.lean`); the conv-pin `density_path` reuses the genuine density
+of `P.map (X + √t·Z)`. -/
+
+/-- **PB-3 producer (X / Y, unit-noise direct)**: from method-X input regularity (`X`
+measurable, a.c., finite second moment) and **standard-normal** noise `Z_X` independent of
+`X`, supply the `IsDeBruijnRegularityHyp X Z_X P` group threaded by the case-1 wrapper.
+
+The V2 `reg_at` instance is built directly (mirroring `IsRegularDeBruijnHypV2.ofHeatFlow`'s
+field plumbing, but taking the unit `Z_law` from `hZX_law` instead of an
+`IsHeatFlowDensity` witness — `ofHeatFlow` only consumes `h_heat.Z_law` anyway, so going
+direct avoids bundling the load-bearing heat-equation field). The `density_path`/conv-pin
+fields use the genuine convolution density. The `pX` series is a regularity precondition
+(`X` has a Lebesgue density + finite variance), discharged genuinely from `hX_ac`/`h_mom_X`.
+
+The `integrable_deriv` field — interval-integrability of `t ↦ (1/2)·J(density_t)` on `[0,T]`
+— is the genuine analytic obstacle: `gaussianConv_fisher_le_inv_var` bounds `J ≤ 1/t`, which
+is *not* interval-integrable near `t = 0` for a general (non-Gaussian) input `X`. This is the
+de Bruijn per-time analytic content, parked here; the rest of the group is genuine.
+@residual(plan:epi-case1-debruijn-producer-plan) -/
+noncomputable def isDeBruijnRegularityHyp_of_methodX_unitnoise
+    (X Z_X : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
+    (hZX_law : P.map Z_X = gaussianReal 0 1)
+    (hX_ac : (P.map X) ≪ volume) (h_mom_X : Integrable (fun ω => (X ω) ^ 2) P) :
+    InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P := by
+  classical
+  -- Real density witness for `X` from a.c.
+  set pX : ℝ → ℝ := fun x => ((P.map X).rnDeriv volume x).toReal with hpX_def
+  have hpX_nn : ∀ x, 0 ≤ pX x := fun x => ENNReal.toReal_nonneg
+  have hpX_meas : Measurable pX :=
+    ((P.map X).measurable_rnDeriv volume).ennreal_toReal
+  have hpX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x)) := by
+    have hfin : ∀ᵐ x ∂volume, (P.map X).rnDeriv volume x < ∞ :=
+      Measure.rnDeriv_lt_top (P.map X) volume
+    have hcongr : (fun x => ENNReal.ofReal (pX x)) =ᵐ[volume]
+        (P.map X).rnDeriv volume := by
+      filter_upwards [hfin] with x hx
+      simp only [hpX_def, ENNReal.ofReal_toReal hx.ne]
+    rw [withDensity_congr_ae hcongr, Measure.withDensity_rnDeriv_eq _ _ hX_ac]
+  have hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume := by
+    have hsq_law : Integrable (fun y => y ^ 2) (P.map X) := by
+      rw [integrable_map_measure
+        ((by fun_prop : Measurable (fun y : ℝ => y ^ 2)).aestronglyMeasurable)
+        hX.aemeasurable]
+      simpa [Function.comp] using h_mom_X
+    rw [hpX_law] at hsq_law
+    rw [integrable_withDensity_iff_integrable_smul₀'
+      hpX_meas.ennreal_ofReal.aemeasurable
+      (Filter.Eventually.of_forall fun x => ENNReal.ofReal_lt_top)] at hsq_law
+    refine hsq_law.congr (Filter.Eventually.of_forall fun x => ?_)
+    simp only [smul_eq_mul, ENNReal.toReal_ofReal (hpX_nn x)]; ring
+  refine
+    { density_path := fun t => InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
+        (gaussianPDFReal 0 t.toNNReal),
+      reg_at := fun t ht =>
+        { Z_law := hZX_law
+          density_t := InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
+            (gaussianPDFReal 0 ⟨t, ht.le⟩)
+          density_t_eq := fun _ _ => rfl
+          pX := pX
+          pX_nn := hpX_nn
+          pX_meas := hpX_meas
+          pX_law := hpX_law
+          pX_mom := hpX_mom }
+      density_t_eq := ?_
+      integrable_deriv := ?_ }
+  · -- density_t_eq: the V2-internal density_t is pinned to density_path t (both = conv-pin).
+    intro t ht
+    have : t.toNNReal = (⟨t, ht.le⟩ : ℝ≥0) := by
+      apply NNReal.eq; exact Real.coe_toNNReal t ht.le
+    rw [this]
+  · -- integrable_deriv: genuine analytic obstacle (J ≤ 1/t not integrable at 0).
+    -- @residual(plan:epi-case1-debruijn-producer-plan)
+    sorry
 
 end InformationTheory.Shannon.EPICase1RatioLimit
