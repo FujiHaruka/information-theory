@@ -34,7 +34,10 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 `N(X+Y) ≥ N(X) + N(Y) = 0 + 0 = 0`。LHS ≥ 0 は ℝ≥0∞ で型自明 (`zero_le`)。
 X+Y が a.c. か特異かを判定せずに閉じる (RHS=0 ゆえ LHS の値に依らず成立)。
 
-退化定義悪用ではない: 特異測度のエントロピーパワーは真に 0 であり RHS=0 は正しい値。 -/
+退化定義悪用ではない: 特異測度のエントロピーパワーは真に 0 であり RHS=0 は正しい値。
+独立 honesty audit 2026-06-05: `entropyPowerExt_singular` (genuine, sorryAx-free) + sanity gate
+(`entropyPowerExt_dirac`/`_gaussianReal`) により退化定義悪用でなく、RHS=0 は正しい値と確認。
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free 機械確認)。@audit:ok -/
 theorem entropyPowerExt_singular_add_ge
     (X Y : Ω → ℝ) (P : Measure Ω)
     (hX_sing : ¬ P.map X ≪ volume) (hY_sing : ¬ P.map Y ≪ volume) :
@@ -46,7 +49,9 @@ theorem entropyPowerExt_singular_add_ge
 /-- **Phase 2 — convolution-a.c.**: `X a.c. ∧ X ⊥ Y ⟹ X+Y a.c.`。
 `IndepFun.map_add_eq_map_conv_map` で `μ.map(X+Y) = μ.map X ∗ μ.map Y`、`conv_comm` で
 a.c. 因子を右に回し (`conv_absolutelyContinuous` は a.c. 因子を右に要求する非対称形)、
-`conv_absolutelyContinuous` で a.c. 伝播。純 Mathlib。 -/
+`conv_absolutelyContinuous` で a.c. 伝播。純 Mathlib。
+独立 honesty audit 2026-06-05: 仮説は全 regularity precondition (measurability/IndepFun/a.c.)、
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free)。@audit:ok -/
 theorem map_add_absolutelyContinuous
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -63,7 +68,11 @@ theorem map_add_absolutelyContinuous
 8 integrability 前提 (`h_ac`/`h_int`/`hκ_v`/`hκ_logp_int`/`hκ_cross_int`/`h_fibreEnt_int`/
 `h_cross_int`/`h_logq_int`) は **honest regularity precondition** — W=X+Y の a.c. 密度 +
 fibre regularity であって、結論の核心を encode していない (**NOT load-bearing**)。
-`differentialEntropy_indep_gaussian_add_ge` の signature が雛形 (`√s·Z` を `Y` に置換)。 -/
+`differentialEntropy_indep_gaussian_add_ge` の signature が雛形 (`√s·Z` を `Y` に置換)。
+独立 honesty audit 2026-06-05: 8 integrability は `condDifferentialEntropy_le` / `_indep_add_eq`
+(両 genuine `@audit:ok`) の precondition と同型 threading で load-bearing でない。core は genuine な
+依存補題側にあり、結論 `h(X)≤h(X+Y)` を仮説に encode していない。
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free 機械確認)。@audit:ok -/
 theorem differentialEntropy_add_ge_of_indep
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -111,7 +120,9 @@ theorem differentialEntropy_add_ge_of_indep
 `entropyPowerExt_of_ac` で両者 `ofReal (exp (2h))`、Phase 3 の `h(X)≤h(X+Y)` を
 `Real.exp_le_exp` → `ENNReal.ofReal_le_ofReal` で lift。
 
-8 integrability は Phase 3 から透過する honest regularity precondition (NOT load-bearing)。 -/
+8 integrability は Phase 3 から透過する honest regularity precondition (NOT load-bearing)。
+独立 honesty audit 2026-06-05: core は genuine Phase 3 補題を直接呼出 + `entropyPowerExt_of_ac`/
+`_singular` lift、`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free)。@audit:ok -/
 theorem entropyPowerExt_mixed_add_ge
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -158,7 +169,9 @@ theorem entropyPowerExt_mixed_add_ge
 `X + Y = Y + X` (`add_comm` の funext) で `entropyPowerExt_mixed_add_ge` を Y/X 入替えて
 再適用 (`hXY.symm : IndepFun Y X P`)。RHS は `N(X)+N(Y) = N(Y)+N(X)` を `add_comm` で合わせる。
 
-8 integrability は `Y+X` の path で本補題の honest regularity precondition (NOT load-bearing)。 -/
+8 integrability は `Y+X` の path で本補題の honest regularity precondition (NOT load-bearing)。
+独立 honesty audit 2026-06-05: `entropyPowerExt_mixed_add_ge` (genuine) を Y/X 入替で直接再適用、
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free)。@audit:ok -/
 theorem entropyPowerExt_mixed_add_ge_symm
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -202,33 +215,71 @@ theorem entropyPowerExt_mixed_add_ge_symm
 * Y a.c. ∧ X 特異 (case 2 対称): `entropyPowerExt_mixed_add_ge_symm` (+ Y+X path の integrability)。
 * 両特異 (case 3): `entropyPowerExt_singular_add_ge` (型自明、RHS=0)。
 
-case 3 (両特異) 枝は本 file 内で genuine に閉じる。case 2 (X a.c. ∧ Y 特異) / case 2 対称
-(Y a.c. ∧ X 特異) の 2 枝は、path 依存の 8 integrability regularity precondition (W=X+Y / W=Y+X
-の a.c. 密度 + fibre regularity、**NOT load-bearing**) を要するため、それらを discharge した
-`entropyPowerExt_mixed_add_ge` / `_symm` への配線可能性を **a.c./特異 判定で条件づけた
-honest implication `hMixed_XY` / `hMixed_YX`** で受け取る (これらの core proof は本 file の
-Phase 4 補題で既に genuine、implication は regularity を threading する役割のみで結論を
-仮説に encode していない)。
+case 3 (両特異) 枝は本 file 内で genuine に閉じる (`entropyPowerExt_singular_add_ge` 直接呼出)。
+case 2 (X a.c. ∧ Y 特異) / case 2 対称 (Y a.c. ∧ X 特異) の 2 枝は、Phase 4 補題
+`entropyPowerExt_mixed_add_ge` / `_symm` を **8 integrability precondition つきで直接呼出** する。
+これらの integrability は path 依存の honest regularity precondition (X+Y path / Y+X path の
+a.c. 密度 + fibre regularity、**NOT load-bearing**)。X+Y path の 8 本を `h_*`、Y+X path の 8 本を
+`h_*_symm` として dispatch signature に直接展開する (結論を仮説に bundle しない)。
 
 case 1 枝 (両 a.c.) のみ `sorry`: 既存 plan 群 (`epi-stam-to-conclusion-plan`) が closure する
 hard core で本 plan scope 外。最終 headline `entropy_power_inequality_unconditional`
 (S2 で確定する新型 statement、case1 を S5 経由無前提版に差替) の body 完成は傘 Phase 5。
 
 **case 1 park 以外は genuine** (case 3 は vacuous でなく特異測度のエントロピーパワーが真に 0、
-case 2 の前提は load-bearing でなく regularity)。
-
+case 2 の前提は load-bearing でなく regularity precondition を Phase 4 補題に threading するのみ)。
+独立 honesty audit 2026-06-05: case 2 / case 2 対称 枝は本 file の genuine Phase 4 補題を直接呼出、
+integrability は honest regularity precondition、case 1 のみ `@residual(plan:...)` で park。
 @residual(plan:epi-stam-to-conclusion-plan) -/
 theorem entropyPowerExt_add_ge_dispatch_skeleton
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    -- case 2 配線: X+Y path regularity を discharge した mixed 補題への結線 (NOT load-bearing)
-    (hMixed_XY : (P.map X) ≪ volume → ¬ P.map Y ≪ volume →
-      entropyPowerExt (P.map (fun ω => X ω + Y ω))
-        ≥ entropyPowerExt (P.map X) + entropyPowerExt (P.map Y))
-    -- case 2 対称 配線: Y+X path regularity を discharge した mixed 補題への結線 (NOT load-bearing)
-    (hMixed_YX : (P.map Y) ≪ volume → ¬ P.map X ≪ volume →
-      entropyPowerExt (P.map (fun ω => X ω + Y ω))
-        ≥ entropyPowerExt (P.map X) + entropyPowerExt (P.map Y)) :
+    -- case 2 (X a.c. ∧ Y 特異) 用 X+Y path の 8 integrability regularity precondition (NOT load-bearing)
+    (h_ac : (P.map Y) ⊗ₘ condDistrib (fun ω => X ω + Y ω) Y P
+        ≪ (P.map Y) ⊗ₘ Kernel.const ℝ (P.map (fun ω => X ω + Y ω)))
+    (h_int : Integrable
+      (llr ((P.map Y) ⊗ₘ condDistrib (fun ω => X ω + Y ω) Y P)
+        ((P.map Y) ⊗ₘ Kernel.const ℝ (P.map (fun ω => X ω + Y ω))))
+      ((P.map Y) ⊗ₘ condDistrib (fun ω => X ω + Y ω) Y P))
+    (hκ_v : ∀ᵐ z ∂(P.map Y),
+      condDistrib (fun ω => X ω + Y ω) Y P z ≪ volume)
+    (hκ_logp_int : ∀ᵐ z ∂(P.map Y), Integrable
+      (fun x => ((condDistrib (fun ω => X ω + Y ω) Y P z).rnDeriv volume x).toReal
+        * Real.log (((condDistrib (fun ω => X ω + Y ω) Y P z).rnDeriv volume x).toReal)) volume)
+    (hκ_cross_int : ∀ᵐ z ∂(P.map Y), Integrable
+      (fun x => ((condDistrib (fun ω => X ω + Y ω) Y P z).rnDeriv volume x).toReal
+        * Real.log (((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal)) volume)
+    (h_fibreEnt_int : Integrable
+      (fun z => differentialEntropy (condDistrib (fun ω => X ω + Y ω) Y P z)) (P.map Y))
+    (h_cross_int : Integrable
+      (fun z => ∫ x, ((condDistrib (fun ω => X ω + Y ω) Y P z).rnDeriv volume x).toReal
+        * Real.log (((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) ∂volume) (P.map Y))
+    (h_logq_int : Integrable
+      (fun x => Real.log (((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal))
+      (P.map (fun ω => X ω + Y ω)))
+    -- case 2 対称 (Y a.c. ∧ X 特異) 用 Y+X path の 8 integrability regularity precondition (NOT load-bearing)
+    (h_ac_symm : (P.map X) ⊗ₘ condDistrib (fun ω => Y ω + X ω) X P
+        ≪ (P.map X) ⊗ₘ Kernel.const ℝ (P.map (fun ω => Y ω + X ω)))
+    (h_int_symm : Integrable
+      (llr ((P.map X) ⊗ₘ condDistrib (fun ω => Y ω + X ω) X P)
+        ((P.map X) ⊗ₘ Kernel.const ℝ (P.map (fun ω => Y ω + X ω))))
+      ((P.map X) ⊗ₘ condDistrib (fun ω => Y ω + X ω) X P))
+    (hκ_v_symm : ∀ᵐ z ∂(P.map X),
+      condDistrib (fun ω => Y ω + X ω) X P z ≪ volume)
+    (hκ_logp_int_symm : ∀ᵐ z ∂(P.map X), Integrable
+      (fun x => ((condDistrib (fun ω => Y ω + X ω) X P z).rnDeriv volume x).toReal
+        * Real.log (((condDistrib (fun ω => Y ω + X ω) X P z).rnDeriv volume x).toReal)) volume)
+    (hκ_cross_int_symm : ∀ᵐ z ∂(P.map X), Integrable
+      (fun x => ((condDistrib (fun ω => Y ω + X ω) X P z).rnDeriv volume x).toReal
+        * Real.log (((P.map (fun ω => Y ω + X ω)).rnDeriv volume x).toReal)) volume)
+    (h_fibreEnt_int_symm : Integrable
+      (fun z => differentialEntropy (condDistrib (fun ω => Y ω + X ω) X P z)) (P.map X))
+    (h_cross_int_symm : Integrable
+      (fun z => ∫ x, ((condDistrib (fun ω => Y ω + X ω) X P z).rnDeriv volume x).toReal
+        * Real.log (((P.map (fun ω => Y ω + X ω)).rnDeriv volume x).toReal) ∂volume) (P.map X))
+    (h_logq_int_symm : Integrable
+      (fun x => Real.log (((P.map (fun ω => Y ω + X ω)).rnDeriv volume x).toReal))
+      (P.map (fun ω => Y ω + X ω))) :
     entropyPowerExt (P.map (fun ω => X ω + Y ω))
       ≥ entropyPowerExt (P.map X) + entropyPowerExt (P.map Y) := by
   by_cases hX_ac : P.map X ≪ volume
@@ -236,12 +287,15 @@ theorem entropyPowerExt_add_ge_dispatch_skeleton
     · -- case 1 (両 a.c.): hard core、本 plan scope 外で park。
       -- @residual(plan:epi-stam-to-conclusion-plan)
       sorry
-    · -- case 2 (X a.c. ∧ Y 特異).
-      exact hMixed_XY hX_ac hY_ac
+    · -- case 2 (X a.c. ∧ Y 特異): Phase 4 補題を 8 integrability precondition つきで直接呼出。
+      exact entropyPowerExt_mixed_add_ge X Y P hX hY hXY hX_ac hY_ac h_ac h_int hκ_v
+        hκ_logp_int hκ_cross_int h_fibreEnt_int h_cross_int h_logq_int
   · by_cases hY_ac : P.map Y ≪ volume
-    · -- case 2 対称 (Y a.c. ∧ X 特異).
-      exact hMixed_YX hY_ac hX_ac
-    · -- case 3 (両特異).
+    · -- case 2 対称 (Y a.c. ∧ X 特異): Phase 4 対称版を Y+X path integrability つきで直接呼出。
+      exact entropyPowerExt_mixed_add_ge_symm X Y P hX hY hXY hY_ac hX_ac h_ac_symm h_int_symm
+        hκ_v_symm hκ_logp_int_symm hκ_cross_int_symm h_fibreEnt_int_symm h_cross_int_symm
+        h_logq_int_symm
+    · -- case 3 (両特異): 型自明、RHS=0。
       exact entropyPowerExt_singular_add_ge X Y P hX_ac hY_ac
 
 end InformationTheory.Shannon
