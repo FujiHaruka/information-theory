@@ -14,13 +14,16 @@ import InformationTheory.Shannon.FisherInfoV2DeBruijnAssembly
 /-!
 # EPI G2 Vitali witness — UnifIntegrable (UI), standalone genuine attempt
 
-Genuine standalone implementation of the `hui` input for the layer-2 Vitali
-machinery (`differentialEntropy_convDensity_integral_tendsto`). The main lemma
-`negMulLog_convDensity_unifIntegrable` has the *same signature* as the parked
-`EPIG2HeatFlowContinuity.negMulLog_convDensity_unifIntegrable` (`:165`) plus an
-added probability-mass normalization precondition `hpX_mass : ∫ pX = 1` (a
-regularity precondition supplied by the layer-2 consumer). The orchestrator will
-delegate the parked version to this file (removing the EPIG2 copy).
+**HISTORICAL (2026-06-05): the UI witness `negMulLog_convDensity_unifIntegrable`
+and its de la Vallée-Poussin core have been DELETED.** The layer-2 endpoint
+continuity (`differentialEntropy_convDensity_integral_tendsto`) no longer uses the
+Vitali route — it was reassembled from the genuine `(α)` upper bound + `(β)` lower
+bound sandwich, and `wall:approx-identity-L1` is CLOSED (no active residual). What
+this file still provides is the **genuine maxent upper bound**
+`negMulLog_convDensityAdd_gaussian_entropy_upper` (`@audit:ok`), which the sandwich
+layer-2 now consumes to discharge the `IsBoundedUnder` premise of
+`tendsto_of_le_liminf_of_limsup_le`. The Strategy note below is retained only as a
+record of the abandoned Vitali approach.
 
 ## Strategy (inventory `epi-g2-ui-bridge-inventory.md`, 4 steps)
 
@@ -39,8 +42,10 @@ delegate the parked version to this file (removing the EPIG2 copy).
   bound `M` on `∫ |negMulLog f_n|`.
 * **Step 4** (★ de la Vallée-Poussin bridge core, Mathlib-absent): "`∫|negMulLog f_n|`
   uniformly bounded → `∫⁻_{C≤|negMulLog f_n|}|negMulLog f_n| ≤ ε` uniformly (C large)".
-  This is the genuine de la Vallée-Poussin content (superlinear moment) which has no
-  Mathlib lemma. **Parked** as `wall:approx-identity-L1`; Steps 1-3 are genuine.
+  This was the genuine de la Vallée-Poussin content (superlinear moment) with no
+  Mathlib lemma. It was the `wall:approx-identity-L1` content — now **OBSOLETE**: the
+  sandwich route bypassed it entirely (the (α) upper bound uses klFun-Fatou KL
+  lower-semicontinuity, no uniform-integrability / de la Vallée-Poussin needed).
 -/
 
 namespace InformationTheory.Shannon

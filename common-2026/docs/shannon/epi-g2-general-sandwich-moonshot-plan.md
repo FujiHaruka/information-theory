@@ -20,8 +20,16 @@ rg "^- \[ \]" で残タスク横断 grep、rg "🔄" でピボット箇所だけ
 
 - [x] Phase 0 — 接続 lemma の verbatim 再確認（Read のみ） ✅
 - [x] **Phase 1 — (β) 下界: 畳み込みでエントロピー非減少 ✅ DONE (genuine, sorryAx-free, 独立監査 PASS)**
-- [~] Phase 2 — (α) 上界: KL-LSC = Donsker-Varadhan 🚧（2a easy direction genuine ✅、2b hard direction = 真 moonshot park、2c 未着手）
-- [ ] Phase 3 — 層2 載せ替え + UI/UT witness 削除 + 独立 honesty audit 📋（(α) = 2b park ゆえ未完、層2 据置）
+- [x] **Phase 2 — (α) 上界: KL 下半連続性 ✅ DONE (genuine, sorryAx-free, 独立監査 PASS)** 🔄 — 2b DV 双対 hard direction を回避し **klFun-Fatou ルート**で genuine 化（判断ログ 7）。
+- [x] **Phase 3 — 層2 載せ替え + UI/UT witness 削除 + 独立 honesty audit ✅ DONE** — `wall:approx-identity-L1` CLOSED、EPI G2 端点連続性 一般形 genuine 完成（判断ログ 7）。
+
+> **🎉 MOONSHOT 達成 (2026-06-05 multi-round orchestrator session)**: EPI G2 heat-flow 端点連続性が
+> **一般の有限 2 次モーメント分布 + `h(X)>−∞` のまま (スコープ犠牲なし) で完全 genuine 完成**。親計画・在庫・
+> handoff が「research-level moonshot、park が honest」と判定していた **DV 双対 hard direction (2b) を回避**し、
+> KL 下半連続性を **klFun 積分表現 (`klDiv_eq_lintegral_klFun_of_ac`) + klFun≥0 + Fatou (`lintegral_liminf_le`)**
+> で出す klFun-Fatou ルートで closure（判断ログ 7）。`wall:approx-identity-L1` の最後の壁 (UI/UT witness 2 本) を
+> 削除、`#print axioms` で層2 + 下流 sorryAx-free。新規 genuine 資産: `EPIG2KLFatouLSC.lean` (KL-LSC, W1-W4 +
+> assembly)、`EPIG2ConvEntropyDensity.lean` (密度形 (β) 下界)。独立 honesty audit 3 回全 PASS。
 
 > **進捗スナップショット (2026-06-04 multi-round session)**:
 > - **Phase 2a ✅ genuine DONE**: `EPIG2KLVariationalLower.lean`、`klDiv_variational_lower_bound` +
@@ -457,6 +465,32 @@ regularity field）は OK。
 ## 判断ログ
 
 書く頻度: Phase 中の方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
+
+7. **(2026-06-05 multi-round orchestrator session) MOONSHOT 達成 = 2b DV 双対を klFun-Fatou で回避し
+   (α)+(β)+層2 全 genuine、wall:approx-identity-L1 CLOSED**:
+   オーケストレーター 11 ラウンド (pivot-advisor + 在庫精査 → W1-W4 実装 → assembly scaffolding → (β) wrapper
+   3 段 → (α) assembly closure → 層2 swap、監査 4 回) を実行。
+   (a) **核心 pivot — 在庫の DV 双対 moonshot 判定は単一ルート過大評価だった**: 在庫 §A は `klDiv,
+   LowerSemicontinuous` / `DonskerVaradhan` を Found 0 で「(α) = DV 双対 hard direction = research-level
+   moonshot、park が honest」と判定。しかし **`klDiv_eq_lintegral_klFun_of_ac` (KL を ∫⁻ klFun(rnDeriv) dγ に
+   書換) + klFun≥0 + Fatou (`lintegral_liminf_le`)** の間接経路で **固定ガウス確率測度 γ 上の KL 下半連続性**が
+   直接出る。在庫が negMulLog を無限測度 Lebesgue 上で Fatou に乗せようとして「負部一様可積分 majorant 必須 =
+   既存 wall 同型」と結論したのは、γ 上に書き換える pivot を見落としたため。memory `feedback_independent_wall_recheck`
+   の実例追加 (監査・在庫は単一ルート仮定で壁を過大評価する)。
+   (b) **(α) klFun-Fatou ルート (`EPIG2KLFatouLSC.lean`)**: W1 KL-LSC 本体 + W2 rnDeriv 商 base 統一 + W3
+   cross-term 収束 + W4 密度 a.e. 部分列 + assembly。全 genuine sorryAx-free `@audit:ok`。真の Mathlib 壁 0 件。
+   (c) **(β) 密度形 wrapper (`EPIG2ConvEntropyDensity.lean`)**: Ω-level (β) 補題を canonical Ω=ℝ×ℝ
+   (`(withDensity pX).prod (gaussianReal 0 v_Z)`、X=fst/Z=snd) に instantiate、per-n regularity 前提 8 本を
+   全 discharge (shift-invariance + 多項式優関数 `convDensityAdd_logFactor_poly_majorant` public 化 +
+   `integrable_compProd_iff`)。genuine sorryAx-free。(α) assembly の boundedness と Phase 3 下刃に必須。
+   (d) **サンドイッチの 2 刃は boundedness で交わる**: (α) assembly の ℝ≥0∞→toReal 変換に `h(μ_n)` の上有界性
+   = (β) 下界が本質的に要る (klDiv≥0 は下界のみ供給)。「独立 2 刃」framing より entangled。
+   (e) **Phase 3 層2 swap**: Vitali ブロックをサンドイッチ + `tendsto_of_le_liminf_of_limsup_le` に置換、
+   boundedness は genuine maxent 上界 (`negMulLog_convDensityAdd_gaussian_entropy_upper`、壁非経由) で供給。
+   UI/UT witness 削除、`wall:approx-identity-L1` active residual 0 件。独立 honesty audit 3 回全 PASS
+   (defect/vacuity/false-generalization なし、signature 不変・非循環・非バンドル機械確認)。
+   **副産物**: `CondKLIntegral.lean` (条件付き KL 積分形、Mathlib `ChainRule.lean` TODO 充足) は Mathlib
+   upstream PR 候補のまま。klFun-Fatou KL-LSC も連続版 MI/DPI で再利用可能な独立資産。
 
 6. **(2026-06-04 multi-round session) 実装結果 = Phase 2a + 補題2 genuine、補題1 = bridge 1 本に shrink**:
    オーケストレーター 5 ラウンド (在庫 → Phase 2a → 補題2 → 監査 → 補題1 → 監査) を実行。
