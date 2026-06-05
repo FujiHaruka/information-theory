@@ -236,6 +236,8 @@ theorem deBruijn_identity_v2_of_heat_subhyp
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z)
     (hXZ : IndepFun X Z P)
+    (hX_ac : (P.map X) ≪ volume)
+    (h_mom_X : Integrable (fun ω => (X ω) ^ 2) P)
     {t : ℝ} (ht : 0 < t)
     {p : ℝ → ℝ → ℝ} {Δp : ℝ → ℝ → ℝ}
     (h_conv : IsHeatFlowConvolutionHyp X Z P p)
@@ -243,9 +245,11 @@ theorem deBruijn_identity_v2_of_heat_subhyp
     (_h_ibp : IsIBPHypothesis X Z P p t) :
     HasDerivAt
       (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
-      ((1 / 2) * fisherInfoOfDensityReal (p t))
+      ((1 / 2) * fisherInfoOfDensityReal
+        (IsRegularDeBruijnHypV2.ofHeatFlow hX hZ hXZ hX_ac h_mom_X ht
+          (IsHeatFlowDensity_of_sub_predicates h_conv h_time)).density_t)
       t :=
-  deBruijn_identity_v2_of_heat_flow X Z hX hZ hXZ ht
+  deBruijn_identity_v2_of_heat_flow X Z hX hZ hXZ hX_ac h_mom_X ht
     (IsHeatFlowDensity_of_sub_predicates h_conv h_time) _h_ibp
 
 /-- **`IsRegularDeBruijnHypV2` constructor from sub-predicates.**
@@ -260,12 +264,14 @@ noncomputable def IsRegularDeBruijnHypV2.ofHeatSubhyp
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     {X Z : Ω → ℝ} (hX : Measurable X) (hZ : Measurable Z)
     (hXZ : IndepFun X Z P)
+    (hX_ac : (P.map X) ≪ volume)
+    (h_mom_X : Integrable (fun ω => (X ω) ^ 2) P)
     {t : ℝ} (ht : 0 < t)
     {p : ℝ → ℝ → ℝ} {Δp : ℝ → ℝ → ℝ}
     (h_conv : IsHeatFlowConvolutionHyp X Z P p)
     (h_time : IsHeatTimeDerivHyp p Δp) :
     IsRegularDeBruijnHypV2 X Z P t :=
-  IsRegularDeBruijnHypV2.ofHeatFlow hX hZ hXZ ht
+  IsRegularDeBruijnHypV2.ofHeatFlow hX hZ hXZ hX_ac h_mom_X ht
     (IsHeatFlowDensity_of_sub_predicates h_conv h_time)
 
 end InformationTheory.Shannon.FisherInfoV2

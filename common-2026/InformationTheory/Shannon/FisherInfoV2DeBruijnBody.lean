@@ -11,6 +11,7 @@ import InformationTheory.Shannon.FisherInfoV2
 import InformationTheory.Shannon.FisherInfoV2DeBruijn
 import InformationTheory.Shannon.FisherInfoV2DeBruijnGenuine
 import InformationTheory.Shannon.DifferentialEntropy
+import InformationTheory.Shannon.EPIConvDensity
 
 /-!
 # Fisher information V2 — de Bruijn body (T2-F wave7 follow-up)
@@ -80,6 +81,7 @@ namespace InformationTheory.Shannon.FisherInfoV2
 set_option linter.unusedSectionVars false
 
 open MeasureTheory Real ProbabilityTheory InformationTheory
+open InformationTheory.Shannon.EPIConvDensity (convDensityAdd)
 open scoped ENNReal NNReal Real
 
 /-! ## Heat kernel (Gaussian density with variance `t`) -/
@@ -222,59 +224,82 @@ signature-file `deBruijn_identity_v2` shape. -/
 
 /-- **Constructor for `IsRegularDeBruijnHypV2`** from a heat-flow density.
 
-Phase 2.B 段 1 (foundation): `IsRegularDeBruijnHypV2` is now 2-field
-(`Z_law` + `density_t`), so the constructor only needs the heat-flow
-density predicate. The IBP hypothesis is no longer carried here — it is
-discharged downstream by the genuine (sorryAx-free)
+Phase 2.B 段 1 (foundation): builds the regularity predicate from the heat-flow
+density predicate, plus two **X-density regularity preconditions** required by the
+`pX`-witness fields (§5A):
+
+* `hX_ac : (P.map X) ≪ volume` — `X` has a Lebesgue density. Required by `pX_law`
+  (`withDensity_rnDeriv_eq`). The heat-flow predicate `IsHeatFlowDensity` carries
+  only the *path* density `p` (density of `X + √t·Z`), NOT a witness for `X`'s own
+  Lebesgue density, so this must be supplied externally.
+* `h_mom_X : Integrable (fun ω => (X ω)^2) P` — `X` has finite second moment.
+  Required by `pX_mom` (transport of `X²` integrability to the `y²·pX` integral on
+  `volume`). Again the heat-flow predicate carries no finite-variance source.
+
+Both are **regularity preconditions** (a.c. + finite variance), NOT load-bearing:
+they assert external regularity of `X` (existence of a density + finite variance),
+not any de Bruijn / Fisher / `HasDerivAt` analytic core. The de Bruijn identity
+itself is discharged downstream by the genuine (sorryAx-free)
 `debruijnIdentityV2_holds_assembled` (`FisherInfoV2DeBruijnAssembly.lean`;
 `wall:debruijn-integration` is [CLOSED 2026-06-04]). -/
 @[entry_point]
 noncomputable def IsRegularDeBruijnHypV2.ofHeatFlow
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
-    {X Z : Ω → ℝ} (_hX : Measurable X) (_hZ : Measurable Z)
+    {X Z : Ω → ℝ} (hX : Measurable X) (_hZ : Measurable Z)
     (_hXZ : IndepFun X Z P)
+    (hX_ac : (P.map X) ≪ volume)
+    (h_mom_X : Integrable (fun ω => (X ω) ^ 2) P)
     {t : ℝ} (_ht : 0 < t)
     {p : ℝ → ℝ → ℝ}
     (h_heat : IsHeatFlowDensity X Z P p) :
     IsRegularDeBruijnHypV2 X Z P t where
   Z_law := h_heat.Z_law
-  density_t := p t
-  -- Phase 0 density-pin: `p t` is the density of `P.map (X + √t·Z)` by the
-  -- intended meaning of `IsHeatFlowDensity` (docstring: `p t x = density at x`),
-  -- but the predicate only carries nonnegativity + measurability + heat eq, not
-  -- the `= (rnDeriv).toReal` external-shape equation. Pinning `p t` to the actual
-  -- rnDeriv is the Phase 1 density-identification atom (`pPath_eq_convDensityAdd`).
-  -- Honesty audit (2026-05-31): honest_residual, slug correct. This is the Phase 1
-  -- density-identification atom; not load-bearing (proves the external pin equation
-  -- bridging `IsHeatFlowDensity`'s `p t` to the actual rnDeriv). NOTE for orchestrator:
-  -- the pre-existing structure `IsHeatFlowDensity` (:135) carries a statement-form
-  -- `heat_equation` field that its OWN docstring admits "holds the conclusion, not the
-  -- derivation" — that is a tier-4-adjacent load-bearing field, but it predates this
-  -- commit (out of pivot scope); flag for incidental migration, not this audit's verdict.
-  -- @residual(plan:epi-debruijn-pertime-closure)
-  density_t_eq := by sorry
-  -- §5A `pX`-witness fields. `IsHeatFlowDensity` carries only the *path* density
-  -- `p` (the density of `X + √t·Z`), NOT a witness for `X`'s own Lebesgue density.
-  -- So we pin `pX` to the actual rnDeriv of `P.map X` and leave the external-shape
-  -- equation `pX_law` as a regularity-precondition sorry: it holds whenever `X` has
-  -- a density (the `ofHeatFlow` route does not supply one). This is the X-density
-  -- analogue of the existing `density_t_eq` sorry above (Phase 1 special case for
-  -- the non-Gaussian heat-flow route). Not load-bearing (external-shape equation).
-  -- @residual(plan:epi-debruijn-pertime-closure)
+  -- Conv-pin redesign: pin `density_t` directly to the smooth convolution
+  -- representative so `density_t_eq` is `rfl`. This is the genuine density of
+  -- `P.map (X + √t·Z)` (Phase 1b `pPath_eq_convDensityAdd`), written explicitly.
+  density_t := convDensityAdd (fun x => ((P.map X).rnDeriv volume x).toReal)
+    (gaussianPDFReal 0 ⟨t, _ht.le⟩)
+  density_t_eq := fun _ _ => rfl
   pX := fun x => ((P.map X).rnDeriv volume x).toReal
   pX_nn := fun x => ENNReal.toReal_nonneg
   pX_meas := ((P.map X).measurable_rnDeriv volume).ennreal_toReal
-  -- @residual(plan:epi-debruijn-pertime-closure)
-  pX_law := by sorry
-  -- Second-moment regularity precondition. The rnDeriv route does not supply a
-  -- finite-variance source for `X`, so this is an honest regularity-precondition
-  -- sorry, the moment analogue of the `pX_law` sorry above (holds whenever `X` has
-  -- finite second moment). Not load-bearing (no Fisher/HasDerivAt core).
-  -- Independent honesty audit (2026-05-31, commit `6648753`): honest_residual,
-  -- classification correct (peer of the same constructor's `density_t_eq`/`pX_law`
-  -- sorries; rnDeriv route has no moment source = `plan:` deferral, not a Mathlib `wall:`).
-  -- @residual(plan:epi-debruijn-pertime-closure)
-  pX_mom := by sorry
+  -- `pX_law` from `hX_ac` via `withDensity_rnDeriv_eq` (mirrors
+  -- `rescaledInput_density_witness`'s `hpX_law`, here on `P.map X`).
+  pX_law := by
+    set pX : ℝ → ℝ := fun x => ((P.map X).rnDeriv volume x).toReal with hpX
+    have hfin : ∀ᵐ x ∂volume, (P.map X).rnDeriv volume x < ∞ :=
+      Measure.rnDeriv_lt_top (P.map X) volume
+    have hcongr : (fun x => ENNReal.ofReal (pX x)) =ᵐ[volume]
+        (P.map X).rnDeriv volume := by
+      filter_upwards [hfin] with x hx
+      simp only [hpX, ENNReal.ofReal_toReal hx.ne]
+    rw [withDensity_congr_ae hcongr, Measure.withDensity_rnDeriv_eq _ _ hX_ac]
+  -- `pX_mom` from `h_mom_X` via `integrable_map_measure` transport + the `pX_law`
+  -- withDensity equation (mirrors `rescaledInput_density_witness`'s `hpX_mom`).
+  pX_mom := by
+    set pX : ℝ → ℝ := fun x => ((P.map X).rnDeriv volume x).toReal with hpX
+    have hpX_nn : ∀ x, 0 ≤ pX x := fun x => ENNReal.toReal_nonneg
+    have hpX_meas : Measurable pX :=
+      ((P.map X).measurable_rnDeriv volume).ennreal_toReal
+    have hpX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x)) := by
+      have hfin : ∀ᵐ x ∂volume, (P.map X).rnDeriv volume x < ∞ :=
+        Measure.rnDeriv_lt_top (P.map X) volume
+      have hcongr : (fun x => ENNReal.ofReal (pX x)) =ᵐ[volume]
+          (P.map X).rnDeriv volume := by
+        filter_upwards [hfin] with x hx
+        simp only [hpX, ENNReal.ofReal_toReal hx.ne]
+      rw [withDensity_congr_ae hcongr, Measure.withDensity_rnDeriv_eq _ _ hX_ac]
+    have hsq_law : Integrable (fun y => y ^ 2) (P.map X) := by
+      rw [integrable_map_measure
+        ((by fun_prop : Measurable (fun y : ℝ => y ^ 2)).aestronglyMeasurable)
+        hX.aemeasurable]
+      simpa [Function.comp] using h_mom_X
+    rw [hpX_law] at hsq_law
+    rw [integrable_withDensity_iff_integrable_smul₀'
+      hpX_meas.ennreal_ofReal.aemeasurable
+      (Filter.Eventually.of_forall fun x => ENNReal.ofReal_lt_top)] at hsq_law
+    refine hsq_law.congr (Filter.Eventually.of_forall fun x => ?_)
+    simp only [smul_eq_mul, ENNReal.toReal_ofReal (hpX_nn x)]; ring
 
 /-- **de Bruijn identity body discharge** (L-FV2DB-C).
 
@@ -297,29 +322,35 @@ constructor `ofHeatFlow` を本 declaration の上に移動済 (forward referenc
 predicate-form literal alias (D1) として残存し、`@audit:retract-candidate`
 を別途付与する段 3 task に委譲。
 
-NOTE (2026-06-04 audit): `deBruijn_identity_v2` 自体は genuine (sorryAx-free、
+NOTE (2026-06-05 closure): `deBruijn_identity_v2` 自体は genuine (sorryAx-free、
 `debruijnIdentityV2_holds_assembled` 経由)。`wall:debruijn-integration` は
-[CLOSED 2026-06-04]。ただし本 theorem は `IsRegularDeBruijnHypV2.ofHeatFlow`
-constructor を呼び、その 3 field (`density_t_eq`/`pX_law`/`pX_mom`,
-`@residual(plan:epi-debruijn-pertime-closure)`) が real sorry を保持するため、
-`#print axioms` は依然 `sorryAx` 依存 (transitive)。よって proof-done ではないが、
-残る sorry は **de Bruijn wall ではなく per-time closure plan 側**。pass-through
-自体は honest。transitive consumer のため本 theorem には `@residual` を付けない
-(sorry は `ofHeatFlow` constructor が保持)。 -/
+[CLOSED 2026-06-04]。`IsRegularDeBruijnHypV2.ofHeatFlow` constructor の 3 field
+(`density_t_eq`/`pX_law`/`pX_mom`) は本セッションで全 genuine 化済
+(`density_t` を `convDensityAdd pX g_t` に conv-pin して `density_t_eq := rfl`、
+`pX_law`/`pX_mom` は新 precondition `hX_ac`/`h_mom_X` から `withDensity_rnDeriv_eq`
++ `integrable_map_measure` transport で閉じた、`rescaledInput_density_witness`
+手筋流用)。`#print axioms ofHeatFlow = [propext, Classical.choice, Quot.sound]`
+(sorryAx-free)。RHS は conv-pin により `p t` ではなく `ofHeatFlow ... .density_t`
+(= `convDensityAdd pX g_t`)。`hX_ac`/`h_mom_X` は X-density regularity precondition
+(a.c. + 有限2次モーメント) であり load-bearing でない。 -/
 @[entry_point]
 theorem deBruijn_identity_v2_of_heat_flow
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
     (X Z : Ω → ℝ) (hX : Measurable X) (hZ : Measurable Z)
     (hXZ : IndepFun X Z P)
+    (hX_ac : (P.map X) ≪ volume)
+    (h_mom_X : Integrable (fun ω => (X ω) ^ 2) P)
     {t : ℝ} (ht : 0 < t)
     {p : ℝ → ℝ → ℝ}
     (h_heat : IsHeatFlowDensity X Z P p)
     (_h_ibp : IsIBPHypothesis X Z P p t) :
     HasDerivAt
       (fun s => differentialEntropy (P.map (gaussianConvolution X Z s)))
-      ((1/2) * fisherInfoOfDensityReal (p t))
+      ((1/2) * fisherInfoOfDensityReal
+        (IsRegularDeBruijnHypV2.ofHeatFlow hX hZ hXZ hX_ac h_mom_X ht h_heat).density_t)
       t :=
-  deBruijn_identity_v2 X Z hX hZ hXZ ht (IsRegularDeBruijnHypV2.ofHeatFlow hX hZ hXZ ht h_heat)
+  deBruijn_identity_v2 X Z hX hZ hXZ ht
+    (IsRegularDeBruijnHypV2.ofHeatFlow hX hZ hXZ hX_ac h_mom_X ht h_heat)
 
 /-! ## Convenience corollaries
 
