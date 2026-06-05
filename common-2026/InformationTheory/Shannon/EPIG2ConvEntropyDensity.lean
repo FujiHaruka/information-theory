@@ -110,7 +110,15 @@ finite second moment and integrable entropy integrand. `v_Z` is any fixed positi
 variance for the auxiliary Gaussian; it does not appear in the conclusion.
 
 Proved by instantiating the genuine Ω-level (β) lower bound
-`negMulLog_convDensity_entropy_ge` on the canonical product space `ℝ × ℝ`. -/
+`negMulLog_convDensity_entropy_ge` on the canonical product space `ℝ × ℝ`.
+
+Independent honesty audit 2026-06-05: PASS — non-circular, non-bundled (all 8 Ω-level
+preconditions discharged genuinely in the body from the canonical `ℝ × ℝ` construction;
+no `*Hypothesis` predicate bundling), `μ = withDensity(pX).prod(gaussian)` is a genuine
+probability measure (not vacuous), the cross-term / KL-finiteness preconditions are closed
+via the s-uniform polynomial majorant + `integrable_compProd_iff` (non-trivial), `#print
+axioms` re-verified sorryAx-free.
+@audit:ok -/
 theorem negMulLog_convDensity_entropy_ge_density
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)

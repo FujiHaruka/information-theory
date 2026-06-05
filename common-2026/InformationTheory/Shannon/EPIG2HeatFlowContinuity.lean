@@ -16,9 +16,9 @@ import InformationTheory.Shannon.EPIStamDischarge
 import InformationTheory.Shannon.EPIConvDensity
 import InformationTheory.Shannon.FisherInfoV2DeBruijnPerTime
 import InformationTheory.Shannon.FisherInfoV2DeBruijnAssembly
-import InformationTheory.Shannon.EPIVitaliAE
-import InformationTheory.Shannon.EPIVitaliUnifTight
 import InformationTheory.Shannon.EPIVitaliUI
+import InformationTheory.Shannon.EPIG2KLFatouLSC
+import InformationTheory.Shannon.EPIG2ConvEntropyDensity
 
 /-!
 # G2: heat-flow entropy-power continuity at the endpoint `t = 0⁺`
@@ -86,9 +86,10 @@ open scoped ENNReal NNReal Topology
 The density-level approximate-identity L¹ convergence `convDensityAdd pX g_t → pX`
 in `L¹(volume)` as `t → 0⁺` now lives in `EPIApproxIdentityL1.lean` as
 `convDensityAdd_tendsto_L1_zero` (with its genuine translation-continuity /
-continuous-Minkowski / difference-representation helpers). It is not consumed by
-the layer-2 machinery below (which goes through the Vitali UI/UT/ae witnesses), so
-this file no longer carries a (formerly orphan, duplicate) copy. -/
+continuous-Minkowski / difference-representation helpers). The layer-2 machinery
+below no longer consumes it: the 2026-06-05 sandwich swap derives the
+entropy-integral limit directly from the (α)/(β) bounds (both `@audit:ok`), so the
+Vitali UI/UT/ae route and its `wall:approx-identity-L1` witnesses are gone. -/
 
 /-! ## Layer 1' — entropy finiteness of the limit density (now a precondition)
 
@@ -133,63 +134,47 @@ theorem convDensityAdd_negMulLog_integrable_pub
   InformationTheory.Shannon.FisherInfoV2.convDensityAdd_negMulLog_integrable
     pX hpX_nn hpX_meas hpX_int hpX_mass hpX_mom ht
 
-/-! ## Layer 2 — UnifIntegrable / UnifTight witnesses (parked) + genuine lifting
+/-! ## Layer 2 — genuine two-sided sandwich (2026-06-05)
 
-Given the parked layer-1 inputs and the regularity of `pX`, the lift from L¹
-density convergence to entropy-integral convergence is genuine Mathlib machinery
-(`tendsto_Lp_of_tendsto_ae` + `tendsto_integral_of_L1'`, both `[IsFiniteMeasure]`-
-free), modulo the `UnifIntegrable` / `UnifTight` witnesses (parked). -/
+The lift from per-time entropy integrals to the endpoint entropy integral is now a
+genuine two-sided sandwich, replacing the former Vitali (UnifIntegrable / UnifTight)
+route. The previous route consumed parked `wall:approx-identity-L1` witnesses; those
+are deleted. The sandwich uses two `@audit:ok` levers plus a genuine maxent bound:
 
-/-! The UI witness `negMulLog_convDensity_unifIntegrable` now lives in
-`EPIVitaliUI.lean` (genuine `withDensity` probability framing + Gaussian
-maximum-entropy upper bound; only the de la Vallée-Poussin indicator-tail core
-parked under `wall:approx-identity-L1`). It carries the extra regularity
-precondition `hpX_mass : (∫ y, pX y) = 1` (needed for the probability framing,
-supplied by the layer-2 consumer). Consumed below by the layer-2 machinery. -/
+* **(α) limsup upper bound** — `InformationTheory.EPIG2KLFatou.negMulLog_convDensity_limsup_le`
+  (Fatou / KL lower-semicontinuity): `limsup (∫ negMulLog f_n) ≤ ∫ negMulLog pX`.
+* **(β) per-`n` lower bound** — `negMulLog_convDensity_entropy_ge_density`
+  (conditioning reduces entropy): `∫ negMulLog pX ≤ ∫ negMulLog f_n`.
+* **uniform upper bound** — `negMulLog_convDensityAdd_gaussian_entropy_upper`
+  (Gaussian maximum-entropy, `@audit:ok`): a per-`n` bound with a uniform variance
+  majorant (the `v n` are bounded since `v n → 0`), supplying the
+  `IsBoundedUnder (· ≤ ·)` witness for the squeeze.
 
-/-- **Layer 2 (genuine lifting machinery).** Density-level entropy-integral
-convergence: given the parked layer-1 input (approximate-identity L¹ convergence),
-the regularity of `pX`, and the entropy-finiteness precondition `hpX_ent`
-(= `h(X) < ∞`, a regularity precondition on the input — see Layer 1' note), the
-differential-entropy integrals of the heat-smoothed densities converge to the
-entropy integral of `pX` as `t → 0⁺`:
+The squeeze `tendsto_of_le_liminf_of_limsup_le` then gives `∫ negMulLog f_n → ∫
+negMulLog pX` along sequences, lifted to `𝓝[Ioi 0] 0` via
+`Filter.tendsto_iff_seq_tendsto`. -/
+
+/-- **Layer 2 (genuine entropy-integral convergence).** Density-level
+entropy-integral convergence: given the regularity of `pX` and the entropy-finiteness
+precondition `hpX_ent` (= `h(X) < ∞`, a regularity precondition on the input — see
+Layer 1' note), the differential-entropy integrals of the heat-smoothed densities
+converge to the entropy integral of `pX` as `t → 0⁺`:
 
 `∫ negMulLog (convDensityAdd pX g_t) ∂volume → ∫ negMulLog pX ∂volume`.
 
-This is the genuine Phase-3 machinery: sequentialisation of `𝓝[Ioi 0] 0`
-(`Filter.tendsto_iff_seq_tendsto`, `nhdsWithin` countably generated) → Vitali
-(`tendsto_Lp_of_tendsto_ae`, `[IsFiniteMeasure]`-free via `UnifTight`) →
-L¹→integral (`tendsto_integral_of_L1'`, measure/filter-free). No own `sorry`; the
-only residual is the parked layer-1 / UI / UT approximate-identity machinery it
-consumes (`wall:approx-identity-L1`). The former limit-density entropy-finiteness
-residual is now the `hpX_ent` precondition (plan Phase 5-F, not a residual).
+**Genuine, sorryAx-free (2026-06-05).** Sequentialisation of `𝓝[Ioi 0] 0`
+(`Filter.tendsto_iff_seq_tendsto`, `nhdsWithin` countably generated), then the
+two-sided sandwich described in the section header: (α) limsup upper bound +
+(β) per-`n` lower bound (both `@audit:ok`), squeezed by
+`tendsto_of_le_liminf_of_limsup_le` with the uniform upper-boundedness witness from
+the genuine Gaussian maxent bound `negMulLog_convDensityAdd_gaussian_entropy_upper`
+(`@audit:ok`). No `sorry`, no residual.
 
-Independent honesty audit 2026-06-04 (fresh subagent, commit 36fc577): PASS (no own
-residual; transitive only). Machine-checked: own body is `sorry`-free (`#print
-axioms` = `[propext, sorryAx, Classical.choice, Quot.sound]` where `sorryAx` is
-purely transitive through the consumed UI/UT witnesses; the sole own-file `sorry` is
-the UI witness `:153`, NOT this body). The 2026-06-04 subsequence-route rewrite is
-genuine: a.e. convergence is reconstructed from the genuine
-`negMulLog_convDensity_tendsto_ae_subseq` (`@audit:ok`, sorryAx-free) via
-`tendsto_of_subseq_tendsto` + `tendsto_Lp_of_tendsto_ae`, with UI/UT restricted to
-the reindexed family `fun i => F (ns (ms i))` (trivial `∀ i` reindex, no leak). The
-a.e. core is NOT hidden in a hypothesis — it is rebuilt from the genuine subsequence
-witness, so the removed full-sequence ae witness's substance is not laundered
-elsewhere. All hypotheses are regularity/normalisation (hpX_nn/meas/int/mass/mom/
-ent). NOT circular / load-bearing / degenerate; sufficiency holds. Not `@audit:ok`
-only because of the transitive layer-1 sorries (UI/UT).
-
-Independent honesty audit 2026-06-04 (fresh subagent, commit 825154f): delegation
-CONFIRMED honest. After 825154f the UI witness lives in `EPIVitaliUI.lean`
-(`negMulLog_convDensity_unifIntegrable`, hpX_mass added); the `hui :=
-negMulLog_convDensity_unifIntegrable … hpX_mass …` and `hut :=
-negMulLog_convDensity_unifTight …` calls (`:236`/`:238`) are genuine applications with
-the regularity preconditions threaded from this signature (`hpX_mass` consumed, not
-laundered). Own body verified `sorry`-free (0 tactic `sorry` tokens in the whole file;
-the 12 `rg sorry` hits are docstring text). The Vitali subsequence route
-(`tendsto_of_subseq_tendsto` + `tendsto_Lp_of_tendsto_ae` + `tendsto_integral_of_L1'`)
-is genuine machinery; residual is transitive through the UI/UT `wall:approx-identity-L1`
-only. -/
+`#print axioms differentialEntropy_convDensity_integral_tendsto` =
+`[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-checked 2026-06-05).
+All hypotheses are regularity / normalisation (hpX_nn/meas/int/mass/mom/ent); NOT
+circular / load-bearing / degenerate; sufficiency holds. `@audit:ok` pending
+independent audit. -/
 theorem differentialEntropy_convDensity_integral_tendsto
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -232,61 +217,73 @@ theorem differentialEntropy_convDensity_integral_tendsto
     rw [hF_def]
     exact convDensityAdd_negMulLog_integrable_pub hpX_nn hpX_meas hpX_int hpX_mass hpX_mom
       (hv_pos n)
-  -- Vitali (infinite-measure version, via UnifTight): `eLpNorm (F n - g) 1 → 0`.
-  have haef : ∀ n, AEStronglyMeasurable (F n) volume := fun n => (hFint n).aestronglyMeasurable
-  have hg' : MemLp g 1 volume := by
-    rw [hg_def]
-    exact memLp_one_iff_integrable.mpr hpX_ent
   -- `v → 0⁺`: agrees with `u` eventually, and `u → 0⁺`.
   have hv_lim : Tendsto v atTop (𝓝[Set.Ioi 0] 0) :=
     hu_lim.congr' (hv_eq.mono fun n hn => hn.symm)
-  -- `v` converges, hence its range is bounded above (supplies `hu_bdd` to the
-  -- UI/UT witnesses, whose tail estimates require boundedness of the variances).
+  -- `v` converges, hence its range is bounded above.
   have hv_bdd : BddAbove (Set.range v) :=
     (hv_lim.mono_right nhdsWithin_le_nhds).bddAbove_range
-  have hui : UnifIntegrable F 1 volume :=
-    negMulLog_convDensity_unifIntegrable hpX_nn hpX_meas hpX_int hpX_mass hpX_mom v hv_pos hv_bdd
-  have hut : UnifTight F 1 volume :=
-    negMulLog_convDensity_unifTight hpX_nn hpX_meas hpX_int hpX_mom v hv_pos hv_bdd
-  -- Vitali via the subsequence route: `tendsto_Lp_of_tendsto_ae` needs full-sequence
-  -- a.e. convergence, which we only have along subsequences (the genuine ae witness
-  -- `negMulLog_convDensity_tendsto_ae_subseq`). Use `tendsto_of_subseq_tendsto`: it
-  -- suffices that every subsequence has a further subsequence converging in L¹.
-  have hVitali :
-      Tendsto (fun n => eLpNorm (F n - g) 1 volume) atTop (𝓝 0) := by
-    refine tendsto_of_subseq_tendsto fun ns hns => ?_
-    -- `v ∘ ns → 0⁺` too.
-    have hvns_pos : ∀ k, 0 < v (ns k) := fun k => hv_pos (ns k)
-    have hvns_lim : Tendsto (fun k => v (ns k)) atTop (𝓝[Set.Ioi 0] 0) :=
-      hv_lim.comp hns
-    obtain ⟨ms, _hms_mono, hms_ae⟩ :=
-      negMulLog_convDensity_tendsto_ae_subseq hpX_nn hpX_meas hpX_int hpX_mom
-        (fun k => v (ns k)) hvns_pos hvns_lim
-    refine ⟨ms, ?_⟩
-    -- a.e. convergence of the reindexed family `F (ns (ms i))`.
-    have hae : ∀ᵐ x ∂volume,
-        Tendsto (fun i => F (ns (ms i)) x) atTop (𝓝 (g x)) := by
-      filter_upwards [hms_ae] with x hx
-      simpa only [hF_def, hg_def] using hx
-    -- Restrict UI / UT to the subsequence `i ↦ F (ns (ms i))` (reindexing is trivial
-    -- since both quantifiers are `∀ i`).
-    refine tendsto_Lp_of_tendsto_ae (le_refl 1) (by simp)
-      (fun i => haef (ns (ms i))) hg' ?_ ?_ hae
-    · intro ε hε
-      obtain ⟨δ, hδ, hδ'⟩ := hui hε
-      exact ⟨δ, hδ, fun i s hs hμs => hδ' (ns (ms i)) s hs hμs⟩
-    · intro ε hε
-      obtain ⟨s, hμs, hsε⟩ := hut hε
-      exact ⟨s, hμs, fun i => hsε (ns (ms i))⟩
-  -- L¹→integral: `∫ F n → ∫ g`.
-  have hfi : Integrable g volume := by
-    rw [hg_def]
-    exact hpX_ent
-  have hFi : ∀ᶠ n in atTop, Integrable (F n) volume :=
-    Eventually.of_forall hFint
+  -- Abbreviation for the target value `a := ∫ g = ∫ negMulLog pX`.
+  set a : ℝ := ∫ x, g x ∂volume with ha_def
+  -- **(β) lower bound** (`negMulLog_convDensity_entropy_ge_density`, genuine, `@audit:ok`):
+  -- for every `n`, `∫ negMulLog pX ≤ ∫ F n`, i.e. `a ≤ ∫ F n`.
+  have hβ : ∀ n, a ≤ ∫ x, F n x ∂volume := by
+    intro n
+    rw [ha_def, hg_def, hF_def]
+    exact negMulLog_convDensity_entropy_ge_density hpX_nn hpX_meas hpX_int hpX_mass hpX_mom
+      hpX_ent (v_Z := 1) one_pos v hv_pos n
+  -- **(α) limsup upper bound** (`negMulLog_convDensity_limsup_le`, genuine, `@audit:ok`):
+  -- `limsup (∫ F ·) ≤ ∫ negMulLog pX = a`.
+  have hα : Filter.limsup (fun n => ∫ x, F n x ∂volume) atTop ≤ a := by
+    rw [ha_def, hg_def]
+    have hlim := InformationTheory.EPIG2KLFatou.negMulLog_convDensity_limsup_le
+      hpX_nn hpX_meas hpX_int hpX_mass hpX_mom hpX_ent (σ2 := 1) one_ne_zero v hv_pos hv_lim
+    -- The lever's summand `∫ negMulLog (convDensityAdd pX (gaussianPDFReal 0 ⟨v n,_⟩))`
+    -- is `F n` by definition.
+    simpa only [hF_def] using hlim
+  -- **Uniform upper bound on `∫ F n`** (genuine, `@audit:ok`, no wall): the Gaussian
+  -- maximum-entropy bound `negMulLog_convDensityAdd_gaussian_entropy_upper` gives a per-`n`
+  -- bound with a uniform variance majorant `V` (since the `v n` are bounded above).
+  obtain ⟨C, hC⟩ : ∃ C : ℝ, ∀ n, (∫ x, F n x ∂volume) ≤ C := by
+    -- Pick a real bound `B` on the range of `v`, and the majorant `V := ∫ x²pX + B + 1`.
+    obtain ⟨B, hB⟩ := hv_bdd
+    have hBnn : (0 : ℝ) ≤ B := le_trans (hv_pos 0).le (hB (Set.mem_range_self 0))
+    set Vr : ℝ := (∫ x, x ^ 2 * pX x ∂volume) + B + 1 with hVr_def
+    have hVr_pos : (0 : ℝ) < Vr := by
+      have hmom_nn : (0 : ℝ) ≤ ∫ x, x ^ 2 * pX x ∂volume :=
+        integral_nonneg fun x => mul_nonneg (sq_nonneg x) (hpX_nn x)
+      have : (0 : ℝ) < (∫ x, x ^ 2 * pX x ∂volume) + B + 1 := by positivity
+      rwa [hVr_def]
+    refine ⟨(1/2) * Real.log (2 * Real.pi * Real.exp 1 * Vr), fun n => ?_⟩
+    have hVnn : (0 : ℝ≥0) ≠ Vr.toNNReal := by
+      intro h; exact hVr_pos.ne' (by rw [← Real.coe_toNNReal Vr hVr_pos.le, ← h]; rfl)
+    have hVle : (∫ x, x ^ 2 * pX x ∂volume) + v n ≤ (Vr.toNNReal : ℝ) := by
+      rw [Real.coe_toNNReal Vr hVr_pos.le, hVr_def]
+      have : v n ≤ B := hB (Set.mem_range_self n)
+      linarith
+    have hub := negMulLog_convDensityAdd_gaussian_entropy_upper
+      hpX_nn hpX_meas hpX_int hpX_mass hpX_mom (t := v n) (hv_pos n)
+      (V := Vr.toNNReal) hVle (Ne.symm hVnn)
+    -- The bound's variance witness `⟨v n,_⟩` matches `F n`, and `V.toNNReal` coerces back.
+    rw [hF_def]
+    calc (∫ x, Real.negMulLog
+            (convDensityAdd pX (gaussianPDFReal 0 ⟨v n, (hv_pos n).le⟩) x) ∂volume)
+        ≤ (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (Vr.toNNReal : ℝ)) := hub
+      _ = (1/2) * Real.log (2 * Real.pi * Real.exp 1 * Vr) := by
+            rw [Real.coe_toNNReal Vr hVr_pos.le]
+  -- Boundedness witnesses for the squeeze.
+  have hbdd_le : Filter.IsBoundedUnder (· ≤ ·) atTop (fun n => ∫ x, F n x ∂volume) :=
+    isBoundedUnder_of_eventually_le (Eventually.of_forall hC)
+  have hbdd_ge : Filter.IsBoundedUnder (· ≥ ·) atTop (fun n => ∫ x, F n x ∂volume) :=
+    isBoundedUnder_of_eventually_ge (Eventually.of_forall hβ)
+  -- `a ≤ liminf (∫ F ·)` from the (β) lower bound.
+  have hliminf : a ≤ Filter.liminf (fun n => ∫ x, F n x ∂volume) atTop :=
+    le_liminf_of_le (Filter.isCoboundedUnder_ge_of_le atTop hC) (Eventually.of_forall hβ)
+  -- Squeeze: `∫ F n → a`.
   have hL1 :
-      Tendsto (fun n => ∫ x, F n x ∂volume) atTop (𝓝 (∫ x, g x ∂volume)) :=
-    tendsto_integral_of_L1' g hfi hFi hVitali
+      Tendsto (fun n => ∫ x, F n x ∂volume) atTop (𝓝 a) :=
+    tendsto_of_le_liminf_of_limsup_le hliminf hα hbdd_le hbdd_ge
+  -- The goal's target `𝓝 (∫ negMulLog pX)` is already `𝓝 a` (folded via `g`/`a`).
   -- Transfer back from `v` to `u` (they agree eventually). The goal's per-`n`
   -- variance witness is `(u n).toNNReal`; on the eventual set where `v n = u n`
   -- (and `u n > 0`) this equals `⟨v n, (hv_pos n).le⟩`.
@@ -314,23 +311,19 @@ the layer-2 machinery `differentialEntropy_convDensity_integral_tendsto`
 (reparameterised `t' := t·v_Z`) supplies the limit (B-3), and `ContinuousWithinAt`
 is recovered with the endpoint value `differentialEntropy (P.map X) = ∫ negMulLog pX`
 (B-4). All fields are preconditions (regularity / input-distribution data); no
-continuity conclusion is bundled. The only residuals are transitive (layer-2
-`wall:approx-identity-L1`); this helper itself adds no `@residual`.
+continuity conclusion is bundled.
 
-Independent honesty audit 2026-06-04 (fresh subagent, commit fa0fe3f): PASS.
-Own body is `sorry`-free. After the 2026-06-04 layer-2 subsequence-route rewrite,
-the file's only `sorry` warning is the single parked layer-2 UI witness
-`negMulLog_convDensity_unifIntegrable` (`wall:approx-identity-L1`); the UT and
-a.e.-convergence witnesses are now consumed from `EPIVitaliUnifTight.lean`
-(UT, parked) and the genuine `EPIVitaliAE.negMulLog_convDensity_tendsto_ae_subseq`
-(0 sorry). `#print axioms` shows `sorryAx` purely transitive through the remaining
-UI witness (NOT in the helper's own derivation). The
-density bridge call (`pPath_eq_convDensityAdd`, `@audit:ok`) matches signatures
-verbatim; `differentialEntropy_convDensity_integral_tendsto.comp h_reparam` is a
-genuine `t' := t·v_Z` reparam. Sufficiency holds: conclusion follows from the
-regularity hypotheses (no free-variable counterexample — singular `P.map X` is
-excluded by the `hpX_law` density witness). NOT circular / load-bearing /
-degenerate. Not `@audit:ok` only because of the transitive layer-1 sorries. -/
+**Genuine, sorryAx-free (2026-06-05).** After the layer-2 sandwich swap, the
+consumed `differentialEntropy_convDensity_integral_tendsto` is itself sorryAx-free,
+so this helper has no residual. `#print axioms
+heatFlowDifferentialEntropy_continuousWithinAt_zero` =
+`[propext, Classical.choice, Quot.sound]` (machine-checked 2026-06-05). The density
+bridge call (`pPath_eq_convDensityAdd`, `@audit:ok`) matches signatures verbatim;
+`differentialEntropy_convDensity_integral_tendsto.comp h_reparam` is a genuine
+`t' := t·v_Z` reparam. Sufficiency holds: conclusion follows from the regularity
+hypotheses (no free-variable counterexample — singular `P.map X` is excluded by the
+`hpX_law` density witness). NOT circular / load-bearing / degenerate. `@audit:ok`
+pending independent audit. -/
 theorem heatFlowDifferentialEntropy_continuousWithinAt_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω} (X Z : Ω → ℝ) (P : Measure Ω)
     [IsProbabilityMeasure P]
@@ -504,8 +497,20 @@ inner differential-entropy continuity is the standalone helper
 `pPath_eq_convDensityAdd` + reparameterised layer-2 machinery
 `differentialEntropy_convDensity_integral_tendsto`), and `entropyPower =
 exp ∘ (2·differentialEntropy)` lifts it via `Real.continuous_exp`. The direct
-`sorry` is gone; the only residual is transitive, through the layer-2 machinery's
-`wall:approx-identity-L1` (approximate-identity L¹ convergence).
+`sorry` is gone.
+
+**Wall CLOSED (2026-06-05, sandwich swap).** The layer-2 machinery
+`differentialEntropy_convDensity_integral_tendsto` was re-derived genuinely via a
+two-sided sandwich — the Fatou-LSC limsup upper bound
+`InformationTheory.EPIG2KLFatou.negMulLog_convDensity_limsup_le` (α, `@audit:ok`)
+plus the conditioning per-`n` lower bound
+`negMulLog_convDensity_entropy_ge_density` (β, `@audit:ok`), squeezed by
+`tendsto_of_le_liminf_of_limsup_le` with the uniform upper-boundedness witness from
+the genuine Gaussian maxent bound `negMulLog_convDensityAdd_gaussian_entropy_upper`
+(`@audit:ok`). The Vitali UI/UT route (and the parked
+`wall:approx-identity-L1` witnesses) is no longer consumed; the witnesses were
+deleted. `#print axioms` is now `[propext, Classical.choice, Quot.sound]`
+(sorryAx-free, machine-checked 2026-06-05). This lemma carries no residual.
 
 The bridge requires `Measurable X`, `Measurable Z`, `IndepFun X Z P` and a Real
 density witness for `P.map X` — not carried by the old `IsDeBruijnRegularityHyp`.
@@ -518,35 +523,27 @@ Surface shrink (2026-06-04): the predecessor `heatFlowEntropyPower_continuousOn`
 claimed the full ray `ContinuousOn (Set.Ici 0)`; this version shrinks the residual
 to the single endpoint, with the interior recovered genuinely on the consumer side.
 
-Residual status (plan Phase 5-B/5-E/5-F closure): this lemma's **own** body is
-genuine — it delegates to `heatFlowDifferentialEntropy_continuousWithinAt_zero`
-(itself `sorry`-free). The `plan:epi-g2-layer2-moonshot-plan` part of the old
-compound is now **closed**:
+Residual status (plan Phase 5-B/5-E/5-F + 2026-06-05 sandwich closure): this
+lemma's **own** body is genuine — it delegates to
+`heatFlowDifferentialEntropy_continuousWithinAt_zero` (itself `sorry`-free), which
+in turn consumes the now-genuine layer-2 machinery. All former residuals are closed:
 
-* Phase 5-E (plumbing): `convDensityAdd_negMulLog_integrable_pub` is now genuine —
+* Phase 5-E (plumbing): `convDensityAdd_negMulLog_integrable_pub` is genuine —
   it delegates to the (now public) `@audit:ok` Assembly asset
-  `FisherInfoV2.convDensityAdd_negMulLog_integrable`. No longer a residual.
-* Phase 5-F (precondition): the limit-density entropy finiteness (former
-  `negMulLog_integrable_of_density`, which falsely claimed derivability from L¹ +
-  second moment) is now the `hpX_ent` field of `IsHeatFlowEndpointRegular` — a
-  regularity precondition, not a residual.
+  `FisherInfoV2.convDensityAdd_negMulLog_integrable`.
+* Phase 5-F (precondition): the limit-density entropy finiteness is the `hpX_ent`
+  field of `IsHeatFlowEndpointRegular` — a regularity precondition, not a residual.
+* 2026-06-05 (layer-2 sandwich): the last transitive residual
+  (`wall:approx-identity-L1`, via the Vitali UI/UT witnesses) is removed — the
+  layer-2 limit is now derived by the (α)/(β) sandwich, both `@audit:ok`. The
+  Vitali witnesses were deleted.
 
-The remaining `sorryAx` in `#print axioms` is therefore purely transitive through
-the layer-2 machinery's `wall:approx-identity-L1` only (approximate-identity L¹
-convergence: `convDensityAdd_tendsto_L1_zero` + the 3 Vitali UI/UT/ae witnesses).
-
-Independent honesty audit 2026-06-04 (fresh subagent, commit fa0fe3f): PASS as
-`honest_residual`. (a) Own body is genuine delegation: `key` from
-`heatFlowDifferentialEntropy_continuousWithinAt_zero` (own sorry 0) +
-`entropyPower = exp ∘ (2·differentialEntropy)` lift via `.const_smul.rexp`. (b)
-`wall:approx-identity-L1` confirmed transitive via the 4 parked Vitali witnesses;
-loogle (`MeasureTheory.convolution, MeasureTheory.eLpNorm`) = 0 declarations, so
-the general-L¹ approximate-identity convergence is a genuine Mathlib gap (in
-register). Signature `IsHeatFlowEndpointRegular X Z P` — all preconditions
-(including the new `hpX_ent`, audited above). NOT load-bearing / circular /
-wall-misuse.
-
-@residual(wall:approx-identity-L1) -/
+`#print axioms heatFlowEntropyPower_continuousWithinAt_zero` is therefore
+`[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-checked
+2026-06-05). The signature `IsHeatFlowEndpointRegular X Z P` carries only
+preconditions (regularity / input-distribution data); no continuity /
+density-identification conclusion is bundled (not load-bearing / circular /
+wall-misuse). 0 own sorry, 0 residual — `@audit:ok` pending independent audit. -/
 theorem heatFlowEntropyPower_continuousWithinAt_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]

@@ -301,71 +301,15 @@ theorem convDensityAdd_second_moment_unif_bdd
     mul_le_mul_of_nonneg_left (hB_nn n) hmass_nn
   linarith
 
-/-- **Layer 2 UT witness (genuine).** Uniform tightness of the entropy integrands
-along any sequence `u : ℕ → ℝ` with `u n > 0`. Vitali input `hut`.
+/-! ## UT witness removed (2026-06-05)
 
-Same signature as `EPIG2HeatFlowContinuity.negMulLog_convDensity_unifTight` (`:161`).
-
-The genuine reduction: `UnifTight` unfolds to "for every `ε`, some finite-measure
-set `s` (here `s = Icc (-R) R`) with tail eLpNorm `≤ ε` uniformly in `n`". The
-tail eLpNorm (`p = 1`) is the lintegral `∫⁻_{|x|>R} ‖negMulLog (f_n x)‖ₑ`. The
-crux — bounding this uniformly in `n` by the second-moment tail of `f_n`
-(`∫ x² f_n = ∫ x² pX + (∫ pX)·u n`, via `mul_meas_ge_le_lintegral` on `volume`) —
-requires an elementary `|negMulLog t|`-vs-`t·(1+log-tail)` estimate combined with
-the Gaussian log-tail `|log f_n(x)| ≲ 1 + x²`. There is no Mathlib bridge for this
-(inventory category C / 自作 #2). Parked as the approximate-identity wall.
-
-GENUINE-ATTEMPT FINDING (2026-06-04): the `s = Icc (-R) R` reduction and the
-`n`-uniform second-moment majorant are now genuine (see
-`convDensityAdd_second_moment_unif_bdd`, sorry-free, which supplies a uniform
-`V ≥ ∫ x² f_n`). The remaining core is the negMulLog tail bridge, which was attempted
-and found genuinely wall-bound: the heuristic `|log f_n(x)| ≲ 1 + x²` does NOT hold
-for a general L¹ density `pX`. The upper bound `f_n(x) ≤ (2π u n)^{-1/2}` is uniform,
-but a matching LOWER bound `f_n(x) ≳ exp(-c x²)` (needed to keep `-log f_n ≲ x²`) can
-fail: a `pX` with thinner-than-Gaussian tails makes `(pX ∗ g_{u n})(x)` decay faster
-than any `exp(-c x²)`, so `-log f_n(x)` grows super-polynomially and no `1 + x²`
-envelope exists. Hence `-f_n log f_n` is NOT controlled by the second-moment tail of
-`f_n` alone, and the tail integral cannot be driven to `0` uniformly in `n` by the
-second-moment route. loogle re-confirmed (2026-06-04): 0 Mathlib lemmas mentioning
-both `Integrable`/`_ ≤ _` and `Real.negMulLog`, and no `UnifTight` constructor from an
-integrable majorant. Genuinely Mathlib-absent — honest park as the approx-identity
-wall (the closure plan `epi-g2-vitali-closure-plan` Phase B addresses UT via a
-maxent-bound framing, not the second-moment route attempted here).
-
-HONESTY FIX (2026-06-04): the second moment `∫ x² f_n = ∫ x² pX + (∫ pX)·u n` is
-uniform in `n` only when `u` is bounded. Without it (`sup u n = ∞`) the tail mass
-escapes to infinity and `UnifTight` genuinely FAILS — the previous signature
-(`u : ℕ → ℝ` arbitrary positive) was under-hypothesised (a false claim in the sense
-of CLAUDE.md「検証の誠実性」). The regularity precondition `hu_bdd : BddAbove
-(Set.range u)` is now added to make the signature honest. The sole consumer
-(`differentialEntropy_convDensity_integral_tendsto`) only instantiates with a
-sequence `u → 0` (hence bounded), so the precondition is satisfied there. The
-remaining residual is the genuine negMulLog tail bridge (`|negMulLog f_n| ≲
-f_n·(1+log-tail)` vs the Gaussian log-tail `|log f_n| ≲ 1 + x²`), which has no
-Mathlib bridge — the approximate-identity wall.
-
-Independent honesty audit 2026-06-04 (fresh subagent, commit 36fc577): residual
-honest, classification correct. `hu_bdd : BddAbove (Set.range u)` is a REGULARITY
-precondition on the input sequence `u` (the variances `u n`), NOT a bundling of the
-UT conclusion — it asserts no `UnifTight` value. Without it the second-moment tail
-`∫ x² f_n = ∫ x² pX + (∫ pX)·u_n` is not `n`-uniform and UT genuinely fails, so the
-precondition corrects a previously under-hypothesised (false-as-framed for unbounded
-`u`) signature — the honest direction. The sole consumer
-(`differentialEntropy_convDensity_integral_tendsto`) produces it from sequence
-convergence, so it is satisfied for free. The `wall:approx-identity-L1`
-classification is backed by loogle: 0 hits for any lemma mentioning both `Integrable`
-and `Real.negMulLog`, so the negMulLog tail bridge is genuinely Mathlib-absent. NOT
-load-bearing; sufficiency holds.
-@residual(wall:approx-identity-L1) -/
-theorem negMulLog_convDensity_unifTight
-    {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_int : Integrable pX volume)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
-    (u : ℕ → ℝ) (hu_pos : ∀ n, 0 < u n) (hu_bdd : BddAbove (Set.range u)) :
-    UnifTight
-      (fun n => fun x =>
-        Real.negMulLog (convDensityAdd pX (gaussianPDFReal 0 ⟨u n, (hu_pos n).le⟩) x))
-      1 volume := by
-  sorry
+The Vitali UnifTight witness `negMulLog_convDensity_unifTight` (parked under
+`wall:approx-identity-L1`) was the layer-2 (`differentialEntropy_convDensity_integral_tendsto`)
+input on the Vitali route. The layer-2 body has been re-derived genuinely via the
+two-sided sandwich (Fatou-LSC `(α)` limsup upper bound + conditioning
+`(β)` per-`n` lower bound, both `@audit:ok`), so the Vitali UI/UT witnesses are no
+longer consumed and the orphan UT witness is deleted. The genuine helpers
+`convDensityAdd_second_moment` (still consumed by the `(α)` machinery and
+`EPIVitaliUI`) and `convDensityAdd_second_moment_unif_bdd` are retained. -/
 
 end InformationTheory.Shannon

@@ -511,90 +511,18 @@ theorem negMulLog_convDensityAdd_gaussian_entropy_upper {pX : ℝ → ℝ}
   rw [hf_def]
   exact hmaxent
 
-/-! ## de la Vallée-Poussin bridge core (Step 4, parked) -/
+/-! ## Vitali UI witness removed (2026-06-05)
 
-/-- **de la Vallée-Poussin bridge core (Step 4, ★ Mathlib-absent).**
-The uniform indicator-tail input required by `unifIntegrable_of`: for every `ε > 0`,
-there is a threshold `C` such that the tail eLpNorm of `negMulLog (f_n)` above `C` is
-`≤ ε` uniformly in `n`. The maxent upper bound (Step 3) controls `∫ negMulLog f_n`
-uniformly, but the de la Vallée-Poussin step — turning a uniform bound on
-`∫ |negMulLog f_n|` into a uniform tail `∫⁻_{C ≤ |negMulLog f_n|} |negMulLog f_n| → 0`
-— requires a superlinear-moment argument absent from Mathlib (inventory category B,
-loogle: 0 hits for any de la Vallée-Poussin / superlinear-moment → UnifIntegrable
-lemma). Parked as the approximate-identity wall.
-
-Independent honesty audit 2026-06-04 (fresh subagent, commit 825154f): honest_residual,
-`wall:approx-identity-L1` classification CORRECT. The wall is loogle-confirmed Mathlib-
-absent: `Real.negMulLog` + `MeasureTheory.Integrable` = 0 declarations;
-`MeasureTheory.UnifTight` returns only structural lemmas (`aeeq`/`neg`/`const`/`finite`),
-no de la Vallée-Poussin superlinear-moment constructor. Signature is honest: the
-conclusion is the genuine intermediate proposition "uniform indicator-tail eLpNorm ≤ ε"
-(a tail-smallness statement), NOT the `UnifIntegrable` conclusion bundled as a
-hypothesis — `negMulLog_convDensity_unifIntegrable` genuinely reduces TO this via
-`unifIntegrable_of`. All `hpX_*`/`hu_*` are regularity preconditions. NOT load-bearing.
-@residual(wall:approx-identity-L1) -/
-theorem negMulLog_convDensity_indicatorTail_uniform
-    {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
-    (u : ℕ → ℝ) (hu_pos : ∀ n, 0 < u n) (hu_bdd : BddAbove (Set.range u))
-    {ε : ℝ} (hε : 0 < ε) :
-    ∃ C : ℝ≥0, ∀ n,
-      eLpNorm
-        ({ x | C ≤ ‖Real.negMulLog
-            (convDensityAdd pX (gaussianPDFReal 0 ⟨u n, (hu_pos n).le⟩) x)‖₊ }.indicator
-          (fun x => Real.negMulLog
-            (convDensityAdd pX (gaussianPDFReal 0 ⟨u n, (hu_pos n).le⟩) x)))
-        1 volume ≤ ENNReal.ofReal ε := by
-  sorry
-
-/-! ## Main UI witness (Step 1, genuine reduction to Step 4) -/
-
-/-- **Layer 2 UI witness.** Uniform integrability of the entropy integrands along any
-sequence `u : ℕ → ℝ` with `u n > 0` and bounded range. Vitali input `hui`.
-
-Same signature as `EPIG2HeatFlowContinuity.negMulLog_convDensity_unifIntegrable`
-(`:165`) plus the probability-mass normalization precondition `hpX_mass : ∫ pX = 1`
-(regularity, supplied by the layer-2 consumer). The genuine reduction (`unifIntegrable_of`,
-`[IsFiniteMeasure]`-free) delegates the uniform indicator-tail input to the parked de
-la Vallée-Poussin bridge core `negMulLog_convDensity_indicatorTail_uniform`
-(`wall:approx-identity-L1`). The framing/maxent helpers (Steps 2-3) are genuine.
-
-NOT load-bearing: this body is the genuine Step-1 reduction. Its only own residual is
-transitive, through the parked de la Vallée-Poussin bridge core
-(`wall:approx-identity-L1`); the framing/maxent helpers (Steps 2-3) are genuine modulo
-the parked moment-integrability plumbing (`plan:epi-g2-vitali-closure-plan`).
-
-Independent honesty audit 2026-06-04 (fresh subagent, commit 825154f): honest_residual
-(transitive only), PASS. Own body is the genuine Step-1 reduction: `unifIntegrable_of`
-(`[IsFiniteMeasure]`-free, so valid on infinite `volume`) discharges the
-AEStronglyMeasurable side via `continuous_negMulLog.comp_aestronglyMeasurable`, and
-delegates the uniform indicator-tail input genuinely to the parked de la Vallée-Poussin
-core `negMulLog_convDensity_indicatorTail_uniform`. The `UnifIntegrable` conclusion is
-NOT bundled into any hypothesis — it is genuinely reconstructed by the constructor; the
-single hard step (uniform tail) is the parked core, a genuine intermediate proposition
-(not the UI conclusion). `#print axioms` carries `sorryAx` purely transitively through
-that wall. `hpX_mass : ∫ pX = 1` (probability framing) and `hu_bdd` are regularity
-preconditions, not load-bearing. "genuine but transitive residual" is the honest
-shape (audit-tags.md tier 2 / transitive-sorry): own sorry 0, residual via the parked
-core. NOT load-bearing / circular / degenerate; sufficiency holds. -/
-theorem negMulLog_convDensity_unifIntegrable
-    {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
-    (u : ℕ → ℝ) (hu_pos : ∀ n, 0 < u n) (hu_bdd : BddAbove (Set.range u)) :
-    UnifIntegrable
-      (fun n => fun x =>
-        Real.negMulLog (convDensityAdd pX (gaussianPDFReal 0 ⟨u n, (hu_pos n).le⟩) x))
-      1 volume := by
-  -- Step 1: reduce UnifIntegrable to the uniform indicator-tail estimate via
-  -- `unifIntegrable_of` (`[IsFiniteMeasure]`-free, so usable on `volume`).
-  refine unifIntegrable_of (le_refl 1) ENNReal.one_ne_top (fun n => ?_) (fun ε hε => ?_)
-  · -- AEStronglyMeasurable of `negMulLog ∘ f_n`.
-    refine Real.continuous_negMulLog.comp_aestronglyMeasurable ?_
-    exact (convDensityAdd_gaussian_measurable hpX_meas (hu_pos n)).aestronglyMeasurable
-  · -- The uniform indicator-tail input is the parked de la Vallée-Poussin bridge core.
-    exact negMulLog_convDensity_indicatorTail_uniform hpX_nn hpX_meas hpX_int hpX_mass
-      hpX_mom u hu_pos hu_bdd hε
+The Vitali UnifIntegrable witness `negMulLog_convDensity_unifIntegrable` and its
+sole hard dependency, the de la Vallée-Poussin bridge core
+`negMulLog_convDensity_indicatorTail_uniform` (the actual `wall:approx-identity-L1`
+sorry), were the layer-2 (`differentialEntropy_convDensity_integral_tendsto`) inputs
+on the Vitali route. The layer-2 body is now re-derived genuinely via the two-sided
+sandwich (Fatou-LSC `(α)` limsup upper bound + conditioning `(β)` per-`n` lower
+bound, both `@audit:ok`), so these Vitali witnesses are no longer consumed and are
+deleted. The genuine framing/maxent helpers above
+(`negMulLog_convDensityAdd_gaussian_entropy_upper` etc.) are retained — the maxent
+upper bound is now consumed directly by the layer-2 sandwich for its uniform
+upper-boundedness witness. -/
 
 end InformationTheory.Shannon

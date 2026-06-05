@@ -349,7 +349,12 @@ so `KLr → (klDiv μ γ).toReal` (squeeze), hence `h_n → −(klDiv μ γ).toR
 The hypotheses are all regularity preconditions (`pX` density regularity + `σ² ≠ 0` +
 `u → 0⁺` positivity); the conclusion is the genuine limsup inequality, not bundled.
 `#print axioms negMulLog_convDensity_limsup_le` = `[propext, Classical.choice, Quot.sound]`
-(sorryAx-free, 2026-06-05). -/
+(sorryAx-free, 2026-06-05). Independent honesty audit 2026-06-05: PASS — non-circular,
+non-bundled (boundedness genuinely supplied by the cross-file (β) lower bound, no import
+cycle), subsequence promotion (`Filter.tendsto_of_subseq_tendsto`) used correctly (both
+squeeze ends equal `(klDiv μ γ).toReal`, not a false generalization of a subsequence
+result), `#print axioms` re-verified sorryAx-free.
+@audit:ok -/
 theorem negMulLog_convDensity_limsup_le {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
