@@ -8,6 +8,7 @@ import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.EPIConvDensity
 import InformationTheory.Shannon.FisherInfoV2DeBruijnAssembly
 import InformationTheory.Shannon.EPIG2ConvEntropyMonotone
+import InformationTheory.Meta.EntryPoint
 
 /-!
 # EPI G2 — (β) density-only lower bound
@@ -119,6 +120,7 @@ probability measure (not vacuous), the cross-term / KL-finiteness preconditions 
 via the s-uniform polynomial majorant + `integrable_compProd_iff` (non-trivial), `#print
 axioms` re-verified sorryAx-free.
 @audit:ok -/
+@[entry_point]
 theorem negMulLog_convDensity_entropy_ge_density
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)

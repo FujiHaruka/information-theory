@@ -10,6 +10,7 @@ import InformationTheory.Shannon.EPIVitaliUI
 import InformationTheory.Shannon.EPIConvDensityAssoc
 import InformationTheory.Shannon.EPIG2BridgeDensityHelpers
 import InformationTheory.Shannon.EPIG2ConvEntropyDensity
+import InformationTheory.Meta.EntryPoint
 
 /-!
 # EPI G2 (α) upper bound — KL lower-semicontinuity via klFun-Fatou
@@ -355,6 +356,7 @@ cycle), subsequence promotion (`Filter.tendsto_of_subseq_tendsto`) used correctl
 squeeze ends equal `(klDiv μ γ).toReal`, not a false generalization of a subsequence
 result), `#print axioms` re-verified sorryAx-free.
 @audit:ok -/
+@[entry_point]
 theorem negMulLog_convDensity_limsup_le {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)

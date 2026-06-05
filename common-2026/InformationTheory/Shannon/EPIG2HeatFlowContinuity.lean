@@ -19,6 +19,7 @@ import InformationTheory.Shannon.FisherInfoV2DeBruijnAssembly
 import InformationTheory.Shannon.EPIVitaliUI
 import InformationTheory.Shannon.EPIG2KLFatouLSC
 import InformationTheory.Shannon.EPIG2ConvEntropyDensity
+import InformationTheory.Meta.EntryPoint
 
 /-!
 # G2: heat-flow entropy-power continuity at the endpoint `t = 0⁺`
@@ -187,6 +188,7 @@ are honest auxiliary-scale instances, independent of the kernel variance `u n`.
 not vacuous). (d) `#print axioms` = `[propext, Classical.choice, Quot.sound]`
 (sorryAx-free, machine-checked 2026-06-05 after `lake build` olean refresh).
 @audit:ok -/
+@[entry_point]
 theorem differentialEntropy_convDensity_integral_tendsto
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -575,6 +577,7 @@ deletion is the legitimate removal of orphaned scaffolding (replaced by the genu
 and the module rebuilds clean; (4) `#print axioms` =
 `[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-checked).
 @audit:ok -/
+@[entry_point]
 theorem heatFlowEntropyPower_continuousWithinAt_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
