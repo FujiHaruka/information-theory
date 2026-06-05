@@ -428,3 +428,69 @@ theorem factor2_arith_FALSE :
   norm_num at this
 -- exact gap (co-monotonicity を足すと閉じる) も機械確認済。
 ```
+
+---
+
+## §Two-time object — Phase-0 arith gate PASSED (2026-06-06、機械実証)
+
+**user 判断**: GS-A3' REFUTE (全 single-t route blocked) を受け、**(2) two-time restructure に着手**を選択。
+着手前に GS-A3' の risk-ordering 教訓 (plumbing 投資前に解析核 gate) を適用し、two-time object の
+**arith core を機械実証** → **PASS**。
+
+### 決定的発見: 解析核は既存 harmonic Stam から閉じる (factor-2 も co-monotonicity も不要)
+
+single-t object は `s=r=t` を強制 (path velocity `s'=r'=1`) → sum 微分が `2·J_sum` になり Stam から
+閉じない (GS-A3' REFUTE)。**two-time object** は X を時刻 s、Y を時刻 r で独立摂動し、path `(s(t),r(t))`
+を辿る。gap `R(t) = log N(s,r) − log(N_X(s)+N_Y(r))` の微分:
+
+```
+R'(t) = J_S·(s'+r') − (J_X·N_X·s' + J_Y·N_Y·r')/(N_X+N_Y)
+```
+
+ここで `J_S = J(X_s+Y_r)`、`J_X=J(X_s)`、`J_Y=J(Y_r)`。**FII-matched path velocity `s'=1/J_X, r'=1/J_Y`**
+を取ると:
+```
+R'(t) = J_S·(1/J_X + 1/J_Y) − (J_X·N_X/J_X + J_Y·N_Y/J_Y)/(N_X+N_Y)
+      = J_S·(1/J_X + 1/J_Y) − (N_X+N_Y)/(N_X+N_Y)
+      = J_S·(1/J_X + 1/J_Y) − 1
+```
+**harmonic Stam `1/J_S ≥ 1/J_X+1/J_Y` ⟺ `J_S·(1/J_X+1/J_Y) ≤ 1`** (J_S>0) → `R'(t) ≤ 0`。✅
+
+### 機械実証 (`InformationTheory/Shannon/ProbeTwoTime.lean`、scratch、検証後削除。再現 verbatim 下記)
+
+`lake env lean` EXIT=0:
+- **`twotime_reduced`**: `J_S·(1/J_X+1/J_Y) − 1 ≤ 0` を harmonic Stam + positivity から証明。✅
+- **`twotime_full`**: 完全形 `J_S·(1/J_X+1/J_Y) − (J_X·N_X·(1/J_X)+J_Y·N_Y·(1/J_Y))/(N_X+N_Y) ≤ 0`
+  (consumer lemma が実際に証明する shape) を harmonic Stam + positivity から証明。weighted 項が
+  `(N_X+N_Y)/(N_X+N_Y)=1` に collapse。✅
+
+**同じ harmonic Stam が single-t factor-2 を REFUTE し (GS-A3')、two-time を CLOSE する**。差は純粋に
+**path geometry** (`s'=r'=1` 強制 vs `s'=1/J_X, r'=1/J_Y` 自由) のみ。解析入力は同一。
+
+### 含意 — restructure は解析核 wall なし、plumbing 主体
+
+- **解析核 (最大 risk) は SOLID** = 既存 harmonic Stam producer (`isStamInequalityHyp_via_body` 系) を
+  そのまま使う。新規 wall ゼロ。GS-A3' の non-local co-monotonicity 要求は **two-time では発生しない**。
+- de Bruijn building block (`deBruijn_identity_v2`、`(1/2)·J` per-variable) も **そのまま使える**
+  (各変数 s/r は unit-noise Z_X/Z_Y で摂動 = variance-1、de Bruijn の `(1/2)·J` が正しい)。
+  variance-2 問題は「sum を単一 noise で見た」ことの artifact で、two-time では X_s+Y_r を
+  `∂/∂s` (Z_X 追加) / `∂/∂r` (Z_Y 追加) で別々に見るので各 partial が `(1/2)·J_S` (unit)、factor 健全。
+- **残る設計課題 = formulation 選択** (planner gate): path `(s(t),r(t))` は ODE `s'=1/J_X(s), r'=1/J_Y(r)`
+  で定義され Lean 形式化が非自明。代替: (a) single-path ODE、(b) 2 変数 region monotonicity
+  `N(s,r) ≥ N_X(s)+N_Y(r)` on quadrant、(c) Rioul 正規化摂動。最も Lean-tractable な形を planner が選定。
+- **consumer 移行**: `csiszarLogRatioGap` (alias `ln`、83 occ/4 file) + `csiszarGap1Source` (74 occ) を
+  two-time object に restructure (major wave、ただし解析核 gate PASS で投資価値確定)。
+
+### 再現用 verbatim
+
+```lean
+theorem twotime_reduced
+    (J_X J_Y J_S : ℝ) (hJX : 0 < J_X) (hJY : 0 < J_Y) (hJS : 0 < J_S)
+    (h_stam : 1 / J_S ≥ 1 / J_X + 1 / J_Y) :
+    J_S * (1 / J_X + 1 / J_Y) - 1 ≤ 0 := by
+  have h : 1 / J_X + 1 / J_Y ≤ 1 / J_S := h_stam
+  have : J_S * (1 / J_X + 1 / J_Y) ≤ J_S * (1 / J_S) :=
+    mul_le_mul_of_nonneg_left h (le_of_lt hJS)
+  rw [mul_one_div, div_self (ne_of_gt hJS)] at this; linarith
+-- twotime_full: weighted 項が 1 に collapse、同 Stam で閉じる (proof-log 本文参照)。
+```
