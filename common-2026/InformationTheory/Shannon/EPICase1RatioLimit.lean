@@ -86,7 +86,12 @@ the entropy power inequality holds.
 `epi_of_csiszarLogRatioGap_zero_nonneg` (genuine bridge).
 
 Genuine — no `sorry`, no load-bearing hypotheses (the antitone carrier and the limit
-are honest inputs, both about `R` itself, not the EPI conclusion). -/
+are honest inputs, both about `R` itself, not the EPI conclusion).
+
+@audit:ok (independent honesty audit 2026-06-05: own body + transitive sorryAx-free
+[propext, Classical.choice, Quot.sound]; `h_anti`/`h_lim` are statements about `R`
+itself, not the EPI conclusion — non-load-bearing, sufficiency holds via `ge_of_tendsto`
++ genuine `epi_of_csiszarLogRatioGap_zero_nonneg`). -/
 theorem epi_of_csiszarLogRatioGap_tendsto
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω)
     (h_anti : AntitoneOn (fun t => csiszarLogRatioGap X Y Z_X Z_Y P t) (Set.Ici (0 : ℝ)))
@@ -115,7 +120,12 @@ theorem epi_of_csiszarLogRatioGap_tendsto
 `A + √t·B = √t·(A/√t + B)`, so the law on the left is the law on the right pushed
 forward by `(· * √t)`; `entropyPower_map_mul_const` with `c = √t` (squared `= t`)
 finishes. The a.c. + entropy-integrability of the *unscaled* W-path law are honest
-regularity preconditions (consumed by `entropyPower_map_mul_const`). -/
+regularity preconditions (consumed by `entropyPower_map_mul_const`).
+
+@audit:ok (independent honesty audit 2026-06-05: own body + transitive sorryAx-free;
+`h_ac`/`h_ent_int` are regularity preconditions of `entropyPower_map_mul_const`
+[a.c. + negMulLog integrability], NOT load-bearing — the scaling identity is genuine
+glue, conclusion `N(path) = t·N(W)` not encoded in any hypothesis). -/
 theorem entropyPower_path_scaling
     (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hA : Measurable A) (hB : Measurable B)
@@ -172,7 +182,17 @@ variance of `A`). These are regularity preconditions (方針 X, NOT load-bearing
 conclusion `N(W t) → N(B)` is not encoded in any hypothesis. Threading the full
 per-`t` regularity bundle is deferred; the body retreats with `sorry`.
 
-@residual(plan:epi-case1-difference-g3-closure-plan) -/
+@residual(plan:epi-case1-difference-g3-closure-plan)
+-- audit 2026-06-05 (honest_residual, classification CONFIRMED: plan exists and §249-256
+-- of the plan owns this squeeze as a relocated regularity wall; the body is an honest
+-- sorry, no load-bearing bundling — conclusion `N(W t) → N(B)` is NOT encoded in any
+-- hypothesis). SIGNATURE GAP flagged for the plan owner: the squeeze lower bound
+-- `differentialEntropy_add_ge_of_indep` requires `IndepFun A B P`, which is ABSENT from
+-- this signature (and from the §4 caller, which lacks `IndepFun X Z_X`/`Y Z_Y`). The
+-- conclusion is mathematically true (A/√t → 0 ⇒ pushforward → law B), so this is NOT a
+-- false_statement, but the signature is under-hypothesized for the planned proof route:
+-- closure will need to thread `IndepFun A B P` (a regularity precondition, non-load-bearing).
+-- Not a defect to revert; an honest residual whose signature must be extended at closure. -/
 theorem entropyPower_rescaled_path_tendsto
     (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hA : Measurable A) (hB : Measurable B)
@@ -200,7 +220,16 @@ regularity. No EPI / Stam core is bundled.
 Genuine analytic glue — **own body is `sorry`-free** (scaling cancellation, `log`
 cancellation, composition with the per-path limits, Gaussian additivity, limit
 transfer). The only transitive `sorry` is the per-path squeeze
-`entropyPower_rescaled_path_tendsto` (§3), tagged separately. -/
+`entropyPower_rescaled_path_tendsto` (§3), tagged separately.
+
+-- audit 2026-06-05 (honest_residual, own body genuine): `#print axioms` shows own body
+-- is sorry-free; the only `sorryAx` is the transitive §3 residual (confirmed honest).
+-- The threaded `h_scale_X/Y/sum` are regularity preconditions of `entropyPower_path_scaling`
+-- (a.c. + negMulLog integrability), `hZX_law`/`hZY_law`/`hZXZY_indep` are noise regularity —
+-- no EPI/Stam core bundled. SIGNATURE GAP (same as §3): this theorem lacks `IndepFun X Z_X`
+-- and `IndepFun Y Z_Y`, which §3's squeeze lower bound will require; closure of §3 will force
+-- adding them here too (regularity preconditions, non-load-bearing). Not `@audit:ok` yet
+-- because of the live transitive §3 sorry; promote to `@audit:ok` once §3 closes. -/
 theorem csiszarLogRatioGap_tendsto_zero_atTop
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y)
