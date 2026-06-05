@@ -90,11 +90,34 @@ rg "^- \[ \]" で残タスク横断 grep、rg "🔄" でピボット箇所だけ
 
 → Phase 3/5 の最終 signature をどちらに置くかをユーザーに確認後、確定する (下記 §スコープ判断)。
 
-## スコープ判断 (open、ユーザー確認待ち)
+## スコープ判断 — **DECIDED: 方針 Y (真に仮説ゼロ)** (2026-06-05、ユーザー確定)
 
-最終主定理に有限分散 + 有限微分エントロピーの regularity precondition を残すか (方針 X)、
-truncation 論法で除く別 moonshot を積むか (方針 Y)。撤退ライン L-Uncond-3-scope =
-「方針 Y が semicontinuity wall で詰まったら方針 X に縮退して honest に着地」。
+最終主定理は独立性 + 可測性のみ。a.c. ブランチの有限分散 + 有限微分エントロピーも除く。
+撤退ライン **L-Uncond-3-scope** = 「方針 Y が semicontinuity wall で genuine に詰まったら、
+有限分散+有限エントロピーを honest precondition として残す方針 X に縮退して着地」(honest 後退口、tier 2)。
+
+### 方針 Y の機構 (新クリティカルパス) — § Phase Y / sub-plan S5
+
+a.c. ブランチで生入力に regularity を課す根因は **heat-flow endpoint t→0⁺ の連続性**
+(`heatFlowEntropyPower_continuousWithinAt_zero` が生入力の有限分散+有限エントロピー density-witness を要求、発見 3)。
+方針 Y はこの endpoint 依存を **近似 + 極限** で迂回する:
+
+1. **t > 0 (平滑側) で無前提 EPI**: heat-flow path 上 `t > 0` では入力が Gaussian と畳み込み済で
+   自動的に regular (有限分散・滑らか・有限エントロピー)。よって EPI_t `N(X+√t Z_X + Y+√t Z_Y) ≥
+   N(X+√t Z_X) + N(Y+√t Z_Y)` は **入力 regularity 無し**に既存 a.c. core で閉じる (要確認: 平滑後測度が
+   density-witness を自動充足するか — 発見 3 は「生入力」と判定したが t>0 平滑後は別、Phase Y-0 で検算)。
+2. **t→0⁺ 極限**: EPI_t の各項で `t→0` を取る。RHS は `N(X+√t Z) → N(X)` の収束、LHS は
+   `liminf` を取る。不等式が極限で保たれるには **entropy power の下半連続性** (LHS)
+   `N(X+Y) ≤ liminf N((X+Y)+√t Z)` と RHS の収束が要る。
+3. **真の wall = entropy power 弱収束 半連続性**: `X_t → X` (weak / 法則収束) のとき
+   `liminf N(X_t) ≥ N(X)` (or 適切な向き)。**Mathlib 完全不在** (entropy/KL の半連続性 loogle Found 0、
+   epi-g2-main-closure-inventory)。これが方針 Y の新規 genuine Mathlib 壁。自作必要。
+   - 関連在庫: KL の下半連続性 `MeasureTheory.??` / `lowerSemicontinuous` + portmanteau /
+     Fatou 系 (EPIG2KLFatouLSC.lean に klFun-Fatou サンドイッチの genuine 実績あり — 流用候補)。
+     **→ § Phase Y の先行調査 S5-inventory で確定 (起動済)**。
+
+注: 退化トラップ除去 (特異 → entropy power 0) は方針 Y でも cases 2/3 の枠組みをそのまま使う。
+方針 Y が追加するのは「a.c. だが有限分散でない入力」を平滑近似で救う層のみ。
 
 ## 進捗
 
@@ -184,9 +207,12 @@ Gaussian saturation / L-EPI1 Stam / L-EPI2 de Bruijn。残 sorry (G3 rescale / a
 | S2 | `epi-downstream-report-plan` | 柱 1 cont.: 36-file の `differentialEntropy`/`entropyPower` 参照を (a)(b) いずれが必要か分類し re-port。statement-層 shim + import 順序の DAG。AWGN/Fisher/de Bruijn は (a) のまま不変であることを検証する re-port。 | S1 | 📋 |
 | S3 | `epi-singular-mixed-case-plan` | 柱 2: case 2 (混合) + case 3 (両特異) の新規補題。`condDifferentialEntropy_le` + `condDifferentialEntropy_indep_add_eq` から ℝ≥0∞ `N(X+Y) ≥ N(X)` への lift。case 3 は `zero_le` 自明。3-case 判定 + dispatch。 | S1、S2 (statement 型) | 📋 |
 | — | (case 1 a.c. core closure) | 柱 3: 既存 plan 群を**流用** (新規 sub-plan を作らない)。`epi-stam-to-conclusion-plan` / `epi-csiszar-ratio-reframe-plan` / `epi-richness-route-b-plan` / `epi-g2-*` が SoT。 | (進行中) | 既存 |
-| S4 | (assembly、本 plan Phase 5 で直接) | 柱 2+3 合流: 3-case dispatch → 無条件主定理。新 sub-plan 不要、本 plan §Phase 5。 | S1–S3 + case1 | 📋 |
+| S5 | `epi-uncond-truncation-lsc-plan` | **方針 Y クリティカルパス**: t>0 平滑側無前提 EPI + t→0⁺ 極限 + entropy power 弱収束 半連続性 (新規 Mathlib 壁、自作)。EPIG2KLFatouLSC の klFun-Fatou 実績流用候補。 | case1 (有限分散版 a.c. core) + S1 | 📋 先行調査中 |
+| S4 | (assembly、本 plan Phase 5 で直接) | 柱 2+3 合流: 3-case dispatch → 無条件主定理。方針 Y では case1 を S5 経由の無前提版に差替。新 sub-plan 不要、本 plan §Phase 5。 | S1–S3 + S5 | 📋 |
 
-**依存 DAG**: `Phase 0 → S1 → S2 → {S3, case1(既存)} → Phase 5(S4)`。S3 と case1 は S2 完了後に並行可。
+**依存 DAG (方針 Y)**: `Phase 0 → S1 → S2 → {S3, case1(既存、有限分散版)} → S5(無前提化) → Phase 5(S4)`。
+S5 が方針 Y の本体で、case1 の有限分散版 a.c. core を入力に「平滑側無前提 EPI + 半連続性極限」で
+regularity を剥がす。S5 が semicontinuity wall で詰まれば L-Uncond-3-scope で方針 X (case1 をそのまま最終形) に縮退。
 
 ---
 
