@@ -241,7 +241,22 @@ they assert external regularity of `X` (existence of a density + finite variance
 not any de Bruijn / Fisher / `HasDerivAt` analytic core. The de Bruijn identity
 itself is discharged downstream by the genuine (sorryAx-free)
 `debruijnIdentityV2_holds_assembled` (`FisherInfoV2DeBruijnAssembly.lean`;
-`wall:debruijn-integration` is [CLOSED 2026-06-04]). -/
+`wall:debruijn-integration` is [CLOSED 2026-06-04]).
+
+@audit:ok — independent honesty audit (2026-06-05, fresh auditor, commit 94a3ae8):
+3 fields (`density_t_eq`/`pX_law`/`pX_mom`) genuine, sorryAx-free. `#print axioms` =
+`[propext, Classical.choice, Quot.sound]` (transient + `lake env lean` after olean
+refresh). Sufficiency verified: the conv-pin `density_t := convDensityAdd pX g_t` is
+the genuine density of `P.map (X + √t·Z)` — `density_t_eq := rfl` is trivially true by
+construction, and the connection to the *actual* path measure is established genuinely
+downstream by `pPath_eq_convDensityAdd` (`@audit:ok`, consumed inside
+`debruijnIdentityV2_holds_assembled._entropy_eq` via `pX_law`/`Z_law`/`IndepFun`), so
+the conv-pin is the CORRECT side of the structure docstring's false-statement warning
+(NOT the rnDeriv-pin/`density_t:=0` degeneracy that collapses Fisher to 0). New
+preconditions `hX_ac`/`h_mom_X` are regularity (a.c. + finite 2nd moment of X): core-
+reconstruction test = granting them does NOT yield the de Bruijn identity; they only
+feed `pX_law` (`withDensity_rnDeriv_eq`) / `pX_mom` (`integrable_map_measure` transport).
+Load-bearing = NO. -/
 @[entry_point]
 noncomputable def IsRegularDeBruijnHypV2.ofHeatFlow
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
@@ -332,7 +347,15 @@ NOTE (2026-06-05 closure): `deBruijn_identity_v2` 自体は genuine (sorryAx-fre
 手筋流用)。`#print axioms ofHeatFlow = [propext, Classical.choice, Quot.sound]`
 (sorryAx-free)。RHS は conv-pin により `p t` ではなく `ofHeatFlow ... .density_t`
 (= `convDensityAdd pX g_t`)。`hX_ac`/`h_mom_X` は X-density regularity precondition
-(a.c. + 有限2次モーメント) であり load-bearing でない。 -/
+(a.c. + 有限2次モーメント) であり load-bearing でない。
+
+@audit:ok — independent honesty audit (2026-06-05, fresh auditor, commit 94a3ae8):
+sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`). Genuine
+pass-through to `deBruijn_identity_v2` (`@audit:ok`, `debruijnIdentityV2_holds_assembled`
+経由) on `ofHeatFlow` (`@audit:ok`). RHS conv-pin 変更 (`p t` → `ofHeatFlow….density_t`
+= `convDensityAdd pX g_t`) は statement をより正確にする (genuine path density)、偽化
+していない。NOTE: `_h_ibp : IsIBPHypothesis` は underscore-unused (name-laundering alias
+`@audit:retract-candidate`、本 commit 由来でなく既存、未消費なので dishonesty なし)。 -/
 @[entry_point]
 theorem deBruijn_identity_v2_of_heat_flow
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]
