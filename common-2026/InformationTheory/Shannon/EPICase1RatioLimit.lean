@@ -1912,7 +1912,27 @@ longer fully parked: its sole remaining `sorry` is the `t`-measurability of the 
 (AEStronglyMeasurable on `Ι 0 T`), a separate plumbing obstacle (no direct Mathlib
 parameter-measurability lemma for the `logDeriv (convDensityAdd …)` lintegral). All four added
 preconditions are regularity (regular density / normalization / Integrable-boundedness bundle /
-finite Fisher), NOT load-bearing — they do not encode the inequality core. -/
+finite Fisher), NOT load-bearing — they do not encode the inequality core.
+@audit-note: INDEPENDENT honesty audit of design-(b) change (2026-06-05, fresh auditor, commit
+`06a2989`). Verdict honest_residual — CONFIRMED. (1) The 3 added preconditions are genuine
+regularity, NOT load-bearing: `hreg_pX` = 7-field `IsRegularDensityV2` (diff / pos / tails→0 /
+integrable-deriv / ∫deriv=0); `hnorm_pX` = normalization; `hready_pX` = the 19-field
+`IsBlachmanConvReady` bundle (`EPIBlachmanDensity.lean:712-761`, read verbatim) whose every field
+is `Integrable (…)` / `∃ M, |·| ≤ M` / `0 < …` — the `int_inner`/`int_prod{1,2,3}`/`int_W`/
+`int_Wsq` fields assert only INTEGRABILITY of the Tonelli-expansion integrands, never their
+*values* nor any inequality, so the Fisher-monotonicity conclusion `J(conv)≤J(pX)` is NOT smuggled
+through `hready_pX` — it is produced by `convex_fisher_bound_of_ready` (`@audit:ok`) at `lam=1`
+(RHS collapses to `1²·J(pX)+0²·J(g_t)=J(pX)`). (2) The bound branch is GENUINE, not vacuous:
+`integrableOn_of_bounded` (`IntegrableOn.lean:649`) has 3 obligations — `s_finite` (discharged),
+`f_mble : AEStronglyMeasurable` (the SOLE sorry, `:2021`), `f_bdd` (discharged from `hbound`).
+`hbound` fires PB-2b on `pX`/`g_t` with `t.toNNReal≠0` genuinely from `t>0`, giving a uniform
+`t`-independent finite bound `C=(1/2)·J(pX).toReal`; the rfl bridge `fisherInfoOfMeasureV2_def`
+(`FisherInfoV2DeBruijn.lean:90`, genuine `rfl`) is legitimate. (3) sufficiency: non-circular
+(conclusion ≢ any hyp), non-degenerate (`density_t_eq:=fun _ _=>rfl` genuine, no `:True` slot).
+(4) `#print axioms isDeBruijnRegularityHyp_of_methodX_unitnoise` = `[propext, sorryAx,
+Classical.choice, Quot.sound]` — exactly ONE `sorryAx`, traced to the single `:2021` AEStrongly-
+Measurable park; the `f_bdd` branch and the `pX`-series fields leak NO transitive sorry. Slug
+VALID (plan exists). No deprecated tags in this declaration. -/
 noncomputable def isDeBruijnRegularityHyp_of_methodX_unitnoise
     (X Z_X : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
