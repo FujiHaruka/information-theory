@@ -341,3 +341,90 @@ as a concrete `ring`-level contradiction in the consumer's hardcoded `(1/2)` ari
   `fisherInfoOfMeasureV2` ignores its measure argument") refers to a deleted D3 difference-gap lemma
   context, NOT to `csiszarLogRatioGap_deriv_le_zero`'s actual `fisherInfoOfDensityReal` values — a
   possible source of the brief's misread.
+
+---
+
+## §GS-A3' probe — factor-2 ratio-Stam arith REFUTED (2026-06-06、機械実証)
+
+**結論 (gate verdict)**: GS-A3' の最小 probe (plan の gate) を実機械検証した。**factor-2 ratio-gap
+arith は harmonic Stam + positivity から閉じない (REFUTED)**。plan の「確定状態」が optimistic に
+「factor-2 再導出 = bounded genuine 標準 EPI 数学、壁でない」と framing したのは **誤り**。doctrine
+「楽観主張も必ず実機械検証」に従い probe したところ REFUTE された。
+
+### probe (`InformationTheory/Shannon/ProbeGSA3.lean`、scratch、機械検証後削除。再現は下記 verbatim)
+
+3 theorem を `lake env lean` で型検査 (EXIT=0, all clean):
+
+1. **`factor1_arith`** (sanity): 現 factor-1 arith
+   `J_sum − (N_X·J_X+N_Y·J_Y)/(N_X+N_Y) ≤ 0` は harmonic Stam から閉じる
+   (既存 `@audit:ok` core `csiszar_ratio_deriv_le_zero_arith` `:657` の body を verbatim 複製、通る)。✅
+
+2. **`factor2_arith_FALSE`** (KEY、REFUTE): variance-2 sum で `d/dt log N_sum = 2·J_sum` になった
+   ときの arith `2·J_sum − (N_X·J_X+N_Y·J_Y)/(N_X+N_Y) ≤ 0` は **harmonic Stam + positivity から
+   FALSE**。constructive counterexample (compile 済):
+   - `J_X=2, J_Y=1, J_sum=2/3, N_X=1, N_Y=3`。
+   - Stam: `1/J_sum = 3/2 = 1/2+1 = 1/J_X+1/J_Y` ✅ (equality 成立)。
+   - 結論: `2·(2/3) − (1·2+3·1)/(1+3) = 4/3 − 5/4 = 1/12 > 0` ✗ → `≤0` 偽。
+   - `¬(∀ ... ≤0)` が型検査で通る = abstract factor-2 arith は偽。
+
+3. **`factor2_arith_with_comonotone`** (exact gap pin): factor-2 arith は **追加仮説**
+   `(J_X−J_Y)·(N_X·J_X − N_Y·J_Y) ≥ 0` (co-monotonicity) を足すと閉じる。これが欠けている
+   ingredient を正確に特定する。
+
+### 数学的根本 (なぜ単一-t object で閉じないか)
+
+`entropyPower μ = exp(2·h(μ))` (`EntropyPowerInequality.lean:102`、no 1/2πe)、
+`csiszarLogRatioGap = log N_sum − log(N_X+N_Y)` (`EPIL3Integration.lean:1380`) を verbatim 確認。
+
+- variance-2 sum: de Bruijn `h_sum'(t) = (v_sum/2)·J_sum = (2/2)·J_sum = J_sum`、
+  → `d/dt log N_sum = 2·h_sum' = 2·J_sum`。
+- component: `h_X'(t) = (1/2)·J_X` → `d/dt log N_X = J_X`、
+  `d/dt log(N_X+N_Y) = (N_X·J_X+N_Y·J_Y)/(N_X+N_Y)`。
+- ∴ `R'(t) = 2·J_sum − (N_X·J_X+N_Y·J_Y)/(N_X+N_Y)`。**sum 項だけ factor 2** (variance-2 の非対称)。
+
+Stam を best-case (`J_sum = J_X·J_Y/(J_X+J_Y)`) で使っても、要求は
+`(N_X·J_X+N_Y·J_Y)(J_X+J_Y) − 2·J_X·J_Y·(N_X+N_Y) = (J_X−J_Y)(N_X·J_X − N_Y·J_Y) ≥ 0` に帰着。
+これは **`J_i` と `N_i·J_i` の co-monotonicity** で、Stam + positivity からは出ない (theorem 2)。
+**isoperimetric `N_i·J_i ≥ 2πe` を足しても出ない** — `N_i·J_i` は `J_i` の順序と独立に大きく取れる
+ので co-monotonicity を含意しない (πe 例で margin 確認、ただし完全 realizable でない注意あり)。
+
+### plan「確定状態」への含意 (optimism REFUTED)
+
+- plan は「factor-2 再導出は 2 consumer lemma に局在、壁でない・bounded genuine」と主張したが、
+  arith core (theorem 2) が **Stam から閉じない**ことで REFUTED。`hN_sum` lift を正しい factor で
+  書き直すこと自体は可能だが、その先の `csiszar_ratio_deriv_le_zero_arith` (factor-2 版) が
+  **証明不能** (偽ではなく、available hypotheses からは閉じない)。
+- 欠けている ingredient = co-monotonicity `(J_X−J_Y)(N_X·J_X − N_Y·J_Y) ≥ 0` は **non-local な
+  heat-flow family の性質**で、local arith でも Stam でも isoperimetric でも出ない。これは
+  **B-τ/c/case-A が失敗したのと同一の根本** = 単一共有-t object が variance-2 非対称を吸収できない。
+- 文献の Stam/Blachman EPI は X,Y を **別時刻** (optimized) で摂動して factor-2 を解消する
+  (= reparametrization)。本 codebase の consumer (`csiszarLogRatioGap`) は単一-t hardcode なので
+  これを表現できない (B-τ が試みて refuted、route c の ~93-site restructure)。
+
+### 撤退ライン判定 (L-GS-A3'-weight → 昇格)
+
+- これは「weight 構造の bounded 調整」(L-GS-A3'-weight 想定) では済まない。欠けているのは weight
+  でなく **non-local co-monotonicity lemma** = 真の追加解析核 (研究級 wall の可能性大) か、または
+  consumer chain 全体の two-time reparametrization restructure (route c、~93 site、tractable でない)。
+- ∴ b-2 (general-variance single-t) も **arith core で blocked**。**全 single-t route が REFUTED**。
+- 現実的な honest resting state: sum producer の `Z_law` defect park
+  (`EPICase1SumProducer.lean`) を**そのまま維持**し、EPI case-1 sum frontier を
+  **「単一-t object では閉じない deeper obstruction」として正直に文書化**する (案D 寄り、ただし
+  「壁でない」という旧 plan の楽観を機械実証で撤回した上で)。次の genuine route は (1) co-monotonicity
+  の独立 lemma 化可否調査、または (2) two-time reparametrization の consumer restructure 再評価。
+
+### 再現用 verbatim (probe theorem statements)
+
+```lean
+-- factor-2 abstract arith は偽:
+theorem factor2_arith_FALSE :
+    ¬ (∀ (J_X J_Y J_sum N_X N_Y : ℝ),
+        0 < J_X → 0 < J_Y → 0 < J_sum → 0 < N_X → 0 < N_Y →
+        (1 / J_sum ≥ 1 / J_X + 1 / J_Y) →
+        2 * J_sum - (N_X * J_X + N_Y * J_Y) / (N_X + N_Y) ≤ 0) := by
+  intro h
+  have := h 2 1 (2/3) 1 3 (by norm_num) (by norm_num) (by norm_num)
+    (by norm_num) (by norm_num) (by norm_num)
+  norm_num at this
+-- exact gap (co-monotonicity を足すと閉じる) も機械確認済。
+```
