@@ -212,3 +212,132 @@ or the defect park maintained until that wave is scheduled.
   assumed to fall out of plumbing.
 - `pPath_eq_convDensityAdd` (general v_Z) being already in-tree is the one real asset for b-2.
 - grep miss: `gaussianConvolution_rescale_eq` is at `:1766` (plan said `~:1769`); off by 3.
+
+---
+
+## GS-A0 probe (2026-06-06) — `J_sum` v_Z-invariance via `fisherInfoOfMeasureV2` measure-ignore
+
+> Scope: the advisor's "first move" — machine-check whether the de Bruijn assembly,
+> when v_Z-generalized, keeps the sum-term `J_sum` (Fisher value) **invariant** in v_Z
+> via the `fisherInfoOfMeasureV2` measure-ignore at `FisherInfoV2DeBruijn.lean:81`.
+> Probe file `InformationTheory/Shannon/ZZProbeGSA0.lean` (deleted post-probe),
+> `lake env lean` clean (only 3 intended PROBE-FAIL `sorry`s). go/no-go only; no impl.
+
+### VERDICT: **NO-GO** — the `fisherInfoOfMeasureV2` measure-ignore does NOT decouple `J_sum` from v_Z
+
+The advisor's hypothesized rescue ("`J_sum` = `fisherInfoOfMeasureV2 (Z_law) density_t` and
+`fisherInfoOfMeasureV2` ignores its measure arg, so `J_sum` is v_Z-independent") is **refuted
+at the type level**. The measure-ignore is real (`rfl`-confirmed, claim a ✅) but **irrelevant
+to the desync**: the de Bruijn derivative value and the ratio core both consume
+`fisherInfoOfDensityReal` applied to the **density function `density_t` directly** — NOT
+`fisherInfoOfMeasureV2 μ density_t`. The density function is carrier-pinned (`density_t_eq`,
+carrier `t·v_Z`), so v_Z reaches `J_sum` through the **second (function) argument**, which the
+`:81` measure-ignore does not touch. This **independently re-confirms** the prior item-4d VERDICT
+(NO-GO for the wrapper-W/B-τ route) from the advisor's new angle, and additionally shows the
+b-2 surgery's spurious-factor-2 desync is **machine-real**, not avoidable by the measure-ignore.
+
+→ **Recommendation: maintain the `Z_law` defect park** (unchanged from the prior verdict). The
+genuine-closure analytic core remains **factor-2 ratio-Stam re-derivation** (GS-A3), and this
+probe sharpens *where* the desync lives: NOT in the ratio core (`csiszarLogRatioGap_deriv_le_zero`,
+opaque density-Fisher values, v_Z-agnostic re-usable) but one level up in
+`csiszarLogRatioGap_hasDerivAt`'s `hN_sum` entropy-power lift, where the `(1/2)·J` cancellation
+against `2·` is hardcoded (`EPIStamToBridge.lean:790-803`).
+
+### Machine-verified probe results (6 `example`s, type-level)
+
+**PROBE 0 — de Bruijn derivative value dependence: type-checks ✅ (sets up the refutation)**
+`deBruijn_identity_v2 X Z … h_reg` returns
+`HasDerivAt (… differentialEntropy …) ((1/2) * fisherInfoOfDensityReal h_reg.density_t) t`
+(`FisherInfoV2DeBruijnGenuine.lean:51`, verbatim). The Fisher value is
+`fisherInfoOfDensityReal h_reg.density_t` — `fisherInfoOfDensityReal` applied to the **`ℝ → ℝ`
+density function `density_t` DIRECTLY**, NOT via `fisherInfoOfMeasureV2 μ density_t`. So the
+measure-keyed wrapper's `:81` ignore is **not on the path** of the derivative value.
+
+**PROBE 1a — `fisherInfoOfMeasureV2 μ f = fisherInfoOfDensity f`: `rfl` ✅ (claim a verbatim)**
+`example (μ : Measure ℝ) (f : ℝ → ℝ) : fisherInfoOfMeasureV2 μ f = fisherInfoOfDensity f := rfl`
+type-checks. The measure-ignore at `FisherInfoV2DeBruijn.lean:81` is genuine. **But it ignores the
+FIRST (measure) argument; the density witness `f` (2nd arg) is fully load-bearing.**
+
+**PROBE 1b — `gaussianConvolution_rescale_eq` is PATH-function, not DENSITY-function ✅**
+`EPICase1RatioLimit.gaussianConvolution_rescale_eq X Z v hv t ht` type-checks with conclusion
+`gaussianConvolution X (Z/√v) (t·v) = gaussianConvolution X Z t` (path `X+√(t·v)·(Z/√v) = X+√t·Z`).
+This is the *path random variable* `X+√t·Z`, NOT the *density* `convDensityAdd pX g_{carrier}` that
+`fisherInfoOfDensityReal` consumes. The rescale never touches the density argument.
+
+**PROBE 1c (claim 1 KEY) — carrier rescale does NOT reach the Fisher value level ⛔**
+```
+convDensityAdd pX (gaussianPDFReal 0 ⟨t, _⟩) = convDensityAdd pX (gaussianPDFReal 0 ⟨t*2, _⟩)
+```
+**`rfl` FAILS** (machine output: "carrier-t density is not definitionally equal to carrier-2t
+density"). The general-v_Z density (v_Z=2) is `convDensityAdd pX g_{2t}` (carrier 2t, from
+`pPath_eq_convDensityAdd … v_Z …`, `FisherInfoV2DeBruijnPerTime.lean:215` carrier `s·v_Z`), which is
+**a different function** from the unit-carrier `convDensityAdd pX g_t`. `gaussianConvolution_rescale_eq`
+(path-level) cannot bridge them — it identifies the carrier-2t *W-path* with the carrier-t *Z-path*
+(the very desync of item 4d), not the two *densities*.
+
+**PROBE 2 (claim 2) — `J_sum` is NOT v_Z-invariant ⛔**
+```
+fisherInfoOfDensityReal (convDensityAdd pX g_t) = fisherInfoOfDensityReal (convDensityAdd pX g_{2t})
+```
+left as `sorry` — **not closable by `rfl`/`simp`** (the two arguments are the PROBE-1c non-defeq
+densities; the Fisher value of a Gaussian-convolved density genuinely depends on the carrier,
+`J(pX∗g_t) ≤ 1/t` scales with carrier per `gaussianConv_fisher_le_inv_var`). `J_sum` v_Z-invariance
+is **machine-refuted**.
+
+**PROBE 3a — unit-carrier cancellation arithmetic: `ring` ✅ (the current mechanism)**
+`eP * J_sum = eP * (2 * ((1/2) * J_sum))` closes by `ring`. This is the current
+`csiszarLogRatioGap_hasDerivAt` `hN_sum` lift (`EPIStamToBridge.lean:794-801`): de Bruijn gives
+`(1/2)·J_sum`, the entropy-power chain rule multiplies by `2·`, the `(1/2)` cancels → `eP·J_sum`.
+
+**PROBE 3b (the make-or-break) — general-variance v_sum=2 breaks the cancellation ⛔**
+`eP * J_sum = eP * (2 * ((2/2) * J_sum))`: **`ring` FAILS**, reducing the goal to
+`eP * J_sum = eP * J_sum * 2` (machine output verbatim) — false unless `J_sum = 0`. With
+general-variance, the de Bruijn derivative becomes `(v_sum/2)·J_sum = (2/2)·J_sum = J_sum`, so the
+`2·` lift yields `eP · 2·J_sum` — a **spurious factor 2**. This is the item-4d desync, now confirmed
+as a concrete `ring`-level contradiction in the consumer's hardcoded `(1/2)` arithmetic.
+
+### Answers to the brief's completion questions
+
+(a) **GO/NO-GO**: **NO-GO** (J_sum is v_Z-dependent; measure-ignore does not save it).
+(b) **carrier rescale → Fisher value level**: **NO** (PROBE 1c `rfl` fails; rescale is path-level only,
+    carrier-t and carrier-2t densities are not defeq, so `fisherInfoOfDensityReal` differs).
+(c) **`J_sum` v_Z-invariant**: **NO, machine-refuted** (PROBE 2 + PROBE 3b: the v_Z=2 carrier produces
+    a spurious factor 2 that `ring` rejects as `eP·J_sum = eP·J_sum·2`).
+(d) **ratio core unchanged re-use**: **PARTIALLY YES but misleading** —
+    `csiszarLogRatioGap_deriv_le_zero` (`:895`) takes `(h_reg_*.reg_at t ht).density_t` Fisher values
+    as **opaque** function-Fisher-values and does NOT reference v_Z, so the *core itself* is reusable.
+    BUT the desync is NOT in the ratio core; it is one level **up** in
+    `csiszarLogRatioGap_hasDerivAt`'s `hN_sum` (`:790-803`), where the de Bruijn value `(1/2)·J_sum`
+    is fed into an entropy-power lift whose `(1/2)`-cancellation is hardcoded. Re-using the ratio core
+    unchanged is exactly what FAILS, because its inputs (the `hN_sum`-lifted derivative) carry the
+    spurious factor 2.
+(e) **residual障害の具体と sizing** (NO-GO): the genuine closure障害 is unchanged from item 4d =
+    **factor-2 ratio-Stam re-derivation** (GS-A3 load-bearing analytic core). The probe adds: the
+    surgery must rewrite `csiszarLogRatioGap_hasDerivAt`'s `hN_sum`/`hN_X`/`hN_Y` lifts
+    (`EPIStamToBridge.lean:766-803`) to carry per-term `v_i` factors (sum: `(v_sum/2)·J`, X/Y:
+    `(1/2)·J`), AND re-derive the harmonic-Stam `α²≤α` weights in `csiszar_ratio_deriv_le_zero_arith`
+    with the factor-2 sum numerator. This is the genuine EPI math the defect hides — NOT plumbing.
+(f) **GS-A1'〜A4' 機械的補完の感触** (13-file v_Z:=1): the structural plumbing (v_Z field +
+    `density_t_eq` carrier `t·v_Z` general-ization, `_entropy_eq`/`_fisher_match` via
+    `pPath_eq_convDensityAdd` general v_Z) IS mechanical — `pPath_eq_convDensityAdd` already takes
+    `(v_Z : ℝ≥0)` (`FisherInfoV2DeBruijnPerTime.lean:215`), and X/Y instances `v_Z := 1` recover the
+    current carriers definitionally (`s·1 = s` simp). The NON-mechanical part is concentrated in the
+    **two `EPIStamToBridge.lean` consumer lemmas** (`csiszarLogRatioGap_hasDerivAt` `hN_sum` lift +
+    `csiszarLogRatioGap_deriv_le_zero` arith weights), which carry load-bearing `(1/2)`/`α²≤α`
+    arithmetic that the v_Z=2 sum term breaks. So GS-A1/A2 plumbing ≈ mechanical, but GS-A3 (the 2
+    consumer lemmas) is the genuine analytic surgery and the actual sizing risk. **Confirms the
+    plan's risk order**: gate GS-A3 tractability (`proof-pivot-advisor` on factor-2 ratio-Stam) BEFORE
+    investing in the 13-file plumbing.
+
+### Probe notes (proof-log素材)
+- The brief's framing (claim 2: "`fisherInfoOfMeasureV2` measure-ignore ⟹ `J_sum` v_Z-invariant")
+  conflates the measure-keyed wrapper `fisherInfoOfMeasureV2` (`:81`, ignores 1st arg) with the
+  density-direct `fisherInfoOfDensityReal` actually used by the de Bruijn derivative and ratio core.
+  The measure-ignore is real but on the wrong argument. This is the single load-bearing distinction.
+- `rg` miss: no separate `J_sum`-as-`fisherInfoOfMeasureV2` call exists in the consumer chain; all
+  three Fisher values (`J_X`/`J_Y`/`J_sum`) are `fisherInfoOfDensityReal ((h_reg_*.reg_at t ht).density_t)`
+  applied to the density function directly (`EPIStamToBridge.lean:903-908`, `:938-943`).
+- The docstring at `EPIStamToBridge.lean:892-893` ("the three Fisher `rfl` identifications hold since
+  `fisherInfoOfMeasureV2` ignores its measure argument") refers to a deleted D3 difference-gap lemma
+  context, NOT to `csiszarLogRatioGap_deriv_le_zero`'s actual `fisherInfoOfDensityReal` values — a
+  possible source of the brief's misread.
