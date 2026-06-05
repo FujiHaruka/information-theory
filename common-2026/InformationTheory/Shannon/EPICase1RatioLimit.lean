@@ -1439,6 +1439,24 @@ threaded `IsDeBruijnRegularityHyp` group (previously vacuous for `v_X ≠ 1`). T
 re-introduces `v_X v_Y := (1 : ℝ≥0)` existentially to keep the `_of_regular` plumbing
 (general `v_B` on the §4 saturation side) unchanged.
 
+@audit-note: independent honesty audit (2026-06-05, fresh auditor, commit c0cd760).
+PB-1 restate VERIFIED to genuinely resolve the latent vacuity defect. The old signature
+took arbitrary nonzero `v_X v_Y` while threading `IsDeBruijnRegularityHyp X Z_X P`, whose
+`reg_at t ht .Z_law` (= `IsRegularDeBruijnHypV2.Z_law`, `FisherInfoV2DeBruijn.lean:210`)
+hardcodes `P.map Z_X = gaussianReal 0 1` — so for `v_X ≠ 1` the hypotheses `hZX_law` and
+`Z_law` were mutually unsatisfiable, making the theorem vacuously true (premises never
+jointly inhabitable). Fixing `hZX_law : P.map Z_X = gaussianReal 0 1` removes the
+contradiction. The body's `obtain ⟨v_X, hv_X, hZX_law⟩ : ∃ v, v≠0 ∧ … := ⟨1, one_ne_zero,
+hZX_law⟩` is HONEST (not circular `:= h`, not `:True`): it locally re-derives the
+`∃ v ≠ 0` shape the `_of_regular` plumbing expects, instantiated at the genuine witness
+`v = 1` carried by the unit hypothesis. The conclusion `N(X+Y) ≥ N(X)+N(Y)` is unchanged and
+not weakened; the noise is genuinely auxiliary (absent from the conclusion) so the unit
+restriction loses no generality. Wrapper itself sorryAx-free (orchestrator-confirmed); the
+threaded `IsDeBruijnRegularityHyp` / `h_reg_*` are honest preconditions (residuals live in
+the producer's `integrable_deriv`, see `isDeBruijnRegularityHyp_of_methodX_unitnoise`). Not
+`@audit:ok` only because it threads residual-carrying regularity hyps (type-check done, not
+proof done).
+
 This wrapper discharges the supply-able preconditions of
 `entropyPower_add_ge_case1_of_regular` from clean method-X data:
 * noise a.c. (`hZX_ac`/`hZY_ac`/`hZXZY_ac`) via `gaussianReal_absolutelyContinuous`
@@ -1735,7 +1753,15 @@ theorem entropyPower_add_ge_case1_of_methodX
 time-reparametrized path `X + √(t·v)·Z'` agrees *pointwise* (everywhere, not just a.e.)
 with the original path `X + √t·Z`. Used to bridge the sum-instance's `𝒩(0,2)` noise to a
 unit `W`. The hypothesis `0 < v` is required (`√v ≠ 0`); the `v = 0` degeneracy (division
-by `√0 = 0`) is excluded. -/
+by `√0 = 0`) is excluded.
+
+@audit:ok — independent honesty audit (2026-06-05, fresh auditor, commit c0cd760):
+genuine 0-sorry pointwise identity (`funext` + `Real.sqrt_mul` + `field_simp`).
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free, transient
+`#print axioms` + `lake env lean`). Signature honest: conclusion is an equality of two
+explicit `gaussianConvolution` functions, not embedded in any hypothesis; `0 < v` is a
+genuine non-degeneracy precondition (excludes the `√0 = 0` division), NOT load-bearing.
+`map_gaussianConvolution_rescale_eq` likewise `@audit:ok` (sorryAx-free, single `rw`). -/
 theorem gaussianConvolution_rescale_eq {α : Type*}
     (X Z : α → ℝ) (v : ℝ) (hv : 0 < v) (t : ℝ) (ht : 0 ≤ t) :
     InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X
@@ -1778,10 +1804,34 @@ fields use the genuine convolution density. The `pX` series is a regularity prec
 (`X` has a Lebesgue density + finite variance), discharged genuinely from `hX_ac`/`h_mom_X`.
 
 The `integrable_deriv` field — interval-integrability of `t ↦ (1/2)·J(density_t)` on `[0,T]`
-— is the genuine analytic obstacle: `gaussianConv_fisher_le_inv_var` bounds `J ≤ 1/t`, which
-is *not* interval-integrable near `t = 0` for a general (non-Gaussian) input `X`. This is the
-de Bruijn per-time analytic content, parked here; the rest of the group is genuine.
-@residual(plan:epi-case1-debruijn-producer-plan) -/
+— is the genuine residual: `gaussianConv_fisher_le_inv_var` bounds `J(pX∗g_t) ≤ 1/t`, which
+is *not* interval-integrable near `t = 0` (`∫₀ᵀ 1/t dt = +∞`), so the available upper bound is
+too weak to discharge the field for a general input `X`. The precise root cause is
+**under-hypothesization, not a Mathlib wall**: by de Bruijn, `∫₀ᵀ (1/2)J(pX∗g_t) dt =
+h(X+√T·Z) − h(X)`, which is finite iff `h(X) > −∞`; the producer's current preconditions
+(`hX_ac` + finite second moment `h_mom_X`) do NOT force finite differential entropy / finite
+Fisher of `X`, so the integral can genuinely diverge for some a.c. finite-2nd-moment `X`. The
+honest closure is to thread a finite-entropy / finite-Fisher regularity precondition (a
+precondition, NOT load-bearing — it does not bundle the de Bruijn analytic core), tracked in
+the owning plan. The rest of the group is genuine.
+
+@residual(plan:epi-case1-debruijn-producer-plan)
+@audit-note: independent honesty audit (2026-06-05, fresh auditor, commit c0cd760).
+honest_residual — slug VALID (plan exists at `docs/shannon/epi-case1-debruijn-producer-plan.md`).
+Verified: (i) `pX` series (pX_nn/pX_meas/pX_law/pX_mom) is a verbatim mirror of
+`IsRegularDeBruijnHypV2.ofHeatFlow`'s `@audit:ok` plumbing (`FisherInfoV2DeBruijnBody.lean:275-`,
+`withDensity_rnDeriv_eq` + `integrable_map_measure`), genuinely derived from `hX_ac`/`h_mom_X`,
+NON-circular. (ii) `reg_at` fields are all regularity/witness (the structure
+`IsRegularDeBruijnHypV2` carries NO analytic-core field — de Bruijn is delivered externally by
+`debruijnIdentityV2_holds_assembled`), so NO load-bearing `*Hypothesis` bundling; going direct
+on `Z_law := hZX_law` rather than via `IsHeatFlowDensity` is honest (only `Z_law` is consumed).
+(iii) `density_t_eq := fun _ _ => rfl` genuine (density_t IS the conv-pin). (iv) the sole sorry
+is `integrable_deriv` only. CLASSIFICATION REFINED from "Mathlib analytic wall" to
+"under-hypothesized (missing finite-entropy/Fisher precondition)"; the `plan:` slug is the
+correct home (resolve by threading the precondition). NOTE: the plan (`:403-404`) optimistically
+predicted this field closes via `gaussianConv_fisher_le_inv_var` claiming `J ≤ 1/t` is
+"continuous bounded" on `[0,T]` — that prediction is mathematically WRONG (`1/t` is unbounded
+at `t=0`); the implementer correctly caught the drift and parked instead. -/
 noncomputable def isDeBruijnRegularityHyp_of_methodX_unitnoise
     (X Z_X : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
