@@ -729,4 +729,487 @@ theorem negMulLog_convDensity_entropy_ge_density
     hpX_nn hpX_meas hpX_law u hu_pos n
     h_ac h_int hκ_v hκ_logp_int hκ_cross_int h_fibreEnt_int h_cross_int h_logq_int
 
+/-! ## Standalone cross-entropy integrability lemmas (extract of the template above)
+
+The 3 `have` blocks `hκ_cross_int` / `h_cross_int` / `h_int` inside
+`negMulLog_convDensity_entropy_ge_density` are extracted into standalone lemmas
+parametrized over an arbitrary **fibre density** `q` (with mass `1`, finite second
+moment, finite absolute entropy) and a **target convolution log-density**
+`g := convDensityAdd pX (gaussianPDFReal 0 v)`.  Unlike the template (where fibre and
+target share the same `pX`), these admit *two distinct* densities, so they cover the
+EPI case-1 framing where the fibre is the Gaussian `q = gaussianPDFReal 0 v_B` (translated
+by `z`) and the target is the input-convolution density `g`.
+
+The polynomial majorant `|log g| ≤ (A+1) + B·x²` (a.e.) comes from
+`convDensityAdd_logFactor_poly_majorant pX …`; the fibre `q` supplies the dominating
+moments.  All genuine (no `sorry`), reusing the template's domination structure. -/
+
+variable {Ω : Type*}
+
+/-- Second-moment integrability of the centred Gaussian density: `y²·g_v(y)` is
+`volume`-integrable.  Via `∫ y²·g_v = ∫ y² ∂(gaussianReal 0 v)` (finite by
+`memLp_id_gaussianReal 2`). -/
+theorem integrable_sq_mul_gaussianPDFReal {v : ℝ≥0} (hv : v ≠ 0) :
+    Integrable (fun y => y ^ 2 * gaussianPDFReal 0 v y) volume := by
+  -- `Integrable (y²) (gaussianReal 0 v)` from `MemLp id 2`.
+  have hmem : MemLp (id : ℝ → ℝ) 2 (gaussianReal 0 v) := memLp_id_gaussianReal 2
+  have hsq : Integrable (fun y => y ^ 2) (gaussianReal 0 v) := by
+    have := (memLp_two_iff_integrable_sq (μ := gaussianReal 0 v)
+      (f := (id : ℝ → ℝ)) measurable_id.aestronglyMeasurable).mp hmem
+    simpa using this
+  -- `gaussianReal 0 v = withDensity (ofReal (gaussianPDFReal 0 v))`.
+  have hgauss : (gaussianReal 0 v)
+      = volume.withDensity (fun x => ENNReal.ofReal (gaussianPDFReal 0 v x)) := by
+    rw [gaussianReal_of_var_ne_zero 0 hv, gaussianPDF_def]
+  rw [hgauss] at hsq
+  rw [integrable_withDensity_iff_integrable_smul₀'
+    (measurable_gaussianPDFReal 0 v).ennreal_ofReal.aemeasurable
+    (Filter.Eventually.of_forall fun x => ENNReal.ofReal_lt_top)] at hsq
+  refine hsq.congr (Filter.Eventually.of_forall fun y => ?_)
+  simp only [smul_eq_mul, ENNReal.toReal_ofReal (gaussianPDFReal_nonneg 0 v y)]
+  ring
+
+/-- Per-fibre cross-term integrability: the (shifted) fibre density `q(·−c)` times the
+log of the convolution target `g = convDensityAdd pX g_v` is `volume`-integrable.
+Dominated by `q(x−c)·((A+1)+B·x²)` via the polynomial majorant of `log g`. -/
+theorem convCrossEntropy_perFibre_integrable
+    (q pX : ℝ → ℝ) (hq_nn : ∀ x, 0 ≤ q x) (hq_meas : Measurable q)
+    (hq_int : Integrable q volume) (hq_mom : Integrable (fun y => y ^ 2 * q y) volume)
+    (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
+    {v : ℝ≥0} (hv : 0 < v) (c : ℝ) :
+    Integrable (fun x => q (x - c)
+      * Real.log (convDensityAdd pX (gaussianPDFReal 0 v) x)) volume := by
+  set g : ℝ → ℝ := convDensityAdd pX (gaussianPDFReal 0 v) with hg_def
+  -- Polynomial majorant `|log g| ≤ (A+1) + B·x²` a.e., at the single point `s = v`.
+  obtain ⟨A, B, hB_nn, hLog0⟩ :=
+    InformationTheory.Shannon.FisherInfoV2.convDensityAdd_logFactor_poly_majorant
+      pX hpX_nn hpX_meas hpX_int hpX_mass hv
+  have hv_mem : (v : ℝ) ∈ Set.Ioo ((v : ℝ) / 2) (2 * v) :=
+    ⟨by linarith [(show (0:ℝ) < v from hv)], by linarith [(show (0:ℝ) < v from hv)]⟩
+  have hLog : ∀ᵐ x ∂volume, |Real.log (g x)| ≤ (A + 1) + B * x ^ 2 := by
+    filter_upwards [hLog0] with x hx
+    have hb := hx (v : ℝ) hv_mem
+    have hvval : (⟨(v : ℝ), le_of_lt (show (0:ℝ) < v from hv)⟩ : ℝ≥0) = v :=
+      NNReal.coe_injective rfl
+    have hpt_eq : convDensityAdd pX
+        (gaussianPDFReal 0 ⟨(v : ℝ), le_of_lt (show (0:ℝ) < v from hv)⟩) x = g x := by
+      rw [hg_def, hvval]
+    rw [hpt_eq, Real.norm_eq_abs] at hb
+    have habs : |Real.log (g x)| ≤ |(- Real.log (g x) - 1)| + 1 := by
+      calc |Real.log (g x)| = |(- Real.log (g x) - 1) + 1| := by
+            rw [show (- Real.log (g x) - 1) + 1 = - Real.log (g x) by ring, abs_neg]
+        _ ≤ |(- Real.log (g x) - 1)| + |(1:ℝ)| := abs_add_le _ _
+        _ = |(- Real.log (g x) - 1)| + 1 := by norm_num
+    linarith
+  -- Measurability of `g = convDensityAdd pX g_v`.
+  have hg_meas : Measurable g := by
+    rw [hg_def]
+    have hg_pdf : Measurable (gaussianPDFReal 0 v) := measurable_gaussianPDFReal 0 _
+    have huncurry : StronglyMeasurable
+        (Function.uncurry fun z x => pX x * gaussianPDFReal 0 v (z - x)) := by
+      apply Measurable.stronglyMeasurable
+      exact (hpX_meas.comp measurable_snd).mul (hg_pdf.comp (measurable_fst.sub measurable_snd))
+    have h := huncurry.integral_prod_right (ν := volume)
+    simpa only [convDensityAdd] using h.measurable
+  -- `q·first-moment` is integrable: `|y·q y| ≤ q + y²·q`.
+  have hq_mom1 : Integrable (fun y => y * q y) volume := by
+    refine Integrable.mono' (hq_int.add hq_mom)
+      (by fun_prop : AEStronglyMeasurable (fun y => y * q y) volume) ?_
+    filter_upwards with y
+    rw [Real.norm_eq_abs, abs_mul, abs_of_nonneg (hq_nn y)]
+    have hy_le : |y| ≤ 1 + y ^ 2 := by nlinarith [sq_nonneg (|y| - 1), sq_abs y]
+    calc |y| * q y ≤ (1 + y ^ 2) * q y := mul_le_mul_of_nonneg_right hy_le (hq_nn y)
+      _ = q y + y ^ 2 * q y := by ring
+  -- The dominating function `q(x−c)·((A+1)+B·x²)` is integrable.
+  have hdom : Integrable (fun x => q (x - c) * ((A + 1) + B * x ^ 2)) volume := by
+    have hT0 : Integrable (fun x => q (x - c)) volume := hq_int.comp_sub_right c
+    have hT1 : Integrable (fun x => (x - c) * q (x - c)) volume := hq_mom1.comp_sub_right c
+    have hT2 : Integrable (fun x => (x - c) ^ 2 * q (x - c)) volume := hq_mom.comp_sub_right c
+    have hcomb : Integrable
+        (fun x => (A + 1) * q (x - c)
+          + B * ((x - c) ^ 2 * q (x - c) + 2 * c * ((x - c) * q (x - c))
+              + c ^ 2 * q (x - c))) volume :=
+      (hT0.const_mul (A + 1)).add
+        (((hT2.add (hT1.const_mul (2 * c))).add (hT0.const_mul (c ^ 2))).const_mul B)
+    refine hcomb.congr (Filter.Eventually.of_forall (fun x => ?_)); ring
+  refine Integrable.mono' hdom ?_ ?_
+  · exact ((hq_meas.comp (measurable_id.sub_const c)).mul hg_meas.log).aestronglyMeasurable
+  · filter_upwards [hLog] with x hx
+    rw [Real.norm_eq_abs, abs_mul, abs_of_nonneg (hq_nn _)]
+    exact mul_le_mul_of_nonneg_left hx (hq_nn _)
+
+/-- `z`-averaged cross-term integrability: averaging the per-fibre cross integral over a
+measure `νZ` with finite second moment yields an integrable function of `z`.  The shift
+is `c(z) = √s·z`; bounded by `(A+1) + 2B·M2q + 2B·s·z²` (gaussian-style moment control). -/
+theorem convCrossEntropy_zAvg_integrable
+    (q pX : ℝ → ℝ) (hq_nn : ∀ x, 0 ≤ q x) (hq_meas : Measurable q)
+    (hq_int : Integrable q volume) (hq_mass : (∫ y, q y ∂volume) = 1)
+    (hq_mom : Integrable (fun y => y ^ 2 * q y) volume)
+    (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
+    {v : ℝ≥0} (hv : 0 < v) {s : ℝ} (hs : 0 < s)
+    (νZ : Measure ℝ) [IsFiniteMeasure νZ] (hνZ_sq : Integrable (fun z => z ^ 2) νZ) :
+    Integrable (fun z => ∫ x, q (x - Real.sqrt s * z)
+      * Real.log (convDensityAdd pX (gaussianPDFReal 0 v) x) ∂volume) νZ := by
+  set g : ℝ → ℝ := convDensityAdd pX (gaussianPDFReal 0 v) with hg_def
+  -- Polynomial majorant `|log g| ≤ (A+1) + B·x²` a.e.
+  obtain ⟨A, B, hB_nn, hLog0⟩ :=
+    InformationTheory.Shannon.FisherInfoV2.convDensityAdd_logFactor_poly_majorant
+      pX hpX_nn hpX_meas hpX_int hpX_mass hv
+  have hv_mem : (v : ℝ) ∈ Set.Ioo ((v : ℝ) / 2) (2 * v) :=
+    ⟨by linarith [(show (0:ℝ) < v from hv)], by linarith [(show (0:ℝ) < v from hv)]⟩
+  have hvval : (⟨(v : ℝ), le_of_lt (show (0:ℝ) < v from hv)⟩ : ℝ≥0) = v :=
+    NNReal.coe_injective rfl
+  have hLog : ∀ᵐ x ∂volume, |Real.log (g x)| ≤ (A + 1) + B * x ^ 2 := by
+    filter_upwards [hLog0] with x hx
+    have hb := hx (v : ℝ) hv_mem
+    have hpt_eq : convDensityAdd pX
+        (gaussianPDFReal 0 ⟨(v : ℝ), le_of_lt (show (0:ℝ) < v from hv)⟩) x = g x := by
+      rw [hg_def, hvval]
+    rw [hpt_eq, Real.norm_eq_abs] at hb
+    have habs : |Real.log (g x)| ≤ |(- Real.log (g x) - 1)| + 1 := by
+      calc |Real.log (g x)| = |(- Real.log (g x) - 1) + 1| := by
+            rw [show (- Real.log (g x) - 1) + 1 = - Real.log (g x) by ring, abs_neg]
+        _ ≤ |(- Real.log (g x) - 1)| + |(1:ℝ)| := abs_add_le _ _
+        _ = |(- Real.log (g x) - 1)| + 1 := by norm_num
+    linarith
+  -- Measurability of `g`.
+  have hg_meas : Measurable g := by
+    rw [hg_def]
+    have hg_pdf : Measurable (gaussianPDFReal 0 v) := measurable_gaussianPDFReal 0 _
+    have huncurry : StronglyMeasurable
+        (Function.uncurry fun z x => pX x * gaussianPDFReal 0 v (z - x)) := by
+      apply Measurable.stronglyMeasurable
+      exact (hpX_meas.comp measurable_snd).mul (hg_pdf.comp (measurable_fst.sub measurable_snd))
+    have h := huncurry.integral_prod_right (ν := volume)
+    simpa only [convDensityAdd] using h.measurable
+  -- Translate moments of `q`.
+  set M2 : ℝ := ∫ y, y ^ 2 * q y ∂volume with hM2
+  set Fclean : ℝ → ℝ :=
+    fun z => ∫ x, q (x - Real.sqrt s * z) * Real.log (g x) ∂volume with hFclean
+  -- dominating polynomial `H(z) := (A+1) + 2B·M2 + 2B·s·z²`, integrable over `νZ`.
+  set H : ℝ → ℝ := fun z => (A + 1) + 2 * B * M2 + 2 * B * s * z ^ 2 with hH
+  have hH_int : Integrable H νZ := by
+    rw [hH]; exact (integrable_const _).add (hνZ_sq.const_mul (2 * B * s))
+  -- measurability of `Fclean`.
+  have hFclean_meas : AEStronglyMeasurable Fclean νZ := by
+    have hjoint : StronglyMeasurable
+        (Function.uncurry fun z x => q (x - Real.sqrt s * z) * Real.log (g x)) := by
+      apply Measurable.stronglyMeasurable
+      apply Measurable.mul
+      · exact hq_meas.comp (measurable_snd.sub (measurable_const.mul measurable_fst))
+      · exact (hg_meas.comp measurable_snd).log
+    exact (hjoint.integral_prod_right').aestronglyMeasurable
+  refine Integrable.mono' hH_int hFclean_meas ?_
+  -- `‖Fclean z‖ ≤ H z`.
+  filter_upwards with z
+  set c : ℝ := Real.sqrt s * z with hc
+  have hc2 : c ^ 2 = s * z ^ 2 := by rw [hc, mul_pow, Real.sq_sqrt hs.le]
+  have hbound_ae : ∀ᵐ x ∂volume,
+      ‖q (x - c) * Real.log (g x)‖ ≤ q (x - c) * ((A + 1) + B * x ^ 2) := by
+    filter_upwards [hLog] with x hx
+    rw [Real.norm_eq_abs, abs_mul, abs_of_nonneg (hq_nn _)]
+    exact mul_le_mul_of_nonneg_left hx (hq_nn _)
+  have hdom : Integrable (fun x => q (x - c) * ((A + 1) + B * x ^ 2)) volume := by
+    have hq_mom1 : Integrable (fun y => y * q y) volume := by
+      refine Integrable.mono' (hq_int.add hq_mom)
+        (by fun_prop : AEStronglyMeasurable (fun y => y * q y) volume) ?_
+      filter_upwards with y
+      rw [Real.norm_eq_abs, abs_mul, abs_of_nonneg (hq_nn y)]
+      have hy_le : |y| ≤ 1 + y ^ 2 := by nlinarith [sq_nonneg (|y| - 1), sq_abs y]
+      calc |y| * q y ≤ (1 + y ^ 2) * q y := mul_le_mul_of_nonneg_right hy_le (hq_nn y)
+        _ = q y + y ^ 2 * q y := by ring
+    have hT0 : Integrable (fun x => q (x - c)) volume := hq_int.comp_sub_right c
+    have hT1 : Integrable (fun x => (x - c) * q (x - c)) volume := hq_mom1.comp_sub_right c
+    have hT2 : Integrable (fun x => (x - c) ^ 2 * q (x - c)) volume := hq_mom.comp_sub_right c
+    have hcomb : Integrable
+        (fun x => (A + 1) * q (x - c)
+          + B * ((x - c) ^ 2 * q (x - c) + 2 * c * ((x - c) * q (x - c))
+              + c ^ 2 * q (x - c))) volume :=
+      (hT0.const_mul (A + 1)).add
+        (((hT2.add (hT1.const_mul (2 * c))).add (hT0.const_mul (c ^ 2))).const_mul B)
+    refine hcomb.congr (Filter.Eventually.of_forall (fun x => ?_)); ring
+  have hF_le : ‖Fclean z‖ ≤ ∫ x, q (x - c) * ((A + 1) + B * x ^ 2) ∂volume := by
+    rw [hFclean]
+    calc ‖∫ x, q (x - c) * Real.log (g x) ∂volume‖
+        ≤ ∫ x, ‖q (x - c) * Real.log (g x)‖ ∂volume := norm_integral_le_integral_norm _
+      _ ≤ ∫ x, q (x - c) * ((A + 1) + B * x ^ 2) ∂volume :=
+          integral_mono_of_nonneg (Filter.Eventually.of_forall fun x => norm_nonneg _)
+            hdom hbound_ae
+  have hint_le : ∫ x, q (x - c) * ((A + 1) + B * x ^ 2) ∂volume ≤ H z := by
+    set U : ℝ → ℝ := fun x =>
+      (A + 1) * q (x - c) + 2 * B * ((x - c) ^ 2 * q (x - c))
+        + 2 * B * c ^ 2 * q (x - c) with hU
+    have hT0 : Integrable (fun x => q (x - c)) volume := hq_int.comp_sub_right c
+    have hT2 : Integrable (fun x => (x - c) ^ 2 * q (x - c)) volume := hq_mom.comp_sub_right c
+    have hU_int : Integrable U volume :=
+      ((hT0.const_mul (A + 1)).add (hT2.const_mul (2 * B))).add (hT0.const_mul (2 * B * c ^ 2))
+    have hle : ∀ x, q (x - c) * ((A + 1) + B * x ^ 2) ≤ U x := by
+      intro x; rw [hU]
+      have hx2 : x ^ 2 ≤ 2 * (x - c) ^ 2 + 2 * c ^ 2 := by nlinarith [sq_nonneg (x - 2 * c)]
+      have hBnn : (0:ℝ) ≤ B := hB_nn
+      nlinarith [hq_nn (x - c), mul_le_mul_of_nonneg_left hx2 hBnn,
+        mul_nonneg hBnn (sq_nonneg (x - c))]
+    calc ∫ x, q (x - c) * ((A + 1) + B * x ^ 2) ∂volume
+        ≤ ∫ x, U x ∂volume := integral_mono hdom hU_int hle
+      _ = H z := by
+          have hI0 : ∫ x, q (x - c) ∂volume = 1 := by
+            rw [integral_sub_right_eq_self (fun y => q y) c, hq_mass]
+          have hI2 : ∫ x, (x - c) ^ 2 * q (x - c) ∂volume = M2 := by
+            rw [integral_sub_right_eq_self (fun y => y ^ 2 * q y) c, ← hM2]
+          have hsplit : ∫ x, U x ∂volume
+              = (A + 1) * (∫ x, q (x - c) ∂volume)
+                + 2 * B * (∫ x, (x - c) ^ 2 * q (x - c) ∂volume)
+                + 2 * B * c ^ 2 * (∫ x, q (x - c) ∂volume) := by
+            show ∫ x, ((A + 1) * q (x - c) + 2 * B * ((x - c) ^ 2 * q (x - c))
+                + 2 * B * c ^ 2 * q (x - c)) ∂volume = _
+            rw [integral_add
+                (f := fun x => (A + 1) * q (x - c) + 2 * B * ((x - c) ^ 2 * q (x - c)))
+                (g := fun x => 2 * B * c ^ 2 * q (x - c))
+                ((hT0.const_mul (A + 1)).add (hT2.const_mul (2 * B)))
+                (hT0.const_mul (2 * B * c ^ 2)),
+              integral_add
+                (f := fun x => (A + 1) * q (x - c))
+                (g := fun x => 2 * B * ((x - c) ^ 2 * q (x - c)))
+                (hT0.const_mul (A + 1)) (hT2.const_mul (2 * B)),
+              integral_const_mul, integral_const_mul, integral_const_mul]
+          rw [hsplit, hI0, hI2, hH, hc2]; ring
+  exact le_trans hF_le hint_le
+
+/-- Joint llr (conditional-KL divergence integrand) integrability, extracted from the
+template `h_int` block.  Given a probability space `μ` with coordinates `Z W`, a fibre
+kernel `κ = condDistrib W Z μ` whose fibres a.e.-equal the (shifted) density `q(·−√s·z)`
+and whose marginal `μ.map W` has density `g`, with the polynomial majorant
+`|log g| ≤ (A+1)+B·x²`, the joint `llr` of the compProd vs. the product-with-const is
+`(μ.map Z) ⊗ₘ κ`-integrable.  All hypotheses are genuine regularity/integrability
+obligations (none encodes the EPI conclusion). -/
+theorem convJointLlr_integrable
+    {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (Z W : Ω → ℝ)
+    (q g : ℝ → ℝ) (hq_nn : ∀ x, 0 ≤ q x) (hg_nn : ∀ x, 0 ≤ g x)
+    (hq_meas : Measurable q) (hg_meas : Measurable g)
+    (A B : ℝ) {s : ℝ} (hs : 0 < s)
+    (hW_ac : (μ.map W) ≪ volume)
+    (vol_ac_W : (volume : Measure ℝ) ≪ μ.map W)
+    (hκ_v : ∀ᵐ z ∂(μ.map Z), condDistrib W Z μ z ≪ volume)
+    (h_ac : (μ.map Z) ⊗ₘ condDistrib W Z μ
+        ≪ (μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map W))
+    (hfib_eq : ∀ᵐ z ∂(μ.map Z),
+        (condDistrib W Z μ z).rnDeriv volume
+          =ᵐ[volume] fun x => ENNReal.ofReal (q (x - Real.sqrt s * z)))
+    (hqW : (μ.map W).rnDeriv volume =ᵐ[volume] fun x => ENNReal.ofReal (g x))
+    (hLog : ∀ᵐ x ∂volume, |Real.log (g x)| ≤ (A + 1) + B * x ^ 2) (hB_nn : 0 ≤ B)
+    (hκ_logp_int : ∀ᵐ z ∂(μ.map Z), Integrable
+        (fun x => ((condDistrib W Z μ z).rnDeriv volume x).toReal
+          * Real.log (((condDistrib W Z μ z).rnDeriv volume x).toReal)) volume)
+    (hκ_cross_int : ∀ᵐ z ∂(μ.map Z), Integrable
+        (fun x => ((condDistrib W Z μ z).rnDeriv volume x).toReal
+          * Real.log (((μ.map W).rnDeriv volume x).toReal)) volume)
+    (hq_int : Integrable q volume) (hq_mass : (∫ y, q y ∂volume) = 1)
+    (hq_mom : Integrable (fun y => y ^ 2 * q y) volume)
+    (hq_abs_ent : Integrable (fun x => q x * |Real.log (q x)|) volume)
+    (hZ_sq : Integrable (fun z => z ^ 2) (μ.map Z)) :
+    Integrable
+      (llr ((μ.map Z) ⊗ₘ condDistrib W Z μ)
+        ((μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map W)))
+      ((μ.map Z) ⊗ₘ condDistrib W Z μ) := by
+  set κ : Kernel ℝ ℝ := condDistrib W Z μ with hκ_def
+  -- per-fibre absolute continuity `κ z ≪ μ.map W`.
+  have hκ_acW : ∀ᵐ z ∂(μ.map Z), κ z ≪ μ.map W := by
+    filter_upwards [hκ_v] with z hz
+    exact hz.trans vol_ac_W
+  -- per-fibre `llr (κ z) (μ.map W) =ᵐ[κ z] log p_z − log p_t`.
+  have hllr_split : ∀ᵐ z ∂(μ.map Z),
+      llr (κ z) (μ.map W) =ᵐ[κ z] fun x =>
+        Real.log (((κ z).rnDeriv volume x).toReal)
+          - Real.log (((μ.map W).rnDeriv volume x).toReal) := by
+    filter_upwards [hκ_v, hκ_acW] with z hz_v hz_acW
+    haveI : SigmaFinite (κ z) := by
+      haveI : IsProbabilityMeasure (κ z) := by rw [hκ_def]; infer_instance
+      infer_instance
+    exact llr_eq_log_density_sub_log_density (κ z) (μ.map W) hz_v hW_ac hz_acW
+  -- per-fibre `Integrable (llr (κ z) (μ.map W)) (κ z)`.
+  have hfib_llr_int : ∀ᵐ z ∂(μ.map Z), Integrable (llr (κ z) (μ.map W)) (κ z) := by
+    filter_upwards [hκ_v, hllr_split, hκ_logp_int, hκ_cross_int] with
+      z hz_v hz_split hz_logp hz_cross
+    refine (integrable_congr hz_split).mpr ?_
+    rw [← integrable_toReal_rnDeriv_mul_iff hz_v]
+    have hdist : (fun x => ((κ z).rnDeriv volume x).toReal
+          * (Real.log (((κ z).rnDeriv volume x).toReal)
+            - Real.log (((μ.map W).rnDeriv volume x).toReal)))
+        = (fun x => ((κ z).rnDeriv volume x).toReal * Real.log (((κ z).rnDeriv volume x).toReal)
+            - ((κ z).rnDeriv volume x).toReal * Real.log (((μ.map W).rnDeriv volume x).toReal)) := by
+      funext x; ring
+    rw [hdist]
+    exact hz_logp.sub hz_cross
+  -- The joint llr value identity, transferred to per-fibre a.e.
+  have h_llr_joint_eq : ∀ᵐ z ∂(μ.map Z), (fun y =>
+        llr ((μ.map Z) ⊗ₘ κ) ((μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map W)) (z, y))
+      =ᵐ[κ z] llr (κ z) (μ.map W) := by
+    have h_slice := InformationTheory.rnDeriv_compProd_eq_kernel_rnDeriv
+      (μ := μ.map Z) (κ := κ) (η := Kernel.const ℝ (μ.map W)) h_ac
+    have h_sliceJ := h_ac.ae_le h_slice
+    have h_per : ∀ᵐ z ∂(μ.map Z), ∀ᵐ y ∂(κ z),
+        ((μ.map Z) ⊗ₘ κ).rnDeriv ((μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map W)) (z, y)
+          = Kernel.rnDeriv κ (Kernel.const ℝ (μ.map W)) z y :=
+      Measure.ae_ae_of_ae_compProd h_sliceJ
+    filter_upwards [h_per, hκ_acW] with z hz hz_acW
+    have hkrn := Kernel.rnDeriv_eq_rnDeriv_measure (κ := κ)
+      (η := Kernel.const ℝ (μ.map W)) (a := z)
+    simp only [Kernel.const_apply] at hkrn
+    have hkrn' : Kernel.rnDeriv κ (Kernel.const ℝ (μ.map W)) z
+        =ᵐ[κ z] fun y => (κ z).rnDeriv (μ.map W) y := hz_acW.ae_le hkrn
+    filter_upwards [hz, hkrn'] with y hy hky
+    simp only [llr_def]
+    rw [hy, hky]
+  -- AEStronglyMeasurable of the joint `llr`.
+  have h_meas_llr : AEStronglyMeasurable
+      (llr ((μ.map Z) ⊗ₘ κ) ((μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map W)))
+      ((μ.map Z) ⊗ₘ κ) := by
+    simp only [llr_def]
+    exact (Measure.measurable_rnDeriv _ _).ennreal_toReal.log.aestronglyMeasurable
+  rw [MeasureTheory.Measure.integrable_compProd_iff h_meas_llr]
+  refine ⟨?_, ?_⟩
+  · -- branch (a): per-fibre integrability.
+    filter_upwards [h_llr_joint_eq, hfib_llr_int] with z hz_eq hz_int
+    exact (integrable_congr hz_eq).mpr hz_int
+  · -- branch (b): outer integrability of `z ↦ ∫ ‖llr‖ ∂(κ z)`.
+    set Gabs : ℝ → ℝ := fun z => ∫ y, ‖Real.log (((κ z).rnDeriv volume y).toReal)
+        - Real.log (((μ.map W).rnDeriv volume y).toReal)‖ ∂(κ z) with hGabs
+    have hinner_eq : (fun z => ∫ y, ‖llr ((μ.map Z) ⊗ₘ κ)
+          ((μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map W)) (z, y)‖ ∂(κ z))
+        =ᵐ[μ.map Z] Gabs := by
+      filter_upwards [h_llr_joint_eq, hllr_split] with z hz_eq hz_split
+      rw [hGabs]
+      refine integral_congr_ae ?_
+      filter_upwards [hz_eq, hz_split] with y hy hy2
+      rw [hy, hy2]
+    refine (Integrable.congr ?_ hinner_eq.symm)
+    -- clean form of the inner integral via translate `p_z(y) = q(y − c)`, `c = √s·z`.
+    set Fabs : ℝ → ℝ := fun z =>
+      ∫ y, q (y - Real.sqrt s * z)
+        * |Real.log (q (y - Real.sqrt s * z)) - Real.log (g y)| ∂volume with hFabs
+    have hGF_eq : Gabs =ᵐ[μ.map Z] Fabs := by
+      filter_upwards [hκ_v, hfib_eq] with z hz_v hz_fib
+      simp only [hGabs, hFabs]
+      set c : ℝ := Real.sqrt s * z with hc
+      rw [← integral_toReal_rnDeriv_mul (μ := κ z) (ν := volume) hz_v]
+      refine integral_congr_ae ?_
+      filter_upwards [hz_fib, hqW] with y hyfib hyW
+      rw [hyfib, hyW, ENNReal.toReal_ofReal (hq_nn _), ENNReal.toReal_ofReal (hg_nn y),
+        Real.norm_eq_abs]
+    refine (Integrable.congr ?_ hGF_eq.symm)
+    -- dominate `‖Fabs z‖ ≤ Habs z := (C0 + (A+1)) + 2B·M2 + 2B·s·z²`.
+    set M2 : ℝ := ∫ y, y ^ 2 * q y ∂volume with hM2
+    set C0 : ℝ := ∫ y, q y * |Real.log (q y)| ∂volume with hC0
+    set Habs : ℝ → ℝ := fun z => (C0 + (A + 1)) + 2 * B * M2 + 2 * B * s * z ^ 2 with hHabs
+    have hHabs_int : Integrable Habs (μ.map Z) := by
+      rw [hHabs]; exact (integrable_const _).add (hZ_sq.const_mul (2 * B * s))
+    have hFabs_meas : AEStronglyMeasurable Fabs (μ.map Z) := by
+      have hjoint : StronglyMeasurable (Function.uncurry fun z y =>
+          q (y - Real.sqrt s * z)
+            * |Real.log (q (y - Real.sqrt s * z)) - Real.log (g y)|) := by
+        apply Measurable.stronglyMeasurable
+        apply Measurable.mul
+        · exact hq_meas.comp (measurable_snd.sub (measurable_const.mul measurable_fst))
+        · exact (((hq_meas.comp (measurable_snd.sub (measurable_const.mul measurable_fst))).log).sub
+            ((hg_meas.comp measurable_snd).log)).abs
+      exact (hjoint.integral_prod_right').aestronglyMeasurable
+    refine Integrable.mono' hHabs_int hFabs_meas ?_
+    filter_upwards with z
+    set c : ℝ := Real.sqrt s * z with hc
+    have hc2 : c ^ 2 = s * z ^ 2 := by rw [hc, mul_pow, Real.sq_sqrt hs.le]
+    have hbound_ae : ∀ᵐ y ∂volume,
+        q (y - c) * |Real.log (q (y - c)) - Real.log (g y)|
+          ≤ q (y - c) * |Real.log (q (y - c))|
+            + q (y - c) * ((A + 1) + B * y ^ 2) := by
+      filter_upwards [hLog] with y hy
+      have htri : |Real.log (q (y - c)) - Real.log (g y)|
+          ≤ |Real.log (q (y - c))| + |Real.log (g y)| := abs_sub _ _
+      have hstep : |Real.log (q (y - c)) - Real.log (g y)|
+          ≤ |Real.log (q (y - c))| + ((A + 1) + B * y ^ 2) := le_trans htri (by linarith)
+      calc q (y - c) * |Real.log (q (y - c)) - Real.log (g y)|
+          ≤ q (y - c) * (|Real.log (q (y - c))| + ((A + 1) + B * y ^ 2)) :=
+            mul_le_mul_of_nonneg_left hstep (hq_nn _)
+        _ = q (y - c) * |Real.log (q (y - c))| + q (y - c) * ((A + 1) + B * y ^ 2) := by ring
+    have hC_int : Integrable (fun y => q (y - c) * |Real.log (q (y - c))|) volume :=
+      hq_abs_ent.comp_sub_right c
+    have hD_int : Integrable (fun y => q (y - c) * ((A + 1) + B * y ^ 2)) volume := by
+      have hq_mom1 : Integrable (fun y => y * q y) volume := by
+        refine Integrable.mono' (hq_int.add hq_mom)
+          (by fun_prop : AEStronglyMeasurable (fun y => y * q y) volume) ?_
+        filter_upwards with y
+        rw [Real.norm_eq_abs, abs_mul, abs_of_nonneg (hq_nn y)]
+        have hy_le : |y| ≤ 1 + y ^ 2 := by nlinarith [sq_nonneg (|y| - 1), sq_abs y]
+        calc |y| * q y ≤ (1 + y ^ 2) * q y := mul_le_mul_of_nonneg_right hy_le (hq_nn y)
+          _ = q y + y ^ 2 * q y := by ring
+      have hT0 : Integrable (fun x => q (x - c)) volume := hq_int.comp_sub_right c
+      have hT1 : Integrable (fun x => (x - c) * q (x - c)) volume := hq_mom1.comp_sub_right c
+      have hT2 : Integrable (fun x => (x - c) ^ 2 * q (x - c)) volume := hq_mom.comp_sub_right c
+      have hcomb : Integrable
+          (fun x => (A + 1) * q (x - c)
+            + B * ((x - c) ^ 2 * q (x - c) + 2 * c * ((x - c) * q (x - c))
+                + c ^ 2 * q (x - c))) volume :=
+        (hT0.const_mul (A + 1)).add
+          (((hT2.add (hT1.const_mul (2 * c))).add (hT0.const_mul (c ^ 2))).const_mul B)
+      refine hcomb.congr (Filter.Eventually.of_forall (fun x => ?_)); ring
+    have hsum_int : Integrable (fun y => q (y - c) * |Real.log (q (y - c))|
+        + q (y - c) * ((A + 1) + B * y ^ 2)) volume := hC_int.add hD_int
+    have hF_le : ‖Fabs z‖ ≤ ∫ y, (q (y - c) * |Real.log (q (y - c))|
+        + q (y - c) * ((A + 1) + B * y ^ 2)) ∂volume := by
+      rw [hFabs]
+      have hint_nn : 0 ≤ ∫ y, q (y - c)
+          * |Real.log (q (y - c)) - Real.log (g y)| ∂volume :=
+        integral_nonneg (fun y => mul_nonneg (hq_nn _) (abs_nonneg _))
+      rw [Real.norm_eq_abs, abs_of_nonneg hint_nn]
+      refine integral_mono_of_nonneg
+        (Filter.Eventually.of_forall (fun y => mul_nonneg (hq_nn _) (abs_nonneg _)))
+        hsum_int hbound_ae
+    have hI_eval : ∫ y, (q (y - c) * |Real.log (q (y - c))|
+        + q (y - c) * ((A + 1) + B * y ^ 2)) ∂volume ≤ Habs z := by
+      rw [integral_add hC_int hD_int]
+      have hICabs : ∫ y, q (y - c) * |Real.log (q (y - c))| ∂volume = C0 := by
+        rw [hC0, integral_sub_right_eq_self (fun y => q y * |Real.log (q y)|) c]
+      set U : ℝ → ℝ := fun y =>
+        (A + 1) * q (y - c) + 2 * B * ((y - c) ^ 2 * q (y - c))
+          + 2 * B * c ^ 2 * q (y - c) with hU
+      have hT0 : Integrable (fun y => q (y - c)) volume := hq_int.comp_sub_right c
+      have hT2 : Integrable (fun y => (y - c) ^ 2 * q (y - c)) volume :=
+        hq_mom.comp_sub_right c
+      have hU_int : Integrable U volume :=
+        ((hT0.const_mul (A + 1)).add (hT2.const_mul (2 * B))).add (hT0.const_mul (2 * B * c ^ 2))
+      have hle : ∀ y, q (y - c) * ((A + 1) + B * y ^ 2) ≤ U y := by
+        intro y; rw [hU]
+        have hy2 : y ^ 2 ≤ 2 * (y - c) ^ 2 + 2 * c ^ 2 := by nlinarith [sq_nonneg (y - 2 * c)]
+        have hBnn : (0:ℝ) ≤ B := hB_nn
+        nlinarith [hq_nn (y - c), mul_le_mul_of_nonneg_left hy2 hBnn,
+          mul_nonneg hBnn (sq_nonneg (y - c))]
+      have hIDle : ∫ y, q (y - c) * ((A + 1) + B * y ^ 2) ∂volume ≤ ∫ y, U y ∂volume :=
+        integral_mono hD_int hU_int hle
+      have hI0 : ∫ y, q (y - c) ∂volume = 1 := by
+        rw [integral_sub_right_eq_self (fun y => q y) c, hq_mass]
+      have hI2 : ∫ y, (y - c) ^ 2 * q (y - c) ∂volume = M2 := by
+        rw [integral_sub_right_eq_self (fun y => y ^ 2 * q y) c, ← hM2]
+      have hUsplit : ∫ y, U y ∂volume
+          = (A + 1) * (∫ y, q (y - c) ∂volume)
+            + 2 * B * (∫ y, (y - c) ^ 2 * q (y - c) ∂volume)
+            + 2 * B * c ^ 2 * (∫ y, q (y - c) ∂volume) := by
+        show ∫ y, ((A + 1) * q (y - c) + 2 * B * ((y - c) ^ 2 * q (y - c))
+            + 2 * B * c ^ 2 * q (y - c)) ∂volume = _
+        rw [integral_add
+            (f := fun y => (A + 1) * q (y - c) + 2 * B * ((y - c) ^ 2 * q (y - c)))
+            (g := fun y => 2 * B * c ^ 2 * q (y - c))
+            ((hT0.const_mul (A + 1)).add (hT2.const_mul (2 * B)))
+            (hT0.const_mul (2 * B * c ^ 2)),
+          integral_add
+            (f := fun y => (A + 1) * q (y - c))
+            (g := fun y => 2 * B * ((y - c) ^ 2 * q (y - c)))
+            (hT0.const_mul (A + 1)) (hT2.const_mul (2 * B)),
+          integral_const_mul, integral_const_mul, integral_const_mul]
+      rw [hICabs, hHabs]
+      rw [hUsplit, hI0, hI2] at hIDle
+      nlinarith [hIDle, hc2]
+    exact le_trans hF_le hI_eval
+
 end InformationTheory.Shannon
