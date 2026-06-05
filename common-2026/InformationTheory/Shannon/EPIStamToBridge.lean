@@ -1239,33 +1239,52 @@ theorem csiszarGap1Source_differentiableOn_interior
 -- (`csiszarGap_antitoneOn_Icc_zero_one`) took the 1-source `AntitoneOn` only as an
 -- unused carrier argument, so the difference-version is no longer reachable.
 
-/-- **A-4-4** (撤退 A-4-β 発火): rescale lift `AntitoneOn (... csiszarGap)
-(Set.Icc 0 1)` from the 1-source `AntitoneOn (Set.Ici 0)` via
-`csiszarGap_eq_one_source_via_rescale`.
+/-- **A-4-4** (Phase 3, G3 rescale assembly): rescale lift
+`AntitoneOn (... csiszarGap) (Set.Icc 0 1)` (2-source **difference** gap).
 
-撤退 A-4-β fired: the rescale lift requires 6 caller-side absolute-continuity
-+ integrability hypotheses per `s ∈ Set.Ico 0 1` (carried by
-`csiszarGap_eq_one_source_via_rescale`'s arguments
-`h_ac_sum / h_ac_X / h_ac_Y / h_int_sum / h_int_X / h_int_Y`), plus the
-`s = 1` endpoint connection through `csiszarGap_at_one_eq_zero_of_gaussian_pair`
-+ continuity. Materializing these as a uniform `∀ s ∈ Set.Ico 0 1, ...`
-hypothesis in this constructor's signature would balloon the file scope
-beyond A-4's ~25-40 line budget. We retreat to `sorry` with
-`@residual(plan:epi-stam-to-conclusion-phaseA-plan)` — sub-step
-A-4-rescale (lift 1-source `AntitoneOn (Set.Ici 0)` to 2-source
-`AntitoneOn (Set.Icc 0 1)` via `csiszarGap_eq_one_source_via_rescale`
-+ `csiszarGap_at_one_eq_zero_of_gaussian_pair`).
+**SUFFICIENCY FINDING (2026-06-05, Phase 3 implementer)**: this body is **NOT a
+discharge** and **NOT closable from the `_h_1source_anti` carrier as supplied**.
+The carrier is the **ratio** antitone
+`AntitoneOn (csiszarLogRatioGap ...) (Set.Ici 0)` (R-5-c, genuine, sorryAx-free),
+but the conclusion is the **difference** antitone
+`AntitoneOn (eP(sum) − eP(X) − eP(Y)) (Set.Icc 0 1)`. These are inequivalent:
+`antitone(ratio) ⊬ antitone(difference)`. Concretely, the rescale equation
+`csiszarGap_eq_one_source_via_rescale` only connects the 2-source **difference**
+gap to the 1-source **difference** gap
+`csiszarGap(s) = (1−s)·csiszarGap1Source(s/(1−s))` (NOT to the ratio), and the
+1-source difference gap factors as
+`csiszarGap1Source(t) = (N_X(t)+N_Y(t))·(exp(R(t)) − 1)` where `R = csiszarLogRatioGap`.
+With `R` antitone we get `exp(R)−1` antitone, but `N_X+N_Y` is *increasing* in `t`
+(`entropyPower` grows under added noise), so the product's monotonicity is
+indeterminate from the carrier alone. The genuine ingredient required is the
+**1-source difference antitone** `AntitoneOn (csiszarGap1Source ...) (Set.Ici 0)`
+(the old D6, `csiszarGap1Source_antitoneOn_Ici_zero`), which was **DELETED** in
+the R-5 rewire because it transitively consumed the false-as-framed
+`csiszarGap1Source_deriv_le_zero` (D3, `@audit:defect(false-statement)`:
+`eP_sum·J_sum ≤ eP_X·J_X + eP_Y·J_Y` does NOT follow from plain harmonic Stam).
 
-R-5 rewire (2026-06-01): the `_h_1source_anti` carrier argument now takes the
-**genuine ratio** `AntitoneOn (csiszarLogRatioGap ...) (Set.Ici 0)` (R-5-c) rather
-than the difference-version `csiszarGap1Source` `AntitoneOn` (the false-D3-dependent
-D6, deleted). The argument is unused in the (still `sorry`) body, so this is a
-type-only swap that removes the false-statement dependency. The conclusion is
-unchanged (2-source difference gap on `Set.Icc 0 1`); under M0-3 the ratio rescale
-is scale-invariant (`(1-s)` cancels inside `log`), so when this rescale `sorry` is
-closed it can be driven by the ratio chain.
+**Genuine closure routes (both real analytic work, per reframe plan judgment
+log 10)**: (a) re-derive the 1-source difference antitone via a genuine
+difference-derivative bound that plain Stam *does* yield (the false D3 must be
+replaced by a correct difference-form `g'(t) ≤ 0`, currently unknown to be
+closable), then push it through the rescale equation (whose 6 per-`s`
+absolute-continuity + integrability hypotheses
+`h_ac_sum / h_ac_X / h_ac_Y / h_int_sum / h_int_X / h_int_Y` must also be
+supplied — no in-house `P.map (X + √r·Z) ≪ volume` lemma exists yet, so this
+needs new bridge lemmas), plus the `s = 1` endpoint via
+`csiszarGap_at_one_eq_zero_of_gaussian_pair`; or (b) build a new `R(t) → 0` as
+`t → ∞` limit lemma and complete a ratio-only EPI route separately. Neither is a
+mechanical assembly; the Phase 3 "pure assembly, no Mathlib wall" premise is
+incorrect at this junction (the wall is the difference-monotonicity sufficiency
+gap, not the AC/integrability supply).
 
-Signature stable; body deferred. -/
+The `_h_1source_anti` (ratio) carrier is therefore genuinely **unused** here: it
+is sound on the type level but does not bridge to the difference conclusion.
+Signature stable; body remains `sorry` with the corrected classification below.
+
+@residual(plan:epi-case1-difference-g3-closure-plan) -- difference-monotonicity
+sufficiency gap: ratio carrier insufficient; 1-source difference antitone (old
+D6) deleted as false-D3-dependent, genuine replacement is real analytic work. -/
 @[entry_point]
 theorem csiszarGap_antitoneOn_Icc_zero_one
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -1286,8 +1305,11 @@ theorem csiszarGap_antitoneOn_Icc_zero_one
           - entropyPower (P.map (heatFlowPath2 X Z_X s))
           - entropyPower (P.map (heatFlowPath2 Y Z_Y s)))
       (Set.Icc (0 : ℝ) 1) := by
+  -- @residual(plan:epi-case1-difference-g3-closure-plan) -- difference-monotonicity
+  -- sufficiency gap (see docstring): ratio carrier `_h_1source_anti` does NOT
+  -- bridge to the difference conclusion; 1-source difference antitone (old D6)
+  -- deleted as false-D3-dependent. NOT a discharge.
   sorry
-  -- @residual(plan:epi-stam-to-conclusion-phaseA-plan) -- sub-step A-4-rescale
 
 /-- **A-4-5**: `IsStamToEPIScalingHyp X Y P` constructor from
 `IsStamScalingNoiseHyp` (A-1 staged honest witness) + the three sister
