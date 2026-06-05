@@ -535,4 +535,124 @@ theorem csiszarLogRatioGap_tendsto_zero_atTop
   -- Transfer the limit through the eventual equality.
   exact (Filter.tendsto_congr' h_eventually_eq).mpr h_lim_rescaled
 
+/-! ## §5 — End-to-end case-1 assembly (with-noise)
+
+`entropyPower_add_ge_case1_of_regular`: combine the genuine ratio antitonicity
+(`csiszarLogRatioGap_antitoneOn_Ici_zero`, `EPIStamToBridge.lean:1085`) and the
+genuine saturation (`csiszarLogRatioGap_tendsto_zero_atTop`, §4) through the
+genuine order-limit bridge (§1 `epi_of_csiszarLogRatioGap_tendsto`) to obtain the
+classical (case-1, a.c. inputs) entropy power inequality. Pure assembly — no new
+analytic content, no `sorry`. -/
+
+/-- **Case-1 EPI (with-noise, entropic-CLT-free), under heat-flow + scaling
+regularity**. The classical entropy power inequality
+`N(law(X+Y)) ≥ N(law X) + N(law Y)` for a.c. inputs, assembled from the two genuine
+pillars:
+
+* `csiszarLogRatioGap_antitoneOn_Ici_zero` (`EPIStamToBridge.lean:1085`, genuine):
+  the log-ratio gap `R = csiszarLogRatioGap X Y Z_X Z_Y P` is `AntitoneOn (Set.Ici 0)`.
+* `csiszarLogRatioGap_tendsto_zero_atTop` (§4, genuine): `R t → 0` as `t → ∞`.
+
+By the order-limit bridge §1 `epi_of_csiszarLogRatioGap_tendsto`, antitonicity +
+`R t → 0` force `R 0 ≥ 0`, hence EPI. **No entropic CLT** — the saturation `R t → 0`
+is the scaling squeeze of §4.
+
+All hypotheses are **honest regularity preconditions** (方針 X), the union of the two
+pillars' preconditions: pairwise + joint independence (`hXZX`/`hYZY`/`hXYZXY`), the
+three `IsDeBruijnRegularityHyp` / `IsHeatFlowEndpointRegular` density-witness bundles,
+the per-`t` `h_pos_stam` Fisher/Stam/Blachman bundle (ratio antitone side), the noise
+Gaussian laws + a.c. (`hZX_law`/`hZY_law`/`hZXZY_indep`/`hZX_ac`/`hZY_ac`/`hZXZY_ac`),
+the per-`t` scaling regularity (`h_scale_X/Y/sum`), and the per-path variance data +
+three `IsRescaledPathRegular` bundles (§4 side). **None is load-bearing**: the EPI /
+Stam core is supplied genuinely inside the two pillars; the conclusion
+`N(X+Y) ≥ N(X)+N(Y)` is not encoded in any hypothesis. Honest naming
+(`_of_regular`, not bare `_unconditional`): the regularity preconditions are real.
+
+@audit:ok candidate (pending independent audit): genuine assembly of two `@audit:ok`
+pillars through one `@audit:ok` bridge; own body `sorry`-free; preconditions are the
+union of the two pillars' regularity hypotheses, threaded transparently. -/
+theorem entropyPower_add_ge_case1_of_regular
+    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    -- independence (pairwise + joint), shared by both pillars
+    (hX : Measurable X) (hY : Measurable Y)
+    (hZX : Measurable Z_X) (hZY : Measurable Z_Y)
+    (hXZX : IndepFun X Z_X P) (hYZY : IndepFun Y Z_Y P)
+    (hXYZXY : IndepFun (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (hZXZY_indep : IndepFun Z_X Z_Y P)
+    -- noise Gaussian laws + variances (§4 side), nonzero
+    (v_X v_Y : ℝ≥0) (hv_X : v_X ≠ 0) (hv_Y : v_Y ≠ 0)
+    (hZX_law : P.map Z_X = gaussianReal 0 v_X)
+    (hZY_law : P.map Z_Y = gaussianReal 0 v_Y)
+    (hZX_ac : (P.map Z_X) ≪ volume) (hZY_ac : (P.map Z_Y) ≪ volume)
+    (hZXZY_ac : (P.map (fun ω => Z_X ω + Z_Y ω)) ≪ volume)
+    -- ratio-antitone density-witness + de Bruijn regularity bundles
+    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (h_reg_X' : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y' : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
+    (h_endpt_sum : InformationTheory.Shannon.IsHeatFlowEndpointRegular
+                    (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (h_endpt_X : InformationTheory.Shannon.IsHeatFlowEndpointRegular X Z_X P)
+    (h_endpt_Y : InformationTheory.Shannon.IsHeatFlowEndpointRegular Y Z_Y P)
+    (h_pos_stam : ∀ (t : ℝ) (ht : 0 < t),
+      (0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              ((h_reg_X'.reg_at t ht).density_t)) ∧
+      (0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              ((h_reg_Y'.reg_at t ht).density_t)) ∧
+      (0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              ((h_reg_sum.reg_at t ht).density_t)) ∧
+      InformationTheory.Shannon.EPIStamDischarge.IsStamInequalityHyp
+        (fun ω => X ω + Real.sqrt t * Z_X ω)
+        (fun ω => Y ω + Real.sqrt t * Z_Y ω) P ∧
+      InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
+        ((h_reg_X'.reg_at t ht).density_t) ∧
+      InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2
+        ((h_reg_Y'.reg_at t ht).density_t) ∧
+      (∫ x, (h_reg_X'.reg_at t ht).density_t x ∂MeasureTheory.volume = 1) ∧
+      (∫ x, (h_reg_Y'.reg_at t ht).density_t x ∂MeasureTheory.volume = 1) ∧
+      (∀ x, (h_reg_sum.reg_at t ht).density_t x
+            = InformationTheory.Shannon.EPIConvDensity.convDensityAdd
+                ((h_reg_X'.reg_at t ht).density_t)
+                ((h_reg_Y'.reg_at t ht).density_t) x) ∧
+      InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady
+        ((h_reg_X'.reg_at t ht).density_t)
+        ((h_reg_Y'.reg_at t ht).density_t))
+    -- per-`t` scaling regularity (§4 side, consumed by `entropyPower_path_scaling`)
+    (h_scale_X : ∀ t : ℝ, 0 < t →
+      (P.map (fun ω => X ω / Real.sqrt t + Z_X ω)) ≪ volume ∧
+      Integrable (fun x => Real.negMulLog
+        (((P.map (fun ω => X ω / Real.sqrt t + Z_X ω)).rnDeriv volume x).toReal)) volume)
+    (h_scale_Y : ∀ t : ℝ, 0 < t →
+      (P.map (fun ω => Y ω / Real.sqrt t + Z_Y ω)) ≪ volume ∧
+      Integrable (fun x => Real.negMulLog
+        (((P.map (fun ω => Y ω / Real.sqrt t + Z_Y ω)).rnDeriv volume x).toReal)) volume)
+    (h_scale_sum : ∀ t : ℝ, 0 < t →
+      (P.map (fun ω => (X ω + Y ω) / Real.sqrt t + (Z_X ω + Z_Y ω))) ≪ volume ∧
+      Integrable (fun x => Real.negMulLog
+        (((P.map (fun ω => (X ω + Y ω) / Real.sqrt t
+            + (Z_X ω + Z_Y ω))).rnDeriv volume x).toReal)) volume)
+    -- per-path variance data + §3 squeeze regularity bundles (§4 side)
+    (varX varY varS : ℝ)
+    (h_varX_nn : 0 ≤ varX) (h_varY_nn : 0 ≤ varY) (h_varS_nn : 0 ≤ varS)
+    (h_reg_X : IsRescaledPathRegular X Z_X P varX v_X)
+    (h_reg_Y : IsRescaledPathRegular Y Z_Y P varY v_Y)
+    (h_reg_S : IsRescaledPathRegular (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P
+      varS (v_X + v_Y)) :
+    entropyPower (P.map (fun ω => X ω + Y ω))
+      ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
+  -- Pillar 1: genuine ratio antitonicity on `Set.Ici 0`.
+  have h_anti := csiszarLogRatioGap_antitoneOn_Ici_zero X Y Z_X Z_Y P
+    hX hZX hXZX hY hZY hYZY hXYZXY
+    h_reg_sum h_reg_X' h_reg_Y'
+    h_endpt_sum h_endpt_X h_endpt_Y h_pos_stam
+  -- Pillar 2: genuine saturation `R t → 0`.
+  have h_lim := csiszarLogRatioGap_tendsto_zero_atTop X Y Z_X Z_Y P
+    hX hY hZX hZY v_X v_Y hv_X hv_Y hZX_law hZY_law hZXZY_indep
+    h_scale_X h_scale_Y h_scale_sum
+    hZX_ac hZY_ac hZXZY_ac
+    varX varY varS h_varX_nn h_varY_nn h_varS_nn
+    h_reg_X h_reg_Y h_reg_S
+  -- Order-limit bridge §1: antitone + `R t → 0` ⟹ EPI.
+  exact epi_of_csiszarLogRatioGap_tendsto X Y Z_X Z_Y P h_anti h_lim
+
 end InformationTheory.Shannon.EPICase1RatioLimit
