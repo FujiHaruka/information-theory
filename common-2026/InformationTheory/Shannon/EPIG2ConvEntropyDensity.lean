@@ -27,30 +27,35 @@ We **instantiate the canonical product space** `Ω := ℝ × ℝ`,
 `μ.map X = withDensity pX`, `μ.map Z = gaussianReal 0 v_Z`, and the 8 preconditions are
 discharged here (or honestly parked).
 
-## Status — type-check done (1 sorry / 1 residual)
+## Status — proof done (0 sorry / 0 residual)
 
-Of the 8 per-`n` preconditions of the Ω-level (β) lower bound, **7 are discharged
-genuinely** here from the canonical construction:
+All 8 per-`n` preconditions of the Ω-level (β) lower bound are discharged genuinely here
+from the canonical construction:
 
 * per-fibre absolute continuity, `p log p` integrability, fibre-entropy integrability
   (translation invariance: each fibre is a translate `pX(· − √s·z)` of `μ.map X`);
 * joint absolute continuity (per-fibre `≪ volume ≪ μ.map W`, the marginal having a
   strictly positive density);
-* the **two cross terms** (per-fibre (5) + outer (7)): now genuinely closed via the
-  `s`-uniform polynomial majorant `|log p_t| ≤ A + B·x²`
+* the **two cross terms** (per-fibre (5) + outer (7)): closed via the `s`-uniform
+  polynomial majorant `|log p_t| ≤ A + B·x²`
   (`convDensityAdd_logFactor_poly_majorant`, made public in
   `FisherInfoV2DeBruijnAssembly`) integrated against `pX`'s translate moments
   (helpers `hLog` / `hfib_eq` / `hfib_dom_int` in the proof body);
 * marginal log-density integrability (`∫ negMulLog p_t < ∞`, the genuine
-  `convDensityAdd_negMulLog_integrable`).
+  `convDensityAdd_negMulLog_integrable`);
+* **joint llr integrability** `h_int` (= KL finiteness `D(joint ‖ product) < ∞`): closed
+  via `MeasureTheory.Measure.integrable_compProd_iff`.  The slice identity
+  `rnDeriv_compProd_eq_kernel_rnDeriv` + `Kernel.rnDeriv_eq_rnDeriv_measure` identify the
+  joint `llr` a.e. with the per-fibre `llr (κ_z) (μ.map W)`, which the density split
+  `llr_eq_log_density_sub_log_density` rewrites as `log p_z − log p_t`.  The per-fibre
+  branch reuses the fibre-entropy + cross-term integrabilities (via
+  `integrable_toReal_rnDeriv_mul_iff`); the outer branch dominates
+  `∫ ‖log p_z − log p_t‖ ∂κ_z` by `C0 + (A+1) + 2B·M2 + 2B·s·z²` (Gaussian-integrable),
+  using `∫ pX·|log pX| < ∞` (from `Integrable f ↔ Integrable ‖f‖` on `hpX_ent`) plus the
+  `s`-uniform majorant.
 
-The **1 remaining precondition is parked** (`@residual(plan:...)`): the joint llr
-integrability `h_int` (= KL finiteness `D(joint ‖ product) < ∞`). This is a separate
-compProd / per-fibre chain-rule assembly (`rnDeriv_compProd_eq_kernel_rnDeriv` +
-`rnDeriv_mul_rnDeriv` + the `llr` value identity `log((κ_z).rnDeriv (μ.map W)) =ᵐ[κ_z]
-log q_z − log p_t`), reducing to the already-discharged fibre/outer integrabilities; it
-is NOT blocked by the (former) private majorant. Closure plan:
-`docs/shannon/epi-g2-general-sandwich-moonshot-plan.md` Phase 1.
+`#print axioms negMulLog_convDensity_entropy_ge_density` = `[propext, Classical.choice,
+Quot.sound]` (sorryAx-free).  This completes the EPI G2 (β) density-only lower bound.
 -/
 
 namespace InformationTheory.Shannon
@@ -493,18 +498,222 @@ theorem negMulLog_convDensity_entropy_ge_density
     filter_upwards [hqW] with x hx
     rw [hx, ENNReal.toReal_ofReal (hp_t_nn x)]
     simp only [Pi.neg_apply, Real.negMulLog, neg_neg, neg_mul]
-  -- (2) joint llr integrability (= KL finiteness `D(joint ‖ product) < ∞`).  This is a
-  -- separate compProd/chain-rule assembly (NOT the private-majorant blocker that (5)/(7)
-  -- needed): the joint `rnDeriv` factorises per-fibre into `(κ_z).rnDeriv (μ.map W)` whose
-  -- log a.e.[κ_z] equals `log q_z − log p_t`, and `integrable_compProd_iff` reduces to the
-  -- already-discharged fibre/outer integrabilities.  Parked: the per-fibre chain-rule
-  -- (`rnDeriv_mul_rnDeriv`) + reciprocal + `llr` value identity is a sizeable assembly.
-  -- @residual(plan:epi-g2-general-sandwich-moonshot-plan)
+  -- (2) joint llr integrability (= KL finiteness `D(joint ‖ product) < ∞`).  We open
+  -- `integrable_compProd_iff` on `J := (μ.map Z) ⊗ₘ condDistrib W Z μ`.  The joint `llr`
+  -- a.e.-equals the per-fibre `llr (κ_z) (μ.map W) = log p_z − log p_t`, and both branches
+  -- reduce to the already-discharged fibre/outer integrabilities.
+  set κ : Kernel ℝ ℝ := condDistrib W Z μ with hκ_def
+  -- per-fibre absolute continuity `κ z ≪ μ.map W` (= `κ z ≪ volume ≪ μ.map W`).
+  have hκ_acW : ∀ᵐ z ∂(μ.map Z), κ z ≪ μ.map W := by
+    filter_upwards [hκ_v] with z hz
+    exact hz.trans vol_ac_W
+  -- per-fibre `llr (κ z) (μ.map W) =ᵐ[κ z] log p_z − log p_t` (density split).
+  have hllr_split : ∀ᵐ z ∂(μ.map Z),
+      llr (κ z) (μ.map W) =ᵐ[κ z] fun x =>
+        Real.log (((κ z).rnDeriv volume x).toReal)
+          - Real.log (((μ.map W).rnDeriv volume x).toReal) := by
+    filter_upwards [hκ_v, hκ_acW] with z hz_v hz_acW
+    haveI : SigmaFinite (κ z) := by
+      haveI : IsProbabilityMeasure (κ z) := by rw [hκ_def]; infer_instance
+      infer_instance
+    exact llr_eq_log_density_sub_log_density (κ z) (μ.map W) hz_v hW_ac hz_acW
+  -- per-fibre `Integrable (llr (κ z) (μ.map W)) (κ z)` from fibre-entropy + cross-term.
+  have hfib_llr_int : ∀ᵐ z ∂(μ.map Z), Integrable (llr (κ z) (μ.map W)) (κ z) := by
+    filter_upwards [hκ_v, hllr_split, hκ_logp_int, hκ_cross_int] with
+      z hz_v hz_split hz_logp hz_cross
+    -- `Integrable f (κ z) ↔ Integrable (fun x => (κz).rnDeriv volume · f) volume`.
+    refine (integrable_congr hz_split).mpr ?_
+    rw [← integrable_toReal_rnDeriv_mul_iff hz_v]
+    -- `(κz).rnDeriv volume · (log p_z − log p_t) = (κz·log p_z) − (κz·log p_t)`.
+    have hdist : (fun x => ((κ z).rnDeriv volume x).toReal
+          * (Real.log (((κ z).rnDeriv volume x).toReal)
+            - Real.log (((μ.map W).rnDeriv volume x).toReal)))
+        = (fun x => ((κ z).rnDeriv volume x).toReal * Real.log (((κ z).rnDeriv volume x).toReal)
+            - ((κ z).rnDeriv volume x).toReal * Real.log (((μ.map W).rnDeriv volume x).toReal)) := by
+      funext x; ring
+    rw [hdist]
+    exact hz_logp.sub hz_cross
+  -- `∫ pX·|log pX| < ∞` (the fibre-entropy in absolute value; `Integrable f ↔ Integrable |f|`).
+  have hpX_abs_ent : Integrable (fun x => pX x * |Real.log (pX x)|) volume := by
+    have h := hpX_ent.norm
+    refine h.congr (Filter.Eventually.of_forall (fun x => ?_))
+    simp only [Real.norm_eq_abs, Real.negMulLog, abs_neg, abs_mul, abs_of_nonneg (hpX_nn x)]
+  -- The joint llr value identity, transferred to per-fibre a.e.
+  have h_llr_joint_eq : ∀ᵐ z ∂(μ.map Z), (fun y =>
+        llr ((μ.map Z) ⊗ₘ κ) ((μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map W)) (z, y))
+      =ᵐ[κ z] llr (κ z) (μ.map W) := by
+    -- slice identity `(μ_Z ⊗ₘ κ).rnDeriv (μ_Z ⊗ₘ const μ_W) (z,y) =ᵐ Kernel.rnDeriv κ (const μ_W) z y`.
+    have h_slice := InformationTheory.rnDeriv_compProd_eq_kernel_rnDeriv
+      (μ := μ.map Z) (κ := κ) (η := Kernel.const ℝ (μ.map W)) h_ac
+    -- transfer to `J`-a.e. (`J ≪ Jc`), then open into per-`z` a.e.
+    have h_sliceJ := h_ac.ae_le h_slice
+    have h_per : ∀ᵐ z ∂(μ.map Z), ∀ᵐ y ∂(κ z),
+        ((μ.map Z) ⊗ₘ κ).rnDeriv ((μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map W)) (z, y)
+          = Kernel.rnDeriv κ (Kernel.const ℝ (μ.map W)) z y :=
+      Measure.ae_ae_of_ae_compProd h_sliceJ
+    filter_upwards [h_per, hκ_acW] with z hz hz_acW
+    have hkrn := Kernel.rnDeriv_eq_rnDeriv_measure (κ := κ)
+      (η := Kernel.const ℝ (μ.map W)) (a := z)
+    simp only [Kernel.const_apply] at hkrn
+    -- transfer `Kernel.rnDeriv = (κ z).rnDeriv (μ.map W)` from `μ.map W`-a.e. to `κ z`-a.e.
+    have hkrn' : Kernel.rnDeriv κ (Kernel.const ℝ (μ.map W)) z
+        =ᵐ[κ z] fun y => (κ z).rnDeriv (μ.map W) y := hz_acW.ae_le hkrn
+    filter_upwards [hz, hkrn'] with y hy hky
+    simp only [llr_def]
+    rw [hy, hky]
+  -- AEStronglyMeasurable of the joint `llr` w.r.t. `J = μ_Z ⊗ₘ κ`.
+  have h_meas_llr : AEStronglyMeasurable
+      (llr ((μ.map Z) ⊗ₘ κ) ((μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map W)))
+      ((μ.map Z) ⊗ₘ κ) := by
+    simp only [llr_def]
+    exact (Measure.measurable_rnDeriv _ _).ennreal_toReal.log.aestronglyMeasurable
+  -- joint llr integrability (= KL finiteness), genuinely closed via `integrable_compProd_iff`.
   have h_int : Integrable
-      (llr ((μ.map Z) ⊗ₘ condDistrib W Z μ)
+      (llr ((μ.map Z) ⊗ₘ κ)
         ((μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map W)))
-      ((μ.map Z) ⊗ₘ condDistrib W Z μ) := by
-    sorry
+      ((μ.map Z) ⊗ₘ κ) := by
+    rw [MeasureTheory.Measure.integrable_compProd_iff h_meas_llr]
+    constructor
+    · -- branch (a): per-fibre integrability.
+      filter_upwards [h_llr_joint_eq, hfib_llr_int] with z hz_eq hz_int
+      exact (integrable_congr hz_eq).mpr hz_int
+    · -- branch (b): outer integrability of `z ↦ ∫ ‖llr‖ ∂(κ z)`.
+      -- a.e.-rewrite the inner integral via the joint llr identity + density split, then
+      -- dominate `∫ ‖log p_z − log p_t‖ ∂κz ≤ C + 2B·s·z²` (gaussian-integrable).
+      set Gabs : ℝ → ℝ := fun z => ∫ y, ‖Real.log (((κ z).rnDeriv volume y).toReal)
+          - Real.log (((μ.map W).rnDeriv volume y).toReal)‖ ∂(κ z) with hGabs
+      have hinner_eq : (fun z => ∫ y, ‖llr ((μ.map Z) ⊗ₘ κ)
+            ((μ.map Z) ⊗ₘ Kernel.const ℝ (μ.map W)) (z, y)‖ ∂(κ z))
+          =ᵐ[μ.map Z] Gabs := by
+        filter_upwards [h_llr_joint_eq, hllr_split] with z hz_eq hz_split
+        rw [hGabs]
+        refine integral_congr_ae ?_
+        filter_upwards [hz_eq, hz_split] with y hy hy2
+        rw [hy, hy2]
+      refine (Integrable.congr ?_ hinner_eq.symm)
+      -- clean form of the inner integral via translate `p_z(y) = pX(y − c)`, `c = √s·z`.
+      set Fabs : ℝ → ℝ := fun z =>
+        ∫ y, pX (y - Real.sqrt s * z)
+          * |Real.log (pX (y - Real.sqrt s * z)) - Real.log (p_t y)| ∂volume with hFabs
+      have hGF_eq : Gabs =ᵐ[μ.map Z] Fabs := by
+        filter_upwards [hκ_v, hfib_eq] with z hz_v hz_fib
+        simp only [hGabs, hFabs]
+        set c : ℝ := Real.sqrt s * z with hc
+        -- `∫ ‖log p_z − log p_t‖ ∂κz = ∫ (κz-density)·‖log p_z − log p_t‖ ∂vol`.
+        rw [← integral_toReal_rnDeriv_mul (μ := κ z) (ν := volume) hz_v]
+        refine integral_congr_ae ?_
+        filter_upwards [hz_fib, hqW] with y hyfib hyW
+        rw [hyfib, hyW, ENNReal.toReal_ofReal (hpX_nn _), ENNReal.toReal_ofReal (hp_t_nn y),
+          Real.norm_eq_abs]
+      refine (Integrable.congr ?_ hGF_eq.symm)
+      -- dominate `‖Fabs z‖ ≤ Habs z := (C0 + (A+1)) + 2B·M2 + 2B·s·z²`.
+      set M2 : ℝ := ∫ y, y ^ 2 * pX y ∂volume with hM2
+      set C0 : ℝ := ∫ y, pX y * |Real.log (pX y)| ∂volume with hC0
+      set Habs : ℝ → ℝ := fun z => (C0 + (A + 1)) + 2 * B * M2 + 2 * B * s * z ^ 2 with hHabs
+      have hsq_int : Integrable (fun z => z ^ 2) (μ.map Z) := by
+        rw [hZ_law]
+        have hmem : MemLp (id : ℝ → ℝ) 2 (gaussianReal 0 v_Z) := memLp_id_gaussianReal 2
+        have := (memLp_two_iff_integrable_sq (μ := gaussianReal 0 v_Z)
+          (f := (id : ℝ → ℝ)) measurable_id.aestronglyMeasurable).mp hmem
+        simpa using this
+      have hHabs_int : Integrable Habs (μ.map Z) := by
+        rw [hHabs]
+        exact (integrable_const _).add ((hsq_int.const_mul (2 * B * s)))
+      have hFabs_meas : AEStronglyMeasurable Fabs (μ.map Z) := by
+        have hjoint : StronglyMeasurable (Function.uncurry fun z y =>
+            pX (y - Real.sqrt s * z)
+              * |Real.log (pX (y - Real.sqrt s * z)) - Real.log (p_t y)|) := by
+          apply Measurable.stronglyMeasurable
+          apply Measurable.mul
+          · exact hpX_meas.comp (measurable_snd.sub (measurable_const.mul measurable_fst))
+          · exact (((hpX_meas.comp (measurable_snd.sub (measurable_const.mul measurable_fst))).log).sub
+              ((hp_t_meas.comp measurable_snd).log)).abs
+        exact (hjoint.integral_prod_right').aestronglyMeasurable
+      refine Integrable.mono' hHabs_int hFabs_meas ?_
+      filter_upwards with z
+      set c : ℝ := Real.sqrt s * z with hc
+      have hc2 : c ^ 2 = s * z ^ 2 := by rw [hc, mul_pow, Real.sq_sqrt hs.le]
+      -- pointwise `pX(y−c)·|log p_z − log p_t| ≤ pX(y−c)·|log pX(y−c)| + pX(y−c)·((A+1)+B y²)`.
+      have hbound_ae : ∀ᵐ y ∂volume,
+          pX (y - c) * |Real.log (pX (y - c)) - Real.log (p_t y)|
+            ≤ pX (y - c) * |Real.log (pX (y - c))|
+              + pX (y - c) * ((A + 1) + B * y ^ 2) := by
+        filter_upwards [hLog] with y hy
+        have htri : |Real.log (pX (y - c)) - Real.log (p_t y)|
+            ≤ |Real.log (pX (y - c))| + |Real.log (p_t y)| := abs_sub _ _
+        have hstep : |Real.log (pX (y - c)) - Real.log (p_t y)|
+            ≤ |Real.log (pX (y - c))| + ((A + 1) + B * y ^ 2) := le_trans htri (by linarith)
+        calc pX (y - c) * |Real.log (pX (y - c)) - Real.log (p_t y)|
+            ≤ pX (y - c) * (|Real.log (pX (y - c))| + ((A + 1) + B * y ^ 2)) :=
+              mul_le_mul_of_nonneg_left hstep (hpX_nn _)
+          _ = pX (y - c) * |Real.log (pX (y - c))| + pX (y - c) * ((A + 1) + B * y ^ 2) := by ring
+      -- the two dominating pieces are integrable.
+      have hC_int : Integrable (fun y => pX (y - c) * |Real.log (pX (y - c))|) volume :=
+        hpX_abs_ent.comp_sub_right c
+      have hD_int : Integrable (fun y => pX (y - c) * ((A + 1) + B * y ^ 2)) volume :=
+        hfib_dom_int c
+      have hsum_int : Integrable (fun y => pX (y - c) * |Real.log (pX (y - c))|
+          + pX (y - c) * ((A + 1) + B * y ^ 2)) volume := hC_int.add hD_int
+      -- `‖Fabs z‖ ≤ ∫ (dominating sum) ≤ Habs z`.
+      have hF_le : ‖Fabs z‖ ≤ ∫ y, (pX (y - c) * |Real.log (pX (y - c))|
+          + pX (y - c) * ((A + 1) + B * y ^ 2)) ∂volume := by
+        rw [hFabs]
+        have hint_nn : 0 ≤ ∫ y, pX (y - c)
+            * |Real.log (pX (y - c)) - Real.log (p_t y)| ∂volume :=
+          integral_nonneg (fun y => mul_nonneg (hpX_nn _) (abs_nonneg _))
+        rw [Real.norm_eq_abs, abs_of_nonneg hint_nn]
+        refine integral_mono_of_nonneg
+          (Filter.Eventually.of_forall (fun y => mul_nonneg (hpX_nn _) (abs_nonneg _)))
+          hsum_int hbound_ae
+      -- evaluate the dominating integral `= C0 + (A+1) + 2B·M2 + 2B·c² = Habs z`.
+      have hI_eval : ∫ y, (pX (y - c) * |Real.log (pX (y - c))|
+          + pX (y - c) * ((A + 1) + B * y ^ 2)) ∂volume ≤ Habs z := by
+        rw [integral_add hC_int hD_int]
+        -- first piece `= C0` (translation invariance).
+        have hICabs : ∫ y, pX (y - c) * |Real.log (pX (y - c))| ∂volume = C0 := by
+          rw [hC0, integral_sub_right_eq_self (fun y => pX y * |Real.log (pX y)|) c]
+        -- second piece `≤ (A+1) + 2B·M2 + 2B·c²`.
+        set U : ℝ → ℝ := fun y =>
+          (A + 1) * pX (y - c) + 2 * B * ((y - c) ^ 2 * pX (y - c))
+            + 2 * B * c ^ 2 * pX (y - c) with hU
+        have hT0 : Integrable (fun y => pX (y - c)) volume := hpX_int.comp_sub_right c
+        have hT2 : Integrable (fun y => (y - c) ^ 2 * pX (y - c)) volume :=
+          hpX_mom.comp_sub_right c
+        have hU_int : Integrable U volume :=
+          ((hT0.const_mul (A + 1)).add (hT2.const_mul (2 * B))).add (hT0.const_mul (2 * B * c ^ 2))
+        have hle : ∀ y, pX (y - c) * ((A + 1) + B * y ^ 2) ≤ U y := by
+          intro y; rw [hU]
+          have hy2 : y ^ 2 ≤ 2 * (y - c) ^ 2 + 2 * c ^ 2 := by nlinarith [sq_nonneg (y - 2 * c)]
+          have hBnn : (0:ℝ) ≤ B := hB_nn
+          nlinarith [hpX_nn (y - c), mul_le_mul_of_nonneg_left hy2 hBnn,
+            mul_nonneg hBnn (sq_nonneg (y - c))]
+        have hIDle : ∫ y, pX (y - c) * ((A + 1) + B * y ^ 2) ∂volume ≤ ∫ y, U y ∂volume :=
+          integral_mono hD_int hU_int hle
+        have hI0 : ∫ y, pX (y - c) ∂volume = 1 := by
+          rw [integral_sub_right_eq_self (fun y => pX y) c, hpX_mass]
+        have hI2 : ∫ y, (y - c) ^ 2 * pX (y - c) ∂volume = M2 := by
+          rw [integral_sub_right_eq_self (fun y => y ^ 2 * pX y) c, ← hM2]
+        have hUsplit : ∫ y, U y ∂volume
+            = (A + 1) * (∫ y, pX (y - c) ∂volume)
+              + 2 * B * (∫ y, (y - c) ^ 2 * pX (y - c) ∂volume)
+              + 2 * B * c ^ 2 * (∫ y, pX (y - c) ∂volume) := by
+          show ∫ y, ((A + 1) * pX (y - c) + 2 * B * ((y - c) ^ 2 * pX (y - c))
+              + 2 * B * c ^ 2 * pX (y - c)) ∂volume = _
+          rw [integral_add
+              (f := fun y => (A + 1) * pX (y - c) + 2 * B * ((y - c) ^ 2 * pX (y - c)))
+              (g := fun y => 2 * B * c ^ 2 * pX (y - c))
+              ((hT0.const_mul (A + 1)).add (hT2.const_mul (2 * B)))
+              (hT0.const_mul (2 * B * c ^ 2)),
+            integral_add
+              (f := fun y => (A + 1) * pX (y - c))
+              (g := fun y => 2 * B * ((y - c) ^ 2 * pX (y - c)))
+              (hT0.const_mul (A + 1)) (hT2.const_mul (2 * B)),
+            integral_const_mul, integral_const_mul, integral_const_mul]
+        rw [hICabs, hHabs]
+        rw [hUsplit, hI0, hI2] at hIDle
+        -- `hIDle : ∫ pX(·−c)·((A+1)+B·²) ≤ (A+1)·1 + 2B·M2 + 2B·c²·1`, and `c² = s·z²`.
+        nlinarith [hIDle, hc2]
+      exact le_trans hF_le hI_eval
   -- Instantiate the genuine Ω-level (β) lower bound.
   exact negMulLog_convDensity_entropy_ge X Z μ hX hZ hXZ v_Z hv_Z_pos hZ_law
     hpX_nn hpX_meas hpX_law u hu_pos n
