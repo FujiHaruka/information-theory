@@ -1446,6 +1446,26 @@ This wrapper discharges the supply-able preconditions of
 The **de Bruijn per-time regularity group** (`h_reg_*'` / `h_endpt_*` / `h_pos_stam`)
 is **not supplied from method-X** (it depends on the moonshot
 `epi-debruijn-pertime-closure`) and is threaded as an honest precondition.
+
+Independent honesty audit 2026-06-05 (honest_residual AFFIRMED, 4-check): (1) non-circular
+— conclusion `N(X+Y) ≥ N(X)+N(Y)` matches no hypothesis (`IsStamInequalityHyp` is the
+Fisher form `1/J_sum ≥ 1/J_X+1/J_Y`, a different statement). (2) non-load-bearing — the
+threaded de Bruijn group is regularity, not core: `IsStamInequalityHyp` is genuinely
+derivable from pure regularity (`isStamInequalityHyp_via_step3`, takes only
+measurability/independence, sorryAx-free), so granting it hands no EPI; the genuine EPI
+core lives in `_of_regular`'s two pillars. (3) non-degenerate — non-vacuous (Gaussian
+witness inhabits `IsStamInequalityHyp`), conclusion is verbatim case-1 EPI. (4) sufficiency
+— body genuinely derives all supply-able `_of_regular` preconditions (4 independences from
+the 4-tuple, noise a.c./laws, variance bounds with equality, scaling regularity, three
+`IsRescaledPathRegular`) and threads the de Bruijn group verbatim; conclusion follows
+(`#print axioms` = [propext, Classical.choice, Quot.sound], sorryAx-free, transitively).
+`hXY_ac` honest (sum-a.c. regularity, standard case-1 hyp, cannot encode EPI). Helper
+assets (`convDensityAdd_negMulLog_integrable_pub` / `pPath_eq_convDensityAdd` /
+`map_add_absolutelyContinuous` / `isRescaledPathRegular_of_methodX`) all `@audit:ok`. Naming
+`_of_methodX` honest (de Bruijn group remains open, not `_unconditional`/`_discharged`).
+`@residual(plan:epi-debruijn-pertime-closure)` slug correct (established convention shared
+by 6 FisherInfoV2DeBruijn* files for the same wall; plan file
+`epi-debruijn-pertime-closure-plan.md` exists).
 @residual(plan:epi-debruijn-pertime-closure) -/
 theorem entropyPower_add_ge_case1_of_methodX
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
