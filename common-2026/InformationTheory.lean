@@ -232,3 +232,4 @@ import InformationTheory.Shannon.EPIBlachmanGaussianWitness
 import InformationTheory.Shannon.EPIConvDensityRegular
 import InformationTheory.Shannon.EPIConvDensityAssoc
 import InformationTheory.Shannon.EPIBlachmanGeneralDensity
+import InformationTheory.Shannon.EPICase1RatioLimit
