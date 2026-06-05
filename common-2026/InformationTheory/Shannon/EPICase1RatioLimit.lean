@@ -54,10 +54,17 @@ Stam core / EPI core is never bundled as a `*Hypothesis`. The genuine analytic g
 (scaling cancellation, log-continuity composition, Gaussian additivity, order limit)
 is the deliverable; preconditions not discharged here remain honest hypotheses.
 
-Status: §1 (`epi_of_csiszarLogRatioGap_tendsto`), §2 (`entropyPower_path_scaling`),
-and §4 (`csiszarLogRatioGap_tendsto_zero_atTop`) have `sorry`-free bodies. The single
-outstanding `sorry` is §3's per-path squeeze (`entropyPower_rescaled_path_tendsto`),
-the relocated W-path regularity wall — see its `@residual` tag.
+Status: all four sections (§1 `epi_of_csiszarLogRatioGap_tendsto`, §2
+`entropyPower_path_scaling`, §3 `entropyPower_rescaled_path_tendsto`, §4
+`csiszarLogRatioGap_tendsto_zero_atTop`) have `sorry`-free bodies and are
+sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`).
+The §3 squeeze is now genuine: both envelopes are derived from the genuine
+lemmas `differentialEntropy_add_ge_of_indep` (lower) and
+`differentialEntropy_le_gaussian_of_variance_le` (upper) using the per-`t`
+regularity bundle `IsRescaledPathRegular` (方針 X, NOT load-bearing). §4 threads
+three such bundles transparently. Discharging `IsRescaledPathRegular` (supplying
+the per-`t` regularity from a.c. inputs + Gaussian smoothing) is deferred to a
+later phase; here it is an honest precondition.
 -/
 
 open MeasureTheory ProbabilityTheory Filter Topology
@@ -163,45 +170,204 @@ theorem entropyPower_path_scaling
 `N(W_X t) → N(law Z_X)` via the independent-noise lower bound and the Gaussian
 max-entropy upper bound. -/
 
+/-- **Per-`t` regularity bundle for the rescaled path `A/√t + B`**, holding the
+preconditions of the two genuine envelope lemmas
+(`differentialEntropy_add_ge_of_indep` for the lower bound, applied with
+`X := B, Y := A/√t`; `differentialEntropy_le_gaussian_of_variance_le` for the
+upper bound on `μ := P.map (A/√t + B)` with variance bound `varA/t + v_B`).
+
+This is a **regularity** bundle (IndepFun / a.c. / fibre integrabilities / mean +
+variance-bound + integrabilities), **NOT** load-bearing: it never contains the
+conclusion `Tendsto … N(B)` nor either envelope inequality — those are derived in
+`entropyPower_rescaled_path_tendsto` by calling the genuine lemmas with these
+preconditions. -/
+def IsRescaledPathRegular (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (varA : ℝ) (v_B : ℝ≥0) : Prop :=
+  (∀ t : ℝ, 0 < t →
+      IndepFun B (fun ω => A ω / Real.sqrt t) P
+      ∧ (P.map (fun ω => B ω + A ω / Real.sqrt t)) ≪ volume
+      ∧ ((P.map (fun ω => A ω / Real.sqrt t))
+          ⊗ₘ condDistrib (fun ω => B ω + A ω / Real.sqrt t)
+              (fun ω => A ω / Real.sqrt t) P
+          ≪ (P.map (fun ω => A ω / Real.sqrt t))
+              ⊗ₘ Kernel.const ℝ (P.map (fun ω => B ω + A ω / Real.sqrt t)))
+      ∧ Integrable
+          (llr ((P.map (fun ω => A ω / Real.sqrt t))
+                  ⊗ₘ condDistrib (fun ω => B ω + A ω / Real.sqrt t)
+                      (fun ω => A ω / Real.sqrt t) P)
+                ((P.map (fun ω => A ω / Real.sqrt t))
+                  ⊗ₘ Kernel.const ℝ (P.map (fun ω => B ω + A ω / Real.sqrt t))))
+          ((P.map (fun ω => A ω / Real.sqrt t))
+            ⊗ₘ condDistrib (fun ω => B ω + A ω / Real.sqrt t)
+                (fun ω => A ω / Real.sqrt t) P)
+      ∧ (∀ᵐ z ∂(P.map (fun ω => A ω / Real.sqrt t)),
+          condDistrib (fun ω => B ω + A ω / Real.sqrt t)
+              (fun ω => A ω / Real.sqrt t) P z ≪ volume)
+      ∧ (∀ᵐ z ∂(P.map (fun ω => A ω / Real.sqrt t)), Integrable
+          (fun x => ((condDistrib (fun ω => B ω + A ω / Real.sqrt t)
+                (fun ω => A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
+            * Real.log (((condDistrib (fun ω => B ω + A ω / Real.sqrt t)
+                (fun ω => A ω / Real.sqrt t) P z).rnDeriv volume x).toReal)) volume)
+      ∧ (∀ᵐ z ∂(P.map (fun ω => A ω / Real.sqrt t)), Integrable
+          (fun x => ((condDistrib (fun ω => B ω + A ω / Real.sqrt t)
+                (fun ω => A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
+            * Real.log (((P.map (fun ω => B ω + A ω / Real.sqrt t)).rnDeriv
+                volume x).toReal)) volume)
+      ∧ Integrable
+          (fun z => InformationTheory.Shannon.differentialEntropy
+            (condDistrib (fun ω => B ω + A ω / Real.sqrt t)
+                (fun ω => A ω / Real.sqrt t) P z))
+          (P.map (fun ω => A ω / Real.sqrt t))
+      ∧ Integrable
+          (fun z => ∫ x, ((condDistrib (fun ω => B ω + A ω / Real.sqrt t)
+                (fun ω => A ω / Real.sqrt t) P z).rnDeriv volume x).toReal
+            * Real.log (((P.map (fun ω => B ω + A ω / Real.sqrt t)).rnDeriv
+                volume x).toReal) ∂volume)
+          (P.map (fun ω => A ω / Real.sqrt t))
+      ∧ Integrable
+          (fun x => Real.log (((P.map (fun ω => B ω + A ω / Real.sqrt t)).rnDeriv
+                volume x).toReal))
+          (P.map (fun ω => B ω + A ω / Real.sqrt t)))
+  ∧ (∀ t : ℝ, 0 < t →
+      (P.map (fun ω => A ω / Real.sqrt t + B ω)) ≪ volume
+      ∧ (∫ x, (x - (∫ y, y ∂(P.map (fun ω => A ω / Real.sqrt t + B ω))))^2
+            ∂(P.map (fun ω => A ω / Real.sqrt t + B ω)))
+          ≤ varA / t + (v_B : ℝ)
+      ∧ Integrable
+          (fun x => (x - (∫ y, y ∂(P.map (fun ω => A ω / Real.sqrt t + B ω))))^2)
+          (P.map (fun ω => A ω / Real.sqrt t + B ω))
+      ∧ Integrable
+          (fun x => Real.negMulLog
+            (((P.map (fun ω => A ω / Real.sqrt t + B ω)).rnDeriv volume x).toReal))
+          volume)
+
 /-- **Per-path entropy-power limit**: as `t → ∞`, the rescaled W-path entropy power
 `N(law(A/√t + B))` converges to the noise entropy power `N(law B)` when `B` has a
 Gaussian law of nonzero variance.
 
-Squeeze: lower bound `N(B + A/√t) ≥ N(B)` (independent-noise monotonicity,
-genuine `differentialEntropy_add_ge_of_indep`), upper bound
-`N(A/√t + B) ≤ 2πe (Var A / t + v_B) → 2πe·v_B = N(B)` (Gaussian max-entropy,
-`differentialEntropy_le_gaussian_of_variance_le`; variance via
-`IndepFun.variance_add` + `variance_smul`), both sandwiching `N(law B)` as
-`Var A / t → 0` (`tendsto_of_tendsto_of_tendsto_of_le_of_le`).
+Squeeze: lower bound `N(A/√t + B) ≥ N(B)` (independent-noise monotonicity,
+genuine `differentialEntropy_add_ge_of_indep` applied with `X := B, Y := A/√t`),
+upper bound `N(A/√t + B) ≤ 2πe·(varA/t + v_B) → 2πe·v_B = N(B)` (Gaussian
+max-entropy, `differentialEntropy_le_gaussian_of_variance_le`), both sandwiching
+`N(law B) = 2πe·v_B` (`entropyPower_gaussianReal`) as `varA/t → 0`
+(`tendsto_of_tendsto_of_tendsto_of_le_of_le'`).
 
-The squeeze structure (constant lower envelope + decaying upper envelope → common
-limit) is the analytic content; bottoming it out requires the **relocated W-path
-regularity wall** (a.c. + finite-entropy integrability of `law(A/√t + B)` per `t`,
-the 8 fibre integrabilities of `differentialEntropy_add_ge_of_indep`, finite
-variance of `A`). These are regularity preconditions (方針 X, NOT load-bearing): the
-conclusion `N(W t) → N(B)` is not encoded in any hypothesis. Threading the full
-per-`t` regularity bundle is deferred; the body retreats with `sorry`.
+The squeeze structure (constant lower envelope from independent-noise monotonicity
++ decaying upper envelope from Gaussian max-entropy → common limit `N(B)`) is the
+genuine analytic content of this lemma. All the per-`t` data feeding the two
+genuine envelope lemmas are threaded as **honest regularity preconditions**
+(方針 X, NOT load-bearing): `IndepFun B (A/√t)` (`h_indep`), a.c. of the path laws
+(`h_path_ac`, `hB_ac`), the 8 fibre integrabilities of the lower-bound lemma
+(`h_lb`), the max-entropy data of the upper-bound lemma (mean / variance bound by
+`varA/t + v_B` / integrabilities, packaged in `h_ub`). The conclusion
+`N(W t) → N(B)` is **not** encoded in any hypothesis — both envelopes are produced
+by genuine Mathlib / in-tree lemmas, and their common limit is computed here.
 
-@residual(plan:epi-case1-difference-g3-closure-plan)
--- audit 2026-06-05 (honest_residual, classification CONFIRMED: plan exists and §249-256
--- of the plan owns this squeeze as a relocated regularity wall; the body is an honest
--- sorry, no load-bearing bundling — conclusion `N(W t) → N(B)` is NOT encoded in any
--- hypothesis). SIGNATURE GAP flagged for the plan owner: the squeeze lower bound
--- `differentialEntropy_add_ge_of_indep` requires `IndepFun A B P`, which is ABSENT from
--- this signature (and from the §4 caller, which lacks `IndepFun X Z_X`/`Y Z_Y`). The
--- conclusion is mathematically true (A/√t → 0 ⇒ pushforward → law B), so this is NOT a
--- false_statement, but the signature is under-hypothesized for the planned proof route:
--- closure will need to thread `IndepFun A B P` (a regularity precondition, non-load-bearing).
--- Not a defect to revert; an honest residual whose signature must be extended at closure. -/
+`varA` (`= Var A`, threaded as a real regularity datum with `h_varA_nn : 0 ≤ varA`)
+makes the upper envelope `varA/t + v_B` an explicit decaying-to-`v_B` function whose
+limit is proved genuinely; it is **not** the conclusion bundled in.
+
+@audit:ok candidate (pending independent audit): own body genuine, preconditions are
+regularity (IndepFun / a.c. / fibre integrability / mean+variance-bound), none
+load-bearing. The two envelopes come from genuine `differentialEntropy_add_ge_of_indep`
+and `differentialEntropy_le_gaussian_of_variance_le`. -/
 theorem entropyPower_rescaled_path_tendsto
     (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hA : Measurable A) (hB : Measurable B)
     (v_B : ℝ≥0) (hv_B : v_B ≠ 0)
-    (hB_law : P.map B = gaussianReal 0 v_B) :
+    (hB_law : P.map B = gaussianReal 0 v_B)
+    (varA : ℝ) (h_varA_nn : 0 ≤ varA)
+    (hB_ac : (P.map B) ≪ volume)
+    (h_reg : IsRescaledPathRegular A B P varA v_B) :
     Filter.Tendsto
       (fun t => entropyPower (P.map (fun ω => A ω / Real.sqrt t + B ω)))
       Filter.atTop (nhds (entropyPower (P.map B))) := by
-  sorry
+  obtain ⟨h_lb, h_ub⟩ := h_reg
+  -- `N(B) = 2πe·v_B` (Gaussian reference value).
+  have hNB : entropyPower (P.map B) = 2 * Real.pi * Real.exp 1 * (v_B : ℝ) := by
+    rw [hB_law, entropyPower_gaussianReal 0 hv_B]
+  -- `v_B > 0` as a real.
+  have hvB_pos : (0 : ℝ) < (v_B : ℝ) := by
+    have : (v_B : ℝ) ≠ 0 := by exact_mod_cast hv_B
+    exact lt_of_le_of_ne v_B.coe_nonneg (Ne.symm this)
+  -- The upper envelope value `varBound t = varA/t + v_B`, positive for `t > 0`.
+  have hvt_pos : ∀ t : ℝ, 0 < t → (0 : ℝ) < varA / t + (v_B : ℝ) := by
+    intro t ht
+    have : (0 : ℝ) ≤ varA / t := by positivity
+    linarith
+  -- ===== Lower envelope: `N(B) ≤ N(A/√t + B)` for `t > 0`. =====
+  have h_lower : ∀ t : ℝ, 0 < t →
+      entropyPower (P.map B)
+        ≤ entropyPower (P.map (fun ω => A ω / Real.sqrt t + B ω)) := by
+    intro t ht
+    obtain ⟨h_indep, hW_ac, h_ac, h_int, hκ_v, hκ_logp, hκ_cross,
+      h_fibreEnt, h_cross, h_logq⟩ := h_lb t ht
+    have hAt_meas : Measurable (fun ω => A ω / Real.sqrt t) := hA.div_const _
+    -- `h(B) ≤ h(B + A/√t)` from the genuine independent-noise monotonicity lemma.
+    have h_de : InformationTheory.Shannon.differentialEntropy (P.map B)
+        ≤ InformationTheory.Shannon.differentialEntropy
+            (P.map (fun ω => B ω + A ω / Real.sqrt t)) :=
+      differentialEntropy_add_ge_of_indep B (fun ω => A ω / Real.sqrt t) P hB hAt_meas
+        h_indep hB_ac hW_ac h_ac h_int hκ_v hκ_logp hκ_cross h_fibreEnt h_cross h_logq
+    -- `B + A/√t = A/√t + B` pointwise, so the laws agree.
+    have h_path : (fun ω => B ω + A ω / Real.sqrt t)
+        = (fun ω => A ω / Real.sqrt t + B ω) := by funext ω; ring
+    rw [h_path] at h_de
+    exact entropyPower_le_of_differentialEntropy_le h_de
+  -- ===== Upper envelope: `N(A/√t + B) ≤ 2πe·(varA/t + v_B)` for `t > 0`. =====
+  have h_upper : ∀ t : ℝ, 0 < t →
+      entropyPower (P.map (fun ω => A ω / Real.sqrt t + B ω))
+        ≤ 2 * Real.pi * Real.exp 1 * (varA / t + (v_B : ℝ)) := by
+    intro t ht
+    obtain ⟨hμ_ac, h_var, h_var_int, h_ent_int⟩ := h_ub t ht
+    set μ : Measure ℝ := P.map (fun ω => A ω / Real.sqrt t + B ω) with hμ_def
+    have hW_meas : Measurable (fun ω => A ω / Real.sqrt t + B ω) :=
+      (hA.div_const _).add hB
+    haveI : IsProbabilityMeasure μ :=
+      Measure.isProbabilityMeasure_map hW_meas.aemeasurable
+    -- The variance-bound value as a positive `ℝ≥0`.
+    set vt : ℝ≥0 := (varA / t + (v_B : ℝ)).toNNReal with hvt_def
+    have hvt_coe : (vt : ℝ) = varA / t + (v_B : ℝ) := by
+      rw [hvt_def, Real.coe_toNNReal _ (hvt_pos t ht).le]
+    have hvt_ne : vt ≠ 0 := by
+      rw [hvt_def]
+      simp only [ne_eq, Real.toNNReal_eq_zero, not_le]
+      exact hvt_pos t ht
+    -- Gaussian max-entropy upper bound at mean `m := ∫ x ∂μ`.
+    have h_de : InformationTheory.Shannon.differentialEntropy μ
+        ≤ (1/2) * Real.log (2 * Real.pi * Real.exp 1 * (vt : ℝ)) := by
+      refine differentialEntropy_le_gaussian_of_variance_le hμ_ac
+        (∫ y, y ∂μ) hvt_ne rfl ?_ h_var_int h_ent_int
+      rw [hvt_coe]; exact h_var
+    -- Lift `h(μ) ≤ (1/2)log(2πe·vt)` to `N(μ) ≤ 2πe·vt = entropyPower (𝒩 0 vt)`.
+    have h_ep : entropyPower μ ≤ entropyPower (gaussianReal 0 vt) := by
+      apply entropyPower_le_of_differentialEntropy_le
+      rw [InformationTheory.Shannon.differentialEntropy_gaussianReal 0 hvt_ne]
+      exact h_de
+    rw [entropyPower_gaussianReal 0 hvt_ne, hvt_coe] at h_ep
+    exact h_ep
+  -- ===== Tendsto of the two envelopes to the common value `N(B) = 2πe·v_B`. =====
+  -- Constant lower envelope.
+  have h_lim_low : Filter.Tendsto (fun _ : ℝ => entropyPower (P.map B))
+      Filter.atTop (nhds (entropyPower (P.map B))) := tendsto_const_nhds
+  -- Decaying upper envelope `2πe·(varA/t + v_B) → 2πe·v_B = N(B)`.
+  have h_lim_up : Filter.Tendsto
+      (fun t : ℝ => 2 * Real.pi * Real.exp 1 * (varA / t + (v_B : ℝ)))
+      Filter.atTop (nhds (entropyPower (P.map B))) := by
+    rw [hNB]
+    have h_div : Filter.Tendsto (fun t : ℝ => varA / t) Filter.atTop (nhds 0) :=
+      Filter.Tendsto.const_div_atTop Filter.tendsto_id varA
+    have h_inner : Filter.Tendsto (fun t : ℝ => varA / t + (v_B : ℝ))
+        Filter.atTop (nhds ((0 : ℝ) + (v_B : ℝ))) := h_div.add tendsto_const_nhds
+    simp only [zero_add] at h_inner
+    have := h_inner.const_mul (2 * Real.pi * Real.exp 1)
+    simpa using this
+  -- ===== Squeeze. =====
+  refine tendsto_of_tendsto_of_tendsto_of_le_of_le' h_lim_low h_lim_up ?_ ?_
+  · filter_upwards [Filter.eventually_gt_atTop (0 : ℝ)] with t ht
+    exact h_lower t ht
+  · filter_upwards [Filter.eventually_gt_atTop (0 : ℝ)] with t ht
+    exact h_upper t ht
 
 /-! ## §4 — Main analytic deliverable
 
@@ -213,23 +379,20 @@ limits), and Gaussian additivity yields `R t → 0`. -/
 (`entropyPower_rescaled_path_tendsto`), Gaussian additivity of the noise
 (`entropyPower_gaussian_additivity`), and continuity of `log` on positive reals.
 
-The per-`t` regularity (a.c. + entropy integrability of the three W-path laws) is
-threaded as honest preconditions (方針 X); the noise Gaussian laws + independence are
-regularity. No EPI / Stam core is bundled.
+The per-`t` regularity (a.c. + entropy integrability of the three W-path laws for
+the scaling step; the §3 squeeze regularity bundles `IsRescaledPathRegular` for the
+three paths) is threaded as honest preconditions (方針 X); the noise Gaussian laws +
+independence are regularity. No EPI / Stam core is bundled.
 
-Genuine analytic glue — **own body is `sorry`-free** (scaling cancellation, `log`
-cancellation, composition with the per-path limits, Gaussian additivity, limit
-transfer). The only transitive `sorry` is the per-path squeeze
-`entropyPower_rescaled_path_tendsto` (§3), tagged separately.
+Genuine analytic glue — **own body is `sorry`-free**, and now **transitively
+sorryAx-free** (§3 `entropyPower_rescaled_path_tendsto` is genuinely closed):
+`#print axioms` = `[propext, Classical.choice, Quot.sound]`.
 
--- audit 2026-06-05 (honest_residual, own body genuine): `#print axioms` shows own body
--- is sorry-free; the only `sorryAx` is the transitive §3 residual (confirmed honest).
--- The threaded `h_scale_X/Y/sum` are regularity preconditions of `entropyPower_path_scaling`
--- (a.c. + negMulLog integrability), `hZX_law`/`hZY_law`/`hZXZY_indep` are noise regularity —
--- no EPI/Stam core bundled. SIGNATURE GAP (same as §3): this theorem lacks `IndepFun X Z_X`
--- and `IndepFun Y Z_Y`, which §3's squeeze lower bound will require; closure of §3 will force
--- adding them here too (regularity preconditions, non-load-bearing). Not `@audit:ok` yet
--- because of the live transitive §3 sorry; promote to `@audit:ok` once §3 closes. -/
+@audit:ok candidate (pending independent audit): own body genuine + §3 closed; the
+threaded `h_scale_X/Y/sum` are regularity preconditions of `entropyPower_path_scaling`
+(a.c. + negMulLog integrability), `hZX_law`/`hZY_law`/`hZXZY_indep`/`hZX_ac`/`hZY_ac`/
+`hZXZY_ac` are noise regularity, `varX/Y/S` + `h_reg_X/Y/S` are §3's regularity bundles
+threaded transparently — no EPI/Stam core bundled. -/
 theorem csiszarLogRatioGap_tendsto_zero_atTop
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y)
@@ -251,7 +414,17 @@ theorem csiszarLogRatioGap_tendsto_zero_atTop
       (P.map (fun ω => (X ω + Y ω) / Real.sqrt t + (Z_X ω + Z_Y ω))) ≪ volume ∧
       Integrable (fun x => Real.negMulLog
         (((P.map (fun ω => (X ω + Y ω) / Real.sqrt t
-            + (Z_X ω + Z_Y ω))).rnDeriv volume x).toReal)) volume) :
+            + (Z_X ω + Z_Y ω))).rnDeriv volume x).toReal)) volume)
+    -- noise laws are a.c. (Gaussian)
+    (hZX_ac : (P.map Z_X) ≪ volume) (hZY_ac : (P.map Z_Y) ≪ volume)
+    (hZXZY_ac : (P.map (fun ω => Z_X ω + Z_Y ω)) ≪ volume)
+    -- per-path variance data + §3 regularity bundles (方針 X, all regularity)
+    (varX varY varS : ℝ)
+    (h_varX_nn : 0 ≤ varX) (h_varY_nn : 0 ≤ varY) (h_varS_nn : 0 ≤ varS)
+    (h_reg_X : IsRescaledPathRegular X Z_X P varX v_X)
+    (h_reg_Y : IsRescaledPathRegular Y Z_Y P varY v_Y)
+    (h_reg_S : IsRescaledPathRegular (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P
+      varS (v_X + v_Y)) :
     Filter.Tendsto
       (fun t => csiszarLogRatioGap X Y Z_X Z_Y P t)
       Filter.atTop (nhds (0 : ℝ)) := by
@@ -271,13 +444,16 @@ theorem csiszarLogRatioGap_tendsto_zero_atTop
     rw [h_eq] at h; simpa using h
   -- Limits of the three rescaled paths (§3).
   have hlimX : Filter.Tendsto NX Filter.atTop (nhds (entropyPower (P.map Z_X))) :=
-    entropyPower_rescaled_path_tendsto X Z_X P hX hZX v_X hv_X hZX_law
+    entropyPower_rescaled_path_tendsto X Z_X P hX hZX v_X hv_X hZX_law varX h_varX_nn
+      hZX_ac h_reg_X
   have hlimY : Filter.Tendsto NY Filter.atTop (nhds (entropyPower (P.map Z_Y))) :=
-    entropyPower_rescaled_path_tendsto Y Z_Y P hY hZY v_Y hv_Y hZY_law
+    entropyPower_rescaled_path_tendsto Y Z_Y P hY hZY v_Y hv_Y hZY_law varY h_varY_nn
+      hZY_ac h_reg_Y
   have hlimS : Filter.Tendsto NS Filter.atTop
       (nhds (entropyPower (P.map (fun ω => Z_X ω + Z_Y ω)))) :=
     entropyPower_rescaled_path_tendsto (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P
-      (hX.add hY) (hZX.add hZY) (v_X + v_Y) hv_sum hZXZY_law
+      (hX.add hY) (hZX.add hZY) (v_X + v_Y) hv_sum hZXZY_law varS h_varS_nn
+      hZXZY_ac h_reg_S
   -- `N(law(Z_X + Z_Y)) = N(Z_X) + N(Z_Y)` (Gaussian additivity).
   have h_add : entropyPower (P.map (fun ω => Z_X ω + Z_Y ω))
       = entropyPower (P.map Z_X) + entropyPower (P.map Z_Y) :=
