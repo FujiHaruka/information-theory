@@ -32,10 +32,20 @@
 4. **honest resting state**: sum producer `Z_law` defect park (`EPICase1SumProducer.lean`、
    `@audit:defect(false-statement)` + `@audit:closed-by-successor`) を**そのまま維持**。EPI case-1 sum
    frontier は「単一-t object では閉じない deeper obstruction」。旧 plan の「壁でない」は機械実証で撤回。
-5. **次の genuine route 候補** (どちらも未着手、tractability 未確認): (1) co-monotonicity
-   `(J_X−J_Y)(N_X·J_X−N_Y·J_Y)≥0` を heat-flow family で独立 lemma 化できるか調査 (研究級 wall の可能性)、
-   (2) two-time reparametrization で consumer chain を restructure (route c、~93 site、旧判定 tractable
-   でない) を再評価。**weight 調整 (L-GS-A3'-weight) では済まない**ことが確定。
+5. **次の genuine route 候補** (`proof-pivot-advisor` で在庫横断 sizing 済、2026-06-06):
+   - **(1) co-monotonicity 独立 lemma 化** — ✗ **NO-GO**。`(J_X−J_Y)(N_X·J_X−N_Y·J_Y)≥0` を証明する
+     in-tree asset **ゼロ** (`rg comonoton` 0 件、Costa EPI / Fisher-monotonicity / log-Sobolev 系 0 件、
+     loogle 権威判定で Mathlib 側も無し)。**単一-t pointwise 版は文献にも存在しない公算大** (Stam/Blachman は
+     別時刻版のみ)。asset の file:line を出せない = 案A 二の舞リスク。
+   - **(2) two-time restructure** — △ 構成的だが大規模。consumer chain は `csiszarLogRatioGap` (alias `ln`)
+     **83 occ / 4 file** + `csiszarGap1Source` **74 occ** が単一-t hardcode。新 2-param object 設計 +
+     全 consumer 書換 = **独立した major wave** (本 plan の scope 外)。旧判定「~93 site、tractable でない」は
+     正確 (むしろ控えめ)。
+   - **(3) defect park 恒久化 (honest wall 受容)** — ✓ **advisor 推奨**。sum producer `Z_law` defect park を
+     honest resting state として維持、EPI case-1 sum を「単一-t object では閉じない deeper obstruction
+     (two-time reparametrization か非存在 co-monotonicity lemma が必要)」として textbook-roadmap に正直計上。
+   - **weight 調整 (L-GS-A3'-weight) では済まない**ことが確定。**(2) 着手か (3) 受容かは moonshot 投資判断**
+     (user 判断事項)。
 
 ---
 
