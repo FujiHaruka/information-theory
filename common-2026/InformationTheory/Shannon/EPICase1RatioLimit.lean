@@ -1782,6 +1782,55 @@ theorem map_gaussianConvolution_rescale_eq {α : Type*} [MeasurableSpace α]
       = P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z t) := by
   rw [gaussianConvolution_rescale_eq X Z v hv t ht]
 
+/-! ## PB-2b — Fisher monotonicity under Gaussian convolution (Stam corollary)
+
+The genuine Stam-side input to closing `integrable_deriv`: convolution with a regular
+density only *decreases* Fisher information, `J(pX ∗ fY) ≤ J(pX)`. This is the `lam = 1`
+specialization of the genuine convex Fisher bound `convex_fisher_bound_of_ready`
+(`EPIBlachmanDensity.lean:932`, `@audit:ok`, sorryAx-free):
+
+    `J(conv) ≤ lam²·J(fX) + (1-lam)²·J(fY)`  →  (`lam = 1`)  →  `J(conv) ≤ J(fX)`.
+
+It is conditioned on the *regularity* preconditions that the genuine Stam machinery
+actually requires (`IsRegularDensityV2 fX/fY`, normalization, `IsBlachmanConvReady fX fY`),
+NOT on any inequality core — the bound is genuinely supplied by `convex_fisher_bound_of_ready`.
+
+**Why this does NOT directly close `integrable_deriv` for the case-1 producer**: the
+producer's input density `pX = (P.map X).rnDeriv volume` is a *general* L¹ a.c. density with
+finite second moment. It need NOT satisfy `IsRegularDensityV2` (differentiable + strictly
+positive everywhere + both tails → 0) nor the boundedness fields of `IsBlachmanConvReady`
+(`pX` and `deriv pX` bounded). So this regularity-conditioned monotonicity lemma cannot be
+instantiated at the producer's general `pX`; closing `integrable_deriv` for a general input
+needs Fisher monotonicity for *general* L¹ densities (genuine score-of-convolution work, a
+Mathlib gap), or a strengthened input regularity precondition on `X`. The lemma below is the
+genuine landing of the monotonicity content for the regular case; `integrable_deriv` remains
+parked. -/
+
+/-- **Fisher monotonicity under Gaussian convolution** (Stam `lam = 1` corollary).
+
+For densities `fX`, `fY` satisfying the genuine Stam regularity preconditions
+(`IsRegularDensityV2`, normalization to `1`, and the `IsBlachmanConvReady` integrability /
+boundedness bundle), convolution decreases Fisher information:
+
+    `(J(convDensityAdd fX fY)).toReal ≤ (J fX).toReal`.
+
+Genuine derivation: specialize `convex_fisher_bound_of_ready` at `lam = 1` (RHS collapses to
+`1²·J(fX) + 0²·J(fY) = J(fX)`). The hypotheses are regularity preconditions, NOT load-bearing
+— the inequality core is supplied by the `@audit:ok` `convex_fisher_bound_of_ready`. -/
+theorem fisherInfoOfDensity_convDensityAdd_le
+    (fX fY : ℝ → ℝ)
+    (hregX : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fX)
+    (hregY : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 fY)
+    (hnormX : ∫ x, fX x ∂MeasureTheory.volume = 1)
+    (hnormY : ∫ x, fY x ∂MeasureTheory.volume = 1)
+    (hready : InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady fX fY) :
+    (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity
+        (InformationTheory.Shannon.EPIConvDensity.convDensityAdd fX fY)).toReal
+      ≤ (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity fX).toReal := by
+  have h := InformationTheory.Shannon.EPIBlachmanDensity.convex_fisher_bound_of_ready
+    fX fY 1 (by norm_num) (le_refl 1) hregX hregY hnormX hnormY hready
+  simpa using h
+
 /-! ## PB-3 — `IsDeBruijnRegularityHyp` producer (X / Y, unit-noise direct)
 
 The de Bruijn regularity group threaded by the case-1 wrapper is produced from method-X
@@ -1820,18 +1869,25 @@ Fisher information is finite). With it, the honest closure route is:
 1. **Fisher monotonicity (Stam)** `J(pX∗g_t) ≤ J(pX)` for every `t ≥ 0` (convolution with a
    Gaussian only decreases Fisher information). Combined with the precondition this gives a
    *uniform* bound `(1/2)·J(density_t).toReal ≤ (1/2)·J(pX).toReal` on `[0,T]`, finite and
-   `t`-independent. This monotonicity lemma is **NOT in-tree** (`gaussianConv_fisher_le_inv_var`
-   gives only the `t`-dependent `≤ 1/t`; `convex_fisher_bound` in `EPIBlachmanDensity.lean`
-   requires *bounded* densities + bounded derivatives, which a general L¹ `pX` need not satisfy;
-   loogle confirms Mathlib has no `fisherInfo` / `Blachman` API). Deriving it for general L¹ `pX`
-   is genuine Stam (score-of-convolution) work.
+   `t`-independent. The monotonicity content is now **landed genuinely** as the sorryAx-free
+   `fisherInfoOfDensity_convDensityAdd_le` (PB-2b, = `convex_fisher_bound_of_ready` at `lam = 1`).
+   It is **NOT instantiable for the producer's general `pX`**, however: it requires
+   `IsRegularDensityV2 pX` (differentiable + strictly positive everywhere + tails → 0) and the
+   boundedness fields of `IsBlachmanConvReady pX g_t` (bounded `pX`, bounded `deriv pX`), none of
+   which a general L¹ a.c. density with finite second moment need satisfy. (`gaussianConv_fisher_le_inv_var`
+   gives only the `t`-dependent `≤ 1/t`; loogle confirms Mathlib has no general `fisherInfo` /
+   `Blachman` API.) Closing the field thus needs Fisher monotonicity for *general* L¹ `pX`
+   (genuine score-of-convolution work, a Mathlib gap) **or** a strengthened input-regularity
+   precondition on `X` (regular density + bounded derivative) so PB-2b applies directly.
 2. **`t`-measurability** of `t ↦ J(density_t).toReal` (AEStronglyMeasurable on `Ι 0 T`), needed
    by `Measure.integrableOn_of_bounded`. Also a separate analytic obstacle.
 
-Both pieces are tracked in the owning plan; the *monotonicity lemma is the single remaining
-mathematical content* (measurability follows once the integrand is identified). The rest of the
-group is genuine, and the finite-Fisher precondition is now in place so PB-6 can thread it to
-the case-1 wrapper.
+Both pieces are tracked in the owning plan. The monotonicity *lemma* is now landed
+(`fisherInfoOfDensity_convDensityAdd_le`, PB-2b, genuine) but the remaining mathematical
+content for *this* producer is the regularity gap: either general-`pX` Fisher monotonicity or a
+strengthened input-regularity precondition (see piece 1 above). The rest of the group is
+genuine, and the finite-Fisher precondition is now in place so PB-6 can thread it to the case-1
+wrapper.
 
 @residual(plan:epi-case1-debruijn-producer-plan)
 @audit-note: independent honesty audit (2026-06-05, fresh auditor, commit c0cd760).
@@ -1908,12 +1964,18 @@ noncomputable def isDeBruijnRegularityHyp_of_methodX_unitnoise
     have : t.toNNReal = (⟨t, ht.le⟩ : ℝ≥0) := by
       apply NNReal.eq; exact Real.coe_toNNReal t ht.le
     rw [this]
-  · -- integrable_deriv: closure route now threaded via `h_fisher_X` (finite Fisher of `pX`).
-    -- Remaining: (1) Stam monotonicity `J(pX∗g_t) ≤ J(pX)` (NOT in-tree) gives the uniform
-    -- bound `(1/2)·J(density_t) ≤ (1/2)·(fisherInfoOfDensity pX).toReal` on `[0,T]`, finite by
-    -- `h_fisher_X`; (2) t-measurability of the integrand. See def docstring.
-    -- `h_fisher_X : fisherInfoOfDensity pX ≠ ∞` is the finite-Fisher regularity precondition
-    -- that will bound the integrand uniformly once the Stam monotonicity lemma is available.
+  · -- integrable_deriv: the uniform-bound route is `(1/2)·J(density_t) ≤ (1/2)·J(pX)` for all
+    -- `t`, finite by `h_fisher_X`, giving an `IntervalIntegrable` constant majorant on `[0,T]`.
+    -- The Fisher-monotonicity content is now genuinely landed as the sorryAx-free lemma
+    -- `fisherInfoOfDensity_convDensityAdd_le` (PB-2b above, = `convex_fisher_bound_of_ready`
+    -- at `lam = 1`). It is, however, NOT instantiable here: it requires `IsRegularDensityV2 pX`
+    -- (differentiable + strictly positive everywhere + tails → 0) and the boundedness fields of
+    -- `IsBlachmanConvReady pX g_t` (`pX`, `deriv pX` bounded). The producer's `pX =
+    -- (P.map X).rnDeriv volume` is a *general* L¹ a.c. density with finite second moment and need
+    -- NOT satisfy any of these. The remaining mathematical content is therefore Fisher
+    -- monotonicity for *general* L¹ densities (genuine score-of-convolution work, a Mathlib gap),
+    -- or a strengthened input-regularity precondition on `X` so PB-2b applies. Plus
+    -- (2) t-measurability of the integrand. `h_fisher_X` is in place for the bound's RHS.
     intro T hT
     -- @residual(plan:epi-case1-debruijn-producer-plan)
     sorry
