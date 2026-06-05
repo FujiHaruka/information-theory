@@ -13,12 +13,12 @@
 
 ## 進捗
 
-- [ ] Phase 0 — M0 在庫照合 (joint-indep Mathlib lemma verbatim + 6 AC/integrability 供給元) 📋
-- [ ] Phase 1 — honest signature 確定 (precondition の最小集合・over-claim 修正) 📋
-- [ ] Phase 2 — joint-indep `hXYZXY` 閉鎖 (in-place under-hyp 修正 vs lift route-B B2) 📋
-- [ ] Phase 3 — G3 rescale assembly (`csiszarGap_antitoneOn_Icc_zero_one` の 6 AC/integrability + s=1 端点) 📋
-- [ ] Phase 4 — `stamToEPIScaling_holds` honest 化 + 24 density-witness の precondition thread 📋
-- [ ] Phase 5 — headline `stamToEPIBridge_holds` 方針 X discharge + `#print axioms` 検証 📋
+- [x] Phase 0 — M0 在庫照合 ✅ (joint-indep = `indepFun_prodMk_prodMk`+`comp` self-derive 判明、判断ログ 5)
+- [~] Phase 1 — honest signature: 🔄 **新ルートに pivot** (judgment 7-9)。saturation を difference でなく **ratio+scaling squeeze** で。precondition は `IsRescaledPathRegular` bundle に集約済
+- [~] ~~Phase 2/3 (旧 difference G3)~~ — 🔄 **park** (judgment 6: ratio carrier ⊬ difference target、sufficiency gap)。新ルートが代替
+- [x] **Phase 3' (新) — ratio+scaling saturation architecture ✅ genuine 完成** (`EPICase1RatioLimit.lean`、4 decl 全 `@audit:ok`、0 sorry、sorryAx-free、独立監査 2 回 PASS)。entropic CLT 回避を達成。§1 `epi_of_csiszarLogRatioGap_tendsto` / §2 `entropyPower_path_scaling` / §3 `entropyPower_rescaled_path_tendsto` (squeeze) / §4 `csiszarLogRatioGap_tendsto_zero_atTop` (主定理 `R(t)→0`)
+- [ ] **Phase B — precondition 供給** 📋: (i) `IsRescaledPathRegular` discharge (a.c.+方針X regularity から)、(ii) ratio antitone (`csiszarLogRatioGap_antitoneOn_Ici_zero:1085`) の precondition 供給 = `hXYZXY` self-derive (judgment 5) + 3×`IsHeatFlowEndpointRegular` (density-witness、方針X) + `h_pos_stam` (Blachman = `isBlachmanConvReady_convDensityAdd_gaussian` 供給)
+- [ ] **Phase C — headline 結線** 📋: ratio antitone + `csiszarLogRatioGap_tendsto_zero_atTop` + `epi_of_csiszarLogRatioGap_tendsto` → case-1 EPI → `stamToEPIBridge_holds` / dispatch skeleton case-1 枝。方針X precondition thread、`#print axioms` 検証、honest 命名 (bare `_unconditional` 禁止)
 
 proof-log: Phase 2/3/4/5 は完了時に `docs/shannon/proof-log-epi-case1-g3-phase-*.md`。Phase 0/1 は proof-log: no (調査・設計のみ)。
 
