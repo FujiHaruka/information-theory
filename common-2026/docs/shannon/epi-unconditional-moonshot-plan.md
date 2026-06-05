@@ -119,6 +119,29 @@ a.c. ブランチで生入力に regularity を課す根因は **heat-flow endpo
 注: 退化トラップ除去 (特異 → entropy power 0) は方針 Y でも cases 2/3 の枠組みをそのまま使う。
 方針 Y が追加するのは「a.c. だが有限分散でない入力」を平滑近似で救う層のみ。
 
+### ⚠ 方針 Y feasibility verdict (S5 先行調査、2026-06-05、`epi-uncond-truncation-lsc-inventory.md`)
+
+**結論: 方針 Y は数学的には真だが proof route が moonshot 規模 + genuine Mathlib 壁 2 本。L-Uncond-3-scope (方針 X 縮退) を投資効率の点で推奨。ただし最終判断はユーザー。**
+
+- **step 1「平滑側は無前提」が FALSE (genuine 障害)**: Gaussian 畳み込みは **X 由来の裾を消さない**
+  (`X+√t Z` は X が無限分散なら無限分散)。よって平滑後測度も `hpX_mom`(有限分散)/`hpX_ent`(有限エントロピー)
+  を自動充足しない。⇒ 方針 Y は出発点で既に regularity を要求し、平滑単独では剥がせない。
+  剥がすには **X 自体を compact support に truncate する二重近似** (truncate → 平滑 → 二重極限) が必要、層が 1 段増える。
+- **核心壁 Mathlib 完全不在 (loogle Found 0 × 5)**: entropy/KL の弱収束下半連続性、Gaussian 畳み込み弱収束。
+  新規 wall slug 2 本 `wall:entropy-lsc-weak` / `wall:gaussian-approx-identity-weak`、shared sorry 補題化。
+- **流用見込みが食い違い**: §S5 が流用候補とした `negMulLog_convDensity_limsup_le`
+  (`EPIG2KLFatouLSC.lean:359`) は **limsup ≤ の逆向き**半連続性で、方針 Y LHS で要る liminf ≥ と向きが逆。
+  かつ自身が有限分散 precondition 持ち ⇒ **方針 X でしか機能しない**。
+- **型衝突**: `differentialEntropy : Measure ℝ → ℝ` (Bochner、ℝ 値) は `h=+∞` を持てず、極限で `h=+∞` 入力を
+  扱う型が無い。二層定義の「Real workhorse 温存」制約と衝突 → workhorse 側も EReal 化が要る可能性 (blast radius 増)。
+- **自作量概算**: 弱収束 LSC bridge 200-400 行 (Mathlib 壁含む) + 近似単位元弱収束 80-150 行 +
+  a.c. 枝 `h=+∞` 型修正。別 moonshot 規模。
+
+⇒ **本計画は当面 case1 を有限分散版 (= 方針 X 相当の honest 中間到達点) で完成させ、方針 Y (regularity 完全剥がし)
+は独立 moonshot `epi-uncond-truncation-lsc-plan` として分離する**のが構造的に妥当
+(方針 X 中間形が方針 Y の入力でもあるため、どちらに進んでも先に case1 有限分散版が要る)。
+最終 signature を方針 X で締めるか方針 Y まで押すかは、case1 完成後に再判断可能 (後戻り無し)。
+
 ## 進捗
 
 - [ ] Phase 0 — feasibility gate: 新定義 shape 確定 + 無条件成立の数学的裏付け + Mathlib API 在庫指示 📋
