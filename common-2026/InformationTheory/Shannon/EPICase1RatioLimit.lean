@@ -396,10 +396,111 @@ of `condDistrib (B + A/√t) (A/√t) P` is the translated Gaussian `gaussianRea
 (`affineShiftKernel`, c = 1), so the fibre-level conditions reduce to Gaussian-density
 integrability rather than the general density-witness wall.
 
-Tractable conjuncts (IndepFun / a.c. / fibre a.c.) are closed genuinely; the residual
-fibre log-integrabilities + variance-bound + negMulLog integrability are parked with
-`@residual(plan:epi-case1-difference-g3-closure-plan)` (Gaussian-fibre tractable but
-exceeding the bridge budget here). -/
+Most conjuncts (IndepFun / a.c. / fibre a.c. / fibre self-entropy / fibre-entropy-over-z /
+joint-≪-product / squared-deviation / both path-entropy log-integrabilities) are closed
+genuinely using `hA_ac` + the `convDensityAdd` path-density identification; the 3 residual
+conditional-KL integrabilities (llr divergence integrand + two path-log cross-entropy
+terms) are parked with `@residual(plan:epi-case1-difference-g3-closure-plan)`. -/
+
+/-- **Scaling preserves a.c.**: if `P.map A ≪ volume` then `P.map (A/√t) ≪ volume`
+for `t > 0` (the map `(·/√t)` is a Lebesgue-a.c. linear isomorphism). Genuine. -/
+private theorem map_div_sqrt_absolutelyContinuous
+    (A : Ω → ℝ) (P : Measure Ω) (hA : Measurable A) (hA_ac : (P.map A) ≪ volume)
+    {t : ℝ} (ht : 0 < t) :
+    (P.map (fun ω => A ω / Real.sqrt t)) ≪ volume := by
+  have h_sqrt_ne : Real.sqrt t ≠ 0 := (Real.sqrt_pos.mpr ht).ne'
+  have hc_ne : (Real.sqrt t)⁻¹ ≠ 0 := inv_ne_zero h_sqrt_ne
+  have hf_meas : Measurable (fun x : ℝ => x * (Real.sqrt t)⁻¹) :=
+    measurable_id.mul_const _
+  -- `A/√t = (· * (√t)⁻¹) ∘ A`, so `P.map (A/√t) = (P.map A).map (· * (√t)⁻¹)`.
+  have hmap : (P.map (fun ω => A ω / Real.sqrt t))
+      = (P.map A).map (fun x => x * (Real.sqrt t)⁻¹) := by
+    rw [Measure.map_map hf_meas hA]
+    rfl
+  rw [hmap]
+  -- `(P.map A).map (·*c) ≪ volume.map (·*c) = ofReal|c⁻¹| • volume ≪ volume`.
+  have hac1 : (P.map A).map (fun x => x * (Real.sqrt t)⁻¹)
+      ≪ (volume : Measure ℝ).map (fun x => x * (Real.sqrt t)⁻¹) :=
+    hA_ac.map hf_meas
+  have hvol : (volume : Measure ℝ).map (fun x => x * (Real.sqrt t)⁻¹)
+      = ENNReal.ofReal |((Real.sqrt t)⁻¹)⁻¹| • (volume : Measure ℝ) :=
+    Real.map_volume_mul_right hc_ne
+  refine hac1.trans ?_
+  rw [hvol]
+  exact Measure.smul_absolutelyContinuous
+
+/-- **Density witness for `A/√t`**: from `P.map A ≪ volume`, the rescaled input
+`A/√t` admits a Real density witness `pX := ((P.map (A/√t)).rnDeriv volume).toReal`
+with all the regularity (`≥ 0`, measurable, `withDensity` law, integrable, mass `= 1`,
+finite second moment) needed to invoke `convDensityAdd_negMulLog_integrable_pub` and the
+`pPath_eq_convDensityAdd` identification. Genuine. -/
+private theorem rescaledInput_density_witness
+    (A : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hA : Measurable A) (hA_ac : (P.map A) ≪ volume)
+    (h_mom_A : Integrable (fun ω => (A ω)^2) P) {t : ℝ} (ht : 0 < t) :
+    ∃ pX : ℝ → ℝ, (∀ x, 0 ≤ pX x) ∧ Measurable pX
+      ∧ (P.map (fun ω => A ω / Real.sqrt t)
+          = volume.withDensity (fun x => ENNReal.ofReal (pX x)))
+      ∧ Integrable pX volume ∧ (∫ y, pX y ∂volume) = 1
+      ∧ Integrable (fun y => y ^ 2 * pX y) volume := by
+  set Zt : Ω → ℝ := fun ω => A ω / Real.sqrt t with hZt
+  have hZt_meas : Measurable Zt := hA.div_const _
+  have hZt_ac : (P.map Zt) ≪ volume :=
+    map_div_sqrt_absolutelyContinuous A P hA hA_ac ht
+  haveI : IsProbabilityMeasure (P.map Zt) :=
+    Measure.isProbabilityMeasure_map hZt_meas.aemeasurable
+  set pX : ℝ → ℝ := fun x => ((P.map Zt).rnDeriv volume x).toReal with hpX
+  have hpX_nn : ∀ x, 0 ≤ pX x := fun x => ENNReal.toReal_nonneg
+  have hpX_meas : Measurable pX :=
+    ((P.map Zt).measurable_rnDeriv volume).ennreal_toReal
+  -- `withDensity` law via `withDensity_rnDeriv_eq` + `ofReal ∘ toReal =ᵐ id` (finite rnDeriv).
+  have hpX_law : P.map Zt = volume.withDensity (fun x => ENNReal.ofReal (pX x)) := by
+    have hfin : ∀ᵐ x ∂volume, (P.map Zt).rnDeriv volume x < ∞ :=
+      Measure.rnDeriv_lt_top (P.map Zt) volume
+    have hcongr : (fun x => ENNReal.ofReal (pX x)) =ᵐ[volume]
+        (P.map Zt).rnDeriv volume := by
+      filter_upwards [hfin] with x hx
+      simp only [hpX, ENNReal.ofReal_toReal hx.ne]
+    rw [withDensity_congr_ae hcongr, Measure.withDensity_rnDeriv_eq _ _ hZt_ac]
+  -- `pX` integrable (finite-mass density): `∫⁻ ofReal pX = (P.map Zt) univ = 1`.
+  have hpX_int : Integrable pX volume := by
+    rw [Integrable, hasFiniteIntegral_iff_ofReal (Filter.Eventually.of_forall hpX_nn)]
+    refine ⟨hpX_meas.aestronglyMeasurable, ?_⟩
+    have hlint : ∫⁻ x, ENNReal.ofReal (pX x) ∂volume = (P.map Zt) Set.univ := by
+      rw [hpX_law, withDensity_apply _ MeasurableSet.univ, setLIntegral_univ]
+    rw [hlint, measure_univ]
+    exact ENNReal.one_lt_top
+  -- mass `∫ pX = 1` from the same.
+  have hpX_mass : (∫ y, pX y ∂volume) = 1 := by
+    have h1 : ∫ y, pX y ∂volume = ((P.map Zt) Set.univ).toReal := by
+      rw [integral_eq_lintegral_of_nonneg_ae (Filter.Eventually.of_forall hpX_nn)
+        hpX_meas.aestronglyMeasurable]
+      congr 1
+      have : ∫⁻ x, ENNReal.ofReal (pX x) ∂volume = (P.map Zt) Set.univ := by
+        rw [hpX_law, withDensity_apply _ MeasurableSet.univ, setLIntegral_univ]
+      exact this
+    rw [h1, measure_univ, ENNReal.toReal_one]
+  -- second moment: `∫ y²·pX = ∫ Zt² dP = (1/t)·∫ A² dP < ∞`.
+  have hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume := by
+    -- Transport the integrand to `P.map Zt` (withDensity), then to `P`.
+    have hZt_sq : Integrable (fun ω => (Zt ω)^2) P := by
+      have : (fun ω => (Zt ω)^2) = (fun ω => (1 / t) * (A ω)^2) := by
+        funext ω; simp only [hZt, div_pow, Real.sq_sqrt ht.le]; ring
+      rw [this]; exact h_mom_A.const_mul _
+    -- `Integrable (y²) (P.map Zt)` (transport of `Zt²` to the law).
+    have hsq_law : Integrable (fun y => y ^ 2) (P.map Zt) := by
+      rw [integrable_map_measure
+        ((by fun_prop : Measurable (fun y : ℝ => y ^ 2)).aestronglyMeasurable)
+        hZt_meas.aemeasurable]
+      simpa [Function.comp] using hZt_sq
+    -- Move from `P.map Zt = withDensity (ofReal ∘ pX)` to the `y²·pX` integral on volume.
+    rw [hpX_law] at hsq_law
+    rw [integrable_withDensity_iff_integrable_smul₀'
+      hpX_meas.ennreal_ofReal.aemeasurable
+      (Filter.Eventually.of_forall fun x => ENNReal.ofReal_lt_top)] at hsq_law
+    refine hsq_law.congr (Filter.Eventually.of_forall fun x => ?_)
+    simp only [smul_eq_mul, ENNReal.toReal_ofReal (hpX_nn x)]; ring
+  exact ⟨pX, hpX_nn, hpX_meas, hpX_law, hpX_int, hpX_mass, hpX_mom⟩
 
 /-- **Discharge `IsRescaledPathRegular` from method-X regularity.**
 
@@ -421,17 +522,29 @@ Gaussian noise law, finite-second-moment `h_mom_A` + `varA`-regularity (`h_var_b
 The bundle being constructed is itself regularity (audited non-load-bearing at its def
 site §3).
 
-**Closure status (type-check done, NOT proof done):**
-- Genuine: `IndepFun B (A/√t)` (`h_indep`), a.c. of `B + A/√t` and `A/√t + B`
-  (`hW_ac`/`hμ_ac`, via `map_add_absolutelyContinuous`), the fibre identification
-  `h_fibre_ae` (Gaussian-fibre `affineShiftKernel` machinery), and the per-fibre a.c.
-  `hκ_v`, plus the variance bound itself (threaded `h_var_bound`).
-- Parked (`@residual(plan:epi-case1-difference-g3-closure-plan)`, 9 conjuncts): the 6
-  remaining lower-bundle fibre/path log-integrabilities + joint-≪-product, and the 2
-  upper-bundle integrabilities (squared-deviation, negMulLog). These are Gaussian-fibre
-  tractable (the fibre is `gaussianReal z v_B`) but require the convDensityAdd /
-  entropy-finiteness identification bridge + second-moment transport, exceeding the
-  bridge budget of this lemma.
+**Closure status (type-check done, NOT proof done):** 6 of the original 9 parked
+integrability conjuncts are now closed genuinely (commit, 2026-06-05), exploiting the
+honest precondition `hA_ac : P.map A ≪ volume` (method-X / case-1 a.c. input, NOT
+load-bearing) and the `convDensityAdd` path-density identification (`pPath_eq_convDensityAdd`).
+- Genuine (regularity, closed here): `IndepFun B (A/√t)` (`h_indep`), a.c. of `B + A/√t`
+  and `A/√t + B` (`hW_ac`/`hμ_ac`), the fibre identification `h_fibre_ae` + per-fibre a.c.
+  `hκ_v`, the variance bound (threaded `h_var_bound`), and the **6 newly-closed**:
+  joint-≪-product (`compProd_right` + `volume ≪ P.map W` via `convDensityAdd_pos`),
+  fibre self-entropy integrand (`integrable_density_log_density_of_gaussian` + Gaussian
+  `rnDeriv`), fibre-entropy-over-z (constant `(1/2)log(2πe v_B)`,
+  `differentialEntropy_gaussianReal`), log(path rnDeriv) integrable (entropy-finiteness
+  `convDensityAdd_negMulLog_integrable` via density identification), squared-deviation
+  (`integrable_map_measure` + `MemLp 2` moment transport, `memLp_id_gaussianReal`),
+  negMulLog (path) (entropy-finiteness asset via `pPath_eq_convDensityAdd`).
+- Parked (`@residual(plan:epi-case1-difference-g3-closure-plan)`, **3 conjuncts**, all
+  lower-bundle): (a) `llr(joint, product)` integrability (conditional-KL divergence
+  integrand), (b) fibre-rnDeriv·log(path-rnDeriv) integrand (per-z cross-entropy term),
+  (c) the z-averaged cross-term integrability. These are the genuine conditional-KL
+  analytic content (`condDifferentialEntropy_le`'s `h_int`/`hκ_cross_int`/`h_cross_int`):
+  they require integrability of the path-density `log g` against each Gaussian fibre
+  (`∫ gauss_z(x)·log g(x) dx`), where `g` is the closed-form-free convolution density —
+  exceeding the bridge budget here. Gaussian-fibre tractable but needs a cross-entropy
+  tail-control lemma not yet in tree.
 
 Independent honesty audit 2026-06-05 (honest_residual AFFIRMED): (1) `h_var_bound`
 pass-through (`refine ⟨hμ_ac, h_var_bound t ht, …⟩`) is NOT circular `:= h`: its type ≡
@@ -444,10 +557,10 @@ un-dischargeable in route X (honest naming `_of_methodX`, NOT `_unconditional`) 
 regularity transport, not conclusion smuggling. (2) Genuine conjuncts (`h_indep`/`hW_ac`/
 `hμ_ac`/`h_fibre_ae`/`hκ_v`) verified non-circular: built from `hAB.comp` /
 `map_add_absolutelyContinuous` / `condDistrib_ae_eq_of_measure_eq_compProd` +
-`prod_map_affine_eq_compProd` (`EPIG2ConvEntropyMonotone.lean`, all `@audit:ok`). (3) 9
-parked sorrys all `@residual(plan:epi-case1-difference-g3-closure-plan)` (plan exists),
-classification correct: all are integrability / a.c. regularity obligations (Gaussian-fibre
-tractable), none load-bearing. (4) `#print axioms` = sorryAx present (type-check done, NOT
+`prod_map_affine_eq_compProd` (`EPIG2ConvEntropyMonotone.lean`, all `@audit:ok`). (3) The
+3 remaining parked sorrys all carry `@residual(plan:epi-case1-difference-g3-closure-plan)`
+(plan exists), classification correct: all are conditional-KL integrability regularity
+obligations, none load-bearing. (4) `#print axioms` = sorryAx present (type-check done, NOT
 proof done — expected). No deprecated tags / out-of-vocab slugs.
 @residual(plan:epi-case1-difference-g3-closure-plan) -/
 theorem isRescaledPathRegular_of_methodX
@@ -455,6 +568,7 @@ theorem isRescaledPathRegular_of_methodX
     (hA : Measurable A) (hB : Measurable B)
     (v_B : ℝ≥0) (hv_B : v_B ≠ 0) (hB_law : P.map B = gaussianReal 0 v_B)
     (hAB : IndepFun A B P)
+    (hA_ac : (P.map A) ≪ volume)
     (varA : ℝ) (h_varA_nn : 0 ≤ varA)
     (h_mom_A : Integrable (fun ω => (A ω)^2) P)
     (h_var_bound : ∀ t : ℝ, 0 < t →
@@ -518,33 +632,148 @@ theorem isRescaledPathRegular_of_methodX
       rw [hz, h_fibre_gauss z]
       exact gaussianReal_absolutelyContinuous z hv_B
     refine ⟨h_indep, hW_ac, ?_, ?_, hκ_v, ?_, ?_, ?_, ?_, ?_⟩
-    · -- joint ≪ product-with-const. Fibre = `gaussianReal z v_B` (h_fibre_gauss), path
-      -- law a.c.; the compProd-level a.c. needs per-fibre `gaussianReal z v_B ≪ P.map W`,
-      -- i.e. the path marginal dominates each translated Gaussian fibre (full-support of
-      -- the a.c. convolution). Gaussian-fibre tractable but exceeds the bridge budget here.
-      -- @residual(plan:epi-case1-difference-g3-closure-plan)
-      sorry
+    · -- joint ≪ product-with-const. Per-fibre `gaussianReal z v_B ≪ volume ≪ P.map W`,
+      -- the latter since the convolution density `g = convDensityAdd pX g_{v_B}` is strictly
+      -- positive everywhere (`convDensityAdd_pos`, positive mass), so `volume ≪ P.map W`.
+      have hv_B_pos : (0 : ℝ≥0) < v_B := pos_iff_ne_zero.mpr hv_B
+      -- Density witness + path identification (X := Zt, Z := B, s := 1).
+      obtain ⟨pX, hpX_nn, hpX_meas, hpX_law, hpX_int, hpX_mass, hpX_mom⟩ :=
+        rescaledInput_density_witness A P hA hA_ac h_mom_A ht
+      have hpath_eq : (fun ω => B ω + Zt ω)
+          = InformationTheory.Shannon.FisherInfoV2.gaussianConvolution Zt B 1 := by
+        funext ω
+        simp only [InformationTheory.Shannon.FisherInfoV2.gaussianConvolution,
+          Real.sqrt_one, one_mul]; ring
+      have h_path_rnDeriv : (P.map (fun ω => B ω + Zt ω)).rnDeriv volume
+          =ᵐ[volume] fun z => ENNReal.ofReal
+            (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
+              (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) z) := by
+        rw [hpath_eq]
+        exact InformationTheory.Shannon.FisherInfoV2.pPath_eq_convDensityAdd
+          Zt B hZt_meas hB h_indep.symm v_B hv_B_pos hB_law pX hpX_nn hpX_meas hpX_law
+          (s := 1) one_pos
+      -- `g > 0` everywhere (`convDensityAdd_pos`, mass `= 1 > 0`).
+      have hg_pos : ∀ x, 0 < InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
+          (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x := by
+        intro x
+        exact InformationTheory.Shannon.FisherInfoV2.convDensityAdd_pos pX hpX_nn hpX_int
+          (by rw [hpX_mass]; norm_num) (by positivity) x
+      -- `P.map W = withDensity (ofReal g)`, hence `volume ≪ P.map W`.
+      have hW_density : (P.map (fun ω => B ω + Zt ω))
+          = volume.withDensity (fun x => ENNReal.ofReal
+            (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
+              (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x)) := by
+        rw [← Measure.withDensity_rnDeriv_eq _ _ hW_ac]
+        exact withDensity_congr_ae h_path_rnDeriv
+      have hvol_ac_W : (volume : Measure ℝ) ≪ P.map (fun ω => B ω + Zt ω) := by
+        rw [hW_density]
+        refine withDensity_absolutelyContinuous' ?_ ?_
+        · exact ((P.map (fun ω => B ω + Zt ω)).measurable_rnDeriv volume).aemeasurable.congr
+            h_path_rnDeriv
+        · exact Filter.Eventually.of_forall fun x => by
+            simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]; exact hg_pos x
+      -- Per-fibre a.c.: `condDistrib z ≪ gaussianReal z v_B ≪ volume ≪ P.map W`.
+      refine Measure.AbsolutelyContinuous.compProd_right ?_
+      filter_upwards [h_fibre_ae] with z hz
+      rw [ProbabilityTheory.Kernel.const_apply]
+      refine (?_ : condDistrib (fun ω => B ω + Zt ω) Zt P z ≪ volume).trans hvol_ac_W
+      rw [hz, h_fibre_gauss z]
+      exact gaussianReal_absolutelyContinuous z hv_B
     · -- llr integrable (Gaussian fibre: log-density of `gaussianReal z v_B` vs path law).
       -- @residual(plan:epi-case1-difference-g3-closure-plan)
       sorry
     · -- fibre rnDeriv·log(fibre rnDeriv) integrable (Gaussian density `gaussianReal z v_B`
       -- self-entropy integrand, finite for each z).
-      -- @residual(plan:epi-case1-difference-g3-closure-plan)
-      sorry
+      filter_upwards [h_fibre_ae] with z hz
+      -- The fibre is `gaussianReal z v_B`; its `rnDeriv =ᵐ gaussianPDFReal z v_B`, and the
+      -- self-entropy integrand is integrable (`integrable_density_log_density_of_gaussian`).
+      refine (InformationTheory.Shannon.integrable_density_log_density_of_gaussian z hv_B).congr
+        ?_
+      have hrn : (condDistrib (fun ω => B ω + Zt ω) Zt P z).rnDeriv volume
+          =ᵐ[volume] fun x => ENNReal.ofReal (gaussianPDFReal z v_B x) := by
+        rw [hz, h_fibre_gauss z]
+        filter_upwards [rnDeriv_gaussianReal z v_B] with x hx
+        rw [hx, gaussianPDF]
+      filter_upwards [hrn] with x hx
+      rw [hx, ENNReal.toReal_ofReal (gaussianPDFReal_nonneg z v_B x)]
     · -- fibre rnDeriv·log(path rnDeriv) integrable (cross-term, Gaussian fibre × path law).
       -- @residual(plan:epi-case1-difference-g3-closure-plan)
       sorry
     · -- fibre entropy integrable (`z ↦ h(gaussianReal z v_B) = (1/2)log(2πe v_B)` constant
-      -- in z, hence integrable; needs fibre-entropy identification).
-      -- @residual(plan:epi-case1-difference-g3-closure-plan)
-      sorry
+      -- in z, hence integrable; the fibre is the translated Gaussian `gaussianReal z v_B`).
+      refine (integrable_const ((1/2) * Real.log (2 * Real.pi * Real.exp 1 * v_B))).congr ?_
+      filter_upwards [h_fibre_ae] with z hz
+      rw [hz, h_fibre_gauss z,
+        InformationTheory.Shannon.differentialEntropy_gaussianReal z hv_B]
     · -- cross-term integrable (z-average of the Gaussian-fibre × path cross integrand).
       -- @residual(plan:epi-case1-difference-g3-closure-plan)
       sorry
     · -- log(path rnDeriv) integrable wrt path (path law a.c. + finite second moment;
       -- entropy-finiteness CLOSED asset via convDensityAdd identification bridge).
-      -- @residual(plan:epi-case1-difference-g3-closure-plan)
-      sorry
+      have hv_B_pos : (0 : ℝ≥0) < v_B := pos_iff_ne_zero.mpr hv_B
+      have hv_B_pos' : (0 : ℝ) < v_B := hv_B_pos
+      -- Density witness for `Zt = A/√t`.
+      obtain ⟨pX, hpX_nn, hpX_meas, hpX_law, hpX_int, hpX_mass, hpX_mom⟩ :=
+        rescaledInput_density_witness A P hA hA_ac h_mom_A ht
+      -- `B + Zt = Zt + B = gaussianConvolution Zt B 1` pointwise.
+      have hpath_eq : (fun ω => B ω + Zt ω)
+          = InformationTheory.Shannon.FisherInfoV2.gaussianConvolution Zt B 1 := by
+        funext ω
+        simp only [InformationTheory.Shannon.FisherInfoV2.gaussianConvolution,
+          Real.sqrt_one, one_mul]
+        ring
+      -- Path density identification.
+      have h_path_rnDeriv : (P.map (fun ω => B ω + Zt ω)).rnDeriv volume
+          =ᵐ[volume] fun z => ENNReal.ofReal
+            (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
+              (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) z) := by
+        rw [hpath_eq]
+        exact InformationTheory.Shannon.FisherInfoV2.pPath_eq_convDensityAdd
+          Zt B hZt_meas hB h_indep.symm v_B hv_B_pos hB_law pX hpX_nn hpX_meas hpX_law
+          (s := 1) one_pos
+      set g : ℝ → ℝ := fun x =>
+        InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
+          (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x with hg_def
+      have hg_nn : ∀ x, 0 ≤ g x := fun x =>
+        integral_nonneg fun y => mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg _ _ _)
+      -- negMulLog asset (variance `1·v_B = v_B`).
+      have hvar_eq : (⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩ : ℝ≥0) = v_B := by
+        apply NNReal.coe_injective; show (1 : ℝ) * (v_B : ℝ) = (v_B : ℝ); rw [one_mul]
+      have h_negMulLog : Integrable (fun x => Real.negMulLog (g x)) volume := by
+        rw [hg_def, show (⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩ : ℝ≥0) = v_B from hvar_eq]
+        simpa using InformationTheory.Shannon.convDensityAdd_negMulLog_integrable_pub
+          hpX_nn hpX_meas hpX_int hpX_mass hpX_mom (t := (v_B : ℝ)) hv_B_pos'
+      -- `∫ log p_W d(P.map W) = ∫ p_W·log p_W dx = ∫ -negMulLog p_W dx`, so integrable.
+      -- Reduce `Integrable (log p_W) (P.map W)` to `Integrable (p_W·log p_W) volume`.
+      have hW_ac' : (P.map (fun ω => B ω + Zt ω))
+          = volume.withDensity (fun x => ENNReal.ofReal (g x)) := by
+        have hrn := h_path_rnDeriv
+        rw [← Measure.withDensity_rnDeriv_eq _ _ hW_ac]
+        exact withDensity_congr_ae hrn
+      -- `ofReal ∘ g` is a.e.-measurable (a.e.-equal to the measurable path rnDeriv).
+      have hg_ofReal_aem : AEMeasurable (fun x => ENNReal.ofReal (g x)) volume :=
+        ((P.map (fun ω => B ω + Zt ω)).measurable_rnDeriv volume).aemeasurable.congr
+          h_path_rnDeriv
+      -- Step 1: replace `log ((path.rnDeriv x).toReal)` with `log (g x)` a.e.-`P.map W`
+      -- (the path is a.c., so the vol-a.e. rnDeriv identification holds `P.map W`-a.e.).
+      have h_rn_toReal_ae : (fun x => ((P.map (fun ω => B ω + Zt ω)).rnDeriv volume x).toReal)
+          =ᵐ[P.map (fun ω => B ω + Zt ω)] g := by
+        have h0 : (fun x => ((P.map (fun ω => B ω + Zt ω)).rnDeriv volume x).toReal)
+            =ᵐ[volume] g := by
+          filter_upwards [h_path_rnDeriv] with x hx
+          rw [hx, ENNReal.toReal_ofReal (hg_nn x)]
+        exact hW_ac.ae_eq h0
+      have h_int_logg : Integrable (fun x => Real.log (g x))
+          (P.map (fun ω => B ω + Zt ω)) := by
+        -- `Integrable (log g) (P.map W) = Integrable (g·log g) volume`.
+        rw [hW_ac', integrable_withDensity_iff_integrable_smul₀' hg_ofReal_aem
+          (Filter.Eventually.of_forall fun x => ENNReal.ofReal_lt_top)]
+        refine (h_negMulLog.neg).congr (Filter.Eventually.of_forall fun x => ?_)
+        simp only [Pi.neg_apply, smul_eq_mul, ENNReal.toReal_ofReal (hg_nn x),
+          Real.negMulLog, neg_mul, neg_neg]
+      refine h_int_logg.congr ?_
+      filter_upwards [h_rn_toReal_ae] with x hx
+      rw [hx]
   · -- ===== Upper bundle (per `t`, conditions of
     --       `differentialEntropy_le_gaussian_of_variance_le` + a.c.). =====
     intro t ht
@@ -562,16 +791,91 @@ theorem isRescaledPathRegular_of_methodX
         map_add_absolutelyContinuous B Zt P hB hZt_meas h_indepBZ hB_ac
       have h_path : (fun ω => Zt ω + B ω) = (fun ω => B ω + Zt ω) := by funext ω; ring
       rw [h_path]; exact hWac
+    set W : Ω → ℝ := fun ω => Zt ω + B ω with hW_def
+    have hW_meas : Measurable W := hZt_meas.add hB
+    -- `B` has finite second moment (Gaussian, `memLp_id_gaussianReal`).
+    have hB_sq : Integrable (fun ω => (B ω)^2) P := by
+      have hB_memLp : MemLp B 2 P := by
+        have : MemLp (id : ℝ → ℝ) 2 (P.map B) := by
+          rw [hB_law]; exact memLp_id_gaussianReal' 2 (by simp)
+        have := (memLp_map_measure_iff (p := 2) (μ := P)
+          (g := (id : ℝ → ℝ)) aestronglyMeasurable_id hB.aemeasurable).mp this
+        simpa [Function.comp] using this
+      simpa using hB_memLp.integrable_sq
+    -- `Zt = A/√t` has finite second moment (`h_mom_A`, scaled by `1/t`).
+    have hZt_sq : Integrable (fun ω => (Zt ω)^2) P := by
+      have : (fun ω => (Zt ω)^2) = (fun ω => (1 / t) * (A ω)^2) := by
+        funext ω
+        simp only [hZt, div_pow, Real.sq_sqrt ht.le]
+        ring
+      rw [this]
+      exact h_mom_A.const_mul _
+    -- `W = Zt + B` is `MemLp 2 P`, so `W` and `W²` are integrable.
+    have hW_memLp : MemLp W 2 P := by
+      refine MemLp.add ?_ ?_
+      · exact (memLp_two_iff_integrable_sq_norm hZt_meas.aestronglyMeasurable).mpr
+          (by simpa using hZt_sq)
+      · exact (memLp_two_iff_integrable_sq_norm hB.aestronglyMeasurable).mpr
+          (by simpa using hB_sq)
+    have hW_int : Integrable W P := hW_memLp.integrable (by norm_num)
+    have hW_sq_int : Integrable (fun ω => (W ω)^2) P := hW_memLp.integrable_sq
     refine ⟨hμ_ac, h_var_bound t ht, ?_, ?_⟩
     · -- squared-deviation `(x-m)²` integrable wrt path law (finite second moment of the
       -- path: `A/√t` finite second moment from `h_mom_A` + Gaussian `B` finite variance,
       -- transported to the pushforward law).
-      -- @residual(plan:epi-case1-difference-g3-closure-plan)
-      sorry
+      set m : ℝ := ∫ y, y ∂(P.map W) with hm_def
+      -- Transport to `P` via `integrable_map_measure`, then expand `(W-m)²`.
+      have hg_meas : AEStronglyMeasurable (fun x : ℝ => (x - m)^2) (P.map W) :=
+        ((measurable_id.sub measurable_const).pow_const 2).aestronglyMeasurable
+      rw [integrable_map_measure hg_meas hW_meas.aemeasurable]
+      -- `(W ω - m)² = W² - 2m·W + m²`, each integrable.
+      have hexp : (fun x => (x - m)^2) ∘ W
+          = (fun ω => (W ω)^2 - 2 * m * W ω + m^2) := by
+        funext ω; simp only [Function.comp]; ring
+      rw [hexp]
+      exact (hW_sq_int.sub ((hW_int.const_mul (2 * m)))).add
+        (integrable_const _)
     · -- negMulLog (path rnDeriv) integrable (path entropy finiteness; entropy-finiteness
       -- CLOSED asset via convDensityAdd identification bridge for the a.c. path law).
-      -- @residual(plan:epi-case1-difference-g3-closure-plan)
-      sorry
+      have hv_B_pos : (0 : ℝ≥0) < v_B := pos_iff_ne_zero.mpr hv_B
+      -- Density witness for `Zt = A/√t`.
+      obtain ⟨pX, hpX_nn, hpX_meas, hpX_law, hpX_int, hpX_mass, hpX_mom⟩ :=
+        rescaledInput_density_witness A P hA hA_ac h_mom_A ht
+      -- Path density: `(P.map W).rnDeriv volume =ᵐ ofReal (convDensityAdd pX g_{v_B})`.
+      -- Use `pPath_eq_convDensityAdd` with X:=Zt, Z:=B, v_Z:=v_B, s:=1.
+      have hgconv : InformationTheory.Shannon.FisherInfoV2.gaussianConvolution Zt B 1 = W := by
+        funext ω
+        simp only [InformationTheory.Shannon.FisherInfoV2.gaussianConvolution, hW_def,
+          Real.sqrt_one, one_mul]
+      have h_path_rnDeriv : (P.map W).rnDeriv volume
+          =ᵐ[volume] fun z => ENNReal.ofReal
+            (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
+              (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) z) := by
+        have := InformationTheory.Shannon.FisherInfoV2.pPath_eq_convDensityAdd
+          Zt B hZt_meas hB h_indep v_B hv_B_pos hB_law pX hpX_nn hpX_meas hpX_law
+          (s := 1) one_pos
+        rwa [hgconv] at this
+      -- The asset gives integrability of `negMulLog (convDensityAdd pX g_{v_B})`.
+      -- Normalize the variance witness `⟨1·v_B,_⟩ = ⟨v_B,_⟩`.
+      have hvar_eq : (⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩ : ℝ≥0) = v_B := by
+        apply NNReal.coe_injective
+        show (1 : ℝ) * (v_B : ℝ) = (v_B : ℝ)
+        rw [one_mul]
+      have h_asset : Integrable (fun x =>
+          Real.negMulLog (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
+            (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x)) volume := by
+        rw [show (⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩ : ℝ≥0) = v_B from hvar_eq]
+        have hv_B_pos' : (0 : ℝ) < v_B := hv_B_pos
+        simpa using InformationTheory.Shannon.convDensityAdd_negMulLog_integrable_pub
+          hpX_nn hpX_meas hpX_int hpX_mass hpX_mom (t := (v_B : ℝ)) hv_B_pos'
+      -- Transfer along the a.e. density identification.
+      refine h_asset.congr ?_
+      filter_upwards [h_path_rnDeriv] with x hx
+      have hcd_nn : 0 ≤ InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
+          (gaussianPDFReal 0 ⟨(1 : ℝ) * (v_B : ℝ), by positivity⟩) x :=
+        integral_nonneg fun y =>
+          mul_nonneg (hpX_nn y) (gaussianPDFReal_nonneg _ _ _)
+      rw [hx, ENNReal.toReal_ofReal hcd_nn]
 
 /-! ## §4 — Main analytic deliverable
 
