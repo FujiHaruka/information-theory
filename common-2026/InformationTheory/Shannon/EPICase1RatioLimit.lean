@@ -1808,12 +1808,30 @@ The `integrable_deriv` field — interval-integrability of `t ↦ (1/2)·J(densi
 is *not* interval-integrable near `t = 0` (`∫₀ᵀ 1/t dt = +∞`), so the available upper bound is
 too weak to discharge the field for a general input `X`. The precise root cause is
 **under-hypothesization, not a Mathlib wall**: by de Bruijn, `∫₀ᵀ (1/2)J(pX∗g_t) dt =
-h(X+√T·Z) − h(X)`, which is finite iff `h(X) > −∞`; the producer's current preconditions
+h(X+√T·Z) − h(X)`, which is finite iff `h(X) > −∞`; the producer's earlier preconditions
 (`hX_ac` + finite second moment `h_mom_X`) do NOT force finite differential entropy / finite
-Fisher of `X`, so the integral can genuinely diverge for some a.c. finite-2nd-moment `X`. The
-honest closure is to thread a finite-entropy / finite-Fisher regularity precondition (a
-precondition, NOT load-bearing — it does not bundle the de Bruijn analytic core), tracked in
-the owning plan. The rest of the group is genuine.
+Fisher of `X`, so the integral can genuinely diverge for some a.c. finite-2nd-moment `X`.
+
+**Precondition now threaded (2026-06-05)**: `h_fisher_X : fisherInfoOfDensity pX ≠ ∞`
+(`pX = (P.map X).rnDeriv volume`), a *finite-Fisher regularity precondition* — NOT
+load-bearing (it does not bundle the de Bruijn analytic core; it merely asserts the input's
+Fisher information is finite). With it, the honest closure route is:
+
+1. **Fisher monotonicity (Stam)** `J(pX∗g_t) ≤ J(pX)` for every `t ≥ 0` (convolution with a
+   Gaussian only decreases Fisher information). Combined with the precondition this gives a
+   *uniform* bound `(1/2)·J(density_t).toReal ≤ (1/2)·J(pX).toReal` on `[0,T]`, finite and
+   `t`-independent. This monotonicity lemma is **NOT in-tree** (`gaussianConv_fisher_le_inv_var`
+   gives only the `t`-dependent `≤ 1/t`; `convex_fisher_bound` in `EPIBlachmanDensity.lean`
+   requires *bounded* densities + bounded derivatives, which a general L¹ `pX` need not satisfy;
+   loogle confirms Mathlib has no `fisherInfo` / `Blachman` API). Deriving it for general L¹ `pX`
+   is genuine Stam (score-of-convolution) work.
+2. **`t`-measurability** of `t ↦ J(density_t).toReal` (AEStronglyMeasurable on `Ι 0 T`), needed
+   by `Measure.integrableOn_of_bounded`. Also a separate analytic obstacle.
+
+Both pieces are tracked in the owning plan; the *monotonicity lemma is the single remaining
+mathematical content* (measurability follows once the integrand is identified). The rest of the
+group is genuine, and the finite-Fisher precondition is now in place so PB-6 can thread it to
+the case-1 wrapper.
 
 @residual(plan:epi-case1-debruijn-producer-plan)
 @audit-note: independent honesty audit (2026-06-05, fresh auditor, commit c0cd760).
@@ -1831,12 +1849,18 @@ is `integrable_deriv` only. CLASSIFICATION REFINED from "Mathlib analytic wall" 
 correct home (resolve by threading the precondition). NOTE: the plan (`:403-404`) optimistically
 predicted this field closes via `gaussianConv_fisher_le_inv_var` claiming `J ≤ 1/t` is
 "continuous bounded" on `[0,T]` — that prediction is mathematically WRONG (`1/t` is unbounded
-at `t=0`); the implementer correctly caught the drift and parked instead. -/
+at `t=0`); the implementer correctly caught the drift and parked instead.
+UPDATE 2026-06-05: the finite-Fisher regularity precondition `h_fisher_X` is now threaded
+(see docstring above for the two remaining closure pieces — Stam monotonicity + t-measurability);
+`integrable_deriv` remains the sole sorry. `h_fisher_X` is a regularity precondition (asserts only
+finiteness of the input's Fisher info), NOT load-bearing. -/
 noncomputable def isDeBruijnRegularityHyp_of_methodX_unitnoise
     (X Z_X : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
     (hZX_law : P.map Z_X = gaussianReal 0 1)
-    (hX_ac : (P.map X) ≪ volume) (h_mom_X : Integrable (fun ω => (X ω) ^ 2) P) :
+    (hX_ac : (P.map X) ≪ volume) (h_mom_X : Integrable (fun ω => (X ω) ^ 2) P)
+    (h_fisher_X : InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity
+        (fun x => ((P.map X).rnDeriv volume x).toReal) ≠ ∞) :
     InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P := by
   classical
   -- Real density witness for `X` from a.c.
@@ -1884,7 +1908,13 @@ noncomputable def isDeBruijnRegularityHyp_of_methodX_unitnoise
     have : t.toNNReal = (⟨t, ht.le⟩ : ℝ≥0) := by
       apply NNReal.eq; exact Real.coe_toNNReal t ht.le
     rw [this]
-  · -- integrable_deriv: genuine analytic obstacle (J ≤ 1/t not integrable at 0).
+  · -- integrable_deriv: closure route now threaded via `h_fisher_X` (finite Fisher of `pX`).
+    -- Remaining: (1) Stam monotonicity `J(pX∗g_t) ≤ J(pX)` (NOT in-tree) gives the uniform
+    -- bound `(1/2)·J(density_t) ≤ (1/2)·(fisherInfoOfDensity pX).toReal` on `[0,T]`, finite by
+    -- `h_fisher_X`; (2) t-measurability of the integrand. See def docstring.
+    -- `h_fisher_X : fisherInfoOfDensity pX ≠ ∞` is the finite-Fisher regularity precondition
+    -- that will bound the integrand uniformly once the Stam monotonicity lemma is available.
+    intro T hT
     -- @residual(plan:epi-case1-debruijn-producer-plan)
     sorry
 
