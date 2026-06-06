@@ -6,6 +6,7 @@ import InformationTheory.Shannon.EPIStamToBridge
 import InformationTheory.Shannon.EPIUncondMixedCase
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.EPIG2ConvEntropyDensity
+import InformationTheory.Shannon.EPICase1ProducerMeasurability
 
 /-!
 # EPI case-1 via ratio + scaling squeeze (entropic-CLT-free)
@@ -1924,15 +1925,20 @@ is `Integrable (…)` / `∃ M, |·| ≤ M` / `0 < …` — the `int_inner`/`int
 through `hready_pX` — it is produced by `convex_fisher_bound_of_ready` (`@audit:ok`) at `lam=1`
 (RHS collapses to `1²·J(pX)+0²·J(g_t)=J(pX)`). (2) The bound branch is GENUINE, not vacuous:
 `integrableOn_of_bounded` (`IntegrableOn.lean:649`) has 3 obligations — `s_finite` (discharged),
-`f_mble : AEStronglyMeasurable` (the SOLE sorry, `:2021`), `f_bdd` (discharged from `hbound`).
+`f_mble : AEStronglyMeasurable` (now GENUINE, see below), `f_bdd` (discharged from `hbound`).
 `hbound` fires PB-2b on `pX`/`g_t` with `t.toNNReal≠0` genuinely from `t>0`, giving a uniform
 `t`-independent finite bound `C=(1/2)·J(pX).toReal`; the rfl bridge `fisherInfoOfMeasureV2_def`
 (`FisherInfoV2DeBruijn.lean:90`, genuine `rfl`) is legitimate. (3) sufficiency: non-circular
 (conclusion ≢ any hyp), non-degenerate (`density_t_eq:=fun _ _=>rfl` genuine, no `:True` slot).
-(4) `#print axioms isDeBruijnRegularityHyp_of_methodX_unitnoise` = `[propext, sorryAx,
-Classical.choice, Quot.sound]` — exactly ONE `sorryAx`, traced to the single `:2021` AEStrongly-
-Measurable park; the `f_bdd` branch and the `pX`-series fields leak NO transitive sorry. Slug
-VALID (plan exists). No deprecated tags in this declaration. -/
+(4) **[CLOSED 2026-06-06]** the `f_mble` `t`-measurability (formerly the SOLE `sorryAx` leaf) is
+now discharged genuinely by `EPICase1ProducerMeasurability.aestronglyMeasurable_fisherInfo_t`
+via the **C-b closed-form score route** (`measurable_deriv_with_param` fully avoided): the joint
+`(t,x)`-measurability of `logDeriv (convDensityAdd pX g_t)` follows from `deriv (conv_t) =
+∫ x, pX x · deriv g_t (z-x)` (differentiation-under-integral for `t>0`, both sides `0` for
+`t≤0`) divided by `conv_t`, then `Measurable.lintegral_prod_right`. `Integrable pX` is supplied
+genuinely via `Measure.integrable_toReal_rnDeriv`. `#print axioms
+isDeBruijnRegularityHyp_of_methodX_unitnoise` = `[propext, Classical.choice, Quot.sound]`
+(sorryAx-free, machine-checked 2026-06-06). No deprecated tags in this declaration. -/
 noncomputable def isDeBruijnRegularityHyp_of_methodX_unitnoise
     (X Z_X : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
@@ -2033,12 +2039,15 @@ noncomputable def isDeBruijnRegularityHyp_of_methodX_unitnoise
         simp only [ne_eq]
         exact (measure_Ioc_lt_top).ne)
       ?_meas (M := C) ?_bdd
-    · -- `t`-measurability of `t ↦ (1/2)·J(convDensityAdd pX g_t).toReal`: the `(t,x)`-jointly
-      -- measurable `logDeriv (convDensityAdd pX (gaussianPDFReal 0 t.toNNReal))` feeding the
-      -- `fisherInfoOfDensity` lintegral has no direct Mathlib parameter-measurability lemma.
-      -- The bound above is genuine; this is the sole remaining analytic obstacle.
-      -- @residual(plan:epi-case1-debruijn-producer-plan)
-      sorry
+    · -- `t`-measurability of `t ↦ (1/2)·J(convDensityAdd pX g_t).toReal`, closed via the
+      -- C-b (closed-form score) route in `EPICase1ProducerMeasurability`: the joint
+      -- measurability of `logDeriv (convDensityAdd pX g_t)` (= scoreNum / conv) feeds the
+      -- `fisherInfoOfDensity` lintegral, parameter-measurable by `lintegral_prod_right`.
+      have hpX_int : Integrable pX volume := by
+        rw [hpX_def]
+        exact MeasureTheory.Measure.integrable_toReal_rnDeriv
+      exact InformationTheory.Shannon.EPICase1ProducerMeasurability.aestronglyMeasurable_fisherInfo_t
+        hpX_meas hpX_int
     · -- pointwise bound from the genuine `hbound`, transported to the `Ioc`-restricted measure.
       refine (ae_restrict_iff' measurableSet_Ioc).mpr (Filter.Eventually.of_forall ?_)
       intro t ht
