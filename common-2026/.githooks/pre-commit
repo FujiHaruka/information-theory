@@ -76,6 +76,32 @@ done <<ADD
 $added_files
 ADD
 
+# 6) docs plan の hygiene (CLAUDE.md「Plan / docs hygiene」)。全て WARN、BLOCK しない。
+#    staleness 照合 (plan_lint.ts) は全コード走査で ~10s かかるため hook には載せない (手動/CI)。
+plan_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E 'docs/.*-plan\.md$' || true)
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  blob=$(git show ":$f" 2>/dev/null) || continue
+  added=$(git diff --cached -U0 -- "$f" | grep -E '^\+' | grep -vE '^\+\+\+' || true)
+
+  # P1: 確定事実を prose にキャッシュしない (再導出 / 台帳リンクに誘導)
+  if printf '%s\n' "$added" | grep -qE 'sorryAx-free|Found 0|Mathlib 不在|loogle.*0 ?件'; then
+    addwarn "$f: 確定事実を prose に記述 (sorryAx-free / Found 0 等) — 再導出 or <family>-facts.md にリンク (P1)"
+  fi
+
+  # P4: プラン予算 (≤ 600 行 / active 判断ログ ≤ 10 entry)
+  lines=$(printf '%s\n' "$blob" | wc -l | tr -d ' ')
+  if [ "${lines:-0}" -gt 600 ]; then
+    addwarn "$f: ${lines} 行 > 600 予算 — /compact-plan 候補 (P4)"
+  fi
+  jlog=$(printf '%s\n' "$blob" | awk '/^## 判断ログ/{f=1;next} f && /^[0-9]+\. /{c++} END{print c+0}')
+  if [ "${jlog:-0}" -gt 10 ]; then
+    addwarn "$f: 判断ログ ${jlog} entry > 10 — 決着済を削除 (git が履歴) (P4)"
+  fi
+done <<PLN
+$plan_files
+PLN
+
 if [ -n "$warn" ]; then
   printf '\n[pre-commit] honesty/import warnings (コミットは継続):\n%s' "$warn" >&2
 fi
