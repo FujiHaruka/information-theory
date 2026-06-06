@@ -40,10 +40,11 @@ harmonic Stam producer (no new Mathlib wall). The arith core gate is PASS
 (proof-log §Two-time formulation gate, `ProbeF1.lean`, `e^t` characterization +
 inverse-function chain rule).
 
-This file is the **Phase 2 declaration skeleton** of
-`docs/shannon/epi-case1-twotime-restructure-plan.md`. Every body is `sorry`
-with `@residual(plan:epi-case1-twotime-restructure-plan)`. Bodies are filled in
-later phases (Phase 3 deriv core / Phase 4 endpoints).
+This file implements the two-time object of
+`docs/shannon/epi-case1-twotime-restructure-plan.md`. As of 2026-06-06 it is
+**proof-done** (0 `sorry`, 0 `@residual`): the derivative core
+(`twoTimeLogRatioGap_hasDerivAt`), the endpoints, and the Gaussian-saturation
+limit (`twoTimeLogRatioGap_tendsto_zero_atTop`) are all genuinely closed.
 
 ## Honesty notes
 
@@ -69,6 +70,8 @@ open InformationTheory.Shannon.EntropyPowerInequality
 open InformationTheory.Shannon.EPIStamDischarge
 open InformationTheory.Shannon.EPIL3Integration (csiszarLogRatioGap)
 open InformationTheory.Shannon.EPIStamToBridge (entropyPower_hasDerivAt_of_diffEnt_hasDerivAt)
+open InformationTheory.Shannon.EPICase1RatioLimit
+  (entropyPower_rescaled_path_tendsto entropyPower_path_scaling IsRescaledPathRegular)
 
 variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
 
@@ -1171,43 +1174,72 @@ saturation ratio `A t / B t` (`A t = sumHeatFlowEP …(s t)(r t)` is the numerat
 The `−t` correction is absorbed by the `eᵗ` growth — established genuinely in the
 body via `Real.log_mul`/`Real.log_exp`, no `sorry`.
 
-**§2 (saturation core, isolated `sorry`).** The remaining content is the EPI
-saturation `A t / B t → 1` as `t → ∞` along the matched path (both perturbed
-components Gaussianise as `s t, r t → ∞`). This is isolated into a single
-`have h_ratio_tendsto`; from it `log (A t / B t) → log 1 = 0` (continuity of
-`log` at `1`) and `log (A/B) = log A − log B` (both positive) recover `R t → 0`.
+**§2 (saturation core, genuinely closed 2026-06-06).** The EPI saturation
+`A t / B t → 1` as `t → ∞`, isolated into `have h_ratio_tendsto`; from it
+`log (A t / B t) → log 1 = 0` (continuity of `log` at `1`) and
+`log (A/B) = log A − log B` (both positive) recover `R t → 0`. The saturation is
+reduced to a single genuine limit `A t / eᵗ → N(X) + N(Y)`:
 
-The in-tree saturation machinery (`entropyPower_rescaled_path_tendsto`,
-`IsRescaledPathRegular`) is keyed to the **single-time rescaling**
-parametrization `A/√t + B`; the matched path uses **different** times
-`s t ≠ r t` per component, so bridging requires reducing `A t` via
-`matchedSum_law_eq` to a single-noise heat flow at `τ = s t + r t` and then
-assembling the saturation limits of `N_X(s t)`, `N_Y(r t)`, `N_sum(τ t)` with
-their differing matched-growth divergence rates — not a direct application of the
-existing tendsto lemma. Saturation core only; no EPI/Stam conclusion is bundled.
+* `A t` (the matched-sum numerator) is identified with a single-noise heat flow of
+  `X+Y` at `τ = s t + r t` via `matchedSum_law_eq` (`@audit:ok`), then split by
+  `entropyPower_path_scaling` as `A t = τ · NSr(τ)` with `NSr(σ) → ν` and
+  `ν = N(𝒩(0,1))` the common noise entropy power.
+* the component asymptotics `s t / eᵗ → N(X)/ν`, `r t / eᵗ → N(Y)/ν` come from
+  combining matched growth (`N_X(s t) = N(X)·eᵗ`) with the scaling identity
+  `N_X(s t) = s t · NXr(s t)` and the §3 envelope limit `NXr(s t) → ν` (composed
+  with `s, r → ∞`). Hence `τ / eᵗ → (N(X)+N(Y))/ν`, so `A t / eᵗ → (N(X)+N(Y))`
+  and the `ν` factors cancel.
 
-Independent honesty audit 2026-06-06 (fresh subagent): PASS — `honest_residual`
-affirmed. §1 reduction genuine (machine-checked, `R t = log A − log B` for `t ≥ 0`
-via `matched_growth` + `√0=0` collapse `heatFlowEP _ _ _ 0 = entropyPower (P.map _)`,
-`Real.log_mul`/`Real.log_exp`/`Real.log_div`; `entropyPower > 0` always so no
-degenerate-def exploitation). The two `IsMatchedTimePath` hypotheses are
-path-regularity (start/growth/continuity/derivative), NOT load-bearing on the
-saturation conclusion (which stays the open sorry). Signature is the original
-shape: no precondition added to enable the sorry, no dead hypothesis. The isolated
-§2 sorry (`A t / B t → 1`) is a TRUE statement (Gaussian saturation of entropy
-power), correctly classified `plan:` (not `wall:`): closable by in-tree lemma
-reconnection — `matchedSum_law_eq` (`@audit:ok`) reduces `A t` to single-noise
-heat flow at `τ = s t + r t`, then `entropyPower_rescaled_path_tendsto`
-(`EPICase1RatioLimit.lean:293`, in-tree) keyed to single-time rescaling +
-`entropyPower_gaussian_additivity` assemble the limit. The obstacle is re-keying
-the parametrization (assembly), not a Mathlib-absent gap.
+The §3 saturation machinery (`entropyPower_rescaled_path_tendsto`,
+`IsRescaledPathRegular`) is keyed to the single-time rescaling `A/√t + B`; the
+matched path uses different times `s t ≠ r t`, so the re-keying is exactly the
+`matchedSum_law_eq` reduction above. No EPI/Stam conclusion is bundled; the
+added preconditions (noise laws/independences, path divergence `s,r → ∞`, per-σ
+scaling regularity, the three `IsRescaledPathRegular` bundles) are genuine
+regularity — none of them encodes `A t / B t → 1`.
 
-@residual(plan:epi-case1-twotime-restructure-plan) -/
+Pending independent honesty audit (signature gained §2 regularity preconditions).
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free). -/
 theorem twoTimeLogRatioGap_tendsto_zero_atTop
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     {J_X J_Y : ℝ → ℝ} {s r : ℝ → ℝ}
     (h_path_X : IsMatchedTimePath X Z_X P J_X s)
-    (h_path_Y : IsMatchedTimePath Y Z_Y P J_Y r) :
+    (h_path_Y : IsMatchedTimePath Y Z_Y P J_Y r)
+    -- §2 saturation regularity (all genuine; none bundles the ratio→1 conclusion):
+    (Z : Ω → ℝ)
+    (hX : Measurable X) (hY : Measurable Y)
+    (hZX : Measurable Z_X) (hZY : Measurable Z_Y) (hZ : Measurable Z)
+    (hZX_law : P.map Z_X = gaussianReal 0 1)
+    (hZY_law : P.map Z_Y = gaussianReal 0 1)
+    (hZ_law : P.map Z = gaussianReal 0 1)
+    (hXY_ZXZY_pair : IndepFun (fun ω => X ω + Y ω) (fun ω => (Z_X ω, Z_Y ω)) P)
+    (hXY_Z : IndepFun (fun ω => X ω + Y ω) Z P)
+    (hZX_ZY : IndepFun Z_X Z_Y P)
+    (hZX_ac : (P.map Z_X) ≪ volume) (hZY_ac : (P.map Z_Y) ≪ volume)
+    (hZ_ac : (P.map Z) ≪ volume)
+    -- path divergence (genuine property of the matched path; not the conclusion):
+    (hs_atTop : Filter.Tendsto s Filter.atTop Filter.atTop)
+    (hr_atTop : Filter.Tendsto r Filter.atTop Filter.atTop)
+    (hs_pos : ∀ t : ℝ, 0 < t → 0 < s t) (hr_pos : ∀ t : ℝ, 0 < t → 0 < r t)
+    -- per-σ scaling regularity (consumed by `entropyPower_path_scaling`):
+    (h_scale_X : ∀ σ : ℝ, 0 < σ →
+      (P.map (fun ω => X ω / Real.sqrt σ + Z_X ω)) ≪ volume ∧
+      Integrable (fun x => Real.negMulLog
+        (((P.map (fun ω => X ω / Real.sqrt σ + Z_X ω)).rnDeriv volume x).toReal)) volume)
+    (h_scale_Y : ∀ σ : ℝ, 0 < σ →
+      (P.map (fun ω => Y ω / Real.sqrt σ + Z_Y ω)) ≪ volume ∧
+      Integrable (fun x => Real.negMulLog
+        (((P.map (fun ω => Y ω / Real.sqrt σ + Z_Y ω)).rnDeriv volume x).toReal)) volume)
+    (h_scale_sum : ∀ σ : ℝ, 0 < σ →
+      (P.map (fun ω => (X ω + Y ω) / Real.sqrt σ + Z ω)) ≪ volume ∧
+      Integrable (fun x => Real.negMulLog
+        (((P.map (fun ω => (X ω + Y ω) / Real.sqrt σ + Z ω)).rnDeriv volume x).toReal)) volume)
+    -- per-path squeeze regularity bundles (方針 X; audited non-load-bearing in §3):
+    (varX varY varS : ℝ)
+    (h_varX_nn : 0 ≤ varX) (h_varY_nn : 0 ≤ varY) (h_varS_nn : 0 ≤ varS)
+    (h_reg_X : IsRescaledPathRegular X Z_X P varX 1)
+    (h_reg_Y : IsRescaledPathRegular Y Z_Y P varY 1)
+    (h_reg_S : IsRescaledPathRegular (fun ω => X ω + Y ω) Z P varS 1) :
     Filter.Tendsto (fun t : ℝ => twoTimeLogRatioGap X Y Z_X Z_Y P s r t)
       Filter.atTop (nhds (0 : ℝ)) := by
   -- Abbreviations: the saturation numerator `A t` and the matched-path
@@ -1248,8 +1280,127 @@ theorem twoTimeLogRatioGap_tendsto_zero_atTop
   -- §2 (saturation core): the EPI ratio `A t / B t → 1` along the matched path.
   have h_ratio_tendsto :
       Filter.Tendsto (fun t : ℝ => A t / B t) Filter.atTop (nhds (1 : ℝ)) := by
-    -- @residual(plan:epi-case1-twotime-restructure-plan)
-    sorry
+    -- Common noise entropy power `ν = N(𝒩(0,1))`; all three noises share it.
+    set ν : ℝ := entropyPower (gaussianReal 0 (1 : ℝ≥0)) with hν
+    have hν_pos : (0 : ℝ) < ν := entropyPower_pos _
+    -- Rescaled-path envelope limits → ν (from §3 `entropyPower_rescaled_path_tendsto`).
+    have hNXr_lim : Filter.Tendsto
+        (fun σ : ℝ => entropyPower (P.map (fun ω => X ω / Real.sqrt σ + Z_X ω)))
+        Filter.atTop (nhds ν) := by
+      have h := entropyPower_rescaled_path_tendsto X Z_X P hX hZX (1 : ℝ≥0) one_ne_zero
+        hZX_law varX h_varX_nn hZX_ac h_reg_X
+      rw [hZX_law, ← hν] at h; exact h
+    have hNYr_lim : Filter.Tendsto
+        (fun σ : ℝ => entropyPower (P.map (fun ω => Y ω / Real.sqrt σ + Z_Y ω)))
+        Filter.atTop (nhds ν) := by
+      have h := entropyPower_rescaled_path_tendsto Y Z_Y P hY hZY (1 : ℝ≥0) one_ne_zero
+        hZY_law varY h_varY_nn hZY_ac h_reg_Y
+      rw [hZY_law, ← hν] at h; exact h
+    have hNSr_lim : Filter.Tendsto
+        (fun σ : ℝ => entropyPower (P.map (fun ω => (X ω + Y ω) / Real.sqrt σ + Z ω)))
+        Filter.atTop (nhds ν) := by
+      have h := entropyPower_rescaled_path_tendsto (fun ω => X ω + Y ω) Z P (hX.add hY) hZ
+        (1 : ℝ≥0) one_ne_zero hZ_law varS h_varS_nn hZ_ac h_reg_S
+      rw [hZ_law, ← hν] at h; exact h
+    -- Compose envelope limits with path divergence `s, r, τ = s + r → ∞`.
+    have hτ_atTop : Filter.Tendsto (fun t => s t + r t) Filter.atTop Filter.atTop :=
+      hs_atTop.atTop_add_atTop hr_atTop
+    have hNXr_s : Filter.Tendsto
+        (fun t : ℝ => entropyPower (P.map (fun ω => X ω / Real.sqrt (s t) + Z_X ω)))
+        Filter.atTop (nhds ν) := hNXr_lim.comp hs_atTop
+    have hNYr_r : Filter.Tendsto
+        (fun t : ℝ => entropyPower (P.map (fun ω => Y ω / Real.sqrt (r t) + Z_Y ω)))
+        Filter.atTop (nhds ν) := hNYr_lim.comp hr_atTop
+    have hNSr_τ : Filter.Tendsto
+        (fun t : ℝ =>
+          entropyPower (P.map (fun ω => (X ω + Y ω) / Real.sqrt (s t + r t) + Z ω)))
+        Filter.atTop (nhds ν) := hNSr_lim.comp hτ_atTop
+    -- Component asymptotics: `s t / eᵗ → N(X)/ν`, `r t / eᵗ → N(Y)/ν`.
+    -- From `N_X(s t) = N(X)·eᵗ` (matched growth) and `N_X(s t) = s t · NXr(s t)` (scaling).
+    have h_sX : ∀ t : ℝ, 0 < t →
+        s t / Real.exp t
+          = entropyPower (P.map X)
+              / entropyPower (P.map (fun ω => X ω / Real.sqrt (s t) + Z_X ω)) := by
+      intro t ht
+      have hgrow : heatFlowEP X Z_X P (s t) = entropyPower (P.map X) * Real.exp t := by
+        rw [h_path_X.matched_growth t ht.le, hX0]
+      have hsc : heatFlowEP X Z_X P (s t)
+          = s t * entropyPower (P.map (fun ω => X ω / Real.sqrt (s t) + Z_X ω)) :=
+        entropyPower_path_scaling X Z_X P hX hZX (hs_pos t ht)
+          (h_scale_X (s t) (hs_pos t ht)).1 (h_scale_X (s t) (hs_pos t ht)).2
+      have hNXr_pos : 0 < entropyPower (P.map (fun ω => X ω / Real.sqrt (s t) + Z_X ω)) :=
+        entropyPower_pos _
+      rw [div_eq_div_iff (Real.exp_pos t).ne' hNXr_pos.ne', ← hsc, hgrow]
+    have h_rY : ∀ t : ℝ, 0 < t →
+        r t / Real.exp t
+          = entropyPower (P.map Y)
+              / entropyPower (P.map (fun ω => Y ω / Real.sqrt (r t) + Z_Y ω)) := by
+      intro t ht
+      have hgrow : heatFlowEP Y Z_Y P (r t) = entropyPower (P.map Y) * Real.exp t := by
+        rw [h_path_Y.matched_growth t ht.le, hY0]
+      have hsc : heatFlowEP Y Z_Y P (r t)
+          = r t * entropyPower (P.map (fun ω => Y ω / Real.sqrt (r t) + Z_Y ω)) :=
+        entropyPower_path_scaling Y Z_Y P hY hZY (hr_pos t ht)
+          (h_scale_Y (r t) (hr_pos t ht)).1 (h_scale_Y (r t) (hr_pos t ht)).2
+      have hNYr_pos : 0 < entropyPower (P.map (fun ω => Y ω / Real.sqrt (r t) + Z_Y ω)) :=
+        entropyPower_pos _
+      rw [div_eq_div_iff (Real.exp_pos t).ne' hNYr_pos.ne', ← hsc, hgrow]
+    have h_sX_lim : Filter.Tendsto (fun t : ℝ => s t / Real.exp t) Filter.atTop
+        (nhds (entropyPower (P.map X) / ν)) := by
+      refine (Filter.tendsto_congr' ?_).mp (tendsto_const_nhds.div hNXr_s hν_pos.ne')
+      filter_upwards [Filter.eventually_gt_atTop (0 : ℝ)] with t ht
+      exact (h_sX t ht).symm
+    have h_rY_lim : Filter.Tendsto (fun t : ℝ => r t / Real.exp t) Filter.atTop
+        (nhds (entropyPower (P.map Y) / ν)) := by
+      refine (Filter.tendsto_congr' ?_).mp (tendsto_const_nhds.div hNYr_r hν_pos.ne')
+      filter_upwards [Filter.eventually_gt_atTop (0 : ℝ)] with t ht
+      exact (h_rY t ht).symm
+    -- `τ t / eᵗ → (N(X) + N(Y))/ν`.
+    have h_τ_lim : Filter.Tendsto (fun t : ℝ => (s t + r t) / Real.exp t) Filter.atTop
+        (nhds ((entropyPower (P.map X) + entropyPower (P.map Y)) / ν)) := by
+      have hadd := h_sX_lim.add h_rY_lim
+      have heq : (fun t : ℝ => s t / Real.exp t + r t / Real.exp t)
+          = (fun t : ℝ => (s t + r t) / Real.exp t) := by funext t; rw [add_div]
+      rw [heq, ← add_div] at hadd
+      exact hadd
+    -- `A t = τ t · NSr(τ t)` for `t > 0` (matched-sum reduction + scaling).
+    have h_A : ∀ t : ℝ, 0 < t →
+        A t = (s t + r t)
+            * entropyPower (P.map (fun ω => (X ω + Y ω) / Real.sqrt (s t + r t) + Z ω)) := by
+      intro t ht
+      have hτpos : 0 < s t + r t := by
+        have := hs_pos t ht; have := hr_pos t ht; linarith
+      have hlaw := matchedSum_law_eq X Y Z_X Z_Y Z P hX hY hZX hZY hZ hZX_law hZY_law hZ_law
+        hXY_ZXZY_pair hXY_Z hZX_ZY (s t) (r t) (hs_pos t ht) (hr_pos t ht)
+      have hAeq : A t
+          = entropyPower (P.map (fun ω => (X ω + Y ω) + Real.sqrt (s t + r t) * Z ω)) := by
+        simp only [hA, sumHeatFlowEP]
+        exact congrArg entropyPower hlaw
+      rw [hAeq]
+      exact entropyPower_path_scaling (fun ω => X ω + Y ω) Z P (hX.add hY) hZ hτpos
+        (h_scale_sum (s t + r t) hτpos).1 (h_scale_sum (s t + r t) hτpos).2
+    -- `A t / eᵗ → N(X) + N(Y)`.
+    have h_Ae_lim : Filter.Tendsto (fun t : ℝ => A t / Real.exp t) Filter.atTop
+        (nhds (entropyPower (P.map X) + entropyPower (P.map Y))) := by
+      have hprod := h_τ_lim.mul hNSr_τ
+      have hval : ((entropyPower (P.map X) + entropyPower (P.map Y)) / ν) * ν
+          = entropyPower (P.map X) + entropyPower (P.map Y) := by
+        rw [div_mul_eq_mul_div, mul_div_assoc, div_self hν_pos.ne', mul_one]
+      rw [hval] at hprod
+      refine (Filter.tendsto_congr' ?_).mp hprod
+      filter_upwards [Filter.eventually_gt_atTop (0 : ℝ)] with t ht
+      rw [h_A t ht]; ring
+    -- `A t / B t = (A t / eᵗ)·(1/(N(X)+N(Y))) → 1` (eventually, `t ≥ 0`, via `hB_eq`).
+    have hfin := h_Ae_lim.mul_const
+      (1 / (entropyPower (P.map X) + entropyPower (P.map Y)))
+    have hone : (entropyPower (P.map X) + entropyPower (P.map Y))
+        * (1 / (entropyPower (P.map X) + entropyPower (P.map Y))) = 1 := by
+      rw [mul_one_div, div_self hXY_pos.ne']
+    rw [hone] at hfin
+    refine (Filter.tendsto_congr' ?_).mp hfin
+    filter_upwards [Filter.eventually_ge_atTop (0 : ℝ)] with t ht
+    rw [hB_eq t ht]
+    field_simp
   -- `B t > 0` for `t ≥ 0` (positive entropy powers times `eᵗ`).
   have hB_pos : ∀ t : ℝ, 0 ≤ t → 0 < B t := by
     intro t ht
