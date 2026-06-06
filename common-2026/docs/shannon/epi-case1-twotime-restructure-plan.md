@@ -30,7 +30,11 @@
   - **signature に追加した regularity** (監査: 全 non-load-bearing): noise `Z`+laws+independences+ac、path 発散
     `hs_atTop/hr_atTop`、path positivity、per-σ scaling regularity `h_scale_*`、squeeze bundle `h_reg_X/Y/S`
     (`IsRescaledPathRegular`)。手本 `csiszarLogRatioGap_tendsto_zero_atTop` と同型の precondition 構成。
-- [ ] Phase 5 — **terminal `entropyPower_add_ge_case1_of_regular_twotime` 1 本** (two-time 3 pillars 組立、public-API impact ゼロ) 📋
+- [x] Phase 5 — **terminal `entropyPower_add_ge_case1_of_regular_twotime` 1 本** ✅ (2026-06-06、proof-done
+  sorryAx-free、独立 `honesty-auditor` PASS = `@audit:ok`)。J_X/J_Y Fisher-pin pointwise-honest (`density_t_eq`)、
+  load-bearing なし (core-reconstruction PASS)、harmonic Stam = `isStamInequalityHyp_via_step3` genuine。副産物:
+  `matchedTimePath_exists` を `∃ s, IsMatchedTimePath … ∧ (∀ t>0,0<s t) ∧ Tendsto s atTop atTop` に強化
+  (案 2、sorry-free 維持、再監査 PASS)。public-API impact ゼロ確認。
 - [ ] Phase 6 — consumer 削除 (`csiszarLogRatioGap` 83 occ / sister `csiszarGap1Source` 74 occ) + `Z_law` defect park 解消 📋
 
 ---
@@ -569,3 +573,17 @@ bundling する撤退は**禁止** (CLAUDE.md「検証の誠実性」)。
    X/Y 側は base 差替えのみ。pin が hand-wave でなく in-tree closeable と確定。残 risk は (R-5a) `J_X` 全域定義の
    `hJX_eq` 閉じ、(R-5b) `h_pos`/`hs_atTop` が `IsMatchedTimePath` 露出フィールド外なので案 2 (`matchedTimePath_exists`
    戻り強化) が要る点の 2 つに局在化。両方 Phase 5 着手最初の probe で gate。
+6. **Phase 5 完了 + single-t 系の honesty 再確認 (2026-06-06)**: terminal `entropyPower_add_ge_case1_of_regular_twotime`
+   を proof-done (sorryAx-free、独立監査 PASS) で実装。probe-5a/5b 共に PASS、`matchedTimePath_exists` は案 2 で
+   sorry-free 強化、再監査 PASS。**Phase 6 の削除判定を変える reconnaissance 所見**: single-t **ratio** pillar
+   `csiszarLogRatioGap_deriv_le_zero` (`EPIStamToBridge.lean:940`) は **genuine `@audit:ok`** で、docstring point 4 が
+   「ratio 形は plain harmonic Stam から `csiszar_ratio_deriv_le_zero_arith` (`α²≤α` weights) で閉じる」と明記。
+   GS-A3' REFUTE は **difference 形** `csiszarGap1Source_deriv_le_zero` (既 `@audit:defect(false-statement)`) に
+   局在しており、ratio 形ではない。⟹ 単一-t terminal `entropyPower_add_ge_case1_of_regular` も ratio のみ使用で
+   **genuine な case-1 EPI 証明 (`@audit:ok`)**。よって two-time terminal は「初の closure」でなく **parallel な
+   genuine 証明**。two-time の真の差別化は **前提の充足可能性**: single-t は sum を単一 noise `Z_X+Z_Y` (variance-2)
+   で見るため `h_pos_stam` の Stam supply が `Z_law` `gaussianReal 0 2` defect park (`EPICase1SumProducer.lean:166`)
+   に entangle。two-time は Z_X/Z_Y/Z を分離摂動するので variance-2 view を発生させず、前提が genuinely 充足可能。
+   **Phase 6 含意**: difference sister (dead `@audit:defect`) の削除は無条件 clean。だが single-t **ratio** line
+   (`csiszarLogRatioGap` 群 + terminal) は **genuine `@audit:ok`** なので削除は「working 証明の破棄」= user 判断要
+   (plan の「完全置換後削除が clean」は ratio line が defect/dead でない事実と mild に矛盾 → 削除前に surface)。
