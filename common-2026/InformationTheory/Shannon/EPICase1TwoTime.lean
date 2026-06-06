@@ -1186,6 +1186,22 @@ assembling the saturation limits of `N_X(s t)`, `N_Y(r t)`, `N_sum(τ t)` with
 their differing matched-growth divergence rates — not a direct application of the
 existing tendsto lemma. Saturation core only; no EPI/Stam conclusion is bundled.
 
+Independent honesty audit 2026-06-06 (fresh subagent): PASS — `honest_residual`
+affirmed. §1 reduction genuine (machine-checked, `R t = log A − log B` for `t ≥ 0`
+via `matched_growth` + `√0=0` collapse `heatFlowEP _ _ _ 0 = entropyPower (P.map _)`,
+`Real.log_mul`/`Real.log_exp`/`Real.log_div`; `entropyPower > 0` always so no
+degenerate-def exploitation). The two `IsMatchedTimePath` hypotheses are
+path-regularity (start/growth/continuity/derivative), NOT load-bearing on the
+saturation conclusion (which stays the open sorry). Signature is the original
+shape: no precondition added to enable the sorry, no dead hypothesis. The isolated
+§2 sorry (`A t / B t → 1`) is a TRUE statement (Gaussian saturation of entropy
+power), correctly classified `plan:` (not `wall:`): closable by in-tree lemma
+reconnection — `matchedSum_law_eq` (`@audit:ok`) reduces `A t` to single-noise
+heat flow at `τ = s t + r t`, then `entropyPower_rescaled_path_tendsto`
+(`EPICase1RatioLimit.lean:293`, in-tree) keyed to single-time rescaling +
+`entropyPower_gaussian_additivity` assemble the limit. The obstacle is re-keying
+the parametrization (assembly), not a Mathlib-absent gap.
+
 @residual(plan:epi-case1-twotime-restructure-plan) -/
 theorem twoTimeLogRatioGap_tendsto_zero_atTop
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
