@@ -59,14 +59,14 @@ route で完成、壁2 = NO-GO 真壁確定で parked**。
 
 | slug | Phase | 役割 (発火条件) |
 |---|---|---|
-| L-EPIW-1-α / 1-β | 1 | gateway `⋆ₗ` 微分可能性が組めない / Gaussian-tail dominated 充足超過 (不発、GATE GO) |
+| L-EPIW-1-α, L-EPIW-1-β | 1 | gateway `⋆ₗ` 微分可能性が組めない / Gaussian-tail dominated 充足超過 (不発、GATE GO) |
 | L-EPIW-2-α | 2 | `IndepFun.comp` の score 合成 measurability 詰まり (不発) |
-| L-EPIW-3-α / 3-β | 3 | Blachman 真壁確定 → honest sorry 据置 (density route で解体、不発) |
-| L-EPIW-3-密度-α / 3-密度-β | 3 | score 可積分性 signature 漏れ / precondition gap (案 b で解消) |
-| L-EPIW-3pre-α / 3pre-β | 3-pre | 隠れ construct site 出現時の adapter / defeq 破れ |
-| L-EPIW-3d-α / 3d-β / 3d-γ | 3d | atom Cong deriv-ae / atom Pos / atom Bdd-f 詰まり |
-| L-EPIW-3e-α / 3e-β / 3e-γ / 3e-δ | 3e | linchpin a.e.→pointwise / shear 組立 / private 解消副作用 / sup 自作 |
-| L-EPIW-4-α / 4-β | 4 | per-time 真壁確定 (発火、parked) / 積分形 FTC 詰まり (不発、closure 済) |
+| L-EPIW-3-α, L-EPIW-3-β | 3 | Blachman 真壁確定 → honest sorry 据置 (density route で解体、不発) |
+| L-EPIW-3-密度-α, L-EPIW-3-密度-β | 3 | score 可積分性 signature 漏れ / precondition gap (案 b で解消) |
+| L-EPIW-3pre-α, L-EPIW-3pre-β | 3-pre | 隠れ construct site 出現時の adapter / defeq 破れ |
+| L-EPIW-3d-α, L-EPIW-3d-β, L-EPIW-3d-γ | 3d | atom Cong deriv-ae / atom Pos / atom Bdd-f 詰まり |
+| L-EPIW-3e-α, L-EPIW-3e-β, L-EPIW-3e-γ, L-EPIW-3e-δ | 3e | linchpin a.e.→pointwise / shear 組立 / private 解消副作用 / sup 自作 |
+| L-EPIW-4-α, L-EPIW-4-β | 4 | per-time 真壁確定 (発火、parked) / 積分形 FTC 詰まり (不発、closure 済) |
 
 ## honesty 規律
 
