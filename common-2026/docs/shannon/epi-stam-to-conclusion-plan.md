@@ -1,10 +1,30 @@
 # EPI Stam → EPI conclusion — merge / conclusion plan
 
-> **Status**: Phase 0 / 0-Plumbing 完了 (2026-05-25)、Phase A skeleton 着地済だが
->   headline wall `stamToEPIBridge_holds` 未 discharge。**2026-06-01 re-assessment**:
->   両 sister (L-EPI1 Stam / L-EPI2 de Bruijn) は genuine sorryAx-free、残るは
->   assembly + 2 個の analytic atom (§re-assessment 参照)。
+> **Status**: `stamToEPIBridge_holds` 未 discharge (唯一の active 残壁、`#print axioms` 実測 2026-06-06)。
+> **2026-06-06 大幅 destale**: 旧 G1-G4 closure route (difference 形) は **判断 #8 で dead 削除**、G2 連続性壁は
+>   **2026-06-05 CLOSED**、Stam-Blachman 最深壁も **CLOSED** (`isStamInequalityHyp_of_primitives` sorryAx-free)。
+>   生存 closure route = **ratio 形** (`csiszarLogRatioGap_deriv_le_zero` `@audit:ok`)。次の実作業 = **Route B**
+>   (ratio 形で bridge in-place closure、§下記「2026-06-06 destale」)。
 > **Created**: 2026-05-24 (Wave 1.5 item #8、`epi-moonshot-plan` 76 件 slug 分割)。
+
+## 2026-06-06 destale — 残壁 1 個局在 + 旧 route 削除 + Route B 決定
+
+`#print axioms` 実測 + 判断 #8 削除を受け、本 plan の以下を **無効化** (旧記述は履歴として下に残すが従わない):
+
+- **残壁 = `stamToEPIBridge_holds` (`EntropyPowerInequality.lean:251`) のみ**。`entropy_power_inequality_via_stamDeBruijn`
+  (`EPIStamDeBruijnConclusion.lean:214`、pure primitives) の唯一 transitive sorry がこれ。
+- **G1 (`csiszarGap1Source_deriv_le_zero`) / G3 (`csiszarGap_antitoneOn_Icc_zero_one`) / W1 bridge
+  (`isStamToEPIScalingHyp_of_stam_debruijn`) は判断 #8 で削除済** (difference 形 route 全体が dead orphan、
+  `epi-case1-twotime-restructure-plan.md` 判断 #8)。下の G1-G4 表は参照しない。
+- **G2 (`heatFlowEntropyPower_continuousOn` / `wall:heatflow-continuity`) は CLOSED** (2026-06-05、sorryAx-free)。
+  下の表の「真 Mathlib 壁 2026-06-03」は stale。
+- **Stam-Blachman も CLOSED** (`isStamInequalityHyp_of_primitives:176` sorryAx-free)。
+- **Route B 決定** (`proof-pivot-advisor` verdict、`ch17-inequalities-status.md`「残作業」が詳細 SoT):
+  ratio 形 `csiszarLogRatioGap_deriv_le_zero` (`@audit:ok`) から `stamToEPIBridge_holds` の結論
+  (`IsStamInequalityResidual → IsEntropyPowerInequalityHypothesis`) までを in-place closure。Route A
+  (two-time bypass) は load-bearing Stam 包装替え + sorryAx-present producer 依存で不採用。
+- **次 session の最初の 1 手** = `EntropyPowerInequality.lean:251` 周辺で、G2 closure 後にいま欠けている中間補題を
+  1 個特定する probe (小さければ Route B 続行、大きければ `epi-debruijn-pertime-closure` 先行)。
 
 ## 2026-06-01 re-assessment (genuine 基盤照合)
 
@@ -41,6 +61,10 @@ per-time de Bruijn が genuine sorryAx-free 化したのを受け、EPI frontier
   genuine。残る wall は純粋に **2 個の analytic atom + 1 個の richness gap** に局所化された。
 
 ### 残る genuine な穴 (Phase A の真の closure target)
+
+> ⚠ **以下の G1-G4/W0-W2 表は 2026-06-06 に obsolete** (上記「destale」参照): G1/G3/W1 は判断 #8 で削除、
+> G2 は CLOSED、W2 richness は lift で closable。残るのは W0 `stamToEPIBridge_holds` 1 個のみで、closure は
+> ratio 形 route (Route B)。表は当時の difference 形 route の診断記録として残すが、**新規着手では参照しない**。
 
 headline `stamToEPIBridge_holds` (`EntropyPowerInequality.lean:252`) は以下を transitive に消費する。
 file:line + 性質を verbatim 列挙:
