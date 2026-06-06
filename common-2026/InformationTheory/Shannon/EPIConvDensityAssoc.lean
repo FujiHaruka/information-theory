@@ -188,6 +188,21 @@ theorem convDensityAdd_gaussian_variance_double {t : ℝ} (ht : 0 < t) :
     add_zero]
   congr 1
 
+/-- **Variance-adding** (asymmetric variances): `g_s ∗ g_t = g_{s+t}`
+(`g_s = gaussianPDFReal 0 ⟨s, _⟩`). Independent-time generalization of
+`convDensityAdd_gaussian_variance_double` (`s = t`); feeds the two-time route's
+harmonic-Stam supply producer (`density_sum_{σ+τ} = conv(density_X_σ, density_Y_τ)`). -/
+theorem convDensityAdd_gaussian_variance_add {s t : ℝ} (hs : 0 < s) (ht : 0 < t) :
+    convDensityAdd (gaussianPDFReal 0 ⟨s, hs.le⟩) (gaussianPDFReal 0 ⟨t, ht.le⟩)
+      = gaussianPDFReal 0 ⟨s + t, by positivity⟩ := by
+  have hs_ne : (⟨s, hs.le⟩ : ℝ≥0) ≠ 0 := by
+    intro h; exact hs.ne' (congrArg NNReal.toReal h)
+  have ht_ne : (⟨t, ht.le⟩ : ℝ≥0) ≠ 0 := by
+    intro h; exact ht.ne' (congrArg NNReal.toReal h)
+  rw [InformationTheory.Shannon.EPIBlachmanGaussianWitness.convDensityAdd_gaussian_closed_form hs_ne ht_ne,
+    add_zero]
+  congr 1
+
 /-- **4-fold interchange bridge** (consumed by `int_fisherZ`):
 `conv(conv(pX,g_t), conv(pY,g_t)) = conv(conv(pX,pY), g_{2t})`.
 @audit:ok — independent honesty audit (2026-06-01): the equality follows genuinely from
@@ -248,5 +263,71 @@ theorem convDensityAdd_convGaussian_interchange (pX pY : ℝ → ℝ) {t : ℝ} 
   -- step 5: g∗g = g_{2t}
   rw [show convDensityAdd g g = gaussianPDFReal 0 ⟨2 * t, by positivity⟩ from
     convDensityAdd_gaussian_variance_double ht]
+
+/-- **Asymmetric 4-fold interchange bridge** (independent times `s, t`):
+`conv(conv(pX,g_s), conv(pY,g_t)) = conv(conv(pX,pY), g_{s+t})`. Independent-time
+generalization of `convDensityAdd_convGaussian_interchange` (`σ = τ`); feeds the two-time
+route's harmonic-Stam supply producer for `density_sum_{σ+τ} = conv(density_X_σ, density_Y_τ)`. -/
+theorem convDensityAdd_convGaussian_interchange_asym (pX pY : ℝ → ℝ) {s t : ℝ}
+    (hs : 0 < s) (ht : 0 < t)
+    (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX) (hpX_int : Integrable pX volume)
+    (hpY_nn : ∀ x, 0 ≤ pY x) (hpY_meas : Measurable pY) (hpY_int : Integrable pY volume) :
+    convDensityAdd
+        (convDensityAdd pX (gaussianPDFReal 0 ⟨s, hs.le⟩))
+        (convDensityAdd pY (gaussianPDFReal 0 ⟨t, ht.le⟩))
+      = convDensityAdd
+          (convDensityAdd pX pY)
+          (gaussianPDFReal 0 ⟨s + t, by positivity⟩) := by
+  set gs : ℝ → ℝ := gaussianPDFReal 0 ⟨s, hs.le⟩ with hgs_def
+  set gt : ℝ → ℝ := gaussianPDFReal 0 ⟨t, ht.le⟩ with hgt_def
+  -- regularity of the Gaussian heat kernels `gs`, `gt`
+  have hgs_nn : ∀ x, 0 ≤ gs x := fun x => gaussianPDFReal_nonneg _ _ _
+  have hgs_meas : Measurable gs := measurable_gaussianPDFReal _ _
+  have hgs_int : Integrable gs volume := integrable_gaussianPDFReal _ _
+  have hgs_bdd : ∃ M, ∀ x, |gs x| ≤ M :=
+    InformationTheory.Shannon.EPIBlachmanGaussianWitness.bdd_gaussianPDFReal _ _
+  have hgt_nn : ∀ x, 0 ≤ gt x := fun x => gaussianPDFReal_nonneg _ _ _
+  have hgt_meas : Measurable gt := measurable_gaussianPDFReal _ _
+  have hgt_int : Integrable gt volume := integrable_gaussianPDFReal _ _
+  have hgt_bdd : ∃ M, ∀ x, |gt x| ≤ M :=
+    InformationTheory.Shannon.EPIBlachmanGaussianWitness.bdd_gaussianPDFReal _ _
+  -- regularity of `pY ∗ gt`
+  have hpYg_nn : ∀ x, 0 ≤ convDensityAdd pY gt x :=
+    fun x => convDensityAdd_pXpY_nonneg pY gt hpY_nn hgt_nn x
+  have hpYg_meas : Measurable (convDensityAdd pY gt) :=
+    convDensityAdd_pXpY_measurable pY gt hpY_meas hgt_meas
+  have hpYg_int : Integrable (convDensityAdd pY gt) volume :=
+    convDensityAdd_pXpY_integrable pY gt hpY_int hpY_meas hgt_int hgt_meas
+  have hpYg_bdd : ∃ M, ∀ x, |convDensityAdd pY gt x| ≤ M :=
+    convDensityAdd_bdd_of_integrable_bdd pY gt hpY_nn hpY_int hgt_bdd
+  -- regularity of `gs ∗ gt`
+  have hgsgt_nn : ∀ x, 0 ≤ convDensityAdd gs gt x :=
+    fun x => convDensityAdd_pXpY_nonneg gs gt hgs_nn hgt_nn x
+  have hgsgt_meas : Measurable (convDensityAdd gs gt) :=
+    convDensityAdd_pXpY_measurable gs gt hgs_meas hgt_meas
+  have hgsgt_int : Integrable (convDensityAdd gs gt) volume :=
+    convDensityAdd_pXpY_integrable gs gt hgs_int hgs_meas hgt_int hgt_meas
+  have hgsgt_bdd : ∃ M, ∀ x, |convDensityAdd gs gt x| ≤ M :=
+    convDensityAdd_bdd_of_integrable_bdd gs gt hgs_nn hgs_int hgt_bdd
+  -- algebraic rearrangement: (pX∗gs)∗(pY∗gt) = (pX∗pY)∗(gs∗gt)
+  -- step 1: (pX∗gs)∗(pY∗gt) = pX∗(gs∗(pY∗gt))   (assoc, c = pY∗gt bounded)
+  rw [convDensityAdd_assoc pX gs (convDensityAdd pY gt)
+      hpX_nn hpX_int hpX_meas hgs_nn hgs_int hgs_meas hpYg_nn hpYg_int hpYg_meas
+      hpYg_bdd]
+  -- step 2: gs∗(pY∗gt) = (pY∗gt)∗gs  (comm)
+  rw [convDensityAdd_comm gs (convDensityAdd pY gt)]
+  -- step 3: (pY∗gt)∗gs = pY∗(gt∗gs)  (assoc, c = gs bounded)
+  rw [convDensityAdd_assoc pY gt gs
+      hpY_nn hpY_int hpY_meas hgt_nn hgt_int hgt_meas hgs_nn hgs_int hgs_meas
+      hgs_bdd]
+  -- step 4: gt∗gs = gs∗gt  (comm), so pY∗(gt∗gs) = pY∗(gs∗gt)
+  rw [convDensityAdd_comm gt gs]
+  -- step 5: pX∗(pY∗(gs∗gt)) = (pX∗pY)∗(gs∗gt)  (assoc reverse, c = gs∗gt bounded)
+  rw [← convDensityAdd_assoc pX pY (convDensityAdd gs gt)
+      hpX_nn hpX_int hpX_meas hpY_nn hpY_int hpY_meas hgsgt_nn hgsgt_int hgsgt_meas
+      hgsgt_bdd]
+  -- step 6: gs∗gt = g_{s+t}
+  rw [show convDensityAdd gs gt = gaussianPDFReal 0 ⟨s + t, by positivity⟩ from
+    convDensityAdd_gaussian_variance_add hs ht]
 
 end InformationTheory.Shannon.EPIConvDensity
