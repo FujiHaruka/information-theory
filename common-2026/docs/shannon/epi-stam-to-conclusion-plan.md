@@ -234,6 +234,15 @@ proof-log: yes (別 session)
 - **L-PhB-stop** (許容、デフォルト): 退化枝 / 一般 a.c. の Fisher monotonicity が当該 session で解けない → **Phase A で止める**。`entropy_power_inequality_of_density` を genuine 達成成果とし、一般 `entropy_power_inequality` は `stamToEPIBridge_holds` sorry 経由のまま残す (現状維持、honest)。Phase B は後続 session に持ち越し。
 - **L-PhB-smoothing** (検討): 一般 a.c. を heat-flow smoothing で密度枝に帰着できれば中間枝を消せる。できなければ smoothing 極限の連続性 (G2 系) を honest precondition 化。
 
+#### 2026-06-06 Phase B feasibility verdict (pivot-advisor 独立機械検証) — **L-PhB-stop 発動確定**
+
+Phase A 完成直後に smoothing route を独立評価した結果、**Phase B は当該 session で closeable でない** (genuine multi-session Mathlib 壁、親 moonshot の「方針 Y」と同一、`epi-uncond-truncation-lsc-inventory.md` に feasibility verdict 既存)。機械検証で確定:
+- **`h_stam` は壁ではない**: `IsStamInequalityResidual ≡ IsStamInequalityHyp` は**両方向 defeq**、`isStamInequalityHyp_via_step3` (`@audit:ok`, sorryAx-free) で純 measurability+indep から産める。headline の唯一の残壁は `stamToEPIBridge_holds` (`EntropyPowerInequality.lean:251`, `sorryAx` 依存を `#print axioms` で再確認)。
+- **smoothing route は出発点で詰む**: Gaussian 畳込みは**裾を保存**するため `X+√ε·N` は X が無限分散/無限エントロピーならそのまま無限。Phase A が**生入力**に要求する `IsHeatFlowEndpointRegular.hpX_mom` (有限分散) / `hpX_ent` (有限エントロピー) は smoothing で剥がせない。G2 端点連続性 `heatFlowEntropyPower_continuousWithinAt_zero` は ε と同型の正しい連続性だが、invoke に必要な `IsHeatFlowEndpointRegular` が剥がそうとしている当の `hpX_mom`/`hpX_ent` を要求する (循環)。
+- **救うには truncate→smooth 二重近似 + entropy-power 弱収束 LSC が必須だが Mathlib 完全不在** (loogle Found 0 ×5、唯一の Fatou 資産 `EPIG2KLFatouLSC.lean:359` は向きが逆)。加えて型壁 `differentialEntropy : →ℝ` が `h=+∞` を持てない。これらは別 moonshot 規模 (genuine Mathlib 壁 2 本)。
+- **退化枝の注意**: `entropyPower(dirac)` は親 plan で旧値 1 → 新値 0 へ二層 retype 移行中 (`epi-unconditional-moonshot-plan.md:282`)。退化枝設計は新定義側で行う (旧 P-5 の `=1` を前提にしない)。
+- **結論**: Phase A (`entropy_power_inequality_of_density`, sorryAx-free, `@audit:ok` ×全部品) を genuine deliverable として締め、headline は `stamToEPIBridge_holds` sorry 経由のまま (honest 現状維持)。Phase B = 後続 moonshot へ持ち越し (方針 Y、truncate-smooth-LSC を新規 shared sorry 補題化する skeleton から)。
+
 ---
 
 ## Position
