@@ -1355,4 +1355,37 @@ theorem entropyPowerExt_add_ge_of_finite_variance
     ← ENNReal.ofReal_add (entropyPower_nonneg _) (entropyPower_nonneg _)]
   exact ENNReal.ofReal_le_ofReal hreal
 
+/-- **Pivot B Phase 3 — infinite-variance a.c. classical EPI** (named Mathlib wall).
+
+The `entropyPowerExt` (ℝ≥0∞-valued) entropy power inequality `Nₑ(X+Y) ≥ Nₑ(X) + Nₑ(Y)` for
+two independent absolutely-continuous summands of **infinite variance** (the negation of the
+finite-second-moment hypothesis is taken explicitly via `h_infvar`, both inputs still having
+finite differential entropy).
+
+This is the genuine Mathlib gap of the classical EPI: the finite-variance route (smoothing
+limit, `entropyPowerExt_add_ge_of_finite_variance`) leans on the Gaussian maximum-entropy /
+de-Bruijn / heat-flow machinery whose endpoint inputs require a finite second moment. Without
+finite variance the standard proof goes through **Lieb's sharp Young inequality / Brascamp-Lieb
+rearrangement** (Cover-Thomas 17.8, Lieb 1978), none of which is present in Mathlib.
+
+`h_infvar : ¬ (Integrable (·²) X ∧ Integrable (·²) Y)` makes the infinite-variance regime
+explicit (honest: it is the *negation* of a regularity precondition, not a load-bearing
+bundling of the EPI conclusion). `hX_ent`/`hY_ent` are finite-differential-entropy regularity
+preconditions, not load-bearing — the statement `Nₑ(X+Y) ≥ Nₑ(X)+Nₑ(Y)` is not encoded in any
+hypothesis.
+
+loogle 2026-06-06: `entropyPower` / `fisherInformation` / `Lieb` / `Brascamp` / sharp-Young
+on `Measure ℝ` all `Found 0 declarations` (Mathlib gap mechanically confirmed).
+@residual(wall:epi-infinite-variance-classical) -/
+theorem entropyPowerExt_add_ge_infinite_variance
+    {Ω : Type*} {mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
+    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
+    (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
+    (hX_ent : Integrable (fun x => Real.negMulLog ((P.map X).rnDeriv volume x).toReal) volume)
+    (hY_ent : Integrable (fun x => Real.negMulLog ((P.map Y).rnDeriv volume x).toReal) volume)
+    (h_infvar : ¬ (Integrable (fun ω => (X ω) ^ 2) P ∧ Integrable (fun ω => (Y ω) ^ 2) P)) :
+    entropyPowerExt (P.map (fun ω => X ω + Y ω))
+      ≥ entropyPowerExt (P.map X) + entropyPowerExt (P.map Y) := by
+  sorry
+
 end InformationTheory.Shannon.EPICase1SmoothingLimit
