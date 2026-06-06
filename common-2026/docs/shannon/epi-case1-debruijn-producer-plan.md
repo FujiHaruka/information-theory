@@ -8,6 +8,17 @@
 > **proof-log**: yes (実装 session で `docs/shannon/proof-log-epi-case1-debruijn-producer.md`)
 > **撤退口 slug**: `@residual(plan:epi-case1-debruijn-producer-plan)`
 
+## 進捗サマリ (2026-06-06 実機械検証反映)
+
+de Bruijn 解析核は **CLOSED (sorryAx-free)** が `#print axioms` で機械確認済
+(`debruijnIdentityV2_holds_assembled` / `deBruijn_identity_v2` / `debruijnIntegrationIdentity_holds`
+= `[propext, Classical.choice, Quot.sound]`)。producer の構造的構成は genuine 完了し、
+**残 sorry はただ 1 個** = `isDeBruijnRegularityHyp_of_methodX_unitnoise`
+(`EPICase1RatioLimit.lean:1936`) の `integrable_deriv` field 内 `:2041` の
+**parameter-measurability** (`AEStronglyMeasurable` 引数、bound は genuine)。この sorry は
+**3 層分解済** (Layer A genuine 可能 / Layer B 中継 / Layer C 真の壁 = joint-continuity brick)。
+詳細 → L-Prod-meas + PB-3 節。
+
 ## 進捗
 
 - [x] M0 案D 調査 (de Bruijn Gaussian discharge の var=1 本質依存性) — 本 plan 内で完了
@@ -15,9 +26,10 @@
 - [~] ~~A vs B 確定 — 案A (v_Z 一般化) を採用~~ → **案A REVERT (L-A-esc 発火)、案B 採用** 🔄
 - [x] B-0 path-identification 代数確認 (advisor 第一手) — 本 plan 内で完了
 - [x] B-0' wrapper latent defect 解消方針確定 (3 択評価 → 推奨確定) — 本 plan 内で完了
-- [ ] PB-1 wrapper restate: case-1 wrapper を unit-noise (v_X=v_Y=1) 固定形に restate 📋
+- [x] PB-1 wrapper restate: case-1 wrapper を unit-noise (v_X=v_Y=1) 固定形に restate
 - [ ] PB-2 path-identification reduction 補題 `gaussianConvolution_rescale_eq` 構築 📋
-- [ ] PB-3 `IsDeBruijnRegularityHyp` producer (X / Y、unit-noise 直接) 構築 📋
+- [~] PB-3 `IsDeBruijnRegularityHyp` producer (X / Y、unit-noise 直接) — 構造 genuine 完了、
+  残 1 sorry = `:2041` parameter-measurability (3 層分解済、L-Prod-meas) 🔄
 - [ ] PB-4 sum-instance producer (W=(Z_X+Z_Y)/√2 unit + time-reparam) 構築 📋
 - [ ] PB-5 `h_pos_stam` producer (Stam/Blachman genuine 既存配線) 構築 📋
 - [ ] PB-6 最終 wrapper `entropyPower_add_ge_case1_of_methodX_unitnoise` 結線 📋
@@ -36,6 +48,14 @@ de Bruijn family は 0 sorry / 0 residual 化済 (commit `70314b8`)。
 壁 `wall:debruijn-integration` / `wall:fisher-finiteness` / `wall:entropy-finiteness` /
 `wall:cond-diff-entropy` / `wall:approx-identity-L1` はいずれも CLOSED
 (`docs/audit/audit-tags.md` Wall register 参照)。
+
+**de Bruijn per-time 解析核は実機械検証で CLOSED (sorryAx-free)** (2026-06-06 `#print axioms`):
+- `FisherInfoV2.debruijnIdentityV2_holds_assembled` (`FisherInfoV2DeBruijnAssembly.lean`)
+  = `[propext, Classical.choice, Quot.sound]` (sorryAx 非依存)。
+- `FisherInfoV2.deBruijn_identity_v2` / `FisherInfoV2.debruijnIntegrationIdentity_holds`
+  (`FisherInfoV2DeBruijnGenuine.lean`、旧 shim を genuine 化して移設) も sorryAx-free。
+- つまり姉妹 plan `epi-debruijn-pertime-closure` の「Wall SoT」だった `debruijnIdentityV2_holds`
+  系は **proof-done 済**。本 producer plan はもはやこの核に依存しない。
 
 残るのは wrapper が thread する **de Bruijn regularity 群** を方針X の前提から供給する
 **producer 構築**。wrapper signature (`EPICase1RatioLimit.lean:1488-1518`) が要求する群:
@@ -403,6 +423,27 @@ theorem isDeBruijnRegularityHyp_of_methodX_unitnoise
 - `integrable_deriv`: bounded-T interval integrability。`wall:fisher-finiteness` CLOSED 資産
   `gaussianConv_fisher_le_inv_var` (`FisherConvBound.lean:385`) で `J ≤ 1/(t·1)` 連続有界。
 
+**PB-3 実装現況 (2026-06-06 `#print axioms` + implementer 撤退報告)**:
+`isDeBruijnRegularityHyp_of_methodX_unitnoise` (`EPICase1RatioLimit.lean:1936`) は
+`density_path` / `reg_at` / 全 `pX` series field (`pX_nn` / `pX_meas` / `pX_law` / `pX_mom`) /
+`density_t_eq := fun _ _ => rfl` を **genuine 構成済**。`hbound` (各点
+`(1/2)·J(conv pX g_t).toReal ≤ C := (1/2)·J(pX).toReal`、PB-2b
+`fisherInfoOfDensity_convDensityAdd_le` 経由) も genuine。
+`#print axioms isDeBruijnRegularityHyp_of_methodX_unitnoise`
+= `[propext, sorryAx, Classical.choice, Quot.sound]` で、**sorryAx は `:2041` の単一 sorry に
+trace** される。
+
+**残 sorry (`:2041`) の正体 = parameter-measurability**:
+`integrable_deriv` field の `MeasureTheory.Measure.integrableOn_of_bounded` の
+`AEStronglyMeasurable` 引数。goal ≈
+`AEStronglyMeasurable (fun t => (1/2)·(fisherInfoOfDensity (convDensityAdd pX (gaussianPDFReal 0 t.toNNReal))).toReal) (volume.restrict (Set.Ioc 0 T))`。
+bound は genuine、measurability だけが残課題。closure route の 3 層分解は L-Prod-meas を参照。
+
+**honesty 制約**: `:2041` の sorry は正しい classification
+(`@residual(plan:epi-case1-debruijn-producer-plan)`) を保持。producer signature に
+measurability を **load-bearing hypothesis として足して sorry を消すのは禁止** (tier-5)。
+closure は Layer A+B+C を内部 genuine に閉じる形のみ。
+
 **`pX` series の honesty 判定**: load-bearing でない **regularity precondition**
 (CLAUDE.md「判定の一言」前者)。「X が Lebesgue 密度を持つ」は input regularity で de Bruijn
 analytic 核を bundle しない。case-1 では `hX_ac` から rnDeriv 経由で構成可能なので genuine に
@@ -570,6 +611,38 @@ touched file 全て `lake env lean` silent。
 - **L-A-esc** (発火済): 案A (`Z_law` 値一般化) は値据置 = false statement、値一般化 = ratio
   core 偽化 (M0 落とし穴 / advisor Q1)。**案B にエスカレート済** (本改訂 plan)。案A への
   逆戻りは禁止 (数学的に通らない)。
+- **L-Prod-meas** (PB-3 段階、2026-06-06 実機械検証で実体化): `:2041` の
+  parameter-measurability (`integrable_deriv` の `AEStronglyMeasurable` 引数、bound は genuine)。
+  implementer 撤退報告の診断で 3 層分解済:
+  - **Layer A — `measurable_convDensityAdd_gaussian_uncurry`**:
+    `Measurable (fun p : ℝ×ℝ => convDensityAdd pX (gaussianPDFReal 0 p.1.toNNReal) p.2)`。
+    要 `Measurable pX` + `gaussianPDFReal` の `(v,w)` joint 可測 (port 元
+    `InformationTheory/Draft/Shannon/ContChannelMIDecomp.lean:378`
+    `measurable_gaussianPDFReal_uncurry`) + `MeasureTheory.StronglyMeasurable.integral_prod_right`
+    (`Mathlib/.../Integral/Prod.lean:76`)。**genuine 可能、~40-60 行**。
+  - **Layer B — lintegral param-measurability**: integrand の joint `(t,x)` 可測 →
+    `MeasureTheory.Measurable.lintegral_prod_right` (`Mathlib/.../Measure/Prod.lean:145`、
+    `[SFinite ν]`) で `t ↦ ∫⁻ x, ...` 可測。`.toReal` / `(1/2)·` /
+    `Measurable.aestronglyMeasurable` で goal 到達。Layer A+C が揃えば genuine。
+  - **Layer C — `measurable_logDeriv_convDensityAdd_gaussian_uncurry` (真の壁)**:
+    `logDeriv (conv pX g_t) x = deriv(conv pX g_t) x / conv(...) x` の `(t,x)` joint 可測。
+    Mathlib の唯一の該当 `measurable_deriv_with_param`
+    (`Mathlib/Analysis/Calculus/FDeriv/Measurable.lean:920`) は
+    **`Continuous f.uncurry` (畳み込みの `(t,x)` 同時連続性)** を要求するが、producer の
+    available 仮説 (`IsRegularDensityV2 pX` / `IsBlachmanConvReady`) は全て **per-`t`
+    (固定分散)** で joint 連続性を供給しない。
+    - **designated 突破口**: 「畳み込み
+      `(t,x) ↦ convDensityAdd pX (gaussianPDFReal 0 t.toNNReal) x` の
+      `t ∈ Ioc 0 T` (or `Ioo 0 ∞`)×`x∈ℝ` 上の同時連続性」を独立 brick として先に立てる
+      (Gaussian-tail uniform-on-compacts domination + dominated convergence)。これが立てば
+      `measurable_deriv_with_param` で Layer C closure → Layer B 経由で `:2041` sorry 全消去。
+    - 代替: `convDensityAdd_logDeriv` (`EPIConvDensity.lean:116`) で closed form に落とし
+      7 domination 仮説を a.e. 供給 (substantial、非推奨)。
+  → Layer A は genuine 可能だが Layer C の joint-continuity brick が
+  `measurable_deriv_with_param` の連続性前提ゆえ substantial。joint-continuity brick が当該
+  session で立たなければ `:2041` sorry 据置 (type-check done) で次 session 継続。closure は
+  Layer A+B+C を内部 genuine に閉じる形のみ (producer signature への measurability
+  load-bearing 追加は禁止)。
 - **L-Prod-park** (PB-3 段階): case-1 input density witness (`pX` series、特に `pX_mom` の
   2次モーメント push-forward / `pX_law` の rnDeriv 整合) が `hX_ac`/`h_mom_X` から genuine に
   組めない → 該当 field のみ `sorry` + `@residual(plan:epi-case1-debruijn-producer-plan)` で
@@ -700,3 +773,25 @@ touched file 全て `lake env lean` silent。
    閉じなければ (L-Sum-struct) sum producer の `reg_at` を park し、`Z_law` field のみ
    general-variance 化する structure 改変 (案A とは別物: conv-pin variance は触らず微分値 `(1/2)·J`
    を保つので ratio core 偽化は起きない) を別 plan に切り出す。
+
+6. **2026-06-06 — 実機械検証で producer 現況前進 + 残 sorry を `:2041` measurability に局所化**:
+   `#print axioms` 実測で (a) de Bruijn per-time 解析核 (`debruijnIdentityV2_holds_assembled` /
+   `deBruijn_identity_v2` / `debruijnIntegrationIdentity_holds`) が **sorryAx-free**
+   (`[propext, Classical.choice, Quot.sound]`) と確認 — 姉妹 plan
+   `epi-debruijn-pertime-closure` の Wall SoT は proof-done 済、本 plan は核に非依存。
+   (b) PB-1 wrapper restate 済 (進捗 [x] 昇格)、PB-3 producer
+   `isDeBruijnRegularityHyp_of_methodX_unitnoise` (`:1936`) は構造的構成 genuine 完了で
+   `density_path` / `reg_at` / 全 `pX` series / `density_t_eq := fun _ _ => rfl` / `hbound`
+   (PB-2b `fisherInfoOfDensity_convDensityAdd_le` 経由) を埋済。
+   `#print axioms isDeBruijnRegularityHyp_of_methodX_unitnoise`
+   = `[propext, sorryAx, Classical.choice, Quot.sound]`、**sorryAx は `:2041` 単一 sorry に
+   trace**。残 sorry = `integrable_deriv` の `MeasureTheory.Measure.integrableOn_of_bounded`
+   の `AEStronglyMeasurable` 引数 = parameter-measurability (bound は genuine)。
+   implementer 撤退報告で 3 層分解 (Layer A genuine 可能 ~40-60 行 / Layer B 中継 / Layer C
+   = `measurable_deriv_with_param` が `Continuous f.uncurry` を要求するが available 仮説は
+   per-`t` のみで joint 連続性を供給しない真の壁)。新撤退ライン **L-Prod-meas** 追加、designated
+   突破口 = 畳み込みの `(t,x)` 同時連続性 brick を独立に先立て (Gaussian-tail
+   uniform-on-compacts domination)。`:2041` sorry は honest classification
+   `@residual(plan:epi-case1-debruijn-producer-plan)` を保持、producer signature への
+   measurability load-bearing 追加は禁止 (tier-5)。joint-continuity brick が立たなければ
+   `:2041` 据置 (type-check done) で次 session 継続。
