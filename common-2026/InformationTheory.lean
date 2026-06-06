@@ -236,3 +236,4 @@ import InformationTheory.Shannon.EPICase1ProducerMeasurability
 import InformationTheory.Shannon.EPICase1RatioLimit
 import InformationTheory.Shannon.EPICase1TwoTime
 import InformationTheory.Shannon.EPIDensityForm
+import InformationTheory.Shannon.EPIStamSupplyTwoTime

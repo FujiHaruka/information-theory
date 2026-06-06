@@ -154,4 +154,41 @@ theorem entropy_power_inequality_via_lift (hX : Measurable X) (hY : Measurable Y
       entropyPower_map_comp_fst_eq P Y hY] at h_lift_epi
   rwa [entropyPower_map_comp_fst_eq P (fun ω => X ω + Y ω) (hX.add hY)] at h_lift_epi
 
+/-! ## 3-noise lift (two-time route)
+
+The two-time assembler `entropyPower_add_ge_case1_of_regular_twotime` perturbs the
+sum with a SEPARATE single unit noise `Z`, independent of `(Z_X, Z_Y)`. That requires a
+**3-noise** lift `Ω × ℝ × ℝ × ℝ` (three independent standard normals), since reusing one
+of the 2-noise factors for `Z` would break `Z ⊥ (Z_X, Z_Y)`. The transport lemma below is
+the direct mirror of the 2-noise `entropy_power_inequality_via_lift`: only the first factor
+(`Prod.fst`) carries `X`/`Y`, so all three `entropyPower` terms transport via
+`measurePreserving_fst`. -/
+
+/-- 3-noise lift 空間 `Ω × ℝ × ℝ × ℝ` の測度 (3 因子はすべて標準正規)。 -/
+noncomputable abbrev liftMeasure3 : Measure (Ω × ℝ × ℝ × ℝ) :=
+  P.prod ((gaussianReal 0 1).prod ((gaussianReal 0 1).prod (gaussianReal 0 1)))
+
+omit [IsProbabilityMeasure P] in
+/-- lift3 上で `X` law が保存される (transport の linchpin、2-noise 版の直接 mirror)。 -/
+theorem entropyPower_map_comp_fst_eq3 (hX : Measurable X) :
+    entropyPower ((liftMeasure3 P).map (fun p => X p.1)) = entropyPower (P.map X) := by
+  have hmap : (liftMeasure3 P).map (fun p : Ω × ℝ × ℝ × ℝ => X p.1) = P.map X := by
+    rw [show (fun p : Ω × ℝ × ℝ × ℝ => X p.1) = X ∘ Prod.fst from rfl,
+      ← Measure.map_map hX measurable_fst, measurePreserving_fst.map_eq]
+  rw [hmap]
+
+omit [IsProbabilityMeasure P] in
+/-- route B 本体 (3-noise lift、conditional transport 形)。仮説 `h_lift_epi` は別測度
+`liftMeasure3 P` 上の EPI 結論で、base `(Ω,P)` の EPI と別 Prop (measure-transport reduction、
+2-noise 版 `entropy_power_inequality_via_lift` と同型の honest reduction、非循環・非バンドル)。 -/
+theorem entropy_power_inequality_via_lift3 (hX : Measurable X) (hY : Measurable Y)
+    (h_lift_epi : entropyPower ((liftMeasure3 P).map (fun p => X p.1 + Y p.1))
+      ≥ entropyPower ((liftMeasure3 P).map (fun p => X p.1))
+        + entropyPower ((liftMeasure3 P).map (fun p => Y p.1))) :
+    entropyPower (P.map (fun ω => X ω + Y ω))
+      ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
+  rw [entropyPower_map_comp_fst_eq3 P X hX,
+      entropyPower_map_comp_fst_eq3 P Y hY] at h_lift_epi
+  rwa [entropyPower_map_comp_fst_eq3 P (fun ω => X ω + Y ω) (hX.add hY)] at h_lift_epi
+
 end InformationTheory.Shannon.EPINoiseExtension
