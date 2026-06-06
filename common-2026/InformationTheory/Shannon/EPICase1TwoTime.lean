@@ -1156,13 +1156,35 @@ theorem twoTimeLogRatioGap_antitoneOn_Ici_zero
   have := h_anti_Ioi.insert_of_continuousWithinAt h_cluster h_cont_zero
   rwa [Set.Ioi_insert] at this
 
-/-- **TT-`_at_one_eq_zero`** — the two-time gap is `0` at the Gaussian-saturation
-endpoint.
+/-- **TT-`_tendsto_zero_atTop`** — the two-time gap tends to `0` as `t → ∞`
+(Gaussian-saturation limit along the matched paths). Mirrors
+`csiszarLogRatioGap_tendsto_zero_atTop` (`EPICase1RatioLimit.lean:1178`).
 
-Mirrors `csiszarLogRatioGap_at_one_eq_zero` (`EPIL3Integration.lean:1426`,
-`entropyPower_gaussian_additivity`): at the saturation time the perturbed
-components are independent Gaussians and EPI saturates, so `log A − log A = 0`
-(after the `−t` correction is matched by the `e^t` growth — checked in the body).
+**§1 (genuine reduction, sorry-free in this body).** Using
+`IsMatchedTimePath.matched_growth` (for `t ≥ 0`, `heatFlowEP A B P (s t) =
+heatFlowEP A B P 0 · eᵗ`) and `heatFlowEP A B P 0 = entropyPower (P.map A)` (the
+`√0 = 0` collapse), the matched-path denominator
+`B t = heatFlowEP X Z_X P (s t) + heatFlowEP Y Z_Y P (r t)` equals
+`(eP X + eP Y)·eᵗ`, whence `log B t = log (eP X + eP Y) + t`. Therefore the gap
+reduces (for `t ≥ 0`) to `R t = log (A t) − log (B t)`, the log of the EPI
+saturation ratio `A t / B t` (`A t = sumHeatFlowEP …(s t)(r t)` is the numerator).
+The `−t` correction is absorbed by the `eᵗ` growth — established genuinely in the
+body via `Real.log_mul`/`Real.log_exp`, no `sorry`.
+
+**§2 (saturation core, isolated `sorry`).** The remaining content is the EPI
+saturation `A t / B t → 1` as `t → ∞` along the matched path (both perturbed
+components Gaussianise as `s t, r t → ∞`). This is isolated into a single
+`have h_ratio_tendsto`; from it `log (A t / B t) → log 1 = 0` (continuity of
+`log` at `1`) and `log (A/B) = log A − log B` (both positive) recover `R t → 0`.
+
+The in-tree saturation machinery (`entropyPower_rescaled_path_tendsto`,
+`IsRescaledPathRegular`) is keyed to the **single-time rescaling**
+parametrization `A/√t + B`; the matched path uses **different** times
+`s t ≠ r t` per component, so bridging requires reducing `A t` via
+`matchedSum_law_eq` to a single-noise heat flow at `τ = s t + r t` and then
+assembling the saturation limits of `N_X(s t)`, `N_Y(r t)`, `N_sum(τ t)` with
+their differing matched-growth divergence rates — not a direct application of the
+existing tendsto lemma. Saturation core only; no EPI/Stam conclusion is bundled.
 
 @residual(plan:epi-case1-twotime-restructure-plan) -/
 theorem twoTimeLogRatioGap_tendsto_zero_atTop
@@ -1172,7 +1194,62 @@ theorem twoTimeLogRatioGap_tendsto_zero_atTop
     (h_path_Y : IsMatchedTimePath Y Z_Y P J_Y r) :
     Filter.Tendsto (fun t : ℝ => twoTimeLogRatioGap X Y Z_X Z_Y P s r t)
       Filter.atTop (nhds (0 : ℝ)) := by
-  sorry
+  -- Abbreviations: the saturation numerator `A t` and the matched-path
+  -- denominator `B t = (eP X + eP Y)·eᵗ`.
+  set A := fun t : ℝ => sumHeatFlowEP X Y Z_X Z_Y P (s t) (r t) with hA
+  set B := fun t : ℝ =>
+    heatFlowEP X Z_X P (s t) + heatFlowEP Y Z_Y P (r t) with hB
+  -- (eP X + eP Y) is positive.
+  have hXY_pos : (0 : ℝ) < entropyPower (P.map X) + entropyPower (P.map Y) :=
+    add_pos (entropyPower_pos _) (entropyPower_pos _)
+  -- `heatFlowEP _ _ _ 0 = entropyPower (P.map _)` (the `√0 = 0` collapse).
+  have hX0 : heatFlowEP X Z_X P 0 = entropyPower (P.map X) := by
+    unfold heatFlowEP
+    have : (fun ω => X ω + Real.sqrt 0 * Z_X ω) = X := by
+      funext ω; simp [Real.sqrt_zero]
+    rw [this]
+  have hY0 : heatFlowEP Y Z_Y P 0 = entropyPower (P.map Y) := by
+    unfold heatFlowEP
+    have : (fun ω => Y ω + Real.sqrt 0 * Z_Y ω) = Y := by
+      funext ω; simp [Real.sqrt_zero]
+    rw [this]
+  -- §1 (genuine reduction): for `t ≥ 0`, `R t = log (A t) − log (B t)` and
+  -- `B t = (eP X + eP Y)·eᵗ`.
+  have hB_eq : ∀ t : ℝ, 0 ≤ t →
+      B t = (entropyPower (P.map X) + entropyPower (P.map Y)) * Real.exp t := by
+    intro t ht
+    show heatFlowEP X Z_X P (s t) + heatFlowEP Y Z_Y P (r t) = _
+    rw [h_path_X.matched_growth t ht, h_path_Y.matched_growth t ht, hX0, hY0]
+    ring
+  have h_R_eq : ∀ t : ℝ, 0 ≤ t →
+      twoTimeLogRatioGap X Y Z_X Z_Y P s r t = Real.log (A t) - Real.log (B t) := by
+    intro t ht
+    rw [hB_eq t ht]
+    rw [Real.log_mul hXY_pos.ne' (Real.exp_ne_zero t), Real.log_exp]
+    show Real.log (A t) - _ - t = _
+    rw [hA]
+    ring
+  -- §2 (saturation core): the EPI ratio `A t / B t → 1` along the matched path.
+  have h_ratio_tendsto :
+      Filter.Tendsto (fun t : ℝ => A t / B t) Filter.atTop (nhds (1 : ℝ)) := by
+    -- @residual(plan:epi-case1-twotime-restructure-plan)
+    sorry
+  -- `B t > 0` for `t ≥ 0` (positive entropy powers times `eᵗ`).
+  have hB_pos : ∀ t : ℝ, 0 ≤ t → 0 < B t := by
+    intro t ht
+    rw [hB_eq t ht]; positivity
+  have hA_pos : ∀ t : ℝ, 0 < A t := fun t => by rw [hA]; exact entropyPower_pos _
+  -- `log (A/B) → log 1 = 0` by continuity of `log` at `1`.
+  have h_logratio_tendsto :
+      Filter.Tendsto (fun t : ℝ => Real.log (A t / B t)) Filter.atTop (nhds (0 : ℝ)) := by
+    have := (Real.continuousAt_log (one_ne_zero)).tendsto.comp h_ratio_tendsto
+    simpa using this
+  -- `log (A/B) = log A − log B` (both positive, eventually for `t ≥ 0`).
+  have h_eventually_eq : ∀ᶠ t in Filter.atTop,
+      Real.log (A t / B t) = twoTimeLogRatioGap X Y Z_X Z_Y P s r t := by
+    filter_upwards [Filter.eventually_ge_atTop (0 : ℝ)] with t ht
+    rw [Real.log_div (hA_pos t).ne' (hB_pos t ht).ne', ← h_R_eq t ht]
+  exact (Filter.tendsto_congr' h_eventually_eq).mp h_logratio_tendsto
 
 /-- **TT-`epi_of_*`** — `R(0) ≥ 0 ⟹ EPI` for the two-time object.
 
