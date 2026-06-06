@@ -68,6 +68,7 @@ open InformationTheory.Shannon
 open InformationTheory.Shannon.EntropyPowerInequality
 open InformationTheory.Shannon.EPIStamDischarge
 open InformationTheory.Shannon.EPIL3Integration (csiszarLogRatioGap)
+open InformationTheory.Shannon.EPIStamToBridge (entropyPower_hasDerivAt_of_diffEnt_hasDerivAt)
 
 variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
 
@@ -716,6 +717,13 @@ theorem twoTimeLogRatioGap_hasDerivAt
     -- unit-noise law of `Z`, and independence of `X+Y` from `Z`).
     (hZ : Measurable Z) (hZ_law : P.map Z = gaussianReal 0 1)
     (hXYZ : IndepFun (fun ω => X ω + Y ω) Z P)
+    -- unit-noise laws + joint independences for the matched-sum law
+    -- (`matchedSum_law_eq` regularity preconditions; honest noise-distribution
+    -- facts, not bundled derivative content)
+    (hZX_law : P.map Z_X = gaussianReal 0 1)
+    (hZY_law : P.map Z_Y = gaussianReal 0 1)
+    (hXY_ZXZY_pair : IndepFun (fun ω => X ω + Y ω) (fun ω => (Z_X ω, Z_Y ω)) P)
+    (hZX_ZY : IndepFun Z_X Z_Y P)
     (h_reg_sum : IsDeBruijnRegularityHyp (fun ω => X ω + Y ω) Z P)
     {t : ℝ} (ht : 0 < t)
     -- matched-time positivity (regularity precondition: `t > 0` + strict-mono
@@ -737,7 +745,96 @@ theorem twoTimeLogRatioGap_hasDerivAt
       (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
           ((h_reg_sum.reg_at (s t + r t) hτ).density_t)
         * (1 / J_X (s t) + 1 / J_Y (r t)) - 1) t := by
-  sorry
+  classical
+  set J_S : ℝ := InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+      ((h_reg_sum.reg_at (s t + r t) hτ).density_t) with hJS_def
+  -- Step 2: single-noise de Bruijn for `X+Y` at `τ = s t + r t` gives the
+  -- entropy-power log-derivative `d/dσ log (heatFlowEP (X+Y) Z P σ) = J_S` at `s t + r t`.
+  have h_log_sum :
+      HasDerivAt (fun σ : ℝ => Real.log (heatFlowEP (fun ω => X ω + Y ω) Z P σ))
+        J_S (s t + r t) := by
+    -- Single-noise de Bruijn V2 for `X+Y` perturbed by `Z` at time `τ = s t + r t`.
+    have h_dB :
+        HasDerivAt
+          (fun σ : ℝ => InformationTheory.Shannon.differentialEntropy
+            (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution
+                      (fun ω => X ω + Y ω) Z σ)))
+          ((1/2) * J_S) (s t + r t) := by
+      have := InformationTheory.Shannon.FisherInfoV2.deBruijn_identity_v2
+        (fun ω => X ω + Y ω) Z (hX.add hY) hZ hXYZ hτ (h_reg_sum.reg_at (s t + r t) hτ)
+      simpa only [hJS_def] using this
+    -- Lift to entropy-power form.
+    have h_eP := entropyPower_hasDerivAt_of_diffEnt_hasDerivAt h_dB
+    -- Normalize to `heatFlowEP (X+Y) Z P σ · J_S`.
+    have hN :
+        HasDerivAt (fun σ : ℝ => heatFlowEP (fun ω => X ω + Y ω) Z P σ)
+          (heatFlowEP (fun ω => X ω + Y ω) Z P (s t + r t) * J_S) (s t + r t) := by
+      have h_val :
+          heatFlowEP (fun ω => X ω + Y ω) Z P (s t + r t) * J_S
+            = Real.exp (2 * InformationTheory.Shannon.differentialEntropy
+                (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution
+                          (fun ω => X ω + Y ω) Z (s t + r t))))
+              * (2 * ((1/2) * J_S)) := by
+        unfold heatFlowEP entropyPower InformationTheory.Shannon.FisherInfoV2.gaussianConvolution
+        ring
+      rw [h_val]
+      exact h_eP
+    -- `log` derivative: `(N_S · J_S) / N_S = J_S`.
+    have hNpos : 0 < heatFlowEP (fun ω => X ω + Y ω) Z P (s t + r t) := by
+      simpa [heatFlowEP] using entropyPower_pos _
+    have h := hN.log (ne_of_gt hNpos)
+    rwa [mul_comm, mul_div_assoc, div_self (ne_of_gt hNpos), mul_one] at h
+  -- Step 3: chain rule with `τ(u) = s u + r u`, `τ'(t) = 1/J_X(s t) + 1/J_Y(r t)`.
+  have h_tau_deriv :
+      HasDerivAt (fun u : ℝ => s u + r u) (1 / J_X (s t) + 1 / J_Y (r t)) t :=
+    (h_path_X.deriv_at t ht).add (h_path_Y.deriv_at t ht)
+  have h_log_comp :
+      HasDerivAt (fun u : ℝ => Real.log (heatFlowEP (fun ω => X ω + Y ω) Z P (s u + r u)))
+        (J_S * (1 / J_X (s t) + 1 / J_Y (r t))) t := by
+    -- `comp` of the log-heat-flow (at `s t + r t`) with `τ(u) = s u + r u` (at `t`).
+    have hcomp := h_log_sum.comp t h_tau_deriv
+    -- `comp` yields value `J_S * τ'(t)`; match by `mul_comm`.
+    simpa only [Function.comp, mul_comm] using hcomp
+  -- Step 1: rewrite `log (sumHeatFlowEP ... (s u) (r u))` to the single-noise heat flow
+  -- on a neighborhood of `t`, via `matchedSum_law_eq` (eventually `s u, r u > 0`).
+  have h_log_sumHeat :
+      HasDerivAt
+        (fun u : ℝ => Real.log (sumHeatFlowEP X Y Z_X Z_Y P (s u) (r u)))
+        (J_S * (1 / J_X (s t) + 1 / J_Y (r t))) t := by
+    -- `s`, `r` are continuous at `t` (`HasDerivAt → ContinuousAt`), and `s t, r t > 0`,
+    -- so `s u, r u > 0` on a neighborhood of `t`.
+    have hs_cont : ContinuousAt s t := (h_path_X.deriv_at t ht).continuousAt
+    have hr_cont : ContinuousAt r t := (h_path_Y.deriv_at t ht).continuousAt
+    have hs_ev : ∀ᶠ u in nhds t, 0 < s u :=
+      continuousAt_const.eventually_lt hs_cont hst
+    have hr_ev : ∀ᶠ u in nhds t, 0 < r u :=
+      continuousAt_const.eventually_lt hr_cont hrt
+    -- On that neighborhood the matched-sum law identifies the two heat flows.
+    have h_eq : (fun u : ℝ => Real.log (sumHeatFlowEP X Y Z_X Z_Y P (s u) (r u)))
+        =ᶠ[nhds t] (fun u : ℝ => Real.log (heatFlowEP (fun ω => X ω + Y ω) Z P (s u + r u))) := by
+      filter_upwards [hs_ev, hr_ev] with u hsu hru
+      have hmap := matchedSum_law_eq X Y Z_X Z_Y Z P hX hY hZX hZY hZ
+        hZX_law hZY_law hZ_law hXY_ZXZY_pair hXYZ hZX_ZY (s u) (r u) hsu hru
+      unfold sumHeatFlowEP heatFlowEP
+      rw [hmap]
+    exact h_log_comp.congr_of_eventuallyEq h_eq
+  -- Step 4: assemble. `twoTimeLogRatioGap ... u = log (sumHeatFlowEP ... (s u)(r u)) − const − u`.
+  have h_const :
+      HasDerivAt
+        (fun _ : ℝ => Real.log (entropyPower (P.map X) + entropyPower (P.map Y)))
+        0 t := hasDerivAt_const t _
+  have h_id : HasDerivAt (fun u : ℝ => u) (1 : ℝ) t := hasDerivAt_id t
+  have h_assembled :
+      HasDerivAt (fun u : ℝ => twoTimeLogRatioGap X Y Z_X Z_Y P s r u)
+        (J_S * (1 / J_X (s t) + 1 / J_Y (r t)) - 0 - 1) t := by
+    have := (h_log_sumHeat.sub h_const).sub h_id
+    simpa only [twoTimeLogRatioGap] using this
+  -- Match the stated derivative value.
+  have hval : J_S * (1 / J_X (s t) + 1 / J_Y (r t)) - 0 - 1
+      = J_S * (1 / J_X (s t) + 1 / J_Y (r t)) - 1 := by ring
+  rw [hval] at h_assembled
+  rw [hJS_def] at h_assembled
+  exact h_assembled
 
 /-- **TT-`_deriv_le_zero`** (= analytic core, arith gate PASS) — the two-time
 gap derivative is `≤ 0` at `t > 0` along the matched path.
