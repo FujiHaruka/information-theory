@@ -1,7 +1,22 @@
 # 有限分散 classical EPI closure — Phase-A smoothing-limit 実装計画
 
 > **親**: [`epi-uncond-deffix-monotone-plan.md`](epi-uncond-deffix-monotone-plan.md) → 残壁 `wall:epi-finite-entropy-ac-classical` の **有限分散 sub-case** を genuine close する。無限分散 sub-case は genuine Mathlib 壁 (Lieb-Young 不在) ゆえ別 named wall に隔離 (touch しない、ユーザー確定 2026-06-06)。
-> **status**: 2026-06-06 scoping workflow (`wf_47d024fe-b0e`, 4 thread + synth) で route 確定 + skeleton 産出。**2026-06-07: 主ルート (Phase A 直呼) infeasible 判明 → Pivot B に切替 (下記)。実装は Pivot B route で進行。**
+> **status**: 2026-06-06 scoping → 主ルート (Phase A 直呼) infeasible 判明 → Pivot B 切替。**2026-06-07: Pivot B closure 完成 (下記「## 達成」)。有限分散 EPI machinery は全 sorryAx-free + 独立監査 PASS。残 residual は (a) `hent_sum` (和の有限エントロピー、closable plan-residual) + (b) 無限分散 wall の 2 本。**
+
+## 達成 (2026-06-07 Pivot B closure)
+新 file `InformationTheory/Shannon/EPICase1SmoothingLimit.lean` + `EPIUncondDispatch.lean` で closure。**全 5 核補題 `@audit:ok` (sorryAx-free)、独立 honesty 監査 PASS (defect 0)**:
+- `isDeBruijnRegularityHyp_of_explicitDensity` (explicit 密度版 de Bruijn producer、canonical rnDeriv 回避の核心)
+- `entropy_power_inequality_of_density_explicit` (explicit 密度版 Phase A、two-time 終端 + twoTime_stam_supply 流用)
+- `entropyPower_smoothed_epi_perT` (per-t smoothing EPI)
+- `entropy_power_add_ge_of_finite_variance` (Real) + `entropyPowerExt_add_ge_of_finite_variance` (ext) — via_lift3 + 3 endpoint 連続性 + t→0 極限
+
+`EPIUncondDispatch.lean` (import cycle 回避で `EPIUncondMixedCase` から分離) の `entropyPowerExt_add_ge_finite_ac` を by_cases 分解: 有限分散枝 → 上記 ext 補題、無限分散枝 → L6 wall。旧 bundled `wall:epi-finite-entropy-ac-classical` は **正則 (Phase A 既閉) + 有限分散 (本 closure genuine) + 無限分散 (`wall:epi-infinite-variance-classical`)** に 3 分解、register 追記済。
+
+**残 2 residual**:
+1. `hent_sum` (`EPIUncondDispatch.lean:93`, `@residual(plan:epi-finitevar-smoothing-limit-plan)`): 「a.c. + 有限分散 + 両端有限微分エントロピーの独立 X,Y ⟹ X+Y も有限微分エントロピー (negMulLog 可積分)」。**真の数学事実・closable (Mathlib 壁でない)** だが in-tree 資産不足。撤退理由 (implementer 確認): (a) `convDensityAdd_negMulLog_integrable_pub` は Gaussian 核専用で一般 `pX∗pY` に型不一致、(b) `differentialEntropy_add_ge_of_indep` は h(X)≤h(X+Y) を結論するが可積分性を produce しない、(c) 負部可積分性が L² (∫p²<∞) を要求し有限分散だけからは出ない。**これが唯一の有限分散 closure 残課題** — 別 scoping 推奨 (route: h(X)≤h(X+Y)≤½log(2πe·Var) 両側有界 + negMulLog の pos/neg 部評価、Mathlib の differential-entropy 可積分性在庫調査から)。
+2. `entropyPowerExt_add_ge_infinite_variance` (`EPICase1SmoothingLimit.lean:1406`, `@residual(wall:epi-infinite-variance-classical)`): 無限分散 a.c. = genuine Mathlib 壁 (Lieb-Young 不在、touch しない)。
+
+---
 > **slug**: `epi-finitevar-smoothing-limit-plan`。
 
 ## ⚠️ ピボット (2026-06-07): 主ルート (Phase A 直呼) infeasible → Pivot B
