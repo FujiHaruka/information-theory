@@ -699,7 +699,23 @@ cannot choose their values:
   `fisherInfoOfDensityReal` pointwise `logDeriv`) is gone. No free Fisher-info
   variable remains.
 
-@residual(plan:epi-case1-twotime-restructure-plan) -/
+Independent honesty audit 2026-06-06 (post body-fill, `@audit:defect(false-statement)`
+re-audit): PASS. (1) All three Fisher infos pinned: `J_S` is directly embedded
+(no free variable) as `fisherInfoOfDensityReal ((h_reg_sum.reg_at (s t+r t) hτ).density_t)`,
+matching the body's `set J_S`; `density_t` is pointwise-pinned by
+`IsRegularDeBruijnHypV2.density_t_eq` (`∀ x, density_t x = convDensityAdd ...`,
+NOT a.e.) — the old a.e.-pin escape is structurally removed. `J_X`/`J_Y` stay
+density-pinned via `hJX_eq`/`hJY_eq`. (2) The 4 added preconditions
+(`hZX_law`/`hZY_law`/`hXY_ZXZY_pair`/`hZX_ZY`) are genuine regularity facts,
+consumed only by `matchedSum_law_eq` to identify the matched-sum law with a
+single-noise heat flow; they carry no derivative/EPI content (core-reconstruction:
+granting them does not hand over the conclusion's derivative value). (3) Body is
+genuine: `deBruijn_identity_v2` at `τ = s t+r t` + chain rule + `matchedSum_law_eq`
++ `congr_of_eventuallyEq` on a genuine `s u,r u>0` neighborhood; no `:= h` / no
+degeneracy. (4) Sufficiency holds. `#print axioms` = `[propext, Classical.choice,
+Quot.sound]` (sorryAx-free, machine-verified; not transitively dependent on the
+file's remaining sorry lemmas).
+@audit:ok -/
 theorem twoTimeLogRatioGap_hasDerivAt
     (X Y Z_X Z_Y Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     {J_X J_Y : ℝ → ℝ} {s r : ℝ → ℝ}
