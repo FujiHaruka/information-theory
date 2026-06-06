@@ -587,3 +587,16 @@ bundling する撤退は**禁止** (CLAUDE.md「検証の誠実性」)。
    **Phase 6 含意**: difference sister (dead `@audit:defect`) の削除は無条件 clean。だが single-t **ratio** line
    (`csiszarLogRatioGap` 群 + terminal) は **genuine `@audit:ok`** なので削除は「working 証明の破棄」= user 判断要
    (plan の「完全置換後削除が clean」は ratio line が defect/dead でない事実と mild に矛盾 → 削除前に surface)。
+7. **Phase 6「dead sister 削除」が BLOCKED — difference cluster は clean な dead leaf でなく dead-end de Bruijn
+   bridge subgraph の尾部 (2026-06-06、実機械検証で判明、deletion attempt REVERTED)**: user が「死んだ sister
+   だけ削除」を選択 → 実装前の live-consumer 検証で **0 occ in headline/ratio/two-time** を確認したが、削除実行で
+   `csiszarGap_antitoneOn_Icc_zero_one` (`EPIStamToBridge.lean:1334`、body は既 `sorry`
+   `@residual(plan:epi-case1-difference-g3-closure-plan)`) が **kept bridge `isStamToEPIScalingHyp_of_stam_debruijn`
+   (`:1391`、`@[entry_point]`) の `:1508` で load-bearing 消費**されていると判明 (in-file consumer を初回 grep が
+   見落とし、implementer の verify-before-commit が捕捉、REVERT 済・working tree clean)。chain:
+   `csiszarGap_antitoneOn_Icc_zero_one (sorry)` → `isStamToEPIScalingHyp_of_stam_debruijn (sorry, phaseA-plan)` →
+   `isStamToEPIBridgeHyp_of_stam_debruijn (:1594)` → **0 consumer (dead end)**。headline は別経路
+   `stamToEPIBridge_holds` を使用。⟹ difference cluster (11 decl) は単独削除不能、削除には dead-end de Bruijn
+   bridge attempt の 2 `@[entry_point]` lemma も巻込む。これは **de Bruijn Stam→EPI bridge route (sorry-blocked,
+   0-consumer な genuine 代替) の放棄** = cleanup でなく戦略判断。difference G3 plan は既に park (ratio に pivot 済)
+   だが bridge attempt は phaseA-plan sorry を抱える別 route。→ **user に再 surface、Phase 6 は判断待ちで停止**。
