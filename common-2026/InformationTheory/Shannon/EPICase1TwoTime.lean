@@ -397,7 +397,27 @@ conclusion: it is the order-completeness datum used to invert `N_A` (surjectivit
 **Endpoint precondition** (`h_endpt : IsHeatFlowEndpointRegular A B P`): a regularity
 bundle (measurability / independence / Real density witness of `P.map A` / input
 entropy finiteness) consumed by the heat-flow endpoint continuity lemma; all fields
-are preconditions, none bundles the EPI conclusion. -/
+are preconditions, none bundles the EPI conclusion.
+
+Independent honesty audit 2026-06-06 (fresh subagent): PASS — `@audit:ok` affirmed.
+(1) `#print axioms matchedTimePath_exists = [propext, Classical.choice, Quot.sound]`
+(sorryAx-free, machine-checked; the in-file sorries belong to the out-of-scope
+Phase 3/4 derivative declarations). (2) `hN_tendsto` is a GENUINE regularity /
+order-completeness precondition, NOT load-bearing: it is the divergence of the
+single-source entropy power `N_A(s) → ∞` (assembled from `entropyPower_path_scaling`
+× `entropyPower_rescaled_path_tendsto`, both in-tree, the latter `@audit:ok` and
+landing on the positive finite limit `entropyPower (P.map B)`); it carries neither the
+EPI inequality nor any matched-path construction core, serving only to invert `N_A`
+(surjectivity onto `[N_A 0, ∞)`). (3) `h_endpt : IsHeatFlowEndpointRegular` is the
+same all-precondition bundle already `@audit:ok` at the consuming
+`heatFlowEntropyPower_continuousWithinAt_zero`; no conclusion bundled. (4) All five
+private sub-lemmas (i)-(v) are genuine: no circular `:= h`, no `:True` slot, no
+degenerate exploitation; (v)'s inverse-function glue discharges sign/cancellation
+honestly (`hf'_ne` from `mul_pos`, `hval` cancels `(N·J)⁻¹·(C·eᵗ)` to `1/J` via the
+matched value `N sa = C·eᵗ`). (5) The four `IsMatchedTimePath` fields are constructed
+from the real inverse `g`, not trivially satisfied at a degenerate `s` — the existence
+is non-vacuous.
+@audit:ok -/
 theorem matchedTimePath_exists
     (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (J_A : ℝ → ℝ)
