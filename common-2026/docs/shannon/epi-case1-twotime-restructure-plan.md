@@ -227,12 +227,16 @@ fisherInfoOfDensityReal ((h_reg_sum.reg_at (s t + r t) hτ).density_t)`。`densi
 representative の pointwise pin を供給 (a.e. でなく pointwise) → representative escape が構造的に消える
 (honest single-t 版 `csiszarLogRatioGap_hasDerivAt` と同一機構)。**新規 regularity 抽象は不要**。
 
-- [ ] **3-0a (entry gate)**: `_hasDerivAt` signature を rewrite — free `J_S`/`d_S`/`hd_S`/`hJS_eq` を削除し、
-  `h_reg_sum : IsDeBruijnRegularityHyp (X+Y) Z P` (Z unit Gaussian + law/indep/meas regularity) + `hτ : 0 < s t + r t`
-  を thread、結論の `J_S` を上記埋込式に置換。X/Y velocity pin (`hJX_eq`/`hJY_eq`) は監査 PASS 済なので維持。
-- [ ] **3-0b**: 法等式 body lemma `P.map (X_{s t}+Y_{r t}) = P.map ((X+Y)+√τ·Z)` (Gaussian convolution、
-  `gaussianReal` additivity) を補題化 — `_hasDerivAt` body が埋込 `density_t` を実 matched-sum density に繋ぐ鍵。
-- [ ] **3-0c (再監査)**: rewrite 後 fresh `honesty-auditor` で `J_S` escape 解消を確認 → `@audit:defect` 除去。
+- [x] **3-0a (entry gate)** ✅ (2026-06-06): `_hasDerivAt` rewrite 済 — free `J_S`/`d_S`/`hd_S`/`hJS_eq` 削除、
+  `h_reg_sum : IsDeBruijnRegularityHyp (X+Y) Z P` (Z unit + law/indep/meas) + `hτ` thread、結論 J_S を
+  `fisherInfoOfDensityReal ((h_reg_sum.reg_at (s t+r t) hτ).density_t)` 直接埋込。X/Y pin 維持。
+- [x] **3-0b** ✅ (2026-06-06): `matchedSum_law_eq` を **genuine closure** (sorryAx-free `[propext, Classical.choice,
+  Quot.sound]`)。`gaussianReal_map_const_mul` + `gaussianReal_add_gaussianReal_of_indepFun` +
+  `IndepFun.map_add_eq_map_conv_map` で両辺を `(P.map (X+Y)) ∗ 𝒩(0,s+r)` に分解。独立性仮説を joint-pair
+  `IndepFun (X+Y) (Z_X,Z_Y)` に honest 強化 (scaled noise の独立に必要)。
+- [x] **3-0c (再監査)** ✅ (2026-06-06、3-pass): fresh `honesty-auditor` PASS — J_S escape 構造的解消確認
+  (conv-pin 直接埋込 = X/Y と同一機構)、`matchedSum_law_eq` true math fact、bundling/under-hyp なし。
+  `@audit:defect` 除去済。**Phase 3 entry gate CLOSED**。
 - [ ] proof-log の `twotime_full` body を `TT-_deriv_le_zero` に移植 (arith は PASS 済)。
 - [ ] harmonic Stam の供給を `isStamInequalityHyp_via_step3` から取る (matched-sum `(X+Y)+√τ·Z` 用の Stam
   instance、unit-noise heat-flow なので Stam 前提 `IndepFun` が満たされることを確認)。
