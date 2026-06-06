@@ -216,7 +216,20 @@ pure measure equality (an honest math fact); no derivative value or EPI content
 is bundled. Body: Gaussian convolution additivity (`gaussianReal` add of the
 independent noise variances) + reassociation of the `map`.
 
-@residual(plan:epi-case1-twotime-restructure-plan) -/
+Honesty (2026-06-06 independence strengthening). The original `hXY_ZXZY :
+IndepFun (X+Y) (Z_X+Z_Y) P` was **insufficient**: it gives independence of `X+Y`
+from the *unscaled* sum `Z_X+Z_Y`, but the matched-sum noise is the *scaled*
+combination `√s_t·Z_X + √r_t·Z_Y` (a different linear functional when
+`s_t ≠ r_t`), whose independence from `X+Y` does **not** follow. The honest
+precondition is joint independence of `X+Y` from the pair `(Z_X, Z_Y)`
+(`hXY_ZXZY_pair`), from which the scaled-noise independence is recovered by
+`IndepFun.comp` with the measurable map `(z₁, z₂) ↦ √s_t·z₁ + √r_t·z₂`. This is
+a refinement of a regularity precondition, not a bundling of the conclusion.
+
+Proof done (2026-06-06): genuinely closed via `gaussianReal_map_const_mul`
+(scaled-noise law `√c·W ∼ 𝒩(0,c)`), `gaussianReal_add_gaussianReal_of_indepFun`
+(LHS noise additivity), and `IndepFun.map_add_eq_map_conv_map` (split both sides
+as `(P.map (X+Y)) ∗ 𝒩(0, s_t+r_t)`). `#print axioms` = sorryAx-free. -/
 theorem matchedSum_law_eq
     (X Y Z_X Z_Y Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y)
@@ -224,13 +237,99 @@ theorem matchedSum_law_eq
     (hZX_law : P.map Z_X = gaussianReal 0 1)
     (hZY_law : P.map Z_Y = gaussianReal 0 1)
     (hZ_law : P.map Z = gaussianReal 0 1)
-    (hXY_ZXZY : IndepFun (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (hXY_ZXZY_pair : IndepFun (fun ω => X ω + Y ω) (fun ω => (Z_X ω, Z_Y ω)) P)
     (hXY_Z : IndepFun (fun ω => X ω + Y ω) Z P)
     (hZX_ZY : IndepFun Z_X Z_Y P)
     (s_t r_t : ℝ) (hst : 0 < s_t) (hrt : 0 < r_t) :
     P.map (fun ω => X ω + Real.sqrt s_t * Z_X ω + (Y ω + Real.sqrt r_t * Z_Y ω))
       = P.map (fun ω => (X ω + Y ω) + Real.sqrt (s_t + r_t) * Z ω) := by
-  sorry
+  classical
+  -- Abbreviations.
+  set B : Ω → ℝ := fun ω => X ω + Y ω with hB
+  have hB_meas : Measurable B := hX.add hY
+  have hst0 : (0:ℝ) ≤ s_t := hst.le
+  have hrt0 : (0:ℝ) ≤ r_t := hrt.le
+  have hτ0 : (0:ℝ) ≤ s_t + r_t := by positivity
+  -- Measurability of the three noise terms.
+  have hmul_st : Measurable (fun y : ℝ => Real.sqrt s_t * y) := measurable_const.mul measurable_id
+  have hmul_rt : Measurable (fun y : ℝ => Real.sqrt r_t * y) := measurable_const.mul measurable_id
+  have hmul_τ : Measurable (fun y : ℝ => Real.sqrt (s_t + r_t) * y) :=
+    measurable_const.mul measurable_id
+  have hSZX_meas : Measurable (fun ω => Real.sqrt s_t * Z_X ω) := hmul_st.comp hZX
+  have hRZY_meas : Measurable (fun ω => Real.sqrt r_t * Z_Y ω) := hmul_rt.comp hZY
+  have hτZ_meas : Measurable (fun ω => Real.sqrt (s_t + r_t) * Z ω) := hmul_τ.comp hZ
+  -- **Law of a single scaled noise** `√c·W ∼ 𝒩(0, c)` for `c ≥ 0`, `W ∼ 𝒩(0,1)`.
+  have scaled_law : ∀ (W : Ω → ℝ) (c : ℝ) (hc : 0 ≤ c), Measurable W →
+      P.map W = gaussianReal 0 1 →
+      P.map (fun ω => Real.sqrt c * W ω) = gaussianReal 0 ⟨c, hc⟩ := by
+    intro W c hc hW hW_law
+    have h_compose : Measure.map (fun ω => Real.sqrt c * W ω) P
+        = (P.map W).map (fun y => Real.sqrt c * y) := by
+      have hmm := Measure.map_map (μ := P) (g := fun y : ℝ => Real.sqrt c * y) (f := W)
+        (measurable_const.mul measurable_id) hW
+      simpa [Function.comp] using hmm.symm
+    rw [h_compose, hW_law, gaussianReal_map_const_mul]
+    congr 1
+    · ring
+    · rw [mul_one]
+      apply NNReal.eq
+      exact Real.sq_sqrt hc
+  -- Laws of the three scaled noises.
+  have hSZX_law : P.map (fun ω => Real.sqrt s_t * Z_X ω) = gaussianReal 0 ⟨s_t, hst0⟩ :=
+    scaled_law Z_X s_t hst0 hZX hZX_law
+  have hRZY_law : P.map (fun ω => Real.sqrt r_t * Z_Y ω) = gaussianReal 0 ⟨r_t, hrt0⟩ :=
+    scaled_law Z_Y r_t hrt0 hZY hZY_law
+  have hτZ_law : P.map (fun ω => Real.sqrt (s_t + r_t) * Z ω) = gaussianReal 0 ⟨s_t + r_t, hτ0⟩ :=
+    scaled_law Z (s_t + r_t) hτ0 hZ hZ_law
+  -- **LHS noise law** = `𝒩(0, s_t + r_t)`.
+  -- Independence of the two scaled noises from `IndepFun Z_X Z_Y`.
+  have hSZX_RZY_indep : IndepFun (fun ω => Real.sqrt s_t * Z_X ω)
+      (fun ω => Real.sqrt r_t * Z_Y ω) P :=
+    hZX_ZY.comp hmul_st hmul_rt
+  have hnoiseL_law : P.map (fun ω => Real.sqrt s_t * Z_X ω + Real.sqrt r_t * Z_Y ω)
+      = gaussianReal 0 ⟨s_t + r_t, hτ0⟩ := by
+    have h_sum := gaussianReal_add_gaussianReal_of_indepFun (P := P)
+      (X := fun ω => Real.sqrt s_t * Z_X ω) (Y := fun ω => Real.sqrt r_t * Z_Y ω)
+      (m₁ := 0) (m₂ := 0) (v₁ := ⟨s_t, hst0⟩) (v₂ := ⟨r_t, hrt0⟩)
+      hSZX_RZY_indep hSZX_law hRZY_law
+    have h_funext : (fun ω => Real.sqrt s_t * Z_X ω + Real.sqrt r_t * Z_Y ω)
+        = (fun ω => Real.sqrt s_t * Z_X ω) + (fun ω => Real.sqrt r_t * Z_Y ω) := by
+      funext ω; rfl
+    rw [h_funext, h_sum]
+    refine congrArg₂ gaussianReal (by norm_num) ?_
+    apply NNReal.eq
+    rfl
+  -- Measurability + independence of `B` from the LHS scaled noise.
+  have hnoiseL_meas : Measurable (fun ω => Real.sqrt s_t * Z_X ω + Real.sqrt r_t * Z_Y ω) :=
+    hSZX_meas.add hRZY_meas
+  -- `B ⊥ (√s_t·Z_X + √r_t·Z_Y)` from joint independence `B ⊥ (Z_X, Z_Y)`.
+  have hB_noiseL_indep : IndepFun B
+      (fun ω => Real.sqrt s_t * Z_X ω + Real.sqrt r_t * Z_Y ω) P := by
+    have hmap : Measurable (fun p : ℝ × ℝ => Real.sqrt s_t * p.1 + Real.sqrt r_t * p.2) := by
+      fun_prop
+    have := hXY_ZXZY_pair.comp (measurable_id) hmap
+    simpa [Function.comp] using this
+  -- `B ⊥ (√τ·Z)` from `B ⊥ Z`.
+  have hB_noiseR_indep : IndepFun B (fun ω => Real.sqrt (s_t + r_t) * Z ω) P :=
+    hXY_Z.comp measurable_id hmul_τ
+  -- **Split both sides as `(P.map B) ∗ (noise law)`.**
+  -- LHS.
+  have hLHS_eq : P.map (fun ω => X ω + Real.sqrt s_t * Z_X ω + (Y ω + Real.sqrt r_t * Z_Y ω))
+      = (P.map B) ∗ gaussianReal 0 ⟨s_t + r_t, hτ0⟩ := by
+    have h_funext : (fun ω => X ω + Real.sqrt s_t * Z_X ω + (Y ω + Real.sqrt r_t * Z_Y ω))
+        = B + (fun ω => Real.sqrt s_t * Z_X ω + Real.sqrt r_t * Z_Y ω) := by
+      funext ω; simp only [hB, Pi.add_apply]; ring
+    rw [h_funext,
+      hB_noiseL_indep.map_add_eq_map_conv_map hB_meas hnoiseL_meas, hnoiseL_law]
+  -- RHS.
+  have hRHS_eq : P.map (fun ω => (X ω + Y ω) + Real.sqrt (s_t + r_t) * Z ω)
+      = (P.map B) ∗ gaussianReal 0 ⟨s_t + r_t, hτ0⟩ := by
+    have h_funext : (fun ω => (X ω + Y ω) + Real.sqrt (s_t + r_t) * Z ω)
+        = B + (fun ω => Real.sqrt (s_t + r_t) * Z ω) := by
+      funext ω; simp only [hB, Pi.add_apply]
+    rw [h_funext,
+      hB_noiseR_indep.map_add_eq_map_conv_map hB_meas hτZ_meas, hτZ_law]
+  rw [hLHS_eq, hRHS_eq]
 
 /-- **TT-`_hasDerivAt`** — the two-time gap has derivative
 `J_S·(1/J_X + 1/J_Y) − 1` at `t > 0` along the matched path.
