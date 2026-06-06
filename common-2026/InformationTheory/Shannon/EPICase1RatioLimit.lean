@@ -407,7 +407,7 @@ conditional-KL cross-entropy integrabilities) are closed genuinely using `hA_ac`
 
 /-- **Scaling preserves a.c.**: if `P.map A ≪ volume` then `P.map (A/√t) ≪ volume`
 for `t > 0` (the map `(·/√t)` is a Lebesgue-a.c. linear isomorphism). Genuine. -/
-private theorem map_div_sqrt_absolutelyContinuous
+theorem map_div_sqrt_absolutelyContinuous
     (A : Ω → ℝ) (P : Measure Ω) (hA : Measurable A) (hA_ac : (P.map A) ≪ volume)
     {t : ℝ} (ht : 0 < t) :
     (P.map (fun ω => A ω / Real.sqrt t)) ≪ volume := by
@@ -437,7 +437,7 @@ private theorem map_div_sqrt_absolutelyContinuous
 with all the regularity (`≥ 0`, measurable, `withDensity` law, integrable, mass `= 1`,
 finite second moment) needed to invoke `convDensityAdd_negMulLog_integrable_pub` and the
 `pPath_eq_convDensityAdd` identification. Genuine. -/
-private theorem rescaledInput_density_witness
+theorem rescaledInput_density_witness
     (A : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hA : Measurable A) (hA_ac : (P.map A) ≪ volume)
     (h_mom_A : Integrable (fun ω => (A ω)^2) P) {t : ℝ} (ht : 0 < t) :
