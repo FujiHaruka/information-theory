@@ -35,7 +35,10 @@
   load-bearing なし (core-reconstruction PASS)、harmonic Stam = `isStamInequalityHyp_via_step3` genuine。副産物:
   `matchedTimePath_exists` を `∃ s, IsMatchedTimePath … ∧ (∀ t>0,0<s t) ∧ Tendsto s atTop atTop` に強化
   (案 2、sorry-free 維持、再監査 PASS)。public-API impact ゼロ確認。
-- [ ] Phase 6 — consumer 削除 (`csiszarLogRatioGap` 83 occ / sister `csiszarGap1Source` 74 occ) + `Z_law` defect park 解消 📋
+- [~] Phase 6 — **dead de Bruijn difference subgraph 削除 ✅** (2026-06-06、13 decl: 11 difference cluster +
+  bridge 2、advisor verdict B = structurally orphaned で確定、−26 sorry)。**single-t ratio line は user 判断で温存**
+  (genuine `@audit:ok`、両 terminal 並存)。残: `Z_law` defect park 解消 = `IsRegularDeBruijnHypV2.Z_law`
+  general-variance 化 (~10 file ripple の structure 改変) または `EPICase1SumProducer` dead 化確認 — **別 session**。
 
 ---
 
@@ -600,3 +603,17 @@ bundling する撤退は**禁止** (CLAUDE.md「検証の誠実性」)。
    bridge attempt の 2 `@[entry_point]` lemma も巻込む。これは **de Bruijn Stam→EPI bridge route (sorry-blocked,
    0-consumer な genuine 代替) の放棄** = cleanup でなく戦略判断。difference G3 plan は既に park (ratio に pivot 済)
    だが bridge attempt は phaseA-plan sorry を抱える別 route。→ **user に再 surface、Phase 6 は判断待ちで停止**。
+8. **de Bruijn bridge 評価 → verdict B (dead) → 削除完了 (2026-06-06、`proof-pivot-advisor` + 実機械検証)**:
+   user が「de Bruijn bridge を先に評価」を選択 → `proof-pivot-advisor` が **verdict B (genuinely dead / stale
+   scaffolding)** を返した。決め手は **構造的 severance**: `isStamToEPIBridgeHyp_of_stam_debruijn` は
+   `IsStamToEPIBridgeHyp` (= `IsStamInequalityHyp → IsEPIHypothesis`) を産むが、headline は `IsStamToEPIBridge`
+   (= `IsStamInequalityResidual → …`) を要求し、**両者は別 predicate で converter 不在** ⟹ 全 sorry を閉じても
+   headline に届かない (orphan)。加えて 2 terminal が同一結論を satisfiable 前提から出すので redundant、owning plan
+   (`epi-case1-difference-g3-closure-plan`) も既に ratio に pivot 済の stale scaffolding。user pre-auth (dead-end→削除)
+   に従い **13 decl (11 difference cluster + bridge 2) を削除完了**: EPIL3Integration 8 + EPIStamToBridge 5、
+   −26 sorry (EPIStamToBridge 44→23 / EPIL3Integration 40→35)、全 touched file + headline + 両 terminal が 0 errors、
+   genuine `csiszarLogRatioGap` line + `stamToEPIBridge_holds` は温存・健全。near-miss: §13 region に kept
+   `csiszarLogRatioGap` 群が difference decl 間に **interleave** しており bulk range-delete で巻込みかけたが
+   `lake env lean` の `unknown identifier` で即捕捉 → surgical named-decl 削除に修正 (grep gate `csiszarGap\b` は
+   `csiszarLogRatioGap` を非マッチなので single-file compile が唯一の検出手段だった、教訓)。**残 Phase 6 = `Z_law`
+   defect park 解消のみ** (structure 改変 ~10 file ripple、別 session)。
