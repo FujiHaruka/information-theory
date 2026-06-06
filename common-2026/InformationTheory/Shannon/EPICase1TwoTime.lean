@@ -211,6 +211,26 @@ structurally identical to the existing sum version (no new asset).
 The de Bruijn regularity is `IsDeBruijnRegularityHyp` for each component; the
 `J_* > 0` positivity is threaded as in `csiszarLogRatioGap_deriv_le_zero`.
 
+Honesty (2026-06-06 rewrite — old `@audit:defect(false-statement)` resolved).
+The derivative value's three Fisher infos are now **equality-pinned to real
+densities**, so a skeptic cannot pick free values to refute the conclusion:
+* `J_X (s t)` and `J_Y (r t)` are pinned to
+  `fisherInfoOfDensityReal ((h_reg_X.reg_at (s t) hst).density_t)` (resp. `Y`),
+  the real Fisher info of the perturbed density at the matched time `s t`
+  (resp. `r t`) — exactly the pin used by the honest single-time
+  `csiszarLogRatioGap_hasDerivAt` (`EPIStamToBridge.lean:744`), but at the
+  matched time rather than `t`.
+* `J_S` is pinned to `fisherInfoOfDensityReal d_S`, where `d_S` is a density
+  witness for the matched-sum law (`hd_S`, an external-shape `withDensity`
+  equation in the same style as `IsRegularDeBruijnHypV2.pX_law`). `d_S` is
+  *not* free: `hd_S` forces it to be a genuine Lebesgue density of the matched
+  sum, so `J_S` is determined by the data.
+All added hypotheses are **regularity preconditions** (positivity of the matched
+times `hst`/`hrt`, existence/absolute-continuity of the sum density `hd_S`, and
+the equality pins `hJX_eq`/`hJY_eq`/`hJS_eq`). None of them bundle the analytic
+core (no `HasDerivAt`, harmonic-Stam, or EPI claim is encoded in a hypothesis);
+the derivative value itself remains to be proved (`sorry`).
+
 @residual(plan:epi-case1-twotime-restructure-plan) -/
 theorem twoTimeLogRatioGap_hasDerivAt
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -219,12 +239,31 @@ theorem twoTimeLogRatioGap_hasDerivAt
     (hY : Measurable Y) (hZY : Measurable Z_Y) (hYZY : IndepFun Y Z_Y P)
     (h_path_X : IsMatchedTimePath X Z_X P J_X s)
     (h_path_Y : IsMatchedTimePath Y Z_Y P J_Y r)
-    -- de Bruijn regularity for the independently-perturbed components / sum
+    -- de Bruijn regularity for the independently-perturbed components
     (h_reg_X : IsDeBruijnRegularityHyp X Z_X P)
     (h_reg_Y : IsDeBruijnRegularityHyp Y Z_Y P)
     {t : ℝ} (ht : 0 < t)
-    -- `J_S` = Fisher info of the (matched) sum density `X_{s(t)} + Y_{r(t)}`
-    (J_S : ℝ)
+    -- matched-time positivity (regularity precondition: `t > 0` + strict-mono
+    -- matched path put `s t, r t > 0`; threaded here as a precondition)
+    (hst : 0 < s t) (hrt : 0 < r t)
+    -- `J_X (s t) / J_Y (r t)` density-pinned to the real perturbed-density
+    -- Fisher info at the matched time (same pin as the honest single-time
+    -- `csiszarLogRatioGap_hasDerivAt`, evaluated at `s t` / `r t`)
+    (hJX_eq : J_X (s t)
+        = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+            ((h_reg_X.reg_at (s t) hst).density_t))
+    (hJY_eq : J_Y (r t)
+        = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+            ((h_reg_Y.reg_at (r t) hrt).density_t))
+    -- matched-sum density witness + density-pin of `J_S`. `IsDeBruijnRegularityHyp`
+    -- is single-noise/single-time and cannot model the two-time matched sum, so
+    -- the sum Fisher info is pinned via a free density witness `d_S` constrained
+    -- by an external-shape `withDensity` equation (regularity precondition,
+    -- same form as `IsRegularDeBruijnHypV2.pX_law`).
+    (J_S : ℝ) (d_S : ℝ → ℝ)
+    (hd_S : P.map (fun ω => X ω + Real.sqrt (s t) * Z_X ω + (Y ω + Real.sqrt (r t) * Z_Y ω))
+        = volume.withDensity (fun x => ENNReal.ofReal (d_S x)))
+    (hJS_eq : J_S = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal d_S)
     (hJX_pos : 0 < J_X (s t)) (hJY_pos : 0 < J_Y (r t)) :
     HasDerivAt (fun u : ℝ => twoTimeLogRatioGap X Y Z_X Z_Y P s r u)
       (J_S * (1 / J_X (s t) + 1 / J_Y (r t)) - 1) t := by
@@ -239,6 +278,12 @@ From harmonic Stam `1/J_S ≥ 1/J_X + 1/J_Y` (J_S > 0), the value
 existing genuine producer `isStamInequalityHyp_via_step3` /
 `isStamInequalityHyp_via_body` (sorryAx-free). **No new wall.**
 
+Audit 2026-06-06 (skeleton): signature-honest. Free `J_S`/`J_X`/`J_Y` are here
+genuinely OK because `h_stam : 1/J_S ≥ 1/J_X(s t)+1/J_Y(r t)` + `hJS_pos` CONSTRAIN
+them — the conclusion is pure abstract arith (`J_S·(1/J_X+1/J_Y) ≤ J_S·(1/J_S) = 1`)
+that follows for ANY reals satisfying the hypotheses. Same shape as the honest
+`csiszar_ratio_deriv_le_zero_arith`. Contrast `_hasDerivAt` above, where the free
+`J_S` has NO constraining hypothesis (false-as-framed).
 @residual(plan:epi-case1-twotime-restructure-plan) -/
 theorem twoTimeLogRatioGap_deriv_le_zero
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
