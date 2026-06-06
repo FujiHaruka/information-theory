@@ -139,7 +139,7 @@ git branch | grep '^  worktree-agent-' | xargs -I {} git branch -D {}
 
 ### Brief content checklist — body fill / refactor (parallel or single dispatch)
 
-`lean-implementer` を body fill (sorry 埋め) / 既存 body の P→P' 等 mechanical refactor に出すときは、brief に以下 2 項目を含める。planner / orchestrator 側の責務で、implementer 自身に判断させない。
+`lean-implementer` を body fill (sorry 埋め) / 既存 body の P→P' 等 mechanical refactor に出すときは、brief に以下の項目を含める。planner / orchestrator 側の責務で、implementer 自身に判断させない。
 
 1. **Sub-bound 引数表** (`P_cb` / `P_target` 分離型 predicate を扱うとき) — bundle / composite predicate の各 sub-bound が、rate-bound 引数 `R < (1/2) log(1 + ?/N)` の `?` 部に `P_cb` 側 / `P_target` 側のどちらの capacity を要求するかを 1 枚の表で列挙する (sub-bound 名 × 要求 capacity 側 × 必要 bridge 補題)。Bundle destructure 後に sub-bound 毎の capacity 引数が異なる場合があり (例: `IsAwgnPowerConstraintHonest P_cb P_target N` の rate-bound は `P_target` 側、bundle が供給する `hR_lt_P'C` は `P_cb = P'` 側)、表が無いと LSP 第 1 戻りまで気づけない型 mismatch で 1 turn ループ。Brief 段階で predicate signature を 1 度読めば書ける情報。
 
@@ -147,7 +147,9 @@ git branch | grep '^  worktree-agent-' | xargs -I {} git branch -D {}
 
 3. **担当 file list は実値検証してから貼る** — brief 内に「担当 file list」を書くときは、記憶 / 予測で file 名を並べず、**必ず実ファイル (split 結果 / `find` 出力等) を `cat /tmp/group-X.txt` で確認してから貼る**。抽象指定 (「`InformationTheory/Shannon/<X>.lean` 系の 27 file」) は禁止、具体 path リテラルで。代替として agent 自身に `find ... | head -N` で file list を作らせ orchestrator を間に立たせない手もある。2026-05-26 session で fabricated file 名混入により 5 回の取りこぼし (27 file 中 19 file が存在せず agent skip) を実観測。
 
-由来: 2026-05-24 AWGN pivot Phase 3 で項目 1/2 を実観測 (前者 1 turn 詰まり、後者 4 件継承)、項目 3 は 2026-05-26 で実観測。書き漏らした場合は agent の proof-log 観察を次の brief に反映させる feedback loop で改善。
+4. **honesty-load-bearing signature は goal でなく mechanism を渡す** (representative-dependent な量を結論に持つ lemma の実装時) — Fisher info / Radon-Nikodym 微分 / `logDeriv` など **a.e. 同値類から pointwise を取る量** (`fisherInfoOfDensityReal` 系) を signature に持つ lemma は、pin の強度 (a.e. か pointwise か) と「free 変数で受ける vs 結論に直接埋込」が **正直さそのものを決める** (a.e.-pin + free 変数は false-as-framed、skeptic が non-diff representative を取り値=0 に落とせる)。この種の signature を implementer に **「honest 化せよ」「pin せよ」という goal で投げて draft させない**。brief に (a) in-tree の honest sibling を `file:line` で、(b)「free 変数を作らず結論に直接埋込 (direct embed)」、(c)「a.e.-pin は不十分、pointwise-smooth pin (`density_t_eq` 等) のみ honest」の **3 点を mechanism として転写**する。判別軸は「その量は a.e. 等式で縛れるか、pointwise 必須か」。全 brief への mechanism front-load は delegation を殺すので、escalate するのは **honesty-load-bearing signature のときだけ** (routine body-fill は goal で良い)。
+
+由来: 2026-05-24 AWGN pivot Phase 3 で項目 1/2 を実観測 (前者 1 turn 詰まり、後者 4 件継承)、項目 3 は 2026-05-26 で実観測。項目 4 は 2026-06-06 EPI two-time `twoTimeLogRatioGap_hasDerivAt` で実観測 — honest 機構 (直接埋込) が in-tree sibling `EPIStamToBridge.lean:744-883` `csiszarLogRatioGap_hasDerivAt` に既存だったのに、cycle 2 brief が「equality-pin せよ」の goal 止まりで a.e.-pin を誘発、`implementer→honesty-auditor` を 2 周空転 (cycle 3 で「τ 評価 density_t に直接埋込」を mechanism 指定して一発 PASS)。書き漏らした場合は agent の proof-log 観察を次の brief に反映させる feedback loop で改善。
 
 ## Commits
 

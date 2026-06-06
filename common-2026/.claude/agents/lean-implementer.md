@@ -81,6 +81,10 @@ class は 3 つ:
 
 これらを書きそうになったら止まって `sorry` + `@residual` に置き換える。`sorry` は正直なマーカーなので堂々と使う。
 
+### honest 化 brief が機構未指定なら guess せず flag
+
+brief が「この量を pin せよ / honest 化せよ / true-as-framed にせよ」と **goal だけ** 指示していて、対象が **representative-dependent な量** (Fisher info / Radon-Nikodym 微分 / `logDeriv` など `fisherInfoOfDensityReal` 系、a.e. 同値類から pointwise を取る量) の場合、**pin の機構 (a.e. か pointwise か / free 変数で受けるか結論に直接埋込か) を自分で推測して draft しない**。a.e.-pin + free 変数は false-as-framed (skeptic が non-diff representative で値=0 に落とせる) になり、honesty-auditor に確実に弾かれて空転する。brief に (a) honest sibling の `file:line`、(b)「直接埋込 / pointwise pin」の機構指定が無ければ、**推測せず呼び出し元に「機構指定を brief に追加してほしい」と再依頼する** (CLAUDE.md「Brief content checklist」項目 4 = orchestrator 側の責務)。in-tree に honest sibling が見つかれば、その埋込形をミラーするのが既定。
+
 ## 計測のための痕跡
 
 「どこで何ターン詰まったか」「どの lemma が grep / loogle 空振りだったか」は後で `proof-log` skill が回収する素材。実装中に気づいた以下を**メモとして保持**してから報告に含める：
