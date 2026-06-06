@@ -896,17 +896,119 @@ The `log N(s(t),r(t))` term is continuous via the matched-path continuity
 `−t` term is continuous. Mirrors `csiszarLogRatioGap_continuousWithinAt_zero`
 (`EPIStamToBridge.lean:1098`).
 
+Mechanism. On `Set.Ioi 0` (where the matched velocities give `s t, r t > 0`),
+`matchedSum_law_eq` rewrites the two-time sum heat flow into the single-noise
+heat flow of `X + Y` at `τ = s t + r t`: `sumHeatFlowEP X Y Z_X Z_Y P (s t)(r t) =
+heatFlowEP (X+Y) Z P (s t + r t)`. This eventual equality (on a neighborhood of
+`0` within `Ioi 0`) lets us transfer the continuity via
+`ContinuousWithinAt.congr`. The reduced single-noise heat flow is the composition
+of the genuine endpoint atom `heatFlowEntropyPower_continuousWithinAt_zero`
+(`wall:heatflow-continuity` CLOSED) with the continuous matched reparameterisation
+`τ(t) = s t + r t` (`IsMatchedTimePath.cont`).
+
+Added preconditions are genuine regularity:
+* `IsHeatFlowEndpointRegular (X+Y) Z P` — the single-noise endpoint atom's input.
+* the `matchedSum_law_eq` preconditions (unit-noise laws of `Z_X`, `Z_Y`, `Z`,
+  the joint/pairwise independences, measurability) — honest
+  noise-distribution facts, not bundled EPI/derivative content.
+* `h_pos : ∀ t, 0 < t → 0 < s t ∧ 0 < r t` — the matched-path positivity on the
+  interior (the strict-mono inverse-function path satisfies it), threaded as a
+  precondition exactly as `_hasDerivAt` threads `hst`/`hrt`.
+
 @residual(plan:epi-case1-twotime-restructure-plan) -/
 theorem twoTimeLogRatioGap_continuousWithinAt_zero
-    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (X Y Z_X Z_Y Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     {J_X J_Y : ℝ → ℝ} {s r : ℝ → ℝ}
+    (hX : Measurable X) (hY : Measurable Y)
+    (hZX : Measurable Z_X) (hZY : Measurable Z_Y) (hZ : Measurable Z)
+    (hZX_law : P.map Z_X = gaussianReal 0 1)
+    (hZY_law : P.map Z_Y = gaussianReal 0 1)
+    (hZ_law : P.map Z = gaussianReal 0 1)
+    (hXY_ZXZY_pair : IndepFun (fun ω => X ω + Y ω) (fun ω => (Z_X ω, Z_Y ω)) P)
+    (hXY_Z : IndepFun (fun ω => X ω + Y ω) Z P)
+    (hZX_ZY : IndepFun Z_X Z_Y P)
     (h_path_X : IsMatchedTimePath X Z_X P J_X s)
     (h_path_Y : IsMatchedTimePath Y Z_Y P J_Y r)
-    (h_endpt_X : IsHeatFlowEndpointRegular X Z_X P)
-    (h_endpt_Y : IsHeatFlowEndpointRegular Y Z_Y P) :
+    (h_pos : ∀ t : ℝ, 0 < t → 0 < s t ∧ 0 < r t)
+    (h_endpt_sum : IsHeatFlowEndpointRegular (fun ω => X ω + Y ω) Z P) :
     ContinuousWithinAt (fun t : ℝ => twoTimeLogRatioGap X Y Z_X Z_Y P s r t)
       (Set.Ioi (0 : ℝ)) 0 := by
-  sorry
+  -- The single-noise endpoint heat-flow continuity atom (`wall:heatflow-continuity`
+  -- CLOSED), continuous within `Ioi 0` at `0`.
+  have h_endpt :
+      ContinuousWithinAt
+        (fun u : ℝ => entropyPower (P.map (fun ω => (X ω + Y ω) + Real.sqrt u * Z ω)))
+        (Set.Ioi (0 : ℝ)) 0 :=
+    heatFlowEntropyPower_continuousWithinAt_zero
+      (fun ω => X ω + Y ω) Z P h_endpt_sum
+  -- The matched reparameterisation `τ(t) = s t + r t`, continuous within `Ioi 0`
+  -- at `0` (from `IsMatchedTimePath.cont` on `Ici 0`, restricted), with `τ 0 = 0`.
+  have hs0 : s 0 = 0 := h_path_X.start_zero
+  have hr0 : r 0 = 0 := h_path_Y.start_zero
+  have hs_cwa : ContinuousWithinAt s (Set.Ioi (0 : ℝ)) 0 :=
+    (h_path_X.cont 0 Set.self_mem_Ici).mono Set.Ioi_subset_Ici_self
+  have hr_cwa : ContinuousWithinAt r (Set.Ioi (0 : ℝ)) 0 :=
+    (h_path_Y.cont 0 Set.self_mem_Ici).mono Set.Ioi_subset_Ici_self
+  have hτ_cwa : ContinuousWithinAt (fun t : ℝ => s t + r t) (Set.Ioi (0 : ℝ)) 0 :=
+    hs_cwa.add hr_cwa
+  -- `τ` maps `Ioi 0` into `Ioi 0` (matched-path positivity).
+  have hτ_maps : Set.MapsTo (fun t : ℝ => s t + r t) (Set.Ioi (0 : ℝ)) (Set.Ioi (0 : ℝ)) := by
+    intro t ht
+    obtain ⟨hst, hrt⟩ := h_pos t ht
+    exact add_pos hst hrt
+  -- `τ 0 = 0`.
+  have hτ0 : (fun t : ℝ => s t + r t) 0 = 0 := by simp [hs0, hr0]
+  -- Compose: single-noise heat flow along `τ`, continuous within `Ioi 0` at `0`.
+  have h_heat_comp :
+      ContinuousWithinAt
+        (fun t : ℝ => entropyPower
+          (P.map (fun ω => (X ω + Y ω) + Real.sqrt (s t + r t) * Z ω)))
+        (Set.Ioi (0 : ℝ)) 0 := by
+    have hcomp := h_endpt.comp_of_eq hτ_cwa hτ_maps hτ0
+    simpa [Function.comp] using hcomp
+  -- `log` of the heat flow, continuous within `Ioi 0` at `0`
+  -- (`entropyPower` at `τ 0 = 0` is positive).
+  have hpos0 : (0 : ℝ) < entropyPower
+      (P.map (fun ω => (X ω + Y ω) + Real.sqrt (s 0 + r 0) * Z ω)) := entropyPower_pos _
+  have h_log_comp :
+      ContinuousWithinAt
+        (fun t : ℝ => Real.log (entropyPower
+          (P.map (fun ω => (X ω + Y ω) + Real.sqrt (s t + r t) * Z ω))))
+        (Set.Ioi (0 : ℝ)) 0 := by
+    refine h_heat_comp.log ?_
+    simpa [hs0, hr0] using hpos0.ne'
+  -- The `−log(const) − t` tail is continuous.
+  have h_const : ContinuousWithinAt
+      (fun _ : ℝ => Real.log (entropyPower (P.map X) + entropyPower (P.map Y)))
+      (Set.Ioi (0 : ℝ)) 0 := continuousWithinAt_const
+  have h_id : ContinuousWithinAt (fun t : ℝ => t) (Set.Ioi (0 : ℝ)) 0 :=
+    continuousWithinAt_id
+  -- Assemble the reduced (single-noise) continuity.
+  have h_reduced :
+      ContinuousWithinAt
+        (fun t : ℝ => Real.log (entropyPower
+            (P.map (fun ω => (X ω + Y ω) + Real.sqrt (s t + r t) * Z ω)))
+          - Real.log (entropyPower (P.map X) + entropyPower (P.map Y)) - t)
+        (Set.Ioi (0 : ℝ)) 0 :=
+    (h_log_comp.sub h_const).sub h_id
+  -- Transfer back to the two-time gap via the matched-sum law on `Ioi 0`.
+  refine h_reduced.congr ?_ ?_
+  · -- equality on `Ioi 0`: `twoTimeLogRatioGap ... t = reduced t`.
+    intro t ht
+    obtain ⟨hst, hrt⟩ := h_pos t ht
+    have hmap := matchedSum_law_eq X Y Z_X Z_Y Z P hX hY hZX hZY hZ
+      hZX_law hZY_law hZ_law hXY_ZXZY_pair hXY_Z hZX_ZY (s t) (r t) hst hrt
+    show twoTimeLogRatioGap X Y Z_X Z_Y P s r t = _
+    unfold twoTimeLogRatioGap sumHeatFlowEP
+    rw [hmap]
+  · -- value at `0`: `twoTimeLogRatioGap ... 0 = reduced 0`.
+    show twoTimeLogRatioGap X Y Z_X Z_Y P s r 0 = _
+    unfold twoTimeLogRatioGap sumHeatFlowEP
+    have hfun : (fun ω => X ω + Real.sqrt (s 0) * Z_X ω + (Y ω + Real.sqrt (r 0) * Z_Y ω))
+        = (fun ω => (X ω + Y ω) + Real.sqrt (s 0 + r 0) * Z ω) := by
+      funext ω
+      simp [hs0, hr0, Real.sqrt_zero]
+    rw [hfun]
 
 /-- **TT-`_antitoneOn_Ici_zero`** — the two-time gap is `AntitoneOn (Set.Ici 0)`.
 
@@ -915,14 +1017,101 @@ theorem twoTimeLogRatioGap_continuousWithinAt_zero
 `deriv ≤ 0` (`twoTimeLogRatioGap_hasDerivAt.deriv` + `_deriv_le_zero`).
 Mirrors `csiszarLogRatioGap_antitoneOn_Ici_zero` (`EPIStamToBridge.lean:1130`).
 
+Surface structure (matched to the single-time model). On the interior `Set.Ioi 0`
+`AntitoneOn` is genuine: continuity there is the interior differentiability
+(`_hasDerivAt.differentiableAt.differentiableWithinAt`), `interior (Ioi 0) = Ioi 0`,
+and per-`t` `deriv ≤ 0` is `(_hasDerivAt ...).deriv` rewritten to the closed-form
+derivative `J_S·(1/J_X + 1/J_Y) − 1`, bounded `≤ 0` by `_deriv_le_zero`
+instantiated with the free `J_S := J_S_embed(t)` (= the directly-embedded sum
+Fisher info) and the per-`t` harmonic Stam supply. The endpoint `0` is then
+re-attached via `AntitoneOn.insert_of_continuousWithinAt` + the endpoint
+continuity (Task 1).
+
+The added preconditions are all genuine regularity / Stam-supply, **not** a
+bundling of the EPI conclusion (the `h_per_t` conjunction supplies positivity,
+the density-pin equalities, and the harmonic Stam `1/J_S ≥ 1/J_X + 1/J_Y` — the
+same shape as the model's `h_pos_stam`; the harmonic Stam is the genuine
+single-noise-sum producer's output, threaded per-`t`).
+
 @residual(plan:epi-case1-twotime-restructure-plan) -/
 theorem twoTimeLogRatioGap_antitoneOn_Ici_zero
-    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (X Y Z_X Z_Y Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     {J_X J_Y : ℝ → ℝ} {s r : ℝ → ℝ}
+    (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
+    (hY : Measurable Y) (hZY : Measurable Z_Y) (hYZY : IndepFun Y Z_Y P)
+    (hZ : Measurable Z) (hZ_law : P.map Z = gaussianReal 0 1)
+    (hXYZ : IndepFun (fun ω => X ω + Y ω) Z P)
+    (hZX_law : P.map Z_X = gaussianReal 0 1)
+    (hZY_law : P.map Z_Y = gaussianReal 0 1)
+    (hXY_ZXZY_pair : IndepFun (fun ω => X ω + Y ω) (fun ω => (Z_X ω, Z_Y ω)) P)
+    (hZX_ZY : IndepFun Z_X Z_Y P)
     (h_path_X : IsMatchedTimePath X Z_X P J_X s)
-    (h_path_Y : IsMatchedTimePath Y Z_Y P J_Y r) :
+    (h_path_Y : IsMatchedTimePath Y Z_Y P J_Y r)
+    (h_reg_X : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
+    (h_reg_sum : InformationTheory.Shannon.EPIStamDischarge.IsDeBruijnRegularityHyp
+                    (fun ω => X ω + Y ω) Z P)
+    (h_endpt_sum : IsHeatFlowEndpointRegular (fun ω => X ω + Y ω) Z P)
+    (h_pos : ∀ t : ℝ, 0 < t → 0 < s t ∧ 0 < r t)
+    -- per-`t` regularity + harmonic Stam supply bundle (genuine, not bundled
+    -- conclusion): density-pins for `J_X`/`J_Y`, positivity, and harmonic Stam.
+    (h_per_t : ∀ (t : ℝ), 0 < t → ∀ (hst : 0 < s t) (hrt : 0 < r t),
+      J_X (s t) = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+          ((h_reg_X.reg_at (s t) hst).density_t) ∧
+      J_Y (r t) = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+          ((h_reg_Y.reg_at (r t) hrt).density_t) ∧
+      0 < J_X (s t) ∧ 0 < J_Y (r t) ∧
+      0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+          ((h_reg_sum.reg_at (s t + r t) (add_pos hst hrt)).density_t) ∧
+      1 / InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+            ((h_reg_sum.reg_at (s t + r t) (add_pos hst hrt)).density_t)
+        ≥ 1 / J_X (s t) + 1 / J_Y (r t)) :
     AntitoneOn (fun t : ℝ => twoTimeLogRatioGap X Y Z_X Z_Y P s r t) (Set.Ici (0 : ℝ)) := by
-  sorry
+  set f := fun t : ℝ => twoTimeLogRatioGap X Y Z_X Z_Y P s r t with hf_def
+  -- Genuine interior differentiability (= continuity) on `Set.Ioi 0`.
+  have h_diff_Ioi : DifferentiableOn ℝ f (Set.Ioi 0) := by
+    intro t ht
+    have ht_pos : (0 : ℝ) < t := ht
+    obtain ⟨hst, hrt⟩ := h_pos t ht_pos
+    have hτ : 0 < s t + r t := add_pos hst hrt
+    obtain ⟨hJX_eq, hJY_eq, hJX_pos, hJY_pos, _, _⟩ := h_per_t t ht_pos hst hrt
+    exact ((twoTimeLogRatioGap_hasDerivAt X Y Z_X Z_Y Z P
+      hX hZX hXZX hY hZY hYZY h_path_X h_path_Y h_reg_X h_reg_Y
+      hZ hZ_law hXYZ hZX_law hZY_law hXY_ZXZY_pair hZX_ZY h_reg_sum
+      ht_pos hst hrt hτ hJX_eq hJY_eq hJX_pos hJY_pos).differentiableAt).differentiableWithinAt
+  -- `AntitoneOn f (Set.Ioi 0)`, genuine: deriv ≤ 0 from `_hasDerivAt` + `_deriv_le_zero`.
+  have h_anti_Ioi : AntitoneOn f (Set.Ioi 0) := by
+    refine antitoneOn_of_deriv_nonpos (convex_Ioi 0) h_diff_Ioi.continuousOn
+      (by rw [interior_Ioi]; exact h_diff_Ioi) ?_
+    intro t ht
+    rw [interior_Ioi] at ht
+    have ht_pos : (0 : ℝ) < t := ht
+    obtain ⟨hst, hrt⟩ := h_pos t ht_pos
+    have hτ : 0 < s t + r t := add_pos hst hrt
+    obtain ⟨hJX_eq, hJY_eq, hJX_pos, hJY_pos, hJS_pos, h_stam⟩ := h_per_t t ht_pos hst hrt
+    have h_deriv := twoTimeLogRatioGap_hasDerivAt X Y Z_X Z_Y Z P
+      hX hZX hXZX hY hZY hYZY h_path_X h_path_Y h_reg_X h_reg_Y
+      hZ hZ_law hXYZ hZX_law hZY_law hXY_ZXZY_pair hZX_ZY h_reg_sum
+      ht_pos hst hrt hτ hJX_eq hJY_eq hJX_pos hJY_pos
+    have h_le := twoTimeLogRatioGap_deriv_le_zero X Y Z_X Z_Y P
+      h_path_X h_path_Y ht_pos
+      (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+        ((h_reg_sum.reg_at (s t + r t) hτ).density_t))
+      hJX_pos hJY_pos hJS_pos h_stam
+    rw [h_deriv.deriv]
+    exact h_le
+  -- Endpoint `0` is a (left) cluster point of `Set.Ioi 0`.
+  have h_cluster : ClusterPt (0 : ℝ) (Filter.principal (Set.Ioi 0)) := by
+    rw [← mem_closure_iff_clusterPt, closure_Ioi]
+    exact Set.self_mem_Ici
+  -- Endpoint continuity (Task 1).
+  have h_cont_zero : ContinuousWithinAt f (Set.Ioi 0) 0 :=
+    twoTimeLogRatioGap_continuousWithinAt_zero X Y Z_X Z_Y Z P
+      hX hY hZX hZY hZ hZX_law hZY_law hZ_law hXY_ZXZY_pair hXYZ hZX_ZY
+      h_path_X h_path_Y h_pos h_endpt_sum
+  -- Insert the endpoint: `insert 0 (Ioi 0) = Ici 0`.
+  have := h_anti_Ioi.insert_of_continuousWithinAt h_cluster h_cont_zero
+  rwa [Set.Ioi_insert] at this
 
 /-- **TT-`_at_one_eq_zero`** — the two-time gap is `0` at the Gaussian-saturation
 endpoint.
