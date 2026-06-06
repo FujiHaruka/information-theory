@@ -11,3 +11,6 @@
 
 # Orphan detector report — regenerated each run by scripts/FindOrphans.lean
 /scripts/orphans-report.txt
+
+# Plan staleness report — regenerated each run by scripts/plan_lint.ts
+/docs/plan-staleness-report.md

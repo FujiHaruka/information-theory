@@ -11,7 +11,7 @@
 
 - [x] Phase 1 — 規約変更 (P1 ルール + P4 ライフサイクル反転) ✅ (CLAUDE.md「Plan / docs hygiene」節 + テンプレ2本 + compact-plan skill 反転)
 - [x] Phase 2 — 確定事実台帳フォーマット + EPI seed (P2) ✅ (format → CLAUDE.md 節 / seed → `docs/shannon/epi-facts.md`)
-- [ ] Phase 3 — `scripts/plan_lint.ts` staleness linter (P3) 📋
+- [x] Phase 3 — `scripts/plan_lint.ts` staleness linter (P3) ✅ (純 Deno 走査、201 plans/~11s。実証: 141 STALE / 45 SUSPECT / 44 BUDGET 検出。レポートは gitignore で再生成式)
 - [ ] Phase 4 — pre-commit hook に docs-plan WARN 分岐追加 (P1+P4 強制) 📋
 - [ ] Phase 5 — handoff skill に圧縮トリガー配線 (P4 自動化) 📋
 
