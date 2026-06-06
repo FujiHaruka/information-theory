@@ -10,7 +10,7 @@
 ## 進捗
 
 - [x] Phase 1 — 規約変更 (P1 ルール + P4 ライフサイクル反転) ✅ (CLAUDE.md「Plan / docs hygiene」節 + テンプレ2本 + compact-plan skill 反転)
-- [ ] Phase 2 — 確定事実台帳フォーマット + EPI seed (P2) 📋
+- [x] Phase 2 — 確定事実台帳フォーマット + EPI seed (P2) ✅ (format → CLAUDE.md 節 / seed → `docs/shannon/epi-facts.md`)
 - [ ] Phase 3 — `scripts/plan_lint.ts` staleness linter (P3) 📋
 - [ ] Phase 4 — pre-commit hook に docs-plan WARN 分岐追加 (P1+P4 強制) 📋
 - [ ] Phase 5 — handoff skill に圧縮トリガー配線 (P4 自動化) 📋

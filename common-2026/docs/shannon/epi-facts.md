@@ -1,0 +1,38 @@
+# EPI 確定事実台帳
+
+> family `epi` の確定事実の**単一の真実源**。フォーマット規約 → `CLAUDE.md`「Plan / docs hygiene」。
+> プラン本文に同じ事実を再記述しない (散在防止)。プランからはこの台帳の行にリンクする。
+> **確信度**: `machine` (機械検証可、コマンド併記) / `loogle-neg` (Found 0、query 併記) / `human-judgment` (解析的壁判断、**過大/過小評価しうる低信頼**)。
+
+## 壁 (未解消、コード `@residual(wall:slug)` が SoT)
+
+slug が code に存在する = 壁未解消。`plan_lint` はこれを照合し「plan が壁扱いだが slug 消失」を STALE 判定する。壁の真偽 (本当に Mathlib 壁か / 実は通れるか) は `human-judgment` なので独立 pivot で再確認する (→ CLAUDE.md「Verification」)。
+
+| 壁 (slug) | 確信度 | 再検証コマンド (slug 存在 = 未解消) | last-verified | 場所 / 備考 |
+|---|---|---|---|---|
+| `wall:epi-finite-entropy-ac-classical` | human-judgment | `rg '@residual\(wall:epi-finite-entropy-ac-classical\)' InformationTheory/` | fb7d052 | `EPIUncondMixedCase.lean` 無条件 dispatch の case-1 (有限エントロピー a.c.) が classical EPI に未還元 |
+| `wall:debruijn-integration` | human-judgment | `rg '@residual\(wall:debruijn-integration\)' InformationTheory/` | — | `FisherInfoV2DeBruijn.lean` de Bruijn 恒等式の genuine discharge |
+| `wall:fisher-finiteness` | human-judgment | `rg '@residual\(wall:fisher-finiteness\)' InformationTheory/` | — | `FisherInfoV2DeBruijnAssembly.lean`(8) + `FisherConvBound.lean`(1)。**shared wall (9 consumer)**、集約済 |
+| `wall:entropy-finiteness` | human-judgment | `rg '@residual\(wall:entropy-finiteness\)' InformationTheory/` | — | `FisherInfoV2DeBruijnAssembly.lean` |
+| `wall:stam-blachman` | human-judgment | `rg '@residual\(wall:stam-blachman\)' InformationTheory/` | — | `EPIScoreCrossTermOrth.lean` score cross-term 直交 |
+
+## 達成 (proof-done / sorryAx-free — キャッシュでなく再導出レシピ)
+
+P1 規約により「X は sorryAx-free」を prose で確定キャッシュしない。下の行は**再検証レシピ + 最後に通った commit**であって、信用する代わりに必要時に再実行する。
+
+| 主張 | 確信度 | 再検証コマンド | last-verified | 備考 |
+|---|---|---|---|---|
+| 密度+正則性つき EPI (`entropy_power_inequality_of_density`) が sorryAx-free | machine | `#print axioms entropy_power_inequality_of_density` (経由 `EPIDensityForm.lean`) | 991a718 | two-time 3-noise route、独立監査済 (`@audit:ok`) |
+| 無条件 headline (`entropyPowerExt_add_ge_dispatch_skeleton`) は **case-1 が `wall:epi-finite-entropy-ac-classical` に局所化**、sorryAx-free では**ない** | human-judgment | `#print axioms entropyPowerExt_add_ge_dispatch_skeleton` で sorryAxiom 依存を確認 | fb7d052 | def-fix 済 (case-1 false-statement 訂正)。壁解消まで sorry 残 |
+| `debruijnIdentityV2_holds_assembled` は 6 genuine atom + named gap (`wall:fisher-finiteness` 等) に構造化、sorryAx-free では**ない** | human-judgment | `rg 'wall:' InformationTheory/Shannon/FisherInfoV2DeBruijnAssembly.lean` | — | atom file は genuine、assembly は壁残 |
+
+## Mathlib 不在 (loogle Found 0 / 注意付き)
+
+| 主張 | 確信度 | query | last-verified | 備考 |
+|---|---|---|---|---|
+| `BrascampLieb` 名の宣言は Mathlib に無い | loogle-neg | `loogle "BrascampLieb"` → Found 0 | 2026-06-07 | 無限分散 EPI 経路で必要な sharp 畳み込み不等式の一部 |
+| 無限分散 classical EPI = genuine Mathlib 壁 (sharp Young / Brascamp-Lieb 畳み込み不等式) | human-judgment | — (bare name 検索では判定不能) | 2026-06-07 | **注意**: `loogle "Lieb"` は 128 件返す (Lieb 凹性等、**無関係**)。bare-identifier 失敗 ≠ 不在の逆で、bare-identifier ヒット ≠ 必要 lemma 存在。sharp 畳み込み版は要 targeted 検索。低信頼 |
+
+## 判断ログ (この台帳固有)
+
+1. **seed 作成 (2026-06-07)**: P2 実装の worked example。`loogle "Lieb"` 128件 / `"BrascampLieb"` 0件で「bare name 検索の罠」を確認、無限分散壁を `loogle-neg` でなく `human-judgment` に分類。
