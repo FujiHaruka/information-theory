@@ -566,3 +566,39 @@ example
   have hval : (N sa * J sa)⁻¹ * (C * Real.exp t) = 1 / J sa := by rw [← hmatch]; field_simp
   rwa [hval] at hcomp
 ```
+
+---
+
+## §Two-time Phase 2 honesty audit — `_hasDerivAt` J_S pin defect (2026-06-06、2-pass 独立監査)
+
+Phase 2 skeleton (9 decls、`EPICase1TwoTime.lean`、0 errors) に対し独立 honesty-auditor を 2 回起動。8 decl
+は honest、`twoTimeLogRatioGap_hasDerivAt` のみ **tier-5 `@audit:defect(false-statement)`** で残置 (Phase 3
+entry gate)。
+
+### 教訓 — Fisher info の pin は **a.e. でなく pointwise-smooth** でなければ honest でない
+
+`fisherInfoOfDensityReal d := ∫⁻ (logDeriv d)²·d` は `logDeriv d = deriv d / d` を **pointwise** に取るため
+**representative-dependent** (`FisherInfoV2.lean:81-85`、rnDeriv の `Classical.choose` non-differentiable
+representative を避ける設計)。したがって密度 `d_S` を `withDensity` の **a.e.** 等式 (`P.map (sum) =
+volume.withDensity (ofReal ∘ d_S)`) で縛っても **不十分** — skeptic は a.e.-等価な non-differentiable
+representative を取り `fisherInfoOfDensityReal d_S = 0` → `J_S = 0` → 導関数 `−1` で真値乖離、universally
+refutable。honest 版 `csiszarLogRatioGap_hasDerivAt` は Fisher info を**結論に直接埋込** (free 変数を作らず)、
+`IsRegularDeBruijnHypV2.density_t_eq` が **smooth conv-representative の pointwise pin** を供給することで構造的に
+escape を消している。**Fisher-info を free 変数 + 仮説 pin で渡す設計は a.e. pin では false-as-framed になる** —
+直接埋込 or pointwise-smooth pin が必須。
+
+### iteration 記録 (3 cycle)
+
+1. skeleton: `J_S`/`J_X`/`J_Y` 全 free → universally false (1-pass auditor DEFECT)。
+2. fix-1: X/Y を `reg_at` density に equality-pin (PASS)、`J_S` を `d_S` free + `withDensity` a.e. + `hJS_eq`
+   で pin → **J_S だけ a.e.-pin で不十分** (2-pass auditor DEFECT 再付与)。
+3. 4 回目の rushed patch を避け **第二選択 marked-defect** (`@audit:defect(false-statement)` +
+   `@audit:closed-by-successor(epi-case1-twotime-restructure-plan)`) で honest 残置。Phase 3 entry gate 化。
+
+### Phase 3 解消 lead (key insight)
+
+matched sum `X_{s t}+Y_{r t}` は単一時刻 `t` で law として `(X+Y) + √τ·Z` (τ=s t+r t、Z unit Gaussian) =
+**`X+Y` の単一-noise heat-flow at τ**。∴ 既存 `IsDeBruijnRegularityHyp (X+Y) Z P` を τ で評価して `J_S :=
+fisherInfoOfDensityReal ((h_reg_sum.reg_at τ hτ).density_t)` を**直接埋込**すれば `density_t_eq` が pointwise
+pin を供給 → escape 消滅、新規抽象不要。法等式 `P.map (X_{s t}+Y_{r t}) = P.map ((X+Y)+√τ·Z)` は body lemma
+(plan Phase 3-0a/b)。

@@ -211,26 +211,67 @@ structurally identical to the existing sum version (no new asset).
 The de Bruijn regularity is `IsDeBruijnRegularityHyp` for each component; the
 `J_* > 0` positivity is threaded as in `csiszarLogRatioGap_deriv_le_zero`.
 
-Honesty (2026-06-06 rewrite — old `@audit:defect(false-statement)` resolved).
-The derivative value's three Fisher infos are now **equality-pinned to real
-densities**, so a skeptic cannot pick free values to refute the conclusion:
-* `J_X (s t)` and `J_Y (r t)` are pinned to
-  `fisherInfoOfDensityReal ((h_reg_X.reg_at (s t) hst).density_t)` (resp. `Y`),
-  the real Fisher info of the perturbed density at the matched time `s t`
-  (resp. `r t`) — exactly the pin used by the honest single-time
-  `csiszarLogRatioGap_hasDerivAt` (`EPIStamToBridge.lean:744`), but at the
-  matched time rather than `t`.
-* `J_S` is pinned to `fisherInfoOfDensityReal d_S`, where `d_S` is a density
-  witness for the matched-sum law (`hd_S`, an external-shape `withDensity`
-  equation in the same style as `IsRegularDeBruijnHypV2.pX_law`). `d_S` is
-  *not* free: `hd_S` forces it to be a genuine Lebesgue density of the matched
-  sum, so `J_S` is determined by the data.
-All added hypotheses are **regularity preconditions** (positivity of the matched
-times `hst`/`hrt`, existence/absolute-continuity of the sum density `hd_S`, and
-the equality pins `hJX_eq`/`hJY_eq`/`hJS_eq`). None of them bundle the analytic
-core (no `HasDerivAt`, harmonic-Stam, or EPI claim is encoded in a hypothesis);
-the derivative value itself remains to be proved (`sorry`).
+Honesty (2026-06-06 PARTIAL fix — X/Y escapes closed, `J_S` escape REMAINS).
+The `J_X (s t)` / `J_Y (r t)` velocity Fisher infos are now genuinely
+density-pinned (see re-audit below, PASS), but `J_S` is only `withDensity`
+(a.e.)-pinned, which is insufficient for the representative-dependent
+`fisherInfoOfDensityReal` — so the conclusion is still universally refutable
+via the `J_S` representative. This declaration stays a marked tier-5 defect
+(below) pending the Phase 3 proper pin.
 
+@audit:defect(false-statement) — independent re-audit 2026-06-06 (second-pass,
+fresh auditor). The density-pin FIX closes the X/Y escape but NOT the `J_S`
+escape, so the conclusion is still universally refutable.
+
+* `J_X (s t)` / `J_Y (r t)`: PINNED. `hJX_eq`/`hJY_eq` fix them to
+  `fisherInfoOfDensityReal ((h_reg_*.reg_at (s t) hst).density_t)`, and that
+  `density_t` is **pointwise** pinned to the smooth representative
+  `convDensityAdd pX g_{s t}` via `IsRegularDeBruijnHypV2.density_t_eq`
+  (`FisherInfoV2DeBruijn.lean:260`), with `pX` fixed to the real `X`-density by
+  `pX_law`. No free escape (same mechanism as the honest single-time
+  `csiszarLogRatioGap_hasDerivAt`).
+* `J_S`: **STILL FREE / escapable.** `hd_S` is only a `withDensity` (a.e.)
+  equation, which pins `d_S` to an a.e.-equivalence CLASS — not to a smooth
+  representative. But `fisherInfoOfDensityReal d_S := ∫⁻ (logDeriv d_S)²·d_S`
+  takes `logDeriv d_S = deriv d_S / d_S` POINTWISE, so it is
+  **representative-dependent** (this is the documented design of
+  `fisherInfoOfDensity`, `FisherInfoV2.lean:81-85`, chosen precisely to avoid the
+  `rnDeriv` `Classical.choose` non-differentiable representative). A skeptic may
+  take `d_S' :=` the matched-sum density's non-differentiable (e.g. `rnDeriv`)
+  representative — still satisfying the a.e. `hd_S` — for which
+  `fisherInfoOfDensityReal d_S' = 0`, hence `J_S = 0` and the conclusion
+  derivative `J_S·(1/J_X+1/J_Y)−1 = −1`, contradicting the true value. This is
+  the exact `false-statement` failure mode that `density_t_eq`'s
+  **smooth conv-representative pointwise pin** (NOT a `withDensity` a.e. equation)
+  was introduced to close (`FisherInfoV2DeBruijn.lean:242-249`). The honest
+  single-time `_hasDerivAt` pins `J_sum` the same smooth way; here `hd_S` is
+  strictly weaker.
+
+The FIX is to pin `J_S` to a SMOOTH representative pointwise (mirror
+`density_t_eq`: `hd_S_smooth : ∀ x, d_S x = convDensityAdd pX_sum g_{...} x`
+with `pX_sum` a real density of the matched sum), OR thread a two-time analogue
+of `IsDeBruijnRegularityHyp` for the matched sum, so `J_S` is determined by the
+data. A `withDensity` a.e. equation alone is insufficient.
+
+@audit:closed-by-successor(epi-case1-twotime-restructure-plan)
+第二選択 marked-defect (CLAUDE.md「sorry を書けない箇所での対処順序」). (a) Why
+the proper pin is deferred this session: a faithful pointwise-smooth pin of the
+matched-sum Fisher info is genuine Phase 3 design (the existing
+`IsDeBruijnRegularityHyp` is single-noise/single-time and does not model the
+two-time matched sum as a path), and three quick signature patches in one session
+each missed a representative subtlety — deliberate design is warranted over a 4th
+rushed patch. (b) Successor: Phase 3 of `epi-case1-twotime-restructure-plan`.
+**Design lead (key insight, 2026-06-06)**: at the single time `t`, the matched
+sum `X_{s t} + Y_{r t} = (X+Y) + (√(s t)·Z_X + √(r t)·Z_Y)`, and the noise
+`√(s t)·Z_X + √(r t)·Z_Y` has law `𝒩(0, s t + r t)` independent of `X+Y`, so the
+matched-sum law equals that of `(X+Y) + √τ·Z` with `τ = s t + r t` and `Z` unit
+Gaussian — i.e. a **single-noise heat flow of `X+Y` at time `τ`**. Hence
+`J_S` can be embedded DIRECTLY (no free variable, like the single-time honest
+version) as `fisherInfoOfDensityReal ((h_reg_sum.reg_at (s t + r t) hτ).density_t)`
+threading the EXISTING `IsDeBruijnRegularityHyp (fun ω => X ω + Y ω) Z P` for a
+unit noise `Z` — `density_t_eq` then gives the smooth pointwise pin for free, and
+the law equality `P.map (X_{s t}+Y_{r t}) = P.map ((X+Y)+√τ·Z)` is a body lemma
+(Gaussian convolution). No new regularity abstraction required.
 @residual(plan:epi-case1-twotime-restructure-plan) -/
 theorem twoTimeLogRatioGap_hasDerivAt
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]

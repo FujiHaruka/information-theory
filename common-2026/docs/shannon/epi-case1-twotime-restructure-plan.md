@@ -13,8 +13,9 @@
 
 - [x] Phase 0 — formulation Mathlib asset 在庫調査 ✅
 - [x] Phase 1 — **formulation 確定 gate** (probe) ✅ **PASS = formulation (b) GO** (2026-06-06、`ProbeF1.lean` EXIT=0、proof-log §Two-time formulation gate)
-- [ ] Phase 2 — two-time object declaration skeleton 📋
-- [ ] Phase 3 — deriv_le_zero arith core 結線 (解析核、gate PASS 済) 📋
+- [x] Phase 2 — two-time object declaration skeleton ✅ (9 decls、0 errors、2026-06-06。8 honest + `_hasDerivAt` は
+  tier-5 `@audit:defect(false-statement)` 残置 = Phase 3 entry gate で J_S pin 解消)
+- [ ] Phase 3 — **`_hasDerivAt` J_S pin 設計 (entry gate)** + deriv_le_zero arith 結線 (arith gate PASS 済) 📋
 - [ ] Phase 4 — endpoint (t=0 / t→∞) + antitone + epi_of_* 結線 📋
 - [ ] Phase 5 — consumer 移行 (`csiszarLogRatioGap` 83 occ / 4 file) 📋
 - [ ] Phase 6 — sister `csiszarGap1Source` 削除 + `Z_law` defect park 解消 📋
@@ -208,17 +209,36 @@ consumer を切替えてから旧 object を削除)。signature のみ列挙、b
 
 ---
 
-## Phase 3 - deriv_le_zero arith core 結線 📋
+## Phase 3 - deriv_le_zero arith core 結線 + **`_hasDerivAt` J_S pin 設計 (最優先 entry gate)** 📋
 
-解析核 gate は PASS 済 (proof-log §Two-time object)。本 Phase は **gate で確認した arith を実 object に結線**
-するだけ。
+解析核 arith gate は PASS 済 (proof-log §Two-time object)。ただし Phase 2 skeleton の独立 honesty 監査 (2-pass)
+で `twoTimeLogRatioGap_hasDerivAt` が **tier-5 `@audit:defect(false-statement)`** と判明 (`J_S` の a.e.-pin が
+representative-dependent な `fisherInfoOfDensityReal` に不十分、skeptic が non-differentiable representative で
+`J_S=0` に落とせる)。**Phase 3 の最初 = この J_S pin を proper に解消する設計**。
 
-- [ ] proof-log の `twotime_full` body を `TT-_deriv_le_zero` に移植。
-- [ ] harmonic Stam の供給を `isStamInequalityHyp_via_step3` から取る (X_s+Y_r 用の Stam instance、
-  X_s と Y_r が独立 Gaussian-smoothed なので Stam の前提 `IndepFun` が満たされることを確認)。
-- [ ] `TT-_hasDerivAt` (Phase 2) と結合して `deriv R t ≤ 0` を出す。
+### ⭐ Phase 3 entry design gate — `_hasDerivAt` の J_S pointwise-smooth pin
 
-proof-log: yes (Phase 1 で開いた two-time proof-log に結線結果を記録)。
+**key insight (2026-06-06、defect 解消の決定的 lead)**: 単一時刻 `t` で matched sum
+`X_{s t}+Y_{r t} = (X+Y) + (√(s t)·Z_X + √(r t)·Z_Y)`、noise `√(s t)·Z_X + √(r t)·Z_Y` の law は
+`𝒩(0, s t + r t)` で `X+Y` と独立 → matched-sum law = `(X+Y) + √τ·Z` (τ = s t + r t、Z unit Gaussian) の law
+= **`X+Y` の単一-noise heat-flow at time τ**。∴ `J_S` を free 変数にせず、既存 `IsDeBruijnRegularityHyp
+(fun ω => X ω + Y ω) Z P` を τ で評価して **結論に直接埋込**: `J_S :=
+fisherInfoOfDensityReal ((h_reg_sum.reg_at (s t + r t) hτ).density_t)`。`density_t_eq` が smooth conv-
+representative の pointwise pin を供給 (a.e. でなく pointwise) → representative escape が構造的に消える
+(honest single-t 版 `csiszarLogRatioGap_hasDerivAt` と同一機構)。**新規 regularity 抽象は不要**。
+
+- [ ] **3-0a (entry gate)**: `_hasDerivAt` signature を rewrite — free `J_S`/`d_S`/`hd_S`/`hJS_eq` を削除し、
+  `h_reg_sum : IsDeBruijnRegularityHyp (X+Y) Z P` (Z unit Gaussian + law/indep/meas regularity) + `hτ : 0 < s t + r t`
+  を thread、結論の `J_S` を上記埋込式に置換。X/Y velocity pin (`hJX_eq`/`hJY_eq`) は監査 PASS 済なので維持。
+- [ ] **3-0b**: 法等式 body lemma `P.map (X_{s t}+Y_{r t}) = P.map ((X+Y)+√τ·Z)` (Gaussian convolution、
+  `gaussianReal` additivity) を補題化 — `_hasDerivAt` body が埋込 `density_t` を実 matched-sum density に繋ぐ鍵。
+- [ ] **3-0c (再監査)**: rewrite 後 fresh `honesty-auditor` で `J_S` escape 解消を確認 → `@audit:defect` 除去。
+- [ ] proof-log の `twotime_full` body を `TT-_deriv_le_zero` に移植 (arith は PASS 済)。
+- [ ] harmonic Stam の供給を `isStamInequalityHyp_via_step3` から取る (matched-sum `(X+Y)+√τ·Z` 用の Stam
+  instance、unit-noise heat-flow なので Stam 前提 `IndepFun` が満たされることを確認)。
+- [ ] `TT-_hasDerivAt` (pin 済) と結合して `deriv R t ≤ 0` を出す。
+
+proof-log: yes (§Two-time formulation gate / 新 §Two-time honesty audit に結線結果を記録)。
 
 ---
 
