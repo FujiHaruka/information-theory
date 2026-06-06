@@ -1,0 +1,9 @@
+{
+  "problem": "EPI case-1 two-time restructure: Phase 1 formulation gate + Phase 2 skeleton + Phase 3 entry gate (J_S pin defect 解消) を orchestrator+subagent ループで進めたセッションのプロセス振り返り",
+  "proof_log": "docs/proof-logs/proof-log-epi-twotime-process.md",
+  "sessions": [
+    { "id": "1479c259-e557-488f-a31a-bc8f48607615", "prompt_ids": ["50c87b34", "f73af343"], "note": "Phase1 gate (ProbeF1) → Phase2 skeleton (lean-implementer) → 3× honesty-auditor 監査ループ → J_S pin defect を直接埋込で構造解消 → matchedSum_law_eq genuine closure" }
+  ],
+  "filters": { "file_prefix": "InformationTheory/Shannon/EPICase1TwoTime" },
+  "idle_gap_minutes": 5
+}
