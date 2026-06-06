@@ -136,7 +136,7 @@ before/after を比較。CLAUDE.md「Commits」に従い autonomous commit + pus
 ## 気をつけること
 
 - **plan の凍結された Phase 番号 / hypothesis 名 / 撤退ライン slug (L-INT-2-α 等) は触らない** — 他文書から参照されている可能性。本文の説明だけ縮める
-- **判断ログは append-only 規約** (各 plan の判断ログ節冒頭に書いてあるはず) — 既存 entry を編集して短くするのは OK、削除は不可
+- **判断ログは決着済 entry を削除** (CLAUDE.md「Plan / docs hygiene」で append-only を反転、git が履歴を持つ) — **削除可**: 採用方針が確定 / 反例で却下済 / commit 済の経緯。**残す**: active な撤退ライン・判定軸・進行中 Phase の判断。凍結 slug (L-* 系) は本文説明だけ縮め番号/名は残す
 - **コード側 docstring の `@residual` / `@audit:*` は touch しない** — plan ダイエットの scope 外、別 task
 - **`/resume` が依存する handoff.md は touch しない** — plan dir 以外には触らない
 

@@ -24,4 +24,4 @@
 
 ## 判断ログ
 
-書く頻度: 方針変更 / 撤退 / 当初仮定の修正があったとき。append-only。
+書く頻度: 方針変更 / 撤退 / 当初仮定の修正があったとき。決着済 entry は削除 (git が履歴)、active な判断のみ残す (→ CLAUDE.md「Plan / docs hygiene」)。プラン予算 ≤ 600 行 / active 判断ログ ≤ 10 entry。

@@ -178,6 +178,39 @@ If the session is ad-hoc — opened with no prior handoff context, scope unrelat
 
 **Single file 規約**: handoff は `.claude/handoff.md` **1 本のみ**。`handoff-<slug>.md` の named slot は作らない。複数 active line を並行管理する場合は 1 ファイル内をセクションで分割 (例: `## Line A — AWGN`, `## Line B — EPI/Stam`)。完全 closed なラインは handoff から削除し (履歴は git に残る)、必要なら `## Closure summary` セクションで参照のみ残す。session 終了時の handoff 書き出しは既存 line を上書きせず、追記 (セクション追加) で merge する。
 
+## Plan / docs hygiene
+
+プランは「**制御状態** (scope/approach/next) / **判断履歴** (判断ログ) / **確定事実** (sorryAx-free・壁・補題不在)」の3つを混ぜると肥大・stale 化する。寿命が違うので分離する。
+
+**確定事実は prose にキャッシュしない (再導出 > キャッシュ)**:
+
+- 機械再導出できる事実 (`sorryAx-free` / sorry 有無 / decl 存在) は plan 本文に書かず、都度 `#print axioms` / `rg` で引く。prose キャッシュは無効化されず stale 化するので「再検証コストが安いなら毎回再導出」が正しい。同じ decl の `#print axioms` を別セッションで再実行するのは無駄でなく、prose を信用しない正しい挙動。
+- 壁は `@residual(wall:slug)` がコード側 SoT。plan は slug にリンクし「X は壁」と本文に断定しない (壁が解消されると plan が誤った確定を伝播する)。
+- 再導出が高コストな少数 (loogle Found 0 / 解析的な壁判断) **だけ**確定事実台帳へ。
+
+**確定事実台帳 `docs/<family>/<family>-facts.md`** (family ごと 1 本、散在の単一源化):
+
+| 列 | 内容 |
+|---|---|
+| 主張 | 1 行 |
+| 確信度 | `machine` / `loogle-neg` / `human-judgment` |
+| 再検証コマンド | `#print axioms ...` / loogle query / `rg ...` |
+| last-verified | commit hash |
+| 備考 | 任意 |
+
+- `machine` — axiom/sorry 機械検証済。再検証コマンドを必ず併記。
+- `loogle-neg` — loogle Found 0。query 併記 (bare-identifier 失敗と区別)。
+- `human-judgment` — 解析的な壁判断。**過大評価 (実は通れる) も過小評価 (反例で偽) も起きるので低信頼**。鵜呑みにせず独立 pivot で再確認 (→「Verification」)。
+- plan top-of-file の「Wall SoT: <file:line>」ヘッダは台帳行への参照に置換してよい。
+
+**判断ログ + プランのライフサイクル**:
+
+- 判断ログは「**決着済** (採用方針確定 / 反例で却下済 / commit 済) entry は削除」。git が履歴を持つので prose 二重保存は純肥大。**active な撤退ライン・判定軸・進行中 Phase の判断は残す**。凍結 slug (L-* 系) / 凍結 Phase 番号は他文書参照ありうるので削除不可。
+- 廃止 Phase は取り消し線残置でなく 1 行 + commit に圧縮。完了 Phase の本文も同様。
+- **プラン予算**: 1 plan ≤ 600 行 / active 判断ログ ≤ 10 entry。超過したら `/compact-plan` (handoff 境界で自動起動)。pre-commit が docs-plan の予算超過を WARN。
+
+**staleness 検出**: `scripts/plan_lint.ts` が plan の decl / file:line / 壁 slug 参照をコードと照合し STALE/SUSPECT を出す。STALE 確定は (file 消失 / 壁 slug 消失) の 2 ルールのみ、残りは要レビューの SUSPECT。
+
 ## Definition of Done — 2 段階
 
 検証バーは 2 段階。commit 可否と「証明完成」を分離することで、未完成を `sorry` で正直に残せるようにする (`sorry` を消すための仮説束 / `:True` slot / 退化定義悪用が起きないよう、撤退口を構造的に確保する)。
