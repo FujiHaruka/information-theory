@@ -957,7 +957,17 @@ theorem epi_of_twoTimeLogRatioGap_zero_nonneg
     (h_nonneg : 0 ≤ twoTimeLogRatioGap X Y Z_X Z_Y P s r 0) :
     entropyPower (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
-  sorry
+  rw [twoTimeLogRatioGap_at_zero X Y Z_X Z_Y P h_path_X h_path_Y] at h_nonneg
+  -- `0 ≤ log A − log B` ⟺ `log B ≤ log A`.
+  have h_log_le : Real.log (entropyPower (P.map X) + entropyPower (P.map Y))
+      ≤ Real.log (entropyPower (P.map (fun ω => X ω + Y ω))) := by linarith
+  -- Positivity of both `log` arguments.
+  have hA_pos : 0 < entropyPower (P.map (fun ω => X ω + Y ω)) := entropyPower_pos _
+  have hB_pos : 0 < entropyPower (P.map X) + entropyPower (P.map Y) :=
+    add_pos (entropyPower_pos _) (entropyPower_pos _)
+  -- `log B ≤ log A ⟺ B ≤ A` (both positive).
+  rw [Real.log_le_log_iff hB_pos hA_pos] at h_log_le
+  exact h_log_le
 
 /-- **TT EPI via tendsto** — antitonicity + `R(t) → 0` give `R(0) ≥ 0`, hence EPI.
 
@@ -976,6 +986,14 @@ theorem epi_of_twoTimeLogRatioGap_tendsto
         Filter.atTop (nhds (0 : ℝ))) :
     entropyPower (P.map (fun ω => X ω + Y ω))
       ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
-  sorry
+  set R := fun t : ℝ => twoTimeLogRatioGap X Y Z_X Z_Y P s r t with hR
+  -- `R 0 ≥ R t` for every `t ≥ 0` by antitonicity (`0 ≤ t`).
+  have h_tail : ∀ᶠ t in Filter.atTop, R t ≤ R 0 := by
+    filter_upwards [Filter.eventually_ge_atTop (0 : ℝ)] with t ht
+    exact h_anti Set.self_mem_Ici (Set.mem_Ici.mpr ht) ht
+  -- `R t → 0` and `R t ≤ R 0` eventually ⟹ `0 ≤ R 0`.
+  have h_zero_le : (0 : ℝ) ≤ R 0 := le_of_tendsto h_lim h_tail
+  -- Bridge to EPI.
+  exact epi_of_twoTimeLogRatioGap_zero_nonneg X Y Z_X Z_Y P h_path_X h_path_Y h_zero_le
 
 end InformationTheory.Shannon.EPICase1TwoTime
