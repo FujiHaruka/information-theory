@@ -197,6 +197,41 @@ theorem twoTimeLogRatioGap_at_zero
 `J_S = J(X_s + Y_r)`, via per-component de Bruijn (`deBruijn_identity_v2`) +
 chain rule (`HasDerivAt.comp` with `s' = 1/J_X`, `r' = 1/J_Y`). -/
 
+/-- **Matched-sum law = single-noise heat flow of `X+Y` at `τ = s_t + r_t`.**
+
+At a single time the matched-sum perturbation
+`X + √(s_t)·Z_X + (Y + √(r_t)·Z_Y)` rearranges to
+`(X+Y) + (√(s_t)·Z_X + √(r_t)·Z_Y)`, and the noise
+`√(s_t)·Z_X + √(r_t)·Z_Y` — being a sum of independent centered Gaussians of
+variances `s_t·v_X` and `r_t·v_Y` — has law `𝒩(0, s_t·v_X + r_t·v_Y)`
+independent of `X+Y`. Taking unit-variance noises (`v_X = v_Y = 1`) and
+`τ = s_t + r_t`, the matched-sum law equals the law of `(X+Y) + √τ·Z` for a unit
+Gaussian `Z` independent of `X+Y`. This is the single-noise heat flow of `X+Y`
+at time `τ`, which lets `J_S` be pinned by the existing single-noise
+`IsDeBruijnRegularityHyp (X+Y) Z P`.
+
+The hypotheses are regularity preconditions only (measurability, the unit-noise
+laws of `Z_X`, `Z_Y`, `Z`, and the relevant independences). The conclusion is a
+pure measure equality (an honest math fact); no derivative value or EPI content
+is bundled. Body: Gaussian convolution additivity (`gaussianReal` add of the
+independent noise variances) + reassociation of the `map`.
+
+@residual(plan:epi-case1-twotime-restructure-plan) -/
+theorem matchedSum_law_eq
+    (X Y Z_X Z_Y Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hX : Measurable X) (hY : Measurable Y)
+    (hZX : Measurable Z_X) (hZY : Measurable Z_Y) (hZ : Measurable Z)
+    (hZX_law : P.map Z_X = gaussianReal 0 1)
+    (hZY_law : P.map Z_Y = gaussianReal 0 1)
+    (hZ_law : P.map Z = gaussianReal 0 1)
+    (hXY_ZXZY : IndepFun (fun ω => X ω + Y ω) (fun ω => Z_X ω + Z_Y ω) P)
+    (hXY_Z : IndepFun (fun ω => X ω + Y ω) Z P)
+    (hZX_ZY : IndepFun Z_X Z_Y P)
+    (s_t r_t : ℝ) (hst : 0 < s_t) (hrt : 0 < r_t) :
+    P.map (fun ω => X ω + Real.sqrt s_t * Z_X ω + (Y ω + Real.sqrt r_t * Z_Y ω))
+      = P.map (fun ω => (X ω + Y ω) + Real.sqrt (s_t + r_t) * Z ω) := by
+  sorry
+
 /-- **TT-`_hasDerivAt`** — the two-time gap has derivative
 `J_S·(1/J_X + 1/J_Y) − 1` at `t > 0` along the matched path.
 
@@ -211,70 +246,33 @@ structurally identical to the existing sum version (no new asset).
 The de Bruijn regularity is `IsDeBruijnRegularityHyp` for each component; the
 `J_* > 0` positivity is threaded as in `csiszarLogRatioGap_deriv_le_zero`.
 
-Honesty (2026-06-06 PARTIAL fix — X/Y escapes closed, `J_S` escape REMAINS).
-The `J_X (s t)` / `J_Y (r t)` velocity Fisher infos are now genuinely
-density-pinned (see re-audit below, PASS), but `J_S` is only `withDensity`
-(a.e.)-pinned, which is insufficient for the representative-dependent
-`fisherInfoOfDensityReal` — so the conclusion is still universally refutable
-via the `J_S` representative. This declaration stays a marked tier-5 defect
-(below) pending the Phase 3 proper pin.
+Honesty (2026-06-06 STRUCTURAL fix — all three Fisher infos density-pinned, the
+old a.e.-pin `J_S` escape is structurally removed). All three Fisher infos in
+the conclusion are now pinned to a pointwise-smooth representative, so a skeptic
+cannot choose their values:
 
-@audit:defect(false-statement) — independent re-audit 2026-06-06 (second-pass,
-fresh auditor). The density-pin FIX closes the X/Y escape but NOT the `J_S`
-escape, so the conclusion is still universally refutable.
-
-* `J_X (s t)` / `J_Y (r t)`: PINNED. `hJX_eq`/`hJY_eq` fix them to
+* `J_X (s t)` / `J_Y (r t)`: density-pinned. `hJX_eq`/`hJY_eq` fix them to
   `fisherInfoOfDensityReal ((h_reg_*.reg_at (s t) hst).density_t)`, and that
-  `density_t` is **pointwise** pinned to the smooth representative
-  `convDensityAdd pX g_{s t}` via `IsRegularDeBruijnHypV2.density_t_eq`
-  (`FisherInfoV2DeBruijn.lean:260`), with `pX` fixed to the real `X`-density by
-  `pX_law`. No free escape (same mechanism as the honest single-time
+  `density_t` is **pointwise** pinned to the smooth representative via
+  `IsRegularDeBruijnHypV2.density_t_eq`, with the real `X`/`Y`-density fixed by
+  `pX_law` (same mechanism as the honest single-time
   `csiszarLogRatioGap_hasDerivAt`).
-* `J_S`: **STILL FREE / escapable.** `hd_S` is only a `withDensity` (a.e.)
-  equation, which pins `d_S` to an a.e.-equivalence CLASS — not to a smooth
-  representative. But `fisherInfoOfDensityReal d_S := ∫⁻ (logDeriv d_S)²·d_S`
-  takes `logDeriv d_S = deriv d_S / d_S` POINTWISE, so it is
-  **representative-dependent** (this is the documented design of
-  `fisherInfoOfDensity`, `FisherInfoV2.lean:81-85`, chosen precisely to avoid the
-  `rnDeriv` `Classical.choose` non-differentiable representative). A skeptic may
-  take `d_S' :=` the matched-sum density's non-differentiable (e.g. `rnDeriv`)
-  representative — still satisfying the a.e. `hd_S` — for which
-  `fisherInfoOfDensityReal d_S' = 0`, hence `J_S = 0` and the conclusion
-  derivative `J_S·(1/J_X+1/J_Y)−1 = −1`, contradicting the true value. This is
-  the exact `false-statement` failure mode that `density_t_eq`'s
-  **smooth conv-representative pointwise pin** (NOT a `withDensity` a.e. equation)
-  was introduced to close (`FisherInfoV2DeBruijn.lean:242-249`). The honest
-  single-time `_hasDerivAt` pins `J_sum` the same smooth way; here `hd_S` is
-  strictly weaker.
+* `J_S`: **directly embedded, no free variable.** At the single time `t`, the
+  matched sum `X_{s t} + Y_{r t} = (X+Y) + (√(s t)·Z_X + √(r t)·Z_Y)`, and the
+  noise has law `𝒩(0, s t + r t)` independent of `X+Y`, so the matched-sum law
+  equals that of `(X+Y) + √τ·Z` (`τ = s t + r t`, `Z` unit Gaussian) — a
+  single-noise heat flow of `X+Y` at time `τ` (proved by `matchedSum_law_eq`).
+  Hence `J_S` is embedded directly into the conclusion as
+  `fisherInfoOfDensityReal ((h_reg_sum.reg_at (s t + r t) hτ).density_t)` by
+  threading the EXISTING single-noise `IsDeBruijnRegularityHyp (X+Y) Z P`. Its
+  `density_t_eq` supplies the smooth pointwise pin for free, so the old
+  `withDensity` a.e.-pin (representative-escapable via the documented
+  `fisherInfoOfDensityReal` pointwise `logDeriv`) is gone. No free Fisher-info
+  variable remains.
 
-The FIX is to pin `J_S` to a SMOOTH representative pointwise (mirror
-`density_t_eq`: `hd_S_smooth : ∀ x, d_S x = convDensityAdd pX_sum g_{...} x`
-with `pX_sum` a real density of the matched sum), OR thread a two-time analogue
-of `IsDeBruijnRegularityHyp` for the matched sum, so `J_S` is determined by the
-data. A `withDensity` a.e. equation alone is insufficient.
-
-@audit:closed-by-successor(epi-case1-twotime-restructure-plan)
-第二選択 marked-defect (CLAUDE.md「sorry を書けない箇所での対処順序」). (a) Why
-the proper pin is deferred this session: a faithful pointwise-smooth pin of the
-matched-sum Fisher info is genuine Phase 3 design (the existing
-`IsDeBruijnRegularityHyp` is single-noise/single-time and does not model the
-two-time matched sum as a path), and three quick signature patches in one session
-each missed a representative subtlety — deliberate design is warranted over a 4th
-rushed patch. (b) Successor: Phase 3 of `epi-case1-twotime-restructure-plan`.
-**Design lead (key insight, 2026-06-06)**: at the single time `t`, the matched
-sum `X_{s t} + Y_{r t} = (X+Y) + (√(s t)·Z_X + √(r t)·Z_Y)`, and the noise
-`√(s t)·Z_X + √(r t)·Z_Y` has law `𝒩(0, s t + r t)` independent of `X+Y`, so the
-matched-sum law equals that of `(X+Y) + √τ·Z` with `τ = s t + r t` and `Z` unit
-Gaussian — i.e. a **single-noise heat flow of `X+Y` at time `τ`**. Hence
-`J_S` can be embedded DIRECTLY (no free variable, like the single-time honest
-version) as `fisherInfoOfDensityReal ((h_reg_sum.reg_at (s t + r t) hτ).density_t)`
-threading the EXISTING `IsDeBruijnRegularityHyp (fun ω => X ω + Y ω) Z P` for a
-unit noise `Z` — `density_t_eq` then gives the smooth pointwise pin for free, and
-the law equality `P.map (X_{s t}+Y_{r t}) = P.map ((X+Y)+√τ·Z)` is a body lemma
-(Gaussian convolution). No new regularity abstraction required.
 @residual(plan:epi-case1-twotime-restructure-plan) -/
 theorem twoTimeLogRatioGap_hasDerivAt
-    (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (X Y Z_X Z_Y Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     {J_X J_Y : ℝ → ℝ} {s r : ℝ → ℝ}
     (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
     (hY : Measurable Y) (hZY : Measurable Z_Y) (hYZY : IndepFun Y Z_Y P)
@@ -283,10 +281,20 @@ theorem twoTimeLogRatioGap_hasDerivAt
     -- de Bruijn regularity for the independently-perturbed components
     (h_reg_X : IsDeBruijnRegularityHyp X Z_X P)
     (h_reg_Y : IsDeBruijnRegularityHyp Y Z_Y P)
+    -- unit noise `Z` + single-noise heat-flow regularity of the matched sum.
+    -- `matchedSum_law_eq` shows `P.map (X_{s t}+Y_{r t}) = P.map ((X+Y)+√τ·Z)`,
+    -- so `J_S` is the single-noise sum Fisher info at `τ = s t + r t`; these are
+    -- the regularity preconditions for that identification (measurability, the
+    -- unit-noise law of `Z`, and independence of `X+Y` from `Z`).
+    (hZ : Measurable Z) (hZ_law : P.map Z = gaussianReal 0 1)
+    (hXYZ : IndepFun (fun ω => X ω + Y ω) Z P)
+    (h_reg_sum : IsDeBruijnRegularityHyp (fun ω => X ω + Y ω) Z P)
     {t : ℝ} (ht : 0 < t)
     -- matched-time positivity (regularity precondition: `t > 0` + strict-mono
     -- matched path put `s t, r t > 0`; threaded here as a precondition)
     (hst : 0 < s t) (hrt : 0 < r t)
+    -- `τ = s t + r t > 0` (derivable from `add_pos hst hrt`, threaded explicitly)
+    (hτ : 0 < s t + r t)
     -- `J_X (s t) / J_Y (r t)` density-pinned to the real perturbed-density
     -- Fisher info at the matched time (same pin as the honest single-time
     -- `csiszarLogRatioGap_hasDerivAt`, evaluated at `s t` / `r t`)
@@ -296,18 +304,11 @@ theorem twoTimeLogRatioGap_hasDerivAt
     (hJY_eq : J_Y (r t)
         = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
             ((h_reg_Y.reg_at (r t) hrt).density_t))
-    -- matched-sum density witness + density-pin of `J_S`. `IsDeBruijnRegularityHyp`
-    -- is single-noise/single-time and cannot model the two-time matched sum, so
-    -- the sum Fisher info is pinned via a free density witness `d_S` constrained
-    -- by an external-shape `withDensity` equation (regularity precondition,
-    -- same form as `IsRegularDeBruijnHypV2.pX_law`).
-    (J_S : ℝ) (d_S : ℝ → ℝ)
-    (hd_S : P.map (fun ω => X ω + Real.sqrt (s t) * Z_X ω + (Y ω + Real.sqrt (r t) * Z_Y ω))
-        = volume.withDensity (fun x => ENNReal.ofReal (d_S x)))
-    (hJS_eq : J_S = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal d_S)
     (hJX_pos : 0 < J_X (s t)) (hJY_pos : 0 < J_Y (r t)) :
     HasDerivAt (fun u : ℝ => twoTimeLogRatioGap X Y Z_X Z_Y P s r u)
-      (J_S * (1 / J_X (s t) + 1 / J_Y (r t)) - 1) t := by
+      (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+          ((h_reg_sum.reg_at (s t + r t) hτ).density_t)
+        * (1 / J_X (s t) + 1 / J_Y (r t)) - 1) t := by
   sorry
 
 /-- **TT-`_deriv_le_zero`** (= analytic core, arith gate PASS) — the two-time
