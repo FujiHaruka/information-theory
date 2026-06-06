@@ -13,8 +13,12 @@ description: 現在のセッションの状態を `.claude/handoff.md` に書き
    - `git status` (uncommitted の有無、branch)
    - `git log --oneline -5` (直近のコミット)
    - 現在の Task list (TaskList tool で取得)
-2. **`.claude/handoff.md` を以下の形式で書く** (`Write` で上書き)
-3. ユーザーには「ハンドオフ書いた」と一言だけ。長い要約は不要 (内容はファイルにある)
+2. **active plan の hygiene チェック** (CLAUDE.md「Plan / docs hygiene」): handoff 対象 family の `*-plan.md` を `deno run -A scripts/plan_lint.ts <plan>` で検査。
+   - **BUDGET** (>600 行) が出たら handoff 前に `/compact-plan <plan>` を実行 (決着済 判断ログ entry / 完了 Phase を畳む)。
+   - **STALE** (壁 slug 消失 / file 消失) が出たら該当箇所を修正 or 削除。次セッションが誤った確定を引き継がないため。
+   - 圧縮対象は family plan であって `.claude/handoff.md` ではない (compact-plan の不可侵制約と非競合)。cleanup をセッション境界で必ず走らせる目的 (今は user 起動依存で実行されない)。
+3. **`.claude/handoff.md` を以下の形式で書く** (`Write` で上書き)
+4. ユーザーには「ハンドオフ書いた」と一言だけ。長い要約は不要 (内容はファイルにある)
 
 ## handoff.md の形式
 
