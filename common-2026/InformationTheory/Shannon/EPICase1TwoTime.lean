@@ -51,8 +51,9 @@ limit (`twoTimeLogRatioGap_tendsto_zero_atTop`) are all genuinely closed.
 * `twoTimeLogRatioGap` is a plain `def` parametrized by the matched paths
   `s r : ℝ → ℝ` (formulation (b) `e^t` closed form). The paths are **not**
   load-bearing hypotheses: they are constructed (existence delivered by
-  `matchedTimePath_exists`, a `sorry` lemma whose hypotheses are only the
-  regularity preconditions `J_X > 0`, measurability, independence).
+  `matchedTimePath_exists`, a genuine (sorry-free, `@audit:ok`) lemma whose
+  hypotheses are only the regularity preconditions `J_X > 0`, measurability,
+  independence).
 * The `IsMatchedTimePath` predicate below records the **output** of the path
   construction (matched `e^t` property + `HasDerivAt`). It is genuinely
   produced by `matchedTimePath_exists`; consumers receive it as a *constructed*
@@ -405,8 +406,8 @@ are preconditions, none bundles the EPI conclusion.
 
 Independent honesty audit 2026-06-06 (fresh subagent): PASS — `@audit:ok` affirmed.
 (1) `#print axioms matchedTimePath_exists = [propext, Classical.choice, Quot.sound]`
-(sorryAx-free, machine-checked; the in-file sorries belong to the out-of-scope
-Phase 3/4 derivative declarations). (2) `hN_tendsto` is a GENUINE regularity /
+(sorryAx-free, machine-checked; the file is now fully proof-done, 0 in-file
+`sorry`). (2) `hN_tendsto` is a GENUINE regularity /
 order-completeness precondition, NOT load-bearing: it is the divergence of the
 single-source entropy power `N_A(s) → ∞` (assembled from `entropyPower_path_scaling`
 × `entropyPower_rescaled_path_tendsto`, both in-tree, the latter `@audit:ok` and
@@ -421,6 +422,15 @@ honestly (`hf'_ne` from `mul_pos`, `hval` cancels `(N·J)⁻¹·(C·eᵗ)` to `1
 matched value `N sa = C·eᵗ`). (5) The four `IsMatchedTimePath` fields are constructed
 from the real inverse `g`, not trivially satisfied at a degenerate `s` — the existence
 is non-vacuous.
+
+Re-audit 2026-06-06 (commit `4074dea`, conclusion strengthened with `∀ t, 0<t→0<s t`
+and `Tendsto s atTop atTop`): PASS — `@audit:ok` re-affirmed. Both new conjuncts are
+GENUINELY proven (no sorry, non-vacuous): positivity from `g (C·eᵗ) > 0` via strict-mono
+inverse (`hg_rinv'` + `hN_mono`, exfalso on the `g=0` branch using `N(g y)=C` vs
+`C<C·eᵗ`); divergence from inner `C·eᵗ→∞` (`const_mul_atTop`) composed with `g→∞`
+(strict-mono `N` + right-inverse, explicit `tendsto_atTop_atTop` witness). `#print axioms
+matchedTimePath_exists = [propext, Classical.choice, Quot.sound]` (sorryAx-free,
+machine-verified this audit, with the strengthened signature).
 @audit:ok -/
 theorem matchedTimePath_exists
     (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -1590,8 +1600,23 @@ entropy-power `HasDerivAt` (`hJ_deriv_*`) and the `heatFlowEP` divergence
 (`hN_tendsto_*`), (3) constructs `s`/`r` via the strengthened
 `matchedTimePath_exists`, (4) discharges Pillar B's `h_per_t` (density-pin by
 `dif_pos`, positivity + harmonic Stam from `h_stam_supply`), (5) closes with Pillar
-C and `epi_of_twoTimeLogRatioGap_tendsto`. Awaiting independent honesty audit
-(`@audit:ok` pending) given the new `matchedTimePath_exists` signature change. -/
+C and `epi_of_twoTimeLogRatioGap_tendsto`.
+
+Independent honesty audit 2026-06-06 (fresh subagent): PASS — `@audit:ok`.
+(1) J_X/J_Y are NOT free variables: pinned by `dif`-def to
+`fisherInfoOfDensityReal ((h_reg_*.reg_at σ hσ).density_t)`; the SAME `h_reg_X`/`h_reg_Y`
+feed both `matchedTimePath_exists`'s `hJ_deriv` (via `deBruijn_identity_v2`) and Pillar
+B's `h_per_t`. `density_t` is pointwise-pinned (`∀ x`, NOT a.e.) via
+`IsRegularDeBruijnHypV2.density_t_eq` — representative escape structurally impossible,
+mirroring the sibling `twoTimeLogRatioGap_hasDerivAt` honest mechanism. (2)
+Core-reconstruction: granting all preconditions the conclusion still requires Pillar
+B's de Bruijn antitonicity + Pillar C's scaling squeeze + the seam — non-trivial, not
+bundled. `h_stam_supply` is the Fisher-form `1/J_S ≥ 1/J_X+1/J_Y` (genuine producer
+`isStamInequalityHyp_via_step3`, sorryAx-free `@audit:ok`), a DIFFERENT statement from
+the entropy-power EPI conclusion; not load-bearing. (3) No circular `:= h`, no `:True`
+slot, no degenerate exploitation. (4) `#print axioms = [propext, Classical.choice,
+Quot.sound]` (sorryAx-free, machine-verified this audit).
+@audit:ok -/
 theorem entropyPower_add_ge_case1_of_regular_twotime
     (X Y Z_X Z_Y Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y)
