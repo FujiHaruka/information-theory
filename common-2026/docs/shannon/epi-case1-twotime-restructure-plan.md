@@ -15,8 +15,16 @@
 - [x] Phase 1 — **formulation 確定 gate** (probe) ✅ **PASS = formulation (b) GO** (2026-06-06、`ProbeF1.lean` EXIT=0、proof-log §Two-time formulation gate)
 - [x] Phase 2 — two-time object declaration skeleton ✅ (9 decls、0 errors、2026-06-06。8 honest + `_hasDerivAt` は
   tier-5 `@audit:defect(false-statement)` 残置 = Phase 3 entry gate で J_S pin 解消)
-- [ ] Phase 3 — **`_hasDerivAt` J_S pin 設計 (entry gate)** + deriv_le_zero arith 結線 (arith gate PASS 済) 📋
-- [ ] Phase 4 — endpoint (t=0 / t→∞) + antitone + epi_of_* 結線 📋
+- [x] Phase 3 — **`_hasDerivAt` J_S pin (entry gate) 解消** ✅ + deriv_le_zero arith 結線 ✅ (2026-06-06。
+  J_S 直接埋込 body genuine、`#print axioms` sorryAx-free、独立監査 `@audit:ok`。defect 構造的解消)
+- [~] Phase 4 — endpoint + antitone + epi_of_* 結線 **8/9 done** (2026-06-06)。`matchedTimePath_exists` (逆関数
+  サブプロジェクト ~300 行) / `_at_zero` / `_continuousWithinAt_zero` / `_antitoneOn_Ici_zero` / `epi_of_*`×2 すべて
+  genuine + `@audit:ok`、`matchedSum_law_eq` も genuine。**残 1 = `_tendsto_zero_atTop` の §2 saturation core**
+  (`h_ratio_tendsto : A t/B t → 1`)。§1 reduction (`R t = log(A t/B t)` via `matched_growth`) は genuine 済、
+  §2 のみ honest sorry + `@residual(plan:...)`。**closure route** (監査確認): `matchedSum_law_eq` (@audit:ok) で
+  単一-noise heat flow at τ=s t+r t に帰着 × `entropyPower_rescaled_path_tendsto` (single-time keyed、matchedSum
+  経由が必須) × `entropyPower_gaussian_additivity`。`wall:` でなく in-tree 結線 (plan residual)。
+  `_continuousWithinAt_zero` の noise/indep/endpt bundle を流用可。
 - [ ] Phase 5 — consumer 移行 (`csiszarLogRatioGap` 83 occ / 4 file) 📋
 - [ ] Phase 6 — sister `csiszarGap1Source` 削除 + `Z_law` defect park 解消 📋
 
