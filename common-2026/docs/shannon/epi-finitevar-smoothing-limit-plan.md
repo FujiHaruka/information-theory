@@ -1,10 +1,27 @@
 # 有限分散 classical EPI closure — Phase-A smoothing-limit 実装計画
 
 > **親**: [`epi-uncond-deffix-monotone-plan.md`](epi-uncond-deffix-monotone-plan.md) → 残壁 `wall:epi-finite-entropy-ac-classical` の **有限分散 sub-case** を genuine close する。無限分散 sub-case は genuine Mathlib 壁 (Lieb-Young 不在) ゆえ別 named wall に隔離 (touch しない、ユーザー確定 2026-06-06)。
-> **status**: 2026-06-06 scoping workflow (`wf_47d024fe-b0e`, 4 thread + synth) で route 確定 + skeleton 産出。実装未着手。
+> **status**: 2026-06-06 scoping workflow (`wf_47d024fe-b0e`, 4 thread + synth) で route 確定 + skeleton 産出。**2026-06-07: 主ルート (Phase A 直呼) infeasible 判明 → Pivot B に切替 (下記)。実装は Pivot B route で進行。**
 > **slug**: `epi-finitevar-smoothing-limit-plan`。
 
-## ルート確定: Route A (Phase A smoothing-limit)
+## ⚠️ ピボット (2026-06-07): 主ルート (Phase A 直呼) infeasible → Pivot B
+
+**発見 (proof-pivot-advisor 独立確認済、機械検証)**: 下記 Route A の中核「各 t で Phase A `entropy_power_inequality_of_density` (`EPIDensityForm.lean:70`) を (X_t,Y_t) に直呼」は **記述通りには実行不能**。Phase A の前提 `hreg_pX : FisherInfoV2.IsRegularDensityV2 (fun x => ((P.map X).rnDeriv volume x).toReal)` (`EPIDensityForm.lean:79`) は **Mathlib 正準 `Measure.rnDeriv` の toReal 代表元**の `IsRegularDensityV2` を要求する。`IsRegularDensityV2` (`FisherInfoV2.lean:124`) は `diff : Differentiable ℝ f` + `pos : ∀ x, 0 < f x` で **完全 pointwise** (a.e. 不変でない)。正準 rnDeriv 代表元は `Classical.choose` 由来で **generically 非微分可能** (in-tree docstring `FisherInfoV2DeBruijn.lean:242-249` が conv-pin 設計理由として明記)。X_t の law は `withDensity (ofReal∘conv(pX,g_t))` で conv は正則だが、正準代表元とは **a.e. 一致するだけ** (`pPath_eq_convDensityAdd` `FisherInfoV2DeBruijnPerTime.lean:215` が `=ᵐ` を与える) で pointwise 述語は transport 不能。
+
+裏取り: (a) loogle で「連続/微分可能密度に rnDeriv が pointwise 一致」補題 **Mathlib Found 0**。(b) in-tree で `IsRegularDensityV2 (<canonical rnDeriv repr>)` を供給した箇所 **ゼロ**。(c) Phase A の **消費者ゼロ** (docstring 言及のみ)。⇒ Phase A の `hreg_pX` は generic な変数で **充足不能 (over-hypothesized)**、これが消費者ゼロの理由。Phase A 自体は honesty defect でない (循環/vacuous でない、`hreg_pX` を genuine 消費) が「供給できない入力前提」ゆえ building block として使えない。
+
+**Pivot B (採用ルート)**: `entropyPower_add_ge_case1_of_methodX` (`EPICase1RatioLimit.lean:1499`) を終端に使う。これは `IsDeBruijnRegularityHyp` を **仮説として** 取り、`hreg_pX` (canonical rnDeriv) を **一切要求しない**。要求する `IsRegularDensityV2` は `h_pos_stam` conjunct (`:1536-1539`) の **`(reg_at t ht).density_t` = explicit conv 形** についてのみで、これは `isRegularDensityV2_convDensityAdd_gaussian` (`EPIConvDensityRegular.lean:203`, `@audit:ok`、`EPIStamSupplyTwoTime.lean:231-365` で量産実証済) で供給できる。
+
+手順 (Pivot B):
+1. **smoothed 入力 X_t = X+√t·Z_X の de Bruijn group を手組み**: `IsDeBruijnRegularityHyp X_t Z_X P` (`EPIStamDischarge.lean:251`、完全密度明示) を producer 不経由で構築。`density_path`/`reg_at`(`IsRegularDeBruijnHypV2` `FisherInfoV2DeBruijn.lean:205`)/`density_t_eq`/`integrable_deriv` を、base density pX を **conv(pX_base, g_t)** (= X_t の正則密度) として埋める。producer body `EPICase1RatioLimit.lean:1995-2068` が「rnDeriv → explicit pX」置換のテンプレ。t-measurability は `EPICase1ProducerMeasurability.aestronglyMeasurable_fisherInfo_t` (`:2057`、入力 `hpX_meas`/`hpX_int` のみ) 再利用。
+2. **per-t EPI**: `_of_methodX` に上記 group + endpoint group (`endpt_of` `EPIDensityForm.lean:299-353`、v_Z) + `h_pos_stam` を供給し `N(X_t+Y_t) ≥ N(X_t)+N(Y_t)`。**spike で h_pos_stam 10-way supply 可否を先に de-risk** (唯一の未知数)。
+3. 以降は下記 Route A の **L3 endpoint / L4 外側極限 / L5 ext / L6 wall / L7 dispatch をそのまま流用** (これらは Phase A 直呼に依存せず、per-t EPI 補題が出れば成立)。
+
+撤退: spike で `h_pos_stam` の `IsStamInequalityHyp`/positivity が手組み構造から出ないと判明したら当該 conjunct を `sorry`+`@residual(plan:epi-finitevar-smoothing-limit-plan)` で park (無限分散 wall とは別)。
+
+---
+
+## ルート確定: Route A (Phase A smoothing-limit) — **【SUPERSEDED 2026-06-07: 上記 Pivot B 参照。Phase A 直呼部分は infeasible】**
 
 X, Y 両 a.c. + 有限分散 + 有限エントロピー。`X_t = X+√t·Z_X`, `Y_t = Y+√t·Z_Y` (Z 標準正規、独立)。t>0 で smoothed 密度は正則 → **Phase A `entropy_power_inequality_of_density` を各 t で適用** → endpoint 連続性 (t→0⁺) で base へ降ろし極限で EPI。
 
