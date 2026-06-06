@@ -189,7 +189,14 @@ theorem twoTimeLogRatioGap_at_zero
     twoTimeLogRatioGap X Y Z_X Z_Y P s r 0
       = Real.log (entropyPower (P.map (fun ω => X ω + Y ω)))
         - Real.log (entropyPower (P.map X) + entropyPower (P.map Y)) := by
-  sorry
+  unfold twoTimeLogRatioGap sumHeatFlowEP
+  rw [h_path_X.start_zero, h_path_Y.start_zero]
+  have h_sum_funext :
+      (fun ω => X ω + Real.sqrt 0 * Z_X ω + (Y ω + Real.sqrt 0 * Z_Y ω))
+        = fun ω => X ω + Y ω := by
+    funext ω
+    simp [Real.sqrt_zero]
+  rw [h_sum_funext, sub_zero]
 
 /-! ## §3 — Derivative of the two-time object
 
@@ -437,7 +444,11 @@ theorem twoTimeLogRatioGap_deriv_le_zero
     -- harmonic Stam for the matched-time sum (supplied by the genuine producer)
     (h_stam : 1 / J_S ≥ 1 / J_X (s t) + 1 / J_Y (r t)) :
     J_S * (1 / J_X (s t) + 1 / J_Y (r t)) - 1 ≤ 0 := by
-  sorry
+  have h : 1 / J_X (s t) + 1 / J_Y (r t) ≤ 1 / J_S := h_stam
+  have h2 : J_S * (1 / J_X (s t) + 1 / J_Y (r t)) ≤ J_S * (1 / J_S) :=
+    mul_le_mul_of_nonneg_left h (le_of_lt hJS_pos)
+  rw [mul_one_div, div_self (ne_of_gt hJS_pos)] at h2
+  linarith
 
 /-! ## §4 — Endpoints, antitonicity, EPI bridge -/
 
