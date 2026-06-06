@@ -1883,13 +1883,21 @@ With them the bound is now **GENUINE**:
 2. **`t`-measurability** of `t ↦ J(density_t).toReal` (AEStronglyMeasurable on `Ι 0 T`), required
    by `Measure.integrableOn_of_bounded`. The `(t,x)`-jointly measurable
    `logDeriv (convDensityAdd pX g_t)` feeding the `fisherInfoOfDensity` lintegral has no direct
-   Mathlib parameter-measurability lemma; this is the **sole remaining residual** (parked,
-   `@residual(plan:epi-case1-debruijn-producer-plan)`).
+   Mathlib parameter-measurability lemma; this was the **sole remaining residual**, now
+   **CLOSED** (2026-06-06) by `EPICase1ProducerMeasurability.aestronglyMeasurable_fisherInfo_t`
+   (C-b closed-form score route).
 
 The rest of the group is genuine, and the finite-Fisher precondition is in place so PB-6 can
 thread it to the case-1 wrapper.
 
-@residual(plan:epi-case1-debruijn-producer-plan)
+@audit:ok (independent honesty audit 2026-06-06, fresh auditor, commit 64896e7): the
+formerly-parked `integrable_deriv` `t`-measurability residual is CLOSED; own body sorry-free
+and **transitively sorryAx-free** (`#print axioms isDeBruijnRegularityHyp_of_methodX_unitnoise`
+= `[propext, Classical.choice, Quot.sound]`, machine-confirmed). Stale
+`@residual(plan:epi-case1-debruijn-producer-plan)` retired. All threaded preconditions
+(`IsRegularDensityV2` / normalization / `IsBlachmanConvReady` / finite Fisher / a.c. / second
+moment) verified regularity, NOT load-bearing; the `IsDeBruijnRegularityHyp` structure's
+`density_t_eq` anti-trivial-zero pin keeps the conclusion non-degenerate.
 @audit-note: independent honesty audit (2026-06-05, fresh auditor, commit c0cd760).
 honest_residual — slug VALID (plan exists at `docs/shannon/epi-case1-debruijn-producer-plan.md`).
 Verified: (i) `pX` series (pX_nn/pX_meas/pX_law/pX_mom) is a verbatim mirror of

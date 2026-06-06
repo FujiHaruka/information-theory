@@ -37,7 +37,10 @@ open scoped ENNReal NNReal
 
 /-- **Layer A brick**: the Gaussian pdf is jointly measurable in `(variance, point)`.
 The in-tree port `measurable_gaussianPDFReal_uncurry` is on the *mean* axis; this is
-the *variance* axis (`v = p.1.toNNReal`). -/
+the *variance* axis (`v = p.1.toNNReal`).
+@audit:ok (independent honesty audit 2026-06-06, commit 64896e7: own body + transitive
+sorryAx-free [propext, Classical.choice, Quot.sound]; pure joint measurability of the
+Gaussian pdf, no hypothesis). -/
 theorem measurable_gaussianPDFReal_var_uncurry :
     Measurable (fun p : ℝ × ℝ => gaussianPDFReal 0 p.1.toNNReal p.2) := by
   have hv : Measurable (fun p : ℝ × ℝ => ((p.1.toNNReal : ℝ≥0) : ℝ)) := by
@@ -52,7 +55,9 @@ theorem measurable_gaussianPDFReal_var_uncurry :
     · exact ((measurable_snd.sub measurable_const).pow_const 2).neg
     · exact measurable_const.mul hv
 
-/-- **Layer A brick**: the convolution density is jointly measurable in `(t, z)`. -/
+/-- **Layer A brick**: the convolution density is jointly measurable in `(t, z)`.
+@audit:ok (independent honesty audit 2026-06-06: sorryAx-free; `hpX : Measurable pX` is
+pure regularity, conclusion is joint measurability via `integral_prod_right`). -/
 theorem measurable_convDensityAdd_gaussian_uncurry
     {pX : ℝ → ℝ} (hpX : Measurable pX) :
     Measurable (fun p : ℝ × ℝ =>
@@ -82,7 +87,10 @@ theorem measurable_convDensityAdd_gaussian_uncurry
 
 /-- The Gaussian spatial-derivative closed form `deriv (gaussianPDFReal 0 v) w =
 -(w)/v · gaussianPDFReal 0 v w`, valid for **all** `v` (including `v = 0`, where both
-sides vanish: `gaussianPDFReal 0 0 = 0` and `-(w)/0 = 0`). -/
+sides vanish: `gaussianPDFReal 0 0 = 0` and `-(w)/0 = 0`).
+@audit:ok (independent honesty audit 2026-06-06: sorryAx-free; the `v = 0` branch is a
+genuine both-sides-zero case split via `gaussianPDFReal_zero_var`, NOT a vacuous/exfalso
+exploit; `v ≠ 0` branch reuses in-tree `deriv_gaussianPDFReal`). -/
 theorem deriv_gaussianPDFReal_zero_mean_all (v : ℝ≥0) (w : ℝ) :
     deriv (gaussianPDFReal 0 v) w = -(w) / (v : ℝ) * gaussianPDFReal 0 v w := by
   by_cases hv : v = 0
@@ -93,7 +101,9 @@ theorem deriv_gaussianPDFReal_zero_mean_all (v : ℝ≥0) (w : ℝ) :
 
 /-- **Layer A brick**: the score-form numerator `(t, z) ↦ ∫ x, pX x · deriv g_t (z - x)`
 is jointly measurable. Uses the closed form `deriv (gaussianPDFReal 0 v) w =
--(w)/v · gaussianPDFReal 0 v w` so the integrand is jointly measurable. -/
+-(w)/v · gaussianPDFReal 0 v w` so the integrand is jointly measurable.
+@audit:ok (independent honesty audit 2026-06-06: sorryAx-free; `hpX` pure regularity,
+conclusion joint measurability via the global closed form + `integral_prod_right`). -/
 theorem measurable_scoreNum_gaussian_uncurry
     {pX : ℝ → ℝ} (hpX : Measurable pX) :
     Measurable (fun p : ℝ × ℝ =>
@@ -134,7 +144,12 @@ for **all** `t, z` (the differentiation-under-the-integral score form). For `t >
 this is `convDensityAdd_hasDerivAt_of_integrable_smoothKernel.deriv`; for `t ≤ 0` both
 sides vanish (`g_0 = 0` ⇒ `conv = 0` ⇒ `deriv = 0`, and `deriv g_0 = 0` ⇒ integrand `0`).
 
-`hpX_int` is a pure regularity precondition (`pX` is an integrable density). -/
+`hpX_int` is a pure regularity precondition (`pX` is an integrable density).
+@audit:ok (independent honesty audit 2026-06-06: sorryAx-free; `t > 0` branch uses the
+genuine gateway `convDensityAdd_hasDerivAt_of_integrable_smoothKernel` (differentiation
+under the integral), `t ≤ 0` branch is genuine both-sides-zero (`conv = 0`, `deriv g_0 = 0`),
+NOT vacuous. `hpX_int` supplied at call site from `Measure.integrable_toReal_rnDeriv`, no
+de Bruijn/Fisher core threaded). -/
 theorem deriv_convDensityAdd_gaussian_eq_scoreNum
     {pX : ℝ → ℝ} (hpX_int : Integrable pX volume) (t z : ℝ) :
     deriv (EPIConvDensity.convDensityAdd pX (gaussianPDFReal 0 t.toNNReal)) z
@@ -167,7 +182,10 @@ theorem deriv_convDensityAdd_gaussian_eq_scoreNum
 measurable in `(t, z)`. By `logDeriv = deriv / conv` and the C-b key identity
 `deriv (conv_t) = scoreNum t`, this is `scoreNum / conv`, both jointly measurable.
 
-`hpX_int` is a pure regularity precondition, not the de Bruijn core. -/
+`hpX_int` is a pure regularity precondition, not the de Bruijn core.
+@audit:ok (independent honesty audit 2026-06-06: sorryAx-free; uses Mathlib `logDeriv_apply`
+(rfl `deriv/conv`) + the genuine score identity, NOT the parameterized
+`convDensityAdd_logDeriv` — no circularity. `hpX`/`hpX_int` pure regularity). -/
 theorem measurable_logDeriv_convDensityAdd_gaussian_uncurry
     {pX : ℝ → ℝ} (hpX : Measurable pX) (hpX_int : Integrable pX volume) :
     Measurable (fun p : ℝ × ℝ =>
@@ -186,7 +204,12 @@ theorem measurable_logDeriv_convDensityAdd_gaussian_uncurry
 /-- **Final brick**: the `t`-side measurability the producer's `integrable_deriv`
 field needs, in the exact `Measure.integrableOn_of_bounded` shape (over `volume`).
 
-`hpX_int` is a pure regularity precondition (integrable probability density). -/
+`hpX_int` is a pure regularity precondition (integrable probability density).
+@audit:ok (independent honesty audit 2026-06-06, commit 64896e7: own body + transitive
+sorryAx-free [propext, Classical.choice, Quot.sound]; this is the final brick the producer's
+`integrable_deriv` consumes. Conclusion is `AEStronglyMeasurable` of the Fisher-info-in-`t`
+function — pure measurability, asserts NO Fisher value/bound (those stay at the call site's
+genuine `hbound`). `hpX`/`hpX_int` pure regularity, no load-bearing core). -/
 theorem aestronglyMeasurable_fisherInfo_t
     {pX : ℝ → ℝ} (hpX : Measurable pX) (hpX_int : Integrable pX volume) :
     AEStronglyMeasurable (fun t : ℝ =>
