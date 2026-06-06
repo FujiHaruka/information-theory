@@ -494,3 +494,75 @@ theorem twotime_reduced
   rw [mul_one_div, div_self (ne_of_gt hJS)] at this; linarith
 -- twotime_full: weighted 項が 1 に collapse、同 Stam で閉じる (proof-log 本文参照)。
 ```
+
+---
+
+## §Two-time formulation gate — Phase 1 PASSED (2026-06-06、機械実証)
+
+formulation (b) entropy-power 再パラメータ化が Lean で genuine に組めるかの gate。GS-A3' の
+risk-ordering 教訓 (skeleton 投資前に最大 risk を gate) を formulation に適用。**結論: GO**
+(hard wall ゼロ、全 required asset を in-tree / Mathlib に名前確認、最も誤りが隠れやすい逆関数微分
+glue を機械検証 PASS)。
+
+### asset map (全ピース name-confirmed、hard wall ゼロ)
+
+| 要素 | asset | 場所 | 状態 |
+|---|---|---|---|
+| N_X(s) 導関数 `N_X·J_X` | `csiszarLogRatioGap_hasDerivAt` の `hN_X` building block | `EPIStamToBridge.lean:811` | in-tree ✓ |
+| `0 < N_X(s)` | `entropyPower_pos` | in-tree | ✓ |
+| `0 < J_X(s)` (strict mono に必須) | **定理でなく仮説** (`fisherInfoOfDensityReal_nonneg` は ≥0 のみ。`hJX_pos` 形で precondition 化、`EPIStamToBridge.lean:948`) | — | hypothesis として thread (genuine regularity precond) |
+| N_X 連続 on Ici 0 | 内部 = HasDerivAt、端点 s=0 = heat-flow endpoint continuity (CLOSED 2026-06-05) | in-tree | ✓ |
+| `N_X(s) → ∞` (surjectivity) | `entropyPower_path_scaling` (`N_X(s)=s·eP(X/√s+Z_X)`, `:137`) × `entropyPower_rescaled_path_tendsto` (`→eP(Z_X)`, `:293`) × `entropyPower_pos` ⟹ `s·(→正定数)→∞` | in-tree (regularity precond 付) | ✓ 組立 (壁でない) |
+| strict mono ← deriv>0 | `strictMonoOn_of_deriv_pos` | `Mathlib/Analysis/Calculus/Deriv/MeanValue` | ✓ |
+| 区間への surjOn (IVT) | `intermediate_value_Ici` | Mathlib | ✓ |
+| 連続逆関数 / order iso | `StrictMonoOn.orderIso` | `Mathlib/Order/Hom/Set` | ✓ |
+| 逆関数微分 `(N⁻¹)'=1/(N·J)` | `HasDerivAt.of_local_left_inverse` | `Mathlib/Analysis/Calculus/Deriv/Inverse:77` | ✓ |
+| chain rule 合成 | `HasDerivAt.comp` | Mathlib | ✓ |
+| bivariate de Bruijn (∂/∂s of sum、1 成分摂動) | `deBruijn_identity_v2` を base=(X+Y_r), noise=Z_X で適用 (既存 sum 版と構造同一、新 asset 不要) | in-tree | ✓ |
+
+### 機械実証 (`ProbeF1.lean`、scratch、検証後削除。再現 verbatim 下記)
+
+probe-F2 の核心 = **逆関数微分を `e^t` 特徴づけと合成して `s'(t)=1/J(s(t))` に相殺する符号・約分**
+(formulation 全体で最も誤りが隠れやすい一点)。逆関数 `g=N_X⁻¹` の存在・連続・eventual-right-inverse は
+textbook IVT (上記 asset 確認済) なので probe では仮説に置き、glue のみを isolate して機械検証。
+
+`lake env lean ProbeF1.lean` EXIT=0 (clean type-check)。導出:
+`of_local_left_inverse` で `g'(C e^t) = (N·J)⁻¹` → `comp` で `s=g∘(C e^·)` の deriv = `(N·J)⁻¹·(C e^t)`
+→ matched `N(sa)=C e^t` で `(N·J)⁻¹·N(sa) = 1/J(sa)` に相殺。**N が綺麗に約分**。
+
+### 含意 — GO だが逆関数構成は実質サブプロジェクト (plan の「e^t closed form 楽観」を refine)
+
+plan の ⭐ section は `e^t` 閉形が「ODE を回避」と framing したが、**回避できるのは ODE *solver* (Picard-
+Lindelöf) のみ**。matched path `s(t)=N_X⁻¹(C e^t)` の逆関数構成は依然必要で、
+(strictMonoOn ← J_X>0 hyp) + (連続 on Ici 0) + (surjectivity →∞、scaling 組立) + (連続逆関数 orderIso) +
+(of_local_left_inverse) を組む **~200-300 行のサブプロジェクト** (Phase 2 の最大塊)。**hard wall ではない**
+が plan が示唆したほど trivial でもない。Phase 2 sizing をこの実態に合わせる。
+
+### 再現用 verbatim
+
+```lean
+import Mathlib.Analysis.Calculus.Deriv.Inverse
+import Mathlib.Analysis.SpecialFunctions.ExpDeriv
+import Mathlib.Analysis.Calculus.Deriv.Mul
+open Real Filter Topology
+-- probe-F2: 逆関数微分 + e^t chain で s'(t)=1/J に相殺 (符号・約分の機械検証)
+example
+    (N J g : ℝ → ℝ) (C : ℝ) (t : ℝ)
+    (hg_cont : ContinuousAt g (C * Real.exp t))
+    (hN_deriv : HasDerivAt N
+        (N (g (C * Real.exp t)) * J (g (C * Real.exp t))) (g (C * Real.exp t)))
+    (hNpos : 0 < N (g (C * Real.exp t))) (hJpos : 0 < J (g (C * Real.exp t)))
+    (hrinv : ∀ᶠ y in 𝓝 (C * Real.exp t), N (g y) = y)
+    (hmatch : N (g (C * Real.exp t)) = C * Real.exp t) :
+    HasDerivAt (fun u : ℝ => g (C * Real.exp u)) (1 / J (g (C * Real.exp t))) t := by
+  set sa := g (C * Real.exp t) with hsa
+  have hf'_ne : N sa * J sa ≠ 0 := ne_of_gt (mul_pos hNpos hJpos)
+  have hg_deriv : HasDerivAt g (N sa * J sa)⁻¹ (C * Real.exp t) :=
+    hN_deriv.of_local_left_inverse hg_cont hf'_ne hrinv
+  have hinner : HasDerivAt (fun u : ℝ => C * Real.exp u) (C * Real.exp t) t := by
+    have := (Real.hasDerivAt_exp t).const_mul C; simpa using this
+  have hcomp : HasDerivAt (fun u : ℝ => g (C * Real.exp u))
+      ((N sa * J sa)⁻¹ * (C * Real.exp t)) t := HasDerivAt.comp t hg_deriv hinner
+  have hval : (N sa * J sa)⁻¹ * (C * Real.exp t) = 1 / J sa := by rw [← hmatch]; field_simp
+  rwa [hval] at hcomp
+```

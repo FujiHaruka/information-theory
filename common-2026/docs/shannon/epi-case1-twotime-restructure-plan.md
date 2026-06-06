@@ -11,8 +11,8 @@
 
 ## 進捗
 
-- [ ] Phase 0 — formulation Mathlib asset 在庫調査 📋
-- [ ] Phase 1 — **formulation 確定 gate** (probe、次 session の最初) 📋
+- [x] Phase 0 — formulation Mathlib asset 在庫調査 ✅
+- [x] Phase 1 — **formulation 確定 gate** (probe) ✅ **PASS = formulation (b) GO** (2026-06-06、`ProbeF1.lean` EXIT=0、proof-log §Two-time formulation gate)
 - [ ] Phase 2 — two-time object declaration skeleton 📋
 - [ ] Phase 3 — deriv_le_zero arith core 結線 (解析核、gate PASS 済) 📋
 - [ ] Phase 4 — endpoint (t=0 / t→∞) + antitone + epi_of_* 結線 📋
@@ -151,6 +151,21 @@ PASS 済なので、次の最大 risk = **path の Lean 形式化が genuine に
   de Bruijn から出ない) なら候補 (a) Picard-Lindelöf に戻り Lipschitz-Fisher の壁を再評価、それも NG なら
   撤退ライン (下記 L-TT-form) 発火。
 
+### ✅ gate verdict (2026-06-06、機械実証) — **formulation (b) GO、hard wall ゼロ**
+
+`ProbeF1.lean` (scratch、EXIT=0、proof-log §Two-time formulation gate に asset map + verbatim)。
+全 required asset を in-tree / Mathlib に**名前確認** (proof-log の表)、最も誤りが隠れやすい逆関数微分 glue
+(`of_local_left_inverse` + `comp` で `s'(t)=1/J(s(t))` に相殺) を機械検証 PASS。
+
+**probe で判明した実態 (plan ⭐ の楽観を refine)**:
+- `e^t` 閉形が回避できるのは ODE *solver* (Picard-Lindelöf) のみ。matched path の**逆関数構成
+  `s(t)=N_X⁻¹(C·e^t)` は依然必要**で、(strictMonoOn ← `J_X>0` を hyp で thread) + (連続 on Ici 0、端点は
+  heat-flow CLOSED) + (surjectivity `N_X→∞`、`entropyPower_path_scaling`×`entropyPower_rescaled_path_tendsto`
+  で組立) + (連続逆関数 `StrictMonoOn.orderIso`) + (`of_local_left_inverse`) を組む **~200-300 行サブ
+  プロジェクト** = Phase 2 の最大塊。**壁ではないが trivial でもない** → Phase 2 sizing をこれに合わせる。
+- `0 < fisherInfoOfDensityReal` は in-tree 定理が無く (`_nonneg` のみ)、既存 consumer 同様 `hJX_pos` precondition
+  として thread する (genuine regularity、load-bearing でない)。
+
 ---
 
 ## Phase 2 - two-time object declaration skeleton 📋
@@ -159,6 +174,13 @@ PASS 済なので、次の最大 risk = **path の Lean 形式化が genuine に
 consumer を切替えてから旧 object を削除)。signature のみ列挙、body は別 session (skeleton-driven、各 sorry に
 `@residual(plan:epi-case1-twotime-restructure-plan)`)。
 
+- [ ] **TT-path `matchedTimeX` / `matchedTimeY`** (= Phase 1 gate で確定した逆関数サブプロジェクト、Phase 2 の
+  最大塊 ~200-300 行) — `s : ℝ → ℝ` with `N_X(s(t)) = N_X(0)·e^t` の構成 + `HasDerivAt s (1/J_X(s(t))) t`。
+  ピース: (i) `N_X(s)=entropyPower(P.map(X+√s Z_X))` の `StrictMonoOn (Ici 0)` (`strictMonoOn_of_deriv_pos`
+  + 導関数 `N_X·J_X>0`、`J_X>0` は precondition)、(ii) 連続 on Ici 0 (内部 HasDerivAt + 端点 heat-flow CLOSED)、
+  (iii) `Tendsto N_X atTop atTop` (`entropyPower_path_scaling`×`entropyPower_rescaled_path_tendsto`)、
+  (iv) IVT `intermediate_value_Ici` + `StrictMonoOn.orderIso` で連続逆関数、(v) `HasDerivAt.of_local_left_inverse`
+  + `comp` (gate verbatim 移植)。各 sorry に `@residual(plan:epi-case1-twotime-restructure-plan)`。
 - [ ] **TT-def `twoTimeLogRatioGap`** — `X Y Z_X Z_Y : Ω → ℝ` (P : Measure Ω) (t : ℝ) : ℝ。formulation (b)
   の `e^t` 閉形か、`s(t)/r(t)` を field に持つ structure かは Phase 1 gate verdict で確定。
   再利用: 現 `csiszarLogRatioGap` def 本体 (`EPIL3Integration.lean:1380`) の `entropyPower (P.map ...)` 構造。
