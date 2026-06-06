@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# common-2026 pre-commit — fast text-only honesty / import-policy gate (NO lake compile).
+#
+# 設計理由: compile-check (lake env lean) は cold olean で分単位になり、高頻度自走コミットと
+# inner-loop 検証の冗長になるため blocking には載せない (compile は非同期で別途)。代わりに
+# grep だけで本プロジェクトの実再発失敗モード (honesty 規律 / import policy) を最安段階で止める。
+#
+# 対象: staged な common-2026/InformationTheory/**.lean (docs-only コミットは即通過)。
+# BLOCK: bare `import Mathlib` 追加 / `sorry` 追加なのに @residual タグ皆無。
+# WARN : sorry>residual の undercount / @residual class 語彙外 / deprecated tag / 新規 file の import 未登録。
+# Bypass: `SKIP_LEAN_HOOK=1 git commit ...` または `git commit --no-verify`。
+#
+# git 管理 (core.hooksPath=common-2026/.githooks)。worktree でも committed な本 file がそのまま効く。
+set -u
+
+[ "${SKIP_LEAN_HOOK:-}" = "1" ] && exit 0
+
+block=""
+warn=""
+nl=$'\n'
+addblock() { block="${block}  ✗ $1${nl}"; }
+addwarn()  { warn="${warn}  ⚠ $1${nl}"; }
+
+# staged source files under InformationTheory/ (added/copied/modified)。root aggregator は除外。
+src_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '(^|/)InformationTheory/.*\.lean$' || true)
+
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  blob=$(git show ":$f" 2>/dev/null) || continue
+  added=$(git diff --cached -U0 -- "$f" | grep -E '^\+' | grep -vE '^\+\+\+' || true)
+
+  # 1) bare `import Mathlib` を新規追加 → BLOCK (pinpoint import policy)
+  if printf '%s\n' "$added" | grep -qE '^\+import[[:space:]]+Mathlib[[:space:]]*$'; then
+    addblock "$f: bare 'import Mathlib' を追加 (Import Policy 違反 — pinpoint import に)"
+  fi
+
+  # 2) この diff が sorry を追加した場合のみ、file 全体の @residual タグ有無を見る
+  added_sorry=$(printf '%s\n' "$added" | grep -vE '^\+[[:space:]]*--' | grep -cE '\bsorry\b' || true)
+  if [ "${added_sorry:-0}" -gt 0 ]; then
+    resid_n=$(printf '%s\n' "$blob" | grep -cE '@residual' || true)
+    sorry_n=$(printf '%s\n' "$blob" | grep -vE '^[[:space:]]*--' | grep -cE '\bsorry\b' || true)
+    if [ "${resid_n:-0}" -eq 0 ]; then
+      addblock "$f: 'sorry' 追加だが @residual タグが file 内に皆無 (type-check done 要件 — sorry + @residual(<class>:<slug>))"
+    elif [ "${sorry_n:-0}" -gt "${resid_n:-0}" ]; then
+      addwarn "$f: sorry(${sorry_n}) > @residual(${resid_n}) — 各 sorry が tag 済みか確認"
+    fi
+  fi
+
+  # 3) @residual class 語彙チェック (plan|wall|defect 以外)
+  bad_class=$(printf '%s\n' "$added" | grep -oE '@residual\([a-z-]+:' | sed -E 's/.*\(([a-z-]+):/\1/' | sort -u | grep -vE '^(plan|wall|defect)$' || true)
+  if [ -n "$bad_class" ]; then
+    addwarn "$f: @residual class が語彙外: $(printf '%s' "$bad_class" | tr '\n' ' ')(plan|wall|defect のみ)"
+  fi
+
+  # 4) deprecated audit tag を新規追加
+  if printf '%s\n' "$added" | grep -qE '@audit:(suspect|staged|defer)|🟢ʰ'; then
+    addwarn "$f: deprecated tag (@audit:suspect/staged/defer / 🟢ʰ) を追加 — sorry-based へ移行検討 (audit-tags.md)"
+  fi
+done <<SRC
+$src_files
+SRC
+
+# 5) 新規 InformationTheory source は aggregator に import 登録されているべき
+added_files=$(git diff --cached --name-only --diff-filter=A | grep -E '(^|/)InformationTheory/.*\.lean$' || true)
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  case "$f" in *InformationTheory/*) : ;; *) continue ;; esac
+  prefix=$(printf '%s' "$f" | sed -E 's@InformationTheory/.*$@@')
+  agg="${prefix}InformationTheory.lean"
+  module="InformationTheory.$(printf '%s' "$f" | sed -E 's@^.*InformationTheory/@@; s@\.lean$@@; s@/@.@g')"
+  aggblob=$(git show ":$agg" 2>/dev/null || cat "$agg" 2>/dev/null || true)
+  if ! printf '%s\n' "$aggblob" | grep -qE "^import[[:space:]]+${module}([[:space:]]|\$)"; then
+    addwarn "$f: 新規 file だが '$agg' に 'import $module' が無い"
+  fi
+done <<ADD
+$added_files
+ADD
+
+if [ -n "$warn" ]; then
+  printf '\n[pre-commit] honesty/import warnings (コミットは継続):\n%s' "$warn" >&2
+fi
+if [ -n "$block" ]; then
+  printf '\n[pre-commit] BLOCKED — 修正するか、意図的なら SKIP_LEAN_HOOK=1 / --no-verify:\n%s\n' "$block" >&2
+  exit 1
+fi
+exit 0

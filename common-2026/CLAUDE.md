@@ -27,6 +27,8 @@ Prefer single-file `lake env lean <file>` over full project builds for the inner
 - **After upstream edits, dependents may need olean refresh.** When you change a public symbol, namespace, or signature in module A, dependents may still pick up A's old `.olean`. If `lake env lean <dependent>` reports phantom `unknown identifier`, run `lake build InformationTheory.<A>` once to refresh the olean.
 - **「Mathlib 壁」判定は独立 pivot で再確認してから受け入れる。** 監査エージェント / 在庫が「これは Mathlib の壁 (証明不能・大規模 gap)」と判定しても鵜呑みにせず、`proof-pivot-advisor` で「別の主要 lemma chain で同じ結論に届かないか」を在庫横断で再確認する。監査は **想定した唯一のルートが詰まる** ことを「壁」と誤認し規模を過大評価しがち (A群 Huffman/Chernoff/LZ78 で 3倍過大評価の実例、Chernoff は既存 Sanov 経由で壁ゼロだった)。逆に pivot が楽観しすぎることもある (Huffman Hyp1 の縮約鎖は偽と実装で判明)。壁主張・楽観主張のどちらも、**最終判定は必ず実機械検証** (`lake env lean` + `#print axioms`) で裏取りする。
 
+- **pre-commit hook (git 管理、テキスト検査のみ、lake 不使用)。** `common-2026/.githooks/pre-commit` が staged な `InformationTheory/**.lean` に対し honesty/import 規律を最安段階で検査する (BLOCK: bare `import Mathlib` 追加 / `sorry` 追加で `@residual` 皆無。WARN: residual undercount・class 語彙外・deprecated tag・新規 file の import 未登録)。意図的な暫定コミットは `SKIP_LEAN_HOOK=1 git commit ...` か `--no-verify` で bypass。新環境では 1 回 `git config core.hooksPath common-2026/.githooks` で有効化 (詳細 → `.githooks/README.md`)。compile-check は載せない (cold olean で分単位、inner-loop と冗長)。
+
 ## Mathlib API Search (loogle)
 
 For "does Mathlib have lemma X?" questions, **try `loogle` before `rg`/`grep`**. Loogle answers authoritatively (e.g., `Found 0 declarations`); negative grep can miss differently-named lemmas.
