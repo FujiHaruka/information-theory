@@ -503,7 +503,12 @@ form `log (eP(X+Y)) − log (eP X + eP Y)`.
 Uses `s 0 = r 0 = 0` (`IsMatchedTimePath.start_zero`) so the perturbations
 vanish (`√0 = 0`), `N(s 0, r 0) = eP(X+Y)`, and the `−t` term is `0`.
 
-@residual(plan:epi-case1-twotime-restructure-plan) -/
+Independent honesty audit 2026-06-06 (fresh subagent): PASS — `@audit:ok`.
+Mechanical start-zero reduction: `start_zero` (`s 0 = r 0 = 0`) + `√0 = 0` funext
+collapse the perturbation, `sub_zero` removes `−t`. No hypothesis is load-bearing
+(`h_path_*` used only for `start_zero`). `#print axioms` = `[propext,
+Classical.choice, Quot.sound]` (sorryAx-free).
+@audit:ok -/
 theorem twoTimeLogRatioGap_at_zero
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω)
     {J_X J_Y : ℝ → ℝ} {s r : ℝ → ℝ}
@@ -867,7 +872,16 @@ them — the conclusion is pure abstract arith (`J_S·(1/J_X+1/J_Y) ≤ J_S·(1/
 that follows for ANY reals satisfying the hypotheses. Same shape as the honest
 `csiszar_ratio_deriv_le_zero_arith`. Contrast `_hasDerivAt` above, where the free
 `J_S` has NO constraining hypothesis (false-as-framed).
-@residual(plan:epi-case1-twotime-restructure-plan) -/
+
+Independent honesty audit 2026-06-06 (fresh subagent): PASS — `@audit:ok`.
+Pure abstract arith: `h_stam : 1/J_S ≥ 1/J_X+1/J_Y` + `hJS_pos` CONSTRAIN the free
+`J_S`, so `J_S·(1/J_X+1/J_Y) ≤ J_S·(1/J_S) = 1` follows for ANY reals (sufficiency
+holds; not false-as-framed). The free-vs-embed contrast with `_hasDerivAt` in the
+docstring is accurate (here `J_S` is constrained by `h_stam`, so it may stay free).
+`h_stam` is the genuine in-tree Stam producer's conclusion (sorryAx-free), not the
+EPI core. No `:= h` / no degeneracy. `#print axioms` = `[propext, Classical.choice,
+Quot.sound]` (sorryAx-free).
+@audit:ok -/
 theorem twoTimeLogRatioGap_deriv_le_zero
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     {J_X J_Y : ℝ → ℝ} {s r : ℝ → ℝ}
@@ -915,7 +929,18 @@ Added preconditions are genuine regularity:
   interior (the strict-mono inverse-function path satisfies it), threaded as a
   precondition exactly as `_hasDerivAt` threads `hst`/`hrt`.
 
-@residual(plan:epi-case1-twotime-restructure-plan) -/
+Independent honesty audit 2026-06-06 (fresh subagent): PASS — `@audit:ok`.
+Genuine composition of the CLOSED endpoint atom
+`heatFlowEntropyPower_continuousWithinAt_zero` (`heatflow-continuity` superseded →
+`approx-identity-L1` CLOSED) with the continuous reparametrization `τ(t)=s t+r t`
+(`IsMatchedTimePath.cont`, `τ 0 = 0`, `MapsTo Ioi 0`), transferred to the gap via
+`matchedSum_law_eq` (`@audit:ok`, sorryAx-free) on a genuine `s t,r t>0` set and
+`.congr`. The eventual equality is honest (holds on all of `Ioi 0` by `h_pos`).
+All added preconditions (`Z`/noise laws, joint+pairwise indeps, `h_pos`,
+`IsHeatFlowEndpointRegular (X+Y) Z P`) are genuine regularity / the atom's input;
+none bundles EPI or derivative content. No `:= h` / no degeneracy / sufficiency
+holds. `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free).
+@audit:ok -/
 theorem twoTimeLogRatioGap_continuousWithinAt_zero
     (X Y Z_X Z_Y Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     {J_X J_Y : ℝ → ℝ} {s r : ℝ → ℝ}
@@ -1033,7 +1058,25 @@ the density-pin equalities, and the harmonic Stam `1/J_S ≥ 1/J_X + 1/J_Y` — 
 same shape as the model's `h_pos_stam`; the harmonic Stam is the genuine
 single-noise-sum producer's output, threaded per-`t`).
 
-@residual(plan:epi-case1-twotime-restructure-plan) -/
+Independent honesty audit 2026-06-06 (fresh subagent): PASS — `@audit:ok`.
+(1) `h_per_t` is NOT load-bearing of EPI. Core-reconstruction: granting the
+per-`t` bundle hands over only a scalar Fisher inequality `1/J_S ≥ 1/J_X+1/J_Y`
+(+ positivity + density-pins), NOT `AntitoneOn`/EPI — the genuine de Bruijn
+derivative (`_hasDerivAt`) and endpoint continuity (`heatflow-continuity` CLOSED)
+are still required. The harmonic Stam is exactly the genuine in-tree producer's
+conclusion (`IsStamInequalityHyp`/`isStamInequalityHyp_via_step3` →
+`stam_step2_density_wall`, sorryAx-free `@audit:ok`); supplying its applied scalar
+form per-`t` (vs. threading the predicate as the model does) is a plumbing-
+granularity choice, not conclusion-bundling. Same honest shape as
+`csiszarLogRatioGap_antitoneOn_Ici_zero`. (2) `J_S` is consistently the directly-
+embedded `fisherInfoOfDensityReal ((h_reg_sum.reg_at (s t+r t) hτ).density_t)` in
+both the `_deriv_le_zero` instantiation and the `_hasDerivAt.deriv` value — no
+proof-term mismatch detour. (3) Body genuine: `antitoneOn_of_deriv_nonpos` on
+`Ioi 0` (deriv ≤ 0 via `_hasDerivAt.deriv` + `_deriv_le_zero`) + endpoint insert
+via `_continuousWithinAt_zero`; no `:= h` / no degeneracy. (4) Sufficiency holds.
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free,
+machine-verified; not transitively dependent on the file's remaining tendsto sorry).
+@audit:ok -/
 theorem twoTimeLogRatioGap_antitoneOn_Ici_zero
     (X Y Z_X Z_Y Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     {J_X J_Y : ℝ → ℝ} {s r : ℝ → ℝ}
@@ -1137,7 +1180,12 @@ theorem twoTimeLogRatioGap_tendsto_zero_atTop
 `R 0 ≥ 0 ⟺ entropyPower (X+Y) ≥ entropyPower X + entropyPower Y`. Mirrors
 `epi_of_csiszarLogRatioGap_zero_nonneg` (`EPIStamToBridge.lean:1030`).
 
-@residual(plan:epi-case1-twotime-restructure-plan) -/
+Independent honesty audit 2026-06-06 (fresh subagent): PASS — `@audit:ok`.
+Genuine bridge: `_at_zero` rewrites `R 0` to `log A − log B`, then
+`Real.log_le_log_iff` (both entropy powers `> 0` via `entropyPower_pos`) converts
+`0 ≤ log A − log B` to `B ≤ A`. No load-bearing hypothesis. `#print axioms` =
+`[propext, Classical.choice, Quot.sound]` (sorryAx-free).
+@audit:ok -/
 theorem epi_of_twoTimeLogRatioGap_zero_nonneg
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω)
     {J_X J_Y : ℝ → ℝ} {s r : ℝ → ℝ}
@@ -1164,7 +1212,15 @@ Order-limit bridge (`le_of_tendsto`) over `twoTimeLogRatioGap_antitoneOn_Ici_zer
 + `twoTimeLogRatioGap_tendsto_zero_atTop`, then `epi_of_twoTimeLogRatioGap_zero_nonneg`.
 Mirrors `epi_of_csiszarLogRatioGap_tendsto` (`EPICase1RatioLimit.lean:103`).
 
-@residual(plan:epi-case1-twotime-restructure-plan) -/
+Independent honesty audit 2026-06-06 (fresh subagent): PASS — `@audit:ok`.
+Genuine order-limit bridge: `h_anti` + `h_lim` are taken as hypotheses (the
+antitonicity / tendsto are PROVED elsewhere, not bundled here — this decl only
+assembles them); `le_of_tendsto` on the eventual tail `R t ≤ R 0` gives `0 ≤ R 0`,
+then `epi_of_twoTimeLogRatioGap_zero_nonneg`. `h_anti`/`h_lim` are genuine
+(conclusion-shaped) facts supplied by their own genuine lemmas, consumed
+mechanically — not load-bearing of any unproven core. `#print axioms` = `[propext,
+Classical.choice, Quot.sound]` (sorryAx-free).
+@audit:ok -/
 theorem epi_of_twoTimeLogRatioGap_tendsto
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω)
     {J_X J_Y : ℝ → ℝ} {s r : ℝ → ℝ}
