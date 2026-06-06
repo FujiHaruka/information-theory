@@ -588,4 +588,416 @@ theorem entropy_power_inequality_of_density_explicit
     varX varY varS h_varX_nn h_varY_nn h_varS_nn
     h_rescale_X h_rescale_Y h_rescale_S h_stam_supply
 
+/-- **Blachman bridge** — `IsBlachmanConvReady (convDensityAdd p_base g_τ) (gaussianPDFReal 0 v)`.
+
+The explicit Phase A `entropy_power_inequality_of_density_explicit` requires, for each density
+witness `q`, a `hready : ∀ v ≠ 0, IsBlachmanConvReady q (gaussianPDFReal 0 v)`. When `q` is
+itself a conv-density `convDensityAdd p_base g_τ`, the bare `IsBlachmanConvReady (conv …) (g_v)`
+shape is supplied by the asymmetric producer `isBlachmanConvReady_convDensityAdd_gaussian_asym`:
+take its second arm `pY := gaussianPDFReal 0 ⟨v/2,_⟩` at time `v/2`, so its second factor
+`convDensityAdd g_{v/2} g_{v/2}` collapses to `gaussianPDFReal 0 v` via the variance-doubling
+identity `convDensityAdd_gaussian_variance_double`.
+
+All hypotheses are regularity preconditions; the conclusion (19-field bundle) is genuinely
+derived. No bundled analytic core. -/
+theorem isBlachmanConvReady_convGaussian_gaussian (p_base : ℝ → ℝ) {τ : ℝ} (hτ : 0 < τ)
+    (hp_nn : ∀ x, 0 ≤ p_base x) (hp_meas : Measurable p_base) (hp_int : Integrable p_base volume)
+    (hp_mass : 0 < ∫ x, p_base x ∂volume) (hp_norm : (∫ x, p_base x ∂volume) = 1)
+    {v : ℝ≥0} (hv : v ≠ 0) :
+    InformationTheory.Shannon.EPIBlachmanDensity.IsBlachmanConvReady
+      (InformationTheory.Shannon.EPIConvDensity.convDensityAdd p_base
+        (gaussianPDFReal 0 ⟨τ, hτ.le⟩))
+      (gaussianPDFReal 0 v) := by
+  -- `v/2 > 0` (since `v ≠ 0`).
+  have hv_pos : (0 : ℝ) < (v : ℝ) := by
+    have : (0 : ℝ≥0) < v := pos_iff_ne_zero.mpr hv
+    exact_mod_cast this
+  set h : ℝ := (v : ℝ) / 2 with hh
+  have hh_pos : 0 < h := by rw [hh]; positivity
+  -- The asymmetric producer at second arm `pY := g_{h}`, time `t := h`, gives
+  -- `IsBlachmanConvReady (conv p_base g_τ) (conv g_h g_h)`.
+  have hg_nn : ∀ x, 0 ≤ gaussianPDFReal 0 ⟨h, hh_pos.le⟩ x := gaussianPDFReal_nonneg _ _
+  have hg_meas : Measurable (gaussianPDFReal 0 ⟨h, hh_pos.le⟩) := measurable_gaussianPDFReal _ _
+  have hg_int : Integrable (gaussianPDFReal 0 ⟨h, hh_pos.le⟩) volume := integrable_gaussianPDFReal _ _
+  have hg_ne : (⟨h, hh_pos.le⟩ : ℝ≥0) ≠ 0 := by
+    intro hc; exact hh_pos.ne' (congrArg NNReal.toReal hc)
+  have hg_norm : (∫ x, gaussianPDFReal 0 ⟨h, hh_pos.le⟩ x ∂volume) = 1 :=
+    ProbabilityTheory.integral_gaussianPDFReal_eq_one 0 hg_ne
+  have hg_mass : 0 < ∫ x, gaussianPDFReal 0 ⟨h, hh_pos.le⟩ x ∂volume := by rw [hg_norm]; norm_num
+  have hbundle := InformationTheory.Shannon.EPIStamSupplyTwoTime.isBlachmanConvReady_convDensityAdd_gaussian_asym
+    p_base (gaussianPDFReal 0 ⟨h, hh_pos.le⟩) hτ hh_pos
+    hp_nn hp_meas hp_int hp_mass hp_norm
+    hg_nn hg_meas hg_int hg_mass hg_norm
+  -- collapse `conv g_h g_h = g_{2h} = g_v`.
+  have hcollapse : InformationTheory.Shannon.EPIConvDensity.convDensityAdd
+      (gaussianPDFReal 0 ⟨h, hh_pos.le⟩) (gaussianPDFReal 0 ⟨h, hh_pos.le⟩)
+      = gaussianPDFReal 0 v := by
+    rw [InformationTheory.Shannon.EPIConvDensity.convDensityAdd_gaussian_variance_double hh_pos]
+    congr 1
+    apply NNReal.eq
+    show 2 * h = (v : ℝ)
+    rw [hh]; ring
+  rwa [hcollapse] at hbundle
+
+/-- **Pivot B Phase 2a — per-`t` smoothing EPI**.
+
+For smoothed variables `X_t = X + √t·Z_X`, `Y_t = Y + √t·Z_Y` (independent standard-normal
+noises), the entropy-power inequality holds at every fixed `t > 0`. Proved by instantiating the
+explicit-density Phase A EPI `entropy_power_inequality_of_density_explicit` at `X := X_t`,
+`Y := Y_t`, with conv-density witnesses `convDensityAdd p_base g_τ` (canonical-base densities
+convolved with the smoothing Gaussian), and discharging all regularity obligations via the
+public conv-Gaussian producers (regularity / normalization / Blachman / finite Fisher /
+finite entropy). proof-done target (sorryAx-free). -/
+theorem entropyPower_smoothed_epi_perT
+    {Ω : Type*} {mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
+    (X Y Z_X Z_Y : Ω → ℝ)
+    (hX : Measurable X) (hY : Measurable Y) (hZX : Measurable Z_X) (hZY : Measurable Z_Y)
+    (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
+    (h_mom_X : Integrable (fun ω => (X ω) ^ 2) P)
+    (h_mom_Y : Integrable (fun ω => (Y ω) ^ 2) P)
+    (hZX_law : P.map Z_X = gaussianReal 0 1) (hZY_law : P.map Z_Y = gaussianReal 0 1)
+    (h_iIndep : iIndepFun ![X, Y, Z_X, Z_Y] P)
+    {t : ℝ} (ht : 0 < t) :
+    entropyPower (P.map (fun ω => (X ω + Real.sqrt t * Z_X ω) + (Y ω + Real.sqrt t * Z_Y ω)))
+      ≥ entropyPower (P.map (fun ω => X ω + Real.sqrt t * Z_X ω))
+        + entropyPower (P.map (fun ω => Y ω + Real.sqrt t * Z_Y ω)) := by
+  classical
+  -- abbreviations
+  set Xt : Ω → ℝ := fun ω => X ω + Real.sqrt t * Z_X ω with hXt_def
+  set Yt : Ω → ℝ := fun ω => Y ω + Real.sqrt t * Z_Y ω with hYt_def
+  have ht_ne : t ≠ 0 := ht.ne'
+  -- measurability of smoothed variables
+  have hXt_meas : Measurable Xt := hX.add ((measurable_const).mul hZX)
+  have hYt_meas : Measurable Yt := hY.add ((measurable_const).mul hZY)
+  -- ===== pairwise / joint independences from `iIndepFun ![X,Y,Z_X,Z_Y]` =====
+  have hf_meas : ∀ i, Measurable (![X, Y, Z_X, Z_Y] i) := by
+    intro i; fin_cases i
+    · exact hX
+    · exact hY
+    · exact hZX
+    · exact hZY
+  -- X ⊥ Z_X, Y ⊥ Z_Y, Z_X ⊥ Z_Y
+  have hX_ZX : IndepFun X Z_X P := by
+    have := h_iIndep.indepFun (i := (0 : Fin 4)) (j := (2 : Fin 4)) (by decide); simpa using this
+  have hY_ZY : IndepFun Y Z_Y P := by
+    have := h_iIndep.indepFun (i := (1 : Fin 4)) (j := (3 : Fin 4)) (by decide); simpa using this
+  have hZX_ZY : IndepFun Z_X Z_Y P := by
+    have := h_iIndep.indepFun (i := (2 : Fin 4)) (j := (3 : Fin 4)) (by decide); simpa using this
+  -- (X,Z_X) ⊥ (Y,Z_Y)  → IndepFun Xt Yt
+  have hpair_XZX_YZY : IndepFun (fun ω => (X ω, Z_X ω)) (fun ω => (Y ω, Z_Y ω)) P := by
+    have := h_iIndep.indepFun_prodMk_prodMk hf_meas 0 2 1 3
+      (by decide) (by decide) (by decide) (by decide)
+    simpa using this
+  -- (X,Y) ⊥ (Z_X,Z_Y)  → IndepFun S W
+  have hpair_XY_ZXZY : IndepFun (fun ω => (X ω, Y ω)) (fun ω => (Z_X ω, Z_Y ω)) P := by
+    have := h_iIndep.indepFun_prodMk_prodMk hf_meas 0 1 2 3
+      (by decide) (by decide) (by decide) (by decide)
+    simpa using this
+  -- IndepFun Xt Yt: both are `f∘(X,Z_X)` / `f∘(Y,Z_Y)`.
+  have hXtYt_indep : IndepFun Xt Yt P := by
+    have hmap : Measurable (fun q : ℝ × ℝ => q.1 + Real.sqrt t * q.2) := by fun_prop
+    have := hpair_XZX_YZY.comp hmap hmap
+    simpa [Function.comp, hXt_def, hYt_def] using this
+  -- ===== sum-variable identity: Xt + Yt = S + √t·W =====
+  set S : Ω → ℝ := fun ω => X ω + Y ω with hS_def
+  set W : Ω → ℝ := fun ω => Z_X ω + Z_Y ω with hW_def
+  have hS_meas : Measurable S := hX.add hY
+  have hW_meas : Measurable W := hZX.add hZY
+  have hsum_eq : (fun ω => Xt ω + Yt ω) = (fun ω => S ω + Real.sqrt t * W ω) := by
+    funext ω; simp only [hXt_def, hYt_def, hS_def, hW_def]; ring
+  -- law of W: sum of independent standard normals = N(0,2)
+  have hW_law : P.map W = gaussianReal 0 2 := by
+    have := ProbabilityTheory.gaussianReal_add_gaussianReal_of_indepFun
+      (P := P) hZX_ZY hZX_law hZY_law
+    rw [hW_def, show (fun ω => Z_X ω + Z_Y ω) = Z_X + Z_Y from rfl]
+    rw [this]; norm_num
+  -- S ⊥ W (from (X,Y)⊥(Z_X,Z_Y))
+  have hS_W_indep : IndepFun S W P := by
+    have hmap : Measurable (fun q : ℝ × ℝ => q.1 + q.2) := by fun_prop
+    have := hpair_XY_ZXZY.comp hmap hmap
+    simpa [Function.comp, hS_def, hW_def] using this
+  -- ===== a.c. of smoothed variables =====
+  -- Xt = X + √t·Z_X ; X ⊥ √t·Z_X ; P.map X ≪ volume.
+  have hXt_ac : (P.map Xt) ≪ volume := by
+    have hindep : IndepFun X (fun ω => Real.sqrt t * Z_X ω) P :=
+      hX_ZX.comp measurable_id (measurable_const.mul measurable_id)
+    have := map_add_absolutelyContinuous X (fun ω => Real.sqrt t * Z_X ω) P hX
+      (measurable_const.mul hZX) hindep hX_ac
+    simpa [hXt_def] using this
+  have hYt_ac : (P.map Yt) ≪ volume := by
+    have hindep : IndepFun Y (fun ω => Real.sqrt t * Z_Y ω) P :=
+      hY_ZY.comp measurable_id (measurable_const.mul measurable_id)
+    have := map_add_absolutelyContinuous Y (fun ω => Real.sqrt t * Z_Y ω) P hY
+      (measurable_const.mul hZY) hindep hY_ac
+    simpa [hYt_def] using this
+  -- ===== second moments of smoothed variables =====
+  -- helper: a standard-normal variable is in `MemLp · 2 P`.
+  have hZmemLp : ∀ Z : Ω → ℝ, Measurable Z → P.map Z = gaussianReal 0 1 → MemLp Z 2 P := by
+    intro Z hZ hZ_law
+    have hid : MemLp (id : ℝ → ℝ) 2 (P.map Z) := by
+      rw [hZ_law]; exact memLp_id_gaussianReal' 2 (by simp)
+    have := (memLp_map_measure_iff (p := 2) (μ := P) (g := (id : ℝ → ℝ))
+      aestronglyMeasurable_id hZ.aemeasurable).mp hid
+    simpa [Function.comp] using this
+  have h_mom_Xt : Integrable (fun ω => (Xt ω) ^ 2) P := by
+    have hX_memLp : MemLp X 2 P :=
+      (memLp_two_iff_integrable_sq_norm hX.aestronglyMeasurable).mpr (by simpa using h_mom_X)
+    have hsZ_memLp : MemLp (fun ω => Real.sqrt t * Z_X ω) 2 P :=
+      (hZmemLp Z_X hZX hZX_law).const_mul (Real.sqrt t)
+    have hsum : MemLp Xt 2 P := by rw [hXt_def]; exact hX_memLp.add hsZ_memLp
+    simpa using hsum.integrable_sq
+  have h_mom_Yt : Integrable (fun ω => (Yt ω) ^ 2) P := by
+    have hY_memLp : MemLp Y 2 P :=
+      (memLp_two_iff_integrable_sq_norm hY.aestronglyMeasurable).mpr (by simpa using h_mom_Y)
+    have hsZ_memLp : MemLp (fun ω => Real.sqrt t * Z_Y ω) 2 P :=
+      (hZmemLp Z_Y hZY hZY_law).const_mul (Real.sqrt t)
+    have hsum : MemLp Yt 2 P := by rw [hYt_def]; exact hY_memLp.add hsZ_memLp
+    simpa using hsum.integrable_sq
+  -- ===== base canonical densities =====
+  haveI hPX_prob : IsProbabilityMeasure (P.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
+  haveI hPY_prob : IsProbabilityMeasure (P.map Y) := Measure.isProbabilityMeasure_map hY.aemeasurable
+  haveI hPS_prob : IsProbabilityMeasure (P.map S) := Measure.isProbabilityMeasure_map hS_meas.aemeasurable
+  -- S ≪ volume
+  have hS_ac : (P.map S) ≪ volume := by
+    have := map_add_absolutelyContinuous X Y P hX hY
+      (by have := h_iIndep.indepFun (i := (0 : Fin 4)) (j := (1 : Fin 4)) (by decide); simpa using this)
+      hX_ac
+    simpa [hS_def] using this
+  set pX_base : ℝ → ℝ := fun x => ((P.map X).rnDeriv volume x).toReal with hpXb_def
+  set pY_base : ℝ → ℝ := fun x => ((P.map Y).rnDeriv volume x).toReal with hpYb_def
+  set pS_base : ℝ → ℝ := fun x => ((P.map S).rnDeriv volume x).toReal with hpSb_def
+  -- base density regularity (nonneg / meas / int / mass=1)
+  have hpXb_nn : ∀ x, 0 ≤ pX_base x := fun x => ENNReal.toReal_nonneg
+  have hpYb_nn : ∀ x, 0 ≤ pY_base x := fun x => ENNReal.toReal_nonneg
+  have hpSb_nn : ∀ x, 0 ≤ pS_base x := fun x => ENNReal.toReal_nonneg
+  have hpXb_meas : Measurable pX_base := ((P.map X).measurable_rnDeriv volume).ennreal_toReal
+  have hpYb_meas : Measurable pY_base := ((P.map Y).measurable_rnDeriv volume).ennreal_toReal
+  have hpSb_meas : Measurable pS_base := ((P.map S).measurable_rnDeriv volume).ennreal_toReal
+  have hpXb_int : Integrable pX_base volume := by
+    have := Measure.integrable_toReal_rnDeriv (μ := P.map X) (ν := volume); simpa [hpXb_def] using this
+  have hpYb_int : Integrable pY_base volume := by
+    have := Measure.integrable_toReal_rnDeriv (μ := P.map Y) (ν := volume); simpa [hpYb_def] using this
+  have hpSb_int : Integrable pS_base volume := by
+    have := Measure.integrable_toReal_rnDeriv (μ := P.map S) (ν := volume); simpa [hpSb_def] using this
+  have hpXb_mass : (∫ y, pX_base y ∂volume) = 1 := by
+    rw [hpXb_def, MeasureTheory.Measure.integral_toReal_rnDeriv hX_ac, Measure.real, measure_univ,
+      ENNReal.toReal_one]
+  have hpYb_mass : (∫ y, pY_base y ∂volume) = 1 := by
+    rw [hpYb_def, MeasureTheory.Measure.integral_toReal_rnDeriv hY_ac, Measure.real, measure_univ,
+      ENNReal.toReal_one]
+  have hpSb_mass : (∫ y, pS_base y ∂volume) = 1 := by
+    rw [hpSb_def, MeasureTheory.Measure.integral_toReal_rnDeriv hS_ac, Measure.real, measure_univ,
+      ENNReal.toReal_one]
+  have hpXb_mass_pos : 0 < ∫ y, pX_base y ∂volume := by rw [hpXb_mass]; norm_num
+  have hpYb_mass_pos : 0 < ∫ y, pY_base y ∂volume := by rw [hpYb_mass]; norm_num
+  have hpSb_mass_pos : 0 < ∫ y, pS_base y ∂volume := by rw [hpSb_mass]; norm_num
+  -- base withDensity links (from canonical rnDeriv + a.c.)
+  have base_law : ∀ (V : Ω → ℝ) (p : ℝ → ℝ), Measurable V → (P.map V) ≪ volume →
+      p = (fun x => ((P.map V).rnDeriv volume x).toReal) →
+      P.map V = volume.withDensity (fun x => ENNReal.ofReal (p x)) := by
+    intro V p hV hac hp_def
+    have hfin : ∀ᵐ x ∂volume, (P.map V).rnDeriv volume x < ∞ :=
+      Measure.rnDeriv_lt_top (P.map V) volume
+    have hcongr : (fun x => ENNReal.ofReal (p x)) =ᵐ[volume] (P.map V).rnDeriv volume := by
+      filter_upwards [hfin] with x hx
+      simp only [hp_def, ENNReal.ofReal_toReal hx.ne]
+    rw [withDensity_congr_ae hcongr, Measure.withDensity_rnDeriv_eq _ _ hac]
+  have hpXb_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX_base x)) :=
+    base_law X pX_base hX hX_ac hpXb_def
+  have hpYb_law : P.map Y = volume.withDensity (fun x => ENNReal.ofReal (pY_base x)) :=
+    base_law Y pY_base hY hY_ac hpYb_def
+  have hpSb_law : P.map S = volume.withDensity (fun x => ENNReal.ofReal (pS_base x)) :=
+    base_law S pS_base hS_meas hS_ac hpSb_def
+  -- base second moments (from h_mom on P, transported through the law)
+  have base_mom : ∀ (V : Ω → ℝ) (p : ℝ → ℝ), Measurable V →
+      P.map V = volume.withDensity (fun x => ENNReal.ofReal (p x)) →
+      (∀ x, 0 ≤ p x) → Measurable p →
+      Integrable (fun ω => (V ω) ^ 2) P →
+      Integrable (fun y => y ^ 2 * p y) volume := by
+    intro V p hV hlaw hp_nn hp_meas hmom
+    have hsq_law : Integrable (fun y => y ^ 2) (P.map V) := by
+      rw [integrable_map_measure
+        ((by fun_prop : Measurable (fun y : ℝ => y ^ 2)).aestronglyMeasurable)
+        hV.aemeasurable]
+      simpa [Function.comp] using hmom
+    rw [hlaw] at hsq_law
+    rw [integrable_withDensity_iff_integrable_smul₀'
+      hp_meas.ennreal_ofReal.aemeasurable
+      (Filter.Eventually.of_forall fun x => ENNReal.ofReal_lt_top)] at hsq_law
+    refine hsq_law.congr (Filter.Eventually.of_forall fun x => ?_)
+    simp only [smul_eq_mul, ENNReal.toReal_ofReal (hp_nn x)]; ring
+  have hpXb_mom : Integrable (fun y => y ^ 2 * pX_base y) volume :=
+    base_mom X pX_base hX hpXb_law hpXb_nn hpXb_meas h_mom_X
+  have hpYb_mom : Integrable (fun y => y ^ 2 * pY_base y) volume :=
+    base_mom Y pY_base hY hpYb_law hpYb_nn hpYb_meas h_mom_Y
+  have hpSb_mom : Integrable (fun y => y ^ 2 * pS_base y) volume := by
+    have h_mom_S : Integrable (fun ω => (S ω) ^ 2) P := by
+      have hX_memLp : MemLp X 2 P :=
+        (memLp_two_iff_integrable_sq_norm hX.aestronglyMeasurable).mpr (by simpa using h_mom_X)
+      have hY_memLp : MemLp Y 2 P :=
+        (memLp_two_iff_integrable_sq_norm hY.aestronglyMeasurable).mpr (by simpa using h_mom_Y)
+      have hS_memLp : MemLp S 2 P := by rw [hS_def]; exact hX_memLp.add hY_memLp
+      simpa using hS_memLp.integrable_sq
+    exact base_mom S pS_base hS_meas hpSb_law hpSb_nn hpSb_meas h_mom_S
+  -- ===== the three smoothing density witnesses =====
+  set pXt : ℝ → ℝ := InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX_base
+    (gaussianPDFReal 0 ⟨t, ht.le⟩) with hpXt_def
+  set pYt : ℝ → ℝ := InformationTheory.Shannon.EPIConvDensity.convDensityAdd pY_base
+    (gaussianPDFReal 0 ⟨t, ht.le⟩) with hpYt_def
+  set pSt : ℝ → ℝ := InformationTheory.Shannon.EPIConvDensity.convDensityAdd pS_base
+    (gaussianPDFReal 0 ⟨2 * t, by positivity⟩) with hpSt_def
+  -- ===== withDensity links (via `pPath_eq_convDensityAdd` + `withDensity_rnDeriv_eq`) =====
+  -- single-arm link helper: `V_path = U + √s·Zw`, `Zw ~ N(0,v_Z)`, base density `p_base` of U.
+  have path_law : ∀ (U Zw : Ω → ℝ) (p_base : ℝ → ℝ) (v_Z : ℝ≥0),
+      Measurable U → Measurable Zw → IndepFun U Zw P → 0 < v_Z →
+      P.map Zw = gaussianReal 0 v_Z → (∀ x, 0 ≤ p_base x) → Measurable p_base →
+      P.map U = volume.withDensity (fun x => ENNReal.ofReal (p_base x)) →
+      (P.map (fun ω => U ω + Real.sqrt t * Zw ω)) ≪ volume →
+      P.map (fun ω => U ω + Real.sqrt t * Zw ω)
+        = volume.withDensity (fun x => ENNReal.ofReal
+            (InformationTheory.Shannon.EPIConvDensity.convDensityAdd p_base
+              (gaussianPDFReal 0 ⟨t * (v_Z : ℝ), by positivity⟩) x)) := by
+    intro U Zw p_base v_Z hU hZw hUZw hv_Z hZw_law hp_nn hp_meas hp_law hpath_ac
+    have hgconv : InformationTheory.Shannon.FisherInfoV2.gaussianConvolution U Zw t
+        = fun ω => U ω + Real.sqrt t * Zw ω := rfl
+    have hrn := InformationTheory.Shannon.FisherInfoV2.pPath_eq_convDensityAdd
+      U Zw hU hZw hUZw v_Z hv_Z hZw_law p_base hp_nn hp_meas hp_law (s := t) ht
+    rw [hgconv] at hrn
+    -- `P.map path = withDensity (rnDeriv)`; rewrite rnDeriv via `hrn`.
+    have hself : P.map (fun ω => U ω + Real.sqrt t * Zw ω)
+        = volume.withDensity ((P.map (fun ω => U ω + Real.sqrt t * Zw ω)).rnDeriv volume) :=
+      (Measure.withDensity_rnDeriv_eq _ _ hpath_ac).symm
+    rw [hself, withDensity_congr_ae hrn]
+  -- Xt: `v_Z = 1`, variance witness `⟨t·1,_⟩` collapses to `⟨t,_⟩`.
+  have hpXt_law : P.map Xt = volume.withDensity (fun x => ENNReal.ofReal (pXt x)) := by
+    have h := path_law X Z_X pX_base 1 hX hZX hX_ZX one_pos hZX_law hpXb_nn hpXb_meas hpXb_law
+      (by simpa [hXt_def] using hXt_ac)
+    have hvc : (⟨t * ((1 : ℝ≥0) : ℝ), by positivity⟩ : ℝ≥0) = (⟨t, ht.le⟩ : ℝ≥0) := by
+      apply NNReal.eq; show t * ((1 : ℝ≥0) : ℝ) = t; simp
+    rw [hvc] at h
+    simpa [hXt_def, hpXt_def] using h
+  have hpYt_law : P.map Yt = volume.withDensity (fun x => ENNReal.ofReal (pYt x)) := by
+    have h := path_law Y Z_Y pY_base 1 hY hZY hY_ZY one_pos hZY_law hpYb_nn hpYb_meas hpYb_law
+      (by simpa [hYt_def] using hYt_ac)
+    have hvc : (⟨t * ((1 : ℝ≥0) : ℝ), by positivity⟩ : ℝ≥0) = (⟨t, ht.le⟩ : ℝ≥0) := by
+      apply NNReal.eq; show t * ((1 : ℝ≥0) : ℝ) = t; simp
+    rw [hvc] at h
+    simpa [hYt_def, hpYt_def] using h
+  -- sum: `Xt + Yt = S + √t·W`, `W ~ N(0,2)`, variance witness `⟨t·2,_⟩` collapses to `⟨2t,_⟩`.
+  have hsum_ac : (P.map (fun ω => S ω + Real.sqrt t * W ω)) ≪ volume := by
+    rw [← hsum_eq]
+    have hindep : IndepFun Xt Yt P := hXtYt_indep
+    have := map_add_absolutelyContinuous Xt Yt P hXt_meas hYt_meas hindep hXt_ac
+    simpa using this
+  have hpSt_law : P.map (fun ω => Xt ω + Yt ω)
+      = volume.withDensity (fun x => ENNReal.ofReal (pSt x)) := by
+    have h := path_law S W pS_base 2 hS_meas hW_meas hS_W_indep (by norm_num) hW_law
+      hpSb_nn hpSb_meas hpSb_law hsum_ac
+    have hvc : (⟨t * ((2 : ℝ≥0) : ℝ), by positivity⟩ : ℝ≥0) = (⟨2 * t, by positivity⟩ : ℝ≥0) := by
+      apply NNReal.eq; show t * ((2 : ℝ≥0) : ℝ) = 2 * t; push_cast; ring
+    rw [hvc] at h
+    rw [hsum_eq]
+    simpa [hpSt_def] using h
+  -- ===== regularity of the three smoothing densities =====
+  have hreg_pXt : FisherInfoV2.IsRegularDensityV2 pXt :=
+    InformationTheory.Shannon.EPIConvDensityRegular.isRegularDensityV2_convDensityAdd_gaussian
+      pX_base ht hpXb_nn hpXb_meas hpXb_int hpXb_mass_pos
+  have hreg_pYt : FisherInfoV2.IsRegularDensityV2 pYt :=
+    InformationTheory.Shannon.EPIConvDensityRegular.isRegularDensityV2_convDensityAdd_gaussian
+      pY_base ht hpYb_nn hpYb_meas hpYb_int hpYb_mass_pos
+  have hreg_pSt : FisherInfoV2.IsRegularDensityV2 pSt :=
+    InformationTheory.Shannon.EPIConvDensityRegular.isRegularDensityV2_convDensityAdd_gaussian
+      pS_base (by positivity) hpSb_nn hpSb_meas hpSb_int hpSb_mass_pos
+  -- ===== nonneg / meas / int of the three smoothing densities =====
+  have hpXt_nn : ∀ x, 0 ≤ pXt x := fun x =>
+    InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_nonneg _ _ hpXb_nn
+      (gaussianPDFReal_nonneg _ _) x
+  have hpYt_nn : ∀ x, 0 ≤ pYt x := fun x =>
+    InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_nonneg _ _ hpYb_nn
+      (gaussianPDFReal_nonneg _ _) x
+  have hpSt_nn : ∀ x, 0 ≤ pSt x := fun x =>
+    InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_nonneg _ _ hpSb_nn
+      (gaussianPDFReal_nonneg _ _) x
+  have hpXt_meas : Measurable pXt :=
+    InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_measurable _ _ hpXb_meas
+      (measurable_gaussianPDFReal _ _)
+  have hpYt_meas : Measurable pYt :=
+    InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_measurable _ _ hpYb_meas
+      (measurable_gaussianPDFReal _ _)
+  have hpSt_meas : Measurable pSt :=
+    InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_measurable _ _ hpSb_meas
+      (measurable_gaussianPDFReal _ _)
+  have hpXt_int : Integrable pXt volume :=
+    InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_integrable _ _ hpXb_int hpXb_meas
+      (integrable_gaussianPDFReal _ _) (measurable_gaussianPDFReal _ _)
+  have hpYt_int : Integrable pYt volume :=
+    InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_integrable _ _ hpYb_int hpYb_meas
+      (integrable_gaussianPDFReal _ _) (measurable_gaussianPDFReal _ _)
+  have hpSt_int : Integrable pSt volume :=
+    InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_integrable _ _ hpSb_int hpSb_meas
+      (integrable_gaussianPDFReal _ _) (measurable_gaussianPDFReal _ _)
+  -- ===== normalization ∫ = 1 of the three smoothing densities =====
+  have hgt_norm : (∫ x, gaussianPDFReal 0 ⟨t, ht.le⟩ x ∂volume) = 1 :=
+    ProbabilityTheory.integral_gaussianPDFReal_eq_one 0 (by
+      intro hc; exact ht.ne' (congrArg NNReal.toReal hc))
+  have hg2t_norm : (∫ x, gaussianPDFReal 0 ⟨2 * t, by positivity⟩ x ∂volume) = 1 :=
+    ProbabilityTheory.integral_gaussianPDFReal_eq_one 0 (by
+      intro hc; exact (by positivity : (0:ℝ) < 2 * t).ne' (congrArg NNReal.toReal hc))
+  have hpXt_norm : (∫ x, pXt x ∂volume) = 1 := by
+    rw [hpXt_def, InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_integral_eq _ _
+      hpXb_int (integrable_gaussianPDFReal _ _), hpXb_mass, hgt_norm, one_mul]
+  have hpYt_norm : (∫ x, pYt x ∂volume) = 1 := by
+    rw [hpYt_def, InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_integral_eq _ _
+      hpYb_int (integrable_gaussianPDFReal _ _), hpYb_mass, hgt_norm, one_mul]
+  have hpSt_norm : (∫ x, pSt x ∂volume) = 1 := by
+    rw [hpSt_def, InformationTheory.Shannon.EPIConvDensity.convDensityAdd_pXpY_integral_eq _ _
+      hpSb_int (integrable_gaussianPDFReal _ _), hpSb_mass, hg2t_norm, one_mul]
+  -- ===== Blachman readiness (via the bridge) =====
+  have hready_pXt : ∀ v : ℝ≥0, v ≠ 0 →
+      EPIBlachmanDensity.IsBlachmanConvReady pXt (gaussianPDFReal 0 v) := fun v hv =>
+    isBlachmanConvReady_convGaussian_gaussian pX_base ht hpXb_nn hpXb_meas hpXb_int
+      hpXb_mass_pos hpXb_mass hv
+  have hready_pYt : ∀ v : ℝ≥0, v ≠ 0 →
+      EPIBlachmanDensity.IsBlachmanConvReady pYt (gaussianPDFReal 0 v) := fun v hv =>
+    isBlachmanConvReady_convGaussian_gaussian pY_base ht hpYb_nn hpYb_meas hpYb_int
+      hpYb_mass_pos hpYb_mass hv
+  have hready_pSt : ∀ v : ℝ≥0, v ≠ 0 →
+      EPIBlachmanDensity.IsBlachmanConvReady pSt (gaussianPDFReal 0 v) := fun v hv =>
+    isBlachmanConvReady_convGaussian_gaussian pS_base (by positivity) hpSb_nn hpSb_meas hpSb_int
+      hpSb_mass_pos hpSb_mass hv
+  -- ===== finite entropy of the three smoothing densities =====
+  have hent_pXt : Integrable (fun x => Real.negMulLog (pXt x)) volume := by
+    rw [hpXt_def]
+    exact InformationTheory.Shannon.convDensityAdd_negMulLog_integrable_pub
+      hpXb_nn hpXb_meas hpXb_int hpXb_mass hpXb_mom ht
+  have hent_pYt : Integrable (fun x => Real.negMulLog (pYt x)) volume := by
+    rw [hpYt_def]
+    exact InformationTheory.Shannon.convDensityAdd_negMulLog_integrable_pub
+      hpYb_nn hpYb_meas hpYb_int hpYb_mass hpYb_mom ht
+  have hent_pSt : Integrable (fun x => Real.negMulLog (pSt x)) volume := by
+    rw [hpSt_def]
+    exact InformationTheory.Shannon.convDensityAdd_negMulLog_integrable_pub
+      hpSb_nn hpSb_meas hpSb_int hpSb_mass hpSb_mom (by positivity)
+  -- ===== second moments of the three smoothing densities =====
+  have hpXt_mom : Integrable (fun y => y ^ 2 * pXt y) volume := by
+    rw [hpXt_def]
+    exact InformationTheory.Shannon.convDensityAdd_gaussian_sq_integrable
+      hpXb_nn hpXb_meas hpXb_int hpXb_mom ht
+  have hpYt_mom : Integrable (fun y => y ^ 2 * pYt y) volume := by
+    rw [hpYt_def]
+    exact InformationTheory.Shannon.convDensityAdd_gaussian_sq_integrable
+      hpYb_nn hpYb_meas hpYb_int hpYb_mom ht
+  have hpSt_mom : Integrable (fun y => y ^ 2 * pSt y) volume := by
+    rw [hpSt_def]
+    exact InformationTheory.Shannon.convDensityAdd_gaussian_sq_integrable
+      hpSb_nn hpSb_meas hpSb_int hpSb_mom (by positivity)
+  -- ===== assemble explicit Phase A at X := Xt, Y := Yt =====
+  have hmain := entropy_power_inequality_of_density_explicit P Xt Yt hXt_meas hYt_meas hXtYt_indep
+    hXt_ac hYt_ac h_mom_Xt h_mom_Yt
+    pXt hpXt_nn hpXt_meas hpXt_int hpXt_law hpXt_mom hreg_pXt hpXt_norm hready_pXt hent_pXt
+    pYt hpYt_nn hpYt_meas hpYt_int hpYt_law hpYt_mom hreg_pYt hpYt_norm hready_pYt hent_pYt
+    pSt hpSt_nn hpSt_meas hpSt_int hpSt_law hpSt_mom hreg_pSt hpSt_norm hready_pSt hent_pSt
+  -- rewrite Xt/Yt back to the brief's explicit `fun ω => …` form.
+  simpa only [hXt_def, hYt_def] using hmain
+
 end InformationTheory.Shannon.EPICase1SmoothingLimit
