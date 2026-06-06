@@ -1198,8 +1198,33 @@ added preconditions (noise laws/independences, path divergence `s,r → ∞`, pe
 scaling regularity, the three `IsRescaledPathRegular` bundles) are genuine
 regularity — none of them encodes `A t / B t → 1`.
 
-Pending independent honesty audit (signature gained §2 regularity preconditions).
-`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free). -/
+Independent honesty audit 2026-06-06 (fresh subagent): PASS — `@audit:ok`.
+All four honesty checks pass. (1) Non-circular: no hypothesis has type ≡ the
+conclusion `Tendsto (R t) atTop (nhds 0)`; the two `IsMatchedTimePath` structs
+supply only `start_zero`/`matched_growth`/`cont`/`deriv_at`, and the body is a
+genuine multi-step derivation, not `:= h`. (2) Non-load-bearing: the
+core-reconstruction test fails to recover `A t / B t → 1` from the hypothesis
+bundle — the ratio limit is DERIVED in `have h_ratio_tendsto` by calling
+`entropyPower_path_scaling` (`@audit:ok`), `matchedSum_law_eq` (genuine measure
+equality), and `entropyPower_rescaled_path_tendsto` (`@audit:ok` squeeze). The §2
+preconditions are all regularity: measurability, unit-Gaussian noise laws
+(`= gaussianReal 0 1`), independences (`IndepFun`), a.c. (`≪ volume`), the per-σ
+a.c.+negMulLog-integrability bundles `h_scale_*` (verbatim preconditions of
+`entropyPower_path_scaling`), and the three `IsRescaledPathRegular` bundles
+(independently audited non-load-bearing in `EPICase1RatioLimit.lean`). Path
+divergence `hs_atTop`/`hr_atTop` is a genuine matched-path property (eᵗ growth
+forces time → ∞), consumed only to compose envelope limits — granting it does not
+hand over the conclusion. (3) Non-degenerate: no `:True` slot; conclusion
+nontrivial (`N_X, N_Y > 0` via `entropyPower_pos`). (4) Sufficiency: the limit
+genuinely follows — `B t = (N_X+N_Y)·eᵗ`, `A t = τ·NSr(τ)` (τ = s+r), `s/eᵗ →
+N_X/ν`, `r/eᵗ → N_Y/ν` (matched growth ÷ scaling), so `τ/eᵗ → (N_X+N_Y)/ν` and the
+common ν = N(𝒩(0,1)) (all three noises unit-Gaussian) cancels against `NSr(τ) → ν`,
+giving `A/eᵗ → N_X+N_Y` and `A/B → 1`. The 2026-06-06 independence strengthening
+(`hXY_ZXZY` → `hXY_ZXZY_pair`) is exactly a sufficiency fix for the scaled-noise
+independence, recorded honestly in `matchedSum_law_eq`. `#print axioms` =
+`[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified on fresh
+olean).
+@audit:ok -/
 theorem twoTimeLogRatioGap_tendsto_zero_atTop
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     {J_X J_Y : ℝ → ℝ} {s r : ℝ → ℝ}
