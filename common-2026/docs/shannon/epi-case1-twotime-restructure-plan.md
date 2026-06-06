@@ -35,10 +35,12 @@
   load-bearing なし (core-reconstruction PASS)、harmonic Stam = `isStamInequalityHyp_via_step3` genuine。副産物:
   `matchedTimePath_exists` を `∃ s, IsMatchedTimePath … ∧ (∀ t>0,0<s t) ∧ Tendsto s atTop atTop` に強化
   (案 2、sorry-free 維持、再監査 PASS)。public-API impact ゼロ確認。
-- [~] Phase 6 — **dead de Bruijn difference subgraph 削除 ✅** (2026-06-06、13 decl: 11 difference cluster +
-  bridge 2、advisor verdict B = structurally orphaned で確定、−26 sorry)。**single-t ratio line は user 判断で温存**
-  (genuine `@audit:ok`、両 terminal 並存)。残: `Z_law` defect park 解消 = `IsRegularDeBruijnHypV2.Z_law`
-  general-variance 化 (~10 file ripple の structure 改変) または `EPICase1SumProducer` dead 化確認 — **別 session**。
+- [x] Phase 6 — **dead de Bruijn difference subgraph 削除 ✅** (2026-06-06、13 decl) + **`Z_law` defect park 解消 ✅**
+  (2026-06-06、`EPICase1SumProducer.lean` 全削除)。**single-t ratio line は user 判断で温存** (genuine `@audit:ok`、
+  両 terminal 並存)。`Z_law` 解消は structure surgery (~10 file ripple) **不要**だった — defect の唯一の carrier
+  `isDeBruijnRegularityHyp_sum_of_methodX_unitnoise` (= `EPICase1SumProducer.lean` の唯一 decl) が **0 consumer の
+  構造的 dead orphan** と実 grep + compile 確認 (two-time route が supersede、wrapper は `h_reg_sum` を hypothesis
+  thread で producer 非呼出) ⟹ file 全削除で defect 消滅。判断ログ #9。**Phase 6 完了、本 plan line CLOSED**。
 
 ---
 
@@ -498,12 +500,14 @@ sum producer `EPICase1SumProducer.lean` の `Z_law` field defect park
 unit-noise の de Bruijn `(1/2)·J_S` で health。variance-2 を見る場面が発生しないので `Z_law` の
 `gaussianReal 0 2` 矛盾が消える。
 
-- [ ] **park 解消の段取り**: two-time object 結線完了 (Phase 4) 後、sum producer の `Z_law` defect park が
-  consumer から外れることを確認。旧 sum producer (`EPICase1SumProducer.lean`) が two-time 経路で参照されなく
-  なったら、`@audit:defect(false-statement)` declaration を削除 (または `@audit:superseded-by` で
-  two-time object を指す bookkeeping に格下げ)。
-- [ ] 関連 plan の status 更新: `epi-case1-sum-producer-plan.md` / `epi-case1-debruijn-genvar-struct-plan.md`
-  に「two-time restructure で sum frontier closure、Z_law park は構造的に不要化」を判断ログ追記。
+- [x] **park 解消の段取り ✅** (2026-06-06): sum producer `isDeBruijnRegularityHyp_sum_of_methodX_unitnoise` が
+  **0 consumer の構造的 dead orphan** (どの `.lean` も import せず、本来 consumer の wrapper は `h_reg_sum` を
+  hypothesis thread で producer 非呼出) と実 grep + compile 確認。`@audit:defect(false-statement)` を抱える
+  `EPICase1SumProducer.lean` を **file 全削除** (root import line も削除)。general-variance structure surgery は
+  不要だった。判断ログ #9。
+- [x] 関連 plan の status 更新 ✅ (2026-06-06): `epi-case1-sum-producer-plan.md` /
+  `epi-case1-debruijn-genvar-struct-plan.md` に「two-time restructure で sum frontier closure、Z_law park は
+  producer dead orphan 全削除で消滅 (structure surgery 不要)」を判断ログ追記。
 
 ---
 
@@ -617,3 +621,16 @@ bundling する撤退は**禁止** (CLAUDE.md「検証の誠実性」)。
    `lake env lean` の `unknown identifier` で即捕捉 → surgical named-decl 削除に修正 (grep gate `csiszarGap\b` は
    `csiszarLogRatioGap` を非マッチなので single-file compile が唯一の検出手段だった、教訓)。**残 Phase 6 = `Z_law`
    defect park 解消のみ** (structure 改変 ~10 file ripple、別 session)。
+9. **`Z_law` defect park 解消 = sum producer 全削除、structure surgery 不要 (2026-06-06、実 grep + compile)**:
+   handoff の決定木 (i) dead 化確認 → (ii) dead なら削除 に従い `EPICase1SumProducer.lean` を調査。判明:
+   (a) file は唯一の decl `isDeBruijnRegularityHyp_sum_of_methodX_unitnoise` を持ち、これが **0 code consumer**
+   (実 grep: 定義行以外ヒットなし)、(b) **どの `.lean` も import せず** (root aggregator `InformationTheory.lean:236`
+   のみ)、(c) 本来の consumer `entropyPower_add_ge_case1_of_methodX` (`EPICase1RatioLimit.lean:1498`) は
+   `h_reg_sum` を **hypothesis として thread** (`@residual(plan:epi-debruijn-pertime-closure)`) し producer を呼ばない、
+   (d) `gaussianReal 0 2` defect は **全 tree でこの producer のみ** (他の variance-2 言及は two-time/bridge の
+   説明 docstring)。⟹ 構造的 dead orphan。handoff が懸念した ~10 file ripple の `IsRegularDeBruijnHypV2.Z_law`
+   general-variance 化は **不要** — defect の唯一 carrier が dead なので **file 全削除で defect 消滅**。判断 #7 の
+   in-file consumer near-miss は本件に非該当 (誰も import しない file なので別 file 内 consumer は構造上ありえない)
+   が、判断 #8 の教訓に従い deletion 後 compile で裏取り (EPIStamToBridge / EPICase1RatioLimit / EPICase1TwoTime /
+   headline EntropyPowerInequality 全て 0 errors)。`EPIStamToBridge.lean:562` の stale docstring (defect が producer
+   に live と記述) を destale。**Phase 6 完了、本 plan line CLOSED**。

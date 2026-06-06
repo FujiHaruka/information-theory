@@ -1,7 +1,7 @@
 # Shannon EPI: case-1 sum-instance de Bruijn producer サブ計画 (L-Sum-struct closure)
 
 > **Parent**: [`epi-case1-debruijn-producer-plan.md`](epi-case1-debruijn-producer-plan.md) §PB-4 / L-Sum-struct
-> **Status**: 📋 draft (起草のみ、実装は別 session で `lean-implementer` dispatch)
+> **Status**: ✅ CLOSED (2026-06-06、superseded by `epi-case1-twotime-restructure-plan`、producer dead 削除、判断ログ #5)
 > **Scope**: docs-only (本 plan); 触る予定の実装 file は per-step 節に列挙
 > **proof-log**: yes (実装 session で `docs/shannon/proof-log-epi-case1-sum-producer.md`)
 > **撤退口 slug**: `@residual(plan:epi-case1-sum-producer-plan)`
@@ -562,3 +562,11 @@ type-check done 止まり (handoff 指摘: 残1 を閉じても sum がこれな
    `pX_sum` の Fisher 単調性 gap + t=0 近傍非有界、variance 2 でも `gaussianConv_fisher_le_inv_var`
    が t=0 で発散) かを PS-3 で実機械確認する検証項目を設定。残1 の closure 設計 (b)
    (precondition 強化) が sum にも必要で、未解決段階では compound `@residual(plan:epi-case1-sum-producer-plan,plan:epi-case1-debruijn-producer-plan)` で park。
+
+5. **2026-06-06 — CLOSED: sum frontier は two-time restructure で closure、本 plan の producer は dead 削除**:
+   `epi-case1-twotime-restructure-plan` の two-time route (`EPICase1TwoTime.lean`,
+   `entropyPower_add_ge_case1_of_regular_twotime`, `@audit:ok`) が X/Y を分離 unit-noise で摂動し variance-2
+   view を発生させずに sum EPI を genuine closure。本 plan の sum producer
+   `isDeBruijnRegularityHyp_sum_of_methodX_unitnoise` (`Z_law` `@audit:defect(false-statement)` 保持) は
+   **0 consumer の構造的 dead orphan** と確認され `EPICase1SumProducer.lean` ごと削除 (2026-06-06)。
+   ⟹ `Z_law` general-variance structure surgery (ルート b/c) は **不要化**、本 plan は superseded で CLOSED。

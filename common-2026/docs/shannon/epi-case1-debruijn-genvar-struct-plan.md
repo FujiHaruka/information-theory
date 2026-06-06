@@ -1020,3 +1020,11 @@ Phase C wrapper `EPICase1RatioLimit.lean:1498` の後継) への結線順序を 
    L-GS-A3'-weight)。`Z_law` defect park (`EPICase1SumProducer.lean:166`) は本 wave 進行中維持 (GS-A3' closure
    まで、slug 正当)。stale docstring `EPIStamToBridge.lean:892-893` は当該 file touch 時の incidental 訂正候補
    (本 plan scope 外、参考 file 末尾に記録)。
+
+   **2026-06-06 追記 — `Z_law` general-variance 化は不要化、本 plan は完全 superseded**: GS-A3' REFUTE 後、
+   sum frontier は `epi-case1-twotime-restructure-plan` の two-time route (X/Y 分離 unit-noise 摂動、
+   `entropyPower_add_ge_case1_of_regular_twotime` `@audit:ok`) で genuine closure 済。`Z_law` defect の唯一
+   carrier だった sum producer `EPICase1SumProducer.lean` は **0 consumer の dead orphan** と確認され全削除
+   (twotime plan 判断ログ #9)。⟹ 本 plan が本命候補としていた `IsRegularDeBruijnHypV2.Z_law` general-variance
+   structure surgery (13-file ripple) は **着手不要**。本 plan は両側 (解析核 REFUTE + 後続 route が defect を
+   構造的に不要化) で superseded、新規着手対象なし。

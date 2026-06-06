@@ -559,23 +559,27 @@ hypotheses as stated*: `h_reg_sum.reg_at t ht` carries `IsRegularDeBruijnHypV2`'
 independent, the true sum law is `gaussianReal 0 2`, so `Z_law(sum)=𝒩(0,1)` is
 FALSE and `h_reg_sum` is **uninhabitable** in that setting — and the genuine
 variance-2 derivative would be `2·J_sum − (…)`. Hence this factor-1 derivative is
-NOT usable to discharge sum-EPI: the parked `false-statement` defect lives in the
-sum producer (`EPICase1SumProducer.lean`, `@audit:defect(false-statement)` +
-`@audit:closed-by-successor`), NOT here. As a conditional implication this theorem
+NOT usable to discharge sum-EPI; this is a scope limitation of the single-`t` view,
+not a defect of this conditional theorem. As a conditional implication this theorem
 is genuinely TRUE (no internal inconsistency in the hypotheses → no vacuous-truth
-escape, per the producer audit), non-circular, and non-bundled (`Z_law` is a
-precondition on the noise distribution, not a bundled derivative value); the
-defect is correctly localized to the producer. Honest closure of the sum line
-requires `IsRegularDeBruijnHypV2`'s `Z_law` general-variance refactor (successor
-`epi-case1-debruijn-genvar-struct-plan`; GS-A3' showed all single-`t` routes are
-blocked by a non-local co-monotonicity obligation, not weight tuning).
+escape), non-circular, and non-bundled (`Z_law` is a
+precondition on the noise distribution, not a bundled derivative value). Honest
+closure of the sum line is achieved by the **two-time route**
+(`EPICase1TwoTime.lean`, `entropyPower_add_ge_case1_of_regular_twotime`, `@audit:ok`),
+which perturbs `X`/`Y` with separate unit-variance noises so the variance-2 view
+never arises. The variance-2 `false-statement` defect that this single-`t` view used
+to park in the sum producer (`EPICase1SumProducer.lean`) is resolved: that producer
+was a structurally dead orphan (0 consumers, superseded by the two-time route) and
+has been deleted (2026-06-06), so the `IsRegularDeBruijnHypV2.Z_law` general-variance
+refactor is no longer needed. (GS-A3' showed all single-`t` routes are blocked by a
+non-local co-monotonicity obligation, not weight tuning.)
 
 @audit:ok — independent honesty audit (2026-06-06, fresh auditor): 4 checks PASS
 as a conditional theorem (non-circular / non-bundled — `Z_law` is a noise-law
 precondition / not degenerate / sufficiency — factor-1 follows correctly under the
 stated `Z_law=𝒩(0,1)` hypothesis). `#print axioms` = `[propext, Classical.choice,
-Quot.sound]` (sorryAx-free, mechanically confirmed). Tag retained; defect is in the
-producer, not this consumer. -/
+Quot.sound]` (sorryAx-free, mechanically confirmed). Tag retained; the sum line is
+closed genuinely by the two-time route. -/
 theorem csiszarLogRatioGap_hasDerivAt
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
