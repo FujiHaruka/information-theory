@@ -431,7 +431,9 @@ theorem matchedTimePath_exists
       HasDerivAt (fun u => heatFlowEP A B P u) (heatFlowEP A B P s * J_A s) s)
     (h_endpt : IsHeatFlowEndpointRegular A B P)
     (hN_tendsto : Filter.Tendsto (fun s => heatFlowEP A B P s) Filter.atTop Filter.atTop) :
-    ∃ s : ℝ → ℝ, IsMatchedTimePath A B P J_A s := by
+    ∃ s : ℝ → ℝ, IsMatchedTimePath A B P J_A s
+      ∧ (∀ t : ℝ, 0 < t → 0 < s t)
+      ∧ Filter.Tendsto s Filter.atTop Filter.atTop := by
   classical
   set N : ℝ → ℝ := fun s => heatFlowEP A B P s with hN
   set C : ℝ := N 0 with hC
@@ -448,10 +450,13 @@ theorem matchedTimePath_exists
   -- (iv) the continuous inverse `g` with `N ∘ g = id` near `C·eᵗ` (t>0) and `g 0' = 0`.
   obtain ⟨g, hg_maps, hg_rinv, hg_cont, hg_zero⟩ :=
     matchedTimePath_inverse A B P hN_cont hN_mono hC_pos hN_tendsto
+  -- Repackage the inverse properties in the `C`-indexed form (`C = N 0`).
+  have hg_maps' : ∀ y, C ≤ y → 0 ≤ g y := by
+    intro y hy; exact hg_maps y (by simpa [hC, hN] using hy)
+  have hg_rinv' : ∀ y, C ≤ y → N (g y) = y := by
+    intro y hy; exact hg_rinv y (by simpa [hC, hN] using hy)
   -- Define the matched path `s(t) := g (C · eᵗ)`.
-  refine ⟨fun t => g (C * Real.exp t), ?_⟩
-  -- piece (v): assemble the four `IsMatchedTimePath` fields.
-  refine ⟨?_, ?_, ?_, ?_⟩
+  refine ⟨fun t => g (C * Real.exp t), ⟨?_, ?_, ?_, ?_⟩, ?_, ?_⟩
   · -- start_zero: `s 0 = g (C·e⁰) = g C = 0`.
     simp only [Real.exp_zero, mul_one]
     exact hg_zero
@@ -468,6 +473,40 @@ theorem matchedTimePath_exists
     intro t ht
     exact matchedTimePath_path_hasDerivAt N J_A g C t ht hC_pos
       hN_mono hg_maps hg_cont hg_rinv rfl hJ_pos hJ_deriv
+  · -- positivity: `s t = g (C·eᵗ) > 0` for `t > 0` (strict-mono inverse, `g C = 0`).
+    intro t ht
+    have hCe_gt : C < C * Real.exp t := by
+      nlinarith [Real.add_one_lt_exp (ne_of_gt ht), hC_pos]
+    have hsa_nn : 0 ≤ g (C * Real.exp t) := hg_maps' _ (le_of_lt hCe_gt)
+    rcases eq_or_lt_of_le hsa_nn with h0 | h0
+    · exfalso
+      have : N (g (C * Real.exp t)) = C := by rw [← h0, hC]
+      rw [hg_rinv' _ (le_of_lt hCe_gt)] at this
+      linarith
+    · exact h0
+  · -- divergence: `s t = g (C·eᵗ) → ∞` (inner `C·eᵗ → ∞`, `g → ∞` via strict-mono `N`).
+    have hinner : Filter.Tendsto (fun t : ℝ => C * Real.exp t) Filter.atTop Filter.atTop :=
+      Filter.Tendsto.const_mul_atTop hC_pos Real.tendsto_exp_atTop
+    have hg_atTop : Filter.Tendsto g Filter.atTop Filter.atTop := by
+      rw [Filter.tendsto_atTop_atTop]
+      intro M
+      refine ⟨max C (N (max M 0 + 1)), ?_⟩
+      intro y hy
+      have hyC : C ≤ y := le_trans (le_max_left _ _) hy
+      have hM1_nn : (0 : ℝ) ≤ max M 0 + 1 := by positivity
+      have hgy_nn : 0 ≤ g y := hg_maps' y hyC
+      have hN_gy : N (g y) = y := hg_rinv' y hyC
+      have hge : N (max M 0 + 1) ≤ N (g y) := by
+        rw [hN_gy]; exact le_trans (le_max_right _ _) hy
+      have hbig : max M 0 + 1 ≤ g y := by
+        by_contra hlt
+        push_neg at hlt
+        have := hN_mono (Set.mem_Ici.mpr hgy_nn) (Set.mem_Ici.mpr hM1_nn) hlt
+        linarith
+      calc M ≤ max M 0 := le_max_left _ _
+        _ ≤ max M 0 + 1 := by linarith
+        _ ≤ g y := hbig
+    exact hg_atTop.comp hinner
 
 /-! ## §2 — Two-time log-ratio object (formulation (b), `e^t` closed form)
 
@@ -1509,5 +1548,249 @@ theorem epi_of_twoTimeLogRatioGap_tendsto
   have h_zero_le : (0 : ℝ) ≤ R 0 := le_of_tendsto h_lim h_tail
   -- Bridge to EPI.
   exact epi_of_twoTimeLogRatioGap_zero_nonneg X Y Z_X Z_Y P h_path_X h_path_Y h_zero_le
+
+/-- **TT case-1 EPI terminal** (two-time analog of the single-`t`
+`entropyPower_add_ge_case1_of_regular`, `EPICase1RatioLimit.lean:1343`).
+
+`N(X+Y) ≥ N(X) + N(Y)`, assembled from the three GENUINE two-time pillars
+(`twoTimeLogRatioGap_antitoneOn_Ici_zero`, `twoTimeLogRatioGap_tendsto_zero_atTop`,
+`epi_of_twoTimeLogRatioGap_tendsto`) + the path producer `matchedTimePath_exists`.
+Unlike the single-`t` route (whose sum derivative is the variance-2 `2·J_sum` that
+does NOT close from harmonic Stam), the two-time object perturbs `X`/`Y` at
+*independent* matched times `s(t)`/`r(t)` and closes from the genuine harmonic Stam
+producer.
+
+**`J_X`/`J_Y` Fisher pin (honesty-load-bearing).** The Fisher infos are NOT free
+variables: `J_X`/`J_Y` are defined as the total-domain functions
+`fun σ => if 0 < σ then fisherInfoOfDensityReal ((h_reg_*.reg_at σ _).density_t) else 0`.
+The same quantity supplies both (a) `matchedTimePath_exists`'s entropy-power
+`HasDerivAt` (via `deBruijn_identity_v2` → `entropyPower_hasDerivAt_of_diffEnt_hasDerivAt`)
+and (b) Pillar B's per-`t` density-pin (`dif_pos` under `s t > 0`). `density_t` is
+pointwise-pinned by `IsRegularDeBruijnHypV2.density_t_eq` (`∀ x`, NOT a.e.), so a
+representative escape is structurally impossible — the same honest mechanism as
+`twoTimeLogRatioGap_hasDerivAt`.
+
+**Preconditions** are the union of `matchedTimePath_exists` (×2) + Pillar B + Pillar C
+regularity, deduplicated. None encode the EPI conclusion (mirrors the single-`t`
+terminal's `@audit:ok` union, `EPICase1RatioLimit.lean:1336-1342`):
+* `h_endpt_X`/`h_endpt_Y` (path-producer endpoint continuity), `h_endpt_sum` (Pillar B);
+* `h_reg_X`/`h_reg_Y`/`h_reg_sum : IsDeBruijnRegularityHyp` (de Bruijn + J pin);
+* `h_scale_*` per-σ a.c.+integrability (consumed by `entropyPower_path_scaling`,
+  used both for the path-producer `hN_tendsto` and Pillar C);
+* `h_rescale_*` (`IsRescaledPathRegular`) + `varX`/`varY`/`varS` (Pillar C squeeze
+  and the path-producer divergence);
+* `h_stam_supply` the per-time harmonic-Stam + positivity supply (genuine producer
+  `isStamInequalityHyp_via_step3`, NOT a bundled conclusion — `1/J_S ≥ 1/J_X+1/J_Y`
+  is the Fisher form, a different statement from the EPI inequality).
+
+**Proof done (2026-06-06): sorryAx-free.** `#print axioms
+entropyPower_add_ge_case1_of_regular_twotime = [propext, Classical.choice,
+Quot.sound]`. The body (1) defines `J_X`/`J_Y` by `dif_pos`, (2) assembles the
+entropy-power `HasDerivAt` (`hJ_deriv_*`) and the `heatFlowEP` divergence
+(`hN_tendsto_*`), (3) constructs `s`/`r` via the strengthened
+`matchedTimePath_exists`, (4) discharges Pillar B's `h_per_t` (density-pin by
+`dif_pos`, positivity + harmonic Stam from `h_stam_supply`), (5) closes with Pillar
+C and `epi_of_twoTimeLogRatioGap_tendsto`. Awaiting independent honesty audit
+(`@audit:ok` pending) given the new `matchedTimePath_exists` signature change. -/
+theorem entropyPower_add_ge_case1_of_regular_twotime
+    (X Y Z_X Z_Y Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hX : Measurable X) (hY : Measurable Y)
+    (hZX : Measurable Z_X) (hZY : Measurable Z_Y) (hZ : Measurable Z)
+    (hXZX : IndepFun X Z_X P) (hYZY : IndepFun Y Z_Y P)
+    -- unit-noise laws
+    (hZX_law : P.map Z_X = gaussianReal 0 1)
+    (hZY_law : P.map Z_Y = gaussianReal 0 1)
+    (hZ_law : P.map Z = gaussianReal 0 1)
+    -- joint independences for the matched-sum law (Pillar B/C)
+    (hXYZ : IndepFun (fun ω => X ω + Y ω) Z P)
+    (hXY_ZXZY_pair : IndepFun (fun ω => X ω + Y ω) (fun ω => (Z_X ω, Z_Y ω)) P)
+    (hZX_ZY : IndepFun Z_X Z_Y P)
+    -- a.c. of the noises (Pillar C)
+    (hZX_ac : (P.map Z_X) ≪ volume) (hZY_ac : (P.map Z_Y) ≪ volume)
+    (hZ_ac : (P.map Z) ≪ volume)
+    -- de Bruijn regularity (J pin + de Bruijn HasDerivAt source)
+    (h_reg_X : IsDeBruijnRegularityHyp X Z_X P)
+    (h_reg_Y : IsDeBruijnRegularityHyp Y Z_Y P)
+    (h_reg_sum : IsDeBruijnRegularityHyp (fun ω => X ω + Y ω) Z P)
+    -- heat-flow endpoint regularity (path-producer endpoint continuity + Pillar B)
+    (h_endpt_X : IsHeatFlowEndpointRegular X Z_X P)
+    (h_endpt_Y : IsHeatFlowEndpointRegular Y Z_Y P)
+    (h_endpt_sum : IsHeatFlowEndpointRegular (fun ω => X ω + Y ω) Z P)
+    -- per-σ scaling regularity (path-producer `hN_tendsto` + Pillar C)
+    (h_scale_X : ∀ σ : ℝ, 0 < σ →
+      (P.map (fun ω => X ω / Real.sqrt σ + Z_X ω)) ≪ volume ∧
+      Integrable (fun x => Real.negMulLog
+        (((P.map (fun ω => X ω / Real.sqrt σ + Z_X ω)).rnDeriv volume x).toReal)) volume)
+    (h_scale_Y : ∀ σ : ℝ, 0 < σ →
+      (P.map (fun ω => Y ω / Real.sqrt σ + Z_Y ω)) ≪ volume ∧
+      Integrable (fun x => Real.negMulLog
+        (((P.map (fun ω => Y ω / Real.sqrt σ + Z_Y ω)).rnDeriv volume x).toReal)) volume)
+    (h_scale_sum : ∀ σ : ℝ, 0 < σ →
+      (P.map (fun ω => (X ω + Y ω) / Real.sqrt σ + Z ω)) ≪ volume ∧
+      Integrable (fun x => Real.negMulLog
+        (((P.map (fun ω => (X ω + Y ω) / Real.sqrt σ + Z ω)).rnDeriv volume x).toReal)) volume)
+    -- per-path squeeze regularity (Pillar C + path-producer divergence)
+    (varX varY varS : ℝ)
+    (h_varX_nn : 0 ≤ varX) (h_varY_nn : 0 ≤ varY) (h_varS_nn : 0 ≤ varS)
+    (h_rescale_X : IsRescaledPathRegular X Z_X P varX 1)
+    (h_rescale_Y : IsRescaledPathRegular Y Z_Y P varY 1)
+    (h_rescale_S : IsRescaledPathRegular (fun ω => X ω + Y ω) Z P varS 1)
+    -- harmonic-Stam + positivity supply at independent matched times σ (X side) and
+    -- τ (Y side); `J_S` is pinned to the single-noise sum heat flow at `σ + τ`.
+    -- This is the GENUINE producer output (`isStamInequalityHyp_via_step3`), the
+    -- Fisher form `1/J_S ≥ 1/J_X+1/J_Y` — NOT the EPI conclusion.
+    (h_stam_supply : ∀ (σ τ : ℝ) (hσ : 0 < σ) (hτ : 0 < τ),
+      0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+            ((h_reg_X.reg_at σ hσ).density_t) ∧
+      0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+            ((h_reg_Y.reg_at τ hτ).density_t) ∧
+      0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+            ((h_reg_sum.reg_at (σ + τ) (add_pos hσ hτ)).density_t) ∧
+      1 / InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+            ((h_reg_sum.reg_at (σ + τ) (add_pos hσ hτ)).density_t)
+        ≥ 1 / InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              ((h_reg_X.reg_at σ hσ).density_t)
+          + 1 / InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+              ((h_reg_Y.reg_at τ hτ).density_t)) :
+    entropyPower (P.map (fun ω => X ω + Y ω))
+      ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
+  classical
+  -- ===== Fisher pin: total-domain `J_X`/`J_Y` (probe-5a). =====
+  set J_X : ℝ → ℝ := fun σ =>
+    if hσ : 0 < σ then
+      InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+        ((h_reg_X.reg_at σ hσ).density_t)
+    else 0 with hJX_def
+  set J_Y : ℝ → ℝ := fun τ =>
+    if hτ : 0 < τ then
+      InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+        ((h_reg_Y.reg_at τ hτ).density_t)
+    else 0 with hJY_def
+  have hJX_val : ∀ (σ : ℝ) (hσ : 0 < σ), J_X σ
+      = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+          ((h_reg_X.reg_at σ hσ).density_t) := by
+    intro σ hσ; rw [hJX_def]; simp only [dif_pos hσ]
+  have hJY_val : ∀ (τ : ℝ) (hτ : 0 < τ), J_Y τ
+      = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+          ((h_reg_Y.reg_at τ hτ).density_t) := by
+    intro τ hτ; rw [hJY_def]; simp only [dif_pos hτ]
+  -- `J_X`/`J_Y` positivity (path-producer `hJ_pos`), from the supply at `σ=τ`.
+  have hJX_pos : ∀ σ : ℝ, 0 < σ → 0 < J_X σ := by
+    intro σ hσ
+    rw [hJX_val σ hσ]; exact (h_stam_supply σ σ hσ hσ).1
+  have hJY_pos : ∀ τ : ℝ, 0 < τ → 0 < J_Y τ := by
+    intro τ hτ
+    rw [hJY_val τ hτ]; exact (h_stam_supply τ τ hτ hτ).2.1
+  -- ===== `hJ_deriv` assembly (entropy-power level, probe-5c-i). =====
+  have hJ_deriv_X : ∀ σ : ℝ, 0 < σ →
+      HasDerivAt (fun u => heatFlowEP X Z_X P u) (heatFlowEP X Z_X P σ * J_X σ) σ := by
+    intro σ hσ
+    rw [hJX_val σ hσ]
+    set J := InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+      ((h_reg_X.reg_at σ hσ).density_t) with hJ_def
+    have h_dB : HasDerivAt
+        (fun s => InformationTheory.Shannon.differentialEntropy
+          (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z_X s)))
+        ((1/2) * J) σ := by
+      have := InformationTheory.Shannon.FisherInfoV2.deBruijn_identity_v2
+        X Z_X hX hZX hXZX hσ (h_reg_X.reg_at σ hσ)
+      simpa only [hJ_def] using this
+    have h_eP := entropyPower_hasDerivAt_of_diffEnt_hasDerivAt h_dB
+    have h_val : heatFlowEP X Z_X P σ * J
+        = Real.exp (2 * InformationTheory.Shannon.differentialEntropy
+            (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution X Z_X σ)))
+          * (2 * ((1/2) * J)) := by
+      unfold heatFlowEP entropyPower InformationTheory.Shannon.FisherInfoV2.gaussianConvolution
+      ring
+    rw [h_val]; exact h_eP
+  have hJ_deriv_Y : ∀ τ : ℝ, 0 < τ →
+      HasDerivAt (fun u => heatFlowEP Y Z_Y P u) (heatFlowEP Y Z_Y P τ * J_Y τ) τ := by
+    intro τ hτ
+    rw [hJY_val τ hτ]
+    set J := InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+      ((h_reg_Y.reg_at τ hτ).density_t) with hJ_def
+    have h_dB : HasDerivAt
+        (fun s => InformationTheory.Shannon.differentialEntropy
+          (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution Y Z_Y s)))
+        ((1/2) * J) τ := by
+      have := InformationTheory.Shannon.FisherInfoV2.deBruijn_identity_v2
+        Y Z_Y hY hZY hYZY hτ (h_reg_Y.reg_at τ hτ)
+      simpa only [hJ_def] using this
+    have h_eP := entropyPower_hasDerivAt_of_diffEnt_hasDerivAt h_dB
+    have h_val : heatFlowEP Y Z_Y P τ * J
+        = Real.exp (2 * InformationTheory.Shannon.differentialEntropy
+            (P.map (InformationTheory.Shannon.FisherInfoV2.gaussianConvolution Y Z_Y τ)))
+          * (2 * ((1/2) * J)) := by
+      unfold heatFlowEP entropyPower InformationTheory.Shannon.FisherInfoV2.gaussianConvolution
+      ring
+    rw [h_val]; exact h_eP
+  -- ===== `hN_tendsto` assembly (heatFlowEP divergence, probe-5d). =====
+  have hN_tendsto_X : Filter.Tendsto (fun s => heatFlowEP X Z_X P s) Filter.atTop Filter.atTop := by
+    set ν : ℝ := entropyPower (P.map Z_X) with hν
+    have hν_pos : (0 : ℝ) < ν := entropyPower_pos _
+    have hNr_lim := entropyPower_rescaled_path_tendsto X Z_X P hX hZX (1 : ℝ≥0) one_ne_zero
+      hZX_law varX h_varX_nn hZX_ac h_rescale_X
+    have h_eq : ∀ᶠ s in Filter.atTop,
+        heatFlowEP X Z_X P s = s * entropyPower (P.map (fun ω => X ω / Real.sqrt s + Z_X ω)) := by
+      filter_upwards [Filter.eventually_gt_atTop (0:ℝ)] with s hs
+      have hsc := entropyPower_path_scaling X Z_X P hX hZX hs (h_scale_X s hs).1 (h_scale_X s hs).2
+      simpa only [heatFlowEP] using hsc
+    have h_prod : Filter.Tendsto
+        (fun s : ℝ => s * entropyPower (P.map (fun ω => X ω / Real.sqrt s + Z_X ω)))
+        Filter.atTop Filter.atTop :=
+      Filter.Tendsto.atTop_mul_pos hν_pos Filter.tendsto_id hNr_lim
+    exact h_prod.congr' (h_eq.mono (fun s hs => hs.symm))
+  have hN_tendsto_Y : Filter.Tendsto (fun s => heatFlowEP Y Z_Y P s) Filter.atTop Filter.atTop := by
+    set ν : ℝ := entropyPower (P.map Z_Y) with hν
+    have hν_pos : (0 : ℝ) < ν := entropyPower_pos _
+    have hNr_lim := entropyPower_rescaled_path_tendsto Y Z_Y P hY hZY (1 : ℝ≥0) one_ne_zero
+      hZY_law varY h_varY_nn hZY_ac h_rescale_Y
+    have h_eq : ∀ᶠ s in Filter.atTop,
+        heatFlowEP Y Z_Y P s = s * entropyPower (P.map (fun ω => Y ω / Real.sqrt s + Z_Y ω)) := by
+      filter_upwards [Filter.eventually_gt_atTop (0:ℝ)] with s hs
+      have hsc := entropyPower_path_scaling Y Z_Y P hY hZY hs (h_scale_Y s hs).1 (h_scale_Y s hs).2
+      simpa only [heatFlowEP] using hsc
+    have h_prod : Filter.Tendsto
+        (fun s : ℝ => s * entropyPower (P.map (fun ω => Y ω / Real.sqrt s + Z_Y ω)))
+        Filter.atTop Filter.atTop :=
+      Filter.Tendsto.atTop_mul_pos hν_pos Filter.tendsto_id hNr_lim
+    exact h_prod.congr' (h_eq.mono (fun s hs => hs.symm))
+  -- ===== Construct the matched paths `s` / `r` (strengthened `matchedTimePath_exists`). =====
+  obtain ⟨s, h_path_X, hs_pos, hs_atTop⟩ :=
+    matchedTimePath_exists X Z_X P J_X hX hZX hXZX hJX_pos hJ_deriv_X h_endpt_X hN_tendsto_X
+  obtain ⟨r, h_path_Y, hr_pos, hr_atTop⟩ :=
+    matchedTimePath_exists Y Z_Y P J_Y hY hZY hYZY hJY_pos hJ_deriv_Y h_endpt_Y hN_tendsto_Y
+  -- ===== `h_pos` (Pillar B), built from path positivity. =====
+  have h_pos : ∀ t : ℝ, 0 < t → 0 < s t ∧ 0 < r t :=
+    fun t ht => ⟨hs_pos t ht, hr_pos t ht⟩
+  -- ===== Pillar B `h_per_t`: density-pin (`dif_pos`) + supply at `s t`, `r t`. =====
+  have h_per_t : ∀ (t : ℝ), 0 < t → ∀ (hst : 0 < s t) (hrt : 0 < r t),
+      J_X (s t) = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+          ((h_reg_X.reg_at (s t) hst).density_t) ∧
+      J_Y (r t) = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+          ((h_reg_Y.reg_at (r t) hrt).density_t) ∧
+      0 < J_X (s t) ∧ 0 < J_Y (r t) ∧
+      0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+          ((h_reg_sum.reg_at (s t + r t) (add_pos hst hrt)).density_t) ∧
+      1 / InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+            ((h_reg_sum.reg_at (s t + r t) (add_pos hst hrt)).density_t)
+        ≥ 1 / J_X (s t) + 1 / J_Y (r t) := by
+    intro t ht hst hrt
+    obtain ⟨hJXp, hJYp, hJSp, h_stam⟩ := h_stam_supply (s t) (r t) hst hrt
+    refine ⟨hJX_val (s t) hst, hJY_val (r t) hrt, hJX_pos (s t) hst, hJY_pos (r t) hrt,
+      hJSp, ?_⟩
+    rw [hJX_val (s t) hst, hJY_val (r t) hrt]; exact h_stam
+  -- ===== Pillar B: antitonicity. =====
+  have h_anti := twoTimeLogRatioGap_antitoneOn_Ici_zero X Y Z_X Z_Y Z P
+    hX hZX hXZX hY hZY hYZY hZ hZ_law hXYZ hZX_law hZY_law hXY_ZXZY_pair hZX_ZY
+    h_path_X h_path_Y h_reg_X h_reg_Y h_reg_sum h_endpt_sum h_pos h_per_t
+  -- ===== Pillar C: saturation `R t → 0`. =====
+  have h_lim := twoTimeLogRatioGap_tendsto_zero_atTop X Y Z_X Z_Y P
+    h_path_X h_path_Y Z hX hY hZX hZY hZ hZX_law hZY_law hZ_law
+    hXY_ZXZY_pair hXYZ hZX_ZY hZX_ac hZY_ac hZ_ac hs_atTop hr_atTop hs_pos hr_pos
+    h_scale_X h_scale_Y h_scale_sum varX varY varS h_varX_nn h_varY_nn h_varS_nn
+    h_rescale_X h_rescale_Y h_rescale_S
+  -- ===== Seam: EPI from antitonicity + saturation. =====
+  exact epi_of_twoTimeLogRatioGap_tendsto X Y Z_X Z_Y P h_path_X h_path_Y h_anti h_lim
 
 end InformationTheory.Shannon.EPICase1TwoTime
