@@ -137,9 +137,9 @@ git branch | grep '^  worktree-agent-' | xargs -I {} git branch -D {}
 
 `--force` は agent commit が main 回収済を前提。untracked file が残っていたら main 側と diff し、main が新しければ破棄して OK (worktree HEAD ≠ main HEAD なので status は dirty に見えるが、回収済なら本物の差分はない)。
 
-### Brief content checklist — body fill / refactor (parallel or single dispatch)
+### Brief content checklist — skeleton / body fill / refactor (parallel or single dispatch)
 
-`lean-implementer` を body fill (sorry 埋め) / 既存 body の P→P' 等 mechanical refactor に出すときは、brief に以下の項目を含める。planner / orchestrator 側の責務で、implementer 自身に判断させない。
+`lean-implementer` を skeleton 設計 (signature 含む) / body fill (sorry 埋め) / 既存 body の P→P' 等 mechanical refactor に出すときは、brief に以下の項目を含める (項目により適用 phase が違う: 項目 4 は主に signature 設計時、項目 2 は body 復元時)。planner / orchestrator 側の責務で、implementer 自身に判断させない。
 
 1. **Sub-bound 引数表** (`P_cb` / `P_target` 分離型 predicate を扱うとき) — bundle / composite predicate の各 sub-bound が、rate-bound 引数 `R < (1/2) log(1 + ?/N)` の `?` 部に `P_cb` 側 / `P_target` 側のどちらの capacity を要求するかを 1 枚の表で列挙する (sub-bound 名 × 要求 capacity 側 × 必要 bridge 補題)。Bundle destructure 後に sub-bound 毎の capacity 引数が異なる場合があり (例: `IsAwgnPowerConstraintHonest P_cb P_target N` の rate-bound は `P_target` 側、bundle が供給する `hR_lt_P'C` は `P_cb = P'` 側)、表が無いと LSP 第 1 戻りまで気づけない型 mismatch で 1 turn ループ。Brief 段階で predicate signature を 1 度読めば書ける情報。
 
