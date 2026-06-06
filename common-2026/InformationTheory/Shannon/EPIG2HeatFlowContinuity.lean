@@ -24,17 +24,19 @@ import InformationTheory.Meta.EntryPoint
 /-!
 # G2: heat-flow entropy-power continuity at the endpoint `t = 0⁺`
 
-This file isolates the single analytic atom shared by the two EPI continuity
-consumers in `EPIStamToBridge.lean`:
+This file isolates the single analytic atom used by the live EPI continuity
+consumer in `EPIStamToBridge.lean`:
 
 * `csiszarLogRatioGap_continuousOn` (R-5-b, live: feeds `antitoneOn_of_deriv_nonpos`
-  in R-5-c), and
-* `csiszarGap1Source_continuousOn` (A-4-1, dead difference version).
+  in R-5-c).
 
-Both reduce, at the endpoint `t = 0`, to the continuity of a single term
+(The dead difference-version continuity consumer was deleted with the dead
+de Bruijn difference subgraph.)
+
+It reduces, at the endpoint `t = 0`, to the continuity of a single term
 `t ↦ entropyPower (P.map (fun ω => X ω + √t · Z ω))` as `t → 0⁺` along the
 heat-flow ray. The interior `t > 0` is genuine (already supplied by
-`csiszarGap1Source_differentiableOn_interior` / `csiszarLogRatioGap_differentiableOn_interior`).
+`csiszarLogRatioGap_differentiableOn_interior`).
 
 ## Surface shrink (2026-06-04): full ray → endpoint `t = 0⁺` only
 
