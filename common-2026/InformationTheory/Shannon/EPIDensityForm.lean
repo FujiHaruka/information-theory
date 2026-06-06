@@ -48,6 +48,17 @@ open scoped ENNReal NNReal
 load-bearing でない regularity precondition、producer `isDeBruijnRegularityHyp_of_methodX_unitnoise`
 の要求形を verbatim コピー) を満たすとき、entropy power inequality が成立する。
 
+独立 honesty audit (2026-06-06, commit `eb0825b`): **signature honest**。11 前提は全て
+regularity precondition (measurability/indep/a.c./moment/Fisher 有限/IsRegularDensityV2/
+normalization/IsBlachmanConvReady/entropy 有限)。core-reconstruction test 適用: これらを
+grant しても EPI は出ず、body が genuine に lift→producer→step3→methodX を呼び 6 residual を
+残す。とりわけ `IsDeBruijnRegularityHyp`/`IsStamInequalityHyp`/`h_pos_stam` は signature に
+持ち込まず body 内で `isDeBruijnRegularityHyp_of_methodX_unitnoise` (`@audit:ok`, sorryAx-free)
++ `isStamInequalityHyp_via_step3` (`@audit:ok`, sorryAx-free) から genuine 導出。`IsBlachmanConvReady`
+は純 regularity bundle (Integrable/boundedness/strict-positivity の 19 field、Stam/de Bruijn 核を
+encode せず、EPIBlachmanDensity.lean:712 で確認)。name laundering なし (`_of_density` は honest)。
+6 residual 残置のため `@audit:ok` ではなく type-check done 止まり。
+
 @residual(plan:epi-debruijn-pertime-closure) -/
 theorem entropy_power_inequality_of_density
     {Ω : Type*} {mΩ : MeasurableSpace Ω} (P : Measure Ω) [IsProbabilityMeasure P]
@@ -380,24 +391,26 @@ theorem entropy_power_inequality_of_density
       have hmY : Measurable (fun p => Y' p + Real.sqrt t * ZY p) := by fun_prop
       exact InformationTheory.Shannon.EPIStamStep3Body.isStamInequalityHyp_via_step3 lift _ _ hmX hmY hStam_indep
     refine ⟨?_, ?_, ?_, hStam, hregX_t, hregY_t, hnormX_t, hnormY_t, ?_, hready_t⟩
-    · -- @residual(plan:epi-debruijn-pertime-closure)
-      -- L-PhA-δ (Fisher non-degeneracy gap, NOT a discharge): `0 < J(conv pX g_t)`.
-      -- In-tree only upper bounds exist (`gaussianConv_fisher_le_inv_var`); the `≠ 0`
-      -- (non-degeneracy) direction needs a new lemma: `J=0 ⟹ logDeriv f = 0 a.e. ⟹
-      -- deriv f ≡ 0 (deriv continuous for conv-gaussian) ⟹ f constant ⟹ ⊥ with f→0`.
-      sorry
-    · -- @residual(plan:epi-debruijn-pertime-closure)
-      -- L-PhA-δ (Fisher non-degeneracy gap for Y', same as above).
-      sorry
-    · -- @residual(plan:epi-debruijn-pertime-closure)
+    · -- Gap 1 CLOSED (X'): `0 < J(density_X_t) = J(conv pX g_t)`, genuine via
+      -- `fisherInfoOfDensityReal_convDensityAdd_pos` (finiteness `≤ 1/t` + non-vanishing
+      -- `J=0 ⟹ logDeriv=0 a.e. ⟹ deriv≡0 (conv-deriv continuous) ⟹ f const ⟹ ⊥ with tail`).
+      rw [hpinX]
+      exact EPIConvDensityRegular.fisherInfoOfDensityReal_convDensityAdd_pos
+        pX ht hpX_nn hpX_meas hpX_int hpX_norm
+    · -- Gap 1 CLOSED (Y'): same lemma applied to `pY`.
+      rw [hpinY]
+      exact EPIConvDensityRegular.fisherInfoOfDensityReal_convDensityAdd_pos
+        pY ht hpY_nn hpY_meas hpY_int hpY_norm
+    · -- @residual(plan:epi-phaseA-sum-reparam)
       -- L-PhA-α (sum-instance, NOT a discharge): sum-density Fisher positivity depends on
-      -- the parked `h_reg_sum` (𝒩(0,2) reparam).
+      -- the parked `h_reg_sum` (𝒩(0,2) reparam). Gap 1 closed X'/Y' above; this sum
+      -- conjunct waits on Gap 2 (`epi-phaseA-sum-reparam`).
       sorry
-    · -- @residual(plan:epi-debruijn-pertime-closure)
+    · -- @residual(plan:epi-phaseA-sum-reparam)
       -- L-PhA-α (sum-instance, NOT a discharge): conv-pin `density_sum_t =
       -- convDensityAdd density_X_t density_Y_t` requires the 𝒩(0,2)→𝒩(0,1) reparam
       -- (`convDensityAdd_convGaussian_interchange`: conv(pX∗g_t,pY∗g_t)=conv(pX∗pY,g_{2t}),
-      -- variance 2t≠t), depends on the parked `h_reg_sum`.
+      -- variance 2t≠t), depends on the parked `h_reg_sum` (Gap 2).
       sorry
   -- apply methodX
   exact entropyPower_add_ge_case1_of_methodX X' Y' ZX ZY lift

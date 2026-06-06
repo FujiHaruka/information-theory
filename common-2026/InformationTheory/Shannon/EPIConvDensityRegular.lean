@@ -3,6 +3,7 @@ import InformationTheory.Shannon.FisherInfoV2DeBruijnPerTime
 import InformationTheory.Shannon.FisherInfoV2DeBruijnAssembly
 import InformationTheory.Shannon.EPIBlachmanGaussianWitness
 import InformationTheory.Shannon.FisherInfoGaussian
+import Mathlib.Analysis.Convolution
 
 /-!
 # `IsRegularDensityV2 (convDensityAdd pX g_t)` producer — EPI A-5 precondition (1)
@@ -29,7 +30,7 @@ All hypotheses on `pX` are regularity preconditions (no load-bearing core).
 namespace InformationTheory.Shannon.EPIConvDensityRegular
 
 open MeasureTheory Real ProbabilityTheory
-open scoped NNReal
+open scoped NNReal ENNReal
 open InformationTheory.Shannon.EPIConvDensity
   (convDensityAdd convDensityAddDeriv)
 
@@ -283,5 +284,118 @@ theorem isRegularDensityV2_convDensityAdd_gaussian (pX : ℝ → ℝ) {t : ℝ} 
         InformationTheory.Shannon.integral_deriv_gaussianPDFReal_eq_zero 0 hv_ne, mul_zero]
     simp_rw [hinner]
     exact integral_zero _ _
+
+/-- **Fisher non-degeneracy for a conv-with-Gaussian density** (Gap 1 closure).
+`0 < J(convDensityAdd pX g_t)` for `t > 0` and any normalized probability density
+`pX` (nonneg / measurable / integrable / `∫ pX = 1`).
+
+Route: `J(f).toReal > 0` requires `J(f) ≠ 0` and `J(f) < ⊤`.
+
+* Finiteness: `gaussianConv_fisher_le_inv_var` gives `J(f) ≤ 1/t < ⊤`.
+* Non-vanishing: if `J(f) = 0` then the lintegrand `ofReal((logDeriv f)²)·ofReal(f)`
+  vanishes a.e.; since `f > 0` everywhere (`convDensityAdd_pos`), `logDeriv f = 0`
+  a.e., hence `deriv f = 0` a.e. But `deriv f = convDensityAdd pX (deriv g)` is
+  *continuous* (`BddAbove.continuous_convolution_right_of_integrable`), so it is `0`
+  everywhere, making `f` constant (`is_const_of_deriv_eq_zero`). A constant
+  contradicts the `tail_bot` field (`f → 0` at `-∞`) together with `f 0 > 0`.
+
+All `pX` hypotheses are regularity preconditions (probability-density normalization
+`∫ pX = 1`); the Fisher positivity conclusion is *derived*, not assumed. -/
+theorem fisherInfoOfDensityReal_convDensityAdd_pos (pX : ℝ → ℝ) {t : ℝ} (ht : 0 < t)
+    (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX) (hpX_int : Integrable pX volume)
+    (hpX_norm : (∫ x, pX x ∂volume) = 1) :
+    0 < InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
+          (InformationTheory.Shannon.EPIConvDensity.convDensityAdd pX
+            (ProbabilityTheory.gaussianPDFReal 0 ⟨t, ht.le⟩)) := by
+  have hpX_mass : (0 : ℝ) < ∫ x, pX x ∂volume := by rw [hpX_norm]; norm_num
+  have hv_ne : (⟨t, ht.le⟩ : ℝ≥0) ≠ 0 := by
+    intro h; exact ht.ne' (congrArg NNReal.toReal h)
+  set g : ℝ → ℝ := gaussianPDFReal 0 ⟨t, ht.le⟩ with hg
+  set f : ℝ → ℝ := convDensityAdd pX g with hf
+  -- regularity of `f` (gives `diff` + `tail_bot`)
+  have hreg : InformationTheory.Shannon.FisherInfoV2.IsRegularDensityV2 f :=
+    isRegularDensityV2_convDensityAdd_gaussian pX ht hpX_nn hpX_meas hpX_int hpX_mass
+  -- pointwise positivity of `f`
+  have hf_pos : ∀ x, 0 < f x := fun x =>
+    InformationTheory.Shannon.FisherInfoV2.convDensityAdd_pos pX hpX_nn hpX_int hpX_mass ht x
+  -- finiteness of `J(f)`
+  have hfin : InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity f
+      ≤ ENNReal.ofReal (1 / t) :=
+    InformationTheory.Shannon.FisherInfoV2.gaussianConv_fisher_le_inv_var
+      pX hpX_nn hpX_meas hpX_int hpX_norm ht
+  have hfin' : InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity f ≠ ⊤ :=
+    (lt_of_le_of_lt hfin ENNReal.ofReal_lt_top).ne
+  -- `deriv f = convDensityAdd pX (deriv g)` and this is continuous
+  have hderiv_eq : deriv f = convDensityAdd pX (deriv g) := deriv_convDensityAdd_eq ht hpX_int
+  have hderiv_cont : Continuous (deriv f) := by
+    rw [hderiv_eq]
+    -- `convDensityAdd pX (deriv g) = pX ⋆[mul ℝ ℝ, volume] (deriv g)` (definitional)
+    have hconv : convDensityAdd pX (deriv g)
+        = (convolution pX (deriv g) (ContinuousLinearMap.mul ℝ ℝ) volume) := by
+      funext z; unfold convDensityAdd convolution
+      simp only [ContinuousLinearMap.mul_apply']
+    rw [hconv]
+    obtain ⟨M, hM⟩ := deriv_gaussianPDFReal_abs_le hv_ne
+    have hbdd : BddAbove (Set.range fun x => ‖deriv g x‖) := by
+      refine ⟨M, ?_⟩
+      rintro _ ⟨x, rfl⟩
+      simp only
+      rw [Real.norm_eq_abs]; exact hM x
+    have hg'_cont : Continuous (deriv g) := by
+      rw [hg]
+      exact InformationTheory.Shannon.EPIBlachmanGaussianWitness.continuous_deriv_gaussianPDFReal hv_ne
+    exact BddAbove.continuous_convolution_right_of_integrable
+      (L := ContinuousLinearMap.mul ℝ ℝ) hbdd hpX_int hg'_cont
+  -- non-vanishing of `J(f)`
+  have hne0 : InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity f ≠ 0 := by
+    intro hJ0
+    -- the lintegrand vanishes a.e.
+    have hlogderiv_meas : Measurable (logDeriv f) := by
+      simp only [logDeriv]
+      exact (measurable_deriv f).div (hreg.diff.continuous.measurable)
+    have hf_meas : Measurable f := hreg.diff.continuous.measurable
+    have hintegrand_meas : AEMeasurable
+        (fun x => ENNReal.ofReal ((logDeriv f x) ^ 2) * ENNReal.ofReal (f x)) volume :=
+      (((hlogderiv_meas.pow_const 2).ennreal_ofReal).mul
+        (hf_meas.ennreal_ofReal)).aemeasurable
+    have hJ0' : (∫⁻ x, ENNReal.ofReal ((logDeriv f x) ^ 2) * ENNReal.ofReal (f x) ∂volume) = 0 := by
+      rw [← InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity]; exact hJ0
+    have hae0 : (fun x => ENNReal.ofReal ((logDeriv f x) ^ 2) * ENNReal.ofReal (f x))
+        =ᵐ[volume] 0 :=
+      (MeasureTheory.lintegral_eq_zero_iff' hintegrand_meas).mp hJ0'
+    -- ⟹ `deriv f = 0` a.e.
+    have hderiv_ae0 : deriv f =ᵐ[volume] 0 := by
+      filter_upwards [hae0] with x hx
+      simp only [Pi.zero_apply] at hx ⊢
+      have hfx_pos : (0 : ℝ≥0∞) < ENNReal.ofReal (f x) := ENNReal.ofReal_pos.mpr (hf_pos x)
+      have hsq0 : ENNReal.ofReal ((logDeriv f x) ^ 2) = 0 := by
+        rcases mul_eq_zero.mp hx with h | h
+        · exact h
+        · exact absurd h hfx_pos.ne'
+      have hsq_le : (logDeriv f x) ^ 2 ≤ 0 := ENNReal.ofReal_eq_zero.mp hsq0
+      have hsq_eq : (logDeriv f x) ^ 2 = 0 := le_antisymm hsq_le (sq_nonneg _)
+      have hlog0 : logDeriv f x = 0 := by
+        have := pow_eq_zero_iff (n := 2) (by norm_num) |>.mp hsq_eq
+        exact this
+      -- `logDeriv f x = deriv f x / f x = 0` and `f x ≠ 0` ⟹ `deriv f x = 0`
+      rw [logDeriv_apply, div_eq_zero_iff] at hlog0
+      rcases hlog0 with h | h
+      · exact h
+      · exact absurd h (hf_pos x).ne'
+    -- continuity ⟹ `deriv f ≡ 0`
+    have hderiv0 : deriv f = 0 :=
+      (hderiv_cont.ae_eq_iff_eq (μ := volume) continuous_const).mp hderiv_ae0
+    -- `f` constant
+    have hconst : ∀ x, f x = f 0 := fun x =>
+      is_const_of_deriv_eq_zero hreg.diff (fun y => by rw [hderiv0]; rfl) x 0
+    -- contradict `tail_bot`: constant `f` tends to `f 0`, but tail_bot says `→ 0`
+    have htail : Filter.Tendsto f Filter.atBot (nhds 0) := hreg.tail_bot
+    have hconst_tail : Filter.Tendsto f Filter.atBot (nhds (f 0)) := by
+      have : f = fun _ => f 0 := funext hconst
+      rw [this]; exact tendsto_const_nhds
+    have hf0_eq : f 0 = 0 := tendsto_nhds_unique hconst_tail htail
+    exact (hf_pos 0).ne' hf0_eq
+  rw [InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal]
+  exact ENNReal.toReal_pos hne0 hfin'
 
 end InformationTheory.Shannon.EPIConvDensityRegular
