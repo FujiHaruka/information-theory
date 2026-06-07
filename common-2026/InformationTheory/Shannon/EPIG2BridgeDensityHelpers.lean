@@ -240,7 +240,18 @@ Proof route: `compProd_map_condDistrib` identifies `(μ.map Z) ⊗ₘ condDistri
 with `μ.map (fun ω => (Z ω, X ω))`; `Measure.lintegral_compProd` (Tonelli on
 `fun p => g p.2`) opens the joint lintegral into the iterated fibre lintegral; and
 `lintegral_map` reduces the joint lintegral to `∫⁻ x, g x ∂(μ.map X)` via the second
-projection. -/
+projection.
+
+Independent honesty audit 2026-06-07 (4-check): (1) non-circular — conclusion is the
+ℝ≥0∞ Fubini-marginal identity, not equal to any hypothesis; body is a genuine calc chain
+(`compProd_map_condDistrib` + `Measure.lintegral_compProd` + `lintegral_map`), not `:= h`.
+(2) non-bundling — `hX`/`hZ`/`hg` are all measurability regularity; no `*Hypothesis`
+predicate carries the core. (3) non-degenerate — no `:True` slot; holds on Dirac/singular
+fibres since ℝ≥0∞ lintegral is unconditional. (4) sufficiency — ℝ≥0∞ Tonelli needs no
+integrability side-condition, so `Measurable g` alone yields the conclusion (matches the
+`∫`/Bochner sibling `integral_condDistrib_marginal_eq` minus its `Integrable` hyp).
+sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`, mechanically
+verified). Consistent with sibling `@audit:ok` at `:152`. `@audit:ok` -/
 theorem lintegral_condDistrib_marginal_eq
     {Ω α : Type*} [MeasurableSpace Ω] [MeasurableSpace α]
     (X : Ω → ℝ) (Z : Ω → α) (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -276,7 +287,29 @@ part). `ofReal` clips negatives to 0, so the two instantiations split the signed
 cross-term into its `ℝ≥0∞` positive/negative parts.
 
 All hypotheses are regularity preconditions (measurability, absolute continuity,
-homogeneity of `sign`); the marginal collapse is the conclusion. -/
+homogeneity of `sign`); the marginal collapse is the conclusion.
+
+Independent honesty audit 2026-06-07 (4-check): (1) non-circular — conclusion is the
+density-form marginal-collapse lintegral equality, not equal to any hypothesis; body is a
+genuine 3-step proof (per-fibre `lintegral_rnDeriv_mul` rewrite + `lintegral_congr_ae` →
+`lintegral_condDistrib_marginal_eq` core → reverse density fold), not `:= h`. (2)
+non-bundling — `hsign_hom` (`sign (a*b) = a * sign b`) is checked NOT load-bearing: it
+only lets the non-negative `pz = κz`-density factor commute out of `sign` (used at the two
+`rw [hsign_hom]` / `rw [← hsign_hom]` sites to pair with `ofReal_mul` + `lintegral_rnDeriv_mul`);
+it does NOT encode the marginal collapse, which is carried in-body by the measure-level
+`lintegral_condDistrib_marginal_eq` (Fubini + condDistrib joint identification) + the
+rnDeriv absorption. core-reconstruction test: granting `hsign_hom` alone does NOT hand over
+the Fubini/disintegration substance. On the two values the assembly instantiates,
+`sign := id` gives `id(a*b)=a*b=a*id(b)` (trivial) and `sign := Neg.neg` gives `-(a*b)=a*(-b)`
+(`mul_neg`, trivial), so it is a 1-homogeneity regularity property of `sign`, not a smuggled
+conclusion. `hX`/`hZ`/`hsign_meas` (measurability), `hX_ac`/`hκ_ac` (absolute continuity)
+likewise regularity. (3) non-degenerate — no `:True` slot; not vacuous. (4) sufficiency —
+`hκ_ac` is honestly load-bearing-in-the-honest-sense: without per-fibre `κz ≪ volume` the
+density rewrite `∫⁻ (κz) f = ∫⁻ (κz).rnDeriv·f dvol` fails and the identity is false, so it
+is a genuine (non-excess) precondition, not a bundled core; the body discharges the
+conclusion from the granted hypotheses (sorryAx-free witness). sorryAx-free (`#print axioms`
+= `[propext, Classical.choice, Quot.sound]`, mechanically verified). Consistent with sibling
+`@audit:ok` at `:200`. `@audit:ok` -/
 theorem lintegral_condDistrib_cross_eq
     {Ω α : Type*} [MeasurableSpace Ω] [MeasurableSpace α]
     (X : Ω → ℝ) (Z : Ω → α) (μ : Measure Ω) [IsProbabilityMeasure μ]
