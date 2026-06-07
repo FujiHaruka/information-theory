@@ -138,7 +138,30 @@ theorem klDiv_toReal_eq_neg_differentialEntropy_sub_cross
 per-fibre に還元して消費)。fibre 有限性 (`h_logp_int`/`h_cross_int`/`hKL`) は genuine regularity
 precondition (load-bearing でない): KL 有限性は P ≪ ν の絶対連続性 + llr 可積分性を表明するだけで、
 per-fibre 恒等式の核 (= `klDiv_toReal_eq_neg_differentialEntropy_sub_cross`) を仮説に encode しない。
-5 項全有限なので両辺 `.toReal` の一致 (Real 兄弟 + pos/neg part 分解 + linarith) から ℝ≥0∞ 等式を得る。 -/
+5 項全有限なので両辺 `.toReal` の一致 (Real 兄弟 + pos/neg part 分解 + linarith) から ℝ≥0∞ 等式を得る。
+
+Independent honesty audit 2026-06-08 (4-check): (1) non-circular — conclusion is the ℝ≥0∞
+5-term lintegral identity `A + klDiv + Cpos = B + Cneg`, non-isomorphic to any hypothesis;
+body is a genuine 7-step proof (set abbrevs → per-term finiteness → `toReal_eq_toReal_iff'`
+→ pos/neg-part decomposition → Real-sibling call → `ring`), not `:= h`. (2) non-bundling —
+core-reconstruction test on `hKL : klDiv P ν ≠ ∞`: granting `hKL` (a mere `≠ ⊤` finiteness
+assertion) does NOT hand over the hard substance (`klDiv.toReal = −h(P) − cross`, the
+pos/neg-part sign matching); `hKL` is used only for klDiv-term finiteness (`:182`
+`add_ne_top` + `:187-188` `toReal_add` side-conditions), while the identity itself is carried
+in-body by `hKLreal` calling the `@audit:ok` Real sibling
+`klDiv_toReal_eq_neg_differentialEntropy_sub_cross`. `h_logp_int`/`h_cross_int` likewise feed
+only `hbound`-derived lintegral finiteness + Real-sibling regularity; `hPv`/`hνv`/`hPν` pass
+through as absolute-continuity preconditions. No `*Hypothesis` predicate bundles the core.
+(3) non-degenerate — no `:True` slot; degenerate boundary `P = ν` substituted: `klDiv = 0`,
+`A = Cneg`, `B = Cpos`, so LHS `= Cneg + 0 + Cpos = RHS`, the identity stays live (not
+vacuous). (4) sufficiency — without `hPν`/`hKL` the statement is FALSE on a `klDiv P ν = ∞`
+fibre (LHS `.toReal` collapses to a finite value via `ENNReal.toReal ⊤ = 0` while RHS stays
+finite), so both honestly close the counterexample branch; not over-hypothesized — A/B/Cpos/
+Cneg finiteness is DERIVED from the two `Integrable` hyps via `hbound`, only the klDiv term
+needs `hKL` independently (required for the `toReal_eq_toReal_iff'` premise). sorryAx-free
+(`#print axioms` = `[propext, Classical.choice, Quot.sound]`, mechanically verified).
+Consistent with Real sibling `@audit:ok` at `:99` and ℝ≥0∞ marginal siblings at `:326`/`:384`.
+`@audit:ok` -/
 theorem klDiv_negMulLog_cross_balance_ennreal
     (P ν : Measure ℝ) [IsProbabilityMeasure P] [IsProbabilityMeasure ν]
     (hPv : P ≪ volume) (hνv : ν ≪ volume) (hPν : P ≪ ν)
