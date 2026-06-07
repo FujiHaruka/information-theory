@@ -19,11 +19,8 @@ description: 現在のセッションの状態を `.claude/handoff.md` に書き
    - 圧縮対象は family plan であって `.claude/handoff.md` ではない (compact-plan の不可侵制約と非競合)。cleanup をセッション境界で必ず走らせる目的 (今は user 起動依存で実行されない)。
 3. **`.claude/handoff.md` を以下の形式で書く** (`Write` で上書き)
 4. ユーザーには「ハンドオフ書いた」と一言だけ。長い要約は不要 (内容はファイルにある)
-5. **リフレッシュを提案する** (ユーザーの単純作業 = `/clear` + 「再開」の往復を消すため): handoff 書き出し後、`AskUserQuestion` で「このセッションをリフレッシュ (クリア + 自動再開) しますか?」を **はい / いいえ** で尋ねる。
-   - **はい** → `bash .claude/hooks/claude-refresh.sh` を実行する。
-     - 出力が `REFRESH_SCHEDULED` → tmux が直後に `/clear` を送る。**返答は一言だけにしてターンを終える** (長文を出すと `/clear` 送出とタイミングが競合する)。クリア後は SessionStart フックが自動で resume を注入する。
-     - 出力が `REFRESH_PENDING_MANUAL_CLEAR` → tmux 外。「`/clear` を打てば自動で再開します (「再開」は不要)」とだけ伝える。sentinel は既に立っているので手動 `/clear` だけで自動再開が走る。
-   - **いいえ** → 通常どおり終了。
+
+handoff 単体はファイルを書くだけ。「context が重くなったら自分でリセットして再開し自走を続ける」判断と実行は **resume スキル側** が持つ (resume の「自己リフレッシュ」節)。自己リフレッシュの一部として resume の自走ループから呼ばれることもある。
 
 ## handoff.md の形式
 
@@ -90,11 +87,11 @@ description: 現在のセッションの状態を `.claude/handoff.md` に書き
 
 `/resume` の対になるスキル。
 
-## リフレッシュ機構 (step 5 の裏側)
+## 自己リフレッシュ機構 (resume スキルの自走ループが使う)
 
-`/clear` をフック側から直接打つ手段は無いため、tmux `send-keys` で TUI を外から駆動する。状態受け渡しは sentinel ファイル 1 枚:
+`/clear` をフック側から直接打つ手段は無いため、tmux `send-keys` で TUI を外部駆動する。中核は 2 ファイル:
 
-- `.claude/hooks/claude-refresh.sh` — `.claude/.resume-pending` を touch し、tmux 内なら 2 秒後に `/clear` をペインへ送る (現ターン終了後 idle に発火)。tmux 外なら sentinel だけ立てる。
-- `.claude/hooks/sessionstart-resume.sh` — `SessionStart(matcher=clear)` フック (`.claude/settings.json` 登録)。`.resume-pending` があるときだけ「handoff から resume せよ」を `additionalContext` 注入し sentinel を消す。素の `/clear` は無影響。
+- `.claude/hooks/claude-refresh.sh` — `.claude/.resume-pending` を touch し、tmux 内なら `/clear` → `/resume` を順にペインへ送る (現ターン終了後 idle に発火)。`/clear` だけでは新ターンが始まらないので turn 起動の kick として `/resume` を送る。tmux 外なら sentinel だけ立て `REFRESH_PENDING_MANUAL_CLEAR` を返す。
+- `.claude/hooks/sessionstart-resume.sh` — `SessionStart(matcher=clear)` フック (`.claude/settings.json` 登録)。`.resume-pending` があるときだけ「自己リフレッシュした、自走を継続せよ」を `additionalContext` 注入し sentinel を消す。素の `/clear` は無影響。
 
-前提: claude を tmux 内で起動していること (未起動なら手動 `/clear` で再開のみ機能)。任意で `~/.tmux.conf` に `bind r run-shell "<repo>/.claude/hooks/claude-refresh.sh #{pane_id}"` を足すと確認なしの即リフレッシュキーになる。
+前提: claude を tmux 内で起動していること。tmux 外では自己リフレッシュは無効 (handoff して停止しユーザーに委ねる)。判断・実行ロジックは resume スキルの「自己リフレッシュ」節を参照。
