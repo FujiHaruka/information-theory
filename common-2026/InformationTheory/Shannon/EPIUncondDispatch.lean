@@ -37,6 +37,7 @@ own sorry 0、両枝とも sorryAx-free ゆえ transitive sorry も 0 (proof-don
 namespace InformationTheory.Shannon
 
 open MeasureTheory Real ProbabilityTheory
+open InformationTheory.Shannon.EntropyPowerInequality
 open scoped ENNReal NNReal
 
 variable {Ω : Type*} [MeasurableSpace Ω]
@@ -213,5 +214,49 @@ theorem entropyPowerExt_add_ge_dispatch_skeleton
         h_logq_int_symm hY_ent hWyx_ent
     · -- case 3 (両特異): 型自明、RHS=0。
       exact entropyPowerExt_singular_add_ge X Y P hX_ac hY_ac
+
+/-- **実数版 EPI — a.c. + 有限微分エントロピー前提版 (proof-done)**。
+
+両入力 `X`, `Y` が独立、各 push-forward 測度が Lebesgue 測度に絶対連続 (a.c.) かつ
+有限微分エントロピー (negMulLog density 可積分) のとき、実数版エントロピーパワー不等式
+`N(X+Y) ≥ N(X) + N(Y)` が成立 (`entropyPower : Measure ℝ → ℝ`、`exp(2·h(μ))`)。
+
+前提 `hX_ac`/`hY_ac` (a.c.)・`hX_ent`/`hY_ent`/`hW_ent` (有限微分エントロピー = negMulLog
+density 可積分) は **regularity precondition であって NOT load-bearing**。EPI 不等式の core は
+拡張版 `entropyPowerExt_add_ge_finite_ac` (ℝ≥0∞ 値、有限分散 = smoothing closure / 無限分散 =
+route T closure、両枝 sorryAx-free) が供給する。本補題が行うのは ℝ≥0∞→ℝ の型変換のみ:
+各 a.c.+可積分枝で `entropyPowerExt μ = ENNReal.ofReal (Real.exp (2·h μ)) = ENNReal.ofReal
+(entropyPower μ)` (`entropyPowerExt_of_ac_integrable`) を使い、ℝ≥0∞ 不等式を ℝ 不等式に剥がす。
+
+対比: 現 headline `entropy_power_inequality` (`EntropyPowerInequality.lean:289`) は `h_stam`
++ 未証明橋 `stamToEPIBridge_holds` を transitive 消費し proof-done でない。本補題は a.c.+有限
+エントロピー前提つきだが own sorry 0 かつ transitive sorry 0 で **sorryAx-free** (proof-done)。
+
+命名 `_of_ac` は前提 (a.c.) を反映する記述的命名 (name laundering でない)。 -/
+theorem entropy_power_inequality_of_ac
+    (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
+    (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
+    (hX_ent : Integrable (fun x => Real.negMulLog ((P.map X).rnDeriv volume x).toReal) volume)
+    (hY_ent : Integrable (fun x => Real.negMulLog ((P.map Y).rnDeriv volume x).toReal) volume)
+    (hW_ent : Integrable
+      (fun x => Real.negMulLog ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume) :
+    entropyPower (P.map (fun ω => X ω + Y ω))
+      ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
+  -- W = X+Y も a.c. (X a.c. ∧ 独立 ⟹ X+Y a.c.)
+  have hW_ac : (P.map (fun ω => X ω + Y ω)) ≪ volume :=
+    map_add_absolutelyContinuous X Y P hX hY hXY hX_ac
+  -- ℝ≥0∞ 版 EPI を取得
+  have hineq := entropyPowerExt_add_ge_finite_ac X Y P hX hY hXY hX_ac hY_ac hX_ent hY_ent hW_ent
+  -- 3 項を ofReal (exp (2h)) = ofReal (entropyPower) に書換
+  rw [entropyPowerExt_of_ac_integrable hW_ac hW_ent,
+    entropyPowerExt_of_ac_integrable hX_ac hX_ent,
+    entropyPowerExt_of_ac_integrable hY_ac hY_ent] at hineq
+  -- RHS の ofReal a + ofReal b を ofReal (a+b) にまとめる
+  rw [← ENNReal.ofReal_add (Real.exp_nonneg _) (Real.exp_nonneg _)] at hineq
+  -- entropyPower 定義を展開し、目標を ofReal 版不等式に直して hineq に一致させる
+  rw [ge_iff_le, entropyPower, entropyPower, entropyPower,
+    ← ENNReal.ofReal_le_ofReal_iff (Real.exp_nonneg _)]
+  exact hineq
 
 end InformationTheory.Shannon
