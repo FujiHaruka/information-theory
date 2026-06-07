@@ -1218,10 +1218,19 @@ theorem convDensityAdd_condTrunc_le_const_mul_at (P : Measure Ω) [IsProbability
 honest: 結論は各点収束。仮説は a.c. + measurability。和エントロピー可積分性 (結論) を
 仮説で受けていない。
 
-独立 honesty audit 2026-06-07: honest_residual。(1) 非循環: 結論は a.e. 各点収束
+**Genuine fill (2026-06-07, body 独自 sorry 0)**: 二重極限を filter 版 DCT
+(`tendsto_integral_filter_of_dominated_convergence`、atTop) で組立。(i) 各成分各点収束
+`pnZ_n x → pZ x` (a.e. x): cond density formula `pnZ_n =ᵐ (m_n)⁻¹·1_{Sn}·pZ` (per-n、`map_condTrunc_eq_cond_map`
++ `rnDeriv_cond_eq`) を tail (n≥n₀) で `ae_all_iff` に束ね、`(m_n)⁻¹.toReal → 1` (`tendsto_measure_iUnion_atTop`)
+× `1_{Sn}(x) → 1` (`exists_nat_ge`) で各点極限。(ii) 内側 (各 z) DCT: 被積分 `pnX_n x·pnY_n(z−x)`
+の各点収束 (i × `x↦z−x` 測度保存 transport) + eventual 優関数 `C_X C_Y·pX(x)pY(z−x)`
+(`condTrunc_marginal_density_le` を n≥n₀ で) + slice 可積分 (`integrable_prod_iff'` + `prod_right_ae`)。
+self-audit 不可ゆえ `@residual` は残置 (orchestrator が独立監査)。
+
+独立 honesty audit 2026-06-07 (skeleton 時点): honest_residual。(1) 非循環: 結論は a.e. 各点収束
 `p_n∗q_n → p∗q`、仮説は a.c. + measurability の regularity precondition、結論型 ≢ 仮説型。
 (2) 非バンドル: usc 結論を仮説で受けていない。(3) classification: plan slug 実在、収束は
-DCT (`tendsto_integral_of_dominated_convergence`、優関数 A) で buildable、plan 分類が妥当。
+DCT (`tendsto_integral_filter_of_dominated_convergence`、優関数 A) で buildable、plan 分類が妥当。
 @residual(plan:epi-infinite-variance-truncation-plan) -/
 theorem convDensity_condTrunc_tendsto (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -1432,7 +1441,16 @@ noncomputable def crossEntropySeq (P : Measure Ω) (X Y : Ω → ℝ) (n : ℕ) 
 honest: 結論は可積分性 (regularity)。仮説は a.c. + measurability + 和エントロピー可積分
 (regularity)。usc 結論を仮説で受けていない。
 
-独立 honesty audit 2026-06-07: honest_residual。(1) 非循環: 結論は cross-entropy 被積分関数の
+**Genuine fill (2026-06-07, body 独自 sorry 0)**: pull-back `Integrable g μ_n ⟺
+Integrable ((μ_n.rnDeriv vol)·g) vol` (`integrable_rnDeriv_smul_iff`、`hμ_n_ac =
+map_condTrunc_absolutelyContinuous`)。density 同定 `(μ_n.rnDeriv).toReal =ᵐ p_n∗q_n`
+(`rnDeriv_map_condTrunc_sum_ae` + `toReal_ofReal`)、`(ν.rnDeriv).toReal =ᵐ p∗q`
+(`rnDeriv_map_sum_ae`)。優関数 fixed-n `convDensityAdd_condTrunc_le_const_mul_at` で
+`p_n∗q_n ≤ C(p∗q)`、`|(μ_n.rnDeriv)·g| ≤ C·(ν.rnDeriv).toReal·|log| = C·|negMulLog((ν.rnDeriv).toReal)|`
+(`r·|log r| = |negMulLog r|`、r≥0)、`hent_sum.abs.const_mul C` で可積分 → `Integrable.mono'`。
+self-audit 不可ゆえ `@residual` は残置 (orchestrator が独立監査)。
+
+独立 honesty audit 2026-06-07 (skeleton 時点): honest_residual。(1) 非循環: 結論は cross-entropy 被積分関数の
 可積分性 `Integrable (log ν 密度) μ_n`、仮説は a.c. + measurability + `hent_sum` (= regularity)、
 結論型 ≢ 仮説型。(2) 非バンドル: usc 結論を仮説で受けていない。`hent_sum` は優関数経由で
 可積分性供給に使う precondition。(3) classification: plan slug 実在、`∫|log ν|dμ_n ≤ C²∫|log ν|(p∗q)`
@@ -1594,7 +1612,16 @@ theorem differentialEntropy_condTrunc_sum_le_crossEntropy (P : Measure Ω) [IsPr
 honest: 結論は数列の収束。仮説は a.c. + measurability + 和エントロピー可積分 (regularity)。
 usc 結論を仮説で受けていない。
 
-独立 honesty audit 2026-06-07: honest_residual。(1) 非循環: 結論は `RHS_n → h(ν)` (数列収束)、
+**Genuine fill (2026-06-07, body 独自 sorry 0)**: pull-back `crossEntropySeq n =ᶠ
+-∫ (p_n∗q_n)·g dvol` (positive-mass tail、`integral_rnDeriv_smul` + `rnDeriv_map_condTrunc_sum_ae`、
+`g x = log((ν.rnDeriv).toReal)`)。外側 filter 版 DCT (`tendsto_integral_filter_of_dominated_convergence`、
+atTop): 各点収束 = B (`p_n∗q_n → p∗q`) × g(x) 定数、eventual 優関数 = A
+(`convDensity_condTrunc_le_const_mul`、n₀ 固定) × |g(x)| → `bnd = C·|negMulLog((ν.rnDeriv).toReal)|`
+(`hent_sum.abs.const_mul C` で可積分)。収束先 `-∫ (p∗q)·g = ∫ negMulLog((ν.rnDeriv).toReal) =
+differentialEntropy ν` (`rnDeriv_map_sum_ae` + `negMulLog_eq_neg`)。`Tendsto.congr' hpull hDCT.neg`。
+self-audit 不可ゆえ `@residual` は残置 (orchestrator が独立監査)。
+
+独立 honesty audit 2026-06-07 (skeleton 時点): honest_residual。(1) 非循環: 結論は `RHS_n → h(ν)` (数列収束)、
 仮説は a.c. + measurability + `hent_sum` (= regularity)、結論型 ≢ 仮説型。(2) 非バンドル:
 usc 不等式や h(ν) の値を仮説に bundle していない (収束先 h(ν) は結論内で導出、仮説で受けない)。
 (3) classification: plan slug 実在、`RHS_n = ∫(-log ν)·(p_n∗q_n)` の各点収束 (B) + 優関数 (A+hent_sum)
@@ -1607,8 +1634,123 @@ theorem crossEntropySeq_tendsto (P : Measure Ω) [IsProbabilityMeasure P]
       (fun x => Real.negMulLog ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume) :
     Tendsto (fun n => crossEntropySeq P X Y n) atTop
       (𝓝 (differentialEntropy (P.map (fun ω => X ω + Y ω)))) := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  classical
+  have hsum_meas : Measurable (fun ω => X ω + Y ω) := hX.add hY
+  set ν := P.map (fun ω => X ω + Y ω) with hν_def
+  haveI : IsProbabilityMeasure ν := Measure.isProbabilityMeasure_map hsum_meas.aemeasurable
+  have hν_ac : ν ≪ volume := by
+    have hconv : P.map (fun ω => X ω + Y ω) = (P.map X) ∗ (P.map Y) := by
+      rw [show (fun ω => X ω + Y ω) = X + Y from rfl, hXY.map_add_eq_map_conv_map hX hY]
+    rw [hν_def, hconv]; exact Measure.conv_absolutelyContinuous hY_ac
+  -- abbreviations.
+  set g : ℝ → ℝ := fun x => Real.log ((ν.rnDeriv volume x).toReal) with hg_def
+  set pX : ℝ → ℝ := fun y => (P.map X).rnDeriv volume y |>.toReal with hpX_def
+  set pY : ℝ → ℝ := fun y => (P.map Y).rnDeriv volume y |>.toReal with hpY_def
+  set pnX : ℕ → ℝ → ℝ :=
+    fun n y => ((condTrunc P X Y n).map X).rnDeriv volume y |>.toReal with hpnX_def
+  set pnY : ℕ → ℝ → ℝ :=
+    fun n y => ((condTrunc P X Y n).map Y).rnDeriv volume y |>.toReal with hpnY_def
+  have hpX_nn : ∀ x, 0 ≤ pX x := fun x => ENNReal.toReal_nonneg
+  have hpY_nn : ∀ x, 0 ≤ pY x := fun x => ENNReal.toReal_nonneg
+  -- `(ν.rnDeriv vol).toReal =ᵐ convDensityAdd pX pY`.
+  have hν_dens : (fun x => (ν.rnDeriv volume x).toReal)
+      =ᵐ[volume] fun x => convDensityAdd pX pY x := by
+    have h := rnDeriv_map_sum_ae P hX hY hX_ac hY_ac hXY
+    filter_upwards [h] with x hx
+    have hconv_nn : 0 ≤ convDensityAdd pX pY x :=
+      integral_nonneg (fun y => mul_nonneg (hpX_nn y) (hpY_nn (x - y)))
+    rw [hν_def, hx, ENNReal.toReal_ofReal hconv_nn]
+  -- the dominating bound from sub-helper A (eventual in `n`).
+  obtain ⟨n₀, hpos₀⟩ := (eventually_measure_truncSet_pos P hX hY).exists
+  obtain ⟨C, hC_nn, hAbound⟩ :=
+    convDensity_condTrunc_le_const_mul P hX hY hXY hX_ac hY_ac (n₀ := n₀) hpos₀
+  -- the pointwise convergence from sub-helper B.
+  have hB := convDensity_condTrunc_tendsto P hX hY hXY hX_ac hY_ac
+  -- bound function on `volume`: `C · |negMulLog ((ν.rnDeriv vol).toReal)|`, integrable.
+  set bnd : ℝ → ℝ := fun x => C * |Real.negMulLog ((ν.rnDeriv volume x).toReal)| with hbnd_def
+  have hbnd_int : Integrable bnd volume := hent_sum.abs.const_mul C
+  -- outer DCT: `∫ (convDensityAdd pnX pnY)·g → ∫ (convDensityAdd pX pY)·g`.
+  have hDCT : Tendsto (fun n => ∫ x, convDensityAdd (pnX n) (pnY n) x * g x ∂volume) atTop
+      (𝓝 (∫ x, convDensityAdd pX pY x * g x ∂volume)) := by
+    refine tendsto_integral_filter_of_dominated_convergence bnd ?_ ?_ hbnd_int ?_
+    · -- `∀ᶠ n, AEStronglyMeasurable (fun x => convDensityAdd pnX pnY x · g x)`.
+      refine Filter.Eventually.of_forall (fun n => ?_)
+      have hmX : Measurable (fun y => pnX n y) :=
+        (Measure.measurable_rnDeriv _ _).ennreal_toReal
+      have hmY : Measurable (fun y => pnY n y) :=
+        (Measure.measurable_rnDeriv _ _).ennreal_toReal
+      have hconv_sm : StronglyMeasurable (fun z => convDensityAdd (pnX n) (pnY n) z) := by
+        refine StronglyMeasurable.integral_prod_right (f := fun z x => pnX n x * pnY n (z - x)) ?_
+        have h1 : Measurable (fun p : ℝ × ℝ => pnX n p.2) := hmX.comp measurable_snd
+        have h2 : Measurable (fun p : ℝ × ℝ => pnY n (p.1 - p.2)) :=
+          hmY.comp (measurable_fst.sub measurable_snd)
+        exact ((h1.mul h2)).stronglyMeasurable
+      have hg_meas : Measurable g :=
+        Real.measurable_log.comp (Measure.measurable_rnDeriv ν volume).ennreal_toReal
+      exact (hconv_sm.aestronglyMeasurable.mul hg_meas.aestronglyMeasurable)
+    · -- `∀ᶠ n, ∀ᵐ x, ‖convDensityAdd pnX pnY x · g x‖ ≤ bnd x`.
+      filter_upwards [hAbound] with n hAn
+      filter_upwards [hAn, hν_dens] with x hxA hxν
+      rw [norm_mul]
+      -- `convDensityAdd pnX pnY x ≥ 0`.
+      have hconv_nn : 0 ≤ convDensityAdd (pnX n) (pnY n) x :=
+        integral_nonneg (fun y => mul_nonneg ENNReal.toReal_nonneg ENNReal.toReal_nonneg)
+      rw [Real.norm_of_nonneg hconv_nn]
+      have hr_nn : (0 : ℝ) ≤ (ν.rnDeriv volume x).toReal := ENNReal.toReal_nonneg
+      -- `convDensityAdd pnX pnY x ≤ C · convDensityAdd pX pY x = C · (ν.rnDeriv).toReal`.
+      have hstep : convDensityAdd (pnX n) (pnY n) x ≤ C * (ν.rnDeriv volume x).toReal := by
+        calc convDensityAdd (pnX n) (pnY n) x
+            ≤ C * convDensityAdd pX pY x := hxA
+          _ = C * (ν.rnDeriv volume x).toReal := by rw [← hxν]
+      have hg_log : (ν.rnDeriv volume x).toReal * ‖g x‖
+          = |Real.negMulLog ((ν.rnDeriv volume x).toReal)| := by
+        have hgx : g x = Real.log ((ν.rnDeriv volume x).toReal) := rfl
+        rw [hgx, Real.norm_eq_abs, Real.negMulLog_eq_neg, abs_neg, abs_mul, abs_of_nonneg hr_nn]
+      calc convDensityAdd (pnX n) (pnY n) x * ‖g x‖
+          ≤ (C * (ν.rnDeriv volume x).toReal) * ‖g x‖ :=
+            mul_le_mul_of_nonneg_right hstep (norm_nonneg _)
+        _ = C * ((ν.rnDeriv volume x).toReal * ‖g x‖) := by ring
+        _ = C * |Real.negMulLog ((ν.rnDeriv volume x).toReal)| := by rw [hg_log]
+        _ = bnd x := by rw [hbnd_def]
+    · -- `∀ᵐ x, convDensityAdd pnX pnY x · g x → convDensityAdd pX pY x · g x`.
+      filter_upwards [hB] with x hxB
+      exact hxB.mul_const (g x)
+  -- pull-back: `crossEntropySeq n =ᶠ -∫ (convDensityAdd pnX pnY)·g` (positive-mass `n`).
+  have hpull : (fun n => crossEntropySeq P X Y n)
+      =ᶠ[atTop] fun n => -∫ x, convDensityAdd (pnX n) (pnY n) x * g x ∂volume := by
+    filter_upwards [eventually_measure_truncSet_pos P hX hY] with n hpos
+    haveI : IsProbabilityMeasure (condTrunc P X Y n) :=
+      isProbabilityMeasure_condTrunc P hX hY hpos
+    set μn := (condTrunc P X Y n).map (fun ω => X ω + Y ω) with hμn_def
+    haveI : IsProbabilityMeasure μn := Measure.isProbabilityMeasure_map hsum_meas.aemeasurable
+    have hμn_ac : μn ≪ volume := map_condTrunc_absolutelyContinuous P hX hsum_meas hν_ac
+    -- `crossEntropySeq n = -∫ g ∂μn = -∫ (μn.rnDeriv vol).toReal • g ∂vol`.
+    have h1 : crossEntropySeq P X Y n = -∫ x, g x ∂μn := rfl
+    rw [h1, ← integral_rnDeriv_smul (μ := μn) (ν := volume) hμn_ac (f := g)]
+    -- `(μn.rnDeriv vol).toReal • g =ᵐ (convDensityAdd pnX pnY)·g`.
+    have hμn_dens : (fun x => (μn.rnDeriv volume x).toReal)
+        =ᵐ[volume] fun x => convDensityAdd (pnX n) (pnY n) x := by
+      have h := rnDeriv_map_condTrunc_sum_ae P hX hY hX_ac hY_ac hXY hpos
+      filter_upwards [h] with x hx
+      have hconv_nn : 0 ≤ convDensityAdd (pnX n) (pnY n) x :=
+        integral_nonneg (fun y => mul_nonneg ENNReal.toReal_nonneg ENNReal.toReal_nonneg)
+      rw [hμn_def, hx, ENNReal.toReal_ofReal hconv_nn]
+    congr 1
+    refine integral_congr_ae ?_
+    filter_upwards [hμn_dens] with x hx
+    rw [smul_eq_mul, hx]
+  -- limit target: `-∫ (convDensityAdd pX pY)·g = differentialEntropy ν`.
+  have htarget : -∫ x, convDensityAdd pX pY x * g x ∂volume = differentialEntropy ν := by
+    rw [show differentialEntropy ν
+        = ∫ x, Real.negMulLog ((ν.rnDeriv volume x).toReal) ∂volume from rfl]
+    rw [← integral_neg]
+    refine integral_congr_ae ?_
+    filter_upwards [hν_dens] with x hxν
+    have hgx : g x = Real.log ((ν.rnDeriv volume x).toReal) := rfl
+    rw [← hxν, hgx, Real.negMulLog_eq_neg]
+  -- assemble.
+  rw [← htarget]
+  exact Tendsto.congr' hpull.symm hDCT.neg
 
 /-- **crux usc 微分エントロピー版の有界性副産物**: `h(P_n.map(X+Y))` (= `h(μ_n)`) の列が
 `atTop` で上に有界 (`IsBoundedUnder (≤)`、genuine: Gibbs C + DCT D から) かつ下から co-有界
