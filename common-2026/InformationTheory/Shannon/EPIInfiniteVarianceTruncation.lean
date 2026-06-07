@@ -853,29 +853,237 @@ theorem entropyPowerExt_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabilityM
 
 /-! ### Helper 5 — RHS 収束 (plan §推奨分解 5) -/
 
+/-- **growing-set entropy 分解恒等式**: probability measure `μ` (a.c.+有限 entropy) を
+成長する切詰集合 `Sn := {|r|≤n}` で conditioning した測度の微分エントロピーは
+`h(cond μ Sn) = (m_n.toReal)⁻¹ · ∫ Sn.indicator (negMulLog ∘ q) ∂vol + log (m_n.toReal)`
+(`m_n := μ Sn`, `q x := (μ.rnDeriv vol x).toReal`)。
+`rnDeriv_cond_eq` (cond density formula) + `negMulLog_mul` + density の Sn 積分 = measure。 -/
+theorem differentialEntropy_cond_decomp (μ : Measure ℝ) [IsProbabilityMeasure μ]
+    {n : ℕ} (hpos : μ {r : ℝ | |r| ≤ (n : ℝ)} ≠ 0)
+    (hac : μ ≪ volume)
+    (hent : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
+    differentialEntropy (ProbabilityTheory.cond μ {r : ℝ | |r| ≤ (n : ℝ)})
+      = ((μ {r : ℝ | |r| ≤ (n : ℝ)}).toReal)⁻¹
+          * ∫ x, ({r : ℝ | |r| ≤ (n : ℝ)}).indicator
+              (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) x ∂volume
+        + Real.log ((μ {r : ℝ | |r| ≤ (n : ℝ)}).toReal) := by
+  classical
+  set Sn : Set ℝ := {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
+  have hSn_meas : MeasurableSet Sn :=
+    measurableSet_le measurable_norm measurable_const
+  set m : ℝ≥0∞ := μ Sn with hm_def
+  have hm_ne_top : m ≠ ∞ := measure_ne_top _ _
+  set q : ℝ → ℝ := fun x => ((μ.rnDeriv volume x).toReal) with hq_def
+  have hq_meas : Measurable q := (Measure.measurable_rnDeriv _ _).ennreal_toReal
+  have hq_int : Integrable q volume := Measure.integrable_toReal_rnDeriv
+  set c : ℝ := (m⁻¹).toReal with hc_def
+  -- cond density formula: rewrite the cond rnDeriv a.e.
+  have h_rn : (ProbabilityTheory.cond μ Sn).rnDeriv volume
+      =ᵐ[volume] fun x => m⁻¹ * Sn.indicator (μ.rnDeriv volume) x :=
+    rnDeriv_cond_eq μ hSn_meas hpos
+  -- `differentialEntropy (cond μ Sn) = ∫ Sn.indicator (q · negMulLog c + c · negMulLog q)`.
+  have h_ent_eq : differentialEntropy (ProbabilityTheory.cond μ Sn)
+      = ∫ x, Sn.indicator
+          (fun x => q x * Real.negMulLog c + c * Real.negMulLog (q x)) x ∂volume := by
+    unfold differentialEntropy
+    refine integral_congr_ae ?_
+    filter_upwards [h_rn] with x hx
+    rw [hx]
+    by_cases hxs : x ∈ Sn
+    · rw [Set.indicator_of_mem hxs
+          (f := fun x => q x * Real.negMulLog c + c * Real.negMulLog (q x)),
+        ENNReal.toReal_mul, Set.indicator_of_mem hxs (f := μ.rnDeriv volume)]
+      show Real.negMulLog (c * q x) = q x * Real.negMulLog c + c * Real.negMulLog (q x)
+      exact Real.negMulLog_mul c (q x)
+    · rw [Set.indicator_of_notMem hxs
+          (f := fun x => q x * Real.negMulLog c + c * Real.negMulLog (q x)),
+        Set.indicator_of_notMem hxs (f := μ.rnDeriv volume)]
+      simp only [mul_zero, ENNReal.toReal_zero, Real.negMulLog_zero]
+  rw [h_ent_eq]
+  -- split the indicator integral into the two terms.
+  have hsplit : (fun x => Sn.indicator
+      (fun x => q x * Real.negMulLog c + c * Real.negMulLog (q x)) x)
+      = fun x => Sn.indicator (fun x => q x * Real.negMulLog c) x
+        + Sn.indicator (fun x => c * Real.negMulLog (q x)) x := by
+    funext x
+    by_cases hxs : x ∈ Sn
+    · simp only [Set.indicator_of_mem hxs]
+    · simp only [Set.indicator_of_notMem hxs, add_zero]
+  rw [hsplit]
+  -- integrability of the two indicator pieces.
+  have h1_int : Integrable (fun x => Sn.indicator (fun x => q x * Real.negMulLog c) x) volume :=
+    (hq_int.mul_const (Real.negMulLog c)).indicator hSn_meas
+  have h2_int : Integrable (fun x => Sn.indicator (fun x => c * Real.negMulLog (q x)) x) volume :=
+    (hent.const_mul c).indicator hSn_meas
+  rw [integral_add h1_int h2_int]
+  -- first term: `∫ Sn.indicator (q · negMulLog c) = negMulLog c · (μ Sn).toReal`.
+  have h_term1 : ∫ x, Sn.indicator (fun x => q x * Real.negMulLog c) x ∂volume
+      = Real.negMulLog c * m.toReal := by
+    rw [integral_indicator hSn_meas]
+    rw [show (fun x => q x * Real.negMulLog c) = (fun x => Real.negMulLog c * q x) from by
+      funext x; ring]
+    rw [MeasureTheory.integral_const_mul]
+    rw [Measure.setIntegral_toReal_rnDeriv hac Sn, measureReal_def]
+  -- second term: `∫ Sn.indicator (c · negMulLog q) = c · ∫ Sn.indicator (negMulLog q)`.
+  have h_term2 : ∫ x, Sn.indicator (fun x => c * Real.negMulLog (q x)) x ∂volume
+      = c * ∫ x, Sn.indicator (fun x => Real.negMulLog (q x)) x ∂volume := by
+    rw [integral_indicator hSn_meas, integral_indicator hSn_meas]
+    rw [MeasureTheory.integral_const_mul]
+  rw [h_term1, h_term2]
+  -- `negMulLog c · m.toReal = log m.toReal` and `c = m.toReal⁻¹`.
+  have hm_pos : 0 < m.toReal := ENNReal.toReal_pos hpos hm_ne_top
+  have hc_eq : c = (m.toReal)⁻¹ := by
+    rw [hc_def, ENNReal.toReal_inv]
+  -- `negMulLog c * m.toReal = -c * log c * m.toReal = log m.toReal`.
+  have h_negc : Real.negMulLog c * m.toReal = Real.log m.toReal := by
+    have h1 : Real.negMulLog c = -c * Real.log c := rfl
+    rw [h1, hc_eq, Real.log_inv]
+    field_simp
+  rw [h_negc, hc_eq]
+  ring
+
 /-- **RHS 収束 (微分エントロピー版)**: `h(P_n.map Z) → h(P.map Z)` (各成分)。
 恒等式 `-∫ p_n log p_n = -(1/m_n)∫_{truncSet} p log p + log m_n`、第 1 項は固定可積分
 `p log p` の growing-set monotone/dominated convergence、第 2 項は `m_n → 1` → `log m_n → 0`。
-moment 非依存 (固定可積分関数 `p log p` のみ)。 -/
+moment 非依存 (固定可積分関数 `p log p` のみ)。
+
+⚠ signature 追加: bridge `map_condTrunc_eq_cond_map` を使うため `hZ : Z = X ∨ Z = Y`
+(成分制約) + `hXY` (独立性) が必要 (旧 `hZ : Measurable Z` を置換、可測性は `hZ` から導出)。
+両者とも structural/regularity precondition (結論 = entropy 収束を encode しない)。 -/
 theorem differentialEntropy_map_condTrunc_tendsto (P : Measure Ω) [IsProbabilityMeasure P]
-    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) {Z : Ω → ℝ} (hZ : Measurable Z)
+    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
+    {Z : Ω → ℝ} (hZ : Z = X ∨ Z = Y)
     (hZ_ac : (P.map Z) ≪ volume)
     (hZ_ent : Integrable (fun x => Real.negMulLog ((P.map Z).rnDeriv volume x).toReal) volume) :
     Tendsto (fun n => differentialEntropy ((condTrunc P X Y n).map Z)) atTop
       (𝓝 (differentialEntropy (P.map Z))) := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  classical
+  have hZmeas : Measurable Z := by rcases hZ with rfl | rfl; exacts [hX, hY]
+  haveI : IsProbabilityMeasure (P.map Z) :=
+    MeasureTheory.Measure.isProbabilityMeasure_map hZmeas.aemeasurable
+  -- abbreviations: `Sn n = {|r| ≤ n}`, `m_n = (P.map Z) (Sn n)`, `p x = ((P.map Z).rnDeriv vol x).toReal`.
+  set Sn : ℕ → Set ℝ := fun n => {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
+  have hSn_meas : ∀ n, MeasurableSet (Sn n) := fun n =>
+    measurableSet_le measurable_norm measurable_const
+  set p : ℝ → ℝ := fun x => ((P.map Z).rnDeriv volume x).toReal with hp_def
+  -- the `Sn n` are monotone increasing and exhaust `ℝ`.
+  have hSn_mono : Monotone Sn := by
+    intro a b hab r hr
+    have hab' : (a : ℝ) ≤ (b : ℝ) := by exact_mod_cast hab
+    exact le_trans hr hab'
+  have hSn_union : ⋃ n, Sn n = Set.univ := by
+    rw [Set.eq_univ_iff_forall]; intro r
+    obtain ⟨k, hk⟩ := exists_nat_ge (|r|)
+    exact Set.mem_iUnion.2 ⟨k, hk⟩
+  -- `m_n = (P.map Z) (Sn n) → 1`.
+  have hm_tendsto : Tendsto (fun n => (P.map Z) (Sn n)) atTop (𝓝 1) := by
+    have h := tendsto_measure_iUnion_atTop (μ := P.map Z) hSn_mono
+    rw [hSn_union, measure_univ] at h
+    exact h
+  -- eventually `(P.map Z) (Sn n) ≠ 0` and `P (truncSet X Y n) ≠ 0`.
+  have hSn_pos_ev : ∀ᶠ n in atTop, (P.map Z) (Sn n) ≠ 0 := by
+    have h_nhds : {x : ℝ≥0∞ | x ≠ 0} ∈ 𝓝 (1 : ℝ≥0∞) := isOpen_ne.mem_nhds one_ne_zero
+    exact hm_tendsto.eventually_mem h_nhds
+  have hpos_ev : ∀ᶠ n in atTop, P (truncSet X Y n) ≠ 0 :=
+    eventually_measure_truncSet_pos P hX hY
+  -- `m_n.toReal → 1`.
+  have hmreal_tendsto : Tendsto (fun n => ((P.map Z) (Sn n)).toReal) atTop (𝓝 (1 : ℝ)) := by
+    have := (ENNReal.tendsto_toReal (ENNReal.one_ne_top)).comp hm_tendsto
+    simpa using this
+  -- `c_n := (m_n.toReal)⁻¹ → 1`.
+  have hc_tendsto : Tendsto (fun n => ((P.map Z) (Sn n)).toReal⁻¹) atTop (𝓝 1) := by
+    have := (continuousAt_inv₀ (by norm_num : (1 : ℝ) ≠ 0)).tendsto.comp hmreal_tendsto
+    simpa using this
+  -- `log m_n.toReal → log 1 = 0`.
+  have hlogm_tendsto : Tendsto (fun n => Real.log ((P.map Z) (Sn n)).toReal) atTop (𝓝 0) := by
+    have := (Real.continuousAt_log (by norm_num : (1 : ℝ) ≠ 0)).tendsto.comp hmreal_tendsto
+    simpa [Real.log_one] using this
+  -- `∫ Sn.indicator (negMulLog ∘ p) → ∫ negMulLog ∘ p = h(P.map Z)` via DCT.
+  have hint_tendsto :
+      Tendsto (fun n => ∫ x, (Sn n).indicator
+          (fun x => Real.negMulLog (p x)) x ∂volume) atTop
+        (𝓝 (∫ x, Real.negMulLog (p x) ∂volume)) := by
+    refine tendsto_integral_of_dominated_convergence
+      (fun x => |Real.negMulLog (p x)|) ?_ ?_ ?_ ?_
+    · -- AEStronglyMeasurable of each indicator term.
+      intro n
+      refine (Measurable.aestronglyMeasurable ?_)
+      exact (Real.continuous_negMulLog.measurable.comp
+        ((Measure.measurable_rnDeriv _ _).ennreal_toReal)).indicator (hSn_meas n)
+    · -- bound integrable.
+      exact hZ_ent.abs
+    · -- pointwise bound: `‖Sn.indicator (negMulLog p) x‖ ≤ |negMulLog p x|`.
+      intro n
+      refine Filter.Eventually.of_forall (fun x => ?_)
+      by_cases hxn : x ∈ Sn n
+      · rw [Set.indicator_of_mem hxn, Real.norm_eq_abs]
+      · rw [Set.indicator_of_notMem hxn]; simp [abs_nonneg]
+    · -- pointwise limit: for each x, eventually `x ∈ Sn n`, so indicator → value.
+      refine Filter.Eventually.of_forall (fun x => ?_)
+      obtain ⟨k, hk⟩ := exists_nat_ge (|x|)
+      refine Tendsto.congr' ?_ tendsto_const_nhds
+      filter_upwards [Filter.eventually_ge_atTop k] with n hn
+      have hxn : x ∈ Sn n := le_trans hk (by exact_mod_cast hn)
+      rw [Set.indicator_of_mem hxn]
+  -- the integral equals `h(P.map Z)` (= `∫ negMulLog p`).
+  have hint_eq : (∫ x, Real.negMulLog (p x) ∂volume) = differentialEntropy (P.map Z) := rfl
+  rw [← hint_eq]
+  -- now assemble: the RHS sequence `c_n · term + log m_n` tends to `∫ negMulLog p`,
+  -- and eventually equals `h(condTrunc.map Z)`.
+  have hRHS_tendsto : Tendsto (fun n => ((P.map Z) (Sn n)).toReal⁻¹
+      * (∫ x, (Sn n).indicator (fun x => Real.negMulLog (p x)) x ∂volume)
+      + Real.log ((P.map Z) (Sn n)).toReal) atTop
+      (𝓝 (∫ x, Real.negMulLog (p x) ∂volume)) := by
+    have hmul : Tendsto (fun n => ((P.map Z) (Sn n)).toReal⁻¹
+        * ∫ x, (Sn n).indicator (fun x => Real.negMulLog (p x)) x ∂volume) atTop
+        (𝓝 (1 * ∫ x, Real.negMulLog (p x) ∂volume)) :=
+      hc_tendsto.mul hint_tendsto
+    have := hmul.add hlogm_tendsto
+    simpa using this
+  refine hRHS_tendsto.congr' ?_
+  filter_upwards [hpos_ev, hSn_pos_ev] with n hpos hSn_pos
+  rw [map_condTrunc_eq_cond_map P hX hY hXY hZ hpos,
+    differentialEntropy_cond_decomp (P.map Z) hSn_pos hZ_ac hZ_ent]
 
 /-- **RHS 収束 (entropyPower 版)**: `Nₑ(P_n.map Z) → Nₑ(P.map Z)`。
-微分エントロピー版を `entropyPowerExt = exp (2·h)` の連続変換で lift。 -/
+微分エントロピー版を `entropyPowerExt = exp (2·h)` の連続変換で lift。
+
+⚠ signature 追加: 微分エントロピー版 (`differentialEntropy_map_condTrunc_tendsto`) と
+per-n 有限 entropy (`integrable_negMulLog_map_condTrunc`、Z=X/Y で適用) のため
+`hZ : Z = X ∨ Z = Y` + `hXY` が必要 (旧 `hZ : Measurable Z` を置換)。
+structural/regularity precondition。 -/
 theorem entropyPowerExt_map_condTrunc_tendsto (P : Measure Ω) [IsProbabilityMeasure P]
-    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) {Z : Ω → ℝ} (hZ : Measurable Z)
+    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
+    {Z : Ω → ℝ} (hZ : Z = X ∨ Z = Y)
     (hZ_ac : (P.map Z) ≪ volume)
     (hZ_ent : Integrable (fun x => Real.negMulLog ((P.map Z).rnDeriv volume x).toReal) volume) :
     Tendsto (fun n => entropyPowerExt ((condTrunc P X Y n).map Z)) atTop
       (𝓝 (entropyPowerExt (P.map Z))) := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  have hZmeas : Measurable Z := by rcases hZ with rfl | rfl; exacts [hX, hY]
+  -- the differential-entropy version.
+  have hdiff := differentialEntropy_map_condTrunc_tendsto P hX hY hXY hZ hZ_ac hZ_ent
+  -- the continuous exp-lift map `g h := ofReal (exp (2h))`.
+  have hcont : Continuous (fun h : ℝ => ENNReal.ofReal (Real.exp (2 * h))) :=
+    ENNReal.continuous_ofReal.comp (Real.continuous_exp.comp (continuous_const.mul continuous_id))
+  -- limit side: `Nₑ (P.map Z) = ofReal (exp (2 h(P.map Z)))`.
+  have hlim_eq : entropyPowerExt (P.map Z)
+      = ENNReal.ofReal (Real.exp (2 * differentialEntropy (P.map Z))) :=
+    entropyPowerExt_of_ac_integrable hZ_ac hZ_ent
+  rw [hlim_eq]
+  -- lift the differential-entropy tendsto through `g`, then `Tendsto.congr'` over the
+  -- eventual positive-mass set where `Nₑ (condTrunc.map Z) = ofReal (exp (2 h))`.
+  have hlifted := (hcont.tendsto (differentialEntropy (P.map Z))).comp hdiff
+  refine hlifted.congr' ?_
+  filter_upwards [eventually_measure_truncSet_pos P hX hY] with n hpos
+  -- per-n: `(condTrunc.map Z) ≪ vol` and finite entropy ⟹ `Nₑ = ofReal (exp (2h))`.
+  have hac_n : ((condTrunc P X Y n).map Z) ≪ volume :=
+    map_condTrunc_absolutelyContinuous P hX hZmeas hZ_ac
+  have hent_n : Integrable
+      (fun x => Real.negMulLog (((condTrunc P X Y n).map Z).rnDeriv volume x).toReal) volume :=
+    integrable_negMulLog_map_condTrunc P hX hY hXY hZ hZ_ac hZ_ent hpos
+  show ENNReal.ofReal (Real.exp (2 * differentialEntropy ((condTrunc P X Y n).map Z)))
+      = entropyPowerExt ((condTrunc P X Y n).map Z)
+  exact (entropyPowerExt_of_ac_integrable hac_n hent_n).symm
 
 /-! ### Helper 6 — headline 法則版 + assembly (plan §推奨分解 6, Phase 4) -/
 
