@@ -1,5 +1,7 @@
 import InformationTheory.Shannon.EntropyPowerExt
 import InformationTheory.Shannon.EPIG2ConvEntropyMonotone
+import InformationTheory.Shannon.CondKLIntegral
+import InformationTheory.Shannon.EPIG2BridgeDensityHelpers
 import Mathlib.MeasureTheory.Group.LIntegral
 import Mathlib.Probability.Kernel.CondDistrib
 import Mathlib.Probability.Kernel.Composition.MeasureCompProd
@@ -147,6 +149,47 @@ theorem condDifferentialEntropyExt_indep_add_eq
       exact lintegral_ofReal_signed_negMulLog_rnDeriv_map_add_const (c * z) sign
   rw [hpart (fun r => r), hpart (fun r => -r)]
 
+/-- **EReal balance 補題** (crux ② finite 版 assemble の closure step)。
+ℝ≥0∞ 5 項 balance `a1 + b2 = a2 + k + b1` (b1, b2 有限) から、EReal の差分形
+`(a1:E) - (b1:E) = ((a2:E) - (b2:E)) + (k:E)` を得る。
+
+機構: b1, b2 を `EReal.coe_ennreal_toReal` で Real-coe `↑b1.toReal` / `↑b2.toReal` 化して
+finite subtrahend にし、`EReal.sub_add_cancel` / `EReal.add_sub_cancel_right` で両辺を
+`(a1:E) + (b2:E) = ((a2:E) + (k:E)) + (b1:E)` の cancel 形に持ち込み、`EReal.coe_ennreal_add`
+で coe をまとめ `EReal.coe_ennreal_eq_coe_ennreal_iff` で ℝ≥0∞ 等式 `hbal` に還元する。
+a1 / a2 / k が `⊤` でも b1, b2 finite なので cancellation は通る (casework 不要)。 -/
+theorem ereal_sub_eq_sub_add_of_ennreal_balance
+    (a1 b1 a2 b2 k : ℝ≥0∞) (hb1 : b1 ≠ ∞) (hb2 : b2 ≠ ∞)
+    (hbal : a1 + b2 = a2 + k + b1) :
+    ((a1 : EReal) - (b1 : EReal)) = (((a2 : EReal) - (b2 : EReal)) + (k : EReal)) := by
+  -- b1, b2 finite: rewrite their EReal-coe as the Real-coe of `.toReal` (finite subtrahends).
+  rw [← EReal.coe_ennreal_toReal hb1, ← EReal.coe_ennreal_toReal hb2]
+  -- It suffices to prove the cancel form `(a1:E) + ↑b2.toReal = ((a2:E) + (k:E)) + ↑b1.toReal`,
+  -- because adding ↑b1.toReal then subtracting ↑b2.toReal recovers the goal (finite cancels).
+  have key : (a1 : EReal) + (b2.toReal : EReal) = (((a2 : EReal) + (k : EReal)) + (b1.toReal : EReal)) := by
+    -- Reduce to the ℝ≥0∞ balance via `coe_ennreal_add`.
+    rw [EReal.coe_ennreal_toReal hb1, EReal.coe_ennreal_toReal hb2,
+      ← EReal.coe_ennreal_add, ← EReal.coe_ennreal_add, ← EReal.coe_ennreal_add,
+      EReal.coe_ennreal_eq_coe_ennreal_iff]
+    -- Goal: `a1 + b2 = a2 + k + b1` (= hbal).
+    exact hbal
+  -- From `key`, isolate `↑a1` by subtracting the finite `↑b2.toReal` (cancellation, b2 finite).
+  have ha1 : (a1 : EReal) = (((a2 : EReal) + (k : EReal)) + (b1.toReal : EReal)) - (b2.toReal : EReal) := by
+    rw [← key, EReal.add_sub_cancel_right]
+  -- Now compute the goal `↑a1 - ↑b1.toReal = (↑a2 - ↑b2.toReal) + ↑k`.
+  rw [ha1]
+  -- Goal: `↑a2 + ↑k + ↑b1.toReal - ↑b2.toReal - ↑b1.toReal = (↑a2 - ↑b2.toReal) + ↑k`.
+  -- All `± ↑(·.toReal)` summands are finite; convert to `+(-·)` form and reorganise in
+  -- the AddCommMonoid `EReal`, then cancel `↑b1.toReal + (-↑b1.toReal)`.
+  rw [sub_eq_add_neg, sub_eq_add_neg, sub_eq_add_neg]
+  -- Goal: `↑a2 + ↑k + ↑b1.toReal + (-↑b2.toReal) + (-↑b1.toReal) = ↑a2 + (-↑b2.toReal) + ↑k`.
+  -- Bring `↑b1.toReal` and `-↑b1.toReal` adjacent and cancel.
+  rw [add_right_comm (((a2 : EReal) + (k : EReal)) + (b1.toReal : EReal)) (-(b2.toReal : EReal))
+        (-(b1.toReal : EReal)),
+    add_assoc ((a2 : EReal) + (k : EReal)) (b1.toReal : EReal) (-(b1.toReal : EReal)),
+    ← EReal.coe_neg, ← EReal.coe_add, add_neg_cancel, EReal.coe_zero, add_zero,
+    add_right_comm (a2 : EReal) (k : EReal) (-(b2.toReal : EReal))]
+
 /-- **(②) EReal chain rule** (finiteness-free、crux 本体、未証明)。
 `h_ext(X) = h_ext(X | Z) + I(X;Z)`、`I = klDiv(joint ‖ product)` (ℝ≥0∞ → EReal coe、非負)。
 
@@ -198,5 +241,172 @@ theorem differentialEntropyExt_eq_condEntExt_add_klDiv
         + (((InformationTheory.klDiv ((μ.map Z) ⊗ₘ condDistrib X Z μ)
               ((μ.map Z) ⊗ₘ Kernel.const α (μ.map X))) : ℝ≥0∞) : EReal) := by
   sorry
+
+/-- **(②-finite) EReal chain rule, fibre-finiteness 版** (genuine、finite ② headline)。
+`h_ext(X) = h_ext(X | Z) + I(X;Z)` を **per-fibre 有限性 regularity** を取って genuine に建てる。
+
+finiteness-free 版 (`differentialEntropyExt_eq_condEntExt_add_klDiv`、`:191`、sorry) は per-fibre
+恒等式が mass 相殺に依存し、`ℝ≥0∞` に減算が無いため **証明不能と確定済**。本版は各 fibre `condDistrib X Z μ z`
+の有限性 (a.c. / 可積分 / KL 有限) を仮説に取り、step a' (`klDiv_compProd_lintegral`) / step b'
+(`klDiv_negMulLog_cross_balance_ennreal`) / step c' (`lintegral_condDistrib_cross_eq`、いずれも
+`@audit:ok`) を結線して closure する。
+
+全 11 仮説は regularity precondition (可測性 / 絶対連続性 / 可積分性 / KL 有限性 / ⊥ 除外) であり
+load-bearing でない: 結論 RHS の核 (klDiv 項 = I(X;Z)) を仮説に encode していない。`hκ_KL`
+(`klDiv (κz) ν ≠ ∞` a.e. z) は `hκ_ac` + `hκ_logp_int` + `hκ_cross_int` + (κz ≪ ν、`h_ac` 由来) から
+導出可能だが、step b' の `hKL` precondition を per-fibre で供給するための tractability 用に明示で取る
+(**redundant regularity、非 load-bearing**; 導出可能性が結論の核ではない)。`hcond_ne_bot` / `hX_ne_bot`
+は ⊥ 退化枝 (h(X|Z) = −∞ / h(X) = −∞) を honest に除外する scope (`⊥ + klDiv = ⊥` で恒等式が崩れる枝)。
+
+@audit を付けない (独立監査が後で classification + signature honesty を verify)。 -/
+theorem differentialEntropyExt_eq_condEntExt_add_klDiv_of_finite
+    {Ω α : Type*} [MeasurableSpace Ω] [MeasurableSpace α]
+    [MeasurableSpace.CountableOrCountablyGenerated α ℝ]
+    (X : Ω → ℝ) (Z : Ω → α) (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (hX : Measurable X) (hZ : Measurable Z) (hX_ac : (μ.map X) ≪ volume)
+    (h_ac : (μ.map Z) ⊗ₘ condDistrib X Z μ ≪ (μ.map Z) ⊗ₘ Kernel.const α (μ.map X))
+    (hκ_dens_meas : Measurable
+      (fun p : α × ℝ => ((condDistrib X Z μ p.1).rnDeriv volume p.2)))
+    (hκ_ac : ∀ᵐ z ∂(μ.map Z), condDistrib X Z μ z ≪ volume)
+    (hκ_logp_int : ∀ᵐ z ∂(μ.map Z), Integrable
+      (fun x => ((condDistrib X Z μ z).rnDeriv volume x).toReal
+        * Real.log (((condDistrib X Z μ z).rnDeriv volume x).toReal)) volume)
+    (hκ_cross_int : ∀ᵐ z ∂(μ.map Z), Integrable
+      (fun x => ((condDistrib X Z μ z).rnDeriv volume x).toReal
+        * Real.log (((μ.map X).rnDeriv volume x).toReal)) volume)
+    (hκ_KL : ∀ᵐ z ∂(μ.map Z), klDiv (condDistrib X Z μ z) (μ.map X) ≠ ∞)
+    (hcond_ne_bot : condDifferentialEntropyExt X Z μ ≠ ⊥)
+    (hX_ne_bot : differentialEntropyExt (μ.map X) ≠ ⊥) :
+    differentialEntropyExt (μ.map X)
+      = condDifferentialEntropyExt X Z μ
+        + (((InformationTheory.klDiv ((μ.map Z) ⊗ₘ condDistrib X Z μ)
+              ((μ.map Z) ⊗ₘ Kernel.const α (μ.map X))) : ℝ≥0∞) : EReal) := by
+  haveI : IsProbabilityMeasure (μ.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
+  haveI : IsProbabilityMeasure (μ.map Z) := Measure.isProbabilityMeasure_map hZ.aemeasurable
+  -- abbreviations
+  set μZ := μ.map Z with hμZ
+  set ν := μ.map X with hν
+  set κ := condDistrib X Z μ with hκ
+  -- positive / negative part lintegrals of the marginal `ν = μ.map X`
+  set a1 : ℝ≥0∞ :=
+    ∫⁻ x, ENNReal.ofReal (Real.negMulLog ((ν.rnDeriv volume x).toReal)) ∂volume with ha1
+  set b1 : ℝ≥0∞ :=
+    ∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((ν.rnDeriv volume x).toReal))) ∂volume with hb1
+  -- conditional positive / negative part lintegrals
+  set a2 : ℝ≥0∞ :=
+    ∫⁻ z, (∫⁻ x, ENNReal.ofReal (Real.negMulLog (((κ z).rnDeriv volume x).toReal)) ∂volume) ∂μZ
+    with ha2
+  set b2 : ℝ≥0∞ :=
+    ∫⁻ z, (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (((κ z).rnDeriv volume x).toReal))) ∂volume) ∂μZ
+    with hb2
+  -- joint KL
+  set k : ℝ≥0∞ := InformationTheory.klDiv (μZ ⊗ₘ κ) (μZ ⊗ₘ Kernel.const α ν) with hk
+  -- z-measurability of the four fibre lintegrals
+  -- z-measurability of the four fibre lintegrals (via `lintegral_prod_right'` on the joint
+  -- density measurability `hκ_dens_meas`).
+  have hpz_toReal : Measurable
+      (fun p : α × ℝ => (((κ p.1).rnDeriv volume p.2).toReal)) := hκ_dens_meas.ennreal_toReal
+  have hAz_meas : Measurable
+      (fun z => ∫⁻ x, ENNReal.ofReal (Real.negMulLog (((κ z).rnDeriv volume x).toReal)) ∂volume) :=
+    (((Real.continuous_negMulLog.measurable.comp hpz_toReal)).ennreal_ofReal).lintegral_prod_right'
+  have hBz_meas : Measurable
+      (fun z => ∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (((κ z).rnDeriv volume x).toReal))) ∂volume) :=
+    ((((Real.continuous_negMulLog.measurable.comp hpz_toReal)).neg).ennreal_ofReal).lintegral_prod_right'
+  -- per-fibre balance (step b'), a.e. z
+  have hfib : ∀ᵐ z ∂μZ,
+      (∫⁻ x, ENNReal.ofReal (Real.negMulLog (((κ z).rnDeriv volume x).toReal)) ∂volume)
+        + InformationTheory.klDiv (κ z) ν
+        + (∫⁻ x, ENNReal.ofReal (((κ z).rnDeriv volume x).toReal
+              * Real.log ((ν.rnDeriv volume x).toReal)) ∂volume)
+      = (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (((κ z).rnDeriv volume x).toReal))) ∂volume)
+        + (∫⁻ x, ENNReal.ofReal (-(((κ z).rnDeriv volume x).toReal
+              * Real.log ((ν.rnDeriv volume x).toReal))) ∂volume) := by
+    -- per-fibre absolute continuity `κ z ≪ ν` from the joint a.c. `h_ac`.
+    have hκν : ∀ᵐ z ∂μZ, κ z ≪ ν := by
+      filter_upwards [Measure.absolutelyContinuous_compProd_right_iff.mp h_ac] with z hz
+      simpa only [Kernel.const_apply] using hz
+    filter_upwards [hκ_ac, hκν, hκ_logp_int, hκ_cross_int, hκ_KL]
+      with z hzv hzν hzlogp hzcross hzKL
+    exact klDiv_negMulLog_cross_balance_ennreal (κ z) ν hzv hX_ac hzν hzlogp hzcross hzKL
+  -- joint KL = ∫⁻ fibre KL (step a')
+  have hk_eq : k = ∫⁻ z, InformationTheory.klDiv (κ z) ν ∂μZ := by
+    rw [hk, klDiv_compProd_lintegral h_ac]
+    refine lintegral_congr fun z => ?_
+    rw [Kernel.const_apply]
+  -- cross-term marginal collapse (step c', positive part: Cpos integrates to b1)
+  have hCpos_eq :
+      (∫⁻ z, (∫⁻ x, ENNReal.ofReal (((κ z).rnDeriv volume x).toReal
+            * Real.log ((ν.rnDeriv volume x).toReal)) ∂volume) ∂μZ) = b1 := by
+    -- step c' with `sign := id` (positive part), then fold `qν·log qν = -(negMulLog qν)`.
+    rw [lintegral_condDistrib_cross_eq X Z μ hX hZ hX_ac hκ_ac (fun r => r) measurable_id
+          (fun a b => rfl), hb1]
+    refine lintegral_congr fun x => ?_
+    congr 1
+    rw [Real.negMulLog_eq_neg]; ring
+  -- cross-term marginal collapse (step c', negative part: Cneg integrates to a1)
+  have hCneg_eq :
+      (∫⁻ z, (∫⁻ x, ENNReal.ofReal (-(((κ z).rnDeriv volume x).toReal
+            * Real.log ((ν.rnDeriv volume x).toReal))) ∂volume) ∂μZ) = a1 := by
+    -- step c' with `sign := Neg.neg` (negative part), then fold `-(qν·log qν) = negMulLog qν`.
+    rw [lintegral_condDistrib_cross_eq X Z μ hX hZ hX_ac hκ_ac (fun r => -r) measurable_neg
+          (fun a b => by ring), ha1]
+    refine lintegral_congr fun x => ?_
+    congr 1
+    rw [Real.negMulLog_eq_neg]
+  -- z-measurability of the cross positive part `Cpos_z` (needed for the LHS split below).
+  have hCpos_z_meas : Measurable
+      (fun z => ∫⁻ x, ENNReal.ofReal (((κ z).rnDeriv volume x).toReal
+          * Real.log ((ν.rnDeriv volume x).toReal)) ∂volume) := by
+    have hcross_meas : Measurable
+        (fun p : α × ℝ => ((κ p.1).rnDeriv volume p.2).toReal
+            * Real.log ((ν.rnDeriv volume p.2).toReal)) :=
+      hpz_toReal.mul ((Real.measurable_log.comp
+        (Measure.measurable_rnDeriv ν volume).ennreal_toReal).comp measurable_snd)
+    exact hcross_meas.ennreal_ofReal.lintegral_prod_right'
+  -- (★) ℝ≥0∞ balance `a1 + b2 = a2 + k + b1`
+  have hbal : a1 + b2 = a2 + k + b1 := by
+    -- Integrate the per-fibre balance `hfib` over `μZ`.
+    have hint_eq :
+        (∫⁻ z, ((∫⁻ x, ENNReal.ofReal (Real.negMulLog (((κ z).rnDeriv volume x).toReal)) ∂volume)
+            + InformationTheory.klDiv (κ z) ν
+            + (∫⁻ x, ENNReal.ofReal (((κ z).rnDeriv volume x).toReal
+                  * Real.log ((ν.rnDeriv volume x).toReal)) ∂volume)) ∂μZ)
+          = ∫⁻ z, ((∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (((κ z).rnDeriv volume x).toReal))) ∂volume)
+              + (∫⁻ x, ENNReal.ofReal (-(((κ z).rnDeriv volume x).toReal
+                    * Real.log ((ν.rnDeriv volume x).toReal))) ∂volume)) ∂μZ :=
+      lintegral_congr_ae hfib
+    -- LHS: regroup `A_z + KL_z + Cpos_z = (A_z + Cpos_z) + KL_z`, then split twice
+    -- (KL_z stays on the arbitrary side, so its measurability is not needed).
+    rw [lintegral_congr (g := fun z =>
+          ((∫⁻ x, ENNReal.ofReal (Real.negMulLog (((κ z).rnDeriv volume x).toReal)) ∂volume)
+            + (∫⁻ x, ENNReal.ofReal (((κ z).rnDeriv volume x).toReal
+                  * Real.log ((ν.rnDeriv volume x).toReal)) ∂volume))
+            + InformationTheory.klDiv (κ z) ν)
+          (fun z => by rw [add_right_comm]),
+        lintegral_add_left (hAz_meas.add hCpos_z_meas),
+        lintegral_add_left hAz_meas,
+        lintegral_add_left hBz_meas] at hint_eq
+    -- Identify each piece: `∫⁻ Cpos_z = b1`, `∫⁻ Cneg_z = a1`, `∫⁻ KL_z = k`,
+    -- and fold `∫⁻ A_z = a2`, `∫⁻ B_z = b2` (post-`rw` terms not auto-folded by `set`).
+    rw [hCpos_eq, hCneg_eq, ← hk_eq, ← ha2, ← hb2] at hint_eq
+    -- `hint_eq : a2 + b1 + k = b2 + a1`. Reassemble to the balance form (ℝ≥0∞ CommMonoid).
+    rw [add_right_comm a2 k b1, hint_eq, add_comm b2 a1]
+  -- b1, b2 ≠ ∞ from the ⊥-exclusion hypotheses (h(X) ≠ −∞, h(X|Z) ≠ −∞).
+  -- If `b1 = ∞`, then `(a1:E) - ⊤ = ⊥`, contradicting `differentialEntropyExt ν ≠ ⊥`.
+  have hb1_ne : b1 ≠ ∞ := by
+    intro h
+    rw [differentialEntropyExt_of_ac hX_ac, ← ha1, ← hb1, h,
+      EReal.coe_ennreal_eq_top_iff.mpr rfl, EReal.sub_top] at hX_ne_bot
+    exact hX_ne_bot rfl
+  -- If `b2 = ∞`, then `(a2:E) - ⊤ = ⊥`, contradicting `condDifferentialEntropyExt ≠ ⊥`.
+  have hb2_ne : b2 ≠ ∞ := by
+    intro h
+    rw [condDifferentialEntropyExt, ← ha2, ← hb2, h,
+      EReal.coe_ennreal_eq_top_iff.mpr rfl, EReal.sub_top] at hcond_ne_bot
+    exact hcond_ne_bot rfl
+  -- unfold both differential entropies into positive/negative part EReal differences
+  rw [differentialEntropyExt_of_ac hX_ac, condDifferentialEntropyExt]
+  -- close via the EReal balance helper
+  exact ereal_sub_eq_sub_add_of_ennreal_balance a1 b1 a2 b2 k hb1_ne hb2_ne hbal
 
 end InformationTheory.Shannon
