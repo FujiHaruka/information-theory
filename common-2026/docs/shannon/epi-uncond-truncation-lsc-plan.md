@@ -7,7 +7,7 @@
 
 ## 進捗
 
-- [ ] Phase 0 — feasibility gate (ターゲット確定 + truncation 構成 verbatim 検算) 📋
+- [x] Phase 0 — feasibility gate ✅ **GO** (2026-06-08、scratch `/tmp/route_beta_phase0.lean` 0 error/0 sorry)。weak-conv 回避確定、`hκ_dens_meas` を唯一の真 gap に局所化 (判断ログ 3)。
 - [ ] Phase 1 — skeleton (核 lemma signature を `:= by sorry` で立てる) 📋
 - [ ] Phase 2 — truncated W_n 構成 + per-n finite-entropy 単調性供給 📋
 - [ ] Phase 3 — n→∞ 極限 (単調収束 / EReal ⊤ 表現で weak-conv LSC 回避) 📋
@@ -238,6 +238,18 @@ proof-log: yes (極限 step が weak-conv LSC wall を回避できるかが feas
    は等式②を放棄し gateway 単調性の ⊤ 枝 (不等式) を truncation 近似で直接建てて無条件版② を bypass する。
    consumer chain (`EPIUncondMonotone.lean`) は全て (i-a) の transitive sorry のみ継承するので、⊤ 枝の
    無条件 closure で gateway が proof-done 昇格する (有限枝は finite ② / coe 枝で別途)。
+
+3. **Phase 0 gate = GO、risk を `hκ_dens_meas` に局所化 (2026-06-08)**: scratch `/tmp/route_beta_phase0.lean`
+   (0 error/0 sorry) で 3 核心問いを機械裏取り。**Q1 (核心)**: Fatou lift `A_W ≤ liminf A_{W_n}` が density a.e.
+   収束のみから fire (`klDiv_le_liminf_of_ae_tendsto` `EPIG2KLFatouLSC.lean:112` と完全同型、`klFun`→`negMulLog`
+   差替のみ、両者 continuous)。`A_W=⊤ ⟹ liminf A_{W_n}=⊤` を `top_le_iff` で確定 = ⊤ 枝 LSC が weak-conv 抜きで
+   立つ ⇒ `wall:entropy-lsc-weak` 回避確定 (L-Uncond-Y-roi 発動不要)。**Q2**: a.c. 保存 = `cond_absolutelyContinuous`
+   (`ConditionalProbability.lean:183`、`[IsProbabilityMeasure P]` のみ) + `.map hW |>.trans hW_ac` の 2 行、W 単独
+   truncation で十分 (route T joint `truncSet` 不要)。**Q3**: type-class leak 解消 (`CountableOrCountablyGenerated ℝ ℝ`
+   が `infer_instance` 自動)。finite ② 11 仮説の W_n discharge は `hκ_dens_meas` (joint 密度可測
+   `Measurable (fun p : α×ℝ => (condDistrib X Z μ p.1).rnDeriv vol p.2)`、loogle Found 0、Mathlib 不在) のみ **HARD**、
+   残 10 は OK/medium。**finite ② は in-tree consumer 0** ゆえ route β' Phase 2 が 11 仮説の初実地 discharge =
+   `hκ_dens_meas` が Phase 2 主リスク (撤退口 `sorry + @residual(plan:...)`、wall 化確定なら昇格)。
 
 2. **在庫 §1-C STALE / §4 sidestep の reconcile (2026-06-08)**: 在庫 `epi-uncond-truncation-lsc-inventory.md`
    の悲観 verdict (L-Uncond-3-scope 推奨) は **def-fix 以前 + Gaussian smoothing 前提**。§1-C「ℝ workhorse が
