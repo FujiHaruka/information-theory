@@ -137,6 +137,43 @@ theorem klDiv_compProd_toReal_integral
         filter_upwards [Kernel.rnDeriv_eq_rnDeriv_measure (κ := κ) (η := η) (a := z)] with y hy
         rw [hy]
 
+/-- **Conditional KL divergence, lintegral form** (Mathlib `ChainRule.lean` `TODO`, ℝ≥0∞ form).
+ℝ≥0∞ mirror of `klDiv_compProd_toReal_integral`: when the two joint measures share the first
+marginal `μ`, the (ℝ≥0∞-valued) KL divergence equals the `μ`-average of the fibrewise divergences,
+**with no integrability hypothesis** (ℝ≥0∞ Tonelli `lintegral_compProd` is unconditional). -/
+theorem klDiv_compProd_lintegral (h_ac : μ ⊗ₘ κ ≪ μ ⊗ₘ η) :
+    klDiv (μ ⊗ₘ κ) (μ ⊗ₘ η) = ∫⁻ z, klDiv (κ z) (η z) ∂μ := by
+  -- a.e. fibrewise absolute continuity
+  have h_fib : ∀ᵐ a ∂μ, κ a ≪ η a :=
+    Measure.absolutelyContinuous_compProd_right_iff.mp h_ac
+  -- ℝ≥0∞ integrand: `ofReal`-form of the slice klFun
+  set F : 𝓧 × 𝓨 → ℝ≥0∞ :=
+    fun p ↦ ENNReal.ofReal (klFun (Kernel.rnDeriv κ η p.1 p.2).toReal) with hF
+  have h_slice := rnDeriv_compProd_eq_kernel_rnDeriv (μ := μ) (κ := κ) (η := η) h_ac
+  have h_klfun_eq :
+      (fun p ↦ ENNReal.ofReal (klFun ((μ ⊗ₘ κ).rnDeriv (μ ⊗ₘ η) p).toReal)) =ᵐ[μ ⊗ₘ η] F := by
+    filter_upwards [h_slice] with p hp
+    rw [hF]; rw [hp]
+  have hF_meas : Measurable F := by
+    have h_rn : Measurable (Function.uncurry (Kernel.rnDeriv κ η)) :=
+      Kernel.measurable_rnDeriv κ η
+    rw [hF]
+    exact (measurable_klFun.comp
+      (h_rn.ennreal_toReal)).ennreal_ofReal
+  calc klDiv (μ ⊗ₘ κ) (μ ⊗ₘ η)
+      = ∫⁻ p, ENNReal.ofReal (klFun ((μ ⊗ₘ κ).rnDeriv (μ ⊗ₘ η) p).toReal) ∂(μ ⊗ₘ η) :=
+        klDiv_eq_lintegral_klFun_of_ac h_ac
+    _ = ∫⁻ p, F p ∂(μ ⊗ₘ η) := lintegral_congr_ae h_klfun_eq
+    _ = ∫⁻ z, ∫⁻ y, ENNReal.ofReal (klFun (Kernel.rnDeriv κ η z y).toReal) ∂(η z) ∂μ :=
+        Measure.lintegral_compProd hF_meas
+    _ = ∫⁻ z, klDiv (κ z) (η z) ∂μ := by
+        refine lintegral_congr_ae ?_
+        filter_upwards [h_fib] with z hz
+        rw [klDiv_eq_lintegral_klFun_of_ac hz]
+        refine lintegral_congr_ae ?_
+        filter_upwards [Kernel.rnDeriv_eq_rnDeriv_measure (κ := κ) (η := η) (a := z)] with y hy
+        rw [hy]
+
 /-- **Conditional KL divergence, integral form against a constant kernel.**
 Specialization of `klDiv_compProd_toReal_integral` to `η := Kernel.const 𝓧 ν`, the form used by
 the EPI G2 conditional differential-entropy bridge.
