@@ -3,6 +3,7 @@
 /.claude/settings.local.json
 /.claude/handoff*.md
 /.claude/scheduled_tasks.lock
+/.claude/.resume-pending
 
 # Honesty audit DB — point-in-time audit of the codebase, not tracked
 /docs/audit/*.db
