@@ -174,10 +174,10 @@ git branch | grep '^  worktree-agent-' | xargs -I {} git branch -D {}
 
 ## Handoff
 
-The `handoff` skill writes session state to `.claude/handoff.md` so the next session can `/resume` from it. Default behavior is user-triggered, but autonomously invoke it at end-of-turn when **both**:
+The `handoff` skill writes session state to `.claude/handoff.md` so the next session can `/carryon` from it. Default behavior is user-triggered, but autonomously invoke it at end-of-turn when **both**:
 
 - the turn's work is finished and there is a clear, concrete next action, **and**
-- this session is a continuation of a prior handoff (started via `/resume`, or otherwise picking up an in-flight thread).
+- this session is a continuation of a prior handoff (started via `/carryon`, or otherwise picking up an in-flight thread).
 
 If the session is ad-hoc — opened with no prior handoff context, scope unrelated to any in-flight work — do not autonomously hand off; wait for explicit instruction.
 

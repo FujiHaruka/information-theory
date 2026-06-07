@@ -17,5 +17,5 @@ SENTINEL="$CLAUDE_DIR/.resume-pending"
 rm -f "$SENTINEL"
 
 cat <<'JSON'
-{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"このセッションはあなた自身が context リフレッシュのために自己リセットしたものです (ユーザー操作ではありません)。直後に /resume が走り前作業を再開します。resume スキルに従い `.claude/handoff.md` から自走を継続してください。ユーザーへの確認は不要。停止するのは『タスク完了』『ユーザー判断が要る論点』『同じ壁で進捗が出ない』のいずれかに達したときだけです。"}}
+{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"このセッションはあなた自身が context リフレッシュのために自己リセットしたものです (ユーザー操作ではありません)。直後に /carryon が走り前作業を再開します。carryon スキルに従い `.claude/handoff.md` から自走を継続してください。ユーザーへの確認は不要。停止するのは『タスク完了』『ユーザー判断が要る論点』『同じ壁で進捗が出ない』のいずれかに達したときだけです。"}}
 JSON
