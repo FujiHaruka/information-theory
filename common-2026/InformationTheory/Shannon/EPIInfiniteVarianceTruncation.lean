@@ -596,6 +596,8 @@ verbatim 検証で判明)。genuine body は draft 済 (Jensen+Tonelli、~100 �
 theorem integrable_negPart_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) (hXY : IndepFun X Y P)
+    (hX_ent : Integrable (fun x => Real.negMulLog ((P.map X).rnDeriv volume x).toReal) volume)
+    (hY_ent : Integrable (fun x => Real.negMulLog ((P.map Y).rnDeriv volume x).toReal) volume)
     {n : ℕ} (hpos : P (truncSet X Y n) ≠ 0) :
     Integrable
       (fun x => max (-(Real.negMulLog
@@ -620,6 +622,8 @@ honest_residual (transitive: #7 の plan).
 theorem integrable_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) (hXY : IndepFun X Y P)
+    (hX_ent : Integrable (fun x => Real.negMulLog ((P.map X).rnDeriv volume x).toReal) volume)
+    (hY_ent : Integrable (fun x => Real.negMulLog ((P.map Y).rnDeriv volume x).toReal) volume)
     {n : ℕ} (hpos : P (truncSet X Y n) ≠ 0) :
     Integrable
       (fun x => Real.negMulLog
@@ -687,7 +691,7 @@ theorem integrable_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProbabilityMe
     Integrable.mono' hbound_int hg₁_meas hg₁_le
   -- negative part `g₂` integrable (the genuine core, supplied by the negPart lemma).
   have hg₂_int : Integrable g₂ volume :=
-    integrable_negPart_negMulLog_map_condTrunc_sum P hX hY hX_ac hY_ac hXY hpos
+    integrable_negPart_negMulLog_map_condTrunc_sum P hX hY hX_ac hY_ac hXY hX_ent hY_ent hpos
   -- `negMulLog r = g₁ - g₂` pointwise (`a = a⁺ - a⁻`).
   have hsplit : (fun x => Real.negMulLog (r x)) = fun x => g₁ x - g₂ x := by
     funext x
@@ -731,7 +735,7 @@ theorem entropyPowerExt_condTrunc_add_ge (P : Measure Ω) [IsProbabilityMeasure 
     (integrable_sq_condTrunc P hX hY hpos (Or.inr rfl))
     (integrable_negMulLog_map_condTrunc P hX hY hXY (Or.inl rfl) hX_ac hX_ent hpos)
     (integrable_negMulLog_map_condTrunc P hX hY hXY (Or.inr rfl) hY_ac hY_ent hpos)
-    (integrable_negMulLog_map_condTrunc_sum P hX hY hX_ac hY_ac hXY hpos)
+    (integrable_negMulLog_map_condTrunc_sum P hX hY hX_ac hY_ac hXY hX_ent hY_ent hpos)
 
 /-! ### Helper 3 — 優関数 + generalized Gibbs (plan §推奨分解 3) -/
 
@@ -1595,6 +1599,8 @@ C' の cross 可積分性供給に使う regularity precondition で load-bearin
 theorem differentialEntropy_condTrunc_sum_le_crossEntropy (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
+    (hX_ent : Integrable (fun x => Real.negMulLog ((P.map X).rnDeriv volume x).toReal) volume)
+    (hY_ent : Integrable (fun x => Real.negMulLog ((P.map Y).rnDeriv volume x).toReal) volume)
     (hent_sum : Integrable
       (fun x => Real.negMulLog ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume) :
     ∀ᶠ n in atTop,
@@ -1622,7 +1628,7 @@ theorem differentialEntropy_condTrunc_sum_le_crossEntropy (P : Measure Ω) [IsPr
   have hμ_ent : Integrable
       (fun x => Real.negMulLog
         (((condTrunc P X Y n).map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume :=
-    integrable_negMulLog_map_condTrunc_sum P hX hY hX_ac hY_ac hXY hpos
+    integrable_negMulLog_map_condTrunc_sum P hX hY hX_ac hY_ac hXY hX_ent hY_ent hpos
   have hcross : Integrable
       (fun x => Real.log ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal)
       ((condTrunc P X Y n).map (fun ω => X ω + Y ω)) :=
@@ -1811,6 +1817,8 @@ transitive のみ)、co-有界 `.2` (`IsCoboundedUnder` = 下界) のみ body �
 theorem differentialEntropy_condTrunc_sum_bddUnder (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
+    (hX_ent : Integrable (fun x => Real.negMulLog ((P.map X).rnDeriv volume x).toReal) volume)
+    (hY_ent : Integrable (fun x => Real.negMulLog ((P.map Y).rnDeriv volume x).toReal) volume)
     (hent_sum : Integrable
       (fun x => Real.negMulLog ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume) :
     IsBoundedUnder (· ≤ ·) atTop
@@ -1822,12 +1830,13 @@ theorem differentialEntropy_condTrunc_sum_bddUnder (P : Measure Ω) [IsProbabili
     have hC : ∀ᶠ n in atTop,
         differentialEntropy ((condTrunc P X Y n).map (fun ω => X ω + Y ω))
           ≤ crossEntropySeq P X Y n :=
-      differentialEntropy_condTrunc_sum_le_crossEntropy P hX hY hXY hX_ac hY_ac hent_sum
+      differentialEntropy_condTrunc_sum_le_crossEntropy
+        P hX hY hXY hX_ac hY_ac hX_ent hY_ent hent_sum
     have hD : Tendsto (fun n => crossEntropySeq P X Y n) atTop
         (𝓝 (differentialEntropy (P.map (fun ω => X ω + Y ω)))) :=
       crossEntropySeq_tendsto P hX hY hXY hX_ac hY_ac hent_sum
     exact hD.isBoundedUnder_le.mono_le hC
-  · -- cobounded below: compact-support fibre lower bound (genuine analytic core, parked).
+  · -- cobounded below: per-n EPI lower bound (genuine, Step 3 fill).
     -- @residual(plan:epi-infinite-variance-truncation-plan)
     sorry
 
@@ -1864,6 +1873,8 @@ transitive sorryAx は C'/D/boundedness の plan park 由来のみ (2026-06-07 �
 theorem differentialEntropy_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
+    (hX_ent : Integrable (fun x => Real.negMulLog ((P.map X).rnDeriv volume x).toReal) volume)
+    (hY_ent : Integrable (fun x => Real.negMulLog ((P.map Y).rnDeriv volume x).toReal) volume)
     (hent_sum : Integrable
       (fun x => Real.negMulLog ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume) :
     Filter.limsup
@@ -1874,13 +1885,15 @@ theorem differentialEntropy_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabil
   set hν : ℝ := differentialEntropy (P.map (fun ω => X ω + Y ω)) with hhν_def
   -- sub-helper C: `h_seq n ≤ RHS_n` eventually.
   have hC : ∀ᶠ n in atTop, h_seq n ≤ crossEntropySeq P X Y n :=
-    differentialEntropy_condTrunc_sum_le_crossEntropy P hX hY hXY hX_ac hY_ac hent_sum
+    differentialEntropy_condTrunc_sum_le_crossEntropy
+      P hX hY hXY hX_ac hY_ac hX_ent hY_ent hent_sum
   -- sub-helper D: `RHS_n → hν`.
   have hD : Tendsto (fun n => crossEntropySeq P X Y n) atTop (𝓝 hν) :=
     crossEntropySeq_tendsto P hX hY hXY hX_ac hY_ac hent_sum
   -- boundedness of `h_seq`.
   obtain ⟨_hbdd, hcobdd⟩ :=
-    differentialEntropy_condTrunc_sum_bddUnder P hX hY hXY hX_ac hY_ac hent_sum
+    differentialEntropy_condTrunc_sum_bddUnder
+      P hX hY hXY hX_ac hY_ac hX_ent hY_ent hent_sum
   -- `RHS_n` is bounded above (it converges).
   have hRHS_bdd : IsBoundedUnder (· ≤ ·) atTop (fun n => crossEntropySeq P X Y n) :=
     hD.isBoundedUnder_le
@@ -1919,6 +1932,8 @@ body 独自 sorry なし。(4) `#print axioms` = transitive sorryAx は #3/C'/D/
 theorem entropyPowerExt_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
+    (hX_ent : Integrable (fun x => Real.negMulLog ((P.map X).rnDeriv volume x).toReal) volume)
+    (hY_ent : Integrable (fun x => Real.negMulLog ((P.map Y).rnDeriv volume x).toReal) volume)
     (hent_sum : Integrable
       (fun x => Real.negMulLog ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume) :
     Filter.limsup
@@ -1956,14 +1971,15 @@ theorem entropyPowerExt_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabilityM
     have hent_n : Integrable
         (fun x => Real.negMulLog
           (((condTrunc P X Y n).map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume :=
-      integrable_negMulLog_map_condTrunc_sum P hX hY hX_ac hY_ac hXY hpos
+      integrable_negMulLog_map_condTrunc_sum P hX hY hX_ac hY_ac hXY hX_ent hY_ent hpos
     rw [entropyPowerExt_of_ac_integrable hac_n hent_n]
   -- limit rewrite: `Nₑ(ν) = g hν`.
   have hlim_eq : entropyPowerExt ν = g hν :=
     entropyPowerExt_of_ac_integrable hν_ac hent_sum
   -- boundedness for the monotone-continuous limsup push.
   obtain ⟨hbdd, hcobdd⟩ :=
-    differentialEntropy_condTrunc_sum_bddUnder P hX hY hXY hX_ac hY_ac hent_sum
+    differentialEntropy_condTrunc_sum_bddUnder
+      P hX hY hXY hX_ac hY_ac hX_ent hY_ent hent_sum
   -- `limsup Nₑ(μ_n) = limsup (g ∘ h_seq)`.
   have hcongr : Filter.limsup
       (fun n => entropyPowerExt ((condTrunc P X Y n).map (fun ω => X ω + Y ω))) atTop
@@ -1976,7 +1992,8 @@ theorem entropyPowerExt_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabilityM
   rw [← hpush]
   -- `g (limsup h_seq) ≤ g hν` by monotonicity + the differential-entropy usc (#3).
   refine hg_mono ?_
-  exact differentialEntropy_condTrunc_sum_limsup_le P hX hY hXY hX_ac hY_ac hent_sum
+  exact differentialEntropy_condTrunc_sum_limsup_le
+    P hX hY hXY hX_ac hY_ac hX_ent hY_ent hent_sum
 
 /-! ### Helper 5 — RHS 収束 (plan §推奨分解 5) -/
 
@@ -2278,6 +2295,7 @@ theorem entropyPowerExt_add_ge_infinite_variance_truncation
           (fun n => entropyPowerExt ((condTrunc P X Y n).map (fun ω => X ω + Y ω))) atTop :=
           Filter.limsup_le_limsup hper_n
     _ ≤ entropyPowerExt (P.map (fun ω => X ω + Y ω)) :=
-          entropyPowerExt_condTrunc_sum_limsup_le P hX hY hXY hX_ac hY_ac hent_sum
+          entropyPowerExt_condTrunc_sum_limsup_le
+            P hX hY hXY hX_ac hY_ac hX_ent hY_ent hent_sum
 
 end InformationTheory.Shannon.EPIInfiniteVarianceTruncation
