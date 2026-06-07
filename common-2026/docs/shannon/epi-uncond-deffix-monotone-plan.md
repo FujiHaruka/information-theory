@@ -71,7 +71,7 @@ def 修正は case-2 (mixed) を破る (`entropyPowerExt_mixed_add_ge:165` が `
 ## 4. 実装 campaign (Phase)
 
 - [x] **P1 def-fix** ✅ (`EntropyPowerExt.lean`、2026-06-06): 訂正 def (正部・負部 EReal 差) + `differentialEntropyExt_of_ac` (raw) + `_of_ac_integrable` (bridge、`integral_eq_lintegral_pos_part_sub_lintegral_neg_part` 経由) + `entropyPowerExt_of_ac_integrable` + `entropyPowerExt_eq_top_of_diffEntExt_top` (+∞→∞) + 特異枝不変 + sanity gate `_gaussianReal` を `integrable_negMulLog_gaussianReal_density` (新 helper、`memLp_id_gaussianReal` + `integrable_withDensity_iff`) で修復。**全 sorryAx-free** (`#print axioms` `[propext, Classical.choice, Quot.sound]`)。
-- [~] **P2 拡張単調性** `entropyPowerExt_mono_add` (`EPIUncondMonotone.lean:135`、2026-06-07 gateway atom 着手済) — **−∞ 枝 + EReal lift genuine、+∞ 伝播 (`:77`) + 有限枝 (`:120`) は sorry** (`@residual(plan:epi-uncond-deffix-monotone-plan)`、独立監査 PASS)。**+∞ 伝播の攻略は §7 が SoT** (route α = EReal-conditioning 本筋、multi-session moonshot 規模、当初「plumbing」見積りは machine 再評価で訂正)。
+- [~] **P2 拡張単調性** `entropyPowerExt_mono_add` (`EPIUncondMonotone.lean`、gateway atom) — **restructure 済 (§7-6) → 第一 chunk 着地 (§7-7)**: mono/top 伝播/(i-a) は ①③ 合成で genuine modulo ②、唯一の sorry = ② EReal chain rule (`EPIUncondCondEntropyExt.lean`、`@residual(plan:...)`、独立監査 honest_residual PASS)。**② 攻略は §7-6/§7-7 が SoT** (道 A self-build、multi-session moonshot、型壁で 2-3 session 詰まれば §7-4 で `wall:` 昇格)。
 - [x] **P3 dispatch 再構成** ✅ (`EPIUncondMixedCase.lean`、2026-06-06): case-2 `entropyPowerExt_mixed_add_ge` (+ symm) に finite-entropy 前提 `hX_ent`/`hW_ent` 追加 + `_of_ac_integrable` 使用 (genuine 維持)。case-1 の **false-as-stated だった bare sorry を named wall `entropyPowerExt_add_ge_finite_ac` (`@residual(wall:epi-finite-entropy-ac-classical)`) に置換**。dispatch は finite-entropy 4 前提を thread (方針 X partial scope)。**case-2/3/symm sorryAx-free 維持、唯一の sorry = named wall 1 本**。
 - [x] **P4 独立 honesty-auditor** ✅ (2026-06-06): 13 declaration 監査 = 11 ok / 1 honest_residual (named wall) / 1 dispatch transitive sorry / **0 defect**。訂正 def の退化非悪用 (±∞ 正写像) 機械検証、finite-entropy 前提の non-load-bearing 確認、`wall:epi-finite-entropy-ac-classical` 分類妥当性 (一般 a.c. 無限分散 = Lieb-Young 不在 loogle Found 0) を独立確認。`@audit:ok` 付与済。
 - [x] **P5 wall register 登録 + commit** ✅: `audit-tags.md` Wall name register に `epi-finite-entropy-ac-classical` 追記。
@@ -200,9 +200,33 @@ crux が単一恒等式に局所化された。**§7 の本線を「恒等式 (i
   道 B (KL 直接 density) = 入口 `klDiv_eq_lintegral_klFun_of_ac` は Mathlib 存在だが condDistrib rnDeriv ↔ W+V
   density の繋ぎが Mathlib 不在 (loogle `ProbabilityTheory.condDistrib, MeasureTheory.Measure.rnDeriv` Found 0)
   → 道 A 優先。
-- **着手順 (本線)**: ① EReal 版 fibre 同定 `condDifferentialEntropyExt_indep_add_eq` (定数 fibre、制約1 で軽い)
+- **着手順 (本線)**: ① EReal 版 fibre 同定 `condDifferentialEntropyExt_indep_add_eq` (定数 fibre、制約1 で軽い) ✅ **genuine 着地済 (§7-7)**
   → ② EReal chain rule `h_ext(X) = condDifferentialEntropyExt(X|Z) + (klDiv:EReal)` (Real bridge steps a/b/c の
-  lintegral 持ち上げ = crux 本体) → ③ ①② 合成で (i-a) → ④ gateway atom を「(i-a)+算術」の薄い 2-lemma に
-  rewrite (trichotomy 廃止)。
+  lintegral 持ち上げ = crux 本体) ← **現 crux、唯一の sorry** → ③ ①② 合成で (i-a) ✅ **sorry 消滅済 (§7-7)** → ④ gateway atom は ③ 経由で genuine modulo ②。
 - **classification 据置**: `plan:epi-uncond-deffix-monotone-plan` (known-shape self-build、Mathlib 壁でない)。
   道 A chain rule (②) が型壁で 2-3 session 詰まれば §7-4 判断点で `wall:` 昇格。
+
+### 7-7. 第一 chunk 着地 (2026-06-07、`EPIUncondCondEntropyExt.lean` 新規 + 独立監査 PASS)
+
+道 A の ①③ + def を genuine 着地、crux を ② に局所化。**新 file `InformationTheory/Shannon/EPIUncondCondEntropyExt.lean`** (4 decl):
+
+- **def `condDifferentialEntropyExt`** (genuine、`@audit:ok`): `differentialEntropyExt` の正部/負部 A/B を
+  `μ.map Z` 上の lintegral で平均した EReal 条件付き微分エントロピー (EReal Bochner を組まず ℝ≥0∞ `∫⁻` で well-defined)。
+- **helper `lintegral_ofReal_signed_negMulLog_rnDeriv_map_add_const`** (genuine、sorryAx-free): `differentialEntropy_map_add_const`
+  の lintegral 版平行移動不変性 (± を sign 引数化)。Mathlib 部品 (`lintegral_add_right_eq_self`/`MeasurableEmbedding.rnDeriv_map`) のみ、自作壁ゼロ。
+- **① `condDifferentialEntropyExt_indep_add_eq`** (genuine、sorryAx-free `[propext, Classical.choice, Quot.sound]`、`@audit:ok`):
+  Real 版 `condDifferentialEntropy_indep_add_eq` の `∫→∫⁻` ミラー。fibre 同定 (steps 1-2) は entropy 形非依存でコピー、内側を helper + 定数 fibre 平均で閉。
+- **② `differentialEntropyExt_eq_condEntExt_add_klDiv`** (sorry、`@residual(plan:...)`、独立監査 honest_residual PASS):
+  唯一の crux。precondition = measurability + `hX_ac` + `hcond_ne_bot` (= `condEntExt(X|Z) ≠ ⊥`、h(X|Z)=−∞ の偽枝除外、non-bundle)。
+
+`EPIUncondMonotone.lean` の (i-a) `differentialEntropyExt_indep_add_eq_add_klDiv` は ①③ 合成で **sorry 消滅** (`#print axioms` で
+sorryAx は ② transitive 継承のみ機械確認)、gateway atom `entropyPowerExt_mono_add` / mono / top 伝播も ② のみ継承。
+**② が closure すれば W-Y1 全体が一括 proof-done 昇格** (集約点単一)。
+
+**② 攻略の足掛かり (次 chunk)**: Real bridge `differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv` (差分形・8 integrability)
+を sum 形・finiteness-free に持ち上げる。Mathlib に finiteness-free KL chain rule `klDiv_compProd_eq_add`
+(`Mathlib/.../ChainRule.lean:204`、無仮定) 在。ただし「条件付き KL = fibrewise lintegral 平均」の直接分解は Mathlib **不在**
+(loogle: compProd KL は `klDiv_compProd_eq_add`/`_left` のみ) → in-tree `klDiv_compProd_const_toReal_integral` (`CondKLIntegral.lean`、
+`.toReal` 形) の ℝ≥0∞ 版自作 + per-fibre entropy↔KL 関係 (符号 delicate) + marginal collapse の lift が要 = multi-session。
+**監査 気づき (acyclic 注意)**: ② closure で conditioning 単調性 (`h(X|Z)≤h(X)`) を使うなら、その単調性を ② に依存させない
+順序を組む (`condDifferentialEntropy_le` の EReal 版を ② 証明に使う場合の循環回避)。
