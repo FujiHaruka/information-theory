@@ -131,6 +131,78 @@ theorem klDiv_toReal_eq_neg_differentialEntropy_sub_cross
   rw [hent]
   ring
 
+/-- **ℝ≥0∞ per-fibre balance** (crux ② step b', `klDiv_toReal_eq_neg_differentialEntropy_sub_cross`
+の all-nonneg ℝ≥0∞ 版)。fibre 微分エントロピー正部 `A := ∫⁻ ofReal(negMulLog p)`、KL、cross 正部
+`Cpos := ∫⁻ ofReal(p·log q)` の和が、負部 `B := ∫⁻ ofReal(-negMulLog p)` と cross 負部
+`Cneg := ∫⁻ ofReal(-(p·log q))` の和に等しい。減算を含まない恒等式 (assemble が lintegral_add で
+per-fibre に還元して消費)。fibre 有限性 (`h_logp_int`/`h_cross_int`/`hKL`) は genuine regularity
+precondition (load-bearing でない): KL 有限性は P ≪ ν の絶対連続性 + llr 可積分性を表明するだけで、
+per-fibre 恒等式の核 (= `klDiv_toReal_eq_neg_differentialEntropy_sub_cross`) を仮説に encode しない。
+5 項全有限なので両辺 `.toReal` の一致 (Real 兄弟 + pos/neg part 分解 + linarith) から ℝ≥0∞ 等式を得る。 -/
+theorem klDiv_negMulLog_cross_balance_ennreal
+    (P ν : Measure ℝ) [IsProbabilityMeasure P] [IsProbabilityMeasure ν]
+    (hPv : P ≪ volume) (hνv : ν ≪ volume) (hPν : P ≪ ν)
+    (h_logp_int : Integrable
+      (fun x => (P.rnDeriv volume x).toReal * Real.log ((P.rnDeriv volume x).toReal)) volume)
+    (h_cross_int : Integrable
+      (fun x => (P.rnDeriv volume x).toReal * Real.log ((ν.rnDeriv volume x).toReal)) volume)
+    (hKL : klDiv P ν ≠ ∞) :
+    (∫⁻ x, ENNReal.ofReal (Real.negMulLog ((P.rnDeriv volume x).toReal)) ∂volume)
+      + klDiv P ν
+      + (∫⁻ x, ENNReal.ofReal ((P.rnDeriv volume x).toReal
+            * Real.log ((ν.rnDeriv volume x).toReal)) ∂volume)
+    = (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((P.rnDeriv volume x).toReal))) ∂volume)
+      + (∫⁻ x, ENNReal.ofReal (-((P.rnDeriv volume x).toReal
+            * Real.log ((ν.rnDeriv volume x).toReal))) ∂volume) := by
+  set p := fun x => (P.rnDeriv volume x).toReal with hp
+  set q := fun x => (ν.rnDeriv volume x).toReal with hq
+  -- A := ∫⁻ ofReal(negMulLog p), B := ∫⁻ ofReal(-(negMulLog p)),
+  -- Cpos := ∫⁻ ofReal(p·log q), Cneg := ∫⁻ ofReal(-(p·log q)).
+  set A := ∫⁻ x, ENNReal.ofReal (Real.negMulLog (p x)) ∂volume with hA
+  set B := ∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (p x))) ∂volume with hB
+  set Cpos := ∫⁻ x, ENNReal.ofReal (p x * Real.log (q x)) ∂volume with hCpos
+  set Cneg := ∫⁻ x, ENNReal.ofReal (-(p x * Real.log (q x))) ∂volume with hCneg
+  -- Step 1: finiteness of the four lintegrals (template from `differentialEntropyExt_of_ac_integrable`).
+  have hbound : ∀ (f : ℝ → ℝ), Integrable f volume →
+      (∫⁻ x, ENNReal.ofReal (f x) ∂volume) ≠ ⊤ := by
+    intro f hf
+    refine ne_top_of_le_ne_top hf.hasFiniteIntegral.ne (lintegral_mono fun x => ?_)
+    rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs]
+    exact ENNReal.ofReal_le_ofReal (le_abs_self _)
+  -- `negMulLog p = -(p·log p)`, so `negMulLog ∘ p` is integrable (from `h_logp_int.neg`).
+  have h_negMulLog_int : Integrable (fun x => Real.negMulLog (p x)) volume := by
+    refine (h_logp_int.neg).congr (Filter.Eventually.of_forall (fun x => ?_))
+    simp only [Real.negMulLog_eq_neg, Pi.neg_apply, hp]
+  have hAfin : A ≠ ⊤ := hbound _ h_negMulLog_int
+  have hBfin : B ≠ ⊤ := hbound _ h_negMulLog_int.neg
+  have hCposfin : Cpos ≠ ⊤ := hbound _ h_cross_int
+  have hCnegfin : Cneg ≠ ⊤ := hbound _ h_cross_int.neg
+  -- Step 2: both sides ≠ ∞.
+  have hLHS_ne : A + klDiv P ν + Cpos ≠ ⊤ := by
+    refine ENNReal.add_ne_top.mpr ⟨ENNReal.add_ne_top.mpr ⟨hAfin, hKL⟩, hCposfin⟩
+  have hRHS_ne : B + Cneg ≠ ⊤ := ENNReal.add_ne_top.mpr ⟨hBfin, hCnegfin⟩
+  -- Step 3: reduce the ℝ≥0∞ equality to a `.toReal` equality.
+  rw [← ENNReal.toReal_eq_toReal_iff' hLHS_ne hRHS_ne]
+  -- Step 4: distribute `.toReal` over the sums.
+  rw [ENNReal.toReal_add (ENNReal.add_ne_top.mpr ⟨hAfin, hKL⟩) hCposfin,
+    ENNReal.toReal_add hAfin hKL, ENNReal.toReal_add hBfin hCnegfin]
+  -- Step 5: pos/neg part decomposition of the two real integrals.
+  -- `∫ negMulLog p = A.toReal - B.toReal` (this also gives `differentialEntropy P`).
+  have hdecomp_logp : differentialEntropy P = A.toReal - B.toReal := by
+    rw [differentialEntropy]
+    exact integral_eq_lintegral_pos_part_sub_lintegral_neg_part h_negMulLog_int
+  -- `∫ p·log q = Cpos.toReal - Cneg.toReal`.
+  have hdecomp_cross : (∫ x, p x * Real.log (q x) ∂volume) = Cpos.toReal - Cneg.toReal :=
+    integral_eq_lintegral_pos_part_sub_lintegral_neg_part h_cross_int
+  -- Step 6: Real sibling — `klDiv.toReal = -differentialEntropy P - ∫ p·log q`.
+  have hmass : P Set.univ = ν Set.univ := by rw [measure_univ, measure_univ]
+  have hKLreal : (klDiv P ν).toReal
+      = - differentialEntropy P - ∫ x, p x * Real.log (q x) ∂volume :=
+    klDiv_toReal_eq_neg_differentialEntropy_sub_cross P ν hPv hνv hPν hmass h_logp_int h_cross_int
+  -- Step 7: close by linear arithmetic.
+  rw [hKLreal, hdecomp_logp, hdecomp_cross]
+  ring
+
 /-! ## sub-gap (c) — Fubini + marginal identification -/
 
 /-- **Fubini + `condDistrib` marginal identification** (sub-gap (c), measure-level core).
