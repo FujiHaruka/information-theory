@@ -10,17 +10,19 @@
   - **コンパイラ生成の補助定義** (`_proof_` / `match_` / `recOn` / projection /
     notation 等) はデフォルトで畳み (passthrough)、人が書いた定理・定義だけが
     ノードになるようにする。`DEP_RAW=1` で補助定義も表示。
+  - **デフォルトは証明本体 (value) のみ追う**。型シグネチャ由来の依存
+    (型クラスインスタンス等のノイズ) は除外する。`DEP_WITH_TYPE=1` で型も含める。
 
   ## 実行 (環境変数で設定。通常は scripts/dep_graph.sh ラッパ経由)
 
-    DEP_ROOT=<完全修飾名> [DEP_OUT=out.dot] [DEP_PROOF_ONLY=1]
+    DEP_ROOT=<完全修飾名> [DEP_OUT=out.dot] [DEP_WITH_TYPE=1]
       [DEP_MAX_DEPTH=n] [DEP_RAW=1] lake env lean scripts/DepGraph.lean
 
   | env var          | 意味                                                       |
   |------------------|------------------------------------------------------------|
   | DEP_ROOT (必須)  | 起点 declaration の完全修飾名                               |
   | DEP_OUT          | 出力 dot ファイル (default: dep_graph.dot)                  |
-  | DEP_PROOF_ONLY   | set すると証明本体 (value) のみ追う。型シグネチャ依存は除外 |
+  | DEP_WITH_TYPE    | set すると型シグネチャ依存も含める (default: 証明本体のみ)  |
   | DEP_MAX_DEPTH    | 内部依存の展開深さ上限 (default: 無制限)                    |
   | DEP_RAW          | set すると auto-gen 補助定義も畳まずノード化                |
 -/
@@ -76,19 +78,19 @@ def moduleOf (env : Environment) (n : Name) : Name :=
 
 /-- グラフ生成の設定。 -/
 structure Config where
-  root      : Name
-  out       : String
-  proofOnly : Bool
-  raw       : Bool
-  maxDepth? : Option Nat
+  root        : Name
+  out         : String
+  includeType : Bool
+  raw         : Bool
+  maxDepth?   : Option Nat
 
 /-- declaration の type / value Expr に直接出現する定数参照の集合。
-    `proofOnly` のときは value (証明本体) のみ見る。 -/
+    デフォルトは value (証明本体) のみ。`includeType` のとき型シグネチャも見る。 -/
 def refsOf (env : Environment) (cfg : Config) (n : Name) : NameSet :=
   let collect (e : Expr) (acc : NameSet) : NameSet :=
     e.foldConsts acc (fun m s => s.insert m)
   let fromType (acc : NameSet) (t : Expr) : NameSet :=
-    if cfg.proofOnly then acc else collect t acc
+    if cfg.includeType then collect t acc else acc
   match env.find? n with
   | some (.thmInfo v)    => collect v.value (fromType {} v.type)
   | some (.defnInfo v)   => collect v.value (fromType {} v.type)
@@ -220,9 +222,9 @@ open Tooling.DepGraph in
   let cfg : Config := {
     root      := root
     out       := (← IO.getEnv "DEP_OUT").getD "dep_graph.dot"
-    proofOnly := (← envFlag "DEP_PROOF_ONLY")
-    raw       := (← envFlag "DEP_RAW")
-    maxDepth? := (← IO.getEnv "DEP_MAX_DEPTH").bind String.toNat?
+    includeType := (← envFlag "DEP_WITH_TYPE")
+    raw         := (← envFlag "DEP_RAW")
+    maxDepth?   := (← IO.getEnv "DEP_MAX_DEPTH").bind String.toNat?
   }
   let ref ← IO.mkRef ({} : GraphState)
   expand env cfg ref 0 root
@@ -237,5 +239,5 @@ open Tooling.DepGraph in
   IO.println s!"  root         : {root}"
   IO.println s!"  nodes        : {nodes.size}  (内部 {internal.length} / 外部 {nodes.size - internal.length})"
   IO.println s!"  edges        : {edgeCount}"
-  IO.println s!"  proof-only   : {cfg.proofOnly}   raw : {cfg.raw}   max-depth : {cfg.maxDepth?}"
+  IO.println s!"  include-type : {cfg.includeType}   raw : {cfg.raw}   max-depth : {cfg.maxDepth?}"
   IO.println s!"  画像化: dot -Tsvg {cfg.out} -o out.svg  (Graphviz)"

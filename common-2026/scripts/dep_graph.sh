@@ -15,10 +15,12 @@ usage: scripts/dep_graph.sh <RootDecl> [options]
   <RootDecl>           起点となる定理 / 定義の完全修飾名
                        例: InformationTheory.Shannon.differentialEntropy_dirac
 
+  デフォルトは証明本体の依存のみ追う (型シグネチャ由来の型クラスインスタンス等の
+  ノイズを除外)。型シグネチャの依存も含めたいときは --with-type を指定する。
+
 options:
   -o, --output <file>  出力 dot ファイル (default: dep_graph.dot)
-  --proof-only         証明本体 (value) のみ追う。型シグネチャの依存
-                       (型クラスインスタンス等) を除外してノイズを減らす
+  --with-type          型シグネチャの依存も含める (default: 証明本体のみ)
   --max-depth <n>      内部依存の展開深さ上限 (default: 無制限)
   --raw                auto-gen 補助定義 (_proof_/match_/recOn/projection 等) も
                        畳まずノード化する (default: 畳んで非表示)
@@ -28,7 +30,7 @@ options:
 
 例:
   scripts/dep_graph.sh InformationTheory.Shannon.differentialEntropy_dirac
-  scripts/dep_graph.sh My.Thm --proof-only -o thm.dot --svg
+  scripts/dep_graph.sh My.Thm --with-type -o thm.dot --svg
 
 出力された dot は Graphviz で画像化できます:
   dot -Tsvg dep_graph.dot -o dep_graph.svg
@@ -38,12 +40,12 @@ EOF
 ROOT=""
 OUT="dep_graph.dot"
 RENDER=""   # svg / png
-export DEP_PROOF_ONLY="" DEP_RAW="" DEP_MAX_DEPTH=""
+export DEP_WITH_TYPE="" DEP_RAW="" DEP_MAX_DEPTH=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -o|--output)   OUT="$2"; shift 2;;
-    --proof-only)  export DEP_PROOF_ONLY=1; shift;;
+    --with-type)   export DEP_WITH_TYPE=1; shift;;
     --raw)         export DEP_RAW=1; shift;;
     --max-depth)   export DEP_MAX_DEPTH="$2"; shift 2;;
     --svg)         RENDER="svg"; shift;;
