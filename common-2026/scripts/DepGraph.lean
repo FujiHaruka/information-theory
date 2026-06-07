@@ -37,6 +37,7 @@
   |------------------|------------------------------------------------------------|
   | DEP_RANK         | set するとランキングモード (DEP_ROOT より優先)             |
   | DEP_TOP          | 上位何件を表示するか (default: 20)                          |
+  | DEP_SORT         | ソート基準 total / internal / external (default: total)    |
 -/
 import Lean
 import InformationTheory
@@ -260,8 +261,26 @@ def depCounts (env : Environment) (cfg : Config)
   -- root は internal 前提。internal/total から root 1 件を差し引く。
   return (intCount - 1, nodes.size - intCount)
 
-/-- entry point を全列挙し、推移的依存数の降順に上位 `topN` を出力する。 -/
-def runRank (env : Environment) (cfg : Config) (topN : Nat) : IO Unit := do
+/-- ランキングのソートキー。`total` = 内部+外部、`internal` = プロジェクト内のみ
+    (自前の補題積み上げの厚み)、`external` = 外部 (Mathlib 等) のみ。 -/
+inductive SortKey where
+  | total | internal | external
+  deriving Inhabited, BEq
+
+/-- 文字列 → SortKey (未知の値は total)。 -/
+def SortKey.ofString : String → SortKey
+  | "internal" => .internal
+  | "external" => .external
+  | _          => .total
+
+def SortKey.label : SortKey → String
+  | .total    => "total (内部+外部)"
+  | .internal => "internal (プロジェクト内のみ)"
+  | .external => "external (外部のみ)"
+
+/-- entry point を全列挙し、依存数の降順に上位 `topN` を出力する。
+    `sortKey` でソート基準 (total / internal / external) を選ぶ。 -/
+def runRank (env : Environment) (cfg : Config) (topN : Nat) (sortKey : SortKey) : IO Unit := do
   let mut entries : Array Name := #[]
   for (n, _) in env.constants.toList do
     if isEntryPoint env n && isInInformationTheory env n then
@@ -271,11 +290,15 @@ def runRank (env : Environment) (cfg : Config) (topN : Nat) : IO Unit := do
   for ep in entries do
     let (intDeps, extDeps) ← depCounts env cfg cache ep
     rows := rows.push { name := ep, total := intDeps + extDeps, internal := intDeps, external := extDeps }
+  let keyOf (r : RankRow) : Nat :=
+    match sortKey with
+    | .total => r.total | .internal => r.internal | .external => r.external
   let sorted := rows.qsort (fun a b =>
-    if a.total == b.total then a.name.toString < b.name.toString else a.total > b.total)
+    if keyOf a == keyOf b then a.name.toString < b.name.toString else keyOf a > keyOf b)
   let typeNote := if cfg.includeType then "型シグネチャ込み" else "証明本体のみ"
   IO.println "==== InformationTheory 依存数ランキング (entry point 限定) ===="
   IO.println s!"  entry point 総数 : {entries.size}   表示 : 上位 {topN}   依存集計 : {typeNote}"
+  IO.println s!"  ソート基準 : {sortKey.label}"
   IO.println "  依存数 = 推移的に到達する declaration 数 (root 自身を除く / 内部は再帰展開・外部は葉)"
   IO.println ""
   IO.println ("  " ++ padLeft 4 "rank" ++ " " ++ padLeft 7 "total" ++ " "
@@ -304,7 +327,8 @@ open Tooling.DepGraph in
       raw         := (← envFlag "DEP_RAW")
       maxDepth?   := (← IO.getEnv "DEP_MAX_DEPTH").bind String.toNat?
     }
-    runRank env cfg topN
+    let sortKey := SortKey.ofString ((← IO.getEnv "DEP_SORT").getD "total")
+    runRank env cfg topN sortKey
     return
   -- 単一グラフモード (DEP_ROOT で指定)
   let rootStr := (← IO.getEnv "DEP_ROOT").getD ""
