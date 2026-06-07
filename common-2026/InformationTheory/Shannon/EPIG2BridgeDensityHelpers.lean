@@ -1,8 +1,11 @@
 import InformationTheory.Shannon.DifferentialEntropy
 import Mathlib.InformationTheory.KullbackLeibler.Basic
 import Mathlib.MeasureTheory.Measure.LogLikelihoodRatio
+import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
+import Mathlib.MeasureTheory.Integral.Lebesgue.Map
 import Mathlib.Probability.Kernel.CondDistrib
 import Mathlib.Probability.Kernel.Composition.IntegralCompProd
+import Mathlib.Probability.Kernel.Composition.MeasureCompProd
 
 /-!
 # EPI G2 bridge — density-expansion + Fubini-marginal helpers (sub-gaps (b), (c))
@@ -220,5 +223,108 @@ theorem integral_condDistrib_density_marginal_eq
   rw [integral_condDistrib_marginal_eq X Z μ hX hZ h_logq_int]
   -- Rewrite the marginal `∫ g ∂(μ.map X)` back into the density form against `volume`.
   rw [← integral_toReal_rnDeriv_mul (μ := μ.map X) (ν := volume) hX_ac]
+
+/-! ## sub-gap (c) — ℝ≥0∞ (finiteness-free) marginal collapse for crux ② -/
+
+/-- **ℝ≥0∞ Fubini + `condDistrib` marginal identification** (crux ② core).
+ℝ≥0∞ mirror of `integral_condDistrib_marginal_eq`: for `X : Ω → ℝ`, `Z : Ω → α`
+measurable and `g : ℝ → ℝ≥0∞` measurable, averaging the `X`-fibre lintegral of `g`
+over `μ.map Z` returns the `μ.map X` lintegral:
+
+`∫⁻ z, (∫⁻ x, g x ∂(condDistrib X Z μ z)) ∂(μ.map Z) = ∫⁻ x, g x ∂(μ.map X)`.
+
+ℝ≥0∞ Tonelli (`Measure.lintegral_compProd`) is unconditional, so unlike the `∫`/Bochner
+sibling no integrability hypothesis is needed — just measurability `hg`.
+
+Proof route: `compProd_map_condDistrib` identifies `(μ.map Z) ⊗ₘ condDistrib X Z μ`
+with `μ.map (fun ω => (Z ω, X ω))`; `Measure.lintegral_compProd` (Tonelli on
+`fun p => g p.2`) opens the joint lintegral into the iterated fibre lintegral; and
+`lintegral_map` reduces the joint lintegral to `∫⁻ x, g x ∂(μ.map X)` via the second
+projection. -/
+theorem lintegral_condDistrib_marginal_eq
+    {Ω α : Type*} [MeasurableSpace Ω] [MeasurableSpace α]
+    (X : Ω → ℝ) (Z : Ω → α) (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (hX : Measurable X) (hZ : Measurable Z) {g : ℝ → ℝ≥0∞} (hg : Measurable g) :
+    ∫⁻ z, (∫⁻ x, g x ∂(condDistrib X Z μ z)) ∂(μ.map Z) = ∫⁻ x, g x ∂(μ.map X) := by
+  -- The joint law `(μ.map Z) ⊗ₘ condDistrib X Z μ = μ.map (Z, X)`.
+  have hjoint : (μ.map Z) ⊗ₘ condDistrib X Z μ = μ.map (fun ω => (Z ω, X ω)) :=
+    compProd_map_condDistrib hX.aemeasurable
+  -- The second marginal of the joint is `μ.map X`.
+  have hsnd : (μ.map (fun ω => (Z ω, X ω))).map Prod.snd = μ.map X := by
+    rw [Measure.map_map measurable_snd (hZ.prodMk hX)]; rfl
+  have hgsnd : Measurable (fun p : α × ℝ => g p.2) := hg.comp measurable_snd
+  calc ∫⁻ z, (∫⁻ x, g x ∂(condDistrib X Z μ z)) ∂(μ.map Z)
+      = ∫⁻ p, g p.2 ∂((μ.map Z) ⊗ₘ condDistrib X Z μ) :=
+        (Measure.lintegral_compProd hgsnd).symm
+    _ = ∫⁻ p, g p.2 ∂(μ.map (fun ω => (Z ω, X ω))) := by rw [hjoint]
+    _ = ∫⁻ y, g y ∂((μ.map (fun ω => (Z ω, X ω))).map Prod.snd) :=
+        (lintegral_map hg measurable_snd).symm
+    _ = ∫⁻ x, g x ∂(μ.map X) := by rw [hsnd]
+
+/-- **ℝ≥0∞ cross-term marginal collapse** (crux ② core, sign-parametrized).
+ℝ≥0∞ mirror of `integral_condDistrib_density_marginal_eq`: the `μ.map Z`-average of the
+fibre cross-lintegral `∫⁻ x, ofReal (sign (pz_x · log qX_x)) ∂volume` (where
+`pz_x := (condDistrib X Z μ z -density x)`, `qX_x := (μ.map X -density x)`,
+`log qX_x := Real.log qX_x`) collapses to the marginal cross-lintegral against the
+`μ.map X` density.
+
+`hsign_hom` (`sign (a * b) = a * sign b`) lets the `pz`-factor commute out of `sign`,
+so `ofReal (pz · sign (log qX)) = ofReal pz · ofReal (sign (log qX))` (`ofReal_mul`,
+`pz ≥ 0`) and the `pz = (κz)-density` factor is absorbed via `lintegral_rnDeriv_mul`.
+The assembly instantiates `sign := id` (positive part) and `sign := Neg.neg` (negative
+part). `ofReal` clips negatives to 0, so the two instantiations split the signed
+cross-term into its `ℝ≥0∞` positive/negative parts.
+
+All hypotheses are regularity preconditions (measurability, absolute continuity,
+homogeneity of `sign`); the marginal collapse is the conclusion. -/
+theorem lintegral_condDistrib_cross_eq
+    {Ω α : Type*} [MeasurableSpace Ω] [MeasurableSpace α]
+    (X : Ω → ℝ) (Z : Ω → α) (μ : Measure Ω) [IsProbabilityMeasure μ]
+    (hX : Measurable X) (hZ : Measurable Z)
+    (hX_ac : (μ.map X) ≪ volume)
+    (hκ_ac : ∀ᵐ z ∂(μ.map Z), condDistrib X Z μ z ≪ volume)
+    (sign : ℝ → ℝ) (hsign_meas : Measurable sign)
+    (hsign_hom : ∀ a b : ℝ, sign (a * b) = a * sign b) :
+    ∫⁻ z, (∫⁻ x, ENNReal.ofReal (sign (((condDistrib X Z μ z).rnDeriv volume x).toReal
+            * Real.log (((μ.map X).rnDeriv volume x).toReal))) ∂volume) ∂(μ.map Z)
+      = ∫⁻ x, ENNReal.ofReal (sign (((μ.map X).rnDeriv volume x).toReal
+            * Real.log (((μ.map X).rnDeriv volume x).toReal))) ∂volume := by
+  haveI : IsProbabilityMeasure (μ.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
+  haveI : IsProbabilityMeasure (μ.map Z) := Measure.isProbabilityMeasure_map hZ.aemeasurable
+  -- The `z`-free `ℝ≥0∞` factor `g x := ofReal (sign (log qX_x))`.
+  set g : ℝ → ℝ≥0∞ :=
+    fun x => ENNReal.ofReal (sign (Real.log (((μ.map X).rnDeriv volume x).toReal))) with hg
+  have hg_meas : Measurable g := by
+    refine ENNReal.measurable_ofReal.comp (hsign_meas.comp (Real.measurable_log.comp ?_))
+    exact (Measure.measurable_rnDeriv (μ.map X) volume).ennreal_toReal
+  -- Step 1: per-fibre density rewrite. For a.e. `z` (with `κz ≪ volume`), the inner
+  -- volume-lintegral of the signed cross-term equals the fibre lintegral of `g`.
+  have hfib : ∀ᵐ z ∂(μ.map Z),
+      (∫⁻ x, ENNReal.ofReal (sign (((condDistrib X Z μ z).rnDeriv volume x).toReal
+          * Real.log (((μ.map X).rnDeriv volume x).toReal))) ∂volume)
+        = ∫⁻ x, g x ∂(condDistrib X Z μ z) := by
+    filter_upwards [hκ_ac] with z hz
+    -- a.e.[volume] rewrite of the integrand into `(κz).rnDeriv volume x * g x`.
+    have hrw : ∀ᵐ x ∂volume,
+        ENNReal.ofReal (sign (((condDistrib X Z μ z).rnDeriv volume x).toReal
+            * Real.log (((μ.map X).rnDeriv volume x).toReal)))
+          = (condDistrib X Z μ z).rnDeriv volume x * g x := by
+      filter_upwards [Measure.rnDeriv_lt_top (condDistrib X Z μ z) volume] with x hx
+      rw [hsign_hom, ENNReal.ofReal_mul ENNReal.toReal_nonneg,
+        ENNReal.ofReal_toReal hx.ne, hg]
+    rw [lintegral_congr_ae hrw,
+      lintegral_rnDeriv_mul hz hg_meas.aemeasurable]
+  rw [lintegral_congr_ae hfib]
+  -- Step 2: marginal core — average the fibre lintegral over `μ.map Z`.
+  rw [lintegral_condDistrib_marginal_eq X Z μ hX hZ hg_meas]
+  -- Step 3: reverse density rewrite — fold `∫⁻ g ∂(μ.map X)` back into the density form.
+  rw [← lintegral_rnDeriv_mul hX_ac hg_meas.aemeasurable]
+  refine lintegral_congr_ae ?_
+  filter_upwards [Measure.rnDeriv_lt_top (μ.map X) volume] with x hx
+  -- Goal: `(μ.map X).rnDeriv volume x * g x = ofReal (sign (qX · log qX))`.
+  rw [hg, show (μ.map X).rnDeriv volume x = ENNReal.ofReal (((μ.map X).rnDeriv volume x).toReal)
+        from (ENNReal.ofReal_toReal hx.ne).symm,
+    ← ENNReal.ofReal_mul ENNReal.toReal_nonneg, ← hsign_hom,
+    ENNReal.toReal_ofReal ENNReal.toReal_nonneg]
 
 end InformationTheory.Shannon
