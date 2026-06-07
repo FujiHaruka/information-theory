@@ -1,6 +1,7 @@
 import InformationTheory.Shannon.EntropyPowerExt
 import InformationTheory.Shannon.EPIUncondMixedCase
 import InformationTheory.Shannon.EPIInfiniteVarianceCapstone
+import InformationTheory.Shannon.EPIUncondCondEntropyExt
 import Mathlib.Analysis.SpecialFunctions.Log.ERealExp
 import Mathlib.MeasureTheory.Group.Convolution
 import Mathlib.Probability.Independence.Basic
@@ -85,7 +86,23 @@ theorem differentialEntropyExt_indep_add_eq_add_klDiv
       = differentialEntropyExt (P.map W)
         + (((InformationTheory.klDiv ((P.map V) ⊗ₘ condDistrib (fun ω => W ω + V ω) V P)
                 ((P.map V) ⊗ₘ Kernel.const ℝ (P.map (fun ω => W ω + V ω)))) : ℝ≥0∞) : EReal) := by
-  sorry
+  -- ① fibre 同定 (c=1): `condDifferentialEntropyExt (W+V | V) = h_ext(P.map W)`.
+  have hone : (fun ω => W ω + (1 : ℝ) * V ω) = (fun ω => W ω + V ω) := by
+    funext ω; rw [one_mul]
+  have hfibre : condDifferentialEntropyExt (fun ω => W ω + V ω) V P
+      = differentialEntropyExt (P.map W) := by
+    have := condDifferentialEntropyExt_indep_add_eq W V P 1 hW hV hWV hW_ac
+    rwa [hone] at this
+  -- W+V is a.c. (`hW_ac` + independence).
+  have hWV_ac : (P.map (fun ω => W ω + V ω)) ≪ volume :=
+    map_add_absolutelyContinuous W V P hW hV hWV hW_ac
+  -- The conditional extended entropy is `≠ ⊥` (it equals `h_ext(P.map W) ≠ ⊥`).
+  have hcond_ne_bot : condDifferentialEntropyExt (fun ω => W ω + V ω) V P ≠ ⊥ := by
+    rw [hfibre]; exact hW_ne_bot
+  -- ② chain rule with `X := W + V`, `Z := V`: `h_ext(W+V) = h_ext(W+V | V) + I(W+V; V)`.
+  have hchain := differentialEntropyExt_eq_condEntExt_add_klDiv
+    (fun ω => W ω + V ω) V P (hW.add hV) hV hWV_ac hcond_ne_bot
+  rw [hchain, hfibre]
 
 /-- **EReal レベル拡張単調性** (W-Y1): `W a.c. ∧ W ⊥ V ⟹
 `differentialEntropyExt (P.map W) ≤ differentialEntropyExt (P.map (W+V))`。
