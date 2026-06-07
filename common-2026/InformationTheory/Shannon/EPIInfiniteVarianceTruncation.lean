@@ -218,6 +218,93 @@ theorem map_condTrunc_absolutelyContinuous (P : Measure Ω) [IsProbabilityMeasur
   have h_cond : condTrunc P X Y n ≪ P := ProbabilityTheory.cond_absolutelyContinuous
   exact (h_cond.map hZ).trans hZ_ac
 
+/-- **marginal density bridge (linchpin)**: 同時 conditioning した測度 `condTrunc P X Y n`
+を成分 `Z` (= X or Y) で push-forward すると、**単成分 conditioning** に帰着する:
+`(condTrunc P X Y n).map Z = cond (P.map Z) {r | |r| ≤ n}`。
+既証明 `indepFun_condTrunc` と同じ独立 factoring (`P(truncSet) = P(X⁻¹Sn)·P(Y⁻¹Sn)`、
+他成分の mass `P(Y⁻¹Sn)` が相殺) を再利用する。
+honest: 結論は測度等式、仮説は独立性 + measurability + positive mass (regularity)。 -/
+theorem map_condTrunc_eq_cond_map (P : Measure Ω) [IsProbabilityMeasure P]
+    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
+    {Z : Ω → ℝ} (hZ : Z = X ∨ Z = Y) {n : ℕ} (hpos : P (truncSet X Y n) ≠ 0) :
+    (condTrunc P X Y n).map Z
+      = ProbabilityTheory.cond (P.map Z) {r : ℝ | |r| ≤ (n : ℝ)} := by
+  classical
+  set Sn : Set ℝ := {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
+  have hSn_meas : MeasurableSet Sn :=
+    measurableSet_le measurable_norm measurable_const
+  have hs_eq : truncSet X Y n = X ⁻¹' Sn ∩ Y ⁻¹' Sn := rfl
+  have hs_meas : MeasurableSet (truncSet X Y n) := measurableSet_truncSet hX hY n
+  -- mass of the conditioning set factors.
+  have h_mass : P (truncSet X Y n) = P (X ⁻¹' Sn) * P (Y ⁻¹' Sn) := by
+    rw [hs_eq]; exact hXY.measure_inter_preimage_eq_mul Sn Sn hSn_meas hSn_meas
+  have hPXSn_ne : P (X ⁻¹' Sn) ≠ 0 := by
+    intro h0; apply hpos; rw [h_mass, h0, zero_mul]
+  have hPYSn_ne : P (Y ⁻¹' Sn) ≠ 0 := by
+    intro h0; apply hpos; rw [h_mass, h0, mul_zero]
+  have hPs_top : P (truncSet X Y n) ≠ ∞ := measure_ne_top P _
+  have hPXSn_top : P (X ⁻¹' Sn) ≠ ∞ := measure_ne_top P _
+  have hPYSn_top : P (Y ⁻¹' Sn) ≠ ∞ := measure_ne_top P _
+  have hZmeas : Measurable Z := by rcases hZ with rfl | rfl; exacts [hX, hY]
+  -- The two halves of the argument are symmetric in `X ↔ Y`. We prove a generic
+  -- statement parametrised by which component plays the role of `Z`, using the
+  -- partner mass `P (W ⁻¹' Sn)` (`W` = the other component) which cancels out.
+  refine Measure.ext (fun A hA => ?_)
+  -- RHS: `cond (P.map Z) Sn A = (P (Z⁻¹Sn))⁻¹ * P (Z⁻¹(Sn ∩ A))`.
+  have hRHS : (ProbabilityTheory.cond (P.map Z) Sn) A
+      = (P (Z ⁻¹' Sn))⁻¹ * P (Z ⁻¹' (Sn ∩ A)) := by
+    rw [ProbabilityTheory.cond_apply hSn_meas (P.map Z) A,
+      Measure.map_apply hZmeas hSn_meas,
+      Measure.map_apply hZmeas (hSn_meas.inter hA), Set.preimage_inter]
+  -- LHS: `(condTrunc P X Y n).map Z A = condTrunc P X Y n (Z⁻¹A)`.
+  rw [Measure.map_apply hZmeas hA]
+  unfold condTrunc
+  rw [ProbabilityTheory.cond_apply hs_meas P, hRHS]
+  rcases hZ with rfl | rfl
+  · -- Z = X (subst makes `X` the surviving name `Z`): partner `P(Y⁻¹Sn)` cancels.
+    -- `truncSet Z Y n ∩ Z⁻¹A = Z⁻¹(Sn ∩ A) ∩ Y⁻¹Sn`.
+    have h_inter : truncSet Z Y n ∩ Z ⁻¹' A = Z ⁻¹' (Sn ∩ A) ∩ Y ⁻¹' Sn := by
+      rw [hs_eq]; ext ω
+      simp only [Set.mem_inter_iff, Set.mem_preimage]; tauto
+    rw [h_inter, hXY.measure_inter_preimage_eq_mul (Sn ∩ A) Sn (hSn_meas.inter hA) hSn_meas,
+      h_mass]
+    -- `(c*d)⁻¹ * (a*d) = c⁻¹ * a`  with `a = P(Z⁻¹(Sn∩A)), c = P(Z⁻¹Sn), d = P(Y⁻¹Sn)`.
+    rw [ENNReal.mul_inv (Or.inl hPXSn_ne) (Or.inl hPXSn_top)]
+    rw [mul_comm (P (Z ⁻¹' (Sn ∩ A))) (P (Y ⁻¹' Sn)), ← mul_assoc, mul_assoc _ _ (P (Y ⁻¹' Sn))]
+    rw [ENNReal.inv_mul_cancel hPYSn_ne hPYSn_top, mul_one]
+  · -- Z = Y (subst makes `Y` the surviving name `Z`): partner `P(X⁻¹Sn)` cancels.
+    -- `truncSet X Z n ∩ Z⁻¹A = X⁻¹Sn ∩ Z⁻¹(Sn ∩ A)`.
+    have h_inter : truncSet X Z n ∩ Z ⁻¹' A = X ⁻¹' Sn ∩ Z ⁻¹' (Sn ∩ A) := by
+      rw [hs_eq]; ext ω
+      simp only [Set.mem_inter_iff, Set.mem_preimage]; tauto
+    rw [h_inter, hXY.measure_inter_preimage_eq_mul Sn (Sn ∩ A) hSn_meas (hSn_meas.inter hA),
+      h_mass]
+    -- `(c*d)⁻¹ * (c*b) = d⁻¹ * b`  with `b = P(Z⁻¹(Sn∩A)), c = P(X⁻¹Sn), d = P(Z⁻¹Sn)`.
+    rw [ENNReal.mul_inv (Or.inl hPXSn_ne) (Or.inl hPXSn_top),
+      mul_mul_mul_comm (P (X ⁻¹' Sn))⁻¹ (P (Z ⁻¹' Sn))⁻¹ (P (X ⁻¹' Sn)) (P (Z ⁻¹' (Sn ∩ A))),
+      ENNReal.inv_mul_cancel hPXSn_ne hPXSn_top, one_mul]
+
+/-- **cond density formula**: probability measure `μ` を可測集合 `s` (positive mass) で
+conditioning した測度の Radon-Nikodym 微分は、indicator でカットしたものに正規化定数を
+掛けた形: `(cond μ s).rnDeriv volume =ᵐ (μ s)⁻¹ · 1_s · μ.rnDeriv volume`。
+`cond μ s = (μ s)⁻¹ • μ.restrict s` の scalar mul + restrict の rnDeriv で組立。 -/
+theorem rnDeriv_cond_eq (μ : Measure ℝ) [IsProbabilityMeasure μ] {s : Set ℝ}
+    (hs : MeasurableSet s) (hpos : μ s ≠ 0) :
+    (ProbabilityTheory.cond μ s).rnDeriv volume
+      =ᵐ[volume] fun x => (μ s)⁻¹ * s.indicator (μ.rnDeriv volume) x := by
+  have hr : (μ s)⁻¹ ≠ ∞ := ENNReal.inv_ne_top.mpr hpos
+  -- `cond μ s = (μ s)⁻¹ • μ.restrict s`, so its rnDeriv equals the scaled restrict rnDeriv.
+  have h1 : (ProbabilityTheory.cond μ s).rnDeriv volume
+      =ᵐ[volume] (μ s)⁻¹ • (μ.restrict s).rnDeriv volume := by
+    show ((μ s)⁻¹ • μ.restrict s).rnDeriv volume =ᵐ[volume] (μ s)⁻¹ • (μ.restrict s).rnDeriv volume
+    exact Measure.rnDeriv_smul_left_of_ne_top (μ.restrict s) volume hr
+  -- `(μ.restrict s).rnDeriv volume =ᵐ s.indicator (μ.rnDeriv volume)`.
+  have h2 : (μ.restrict s).rnDeriv volume =ᵐ[volume] s.indicator (μ.rnDeriv volume) :=
+    Measure.rnDeriv_restrict μ volume hs
+  refine h1.trans ?_
+  filter_upwards [h2] with x hx
+  simp only [Pi.smul_apply, hx, smul_eq_mul]
+
 /-! ### Helper 2 — per-n regularity 供給 (plan §推奨分解 2) -/
 
 /-- **per-n 有限 2 次モーメント** `Integrable ((Z ·)²) (condTrunc P X Y n)`。
@@ -247,12 +334,71 @@ theorem integrable_sq_condTrunc (P : Measure Ω) [IsProbabilityMeasure P]
 `(condTrunc P X Y n).map Z`。compact support → bounded density → integrable。
 黒箱 `entropyPowerExt_add_ge_of_finite_variance` の `hX_ent`/`hY_ent` 引数を再供給。 -/
 theorem integrable_negMulLog_map_condTrunc (P : Measure Ω) [IsProbabilityMeasure P]
-    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) {Z : Ω → ℝ} (hZ : Measurable Z)
-    (hZ_ac : (P.map Z) ≪ volume) {n : ℕ} (hpos : P (truncSet X Y n) ≠ 0) :
+    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
+    {Z : Ω → ℝ} (hZ : Z = X ∨ Z = Y)
+    (hZ_ac : (P.map Z) ≪ volume)
+    (hZ_ent : Integrable (fun x => Real.negMulLog ((P.map Z).rnDeriv volume x).toReal) volume)
+    {n : ℕ} (hpos : P (truncSet X Y n) ≠ 0) :
     Integrable
       (fun x => Real.negMulLog (((condTrunc P X Y n).map Z).rnDeriv volume x).toReal) volume := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  classical
+  set Sn : Set ℝ := {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
+  have hSn_meas : MeasurableSet Sn :=
+    measurableSet_le measurable_norm measurable_const
+  have hZmeas : Measurable Z := by rcases hZ with rfl | rfl; exacts [hX, hY]
+  haveI : IsProbabilityMeasure (P.map Z) :=
+    MeasureTheory.Measure.isProbabilityMeasure_map hZmeas.aemeasurable
+  -- positive mass of `Sn` under `P.map Z` (so that `cond` is the genuine conditioning).
+  have hSn_pos : (P.map Z) Sn ≠ 0 := by
+    rw [Measure.map_apply hZmeas hSn_meas]
+    -- `P (Z⁻¹Sn)` is one of the two factors of `P (truncSet X Y n)`.
+    have hfac : P (truncSet X Y n) = P (X ⁻¹' Sn) * P (Y ⁻¹' Sn) := by
+      show P (X ⁻¹' Sn ∩ Y ⁻¹' Sn) = _
+      exact hXY.measure_inter_preimage_eq_mul Sn Sn hSn_meas hSn_meas
+    rcases hZ with rfl | rfl
+    · intro h0; apply hpos; rw [hfac, h0, zero_mul]
+    · intro h0; apply hpos; rw [hfac, h0, mul_zero]
+  -- bridge (A): the pushforward of the conditioning equals single-component conditioning.
+  rw [map_condTrunc_eq_cond_map P hX hY hXY hZ hpos]
+  -- abbreviations: `m = (P.map Z) Sn`, `q x = ((P.map Z).rnDeriv volume x).toReal`.
+  set m : ℝ≥0∞ := (P.map Z) Sn with hm_def
+  set q : ℝ → ℝ := fun x => ((P.map Z).rnDeriv volume x).toReal with hq_def
+  have hm_ne_top : m ≠ ∞ := measure_ne_top _ _
+  -- cond density formula (B): rewrite the integrand a.e.
+  have h_rn : (ProbabilityTheory.cond (P.map Z) Sn).rnDeriv volume
+      =ᵐ[volume] fun x => m⁻¹ * Sn.indicator ((P.map Z).rnDeriv volume) x :=
+    rnDeriv_cond_eq (P.map Z) hSn_meas hSn_pos
+  -- target integrand `=ᵐ` the indicator-split form.
+  -- `q` itself is integrable (probability measure, finite, toReal rnDeriv).
+  have hq_int : Integrable q volume := Measure.integrable_toReal_rnDeriv
+  -- the two pieces, both restricted to `Sn`:
+  --   piece1 = negMulLog (m.toReal⁻¹) • (q · 1_Sn)   [from `y * negMulLog x` term]
+  --   piece2 = (m.toReal⁻¹) • (negMulLog q · 1_Sn)   [from `x * negMulLog y` term]
+  set c : ℝ := (m⁻¹).toReal with hc_def
+  have h_inner : Integrable
+      (fun x => q x * Real.negMulLog c + c * Real.negMulLog (q x)) volume := by
+    have h1 : Integrable (fun x => q x * Real.negMulLog c) volume := hq_int.mul_const _
+    have h2 : Integrable (fun x => c * Real.negMulLog (q x)) volume := hZ_ent.const_mul c
+    exact h1.add h2
+  have h_split : Integrable
+      (fun x => Sn.indicator (fun x => q x * Real.negMulLog c + c * Real.negMulLog (q x)) x)
+      volume := h_inner.indicator hSn_meas
+  refine h_split.congr ?_
+  -- a.e. identification of the indicator-split form with the original integrand.
+  filter_upwards [h_rn] with x hx
+  show Sn.indicator (fun x => q x * Real.negMulLog c + c * Real.negMulLog (q x)) x
+      = Real.negMulLog (((ProbabilityTheory.cond (P.map Z) Sn).rnDeriv volume x).toReal)
+  rw [hx]
+  by_cases hxs : x ∈ Sn
+  · rw [Set.indicator_of_mem hxs (f := fun x => q x * Real.negMulLog c + c * Real.negMulLog (q x)),
+      ENNReal.toReal_mul,
+      Set.indicator_of_mem hxs (f := (P.map Z).rnDeriv volume)]
+    show q x * Real.negMulLog c + c * Real.negMulLog (q x) = Real.negMulLog (c * q x)
+    exact (Real.negMulLog_mul c (q x)).symm
+  · rw [Set.indicator_of_notMem hxs
+      (f := fun x => q x * Real.negMulLog c + c * Real.negMulLog (q x)),
+      Set.indicator_of_notMem hxs (f := (P.map Z).rnDeriv volume)]
+    simp only [mul_zero, ENNReal.toReal_zero, Real.negMulLog_zero]
 
 /-- **per-n 和の有限微分エントロピー** (`hent_sum` 再供給)。compact support の和 X+Y も
 有界密度 → integrable。黒箱 `entropyPowerExt_add_ge_of_finite_variance` は `hent_sum` を
@@ -274,8 +420,10 @@ helper 1/2 で全 regularity を供給し、各 n (positive mass) で
 `Nₑ(P_n.map(X+Y)) ≥ Nₑ(P_n.map X) + Nₑ(P_n.map Y)` を得る。 -/
 theorem entropyPowerExt_condTrunc_add_ge (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) {n : ℕ}
-    (hpos : P (truncSet X Y n) ≠ 0) :
+    (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
+    (hX_ent : Integrable (fun x => Real.negMulLog ((P.map X).rnDeriv volume x).toReal) volume)
+    (hY_ent : Integrable (fun x => Real.negMulLog ((P.map Y).rnDeriv volume x).toReal) volume)
+    {n : ℕ} (hpos : P (truncSet X Y n) ≠ 0) :
     entropyPowerExt ((condTrunc P X Y n).map (fun ω => X ω + Y ω))
       ≥ entropyPowerExt ((condTrunc P X Y n).map X)
         + entropyPowerExt ((condTrunc P X Y n).map Y) := by
@@ -287,8 +435,8 @@ theorem entropyPowerExt_condTrunc_add_ge (P : Measure Ω) [IsProbabilityMeasure 
     (map_condTrunc_absolutelyContinuous P hX hY hY_ac)
     (integrable_sq_condTrunc P hX hY hpos (Or.inl rfl))
     (integrable_sq_condTrunc P hX hY hpos (Or.inr rfl))
-    (integrable_negMulLog_map_condTrunc P hX hY hX hX_ac hpos)
-    (integrable_negMulLog_map_condTrunc P hX hY hY hY_ac hpos)
+    (integrable_negMulLog_map_condTrunc P hX hY hXY (Or.inl rfl) hX_ac hX_ent hpos)
+    (integrable_negMulLog_map_condTrunc P hX hY hXY (Or.inr rfl) hY_ac hY_ent hpos)
     (integrable_negMulLog_map_condTrunc_sum P hX hY hX_ac hY_ac hXY hpos)
 
 /-! ### Helper 3 — 優関数 + generalized Gibbs (plan §推奨分解 3) -/
