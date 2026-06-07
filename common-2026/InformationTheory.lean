@@ -240,4 +240,5 @@ import InformationTheory.Shannon.EPICase1SmoothingLimit
 import InformationTheory.Shannon.EPIInfiniteVarianceTruncation
 import InformationTheory.Shannon.EPIInfiniteVarianceCapstone
 import InformationTheory.Shannon.EPIUncondDispatch
+import InformationTheory.Shannon.EPIUncondMonotone
 import InformationTheory.Shannon.EPIStamSupplyTwoTime
