@@ -819,13 +819,266 @@ theorem differentialEntropy_le_cross_entropy {μ ν : Measure ℝ}
   rw [h_split, h_int_log_μ_eq] at h_kl_nn
   linarith
 
+/-! ### Helper 3' — P 版 conv density 同定 + crux usc の解析核 sub-helper -/
+
+/-- **P 版 conv density 同定**: `(P.map(X+Y)).rnDeriv =ᵐ ofReal (convDensityAdd pX pY)`
+(`pX := (P.map X).rnDeriv vol |>.toReal`, `pY := (P.map Y).rnDeriv vol |>.toReal`)。
+`rnDeriv_map_condTrunc_sum_ae` の `condTrunc P X Y n` を `P` に読み替えた版。
+`indepSum_density_ae` を `P` 自体に適用。
+honest: 結論は a.e. 測度等式、仮説は独立 + measurability + a.c. (regularity)。
+@audit:ok -/
+theorem rnDeriv_map_sum_ae (P : Measure Ω) [IsProbabilityMeasure P]
+    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y)
+    (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) (hXY : IndepFun X Y P) :
+    (P.map (fun ω => X ω + Y ω)).rnDeriv volume
+      =ᵐ[volume] fun x => ENNReal.ofReal
+        (convDensityAdd (fun y => (P.map X).rnDeriv volume y |>.toReal)
+          (fun y => (P.map Y).rnDeriv volume y |>.toReal) x) := by
+  -- a.c. of the sum law.
+  have hXYac : (P.map (fun ω => X ω + Y ω)) ≪ volume := by
+    have hconv : P.map (fun ω => X ω + Y ω) = (P.map X) ∗ (P.map Y) := by
+      rw [show (fun ω => X ω + Y ω) = X + Y from rfl, hXY.map_add_eq_map_conv_map hX hY]
+    rw [hconv]; exact Measure.conv_absolutelyContinuous hY_ac
+  -- density witnesses.
+  set pX : ℝ → ℝ := fun y => (P.map X).rnDeriv volume y |>.toReal with hpX
+  set pY : ℝ → ℝ := fun y => (P.map Y).rnDeriv volume y |>.toReal with hpY
+  set pXY : ℝ → ℝ := fun y => (P.map (fun ω => X ω + Y ω)).rnDeriv volume y |>.toReal with hpXY
+  have hpX_meas : Measurable pX := (Measure.measurable_rnDeriv _ _).ennreal_toReal
+  have hpY_meas : Measurable pY := (Measure.measurable_rnDeriv _ _).ennreal_toReal
+  have hpXY_meas : Measurable pXY := (Measure.measurable_rnDeriv _ _).ennreal_toReal
+  have hpX_nn : ∀ x, 0 ≤ pX x := fun x => ENNReal.toReal_nonneg
+  have hpY_nn : ∀ x, 0 ≤ pY x := fun x => ENNReal.toReal_nonneg
+  have hpXY_nn : ∀ x, 0 ≤ pXY x := fun x => ENNReal.toReal_nonneg
+  -- withDensity laws (a.c. probability ⇒ recovered by `withDensity_rnDeriv_eq`).
+  haveI : IsProbabilityMeasure (P.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
+  haveI : IsProbabilityMeasure (P.map Y) := Measure.isProbabilityMeasure_map hY.aemeasurable
+  haveI : IsProbabilityMeasure (P.map (fun ω => X ω + Y ω)) :=
+    Measure.isProbabilityMeasure_map (hX.add hY).aemeasurable
+  have mk_law : ∀ (W : Ω → ℝ) (pW : ℝ → ℝ), Measurable W → (P.map W) ≪ volume
+      → pW = (fun y => (P.map W).rnDeriv volume y |>.toReal)
+      → P.map W = volume.withDensity (fun x => ENNReal.ofReal (pW x)) := by
+    intro W pW hWmeas hWac hpW_eq
+    haveI : IsProbabilityMeasure (P.map W) := Measure.isProbabilityMeasure_map hWmeas.aemeasurable
+    have hcongr : (fun x => ENNReal.ofReal (pW x))
+        =ᵐ[volume] (P.map W).rnDeriv volume := by
+      filter_upwards [(P.map W).rnDeriv_lt_top volume] with x hx
+      rw [hpW_eq]; exact ENNReal.ofReal_toReal hx.ne
+    rw [withDensity_congr_ae hcongr, Measure.withDensity_rnDeriv_eq _ _ hWac]
+  have hpX_law : P.map X = volume.withDensity (fun x => ENNReal.ofReal (pX x)) :=
+    mk_law X pX hX hX_ac hpX
+  have hpY_law : P.map Y = volume.withDensity (fun x => ENNReal.ofReal (pY x)) :=
+    mk_law Y pY hY hY_ac hpY
+  have hpXY_law : P.map (fun ω => X ω + Y ω)
+      = volume.withDensity (fun x => ENNReal.ofReal (pXY x)) :=
+    mk_law (fun ω => X ω + Y ω) pXY (hX.add hY) hXYac hpXY
+  have hpX_int : Integrable pX volume := Measure.integrable_toReal_rnDeriv
+  have hpY_int : Integrable pY volume := Measure.integrable_toReal_rnDeriv
+  -- lmasses.
+  have hlmass : ∀ (W : Ω → ℝ) (pW : ℝ → ℝ),
+      P.map W = volume.withDensity (fun x => ENNReal.ofReal (pW x))
+      → (∫⁻ x, ENNReal.ofReal (pW x) ∂volume) = (P.map W) Set.univ := by
+    intro W pW hlaw
+    rw [hlaw, withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ]
+  have hpX_lmass : (∫⁻ x, ENNReal.ofReal (pX x) ∂volume) = 1 := by
+    rw [hlmass X pX hpX_law]; exact measure_univ
+  have hpY_lmass : (∫⁻ x, ENNReal.ofReal (pY x) ∂volume) = 1 := by
+    rw [hlmass Y pY hpY_law]; exact measure_univ
+  have hpXY_lmass : (∫⁻ x, ENNReal.ofReal (pXY x) ∂volume) ≠ ⊤ := by
+    rw [hlmass (fun ω => X ω + Y ω) pXY hpXY_law]; exact measure_ne_top _ _
+  have hkey : pXY =ᵐ[volume] convDensityAdd pX pY :=
+    EPIStamSupplyTwoTime.indepSum_density_ae (P := P) X Y hX hY hXY
+      pX pY pXY hpX_nn hpX_meas hpY_nn hpY_meas hpX_law hpY_law hpXY_law
+      hpXY_nn hpXY_meas hpX_int hpY_int hpXY_lmass hpX_lmass hpY_lmass
+  have hrn_ofReal : (P.map (fun ω => X ω + Y ω)).rnDeriv volume
+      =ᵐ[volume] fun x => ENNReal.ofReal (pXY x) := by
+    filter_upwards [(P.map (fun ω => X ω + Y ω)).rnDeriv_lt_top volume] with x hx
+    exact (ENNReal.ofReal_toReal hx.ne).symm
+  filter_upwards [hrn_ofReal, hkey] with x hx hkx
+  rw [hx, hkx]
+
+/-- **sub-helper A — 優関数 `p_n∗q_n ≤ C²·(p∗q)`** (pointwise a.e. `z`)。
+固定 `n₀` (positive mass) に対し、`n ≥ n₀` で各成分の cond 密度
+`p_n := (condTrunc.map X).rnDeriv vol |>.toReal` が `C_X · pX` で上から抑えられ
+(`m_{X,n}⁻¹` の単調性、`C_X := m_{X,n₀}⁻¹`)、同様に `q_n ≤ C_Y · qY`。convolution 単調性
+で `p_n∗q_n ≤ C_X·C_Y·(pX∗qY)`。`C := C_X·C_Y`。`pX∗qY = ν 密度` (`rnDeriv_map_sum_ae`)。
+
+honest: 結論は優関数不等式 (a.e. pointwise bound)。仮説は a.c. + measurability + positive mass。
+和エントロピー可積分性 (結論) を仮説で受けていない。 -/
+theorem convDensity_condTrunc_le_const_mul (P : Measure Ω) [IsProbabilityMeasure P]
+    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
+    (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) {n₀ : ℕ}
+    (hpos₀ : P (truncSet X Y n₀) ≠ 0) :
+    ∃ C : ℝ, 0 ≤ C ∧ ∀ᶠ n in atTop, ∀ᵐ z ∂volume,
+      convDensityAdd (fun y => ((condTrunc P X Y n).map X).rnDeriv volume y |>.toReal)
+        (fun y => ((condTrunc P X Y n).map Y).rnDeriv volume y |>.toReal) z
+        ≤ C * convDensityAdd (fun y => (P.map X).rnDeriv volume y |>.toReal)
+            (fun y => (P.map Y).rnDeriv volume y |>.toReal) z := by
+  -- @residual(plan:epi-infinite-variance-truncation-plan)
+  sorry
+
+/-- **sub-helper B — 各点収束 `p_n∗q_n → p∗q`** (a.e. `z`)。
+`p_n → pX` a.e. (`m_{X,n} → 1`, `1_Sn → 1`)、`q_n → qY` a.e.、convolution 内 DCT
+(被積分関数収束 + 優関数 `C²·pX(x)qY(z-x)` 可積分) で各 `z` で
+`p_n∗q_n(z) → pX∗qY(z)`。
+
+honest: 結論は各点収束。仮説は a.c. + measurability。和エントロピー可積分性 (結論) を
+仮説で受けていない。 -/
+theorem convDensity_condTrunc_tendsto (P : Measure Ω) [IsProbabilityMeasure P]
+    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
+    (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) :
+    ∀ᵐ z ∂volume, Tendsto
+      (fun n => convDensityAdd (fun y => ((condTrunc P X Y n).map X).rnDeriv volume y |>.toReal)
+        (fun y => ((condTrunc P X Y n).map Y).rnDeriv volume y |>.toReal) z) atTop
+      (𝓝 (convDensityAdd (fun y => (P.map X).rnDeriv volume y |>.toReal)
+          (fun y => (P.map Y).rnDeriv volume y |>.toReal) z)) := by
+  -- @residual(plan:epi-infinite-variance-truncation-plan)
+  sorry
+
+/-- **cross-entropy 列** `RHS_n := -∫ log(ν 密度) ∂μ_n` (`μ_n := condTrunc.map(X+Y)`,
+`ν := P.map(X+Y)`)。crux usc の Gibbs 上界 + DCT 収束先を結ぶ補助量。 -/
+noncomputable def crossEntropySeq (P : Measure Ω) (X Y : Ω → ℝ) (n : ℕ) : ℝ :=
+  - ∫ x, Real.log ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal
+      ∂((condTrunc P X Y n).map (fun ω => X ω + Y ω))
+
+/-- **sub-helper C' — cross-entropy 可積分性 (per-n)**: `Integrable (log ν 密度) μ_n`
+(`ν := P.map(X+Y)`, `μ_n := condTrunc.map(X+Y)`)。`∫|log ν 密度| dμ_n ≤ C²∫|log ν 密度|(p∗q)
+< ∞` (優関数 sub-helper A + 和エントロピー可積分 `hent_sum`)。Gibbs sub-helper C の
+`h_cross_int` 前提を供給。
+
+honest: 結論は可積分性 (regularity)。仮説は a.c. + measurability + 和エントロピー可積分
+(regularity)。usc 結論を仮説で受けていない。 -/
+theorem crossEntropy_integrable_condTrunc_sum (P : Measure Ω) [IsProbabilityMeasure P]
+    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
+    (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
+    (hent_sum : Integrable
+      (fun x => Real.negMulLog ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume)
+    {n : ℕ} (hpos : P (truncSet X Y n) ≠ 0) :
+    Integrable
+      (fun x => Real.log ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal)
+      ((condTrunc P X Y n).map (fun ω => X ω + Y ω)) := by
+  -- @residual(plan:epi-infinite-variance-truncation-plan)
+  sorry
+
+/-- **sub-helper C — per-n Gibbs 上界**: `∀ᶠ n, h(μ_n) ≤ RHS_n`
+(`RHS_n = crossEntropySeq P X Y n`)。`differentialEntropy_le_cross_entropy`
+(`μ = μ_n`, `ν = P.map(X+Y)`) に per-n regularity (μ_n a.c.、μ_n ≪ ν、μ_n 有限 entropy #2、
+cross-entropy 可積分 C' `crossEntropy_integrable_condTrunc_sum`) を供給。
+
+genuine Gibbs 配線: μ_n a.c. (`map_condTrunc_absolutelyContinuous`)、ν a.c.
+(conv abs continuous)、μ_n ≪ ν (`cond_absolutelyContinuous` の `.map`)、μ_n 有限 entropy
+(#2 `integrable_negMulLog_map_condTrunc_sum`)、cross-entropy 可積分 (C') を
+`differentialEntropy_le_cross_entropy` に供給。body 独自 sorry なし (transitive: C' + #2)。
+
+honest: 結論は per-n 不等式 (Gibbs)。仮説は a.c. + measurability + 和エントロピー可積分
+(regularity)。usc 結論を仮説で受けていない。 -/
+theorem differentialEntropy_condTrunc_sum_le_crossEntropy (P : Measure Ω) [IsProbabilityMeasure P]
+    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
+    (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
+    (hent_sum : Integrable
+      (fun x => Real.negMulLog ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume) :
+    ∀ᶠ n in atTop,
+      differentialEntropy ((condTrunc P X Y n).map (fun ω => X ω + Y ω))
+        ≤ crossEntropySeq P X Y n := by
+  have hsum_meas : Measurable (fun ω => X ω + Y ω) := hX.add hY
+  have hν_ac : (P.map (fun ω => X ω + Y ω)) ≪ volume := by
+    have hconv : P.map (fun ω => X ω + Y ω) = (P.map X) ∗ (P.map Y) := by
+      rw [show (fun ω => X ω + Y ω) = X + Y from rfl, hXY.map_add_eq_map_conv_map hX hY]
+    rw [hconv]; exact Measure.conv_absolutelyContinuous hY_ac
+  filter_upwards [eventually_measure_truncSet_pos P hX hY] with n hpos
+  haveI : IsProbabilityMeasure (condTrunc P X Y n) :=
+    isProbabilityMeasure_condTrunc P hX hY hpos
+  haveI : IsProbabilityMeasure ((condTrunc P X Y n).map (fun ω => X ω + Y ω)) :=
+    Measure.isProbabilityMeasure_map hsum_meas.aemeasurable
+  haveI : IsProbabilityMeasure (P.map (fun ω => X ω + Y ω)) :=
+    Measure.isProbabilityMeasure_map hsum_meas.aemeasurable
+  -- regularity facts for the Gibbs lemma.
+  have hμ_ac : ((condTrunc P X Y n).map (fun ω => X ω + Y ω)) ≪ volume :=
+    map_condTrunc_absolutelyContinuous P hX hsum_meas hν_ac
+  have hμν : ((condTrunc P X Y n).map (fun ω => X ω + Y ω))
+      ≪ (P.map (fun ω => X ω + Y ω)) := by
+    have h_cond : condTrunc P X Y n ≪ P := ProbabilityTheory.cond_absolutelyContinuous
+    exact h_cond.map hsum_meas
+  have hμ_ent : Integrable
+      (fun x => Real.negMulLog
+        (((condTrunc P X Y n).map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume :=
+    integrable_negMulLog_map_condTrunc_sum P hX hY hX_ac hY_ac hXY hpos
+  have hcross : Integrable
+      (fun x => Real.log ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal)
+      ((condTrunc P X Y n).map (fun ω => X ω + Y ω)) :=
+    crossEntropy_integrable_condTrunc_sum P hX hY hXY hX_ac hY_ac hent_sum hpos
+  exact differentialEntropy_le_cross_entropy hμ_ac hν_ac hμν hμ_ent hcross
+
+/-- **sub-helper D — cross-entropy 列の収束**: `RHS_n → h(ν)` (`ν = P.map(X+Y)`)。
+`RHS_n = ∫ (-log ν 密度)·(p_n∗q_n) dvol` (μ_n 密度経由で vol に pull back)、各点収束
+(sub-helper B `p_n∗q_n → p∗q`) + 優関数 `|log ν 密度|·C²(p∗q)` 可積分
+(sub-helper A + `hent_sum`) で `tendsto_integral_of_dominated_convergence` →
+`-∫(p∗q)log(p∗q) = h(ν)`。
+
+honest: 結論は数列の収束。仮説は a.c. + measurability + 和エントロピー可積分 (regularity)。
+usc 結論を仮説で受けていない。 -/
+theorem crossEntropySeq_tendsto (P : Measure Ω) [IsProbabilityMeasure P]
+    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
+    (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
+    (hent_sum : Integrable
+      (fun x => Real.negMulLog ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume) :
+    Tendsto (fun n => crossEntropySeq P X Y n) atTop
+      (𝓝 (differentialEntropy (P.map (fun ω => X ω + Y ω)))) := by
+  -- @residual(plan:epi-infinite-variance-truncation-plan)
+  sorry
+
+/-- **crux usc 微分エントロピー版の有界性副産物**: `h(P_n.map(X+Y))` (= `h(μ_n)`) の列が
+`atTop` で上に有界 (`IsBoundedUnder (≤)`、genuine: Gibbs C + DCT D から) かつ下から co-有界
+(`IsCoboundedUnder (≤)`、compact support fibre 下界、park)。crux usc 本体
+(`differentialEntropy_condTrunc_sum_limsup_le`) の limsup 比較 + exp-lift
+(`entropyPowerExt_condTrunc_sum_limsup_le`) の `Monotone.map_limsup_of_continuousAt` で
+`bdd_above`/`cobdd` 前提を供給する。
+
+genuine: 上界 (`.1`) は sub-helper C (`h(μ_n) ≤ RHS_n`) + sub-helper D (`RHS_n → h(ν)` →
+`IsBoundedUnder`) + `IsBoundedUnder.mono_le` で genuine 組立。co-有界 (`.2`、下界) のみ
+fibre 下界解析が当該セッション規模を超え park (body 内 1 sorry)。
+
+honest: 結論は列の有界性 (regularity)。仮説は a.c. + measurability + 和エントロピー可積分
+(regularity precondition)。usc 不等式 (結論) を仮説で受けていない。 -/
+theorem differentialEntropy_condTrunc_sum_bddUnder (P : Measure Ω) [IsProbabilityMeasure P]
+    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
+    (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
+    (hent_sum : Integrable
+      (fun x => Real.negMulLog ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume) :
+    IsBoundedUnder (· ≤ ·) atTop
+        (fun n => differentialEntropy ((condTrunc P X Y n).map (fun ω => X ω + Y ω)))
+      ∧ IsCoboundedUnder (· ≤ ·) atTop
+        (fun n => differentialEntropy ((condTrunc P X Y n).map (fun ω => X ω + Y ω))) := by
+  refine ⟨?_, ?_⟩
+  · -- bounded above: from Gibbs (C) `h(μ_n) ≤ RHS_n` + RHS_n bounded (D converges).
+    have hC : ∀ᶠ n in atTop,
+        differentialEntropy ((condTrunc P X Y n).map (fun ω => X ω + Y ω))
+          ≤ crossEntropySeq P X Y n :=
+      differentialEntropy_condTrunc_sum_le_crossEntropy P hX hY hXY hX_ac hY_ac hent_sum
+    have hD : Tendsto (fun n => crossEntropySeq P X Y n) atTop
+        (𝓝 (differentialEntropy (P.map (fun ω => X ω + Y ω)))) :=
+      crossEntropySeq_tendsto P hX hY hXY hX_ac hY_ac hent_sum
+    exact hD.isBoundedUnder_le.mono_le hC
+  · -- cobounded below: compact-support fibre lower bound (genuine analytic core, parked).
+    -- @residual(plan:epi-infinite-variance-truncation-plan)
+    sorry
+
 /-! ### Helper 4 — crux usc (plan §推奨分解 4, genuine sub-wall 候補) -/
 
 /-- **crux usc (微分エントロピー版)**: `limsup_n h(P_n.map(X+Y)) ≤ h(P.map(X+Y))`。
 Gibbs step (`differentialEntropy_le_cross_entropy` で h(P_n.map(X+Y)) を cross-entropy
 `-∫(p_n∗q_n)log(p∗q)` で上から抑える) + cross-entropy DCT (優関数 `C²(p∗q)|log(p∗q)|`、
 和の有限微分エントロピーで可積分、`tendsto_integral_of_dominated_convergence` で
-`→ -∫(p∗q)log(p∗q) = h(p∗q)`)。本 moonshot の核。 -/
+`→ -∫(p∗q)log(p∗q) = h(p∗q)`)。本 moonshot の核。
+
+genuine assembly (2026-06-07): limsup chain `limsup h(μ_n) ≤ limsup RHS_n = h(ν)` を
+sub-helper C (`differentialEntropy_condTrunc_sum_le_crossEntropy`、per-n Gibbs) +
+sub-helper D (`crossEntropySeq_tendsto`、RHS 収束) + boundedness
+(`differentialEntropy_condTrunc_sum_bddUnder`) を black box として genuine 組立。
+解析核 (Gibbs 前提供給 / DCT) は C/D に局所化、本 body の独自 sorry なし
+(transitive sorry は C/D/boundedness の plan park)。
+
+honest: signature の `hent_sum` は regularity precondition (有限微分エントロピー)、結論
+(usc 不等式) を encode しない。body は C/D/boundedness を呼ぶ限り genuine。 -/
 theorem differentialEntropy_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
@@ -834,12 +1087,40 @@ theorem differentialEntropy_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabil
     Filter.limsup
       (fun n => differentialEntropy ((condTrunc P X Y n).map (fun ω => X ω + Y ω))) atTop
       ≤ differentialEntropy (P.map (fun ω => X ω + Y ω)) := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  set h_seq : ℕ → ℝ :=
+    fun n => differentialEntropy ((condTrunc P X Y n).map (fun ω => X ω + Y ω)) with hseq_def
+  set hν : ℝ := differentialEntropy (P.map (fun ω => X ω + Y ω)) with hhν_def
+  -- sub-helper C: `h_seq n ≤ RHS_n` eventually.
+  have hC : ∀ᶠ n in atTop, h_seq n ≤ crossEntropySeq P X Y n :=
+    differentialEntropy_condTrunc_sum_le_crossEntropy P hX hY hXY hX_ac hY_ac hent_sum
+  -- sub-helper D: `RHS_n → hν`.
+  have hD : Tendsto (fun n => crossEntropySeq P X Y n) atTop (𝓝 hν) :=
+    crossEntropySeq_tendsto P hX hY hXY hX_ac hY_ac hent_sum
+  -- boundedness of `h_seq`.
+  obtain ⟨_hbdd, hcobdd⟩ :=
+    differentialEntropy_condTrunc_sum_bddUnder P hX hY hXY hX_ac hY_ac hent_sum
+  -- `RHS_n` is bounded above (it converges).
+  have hRHS_bdd : IsBoundedUnder (· ≤ ·) atTop (fun n => crossEntropySeq P X Y n) :=
+    hD.isBoundedUnder_le
+  -- `limsup h_seq ≤ limsup RHS_n = hν`.
+  calc Filter.limsup h_seq atTop
+      ≤ Filter.limsup (fun n => crossEntropySeq P X Y n) atTop :=
+        Filter.limsup_le_limsup hC hcobdd hRHS_bdd
+    _ = hν := hD.limsup_eq
 
 /-- **crux usc (entropyPower 版)**: `limsup_n Nₑ(P_n.map(X+Y)) ≤ Nₑ(P.map(X+Y))`。
 微分エントロピー版 (`differentialEntropy_condTrunc_sum_limsup_le`) を `entropyPowerExt`
-= `exp (2·h)` の単調連続変換で lift。 -/
+= `ENNReal.ofReal (exp (2·h))` の単調連続変換で lift。
+
+機構 (`g h := ofReal(exp(2h))`、単調連続):
+- per-n: `Nₑ(μ_n) = g(h(μ_n))` (`μ_n` a.c. `map_condTrunc_absolutelyContinuous` + 有限
+  entropy #2 `integrable_negMulLog_map_condTrunc_sum`、`entropyPowerExt_of_ac_integrable`)。
+- limit: `Nₑ(ν) = g(h(ν))` (ν a.c. + `hent_sum`)。
+- `limsup Nₑ(μ_n) = limsup (g∘h(μ_n)) = g(limsup h(μ_n))`
+  (`Monotone.map_limsup_of_continuousAt`、有界性は `differentialEntropy_condTrunc_sum_bddUnder`)
+  `≤ g(h(ν)) = Nₑ(ν)` (g 単調 + #3 `differentialEntropy_condTrunc_sum_limsup_le`)。
+
+`hent_sum` は regularity precondition (有限微分エントロピー)、結論を encode しない。 -/
 theorem entropyPowerExt_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
@@ -848,8 +1129,59 @@ theorem entropyPowerExt_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabilityM
     Filter.limsup
       (fun n => entropyPowerExt ((condTrunc P X Y n).map (fun ω => X ω + Y ω))) atTop
       ≤ entropyPowerExt (P.map (fun ω => X ω + Y ω)) := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  set ν := P.map (fun ω => X ω + Y ω) with hν_def
+  have hsum_meas : Measurable (fun ω => X ω + Y ω) := hX.add hY
+  haveI : IsProbabilityMeasure ν :=
+    Measure.isProbabilityMeasure_map hsum_meas.aemeasurable
+  have hν_ac : ν ≪ volume := by
+    rw [hν_def]
+    have hconv : P.map (fun ω => X ω + Y ω) = (P.map X) ∗ (P.map Y) := by
+      rw [show (fun ω => X ω + Y ω) = X + Y from rfl, hXY.map_add_eq_map_conv_map hX hY]
+    rw [hconv]; exact Measure.conv_absolutelyContinuous hY_ac
+  -- the continuous monotone lift `g h := ofReal (exp (2 h))`.
+  set g : ℝ → ℝ≥0∞ := fun h => ENNReal.ofReal (Real.exp (2 * h)) with hg_def
+  have hg_mono : Monotone g := by
+    intro a b hab
+    exact ENNReal.ofReal_mono (Real.exp_le_exp.mpr (by linarith))
+  have hg_cont : Continuous g :=
+    ENNReal.continuous_ofReal.comp (Real.continuous_exp.comp (continuous_const.mul continuous_id))
+  -- abbreviations.
+  set h_seq : ℕ → ℝ :=
+    fun n => differentialEntropy ((condTrunc P X Y n).map (fun ω => X ω + Y ω)) with hseq_def
+  set hν : ℝ := differentialEntropy ν with hhν_def
+  -- per-n rewrite: `Nₑ(μ_n) = g (h_seq n)` eventually.
+  have hper_n : ∀ᶠ n in atTop,
+      entropyPowerExt ((condTrunc P X Y n).map (fun ω => X ω + Y ω)) = g (h_seq n) := by
+    filter_upwards [eventually_measure_truncSet_pos P hX hY] with n hpos
+    have hac_n : ((condTrunc P X Y n).map (fun ω => X ω + Y ω)) ≪ volume := by
+      have hconv : P.map (fun ω => X ω + Y ω) = (P.map X) ∗ (P.map Y) := by
+        rw [show (fun ω => X ω + Y ω) = X + Y from rfl, hXY.map_add_eq_map_conv_map hX hY]
+      have h_cond : condTrunc P X Y n ≪ P := ProbabilityTheory.cond_absolutelyContinuous
+      exact (h_cond.map hsum_meas).trans (by rw [hconv]; exact Measure.conv_absolutelyContinuous hY_ac)
+    have hent_n : Integrable
+        (fun x => Real.negMulLog
+          (((condTrunc P X Y n).map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume :=
+      integrable_negMulLog_map_condTrunc_sum P hX hY hX_ac hY_ac hXY hpos
+    rw [entropyPowerExt_of_ac_integrable hac_n hent_n]
+  -- limit rewrite: `Nₑ(ν) = g hν`.
+  have hlim_eq : entropyPowerExt ν = g hν :=
+    entropyPowerExt_of_ac_integrable hν_ac hent_sum
+  -- boundedness for the monotone-continuous limsup push.
+  obtain ⟨hbdd, hcobdd⟩ :=
+    differentialEntropy_condTrunc_sum_bddUnder P hX hY hXY hX_ac hY_ac hent_sum
+  -- `limsup Nₑ(μ_n) = limsup (g ∘ h_seq)`.
+  have hcongr : Filter.limsup
+      (fun n => entropyPowerExt ((condTrunc P X Y n).map (fun ω => X ω + Y ω))) atTop
+      = Filter.limsup (fun n => g (h_seq n)) atTop :=
+    Filter.limsup_congr hper_n
+  rw [hcongr, hlim_eq]
+  -- `limsup (g ∘ h_seq) = g (limsup h_seq)` via the continuous-monotone push.
+  have hpush : g (Filter.limsup h_seq atTop) = Filter.limsup (fun n => g (h_seq n)) atTop :=
+    hg_mono.map_limsup_of_continuousAt h_seq (hg_cont.continuousAt) hbdd hcobdd
+  rw [← hpush]
+  -- `g (limsup h_seq) ≤ g hν` by monotonicity + the differential-entropy usc (#3).
+  refine hg_mono ?_
+  exact differentialEntropy_condTrunc_sum_limsup_le P hX hY hXY hX_ac hY_ac hent_sum
 
 /-! ### Helper 5 — RHS 収束 (plan §推奨分解 5) -/
 
