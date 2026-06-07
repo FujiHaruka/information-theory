@@ -158,6 +158,28 @@ theorem differentialEntropyExt_mono_add_truncW
   -- W + V is a.c. under `Q` (`hW_ac_Q` + independence).
   have hWV_ac_Q : (Q.map (fun ω => W ω + V ω)) ≪ volume :=
     map_add_absolutelyContinuous W V Q hW hV hindep hW_ac_Q
+  -- Probability-measure instances on the relevant marginals (needed for the fibre identification
+  -- and the finite ②).
+  haveI hWmap_prob : IsProbabilityMeasure (Q.map W) := Measure.isProbabilityMeasure_map hW.aemeasurable
+  haveI hVmap_prob : IsProbabilityMeasure (Q.map V) := Measure.isProbabilityMeasure_map hV.aemeasurable
+  -- **fibre identification** (c = 1): `condDistrib (W+V) V Q =ᵐ[Q.map V] affineShiftKernel (Q.map W) 1`.
+  -- Mirror of `condDifferentialEntropyExt_indep_add_eq` (Step 1-2): the joint `(V, W+V)` is the
+  -- affine push of the product law (independence), so the regular conditional kernel is the
+  -- z-dependent affine shift of `Q.map W`.
+  have hjoint_VW : Q.map (fun ω => (V ω, W ω + V ω))
+      = (Q.map V) ⊗ₘ (affineShiftKernel (Q.map W) 1) := by
+    have hZX : IndepFun V W Q := hindep.symm
+    have hjoint_VX : Q.map (fun ω => (V ω, W ω)) = (Q.map V).prod (Q.map W) :=
+      (indepFun_iff_map_prod_eq_prod_map_map hV.aemeasurable hW.aemeasurable).mp hZX
+    have hg : Measurable fun p : ℝ × ℝ => (p.1, p.2 + (1 : ℝ) * p.1) := by fun_prop
+    have hcomp : (fun ω => (V ω, W ω + V ω))
+        = (fun p : ℝ × ℝ => (p.1, p.2 + (1 : ℝ) * p.1)) ∘ (fun ω => (V ω, W ω)) := by
+      funext ω; simp [one_mul, add_comm]
+    rw [hcomp, ← Measure.map_map hg (hV.prodMk hW), hjoint_VX,
+      prod_map_affine_eq_compProd]
+  have hae : condDistrib (fun ω => W ω + V ω) V Q
+      =ᵐ[Q.map V] affineShiftKernel (Q.map W) 1 :=
+    condDistrib_ae_eq_of_measure_eq_compProd V (hW.add hV).aemeasurable hjoint_VW
   -- The marginal / conditional extended entropies are `≠ ⊥` (compact support ⟹ finite
   -- differential entropy ⟹ ≠ −∞). Localized: the two ⊥-exclusions on `Q.map W` and `Q.map (W+V)`.
   -- @residual(plan:epi-uncond-truncation-lsc-plan)
@@ -178,8 +200,17 @@ theorem differentialEntropyExt_mono_add_truncW
   have hκ_dens_meas : Measurable
       (fun p : ℝ × ℝ => ((condDistrib (fun ω => W ω + V ω) V Q p.1).rnDeriv volume p.2)) := by
     sorry
-  -- @residual(plan:epi-uncond-truncation-lsc-plan)
-  have hκ_ac : ∀ᵐ z ∂(Q.map V), condDistrib (fun ω => W ω + V ω) V Q z ≪ volume := by sorry
+  -- per-fibre a.c.: each fibre `condDistrib (W+V) V Q z =ᵐ (Q.map W).map (·+z)`, a translation
+  -- of the a.c. measure `Q.map W` (translation-invariance of Lebesgue ⟹ a.c. is preserved).
+  -- No finiteness needed; supplied genuinely from the fibre identification `hae`.
+  have hκ_ac : ∀ᵐ z ∂(Q.map V), condDistrib (fun ω => W ω + V ω) V Q z ≪ volume := by
+    filter_upwards [hae] with z hz
+    rw [hz, affineShiftKernel_apply]
+    have hshift : Measurable fun x : ℝ => x + (1 : ℝ) * z := by fun_prop
+    have h_map_vol : (volume : Measure ℝ).map (fun x : ℝ => x + (1 : ℝ) * z) = volume :=
+      MeasureTheory.map_add_right_eq_self (μ := (volume : Measure ℝ)) ((1 : ℝ) * z)
+    have := hW_ac_Q.map hshift
+    rwa [h_map_vol] at this
   -- @residual(plan:epi-uncond-truncation-lsc-plan)
   have hκ_logp_int : ∀ᵐ z ∂(Q.map V), Integrable
       (fun x => ((condDistrib (fun ω => W ω + V ω) V Q z).rnDeriv volume x).toReal
