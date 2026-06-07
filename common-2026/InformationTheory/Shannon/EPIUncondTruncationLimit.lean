@@ -100,7 +100,111 @@ theorem differentialEntropyExt_mono_add_truncW
     (hW_ac : (P.map W) ≪ volume) (n : ℕ) (hn : P {ω | |W ω| ≤ (n : ℝ)} ≠ 0) :
     differentialEntropyExt ((truncW P W n).map W)
       ≤ differentialEntropyExt ((truncW P W n).map (fun ω => W ω + V ω)) := by
-  sorry
+  -- The truncated measure `Q := truncW P W n = P[| {|W| ≤ n}]` is a probability measure.
+  set Q : Measure Ω := truncW P W n with hQ_def
+  haveI hQ_prob : IsProbabilityMeasure Q := by
+    rw [hQ_def, truncW]; exact ProbabilityTheory.cond_isProbabilityMeasure hn
+  -- W stays a.c. under conditioning: `Q.map W ≪ P.map W ≪ volume`.
+  have hW_ac_Q : (Q.map W) ≪ volume := by
+    refine (Measure.AbsolutelyContinuous.trans ?_ hW_ac)
+    rw [hQ_def, truncW]
+    exact (ProbabilityTheory.cond_absolutelyContinuous).map hW
+  -- W ⊥ V is preserved under conditioning on a W-event `{|W| ≤ n}` (the event is a function of
+  -- W only, so V is unaffected). Self-built from `indepFun_iff_measure_inter_preimage_eq_mul`:
+  -- the conditioning event `E = W⁻¹' {r | |r| ≤ n}` absorbs into the W-preimage, and `hWV`
+  -- factors the joint measure of W- and V-preimages.
+  have hE_meas : MeasurableSet {ω : Ω | |W ω| ≤ (n : ℝ)} :=
+    hW.abs measurableSet_Iic
+  set E : Set Ω := {ω : Ω | |W ω| ≤ (n : ℝ)} with hE_def
+  have hindep : IndepFun W V Q := by
+    rw [indepFun_iff_measure_inter_preimage_eq_mul]
+    intro s t hs ht
+    -- `E ∩ W⁻¹' s = W⁻¹' (Icc⁻¹ ∩ s)` is itself a W-preimage of a measurable set.
+    have hEW : E ∩ W ⁻¹' s = W ⁻¹' ({r : ℝ | |r| ≤ (n : ℝ)} ∩ s) := by
+      ext ω; simp [hE_def, Set.mem_inter_iff, and_comm]
+    have hIcc_meas : MeasurableSet {r : ℝ | |r| ≤ (n : ℝ)} :=
+      (_root_.continuous_abs.measurable measurableSet_Iic)
+    have hAW : MeasurableSet ({r : ℝ | |r| ≤ (n : ℝ)} ∩ s) := hIcc_meas.inter hs
+    -- Expand each `cond` term via `cond_apply hE_meas`.
+    rw [hQ_def, truncW, cond_apply hE_meas, cond_apply hE_meas, cond_apply hE_meas]
+    -- The joint preimage: `E ∩ (W⁻¹s ∩ V⁻¹t) = (E ∩ W⁻¹s) ∩ V⁻¹t = W⁻¹(..) ∩ V⁻¹t`.
+    have hjoint : E ∩ (W ⁻¹' s ∩ V ⁻¹' t) = W ⁻¹' ({r : ℝ | |r| ≤ (n : ℝ)} ∩ s) ∩ V ⁻¹' t := by
+      rw [← Set.inter_assoc, hEW]
+    rw [hjoint, hEW]
+    -- Factor `P` on the W- and V-preimages via the original independence `hWV`.
+    have hfac1 : P (W ⁻¹' ({r : ℝ | |r| ≤ (n : ℝ)} ∩ s) ∩ V ⁻¹' t)
+        = P (W ⁻¹' ({r : ℝ | |r| ≤ (n : ℝ)} ∩ s)) * P (V ⁻¹' t) :=
+      hWV.measure_inter_preimage_eq_mul _ _ hAW ht
+    -- For the V-term: `E ∩ V⁻¹t = W⁻¹(Icc) ∩ V⁻¹t`, again factored by `hWV`.
+    have hEV : E ∩ V ⁻¹' t = W ⁻¹' {r : ℝ | |r| ≤ (n : ℝ)} ∩ V ⁻¹' t := by
+      ext ω; simp [hE_def]
+    have hfac2 : P (E ∩ V ⁻¹' t) = P E * P (V ⁻¹' t) := by
+      rw [hEV, hWV.measure_inter_preimage_eq_mul _ _ hIcc_meas ht, hE_def]; rfl
+    rw [hfac1, hfac2]
+    -- Arithmetic: `c·(a·v) = (c·a)·(c·(P E·v))` where `c = (P E)⁻¹`, since `c·P E = 1`.
+    have hPE_ne : P E ≠ 0 := by rw [hE_def]; exact hn
+    have hPE_ne_top : P E ≠ ∞ := measure_ne_top P E
+    have hcancel : (P E)⁻¹ * (P E * P (V ⁻¹' t)) = P (V ⁻¹' t) := by
+      rw [← mul_assoc, ENNReal.inv_mul_cancel hPE_ne hPE_ne_top, one_mul]
+    rw [hcancel]
+    ring
+  -- ① fibre identification (c = 1): `condDiffEntExt (W + V | V) Q = h_ext(Q.map W)`.
+  have hone : (fun ω => W ω + (1 : ℝ) * V ω) = (fun ω => W ω + V ω) := by
+    funext ω; rw [one_mul]
+  have hfibre : condDifferentialEntropyExt (fun ω => W ω + V ω) V Q
+      = differentialEntropyExt (Q.map W) := by
+    have := condDifferentialEntropyExt_indep_add_eq W V Q 1 hW hV hindep hW_ac_Q
+    rwa [hone] at this
+  -- W + V is a.c. under `Q` (`hW_ac_Q` + independence).
+  have hWV_ac_Q : (Q.map (fun ω => W ω + V ω)) ≪ volume :=
+    map_add_absolutelyContinuous W V Q hW hV hindep hW_ac_Q
+  -- The marginal / conditional extended entropies are `≠ ⊥` (compact support ⟹ finite
+  -- differential entropy ⟹ ≠ −∞). Localized: the two ⊥-exclusions on `Q.map W` and `Q.map (W+V)`.
+  -- @residual(plan:epi-uncond-truncation-lsc-plan)
+  have hW_ne_bot : differentialEntropyExt (Q.map W) ≠ ⊥ := by sorry
+  -- @residual(plan:epi-uncond-truncation-lsc-plan)
+  have hWV_ne_bot : differentialEntropyExt (Q.map (fun ω => W ω + V ω)) ≠ ⊥ := by sorry
+  have hcond_ne_bot : condDifferentialEntropyExt (fun ω => W ω + V ω) V Q ≠ ⊥ := by
+    rw [hfibre]; exact hW_ne_bot
+  -- ② finite chain rule with `X := W + V`, `Z := V`:
+  -- `h_ext(W+V) = h_ext(W+V | V) + I(W+V; V)`.
+  -- The eleven regularity hypotheses of the finite ② are supplied below; the condDistrib-side
+  -- ones (joint density measurability / per-fibre a.c. / integrability / KL finiteness) are not
+  -- yet discharged for the truncated `Q` and are localized as side lemmas.
+  -- @residual(plan:epi-uncond-truncation-lsc-plan)
+  have h_ac : (Q.map V) ⊗ₘ condDistrib (fun ω => W ω + V ω) V Q
+      ≪ (Q.map V) ⊗ₘ Kernel.const ℝ (Q.map (fun ω => W ω + V ω)) := by sorry
+  -- @residual(plan:epi-uncond-truncation-lsc-plan)
+  have hκ_dens_meas : Measurable
+      (fun p : ℝ × ℝ => ((condDistrib (fun ω => W ω + V ω) V Q p.1).rnDeriv volume p.2)) := by
+    sorry
+  -- @residual(plan:epi-uncond-truncation-lsc-plan)
+  have hκ_ac : ∀ᵐ z ∂(Q.map V), condDistrib (fun ω => W ω + V ω) V Q z ≪ volume := by sorry
+  -- @residual(plan:epi-uncond-truncation-lsc-plan)
+  have hκ_logp_int : ∀ᵐ z ∂(Q.map V), Integrable
+      (fun x => ((condDistrib (fun ω => W ω + V ω) V Q z).rnDeriv volume x).toReal
+        * Real.log (((condDistrib (fun ω => W ω + V ω) V Q z).rnDeriv volume x).toReal)) volume := by
+    sorry
+  -- @residual(plan:epi-uncond-truncation-lsc-plan)
+  have hκ_cross_int : ∀ᵐ z ∂(Q.map V), Integrable
+      (fun x => ((condDistrib (fun ω => W ω + V ω) V Q z).rnDeriv volume x).toReal
+        * Real.log (((Q.map (fun ω => W ω + V ω)).rnDeriv volume x).toReal)) volume := by
+    sorry
+  -- @residual(plan:epi-uncond-truncation-lsc-plan)
+  have hκ_KL : ∀ᵐ z ∂(Q.map V),
+      klDiv (condDistrib (fun ω => W ω + V ω) V Q z) (Q.map (fun ω => W ω + V ω)) ≠ ∞ := by sorry
+  have hchain := differentialEntropyExt_eq_condEntExt_add_klDiv_of_finite
+    (fun ω => W ω + V ω) V Q (hW.add hV) hV hWV_ac_Q h_ac hκ_dens_meas hκ_ac hκ_logp_int
+    hκ_cross_int hκ_KL hcond_ne_bot hWV_ne_bot
+  -- Equality → monotonicity: `h(W_n+V) = h(W_n) + I`, `I ≥ 0` ⟹ `h(W_n) ≤ h(W_n+V)`.
+  rw [hchain, hfibre]
+  have hi : (0 : EReal) ≤
+      (((InformationTheory.klDiv ((Q.map V) ⊗ₘ condDistrib (fun ω => W ω + V ω) V Q)
+            ((Q.map V) ⊗ₘ Kernel.const ℝ (Q.map (fun ω => W ω + V ω)))) : ℝ≥0∞) : EReal) := by
+    exact_mod_cast (bot_le : (⊥ : ℝ≥0∞) ≤ _)
+  calc differentialEntropyExt (Q.map W)
+      = differentialEntropyExt (Q.map W) + 0 := (add_zero _).symm
+    _ ≤ differentialEntropyExt (Q.map W) + _ := add_le_add_right hi _
 
 /-- **`h(W_n) → h(W)` の極限**: truncation 緩和で entropy 単調増加 → 極限。`h(W) = ⊤` のときは
 `h(W_n) ↑ ⊤` の単調発散 (有界増加列の ⊤ への発散) で、weak-convergence portmanteau を経由しない。
