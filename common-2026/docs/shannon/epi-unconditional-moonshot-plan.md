@@ -123,9 +123,10 @@ a.c. ブランチで生入力に regularity を課す根因は **heat-flow endpo
 
 > **🔄 SUPERSEDED (2026-06-07、判断ログ 6 参照)**: 本 verdict の核心 step 1「平滑側は無前提が FALSE」は
 > **heat-flow smoothing ルート前提**で、route T (conditioning truncation) が同障害を全回避し覆った **FALSE WALL**。
-> 以下「moonshot 規模 + Mathlib 壁 2 本」も smoothing ルート前提の死んだ見積り。現状は W-Y1 gateway atom 着手済
-> (mono_add genuine)、残る genuine wall は W-Y2 (病的両部発散 a.c.) の 1 本のみ。本節は履歴として残置するが
-> 判定は判断ログ 6 + `epi-uncond-monotone-inventory.md` が SoT。
+> 以下「moonshot 規模 + Mathlib 壁 2 本」も smoothing ルート前提の死んだ見積り。現状は W-Y1 第一 chunk 着地
+> (`EPIUncondCondEntropyExt.lean`: ①fibre同定/def genuine、mono/(i-a) genuine modulo ②、crux = **② EReal chain rule 1 本に局所化**、
+> 監査 honest_residual PASS、S5 子 §7-7)、残る genuine wall は W-Y2 (病的両部発散 a.c.) の 1 本のみ。本節は履歴として残置するが
+> 判定は判断ログ 6 + S5 子 §7-6/§7-7 + `epi-uncond-monotone-inventory.md` が SoT。
 
 **結論 (2026-06-05 時点、SUPERSEDED): 方針 Y は数学的には真だが proof route が moonshot 規模 + genuine Mathlib 壁 2 本。L-Uncond-3-scope (方針 X 縮退) を投資効率の点で推奨。ただし最終判断はユーザー。**
 
