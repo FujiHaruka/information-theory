@@ -11,6 +11,27 @@
 
 ---
 
+## ⚠ 戦略更新 (2026-06-07、step a' 着地 + pivot-advisor 独立検証後) — **本セクションが現行 SoT**
+
+> 以下は step a' 着地 (`CondKLIntegral.lean:144`、commit `bb852da`、sorryAx-free) と proof-pivot-advisor 独立検証を経た方針修正。**下記「API 在庫テーブル」の step b'/c' 設計 (A/B/cross 別 lintegral 分配) は赤フラグと判明したので、本セクションが優先する**。
+
+- **step a' 状態 = ✅ 着地済** (`klDiv_compProd_lintegral`、`CondKLIntegral.lean:144`、ℝ≥0∞・無 integrability・sorryAx-free)。在庫テーブル項目1 / 自作要素1 の「未着地」記述は drift (本セクションが訂正)。
+
+- **❌ 棄却ルート (案 B')**: per-step で `klDiv(κz)(ν)` を A(κz)/B(κz)/Cpos/Cneg の **別々 lintegral に分配** する設計 (下記 項目2 「符号付き分解」の素朴解釈)。`ENNReal.ofReal(a+b) ≠ ofReal a + ofReal b` で pointwise 恒等式にならず、`klDiv` の integrand `ofReal(p log p − p log q + q − p)` (= 単一非負 `ofReal(q·klFun(p/q))`) は A/B/cross に割れない。`.toReal` 版がミラーできたのは Real 域で減算自由だからで、**負号/減算を含む step では ℝ≥0∞ ミラーは機械的に成り立たない** (advisor 教訓)。
+
+- **✅ 採用ルート (案 A' = 単一量 all-nonneg ℝ≥0∞ 恒等式)**:
+  1. **assemble の核**: ② を EReal 差の比較でなく **all-nonneg ℝ≥0∞ 恒等式 (★)** に落とす:
+     `A(ν) + ∫⁻z B(κz) = ∫⁻z A(κz) + B(ν) + ∫⁻z klDiv(κz)(ν)` (全項 coe-from-ℝ≥0∞、減算なし)。
+     これを EReal 補題 `(U−V = a−b) ⟸ (U+b = a+V)` (⊤ 場合分けは `hcond_ne_bot` scope) で目標 EReal 差形へ。`klDiv` は **単一非負量のまま** (分配しない)。
+  2. **step c' (marginal collapse) = clean・finiteness-free** (私の追加分析、確信度高): cross 項 `ofReal(pz·log qν)` は **`pz` に線型** (`log qν(x)` の符号は z 非依存) ⇒ `ofReal(pz·c) = pz·c⁺` で `ofReal` が z-Tonelli を通過。marginal collapse `∫⁻z pz ∂μZ = qν` で `∫⁻z Cpos_z = B(ν)`、`∫⁻z Cneg_z = A(ν)`。元 `integral_condDistrib_marginal_eq` (`:150`) の lintegral ミラーで取れる。
+  3. **step b' (per-fibre ☆) = 真のボトルネック・finiteness-free 性が不確実**:
+     `∫⁻z [A(κz) + klDiv(κz)(ν) + Cpos_z] = ∫⁻z [Cneg_z + B(κz)]` を per-fibre 恒等式
+     `A(κz) + klDiv(κz)(ν) + Cpos_z = Cneg_z + B(κz)` (☆) に落とす。**(☆) は pointwise 恒等式でない** — `+q−p` mass 項 (∫=0 だが pointwise≠0) が pointwise 等式を壊し、signed llr は ℝ≥0∞ に直接入らない。`.toReal` 版は `toReal_klDiv_of_measure_eq hPQ hmass` が mass 項を吸収するが、ℝ≥0∞ には対応物がない (`∫⁻ ofReal(llr) ≥ klDiv`、符号で不等)。**finiteness-free が成立するか、per-fibre 有限性 (fibre 微分エントロピー有限) regularity hyp が必要かは実機械検証で裏取り** (advisor=不要派、本調査追加分析=補強の可能性あり、判定分岐)。
+
+- **撤退ライン**: step b' で finiteness-free が崩れ、honest な regularity 補強 (fibre 有限エントロピー) でも closure できない / 2-3 session 詰まれば §7-4 で `wall:` 昇格 + headline を `entropy_power_inequality_of_ac` (proof-done) に確定 (L-Uncond-Y-roi)。**case-split-to-Real-bridge (案 C') は選ばない** (advisor: 最悪コスト)。**signature 補強が genuine regularity でかつ EPI consumer (`differentialEntropyExt_indep_add_eq_add_klDiv`、`EPIUncondMonotone.lean:80`、fibre = `μ.map W` 有限エントロピー) で供給可能なら、補強は撤退でなく honest closure** (load-bearing でない)。
+
+---
+
 ## 主定理の最終形 (crux ②、再掲)
 
 `InformationTheory/Shannon/EPIUncondCondEntropyExt.lean:191-200` verbatim:
