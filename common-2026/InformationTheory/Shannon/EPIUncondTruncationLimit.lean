@@ -67,6 +67,35 @@ private theorem rnDeriv_cond_eq (μ : Measure ℝ) [IsProbabilityMeasure μ] {s 
   filter_upwards [h2] with x hx
   simp only [Pi.smul_apply, hx, smul_eq_mul]
 
+/-- **per-fibre entropy integrability の translation 不変性**: `ν ≪ volume` で
+`negMulLog (rnDeriv ν)` が可積分なら、平行移動 `ν.map (· + y)` でも可積分。Lebesgue 平行移動不変
+(`map_add_right_eq_self`) + measure-preserving 合成 (`MeasurePreserving.integrable_comp_emb`) +
+`MeasurableEmbedding.rnDeriv_map` で shift 後の rnDeriv を shift 前に同定。
+独立 honesty audit 2026-06-08: Mathlib 機械的合成、循環/bundling なし。@audit:ok -/
+private theorem integrable_negMulLog_rnDeriv_map_add_const
+    {ν : Measure ℝ} [SigmaFinite ν] (y : ℝ)
+    (hν_ent : Integrable (fun x => Real.negMulLog ((ν.rnDeriv volume x).toReal)) volume) :
+    Integrable
+      (fun x => Real.negMulLog (((ν.map (fun x => x + y)).rnDeriv volume x).toReal)) volume := by
+  have hf : MeasurableEmbedding (fun x : ℝ => x + y) := measurableEmbedding_addRight y
+  have h_map_vol : (volume : Measure ℝ).map (fun x => x + y) = volume :=
+    MeasureTheory.map_add_right_eq_self (μ := (volume : Measure ℝ)) y
+  -- `(· + y)` is measure-preserving on Lebesgue.
+  have hmp : MeasurePreserving (fun x : ℝ => x + y) volume volume :=
+    ⟨hf.measurable, h_map_vol⟩
+  -- rnDeriv after the shift, evaluated at `x + y`, equals rnDeriv before the shift.
+  have h_rn := hf.rnDeriv_map ν (volume : Measure ℝ)
+  rw [h_map_vol] at h_rn
+  -- It suffices to prove integrability of the composition `g ∘ (· + y)` and then transfer.
+  have hcomp_int : Integrable
+      (fun x => Real.negMulLog ((((ν.map (fun x => x + y)).rnDeriv volume) (x + y)).toReal))
+      volume := by
+    refine hν_ent.congr ?_
+    filter_upwards [h_rn] with x hx
+    rw [hx]
+  -- transfer along the measure-preserving embedding `(· + y)`.
+  exact (hmp.integrable_comp_emb hf).mp hcomp_int
+
 /-- **negMulLog-Fatou helper** — 正部 lintegral `A` の Fatou lift。
 density の toReal a.e. 収束 `f_{μ_n} → f_μ` から `A_μ ≤ liminf A_{μ_n}` を Fatou で出す
 (`A μ := ∫⁻ x, ofReal (negMulLog (rnDeriv μ vol x).toReal) ∂volume` = `differentialEntropyExt`
@@ -388,11 +417,22 @@ theorem differentialEntropyExt_mono_add_truncW
       MeasureTheory.map_add_right_eq_self (μ := (volume : Measure ℝ)) ((1 : ℝ) * z)
     have := hW_ac_Q.map hshift
     rwa [h_map_vol] at this
-  -- @residual(plan:epi-uncond-truncation-lsc-plan)
+  -- per-fibre entropy integrability `Integrable (fκz · log fκz)`: each fibre is a translate of
+  -- `Q.map W`, and `t·log t = -(negMulLog t)`, so this transfers from `hW_ent_Q` by translation
+  -- invariance (`integrable_negMulLog_rnDeriv_map_add_const`).
   have hκ_logp_int : ∀ᵐ z ∂(Q.map V), Integrable
       (fun x => ((condDistrib (fun ω => W ω + V ω) V Q z).rnDeriv volume x).toReal
         * Real.log (((condDistrib (fun ω => W ω + V ω) V Q z).rnDeriv volume x).toReal)) volume := by
-    sorry
+    filter_upwards [hae] with z hz
+    have hbase := (integrable_negMulLog_rnDeriv_map_add_const (ν := Q.map W) ((1 : ℝ) * z)
+      hW_ent_Q).neg
+    refine hbase.congr ?_
+    filter_upwards with x
+    rw [hz, affineShiftKernel_apply]
+    show -(Real.negMulLog (((((Q.map W).map (fun x => x + (1 : ℝ) * z)).rnDeriv volume x)).toReal))
+      = (((((Q.map W).map (fun x => x + (1 : ℝ) * z)).rnDeriv volume x)).toReal)
+        * Real.log ((((((Q.map W).map (fun x => x + (1 : ℝ) * z)).rnDeriv volume x)).toReal))
+    rw [Real.negMulLog]; ring
   -- @residual(plan:epi-uncond-truncation-lsc-plan)
   have hκ_cross_int : ∀ᵐ z ∂(Q.map V), Integrable
       (fun x => ((condDistrib (fun ω => W ω + V ω) V Q z).rnDeriv volume x).toReal
