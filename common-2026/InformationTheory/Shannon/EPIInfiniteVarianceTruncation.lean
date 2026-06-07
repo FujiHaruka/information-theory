@@ -896,20 +896,106 @@ theorem rnDeriv_map_sum_ae (P : Measure Ω) [IsProbabilityMeasure P]
   filter_upwards [hrn_ofReal, hkey] with x hx hkx
   rw [hx, hkx]
 
-/-- **sub-helper A — 優関数 `p_n∗q_n ≤ C²·(p∗q)`** (pointwise a.e. `z`)。
+/-- **marginal mass の正値性 (factoring)**: `P (truncSet X Y n) ≠ 0` → 各成分の周辺
+mass `(P.map Z) {r | |r| ≤ n} ≠ 0` (Z = X or Y)。独立 factoring
+`P(truncSet) = P(X⁻¹Sn)·P(Y⁻¹Sn)` の片側因子が `(P.map Z) Sn` に一致。 -/
+theorem map_measure_truncBall_ne_zero (P : Measure Ω) [IsProbabilityMeasure P]
+    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
+    {Z : Ω → ℝ} (hZ : Z = X ∨ Z = Y) {n : ℕ} (hpos : P (truncSet X Y n) ≠ 0) :
+    (P.map Z) {r : ℝ | |r| ≤ (n : ℝ)} ≠ 0 := by
+  set Sn : Set ℝ := {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
+  have hSn_meas : MeasurableSet Sn :=
+    measurableSet_le measurable_norm measurable_const
+  have hZmeas : Measurable Z := by rcases hZ with rfl | rfl; exacts [hX, hY]
+  rw [Measure.map_apply hZmeas hSn_meas]
+  have hfac : P (truncSet X Y n) = P (X ⁻¹' Sn) * P (Y ⁻¹' Sn) := by
+    show P (X ⁻¹' Sn ∩ Y ⁻¹' Sn) = _
+    exact hXY.measure_inter_preimage_eq_mul Sn Sn hSn_meas hSn_meas
+  rcases hZ with rfl | rfl
+  · intro h0; apply hpos; rw [hfac, h0, zero_mul]
+  · intro h0; apply hpos; rw [hfac, h0, mul_zero]
+
+/-- **per-n 周辺密度の優関数 (single component)**: 固定 `n₀` (positive mass) に対し、
+`n₀ ≤ n` (ゆえ positive mass) で cond 周辺密度 `p_n := (condTrunc.map Z).rnDeriv vol |>.toReal`
+が定数倍 `C_Z · pZ` で上から抑えられる (`pZ := (P.map Z).rnDeriv vol |>.toReal`,
+`C_Z := ((P.map Z) {|r|≤n₀})⁻¹.toReal`)。機構: `map_condTrunc_eq_cond_map` で単成分
+conditioning に帰着 → `rnDeriv_cond_eq` で `p_n =ᵐ (m_n)⁻¹ · 1_Sn · pZ`、indicator + m_n 単調性
+(`Sn₀ ⊆ Sn` → `m_n ≥ m_{n₀}` → `m_n⁻¹ ≤ m_{n₀}⁻¹ = C_Z`) で上界。 -/
+theorem condTrunc_marginal_density_le (P : Measure Ω) [IsProbabilityMeasure P]
+    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
+    {Z : Ω → ℝ} (hZ : Z = X ∨ Z = Y) {n₀ n : ℕ} (hn : n₀ ≤ n)
+    (hpos₀ : P (truncSet X Y n₀) ≠ 0) :
+    ∀ᵐ x ∂volume,
+      (((condTrunc P X Y n).map Z).rnDeriv volume x).toReal
+        ≤ (((P.map Z) {r : ℝ | |r| ≤ (n₀ : ℝ)})⁻¹).toReal
+          * ((P.map Z).rnDeriv volume x).toReal := by
+  classical
+  set Sn₀ : Set ℝ := {r : ℝ | |r| ≤ (n₀ : ℝ)} with hSn₀_def
+  set Sn : Set ℝ := {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
+  have hSn₀_meas : MeasurableSet Sn₀ := measurableSet_le measurable_norm measurable_const
+  have hSn_meas : MeasurableSet Sn := measurableSet_le measurable_norm measurable_const
+  have hZmeas : Measurable Z := by rcases hZ with rfl | rfl; exacts [hX, hY]
+  haveI : IsProbabilityMeasure (P.map Z) :=
+    Measure.isProbabilityMeasure_map hZmeas.aemeasurable
+  -- positive mass at level `n₀` and `n` (the latter by monotone `Sn₀ ⊆ Sn`).
+  have hpos_n : P (truncSet X Y n) ≠ 0 := by
+    intro h0; exact hpos₀ (measure_mono_null (truncSet_mono hn) h0)
+  have hm₀_ne : (P.map Z) Sn₀ ≠ 0 := map_measure_truncBall_ne_zero P hX hY hXY hZ hpos₀
+  have hm_ne : (P.map Z) Sn ≠ 0 := map_measure_truncBall_ne_zero P hX hY hXY hZ hpos_n
+  set m₀ : ℝ≥0∞ := (P.map Z) Sn₀ with hm₀_def
+  set m : ℝ≥0∞ := (P.map Z) Sn with hm_def
+  have hm₀_top : m₀ ≠ ∞ := measure_ne_top _ _
+  -- `m₀ ≤ m` (Sn₀ ⊆ Sn), hence `m⁻¹ ≤ m₀⁻¹`, hence `(m⁻¹).toReal ≤ (m₀⁻¹).toReal`.
+  have hSn₀_sub : Sn₀ ⊆ Sn := by
+    intro r hr
+    have hnn : (n₀ : ℝ) ≤ (n : ℝ) := by exact_mod_cast hn
+    exact le_trans hr hnn
+  have hm_le : m₀ ≤ m := measure_mono hSn₀_sub
+  have hinv_le : m⁻¹ ≤ m₀⁻¹ := ENNReal.inv_le_inv.mpr hm_le
+  have hC_bound : (m⁻¹).toReal ≤ (m₀⁻¹).toReal :=
+    ENNReal.toReal_mono (ENNReal.inv_ne_top.mpr hm₀_ne) hinv_le
+  -- cond density formula: `(condTrunc.map Z).rnDeriv =ᵐ (cond (P.map Z) Sn).rnDeriv`.
+  rw [map_condTrunc_eq_cond_map P hX hY hXY hZ hpos_n]
+  have h_rn : (ProbabilityTheory.cond (P.map Z) Sn).rnDeriv volume
+      =ᵐ[volume] fun x => m⁻¹ * Sn.indicator ((P.map Z).rnDeriv volume) x :=
+    rnDeriv_cond_eq (P.map Z) hSn_meas hm_ne
+  filter_upwards [h_rn] with x hx
+  rw [hx]
+  set pZx : ℝ := ((P.map Z).rnDeriv volume x).toReal with hpZx_def
+  have hpZx_nn : 0 ≤ pZx := ENNReal.toReal_nonneg
+  by_cases hxs : x ∈ Sn
+  · rw [Set.indicator_of_mem hxs (f := (P.map Z).rnDeriv volume), ENNReal.toReal_mul]
+    -- `(m⁻¹).toReal * pZx ≤ (m₀⁻¹).toReal * pZx`.
+    exact mul_le_mul_of_nonneg_right hC_bound hpZx_nn
+  · rw [Set.indicator_of_notMem hxs (f := (P.map Z).rnDeriv volume), mul_zero,
+      ENNReal.toReal_zero]
+    exact mul_nonneg ENNReal.toReal_nonneg hpZx_nn
+
+/-- **sub-helper A — 優関数 `p_n∗q_n ≤ C·(p∗q)`** (pointwise a.e. `z`、`C = C_X·C_Y`)。
 固定 `n₀` (positive mass) に対し、`n ≥ n₀` で各成分の cond 密度
 `p_n := (condTrunc.map X).rnDeriv vol |>.toReal` が `C_X · pX` で上から抑えられ
-(`m_{X,n}⁻¹` の単調性、`C_X := m_{X,n₀}⁻¹`)、同様に `q_n ≤ C_Y · qY`。convolution 単調性
-で `p_n∗q_n ≤ C_X·C_Y·(pX∗qY)`。`C := C_X·C_Y`。`pX∗qY = ν 密度` (`rnDeriv_map_sum_ae`)。
+(`m_{X,n}⁻¹` の単調性、`C_X := (m_{X,n₀})⁻¹.toReal`)、同様に `q_n ≤ C_Y · qY`。convolution
+単調性で `p_n∗q_n ≤ C_X·C_Y·(pX∗qY)`。`C := C_X·C_Y`。
+
+**Genuine fill (2026-06-07, sorryAx-free)**: Step 1 各成分優関数 = helper
+`condTrunc_marginal_density_le` (`map_condTrunc_eq_cond_map` で単成分 conditioning に帰着
+→ `rnDeriv_cond_eq` の indicator 形 + `m_n` 単調性 `measure_mono`/`ENNReal.inv_le_inv`)。
+Step 2 各 z の畳込み単調性 = `integral_mono_of_nonneg` (LHS 可積分不要、RHS 可積分のみ)。
+per-z RHS 可積分性 (`∀ᵐ z, Integrable (x ↦ pX x · pY (z−x))`) は 2D 可積分性
+`integrable_prod_iff'` (layout `f (z,x) = pX x · pY (z−x)`、`convKernel_envelope_integrable`
+`FisherInfoV2DeBruijnAssembly.lean:791` を転用) + `Integrable.prod_right_ae` で genuine 供給
+(park 不要、session 内に閉じた)。Y 成分 bound の `q_n(z−x) ≤ C_Y qY(z−x)` への変換は
+測度保存写像 `x ↦ z − x` (`Measure.measurePreserving_sub_left`) の
+`QuasiMeasurePreserving.ae` で transport。
 
 honest: 結論は優関数不等式 (a.e. pointwise bound)。仮説は a.c. + measurability + positive mass。
 和エントロピー可積分性 (結論) を仮説で受けていない。
 
-独立 honesty audit 2026-06-07: honest_residual。(1) 非循環: 結論は `∃ C, p_n∗q_n ≤ C·(p∗q)`
+独立 honesty audit 2026-06-07: honest_residual (genuine fill 済、self-audit 不可ゆえ
+`@residual` は orchestrator の独立 audit まで保持)。(1) 非循環: 結論は `∃ C, p_n∗q_n ≤ C·(p∗q)`
 (優関数不等式)、仮説は `hX_ac`/`hY_ac`/`hXY`/`hpos₀` (= regularity precondition)、結論型 ≢ 仮説型。
 (2) 非バンドル: usc 不等式や和エントロピー可積分性 (= 親結論) を仮説で受けていない。
-(3) classification: plan slug 実在、優関数は m_n 単調性 + convolution 単調性で buildable
-(Mathlib 壁でなく plan 分類が妥当)。
+(3) `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free、body 独自 sorry 0)。
 @residual(plan:epi-infinite-variance-truncation-plan) -/
 theorem convDensity_condTrunc_le_const_mul (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -920,8 +1006,100 @@ theorem convDensity_condTrunc_le_const_mul (P : Measure Ω) [IsProbabilityMeasur
         (fun y => ((condTrunc P X Y n).map Y).rnDeriv volume y |>.toReal) z
         ≤ C * convDensityAdd (fun y => (P.map X).rnDeriv volume y |>.toReal)
             (fun y => (P.map Y).rnDeriv volume y |>.toReal) z := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  classical
+  -- marginal densities of `P` (probability measures, a.c. ⇒ integrable toReal rnDeriv).
+  haveI : IsProbabilityMeasure (P.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
+  haveI : IsProbabilityMeasure (P.map Y) := Measure.isProbabilityMeasure_map hY.aemeasurable
+  set pX : ℝ → ℝ := fun y => ((P.map X).rnDeriv volume y).toReal with hpX_def
+  set pY : ℝ → ℝ := fun y => ((P.map Y).rnDeriv volume y).toReal with hpY_def
+  have hpX_meas : Measurable pX := (Measure.measurable_rnDeriv _ _).ennreal_toReal
+  have hpY_meas : Measurable pY := (Measure.measurable_rnDeriv _ _).ennreal_toReal
+  have hpX_nn : ∀ x, 0 ≤ pX x := fun x => ENNReal.toReal_nonneg
+  have hpY_nn : ∀ x, 0 ≤ pY x := fun x => ENNReal.toReal_nonneg
+  have hpX_int : Integrable pX volume := Measure.integrable_toReal_rnDeriv
+  have hpY_int : Integrable pY volume := Measure.integrable_toReal_rnDeriv
+  -- constants.
+  set C_X : ℝ := (((P.map X) {r : ℝ | |r| ≤ (n₀ : ℝ)})⁻¹).toReal with hCX_def
+  set C_Y : ℝ := (((P.map Y) {r : ℝ | |r| ≤ (n₀ : ℝ)})⁻¹).toReal with hCY_def
+  have hCX_nn : 0 ≤ C_X := ENNReal.toReal_nonneg
+  have hCY_nn : 0 ≤ C_Y := ENNReal.toReal_nonneg
+  refine ⟨C_X * C_Y, mul_nonneg hCX_nn hCY_nn, ?_⟩
+  -- Step 2 prerequisite: for a.e. `z`, the convolution slice `x ↦ pX x · pY (z - x)`
+  -- is integrable. Established via 2D integrability + `Integrable.prod_right_ae`.
+  -- Layout: `f (z, x) = pX x · pY (z - x)` (first coord `z`, second coord `x`). This is the
+  -- `convKernel_envelope_integrable` shape (`FisherInfoV2DeBruijnAssembly.lean:791`) with
+  -- `K = pY` and the kernel-density being `pX`.
+  have hslice_int : ∀ᵐ z ∂volume, Integrable (fun x => pX x * pY (z - x)) volume := by
+    -- the 2D integrand `f (z, x) = pX x · pY (z - x)`.
+    set f : ℝ × ℝ → ℝ := fun p => pX p.2 * pY (p.1 - p.2) with hf_def
+    have hf_meas : AEStronglyMeasurable f (volume.prod volume) := by
+      have h1 : AEStronglyMeasurable (fun p : ℝ × ℝ => pX p.2) (volume.prod volume) :=
+        (hpX_meas.comp measurable_snd).aestronglyMeasurable
+      have h2 : AEStronglyMeasurable (fun p : ℝ × ℝ => pY (p.1 - p.2)) (volume.prod volume) := by
+        have hsub : Measurable (fun p : ℝ × ℝ => p.1 - p.2) := measurable_fst.sub measurable_snd
+        exact (hpY_meas.comp hsub).aestronglyMeasurable
+      exact h1.mul h2
+    have hf_int : Integrable f (volume.prod volume) := by
+      rw [integrable_prod_iff' hf_meas]
+      refine ⟨?_, ?_⟩
+      · -- for each `x`, `z ↦ pX x · pY (z − x)` is integrable (`pX x` constant).
+        refine Filter.Eventually.of_forall (fun x => ?_)
+        exact (hpY_int.comp_sub_right x).const_mul (pX x)
+      · -- `x ↦ ∫ z ‖pX x · pY(z−x)‖ dz = ‖pX x‖ · (∫‖pY‖)` is integrable.
+        have heq : (fun x => ∫ z, ‖f (z, x)‖ ∂volume)
+            = (fun x => ‖pX x‖ * ∫ z, ‖pY z‖ ∂volume) := by
+          funext x
+          simp only [hf_def, norm_mul]
+          rw [integral_const_mul]
+          congr 1
+          rw [← integral_sub_right_eq_self (fun z => ‖pY z‖) x]
+        rw [heq]
+        exact (hpX_int.norm.mul_const _)
+    -- slice over the second coord `x` for fixed first `z`.
+    exact hf_int.prod_right_ae
+  -- the eventual filter: `n ≥ n₀` (positive mass automatic by monotonicity).
+  rw [Filter.eventually_atTop]
+  refine ⟨n₀, fun n hn => ?_⟩
+  -- per-component density bounds (a.e. `x`).
+  have hbX : ∀ᵐ x ∂volume,
+      (((condTrunc P X Y n).map X).rnDeriv volume x).toReal ≤ C_X * pX x :=
+    condTrunc_marginal_density_le P hX hY hXY (Or.inl rfl) hn hpos₀
+  have hbY : ∀ᵐ y ∂volume,
+      (((condTrunc P X Y n).map Y).rnDeriv volume y).toReal ≤ C_Y * pY y :=
+    condTrunc_marginal_density_le P hX hY hXY (Or.inr rfl) hn hpos₀
+  -- abbreviations for the conditioned marginal densities.
+  set pnX : ℝ → ℝ := fun y => (((condTrunc P X Y n).map X).rnDeriv volume y).toReal with hpnX_def
+  set pnY : ℝ → ℝ := fun y => (((condTrunc P X Y n).map Y).rnDeriv volume y).toReal with hpnY_def
+  have hpnX_nn : ∀ x, 0 ≤ pnX x := fun x => ENNReal.toReal_nonneg
+  have hpnY_nn : ∀ x, 0 ≤ pnY x := fun x => ENNReal.toReal_nonneg
+  -- combine slice integrability + transported `Y` bound over a.e. `z`.
+  filter_upwards [hslice_int] with z hz_int
+  -- transport the `Y` bound through the measure-preserving map `x ↦ z - x`.
+  have hbY_z : ∀ᵐ x ∂volume, pnY (z - x) ≤ C_Y * pY (z - x) :=
+    (Measure.measurePreserving_sub_left volume z).quasiMeasurePreserving.ae hbY
+  -- the integrand bound `pnX x · pnY (z−x) ≤ (C_X·C_Y)·(pX x · pY (z−x))` a.e. `x`.
+  have hfg : (fun x => pnX x * pnY (z - x))
+      ≤ᵐ[volume] fun x => (C_X * C_Y) * (pX x * pY (z - x)) := by
+    filter_upwards [hbX, hbY_z] with x hxX hxY
+    have h1 : pnX x * pnY (z - x) ≤ (C_X * pX x) * (C_Y * pY (z - x)) :=
+      mul_le_mul hxX hxY (hpnY_nn (z - x)) (le_trans (hpnX_nn x) hxX)
+    calc pnX x * pnY (z - x)
+        ≤ (C_X * pX x) * (C_Y * pY (z - x)) := h1
+      _ = (C_X * C_Y) * (pX x * pY (z - x)) := by ring
+  -- nonnegativity of the LHS integrand.
+  have hf_nn : (0 : ℝ → ℝ) ≤ᵐ[volume] fun x => pnX x * pnY (z - x) :=
+    Filter.Eventually.of_forall (fun x => mul_nonneg (hpnX_nn x) (hpnY_nn (z - x)))
+  -- integrability of the RHS integrand.
+  have hgi : Integrable (fun x => (C_X * C_Y) * (pX x * pY (z - x))) volume :=
+    hz_int.const_mul (C_X * C_Y)
+  -- integral monotonicity, then pull out the constant.
+  have hmono : (∫ x, pnX x * pnY (z - x) ∂volume)
+      ≤ ∫ x, (C_X * C_Y) * (pX x * pY (z - x)) ∂volume :=
+    integral_mono_of_nonneg hf_nn hgi hfg
+  rw [integral_const_mul] at hmono
+  -- rewrite both sides as `convDensityAdd`.
+  show convDensityAdd pnX pnY z ≤ (C_X * C_Y) * convDensityAdd pX pY z
+  simpa only [convDensityAdd] using hmono
 
 /-- **sub-helper B — 各点収束 `p_n∗q_n → p∗q`** (a.e. `z`)。
 `p_n → pX` a.e. (`m_{X,n} → 1`, `1_Sn → 1`)、`q_n → qY` a.e.、convolution 内 DCT
