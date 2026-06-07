@@ -57,6 +57,18 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 本補題自身は delegation のみで own sorry 0、signature honest (`hX_ent`/`hY_ent`/`hW_ent` は
 有限微分エントロピー regularity precondition、結論を encode しない)。transitive sorry は
 infinite-variance [wall] 1 本のみ。旧 bundled `wall:epi-finite-entropy-ac-classical` の分解先。
+
+独立 honesty audit 2026-06-07 (commit 452ea1b、`hW_ent` threading 化): `hW_ent` は
+regularity precondition で **NOT load-bearing** と確認 (core-reconstruction test PASS — 「X+Y の
+negMulLog density 可積分」単独では結論不等式 `N(X+Y)≥N(X)+N(Y)` を含意しない)。実消費は
+delegation 先 `entropyPowerExt_add_ge_of_finite_variance` で `IsHeatFlowEndpointRegular.hpX_ent`
+field (endpoint 連続性入力 = regularity) + `entropyPowerExt=ofReal(entropyPower)` 橋渡しのみ
+(不等式 core は smoothing-limit machinery が供給)。`hX_ent`/`hY_ent` と同型・同階層 (出力側で
+あることは honesty を変えない)。delegation 先 `hent_sum` 引数型と verbatim 一致。`hent_sum`
+local sorry → `hW_ent` 仮説への hoist は honest (obligation を隠さず caller に正直に露出)。
+wall:epi-infinite-variance-classical は loogle 裏取り (`entropyPower`/`Brascamp`/`sharpYoung`
+Found 0、`Lieb` は Lie 代数 128 件のみで無関係)。`#print axioms` = sorryAx 依存 (wall 1 本残る、
+proof-done ではない)。
 @residual(wall:epi-infinite-variance-classical) -/
 theorem entropyPowerExt_add_ge_finite_ac
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -100,7 +112,11 @@ delegate (threaded `hX_ent`/`hY_ent` を再利用)。
 真に 0、case 2 の前提は load-bearing でなく regularity precondition を Phase 4 補題に threading
 するのみ、case 1 は named wall に delegation)。新 finite-entropy 前提 4 本は honest regularity
 precondition (load-bearing でない)。dispatch 自身は own sorry 0、transitive sorry は case-1
-named wall 由来 (hent_sum [plan] + infinite-variance [wall])。 -/
+named wall 由来 (infinite-variance [wall] 1 本のみ、`hW_ent` threading で hent_sum [plan] 解消)。
+
+独立 honesty audit 2026-06-07 (commit 452ea1b): case-1 への `hW_ent` threading (line 165) は
+headline 既存引数の再利用で、新 defect を上流に積んでいないと確認 (`hW_ent` は regularity
+precondition、honest)。 -/
 theorem entropyPowerExt_add_ge_dispatch_skeleton
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
