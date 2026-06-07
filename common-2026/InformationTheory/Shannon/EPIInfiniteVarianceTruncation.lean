@@ -226,7 +226,8 @@ theorem map_condTrunc_absolutelyContinuous (P : Measure Ω) [IsProbabilityMeasur
 `(condTrunc P X Y n).map Z = cond (P.map Z) {r | |r| ≤ n}`。
 既証明 `indepFun_condTrunc` と同じ独立 factoring (`P(truncSet) = P(X⁻¹Sn)·P(Y⁻¹Sn)`、
 他成分の mass `P(Y⁻¹Sn)` が相殺) を再利用する。
-honest: 結論は測度等式、仮説は独立性 + measurability + positive mass (regularity)。 -/
+honest: 結論は測度等式、仮説は独立性 + measurability + positive mass (regularity)。
+@audit:ok -/
 theorem map_condTrunc_eq_cond_map (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     {Z : Ω → ℝ} (hZ : Z = X ∨ Z = Y) {n : ℕ} (hpos : P (truncSet X Y n) ≠ 0) :
@@ -290,7 +291,8 @@ theorem map_condTrunc_eq_cond_map (P : Measure Ω) [IsProbabilityMeasure P]
 /-- **cond density formula**: probability measure `μ` を可測集合 `s` (positive mass) で
 conditioning した測度の Radon-Nikodym 微分は、indicator でカットしたものに正規化定数を
 掛けた形: `(cond μ s).rnDeriv volume =ᵐ (μ s)⁻¹ · 1_s · μ.rnDeriv volume`。
-`cond μ s = (μ s)⁻¹ • μ.restrict s` の scalar mul + restrict の rnDeriv で組立。 -/
+`cond μ s = (μ s)⁻¹ • μ.restrict s` の scalar mul + restrict の rnDeriv で組立。
+@audit:ok -/
 theorem rnDeriv_cond_eq (μ : Measure ℝ) [IsProbabilityMeasure μ] {s : Set ℝ}
     (hs : MeasurableSet s) (hpos : μ s ≠ 0) :
     (ProbabilityTheory.cond μ s).rnDeriv volume
@@ -335,7 +337,11 @@ theorem integrable_sq_condTrunc (P : Measure Ω) [IsProbabilityMeasure P]
 
 /-- **per-n 有限微分エントロピー (各成分)** `Integrable (negMulLog (rnDeriv ·)) volume` for
 `(condTrunc P X Y n).map Z`。compact support → bounded density → integrable。
-黒箱 `entropyPowerExt_add_ge_of_finite_variance` の `hX_ent`/`hY_ent` 引数を再供給。 -/
+黒箱 `entropyPowerExt_add_ge_of_finite_variance` の `hX_ent`/`hY_ent` 引数を再供給。
+honest: `hZ_ent` (= `P.map Z` のエントロピー可積分) は上流 regularity precondition、
+別測度 `condTrunc.map Z = cond (P.map Z) Sn` のエントロピー可積分を cond density formula
+経由で genuine 導出 (結論を encode しない load-bearing でない、sorryAx-free)。
+@audit:ok -/
 theorem integrable_negMulLog_map_condTrunc (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     {Z : Ω → ℝ} (hZ : Z = X ∨ Z = Y)
@@ -406,7 +412,8 @@ theorem integrable_negMulLog_map_condTrunc (P : Measure Ω) [IsProbabilityMeasur
 /-- **density witness の withDensity 法則** (補助): a.c. probability measure `condTrunc.map Z`
 の rnDeriv を toReal した実関数 `r := (rnDeriv ·).toReal` が、その measure を `withDensity`
 で復元する: `(condTrunc P X Y n).map Z = volume.withDensity (ofReal ∘ r)`。
-a.c. ゆえ `withDensity_rnDeriv_eq` で復元 + a.e. finite rnDeriv で `ofReal ∘ toReal = id`。 -/
+a.c. ゆえ `withDensity_rnDeriv_eq` で復元 + a.e. finite rnDeriv で `ofReal ∘ toReal = id`。
+@audit:ok -/
 theorem map_condTrunc_withDensity_toReal_rnDeriv (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) {Z : Ω → ℝ} (hZ : Measurable Z)
     {n : ℕ} (hpos : P (truncSet X Y n) ≠ 0)
@@ -433,7 +440,8 @@ theorem map_condTrunc_withDensity_toReal_rnDeriv (P : Measure Ω) [IsProbability
 prob measure は `isProbabilityMeasure_condTrunc`。
 
 honest: 結論は a.e. 測度等式、仮説は独立 + measurability + a.c. + positive mass (regularity)。
-本 helper は #3 (crux usc) の優関数構成でも再利用する。 -/
+本 helper は #3 (crux usc) の優関数構成でも再利用する。
+@audit:ok -/
 theorem rnDeriv_map_condTrunc_sum_ae (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) (hXY : IndepFun X Y P)
@@ -519,7 +527,8 @@ theorem rnDeriv_map_condTrunc_sum_ae (P : Measure Ω) [IsProbabilityMeasure P]
 
 /-- **compact support of the sum law**: `condTrunc P X Y n` は `truncSet` (両成分有界
 `|X|≤n ∧ |Y|≤n`) に concentrated ゆえ、和 `X+Y` の push-forward 法則は区間
-`Icc (-(2n)) (2n)` に concentrated: `(condTrunc.map(X+Y)) (Icc (-(2n)) (2n))ᶜ = 0`。 -/
+`Icc (-(2n)) (2n)` に concentrated: `(condTrunc.map(X+Y)) (Icc (-(2n)) (2n))ᶜ = 0`。
+@audit:ok -/
 theorem map_condTrunc_sum_concentrated (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) {n : ℕ}
     (hpos : P (truncSet X Y n) ≠ 0) :
@@ -571,7 +580,16 @@ on probability measure `p_n·volume`、`Real.convexOn_mul_log`、`self_sub_one_l
 点の Jensen 前提 (`Integrable (q_n(z-·)) (p_n·vol)` + `Integrable (q_n(z-·)·log q_n(z-·))
 (p_n·vol)` を a.e. z で) 供給 + Fubini の uncurry `Integrable (p_n x · (q_n(z-x)·log q_n(z-x)))
 (vol.prod vol)` 供給が当該セッション規模 (100+ 行) を超えたため park。仮説束化での sorry 回避は
-していない (signature は本来の可積分性結論のまま)。 -/
+していない (signature は本来の可積分性結論のまま)。
+
+独立 honesty audit 2026-06-07: honest_residual 確認。(1) 非循環: 結論は和密度 negMulLog の
+負部可積分性、仮説は `hX_ac`/`hY_ac` (各成分 a.c.) + `hXY` (独立) + `hpos` (positive mass) のみ
+= regularity precondition、結論型 ≢ 仮説型。(2) 非バンドル: 和エントロピー可積分性 (= 結論) を
+仮説で受けていない。(3) classification: `plan:epi-infinite-variance-truncation-plan` の plan 実在
+(docs/shannon/、19KB) + closure 素材 `ConvexOn.map_integral_le` / `MeasureTheory.integral_integral_swap`
+は Mathlib 既存 (loogle 確認) ゆえ wall でなく plan 分類が妥当 (buildable)、右辺有限性は
+`integrable_negMulLog_map_condTrunc` (Z=Y, sorryAx-free) が供給可。
+@residual(plan:epi-infinite-variance-truncation-plan) -/
 theorem integrable_negPart_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) (hXY : IndepFun X Y P)
@@ -586,7 +604,16 @@ theorem integrable_negPart_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProba
 密度 `r := (condTrunc.map(X+Y)).rnDeriv vol |>.toReal` (= `p_n ∗ q_n`、support [-2n,2n]) の
 `negMulLog` 可積分性を正部/負部分解で。正部 `{r≤1}` は `negMulLog_le_one_sub_self` + `r` 可積分
 (probability measure の toReal rnDeriv)、負部 `{r>1}` は `h(condTrunc.map(X+Y)) ≥ h(condTrunc.map X)
-> -∞` から。黒箱 `entropyPowerExt_add_ge_of_finite_variance` は `hent_sum` を明示引数で要求。 -/
+> -∞` から。黒箱 `entropyPowerExt_add_ge_of_finite_variance` は `hent_sum` を明示引数で要求。
+
+独立 honesty audit 2026-06-07: body genuine。(1) signature に和エントロピー仮説 sneak なし
+= `hX_ac`/`hY_ac`/`hXY`/`hpos` のみ (= 結論である和エントロピー可積分性を仮説で受けていない、
+循環/load-bearing でない、最重要チェック PASS)。(2) body は正部 `g₁` を compact support
+(`map_condTrunc_sum_concentrated`) + `negMulLog_le_one_sub_self` で genuine 構成 + 負部 `g₂` を
+#7 `integrable_negPart_negMulLog_map_condTrunc_sum` に委譲 + `negMulLog r = g₁ - g₂` split。
+(3) `#print axioms` = transitive sorry は #7 由来 1 本のみ (body 自体の独自 sorry なし)。
+honest_residual (transitive: #7 の plan).
+@residual(plan:epi-infinite-variance-truncation-plan) -/
 theorem integrable_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) (hXY : IndepFun X Y P)
@@ -673,7 +700,15 @@ theorem integrable_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProbabilityMe
 
 /-- **per-n 有限分散 EPI** (黒箱 `entropyPowerExt_add_ge_of_finite_variance` への配線)。
 helper 1/2 で全 regularity を供給し、各 n (positive mass) で
-`Nₑ(P_n.map(X+Y)) ≥ Nₑ(P_n.map X) + Nₑ(P_n.map Y)` を得る。 -/
+`Nₑ(P_n.map(X+Y)) ≥ Nₑ(P_n.map X) + Nₑ(P_n.map Y)` を得る。
+
+独立 honesty audit 2026-06-07: body は黒箱への genuine 配線 (黒箱が要求する 8 regularity 引数
+= indep/a.c.×2/2次モーメント×2/各成分 entropy×2/和 entropy をすべて helper 1/2 で供給)。
+signature の `hX_ent`/`hY_ent` は黒箱の各成分有限エントロピー precondition を `condTrunc.map` 側に
+再供給するための regularity precondition (`integrable_negMulLog_map_condTrunc` 経由)、結論 (per-n EPI
+不等式) を encode しない load-bearing でない。transitive sorry は #8→#7 由来 1 本のみ (body 独自
+sorry なし)。honest_residual (transitive: #7 の plan).
+@residual(plan:epi-infinite-variance-truncation-plan) -/
 theorem entropyPowerExt_condTrunc_add_ge (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
@@ -702,7 +737,8 @@ theorem entropyPowerExt_condTrunc_add_ge (P : Measure Ω) [IsProbabilityMeasure 
 `(klDiv μ ν).toReal ≥ 0` (klDiv は ℝ≥0∞ 値、`ENNReal.toReal_nonneg` で型自明) +
 `toReal_klDiv_of_measure_eq` の llr 分解から。in-tree template
 `differentialEntropy_le_gaussian_of_variance_le` (`DifferentialEntropy.lean:520`) の
-Gaussian 参照 ν を一般参照に generalize した版。 -/
+Gaussian 参照 ν を一般参照に generalize した版。
+@audit:ok -/
 theorem differentialEntropy_le_cross_entropy {μ ν : Measure ℝ}
     [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (hμ_ac : μ ≪ volume) (hν_ac : ν ≪ volume) (hμν : μ ≪ ν)
