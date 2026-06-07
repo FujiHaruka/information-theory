@@ -20,14 +20,27 @@
 
   | env var          | 意味                                                       |
   |------------------|------------------------------------------------------------|
-  | DEP_ROOT (必須)  | 起点 declaration の完全修飾名                               |
+  | DEP_ROOT         | 起点 declaration の完全修飾名 (単一グラフモードで必須)      |
   | DEP_OUT          | 出力 dot ファイル (default: dep_graph.dot)                  |
   | DEP_WITH_TYPE    | set すると型シグネチャ依存も含める (default: 証明本体のみ)  |
   | DEP_MAX_DEPTH    | 内部依存の展開深さ上限 (default: 無制限)                    |
   | DEP_RAW          | set すると auto-gen 補助定義も畳まずノード化                |
+
+  ## ランキングモード (entry point 限定の依存数ランキング)
+
+    DEP_RANK=1 [DEP_TOP=n] [DEP_WITH_TYPE=1] lake env lean scripts/DepGraph.lean
+
+  `@[entry_point]` でマークされた declaration を対象に、推移的依存数の多い順
+  (= より複雑・難解な定理の順) に上位 n 件を出力する。通常は scripts/dep_rank.sh 経由。
+
+  | env var          | 意味                                                       |
+  |------------------|------------------------------------------------------------|
+  | DEP_RANK         | set するとランキングモード (DEP_ROOT より優先)             |
+  | DEP_TOP          | 上位何件を表示するか (default: 20)                          |
 -/
 import Lean
 import InformationTheory
+import InformationTheory.Meta.EntryPoint
 
 open Lean
 
@@ -133,21 +146,34 @@ structure GraphState where
   expanded : NameSet := {}
   adj      : Std.HashMap Name NameSet := {}
 
+/-- `realDepsOf` のメモ化 (root に非依存なので全 root 走査で再利用できる)。
+    ランキングモードで 800+ entry point を走らせる際の高速化に効く。 -/
+def cachedRealDeps (env : Environment) (cfg : Config)
+    (cache : IO.Ref (Std.HashMap Name NameSet)) (n : Name) : IO NameSet := do
+  match (← cache.get).get? n with
+  | some v => return v
+  | none   =>
+    let v := realDepsOf env cfg n
+    cache.modify (·.insert n v)
+    return v
+
 /-- 起点 `n` から DFS で依存を辿る。プロジェクト内ノードは再帰展開、
-    外部ノードは葉として隣接リストに残すのみ (展開しない)。 -/
-partial def expand (env : Environment) (cfg : Config) (ref : IO.Ref GraphState)
+    外部ノードは葉として隣接リストに残すのみ (展開しない)。
+    `cache` は `realDepsOf` のメモ (単一グラフ用には fresh な ref を渡せばよい)。 -/
+partial def expand (env : Environment) (cfg : Config)
+    (cache : IO.Ref (Std.HashMap Name NameSet)) (ref : IO.Ref GraphState)
     (depth : Nat) (n : Name) : IO Unit := do
   if (← ref.get).expanded.contains n then return
   ref.modify fun s => { s with expanded := s.expanded.insert n }
   match cfg.maxDepth? with
   | some md => if depth ≥ md then return    -- 深さ上限で打ち切り (out-edge を出さない)
   | none    => pure ()
-  for d in (realDepsOf env cfg n).toList do
+  for d in (← cachedRealDeps env cfg cache n).toList do
     if d == n then continue
     ref.modify fun s =>
       { s with adj := s.adj.insert n ((s.adj.getD n {}).insert d) }
     if isInInformationTheory env d then
-      expand env cfg ref (depth + 1) d
+      expand env cfg cache ref (depth + 1) d
     -- 外部依存はここで止める (葉ノード)
 
 /-- グラフに現れる全ノード集合 (root + 隣接リストの key / value)。 -/
@@ -201,6 +227,64 @@ def render (env : Environment) (cfg : Config) (st : GraphState) : String := Id.r
   out := out.push "}"
   return "\n".intercalate out.toList ++ "\n"
 
+/-! ## ランキングモード (entry point 限定の依存数集計)
+
+    依存定理が多い定理ほど複雑・難解という想定で、`@[entry_point]` でマークされた
+    declaration を対象に、推移的依存数 (= root を起点にした依存グラフのノード数 −1)
+    を降順ランキングする。`realDepsOf` のメモを全 entry point で共有して高速化する。 -/
+
+/-- declaration が `@[entry_point]` でマークされているか。 -/
+def isEntryPoint (env : Environment) (n : Name) : Bool :=
+  InformationTheory.Meta.entryPointAttr.hasTag env n
+
+/-- ランキング 1 行分。`total = internal + external` (いずれも root 自身を除く)。 -/
+structure RankRow where
+  name     : Name
+  total    : Nat
+  internal : Nat
+  external : Nat
+  deriving Inhabited
+
+/-- 右詰めパディング。 -/
+def padLeft (w : Nat) (s : String) : String :=
+  if s.length ≥ w then s else ("".pushn ' ' (w - s.length)) ++ s
+
+/-- 1 つの root の推移的依存数 (internal / external) を数える。root 自身は除く。 -/
+def depCounts (env : Environment) (cfg : Config)
+    (cache : IO.Ref (Std.HashMap Name NameSet)) (root : Name) : IO (Nat × Nat) := do
+  let ref ← IO.mkRef ({} : GraphState)
+  expand env { cfg with root := root } cache ref 0 root
+  let st ← ref.get
+  let nodes := nodeSet root st
+  let intCount := (nodes.toList.filter (fun n => isInInformationTheory env n)).length
+  -- root は internal 前提。internal/total から root 1 件を差し引く。
+  return (intCount - 1, nodes.size - intCount)
+
+/-- entry point を全列挙し、推移的依存数の降順に上位 `topN` を出力する。 -/
+def runRank (env : Environment) (cfg : Config) (topN : Nat) : IO Unit := do
+  let mut entries : Array Name := #[]
+  for (n, _) in env.constants.toList do
+    if isEntryPoint env n && isInInformationTheory env n then
+      entries := entries.push n
+  let cache ← IO.mkRef ({} : Std.HashMap Name NameSet)
+  let mut rows : Array RankRow := #[]
+  for ep in entries do
+    let (intDeps, extDeps) ← depCounts env cfg cache ep
+    rows := rows.push { name := ep, total := intDeps + extDeps, internal := intDeps, external := extDeps }
+  let sorted := rows.qsort (fun a b =>
+    if a.total == b.total then a.name.toString < b.name.toString else a.total > b.total)
+  let typeNote := if cfg.includeType then "型シグネチャ込み" else "証明本体のみ"
+  IO.println "==== InformationTheory 依存数ランキング (entry point 限定) ===="
+  IO.println s!"  entry point 総数 : {entries.size}   表示 : 上位 {topN}   依存集計 : {typeNote}"
+  IO.println "  依存数 = 推移的に到達する declaration 数 (root 自身を除く / 内部は再帰展開・外部は葉)"
+  IO.println ""
+  IO.println ("  " ++ padLeft 4 "rank" ++ " " ++ padLeft 7 "total" ++ " "
+    ++ padLeft 7 "int" ++ " " ++ padLeft 7 "ext" ++ "   declaration")
+  let shown := min topN sorted.size
+  for i in [0:shown] do
+    let r := sorted[i]!
+    IO.println s!"  {padLeft 4 (toString (i+1))} {padLeft 7 (toString r.total)} {padLeft 7 (toString r.internal)} {padLeft 7 (toString r.external)}   {r.name}"
+
 end Tooling.DepGraph
 
 /-- 環境変数が「非空に設定されている」か。空文字 (`export X=""`) は未設定扱い。 -/
@@ -210,9 +294,23 @@ private def envFlag (name : String) : IO Bool := do
 open Tooling.DepGraph in
 #eval! show MetaM Unit from do
   let env ← getEnv
+  -- ランキングモード (DEP_RANK set): entry point 限定で依存数の多い順に出力
+  if (← envFlag "DEP_RANK") then
+    let topN := ((← IO.getEnv "DEP_TOP").bind String.toNat?).getD 20
+    let cfg : Config := {
+      root        := .anonymous          -- runRank が entry point ごとに上書き
+      out         := ""
+      includeType := (← envFlag "DEP_WITH_TYPE")
+      raw         := (← envFlag "DEP_RAW")
+      maxDepth?   := (← IO.getEnv "DEP_MAX_DEPTH").bind String.toNat?
+    }
+    runRank env cfg topN
+    return
+  -- 単一グラフモード (DEP_ROOT で指定)
   let rootStr := (← IO.getEnv "DEP_ROOT").getD ""
   if rootStr.isEmpty then
     IO.eprintln "[DepGraph] DEP_ROOT が未設定です (例: DEP_ROOT=InformationTheory.Foo.bar)"
+    IO.eprintln "  ランキングは DEP_RANK=1 [DEP_TOP=n] で実行できます。"
     return
   let root := rootStr.toName
   unless env.contains root do
@@ -226,8 +324,9 @@ open Tooling.DepGraph in
     raw         := (← envFlag "DEP_RAW")
     maxDepth?   := (← IO.getEnv "DEP_MAX_DEPTH").bind String.toNat?
   }
+  let cache ← IO.mkRef ({} : Std.HashMap Name NameSet)
   let ref ← IO.mkRef ({} : GraphState)
-  expand env cfg ref 0 root
+  expand env cfg cache ref 0 root
   let st ← ref.get
   IO.FS.writeFile cfg.out (render env cfg st)
   -- サマリ
