@@ -21,15 +21,15 @@ case-1 wall を両 file (`EPIUncondMixedCase` + `EPICase1SmoothingLimit`) の **
 
 **case-1 (両 a.c.) の有限分散 / 無限分散 分解**: case-1 古典 EPI を分散の有無で 2 分:
 * **有限分散**: `entropyPowerExt_add_ge_of_finite_variance` (smoothing-limit、genuine) に
-  delegate。残る transitive sorry は和の有限微分エントロピー (`hent_sum`) のみ
-  (`@residual(plan:epi-finitevar-smoothing-limit-plan)`)。
+  delegate。和の有限微分エントロピー `hW_ent` precondition を threading するのみで own sorry
+  なし (`hW_ent` は `hX_ent`/`hY_ent` と同階層の regularity precondition、EPI を encode しない)。
 * **無限分散**: `entropyPowerExt_add_ge_infinite_variance` (Lieb-Young / Brascamp-Lieb 不在の
   genuine Mathlib 壁、`@residual(wall:epi-infinite-variance-classical)`)。
 
 旧 bundled `wall:epi-finite-entropy-ac-classical` (両 a.c. 有限エントロピー古典 EPI の 1 本
-sorry) は本 file で有限分散枝 (smoothing closure、残 hent_sum のみ) + 無限分散枝 (named wall)
-の 2 本に **分解**された。`entropyPowerExt_add_ge_finite_ac` 自身は delegation のみで own sorry
-を持たず、transitive sorry は hent_sum [plan] + infinite-variance [wall] の 2 本。
+sorry) は本 file で有限分散枝 (smoothing closure、`hW_ent` threading で own sorry なし) +
+無限分散枝 (named wall) の 2 本に **分解**された。`entropyPowerExt_add_ge_finite_ac` 自身は
+delegation のみで own sorry を持たず、残 transitive sorry は infinite-variance [wall] 1 本のみ。
 -/
 
 namespace InformationTheory.Shannon
@@ -46,54 +46,34 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 
 * **有限分散** (`hfv : Integrable (·²) X ∧ Integrable (·²) Y`):
   `EPICase1SmoothingLimit.entropyPowerExt_add_ge_of_finite_variance` (smoothing→正則化 limit
-  closure、sorryAx-free) に delegate。唯一の追加入力 = 和の有限微分エントロピー `hent_sum`
-  (`negMulLog ((P.map (X+Y)).rnDeriv volume ·).toReal` 可積分)。これは X+Y の有限微分エントロピー
-  regularity precondition であって EPI を encode しない。残 transitive sorry は hent_sum 1 本
-  (`@residual(plan:epi-finitevar-smoothing-limit-plan)`)。
+  closure、sorryAx-free) に delegate。X+Y の有限微分エントロピー `hW_ent`
+  (`negMulLog ((P.map (X+Y)).rnDeriv volume ·).toReal` 可積分) を threading するのみ。これは
+  `hX_ent`/`hY_ent` と同階層の regularity precondition であって EPI を encode しない
+  (**NOT load-bearing**)。本枝に own sorry は無い。
 * **無限分散** (`¬ hfv`):
   `EPICase1SmoothingLimit.entropyPowerExt_add_ge_infinite_variance` (Lieb-Young / Brascamp-Lieb
   不在の genuine Mathlib 壁、`@residual(wall:epi-infinite-variance-classical)`) に delegate。
 
-本補題自身は delegation のみで own sorry 0、signature honest (`hX_ent`/`hY_ent` は有限微分
-エントロピー regularity precondition、結論を encode しない)。transitive sorry は hent_sum [plan]
-+ infinite-variance [wall] の 2 本。旧 bundled `wall:epi-finite-entropy-ac-classical` の分解先。
-@residual(plan:epi-finitevar-smoothing-limit-plan,wall:epi-infinite-variance-classical) -/
+本補題自身は delegation のみで own sorry 0、signature honest (`hX_ent`/`hY_ent`/`hW_ent` は
+有限微分エントロピー regularity precondition、結論を encode しない)。transitive sorry は
+infinite-variance [wall] 1 本のみ。旧 bundled `wall:epi-finite-entropy-ac-classical` の分解先。
+@residual(wall:epi-infinite-variance-classical) -/
 theorem entropyPowerExt_add_ge_finite_ac
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
     (hX_ent : Integrable (fun x => Real.negMulLog ((P.map X).rnDeriv volume x).toReal) volume)
-    (hY_ent : Integrable (fun x => Real.negMulLog ((P.map Y).rnDeriv volume x).toReal) volume) :
+    (hY_ent : Integrable (fun x => Real.negMulLog ((P.map Y).rnDeriv volume x).toReal) volume)
+    (hW_ent : Integrable
+      (fun x => Real.negMulLog ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume) :
     entropyPowerExt (P.map (fun ω => X ω + Y ω))
       ≥ entropyPowerExt (P.map X) + entropyPowerExt (P.map Y) := by
   by_cases hfv : Integrable (fun ω => (X ω) ^ 2) P ∧ Integrable (fun ω => (Y ω) ^ 2) P
-  · -- 有限分散: smoothing-limit closure に delegate。
+  · -- 有限分散: smoothing-limit closure に delegate。和の有限微分エントロピー `hW_ent` は
+    -- hX_ent/hY_ent と同階層の regularity precondition を threading するだけ。
     obtain ⟨h_mom_X, h_mom_Y⟩ := hfv
-    have hent_sum : Integrable (fun x => Real.negMulLog
-        (((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal)) volume := by
-      -- 和 X+Y の有限微分エントロピー (regularity precondition、EPI を encode しない)。
-      -- closable な実解析事実 (Mathlib 壁ではない): 両 a.c. + 両有限分散 + 両有限微分
-      -- エントロピーの独立 X,Y ⟹ X+Y も有限微分エントロピー (h(X)≤h(X+Y)≤½log(2πe·Var(X+Y))
-      -- の両側有界 + negMulLog 可積分性)。有限分散だけでは不足 (spike 状密度で h=−∞)、両端
-      -- hX_ent/hY_ent 必須。
-      -- 撤退理由 (Step 2 attempt 後): in-tree 資産では素直に閉じない。
-      --   (a) `convDensityAdd_negMulLog_integrable_pub` (EPIG2HeatFlowContinuity) は
-      --       **Gaussian 核** convolution `pX ∗ g_t` (t>0) 専用で、一般 convolution
-      --       `pX ∗ pY` (= P.map(X+Y) の密度) に型が合わない。
-      --   (b) `differentialEntropy_add_ge_of_indep` (EPIUncondMixedCase) は
-      --       `h(X)≤h(X+Y)` の **下界** を結論するが negMulLog density 可積分性を produce
-      --       しない (前提に取りもしないが、可積分性の供給源にならない)。
-      --   (c) 正部 (0≤p≤1) / 負部 (p>1) の可積分性を分けると、負部は ∫p²<∞ (密度 L²) を
-      --       要求し、一般 a.c. 密度 + 有限分散だけからは出ない (ガウス平滑化なら成立する
-      --       が、一般 `pX ∗ pY` は spike 状密度の和で L²/有界性が保証されない)。
-      -- closure route メモ: 有限分散 + 有限微分エントロピー + a.c. から X+Y の負部・正部
-      --   negMulLog 可積分性を直接構成する実解析補題 (上界 ½log(2πe·Var) からの正部支配 +
-      --   下界 h(X)≤h(X+Y) からの負部支配)、または P.map(X+Y) の bounded density 性の追加
-      --   regularity 仮定。`epi-finitevar-smoothing-limit-plan` で closure 予定。
-      -- @residual(plan:epi-finitevar-smoothing-limit-plan)
-      sorry
     exact EPICase1SmoothingLimit.entropyPowerExt_add_ge_of_finite_variance
-      P X Y hX hY hXY hX_ac hY_ac h_mom_X h_mom_Y hX_ent hY_ent hent_sum
+      P X Y hX hY hXY hX_ac hY_ac h_mom_X h_mom_Y hX_ent hY_ent hW_ent
   · -- 無限分散: genuine Mathlib 壁 (Lieb-Young / Brascamp-Lieb)。
     exact EPICase1SmoothingLimit.entropyPowerExt_add_ge_infinite_variance
       P X Y hX hY hXY hX_ac hY_ac hX_ent hY_ent hfv
@@ -182,7 +162,7 @@ theorem entropyPowerExt_add_ge_dispatch_skeleton
   by_cases hX_ac : P.map X ≪ volume
   · by_cases hY_ac : P.map Y ≪ volume
     · -- case 1 (両 a.c.): named wall `entropyPowerExt_add_ge_finite_ac` に delegation。
-      exact entropyPowerExt_add_ge_finite_ac X Y P hX hY hXY hX_ac hY_ac hX_ent hY_ent
+      exact entropyPowerExt_add_ge_finite_ac X Y P hX hY hXY hX_ac hY_ac hX_ent hY_ent hW_ent
     · -- case 2 (X a.c. ∧ Y 特異): Phase 4 補題を 8 integrability + 2 finite-entropy precondition つきで直接呼出。
       exact entropyPowerExt_mixed_add_ge X Y P hX hY hXY hX_ac hY_ac h_ac h_int hκ_v
         hκ_logp_int hκ_cross_int h_fibreEnt_int h_cross_int h_logq_int hX_ent hW_ent
