@@ -9,6 +9,9 @@
 - 判断ログは決着済 entry を削除（採用方針確定 / 反例却下 / commit 済）。active な撤退ライン・判定軸・進行中の判断は残す。凍結 slug (L-* 系) 不可侵。詳細 → CLAUDE.md「Plan / docs hygiene」
 - プラン予算: ≤ 600 行 / active 判断ログ ≤ 10 entry。超過は `/compact-plan`（handoff 境界で自動起動）
 - `rg "^- \[ \]"` で残タスク横断 grep、`rg "🔄"` でピボット箇所だけ拾える
+- sub-plan を分割したら「進捗」or 専用「## Sub-plan 一覧」テーブルから各子 `*-plan.md` にリンク。これが
+  子の Parent ヘッダの backlink 対象 (plan_lint が双方向照合)。子の本線/park・進捗が変わったら、この
+  DAG 行 / sub-plan テーブルも同期する（衝突時は子が SoT → CLAUDE.md「Plan / docs hygiene」親子整合）
 -->
 
 ## 進捗

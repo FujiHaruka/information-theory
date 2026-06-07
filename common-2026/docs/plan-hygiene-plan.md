@@ -1,8 +1,8 @@
 # プラン衛生 (判断ログ + 確定事実のとっちらかり緩和) 計画 🧹
 
-> **Scope**: P1 (事実は再導出) + P2 (確定事実台帳) + P3 (staleness linter) + P4 (判断ログ自動圧縮)。
-> **Non-goal**: P5 (frontmatter status + archive ライフサイクル) — ユーザー deselect (2026-06-07)。
-> **由来**: 2セッション横断調査で確認した 2 問題 (プラン肥大 / セッション間重複発見)。詳細データはセッション履歴。
+> **Scope**: P1 (事実は再導出) + P2 (確定事実台帳) + P3 (staleness linter) + P4 (判断ログ自動圧縮) + P6 (親子プラン整合)。
+> **Non-goal**: P5 (frontmatter status + archive ライフサイクル) — ユーザー deselect (2026-06-07)。P6 は P5 の親子 slice を frontmatter なし (既存 Parent ヘッダ + sub-plan テーブルのみ) で代替する。
+> **由来**: 2セッション横断調査で確認した 2 問題 (プラン肥大 / セッション間重複発見)。P6 は handoff/carryon で親 DAG が stale 化する drift。詳細データはセッション履歴。
 
 <!-- 記法は moonshot-plan-template と同じ (📋🚧✅🔄 / 取り消し線 / 判断ログ)。
      このプラン自身が「衛生」の実例なので、肥大させない (≤ 250 行を budget とする)。 -->
@@ -14,6 +14,7 @@
 - [x] Phase 3 — `scripts/plan_lint.ts` staleness linter (P3) ✅ (純 Deno 走査、201 plans/~11s。実証: 141 STALE / 45 SUSPECT / 44 BUDGET 検出。レポートは gitignore で再生成式)
 - [x] Phase 4 — pre-commit hook に docs-plan WARN 分岐追加 (P1+P4 強制) ✅ (P1 prose / P4 予算>600行 / P4 判断ログ>10 の3 WARN 実機確認。plan_lint は ~10s で hook 非搭載=手動/CI)
 - [x] Phase 5 — handoff skill に圧縮トリガー配線 (P4 自動化) ✅ (handoff やること step 2 = plan_lint → BUDGET/STALE で /compact-plan、cleanup がセッション境界で必ず走る)
+- [x] Phase 6 — 親子プラン整合 (P6) ✅ (L1 doctrine: CLAUDE.md「親子プラン整合」+ テンプレ2本 / L2 pre-commit「子だけ staged で親未 staged」WARN 実機確認 / L3 plan_lint 親子グラフ: dead リンク STALE・backlink 欠落/親子 drift SUSPECT、positive test 済 / handoff・carryon に family 一括 lint + 子 SoT 解消を配線)
 
 ## ゴール / Approach
 
@@ -93,6 +94,15 @@ Deno + TS、`session_metrics.ts` のスタイル (`#!/usr/bin/env -S deno run -A
 
 依存: Phase 1 (反転済ルール) + Phase 4 (予算定義)。
 
+## Phase 6 — 親子プラン整合 (P6) ✅
+
+親 moonshot plan は子の状態 (DAG 本線/park、sub-plan 進捗) を *キャッシュ* で持つ。子だけ更新して親 DAG を直し忘れると、cold な次セッションが `/carryon` で親 DAG を最初に読み park 経路を本線と誤認する (handoff/carryon の典型 drift)。frontmatter を足さず (P5 deselect 尊重)、既存の子 `**Parent**:` ヘッダ + 親 sub-plan テーブルのリンク構造だけを材料に L1/L2/L3 で抑える。
+
+- **L1 doctrine**: CLAUDE.md「Plan / docs hygiene」に「衝突時は子が SoT、親を子に合わせて直す」を明文化 (cold セッションの decision rule)。`subplan-template.md` / `moonshot-plan-template.md` の Parent ヘッダ / sub-plan テーブル注記を「親更新の同期点」に強化。
+- **L2 編集時 reminder** (pre-commit, text のみ): 子 plan (Parent ヘッダ持ち) を staged にした commit に親 plan が co-staged されていなければ WARN。
+- **L3 グラフ lint** (`plan_lint.ts`): 子の Parent ヘッダから親子グラフを構築し、(a) dead `*-plan.md` リンク = STALE、(b) backlink 欠落 (親が子 slug を sub-plan 参照していない) = SUSPECT、(c) 親子 drift (子の git commit が親より新しい) = SUSPECT。`docs/**/*-plan.md` のみ読むので code 全走査が不要 = 軽量。
+- **handoff/carryon 配線**: 両 skill で family 一括 `plan_lint docs/<family>/*-plan.md` を走らせ、親子 SUSPECT を「親を子に合わせる」で解消してから引き継ぐ/着手する。handoff.md State に「親子整合」行を追加。
+
 ## 非ゴール / リスク
 
 - **P5 除外**: frontmatter `status`/`owns`/`synced_at` + `docs/archive/` 自動移動はやらない (ユーザー deselect)。P3 の sync 判定は frontmatter でなく git log 比較で代替。
@@ -112,3 +122,4 @@ Deno + TS、`session_metrics.ts` のスタイル (`#!/usr/bin/env -S deno run -A
 書く頻度: 方針変更 / 撤退 / 当初仮定の修正時。決着済は削除 (このプラン自身が P4 規約の実例)。
 
 1. **P5 deselect (2026-06-07)**: ユーザーが P1/P2/P3/P4 を選択、P5 (frontmatter+archive) を除外。→ P3 の sync 判定を frontmatter `synced_at` でなく git log 比較に変更。
+2. **P6 採用 (2026-06-07)**: P5 deselect 後も残る親子 DAG drift (handoff/carryon で park 経路を本線と誤認) を、新 frontmatter なし (既存 Parent ヘッダ + 親 sub-plan テーブルのリンクのみ) で機械検出する L1+L2+L3 を実装。親子 drift 検出は P3 の git-staleness を「親 plan vs 子 plan の commit 比較」に流用 (新マークアップ不要)。深度はユーザー選択「推奨: L1+L2+L3 フル」。

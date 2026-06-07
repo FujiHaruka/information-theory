@@ -13,9 +13,10 @@ description: 現在のセッションの状態を `.claude/handoff.md` に書き
    - `git status` (uncommitted の有無、branch)
    - `git log --oneline -5` (直近のコミット)
    - 現在の Task list (TaskList tool で取得)
-2. **active plan の hygiene チェック** (CLAUDE.md「Plan / docs hygiene」): handoff 対象 family の `*-plan.md` を `deno run -A scripts/plan_lint.ts <plan>` で検査。
+2. **active plan の hygiene チェック** (CLAUDE.md「Plan / docs hygiene」): handoff 対象 family の `*-plan.md` を **family 一括**で検査 — `deno run -A scripts/plan_lint.ts docs/<family>/*-plan.md` (親子の両端を見るため単一 plan でなく family 一括)。
    - **BUDGET** (>600 行) が出たら handoff 前に `/compact-plan <plan>` を実行 (決着済 判断ログ entry / 完了 Phase を畳む)。
-   - **STALE** (壁 slug 消失 / file 消失) が出たら該当箇所を修正 or 削除。次セッションが誤った確定を引き継がないため。
+   - **STALE** (壁 slug 消失 / file 消失 / dead 親子リンク) が出たら該当箇所を修正 or 削除。次セッションが誤った確定を引き継がないため。
+   - **親子整合 SUSPECT** (backlink 欠落 / 親子 drift = 子が親より後に更新) が出たら、**親 DAG / sub-plan テーブルを子に合わせて直す** (子が SoT)。cold な次セッションは親 DAG を最初に読むので、ここで解消しておかないと park 経路を本線と取り違える。
    - 圧縮対象は family plan であって `.claude/handoff.md` ではない (compact-plan の不可侵制約と非競合)。cleanup をセッション境界で必ず走らせる目的 (今は user 起動依存で実行されない)。
 3. **`.claude/handoff.md` を以下の形式で書く** (`Write` で上書き)
 4. ユーザーには「ハンドオフ書いた」と一言だけ。長い要約は不要 (内容はファイルにある)
@@ -30,6 +31,7 @@ description: 現在のセッションの状態を `.claude/handoff.md` に書き
 - Branch: <branch>
 - Uncommitted: <"clean" or short list>
 - Active phase / 作業中の文脈: <一文>
+- 親子整合: <clean / 親 P と子 C が drift・子が新しい → 次セッションは親 DAG を子に合わせて直す>
 
 ## Tasks
 

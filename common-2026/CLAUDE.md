@@ -214,7 +214,16 @@ If the session is ad-hoc — opened with no prior handoff context, scope unrelat
 - 廃止 Phase は取り消し線残置でなく 1 行 + commit に圧縮。完了 Phase の本文も同様。
 - **プラン予算**: 1 plan ≤ 600 行 / active 判断ログ ≤ 10 entry。超過したら `/compact-plan` (handoff 境界で自動起動)。pre-commit が docs-plan の予算超過を WARN。
 
-**staleness 検出**: `scripts/plan_lint.ts` が plan の decl / file:line / 壁 slug 参照をコードと照合し STALE/SUSPECT を出す。STALE 確定は (file 消失 / 壁 slug 消失) の 2 ルールのみ、残りは要レビューの SUSPECT。
+**staleness 検出**: `scripts/plan_lint.ts` が plan の decl / file:line / 壁 slug 参照をコードと照合し STALE/SUSPECT を出す。STALE 確定は (file 消失 / 壁 slug 消失 / dead `*-plan.md` リンク) の 3 ルールのみ、残りは要レビューの SUSPECT。親子グラフ (下記) も同 linter が検査する。
+
+**親子プラン整合 (handoff/carryon ドリフト対策)**:
+
+親 moonshot plan は子の **状態** (DAG の本線/park、sub-plan テーブルの進捗) を *キャッシュ* として持つ。子だけ更新して親 DAG を直し忘れると、cold な次セッションが `/carryon` で親 DAG を最初に読み、park 経路を本線と取り違える。構造 (DAG エッジ) は滅多に変わらない — drift するのは状態/ルート選択なので、そこにだけ「再導出 > キャッシュ」を効かせる。
+
+- **衝突時は子が SoT**: 親 DAG/sub-plan テーブルと子 plan が食い違ったら、子が作業に近く新しい。**親を子に合わせて直す** (子を親に揃えない)。これが混乱した cold セッションの decision rule。
+- **編集時の強制点** (pre-commit, text のみ): 子 plan (`**Parent**:`/`**親**:` ヘッダ持ち) を編集する commit に親 plan が co-staged されていないと WARN。子を直したらできるだけ親も同コミットに含める。
+- **検査の強制点** (`plan_lint.ts`): 親子グラフを照合 — dead 親/子リンク (STALE)、backlink 欠落 (親が子を sub-plan 参照していない、SUSPECT)、親子 drift (子が親より後にコミット、SUSPECT)。`handoff` / `carryon` が family 単位で `deno run -A scripts/plan_lint.ts docs/<family>/*-plan.md` を走らせ、SUSPECT を解消してから引き継ぐ / 着手する。
+- **規約上の同期点**: 子の `**Parent**:` ヘッダが親へのリンク兼「親更新の同期点」、親の sub-plan テーブル / DAG 行が子への backlink。両端を linter が双方向照合する (テンプレ → `docs/subplan-template.md` / `docs/moonshot-plan-template.md`)。
 
 ## Definition of Done — 2 段階
 

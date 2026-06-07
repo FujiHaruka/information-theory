@@ -5,7 +5,9 @@
 <!--
 雛形メモ:
 - 記法は moonshot-plan-template と同じ（状態絵文字、取り消し線、判断ログ）
-- Parent ヘッダは必須。ナビゲーション + 親更新時の同期点として使う
+- Parent ヘッダは必須 (リンクは親 `*-plan.md` への相対パス)。plan_lint がこの行から親子グラフを構築し、
+  pre-commit が「子を更新したら親も co-stage」を WARN する同期点。**子の状態 (本線/park、進捗) を
+  変えたら親 DAG / sub-plan テーブルも直す** (衝突時は子が SoT → CLAUDE.md「Plan / docs hygiene」親子整合)
 -->
 
 ## 進捗

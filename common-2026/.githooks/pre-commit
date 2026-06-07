@@ -78,6 +78,8 @@ ADD
 
 # 6) docs plan の hygiene (CLAUDE.md「Plan / docs hygiene」)。全て WARN、BLOCK しない。
 #    staleness 照合 (plan_lint.ts) は全コード走査で ~10s かかるため hook には載せない (手動/CI)。
+#    親子整合の本格照合 (backlink/drift) も plan_lint 側。ここは「子を更新したのに親が
+#    同コミットに無い」を text のみで検出する軽量 reminder (handoff/carryon の親子 drift 対策)。
 plan_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E 'docs/.*-plan\.md$' || true)
 while IFS= read -r f; do
   [ -z "$f" ] && continue
@@ -97,6 +99,21 @@ while IFS= read -r f; do
   jlog=$(printf '%s\n' "$blob" | awk '/^## 判断ログ/{f=1;next} f && /^[0-9]+\. /{c++} END{print c+0}')
   if [ "${jlog:-0}" -gt 10 ]; then
     addwarn "$f: 判断ログ ${jlog} entry > 10 — 決着済を削除 (git が履歴) (P4)"
+  fi
+
+  # 親子整合: 子 plan (Parent ヘッダ持ち) を更新したら親 plan も同コミットで確認する
+  # (子だけ更新 → 親 DAG/sub-plan が stale → handoff/carryon で park 経路を本線と誤認)。
+  parent_rel=$(printf '%s\n' "$blob" | grep -oE '\*\*(Parent|親)\*\*[:：][^(]*\([^)]+-plan\.md\)' | head -1 | sed -E 's/.*\(([^)]+-plan\.md)\)/\1/')
+  case "$parent_rel" in ""|*"<"*|*">"*) parent_rel="" ;; esac
+  if [ -n "$parent_rel" ]; then
+    parent_path="$(dirname "$f")/$parent_rel"
+    parent_path=$(printf '%s' "$parent_path" | sed -E 's@/\./@/@g')
+    while printf '%s' "$parent_path" | grep -q '/[^/]\{1,\}/\.\./'; do
+      parent_path=$(printf '%s' "$parent_path" | sed -E 's@/[^/]+/\.\./@/@')
+    done
+    if ! printf '%s\n' "$plan_files" | grep -qxF "$parent_path"; then
+      addwarn "$f: 子 plan を更新だが親 '$parent_path' が同コミットに無い — 親の §sub-plan 一覧 / DAG が drift していないか確認 (衝突時は子が SoT) (親子整合)"
+    fi
   fi
 done <<PLN
 $plan_files

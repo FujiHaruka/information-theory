@@ -14,8 +14,11 @@
 //
 // 判定 (CLAUDE.md と整合):
 //   STALE (確定)   = (a) file:line の file が存在しない  (b) plan の wall:slug が code に無い
+//                    (c) plan 内の '*-plan.md' リンクのリンク先が存在しない (dead 親/子リンク)
 //                    ※ (b) は壁解消/改名のほか「未作成 (planning ahead)」も含む — その場合は誤検出
 //   SUSPECT (要レビュー) = 行ドリフト (line > file 行数) / git staleness (参照コードが plan より新しい)
+//                          / 親子 backlink 欠落 (子の Parent が指す親が子を sub-plan 参照していない)
+//                          / 親子 drift (子 plan が親 plan より後に更新 — 親 DAG/状態が stale の疑い)
 //                          / [--check-decls] backtick decl が code に無い (heuristic, 誤検出あり)
 //   BUDGET         = plan > 600 行 (CLAUDE.md プラン予算)
 
@@ -111,6 +114,33 @@ async function lineCount(path: string): Promise<number> {
   return n;
 }
 
+// ── parent/child plan graph helpers ─────────────────────────────────────────
+// 子 plan は `**Parent**:` / `**親**:` ヘッダで親を宣言。親は sub-plan テーブルから子に
+// link-back する。両端を照合し、親子 drift (handoff/carryon で親 DAG が stale 化) を機械検出。
+
+const PARENT_RE = /\*\*(?:Parent|親)\*\*\s*[:：]\s*\[[^\]]*\]\(([^)\s]+\.md)\)/;
+
+function dirOf(p: string): string {
+  const i = p.lastIndexOf("/");
+  return i < 0 ? "" : p.slice(0, i);
+}
+function baseOf(p: string): string {
+  const i = p.lastIndexOf("/");
+  return i < 0 ? p : p.slice(i + 1);
+}
+function resolveRel(baseDir: string, rel: string): string {
+  const parts = baseDir ? baseDir.split("/") : [];
+  for (const seg of rel.split("/")) {
+    if (seg === "" || seg === ".") continue;
+    else if (seg === "..") parts.pop();
+    else parts.push(seg);
+  }
+  return parts.join("/");
+}
+function mdLinkTargets(text: string): string[] {
+  return [...text.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)].map((m) => m[1]);
+}
+
 // ── per-plan lint ────────────────────────────────────────────────────────────
 
 interface Finding {
@@ -198,21 +228,93 @@ async function lintPlan(
   return findings;
 }
 
-// ── main ───────────────────────────────────────────────────────────────────
+// ── parent/child graph lint ──────────────────────────────────────────────────
 
-async function planList(): Promise<string[]> {
-  if (paths.length) return paths;
-  const out: string[] = [];
-  for await (const f of walk(DOCS_ROOT, (p) => p.endsWith("-plan.md"))) out.push(f);
-  return out.sort();
+async function lintGraph(
+  plan: string,
+  text: string,
+  planSet: Set<string>,
+  declaredParent: Map<string, string>,
+  planTexts: Map<string, string>,
+): Promise<Finding[]> {
+  const findings: Finding[] = [];
+  const dir = dirOf(plan);
+
+  // (c) dead '*-plan.md' リンク (親リンク・子 sub-plan リンクどちらも拾う)
+  const seenLinks = new Set<string>();
+  for (const target of mdLinkTargets(text)) {
+    const path = target.split("#")[0];
+    if (!path.endsWith("-plan.md")) continue;
+    if (/^https?:\/\//.test(path)) continue;
+    if (path.includes("<") || path.includes(">")) continue; // テンプレ placeholder
+    const resolved = resolveRel(dir, path);
+    if (seenLinks.has(resolved)) continue;
+    seenLinks.add(resolved);
+    if (!planSet.has(resolved) && !(await fileExists(resolved))) {
+      findings.push({ kind: "STALE", msg: `plan リンク '${target}' のリンク先が存在しない` });
+    }
+  }
+
+  // 親子整合 (子の Parent ヘッダ起点)。親 file 消失は上の (c) が STALE で拾う。
+  const parent = declaredParent.get(plan);
+  if (parent) {
+    const ptext = planTexts.get(parent);
+    if (ptext !== undefined) {
+      // backlink: 親が子の slug を本文 (sub-plan テーブル等) で参照しているか
+      const slug = baseOf(plan).replace(/\.md$/, "");
+      if (!ptext.includes(slug)) {
+        findings.push({
+          kind: "SUSPECT",
+          msg: `親 '${baseOf(parent)}' が子 '${slug}' を sub-plan 参照していない (backlink 欠落)`,
+        });
+      }
+      // drift: 子が親より後にコミット = 親 DAG/状態が子を反映していない疑い (子が SoT)
+      const ct = await gitTime(plan);
+      const pt = await gitTime(parent);
+      if (ct !== null && pt !== null && ct > pt) {
+        findings.push({
+          kind: "SUSPECT",
+          msg: `子が親 '${baseOf(parent)}' より後に更新 — 親の DAG/状態が子を反映しているか確認 (親子 drift)`,
+        });
+      }
+    }
+  }
+
+  return findings;
 }
 
+// ── main ───────────────────────────────────────────────────────────────────
+
 const { wallSlugs, declNames } = await scanCode();
-const plans = await planList();
+
+// 全 plan を読み込み親子グラフを構築する (lint 対象が部分集合でも親の本文が要るため、
+// グラフ構築は常に docs/**/*-plan.md 全体で行う)。
+const allPlans: string[] = [];
+for await (const f of walk(DOCS_ROOT, (p) => p.endsWith("-plan.md"))) allPlans.push(f);
+allPlans.sort();
+const planSet = new Set(allPlans);
+const planTexts = new Map<string, string>();
+for (const p of allPlans) {
+  try {
+    planTexts.set(p, await Deno.readTextFile(p));
+  } catch { /* skip */ }
+}
+const declaredParent = new Map<string, string>();
+for (const [p, t] of planTexts) {
+  const m = t.match(PARENT_RE);
+  if (m) {
+    const resolved = resolveRel(dirOf(p), m[1]);
+    if (resolved !== p) declaredParent.set(p, resolved);
+  }
+}
+
+const plans = paths.length ? paths : allPlans;
 
 const all: { plan: string; findings: Finding[] }[] = [];
 for (const plan of plans) {
   const f = await lintPlan(plan, wallSlugs, declNames);
+  const text = planTexts.get(plan) ?? await Deno.readTextFile(plan).catch(() => "");
+  if (text) f.push(...await lintGraph(plan, text, planSet, declaredParent, planTexts));
   if (f.length) all.push({ plan, findings: f });
 }
 
