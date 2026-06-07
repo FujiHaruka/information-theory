@@ -24,47 +24,27 @@ Prefer single-file `lake env lean <file>` over full project builds for the inner
 
 - **Primary — `lake env lean <file>`** is the definitive synchronous check. Silent output = clean. Run after each fill / edit when you want an explicit verdict.
 - **Do NOT use `lake build` for verification.** It rebuilds every module and is too slow for the inner loop. Reserve it for one-off project-wide sanity checks after a large refactor.
-- **After upstream edits, dependents may need olean refresh.** module A の public symbol / namespace / signature を変えると dependent が A の旧 `.olean` を拾い phantom `unknown identifier` を出すことがある → `lake build InformationTheory.<A>` で 1 度 refresh。
+- **After upstream edits, dependents may need olean refresh.** Changing a public symbol / namespace / signature in module A can make a dependent pick up A's stale `.olean` and emit a phantom `unknown identifier` → refresh once with `lake build InformationTheory.<A>`.
 
-**「Mathlib 壁」判定は反証を 1 度試みてから受け入れる** (覆し ~40 件の真因はほぼ全て「別ルート or 反例を 1 つも探さずに断じた」)。`@residual(wall:slug)` を書く / lemma を「壁」と scope-out する **前に** 判定の向きに応じた反証を 1 回行い、最終判定は必ず実機械検証 (`lake env lean` + `#print axioms`) で裏取りする。監査 / 在庫の壁判定を鵜呑みにせず `proof-pivot-advisor` で別 lemma chain を在庫横断で再確認するのが定石。
+**Accept a "Mathlib wall" verdict only after attempting one refutation** (the root cause of the ~40 overturned verdicts was almost always "declared a wall without searching for a single alternative route or counterexample"). **Before** you write `@residual(wall:slug)` or scope a lemma out as a "wall", perform one refutation in the direction of the verdict, and always back the final verdict with real machine verification (`lake env lean` + `#print axioms`). The standard practice is to not take audit / inventory wall verdicts at face value and to re-confirm an alternative lemma chain across the inventory with `proof-pivot-advisor`.
 
-- **壁と断じる側 (過大評価対策)**: loogle 0 件は *必要条件であって十分条件でない*。0 件の後に (a) **conclusion-shape 二段検索** (bare-identifier でなく `|- _ ≤ _` 等の subterm / conclusion pattern で再検索)、(b) **期待結論形に近い template lemma を 1 本挙げ self-build 行数を見積もる**。これが書けないなら壁判定保留。詰まりが「命題が Mathlib に無い (真の gap)」か「既存 asset への配線 (import cycle 含む plumbing)」かを区別する。
-- **family 丸ごと壁 / scope-out と断じる前 (gateway-atom-first)**: その family の決定的 atom 1 本を `lean-implementer` に実装 dispatch して通るか試してから判定する。
-- **非壁 / 仮説 OK と断じる側 (過小評価対策)**: 受け入れる前に **small-case で反例を 1 度探す** + **退化境界を 1 つ代入** (`=0` / Dirac / 非可積分 / `N=0`) して statement が生きているか確認する。述語の signature が constraint を落としていないか (`*_def` の Read) を確認。具体的数値・型の予測は「具体的数値・型予測の verbatim 確認」節に従う。
+- **When declaring a wall (guarding against over-estimation)**: a loogle 0-hit is *necessary but not sufficient*. After a 0-hit, do (a) a **two-stage conclusion-shape search** (re-search by subterm / conclusion pattern such as `|- _ ≤ _`, not a bare identifier), and (b) **name one template lemma close to the expected conclusion form and estimate the self-build line count**. If you can't write that, hold off on the wall verdict. Distinguish whether the blocker is "the proposition is absent from Mathlib (a genuine gap)" or "wiring to an existing asset (plumbing, including import cycles)".
+- **Before declaring an entire family a wall / scoping it out (gateway-atom-first)**: dispatch one decisive atom of that family to `lean-implementer` and see whether it goes through before deciding.
+- **When declaring something not-a-wall / a hypothesis OK (guarding against under-estimation)**: before accepting, **search once for a counterexample in a small case** + **substitute one degenerate boundary** (`=0` / Dirac / non-integrable / `N=0`) to confirm the statement is still alive. Check that the predicate's signature hasn't dropped a constraint (Read its `*_def`). For concrete numeric / type predictions, follow the "Verbatim confirmation of concrete numeric / type predictions" section.
 
-壁判定の必須メタデータ・cause タグ・覆し分析テーブル → `docs/audit/audit-tags.md`「壁判定の必須メタデータ」。
+Required metadata for wall verdicts, cause tags, and the overturn-analysis table → `docs/audit/audit-tags.md` "Required metadata for wall verdicts".
 
-- **pre-commit hook** (git 管理、テキスト検査のみ、lake 不使用): `common-2026/.githooks/pre-commit` が staged `InformationTheory/**.lean` に honesty/import 規律を検査 (BLOCK: bare `import Mathlib` 追加 / `sorry` 追加で `@residual` 皆無。WARN: residual undercount・class 語彙外・deprecated tag・新規 file の import 未登録)。bypass は `SKIP_LEAN_HOOK=1 git commit ...` か `--no-verify`。新環境では `git config core.hooksPath common-2026/.githooks` で有効化 (詳細 → `.githooks/README.md`)。
+- **pre-commit hook** (git-managed, text inspection only, no lake): `common-2026/.githooks/pre-commit` checks honesty / import discipline on staged `InformationTheory/**.lean` (BLOCK: adding a bare `import Mathlib` / adding a `sorry` with no `@residual` at all. WARN: residual undercount, out-of-vocabulary class, deprecated tag, a new file's import not registered). Bypass with `SKIP_LEAN_HOOK=1 git commit ...` or `--no-verify`. In a new environment, enable it with `git config core.hooksPath common-2026/.githooks` (details → `.githooks/README.md`).
 
-## Mathlib API Search (loogle)
+## Dependency / consumer reverse-lookup tools (`scripts/dep_*.sh`)
 
-For "does Mathlib have lemma X?" questions, **try `loogle` before `rg`/`grep`**. Loogle answers authoritatively (e.g., `Found 0 declarations`); negative grep can miss differently-named lemmas.
+Mechanically look up dependency relations among in-project declarations. The implementation is `scripts/DepGraph.lean` (`import InformationTheory`). Unlike `rg`'s text matching, it picks up **true term-level references** (mentions in docstrings / comments don't count). Three modes:
 
-- **One-time index build** (~2 min, ~350 MB, gitignored under `.lake/`):
-  ```bash
-  mkdir -p .lake/build && lake exe loogle --write-index .lake/build/loogle.index
-  ```
-- **Per-query** — invoke the binary directly (skip `lake env`):
-  ```bash
-  ./.lake/packages/loogle/.lake/build/bin/loogle --read-index .lake/build/loogle.index "<query>"
-  ```
-  Cost: ~8.5 s/query with index vs ~60 s cold via `lake exe loogle`.
-- **Query syntax**:
-  - **Full namespace required**: `MeasureTheory.Measure.map` not `Measure.map`. Loogle prints "Maybe you meant: ..." with the right qualifier.
-  - **Subterm pattern**: `Foo.bar (Baz.qux _ _) (Baz.qux _ _)` finds `Foo.bar` applied to two `Baz.qux`.
-  - **Multi-term (any of)**: comma-separated, e.g. `Foo.bar, Baz.qux` finds lemmas mentioning both.
-  - **Conclusion pattern**: `|- _ ≤ _` finds inequalities.
-- **Fall back to `rg`** for text-level searches: comments, docstrings, file-structure exploration, or pattern matches not tied to a specific identifier.
+- **`scripts/dep_consumers.sh <fully-qualified-name> [--transitive]`** — **reverse dependencies (consumer graph)**. Lists, with `file:line`, the InformationTheory decls that *directly reference* the given decl. **Always run this once before changing a shared lemma's signature (hypothesis threading, etc.)** — prerequisite work for putting the ripple (the set of decls that need touching) accurately into the initial brief. `--transitive` gives the full blast radius (transitive closure).
+- **`scripts/dep_graph.sh <fully-qualified-name>`** — emits the forward dependency graph (what the root depends on) as Graphviz dot. `--svg`/`--png` to render an image.
+- **`scripts/dep_rank.sh [N]`** — ranking by transitive-dependency count, descending, restricted to `@[entry_point]`.
 
-## 依存 / consumer 逆引きツール (`scripts/dep_*.sh`)
-
-プロジェクト内 declaration の依存関係を機械的に引く。実体は `scripts/DepGraph.lean` (`import InformationTheory`)。`rg` のテキスト一致と違い **term レベルの真の参照** を拾う (docstring / コメントの言及は数えない)。3 モード:
-
-- **`scripts/dep_consumers.sh <完全修飾名> [--transitive]`** — **逆依存 (consumer graph)**。指定 decl を *直接参照している* InformationTheory decl を `file:line` 付きで列挙。**共有補題の signature を変更 (仮説 threading 等) する前に必ず 1 度引く** — ripple (touch が要る decl 群) を初回 brief に正確に載せる前提作業。`--transitive` で full blast radius (推移閉包)。
-- **`scripts/dep_graph.sh <完全修飾名>`** — forward 依存グラフ (root が何に依存するか) を Graphviz dot で出力。`--svg`/`--png` で画像化。
-- **`scripts/dep_rank.sh [N]`** — `@[entry_point]` 限定で推移的依存数の多い順ランキング。
-
-注意: いずれも root olean を読む。最近追加した decl が「未知の declaration」と出たら root が stale → `lake build InformationTheory` で refresh してから再実行。各 `-h` でオプション一覧。
+Note: all of them read the root olean. If a recently added decl shows up as an "unknown declaration", the root is stale → refresh with `lake build InformationTheory` and re-run. `-h` on each for the option list.
 
 ## Subagent Inventory of Mathlib Lemmas
 
@@ -87,15 +67,15 @@ When introducing a new definition that will be reasoned about via existing Mathl
 
 The textbook-equivalent form can be re-derived as a separate equivalence lemma later if needed. Skipping this step routinely forces a mid-proof definition pivot or 50–100 lines of self-written bridge lemmas to convert between "the form Mathlib hands you" and "the form your proof expects". A red flag that you skipped this step: you find yourself searching for "the lemma that turns `f (compProd ...)` into `∫⁻ ... ∂ ...`" or any analogous re-shaping bridge. If that bridge is not in Mathlib, the cheapest fix is almost always to redefine, not to write the bridge.
 
-This rewrite is also the **第一選択 mitigation** when a definition / `Prop` RHS / `inductive` constructor can't accept `sorry` directly (`sorry` lives in proof body only). Convert the def's core into a separate `theorem` whose body is `sorry` + `@residual(<class>:<slug>)`, and have the def call that theorem (or a shared sorry lemma — `docs/audit/audit-tags.md`「共有 Mathlib 壁」). The fallback when rewrite isn't feasible — keep the signature as a defect-marked tier-5 placeholder — is under「検証の誠実性 → sorry を書けない箇所での対処順序」.
+This rewrite is also the **first-choice mitigation** when a definition / `Prop` RHS / `inductive` constructor can't accept `sorry` directly (`sorry` lives in proof body only). Convert the def's core into a separate `theorem` whose body is `sorry` + `@residual(<class>:<slug>)`, and have the def call that theorem (or a shared sorry lemma — `docs/audit/audit-tags.md` "Shared Mathlib walls"). The fallback when rewrite isn't feasible — keep the signature as a defect-marked tier-5 placeholder — is under "Verification honesty → Handling order where `sorry` can't be written".
 
-### 具体的数値・型予測の verbatim 確認 (plan / inventory 共通)
+### Verbatim confirmation of concrete numeric / type predictions (common to plan / inventory)
 
-Plan / inventory で具体的な **数値・型値** (例: `differentialEntropy (Dirac 0) = ?`、ある関数の `.toReal` 値、境界 case の `≠ 0` / `= 0`) を**予測**する箇所は、書き出す前に **実コード verbatim 確認** (Mathlib lemma + InformationTheory file の該当行を Read) を必ず行う。予測値が誤りだと、それを前提に組まれた撤退ライン / 退化境界 / 戦略選択がすべて drift する。「常識的にこの値だろう」「-∞ になるはず」のような直感は信用しない — Mathlib / InformationTheory の境界 case 定義は `Real` / `EReal` / `ℝ≥0∞` で慣行が異なり、Dirac / 退化 measure の値は特に直感と乖離しやすい。
+Anywhere a plan / inventory **predicts** a concrete **numeric / type value** (e.g. `differentialEntropy (Dirac 0) = ?`, some function's `.toReal` value, a boundary case's `≠ 0` / `= 0`), always do a **verbatim confirmation against the real code** (Read the relevant lines of the Mathlib lemma + the InformationTheory file) before writing it down. If a predicted value is wrong, every retreat line / degenerate boundary / strategy choice built on top of it drifts. Don't trust intuitions like "this is surely the value" or "it should be -∞" — boundary-case definitions in Mathlib / InformationTheory follow different conventions across `Real` / `EReal` / `ℝ≥0∞`, and the values for Dirac / degenerate measures are especially prone to diverging from intuition.
 
-確認方法: Mathlib API → loogle で完全 namespace 検索後 verbatim signature を Read。InformationTheory 内定義 → `rg` で grep → 該当行 Read。
+How to confirm: Mathlib API → search by full namespace in loogle, then Read the verbatim signature. In-project (InformationTheory) definitions → grep with `rg` → Read the relevant line.
 
-同じ verbatim 確認義務は **依存方向 / Phase 順序 / wrapper 呼出方向 / import cycle** にも適用される (orchestrator brief で in-mind 仮定したそれらを subagent が verbatim 検証で逆順修正する提案は accept がデフォルト)。
+The same verbatim-confirmation obligation applies to **dependency direction / Phase order / wrapper call direction / import cycles** (when a subagent's verbatim verification proposes reversing one of those that the orchestrator brief assumed in-mind, accepting is the default).
 
 ## Skeleton-driven Development
 
@@ -105,31 +85,31 @@ Do **not** write a whole proof file in one shot. Instead:
 2. After Write, wait for the LSP `<new-diagnostics>` reminder. Confirm the skeleton type-checks (only `sorry` warnings expected).
 3. Fill in **one** `sorry` at a time. Trust the LSP diagnostic reminder for fast feedback; reach for `lake env lean <file>` when you want a synchronous confirmation.
 4. Let the diagnostics tell you when a tactic doesn't fire or a case is missing, instead of pattern-matching in your head.
-5. **Dead-end は `sorry` で抜く**: 詰まったら signature を本来証明したい形に保ち、body を `sorry` のまま残し `@residual(<class>:<slug>)` を付与する (配置 + 語彙 → `docs/audit/audit-tags.md`)。`*Hypothesis` predicate に核を bundling する撤退は禁止 (→「検証の誠実性」)。`sorry` は正直な未完成マーカーとして commit してよい (→「Definition of Done」)。
+5. **Exit a dead-end with `sorry`**: when stuck, keep the signature in the form you actually want to prove, leave the body as `sorry`, and attach `@residual(<class>:<slug>)` (placement + vocabulary → `docs/audit/audit-tags.md`). Retreating by bundling the core into a `*Hypothesis` predicate is forbidden (→ "Verification honesty"). A `sorry` may be committed as an honest incompleteness marker (→ "Definition of Done").
 
 ## Parallel orchestration
 
-Trigger: user が並列実行を明示要求 (「並列で」「N seed 並列」「並列実行」)。`Agent` + `isolation: "worktree"` で独立 seed を起動。**各 agent prompt には `.claude/guides/agent-dispatch-guide.md` の Standard boilerplate を必ず含める** (省略すると disk full / branch drift)。merge 後の cleanup 手順・Brief content checklist も同ガイドが SoT。
+Trigger: the user explicitly requests parallel execution ("in parallel", "N seeds in parallel", "parallel run"). Launch independent seeds with `Agent` + `isolation: "worktree"`. **Every agent prompt must include the Standard boilerplate from `.claude/guides/agent-dispatch-guide.md`** (omitting it causes disk-full / branch drift). The post-merge cleanup procedure and the Brief content checklist are also owned (SoT) by that guide.
 
-**単独 dispatch では worktree 不要**: 並列トリガーが無い単独 `lean-implementer` dispatch は `isolation` 省略 + main 直接作業で良い。worktree は並列時の disk / branch 衝突対策で、単独では merge / cleanup cost が増えるだけ。boilerplate の worktree symlink / ブランチ規律 / commit-push 分離は省略可 (main 上で自走 commit + push OK)。skeleton-driven / 検証 / scope / import / 撤退口は単独でも有効。
+**A solo dispatch needs no worktree**: a solo `lean-implementer` dispatch with no parallel trigger can omit `isolation` and work directly on main. The worktree exists to avoid disk / branch collisions during parallel runs; for a solo run it only adds merge / cleanup cost. The boilerplate's worktree symlink / branch discipline / commit-push separation may be omitted (autonomous commit + push on main is fine). Skeleton-driven development / verification / scope / imports / retreat exits still apply for a solo run.
 
-**Orchestrator role 規律**: 並列 dispatch を伴う作業では orchestrator 役の自分は **コード / docs を直接編集しない**。`Edit` / `Write` は subagent に dispatch し、自分は `git commit` / `git push` / TaskCreate / `git status` / `lake env lean` / `Read` 等の monitoring・調整のみ行う。trivial に見える 1-line patch でも brief を書いて投げる。handoff に「orchestrator が direct edit」とあっても (前 session の自分が書いたもの) 現 session では従わず subagent 化する (user redirect 優先)。例外は user が明示的に「自分でやって」と言った場合のみ。**並列を伴わない単独 session ではこの規律は適用外** (自由に直接編集してよい)。
+**Orchestrator role discipline**: in work that involves parallel dispatch, you-as-orchestrator **do not edit code / docs directly**. Dispatch `Edit` / `Write` to subagents and limit yourself to monitoring / coordination such as `git commit` / `git push` / TaskCreate / `git status` / `lake env lean` / `Read`. Even a seemingly trivial 1-line patch is written up as a brief and dispatched. Even if a handoff says "orchestrator edits directly" (written by a past-session self), don't follow it in the current session — subagent-ize it (user redirect takes precedence). The only exception is when the user explicitly says "do it yourself". **This discipline does not apply to a solo session with no parallelism** (you may edit directly at will).
 
-**Exception — planner / docs-only agents**: `lean-planner` / `mathlib-inventory` / 監査系 agent は `docs/<family>/*.md` への書込みのみで Lean compile しないため worktree 隔離は不要 (harness が worktree dir を不完全に作り agent が main に直書きする failure mode あり)。docs-only 並列は `isolation` 省略 + brief で「触る file の所有権 (Agent N は file F のみ編集)」を明示するだけ。実装系 (`lean-implementer`) は **並列時のみ** worktree 隔離 + boilerplate 必要。
+**Exception — planner / docs-only agents**: `lean-planner` / `mathlib-inventory` / audit agents only write to `docs/<family>/*.md` and don't compile Lean, so worktree isolation is unnecessary (there is a failure mode where the harness creates the worktree dir incompletely and the agent writes straight to main). For docs-only parallelism, just omit `isolation` and make file ownership explicit in the brief ("Agent N edits only file F"). Implementation agents (`lean-implementer`) need worktree isolation + boilerplate **only when running in parallel**.
 
 ## Commits
 
 - Commits and pushes are autonomous. Decide when to commit and push on each turn without waiting for the user to ask. The user will not give commit instructions. Commit autonomously even for changes that did not originate in the current session (e.g. uncommitted edits already on disk).
 - Do not report commits or pushes. The user is not interested in commit/push activity. Skip mentioning them in turn summaries or status updates.
 - Keep commit messages short. One concise line, no body unless absolutely necessary.
-- **実装系 subagent は自走 commit することがある**: `lean-implementer` 等は brief に「commit するな」と書いても完了時に `git commit` 済のことがある。完了後は `git log --oneline -3` + `git status --short` で **既コミットの有無を確認してから** 差分のみ commit する (二重コミット防止)。`git add -A` は `.claude/worktrees/agent-*` の embedded repo を巻き込むため避け、対象 path を明示。
+- **Implementation subagents may commit on their own**: `lean-implementer` and the like may have already run `git commit` on completion even if the brief said "don't commit". After they finish, **check for existing commits with `git log --oneline -3` + `git status --short` before** committing only the remaining diff (to prevent double commits). Avoid `git add -A` — it sweeps in the embedded repos under `.claude/worktrees/agent-*` — and name the target path explicitly.
 
 ## Textbook site deploy
 
-`docs/textbook/` の原稿を編集したら、確認を求めず **常に** サイトを再デプロイする (`docs/textbook/site/deploy.sh` を実行)。外向き公開だが毎回承認は不要 (ユーザー明言、原稿とライブサイトを常に同期させたい)。
+After editing a manuscript under `docs/textbook/`, **always** redeploy the site without asking for confirmation (run `docs/textbook/site/deploy.sh`). It is an outward-facing publish, but per-time approval is not required (the user has stated this — they want the manuscript and the live site always in sync).
 
-- ワークフロー: ソース編集 → ビルド → commit → `deploy.sh` を自動実行。
-- surge は処理エラーで初回失敗することがある (`payload.error.filename` undefined 系) — transient なので 1 回リトライすれば通る。
+- Workflow: edit source → build → commit → run `deploy.sh` automatically.
+- surge sometimes fails on the first attempt with a processing error (the `payload.error.filename` undefined family) — it's transient, so one retry gets through.
 
 ## Handoff
 
@@ -140,107 +120,107 @@ The `handoff` skill writes session state to `.claude/handoff.md` so the next ses
 
 If the session is ad-hoc — opened with no prior handoff context, scope unrelated to any in-flight work — do not autonomously hand off; wait for explicit instruction.
 
-**Interrupt trigger — malformed tool call が 2 件目で handoff + セッション終了** (ad-hoc でも override、上の both 条件を待たない): ツール呼び出しが `Your tool call was malformed and could not be parsed` で弾かれたら (開始タグが余計な先頭トークンや `antml:` プレフィックス欠落の素の `<invoke>` / `<parameter>` に化ける)、**1 件目は transient とみなして 1 回だけリトライする** (同じ呼び出しを最小ブロックで出し直し、壊れたトークンを散文に書かない = 自己増幅を断つ)。リトライが通れば通常続行。**2 件目 (リトライ失敗 or 別の独立再発) が出たら粘らず停止する**: (a) 安全なら進行中の atomic step だけ畳み、(b) `handoff` skill で状態 + 次の一手を書き出し、(c) user に「`/clear` → `/carryon` で新セッション再開」を促す。根拠: この failure は**総コンテキスト量と単調相関**し (高コンテキストほど多発・自己増幅 cascade)、低コンテキストの 1 件はほぼ独立ノイズだが再発は cascade の信号なので続行は悪化させるだけ。高コンテキスト域 (~260K 超) に自覚的に居るなら 1 件目でも即停止してよい。根本原因は harness バグでなく長コンテキスト下の特殊トークン忠実度低下 (背景 → memory `pitfall-agent-invoke-malformed`)。
+**Interrupt trigger — on the 2nd malformed tool call, hand off + end the session** (overrides even ad-hoc, doesn't wait for the two conditions above): when a tool call is rejected with `Your tool call was malformed and could not be parsed` (the opening tag degenerates into a bare `<invoke>` / `<parameter>` with an extra leading token or a missing `antml:` prefix), **treat the 1st one as transient and retry exactly once** (re-emit the same call in the most minimal block, and don't write the broken token into prose = cut off the self-amplification). If the retry goes through, continue as normal. **If a 2nd one occurs (retry fails, or another independent recurrence), stop instead of pushing on**: (a) if safe, fold up only the atomic step in progress, (b) write the state + next move with the `handoff` skill, (c) prompt the user to restart a fresh session via `/clear` → `/carryon`. Rationale: this failure correlates monotonically with total context volume (more frequent and self-amplifying into a cascade at higher context); a single occurrence at low context is nearly independent noise, but a recurrence is a cascade signal, so continuing only makes it worse. If you're consciously in the high-context zone (~260K+), it's fine to stop on the 1st one. The root cause is not a harness bug but reduced special-token fidelity under long context (background → memory `pitfall-agent-invoke-malformed`).
 
-**Single file 規約**: handoff は `.claude/handoff.md` **1 本のみ**。`handoff-<slug>.md` の named slot は作らない。複数 active line を並行管理する場合は 1 ファイル内をセクションで分割 (例: `## Line A — AWGN`, `## Line B — EPI/Stam`)。完全 closed なラインは handoff から削除し (履歴は git に残る)、必要なら `## Closure summary` セクションで参照のみ残す。session 終了時の handoff 書き出しは既存 line を上書きせず追記 (セクション追加) で merge する。
+**Single-file convention**: there is **only one** handoff, `.claude/handoff.md`. Don't create `handoff-<slug>.md` named slots. To manage multiple active lines concurrently, split within the one file by section (e.g. `## Line A — AWGN`, `## Line B — EPI/Stam`). Remove a fully closed line from the handoff (history stays in git), leaving only a reference in a `## Closure summary` section if needed. When writing the handoff at session end, merge by appending (adding a section) rather than overwriting an existing line.
 
-**gitignore 済み — commit しない**: `.claude/handoff.md` は意図的に gitignore されている (ローカル作業状態、追跡対象外)。「Commits」節の自走コミット対象から **除外** する。handoff を書いた後に `git add` / `git commit` を試みない (毎回 git に弾かれて gitignore と再発見するループになる)。
+**gitignored — don't commit**: `.claude/handoff.md` is deliberately gitignored (local working state, untracked). **Exclude** it from the autonomous-commit scope of the "Commits" section. Don't try to `git add` / `git commit` it after writing the handoff (it just loops: git rejects it every time and you rediscover the gitignore).
 
 ## Plan / docs hygiene
 
-プランは「**制御状態** (scope/approach/next) / **判断履歴** / **確定事実** (sorryAx-free・壁・補題不在)」の3つを混ぜると肥大・stale 化する。寿命が違うので分離する。
+A plan bloats and goes stale if you mix the three: **control state** (scope/approach/next) / **decision history** / **settled facts** (sorryAx-free, walls, absent lemmas). Their lifetimes differ, so separate them.
 
-**確定事実は prose にキャッシュしない (再導出 > キャッシュ)**:
+**Don't cache settled facts in prose (re-derive > cache)**:
 
-- 機械再導出できる事実 (`sorryAx-free` / sorry 有無 / decl 存在) は plan 本文に書かず都度 `#print axioms` / `rg` で引く。prose キャッシュは無効化されず stale 化するので「再検証コストが安いなら毎回再導出」が正しい。
-- 壁は `@residual(wall:slug)` がコード側 SoT。plan は slug にリンクし「X は壁」と本文に断定しない (壁が解消されると plan が誤った確定を伝播する)。
-- 再導出が高コストな少数 (loogle Found 0 / 解析的な壁判断) **だけ**確定事実台帳へ。
+- Machine-re-derivable facts (`sorryAx-free` / presence of `sorry` / existence of a decl) don't belong in plan prose — look them up each time with `#print axioms` / `rg`. A prose cache is never invalidated and goes stale, so "if re-verification is cheap, re-derive every time" is the right rule.
+- For walls, `@residual(wall:slug)` is the code-side SoT. The plan links to the slug and does not assert "X is a wall" in prose (once a wall is resolved, the plan would propagate a false certainty).
+- Only the few facts that are expensive to re-derive (loogle Found 0 / analytic wall judgments) go into the settled-facts ledger.
 
-**確定事実台帳 `docs/<family>/<family>-facts.md`** (family ごと 1 本): 列 = 主張 / 確信度 / 再検証コマンド / last-verified (commit hash) / 備考。確信度は `machine` (axiom/sorry 機械検証済、再検証コマンド必須) / `loogle-neg` (loogle Found 0、query 併記) / `human-judgment` (解析的壁判断、**過大も過小も起きるので低信頼、独立 pivot で再確認**) の 3 値。
+**Settled-facts ledger `docs/<family>/<family>-facts.md`** (one per family): columns = claim / confidence / re-verification command / last-verified (commit hash) / notes. Confidence is one of three values: `machine` (axiom/sorry machine-verified, re-verification command required) / `loogle-neg` (loogle Found 0, with the query alongside) / `human-judgment` (analytic wall judgment — **low trust because it can both over- and under-estimate; re-confirm with an independent pivot**).
 
-**判断ログ + ライフサイクル**:
+**Decision log + lifecycle**:
 
-- 判断ログは **決着済** (採用確定 / 反例却下 / commit 済) entry を削除する (git が履歴を持つ)。**active な撤退ライン・判定軸・進行中 Phase の判断は残す**。凍結 slug (L-* 系) / 凍結 Phase 番号は他文書参照ありうるので削除不可。
-- 廃止 / 完了 Phase は取り消し線残置でなく 1 行 + commit に圧縮。
-- **プラン予算**: 1 plan ≤ 600 行 / active 判断ログ ≤ 10 entry。超過したら `/compact-plan` (handoff 境界で自動起動)。pre-commit が docs-plan の予算超過を WARN。
+- Delete **settled** entries from the decision log (adoption confirmed / rejected by counterexample / committed) — git keeps the history. **Keep active retreat lines, decision axes, and in-progress Phase decisions.** Frozen slugs (the L-* family) / frozen Phase numbers can't be deleted, as other documents may reference them.
+- Compress retired / completed Phases to one line + a commit rather than leaving struck-through text.
+- **Plan budget**: one plan ≤ 600 lines / active decision log ≤ 10 entries. On overflow, `/compact-plan` (auto-invoked at handoff boundaries). pre-commit WARNs on a docs-plan budget overflow.
 
-**staleness 検出**: `scripts/plan_lint.ts` が plan の decl / file:line / 壁 slug 参照をコードと照合し STALE/SUSPECT を出す。STALE 確定は (file 消失 / 壁 slug 消失 / dead `*-plan.md` リンク) の 3 ルールのみ、残りは要レビューの SUSPECT。親子グラフも同 linter が検査。
+**Staleness detection**: `scripts/plan_lint.ts` cross-checks a plan's decl / file:line / wall-slug references against the code and emits STALE/SUSPECT. A definite STALE comes from only three rules (file vanished / wall slug vanished / dead `*-plan.md` link); the rest is review-needed SUSPECT. The same linter also inspects the parent/child graph.
 
-**親子プラン整合 (handoff/carryon ドリフト対策)**: 親 moonshot plan は子の **状態** (DAG の本線/park、sub-plan テーブルの進捗) を *キャッシュ* として持つ。子だけ更新して親 DAG を直し忘れると、cold な次セッションが `/carryon` で親 DAG を最初に読み park 経路を本線と取り違える。構造 (DAG エッジ) は滅多に変わらない — drift するのは状態 / ルート選択なので、そこにだけ「再導出 > キャッシュ」を効かせる。
+**Parent/child plan consistency (guarding against handoff/carryon drift)**: a parent moonshot plan holds the child's **state** (mainline/park in the DAG, progress in the sub-plan table) as a *cache*. If you update only the child and forget to fix the parent DAG, a cold next session reading the parent DAG first under `/carryon` mistakes a parked route for the mainline. The structure (DAG edges) rarely changes — what drifts is state / route selection, so apply "re-derive > cache" only there.
 
-- **衝突時は子が SoT**: 親 DAG / sub-plan テーブルと子 plan が食い違ったら、子が作業に近く新しい。**親を子に合わせて直す** (子を親に揃えない)。
-- **編集時の強制点** (pre-commit, text のみ): 子 plan (`**Parent**:`/`**親**:` ヘッダ持ち) を編集する commit に親 plan が co-staged されていないと WARN。子を直したらできるだけ親も同コミットに含める。
-- **検査の強制点** (`plan_lint.ts`): 親子グラフを照合 — dead 親/子リンク (STALE)、backlink 欠落 / 親子 drift (SUSPECT)。`handoff` / `carryon` が family 単位で `deno run -A scripts/plan_lint.ts docs/<family>/*-plan.md` を走らせ SUSPECT を解消してから引き継ぐ / 着手する。
-- **規約上の同期点**: 子の `**Parent**:` ヘッダが親へのリンク兼「親更新の同期点」、親の sub-plan テーブル / DAG 行が子への backlink。両端を linter が双方向照合する (テンプレ → `docs/subplan-template.md` / `docs/moonshot-plan-template.md`)。
+- **On conflict the child is SoT**: when the parent DAG / sub-plan table and the child plan disagree, the child is closer to the work and newer. **Fix the parent to match the child** (don't align the child to the parent).
+- **Enforcement point on edit** (pre-commit, text only): a commit that edits a child plan (one with a `**Parent**:`/`**親**:` header) WARNs if the parent plan isn't co-staged. When you fix a child, try to include the parent in the same commit.
+- **Enforcement point on inspection** (`plan_lint.ts`): cross-checks the parent/child graph — dead parent/child links (STALE), missing backlink / parent-child drift (SUSPECT). `handoff` / `carryon` run `deno run -A scripts/plan_lint.ts docs/<family>/*-plan.md` per family and resolve SUSPECT before handing off / starting work.
+- **Conventional sync points**: the child's `**Parent**:` header is both the link to the parent and the "sync point for updating the parent"; the parent's sub-plan table / DAG row is the backlink to the child. The linter cross-checks both ends bidirectionally (templates → `docs/subplan-template.md` / `docs/moonshot-plan-template.md`).
 
-## Definition of Done — 2 段階
+## Definition of Done — two stages
 
-検証バーは 2 段階。commit 可否と「証明完成」を分離することで、未完成を `sorry` で正直に残せるようにする (`sorry` を消すための仮説束 / `:True` slot / 退化定義悪用が起きないよう撤退口を構造的に確保する)。
+The verification bar has two stages. Separating "can it be committed" from "is the proof complete" lets you honestly leave incomplete work as `sorry` (structurally guaranteeing a retreat exit so that hypothesis bundling / `:True` slots / abuse of degenerate definitions to erase `sorry` don't happen).
 
-- **type-check done** (commit / push OK): `lake env lean <file>` が 0 errors。`sorry` warning は許容。各 `sorry` は `@residual(<class>:<slug>)` タグを持つ (配置 + 語彙 → `docs/audit/audit-tags.md`「配置ルール」)。
-- **proof done** (genuine completion): 上記に加えて当該 file 内 0 `sorry` / 0 `@residual`。独立 auditor が pass 判定すれば `@audit:ok` 付与。
+- **type-check done** (commit / push OK): `lake env lean <file>` has 0 errors. `sorry` warnings are allowed. Each `sorry` carries a `@residual(<class>:<slug>)` tag (placement + vocabulary → `docs/audit/audit-tags.md` "Placement rules").
+- **proof done** (genuine completion): the above, plus 0 `sorry` / 0 `@residual` within the file. If an independent auditor passes it, attach `@audit:ok`.
 
-実装中の中間状態は type-check done で十分 (commit / push 可)。proof done は本物の完成を表す独立指標で、moonshot plan / textbook roadmap 側の集計対象。`sorry` は **正直な未完成マーカー** として積極的に使う。仮説に核を抱えさせて `sorry` を消すのは禁止 (→「検証の誠実性」)。
+An intermediate state during implementation only needs type-check done (commit / push allowed). proof done is an independent metric for genuine completion and is what the moonshot plan / textbook roadmap tally. Use `sorry` liberally as an **honest incompleteness marker**. Erasing `sorry` by making a hypothesis carry the core is forbidden (→ "Verification honesty").
 
-## 検証の誠実性 (honesty) — 全エージェント常時
+## Verification honesty — at all times, for every agent
 
-標準B (無条件機械検証) が本プロジェクトの検証バー。**`0 sorry` だけでは完成判定にならない** — 仮説に核を抱えさせて `sorry` を消すパターンを許すと、コンパイラが通る (≒ 0 sorry) のに proof は完成していない状態が無限に作れる。proof done は「0 sorry **かつ** 0 residual」。
+Standard B (unconditional machine verification) is this project's verification bar. **`0 sorry` alone is not a completion verdict** — if you allow the pattern of erasing `sorry` by making a hypothesis carry the core, you can manufacture endless states where the compiler passes (≈ 0 sorry) yet the proof is not complete. proof done is "0 sorry **and** 0 residual".
 
-直接タスクに取り組んでいる最中でも、以下の honesty defect を **作らない** + **見つけたら即アラート** する。専用監査を待たない。
+Even while working directly on a task, **do not create** the honesty defects below + **alert immediately if you find one**. Don't wait for a dedicated audit.
 
-**defect の兆候 (tells):**
+**Signs of a defect (tells):**
 
-- 循環: 仮説型 ≡ 結論型 で body が `:= h` (何も証明していない)
-- `:True` / 未使用スロットに実 residual を隠す
-- 退化定義の悪用 (vacuous truth、例: `0 = 値` を突いた exfalso)
-- **load-bearing hypothesis bundling**: 証明の核心を `*Hypothesis` / `*Reduction` / `IsXxxClaim` predicate にまとめて仮説として渡し、body は機械的展開だけにする (Stam / typicality / multi-user Fano 等)。regularity hyp (full-support / `IsFiniteMeasure` / measurability 等) は precondition なので OK。**この区別の判定軸 → 後述**
-- name laundering: 仮説が開いたままの定理を `*_discharged` / `*_full` / `*_unconditional` と命名
-- 「Mathlib 壁」の誤用: 実は選択 (big) を blocked (hard) と偽る
-- **under-hypothesized / insufficient signature**: 仮説群から結論が semantic に follow しない (非循環・非バンドルでも偽の含意を主張)。非循環・非バンドルは honesty の **必要条件であって十分条件ではない** (sufficiency check の SoT → `docs/audit/audit-tags.md`)。
+- Circularity: hypothesis type ≡ conclusion type with the body `:= h` (proves nothing)
+- Hiding a real residual in a `:True` / unused slot
+- Abuse of a degenerate definition (vacuous truth, e.g. an exfalso exploiting `0 = value`)
+- **load-bearing hypothesis bundling**: packing the proof's core into a `*Hypothesis` / `*Reduction` / `IsXxxClaim` predicate, passing it as a hypothesis, and leaving the body as mechanical unfolding only (Stam / typicality / multi-user Fano, etc.). Regularity hyps (full-support / `IsFiniteMeasure` / measurability, etc.) are preconditions and are OK. **The axis for this distinction → below**
+- name laundering: naming a theorem whose hypotheses are still open `*_discharged` / `*_full` / `*_unconditional`
+- Misuse of "Mathlib wall": passing off what is actually a choice (big) as blocked (hard)
+- **under-hypothesized / insufficient signature**: the conclusion doesn't semantically follow from the hypotheses (claiming a false implication even when non-circular and non-bundled). Non-circular and non-bundled is **necessary but not sufficient** for honesty (the SoT for the sufficiency check → `docs/audit/audit-tags.md`).
 
-**作る側 (実装中)**: 行き詰まったら **`sorry` + `@residual(<class>:<slug>)`** で抜く (→ Skeleton-driven Development 手順 5)。仮説に核を bundling する撤退は禁止。type-check done で commit して次セッションに引き継ぐ。
+**As the author (during implementation)**: when stuck, exit with **`sorry` + `@residual(<class>:<slug>)`** (→ Skeleton-driven Development, step 5). Retreating by bundling the core into a hypothesis is forbidden. Commit at type-check done and hand off to the next session.
 
-**見つけた側**: 既存コード / 依存 / 計画に defect を見つけたら、現タスクと無関係でも **その場で即フラグ** (任意の気づきに埋めない)。defect の上に黙って積み上げない。フラグの仕方は defect の重さで分岐:
+**As the finder**: when you find a defect in existing code / dependencies / plans, **flag it on the spot** even if it's unrelated to the current task (don't bury it in an optional observation). Don't silently build on top of a defect. How you flag it branches on the defect's severity:
 
-- **tier 5 defect** (循環 `:= h` / `:True` slot / 退化定義悪用 / load-bearing hyp / name laundering): silent fix しない。signature 改変 + sorry 化が必要だが、見つけた turn では **(a) defect の場所と種類を報告**、**(b) その上に build しない** で止める。実際の rewrite は当該 declaration の owner / 別 task。一時的に既存 docstring に `@audit:defect(<kind>)` を TODO marker として書込む (signature はまだ defect 形) のも可だが「defect 残置中」を明示。
-- **tier 4 legacy** (`@audit:suspect/staged`、散文 `🟢ʰ`): tier 5 ほど urgent ではない。当該 file を current task で touch するなら incidental に sorry-based へ migrate、touch しないなら触らない。
+- **tier 5 defect** (circular `:= h` / `:True` slot / abuse of a degenerate definition / load-bearing hyp / name laundering): don't silent-fix. It needs a signature change + sorry-ification, but in the turn you find it, stop at **(a) report the defect's location and kind** and **(b) don't build on top of it**. The actual rewrite belongs to that declaration's owner / a separate task. You may temporarily write `@audit:defect(<kind>)` into the existing docstring as a TODO marker (the signature is still in defect form), but make "defect left in place" explicit.
+- **tier 4 legacy** (`@audit:suspect/staged`, prose `🟢ʰ`): not as urgent as tier 5. If the current task touches that file, incidentally migrate it to sorry-based; if not, leave it alone.
 
-タスクリストや snapshot 文書に分散保管しない (code が SoT)。語彙詳細 → `docs/audit/audit-tags.md`。
+Don't scatter this across task lists or snapshot documents (code is SoT). Vocabulary details → `docs/audit/audit-tags.md`.
 
-### sorry を書けない箇所 (def / Prop RHS / inductive constructor) での対処順序
+### Handling order where `sorry` can't be written (def / Prop RHS / inductive constructor)
 
-`sorry` は proof body にしか書けない。`def` / `abbrev` / `Prop := ...` の RHS / `inductive` constructor 等が詰まったときの対処順:
+`sorry` can only go in a proof body. When you're stuck on a `def` / `abbrev` / the RHS of `Prop := ...` / an `inductive` constructor, etc., the handling order is:
 
-1. **第一選択 — 定義書換で `sorry` を proof body に逃がす** (→「Mathlib-shape-driven Definitions」)。textbook の formulation を直接 def 化せず、結論型を Mathlib 結論形に合わせて再定義 → 性質を別 `theorem` で述べる → body `sorry` + `@residual(<class>:<slug>)` に持ち込む。例: `IsXxxHypothesis : Prop` を補題 `xxxInequality : ... := by sorry` に分割し、原 def は補題呼び出しに置換 / shared sorry 補題化 (audit-tags.md「共有 Mathlib 壁」)。
+1. **First choice — rewrite the definition to push the `sorry` into a proof body** (→ "Mathlib-shape-driven Definitions"). Don't def-ify the textbook formulation directly; redefine the conclusion type to match Mathlib's conclusion form → state the property as a separate `theorem` → bring it down to a body of `sorry` + `@residual(<class>:<slug>)`. Example: split `IsXxxHypothesis : Prop` into a lemma `xxxInequality : ... := by sorry`, and replace the original def with a call to that lemma / turn it into a shared sorry lemma (audit-tags.md "Shared Mathlib walls").
 
-2. **第二選択 (暫定) — `@audit:defect(<kind>)` でマークして tier 5 のまま残す**。第一選択が当該セッションで無理 (循環構造解消に上流再設計必要 / signature 改変の影響範囲が大 / vacuously-true wrapper として acknowledged 等) な場合は signature を defect 形のまま残し、docstring に `@audit:defect(<kind>)` (`circular` / `prop-true` / `launder` / `degenerate` / `false-statement` / `false-hypothesis` から選択、語彙 → `docs/audit/audit-tags.md`「Defect kind 語彙」) + `@audit:retract-candidate(<reason>)` または `@audit:closed-by-successor(<plan-slug>)` を併記する。これは **後の (1) を待つ暫定マーカー** であり stable な resting state ではない。残す場合は (a) なぜ (1) が無理だったか 1 行散文、(b) 後続 plan slug、の 2 点を docstring に書く。
+2. **Second choice (provisional) — mark it with `@audit:defect(<kind>)` and leave it at tier 5**. When the first choice is infeasible in the current session (resolving the circular structure needs upstream redesign / the signature change has a large blast radius / it's an acknowledged vacuously-true wrapper, etc.), leave the signature in defect form and write in the docstring both `@audit:defect(<kind>)` (choose from `circular` / `prop-true` / `launder` / `degenerate` / `false-statement` / `false-hypothesis`; vocabulary → `docs/audit/audit-tags.md` "Defect kind vocabulary") and either `@audit:retract-candidate(<reason>)` or `@audit:closed-by-successor(<plan-slug>)`. This is a **provisional marker awaiting a later (1)**, not a stable resting state. If you leave it, write two things in the docstring: (a) one line of prose on why (1) was infeasible, and (b) the successor plan slug.
 
-**禁止** (= 上記 tells 再掲、マーカー無しでの導入は tier 5 silent defect): `Prop := True` placeholder / 仮説型≡結論の `:= h` 循環 / load-bearing `*Hypothesis` predicate に核を bundle / 退化定義悪用。
+**Forbidden** (= the tells above restated; introducing any of these without a marker is a tier 5 silent defect): `Prop := True` placeholder / a `:= h` circularity where hypothesis type ≡ conclusion / bundling the core into a load-bearing `*Hypothesis` predicate / abuse of a degenerate definition.
 
-**判定の一言**: 「その仮説は前提条件 (regularity) か、それとも証明の核心 (load-bearing) か」。前者 OK、後者は **書いてはいけない** — sorry に置き換える。詳細 → `docs/textbook-roadmap.md`「完成判定 / 検証強度の基準」「Mathlib 壁の 4 分類」。
+**The decision in one line**: "Is that hypothesis a precondition (regularity), or the core of the proof (load-bearing)?" The former is OK; the latter **must not be written** — replace it with sorry. Details → `docs/textbook-roadmap.md` "Completion verdict / verification-strength criteria" and "The four classes of Mathlib wall".
 
-**honesty 階層** (`docs/audit/audit-tags.md`「Honesty 階層」が SoT):
+**Honesty hierarchy** (`docs/audit/audit-tags.md` "Honesty hierarchy" is SoT):
 
 ```
-Tier 1: @audit:ok                                                 ← 最高 honest
-Tier 2: sorry + @residual(<class>:<slug>)                         ← 新規実装の唯一の正規撤退口
-Tier 3: @audit:superseded-by / @audit:retract-candidate           ← bookkeeping (履歴 / 削除候補)
-Tier 4: legacy @audit:suspect / @audit:staged / @audit:defer / @audit:closed-by-successor / 散文 🟢ʰ  ← 旧方針で許容、新方針で defect 寄り
-Tier 5: @audit:defect / 循環 := h / :True slot / 退化定義悪用 / name laundering  ← 真の defect
+Tier 1: @audit:ok                                                 ← most honest
+Tier 2: sorry + @residual(<class>:<slug>)                         ← the only sanctioned retreat exit for new implementation
+Tier 3: @audit:superseded-by / @audit:retract-candidate           ← bookkeeping (history / deletion candidate)
+Tier 4: legacy @audit:suspect / @audit:staged / @audit:defer / @audit:closed-by-successor / prose 🟢ʰ  ← allowed under the old policy, defect-leaning under the new
+Tier 5: @audit:defect / circular := h / :True slot / abuse of a degenerate definition / name laundering  ← a true defect
 ```
 
-**一番 honest なのは `sorry`** — コンパイラ可視 + 「ごめんね」と明示する隠蔽不能なマーカー。旧方針で許容されていた load-bearing hypothesis (`@audit:suspect`、🟢ʰ) は tier 4 = sorry-based より strictly less honest なので、新規導入禁止 + legacy 発見は incidental migration 推奨。
+**The most honest thing is `sorry`** — a compiler-visible, un-hideable marker that explicitly says "sorry". A load-bearing hypothesis (`@audit:suspect`, 🟢ʰ) allowed under the old policy is strictly less honest than tier 4 = sorry-based, so new introductions are forbidden and incidental migration is recommended when legacy ones are found.
 
-## Independent honesty audit (orchestrator 必須)
+## Independent honesty audit (orchestrator-mandatory)
 
-実装サブエージェントが新規に `sorry` + `@residual(<class>:<slug>)` を含む commit を作った場合、orchestrator は当該セッション中 (遅くとも `InformationTheory.lean` 編入 commit 前) に **独立 audit subagent** を 1 件起動する。実装 agent の self-申告だけでは classification (`<class>:<slug>` の正しさ) + signature の honesty を誰も独立に検証していない (書いた本人 = 申告者)。
+When an implementation subagent makes a commit that introduces a new `sorry` + `@residual(<class>:<slug>)`, the orchestrator launches one **independent audit subagent** during that session (at the latest, before the commit that wires it into `InformationTheory.lean`). With only the implementation agent's self-report, no one has independently verified the classification (correctness of `<class>:<slug>`) + the signature's honesty (the author = the reporter).
 
-**起動条件**: 新規 `sorry` + `@residual` を導入する commit が session 内にある / 共有 sorry 補題を新規追加した / 既存 declaration の signature を変更し honesty 関連の意味が変わる / legacy `@audit:suspect` / `@audit:staged` の sorry-based 移行を行った。「既存 `@residual` を継承使用するだけ」のケースは不要。
+**Launch conditions**: there is a commit in the session that introduces a new `sorry` + `@residual` / a new shared sorry lemma was added / an existing declaration's signature changed in a way that alters honesty-relevant meaning / a legacy `@audit:suspect` / `@audit:staged` was migrated to sorry-based. The "merely inheriting an existing `@residual`" case does not need it.
 
-**subagent**: 専用 agent `honesty-auditor` (`.claude/agents/honesty-auditor.md`、CORE doctrine 内蔵) を `subagent_type: "honesty-auditor"` で起動 (CORE + audit-tags.md 語彙適用が自動)。必須条件は実装に関与していない fresh subagent (self-audit 不可)。渡す入力 = 対象 file path + 監査対象 declaration 名 + line 番号 + 関連 commit hash + 親 plan path。書込先 = コード docstring の `@residual(...)` / `@audit:*` タグ (Edit 経由、**コードタグが SoT**)。書込後 orchestrator に 200 行以内サマリ返却。
+**subagent**: launch the dedicated agent `honesty-auditor` (`.claude/agents/honesty-auditor.md`, with the CORE doctrine built in) via `subagent_type: "honesty-auditor"` (CORE + audit-tags.md vocabulary apply automatically). The hard requirement is a fresh subagent not involved in the implementation (no self-audit). Inputs to pass = target file path + the declaration name(s) to audit + line number(s) + the relevant commit hash + the parent plan path. Write target = the `@residual(...)` / `@audit:*` tags in the code docstring (via Edit, **code tags are SoT**). After writing, return a summary of ≤ 200 lines to the orchestrator.
 
-**監査スコープ**: (a) signature の honesty (結論型 ≡ 仮説型 の `:= h` 循環 / `:True` slot / 退化定義悪用 / `*Hypothesis` predicate への核 bundling)、(b) `@residual(<class>:<slug>)` の classification 正しさ (`wall:X` だが実は plan 1 つで closure 可能、`plan:foo` だが対応 plan 不在 等の誤分類)、(c) shared sorry 補題の集約状態 (同じ壁が複数 file に散らばっていないか)、(d) deprecated タグの残置 (`@audit:suspect` / `@audit:staged` / 散文 `🟢ʰ` の移行漏れ)。
+**Audit scope**: (a) the signature's honesty (a `:= h` circularity where conclusion type ≡ hypothesis type / `:True` slot / abuse of a degenerate definition / bundling the core into a `*Hypothesis` predicate), (b) the correctness of the `@residual(<class>:<slug>)` classification (misclassifications such as `wall:X` that is actually closable by a single plan, or `plan:foo` with no corresponding plan), (c) the consolidation state of shared sorry lemmas (whether the same wall is scattered across multiple files), (d) leftover deprecated tags (un-migrated `@audit:suspect` / `@audit:staged` / prose `🟢ʰ`).
 
-**closure 判定**: verdict が **全 OK** → session 完了 OK (handoff に明記)、**questionable** → docstring refine / 追加コメント / 必要なら追加 patch、**DEFECT** → 当該 declaration を撤回 or 修正 (sorry-based に書換) を session 中に処理。
+**Closure verdict**: if the verdict is **all OK** → the session may complete (note it in the handoff); **questionable** → refine the docstring / add comments / an additional patch if needed; **DEFECT** → retract or fix the declaration (rewrite to sorry-based) within the session.
 
-**inline policy との関係**: 「専用監査を待たない」は **inline 検出** の原則 (実装中に気付いたら即フラグ)。本独立監査は **実装後の二段目** であって inline の代替ではない — 両方走らせる。orchestrator が新規 `@residual` 導入を検出していながら独立監査を起動せずに session を closure するのは **honesty workflow 違反**。
+**Relation to the inline policy**: "don't wait for a dedicated audit" is the principle of **inline detection** (flag immediately when you notice during implementation). This independent audit is a **second stage after implementation**, not a replacement for the inline one — run both. For the orchestrator to close a session having detected a new `@residual` introduction without launching the independent audit is a **honesty-workflow violation**.
