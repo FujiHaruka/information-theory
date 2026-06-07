@@ -903,7 +903,14 @@ theorem rnDeriv_map_sum_ae (P : Measure Ω) [IsProbabilityMeasure P]
 で `p_n∗q_n ≤ C_X·C_Y·(pX∗qY)`。`C := C_X·C_Y`。`pX∗qY = ν 密度` (`rnDeriv_map_sum_ae`)。
 
 honest: 結論は優関数不等式 (a.e. pointwise bound)。仮説は a.c. + measurability + positive mass。
-和エントロピー可積分性 (結論) を仮説で受けていない。 -/
+和エントロピー可積分性 (結論) を仮説で受けていない。
+
+独立 honesty audit 2026-06-07: honest_residual。(1) 非循環: 結論は `∃ C, p_n∗q_n ≤ C·(p∗q)`
+(優関数不等式)、仮説は `hX_ac`/`hY_ac`/`hXY`/`hpos₀` (= regularity precondition)、結論型 ≢ 仮説型。
+(2) 非バンドル: usc 不等式や和エントロピー可積分性 (= 親結論) を仮説で受けていない。
+(3) classification: plan slug 実在、優関数は m_n 単調性 + convolution 単調性で buildable
+(Mathlib 壁でなく plan 分類が妥当)。
+@residual(plan:epi-infinite-variance-truncation-plan) -/
 theorem convDensity_condTrunc_le_const_mul (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) {n₀ : ℕ}
@@ -922,7 +929,13 @@ theorem convDensity_condTrunc_le_const_mul (P : Measure Ω) [IsProbabilityMeasur
 `p_n∗q_n(z) → pX∗qY(z)`。
 
 honest: 結論は各点収束。仮説は a.c. + measurability。和エントロピー可積分性 (結論) を
-仮説で受けていない。 -/
+仮説で受けていない。
+
+独立 honesty audit 2026-06-07: honest_residual。(1) 非循環: 結論は a.e. 各点収束
+`p_n∗q_n → p∗q`、仮説は a.c. + measurability の regularity precondition、結論型 ≢ 仮説型。
+(2) 非バンドル: usc 結論を仮説で受けていない。(3) classification: plan slug 実在、収束は
+DCT (`tendsto_integral_of_dominated_convergence`、優関数 A) で buildable、plan 分類が妥当。
+@residual(plan:epi-infinite-variance-truncation-plan) -/
 theorem convDensity_condTrunc_tendsto (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) :
@@ -935,7 +948,13 @@ theorem convDensity_condTrunc_tendsto (P : Measure Ω) [IsProbabilityMeasure P]
   sorry
 
 /-- **cross-entropy 列** `RHS_n := -∫ log(ν 密度) ∂μ_n` (`μ_n := condTrunc.map(X+Y)`,
-`ν := P.map(X+Y)`)。crux usc の Gibbs 上界 + DCT 収束先を結ぶ補助量。 -/
+`ν := P.map(X+Y)`)。crux usc の Gibbs 上界 + DCT 収束先を結ぶ補助量。
+
+独立 honesty audit 2026-06-07: honest 補助量 def (退化定義悪用なし)。RHS の本体は
+cross-entropy `H(μ_n, ν) = -∫ log(ν の Lebesgue 密度) ∂μ_n` (truncated 測度 μ_n を極限測度 ν
+の log 密度で積分) という意味のある量で、Gibbs 出口補題 `differentialEntropy_le_cross_entropy`
+の RHS `-∫ log(ν.rnDeriv vol).toReal ∂μ` と literal に一致 (#6 で消費)。usc 不等式 (結論) や
+`:True` / vacuous shape を encode していない。`Prop` を返さず `ℝ`-値の honest 補助量。@audit:ok -/
 noncomputable def crossEntropySeq (P : Measure Ω) (X Y : Ω → ℝ) (n : ℕ) : ℝ :=
   - ∫ x, Real.log ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal
       ∂((condTrunc P X Y n).map (fun ω => X ω + Y ω))
@@ -946,7 +965,14 @@ noncomputable def crossEntropySeq (P : Measure Ω) (X Y : Ω → ℝ) (n : ℕ) 
 `h_cross_int` 前提を供給。
 
 honest: 結論は可積分性 (regularity)。仮説は a.c. + measurability + 和エントロピー可積分
-(regularity)。usc 結論を仮説で受けていない。 -/
+(regularity)。usc 結論を仮説で受けていない。
+
+独立 honesty audit 2026-06-07: honest_residual。(1) 非循環: 結論は cross-entropy 被積分関数の
+可積分性 `Integrable (log ν 密度) μ_n`、仮説は a.c. + measurability + `hent_sum` (= regularity)、
+結論型 ≢ 仮説型。(2) 非バンドル: usc 結論を仮説で受けていない。`hent_sum` は優関数経由で
+可積分性供給に使う precondition。(3) classification: plan slug 実在、`∫|log ν|dμ_n ≤ C²∫|log ν|(p∗q)`
+は優関数 A + `hent_sum` で buildable、plan 分類が妥当。
+@residual(plan:epi-infinite-variance-truncation-plan) -/
 theorem crossEntropy_integrable_condTrunc_sum (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
@@ -970,7 +996,20 @@ genuine Gibbs 配線: μ_n a.c. (`map_condTrunc_absolutelyContinuous`)、ν a.c.
 `differentialEntropy_le_cross_entropy` に供給。body 独自 sorry なし (transitive: C' + #2)。
 
 honest: 結論は per-n 不等式 (Gibbs)。仮説は a.c. + measurability + 和エントロピー可積分
-(regularity)。usc 結論を仮説で受けていない。 -/
+(regularity)。usc 結論を仮説で受けていない。
+
+独立 honesty audit 2026-06-07: honest_residual (transitive: C'/#2 park)。(1) 非循環: 結論は
+per-n Gibbs 不等式 `h(μ_n) ≤ crossEntropySeq`、仮説は `hX_ac`/`hY_ac`/`hXY`/`hent_sum`
+(= regularity precondition)、結論型 ≢ 仮説型。(2) 非バンドル (最重点): usc 不等式 (= 親結論)
+を `*Hypothesis` predicate に bundle していない。`hent_sum` (和の有限微分エントロピー) は
+C' の cross 可積分性供給に使う regularity precondition で load-bearing でない (per-n Gibbs
+不等式を encode しない)。(3) body は genuine Gibbs 配線: 出口補題 `differentialEntropy_le_cross_entropy`
+(自身 sorryAx-free、klDiv≥0 `toReal_klDiv_of_measure_eq` + llr 分解の genuine 証明) に
+μ_n a.c. (`map_condTrunc_absolutelyContinuous`)/ν a.c./μ_n≪ν (`cond_absolutelyContinuous.map`)/
+μ_n 有限 entropy (#2)/cross 可積分 (C') を機械供給。body 独自 sorry なし。(4) `#print axioms`
+= transitive sorryAx は C' (`crossEntropy_integrable_condTrunc_sum`) + #2 由来のみ
+(2026-06-07 機械確認)。plan slug 実在。
+@residual(plan:epi-infinite-variance-truncation-plan) -/
 theorem differentialEntropy_condTrunc_sum_le_crossEntropy (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
@@ -1015,7 +1054,14 @@ theorem differentialEntropy_condTrunc_sum_le_crossEntropy (P : Measure Ω) [IsPr
 `-∫(p∗q)log(p∗q) = h(ν)`。
 
 honest: 結論は数列の収束。仮説は a.c. + measurability + 和エントロピー可積分 (regularity)。
-usc 結論を仮説で受けていない。 -/
+usc 結論を仮説で受けていない。
+
+独立 honesty audit 2026-06-07: honest_residual。(1) 非循環: 結論は `RHS_n → h(ν)` (数列収束)、
+仮説は a.c. + measurability + `hent_sum` (= regularity)、結論型 ≢ 仮説型。(2) 非バンドル:
+usc 不等式や h(ν) の値を仮説に bundle していない (収束先 h(ν) は結論内で導出、仮説で受けない)。
+(3) classification: plan slug 実在、`RHS_n = ∫(-log ν)·(p_n∗q_n)` の各点収束 (B) + 優関数 (A+hent_sum)
+で DCT 収束 → buildable、plan 分類が妥当。
+@residual(plan:epi-infinite-variance-truncation-plan) -/
 theorem crossEntropySeq_tendsto (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
@@ -1038,7 +1084,17 @@ genuine: 上界 (`.1`) は sub-helper C (`h(μ_n) ≤ RHS_n`) + sub-helper D (`R
 fibre 下界解析が当該セッション規模を超え park (body 内 1 sorry)。
 
 honest: 結論は列の有界性 (regularity)。仮説は a.c. + measurability + 和エントロピー可積分
-(regularity precondition)。usc 不等式 (結論) を仮説で受けていない。 -/
+(regularity precondition)。usc 不等式 (結論) を仮説で受けていない。
+
+独立 honesty audit 2026-06-07: honest_residual (部分 fill: 上界 genuine / 下界 park)。
+(1) 非循環: 結論は `IsBoundedUnder ∧ IsCoboundedUnder` (有界性ペア)、仮説は regularity precondition、
+結論型 ≢ 仮説型。(2) 部分 fill 確認: 上界 `.1` (`IsBoundedUnder`) は body 内で genuine 組立
+(Gibbs C `h(μ_n) ≤ RHS_n` + D 収束 `hD.isBoundedUnder_le` + `.mono_le hC`、独自 sorry なし、
+transitive のみ)、co-有界 `.2` (`IsCoboundedUnder` = 下界) のみ body 内 1 sorry で park
+(compact-support fibre 下界解析がセッション規模超)。(3) 非バンドル: usc 不等式 (親結論) を
+仮説で受けていない。上界が #9 で load-bearing に使われるが genuine fill なので問題なし
+(park は co-bound 側のみ)。(4) plan slug 実在。inner sorry に `@residual` コメント付。
+@residual(plan:epi-infinite-variance-truncation-plan) -/
 theorem differentialEntropy_condTrunc_sum_bddUnder (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
@@ -1078,7 +1134,20 @@ sub-helper D (`crossEntropySeq_tendsto`、RHS 収束) + boundedness
 (transitive sorry は C/D/boundedness の plan park)。
 
 honest: signature の `hent_sum` は regularity precondition (有限微分エントロピー)、結論
-(usc 不等式) を encode しない。body は C/D/boundedness を呼ぶ限り genuine。 -/
+(usc 不等式) を encode しない。body は C/D/boundedness を呼ぶ限り genuine。
+
+独立 honesty audit 2026-06-07: honest_residual (genuine assembly, transitive: C'/D/boundedness park)。
+(1) 非循環: 結論は `limsup h(μ_n) ≤ h(ν)`、仮説は `hX_ac`/`hY_ac`/`hXY`/`hent_sum`
+(= regularity precondition)、結論型 ≢ 仮説型。(2) 非バンドル (最重点): usc 結論を sub-helper の
+仮説に bundle せず、limsup chain を機械配線。`Filter.limsup_le_limsup hC hcobdd hRHS_bdd` の
+引数向きを Mathlib signature (`h : u ≤ᶠ v` / `hu : IsCoboundedUnder u` / `hv : IsBoundedUnder v`)
+と照合: u = h_seq, v = crossEntropySeq、hC (∀ᶠ h_seq ≤ RHS)・hcobdd (h_seq の cobdd =
+boundedness の `.2`)・hRHS_bdd (D 収束 → RHS bdd above) で全引数の向き・型整合。`_ = hν`
+は `hD.limsup_eq` (D の収束先)。(3) sufficiency: `limsup h_seq ≤ limsup RHS_n = h(ν)` は
+per-n Gibbs (C) + RHS 収束 (D) から semantic に follow (差分形/比形の取り違えなし、単調 push 不使用)。
+`hent_sum` は load-bearing でなく precondition。body 独自 sorry なし。(4) `#print axioms` =
+transitive sorryAx は C'/D/boundedness の plan park 由来のみ (2026-06-07 機械確認、本 body は genuine)。
+@residual(plan:epi-infinite-variance-truncation-plan) -/
 theorem differentialEntropy_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
@@ -1120,7 +1189,20 @@ theorem differentialEntropy_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabil
   (`Monotone.map_limsup_of_continuousAt`、有界性は `differentialEntropy_condTrunc_sum_bddUnder`)
   `≤ g(h(ν)) = Nₑ(ν)` (g 単調 + #3 `differentialEntropy_condTrunc_sum_limsup_le`)。
 
-`hent_sum` は regularity precondition (有限微分エントロピー)、結論を encode しない。 -/
+`hent_sum` は regularity precondition (有限微分エントロピー)、結論を encode しない。
+
+独立 honesty audit 2026-06-07: honest_residual (genuine exp-lift, transitive: #3/C'/D/boundedness park)。
+(1) 非循環: 結論は `limsup Nₑ(μ_n) ≤ Nₑ(ν)`、仮説は regularity precondition のみ、結論型 ≢ 仮説型。
+(2) 非バンドル: usc 結論を bundle せず、単調連続 lift `g h := ofReal(exp(2h))` で #3 (微分エントロピー版)
+を持ち上げ。per-n rewrite `Nₑ(μ_n) = g(h(μ_n))` は出口補題 `entropyPowerExt_of_ac_integrable`
+(自身 `@audit:ok`、sorryAx-free、退化定義悪用なし = a.c.+有限 entropy で `ofReal(exp(2h))` を返す
+genuine 式) を μ_n a.c. (`hac_n`) + #2 有限 entropy に適用、limit rewrite も同補題。`g` 単調連続
+(`hg_mono`/`hg_cont`) で `Monotone.map_limsup_of_continuousAt` (boundedness `hbdd`/`hcobdd` 供給) →
+`g(limsup h_seq) ≤ g(hν) = Nₑ(ν)`、最後の `≤` は g 単調 + #3 (`differentialEntropy_condTrunc_sum_limsup_le`)。
+(3) sufficiency: exp lift は単調連続変換ゆえ #3 の usc 不等式から semantic に follow (g 単調で向き保存)。
+body 独自 sorry なし。(4) `#print axioms` = transitive sorryAx は #3/C'/D/boundedness park 由来のみ
+(2026-06-07 機械確認)。
+@residual(plan:epi-infinite-variance-truncation-plan) -/
 theorem entropyPowerExt_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
