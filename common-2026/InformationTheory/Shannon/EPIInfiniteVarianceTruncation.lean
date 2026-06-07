@@ -29,11 +29,13 @@ crux usc は Gibbs step (`(klDiv (P_n.map(X+Y)) (P.map(X+Y))).toReal ≥ 0`、in
 cross-entropy DCT (優関数 `p_n∗q_n ≤ C²(p∗q)`、`tendsto_integral_of_dominated_convergence`)。
 分散発散は red herring (固定参照 = p∗q で moment 非依存に閉じる)。
 
-## skeleton 注記 (Phase 1)
+## 進捗注記 (2026-06-07: 全 declaration genuine 化)
 
-本 file は全 signature + `:= by sorry` の skeleton。各 `sorry` は
-`@residual(plan:epi-infinite-variance-truncation-plan)` (buildable な未完成、wall でない)。
-fill は別 Phase で dispatch。helper は plan §推奨分解 (1-6) に対応。
+旧 Phase 1 では全 signature + `:= by sorry` の skeleton (各 `sorry` は
+`@residual(plan:epi-infinite-variance-truncation-plan)`) だったが、現在は file 内 literal
+`sorry` 0 件・全 declaration `@audit:ok` (sorryAx-free、独立 honesty audit 2026-06-07 PASS)。
+helper は plan §推奨分解 (1-6) に対応。headline `entropyPowerExt_add_ge_infinite_variance_truncation`
+も sorryAx-free (wall theorem `:1407` への接続は assembly で `hent_sum` 導出が残課題)。
 
 設計判断:
 - **R の型**: `n : ℕ`、切詰集合 `{|X|≤n ∧ |Y|≤n}` (monotone over n、`atTop` filter で
@@ -588,7 +590,13 @@ crux-usc chain 6 関数 + headline 呼出に同 precondition を threading 済 (
 `[propext, Classical.choice, Quot.sound]` (sorryAx-free、olean refresh 後機械確認)。これにより
 #2 (`integrable_negMulLog_map_condTrunc_sum`) + per-n EPI (`entropyPowerExt_condTrunc_add_ge`) も
 transitively genuine 化。
-@residual(plan:epi-infinite-variance-truncation-plan) -/
+
+独立 honesty audit 2026-06-07 (fresh auditor): ok (proof done)。Jensen 向き
+(`ConvexOn.map_integral_le`: `φ(∫f dμX)≤∫φ(f) dμX`、凸 `φ=t·log t`) + Tonelli + 平行移動不変
+で `∫⁻ G ≤ 1·C<∞`、C = `hqn_ent_int` (Z=Y) の正部から genuine。結論 (負部可積分性 = regularity) を
+仮説に bundle せず (非循環・非バンドル)、`hX_ent`/`hY_ent` は各成分 (別測度 P.map X/Y) の有限微分
+エントロピー precondition (load-bearing でない)。`#print axioms` sorryAx-free 機械再確認。
+@audit:ok -/
 theorem integrable_negPart_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) (hXY : IndepFun X Y P)
@@ -850,9 +858,11 @@ theorem integrable_negPart_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProba
 循環/load-bearing でない、最重要チェック PASS)。(2) body は正部 `g₁` を compact support
 (`map_condTrunc_sum_concentrated`) + `negMulLog_le_one_sub_self` で genuine 構成 + 負部 `g₂` を
 #7 `integrable_negPart_negMulLog_map_condTrunc_sum` に委譲 + `negMulLog r = g₁ - g₂` split。
-(3) `#print axioms` = transitive sorry は #7 由来 1 本のみ (body 自体の独自 sorry なし)。
-honest_residual (transitive: #7 の plan).
-@residual(plan:epi-infinite-variance-truncation-plan) -/
+(3) #7 が genuine 化したため `#print axioms` = `[propext, Classical.choice, Quot.sound]`
+(sorryAx-free、2026-06-07 fresh auditor 機械再確認、旧「transitive #7 由来」記述は stale)。
+正部 `g₁` は compact support + `negMulLog_le_one_sub_self` で genuine、負部 `g₂` は #7 へ委譲、
+`negMulLog r = g₁-g₂` split。`hX_ent`/`hY_ent` は各成分 regularity precondition。ok (proof done).
+@audit:ok -/
 theorem integrable_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) (hXY : IndepFun X Y P)
@@ -947,9 +957,13 @@ helper 1/2 で全 regularity を供給し、各 n (positive mass) で
 = indep/a.c.×2/2次モーメント×2/各成分 entropy×2/和 entropy をすべて helper 1/2 で供給)。
 signature の `hX_ent`/`hY_ent` は黒箱の各成分有限エントロピー precondition を `condTrunc.map` 側に
 再供給するための regularity precondition (`integrable_negMulLog_map_condTrunc` 経由)、結論 (per-n EPI
-不等式) を encode しない load-bearing でない。transitive sorry は #8→#7 由来 1 本のみ (body 独自
-sorry なし)。honest_residual (transitive: #7 の plan).
-@residual(plan:epi-infinite-variance-truncation-plan) -/
+不等式) を encode しない load-bearing でない。
+
+独立 honesty audit 2026-06-07 (fresh auditor): ok (proof done)。body は黒箱 8 引数の genuine 配線
+(indep/a.c.×2/2次モーメント×2/各成分 entropy×2/和 entropy を helper で供給)、結論を仮説で受けず。
+#7/#8 が genuine 化したため `#print axioms` = `[propext, Classical.choice, Quot.sound]`
+(sorryAx-free、機械再確認、旧「transitive #7」記述は stale)。
+@audit:ok -/
 theorem entropyPowerExt_condTrunc_add_ge (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
@@ -1826,10 +1840,11 @@ C' の cross 可積分性供給に使う regularity precondition で load-bearin
 不等式を encode しない)。(3) body は genuine Gibbs 配線: 出口補題 `differentialEntropy_le_cross_entropy`
 (自身 sorryAx-free、klDiv≥0 `toReal_klDiv_of_measure_eq` + llr 分解の genuine 証明) に
 μ_n a.c. (`map_condTrunc_absolutelyContinuous`)/ν a.c./μ_n≪ν (`cond_absolutelyContinuous.map`)/
-μ_n 有限 entropy (#2)/cross 可積分 (C') を機械供給。body 独自 sorry なし。(4) `#print axioms`
-= transitive sorryAx は C' (`crossEntropy_integrable_condTrunc_sum`) + #2 由来のみ
-(2026-06-07 機械確認)。plan slug 実在。
-@residual(plan:epi-infinite-variance-truncation-plan) -/
+μ_n 有限 entropy (#2)/cross 可積分 (C') を機械供給。body 独自 sorry なし。(4) C' (`@audit:ok`) +
+#2 が genuine 化したため `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free、
+2026-06-07 fresh auditor 機械再確認、旧「transitive C'/#2 park」記述は stale)。`hX_ent`/`hY_ent` は
+各成分 regularity precondition (load-bearing でない)。ok (proof done).
+@audit:ok -/
 theorem differentialEntropy_condTrunc_sum_le_crossEntropy (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
@@ -2276,7 +2291,15 @@ honest: 結論は列の有界性 (regularity)。仮説は a.c. + measurability +
 `hX_ent`/`hY_ent` + 和エントロピー可積分 `hent_sum` (regularity precondition)。usc 不等式 (結論) を
 仮説で受けていない。`hX_ent`/`hY_ent` は co-有界の per-n EPI 下界供給に使う precondition
 (load-bearing でない)、Step 1 で crux-usc chain に threading 済 (headline `:2238-2239` が保持)。
-@residual(plan:epi-infinite-variance-truncation-plan) -/
+
+独立 honesty audit 2026-06-07 (fresh auditor): ok (proof done)。co-bound `.2` 退化境界悪用チェック
+最重点 PASS — `cX = Nₑ(P.map X).toReal = exp(2h(X))` (`entropyPowerExt_of_ac_integrable hX_ac hX_ent`)、
+`0<cX` は `Real.exp_pos` から genuine (`Nₑ(X)=0` 悪用なし、`cX/2>0` で `log` 健全)。chain
+`cX/2 ≤ Nₑ(X_n).toReal ≤ Nₑ(μ_n).toReal=exp(2hμn)` (per-n EPI + `toReal_mono` 要 `≠⊤` を
+`ofReal_ne_top` で genuine) → log → eventually `c ≤ hμn`、`isCoboundedUnder_le_of_eventually_le`
+(向き正: eventually-below から `IsCoboundedUnder (≤)` 構成、frequently でない)。`#print axioms`
+sorryAx-free 機械確認。
+@audit:ok -/
 theorem differentialEntropy_condTrunc_sum_bddUnder (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
@@ -2395,9 +2418,11 @@ honest: signature の `hent_sum` は regularity precondition (有限微分エン
 boundedness の `.2`)・hRHS_bdd (D 収束 → RHS bdd above) で全引数の向き・型整合。`_ = hν`
 は `hD.limsup_eq` (D の収束先)。(3) sufficiency: `limsup h_seq ≤ limsup RHS_n = h(ν)` は
 per-n Gibbs (C) + RHS 収束 (D) から semantic に follow (差分形/比形の取り違えなし、単調 push 不使用)。
-`hent_sum` は load-bearing でなく precondition。body 独自 sorry なし。(4) `#print axioms` =
-transitive sorryAx は C'/D/boundedness の plan park 由来のみ (2026-06-07 機械確認、本 body は genuine)。
-@residual(plan:epi-infinite-variance-truncation-plan) -/
+`hent_sum` は load-bearing でなく precondition。body 独自 sorry なし。(4) 依存 C/D/boundedness が
+全て genuine 化したため `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free、
+2026-06-07 fresh auditor 機械再確認、旧「transitive C/D/boundedness park」記述は stale = 残 sorry
+無し)。`hX_ent`/`hY_ent` は各成分 regularity precondition。ok (proof done).
+@audit:ok -/
 theorem differentialEntropy_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
@@ -2454,9 +2479,11 @@ genuine 式) を μ_n a.c. (`hac_n`) + #2 有限 entropy に適用、limit rewri
 (`hg_mono`/`hg_cont`) で `Monotone.map_limsup_of_continuousAt` (boundedness `hbdd`/`hcobdd` 供給) →
 `g(limsup h_seq) ≤ g(hν) = Nₑ(ν)`、最後の `≤` は g 単調 + #3 (`differentialEntropy_condTrunc_sum_limsup_le`)。
 (3) sufficiency: exp lift は単調連続変換ゆえ #3 の usc 不等式から semantic に follow (g 単調で向き保存)。
-body 独自 sorry なし。(4) `#print axioms` = transitive sorryAx は #3/C'/D/boundedness park 由来のみ
-(2026-06-07 機械確認)。
-@residual(plan:epi-infinite-variance-truncation-plan) -/
+body 独自 sorry なし。(4) 依存 #3/C/D/boundedness が全て genuine 化したため `#print axioms` =
+`[propext, Classical.choice, Quot.sound]` (sorryAx-free、2026-06-07 fresh auditor 機械再確認、旧
+「transitive #3/C'/D/boundedness park」記述は stale = 残 sorry 無し)。`hX_ent`/`hY_ent`/`hent_sum`
+は regularity precondition。ok (proof done).
+@audit:ok -/
 theorem entropyPowerExt_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
