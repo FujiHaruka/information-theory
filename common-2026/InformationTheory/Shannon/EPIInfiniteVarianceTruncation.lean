@@ -1231,8 +1231,186 @@ theorem convDensity_condTrunc_tendsto (P : Measure Ω) [IsProbabilityMeasure P]
         (fun y => ((condTrunc P X Y n).map Y).rnDeriv volume y |>.toReal) z) atTop
       (𝓝 (convDensityAdd (fun y => (P.map X).rnDeriv volume y |>.toReal)
           (fun y => (P.map Y).rnDeriv volume y |>.toReal) z)) := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  classical
+  -- `Sn n = {|r| ≤ n}`, monotone exhausting `ℝ`.
+  set Sn : ℕ → Set ℝ := fun n => {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
+  have hSn_meas : ∀ n, MeasurableSet (Sn n) := fun n =>
+    measurableSet_le measurable_norm measurable_const
+  -- marginal densities of `P`.
+  haveI : IsProbabilityMeasure (P.map X) := Measure.isProbabilityMeasure_map hX.aemeasurable
+  haveI : IsProbabilityMeasure (P.map Y) := Measure.isProbabilityMeasure_map hY.aemeasurable
+  set pX : ℝ → ℝ := fun y => ((P.map X).rnDeriv volume y).toReal with hpX_def
+  set pY : ℝ → ℝ := fun y => ((P.map Y).rnDeriv volume y).toReal with hpY_def
+  have hpX_meas : Measurable pX := (Measure.measurable_rnDeriv _ _).ennreal_toReal
+  have hpY_meas : Measurable pY := (Measure.measurable_rnDeriv _ _).ennreal_toReal
+  have hpX_nn : ∀ x, 0 ≤ pX x := fun x => ENNReal.toReal_nonneg
+  have hpY_nn : ∀ x, 0 ≤ pY x := fun x => ENNReal.toReal_nonneg
+  have hpX_int : Integrable pX volume := Measure.integrable_toReal_rnDeriv
+  have hpY_int : Integrable pY volume := Measure.integrable_toReal_rnDeriv
+  -- a fixed positive-mass index `n₀`.
+  obtain ⟨n₀, hpos₀⟩ := (eventually_measure_truncSet_pos P hX hY).exists
+  -- generic per-component pointwise convergence `pnZ_n x → pZ x` (a.e. `x`).
+  have hconv_comp : ∀ {Z : Ω → ℝ} (hZ : Z = X ∨ Z = Y), (P.map Z) ≪ volume →
+      ∀ᵐ x ∂volume, Tendsto
+        (fun n => (((condTrunc P X Y n).map Z).rnDeriv volume x).toReal) atTop
+        (𝓝 (((P.map Z).rnDeriv volume x).toReal)) := by
+    intro Z hZ hZ_ac
+    have hZmeas : Measurable Z := by rcases hZ with rfl | rfl; exacts [hX, hY]
+    haveI : IsProbabilityMeasure (P.map Z) := Measure.isProbabilityMeasure_map hZmeas.aemeasurable
+    set pZ : ℝ → ℝ := fun y => ((P.map Z).rnDeriv volume y).toReal with hpZ_def
+    -- `m n := (P.map Z) (Sn n)`, exhausts → `m n → 1`.
+    have hSn_mono : Monotone Sn := by
+      intro a b hab r hr
+      have hab' : (a : ℝ) ≤ (b : ℝ) := by exact_mod_cast hab
+      exact le_trans hr hab'
+    have hSn_union : ⋃ n, Sn n = Set.univ := by
+      rw [Set.eq_univ_iff_forall]; intro r
+      obtain ⟨k, hk⟩ := exists_nat_ge (|r|)
+      exact Set.mem_iUnion.2 ⟨k, hk⟩
+    have hm_tendsto : Tendsto (fun n => (P.map Z) (Sn n)) atTop (𝓝 1) := by
+      have h := tendsto_measure_iUnion_atTop (μ := P.map Z) hSn_mono
+      rw [hSn_union, measure_univ] at h
+      exact h
+    have hmreal_tendsto : Tendsto (fun n => ((P.map Z) (Sn n)).toReal) atTop (𝓝 (1 : ℝ)) := by
+      have := (ENNReal.tendsto_toReal (ENNReal.one_ne_top)).comp hm_tendsto
+      simpa using this
+    have hc_tendsto : Tendsto (fun n => (((P.map Z) (Sn n))⁻¹).toReal) atTop (𝓝 1) := by
+      have h1 : Tendsto (fun n => ((P.map Z) (Sn n)).toReal⁻¹) atTop (𝓝 1) := by
+        have := (continuousAt_inv₀ (by norm_num : (1 : ℝ) ≠ 0)).tendsto.comp hmreal_tendsto
+        simpa using this
+      refine h1.congr (fun n => ?_)
+      rw [ENNReal.toReal_inv]
+    -- per-`n` a.e. equality (only for positive-mass indices `n ≥ n₀`):
+    -- `pnZ_n =ᵐ (m n)⁻¹.toReal · 1_{Sn n} · pZ`.
+    set fseq : ℕ → ℝ → ℝ :=
+      fun n x => (((P.map Z) (Sn n))⁻¹).toReal * (Sn n).indicator pZ x with hfseq_def
+    have hper_n : ∀ n, ∀ᵐ x ∂volume, n₀ ≤ n →
+        (((condTrunc P X Y n).map Z).rnDeriv volume x).toReal = fseq n x := by
+      intro n
+      by_cases hge : n₀ ≤ n
+      · have hpos : P (truncSet X Y n) ≠ 0 := by
+          intro h0; exact hpos₀ (measure_mono_null (truncSet_mono hge) h0)
+        have hm_ne : (P.map Z) (Sn n) ≠ 0 :=
+          map_measure_truncBall_ne_zero P hX hY hXY hZ hpos
+        rw [map_condTrunc_eq_cond_map P hX hY hXY hZ hpos]
+        have h_rn := rnDeriv_cond_eq (P.map Z) (hSn_meas n) hm_ne
+        filter_upwards [h_rn] with x hx _
+        simp only [hfseq_def]
+        rw [hx]
+        by_cases hxs : x ∈ Sn n
+        · rw [Set.indicator_of_mem hxs (f := (P.map Z).rnDeriv volume),
+            Set.indicator_of_mem hxs (f := pZ), ENNReal.toReal_mul]
+        · rw [Set.indicator_of_notMem hxs (f := (P.map Z).rnDeriv volume),
+            Set.indicator_of_notMem hxs (f := pZ), mul_zero, ENNReal.toReal_zero, mul_zero]
+      · exact Filter.Eventually.of_forall (fun x hxle => absurd hxle hge)
+    -- a single a.e. set where the tail equalities all hold.
+    rw [← ae_all_iff] at hper_n
+    filter_upwards [hper_n] with x hx
+    -- `fseq n x → pZ x` (constant `c_n → 1`, indicator `→ 1`).
+    have hf_lim : Tendsto (fun n => fseq n x) atTop (𝓝 (pZ x)) := by
+      have hev_eq : (fun n => fseq n x)
+          =ᶠ[atTop] fun n => (((P.map Z) (Sn n))⁻¹).toReal * pZ x := by
+        obtain ⟨k, hk⟩ := exists_nat_ge (|x|)
+        filter_upwards [Filter.eventually_ge_atTop k] with n hn
+        have hxn : x ∈ Sn n := le_trans hk (by exact_mod_cast hn)
+        simp only [hfseq_def, Set.indicator_of_mem hxn (f := pZ)]
+      refine Tendsto.congr' hev_eq.symm ?_
+      have := hc_tendsto.mul_const (pZ x)
+      simpa using this
+    -- transport the tail equality `pnZ_n x = fseq n x` (for `n ≥ n₀`) into the limit.
+    refine (hf_lim.congr' ?_)
+    filter_upwards [Filter.eventually_ge_atTop n₀] with n hn
+    exact (hx n hn).symm
+  -- per-component pointwise convergence (a.e. `x`).
+  have hX_lim := hconv_comp (Z := X) (Or.inl rfl) hX_ac
+  have hY_lim := hconv_comp (Z := Y) (Or.inr rfl) hY_ac
+  -- per-component eventual uniform bound (`n ≥ n₀`, a.e. `x`).
+  set C_X : ℝ := (((P.map X) {r : ℝ | |r| ≤ (n₀ : ℝ)})⁻¹).toReal with hCX_def
+  set C_Y : ℝ := (((P.map Y) {r : ℝ | |r| ≤ (n₀ : ℝ)})⁻¹).toReal with hCY_def
+  have hCX_nn : 0 ≤ C_X := ENNReal.toReal_nonneg
+  have hCY_nn : 0 ≤ C_Y := ENNReal.toReal_nonneg
+  have hX_bdd : ∀ᶠ n in atTop, ∀ᵐ x ∂volume,
+      (((condTrunc P X Y n).map X).rnDeriv volume x).toReal ≤ C_X * pX x := by
+    filter_upwards [Filter.eventually_ge_atTop n₀] with n hn
+    exact condTrunc_marginal_density_le P hX hY hXY (Or.inl rfl) hn hpos₀
+  have hY_bdd : ∀ᶠ n in atTop, ∀ᵐ x ∂volume,
+      (((condTrunc P X Y n).map Y).rnDeriv volume x).toReal ≤ C_Y * pY x := by
+    filter_upwards [Filter.eventually_ge_atTop n₀] with n hn
+    exact condTrunc_marginal_density_le P hX hY hXY (Or.inr rfl) hn hpos₀
+  -- slice integrability of `x ↦ pX x · pY (z − x)` (a.e. `z`), as in sub-helper A.
+  have hslice_int : ∀ᵐ z ∂volume, Integrable (fun x => pX x * pY (z - x)) volume := by
+    set f : ℝ × ℝ → ℝ := fun p => pX p.2 * pY (p.1 - p.2) with hf_def
+    have hf_meas : AEStronglyMeasurable f (volume.prod volume) := by
+      have h1 : AEStronglyMeasurable (fun p : ℝ × ℝ => pX p.2) (volume.prod volume) :=
+        (hpX_meas.comp measurable_snd).aestronglyMeasurable
+      have h2 : AEStronglyMeasurable (fun p : ℝ × ℝ => pY (p.1 - p.2)) (volume.prod volume) := by
+        have hsub : Measurable (fun p : ℝ × ℝ => p.1 - p.2) := measurable_fst.sub measurable_snd
+        exact (hpY_meas.comp hsub).aestronglyMeasurable
+      exact h1.mul h2
+    have hf_int : Integrable f (volume.prod volume) := by
+      rw [integrable_prod_iff' hf_meas]
+      refine ⟨?_, ?_⟩
+      · refine Filter.Eventually.of_forall (fun x => ?_)
+        exact (hpY_int.comp_sub_right x).const_mul (pX x)
+      · have heq : (fun x => ∫ z, ‖f (z, x)‖ ∂volume)
+            = (fun x => ‖pX x‖ * ∫ z, ‖pY z‖ ∂volume) := by
+          funext x
+          simp only [hf_def, norm_mul]
+          rw [integral_const_mul]
+          congr 1
+          rw [← integral_sub_right_eq_self (fun z => ‖pY z‖) x]
+        rw [heq]
+        exact (hpX_int.norm.mul_const _)
+    exact hf_int.prod_right_ae
+  -- abbreviations for the conditioned marginal densities.
+  set pnX : ℕ → ℝ → ℝ :=
+    fun n y => (((condTrunc P X Y n).map X).rnDeriv volume y).toReal with hpnX_def
+  set pnY : ℕ → ℝ → ℝ :=
+    fun n y => (((condTrunc P X Y n).map Y).rnDeriv volume y).toReal with hpnY_def
+  have hpnX_nn : ∀ n x, 0 ≤ pnX n x := fun n x => ENNReal.toReal_nonneg
+  have hpnY_nn : ∀ n x, 0 ≤ pnY n x := fun n x => ENNReal.toReal_nonneg
+  -- assemble per `z` with the filter-version dominated convergence theorem.
+  filter_upwards [hslice_int] with z hz_int
+  -- the convolution as `∫ pnX n x · pnY n (z − x) dx → ∫ pX x · pY (z − x) dx`.
+  show Tendsto (fun n => convDensityAdd (pnX n) (pnY n) z) atTop
+    (𝓝 (convDensityAdd pX pY z))
+  simp only [convDensityAdd]
+  refine tendsto_integral_filter_of_dominated_convergence
+    (fun x => (C_X * C_Y) * (pX x * pY (z - x))) ?_ ?_ ?_ ?_
+  · -- `∀ᶠ n, AEStronglyMeasurable (fun x => pnX n x · pnY n (z − x))`.
+    refine Filter.Eventually.of_forall (fun n => ?_)
+    refine (?_ : AEStronglyMeasurable (fun x => pnX n x * pnY n (z - x)) volume)
+    have h1 : Measurable (fun x => pnX n x) := by
+      simpa [hpnX_def] using (Measure.measurable_rnDeriv
+        ((condTrunc P X Y n).map X) volume).ennreal_toReal
+    have h2 : Measurable (fun x => pnY n (z - x)) := by
+      have hb : Measurable (fun y => pnY n y) := by
+        simpa [hpnY_def] using (Measure.measurable_rnDeriv
+          ((condTrunc P X Y n).map Y) volume).ennreal_toReal
+      exact hb.comp (measurable_const.sub measurable_id)
+    exact (h1.mul h2).aestronglyMeasurable
+  · -- `∀ᶠ n, ∀ᵐ x, ‖pnX n x · pnY n (z − x)‖ ≤ (C_X·C_Y)·(pX x · pY (z − x))`.
+    filter_upwards [hX_bdd, hY_bdd] with n hxX hxY
+    -- transport the `Y` bound through `x ↦ z − x`.
+    have hxY_z : ∀ᵐ x ∂volume, pnY n (z - x) ≤ C_Y * pY (z - x) :=
+      (Measure.measurePreserving_sub_left volume z).quasiMeasurePreserving.ae hxY
+    filter_upwards [hxX, hxY_z] with x hbx hby
+    have hprod_nn : 0 ≤ pnX n x * pnY n (z - x) :=
+      mul_nonneg (hpnX_nn n x) (hpnY_nn n (z - x))
+    rw [Real.norm_of_nonneg hprod_nn]
+    have h1 : pnX n x * pnY n (z - x) ≤ (C_X * pX x) * (C_Y * pY (z - x)) :=
+      mul_le_mul hbx hby (hpnY_nn n (z - x)) (le_trans (hpnX_nn n x) hbx)
+    calc pnX n x * pnY n (z - x)
+        ≤ (C_X * pX x) * (C_Y * pY (z - x)) := h1
+      _ = (C_X * C_Y) * (pX x * pY (z - x)) := by ring
+  · -- bound integrable.
+    exact hz_int.const_mul (C_X * C_Y)
+  · -- `∀ᵐ x, pnX n x · pnY n (z − x) → pX x · pY (z − x)`.
+    -- transport the `X` convergence (z-independent) + transported `Y` convergence.
+    have hzY_lim' : ∀ᵐ x ∂volume, Tendsto (fun n => pnY n (z - x)) atTop (𝓝 (pY (z - x))) :=
+      (Measure.measurePreserving_sub_left volume z).quasiMeasurePreserving.ae hY_lim
+    filter_upwards [hX_lim, hzY_lim'] with x hxlim hylim
+    exact hxlim.mul hylim
 
 /-- **cross-entropy 列** `RHS_n := -∫ log(ν 密度) ∂μ_n` (`μ_n := condTrunc.map(X+Y)`,
 `ν := P.map(X+Y)`)。crux usc の Gibbs 上界 + DCT 収束先を結ぶ補助量。
