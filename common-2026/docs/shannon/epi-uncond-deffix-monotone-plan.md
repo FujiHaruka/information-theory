@@ -212,15 +212,17 @@ crux が単一恒等式に局所化された。**§7 の本線を「恒等式 (i
 
 - **def `condDifferentialEntropyExt`** (genuine、`@audit:ok`): `differentialEntropyExt` の正部/負部 A/B を
   `μ.map Z` 上の lintegral で平均した EReal 条件付き微分エントロピー (EReal Bochner を組まず ℝ≥0∞ `∫⁻` で well-defined)。
-- **helper `lintegral_ofReal_signed_negMulLog_rnDeriv_map_add_const`** (genuine、sorryAx-free): `differentialEntropy_map_add_const`
+- **helper `lintegral_ofReal_signed_negMulLog_rnDeriv_map_add_const`** (genuine): `differentialEntropy_map_add_const`
   の lintegral 版平行移動不変性 (± を sign 引数化)。Mathlib 部品 (`lintegral_add_right_eq_self`/`MeasurableEmbedding.rnDeriv_map`) のみ、自作壁ゼロ。
-- **① `condDifferentialEntropyExt_indep_add_eq`** (genuine、sorryAx-free `[propext, Classical.choice, Quot.sound]`、`@audit:ok`):
+- **① `condDifferentialEntropyExt_indep_add_eq`** (genuine、`@audit:ok`):
   Real 版 `condDifferentialEntropy_indep_add_eq` の `∫→∫⁻` ミラー。fibre 同定 (steps 1-2) は entropy 形非依存でコピー、内側を helper + 定数 fibre 平均で閉。
+  (axiom profile は `#print axioms condDifferentialEntropyExt_indep_add_eq` で都度確認、② に非依存で genuine。)
 - **② `differentialEntropyExt_eq_condEntExt_add_klDiv`** (sorry、`@residual(plan:...)`、独立監査 honest_residual PASS):
   唯一の crux。precondition = measurability + `hX_ac` + `hcond_ne_bot` (= `condEntExt(X|Z) ≠ ⊥`、h(X|Z)=−∞ の偽枝除外、non-bundle)。
 
-`EPIUncondMonotone.lean` の (i-a) `differentialEntropyExt_indep_add_eq_add_klDiv` は ①③ 合成で **sorry 消滅** (`#print axioms` で
-sorryAx は ② transitive 継承のみ機械確認)、gateway atom `entropyPowerExt_mono_add` / mono / top 伝播も ② のみ継承。
+`EPIUncondMonotone.lean` の (i-a) `differentialEntropyExt_indep_add_eq_add_klDiv` は ①③ 合成で **sorry 消滅** (axiom は
+`#print axioms differentialEntropyExt_indep_add_eq_add_klDiv` で都度確認、sorryAx は ② transitive 継承のみ)、gateway atom
+`entropyPowerExt_mono_add` / mono / top 伝播も ② のみ継承。
 **② が closure すれば W-Y1 全体が一括 proof-done 昇格** (集約点単一)。
 
 **② 攻略の足掛かり (次 chunk)**: Real bridge `differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv` (差分形・8 integrability)
