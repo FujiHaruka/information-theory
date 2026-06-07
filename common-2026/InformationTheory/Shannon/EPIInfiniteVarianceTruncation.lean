@@ -898,7 +898,12 @@ theorem rnDeriv_map_sum_ae (P : Measure Ω) [IsProbabilityMeasure P]
 
 /-- **marginal mass の正値性 (factoring)**: `P (truncSet X Y n) ≠ 0` → 各成分の周辺
 mass `(P.map Z) {r | |r| ≤ n} ≠ 0` (Z = X or Y)。独立 factoring
-`P(truncSet) = P(X⁻¹Sn)·P(Y⁻¹Sn)` の片側因子が `(P.map Z) Sn` に一致。 -/
+`P(truncSet) = P(X⁻¹Sn)·P(Y⁻¹Sn)` の片側因子が `(P.map Z) Sn` に一致。
+
+独立 honesty audit 2026-06-07 PASS: 結論 = 周辺 mass 非零、仮説 = `IndepFun`/measurability/
+positive mass (regularity precondition)、結論型 ≢ 仮説型 (非循環)。core bundle なし (非バンドル)。
+sufficiency: 独立 factoring `measure_inter_preimage_eq_mul` で `P(truncSet)=P(X⁻¹Sn)·P(Y⁻¹Sn)`、
+片因子=0 なら積=0 で `hpos` と矛盾 → genuine follow。`#print axioms` sorryAx-free。@audit:ok -/
 theorem map_measure_truncBall_ne_zero (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     {Z : Ω → ℝ} (hZ : Z = X ∨ Z = Y) {n : ℕ} (hpos : P (truncSet X Y n) ≠ 0) :
@@ -920,7 +925,14 @@ theorem map_measure_truncBall_ne_zero (P : Measure Ω) [IsProbabilityMeasure P]
 が定数倍 `C_Z · pZ` で上から抑えられる (`pZ := (P.map Z).rnDeriv vol |>.toReal`,
 `C_Z := ((P.map Z) {|r|≤n₀})⁻¹.toReal`)。機構: `map_condTrunc_eq_cond_map` で単成分
 conditioning に帰着 → `rnDeriv_cond_eq` で `p_n =ᵐ (m_n)⁻¹ · 1_Sn · pZ`、indicator + m_n 単調性
-(`Sn₀ ⊆ Sn` → `m_n ≥ m_{n₀}` → `m_n⁻¹ ≤ m_{n₀}⁻¹ = C_Z`) で上界。 -/
+(`Sn₀ ⊆ Sn` → `m_n ≥ m_{n₀}` → `m_n⁻¹ ≤ m_{n₀}⁻¹ = C_Z`) で上界。
+
+独立 honesty audit 2026-06-07 PASS: 結論 = 周辺密度の優関数不等式 (a.e.)、仮説 = `IndepFun`/
+measurability/`n₀≤n`/positive mass `hpos₀` (regularity precondition)、結論型 ≢ 仮説型 (非循環)。
+core bundle なし (非バンドル)。sufficiency: cond density formula で `p_n =ᵐ m⁻¹·1_Sn·pZ`、
+`m₀≤m` (`Sn₀⊆Sn`, `measure_mono`) → `m⁻¹≤m₀⁻¹` → `(m⁻¹).toReal≤(m₀⁻¹).toReal`、
+indicator 両 case (x∈Sn: m⁻¹·pZ ≤ C_Z·pZ / x∉Sn: 0 ≤ C_Z·pZ) で follow。`m₀≠0` (positive mass)
+ゆえ `m₀⁻¹≠∞` (退化境界悪用なし)。`#print axioms` sorryAx-free。@audit:ok -/
 theorem condTrunc_marginal_density_le (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     {Z : Ω → ℝ} (hZ : Z = X ∨ Z = Y) {n₀ n : ℕ} (hn : n₀ ≤ n)
@@ -991,12 +1003,17 @@ per-z RHS 可積分性 (`∀ᵐ z, Integrable (x ↦ pX x · pY (z−x))`) は 2
 honest: 結論は優関数不等式 (a.e. pointwise bound)。仮説は a.c. + measurability + positive mass。
 和エントロピー可積分性 (結論) を仮説で受けていない。
 
-独立 honesty audit 2026-06-07: honest_residual (genuine fill 済、self-audit 不可ゆえ
-`@residual` は orchestrator の独立 audit まで保持)。(1) 非循環: 結論は `∃ C, p_n∗q_n ≤ C·(p∗q)`
-(優関数不等式)、仮説は `hX_ac`/`hY_ac`/`hXY`/`hpos₀` (= regularity precondition)、結論型 ≢ 仮説型。
-(2) 非バンドル: usc 不等式や和エントロピー可積分性 (= 親結論) を仮説で受けていない。
-(3) `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free、body 独自 sorry 0)。
-@residual(plan:epi-infinite-variance-truncation-plan) -/
+独立 honesty audit 2026-06-07 PASS (fresh auditor、self-audit 不可ゆえ独立判定): genuine fill
+proof-done。(1) 非循環: 結論は `∃ C, p_n∗q_n ≤ C·(p∗q)` (優関数不等式)、仮説は
+`hX_ac`/`hY_ac`/`hXY`/`hpos₀` (= regularity precondition)、結論型 ≢ 仮説型。
+(2) 非バンドル: usc 不等式や和エントロピー可積分性 (= 親 route T 結論) を仮説で受けていない。
+依存 helper (`condTrunc_marginal_density_le`/`map_condTrunc_eq_cond_map`/`rnDeriv_cond_eq`) も
+core を bundle しない genuine 補題。(3) sufficiency: 「各成分 bound `p_n ≤ C_Z·pZ` (m_n⁻¹ 単調)
++ 各 z の畳込み単調性 (`integral_mono_of_nonneg`)」から優関数不等式が follow。`C = C_X·C_Y`
+は `hpos₀` (positive mass `m₀≠0`) ゆえ `m₀⁻¹≠∞` → finite positive (退化境界悪用なし、
+`(∞).toReal=0` の degenerate に落ちない)。(4) `#print axioms` = `[propext, Classical.choice,
+Quot.sound]` (sorryAx-free、body 独自 sorry 0、機械確認)。0 sorry / 0 residual = proof done。
+@audit:ok -/
 theorem convDensity_condTrunc_le_const_mul (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) {n₀ : ℕ}
