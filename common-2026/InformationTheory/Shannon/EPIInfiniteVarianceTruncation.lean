@@ -67,19 +67,28 @@ def truncSet (X Y : Ω → ℝ) (n : ℕ) : Set Ω :=
 /-- 切詰集合は可測 (X, Y 可測から). -/
 theorem measurableSet_truncSet {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (n : ℕ) :
     MeasurableSet (truncSet X Y n) := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  have hXm : MeasurableSet {ω | |X ω| ≤ (n : ℝ)} :=
+    measurableSet_le hX.abs measurable_const
+  have hYm : MeasurableSet {ω | |Y ω| ≤ (n : ℝ)} :=
+    measurableSet_le hY.abs measurable_const
+  exact hXm.inter hYm
 
 /-- 切詰集合の単調性 (`n ≤ m → truncSet X Y n ⊆ truncSet X Y m`)。 -/
 theorem truncSet_mono {X Y : Ω → ℝ} : Monotone (truncSet X Y) := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  intro n m hnm ω hω
+  have hnm' : (n : ℝ) ≤ (m : ℝ) := by exact_mod_cast hnm
+  exact ⟨hω.1.trans hnm', hω.2.trans hnm'⟩
 
 /-- 切詰集合の和集合は全体 (`⋃ n, truncSet X Y n = univ`)。各 ω で `|X ω|, |Y ω|` が
 有限ゆえ十分大きい n で含まれる (`exists_nat_ge`). -/
 theorem iUnion_truncSet (X Y : Ω → ℝ) : ⋃ n, truncSet X Y n = Set.univ := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  rw [Set.eq_univ_iff_forall]
+  intro ω
+  obtain ⟨nX, hnX⟩ := exists_nat_ge (|X ω|)
+  obtain ⟨nY, hnY⟩ := exists_nat_ge (|Y ω|)
+  refine Set.mem_iUnion.2 ⟨max nX nY, ?_, ?_⟩
+  · exact hnX.trans (by exact_mod_cast le_max_left nX nY)
+  · exact hnY.trans (by exact_mod_cast le_max_right nX nY)
 
 /-- **conditioning 確率測度** `P_n := P[| truncSet X Y n]`。十分大きい n で
 `P (truncSet X Y n) > 0` (和集合が全体ゆえ measure → 1) なので probability measure。 -/
@@ -93,24 +102,27 @@ noncomputable def condTrunc (P : Measure Ω) (X Y : Ω → ℝ) (n : ℕ) : Meas
 theorem measure_truncSet_tendsto_one (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) :
     Tendsto (fun n => P (truncSet X Y n)) atTop (𝓝 1) := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  have h := tendsto_measure_iUnion_atTop (μ := P) (truncSet_mono (X := X) (Y := Y))
+  rw [iUnion_truncSet X Y, measure_univ] at h
+  exact h
 
 /-- 十分大きい n では `P (truncSet X Y n) ≠ 0` (measure → 1)。
 以降の per-n 補題は `n ≥ N₀` (positive mass) で立てる。 -/
 theorem eventually_measure_truncSet_pos (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) :
     ∀ᶠ n in atTop, P (truncSet X Y n) ≠ 0 := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  have h := measure_truncSet_tendsto_one P hX hY
+  have h_nhds : {x : ℝ≥0∞ | x ≠ 0} ∈ 𝓝 (1 : ℝ≥0∞) :=
+    isOpen_ne.mem_nhds one_ne_zero
+  exact h.eventually_mem h_nhds
 
 /-- `condTrunc P X Y n` は確率測度 (positive mass の n で)。 -/
 theorem isProbabilityMeasure_condTrunc (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) {n : ℕ}
     (hpos : P (truncSet X Y n) ≠ 0) :
     IsProbabilityMeasure (condTrunc P X Y n) := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  unfold condTrunc
+  exact ProbabilityTheory.cond_isProbabilityMeasure hpos
 
 /-- **独立性保存**: `IndepFun X Y P` → `IndepFun X Y (condTrunc P X Y n)`。
 同時 conditioning が矩形事象 `X⁻¹[-n,n] ∩ Y⁻¹[-n,n]` ゆえ独立性を保つ。
@@ -119,8 +131,83 @@ theorem indepFun_condTrunc (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P) {n : ℕ}
     (hpos : P (truncSet X Y n) ≠ 0) :
     IndepFun X Y (condTrunc P X Y n) := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  classical
+  -- `truncSet X Y n = X ⁻¹' Sn ∩ Y ⁻¹' Sn` with `Sn = {r | |r| ≤ n}` measurable.
+  set Sn : Set ℝ := {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
+  have hSn_meas : MeasurableSet Sn :=
+    measurableSet_le measurable_norm measurable_const
+  have hs_eq : truncSet X Y n = X ⁻¹' Sn ∩ Y ⁻¹' Sn := rfl
+  have hs_meas : MeasurableSet (truncSet X Y n) := measurableSet_truncSet hX hY n
+  -- mass of the conditioning set factors: `P s = P(X⁻¹Sn) * P(Y⁻¹Sn)`.
+  have h_mass : P (truncSet X Y n) = P (X ⁻¹' Sn) * P (Y ⁻¹' Sn) := by
+    rw [hs_eq]; exact hXY.measure_inter_preimage_eq_mul Sn Sn hSn_meas hSn_meas
+  have hPXSn_ne : P (X ⁻¹' Sn) ≠ 0 := by
+    intro h0; apply hpos; rw [h_mass, h0, zero_mul]
+  have hPYSn_ne : P (Y ⁻¹' Sn) ≠ 0 := by
+    intro h0; apply hpos; rw [h_mass, h0, mul_zero]
+  rw [indepFun_iff_measure_inter_preimage_eq_mul]
+  intro A B hA hB
+  -- abbreviations
+  have hXAm : MeasurableSet (X ⁻¹' A) := hX hA
+  have hYBm : MeasurableSet (Y ⁻¹' B) := hY hB
+  have hXASn : MeasurableSet (X ⁻¹' (A ∩ Sn)) := hX (hA.inter hSn_meas)
+  have hYBSn : MeasurableSet (Y ⁻¹' (B ∩ Sn)) := hY (hB.inter hSn_meas)
+  -- LHS: `(condTrunc)(X⁻¹A ∩ Y⁻¹B)`.
+  have hLHS : (condTrunc P X Y n) (X ⁻¹' A ∩ Y ⁻¹' B)
+      = (P (truncSet X Y n))⁻¹ * (P (X ⁻¹' (A ∩ Sn)) * P (Y ⁻¹' (B ∩ Sn))) := by
+    unfold condTrunc
+    rw [cond_apply hs_meas P]
+    congr 1
+    -- `s ∩ (X⁻¹A ∩ Y⁻¹B) = X⁻¹(A∩Sn) ∩ Y⁻¹(B∩Sn)`.
+    have h_inter : truncSet X Y n ∩ (X ⁻¹' A ∩ Y ⁻¹' B)
+        = X ⁻¹' (A ∩ Sn) ∩ Y ⁻¹' (B ∩ Sn) := by
+      rw [hs_eq]; ext ω
+      simp only [Set.mem_inter_iff, Set.mem_preimage]
+      tauto
+    rw [h_inter]
+    exact hXY.measure_inter_preimage_eq_mul (A ∩ Sn) (B ∩ Sn)
+      (hA.inter hSn_meas) (hB.inter hSn_meas)
+  -- `(condTrunc)(X⁻¹A) = (P s)⁻¹ * P(X⁻¹(A∩Sn)) * P(Y⁻¹Sn)`.
+  have hcondX : (condTrunc P X Y n) (X ⁻¹' A)
+      = (P (truncSet X Y n))⁻¹ * (P (X ⁻¹' (A ∩ Sn)) * P (Y ⁻¹' Sn)) := by
+    unfold condTrunc
+    rw [cond_apply hs_meas P]
+    congr 1
+    have h_inter : truncSet X Y n ∩ X ⁻¹' A = X ⁻¹' (A ∩ Sn) ∩ Y ⁻¹' Sn := by
+      rw [hs_eq]; ext ω
+      simp only [Set.mem_inter_iff, Set.mem_preimage]
+      tauto
+    rw [h_inter]
+    exact hXY.measure_inter_preimage_eq_mul (A ∩ Sn) Sn (hA.inter hSn_meas) hSn_meas
+  -- `(condTrunc)(Y⁻¹B) = (P s)⁻¹ * P(X⁻¹Sn) * P(Y⁻¹(B∩Sn))`.
+  have hcondY : (condTrunc P X Y n) (Y ⁻¹' B)
+      = (P (truncSet X Y n))⁻¹ * (P (X ⁻¹' Sn) * P (Y ⁻¹' (B ∩ Sn))) := by
+    unfold condTrunc
+    rw [cond_apply hs_meas P]
+    congr 1
+    have h_inter : truncSet X Y n ∩ Y ⁻¹' B = X ⁻¹' Sn ∩ Y ⁻¹' (B ∩ Sn) := by
+      rw [hs_eq]; ext ω
+      simp only [Set.mem_inter_iff, Set.mem_preimage]
+      tauto
+    rw [h_inter]
+    exact hXY.measure_inter_preimage_eq_mul Sn (B ∩ Sn) hSn_meas (hB.inter hSn_meas)
+  -- finite-ness needed for cancellation.
+  have hPs_ne : P (truncSet X Y n) ≠ ∞ := measure_ne_top P _
+  have hPXSn_top : P (X ⁻¹' Sn) ≠ ∞ := measure_ne_top P _
+  have hPYSn_top : P (Y ⁻¹' Sn) ≠ ∞ := measure_ne_top P _
+  rw [hLHS, hcondX, hcondY, h_mass]
+  -- algebraic identity in ℝ≥0∞.
+  set a := P (X ⁻¹' (A ∩ Sn))
+  set b := P (Y ⁻¹' (B ∩ Sn))
+  set c := P (X ⁻¹' Sn)
+  set d := P (Y ⁻¹' Sn)
+  -- goal: `(c*d)⁻¹ * (a*b) = ((c*d)⁻¹ * (a*d)) * ((c*d)⁻¹ * (c*b))`.
+  have hcd_cancel : (c * d)⁻¹ * (c * d) = 1 :=
+    ENNReal.inv_mul_cancel (mul_ne_zero hPXSn_ne hPYSn_ne)
+      (ENNReal.mul_ne_top hPXSn_top hPYSn_top)
+  calc (c * d)⁻¹ * (a * b)
+      = ((c * d)⁻¹ * (c * d)) * ((c * d)⁻¹ * (a * b)) := by rw [hcd_cancel, one_mul]
+    _ = ((c * d)⁻¹ * (a * d)) * ((c * d)⁻¹ * (c * b)) := by ring
 
 /-- **a.c. 保存**: `(P.map X) ≪ volume` → `((condTrunc P X Y n).map X) ≪ volume`。
 `cond_absolutelyContinuous` (`(condTrunc) ≪ P`) + `Measure.map` の a.c. mono で合成。 -/
@@ -128,8 +215,8 @@ theorem map_condTrunc_absolutelyContinuous (P : Measure Ω) [IsProbabilityMeasur
     {X Y : Ω → ℝ} (hX : Measurable X) {Z : Ω → ℝ} (hZ : Measurable Z)
     (hZ_ac : (P.map Z) ≪ volume) {n : ℕ} :
     ((condTrunc P X Y n).map Z) ≪ volume := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  have h_cond : condTrunc P X Y n ≪ P := ProbabilityTheory.cond_absolutelyContinuous
+  exact (h_cond.map hZ).trans hZ_ac
 
 /-! ### Helper 2 — per-n regularity 供給 (plan §推奨分解 2) -/
 
@@ -141,8 +228,20 @@ theorem integrable_sq_condTrunc (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) {Z : Ω → ℝ} {n : ℕ}
     (hpos : P (truncSet X Y n) ≠ 0) (hZ : Z = X ∨ Z = Y) :
     Integrable (fun ω => (Z ω) ^ 2) (condTrunc P X Y n) := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  haveI : IsProbabilityMeasure (condTrunc P X Y n) :=
+    isProbabilityMeasure_condTrunc P hX hY hpos
+  have hZ_meas : Measurable Z := by rcases hZ with rfl | rfl; exacts [hX, hY]
+  -- `condTrunc`-a.e. ω lies in truncSet, so `|Z ω| ≤ n`, hence `Z ω ^ 2 ∈ [0, n^2]`.
+  have h_mem : ∀ᵐ ω ∂(condTrunc P X Y n), ω ∈ truncSet X Y n := by
+    unfold condTrunc
+    exact ProbabilityTheory.ae_cond_mem (measurableSet_truncSet hX hY n)
+  refine Integrable.of_mem_Icc 0 ((n : ℝ) ^ 2) (hZ_meas.pow_const 2).aemeasurable ?_
+  filter_upwards [h_mem] with ω hω
+  have hZ_le : |Z ω| ≤ (n : ℝ) := by rcases hZ with rfl | rfl; exacts [hω.1, hω.2]
+  constructor
+  · positivity
+  · calc (Z ω) ^ 2 = |Z ω| ^ 2 := (sq_abs (Z ω)).symm
+      _ ≤ (n : ℝ) ^ 2 := by gcongr
 
 /-- **per-n 有限微分エントロピー (各成分)** `Integrable (negMulLog (rnDeriv ·)) volume` for
 `(condTrunc P X Y n).map Z`。compact support → bounded density → integrable。
@@ -180,8 +279,17 @@ theorem entropyPowerExt_condTrunc_add_ge (P : Measure Ω) [IsProbabilityMeasure 
     entropyPowerExt ((condTrunc P X Y n).map (fun ω => X ω + Y ω))
       ≥ entropyPowerExt ((condTrunc P X Y n).map X)
         + entropyPowerExt ((condTrunc P X Y n).map Y) := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  haveI : IsProbabilityMeasure (condTrunc P X Y n) :=
+    isProbabilityMeasure_condTrunc P hX hY hpos
+  exact entropyPowerExt_add_ge_of_finite_variance (condTrunc P X Y n) X Y hX hY
+    (indepFun_condTrunc P hX hY hXY hpos)
+    (map_condTrunc_absolutelyContinuous P hX hX hX_ac)
+    (map_condTrunc_absolutelyContinuous P hX hY hY_ac)
+    (integrable_sq_condTrunc P hX hY hpos (Or.inl rfl))
+    (integrable_sq_condTrunc P hX hY hpos (Or.inr rfl))
+    (integrable_negMulLog_map_condTrunc P hX hY hX hX_ac hpos)
+    (integrable_negMulLog_map_condTrunc P hX hY hY hY_ac hpos)
+    (integrable_negMulLog_map_condTrunc_sum P hX hY hX_ac hY_ac hXY hpos)
 
 /-! ### Helper 3 — 優関数 + generalized Gibbs (plan §推奨分解 3) -/
 
@@ -198,8 +306,78 @@ theorem differentialEntropy_le_cross_entropy {μ ν : Measure ℝ}
     (h_cross_int : Integrable
       (fun x => Real.log ((ν.rnDeriv volume x).toReal)) μ) :
     differentialEntropy μ ≤ - ∫ x, Real.log ((ν.rnDeriv volume x).toReal) ∂μ := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  -- `(klDiv μ ν).toReal = ∫ llr μ ν ∂μ ≥ 0`.
+  have h_meas_eq : μ Set.univ = ν Set.univ := by simp
+  have h_kl_eq : (klDiv μ ν).toReal = ∫ x, llr μ ν x ∂μ :=
+    toReal_klDiv_of_measure_eq hμν h_meas_eq
+  have h_kl_nn : (0 : ℝ) ≤ ∫ x, llr μ ν x ∂μ := h_kl_eq ▸ ENNReal.toReal_nonneg
+  -- rnDeriv chain: `μ.rnDeriv ν * ν.rnDeriv vol =ᵐ[μ] μ.rnDeriv vol`.
+  have h_rn_chain_vol : μ.rnDeriv ν * ν.rnDeriv volume =ᵐ[volume] μ.rnDeriv volume :=
+    Measure.rnDeriv_mul_rnDeriv hμν
+  have h_rn_chain_μ : μ.rnDeriv ν * ν.rnDeriv volume =ᵐ[μ] μ.rnDeriv volume :=
+    hμ_ac.ae_le h_rn_chain_vol
+  have h_rn_μν_pos : ∀ᵐ x ∂μ, 0 < μ.rnDeriv ν x := Measure.rnDeriv_pos hμν
+  have h_rn_μν_lt_top : ∀ᵐ x ∂μ, μ.rnDeriv ν x < ∞ :=
+    hμν.ae_le (Measure.rnDeriv_lt_top μ ν)
+  have h_rn_μvol_pos : ∀ᵐ x ∂μ, 0 < μ.rnDeriv volume x := Measure.rnDeriv_pos hμ_ac
+  have h_rn_νvol_lt_top : ∀ᵐ x ∂μ, ν.rnDeriv volume x < ∞ :=
+    hμ_ac.ae_le (Measure.rnDeriv_lt_top ν volume)
+  -- llr decomposition: `llr μ ν x = log (μ.rnDeriv vol).toReal - log (ν.rnDeriv vol).toReal`.
+  have h_llr_decomp : ∀ᵐ x ∂μ,
+      llr μ ν x = Real.log ((μ.rnDeriv volume x).toReal)
+        - Real.log ((ν.rnDeriv volume x).toReal) := by
+    filter_upwards [h_rn_chain_μ, h_rn_μν_pos, h_rn_μν_lt_top, h_rn_μvol_pos, h_rn_νvol_lt_top]
+      with x h_chain h_μν_pos h_μν_lt_top h_μvol_pos h_νvol_lt_top
+    -- `μ.rnDeriv vol x = μ.rnDeriv ν x * ν.rnDeriv vol x`.
+    have h_combine : μ.rnDeriv volume x = μ.rnDeriv ν x * ν.rnDeriv volume x := by
+      rw [← h_chain]; rfl
+    have hμν_real_pos : 0 < (μ.rnDeriv ν x).toReal :=
+      ENNReal.toReal_pos h_μν_pos.ne' h_μν_lt_top.ne
+    -- `ν.rnDeriv vol x > 0` μ-a.e.: from `0 < μ.rnDeriv vol x = μ.rnDeriv ν x * ν.rnDeriv vol x`.
+    have hν_vol_ne : ν.rnDeriv volume x ≠ 0 := by
+      intro h0
+      rw [h_combine, h0, mul_zero] at h_μvol_pos
+      exact lt_irrefl 0 h_μvol_pos
+    have hν_vol_pos : 0 < (ν.rnDeriv volume x).toReal :=
+      ENNReal.toReal_pos hν_vol_ne h_νvol_lt_top.ne
+    show Real.log ((μ.rnDeriv ν x).toReal)
+        = Real.log ((μ.rnDeriv volume x).toReal) - Real.log ((ν.rnDeriv volume x).toReal)
+    rw [h_combine, ENNReal.toReal_mul,
+      Real.log_mul hμν_real_pos.ne' hν_vol_pos.ne']
+    ring
+  -- `∫ log (μ.rnDeriv vol x).toReal ∂μ = - h(μ)`.
+  have h_int_log_μ_eq :
+      ∫ x, Real.log ((μ.rnDeriv volume x).toReal) ∂μ = - differentialEntropy μ := by
+    have h_pull : ∫ x, Real.log ((μ.rnDeriv volume x).toReal) ∂μ
+        = ∫ x, (μ.rnDeriv volume x).toReal • Real.log ((μ.rnDeriv volume x).toReal) ∂volume := by
+      rw [integral_rnDeriv_smul (μ := μ) (ν := volume) hμ_ac
+        (f := fun x => Real.log ((μ.rnDeriv volume x).toReal))]
+    rw [h_pull]
+    unfold differentialEntropy
+    rw [show -∫ x, Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume
+        = ∫ x, -Real.negMulLog ((μ.rnDeriv volume x).toReal) ∂volume from (integral_neg _).symm]
+    refine integral_congr_ae ?_
+    refine Filter.Eventually.of_forall (fun x => ?_)
+    simp only [smul_eq_mul, Real.negMulLog_def]
+    ring
+  -- `∫ log (μ.rnDeriv vol).toReal ∂μ` integrable on μ (= -negMulLog pulled back).
+  have h_int_log_μ : Integrable (fun x => Real.log ((μ.rnDeriv volume x).toReal)) μ := by
+    rw [← integrable_rnDeriv_smul_iff (μ := μ) (ν := volume) hμ_ac
+      (f := fun x => Real.log ((μ.rnDeriv volume x).toReal))]
+    refine (hμ_ent.neg).congr (Filter.Eventually.of_forall fun x => ?_)
+    show -Real.negMulLog ((μ.rnDeriv volume x).toReal)
+        = (μ.rnDeriv volume x).toReal • Real.log ((μ.rnDeriv volume x).toReal)
+    simp only [smul_eq_mul, Real.negMulLog_def]
+    ring
+  -- `∫ llr μ ν ∂μ = ∫ log (μ.rnDeriv vol).toReal ∂μ - ∫ log (ν.rnDeriv vol).toReal ∂μ`.
+  have h_split : ∫ x, llr μ ν x ∂μ
+      = ∫ x, Real.log ((μ.rnDeriv volume x).toReal) ∂μ
+        - ∫ x, Real.log ((ν.rnDeriv volume x).toReal) ∂μ := by
+    rw [← integral_sub h_int_log_μ h_cross_int]
+    exact integral_congr_ae h_llr_decomp
+  -- assemble: `0 ≤ -h(μ) - ∫ log (ν.rnDeriv vol).toReal ∂μ` ⟹ result.
+  rw [h_split, h_int_log_μ_eq] at h_kl_nn
+  linarith
 
 /-! ### Helper 4 — crux usc (plan §推奨分解 4, genuine sub-wall 候補) -/
 
@@ -270,7 +448,17 @@ per-n 黒箱 EPI (`entropyPowerExt_condTrunc_add_ge`) + crux usc
 ⚠ 本版は和の有限微分エントロピー `hent_sum` を crux usc に渡すため明示引数で受ける
 (wall theorem 側 signature には無い)。assembly で wall body から供給する設計
 (compact support 経由 or 別途確立)。`hent_sum` は regularity precondition (有限微分
-エントロピー)、結論を encode しない load-bearing でない。 -/
+エントロピー)、結論を encode しない load-bearing でない。
+
+独立 honesty audit 2026-06-07 (skeleton 段階、signature honesty + classification):
+`hent_sum` は load-bearing でなく regularity precondition と確認 (core-reconstruction:
+和エントロピー=+∞ なら Nₑ(P.map(X+Y))=⊤ で EPI 自明ゆえ、`hent_sum`=有限 は route T 適用
+領域を切り出す前提であって EPI 不等式を encode しない)。⚠Phase 4 接続課題: wall theorem
+`:1407` の仮説は global `hX_ent`/`hY_ent` (各成分) で `hent_sum` (和) を持たないため、
+assembly では `hent_sum` を各成分の有限 entropy + a.c. から **genuine 導出** する必要がある
+(両成分有限 entropy ⊬ 和有限 entropy は自明でない)。この導出が詰まっても `hent_sum` を
+wall theorem の新規仮説に**昇格させない** (= signature load-bearing 化、tier 5)。詰まる
+場合は当該導出補題に `sorry` + `@residual` で park。 -/
 theorem entropyPowerExt_add_ge_infinite_variance_truncation
     (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
