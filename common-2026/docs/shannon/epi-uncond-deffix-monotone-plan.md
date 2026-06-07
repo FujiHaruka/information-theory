@@ -2,7 +2,7 @@
 
 > **親**: [`epi-unconditional-moonshot-plan.md`](epi-unconditional-moonshot-plan.md) (傘 moonshot)。本 plan は傘の **Phase 1 (S1 retype) の defect 訂正 + Phase 5 dispatch 再構成** を担う。
 > **slug**: `epi-uncond-deffix-monotone-plan`。
-> **status**: 2026-06-06 起草。`entropyPowerExt` の **false-statement defect を機械検証で発見** → 訂正 def を validated prototype 化 (`/tmp/epi_deffix_proto.lean` compiles) → 実装 campaign。
+> **status**: 2026-06-06 起草 (def-fix campaign P1-P5 done)。**2026-06-07 更新**: W-Y1 gateway atom 着手 + machine 再評価で +∞ 伝播の攻略を §7 に再設計 (route α = EReal-conditioning primary、当初「plumbing」見積り訂正、multi-session moonshot 規模)。次 session で §7 着手。
 
 ## 0. 発見 (機械検証済、linchpin)
 
@@ -49,7 +49,7 @@ def 修正は case-2 (mixed) を破る (`entropyPowerExt_mixed_add_ge:165` が `
 (W+V a.c. は `map_add_absolutelyContinuous` (`EPIUncondMixedCase.lean:55`) で W a.c. から。`EReal.exp` 単調 ← `differentialEntropyExt(W) ≤ differentialEntropyExt(W+V)`。)
 - **−∞ 枝** (diffEntExt W = ⊥): `bot_le`。genuine。
 - **有限枝** (a.c.+integrable): 既存 Real `differentialEntropy_add_ge_of_indep` (`EPIUncondMixedCase.lean:76`、8 integrability honest precondition) を bridge で lift。genuine。
-- **+∞ 枝** (diffEntExt W = ⊤): diffEntExt(W+V)=⊤ 要 (+∞ 伝播)。**Mathlib 壁でなく拡張 entropy plumbing**。今 session で閉じれば genuine、無理なら `sorry + @residual(plan:epi-uncond-deffix-monotone-plan)` (plan slug、wall でない)。
+- **+∞ 枝** (diffEntExt W = ⊤): diffEntExt(W+V)=⊤ 要 (+∞ 伝播)。**⚠ 2026-06-07 machine 再評価で「plumbing ~80-150 行」は過小評価と判明 → 攻略は §7 が SoT** (route α = EReal-conditioning が本筋、A/B 分解は回避可)。`sorry + @residual(plan:epi-uncond-deffix-monotone-plan)`。
 
 これで:
 - **case-2 (X a.c., Y 特異)**: RHS = N(X)+0 = N(X) ≤ N(X+Y) (mono)。全 entropy 値で genuine (+∞ 枝が閉じれば)。
@@ -71,7 +71,7 @@ def 修正は case-2 (mixed) を破る (`entropyPowerExt_mixed_add_ge:165` が `
 ## 4. 実装 campaign (Phase)
 
 - [x] **P1 def-fix** ✅ (`EntropyPowerExt.lean`、2026-06-06): 訂正 def (正部・負部 EReal 差) + `differentialEntropyExt_of_ac` (raw) + `_of_ac_integrable` (bridge、`integral_eq_lintegral_pos_part_sub_lintegral_neg_part` 経由) + `entropyPowerExt_of_ac_integrable` + `entropyPowerExt_eq_top_of_diffEntExt_top` (+∞→∞) + 特異枝不変 + sanity gate `_gaussianReal` を `integrable_negMulLog_gaussianReal_density` (新 helper、`memLp_id_gaussianReal` + `integrable_withDensity_iff`) で修復。**全 sorryAx-free** (`#print axioms` `[propext, Classical.choice, Quot.sound]`)。
-- [~] **P2 拡張単調性** `entropyPowerExt_mono_add` — **本 session では未着手 (deferred)**。infinite-entropy (±∞) 入力の `entropyPowerExt` 単調性。dispatch を **finite-entropy precondition で scope** することで回避 (下記 P3)。+∞ 伝播 (`h(W)=+∞, V indep ⟹ h(W+V)=+∞`) は extended-entropy plumbing (Mathlib 壁でなく)、後続で着手 → `plan:epi-uncond-deffix-monotone-plan`。
+- [~] **P2 拡張単調性** `entropyPowerExt_mono_add` (`EPIUncondMonotone.lean:135`、2026-06-07 gateway atom 着手済) — **−∞ 枝 + EReal lift genuine、+∞ 伝播 (`:77`) + 有限枝 (`:120`) は sorry** (`@residual(plan:epi-uncond-deffix-monotone-plan)`、独立監査 PASS)。**+∞ 伝播の攻略は §7 が SoT** (route α = EReal-conditioning 本筋、multi-session moonshot 規模、当初「plumbing」見積りは machine 再評価で訂正)。
 - [x] **P3 dispatch 再構成** ✅ (`EPIUncondMixedCase.lean`、2026-06-06): case-2 `entropyPowerExt_mixed_add_ge` (+ symm) に finite-entropy 前提 `hX_ent`/`hW_ent` 追加 + `_of_ac_integrable` 使用 (genuine 維持)。case-1 の **false-as-stated だった bare sorry を named wall `entropyPowerExt_add_ge_finite_ac` (`@residual(wall:epi-finite-entropy-ac-classical)`) に置換**。dispatch は finite-entropy 4 前提を thread (方針 X partial scope)。**case-2/3/symm sorryAx-free 維持、唯一の sorry = named wall 1 本**。
 - [x] **P4 独立 honesty-auditor** ✅ (2026-06-06): 13 declaration 監査 = 11 ok / 1 honest_residual (named wall) / 1 dispatch transitive sorry / **0 defect**。訂正 def の退化非悪用 (±∞ 正写像) 機械検証、finite-entropy 前提の non-load-bearing 確認、`wall:epi-finite-entropy-ac-classical` 分類妥当性 (一般 a.c. 無限分散 = Lieb-Young 不在 loogle Found 0) を独立確認。`@audit:ok` 付与済。
 - [x] **P5 wall register 登録 + commit** ✅: `audit-tags.md` Wall name register に `epi-finite-entropy-ac-classical` 追記。
@@ -85,6 +85,94 @@ def 修正は case-2 (mixed) を破る (`entropyPowerExt_mixed_add_ge:165` が `
 - **P2 +∞ 伝播が今 session 不可**: `sorry + @residual(plan:epi-uncond-deffix-monotone-plan)` で park (wall でなく plan、後続 closeable)。case-1b 無限 entropy 枝も同 residual 経由 (mono に乗る)。
 - **共通**: 詰まったら signature を結論形に保ち `sorry + @residual`。`*Hypothesis` bundle / 退化定義悪用 / 名前ロンダリング禁止。`_unconditional` 命名は threaded integrability precondition が残る間は name-laundering ゆえ不可 (傘 Phase 5 判断ログ 2 と整合)。
 
-## 6. honest 到達点 (本 session target)
+## 6. honest 到達点 (2026-06-06 session target)
 
 headline TRUE-as-stated (def-fix)。genuine close: singular/mixed/(−∞ or 0 entropy)/(+∞ entropy if 伝播閉)。残 named wall: (a) +∞ 伝播 (閉じなければ、plan slug)、(b) `wall:epi-finite-entropy-ac-classical` (両有限 entropy 一般 a.c. の古典 EPI、方針 X partial + 無限分散 wall)。**現状の「false-as-stated monolithic sorry」から「true-as-stated + 精密 named wall 1-2 本」への昇格が成果**。
+
+---
+
+## 7. W-Y1 (+∞ 伝播 / 拡張単調性) 攻略計画 — 2026-06-07 machine 再評価
+
+> §2/§4 P2 の「+∞ 伝播 = extended-entropy plumbing ~80-150 行、Mathlib 壁でない」は **過小評価**だった。
+> 本節が SoT。gateway atom `entropyPowerExt_mono_add` (`EPIUncondMonotone.lean:135`、新規 file) と
+> +∞ 伝播 `differentialEntropyExt_top_of_indep_add` (`:77`) の 2 sorry を closure する攻略。
+> ユーザー確認 (2026-06-07): 大ゴール (方針 Y 完全無条件) 不変、次 session で壁に挑む。
+
+### 7-0. machine 再評価の結論 (loogle conclusion-shape 二段 + verbatim signature)
+
++∞ 伝播 `h(W)=⊤ ⟹ h(W+V)=⊤` を「A_{W+V}=⊤ ∧ B_{W+V}<⊤」の 2 obligation に割ると、**両方とも当初見積りより重い**:
+
+- **Mathlib の Jensen は全て `Integrable (g∘f)` 要求** (verbatim、`ConvexOn.map_integral_le`
+  `Mathlib/Analysis/Convex/Integral.lean:199`、`map_average_le:130`)。「φ 下に有界 → RHS +∞ 許容」版は不在。
+  ⇒ capstone 補題1 `integrable_negPart_negMulLog_map_sum` (`EPIInfiniteVarianceCapstone.lean:74`) の
+  Jensen block (L220-273) は **片成分の完全有限エントロピー** (A も B も有限) を要求し、⊤ 枝 (A_W=⊤) では呼べない。
+- `Measure.conv` の entropy-monotone: loogle `"…conv", \|- _ ≤ _` **Found 0**。conv の essSup peak bound **Found 0**。
+  lintegral/ℝ≥0∞ Jensen **Found 0**。in-tree `negMulLog_convDensity_entropy_ge_density`
+  (`EPIG2ConvEntropyDensity.lean:124`) は有限分散+有限エントロピー必須 (h=±∞ 不適用)。
+- proof-pivot-advisor の「enorm 分解で A=⊤」案は **循環**: B<⊤ 下で「和エントロピー非可積分」≡「A_{W+V}=⊤」。
+  capstone Case 2 (`:368-392`) は `¬hent_sum` を **by_cases で与えられていた**が、W-Y1 では h(W)=⊤ から
+  **導く**必要があり enorm は no-op repackaging。Jensen は φ(r) を**上から**抑えるだけで裾積分の下界に使えない。
+
+### 7-1. Approach — route α (EReal 単調性直接) を primary に
+
+**鍵の再認識**: ゴールは A/B 分解でなく **EReal 単調性** `differentialEntropyExt (P.map W) ≤
+differentialEntropyExt (P.map (W+V))`。これが直接出れば 3 枝が一括で閉じ、+∞ 伝播の A/B 分解 (T1/T2) は **全て不要**:
+- ⊤ 枝: `h(W)=⊤ ≤ h(W+V) ⟹ h(W+V)=⊤` (`le_top` + antisymm)。B_{W+V}<⊤ の Jensen obstruction を回避。
+- 有限枝: 単調性そのもの。⊥ 枝: `bot_le`。
+
+⇒ **primary = route α** (EReal-conditioning)、**fallback = 明示 A/B** (route β + T1)。
+
+### 7-2. route α (primary) — conditioning-reduces-entropy の EReal 化
+
+機構: `h(W+V) ≥ h(W+V \| V) = h(W)`。in-tree Real 版が両方 genuine 既存:
+- conditioning 減少 `condDifferentialEntropy_le` (`EPIG2ConvEntropyMonotone.lean:224`、`@audit:ok`、8 integrability)。
+- fibre 同定 `condDifferentialEntropy_indep_add_eq` (`:328`、`@audit:ok`、c=1 で `h(W+V\|V)=h(W)`)。
+- 差の KL 恒等式 `differentialEntropy_sub_condDifferentialEntropy_eq_toReal_klDiv`
+  (`EPIG2ConvEntropyMonotone.lean` 系、`h(X)−h(X\|Z) = (klDiv joint product).toReal ≥ 0`)。
+
+**障害 = 型壁**: これら全て `differentialEntropy : Measure ℝ → ℝ` (Bochner ℝ 値、h=±∞ 非表現) と
+`.toReal` 経由で、有限性 precondition を本質的に持つ。EReal 化には:
+- **(α-i) `condDifferentialEntropyExt : ... → EReal` 新規定義** + conditioning 不等式の EReal 版、または
+- **(α-ii) KL 直接バイパス**: `I(W+V;V) = klDiv(joint ‖ product) ≥ 0` (Mathlib `InformationTheory.klDiv` は
+  ℝ≥0∞ 値で非負 type-trivial) と chain rule `h(W+V) = h(W+V\|V) + I` を EReal で組む。⊤ 項を含む chain rule
+  (`⊤ + nonneg = ⊤`、`⊤ − ⊤` 回避) の careful な EReal 算術が要る。
+
+見積: **~150-300 行 + Real workhorse の EReal 化 blast radius** (傘 plan §設計制約「de Bruijn が normed field 要求で
+Real 温存」と衝突しうる — workhorse は触らず上位に EReal 層を**足す**設計に限定する)。**multi-session、moonshot 規模**。
+着手 1 手 = **(α-ii) KL バイパスの薄い prototype** を `lean-implementer` に試させ feasibility gate を取る
+(EReal chain rule が ⊤ 項で破綻するか確認)。
+
+### 7-3. route β (fallback) — 明示 A/B (route α が型壁で重すぎる場合)
+
+- **T1 (B_{W+V}<⊤)**: 自作 **Jensen-下界** (φ=t·log t 下に有界 `≥−1/e`、affine minorant 経由)。
+  部品 = `ConvexOn.exists_affine_le_real` (`Mathlib/Analysis/Convex/Approximation.lean:98`、verbatim:
+  `(hsc : IsClosed s) (hfc : LowerSemicontinuousOn f s) (hf : ConvexOn ℝ s f) : ∃ c c', ∀ x∈s, c*x+c' ≤ f x`)。
+  証明: a=∫f dμ で affine minorant `c·t+c' ≤ φ(t)` を取り積分 → `φ(a) = c·a+c' ≤ ∫φ(f)` (∫c(f−a)=0)。
+  RHS well-defined (φ(f) ≥ integrable affine ⟹ 負部可積分)。capstone 補題1 の Jensen block を **W の負部
+  B_W<⊤ から** bound する版に組み直す (`convDensityAdd_comm` `EPIConvDensity.lean:47` で対称)。~30-50 行、`hV_ac` 追加要。
+- **T2 (A_{W+V}=⊤)**: route β でも循環は残る。truncation+LSC (route β') = W を有限エントロピー近似 W_n
+  (conditioning truncation、route T `EPIInfiniteVarianceCapstone` 流用) → Real monotonicity → n→∞ を
+  `klDiv_le_liminf_of_ae_tendsto` (`EPIG2KLFatouLSC.lean:112`) で LSC 持ち上げ。`wall:entropy-lsc-weak` 領域、
+  W-Y2 と machinery 共有。⇒ route β は T2 が結局 LSC wall に当たるため、**route α の方が本筋**。
+
+### 7-4. signature 設計確定 + 着手順
+
+1. **`differentialEntropyExt_top_of_indep_add` に `hV_ac : (P.map V) ≪ volume` 追加** (案 F、honest
+   regularity precondition)。消費先は未実装 `entropyPowerExt_add_ge_ac_unconditional` (両 a.c.) のみ → ripple 0。
+   `rnDeriv_map_sum_ae` (両 a.c. 要) が呼べる。
+2. **route α (α-ii KL バイパス) の feasibility gate** を最初に取る。通れば mono_add primitive 化、
+   top_of_indep_add は系として削除可。
+3. 通らなければ route β: T1 (自作 Jensen-下界、独立資産) を landing → B<⊤ 確保 → T2 を β' (LSC) に切替。
+4. **判断点**: route α (型壁) も route β' (LSC wall) も 2-3 session 詰まれば、+∞ 伝播を `@residual(wall:…)` に
+   昇格 (現 `plan:` から)、headline を `entropy_power_inequality_of_ac` (a.c.+有限エントロピー、proof-done) に確定
+   (方針 X より strictly 強い honest 中間形)。これが L-Uncond-Y-roi 撤退口。
+
+### 7-5. 撤退ライン (W-Y1 専用)
+
+- **L-WY1-α** (route α 型壁): EReal chain rule が ⊤ 項 (`h(W)=⊤`) で `⊤−⊤=⊥` 等の退化に落ち、workhorse
+  EReal 化が傘 plan の「Real 温存」設計制約と衝突 → route β (明示 A/B) に切替、T2 を LSC (W-Y2 と統合)。
+- **L-WY1-β** (T1 Jensen-下界が組めない): `exists_affine_le_real` の LSC 前提が φ=t·log t (連続) で自明充足
+  なので組める見込みだが、capstone 補題1 への配線が hell 化 → B<⊤ を route α 経由 (h(W+V)≥h(W) から自動) に一本化。
+- **共通**: 詰まったら signature を結論形に保ち `sorry + @residual(plan:epi-uncond-deffix-monotone-plan)`。
+  `*Hypothesis` bundle / 退化定義悪用 / 名前ロンダリング禁止。W-Y1 が genuine wall 化したら
+  `@residual(wall:…)` に正しく昇格し独立 honesty-auditor を起動。

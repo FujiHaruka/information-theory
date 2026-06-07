@@ -66,12 +66,17 @@ measurability/indep/a.c./`= ⊤` で全て precondition、和の正部発散 (= 
 `h(W+V)=h(W)=⊤` で非 vacuous に成立。(4) **sufficiency — TRUE-as-framed**: 畳み込みは独立 V
 との合成で裾 (正部発散) を消さない (和密度の裾は重い方の因子の裾が支配) ゆえ `A_{W+V}=⊤`、退化境界で
 反例構成不能。**classification 判定**: `plan:epi-uncond-deffix-monotone-plan` 妥当 (wall でない)。
-plan 実在 (§2/§4 P2)、loogle `Real.negMulLog, Measure.conv` = Found 0 (bare + conclusion-shape
-`|- _ ≤ _` 二段とも 0、Mathlib off-the-shelf 不在) は確認したが、conv が裾を保つ lintegral 評価は
-elementary measure theory で self-buildable plumbing (genuine Mathlib gap でない)、plan が closure を
-明示所有 (~80-150 行見積、inventory L198-201/223-224)。現 signature が V a.c. を欠くため
-`rnDeriv_map_sum_ae` (V a.c. 要) 経由の conv 密度同定が呼べない = signature 設計課題だが、これは
-plan 内で V a.c. 追加 or 別経路で解決する範囲 (closeable)。verdict: honest_residual。
+plan 実在 (§2/§4/§7)。
+
+**⚠ 2026-06-07 machine 再評価で scope 訂正** (`epi-uncond-deffix-monotone-plan.md` §7 が SoT):
+当初 docstring の「conv が裾を保つ lintegral 評価は elementary plumbing ~80-150 行」は **過小評価**。
+machine 証拠: (1) Mathlib の Jensen は全て `Integrable (g∘f)` 要求 (verbatim、`ConvexOn.map_integral_le`)、
+「φ 下に有界 → RHS +∞ 許容」版は不在 → B_{W+V}<⊤ の Jensen route は ⊤ 枝 (A_W=⊤) で破綻。
+(2) `Measure.conv` entropy-monotone / essSup peak bound / lintegral Jensen = loogle 全 Found 0。
+(3) advisor の「enorm で A=⊤」案は循環 (B<⊤ 下で「和エントロピー非可積分」≡「A=⊤」)。
+⇒ 真の攻略 = §7 route α (EReal-conditioning 単調性を直接、A/B 分解を回避、multi-session moonshot 規模)。
+classification は **`plan:` 据置** (Mathlib-不能 wall でなく known-shape の大規模 self-build = EReal-conditioning、
+route α が型壁で詰まれば §7-4 判断点で `wall:` 昇格)。verdict: honest_residual (scope 大、closeable)。
 
 @residual(plan:epi-uncond-deffix-monotone-plan) -/
 theorem differentialEntropyExt_top_of_indep_add
