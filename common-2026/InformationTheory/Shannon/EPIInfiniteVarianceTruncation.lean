@@ -560,7 +560,18 @@ Fubini (`integral_integral_swap`) で積分すると `∫ (r log r)⁺ ≤ ∫ q
 (後者は `condTrunc.map Y` の `negMulLog` 可積分 `integrable_negMulLog_map_condTrunc` Z=Y から)。
 
 honest: 結論は可積分性 (regularity)。仮説は a.c. + measurability + positive mass。
-和エントロピー可積分性 (= #2 の結論) を仮説で受けていない (非循環・非バンドル)。 -/
+和エントロピー可積分性 (= #2 の結論) を仮説で受けていない (非循環・非バンドル)。
+
+park 状態 (L-IVT-4 escape、2026-06-07): #2 (`integrable_negMulLog_map_condTrunc_sum`) は
+正部 (compact support `map_condTrunc_sum_concentrated` + `negMulLog_le_one_sub_self` で
+`Integrable.mono'`、genuine) と本負部 lemma の honest split で完成 (`negMulLog r = g₁ - g₂`)。
+本負部 lemma 単独が残課題。Jensen+Fubini ルートの素材は確認済 (`ConvexOn.map_integral_le`
+on probability measure `p_n·volume`、`Real.convexOn_mul_log`、`self_sub_one_le_n` で下界、
+`integral_integral_swap`、右辺有限性は `integrable_negMulLog_map_condTrunc` Z=Y) が、各 z
+点の Jensen 前提 (`Integrable (q_n(z-·)) (p_n·vol)` + `Integrable (q_n(z-·)·log q_n(z-·))
+(p_n·vol)` を a.e. z で) 供給 + Fubini の uncurry `Integrable (p_n x · (q_n(z-x)·log q_n(z-x)))
+(vol.prod vol)` 供給が当該セッション規模 (100+ 行) を超えたため park。仮説束化での sorry 回避は
+していない (signature は本来の可積分性結論のまま)。 -/
 theorem integrable_negPart_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) (hXY : IndepFun X Y P)
