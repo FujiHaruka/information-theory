@@ -1,5 +1,16 @@
 # 無限分散 a.c. 古典 EPI 構築 — truncation ルート moonshot 計画 🌙
 
+> ## ✅ CLOSED 2026-06-07 — route T で genuine closure 完了 (sorryAx-free)
+> 無限分散 a.c. 古典 EPI `entropyPowerExt_add_ge_infinite_variance` を route T で **sorryAx-free
+> genuine closure**。`wall:epi-infinite-variance-classical` は FALSE WALL (sharp Young/Brascamp-Lieb
+> 不要)。実装: `EPIInfiniteVarianceTruncation.lean` (全 sub-lemma A/B/C'/D/bdd/neg genuine + 監査
+> PASS) + capstone `EPIInfiniteVarianceCapstone.lean` (P 版負部可積分 + wall の hent_sum case split)。
+> dispatch `entropyPowerExt_add_ge_dispatch_skeleton` まで sorryAx-free、独立 honesty audit PASS
+> (defect 0)。旧 sorry wall (`EPICase1SmoothingLimit.lean:1407`) 削除済、dispatch を capstone へ rewire 済。
+> 主要発見: bdd cobound は compact support でなく per-n EPI 下界 (`Nₑ(μ_R)≥Nₑ(X_R)→Nₑ(X)>0`)、neg は
+> `hX_ent/hY_ent` を crux-usc chain に threading 要 (a.c.+独立だけでは畳込み密度負部有限性が出ない)。
+> 以下は計画立案時の記録 (履歴)。
+
 > **親**: [`epi-unconditional-moonshot-plan.md`](epi-unconditional-moonshot-plan.md) §sub-plan 一覧 (S6)。
 > **対象壁**: `@residual(wall:epi-infinite-variance-classical)` =
 > `entropyPowerExt_add_ge_infinite_variance` (`InformationTheory/Shannon/EPICase1SmoothingLimit.lean:1407`)。
