@@ -48,6 +48,8 @@ fill は別 Phase で dispatch。helper は plan §推奨分解 (1-6) に対応�
   (helper `indepFun_cond_truncSet`)。
 -/
 import InformationTheory.Shannon.EPICase1SmoothingLimit
+import InformationTheory.Shannon.EPIStamSupplyTwoTime
+import InformationTheory.Shannon.EPIG2ConvEntropyMonotone
 
 namespace InformationTheory.Shannon.EPIInfiniteVarianceTruncation
 
@@ -55,6 +57,7 @@ open MeasureTheory Filter Real ProbabilityTheory
 open InformationTheory.Shannon
 open InformationTheory.Shannon.EntropyPowerInequality
 open InformationTheory.Shannon.EPICase1SmoothingLimit
+open InformationTheory.Shannon.EPIConvDensity (convDensityAdd convDensityAdd_comm)
 open scoped ENNReal NNReal Topology
 
 variable {Ω : Type*} {mΩ : MeasurableSpace Ω}
@@ -400,9 +403,179 @@ theorem integrable_negMulLog_map_condTrunc (P : Measure Ω) [IsProbabilityMeasur
       Set.indicator_of_notMem hxs (f := (P.map Z).rnDeriv volume)]
     simp only [mul_zero, ENNReal.toReal_zero, Real.negMulLog_zero]
 
-/-- **per-n 和の有限微分エントロピー** (`hent_sum` 再供給)。compact support の和 X+Y も
-有界密度 → integrable。黒箱 `entropyPowerExt_add_ge_of_finite_variance` は `hent_sum` を
-明示引数で要求するので必須 (wall theorem 側には無い、在庫 §D)。 -/
+/-- **density witness の withDensity 法則** (補助): a.c. probability measure `condTrunc.map Z`
+の rnDeriv を toReal した実関数 `r := (rnDeriv ·).toReal` が、その measure を `withDensity`
+で復元する: `(condTrunc P X Y n).map Z = volume.withDensity (ofReal ∘ r)`。
+a.c. ゆえ `withDensity_rnDeriv_eq` で復元 + a.e. finite rnDeriv で `ofReal ∘ toReal = id`。 -/
+theorem map_condTrunc_withDensity_toReal_rnDeriv (P : Measure Ω) [IsProbabilityMeasure P]
+    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) {Z : Ω → ℝ} (hZ : Measurable Z)
+    {n : ℕ} (hpos : P (truncSet X Y n) ≠ 0)
+    (hZ_ac : ((condTrunc P X Y n).map Z) ≪ volume) :
+    (condTrunc P X Y n).map Z
+      = volume.withDensity
+        (fun x => ENNReal.ofReal (((condTrunc P X Y n).map Z).rnDeriv volume x).toReal) := by
+  haveI : IsProbabilityMeasure (condTrunc P X Y n) :=
+    isProbabilityMeasure_condTrunc P hX hY hpos
+  haveI : IsProbabilityMeasure ((condTrunc P X Y n).map Z) :=
+    Measure.isProbabilityMeasure_map hZ.aemeasurable
+  have hcongr : (fun x => ENNReal.ofReal (((condTrunc P X Y n).map Z).rnDeriv volume x).toReal)
+      =ᵐ[volume] ((condTrunc P X Y n).map Z).rnDeriv volume := by
+    filter_upwards [((condTrunc P X Y n).map Z).rnDeriv_lt_top volume] with x hx
+    exact ENNReal.ofReal_toReal hx.ne
+  rw [withDensity_congr_ae hcongr, Measure.withDensity_rnDeriv_eq _ _ hZ_ac]
+
+/-- **conv density 同定 (再利用可能)**: 独立和 `X+Y` を同時 conditioning した測度
+`condTrunc P X Y n` で push-forward した法則の rnDeriv は、各成分の周辺密度
+`p_n := (condTrunc.map X).rnDeriv vol |>.toReal`, `q_n := (condTrunc.map Y).rnDeriv vol |>.toReal`
+の畳込み `convDensityAdd p_n q_n` に a.e. 一致する。`indepSum_density_ae`
+(`EPIStamSupplyTwoTime.lean:101`、一般・sorryAx-free) を `condTrunc P X Y n` を P と読み替えて
+適用。独立は `indepFun_condTrunc`、a.c. は `map_condTrunc_absolutelyContinuous`、
+prob measure は `isProbabilityMeasure_condTrunc`。
+
+honest: 結論は a.e. 測度等式、仮説は独立 + measurability + a.c. + positive mass (regularity)。
+本 helper は #3 (crux usc) の優関数構成でも再利用する。 -/
+theorem rnDeriv_map_condTrunc_sum_ae (P : Measure Ω) [IsProbabilityMeasure P]
+    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y)
+    (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) (hXY : IndepFun X Y P)
+    {n : ℕ} (hpos : P (truncSet X Y n) ≠ 0) :
+    ((condTrunc P X Y n).map (fun ω => X ω + Y ω)).rnDeriv volume
+      =ᵐ[volume] fun x => ENNReal.ofReal
+        (convDensityAdd (fun y => ((condTrunc P X Y n).map X).rnDeriv volume y |>.toReal)
+          (fun y => ((condTrunc P X Y n).map Y).rnDeriv volume y |>.toReal) x) := by
+  haveI : IsProbabilityMeasure (condTrunc P X Y n) :=
+    isProbabilityMeasure_condTrunc P hX hY hpos
+  -- a.c. of the three pushforwards.
+  have hXac_n : ((condTrunc P X Y n).map X) ≪ volume :=
+    map_condTrunc_absolutelyContinuous P hX hX hX_ac
+  have hYac_n : ((condTrunc P X Y n).map Y) ≪ volume :=
+    map_condTrunc_absolutelyContinuous P hX hY hY_ac
+  have hXYac_n : ((condTrunc P X Y n).map (fun ω => X ω + Y ω)) ≪ volume := by
+    have hsum_ac : (P.map (fun ω => X ω + Y ω)) ≪ volume := by
+      -- the sum law is a.c. since it is the convolution of two a.c. laws.
+      have hconv : P.map (fun ω => X ω + Y ω) = (P.map X) ∗ (P.map Y) := by
+        rw [show (fun ω => X ω + Y ω) = X + Y from rfl, hXY.map_add_eq_map_conv_map hX hY]
+      rw [hconv]
+      exact Measure.conv_absolutelyContinuous hY_ac
+    have h_cond : condTrunc P X Y n ≪ P := ProbabilityTheory.cond_absolutelyContinuous
+    exact (h_cond.map (hX.add hY)).trans hsum_ac
+  -- density witnesses.
+  set pX : ℝ → ℝ := fun y => ((condTrunc P X Y n).map X).rnDeriv volume y |>.toReal with hpX
+  set pY : ℝ → ℝ := fun y => ((condTrunc P X Y n).map Y).rnDeriv volume y |>.toReal with hpY
+  set pXY : ℝ → ℝ := fun y => ((condTrunc P X Y n).map (fun ω => X ω + Y ω)).rnDeriv volume y
+    |>.toReal with hpXY
+  -- measurability + non-negativity of the toReal rnDerivs.
+  have hpX_meas : Measurable pX := (Measure.measurable_rnDeriv _ _).ennreal_toReal
+  have hpY_meas : Measurable pY := (Measure.measurable_rnDeriv _ _).ennreal_toReal
+  have hpXY_meas : Measurable pXY := (Measure.measurable_rnDeriv _ _).ennreal_toReal
+  have hpX_nn : ∀ x, 0 ≤ pX x := fun x => ENNReal.toReal_nonneg
+  have hpY_nn : ∀ x, 0 ≤ pY x := fun x => ENNReal.toReal_nonneg
+  have hpXY_nn : ∀ x, 0 ≤ pXY x := fun x => ENNReal.toReal_nonneg
+  -- withDensity laws.
+  have hpX_law : (condTrunc P X Y n).map X
+      = volume.withDensity (fun x => ENNReal.ofReal (pX x)) :=
+    map_condTrunc_withDensity_toReal_rnDeriv P hX hY hX hpos hXac_n
+  have hpY_law : (condTrunc P X Y n).map Y
+      = volume.withDensity (fun x => ENNReal.ofReal (pY x)) :=
+    map_condTrunc_withDensity_toReal_rnDeriv P hX hY hY hpos hYac_n
+  have hpXY_law : (condTrunc P X Y n).map (fun ω => X ω + Y ω)
+      = volume.withDensity (fun x => ENNReal.ofReal (pXY x)) :=
+    map_condTrunc_withDensity_toReal_rnDeriv P hX hY (hX.add hY) hpos hXYac_n
+  -- integrability of the marginal densities.
+  have hpX_int : Integrable pX volume := Measure.integrable_toReal_rnDeriv
+  have hpY_int : Integrable pY volume := Measure.integrable_toReal_rnDeriv
+  -- lmasses: `∫⁻ ofReal(pW) = (condTrunc.map W) univ`.
+  have hlmass : ∀ (W : Ω → ℝ) (pW : ℝ → ℝ),
+      (condTrunc P X Y n).map W = volume.withDensity (fun x => ENNReal.ofReal (pW x))
+      → (∫⁻ x, ENNReal.ofReal (pW x) ∂volume) = ((condTrunc P X Y n).map W) Set.univ := by
+    intro W pW hlaw
+    rw [hlaw, withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ]
+  have hpX_lmass : (∫⁻ x, ENNReal.ofReal (pX x) ∂volume) = 1 := by
+    rw [hlmass X pX hpX_law]
+    haveI : IsProbabilityMeasure ((condTrunc P X Y n).map X) :=
+      Measure.isProbabilityMeasure_map hX.aemeasurable
+    exact measure_univ
+  have hpY_lmass : (∫⁻ x, ENNReal.ofReal (pY x) ∂volume) = 1 := by
+    rw [hlmass Y pY hpY_law]
+    haveI : IsProbabilityMeasure ((condTrunc P X Y n).map Y) :=
+      Measure.isProbabilityMeasure_map hY.aemeasurable
+    exact measure_univ
+  have hpXY_lmass : (∫⁻ x, ENNReal.ofReal (pXY x) ∂volume) ≠ ⊤ := by
+    rw [hlmass (fun ω => X ω + Y ω) pXY hpXY_law]
+    exact measure_ne_top _ _
+  -- a.e. identity: `pXY =ᵐ convDensityAdd pX pY` (general convolution density).
+  have hkey : pXY =ᵐ[volume] convDensityAdd pX pY :=
+    EPIStamSupplyTwoTime.indepSum_density_ae (P := condTrunc P X Y n) X Y hX hY
+      (indepFun_condTrunc P hX hY hXY hpos)
+      pX pY pXY hpX_nn hpX_meas hpY_nn hpY_meas hpX_law hpY_law hpXY_law
+      hpXY_nn hpXY_meas hpX_int hpY_int hpXY_lmass hpX_lmass hpY_lmass
+  -- transport to the rnDeriv: `rnDeriv =ᵐ ofReal pXY =ᵐ ofReal (convDensityAdd pX pY)`.
+  have hrn_ofReal : ((condTrunc P X Y n).map (fun ω => X ω + Y ω)).rnDeriv volume
+      =ᵐ[volume] fun x => ENNReal.ofReal (pXY x) := by
+    filter_upwards
+      [((condTrunc P X Y n).map (fun ω => X ω + Y ω)).rnDeriv_lt_top volume] with x hx
+    exact (ENNReal.ofReal_toReal hx.ne).symm
+  filter_upwards [hrn_ofReal, hkey] with x hx hkx
+  rw [hx, hkx]
+
+/-- **compact support of the sum law**: `condTrunc P X Y n` は `truncSet` (両成分有界
+`|X|≤n ∧ |Y|≤n`) に concentrated ゆえ、和 `X+Y` の push-forward 法則は区間
+`Icc (-(2n)) (2n)` に concentrated: `(condTrunc.map(X+Y)) (Icc (-(2n)) (2n))ᶜ = 0`。 -/
+theorem map_condTrunc_sum_concentrated (P : Measure Ω) [IsProbabilityMeasure P]
+    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) {n : ℕ}
+    (hpos : P (truncSet X Y n) ≠ 0) :
+    ((condTrunc P X Y n).map (fun ω => X ω + Y ω))
+      (Set.Icc (-(2 * (n : ℝ))) (2 * (n : ℝ)))ᶜ = 0 := by
+  haveI : IsProbabilityMeasure (condTrunc P X Y n) :=
+    isProbabilityMeasure_condTrunc P hX hY hpos
+  rw [Measure.map_apply (hX.add hY) (measurableSet_Icc.compl)]
+  -- `condTrunc (truncSetᶜ) = 0` (concentrated on `truncSet`).
+  have h_trunc_compl : (condTrunc P X Y n) (truncSet X Y n)ᶜ = 0 := by
+    have h_mem : ∀ᵐ ω ∂(condTrunc P X Y n), ω ∈ truncSet X Y n := by
+      unfold condTrunc
+      exact ProbabilityTheory.ae_cond_mem (measurableSet_truncSet hX hY n)
+    rw [ae_iff] at h_mem
+    exact h_mem
+  -- the preimage of `(Icc)ᶜ` is contained in `(truncSet)ᶜ`.
+  refine measure_mono_null (fun ω hω => ?_) h_trunc_compl
+  simp only [Set.mem_preimage, Set.mem_compl_iff, Set.mem_Icc] at hω ⊢
+  -- if `ω ∈ truncSet`, then `|X ω + Y ω| ≤ 2n`, contradicting `ω ∉ Icc`.
+  intro hmem
+  have hXle : |X ω| ≤ (n : ℝ) := hmem.1
+  have hYle : |Y ω| ≤ (n : ℝ) := hmem.2
+  have hsum : |X ω + Y ω| ≤ 2 * (n : ℝ) := by
+    calc |X ω + Y ω| ≤ |X ω| + |Y ω| := abs_add_le _ _
+      _ ≤ (n : ℝ) + (n : ℝ) := by linarith
+      _ = 2 * (n : ℝ) := by ring
+  rw [abs_le] at hsum
+  exact hω ⟨by linarith [hsum.1], by linarith [hsum.2]⟩
+
+/-- **負部 (`{r>1}` 上の `r log r`) の可積分性**: 和の密度 `r := (condTrunc.map(X+Y)).rnDeriv
+vol |>.toReal` (= `p_n ∗ q_n`、convolution) の `negMulLog` の負部
+`(negMulLog r)⁻ = max (-(negMulLog r)) 0 = (r log r)⁺` の `volume`-可積分性。
+これが #2 の真の核 (正部は compact support + `negMulLog_le_one_sub_self` で即)。
+
+機構: convolution `r(z) = ∫ p_n(x) q_n(z-x) dx` で `t ↦ t log t` は凸ゆえ Jensen の積分版
+(`ConvexOn.map_integral_le`) で各 z 点ごとに `r(z) log r(z) ≤ ∫ p_n(x) q_n(z-x) log q_n(z-x) dx`、
+Fubini (`integral_integral_swap`) で積分すると `∫ (r log r)⁺ ≤ ∫ q_n (log q_n)⁺ < ∞`
+(後者は `condTrunc.map Y` の `negMulLog` 可積分 `integrable_negMulLog_map_condTrunc` Z=Y から)。
+
+honest: 結論は可積分性 (regularity)。仮説は a.c. + measurability + positive mass。
+和エントロピー可積分性 (= #2 の結論) を仮説で受けていない (非循環・非バンドル)。 -/
+theorem integrable_negPart_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProbabilityMeasure P]
+    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y)
+    (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) (hXY : IndepFun X Y P)
+    {n : ℕ} (hpos : P (truncSet X Y n) ≠ 0) :
+    Integrable
+      (fun x => max (-(Real.negMulLog
+        (((condTrunc P X Y n).map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal)) 0) volume := by
+  -- @residual(plan:epi-infinite-variance-truncation-plan)
+  sorry
+
+/-- **per-n 和の有限微分エントロピー** (`hent_sum` 再供給)。compact support の和 X+Y の
+密度 `r := (condTrunc.map(X+Y)).rnDeriv vol |>.toReal` (= `p_n ∗ q_n`、support [-2n,2n]) の
+`negMulLog` 可積分性を正部/負部分解で。正部 `{r≤1}` は `negMulLog_le_one_sub_self` + `r` 可積分
+(probability measure の toReal rnDeriv)、負部 `{r>1}` は `h(condTrunc.map(X+Y)) ≥ h(condTrunc.map X)
+> -∞` から。黒箱 `entropyPowerExt_add_ge_of_finite_variance` は `hent_sum` を明示引数で要求。 -/
 theorem integrable_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) (hXY : IndepFun X Y P)
@@ -410,8 +583,80 @@ theorem integrable_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProbabilityMe
     Integrable
       (fun x => Real.negMulLog
         (((condTrunc P X Y n).map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  haveI : IsProbabilityMeasure (condTrunc P X Y n) :=
+    isProbabilityMeasure_condTrunc P hX hY hpos
+  set ν := (condTrunc P X Y n).map (fun ω => X ω + Y ω) with hν_def
+  have hsum_meas : Measurable (fun ω => X ω + Y ω) := hX.add hY
+  haveI : IsProbabilityMeasure ν :=
+    Measure.isProbabilityMeasure_map hsum_meas.aemeasurable
+  set r : ℝ → ℝ := fun x => (ν.rnDeriv volume x).toReal with hr_def
+  have hr_meas : Measurable r := (Measure.measurable_rnDeriv _ _).ennreal_toReal
+  have hr_nn : ∀ x, 0 ≤ r x := fun x => ENNReal.toReal_nonneg
+  -- `r` is itself integrable (probability measure, toReal rnDeriv).
+  have hr_int : Integrable r volume := Measure.integrable_toReal_rnDeriv
+  -- compact support: `r =ᵐ Icc.indicator r` (rnDeriv vanishes a.e. off `[-2n, 2n]`).
+  set I : Set ℝ := Set.Icc (-(2 * (n : ℝ))) (2 * (n : ℝ)) with hI_def
+  have hI_meas : MeasurableSet I := measurableSet_Icc
+  have hr_supp : r =ᵐ[volume] I.indicator r := by
+    -- off `I`, the measure `ν` of `Iᶜ` is 0, so its density `r` vanishes a.e. there.
+    have hconc : ν Iᶜ = 0 := map_condTrunc_sum_concentrated P hX hY hpos
+    have hac : ν ≪ volume := by
+      rw [hν_def]; exact map_condTrunc_absolutelyContinuous P hX hsum_meas (by
+        have hconv : P.map (fun ω => X ω + Y ω) = (P.map X) ∗ (P.map Y) := by
+          rw [show (fun ω => X ω + Y ω) = X + Y from rfl, hXY.map_add_eq_map_conv_map hX hY]
+        rw [hconv]; exact Measure.conv_absolutelyContinuous hY_ac)
+    -- `∫⁻_{Iᶜ} rnDeriv = ν Iᶜ = 0`, so `rnDeriv = 0` a.e. on `Iᶜ`.
+    have hlint : ∫⁻ x in Iᶜ, ν.rnDeriv volume x ∂volume = 0 := by
+      rw [Measure.setLIntegral_rnDeriv hac]; exact hconc
+    have hrn_zero : ∀ᵐ x ∂volume, x ∈ Iᶜ → ν.rnDeriv volume x = 0 := by
+      have := (setLIntegral_eq_zero_iff hI_meas.compl
+        (Measure.measurable_rnDeriv ν volume)).mp hlint
+      filter_upwards [this] with x hx hmem
+      exact hx hmem
+    filter_upwards [hrn_zero] with x hx
+    by_cases hxI : x ∈ I
+    · rw [Set.indicator_of_mem hxI]
+    · rw [Set.indicator_of_notMem hxI, hr_def]
+      simp only [hx hxI, ENNReal.toReal_zero]
+  -- positive part `g₁ := max (negMulLog r) 0`: bounded by `Icc.indicator 1` a.e.
+  set g₁ : ℝ → ℝ := fun x => max (Real.negMulLog (r x)) 0 with hg₁_def
+  set g₂ : ℝ → ℝ := fun x => max (-(Real.negMulLog (r x))) 0 with hg₂_def
+  have hr_negMulLog_meas : Measurable (fun x => Real.negMulLog (r x)) :=
+    Real.continuous_negMulLog.measurable.comp hr_meas
+  have hg₁_meas : AEStronglyMeasurable g₁ volume :=
+    (hr_negMulLog_meas.max measurable_const).aestronglyMeasurable
+  -- `g₁ ≤ I.indicator 1` a.e.: off `I`, `r = 0` so `negMulLog 0 = 0`, `g₁ = 0`;
+  --  on `I`, `negMulLog r ≤ 1 - r ≤ 1` (since `r ≥ 0`).
+  have hbound_int : Integrable (I.indicator (fun _ => (1 : ℝ))) volume :=
+    (integrableOn_const (s := I) (μ := volume) measure_Icc_lt_top.ne).integrable_indicator hI_meas
+  have hg₁_le : ∀ᵐ x ∂volume, ‖g₁ x‖ ≤ I.indicator (fun _ => (1 : ℝ)) x := by
+    filter_upwards [hr_supp] with x hx
+    have hg₁_nn : 0 ≤ g₁ x := le_max_right _ _
+    rw [Real.norm_of_nonneg hg₁_nn]
+    by_cases hxI : x ∈ I
+    · rw [Set.indicator_of_mem hxI]
+      refine max_le ?_ (by norm_num)
+      calc Real.negMulLog (r x) ≤ 1 - r x := Real.negMulLog_le_one_sub_self (hr_nn x)
+        _ ≤ 1 := by linarith [hr_nn x]
+    · -- off `I`: `r x = (I.indicator r) x = 0`, so `negMulLog 0 = 0`, `g₁ x = 0`.
+      rw [Set.indicator_of_notMem hxI]
+      have hrx0 : r x = 0 := by rw [hx, Set.indicator_of_notMem hxI]
+      rw [hg₁_def]; simp only [hrx0, Real.negMulLog_zero, max_self, le_refl]
+  have hg₁_int : Integrable g₁ volume :=
+    Integrable.mono' hbound_int hg₁_meas hg₁_le
+  -- negative part `g₂` integrable (the genuine core, supplied by the negPart lemma).
+  have hg₂_int : Integrable g₂ volume :=
+    integrable_negPart_negMulLog_map_condTrunc_sum P hX hY hX_ac hY_ac hXY hpos
+  -- `negMulLog r = g₁ - g₂` pointwise (`a = a⁺ - a⁻`).
+  have hsplit : (fun x => Real.negMulLog (r x)) = fun x => g₁ x - g₂ x := by
+    funext x
+    simp only [hg₁_def, hg₂_def]
+    rcases le_or_gt 0 (Real.negMulLog (r x)) with h | h
+    · rw [max_eq_left h, max_eq_right (by linarith : -(Real.negMulLog (r x)) ≤ 0)]; ring
+    · rw [max_eq_right h.le, max_eq_left (by linarith : 0 ≤ -(Real.negMulLog (r x)))]; ring
+  rw [show (fun x => Real.negMulLog (ν.rnDeriv volume x).toReal)
+      = fun x => Real.negMulLog (r x) from rfl, hsplit]
+  exact hg₁_int.sub hg₂_int
 
 /-! ### Helper 黒箱配線 — per-n EPI -/
 
