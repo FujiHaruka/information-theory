@@ -46,6 +46,27 @@ sorry なし・@residual なし。@audit:ok -/
 noncomputable def truncW (P : Measure Ω) (W : Ω → ℝ) (n : ℕ) : Measure Ω :=
   ProbabilityTheory.cond P {ω | |W ω| ≤ (n : ℝ)}
 
+/-- **cond density formula** (route T `rnDeriv_cond_eq` を W 単独 truncation 用に再掲、heavy
+import 回避のため local 再証明): 確率測度 `μ : Measure ℝ` を可測集合 `s` (positive mass) で
+条件付けた測度の Radon-Nikodym 微分は `(cond μ s).rnDeriv volume =ᵐ (μ s)⁻¹ · 1_s · μ.rnDeriv volume`。
+`cond μ s = (μ s)⁻¹ • μ.restrict s` の scalar mul + restrict の rnDeriv (`rnDeriv_smul_left_of_ne_top`
++ `rnDeriv_restrict`、共に Mathlib) で組立。route T と完全同型 (集約漏れでなく import cycle/cost 回避)。
+独立 honesty audit 2026-06-08: Mathlib 2 補題の機械的合成、循環/bundling なし。@audit:ok -/
+private theorem rnDeriv_cond_eq (μ : Measure ℝ) [IsProbabilityMeasure μ] {s : Set ℝ}
+    (hs : MeasurableSet s) (hpos : μ s ≠ 0) :
+    (ProbabilityTheory.cond μ s).rnDeriv volume
+      =ᵐ[volume] fun x => (μ s)⁻¹ * s.indicator (μ.rnDeriv volume) x := by
+  have hr : (μ s)⁻¹ ≠ ∞ := ENNReal.inv_ne_top.mpr hpos
+  have h1 : (ProbabilityTheory.cond μ s).rnDeriv volume
+      =ᵐ[volume] (μ s)⁻¹ • (μ.restrict s).rnDeriv volume := by
+    show ((μ s)⁻¹ • μ.restrict s).rnDeriv volume =ᵐ[volume] (μ s)⁻¹ • (μ.restrict s).rnDeriv volume
+    exact Measure.rnDeriv_smul_left_of_ne_top (μ.restrict s) volume hr
+  have h2 : (μ.restrict s).rnDeriv volume =ᵐ[volume] s.indicator (μ.rnDeriv volume) :=
+    Measure.rnDeriv_restrict μ volume hs
+  refine h1.trans ?_
+  filter_upwards [h2] with x hx
+  simp only [Pi.smul_apply, hx, smul_eq_mul]
+
 /-- **negMulLog-Fatou helper** — 正部 lintegral `A` の Fatou lift。
 density の toReal a.e. 収束 `f_{μ_n} → f_μ` から `A_μ ≤ liminf A_{μ_n}` を Fatou で出す
 (`A μ := ∫⁻ x, ofReal (negMulLog (rnDeriv μ vol x).toReal) ∂volume` = `differentialEntropyExt`
@@ -86,18 +107,31 @@ finite ② の 11 仮説 (joint 密度可測 / per-fibre KL 有限 等) を cond
 route β' Phase 2 で埋める。`hn` (positive mass) は条件付けが well-defined な n を選ぶ scope
 (load-bearing でない)。
 
+**`hW_negPart_fin` の追加理由 (2026-06-08 Phase 2 案 F)**: `B(W) := ∫⁻ ofReal(-(negMulLog f_W)) < ⊤`
+(= h(W) の負部 lintegral 有限性) を表す **regularity precondition**。truncated `B(W_n) < ⊤` を
+密度分解 `f_n = c⁻¹·1_{[-n,n]}·f_W` (`restrict_map` + `rnDeriv_smul_left` + `rnDeriv_restrict`)
++ `negMulLog_mul` で `B(W)` から供給するための入力で、`hW_ne_bot`/`hWV_ne_bot` 系の `≠⊥`
+(= 負部有限) closure に使う。**load-bearing でない**: 単調性 `h(W_n) ≤ h(W_n+V)` の核は body 側の
+finite ② (`differentialEntropyExt_eq_condEntExt_add_klDiv_of_finite`) が担い、`hW_negPart_fin` は
+h(W) の負部有限性 (正則性条件) で単調性の核を encode しない。name-laundering でない (核を仮説に
+packing せず、body sorry は `@residual` で正直にマーク)。
+
 独立 honesty audit 2026-06-08 (skeleton, 4-check PASS → honest_residual): (1) 非循環 — 結論
-(単調不等式 `h(W_n) ≤ h(W_n+V)`) は 6 仮説と非同型。(2) 非バンドル — `hW`/`hV`/`hWV`/`hW_ac`
-は可測/独立/絶対連続の regularity、`hn` は cond well-defined の scope precondition、いずれも
-単調性の核を encode せず (供給元 finite ② = `differentialEntropyExt_eq_condEntExt_add_klDiv_of_finite`
-が body 側に来る)。(3) 非退化 — `:True` slot なし。(4) sufficiency — compact support
-(`{|W|≤n}` 条件付け) の有限分散・有限エントロピー measure で単調性が立つのは正しい (route T
-が同 truncation で sorryAx-free 実証済)。`plan:` 妥当。
+(単調不等式 `h(W_n) ≤ h(W_n+V)`) は 7 仮説と非同型。(2) 非バンドル — `hW`/`hV`/`hWV`/`hW_ac`
+は可測/独立/絶対連続の regularity、`hW_negPart_fin` は h(W) 負部有限性の regularity、`hn` は cond
+well-defined の scope precondition、いずれも単調性の核を encode せず (供給元 finite ② =
+`differentialEntropyExt_eq_condEntExt_add_klDiv_of_finite` が body 側に来る)。(3) 非退化 — `:True`
+slot なし。(4) sufficiency — compact support (`{|W|≤n}` 条件付け) の有限分散・有限エントロピー
+measure で単調性が立つのは正しい (route T が同 truncation で sorryAx-free 実証済)。`plan:` 妥当。
 @residual(plan:epi-uncond-truncation-lsc-plan) -/
 theorem differentialEntropyExt_mono_add_truncW
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)
-    (hW_ac : (P.map W) ≪ volume) (n : ℕ) (hn : P {ω | |W ω| ≤ (n : ℝ)} ≠ 0) :
+    (hW_ac : (P.map W) ≪ volume)
+    (hW_negPart_fin :
+      (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (((P.map W).rnDeriv volume x).toReal)))
+        ∂volume) ≠ ⊤)
+    (n : ℕ) (hn : P {ω | |W ω| ≤ (n : ℝ)} ≠ 0) :
     differentialEntropyExt ((truncW P W n).map W)
       ≤ differentialEntropyExt ((truncW P W n).map (fun ω => W ω + V ω)) := by
   -- The truncated measure `Q := truncW P W n = P[| {|W| ≤ n}]` is a probability measure.
@@ -182,8 +216,119 @@ theorem differentialEntropyExt_mono_add_truncW
     condDistrib_ae_eq_of_measure_eq_compProd V (hW.add hV).aemeasurable hjoint_VW
   -- The marginal / conditional extended entropies are `≠ ⊥` (compact support ⟹ finite
   -- differential entropy ⟹ ≠ −∞). Localized: the two ⊥-exclusions on `Q.map W` and `Q.map (W+V)`.
+  -- **Set-up shared by the `≠ ⊥` blocks**: `Q.map W = cond (P.map W) Sn` (single-variable
+  -- truncation), so its density is `c⁻¹ · 1_Sn · f_W` with `c = (P.map W) Sn = P E`.
+  set Sn : Set ℝ := {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
+  have hSn_meas : MeasurableSet Sn := measurableSet_le measurable_norm measurable_const
+  -- `(truncW P W n).map W = cond (P.map W) Sn` (direct: conditioning on `W⁻¹' Sn` then pushing
+  -- forward by `W` equals conditioning the law of `W` on `Sn`).
+  have hE_eq : E = W ⁻¹' Sn := by ext ω; simp [hE_def, hSn_def]
+  have hQW_eq : (Q.map W) = ProbabilityTheory.cond (P.map W) Sn := by
+    refine Measure.ext (fun A hA => ?_)
+    -- LHS: `(Q.map W) A = Q (W⁻¹A) = (P E)⁻¹ * P (E ∩ W⁻¹A)`.
+    have hLHS : (Q.map W) A = (P E)⁻¹ * P (W ⁻¹' Sn ∩ W ⁻¹' A) := by
+      rw [Measure.map_apply hW hA, hQ_def, truncW, ← hE_def,
+        ProbabilityTheory.cond_apply hE_meas P, hE_eq]
+    -- RHS: `cond (P.map W) Sn A = ((P.map W) Sn)⁻¹ * (P.map W)(Sn ∩ A)`.
+    have hRHS : (ProbabilityTheory.cond (P.map W) Sn) A
+        = (P E)⁻¹ * P (W ⁻¹' Sn ∩ W ⁻¹' A) := by
+      rw [ProbabilityTheory.cond_apply hSn_meas (P.map W) A,
+        Measure.map_apply hW hSn_meas, Measure.map_apply hW (hSn_meas.inter hA),
+        Set.preimage_inter, hE_eq]
+    rw [hLHS, hRHS]
+  -- positive mass of `Sn` under `P.map W`.
+  have hWmap_prob' : IsProbabilityMeasure (P.map W) := Measure.isProbabilityMeasure_map hW.aemeasurable
+  have hSn_pos : (P.map W) Sn ≠ 0 := by
+    rw [Measure.map_apply hW hSn_meas]
+    have : W ⁻¹' Sn = E := by ext ω; simp [hE_def, hSn_def]
+    rw [this, hE_def]; exact hn
   -- @residual(plan:epi-uncond-truncation-lsc-plan)
-  have hW_ne_bot : differentialEntropyExt (Q.map W) ≠ ⊥ := by sorry
+  have hW_ne_bot : differentialEntropyExt (Q.map W) ≠ ⊥ := by
+    rw [differentialEntropyExt_of_ac hW_ac_Q, sub_eq_add_neg]
+    -- It suffices to show the negative-part lintegral `B_n ≠ ⊤`; then `A − B = A + (-B) ≠ ⊥`.
+    set Bn : ℝ≥0∞ :=
+      ∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (((Q.map W).rnDeriv volume x).toReal))) ∂volume
+      with hBn_def
+    suffices hBn : Bn ≠ ⊤ by
+      have hBcoe : ((Bn : EReal)) ≠ ⊤ := by simpa using hBn
+      intro hcontra
+      rw [EReal.add_eq_bot_iff] at hcontra
+      rcases hcontra with h | h
+      · exact (EReal.coe_ennreal_ne_bot _) h
+      · rw [EReal.neg_eq_bot_iff] at h; exact hBcoe h
+    -- cond density formula: `f_n =ᵐ c⁻¹ · 1_Sn · f_W` (`c = (P.map W) Sn`).
+    set fW : ℝ → ℝ := fun x => ((P.map W).rnDeriv volume x).toReal with hfW_def
+    set c : ℝ≥0∞ := (P.map W) Sn with hc_def
+    have hc_top : c ≠ ∞ := measure_ne_top _ _
+    set cbar : ℝ := (c⁻¹).toReal with hcbar_def
+    have hcbar_nn : 0 ≤ cbar := ENNReal.toReal_nonneg
+    have h_rn : (Q.map W).rnDeriv volume
+        =ᵐ[volume] fun x => c⁻¹ * Sn.indicator ((P.map W).rnDeriv volume) x := by
+      rw [hQW_eq]; exact rnDeriv_cond_eq (P.map W) hSn_meas hSn_pos
+    -- pointwise bound on the negative-part integrand `=ᵐ`:
+    --   `-(negMulLog f_n) = 1_Sn · ((cbar log cbar)·fW + cbar·(-(negMulLog fW)))`.
+    have h_int_eq : (fun x => ENNReal.ofReal (-(Real.negMulLog (((Q.map W).rnDeriv volume x).toReal))))
+        =ᵐ[volume] fun x => ENNReal.ofReal (Sn.indicator
+          (fun x => cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x)))) x) := by
+      filter_upwards [h_rn] with x hx
+      rw [hx]
+      by_cases hxs : x ∈ Sn
+      · rw [Set.indicator_of_mem hxs (f := (P.map W).rnDeriv volume),
+          Set.indicator_of_mem hxs
+            (f := fun x => cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x)))),
+          ENNReal.toReal_mul]
+        congr 1
+        show -(Real.negMulLog (cbar * fW x)) = cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x)))
+        rw [Real.negMulLog_mul cbar (fW x)]
+        ring_nf
+        rw [Real.negMulLog]
+        ring
+      · rw [Set.indicator_of_notMem hxs (f := (P.map W).rnDeriv volume),
+          Set.indicator_of_notMem hxs
+            (f := fun x => cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x))))]
+        simp [Real.negMulLog]
+    rw [hBn_def, lintegral_congr_ae h_int_eq]
+    -- Bound the indicator integrand by the sum of two finite-integral pieces.
+    have hbound : ∀ x, ENNReal.ofReal (Sn.indicator
+          (fun x => cbar * Real.log cbar * fW x + cbar * (-(Real.negMulLog (fW x)))) x)
+        ≤ ENNReal.ofReal (|cbar * Real.log cbar|) * ENNReal.ofReal (fW x)
+          + ENNReal.ofReal cbar * ENNReal.ofReal (-(Real.negMulLog (fW x))) := by
+      intro x
+      by_cases hxs : x ∈ Sn
+      · rw [Set.indicator_of_mem hxs]
+        refine le_trans ENNReal.ofReal_add_le ?_
+        refine add_le_add ?_ ?_
+        · rw [← ENNReal.ofReal_mul (abs_nonneg _)]
+          refine ENNReal.ofReal_le_ofReal (le_trans (le_abs_self _) ?_)
+          have hfW_nn : (0 : ℝ) ≤ fW x := ENNReal.toReal_nonneg
+          rw [abs_mul, abs_of_nonneg hfW_nn]
+        · rw [← ENNReal.ofReal_mul hcbar_nn]
+      · rw [Set.indicator_of_notMem hxs]; simp
+    refine ne_top_of_le_ne_top ?_ (lintegral_mono hbound)
+    -- Split the upper-bound integral additively, both pieces finite.
+    have hfW_meas : Measurable (fun x => ENNReal.ofReal (fW x)) :=
+      (Measure.measurable_rnDeriv _ _).ennreal_toReal.ennreal_ofReal
+    have hg1_meas : Measurable
+        (fun x => ENNReal.ofReal (|cbar * Real.log cbar|) * ENNReal.ofReal (fW x)) :=
+      measurable_const.mul hfW_meas
+    have hnegm_meas : Measurable (fun x => ENNReal.ofReal (-(Real.negMulLog (fW x)))) :=
+      ((Real.continuous_negMulLog.measurable.comp
+        ((Measure.measurable_rnDeriv _ _).ennreal_toReal)).neg).ennreal_ofReal
+    rw [lintegral_add_left hg1_meas]
+    apply ENNReal.add_ne_top.mpr
+    refine ⟨?_, ?_⟩
+    · -- `∫⁻ g1 = ofReal|cbar log cbar| · ∫⁻ ofReal(fW) = ofReal|...| · 1 < ∞`.
+      rw [lintegral_const_mul _ hfW_meas]
+      have hfW_lint : (∫⁻ x, ENNReal.ofReal (fW x) ∂volume) = 1 := by
+        have hae_eq : (fun x => ENNReal.ofReal (fW x))
+            =ᵐ[volume] (P.map W).rnDeriv volume := by
+          filter_upwards [(P.map W).rnDeriv_ne_top volume] with x hx
+          rw [hfW_def]; exact ENNReal.ofReal_toReal hx
+        rw [lintegral_congr_ae hae_eq, Measure.lintegral_rnDeriv hW_ac, measure_univ]
+      rw [hfW_lint, mul_one]; exact ENNReal.ofReal_ne_top
+    · -- `∫⁻ g2 = ofReal(cbar) · B(W) < ∞`.
+      rw [lintegral_const_mul _ hnegm_meas]
+      exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top hW_negPart_fin
   -- @residual(plan:epi-uncond-truncation-lsc-plan)
   have hWV_ne_bot : differentialEntropyExt (Q.map (fun ω => W ω + V ω)) ≠ ⊥ := by sorry
   have hcond_ne_bot : condDifferentialEntropyExt (fun ω => W ω + V ω) V Q ≠ ⊥ := by
