@@ -232,6 +232,7 @@ Gaussian saturation / L-EPI1 Stam / L-EPI2 de Bruijn。残 sorry (G3 rescale / a
 | — | (case 1 a.c. core closure) | 柱 3: 既存 plan 群を**流用** (新規 sub-plan を作らない)。`epi-stam-to-conclusion-plan` / `epi-csiszar-ratio-reframe-plan` / `epi-richness-route-b-plan` / `epi-g2-*` が SoT。 | (進行中) | 既存 |
 | S5 | `epi-uncond-truncation-lsc-plan` | **方針 Y クリティカルパス**: t>0 平滑側無前提 EPI + t→0⁺ 極限 + entropy power 弱収束 半連続性 (新規 Mathlib 壁、自作)。EPIG2KLFatouLSC の klFun-Fatou 実績流用候補。 | case1 (有限分散版 a.c. core) + S1 | 📋 先行調査中 |
 | S4 | (assembly、本 plan Phase 5 で直接) | 柱 2+3 合流: 3-case dispatch → 無条件主定理。方針 Y では case1 を S5 経由の無前提版に差替。新 sub-plan 不要、本 plan §Phase 5。 | S1–S3 + S5 | 📋 |
+| S6 | [`epi-infinite-variance-truncation-plan`](epi-infinite-variance-truncation-plan.md) | **無限分散 a.c. 古典 EPI 構築 (`wall:epi-infinite-variance-classical` の genuine close)**: route T (conditioning truncation、有限分散 EPI 黒箱再利用 + R→∞)。**Phase 0 GO (2026-06-07): crux usc は FALSE WALL** (Gibbs+DCT で buildable、数値反証ゼロ) → route T で **sorryAx-free genuine closure 見込み**、sharp Young は deep-fallback。owner genuine 構築方針。 | case1 有限分散版 EPI (closure 済) | 📋 Phase 0 GO、P1 着手待ち |
 
 **依存 DAG (方針 Y)**: `Phase 0 → S1 → S2 → {S3, case1(既存、有限分散版)} → S5(無前提化) → Phase 5(S4)`。
 S5 が方針 Y の本体で、case1 の有限分散版 a.c. core を入力に「平滑側無前提 EPI + 半連続性極限」で
