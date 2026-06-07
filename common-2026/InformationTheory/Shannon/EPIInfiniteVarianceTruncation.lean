@@ -1117,7 +1117,40 @@ theorem entropyPowerExt_add_ge_infinite_variance_truncation
       (fun x => Real.negMulLog ((P.map (fun ω => X ω + Y ω)).rnDeriv volume x).toReal) volume) :
     entropyPowerExt (P.map (fun ω => X ω + Y ω))
       ≥ entropyPowerExt (P.map X) + entropyPowerExt (P.map Y) := by
-  -- @residual(plan:epi-infinite-variance-truncation-plan)
-  sorry
+  -- Goal: `Nₑ(P.map X) + Nₑ(P.map Y) ≤ Nₑ(P.map(X+Y))`.
+  rw [ge_iff_le]
+  -- (1) RHS 収束: `Nₑ(P_n.map X) + Nₑ(P_n.map Y) → Nₑ(P.map X) + Nₑ(P.map Y)`.
+  have hX_tendsto :
+      Tendsto (fun n => entropyPowerExt ((condTrunc P X Y n).map X)) atTop
+        (𝓝 (entropyPowerExt (P.map X))) :=
+    entropyPowerExt_map_condTrunc_tendsto P hX hY hXY (Or.inl rfl) hX_ac hX_ent
+  have hY_tendsto :
+      Tendsto (fun n => entropyPowerExt ((condTrunc P X Y n).map Y)) atTop
+        (𝓝 (entropyPowerExt (P.map Y))) :=
+    entropyPowerExt_map_condTrunc_tendsto P hX hY hXY (Or.inr rfl) hY_ac hY_ent
+  have hRHS_tendsto :
+      Tendsto (fun n => entropyPowerExt ((condTrunc P X Y n).map X)
+          + entropyPowerExt ((condTrunc P X Y n).map Y)) atTop
+        (𝓝 (entropyPowerExt (P.map X) + entropyPowerExt (P.map Y))) :=
+    hX_tendsto.add hY_tendsto
+  -- (2) per-n 不等式 (eventually): `Nₑ(P_n.map X) + Nₑ(P_n.map Y) ≤ Nₑ(P_n.map(X+Y))`.
+  have hper_n :
+      ∀ᶠ n in atTop,
+        entropyPowerExt ((condTrunc P X Y n).map X)
+            + entropyPowerExt ((condTrunc P X Y n).map Y)
+          ≤ entropyPowerExt ((condTrunc P X Y n).map (fun ω => X ω + Y ω)) := by
+    filter_upwards [eventually_measure_truncSet_pos P hX hY] with n hpos
+    exact entropyPowerExt_condTrunc_add_ge P hX hY hXY hX_ac hY_ac hX_ent hY_ent hpos
+  -- (3) limsup chain.
+  calc
+    entropyPowerExt (P.map X) + entropyPowerExt (P.map Y)
+        = Filter.limsup (fun n => entropyPowerExt ((condTrunc P X Y n).map X)
+            + entropyPowerExt ((condTrunc P X Y n).map Y)) atTop :=
+          hRHS_tendsto.limsup_eq.symm
+    _ ≤ Filter.limsup
+          (fun n => entropyPowerExt ((condTrunc P X Y n).map (fun ω => X ω + Y ω))) atTop :=
+          Filter.limsup_le_limsup hper_n
+    _ ≤ entropyPowerExt (P.map (fun ω => X ω + Y ω)) :=
+          entropyPowerExt_condTrunc_sum_limsup_le P hX hY hXY hX_ac hY_ac hent_sum
 
 end InformationTheory.Shannon.EPIInfiniteVarianceTruncation
