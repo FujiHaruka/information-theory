@@ -183,6 +183,8 @@ If the session is ad-hoc — opened with no prior handoff context, scope unrelat
 
 **Single file 規約**: handoff は `.claude/handoff.md` **1 本のみ**。`handoff-<slug>.md` の named slot は作らない。複数 active line を並行管理する場合は 1 ファイル内をセクションで分割 (例: `## Line A — AWGN`, `## Line B — EPI/Stam`)。完全 closed なラインは handoff から削除し (履歴は git に残る)、必要なら `## Closure summary` セクションで参照のみ残す。session 終了時の handoff 書き出しは既存 line を上書きせず、追記 (セクション追加) で merge する。
 
+**gitignore 済み — commit しない**: `.claude/handoff.md` は意図的に gitignore されている (ローカル作業状態、追跡対象外)。「Commits」節の自走コミット対象から **除外** する。handoff を書いた後に `git add` / `git commit` を試みない (毎回 git に弾かれて gitignore と再発見するループになる)。
+
 ## Plan / docs hygiene
 
 プランは「**制御状態** (scope/approach/next) / **判断履歴** (判断ログ) / **確定事実** (sorryAx-free・壁・補題不在)」の3つを混ぜると肥大・stale 化する。寿命が違うので分離する。
