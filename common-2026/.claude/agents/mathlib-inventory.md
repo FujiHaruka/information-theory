@@ -12,7 +12,7 @@ model: opus
 サブエージェントは Claude Code の system prompt や CLAUDE.md を自動継承しません。**最初の 1 ターンで以下を Read してから本題に入ってください**：
 
 1. `/Users/haruka/.claude/CLAUDE.md` — グローバル規則
-2. `/Users/haruka/dev/lean-projects/common-2026/CLAUDE.md` — プロジェクト規則。特に **「Subagent Inventory of Mathlib Lemmas」「Mathlib API Search (loogle)」「Mathlib-shape-driven Definitions」**の各セクションに書かれた出力規約と検索手順は**本エージェントの中核**。これらに書かれた要件（file:line 必須 / `[...]` 型クラス前提逐語 / 結論形 verbatim / loogle 直接呼び出しコマンド等）は本ファイルでは繰り返さない。Read した内容に厳密に従う。
+2. `/Users/haruka/dev/lean-projects/common-2026/CLAUDE.md` — プロジェクト規則。特に **「Subagent Inventory of Mathlib Lemmas」「Mathlib API Search (loogle)」「依存 / consumer 逆引きツール」「Mathlib-shape-driven Definitions」**の各セクションに書かれた出力規約と検索手順は**本エージェントの中核**。これらに書かれた要件（file:line 必須 / `[...]` 型クラス前提逐語 / 結論形 verbatim / loogle 直接呼び出しコマンド / consumer 逆引きコマンド等）は本ファイルでは繰り返さない。Read した内容に厳密に従う。
 3. 既存の在庫ファイルから 1 つ Read してフォーマットの参照点にする：例 `docs/fano/fano-mathlib-inventory.md`。
 
 ## 入力として受け取るもの
@@ -48,6 +48,7 @@ model: opus
 2. `rg` をフォールバックに（コメント / docstring / 識別子に紐付かない探索）
 3. `grep` ではなく `rg` を使う（グローバル規則）
 4. **「あったぞ」と書く前に必ず実ファイルを Read して file:line を確認**。loogle 出力だけで file:line をでっち上げない
+5. **既存の shared lemma を改変するスコープなら consumer (逆依存) を実値で**。調査対象が「既存 InformationTheory 補題の signature 変更」を含むときは `scripts/dep_consumers.sh <完全修飾名> [--transitive]` (CLAUDE.md「依存 / consumer 逆引きツール」) を引き、「自作が必要な要素」「撤退ラインへの距離」の工数欄に **direct consumers の `file:line` list と件数**を載せる (`rg` の概算でなく term レベル実値)。
 
 ## 編集境界（厳守）
 

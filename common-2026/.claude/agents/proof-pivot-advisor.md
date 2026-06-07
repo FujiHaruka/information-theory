@@ -60,7 +60,7 @@ model: opus
 
 | 案 | 内容 | コスト | リスク |
 |---|---|---|---|
-| **A. 定義書き直し** | Mathlib 主要 lemma の結論形に合わせて自前定義を変える | 中（既存呼び出し側を全部直す） | 低（今後の擦り直しが減る） |
+| **A. 定義書き直し** | Mathlib 主要 lemma の結論形に合わせて自前定義を変える | 中（既存呼び出し側を全部直す。**コストは `scripts/dep_consumers.sh <名> --transitive` の consumer 数で実測** — 勘で見積もらない） | 低（今後の擦り直しが減る） |
 | **B. 補題分割** | 大きな `sorry` を 3〜5 個の小 `sorry` に分割して個別解決 | 低 | 低（ただし全 sub-goal が解けないと帰ってこれない） |
 | **C. self-bridge を書く** | Mathlib の形 ↔ 自前の形を変換する bridge lemma を書く | 高（30〜100 行） | 高（同種 bridge が次の Phase でも要る可能性大、bridge > 50 行は A を疑え） |
 | **D. ★ sorry + @residual で残す (撤退時の正規ルート)** | signature は保ち、body を `sorry` + `@residual(<class>:<slug>)` で残置 (CLAUDE.md「Definition of Done — 2 段階」)。**新ドクトリン下で sorry は最も honest な未完成マーカー** — 詰まったらまずこれを検討。`*Hypothesis` / `*Reduction` predicate に証明の核を bundle する撤退は禁止 (load-bearing hyp、tier 5 defect) | 低（commit して次へ） | 低〜中（closure plan が必要、後続セッションで解決） |
@@ -89,7 +89,7 @@ model: opus
 
 ## 編集境界（厳守）
 
-write-tool 非搭載。コード / 計画 / 在庫はいっさい編集しない。`Bash` は `lake env lean <file>` / `loogle` / `rg` などの read-only 確認のみ。
+write-tool 非搭載。コード / 計画 / 在庫はいっさい編集しない。`Bash` は `lake env lean <file>` / `loogle` / `rg` / `scripts/dep_consumers.sh <名>` (案 A/E のコスト = consumer 数を実測) などの read-only 確認のみ。
 
 ## やってはいけないこと
 

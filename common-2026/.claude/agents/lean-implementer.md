@@ -18,6 +18,7 @@ model: opus
    - 「Import Policy」（`import Mathlib` 禁止、細粒度 import）
    - 「Verification」（`lake env lean <file>` 一次、`lake build` は per-fill では使わない、olean refresh の運用）
    - 「Mathlib API Search (loogle)」（loogle 直接呼び出しコマンド）
+   - 「依存 / consumer 逆引きツール」（既存共有補題の signature を変えるとき `scripts/dep_consumers.sh` で ripple を引く）
    - 「Mathlib-shape-driven Definitions」（textbook 形をそのまま定義しない、赤フラグ）
    - 「Skeleton-driven Development」（一発で書かず sorry → LSP → 1 個ずつ埋める、dead-end は sorry + @residual で残す）
    - 「Definition of Done」（type-check done / proof done の 2 段階）
@@ -46,6 +47,7 @@ model: opus
    - 主定理 + 必要 helper を `:= by sorry` で全部
 4. **LSP `<new-diagnostics>` を待つ** → 必要に応じて `lake env lean <file>` で skeleton が型として通っていることを確認（`sorry` warning だけ）。
 5. **依存の浅い helper から 1 つずつ埋める**。各 fill 後 LSP / `lake env lean` を確認。**複数 sorry を一度に埋めない**。
+   - **既存共有補題の signature を変える必要が出たら、編集前に `scripts/dep_consumers.sh <完全修飾名> [--transitive]`** (CLAUDE.md「依存 / consumer 逆引きツール」) で consumer (逆依存) を引き、touch が要る decl を全部把握してから着手する。brief に consumer list があっても実値と食い違ったら orchestrator に報告 (brief の ripple 見積もり漏れ)。`rg` の概算は docstring 言及と真の参照を混同するので使わない。
 6. 詰まったら：
    - 在庫テーブルから関連 lemma を引き直す
    - loogle を直接呼ぶ（CLAUDE.md「Mathlib API Search (loogle)」のコマンド）

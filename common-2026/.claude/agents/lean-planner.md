@@ -44,6 +44,7 @@ family は `fano` / `han` / `shannon` などのテーマ単位ディレクトリ
 4. 各 Phase に proof-log を残すかどうかを `proof-log: yes/no` で明記する。
 5. **撤退ライン**は「sorry + `@residual(<class>:<slug>)` で何を残すか」を明示する。`*Hypothesis` predicate に核を bundling する撤退案は書かない (honesty defect、CLAUDE.md「検証の誠実性」)。
 6. **closure plan**: 別 plan に切り出した残課題は `@residual(plan:<filename-stem>)` で参照される。新規 plan の filename は kebab-case で、`@residual` slug と一致させる。
+7. **既存共有補題の signature 変更を含む計画なら ripple を機械的に確認する**。仮説 threading / 引数追加で既存 shared lemma の signature を変える Phase を立てるときは、`scripts/dep_consumers.sh <完全修飾名> [--transitive]` (CLAUDE.md「依存 / consumer 逆引きツール」) で **consumer (逆依存) list を引き**、影響を受ける decl 数 / file 数を Phase の工数・撤退ラインに織り込む。記憶や `rg` の概算でなく実値で。`rg` は docstring 言及と真の参照を混同するので過大/過小に振れる。consumer が複数系統 (例: EPI 加法側と Gibbs 単調側) に跨る場合は特に、その list を計画本文 or 後続 brief 用に残す。
 
 ## 編集境界（厳守）
 

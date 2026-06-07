@@ -54,6 +54,17 @@ For "does Mathlib have lemma X?" questions, **try `loogle` before `rg`/`grep`**.
   - **Conclusion pattern**: `|- _ ≤ _` finds inequalities.
 - **Fall back to `rg`** for text-level searches: comments, docstrings, file-structure exploration, or pattern matches that aren't tied to a specific identifier.
 
+## 依存 / consumer 逆引きツール (`scripts/dep_*.sh`)
+
+プロジェクト内 declaration の依存関係を機械的に引く。実体は `scripts/DepGraph.lean` (`import InformationTheory`)。`rg` のテキスト一致と違い **term レベルの真の参照** を拾う (docstring / コメントの言及は数えない)。3 モード:
+
+- **`scripts/dep_consumers.sh <完全修飾名> [--transitive]`** — **逆依存 (consumer graph)**。指定 decl を *直接参照している* InformationTheory decl を `file:line` 付きで列挙する。**共有補題の signature を変更 (仮説 threading 等) する前に必ず 1 度引く** — ripple (touch が要る decl 群) を初回 brief に正確に載せるための前提作業。`--transitive` で full blast radius (推移閉包) も。
+  - 由来: 共有補題の consumer graph を threading 前に洗い出していれば、`hX_ent`/`hY_ent` の ripple 範囲を初回 brief で正確に渡せた (rg だと散文言及と真の参照を区別できず過大/過小に振れる)。
+- **`scripts/dep_graph.sh <完全修飾名>`** — forward 依存グラフ (root が何に依存するか) を Graphviz dot で出力。`--svg`/`--png` で画像化。
+- **`scripts/dep_rank.sh [N]`** — `@[entry_point]` 限定で推移的依存数の多い順ランキング (複雑な定理の俯瞰)。
+
+注意: いずれも root olean を読む。最近追加した decl が「未知の declaration」と出たら root が stale → `lake build InformationTheory` で refresh してから再実行 (`dep_consumers.sh` のエラーにもこのヒントを出す)。各 `-h` でオプション一覧。
+
 ## Subagent Inventory of Mathlib Lemmas
 
 When delegating Mathlib API inventory to a subagent ("find candidate lemmas for X"), require **structured per-lemma output**, not prose summaries. For each candidate, the subagent must record:
@@ -156,7 +167,9 @@ git branch | grep '^  worktree-agent-' | xargs -I {} git branch -D {}
 
 4. **honesty-load-bearing signature は goal でなく mechanism を渡す** (representative-dependent な量を結論に持つ lemma の実装時) — Fisher info / Radon-Nikodym 微分 / `logDeriv` など **a.e. 同値類から pointwise を取る量** (`fisherInfoOfDensityReal` 系) を signature に持つ lemma は、pin の強度 (a.e. か pointwise か) と「free 変数で受ける vs 結論に直接埋込」が **正直さそのものを決める** (a.e.-pin + free 変数は false-as-framed、skeptic が non-diff representative を取り値=0 に落とせる)。この種の signature を implementer に **「honest 化せよ」「pin せよ」という goal で投げて draft させない**。brief に (a) in-tree の honest sibling を `file:line` で、(b)「free 変数を作らず結論に直接埋込 (direct embed)」、(c)「a.e.-pin は不十分、pointwise-smooth pin (`density_t_eq` 等) のみ honest」の **3 点を mechanism として転写**する。判別軸は「その量は a.e. 等式で縛れるか、pointwise 必須か」。全 brief への mechanism front-load は delegation を殺すので、escalate するのは **honesty-load-bearing signature のときだけ** (routine body-fill は goal で良い)。
 
-由来: 2026-05-24 AWGN pivot Phase 3 で項目 1/2 を実観測 (前者 1 turn 詰まり、後者 4 件継承)、項目 3 は 2026-05-26 で実観測。項目 4 は 2026-06-06 EPI two-time `twoTimeLogRatioGap_hasDerivAt` で実観測 — honest 機構 (直接埋込) が in-tree sibling `EPIStamToBridge.lean:744-883` `csiszarLogRatioGap_hasDerivAt` に既存だったのに、cycle 2 brief が「equality-pin せよ」の goal 止まりで a.e.-pin を誘発、`implementer→honesty-auditor` を 2 周空転 (cycle 3 で「τ 評価 density_t に直接埋込」を mechanism 指定して一発 PASS)。書き漏らした場合は agent の proof-log 観察を次の brief に反映させる feedback loop で改善。
+5. **共有補題の signature を変更するなら consumer graph を brief に添付** (shared lemma に仮説 threading / 引数追加・削除をするとき) — 変更前に **`scripts/dep_consumers.sh <完全修飾名>` を 1 度引き** (→「依存 / consumer 逆引きツール」)、direct consumers (= 直接 touch が要る decl 群) の `file:line` list をそのまま brief に貼る。これが ripple 範囲の見積もり前提。`rg` で済ませると docstring/コメントの言及を真の参照と混同し、ripple を過大/過小に振る (本ツールは term レベル参照のみ数える)。複数系統から消費される補題ほど初回 brief に正確な consumer list を載せないと、threading 後に LSP 第 1 戻りまで取りこぼしに気づけない。
+
+由来: 2026-05-24 AWGN pivot Phase 3 で項目 1/2 を実観測 (前者 1 turn 詰まり、後者 4 件継承)、項目 3 は 2026-05-26 で実観測。項目 5 は共有補題 `integrable_negMulLog_map_condTrunc_sum` が EPI 加法側と Gibbs 単調側の両系統から消費され、threading 前に consumer graph を洗い出していれば `hX_ent`/`hY_ent` の ripple を初回 brief で正確に渡せた実例 (この気づきが `dep_consumers.sh` 新設の契機)。項目 4 は 2026-06-06 EPI two-time `twoTimeLogRatioGap_hasDerivAt` で実観測 — honest 機構 (直接埋込) が in-tree sibling `EPIStamToBridge.lean:744-883` `csiszarLogRatioGap_hasDerivAt` に既存だったのに、cycle 2 brief が「equality-pin せよ」の goal 止まりで a.e.-pin を誘発、`implementer→honesty-auditor` を 2 周空転 (cycle 3 で「τ 評価 density_t に直接埋込」を mechanism 指定して一発 PASS)。書き漏らした場合は agent の proof-log 観察を次の brief に反映させる feedback loop で改善。
 
 ## Commits
 
