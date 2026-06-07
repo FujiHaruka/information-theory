@@ -32,6 +32,8 @@
 
   `@[entry_point]` でマークされた declaration を対象に、推移的依存数の多い順
   (= より複雑・難解な定理の順) に上位 n 件を出力する。通常は scripts/dep_rank.sh 経由。
+  各行には参考値として `pf-lines` (自身＋プロジェクト内依存定理の証明行数合計、
+  コメント・空行除く) を併記する。これはソートには影響しない。
 
   | env var          | 意味                                                       |
   |------------------|------------------------------------------------------------|
@@ -238,28 +240,144 @@ def render (env : Environment) (cfg : Config) (st : GraphState) : String := Id.r
 def isEntryPoint (env : Environment) (n : Name) : Bool :=
   InformationTheory.Meta.entryPointAttr.hasTag env n
 
-/-- ランキング 1 行分。`total = internal + external` (いずれも root 自身を除く)。 -/
+/-- ランキング 1 行分。`total = internal + external` (いずれも root 自身を除く)。
+    `proofLines` は自身＋プロジェクト内依存定理の証明行数合計 (コメント除く・参考値、
+    ソート非対象)。 -/
 structure RankRow where
-  name     : Name
-  total    : Nat
-  internal : Nat
-  external : Nat
+  name       : Name
+  total      : Nat
+  internal   : Nat
+  external   : Nat
+  proofLines : Nat
   deriving Inhabited
 
 /-- 右詰めパディング。 -/
 def padLeft (w : Nat) (s : String) : String :=
   if s.length ≥ w then s else ("".pushn ' ' (w - s.length)) ++ s
 
-/-- 1 つの root の推移的依存数 (internal / external) を数える。root 自身は除く。 -/
-def depCounts (env : Environment) (cfg : Config)
-    (cache : IO.Ref (Std.HashMap Name NameSet)) (root : Name) : IO (Nat × Nat) := do
+/-! ## 証明行数 (コメント除く) の参考集計
+
+    各 entry point について、自身＋プロジェクト内依存定理の証明行数 (コメント・空行を
+    除いたソース行) の合計を参考値として併記する。ランキングのソートには影響しない。
+    overlap (where 補助定義など同一ソース行を複数 decl が共有する場合) は行単位の
+    和集合で重複排除する。 -/
+
+/-- module 名 → ソースファイルパス
+    (`InformationTheory.Foo.Bar` → `InformationTheory/Foo/Bar.lean`)。
+    dep_rank.sh はプロジェクトルートで実行するので相対パスで開ける。 -/
+def srcPathOf (mod : Name) : System.FilePath :=
+  (System.mkFilePath (mod.components.map (·.toString))).addExtension "lean"
+
+/-- ソース 1 ファイル分の「各行が実コードを含むか」フラグ配列 (1-based 行 → 0-based index)。
+    ブロックコメント (スラッシュ＋ハイフン、ネスト可) / 行コメント (ハイフン 2 連) /
+    文字列・文字リテラルを char 単位で追い、コメント・空行を除いた実コード行だけ
+    `true` にする。文字列内のコメント開始記号でブロックコメント深さが暴走しないよう
+    文字列・文字を追跡する (近似: 識別子の prime と文字リテラルの区別はヒューリスティック)。 -/
+def computeIsCode (content : String) : Array Bool := Id.run do
+  let mut nest : Nat := 0          -- block comment ネスト深さ
+  let mut inStr : Bool := false    -- "…" 文字列内か (行跨ぎ gap も追う)
+  let mut result : Array Bool := #[]
+  for line in content.splitOn "\n" do
+    let cs := line.toList.toArray
+    let n := cs.size
+    let mut i := 0
+    let mut hasCode := false
+    let mut lineComment := false
+    while i < n && !lineComment do
+      let c := cs[i]!
+      if inStr then
+        if c == '\\' then i := i + 2
+        else if c == '"' then inStr := false; i := i + 1
+        else i := i + 1
+      else if nest > 0 then
+        if c == '-' && i + 1 < n && cs[i+1]! == '/' then nest := nest - 1; i := i + 2
+        else if c == '/' && i + 1 < n && cs[i+1]! == '-' then nest := nest + 1; i := i + 2
+        else i := i + 1
+      else
+        if c == '/' && i + 1 < n && cs[i+1]! == '-' then nest := nest + 1; i := i + 2
+        else if c == '-' && i + 1 < n && cs[i+1]! == '-' then lineComment := true
+        else if c == '"' then inStr := true; hasCode := true; i := i + 1
+        else if c == '\'' then
+          hasCode := true
+          if i + 1 < n && cs[i+1]! == '\\' then
+            -- escape 文字リテラル '\n' / '\'' / '«' 等: 閉じ ' まで飛ばす
+            i := i + 2
+            while i < n && cs[i]! != '\'' do i := i + 1
+            i := i + 1
+          else if i + 2 < n && cs[i+2]! == '\'' then i := i + 3   -- 'x' 形
+          else i := i + 1                                          -- 識別子の prime
+        else
+          if !c.isWhitespace then hasCode := true
+          i := i + 1
+    result := result.push hasCode
+  return result
+
+/-- module の isCode 配列をキャッシュ付きで取得。ファイルが無ければ空配列。 -/
+def getFileIsCode (cache : IO.Ref (Std.HashMap Name (Array Bool))) (mod : Name) :
+    IO (Array Bool) := do
+  match (← cache.get).get? mod with
+  | some v => return v
+  | none   =>
+    let path := srcPathOf mod
+    let v ← if (← path.pathExists) then
+              pure (computeIsCode (← IO.FS.readFile path))
+            else pure #[]
+    cache.modify (·.insert mod v)
+    return v
+
+/-- declaration の (所属 module, 開始行, 終了行) をキャッシュ付きで取得。 -/
+def getDeclLineRange (env : Environment)
+    (cache : IO.Ref (Std.HashMap Name (Option (Name × Nat × Nat)))) (n : Name) :
+    IO (Option (Name × Nat × Nat)) := do
+  match (← cache.get).get? n with
+  | some v => return v
+  | none   =>
+    let v := match Lean.declRangeExt.find? env n with
+      | some dr => some (moduleOf env n, dr.range.pos.line, dr.range.endPos.line)
+      | none    => none
+    cache.modify (·.insert n v)
+    return v
+
+/-- 内部依存ノード集合 (root 自身含む) の証明行数合計 (コメント・空行除く)。
+    同一ソース行を複数 decl が共有する場合は行単位の和集合で重複排除する。 -/
+def proofLinesOf (env : Environment)
+    (fileCache : IO.Ref (Std.HashMap Name (Array Bool)))
+    (rangeCache : IO.Ref (Std.HashMap Name (Option (Name × Nat × Nat))))
+    (internalNodes : List Name) : IO Nat := do
+  let mut covered : Std.HashMap Name (Std.HashSet Nat) := {}
+  for nd in internalNodes do
+    match ← getDeclLineRange env rangeCache nd with
+    | none => pure ()
+    | some (mod, s, e) =>
+      let mut lines := covered.getD mod Std.HashSet.emptyWithCapacity
+      for ln in [s:e+1] do
+        lines := lines.insert ln
+      covered := covered.insert mod lines
+  let mut total : Nat := 0
+  for (mod, lines) in covered.toList do
+    let isCode ← getFileIsCode fileCache mod
+    for ln in lines.toList do
+      if 1 ≤ ln && ln ≤ isCode.size && isCode[ln-1]! then
+        total := total + 1
+  return total
+
+/-- 1 つの root の推移的依存数 (internal / external) と、自身＋プロジェクト内依存定理の
+    証明行数合計 (コメント除く・参考値) を求める。依存数は root 自身を除く。 -/
+def depStats (env : Environment) (cfg : Config)
+    (cache : IO.Ref (Std.HashMap Name NameSet))
+    (fileCache : IO.Ref (Std.HashMap Name (Array Bool)))
+    (rangeCache : IO.Ref (Std.HashMap Name (Option (Name × Nat × Nat))))
+    (root : Name) : IO (Nat × Nat × Nat) := do
   let ref ← IO.mkRef ({} : GraphState)
   expand env { cfg with root := root } cache ref 0 root
   let st ← ref.get
   let nodes := nodeSet root st
-  let intCount := (nodes.toList.filter (fun n => isInInformationTheory env n)).length
+  let internalNodes := nodes.toList.filter (fun n => isInInformationTheory env n)
+  let intCount := internalNodes.length
+  -- proofLines は root 自身も内部ノードに含むので「自身の証明込み」になる。
+  let proofLines ← proofLinesOf env fileCache rangeCache internalNodes
   -- root は internal 前提。internal/total から root 1 件を差し引く。
-  return (intCount - 1, nodes.size - intCount)
+  return (intCount - 1, nodes.size - intCount, proofLines)
 
 /-- ランキングのソートキー。`total` = 内部+外部、`internal` = プロジェクト内のみ
     (自前の補題積み上げの厚み)、`external` = 外部 (Mathlib 等) のみ。 -/
@@ -286,10 +404,13 @@ def runRank (env : Environment) (cfg : Config) (topN : Nat) (sortKey : SortKey) 
     if isEntryPoint env n && isInInformationTheory env n then
       entries := entries.push n
   let cache ← IO.mkRef ({} : Std.HashMap Name NameSet)
+  let fileCache ← IO.mkRef ({} : Std.HashMap Name (Array Bool))
+  let rangeCache ← IO.mkRef ({} : Std.HashMap Name (Option (Name × Nat × Nat)))
   let mut rows : Array RankRow := #[]
   for ep in entries do
-    let (intDeps, extDeps) ← depCounts env cfg cache ep
-    rows := rows.push { name := ep, total := intDeps + extDeps, internal := intDeps, external := extDeps }
+    let (intDeps, extDeps, pf) ← depStats env cfg cache fileCache rangeCache ep
+    rows := rows.push { name := ep, total := intDeps + extDeps, internal := intDeps,
+                        external := extDeps, proofLines := pf }
   let keyOf (r : RankRow) : Nat :=
     match sortKey with
     | .total => r.total | .internal => r.internal | .external => r.external
@@ -300,13 +421,14 @@ def runRank (env : Environment) (cfg : Config) (topN : Nat) (sortKey : SortKey) 
   IO.println s!"  entry point 総数 : {entries.size}   表示 : 上位 {topN}   依存集計 : {typeNote}"
   IO.println s!"  ソート基準 : {sortKey.label}"
   IO.println "  依存数 = 推移的に到達する declaration 数 (root 自身を除く / 内部は再帰展開・外部は葉)"
+  IO.println "  pf-lines = 自身＋プロジェクト内依存定理の証明行数合計 (コメント・空行除く・参考値、ソート非対象)"
   IO.println ""
   IO.println ("  " ++ padLeft 4 "rank" ++ " " ++ padLeft 7 "total" ++ " "
-    ++ padLeft 7 "int" ++ " " ++ padLeft 7 "ext" ++ "   declaration")
+    ++ padLeft 7 "int" ++ " " ++ padLeft 7 "ext" ++ " " ++ padLeft 9 "pf-lines" ++ "   declaration")
   let shown := min topN sorted.size
   for i in [0:shown] do
     let r := sorted[i]!
-    IO.println s!"  {padLeft 4 (toString (i+1))} {padLeft 7 (toString r.total)} {padLeft 7 (toString r.internal)} {padLeft 7 (toString r.external)}   {r.name}"
+    IO.println s!"  {padLeft 4 (toString (i+1))} {padLeft 7 (toString r.total)} {padLeft 7 (toString r.internal)} {padLeft 7 (toString r.external)} {padLeft 9 (toString r.proofLines)}   {r.name}"
 
 end Tooling.DepGraph
 
