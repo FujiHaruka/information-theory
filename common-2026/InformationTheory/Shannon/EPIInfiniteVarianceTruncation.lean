@@ -563,32 +563,35 @@ vol |>.toReal` (= `p_n ∗ q_n`、convolution) の `negMulLog` の負部
 `(negMulLog r)⁻ = max (-(negMulLog r)) 0 = (r log r)⁺` の `volume`-可積分性。
 これが #2 の真の核 (正部は compact support + `negMulLog_le_one_sub_self` で即)。
 
-機構: convolution `r(z) = ∫ p_n(x) q_n(z-x) dx` で `t ↦ t log t` は凸ゆえ Jensen の積分版
-(`ConvexOn.map_integral_le`) で各 z 点ごとに `r(z) log r(z) ≤ ∫ p_n(x) q_n(z-x) log q_n(z-x) dx`、
-Fubini (`integral_integral_swap`) で積分すると `∫ (r log r)⁺ ≤ ∫ q_n (log q_n)⁺ < ∞`
-(後者は `condTrunc.map Y` の `negMulLog` 可積分 `integrable_negMulLog_map_condTrunc` Z=Y から)。
+機構 (route ② Jensen + Tonelli、2026-06-07 verbatim 検証で確定): convolution
+`r =ᵐ convDensityAdd p_n q_n` (`rnDeriv_map_condTrunc_sum_ae`) で各 z に対し
+`r(z) = ∫ x, q_n(z-x) ∂(p_n·vol)`、`p_n·vol` は確率測度 (`∫ p_n = 1`)。`t ↦ t·log t` は `Ici 0`
+上で凸 (`Real.convexOn_mul_log`) ゆえ Jensen 積分版 (`ConvexOn.map_integral_le` on `p_n·vol`) で
+`(r(z) log r(z))⁺ ≤ ∫ x, p_n(x)·(q_n(z-x) log q_n(z-x))⁺ dx`。`lintegral` 化 + Tonelli +
+Lebesgue 平行移動不変で `∫⁻ z (r log r)⁺ ≤ (∫⁻ p_n)·(∫⁻ w (q_n log q_n)⁺) = 1·C < ∞`。
+`C = ∫ (q_n log q_n)⁺ = ∫ (negMulLog q_n)⁻ < ∞` は `Integrable (negMulLog q_n)`
+(`integrable_negMulLog_map_condTrunc` Z=Y, `hY_ac`/`hY_ent`/`hpos`) の負部から。
 
-honest: 結論は可積分性 (regularity)。仮説は a.c. + measurability + positive mass。
+honest: 結論は可積分性 (regularity)。仮説は a.c. + measurability + indep + positive mass。
 和エントロピー可積分性 (= #2 の結論) を仮説で受けていない (非循環・非バンドル)。
 
-park 状態 (L-IVT-4 escape、2026-06-07): #2 (`integrable_negMulLog_map_condTrunc_sum`) は
-正部 (compact support `map_condTrunc_sum_concentrated` + `negMulLog_le_one_sub_self` で
-`Integrable.mono'`、genuine) と本負部 lemma の honest split で完成 (`negMulLog r = g₁ - g₂`)。
-本負部 lemma 単独が残課題。Jensen+Fubini ルートの素材は確認済 (`ConvexOn.map_integral_le`
-on probability measure `p_n·volume`、`Real.convexOn_mul_log`、`self_sub_one_le_n` で下界、
-`integral_integral_swap`、右辺有限性は `integrable_negMulLog_map_condTrunc` Z=Y) が、各 z
-点の Jensen 前提 (`Integrable (q_n(z-·)) (p_n·vol)` + `Integrable (q_n(z-·)·log q_n(z-·))
-(p_n·vol)` を a.e. z で) 供給 + Fubini の uncurry `Integrable (p_n x · (q_n(z-x)·log q_n(z-x)))
-(vol.prod vol)` 供給が当該セッション規模 (100+ 行) を超えたため park。仮説束化での sorry 回避は
-していない (signature は本来の可積分性結論のまま)。
-
-独立 honesty audit 2026-06-07: honest_residual 確認。(1) 非循環: 結論は和密度 negMulLog の
-負部可積分性、仮説は `hX_ac`/`hY_ac` (各成分 a.c.) + `hXY` (独立) + `hpos` (positive mass) のみ
-= regularity precondition、結論型 ≢ 仮説型。(2) 非バンドル: 和エントロピー可積分性 (= 結論) を
-仮説で受けていない。(3) classification: `plan:epi-infinite-variance-truncation-plan` の plan 実在
-(docs/shannon/、19KB) + closure 素材 `ConvexOn.map_integral_le` / `MeasureTheory.integral_integral_swap`
-は Mathlib 既存 (loogle 確認) ゆえ wall でなく plan 分類が妥当 (buildable)、右辺有限性は
-`integrable_negMulLog_map_condTrunc` (Z=Y, sorryAx-free) が供給可。
+**signature-design escalation (2026-06-07)**: 本 lemma の genuine closure は各成分有限微分
+エントロピー仮説 `Integrable (negMulLog ((P.map Y).rnDeriv vol ·).toReal)` (= `hY_ent`) を
+**本質的に要する** (convolution `p_n∗q_n` は両成分 singular density のとき非有界化しうるため、
+負部 `∫ (r log r)⁺` の有限性は entropy-type 制御が必須。Mathlib の Young 不等式 /
+畳込み有界性 (`BddAbove.continuous_convolution_*` は一方有界前提) は適用不能、a.c.+indep のみ
+からは導けない — `integral_integral_swap` での反例構成済)。**だが** 本 lemma の唯一の consumer
+#2 (`integrable_negMulLog_map_condTrunc_sum`) は crux-usc + bdd co-bound chain
+(`differentialEntropy_condTrunc_sum_le_crossEntropy` `:1622` /
+`entropyPowerExt_condTrunc_sum_limsup_le` `:1956` / `differentialEntropy_condTrunc_sum_bddUnder`
+`:1808` (内部に `:1829` の park 中 sorry)) からも消費され、これらは `hX_ent`/`hY_ent` を
+signature に持たない。`hY_ent` を #7+#2 に追加すると ripple がこの 6 関数 (bdd co-bound を含む
+no-touch zone) の signature 全てに波及する。entropy 仮説は headline `:2238-2239` が保持済ゆえ
+threading は機械的だが、bdd co-bound 関数 (`:1808`) の signature に手を入れる必要があり
+brief の no-touch 制約と衝突。**この signature/threading 決定は orchestrator escalate 案件**
+(brief の ripple 一覧 `:617`/`:712`/`:2234` は crux-usc consumer `:1622`/`:1956` を漏らしていた、
+verbatim 検証で判明)。genuine body は draft 済 (Jensen+Tonelli、~100 行) で entropy 仮説さえ
+供給されれば即埋まる。仮説束化での回避はしない (signature は本来の可積分性結論のまま park)。
 @residual(plan:epi-infinite-variance-truncation-plan) -/
 theorem integrable_negPart_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y)
