@@ -11,7 +11,20 @@
 
 ---
 
-## ⚠ 戦略更新 (2026-06-07、step a' 着地 + pivot-advisor 独立検証後) — **本セクションが現行 SoT**
+## ✅ 完了状態 (2026-06-08) — **finite-entropy 版 ② genuine 着地**
+
+> **crux ② の finite-entropy 版が genuine 完成** (sorryAx-free + 独立 honesty 監査 PASS `@audit:ok`)。step a'/b'/c' + EReal helper を全て着地・監査済:
+> - **step a'** `klDiv_compProd_lintegral` (`CondKLIntegral.lean:144`、`@audit:ok`)
+> - **step c'** `lintegral_condDistrib_marginal_eq` + `lintegral_condDistrib_cross_eq` (`EPIG2BridgeDensityHelpers.lean:244/280`、`@audit:ok`)
+> - **step b'** `klDiv_negMulLog_cross_balance_ennreal` (`EPIG2BridgeDensityHelpers.lean:142`、`@audit:ok`)
+> - **EReal helper** `ereal_sub_eq_sub_add_of_ennreal_balance` (`EPIUncondCondEntropyExt.lean:161`、`@audit:ok`)
+> - **finite ②** `differentialEntropyExt_eq_condEntExt_add_klDiv_of_finite` (`EPIUncondCondEntropyExt.lean:262`、`@audit:ok`、11 仮説全て regularity)
+>
+> **確定事実 (human-judgment、再導出コスト高)**: **finiteness-free 版 ② は本ルート (per-fibre (☆) 経由) で証明不能**。per-fibre 恒等式 `A_z + KL_z + Cpos_z = B_z + Cneg_z` は積分された mass 相殺 `∫(qν−pz)=0` に依存し、ℝ≥0∞ に減算が無いため fibre 有限性なしに mass 項を消せない (反例: `KL(κz‖ν)=∞` かつ fibre entropy/cross 有限な fibre で LHS=∞・RHS=有限)。proof-pivot-advisor 独立裏取り済 (覆らない)。⇒ 無条件版 ② (`EPIUncondCondEntropyExt.lean:234`、sorry 残置) は **route β' (truncation+LSC、有限エントロピー近似 W_n の極限) で別途攻略** (plan §7 L-Uncond-Y-roi / `:153` T2)。statement は真、proof が hard なので `@residual(plan:)` 維持。
+> - finite ② の signature 補強 (11 regularity 仮説、特に `hκ_dens_meas` joint 密度可測 / `hκ_*` per-fibre 有限性 / `hX_ne_bot`,`hcond_ne_bot` ⊥ 除外) は **honest closure** (load-bearing でない、EPI Gaussian fibre で discharge 可)。
+> - **次の一手**: route β' (無条件 lift) の plan 起草、または finite ② を消費する finite-entropy consumer chain (gateway) の wiring。
+
+## ⚠ 戦略更新 (2026-06-07、step a' 着地 + pivot-advisor 独立検証後) — **上記「完了状態」で superseded、以下は履歴**
 
 > 以下は step a' 着地 (`CondKLIntegral.lean:144`、commit `bb852da`、sorryAx-free) と proof-pivot-advisor 独立検証を経た方針修正。**下記「API 在庫テーブル」の step b'/c' 設計 (A/B/cross 別 lintegral 分配) は赤フラグと判明したので、本セクションが優先する**。
 
