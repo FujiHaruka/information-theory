@@ -194,6 +194,8 @@ The `handoff` skill writes session state to `.claude/handoff.md` so the next ses
 
 If the session is ad-hoc — opened with no prior handoff context, scope unrelated to any in-flight work — do not autonomously hand off; wait for explicit instruction.
 
+**Interrupt trigger — malformed tool call が 1 度でも出たら即 handoff + セッション終了** (ad-hoc でも override、上の both 条件を待たない): ツール呼び出しが `Your tool call was malformed and could not be parsed` で弾かれたら (開始タグが `court\n<invoke` や `antml:` プレフィックス欠落の素の `<invoke>` / `<parameter>` に化ける)、retry で粘らない。この failure は**総コンテキスト量と単調相関**し (過去 34000 ターン集計で ~140K まで 0.01%、140–260K で 0.08%、260–320K で 0.52%、worst session の 250K 以降は ~21%/turn)、しかも `court` が一度文脈に入ると次ターンも真似て**自己増幅**する (散文に `court` と書くだけでも誘発) ので、続行は cascade を招くだけ。よって最初の 1 件で (a) 安全なら進行中の atomic step だけ畳み、(b) `handoff` skill で状態 + 次の一手を書き出し、(c) user に「`/clear` → `/carryon` で新セッション再開」を促して止める。根本原因は harness バグでなく長コンテキスト下の特殊トークン忠実度低下 (背景 → memory `pitfall-agent-invoke-malformed`)。
+
 **Single file 規約**: handoff は `.claude/handoff.md` **1 本のみ**。`handoff-<slug>.md` の named slot は作らない。複数 active line を並行管理する場合は 1 ファイル内をセクションで分割 (例: `## Line A — AWGN`, `## Line B — EPI/Stam`)。完全 closed なラインは handoff から削除し (履歴は git に残る)、必要なら `## Closure summary` セクションで参照のみ残す。session 終了時の handoff 書き出しは既存 line を上書きせず、追記 (セクション追加) で merge する。
 
 **gitignore 済み — commit しない**: `.claude/handoff.md` は意図的に gitignore されている (ローカル作業状態、追跡対象外)。「Commits」節の自走コミット対象から **除外** する。handoff を書いた後に `git add` / `git commit` を試みない (毎回 git に弾かれて gitignore と再発見するループになる)。
