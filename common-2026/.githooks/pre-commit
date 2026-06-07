@@ -6,8 +6,9 @@
 # grep だけで本プロジェクトの実再発失敗モード (honesty 規律 / import policy) を最安段階で止める。
 #
 # 対象: staged な common-2026/InformationTheory/**.lean (docs-only コミットは即通過)。
-# BLOCK: bare `import Mathlib` 追加 / `sorry` 追加なのに @residual タグ皆無。
-# WARN : sorry>residual の undercount / @residual class 語彙外 / deprecated tag / 新規 file の import 未登録。
+# BLOCK: bare `import Mathlib` 追加 / 実 `sorry` 追加なのに @residual タグ皆無。
+# WARN : 実 sorry>residual の undercount / @residual class 語彙外 / deprecated tag / 新規 file の import 未登録。
+#        sorry / @residual の計数は Lean コメント除去後の実 token のみ (docstring 散文を数えない)。
 # Bypass: `SKIP_LEAN_HOOK=1 git commit ...` または `git commit --no-verify`。
 #
 # git 管理 (core.hooksPath=common-2026/.githooks)。worktree でも committed な本 file がそのまま効く。
@@ -20,6 +21,30 @@ warn=""
 nl=$'\n'
 addblock() { block="${block}  ✗ $1${nl}"; }
 addwarn()  { warn="${warn}  ⚠ $1${nl}"; }
+
+# Lean ソースから実 tactic sorry のみ数える: 行コメント (--) と (ネスト可) ブロックコメント
+# /- .. -/ (docstring /-- .. -/ 含む) を除去してから \bsorry\b を数える。docstring 散文の
+# "sorry" (honesty 注記で多発: 「0 sorry」「shared sorry 補題」「sorry + @residual」等) を
+# 数えないことで、誤 undercount 警告 / 誤 BLOCK を防ぐ (行頭形 `  sorry` も `:= by sorry` も拾う)。
+strip_lean_comments() {
+  awk '
+  {
+    line = $0; out = ""; i = 1; n = length(line)
+    while (i <= n) {
+      two = substr(line, i, 2)
+      if (depth > 0) {
+        if (two == "-/") { depth--; i += 2; continue }
+        if (two == "/-") { depth++; i += 2; continue }
+        i++; continue
+      }
+      if (two == "/-") { depth++; i += 2; continue }
+      if (two == "--") break
+      out = out substr(line, i, 1); i++
+    }
+    print out
+  }'
+}
+real_sorry_count() { printf '%s\n' "$1" | strip_lean_comments | grep -oE '\bsorry\b' | wc -l | tr -d ' '; }
 
 # staged source files under InformationTheory/ (added/copied/modified)。root aggregator は除外。
 src_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '(^|/)InformationTheory/.*\.lean$' || true)
@@ -34,15 +59,17 @@ while IFS= read -r f; do
     addblock "$f: bare 'import Mathlib' を追加 (Import Policy 違反 — pinpoint import に)"
   fi
 
-  # 2) この diff が sorry を追加した場合のみ、file 全体の @residual タグ有無を見る
-  added_sorry=$(printf '%s\n' "$added" | grep -vE '^\+[[:space:]]*--' | grep -cE '\bsorry\b' || true)
-  if [ "${added_sorry:-0}" -gt 0 ]; then
-    resid_n=$(printf '%s\n' "$blob" | grep -cE '@residual' || true)
-    sorry_n=$(printf '%s\n' "$blob" | grep -vE '^[[:space:]]*--' | grep -cE '\bsorry\b' || true)
+  # 2) 実 tactic sorry (コメント除去後) が HEAD より増えた commit だけ honesty タグを検査。
+  #    docstring 散文の "sorry" は数えない (honesty 注記の false positive 回避)。
+  staged_sorry=$(real_sorry_count "$blob")
+  head_sorry=$(real_sorry_count "$(git show "HEAD:$f" 2>/dev/null || true)")
+  if [ "${staged_sorry:-0}" -gt "${head_sorry:-0}" ]; then
+    # 実タグ @residual(<class>:<slug>) のみ数える (散文 placeholder `@residual(<class>:..)` は除外)。
+    resid_n=$(printf '%s\n' "$blob" | grep -oE '@residual\([a-z-]+:' | wc -l | tr -d ' ')
     if [ "${resid_n:-0}" -eq 0 ]; then
-      addblock "$f: 'sorry' 追加だが @residual タグが file 内に皆無 (type-check done 要件 — sorry + @residual(<class>:<slug>))"
-    elif [ "${sorry_n:-0}" -gt "${resid_n:-0}" ]; then
-      addwarn "$f: sorry(${sorry_n}) > @residual(${resid_n}) — 各 sorry が tag 済みか確認"
+      addblock "$f: 実 'sorry' 追加だが @residual タグが file 内に皆無 (type-check done 要件 — sorry + @residual(<class>:<slug>))"
+    elif [ "${staged_sorry:-0}" -gt "${resid_n:-0}" ]; then
+      addwarn "$f: 実 sorry(${staged_sorry}) > @residual(${resid_n}) — 各 sorry が tag 済みか確認"
     fi
   fi
 

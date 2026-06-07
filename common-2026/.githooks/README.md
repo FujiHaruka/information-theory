@@ -20,11 +20,16 @@ git config core.hooksPath common-2026/.githooks
 | 種別 | 条件 |
 |---|---|
 | **BLOCK** | bare `import Mathlib` を新規追加 (pinpoint import policy 違反) |
-| **BLOCK** | `sorry` を追加したのに file 内に `@residual` タグが皆無 (type-check done 要件) |
-| WARN | sorry 数 > @residual 数 (undercount の疑い) |
+| **BLOCK** | 実 `sorry` を追加したのに file 内に `@residual` タグが皆無 (type-check done 要件) |
+| WARN | 実 sorry 数 > @residual 数 (undercount の疑い) |
 | WARN | `@residual(<class>:...)` の class が `plan` / `wall` / `defect` 以外 |
 | WARN | deprecated tag (`@audit:suspect` / `staged` / `defer` / 散文 `🟢ʰ`) を新規追加 |
 | WARN | 新規 `InformationTheory/X.lean` が aggregator `InformationTheory.lean` に未 import |
+
+`sorry` / `@residual` の計数は **Lean コメント (行 `--` / ブロック `/- -/` / docstring `/-- -/`) を
+除去した実 token のみ** を数える。docstring 散文の "sorry" (「0 sorry」「shared sorry 補題」
+「sorry + @residual」等の honesty 注記) や placeholder `@residual(<class>:<slug>)` は数えないので、
+注記を多く書く file でも誤警告 / 誤 BLOCK しない。実 sorry が HEAD より増えた commit だけ検査する。
 
 docs-only コミットは対象ファイルが無いので即通過。意味的 honesty defect (核 bundling / 循環 `:= h` /
 退化定義悪用) は grep 不能なので **対象外** — そこは `honesty-auditor` の領域 (線引きは意図的)。
