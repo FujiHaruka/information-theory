@@ -58,6 +58,21 @@ RHS `differentialEntropyExt (P.map (W+V)) = ⊤` を出すには `A_{W+V} = ⊤ 
 設計判断 (proof-pivot-advisor 案件) が要る。capstone Case 2 が単独測度 (¬integrable) で `A=⊤` を
 出す機構は density 経由でなく非可積分性の直接対偶ゆえ、独立和の正部発散には移植できない。
 
+独立 honesty audit 2026-06-07 (commit 4f81972): 4-check 全 PASS、classification `plan:` 妥当。
+(1) 非循環 — 仮説 `differentialEntropyExt (P.map W) = ⊤` は W 単独の事実 (= `A_W=⊤ ∧ B_W<⊤`
+正部発散)、結論は W+V について、body は `sorry` で `:= h` でない。(2) 非バンドル — 仮説は
+measurability/indep/a.c./`= ⊤` で全て precondition、和の正部発散 (= 結論) を仮説に encode せず。
+(3) 非退化 — 具体的 EReal 等式、退化境界 V≡0 (Dirac、特異、signature 許容) では W+V=W ゆえ
+`h(W+V)=h(W)=⊤` で非 vacuous に成立。(4) **sufficiency — TRUE-as-framed**: 畳み込みは独立 V
+との合成で裾 (正部発散) を消さない (和密度の裾は重い方の因子の裾が支配) ゆえ `A_{W+V}=⊤`、退化境界で
+反例構成不能。**classification 判定**: `plan:epi-uncond-deffix-monotone-plan` 妥当 (wall でない)。
+plan 実在 (§2/§4 P2)、loogle `Real.negMulLog, Measure.conv` = Found 0 (bare + conclusion-shape
+`|- _ ≤ _` 二段とも 0、Mathlib off-the-shelf 不在) は確認したが、conv が裾を保つ lintegral 評価は
+elementary measure theory で self-buildable plumbing (genuine Mathlib gap でない)、plan が closure を
+明示所有 (~80-150 行見積、inventory L198-201/223-224)。現 signature が V a.c. を欠くため
+`rnDeriv_map_sum_ae` (V a.c. 要) 経由の conv 密度同定が呼べない = signature 設計課題だが、これは
+plan 内で V a.c. 追加 or 別経路で解決する範囲 (closeable)。verdict: honest_residual。
+
 @residual(plan:epi-uncond-deffix-monotone-plan) -/
 theorem differentialEntropyExt_top_of_indep_add
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -76,7 +91,15 @@ theorem differentialEntropyExt_top_of_indep_add
   W+V 有限エントロピー要 (signature の a.c. のみからは出ない obligation)。
 - `⊤` 枝: `differentialEntropyExt_top_of_indep_add` (+∞ 伝播)。
 
-複数 sorry: 各 sorry 直前に `@residual` を付す。 -/
+複数 sorry: 各 sorry 直前に `@residual` を付す。
+
+独立 honesty audit 2026-06-07 (commit 4f81972): 4-check 全 PASS。⊥ 枝 = `bot_le` genuine、
+⊤ 枝 = `_top_of_indep_add` thread (genuine reduction、循環でない)。有限枝 sorry (`:97`) の
+classification `plan:` 妥当: Real 中核 `differentialEntropy_add_ge_of_indep` (`EPIUncondMixedCase.lean:76`)
+を lift する経路は genuine だが、その 8+ integrability/a.c. precondition (`hW_ac` for `P.map Y`、
+compProd `h_ac`、fibre/cross integrability 等) は `hW_ac` (W a.c.) 単独からは出ない genuine
+regularity obligation で、和エントロピー結論を仮説に encode しない (非バンドル)。plan §3 が
+closure を所有。verdict: honest_residual (⊤/有限 両 sorry とも)。 -/
 theorem differentialEntropyExt_mono_add
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)
@@ -101,7 +124,14 @@ theorem differentialEntropyExt_mono_add
 (= `EReal.exp (2 · differentialEntropyExt)`) に lift する。
 
 方針 Y (完全無条件 EPI) の gateway: case-2 (X a.c., Y 特異) や ±∞ 退化境界の closure に使う。
-genuine lift: hard core は `differentialEntropyExt_mono_add` 内。 -/
+genuine lift: hard core は `differentialEntropyExt_mono_add` 内。
+
+独立 honesty audit 2026-06-07 (commit 4f81972): lift 自体は genuine (`EReal.exp_monotone` +
+`mul_le_mul_of_nonneg_left`、循環/バンドル/退化なし、signature は integrability を encode せず
+`hW`/`hV`/`hWV`/`hW_ac` のみ = 非バンドル PASS)。ただし **`@audit:ok` (tier 1) ではない**:
+本 atom は `differentialEntropyExt_mono_add` の有限枝・⊤ 枝 sorry を transitive 継承する
+(`#print axioms` は `sorryAx` 依存になる見込み)。verdict: honest_residual (transitive、
+上流 2 sorry が `plan:epi-uncond-deffix-monotone-plan` で closure された時点で proof-done 昇格)。 -/
 theorem entropyPowerExt_mono_add
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)
