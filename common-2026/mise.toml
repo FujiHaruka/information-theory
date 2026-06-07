@@ -1,0 +1,11 @@
+[tools]
+python = "3.13"
+
+[env]
+# このディレクトリに入ると .venv を自動で作成・有効化する (mise activate 済みシェル前提)。
+# これにより `python` / `pip` が常に .venv 内のものを指し、system python に依存しない。
+_.python.venv = { path = ".venv", create = true }
+
+[tasks.setup]
+description = "数値検証用 Python 依存 (numpy/scipy) を .venv に導入する"
+run = "python -m pip install -U pip && python -m pip install -r requirements.txt"
