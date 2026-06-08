@@ -6,7 +6,7 @@ import InformationTheory.Shannon.AWGNMIClosedForm
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Draft.Shannon.MultivariateDiffEntropy
 import InformationTheory.Shannon.MIChainRule
-import InformationTheory.Shannon.ChannelCoding
+import InformationTheory.Shannon.ChannelCoding.Basic
 import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.MeasureTheory.Integral.Pi
 import Mathlib.Probability.Distributions.Gaussian.Real

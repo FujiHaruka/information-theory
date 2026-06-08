@@ -5,7 +5,7 @@ import Mathlib.Analysis.LConvolution
 import Mathlib.Probability.Moments.Variance
 import Mathlib.Probability.Distributions.Gaussian.Real
 import InformationTheory.Shannon.DifferentialEntropy
-import InformationTheory.Shannon.ChannelCoding
+import InformationTheory.Shannon.ChannelCoding.Basic
 import InformationTheory.Shannon.AWGN
 import InformationTheory.Shannon.AWGNBindConvBody
 import InformationTheory.Draft.Shannon.ContChannelMIDecomp

@@ -1,5 +1,5 @@
 import InformationTheory.Shannon.EPIConvDensity
-import InformationTheory.Shannon.FisherInfoV2
+import InformationTheory.Shannon.FisherInfo.V2
 import Mathlib.Analysis.Calculus.LogDeriv
 import Mathlib.MeasureTheory.Group.Integral
 import Mathlib.MeasureTheory.Integral.Bochner.Basic

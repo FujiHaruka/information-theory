@@ -6,7 +6,7 @@ import Mathlib.MeasureTheory.Measure.Prod
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.EPIConvDensity
-import InformationTheory.Shannon.FisherInfoV2DeBruijnAssembly
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly
 import InformationTheory.Shannon.EPIG2ConvEntropyMonotone
 import InformationTheory.Meta.EntryPoint
 

@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.RateDistortionAchievabilityPhaseD
+import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseD
 
 /-!
 # Rate-distortion achievability — Phase E MVP (main theorem, witness form)

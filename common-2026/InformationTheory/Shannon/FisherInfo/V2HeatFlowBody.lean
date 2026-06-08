@@ -7,10 +7,10 @@ import Mathlib.Analysis.Calculus.Deriv.Add
 import Mathlib.Analysis.Calculus.Deriv.Mul
 import Mathlib.Analysis.Calculus.Deriv.Comp
 import Mathlib.Analysis.Calculus.LogDeriv
-import InformationTheory.Shannon.FisherInfoV2
-import InformationTheory.Shannon.FisherInfoV2DeBruijn
-import InformationTheory.Shannon.FisherInfoV2DeBruijnBody
-import InformationTheory.Shannon.FisherInfoGaussian
+import InformationTheory.Shannon.FisherInfo.V2
+import InformationTheory.Shannon.FisherInfo.V2DeBruijn
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnBody
+import InformationTheory.Shannon.FisherInfo.Gaussian
 import InformationTheory.Shannon.DifferentialEntropy
 
 /-!

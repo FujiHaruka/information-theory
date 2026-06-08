@@ -4,7 +4,7 @@ import Mathlib.Probability.Density
 import Mathlib.Probability.Independence.Basic
 import Mathlib.Analysis.Calculus.LogDeriv
 import Mathlib.Analysis.SpecialFunctions.Log.Deriv
-import InformationTheory.Shannon.FisherInfo
+import InformationTheory.Shannon.FisherInfo.Basic
 import InformationTheory.Shannon.DifferentialEntropy
 
 /-!

@@ -6,9 +6,9 @@ import Mathlib.Analysis.Calculus.Deriv.Inv
 import Mathlib.Analysis.Calculus.Deriv.Mul
 import Mathlib.Analysis.Calculus.Deriv.Add
 import Mathlib.Analysis.Calculus.Deriv.Comp
-import InformationTheory.Shannon.FisherInfoGaussian
-import InformationTheory.Shannon.FisherInfoV2DeBruijnBody
-import InformationTheory.Shannon.FisherInfoV2HeatFlowBody
+import InformationTheory.Shannon.FisherInfo.Gaussian
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnBody
+import InformationTheory.Shannon.FisherInfo.V2HeatFlowBody
 
 /-!
 # Gaussian PDF variance (time) derivative — de Bruijn FTC core (W10-S10)

@@ -9,7 +9,7 @@ import InformationTheory.Shannon.EPIConvDensityAssoc
 import InformationTheory.Shannon.EPIConvDensityNormalization
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.EPIVitaliUnifTight
-import InformationTheory.Shannon.FisherInfoV2DeBruijnAssembly
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly
 
 /-!
 # EPI G2 Vitali witness — UnifIntegrable (UI), standalone genuine attempt

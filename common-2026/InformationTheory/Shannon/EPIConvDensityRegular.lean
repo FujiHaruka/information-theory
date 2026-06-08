@@ -1,8 +1,8 @@
 import InformationTheory.Shannon.EPIConvDensityGaussianGateway
-import InformationTheory.Shannon.FisherInfoV2DeBruijnPerTime
-import InformationTheory.Shannon.FisherInfoV2DeBruijnAssembly
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly
 import InformationTheory.Shannon.EPIBlachmanGaussianWitness
-import InformationTheory.Shannon.FisherInfoGaussian
+import InformationTheory.Shannon.FisherInfo.Gaussian
 import Mathlib.Analysis.Convolution
 
 /-!

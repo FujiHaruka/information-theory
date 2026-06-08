@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.ChannelCoding
+import InformationTheory.Shannon.ChannelCoding.Basic
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.AWGNMIDecompBody
 import InformationTheory.Shannon.AWGNBindConvBody

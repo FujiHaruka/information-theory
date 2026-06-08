@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.DifferentialEntropy
-import InformationTheory.Shannon.FisherInfo
-import InformationTheory.Shannon.FisherInfoV2
+import InformationTheory.Shannon.FisherInfo.Basic
+import InformationTheory.Shannon.FisherInfo.V2
 import InformationTheory.Shannon.EPIConvDensity
 import InformationTheory.Shannon.EPIBlachmanDensity
 import Mathlib.Analysis.SpecialFunctions.Exp

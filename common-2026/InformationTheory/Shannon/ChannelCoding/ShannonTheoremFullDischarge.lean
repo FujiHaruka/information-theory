@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.ChannelCodingShannonTheorem
-import InformationTheory.Shannon.ChannelCodingShannonTheoremGeneral
+import InformationTheory.Shannon.ChannelCoding.ShannonTheorem
+import InformationTheory.Shannon.ChannelCoding.ShannonTheoremGeneral
 import InformationTheory.Shannon.IIDProductInput
 import InformationTheory.Shannon.AEPRate
 import Mathlib.Analysis.Convex.StdSimplex

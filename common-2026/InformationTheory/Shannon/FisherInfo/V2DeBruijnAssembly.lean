@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.FisherInfoV2DeBruijnPerTime
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
 import InformationTheory.Shannon.FisherConvBound   -- shared 壁 gaussianConv_fisher_le_inv_var
 import InformationTheory.Shannon.EPIConvDensitySecondDeriv  -- STEP-D bridge convDensityAdd_deriv2_eq_gaussian
 

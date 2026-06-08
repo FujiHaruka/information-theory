@@ -1,7 +1,7 @@
 import InformationTheory.Shannon.EPIConvDensity
 import InformationTheory.Shannon.EPIConvDensityNormalization
 import InformationTheory.Shannon.EPIBlachmanGaussianWitness
-import InformationTheory.Shannon.FisherInfoV2DeBruijnAssembly
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly
 import Mathlib.Analysis.Convolution
 import Mathlib.MeasureTheory.Group.Prod
 

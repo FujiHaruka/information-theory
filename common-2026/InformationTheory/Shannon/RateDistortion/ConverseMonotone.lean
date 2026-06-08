@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.RateDistortionConverse
+import InformationTheory.Shannon.RateDistortion.Converse
 
 /-!
 # Rate-distortion converse (specified-distortion form, E-4' MVP)

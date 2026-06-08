@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.DifferentialEntropy
-import InformationTheory.Shannon.FisherInfo
-import InformationTheory.Shannon.FisherInfoGaussian
+import InformationTheory.Shannon.FisherInfo.Basic
+import InformationTheory.Shannon.FisherInfo.Gaussian
 import Mathlib.Analysis.Calculus.LogDeriv
 import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
 import Mathlib.Analysis.SpecialFunctions.Log.Deriv

@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.FisherInfoV2DeBruijn
+import InformationTheory.Shannon.FisherInfo.V2DeBruijn
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.Basic
 import Mathlib.Tactic.Positivity

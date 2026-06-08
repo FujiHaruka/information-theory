@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.AEP
-import InformationTheory.Shannon.ChannelCoding
+import InformationTheory.Shannon.ChannelCoding.Basic
 
 /-!
 # Slepian–Wolf conditional typical slice (E-5'' Phase C MVP)

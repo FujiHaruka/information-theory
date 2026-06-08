@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.RateDistortionAchievabilityPhaseC
+import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseC
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Order.Filter.AtTopBot.Basic
 

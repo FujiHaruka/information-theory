@@ -3,9 +3,9 @@ import InformationTheory.Shannon.EntropyPowerInequality
 import InformationTheory.Shannon.EPIPlumbing
 import InformationTheory.Shannon.EPIStamDischarge
 import InformationTheory.Shannon.EPIStamInequalityBody
-import InformationTheory.Shannon.FisherInfoV2
-import InformationTheory.Shannon.FisherInfoV2DeBruijn
-import InformationTheory.Shannon.FisherInfoGaussian
+import InformationTheory.Shannon.FisherInfo.V2
+import InformationTheory.Shannon.FisherInfo.V2DeBruijn
+import InformationTheory.Shannon.FisherInfo.Gaussian
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Probability.Distributions.Gaussian.Real

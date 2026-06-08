@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.FisherInfoV2DeBruijnAssembly
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly
 
 /-!
 # de Bruijn identity (V2) — genuine wiring of `debruijnIdentityV2_holds_assembled`

@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.ChannelCoding
+import InformationTheory.Shannon.ChannelCoding.Basic
 import InformationTheory.Shannon.DifferentialEntropy
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Distributions.Gaussian.Basic

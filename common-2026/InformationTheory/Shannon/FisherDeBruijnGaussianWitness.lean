@@ -1,7 +1,7 @@
-import InformationTheory.Shannon.FisherInfoV2
-import InformationTheory.Shannon.FisherInfoV2DeBruijn
-import InformationTheory.Shannon.FisherInfoV2DeBruijnBody
-import InformationTheory.Shannon.FisherInfoV2HeatFlowBody
+import InformationTheory.Shannon.FisherInfo.V2
+import InformationTheory.Shannon.FisherInfo.V2DeBruijn
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnBody
+import InformationTheory.Shannon.FisherInfo.V2HeatFlowBody
 import InformationTheory.Shannon.GaussianPDFVarianceDerivBody
 
 /-!

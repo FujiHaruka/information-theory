@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.ChannelCodingConverseGeneralStrong
+import InformationTheory.Shannon.ChannelCoding.ConverseGeneralStrong
 
 /-!
 # Channel coding converse — pure `IsMemorylessChannel` form (D-2'' γ-chain bridge)

@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.RateDistortionAchievabilityPhaseB
+import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseB
 
 /-!
 # Rate-distortion achievability — Phase C-1 (codebook-level match probability)

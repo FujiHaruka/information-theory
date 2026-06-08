@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.RateDistortionAchievability
+import InformationTheory.Shannon.RateDistortion.Achievability
 import InformationTheory.Draft.Shannon.RateDistortionConverseNLetter
 
 /-!

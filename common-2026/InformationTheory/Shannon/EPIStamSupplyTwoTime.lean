@@ -40,7 +40,7 @@ import InformationTheory.Shannon.EPIConvDensityRegular
 import InformationTheory.Shannon.EPIBlachmanGeneralDensity
 import InformationTheory.Shannon.EPIConvDensityAssoc
 import InformationTheory.Shannon.EPIConvDensityNormalization
-import InformationTheory.Shannon.FisherInfoV2DeBruijn
+import InformationTheory.Shannon.FisherInfo.V2DeBruijn
 
 namespace InformationTheory.Shannon.EPIStamSupplyTwoTime
 

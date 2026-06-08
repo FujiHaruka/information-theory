@@ -2,9 +2,9 @@ import InformationTheory.Draft.Shannon.RateDistortionAchievabilityPhaseE
 import InformationTheory.Draft.Shannon.RateDistortionAchievabilityPhaseEDischarge
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.ConditionalMethodOfTypes
-import InformationTheory.Shannon.RateDistortionAchievabilityPhaseC
-import InformationTheory.Shannon.RateDistortionAchievabilityPhaseD
-import InformationTheory.Shannon.RateDistortionAchievabilityPhaseEStrong
+import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseC
+import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseD
+import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseEStrong
 
 /-!
 # Rate-distortion achievability — final discharge of `codebookAvgFailure_tendsto_zero`

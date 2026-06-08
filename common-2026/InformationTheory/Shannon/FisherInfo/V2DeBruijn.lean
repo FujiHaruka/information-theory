@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.FisherInfoV2
+import InformationTheory.Shannon.FisherInfo.V2
 import InformationTheory.Shannon.EPIConvDensity
 import Mathlib.Analysis.Calculus.LogDeriv
 import Mathlib.Analysis.SpecialFunctions.Log.Deriv

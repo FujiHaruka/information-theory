@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.RateDistortionConverseMonotone
+import InformationTheory.Shannon.RateDistortion.ConverseMonotone
 import InformationTheory.Meta.EntryPoint
 
 /-!

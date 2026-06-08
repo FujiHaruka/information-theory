@@ -1,8 +1,8 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.EPIStamDischarge
 import InformationTheory.Shannon.EPIStamInequalityBody
-import InformationTheory.Shannon.FisherInfoV2
-import InformationTheory.Shannon.FisherInfoV2DeBruijn
+import InformationTheory.Shannon.FisherInfo.V2
+import InformationTheory.Shannon.FisherInfo.V2DeBruijn
 import InformationTheory.Shannon.EPIConvDensity
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.Positivity

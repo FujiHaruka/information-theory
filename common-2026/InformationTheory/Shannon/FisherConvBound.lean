@@ -1,8 +1,8 @@
 import InformationTheory.Shannon.EPIConvDensity
 import InformationTheory.Shannon.EPIConvDensitySecondDeriv          -- convDensityAdd_deriv1_gaussian_eq
-import InformationTheory.Shannon.FisherInfoV2
-import InformationTheory.Shannon.FisherInfoV2DeBruijn   -- V2 Gaussian 閉形 J(𝒩(0,s))=1/s
-import InformationTheory.Shannon.FisherInfoV2DeBruijnPerTime        -- convDensityAdd_pos / fisher_from_logDeriv
+import InformationTheory.Shannon.FisherInfo.V2
+import InformationTheory.Shannon.FisherInfo.V2DeBruijn   -- V2 Gaussian 閉形 J(𝒩(0,s))=1/s
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime        -- convDensityAdd_pos / fisher_from_logDeriv
 import InformationTheory.Shannon.StamGaussianBound       -- stam_fisher_arith
 import Mathlib.MeasureTheory.Integral.Bochner.Basic          -- integral_mul_le_Lp_mul_Lq_of_nonneg
 import Mathlib.MeasureTheory.Measure.Prod                    -- lintegral_lintegral_swap

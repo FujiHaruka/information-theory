@@ -2,9 +2,9 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.EntropyPowerInequality
 import InformationTheory.Shannon.EPIPlumbing
 import InformationTheory.Shannon.EPIStamDischarge
-import InformationTheory.Shannon.FisherInfoV2DeBruijn
-import InformationTheory.Shannon.FisherInfoV2
-import InformationTheory.Shannon.FisherInfoGaussian
+import InformationTheory.Shannon.FisherInfo.V2DeBruijn
+import InformationTheory.Shannon.FisherInfo.V2
+import InformationTheory.Shannon.FisherInfo.Gaussian
 import InformationTheory.Shannon.EPIBlachmanGaussianWitness
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.HeatFlowPath

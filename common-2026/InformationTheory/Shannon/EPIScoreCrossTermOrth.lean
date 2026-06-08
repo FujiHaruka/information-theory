@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.FisherInfoV2
+import InformationTheory.Shannon.FisherInfo.V2
 import Mathlib.Probability.Independence.Integration   -- IndepFun.integral_fun_mul_eq_mul_integral
 import Mathlib.Probability.Independence.Basic          -- IndepFun.comp
 

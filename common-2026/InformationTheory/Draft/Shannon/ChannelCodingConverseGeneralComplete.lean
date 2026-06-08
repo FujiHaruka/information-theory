@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.ChannelCodingConverseGeneral
+import InformationTheory.Shannon.ChannelCoding.ConverseGeneral
 import InformationTheory.Shannon.CondMutualInfo
 import InformationTheory.Shannon.MIChainRule
 import InformationTheory.Shannon.MutualInfo

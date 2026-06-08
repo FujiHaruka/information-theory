@@ -1,6 +1,6 @@
 import InformationTheory.Shannon.EPIConvDensity
-import InformationTheory.Shannon.FisherInfoV2DeBruijnPerTime
-import InformationTheory.Shannon.FisherInfoGaussian
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
+import InformationTheory.Shannon.FisherInfo.Gaussian
 
 /-!
 # Convolution density — spatial 2nd derivative identification (STEP D bridge)

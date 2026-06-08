@@ -1,10 +1,10 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.EntropyPowerInequality
 import InformationTheory.Shannon.EPIPlumbing
-import InformationTheory.Shannon.FisherInfoV2
-import InformationTheory.Shannon.FisherInfoV2DeBruijn
-import InformationTheory.Shannon.FisherInfoV2DeBruijnGenuine
-import InformationTheory.Shannon.FisherInfoGaussian
+import InformationTheory.Shannon.FisherInfo.V2
+import InformationTheory.Shannon.FisherInfo.V2DeBruijn
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnGenuine
+import InformationTheory.Shannon.FisherInfo.Gaussian
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.EPIConvDensity
 import InformationTheory.Shannon.EPIBlachmanDensity

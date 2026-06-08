@@ -1,5 +1,5 @@
 import InformationTheory.Shannon.EPIConvDensity
-import InformationTheory.Shannon.FisherInfoV2
+import InformationTheory.Shannon.FisherInfo.V2
 
 /-!
 # Convolution density gateway — `pX` integrable-only + Gaussian-kernel-smooth variant

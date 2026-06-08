@@ -4,8 +4,8 @@ import Mathlib.MeasureTheory.Measure.WithDensity
 import Mathlib.MeasureTheory.Group.Prod
 import Mathlib.MeasureTheory.Integral.Prod
 import Mathlib.Analysis.LConvolution
-import InformationTheory.Shannon.FisherInfoV2
-import InformationTheory.Shannon.FisherInfoGaussian
+import InformationTheory.Shannon.FisherInfo.V2
+import InformationTheory.Shannon.FisherInfo.Gaussian
 import InformationTheory.Shannon.EPIConvDensity
 import InformationTheory.Shannon.EPIBlachmanDensity
 

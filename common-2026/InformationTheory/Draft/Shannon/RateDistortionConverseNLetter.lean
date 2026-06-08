@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.RateDistortionConverseMonotone
-import InformationTheory.Shannon.RateDistortionAchievability
-import InformationTheory.Shannon.RateDistortionConvexityDischarge
+import InformationTheory.Shannon.RateDistortion.ConverseMonotone
+import InformationTheory.Shannon.RateDistortion.Achievability
+import InformationTheory.Shannon.RateDistortion.ConvexityDischarge
 
 /-!
 # Rate-distortion converse (n-letter form, E-4''C MVP)

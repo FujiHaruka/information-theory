@@ -4,7 +4,7 @@ import InformationTheory.Shannon.AwgnWalls
 import InformationTheory.Shannon.Converse
 import InformationTheory.Shannon.CondMutualInfo
 import InformationTheory.Shannon.DifferentialEntropy
-import InformationTheory.Shannon.ChannelCoding
+import InformationTheory.Shannon.ChannelCoding.Basic
 import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.Probability.Distributions.Gaussian.Real
 

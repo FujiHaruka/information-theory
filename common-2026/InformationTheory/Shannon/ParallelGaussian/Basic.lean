@@ -1,6 +1,6 @@
 import InformationTheory.Shannon.AWGN
 import InformationTheory.Shannon.AWGNMain
-import InformationTheory.Shannon.ChannelCoding
+import InformationTheory.Shannon.ChannelCoding.Basic
 import InformationTheory.Shannon.DifferentialEntropy
 import Mathlib.MeasureTheory.Constructions.Pi
 import Mathlib.Probability.Distributions.Gaussian.Real

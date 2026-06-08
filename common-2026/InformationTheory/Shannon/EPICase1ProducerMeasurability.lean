@@ -2,7 +2,7 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.EPIConvDensity
 import InformationTheory.Shannon.EPIConvDensityGaussianGateway
 import InformationTheory.Shannon.EPIBlachmanGaussianWitness
-import InformationTheory.Shannon.FisherInfoV2
+import InformationTheory.Shannon.FisherInfo.V2
 import Mathlib.Analysis.Calculus.LogDeriv
 import Mathlib.MeasureTheory.Integral.Prod
 import Mathlib.MeasureTheory.Measure.Prod

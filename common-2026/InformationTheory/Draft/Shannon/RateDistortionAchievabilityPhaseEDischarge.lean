@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Draft.Shannon.RateDistortionAchievabilityPhaseE
 import InformationTheory.Shannon.IIDProductInputJoint
-import InformationTheory.Shannon.ChannelCodingShannonTheorem
+import InformationTheory.Shannon.ChannelCoding.ShannonTheorem
 
 /-!
 # Rate-distortion achievability — Phase E partial discharge (E-3'')

@@ -14,8 +14,8 @@ import InformationTheory.Shannon.EntropyPowerInequality
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.EPIStamDischarge
 import InformationTheory.Shannon.EPIConvDensity
-import InformationTheory.Shannon.FisherInfoV2DeBruijnPerTime
-import InformationTheory.Shannon.FisherInfoV2DeBruijnAssembly
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly
 import InformationTheory.Shannon.EPIVitaliUI
 import InformationTheory.Shannon.EPIG2KLFatouLSC
 import InformationTheory.Shannon.EPIG2ConvEntropyDensity

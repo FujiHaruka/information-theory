@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.RateDistortionConverse
+import InformationTheory.Shannon.RateDistortion.Converse
 import Mathlib.Analysis.Convex.StdSimplex
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import Mathlib.Topology.Order.Compact

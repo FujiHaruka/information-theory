@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.EntropyPowerInequality
 import InformationTheory.Shannon.EPIStamDischarge
-import InformationTheory.Shannon.FisherInfoV2DeBruijnGenuine
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnGenuine
 import InformationTheory.Shannon.EPIL3Integration
 import InformationTheory.Shannon.EPIPlumbing
 import InformationTheory.Shannon.DifferentialEntropy

@@ -9,7 +9,7 @@ import Mathlib.InformationTheory.KullbackLeibler.Basic
 import Mathlib.Probability.Kernel.Composition.Lemmas
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.EPIConvDensity
-import InformationTheory.Shannon.FisherInfoV2DeBruijnPerTime
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
 import InformationTheory.Shannon.CondKLIntegral
 import InformationTheory.Shannon.EPIG2BridgeDensityHelpers
 

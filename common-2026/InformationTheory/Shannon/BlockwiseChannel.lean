@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.ChannelCoding
-import InformationTheory.Shannon.ChannelCodingShannonTheorem
+import InformationTheory.Shannon.ChannelCoding.Basic
+import InformationTheory.Shannon.ChannelCoding.ShannonTheorem
 import InformationTheory.Shannon.MIChainRule
 import InformationTheory.Shannon.CondEntropyMemoryless
 import Mathlib.Analysis.Subadditive
