@@ -20,6 +20,7 @@
 | [`lean-style.md`](lean-style.md) | フォーマット・レイアウト・タクティク作法・normal form・透明性 |
 | [`naming.md`](naming.md) | 命名規約（大文字小文字・定理名の組み立て方・記号→語の対応表） |
 | [`docstrings.md`](docstrings.md) | docstring 規約（宣言/module docstring の形・本リポジトリの乖離点・固有タグとの同居） |
+| [`module-structure.md`](module-structure.md) | モジュール分割・ディレクトリ構造（ディレクトリ=主題・Defs/Basic 役割・import DAG・`Shannon/` 現状診断とターゲット形） |
 
 ## Mathlib 規約の採否一覧
 
@@ -41,6 +42,7 @@
 - コメント種別の使い分け（`/-! -/` 見出し / `/- -/` 技術メモ / `--` 短文 / `/-- -/` docstring）
 - docstring 規約一式（[`docstrings.md`](docstrings.md)）。数学的意味を述べる完全文・バッククォート識別子・宣言 docstring の継続行は字下げしない・named theorem のみ太字
 - 命名規約一式（[`naming.md`](naming.md)）。既に実態と一致（例: `exp_decay_N_of_pos` の `_of_`、`DotEq` の UpperCamelCase）
+- モジュール分割・ディレクトリ構造（[`module-structure.md`](module-structure.md)）。ディレクトリ=主題・階層は複合ファイル名でなくディレクトリで・Defs/Basic 役割・import は DAG（循環禁止）・1 ファイル 1500 行。`Shannon/` のフラット集中（205/233）は要改善で、現状診断とターゲット形を所収
 
 ### 読み替え（adapt）— 修正して適用
 
