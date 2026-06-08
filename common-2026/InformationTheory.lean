@@ -222,6 +222,9 @@ import InformationTheory.Shannon.EPI.Stam.DeBruijnConclusion
 import InformationTheory.Shannon.WynerZiv.CondEntDiffConvexBody
 import InformationTheory.Draft.Shannon.MultivariateDiffEntropy
 import InformationTheory.Draft.Shannon.ParallelGaussianPerCoord
+import InformationTheory.Shannon.ParallelGaussian.Converse.Core
+import InformationTheory.Shannon.ParallelGaussian.Converse.Regularity
+import InformationTheory.Shannon.ParallelGaussian.Converse.MixtureDensity
 import InformationTheory.Shannon.ParallelGaussian.Converse
 import InformationTheory.Shannon.ParallelGaussian.PerCoordRegularity
 import InformationTheory.Shannon.Huffman.SwapNormProof
