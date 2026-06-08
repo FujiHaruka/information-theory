@@ -201,7 +201,7 @@ private lemma diracPMF_errorProb (Q : Measure X) [IsProbabilityMeasure Q] (xh : 
     simp
   rw [hSet]
 
-omit [Nonempty X] in
+omit [DecidableEq X] [Nonempty X] in
 /-- Pointwise Fano: `Q : Measure X`（確率測度）と guess `xh : X` に対し、
 `∑ x, negMulLog (Q.real {x}) ≤ qaryEntropy |X| (Q.real {x | x ≠ xh})`。
 
@@ -211,6 +211,7 @@ lemma pointwise_fano (Q : Measure X) [IsProbabilityMeasure Q] (xh : X)
     (hcard : 2 ≤ Fintype.card X) :
     (∑ x : X, Real.negMulLog (Q.real {x}))
       ≤ Real.qaryEntropy (Fintype.card X) (Q.real {x : X | x ≠ xh}) := by
+  classical
   have hFano := (diracPMF Q xh).fano_core hcard
   rw [diracPMF_condEntropy, diracPMF_errorProb] at hFano
   exact hFano
@@ -221,6 +222,7 @@ lemma pointwise_fano (Q : Measure X) [IsProbabilityMeasure Q] (xh : X)
 独立補題ではなく定理内 `have` で局所構築している。
 -/
 
+omit [DecidableEq X] in
 /-- Fano's inequality, measure-theoretic form (deterministic decoder). -/
 @[entry_point]
 theorem fano_inequality_measure_theoretic

@@ -85,7 +85,7 @@ lemma marginalY_nonneg (μ : X → E → Y → ℝ) (h_nn : ∀ x e y, 0 ≤ μ 
 /-- For a binary `E = Bool`, the `Y` marginal splits as the sum of the
 two `(E, Y)` marginals. -/
 lemma marginalY_eq_marginalEY_true_add_false {X Y : Type*}
-    [Fintype X] [Fintype Y] (μ : X → Bool → Y → ℝ) (y : Y) :
+    [Fintype X] (μ : X → Bool → Y → ℝ) (y : Y) :
     marginalY μ y = marginalEY μ true y + marginalEY μ false y := by
   unfold marginalY marginalEY
   rw [← Finset.sum_add_distrib]
