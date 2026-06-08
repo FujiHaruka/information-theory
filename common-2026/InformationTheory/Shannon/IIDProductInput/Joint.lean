@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.IIDProductInput
+import InformationTheory.Shannon.IIDProductInput.Basic
 import InformationTheory.Meta.EntryPoint
 
 /-!

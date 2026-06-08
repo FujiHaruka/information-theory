@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.MutualInfo
 import InformationTheory.Shannon.MIChainRule
-import InformationTheory.Shannon.AEP
+import InformationTheory.Shannon.AEP.Basic
 import Mathlib.Probability.Kernel.Basic
 import Mathlib.Probability.Kernel.Composition.MeasureCompProd
 

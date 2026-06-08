@@ -1,6 +1,6 @@
 import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseB
 import InformationTheory.Shannon.StrongTypicality
-import InformationTheory.Shannon.IIDProductInputJoint
+import InformationTheory.Shannon.IIDProductInput.Joint
 import InformationTheory.Draft.Shannon.RateDistortionAchievabilityPhaseEDischarge
 
 /-!

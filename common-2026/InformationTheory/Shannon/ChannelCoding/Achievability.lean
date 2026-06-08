@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.ChannelCoding.Basic
-import InformationTheory.Shannon.IIDProductInput
-import InformationTheory.Shannon.AEPRate
+import InformationTheory.Shannon.IIDProductInput.Basic
+import InformationTheory.Shannon.AEP.Rate
 import Mathlib.Probability.ProductMeasure
 import Mathlib.Probability.Independence.InfinitePi
 

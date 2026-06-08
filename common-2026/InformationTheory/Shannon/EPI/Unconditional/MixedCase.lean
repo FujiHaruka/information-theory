@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.EntropyPowerExt
+import InformationTheory.Shannon.EntropyPower.Ext
 import InformationTheory.Shannon.EPI.G2.ConvEntropyMonotone
 import Mathlib.MeasureTheory.Group.Convolution
 import Mathlib.Probability.Independence.Basic

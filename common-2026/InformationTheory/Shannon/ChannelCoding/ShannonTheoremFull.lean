@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.ChannelCoding.ShannonTheorem
 import InformationTheory.Shannon.ChannelCoding.ShannonTheoremGeneral
-import InformationTheory.Shannon.AEPRate
+import InformationTheory.Shannon.AEP.Rate
 
 /-!
 # Shannon noisy channel coding theorem — `hW_pos` 完全除去 (D-1'' Phase D)

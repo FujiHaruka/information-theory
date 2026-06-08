@@ -9,8 +9,8 @@ import Mathlib.Data.Prod.Lex
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.ShannonCode
-import InformationTheory.Shannon.ShannonCodeKraftReverse
+import InformationTheory.Shannon.ShannonCode.Basic
+import InformationTheory.Shannon.ShannonCode.KraftReverse
 
 /-!
 # Huffman 最適性 (Cover-Thomas Theorem 5.8.1)

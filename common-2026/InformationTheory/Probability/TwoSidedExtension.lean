@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.Stationary
+import InformationTheory.Shannon.Stationary.Basic
 import InformationTheory.Shannon.EntropyRate
 import Mathlib.MeasureTheory.Constructions.Projective
 import Mathlib.MeasureTheory.Constructions.ProjectiveFamilyContent

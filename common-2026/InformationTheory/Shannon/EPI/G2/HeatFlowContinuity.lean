@@ -10,7 +10,7 @@ import Mathlib.Topology.Order.Monotone
 import Mathlib.Topology.Bases
 import Mathlib.Order.Monotone.Basic
 import Mathlib.Order.Filter.AtTopBot.CountablyGenerated
-import InformationTheory.Shannon.EntropyPowerInequality
+import InformationTheory.Shannon.EntropyPower.Inequality
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.EPI.Stam.Discharge
 import InformationTheory.Shannon.EPI.Conv.Density

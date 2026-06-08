@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.EntropyPowerInequality
+import InformationTheory.Shannon.EntropyPower.Inequality
 import InformationTheory.Shannon.DifferentialEntropy
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic

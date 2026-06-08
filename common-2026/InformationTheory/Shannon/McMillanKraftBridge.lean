@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.ShannonCode
+import InformationTheory.Shannon.ShannonCode.Basic
 import Mathlib.InformationTheory.Coding.KraftMcMillan
 import Mathlib.InformationTheory.Coding.UniquelyDecodable
 

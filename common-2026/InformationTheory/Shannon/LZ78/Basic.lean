@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.Stationary
+import InformationTheory.Shannon.Stationary.Basic
 import InformationTheory.Shannon.EntropyRate
-import InformationTheory.Shannon.ShannonMcMillanBreiman
+import InformationTheory.Shannon.SMB.McMillanBreiman
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Topology.Order.LiminfLimsup
 

@@ -1,6 +1,6 @@
 import InformationTheory.Shannon.RateDistortion.Achievability
 import InformationTheory.Shannon.ChannelCoding.Achievability
-import InformationTheory.Shannon.AEP
+import InformationTheory.Shannon.AEP.Basic
 import Mathlib.MeasureTheory.Function.ConvergenceInMeasure
 import Mathlib.Probability.StrongLaw
 

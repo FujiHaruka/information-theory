@@ -1,8 +1,8 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.ChannelCoding.ShannonTheorem
 import InformationTheory.Shannon.ChannelCoding.ShannonTheoremGeneral
-import InformationTheory.Shannon.IIDProductInput
-import InformationTheory.Shannon.AEPRate
+import InformationTheory.Shannon.IIDProductInput.Basic
+import InformationTheory.Shannon.AEP.Rate
 import Mathlib.Analysis.Convex.StdSimplex
 import Mathlib.Topology.Order.Compact
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog

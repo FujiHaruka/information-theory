@@ -32,7 +32,7 @@ import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.Basic
 import Mathlib.MeasureTheory.Measure.Prod
 import Mathlib.MeasureTheory.Measure.Map
-import InformationTheory.Shannon.EntropyPowerInequality
+import InformationTheory.Shannon.EntropyPower.Inequality
 import InformationTheory.Shannon.EPI.Stam.ToBridge
 
 namespace InformationTheory.Shannon.EPINoiseExtension

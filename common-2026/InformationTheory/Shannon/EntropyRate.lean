@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.Stationary
+import InformationTheory.Shannon.Stationary.Basic
 import InformationTheory.Shannon.Bridge
 import InformationTheory.Shannon.CondMutualInfo
 import InformationTheory.Shannon.Pi

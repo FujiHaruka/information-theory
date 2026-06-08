@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.GeneralDMC
+import InformationTheory.Shannon.GeneralDMC.Basic
 
 /-!
 # General DMC capacity — extension layer (wave7 I-2)

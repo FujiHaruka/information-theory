@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.EntropyPowerInequality
+import InformationTheory.Shannon.EntropyPower.Inequality
 import InformationTheory.Shannon.EPI.Plumbing
 import InformationTheory.Shannon.FisherInfo.V2
 import InformationTheory.Shannon.FisherInfo.V2DeBruijn

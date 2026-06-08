@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Draft.Shannon.RateDistortionAchievabilityPhaseE
-import InformationTheory.Shannon.IIDProductInputJoint
+import InformationTheory.Shannon.IIDProductInput.Joint
 import InformationTheory.Shannon.ChannelCoding.ShannonTheorem
 
 /-!

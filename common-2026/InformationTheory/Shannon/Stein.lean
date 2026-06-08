@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.AEP
+import InformationTheory.Shannon.AEP.Basic
 import InformationTheory.Shannon.DPI
 import InformationTheory.Shannon.MutualInfo
 import Mathlib.InformationTheory.KullbackLeibler.Basic

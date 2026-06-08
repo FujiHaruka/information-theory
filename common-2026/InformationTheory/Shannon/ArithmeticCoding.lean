@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.ShannonCode
-import InformationTheory.Shannon.ShannonCodeKraftReverse
+import InformationTheory.Shannon.ShannonCode.Basic
+import InformationTheory.Shannon.ShannonCode.KraftReverse
 import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 import Mathlib.Logic.Equiv.Defs
 

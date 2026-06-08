@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.EntropyPowerExt
+import InformationTheory.Shannon.EntropyPower.Ext
 import InformationTheory.Shannon.EPI.Unconditional.MixedCase
 import InformationTheory.Shannon.EPI.InfiniteVariance.Capstone
 import InformationTheory.Shannon.EPI.Unconditional.CondEntropyExt

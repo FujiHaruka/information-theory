@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.EntropyPowerExt
+import InformationTheory.Shannon.EntropyPower.Ext
 import InformationTheory.Shannon.EPI.Unconditional.CondEntropyExt
 import InformationTheory.Shannon.EPI.Unconditional.Monotone
 import Mathlib.Probability.ConditionalProbability

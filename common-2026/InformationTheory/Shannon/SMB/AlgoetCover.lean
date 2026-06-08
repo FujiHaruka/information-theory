@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.SMBChainRule
-import InformationTheory.Shannon.ShannonMcMillanBreiman
+import InformationTheory.Shannon.SMB.ChainRule
+import InformationTheory.Shannon.SMB.McMillanBreiman
 import InformationTheory.Probability.TwoSidedExtension
 import Mathlib.MeasureTheory.OuterMeasure.BorelCantelli
 import Mathlib.MeasureTheory.Integral.Lebesgue.Markov
