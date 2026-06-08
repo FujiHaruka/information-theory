@@ -28,9 +28,12 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 def jointRV (Xs : ℕ → Ω → α) (n : ℕ) : Ω → (Fin n → α) :=
   fun ω i => Xs i ω
 
+omit [MeasurableSpace Ω] [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α]
+  [MeasurableSingletonClass α] in
 @[simp] lemma jointRV_apply (Xs : ℕ → Ω → α) (n : ℕ) (ω : Ω) (i : Fin n) :
     jointRV Xs n ω i = Xs i ω := rfl
 
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 lemma measurable_jointRV (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (n : ℕ) :
     Measurable (jointRV Xs n) :=
   measurable_pi_lambda _ fun i => hXs i
@@ -48,6 +51,7 @@ sequence by composition with the (always-measurable, finite-domain) `pmfLog`.
 noncomputable def pmfLog (μ : Measure Ω) (Xs : ℕ → Ω → α) : α → ℝ :=
   fun x => -Real.log ((μ.map (Xs 0)).real {x})
 
+omit [DecidableEq α] [Nonempty α] in
 lemma measurable_pmfLog (μ : Measure Ω) (Xs : ℕ → Ω → α) :
     Measurable (pmfLog μ Xs) := by
   -- α is a discrete measurable space (`MeasurableSingletonClass α`), and α is `Fintype`
@@ -59,15 +63,18 @@ noncomputable def logLikelihood
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (i : ℕ) : Ω → ℝ :=
   fun ω => pmfLog μ Xs (Xs i ω)
 
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 @[entry_point]
 lemma logLikelihood_eq_comp (μ : Measure Ω) (Xs : ℕ → Ω → α) (i : ℕ) :
     logLikelihood μ Xs i = pmfLog μ Xs ∘ Xs i := rfl
 
+omit [DecidableEq α] [Nonempty α] in
 lemma measurable_logLikelihood
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i)) (i : ℕ) :
     Measurable (logLikelihood μ Xs i) :=
   (measurable_pmfLog μ Xs).comp (hXs i)
 
+omit [DecidableEq α] [Nonempty α] in
 /-- `pmfLog μ Xs` is integrable on a finite alphabet (any function on a finite
 discrete space is bounded, hence integrable for any finite measure). -/
 lemma integrable_logLikelihood
@@ -82,6 +89,7 @@ lemma integrable_logLikelihood
   -- Pull back through `Xs i`.
   exact h_int.comp_measurable (hXs i)
 
+omit [DecidableEq α] [Nonempty α] in
 /-- The expectation of `logLikelihood μ Xs 0` is the entropy of `Xs 0`. -/
 lemma integral_logLikelihood_zero
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -107,6 +115,7 @@ lemma integral_logLikelihood_zero
   rw [pmfLog, Real.negMulLog]
   simp [smul_eq_mul]
 
+omit [DecidableEq α] [Nonempty α] in
 /-- Composition lift of `IdentDistrib` to `logLikelihood`. -/
 lemma identDistrib_logLikelihood
     (μ : Measure Ω) (Xs : ℕ → Ω → α)
@@ -114,6 +123,7 @@ lemma identDistrib_logLikelihood
     IdentDistrib (logLikelihood μ Xs i) (logLikelihood μ Xs 0) μ μ := by
   simpa [logLikelihood_eq_comp] using (hident i).comp (measurable_pmfLog μ Xs)
 
+omit [DecidableEq α] [Nonempty α] in
 /-- Composition lift of pairwise `IndepFun` to `logLikelihood`. -/
 lemma indepFun_logLikelihood
     (μ : Measure Ω) (Xs : ℕ → Ω → α)
@@ -125,6 +135,7 @@ lemma indepFun_logLikelihood
   have hpf := measurable_pmfLog μ Xs
   simpa [logLikelihood_eq_comp] using h.comp hpf hpf
 
+omit [DecidableEq α] [Nonempty α] in
 /-- **Probability AEP — almost sure version**: for an i.i.d. discrete sequence
 `Xs : ℕ → Ω → α` with finite alphabet `α`, the empirical entropy estimator
 `(1/n) ∑ i, (−log P(Xs i ω))` converges almost surely to the entropy `H(Xs 0)`. -/
@@ -154,6 +165,7 @@ theorem aep_ae
   filter_upwards [h_lln] with ω hω
   simpa [h_int_eq] using hω
 
+omit [DecidableEq α] [Nonempty α] in
 /-- **Probability AEP — convergence in probability**: the empirical entropy estimator
 converges to `entropy μ (Xs 0)` in probability. -/
 @[entry_point]
@@ -207,11 +219,13 @@ noncomputable def typicalSet
     Set (Fin n → α) :=
   { x | |(∑ i : Fin n, pmfLog μ Xs (x i)) / n - entropy μ (Xs 0)| < ε }
 
+omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 lemma mem_typicalSet_iff
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (n : ℕ) (ε : ℝ) (x : Fin n → α) :
     x ∈ typicalSet μ Xs n ε ↔
       |(∑ i : Fin n, pmfLog μ Xs (x i)) / n - entropy μ (Xs 0)| < ε := Iff.rfl
 
+omit [DecidableEq α] [Nonempty α] in
 /-- Measurability of the typical set. -/
 @[entry_point]
 theorem measurableSet_typicalSet
@@ -222,6 +236,7 @@ theorem measurableSet_typicalSet
   -- so every subset is measurable.
   exact (Set.toFinite (typicalSet μ Xs n ε)).measurableSet
 
+omit [DecidableEq α] [Nonempty α] in
 /-- **Size bound**: `|T_ε^n| ≤ exp (n · (H + ε))`. We state the bound with
 `Real.exp` rather than `2^x` to avoid the `log 2` plumbing — the textbook
 form follows by re-basing the logarithm.
@@ -236,7 +251,7 @@ theorem typicalSet_card_le
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
     (hpos : ∀ x : α, 0 < (μ.map (Xs 0)).real {x})
-    (n : ℕ) {ε : ℝ} (hε : 0 < ε) :
+    (n : ℕ) {ε : ℝ} (_hε : 0 < ε) :
     ((typicalSet μ Xs n ε).toFinite.toFinset.card : ℝ) ≤
       Real.exp ((n : ℝ) * (entropy μ (Xs 0) + ε)) := by
   -- Notation: write `P x := (μ.map (Xs 0)).real {x}` for the marginal pmf.
@@ -345,6 +360,7 @@ theorem typicalSet_card_le
     rw [h_rewrite, mul_inv_le_iff₀ hexp_pos'] at h_combined
     linarith
 
+omit [DecidableEq α] [Nonempty α] in
 /-- **Typicality probability**: `P(jointRV Xs n ∈ T_ε^n) → 1`.
 
 The event `{ω | jointRV Xs n ω ∈ typicalSet μ Xs n ε}` is the complement of

@@ -152,9 +152,9 @@ the canonical equiv `(Fin n → α) × (Fin n → β) ≃ᵐ Fin n → (α × β
 `Measure.pi (fun i => p_i ⊗ₘ W)`. -/
 private theorem toBlock_compProd_pi_factor
     {α β : Type*}
-    [Fintype α] [DecidableEq α] [Nonempty α]
+    [Fintype α] [Nonempty α]
       [MeasurableSpace α] [MeasurableSingletonClass α]
-    [Fintype β] [DecidableEq β] [Nonempty β]
+    [Fintype β] [Nonempty β]
       [MeasurableSpace β] [MeasurableSingletonClass β]
     (W : Channel α β) [IsMarkovKernel W] (n : ℕ)
     (p : Fin n → Measure α) [∀ i, IsProbabilityMeasure (p i)] :
@@ -285,13 +285,14 @@ private lemma real_atoms_mem_stdSimplex
 /-- Any probability measure on a finite alphabet has channel MI bounded by capacity. -/
 private theorem mutualInfoOfChannel_toReal_le_capacity
     {α β : Type*}
-    [Fintype α] [DecidableEq α] [Nonempty α]
+    [Fintype α] [Nonempty α]
       [MeasurableSpace α] [MeasurableSingletonClass α]
-    [Fintype β] [DecidableEq β] [Nonempty β]
+    [Fintype β] [Nonempty β]
       [MeasurableSpace β] [MeasurableSingletonClass β]
     (W : Channel α β) [IsMarkovKernel W]
     (q : Measure α) [IsProbabilityMeasure q] :
     (mutualInfoOfChannel q W).toReal ≤ capacity W := by
+  classical
   -- Write q = pmfToMeasure p with p := q.real {·} ∈ stdSimplex.
   set p : α → ℝ := fun a => q.real {a} with hp_def
   have hp_mem : p ∈ stdSimplex ℝ α := real_atoms_mem_stdSimplex q
@@ -320,9 +321,9 @@ to reshape both joint (via `toBlock_compProd_pi_factor`) and marginal product (v
 `klDiv_pi_eq_sum`. -/
 private theorem mutualInfoOfChannel_pi_iid_eq_nsmul
     {α β : Type*}
-    [Fintype α] [DecidableEq α] [Nonempty α]
+    [Fintype α] [Nonempty α]
       [MeasurableSpace α] [MeasurableSingletonClass α]
-    [Fintype β] [DecidableEq β] [Nonempty β]
+    [Fintype β] [Nonempty β]
       [MeasurableSpace β] [MeasurableSingletonClass β]
     (W : Channel α β) [IsMarkovKernel W] (n : ℕ)
     (p₀ : Measure α) [IsProbabilityMeasure p₀] :
@@ -938,7 +939,7 @@ private lemma isMarkovChain_outputs_cond_indep
           · simp [h]
           · have := congrFun hy ⟨j, h⟩; simp [h, this]
         · intro h; funext ⟨j, hj⟩
-          have := h j; simp [hj] at this; exact this
+          have := h j; simp only [hj, ↓reduceDIte, ne_eq, Set.mem_singleton_iff] at this; exact this
       rw [h_LHS_inner_set, Measure.pi_pi]
     -- Compute RHS as singleton:
     have h_RHS_compute :
@@ -963,8 +964,9 @@ private lemma isMarkovChain_outputs_cond_indep
           · subst h; simp [hy_i]
           · have := congrFun hy' ⟨j, h⟩; simp [h, this]
         · intro h; refine ⟨?_, ?_⟩
-          · funext ⟨j, hj⟩; have := h j; simp [hj] at this; exact this
-          · have := h i; simp at this; exact this
+          · funext ⟨j, hj⟩; have := h j
+            simp only [hj, ↓reduceDIte, ne_eq, Set.mem_singleton_iff] at this; exact this
+          · have := h i; simp only [↓reduceDIte, Set.mem_singleton_iff] at this; exact this
       rw [h_RHS_preimage, Measure.pi_pi]
     rw [h_LHS_compute, h_RHS_compute]
     -- LHS: (∏ j, W (x j) (if h : j = i then univ else {y' ⟨j, h⟩})) * W (x i) {b}
@@ -1002,6 +1004,7 @@ private lemma isMarkovChain_outputs_cond_indep
   -- The two maps are pointwise equal: (z.1, z.2 ∘ ↑, z.2 i) = Prod.map id (...) (z.1, z.2).
   rfl
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- Phase 4-α (≤ direction): block capacity is bounded by `n · capacity W`.
 
 Strategy: for any block input `q`, apply `mutualInfo_le_sum_per_letter_of_memoryless_strong`
@@ -1013,6 +1016,7 @@ private theorem capacityN_ofMemoryless_le
     (W : Channel α β) [IsMarkovKernel W] (n : ℕ) (_hn : 0 < n) :
     (BlockwiseChannel.ofMemoryless W).capacityN n
       ≤ ENNReal.ofReal ((n : ℝ) * capacity W) := by
+  classical
   unfold BlockwiseChannel.capacityN
   refine sSup_le ?_
   rintro v ⟨q, hq_prob, rfl⟩
@@ -1103,9 +1107,9 @@ apply `mutualInfoOfChannel_pi_iid_eq_nsmul` to get
 in `capacityN` then witnesses `n • capacity W` as a lower bound. -/
 private theorem capacityN_ofMemoryless_ge
     {α β : Type*}
-    [Fintype α] [DecidableEq α] [Nonempty α]
+    [Fintype α] [Nonempty α]
       [MeasurableSpace α] [MeasurableSingletonClass α]
-    [Fintype β] [DecidableEq β] [Nonempty β]
+    [Fintype β] [Nonempty β]
       [MeasurableSpace β] [MeasurableSingletonClass β]
     (W : Channel α β) [IsMarkovKernel W] (n : ℕ) (_hn : 0 < n) :
     ENNReal.ofReal ((n : ℝ) * capacity W)
@@ -1169,9 +1173,9 @@ instance chain. -/
 @[entry_point]
 theorem capacityN_ofMemoryless_eq
     {α β : Type*}
-    [Fintype α] [DecidableEq α] [Nonempty α]
+    [Fintype α] [Nonempty α]
       [MeasurableSpace α] [MeasurableSingletonClass α] [StandardBorelSpace α]
-    [Fintype β] [DecidableEq β] [Nonempty β]
+    [Fintype β] [Nonempty β]
       [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
     (W : Channel α β) [IsMarkovKernel W] (n : ℕ) (_hn : 0 < n) :
     (BlockwiseChannel.ofMemoryless W).capacityN n
@@ -1186,12 +1190,13 @@ memoryless case. Direct from Phase 4-α (the sequence is eventually the constant
 @[entry_point]
 theorem capacity_lim_eq_capacity_of_memoryless
     {α β : Type*}
-    [Fintype α] [DecidableEq α] [Nonempty α]
+    [Fintype α] [Nonempty α]
       [MeasurableSpace α] [MeasurableSingletonClass α] [StandardBorelSpace α]
-    [Fintype β] [DecidableEq β] [Nonempty β]
+    [Fintype β] [Nonempty β]
       [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
     (W : Channel α β) [IsMarkovKernel W] :
     (BlockwiseChannel.ofMemoryless W).capacity_lim = capacity W := by
+  classical
   have hC_nn : 0 ≤ capacity W := capacity_nonneg W
   have h_eq_eventually :
       ∀ᶠ n : ℕ in Filter.atTop,

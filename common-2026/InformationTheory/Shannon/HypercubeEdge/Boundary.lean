@@ -413,20 +413,20 @@ theorem two_sum_projection_eq {n : ℕ} (A : Finset (Fin n → Bool)) :
           · rw [show ({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A)
                   = {extension i false y} from by
                   apply Finset.filter_eq_self.mpr
-                  intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]; exact h0,
+                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
               show ({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A)
                   = {extension i true y} from by
                   apply Finset.filter_eq_self.mpr
-                  intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]; exact h1,
+                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1,
               show ({extension i false y} : Finset (Fin n → Bool)).filter
                   (fun x => x ∈ A ∧ extension i true y ∉ A) = ∅ from by
                   apply Finset.filter_eq_empty_iff.mpr
-                  intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]
+                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
                   rintro ⟨_, h⟩; exact h h1,
               show ({extension i true y} : Finset (Fin n → Bool)).filter
                   (fun x => x ∈ A ∧ extension i false y ∉ A) = ∅ from by
                   apply Finset.filter_eq_empty_iff.mpr
-                  intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]
+                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
                   rintro ⟨_, h⟩; exact h h0]
             simp [Finset.card_singleton]
           · apply Finset.disjoint_filter_filter
@@ -440,19 +440,19 @@ theorem two_sum_projection_eq {n : ℕ} (A : Finset (Fin n → Bool)) :
           · rw [show ({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A)
                   = {extension i false y} from by
                   apply Finset.filter_eq_self.mpr
-                  intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]; exact h0,
+                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
               show ({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A) = ∅ from by
                   apply Finset.filter_eq_empty_iff.mpr
-                  intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]; exact h1,
+                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1,
               show ({extension i false y} : Finset (Fin n → Bool)).filter
                   (fun x => x ∈ A ∧ extension i true y ∉ A) = {extension i false y} from by
                   apply Finset.filter_eq_self.mpr
-                  intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]
+                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
                   exact ⟨h0, h1⟩,
               show ({extension i true y} : Finset (Fin n → Bool)).filter
                   (fun x => x ∈ A ∧ extension i false y ∉ A) = ∅ from by
                   apply Finset.filter_eq_empty_iff.mpr
-                  intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]
+                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
                   rintro ⟨h, _⟩; exact h1 h]
             simp [Finset.card_singleton]
           · -- disjointness of singleton-filter sets
@@ -469,20 +469,20 @@ theorem two_sum_projection_eq {n : ℕ} (A : Finset (Fin n → Bool)) :
           · rw [show ({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A)
                   = {extension i false y} from by
                   apply Finset.filter_eq_self.mpr
-                  intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]; exact h0,
+                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
               show ({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A)
                   = {extension i true y} from by
                   apply Finset.filter_eq_self.mpr
-                  intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]; exact h1,
+                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1,
               show ({extension i false y} : Finset (Fin n → Bool)).filter
                   (fun x => x ∈ A ∧ extension i true y ∉ A) = ∅ from by
                   apply Finset.filter_eq_empty_iff.mpr
-                  intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]
+                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
                   rintro ⟨_, h⟩; exact h h1,
               show ({extension i true y} : Finset (Fin n → Bool)).filter
                   (fun x => x ∈ A ∧ extension i false y ∉ A) = ∅ from by
                   apply Finset.filter_eq_empty_iff.mpr
-                  intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]
+                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
                   rintro ⟨_, h⟩; exact h h0]
             simp [Finset.card_singleton]
           · -- disjointness of singleton-filter sets
@@ -496,20 +496,20 @@ theorem two_sum_projection_eq {n : ℕ} (A : Finset (Fin n → Bool)) :
           rw [Finset.card_union_of_disjoint, Finset.card_union_of_disjoint]
           · rw [show ({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A) = ∅ from by
                   apply Finset.filter_eq_empty_iff.mpr
-                  intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]; exact h0,
+                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
               show ({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A)
                   = {extension i true y} from by
                   apply Finset.filter_eq_self.mpr
-                  intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]; exact h1,
+                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1,
               show ({extension i false y} : Finset (Fin n → Bool)).filter
                   (fun x => x ∈ A ∧ extension i true y ∉ A) = ∅ from by
                   apply Finset.filter_eq_empty_iff.mpr
-                  intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]
+                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
                   rintro ⟨h, _⟩; exact h0 h,
               show ({extension i true y} : Finset (Fin n → Bool)).filter
                   (fun x => x ∈ A ∧ extension i false y ∉ A) = {extension i true y} from by
                   apply Finset.filter_eq_self.mpr
-                  intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]
+                  intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]
                   exact ⟨h1, h0⟩]
             simp [Finset.card_singleton]
           · -- disjointness of singleton-filter sets

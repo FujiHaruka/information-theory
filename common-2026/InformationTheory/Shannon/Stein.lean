@@ -274,6 +274,7 @@ theorem measurableSet_steinTypicalSet
     MeasurableSet (steinTypicalSet P Q n ε) :=
   (Set.toFinite (steinTypicalSet P Q n ε)).measurableSet
 
+omit [DecidableEq α] in
 set_option linter.unusedSectionVars false in
 /-- **P-side typicality probability tends to 1**: `μ {ω | jointRV Xs n ω ∈ T} → 1`. -/
 theorem steinTypicalSet_P_prob_tendsto_one
@@ -483,6 +484,7 @@ theorem steinTypicalSet_Q_prob_le
       _ = Real.exp (-((n : ℝ) * (K - ε))) := one_mul _
   exact h_sum_le
 
+omit [DecidableEq α] in
 /-- **Stein achievability (lower bound)**: there exists a sequence of α-level tests
 whose type-II error decays as `exp(-n · (klDiv P Q - δ))`.
 
@@ -506,6 +508,7 @@ theorem stein_achievability
         ((Measure.pi (fun _ : Fin n => P)) sᶜ).toReal ≤ ε ∧
         -((1 : ℝ) / n) * Real.log ((Measure.pi (fun _ : Fin n => Q)) s).toReal
           ≥ (klDiv P Q).toReal - δ := by
+  classical
   -- Use the Stein-typical set with slack `δ` as the rejection region.
   -- (1) `μ{ω | jointRV Xs n ω ∈ steinTypicalSet} → 1` (B.2),
   --     translated to `P^n(steinTypicalSet) → 1` via `hMapJoint`.
@@ -600,7 +603,7 @@ theorem stein_achievability
     -- And `Q^n({x}) ≤ Q^n(steinTypicalSet)` by monotonicity.
     have h_subset : ({x} : Set (Fin n → α)) ⊆ steinTypicalSet P Q n δ := by
       intro y hy
-      simp at hy
+      simp only [Set.mem_singleton_iff] at hy
       rw [hy]; exact hx
     have h_meas_sub : ((Measure.pi (fun _ : Fin n => Q)) {x}).toReal
         ≤ ((Measure.pi (fun _ : Fin n => Q)) (steinTypicalSet P Q n δ)).toReal :=
@@ -1027,7 +1030,7 @@ theorem stein_converse_finite_n
     exact Finset.prod_pos (fun i _ => hQpos (x_witness i))
   have h_Qn_s_pos : 0 < Qn.real s := by
     have h_subset : ({x_witness} : Set (Fin n → α)) ⊆ s := by
-      intro y hy; simp at hy; rw [hy]; exact hx_in_s
+      intro y hy; simp only [Set.mem_singleton_iff] at hy; rw [hy]; exact hx_in_s
     have : Qn.real {x_witness} ≤ Qn.real s := MeasureTheory.measureReal_mono h_subset
     linarith
   -- Qn sᶜ > 0: similarly, but only if sᶜ is nonempty. If s = univ, Qn sᶜ = 0;
@@ -1154,6 +1157,7 @@ noncomputable def steinOptimalBeta
     (P Q : Measure α) (n : ℕ) (ε : ℝ) : ℝ :=
   sInf (steinBetaSet P Q n ε)
 
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- `s := Set.univ` is always an α-level test (its complement has measure 0). -/
 lemma one_mem_steinBetaSet
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
@@ -1161,18 +1165,20 @@ lemma one_mem_steinBetaSet
     (1 : ℝ) ∈ steinBetaSet P Q n ε := by
   refine ⟨Set.univ, MeasurableSet.univ, ?_, ?_⟩
   · rw [Set.compl_univ]
-    simp
+    simp only [measure_empty, ENNReal.toReal_zero]
     exact hε
   · show 1 = ((Measure.pi (fun _ : Fin n => Q)) Set.univ).toReal
     rw [show ((Measure.pi (fun _ : Fin n => Q)) Set.univ).toReal
       = (Measure.pi (fun _ : Fin n => Q)).real Set.univ from rfl, probReal_univ]
 
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 lemma steinBetaSet_nonempty
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
     (n : ℕ) (ε : ℝ) (hε : 0 ≤ ε) :
     (steinBetaSet P Q n ε).Nonempty :=
   ⟨1, one_mem_steinBetaSet P Q n ε hε⟩
 
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 lemma steinBetaSet_bddBelow
     (P Q : Measure α) (n : ℕ) (ε : ℝ) :
     BddBelow (steinBetaSet P Q n ε) := by
@@ -1180,6 +1186,7 @@ lemma steinBetaSet_bddBelow
   rintro β ⟨s, _, _, rfl⟩
   exact ENNReal.toReal_nonneg
 
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 @[entry_point]
 lemma steinOptimalBeta_nonneg
     (P Q : Measure α) (n : ℕ) (ε : ℝ) :
@@ -1188,6 +1195,7 @@ lemma steinOptimalBeta_nonneg
   · exact le_csInf h fun _ ⟨_, _, _, hβ⟩ => hβ ▸ ENNReal.toReal_nonneg
   · simp [steinOptimalBeta, Set.not_nonempty_iff_eq_empty.mp h, Real.sInf_empty]
 
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 @[entry_point]
 lemma steinOptimalBeta_le_one
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
@@ -1195,6 +1203,7 @@ lemma steinOptimalBeta_le_one
     steinOptimalBeta P Q n ε ≤ 1 :=
   csInf_le (steinBetaSet_bddBelow P Q n ε) (one_mem_steinBetaSet P Q n ε hε)
 
+omit [DecidableEq α] [Nonempty α] in
 /-- Pointwise converse bound in exponential form: for any α-level test `s`,
 `Q^n s ≥ exp(-n * (K/(1-ε) + log 2 / (n(1-ε))))`. Derived from
 `stein_converse_finite_n` by taking `exp` of both sides. -/
@@ -1230,7 +1239,7 @@ lemma exp_le_Qn_of_alpha_level
     exact Finset.prod_pos (fun i _ => hQpos (x_w i))
   have h_Qn_s_pos : 0 < Qn.real s := by
     have h_subset : ({x_w} : Set (Fin n → α)) ⊆ s := by
-      intro y hy; simp at hy; rw [hy]; exact hx_in_s
+      intro y hy; simp only [Set.mem_singleton_iff] at hy; rw [hy]; exact hx_in_s
     have := MeasureTheory.measureReal_mono (μ := Qn) h_subset
     linarith
   have h_Qn_s_real_pos : 0 < ((Measure.pi (fun _ : Fin n => Q)) s).toReal := h_Qn_s_pos
@@ -1265,6 +1274,7 @@ lemma exp_le_Qn_of_alpha_level
   rw [Real.exp_log h_Qn_s_real_pos] at h_exp_chain
   exact h_exp_chain
 
+omit [DecidableEq α] [Nonempty α] in
 /-- The set `steinBetaSet` is bounded below by `exp(-n * (K/(1-ε) + log 2/(n(1-ε))))`,
 hence `steinOptimalBeta` is also. -/
 lemma exp_le_steinOptimalBeta
@@ -1280,6 +1290,7 @@ lemma exp_le_steinOptimalBeta
   rintro β ⟨s, hs, hα, rfl⟩
   exact exp_le_Qn_of_alpha_level P Q hPpos hPQ hQpos hε hε1 hn s hs hα
 
+omit [DecidableEq α] [Nonempty α] in
 /-- `steinOptimalBeta` is strictly positive (under our hypotheses). -/
 lemma steinOptimalBeta_pos
     (P Q : Measure α) [IsProbabilityMeasure P] [IsProbabilityMeasure Q]
@@ -1290,6 +1301,7 @@ lemma steinOptimalBeta_pos
     0 < steinOptimalBeta P Q n ε :=
   lt_of_lt_of_le (Real.exp_pos _) (exp_le_steinOptimalBeta P Q hPpos hPQ hQpos hε hε1 hn)
 
+omit [DecidableEq α] [Nonempty α] in
 /-- Converse-side upper bound on the rate:
 `-(1/n) log steinOptimalBeta ≤ K/(1-ε) + log 2/(n(1-ε))`. -/
 @[entry_point]
@@ -1319,6 +1331,7 @@ theorem steinOptimalBeta_log_le_of_converse
   have h_simp : -((1 : ℝ) / n) * (-((n : ℝ) * B)) = B := by field_simp
   linarith
 
+omit [DecidableEq α] in
 /-- Achievability-side lower bound on the rate: eventually
 `K - δ ≤ -(1/n) log steinOptimalBeta`. -/
 @[entry_point]
@@ -1369,7 +1382,7 @@ theorem steinOptimalBeta_log_ge_of_achievability
     exact Finset.prod_pos (fun i _ => hQpos (x_w i))
   have h_Qns_pos : 0 < Qn_s := by
     have h_subset : ({x_w} : Set (Fin n → α)) ⊆ s := by
-      intro y hy; simp at hy; rw [hy]; exact hx_in_s
+      intro y hy; simp only [Set.mem_singleton_iff] at hy; rw [hy]; exact hx_in_s
     have := MeasureTheory.measureReal_mono (μ := Qn) h_subset
     -- Qn.real {x_w} ≤ Qn.real s = Qn_s
     have h_eq : Qn.real s = Qn_s := rfl

@@ -153,6 +153,7 @@ lemma chernoffLogZ_continuous
 
 /-! ### A-4 `chernoffInfo` 達成性 + 非負性 -/
 
+omit [DecidableEq α] in
 /-- Chernoff information is attained: `∃ λ* ∈ Icc 0 1, chernoffInfo = -log Z(λ*)`. -/
 @[entry_point]
 theorem chernoffInfo_attained
@@ -170,6 +171,7 @@ theorem chernoffInfo_attained
   unfold chernoffInfo
   rw [h_sInf_eq]
 
+omit [DecidableEq α] in
 /-- `chernoffInfo P₁ P₂ ≥ 0`.
 
 `chernoffInfo := -sInf (log Z '' Icc 0 1)`. At `λ = 0`, `log Z(0) = log 1 = 0`, so
@@ -226,6 +228,7 @@ lemma chernoffZSum_swap (P₁ P₂ : α → ℝ) (lam : ℝ) :
 
 /-! ## Phase D — Hoeffding tradeoff exponent (Tier 0: 定義 + min 達成性) -/
 
+omit [DecidableEq α] in
 /-- `klDivPmf P P = 0`: KL divergence of any pmf with itself is zero.
 Useful for Hoeffding constraint set non-emptiness (`P₁ ∈ {Q : klDivPmf Q P₁ ≤ alpha}`). -/
 lemma klDivPmf_self_eq_zero
@@ -248,6 +251,7 @@ noncomputable def hoeffdingE2 (P₁ P₂ : α → ℝ) (alpha : ℝ) : ℝ :=
 def hoeffdingConstraintSet (P₁ : α → ℝ) (alpha : ℝ) : Set (α → ℝ) :=
   {Q : α → ℝ | Q ∈ stdSimplex ℝ α ∧ klDivPmf Q P₁ ≤ alpha}
 
+omit [DecidableEq α] in
 /-- The Hoeffding constraint set is **non-empty** when `α ≥ 0` and `P₁` is a positive pmf:
 `P₁` itself satisfies `klDivPmf P₁ P₁ = 0 ≤ α`. -/
 lemma hoeffdingConstraintSet_nonempty
@@ -259,17 +263,20 @@ lemma hoeffdingConstraintSet_nonempty
   · rw [klDivPmf_self_eq_zero P₁ hP₁_pos]
     exact h_alpha_nn
 
+omit [DecidableEq α] in
 /-- The Hoeffding constraint set is a **subset of the simplex**. -/
 lemma hoeffdingConstraintSet_subset_stdSimplex
     (P₁ : α → ℝ) (alpha : ℝ) :
     hoeffdingConstraintSet P₁ alpha ⊆ stdSimplex ℝ α :=
   fun _ hQ => hQ.1
 
+omit [DecidableEq α] in
 /-- The Hoeffding constraint set is **closed** (intersection of the closed simplex with
 the closed sublevel set of the continuous function `Q ↦ klDivPmf Q P₁`). -/
 lemma hoeffdingConstraintSet_isClosed
     (P₁ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (alpha : ℝ) :
     IsClosed (hoeffdingConstraintSet P₁ alpha) := by
+  classical
   -- K = stdSimplex ∩ {Q | klDivPmf Q P₁ ≤ alpha}.
   have h_simplex : IsClosed (stdSimplex ℝ α) := isClosed_stdSimplex ℝ α
   have h_cont : Continuous (fun Q : α → ℝ => klDivPmf Q P₁) :=
@@ -278,6 +285,7 @@ lemma hoeffdingConstraintSet_isClosed
     isClosed_le h_cont continuous_const
   exact h_simplex.inter h_sublevel
 
+omit [DecidableEq α] in
 /-- **Hoeffding `min` 達成性**: there exists `Q* ∈ K` realizing the infimum
 `hoeffdingE2 P₁ P₂ alpha = klDivPmf Q* P₂`.
 
@@ -292,6 +300,7 @@ theorem hoeffdingE2_attained
     (alpha : ℝ) (h_alpha_nn : 0 ≤ alpha) :
     ∃ Qstar ∈ hoeffdingConstraintSet P₁ alpha,
       hoeffdingE2 P₁ P₂ alpha = klDivPmf Qstar P₂ := by
+  classical
   -- K = hoeffdingConstraintSet P₁ alpha: closed (continuous KL preimage ∩ closed simplex),
   -- nonempty (contains P₁), and a subset of the compact simplex.
   have h_closed : IsClosed (hoeffdingConstraintSet P₁ alpha) :=
@@ -310,6 +319,7 @@ theorem hoeffdingE2_attained
   unfold hoeffdingE2
   exact h_sInf_eq
 
+omit [DecidableEq α] in
 /-- `hoeffdingE2 P₁ P₂ alpha ≥ 0`.
 
 `hoeffdingE2 := sInf (klDivPmf · P₂ '' K)`. Since `K` is nonempty and every element in
@@ -321,6 +331,7 @@ theorem hoeffdingE2_nonneg
     (hP₁_sum : ∑ a, P₁ a = 1)
     (alpha : ℝ) (h_alpha_nn : 0 ≤ alpha) :
     0 ≤ hoeffdingE2 P₁ P₂ alpha := by
+  classical
   unfold hoeffdingE2
   have h_ne : (hoeffdingConstraintSet P₁ alpha).Nonempty :=
     hoeffdingConstraintSet_nonempty P₁ hP₁_pos hP₁_sum alpha h_alpha_nn
@@ -450,6 +461,7 @@ lemma chernoffZSum_holder_mul
   rw [h_lhs, h_f_pow_sum, h_g_pow_sum] at hHolder
   exact hHolder
 
+omit [DecidableEq α] in
 /-- **`log Z(λ)` is convex on `Icc 0 1`**.
 
 Mediator of `chernoffInfo` 達成性 + 凸性 (Cover-Thomas 11.9.1 setup). -/
@@ -558,6 +570,7 @@ lemma chernoffMediator_lam_one
 
 /-! ### Phase D 残 — `hoeffdingE2` 一意性 (Csiszar projection + strict convexity 経由) -/
 
+omit [DecidableEq α] in
 /-- **Hoeffding `min` 達成点の一意性**: the constraint set `K` is convex (closed +
 sub-simplex の preimage of convex sublevel under convex `klDivPmf · P₁` is closed +
 convex), `klDivPmf · P₂` は `K` 上で strictly convex (full-support `P₂` から `stdSimplex` 上
@@ -574,6 +587,7 @@ theorem hoeffdingE2_unique
     (hQ₁_min : hoeffdingE2 P₁ P₂ alpha = klDivPmf Q₁ P₂)
     (hQ₂_min : hoeffdingE2 P₁ P₂ alpha = klDivPmf Q₂ P₂) :
     Q₁ = Q₂ := by
+  classical
   -- Strict convexity of `klDivPmf · P₂` on stdSimplex + both Q_i are minimizers ⇒ Q_1 = Q_2.
   -- Strategy: convex midpoint Q₃ := (Q₁ + Q₂) / 2 ∈ K (convexity of K).
   -- If Q₁ ≠ Q₂, then klDivPmf Q₃ P₂ < (klDivPmf Q₁ P₂ + klDivPmf Q₂ P₂) / 2 = hoeffdingE2,
@@ -753,6 +767,7 @@ lemma sum_prod_rpow_eq_Z_pow
   -- piFinset (fun _ => univ) = univ via Fintype.piFinset_univ.
   rw [Fintype.piFinset_univ]
 
+omit [DecidableEq α] in
 /-- **`bayesErrorMinPmf ≤ (1/2) · Z(λ)^n`** for each `λ ∈ Icc 0 1`.
 
 Cover-Thomas 11.9.1 の core inequality. Per-point `min(a, b) ≤ a^{1-λ} · b^λ` を
@@ -785,6 +800,7 @@ theorem bayesErrorMinPmf_le_half_Z_pow
 
 /-! ### C-3 Positivity of `bayesErrorMinPmf` (full support から自動) -/
 
+omit [DecidableEq α] in
 /-- **`bayesErrorMinPmf > 0`** under full support `P₁, P₂ > 0`. -/
 lemma bayesErrorMinPmf_pos
     (P₁ P₂ : α → ℝ) [Nonempty α]
@@ -805,6 +821,7 @@ lemma bayesErrorMinPmf_pos
 
 /-! ### C-4 Rate lower bound per `λ`: `-(1/n) log bayesErrorMinPmf ≥ -log Z(λ) - (log 2)/n` -/
 
+omit [DecidableEq α] in
 /-- For each fixed `λ ∈ Icc 0 1`,
 `-(1/n) log bayesErrorMinPmf ≥ -log Z(λ) + (log 2)/n` (eventually for `n ≥ 1`).
 
@@ -860,6 +877,7 @@ lemma chernoff_rate_ge_neg_log_Z_per_lam
   rw [h_simp] at h_mul
   linarith
 
+omit [DecidableEq α] in
 /-- For each fixed `λ* ∈ Icc 0 1` attaining `chernoffInfo` (= `-log Z(λ*)`),
 `-(1/n) log bayesErrorMinPmf ≥ chernoffInfo + (log 2)/n` (eventually for `n ≥ 1`). -/
 lemma chernoff_rate_ge_chernoffInfo_eventually
@@ -875,6 +893,7 @@ lemma chernoff_rate_ge_chernoffInfo_eventually
   rw [hlam_eq]
   linarith
 
+omit [DecidableEq α] in
 /-- **Auxiliary upper bound**: `rate n ≤ -log p_min - (log 2)/n` (loose, just to get
 boundedness for `liminf` plumbing). Here `p_min := min over a of (min (P₁ a) (P₂ a))`. -/
 private lemma chernoff_rate_le_aux_upper
@@ -981,6 +1000,7 @@ private lemma chernoff_rate_le_aux_upper
     linarith [this]
   linarith
 
+omit [DecidableEq α] in
 /-- **Chernoff achievability** (rate-side lower bound):
 `liminf_n -(1/n) log bayesErrorMinPmf ≥ chernoffInfo P₁ P₂`. -/
 theorem chernoff_achievability
@@ -1034,6 +1054,7 @@ liminf -(1/n) log bayesErrorMinPmf ≥ chernoffInfo P₁ P₂
 ```
 -/
 
+omit [DecidableEq α] in
 /-- **Chernoff achievability** (T1-B Tier 1 publish, Cover-Thomas Theorem 11.9.1 半分):
 `bayesErrorMinPmf` の指数収束 rate は少なくとも `chernoffInfo P₁ P₂` 以上.
 
