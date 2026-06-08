@@ -46,7 +46,7 @@ Mathlib 全体で `Defs.lean` 214 / `Basic.lean` 727 ディレクトリという
 |---|---|---|
 | `InformationTheory/Shannon/` 直下のファイル | **205 / 233（88%）** | **40**（真の単独概念のみ） |
 | `Shannon/` のサブディレクトリ | **0** | **25** |
-| 1500 行超のファイル | **13**（最大 3589 行 = 上限の 2.4 倍） | 14（**分割は未着手・別パス**） |
+| 1500 行超のファイル | **13**（最大 3589 行 = 上限の 2.4 倍） | **0**（2026-06-09 分割完了。最大 3589 行 = V2DeBruijnAssembly を 4 part 化） |
 
 移行前は `Shannon/` 以外（`Probability/` `Meta/` `Polymatroid/`）だけがサブディレクトリ化され、**`Shannon/` だけが例外的にフラット集中**していた。ファイル名接頭辞が既に暗黙の階層を成していた（`EPI*` 43、`ChannelCoding*` 13、`Huffman*` 12、`AWGN*` 14、`LZ78*` 11 …）。これを下記ターゲット形に従ってサブディレクトリへ昇格済み（→「移行ステータス」）。
 
@@ -72,7 +72,8 @@ Mathlib 全体で `Defs.lean` 214 / `Basic.lean` 727 ディレクトリという
 ディレクトリ再編は **完了**（全主要接頭辞クラスタ + EPI 二段ネスト + Cramer + クリーンなミニクラスタ）。各クラスタ後 `lake build InformationTheory` 0 error で検証、commit/push 済み。25 サブディレクトリ: `AEP AWGN ChannelCoding Chernoff Cramer EntropyPower EPI FisherInfo GeneralDMC Han Hoeffding Huffman HypercubeEdge IIDProductInput LZ78 MaxEntropy ParallelGaussian Pinsker RateDistortion Sanov ShannonCode SlepianWolf SMB Stationary WynerZiv`。
 
 - **namespace は変更していない**（flat `InformationTheory.Shannon` のまま）。Lean 4 では namespace とファイルパスは独立で、namespace を変えると宣言名が全変化し term 参照まで壊れ blast radius が激増するため、**移行はファイル移動 + import パス書換のみ**。
-- **未完（別パス）**: ① 1500 行超 14 ファイルの分割（再編とは独立）。② 真の単独 40 ファイルはフラット維持（1 ファイルのサブ化は無価値）。③ docstring/プランの旧モジュールパス prose 参照の sweep（build 非依存）。
+- **完了**: ① 1500 行超 14 ファイルの分割（2026-06-09 完了。subdir + part + umbrella 方式、全 part < 1500 行、namespace 不変、各 `lake build InformationTheory` EXIT=0 で検証）。
+- **未完（別パス）**: ② 真の単独 40 ファイルはフラット維持（1 ファイルのサブ化は無価値）。③ docstring/プランの旧モジュールパス prose 参照の sweep（build 非依存）。
 
 ### 残作業の進め方（1500 行分割 等）
 
