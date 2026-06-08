@@ -246,6 +246,9 @@ import InformationTheory.Shannon.EPI.Case1.RatioLimit.Assembly
 import InformationTheory.Shannon.EPI.Case1.RatioLimit.PathRegular
 import InformationTheory.Shannon.EPI.Case1.RatioLimit.Producer
 import InformationTheory.Shannon.EPI.Case1.RatioLimit
+import InformationTheory.Shannon.EPI.Case1.TwoTime.Core
+import InformationTheory.Shannon.EPI.Case1.TwoTime.Paths
+import InformationTheory.Shannon.EPI.Case1.TwoTime.Object
 import InformationTheory.Shannon.EPI.Case1.TwoTime
 import InformationTheory.Shannon.EPI.DensityForm
 import InformationTheory.Shannon.EPI.Case1.SmoothingLimit
