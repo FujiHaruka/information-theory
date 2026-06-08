@@ -42,14 +42,13 @@ Mathlib 全体で `Defs.lean` 214 / `Basic.lean` 727 ディレクトリという
 
 ## 本リポジトリの現状診断
 
-| 指標 | 値 |
-|---|---|
-| `InformationTheory/Shannon/` 直下のファイル | **205 / 233（88%）** |
-| `Shannon/` のサブディレクトリ | **0** |
-| 1500 行超のファイル | **13**（最大 3589 行 = 上限の 2.4 倍） |
-| 階層が複合ファイル名に埋め込まれた例 | `EPIConvDensityGaussianGateway`, `EPIInfiniteVarianceTruncation`, `ChannelCodingConverseGeneralStrong` … |
+| 指標 | 移行前 | 移行後（2026-06-08） |
+|---|---|---|
+| `InformationTheory/Shannon/` 直下のファイル | **205 / 233（88%）** | **40**（真の単独概念のみ） |
+| `Shannon/` のサブディレクトリ | **0** | **25** |
+| 1500 行超のファイル | **13**（最大 3589 行 = 上限の 2.4 倍） | 14（**分割は未着手・別パス**） |
 
-`Shannon/` 以外（`Probability/` `Meta/` `Polymatroid/`）はサブディレクトリ化されており、**`Shannon/` だけが例外的にフラット集中**している。ファイル名の接頭辞が既に暗黙の階層を成している（`EPI*` 40+、`ChannelCoding*` 13、`Huffman*` 12、`Fisher*` 11、`Rate*` 9 …）。
+移行前は `Shannon/` 以外（`Probability/` `Meta/` `Polymatroid/`）だけがサブディレクトリ化され、**`Shannon/` だけが例外的にフラット集中**していた。ファイル名接頭辞が既に暗黙の階層を成していた（`EPI*` 43、`ChannelCoding*` 13、`Huffman*` 12、`AWGN*` 14、`LZ78*` 11 …）。これを下記ターゲット形に従ってサブディレクトリへ昇格済み（→「移行ステータス」）。
 
 ## 適用 / ターゲット形
 
@@ -68,11 +67,17 @@ Mathlib 全体で `Defs.lean` 214 / `Basic.lean` 727 ディレクトリという
 
 トピック候補（接頭辞クラスタより）: `EPI/`（Stam / Conv / Case1 / Unconditional / Blachman / Vitali / G2 / InfiniteVariance）, `ChannelCoding/`, `Huffman/`, `FisherInfo/`, `RateDistortion/`, `SlepianWolf/`, `Wyner/`, `Hoeffding/`, `Sanov/`, `LZ78/`, `Han/`, `MethodOfTypes/`, `AWGN/`, `Gaussian/`。各トピック内は `Defs` / `Basic` / アスペクト別に整える。1500 行超 13 ファイルは移行時に分割。
 
-## 移行の進め方（別タスク）
+## 移行ステータス（2026-06-08 実施）
 
-これは大規模な機械リファクタ（`git mv` + 全 `import InformationTheory.Shannon.Foo` の書換 + `InformationTheory.lean` 再登録 + namespace 整合）。本ファイルは**規約とターゲット形を定める**もので、移行自体は段階計画を立てて別タスクで行う。指針:
+ディレクトリ再編は **完了**（全主要接頭辞クラスタ + EPI 二段ネスト + Cramer + クリーンなミニクラスタ）。各クラスタ後 `lake build InformationTheory` 0 error で検証、commit/push 済み。25 サブディレクトリ: `AEP AWGN ChannelCoding Chernoff Cramer EntropyPower EPI FisherInfo GeneralDMC Han Hoeffding Huffman HypercubeEdge IIDProductInput LZ78 MaxEntropy ParallelGaussian Pinsker RateDistortion Sanov ShannonCode SlepianWolf SMB Stationary WynerZiv`。
+
+- **namespace は変更していない**（flat `InformationTheory.Shannon` のまま）。Lean 4 では namespace とファイルパスは独立で、namespace を変えると宣言名が全変化し term 参照まで壊れ blast radius が激増するため、**移行はファイル移動 + import パス書換のみ**。
+- **未完（別パス）**: ① 1500 行超 14 ファイルの分割（再編とは独立）。② 真の単独 40 ファイルはフラット維持（1 ファイルのサブ化は無価値）。③ docstring/プランの旧モジュールパス prose 参照の sweep（build 非依存）。
+
+### 残作業の進め方（1500 行分割 等）
+
+これは大規模な機械リファクタ（`git mv` + 全 `import InformationTheory.Shannon.Foo` の書換 + `InformationTheory.lean` 再登録）。指針:
 
 - **依存グラフを先に取る**: 移動前に `scripts/dep_consumers.sh <name> --transitive`（被参照）/ `scripts/dep_graph.sh <name>`（forward）で blast radius を把握し、循環を作らない安全な順序を決める。
-- **トピック単位で 1 クラスタずつ**移行し、各クラスタ後に `lake build InformationTheory` で olean を更新（dep ツールはルート olean を読むため）。
-- **接頭辞を落とす**リネームと**ディレクトリ移動**は同時に行う（`EPIStamDischarge` → `EPI/Stam/Discharge`）。
+- **import 書換は末尾アンカー or 境界マッチ sed** で機械的に。境界に `.` を含めると base 式（`AWGN → AWGN.Basic`）が直前置換後の `AWGN.` に再マッチして二重置換するので、**境界は `([ \t]|$)`（空白か行末のみ）に限定**する。書換後 `lake build InformationTheory` で olean 更新 + 検証（dep ツールはルート olean を読むため）。末尾コメント付き import 行を見落とさないこと。
 - 1500 行超ファイルの**分割**は移行と同じ PR で行うと import 書換が一度で済む。
