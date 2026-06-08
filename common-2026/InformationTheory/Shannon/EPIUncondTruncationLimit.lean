@@ -263,7 +263,9 @@ negative part `B(μW)`.
 - Tonelli + 平行移動不変: `∫⁻ z, ofReal(max (φ (r z)) 0) ≤ ∫⁻ z ∫⁻ v ofReal(max(φ(fW(z-v)))0) ∂μV
   = ∫⁻ v ∫⁻ z ofReal(Cq(z-v)) ∂vol ∂μV = (μV univ)·C = 1·C = C = B(μW) < ⊤`.
 
-@residual(plan:epi-uncond-truncation-lsc-plan) -/
+proof-done (0 sorry)。`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free)。
+非循環/非バンドル/非退化: 結論 (和周辺負部 lintegral 有限性) は仮説 (`hμW` a.c. + `B(μW)<⊤`) と
+非同型、両仮説は regularity precondition、`:True`/退化なし。@audit:ok -/
 private theorem negPart_negMulLog_conv_single_ne_top
     (μW μV : Measure ℝ) [IsFiniteMeasure μW] [IsProbabilityMeasure μV] (hμW : μW ≪ volume)
     (hμW_negPart_fin :
