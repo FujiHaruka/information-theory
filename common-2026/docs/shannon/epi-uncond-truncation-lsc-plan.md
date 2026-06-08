@@ -2,7 +2,7 @@
 
 > **Parent**: [`epi-unconditional-moonshot-plan.md`](epi-unconditional-moonshot-plan.md) §Sub-plan 一覧 S5 (W-Y2)
 > **slug**: `epi-uncond-truncation-lsc-plan` (= parent S5 が参照する slug、`@residual(plan:epi-uncond-truncation-lsc-plan)` と一致)。
-> **status**: 2026-06-08 起草 (route β' feasibility 評価 + 着手 skeleton)。
+> **status**: 2026-06-08 **route β' 完了 (proof-done + 独立監査 all-OK)**。gateway ⊤ 枝 `differentialEntropyExt_top_of_indep_add_unconditional` が sorryAx-free + (i-a) 非継承を機械確認。
 > **前提資産**: finite ② `differentialEntropyExt_eq_condEntExt_add_klDiv_of_finite` (`EPIUncondCondEntropyExt.lean:262`、11 regularity 仮説、`@audit:ok`) が proof-done 着地済。
 
 ## 進捗
@@ -10,8 +10,18 @@
 - [x] Phase 0 — feasibility gate ✅ **GO** (2026-06-08、scratch `/tmp/route_beta_phase0.lean` 0 error/0 sorry)。weak-conv 回避確定。
 - [x] Phase 1 — skeleton ✅ (核 lemma signature を `:= by sorry` で確定、`InformationTheory.lean` 編入)。
 - [x] Phase 2 — per-n finite-entropy 単調性 ✅ **proof-done** (2026-06-08、`differentialEntropyExt_mono_add_truncW` sorryAx-free、独立 honesty-auditor all OK)。**ルート転換で `hκ_dens_meas` 真 gap を全廃** (判断ログ 5)。
-- [ ] Phase 3 — n→∞ 極限 (単調収束 / EReal ⊤ 表現で weak-conv LSC 回避) 📋 ← **次の critical path**
-- [ ] Phase 4 — gateway ⊤ 枝 closure + assembly + 独立 honesty-auditor 📋
+- [x] Phase 3 — W-marginal ⊤-divergence ✅ **proof-done** (2026-06-08、commit 5cd28ca/803e489)。Fatou helper `differentialEntropyExt_posPart_le_liminf_of_ae_tendsto` (`klDiv_le_liminf_of_ae_tendsto` 同型) + `differentialEntropyExt_truncW_tendsto_top` (⊤ 専用に rescope、`h(Q_n.map W)→⊤`)。density a.e. 各点収束で weak-conv 回避確定 (L-Uncond-Y-roi 不発動)。独立 honesty-auditor all-OK。
+- [x] Phase 4 — gateway ⊤ 枝 closure + assembly ✅ **proof-done** (2026-06-08、commit 803e489)。`differentialEntropyExt_top_of_indep_add_unconditional` を route (d'') チェーンで closure、**signature に hyp 追加なし** (`B(W)≠⊤` を `hW_top` から `negPart_lintegral_ne_top_of_diffEntExt_top` で導出)。`#print axioms` = sorryAx-free、**(i-a) `differentialEntropyExt_indep_add_eq_add_klDiv` 非継承を機械確認** (truncation ルートが無条件版② を genuine 迂回)。独立 honesty-auditor all-OK (under-hyp 反例試行 PASS、`_unconditional` 命名 = NOT name-laundering)。
+
+## route β' 完了サマリ (2026-06-08)
+
+W-Y2 = 「無限エントロピー a.c. 入力 `h(W)=⊤` で gateway ⊤ 枝 `h(W)=⊤ ⟹ h(W+V)=⊤` を無条件 (truncation 近似) で genuine 着地」を**達成**。成果物 `differentialEntropyExt_top_of_indep_add_unconditional` (`EPIUncondTruncationLimit.lean`) は sorryAx-free + 独立監査 tier-1。ファイル全体 0 sorry / 0 @residual。
+
+**統合に関する findings (次フェーズ = method-Y assembly への申し送り)**:
+1. **import 循環**: `EPIUncondTruncationLimit` は `EPIUncondMonotone` を import 済。よって既存 ⊤ 伝播 `differentialEntropyExt_top_of_indep_add` (Monotone:142) を新 lemma 呼出に**その場で rewire 不可** (循環)。将来 headline へ wire する assembly は両 file の下流 (Truncation を import する新 file or Phase 5) で新 lemma を直接呼ぶ。
+2. **現状 consumer 0**: `differentialEntropyExt_top_of_indep_add` / `entropyPowerExt_mono_add` / 新 lemma いずれも direct consumer 0 (dep_consumers 確認)。gateway はまだ headline 未接続ゆえ「rewire 対象」が存在しない = Phase 4 §consumer rewire は moot。
+3. **route β' は ⊤ 枝のみ閉じる**: full gateway `entropyPowerExt_mono_add` は full `mono_add` (有限枝で (i-a) 依存) 経由。route β' は有限枝を閉じないため、これだけでは gateway は proof-done 化しない。有限枝の無条件化は別 sub-task (W-Y1、(i-a) は等式版が証明不能確定 → 不等式ルートの pivot 要)。**有望な次手**: Phase 2 の per-fibre translate Gibbs 機構 (`differentialEntropyExt_mono_add_truncW`、truncation 不要の有限枝) を **un-truncated W に直接適用**して `mono_add` の有限枝を (i-a) 抜きで閉じられる可能性 — 要 feasibility 検証。
+4. **除去可能な redundant hyp** (非必須、将来 signature 整理): `differentialEntropyExt_truncW_tendsto_top` の `hW_negPart_fin` は `hW_top` が含意 (redundant)、`truncW_map_density_tendsto_ae` の `hW_ac` は unused (over-hypothesized)。両者 honesty-safe、docstring に除去可能と記録済。
 
 ## ゴール / Approach
 
@@ -187,12 +197,12 @@ proof-log: yes (per-n finite-entropy 単調性が route T と同じ Gibbs+maxent
   `hWV_ne_bot` (route T 負部 lemma の single-component 一般化) / `hκ_cross_int` / `hκ_KL` (downstream)。
 - [ ] proof-log に「どの仮説が compact support から自動か / どれを明示供給したか」を記録。
 
-## Phase 3 — W-marginal ⊤-divergence (Fatou、weak-conv 回避) 📋
+## Phase 3 — W-marginal ⊤-divergence (Fatou、weak-conv 回避) ✅ 完了
 
 proof-log: yes (極限 step が weak-conv LSC wall を回避できるかが feasibility の分かれ目)。
 
 **スコープ確定 (判断ログ6)**: route (d'') では full `Tendsto` (任意 h(W)) は不要、**⊤-divergence 専用**に絞る。
-`differentialEntropyExt_truncW_tendsto` (full Tendsto、line ~1068) は over-scoped = ⊤ ケースのみ要 (signature 縮小検討)。
+→ **実施済**: full Tendsto は over-scoped と確定し `differentialEntropyExt_truncW_tendsto_top` (⊤ 専用、`hW_top` 前提で `𝓝 ⊤`) に rescope。
 
 - [ ] **Fatou helper** `differentialEntropyExt_posPart_le_liminf_of_ae_tendsto` (line ~495): density a.e. 収束
   → `A(μ) ≤ liminf A(μ_n)`。`klDiv_le_liminf_of_ae_tendsto` (`EPIG2KLFatouLSC.lean:112`) と完全同型 (klFun→negMulLog 差替)。
@@ -200,7 +210,7 @@ proof-log: yes (極限 step が weak-conv LSC wall を回避できるかが feas
   → `h(W_n)=A(W_n)−B(W_n)→⊤`。density a.e. 収束は `tendsto_measure_iUnion_atTop` (route T) ベースで供給。
 - [ ] **weak-conv 不使用の担保**: `tendsto_iff_forall_integral_tendsto` (弱収束定義) を使わない。使ったら L-Uncond-Y-roi。
 
-## Phase 4 — ⊤ 枝 closure (route (d'') = 測度 domination + ℝ≥0∞ Gibbs) + 監査 📋
+## Phase 4 — ⊤ 枝 closure (route (d'') = 測度 domination + ℝ≥0∞ Gibbs) + 監査 ✅ 完了
 
 **route (d'') 確定 (判断ログ6)**: 当初の「`h(W_n+V)→⊤` から `le_top` で `h(W+V)=⊤`」は **和列 tendsto**
 `h(Q_n.map(W+V))→h(P.map(W+V))` を要し、その A 部は Fatou の逆向き (reverse-Fatou) で出ない。
