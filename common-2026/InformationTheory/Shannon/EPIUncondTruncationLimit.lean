@@ -129,7 +129,12 @@ cross-entropy の正部・負部 (ℝ≥0∞):
 * `crossNeg μ ν := ∫⁻ x, ofReal (log fν x) ∂μ`  (= `∫ (log fν)⁺ dμ`)
 
 ただし `fν x := (ν.rnDeriv volume x).toReal`。`crossEnt(μ,ν) = -∫ log fν ∂μ = crossPos - crossNeg`
-(ℝ で書くと subtraction、ℝ≥0∞ では ⊤-⊤ 回避のため移項形で扱う)。 -/
+(ℝ で書くと subtraction、ℝ≥0∞ では ⊤-⊤ 回避のため移項形で扱う)。
+
+**atom 2 全体 proof-done (sorryAx-free)**: `crossPos_self`/`crossNeg_self` (self-identity) +
+`ennreal_gibbs_rearranged` (consumer form、`A(μ)=⊤` 許容) が `#print axioms` で
+`[propext, Classical.choice, Quot.sound]`。⊤-case Gibbs は **負部 `∫⁻ ofReal(-log r) ∂μ ≤ 1`**
+(普遍定数 1-有界 = klFun≥0 の content、`-r log r ≤ 1`) で genuine 着地。 -/
 
 /-- **cross-entropy 正部** (ℝ≥0∞): `∫⁻ x, ofReal (-log ((ν.rnDeriv volume x).toReal)) ∂μ`。
 `ν` の対数密度の **負値部** を `μ` で積分 (ofReal が負部 = `log fν < 0` のとき 0 clamp ⟹
@@ -288,21 +293,26 @@ private theorem ennreal_gibbs_rearranged_of_finite_ent {μ ν : Measure ℝ}
 の核心。`crossPos μ ν` も ⊤ を許す。一方 `B(μ)` (= μ 自身の負部、`hμ_negPart_fin`) と
 `crossNeg μ ν` (= 負部 cross-entropy、atom 1 domination で `(P E)⁻¹·B(ν) < ⊤`) は finite に固定。
 
-**証明 (A(μ) で場合分け)**:
+**証明 (A(μ) で場合分け、proof-done)**:
 - **A(μ) < ⊤**: μ 有限微分エントロピー (A<⊤ ∧ B<⊤ で `negMulLog∘fμ` 可積分) →
   `crossPos μ ν` で更に場合分け: ⊤ なら RHS=⊤ で `le_top`、finite なら cross-entropy μ-可積分
   (crossPos<⊤ ∧ crossNeg<⊤ で `log∘fν` 可積分) → finite-entropy 版 `_of_finite_ent` に委譲。
-- **A(μ) = ⊤**: LHS = ⊤、`B(μ)<⊤` ゆえ RHS=⊤ には `crossPos μ ν = ⊤` が必要。これは
-  `A(μ)=⊤ ∧ B(μ)<⊤` (= h(μ)=+∞) から `crossPos μ ν = ⊤` を出す **⊤-case Gibbs**。
-  ℝ-valued Gibbs (`differentialEntropy_le_cross_entropy`) は `hμ_ent` (= A<⊤) を必須にし、
-  A=⊤ では `differentialEntropy μ` が Bochner 慣行で `0` に退化するため使えない。pointwise/
-  subadditivity ルートも `∫⁻ ofReal(-log r) ∂μ` が同時に ⊤ になりうるため失敗 (構造的)。
-  genuine な ℝ≥0∞ klFun 非負分解 (ofReal 非加法性を跨ぐ) が要る → Phase 4 closure 残課題。
+- **A(μ) = ⊤**: `A(μ)=⊤ ⟹ crossPos μ ν = ⊤` (⊤-case Gibbs、finiteness precondition 不要) を出し、
+  RHS=`crossPos+B(μ)=⊤` で `le_top`。核は **負部の普遍定数 1-有界** (= klFun≥0 の content):
+  1. pointwise subadditivity (μ-a.e.、`-log fμ = -log fν + -log r`, `r := dμ/dν`):
+     `ofReal(-log fμ) ≤ ofReal(-log fν) + ofReal(-log r)` (`ENNReal.ofReal_add_le`)。積分して
+     `A(μ) = crossPos μ μ ≤ crossPos μ ν + ∫⁻ ofReal(-log r) ∂μ` (`crossPos_self` で `crossPos μ μ = A(μ)`)。
+  2. `∫⁻ ofReal(-log r) ∂μ ≤ 1`: change-of-measure `lintegral_rnDeriv_mul` で ν へ移し
+     `∫⁻ ofReal(r·(-log r)) ∂ν`、各 fibre で `-r log r ≤ 1 - r ≤ 1` (`Real.log_le_sub_one_of_pos`
+     を `1/r` に適用)、`∫⁻ 1 ∂ν = ν univ = 1`。
+  3. `A(μ)=⊤ ≤ crossPos μ ν + 1`、`1 ≠ ⊤` ゆえ `crossPos μ ν = ⊤`。
+  (当初 #2 ルートを「負部が `crossNeg+A` で wrong-direction」と誤判定したが、負部 = dμ/dν の log で
+  cross 項でなく、`-r log r ≤ 1` の普遍定数で抑えられる = klFun≥0 が効く。orchestrator escalate で訂正。)
 
 `hμ_ac`/`hν_ac`/`hμν` は絶対連続性、`hμ_negPart_fin` (= B(μ)<⊤) / `hCN_fin` (= crossNeg μ ν<⊤)
-は有限性 regularity precondition (結論核を encode せず、非 load-bearing: B(μ)<⊤ + crossNeg<⊤ を
-grant しても A=⊤⟹crossPos=⊤ の Gibbs 核は出ない)。
-@residual(plan:epi-uncond-truncation-lsc-plan) -/
+は有限性 regularity precondition (A<⊤ 枝で finite-entropy 版へ委譲する際の integrability 供給に使用、
+A=⊤ 枝では未使用 = 結論核を encode せず非 load-bearing。downstream assembly が同じ finiteness を持つ)。
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free)。@audit:ok -/
 private theorem ennreal_gibbs_rearranged {μ ν : Measure ℝ}
     [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (hμ_ac : μ ≪ volume) (hν_ac : ν ≪ volume) (hμν : μ ≪ ν)
@@ -317,25 +327,101 @@ private theorem ennreal_gibbs_rearranged {μ ν : Measure ℝ}
   set B : ℝ≥0∞ := ∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((μ.rnDeriv volume x).toReal))) ∂volume
     with hB
   by_cases hA_top : A = ⊤
-  · -- A(μ) = ⊤ branch. LHS = `⊤ + crossNeg = ⊤`; with `B < ⊤` the goal needs `crossPos μ ν = ⊤`.
-    -- 残課題 = genuine ⊤-case Gibbs `A=⊤ ∧ B<⊤ ∧ crossNeg<⊤ ⟹ crossPos μ ν = ⊤`
-    -- (= h(μ)=+∞ ⟹ cross-entropy=+∞)。
-    --
-    -- 反証済の elementary route (CLAUDE.md「反証義務」):
-    -- (1) ℝ-valued Gibbs `differentialEntropy_le_cross_entropy`: `hμ_ent` (= A<⊤) 必須。A=⊤ では
-    --     `differentialEntropy μ = ∫ negMulLog fμ` が Bochner 慣行 (非可積分→0) で退化 = 使用不能。
-    -- (2) pointwise ofReal subadditivity (`-log fμ = -log fν + -log r`、r=μ.rnDeriv ν):
-    --     `A ≤ crossPos + ∫⁻ ofReal(-log r) ∂μ` を出すが、これは Gibbs の **逆向き**
-    --     (`∫⁻ ofReal(-log r) ∂μ` = llr 負部 ≤ crossNeg + A で B に bound されない)。
-    -- (3) combine-then-pointwise: `ofReal(-log fμ)+ofReal(log fν) ≤ ofReal(-log fν)+ofReal(log fμ)`
-    --     は pointwise FALSE (ofReal 符号 clamp、反例 `log fμ=-5,log fν=3`)。
-    -- 真の Gibbs は klFun 凸性/非負 (`klDiv_eq_lintegral_klFun_of_ac` + `klFun≥0`) を積分した
-    -- 後にしか効かず、ofReal 非加法性を跨ぐ ℝ≥0∞ klFun 分解 (or 密度 truncation + 有限 Gibbs の
-    -- monotone-limit、いずれも 50-100 行規模) が要る。proof-pivot-advisor への escalate 推奨
-    -- (本 atom は route (d'') の load-bearing piece、詰まり方は klFun-分解 vs truncation-limit の
-    -- 設計判断に直結)。
-    -- @residual(plan:epi-uncond-truncation-lsc-plan)
-    sorry
+  · -- A(μ) = ⊤ branch. LHS = `⊤ + crossNeg = ⊤`; goal needs `crossPos μ ν = ⊤`, then RHS = ⊤.
+    -- ⊤-case Gibbs: `A(μ) = ⊤ ⟹ crossPos μ ν = ⊤` via pointwise subadditivity
+    -- (`-log fμ = -log fν + -log r`, `r := dμ/dν`) + **negative part 1-bounded** (`-r log r ≤ 1`,
+    -- = klFun ≥ 0 content). This needs no finiteness precondition.
+    have hCP_top : crossPos μ ν = ⊤ := by
+      -- The `dμ/dν` density as a real and the `μ`-a.e. chain `log fμ = log r + log fν`.
+      set r : ℝ → ℝ := fun x => (μ.rnDeriv ν x).toReal with hr_def
+      have h_rn_chain_μ : μ.rnDeriv ν * ν.rnDeriv volume =ᵐ[μ] μ.rnDeriv volume :=
+        hμ_ac.ae_le (Measure.rnDeriv_mul_rnDeriv hμν)
+      have h_rn_μν_pos : ∀ᵐ x ∂μ, 0 < μ.rnDeriv ν x := Measure.rnDeriv_pos hμν
+      have h_rn_μν_lt_top : ∀ᵐ x ∂μ, μ.rnDeriv ν x < ∞ :=
+        hμν.ae_le (Measure.rnDeriv_lt_top μ ν)
+      have h_rn_μvol_pos : ∀ᵐ x ∂μ, 0 < μ.rnDeriv volume x := Measure.rnDeriv_pos hμ_ac
+      have h_rn_νvol_lt_top : ∀ᵐ x ∂μ, ν.rnDeriv volume x < ∞ :=
+        hμ_ac.ae_le (Measure.rnDeriv_lt_top ν volume)
+      -- Step 2 (μ-a.e.): `ofReal(-log fμ) ≤ ofReal(-log fν) + ofReal(-log r)`.
+      have hsub : ∀ᵐ x ∂μ,
+          ENNReal.ofReal (-Real.log ((μ.rnDeriv volume x).toReal))
+            ≤ ENNReal.ofReal (-Real.log ((ν.rnDeriv volume x).toReal))
+              + ENNReal.ofReal (-Real.log (r x)) := by
+        filter_upwards [h_rn_chain_μ, h_rn_μν_pos, h_rn_μν_lt_top, h_rn_μvol_pos, h_rn_νvol_lt_top]
+          with x h_chain h_μν_pos h_μν_lt_top h_μvol_pos h_νvol_lt_top
+        have h_combine : μ.rnDeriv volume x = μ.rnDeriv ν x * ν.rnDeriv volume x := by
+          rw [← h_chain]; rfl
+        have hr_pos : 0 < r x := ENNReal.toReal_pos h_μν_pos.ne' h_μν_lt_top.ne
+        have hν_vol_ne : ν.rnDeriv volume x ≠ 0 := by
+          intro h0; rw [h_combine, h0, mul_zero] at h_μvol_pos; exact lt_irrefl 0 h_μvol_pos
+        have hν_vol_pos : 0 < (ν.rnDeriv volume x).toReal :=
+          ENNReal.toReal_pos hν_vol_ne h_νvol_lt_top.ne
+        -- `log fμ = log r + log fν`.
+        have hlog : Real.log ((μ.rnDeriv volume x).toReal)
+            = Real.log (r x) + Real.log ((ν.rnDeriv volume x).toReal) := by
+          rw [h_combine, ENNReal.toReal_mul,
+            Real.log_mul (ENNReal.toReal_pos h_μν_pos.ne' h_μν_lt_top.ne).ne' hν_vol_pos.ne']
+        rw [show -Real.log ((μ.rnDeriv volume x).toReal)
+            = -Real.log ((ν.rnDeriv volume x).toReal) + -Real.log (r x) by rw [hlog]; ring]
+        exact ENNReal.ofReal_add_le
+      -- Step 3: integrate. `A(μ) = crossPos μ μ ≤ crossPos μ ν + ∫⁻ ofReal(-log r) ∂μ`.
+      have hA_eq : A = crossPos μ μ := (crossPos_self μ hμ_ac).symm
+      have hint_mono : crossPos μ μ
+          ≤ ∫⁻ x, (ENNReal.ofReal (-Real.log ((ν.rnDeriv volume x).toReal))
+              + ENNReal.ofReal (-Real.log (r x))) ∂μ := by
+        rw [crossPos]; exact lintegral_mono_ae hsub
+      have hsplit : (∫⁻ x, (ENNReal.ofReal (-Real.log ((ν.rnDeriv volume x).toReal))
+            + ENNReal.ofReal (-Real.log (r x))) ∂μ)
+          = crossPos μ ν + ∫⁻ x, ENNReal.ofReal (-Real.log (r x)) ∂μ := by
+        rw [crossPos]
+        exact lintegral_add_left'
+          ((Real.measurable_log.comp (ν.measurable_rnDeriv volume).ennreal_toReal).neg
+            |>.ennreal_ofReal.aemeasurable) _
+      -- Step 4: `∫⁻ ofReal(-log r) ∂μ ≤ 1` (negative part 1-bounded, klFun ≥ 0).
+      have hneg_le_one : (∫⁻ x, ENNReal.ofReal (-Real.log (r x)) ∂μ) ≤ 1 := by
+        -- change of measure to ν: `∫⁻ f ∂μ = ∫⁻ (μ.rnDeriv ν)·f ∂ν`.
+        rw [← lintegral_rnDeriv_mul hμν
+          (f := fun x => ENNReal.ofReal (-Real.log (r x)))
+          ((Real.measurable_log.comp (μ.measurable_rnDeriv ν).ennreal_toReal).neg
+            |>.ennreal_ofReal.aemeasurable)]
+        calc (∫⁻ x, μ.rnDeriv ν x * ENNReal.ofReal (-Real.log (r x)) ∂ν)
+            ≤ ∫⁻ _, (1 : ℝ≥0∞) ∂ν := by
+              refine lintegral_mono_ae ?_
+              filter_upwards [μ.rnDeriv_lt_top ν] with x hx
+              -- `μ.rnDeriv ν x = ofReal (r x)`, then `ofReal(r)·ofReal(-log r) = ofReal(-r log r) ≤ 1`.
+              rw [hr_def, show μ.rnDeriv ν x = ENNReal.ofReal (μ.rnDeriv ν x).toReal from
+                (ENNReal.ofReal_toReal hx.ne).symm,
+                ← ENNReal.ofReal_mul ENNReal.toReal_nonneg]
+              refine (ENNReal.ofReal_le_ofReal ?_).trans (by rw [ENNReal.ofReal_one])
+              -- `(μ.rnDeriv ν x).toReal · (-log (μ.rnDeriv ν x).toReal) ≤ 1`.
+              set s : ℝ := (μ.rnDeriv ν x).toReal with hs
+              show s * -Real.log s ≤ 1
+              rcases eq_or_lt_of_le (ENNReal.toReal_nonneg (a := μ.rnDeriv ν x)) with hs0 | hs_pos
+              · rw [show s = 0 from hs0.symm, zero_mul]; norm_num
+              · -- `-s log s ≤ 1 - s ≤ 1` via `log (1/s) ≤ 1/s - 1`.
+                have hlog_inv : Real.log (1 / s) ≤ 1 / s - 1 :=
+                  Real.log_le_sub_one_of_pos (by positivity)
+                rw [Real.log_div one_ne_zero hs_pos.ne', Real.log_one, zero_sub] at hlog_inv
+                have : s * (-Real.log s) ≤ s * (1 / s - 1) := by
+                  apply mul_le_mul_of_nonneg_left hlog_inv hs_pos.le
+                have hsimp : s * (1 / s - 1) = 1 - s := by
+                  rw [mul_sub, mul_one_div, div_self hs_pos.ne', mul_one]
+                rw [hsimp] at this
+                linarith
+          _ = 1 := by rw [lintegral_const, measure_univ, mul_one]
+      -- assemble: `A = crossPos μ μ ≤ crossPos μ ν + (∫⁻ ofReal(-log r) ∂μ) ≤ crossPos μ ν + 1`.
+      have hA_le : A ≤ crossPos μ ν + 1 := by
+        calc A = crossPos μ μ := hA_eq
+          _ ≤ crossPos μ ν + ∫⁻ x, ENNReal.ofReal (-Real.log (r x)) ∂μ := by
+                rw [← hsplit]; exact hint_mono
+          _ ≤ crossPos μ ν + 1 := by gcongr
+      -- `A = ⊤` forces `crossPos μ ν = ⊤` (since `crossPos μ ν + 1 = ⊤` and `1 ≠ ⊤`).
+      rw [hA_top] at hA_le
+      by_contra hne
+      have : crossPos μ ν + 1 < ⊤ :=
+        ENNReal.add_lt_top.2 ⟨lt_top_iff_ne_top.2 hne, ENNReal.one_lt_top⟩
+      exact this.ne (top_le_iff.1 hA_le)
+    rw [hCP_top, top_add]; exact le_top
   · -- A(μ) < ⊤ branch: derive finite differential entropy of μ, delegate to `_of_finite_ent`.
     have hμ_ent : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume := by
       refine integrable_of_lintegral_ofReal_pos_neg_ne_top
