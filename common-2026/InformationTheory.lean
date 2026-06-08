@@ -239,6 +239,9 @@ import InformationTheory.Shannon.EPI.Conv.DensityRegular
 import InformationTheory.Shannon.EPI.Conv.DensityAssoc
 import InformationTheory.Shannon.EPI.Blachman.GeneralDensity
 import InformationTheory.Shannon.EPI.Case1.ProducerMeasurability
+import InformationTheory.Shannon.EPI.Case1.RatioLimit.Assembly
+import InformationTheory.Shannon.EPI.Case1.RatioLimit.PathRegular
+import InformationTheory.Shannon.EPI.Case1.RatioLimit.Producer
 import InformationTheory.Shannon.EPI.Case1.RatioLimit
 import InformationTheory.Shannon.EPI.Case1.TwoTime
 import InformationTheory.Shannon.EPI.DensityForm
