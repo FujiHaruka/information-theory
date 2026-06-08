@@ -167,6 +167,10 @@ import InformationTheory.Shannon.MaxEntropy.ConstrainedKKT
 import InformationTheory.Shannon.LZ78.GreedyParsing
 import InformationTheory.Shannon.FisherInfo.V2DeBruijn
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Core
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Domination
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Derivatives
+import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Assembly
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnGenuine
 import InformationTheory.Shannon.HeatFlowPath
