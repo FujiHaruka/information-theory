@@ -144,6 +144,9 @@ import InformationTheory.Shannon.SMB.McMillanBreiman
 import InformationTheory.Shannon.LZ78.Basic
 import InformationTheory.Shannon.LZ78.ZivInequality
 import InformationTheory.Shannon.ArithmeticCoding
+import InformationTheory.Shannon.SMB.AlgoetCover.Core
+import InformationTheory.Shannon.SMB.AlgoetCover.TwoSidedRatio
+import InformationTheory.Shannon.SMB.AlgoetCover.Liminf
 import InformationTheory.Shannon.SMB.AlgoetCover
 import InformationTheory.Shannon.SMB.ChainRule
 import InformationTheory.Shannon.BackwardFiltration
