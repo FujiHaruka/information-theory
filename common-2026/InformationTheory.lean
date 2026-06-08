@@ -51,6 +51,9 @@ import InformationTheory.Shannon.MIChainRule
 import InformationTheory.Shannon.ChannelCoding.Basic
 import InformationTheory.Shannon.IIDProductInput.Basic
 import InformationTheory.Shannon.IIDProductInput.Joint
+import InformationTheory.Shannon.ChannelCoding.Achievability.Core
+import InformationTheory.Shannon.ChannelCoding.Achievability.RandomCodebook
+import InformationTheory.Shannon.ChannelCoding.Achievability.Main
 import InformationTheory.Shannon.ChannelCoding.Achievability
 import InformationTheory.Shannon.ChannelCoding.Converse
 import InformationTheory.Shannon.ChannelCoding.ConverseGeneral
