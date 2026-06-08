@@ -291,10 +291,10 @@ random variables `Z_X, Z_Y : Ω → ℝ` defined on the *same* probability space
 
 * `P.map Z_X = P.map Z_Y = gaussianReal 0 1` (each is standard normal),
 * `IndepFun X Z_X P`, `IndepFun Y Z_Y P` (each `Z_*` is independent of
-  its paired original variable — needed to apply `heatFlowPath2_law`),
+its paired original variable — needed to apply `heatFlowPath2_law`),
 * `IndepFun Z_X Z_Y P` (the noise pair is jointly independent — needed
-  for the Gaussian saturation endpoint at `s = 1`, where the path-end
-  reduces to a sum of two independent standard normals).
+for the Gaussian saturation endpoint at `s = 1`, where the path-end
+reduces to a sum of two independent standard normals).
 
 **Mathlib status (loogle, 2026-05-25)**: there is **no** existing
 Mathlib API to extend an arbitrary probability measure `(Ω, P)` with two
@@ -306,13 +306,13 @@ of a pre-existing pair `(X, Y)`. Search results:
 * `ProbabilityTheory.exists_iIndepFun` → `unknown identifier`
 * `exists_measurable_indepFun` → `unknown identifier`
 * `MeasureTheory.NoAtoms` exists as a class
-  (`Mathlib/MeasureTheory/Measure/Typeclasses/NoAtoms.lean:34`) but the
-  noise extension constructor is absent.
+(`Mathlib/MeasureTheory/Measure/Typeclasses/NoAtoms.lean:34`) but the
+noise extension constructor is absent.
 * The Central Limit Theorem use of `gaussianReal` in
-  `Mathlib/Probability/CentralLimitTheorem.lean:79` works on a *different*
-  ambient probability space `P'` and assumes an i.i.d. sequence on `P`,
-  so it cannot be specialized to construct fresh Gaussians on the original
-  `P`.
+`Mathlib/Probability/CentralLimitTheorem.lean:79` works on a *different*
+ambient probability space `P'` and assumes an i.i.d. sequence on `P`,
+so it cannot be specialized to construct fresh Gaussians on the original
+`P`.
 
 InformationTheory internal search (`rg "exists_indep|standard_normal_pair|
 noiseExtension|extendByGaussian"`) likewise returns 0 hits.
@@ -534,7 +534,7 @@ theorem csiszar_ratio_deriv_le_zero_arith
 /-- **R-2 — log-ratio gap derivative**. The genuine monotone object
 `csiszarLogRatioGap` (`EPIL3Integration.lean`) has derivative
 
-  `(d/dt) csiszarLogRatioGap X Y Z_X Z_Y P t = J_sum − (N_X·J_X + N_Y·J_Y)/(N_X+N_Y)`
+`(d/dt) csiszarLogRatioGap X Y Z_X Z_Y P t = J_sum − (N_X·J_X + N_Y·J_Y)/(N_X+N_Y)`
 
 at any `t > 0`, where `N_i = entropyPower (P.map path_i t)` and
 `J_i = fisherInfoOfDensityReal ((h_reg_i.reg_at t ht).density_t)`.
@@ -739,12 +739,12 @@ form IS genuinely closable from plain Stam (weights `α = N_X/(N_X+N_Y)`,
 (the ∀-quantified producer `Prop`) at the three path densities
 `f_i = (h_reg_*.reg_at t ht).density_t`. The application requires:
 * the three Fisher identifications `J_i = (fisherInfoOfMeasureV2 (P.map _) f_i).toReal`
-  — `rfl` since `fisherInfoOfMeasureV2 _ f = fisherInfoOfDensity f`
-  (`fisherInfoOfMeasureV2_def`) and `fisherInfoOfDensityReal f = (fisherInfoOfDensity f).toReal`;
+— `rfl` since `fisherInfoOfMeasureV2 _ f = fisherInfoOfDensity f`
+(`fisherInfoOfMeasureV2_def`) and `fisherInfoOfDensityReal f = (fisherInfoOfDensity f).toReal`;
 * the **caller-supplied regularity preconditions** below: `IsRegularDensityV2`
-  for the two summand path densities (`h_regdens_X`/`h_regdens_Y`), the
-  normalizations `∫ = 1` (`h_norm_X`/`h_norm_Y`), the pointwise convolution
-  identification (`h_conv_id`), and the Blachman-readiness bundle (`h_blachman`).
+for the two summand path densities (`h_regdens_X`/`h_regdens_Y`), the
+normalizations `∫ = 1` (`h_norm_X`/`h_norm_Y`), the pointwise convolution
+identification (`h_conv_id`), and the Blachman-readiness bundle (`h_blachman`).
 
 The core inequality itself lives genuinely in the producer side
 (`stam_step2_density_wall` → `isStamInequalityHyp_via_body`, `@audit:ok`
@@ -1130,9 +1130,9 @@ compatibility (no code consumer; mentions are docstrings only). The theorem is
 genuinely conditional on:
 
 * the Stam wall input `h_stam : IsStamInequalityResidual` (Cover-Thomas Lemma
-  17.7.2 — a separate wall, supplied by the caller / `stamToEPIBridge_holds`),
+17.7.2 — a separate wall, supplied by the caller / `stamToEPIBridge_holds`),
 * the Csiszár-scaling `AntitoneOn` wall, transitively present as the `sorry` in
-  `stamToEPIScaling_holds` under `@residual(plan:epi-stam-to-conclusion-phaseA-plan)`.
+`stamToEPIScaling_holds` under `@residual(plan:epi-stam-to-conclusion-phaseA-plan)`.
 
 The prior signature threaded the now-deleted `h_limit : IsStamToEPILimitHyp`
 (#4) and load-bearing `h_noise : IsStamScalingNoiseHyp` (#5) / `h_reg` /

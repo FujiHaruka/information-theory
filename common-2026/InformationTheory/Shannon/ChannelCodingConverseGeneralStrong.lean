@@ -56,9 +56,9 @@ variable {β : Type*} [MeasurableSpace β] [Nonempty β] [StandardBorelSpace β]
 いたのに対し、本述語は 2 つに分解する:
 
 * `per_letter_markov`: 各 `i` で `(X^n) → X_i → Y_i`、すなわち `Y_i` は他の入力 `X^{≠i}` に
-  依存しない (per-letter チャネル性)。
+依存しない (per-letter チャネル性)。
 * `outputs_cond_indep`: 各 `i` で `Y^{≠i} → X^n → Y_i`、すなわち入力全体を condition すれば
-  `Y_i` は他の出力 `Y^{≠i}` と独立 (出力の条件付き独立性)。
+`Y_i` は他の出力 `Y^{≠i}` と独立 (出力の条件付き独立性)。
 
 これら 2 つから、対応する 3 仮説 (`h_yother_zero`, `h_split`, `h_markov_xprefix`) を
 合成して `channel_coding_converse_general_memoryless` を呼び出すのが本 file の目標。 -/
@@ -140,7 +140,7 @@ purely a `condMutualInfo` reshape + 2-var chain rule).
 
 ```
 condMI X_i Y^n Xprefix
-  = condMI X_i Y_i Xprefix + condMI X_i Y^{≠i} (Xprefix, Y_i)
+= condMI X_i Y_i Xprefix + condMI X_i Y^{≠i} (Xprefix, Y_i)
 ```
 
 戦略:

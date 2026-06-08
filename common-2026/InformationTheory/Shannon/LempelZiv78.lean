@@ -126,7 +126,7 @@ section LZ78Structures
 /-- An **LZ78 dictionary phrase** is a pair `(parent, symbol)` where:
 
 * `parent : Option ℕ` references the earlier phrase being extended, or
-  `none` for the empty-prefix root (the very first phrase ever emitted).
+`none` for the empty-prefix root (the very first phrase ever emitted).
 * `symbol : α` is the single new alphabet symbol appended.
 
 This is the Cover–Thomas Ch.13.5 dictionary entry encoded at the type
@@ -361,15 +361,15 @@ takes the genuine two-sided sandwich on `lz/n` — the liminf lower bound
 The hypothesis slots:
 
 * `lz78EncodingLength` — the encoding-length function is taken as a
-  *parameter* (L-LZ4), not implemented in this file. Any function from
-  `(Fin n → α) → ℕ` consistent with the LZ78 dictionary discharges it.
+*parameter* (L-LZ4), not implemented in this file. Any function from
+`(Fin n → α) → ℕ` consistent with the LZ78 dictionary discharges it.
 * `h_lower` — the LZ78 converse direction `entropyRate ≤ liminf (lz/n)`
-  a.s. (L-LZ2). This is *not* the conclusion; it is the genuine lower
-  half of the sandwich, supplied downstream by
-  `lz78_converse_lower_bound_with_chain` composed with the SMB liminf.
+a.s. (L-LZ2). This is *not* the conclusion; it is the genuine lower
+half of the sandwich, supplied downstream by
+`lz78_converse_lower_bound_with_chain` composed with the SMB liminf.
 * `h_upper` — the Ziv-inequality achievability bound
-  `limsup (lz/n) ≤ entropyRate` a.s. (L-LZ1). Supplied downstream by
-  `lz78_achievability_upper_bound_ergodic`.
+`limsup (lz/n) ≤ entropyRate` a.s. (L-LZ1). Supplied downstream by
+`lz78_achievability_upper_bound_ergodic`.
 * `h_bdd_above` / `h_bdd_below` — boundedness of the per-symbol rate.
 
 For the maximally-discharged chain-level form (where the residual is the

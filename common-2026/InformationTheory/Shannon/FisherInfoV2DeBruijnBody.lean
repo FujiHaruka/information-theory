@@ -229,12 +229,12 @@ density predicate, plus two **X-density regularity preconditions** required by t
 `pX`-witness fields (§5A):
 
 * `hX_ac : (P.map X) ≪ volume` — `X` has a Lebesgue density. Required by `pX_law`
-  (`withDensity_rnDeriv_eq`). The heat-flow predicate `IsHeatFlowDensity` carries
-  only the *path* density `p` (density of `X + √t·Z`), NOT a witness for `X`'s own
-  Lebesgue density, so this must be supplied externally.
+(`withDensity_rnDeriv_eq`). The heat-flow predicate `IsHeatFlowDensity` carries
+only the *path* density `p` (density of `X + √t·Z`), NOT a witness for `X`'s own
+Lebesgue density, so this must be supplied externally.
 * `h_mom_X : Integrable (fun ω => (X ω)^2) P` — `X` has finite second moment.
-  Required by `pX_mom` (transport of `X²` integrability to the `y²·pX` integral on
-  `volume`). Again the heat-flow predicate carries no finite-variance source.
+Required by `pX_mom` (transport of `X²` integrability to the `y²·pX` integral on
+`volume`). Again the heat-flow predicate carries no finite-variance source.
 
 Both are **regularity preconditions** (a.c. + finite variance), NOT load-bearing:
 they assert external regularity of `X` (existence of a density + finite variance),

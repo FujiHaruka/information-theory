@@ -133,9 +133,9 @@ Proof skeleton (explicit Bochner integrals + cancellation, NO disintegration):
 * `logDeriv p_Z z = p_Z'(z) / p_Z(z)` (gateway `HasDerivAt` + `logDeriv_apply`).
 * `∫ W_λ · p_{X|Z} = (1/p_Z) ∫ W_λ · fX(x) fY(z-x)`.
 * `W_λ · fX(x) fY(z-x) = λ (logDeriv fX x · fX x) fY(z-x) + (1-λ) fX x (logDeriv fY(z-x) · fY(z-x))`,
-  and `logDeriv f · f = deriv f` pointwise (positivity).
+and `logDeriv f · f = deriv f` pointwise (positivity).
 * `∫ deriv fX(x) fY(z-x) = p_Z'(z)` (S2) and `∫ fX(x) deriv fY(z-x) = p_Z'(z)`
-  (gateway derivative).  Numerator `= λ p_Z' + (1-λ) p_Z' = p_Z'`.  Divide by `p_Z`.
+(gateway derivative).  Numerator `= λ p_Z' + (1-λ) p_Z' = p_Z'`.  Divide by `p_Z`.
 
 `h_int_W` is the regularity precondition that the weighted integrand is integrable.
 
@@ -494,10 +494,10 @@ Proof shape (explicit density route, condExp-free):
 * `J_sum = ∫ z, (logDeriv p_Z z)² · p_Z(z) dz` (atom A on `p_Z = convDensityAdd fX fY`).
 * `(logDeriv p_Z z)² ≤ ∫ x, W_λ² · p_{X|Z}` pointwise (S4 `score_sq_le_weighted_integral`).
 * integrate against `p_Z`, cancel `p_{X|Z}·p_Z = fX(x)·fY(z-x)`, swap order (Tonelli),
-  expand `W_λ² = λ²s_X² + (1-λ)²s_Y² + 2λ(1-λ)s_X s_Y`:
-  * `λ²` term `= λ²·J_X` (`∫_z fY(z-x) dz = 1` by translation invariance + normalization),
-  * `(1-λ)²` term `= (1-λ)²·J_Y`,
-  * cross term `= 0` (`∫ logDeriv fX · fX = 0` and `∫ logDeriv fY · fY = 0`,
+expand `W_λ² = λ²s_X² + (1-λ)²s_Y² + 2λ(1-λ)s_X s_Y`:
+* `λ²` term `= λ²·J_X` (`∫_z fY(z-x) dz = 1` by translation invariance + normalization),
+* `(1-λ)²` term `= (1-λ)²·J_Y`,
+* cross term `= 0` (`∫ logDeriv fX · fX = 0` and `∫ logDeriv fY · fY = 0`,
     `integral_logDeriv_density_eq_zero`).
 
 All bundled hypotheses are regularity preconditions (`IsRegularDensityV2`,
@@ -507,15 +507,15 @@ preconditions); none bundles the inequality core.
 
 Assembly (all genuine, no `sorry`):
 * atom A `fisherInfoOfDensity_toReal_eq_integral` rewrites all three Fisher
-  informations to Bochner integrals;
+informations to Bochner integrals;
 * S4 `score_sq_le_weighted_integral` (`@audit:ok`, Jensen on a `withDensity`
-  probability measure) gives `(logDeriv p_Z z)² ≤ ∫ x, W_λ²·p_{X|Z}` pointwise,
-  integrated against `p_Z ≥ 0` via `integral_mono_ae`;
+probability measure) gives `(logDeriv p_Z z)² ≤ ∫ x, W_λ²·p_{X|Z}` pointwise,
+integrated against `p_Z ≥ 0` via `integral_mono_ae`;
 * `condDensityX·p_Z = fX(x)·fY(z-x)` cancellation;
 * the 3-term Tonelli evaluation `convex_fisher_term1/2/cross` (`integral_integral_swap`
-  + translation invariance `integral_sub_right_eq_self` + normalization /
-  `integral_logDeriv_density_eq_zero` for the cross term) yields
-  `λ²·J_X + (1-λ)²·J_Y` (cross term `= 0`).
++ translation invariance `integral_sub_right_eq_self` + normalization /
+`integral_logDeriv_density_eq_zero` for the cross term) yields
+`λ²·J_X + (1-λ)²·J_Y` (cross term `= 0`).
 
 2026-05-30 Phase 3c-fin genuine closure (0 sorry, `sorryAx`-free: `#print axioms` =
 `[propext, Classical.choice, Quot.sound]`).
@@ -770,15 +770,15 @@ swap on the product-measure fields. All 19 fields are constructed:
 * `int_fX/int_fY/bdd_*/int_fisherX/int_fisherY` — direct `X ↔ Y` projection of `h`.
 * `pos_pZ/int_fisherZ` — `convDensityAdd_comm` rewrite of the corresponding `h` field.
 * `int_X/int_Y/cond_int` — reflection (`Integrable.comp_sub_left`) of the swapped `h`
-  field, then a pointwise `mul_comm`.
+field, then a pointwise `mul_comm`.
 * `int_W/int_Wsq` — reflection of `h.int_W (1-lam)` / `h.int_Wsq (1-lam)` (the
-  `lam ↔ 1-lam` relabelling is exactly the X↔Y swap under `x ↦ z - x`).
+`lam ↔ 1-lam` relabelling is exactly the X↔Y swap under `x ↦ z - x`).
 * `int_inner` — `z`-pointwise congruence with `h.int_inner (1-lam)`, the inner
-  `x`-integral being reflection-invariant (`integral_sub_left_eq_self`).
+`x`-integral being reflection-invariant (`integral_sub_left_eq_self`).
 * `int_prod1/int_prod2` — separable rebuild from `h` Fisher/integrability fields,
-  sheared by `measurePreserving_prod_sub_swap` (`(z,x) ↦ (x, z-x)`).
+sheared by `measurePreserving_prod_sub_swap` (`(z,x) ↦ (x, z-x)`).
 * `int_prod3` — transport of `h.int_prod3` by the skew map `(z,x) ↦ (z, z-x)`
-  (`MeasurePreserving.skew_product` with the `x ↦ z - x` reflection on the 2nd coord).
+(`MeasurePreserving.skew_product` with the `x ↦ z - x` reflection on the 2nd coord).
 
 Consumed only by the (unused) API-completeness lemmas
 `isStamCauchySchwarz_symm` / `isStamCondExpCSHyp_symm`.

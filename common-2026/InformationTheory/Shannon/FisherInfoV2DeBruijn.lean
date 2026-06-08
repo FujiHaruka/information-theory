@@ -306,15 +306,15 @@ which the consumer `debruijnIntegrationIdentity_holds`
 (FisherInfoV2DeBruijnGenuine.lean) invokes per time-point via each `reg_t` field.
 
 * `fPath` — density witness path: `fPath t` is the density of
-  `P.map (gaussianConvolution X Z t)`.
+`P.map (gaussianConvolution X Z t)`.
 * `reg_t` — per-time V2 de Bruijn regularity at each interior `t ∈ (0, T)`,
-  with `density_t = fPath t` (so the per-time `HasDerivAt` value matches the
-  integrand). This is what feeds `debruijnIdentityV2_holds_assembled` per time-point.
+with `density_t = fPath t` (so the per-time `HasDerivAt` value matches the
+integrand). This is what feeds `debruijnIdentityV2_holds_assembled` per time-point.
 * `cont` — continuity of the heat-flow entropy on the closed interval `[0, T]`
-  (a path-regularity precondition; cf. the Gaussian instance
-  `continuousOn_differentialEntropy_heat_flow_gaussian`).
+(a path-regularity precondition; cf. the Gaussian instance
+`continuousOn_differentialEntropy_heat_flow_gaussian`).
 * `integrable` — the path integrand `(1/2) · J(X + √t·Z)` is interval-integrable
-  on `(0, T)` (path integrability precondition).
+on `(0, T)` (path integrability precondition).
 
 @audit:ok — independent honesty audit (2026-05-31): all 4 fields are genuine
 regularity preconditions, NOT load-bearing. Core-reconstruction test: granting

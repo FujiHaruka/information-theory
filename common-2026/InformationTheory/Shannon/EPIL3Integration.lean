@@ -984,7 +984,7 @@ deliverable.
 For Gaussian `X ∼ 𝒩(m, v)` with `v ≠ 0`, the heat-flow entropy gap over
 the bounded interval `(0, T)` equals the path integral of `1/(2(v+t))`:
 
-  `h(N(m, v+T)) - h(N(m, v))
+`h(N(m, v+T)) - h(N(m, v))
     = ∫_(0, T) 1/(2(v+t)) dt`,
 
 stated as a direct equality (i.e., bypassing the

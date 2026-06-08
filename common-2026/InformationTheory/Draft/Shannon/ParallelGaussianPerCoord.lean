@@ -389,13 +389,13 @@ i.e. `csSup_le` max-entropy upper bound + `le_csSup` achiever lower bound). The
 only hypotheses are the *genuine* honest inputs:
 
 * `h_kkt` (L-WF1): water level uses up the budget `∑ max(0, ν - N_i) = P` (genuine,
-  IVT-dischargeable via `exists_waterFillingKKT_of_pos`);
+IVT-dischargeable via `exists_waterFillingKKT_of_pos`);
 * `h_opt` (L-WF2): water-filling is the constrained `∑ (1/2) log(1 + P_i/N_i)`
-  maximizer (genuine, concavity-dischargeable);
+maximizer (genuine, concavity-dischargeable);
 * `h_reg` (🟢ʰ): the residual analytic regularity bundle
-  `IsParallelGaussianPerCoordRegularity` — `bddAbove` + achiever-MI value +
-  correlated-input max-entropy bound — **none of which is the conclusion equality**;
-  they mirror the 1-D `AWGN.awgnCapacity_eq` residuals.
+`IsParallelGaussianPerCoordRegularity` — `bddAbove` + achiever-MI value +
+correlated-input max-entropy bound — **none of which is the conclusion equality**;
+they mirror the 1-D `AWGN.awgnCapacity_eq` residuals.
 
 No `h_per_coord : IsParallelGaussianPerCoordReduction` argument (the conclusion) is
 taken; the body is a real `le_antisymm` derivation, never `:= h_per_coord`.
@@ -807,11 +807,11 @@ AWGN sub-channel, the Gaussian-input mutual information equals
 `(1/2)·log(1 + Q/N)`, with no positivity hypothesis on the input variance `Q`.
 
 * `Q ≠ 0` branch: delegates to the hypothesis-free, sorryAx-free closed form
-  `AWGN.mutualInfoOfChannel_gaussianInput_closed_form'` (cast `Q : ℝ≥0` through
-  `Real.toNNReal_coe`).
+`AWGN.mutualInfoOfChannel_gaussianInput_closed_form'` (cast `Q : ℝ≥0` through
+`Real.toNNReal_coe`).
 * `Q = 0` branch (deterministic input `gaussianReal 0 0 = dirac 0`): the joint
-  `dirac 0 ⊗ₘ W` coincides with the product `(dirac 0) ×ₘ output`, so `klDiv_self`
-  gives MI `= 0`; the RHS is `(1/2)·log(1 + 0/N) = (1/2)·log 1 = 0`. Genuine. -/
+`dirac 0 ⊗ₘ W` coincides with the product `(dirac 0) ×ₘ output`, so `klDiv_self`
+gives MI `= 0`; the RHS is `(1/2)·log(1 + 0/N) = (1/2)·log 1 = 0`. Genuine. -/
 theorem awgn_perCoord_mi_closed_form (Q N : ℝ≥0) (hN : N ≠ 0)
     (h_meas : IsAwgnChannelMeasurable N) :
     (mutualInfoOfChannel (gaussianReal 0 Q) (awgnChannel N h_meas)).toReal

@@ -33,14 +33,14 @@ namespace InformationTheory.Asymptotic
 open Asymptotics Filter Topology Real
 
 /-- **Exponent equality (textbook `\doteq`)**: `a_n ≐ b_n` if
-  `Real.log (a n) − Real.log (b n) = o(n)` along `atTop`.
+`Real.log (a n) − Real.log (b n) = o(n)` along `atTop`.
 
-  教科書 (Cover-Thomas) の `a_n ≐ b_n ⟺ (1/n) log (a_n / b_n) → 0` と同値
-  (`dotEq_iff_tendsto_log_div`, under positivity `0 < a n ∧ 0 < b n`).
+教科書 (Cover-Thomas) の `a_n ≐ b_n ⟺ (1/n) log (a_n / b_n) → 0` と同値
+(`dotEq_iff_tendsto_log_div`, under positivity `0 < a n ∧ 0 < b n`).
 
-  positivity hypothesis は述語自体には組み込まれない (Mathlib `Real.log` は
-  `x ≤ 0` で `0` を返すため `DotEq` 自体は any `ℕ → ℝ` で well-defined)。
-  positivity は use site で要求する。 -/
+positivity hypothesis は述語自体には組み込まれない (Mathlib `Real.log` は
+`x ≤ 0` で `0` を返すため `DotEq` 自体は any `ℕ → ℝ` で well-defined)。
+positivity は use site で要求する。 -/
 @[entry_point]
 def DotEq (a b : ℕ → ℝ) : Prop :=
   (fun n : ℕ => Real.log (a n) - Real.log (b n)) =o[atTop] (fun n : ℕ => (n : ℝ))
@@ -79,7 +79,7 @@ lemma DotEq.trans {a b c : ℕ → ℝ} (hab : a ≐ b) (hbc : b ≐ c) : a ≐ 
 
 /-- Multiplicative compatibility: `a₁ * a₂ ≐ b₁ * b₂` if `a_i ≐ b_i` (under positivity).
 
-  Proof: `log(a₁·a₂) - log(b₁·b₂) = (log a₁ - log b₁) + (log a₂ - log b₂)` via `Real.log_mul`. -/
+Proof: `log(a₁·a₂) - log(b₁·b₂) = (log a₁ - log b₁) + (log a₂ - log b₂)` via `Real.log_mul`. -/
 @[entry_point]
 lemma DotEq.mul {a₁ a₂ b₁ b₂ : ℕ → ℝ}
     (hPos₁ : ∀ n, 0 < a₁ n ∧ 0 < b₁ n) (hPos₂ : ∀ n, 0 < a₂ n ∧ 0 < b₂ n)
@@ -102,7 +102,7 @@ lemma DotEq.mul {a₁ a₂ b₁ b₂ : ℕ → ℝ}
 
 /-- Inverse compatibility: `(a n)⁻¹ ≐ (b n)⁻¹` if `a ≐ b`.
 
-  Proof: `log a⁻¹ - log b⁻¹ = -(log a - log b)` via `Real.log_inv` (unconditional in Mathlib). -/
+Proof: `log a⁻¹ - log b⁻¹ = -(log a - log b)` via `Real.log_inv` (unconditional in Mathlib). -/
 @[entry_point]
 lemma DotEq.inv {a b : ℕ → ℝ} (h : a ≐ b) :
     (fun n => (a n)⁻¹) ≐ (fun n => (b n)⁻¹) := by
@@ -116,10 +116,10 @@ lemma DotEq.inv {a b : ℕ → ℝ} (h : a ≐ b) :
   exact h.neg_left
 
 /-- **Bridge**: `DotEq` is equivalent to `Tendsto ((1/n) * log (a/b)) → 0`
-  under positivity.
+under positivity.
 
-  両辺の `(1/n) * log (a n / b n)` と `(log (a n) - log (b n)) / (n : ℝ)` は
-  positivity の下で `Real.log_div` + 可換性で同形。 -/
+両辺の `(1/n) * log (a n / b n)` と `(log (a n) - log (b n)) / (n : ℝ)` は
+positivity の下で `Real.log_div` + 可換性で同形。 -/
 @[entry_point]
 lemma dotEq_iff_tendsto_log_div (a b : ℕ → ℝ) (hPos : ∀ n, 0 < a n ∧ 0 < b n) :
     a ≐ b ↔
@@ -148,11 +148,11 @@ lemma dotEq_iff_tendsto_log_div (a b : ℕ → ℝ) (hPos : ∀ n, 0 < a n ∧ 0
             =o[atTop] (fun n : ℕ => (n : ℝ))) from rfl, h_iff, h_ratio_eq]
 
 /-- **Closed-form `N` for `exp(-n·g) < ε'`** (rate extraction wrapper).
-  For `g, ε' > 0`, the witness `N := ⌈max 0 (-Real.log ε' / g)⌉ + 1` works.
+For `g, ε' > 0`, the witness `N := ⌈max 0 (-Real.log ε' / g)⌉ + 1` works.
 
-  既存 `InformationTheory/Shannon/AEPRate.lean:323` の `exp_neg_mul_lt_of_rate` の
-  family-agnostic 版。本 I-3 では abstract wrapper のみ publish、既存 callsite
-  migration は本タスク範囲外。 -/
+既存 `InformationTheory/Shannon/AEPRate.lean:323` の `exp_neg_mul_lt_of_rate` の
+family-agnostic 版。本 I-3 では abstract wrapper のみ publish、既存 callsite
+migration は本タスク範囲外。 -/
 @[entry_point]
 theorem exp_decay_N_of_pos {g ε' : ℝ} (hg : 0 < g) (hε' : 0 < ε') :
     ∃ N : ℕ, ∀ n ≥ N, Real.exp (-(n : ℝ) * g) < ε' := by

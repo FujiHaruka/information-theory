@@ -92,10 +92,10 @@ noncomputable def heatFlowEP (A B : Ω → ℝ) (P : Measure Ω) (s : ℝ) : ℝ
 For a path `s : ℝ → ℝ` along the `A`-perturbation, this records that:
 * `s` starts at `0` (`s 0 = 0`);
 * the entropy power grows as `eᵗ`: `N_A(s(t)) = N_A(0)·eᵗ` for `t ≥ 0`
-  (the matched-time `e^t` characterization, proof-log §formulation gate);
+(the matched-time `e^t` characterization, proof-log §formulation gate);
 * `s` is continuous on `[0, ∞)`;
 * on the interior `t > 0`, `s` has derivative `1/J_A(s(t))` (FII-matched
-  velocity), where `J_A` is the Fisher info of the perturbed density.
+velocity), where `J_A` is the Fisher info of the perturbed density.
 
 This is **not** a load-bearing hypothesis on the EPI conclusion: it is the
 genuine output of `matchedTimePath_exists` (inverse-function subproject), whose
@@ -375,20 +375,20 @@ subproject is assembled from five private sub-lemmas (`#print axioms
 matchedTimePath_exists = [propext, Classical.choice, Quot.sound]`):
 
 * (i) `matchedTimePath_N_strictMonoOn` — strict monotonicity from `J_A > 0`
-  (`strictMonoOn_of_deriv_pos`, derivative `N_A(s)·J_A(s) > 0` via
-  `entropyPower_pos` × `hJ_pos`);
+(`strictMonoOn_of_deriv_pos`, derivative `N_A(s)·J_A(s) > 0` via
+`entropyPower_pos` × `hJ_pos`);
 * (ii) `matchedTimePath_N_continuousOn` — continuity on `Ici 0` (interior from the
-  supplied derivative `DifferentiableAt → ContinuousAt`; endpoint `s = 0⁺` from
-  `heatFlowEntropyPower_continuousWithinAt_zero`, CLOSED 2026-06-05, via
-  `continuousWithinAt_Ioi_iff_Ici`);
+supplied derivative `DifferentiableAt → ContinuousAt`; endpoint `s = 0⁺` from
+`heatFlowEntropyPower_continuousWithinAt_zero`, CLOSED 2026-06-05, via
+`continuousWithinAt_Ioi_iff_Ici`);
 * (iii)+(iv) `matchedTimePath_inverse` — surjectivity onto `[N_A 0, ∞)`
-  (`isPreconnected_Ici.intermediate_value_Ici`, IVT) + continuous inverse
-  `g = Function.invFunOn N_A (Ici 0)` (`StrictMonoOn.continuousAt_of_image_mem_nhds`
-  / `...continuousWithinAt_right_of_surjOn`);
+(`isPreconnected_Ici.intermediate_value_Ici`, IVT) + continuous inverse
+`g = Function.invFunOn N_A (Ici 0)` (`StrictMonoOn.continuousAt_of_image_mem_nhds`
+/ `...continuousWithinAt_right_of_surjOn`);
 * (v) `matchedTimePath_path_hasDerivAt` — inverse-function chain rule glue
-  (`HasDerivAt.of_local_left_inverse` giving `g'(C·eᵗ) = (N·J)⁻¹`, composed via
-  `HasDerivAt.comp` with `d/dt (C·eᵗ) = C·eᵗ`, cancelling to `1/J_A`; mirrors the
-  mechanically-verified `ProbeF1.lean` glue).
+(`HasDerivAt.of_local_left_inverse` giving `g'(C·eᵗ) = (N·J)⁻¹`, composed via
+`HasDerivAt.comp` with `d/dt (C·eᵗ) = C·eᵗ`, cancelling to `1/J_A`; mirrors the
+mechanically-verified `ProbeF1.lean` glue).
 
 **Surjectivity precondition** (`hN_tendsto`): the single-source heat-flow entropy
 power `N_A(s) = entropyPower (P.map (A + √s·B))` diverges to `∞` as `s → ∞`. This
@@ -738,23 +738,23 @@ the conclusion are now pinned to a pointwise-smooth representative, so a skeptic
 cannot choose their values:
 
 * `J_X (s t)` / `J_Y (r t)`: density-pinned. `hJX_eq`/`hJY_eq` fix them to
-  `fisherInfoOfDensityReal ((h_reg_*.reg_at (s t) hst).density_t)`, and that
-  `density_t` is **pointwise** pinned to the smooth representative via
-  `IsRegularDeBruijnHypV2.density_t_eq`, with the real `X`/`Y`-density fixed by
-  `pX_law` (same mechanism as the honest single-time
-  `csiszarLogRatioGap_hasDerivAt`).
+`fisherInfoOfDensityReal ((h_reg_*.reg_at (s t) hst).density_t)`, and that
+`density_t` is **pointwise** pinned to the smooth representative via
+`IsRegularDeBruijnHypV2.density_t_eq`, with the real `X`/`Y`-density fixed by
+`pX_law` (same mechanism as the honest single-time
+`csiszarLogRatioGap_hasDerivAt`).
 * `J_S`: **directly embedded, no free variable.** At the single time `t`, the
-  matched sum `X_{s t} + Y_{r t} = (X+Y) + (√(s t)·Z_X + √(r t)·Z_Y)`, and the
-  noise has law `𝒩(0, s t + r t)` independent of `X+Y`, so the matched-sum law
-  equals that of `(X+Y) + √τ·Z` (`τ = s t + r t`, `Z` unit Gaussian) — a
-  single-noise heat flow of `X+Y` at time `τ` (proved by `matchedSum_law_eq`).
-  Hence `J_S` is embedded directly into the conclusion as
-  `fisherInfoOfDensityReal ((h_reg_sum.reg_at (s t + r t) hτ).density_t)` by
-  threading the EXISTING single-noise `IsDeBruijnRegularityHyp (X+Y) Z P`. Its
-  `density_t_eq` supplies the smooth pointwise pin for free, so the old
-  `withDensity` a.e.-pin (representative-escapable via the documented
-  `fisherInfoOfDensityReal` pointwise `logDeriv`) is gone. No free Fisher-info
-  variable remains.
+matched sum `X_{s t} + Y_{r t} = (X+Y) + (√(s t)·Z_X + √(r t)·Z_Y)`, and the
+noise has law `𝒩(0, s t + r t)` independent of `X+Y`, so the matched-sum law
+equals that of `(X+Y) + √τ·Z` (`τ = s t + r t`, `Z` unit Gaussian) — a
+single-noise heat flow of `X+Y` at time `τ` (proved by `matchedSum_law_eq`).
+Hence `J_S` is embedded directly into the conclusion as
+`fisherInfoOfDensityReal ((h_reg_sum.reg_at (s t + r t) hτ).density_t)` by
+threading the EXISTING single-noise `IsDeBruijnRegularityHyp (X+Y) Z P`. Its
+`density_t_eq` supplies the smooth pointwise pin for free, so the old
+`withDensity` a.e.-pin (representative-escapable via the documented
+`fisherInfoOfDensityReal` pointwise `logDeriv`) is gone. No free Fisher-info
+variable remains.
 
 Independent honesty audit 2026-06-06 (post body-fill, `@audit:defect(false-statement)`
 re-audit): PASS. (1) All three Fisher infos pinned: `J_S` is directly embedded
@@ -975,11 +975,11 @@ of the genuine endpoint atom `heatFlowEntropyPower_continuousWithinAt_zero`
 Added preconditions are genuine regularity:
 * `IsHeatFlowEndpointRegular (X+Y) Z P` — the single-noise endpoint atom's input.
 * the `matchedSum_law_eq` preconditions (unit-noise laws of `Z_X`, `Z_Y`, `Z`,
-  the joint/pairwise independences, measurability) — honest
-  noise-distribution facts, not bundled EPI/derivative content.
+the joint/pairwise independences, measurability) — honest
+noise-distribution facts, not bundled EPI/derivative content.
 * `h_pos : ∀ t, 0 < t → 0 < s t ∧ 0 < r t` — the matched-path positivity on the
-  interior (the strict-mono inverse-function path satisfies it), threaded as a
-  precondition exactly as `_hasDerivAt` threads `hst`/`hrt`.
+interior (the strict-mono inverse-function path satisfies it), threaded as a
+precondition exactly as `_hasDerivAt` threads `hst`/`hrt`.
 
 Independent honesty audit 2026-06-06 (fresh subagent): PASS — `@audit:ok`.
 Genuine composition of the CLOSED endpoint atom
@@ -1230,14 +1230,14 @@ body via `Real.log_mul`/`Real.log_exp`, no `sorry`.
 reduced to a single genuine limit `A t / eᵗ → N(X) + N(Y)`:
 
 * `A t` (the matched-sum numerator) is identified with a single-noise heat flow of
-  `X+Y` at `τ = s t + r t` via `matchedSum_law_eq` (`@audit:ok`), then split by
-  `entropyPower_path_scaling` as `A t = τ · NSr(τ)` with `NSr(σ) → ν` and
-  `ν = N(𝒩(0,1))` the common noise entropy power.
+`X+Y` at `τ = s t + r t` via `matchedSum_law_eq` (`@audit:ok`), then split by
+`entropyPower_path_scaling` as `A t = τ · NSr(τ)` with `NSr(σ) → ν` and
+`ν = N(𝒩(0,1))` the common noise entropy power.
 * the component asymptotics `s t / eᵗ → N(X)/ν`, `r t / eᵗ → N(Y)/ν` come from
-  combining matched growth (`N_X(s t) = N(X)·eᵗ`) with the scaling identity
-  `N_X(s t) = s t · NXr(s t)` and the §3 envelope limit `NXr(s t) → ν` (composed
-  with `s, r → ∞`). Hence `τ / eᵗ → (N(X)+N(Y))/ν`, so `A t / eᵗ → (N(X)+N(Y))`
-  and the `ν` factors cancel.
+combining matched growth (`N_X(s t) = N(X)·eᵗ`) with the scaling identity
+`N_X(s t) = s t · NXr(s t)` and the §3 envelope limit `NXr(s t) → ν` (composed
+with `s, r → ∞`). Hence `τ / eᵗ → (N(X)+N(Y))/ν`, so `A t / eᵗ → (N(X)+N(Y))`
+and the `ν` factors cancel.
 
 The §3 saturation machinery (`entropyPower_rescaled_path_tendsto`,
 `IsRescaledPathRegular`) is keyed to the single-time rescaling `A/√t + B`; the
@@ -1586,12 +1586,12 @@ terminal's `@audit:ok` union, `EPICase1RatioLimit.lean:1336-1342`):
 * `h_endpt_X`/`h_endpt_Y` (path-producer endpoint continuity), `h_endpt_sum` (Pillar B);
 * `h_reg_X`/`h_reg_Y`/`h_reg_sum : IsDeBruijnRegularityHyp` (de Bruijn + J pin);
 * `h_scale_*` per-σ a.c.+integrability (consumed by `entropyPower_path_scaling`,
-  used both for the path-producer `hN_tendsto` and Pillar C);
+used both for the path-producer `hN_tendsto` and Pillar C);
 * `h_rescale_*` (`IsRescaledPathRegular`) + `varX`/`varY`/`varS` (Pillar C squeeze
-  and the path-producer divergence);
+and the path-producer divergence);
 * `h_stam_supply` the per-time harmonic-Stam + positivity supply (genuine producer
-  `isStamInequalityHyp_via_step3`, NOT a bundled conclusion — `1/J_S ≥ 1/J_X+1/J_Y`
-  is the Fisher form, a different statement from the EPI inequality).
+`isStamInequalityHyp_via_step3`, NOT a bundled conclusion — `1/J_S ≥ 1/J_X+1/J_Y`
+is the Fisher form, a different statement from the EPI inequality).
 
 **Proof done (2026-06-06): sorryAx-free.** `#print axioms
 entropyPower_add_ge_case1_of_regular_twotime = [propext, Classical.choice,

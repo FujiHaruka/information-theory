@@ -81,7 +81,7 @@ noncomputable def logPartitionψ (f : Fin k → α → ℝ) (lam : Fin k → ℝ
 
 /-- **Exponential family pmf**, Lagrangian / KKT-canonical form:
 
-  expFamilyDist λ f x := exp (⟨λ, f x⟩ - ψ(λ))
+expFamilyDist λ f x := exp (⟨λ, f x⟩ - ψ(λ))
 
 where `⟨λ, f x⟩ = ∑ i, λ i · f i x`. This is the saddle-point optimizer of the
 Lagrangian `L(p, λ) = H(p) + ∑ i, λ i (𝔼_p[f i] - c i)`. By
@@ -93,7 +93,7 @@ noncomputable def expFamilyDist (f : Fin k → α → ℝ) (lam : Fin k → ℝ)
 /-- **Bridge**: the KKT-canonical form `expFamilyDist` agrees pointwise with the
 Boltzmann–Gibbs form `gibbsPmf`:
 
-  exp (⟨λ, f x⟩ - ψ(λ)) = exp ⟨λ, f x⟩ / Z(λ).
+exp (⟨λ, f x⟩ - ψ(λ)) = exp ⟨λ, f x⟩ / Z(λ).
 
 Proof: `Real.exp_sub` + `Real.exp_log` on `Z(λ) > 0`. -/
 lemma expFamilyDist_eq_gibbsPmf [Nonempty α]
@@ -156,7 +156,7 @@ lemma KKTSolution.gibbs_moment_match [Nonempty α]
 solution `(λ, moment_match)` for constraints `c`, the entropy of the
 exponential-family optimum has the closed form
 
-  H(p*) = ψ(λ) - ⟨λ, c⟩.
+H(p*) = ψ(λ) - ⟨λ, c⟩.
 
 This is the KKT duality: at the saddle point of the Lagrangian, the primal value
 equals the dual value `ψ(λ) - ⟨λ, c⟩`. -/
@@ -271,7 +271,7 @@ theorem expFamily_unique_of_KKT [Nonempty α]
 /-- **Variational upper bound (Legendre / free-energy form)** — any constraint-feasible
 `P` satisfies the dual bound
 
-  H(P) ≤ ψ(λ) - ⟨λ, c⟩
+H(P) ≤ ψ(λ) - ⟨λ, c⟩
 
 for *every* `λ` whose exponential-family solution satisfies the same moments.
 This is the variational characterization of `logPartitionψ` as the Legendre
