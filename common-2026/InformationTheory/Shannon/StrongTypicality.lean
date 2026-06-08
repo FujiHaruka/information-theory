@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.AEP
-import InformationTheory.Shannon.Sanov
+import InformationTheory.Shannon.Sanov.Basic
 import Mathlib.MeasureTheory.Order.Group.Lattice
 
 /-!

@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.SanovLDP
+import InformationTheory.Shannon.Sanov.LDP
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import Mathlib.Topology.Algebra.Monoid
 

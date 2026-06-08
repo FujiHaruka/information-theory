@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.SanovLDP
+import InformationTheory.Shannon.Sanov.LDP
 import InformationTheory.Shannon.KLDivContinuous
 import Mathlib.Algebra.Order.Floor.Semiring
 import Mathlib.Algebra.BigOperators.Fin

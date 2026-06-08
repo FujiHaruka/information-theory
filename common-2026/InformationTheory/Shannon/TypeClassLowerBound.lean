@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.SanovLDPEquality
+import InformationTheory.Shannon.Sanov.LDPEquality
 
 /-!
 # Type-class size lower bound (E-2)

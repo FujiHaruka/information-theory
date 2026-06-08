@@ -7,7 +7,7 @@ import InformationTheory.Draft.Shannon.HoeffdingInteriorGradientBody
 import InformationTheory.Draft.Shannon.HoeffdingMinimizerAttainment
 import InformationTheory.Shannon.Chernoff
 import InformationTheory.Shannon.CsiszarProjection
-import InformationTheory.Shannon.SanovLDPEquality
+import InformationTheory.Shannon.Sanov.LDPEquality
 import InformationTheory.Shannon.StrongStein
 import InformationTheory.Shannon.KLDivContinuous
 import Mathlib.Topology.Order.LiminfLimsup

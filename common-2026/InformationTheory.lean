@@ -76,10 +76,10 @@ import InformationTheory.Draft.Shannon.RateDistortionAchievabilityPhaseE
 import InformationTheory.Draft.Shannon.RateDistortionAchievabilityPhaseEDischarge
 import InformationTheory.Shannon.RateDistortionAchievabilityPhaseEStrong
 import InformationTheory.Draft.Shannon.RateDistortionConverseNLetter
-import InformationTheory.Shannon.Sanov
-import InformationTheory.Shannon.SanovLDP
+import InformationTheory.Shannon.Sanov.Basic
+import InformationTheory.Shannon.Sanov.LDP
 import InformationTheory.Shannon.KLDivContinuous
-import InformationTheory.Shannon.SanovLDPEquality
+import InformationTheory.Shannon.Sanov.LDPEquality
 import InformationTheory.Shannon.TypeClassLowerBound
 import InformationTheory.Shannon.StrongTypicality
 import InformationTheory.Shannon.ConditionalMethodOfTypes

@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.StrongTypicality
-import InformationTheory.Shannon.SanovLDPEquality
+import InformationTheory.Shannon.Sanov.LDPEquality
 import InformationTheory.Shannon.TypeClassLowerBound
 import InformationTheory.Shannon.RateDistortionAchievabilityPhaseEStrong
 
