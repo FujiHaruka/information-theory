@@ -1340,7 +1340,12 @@ regularity bundles; granting them (incl. the per-`t` `h_pos_stam` whose
 `IsStamInequalityHyp` is itself genuinely provable, `wall:stam-step2-density` CLOSED)
 does NOT hand the EPI conclusion — that requires the pillars' genuine de Bruijn
 integration + scaling squeeze, neither encoded in any hypothesis. Sufficiency: body
-threads pillar args in matching order and composes via §1 bridge. -/
+threads pillar args in matching order and composes via §1 bridge.
+**@audit:superseded-by(entropyPowerExt_add_ge_unconditional)** (2026-06-08): 本 single-time de Bruijn/
+ratio-limit case-1 EPI は、無条件 EPI が route T (smoothing+truncation、`entropyPowerExt_add_ge_finite_ac`
+経由 → `entropyPowerExt_add_ge_unconditional`) で case-1 を閉じたため EPI 用途では不要。consumer は dead leaf
+`entropyPower_add_ge_case1_of_methodX` のみ (無条件 headline チェーン外)。proof-done ゆえ残置。
+注: two-time 版 `entropyPower_add_ge_case1_of_regular_twotime` は別物で smoothing-limit 経由 LIVE。 -/
 theorem entropyPower_add_ge_case1_of_regular
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     -- independence (pairwise + joint), shared by both pillars
@@ -1495,6 +1500,11 @@ assets (`convDensityAdd_negMulLog_integrable_pub` / `pPath_eq_convDensityAdd` /
 `@residual(plan:epi-debruijn-pertime-closure)` slug correct (established convention shared
 by 6 FisherInfoV2DeBruijn* files for the same wall; plan file
 `epi-debruijn-pertime-closure-plan.md` exists).
+**@audit:superseded-by(entropyPowerExt_add_ge_unconditional)** (2026-06-08): 本 method-X case-1 EPI
+wrapper は consumer 0、かつ未解消 de Bruijn per-time 残壁 (`@residual` 下記) を抱える。無条件 EPI は
+route T で case-1 を閉じた (`entropyPowerExt_add_ge_unconditional`) ため、この de Bruijn EPI 経路は EPI
+用途では不要 = retract 候補。ただし de Bruijn 恒等式 closure 計画 `epi-debruijn-pertime-closure` 自体は
+EPI と独立の standalone goal として有効 (本 wrapper の supersede は de Bruijn 計画の中止を意味しない)。
 @residual(plan:epi-debruijn-pertime-closure) -/
 theorem entropyPower_add_ge_case1_of_methodX
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]

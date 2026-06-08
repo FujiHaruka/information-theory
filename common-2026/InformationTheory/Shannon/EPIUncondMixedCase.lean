@@ -130,7 +130,13 @@ theorem differentialEntropy_add_ge_of_indep
 (2026-06-06 def-fix で finite-entropy 前提追加)。
 **def-fix 後再監査 PASS (2026-06-06)**: 新 `hX_ent`/`hW_ent` は a.c. 訂正 def 下で
 `entropyPowerExt_of_ac_integrable` (有限差→workhorse) lift に必要な honest regularity precondition、
-load-bearing でない。`#print axioms` = sorryAx-free 再確認。@audit:ok -/
+load-bearing でない。`#print axioms` = sorryAx-free 再確認。@audit:ok
+**@audit:superseded-by(entropyPowerExt_add_ge_unconditional)** (2026-06-08): 本 case-2 補題 (8 integrability
++ 2 finite-entropy precondition) は旧 21-precondition `entropyPowerExt_add_ge_dispatch_skeleton` 専用。
+Phase 5 endgame で gateway 単調性経由の無条件版 `entropyPowerExt_mixed_add_ge_uncond`
+(`EPIUncondDispatchFull.lean`、precondition `hX_ac hY_sing` のみ) に置換され、完全無条件 headline
+`entropyPowerExt_add_ge_unconditional` のチェーンからは到達しない (consumer = dead dispatch_skeleton + symm のみ)。
+proof-done ゆえ削除せず残置。 -/
 theorem entropyPowerExt_mixed_add_ge
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -188,7 +194,10 @@ regularity precondition (NOT load-bearing)。
 `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free)。@audit:ok
 (2026-06-06 def-fix で finite-entropy 前提追加)。
 **def-fix 後再監査 PASS (2026-06-06)**: `hY_ent`/`hWyx_ent` は Y+X path の honest regularity
-precondition、load-bearing でない。`#print axioms` = sorryAx-free 再確認。@audit:ok -/
+precondition、load-bearing でない。`#print axioms` = sorryAx-free 再確認。@audit:ok
+**@audit:superseded-by(entropyPowerExt_add_ge_unconditional)** (2026-06-08): case-2 対称版も #134 と同様、
+旧 dispatch_skeleton 専用。無条件版 `entropyPowerExt_mixed_add_ge_symm_uncond` (`EPIUncondDispatchFull.lean`)
+に置換され、無条件 headline チェーンからは到達しない (consumer = dead dispatch_skeleton のみ)。proof-done ゆえ残置。 -/
 theorem entropyPowerExt_mixed_add_ge_symm
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
