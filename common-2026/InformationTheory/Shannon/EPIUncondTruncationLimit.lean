@@ -265,7 +265,22 @@ negative part `B(μW)`.
 
 proof-done (0 sorry)。`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free)。
 非循環/非バンドル/非退化: 結論 (和周辺負部 lintegral 有限性) は仮説 (`hμW` a.c. + `B(μW)<⊤`) と
-非同型、両仮説は regularity precondition、`:True`/退化なし。@audit:ok -/
+非同型、両仮説は regularity precondition、`:True`/退化なし。
+
+**独立 honesty audit 2026-06-08 (fresh subagent, self-applied @audit:ok を独立確認 → ok)**:
+under-hypothesized でないことを反例試行で確認済 (3 仮説いずれも load-bearing for soundness、欠落で偽):
+- `[IsProbabilityMeasure μV]` 欠落 → Jensen `φ(∫f dμV) ≤ ∫φ(f) dμV` が確率測度必須ゆえ崩壊、bound
+  `μV(univ)·B(μW)` も発散。確率性は regularity precondition で genuine 必要・present。
+- `hμW` (a.c.) 欠落 → 反例 μW=δ₀ (rnDeriv=0 a.e. で `B(δ₀)=0≠⊤` を vacuous に満たすが `δ₀∗μV=μV`、
+  μV を `B=⊤` の a.c. 確率測度に取ると結論偽)。body は `conv_eq_withDensity_translate_average`
+  (`:109`) で a.c. を genuine 消費。
+- `hμW_negPart_fin` (B(μW)<⊤) 欠落 → 反例 μW a.c. で密度 spike により `B(μW)=⊤`、bound 右辺 ⊤ で
+  結論不成立。
+退化境界: μV=δ₀ で `μW∗δ₀=μW`、結論=仮説で trivial だが non-vacuous (live statement)。
+false-statement でない: 「凸性 + μV 確率での Jensen → Tonelli + 平行移動不変で和の負部 ≤ 片成分負部」
+は数学的に正しい (`Real.convexOn_mul_log.map_integral_le` line 414 で genuine 適用)。`#print axioms`
+(transient + `lake env lean`) = `[propext, Classical.choice, Quot.sound]`、sorryAx 非依存を機械再確認。
+@audit:ok -/
 private theorem negPart_negMulLog_conv_single_ne_top
     (μW μV : Measure ℝ) [IsFiniteMeasure μW] [IsProbabilityMeasure μV] (hμW : μW ≪ volume)
     (hμW_negPart_fin :
@@ -519,7 +534,21 @@ theorem differentialEntropyExt_posPart_le_liminf_of_ae_tendsto
 **仮説は全て regularity (非 load-bearing)**: `hW`/`hV`/`hWV`/`hW_ac` は可測/独立/絶対連続、
 `hW_negPart_fin` (= `B(W) < ⊤`) は h(W) 負部有限性、`hn` (positive mass) は cond well-defined の scope。
 単調性の核は body の per-fibre Gibbs + Tonelli が担い、仮説に encode しない。`#print axioms` =
-`[propext, Classical.choice, Quot.sound]` (sorryAx-free、要 olean refresh で確認)。 -/
+`[propext, Classical.choice, Quot.sound]` (sorryAx-free、要 olean refresh で確認)。
+
+**独立 honesty audit 2026-06-08 (fresh subagent, proof-done 主張検証 → ok)**: proof-done 確定。
+(1) 非循環 — 結論 `h(W_n) ≤ h(W_n+V)` は 7 仮説のいずれとも非同型、body は genuine 全証明 (`:= h`
+でない)。(2) 非バンドル — `hW`/`hV`/`hWV`/`hW_ac` は可測/独立/絶対連続、`hW_negPart_fin` (=B(W)<⊤)
+は ⊤ 枝の `⊤-⊤` 不定形回避用の有限性 precondition (B(W)<⊤ を grant しても単調性は出ない = core-
+reconstruction FAIL = 非 load-bearing)、`hn` は cond well-defined scope。単調性の核 = Case B の
+per-fibre translate Gibbs (`differentialEntropy_le_cross_entropy` 経由) + Tonelli collapse で body
+が担う。(3) 非退化 — Case A の `le_top` は `differentialEntropyExt ν = A−B = ⊤−(有限) = ⊤` を A(ν)=⊤
+(¬hent_sum で `‖g‖ₑ = A+B` 分解、B<⊤ は `negPart_negMulLog_conv_single_ne_top` で genuine 供給) から
+建ててからの genuine EReal ⊤ 利用 (route T capstone Case 2 と同型、vacuous/exfalso でない)。(4)
+sufficiency — 結論は 7 仮説から follow、依存 private helper 6 本 + 外部 Gibbs `differentialEntropy_le_
+cross_entropy` (`@audit:ok`) 全て sorry-free。**機械裏取り**: `#print axioms` (transient + `lake env lean`、
+olean refresh 後) = `[propext, Classical.choice, Quot.sound]`、sorryAx **非依存** を確認 (Phase 3/4
+skeleton sorry 3 件は本定理の依存 path 外、axiom 出力 clean で transitive 0 sorry)。@audit:ok -/
 theorem differentialEntropyExt_mono_add_truncW
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)
