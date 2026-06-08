@@ -185,7 +185,17 @@ for a.e. `z ∂(Q.map V)`. This is the **continuous** version of the general dis
 a.c.) は仮説 (indep + a.c. regularity) と非同型。(2) 非バンドル — `hindep`/`hμW_ac` は regularity
 precondition、a.c. の核を encode せず。(3) 非退化 — `:True` slot なし。(4) sufficiency — Fubini +
 support 包含で genuine、Z=X 退化 (Dirac fibre) は **sum 構造で除外** (translate of a.c. は a.c.、
-Dirac でない)。@audit:ok -/
+Dirac でない)。
+
+**独立 auditor 確認 (fresh subagent, 2026-06-08, 実装者 self-report と独立、4-check 再検証 PASS)**:
+sorryAx-free 機械裏取り済 (`#print axioms` = `[propext, Classical.choice, Quot.sound]`)。
+under-hypothesized でない (核心検証): `hμW_ac` を落とすと反例で偽 (μW=δ_a, μV=Unif[0,1] ⟹
+δ_{a+z} ⋘ Unif[a,a+1]) = 仮説必要 = honest。退化境界: μV=δ_0 で trivial (δ_0 で μW≪μW)、Dirac fibre
+病理 (一般 disintegration `condDistrib z ≪ μ.map X` は Z=X で偽) は **fibre が translate-of-a.c. =
+それ自身 a.c. ＋ marginal が convolution = 全 translate を mixing** ゆえ排除 (sum 構造が本質、generic
+condDistrib でない)。in-tree `Bridge.condDistrib_ae_absolutelyContinuous_map` は per-singleton vanishing
+proof = 離散 alphabet 限定 (`X=ℝ` 構造的に不可) を確認 ⇒ 本 continuous 自前 build は集約漏れでなく
+genuine distinct asset。@audit:ok -/
 private theorem condDistrib_ae_absolutelyContinuous_indep_add
     {μW μV : Measure ℝ} [SFinite μW] [SFinite μV] [IsProbabilityMeasure μV] (hμW_ac : μW ≪ volume) :
     ∀ᵐ z ∂μV, (μW.map (fun x => x + z)) ≪ (μW ∗ μV) := by
@@ -330,6 +340,20 @@ measure で単調性が立つのは正しい (route T が同 truncation で sorr
   「唯一の真 gap、wall 化候補」と認識済 = plan owner 判断に委ねる (本監査の focus 4 件外、現状 `plan:` 許容)。
 - 4-check PASS → **honest_residual** (tier 2)。signature honest、`@residual(plan:...)` 分類正確、
   deprecated タグ (`@audit:suspect`/`@audit:staged`/`🟢ʰ`) なし。
+
+**独立 auditor 確認 (fresh subagent, 2026-06-08, Phase 2 後半 = h_ac genuine CLOSED state)**:
+file は 0 error / 4 declaration sorry (#259 Phase3-skeleton + 本 #3 の sum-marginal crux 3 本
+`hWV_ne_bot`/`hκ_cross_int`/`hκ_KL` + `hκ_dens_meas` + #689/#730 skeleton) のみ、private helper 5 本
+(`rnDeriv_cond_eq`/`integrable_negMulLog_rnDeriv_map_add_const`/`conv_eq_withDensity_translate_average`/
+`map_add_const_withDensity`/`condDistrib_ae_absolutelyContinuous_indep_add`) は全て sorry-free +
+sorryAx-free 機械裏取り済 (`#print axioms` = 標準 3 公理)。`h_ac` 配線 (`absolutelyContinuous_compProd_right_iff`
+Mathlib 実在 + per-fibre 自前 build genuine 消費、`hsum_conv`/`hae`/`affineShiftKernel` 正しく threading、
+silent leak なし) genuine CLOSED 確認。残 3 sorry の `plan:` 分類 = **妥当 (wall: 昇格不要)**: route-T
+`integrable_negPart_negMulLog_map_condTrunc_sum` は両成分 entropy (`hX_ent`+`hY_ent`) + joint `condTrunc`
+要求のため V-entropy 仮説なしの本 setting で直接再利用不可を verbatim 確認、ただし closure tool
+(Jensen `ConvexOn.map_integral_le` / `klDiv_ne_top` / `klDiv_ne_top_iff`) は Mathlib 実在 = 単独成分版
+re-derivation で closeable (真 gap でない)。`hκ_KL` の `≪`-part = `h_ac` 供給済、llr-part = `hκ_cross_int`
+transitive 依存の分析正確。**verdict = all OK (honest_residual)**。
 @residual(plan:epi-uncond-truncation-lsc-plan) -/
 theorem differentialEntropyExt_mono_add_truncW
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
