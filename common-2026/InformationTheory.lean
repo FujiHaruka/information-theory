@@ -272,6 +272,9 @@ import InformationTheory.Shannon.EPI.InfiniteVariance.Capstone
 import InformationTheory.Shannon.EPI.Unconditional.Dispatch
 import InformationTheory.Shannon.EPI.Unconditional.CondEntropyExt
 import InformationTheory.Shannon.EPI.Unconditional.Monotone
+import InformationTheory.Shannon.EPI.Unconditional.TruncationLimit.Core
+import InformationTheory.Shannon.EPI.Unconditional.TruncationLimit.Mono
+import InformationTheory.Shannon.EPI.Unconditional.TruncationLimit.Limit
 import InformationTheory.Shannon.EPI.Unconditional.TruncationLimit
 import InformationTheory.Shannon.EPI.Unconditional.DispatchFull
 import InformationTheory.Shannon.EPI.Stam.SupplyTwoTime
