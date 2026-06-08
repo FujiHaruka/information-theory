@@ -69,6 +69,53 @@ private theorem rnDeriv_cond_eq (μ : Measure ℝ) [IsProbabilityMeasure μ] {s 
   filter_upwards [h2] with x hx
   simp only [Pi.smul_apply, hx, smul_eq_mul]
 
+/-- **truncated sum law is dominated by the full sum law (measure level)**: pushing the truncated
+measure `truncW P W n = P[| {|W| ≤ n}]` forward through `W + V` is bounded above by the inverse-mass
+scaled pushforward of `P` through `W + V`. Pure measure monotonicity (no convolution / density):
+`cond P E = (P E)⁻¹ • P.restrict E ≤ (P E)⁻¹ • P` via `restrict_le_self`, then push forward
+(`Measure.map_smul` + `Measure.map_mono`). Used downstream for the klDiv expansion of the truncated
+truncW sum law. (`hn` は consumer の `cond` well-defined scope を揃えるための regularity precondition で
+API 対称用に保持。`P E = 0` でも `cond P E = 0 ≤ anything` ゆえ本 `≤` 方向の proof body では未使用。)
+
+独立 honesty audit 2026-06-08 (route (d'') gateway atom): genuine, Mathlib 機械合成 (cond 展開 +
+restrict ≤ self + map 単調 + smul 可換)、結論は測度不等式 (regularity)、循環/bundling なし。@audit:ok -/
+private theorem map_truncW_add_le_smul_map_add
+    (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hW : Measurable W) (hV : Measurable V) (n : ℕ)
+    (hn : P {ω | |W ω| ≤ (n : ℝ)} ≠ 0) :
+    (truncW P W n).map (fun ω => W ω + V ω)
+      ≤ (P {ω | |W ω| ≤ (n : ℝ)})⁻¹ • P.map (fun ω => W ω + V ω) := by
+  set g : Ω → ℝ := fun ω => W ω + V ω with hg_def
+  have hg : Measurable g := hW.add hV
+  set E : Set Ω := {ω | |W ω| ≤ (n : ℝ)} with hE_def
+  -- Expand `truncW P W n = cond P E = (P E)⁻¹ • P.restrict E`, push forward, and dominate.
+  have hcond : (truncW P W n).map g = (P E)⁻¹ • (P.restrict E).map g := by
+    rw [truncW]
+    show ((P E)⁻¹ • P.restrict E).map g = (P E)⁻¹ • (P.restrict E).map g
+    exact Measure.map_smul (P E)⁻¹ (P.restrict E) g
+  rw [hcond]
+  -- `(P.restrict E).map g ≤ P.map g` (restrict_le_self + map_mono), then scale by `(P E)⁻¹`.
+  have hle : (P.restrict E).map g ≤ P.map g :=
+    Measure.map_mono Measure.restrict_le_self hg
+  intro s
+  simp only [Measure.smul_apply, smul_eq_mul]
+  exact mul_le_mul_right (hle s) _
+
+/-- **a.c. corollary of the truncated-sum-law domination**: the truncated sum law `truncW P W n`
+pushed through `W + V` is absolutely continuous w.r.t. the full sum law `P.map (W + V)`. Immediate
+from `map_truncW_add_le_smul_map_add` via `absolutelyContinuous_of_le_smul` (`μ' ≤ c • μ → μ' ≪ μ`,
+unconditional in `c`). Used downstream for the klDiv expansion of the truncated truncW sum law.
+
+独立 honesty audit 2026-06-08 (route (d'') gateway atom): genuine, 先行 `≤` lemma の機械的帰結、
+結論は絶対連続性 (regularity)、循環/bundling なし。@audit:ok -/
+private theorem map_truncW_add_absolutelyContinuous_map_add
+    (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hW : Measurable W) (hV : Measurable V) (n : ℕ)
+    (hn : P {ω | |W ω| ≤ (n : ℝ)} ≠ 0) :
+    (truncW P W n).map (fun ω => W ω + V ω) ≪ P.map (fun ω => W ω + V ω) := by
+  exact Measure.absolutelyContinuous_of_le_smul
+    (map_truncW_add_le_smul_map_add W V P hW hV n hn)
+
 /-- **per-fibre entropy integrability の translation 不変性**: `ν ≪ volume` で
 `negMulLog (rnDeriv ν)` が可積分なら、平行移動 `ν.map (· + y)` でも可積分。Lebesgue 平行移動不変
 (`map_add_right_eq_self`) + measure-preserving 合成 (`MeasurePreserving.integrable_comp_emb`) +
