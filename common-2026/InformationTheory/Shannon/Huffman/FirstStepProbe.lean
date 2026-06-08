@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.HuffmanColexDeterminism
+import InformationTheory.Shannon.Huffman.ColexDeterminism
 
 /-!
 # T1-A'' Huffman — first-step identification PROBE (go/no-go for 案 A)

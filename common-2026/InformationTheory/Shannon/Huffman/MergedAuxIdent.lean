@@ -2,7 +2,7 @@ import Mathlib.Logic.Equiv.Basic
 import Mathlib.Data.Multiset.MapFold
 import Mathlib.Tactic.Linarith
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.HuffmanMergedIdentBody
+import InformationTheory.Shannon.Huffman.MergedIdentBody
 
 /-!
 # T1-A'' Huffman — Part C: `MergedHuffmanAuxIdentHypothesis` の carrier-crossing discharge

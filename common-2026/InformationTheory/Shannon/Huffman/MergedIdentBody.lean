@@ -1,6 +1,6 @@
 import Mathlib.Logic.Equiv.Basic
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.HuffmanOptimality
+import InformationTheory.Shannon.Huffman.Optimality
 
 /-!
 # T1-A'' Huffman merged-length identification — vertical reduction (Wave 10, Seed S4)

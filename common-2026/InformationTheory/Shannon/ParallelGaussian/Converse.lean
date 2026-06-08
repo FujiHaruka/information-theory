@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.ParallelGaussian
+import InformationTheory.Shannon.ParallelGaussian.Basic
 import InformationTheory.Draft.Shannon.ParallelGaussianPerCoord
 import InformationTheory.Draft.Shannon.ContChannelMIDecomp
 import InformationTheory.Draft.Shannon.MultivariateDiffEntropy

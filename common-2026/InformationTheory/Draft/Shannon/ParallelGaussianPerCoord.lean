@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.ParallelGaussian
-import InformationTheory.Shannon.ParallelGaussianKKT
+import InformationTheory.Shannon.ParallelGaussian.Basic
+import InformationTheory.Shannon.ParallelGaussian.KKT
 import InformationTheory.Draft.Shannon.ContChannelMIDecomp
 import InformationTheory.Shannon.AWGNMIClosedForm
 import InformationTheory.Shannon.DifferentialEntropy

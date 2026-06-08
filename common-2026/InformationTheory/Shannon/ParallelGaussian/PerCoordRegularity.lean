@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.ParallelGaussian
+import InformationTheory.Shannon.ParallelGaussian.Basic
 import InformationTheory.Draft.Shannon.ParallelGaussianPerCoord
-import InformationTheory.Shannon.ParallelGaussianConverse
+import InformationTheory.Shannon.ParallelGaussian.Converse
 import InformationTheory.Shannon.AWGN
 import InformationTheory.Shannon.AWGNMIBridge
 import InformationTheory.Draft.Shannon.ContChannelMIDecomp

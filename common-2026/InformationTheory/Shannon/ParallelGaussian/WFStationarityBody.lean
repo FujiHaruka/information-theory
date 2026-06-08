@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.ParallelGaussianWFCertBody
+import InformationTheory.Shannon.ParallelGaussian.WFCertBody
 
 /-!
 # W10-S2 Water-filling KKT stationarity discharge (common Lagrange multiplier)

@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.ParallelGaussian
-import InformationTheory.Shannon.ParallelGaussianL_PG0Discharge
+import InformationTheory.Shannon.ParallelGaussian.Basic
+import InformationTheory.Shannon.ParallelGaussian.L_PG0Discharge
 import Mathlib.Topology.Order.IntermediateValue
 import Mathlib.Topology.Algebra.Monoid
 import Mathlib.Topology.Algebra.Group.Defs

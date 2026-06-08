@@ -1,5 +1,5 @@
 import Mathlib.Logic.Equiv.Basic
-import InformationTheory.Shannon.HuffmanOptimality
+import InformationTheory.Shannon.Huffman.Optimality
 import InformationTheory.Meta.EntryPoint
 
 /-!

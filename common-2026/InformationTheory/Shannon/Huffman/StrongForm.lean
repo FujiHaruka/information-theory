@@ -1,8 +1,8 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.HuffmanOptimality
-import InformationTheory.Shannon.HuffmanSwapNormCompletion
-import InformationTheory.Shannon.HuffmanMergedIdentBody
-import InformationTheory.Shannon.HuffmanSwapNormProof
+import InformationTheory.Shannon.Huffman.Optimality
+import InformationTheory.Shannon.Huffman.SwapNormCompletion
+import InformationTheory.Shannon.Huffman.MergedIdentBody
+import InformationTheory.Shannon.Huffman.SwapNormProof
 
 /-!
 # T1-A'' — Hyp1 (swap normalization) genuine discharge, strong-precondition core

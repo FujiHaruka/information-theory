@@ -1,7 +1,7 @@
 import Mathlib.Logic.Equiv.Basic
-import InformationTheory.Shannon.HuffmanOptimality
-import InformationTheory.Shannon.HuffmanT1APPrimePartial
-import InformationTheory.Shannon.HuffmanT1APPrimeBody
+import InformationTheory.Shannon.Huffman.Optimality
+import InformationTheory.Shannon.Huffman.T1APPrimePartial
+import InformationTheory.Shannon.Huffman.T1APPrimeBody
 import InformationTheory.Meta.EntryPoint
 
 /-!

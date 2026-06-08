@@ -6,7 +6,7 @@ import Mathlib.Data.Fintype.EquivFin
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.MeasureTheory.Measure.Real
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.Huffman
+import InformationTheory.Shannon.Huffman.Basic
 
 /-!
 # Huffman 最適性 主定理 (T1-A' Cover-Thomas Theorem 5.8.1)

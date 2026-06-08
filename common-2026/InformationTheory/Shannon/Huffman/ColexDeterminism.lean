@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.HuffmanMergedAuxIdent
+import InformationTheory.Shannon.Huffman.MergedAuxIdent
 
 /-!
 # T1-A'' Huffman — colex 決定化による無条件 relabel 不変量

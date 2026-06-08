@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.ParallelGaussianKKT
+import InformationTheory.Shannon.ParallelGaussian.KKT
 import Mathlib.Analysis.Convex.Deriv
 import Mathlib.Analysis.Convex.SpecificFunctions.Basic
 import Mathlib.Analysis.SpecialFunctions.Log.Deriv

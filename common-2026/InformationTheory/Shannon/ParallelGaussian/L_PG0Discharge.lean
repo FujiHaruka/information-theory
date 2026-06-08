@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.ParallelGaussian
+import InformationTheory.Shannon.ParallelGaussian.Basic
 
 /-!
 # T2-B L-PG0 discharge: Parallel Gaussian kernel measurability

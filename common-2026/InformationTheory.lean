@@ -87,9 +87,9 @@ import InformationTheory.Shannon.RateDistortionAchievabilityPhaseEStrongFinal
 import InformationTheory.Shannon.ShannonCode
 import InformationTheory.Shannon.ShannonCodeKraftReverse
 import InformationTheory.Shannon.McMillanKraftBridge
-import InformationTheory.Shannon.Huffman
-import InformationTheory.Shannon.HuffmanOptimality
-import InformationTheory.Shannon.HuffmanT1APPrimePartial
+import InformationTheory.Shannon.Huffman.Basic
+import InformationTheory.Shannon.Huffman.Optimality
+import InformationTheory.Shannon.Huffman.T1APPrimePartial
 import InformationTheory.Shannon.CsiszarProjection
 import InformationTheory.Shannon.Chernoff.Basic
 import InformationTheory.Shannon.Chernoff.NLetterZSum
@@ -111,8 +111,8 @@ import InformationTheory.Shannon.AWGNF1Discharge
 import InformationTheory.Shannon.AWGNAchievabilityDischarge
 import InformationTheory.Shannon.AWGNConverseDischarge
 import InformationTheory.Shannon.AwgnWalls
-import InformationTheory.Shannon.ParallelGaussian
-import InformationTheory.Shannon.ParallelGaussianL_PG0Discharge
+import InformationTheory.Shannon.ParallelGaussian.Basic
+import InformationTheory.Shannon.ParallelGaussian.L_PG0Discharge
 import InformationTheory.Shannon.EntropyPowerExt
 import InformationTheory.Shannon.EPIUncondMixedCase
 import InformationTheory.Shannon.EntropyPowerInequality
@@ -153,10 +153,10 @@ import InformationTheory.Shannon.MeasurePiTiltedFactorization
 import InformationTheory.Draft.Shannon.InfinitePiTiltedChangeOfMeasure
 -- Wave6 parallel-10 body discharge
 import InformationTheory.Shannon.AWGNMIBridge
-import InformationTheory.Shannon.ParallelGaussianKKT
+import InformationTheory.Shannon.ParallelGaussian.KKT
 import InformationTheory.Shannon.EPIL3Integration
 -- Wave6 gap-close
-import InformationTheory.Shannon.HuffmanT1APPrimeBody
+import InformationTheory.Shannon.Huffman.T1APPrimeBody
 import InformationTheory.Shannon.Hoeffding.SandwichBody
 import InformationTheory.Shannon.WynerZiv.ConvexityBody
 -- Wave7 parallel-10 + gap-close
@@ -184,17 +184,17 @@ import InformationTheory.Shannon.FisherInfoV2HeatFlowBody
 import InformationTheory.Shannon.LZ78GreedyParsingImpl
 import InformationTheory.Shannon.LZ78GreedyLongestPrefix
 import InformationTheory.Draft.Shannon.HoeffdingInteriorGradientBody
-import InformationTheory.Shannon.HuffmanSwapStepChainBody
+import InformationTheory.Shannon.Huffman.SwapStepChainBody
 import InformationTheory.Shannon.AWGNMIDecompBody
 import InformationTheory.Draft.Shannon.ContChannelMIDecomp
 import InformationTheory.Draft.Shannon.AwgnCapacityConverseMaxent
 import InformationTheory.Shannon.AWGNMIClosedForm
-import InformationTheory.Shannon.ParallelGaussianWFCertBody
+import InformationTheory.Shannon.ParallelGaussian.WFCertBody
 import InformationTheory.Draft.Shannon.HoeffdingLagrangeIVTBody
-import InformationTheory.Shannon.ParallelGaussianWFStationarityBody
+import InformationTheory.Shannon.ParallelGaussian.WFStationarityBody
 import InformationTheory.Shannon.LZ78PhraseCountAsymptoticBody
 import InformationTheory.Shannon.LZ78ZivCountingBody
-import InformationTheory.Shannon.HuffmanMergedIdentBody
+import InformationTheory.Shannon.Huffman.MergedIdentBody
 import InformationTheory.Shannon.WynerZiv.ObjectiveConvexityBody
 import InformationTheory.Shannon.GaussianPDFVarianceDerivBody
 import InformationTheory.Shannon.FisherDeBruijnGaussianWitness
@@ -208,15 +208,15 @@ import InformationTheory.Shannon.EPIStamDeBruijnConclusion
 import InformationTheory.Shannon.WynerZiv.CondEntDiffConvexBody
 import InformationTheory.Draft.Shannon.MultivariateDiffEntropy
 import InformationTheory.Draft.Shannon.ParallelGaussianPerCoord
-import InformationTheory.Shannon.ParallelGaussianConverse
-import InformationTheory.Shannon.ParallelGaussianPerCoordRegularity
-import InformationTheory.Shannon.HuffmanSwapNormProof
-import InformationTheory.Shannon.HuffmanSwapNormCompletion
-import InformationTheory.Shannon.HuffmanStrongForm
+import InformationTheory.Shannon.ParallelGaussian.Converse
+import InformationTheory.Shannon.ParallelGaussian.PerCoordRegularity
+import InformationTheory.Shannon.Huffman.SwapNormProof
+import InformationTheory.Shannon.Huffman.SwapNormCompletion
+import InformationTheory.Shannon.Huffman.StrongForm
 import InformationTheory.Draft.Shannon.HuffmanWalls
-import InformationTheory.Shannon.HuffmanMergedAuxIdent
-import InformationTheory.Shannon.HuffmanColexDeterminism
-import InformationTheory.Shannon.HuffmanFirstStepProbe
+import InformationTheory.Shannon.Huffman.MergedAuxIdent
+import InformationTheory.Shannon.Huffman.ColexDeterminism
+import InformationTheory.Shannon.Huffman.FirstStepProbe
 import InformationTheory.Shannon.MinkowskiDet
 import InformationTheory.Shannon.EPIScoreCrossTermOrth
 import InformationTheory.Shannon.EPIApproxIdentityL1

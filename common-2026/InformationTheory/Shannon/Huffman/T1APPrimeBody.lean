@@ -1,7 +1,7 @@
 import Mathlib.Logic.Equiv.Basic
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.HuffmanOptimality
-import InformationTheory.Shannon.HuffmanT1APPrimePartial
+import InformationTheory.Shannon.Huffman.Optimality
+import InformationTheory.Shannon.Huffman.T1APPrimePartial
 
 /-!
 # T1-A'' Huffman 最適性 body 拡張 (Wave 5)

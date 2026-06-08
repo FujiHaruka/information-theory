@@ -1,5 +1,5 @@
-import InformationTheory.Shannon.HuffmanStrongForm
-import InformationTheory.Shannon.HuffmanSwapStepChainBody
+import InformationTheory.Shannon.Huffman.StrongForm
+import InformationTheory.Shannon.Huffman.SwapStepChainBody
 import InformationTheory.Meta.EntryPoint
 
 /-!
