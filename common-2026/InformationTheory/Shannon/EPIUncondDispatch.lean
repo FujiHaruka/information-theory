@@ -141,7 +141,14 @@ thread、case 3 は型自明)、(3) 非退化 (case 3 両特異は `entropyPower
 エントロピーパワー真に 0 → RHS=0、退化悪用でなく正しい値、sanity gate `entropyPowerExt_dirac=0`
 確認済の既 `@audit:ok` decl に delegate)、(4) sufficiency (全 4 枝で delegation 先引数と一致)。case-1
 無限分散枝が capstone 経由で genuine closure 済 (FALSE WALL 解消) ゆえ transitive sorry 0、
-`#print axioms` = `[propext, Classical.choice, Quot.sound]` (本監査機械再確認) で proof done。@audit:ok -/
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (本監査機械再確認) で proof done。@audit:ok
+
+**@audit:superseded-by(entropyPowerExt_add_ge_unconditional)**: 本 skeleton は 21 precondition
+(case2/2symm 用 16 integrability + case-1/case2 用 5 finite-entropy) を取るが、2026-06-08 Phase 5
+endgame で method-Y gateway 経由の完全無条件版 `entropyPowerExt_add_ge_unconditional`
+(`EPIUncondDispatchFull.lean`、`hX hY hXY` のみ、precondition 0、sorryAx-free、独立監査 all-OK) が
+別建てされ canonical headline となった。本 skeleton は proof-done の consumer 0 leaf として残置
+(削除しないが新規利用は無条件版を推奨)。 -/
 theorem entropyPowerExt_add_ge_dispatch_skeleton
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
