@@ -87,6 +87,8 @@ import InformationTheory.Shannon.Sanov.LDPEquality
 import InformationTheory.Shannon.TypeClassLowerBound
 import InformationTheory.Shannon.StrongTypicality
 import InformationTheory.Shannon.ConditionalMethodOfTypes
+import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseEStrongFinal.Setup
+import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseEStrongFinal.FailureTendsto
 import InformationTheory.Shannon.RateDistortion.AchievabilityPhaseEStrongFinal
 import InformationTheory.Shannon.ShannonCode.Basic
 import InformationTheory.Shannon.ShannonCode.KraftReverse
