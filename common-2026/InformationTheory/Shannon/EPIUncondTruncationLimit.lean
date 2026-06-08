@@ -955,11 +955,18 @@ theorem differentialEntropyExt_mono_add_truncW
         rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs, abs_mul, abs_of_nonneg (hfW_nn _)]
       rw [henorm_eq]
       exact lt_of_le_of_ne le_top hglob_abs_lint
-    -- (d) per-fibre cross-integrability `Integrable (log r) (μWz z)`  (a.e. z), from the Tonelli
-    -- finiteness `∫ r |log r| < ∞` (= `hent_sum` rewritten via `negMulLog r = -r log r`).
+    -- (d) per-fibre cross-integrability `Integrable (log r) (μWz z)`  (a.e. z), from the per-z
+    -- section of the global product-integrable kernel `hKint`.
     have hcross_int : ∀ᵐ z ∂μV, Integrable
         (fun x => Real.log (rfun x)) (μWz z) := by
-      sorry
+      filter_upwards [hKint.prod_right_ae] with z hz_sec
+      -- `hz_sec : Integrable (fun x => fW (x - z) * log (rfun x)) volume`.
+      rw [hμWz_wd z, integrable_withDensity_iff_integrable_smul'
+        (by fun_prop : Measurable fun x => fWe (x - z)) (hfWe_translate_fin z)]
+      refine hz_sec.congr ?_
+      filter_upwards with x
+      show fW (x - z) * Real.log (rfun x) = (fWe (x - z)).toReal • Real.log (rfun x)
+      rw [smul_eq_mul]
     -- (e) per-fibre Gibbs:  `h(μWz z) ≤ -∫ x, log(r x) ∂(μWz z)`  (a.e. z).
     have hgibbs : ∀ᵐ z ∂μV,
         differentialEntropy (μWz z) ≤ - ∫ x, Real.log (rfun x) ∂(μWz z) := by
@@ -974,11 +981,40 @@ theorem differentialEntropyExt_mono_add_truncW
     -- (g) the cross-entropy term collapses (after integration over μV) to `-h(ν)`.
     -- the μV-integrability of `z ↦ -∫ x, log(r x) ∂(μWz z)` (for `integral_mono_ae`).
     have hRHS_int : Integrable (fun z => - ∫ x, Real.log (rfun x) ∂(μWz z)) μV := by
-      sorry
+      have hbase : Integrable
+          (fun z => ∫ x, fW (x - z) * Real.log (rfun x) ∂volume) μV :=
+        hKint.integral_prod_left
+      refine (hbase.neg).congr ?_
+      filter_upwards with z
+      show -∫ x, fW (x - z) * Real.log (rfun x) ∂volume
+        = -∫ x, Real.log (rfun x) ∂(μWz z)
+      rw [hinner z (fun x => Real.log (rfun x))]
     -- (h) `∫ z, (-∫ x, log(r x) ∂(μWz z)) ∂μV = - ∫ x, r x · log(r x) ∂volume = h(ν)`.
     have hRHS_eq : (∫ z, (- ∫ x, Real.log (rfun x) ∂(μWz z)) ∂μV)
         = differentialEntropy ν := by
-      sorry
+      -- rewrite each inner via `hinner`, pull out the sign, Fubini-swap, collapse the inner z-integral.
+      have hstep1 : (∫ z, (- ∫ x, Real.log (rfun x) ∂(μWz z)) ∂μV)
+          = - ∫ z, (∫ x, fW (x - z) * Real.log (rfun x) ∂volume) ∂μV := by
+        rw [← integral_neg]
+        apply integral_congr_ae; filter_upwards with z
+        rw [hinner z (fun x => Real.log (rfun x))]
+      -- Fubini swap `∫ z ∫ x = ∫ x ∫ z`  (kernel `hKint` over `μV.prod vol`).
+      have hswap : (∫ z, (∫ x, fW (x - z) * Real.log (rfun x) ∂volume) ∂μV)
+          = ∫ x, (∫ z, fW (x - z) * Real.log (rfun x) ∂μV) ∂volume :=
+        integral_integral_swap (f := fun z x => fW (x - z) * Real.log (rfun x)) hKint
+      -- inner `∫ z, fW(x-z)·log(r x) ∂μV = (∫ z, fW(x-z) ∂μV)·log(r x) = rfun x · log(rfun x)` a.e.
+      have hcollapse : (∫ x, (∫ z, fW (x - z) * Real.log (rfun x) ∂μV) ∂volume)
+          = ∫ x, rfun x * Real.log (rfun x) ∂volume := by
+        apply integral_congr_ae
+        filter_upwards [hr_avg] with x hx
+        rw [integral_mul_const, ← hx]
+      -- `differentialEntropy ν = ∫ negMulLog r = -∫ r·log r`.
+      have hent_eq : differentialEntropy ν = - ∫ x, rfun x * Real.log (rfun x) ∂volume := by
+        rw [differentialEntropy, ← integral_neg]
+        apply integral_congr_ae; filter_upwards with x
+        show Real.negMulLog ((ν.rnDeriv volume x).toReal) = -(rfun x * Real.log (rfun x))
+        rw [Real.negMulLog]; ring
+      rw [hstep1, hswap, hcollapse, hent_eq]
     -- assemble:  `h(Q.map W) = ∫ z, h(Q.map W) ∂μV ≤ ∫ z, (-∫ log r ∂μWz) ∂μV = h(ν)`.
     calc differentialEntropy (Q.map W)
         = ∫ _z, differentialEntropy (Q.map W) ∂μV := by
