@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.Han
+import InformationTheory.Shannon.Han.Basic
 import InformationTheory.Shannon.SlepianWolf
 
 /-!

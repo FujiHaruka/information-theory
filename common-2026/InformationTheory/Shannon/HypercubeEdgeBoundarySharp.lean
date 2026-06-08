@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.HypercubeEdgeBoundary
-import InformationTheory.Shannon.HanD
+import InformationTheory.Shannon.Han.D
 import Mathlib.Analysis.SpecialFunctions.Log.Base
 
 /-!

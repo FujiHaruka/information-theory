@@ -3,7 +3,7 @@ import InformationTheory.Shannon.Sanov.LDP
 import InformationTheory.Shannon.Sanov.LDPEquality
 import InformationTheory.Shannon.KLDivContinuous
 import InformationTheory.Shannon.CsiszarProjection
-import InformationTheory.Shannon.Chernoff
+import InformationTheory.Shannon.Chernoff.Basic
 import InformationTheory.Shannon.HoeffdingTradeoff
 import InformationTheory.Shannon.HoeffdingSandwichDischarge
 

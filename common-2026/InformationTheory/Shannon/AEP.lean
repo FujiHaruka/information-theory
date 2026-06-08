@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.Bridge
-import InformationTheory.Shannon.Han
+import InformationTheory.Shannon.Han.Basic
 import InformationTheory.Shannon.Pi
 import InformationTheory.Shannon.DPI
 import InformationTheory.Shannon.SlepianWolf

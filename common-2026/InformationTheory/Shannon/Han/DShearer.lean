@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.HanD
+import InformationTheory.Shannon.Han.D
 
 /-!
 # Han Phase D — Phase C: Shearer の不等式 (整数 covering 形)

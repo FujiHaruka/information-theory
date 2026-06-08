@@ -1,5 +1,5 @@
 import InformationTheory.Shannon.HoeffdingTradeoff
-import InformationTheory.Shannon.Chernoff
+import InformationTheory.Shannon.Chernoff.Basic
 import InformationTheory.Meta.EntryPoint
 import Mathlib.Order.Filter.IsBounded
 

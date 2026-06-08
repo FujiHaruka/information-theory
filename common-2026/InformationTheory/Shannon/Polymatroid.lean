@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Polymatroid.Basic
-import InformationTheory.Shannon.HanD
+import InformationTheory.Shannon.Han.D
 
 /-!
 # Polymatroid axioms for joint entropy (Phase A〜C skeleton)

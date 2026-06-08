@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.Chernoff
+import InformationTheory.Shannon.Chernoff.Basic
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Data.Fintype.Pi
 

@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.HanDShearer
+import InformationTheory.Shannon.Han.DShearer
 import Mathlib.Probability.UniformOn
 
 /-!

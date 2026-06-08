@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.MaxEntropyConstrained
+import InformationTheory.Shannon.MaxEntropy.Constrained
 
 /-!
 # Constrained Maximum Entropy — Lagrange / KKT perspective (T3-A')

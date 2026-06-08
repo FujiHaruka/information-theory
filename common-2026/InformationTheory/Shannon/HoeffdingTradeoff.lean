@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.Chernoff
+import InformationTheory.Shannon.Chernoff.Basic
 import InformationTheory.Shannon.CsiszarProjection
 import InformationTheory.Shannon.KLDivContinuous
 import InformationTheory.Shannon.Sanov.LDPEquality

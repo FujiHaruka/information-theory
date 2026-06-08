@@ -5,7 +5,7 @@ import InformationTheory.Shannon.HoeffdingSandwichBody
 import InformationTheory.Draft.Shannon.HoeffdingInteriorBody
 import InformationTheory.Draft.Shannon.HoeffdingInteriorGradientBody
 import InformationTheory.Draft.Shannon.HoeffdingMinimizerAttainment
-import InformationTheory.Shannon.Chernoff
+import InformationTheory.Shannon.Chernoff.Basic
 import InformationTheory.Shannon.CsiszarProjection
 import InformationTheory.Shannon.Sanov.LDPEquality
 import InformationTheory.Shannon.StrongStein

@@ -26,10 +26,10 @@ import InformationTheory.Shannon.SlepianWolfConditionalTypicalSlice
 import InformationTheory.Shannon.SufficientStatistic
 import InformationTheory.Shannon.SlepianWolfFullRateRegion
 import InformationTheory.Shannon.Pi
-import InformationTheory.Shannon.Han
-import InformationTheory.Shannon.HanD
-import InformationTheory.Shannon.HanDAverage
-import InformationTheory.Shannon.HanDShearer
+import InformationTheory.Shannon.Han.Basic
+import InformationTheory.Shannon.Han.D
+import InformationTheory.Shannon.Han.DAverage
+import InformationTheory.Shannon.Han.DShearer
 import InformationTheory.Shannon.LoomisWhitney
 import InformationTheory.Shannon.BrascampLieb
 import InformationTheory.Shannon.HypercubeEdgeBoundary
@@ -40,8 +40,8 @@ import InformationTheory.Shannon.AEP
 import InformationTheory.Shannon.AEPRate
 import InformationTheory.Shannon.Stein
 import InformationTheory.Shannon.StrongStein
-import InformationTheory.Shannon.MaxEntropy
-import InformationTheory.Shannon.MaxEntropyConstrained
+import InformationTheory.Shannon.MaxEntropy.Basic
+import InformationTheory.Shannon.MaxEntropy.Constrained
 import InformationTheory.Shannon.Pinsker
 import InformationTheory.Shannon.PinskerSharp
 import InformationTheory.Shannon.MIChainRule
@@ -91,8 +91,8 @@ import InformationTheory.Shannon.Huffman
 import InformationTheory.Shannon.HuffmanOptimality
 import InformationTheory.Shannon.HuffmanT1APPrimePartial
 import InformationTheory.Shannon.CsiszarProjection
-import InformationTheory.Shannon.Chernoff
-import InformationTheory.Shannon.ChernoffNLetterZSum
+import InformationTheory.Shannon.Chernoff.Basic
+import InformationTheory.Shannon.Chernoff.NLetterZSum
 import InformationTheory.Draft.Shannon.Cramer
 import InformationTheory.Shannon.CramerLC2Discharge
 import InformationTheory.Shannon.CramerLC2DischargeExt
@@ -139,7 +139,7 @@ import InformationTheory.Shannon.TypedRV
 import InformationTheory.Asymptotic
 -- Wave5 parallel-10 publish
 import InformationTheory.Shannon.EPIStamDischarge
-import InformationTheory.Shannon.MaxEntropyConstrainedKKT
+import InformationTheory.Shannon.MaxEntropy.ConstrainedKKT
 import InformationTheory.Shannon.LZ78GreedyParsing
 import InformationTheory.Shannon.FisherInfoV2DeBruijn
 import InformationTheory.Shannon.FisherInfoV2DeBruijnPerTime

@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.ChannelCoding
 import InformationTheory.Shannon.ChannelCodingAchievability
-import InformationTheory.Shannon.MaxEntropy
+import InformationTheory.Shannon.MaxEntropy.Basic
 import Mathlib.Analysis.Convex.StdSimplex
 import Mathlib.Topology.Order.Compact
 import Mathlib.Order.ConditionallyCompleteLattice.Basic

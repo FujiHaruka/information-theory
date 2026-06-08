@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.HanD
+import InformationTheory.Shannon.Han.D
 
 /-!
 # Han Phase D-1: subset average chain (skeleton)

@@ -2,7 +2,7 @@ import InformationTheory.Fano.Measure
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.Bridge
 import InformationTheory.Shannon.DPI
-import InformationTheory.Shannon.MaxEntropy
+import InformationTheory.Shannon.MaxEntropy.Basic
 import InformationTheory.Shannon.MutualInfo
 import InformationTheory.Shannon.Pi
 

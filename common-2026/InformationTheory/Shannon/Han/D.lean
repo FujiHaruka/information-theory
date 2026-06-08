@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.Han
+import InformationTheory.Shannon.Han.Basic
 
 /-!
 # Han Phase D: subset 版 joint entropy infrastructure (skeleton)
