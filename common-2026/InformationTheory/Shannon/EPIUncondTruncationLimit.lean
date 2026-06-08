@@ -486,84 +486,38 @@ theorem differentialEntropyExt_posPart_le_liminf_of_ae_tendsto
             (Real.negMulLog (((μ_n n).rnDeriv volume x).toReal)) ∂volume) atTop := by
   sorry
 
-/-- **per-n finite-entropy 単調性**: 各 n で `h(W_n) ≤ h(W_n + V)` を finite ②
-(`differentialEntropyExt_eq_condEntExt_add_klDiv_of_finite`、11 regularity 仮説、`@audit:ok`) or
-有限枝単調性経由で建てる。`truncW P W n` は compact support ゆえ有限分散・有限エントロピーで、
-finite ② の 11 仮説 (joint 密度可測 / per-fibre KL 有限 等) を condDistrib で供給する。
+/-- **per-n 単調性** (proof-done, 0 sorry): 各 n で `h(W_n) ≤ h(W_n + V)`、`W_n := truncW P W n`
+(= `P` を W-事象 `{|W| ≤ n}` で条件付けた compact-support 近似)。
 
-route β' Phase 2 で埋める。`hn` (positive mass) は条件付けが well-defined な n を選ぶ scope
-(load-bearing でない)。
+**route (chain rule 不使用)**: 旧版は finite ② chain rule
+`differentialEntropyExt_eq_condEntExt_add_klDiv_of_finite` を `X:=W+V, Z:=V` で適用していたが、
+その 11 regularity 仮説のうち `hκ_dens_meas` (joint 密度可測) が Mathlib 不在の真 gap だった。
+本版は **chain rule を完全に捨て**、fibre を抽象 condDistrib でなく **explicit な平行移動
+`(Q.map W).map(·+z)`** として扱う per-fibre translate Gibbs に置き換え、`hκ_dens_meas`/`hκ_KL`/
+`hκ_cross_int` を全廃する。
 
-**`hW_negPart_fin` の追加理由 (2026-06-08 Phase 2 案 F)**: `B(W) := ∫⁻ ofReal(-(negMulLog f_W)) < ⊤`
-(= h(W) の負部 lintegral 有限性) を表す **regularity precondition**。truncated `B(W_n) < ⊤` を
-密度分解 `f_n = c⁻¹·1_{[-n,n]}·f_W` (`restrict_map` + `rnDeriv_smul_left` + `rnDeriv_restrict`)
-+ `negMulLog_mul` で `B(W)` から供給するための入力で、`hW_ne_bot`/`hWV_ne_bot` 系の `≠⊥`
-(= 負部有限) closure に使う。**load-bearing でない**: 単調性 `h(W_n) ≤ h(W_n+V)` の核は body 側の
-finite ② (`differentialEntropyExt_eq_condEntExt_add_klDiv_of_finite`) が担い、`hW_negPart_fin` は
-h(W) の負部有限性 (正則性条件) で単調性の核を encode しない。name-laundering でない (核を仮説に
-packing せず、body sorry は `@residual` で正直にマーク)。
+記号: `Q := truncW P W n`、`ν := Q.map(W+V) = (Q.map W) ∗ (Q.map V)` (独立 ⟹ 畳み込み)、
+`rfun := (ν.rnDeriv vol).toReal` (和周辺密度)、`fW := (Q.map W).rnDeriv vol .toReal`。
 
-**Phase 2 progress (2026-06-08, 後半)**: body は genuine 配線済 (IndepFun 保存 / fibre 同定 / 等式→
-単調性 calc)。finite ② の 11 仮説 supply のうち **genuine 着地**: `hWV_ac_Q` / `hκ_ac` /
-`hκ_logp_int` (fibre = `Q.map W` の平行移動ゆえ `integrable_negMulLog_rnDeriv_map_add_const` で
-還元) / `hW_ne_bot` (= `hW_ent_Q` 経由、`hAn_fin` compact-support 正部 + `hBn_fin` = `hW_negPart_fin`
-由来負部、両部有限 ⟹ 全エントロピー可積分) / **`h_ac` (sum-marginal、CLOSED 2026-06-08 後半)**:
-`absolutelyContinuous_compProd_right_iff` で per-fibre a.c. に還元 → 連続 disintegration a.c. 自前 build
-`condDistrib_ae_absolutelyContinuous_indep_add` (Mathlib 一般版不在、`[Countable X]` Bridge は `X=ℝ` 不可)
-で closure。後者は 和密度 = translate-average (`conv_eq_withDensity_translate_average`、左因子のみ a.c.
-で十分、route-T `convDensityAdd` は両 a.c. 要求のため別 build) + Fubini で `{r=0}⊆{f_W(·-z)=0}` a.e. z
-+ withDensity 間 a.c. 変換。**honest sorry 残 (3 件)**: sum-marginal `Q.map(W+V)` の mixture log を参照する
-`hWV_ne_bot` (= mixture 負部 Jensen+Tonelli、route-T-scale Bochner Jensen を単独成分 over μ_V 版で再 build
-要、~120 行) / `hκ_cross_int` (= cross-entropy domination、mixture log の支配) / `hκ_KL` (= `hκ_cross_int`
-の下流、a.c. 部は `h_ac` と同供給で取れるが llr 可積分が cross-term 依存) + Mathlib 不在の `hκ_dens_meas`
-(joint 密度可測、真 gap、touch 対象外)。前者 3 件は route-T-scale Jensen/DCT 再 build ゆえ別 fill / escalate へ。
+**証明の骨格 (3 段)**:
+1. **B(ν) < ⊤** (= 和周辺の負部 lintegral 有限性): single-component helper
+   `negPart_negMulLog_conv_single_ne_top` を `μW := Q.map W`, `μV := Q.map V` で適用。`B(Q.map W) < ⊤`
+   (= `hBn_fin`、`hW_negPart_fin` を truncated 密度分解 + `negMulLog_mul` で供給) が入力。averaging は
+   確率測度 `Q.map V` 上ゆえ `V` の a.c. 不要 (route-T single-component 一般化)。
+2. **場合分け** `by_cases hent_sum : Integrable (negMulLog ∘ rfun) volume`:
+   - **Case A (無限枝, `¬ hent_sum`)**: `B(ν) < ⊤` と `¬ hent_sum` から正部 `A(ν) = ⊤`、よって
+     `differentialEntropyExt ν = ⊤`、`h(W_n) ≤ ⊤` を `le_top` で閉じる (route T capstone Case 2 と同型)。
+   - **Case B (有限枝, `hent_sum`)**: 両辺を workhorse `differentialEntropy` に降ろし、実不等式
+     `h(Q.map W) ≤ h(ν)` を **per-fibre translate Gibbs** で建てる: 各 fibre `μWz z := (Q.map W).map(·+z)`
+     に Gibbs 出口 `differentialEntropy_le_cross_entropy` (`μWz z ≪ ν` は連続 disintegration a.c.
+     `condDistrib_ae_absolutelyContinuous_indep_add` で供給) → 平行移動不変
+     `differentialEntropy_map_add_const` で LHS を定数化 → `μV` 上で積分 → cross-entropy 項を Tonelli
+     (`r(x) = ∫ fW(x-z) ∂μV` = 収束密度恒等式) で collapse して `-h(ν)` に同定。
 
-独立 honesty audit 2026-06-08 (skeleton, 4-check PASS → honest_residual): (1) 非循環 — 結論
-(単調不等式 `h(W_n) ≤ h(W_n+V)`) は 7 仮説と非同型。(2) 非バンドル — `hW`/`hV`/`hWV`/`hW_ac`
-は可測/独立/絶対連続の regularity、`hW_negPart_fin` は h(W) 負部有限性の regularity、`hn` は cond
-well-defined の scope precondition、いずれも単調性の核を encode せず (供給元 finite ② =
-`differentialEntropyExt_eq_condEntExt_add_klDiv_of_finite` が body 側に来る)。(3) 非退化 — `:True`
-slot なし。(4) sufficiency — compact support (`{|W|≤n}` 条件付け) の有限分散・有限エントロピー
-measure で単調性が立つのは正しい (route T が同 truncation で sorryAx-free 実証済)。`plan:` 妥当。
-
-**独立 auditor 確認 (fresh subagent、2026-06-08、実装者の self-report と独立)**:
-- `hW_negPart_fin` = **regularity precondition、NOT load-bearing** (core-reconstruction test FAIL: B(W)<⊤
-  を grant しても単調性 `h(W_n)≤h(W_n+V)` は出ない。仮説は h(W) 負部 lintegral の **有限性** のみ = finiteness
-  category = OK。consumer 検証: body で `hBn_fin` (truncated 負部有限) 経由 `hW_ne_bot`/`hW_ent_Q` の ≠⊥
-  regularity にのみ消費、単調性の核 = 別 file finite ② `..._of_finite` `@audit:ok` が body 側で担う)。
-- genuine closure 検証 (機械: file は 0 error / 4 sorry のみ = helper 群 sorry なし):
-  `hAn_fin` (compact-support `negMulLog_le_one_sub_self` + `volume Sn<⊤`)、`hBn_fin` (`negMulLog_mul`
-  分解 + `hW_negPart_fin` bound、両 Mathlib 補題 loogle 実在確認)、`hW_ent_Q` (両部有限⟹可積分)、
-  `hW_ne_bot` (`differentialEntropyExt_of_ac_integrable` sig 照合済)、`hκ_logp_int` (`Q.map W` 平行移動
-  還元) いずれも genuine、退化定義悪用 (exfalso/vacuous) なし。private helper 2 本 (`rnDeriv_cond_eq` /
-  `integrable_negMulLog_rnDeriv_map_add_const`) signature 非 under-hypothesized、body Mathlib 機械合成。
-- skeleton 監査時点の 4 honest sorry (`hWV_ne_bot`/`h_ac`/`hκ_cross_int`/`hκ_KL`) のうち **`h_ac` は
-  Phase 2 後半で genuine CLOSED** (上記 progress 参照、自前 build `condDistrib_ae_absolutelyContinuous_indep_add`
-  + `conv_eq_withDensity_translate_average` + `map_add_const_withDensity`、いずれも `@audit:ok`、`#print axioms`
-  で transitive sorry が残 3 件のみ確認)。残 3 honest sorry (`hWV_ne_bot`/`hκ_cross_int`/`hκ_KL`) の `plan:`
-  分類妥当 (wall: 化不要): route-T 負部補題 `integrable_negPart_negMulLog_map_condTrunc_sum` は両成分 entropy
-  (`hX_ent`+`hY_ent`) 要求のため再利用不可確認 (V entropy 仮説なし)、単独成分 Jensen を over μ_V 版で再 build
-  すれば closeable (真 gap でない、route-T-scale)。
-  in-tree `Bridge.condDistrib_ae_absolutelyContinuous_map` は `[Fintype X]` 専用 (`X=ℝ` 不可) 確認。
-- 注記: `hκ_dens_meas` (joint 密度可測、loogle Found 0) は実装者も `plan:` だが plan 判断ログ #3 が
-  「唯一の真 gap、wall 化候補」と認識済 = plan owner 判断に委ねる (本監査の focus 4 件外、現状 `plan:` 許容)。
-- 4-check PASS → **honest_residual** (tier 2)。signature honest、`@residual(plan:...)` 分類正確、
-  deprecated タグ (`@audit:suspect`/`@audit:staged`/`🟢ʰ`) なし。
-
-**独立 auditor 確認 (fresh subagent, 2026-06-08, Phase 2 後半 = h_ac genuine CLOSED state)**:
-file は 0 error / 4 declaration sorry (#259 Phase3-skeleton + 本 #3 の sum-marginal crux 3 本
-`hWV_ne_bot`/`hκ_cross_int`/`hκ_KL` + `hκ_dens_meas` + #689/#730 skeleton) のみ、private helper 5 本
-(`rnDeriv_cond_eq`/`integrable_negMulLog_rnDeriv_map_add_const`/`conv_eq_withDensity_translate_average`/
-`map_add_const_withDensity`/`condDistrib_ae_absolutelyContinuous_indep_add`) は全て sorry-free +
-sorryAx-free 機械裏取り済 (`#print axioms` = 標準 3 公理)。`h_ac` 配線 (`absolutelyContinuous_compProd_right_iff`
-Mathlib 実在 + per-fibre 自前 build genuine 消費、`hsum_conv`/`hae`/`affineShiftKernel` 正しく threading、
-silent leak なし) genuine CLOSED 確認。残 3 sorry の `plan:` 分類 = **妥当 (wall: 昇格不要)**: route-T
-`integrable_negPart_negMulLog_map_condTrunc_sum` は両成分 entropy (`hX_ent`+`hY_ent`) + joint `condTrunc`
-要求のため V-entropy 仮説なしの本 setting で直接再利用不可を verbatim 確認、ただし closure tool
-(Jensen `ConvexOn.map_integral_le` / `klDiv_ne_top` / `klDiv_ne_top_iff`) は Mathlib 実在 = 単独成分版
-re-derivation で closeable (真 gap でない)。`hκ_KL` の `≪`-part = `h_ac` 供給済、llr-part = `hκ_cross_int`
-transitive 依存の分析正確。**verdict = all OK (honest_residual)**。
-@residual(plan:epi-uncond-truncation-lsc-plan) -/
+**仮説は全て regularity (非 load-bearing)**: `hW`/`hV`/`hWV`/`hW_ac` は可測/独立/絶対連続、
+`hW_negPart_fin` (= `B(W) < ⊤`) は h(W) 負部有限性、`hn` (positive mass) は cond well-defined の scope。
+単調性の核は body の per-fibre Gibbs + Tonelli が担い、仮説に encode しない。`#print axioms` =
+`[propext, Classical.choice, Quot.sound]` (sorryAx-free、要 olean refresh で確認)。 -/
 theorem differentialEntropyExt_mono_add_truncW
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)
