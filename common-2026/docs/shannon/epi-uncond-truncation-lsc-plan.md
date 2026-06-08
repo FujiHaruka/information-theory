@@ -2,7 +2,7 @@
 
 > **Parent**: [`epi-unconditional-moonshot-plan.md`](epi-unconditional-moonshot-plan.md) §Sub-plan 一覧 S5 (W-Y2)
 > **slug**: `epi-uncond-truncation-lsc-plan` (= parent S5 が参照する slug、`@residual(plan:epi-uncond-truncation-lsc-plan)` と一致)。
-> **status**: 2026-06-08 **route β' 完了 (proof-done + 独立監査 all-OK)**。gateway ⊤ 枝 `differentialEntropyExt_top_of_indep_add_unconditional` が sorryAx-free + (i-a) 非継承を機械確認。
+> **status**: 2026-06-08 **route β' 完了 + method-Y full gateway 完了 (proof-done + 独立監査 all-OK)**。gateway ⊤ 枝 `differentialEntropyExt_top_of_indep_add_unconditional` + full 無条件 `differentialEntropyExt_mono_add_unconditional` / `entropyPowerExt_mono_add_unconditional` がいずれも sorryAx-free + (i-a) 非継承を機械確認。**S5 = 方針 Y gateway 完全 proof-done**。残 moonshot 工程 = headline wire (親 Phase 5/S4)。
 > **前提資産**: finite ② `differentialEntropyExt_eq_condEntExt_add_klDiv_of_finite` (`EPIUncondCondEntropyExt.lean:262`、11 regularity 仮説、`@audit:ok`) が proof-done 着地済。
 
 ## 進捗
@@ -20,7 +20,10 @@ W-Y2 = 「無限エントロピー a.c. 入力 `h(W)=⊤` で gateway ⊤ 枝 `h
 **統合に関する findings (次フェーズ = method-Y assembly への申し送り)**:
 1. **import 循環**: `EPIUncondTruncationLimit` は `EPIUncondMonotone` を import 済。よって既存 ⊤ 伝播 `differentialEntropyExt_top_of_indep_add` (Monotone:142) を新 lemma 呼出に**その場で rewire 不可** (循環)。将来 headline へ wire する assembly は両 file の下流 (Truncation を import する新 file or Phase 5) で新 lemma を直接呼ぶ。
 2. **現状 consumer 0**: `differentialEntropyExt_top_of_indep_add` / `entropyPowerExt_mono_add` / 新 lemma いずれも direct consumer 0 (dep_consumers 確認)。gateway はまだ headline 未接続ゆえ「rewire 対象」が存在しない = Phase 4 §consumer rewire は moot。
-3. **route β' は ⊤ 枝のみ閉じる**: full gateway `entropyPowerExt_mono_add` は full `mono_add` (有限枝で (i-a) 依存) 経由。route β' は有限枝を閉じないため、これだけでは gateway は proof-done 化しない。有限枝の無条件化は別 sub-task (W-Y1、(i-a) は等式版が証明不能確定 → 不等式ルートの pivot 要)。**有望な次手**: Phase 2 の per-fibre translate Gibbs 機構 (`differentialEntropyExt_mono_add_truncW`、truncation 不要の有限枝) を **un-truncated W に直接適用**して `mono_add` の有限枝を (i-a) 抜きで閉じられる可能性 — 要 feasibility 検証。
+3. **route β' は ⊤ 枝のみ閉じる → full gateway も完了 (2026-06-08 後続セッションで closure)**: full gateway は ⊥ (bot_le) + 有限枝 + ⊤ 枝 (route β') の 3 枝 assembly で proof-done 化した。
+   - **(a) 有限枝**: Phase 2 の per-fibre translate Gibbs 機構が truncation 非依存 (compact support は finiteness 供給のみ、Tonelli collapse / convolution density は任意 a.c. 確率測度で動く、core は既に `by_cases hent_sum` で ν 有限性場合分け済) と判明。core を一般化補題 `differentialEntropyExt_mono_add_of_integrable` (`W a.c. ∧ W⊥V ∧ hW_ent(=integrable)` ⟹ `h(W)≤h(W+V)`) に抽出し truncW を系に refactor。sorryAx-free + `@audit:ok`。
+   - **(b) full assembly**: `differentialEntropyExt_mono_add_unconditional` (3 枝) + `entropyPowerExt_mono_add_unconditional` を Truncation file 末尾に建てた。有限枝 bridge `differentialEntropyExt_integrable_of_finite` (有限 h+a.c.⟹integrable) 新規。3 補題とも sorryAx-free + (i-a) 非継承を機械確認、独立 honesty-auditor all-OK。
+   → facts 台帳「達成」表参照。**残 = headline wire のみ (親 Phase 5/S4)。gateway consumer は依然 0 (wire 未着手)**。
 4. **除去可能な redundant hyp** (非必須、将来 signature 整理): `differentialEntropyExt_truncW_tendsto_top` の `hW_negPart_fin` は `hW_top` が含意 (redundant)、`truncW_map_density_tendsto_ae` の `hW_ac` は unused (over-hypothesized)。両者 honesty-safe、docstring に除去可能と記録済。
 
 ## ゴール / Approach
