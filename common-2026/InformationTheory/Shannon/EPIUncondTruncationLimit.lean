@@ -232,7 +232,10 @@ probability) で `h(μ) ≤ crossEnt(μ,ν)` を **⊤-⊤ を回避した移項
 lintegral 差に同定 → ℝ で移項 → 全有限ゆえ ℝ≥0∞ に持ち上げ。
 
 `hμ_ac`/`hν_ac`/`hμν` は絶対連続性、`hμ_ent`/`h_cross_int` は有限性 regularity precondition
-(grant しても Gibbs 不等式は出ない → 非 load-bearing)。`#print axioms` = sorryAx-free。@audit:ok -/
+(grant しても Gibbs 不等式は出ない → 非 load-bearing)。出口補題 `differentialEntropy_le_cross_entropy`
+(ℝ-Gibbs、本体に KL≥0 = `toReal_klDiv_of_measure_eq` の genuine 核) を pos/neg 分解で lift。
+独立 honesty audit 2026-06-08 PASS: regularity precondition のみ、核は出口補題本体。
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free 機械再確認)。@audit:ok -/
 private theorem ennreal_gibbs_rearranged_of_finite_ent {μ ν : Measure ℝ}
     [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (hμ_ac : μ ≪ volume) (hν_ac : ν ≪ volume) (hμν : μ ≪ ν)
@@ -312,7 +315,12 @@ private theorem ennreal_gibbs_rearranged_of_finite_ent {μ ν : Measure ℝ}
 `hμ_ac`/`hν_ac`/`hμν` は絶対連続性、`hμ_negPart_fin` (= B(μ)<⊤) / `hCN_fin` (= crossNeg μ ν<⊤)
 は有限性 regularity precondition (A<⊤ 枝で finite-entropy 版へ委譲する際の integrability 供給に使用、
 A=⊤ 枝では未使用 = 結論核を encode せず非 load-bearing。downstream assembly が同じ finiteness を持つ)。
-`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free)。@audit:ok -/
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free)。
+独立 honesty audit 2026-06-08 PASS (4-check 全通過): core-reconstruction = 2 finiteness hyp を grant しても
+Gibbs (KL≥0) は出ない (非 load-bearing、Gibbs 核は A<⊤ 枝の出口補題 `differentialEntropy_le_cross_entropy`
+本体 + A=⊤ 枝の `-r log r ≤ 1` 普遍定数で genuine 供給)。sufficiency = `A=⊤ ⟹ crossPos=⊤` を body が
+genuine に証明 (退化/vacuous でない、refutation: 「A=⊤ かつ crossPos<⊤」なら偽だが body がこの枝を排除)。
+循環/`:= h`/`:True` slot なし。`#print axioms` 機械再確認 sorryAx-free。@audit:ok -/
 private theorem ennreal_gibbs_rearranged {μ ν : Measure ℝ}
     [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
     (hμ_ac : μ ≪ volume) (hν_ac : ν ≪ volume) (hμν : μ ≪ ν)
