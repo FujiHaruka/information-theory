@@ -13,4 +13,4 @@ scope = "leanprover-community"
 
 [[lean_lib]]
 name = "InformationTheory"
-leanOptions = { weak.linter.mathlibStandardSet = true }
+leanOptions = { weak.linter.mathlibStandardSet = true, weak.linter.unusedFintypeInType = false }
