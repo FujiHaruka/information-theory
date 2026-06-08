@@ -2319,4 +2319,88 @@ theorem differentialEntropyExt_top_of_indep_add_unconditional
   rw [differentialEntropyExt_of_ac hν_ac, ← hAν_def, hAν_top, EReal.coe_ennreal_top,
     ← EReal.coe_ennreal_toReal hBν, EReal.top_sub_coe]
 
+/-! ## 無条件 gateway 単調性 (方針 Y、(i-a) 非依存)
+
+⊥ 枝 (`bot_le`)、有限枝 (`differentialEntropyExt_mono_add_of_integrable`、per-fibre Gibbs)、
+⊤ 枝 (`differentialEntropyExt_top_of_indep_add_unconditional`、route β') の 3 部品を組んで
+gateway 単調性を無条件で建てる。有限枝は finiteness → integrability の bridge
+(`differentialEntropyExt_integrable_of_finite`) を経由する。 -/
+
+/-- **有限微分エントロピー → `negMulLog∘density` 可積分** (`differentialEntropyExt_of_ac_integrable`
+の converse)。a.c. + `h(μ) ≠ ⊤` + `h(μ) ≠ ⊥` から、`negMulLog (density)` が `volume` 上可積分。
+
+`differentialEntropyExt_of_ac hac` で `h = (A:EReal) − (B:EReal)` (A/B = 正部・負部 lintegral)。
+- `A ≠ ⊤`: A=⊤ なら `(⊤:EReal) − B = ⊤` (B<⊤) で `h=⊤`、`hne_top` に矛盾。
+- `B ≠ ⊤`: B=⊤ なら `A − ⊤ = ⊥` (A<⊤) で `h=⊥`、`hne_bot` に矛盾。
+- `A<⊤ ∧ B<⊤ ⟹ Integrable`: aestronglyMeasurable + HasFiniteIntegral
+  (`∫⁻ ‖negMulLog f‖ₑ = A + B < ⊤`)。
+
+honesty: `hne_top`/`hne_bot` は有限性 regularity precondition (結論 = Integrable を encode せず)。
+@residual(plan:epi-uncond-truncation-lsc-plan) -/
+theorem differentialEntropyExt_integrable_of_finite {μ : Measure ℝ} (hac : μ ≪ volume)
+    (hne_top : differentialEntropyExt μ ≠ ⊤) (hne_bot : differentialEntropyExt μ ≠ ⊥) :
+    Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume := by
+  -- positive- and negative-part lintegrals of the density's `negMulLog`.
+  set A : ℝ≥0∞ := ∫⁻ x, ENNReal.ofReal (Real.negMulLog ((μ.rnDeriv volume x).toReal)) ∂volume
+    with hA_def
+  set B : ℝ≥0∞ := ∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((μ.rnDeriv volume x).toReal))) ∂volume
+    with hB_def
+  -- `h(μ) = (A : EReal) - (B : EReal)`.
+  have hsplit : differentialEntropyExt μ = (A : EReal) - (B : EReal) := by
+    rw [differentialEntropyExt_of_ac hac]
+  -- **`A ≠ ⊤`**: otherwise `⊤ - B` is `⊤` (B≠⊤) or `⊥` (B=⊤), both excluded.
+  have hA_ne_top : A ≠ ⊤ := by
+    intro hAtop
+    by_cases hBtop : (B : EReal) = ⊤
+    · -- `⊤ - ⊤ = ⊥` contradicts `hne_bot`.
+      apply hne_bot
+      rw [hsplit, hAtop, EReal.coe_ennreal_top, hBtop, EReal.sub_top]
+    · -- `⊤ - (coe) = ⊤` contradicts `hne_top`.
+      apply hne_top
+      rw [hsplit, hAtop, EReal.coe_ennreal_top, EReal.top_sub hBtop]
+  -- **`B ≠ ⊤`**: with `A < ⊤`, `(A : EReal) - ⊤ = ⊥` contradicts `hne_bot`.
+  have hB_ne_top : B ≠ ⊤ := by
+    intro hBtop
+    apply hne_bot
+    rw [hsplit, hBtop, EReal.coe_ennreal_top, EReal.sub_top]
+  -- assemble integrability from the two finite lintegrals + measurability.
+  refine integrable_of_lintegral_ofReal_pos_neg_ne_top ?_ hA_ne_top hB_ne_top
+  exact (Real.continuous_negMulLog.measurable.comp
+    (μ.measurable_rnDeriv volume).ennreal_toReal).aestronglyMeasurable
+
+/-- **無条件 gateway 単調性** (方針 Y、(i-a) 非依存): `W a.c. ∧ W ⊥ V ⟹ h(W) ≤ h(W+V)`。
+⊥ 枝 = `bot_le`、有限枝 = `differentialEntropyExt_mono_add_of_integrable` (per-fibre Gibbs)、
+⊤ 枝 = `differentialEntropyExt_top_of_indep_add_unconditional` (route β')。
+
+旧 `EPIUncondMonotone.differentialEntropyExt_mono_add` の無条件 proof-done 版 (旧版は無条件版②
+`differentialEntropyExt_indep_add_eq_add_klDiv` (i-a) に transitive 依存)。本版は (i-a) を継承しない。 -/
+theorem differentialEntropyExt_mono_add_unconditional
+    (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)
+    (hW_ac : (P.map W) ≪ volume) :
+    differentialEntropyExt (P.map W) ≤ differentialEntropyExt (P.map (fun ω => W ω + V ω)) := by
+  -- **⊥ branch**: `h(W) = ⊥ ≤ anything`.
+  rcases eq_bot_or_bot_lt (differentialEntropyExt (P.map W)) with hbot | hpos
+  · rw [hbot]; exact bot_le
+  · have hne_bot : differentialEntropyExt (P.map W) ≠ ⊥ := hpos.ne'
+    by_cases htop : differentialEntropyExt (P.map W) = ⊤
+    · -- **⊤ branch**: route β' gives `h(W+V) = ⊤`, so `⊤ ≤ ⊤`.
+      rw [htop, differentialEntropyExt_top_of_indep_add_unconditional W V P hW hV hWV hW_ac htop]
+    · -- **finite branch**: bridge finiteness → integrability, then per-fibre Gibbs.
+      exact differentialEntropyExt_mono_add_of_integrable W V P hW hV hWV hW_ac
+        (differentialEntropyExt_integrable_of_finite hW_ac htop hne_bot)
+
+/-- **無条件 gateway atom** (方針 Y): `W a.c. ∧ W ⊥ V ⟹ N(W+V) ≥ N(W)`。
+`differentialEntropyExt_mono_add_unconditional` を `EReal.exp_monotone` で `entropyPowerExt`
+(= `EReal.exp (2 · differentialEntropyExt)`) に lift。proof-done (i-a 非依存)。 -/
+theorem entropyPowerExt_mono_add_unconditional
+    (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
+    (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)
+    (hW_ac : (P.map W) ≪ volume) :
+    entropyPowerExt (P.map (fun ω => W ω + V ω)) ≥ entropyPowerExt (P.map W) := by
+  unfold entropyPowerExt
+  apply EReal.exp_monotone
+  exact mul_le_mul_of_nonneg_left
+    (differentialEntropyExt_mono_add_unconditional W V P hW hV hWV hW_ac) (by norm_num)
+
 end InformationTheory.Shannon
