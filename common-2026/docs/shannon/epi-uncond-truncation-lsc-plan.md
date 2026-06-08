@@ -7,10 +7,10 @@
 
 ## 進捗
 
-- [x] Phase 0 — feasibility gate ✅ **GO** (2026-06-08、scratch `/tmp/route_beta_phase0.lean` 0 error/0 sorry)。weak-conv 回避確定、`hκ_dens_meas` を唯一の真 gap に局所化 (判断ログ 3)。
-- [ ] Phase 1 — skeleton (核 lemma signature を `:= by sorry` で立てる) 📋
-- [ ] Phase 2 — truncated W_n 構成 + per-n finite-entropy 単調性供給 📋
-- [ ] Phase 3 — n→∞ 極限 (単調収束 / EReal ⊤ 表現で weak-conv LSC 回避) 📋
+- [x] Phase 0 — feasibility gate ✅ **GO** (2026-06-08、scratch `/tmp/route_beta_phase0.lean` 0 error/0 sorry)。weak-conv 回避確定。
+- [x] Phase 1 — skeleton ✅ (核 lemma signature を `:= by sorry` で確定、`InformationTheory.lean` 編入)。
+- [x] Phase 2 — per-n finite-entropy 単調性 ✅ **proof-done** (2026-06-08、`differentialEntropyExt_mono_add_truncW` sorryAx-free、独立 honesty-auditor all OK)。**ルート転換で `hκ_dens_meas` 真 gap を全廃** (判断ログ 5)。
+- [ ] Phase 3 — n→∞ 極限 (単調収束 / EReal ⊤ 表現で weak-conv LSC 回避) 📋 ← **次の critical path**
 - [ ] Phase 4 — gateway ⊤ 枝 closure + assembly + 独立 honesty-auditor 📋
 
 ## ゴール / Approach
@@ -261,19 +261,23 @@ proof-log: yes (極限 step が weak-conv LSC wall を回避できるかが feas
    sidestep 実証。残る `wall:entropy-lsc-weak` は weak-conv ルート専用で、monotone-limit + EReal ⊤ 表現で回避
    見込み (Phase 0 gate で裏取り)。⇒ 在庫の悲観は緩み、総合判定 (B) path 可視 moonshot。
 
-4. **案 F = 部分的成功、sum-marginal crux 4 本が残存 (2026-06-08)**: #3 `differentialEntropyExt_mono_add_truncW`
-   に regularity 仮説 `hW_negPart_fin` (B(W)<⊤) を 1 本追加し残 6 局所 sorry を closure 試行。**2 本 genuine**
-   (`hW_ne_bot`: 正部=裾切り `negMulLog_le_one_sub_self` + 負部 `hW_negPart_fin` の `negMulLog_mul` 分解、
-   `hκ_logp_int`: fibre が `Q.map W` の平行移動という構造で還元)。**4 本は sum-marginal `Q.map(W+V)` 解析で
-   ブロック** (`hWV_ne_bot` / `h_ac` / `hκ_cross_int` / `hκ_KL`)。当初仮定の修正: advisor 案 F の「全部 `hae`
-   経由で B(W_n) に還元」は per-fibre が `Q.map W` の平行移動である項にしか効かず、sum marginal 参照項
-   (mixture/convolution) は還元不能。honesty-auditor verdict = **all OK**: `hW_negPart_fin` = regularity
-   (core-reconstruction FAIL = 非 load-bearing)、4 residual の `plan:` classification 妥当 (wall: 化不要)。
-   closure ルート (auditor 確認): `h_ac` は `compProd_map_condDistrib` + `condDistrib_ae_eq_of_measure_eq_compProd`
-   (Mathlib 実在) 配線 ~150 行、`hWV_ne_bot` は route T 負部 lemma `integrable_negPart_negMulLog_map_condTrunc_sum`
-   (`EPIInfiniteVarianceTruncation.lean:600`) を **single-component 一般化** (現状両成分 entropy 要求だが
-   Jensen averaging は片成分の law 上ゆえ片方の finite entropy で足る = 一般化で `hWV_ne_bot` アンブロック +
-   EPI truncation family 再利用可)、`hκ_cross_int` は cross-entropy domination、`hκ_KL` は `h_ac`+`hκ_cross_int`
-   の downstream (`klDiv_ne_top`)。⇒ Phase 2 後半 = この 4 本の dispatch。
+5. **ルート転換 = chain rule 等式を捨て explicit translate Gibbs で Phase 2 proof-done (2026-06-08)**:
+   当初の chain rule 路 (finite ② 等式 `differentialEntropyExt_eq_condEntExt_add_klDiv_of_finite` で
+   11 仮説を discharge) は **`hκ_dens_meas` (joint 密度可測、Mathlib 真 gap、loogle Found 0) を必須仮説に持つ**
+   ため、これが残る限り proof-done に到達不能だった。proof-pivot-advisor の戦略再評価で **単調性は等式不要・
+   不等式で足る**と確定 → 場合分け + per-fibre Gibbs にルート転換し chain rule lemma を完全に捨てた。
+   - **新ルート**: `h(W_n+V)` で場合分け。⊤ 枝 = Capstone Case-2 同型 (`differentialEntropyExt ν = A−B = ⊤−有限`)
+     で `le_top`。有限枝 = workhorse `differentialEntropy` に降ろし、**fibre を抽象 condDistrib でなく explicit
+     平行移動 `(Q.map W).map(·+z)` として扱う** per-fibre Gibbs (`differentialEntropy_le_cross_entropy`
+     `EPIInfiniteVarianceTruncation.lean:997` を平行移動 fibre で適用 → μV 積分 → Tonelli collapse で
+     `= differentialEntropy ν`)。`differentialEntropy_map_add_const` で fibre エントロピー = h(W_n) 定数化。
+   - **効果**: chain-rule scaffolding (`hae`/`h_ac`/`hκ_ac`/`hκ_logp_int`/`hκ_cross_int`/`hκ_KL`/`hκ_dens_meas`)
+     を**全廃**。残った単一 crux = single-component Jensen helper `negPart_negMulLog_conv_single_ne_top`
+     (route-T `integrable_negPart_negMulLog_map_condTrunc_sum` `:600` を averaging measure `pn·vol → μV`
+     に差し替えた非対称版、V 非 a.c. でも成立)。`differentialEntropyExt_mono_add_truncW` sorryAx-free、
+     独立 honesty-auditor all OK (helper under-hypothesized 反例試行も PASS、`hW_negPart_fin` 非 load-bearing 再確認)。
+   - **教訓**: moonshot の真の consumer が ⊤ 枝**不等式**なら、中間を chain rule **等式** (finite ②) で建てると
+     condDistrib regularity stack (joint 密度可測等) を丸ごと背負う。不等式には in-tree Gibbs +
+     explicit convolution 構造で足り、真 gap を回避できる (CLAUDE.md「Mathlib-shape-driven Definitions」)。
    注: `wall:entropy-lsc-weak` は撤退ライン予約 slug、Phase 0 で回避確定 = code 未登録は設計通り、plan_lint
    STALE は既知の誤検出。
