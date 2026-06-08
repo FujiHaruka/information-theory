@@ -1603,7 +1603,13 @@ assembly の Step 0 で `hW_top` から `B(P.map W) ≠ ⊤` を導出でき、s
 足さずに済む (= 無条件性の鍵)。
 
 genuine (新規 helper)。`htop : h(μ)=⊤` から `B ≠ ⊤` を EReal 減算規約の場合分けで抽出、
-循環/bundling/退化なし。@residual なし。@audit:ok -/
+循環/bundling/退化なし。@residual なし。
+
+**独立 honesty audit 2026-06-08 (fresh subagent, route closure 監査, commit 803e489 → ok)**:
+`posPart_…` の genuine 対称形。`hac` は regularity precondition、結論 `B≠⊤` は body の EReal `sub_top`
+場合分け (`B=⊤⟹(A:EReal)−⊤=⊥≠⊤=htop` 矛盾) で `htop` から抽出 = 仮説に核を encode せず (非循環・
+非バンドル・非退化)。`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free 独立
+機械確認)。@audit:ok -/
 theorem negPart_lintegral_ne_top_of_diffEntExt_top {μ : Measure ℝ} (hac : μ ≪ volume)
     (htop : differentialEntropyExt μ = ⊤) :
     (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((μ.rnDeriv volume x).toReal))) ∂volume) ≠ ⊤ := by
@@ -1918,7 +1924,15 @@ explicit bound `truncW_map_negPart_lintegral_le` (finite since `B(W) < ⊤` and 
 to the sum law via the single-component finiteness `negPart_negMulLog_conv_single_ne_top`.
 
 genuine (新規 helper)。`hW`/`hV`/`hWV`/`hW_ac`/`hBW`/`hn` は全て regularity precondition
-(結論 = 截断和周辺負部の有限性 を encode せず)。@residual なし。@audit:ok -/
+(結論 = 截断和周辺負部の有限性 を encode せず)。@residual なし。
+
+**独立 honesty audit 2026-06-08 (fresh subagent, route closure 監査, commit 803e489 → ok)**:
+非循環・非バンドル・非退化 全 PASS。6 仮説は可測/独立/絶対連続/`B(W)<⊤`/positive-mass = 全 regularity
+precondition (grant しても結論 `B(ν_n)≠⊤` は出ない、core = body の独立保存 conditioning + per-n explicit
+bound `truncW_map_negPart_lintegral_le` + single-component lift `negPart_negMulLog_conv_single_ne_top`)。
+sufficiency — `hBW` (=B(W)<⊤) + cond の per-n bound で genuine に follow。`#print axioms` (in-file
+transient + `lake env lean`) = `[propext, Classical.choice, Quot.sound]` (sorryAx-free 独立機械確認)。
+@audit:ok -/
 private theorem negPart_lintegral_map_truncW_add_ne_top
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)
@@ -2036,7 +2050,29 @@ bypass、axiom 出力に sorryAx 不在で機械裏取り)。
 honesty: (a) load-bearing hyp なし (`hW`/`hV`/`hWV`/`hW_ac` は regularity、`hW_top` は ⊤ 枝の場合分け
 precondition で結論核 = h(W+V)=⊤ を encode せず)、(b) `_unconditional` 命名 = NOT name-laundering
 (open load-bearing hyp も完成偽装 sorry-body も無し、proof-done 達成済)。(4) sufficiency — `h(W)=⊤`
-+ 無条件単調性で `h(W+V)=⊤` は正しい含意 (反例なし)。 -/
++ 無条件単調性で `h(W+V)=⊤` は正しい含意 (反例なし)。
+
+**独立 honesty audit 2026-06-08 (fresh subagent, route 完了 closure 監査, commit 803e489 → ok)**:
+4-check 全 PASS。(1) 非循環 — 結論 `h(P.map(W+V))=⊤` は 5 仮説のいずれとも非同型、body は
+genuine 全証明 (`:= h` でない)。(2) 非バンドル (core-reconstruction) — `hW`/`hV`/`hWV`/`hW_ac` は
+可測/独立/絶対連続、`hW_top` (h(W)=⊤) は ⊤ 枝 case-split precondition。5 仮説を全 grant しても
+結論 (= h(W+V)=⊤) の核は出ない: 核 = 無条件単調性 `h(W_n)≤h(W_n+V)` (#3 `differentialEntropyExt_
+mono_add_truncW`, `@audit:ok`) + `h(W_n)→⊤` (Phase 3, `@audit:ok`) で body が担う = 非 load-bearing。
+(3) 非退化 — 結論の `h(ν)=⊤` は `A(ν)=⊤` (by_contra + per-n Gibbs + 測度 domination で genuine 確立)
++ `B(ν)≠⊤` から `⊤−fin=⊤` (`EReal.top_sub_coe`) で建てる genuine EReal ⊤ 利用、vacuous/exfalso でない。
+(4) **sufficiency (反例試行) — 含意 TRUE、反例構成不能**: 退化境界 3 通り試行 — V Dirac (W+V=W+c シフト,
+h 不変→⊤)、V 独立 a.c. (h(W+V)≥h(W)=⊤)、V atom/特異 (a.c. W との conv は a.c.、⊤-entropy シフト
+混合は⊤ 維持)。いずれも `h(W+V)=⊤` が生き、`h(W+V)≠⊤` 反例なし。核は無条件単調性 (任意独立 V で成立,
+V a.c. 不要) = 「独立ノイズ加算は微分エントロピーを減らさない」、`h(W)=⊤⟹h(W+V)=⊤` は genuine 含意。
+under-hypothesized でない。**name-laundering 最終判定 = NOT laundering**: signature は既存
+`differentialEntropyExt_top_of_indep_add` (EPIUncondMonotone.lean:153) と完全同一仮説群・同一結論、
+新規 hyp なし。`_unconditional` は「(i-a) `differentialEntropyExt_indep_add_eq_add_klDiv` の sorryAx を
+継承しない別 route (truncation 近似)」という proof-route 主張で正当 (open load-bearing hyp も偽装
+sorry-body も無し)。**機械裏取り (olean refresh 後)**: `#print axioms differentialEntropyExt_top_of_
+indep_add_unconditional` = `[propext, Classical.choice, Quot.sound]` (sorryAx **非依存**)、対して
+`#print axioms differentialEntropyExt_indep_add_eq_add_klDiv` (i-a) = `sorryAx` 保持。**非継承を独立
+再確認**: 同 commit で両 module を `lake build` リフレッシュ後 fresh `lake env lean` で確認、stale-olean
+artifact でなく truncation route が genuine に無条件版② chain rule を迂回。@audit:ok -/
 theorem differentialEntropyExt_top_of_indep_add_unconditional
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)
