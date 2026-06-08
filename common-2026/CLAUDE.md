@@ -36,6 +36,26 @@ Required metadata for wall verdicts, cause tags, and the overturn-analysis table
 
 - **pre-commit hook** (git-managed, text inspection only, no lake): `common-2026/.githooks/pre-commit` checks honesty / import discipline on staged `InformationTheory/**.lean` (BLOCK: adding a bare `import Mathlib` / adding a `sorry` with no `@residual` at all. WARN: residual undercount, out-of-vocabulary class, deprecated tag, a new file's import not registered). Bypass with `SKIP_LEAN_HOOK=1 git commit ...` or `--no-verify`. In a new environment, enable it with `git config core.hooksPath common-2026/.githooks` (details → `.githooks/README.md`).
 
+## Mathlib API Search (loogle)
+
+For "does Mathlib have lemma X?" questions, **try `loogle` before `rg`/`grep`**. Loogle answers authoritatively (e.g., `Found 0 declarations`); negative grep can miss differently-named lemmas.
+
+- **One-time index build** (~2 min, ~350 MB, gitignored under `.lake/`):
+  ```bash
+  mkdir -p .lake/build && lake exe loogle --write-index .lake/build/loogle.index
+  ```
+- **Per-query** — invoke the binary directly (skip `lake env`):
+  ```bash
+  ./.lake/packages/loogle/.lake/build/bin/loogle --read-index .lake/build/loogle.index "<query>"
+  ```
+  Cost: ~8.5 s/query with index vs ~60 s cold via `lake exe loogle`.
+- **Query syntax**:
+  - **Full namespace required**: `MeasureTheory.Measure.map` not `Measure.map`. Loogle prints "Maybe you meant: ..." with the right qualifier.
+  - **Subterm pattern**: `Foo.bar (Baz.qux _ _) (Baz.qux _ _)` finds `Foo.bar` applied to two `Baz.qux`.
+  - **Multi-term (any of)**: comma-separated, e.g. `Foo.bar, Baz.qux` finds lemmas mentioning both.
+  - **Conclusion pattern**: `|- _ ≤ _` finds inequalities.
+- **Fall back to `rg`** for text-level searches: comments, docstrings, file-structure exploration, or pattern matches not tied to a specific identifier.
+
 ## Dependency / consumer reverse-lookup tools (`scripts/dep_*.sh`)
 
 Mechanically look up dependency relations among in-project declarations. The implementation is `scripts/DepGraph.lean` (`import InformationTheory`). Unlike `rg`'s text matching, it picks up **true term-level references** (mentions in docstrings / comments don't count). Three modes:
