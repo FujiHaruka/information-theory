@@ -177,11 +177,14 @@ theorem differentialEntropyExt_top_of_indep_add_unconditional
 proof-log: yes (per-n finite-entropy 単調性が route T と同じ Gibbs+maxent チェーンで genuine に立つかが
 本 plan の主リスク)。
 
-- [ ] **truncW の regularity**: `(truncW P W n).map W ≪ volume` (a.c. 保存)、compact support
-  (`{|W|≤n}` 条件付け)、有限分散 (`differentialEntropy_le_gaussian_of_variance_le` の前提)、有限エントロピー。
-- [ ] **per-n finite ② 適用**: `differentialEntropyExt_mono_add_truncW` を finite-entropy 枝
-  (有限枝 = coe 枝、`differentialEntropy_add_ge_of_indep` の EReal lift) または finite ② で discharge。
-  11 regularity 仮説を `W_n + V` の condDistrib で順に供給 (route T の per-n 供給を流用)。
+- [x] **truncW の regularity**: a.c. 保存 (`cond_absolutelyContinuous`.map.trans)、compact support
+  (`{|W|≤n}` 条件付け)、有限エントロピー (`hW_ent_Q` genuine: 正部=裾切り + 負部=`hW_negPart_fin`)。commit 28cb110。
+- [~] **per-n finite ② 適用** (案 F、判断ログ 4): `differentialEntropyExt_mono_add_truncW` 本体 genuine 配線
+  完成 + 残 6 局所 sorry のうち **2 本 genuine** (`hW_ne_bot` / `hκ_logp_int`)、**4 本 sum-marginal crux 残**
+  (`hWV_ne_bot` / `h_ac` / `hκ_cross_int` / `hκ_KL`、`@residual(plan:...)`)。signature に regularity 仮説
+  `hW_negPart_fin` (B(W)<⊤) 追加 (honesty-auditor PASS = 非 load-bearing)。`hκ_ac` も genuine。
+- [ ] **sum-marginal crux 4 本の closure** (Phase 2 後半): `h_ac` (`compProd_map_condDistrib` 配線 ~150 行) /
+  `hWV_ne_bot` (route T 負部 lemma の single-component 一般化) / `hκ_cross_int` / `hκ_KL` (downstream)。
 - [ ] proof-log に「どの仮説が compact support から自動か / どれを明示供給したか」を記録。
 
 ## Phase 3 — n→∞ 極限 (単調収束で weak-conv 回避) 📋
@@ -257,3 +260,20 @@ proof-log: yes (極限 step が weak-conv LSC wall を回避できるかが feas
    で、truncation (裾を切り落とす別機構) には当たらない。route T が同 truncation で sorryAx-free closure 済 =
    sidestep 実証。残る `wall:entropy-lsc-weak` は weak-conv ルート専用で、monotone-limit + EReal ⊤ 表現で回避
    見込み (Phase 0 gate で裏取り)。⇒ 在庫の悲観は緩み、総合判定 (B) path 可視 moonshot。
+
+4. **案 F = 部分的成功、sum-marginal crux 4 本が残存 (2026-06-08)**: #3 `differentialEntropyExt_mono_add_truncW`
+   に regularity 仮説 `hW_negPart_fin` (B(W)<⊤) を 1 本追加し残 6 局所 sorry を closure 試行。**2 本 genuine**
+   (`hW_ne_bot`: 正部=裾切り `negMulLog_le_one_sub_self` + 負部 `hW_negPart_fin` の `negMulLog_mul` 分解、
+   `hκ_logp_int`: fibre が `Q.map W` の平行移動という構造で還元)。**4 本は sum-marginal `Q.map(W+V)` 解析で
+   ブロック** (`hWV_ne_bot` / `h_ac` / `hκ_cross_int` / `hκ_KL`)。当初仮定の修正: advisor 案 F の「全部 `hae`
+   経由で B(W_n) に還元」は per-fibre が `Q.map W` の平行移動である項にしか効かず、sum marginal 参照項
+   (mixture/convolution) は還元不能。honesty-auditor verdict = **all OK**: `hW_negPart_fin` = regularity
+   (core-reconstruction FAIL = 非 load-bearing)、4 residual の `plan:` classification 妥当 (wall: 化不要)。
+   closure ルート (auditor 確認): `h_ac` は `compProd_map_condDistrib` + `condDistrib_ae_eq_of_measure_eq_compProd`
+   (Mathlib 実在) 配線 ~150 行、`hWV_ne_bot` は route T 負部 lemma `integrable_negPart_negMulLog_map_condTrunc_sum`
+   (`EPIInfiniteVarianceTruncation.lean:600`) を **single-component 一般化** (現状両成分 entropy 要求だが
+   Jensen averaging は片成分の law 上ゆえ片方の finite entropy で足る = 一般化で `hWV_ne_bot` アンブロック +
+   EPI truncation family 再利用可)、`hκ_cross_int` は cross-entropy domination、`hκ_KL` は `h_ac`+`hκ_cross_int`
+   の downstream (`klDiv_ne_top`)。⇒ Phase 2 後半 = この 4 本の dispatch。
+   注: `wall:entropy-lsc-weak` は撤退ライン予約 slug、Phase 0 で回避確定 = code 未登録は設計通り、plan_lint
+   STALE は既知の誤検出。
