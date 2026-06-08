@@ -47,6 +47,7 @@ lemma abs_logLikelihood_le_bound
   unfold logLikelihood
   exact abs_pmfLog_le_bound μ Xs (Xs i ω)
 
+omit [DecidableEq α] in
 /-- `logLikelihood μ Xs i` is in `L²(μ)`. -/
 lemma memLp_logLikelihood
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -69,6 +70,7 @@ lemma pmfLogVariance_nonneg (μ : Measure Ω) (Xs : ℕ → Ω → α) :
   unfold pmfLogVariance variance
   exact ENNReal.toReal_nonneg
 
+omit [DecidableEq α] [Nonempty α] in
 /-- **Popoviciu lift**: a pointwise `|pmfLog Xs a| ≤ B` bound gives
 `pmfLogVariance ≤ B²` (via `variance_le_sq_of_bounded`). Used in Phase D.3
 parent surgery to bound axis-wise variance closed-form by `(log(|β|/δ))²` etc. -/
@@ -95,6 +97,7 @@ lemma pmfLogVariance_le_sq_of_bounded
   rw [h_eq] at h
   exact h
 
+omit [DecidableEq α] [Nonempty α] in
 /-- Variance is invariant under `IdentDistrib`. -/
 lemma variance_logLikelihood_eq
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -104,6 +107,7 @@ lemma variance_logLikelihood_eq
   unfold pmfLogVariance
   exact (identDistrib_logLikelihood μ Xs hident i).variance_eq
 
+omit [DecidableEq α] in
 /-- Chebyshev applied to `∑ i ∈ range n, logLikelihood μ Xs i` and divided by `n`:
 for `n ≥ 1` and `ε > 0`,
 
@@ -203,6 +207,7 @@ lemma aep_chebyshev_bound
     field_simp
   rw [h_eq]
 
+omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- The typical-set event has the same complement as the Chebyshev "bad" set, re-indexed
 from `range n` to `Fin n`. -/
 private lemma typicalSet_compl_eq
@@ -218,6 +223,7 @@ private lemma typicalSet_compl_eq
     Fin.sum_univ_eq_sum_range (fun i => pmfLog μ Xs (Xs i ω)) n
   rw [h_sum]
 
+omit [DecidableEq α] in
 /-- **Step 1 main result**: explicit-rate AEP. For any `ε, η > 0`, there is `N(ε, η)` such that
 for all `n ≥ N`, the typical-set has μ-measure ≥ `1 - η`.
 
@@ -384,13 +390,14 @@ theorem channelCoding_E2_lt_of_rate
     rw [← h_exp_eq]; exact h_mul
   exact lt_of_le_of_lt h_upper_le (hN n hn)
 
+omit [DecidableEq α] in
 /-- **Joint AEP — closed-form rate**: for any `ε, η > 0`, there exists `N` such that for all
 `n ≥ N`, the jointly typical set has μ-measure ≥ `1 - η`. The bound `N` is built from three
 independent applications of `typicalSet_prob_ge_of_rate` (X, Y, Z = X × Y), with `η / 3` each
 plus a union bound (Bonferroni). -/
 @[entry_point]
 theorem jointlyTypicalSet_prob_ge_of_rate
-    {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
+    {β : Type*} [Fintype β] [Nonempty β]
       [MeasurableSpace β] [MeasurableSingletonClass β]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
@@ -574,6 +581,7 @@ lemma typicalSetMinN_mono_V {V V' η ε : ℝ} (hηε : 0 < η * ε ^ 2)
   refine Nat.ceil_le_ceil ?_
   exact div_le_div_of_nonneg_right hVV' hηε.le
 
+omit [DecidableEq α] in
 /-- **D.AEP.1**: closed-form `N` version of `typicalSet_prob_ge_of_rate`. -/
 @[entry_point]
 theorem typicalSet_prob_ge_at_N
@@ -656,6 +664,7 @@ theorem typicalSet_prob_ge_at_N
     simpa [ENNReal.toReal_ofReal hη.le] using this
   linarith
 
+omit [DecidableEq α] in
 /-- **D.AEP.2**: variance-upper-bound version of `typicalSet_prob_ge_at_N`.
 Caller provides an upper bound `V_upper ≥ pmfLogVariance μ Xs`, and the
 closed-form `N` is `typicalSetMinN V_upper η ε` (independent of the true
@@ -751,12 +760,13 @@ noncomputable def jointlyTypicalSetMinN
   max (max (typicalSetMinN V_X (η / 3) ε) (typicalSetMinN V_Y (η / 3) ε))
       (typicalSetMinN V_Z (η / 3) ε)
 
+omit [DecidableEq α] in
 /-- **D.AEP.5**: variance-upper-bound version of joint AEP. The caller
 provides axis-wise variance upper bounds `V_X, V_Y, V_Z`, and the closed-form
 `N` is `jointlyTypicalSetMinN V_X V_Y V_Z η ε`. -/
 @[entry_point]
 theorem jointlyTypicalSet_prob_ge_at_N_le
-    {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
+    {β : Type*} [Fintype β] [Nonempty β]
       [MeasurableSpace β] [MeasurableSingletonClass β]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)

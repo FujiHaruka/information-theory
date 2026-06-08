@@ -43,6 +43,7 @@ variable {Y : Type*} [MeasurableSpace Y]
 noncomputable def entropy (μ : Measure Ω) (Xs : Ω → X) : ℝ :=
   ∑ x : X, Real.negMulLog ((μ.map Xs).real {x})
 
+omit [DecidableEq X] [Nonempty X] [MeasurableSingletonClass X] in
 /-- Entropy is nonnegative: each term `negMulLog p` is nonneg for `p ∈ [0, 1]`. -/
 lemma entropy_nonneg (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (hXs : Measurable Xs) : 0 ≤ entropy μ Xs := by
@@ -269,6 +270,7 @@ private lemma klDiv_discrete_toReal_eq_sum
     linarith [h_rnD_real]
   rw [h_rnD_div, Real.log_div hQx_pos.ne' hPx_pos.ne']
 
+omit [DecidableEq X] in
 /-- Marginal recovery (lintegral form). -/
 private lemma lintegral_condDistrib_singleton_eq
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -290,6 +292,7 @@ private lemma lintegral_condDistrib_singleton_eq
   ext ω
   simp
 
+omit [DecidableEq X] in
 /-- Marginal recovery: integrating the conditional probability mass at `x` over
 the `Y`-marginal returns the `X`-marginal mass at `x`. -/
 private lemma integral_condDistrib_real_singleton_eq
@@ -312,6 +315,7 @@ private lemma integral_condDistrib_real_singleton_eq
       lintegral_condDistrib_singleton_eq μ Xs Yo hXs hYo x]
   rfl
 
+omit [DecidableEq X] in
 /-- Per-fibre AC of `condDistrib Xs Yo μ y` w.r.t. `μ.map Xs`. On a finite
 alphabet `X`, AC reduces to per-singleton vanishing.
 
@@ -380,6 +384,7 @@ private lemma condDistrib_ae_absolutelyContinuous_map
   rw [hA_decomp, measure_biUnion_finset h_pwd h_meas]
   exact Finset.sum_eq_zero fun x hx => hy x (hP_each x hx)
 
+omit [DecidableEq X] in
 /-- Discrete-fiber expansion of the KL divergence appearing in `mutualInfo`.
 For a finite alphabet `X` we may rewrite the joint integral as
 `∑_{x : X} ∫_y …` and pull the discrete log decomposition through.
@@ -411,6 +416,7 @@ private theorem klDiv_joint_prod_marginals_toReal
     (klDiv (μ.map (fun ω => (Xs ω, Yo ω)))
         ((μ.map Xs).prod (μ.map Yo))).toReal
       = entropy μ Xs - InformationTheory.MeasureFano.condEntropy μ Xs Yo := by
+  classical
   have hMYo : IsProbabilityMeasure (μ.map Yo) :=
     Measure.isProbabilityMeasure_map hYo.aemeasurable
   have hMXs : IsProbabilityMeasure (μ.map Xs) :=
@@ -582,6 +588,7 @@ private theorem klDiv_joint_prod_marginals_toReal
   rw [h_entropy_term]
   ring
 
+omit [DecidableEq X] in
 /-- The MI / condEntropy bridge: for a finite-alphabet source `X`, the Phase 4-α
 KL-based mutual information equals `H(X) - H(X | Y)` where `H` is the Phase 3
 measure-theoretic Shannon entropy / conditional entropy. -/
@@ -591,6 +598,7 @@ theorem mutualInfo_eq_entropy_sub_condEntropy
     (hXs : Measurable Xs) (hYo : Measurable Yo) :
     (mutualInfo μ Xs Yo).toReal
       = entropy μ Xs - InformationTheory.MeasureFano.condEntropy μ Xs Yo := by
+  classical
   unfold mutualInfo
   exact klDiv_joint_prod_marginals_toReal μ Xs Yo hXs hYo
 

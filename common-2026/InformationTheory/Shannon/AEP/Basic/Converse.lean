@@ -34,6 +34,7 @@ Phase D は source-coding converse (Cover-Thomas Theorem 5.4.1) を `Filter.limi
 
 /-! #### Phase A補助 — i.i.d. block entropy chain rule -/
 
+omit [DecidableEq α] in
 /-- 独立条件付き ⇒ `condEntropy = entropy`. `mutualInfo_eq_zero_iff_indep` +
 `mutualInfo_eq_entropy_sub_condEntropy` の合成。 -/
 lemma condEntropy_eq_entropy_of_indepFun
@@ -43,6 +44,7 @@ lemma condEntropy_eq_entropy_of_indepFun
     (hX : Measurable X) (hY : Measurable Y)
     (hindep : IndepFun X Y μ) :
     InformationTheory.MeasureFano.condEntropy μ X Y = entropy μ X := by
+  classical
   have h_bridge :
       (mutualInfo μ X Y).toReal
         = entropy μ X - InformationTheory.MeasureFano.condEntropy μ X Y :=
@@ -52,6 +54,7 @@ lemma condEntropy_eq_entropy_of_indepFun
   rw [h_zero, ENNReal.toReal_zero] at h_bridge
   linarith
 
+omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- `IdentDistrib` ⇒ entropy 等. `μ.map X = ν.map Y` ⟹ pointwise singleton mass 等から
 entropy の有限和定義が一致。 -/
 lemma entropy_eq_of_identDistrib
@@ -67,9 +70,11 @@ lemma entropy_eq_of_identDistrib
 private noncomputable def jointFamily (Xs : ℕ → Ω → α) (n : ℕ) : Fin n → Ω → α :=
   fun i ω => Xs i.val ω
 
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 private lemma measurable_jointFamily (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
     (n : ℕ) (i : Fin n) : Measurable (jointFamily Xs n i) := hXs i.val
 
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- Independence of `Xs i` and the prefix `(Xs 0, ..., Xs (i-1))` from `iIndepFun`.
 直接 `iIndepFun.indepFun_finset` を `S = {i}`, `T = Finset.range i` over `ℕ` で適用し、
 両辺を `IndepFun.comp` で `Xs i` および `Fin i → α` 型に潰す。 -/
@@ -104,6 +109,7 @@ private lemma indepFun_Xs_prefix_of_iIndepFun
   -- h_lifted : IndepFun (projS ∘ ...) (projT ∘ ...) = IndepFun (Xs i) (fun ω j => Xs j.val ω).
   exact h_lifted
 
+omit [DecidableEq α] in
 /-- **Pi 化 entropy chain rule for i.i.d. blocks**: `H(X^n) = n · H(X_0)`.
 
 戦略 (Han 路線): `Han.jointEntropy_chain_rule` を `Fin n` 上で適用、各 summand
@@ -118,6 +124,7 @@ theorem entropy_jointRV_eq_n_smul
     (hident : ∀ i, IdentDistrib (Xs i) (Xs 0) μ μ)
     (n : ℕ) :
     entropy μ (jointRV Xs n) = (n : ℝ) * entropy μ (Xs 0) := by
+  classical
   -- jointRV は jointFamily の joint と defeq.
   set F : Fin n → Ω → α := jointFamily Xs n with hF_def
   have hF_meas : ∀ i, Measurable (F i) := measurable_jointFamily Xs hXs n
@@ -158,6 +165,7 @@ theorem entropy_jointRV_eq_n_smul
 
 /-! #### Phase B — per-n converse bound (Slepian-Wolf 流儀 4-step) -/
 
+omit [DecidableEq α] in
 /-- per-n source coding converse bound:
 `(n : ℝ) · H(Xs 0) ≤ log M + h(Pe_n) + Pe_n · n · log |α|`.
 
@@ -183,6 +191,7 @@ theorem source_coding_per_n_bound
         + InformationTheory.MeasureFano.errorProb μ
             (jointRV Xs n) (fun ω => c (jointRV Xs n ω)) d
           * (n : ℝ) * Real.log (Fintype.card α) := by
+  classical
   -- ## B.0 Setup
   set Xn : Ω → (Fin n → α) := jointRV Xs n with hXn_def
   set Yn : Ω → Fin M := fun ω => c (Xn ω) with hYn_def
@@ -280,6 +289,7 @@ theorem source_coding_per_n_bound
 
 /-! #### Phase C — `Filter.liminf` 形主定理 -/
 
+omit [DecidableEq α] in
 /-- **Source coding theorem, weak converse**:
 For any block code `(c_n, d_n)` with `M_n` codewords and i.i.d. discrete source,
 if the error probability vanishes then the rate is at least the entropy.
@@ -306,6 +316,7 @@ theorem source_coding_converse
     (hM_bdd : ∃ R, ∀ n, Real.log (M n : ℝ) / n ≤ R) :
     entropy μ (Xs 0)
       ≤ Filter.liminf (fun n : ℕ => Real.log (M n : ℝ) / n) atTop := by
+  classical
   set H : ℝ := entropy μ (Xs 0) with hH_def
   set Pe : ℕ → ℝ := fun n => InformationTheory.MeasureFano.errorProb μ
     (jointRV Xs n) (fun ω => c n (jointRV Xs n ω)) (d n) with hPe_def

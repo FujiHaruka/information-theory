@@ -38,16 +38,17 @@ variable {Y : Type*} [Fintype Y] [DecidableEq Y] [Nonempty Y]
 variable {Z : Type*} [Fintype Z] [DecidableEq Z] [Nonempty Z]
   [MeasurableSpace Z] [MeasurableSingletonClass Z]
 
+omit [DecidableEq X] [Nonempty X] [DecidableEq Y] in
 /-- Chain rule for Shannon entropy: `H(X, Y) = H(X) + H(Y | X)`. -/
 @[entry_point]
 theorem entropy_pair_eq_entropy_add_condEntropy
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y)
-    (hXs : Measurable Xs) (hYo : Measurable Yo) :
+    (_hXs : Measurable Xs) (hYo : Measurable Yo) :
     entropy μ (fun ω => (Xs ω, Yo ω))
       = entropy μ Xs + InformationTheory.MeasureFano.condEntropy μ Yo Xs := by
   haveI : IsProbabilityMeasure (μ.map Xs) :=
-    Measure.isProbabilityMeasure_map hXs.aemeasurable
+    Measure.isProbabilityMeasure_map _hXs.aemeasurable
   -- Disintegrate the joint: μ.map (Xs, Yo) = (μ.map Xs) ⊗ₘ condDistrib Yo Xs μ.
   have h_joint : μ.map (fun ω => (Xs ω, Yo ω))
       = (μ.map Xs) ⊗ₘ (condDistrib Yo Xs μ) :=
@@ -134,6 +135,8 @@ theorem entropy_pair_eq_entropy_add_condEntropy
   -- entropy μ Xs = ∑ x, negMulLog ((μ.map Xs).real {x}) by definition.
   rfl
 
+omit [DecidableEq X] [Fintype Y] [DecidableEq Y] [Nonempty Y] [MeasurableSingletonClass Y]
+    [DecidableEq Z] in
 /-- Tower of conditional entropy: disintegrating the joint conditioner `(Y, Z)` into
 `Z` given `Y` followed by `Y`,
 `H(X | Y, Z) = ∫ y, ∫ z, Σ x, negMulLog (condDistrib X (Y,Z) μ (y,z) {x})
@@ -147,13 +150,13 @@ result `condMutualInfo_eq_condEntropy_sub_condEntropy`. -/
 theorem condEntropy_tower
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y) (Zo : Ω → Z)
-    (hXs : Measurable Xs) (hYo : Measurable Yo) (hZo : Measurable Zo) :
+    (_hXs : Measurable Xs) (_hYo : Measurable Yo) (hZo : Measurable Zo) :
     InformationTheory.MeasureFano.condEntropy μ Xs (fun ω => (Yo ω, Zo ω))
       = ∫ y, ∫ z, ∑ x : X, Real.negMulLog
             ((condDistrib Xs (fun ω => (Yo ω, Zo ω)) μ (y, z)).real {x})
             ∂(condDistrib Zo Yo μ y) ∂(μ.map Yo) := by
   haveI : IsProbabilityMeasure (μ.map (fun ω => (Yo ω, Zo ω))) :=
-    Measure.isProbabilityMeasure_map (hYo.prodMk hZo).aemeasurable
+    Measure.isProbabilityMeasure_map (_hYo.prodMk hZo).aemeasurable
   -- Integrand: f p = ∑ x, negMulLog ((cond Xs (Yo, Zo) μ p).real {x}). Bounded in [0, |X|].
   set f : Y × Z → ℝ := fun p =>
     ∑ x : X, Real.negMulLog
@@ -193,6 +196,7 @@ theorem condEntropy_tower
             ((condDistrib Xs (fun ω => (Yo ω, Zo ω)) μ y).real {x})) = f from rfl,
     h_yz, Measure.integral_compProd (h_yz ▸ h_integrable)]
 
+omit [DecidableEq X] [DecidableEq Y] [Nonempty Y] [DecidableEq Z] in
 /-- The chain rule for conditional mutual information in Shannon (additive) form:
 `I(X; Z | Y) = H(X | Y) - H(X | Y, Z)`.
 
@@ -216,6 +220,7 @@ theorem condMutualInfo_eq_condEntropy_sub_condEntropy
     (condMutualInfo μ Xs Zo Yo).toReal
       = InformationTheory.MeasureFano.condEntropy μ Xs Yo
         - InformationTheory.MeasureFano.condEntropy μ Xs (fun ω => (Yo ω, Zo ω)) := by
+  classical
   have hYZ : Measurable (fun ω => (Yo ω, Zo ω)) := hYo.prodMk hZo
   -- Step 1: chain rule with renamed args
   have h_chain := mutualInfo_chain_rule μ Zo Xs Yo hZo hXs hYo
@@ -237,6 +242,7 @@ theorem condMutualInfo_eq_condEntropy_sub_condEntropy
       mutualInfo_eq_entropy_sub_condEntropy μ Xs Yo hXs hYo] at h_chain_toReal
   linarith
 
+omit [DecidableEq X] [DecidableEq Y] [Nonempty Y] [DecidableEq Z] in
 /-- Conditioning never increases entropy: `H(X | Y, Z) ≤ H(X | Y)`. Direct corollary of
 the middle lemma `condMutualInfo_eq_condEntropy_sub_condEntropy` and
 `condMutualInfo_nonneg`. Phase B (n-variable Han) reduces to iterating this on

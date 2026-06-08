@@ -80,6 +80,7 @@ The denominator `Z(λ)` (`gibbsZ f lam`) is the partition function. -/
 noncomputable def gibbsPmf (f : Fin k → α → ℝ) (lam : Fin k → ℝ) : α → ℝ :=
   fun x => Real.exp (∑ i, lam i * f i x) / gibbsZ f lam
 
+omit [DecidableEq α] in
 /-- The partition function `Z(λ)` is strictly positive (each summand is `exp _ > 0`
 and there is at least one term by `[Nonempty α]`). -/
 lemma gibbsZ_pos [Nonempty α]
@@ -90,6 +91,7 @@ lemma gibbsZ_pos [Nonempty α]
   · intro y _; exact Real.exp_pos _
   · exact Finset.univ_nonempty
 
+omit [DecidableEq α] in
 /-- Each component of `gibbsPmf f λ` is strictly positive. -/
 lemma gibbsPmf_pos [Nonempty α]
     (f : Fin k → α → ℝ) (lam : Fin k → ℝ) (x : α) :
@@ -97,12 +99,14 @@ lemma gibbsPmf_pos [Nonempty α]
   unfold gibbsPmf
   exact div_pos (Real.exp_pos _) (gibbsZ_pos f lam)
 
+omit [DecidableEq α] in
 /-- `gibbsPmf f λ` is non-negative pointwise (corollary of positivity). -/
 lemma gibbsPmf_nonneg [Nonempty α]
     (f : Fin k → α → ℝ) (lam : Fin k → ℝ) (x : α) :
     0 ≤ gibbsPmf f lam x :=
   (gibbsPmf_pos f lam x).le
 
+omit [DecidableEq α] in
 /-- The mass of `gibbsPmf f λ` sums to `1`. -/
 lemma gibbsPmf_sum_eq_one [Nonempty α]
     (f : Fin k → α → ℝ) (lam : Fin k → ℝ) :
@@ -111,12 +115,14 @@ lemma gibbsPmf_sum_eq_one [Nonempty α]
   rw [← Finset.sum_div]
   exact div_self (gibbsZ_pos f lam).ne'
 
+omit [DecidableEq α] in
 /-- `gibbsPmf f λ ∈ stdSimplex ℝ α`. -/
 lemma gibbsPmf_mem_stdSimplex [Nonempty α]
     (f : Fin k → α → ℝ) (lam : Fin k → ℝ) :
     gibbsPmf f lam ∈ stdSimplex ℝ α :=
   ⟨fun x => gibbsPmf_nonneg f lam x, gibbsPmf_sum_eq_one f lam⟩
 
+omit [DecidableEq α] in
 /-- Closed form for `log (gibbsPmf f λ x)`: the numerator's exponent minus `log Z(λ)`.
 Phase B 核 identity の入口。 -/
 lemma log_gibbsPmf [Nonempty α]
@@ -129,6 +135,7 @@ lemma log_gibbsPmf [Nonempty α]
 
 /-! ## Phase B — 核 identity + Tier 1 主定理 -/
 
+omit [DecidableEq α] in
 /-- **Core algebraic identity (Phase B の重力中心)** — for any `Q ∈ stdSimplex` on `α`,
 the KL divergence from `Q` to `gibbsPmf f λ` decomposes into negative entropy,
 the constraint inner product `⟨λ, 𝔼_Q[f]⟩`, and `log Z(λ)`:
@@ -235,6 +242,7 @@ lemma klDivPmf_gibbsPmf_eq [Nonempty α]
   rw [Finset.sum_sub_distrib, gibbsPmf_sum_eq_one f lam, hQ_sum, sub_self]
   ring
 
+omit [DecidableEq α] in
 /-- **T3-A 主定理 (Tier 1 上界)** — Cover–Thomas Theorem 12.1.1, pmf 形:
 under moment constraints `∑ x, P x · f i x = c i` for all `i`, and assuming the same
 constraints hold for the Boltzmann–Gibbs ansatz `gibbsPmf f λ` for some fixed Lagrange
@@ -254,6 +262,7 @@ theorem entropy_le_gibbs_of_constraints [Nonempty α]
     (lam : Fin k → ℝ)
     (h_gibbs_constraints : ∀ i, ∑ x, gibbsPmf f lam x * f i x = c i) :
     ∑ x, Real.negMulLog (P x) ≤ ∑ x, Real.negMulLog (gibbsPmf f lam x) := by
+  classical
   -- Gibbs inequality: klDivPmf P G ≥ 0.
   have h_KL_P : 0 ≤ klDivPmf P (gibbsPmf f lam) :=
     klDivPmf_nonneg P (gibbsPmf f lam) hP.1 (fun a => gibbsPmf_nonneg f lam a)
@@ -281,6 +290,7 @@ theorem entropy_le_gibbs_of_constraints [Nonempty α]
 
 /-! ## Phase C — Tier 2 uniqueness -/
 
+omit [DecidableEq α] in
 /-- Auxiliary: for a full-support reference pmf `Q`, `klDivPmf P Q = 0 ↔ P = Q`.
 Used in `entropy_eq_gibbs_iff_of_constraints` to translate "KL = 0" into the pointwise
 equality `P = gibbsPmf f λ`. -/
@@ -319,6 +329,7 @@ lemma klDivPmf_eq_zero_iff_pmf
     rw [h]
     exact klDivPmf_self_eq_zero Q hQ_pos
 
+omit [DecidableEq α] in
 /-- **T3-A uniqueness (Tier 2)** — entropy equality `H(P) = H(gibbsPmf f λ)` is achieved
 *if and only if* `P = gibbsPmf f λ` pointwise. -/
 @[entry_point]
@@ -371,6 +382,7 @@ theorem entropy_eq_gibbs_iff_of_constraints [Nonempty α]
 で、`MaxEntropy.entropy_le_log_card` の pmf 形に一致する。
 -/
 
+omit [DecidableEq α] in
 /-- `gibbsZ` of the zero feature map is just `Fintype.card α` (each `exp 0 = 1` summed
 `N` times). -/
 lemma gibbsZ_zero [Nonempty α] (lam : Fin k → ℝ) :
@@ -384,6 +396,7 @@ lemma gibbsZ_zero [Nonempty α] (lam : Fin k → ℝ) :
   rw [Finset.sum_congr rfl (fun y _ => h_term y)]
   rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, mul_one]
 
+omit [DecidableEq α] in
 /-- With the zero feature map, `gibbsPmf` is the uniform pmf `x ↦ 1 / Fintype.card α`. -/
 lemma gibbsPmf_zero_eq_uniform [Nonempty α] (lam : Fin k → ℝ) :
     gibbsPmf (0 : Fin k → α → ℝ) lam = fun _ => (1 : ℝ) / Fintype.card α := by
@@ -395,6 +408,7 @@ lemma gibbsPmf_zero_eq_uniform [Nonempty α] (lam : Fin k → ℝ) :
     rw [this, Real.exp_zero]
   rw [h_num]
 
+omit [DecidableEq α] in
 /-- Entropy of the uniform pmf `x ↦ 1 / N` is `log N`. -/
 lemma entropy_uniform_pmf [Nonempty α] :
     ∑ _x : α, Real.negMulLog ((1 : ℝ) / Fintype.card α) = Real.log (Fintype.card α) := by
@@ -412,6 +426,7 @@ lemma entropy_uniform_pmf [Nonempty α] :
   rw [← hN_def]
   field_simp
 
+omit [DecidableEq α] in
 /-- **E-1 (Tier 3 特例)** — エントロピーの uniform pmf 評価値:
 `∑ x, negMulLog (gibbsPmf 0 lam x) = log (Fintype.card α)`. これは
 `MaxEntropy.entropy_le_log_card` の pmf 形 (sup) と一致する。 -/
@@ -454,7 +469,7 @@ lemma gibbsPmf_bool_true_eq_of_mean
     gibbsPmf boolFeature lam true = μ := by
   rw [Fintype.sum_bool] at h_mean
   -- boolFeature 0 true = 1, boolFeature 0 false = 0
-  simp [boolFeature] at h_mean
+  simp only [boolFeature, ↓reduceIte, mul_one, Bool.false_eq_true, mul_zero, add_zero] at h_mean
   exact h_mean
 
 /-- Companion to the above: `gibbsPmf boolFeature λ false = 1 - μ`. -/

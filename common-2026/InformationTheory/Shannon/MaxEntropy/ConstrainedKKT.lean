@@ -90,6 +90,7 @@ positivity / pmf properties transfer. -/
 noncomputable def expFamilyDist (f : Fin k → α → ℝ) (lam : Fin k → ℝ) : α → ℝ :=
   fun x => Real.exp ((∑ i, lam i * f i x) - logPartitionψ f lam)
 
+omit [DecidableEq α] in
 /-- **Bridge**: the KKT-canonical form `expFamilyDist` agrees pointwise with the
 Boltzmann–Gibbs form `gibbsPmf`:
 
@@ -99,25 +100,30 @@ Proof: `Real.exp_sub` + `Real.exp_log` on `Z(λ) > 0`. -/
 lemma expFamilyDist_eq_gibbsPmf [Nonempty α]
     (f : Fin k → α → ℝ) (lam : Fin k → ℝ) :
     expFamilyDist f lam = gibbsPmf f lam := by
+  classical
   funext x
   unfold expFamilyDist logPartitionψ gibbsPmf
   rw [Real.exp_sub, Real.exp_log (gibbsZ_pos f lam)]
 
 /-! ## Section 2 — Basic positivity / pmf properties transported from `gibbsPmf` -/
 
+omit [DecidableEq α] in
 /-- `expFamilyDist` is pointwise strictly positive. -/
 @[entry_point]
 lemma expFamilyDist_pos [Nonempty α]
     (f : Fin k → α → ℝ) (lam : Fin k → ℝ) (x : α) :
     0 < expFamilyDist f lam x := by
+  classical
   rw [show expFamilyDist f lam = gibbsPmf f lam from expFamilyDist_eq_gibbsPmf f lam]
   exact gibbsPmf_pos f lam x
 
+omit [DecidableEq α] in
 /-- `expFamilyDist λ f ∈ stdSimplex ℝ α`. -/
 @[entry_point]
 lemma expFamilyDist_mem_stdSimplex [Nonempty α]
     (f : Fin k → α → ℝ) (lam : Fin k → ℝ) :
     expFamilyDist f lam ∈ stdSimplex ℝ α := by
+  classical
   rw [show expFamilyDist f lam = gibbsPmf f lam from expFamilyDist_eq_gibbsPmf f lam]
   exact gibbsPmf_mem_stdSimplex f lam
 
@@ -140,10 +146,12 @@ structure KKTSolution (f : Fin k → α → ℝ) (c : Fin k → ℝ) where
       `𝔼_{p*}[f i] = c i` for all `i`. -/
   moment_match : ∀ i, ∑ x, expFamilyDist f lam x * f i x = c i
 
+omit [DecidableEq α] in
 /-- KKT-solution moment matching restated in the `gibbsPmf` language. -/
 lemma KKTSolution.gibbs_moment_match [Nonempty α]
     {f : Fin k → α → ℝ} {c : Fin k → ℝ} (S : KKTSolution f c) :
     ∀ i, ∑ x, gibbsPmf f S.lam x * f i x = c i := by
+  classical
   intro i
   have h := S.moment_match i
   rw [show expFamilyDist f S.lam = gibbsPmf f S.lam
@@ -152,6 +160,7 @@ lemma KKTSolution.gibbs_moment_match [Nonempty α]
 
 /-! ## Section 4 — Legendre identity: self-entropy of the exponential family -/
 
+omit [DecidableEq α] in
 /-- **Legendre / saddle-point identity** for the exponential family. With KKT
 solution `(λ, moment_match)` for constraints `c`, the entropy of the
 exponential-family optimum has the closed form
@@ -165,6 +174,7 @@ theorem entropy_expFamilyDist_eq_legendre [Nonempty α]
     (f : Fin k → α → ℝ) (c : Fin k → ℝ) (S : KKTSolution f c) :
     ∑ x, Real.negMulLog (expFamilyDist f S.lam x)
       = logPartitionψ f S.lam - ∑ i, S.lam i * c i := by
+  classical
   -- Reduce to gibbsPmf and apply the core identity at Q = gibbsPmf.
   rw [show expFamilyDist f S.lam = gibbsPmf f S.lam
         from expFamilyDist_eq_gibbsPmf f S.lam]
@@ -187,6 +197,7 @@ theorem entropy_expFamilyDist_eq_legendre [Nonempty α]
 
 /-! ## Section 5 — Main theorem: exponential family maximizes constrained entropy -/
 
+omit [DecidableEq α] in
 /-- **Cover–Thomas Theorem 12.1.1 (Tier 1) — KKT / exponential-family form**.
 
 Under moment constraints `𝔼_P[f i] = c i` for all `i`, the entropy of `P` is
@@ -203,6 +214,7 @@ theorem expFamily_maximizes_entropy [Nonempty α]
     (lam : Fin k → ℝ)
     (h_KKT : ∀ i, ∑ x, expFamilyDist f lam x * f i x = c i) :
     ∑ x, Real.negMulLog (P x) ≤ ∑ x, Real.negMulLog (expFamilyDist f lam x) := by
+  classical
   -- Transport the KKT moment-match to the gibbs form, invoke the existing
   -- `entropy_le_gibbs_of_constraints`, then transport the conclusion back.
   have h_gibbs_KKT : ∀ i, ∑ x, gibbsPmf f lam x * f i x = c i := by
@@ -216,6 +228,7 @@ theorem expFamily_maximizes_entropy [Nonempty α]
         from expFamilyDist_eq_gibbsPmf f lam]
   exact h
 
+omit [DecidableEq α] in
 /-- **KKT-packaged Cover–Thomas Theorem 12.1.1**: a constraint-feasible `P` cannot
 exceed the entropy of the exponential-family solution attached to a KKT witness. -/
 @[entry_point]
@@ -229,6 +242,7 @@ theorem expFamily_maximizes_entropy_of_KKT [Nonempty α]
 
 /-! ## Section 6 — Uniqueness of the exponential-family maximizer -/
 
+omit [DecidableEq α] in
 /-- **Cover–Thomas Theorem 12.1.1 uniqueness (Tier 2) — KKT / exponential-family form**.
 
 For constraint-feasible `P` and a KKT-witnessed exponential-family solution,
@@ -245,6 +259,7 @@ theorem expFamily_unique [Nonempty α]
     (h_KKT : ∀ i, ∑ x, expFamilyDist f lam x * f i x = c i) :
     ∑ x, Real.negMulLog (P x) = ∑ x, Real.negMulLog (expFamilyDist f lam x)
       ↔ P = expFamilyDist f lam := by
+  classical
   have h_bridge : expFamilyDist f lam = gibbsPmf f lam :=
     expFamilyDist_eq_gibbsPmf f lam
   have h_gibbs_KKT : ∀ i, ∑ x, gibbsPmf f lam x * f i x = c i := by
@@ -255,6 +270,7 @@ theorem expFamily_unique [Nonempty α]
   rw [h_bridge]
   exact entropy_eq_gibbs_iff_of_constraints f c P hP hP_constraints lam h_gibbs_KKT
 
+omit [DecidableEq α] in
 /-- KKT-packaged uniqueness companion of `expFamily_maximizes_entropy_of_KKT`. -/
 @[entry_point]
 theorem expFamily_unique_of_KKT [Nonempty α]
@@ -268,6 +284,7 @@ theorem expFamily_unique_of_KKT [Nonempty α]
 
 /-! ## Section 7 — Variational form (free-energy / Legendre dual upper bound) -/
 
+omit [DecidableEq α] in
 /-- **Variational upper bound (Legendre / free-energy form)** — any constraint-feasible
 `P` satisfies the dual bound
 
@@ -294,6 +311,7 @@ theorem entropy_le_logPartition_sub_inner [Nonempty α]
     entropy_expFamilyDist_eq_legendre (S := S) f c
   linarith
 
+omit [DecidableEq α] in
 /-- KKT-packaged variational form. -/
 @[entry_point]
 theorem entropy_le_logPartition_sub_inner_of_KKT [Nonempty α]
@@ -307,6 +325,7 @@ theorem entropy_le_logPartition_sub_inner_of_KKT [Nonempty α]
 
 /-! ## Section 8 — KKT first-order moment-matching reformulation -/
 
+omit [DecidableEq α] in
 /-- **KKT first-order condition equivalence** — the moment-matching hypothesis
 `𝔼_{p*}[f] = c` (the gradient-of-ψ condition `∇ψ(λ) = c`) is *equivalent* to
 the gibbs ansatz satisfying the same constraint as `P`. This is the formal
@@ -324,6 +343,7 @@ lemma KKT_moment_match_iff_gibbs_moment_match [Nonempty α]
 
 /-! ## Section 10 — Tier 3 stretch: zero-multiplier reduction = uniform -/
 
+omit [DecidableEq α] in
 /-- **KKT zero-multiplier reduction**: `expFamilyDist f 0 = expFamilyDist g 0`
 for any features `f`, `g` (both equal to the uniform pmf). This is the
 unconstrained-Lagrangian degenerate case `λ = 0`. -/

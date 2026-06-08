@@ -53,6 +53,7 @@ variable {n : ℕ}
 variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β]
 
+omit [DecidableEq β] in
 /-- **Entropy subadditivity on `Fin n`**: `H(Y^n) ≤ ∑ H(Y_i)`.
 
 This is encoder-agnostic — holds for any family `Ys : Fin n → Ω → β` without any
@@ -66,6 +67,7 @@ lemma entropy_pi_le_sum_entropy
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Ys : Fin n → Ω → β) (hYs : ∀ i, Measurable (Ys i)) :
     jointEntropy μ Ys ≤ ∑ i : Fin n, entropy μ (Ys i) := by
+  classical
   -- Step 1: chain rule for joint entropy.
   rw [jointEntropy_chain_rule μ Ys hYs]
   -- Step 2: for each i, condEntropy ≤ entropy (conditioning reduces entropy).
@@ -99,11 +101,11 @@ Derived from the unconditional 2-var chain rule
 `(C, (A, B))`, regrouped via `entropy_measurableEquiv_comp` as `((C, A), B)`. -/
 private lemma condEntropy_pair_eq_condEntropy_add_condEntropy
     {α' β' γ' : Type*}
-    [Fintype α'] [DecidableEq α'] [Nonempty α']
+    [Fintype α'] [Nonempty α']
       [MeasurableSpace α'] [MeasurableSingletonClass α']
-    [Fintype β'] [DecidableEq β'] [Nonempty β']
+    [Fintype β'] [Nonempty β']
       [MeasurableSpace β'] [MeasurableSingletonClass β']
-    [Fintype γ'] [DecidableEq γ'] [Nonempty γ']
+    [Fintype γ'] [Nonempty γ']
       [MeasurableSpace γ'] [MeasurableSingletonClass γ']
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (As : Ω → α') (Bs : Ω → β') (Cs : Ω → γ')
@@ -113,6 +115,7 @@ private lemma condEntropy_pair_eq_condEntropy_add_condEntropy
       = InformationTheory.MeasureFano.condEntropy μ As Cs
         + InformationTheory.MeasureFano.condEntropy μ Bs
             (fun ω => (Cs ω, As ω)) := by
+  classical
   -- Step 1: H((C, (A, B))) = H(C) + H((A, B) | C).
   have h1 := entropy_pair_eq_entropy_add_condEntropy μ Cs (fun ω => (As ω, Bs ω))
     hCs (hAs.prodMk hBs)
@@ -140,6 +143,7 @@ private lemma condEntropy_pair_eq_condEntropy_add_condEntropy
   rw [h_reshape] at h1
   linarith
 
+omit [DecidableEq β] in
 /-- **Conditional joint entropy chain rule on `Fin n`** (generalized over an
 arbitrary conditioner type `χ`):
 `H(Y^n | X) = ∑ i, H(Y_i | X, Y^{<i})`.
@@ -152,7 +156,7 @@ Proof: induction on `n`. Base case `n = 0`: both sides reduce to `0` (the joint
 Step `n+1`: split `Y^{n+1}` as `(Y^n_prefix, Y_n)`, apply the 2-var conditional
 chain rule, apply IH to the prefix, and reassemble via `Fin.sum_univ_castSucc`. -/
 lemma condEntropy_pi_chain_rule_aux
-    {n : ℕ} {χ : Type*} [Fintype χ] [DecidableEq χ] [Nonempty χ]
+    {n : ℕ} {χ : Type*} [Fintype χ] [Nonempty χ]
       [MeasurableSpace χ] [MeasurableSingletonClass χ]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → χ) (Ys : Fin n → Ω → β)
@@ -162,6 +166,7 @@ lemma condEntropy_pi_chain_rule_aux
           InformationTheory.MeasureFano.condEntropy μ (Ys i)
             (fun ω => (Xs ω,
               fun (j : Fin i.val) => Ys ⟨j.val, j.isLt.trans i.isLt⟩ ω)) := by
+  classical
   induction n with
   | zero =>
     rw [Fin.sum_univ_zero]
@@ -242,6 +247,7 @@ lemma condEntropy_pi_chain_rule_aux
     rw [Fin.sum_univ_castSucc]
     congr 1
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Conditional joint entropy chain rule on `Fin n`** (specialization of
 `condEntropy_pi_chain_rule_aux` with conditioner `Xs : Ω → (Fin n → α)`).
 `H(Y^n | X^n) = ∑ i, H(Y_i | X^n, Y^{<i})`. Building Block 2 of Cover-Thomas Thm 7.9. -/
@@ -270,7 +276,7 @@ variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
 variable {γ : Type*} [Fintype γ] [DecidableEq γ] [Nonempty γ]
   [MeasurableSpace γ] [MeasurableSingletonClass γ] [StandardBorelSpace γ]
 
-omit [StandardBorelSpace α] in
+omit [StandardBorelSpace α] [DecidableEq α] [DecidableEq β] [DecidableEq γ] in
 /-- **Markov-drop for conditional entropy**: under Markov chain `Yo → Zc → Wc`,
 `H(Yo | Zc, Wc) = H(Yo | Zc)`.
 
@@ -285,6 +291,7 @@ lemma condEntropy_drop_irrelevant_of_markov
     (hmarkov : IsMarkovChain μ Yo Zc Wc) :
     InformationTheory.MeasureFano.condEntropy μ Yo (fun ω => (Zc ω, Wc ω))
       = InformationTheory.MeasureFano.condEntropy μ Yo Zc := by
+  classical
   -- Bridge: condMI(Yo; Wc | Zc).toReal = H(Yo|Zc) - H(Yo|Zc, Wc).
   have h_bridge :=
     condMutualInfo_eq_condEntropy_sub_condEntropy μ Yo Zc Wc hYo hZc hWc
@@ -384,6 +391,7 @@ private noncomputable def measurableEquivExtractLocal {β' : Type*} [MeasurableS
   (MeasurableEquiv.piEquivPiSubtypeProd (π := fun _ : Fin n => β') (fun j => j = i)).trans
     ((MeasurableEquiv.funUnique {j : Fin n // j = i} β').prodCongr (.refl _))
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Conditional joint entropy of outputs given inputs, under strong memoryless DMC**:
 `H(Y^n | X^n) = ∑ i, H(Y_i | X_i)`.
 
@@ -415,6 +423,7 @@ lemma condEntropy_pi_eq_sum_of_memoryless_strong
         (fun ω j => Ys j ω) (fun ω j => Xs j ω)
       = ∑ i : Fin n,
           InformationTheory.MeasureFano.condEntropy μ (Ys i) (Xs i) := by
+  classical
   have hXs_pi : Measurable (fun ω j => Xs j ω) := measurable_pi_iff.mpr hXs
   -- Step 1: chain rule.
   rw [condEntropy_pi_chain_rule μ (fun ω j => Xs j ω) Ys hXs_pi hYs]
@@ -532,6 +541,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Cover-Thomas Thm 7.9 / per-letter MI bound from strong memoryless DMC**:
 `(I(X^n; Y^n)).toReal ≤ ∑ i, (I(X_i; Y_i)).toReal`.
 
@@ -562,6 +572,7 @@ theorem mutualInfo_le_sum_per_letter_of_memoryless_strong
         (Ys i)) :
     (mutualInfo μ (fun ω j => Xs j ω) (fun ω j => Ys j ω)).toReal
       ≤ ∑ i : Fin n, (mutualInfo μ (Xs i) (Ys i)).toReal := by
+  classical
   -- Pull joint X^n and Y^n into measurable form.
   have hX_pi : Measurable (fun ω j => Xs j ω) := measurable_pi_iff.mpr hXs
   have hY_pi : Measurable (fun ω j => Ys j ω) := measurable_pi_iff.mpr hYs

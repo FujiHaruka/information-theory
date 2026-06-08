@@ -81,7 +81,7 @@ lemma measurable_letterIndicator
 independent given the same for `Xs`. -/
 lemma indepFun_letterIndicator
     (μ : Measure Ω) (Xs : ℕ → Ω → α)
-    (hXs : ∀ i, Measurable (Xs i))
+    (_hXs : ∀ i, Measurable (Xs i))
     (hindep : Pairwise fun i j => Xs i ⟂ᵢ[μ] Xs j) (a : α) :
     Pairwise fun i j =>
       letterIndicator Xs a i ⟂ᵢ[μ] letterIndicator Xs a j := by
@@ -339,6 +339,7 @@ strong-to-weak typicality bridge. Finite for any finite alphabet. -/
 noncomputable def logSumAbs (μ : Measure Ω) (Xs : ℕ → Ω → α) : ℝ :=
   ∑ a : α, |Real.log ((μ.map (Xs 0)).real {a})|
 
+omit [DecidableEq α] [Nonempty α] in
 lemma logSumAbs_nonneg (μ : Measure Ω) (Xs : ℕ → Ω → α) :
     0 ≤ logSumAbs μ Xs :=
   Finset.sum_nonneg fun _ _ => abs_nonneg _
@@ -350,7 +351,7 @@ This rewrites the "weak typicality" displacement as a sum of "strong typicality"
 per-letter displacements, weighted by `log P(a)`. -/
 lemma weak_displacement_eq_strong_sum
     (μ : Measure Ω) [IsProbabilityMeasure μ]
-    (Xs : ℕ → Ω → α) (hXs : ∀ i, Measurable (Xs i))
+    (Xs : ℕ → Ω → α) (_hXs : ∀ i, Measurable (Xs i))
     {n : ℕ} (hn : 0 < n) (x : Fin n → α) :
     (∑ i : Fin n, pmfLog μ Xs (x i)) / n - entropy μ (Xs 0)
       = ∑ a : α,
