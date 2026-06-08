@@ -12,11 +12,13 @@ prose にキャッシュせず `#print axioms` で都度確認 (CLAUDE.md「re-d
 
 ## 進捗
 
-- [ ] Phase 0 — 在庫 gate (EReal exp 境界値 + RHS 確定補助の在庫指示) 📋
-- [ ] Phase 1 — 柱 A: singular-case rewire (case 2 / case 2 対称) skeleton + proof 📋
-- [ ] Phase 2 — 柱 B: case-1 split (⊤/⊥/有限 sub-case) skeleton + proof 📋
-- [ ] Phase 3 — 柱 C: 完全無条件 dispatch assembly + #print axioms 検証 📋
-- [ ] Phase 4 — 柱 D: headline 命名 + 親 Phase 5 同期 📋
+- [x] Phase 0 — 在庫 gate ✅ (EReal exp 境界値 in-tree 確認、h=⊥⟹N=0 helper は `entropyPowerExt_singular` 末尾 verbatim と確定)
+- [x] Phase 1 — 柱 A: singular-case rewire ✅ (`entropyPowerExt_mixed_add_ge_uncond` + 対称版、gateway で 16 integrability + 4 finite-entropy 除去、`@audit:ok`)
+- [x] Phase 2 — 柱 B: case-1 split ✅ (`entropyPowerExt_add_ge_case1_uncond`、6-way ⊤/⊥/有限 split、bridge で integrability 供給、own sorry 0、`@audit:ok`)
+- [x] Phase 3 — 柱 C: assembly ✅ (`entropyPowerExt_add_ge_unconditional` = `hX hY hXY` のみ、`#print axioms` = `[propext, Classical.choice, Quot.sound]` 機械確認、5 declaration 独立 honesty-auditor all-OK、commit f767105)
+- [x] Phase 4 — 柱 D: headline 命名 + 同期 ✅ (真の無条件 headline = ℝ≥0∞ 版のみ確定、facts 台帳 + 親 Phase 5 同期)
+
+**✅ 全 Phase 完了 (2026-06-08)**: 完全無条件 EPI dispatch `entropyPowerExt_add_ge_unconditional` proof-done (sorryAx-free、precondition 0、独立監査 all-OK)。
 
 proof-log: Phase 0 = no (調査のみ)。Phase 1–4 = yes (`docs/shannon/proof-log-epi-uncond-dispatch-endgame-*.md`)。
 
