@@ -19,12 +19,12 @@ import InformationTheory.Shannon.Bridge
 import InformationTheory.Shannon.CondMutualInfo
 import InformationTheory.Shannon.Converse
 import InformationTheory.Shannon.Entropy
-import InformationTheory.Shannon.SlepianWolf
-import InformationTheory.Shannon.SlepianWolfAchievability
-import InformationTheory.Shannon.SlepianWolfBinning
-import InformationTheory.Shannon.SlepianWolfConditionalTypicalSlice
+import InformationTheory.Shannon.SlepianWolf.Basic
+import InformationTheory.Shannon.SlepianWolf.Achievability
+import InformationTheory.Shannon.SlepianWolf.Binning
+import InformationTheory.Shannon.SlepianWolf.ConditionalTypicalSlice
 import InformationTheory.Shannon.SufficientStatistic
-import InformationTheory.Shannon.SlepianWolfFullRateRegion
+import InformationTheory.Shannon.SlepianWolf.FullRateRegion
 import InformationTheory.Shannon.Pi
 import InformationTheory.Shannon.Han.Basic
 import InformationTheory.Shannon.Han.D
@@ -96,8 +96,8 @@ import InformationTheory.Shannon.Chernoff.NLetterZSum
 import InformationTheory.Draft.Shannon.Cramer
 import InformationTheory.Shannon.CramerLC2Discharge
 import InformationTheory.Shannon.CramerLC2DischargeExt
-import InformationTheory.Shannon.HoeffdingTradeoff
-import InformationTheory.Shannon.HoeffdingSandwich
+import InformationTheory.Shannon.Hoeffding.Tradeoff
+import InformationTheory.Shannon.Hoeffding.Sandwich
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.DeLaValleePoussin
 import InformationTheory.Shannon.FisherInfo
@@ -119,8 +119,8 @@ import InformationTheory.Shannon.EntropyPowerInequality
 import InformationTheory.Shannon.EPIPlumbing
 import InformationTheory.Shannon.ShannonHartley
 import InformationTheory.Shannon.WhittakerShannonPartial
-import InformationTheory.Shannon.WynerZiv
-import InformationTheory.Shannon.WynerZivDischarge
+import InformationTheory.Shannon.WynerZiv.Basic
+import InformationTheory.Shannon.WynerZiv.Discharge
 import InformationTheory.Shannon.Stationary
 import InformationTheory.Shannon.EntropyRate
 import InformationTheory.Shannon.ShannonMcMillanBreiman
@@ -157,8 +157,8 @@ import InformationTheory.Shannon.ParallelGaussianKKT
 import InformationTheory.Shannon.EPIL3Integration
 -- Wave6 gap-close
 import InformationTheory.Shannon.HuffmanT1APPrimeBody
-import InformationTheory.Shannon.HoeffdingSandwichBody
-import InformationTheory.Shannon.WynerZivConvexityBody
+import InformationTheory.Shannon.Hoeffding.SandwichBody
+import InformationTheory.Shannon.WynerZiv.ConvexityBody
 -- Wave7 parallel-10 + gap-close
 import InformationTheory.Shannon.AWGNMIBridgeDischarge
 import InformationTheory.Shannon.CondKLIntegral
@@ -195,17 +195,17 @@ import InformationTheory.Shannon.ParallelGaussianWFStationarityBody
 import InformationTheory.Shannon.LZ78PhraseCountAsymptoticBody
 import InformationTheory.Shannon.LZ78ZivCountingBody
 import InformationTheory.Shannon.HuffmanMergedIdentBody
-import InformationTheory.Shannon.WynerZivObjectiveConvexityBody
+import InformationTheory.Shannon.WynerZiv.ObjectiveConvexityBody
 import InformationTheory.Shannon.GaussianPDFVarianceDerivBody
 import InformationTheory.Shannon.FisherDeBruijnGaussianWitness
 import InformationTheory.Draft.Shannon.HoeffdingMinimizerAttainment
-import InformationTheory.Shannon.HoeffdingSandwichDischarge
-import InformationTheory.Shannon.HoeffdingTradeoffExp
+import InformationTheory.Shannon.Hoeffding.SandwichDischarge
+import InformationTheory.Shannon.Hoeffding.TradeoffExp
 import InformationTheory.Shannon.LZ78ZivEntropyBridge
 import InformationTheory.Shannon.StationaryKernel
 import InformationTheory.Shannon.LZ78ConverseUDObject
 import InformationTheory.Shannon.EPIStamDeBruijnConclusion
-import InformationTheory.Shannon.WynerZivCondEntDiffConvexBody
+import InformationTheory.Shannon.WynerZiv.CondEntDiffConvexBody
 import InformationTheory.Draft.Shannon.MultivariateDiffEntropy
 import InformationTheory.Draft.Shannon.ParallelGaussianPerCoord
 import InformationTheory.Shannon.ParallelGaussianConverse

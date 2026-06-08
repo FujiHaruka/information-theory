@@ -1,7 +1,7 @@
 import InformationTheory.Fano.BinaryJensen -- mul_negMulLog_div
 import InformationTheory.Fano.DPI          -- log_sum_inequality_negMulLog
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.WynerZivObjectiveConvexityBody
+import InformationTheory.Shannon.WynerZiv.ObjectiveConvexityBody
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import Mathlib.Analysis.Convex.Jensen
 import Mathlib.Algebra.BigOperators.Field

@@ -3,7 +3,7 @@ import InformationTheory.Shannon.Bridge
 import InformationTheory.Shannon.MutualInfo
 import InformationTheory.Shannon.CondMutualInfo
 import InformationTheory.Shannon.DPI
-import InformationTheory.Shannon.SlepianWolf
+import InformationTheory.Shannon.SlepianWolf.Basic
 import InformationTheory.Fano.Measure
 import InformationTheory.Shannon.DifferentialEntropy
 import Mathlib.InformationTheory.KullbackLeibler.Basic

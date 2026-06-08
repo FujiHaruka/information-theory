@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.WynerZivConvexityBody
+import InformationTheory.Shannon.WynerZiv.ConvexityBody
 
 /-!
 # Wyner–Ziv objective convexity discharge (Cover–Thomas Lemma 15.9)

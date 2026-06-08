@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.HoeffdingTradeoff
-import InformationTheory.Shannon.HoeffdingSandwich
-import InformationTheory.Shannon.HoeffdingSandwichBody
+import InformationTheory.Shannon.Hoeffding.Tradeoff
+import InformationTheory.Shannon.Hoeffding.Sandwich
+import InformationTheory.Shannon.Hoeffding.SandwichBody
 import InformationTheory.Draft.Shannon.HoeffdingInteriorBody
 import InformationTheory.Draft.Shannon.HoeffdingInteriorGradientBody
 import InformationTheory.Draft.Shannon.HoeffdingMinimizerAttainment

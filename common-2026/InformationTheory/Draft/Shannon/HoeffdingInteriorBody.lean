@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.HoeffdingSandwichBody
+import InformationTheory.Shannon.Hoeffding.SandwichBody
 import InformationTheory.Meta.EntryPoint
 
 /-!

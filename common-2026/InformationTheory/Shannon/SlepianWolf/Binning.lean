@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.SlepianWolfAchievability
+import InformationTheory.Shannon.SlepianWolf.Achievability
 import Mathlib.Probability.UniformOn
 import Mathlib.MeasureTheory.Constructions.Pi
 

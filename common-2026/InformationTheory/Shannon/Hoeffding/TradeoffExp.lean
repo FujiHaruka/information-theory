@@ -4,8 +4,8 @@ import InformationTheory.Shannon.Sanov.LDPEquality
 import InformationTheory.Shannon.KLDivContinuous
 import InformationTheory.Shannon.CsiszarProjection
 import InformationTheory.Shannon.Chernoff.Basic
-import InformationTheory.Shannon.HoeffdingTradeoff
-import InformationTheory.Shannon.HoeffdingSandwichDischarge
+import InformationTheory.Shannon.Hoeffding.Tradeoff
+import InformationTheory.Shannon.Hoeffding.SandwichDischarge
 
 /-!
 # Hoeffding tradeoff — exponential-level redefinition (full genuine closure)

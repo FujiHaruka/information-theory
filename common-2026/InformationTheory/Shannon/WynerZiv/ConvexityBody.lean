@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.WynerZivDischarge
+import InformationTheory.Shannon.WynerZiv.Discharge
 
 /-!
 # Wyner–Ziv L-WZ3 **full convexity** discharge under factorization predicate

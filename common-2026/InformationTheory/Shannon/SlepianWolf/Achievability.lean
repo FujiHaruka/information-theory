@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.AEP
-import InformationTheory.Shannon.SlepianWolf
+import InformationTheory.Shannon.SlepianWolf.Basic
 
 /-!
 # Slepian–Wolf achievability (E-5 MVP — sum bound 退化点)

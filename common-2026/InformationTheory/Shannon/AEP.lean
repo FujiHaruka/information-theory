@@ -3,7 +3,7 @@ import InformationTheory.Shannon.Bridge
 import InformationTheory.Shannon.Han.Basic
 import InformationTheory.Shannon.Pi
 import InformationTheory.Shannon.DPI
-import InformationTheory.Shannon.SlepianWolf
+import InformationTheory.Shannon.SlepianWolf.Basic
 import InformationTheory.Fano.Measure
 import Mathlib.Probability.StrongLaw
 import Mathlib.Probability.IdentDistrib

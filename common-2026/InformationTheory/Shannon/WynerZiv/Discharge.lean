@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.WynerZiv
+import InformationTheory.Shannon.WynerZiv.Basic
 
 /-!
 # Wyner–Ziv body discharge — L-WZ3 partial plumbing (T3-D continuation)

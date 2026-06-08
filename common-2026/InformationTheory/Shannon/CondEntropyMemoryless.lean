@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.Han.Basic
-import InformationTheory.Shannon.SlepianWolf
+import InformationTheory.Shannon.SlepianWolf.Basic
 
 /-!
 # Conditional entropy on `Fin n` under strong memoryless DMC (D-2'' Phase B refactor)

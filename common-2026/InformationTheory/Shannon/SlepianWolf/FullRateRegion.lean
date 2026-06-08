@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.SlepianWolfAchievability
-import InformationTheory.Shannon.SlepianWolfBinning
-import InformationTheory.Shannon.SlepianWolfConditionalTypicalSlice
+import InformationTheory.Shannon.SlepianWolf.Achievability
+import InformationTheory.Shannon.SlepianWolf.Binning
+import InformationTheory.Shannon.SlepianWolf.ConditionalTypicalSlice
 
 /-!
 # Slepian–Wolf full rate region — Phase D (error event decomposition)

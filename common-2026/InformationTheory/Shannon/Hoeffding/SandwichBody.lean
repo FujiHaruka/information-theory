@@ -1,5 +1,5 @@
-import InformationTheory.Shannon.HoeffdingTradeoff
-import InformationTheory.Shannon.HoeffdingSandwich
+import InformationTheory.Shannon.Hoeffding.Tradeoff
+import InformationTheory.Shannon.Hoeffding.Sandwich
 import InformationTheory.Shannon.MaxEntropy.Constrained
 import InformationTheory.Meta.EntryPoint
 
