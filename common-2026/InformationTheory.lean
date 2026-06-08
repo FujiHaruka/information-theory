@@ -36,6 +36,9 @@ import InformationTheory.Shannon.HypercubeEdge.Boundary
 import InformationTheory.Shannon.HypercubeEdge.BoundarySharp
 import InformationTheory.Polymatroid.Basic
 import InformationTheory.Shannon.Polymatroid
+import InformationTheory.Shannon.AEP.Basic.Core
+import InformationTheory.Shannon.AEP.Basic.Converse
+import InformationTheory.Shannon.AEP.Basic.Achievability
 import InformationTheory.Shannon.AEP.Basic
 import InformationTheory.Shannon.AEP.Rate
 import InformationTheory.Shannon.Stein
