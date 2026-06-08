@@ -870,7 +870,13 @@ precondition、Fatou 不等式の核を encode せず。(3) 非退化 — `:True
 Fatou (`lintegral_liminf_le`、非負被積分関数列で `∫ liminf ≤ liminf ∫`) が正しい向き: `ofReal(negMulLog
 ...)` で負部を 0 clamp した正部 A に対し成立する向きで、収束列の極限 = liminf を使う
 (`klDiv_le_liminf_of_ae_tendsto` body と同構造)。`klDiv_le_liminf_of_ae_tendsto` (`EPIG2KLFatouLSC.lean:112`)
-と **別物** (参照測度 γ 有限 vs volume 無限、klFun vs negMulLog) ゆえ集約漏れでない。@audit:ok -/
+と **別物** (参照測度 γ 有限 vs volume 無限、klFun vs negMulLog) ゆえ集約漏れでない。
+
+**独立 honesty audit 2026-06-08 (fresh subagent, `@residual` 除去の正当性検証 → ok)**: 旧 sorry+
+`@residual` 除去は正当。`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free
+機械確認、transitive sorry 無し)。4-check PASS: `h_ae` は a.e. 収束 input precondition で Fatou
+不等式の核 (`lintegral_liminf_le`) を encode せず (非 load-bearing)、Fatou の向きは正部 (負部 0-clamp)
+被積分関数列で正しい。@audit:ok -/
 theorem differentialEntropyExt_posPart_le_liminf_of_ae_tendsto
     (μ : Measure ℝ) (μ_n : ℕ → Measure ℝ)
     (h_ae : ∀ᵐ x ∂(volume : Measure ℝ),
@@ -1457,7 +1463,14 @@ theorem differentialEntropyExt_mono_add_truncW
 は n→∞ で `((P.map W).rnDeriv vol x).toReal` に volume-a.e. 収束。`(truncW P W n).map W = cond (P.map W) Sn`
 (`Sn n := {r | |r| ≤ n}`) + `rnDeriv_cond_eq` で `fn_n x = c_n⁻¹ · 1_{Sn n}(x) · fW_enn x` (a.e.)、
 `c_n = (P.map W) Sn → 1` (`tendsto_measure_iUnion_atTop`、`⋃ Sn = univ`) + 固定 x で十分大 n で `x ∈ Sn n`。
-weak-conv 不使用 (各点極限)。`hW_ac` は a.c. (cond 保存)、regularity precondition。 -/
+weak-conv 不使用 (各点極限)。`hW_ac` は a.c. (cond 保存)、regularity precondition。
+
+**独立 honesty audit 2026-06-08 (fresh subagent → ok)**: (B) `hW_ac` は body 未参照 (unused
+warning line 1463) = over-hypothesized だが honesty-safe (a.c. 無しでも各点 a.e. 密度収束は cond
+公式 + 質量収束で閉じる = より弱い前提で済む、退化定義悪用でなく単なる冗長)。除去可能 (非必須)、
+caller 一様性のため残置。(E) weak-conv portmanteau (`tendsto_iff_forall_integral_tendsto` 等) 不使用、
+`rnDeriv_cond_eq` + `tendsto_measure_iUnion_atTop` + indicator 各点極限で閉じる (L-Uncond-Y-roi 不発動)。
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free 機械確認)。@audit:ok -/
 theorem truncW_map_density_tendsto_ae
     (W : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hW_ac : (P.map W) ≪ volume) :
@@ -1556,7 +1569,12 @@ theorem truncW_map_density_tendsto_ae
 /-- **(2b) helper — `h(μ) = ⊤ ⟹ A(μ) = ⊤`** (正部 lintegral 発散の抽出)。
 `differentialEntropyExt μ = (A:EReal) − (B:EReal) = ⊤` (a.c. 枝) から、`A ≠ ⊤` だと EReal 引き算が
 `⊤` になり得ない (`B = ⊤`: `fin − ⊤ = ⊥`、`B ≠ ⊤`: `fin − fin = fin`) ので `A = ⊤`。`B(μ) < ⊤` 不要
-(`h = ⊤` だけで `A = ⊤` が follow、より強い形)。 -/
+(`h = ⊤` だけで `A = ⊤` が follow、より強い形)。
+
+**独立 honesty audit 2026-06-08 (fresh subagent → ok)**: genuine (新規 helper)。`htop : h(μ)=⊤`
+から `A=⊤` を EReal 減算規約 (`sub_top`/`top_sub`) の場合分けで抽出、循環/bundling/退化なし。
+本 helper の対称形が #1 の `hW_negPart_fin` redundancy (= `h=⊤ ⟹ B≠⊤`) を裏付ける。`#print axioms`
+= `[propext, Classical.choice, Quot.sound]` (sorryAx-free 機械確認)。@audit:ok -/
 theorem posPart_lintegral_eq_top_of_diffEntExt_top {μ : Measure ℝ} (hac : μ ≪ volume)
     (htop : differentialEntropyExt μ = ⊤) :
     (∫⁻ x, ENNReal.ofReal (Real.negMulLog ((μ.rnDeriv volume x).toReal)) ∂volume) = ⊤ := by
@@ -1582,7 +1600,13 @@ theorem posPart_lintegral_eq_top_of_diffEntExt_top {μ : Measure ℝ} (hac : μ 
 `B(W_n) ≤ ofReal|cbar_n · log cbar_n| + ofReal(cbar_n) · B(W)`、`cbar_n := ((P.map W)(Sn n))⁻¹.toReal`、
 `Sn n := {r | |r| ≤ n}`。truncated 密度 `fn = cbar_n · 1_{Sn n} · fW` の `negMulLog_mul` 分解 +
 `∫⁻ ofReal(fW) = 1` (確率密度正規化) で得る。`cbar_n → 1` ゆえ B(W_n) を最終的に固定有限値で抑えるための
-per-n bound。`hW_negPart_fin` (= B(W) < ⊤) は regularity precondition。 -/
+per-n bound。
+
+**独立 honesty audit 2026-06-08 (fresh subagent → ok)**: genuine (新規 helper)。`hcn` (positive
+mass) は cond well-defined の scope = regularity、`hW`/`hW_ac` も regularity。結論 = per-n B 上界の
+explicit 式で、仮説に核を encode せず (`negMulLog_mul` 分解 + 確率密度正規化が body で担う)。`#print
+axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free 機械確認)。NB: docstring 旧版が言及
+していた `hW_negPart_fin` は本 helper の signature に**無い** (caller #1 / 単調性側の仮説)。@audit:ok -/
 theorem truncW_map_negPart_lintegral_le
     (W : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hW_ac : (P.map W) ≪ volume) (n : ℕ)
@@ -1717,7 +1741,20 @@ theorem truncW_map_negPart_lintegral_le
 (Fatou) / `truncW_map_negPart_lintegral_le` (B 有界化) で組立、最終 EReal Tendsto は
 `EReal.tendsto_nhds_top_iff_real` で `∀ M, eventually M < A_n − B_n`。weak-convergence portmanteau
 (`tendsto_iff_forall_integral_tendsto` 等) は使わず density a.e. 収束 (finitary) のみで閉じる
-(L-Uncond-Y-roi 不発動)。@audit:ok -/
+(L-Uncond-Y-roi 不発動)。
+
+**独立 honesty audit 2026-06-08 (fresh subagent, proof-done 主張検証 → ok)**: A〜E 全 PASS。
+(A) **`hW_negPart_fin` = regularity (非 load-bearing) かつ redundant**: B(W)<⊤ を grant しても
+結論 `h(W_n)→⊤` は出ない (核は body の Fatou + posPart-⊤ lift、core-reconstruction FAIL) = 非
+load-bearing。body では `C:=1+2·Bμ` 有限化 + #5 の per-n B-bound で genuine 消費 = regularity
+precondition として生きている。**さらに redundant**: `hW_top : h(P.map W)=⊤` が EReal 減算規約
+(`EReal.sub_top : x-⊤=⊥`、`EReal.top_sub : ⊤-x=⊤ (x≠⊤)`、機械確認) 上 B(W)<⊤ を含意する
+(`A-B=⊤` ⟹ A=⊤ ∧ B≠⊤、#4 と対称の抽出)。除去可能 (非必須、別タスク)。honesty 上は無害。
+(B) line ~1463 unused `hW_ac` は #3 (density helper) のもの、本定理の `hW_ac` は genuine 消費。
+(C) rescope (full Tendsto → ⊤ 専用) honesty-safe: 結論を弱める方向、唯一の consumer = Phase 4
+⊤ 枝 (`_top_of_indep_add_unconditional`) が `𝓝 ⊤` のみ要求、偽の含意隠蔽なし。(D) `#print axioms`
+= `[propext, Classical.choice, Quot.sound]` (sorryAx-free 機械確認)。(E) weak-conv portmanteau 不使用
+(density a.e. 収束 finitary のみ、L-Uncond-Y-roi 不発動)。@audit:ok -/
 theorem differentialEntropyExt_truncW_tendsto_top
     (W : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hW_ac : (P.map W) ≪ volume)
