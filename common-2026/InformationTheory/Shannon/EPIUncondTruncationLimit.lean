@@ -2336,7 +2336,17 @@ gateway 単調性を無条件で建てる。有限枝は finiteness → integrab
   (`∫⁻ ‖negMulLog f‖ₑ = A + B < ⊤`)。
 
 honesty: `hne_top`/`hne_bot` は有限性 regularity precondition (結論 = Integrable を encode せず)。
-@residual(plan:epi-uncond-truncation-lsc-plan) -/
+
+**独立 honesty audit 2026-06-08 (fresh subagent, commit 64cb872 → ok)**: 4-check 全 PASS。
+(1) 非循環 — 結論 `Integrable (negMulLog∘density)` は 3 仮説のいずれとも非同型、body は EReal
+分岐 (`hsplit` の `A−B` 展開 + `EReal.sub_top`/`top_sub` で A≠⊤/B≠⊤) → `integrable_of_lintegral_
+ofReal_pos_neg_ne_top` で genuine 組立 (`:= h` でない)。(2) 非バンドル — `hac` 絶対連続性、
+`hne_top`/`hne_bot` 有限性 regularity precondition、3 仮説 grant しても Integrable は body の
+EReal 推論を要し核を encode せず。(3) 非退化 — Integrable は実命題、vacuous/exfalso なし。
+(4) **sufficiency (反例試行) — 両仮説 genuine に必要**: `hne_bot` 落とすと A<⊤∧B=⊤ (h=fin−⊤=⊥,
+hne_top 成立だが非可積分) が反例、`hne_top` 落とすと A=⊤∧B<⊤ (h=⊤−fin=⊤, hne_bot 成立だが
+非可積分) が反例。under-hypothesized でない。`#print axioms` = `[propext, Classical.choice,
+Quot.sound]` (sorryAx-free 機械確認、(i-a) `differentialEntropyExt_indep_add_eq_add_klDiv` 非継承)。@audit:ok -/
 theorem differentialEntropyExt_integrable_of_finite {μ : Measure ℝ} (hac : μ ≪ volume)
     (hne_top : differentialEntropyExt μ ≠ ⊤) (hne_bot : differentialEntropyExt μ ≠ ⊥) :
     Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume := by
@@ -2373,7 +2383,19 @@ theorem differentialEntropyExt_integrable_of_finite {μ : Measure ℝ} (hac : μ
 ⊤ 枝 = `differentialEntropyExt_top_of_indep_add_unconditional` (route β')。
 
 旧 `EPIUncondMonotone.differentialEntropyExt_mono_add` の無条件 proof-done 版 (旧版は無条件版②
-`differentialEntropyExt_indep_add_eq_add_klDiv` (i-a) に transitive 依存)。本版は (i-a) を継承しない。 -/
+`differentialEntropyExt_indep_add_eq_add_klDiv` (i-a) に transitive 依存)。本版は (i-a) を継承しない。
+
+**独立 honesty audit 2026-06-08 (fresh subagent, commit 64cb872 → ok)**: 4-check 全 PASS。
+(1) 非循環 — 結論 `h(W)≤h(W+V)` は 4 仮説のいずれとも非同型、body は genuine 3 枝場合分け。
+(2) 非バンドル — `hW`/`hV`/`hWV`/`hW_ac` は可測/独立/絶対連続 regularity、核 (単調性) は body の
+3 枝 (⊥=`bot_le` / ⊤=route β' `@audit:ok` / 有限=per-fibre Gibbs `@audit:ok` + bridge) が担う。
+(3) 非退化 — ⊤ 枝の `⊤≤⊤` は route β' `differentialEntropyExt_top_of_indep_add_unconditional`
+(genuine, `@audit:ok`) で `h(W+V)=⊤` を確立してから閉じる、退化定義悪用でない。
+(4) **sufficiency (反例試行) — 含意 TRUE**: 「独立ノイズ加算は微分エントロピーを減らさない」の genuine
+EPI 単調性、`hW_ac`/`hWV` は genuine に必要。under-hypothesized でない。**name-laundering check —
+NOT laundering**: `_unconditional` = (i-a) sorryAx 非継承の proof-route 主張で正当、open load-bearing
+hyp も偽装 sorry-body も無し。`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free
+機械確認、axiom 出力に (i-a) `differentialEntropyExt_indep_add_eq_add_klDiv` 不在で非継承を独立裏取り)。@audit:ok -/
 theorem differentialEntropyExt_mono_add_unconditional
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)
@@ -2392,7 +2414,12 @@ theorem differentialEntropyExt_mono_add_unconditional
 
 /-- **無条件 gateway atom** (方針 Y): `W a.c. ∧ W ⊥ V ⟹ N(W+V) ≥ N(W)`。
 `differentialEntropyExt_mono_add_unconditional` を `EReal.exp_monotone` で `entropyPowerExt`
-(= `EReal.exp (2 · differentialEntropyExt)`) に lift。proof-done (i-a 非依存)。 -/
+(= `EReal.exp (2 · differentialEntropyExt)`) に lift。proof-done (i-a 非依存)。
+
+**独立 honesty audit 2026-06-08 (fresh subagent, commit 64cb872 → ok)**: `mono_add_unconditional`
+(@audit:ok) の genuine な `EReal.exp_monotone` lift (`mul_le_mul_of_nonneg_left ... (2≥0)` 経由)、
+循環/bundling なし。`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free 機械確認、
+(i-a) 非継承)。@audit:ok -/
 theorem entropyPowerExt_mono_add_unconditional
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)
