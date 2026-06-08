@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.LempelZiv78
-import InformationTheory.Shannon.LZ78GreedyParsing
-import InformationTheory.Shannon.LZ78GreedyParsingImpl
+import InformationTheory.Shannon.LZ78.Basic
+import InformationTheory.Shannon.LZ78.GreedyParsing
+import InformationTheory.Shannon.LZ78.GreedyParsingImpl
 import Mathlib.Data.List.Nodup
 import Mathlib.Data.List.Basic
 

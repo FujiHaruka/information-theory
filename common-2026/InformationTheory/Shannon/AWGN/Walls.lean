@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.AWGN
+import InformationTheory.Shannon.AWGN.Basic
 import InformationTheory.Shannon.BlockwiseChannel
 import Mathlib.Probability.Distributions.Gaussian.Real
 

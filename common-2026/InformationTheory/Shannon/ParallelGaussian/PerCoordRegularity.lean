@@ -2,8 +2,8 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.ParallelGaussian.Basic
 import InformationTheory.Draft.Shannon.ParallelGaussianPerCoord
 import InformationTheory.Shannon.ParallelGaussian.Converse
-import InformationTheory.Shannon.AWGN
-import InformationTheory.Shannon.AWGNMIBridge
+import InformationTheory.Shannon.AWGN.Basic
+import InformationTheory.Shannon.AWGN.MIBridge
 import InformationTheory.Draft.Shannon.ContChannelMIDecomp
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Draft.Shannon.MultivariateDiffEntropy

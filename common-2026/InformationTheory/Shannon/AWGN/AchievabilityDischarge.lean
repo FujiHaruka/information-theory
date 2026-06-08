@@ -1,9 +1,9 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.AWGN
-import InformationTheory.Shannon.AwgnWalls
-import InformationTheory.Shannon.AWGNAchievability
-import InformationTheory.Shannon.AWGNMain
-import InformationTheory.Shannon.AWGNF1Discharge
+import InformationTheory.Shannon.AWGN.Basic
+import InformationTheory.Shannon.AWGN.Walls
+import InformationTheory.Shannon.AWGN.Achievability
+import InformationTheory.Shannon.AWGN.Main
+import InformationTheory.Shannon.AWGN.F1Discharge
 import InformationTheory.Shannon.DifferentialEntropy
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.Independence.Basic

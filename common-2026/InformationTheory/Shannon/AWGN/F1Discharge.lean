@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.AWGNMain
+import InformationTheory.Shannon.AWGN.Main
 
 /-!
 # T2-A F-1 discharge: AWGN kernel measurability

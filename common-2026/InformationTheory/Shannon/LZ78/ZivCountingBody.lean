@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.LZ78GreedyLongestPrefix
-import InformationTheory.Shannon.LZ78PhraseCountAsymptoticBody
+import InformationTheory.Shannon.LZ78.GreedyLongestPrefix
+import InformationTheory.Shannon.LZ78.PhraseCountAsymptoticBody
 import Mathlib.Data.Nat.Log
 import Mathlib.Data.List.Nodup
 import Mathlib.Data.Fintype.Card

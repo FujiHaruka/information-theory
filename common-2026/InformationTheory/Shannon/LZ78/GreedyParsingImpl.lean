@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.LempelZiv78
-import InformationTheory.Shannon.LZ78GreedyParsing
+import InformationTheory.Shannon.LZ78.Basic
+import InformationTheory.Shannon.LZ78.GreedyParsing
 import Mathlib.Data.Nat.Log
 import Mathlib.Data.List.Basic
 import Mathlib.Data.List.Range

@@ -1,8 +1,8 @@
 import InformationTheory.Shannon.ChannelCoding.Basic
 import InformationTheory.Shannon.DifferentialEntropy
-import InformationTheory.Shannon.AWGNMIDecompBody
-import InformationTheory.Shannon.AWGNBindConvBody
-import InformationTheory.Shannon.AwgnWalls
+import InformationTheory.Shannon.AWGN.MIDecompBody
+import InformationTheory.Shannon.AWGN.BindConvBody
+import InformationTheory.Shannon.AWGN.Walls
 import Mathlib.InformationTheory.KullbackLeibler.Basic
 import Mathlib.Probability.Kernel.Composition.RadonNikodym
 import Mathlib.Probability.Kernel.Composition.IntegralCompProd

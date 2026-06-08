@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.AWGN
-import InformationTheory.Shannon.AWGNConverseDischarge
+import InformationTheory.Shannon.AWGN.Basic
+import InformationTheory.Shannon.AWGN.ConverseDischarge
 
 /-!
 # T2-A Phase C: AWGN channel coding theorem — converse (Tier 2 sorry form)

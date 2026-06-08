@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.LempelZiv78
-import InformationTheory.Shannon.LZ78ZivInequality
+import InformationTheory.Shannon.LZ78.Basic
+import InformationTheory.Shannon.LZ78.ZivInequality
 import Mathlib.Analysis.Asymptotics.Defs
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Order.Filter.AtTopBot.Basic

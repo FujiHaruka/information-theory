@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.AWGN
+import InformationTheory.Shannon.AWGN.Basic
 
 /-!
 # T2-A Phase B: AWGN channel coding theorem — achievability (Tier 2 sorry form)

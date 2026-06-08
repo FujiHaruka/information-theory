@@ -2,7 +2,7 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.ParallelGaussian.Basic
 import InformationTheory.Shannon.ParallelGaussian.KKT
 import InformationTheory.Draft.Shannon.ContChannelMIDecomp
-import InformationTheory.Shannon.AWGNMIClosedForm
+import InformationTheory.Shannon.AWGN.MIClosedForm
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Draft.Shannon.MultivariateDiffEntropy
 import InformationTheory.Shannon.MIChainRule

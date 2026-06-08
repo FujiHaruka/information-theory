@@ -1,4 +1,4 @@
-import InformationTheory.Shannon.AWGNBindConvBody
+import InformationTheory.Shannon.AWGN.BindConvBody
 import InformationTheory.Draft.Shannon.ContChannelMIDecomp
 
 /-!

@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.AWGNMIBridge
+import InformationTheory.Shannon.AWGN.MIBridge
 
 /-!
 # T2-A AWGN MI bridge: body discharge of `IsAwgnOutputGaussian`

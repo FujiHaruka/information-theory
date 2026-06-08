@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.LZ78ZivEntropyBridge
-import InformationTheory.Shannon.LZ78ZivCountingBody
+import InformationTheory.Shannon.LZ78.ZivEntropyBridge
+import InformationTheory.Shannon.LZ78.ZivCountingBody
 import InformationTheory.Shannon.EntropyRate
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 

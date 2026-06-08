@@ -1,7 +1,7 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.AWGN
-import InformationTheory.Shannon.AWGNAchievability
-import InformationTheory.Shannon.AWGNConverse
+import InformationTheory.Shannon.AWGN.Basic
+import InformationTheory.Shannon.AWGN.Achievability
+import InformationTheory.Shannon.AWGN.Converse
 
 /-!
 # T2-A Phase D: AWGN main theorem — `awgn_channel_coding_theorem`

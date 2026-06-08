@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.ShannonMcMillanBreiman
-import InformationTheory.Shannon.LZ78GreedyLongestPrefix
+import InformationTheory.Shannon.LZ78.GreedyLongestPrefix
 import Mathlib.Analysis.SpecialFunctions.Log.NegMulLog
 import Mathlib.Analysis.Convex.Jensen
 

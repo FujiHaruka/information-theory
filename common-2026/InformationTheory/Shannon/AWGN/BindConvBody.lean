@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.AWGNMIBridgeDischarge
+import InformationTheory.Shannon.AWGN.MIBridgeDischarge
 import Mathlib.MeasureTheory.Group.Convolution
 
 /-!

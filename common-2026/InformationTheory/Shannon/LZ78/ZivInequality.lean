@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.LempelZiv78
+import InformationTheory.Shannon.LZ78.Basic
 import Mathlib.Data.Finset.Card
 import Mathlib.Data.Finset.Image
 import Mathlib.Data.Fintype.Card

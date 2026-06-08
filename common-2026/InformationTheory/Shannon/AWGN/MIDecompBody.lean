@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.AWGNMIBridgeDischarge
+import InformationTheory.Shannon.AWGN.MIBridgeDischarge
 
 /-!
 # W9-G1 T2-A AWGN MI bridge: body discharge of `IsAwgnMIDecomp`

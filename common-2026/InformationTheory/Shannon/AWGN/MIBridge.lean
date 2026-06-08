@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.AWGNF1Discharge
+import InformationTheory.Shannon.AWGN.F1Discharge
 
 /-!
 # T2-A F-2 (MI bridge) discharge: AWGN channel mutual information closed form

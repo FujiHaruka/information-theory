@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.McMillanKraftBridge
-import InformationTheory.Shannon.LZ78GreedyParsing
+import InformationTheory.Shannon.LZ78.GreedyParsing
 import Mathlib.Data.Nat.Bitwise
 import Mathlib.Data.Nat.Log
 

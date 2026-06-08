@@ -1,5 +1,5 @@
-import InformationTheory.Shannon.AWGN
-import InformationTheory.Shannon.AWGNMain
+import InformationTheory.Shannon.AWGN.Basic
+import InformationTheory.Shannon.AWGN.Main
 import InformationTheory.Shannon.ChannelCoding.Basic
 import InformationTheory.Shannon.DifferentialEntropy
 import Mathlib.MeasureTheory.Constructions.Pi
