@@ -2,7 +2,14 @@
 
 Mathlib 命名規約（<https://leanprover-community.github.io/contribute/naming.html>）から本プロジェクトに適用する分。スタイルは [`lean-style.md`](lean-style.md)。
 
-本プロジェクトの実態は既にこの規約に沿っている（例: `exp_decay_N_of_pos` の `_of_`、`DotEq` の UpperCamelCase、`entropyPowerExt_add_ge_unconditional`）。
+## 本リポジトリの適合状況（検証済）
+
+定理・補題 1823 件を調べた結果、**基本文法は広く沿っているが、証明ステージング由来の命名層は Mathlib 外**。
+
+- **沿っている**: snake_case 定理 / UpperCamelCase 型 / dot 記法（`HuffmanGrouping.nodup`）。`_of_` での仮定後置が **218 件**（`fano_inequality_of_le_qaryEntropy`, `condE_XY_zero_of_deterministic` など教科書通り）。演算語の転写（`add`/`mul`/`le`/`eq`）。
+- **沿っていない（Mathlib に無い proof-staging 語彙）**: `Step`(18) / `Partial`(11) / `Bridge`(9) / `unconditional`(6) / `Full`(5) / `Discharge` / `Witness` 等、計 ~50 件超。うち `unconditional` / `Full` / `discharged` は CLAUDE.md honesty 系の **name laundering 監視語**と重なる（証明が真に無条件なら descriptive だが Mathlib 語彙ではない）。軽微な逸脱として `AWGNJointlyTypicalSet_zero` 式の **UpperCamelCase 接頭辞を `_` 直結**（Mathlib なら `.zero`）、末尾 `_`、`when_eq` 等の非標準接続詞。
+
+→ 新規命名は下記の Mathlib ルールに寄せ、staging 語彙は最終 publish 名から落とす（distinguish が要るなら `_of_<hyp>` 形で条件版を分ける）。既存の一括リネームは別タスク。
 
 ## 大文字小文字
 
