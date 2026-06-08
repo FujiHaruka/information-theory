@@ -187,21 +187,36 @@ proof-log: yes (per-n finite-entropy 単調性が route T と同じ Gibbs+maxent
   `hWV_ne_bot` (route T 負部 lemma の single-component 一般化) / `hκ_cross_int` / `hκ_KL` (downstream)。
 - [ ] proof-log に「どの仮説が compact support から自動か / どれを明示供給したか」を記録。
 
-## Phase 3 — n→∞ 極限 (単調収束で weak-conv 回避) 📋
+## Phase 3 — W-marginal ⊤-divergence (Fatou、weak-conv 回避) 📋
 
 proof-log: yes (極限 step が weak-conv LSC wall を回避できるかが feasibility の分かれ目)。
 
-- [ ] **`h(W_n) ↑ ⊤`**: `h(W)=⊤` のとき truncation 緩和列 `h(W_n)` が ⊤ へ単調発散。`truncW_tendsto` を
-  `tendsto_measure_iUnion_atTop` + 単調列の極限で建てる (route T `measure_truncSet_tendsto_one` 流用)。
-- [ ] **weak-conv 回避の確認**: この極限が density a.e. 収束 (`klDiv_le_liminf_of_ae_tendsto` 適用可) or
-  単調収束のみで閉じ、`MeasureTheory.ProbabilityMeasure.tendsto_iff_forall_integral_tendsto` (弱収束定義) を
-  使わないことを proof で担保。weak-conv を使ったら即 L-Uncond-Y-roi 検討。
+**スコープ確定 (判断ログ6)**: route (d'') では full `Tendsto` (任意 h(W)) は不要、**⊤-divergence 専用**に絞る。
+`differentialEntropyExt_truncW_tendsto` (full Tendsto、line ~1068) は over-scoped = ⊤ ケースのみ要 (signature 縮小検討)。
 
-## Phase 4 — ⊤ 枝 closure + assembly + 監査 📋
+- [ ] **Fatou helper** `differentialEntropyExt_posPart_le_liminf_of_ae_tendsto` (line ~495): density a.e. 収束
+  → `A(μ) ≤ liminf A(μ_n)`。`klDiv_le_liminf_of_ae_tendsto` (`EPIG2KLFatouLSC.lean:112`) と完全同型 (klFun→negMulLog 差替)。
+- [ ] **`h(W_n) → ⊤`**: `h(W)=⊤ ⟹ A(W)=⊤ →(Fatou) liminf A(W_n)=⊤ → A(W_n)→⊤`、+ `B(W_n)` 有界 (B-helper)
+  → `h(W_n)=A(W_n)−B(W_n)→⊤`。density a.e. 収束は `tendsto_measure_iUnion_atTop` (route T) ベースで供給。
+- [ ] **weak-conv 不使用の担保**: `tendsto_iff_forall_integral_tendsto` (弱収束定義) を使わない。使ったら L-Uncond-Y-roi。
 
-- [ ] **⊤ 枝 assembly**: per-n 単調性 `h(W_n) ≤ h(W_n + V)` + `h(W_n) ↑ ⊤` から `h(W_n + V) ≥ h(W_n) → ⊤`
-  で `h(W+V) = ⊤` (`le_top` + 極限)。route T capstone Case 2 (`EPIInfiniteVarianceCapstone.lean:343`、
-  `entropyPowerExt = ⊤` を `le_top`) と同型。
+## Phase 4 — ⊤ 枝 closure (route (d'') = 測度 domination + ℝ≥0∞ Gibbs) + 監査 📋
+
+**route (d'') 確定 (判断ログ6)**: 当初の「`h(W_n+V)→⊤` から `le_top` で `h(W+V)=⊤`」は **和列 tendsto**
+`h(Q_n.map(W+V))→h(P.map(W+V))` を要し、その A 部は Fatou の逆向き (reverse-Fatou) で出ない。
+密度 domination + 有限性不要 Gibbs で reverse-Fatou を回避する。記号: ν=P.map(W+V), ν_n=Q_n.map(W+V), g=−log f_ν。
+
+- [ ] **atom 1 (gateway、測度 domination)**: `Q.map(W+V) ≤ (P E)⁻¹ • P.map(W+V)` (E={|W|≤n})。
+  `cond = (P E)⁻¹•P.restrict E ≤ (P E)⁻¹•P` + pushforward 単調。a.c. 系も無料。`lintegral_mono'` で
+  `∫⁻ φ dν_n ≤ (P E)⁻¹ ∫⁻ φ dν` (φ≥0)。← **load-bearing、最初に検証**。
+- [ ] **atom 2 (有限性不要 Gibbs)**: `h_ext(μ) ≤ crossExt(μ,ν)` (μ≪ν 両 a.c. probability、μ 有限エントロピー不要)。
+  既存 `differentialEntropy_le_cross_entropy` (`:997`) は `integral_sub` で有限 cross-integral 必須 = ⊤ で破綻 (使用不可)。
+  代わりに **ℝ≥0∞ klDiv** `klDiv_eq_lintegral_klFun_of_ac` (Mathlib) + `klDiv≥0` で ℝ≥0∞ 不等式として建てる
+  (template `EPIG2KLFatouLSC.lean:126`)。
+- [ ] **⊤ 枝 assembly**: ① per-n 単調性 + Phase 3 で `h_ext(ν_n)→⊤`。② atom 2 で `h_ext(ν_n) ≤ ∫ g dν_n`。
+  ③ `∫ g⁻ dν_n ≤ (P E)⁻¹ B(W+V) <⊤` (atom 1 + B-helper `negPart_negMulLog_conv_single_ne_top` を un-truncated 適用)
+  → `∫ g⁺ dν_n →⊤`。④ atom 1 で `∫ g⁺ dν_n ≤ (P E)⁻¹ A(W+V)` → `A(W+V)=⊤`、+ `B(W+V)<⊤` → `h(W+V)=⊤`。
+  `differentialEntropyExt_top_of_indep_add_unconditional` (line ~1109) を closure。
 - [ ] **consumer rewire**: `entropyPowerExt_mono_add` の無限エントロピー入力ケースを
   `differentialEntropyExt_top_of_indep_add_unconditional` に rewire し、無条件版② (i-a) 依存を ⊤ 枝で
   bypass。有限枝は finite ② / coe 枝で別途。残る (i-a) sorry が真に消えるか
@@ -234,6 +249,29 @@ proof-log: yes (極限 step が weak-conv LSC wall を回避できるかが feas
 ## 判断ログ
 
 書く頻度: 方針変更 / 撤退 / 当初仮定の修正があったとき。決着済 entry は削除、active な判断のみ残す。
+
+6. **Phase 4 assembly を route (d'') に確定 (2026-06-08、proof-pivot-advisor 2 往復 + orchestrator verbatim refute)**:
+   当初 plan の「`h(W_n+V)→⊤` から `le_top` で `h(W+V)=⊤`」は **和列 tendsto** `h(ν_n)→h(ν)` を暗黙に要し、
+   その A 部 (正部 lintegral) は Fatou (LSC) の逆向き = reverse-Fatou で出ないことが判明 (Phase 0 gate は W-marginal
+   Fatou のみ裏取り、和側の passage は未検討だった)。検討した代替ルートと結末:
+   - **route (c)** (advisor 推奨、per-fibre Gibbs の reference 測度を full sum `ν` に差し替え): **refute**。
+     Tonelli collapse は「積分する積測度 = reference」のときだけ cross-entropy が self-entropy `h(ν)` に潰れる。
+     reference を ν に差し替えると積分側は `(Q.map W)∗μV ≠ ν` のままで RHS は cross-entropy に留まり潰れない。
+   - **route (d')** (orchestrator、密度 domination + 既存 Gibbs): **finite-Gibbs snag で要修正**。
+     `differentialEntropy_le_cross_entropy` (`:997`) は `integral_sub` (`:1071`) で有限 cross-integral + `hμ_ent`
+     (μ 自身の有限エントロピー) を必須にするため、⊤ ケース (大 n で h(ν_n)→⊤) で fire しない (verbatim 確認)。
+   - **route (d'') 採用**: route (d') の Gibbs を **有限性不要の ℝ≥0∞ klDiv** (`klDiv_eq_lintegral_klFun_of_ac` +
+     `klDiv≥0`) に置換。cross-entropy `∫ g dν_n` (g=−log f_ν) は ν_n について**線形**ゆえ測度 domination が効く。
+     domination は **測度レベル** (`cond=(P E)⁻¹•P.restrict E ≤ (P E)⁻¹•P` → pushforward 単調) で取れ、a.c. も無料、
+     convolution 密度操作不要。assembly は Phase 4 §参照。**NOT a wall** (self-build、`wall:entropy-lsc-weak` 不該当、
+     weak-conv 不使用)。
+   - **却下した advisor fallback** (A への直接 domination via `lintegral_mono_ae`): `negMulLog⁺` が密度について**非単調**
+     (max 1/e、t∈(0,1) で山型) ゆえ `f_n≤(1/c_n)f` から `A(ν_n)≤(1/c_n)A(ν)` は出ない (route (c) と同型の誤り)。
+     線形な cross-entropy 経由 (route (d'')) が必須。
+   - **教訓**: in-tree の ℝ-valued Gibbs (`differentialEntropy_le_cross_entropy`) は `integral_sub` で構造的に
+     **有限エントロピー lemma**。⊤ を跨ぐ不等式は ℝ≥0∞ klDiv (`klDiv_eq_lintegral_klFun_of_ac` + `klDiv≥0`) か
+     正部 lintegral の直接比較に流す。密度 domination は **線形 test 関数** (cross-entropy) にしか効かず、非線形な
+     A (= negMulLog⁺ の lintegral) には効かない。
 
 1. **ターゲットを等式②でなく gateway ⊤ 枝に確定 (2026-06-08)**: 無条件版② chain rule の finiteness-free
    等式は **証明不能と確定済** (`epi-uncond-chainrule-ext-inventory.md`「完了状態」、per-fibre mass 相殺が
