@@ -33,14 +33,30 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 /-- **helper — `h = ⊥ ⟹ N = 0`** (a.c. だが負部発散で `h=⊥` の場合)。
 `entropyPowerExt_singular` は `¬ a.c.` 専用で a.c. かつ `h=⊥` を覆わないため、`differentialEntropyExt`
 の値が `⊥` であることだけから `entropyPowerExt = 0` を出す helper を別途立てる。
-`EReal.exp_bot` + `EReal.mul_bot_of_pos` の 2 行 (`entropyPowerExt_singular` の証明末尾と同型)。 -/
+`EReal.exp_bot` + `EReal.mul_bot_of_pos` の 2 行 (`entropyPowerExt_singular` の証明末尾と同型)。
+
+独立 honesty audit 2026-06-08 (fresh subagent, commit 34b8d37 → ok): 4-check 全 PASS。
+(1) 非循環 — 結論 `N=0` は仮説 `h=⊥` と非同型、body は `entropyPowerExt=EReal.exp(2·h)` の genuine
+2 行 rewrite (`:= h` でない)。(2) 非バンドル — 唯一の仮説 `h=⊥` は `differentialEntropyExt` の値で、
+結論 (entropy power = 0) は body の EReal exp 計算が供給。(3) 非退化 — `exp(2·⊥)=exp(⊥)=0` は
+EReal exp def の正しい値、vacuous/exfalso なし。(4) sufficiency — 含意 TRUE (`h=⊥⟹N=0` は def 直結)。
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free 機械確認)。@audit:ok -/
 private theorem entropyPowerExt_eq_zero_of_diffEntExt_bot {μ : Measure ℝ}
     (h : differentialEntropyExt μ = ⊥) : entropyPowerExt μ = 0 := by
   unfold entropyPowerExt
   rw [h, EReal.mul_bot_of_pos (by norm_num), EReal.exp_bot]
 
 /-- **柱 A (case 2) — X a.c. ∧ Y 特異**: `N(Y)=0` ゆえ RHS=`N(X)`、gateway 単調性で `N(X+Y) ≥ N(X)`。
-仮説は `hX hY hXY hX_ac hY_sing` のみ (既存 dispatch の 8 integrability + 2 finite-entropy を全除去)。 -/
+仮説は `hX hY hXY hX_ac hY_sing` のみ (既存 dispatch の 8 integrability + 2 finite-entropy を全除去)。
+
+独立 honesty audit 2026-06-08 (fresh subagent, commit 34b8d37 → ok): 4-check 全 PASS。
+(1) 非循環 — 結論 `N(X+Y)≥N(X)+N(Y)` は仮説いずれとも非同型、body は `N(Y)=0` rewrite + gateway 単調。
+(2) 非バンドル — `hX_ac` 絶対連続 / `hY_sing` 特異性 / `hX hY hXY` regularity、EPI 単調性 core は genuine
+gateway `entropyPowerExt_mono_add_unconditional` (`@audit:ok`) の body 3 枝が供給 (仮説に encode せず)。
+(3) 非退化 — `N(Y)=0` は特異測度のエントロピーパワーの真の値 (`entropyPowerExt_singular` genuine、sanity
+gate `entropyPowerExt_dirac=0` 確認済)、退化定義悪用でない。(4) sufficiency (反例試行) — `hY_sing` を
+落とすと N(Y)>0 が可能で `N(X+Y)≥N(X)` だけでは結論不成立、genuine に必要。under-hypothesized でない。
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free 機械確認)。@audit:ok -/
 theorem entropyPowerExt_mixed_add_ge_uncond
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -52,7 +68,14 @@ theorem entropyPowerExt_mixed_add_ge_uncond
 
 /-- **柱 A 対称 (case 2 対称) — Y a.c. ∧ X 特異**: `N(X)=0` ゆえ RHS=`N(Y)`、gateway 単調性
 (W=Y, V=X) で `N(Y+X) ≥ N(Y)` を出し `add_comm` で `X+Y` に reshape。
-仮説は `hX hY hXY hY_ac hX_sing` のみ。 -/
+仮説は `hX hY hXY hY_ac hX_sing` のみ。
+
+独立 honesty audit 2026-06-08 (fresh subagent, commit 34b8d37 → ok): 4-check 全 PASS (#2 の mirror)。
+(1) 非循環 — body は `add_comm` reshape + `N(X)=0` rewrite + gateway 単調 (W=Y,V=X、`hXY.symm`)。
+(2) 非バンドル — `hY_ac`/`hX_sing`/regularity、EPI 単調性 core は gateway (`@audit:ok`) が供給。
+(3) 非退化 — `N(X)=0` は特異測度の真の値 (sanity-gated)、退化悪用でない。(4) sufficiency — `hX_sing`
+genuine に必要 (#2 と対称)。`add_comm` rewrite は genuine な measure 等式 (`congrArg`+`funext`)。
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free 機械確認)。@audit:ok -/
 theorem entropyPowerExt_mixed_add_ge_symm_uncond
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -68,7 +91,18 @@ theorem entropyPowerExt_mixed_add_ge_symm_uncond
 `h(X+Y)`/`h(X)`/`h(Y)` の ⊤/⊥/有限で by_cases split。`N = EReal.exp(2·h)` ゆえ `h=⊤⟹N=⊤`、
 `h=⊥⟹N=0`。⊤/⊥ 枝は gateway 単調性で RHS の一項を潰し、有限残枝は bridge
 `differentialEntropyExt_integrable_of_finite` で 3 integrability を供給して既存 genuine
-`entropyPowerExt_add_ge_finite_ac` に落とす。仮説は `hX hY hXY hX_ac hY_ac` のみ。 -/
+`entropyPowerExt_add_ge_finite_ac` に落とす。仮説は `hX hY hXY hX_ac hY_ac` のみ。
+
+独立 honesty audit 2026-06-08 (fresh subagent, commit 34b8d37 → ok): 4-check 全 PASS。
+(1) 非循環 — 6-way by_cases (h(X+Y)/h(X)/h(Y) の ⊤/⊥/有限)、各枝 genuine delegation で `:= h` でない。
+⊤ 枝 = `entropyPowerExt_eq_top_of_diffEntExt_top` + gateway 単調 → `le_top`、⊥ 枝 = helper #1
+(`entropyPowerExt_eq_zero_of_diffEntExt_bot`) + gateway 単調。`hWbot` 導出 (h(X)≠⊥ ∧ h(X)≤h(X+Y) ⟹
+h(X+Y)≠⊥) は genuine 単調性 (exfalso 悪用でない)。(2) 非バンドル — `hX_ac`/`hY_ac` 絶対連続 regularity、
+EPI 不等式 core は genuine `entropyPowerExt_add_ge_finite_ac` (`@audit:ok`、有限分散 smoothing / 無限分散
+route T 両枝 sorryAx-free) が供給。bridge `differentialEntropyExt_integrable_of_finite` (`@audit:ok`) で
+3 integrability を再構成 (仮説に encode せず)。(3) 非退化 — ⊤=`le_top`/⊥ 枝とも実値計算で genuine。
+(4) sufficiency — 両 a.c. 仮説は case-1 regime に genuine 必要、finite_ac 呼出引数 verbatim 一致。
+`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free 機械確認、transitive sorry 0)。@audit:ok -/
 theorem entropyPowerExt_add_ge_case1_uncond
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -130,7 +164,29 @@ theorem entropyPowerExt_add_ge_case1_uncond
 * Y a.c. ∧ X 特異 → 柱 A 対称 `entropyPowerExt_mixed_add_ge_symm_uncond`
 * 両特異 → `entropyPowerExt_singular_add_ge` (RHS=0、型自明)
 
-真の無条件 EPI (ℝ≥0∞ 版)。`_unconditional` 命名は precondition 21→0 ゆえ name-laundering でない。 -/
+真の無条件 EPI (ℝ≥0∞ 版)。`_unconditional` 命名は precondition 21→0 ゆえ name-laundering でない。
+
+独立 honesty audit 2026-06-08 (fresh subagent, commit 34b8d37 → ok、moonshot headline 最重点):
+4-check 全 PASS + name-laundering NOT laundering + case-3 非退化 を独立確認。
+(1) 非循環 — 4 枝 by_cases ((P.map X≪vol)×(P.map Y≪vol))、各枝 proof-done 補題への genuine
+delegation で `:= h` でない。(2) **非バンドル — 構造的に余地なし**: signature は `hX hY hXY`
+(可測+独立) + instance `[IsProbabilityMeasure P]` のみ。`*Hypothesis` predicate も integrability/
+finiteness/a.c. 仮説も無し ⇒ load-bearing bundling の余地が構造的に存在しない。
+(3) **case-3 非退化** — 両特異枝 `entropyPowerExt_singular_add_ge` (RHS=0+0) は退化定義悪用でない:
+特異測度の `differentialEntropyExt=⊥` ゆえ `entropyPowerExt=exp(2·⊥)=0` は **正しい値** (sanity gate
+`entropyPowerExt_dirac=0` 確認済、旧 Real def の `exp 0=1` トラップは 2026-06-06 def-fix で除去)。
+a.c. 判定は genuine Classical `by_cases` で「常時 false に倒して vacuous 達成」でない。
+(4) sufficiency — 4 枝 exhaustive (clean compile 確認)、各枝 delegation 先と引数 verbatim 一致:
+両 a.c.→柱B `entropyPowerExt_add_ge_case1_uncond` / X a.c.∧Y 特異→柱A `_mixed_add_ge_uncond` /
+Y a.c.∧X 特異→柱A 対称 `_mixed_add_ge_symm_uncond` / 両特異→`entropyPowerExt_singular_add_ge`。
+**name-laundering check — NOT laundering**: `_unconditional` = precondition 21→0 が genuine。
+a.c./integrability/finiteness は型クラス/instance で密輸せず、body 内で `by_cases` + bridge
+`differentialEntropyExt_integrable_of_finite` (`@audit:ok`) により内部再構成。`[IsProbabilityMeasure P]`
+は正当な regularity instance (確率測度上の命題、密輸仮説でない)。全 delegation 先 (`mono_add_unconditional`/
+`integrable_of_finite`/`add_ge_finite_ac`/`singular`/`singular_add_ge`、すべて既 `@audit:ok` 機械確認済)。
+`#print axioms entropyPowerExt_add_ge_unconditional` = `[propext, Classical.choice, Quot.sound]`
+(sorryAx-free 本監査機械再確認、`Classical.choice` は `by_cases (≪volume)` の Decidable 由来で許容)、
+transitive sorry 0 = proof done。@audit:ok -/
 theorem entropyPowerExt_add_ge_unconditional
     (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P) :
