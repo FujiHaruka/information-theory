@@ -206,13 +206,14 @@ proof-log: yes (極限 step が weak-conv LSC wall を回避できるかが feas
 `h(Q_n.map(W+V))→h(P.map(W+V))` を要し、その A 部は Fatou の逆向き (reverse-Fatou) で出ない。
 密度 domination + 有限性不要 Gibbs で reverse-Fatou を回避する。記号: ν=P.map(W+V), ν_n=Q_n.map(W+V), g=−log f_ν。
 
-- [ ] **atom 1 (gateway、測度 domination)**: `Q.map(W+V) ≤ (P E)⁻¹ • P.map(W+V)` (E={|W|≤n})。
-  `cond = (P E)⁻¹•P.restrict E ≤ (P E)⁻¹•P` + pushforward 単調。a.c. 系も無料。`lintegral_mono'` で
-  `∫⁻ φ dν_n ≤ (P E)⁻¹ ∫⁻ φ dν` (φ≥0)。← **load-bearing、最初に検証**。
-- [ ] **atom 2 (有限性不要 Gibbs)**: `h_ext(μ) ≤ crossExt(μ,ν)` (μ≪ν 両 a.c. probability、μ 有限エントロピー不要)。
-  既存 `differentialEntropy_le_cross_entropy` (`:997`) は `integral_sub` で有限 cross-integral 必須 = ⊤ で破綻 (使用不可)。
-  代わりに **ℝ≥0∞ klDiv** `klDiv_eq_lintegral_klFun_of_ac` (Mathlib) + `klDiv≥0` で ℝ≥0∞ 不等式として建てる
-  (template `EPIG2KLFatouLSC.lean:126`)。
+- [x] **atom 1 (gateway、測度 domination)** ✅ proof-done (sorryAx-free, commit 53d052e): `map_truncW_add_le_smul_map_add`
+  (`Q.map(W+V) ≤ (P E)⁻¹ • P.map(W+V)`) + a.c. 系 `map_truncW_add_absolutelyContinuous_map_add`。
+  `cond=(P E)⁻¹•P.restrict E ≤ (P E)⁻¹•P` + pushforward 単調。downstream は `lintegral_mono'` で積分 domination。
+- [x] **atom 2 (有限性不要 ℝ≥0∞ Gibbs)** ✅ proof-done (sorryAx-free, commit dd3b6d2、独立 honesty-auditor all-OK ed533ba):
+  `crossPos`/`crossNeg` def + self-identity `crossPos ν ν=A(ν)`/`crossNeg ν ν=B(ν)` + `ennreal_gibbs_rearranged`
+  (`A(μ)+crossNeg ≤ crossPos+B(μ)`、A(μ)=⊤ 許容)。`klDiv_eq_lintegral_klFun_of_ac` + KL≥0。⊤ 枝の核 = 負部 1-有界
+  (`-r log r ≤ 1−r`、`Real.log_le_sub_one_of_pos`) で `A=⊤ ⟹ crossPos=⊤`。precondition `B(μ)≠⊤`/`crossNeg≠⊤` は
+  非 load-bearing (A<⊤ 枝の委譲 integrability のみ、監査確認)。
 - [ ] **⊤ 枝 assembly**: ① per-n 単調性 + Phase 3 で `h_ext(ν_n)→⊤`。② atom 2 で `h_ext(ν_n) ≤ ∫ g dν_n`。
   ③ `∫ g⁻ dν_n ≤ (P E)⁻¹ B(W+V) <⊤` (atom 1 + B-helper `negPart_negMulLog_conv_single_ne_top` を un-truncated 適用)
   → `∫ g⁺ dν_n →⊤`。④ atom 1 で `∫ g⁺ dν_n ≤ (P E)⁻¹ A(W+V)` → `A(W+V)=⊤`、+ `B(W+V)<⊤` → `h(W+V)=⊤`。
