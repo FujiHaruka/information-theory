@@ -24,6 +24,9 @@ import InformationTheory.Shannon.SlepianWolf.Achievability
 import InformationTheory.Shannon.SlepianWolf.Binning
 import InformationTheory.Shannon.SlepianWolf.ConditionalTypicalSlice
 import InformationTheory.Shannon.SufficientStatistic
+import InformationTheory.Shannon.SlepianWolf.FullRateRegion.Core
+import InformationTheory.Shannon.SlepianWolf.FullRateRegion.AliasBound
+import InformationTheory.Shannon.SlepianWolf.FullRateRegion.PairBound
 import InformationTheory.Shannon.SlepianWolf.FullRateRegion
 import InformationTheory.Shannon.Pi
 import InformationTheory.Shannon.Han.Basic
