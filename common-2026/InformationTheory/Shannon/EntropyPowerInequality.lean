@@ -284,7 +284,19 @@ shared sorry 補題 (`stamToEPIBridge_holds`) の consumer であり、当該 wr
 ではなく、以前の `@audit:ok` は tier-1 誤付与だった (file-local `rg sorry` が
 transitive sorry を見逃した)。reduction 自体は honest: bridge を所与とした正しい
 変形 (body `:= stamToEPIBridge_holds X Y P h_stam`)。local sorry を持たない
-transitive consumer なので `@residual` は付けない (sorry は被呼出 wall が保持)。 -/
+transitive consumer なので `@residual` は付けない (sorry は被呼出 wall が保持)。
+
+**proof-done 後継 (2026-06-08、`epi-unconditional-moonshot-plan` 完了)**: 本 headline は
+`h_stam` (= Cover-Thomas Stam 形、未証明橋経由) を取るため proof-done でない。無条件化
+moonshot の完了により、proof-done な後継 2 本が in-tree に存在する:
+* 実数版 — `entropy_power_inequality_of_ac` (`EPIUncondDispatch.lean`、`entropyPower :
+  Measure ℝ → ℝ`、a.c. + 有限微分エントロピー前提、sorryAx-free、`@audit:ok`)。`h_stam` を
+  a.c.+有限の regularity precondition に置換した honest 形。
+* 完全無条件版 — `entropyPowerExt_add_ge_unconditional` (`EPIUncondDispatchFull.lean`、
+  ℝ≥0∞ 値 `entropyPowerExt`、`hX hY hXY` のみ = precondition ゼロ、sorryAx-free、`@audit:ok`)。
+**実数版は完全無条件化できない** (型壁: `h=±∞` を ℝ で表現不可、`EReal.exp_coe` 変換に
+a.c.+有限を要する) ため、a.c.+有限版が実数 headline の honest 限界。本 headline は Cover-Thomas
+の Stam-bridge 形を保つ legacy 露出として残置 (live consumer あり、取り消し線化しない)。 -/
 @[entry_point]
 theorem entropy_power_inequality {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
