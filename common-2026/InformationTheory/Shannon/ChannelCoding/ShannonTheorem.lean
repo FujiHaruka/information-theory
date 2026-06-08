@@ -150,7 +150,7 @@ theorem capacity_nonneg (W : Channel α β) [IsMarkovKernel W] : 0 ≤ capacity 
 
 /-! ### A.2 — `I(p; W).toReal` の連続性 (in p) -/
 
-omit [Nonempty α] in
+omit [Nonempty α] [DecidableEq α] [Fintype β] [DecidableEq β] [Nonempty β] in
 /-- For `p ∈ stdSimplex`, the output marginal `(p ⊗ₘ W).snd` real-value on `{b}` is
 `∑ a, p a · (W a).real {b}`. -/
 private lemma outputDistribution_real_singleton_of_stdSimplex
@@ -184,7 +184,7 @@ private lemma outputDistribution_real_singleton_of_stdSimplex
   rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal (hp.1 a)]
   rfl
 
-omit [Nonempty α] in
+omit [Nonempty α] [Fintype β] [DecidableEq β] [Nonempty β] in
 /-- For `p ∈ stdSimplex`, the joint `(p ⊗ₘ W)` real-value on `{(a,b)}` is
 `(p a) · (W a).real {b}`. -/
 private lemma jointDistribution_real_singleton_of_stdSimplex
@@ -220,7 +220,7 @@ private lemma jointDistribution_real_singleton_of_stdSimplex
   rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal (hp.1 a)]
   rfl
 
-omit [Nonempty α] in
+omit [Nonempty α] [DecidableEq α] [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
 /-- For `p ∈ stdSimplex`, `(pmfToMeasure p).real {a}` rewritten using `J.map Prod.fst = p`. -/
 private lemma jointMap_fst_real_singleton_of_stdSimplex
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
@@ -233,7 +233,7 @@ private lemma jointMap_fst_real_singleton_of_stdSimplex
     exact Measure.fst_compProd _ W
   rw [h_fst, pmfToMeasure_real_singleton hp]
 
-omit [Nonempty α] in
+omit [Nonempty α] [DecidableEq α] [Fintype β] [DecidableEq β] [Nonempty β] in
 /-- For `p ∈ stdSimplex`, `J.map Prod.snd .real {b} = ∑ a, p a · (W a).real {b}`. -/
 private lemma jointMap_snd_real_singleton_of_stdSimplex
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
@@ -245,7 +245,7 @@ private lemma jointMap_snd_real_singleton_of_stdSimplex
   rw [h_snd]
   exact outputDistribution_real_singleton_of_stdSimplex hp W b
 
-omit [Nonempty α] in
+omit [Nonempty α] [Fintype β] [DecidableEq β] [Nonempty β] in
 /-- For `p ∈ stdSimplex`, `J.map id .real {(a,b)} = p a · (W a).real {b}`. -/
 private lemma jointMap_id_real_singleton_of_stdSimplex
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
@@ -350,6 +350,7 @@ theorem capacity_lt_implies_exists_pmf
 Average → max error 化。Markov inequality on Finset で「`errorProbAt > 2·avg` な m の数 ≤ M/2」
 → 上位半分の messages を取って sub-code 化 → max error ≤ 2·avg。-/
 
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
 /-- **Phase B.1**: Markov inequality on Finset で
 `errorProbAt > K · avg` を満たす m の個数 ≤ M / K。 -/
 theorem errorProbAt_filter_card_bound
@@ -434,27 +435,28 @@ noncomputable def Code.subcode
     Code S.card n α β :=
   -- 一旦 placeholder: encoder = S 内 message を順番に並べる、decoder は c.decoder の像を S
   -- に絞り込み、外なら ⟨0, hS⟩。
-  { encoder := fun m' => c.encoder (S.equivFin.symm ⟨m', by simpa using m'.isLt⟩).val
+  { encoder := fun m' => c.encoder (S.equivFin.symm ⟨m', by simp⟩).val
     decoder := fun y =>
       let m := c.decoder y
       if h : m ∈ S then
-        ⟨(S.equivFin ⟨m, h⟩).val, by simpa using (S.equivFin ⟨m, h⟩).isLt⟩
+        ⟨(S.equivFin ⟨m, h⟩).val, by simp⟩
       else ⟨0, hS⟩ }
 
+omit [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β] in
 /-- **Phase B.2**: sub-code error は元 code の errorProbAt で上から抑えられる。 -/
 theorem Code.subcode_errorProbAt_le
     {M n : ℕ} (c : Code M n α β) (W : Channel α β) [IsMarkovKernel W]
     (S : Finset (Fin M)) (hS : 0 < S.card) (m' : Fin S.card) :
     (c.subcode S hS).errorProbAt W m'
-      ≤ c.errorProbAt W (S.equivFin.symm ⟨m', by simpa using m'.isLt⟩).val := by
+      ≤ c.errorProbAt W (S.equivFin.symm ⟨m', by simp⟩).val := by
   classical
   -- Notation: `m₀_sub : ↑S` is `S.equivFin.symm ⟨m'.val, _⟩`; `m₀ : Fin M` is its `.val`.
-  set m₀_sub : ↑S := S.equivFin.symm ⟨m'.val, by simpa using m'.isLt⟩ with hm₀_sub_def
+  set m₀_sub : ↑S := S.equivFin.symm ⟨m'.val, by simp⟩ with hm₀_sub_def
   set m₀ : Fin M := m₀_sub.val with hm₀_def
   have hm₀_mem : m₀ ∈ S := m₀_sub.property
   -- Encoder coincidence: (subcode).encoder m' = c.encoder m₀.
   have h_enc_eq : (c.subcode S hS).encoder m' = c.encoder m₀ := by
-    show c.encoder (S.equivFin.symm ⟨m'.val, by simpa using m'.isLt⟩).val
+    show c.encoder (S.equivFin.symm ⟨m'.val, by simp⟩).val
         = c.encoder m₀
     rfl
   -- The two `Measure.pi` factors coincide.
@@ -472,13 +474,13 @@ theorem Code.subcode_errorProbAt_le
     apply hy
     -- Show (subcode).decoder y = m'.
     show (if h : c.decoder y ∈ S then
-            (⟨(S.equivFin ⟨c.decoder y, h⟩).val, by simpa using (S.equivFin ⟨c.decoder y, h⟩).isLt⟩
+            (⟨(S.equivFin ⟨c.decoder y, h⟩).val, by simp⟩
               : Fin S.card)
           else ⟨0, hS⟩) = m'
     have h_mem : c.decoder y ∈ S := h_eq ▸ hm₀_mem
     rw [dif_pos h_mem]
     -- Now show: ⟨(S.equivFin ⟨c.decoder y, h_mem⟩).val, _⟩ = m'.
-    have h_efy_eq : S.equivFin ⟨c.decoder y, h_mem⟩ = ⟨m'.val, by simpa using m'.isLt⟩ := by
+    have h_efy_eq : S.equivFin ⟨c.decoder y, h_mem⟩ = ⟨m'.val, by simp⟩ := by
       have h_subS_eq : (⟨c.decoder y, h_mem⟩ : ↑S) = m₀_sub := by
         apply Subtype.ext
         simp [hm₀_def, h_eq]
@@ -671,8 +673,8 @@ theorem channel_coding_achievability_max_error
   intro m'
   -- The error bound: each subcode error ≤ 2 * avg < 2 * ε' = ε/2 < ε.
   have h_sub_le := c.subcode_errorProbAt_le W S hS_pos m'
-  set m₀ : Fin M := (S.equivFin.symm ⟨m'.val, by simpa using m'.isLt⟩).val with hm₀_def
-  have hm₀_mem : m₀ ∈ S := (S.equivFin.symm ⟨m'.val, by simpa using m'.isLt⟩).property
+  set m₀ : Fin M := (S.equivFin.symm ⟨m'.val, by simp⟩).val with hm₀_def
+  have hm₀_mem : m₀ ∈ S := (S.equivFin.symm ⟨m'.val, by simp⟩).property
   -- m₀ ∈ S means errorProbAt c W m₀ ≤ 2 * avg.
   have h_m₀_le : (c.errorProbAt W m₀).toReal ≤ 2 * (c.averageErrorProb W).toReal := by
     rw [hS_def, Finset.mem_filter] at hm₀_mem
@@ -940,7 +942,7 @@ lemma uniformInput_pos (a : α) : 0 < uniformInput α a := by
 noncomputable def pSmooth (p₀ : α → ℝ) (δ : ℝ) : α → ℝ :=
   fun a => (1 - δ) * p₀ a + δ * uniformInput α a
 
-omit [DecidableEq α] [MeasurableSpace α] [MeasurableSingletonClass α]
+omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β]
   [MeasurableSingletonClass β] in
 /-- `pSmooth p₀ 0 = p₀`. -/
@@ -975,6 +977,7 @@ lemma pSmooth_pos {p₀ : α → ℝ} (hp₀ : p₀ ∈ stdSimplex ℝ α)
   have h2 : 0 < δ * uniformInput α a := mul_pos hδ_pos (uniformInput_pos a)
   linarith
 
+omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- `δ ↦ pSmooth p₀ δ` is continuous (as a curve into `α → ℝ` with product topology). -/
 lemma continuous_pSmooth (p₀ : α → ℝ) : Continuous (fun δ : ℝ => pSmooth p₀ δ) := by
   refine continuous_pi (fun a => ?_)
