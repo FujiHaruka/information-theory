@@ -246,6 +246,9 @@ import InformationTheory.Shannon.EPI.Case1.RatioLimit
 import InformationTheory.Shannon.EPI.Case1.TwoTime
 import InformationTheory.Shannon.EPI.DensityForm
 import InformationTheory.Shannon.EPI.Case1.SmoothingLimit
+import InformationTheory.Shannon.EPI.InfiniteVariance.Truncation.Construction
+import InformationTheory.Shannon.EPI.InfiniteVariance.Truncation.Density
+import InformationTheory.Shannon.EPI.InfiniteVariance.Truncation.Convergence
 import InformationTheory.Shannon.EPI.InfiniteVariance.Truncation
 import InformationTheory.Shannon.EPI.InfiniteVariance.Capstone
 import InformationTheory.Shannon.EPI.Unconditional.Dispatch
