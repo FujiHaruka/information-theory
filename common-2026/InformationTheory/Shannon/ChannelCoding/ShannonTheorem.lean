@@ -66,7 +66,7 @@ lemma pmfToMeasure_apply_singleton (p : α → ℝ) (a : α) :
   · simp [Measure.smul_apply, Measure.dirac_apply' _ (MeasurableSet.singleton a)]
   · intro b _ hb
     simp [Measure.smul_apply, Measure.dirac_apply' _ (MeasurableSet.singleton a),
-      Set.indicator_of_notMem (show b ∉ ({a} : Set α) by simp [Set.mem_singleton_iff]; exact hb)]
+      Set.indicator_of_notMem (show b ∉ ({a} : Set α) by simp only [Set.mem_singleton_iff]; exact hb)]
   · intro h
     exact (h (Finset.mem_univ a)).elim
 
@@ -104,18 +104,21 @@ noncomputable def capacity (W : Channel α β) : ℝ :=
   sSup ((fun p : α → ℝ => (mutualInfoOfChannel (pmfToMeasure p) W).toReal) ''
         stdSimplex ℝ α)
 
-omit [MeasurableSingletonClass α] [Fintype β] [DecidableEq β] [Nonempty β]
+omit [DecidableEq α] [MeasurableSingletonClass α] [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSingletonClass β] in
 /-- `capacity` value set は非空 (`Pi.single` Dirac で). -/
 lemma capacity_image_nonempty (W : Channel α β) :
     ((fun p : α → ℝ => (mutualInfoOfChannel (pmfToMeasure p) W).toReal) ''
-      stdSimplex ℝ α).Nonempty :=
-  ⟨_, Pi.single (Classical.arbitrary α) 1, single_mem_stdSimplex ℝ _, rfl⟩
+      stdSimplex ℝ α).Nonempty := by
+  classical
+  exact ⟨_, Pi.single (Classical.arbitrary α) 1, single_mem_stdSimplex ℝ _, rfl⟩
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- `capacity` value set is bounded above by `H(X) + H(Y)`-style entropy bound. -/
 theorem capacity_bddAbove (W : Channel α β) [IsMarkovKernel W] :
     BddAbove ((fun p : α → ℝ => (mutualInfoOfChannel (pmfToMeasure p) W).toReal) ''
               stdSimplex ℝ α) := by
+  classical
   -- I(p; W).toReal = H(X) + H(Y) - H(X,Y) ≤ H(X) + H(Y) ≤ log |α| + log |β|.
   refine ⟨Real.log (Fintype.card α) + Real.log (Fintype.card β), ?_⟩
   rintro _ ⟨p, hp, rfl⟩
@@ -136,6 +139,7 @@ theorem capacity_bddAbove (W : Channel α β) [IsMarkovKernel W] :
     entropy_nonneg _ id measurable_id
   linarith
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- `capacity W ≥ 0`. -/
 @[entry_point]
 theorem capacity_nonneg (W : Channel α β) [IsMarkovKernel W] : 0 ≤ capacity W := by
@@ -184,7 +188,7 @@ private lemma outputDistribution_real_singleton_of_stdSimplex
   rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal (hp.1 a)]
   rfl
 
-omit [Nonempty α] [Fintype β] [DecidableEq β] [Nonempty β] in
+omit [Nonempty α] [DecidableEq α] [Fintype β] [DecidableEq β] [Nonempty β] in
 /-- For `p ∈ stdSimplex`, the joint `(p ⊗ₘ W)` real-value on `{(a,b)}` is
 `(p a) · (W a).real {b}`. -/
 private lemma jointDistribution_real_singleton_of_stdSimplex
@@ -192,6 +196,7 @@ private lemma jointDistribution_real_singleton_of_stdSimplex
     (W : Channel α β) [IsMarkovKernel W] (a : α) (b : β) :
     (jointDistribution (pmfToMeasure p) W).real {(a, b)}
       = p a * (W a).real {b} := by
+  classical
   haveI : IsProbabilityMeasure (pmfToMeasure p) := pmfToMeasure_isProbabilityMeasure hp
   -- {(a, b)} = {a} ×ˢ {b}.
   have h_eq : ({(a, b)} : Set (α × β)) = ({a} : Set α) ×ˢ ({b} : Set β) := by
@@ -245,7 +250,7 @@ private lemma jointMap_snd_real_singleton_of_stdSimplex
   rw [h_snd]
   exact outputDistribution_real_singleton_of_stdSimplex hp W b
 
-omit [Nonempty α] [Fintype β] [DecidableEq β] [Nonempty β] in
+omit [Nonempty α] [DecidableEq α] [Fintype β] [DecidableEq β] [Nonempty β] in
 /-- For `p ∈ stdSimplex`, `J.map id .real {(a,b)} = p a · (W a).real {b}`. -/
 private lemma jointMap_id_real_singleton_of_stdSimplex
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
@@ -254,6 +259,7 @@ private lemma jointMap_id_real_singleton_of_stdSimplex
   rw [Measure.map_id]
   exact jointDistribution_real_singleton_of_stdSimplex hp W a b
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- For `p ∈ stdSimplex`, `I(pmfToMeasure p; W).toReal` equals the 3-entropy expression
 in `p`. -/
 private lemma mutualInfoOfChannel_toReal_eq_of_stdSimplex
@@ -263,6 +269,7 @@ private lemma mutualInfoOfChannel_toReal_eq_of_stdSimplex
       = (∑ a : α, Real.negMulLog (p a))
         + (∑ b : β, Real.negMulLog (∑ a : α, p a * (W a).real {b}))
         - (∑ ab : α × β, Real.negMulLog (p ab.1 * (W ab.1).real {ab.2})) := by
+  classical
   haveI : IsProbabilityMeasure (pmfToMeasure p) := pmfToMeasure_isProbabilityMeasure hp
   rw [mutualInfoOfChannel_eq_HX_add_HY_sub_HZ]
   -- entropy μ X = ∑ x, negMulLog ((μ.map X).real {x}).
@@ -278,6 +285,7 @@ private lemma mutualInfoOfChannel_toReal_eq_of_stdSimplex
     refine Finset.sum_congr rfl (fun ab _ => ?_)
     rw [jointMap_id_real_singleton_of_stdSimplex hp W ab.1 ab.2]
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Phase A.2**: `(p : α → ℝ) ↦ (mutualInfoOfChannel (pmfToMeasure p) W).toReal`
 は `stdSimplex ℝ α` 上連続。3-entropy 形 + `Real.continuous_negMulLog` 経由。 -/
 theorem continuous_mutualInfoOfChannel_left (W : Channel α β) [IsMarkovKernel W] :
@@ -313,6 +321,7 @@ theorem continuous_mutualInfoOfChannel_left (W : Channel α β) [IsMarkovKernel 
 
 /-! ### A.3 — capacity 達成元 (documentation) -/
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Phase A.3 (documentation)**: `IsCompact.exists_isMaxOn` 経由で
 capacity 達成元 `p* ∈ stdSimplex` の存在。主定理 (Phase D) は `capacity_lt_implies_exists_pmf`
 だけで通るので documentation 用。 -/
@@ -321,12 +330,14 @@ theorem exists_capacity_achiever (W : Channel α β) [IsMarkovKernel W] :
     ∃ p ∈ stdSimplex ℝ α, IsMaxOn
       (fun p : α → ℝ => (mutualInfoOfChannel (pmfToMeasure p) W).toReal)
       (stdSimplex ℝ α) p := by
+  classical
   refine IsCompact.exists_isMaxOn (isCompact_stdSimplex ℝ α) ?_
     (continuous_mutualInfoOfChannel_left W)
   exact ⟨_, single_mem_stdSimplex ℝ (Classical.arbitrary α)⟩
 
 /-! ### A.4 — `R < C ⟹ ∃ p, R < I(p; W)` (Phase A 主補題) -/
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Phase A.4 (key)**: `R < capacity W` から `R < I(p; W).toReal` を満たす `p ∈ stdSimplex` を
 直接取り出す。`lt_csSup_iff` (`BddAbove` + `Nonempty`) を適用。 -/
 theorem capacity_lt_implies_exists_pmf
@@ -579,6 +590,7 @@ lemma exists_N_two_ceil_exp_le
     h_lhs_real.trans (h_target_real.trans h_rhs_real)
   exact_mod_cast h_combined
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Phase B.4**: Average error achievability → max error achievability。 -/
 @[entry_point]
 theorem channel_coding_achievability_max_error
@@ -985,6 +997,7 @@ lemma continuous_pSmooth (p₀ : α → ℝ) : Continuous (fun δ : ℝ => pSmoo
   exact (continuous_const.sub continuous_id).mul continuous_const
     |>.add (continuous_id.mul continuous_const)
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **D-1 主定理 (Cover-Thomas 7.7.1 完全形)**: 任意 `R < capacity W` と任意 `ε > 0` で
 十分大きい block 長 `n` で max error < ε を達成する `M ≥ exp(n R)` 個の符号が存在。
 
