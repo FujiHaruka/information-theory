@@ -1,5 +1,5 @@
 import InformationTheory.Meta.EntryPoint
-import InformationTheory.Shannon.EPIConvDensity
+import InformationTheory.Shannon.EPI.Conv.Density
 import InformationTheory.Shannon.FisherInfo.V2DeBruijn
 import InformationTheory.Shannon.DifferentialEntropy
 import Mathlib.Analysis.Calculus.ParametricIntegral

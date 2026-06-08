@@ -11,7 +11,7 @@ import InformationTheory.Shannon.FisherInfo.V2
 import InformationTheory.Shannon.FisherInfo.V2DeBruijn
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnGenuine
 import InformationTheory.Shannon.DifferentialEntropy
-import InformationTheory.Shannon.EPIConvDensity
+import InformationTheory.Shannon.EPI.Conv.Density
 
 /-!
 # Fisher information V2 — de Bruijn body (T2-F wave7 follow-up)

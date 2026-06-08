@@ -2,8 +2,8 @@ import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.DifferentialEntropy
 import InformationTheory.Shannon.FisherInfo.Basic
 import InformationTheory.Shannon.FisherInfo.V2
-import InformationTheory.Shannon.EPIConvDensity
-import InformationTheory.Shannon.EPIBlachmanDensity
+import InformationTheory.Shannon.EPI.Conv.Density
+import InformationTheory.Shannon.EPI.Blachman.Density
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Probability.Distributions.Gaussian.Real

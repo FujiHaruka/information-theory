@@ -1,6 +1,6 @@
 import InformationTheory.Meta.EntryPoint
 import InformationTheory.Shannon.FisherInfo.V2
-import InformationTheory.Shannon.EPIConvDensity
+import InformationTheory.Shannon.EPI.Conv.Density
 import Mathlib.Analysis.Calculus.LogDeriv
 import Mathlib.Analysis.SpecialFunctions.Log.Deriv
 import Mathlib.Analysis.SpecialFunctions.Pow.Real

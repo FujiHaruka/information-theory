@@ -1,5 +1,5 @@
-import InformationTheory.Shannon.EPIConvDensity
-import InformationTheory.Shannon.EPIConvDensitySecondDeriv          -- convDensityAdd_deriv1_gaussian_eq
+import InformationTheory.Shannon.EPI.Conv.Density
+import InformationTheory.Shannon.EPI.Conv.DensitySecondDeriv          -- convDensityAdd_deriv1_gaussian_eq
 import InformationTheory.Shannon.FisherInfo.V2
 import InformationTheory.Shannon.FisherInfo.V2DeBruijn   -- V2 Gaussian 閉形 J(𝒩(0,s))=1/s
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnPerTime        -- convDensityAdd_pos / fisher_from_logDeriv
