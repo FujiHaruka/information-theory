@@ -490,18 +490,18 @@ theorem jointStronglyTypicalSet_indep_prob_ge
     -- x is weakly typical for Xs at εX' = εX·LX + δ (strict bound from strong ⊆ weak).
     have hxX_weak : x ∈ typicalSet μ Xs n εX' := by
       apply stronglyTypicalSet_subset_typicalSet μ Xs hXs hn_pos
-      show εX * LX < εX * LX + δ
-      linarith
-      exact hxX_strong
+      · show εX * LX < εX * LX + δ
+        linarith
+      · exact hxX_strong
     -- y is strongly typical for Ys at εY = |α|·ε.
     have hyY_strong : y ∈ stronglyTypicalSet μ Ys n εY :=
       jointStronglyTypicalSet_implies_Y_stronglyTypical μ Xs Ys hXs hYs hmarg_Y
         hn_pos hε.le x y hp_set
     have hyY_weak : y ∈ typicalSet μ Ys n εY' := by
       apply stronglyTypicalSet_subset_typicalSet μ Ys hYs hn_pos
-      show εY * LY < εY * LY + δ
-      linarith
-      exact hyY_strong
+      · show εY * LY < εY * LY + δ
+        linarith
+      · exact hyY_strong
     have hbdX : Real.exp (-(n : ℝ) * (HX + εX')) ≤ μXn.real {x} :=
       InformationTheory.Shannon.typicalSet_prob_ge μ Xs hXs hindepX_full hidentX
         hposX n x hxX_weak

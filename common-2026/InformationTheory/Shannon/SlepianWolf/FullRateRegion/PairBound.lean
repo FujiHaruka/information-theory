@@ -44,6 +44,7 @@ private def swError_EXY_strict
           ∧ f_Y p.2 = f_Y (jointRV Ys n ω)
           ∧ p ∈ jointlyTypicalSet μ Xs Ys n ε }
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- The full `swError_EXY` event is contained in the union of the two single-axis
 events `swError_EX`, `swError_EY` and the strict `swError_EXY_strict`. The loose
 cases (only one coordinate of the alias `p` agrees with the truth) are absorbed
@@ -83,6 +84,7 @@ lemma swError_EXY_subset_union
       right
       exact ⟨p, hp1, hp2, hfx, hfy, hpJTS⟩
 
+omit [DecidableEq α] [DecidableEq β] in
 private lemma measurableSet_swError_EXY_strict
     {Xs : ℕ → Ω → α} {Ys : ℕ → Ω → β}
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
@@ -108,6 +110,7 @@ private lemma measurableSet_swError_EXY_strict
   rw [h_eq]
   exact hmeas hS_meas
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Random pair-binning alias expectation bound** (Phase E.4 utility).
 
 For a (deterministic) finite set `S` of candidate alias **pairs**, the product
@@ -209,6 +212,7 @@ followed by a per-`ω` slice bound via `binning_pair_alias_expectation_le_aux`
 applied to `S := JTS.toFinite.toFinset` (which is `ω`-independent), and
 closing with `jointlyTypicalSet_card_le`. -/
 
+omit [DecidableEq α] [DecidableEq β] in
 set_option linter.unusedVariables false in
 @[entry_point]
 theorem swError_EXY_strict_expectation_le
@@ -445,6 +449,7 @@ variable {α' β' Ω' : Type*}
   [Fintype β'] [DecidableEq β'] [Nonempty β']
     [MeasurableSpace β'] [MeasurableSingletonClass β']
 
+omit [DecidableEq α'] [DecidableEq β'] in
 /-- **Bridge**: `H(X, Y) - H(X) = H(Y | X)`. Direct corollary of chain rule
 `entropy_pair_eq_entropy_add_condEntropy`. -/
 private lemma entropy_joint_sub_marginal_eq_condEntropy
@@ -452,11 +457,13 @@ private lemma entropy_joint_sub_marginal_eq_condEntropy
     (X : Ω' → α') (Y : Ω' → β') (hX : Measurable X) (hY : Measurable Y) :
     entropy μ (fun ω => (X ω, Y ω)) - entropy μ X
       = InformationTheory.MeasureFano.condEntropy μ Y X := by
+  classical
   have h := entropy_pair_eq_entropy_add_condEntropy μ X Y hX hY
   linarith
 
 end PhaseF
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **F.1**: Phase D 4 分解 + Phase E.4 subset 吸収を結合した
 binning expectation total bound. 係数 2 は `EXY ⊆ EX ∪ EY ∪ EXY_strict` の
 2 重カウントを吸収. -/
@@ -876,6 +883,7 @@ private theorem swErrorProb_total_expectation_le
             mul_le_mul_of_nonneg_left hE3 h2
           linarith [hmono_E2, hmono_E3, hE4]
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **F.2 pigeonhole**: 期待値 ≤ δ から deterministic 取り出し。
 First moment method (`MeasureTheory.exists_le_integral`) を 2 回適用。 -/
 private lemma exists_pair_le_of_binning_integral_le
@@ -995,6 +1003,7 @@ of the full Slepian–Wolf rate region: for any rates strictly above the conditi
 entropies `H(X|Y)`, `H(Y|X)` and the joint entropy `H(X,Y)`, there is a sequence of
 binning encoders + joint typicality decoders whose error probability tends to `0`. -/
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **F.3 main theorem — Slepian–Wolf full rate region achievability**
 (Cover–Thomas 15.4.1). For an i.i.d. source `(Xⁿ, Yⁿ)` with full support, any rate
 pair `(R_X, R_Y)` with `R_X > H(X|Y)`, `R_Y > H(Y|X)`, `R_X + R_Y > H(X,Y)` is

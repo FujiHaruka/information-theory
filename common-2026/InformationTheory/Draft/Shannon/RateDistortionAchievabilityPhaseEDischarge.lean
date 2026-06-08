@@ -52,8 +52,8 @@ set_option linter.unusedSectionVars false
 set_option linter.unusedVariables false
 
 variable {α β : Type*}
-  [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
-  [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β]
+  [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
+  [Fintype β] [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β]
 
 /-! ## `pmfToMeasure` marginal identities -/
 

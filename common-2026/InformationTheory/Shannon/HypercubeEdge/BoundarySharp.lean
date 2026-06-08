@@ -204,11 +204,11 @@ private lemma entropy_projMap_eq
         rw [show (({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A))
               = {extension i false y} from by
                 apply Finset.filter_eq_self.mpr
-                intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]; exact h0,
+                intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
             show (({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A))
               = {extension i true y} from by
                 apply Finset.filter_eq_self.mpr
-                intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]; exact h1]
+                intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1]
         simp
       · -- only h0: fibre = 1
         left
@@ -217,11 +217,11 @@ private lemma entropy_projMap_eq
         rw [show (({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A))
               = {extension i false y} from by
                 apply Finset.filter_eq_self.mpr
-                intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]; exact h0,
+                intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
             show (({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A))
               = ∅ from by
                 apply Finset.filter_eq_empty_iff.mpr
-                intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]; exact h1]
+                intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1]
         simp
     · by_cases h0 : extension i false y ∈ A
       · right
@@ -230,11 +230,11 @@ private lemma entropy_projMap_eq
         rw [show (({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A))
               = {extension i false y} from by
                 apply Finset.filter_eq_self.mpr
-                intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]; exact h0,
+                intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
             show (({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A))
               = {extension i true y} from by
                 apply Finset.filter_eq_self.mpr
-                intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]; exact h1]
+                intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1]
         simp
       · left
         show (A.filter (fun x => projMap i x = y)).card = 1
@@ -242,11 +242,11 @@ private lemma entropy_projMap_eq
         rw [show (({extension i false y} : Finset (Fin n → Bool)).filter (· ∈ A))
               = ∅ from by
                 apply Finset.filter_eq_empty_iff.mpr
-                intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]; exact h0,
+                intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h0,
             show (({extension i true y} : Finset (Fin n → Bool)).filter (· ∈ A))
               = {extension i true y} from by
                 apply Finset.filter_eq_self.mpr
-                intro x hx; simp [Finset.mem_singleton] at hx; rw [hx]; exact h1]
+                intro x hx; simp only [Finset.mem_singleton] at hx; rw [hx]; exact h1]
         simp
   -- proj = S1 ∪ S2, disjoint
   have hS_disjoint : Disjoint S1 S2 := by
@@ -254,7 +254,7 @@ private lemma entropy_projMap_eq
     intro y _ h1 h2; omega
   have hS_union : S1 ∪ S2 = proj := by
     ext y
-    simp [hS1_def, hS2_def, Finset.mem_union, Finset.mem_filter]
+    simp only [ne_eq, hS1_def, hS2_def, Finset.mem_union, Finset.mem_filter]
     constructor
     · rintro (⟨hy, _⟩ | ⟨hy, _⟩) <;> exact hy
     · intro hy
@@ -447,7 +447,7 @@ theorem condEntropy_coord_eq
 HanD.lean `condEntropy_chainSummand_bridge` の S = univ 版を局所写経。 -/
 private lemma condEntropy_chain_to_subset
     {n : ℕ} {α : Type*}
-    [Fintype α] [DecidableEq α] [Nonempty α]
+    [Fintype α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
     {Ω : Type*} [MeasurableSpace Ω]
     (μ : MeasureTheory.Measure Ω) [IsProbabilityMeasure μ]
@@ -504,7 +504,7 @@ private lemma condEntropy_chain_to_subset
 /-- subtype `{j // j ≠ i}` 形 と `↥(univ.erase i)` 形 の reshape。 -/
 private lemma condEntropy_subtype_erase_bridge
     {n : ℕ} {α : Type*}
-    [Fintype α] [DecidableEq α] [Nonempty α]
+    [Fintype α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
     {Ω : Type*} [MeasurableSpace Ω]
     (μ : MeasureTheory.Measure Ω) [IsProbabilityMeasure μ]

@@ -106,9 +106,11 @@ tradeoff problem rather than the Chernoff bound. -/
 noncomputable def hoeffdingTilt (P₁ P₂ : α → ℝ) (lam : ℝ) : α → ℝ :=
   chernoffMediator P₁ P₂ lam
 
+omit [DecidableEq α] in
 lemma hoeffdingTilt_eq_chernoffMediator (P₁ P₂ : α → ℝ) (lam : ℝ) :
     hoeffdingTilt P₁ P₂ lam = chernoffMediator P₁ P₂ lam := rfl
 
+omit [DecidableEq α] in
 /-- The tilt is positive under full support. -/
 lemma hoeffdingTilt_pos
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -116,6 +118,7 @@ lemma hoeffdingTilt_pos
     0 < hoeffdingTilt P₁ P₂ lam a :=
   chernoffMediator_pos P₁ P₂ hP₁_pos hP₂_pos lam a
 
+omit [DecidableEq α] in
 /-- The tilt sums to `1`. -/
 lemma hoeffdingTilt_sum_eq_one
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -123,6 +126,7 @@ lemma hoeffdingTilt_sum_eq_one
     (∑ a, hoeffdingTilt P₁ P₂ lam a) = 1 :=
   chernoffMediator_sum_eq_one P₁ P₂ hP₁_pos hP₂_pos lam
 
+omit [DecidableEq α] in
 /-- The tilt lies in the simplex. -/
 lemma hoeffdingTilt_mem_stdSimplex
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
@@ -133,6 +137,7 @@ lemma hoeffdingTilt_mem_stdSimplex
 
 /-! ## Phase 2 — Lagrange gradient identity (constant log-ratio) -/
 
+omit [DecidableEq α] in
 /-- **Lagrange gradient stationarity (constant log-ratio)**: for the tilt
 `Qstar = hoeffdingTilt P₁ P₂ lam`, the log-likelihood combination
 
@@ -165,6 +170,7 @@ lemma hoeffdingTilt_log_ratio_const
   rw [h_log_tilt]
   ring
 
+omit [DecidableEq α] in
 /-- **Pairwise flatness**: a corollary stating that the log-ratio combination
 agrees at any two points `a, b`. This is the gradient condition in the form
 "`∇` is constant", convenient for the KKT consumer. -/
@@ -198,6 +204,7 @@ structure IsKLGradientHyp
     Real.log (Qstar a) - (1 - lam) * Real.log (P₁ a) - lam * Real.log (P₂ a)
       = Real.log (Qstar b) - (1 - lam) * Real.log (P₁ b) - lam * Real.log (P₂ b)
 
+omit [DecidableEq α] in
 /-- **Gradient discharge for the tilt family**: the closed-form tilt
 `hoeffdingTilt P₁ P₂ lam` satisfies `IsKLGradientHyp`. This is the internal
 discharge of the gradient sub-predicate (no hypothesis on `alpha`). -/
@@ -239,6 +246,7 @@ structure IsHoeffdingLagrangeHyp
 
 /-! ## Phase 5 — Bridge: Lagrange hypothesis ⇒ interior minimizer -/
 
+omit [DecidableEq α] in
 /-- **Bridge (Lagrange ⇒ interior minimizer) — textbook L-H4-FS interior**: the
 tilt at parameter `lam` is the wave7 `IsHoeffdingInteriorMinimizer`.
 
@@ -255,6 +263,7 @@ theorem isHoeffdingInteriorMinimizer_of_lagrange
     IsHoeffdingInteriorMinimizer P₁ P₂ alpha (hoeffdingTilt P₁ P₂ lam) := by
   sorry
 
+omit [DecidableEq α] in
 /-- **Existence form** (textbook L-H4-FS interior): there exists an interior
 minimizer (the tilt witness).
 
@@ -272,6 +281,7 @@ theorem isHoeffdingInteriorMinimizer_exists_of_lagrange
 
 /-! ## Phase 6 — Full-support flag via Lagrange tilt -/
 
+omit [DecidableEq α] in
 /-- **Tilt is full support**: the closed-form tilt minimizer satisfies the
 wave6 `IsHoeffdingMinimizerFullSupport` predicate. This is purely constructive
 — `hoeffdingTilt_pos` discharges full support directly from `hP₁_pos` /
@@ -281,12 +291,14 @@ predicate-form `IsHoeffdingLagrangeHyp` does not touch this lemma. -/
 theorem isHoeffdingMinimizerFullSupport_of_lagrange
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (lam : ℝ) :
-    IsHoeffdingMinimizerFullSupport (hoeffdingTilt P₁ P₂ lam) :=
-  IsHoeffdingMinimizerFullSupport.of_pos
+    IsHoeffdingMinimizerFullSupport (hoeffdingTilt P₁ P₂ lam) := by
+  classical
+  exact IsHoeffdingMinimizerFullSupport.of_pos
     (hoeffdingTilt_pos P₁ P₂ hP₁_pos hP₂_pos lam)
 
 /-! ## Phase 7 — Interior infimum reached at the Lagrange tilt -/
 
+omit [DecidableEq α] in
 /-- **Interior infimum at the Lagrange tilt** (textbook L-H4-FS interior): the
 infimum `hoeffdingE2 P₁ P₂ alpha` is realised at the full-support tilt witness
 lying in `K(α)`.
@@ -305,6 +317,7 @@ theorem hoeffdingE2_interior_minimizer_via_lagrange
 
 /-! ## Phase 8 — Pythagoras at the Lagrange tilt -/
 
+omit [DecidableEq α] in
 /-- **Pythagoras at the Lagrange tilt** (textbook L-H4-FS interior): at the
 tilt minimizer, the Pythagorean inequality holds against any other
 full-support `P ∈ K(α)`.

@@ -20,6 +20,7 @@ variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
 
 /-! ## Phase E common utility — alias expectation bound. -/
 
+omit [DecidableEq α] in
 /-- **Random-binning alias expectation bound (E.2 / E.3 / E.4 common utility).**
 
 Fixing the source realization, let `S` be a (deterministic) set of candidate alias
@@ -130,6 +131,7 @@ Strategy (Fubini + per-`ω` slice argument):
 the `conditionalTypicalSlice_card_le` shape and is consumed by downstream
 final-rate-region theorems) even though this proof does not branch on it. -/
 
+omit [DecidableEq α] [DecidableEq β] in
 set_option linter.unusedVariables false in
 @[entry_point]
 theorem swError_EX_expectation_le
@@ -330,18 +332,21 @@ private noncomputable def conditionalTypicalSliceY
     (n : ℕ) (ε : ℝ) (x : Fin n → α) : Set (Fin n → β) :=
   { y | (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε }
 
+omit [DecidableEq α] [DecidableEq β] in
 private lemma mem_conditionalTypicalSliceY_iff
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (n : ℕ) (ε : ℝ) (x : Fin n → α) (y : Fin n → β) :
     y ∈ conditionalTypicalSliceY μ Xs Ys n ε x ↔
       (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε := Iff.rfl
 
+omit [DecidableEq α] [DecidableEq β] in
 private lemma conditionalTypicalSliceY_finite
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (n : ℕ) (ε : ℝ) (x : Fin n → α) :
     (conditionalTypicalSliceY μ Xs Ys n ε x).Finite :=
   Set.toFinite _
 
+omit [DecidableEq α] [DecidableEq β] in
 private lemma conditionalTypicalSliceY_empty_of_x_not_typical
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (n : ℕ) (ε : ℝ) {x : Fin n → α}
@@ -354,6 +359,7 @@ private lemma conditionalTypicalSliceY_empty_of_x_not_typical
   · intro hy
     exact hy.elim
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Y-fiber slice size bound** (mirror of `conditionalTypicalSlice_card_le`).
 For any X-block `x`, the cardinality of the Y-fiber of the jointly typical
 set at `x` is at most `exp(n · (H(X, Y) - H(X) + 2ε))`. -/
@@ -525,11 +531,12 @@ private theorem conditionalTypicalSliceY_card_le
       rw [hempty]
       simp
     rw [hF_empty]
-    simp
+    simp only [Finset.card_empty, CharP.cast_eq_zero, ge_iff_le]
     exact (Real.exp_pos _).le
 
 /-! ### Main statement — `E_Y` expectation bound. -/
 
+omit [DecidableEq α] [DecidableEq β] in
 set_option linter.unusedVariables false in
 @[entry_point]
 theorem swError_EY_expectation_le

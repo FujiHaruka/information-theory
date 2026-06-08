@@ -43,7 +43,7 @@ set_option linter.unusedSectionVars false
 open Set Real InformationTheory Filter
 open scoped BigOperators Topology
 
-variable {α : Type*} [Fintype α] [DecidableEq α]
+variable {α : Type*} [Fintype α]
 
 /-! ## Phase A — `klDivPmf` 定義 + 連続性 + 厳密凸性 -/
 

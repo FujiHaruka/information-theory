@@ -81,7 +81,7 @@ open InformationTheory.Shannon.HoeffdingInteriorBody
 open InformationTheory.Shannon.HoeffdingInteriorGradientBody
 open scoped BigOperators Topology
 
-variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+variable {α : Type*} [Fintype α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
 /-! ## Phase 1 — Continuity of the constraint functional `g(λ) = klDivPmf T_λ P₁` -/
@@ -129,6 +129,7 @@ lemma hoeffdingTilt_kl_P₁_lam_zero
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₁_sum : ∑ a, P₁ a = 1) :
     klDivPmf (hoeffdingTilt P₁ P₂ 0) P₁ = 0 := by
+  classical
   have h_eq : hoeffdingTilt P₁ P₂ 0 = P₁ := by
     funext a
     rw [hoeffdingTilt_eq_chernoffMediator]
@@ -141,6 +142,7 @@ lemma hoeffdingTilt_kl_P₁_lam_one
     (P₁ P₂ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₂_pos : ∀ a, 0 < P₂ a)
     (hP₂_sum : ∑ a, P₂ a = 1) :
     klDivPmf (hoeffdingTilt P₁ P₂ 1) P₁ = klDivPmf P₂ P₁ := by
+  classical
   have h_eq : hoeffdingTilt P₁ P₂ 1 = P₂ := by
     funext a
     rw [hoeffdingTilt_eq_chernoffMediator]
@@ -183,6 +185,7 @@ theorem hoeffdingTilt_mem_constraintSet_of_kl_eq
     {alpha lam : ℝ}
     (h_kl : klDivPmf (hoeffdingTilt P₁ P₂ lam) P₁ = alpha) :
     hoeffdingTilt P₁ P₂ lam ∈ hoeffdingConstraintSet P₁ alpha := by
+  classical
   refine ⟨hoeffdingTilt_mem_stdSimplex P₁ P₂ hP₁_pos hP₂_pos lam, ?_⟩
   exact le_of_eq h_kl
 
@@ -205,6 +208,7 @@ theorem isHoeffdingTiltMinimal_realises
     (h_mem : hoeffdingTilt P₁ P₂ lam ∈ hoeffdingConstraintSet P₁ alpha)
     (h_min : IsHoeffdingTiltMinimal P₁ P₂ alpha lam) :
     hoeffdingE2 P₁ P₂ alpha = klDivPmf (hoeffdingTilt P₁ P₂ lam) P₂ := by
+  classical
   set S : Set (α → ℝ) := {Q : α → ℝ | Q ∈ stdSimplex ℝ α ∧ klDivPmf Q P₁ ≤ alpha} with hS_def
   -- The constraint set is exactly S (defeq).
   have h_mem_S : hoeffdingTilt P₁ P₂ lam ∈ S := h_mem
@@ -289,7 +293,8 @@ theorem isHoeffdingInteriorMinimizer_of_ivt
     {alpha lam : ℝ}
     (_h_kl : klDivPmf (hoeffdingTilt P₁ P₂ lam) P₁ = alpha)
     (_h_min : IsHoeffdingTiltMinimal P₁ P₂ alpha lam) :
-    IsHoeffdingInteriorMinimizer P₁ P₂ alpha (hoeffdingTilt P₁ P₂ lam) :=
-  isHoeffdingInteriorMinimizer_of_lagrange P₁ P₂ hP₁_pos hP₂_pos
+    IsHoeffdingInteriorMinimizer P₁ P₂ alpha (hoeffdingTilt P₁ P₂ lam) := by
+  classical
+  exact isHoeffdingInteriorMinimizer_of_lagrange P₁ P₂ hP₁_pos hP₂_pos
 
 end InformationTheory.Shannon.HoeffdingLagrangeIVTBody

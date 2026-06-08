@@ -62,7 +62,7 @@ open InformationTheory.Shannon.ShannonCodeKraftReverse
 
 set_option linter.unusedSectionVars false
 
-variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+variable {α : Type*} [Fintype α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
 /-- **Shannon-Fano-Elias codeword length**: `ℓ(a) = ⌈-log₂ P(a)⌉ + 1`. -/
@@ -130,6 +130,7 @@ theorem arithmeticCode_prefix_free
       (∀ a, (c a).length = sfeLength P a) ∧
       Function.Injective c ∧
       (∀ a b : α, a ≠ b → ¬ c a <+: c b) := by
+  classical
   -- Kraft 充足 (sfeLength) を `exists_prefix_code_of_kraft` の `hk` 形に橋渡し
   have hk : ∑ a : α, ((2 : ℕ) : ℝ) ^ (-(sfeLength P a : ℤ)) ≤ 1 := by
     have h := sfeLength_kraft_le_one P hP
