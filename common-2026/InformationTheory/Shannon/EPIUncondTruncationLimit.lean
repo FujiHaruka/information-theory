@@ -622,41 +622,17 @@ theorem differentialEntropyExt_mono_add_truncW
       rw [← mul_assoc, ENNReal.inv_mul_cancel hPE_ne hPE_ne_top, one_mul]
     rw [hcancel]
     ring
-  -- ① fibre identification (c = 1): `condDiffEntExt (W + V | V) Q = h_ext(Q.map W)`.
-  have hone : (fun ω => W ω + (1 : ℝ) * V ω) = (fun ω => W ω + V ω) := by
-    funext ω; rw [one_mul]
-  have hfibre : condDifferentialEntropyExt (fun ω => W ω + V ω) V Q
-      = differentialEntropyExt (Q.map W) := by
-    have := condDifferentialEntropyExt_indep_add_eq W V Q 1 hW hV hindep hW_ac_Q
-    rwa [hone] at this
   -- W + V is a.c. under `Q` (`hW_ac_Q` + independence).
   have hWV_ac_Q : (Q.map (fun ω => W ω + V ω)) ≪ volume :=
     map_add_absolutelyContinuous W V Q hW hV hindep hW_ac_Q
-  -- Probability-measure instances on the relevant marginals (needed for the fibre identification
-  -- and the finite ②).
+  -- Probability-measure instances on the relevant marginals.
   haveI hWmap_prob : IsProbabilityMeasure (Q.map W) := Measure.isProbabilityMeasure_map hW.aemeasurable
   haveI hVmap_prob : IsProbabilityMeasure (Q.map V) := Measure.isProbabilityMeasure_map hV.aemeasurable
-  -- **fibre identification** (c = 1): `condDistrib (W+V) V Q =ᵐ[Q.map V] affineShiftKernel (Q.map W) 1`.
-  -- Mirror of `condDifferentialEntropyExt_indep_add_eq` (Step 1-2): the joint `(V, W+V)` is the
-  -- affine push of the product law (independence), so the regular conditional kernel is the
-  -- z-dependent affine shift of `Q.map W`.
-  have hjoint_VW : Q.map (fun ω => (V ω, W ω + V ω))
-      = (Q.map V) ⊗ₘ (affineShiftKernel (Q.map W) 1) := by
-    have hZX : IndepFun V W Q := hindep.symm
-    have hjoint_VX : Q.map (fun ω => (V ω, W ω)) = (Q.map V).prod (Q.map W) :=
-      (indepFun_iff_map_prod_eq_prod_map_map hV.aemeasurable hW.aemeasurable).mp hZX
-    have hg : Measurable fun p : ℝ × ℝ => (p.1, p.2 + (1 : ℝ) * p.1) := by fun_prop
-    have hcomp : (fun ω => (V ω, W ω + V ω))
-        = (fun p : ℝ × ℝ => (p.1, p.2 + (1 : ℝ) * p.1)) ∘ (fun ω => (V ω, W ω)) := by
-      funext ω; simp [one_mul, add_comm]
-    rw [hcomp, ← Measure.map_map hg (hV.prodMk hW), hjoint_VX,
-      prod_map_affine_eq_compProd]
-  have hae : condDistrib (fun ω => W ω + V ω) V Q
-      =ᵐ[Q.map V] affineShiftKernel (Q.map W) 1 :=
-    condDistrib_ae_eq_of_measure_eq_compProd V (hW.add hV).aemeasurable hjoint_VW
-  -- The marginal / conditional extended entropies are `≠ ⊥` (compact support ⟹ finite
-  -- differential entropy ⟹ ≠ −∞). Localized: the two ⊥-exclusions on `Q.map W` and `Q.map (W+V)`.
-  -- **Set-up shared by the `≠ ⊥` blocks**: `Q.map W = cond (P.map W) Sn` (single-variable
+  -- The sum law equals the convolution of the W- and V-marginals (independence).
+  have hsum_conv : Q.map (fun ω => W ω + V ω) = (Q.map W) ∗ (Q.map V) := by
+    have := hindep.map_add_eq_map_conv_map hW hV
+    simpa [Pi.add_apply] using this
+  -- **Set-up shared by the `≠ ⊥` / entropy blocks**: `Q.map W = cond (P.map W) Sn` (single-variable
   -- truncation), so its density is `c⁻¹ · 1_Sn · f_W` with `c = (P.map W) Sn = P E`.
   set Sn : Set ℝ := {r : ℝ | |r| ≤ (n : ℝ)} with hSn_def
   have hSn_meas : MeasurableSet Sn := measurableSet_le measurable_norm measurable_const
@@ -801,108 +777,70 @@ theorem differentialEntropyExt_mono_add_truncW
   have hW_ne_bot : differentialEntropyExt (Q.map W) ≠ ⊥ := by
     rw [differentialEntropyExt_of_ac_integrable hW_ac_Q hW_ent_Q]
     exact EReal.coe_ne_bot _
-  -- **`hWV_ne_bot` (sum-marginal negative-part)** = `B(W_n+V) < ⊤`. NOT a translate of `Q.map W`:
-  -- `Q.map(W+V)` is the mixture/convolution `f_{W_n} ∗ μ_V`, whose negative-part finiteness needs
-  -- the route-T Jensen + Tonelli argument (`(g log g)⁺ ≤ ∫ f_{W_n}(·−v) log f_{W_n}(·−v))⁺ dμ_V`,
-  -- Tonelli + 平行移動不変で `≤ B(W_n) = hBn_fin`)。route T `integrable_negPart_negMulLog_map_condTrunc_sum`
-  -- (`EPIInfiniteVarianceTruncation.lean:600`、~250 行 genuine) は joint `condTrunc` 専用 + 両成分
-  -- 有限エントロピー前提のため直接再利用不可 (V のエントロピー仮説なし)。単独成分 (W_n) 版への一般化が
-  -- 必要 = route-T-scale self-build、本 fill の予算超過 (≥150 行)。escalate 候補。
-  -- @residual(plan:epi-uncond-truncation-lsc-plan)
-  have hWV_ne_bot : differentialEntropyExt (Q.map (fun ω => W ω + V ω)) ≠ ⊥ := by sorry
-  have hcond_ne_bot : condDifferentialEntropyExt (fun ω => W ω + V ω) V Q ≠ ⊥ := by
-    rw [hfibre]; exact hW_ne_bot
-  -- ② finite chain rule with `X := W + V`, `Z := V`:
-  -- `h_ext(W+V) = h_ext(W+V | V) + I(W+V; V)`.
-  -- The eleven regularity hypotheses of the finite ② are supplied below.  The genuine ones
-  -- (`hWV_ac_Q` / `hκ_ac` / `hκ_logp_int`) reduce to `Q.map W` via the fibre identification `hae`
-  -- (each fibre a translate of `Q.map W`); the four that reference the **sum marginal**
-  -- `Q.map(W+V)` (`h_ac` / `hκ_cross_int` / `hκ_KL` / `hWV_ne_bot`) are the genuine analytic crux
-  -- (mixture/convolution, no full-support reference) and stay as honest sorry.
-  -- **`h_ac` (joint ≪ product)**: reduce to per-fibre `condDistrib (W+V) V Q z ≪ Q.map(W+V)` a.e. z
-  -- via `absolutelyContinuous_compProd_right_iff`, then close it from the **continuous** disintegration
-  -- a.c. self-build `condDistrib_ae_absolutelyContinuous_indep_add` (Mathlib general/non-discrete 版は
-  -- 不在、in-tree `Bridge.condDistrib_ae_absolutelyContinuous_map` は `[Countable X]` 専用で `X=ℝ` 不可)。
-  -- The fibre is identified by `hae` as `(Q.map W).map (·+z)`, and the sum marginal as the convolution
-  -- `(Q.map W) ∗ (Q.map V)`.
-  -- The sum law equals the convolution of the W- and V-marginals (independence).
-  have hsum_conv : Q.map (fun ω => W ω + V ω) = (Q.map W) ∗ (Q.map V) := by
-    have := hindep.map_add_eq_map_conv_map hW hV
-    simpa [Pi.add_apply] using this
-  have h_ac : (Q.map V) ⊗ₘ condDistrib (fun ω => W ω + V ω) V Q
-      ≪ (Q.map V) ⊗ₘ Kernel.const ℝ (Q.map (fun ω => W ω + V ω)) := by
-    rw [Measure.absolutelyContinuous_compProd_right_iff]
-    -- per-fibre a.c. of the translate `(Q.map W).map (·+1·z)` w.r.t. the sum marginal.
-    have hper := condDistrib_ae_absolutelyContinuous_indep_add
-      (μW := Q.map W) (μV := Q.map V) hW_ac_Q
-    filter_upwards [hae, hper] with z hz hper_z
-    rw [Kernel.const_apply, hz, affineShiftKernel_apply, one_mul]
-    rw [hsum_conv]
-    -- `hper_z : (Q.map W).map (·+z) ≪ (Q.map W) ∗ (Q.map V)`, but the fibre shift is `·+1·z`.
-    simpa [one_mul] using hper_z
-  -- @residual(plan:epi-uncond-truncation-lsc-plan)
-  have hκ_dens_meas : Measurable
-      (fun p : ℝ × ℝ => ((condDistrib (fun ω => W ω + V ω) V Q p.1).rnDeriv volume p.2)) := by
+  -- abbreviations for the sum law `ν := Q.map (W+V) = (Q.map W) ∗ (Q.map V)` and its density.
+  set ν : Measure ℝ := Q.map (fun ω => W ω + V ω) with hν_def
+  set rfun : ℝ → ℝ := fun x => (ν.rnDeriv volume x).toReal with hrfun_def
+  -- **`B(ν) < ⊤`** (sum-marginal negative-part), via the single-component helper
+  -- `negPart_negMulLog_conv_single_ne_top` averaging over the probability measure `Q.map V`
+  -- (no a.c. on `V` needed).  `B(Q.map W) < ⊤` is `hBn_fin` (= `hW_negPart_fin` truncated).
+  have hBn_fin' :
+      (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (((Q.map W).rnDeriv volume x).toReal)))
+        ∂volume) ≠ ⊤ := hBn_fin
+  have hν_conv : ν = (Q.map W) ∗ (Q.map V) := hsum_conv
+  have hBnu_fin :
+      (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog (rfun x))) ∂volume) ≠ ⊤ := by
+    have hconv_fin := negPart_negMulLog_conv_single_ne_top (Q.map W) (Q.map V) hW_ac_Q hBn_fin'
+    rw [hrfun_def, hν_conv]; exact hconv_fin
+  -- **Case split on whether the sum entropy integrand is integrable.**
+  by_cases hent_sum : Integrable (fun x => Real.negMulLog (rfun x)) volume
+  · -- **Case B (finite branch)**: descend to the workhorse `differentialEntropy` and prove the
+    -- real inequality `h(Q.map W) ≤ h(ν)` via per-fibre translate Gibbs.
+    have hν_ac : ν ≪ volume := hWV_ac_Q
+    have hent_sum' : Integrable
+        (fun x => Real.negMulLog ((ν.rnDeriv volume x).toReal)) volume := hent_sum
+    rw [differentialEntropyExt_of_ac_integrable hν_ac hent_sum',
+      differentialEntropyExt_of_ac_integrable hW_ac_Q hW_ent_Q]
+    refine EReal.coe_le_coe_iff.mpr ?_
     sorry
-  -- per-fibre a.c.: each fibre `condDistrib (W+V) V Q z =ᵐ (Q.map W).map (·+z)`, a translation
-  -- of the a.c. measure `Q.map W` (translation-invariance of Lebesgue ⟹ a.c. is preserved).
-  -- No finiteness needed; supplied genuinely from the fibre identification `hae`.
-  have hκ_ac : ∀ᵐ z ∂(Q.map V), condDistrib (fun ω => W ω + V ω) V Q z ≪ volume := by
-    filter_upwards [hae] with z hz
-    rw [hz, affineShiftKernel_apply]
-    have hshift : Measurable fun x : ℝ => x + (1 : ℝ) * z := by fun_prop
-    have h_map_vol : (volume : Measure ℝ).map (fun x : ℝ => x + (1 : ℝ) * z) = volume :=
-      MeasureTheory.map_add_right_eq_self (μ := (volume : Measure ℝ)) ((1 : ℝ) * z)
-    have := hW_ac_Q.map hshift
-    rwa [h_map_vol] at this
-  -- per-fibre entropy integrability `Integrable (fκz · log fκz)`: each fibre is a translate of
-  -- `Q.map W`, and `t·log t = -(negMulLog t)`, so this transfers from `hW_ent_Q` by translation
-  -- invariance (`integrable_negMulLog_rnDeriv_map_add_const`).
-  have hκ_logp_int : ∀ᵐ z ∂(Q.map V), Integrable
-      (fun x => ((condDistrib (fun ω => W ω + V ω) V Q z).rnDeriv volume x).toReal
-        * Real.log (((condDistrib (fun ω => W ω + V ω) V Q z).rnDeriv volume x).toReal)) volume := by
-    filter_upwards [hae] with z hz
-    have hbase := (integrable_negMulLog_rnDeriv_map_add_const (ν := Q.map W) ((1 : ℝ) * z)
-      hW_ent_Q).neg
-    refine hbase.congr ?_
-    filter_upwards with x
-    rw [hz, affineShiftKernel_apply]
-    show -(Real.negMulLog (((((Q.map W).map (fun x => x + (1 : ℝ) * z)).rnDeriv volume x)).toReal))
-      = (((((Q.map W).map (fun x => x + (1 : ℝ) * z)).rnDeriv volume x)).toReal)
-        * Real.log ((((((Q.map W).map (fun x => x + (1 : ℝ) * z)).rnDeriv volume x)).toReal))
-    rw [Real.negMulLog]; ring
-  -- **`hκ_cross_int` (cross-entropy term)**: couples the fibre density `fκz` (translate of `Q.map W`)
-  -- with `log(f_{Q.map(W+V)})` (= the **sum-marginal** log-density). The marginal factor is NOT a
-  -- translate of `Q.map W`, so this does not reduce by the `integrable_negMulLog_rnDeriv_map_add_const`
-  -- pattern; it needs a domination argument against the mixture density (route-T cross-entropy DCT
-  -- style). Sum-marginal analytic crux, 予算超過。
-  -- @residual(plan:epi-uncond-truncation-lsc-plan)
-  have hκ_cross_int : ∀ᵐ z ∂(Q.map V), Integrable
-      (fun x => ((condDistrib (fun ω => W ω + V ω) V Q z).rnDeriv volume x).toReal
-        * Real.log (((Q.map (fun ω => W ω + V ω)).rnDeriv volume x).toReal)) volume := by
-    sorry
-  -- **`hκ_KL` (per-fibre KL ≠ ∞)**: per finite ② docstring, `klDiv κz ν ≠ ∞ ↔ κz ≪ ν ∧
-  -- Integrable (llr κz ν) κz` (`klDiv_ne_top`). The a.c. `κz ≪ ν` is now genuinely available
-  -- (`condDistrib_ae_absolutelyContinuous_indep_add`, same supply as the closed `h_ac`), but the
-  -- llr integrability `Integrable (log(fκz/r)) κz = ∫ fκz·(log fκz - log r)` requires the
-  -- **cross-term** `hκ_cross_int` (sum-marginal log-density `log r`), which is still the open crux.
-  -- So `hκ_KL` stays sorry until `hκ_cross_int` lands (transitive dependence on the cross-entropy
-  -- domination, not on `h_ac` which is now closed).
-  -- @residual(plan:epi-uncond-truncation-lsc-plan)
-  have hκ_KL : ∀ᵐ z ∂(Q.map V),
-      klDiv (condDistrib (fun ω => W ω + V ω) V Q z) (Q.map (fun ω => W ω + V ω)) ≠ ∞ := by sorry
-  have hchain := differentialEntropyExt_eq_condEntExt_add_klDiv_of_finite
-    (fun ω => W ω + V ω) V Q (hW.add hV) hV hWV_ac_Q h_ac hκ_dens_meas hκ_ac hκ_logp_int
-    hκ_cross_int hκ_KL hcond_ne_bot hWV_ne_bot
-  -- Equality → monotonicity: `h(W_n+V) = h(W_n) + I`, `I ≥ 0` ⟹ `h(W_n) ≤ h(W_n+V)`.
-  rw [hchain, hfibre]
-  have hi : (0 : EReal) ≤
-      (((InformationTheory.klDiv ((Q.map V) ⊗ₘ condDistrib (fun ω => W ω + V ω) V Q)
-            ((Q.map V) ⊗ₘ Kernel.const ℝ (Q.map (fun ω => W ω + V ω)))) : ℝ≥0∞) : EReal) := by
-    exact_mod_cast (bot_le : (⊥ : ℝ≥0∞) ≤ _)
-  calc differentialEntropyExt (Q.map W)
-      = differentialEntropyExt (Q.map W) + 0 := (add_zero _).symm
-    _ ≤ differentialEntropyExt (Q.map W) + _ := add_le_add_right hi _
+  · -- **Case A (infinite branch)**: `¬ hent_sum` and `B(ν) < ⊤` ⟹ `A(ν) = ⊤` ⟹
+    -- `differentialEntropyExt ν = ⊤`, then `h(Q.map W) ≤ ⊤` by `le_top`.
+    set g : ℝ → ℝ := fun x => Real.negMulLog (rfun x) with hg_def
+    have hg_meas : Measurable g :=
+      Real.continuous_negMulLog.measurable.comp
+        ((Measure.measurable_rnDeriv _ _).ennreal_toReal)
+    set Aint : ℝ≥0∞ := ∫⁻ x, ENNReal.ofReal (g x) ∂volume with hA_def
+    set Bint : ℝ≥0∞ := ∫⁻ x, ENNReal.ofReal (-(g x)) ∂volume with hB_def
+    have hB_lt_top : Bint ≠ ⊤ := by rw [hB_def]; exact hBnu_fin
+    have hA_top : Aint = ⊤ := by
+      have hnotfin : ¬ HasFiniteIntegral g volume := fun hfin =>
+        hent_sum ⟨hg_meas.aestronglyMeasurable, hfin⟩
+      have henorm_top : (∫⁻ x, ‖g x‖ₑ ∂volume) = ⊤ := by
+        by_contra h
+        exact hnotfin (hasFiniteIntegral_iff_enorm.mpr (lt_of_le_of_ne le_top h))
+      have hsplit : (∫⁻ x, ‖g x‖ₑ ∂volume) = Aint + Bint := by
+        rw [hA_def, hB_def, ← lintegral_add_left
+          (Measurable.ennreal_ofReal hg_meas) (fun x => ENNReal.ofReal (-(g x)))]
+        apply lintegral_congr; intro x
+        rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs]
+        rcases le_or_gt 0 (g x) with h | h
+        · have hneg : ENNReal.ofReal (-(g x)) = 0 :=
+            ENNReal.ofReal_of_nonpos (by linarith)
+          rw [abs_of_nonneg h, hneg, add_zero]
+        · have hpos : ENNReal.ofReal (g x) = 0 :=
+            ENNReal.ofReal_of_nonpos h.le
+          rw [abs_of_neg h, hpos, zero_add]
+      rw [hsplit] at henorm_top
+      by_contra hA
+      exact (ENNReal.add_lt_top.mpr ⟨lt_of_le_of_ne le_top hA, lt_of_le_of_ne le_top hB_lt_top⟩).ne
+        henorm_top
+    have hdiff_top : differentialEntropyExt ν = ⊤ := by
+      rw [differentialEntropyExt_of_ac hWV_ac_Q]
+      show ((Aint : EReal) - (Bint : EReal)) = ⊤
+      rw [hA_def, hB_def, ← hg_def] at *
+      rw [hA_top, EReal.coe_ennreal_top]
+      exact EReal.top_sub (by
+        rw [Ne, EReal.coe_ennreal_eq_top_iff]; exact hB_lt_top)
+    rw [hdiff_top]; exact le_top
 
 /-- **`h(W_n) → h(W)` の極限**: truncation 緩和で entropy 単調増加 → 極限。`h(W) = ⊤` のときは
 `h(W_n) ↑ ⊤` の単調発散 (有界増加列の ⊤ への発散) で、weak-convergence portmanteau を経由しない。
