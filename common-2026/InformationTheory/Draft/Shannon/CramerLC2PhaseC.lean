@@ -1,6 +1,6 @@
 import InformationTheory.Draft.Shannon.Cramer
-import InformationTheory.Shannon.CramerLC2Discharge
-import InformationTheory.Shannon.CramerLC2DischargeExt
+import InformationTheory.Shannon.Cramer.LC2Discharge
+import InformationTheory.Shannon.Cramer.LC2DischargeExt
 import Mathlib.Probability.StrongLaw
 import Mathlib.Probability.Independence.InfinitePi
 import Mathlib.Probability.ProductMeasure

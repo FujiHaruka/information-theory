@@ -94,8 +94,8 @@ import InformationTheory.Shannon.CsiszarProjection
 import InformationTheory.Shannon.Chernoff.Basic
 import InformationTheory.Shannon.Chernoff.NLetterZSum
 import InformationTheory.Draft.Shannon.Cramer
-import InformationTheory.Shannon.CramerLC2Discharge
-import InformationTheory.Shannon.CramerLC2DischargeExt
+import InformationTheory.Shannon.Cramer.LC2Discharge
+import InformationTheory.Shannon.Cramer.LC2DischargeExt
 import InformationTheory.Shannon.Hoeffding.Tradeoff
 import InformationTheory.Shannon.Hoeffding.Sandwich
 import InformationTheory.Shannon.DifferentialEntropy

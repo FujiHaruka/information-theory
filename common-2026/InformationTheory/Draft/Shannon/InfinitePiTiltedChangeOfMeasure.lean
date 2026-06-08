@@ -1,5 +1,5 @@
 import InformationTheory.Shannon.MeasurePiTiltedFactorization
-import InformationTheory.Shannon.CramerLC2DischargeExt
+import InformationTheory.Shannon.Cramer.LC2DischargeExt
 import InformationTheory.Draft.Shannon.CramerLC2PhaseC
 import Mathlib.Probability.ProductMeasure
 import InformationTheory.Meta.EntryPoint
