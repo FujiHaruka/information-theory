@@ -243,4 +243,5 @@ import InformationTheory.Shannon.EPIUncondDispatch
 import InformationTheory.Shannon.EPIUncondCondEntropyExt
 import InformationTheory.Shannon.EPIUncondMonotone
 import InformationTheory.Shannon.EPIUncondTruncationLimit
+import InformationTheory.Shannon.EPIUncondDispatchFull
 import InformationTheory.Shannon.EPIStamSupplyTwoTime
