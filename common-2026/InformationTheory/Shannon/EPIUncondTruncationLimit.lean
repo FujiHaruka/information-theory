@@ -930,7 +930,24 @@ theorem differentialEntropyExt_posPart_le_liminf_of_ae_tendsto
 
 proof-done (0 sorry / 0 @residual)。`#print axioms` = `[propext, Classical.choice, Quot.sound]`
 (sorryAx-free、`differentialEntropyExt_mono_add_truncW` の core を抽出したものなので transitive も同等)。
-独立 honesty audit 待ち。 -/
+
+**独立 honesty audit 2026-06-08 (fresh subagent, proof-done + `hW_ent` 非 load-bearing 主張検証 → ok)**:
+4-check PASS。(1) 非循環 — 結論 `h(Q.map W) ≤ h(Q.map (W+V))` は 5 仮説いずれとも非同型、body は
+~280 行の genuine 全証明 (`:= h` でない)。(2) 非バンドル — core-reconstruction test: `hW_ent` (W-marginal
+有限微分エントロピー) を grant しても単調不等式は出ない (h(W) の有限性のみ、h(W) と h(W+V) の関係を
+encode しない) = FAIL = 非 load-bearing。単調性の核 = Case B の per-fibre translate Gibbs (外部
+`differentialEntropy_le_cross_entropy`、`@audit:ok`、klDiv≥0 由来の genuine 出口補題) + Tonelli collapse
+で body が担う。`hW_ent` は Case B descent (`differentialEntropyExt_of_ac_integrable` の integrability)
++ Case A の `B(ν)<⊤` 供給 (`negPart_negMulLog_conv_single_ne_top` 経由) に消費される finiteness
+precondition。(3) 非退化 — Case A の `le_top` は `differentialEntropyExt ν = A−B = ⊤−(有限) = ⊤` を
+A(ν)=⊤ (`‖g‖ₑ=A+B=⊤` ∧ B<⊤ の genuine 分解) から建ててからの `EReal.top_sub` (vacuous/exfalso/`0=value`
+でない)。(4) sufficiency — 「W a.c. ∧ W⊥V ∧ h(W) 有限 ⟹ h(W)≤h(W+V)」は独立ノイズ加算でエントロピー
+増大の古典定理で真。反証試行: `hW_ac` 欠落 → W=Dirac で per-fibre translate `μWz z` が ν に非 a.c. ⟹
+Gibbs 崩壊 (`condDistrib_ae_absolutelyContinuous_indep_add` が a.c. genuine 消費) = a.c. は必要 precondition
+present。**機械裏取り**: `#print axioms differentialEntropyExt_mono_add_of_integrable` (transient +
+`lake env lean`) = `[propext, Classical.choice, Quot.sound]`、sorryAx **非依存**。(i-a) chain rule
+`differentialEntropyExt_indep_add_eq_add_klDiv` (sorryAx 保持) を **非継承** (axiom 出力に sorryAx
+非出現で genuine 迂回を確認、body も chain rule 不使用 = per-fibre translate Gibbs に置換済)。@audit:ok -/
 theorem differentialEntropyExt_mono_add_of_integrable
     (W V : Ω → ℝ) (Q : Measure Ω) [IsProbabilityMeasure Q]
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V Q)
