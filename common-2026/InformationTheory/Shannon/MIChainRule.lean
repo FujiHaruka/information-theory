@@ -414,6 +414,7 @@ variable {α β : Type*}
   [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β]
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Mutual-information ↔ entropy three-term identity (joint-distribution level).**
 For any probability measure `joint` on a finite-alphabet product `α × β`, the
 `klDiv`-based mutual information of its coordinates equals the standard three-term
@@ -429,6 +430,7 @@ theorem mutualInfo_eq_entropy_add_entropy_sub_jointEntropy
     (joint : Measure (α × β)) [IsProbabilityMeasure joint] :
     (mutualInfo joint Prod.fst Prod.snd).toReal
       = entropy joint Prod.fst + entropy joint Prod.snd - entropy joint id := by
+  classical
   -- Step 1: commute MI to put `Prod.snd` on the left.
   rw [mutualInfo_comm joint Prod.fst Prod.snd measurable_fst measurable_snd]
   -- Step 2: Bridge — (mutualInfo joint Prod.snd Prod.fst).toReal

@@ -66,9 +66,9 @@ monotonicity. The `n`-letter form requires `R(D)` convexity (Jensen) and is
 deferred (E-4''). -/
 @[entry_point]
 theorem rate_distortion_converse_single_shot_specified
-    [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+    [Fintype α] [Nonempty α] [MeasurableSingletonClass α]
     [MeasurableSingletonClass β]
-    {M : Type*} [Fintype M] [DecidableEq M] [Nonempty M]
+    {M : Type*} [Fintype M] [Nonempty M]
     [MeasurableSpace M] [MeasurableSingletonClass M]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (X : Ω → α) (encoder : α → M) (decoder : M → β)
@@ -82,6 +82,7 @@ theorem rate_distortion_converse_single_shot_specified
     (hD : ∫ ω, d (X ω) (decoder (encoder (X ω))) ∂μ ≤ D) :
     (rateDistortionFunction d (μ.map X) D).toReal
       ≤ Real.log (Fintype.card M) := by
+  classical
   -- ## Step 1: parent single-shot converse at the *actual* distortion D̃.
   have h_parent :
       (rateDistortionFunction d (μ.map X)

@@ -1320,14 +1320,14 @@ theorem integral_MRatioLowerZ_le_one
               * ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a)
               * ENNReal.ofReal (Real.exp (pmfLogCondInfty μ p (shiftZ^[n] x))))
           refine Measurable.mul ?_ ?_
-          refine Measurable.mul ?_ ?_
-          refine Measurable.mul ?_ ?_
-          · refine Measurable.indicator measurable_const ?_
-            exact ((measurable_shiftZ).iterate n) (measurableSet_coord0_eq a)
-          · exact h_MR_meas n
-          · refine ENNReal.measurable_ofReal.comp ?_
-            refine (measurable_blockCondRatio_apply μ p n a).comp ?_
-            exact measurable_firstBlockZ n
+          · refine Measurable.mul ?_ ?_
+            · refine Measurable.mul ?_ ?_
+              · refine Measurable.indicator measurable_const ?_
+                exact ((measurable_shiftZ).iterate n) (measurableSet_coord0_eq a)
+              · exact h_MR_meas n
+            · refine ENNReal.measurable_ofReal.comp ?_
+              refine (measurable_blockCondRatio_apply μ p n a).comp ?_
+              exact measurable_firstBlockZ n
           · exact ENNReal.measurable_ofReal.comp h_pmf_meas
       _ ≤ ∑ a, ∫⁻ x, MRatioLowerZ μ p n x
               * ENNReal.ofReal (blockCondRatio μ p n (firstBlockZ n x) a) ∂(μZ μ p) :=

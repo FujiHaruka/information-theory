@@ -500,7 +500,7 @@ private lemma codebook_marginal_two
     apply Finset.prod_eq_one; intro i _; exact h_sum_one_alpha
   rw [h_sum_other, mul_one]
 
-omit [Nonempty α] [DecidableEq β] [Nonempty β] in
+omit [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β] in
 /-- **(E1) Fubini swap.** For any message index `m`, the codebook expectation of
 the "true codeword not jointly typical" event equals the abstract i.i.d.
 expectation. -/
@@ -759,6 +759,7 @@ private lemma random_codebook_E1_swap
     · intro _ _; rfl
   rw [h_LHS_eq]
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **(E2) Fubini swap.** For any two distinct message indices `m ≠ m'`, the
 codebook expectation of the "alias codeword jointly typical" event is bounded
 by `exp(n((HZ-HX-HY)+3ε))` via the independent-pair bound
@@ -998,6 +999,7 @@ private lemma random_codebook_E2_swap
   exact jointlyTypicalSet_indep_prob_le μ Xs Ys hXs hYs hindepX hidentX hindepY hidentY
     hposX hposY hposZ n hε
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Random codebook average (probabilistic-method form).** With each codeword
 drawn i.i.d. from `p^n` (so the codebook law is `codebookMeasure p M n`), the
 codebook-average of the (uniform-over-message) error probability decomposes via

@@ -64,6 +64,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
 /-! ## Phase 1 — `IsBoundedUnder (· ≥ ·)` internal discharge (L-HS-B) -/
 
+omit [DecidableEq α] in
 /-- **L-HS-B internal discharge**: the rate sequence
 `-(1/n) log (steinTypeII_at_level_pmf P₁ P₂ n alpha)` is bounded below by `0`
 along `atTop`.
@@ -82,6 +83,7 @@ lemma hoeffding_rate_isBoundedUnder_ge
     Filter.IsBoundedUnder (· ≥ ·) atTop
       (fun n : ℕ =>
         -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha)) := by
+  classical
   -- ∀ᶠ n ≥ 1, rate n ≥ 0.
   refine Filter.isBoundedUnder_of_eventually_ge (a := (0 : ℝ)) ?_
   filter_upwards [eventually_gt_atTop 0] with n hn
@@ -105,6 +107,7 @@ lemma hoeffding_rate_isBoundedUnder_ge
 
 /-! ## Phase 2 — `IsBoundedUnder (· ≤ ·)` internal discharge (L-HS-U) -/
 
+omit [DecidableEq α] in
 /-- **L-HS-U lemma 1**: lower bound on `steinTypeII_at_level_pmf` when `alpha < 1`
 under full support `P₁, P₂ > 0`.
 
@@ -177,6 +180,7 @@ lemma steinTypeII_at_level_pmf_ge_pow_pmin
       mul_le_mul_of_nonneg_right h_s_card_ge h_pow_nn
     linarith
 
+omit [DecidableEq α] in
 /-- **L-HS-U internal discharge**: the rate sequence is bounded above along `atTop`
 under full support + `alpha < 1`. The uniform upper bound is
 `M := -log p₂_min - log(1 - alpha) / n`, which is bounded by

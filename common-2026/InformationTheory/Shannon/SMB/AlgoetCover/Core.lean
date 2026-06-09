@@ -901,6 +901,7 @@ theorem limsup_blockLogAvg_le_condEntropyTail
     · exact h_rhs.isBoundedUnder_le
   exact h_limsup_bound.trans h_rhs.limsup_eq.le
 
+omit [DecidableEq α] in
 /-- Letting `k → ∞` in the per-`k` bound and using
 `entropyRate_eq_lim_condEntropy` discharges the `limsup` hypothesis of
 `shannon_mcmillan_breiman_of_sandwich`. -/
@@ -910,6 +911,7 @@ theorem algoet_cover_limsup_bound
     ∀ᵐ ω ∂μ,
       Filter.limsup (fun n => blockLogAvg μ p.toStationaryProcess n ω) Filter.atTop
         ≤ entropyRate μ p.toStationaryProcess := by
+  classical
   -- Per-k bound (a.s.): limsup ≤ H_k.
   have h_all : ∀ᵐ ω ∂μ, ∀ k : ℕ,
       Filter.limsup (fun n => blockLogAvg μ p.toStationaryProcess n ω) Filter.atTop

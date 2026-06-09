@@ -172,7 +172,7 @@ private lemma factored_map_perm_eq_compProd_prod
     [StandardBorelSpace X] [Nonempty X]
     [StandardBorelSpace Y] [Nonempty Y]
     (Xs : Ω → X) (Yo : Ω → Y) (Zc : Ω → Z)
-    (hXs : Measurable Xs) (hYo : Measurable Yo) (hZc : Measurable Zc) :
+    (_hXs : Measurable Xs) (hYo : Measurable Yo) (hZc : Measurable Zc) :
     ((μ.map (fun ω => (Zc ω, Yo ω))) ⊗ₘ
         Kernel.prodMkRight Y (condDistrib Xs Zc μ)).map (permZYX_Z_XY Z X Y)
       = (μ.map Zc) ⊗ₘ ((condDistrib Xs Zc μ) ×ₖ (condDistrib Yo Zc μ)) := by
@@ -361,7 +361,7 @@ theorem condMutualInfo_eq_zero_of_markov
     [StandardBorelSpace X] [Nonempty X]
     [StandardBorelSpace Y] [Nonempty Y]
     (Xs : Ω → X) (Zc : Ω → Z) (Yo : Ω → Y)
-    (hXs : Measurable Xs) (hZc : Measurable Zc) (hYo : Measurable Yo)
+    (hXs : Measurable Xs) (_hZc : Measurable Zc) (hYo : Measurable Yo)
     (hmarkov : IsMarkovChain μ Xs Zc Yo) :
     condMutualInfo μ Xs Yo Zc = 0 := by
   unfold condMutualInfo

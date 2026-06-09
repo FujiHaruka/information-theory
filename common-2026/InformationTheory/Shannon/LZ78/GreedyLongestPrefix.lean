@@ -137,6 +137,7 @@ section Length
 
 variable {α : Type*} [DecidableEq α]
 
+omit [DecidableEq α] in
 /-- **Additive `foldr`-length over an append**: the total phrase length of
 `l ++ [w]` is the total over `l` plus `w.length`. (The accumulator
 `fun w acc => w.length + acc` is additive, so `foldr_append` would leave a
@@ -236,6 +237,7 @@ theorem lz78PhraseStrings_forall_ne_nil (input : List α) :
     ∀ w ∈ lz78PhraseStrings input, w ≠ [] :=
   lz78PhraseStringsAux_forall_ne_nil _ [] [] input (by simp)
 
+omit [DecidableEq α] in
 /-- **Count is bounded by total length when every phrase is non-empty**:
 the number of phrases is at most the sum of their lengths, since each
 length is `≥ 1`. -/

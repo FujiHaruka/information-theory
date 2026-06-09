@@ -133,9 +133,9 @@ This is the single-shot form of Cover-Thomas 10.4. The `n`-letter form
 `rate ≥ R(D)` requires `R(D)` convexity (Jensen) and is deferred. -/
 @[entry_point]
 theorem rate_distortion_converse_single_shot
-    [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+    [Fintype α] [Nonempty α] [MeasurableSingletonClass α]
     [MeasurableSingletonClass β]
-    {M : Type*} [Fintype M] [DecidableEq M] [Nonempty M]
+    {M : Type*} [Fintype M] [Nonempty M]
     [MeasurableSpace M] [MeasurableSingletonClass M]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (X : Ω → α) (encoder : α → M) (decoder : M → β)
@@ -148,6 +148,7 @@ theorem rate_distortion_converse_single_shot
     (rateDistortionFunction d (μ.map X)
         (∫ ω, d (X ω) (decoder (encoder (X ω))) ∂μ)).toReal
       ≤ Real.log (Fintype.card M) := by
+  classical
   -- Set up the auxiliary random variables.
   set W : Ω → M := fun ω => encoder (X ω) with hW_def
   set Xh : Ω → β := fun ω => decoder (encoder (X ω)) with hXh_def

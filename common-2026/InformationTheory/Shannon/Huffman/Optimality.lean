@@ -598,8 +598,8 @@ lemma mergedMeasure_pos
     0 < (mergedMeasure P a b hab).real {x} := by
   rw [mergedMeasure_real P a b hab x]
   by_cases hxa : x.val = a
-  · simp [hxa]; exact add_pos (hP a) (hP b)
-  · simp [hxa]; exact hP x.val
+  · simp only [ne_eq, hxa, ↓reduceIte]; exact add_pos (hP a) (hP b)
+  · simp only [ne_eq, hxa, ↓reduceIte]; exact hP x.val
 
 omit [LinearOrder α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- **Phase 4 helper**: `Fintype.card { y : α // y ≠ b } = Fintype.card α - 1`. -/

@@ -110,7 +110,7 @@ private theorem matchedTimePath_inverse
     (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hN_cont : ContinuousOn (fun s => heatFlowEP A B P s) (Set.Ici (0 : ℝ)))
     (hN_mono : StrictMonoOn (fun s => heatFlowEP A B P s) (Set.Ici (0 : ℝ)))
-    (hC_pos : 0 < heatFlowEP A B P 0)
+    (_hC_pos : 0 < heatFlowEP A B P 0)
     (hN_tendsto : Filter.Tendsto (fun s => heatFlowEP A B P s) Filter.atTop Filter.atTop) :
     ∃ g : ℝ → ℝ,
       (∀ y, heatFlowEP A B P 0 ≤ y → 0 ≤ g y)
@@ -229,7 +229,7 @@ derivative `1/J_A(s(t))` at `t > 0`, via `HasDerivAt.of_local_left_inverse` (giv
 `g' (C·eᵗ) = (N·J)⁻¹`) composed with `d/dt (C·eᵗ) = C·eᵗ`, cancelling to `1/J`. -/
 private theorem matchedTimePath_path_hasDerivAt
     (N J_A g : ℝ → ℝ) (C t : ℝ) (ht : 0 < t) (hC_pos : 0 < C)
-    (hN_mono : StrictMonoOn N (Set.Ici (0 : ℝ)))
+    (_hN_mono : StrictMonoOn N (Set.Ici (0 : ℝ)))
     (hg_maps : ∀ y, C ≤ y → 0 ≤ g y)
     (hg_cont : ContinuousOn g (Set.Ici C))
     (hg_rinv : ∀ y, C ≤ y → N (g y) = y)
@@ -365,7 +365,7 @@ machine-verified this audit, with the strengthened signature).
 theorem matchedTimePath_exists
     (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (J_A : ℝ → ℝ)
-    (hA : Measurable A) (hB : Measurable B) (hAB : IndepFun A B P)
+    (_hA : Measurable A) (_hB : Measurable B) (_hAB : IndepFun A B P)
     (hJ_pos : ∀ s : ℝ, 0 < s → 0 < J_A s)
     (hJ_deriv : ∀ s : ℝ, 0 < s →
       HasDerivAt (fun u => heatFlowEP A B P u) (heatFlowEP A B P s * J_A s) s)

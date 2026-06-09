@@ -51,6 +51,7 @@ private lemma cnt_mul_log_div
     rw [Real.log_div this.ne' hn]
     ring
 
+omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- **Bridge identity**: `(n^n) / ∏ a, (c a)^{c a} = exp (n · H(c/n))` for
 `∑ c = n`. Holds for all `n` including `n = 0` (both sides equal 1). -/
 @[entry_point]

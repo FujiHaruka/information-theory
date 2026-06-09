@@ -63,6 +63,7 @@ lemma one_sub_pow_le_exp_neg_mul (M : ℕ) {t : ℝ} (_h0 : 0 ≤ t) (h1 : t ≤
     _ = Real.exp (-(M : ℝ) * t) := by ring_nf
 
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Exponentialization** of the source-averaged failure-pow bound.
 Pointwise `(1 - p_typ x)^M ≤ exp(-M · p_typ x)`, then integrate. -/
 @[entry_point]
@@ -132,6 +133,7 @@ lossy-distortion-style consumers.
 
 open InformationTheory.Shannon.ChannelCoding (Codebook codebookMeasure)
 
+omit [DecidableEq β] in
 /-- **Pigeonhole (probabilistic-method form, lossy version).** If a real-valued
 codebook functional has `codebookMeasure`-weighted average `≤ B`, then some
 deterministic codebook achieves `f c ≤ B`.
