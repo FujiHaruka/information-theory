@@ -63,6 +63,19 @@ base (Ω,P) ──[lift]──→ (Ω×ℝ×ℝ, liftMeasure P)
 
 ### P-2 雑音 lift (lift 上 EPI → base EPI の measure-transport)
 
+> **⚠ STALE (2026-06-09, commit `4cd6b12`)**: 下記 P-2 の 2-noise decl
+> (`liftMeasure` / `entropy_power_inequality_via_lift` / `stamScalingNoise_exists_on_lift` /
+> `indepFun_add_add_on_lift` / `entropyPower_map_comp_fst_eq`) は **削除済**。two-time case-1
+> assembler が別 unit noise `Z` を要するため、実装は **3-noise** lift
+> (`EPINoiseExtension.liftMeasure3` / `entropyPower_map_comp_fst_eq3` /
+> `entropy_power_inequality_via_lift3`、`NoiseExtension.lean`) に移行し、密度版結論
+> `EPIDensityForm.entropy_power_inequality_of_density` (= Phase A の目標 theorem、実在) +
+> `EPICase1SmoothingLimit.*` がそれを消費している。**3-noise 側には `stamScalingNoise_exists_on_lift` /
+> `indepFun_add_add_on_lift` の対応物が無い** (雑音独立性の供給経路が 2-noise 設計と異なる) ので、
+> 下記 P-2 + §Phase A の Approach 図 / A-Steps (A-1/A-2/A-6) は **実装 (DensityForm/SmoothingLimit) との
+> 実態整合が未了**。Phase A の進捗チェックボックスも DensityForm の closure 状態 (sorryAx 有無) と
+> 突き合わせて再構成が必要。**この block の decl 主張をそのまま信用しないこと**。
+
 - **`liftMeasure`** — `EPINoiseExtension.lean:48`: `liftMeasure P := P.prod ((gaussianReal 0 1).prod (gaussianReal 0 1))` (noncomputable abbrev、型 `Measure (Ω × ℝ × ℝ)`)。
 - **`entropy_power_inequality_via_lift`** — `EPINoiseExtension.lean:145`、`@audit:ok`。
   - signature: `(hX : Measurable X) (hY : Measurable Y) (h_lift_epi : entropyPower ((liftMeasure P).map (fun p => X p.1 + Y p.1)) ≥ entropyPower ((liftMeasure P).map (fun p => X p.1)) + entropyPower ((liftMeasure P).map (fun p => Y p.1))) : entropyPower (P.map (fun ω => X ω + Y ω)) ≥ entropyPower (P.map X) + entropyPower (P.map Y)`
