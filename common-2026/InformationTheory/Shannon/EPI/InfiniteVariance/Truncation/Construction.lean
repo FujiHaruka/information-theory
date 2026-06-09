@@ -375,7 +375,7 @@ theorem map_condTrunc_withDensity_toReal_rnDeriv (P : Measure Ω) [IsProbability
   haveI : IsProbabilityMeasure (condTrunc P X Y n) :=
     isProbabilityMeasure_condTrunc P hX hY hpos
   haveI : IsProbabilityMeasure ((condTrunc P X Y n).map Z) :=
-    Measure.isProbabilityMeasure_map hZ.aemeasurable
+    Measure.isProbabilityMeasure_map _hZ.aemeasurable
   have hcongr : (fun x => ENNReal.ofReal (((condTrunc P X Y n).map Z).rnDeriv volume x).toReal)
       =ᵐ[volume] ((condTrunc P X Y n).map Z).rnDeriv volume := by
     filter_upwards [((condTrunc P X Y n).map Z).rnDeriv_lt_top volume] with x hx
@@ -486,7 +486,7 @@ theorem map_condTrunc_sum_concentrated (P : Measure Ω) [IsProbabilityMeasure P]
     ((condTrunc P X Y n).map (fun ω => X ω + Y ω))
       (Set.Icc (-(2 * (n : ℝ))) (2 * (n : ℝ)))ᶜ = 0 := by
   haveI : IsProbabilityMeasure (condTrunc P X Y n) :=
-    isProbabilityMeasure_condTrunc P hX hY hpos
+    isProbabilityMeasure_condTrunc P hX hY _hpos
   rw [Measure.map_apply (hX.add hY) (measurableSet_Icc.compl)]
   -- `condTrunc (truncSetᶜ) = 0` (concentrated on `truncSet`).
   have h_trunc_compl : (condTrunc P X Y n) (truncSet X Y n)ᶜ = 0 := by
