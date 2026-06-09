@@ -536,7 +536,7 @@ core. The bound is genuinely assembled from atom A (`@audit:ok`) + S4
 sorryAx-free verified transiently (`#print axioms` = `[propext, Classical.choice,
 Quot.sound]`, no transitive sorry). -/
 theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
-    (hlam0 : 0 ≤ lam) (hlam1 : lam ≤ 1)
+    (_hlam0 : 0 ≤ lam) (_hlam1 : lam ≤ 1)
     (hregX : IsRegularDensityV2 fX) (hregY : IsRegularDensityV2 fY)
     (hX_int : Integrable fX volume) (hY_int : Integrable fY volume)
     (hX_bdd : ∃ M : ℝ, ∀ w, |fX w| ≤ M) (hX'_bdd : ∃ M : ℝ, ∀ w, |deriv fX w| ≤ M)

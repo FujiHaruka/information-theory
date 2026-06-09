@@ -73,7 +73,7 @@ restrict ≤ self + map 単調 + smul 可換)、結論は測度不等式 (regula
 theorem map_truncW_add_le_smul_map_add
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (n : ℕ)
-    (hn : P {ω | |W ω| ≤ (n : ℝ)} ≠ 0) :
+    (_hn : P {ω | |W ω| ≤ (n : ℝ)} ≠ 0) :
     (truncW P W n).map (fun ω => W ω + V ω)
       ≤ (P {ω | |W ω| ≤ (n : ℝ)})⁻¹ • P.map (fun ω => W ω + V ω) := by
   set g : Ω → ℝ := fun ω => W ω + V ω with hg_def

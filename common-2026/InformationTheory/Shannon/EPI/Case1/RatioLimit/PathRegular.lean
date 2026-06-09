@@ -504,7 +504,7 @@ theorem isRescaledPathRegular_of_methodX
     (v_B : ℝ≥0) (hv_B : v_B ≠ 0) (hB_law : P.map B = gaussianReal 0 v_B)
     (hAB : IndepFun A B P)
     (hA_ac : (P.map A) ≪ volume)
-    (varA : ℝ) (h_varA_nn : 0 ≤ varA)
+    (varA : ℝ) (_h_varA_nn : 0 ≤ varA)
     (h_mom_A : Integrable (fun ω => (A ω)^2) P)
     (h_var_bound : ∀ t : ℝ, 0 < t →
       (∫ x, (x - (∫ y, y ∂(P.map (fun ω => A ω / Real.sqrt t + B ω))))^2

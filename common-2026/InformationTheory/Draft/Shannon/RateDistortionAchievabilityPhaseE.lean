@@ -71,6 +71,7 @@ variable [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass �
 (Already discharged inside `source_avg_distortion_le_simpler`; reproduced as a
 named lemma for downstream reuse.) -/
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Phase E (witness form, MVP).**
 
 Given a feasible joint pmf `qStar ∈ RDConstraint P_X_pmf d D`, a rate

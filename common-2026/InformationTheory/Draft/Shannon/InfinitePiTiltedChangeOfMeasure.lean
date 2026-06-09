@@ -386,7 +386,7 @@ theorem cramer_lower_phaseC_residual_discharge
         (1 / (n : ℝ)) * Real.log
           ((Measure.infinitePi (fun _ : ℕ => μ₀)).real
             {ω : ℕ → Ω₀ | (a : ℝ) * n ≤ ∑ i ∈ Finset.range n, Y (ω i)})))
-    (h_res : IsTiltedWindowEventuallyLarge μ₀ Y lam) :
+    (_h_res : IsTiltedWindowEventuallyLarge μ₀ Y lam) :
     -(lam * a
         - cgf (fun ω : ℕ → Ω₀ => Y (ω 0))
             (Measure.infinitePi (fun _ : ℕ => μ₀)) lam)

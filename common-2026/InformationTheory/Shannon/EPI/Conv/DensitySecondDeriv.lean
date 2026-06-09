@@ -143,7 +143,7 @@ pX regularity carried for downstream GAP② consumers (unused here, lint-confirm
 verified sorryAx-free: `#print axioms` = `[propext, Classical.choice, Quot.sound]`.
 @audit:ok -/
 theorem convDensityAdd_deriv2_eq_gaussian
-    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
+    (pX : ℝ → ℝ) (_hpX_nn : ∀ x, 0 ≤ pX x) (_hpX_int : Integrable pX volume)
     {s : ℝ} (hs : 0 < s) (z : ℝ)
     (bound1 : ℝ → ℝ) (hbound1_int : Integrable bound1 volume)
     (hF1_meas : ∀ ξ : ℝ,

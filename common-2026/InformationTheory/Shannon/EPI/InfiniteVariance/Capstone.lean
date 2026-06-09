@@ -326,7 +326,7 @@ theorem entropyPowerExt_add_ge_infinite_variance
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
     (hX_ent : Integrable (fun x => Real.negMulLog ((P.map X).rnDeriv volume x).toReal) volume)
     (hY_ent : Integrable (fun x => Real.negMulLog ((P.map Y).rnDeriv volume x).toReal) volume)
-    (h_infvar : ¬ (Integrable (fun ω => (X ω) ^ 2) P ∧ Integrable (fun ω => (Y ω) ^ 2) P)) :
+    (_h_infvar : ¬ (Integrable (fun ω => (X ω) ^ 2) P ∧ Integrable (fun ω => (Y ω) ^ 2) P)) :
     entropyPowerExt (P.map (fun ω => X ω + Y ω))
       ≥ entropyPowerExt (P.map X) + entropyPowerExt (P.map Y) := by
   -- the sum law `ν := P.map (X+Y)` and its absolute continuity.

@@ -97,7 +97,7 @@ theorem integrable_sq_mul_gaussianPDFReal {s : ℝ} (hs : 0 < s) :
 @audit:ok — independent audit (2026-06-01, commit b5e13e2): genuine `Integrable` output (regularity),
 sorryAx-free `[propext, Classical.choice, Quot.sound]`. -/
 theorem convSecondMoment_integrand_integrable
-    (pX : ℝ → ℝ) (hpX_meas : Measurable pX) (hpX_int : Integrable pX volume)
+    (pX : ℝ → ℝ) (_hpX_meas : Measurable pX) (hpX_int : Integrable pX volume)
     {s : ℝ} (hs : 0 < s) (x : ℝ) :
     Integrable (fun y => (x - y) ^ 2 * (pX y * gaussianPDFReal 0 ⟨s, hs.le⟩ (x - y))) volume := by
   -- global bound for `u ↦ u² · g_s(u)`: `u² exp(-u²/(2s)) = 2s·(u²/(2s))·exp(-u²/(2s)) ≤ 2s·exp(-1)`.

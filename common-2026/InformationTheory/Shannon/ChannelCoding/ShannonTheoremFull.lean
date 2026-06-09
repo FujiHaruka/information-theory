@@ -43,7 +43,7 @@ variable {α β : Type*}
   [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β]
 
-omit [DecidableEq α] [Nonempty α] in
+omit [DecidableEq α] [Nonempty α] [DecidableEq β] in
 /-- **D-1'' Phase D 主定理 (hypothesis pass-through 形)**: `hW_pos` 完全除去版
 Shannon noisy channel coding theorem。
 
@@ -68,6 +68,7 @@ theorem shannon_noisy_channel_coding_theorem_general
       ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
         (c : Code M n α β),
         ∀ m, (c.errorProbAt W m).toReal < ε := by
+  classical
   obtain ⟨N, hN⟩ := h_passthrough
   refine ⟨N, fun n hn => ?_⟩
   obtain ⟨δ, hδ_pos, hδ_le, h_tv_bd, M, hM_lb, c, hc_err⟩ := hN n hn

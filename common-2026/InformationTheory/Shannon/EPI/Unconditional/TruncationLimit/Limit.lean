@@ -43,7 +43,7 @@ caller 一様性のため残置。(E) weak-conv portmanteau (`tendsto_iff_forall
 `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free 機械確認)。@audit:ok -/
 theorem truncW_map_density_tendsto_ae
     (W : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
-    (hW : Measurable W) (hW_ac : (P.map W) ≪ volume) :
+    (hW : Measurable W) (_hW_ac : (P.map W) ≪ volume) :
     ∀ᵐ x ∂(volume : Measure ℝ),
       Tendsto (fun n => (((truncW P W n).map W).rnDeriv volume x).toReal) atTop
         (𝓝 (((P.map W).rnDeriv volume x).toReal)) := by

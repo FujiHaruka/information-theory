@@ -816,6 +816,7 @@ lemma birkhoffAverageReal_limsup_comp_T_ae
   rw [← h_shift]
   exact le_antisymm h_le h_ge
 
+omit [IsProbabilityMeasure μ] in
 /-- Measurability of `ω ↦ limsup A_n(f, ω)` (as a real-valued function;
 when the sequence is unbounded the value is the `Real.limsup` junk value
 but the function remains measurable). -/

@@ -62,6 +62,7 @@ noncomputable def channelCodingSmoothMinN
         (expNegMulMinN ((I_lb - R) / 2) (ε' / 2)))
       1
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Phase D.2 (closed-form N)** — `channel_coding_achievability` with the
 existential `N` replaced by `channelCodingSmoothMinN V_X V_Y V_Z I_lb R ε'`.
 

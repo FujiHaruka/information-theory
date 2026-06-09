@@ -121,7 +121,8 @@ lemma comap_T_tailSigma_le (T : Ω → Ω) (hT : Measurable T) :
   refine le_iInf (fun n => ?_)
   rcases n with _ | k
   · -- `n = 0`: `backwardFiltration` at `0` is `comap (T^[0]) m₀ = m₀`.
-    simp [backwardFiltration_apply, Function.iterate_zero]
+    simp only [toDual_zero, backwardFiltration_apply, ofDual_zero, Function.iterate_zero,
+      MeasurableSpace.comap_id]
     -- Goal: `comap T (tailSigma T hT) ≤ m₀`.
     exact (MeasurableSpace.comap_mono (tailSigma_le T hT)).trans hT.comap_le
   · -- `n = k+1`: factor `T^[k+1] = T^[k] ∘ T`.

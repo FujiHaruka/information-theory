@@ -119,6 +119,7 @@ lemma one_div_smooth_n_le
     linarith
   exact h_inv_le.trans h_target
 
+omit [DecidableEq α] [DecidableEq β] in
 set_option maxHeartbeats 1200000 in
 /-- **Phase D.3** — outer `N` construction with simultaneous `δ_n` and max-error
 code. For any `R < capacity W` and `ε > 0`, there exists `N₀` such that for all

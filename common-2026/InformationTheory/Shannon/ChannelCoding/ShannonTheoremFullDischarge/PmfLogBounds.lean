@@ -52,7 +52,7 @@ lemma pmfLog_iidXs_const_in_smooth
   unfold pmfLog
   rw [iidAmbient_map_iidXs p (Channel.smooth W δ) 0, iidAmbient_map_iidXs p W 0]
 
-omit [DecidableEq α] [Nonempty α] in
+omit [DecidableEq α] [Nonempty α] [DecidableEq β] in
 /-- **D.1.1** — `iidYs` の pmfLog は smooth で `log(|β|/δ)` で押さえられる。
 `(W_smooth δ a).real {b} ≥ δ/|β|` を経由した output 下限。 -/
 lemma pmfLog_iidYs_bound_smooth

@@ -244,7 +244,7 @@ theorem differentialEntropy_map_mul_const
   have h_rn3 : (fun x => r⁻¹ * (μ.map (· * c)).rnDeriv volume (x * c)) =ᵐ[volume]
       μ.rnDeriv volume := by
     filter_upwards [h_rn1, h_rn2_comp] with x h1 h2 using
-      (by simp [Pi.smul_apply, smul_eq_mul] at h2; rw [← h2]; exact h1)
+      (by simp only [Pi.smul_apply, smul_eq_mul] at h2; rw [← h2]; exact h1)
   -- Hence `(μ.map (·*c)).rnDeriv volume (x*c) =ᵐ r * μ.rnDeriv volume x`.
   have h_rn4 : (fun x => (μ.map (· * c)).rnDeriv volume (x * c)) =ᵐ[volume]
       fun x => r * μ.rnDeriv volume x := by

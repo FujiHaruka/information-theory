@@ -1173,6 +1173,7 @@ private lemma tendsto_integral_negMulLog_condProbPast (a : α) :
     (bound := fun _ => (1 : ℝ))
     h_meas h_bound_int h_bound h_ae
 
+omit [DecidableEq α] in
 /-- **The SMB integral identity** `∫ pmfLogCondInfty dμZ = entropyRate μ p`.
 
 Combines:
