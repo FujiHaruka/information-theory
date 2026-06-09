@@ -7,7 +7,6 @@ import InformationTheory.Shannon.FisherInfo.V2
 import InformationTheory.Shannon.FisherInfo.Gaussian
 import InformationTheory.Shannon.EPI.Blachman.GaussianWitness
 import InformationTheory.Shannon.DifferentialEntropy
-import InformationTheory.Shannon.HeatFlowPath
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Probability.Distributions.Gaussian.Real
@@ -1081,9 +1080,6 @@ The earlier difference-form Csiszár gap families were deleted as a structurally
 orphaned, false-as-framed dead subgraph; the ratio reframe
 (`epi-csiszar-ratio-reframe-plan`) is the genuine successor.
 -/
-
-open InformationTheory.Shannon (heatFlowPath2 heatFlowPath2_zero heatFlowPath2_one
-  measurable_heatFlowPath2)
 
 /-- **1-source Csiszár log-ratio gap** (genuine monotone object).
 

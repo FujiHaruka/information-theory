@@ -5,7 +5,6 @@ import InformationTheory.Shannon.FisherInfo.V2DeBruijnGenuine
 import InformationTheory.Shannon.EPI.L3Integration
 import InformationTheory.Shannon.EPI.Plumbing
 import InformationTheory.Shannon.DifferentialEntropy
-import InformationTheory.Shannon.HeatFlowPath
 import InformationTheory.Shannon.EPI.G2.HeatFlowContinuity
 import Mathlib.Analysis.SpecialFunctions.Exp
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
@@ -72,8 +71,6 @@ open scoped ENNReal NNReal Topology
 open InformationTheory.Shannon.EntropyPowerInequality
 open InformationTheory.Shannon.EPIStamDischarge
 open InformationTheory.Shannon.EPIL3Integration
-open InformationTheory.Shannon (heatFlowPath2 heatFlowPath2_zero heatFlowPath2_one
-  measurable_heatFlowPath2)
 
 /-! ## §2' — Phase A staged predicate: standard normal pair witness on `(Ω, P)` -/
 
@@ -87,7 +84,7 @@ random variables `Z_X, Z_Y : Ω → ℝ` defined on the *same* probability space
 
 * `P.map Z_X = P.map Z_Y = gaussianReal 0 1` (each is standard normal),
 * `IndepFun X Z_X P`, `IndepFun Y Z_Y P` (each `Z_*` is independent of
-its paired original variable — needed to apply `heatFlowPath2_law`),
+its paired original variable — needed for the path-law step),
 * `IndepFun Z_X Z_Y P` (the noise pair is jointly independent — needed
 for the Gaussian saturation endpoint at `s = 1`, where the path-end
 reduces to a sum of two independent standard normals).

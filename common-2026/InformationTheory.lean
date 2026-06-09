@@ -173,7 +173,6 @@ import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Derivatives
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly.Assembly
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnAssembly
 import InformationTheory.Shannon.FisherInfo.V2DeBruijnGenuine
-import InformationTheory.Shannon.HeatFlowPath
 import InformationTheory.Shannon.AWGN.F2F3Discharge
 -- Wave5 gap-close
 import InformationTheory.Draft.Shannon.CramerLC2PhaseC
