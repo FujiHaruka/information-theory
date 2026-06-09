@@ -65,9 +65,11 @@ instance uniformMeasureβ_isProbabilityMeasure :
   rw [h_sum, smul_eq_mul]
   exact ENNReal.inv_mul_cancel h_card_pos.ne' h_card_ne_top
 
+omit [DecidableEq β] in
 /-- Atom evaluation: `(uniformMeasureβ).real {b} = 1/|β|`. -/
 lemma uniformMeasureβ_real_singleton (b : β) :
     (uniformMeasureβ β).real ({b} : Set β) = (Fintype.card β : ℝ)⁻¹ := by
+  classical
   unfold uniformMeasureβ
   -- ((Fintype.card β)⁻¹ • ∑ b', dirac b') {b} = (Fintype.card β)⁻¹ * 1.
   have h_card_pos : 0 < (Fintype.card β : ℝ≥0∞) := by
@@ -120,7 +122,7 @@ lemma Channel.smooth_isMarkovKernel
   have : (1 : ℝ) - δ + δ = 1 := by ring
   rw [this, ENNReal.ofReal_one]
 
-omit [DecidableEq α] [Nonempty α] in
+omit [DecidableEq α] [Nonempty α] [DecidableEq β] in
 /-- For `δ ∈ [0,1]`, `(W_smooth δ a).real {b} = (1-δ)(W a).real{b} + δ/|β|`. -/
 lemma Channel.smooth_real_singleton
     (W : Channel α β) [IsMarkovKernel W] {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ ≤ 1) (a : α) (b : β) :
@@ -139,7 +141,7 @@ lemma Channel.smooth_real_singleton
       uniformMeasureβ_real_singleton, ENNReal.toReal_ofReal hδ0,
       ENNReal.toReal_ofReal (by linarith : (0 : ℝ) ≤ 1 - δ)]
 
-omit [DecidableEq α] [Nonempty α] in
+omit [DecidableEq α] [Nonempty α] [DecidableEq β] in
 /-- For `δ ∈ (0,1]`, every atom of `W_smooth δ a` has positive probability. -/
 lemma Channel.smooth_pos
     (W : Channel α β) [IsMarkovKernel W] {δ : ℝ} (hδ_pos : 0 < δ) (hδ1 : δ ≤ 1) :
@@ -155,6 +157,7 @@ lemma Channel.smooth_pos
 
 /-! ## Phase B — MI の `δ` 連続性 -/
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- Helper: for any Markov channel `K`, the 3-entropy form of MI in terms of `(K a).real {b}`. -/
 lemma mutualInfoOfChannel_toReal_three_entropy
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
@@ -163,6 +166,7 @@ lemma mutualInfoOfChannel_toReal_three_entropy
       = (∑ a : α, Real.negMulLog (p a))
         + (∑ b : β, Real.negMulLog (∑ a : α, p a * (K a).real {b}))
         - (∑ ab : α × β, Real.negMulLog (p ab.1 * (K ab.1).real {ab.2})) := by
+  classical
   haveI : IsProbabilityMeasure (pmfToMeasure p) := pmfToMeasure_isProbabilityMeasure hp
   rw [mutualInfoOfChannel_eq_HX_add_HY_sub_HZ]
   unfold InformationTheory.Shannon.entropy
@@ -234,6 +238,7 @@ lemma mutualInfoOfChannel_toReal_three_entropy
     · refine Finset.sum_congr rfl (fun b _ => ?_); rw [h_snd b]
   · refine Finset.sum_congr rfl (fun ab _ => ?_); rw [h_id ab]
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- For `δ ∈ [0,1]`, `(mutualInfoOfChannel (pmfToMeasure p) (Channel.smooth W δ)).toReal` expands
 in the 3-entropy form with `(W_smooth δ a).real {b}` substituted via `smooth_real_singleton`. -/
 lemma mutualInfoOfChannel_toReal_smooth_eq
@@ -256,6 +261,7 @@ lemma mutualInfoOfChannel_toReal_smooth_eq
   · refine Finset.sum_congr rfl (fun ab _ => ?_)
     rw [Channel.smooth_real_singleton W hδ0 hδ1]
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- `δ ↦ (mutualInfoOfChannel (pmfToMeasure p) (Channel.smooth W δ)).toReal` is continuous on `[0,1]`. -/
 lemma continuous_mutualInfoOfChannel_right_smooth
     {p : α → ℝ} (hp : p ∈ stdSimplex ℝ α)
@@ -294,6 +300,7 @@ lemma continuous_mutualInfoOfChannel_right_smooth
     · exact (continuous_const.sub continuous_id).mul continuous_const
     · exact continuous_id.mul continuous_const
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Phase B.2**: From `R < capacity W`, extract `δ₀ ∈ (0, 1]` and `p₀ ∈ stdSimplex` with
 `R < (mutualInfoOfChannel (pmfToMeasure p₀) (Channel.smooth W δ₀)).toReal`. -/
 private lemma exists_smooth_capacity_gt
@@ -344,7 +351,7 @@ private lemma exists_smooth_capacity_gt
 
 /-! ## Phase C — TV bound -/
 
-omit [DecidableEq α] [Nonempty α] in
+omit [DecidableEq α] [Nonempty α] [DecidableEq β] in
 /-- **C.2.1**: For `δ ∈ [0,1]`, `∑_b |(W a).real {b} - (W_smooth δ a).real {b}| ≤ 2 δ`. -/
 private lemma Channel.smooth_TV_bound
     (W : Channel α β) [IsMarkovKernel W] {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ ≤ 1) (a : α) :
@@ -599,7 +606,7 @@ private lemma Measure_pi_real_event_diff_le
   exact sum_prod_diff_abs_le_aux a b' h_a_nn h_b_nn h_sum_a h_sum_b
 
 
-omit [DecidableEq α] [Nonempty α] in
+omit [DecidableEq α] [Nonempty α] [DecidableEq β] in
 /-- **C.2.3**: For `δ ∈ [0,1]`, the difference between `errorProbAt` under `W` and `W_smooth δ`
 is bounded by `2 n δ`. -/
 @[entry_point]

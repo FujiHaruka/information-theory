@@ -302,8 +302,8 @@ file's remaining sorry lemmas).
 theorem twoTimeLogRatioGap_hasDerivAt
     (X Y Z_X Z_Y Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     {J_X J_Y : ℝ → ℝ} {s r : ℝ → ℝ}
-    (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
-    (hY : Measurable Y) (hZY : Measurable Z_Y) (hYZY : IndepFun Y Z_Y P)
+    (hX : Measurable X) (hZX : Measurable Z_X) (_hXZX : IndepFun X Z_X P)
+    (hY : Measurable Y) (hZY : Measurable Z_Y) (_hYZY : IndepFun Y Z_Y P)
     (h_path_X : IsMatchedTimePath X Z_X P J_X s)
     (h_path_Y : IsMatchedTimePath Y Z_Y P J_Y r)
     -- de Bruijn regularity for the independently-perturbed components
@@ -333,13 +333,13 @@ theorem twoTimeLogRatioGap_hasDerivAt
     -- `J_X (s t) / J_Y (r t)` density-pinned to the real perturbed-density
     -- Fisher info at the matched time (same pin as the honest single-time
     -- `csiszarLogRatioGap_hasDerivAt`, evaluated at `s t` / `r t`)
-    (hJX_eq : J_X (s t)
+    (_hJX_eq : J_X (s t)
         = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
             ((h_reg_X.reg_at (s t) hst).density_t))
-    (hJY_eq : J_Y (r t)
+    (_hJY_eq : J_Y (r t)
         = InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
             ((h_reg_Y.reg_at (r t) hrt).density_t))
-    (hJX_pos : 0 < J_X (s t)) (hJY_pos : 0 < J_Y (r t)) :
+    (_hJX_pos : 0 < J_X (s t)) (_hJY_pos : 0 < J_Y (r t)) :
     HasDerivAt (fun u : ℝ => twoTimeLogRatioGap X Y Z_X Z_Y P s r u)
       (InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensityReal
           ((h_reg_sum.reg_at (s t + r t) hτ).density_t)
@@ -463,11 +463,11 @@ Quot.sound]` (sorryAx-free).
 theorem twoTimeLogRatioGap_deriv_le_zero
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     {J_X J_Y : ℝ → ℝ} {s r : ℝ → ℝ}
-    (h_path_X : IsMatchedTimePath X Z_X P J_X s)
-    (h_path_Y : IsMatchedTimePath Y Z_Y P J_Y r)
-    {t : ℝ} (ht : 0 < t)
+    (_h_path_X : IsMatchedTimePath X Z_X P J_X s)
+    (_h_path_Y : IsMatchedTimePath Y Z_Y P J_Y r)
+    {t : ℝ} (_ht : 0 < t)
     (J_S : ℝ)
-    (hJX_pos : 0 < J_X (s t)) (hJY_pos : 0 < J_Y (r t)) (hJS_pos : 0 < J_S)
+    (_hJX_pos : 0 < J_X (s t)) (_hJY_pos : 0 < J_Y (r t)) (hJS_pos : 0 < J_S)
     -- harmonic Stam for the matched-time sum (supplied by the genuine producer)
     (h_stam : 1 / J_S ≥ 1 / J_X (s t) + 1 / J_Y (r t)) :
     J_S * (1 / J_X (s t) + 1 / J_Y (r t)) - 1 ≤ 0 := by

@@ -21,7 +21,7 @@ open MeasureTheory ProbabilityTheory Filter Real
 open scoped ENNReal NNReal Topology
 
 variable {Ω : Type*} [MeasurableSpace Ω]
-variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+variable {α : Type*} [Fintype α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
 /-! ### Phase E — 源符号化定理 achievability

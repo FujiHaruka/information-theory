@@ -53,7 +53,7 @@ open InformationTheory.Shannon.Chernoff InformationTheory.Shannon.CsiszarProject
 open InformationTheory.Shannon
 open scoped BigOperators Topology ENNReal
 
-variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+variable {α : Type*} [Fintype α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
 /-! ## Phase A — pmf ↔ Measure bridge (helper) -/

@@ -113,7 +113,7 @@ open InformationTheory.Shannon InformationTheory.Shannon.HoeffdingTradeoff
 open InformationTheory.Shannon.HoeffdingSandwich
 open scoped BigOperators Topology
 
-variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+variable {α : Type*} [Fintype α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
 /-! ## Phase 1 — Full-support predicate (hypothesis pass-through, L-H4-FS) -/
@@ -153,6 +153,7 @@ By `klDivPmf_eq_zero_iff_pmf` (full-support `P₁`), `Q = P₁`. -/
 lemma hoeffdingConstraintSet_eq_singleton_at_alpha_zero
     (P₁ : α → ℝ) (hP₁_pos : ∀ a, 0 < P₁ a) (hP₁_sum : ∑ a, P₁ a = 1) :
     hoeffdingConstraintSet P₁ (0 : ℝ) = {P₁} := by
+  classical
   apply Set.eq_singleton_iff_unique_mem.mpr
   refine ⟨?_, ?_⟩
   · -- P₁ ∈ K (klDivPmf P₁ P₁ = 0 ≤ 0).
@@ -187,6 +188,7 @@ lemma hoeffdingE2_eq_zero_at_alpha_ge_kl
     {alpha : ℝ} (h_alpha_nn : 0 ≤ alpha)
     (h_alpha_ge : klDivPmf P₂ P₁ ≤ alpha) :
     hoeffdingE2 P₁ P₂ alpha = 0 := by
+  classical
   -- ≤ 0: P₂ ∈ K, klDivPmf P₂ P₂ = 0 ⇒ infimum ≤ 0.
   have h_P₂_in : P₂ ∈ hoeffdingConstraintSet P₁ alpha :=
     P₂_mem_hoeffdingConstraintSet P₁ P₂ hP₂_pos hP₂_sum h_alpha_ge
@@ -247,8 +249,9 @@ lemma hoeffding_minimizer_ge_via_predicate
     {P : α → ℝ}
     (hP_mem : P ∈ hoeffdingConstraintSet P₁ alpha)
     (hP_pos : ∀ a, 0 < P a) :
-    klDivPmf Qstar P₂ ≤ klDivPmf P P₂ :=
-  hoeffding_minimizer_ge P₁ P₂ hP₁_pos hP₂_pos hP₁_sum hP₂_sum alpha h_alpha_nn
+    klDivPmf Qstar P₂ ≤ klDivPmf P P₂ := by
+  classical
+  exact hoeffding_minimizer_ge P₁ P₂ hP₁_pos hP₂_pos hP₁_sum hP₂_sum alpha h_alpha_nn
     hQs_mem hQs_full.pos hQs_min hP_mem hP_pos
 
 end InformationTheory.Shannon.HoeffdingSandwichBody

@@ -516,7 +516,6 @@ raw image (modulo the side conditions in `factorisable_subset_constraint`),
 which is contained in `objective '' stdSimplex`, which is compact and
 hence bounded below. -/
 lemma wynerZivFactorizableObjective_image_bddBelow
-    [DecidableEq α] [DecidableEq β]
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
     (d : α → γ → ℝ) (D : ℝ) :
     BddBelow
@@ -545,7 +544,6 @@ witnesses.
 
 `@audit:superseded-by(wynerZivRateFactorizable_convex_in_D_unconditional)` -/
 theorem wynerZivRateFactorizable_convex_of_pmf
-    [DecidableEq α] [DecidableEq β]
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
     (d : α → γ → ℝ) (f : U × β → γ)
     {D₁ D₂ : ℝ}
@@ -601,7 +599,6 @@ is deferred to a separate plan).
 
 `@audit:superseded-by(wynerZivRateFactorizable_convex_in_D_unconditional)` -/
 theorem wynerZivRateFactorizable_convex_in_D
-    [DecidableEq α] [DecidableEq β]
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
     (d : α → γ → ℝ) (f : U × β → γ)
     {D₁ D₂ : ℝ}

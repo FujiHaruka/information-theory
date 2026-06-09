@@ -48,7 +48,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 variable {Ω : Type*} [MeasurableSpace Ω]
 
-omit [Nonempty α] in
+omit [DecidableEq α] [Nonempty α] in
 /-- `uniformOn (univ : Set α)` における singleton の ENNReal mass は `1/|α|`。 -/
 private lemma uniformOn_univ_apply_singleton (x : α) :
     (uniformOn (Set.univ : Set α)) ({x} : Set α) = 1 / (Fintype.card α : ℝ≥0∞) := by
@@ -60,7 +60,7 @@ private lemma uniformOn_univ_apply_singleton (x : α) :
       uniformOn_apply_finset, Finset.univ_inter, Finset.card_singleton,
       Finset.card_univ, Nat.cast_one]
 
-omit [Nonempty α] in
+omit [DecidableEq α] [Nonempty α] in
 /-- `uniformOn (univ : Set α)` における singleton の measureReal は `1/|α|`。 -/
 private lemma uniformOn_univ_real_singleton (x : α) :
     (uniformOn (Set.univ : Set α)).real ({x} : Set α) = (1 : ℝ) / Fintype.card α := by
@@ -68,7 +68,7 @@ private lemma uniformOn_univ_real_singleton (x : α) :
     ENNReal.toReal_div, ENNReal.toReal_one]
   rfl
 
-omit [Nonempty α] in
+omit [DecidableEq α] [Nonempty α] in
 /-- 任意の `μ.map X` は `uniformOn univ` に絶対連続。
 `uniformOn univ` は各 singleton に `1/|α| > 0` を割り当てるので、`U A = 0 ⟹ A` は (有限なので)
 空、ゆえに `P A = 0`。 -/
@@ -110,7 +110,7 @@ private lemma map_absolutelyContinuous_uniformOn_univ
   rw [hA_decomp, measure_biUnion_finset h_pwd h_meas, h_s_empty]
   simp
 
-omit [Nonempty α] in
+omit [DecidableEq α] [Nonempty α] in
 /-- AC + identity ⟹ klDiv finite。 -/
 private lemma klDiv_map_uniformOn_univ_ne_top
     (μ : Measure Ω) [IsProbabilityMeasure μ] (X : Ω → α) (hX : Measurable X) :
@@ -129,6 +129,7 @@ private lemma klDiv_map_uniformOn_univ_ne_top
 
 /-! ## Phase A — identity -/
 
+omit [DecidableEq α] in
 /-- `klDiv (μ.map X) (uniformOn univ) = log |α| - entropy μ X` (Real 形)。 -/
 @[entry_point]
 theorem klDiv_uniformOn_univ_toReal_eq
@@ -284,6 +285,7 @@ theorem entropy_le_log_card
 
 /-! ## Phase C — 等号条件 (Jensen 等号ケース) -/
 
+omit [DecidableEq α] in
 /-- 等号条件: エントロピー = `log |α|` ⟺ 像分布 `μ.map X` が一様。狭義凹の Jensen
 等号ケース (`StrictConcaveOn.map_sum_eq_iff`) から、等号 ⟺ 全 singleton 質量が
 `1/N` で一定 ⟺ 一様分布、を得る。 -/

@@ -94,7 +94,7 @@ open InformationTheory.Shannon.HoeffdingSandwich
 open InformationTheory.Shannon.HoeffdingSandwichBody
 open scoped BigOperators Topology
 
-variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+variable {α : Type*} [Fintype α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 
 /-! ## Phase 1 — Interior predicates (L-H4-FS pass-through) -/

@@ -109,7 +109,7 @@ theorem indepSum_density_ae {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω}
     (hpXY_law : P.map (fun ω => X ω + Y ω)
       = volume.withDensity (fun x => ENNReal.ofReal (pXY x)))
     (hpXY_nn : ∀ x, 0 ≤ pXY x) (hpXY_meas : Measurable pXY)
-    (hpX_int : Integrable pX volume) (hpY_int : Integrable pY volume)
+    (_hpX_int : Integrable pX volume) (_hpY_int : Integrable pY volume)
     (hpXY_lmass : (∫⁻ x, ENNReal.ofReal (pXY x) ∂volume) ≠ ⊤)
     (hpX_lmass : (∫⁻ x, ENNReal.ofReal (pX x) ∂volume) = 1)
     (hpY_lmass : (∫⁻ x, ENNReal.ofReal (pY x) ∂volume) = 1) :
@@ -577,17 +577,17 @@ theorem twoTime_stam_supply {Ω : Type*} [MeasurableSpace Ω]
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y Z_X Z_Y Z : Ω → ℝ)
     (hX : Measurable X) (hY : Measurable Y)
-    (hZX : Measurable Z_X) (hZY : Measurable Z_Y) (hZ : Measurable Z)
-    (hXZX : IndepFun X Z_X P) (hYZY : IndepFun Y Z_Y P) (hXY : IndepFun X Y P)
+    (hZX : Measurable Z_X) (hZY : Measurable Z_Y) (_hZ : Measurable Z)
+    (_hXZX : IndepFun X Z_X P) (_hYZY : IndepFun Y Z_Y P) (hXY : IndepFun X Y P)
     -- joint independence of the two source-noise pairs (supplied by the lift's
     -- `iIndepFun ![X, Y, Z_X, Z_Y]` via `indepFun_prodMk_prodMk`); needed for `A ⊥ B`.
     (hpair_indep : IndepFun (fun ω => (X ω, Z_X ω)) (fun ω => (Y ω, Z_Y ω)) P)
-    (hZX_law : P.map Z_X = gaussianReal 0 1)
-    (hZY_law : P.map Z_Y = gaussianReal 0 1)
-    (hZ_law : P.map Z = gaussianReal 0 1)
-    (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume)
-    (hmomX : Integrable (fun ω => (X ω) ^ 2) P)
-    (hmomY : Integrable (fun ω => (Y ω) ^ 2) P)
+    (_hZX_law : P.map Z_X = gaussianReal 0 1)
+    (_hZY_law : P.map Z_Y = gaussianReal 0 1)
+    (_hZ_law : P.map Z = gaussianReal 0 1)
+    (_hX_ac : (P.map X) ≪ volume) (_hY_ac : (P.map Y) ≪ volume)
+    (_hmomX : Integrable (fun ω => (X ω) ^ 2) P)
+    (_hmomY : Integrable (fun ω => (Y ω) ^ 2) P)
     (h_reg_X : EPIStamDischarge.IsDeBruijnRegularityHyp X Z_X P)
     (h_reg_Y : EPIStamDischarge.IsDeBruijnRegularityHyp Y Z_Y P)
     (h_reg_sum : EPIStamDischarge.IsDeBruijnRegularityHyp (fun ω => X ω + Y ω) Z P) :

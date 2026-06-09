@@ -105,7 +105,7 @@ end OptTuple
 
 section Stratification
 
-variable {α : Type*} [Fintype α] [DecidableEq α]
+variable {α : Type*} [Fintype α]
 
 /-- **Distinct short-string count bound**: a `Nodup` list of strings, all
 of length `≤ L`, has length at most `(|α|+1)^(L+1)`. -/
@@ -129,7 +129,7 @@ end Stratification
 
 section Packing
 
-variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+variable {α : Type*} [Fintype α] [Nonempty α]
 
 /-- **Nat-level packing bound**: for any threshold `L`, the total length
 `T` of a `Nodup` string list dominates `(L+1)` times the number of long
@@ -225,7 +225,9 @@ theorem total_length_ge_count_mul_log
     have hlogc_le : Real.log (c : ℝ) ≤ 4 * Real.log (b1 : ℝ) := by
       have h1 : Real.log (c : ℝ) ≤ Real.log ((b1 ^ 4 : ℕ) : ℝ) := by
         rcases Nat.eq_zero_or_pos c with hc0 | hcpos
-        · simp [hc0]; positivity
+        · simp only [hc0, CharP.cast_eq_zero, Real.log_zero, Nat.cast_pow, Real.log_pow,
+            Nat.cast_ofNat, Nat.ofNat_pos, mul_nonneg_iff_of_pos_left]
+          positivity
         · exact Real.log_le_log (by exact_mod_cast hcpos) (by exact_mod_cast hsmall)
       rw [show ((b1 ^ 4 : ℕ) : ℝ) = (b1 : ℝ) ^ 4 by push_cast; ring,
         Real.log_pow] at h1
@@ -337,6 +339,7 @@ section ZivBound
 
 variable {α : Type*} [Fintype α] [DecidableEq α]
 
+omit [DecidableEq α] in
 /-- **`foldr`-length equals `map`-length sum**: bridges the Phase A
 total-length shape to the `List.sum` shape used by the packing lemma. -/
 theorem foldr_length_eq_map_sum (ws : List (List α)) :

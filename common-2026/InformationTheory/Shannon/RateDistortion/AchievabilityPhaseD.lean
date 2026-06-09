@@ -110,6 +110,7 @@ noncomputable def distortionMax (d : DistortionFn α β) : ℝ :=
   (Finset.univ : Finset (α × β)).sup' Finset.univ_nonempty
     (fun ab : α × β => ((d ab.1 ab.2 : NNReal) : ℝ))
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- `distortionMax` is non-negative. -/
 lemma distortionMax_nonneg (d : DistortionFn α β) : 0 ≤ distortionMax d := by
   unfold distortionMax
@@ -122,6 +123,7 @@ lemma distortionMax_nonneg (d : DistortionFn α β) : 0 ≤ distortionMax d := b
     Finset.le_sup' (f := fun ab : α × β => ((d ab.1 ab.2 : NNReal) : ℝ)) h_mem
   exact le_trans (NNReal.coe_nonneg _) h_le
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- Per-symbol bound: each `((d a b : NNReal) : ℝ) ≤ distortionMax d`. -/
 lemma distortion_le_distortionMax (d : DistortionFn α β) (a : α) (b : β) :
     ((d a b : NNReal) : ℝ) ≤ distortionMax d := by
@@ -129,6 +131,7 @@ lemma distortion_le_distortionMax (d : DistortionFn α β) (a : α) (b : β) :
   exact Finset.le_sup' (f := fun ab : α × β => ((d ab.1 ab.2 : NNReal) : ℝ))
     (Finset.mem_univ (a, b))
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **D.5.1 main** — `blockDistortion d n x y ≤ distortionMax d`. -/
 lemma blockDistortion_le_distortionMax
     (d : DistortionFn α β) (n : ℕ) (x : Fin n → α) (y : Fin n → β) :
@@ -136,7 +139,7 @@ lemma blockDistortion_le_distortionMax
   unfold blockDistortion
   by_cases hn : n = 0
   · subst hn
-    simp
+    simp only [CharP.cast_eq_zero, div_zero, Finset.univ_eq_empty, Finset.sum_empty, mul_zero]
     exact distortionMax_nonneg d
   · have hn_pos : 0 < (n : ℝ) := by exact_mod_cast Nat.pos_of_ne_zero hn
     have h_sum_le :
@@ -161,6 +164,7 @@ lemma blockDistortion_le_distortionMax
     rw [h_simp] at h_mul_le
     exact h_mul_le
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- `expectedJointDistortion` is non-negative (integrand is `NNReal`-valued). -/
 lemma expectedJointDistortion_nonneg
     (μ : Measure Ω) (X : Ω → α) (Y : Ω → β) (d : DistortionFn α β) :
@@ -169,6 +173,7 @@ lemma expectedJointDistortion_nonneg
   exact integral_nonneg (fun _ => NNReal.coe_nonneg _)
 
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **D.5.3 (simplified form) — codebook-fixed average distortion decomposition.**
 
 For a fixed deterministic codebook `c : Codebook M n β` and the joint-typical

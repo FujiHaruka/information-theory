@@ -54,7 +54,7 @@ noncomputable def condTrunc (P : Measure Ω) (X Y : Ω → ℝ) (n : ℕ) : Meas
 /-- `P (truncSet X Y n) → 1` (n→∞、和集合が全体 + `IsProbabilityMeasure`)。
 ゆえに十分大きい n で `P (truncSet X Y n) ≠ 0`。 -/
 theorem measure_truncSet_tendsto_one (P : Measure Ω) [IsProbabilityMeasure P]
-    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) :
+    {X Y : Ω → ℝ} (_hX : Measurable X) (_hY : Measurable Y) :
     Tendsto (fun n => P (truncSet X Y n)) atTop (𝓝 1) := by
   have h := tendsto_measure_iUnion_atTop (μ := P) (truncSet_mono (X := X) (Y := Y))
   rw [iUnion_truncSet X Y, measure_univ] at h
@@ -72,7 +72,7 @@ theorem eventually_measure_truncSet_pos (P : Measure Ω) [IsProbabilityMeasure P
 
 /-- `condTrunc P X Y n` は確率測度 (positive mass の n で)。 -/
 theorem isProbabilityMeasure_condTrunc (P : Measure Ω) [IsProbabilityMeasure P]
-    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) {n : ℕ}
+    {X Y : Ω → ℝ} (_hX : Measurable X) (_hY : Measurable Y) {n : ℕ}
     (hpos : P (truncSet X Y n) ≠ 0) :
     IsProbabilityMeasure (condTrunc P X Y n) := by
   unfold condTrunc
@@ -166,7 +166,7 @@ theorem indepFun_condTrunc (P : Measure Ω) [IsProbabilityMeasure P]
 /-- **a.c. 保存**: `(P.map X) ≪ volume` → `((condTrunc P X Y n).map X) ≪ volume`。
 `cond_absolutelyContinuous` (`(condTrunc) ≪ P`) + `Measure.map` の a.c. mono で合成。 -/
 theorem map_condTrunc_absolutelyContinuous (P : Measure Ω) [IsProbabilityMeasure P]
-    {X Y : Ω → ℝ} (hX : Measurable X) {Z : Ω → ℝ} (hZ : Measurable Z)
+    {X Y : Ω → ℝ} (_hX : Measurable X) {Z : Ω → ℝ} (hZ : Measurable Z)
     (hZ_ac : (P.map Z) ≪ volume) {n : ℕ} :
     ((condTrunc P X Y n).map Z) ≪ volume := by
   have h_cond : condTrunc P X Y n ≪ P := ProbabilityTheory.cond_absolutelyContinuous
@@ -296,7 +296,7 @@ honest: `hZ_ent` (= `P.map Z` のエントロピー可積分) は上流 regulari
 theorem integrable_negMulLog_map_condTrunc (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
     {Z : Ω → ℝ} (hZ : Z = X ∨ Z = Y)
-    (hZ_ac : (P.map Z) ≪ volume)
+    (_hZ_ac : (P.map Z) ≪ volume)
     (hZ_ent : Integrable (fun x => Real.negMulLog ((P.map Z).rnDeriv volume x).toReal) volume)
     {n : ℕ} (hpos : P (truncSet X Y n) ≠ 0) :
     Integrable
@@ -366,7 +366,7 @@ theorem integrable_negMulLog_map_condTrunc (P : Measure Ω) [IsProbabilityMeasur
 a.c. ゆえ `withDensity_rnDeriv_eq` で復元 + a.e. finite rnDeriv で `ofReal ∘ toReal = id`。
 @audit:ok -/
 theorem map_condTrunc_withDensity_toReal_rnDeriv (P : Measure Ω) [IsProbabilityMeasure P]
-    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) {Z : Ω → ℝ} (hZ : Measurable Z)
+    {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) {Z : Ω → ℝ} (_hZ : Measurable Z)
     {n : ℕ} (hpos : P (truncSet X Y n) ≠ 0)
     (hZ_ac : ((condTrunc P X Y n).map Z) ≪ volume) :
     (condTrunc P X Y n).map Z
@@ -482,7 +482,7 @@ theorem rnDeriv_map_condTrunc_sum_ae (P : Measure Ω) [IsProbabilityMeasure P]
 @audit:ok -/
 theorem map_condTrunc_sum_concentrated (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) {n : ℕ}
-    (hpos : P (truncSet X Y n) ≠ 0) :
+    (_hpos : P (truncSet X Y n) ≠ 0) :
     ((condTrunc P X Y n).map (fun ω => X ω + Y ω))
       (Set.Icc (-(2 * (n : ℝ))) (2 * (n : ℝ)))ᶜ = 0 := by
   haveI : IsProbabilityMeasure (condTrunc P X Y n) :=
@@ -549,7 +549,7 @@ transitively genuine 化。
 theorem integrable_negPart_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y)
     (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) (hXY : IndepFun X Y P)
-    (hX_ent : Integrable (fun x => Real.negMulLog ((P.map X).rnDeriv volume x).toReal) volume)
+    (_hX_ent : Integrable (fun x => Real.negMulLog ((P.map X).rnDeriv volume x).toReal) volume)
     (hY_ent : Integrable (fun x => Real.negMulLog ((P.map Y).rnDeriv volume x).toReal) volume)
     {n : ℕ} (hpos : P (truncSet X Y n) ≠ 0) :
     Integrable
@@ -945,7 +945,7 @@ Gaussian 参照 ν を一般参照に generalize した版。
 @audit:ok -/
 theorem differentialEntropy_le_cross_entropy {μ ν : Measure ℝ}
     [IsProbabilityMeasure μ] [IsProbabilityMeasure ν]
-    (hμ_ac : μ ≪ volume) (hν_ac : ν ≪ volume) (hμν : μ ≪ ν)
+    (hμ_ac : μ ≪ volume) (_hν_ac : ν ≪ volume) (hμν : μ ≪ ν)
     (hμ_ent : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume)
     (h_cross_int : Integrable
       (fun x => Real.log ((ν.rnDeriv volume x).toReal)) μ) :
