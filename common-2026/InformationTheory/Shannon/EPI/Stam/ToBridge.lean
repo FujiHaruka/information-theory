@@ -20,9 +20,7 @@ import Mathlib.Order.Monotone.Basic
 
 This file holds the Csiszár-coupling ratio path-derivative lemmas (the genuine
 `AntitoneOn` / continuity chain along the heat-flow path) consumed by the EPI
-case-1 closure, plus the standard-normal-pair richness predicate
-`IsStamScalingNoiseHyp` whose honest lift-form inhabitant lives in
-`EPINoiseExtension`.
+case-1 closure.
 
 The former in-place scaling/noise route through this file
 (`IsStamToEPIScalingHyp` / `stamToEPIScaling_holds` /
@@ -32,18 +30,15 @@ The former in-place scaling/noise route through this file
 has been **deleted** (2026-06-09, `epi-richness-route-b-plan` B2): the in-place
 noise existential `stamScalingNoise_exists` was a `false-statement` defect
 (false on atomic measures), and the scaling sub-predicate / headline decls built
-on it were dead code (consumer ripple 0). The EPI conclusion is now carried by
-the honest successor
-`EPINoiseExtension.entropy_power_inequality_via_lift` (sorryAx-free), which
-transports EPI from the lift space `Ω × ℝ × ℝ` using `entropyPower`'s law-only
-property + `IsStamInequalityResidual`'s carrier-free defeq.
+on it were dead code (consumer ripple 0). The honest richness predicate
+`IsStamScalingNoiseHyp` + its 2-noise lift inhabitant in `EPINoiseExtension`
+were likewise removed (2026-06-09) once superseded by the live **3-noise** lift
+route `EPINoiseExtension.entropy_power_inequality_via_lift3` (sorryAx-free),
+which transports EPI from `Ω × ℝ × ℝ × ℝ` and is what the density-form EPI
+conclusions consume.
 
 ## Surviving members
 
-* `IsStamScalingNoiseHyp X Y P` — the genuine standard-normal-pair existential
-  predicate (§2'). Its honest lift-form inhabitant is the live
-  `EPINoiseExtension.stamScalingNoise_exists_on_lift`.
-* `isStamScalingNoiseHyp_symm` — symmetry of that predicate (§2').
 * the Csiszár-cluster ratio path-derivative lemmas
   (`entropyPower_hasDerivAt_of_diffEnt_hasDerivAt`,
   `csiszarLogRatioGap_hasDerivAt`, `csiszarLogRatioGap_deriv_le_zero`,
@@ -53,7 +48,6 @@ property + `IsStamInequalityResidual`'s carrier-free defeq.
 
 ## File map
 
-* §2' — Phase A staged predicate: standard normal pair witness on `(Ω, P)`
 * §2'' — Phase A A-2: path-derivative of the 1-source gap
 * §2''' — Phase A A-3: 1-source Stam reduction `g'(t) ≤ 0`
 * §5 — Symmetry, congruence, pass-through helpers
@@ -71,85 +65,6 @@ open scoped ENNReal NNReal Topology
 open InformationTheory.Shannon.EntropyPowerInequality
 open InformationTheory.Shannon.EPIStamDischarge
 open InformationTheory.Shannon.EPIL3Integration
-
-/-! ## §2' — Phase A staged predicate: standard normal pair witness on `(Ω, P)` -/
-
-/-- **Standard normal pair witness on an arbitrary probability space**
-(Phase A A-1 staged honest predicate, sister sub-plan
-`epi-stam-to-conclusion-phaseA-plan`).
-
-Cover-Thomas Ch.17 Csiszár scaling argument requires two standard normal
-random variables `Z_X, Z_Y : Ω → ℝ` defined on the *same* probability space
-`(Ω, P)` as the original `X, Y`, with:
-
-* `P.map Z_X = P.map Z_Y = gaussianReal 0 1` (each is standard normal),
-* `IndepFun X Z_X P`, `IndepFun Y Z_Y P` (each `Z_*` is independent of
-its paired original variable — needed for the path-law step),
-* `IndepFun Z_X Z_Y P` (the noise pair is jointly independent — needed
-for the Gaussian saturation endpoint at `s = 1`, where the path-end
-reduces to a sum of two independent standard normals).
-
-**Mathlib status (loogle, 2026-05-25)**: there is **no** existing
-Mathlib API to extend an arbitrary probability measure `(Ω, P)` with two
-fresh independent standard-normal random variables jointly independent
-of a pre-existing pair `(X, Y)`. Search results:
-
-* `MeasureTheory.AtomlessProbability` → `unknown identifier`
-* `ProbabilityTheory.IsAtomless` → `unknown identifier`
-* `ProbabilityTheory.exists_iIndepFun` → `unknown identifier`
-* `exists_measurable_indepFun` → `unknown identifier`
-* `MeasureTheory.NoAtoms` exists as a class
-(`Mathlib/MeasureTheory/Measure/Typeclasses/NoAtoms.lean:34`) but the
-noise extension constructor is absent.
-* The Central Limit Theorem use of `gaussianReal` in
-`Mathlib/Probability/CentralLimitTheorem.lean:79` works on a *different*
-ambient probability space `P'` and assumes an i.i.d. sequence on `P`,
-so it cannot be specialized to construct fresh Gaussians on the original
-`P`.
-
-InformationTheory internal search (`rg "exists_indep|standard_normal_pair|
-noiseExtension|extendByGaussian"`) likewise returns 0 hits.
-
-**Non-vacuous**: the 7-conjunction body is not trivially dischargeable —
-the `P.map _ = gaussianReal 0 1` conjuncts rule out the `Z_* := 0` collapse
-(`P.map (fun _ => 0) = Measure.dirac 0 ≠ gaussianReal 0 1`). The genuine content
-is the *existence* of such fresh jointly independent standard normals (Cover-Thomas
-Ch.17 implicit assumption "carries enough auxiliary randomness"). No Mathlib API
-constructs them in place (loogle 0 hits — `ProbabilityTheory.exists_iIndepFun`,
-`MeasureTheory.Measure.IsAtomless`, `exists_measurable_indepFun` all `unknown
-identifier`); and the predicate is not the EPI conclusion in disguise (it concerns
-noise existence, not an entropy-power inequality).
-
-**Honesty status**: this `def` is a *genuine existential richness statement* (no
-circular / `:True` / vacuous shape). The **in-place** instantiation on an
-arbitrary `(Ω, P)` is **provably false** on atomic measures (e.g. `Ω = Unit`,
-`P = Measure.dirac ()`), so the route through this file was deleted (2026-06-09,
-`epi-richness-route-b-plan` B2). The honest inhabitant that *does* hold is
-`EPINoiseExtension.stamScalingNoise_exists_on_lift` on the lift space
-`Ω × ℝ × ℝ` (0 sorry, live), which feeds
-`EPINoiseExtension.entropy_power_inequality_via_lift` (the honest EPI successor).
-This predicate carries **no** `@residual` / `@audit:*` tag of its own. -/
-def IsStamScalingNoiseHyp {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
-  ∃ (Z_X Z_Y : Ω → ℝ),
-    Measurable Z_X ∧ Measurable Z_Y ∧
-    P.map Z_X = gaussianReal 0 1 ∧ P.map Z_Y = gaussianReal 0 1 ∧
-    IndepFun X Z_X P ∧ IndepFun Y Z_Y P ∧ IndepFun Z_X Z_Y P
-
-/-- **Symmetry of the standard-normal-pair predicate**: if `(Z_X, Z_Y)`
-witnesses `IsStamScalingNoiseHyp X Y P`, then `(Z_Y, Z_X)` witnesses
-`IsStamScalingNoiseHyp Y X P` (swap the roles).
-
-`@audit:ok` (trivial existential repackage; no analytic content). -/
-theorem isStamScalingNoiseHyp_symm
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω}
-    (h : IsStamScalingNoiseHyp X Y P) :
-    IsStamScalingNoiseHyp Y X P := by
-  obtain ⟨Z_X, Z_Y, hZX_meas, hZY_meas, hZX_law, hZY_law,
-          hXZX, hYZY, hZXZY⟩ := h
-  exact ⟨Z_Y, Z_X, hZY_meas, hZX_meas, hZY_law, hZX_law, hYZY, hXZX,
-         hZXZY.symm⟩
 
 /-! ## §2'' — Phase A A-2: path-derivative of the 1-source gap
 
