@@ -158,6 +158,7 @@ formulation are:
 
 /-! ### Phase D-(b) — Main theorem -/
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Channel coding achievability (Cover-Thomas 7.7.1, achievability half).**
 For any rate `R < I(p; W)` and target error probability `ε' > 0`, there exists
 `N` such that for all `n ≥ N` there is a block code of length `n` with at least

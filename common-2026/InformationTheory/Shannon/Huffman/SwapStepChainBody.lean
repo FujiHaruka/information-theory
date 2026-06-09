@@ -74,7 +74,7 @@ theorem kraft_sum_perm_chain2_eq
 
 /-! ### Section B — permutation chain の expectedLength 不変性 (pointwise-eq) -/
 
-omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+omit [DecidableEq α] [LinearOrder α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- **permutation chain の expectedLength 不変性 (2-step, pointwise-eq)**: 2 permutation の
 合成 `σ ∘ τ` で `∀ x, l (σ (τ x)) = l x` が成立するとき expectedLength は不変. -/
 @[entry_point]
@@ -91,7 +91,7 @@ theorem expectedLength_perm_chain2_invariant
   congr 1
   exact_mod_cast h_eq_pt x
 
-omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+omit [DecidableEq α] [LinearOrder α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- **permutation chain の expectedLength `≤` 形**: 上記等式の `≤` 形. -/
 @[entry_point]
 theorem expectedLength_perm_chain2_le
@@ -180,7 +180,7 @@ theorem swapStepLeChainHypothesis_via_subpredicates
 
 /-! ### Section E — n-step swap normalization lift -/
 
-omit [Nonempty α] [MeasurableSingletonClass α] in
+omit [LinearOrder α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- **2-step swap chain の expectedLength 不変 (pointwise eq swaps)**: 2 つの swap が
 それぞれ `ll a = ll b` 型の値等しい pair であるとき、合成後も expectedLength は不変. -/
 @[entry_point]

@@ -195,12 +195,12 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 /-- `H(X) ≥ 0` (typed RV form): `entropy_nonneg` の RV-form alias. -/
 @[entry_point]
 theorem entropy_nonneg_rv
-    {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
+    {α : Type*} [Fintype α] [Nonempty α]
     [MeasurableSpace α] [MeasurableSingletonClass α]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (X : Ω → α) (hX : Measurable X) :
-    0 ≤ entropy μ X :=
-  entropy_nonneg μ X hX
+    0 ≤ entropy μ X := by
+  classical exact entropy_nonneg μ X hX
 
 /-! ### Mutual information -/
 

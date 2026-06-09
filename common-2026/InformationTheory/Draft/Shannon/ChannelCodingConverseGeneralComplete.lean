@@ -399,7 +399,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
-omit [DecidableEq α] [DecidableEq β] in
+omit [DecidableEq M] [DecidableEq α] [DecidableEq β] in
 /-- **Channel coding converse, memoryless DMC, hypothesis-form (Cover-Thomas Thm 7.9)**.
 
 Variant of `channel_coding_converse_general_chainRule` (D-2 既存) with the per-summand

@@ -675,7 +675,7 @@ theorem codebookAvgFailureStrong_tendsto_zero
             refine ⟨xy.swap, hxy, ?_⟩
             simp [Prod.swap]
           · rintro ⟨ab, hab, rfl⟩
-            simp [Prod.swap]
+            simp only [Prod.swap, Set.mem_preimage, Prod.mk.eta]
             exact hab
         show ((W.prod (P_X n)) R_set).toReal
             = (((P_X n).prod W) (Prod.swap '' R_set)).toReal

@@ -469,6 +469,7 @@ omit [DecidableEq α] in
 lemma le_commonDepth (l : α → ℕ) (a : α) : l a ≤ commonDepth l :=
   Finset.le_sup (Finset.mem_univ a)
 
+omit [DecidableEq α] in
 /-- **主定理**: Kraft 充足 ⟹ prefix code 存在. -/
 @[entry_point]
 theorem exists_prefix_code_of_kraft
@@ -479,6 +480,7 @@ theorem exists_prefix_code_of_kraft
       Function.Injective c ∧
       (∀ a, (c a).length = l a) ∧
       IsPrefixFree c := by
+  classical
   haveI : NeZero D := ⟨by omega⟩
   set L := commonDepth l with hL_def
   have hL_bound : ∀ a, l a ≤ L := le_commonDepth l

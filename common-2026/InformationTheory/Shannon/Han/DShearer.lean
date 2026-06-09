@@ -36,6 +36,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 variable {Ω : Type*} [MeasurableSpace Ω]
 
+omit [DecidableEq α] in
 /-- Shearer の不等式 (整数 covering 形)。
 `S : ι → Finset (Fin n)` が各 `i : Fin n` を少なくとも `k` 回被覆するとき:
 $k \cdot H(X_{[n]}) \le \sum_j H(X_{S_j})$。 -/

@@ -96,6 +96,7 @@ reads `i` as the raw `X^n` (via the trivial inverse) and `j` as the AEP-decoded 
 This achieves SW rate pair `(log|α|, R_Y)` for any `R_Y > H(Y)`, with `errorProb → 0`.
 -/
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- The "X-uncompressed, Y-AEP" SW encoder pair achievability.
 
 Given an AEP Y-side encoder/decoder pair `(c_Y, d_Y)` (from `source_coding_achievability`),
@@ -127,6 +128,7 @@ theorem slepian_wolf_achievability_via_Y_aep
                     (f_Y n)
                     (fun p => ((Fintype.equivFin (Fin n → α)).invFun p.1, d_Y n p.2)))
         atTop (𝓝 0) := by
+  classical
   -- Apply Y-side AEP source coding achievability.
   obtain ⟨M_Y, hM_Y_pos, c_Y, d_Y, hRate, hPe⟩ :=
     source_coding_achievability μ Ys hYs hposY hindepY_full hidentY hR_Y

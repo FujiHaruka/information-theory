@@ -60,7 +60,7 @@ E 非増加 / 正値 の `l_norm` が存在する。
 `SwapNormalizationHypothesis` の disjunctive `_h_min` より強い。docstring 参照. -/
 @[entry_point]
 theorem swap_normalization_strong
-    {β : Type u} [Fintype β] [DecidableEq β] [LinearOrder β] [Nonempty β]
+    {β : Type u} [Fintype β] [LinearOrder β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (Q : Measure β) [IsProbabilityMeasure Q]
     (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
