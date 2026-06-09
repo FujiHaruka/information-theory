@@ -263,8 +263,8 @@ either. `@audit:ok` retained.
 @audit:ok -/
 private theorem convDensityAdd_deriv2_poly_moment_majorant
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
-    (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
+    (hpX_int : Integrable pX volume) (_hpX_mass : (∫ y, pX y ∂volume) = 1)
+    (_hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume)
     {t : ℝ} (ht : 0 < t) :
     ∃ bound : ℝ → ℝ, Integrable bound volume ∧
       ∀ᵐ x ∂volume, ∀ s : ℝ, (hs : s ∈ Set.Ioo (t/2) (2*t)) →

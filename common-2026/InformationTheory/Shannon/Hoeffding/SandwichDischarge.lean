@@ -52,6 +52,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 
 /-! ## Phase 1 — Constructive full-support minimizer (3-case) -/
 
+omit [DecidableEq α] in
 /-- **Constructive 3-case minimizer**: an explicit full-support `Qstar` realising
 `hoeffdingE2 P₁ P₂ alpha = klDivPmf Qstar P₂`, with `Qstar ∈ K`. -/
 lemma exists_hoeffding_minimizer_full_support
@@ -60,6 +61,7 @@ lemma exists_hoeffding_minimizer_full_support
     {alpha : ℝ} (h_alpha_nn : 0 ≤ alpha) :
     ∃ Qstar ∈ hoeffdingConstraintSet P₁ alpha,
       hoeffdingE2 P₁ P₂ alpha = klDivPmf Qstar P₂ ∧ (∀ a, 0 < Qstar a) := by
+  classical
   rcases eq_or_lt_of_le h_alpha_nn with h_alpha0 | h_alpha_pos
   · -- case (a) alpha = 0: Qstar = P₁, K = {P₁}, E2 = 0 = klDivPmf P₁ P₁.
     subst h_alpha0
@@ -100,6 +102,7 @@ This is the one genuinely-discharged asymptotic inequality of the file. Outside 
 boundary it is *not* generally true — see the judgement log in Phase 3 (it fails at
 `alpha = 0`, where `E₂(0) = D(P₁‖P₂) > 0 = liminf rate`). -/
 
+omit [DecidableEq α] in
 /-- **achievability at the boundary** (`klDivPmf P₂ P₁ ≤ alpha`, fully
 unconditional): there `hoeffdingE2 = 0 ≤ liminf rate`, since the rate is
 non-negative. -/
@@ -112,6 +115,7 @@ theorem hoeffding_tradeoff_achievability_at_boundary
     hoeffdingE2 P₁ P₂ alpha ≤
       Filter.liminf (fun n : ℕ =>
         -((1 : ℝ) / n) * Real.log (steinTypeII_at_level_pmf P₁ P₂ n alpha)) atTop := by
+  classical
   -- E2 = 0 on the boundary.
   rw [hoeffdingE2_eq_zero_at_alpha_ge_kl P₁ P₂ hP₁_pos hP₂_pos hP₁_sum hP₂_sum
     h_alpha_nn h_alpha_ge]

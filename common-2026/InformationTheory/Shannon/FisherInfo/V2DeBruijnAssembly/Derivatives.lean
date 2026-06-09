@@ -139,7 +139,7 @@ uniformity (a benign precondition, not a defect). The differentiability is genui
 `HasDerivAt`/`Differentiable` bundle.
 @audit:ok -/
 theorem convDensityAdd_hasDerivAt_self
-    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (pX : ℝ → ℝ) (_hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) {t : ℝ} (ht : 0 < t) (x : ℝ) :
     HasDerivAt (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩))
       (deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)) x) x := by
@@ -251,7 +251,7 @@ every hypothesis is pX regularity / context; `hpX_nn` unused, carried only for f
 uniformity.
 @audit:ok -/
 theorem convDensityAdd_deriv_hasDerivAt_self
-    (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    (pX : ℝ → ℝ) (_hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) {t : ℝ} (ht : 0 < t) (x : ℝ) :
     HasDerivAt (deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩)))
       (deriv (deriv (convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩))) x) x := by

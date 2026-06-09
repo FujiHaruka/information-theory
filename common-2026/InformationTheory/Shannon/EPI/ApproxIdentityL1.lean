@@ -178,7 +178,7 @@ private theorem gaussianPDFReal_le_pref (v : ℝ≥0) (y : ℝ) :
 `convDensityAdd_sub_self_eq` による差分表示 + 連続版 Minkowski + 定数 `g_t y ≥ 0` の括り出し。
 @audit:ok -/
 private theorem convDensityAdd_eLpNorm_le_psi
-    {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
+    {pX : ℝ → ℝ} (_hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) {t : ℝ} (ht : 0 < t) :
     eLpNorm (EPIConvDensity.convDensityAdd pX (gaussianPDFReal 0 t.toNNReal) - pX) 1 volume
       ≤ ∫⁻ y, ENNReal.ofReal (gaussianPDFReal 0 t.toNNReal y) * translL1 pX y ∂volume := by
@@ -424,7 +424,7 @@ Gauss 集中 (二次モーメント Chebyshev `gaussianTail_lintegral_le`) の s
 theorem convDensityAdd_tendsto_L1_zero
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume)
-    (hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume) :
+    (_hpX_mom : Integrable (fun y => y ^ 2 * pX y) volume) :
     Tendsto (fun t : ℝ =>
       eLpNorm (EPIConvDensity.convDensityAdd pX (gaussianPDFReal 0 t.toNNReal) - pX) 1 volume)
       (𝓝[Set.Ioi 0] 0) (𝓝 0) := by

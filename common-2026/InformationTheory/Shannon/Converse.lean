@@ -72,6 +72,7 @@ private lemma entropy_of_uniform_msg
       Real.log_inv]
   field_simp
 
+omit [DecidableEq M] in
 /-- Single-shot Shannon converse: for a uniformly distributed message `Msg`
 transmitted via channel output `Yo` and decoded by `decoder`,
 `log |M| ≤ I(Msg; Yo) + h(Pe) + Pe · log(|M| - 1)`,
@@ -92,6 +93,7 @@ theorem shannon_converse_single_shot
           (InformationTheory.MeasureFano.errorProb μ Msg Yo decoder) +
         InformationTheory.MeasureFano.errorProb μ Msg Yo decoder *
           Real.log ((Fintype.card M : ℝ) - 1) := by
+  classical
   -- Local abbrev
   set Pe := InformationTheory.MeasureFano.errorProb μ Msg Yo decoder
   have hM_hat_meas : Measurable (decoder ∘ Yo) := hdecoder.comp hYo
@@ -149,6 +151,7 @@ log |M| ≤ I(Msg; Yo) + h(Pe) + Pe·log(|M|-1)  -- shannon_converse_single_shot
 ```
 -/
 
+omit [DecidableEq M] in
 /-- Single-shot Shannon converse, Markov encoder 版:
 Markov chain `Msg → encoder ∘ Msg → Yo` (β-form) のもとで、
 `log |M| ≤ I(encoder ∘ Msg; Yo) + h(Pe) + Pe · log(|M| - 1)`. -/

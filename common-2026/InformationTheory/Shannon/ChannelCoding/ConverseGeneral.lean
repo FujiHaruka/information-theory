@@ -52,7 +52,7 @@ variable {α β : Type*}
   [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β]
 
-omit [DecidableEq α] [DecidableEq β] in
+omit [DecidableEq M] [DecidableEq α] [DecidableEq β] in
 /-- Channel coding converse, **general input** form (Markov encoder, chain-rule decomposition).
 
 `Msg : Ω → M` 一様、`encoder : M → (Fin n → α)`、`Ys : Fin n → Ω → β`、
@@ -99,6 +99,7 @@ theorem channel_coding_converse_general_chainRule
         InformationTheory.MeasureFano.errorProb μ Msg
           (fun ω i => Ys i ω) decoder *
           Real.log ((Fintype.card M : ℝ) - 1) := by
+  classical
   -- Auto-derived measurability.
   have h_encoder : Measurable encoder := measurable_of_countable _
   have h_X_full : Measurable (fun ω => encoder (Msg ω)) := h_encoder.comp hMsg

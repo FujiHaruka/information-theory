@@ -164,6 +164,7 @@ variable {α : Type*} [MeasurableSpace α]
 variable {β : Type*} [Fintype β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
+omit [DecidableEq M] in
 /-- **Feedback channel coding converse — memoryless 完全形 (Cover-Thomas Thm 7.12)**.
 
 Variant of `channel_coding_feedback_converse` with `h_per_letter` replaced by the
@@ -191,6 +192,7 @@ theorem channel_coding_feedback_converse_memoryless
         InformationTheory.MeasureFano.errorProb μ Msg
           (fun ω i => Ys i ω) decoder *
           Real.log ((Fintype.card M : ℝ) - 1) := by
+  classical
   have h_per_letter := feedback_per_letter_bound μ Msg Xs Ys hMsg hXs hYs h_memo
   exact channel_coding_feedback_converse C hC_finite μ Msg Xs Ys decoder
     hMsg hYs hdecoder h_per_letter h_capacity hMsg_uniform hcard

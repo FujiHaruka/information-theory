@@ -68,11 +68,12 @@ distinct `c ≠ b` with `l b ≤ l c`. In particular the maximum length is attai
 least two symbols. -/
 @[entry_point]
 theorem strict_kraft_one_implies_pairing
-    {β : Type*} [Fintype β] [DecidableEq β]
+    {β : Type*} [Fintype β]
     (l : β → ℕ) (hl_pos : ∀ c, 0 < l c)
     (hkraft : ∑ c : β, ((2 : ℝ)) ^ (-(l c : ℤ)) = 1)
     (b : β) (hb_max : ∀ c, l c ≤ l b) :
     ∃ c, c ≠ b ∧ l b ≤ l c := by
+  classical
   by_contra hcon
   push Not at hcon
   -- hcon : ∀ c, c ≠ b → l c < l b
@@ -112,7 +113,7 @@ length is attained by **two distinct** symbols. This is the structural fact Cove
 uses to argue that the two longest leaves of an optimal binary code are siblings. -/
 @[entry_point]
 theorem exists_two_equal_longest
-    {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
+    {β : Type*} [Fintype β] [Nonempty β]
     (l : β → ℕ) (hl_pos : ∀ c, 0 < l c)
     (hkraft : ∑ c : β, ((2 : ℝ)) ^ (-(l c : ℤ)) = 1) :
     ∃ c₁ c₂ : β, c₁ ≠ c₂ ∧ (∀ d, l d ≤ l c₁) ∧ l c₁ = l c₂ := by

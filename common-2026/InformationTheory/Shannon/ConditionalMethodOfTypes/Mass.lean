@@ -49,6 +49,7 @@ exponential bound. Additionally requires marginal-compatibility hypotheses
 (`hmarg_X`, `hmarg_Y`) which are typically supplied by the caller's construction
 (e.g. `rdAmbient qStar` provides both marginals from a single joint pmf). -/
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Marginal-Y identification** (helper): the Y-marginal of `qZ` equals `qY`,
 i.e., `qY(b) = ∑_a qZ(a, b)`. -/
 private lemma qY_eq_sum_qZ

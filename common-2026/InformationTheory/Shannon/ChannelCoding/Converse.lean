@@ -40,7 +40,7 @@ variable {α β : Type*}
   [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β]
 
-omit [DecidableEq α] [DecidableEq β] in
+omit [DecidableEq M] [DecidableEq α] [DecidableEq β] in
 /-- Channel coding converse, n-variable i.i.d. form (Markov encoder 版).
 
 `Msg : Ω → M` 一様、`encoder : M → (Fin n → α)`、`Ys : Fin n → Ω → β`、
@@ -92,6 +92,7 @@ theorem channel_coding_converse_iid
         InformationTheory.MeasureFano.errorProb μ Msg
           (fun ω i => Ys i ω) decoder *
           Real.log ((Fintype.card M : ℝ) - 1) := by
+  classical
   -- Auto-derived: encoder/Yo measurability + StandardBorel/Nonempty for `Fin n → α`,
   -- `Fin n → β`.
   have h_encoder : Measurable encoder := measurable_of_countable _

@@ -37,6 +37,7 @@ variable {α β : Type*}
 
 /-! ## Phase D.4 — main theorem (Shannon noisy channel coding, fully discharged) -/
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **D-1'' Phase D 主定理 (full discharge)**: `R < capacity W` で任意 `ε > 0` に対し
 十分大きい `n` で max-error < ε を達成する `M ≥ ⌈exp(nR)⌉` 個の符号が存在。
 `hW_pos` 完全除去版。 -/
@@ -49,6 +50,7 @@ theorem shannon_noisy_channel_coding_theorem_general_full
       ∃ (M : ℕ) (_hM_lb : Nat.ceil (Real.exp ((n : ℝ) * R)) ≤ M)
         (c : Code M n α β),
         ∀ m, (c.errorProbAt W m).toReal < ε := by
+  classical
   obtain ⟨N, hN⟩ := exists_N_for_smooth_achievability_uniform W hR_pos hR hε
   refine ⟨N, fun n hn => ?_⟩
   obtain ⟨δ, hδ_pos, hδ_le, h_tv_bd, M, hM_lb, c, hc_err⟩ := hN n hn

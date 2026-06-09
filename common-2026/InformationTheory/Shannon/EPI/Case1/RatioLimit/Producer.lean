@@ -221,10 +221,10 @@ isDeBruijnRegularityHyp_of_methodX_unitnoise` = `[propext, Classical.choice, Quo
 (sorryAx-free, machine-checked 2026-06-06). No deprecated tags in this declaration. -/
 noncomputable def isDeBruijnRegularityHyp_of_methodX_unitnoise
     (X Z_X : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
-    (hX : Measurable X) (hZX : Measurable Z_X) (hXZX : IndepFun X Z_X P)
+    (hX : Measurable X) (_hZX : Measurable Z_X) (_hXZX : IndepFun X Z_X P)
     (hZX_law : P.map Z_X = gaussianReal 0 1)
     (hX_ac : (P.map X) ≪ volume) (h_mom_X : Integrable (fun ω => (X ω) ^ 2) P)
-    (h_fisher_X : InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity
+    (_h_fisher_X : InformationTheory.Shannon.FisherInfoV2.fisherInfoOfDensity
         (fun x => ((P.map X).rnDeriv volume x).toReal) ≠ ∞)
     -- Design (b) input-regularity preconditions (regularity, NOT load-bearing):
     -- they assert only that the input density `pX` is a *regular* L¹ density (differentiable,

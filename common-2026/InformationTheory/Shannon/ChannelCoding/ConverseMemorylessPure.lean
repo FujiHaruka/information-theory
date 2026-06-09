@@ -636,6 +636,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
+omit [DecidableEq M] [DecidableEq α] [DecidableEq β] in
 /-- **Channel coding converse, semi-pure memoryless DMC version (D-2'' γ-chain, partial)**.
 
 `IsMemorylessChannel` 仮定下で per-letter Markov chain `X^n → X_i → Y_i` を自動派生し
@@ -673,6 +674,7 @@ theorem channel_coding_converse_general_memoryless_pure
         InformationTheory.MeasureFano.errorProb μ Msg
           (fun ω i => Ys i ω) decoder *
           Real.log ((Fintype.card M : ℝ) - 1) := by
+  classical
   set Xs : Fin n → Ω → α := fun i ω => encoder (Msg ω) i with hXs_def
   have h_encoder : Measurable encoder := measurable_of_countable _
   have hXs_meas : ∀ i, Measurable (Xs i) := fun i =>

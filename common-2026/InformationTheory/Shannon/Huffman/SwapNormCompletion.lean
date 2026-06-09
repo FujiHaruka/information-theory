@@ -110,6 +110,7 @@ lemma realKraft_eq_one_iff_nat_eq
 
 /-! ### 縮約 step -/
 
+omit [DecidableEq β] in
 /-- **shorten-to-Kraft=1 (主結果, 総語長 induction motor)**: 正値 feasible 符号は、
 各点でより短い正値完全符号 (Kraft = 1) に縮められる。`n = ∑ ll x` 上の strong induction. -/
 private theorem shorten_to_kraft_one_aux
@@ -216,6 +217,7 @@ private theorem shorten_to_kraft_one_aux
         IH (∑ x : β, ll' x) htotal_lt ll' hll'_pos hll'_kraft rfl
       exact ⟨l1, hl1_pos, fun x => le_trans (hl1_le x) (hll'_le x), hl1_kraft⟩
 
+omit [DecidableEq β] in
 /-- **shorten-to-Kraft=1 (主結果)**: 正値 feasible 符号は、各点でより短い正値完全符号
 (Kraft = 1) に縮められる。 -/
 @[entry_point]

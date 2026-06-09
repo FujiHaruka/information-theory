@@ -48,6 +48,7 @@ variable {α β : Type*}
   [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α]
   [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSpace β] [MeasurableSingletonClass β]
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Phase D.0** (δ-uniform 化形): `R < capacity W` から `p₀ ∈ stdSimplex`、
 `δ_B ∈ (0, 1]`、`R₁ > R` を抽出。`∀ δ ∈ (0, δ_B]` で
 `R₁ < I(p₀; W_smooth δ).toReal` が成立。 -/
@@ -59,6 +60,7 @@ theorem exists_smooth_capacity_gt_uniform
       ∃ R₁ : ℝ, R < R₁ ∧
       ∀ δ ∈ Set.Ioc (0 : ℝ) δ_B,
         R₁ < (mutualInfoOfChannel (pmfToMeasure p₀) (Channel.smooth W δ)).toReal := by
+  classical
   -- Step 1: extract p₀ with R < I(p₀; W).toReal.
   obtain ⟨p₀, hp₀_mem, hp₀_lt⟩ := capacity_lt_implies_exists_pmf W hR
   set I₀ : ℝ := (mutualInfoOfChannel (pmfToMeasure p₀) W).toReal with hI₀_def
@@ -105,6 +107,7 @@ theorem exists_smooth_capacity_gt_uniform
   have hδ_mem_Icc : δ ∈ Set.Icc (0 : ℝ) 1 := ⟨hδ_pos.le, hδ_le_1⟩
   exact h_η ⟨hδ_mem_ball, hδ_mem_Icc⟩
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Phase D.0'** (pSmooth full-support 統合形): `R < capacity W` から
 `p₀, δ_p, δ_B`、および `I_lb > R` を抽出。`pSmooth p₀ δ_p` は各成分 > 0 の full-support
 pmf であり、`∀ δ ∈ (0, δ_B]` で `I_lb < I(pSmooth p₀ δ_p; W_smooth δ).toReal` が成立。 -/
@@ -118,6 +121,7 @@ theorem pSmooth_smooth_capacity_gt_uniform
       pSmooth p₀ δ_p ∈ stdSimplex ℝ α ∧
       ∀ δ ∈ Set.Ioc (0 : ℝ) δ_B,
         I_lb < (mutualInfoOfChannel (pmfToMeasure (pSmooth p₀ δ_p)) (Channel.smooth W δ)).toReal := by
+  classical
   -- Step 1: extract p₀ with R < I(p₀; W).toReal.
   obtain ⟨p₀, hp₀_mem, hp₀_lt⟩ := capacity_lt_implies_exists_pmf W hR
   set I₀ : ℝ := (mutualInfoOfChannel (pmfToMeasure p₀) W).toReal with hI₀_def

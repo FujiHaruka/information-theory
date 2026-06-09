@@ -144,7 +144,7 @@ theorem huffmanLength_optimal_wrapper_explicit
 
 /-! ### Section I — `Equiv.swap` permutation の sum invariance 再公開 -/
 
-omit [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+omit [LinearOrder α] [DecidableEq α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- **Kraft sum の任意 permutation 不変性**: `Equiv.swap` 経由でなく任意 permutation で
 Kraft sum が不変. -/
 @[entry_point]
@@ -155,7 +155,7 @@ theorem kraft_sum_perm_eq
   show (∑ x : α, ((2 : ℝ)) ^ (-(l (σ x) : ℤ))) = _
   exact Equiv.sum_comp σ (fun x => ((2 : ℝ)) ^ (-(l x : ℤ)))
 
-omit [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
+omit [LinearOrder α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- **expectedLength の permutation 不変性 (`l a = l (σ a)` 条件)**: 任意 permutation `σ`
 で `∀ x, l (σ x) = l x` ⇒ expectedLength は不変. `σ` が恒等 (= 値 nontrivial) でない場合
 にも、すべての pair で `l` が等しいときに使える. -/

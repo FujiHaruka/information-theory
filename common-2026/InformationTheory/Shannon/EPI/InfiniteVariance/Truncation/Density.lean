@@ -211,7 +211,7 @@ Quot.sound]` (sorryAx-free、body 独自 sorry 0、機械確認)。0 sorry / 0 r
 @audit:ok -/
 theorem convDensity_condTrunc_le_const_mul (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) {n₀ : ℕ}
+    (_hX_ac : (P.map X) ≪ volume) (_hY_ac : (P.map Y) ≪ volume) {n₀ : ℕ}
     (hpos₀ : P (truncSet X Y n₀) ≠ 0) :
     ∃ C : ℝ, 0 ≤ C ∧ ∀ᶠ n in atTop, ∀ᵐ z ∂volume,
       convDensityAdd (fun y => ((condTrunc P X Y n).map X).rnDeriv volume y |>.toReal)
@@ -334,7 +334,7 @@ interface を保つ意図 (defect でない)。(3) sufficiency: 各成分 bound 
 @audit:ok -/
 theorem convDensityAdd_condTrunc_le_const_mul_at (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (hX_ac : (P.map X) ≪ volume) (hY_ac : (P.map Y) ≪ volume) {n : ℕ}
+    (_hX_ac : (P.map X) ≪ volume) (_hY_ac : (P.map Y) ≪ volume) {n : ℕ}
     (hpos : P (truncSet X Y n) ≠ 0) :
     ∃ C : ℝ, 0 ≤ C ∧ ∀ᵐ z ∂volume,
       convDensityAdd (fun y => ((condTrunc P X Y n).map X).rnDeriv volume y |>.toReal)
