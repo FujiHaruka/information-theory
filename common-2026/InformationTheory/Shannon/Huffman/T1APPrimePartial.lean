@@ -45,7 +45,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty �
 
 /-! ### 恒等 swap (`a = m`) trivial 系 -/
 
-omit [Fintype α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
+omit [Fintype α] [LinearOrder α] [Nonempty α] [MeasurableSpace α] [MeasurableSingletonClass α] in
 /-- **恒等 swap**: `Equiv.swap m m` は `Equiv.refl α` と等しい (Mathlib 既存
 `Equiv.swap_self` を `Equiv.refl` 形に整理). `l ∘ Equiv.swap m m = l`. -/
 @[entry_point]
@@ -56,7 +56,7 @@ theorem swap_step_le_self_comp (l : α → ℕ) (m : α) :
   rw [Equiv.swap_self]
   rfl
 
-omit [Nonempty α] [MeasurableSingletonClass α] in
+omit [LinearOrder α] [Nonempty α] [MeasurableSingletonClass α] in
 /-- **恒等 swap の `swap_step_le` 適用**: `a = m` のとき `swap_step_le` の結論は trivial
 (swap = identity ⇒ `l' = l`, Kraft / expected length / 値 swap が即時等号). -/
 @[entry_point]
@@ -101,7 +101,7 @@ expected length 非増加) が pass-through で成立. これは `SwapNormalizat
 ことを意味するものではない. -/
 @[entry_point]
 theorem SwapNormalizationHypothesis_trivial_when_eq
-    {β : Type*} [Fintype β] [DecidableEq β] [LinearOrder β]
+    {β : Type*} [Fintype β] [LinearOrder β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     (Q : Measure β) [IsProbabilityMeasure Q]
     (ll : β → ℕ) (hll_pos : ∀ x, 0 < ll x)
@@ -150,7 +150,7 @@ omit [Fintype α] [Nonempty α] [MeasurableSpace α]
 
 /-! #### Wave 4-F — Equiv.swap の合成可換性 / 値 case の系 -/
 
-omit [Fintype α] [Nonempty α] [MeasurableSpace α]
+omit [Fintype α] [LinearOrder α] [Nonempty α] [MeasurableSpace α]
   [MeasurableSingletonClass α] in
 /-- **swap の値 (left)**: `(Equiv.swap a m) a = m`. Mathlib `Equiv.swap_apply_left` の
 非 `∘` 版を独立 lemma に持ち上げ. 後続 proof で `show` ステップを 1 つ削減. -/
@@ -158,7 +158,7 @@ omit [Fintype α] [Nonempty α] [MeasurableSpace α]
 theorem swap_apply_left' (a m : α) : (Equiv.swap a m) a = m :=
   Equiv.swap_apply_left a m
 
-omit [Fintype α] [Nonempty α] [MeasurableSpace α]
+omit [Fintype α] [LinearOrder α] [Nonempty α] [MeasurableSpace α]
   [MeasurableSingletonClass α] in
 /-- **swap の値 (right)**: `(Equiv.swap a m) m = a`. -/
 @[entry_point]

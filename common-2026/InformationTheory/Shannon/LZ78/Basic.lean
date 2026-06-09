@@ -340,6 +340,7 @@ variable [Fintype α] [DecidableEq α] [Nonempty α]
   [MeasurableSpace α] [MeasurableSingletonClass α]
 variable [MeasurableSpace Ω]
 
+omit [DecidableEq α] in
 /-- **T4-A. Lempel–Ziv 78 asymptotic optimality (Cover–Thomas Theorem
 13.5.3, two-sided sandwich form)**.
 
@@ -420,6 +421,7 @@ theorem lz78_asymptotic_optimality
     with ω hl hu hba hbb
   exact tendsto_of_le_liminf_of_limsup_le hl hu hba hbb
 
+omit [DecidableEq α] in
 /-- **LZ78 asymptotic optimality — two-sided combine form**.
 
 Public alias for `lz78_asymptotic_optimality` with the same four genuine
@@ -474,6 +476,7 @@ theorem lz78_asymptotic_optimality_two_sided
   lz78_asymptotic_optimality μ p lz78EncodingLength
     h_lower h_upper h_bdd_above h_bdd_below
 
+omit [DecidableEq α] in
 /-- **LZ78 asymptotic optimality — combine from limsup and liminf alone**.
 
 Convenience helper that *does not* require the two `IsBoundedUnder`

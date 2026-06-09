@@ -150,7 +150,7 @@ condMI X_i Y^n Xprefix
 `I(Xprefix; X_i) ≠ ∞` の有限性は finite-alphabet 仮定から `mutualInfo_ne_top` で得る。 -/
 @[entry_point]
 lemma h_split_of_strong
-    [Fintype α] [MeasurableSingletonClass α] [DecidableEq α]
+    [Fintype α] [MeasurableSingletonClass α]
     [Fintype β] [MeasurableSingletonClass β]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (Ys : Fin n → Ω → β)
@@ -255,6 +255,7 @@ variable {α : Type*} [Fintype α] [DecidableEq α] [Nonempty α]
 variable {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
+omit [DecidableEq M] [DecidableEq α] [DecidableEq β] in
 /-- **Channel coding converse, strong memoryless DMC version (D-2'')**.
 
 `IsMemorylessChannelStrong` 仮定下で per-letter mutual information の和に減衰する形。
@@ -299,6 +300,7 @@ theorem channel_coding_converse_general_memoryless_strong
         InformationTheory.MeasureFano.errorProb μ Msg
           (fun ω i => Ys i ω) decoder *
           Real.log ((Fintype.card M : ℝ) - 1) := by
+  classical
   -- Set up per-letter and joint X RVs.
   set Xs : Fin n → Ω → α := fun i ω => encoder (Msg ω) i with hXs_def
   have h_encoder : Measurable encoder := measurable_of_countable _

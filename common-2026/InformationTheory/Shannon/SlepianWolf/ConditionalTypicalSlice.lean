@@ -70,6 +70,7 @@ lemma mem_conditionalTypicalSlice_iff
     x ∈ conditionalTypicalSlice μ Xs Ys n ε y ↔
       (x, y) ∈ jointlyTypicalSet μ Xs Ys n ε := Iff.rfl
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- The slice is finite (it lives in the finite ambient space `Fin n → α`). -/
 lemma conditionalTypicalSlice_finite
     (μ : Measure Ω) (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
@@ -94,6 +95,7 @@ lemma conditionalTypicalSlice_empty_of_y_not_typical
 
 /-! ## Main bound — fiber cardinality -/
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Conditional typical slice size bound**. For any Y-block `y`,
 the cardinality of the X-fiber of the jointly typical set at `y` is at
 most `exp(n · (H(X, Y) - H(Y) + 2ε))`. The right-hand side equals
@@ -301,7 +303,7 @@ theorem conditionalTypicalSlice_card_le
       rw [hempty]
       simp
     rw [hF_empty]
-    simp
+    simp only [Finset.card_empty, CharP.cast_eq_zero, ge_iff_le]
     exact (Real.exp_pos _).le
 
 end InformationTheory.Shannon.ChannelCoding

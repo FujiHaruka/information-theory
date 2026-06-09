@@ -164,6 +164,7 @@ theorem blockLogAvgZ_ge_negLogQInftyZ_minus_error
     exact h
   linarith
 
+omit [DecidableEq α] in
 /-- **Birkhoff for `pmfLogCondInfty` on the 2-sided side**: applying Birkhoff to
 `(μZ, shiftZ, pmfLogCondInfty)`, using `ergodic_shiftZ`, `measurePreserving_shiftZ`,
 `integrable_pmfLogCondInfty`, and `integral_pmfLogCondInfty_eq_entropyRate`. -/
@@ -175,6 +176,7 @@ theorem birkhoffAverage_pmfLogCondInfty_tendsto
         (fun n : ℕ => negLogQInftyZ μ p.toStationaryProcess n x / (n : ℝ))
         Filter.atTop
         (𝓝 (entropyRate μ p.toStationaryProcess)) := by
+  classical
   have h_mp := measurePreserving_shiftZ μ p.toStationaryProcess
   have h_erg := ergodic_shiftZ μ p
   have h_int := integrable_pmfLogCondInfty μ p.toStationaryProcess
@@ -364,6 +366,7 @@ theorem blockLogAvgZ_bddAbove_ae
     funext (fun n => h_blockLogAvgZ_factor x n)
   rw [h_eq]; exact hx
 
+omit [DecidableEq α] in
 /-- **Z-side liminf bound**: μZ-a.s., `liminf blockLogAvgZ n x ≥ entropyRate`. -/
 @[entry_point]
 theorem liminf_blockLogAvgZ_ge_entropyRate
@@ -407,6 +410,7 @@ theorem liminf_blockLogAvgZ_ge_entropyRate
   rw [h_lhs.liminf_eq] at h_liminf_le
   exact h_liminf_le
 
+omit [DecidableEq α] in
 /-- **Final transfer to Ω-side**: μ-a.s., `entropyRate ≤ liminf blockLogAvg n ω`.
 
 Bridge: `blockLogAvgZ n x` depends only on `natProj x : ℕ → α`. We transfer the
@@ -499,6 +503,7 @@ theorem algoet_cover_liminf_bound
 
 /-! ## D.7 — Main theorem (hypothesis-free assembly) -/
 
+omit [DecidableEq α] in
 /-- **Shannon–McMillan–Breiman theorem** (Cover–Thomas 16.8.1).
 
 For a stationary ergodic process with finite alphabet `α`, the per-symbol
@@ -518,8 +523,9 @@ theorem shannon_mcmillan_breiman
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : ErgodicProcess μ α) :
     ∀ᵐ ω ∂μ, Filter.Tendsto
       (fun n => blockLogAvg μ p.toStationaryProcess n ω)
-      Filter.atTop (𝓝 (entropyRate μ p.toStationaryProcess)) :=
-  shannon_mcmillan_breiman_of_sandwich μ p
+      Filter.atTop (𝓝 (entropyRate μ p.toStationaryProcess)) := by
+  classical
+  exact shannon_mcmillan_breiman_of_sandwich μ p
     (algoet_cover_liminf_bound μ p)
     (algoet_cover_limsup_bound μ p)
     (blockLogAvg_bddAbove_ae μ p)

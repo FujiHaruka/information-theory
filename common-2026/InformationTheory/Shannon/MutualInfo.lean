@@ -179,12 +179,12 @@ private lemma integrable_llr_map_pair_prod_marginals
     [Fintype Y] [MeasurableSingletonClass Y]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Ω → X) (Yo : Ω → Y)
-    (hXs : Measurable Xs) (hYo : Measurable Yo) :
+    (_hXs : Measurable Xs) (_hYo : Measurable Yo) :
     Integrable
       (llr (μ.map (fun ω => (Xs ω, Yo ω))) ((μ.map Xs).prod (μ.map Yo)))
       (μ.map (fun ω => (Xs ω, Yo ω))) := by
   haveI : IsProbabilityMeasure (μ.map (fun ω => (Xs ω, Yo ω))) :=
-    Measure.isProbabilityMeasure_map (hXs.prodMk hYo).aemeasurable
+    Measure.isProbabilityMeasure_map (_hXs.prodMk _hYo).aemeasurable
   refine ⟨(measurable_llr _ _).aestronglyMeasurable, ?_⟩
   rw [hasFiniteIntegral_iff_enorm, lintegral_fintype]
   exact ENNReal.sum_lt_top.mpr fun _ _ =>

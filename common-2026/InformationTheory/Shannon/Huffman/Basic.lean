@@ -473,7 +473,7 @@ lemma huffmanLengthAux_pos_of_mem
     -- 場合分け: a ∈ step.1.1 ∨ a ∈ step.2.1.1
     by_cases h_in_AB : a ∈ step.1.1 ∨ a ∈ step.2.1.1
     · simp [h_in_AB]
-    · simp [h_in_AB]
+    · simp only [h_in_AB, ↓reduceIte, gt_iff_lt]
       -- 残: 0 < huffmanLengthAux step.2.2 a
       -- ∃ p ∈ step.2.2, a ∈ p.1 を示す
       push Not at h_in_AB
@@ -600,7 +600,7 @@ lemma huffmanLengthAux_const_on_group
         rw [hp_x1] at ha hb
         have ha_AB : a ∈ step.1.1 ∨ a ∈ step.2.1.1 := Or.inl ha
         have hb_AB : b ∈ step.1.1 ∨ b ∈ step.2.1.1 := Or.inl hb
-        simp [ha_AB, hb_AB]
+        simp only [ha_AB, ↓reduceIte, hb_AB, Nat.add_right_cancel_iff]
         -- merged ∈ s'', a ∈ merged.1 = x1.1 ∪ x2.1, b ∈ same
         have ha_merged : a ∈ step.1.1 ∪ step.2.1.1 := Finset.mem_union_left _ ha
         have hb_merged : b ∈ step.1.1 ∪ step.2.1.1 := Finset.mem_union_left _ hb
@@ -615,7 +615,7 @@ lemma huffmanLengthAux_const_on_group
           rw [hp_x2] at ha hb
           have ha_AB : a ∈ step.1.1 ∨ a ∈ step.2.1.1 := Or.inr ha
           have hb_AB : b ∈ step.1.1 ∨ b ∈ step.2.1.1 := Or.inr hb
-          simp [ha_AB, hb_AB]
+          simp only [ha_AB, ↓reduceIte, hb_AB, Nat.add_right_cancel_iff]
           have ha_merged : a ∈ step.1.1 ∪ step.2.1.1 := Finset.mem_union_right _ ha
           have hb_merged : b ∈ step.1.1 ∪ step.2.1.1 := Finset.mem_union_right _ hb
           have hmerged_in :
@@ -644,7 +644,7 @@ lemma huffmanLengthAux_const_on_group
             rintro (hb1 | hb2)
             · exact (Finset.disjoint_left.mp h_disj_x1 hb) hb1
             · exact (Finset.disjoint_left.mp h_disj_x2 hb) hb2
-          simp [ha_notAB, hb_notAB]
+          simp only [ha_notAB, ↓reduceIte, hb_notAB]
           exact ih step.2.2.card hs''_lt (s := step.2.2) hg''
             (p := p) hp_s'' (a := a) (b := b) ha hb rfl
     · rw [huffmanLengthAux_eq_zero s (by omega) hg]

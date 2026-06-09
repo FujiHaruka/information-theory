@@ -46,7 +46,7 @@ open scoped ENNReal NNReal
 `negMulLog (1/N) = (log N) / N` の代数で和を `#A · (log N)/N = log N` に潰す。 -/
 @[entry_point]
 theorem entropy_uniformOn_eq_log_card
-    {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
+    {β : Type*} [Fintype β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     {A : Finset β} (hA : A.Nonempty) :
     entropy (uniformOn (A : Set β)) (id : β → β) = Real.log A.card := by
@@ -126,7 +126,7 @@ theorem entropy_uniformOn_eq_log_card
 -/
 @[entry_point]
 theorem entropy_le_log_image_card
-    {β γ : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
+    {β γ : Type*} [Fintype β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     [Fintype γ] [DecidableEq γ] [Nonempty γ]
     [MeasurableSpace γ] [MeasurableSingletonClass γ]

@@ -257,7 +257,6 @@ that the achievability/converse proofs rely on; the full *joint* attainment
 over `(q, f)` requires further hypotheses on `(γ, U, β)` and is deferred. -/
 @[entry_point]
 theorem wynerZivRatePmf_attained_slice
-    [DecidableEq α] [DecidableEq β]
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ)
     (f₀ : U × β → γ)
     (h_ne : ({q : α × β × U → ℝ | (q, f₀) ∈ WynerZivConstraint U P_XY d D}).Nonempty) :

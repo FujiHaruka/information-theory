@@ -44,9 +44,9 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 `Fin (n+1) → α` ↔ `α × (Fin n → α)` reshape used in the chain-rule induction. -/
 lemma entropy_measurableEquiv_comp
     {β γ : Type*}
-    [Fintype β] [DecidableEq β] [Nonempty β]
+    [Fintype β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
-    [Fintype γ] [DecidableEq γ] [Nonempty γ]
+    [Fintype γ] [Nonempty γ]
     [MeasurableSpace γ] [MeasurableSingletonClass γ]
     (μ : Measure Ω) (Xs : Ω → β) (hXs : Measurable Xs) (e : β ≃ᵐ γ) :
     entropy μ (fun ω => e (Xs ω)) = entropy μ Xs := by
@@ -69,20 +69,22 @@ lemma entropy_measurableEquiv_comp
       Measure.map_apply e.measurable (measurableSet_singleton _),
       hpre]
 
+omit [DecidableEq α] in
 /-- conditioner side reshape: condEntropy is invariant under push-forward by
 a `MeasurableEquiv` on the conditioner. Reduces to two applications of
 `entropy_measurableEquiv_comp` via the H(Y,X) = H(Y) + H(X|Y) identity. -/
 lemma condEntropy_measurableEquiv_comp
     {β γ : Type*}
-    [Fintype β] [DecidableEq β] [Nonempty β]
+    [Fintype β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
-    [Fintype γ] [DecidableEq γ] [Nonempty γ]
+    [Fintype γ] [Nonempty γ]
     [MeasurableSpace γ] [MeasurableSingletonClass γ]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xc : Ω → α) (hXc : Measurable Xc)
     (Yo : Ω → β) (hYo : Measurable Yo) (e : β ≃ᵐ γ) :
     InformationTheory.MeasureFano.condEntropy μ Xc (fun ω => e (Yo ω))
       = InformationTheory.MeasureFano.condEntropy μ Xc Yo := by
+  classical
   -- H(Yo, Xc) = H(Yo) + H(Xc | Yo)
   have h₁ := entropy_pair_eq_entropy_add_condEntropy μ Yo Xc hYo hXc
   -- H(e∘Yo, Xc) = H(e∘Yo) + H(Xc | e∘Yo)
@@ -106,7 +108,7 @@ lemma condEntropy_measurableEquiv_comp
 被積分関数 `∑ x, negMulLog (q.real {x})` は probability measure 上の負エントロピー和
 (各項 ≥ 0)。 -/
 theorem condEntropy_nonneg
-    {W : Type*} [Fintype W] [DecidableEq W] [Nonempty W]
+    {W : Type*} [Fintype W] [Nonempty W]
       [MeasurableSpace W] [MeasurableSingletonClass W]
     {Y : Type*} [MeasurableSpace Y]
     (μ : Measure Ω) [IsProbabilityMeasure μ]

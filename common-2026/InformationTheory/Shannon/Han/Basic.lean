@@ -49,6 +49,7 @@ noncomputable def jointEntropyExcept
     (μ : Measure Ω) (Xs : Fin n → Ω → α) (i : Fin n) : ℝ :=
   entropy μ (fun ω (j : {j // j ≠ i}) => Xs j ω)
 
+omit [DecidableEq α] in
 /-- n 変数 chain rule for Shannon joint entropy:
 `H(X_0, …, X_{n-1}) = ∑ i, H(X_i | X_0, …, X_{i-1})`.
 
@@ -63,6 +64,7 @@ theorem jointEntropy_chain_rule
           InformationTheory.MeasureFano.condEntropy μ (Xs i)
             (fun ω (j : Fin i.val) =>
               Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) := by
+  classical
   induction n with
   | zero =>
     -- RHS: empty sum over Fin 0
@@ -127,7 +129,8 @@ theorem jointEntropy_chain_rule
         hg.prodMk hf
       have h2 := entropy_measurableEquiv_comp μ
         (fun ω => (Xs (Fin.last n) ω, fun (j : Fin n) => Xs j.castSucc ω)) h_swap_meas e2
-      simp [e2, MeasurableEquiv.prodComm] at h2
+      simp only [MeasurableEquiv.prodComm, MeasurableEquiv.coe_mk, Equiv.prodComm_apply,
+        Prod.swap_prod_mk, e2] at h2
       -- h2: entropy μ (fun ω => (fun (j : Fin n) => Xs j.castSucc ω, Xs (last n) ω))
       --      = entropy μ (fun ω => (Xs (last n) ω, fun (j : Fin n) => Xs j.castSucc ω))
       rw [jointEntropy, ← h1, ← h2, hf_def, hg_def]
@@ -228,6 +231,7 @@ private def fullSplitMEquiv {n : ℕ} (i : Fin n) :
     (Fin n → α) ≃ᵐ α × ((Fin i.val → α) × ({j : Fin n // i < j} → α)) :=
   (piExceptMEquiv i).trans (MeasurableEquiv.prodCongr (.refl α) (exceptSplitMEquiv i))
 
+omit [DecidableEq α] in
 set_option linter.unusedSectionVars false in
 /-- 個別不等式: 各 `i : Fin n` で `H(Xs) - H(Xs except i) ≤ H(Xs i | prefix)`。
 Phase A の chain rule + 「条件付けで減る」を 1 段ずつ組み合わせる。 -/
@@ -238,6 +242,7 @@ private lemma han_single_bound
     jointEntropy μ Xs - jointEntropyExcept μ Xs i
       ≤ InformationTheory.MeasureFano.condEntropy μ (Xs i)
           (fun ω (j : Fin i.val) => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω) := by
+  classical
   -- Definitions
   set pref : Ω → (Fin i.val → α) :=
       fun ω j => Xs ⟨j.val, j.isLt.trans i.isLt⟩ ω with hpref_def
@@ -322,6 +327,7 @@ private lemma han_single_bound
   -- Note: prefSuff = fun ω => (pref ω, suff ω), so they match definitionally.
   linarith
 
+omit [DecidableEq α] in
 set_option linter.unusedSectionVars false in
 /-- Han の不等式: 任意個 `n` の確率変数 `Xs : Fin n → Ω → α` に対し
 `(n - 1) · H(Xs) ≤ ∑ i, H(Xs except i)`。
@@ -336,6 +342,7 @@ theorem han_inequality
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i)) :
     ((n : ℝ) - 1) * jointEntropy μ Xs
       ≤ ∑ i : Fin n, jointEntropyExcept μ Xs i := by
+  classical
   -- Sum the per-i bound
   have h_sum_bound : ∑ i : Fin n,
         (jointEntropy μ Xs - jointEntropyExcept μ Xs i)

@@ -101,6 +101,7 @@ noncomputable def distortionTypicalSet
           ≤ expectedJointDistortion μ (Xs 0) (Ys 0) d + δ}
 
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **B.2.1**: on `distortionTypicalSet`, the empirical block distortion is bounded
 by the joint expectation plus `δ`. This is the structural fact that drives the
 distortion bound on encoder-success events in Cover-Thomas 10.5 (10.85). -/
@@ -128,6 +129,7 @@ Cover-Thomas 10.5 (10.85) の核となる single-codeword typical-match probabil
 これは `jointlyTypicalSet_prob_tendsto_one` (`ChannelCoding.lean:402`) が直接供給する形。
 -/
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Size lower bound on the jointly typical set** (mirror of
 `jointlyTypicalSet_card_le`). If under joint law the event
 "`(jointRV Xs n ω, jointRV Ys n ω) ∈ JTS`" has measure ≥ `1 - η`, then
@@ -249,6 +251,7 @@ private theorem jointlyTypicalSet_card_ge
   rw [h_rhs, hJTimg_card] at h_mul
   exact h_mul
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Anti-direction (lower-bound) joint-AEP indep probability**.
 The probability under the product measure `μX^n × μY^n` that `(X̃, Ỹ)` lies in
 the jointly typical set is bounded **below** by `(1 - η) · exp(-n · (I + 3ε))`,

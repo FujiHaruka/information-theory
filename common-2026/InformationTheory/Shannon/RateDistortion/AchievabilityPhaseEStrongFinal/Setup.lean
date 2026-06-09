@@ -193,6 +193,7 @@ theorem encoder_strong_failure_prob_le
 
 /-! ## Generic-encoder Phase D bound (mirror of `source_avg_distortion_le_simpler`) -/
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- Generic-encoder Phase D.5. Verbatim mirror of `source_avg_distortion_le_simpler`
 with the joint-typical encoder replaced by an arbitrary encoder function. -/
 theorem source_avg_distortion_le_simpler_generic
@@ -596,6 +597,7 @@ lemma codebookAvgFailureStrong_nonneg
 
 /-! ### Entropy ↔ mutualInfoPmf bridge in the `rdAmbient` setting -/
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- For `μ := rdAmbient qStar`, the entropy difference
 `H(X) + H(Y) − H(Z)` equals `mutualInfoPmf qStar`. -/
 lemma rdAmbient_entropy_diff_eq_mutualInfoPmf
@@ -605,6 +607,7 @@ lemma rdAmbient_entropy_diff_eq_mutualInfoPmf
       - entropy (rdAmbient qStar)
           (jointSequence (α := α) (β := β) iidXs iidYs 0)
       = mutualInfoPmf qStar := by
+  classical
   haveI : IsProbabilityMeasure (pmfToMeasure (α := α × β) qStar) :=
     pmfToMeasure_isProbabilityMeasure hqStar_simp
   -- Each entropy is a negMulLog sum over the marginal pmf.
@@ -637,6 +640,7 @@ lemma rdAmbient_entropy_diff_eq_mutualInfoPmf
 
 /-! ## Block-law identification for `rdAmbient` -/
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- The X-block joint law under `rdAmbient qStar` equals the product of the
 single-letter X-marginal. Mirrors the private `block_law_X_eq_pi_p` in
 `ChannelCodingAchievability`, specialised to `rdAmbient`. -/
