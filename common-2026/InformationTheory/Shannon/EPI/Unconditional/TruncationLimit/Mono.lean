@@ -48,12 +48,7 @@ Fatou (`lintegral_liminf_le`、非負被積分関数列で `∫ liminf ≤ limin
 ...)` で負部を 0 clamp した正部 A に対し成立する向きで、収束列の極限 = liminf を使う
 (`klDiv_le_liminf_of_ae_tendsto` body と同構造)。`klDiv_le_liminf_of_ae_tendsto` (`EPIG2KLFatouLSC.lean:112`)
 と **別物** (参照測度 γ 有限 vs volume 無限、klFun vs negMulLog) ゆえ集約漏れでない。
-
-**独立 honesty audit 2026-06-08 (fresh subagent, `@residual` 除去の正当性検証 → ok)**: 旧 sorry+
-`@residual` 除去は正当。`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free
-機械確認、transitive sorry 無し)。4-check PASS: `h_ae` は a.e. 収束 input precondition で Fatou
-不等式の核 (`lintegral_liminf_le`) を encode せず (非 load-bearing)、Fatou の向きは正部 (負部 0-clamp)
-被積分関数列で正しい。@audit:ok -/
+@audit:ok -/
 theorem differentialEntropyExt_posPart_le_liminf_of_ae_tendsto
     (μ : Measure ℝ) (μ_n : ℕ → Measure ℝ)
     (h_ae : ∀ᵐ x ∂(volume : Measure ℝ),
@@ -107,24 +102,7 @@ theorem differentialEntropyExt_posPart_le_liminf_of_ae_tendsto
 
 proof-done (0 sorry / 0 @residual)。`#print axioms` = `[propext, Classical.choice, Quot.sound]`
 (sorryAx-free、`differentialEntropyExt_mono_add_truncW` の core を抽出したものなので transitive も同等)。
-
-**独立 honesty audit 2026-06-08 (fresh subagent, proof-done + `hW_ent` 非 load-bearing 主張検証 → ok)**:
-4-check PASS。(1) 非循環 — 結論 `h(Q.map W) ≤ h(Q.map (W+V))` は 5 仮説いずれとも非同型、body は
-~280 行の genuine 全証明 (`:= h` でない)。(2) 非バンドル — core-reconstruction test: `hW_ent` (W-marginal
-有限微分エントロピー) を grant しても単調不等式は出ない (h(W) の有限性のみ、h(W) と h(W+V) の関係を
-encode しない) = FAIL = 非 load-bearing。単調性の核 = Case B の per-fibre translate Gibbs (外部
-`differentialEntropy_le_cross_entropy`、`@audit:ok`、klDiv≥0 由来の genuine 出口補題) + Tonelli collapse
-で body が担う。`hW_ent` は Case B descent (`differentialEntropyExt_of_ac_integrable` の integrability)
-+ Case A の `B(ν)<⊤` 供給 (`negPart_negMulLog_conv_single_ne_top` 経由) に消費される finiteness
-precondition。(3) 非退化 — Case A の `le_top` は `differentialEntropyExt ν = A−B = ⊤−(有限) = ⊤` を
-A(ν)=⊤ (`‖g‖ₑ=A+B=⊤` ∧ B<⊤ の genuine 分解) から建ててからの `EReal.top_sub` (vacuous/exfalso/`0=value`
-でない)。(4) sufficiency — 「W a.c. ∧ W⊥V ∧ h(W) 有限 ⟹ h(W)≤h(W+V)」は独立ノイズ加算でエントロピー
-増大の古典定理で真。反証試行: `hW_ac` 欠落 → W=Dirac で per-fibre translate `μWz z` が ν に非 a.c. ⟹
-Gibbs 崩壊 (`condDistrib_ae_absolutelyContinuous_indep_add` が a.c. genuine 消費) = a.c. は必要 precondition
-present。**機械裏取り**: `#print axioms differentialEntropyExt_mono_add_of_integrable` (transient +
-`lake env lean`) = `[propext, Classical.choice, Quot.sound]`、sorryAx **非依存**。(i-a) chain rule
-`differentialEntropyExt_indep_add_eq_add_klDiv` (sorryAx 保持) を **非継承** (axiom 出力に sorryAx
-非出現で genuine 迂回を確認、body も chain rule 不使用 = per-fibre translate Gibbs に置換済)。@audit:ok -/
+@audit:ok -/
 theorem differentialEntropyExt_mono_add_of_integrable
     (W V : Ω → ℝ) (Q : Measure Ω) [IsProbabilityMeasure Q]
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V Q)
@@ -474,20 +452,7 @@ theorem differentialEntropyExt_mono_add_of_integrable
 `hW_negPart_fin` (= `B(W) < ⊤`) は h(W) 負部有限性、`hn` (positive mass) は cond well-defined の scope。
 単調性の核は一般化補題 body の per-fibre Gibbs + Tonelli が担い、仮説に encode しない。`#print axioms` =
 `[propext, Classical.choice, Quot.sound]` (sorryAx-free、要 olean refresh で確認)。
-
-**独立 honesty audit 2026-06-08 (fresh subagent, proof-done 主張検証 → ok)**: proof-done 確定。
-(1) 非循環 — 結論 `h(W_n) ≤ h(W_n+V)` は 7 仮説のいずれとも非同型、body は genuine 全証明 (`:= h`
-でない)。(2) 非バンドル — `hW`/`hV`/`hWV`/`hW_ac` は可測/独立/絶対連続、`hW_negPart_fin` (=B(W)<⊤)
-は ⊤ 枝の `⊤-⊤` 不定形回避用の有限性 precondition (B(W)<⊤ を grant しても単調性は出ない = core-
-reconstruction FAIL = 非 load-bearing)、`hn` は cond well-defined scope。単調性の核 = Case B の
-per-fibre translate Gibbs (`differentialEntropy_le_cross_entropy` 経由) + Tonelli collapse で body
-が担う。(3) 非退化 — Case A の `le_top` は `differentialEntropyExt ν = A−B = ⊤−(有限) = ⊤` を A(ν)=⊤
-(¬hent_sum で `‖g‖ₑ = A+B` 分解、B<⊤ は `negPart_negMulLog_conv_single_ne_top` で genuine 供給) から
-建ててからの genuine EReal ⊤ 利用 (route T capstone Case 2 と同型、vacuous/exfalso でない)。(4)
-sufficiency — 結論は 7 仮説から follow、依存 private helper 6 本 + 外部 Gibbs `differentialEntropy_le_
-cross_entropy` (`@audit:ok`) 全て sorry-free。**機械裏取り**: `#print axioms` (transient + `lake env lean`、
-olean refresh 後) = `[propext, Classical.choice, Quot.sound]`、sorryAx **非依存** を確認 (Phase 3/4
-skeleton sorry 3 件は本定理の依存 path 外、axiom 出力 clean で transitive 0 sorry)。@audit:ok -/
+@audit:ok -/
 theorem differentialEntropyExt_mono_add_truncW
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)

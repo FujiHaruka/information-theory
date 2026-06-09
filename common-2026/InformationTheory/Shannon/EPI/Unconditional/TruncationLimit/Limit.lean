@@ -34,13 +34,7 @@ variable {Ω : Type*} [MeasurableSpace Ω]
 (`Sn n := {r | |r| ≤ n}`) + `rnDeriv_cond_eq` で `fn_n x = c_n⁻¹ · 1_{Sn n}(x) · fW_enn x` (a.e.)、
 `c_n = (P.map W) Sn → 1` (`tendsto_measure_iUnion_atTop`、`⋃ Sn = univ`) + 固定 x で十分大 n で `x ∈ Sn n`。
 weak-conv 不使用 (各点極限)。`hW_ac` は a.c. (cond 保存)、regularity precondition。
-
-**独立 honesty audit 2026-06-08 (fresh subagent → ok)**: (B) `hW_ac` は body 未参照 (unused
-warning line 1463) = over-hypothesized だが honesty-safe (a.c. 無しでも各点 a.e. 密度収束は cond
-公式 + 質量収束で閉じる = より弱い前提で済む、退化定義悪用でなく単なる冗長)。除去可能 (非必須)、
-caller 一様性のため残置。(E) weak-conv portmanteau (`tendsto_iff_forall_integral_tendsto` 等) 不使用、
-`rnDeriv_cond_eq` + `tendsto_measure_iUnion_atTop` + indicator 各点極限で閉じる (L-Uncond-Y-roi 不発動)。
-`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free 機械確認)。@audit:ok -/
+@audit:ok -/
 theorem truncW_map_density_tendsto_ae
     (W : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (_hW_ac : (P.map W) ≪ volume) :
@@ -140,11 +134,7 @@ theorem truncW_map_density_tendsto_ae
 `differentialEntropyExt μ = (A:EReal) − (B:EReal) = ⊤` (a.c. 枝) から、`A ≠ ⊤` だと EReal 引き算が
 `⊤` になり得ない (`B = ⊤`: `fin − ⊤ = ⊥`、`B ≠ ⊤`: `fin − fin = fin`) ので `A = ⊤`。`B(μ) < ⊤` 不要
 (`h = ⊤` だけで `A = ⊤` が follow、より強い形)。
-
-**独立 honesty audit 2026-06-08 (fresh subagent → ok)**: genuine (新規 helper)。`htop : h(μ)=⊤`
-から `A=⊤` を EReal 減算規約 (`sub_top`/`top_sub`) の場合分けで抽出、循環/bundling/退化なし。
-本 helper の対称形が #1 の `hW_negPart_fin` redundancy (= `h=⊤ ⟹ B≠⊤`) を裏付ける。`#print axioms`
-= `[propext, Classical.choice, Quot.sound]` (sorryAx-free 機械確認)。@audit:ok -/
+@audit:ok -/
 theorem posPart_lintegral_eq_top_of_diffEntExt_top {μ : Measure ℝ} (hac : μ ≪ volume)
     (htop : differentialEntropyExt μ = ⊤) :
     (∫⁻ x, ENNReal.ofReal (Real.negMulLog ((μ.rnDeriv volume x).toReal)) ∂volume) = ⊤ := by
@@ -174,12 +164,7 @@ assembly の Step 0 で `hW_top` から `B(P.map W) ≠ ⊤` を導出でき、s
 
 genuine (新規 helper)。`htop : h(μ)=⊤` から `B ≠ ⊤` を EReal 減算規約の場合分けで抽出、
 循環/bundling/退化なし。@residual なし。
-
-**独立 honesty audit 2026-06-08 (fresh subagent, route closure 監査, commit 803e489 → ok)**:
-`posPart_…` の genuine 対称形。`hac` は regularity precondition、結論 `B≠⊤` は body の EReal `sub_top`
-場合分け (`B=⊤⟹(A:EReal)−⊤=⊥≠⊤=htop` 矛盾) で `htop` から抽出 = 仮説に核を encode せず (非循環・
-非バンドル・非退化)。`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free 独立
-機械確認)。@audit:ok -/
+@audit:ok -/
 theorem negPart_lintegral_ne_top_of_diffEntExt_top {μ : Measure ℝ} (hac : μ ≪ volume)
     (htop : differentialEntropyExt μ = ⊤) :
     (∫⁻ x, ENNReal.ofReal (-(Real.negMulLog ((μ.rnDeriv volume x).toReal))) ∂volume) ≠ ⊤ := by
@@ -198,12 +183,7 @@ theorem negPart_lintegral_ne_top_of_diffEntExt_top {μ : Measure ℝ} (hac : μ 
 `Sn n := {r | |r| ≤ n}`。truncated 密度 `fn = cbar_n · 1_{Sn n} · fW` の `negMulLog_mul` 分解 +
 `∫⁻ ofReal(fW) = 1` (確率密度正規化) で得る。`cbar_n → 1` ゆえ B(W_n) を最終的に固定有限値で抑えるための
 per-n bound。
-
-**独立 honesty audit 2026-06-08 (fresh subagent → ok)**: genuine (新規 helper)。`hcn` (positive
-mass) は cond well-defined の scope = regularity、`hW`/`hW_ac` も regularity。結論 = per-n B 上界の
-explicit 式で、仮説に核を encode せず (`negMulLog_mul` 分解 + 確率密度正規化が body で担う)。`#print
-axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free 機械確認)。NB: docstring 旧版が言及
-していた `hW_negPart_fin` は本 helper の signature に**無い** (caller #1 / 単調性側の仮説)。@audit:ok -/
+@audit:ok -/
 theorem truncW_map_negPart_lintegral_le
     (W : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hW_ac : (P.map W) ≪ volume) (n : ℕ)
@@ -339,19 +319,7 @@ theorem truncW_map_negPart_lintegral_le
 `EReal.tendsto_nhds_top_iff_real` で `∀ M, eventually M < A_n − B_n`。weak-convergence portmanteau
 (`tendsto_iff_forall_integral_tendsto` 等) は使わず density a.e. 収束 (finitary) のみで閉じる
 (L-Uncond-Y-roi 不発動)。
-
-**独立 honesty audit 2026-06-08 (fresh subagent, proof-done 主張検証 → ok)**: A〜E 全 PASS。
-(A) **`hW_negPart_fin` = regularity (非 load-bearing) かつ redundant**: B(W)<⊤ を grant しても
-結論 `h(W_n)→⊤` は出ない (核は body の Fatou + posPart-⊤ lift、core-reconstruction FAIL) = 非
-load-bearing。body では `C:=1+2·Bμ` 有限化 + #5 の per-n B-bound で genuine 消費 = regularity
-precondition として生きている。**さらに redundant**: `hW_top : h(P.map W)=⊤` が EReal 減算規約
-(`EReal.sub_top : x-⊤=⊥`、`EReal.top_sub : ⊤-x=⊤ (x≠⊤)`、機械確認) 上 B(W)<⊤ を含意する
-(`A-B=⊤` ⟹ A=⊤ ∧ B≠⊤、#4 と対称の抽出)。除去可能 (非必須、別タスク)。honesty 上は無害。
-(B) line ~1463 unused `hW_ac` は #3 (density helper) のもの、本定理の `hW_ac` は genuine 消費。
-(C) rescope (full Tendsto → ⊤ 専用) honesty-safe: 結論を弱める方向、唯一の consumer = Phase 4
-⊤ 枝 (`_top_of_indep_add_unconditional`) が `𝓝 ⊤` のみ要求、偽の含意隠蔽なし。(D) `#print axioms`
-= `[propext, Classical.choice, Quot.sound]` (sorryAx-free 機械確認)。(E) weak-conv portmanteau 不使用
-(density a.e. 収束 finitary のみ、L-Uncond-Y-roi 不発動)。@audit:ok -/
+@audit:ok -/
 theorem differentialEntropyExt_truncW_tendsto_top
     (W : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hW_ac : (P.map W) ≪ volume)
@@ -495,13 +463,6 @@ to the sum law via the single-component finiteness `negPart_negMulLog_conv_singl
 
 genuine (新規 helper)。`hW`/`hV`/`hWV`/`hW_ac`/`hBW`/`hn` は全て regularity precondition
 (結論 = 截断和周辺負部の有限性 を encode せず)。@residual なし。
-
-**独立 honesty audit 2026-06-08 (fresh subagent, route closure 監査, commit 803e489 → ok)**:
-非循環・非バンドル・非退化 全 PASS。6 仮説は可測/独立/絶対連続/`B(W)<⊤`/positive-mass = 全 regularity
-precondition (grant しても結論 `B(ν_n)≠⊤` は出ない、core = body の独立保存 conditioning + per-n explicit
-bound `truncW_map_negPart_lintegral_le` + single-component lift `negPart_negMulLog_conv_single_ne_top`)。
-sufficiency — `hBW` (=B(W)<⊤) + cond の per-n bound で genuine に follow。`#print axioms` (in-file
-transient + `lake env lean`) = `[propext, Classical.choice, Quot.sound]` (sorryAx-free 独立機械確認)。
 @audit:ok -/
 private theorem negPart_lintegral_map_truncW_add_ne_top
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -792,17 +753,7 @@ gateway 単調性を無条件で建てる。有限枝は finiteness → integrab
   (`∫⁻ ‖negMulLog f‖ₑ = A + B < ⊤`)。
 
 honesty: `hne_top`/`hne_bot` は有限性 regularity precondition (結論 = Integrable を encode せず)。
-
-**独立 honesty audit 2026-06-08 (fresh subagent, commit 64cb872 → ok)**: 4-check 全 PASS。
-(1) 非循環 — 結論 `Integrable (negMulLog∘density)` は 3 仮説のいずれとも非同型、body は EReal
-分岐 (`hsplit` の `A−B` 展開 + `EReal.sub_top`/`top_sub` で A≠⊤/B≠⊤) → `integrable_of_lintegral_
-ofReal_pos_neg_ne_top` で genuine 組立 (`:= h` でない)。(2) 非バンドル — `hac` 絶対連続性、
-`hne_top`/`hne_bot` 有限性 regularity precondition、3 仮説 grant しても Integrable は body の
-EReal 推論を要し核を encode せず。(3) 非退化 — Integrable は実命題、vacuous/exfalso なし。
-(4) **sufficiency (反例試行) — 両仮説 genuine に必要**: `hne_bot` 落とすと A<⊤∧B=⊤ (h=fin−⊤=⊥,
-hne_top 成立だが非可積分) が反例、`hne_top` 落とすと A=⊤∧B<⊤ (h=⊤−fin=⊤, hne_bot 成立だが
-非可積分) が反例。under-hypothesized でない。`#print axioms` = `[propext, Classical.choice,
-Quot.sound]` (sorryAx-free 機械確認、(i-a) `differentialEntropyExt_indep_add_eq_add_klDiv` 非継承)。@audit:ok -/
+@audit:ok -/
 theorem differentialEntropyExt_integrable_of_finite {μ : Measure ℝ} (hac : μ ≪ volume)
     (hne_top : differentialEntropyExt μ ≠ ⊤) (hne_bot : differentialEntropyExt μ ≠ ⊥) :
     Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume := by
@@ -840,18 +791,7 @@ theorem differentialEntropyExt_integrable_of_finite {μ : Measure ℝ} (hac : μ
 
 旧 `EPIUncondMonotone.differentialEntropyExt_mono_add` の無条件 proof-done 版 (旧版は無条件版②
 `differentialEntropyExt_indep_add_eq_add_klDiv` (i-a) に transitive 依存)。本版は (i-a) を継承しない。
-
-**独立 honesty audit 2026-06-08 (fresh subagent, commit 64cb872 → ok)**: 4-check 全 PASS。
-(1) 非循環 — 結論 `h(W)≤h(W+V)` は 4 仮説のいずれとも非同型、body は genuine 3 枝場合分け。
-(2) 非バンドル — `hW`/`hV`/`hWV`/`hW_ac` は可測/独立/絶対連続 regularity、核 (単調性) は body の
-3 枝 (⊥=`bot_le` / ⊤=route β' `@audit:ok` / 有限=per-fibre Gibbs `@audit:ok` + bridge) が担う。
-(3) 非退化 — ⊤ 枝の `⊤≤⊤` は route β' `differentialEntropyExt_top_of_indep_add_unconditional`
-(genuine, `@audit:ok`) で `h(W+V)=⊤` を確立してから閉じる、退化定義悪用でない。
-(4) **sufficiency (反例試行) — 含意 TRUE**: 「独立ノイズ加算は微分エントロピーを減らさない」の genuine
-EPI 単調性、`hW_ac`/`hWV` は genuine に必要。under-hypothesized でない。**name-laundering check —
-NOT laundering**: `_unconditional` = (i-a) sorryAx 非継承の proof-route 主張で正当、open load-bearing
-hyp も偽装 sorry-body も無し。`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free
-機械確認、axiom 出力に (i-a) `differentialEntropyExt_indep_add_eq_add_klDiv` 不在で非継承を独立裏取り)。@audit:ok -/
+@audit:ok -/
 theorem differentialEntropyExt_mono_add_unconditional
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)
@@ -871,11 +811,7 @@ theorem differentialEntropyExt_mono_add_unconditional
 /-- **無条件 gateway atom** (方針 Y): `W a.c. ∧ W ⊥ V ⟹ N(W+V) ≥ N(W)`。
 `differentialEntropyExt_mono_add_unconditional` を `EReal.exp_monotone` で `entropyPowerExt`
 (= `EReal.exp (2 · differentialEntropyExt)`) に lift。proof-done (i-a 非依存)。
-
-**独立 honesty audit 2026-06-08 (fresh subagent, commit 64cb872 → ok)**: `mono_add_unconditional`
-(@audit:ok) の genuine な `EReal.exp_monotone` lift (`mul_le_mul_of_nonneg_left ... (2≥0)` 経由)、
-循環/bundling なし。`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free 機械確認、
-(i-a) 非継承)。@audit:ok -/
+@audit:ok -/
 theorem entropyPowerExt_mono_add_unconditional
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)

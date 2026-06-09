@@ -26,12 +26,6 @@ the `s`-uniform majorant `gaussianHess_le_gaussHessMaj`. This is GAP②'s pointw
 named lemma so that **both** GAP② (as the existential envelope) **and** `_chain_domination` (route
 II Tonelli, which needs the concrete envelope, not the abstract `∃`) consume it. Only `0<t`
 regularity hyps; the Hessian bound (conclusion) is the genuine claim, not load-bearing.
-
-**Independent honesty audit (2026-05-31, Wave 5, commit `647015d`, fresh auditor): verdict ok.**
-`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified — the
-STEP-D bridge `convDensityAdd_deriv2_eq_gaussian` it calls is itself sorry-free). Conclusion
-`‖∂²(pX∗g_s) x‖ ≤ ∫ pX y·gaussHessMaj t (x−y)` is a genuine pointwise claim (not a hypothesis-bundled
-existence); all 5 hyps are pX-regularity + `0<t`. NOT circular/false-statement/load-bearing.
 @audit:ok -/
 private theorem convDensityAdd_deriv2_le_gaussHessMaj_conv
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)

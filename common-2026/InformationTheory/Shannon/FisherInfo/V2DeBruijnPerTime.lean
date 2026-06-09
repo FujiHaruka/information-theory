@@ -426,21 +426,7 @@ the compact neighborhood `Set.Ioo (s/2) (2s)` gives `∂_σ pPath x = ∫ y, pX 
 is avoided), then the `1/2` is pulled out via the kernel σ-derivative closed form. STEP D
 (spatial): two further gateway applications + `HasDerivAt.unique` against the pins
 `hpathDeriv1`/`hpathDeriv2` identify `pathDeriv2 s x = ∫ y, pX y · ∂²_x g_σ(x-y)`, which
-matches the σ-side via `heatFlow_density_heat_equation_kernel_heat_eq`. `#print axioms` =
-`[propext, Classical.choice, Quot.sound]` (sorryAx-free, transitive 0 sorry).
-
-**Independent honesty audit (2026-05-31, Wave6)**: ok (tier 1). core-reconstruction
-test passes — granting all added hyps (3 definitional pins + σ/spatial domination
-groups) does NOT hand the heat-equation equality `∂_σ pPath = (1/2)∂²_x pPath`: every
-added hyp is integrand-level (per-`y` integrability / ae-measurability / Gaussian-tail
-norm bound `‖pX y · kernel · (…)‖ ≤ bound y`), matching the gateway lemma
-`hasDerivAt_integral_of_dominated_loc_of_deriv_le`'s argument shape 1:1. The `(1/2)`
-factor and the σ↔spatial match are *derived* in STEP A–E from the genuine `@audit:ok`
-kernel σ-deriv closed form + kernel heat eq, not assumed. 3 pins
-(`hpPath`/`hpathDeriv1`/`hpathDeriv2`) are unchanged definitional bindings. `#print axioms`
-re-verified after `lake build` olean refresh = `[propext, Classical.choice, Quot.sound]`
-(no `sorryAx`). The b37b9ae false-statement relapse is not present (the conclusion is a
-genuine `HasDerivAt`, not a hyp-bundled equality).
+matches the σ-side via `heatFlow_density_heat_equation_kernel_heat_eq`.
 @audit:ok -/
 theorem heatFlow_density_heat_equation
     (pX : ℝ → ℝ)
@@ -766,10 +752,6 @@ below by a shifted Gaussian, so its support is all of `ℝ`. -/
 
 /-- Integrability helper: `fun y => pX y * gaussianPDFReal 0 v (x - y)` is integrable
 (`pX` integrable × Gaussian factor bounded by its prefactor), reused by both GAP lemmas.
-
-**Independent honesty audit (commit `eaced5a`)**: genuine. `hpX_int` is a regularity
-precondition; body discharges via `Integrable.mul_bdd` (integrable × bounded measurable),
-the Gaussian factor bounded by its prefactor (`gaussianPDFReal_le_prefactor`).
 @audit:ok -/
 private theorem convDensityAdd_integrand_integrable
     (pX : ℝ → ℝ) (hpX_int : Integrable pX volume) (v : ℝ≥0) (x : ℝ) :
@@ -794,13 +776,6 @@ integrand also has positive-measure support, hence positive integral.
 regularity preconditions (a nonnegative integrable density with positive mass — for a
 genuine probability density `∫ pX = 1`). The strict positivity conclusion is *derived*,
 not assumed.
-
-**Independent honesty audit (commit `eaced5a`)**: genuine. `hpX_mass : 0 < ∫ pX` is the
-positive-mass regularity of a density, not the claim. Body derives strict positivity via
-`Function.support F = Function.support pX` (Gaussian factor never vanishes, `s > 0`) +
-`integral_pos_iff_support_of_nonneg` both directions. No circularity / no degenerate
-exploitation / no load-bearing hyp. `#print axioms` = `[propext, Classical.choice,
-Quot.sound]` (sorryAx-free).
 @audit:ok -/
 theorem convDensityAdd_pos
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
@@ -833,10 +808,6 @@ theorem convDensityAdd_pos
 
 /-- Monotonicity of the centered Gaussian pdf in `|·|`: if `|u| ≤ |w|` then
 `g_v(w) ≤ g_v(u)` (the pdf decreases as the argument moves away from the mean `0`).
-
-**Independent honesty audit (commit `eaced5a`)**: genuine. Body unfolds `gaussianPDFReal`,
-reduces to `u² ≤ w²` (from `|u| ≤ |w|` via `pow_le_pow_left₀` + `sq_abs`), handles the
-`v = 0` degenerate branch explicitly.
 @audit:ok -/
 private theorem gaussianPDFReal_antitone_abs
     (v : ℝ≥0) {u w : ℝ} (huw : |u| ≤ |w|) :
@@ -869,17 +840,6 @@ Mathematical route (all steps genuine, 0 sorry / 0 residual):
 
 **Genuine completion**: `hpX_nn` / `hpX_int` / `hpX_mass` (`∫ pX = 1`, probability density)
 are regularity preconditions. The lower bound is *derived*, not bundled into a hypothesis.
-
-**Independent honesty audit (commit `eaced5a`)**: genuine. core-reconstruction test fails
-(granting the 4 hyps does NOT hand the lower bound for free): `∫ pX = 1` is the density
-normalization (regularity), the existential `∃ R, ...` lower bound is constructed in 3
-genuine steps — tightness via `tendsto_setIntegral_of_monotone` (real Mathlib,
-`Bochner/Set.lean:284`) on exhausting boxes `Icc(-n)n` (hand-proved `⋃ = univ` via
-`exists_nat_ge |y|`, correct) + `setIntegral_univ`/`hpX_mass` ⇒ limit 1 ⇒ box with mass
-`≥ 1/2`; box drop via `setIntegral_le_integral`; Gaussian monotonicity via
-`gaussianPDFReal_antitone_abs` with `|x-y| ≤ |x|+R` (`abs_sub` + `|y| ≤ R`). No
-circular / `:True` / degenerate / load-bearing hyp. `#print axioms` = `[propext,
-Classical.choice, Quot.sound]` (sorryAx-free).
 @audit:ok -/
 @[entry_point]
 theorem convDensityAdd_lower_bound_gaussian

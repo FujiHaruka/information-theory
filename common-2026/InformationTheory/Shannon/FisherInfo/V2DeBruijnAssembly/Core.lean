@@ -478,11 +478,6 @@ integrable via `integrable_rpow_mul_exp_neg_mul_sq` (the `u⁴` and `u²` Gaussi
 This is the kernel `G(u) = (a+b·u²)·gaussHessMaj t u` used by the joint-envelope Tonelli
 route (`_chain_domination` first goal): the `x²`-weight `(A+B·x²)` of the log factor is split
 via `x² ≤ 2(x−y)² + 2y²`, and the `(x−y)²` part absorbs into this polynomial-weighted kernel.
-
-**Independent honesty audit (2026-05-31, Wave 5, commit `647015d`, fresh auditor): verdict ok.**
-`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free). Mathematically sound:
-`(a+b·u²)·gaussHessMaj t u` is Gaussian × quartic, integrable via the u²/u⁴ Gaussian moments
-(`integrable_rpow_mul_exp_neg_mul_sq`). Hyps `0<t` + free constants `a b` are regularity.
 @audit:ok -/
 theorem gaussHessMaj_polyWeight_integrable {t : ℝ} (ht : 0 < t) (a b : ℝ) :
     Integrable (fun u : ℝ => (a + b * u ^ 2) * gaussHessMaj t u) volume := by
@@ -524,11 +519,6 @@ term and `u²·gaussHessMaj ≤ (√(πt))⁻¹·(256e⁻² + 8e⁻¹)` (from `u
 ≤ (8t·e⁻¹)²` and `u²·exp(-u²/4t) ≤ 4t·e⁻¹`, both via `mul_exp_neg_le_exp_neg_one`). Used to discharge
 the per-`y` fibre integrability `Integrable (fun y => pX y · G(x−y))` (bounded kernel × integrable pX)
 in the joint-envelope route II.
-
-**Independent honesty audit (2026-05-31, Wave 5, commit `647015d`, fresh auditor): verdict ok.**
-`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free). Mathematically sound:
-Gaussian × quartic decays to 0 at ±∞, global bound via `mul_exp_neg_le_exp_neg_one`. Hyps `0<t`,
-`0≤a`, `0≤b` are regularity (nonneg constants needed for the bound direction).
 @audit:ok -/
 theorem gaussHessMaj_polyWeight_bdd {t : ℝ} (ht : 0 < t) {a b : ℝ}
     (ha : 0 ≤ a) (hb : 0 ≤ b) :
