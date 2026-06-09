@@ -52,10 +52,12 @@ noncomputable def jointEntropySubset
     (μ : Measure Ω) (Xs : Fin n → Ω → α) (S : Finset (Fin n)) : ℝ :=
   entropy μ (fun ω (i : S) => Xs i.val ω)
 
+omit [DecidableEq α] in
 /-- `S = Finset.univ` のとき subset 版は通常の `jointEntropy` に一致。 -/
 theorem jointEntropySubset_univ
     (μ : Measure Ω) (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i)) :
     jointEntropySubset μ Xs Finset.univ = jointEntropy μ Xs := by
+  classical
   -- 索引の同型 `↥(Finset.univ : Finset (Fin n)) ≃ Fin n`。
   let idxEquiv : ↥(Finset.univ : Finset (Fin n)) ≃ Fin n :=
     { toFun := Subtype.val
@@ -76,6 +78,7 @@ theorem jointEntropySubset_univ
   rw [← h]
   congr 1
 
+omit [DecidableEq α] in
 /-- subset 版 chain rule の per-summand bridge:
 `condEntropy μ (Xs (φ k)) (Fin k.val 形) = condEntropy μ (Xs (φ k)) (S.filter 形)`。
 
@@ -92,6 +95,7 @@ private lemma condEntropy_chainSummand_bridge
       = InformationTheory.MeasureFano.condEntropy μ
           (Xs (S.orderEmbOfFin rfl k))
           (fun ω (j : ↥(S.filter (· < S.orderEmbOfFin rfl k))) => Xs j.val ω) := by
+  classical
   set φ : Fin S.card ↪o Fin n := S.orderEmbOfFin rfl
   -- Index equiv `Fin k.val ≃ ↥(S.filter (· < φ k))` constructed via refine
   let idx : Fin k.val ≃ ↥(S.filter (· < φ k)) := by
@@ -184,6 +188,7 @@ private lemma condEntropy_chainSummand_bridge
       Xs (φ ⟨j.val, j.isLt.trans k.isLt⟩) ω) hcond_meas e_cond).symm.trans
       (by rw [h_eq])
 
+omit [DecidableEq α] in
 /-- subset 版 chain rule:
 `H(X_S) = ∑ i ∈ S, H(X_i | X_{S ∩ {j : j < i}})`。
 
@@ -198,6 +203,7 @@ theorem jointEntropySubset_chain_rule
       = ∑ i ∈ S,
           InformationTheory.MeasureFano.condEntropy μ (Xs i)
             (fun ω (j : (S.filter (· < i))) => Xs j.val ω) := by
+  classical
   set φ : Fin S.card ↪o Fin n := S.orderEmbOfFin rfl
   set Xs' : Fin S.card → Ω → α := fun k => Xs (φ k) with hXs'_def
   have hXs'_meas : ∀ k, Measurable (Xs' k) := fun k => hXs (φ k)
@@ -256,6 +262,7 @@ theorem jointEntropySubset_chain_rule
   rw [h_lhs] at h_chain
   rw [h_chain, h_rhs]
 
+omit [DecidableEq α] in
 /-- subset 版 conditioning monotonicity:
 `T₁ ⊆ T₂ ⟹ H(X_i | X_{T₂}) ≤ H(X_i | X_{T₁})`。
 
@@ -270,6 +277,7 @@ theorem condEntropy_subset_anti
         (fun ω (j : T₂) => Xs j.val ω)
       ≤ InformationTheory.MeasureFano.condEntropy μ (Xs i)
           (fun ω (j : T₁) => Xs j.val ω) := by
+  classical
   -- Setup: T₂ への条件付けを (T₁, T₂\T₁) ペアに reshape し、
   -- condEntropy_le_condEntropy_of_pair で T₂\T₁ を捨てる。
   set XT₁ : Ω → (↥T₁ → α) := fun ω j => Xs j.val ω with hXT₁_def
@@ -301,6 +309,7 @@ theorem condEntropy_subset_anti
   exact condEntropy_le_condEntropy_of_pair μ (Xs i) XT₁ XR
     (hXs i) hXT₁_meas hXR_meas
 
+omit [DecidableEq α] in
 /-- Helper: `jointEntropyExcept` of `Xs ∘ orderEmb` at `k` equals `jointEntropySubset`
 of `S.erase (orderEmb k)`. -/
 private lemma jointEntropyExcept_orderEmb_eq
@@ -308,6 +317,7 @@ private lemma jointEntropyExcept_orderEmb_eq
     (S : Finset (Fin n)) (k : Fin S.card) :
     jointEntropyExcept μ (fun k' ω => Xs (S.orderEmbOfFin rfl k') ω) k
       = jointEntropySubset μ Xs (S.erase (S.orderEmbOfFin rfl k)) := by
+  classical
   set φ : Fin S.card ↪o Fin n := S.orderEmbOfFin rfl
   -- Index Equiv: {j : Fin S.card // j ≠ k} ≃ ↥(S.erase (φ k))
   let idx : {j : Fin S.card // j ≠ k} ≃ ↥(S.erase (φ k)) :=
@@ -381,6 +391,7 @@ private lemma jointEntropyExcept_orderEmb_eq
   rw [h_eq] at h_comp
   exact h_comp.symm
 
+omit [DecidableEq α] in
 /-- Han の不等式の subset 版:
 `(|S| - 1) · H(X_S) ≤ ∑ i ∈ S, H(X_{S \ {i}})`。
 
@@ -394,6 +405,7 @@ theorem han_inequality_subset
     (S : Finset (Fin n)) :
     ((S.card : ℝ) - 1) * jointEntropySubset μ Xs S
       ≤ ∑ i ∈ S, jointEntropySubset μ Xs (S.erase i) := by
+  classical
   -- Embed S as Fin S.card via orderEmbOfFin
   set φ : Fin S.card ↪o Fin n := S.orderEmbOfFin rfl with hφ_def
   set Xs' : Fin S.card → Ω → α := fun k => Xs (φ k) with hXs'_def

@@ -78,6 +78,7 @@ lemma mem_E_r_iff (P₁ : α → ℝ) (hP₁_nn : ∀ a, 0 ≤ P₁ a) (hP₁_su
 
 /-! ## Phase 2 — KL bridges (count-0-tolerant) -/
 
+omit [DecidableEq α] in
 /-- **`klDivPmf` log-diff form tolerant of count-0 atoms in `P`**: requires only
 `Q` full support (and both sum to 1), not `P` full support. The `P a = 0` term
 matches on both sides (`Q a` vs `0 + Q a - 0`). -/
@@ -107,6 +108,7 @@ lemma klDivPmf_eq_log_diff_sum_of_Q_pos
   rw [Finset.sum_add_distrib, Finset.sum_sub_distrib, hQ_sum, hP_sum]
   ring
 
+omit [DecidableEq α] in
 /-- **`klDivIndex` as `klDivPmf` of the empirical pmf** (count-0 tolerant):
 for `∑ c = n`, `n > 0`, `Q` full support,
 `klDivIndex c n Q = klDivPmf (c · / n) (Q.real ∘ singleton)`. -/
@@ -115,6 +117,7 @@ lemma klDivIndex_eq_klDivPmf_empirical
     {n : ℕ} (hn : 0 < n) {c : α → ℕ} (hc_sum : (∑ a, c a) = n) :
     klDivIndex c n Q
       = klDivPmf (fun a => (c a : ℝ) / n) (fun a => Q.real {a}) := by
+  classical
   have hn_real : (0 : ℝ) < n := by exact_mod_cast hn
   have h_emp_nn : ∀ a, 0 ≤ (c a : ℝ) / n := fun a => by positivity
   have h_emp_sum : ∑ a, (c a : ℝ) / n = 1 := by
@@ -172,6 +175,7 @@ lemma roundedTypeIndex_mem_E_r_eventually
 noncomputable def Qstar_perturb (Qstar P₁ : α → ℝ) (ε : ℝ) : α → ℝ :=
   fun a => (1 - ε) * Qstar a + ε * P₁ a
 
+omit [DecidableEq α] in
 lemma Qstar_perturb_nonneg {Qstar P₁ : α → ℝ}
     (hQs_nn : ∀ a, 0 ≤ Qstar a) (hP₁_nn : ∀ a, 0 ≤ P₁ a)
     {ε : ℝ} (hε0 : 0 ≤ ε) (hε1 : ε ≤ 1) :
@@ -184,6 +188,7 @@ lemma Qstar_perturb_nonneg {Qstar P₁ : α → ℝ}
   have t2 : 0 ≤ ε * P₁ a := mul_nonneg hε0 hPa
   linarith
 
+omit [DecidableEq α] in
 lemma Qstar_perturb_sum {Qstar P₁ : α → ℝ}
     (hQs_sum : ∑ a, Qstar a = 1) (hP₁_sum : ∑ a, P₁ a = 1) (ε : ℝ) :
     ∑ a, Qstar_perturb Qstar P₁ ε a = 1 := by
@@ -191,6 +196,7 @@ lemma Qstar_perturb_sum {Qstar P₁ : α → ℝ}
   rw [Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.mul_sum, hQs_sum, hP₁_sum]
   ring
 
+omit [DecidableEq α] in
 /-- **Strict interior of the perturbation**: by convexity of `klDivPmf · P₁`
 (`klDivPmf_strictConvexOn_left`) plus `klDivPmf P₁ P₁ = 0`, a tiny push toward
 `P₁` strictly lowers the constraint value below the active value
@@ -201,6 +207,7 @@ lemma klDivPmf_perturb_lt
     {r : ℝ} (hr_pos : 0 < r) (h_le : klDivPmf Qstar P₁ ≤ r)
     {ε : ℝ} (hε0 : 0 < ε) (hε1 : ε < 1) :
     klDivPmf (Qstar_perturb Qstar P₁ ε) P₁ < r := by
+  classical
   have hP₁_nn : ∀ a, 0 ≤ P₁ a := fun a => (hP₁_pos a).le
   have hQs_mem : Qstar ∈ stdSimplex ℝ α := ⟨hQs_nn, hQs_sum⟩
   have hP₁_mem : P₁ ∈ stdSimplex ℝ α := ⟨hP₁_nn, hP₁_sum⟩
@@ -227,6 +234,7 @@ lemma klDivPmf_perturb_lt
       _ < klDivPmf Qstar P₁ := by nlinarith
       _ ≤ r := h_le
 
+omit [DecidableEq α] in
 /-- **ε-continuity of `klDivPmf Qstar_ε P₂`**: as `ε → 0`, the perturbed KL
 divergence converges to `klDivPmf Qstar P₂` (continuity of `klDivPmf · P₂`). -/
 lemma klDivPmf_perturb_tendsto
@@ -234,6 +242,7 @@ lemma klDivPmf_perturb_tendsto
     {Qstar : α → ℝ} :
     Tendsto (fun ε : ℝ => klDivPmf (Qstar_perturb Qstar P₁ ε) P₂)
       (𝓝[>] 0) (𝓝 (klDivPmf Qstar P₂)) := by
+  classical
   -- ε ↦ Qstar_perturb is continuous (each coordinate is) and equals Qstar at 0.
   have h_pt_cont : Continuous (fun ε : ℝ => Qstar_perturb Qstar P₁ ε) := by
     apply continuous_pi

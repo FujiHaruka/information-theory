@@ -233,7 +233,6 @@ simplex containment + continuity of the objective. The standard simplex
 is compact, so the continuous-image is bounded; passing through the
 constraint set inclusion gives the result. -/
 lemma wynerZivObjective_image_bddBelow
-    [DecidableEq α] [DecidableEq β]
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) (D : ℝ) :
     BddBelow
       ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
@@ -269,7 +268,6 @@ eliminate the `BddBelow` side condition. The non-emptiness side condition
 remains: the user must supply at least one feasible `(q, f)` at the smaller
 threshold `D`. -/
 theorem wynerZivRatePmf_antitone_of_nonempty
-    [DecidableEq α] [DecidableEq β]
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {D D' : ℝ} (hD : D ≤ D')
     (h_ne : ((fun qf : (α × β × U → ℝ) × (U × β → γ) =>
                 wzMutualInfoXU U qf.1 - wzMutualInfoYU U qf.1)
@@ -311,7 +309,6 @@ side conditions are discharged internally (via the simplex-projection
 route). -/
 @[entry_point]
 theorem wynerZivRatePmf_antitone_of_feasible
-    [DecidableEq α] [DecidableEq β]
     (P_XY : α × β → ℝ) (d : α → γ → ℝ) {D D' : ℝ} (hD : D ≤ D')
     {qf : (α × β × U → ℝ) × (U × β → γ)}
     (hqf : qf ∈ WynerZivConstraint U P_XY d D) :

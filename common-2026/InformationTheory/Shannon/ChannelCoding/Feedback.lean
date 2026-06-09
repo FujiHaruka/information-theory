@@ -223,6 +223,7 @@ variable {α : Type*} [MeasurableSpace α]
 variable {β : Type*} [Fintype β] [Nonempty β]
   [MeasurableSpace β] [MeasurableSingletonClass β] [StandardBorelSpace β]
 
+omit [DecidableEq M] in
 /-- **Feedback channel coding converse (Cover-Thomas Theorem 7.12)** — chain rule 段
 を hypothesis 形に分離した MVP form。
 
@@ -273,6 +274,7 @@ theorem channel_coding_feedback_converse
         InformationTheory.MeasureFano.errorProb μ Msg
           (fun ω i => Ys i ω) decoder *
           Real.log ((Fintype.card M : ℝ) - 1) := by
+  classical
   -- The Y^n channel output.
   set Yo : Ω → (Fin n → β) := fun ω i => Ys i ω with hYo_def
   have hYo : Measurable Yo := measurable_pi_iff.mpr hYs

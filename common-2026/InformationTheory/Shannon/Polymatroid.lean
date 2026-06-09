@@ -68,6 +68,7 @@ theorem jointEntropySubset_empty
 
 /-! ## Phase B — monotonicity -/
 
+omit [DecidableEq α] in
 /-- Polymatroid axiom (ii): monotonicity in `S`.
 
 `T = S ⊔ (T \ S)` reshape via `MeasurableEquiv.piFinsetUnion` followed by the
@@ -78,6 +79,7 @@ theorem jointEntropySubset_mono
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
     {S T : Finset (Fin n)} (h : S ⊆ T) :
     jointEntropySubset μ Xs S ≤ jointEntropySubset μ Xs T := by
+  classical
   -- Setup: split T into S and T \ S via subsetSplitMEquivAux.
   set XS : Ω → (↥S → α) := fun ω j => Xs j.val ω with hXS_def
   set XR : Ω → (↥(T \ S) → α) := fun ω j => Xs j.val ω with hXR_def
@@ -120,6 +122,7 @@ theorem jointEntropySubset_mono
 A "disjoint union" version of the pair chain rule that lets the caller specify
 the target `U` directly (avoiding `T₂ \ T₁` casts). -/
 
+omit [DecidableEq α] in
 /-- Disjoint-union pair chain rule. If `s ∪ t = U` and `Disjoint s t`, then
 `H(X_U) = H(X_s) + H(X_t | X_s)`.
 
@@ -135,6 +138,7 @@ theorem jointEntropySubset_disjoint_union
         + InformationTheory.MeasureFano.condEntropy μ
             (fun ω (j : ↥t) => Xs j.val ω)
             (fun ω (j : ↥s) => Xs j.val ω) := by
+  classical
   set XS : Ω → (↥s → α) := fun ω j => Xs j.val ω
   set XT : Ω → (↥t → α) := fun ω j => Xs j.val ω
   have hXS_meas : Measurable XS := measurable_pi_iff.mpr (fun _ => hXs _)
@@ -158,11 +162,12 @@ theorem jointEntropySubset_disjoint_union
   unfold jointEntropySubset
   rw [h_reshape, h_chain]
 
+omit [DecidableEq α] in
 /-- condEntropy reshape under disjoint union: when `Disjoint s t` and `s ∪ t = U`,
 the condEntropy with conditioner `X_U` equals the condEntropy with conditioner the
 pair `(X_s, X_t)`. -/
 theorem condEntropy_reshape_disjoint_union
-    {β : Type*} [Fintype β] [DecidableEq β] [Nonempty β]
+    {β : Type*} [Fintype β] [Nonempty β]
       [MeasurableSpace β] [MeasurableSingletonClass β]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : Fin n → Ω → α) (hXs : ∀ i, Measurable (Xs i))
@@ -172,6 +177,7 @@ theorem condEntropy_reshape_disjoint_union
         (fun ω (j : ↥U) => Xs j.val ω)
       = InformationTheory.MeasureFano.condEntropy μ Xc
           (fun ω => ((fun (j : ↥s) => Xs j.val ω), (fun (j : ↥t) => Xs j.val ω))) := by
+  classical
   set XS : Ω → (↥s → α) := fun ω j => Xs j.val ω
   set XT : Ω → (↥t → α) := fun ω j => Xs j.val ω
   have hXS_meas : Measurable XS := measurable_pi_iff.mpr (fun _ => hXs _)
@@ -187,6 +193,7 @@ theorem condEntropy_reshape_disjoint_union
 
 /-! ## Phase C — submodularity -/
 
+omit [DecidableEq α] in
 /-- Polymatroid axiom (iii): submodularity.
 
 3-piece disjoint decomposition `S ∪ T = I ⊔ A ⊔ B` with `I := S ∩ T`,
@@ -199,6 +206,7 @@ theorem jointEntropySubset_submodular
     (S T : Finset (Fin n)) :
     jointEntropySubset μ Xs (S ∪ T) + jointEntropySubset μ Xs (S ∩ T)
       ≤ jointEntropySubset μ Xs S + jointEntropySubset μ Xs T := by
+  classical
   -- Three disjoint decompositions:
   --   (a) S       = (S∩T) ⊔ (S\T)
   --   (b) T       = (S∩T) ⊔ (T\S)

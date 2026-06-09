@@ -212,21 +212,25 @@ empty-prefix root), the symbol over `α`. -/
 noncomputable def lz78TokenCode (c : ℕ) : (Fin (c + 1) × α) → List Bool :=
   finBoolCode (Fin (c + 1) × α) (LZ78Phrase.bitLength c (Fintype.card α))
 
+omit [DecidableEq α] in
 /-- **Every LZ78 token codeword has length `K = bitLength c |α|`.** -/
 @[simp] lemma lz78TokenCode_length (c : ℕ) (t : Fin (c + 1) × α) :
     (lz78TokenCode c t).length = LZ78Phrase.bitLength c (Fintype.card α) :=
   finBoolCode_length _ t
 
+omit [DecidableEq α] in
 /-- **Card bound for the LZ78 token alphabet**: `|Fin (c+1) × α| ≤ 2^K`. -/
 theorem lz78Token_card_le (c : ℕ) :
     Fintype.card (Fin (c + 1) × α) ≤ 2 ^ (LZ78Phrase.bitLength c (Fintype.card α)) := by
   rw [Fintype.card_prod, Fintype.card_fin]
   exact lz78_token_card_le_pow c (Fintype.card α)
 
+omit [DecidableEq α] in
 /-- **The LZ78 token code is injective.** -/
 theorem injective_lz78TokenCode (c : ℕ) : Function.Injective (lz78TokenCode (α := α) c) :=
   injective_finBoolCode (lz78Token_card_le c)
 
+omit [DecidableEq α] in
 /-- **The LZ78 token codeword set is uniquely decodable** (constant length
 `K > 0`) — the genuine UD-object McMillanKraftBridge §3 Residual 1 lacked. -/
 @[entry_point]
@@ -236,6 +240,7 @@ theorem uniquelyDecodable_lz78TokenCode (c : ℕ) :
         Set (List Bool)) :=
   uniquelyDecodable_finBoolCode (LZ78Phrase.bitLength_pos c (Fintype.card α))
 
+omit [DecidableEq α] in
 /-- **Expectation-level source-coding converse for the real LZ78 token code**
 (genuine, sorry-free). For any probability measure `P` (full support) on the
 LZ78 token alphabet, the binary entropy is bounded by the (constant) token

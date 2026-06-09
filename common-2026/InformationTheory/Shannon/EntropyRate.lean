@@ -76,6 +76,7 @@ noncomputable def entropyRate (μ : Measure Ω) (p : StationaryProcess μ α) : 
 `H_{n+1} = H_n + H(X_n | X_{<n})`, the engine of (B.3).
 -/
 
+omit [DecidableEq α] in
 /-- Chain rule for block entropy: `H_{n+1} = H_n + H(X_n | X_{<n})`.
 
 Strategy: apply `MeasurableEquiv.piFinSuccAbove α (Fin.last n)` (forward
@@ -87,6 +88,7 @@ theorem blockEntropy_succ_chain_rule
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) :
     blockEntropy μ p (n + 1)
       = blockEntropy μ p n + conditionalEntropyTail μ p n := by
+  classical
   have h_block_meas : Measurable (p.blockRV n) := p.measurable_blockRV n
   have h_obs_meas : Measurable (p.obs n) := p.measurable_obs n
   have h_block_succ_meas : Measurable (p.blockRV (n + 1)) := p.measurable_blockRV (n + 1)
@@ -214,7 +216,7 @@ end AntitoneHelpers
 `μ.map (fun ω => (Xs ω, Yo ω))`. -/
 lemma condEntropy_eq_pushforward
     {β γ : Type*}
-    [Fintype β] [DecidableEq β] [Nonempty β]
+    [Fintype β] [Nonempty β]
     [MeasurableSpace β] [MeasurableSingletonClass β]
     [MeasurableSpace γ]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -263,9 +265,11 @@ lemma condEntropy_eq_pushforward
   filter_upwards [h_cd_map] with y hy
   rw [hy]
 
+omit [DecidableEq α] in
 theorem conditionalEntropyTail_antitone
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) :
     Antitone (conditionalEntropyTail μ p) := by
+  classical
   -- It suffices to show `f (n+1) ≤ f n` for all `n` (monotone for the dual `≥`).
   refine antitone_nat_of_succ_le (fun n => ?_)
   -- Step 1: by stationarity, `tail n = H(X_{n+1} | shiftedBlockRV)`.
@@ -363,11 +367,13 @@ theorem conditionalEntropyTail_antitone
           (p.obs (n + 1)) (shiftedBlockRV p n) := h_drop
     _ = conditionalEntropyTail μ p n := h_step1.symm
 
+omit [DecidableEq α] in
 /-- Conditional entropy on a finite alphabet is bounded above by `log |α|`,
 hence the tail is uniformly bounded. We only need `0 ≤ tail` for (B.3). -/
 theorem conditionalEntropyTail_nonneg
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) :
     0 ≤ conditionalEntropyTail μ p n := by
+  classical
   unfold conditionalEntropyTail
   exact condEntropy_nonneg μ (p.obs n) (p.blockRV n)
 
@@ -414,6 +420,7 @@ theorem blockEntropy_zero
         (fun h => (h (Finset.mem_univ _)).elim)]
   rw [h_eq]; simp
 
+omit [DecidableEq α] in
 /-- Block entropy expanded as a sum of conditional entropy tails (iterated chain rule). -/
 theorem blockEntropy_eq_sum_conditionalEntropyTail
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) (n : ℕ) :
@@ -425,6 +432,7 @@ theorem blockEntropy_eq_sum_conditionalEntropyTail
     rw [blockEntropy_succ_chain_rule μ p n, ih,
         Finset.sum_range_succ]
 
+omit [DecidableEq α] in
 /-- (B.3, MVP form using `conditionalEntropyTail_antitone`): the entropy rate
 exists, i.e. `blockEntropy μ p n / n` converges.
 
@@ -466,6 +474,7 @@ theorem entropyRate_exists_of_stationary
 Strategy: the chain rule + Cesàro gives `blockEntropy / n → L = lim tail`. The
 `entropyRate` is the limit of `blockEntropy / n` (Filter.limUnder of a convergent
 sequence equals the limit). The two limits agree by uniqueness. -/
+omit [DecidableEq α] in
 @[entry_point]
 theorem entropyRate_eq_lim_condEntropy
     (μ : Measure Ω) [IsProbabilityMeasure μ] (p : StationaryProcess μ α) :

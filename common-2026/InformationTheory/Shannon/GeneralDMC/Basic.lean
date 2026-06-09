@@ -110,6 +110,7 @@ variable
   [Fintype β] [DecidableEq β] [Nonempty β]
     [MeasurableSingletonClass β] [StandardBorelSpace β]
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- For memoryless `W`, the per-letter capacity sequence is **eventually
 constant** equal to `capacity W`. This is the workhorse used by all three
 memoryless-flavour corollaries below. -/
@@ -129,6 +130,7 @@ theorem capacityRate_ofMemoryless_eventually_const
   have hn_ne : (n : ℝ) ≠ 0 := by exact_mod_cast hn_pos.ne'
   field_simp
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- Memoryless concrete L-GD1 (Tendsto-form): the per-letter capacity sequence
 of `ofMemoryless W` converges to `capacity W`. -/
 @[entry_point]
@@ -139,6 +141,7 @@ theorem capacity_lim_tendsto_of_memoryless
   refine (tendsto_const_nhds (x := capacity W)).congr' ?_
   exact (capacityRate_ofMemoryless_eventually_const W).mono (fun n hn => hn.symm)
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- **Main bridge** (I-2 target): for memoryless `W`, the general DMC
 limit-form capacity coincides with the single-letter capacity. Alias of
 `BlockwiseChannel.capacity_lim_eq_capacity_of_memoryless`. -/

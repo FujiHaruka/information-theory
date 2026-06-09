@@ -124,14 +124,15 @@ rewrite the joint-AEP exponent
 once the i.i.d. ambient `μ := Measure.infinitePi (jointDistribution p W)` is plumbed
 in (so that `μ.map (Xs 0) = p`, etc.). -/
 theorem mutualInfoOfChannel_eq_HX_add_HY_sub_HZ
-    [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
-    [Fintype β] [DecidableEq β] [Nonempty β] [MeasurableSingletonClass β]
+    [Fintype α] [Nonempty α] [MeasurableSingletonClass α]
+    [Fintype β] [Nonempty β] [MeasurableSingletonClass β]
     (p : Measure α) [IsProbabilityMeasure p]
     (W : Channel α β) [IsMarkovKernel W] :
     (mutualInfoOfChannel p W).toReal
       = InformationTheory.Shannon.entropy (jointDistribution p W) Prod.fst
         + InformationTheory.Shannon.entropy (jointDistribution p W) Prod.snd
         - InformationTheory.Shannon.entropy (jointDistribution p W) id := by
+  classical
   rw [mutualInfoOfChannel_eq_mutualInfo_prod p W]
   exact InformationTheory.Shannon.mutualInfo_eq_entropy_add_entropy_sub_jointEntropy
     (jointDistribution p W)
@@ -324,7 +325,7 @@ argument. The textbook bound `|A_ε^n| ≤ 2^{n(H(X,Y)+ε)}` (in `Real.exp` base
 by intersecting with the joint condition. -/
 @[entry_point]
 theorem jointlyTypicalSet_card_le
-    [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β]
+    [Nonempty α] [Nonempty β]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
@@ -387,7 +388,7 @@ typical events; its complement is contained in the union of three single-axis co
 each of which has measure tending to `0` by the single-axis `typicalSet_prob_tendsto_one`. -/
 @[entry_point]
 theorem jointlyTypicalSet_prob_tendsto_one
-    [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β]
+    [Nonempty α] [Nonempty β]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
@@ -559,7 +560,7 @@ joint axis identification (`hidentZ`) is **not** required for this bound (it wou
 be required only for Phase C / D, downstream of this lemma). -/
 @[entry_point]
 theorem jointlyTypicalSet_indep_prob_le
-    [DecidableEq α] [Nonempty α] [DecidableEq β] [Nonempty β]
+    [Nonempty α] [Nonempty β]
     (μ : Measure Ω) [IsProbabilityMeasure μ]
     (Xs : ℕ → Ω → α) (Ys : ℕ → Ω → β)
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))

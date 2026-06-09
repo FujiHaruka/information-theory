@@ -482,6 +482,7 @@ to plug into the parent `lz78_asymptotic_optimality` theorem's
 example :
     (∀ n, (Fin n → α) → ℕ) := @lz78GreedyEncodingLength α _
 
+omit [DecidableEq α] in
 /-- **The concrete `lz78GreedyEncodingLength` threaded into the genuine
 two-sided `lz78_asymptotic_optimality` headline**.
 
@@ -535,8 +536,9 @@ theorem lz78_asymptotic_optimality_with_greedy_encoding
           (lz78GreedyEncodingLength n (p.toStationaryProcess.blockRV n ω) : ℝ)
             / (n : ℝ))
         Filter.atTop
-        (𝓝 (entropyRate μ p.toStationaryProcess)) :=
-  lz78_asymptotic_optimality μ p (@lz78GreedyEncodingLength α _)
+        (𝓝 (entropyRate μ p.toStationaryProcess)) := by
+  classical
+  exact lz78_asymptotic_optimality μ p (@lz78GreedyEncodingLength α _)
     h_lower h_upper h_bdd_above h_bdd_below
 
 end ParentCompat

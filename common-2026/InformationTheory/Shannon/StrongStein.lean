@@ -242,6 +242,7 @@ theorem steinAlphaTest_Q_prob_ge
 
 /-! ### Phase C — `Tendsto → K` 主定理 -/
 
+omit [DecidableEq α] [Nonempty α] in
 /-- **Strong-converse lower bound on `steinOptimalBeta`**: For any `δ > 0`,
 `β*(n, ε) ≥ exp(-n(K+δ)) · (P^n(T_n^δ) - ε)`.
 
@@ -258,6 +259,7 @@ theorem exp_le_steinOptimalBeta_strong
   rintro β ⟨s, hs_meas, hs_alpha, rfl⟩
   exact steinAlphaTest_Q_prob_ge P Q hPpos hQpos s hs_meas hs_alpha
 
+omit [DecidableEq α] in
 /-- **Strong converse: limsup bound** (eventually).
 
 For any `δ > 0`, eventually `-(1/n) log β*(n, ε) ≤ K + δ + (1/n) log [1/(P^n(T_n^δ) - ε)]`.

@@ -99,6 +99,7 @@ lemma klFun_ref_mul {R Q : ℝ} (hR : 0 < R) (hQ : 0 ≤ Q) :
 
 /-! ## Phase 2 — `klDivPmf` cross-entropy sum form (no full support) -/
 
+omit [DecidableEq α] in
 /-- **Cross-entropy sum form** of `klDivPmf`, valid for any `Q ∈ stdSimplex`
 (full support *not* required) and full-support reference `R`:
 `klDivPmf Q R = ∑ a, (Q a · log (Q a) - Q a · log (R a) + (R a - Q a))`. -/
@@ -112,6 +113,7 @@ lemma klDivPmf_eq_entropyCross_sum
 
 /-! ## Phase 3 — Master exponential-family identity -/
 
+omit [DecidableEq α] in
 /-- **Master identity**: for every `Q ∈ stdSimplex` the log-linear weighting of
 the three KL divergences against `P₂`, `P₁`, and the tilt collapses to the flat
 `-log Z`:
@@ -172,6 +174,7 @@ lemma hoeffdingTilt_kl_master
 
 /-! ## Phase 4 — Pythagorean difference identity -/
 
+omit [DecidableEq α] in
 /-- **Pythagorean difference identity** (Csiszár): subtracting the master
 identity at `Q` and at the tilt `T` (where `klDivPmf T T = 0`):
 
@@ -184,6 +187,7 @@ lemma hoeffdingTilt_kl_pythagoras_diff
     lam * (klDivPmf Q P₂ - klDivPmf (hoeffdingTilt P₁ P₂ lam) P₂)
         + (1 - lam) * (klDivPmf Q P₁ - klDivPmf (hoeffdingTilt P₁ P₂ lam) P₁)
       = klDivPmf Q (hoeffdingTilt P₁ P₂ lam) := by
+  classical
   set T : α → ℝ := hoeffdingTilt P₁ P₂ lam with hT_def
   have hT_pos : ∀ a, 0 < T a := hoeffdingTilt_pos P₁ P₂ hP₁_pos hP₂_pos lam
   have hT_mem : T ∈ stdSimplex ℝ α :=
@@ -200,6 +204,7 @@ lemma hoeffdingTilt_kl_pythagoras_diff
 
 /-! ## Phase 5 — `IsHoeffdingTiltMinimal` discharge -/
 
+omit [DecidableEq α] in
 /-- **I-projection minimality discharge**: for `0 < λ ≤ 1` and the IVT
 constraint-match `klDivPmf (tilt) P₁ = α`, the tilt minimises `klDivPmf · P₂`
 over the constraint set `K(α)`. This *fully discharges* the primitive
@@ -210,6 +215,7 @@ theorem isHoeffdingTiltMinimal_of_constraint_eq
     {alpha lam : ℝ} (h_lam_pos : 0 < lam) (h_lam_le : lam ≤ 1)
     (h_kl : klDivPmf (hoeffdingTilt P₁ P₂ lam) P₁ = alpha) :
     IsHoeffdingTiltMinimal P₁ P₂ alpha lam := by
+  classical
   intro Q hQ
   -- Goal: klDivPmf (tilt) P₂ ≤ klDivPmf Q P₂  (IsMinOn applied at Q ∈ K).
   show klDivPmf (hoeffdingTilt P₁ P₂ lam) P₂ ≤ klDivPmf Q P₂
@@ -246,6 +252,7 @@ theorem isHoeffdingTiltMinimal_of_constraint_eq
 
 /-! ## Phase 6 — Constructive `IsHoeffdingLagrangeHyp` (both halves) -/
 
+omit [DecidableEq α] in
 /-- **Fully constructive Lagrange hypothesis**: from `0 < λ ≤ 1` and the IVT
 constraint-match, build `IsHoeffdingLagrangeHyp` with both `mem` *and*
 `realises` constructive — no minimality hypothesis carried. -/
@@ -254,13 +261,15 @@ theorem isHoeffdingLagrangeHyp_of_constraint_eq
     (hP₁_sum : ∑ a, P₁ a = 1) (hP₂_sum : ∑ a, P₂ a = 1)
     {alpha lam : ℝ} (h_lam_pos : 0 < lam) (h_lam_le : lam ≤ 1)
     (h_kl : klDivPmf (hoeffdingTilt P₁ P₂ lam) P₁ = alpha) :
-    IsHoeffdingLagrangeHyp P₁ P₂ alpha lam :=
-  isHoeffdingLagrangeHyp_of_minimal P₁ P₂ hP₁_pos hP₂_pos h_kl
+    IsHoeffdingLagrangeHyp P₁ P₂ alpha lam := by
+  classical
+  exact isHoeffdingLagrangeHyp_of_minimal P₁ P₂ hP₁_pos hP₂_pos h_kl
     (isHoeffdingTiltMinimal_of_constraint_eq P₁ P₂ hP₁_pos hP₂_pos hP₁_sum hP₂_sum
       h_lam_pos h_lam_le h_kl)
 
 /-! ## Phase 7 — Interior existence (IVT + discharged minimality) -/
 
+omit [DecidableEq α] in
 /-- **Interior existence**: for interior `0 < α ≤ klDivPmf P₂ P₁`, the IVT
 supplies a `λ ∈ (0,1]` whose tilt matches the constraint, and the in-file
 minimality discharge upgrades it to a *fully constructive*
@@ -271,6 +280,7 @@ theorem exists_isHoeffdingLagrangeHyp_interior
     {alpha : ℝ} (h_alpha_pos : 0 < alpha)
     (h_alpha_le : alpha ≤ klDivPmf P₂ P₁) :
     ∃ lam ∈ Set.Ioc (0 : ℝ) 1, IsHoeffdingLagrangeHyp P₁ P₂ alpha lam := by
+  classical
   -- IVT supplies lam ∈ [0,1] with klDivPmf (tilt) P₁ = alpha.
   obtain ⟨lam, hlam_mem, hlam_kl⟩ :=
     exists_lam_hoeffdingTilt_kl_eq P₁ P₂ hP₁_pos hP₂_pos hP₁_sum hP₂_sum
@@ -292,6 +302,7 @@ theorem exists_isHoeffdingLagrangeHyp_interior
 
 /-! ## Phase 8 — Interior minimizer, re-published with minimality discharged -/
 
+omit [DecidableEq α] in
 /-- **Interior minimizer at the IVT constraint-match parameter** (textbook
 L-H4-FS interior): the tilt at `λ ∈ (0,1]` matching the constraint is a wave7
 `IsHoeffdingInteriorMinimizer`.
@@ -311,7 +322,8 @@ theorem isHoeffdingInteriorMinimizer_of_constraint_eq
     (_hP₁_sum : ∑ a, P₁ a = 1) (_hP₂_sum : ∑ a, P₂ a = 1)
     {alpha lam : ℝ} (_h_lam_pos : 0 < lam) (_h_lam_le : lam ≤ 1)
     (_h_kl : klDivPmf (hoeffdingTilt P₁ P₂ lam) P₁ = alpha) :
-    IsHoeffdingInteriorMinimizer P₁ P₂ alpha (hoeffdingTilt P₁ P₂ lam) :=
-  isHoeffdingInteriorMinimizer_of_lagrange P₁ P₂ hP₁_pos hP₂_pos
+    IsHoeffdingInteriorMinimizer P₁ P₂ alpha (hoeffdingTilt P₁ P₂ lam) := by
+  classical
+  exact isHoeffdingInteriorMinimizer_of_lagrange P₁ P₂ hP₁_pos hP₂_pos
 
 end InformationTheory.Shannon.HoeffdingMinimizerAttainment

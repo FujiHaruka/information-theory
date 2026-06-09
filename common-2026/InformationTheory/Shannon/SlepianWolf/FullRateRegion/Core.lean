@@ -80,6 +80,7 @@ def swError_EXY
 
 /-! ## Phase D-3 — Decoder equation under unique witness -/
 
+omit [DecidableEq α] [DecidableEq β] in
 /-- If `(X^n, Y^n)` is jointly typical **and** is the **unique** source pair (across
 all source pairs) compatible with its bin pair under joint typicality, then the
 joint typical decoder recovers it exactly. -/
@@ -118,6 +119,7 @@ lemma swJointTypicalDecoder_eq_of_unique
 
 /-! ## Phase D-4 — Main decomposition -/
 
+omit [DecidableEq α] [DecidableEq β] in
 set_option linter.unusedVariables false in
 /-- **Main 4-way error decomposition.** The Slepian–Wolf error probability under the
 joint typicality decoder is bounded above by the sum of probabilities of the four
@@ -225,6 +227,7 @@ theorem swErrorProb_le_E0_plus_EX_plus_EY_plus_EXY
 
 /-! ## Phase D-5 — Measurability of the four events -/
 
+omit [DecidableEq α] [DecidableEq β] in
 lemma measurableSet_swError_EX
     {Xs : ℕ → Ω → α} {Ys : ℕ → Ω → β}
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
@@ -250,6 +253,7 @@ lemma measurableSet_swError_EX
   rw [h_eq]
   exact hmeas hS_meas
 
+omit [DecidableEq α] [DecidableEq β] in
 lemma measurableSet_swError_EY
     {Xs : ℕ → Ω → α} {Ys : ℕ → Ω → β}
     (hXs : ∀ i, Measurable (Xs i)) (hYs : ∀ i, Measurable (Ys i))
@@ -279,6 +283,7 @@ by the joint AEP (`jointlyTypicalSet_prob_tendsto_one`). This is the simplest of
 four error-event bounds, and the only one that does **not** depend on the random
 binning measure: it is a pure statement about the underlying source process. -/
 
+omit [DecidableEq α] [DecidableEq β] in
 @[entry_point]
 theorem swError_E0_prob_tendsto_zero
     (μ : Measure Ω) [IsProbabilityMeasure μ]

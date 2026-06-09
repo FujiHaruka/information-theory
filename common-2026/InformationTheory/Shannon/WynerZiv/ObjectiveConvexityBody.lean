@@ -294,7 +294,6 @@ discharges into `h_obj_convex`.
 `@audit:superseded-by(wynerZivRateFactorizable_convex_in_D_unconditional)` -/
 @[entry_point]
 theorem wynerZivRateFactorizable_convex_in_D_of_condEntDiff
-    [DecidableEq α] [DecidableEq β]
     {P_XY : α × β → ℝ} (h_pmf : P_XY ∈ stdSimplex ℝ (α × β))
     (d : α → γ → ℝ) (f : U × β → γ)
     {D₁ D₂ : ℝ}
@@ -309,8 +308,9 @@ theorem wynerZivRateFactorizable_convex_in_D_of_condEntDiff
     {a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) (hab : a + b = 1) :
     wynerZivRateFactorizable U P_XY d (a * D₁ + b * D₂)
       ≤ a * wynerZivRateFactorizable U P_XY d D₁
-        + b * wynerZivRateFactorizable U P_XY d D₂ :=
-  wynerZivRateFactorizable_convex_in_D U h_pmf d f
+        + b * wynerZivRateFactorizable U P_XY d D₂ := by
+  classical
+  exact wynerZivRateFactorizable_convex_in_D U h_pmf d f
     (fun q₁' q₂' hq₁' hq₂' a' b' ha' hb' hab' =>
       wzObjective_convex_of_condEntDiff U P_XY h_core q₁' q₂' hq₁' hq₂' a' b' ha' hb' hab')
     h_feasible₁ h_feasible₂ h_attain₁ h_attain₂ ha hb hab

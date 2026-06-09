@@ -70,7 +70,7 @@ distortion measure. The proof packages the lossy code into the
 i.i.d. source through `Measure.pi`. -/
 @[entry_point]
 theorem rate_distortion_converse_n_letter_block
-    [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+    [Fintype α] [Nonempty α] [MeasurableSingletonClass α]
     [Fintype β] [MeasurableSingletonClass β]
     {M n : ℕ} [NeZero M]
     (c : LossyCode M n α β)
@@ -85,6 +85,7 @@ theorem rate_distortion_converse_n_letter_block
     (rateDistortionFunction (fun x y => blockDistortion d n x y)
         (Measure.pi (fun _ : Fin n => P_X)) D).toReal
       ≤ Real.log (Fintype.card (Fin M)) := by
+  classical
   -- Substitution: α' := Fin n → α, β' := Fin n → β, M' := Fin M,
   -- Ω' := Fin n → α, μ' := Measure.pi (fun _ => P_X), X' := id,
   -- d' := fun x y => blockDistortion d n x y.
@@ -154,7 +155,7 @@ Same DPI + max-entropy chain as `rate_distortion_converse_single_shot`'s steps 1
 extracted as a standalone lemma. -/
 @[entry_point]
 lemma mutualInfo_block_le_log_card
-    [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+    [Fintype α] [Nonempty α] [MeasurableSingletonClass α]
     [Fintype β] [MeasurableSingletonClass β]
     {M n : ℕ} [NeZero M]
     (c : LossyCode M n α β)
@@ -274,7 +275,7 @@ into a precondition. Body retreated to `sorry`.
 -/
 @[entry_point]
 theorem rate_distortion_converse_n_letter_singleLetter
-    [Fintype α] [DecidableEq α] [Nonempty α] [MeasurableSingletonClass α]
+    [Fintype α] [Nonempty α] [MeasurableSingletonClass α]
     [Fintype β] [MeasurableSingletonClass β]
     {M n : ℕ} [NeZero M] (hn : 0 < n)
     (c : LossyCode M n α β)
