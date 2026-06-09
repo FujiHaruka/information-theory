@@ -18,8 +18,19 @@ proof-log: no (本計画は設計のみ。実装着手時に proof-log を別途
 > Phase 4 は予測 (`iIndepFun_pi` + 因子化) より大幅に軽く `indepFun_prod` 直接 1 行で閉じた。
 > 偽 in-place W2 は `@audit:defect(false-statement) @audit:closed-by-successor(epi-richness-route-b-plan)`
 > でマーク (dirac 反例で独立検証済)。wall register 追記は**しない** (false-statement を wall と誤分類しないため)。
-> **残**: B2 (in-place re-wire で偽 lemma 完全除去) は headline を塞ぐ G2 待ちで保留。lift machinery は
-> G2 closure まで live consumer 0 (dead-code、docstring 正当化 3 点 + future B2 foundation)。
+>
+> **B2 完了 (2026-06-09)**: G2 (`wall:heatflow-continuity`) が CLOSED 済
+> (`heatFlowEntropyPower_continuousWithinAt_zero` sorryAx-free、`audit-tags.md` で確認) であることを確認し、
+> B2 昇格 trigger 発火。in-place 偽 W2 `stamScalingNoise_exists` + 偽 scaling `stamToEPIScaling_holds` +
+> dead headline `entropy_power_inequality_unconditional` + 付随 dead decl
+> (`IsStamToEPIScalingHyp` / `isStamToEPIBridgeHyp_of_scaling` /
+> `isStamToEPIBridgeHyp_of_gaussian_via_scaling` / `IsEPIScalingDecomposedPipeline`) を
+> `ToBridge.lean` から削除。honest 後継 `entropy_power_inequality_via_lift` (sorryAx-free) が EPI を担う。
+> consumer ripple 0 (`dep_consumers.sh` で 7 decl 全て dead 確認: dead set 内のみ or 0)。
+> 残す decl (`IsStamScalingNoiseHyp` 述語 + `isStamScalingNoiseHyp_symm` + csiszar ratio cluster) は無傷。
+> `#print axioms entropy_power_inequality_via_lift = [propext, Classical.choice, Quot.sound]` (sorryAx-free、変化なし)。
+> 旧 B1 進捗欄の「park 理由 (G2 待ち)」は **stale だった** — G2 は 2026-06-05/06-04 に既に CLOSED 済で、
+> B2 を塞ぐものは無かった。
 
 - [x] Phase 0 — 在庫照合 + 設計凍結 (B1 採用) ✅ → [`epi-richness-noise-inventory.md`](epi-richness-noise-inventory.md)
 - [x] Phase 1 — `EPINoiseExtension.lean` skeleton 着地 ✅
@@ -29,6 +40,7 @@ proof-log: no (本計画は設計のみ。実装着手時に proof-log を別途
 - [x] Phase 5 — EPI transport 本体 `entropy_power_inequality_via_lift` ✅ **genuine (conditional transport 形), `@audit:ok`**
 - [x] Phase 6 — 偽 in-place `stamScalingNoise_exists` の honest マーク ✅ (wall register 追記は意図的に不実施)
 - [x] Phase 7 — verify (0 errors) + `InformationTheory.lean` 編入 + 独立 honesty audit (全 OK) ✅
+- [x] **B2 (2026-06-09)** — G2 CLOSED 確認 → 偽 W2 + dead scaling/headline 7 decl を `ToBridge.lean` から完全削除 ✅ (consumer ripple 0、`entropy_power_inequality_via_lift` sorryAx-free 変化なし)
 
 proof-log: no (設計のみ。実装 Phase で `docs/shannon/proof-log-epi-richness-route-b-*.md` を別途起こす)
 

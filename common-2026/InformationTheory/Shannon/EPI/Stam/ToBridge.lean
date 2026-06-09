@@ -17,76 +17,46 @@ import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 import Mathlib.Order.Monotone.Basic
 
 /-!
-# T2-D Wave 7: Stam → EPI bridge — Csiszár scaling-path body discharge
+# T2-D: Stam → EPI — Csiszár ratio path-derivative cluster
 
-In Wave 6 we published `IsStamToEPIBridgeHyp` (the Cover–Thomas Lemma 17.7.3
-hypothesis that bundles the Csiszár-coupling/path-integral argument turning
-the Stam inequality into the EPI conclusion). The body of that bridge was
-left as a hypothesis pass-through because the Csiszár scaling argument
-relies on multiple pieces of analytic infrastructure that Mathlib does not
-expose for our Fisher-information V1 representative:
+This file holds the Csiszár-coupling ratio path-derivative lemmas (the genuine
+`AntitoneOn` / continuity chain along the heat-flow path) consumed by the EPI
+case-1 closure, plus the standard-normal-pair richness predicate
+`IsStamScalingNoiseHyp` whose honest lift-form inhabitant lives in
+`EPINoiseExtension`.
 
-* Fisher-information scaling identity `J(√(1 − t) · X + √t · Z) = J(...)`
-  along the heat-flow path,
-* boundary entropy-power identity `lim_{t → 1} N(X(t) + Y(t)) = N(...) + N(...)`,
-* FTC over `[0, 1]` driven by the de Bruijn V2 derivative.
+The former in-place scaling/noise route through this file
+(`IsStamToEPIScalingHyp` / `stamToEPIScaling_holds` /
+`isStamToEPIBridgeHyp_of_scaling` / `stamScalingNoise_exists` /
+`isStamToEPIBridgeHyp_of_gaussian_via_scaling` /
+`IsEPIScalingDecomposedPipeline` / `entropy_power_inequality_unconditional`)
+has been **deleted** (2026-06-09, `epi-richness-route-b-plan` B2): the in-place
+noise existential `stamScalingNoise_exists` was a `false-statement` defect
+(false on atomic measures), and the scaling sub-predicate / headline decls built
+on it were dead code (consumer ripple 0). The EPI conclusion is now carried by
+the honest successor
+`EPINoiseExtension.entropy_power_inequality_via_lift` (sorryAx-free), which
+transports EPI from the lift space `Ω × ℝ × ℝ` using `entropyPower`'s law-only
+property + `IsStamInequalityResidual`'s carrier-free defeq.
 
-This file *body-discharges* `IsStamToEPIBridgeHyp` via a single
-scaling sub-predicate that isolates the Mathlib-missing part:
+## Surviving members
 
-* `IsStamToEPIScalingHyp X Y P` — along the heat-flow path
-  `X(t) = √(1 − t) · X + √t · Z_X`, the EPI gap is `AntitoneOn (Set.Icc 0 1)`
-  (the "Csiszár inner-loop", Cover-Thomas Lemma 17.7.3).
-
-The scaling predicate alone body-discharges `IsStamToEPIBridgeHyp` through
-`isStamToEPIBridgeHyp_of_scaling` (the `s = 1` Gaussian-saturation endpoint is
-proved internally from the extracted standard-normal pair via
-`EntropyPowerInequality.entropyPower_gaussian_additivity`).
-
-2026-05-28 (Cluster C Group 2 Tier 3 → Tier 2 migration): the former
-`IsStamToEPILimitHyp` path-endpoint predicate was deleted (non-load-bearing).
-The load-bearing analytic content is consolidated into the shared sorry lemmas
-`stamToEPIScaling_holds` (Csiszár `AntitoneOn` wall) and `stamScalingNoise_exists`
-(noise-extension richness wall), both under
-`@residual(plan:epi-stam-to-conclusion-phaseA-plan)`.
-
-## Approach
-
-§1 introduces the scaling sub-predicate as a `Prop`-level statement and the two
-shared sorry lemmas that discharge the analytic walls. §2 body-discharges
-`IsStamToEPIBridgeHyp` from scaling alone. §3 supplies the direct Gaussian
-saturation route. §4 packages the scaling-decomposed pipeline alongside the
-existing `IsEPIL3IntegratedPipeline` from `EPIL3Integration.lean`. §5–§7 add
-predicate-manipulation lemmas and chain forms.
-
-## Retreat line
-
-Csiszár-coupling **inner body** (Fisher-information scaling identity, de Bruijn
-FTC over `[0, 1]`, dominated-convergence at `t = 1`) is **not** discharged here
-— it lives in the shared sorry lemma `stamToEPIScaling_holds`'s `sorry` body
-(L-EPISC-2-β) and the Phase A internals it chains. The bridge's *outer*
-implication `scaling → IsStamToEPIBridgeHyp` **is** body-discharged.
-
-For the Gaussian saturation case, the bridge is full-discharged hypothesis-free
-via `isStamToEPIBridgeHyp_of_gaussian_via_scaling` (the EPI inequality holds
-with equality by `entropyPower_gaussian_additivity`).
-
-## Key signatures
-
-* `IsStamToEPIScalingHyp` — scaling path's `AntitoneOn` gap (§1)
-* `stamToEPIScaling_holds` — shared sorry: scaling predicate holds (§1)
-* `stamScalingNoise_exists` — shared sorry: noise-extension richness (§1)
-* `isStamToEPIBridgeHyp_of_scaling` — body discharge from scaling (§2)
-* `isStamToEPIBridgeHyp_of_gaussian_via_scaling` — Gaussian discharge (§3)
-* `IsEPIScalingDecomposedPipeline` — decomposed pipeline structure (§4)
-* `entropy_power_inequality_unconditional` — EPI from the Stam wall (§4)
+* `IsStamScalingNoiseHyp X Y P` — the genuine standard-normal-pair existential
+  predicate (§2'). Its honest lift-form inhabitant is the live
+  `EPINoiseExtension.stamScalingNoise_exists_on_lift`.
+* `isStamScalingNoiseHyp_symm` — symmetry of that predicate (§2').
+* the Csiszár-cluster ratio path-derivative lemmas
+  (`entropyPower_hasDerivAt_of_diffEnt_hasDerivAt`,
+  `csiszarLogRatioGap_hasDerivAt`, `csiszarLogRatioGap_deriv_le_zero`,
+  `epi_of_csiszarLogRatioGap_zero_nonneg`, and the `AntitoneOn` / continuity
+  chain), live-consumed by
+  `EPICase1RatioLimit.entropyPower_add_ge_case1_of_regular` (§2''–§4).
 
 ## File map
 
-* §1 — Scaling sub-predicate `IsStamToEPIScalingHyp` + shared sorry lemmas
-* §2 — Bridge body discharge `isStamToEPIBridgeHyp_of_scaling`
-* §3 — Gaussian saturation discharge
-* §4 — Decomposed pipeline structure + main theorem
+* §2' — Phase A staged predicate: standard normal pair witness on `(Ω, P)`
+* §2'' — Phase A A-2: path-derivative of the 1-source gap
+* §2''' — Phase A A-3: 1-source Stam reduction `g'(t) ≤ 0`
 * §5 — Symmetry, congruence, pass-through helpers
 * §6 — 3-arg / 4-arg chain forms via scaling decomposition
 * §7 — Round-trip / sanity-check theorems
@@ -104,180 +74,6 @@ open InformationTheory.Shannon.EPIStamDischarge
 open InformationTheory.Shannon.EPIL3Integration
 open InformationTheory.Shannon (heatFlowPath2 heatFlowPath2_zero heatFlowPath2_one
   measurable_heatFlowPath2)
-
-/-! ## §1 — Sub-predicates: scaling path + path limit -/
-
-/-- **Stam-to-EPI scaling-path hypothesis** (Cover-Thomas Lemma 17.7.3
-inner-loop).
-
-The Csiszár coupling considers the heat-flow path
-
-    `X(t) := √(1 − t) · X + √t · Z_X`,    `Y(t) := √(1 − t) · Y + √t · Z_Y`
-
-for `t ∈ [0, 1]`, with `Z_X, Z_Y` independent standard Gaussians. Along this
-path, both `entropyPower (X(t) + Y(t))` and `entropyPower X(t) + entropyPower
-Y(t)` evolve. The Stam inequality implies that the gap
-
-    `g(t) := entropyPower (X(t) + Y(t)) − entropyPower X(t) − entropyPower Y(t)`
-
-is monotonically non-decreasing in `t ∈ [0, 1]` — this is the *scaling
-hypothesis* (since the Stam inequality applied to `(X(t), Y(t))` together
-with the de Bruijn identity gives `g'(t) ≥ 0`).
-
-We package this monotonic-along-the-path statement as a `Prop`-level
-predicate. The genuine analytic content (Fisher information scaling
-identity + de Bruijn FTC) lives in the hypothesis body; downstream users
-can either pass it through or discharge it via the Gaussian saturation
-route.
-
-Concretely the predicate is the implication: *if* the Stam inequality
-holds for `X, Y` (the same `IsStamInequalityHyp` predicate as the original
-bridge), *then* there is a heat-flow witness pair along which the EPI gap is
-`AntitoneOn (Set.Icc 0 1)`. The `s = 1` path-endpoint identification (formerly
-the separate `IsStamToEPILimitHyp` predicate, deleted 2026-05-28) is proved
-internally in the bridge body discharge from the extracted standard normals.
-
-The body is the implication `IsStamInequalityHyp X Y P → ∃ Z_X Z_Y, ... ∧
-AntitoneOn (fun s => gap_s) (Set.Icc 0 1)`, where `gap_s :=
-entropyPower (P.map (heatFlowPath2 X Z_X s + heatFlowPath2 Y Z_Y s))
-− entropyPower (P.map (heatFlowPath2 X Z_X s))
-− entropyPower (P.map (heatFlowPath2 Y Z_Y s))`. As `s → 1` the heat-flow
-endpoints reach independent standard normals, so the EPI gap **decreases**
-to `0` (Gaussian saturation) — hence `AntitoneOn` (not `MonotoneOn`) is the
-correct shape; combined with `gap_1 = 0` this gives `gap_0 ≥ 0`, the EPI
-conclusion at `s = 0` (`heatFlowPath2 X Z_X 0 = X`, `heatFlowPath2 Y Z_Y 0 = Y`).
-
-**Honesty status (2026-05-28 Cluster C Tier 3 → Tier 2 migration, Group 2)**:
-this `def` is a genuine implication carrying the Csiszár-scaling `AntitoneOn`
-content (not circular — the RHS existential+`AntitoneOn` is strictly stronger
-than the bridge's `IsEntropyPowerInequalityHypothesis`; not vacuous — the
-`P.map _ = gaussianReal 0 1` conjuncts block the `Z_* := 0` collapse). It is
-no longer threaded as a *load-bearing hypothesis*: the predicate is now
-supplied by the shared sorry lemma `stamToEPIScaling_holds` (below) from
-regularity alone. The genuine analytic wall (the `AntitoneOn` Csiszár
-monotonicity, built in Phase A from Stam + de Bruijn FTC) lives in that
-lemma's `sorry` body under `@residual(plan:epi-stam-to-conclusion-phaseA-plan)`.
-Hence the predicate carries **no**
-`@residual` / `@audit:retract-candidate` tag of its own. -/
-def IsStamToEPIScalingHyp {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
-  IsStamInequalityHyp X Y P →
-    ∃ (Z_X Z_Y : Ω → ℝ),
-      Measurable Z_X ∧ Measurable Z_Y ∧
-      P.map Z_X = gaussianReal 0 1 ∧ P.map Z_Y = gaussianReal 0 1 ∧
-      IndepFun X Z_X P ∧ IndepFun Y Z_Y P ∧
-      IndepFun Z_X Z_Y P ∧
-      AntitoneOn
-        (fun s : ℝ =>
-          entropyPower
-              (P.map (heatFlowPath2 X Z_X s + heatFlowPath2 Y Z_Y s))
-            - entropyPower (P.map (heatFlowPath2 X Z_X s))
-            - entropyPower (P.map (heatFlowPath2 Y Z_Y s)))
-        (Set.Icc (0 : ℝ) 1)
-
--- `IsStamToEPILimitHyp` was purely deleted (2026-05-28, Cluster C Group 2).
--- It was a non-load-bearing path-endpoint predicate (`∃ g1, g1 = 0 ∧ ...`)
--- discarded via an `_` binder everywhere it appeared; the Gaussian-saturation
--- endpoint at `s = 1` is proved internally in `isStamToEPIBridgeHyp_of_scaling`
--- from the extracted standard-normal pair. The `_limit` slot was removed from
--- that constructor and from
--- `entropy_power_inequality_unconditional` / `IsEPIScalingDecomposedPipeline`.
-
-/-- **Shared sorry lemma — Stam-to-EPI scaling predicate holds** (Cluster C
-Group 2 Tier 2 migration, 2026-05-28).
-
-On any probability space `(Ω, P)` with measurable `X, Y`, the
-`IsStamToEPIScalingHyp X Y P` predicate holds: assuming the Stam inequality,
-there exist standard-normal witnesses `(Z_X, Z_Y)` along which the EPI gap is
-`AntitoneOn (Set.Icc 0 1)` (Cover-Thomas Lemma 17.7.3 inner loop, the Csiszár
-scaling monotonicity).
-
-**Wall**: the `AntitoneOn` content is the genuine Csiszár-scaling analytic
-core, built in Phase A from the Stam inequality + de Bruijn FTC over `[0, 1]`.
-It is not
-suppliable by the existing shared wall lemma `stamToEPIBridge_holds` (which
-returns `IsEntropyPowerInequalityHypothesis`, not `AntitoneOn`). This
-consolidates the `AntitoneOn` wall into one `sorry` so consumers call it as a
-normal lemma rather than threading a load-bearing
-`(h_scaling : IsStamToEPIScalingHyp ...)` hypothesis.
-
-@residual(plan:epi-stam-to-conclusion-phaseA-plan) -- L-EPISC-2-β -/
-theorem stamToEPIScaling_holds {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
-    (hX : Measurable X) (hY : Measurable Y) :
-    IsStamToEPIScalingHyp X Y P := by
-  sorry
-
-/-! ## §2 — Bridge body discharge: scaling → bridge -/
-
-/-- **Bridge body discharge from scaling alone**.
-
-`IsStamToEPIScalingHyp` body-discharges the Stam-to-EPI bridge
-`IsStamToEPIBridgeHyp`.
-
-Proof sketch: take a Stam inequality witness `h_stam`. From `h_scaling h_stam`
-extract the standard-normal witnesses `(Z_X, Z_Y)` and the `AntitoneOn` gap.
-Antitonicity gives `gap(1) ≤ gap(0)`; the `s = 1` endpoint vanishes by
-Gaussian saturation (`entropyPower_gaussian_additivity` on the extracted
-independent standard normals), so `gap(0) ≥ 0`, which unfolds to the EPI
-conclusion at `s = 0` (`heatFlowPath2 X Z_X 0 = X`, `heatFlowPath2 Y Z_Y 0 = Y`).
-
-2026-05-28 (Cluster C Group 2): the former `_h_limit : IsStamToEPILimitHyp`
-slot was removed (the limit predicate was non-load-bearing — discarded via an
-`_` binder — and is purely deleted in this migration). The endpoint
-identification at `s = 1` is proved internally from the extracted `(Z_X, Z_Y)`
-pair, not from any caller-supplied limit hypothesis. Renamed from
-`isStamToEPIBridgeHyp_of_scaling_limit` accordingly.
-
-`@audit:ok` -/
-@[entry_point]
-theorem isStamToEPIBridgeHyp_of_scaling
-    {Ω : Type*} [MeasurableSpace Ω]
-    {X Y : Ω → ℝ} {P : Measure Ω} [IsProbabilityMeasure P]
-    (h_scaling : IsStamToEPIScalingHyp X Y P) :
-    IsStamToEPIBridgeHyp X Y P := by
-  intro h_stam
-  -- Extract the genuine Csiszár scaling witnesses from the new signature.
-  obtain ⟨Z_X, Z_Y, hZX_meas, hZY_meas, hZX_law, hZY_law,
-          _hXZX, _hYZY, hZXZY, h_anti⟩ := h_scaling h_stam
-  -- Antitonicity at endpoints: gap(1) ≤ gap(0).
-  have h0_mem : (0 : ℝ) ∈ Set.Icc (0:ℝ) 1 :=
-    Set.left_mem_Icc.mpr zero_le_one
-  have h1_mem : (1 : ℝ) ∈ Set.Icc (0:ℝ) 1 :=
-    Set.right_mem_Icc.mpr zero_le_one
-  have h_endpoint_le : _ ≤ _ := h_anti h0_mem h1_mem zero_le_one
-  -- Beta-reduce the lambda in `h_endpoint_le` to expose `heatFlowPath2 _ _ 0/1`.
-  simp only at h_endpoint_le
-  -- Endpoint reductions:
-  --  * gap(0) reduces to the EPI gap for X, Y (heatFlowPath2 _ _ 0 = X / Y).
-  --  * gap(1) reduces to the EPI gap for Z_X, Z_Y, which vanishes by
-  --    Gaussian saturation (both standard normal, independent).
-  have h_endpoint0_funext :
-      (heatFlowPath2 X Z_X 0 + heatFlowPath2 Y Z_Y 0)
-        = fun ω => X ω + Y ω := by
-    funext ω
-    simp [heatFlowPath2_zero]
-  have h_endpoint1_funext :
-      (heatFlowPath2 X Z_X 1 + heatFlowPath2 Y Z_Y 1)
-        = fun ω => Z_X ω + Z_Y ω := by
-    funext ω
-    simp [heatFlowPath2_one]
-  -- Gaussian saturation at s = 1: both endpoints are standard normal, indep.
-  have h_gap1_zero :
-      entropyPower (P.map (fun ω => Z_X ω + Z_Y ω))
-        - entropyPower (P.map Z_X) - entropyPower (P.map Z_Y) = 0 := by
-    have h_sat := entropyPower_gaussian_additivity
-      P Z_X Z_Y hZX_meas hZY_meas hZXZY 0 0 1 1
-      (by norm_num : (1 : ℝ≥0) ≠ 0) (by norm_num : (1 : ℝ≥0) ≠ 0)
-      hZX_law hZY_law
-    linarith
-  -- Rewrite h_endpoint_le to expose the two endpoint values.
-  rw [h_endpoint0_funext, h_endpoint1_funext,
-      heatFlowPath2_zero, heatFlowPath2_zero,
-      heatFlowPath2_one, heatFlowPath2_one] at h_endpoint_le
-  -- gap(0) ≥ 0 follows from gap(1) = 0 and gap(1) ≤ gap(0).
-  unfold IsEntropyPowerInequalityHypothesis
-  linarith
 
 /-! ## §2' — Phase A staged predicate: standard normal pair witness on `(Ω, P)` -/
 
@@ -317,87 +113,31 @@ so it cannot be specialized to construct fresh Gaussians on the original
 InformationTheory internal search (`rg "exists_indep|standard_normal_pair|
 noiseExtension|extendByGaussian"`) likewise returns 0 hits.
 
-**Phase 0 retraction precedent** (`EPIStamToBridge.lean:317-327`):
-`isStamToEPIScalingHyp_of_gaussian` was retracted in Phase 0 (2026-05-25)
-because the new `IsStamToEPIScalingHyp` signature (existential
-`∃ Z_X Z_Y, ...`) could not be honestly discharged from "X, Y are
-Gaussian" alone — the construction of two such fresh standard-normal
-witnesses on the same probability space requires a richness assumption
-on `(Ω, P)` that is outside Phase 0 / Phase A scope. The same wall
-applies here at the Phase A level.
-
 **Non-vacuous**: the 7-conjunction body is not trivially dischargeable —
 the `P.map _ = gaussianReal 0 1` conjuncts rule out the `Z_* := 0` collapse
-(`P.map (fun _ => 0) = Measure.dirac 0 ≠ gaussianReal 0 1`). The wall is the
-*existence* of such fresh jointly independent standard normals on an arbitrary
-probability space (Cover-Thomas Ch.17 implicit assumption "carries enough
-auxiliary randomness"), retreat line **L-Concl-A-γ**. Independent honesty audit
-(2026-05-25) confirmed: no Mathlib API exists (loogle 0 hits —
-`ProbabilityTheory.exists_iIndepFun`, `MeasureTheory.Measure.IsAtomless`,
-`exists_measurable_indepFun` all `unknown identifier`); not the EPI conclusion
-in disguise (concerns noise existence, not an entropy-power inequality).
+(`P.map (fun _ => 0) = Measure.dirac 0 ≠ gaussianReal 0 1`). The genuine content
+is the *existence* of such fresh jointly independent standard normals (Cover-Thomas
+Ch.17 implicit assumption "carries enough auxiliary randomness"). No Mathlib API
+constructs them in place (loogle 0 hits — `ProbabilityTheory.exists_iIndepFun`,
+`MeasureTheory.Measure.IsAtomless`, `exists_measurable_indepFun` all `unknown
+identifier`); and the predicate is not the EPI conclusion in disguise (it concerns
+noise existence, not an entropy-power inequality).
 
-**Honesty status (2026-05-28 Cluster C Tier 3 → Tier 2 migration, Group 2)**:
-this `def` is a *genuine existential richness statement* (no circular /
-`:True` / vacuous shape — the `P.map _ = gaussianReal 0 1` conjuncts rule
-out the `Z_* := 0` collapse). It is no longer a *load-bearing hypothesis*:
-the noise-extension witness was being supplied by the lemma
-`stamScalingNoise_exists` (below) rather than threaded as a caller
-`(h_noise : IsStamScalingNoiseHyp ...)` argument.
-
-**Update (2026-06-04, `epi-richness-route-b-plan` Phase 6)**: the predicate
-itself is a fine genuine existential, but the **in-place** instantiation
-`stamScalingNoise_exists` (claiming it holds on *any* `(Ω, P)`) is
-**provably false** on atomic measures (not a Mathlib wall — see that lemma's
-docstring + `@audit:defect(false-statement)`). The honest route B successor
-that *does* hold is `EPINoiseExtension.stamScalingNoise_exists_on_lift`
-(on the lift space `Ω × ℝ × ℝ`, 0 sorry). This predicate carries **no**
-`@residual` / `@audit:*` tag of its own — the defect is localized to the
-in-place `stamScalingNoise_exists`. -/
+**Honesty status**: this `def` is a *genuine existential richness statement* (no
+circular / `:True` / vacuous shape). The **in-place** instantiation on an
+arbitrary `(Ω, P)` is **provably false** on atomic measures (e.g. `Ω = Unit`,
+`P = Measure.dirac ()`), so the route through this file was deleted (2026-06-09,
+`epi-richness-route-b-plan` B2). The honest inhabitant that *does* hold is
+`EPINoiseExtension.stamScalingNoise_exists_on_lift` on the lift space
+`Ω × ℝ × ℝ` (0 sorry, live), which feeds
+`EPINoiseExtension.entropy_power_inequality_via_lift` (the honest EPI successor).
+This predicate carries **no** `@residual` / `@audit:*` tag of its own. -/
 def IsStamScalingNoiseHyp {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) : Prop :=
   ∃ (Z_X Z_Y : Ω → ℝ),
     Measurable Z_X ∧ Measurable Z_Y ∧
     P.map Z_X = gaussianReal 0 1 ∧ P.map Z_Y = gaussianReal 0 1 ∧
     IndepFun X Z_X P ∧ IndepFun Y Z_Y P ∧ IndepFun Z_X Z_Y P
-
-/-- **FALSE in-place statement — honest defect marker** (Phase 6 of
-`epi-richness-route-b-plan`, 2026-06-04).
-
-Claims that on **any** probability space `(Ω, P)` there exist two
-standard-normal `Z_X, Z_Y : Ω → ℝ` with `P.map Z_X = gaussianReal 0 1` etc.
-This in-place existential is **provably false**, not "hard": e.g. `Ω = Unit`,
-`P = Measure.dirac ()` satisfies `[IsProbabilityMeasure P]`, but every
-measurable `Z_X : Unit → ℝ` is constant, so `P.map Z_X = Measure.dirac (Z_X ())
-≠ gaussianReal 0 1`. Hence the `sorry` below is a `false-statement` defect —
-no Mathlib noise-extension constructor could ever discharge it (the previous
-docstring's "Mathlib upstream constructor / `IsAtomless` richness instance
-待ち" framing was **misleading**: the statement is false on atomic measures,
-so it is not a Mathlib wall).
-
-**Honest successor (route B, lift form)**:
-`InformationTheory.Shannon.EPINoiseExtension.stamScalingNoise_exists_on_lift`
-proves the genuine existential on the **lift space** `Ω × ℝ × ℝ`
-(`liftMeasure P = P.prod ((gaussianReal 0 1).prod (gaussianReal 0 1))`) with
-coordinate-projection witnesses, 0 sorry, from Mathlib product-measure API
-only. `entropyPower`'s law-only property + `IsStamInequalityResidual`'s
-carrier-free defeq then transport EPI from the lift to `(Ω, P)`
-(`entropy_power_inequality_via_lift`).
-
-**Why the first-choice fix (rewrite the def so `sorry` lives only in a proof
-body) does not apply here**: the defect is in the **statement shape itself**
-(`IsStamScalingNoiseHyp X Y P` is the in-place existential). The honest fix is
-not a rewrite of *this* declaration but a *different* declaration on the lift
-space (the successor above), kept side-by-side (addition, not replacement —
-B1 scope). The in-place signature is left in place (defect-marked) because
-changing it ripples into the difference-gap scaling constructor's destructure,
-which is out of B1 scope (G2-blocked, no ROI).
-
-@audit:defect(false-statement) @audit:closed-by-successor(epi-richness-route-b-plan) -/
-theorem stamScalingNoise_exists {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] :
-    IsStamScalingNoiseHyp X Y P := by
-  sorry
 
 /-- **Symmetry of the standard-normal-pair predicate**: if `(Z_X, Z_Y)`
 witnesses `IsStamScalingNoiseHyp X Y P`, then `(Z_Y, Z_X)` witnesses
@@ -1055,115 +795,6 @@ theorem csiszarLogRatioGap_antitoneOn_Ici_zero
 -- harmonic Stam. The genuine successor is the RATIO route R-3
 -- (`csiszarLogRatioGap_deriv_le_zero` : `J_sum − (N_X·J_X+N_Y·J_Y)/(N_X+N_Y) ≤ 0`),
 -- closable from plain Stam (ratio weights `α,β` with `α²≤α`).
-
-/-! ## §3 — Gaussian saturation full discharge of sub-predicates -/
-
--- `isStamToEPIScalingHyp_of_gaussian` was retracted in Phase 0 (2026-05-25)
--- because the new `IsStamToEPIScalingHyp` signature (which now requires an
--- existential witness `(Z_X, Z_Y)` of two independent standard normals jointly
--- independent of `X, Y`) cannot be honestly discharged from "X, Y are Gaussian"
--- alone: the construction of two such fresh standard-normal witnesses on the
--- same probability space requires a richness assumption on `(Ω, P)` that is
--- outside Phase 0 scope (would need a new staged predicate
--- `IsGaussianStandardizationHyp`). The Gaussian saturation EPI is still
--- discharged hypothesis-free via the direct path in
--- `isStamToEPIBridgeHyp_of_gaussian_via_scaling` below, which skips the
--- scaling predicate entirely.
-
-/-- **Gaussian bridge full discharge (direct Gaussian saturation route)**.
-For independent Gaussians `X, Y` with non-zero variance, the bridge holds
-hypothesis-free: the EPI gap is identically `0` by
-`entropyPower_gaussian_additivity`, so the Stam-conditional
-implication is trivial.
-
-Phase 0 (2026-05-25): previously routed via
-`isStamToEPIScalingHyp_of_gaussian` → `isStamToEPIBridgeHyp_of_scaling`.
-With the new `IsStamToEPIScalingHyp` signature carrying genuine
-Csiszár-scaling content (`AntitoneOn` witness), that scaling-discharge
-becomes inapplicable in the pure-Gaussian setting (no fresh standard-normal
-witness construction in scope); we route directly through Gaussian
-saturation instead.
-
-`@audit:ok` -/
-@[entry_point]
-theorem isStamToEPIBridgeHyp_of_gaussian_via_scaling
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
-    (m₁ m₂ : ℝ) (v₁ v₂ : ℝ≥0) (hv₁ : v₁ ≠ 0) (hv₂ : v₂ ≠ 0)
-    (hLawX : P.map X = gaussianReal m₁ v₁) (hLawY : P.map Y = gaussianReal m₂ v₂) :
-    IsStamToEPIBridgeHyp X Y P := by
-  intro _h_stam
-  have h_eq := entropyPower_gaussian_additivity
-    P X Y hX hY hXY m₁ m₂ v₁ v₂ hv₁ hv₂ hLawX hLawY
-  unfold IsEntropyPowerInequalityHypothesis
-  exact h_eq.ge
-
-/-! ## §4 — Decomposed pipeline structure + main theorem -/
-
-/-- **Decomposed EPI pipeline structure**. Refines `IsEPIL3IntegratedPipeline`
-from `EPIL3Integration.lean` by replacing the monolithic `IsStamToEPIBridgeHyp`
-field with the scaling sub-predicate.
-
-2026-05-28 (Cluster C Group 2): the `limit : IsStamToEPILimitHyp` field was
-removed (the limit predicate was deleted as non-load-bearing). The bridge body
-discharge `isStamToEPIBridgeHyp_of_scaling` needs only the scaling field. -/
-structure IsEPIScalingDecomposedPipeline {Ω : Type*} [MeasurableSpace Ω]
-    (X Y : Ω → ℝ) (P : Measure Ω) : Prop where
-  /-- Stam inequality (Cover-Thomas Lemma 17.7.2). -/
-  stam : IsStamInequalityHyp X Y P
-  /-- Scaling sub-predicate (heat-flow path monotonicity). -/
-  scaling : IsStamToEPIScalingHyp X Y P
-
-/-- **Entropy Power Inequality from the Stam wall** (Cover-Thomas Theorem 17.7.3).
-
-Given measurable `X, Y` on a probability space and the Stam inequality residual
-`h_stam : IsStamInequalityResidual X Y P` (Cover-Thomas Lemma 17.7.2), the EPI
-`N(X + Y) ≥ N(X) + N(Y)` holds. The proof routes through the shared sorry lemma
-`stamToEPIScaling_holds` (Csiszár scaling `AntitoneOn` wall) → the bridge body
-discharge `isStamToEPIBridgeHyp_of_scaling` → apply `h_stam`.
-
-**Honesty status (2026-05-28 Cluster C Group 2 — honesty defect repair)**:
-this theorem is **NOT `@audit:ok`** and is **NOT hypothesis-free**. The name
-`_unconditional` is a *legacy misnomer* retained for backward docstring
-compatibility (no code consumer; mentions are docstrings only). The theorem is
-genuinely conditional on:
-
-* the Stam wall input `h_stam : IsStamInequalityResidual` (Cover-Thomas Lemma
-17.7.2 — a separate wall, supplied by the caller / `stamToEPIBridge_holds`),
-* the Csiszár-scaling `AntitoneOn` wall, transitively present as the `sorry` in
-`stamToEPIScaling_holds` under `@residual(plan:epi-stam-to-conclusion-phaseA-plan)`.
-
-The prior signature threaded the now-deleted `h_limit : IsStamToEPILimitHyp`
-(#4) and load-bearing `h_noise : IsStamScalingNoiseHyp` (#5) / `h_reg` /
-`h_pos_stam` bundles while claiming `@audit:ok`; that was a tier-5 honesty
-overstatement (load-bearing predicate bundling masquerading as a complete
-proof). Those load-bearing arguments are removed: the scaling predicate is now
-obtained from `stamToEPIScaling_holds` (which localizes the wall to one `sorry`),
-so the only remaining inputs are regularity (`hX`, `hY`) + the genuine Stam wall
-`h_stam`.
-
-`h_stam` defeq note: the bridge consumes Stam as `IsStamInequalityHyp`
-(measure-keyed `(fisherInfoOfMeasureV2 _ _).toReal`); `IsStamInequalityResidual`
-(density-keyed `fisherInfoOfDensityReal`) is defeq via `fisherInfoOfMeasureV2_def`.
-
-@residual(plan:epi-stam-to-conclusion-phaseA-plan) -- transitive via `stamToEPIScaling_holds` -/
-@[entry_point]
-theorem entropy_power_inequality_unconditional
-    {Ω : Type*} {mΩ : MeasurableSpace Ω}
-    (P : Measure Ω) [IsProbabilityMeasure P]
-    (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
-    (h_stam : IsStamInequalityResidual X Y P) :
-    entropyPower (P.map (fun ω => X ω + Y ω))
-      ≥ entropyPower (P.map X) + entropyPower (P.map Y) := by
-  -- Scaling predicate from the shared sorry lemma (Csiszár AntitoneOn wall).
-  have h_scaling : IsStamToEPIScalingHyp X Y P := stamToEPIScaling_holds X Y P hX hY
-  -- Bridge body discharge (needs scaling only; `s = 1` endpoint is internal).
-  have h_bridge : IsStamToEPIBridgeHyp X Y P :=
-    isStamToEPIBridgeHyp_of_scaling h_scaling
-  -- Feed Stam to the bridge. `IsStamInequalityResidual` and `IsStamInequalityHyp`
-  -- are defeq via `fisherInfoOfMeasureV2_def`; the `exact` relies on that defeq.
-  exact h_bridge h_stam
 
 /-! ## §5 — Predicate manipulation: symmetry, congruence, pass-through -/
 
