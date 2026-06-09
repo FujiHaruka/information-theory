@@ -7,19 +7,22 @@ lift machinery を集約する (案 B1、最小 scope)。lift 空間 `Ω × ℝ 
 構成し、`entropyPower` の law-only 性 + `IsStamInequalityResidual` の carrier-free 性を使って
 `(Ω, P)` に EPI を transport する。
 
-## B1 dead-code 正当化 (3 点)
+## B1/B2 現状 (2026-06-09: B2 完了後)
 
-本 file の 4 lemma は live consumer ゼロ (現 chain は in-place `IsStamScalingNoiseHyp` を取る)。
-それでも価値を持つ理由:
+B2 (in-place 偽 W2 `stamScalingNoise_exists` の完全除去) は commit `192410c` で完了済。
+in-place 偽 noise existential と、その上に積まれた scaling sub-predicate / headline decl 群は
+削除された (consumer ripple 0)。本 file の lift 機材はその唯一の honest 後継であり、in-place 偽
+lemma の **置換** (併置ではなく) として位置づけられる。
 
-- **(a) future re-wire foundation**: lift 4 lemma は B2 (full re-wire = 偽 in-place
-  `stamScalingNoise_exists` を完全除去) に着手する後続セッションの building block。in-place 偽 lemma を
-  除去する唯一の honest 経路は lift 経由であり、その機材を先に genuine 化しておく。
-- **(b) wall register 訂正の根拠**: `wall:in-place-noise-extension` (在庫が唯一の真壁と判定) は route B で
-  踏まないことを実証する。在庫の「richness は閉じられる」主張を機械検証済の lemma で裏付ける。
-- **(c) 偽 statement 置換の代替提示**: 偽 W2 (`stamScalingNoise_exists`、atomic measure で false-statement)
-  を単に削除/defect マークするだけでなく、honest な代替 (`stamScalingNoise_exists_on_lift`) を提示することで、
-  撤退ではなく置換であることを示す。
+- **honest 置換**: 偽 W2 (`stamScalingNoise_exists`、atomic measure で false-statement) を削除した
+  跡を埋める genuine な代替が `stamScalingNoise_exists_on_lift` (lift 空間上の genuine existential)。
+  EPI 結論は `entropy_power_inequality_via_lift` (sorryAx-free) が carry する。
+- **consumer 状況** (`scripts/dep_consumers.sh` 2026-06-09 確認): `stamScalingNoise_exists_on_lift` /
+  `entropy_power_inequality_via_lift` ともに direct consumer 0。削除された in-place ルートの跡地を
+  埋める honest asset として in-tree に保持しているが、まだ下流 chain には結線されていない (現 EPI
+  conclusion は `EntropyPowerInequality.stamToEPIBridge_holds` 経由)。
+- **wall register 訂正の根拠**: richness sub-wall は route B (lift) で踏まずに閉じられることを
+  機械検証済 lemma で裏付ける。
 
 slug 統一: 本 file の lift lemma は genuine closable (0 sorry 目標)。撤退時のみ
 `@residual(plan:epi-richness-route-b-plan)` を付与する。
@@ -64,8 +67,8 @@ theorem entropyPower_map_comp_fst_eq (hX : Measurable X) :
   rw [hmap]
 
 /-- lift 空間で `IsStamScalingNoiseHyp` (lift 版) を product-measure API のみで構成。
-これは **lift 空間上の genuine な existential** であり、in-place の偽 W2
-`stamScalingNoise_exists` の honest 後継 (置換ではなく併置 = 正当化 (c))。
+これは **lift 空間上の genuine な existential** であり、削除された in-place の偽 W2
+`stamScalingNoise_exists` (commit `192410c` で除去) の honest 置換。
 witness は座標射影 `Z_X' := (·.2.1)`, `Z_Y' := (·.2.2)`。
 
 @audit:ok (independent honesty audit 2026-06-04: sorryAx-free

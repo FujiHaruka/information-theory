@@ -39,9 +39,11 @@ remaining hypothesis to the genuinely-irreducible primitives.
 
 ## Approach
 
-The Wave-7 `IsEPIScalingDecomposedPipeline` (`EPIStamToBridge.lean`) decomposed
-the bridge into `scaling`/`limit`, but its `stam` field was a *black-box*
-`IsStamInequalityHyp`. This file wires the discharged pieces two ways:
+This file wires the discharged Stam + de Bruijn pieces directly into the EPI
+conclusion, with no intermediate scaling-decomposition structure (an earlier
+Wave-7 decomposition predicate that split the bridge into `scaling`/`limit`
+around a black-box `IsStamInequalityHyp` field was removed; it is no longer part
+of the route). The wiring proceeds two ways:
 
 1. **Stam from regularity via the (now genuine) wall lemma** (§2). The genuine
    Step 2-3 analytic core is localized to `stam_step2_density_wall`, now genuinely
@@ -117,11 +119,10 @@ it is non-negative because Fisher information is non-negative.
 
 This `Prop`-level predicate records the **non-negativity of the de Bruijn
 derivative for the density witness `f`** — the genuine analytic content that makes
-the gap monotone. It complements `IsStamToEPIScalingHyp` (which, after the
-Phase 0 (2026-05-25) refactor, carries the global `AntitoneOn` `gap_s` witness
-on `s ∈ [0, 1]` via independent standard-normal witnesses); the present predicate
-isolates the *derivative-sign* step of the Csiszár scaling argument and
-discharges it outright (§1, below). -/
+the gap monotone. It complements `EPIStamToBridge.csiszarLogRatioGap_antitoneOn_Ici_zero`
+(which carries the global `AntitoneOn` witness for the Csiszár log-ratio gap along
+the heat-flow path); the present predicate isolates the *derivative-sign* step of
+the Csiszár scaling argument and discharges it outright (§1, below). -/
 def IsEPIGapMonotoneHyp (f : ℝ → ℝ) : Prop :=
   0 ≤ (1 / 2 : ℝ) * fisherInfoOfDensityReal f
 
@@ -188,9 +189,10 @@ its operation helpers (`isStamInequalityHyp_of_stamDeBruijn`,
 `isEPIL3IntegratedPipeline_of_stamDeBruijn`, `entropy_power_inequality_via_stamDeBruijn`,
 `isEPIStamDeBruijnPipeline_of_primitives`, `_symm`, `_congr`, `_roundtrip`) were
 removed in the wall-consolidation pass. They were an isolated island (zero
-cross-file consumers; the public main theorem `entropy_power_inequality` runs via
-`EPIStamToBridge.entropy_power_inequality_unconditional`), and their load-bearing
-predicate content is now localized to the shared `stam_step2_density_wall`. -/
+cross-file consumers; the public main theorem `entropy_power_inequality`
+actually runs via `EntropyPowerInequality.stamToEPIBridge_holds`, verified by the
+forward dep graph 2026-06-09), and their load-bearing predicate content is now
+localized to the shared `stam_step2_density_wall`. -/
 
 /-- **EPI conclusion from regularity preconditions** (via the shared wall).
 

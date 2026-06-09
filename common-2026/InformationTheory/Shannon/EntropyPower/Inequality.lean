@@ -398,8 +398,7 @@ theorem isEntropyPowerInequalityHypothesis_of_gaussian
 -- declaration line). It carried `@audit:retract-candidate(load-bearing-predicate)`
 -- + `@audit:closed-by-successor(epi-stam-to-conclusion-plan)`; the discharge
 -- path it provided (Gaussian-saturation → bridge) is now publicly available
--- via `EPIStamDischarge.isStamToEPIBridgeHyp_of_gaussian` and
--- `EPIStamToBridge.isStamToEPIBridgeHyp_of_gaussian_via_scaling`, so this
+-- via `EPIStamDischarge.isStamToEPIBridgeHyp_of_gaussian`, so this
 -- in-file `IsStamToEPIBridge` wrapper is redundant.
 
 /-! ## §E — 補助 corollary 群 -/
@@ -471,10 +470,9 @@ conclusion form) に live する。sister `EPIPlumbing.entropy_power_inequality_
 `@audit:retract-candidate(load-bearing-predicate)` から migrate。
 **signature 不変**: 本 wrapper は `EPIL3Integration.entropy_power_inequality_three_arg_integrated`
 (parallel Group 1 が編集中) が現 signature で consume するため、引数を削ると cross-file
-collision。Phase A の代替 discharge route
-(`EPIStamToBridge.entropy_power_inequality_unconditional`) は hypothesis-free を
-**標榜していない** (Stam noise / de Bruijn regularity / limit hyp を thread) ため、
-hypothesis-free 偽装の delegate 先には使わない。 -/
+collision。一般原則として、Stam noise / de Bruijn regularity / limit hyp を thread する
+discharge route を、hypothesis-free を標榜する wrapper の delegate 先には使わない
+(hypothesis-free 偽装を避ける)。 -/
 theorem entropy_power_inequality_three_arg {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]
     (X Y Z : Ω → ℝ)

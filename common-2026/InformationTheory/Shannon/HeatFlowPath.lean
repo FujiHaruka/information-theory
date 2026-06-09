@@ -10,9 +10,14 @@ import Mathlib.Analysis.SpecialFunctions.Pow.NNReal
 # Heat-flow path (2-source) for EPI-Stam Csiszár scaling
 
 `heatFlowPath2 X Z s := √(1-s) · X + √s · Z`, the 2-source generalization of
-the 1-source `gaussianConvolution X Z t = X + √t · Z` in `FisherInfoV2DeBruijn.lean`.
-Used in `EPIStamToBridge.IsStamToEPIScalingHyp` (Phase 0 refactor) to carry
-genuine Csiszár scaling monotonicity along `s ∈ [0, 1]`.
+the 1-source `gaussianConvolution X Z t = X + √t · Z` in `FisherInfoV2DeBruijn.lean`,
+carrying genuine Csiszár scaling monotonicity along `s ∈ [0, 1]`.
+
+Its former consumer `EPIStamToBridge.IsStamToEPIScalingHyp` (Phase 0 refactor) was
+deleted (2026-06-09, commit `192410c`); the definition currently has no live
+term-level consumer outside this file (`scripts/dep_consumers.sh` 2026-06-09).
+The endpoint / law lemmas below remain a self-contained, reusable scaling-path
+asset for a future Csiszár-route re-wire.
 
 ## Endpoints
 
