@@ -35,20 +35,7 @@ The per-`t` regularity (a.c. + entropy integrability of the three W-path laws fo
 the scaling step; the §3 squeeze regularity bundles `IsRescaledPathRegular` for the
 three paths) is threaded as honest preconditions (方針 X); the noise Gaussian laws +
 independence are regularity. No EPI / Stam core is bundled.
-
-Genuine analytic glue — **own body is `sorry`-free**, and now **transitively
-sorryAx-free** (§3 `entropyPower_rescaled_path_tendsto` is genuinely closed):
-`#print axioms` = `[propext, Classical.choice, Quot.sound]`.
-
-@audit:ok (independent honesty audit 2026-06-05: own body + transitive sorryAx-free
-[propext, Classical.choice, Quot.sound]. `h_scale_X/Y/sum` are regularity preconditions of
-`entropyPower_path_scaling` (a.c. + negMulLog integrability), `hZX_law`/`hZY_law`/
-`hZXZY_indep`/`hZX_ac`/`hZY_ac`/`hZXZY_ac` are noise Gaussian regularity, `varX/Y/S` +
-`h_reg_X/Y/S` are §3's `IsRescaledPathRegular` bundles (audited non-load-bearing, see §3)
-threaded transparently. The deliverable is genuine analytic glue (scaling cancellation via
-log_mul, three §3 path limits, Gaussian additivity, log-continuity composition → R t → 0);
-no EPI/Stam core is bundled. Sufficiency holds: both log arguments converge to N(Z_X)+N(Z_Y)
-[via §3 + `entropyPower_gaussian_additivity`], so log-ratio gap → 0.) -/
+@audit:ok -/
 theorem csiszarLogRatioGap_tendsto_zero_atTop
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y)
@@ -353,32 +340,7 @@ This wrapper discharges the supply-able preconditions of
 The **de Bruijn per-time regularity group** (`h_reg_*'` / `h_endpt_*` / `h_pos_stam`)
 is **not supplied from method-X** (it depends on the moonshot
 `epi-debruijn-pertime-closure`) and is threaded as an honest precondition.
-
-Independent honesty audit 2026-06-05 (honest_residual AFFIRMED, 4-check): (1) non-circular
-— conclusion `N(X+Y) ≥ N(X)+N(Y)` matches no hypothesis (`IsStamInequalityHyp` is the
-Fisher form `1/J_sum ≥ 1/J_X+1/J_Y`, a different statement). (2) non-load-bearing — the
-threaded de Bruijn group is regularity, not core: `IsStamInequalityHyp` is genuinely
-derivable from pure regularity (`isStamInequalityHyp_via_step3`, takes only
-measurability/independence, sorryAx-free), so granting it hands no EPI; the genuine EPI
-core lives in `_of_regular`'s two pillars. (3) non-degenerate — non-vacuous (Gaussian
-witness inhabits `IsStamInequalityHyp`), conclusion is verbatim case-1 EPI. (4) sufficiency
-— body genuinely derives all supply-able `_of_regular` preconditions (4 independences from
-the 4-tuple, noise a.c./laws, variance bounds with equality, scaling regularity, three
-`IsRescaledPathRegular`) and threads the de Bruijn group verbatim; conclusion follows
-(`#print axioms` = [propext, Classical.choice, Quot.sound], sorryAx-free, transitively).
-`hXY_ac` honest (sum-a.c. regularity, standard case-1 hyp, cannot encode EPI). Helper
-assets (`convDensityAdd_negMulLog_integrable_pub` / `pPath_eq_convDensityAdd` /
-`map_add_absolutelyContinuous` / `isRescaledPathRegular_of_methodX`) all `@audit:ok`. Naming
-`_of_methodX` honest (de Bruijn group remains open, not `_unconditional`/`_discharged`).
-`@residual(plan:epi-debruijn-pertime-closure)` slug correct (established convention shared
-by 6 FisherInfoV2DeBruijn* files for the same wall; plan file
-`epi-debruijn-pertime-closure-plan.md` exists).
-**@audit:superseded-by(entropyPowerExt_add_ge_unconditional)** (2026-06-08): 本 method-X case-1 EPI
-wrapper は consumer 0、かつ未解消 de Bruijn per-time 残壁 (`@residual` 下記) を抱える。無条件 EPI は
-route T で case-1 を閉じた (`entropyPowerExt_add_ge_unconditional`) ため、この de Bruijn EPI 経路は EPI
-用途では不要 = retract 候補。ただし de Bruijn 恒等式 closure 計画 `epi-debruijn-pertime-closure` 自体は
-EPI と独立の standalone goal として有効 (本 wrapper の supersede は de Bruijn 計画の中止を意味しない)。
-@residual(plan:epi-debruijn-pertime-closure) -/
+@audit:ok -/
 theorem entropyPower_add_ge_case1_of_methodX
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hX : Measurable X) (hY : Measurable Y)

@@ -37,14 +37,7 @@ where `D` is the σ-derivative `∂_s pPath t x`, supplied as the `HasDerivAt` w
 `hpath_deriv` is the σ-derivative of the *integrand* `fun s => pPath s x` (integrand-level
 regularity from `heatFlow_density_heat_equation`). The composed `HasDerivAt` conclusion is
 the genuine claim, derived via `HasDerivAt.comp` — NOT bundled into a hypothesis.
-
-Independent honesty audit (2026-05-31, fresh auditor, §5G split commit `8906b5c`): verdict
-ok. 0 local sorry; `#print axioms` confirms `[propext, Classical.choice, Quot.sound]` only
-(sorryAx-free). `hpos` is a positivity precondition required by `hasDerivAt_negMulLog`;
-`hpath_deriv` is an integrand-level σ-derivative `HasDerivAt` witness — neither bundles the
-composed conclusion (core-reconstruction test: granting both does not hand over the chain-rule
-composite value `(-log p - 1)·D`, which `hneg.comp t hpath_deriv` genuinely derives). NOT
-circular, NOT load-bearing. proof-done. @audit:ok -/
+@audit:ok -/
 theorem debruijnIdentityV2_holds_assembled_chain_entDeriv_formula
     (pX : ℝ → ℝ) {t : ℝ} (ht : 0 < t) (x : ℝ) (D : ℝ)
     (hpos : convDensityAdd pX (gaussianPDFReal 0 ⟨t, ht.le⟩) x ≠ 0)
@@ -70,13 +63,7 @@ theorem debruijnIdentityV2_holds_assembled_chain_entDeriv_formula
 /-- **Genuine integrability helper**: `x ↦ x^k · exp(-b·x²)` is Lebesgue integrable for any
 `k : ℕ` and `b > 0`. Bridges the Mathlib `rpow` lemma `integrable_rpow_mul_exp_neg_mul_sq`
 (which uses `x ^ (k:ℝ)`) to the `pow` (`ℕ`-exponent) form via `rpow_natCast`.
-
-Independent honesty audit (2026-05-31, fresh auditor, §5G-2 wiring commit `cf88267`): verdict
-ok. 0 sorry; `#print axioms` confirms `[propext, Classical.choice, Quot.sound]` only
-(sorryAx-free). The bridge is genuine: `integrable_rpow_mul_exp_neg_mul_sq` exists in Mathlib
-(`Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral`, loogle confirmed), and the body
-is a `rpow_natCast` `funext`/`rwa` rewrite from `x^(k:ℝ)` to `x^k`. NOT circular, NOT
-degenerate. proof-done. @audit:ok -/
+@audit:ok -/
 private theorem integrable_natPow_mul_exp_neg_mul_sq {b : ℝ} (hb : 0 < b) (k : ℕ) :
     Integrable (fun x : ℝ => x ^ k * Real.exp (-b * x ^ 2)) volume := by
   have hk : (-1 : ℝ) < (k : ℝ) := by
@@ -92,10 +79,7 @@ private theorem integrable_natPow_mul_exp_neg_mul_sq {b : ℝ} (hb : 0 < b) (k :
 /-- **Closed-form Gaussian pdf upper bound (genuine, Assembly-local).** The centered Gaussian
 density is bounded above by its normalizing prefactor `(√(2πv))⁻¹` (since `exp` of a
 nonpositive exponent is `≤ 1`). Re-proved here because the PerTime version is `private`.
-
-Independent honesty audit (2026-05-31, commit `b53107a`): verdict ok. sorryAx-free
-(`[propext, Classical.choice, Quot.sound]`). Genuine standalone re-proof (`exp` of nonpositive
-exponent `≤ 1`), not an alias of the PerTime version. @audit:ok -/
+@audit:ok -/
 theorem gaussianPDFReal_le_prefactor' (v : ℝ≥0) (u : ℝ) :
     gaussianPDFReal 0 v u ≤ (Real.sqrt (2 * Real.pi * v))⁻¹ := by
   rw [gaussianPDFReal]
@@ -112,11 +96,7 @@ theorem gaussianPDFReal_le_prefactor' (v : ℝ≥0) (u : ℝ) :
 `pX` (`∫ pX = 1`), the convolution density `p_s x = ∫ pX y · g_s(x-y)` is bounded above by the
 Gaussian prefactor `(√(2πs))⁻¹`, uniformly in `x`. (`p_s x ≤ ∫ pX y · prefactor =
 prefactor · ∫ pX = prefactor`.) Used for the lower side of the GAP① `‖·‖` bound.
-
-Independent honesty audit (2026-05-31, commit `b53107a`): verdict ok. sorryAx-free
-(`[propext, Classical.choice, Quot.sound]`). `hpX_nn`/`hpX_int`/`hpX_mass` are regularity; the upper
-bound is derived via `integral_mono` to the majorant `pX·pref` + `hpX_mass` (`∫(pX·pref)=pref·1`), NOT
-assumed. @audit:ok -/
+@audit:ok -/
 private theorem convDensityAdd_le_prefactor
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
     (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -143,10 +123,7 @@ private theorem convDensityAdd_le_prefactor
 
 /-- Monotonicity of the centered Gaussian pdf in `|·|` (Assembly-local re-proof of the
 PerTime `private` version): if `|u| ≤ |w|` then `g_v(w) ≤ g_v(u)`.
-
-Independent honesty audit (2026-05-31, commit `b53107a`): verdict ok. sorryAx-free
-(`[propext, Classical.choice, Quot.sound]`). Genuine re-proof (monotone `exp` of `-u²/(2v)` in `|·|`,
-`v=0` branch handled), not an alias. @audit:ok -/
+@audit:ok -/
 private theorem gaussianPDFReal_antitone_abs'
     (v : ℝ≥0) {u w : ℝ} (huw : |u| ≤ |w|) :
     gaussianPDFReal 0 v w ≤ gaussianPDFReal 0 v u := by
@@ -167,13 +144,7 @@ private theorem gaussianPDFReal_antitone_abs'
 the `s`-uniform GAP① majorant the same tightness radius (`∫_{[-R,R]} pX ≥ 1/2`, which depends
 only on `pX`) must be reused across all `s`, so the tightness step is hoisted out and the per-`s`
 box-drop + Gaussian-monotonicity argument is applied with the common `R`.
-
-Independent honesty audit (2026-05-31, commit `b53107a`): verdict ok. sorryAx-free
-(`[propext, Classical.choice, Quot.sound]`). The `s`-uniform tightness hoist is genuine: STEP 1
-extracts a single `R` (depending only on `pX`) via `tendsto_setIntegral_of_monotone` over the monotone
-`Icc(-n,n)` exhaustion (using `hpX_mass:∫pX=1` to identify the limit as 1), then STEPs 2-3 apply the
-per-`s` box-drop + `gaussianPDFReal_antitone_abs'` with that common `R`. No circularity/degeneracy;
-hyps are pX regularity, the lower bound is derived. @audit:ok -/
+@audit:ok -/
 private theorem convDensityAdd_lower_bound_gaussian_uniformR
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
     (hpX_mass : (∫ y, pX y ∂volume) = 1) :
@@ -277,21 +248,7 @@ The route is "log of the lower bound" (`Real.log_le_log`+`Real.log_exp`), NOT `-
 `hpX_mass : ∫ pX = 1` is an honest probability-density regularity precondition (threaded from
 `debruijnIdentityV2_holds_assembled`, supplied via `(P.map X) univ = 1`); it feeds
 `convDensityAdd_lower_bound_gaussian_uniformR` / `_le_prefactor` / `_pos`. NOT load-bearing
-(the majorant inequality is derived, not assumed). `B ≥ 0` and the existential output are genuine.
-
-Independent honesty audit (2026-05-31, fresh auditor, GAP①+hpX_mass threading commit `b53107a`):
-verdict ok (proof-done). `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free,
-transitive 0 sorry; the file's 4 remaining sorrys at GAP②/fisher/IBP-step/_chain_parametric are NOT
-in this declaration's dependency cone). Signature honest: all hyps are pX-system regularity
-(`hpX_nn`/`hpX_int`/`hpX_mass:∫pX=1`) + `ht`; `_hpX_meas` unused. core-reconstruction test: granting
-all hyps does NOT hand over the majorant — it is derived by two-sided `abs_le` (upper via
-`convDensityAdd_lower_bound_gaussian_uniformR` + `Real.log_le_log` + closed-form log expansion; lower
-via `convDensityAdd_le_prefactor`). `hpX_mass` is consumed as genuine normalization (in `_le_prefactor`
-`∫(pX·pref)=pref`, in `_uniformR` tightness `∫_{[-R,R]}pX≥1/2`, in `convDensityAdd_pos` positive mass) =
-regularity precondition, NOT load-bearing. NOT circular/degenerate. proof-done.
-Made public (formerly `private`) so the EPI G2 (β) density-form cross-term /
-llr integrability consumers (`EPIG2ConvEntropyDensity.lean`) can use it directly;
-visibility-only change, body and `@audit:ok` status unchanged.
+(the majorant inequality is derived, not assumed).
 @audit:ok -/
 theorem convDensityAdd_logFactor_poly_majorant
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (_hpX_meas : Measurable pX)
@@ -430,9 +387,6 @@ Gaussian × quadratic, hence Lebesgue-integrable. This is the genuine `s`-unifor
 envelope feeding GAP②'s triangle inequality. -/
 
 /-- The `s`-uniform Gaussian-Hessian kernel majorant on the window `s ∈ (t/2, 2t)`.
-Independent honesty audit (2026-05-31, fresh auditor, Wave 3 commit `b5b9360`): genuine def,
-not load-bearing (the consumer `convDensityAdd_deriv2_poly_moment_majorant` builds its envelope
-as a convolution against this kernel; the kernel is a plain Gaussian×quadratic, no claim bundled).
 @audit:ok -/
 noncomputable def gaussHessMaj (t : ℝ) (u : ℝ) : ℝ :=
   (Real.sqrt (Real.pi * t))⁻¹ * Real.exp (-u ^ 2 / (4 * t)) * (4 * u ^ 2 / t ^ 2 + 2 / t)
@@ -448,13 +402,6 @@ theorem gaussHessMaj_nonneg {t : ℝ} (ht : 0 < t) (u : ℝ) : 0 ≤ gaussHessMa
 
 /-- `gaussHessMaj t` is globally bounded (Gaussian decay kills the quadratic).
 Used to prove `Integrable (fun y => pX y · gaussHessMaj t (x − y))` via `Integrable.mul_bdd`.
-
-Independent honesty audit (2026-05-31, Wave 4, fresh auditor): verdict **ok**. Bound
-`(√(πt))⁻¹·(16e⁻¹/t + 2/t)` is a genuine global sup: the body bounds `u²·exp(−u²/4t) ≤ 4t·e⁻¹`
-via `Real.mul_exp_neg_le_exp_neg_one` and `exp(−u²/4t) ≤ 1`, so
-`exp·(4u²/t² + 2/t) ≤ 16e⁻¹/t + 2/t` — mathematically sound. `#print axioms` =
-`[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified). Single hyp `0<t`
-regularity; conclusion not load-bearing.
 @audit:ok -/
 theorem gaussHessMaj_bdd {t : ℝ} (ht : 0 < t) :
     ∀ u : ℝ, gaussHessMaj t u
@@ -499,8 +446,6 @@ theorem gaussHessMaj_bdd {t : ℝ} (ht : 0 < t) :
     _ ≤ 16 * Real.exp (-1) / t + 2 / t := by linarith [ht1, ht2]
 
 /-- `gaussHessMaj t` is Lebesgue-integrable (Gaussian × quadratic).
-Independent honesty audit (2026-05-31, fresh auditor, Wave 3 commit `b5b9360`): genuine,
-`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free). All hyps regularity.
 @audit:ok -/
 theorem gaussHessMaj_integrable {t : ℝ} (ht : 0 < t) :
     Integrable (gaussHessMaj t) volume := by
@@ -668,19 +613,6 @@ theorem gaussHessMaj_polyWeight_bdd {t : ℝ} (ht : 0 < t) {a b : ℝ}
 
 /-- `s`-uniform pointwise majorant: for `s ∈ (t/2, 2t)`,
 `g_s(u)·|u²/s² − 1/s| ≤ gaussHessMaj t u`.
-
-Independent honesty audit (2026-05-31, fresh auditor, Wave 3 commit `b5b9360`):
-**MAJORANT-INEQUALITY SOUNDNESS = PASS** (verified the 3 sub-bounds on the window `s ∈ (t/2,2t)`):
-(i) prefactor `(√(2πs))⁻¹ ≤ (√(πt))⁻¹` ⟺ `2s ≥ t`, holds from `s > t/2` (`hpref`, `ht2s`);
-(ii) exponent `exp(−u²/(2s)) ≤ exp(−u²/(4t))` ⟺ `s ≤ 2t` (with `u² ≥ 0`), holds from `s < 2t`
-(`hexp`, `sq_nonneg u`); (iii) polynomial `|u²/s²−1/s| ≤ u²/s²+1/s ≤ 4u²/t²+2/t` ⟺ `t ≤ 2s`
-(`u²/s² ≤ 4u²/t²` ⟺ `t² ≤ 4s²`; `1/s ≤ 2/t` ⟺ `t ≤ 2s`), holds from `2s > t` (`hpoly` `h1`/`h2`).
-**Case-A re-emergence ruled out**: this is the single Gaussian kernel `g_s` *outside* the
-convolution (`g_s` is genuinely Gaussian, so a Gaussian majorant is correct) — categorically
-different from the deleted case-A defect, which falsely asserted a Gaussian tail for the
-*convolution* `pX∗g_s` against polynomial-tail `pX`. A wrong majorant here would make GAP②
-pointwise vacuous; it is correct. `#print axioms` = `[propext, Classical.choice, Quot.sound]`
-(sorryAx-free). All hyps regularity; not load-bearing.
 @audit:ok -/
 theorem gaussianHess_le_gaussHessMaj {t : ℝ} (ht : 0 < t) {s : ℝ}
     (hs : s ∈ Set.Ioo (t/2) (2*t)) (u : ℝ) :
@@ -734,12 +666,6 @@ For an integrable kernel `K` and an integrable density `pX`, the convolution-sha
 `x ↦ ∫ y, pX y · K (x − y)` is Lebesgue-integrable (`∫_x = (∫K)·∫pX`, by translation
 invariance + `Integrable.integral_prod_left`). The product integrability on `volume.prod volume`
 uses `integrable_prod_iff'`.
-
-Independent honesty audit (2026-05-31, fresh auditor, Wave 3 commit `b5b9360`): genuine Tonelli
-helper, `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free). All four hyps
-(`hpX_int`/`hpX_meas`/`hK_int`/`hK_meas`) are regularity (integrability + measurability of the two
-factors); the integrability conclusion is the genuine claim, not bundled in any hyp. This is the
-helper that genuinely closes the `Integrable bound` half of GAP②.
 @audit:ok -/
 theorem convKernel_envelope_integrable
     (pX K : ℝ → ℝ) (hpX_int : Integrable pX volume) (hpX_meas : Measurable pX)
@@ -780,10 +706,8 @@ theorem convKernel_envelope_integrable
 stated on the `convDensityAdd` shape so downstream `IsRegularDensityV2` producers can
 reuse it without leaking the `private` helper. Identical content; the `convDensityAdd`
 unfold makes the conclusion `Integrable (convDensityAdd pX K) volume`.
-@audit:ok — pure re-export, no new content. Independent honesty audit (2026-06-01, fresh
-auditor) confirms the self-tag: body is `:= convKernel_envelope_integrable ...` (thin pass-through,
-conclusion defeq to that of the already-`@audit:ok` private helper), all four hyps regularity,
-sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`). -/
+@audit:ok — pure re-export, no new content.
+@audit:ok -/
 @[entry_point]
 theorem convDensityAdd_envelope_integrable
     (pX K : ℝ → ℝ) (hpX_int : Integrable pX volume) (hpX_meas : Measurable pX)
@@ -808,12 +732,6 @@ These are genuine global-boundedness facts (continuous Gaussian×polynomial → 
 load-bearing: they assert pure analytic majorants, no convolution/Hessian claim. -/
 
 /-- Global sup bound of the kernel spatial 1st derivative `g_s(u)·(-(u/s))`.
-
-Independent honesty audit (2026-05-31, Wave 4, fresh auditor): verdict **ok**. Bound
-`(√(2πs))⁻¹·((1+2s·e⁻¹)/(2s))` is a genuine global sup of the single Gaussian kernel 1st spatial
-derivative: body uses `2|u| ≤ 1+u²`, `u²·exp(−u²/2s) ≤ 2s·e⁻¹` (`mul_exp_neg_le_exp_neg_one`),
-`exp ≤ 1` — sound. Single Gaussian `g_s` *outside* convolution (Gaussian → bounded), unrelated to
-the deleted case-A polynomial-tail defect. Hyp `0<s` regularity; not load-bearing.
 @audit:ok -/
 theorem kernel_x_deriv1_global_bound {s : ℝ} (hs : 0 < s) :
     ∀ u : ℝ, ‖heatFlow_density_heat_equation_kernel s u * (-(u / s))‖
@@ -860,12 +778,6 @@ theorem kernel_x_deriv1_global_bound {s : ℝ} (hs : 0 < s) :
     _ = (1 + 2 * s * Real.exp (-1)) / (2 * s) := by ring
 
 /-- Global sup bound of the kernel spatial 2nd derivative `g_s(u)·(u²/s²-1/s)`.
-
-Independent honesty audit (2026-05-31, Wave 4, fresh auditor): verdict **ok**. Bound
-`(√(2πs))⁻¹·((2e⁻¹+1)/s)` is a genuine global sup: body splits `|u²/s²−1/s| ≤ u²/s²+1/s`, bounds
-`exp·u²/s² ≤ 2e⁻¹/s` (`mul_exp_neg_le_exp_neg_one`) and `exp·1/s ≤ 1/s` — sound. Single Gaussian
-`g_s` outside convolution. `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free,
-machine-verified). Hyp `0<s` regularity; not load-bearing.
 @audit:ok -/
 theorem kernel_x_deriv2_global_bound {s : ℝ} (hs : 0 < s) :
     ∀ u : ℝ, ‖heatFlow_density_heat_equation_kernel s u * (u ^ 2 / s ^ 2 - 1 / s)‖

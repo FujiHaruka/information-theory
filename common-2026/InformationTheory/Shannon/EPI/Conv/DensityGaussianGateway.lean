@@ -30,13 +30,6 @@ open InformationTheory.Shannon.EPIConvDensity
 `fX` enters only through `Integrable fX volume` (ae-measurability + bound
 integrability). All hyps are regularity preconditions; the differentiability is
 derived via the gateway, not assumed.
-
-Independent honesty audit (2026-06-01, fresh auditor): verdict **ok**. Core-reconstruction
-test: granting the hyps does NOT hand the convolution's derivative — it is reconstructed in
-the body via differentiation-under-integral (dominated convergence + `convDensityAdd_hasDerivAt`).
-`IsRegularDensityV2 fY` only extracts kernel continuity / pointwise `HasDerivAt`; `Integrable fX`
-is a regularity precondition, not load-bearing. sorryAx-free (`#print axioms` =
-`[propext, Classical.choice, Quot.sound]`).
 @audit:ok -/
 theorem convDensityAdd_hasDerivAt_of_integrable_smoothKernel (fX fY : ℝ → ℝ) (z₀ : ℝ)
     (hX_int : Integrable fX volume)
@@ -118,9 +111,6 @@ theorem convDensityAdd_hasDerivAt_of_integrable_smoothKernel (fX fY : ℝ → �
 
 /-- **Differentiable corollary** of `convDensityAdd_hasDerivAt_of_integrable_smoothKernel`,
 for the `diff` field of downstream regular-density witnesses.
-
-Independent honesty audit (2026-06-01, fresh auditor): verdict **ok**. Thin `.differentiableAt`
-corollary of the audited `HasDerivAt` producer; same regularity hyps, no bundling. sorryAx-free.
 @audit:ok -/
 theorem convDensityAdd_differentiable_of_integrable_smoothKernel (fX fY : ℝ → ℝ)
     (hX_int : Integrable fX volume)

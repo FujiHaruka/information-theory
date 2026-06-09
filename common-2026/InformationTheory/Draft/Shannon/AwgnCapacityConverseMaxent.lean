@@ -606,12 +606,6 @@ The input `p` is constrained by membership in `awgnPowerConstraintSet P` (linteg
 second moment `≤ P`), which carries the genuine integrability of `x²` via
 `awgnPowerConstraintSet_mem_iff_integrable` — exactly the regularity Phases 1–5 use.
 This rules out the heavy-tailed inputs (Cauchy etc.) that would break the statement.
-
-Genuinely discharged (0 sorry): the density representation
-(`output_eq_withDensity_mixture` / `output_rnDeriv_ae_mixture`), the upper bound (6a),
-the mixture Gaussian lower bound (6b, `output_logDensity_lower_bound`, the only hard
-sub-lemma), the quadratic combination (6c), and the `withDensity ↔ smul` transport are
-all proven.
 @audit:ok -/
 theorem outputDistribution_logDensity_integrable
     (hP : 0 ≤ P) (hN : N ≠ 0) (h_meas : IsAwgnChannelMeasurable N)
@@ -742,8 +736,7 @@ The constraint is membership in `awgnPowerConstraintSet P` (lintegral form), whi
 carries the genuine integrability of `x²` (`awgnPowerConstraintSet_mem_iff_integrable`),
 ruling out the heavy-tailed inputs (Cauchy etc.) that made the old Bochner-only signature
 false. The output log-density integrability hypotheses (`h_int_out` / `h_ent_int`) are
-discharged genuinely by `outputDistribution_logDensity_integrable[_joint]` (Phase 6) —
-no load-bearing hypothesis is introduced.
+discharged genuinely by `outputDistribution_logDensity_integrable[_joint]` (Phase 6)
 @audit:ok -/
 @[entry_point]
 theorem awgn_per_input_mi_le_log

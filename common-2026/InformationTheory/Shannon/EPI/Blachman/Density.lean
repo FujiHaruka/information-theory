@@ -60,10 +60,7 @@ definition), divided by `p_Z(z) > 0`.
 
 `hpZ` is a regularity precondition (positivity of the convolution density at `z`,
 satisfied whenever `fX, fY > 0` are integrable).
-
-@audit:ok — genuine: numerator `∫ fX·fY(z-·) = convDensityAdd` is `rfl`, divided
-by genuine positivity `hpZ` (`div_self`); not a degenerate/vacuous use of `0 < p_Z`.
-sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`). -/
+@audit:ok -/
 theorem condDensityX_integral_eq_one (fX fY : ℝ → ℝ) (z : ℝ)
     (hpZ : 0 < convDensityAdd fX fY z) :
     ∫ x, condDensityX fX fY z x ∂volume = 1 := by
@@ -138,14 +135,7 @@ and `logDeriv f · f = deriv f` pointwise (positivity).
 (gateway derivative).  Numerator `= λ p_Z' + (1-λ) p_Z' = p_Z'`.  Divide by `p_Z`.
 
 `h_int_W` is the regularity precondition that the weighted integrand is integrable.
-
-@audit:ok — NOT load-bearing: no hyp contains `logDeriv (convDensityAdd …)` nor
-the score equality; all hyps are regularity (`IsRegularDensityV2`, `∃M`,
-`Integrable`, `0 < p_Z`). Core-reconstruction test passes — conclusion is genuinely
-assembled (LHS via gateway `HasDerivAt`+`logDeriv_apply`; RHS via pointwise
-`logDeriv f·f = deriv f` cancellation + S2 `symm_deriv_integral_eq`), not handed by
-a hypothesis. condExp/condDistrib/disintegration absent from body + imports
-(density route honest). sorryAx-free (`#print axioms` = standard 3). -/
+@audit:ok -/
 theorem score_conv_eq_weighted_integral (fX fY : ℝ → ℝ) (lam z : ℝ)
     (hregX : IsRegularDensityV2 fX) (hregY : IsRegularDensityV2 fY)
     (hX_int : Integrable fX volume) (hY_int : Integrable fY volume)
@@ -243,14 +233,7 @@ for `0 ≤ lam ≤ 1`, via:
 `hpos` (`f ≥ 0`) and `hint` (Bochner-integrability of the squared-score density)
 are regularity preconditions, satisfied by any genuine probability density with
 finite Fisher information; neither bundles the Fisher-info value.
-
-Genuine (0 sorry): pure lintegral↔Bochner bridge, no Blachman content.
-
-@audit:ok — independent audit: hyps `hpos`/`hint` are regularity preconditions
-(nonneg + integrability of the squared-score density), neither bundles the
-Fisher-info value. Conclusion genuinely assembled
-(`integral_eq_lintegral_of_nonneg_ae` + `ENNReal.ofReal_mul`). `#print axioms` =
-`[propext, Classical.choice, Quot.sound]` (sorryAx-free, verified transiently). -/
+@audit:ok -/
 theorem fisherInfoOfDensity_toReal_eq_integral (f : ℝ → ℝ)
     (hpos : ∀ x, 0 ≤ f x)
     (hint : Integrable (fun x => (logDeriv f x) ^ 2 * f x) volume) :
@@ -292,15 +275,7 @@ and S3 `score_conv_eq_weighted_integral` to identify `∫ scoreWeight ∂μ` wit
 `hcond_int` (integrability of the conditional density), `hint_W` (integrability of
 the score weight against `condDensityX`) and `hint_Wsq` are regularity preconditions
 on admissible densities; none bundles the conclusion inequality.
-
-@audit:ok — independent audit (2026-05-30): no hyp contains the score-square
-inequality. `hpZ` (positivity), `hcond_int`/`hint_W`/`hint_Wsq` (Integrable
-side-conditions) and the boundedness hyps are all regularity preconditions; none
-bundles the conclusion. `IsProbabilityMeasure μ` is genuinely derived from 3b
-`condDensityX_integral_eq_one` (mass = 1, not faked). Conclusion assembled via
-`ConvexOn.map_integral_le` (Jensen for `(·)²`) + `integral_withDensity_…` CoV + S3.
-`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free, verified
-transiently — S4 body is genuine 0-sorry, no transitive sorry). -/
+@audit:ok -/
 theorem score_sq_le_weighted_integral (fX fY : ℝ → ℝ) (lam z : ℝ)
     (hregX : IsRegularDensityV2 fX) (hregY : IsRegularDensityV2 fY)
     (hX_int : Integrable fX volume) (hY_int : Integrable fY volume)
@@ -388,14 +363,7 @@ honest regularity preconditions (Gaussian-satisfied, load-bearing-free). -/
 
 /-- **Term 1** (the `λ²` term): translation invariance pulls the inner `z` integral of
 `fY (z - x)` to `1`, leaving `J_X`.
-
-@audit:ok — independent audit (2026-05-30): `hnormY` (∫fY=1) is a normalization
-regularity precondition; `hint1 : Integrable (uncurry …) (volume.prod volume)` is a
-pure product-measure integrability precondition on the already-expanded `λ²` term
-integrand (asserts integrability, not the integral's value — no core bundling).
-Conclusion genuinely reconstructed: `integral_integral_swap` (Tonelli) +
-`integral_sub_right_eq_self` (translation) + `hnormY`. Not handed by any hyp.
-sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`). -/
+@audit:ok -/
 private theorem convex_fisher_term1 (fX fY : ℝ → ℝ)
     (hnormY : ∫ x, fY x ∂volume = 1)
     (hint1 :
@@ -417,14 +385,7 @@ private theorem convex_fisher_term1 (fX fY : ℝ → ℝ)
 
 /-- **Term 2** (the `(1-λ)²` term): substitute `y = z - x` (translation), the inner `z`
 integral becomes `J_Y`, and `∫_x fX = 1`.
-
-@audit:ok — independent audit (2026-05-30): `hnormX` (∫fX=1) is a normalization
-regularity precondition; `hint2 : Integrable (uncurry …) (volume.prod volume)` is a
-pure product-measure integrability precondition on the already-expanded `(1-λ)²` term
-integrand (no core bundling). Conclusion genuinely reconstructed:
-`integral_integral_swap` (Tonelli) + `integral_sub_right_eq_self` (translation) +
-`hnormX`. Not handed by any hyp.
-sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`). -/
+@audit:ok -/
 private theorem convex_fisher_term2 (fX fY : ℝ → ℝ)
     (hnormX : ∫ x, fX x ∂volume = 1)
     (hint2 :
@@ -787,19 +748,7 @@ Genuine reflection-invariance transport: 0 sorry, `#print axioms` =
 `[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified after olean
 refresh). No hypothesis bundling — `h` is the sibling regularity bundle, every field is
 *derived* from `h`'s fields, not handed by a load-bearing predicate.
-
-@audit:ok — independent honesty audit (2026-05-31): conclusion `IsBlachmanConvReady fY fX`
-≠ hypothesis `IsBlachmanConvReady fX fY` (X↔Y swap is a distinct proposition; not `:= h`
-circular). The hypothesis `h` is the sibling 19-field regularity bundle (Integrable /
-`∃ M, |·| ≤ M` / `0 < ·` only — no inequality/equality/achievability core bundled), so it
-is precondition, not load-bearing. All 19 fields genuinely 1:1 transported from `h`:
-direct X↔Y projection (5 fields), `convDensityAdd_comm` rewrite (verified genuine
-reflection proof), `comp_sub_left` reflection + `mul_comm`, `lam↔1-lam` relabel under
-`x↦z-x`, `integral_sub_left_eq_self` inner-integral invariance, `measurePreserving_prod_sub_swap`
-shear, and `MeasurePreserving.skew_product` (`(z,x)↦(z,z-x)`, measurability via `fun_prop`
-+ `measurePreserving_sub_left` — no sorry-discharged obligation). sorryAx-free confirmed
-via transient `#print axioms` after `lake build` olean refresh = `[propext,
-Classical.choice, Quot.sound]`. -/
+@audit:ok -/
 theorem isBlachmanConvReady_symm {fX fY : ℝ → ℝ}
     (h : IsBlachmanConvReady fX fY) : IsBlachmanConvReady fY fX := by
   -- `pZ` of the swapped pair coincides with the original (commutativity).

@@ -126,21 +126,6 @@ GAP② consumers; not used by this pure differentiation identity). The `bound1` 
 shape (integrand-level, NOT load-bearing). The closed form is *derived* via two
 gateway applications + the `@audit:ok` kernel derivative atoms `_x_deriv1` /
 `_x_deriv2`.
-
-Genuine, sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`),
-0 sorry / 0 residual.
-
-Independent honesty audit (2026-05-31, fresh auditor, Wave 2 案B-core): verdict ok
-(load-bearing 判定 = CLEAR). Every hypothesis is integrand-level regularity, 1:1 with the
-`@audit:ok` atom `convDensityAdd_hasDerivAt`'s 7-hyp group (`EPIConvDensity.lean:86`): `bound1`/
-`hbound1_int` + `bound2`/`hbound2_int` = integrable dominating functions; `hF1_meas`/`hF1_int`/
-`hF1'_meas`/`hF2_int`/`hF2'_meas` = AEStronglyMeasurable/Integrable of the *per-`y` integrand*
-`fun y => pX y * kernel s (ξ-y)` (NOT the integral); `hb1`/`hb2` = `∀ᵐ y, ‖integrand‖ ≤ bound y`
-domination. NO hypothesis asserts `HasDerivAt (deriv (convDensityAdd …)) …`, `deriv (deriv …) = …`,
-or `Differentiable (convDensityAdd …)` — the 2nd derivative is *derived* by two applications of
-`hasDerivAt_integral_of_dominated_loc_of_deriv_le` (`hgate.2`/`hgate2.2`). `hpX_nn`/`hpX_int` are
-pX regularity carried for downstream GAP② consumers (unused here, lint-confirmed). Independently
-verified sorryAx-free: `#print axioms` = `[propext, Classical.choice, Quot.sound]`.
 @audit:ok -/
 theorem convDensityAdd_deriv2_eq_gaussian
     (pX : ℝ → ℝ) (_hpX_nn : ∀ x, 0 ≤ pX x) (_hpX_int : Integrable pX volume)

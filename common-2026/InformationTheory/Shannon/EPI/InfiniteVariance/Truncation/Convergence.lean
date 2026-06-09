@@ -266,14 +266,6 @@ honest: 結論は列の有界性 (regularity)。仮説は a.c. + measurability +
 `hX_ent`/`hY_ent` + 和エントロピー可積分 `hent_sum` (regularity precondition)。usc 不等式 (結論) を
 仮説で受けていない。`hX_ent`/`hY_ent` は co-有界の per-n EPI 下界供給に使う precondition
 (load-bearing でない)、Step 1 で crux-usc chain に threading 済 (headline `:2238-2239` が保持)。
-
-独立 honesty audit 2026-06-07 (fresh auditor): ok (proof done)。co-bound `.2` 退化境界悪用チェック
-最重点 PASS — `cX = Nₑ(P.map X).toReal = exp(2h(X))` (`entropyPowerExt_of_ac_integrable hX_ac hX_ent`)、
-`0<cX` は `Real.exp_pos` から genuine (`Nₑ(X)=0` 悪用なし、`cX/2>0` で `log` 健全)。chain
-`cX/2 ≤ Nₑ(X_n).toReal ≤ Nₑ(μ_n).toReal=exp(2hμn)` (per-n EPI + `toReal_mono` 要 `≠⊤` を
-`ofReal_ne_top` で genuine) → log → eventually `c ≤ hμn`、`isCoboundedUnder_le_of_eventually_le`
-(向き正: eventually-below から `IsCoboundedUnder (≤)` 構成、frequently でない)。`#print axioms`
-sorryAx-free 機械確認。
 @audit:ok -/
 theorem differentialEntropy_condTrunc_sum_bddUnder (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -383,20 +375,6 @@ sub-helper D (`crossEntropySeq_tendsto`、RHS 収束) + boundedness
 
 honest: signature の `hent_sum` は regularity precondition (有限微分エントロピー)、結論
 (usc 不等式) を encode しない。body は C/D/boundedness を呼ぶ限り genuine。
-
-独立 honesty audit 2026-06-07: honest_residual (genuine assembly, transitive: C'/D/boundedness park)。
-(1) 非循環: 結論は `limsup h(μ_n) ≤ h(ν)`、仮説は `hX_ac`/`hY_ac`/`hXY`/`hent_sum`
-(= regularity precondition)、結論型 ≢ 仮説型。(2) 非バンドル (最重点): usc 結論を sub-helper の
-仮説に bundle せず、limsup chain を機械配線。`Filter.limsup_le_limsup hC hcobdd hRHS_bdd` の
-引数向きを Mathlib signature (`h : u ≤ᶠ v` / `hu : IsCoboundedUnder u` / `hv : IsBoundedUnder v`)
-と照合: u = h_seq, v = crossEntropySeq、hC (∀ᶠ h_seq ≤ RHS)・hcobdd (h_seq の cobdd =
-boundedness の `.2`)・hRHS_bdd (D 収束 → RHS bdd above) で全引数の向き・型整合。`_ = hν`
-は `hD.limsup_eq` (D の収束先)。(3) sufficiency: `limsup h_seq ≤ limsup RHS_n = h(ν)` は
-per-n Gibbs (C) + RHS 収束 (D) から semantic に follow (差分形/比形の取り違えなし、単調 push 不使用)。
-`hent_sum` は load-bearing でなく precondition。body 独自 sorry なし。(4) 依存 C/D/boundedness が
-全て genuine 化したため `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free、
-2026-06-07 fresh auditor 機械再確認、旧「transitive C/D/boundedness park」記述は stale = 残 sorry
-無し)。`hX_ent`/`hY_ent` は各成分 regularity precondition。ok (proof done).
 @audit:ok -/
 theorem differentialEntropy_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)
@@ -444,20 +422,6 @@ theorem differentialEntropy_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabil
   `≤ g(h(ν)) = Nₑ(ν)` (g 単調 + #3 `differentialEntropy_condTrunc_sum_limsup_le`)。
 
 `hent_sum` は regularity precondition (有限微分エントロピー)、結論を encode しない。
-
-独立 honesty audit 2026-06-07: honest_residual (genuine exp-lift, transitive: #3/C'/D/boundedness park)。
-(1) 非循環: 結論は `limsup Nₑ(μ_n) ≤ Nₑ(ν)`、仮説は regularity precondition のみ、結論型 ≢ 仮説型。
-(2) 非バンドル: usc 結論を bundle せず、単調連続 lift `g h := ofReal(exp(2h))` で #3 (微分エントロピー版)
-を持ち上げ。per-n rewrite `Nₑ(μ_n) = g(h(μ_n))` は出口補題 `entropyPowerExt_of_ac_integrable`
-(自身 `@audit:ok`、sorryAx-free、退化定義悪用なし = a.c.+有限 entropy で `ofReal(exp(2h))` を返す
-genuine 式) を μ_n a.c. (`hac_n`) + #2 有限 entropy に適用、limit rewrite も同補題。`g` 単調連続
-(`hg_mono`/`hg_cont`) で `Monotone.map_limsup_of_continuousAt` (boundedness `hbdd`/`hcobdd` 供給) →
-`g(limsup h_seq) ≤ g(hν) = Nₑ(ν)`、最後の `≤` は g 単調 + #3 (`differentialEntropy_condTrunc_sum_limsup_le`)。
-(3) sufficiency: exp lift は単調連続変換ゆえ #3 の usc 不等式から semantic に follow (g 単調で向き保存)。
-body 独自 sorry なし。(4) 依存 #3/C/D/boundedness が全て genuine 化したため `#print axioms` =
-`[propext, Classical.choice, Quot.sound]` (sorryAx-free、2026-06-07 fresh auditor 機械再確認、旧
-「transitive #3/C'/D/boundedness park」記述は stale = 残 sorry 無し)。`hX_ent`/`hY_ent`/`hent_sum`
-は regularity precondition。ok (proof done).
 @audit:ok -/
 theorem entropyPowerExt_condTrunc_sum_limsup_le (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)

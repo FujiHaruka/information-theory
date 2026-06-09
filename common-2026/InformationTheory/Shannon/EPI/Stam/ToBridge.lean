@@ -151,14 +151,7 @@ positivity (probe `factor2_arith_FALSE`, counterexample `J_X=2,J_Y=1,J_sum=2/3,
 N_X=1,N_Y=3`). The factor mismatch for the genuine 𝒩(0,2) sum coupling lives in
 the de Bruijn lift / `Z_law` precondition, NOT in this lemma; this lemma is
 honest as an abstract factor-1 inequality.
-
-@audit:ok — independent honesty audit (2026-06-06, fresh auditor). 4 checks PASS:
-(1) non-circular — conclusion is a real inequality, no hypothesis ≡ conclusion;
-(2) non-bundled — `h_stam` is plain harmonic Stam over free reals, not a bundled
-inequality core; `nlinarith` does the work from `h_stam` + `sq_nonneg`; (3) not
-degenerate; (4) sufficiency — `factor1_arith` is provable from the hypotheses (GS-
-A3' probe verbatim). `#print axioms` = `[propext, Classical.choice, Quot.sound]`
-(sorryAx-free, mechanically confirmed). -/
+@audit:ok -/
 theorem csiszar_ratio_deriv_le_zero_arith
     (J_X J_Y J_sum N_X N_Y : ℝ)
     (hJX : 0 < J_X) (hJY : 0 < J_Y) (hJsum : 0 < J_sum)
@@ -225,13 +218,7 @@ was a structurally dead orphan (0 consumers, superseded by the two-time route) a
 has been deleted (2026-06-06), so the `IsRegularDeBruijnHypV2.Z_law` general-variance
 refactor is no longer needed. (GS-A3' showed all single-`t` routes are blocked by a
 non-local co-monotonicity obligation, not weight tuning.)
-
-@audit:ok — independent honesty audit (2026-06-06, fresh auditor): 4 checks PASS
-as a conditional theorem (non-circular / non-bundled — `Z_law` is a noise-law
-precondition / not degenerate / sufficiency — factor-1 follows correctly under the
-stated `Z_law=𝒩(0,1)` hypothesis). `#print axioms` = `[propext, Classical.choice,
-Quot.sound]` (sorryAx-free, mechanically confirmed). Tag retained; the sum line is
-closed genuinely by the two-time route. -/
+@audit:ok -/
 theorem csiszarLogRatioGap_hasDerivAt
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]

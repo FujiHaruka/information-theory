@@ -36,14 +36,14 @@ noncomputable def parallelOutputMixtureDensity (z : Fin n → ℝ) : ℝ≥0∞ 
   ∫⁻ x : Fin n → ℝ, piGaussProxy N (x, z) ∂p
 
 /-- Unfolded form of `parallelOutputMixtureDensity` (the product of coordinate Gaussian
-pdfs averaged over `p`). Independent honesty audit (2026-05-29): `rfl`, no honesty content.
+pdfs averaged over `p`).
 @audit:ok -/
 theorem parallelOutputMixtureDensity_eq (z : Fin n → ℝ) :
     parallelOutputMixtureDensity N p z
       = ∫⁻ x : Fin n → ℝ, ∏ i, gaussianPDF (x i) (N i) (z i) ∂p := rfl
 
 /-- The joint mixture density is measurable in `z`.
-Independent honesty audit (2026-05-29): genuine, no honesty content. @audit:ok -/
+@audit:ok -/
 theorem measurable_parallelOutputMixtureDensity :
     Measurable (parallelOutputMixtureDensity N p) := by
   unfold parallelOutputMixtureDensity
@@ -54,8 +54,7 @@ theorem measurable_parallelOutputMixtureDensity :
 `Measure.pi (gaussianReal (x i)(N i)) = volume.withDensity (∏ᵢ gaussianPDF (x i)(N i)·)`
 (`pi_withDensity_fin` + `gaussianReal_of_var_ne_zero`), and Tonelli swaps the `∂p` average
 to the outside — `p`-independent, so it lifts the 1-D `output_eq_withDensity_mixture`.
-Genuine, 0 sorry. Independent honesty audit (2026-05-29): Tonelli/Fubini construction,
-`hN` regularity only, no conclusion-bundle. @audit:ok -/
+@audit:ok -/
 theorem parallelOutput_eq_withDensity_mixture (hN : ∀ i, (N i : ℝ) ≠ 0) :
     outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)
       = volume.withDensity (parallelOutputMixtureDensity N p) := by
@@ -119,7 +118,7 @@ theorem parallelOutput_eq_withDensity_mixture (hN : ∀ i, (N i : ℝ) ≠ 0) :
         rw [Pi.mul_apply, mul_comm]
 
 /-- (#5) The output rnDeriv is a.e. the joint mixture density.
-Independent honesty audit (2026-05-29): genuine, `hN` regularity only. @audit:ok -/
+@audit:ok -/
 theorem parallelOutput_rnDeriv_ae_mixture (hN : ∀ i, (N i : ℝ) ≠ 0) :
     (outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)).rnDeriv volume
       =ᵐ[volume] parallelOutputMixtureDensity N p := by
@@ -129,7 +128,7 @@ theorem parallelOutput_rnDeriv_ae_mixture (hN : ∀ i, (N i : ℝ) ≠ 0) :
 /-- (#5, upper bound) The joint mixture density is bounded above by
 `∏ᵢ (√(2π Nᵢ))⁻¹`: each coordinate Gaussian is `≤ (√(2π Nᵢ))⁻¹`
 (`gaussianPDFReal_le_sup`), and `p` is a probability measure.
-Independent honesty audit (2026-05-29): genuine, no hypotheses, no defect. @audit:ok -/
+@audit:ok -/
 theorem parallelOutputMixtureDensity_le_sup (z : Fin n → ℝ) :
     parallelOutputMixtureDensity N p z
       ≤ ENNReal.ofReal (∏ i, (Real.sqrt (2 * Real.pi * N i))⁻¹) := by
@@ -149,10 +148,7 @@ theorem parallelOutputMixtureDensity_le_sup (z : Fin n → ℝ) :
 finite second moment gives `p {|xᵢ| > Rᵢ} ≤ 1/(2n)`; a union bound over `Fin n` keeps the
 complement `≤ 1/2`. (`Fin n → ℝ` uses the sup norm, so the concentration set is the box,
 not the `‖·‖`-ball.)
-Independent honesty audit (2026-05-29): genuine Chebyshev + union bound; `∃ R` is a
-genuinely-constructed concentration claim (`R i := √(2n·E[xᵢ²]+1)`), NOT a conclusion-bundle.
-The `n = 0` branch is honest (box = univ, `p univ = 1 ≥ 1/2`), not a vacuity exploit;
-the headline anyway uses `Fin (n+1)`. `0 ≤ P` / `hp` regularity only. @audit:ok -/
+@audit:ok -/
 theorem parallel_concentration_box (P : ℝ) (hP : 0 ≤ P)
     (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     ∃ R : Fin n → ℝ, (∀ i, 0 < R i) ∧
@@ -246,10 +242,7 @@ set_option maxHeartbeats 1000000 in
 concentration (`parallel_concentration_box`) gives `≥ 1/2` of the mass on `S`, and on `S`
 each coordinate Gaussian has a tail lower bound; the product gives `f_Y(z) ≥ (1/2)·∏ᵢ Krᵢ(zᵢ)`,
 quadratic in each `zᵢ`. Coordinate-product lift of the 1-D `output_logDensity_lower_bound` (`@audit:ok`).
-Genuine, 0 sorry. Independent honesty audit (2026-05-29): explicit `∃ a b` witnesses
-(`a := ∑ 1/Nᵢ`, `b := …`) genuinely constructed; the box concentration + per-coordinate
-Gaussian-tail lower bound `(z−x)² ≤ 2z² + 2R²` is honest, no degeneracy/hyp-bundling.
-`0 ≤ P` / `hN` / `hp` regularity only. @audit:ok -/
+@audit:ok -/
 theorem parallelOutput_logDensity_lower_bound (P : ℝ) (hP : 0 ≤ P)
     (hN : ∀ i, (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     ∃ a b : ℝ, 0 ≤ a ∧ ∀ z : Fin n → ℝ,
@@ -370,8 +363,7 @@ theorem parallelOutput_logDensity_lower_bound (P : ℝ) (hP : 0 ≤ P)
 
 /-- (#5, combination) Quadratic bound on `|log f_Y|`: combines the constant upper bound
 with the quadratic lower bound. `∃ c₀ c₁, 0 ≤ c₁ ∧ ∀ z, |log (f_Y z).toReal| ≤ c₀ + c₁ ∑ᵢ(zᵢ)²`.
-Independent honesty audit (2026-05-29): genuine combination of the `@audit:ok` upper/lower
-bounds, regularity-only hypotheses. @audit:ok -/
+@audit:ok -/
 theorem parallelOutputMixtureDensity_log_abs_le (P : ℝ) (hP : 0 ≤ P)
     (hN : ∀ i, (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     ∃ c₀ c₁ : ℝ, 0 ≤ c₁ ∧ ∀ z : Fin n → ℝ,
@@ -429,13 +421,7 @@ with "no mixture-density representation exists" (FALSE)). Closure: density repre
 (`parallelOutput_logDensity_lower_bound`) → quadratic envelope
 (`parallelOutputMixtureDensity_log_abs_le`) → finite-second-moment domination
 (`Integrable.mono'` against the per-coordinate output second moments).
-
-Signature is a clean `Integrable` claim with regularity-only preconditions
-(`0 ≤ P` / `hN` / `hp`) — no load-bearing hypothesis, no conclusion-bundle, no circularity.
-Independent honesty audit (2026-05-29): all 8 closure helpers re-verified genuine (no
-degenerate-definition / hyp-bundling exploit), and `#print axioms
-parallelOutput_joint_logDensity_integrable` = [propext, Classical.choice, Quot.sound]
-re-confirmed independently (sorryAx-free). @audit:ok -/
+@audit:ok -/
 theorem parallelOutput_joint_logDensity_integrable (P : ℝ) (hP : 0 ≤ P)
     (hN : ∀ i, (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     Integrable
@@ -494,9 +480,7 @@ theorem parallelOutput_joint_logDensity_integrable (P : ℝ) (hP : 0 ≤ P)
 so its joint differential entropy is the coordinate sum of Gaussian entropies, each
 `(1/2)log(2πe Nᵢ)` independent of the mean `x i`. Hence the conditional term is the
 constant `∑ᵢ (1/2)log(2πe Nᵢ)`.
-
-Genuine, sorryAx-free. Independent honesty audit (2026-05-29): no load-bearing
-hypothesis, `#print axioms` sorryAx-free re-confirmed. @audit:ok -/
+@audit:ok -/
 theorem parallel_condTerm_eq_sum_noise_entropy (hN : ∀ i, (N i : ℝ) ≠ 0) :
     (∫ x, jointDifferentialEntropyPi
         ((parallelGaussianChannel N h_meas h_parallel_meas) x) ∂p)
@@ -527,9 +511,7 @@ mean, `∫ (y − m)² ∂(μY.map(·i)) = (∫ (xᵢ − m)² ∂p) + Nᵢ` via
 `μY.map(·i) = (p.map(·i)) ∗ 𝒩(0,Nᵢ)`, `integral_conv`, and the Gaussian fibre second moment
 `∫ z, (xᵢ + z − m)² ∂𝒩(0,Nᵢ) = Nᵢ + (xᵢ − m)²`. This is the linchpin for the variance
 bounds (#8 / #9): noise additivity. Needs `Nᵢ ≠ 0` and `(xᵢ)²` integrability.
-
-Genuine, sorryAx-free. Independent honesty audit (2026-05-29): no load-bearing
-hypothesis, `#print axioms` sorryAx-free re-confirmed. @audit:ok -/
+@audit:ok -/
 theorem parallelOutput_centered_secondMoment_eq (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
     (hN : (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P)
     (c : ℝ) :
@@ -592,9 +574,7 @@ theorem parallelOutput_centered_secondMoment_eq (P : ℝ) (hP : 0 ≤ P) (i : Fi
 
 /-- **Output marginal mean equals input marginal mean.** `mᵢ = ∫ (xᵢ) ∂p`. The
 convolution `μY.map(·i) = (p.map(·i)) ∗ 𝒩(0,Nᵢ)` has mean = input mean + noise mean (= 0).
-
-Genuine, sorryAx-free. Independent honesty audit (2026-05-29): no load-bearing
-hypothesis, `#print axioms` sorryAx-free re-confirmed. @audit:ok -/
+@audit:ok -/
 theorem parallelOutputMean_eq (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
     (hN : (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     parallelOutputMean N h_meas h_parallel_meas p i = ∫ x : Fin n → ℝ, (x i) ∂p := by
@@ -649,9 +629,7 @@ theorem parallelOutputMean_eq (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
 `Zᵢ ∼ 𝒩(0,Nᵢ)` independent of `Xᵢ`, `Var(Yᵢ) = Var(Xᵢ) + Nᵢ ≤ E[Xᵢ²] + Nᵢ`.
 The centering `mᵢ = E[Xᵢ]` (`parallelOutputMean_eq`) makes `∫ (xᵢ − mᵢ)² ∂p = Var(Xᵢ) ≤
 E[Xᵢ²]`.
-
-Genuine, sorryAx-free. Independent honesty audit (2026-05-29): no load-bearing
-hypothesis, `#print axioms` sorryAx-free re-confirmed. @audit:ok -/
+@audit:ok -/
 theorem parallelOutput_variance_le (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
     (hN : (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     ∫ y, (y - parallelOutputMean N h_meas h_parallel_meas p i) ^ 2
@@ -695,9 +673,7 @@ theorem parallelOutput_variance_le (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
 /-- **Output marginal variance lower bound (noise contribution).** `Var(Yᵢ) ≥ Nᵢ`,
 since the independent Gaussian noise of variance `Nᵢ` adds to the (nonnegative) input
 variance: `∫ (yᵢ − mᵢ)² = (∫ (xᵢ − mᵢ)² ∂p) + Nᵢ ≥ Nᵢ`.
-
-Genuine, sorryAx-free. Independent honesty audit (2026-05-29): no load-bearing
-hypothesis, `#print axioms` sorryAx-free re-confirmed. @audit:ok -/
+@audit:ok -/
 theorem parallelOutput_variance_ge_noise (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
     (hN : (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     (N i : ℝ)
@@ -713,9 +689,7 @@ theorem parallelOutput_variance_ge_noise (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
 /-- **Output marginal variance integrability.** The centered square `(yᵢ − mᵢ)²` is
 integrable against the marginal (= 1-D AWGN output of `p.map(·i)`), via
 `output_sq_sub_integrable`.
-
-Genuine, sorryAx-free. Independent honesty audit (2026-05-29): no load-bearing
-hypothesis, `#print axioms` sorryAx-free re-confirmed. @audit:ok -/
+@audit:ok -/
 theorem parallelOutput_variance_integrable (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
     (hN : (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     Integrable (fun y => (y - parallelOutputMean N h_meas h_parallel_meas p i) ^ 2)
@@ -740,9 +714,7 @@ set_option maxHeartbeats 1000000 in
 `p.map(·i)` (`parallelOutput_marginal_eq_awgn_output`), so the 1-D Phase-6 wall
 `outputDistribution_logDensity_integrable` applies, using the inherited power constraint
 `p.map(·i) ∈ awgnPowerConstraintSet P`.
-
-Genuine, sorryAx-free. Independent honesty audit (2026-05-29): no load-bearing
-hypothesis, `#print axioms` sorryAx-free re-confirmed. @audit:ok -/
+@audit:ok -/
 theorem parallelOutput_marginal_entropy_integrable (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
     (hN : (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     Integrable
@@ -764,11 +736,7 @@ theorem parallelOutput_marginal_entropy_integrable (P : ℝ) (hP : 0 ≤ P) (i :
 `W x ≪ volume` (`parallelChannel_fibre_absolutelyContinuous_volume`, Wave 1) composed with
 the reverse full-support AC `volume ≪ μY` (`volume_absolutelyContinuous_parallelOutput`);
 both need `hN`.
-
-Genuine, sorryAx-free (`#print axioms` = [propext, Classical.choice, Quot.sound]).
-Independent honesty audit (2026-05-29): genuine regularity/identity lemma, no
-load-bearing hypothesis (preconditions are AC/measurability/integrability/power-constraint
-membership), `#print axioms` sorryAx-free re-confirmed. @audit:ok -/
+@audit:ok -/
 theorem parallelChannel_fibre_absolutelyContinuous_output (hN : ∀ i, (N i : ℝ) ≠ 0)
     (x : Fin n → ℝ) :
     (parallelGaussianChannel N h_meas h_parallel_meas) x
@@ -779,9 +747,7 @@ theorem parallelChannel_fibre_absolutelyContinuous_output (hN : ∀ i, (N i : �
 /-- **Fibre rnDeriv ↔ Gaussian-PDF-product proxy.** For each fibre `W x = Measure.pi
 (gaussianReal (x i) (N i))`, `(W x).rnDeriv volume =ᵐ[W x] fun y => ∏ᵢ gaussianPDF (x i)(N i)(y i)`.
 Built from `pi_withDensity_fin` (`W x = volume.withDensity (∏ gaussianPDF)`) + `rnDeriv_withDensity`.
-
-Genuine, sorryAx-free. Independent honesty audit (2026-05-29): no load-bearing
-hypothesis, `#print axioms` sorryAx-free re-confirmed. @audit:ok -/
+@audit:ok -/
 theorem parallelFibre_rnDeriv_ae_proxy (hN : ∀ i, (N i : ℝ) ≠ 0) (x : Fin n → ℝ) :
     (fun y => ((parallelGaussianChannel N h_meas h_parallel_meas) x).rnDeriv volume y)
       =ᵐ[(parallelGaussianChannel N h_meas h_parallel_meas) x]

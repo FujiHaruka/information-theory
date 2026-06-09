@@ -177,18 +177,6 @@ the genuine Gaussian maxent bound `negMulLog_convDensityAdd_gaussian_entropy_upp
 `[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-checked 2026-06-05).
 All hypotheses are regularity / normalisation (hpX_nn/meas/int/mass/mom/ent); NOT
 circular / load-bearing / degenerate; sufficiency holds.
-
-Independent honesty audit 2026-06-05 (fresh subagent): PASS. (a) signature unchanged
-across the sandwich swap (git: theorem header is a diff context line in `b8ee036`,
-only the body's `have`-steps changed). (b) The sandwich wires (α)
-`negMulLog_convDensity_limsup_le` + (β) `negMulLog_convDensity_entropy_ge_density`
-(both `@audit:ok`, sorryAx-free) without bundling the conclusion; `σ2:=1` / `v_Z:=1`
-are honest auxiliary-scale instances, independent of the kernel variance `u n`.
-(c) boundedness supplied by the genuine maxent bound
-`negMulLog_convDensityAdd_gaussian_entropy_upper` (`@audit:ok`, body uses
-`differentialEntropy_le_gaussian_of_variance_le`, NOT the Vitali route / `wall:approx-identity-L1`,
-not vacuous). (d) `#print axioms` = `[propext, Classical.choice, Quot.sound]`
-(sorryAx-free, machine-checked 2026-06-05 after `lake build` olean refresh).
 @audit:ok -/
 @[entry_point]
 theorem differentialEntropy_convDensity_integral_tendsto
@@ -339,13 +327,6 @@ bridge call (`pPath_eq_convDensityAdd`, `@audit:ok`) matches signatures verbatim
 `t' := t·v_Z` reparam. Sufficiency holds: conclusion follows from the regularity
 hypotheses (no free-variable counterexample — singular `P.map X` is excluded by the
 `hpX_law` density witness). NOT circular / load-bearing / degenerate.
-
-Independent honesty audit 2026-06-05 (fresh subagent): PASS. After the layer-2
-sandwich swap the consumed `differentialEntropy_convDensity_integral_tendsto` is
-sorryAx-free, so this helper has no residual; `#print axioms` =
-`[propext, Classical.choice, Quot.sound]` (machine-checked). All 14 fields are
-preconditions; the density bridge `pPath_eq_convDensityAdd` (`@audit:ok`) is consumed
-as input, no conclusion bundled.
 @audit:ok -/
 theorem heatFlowDifferentialEntropy_continuousWithinAt_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω} (X Z : Ω → ℝ) (P : Measure Ω)
@@ -430,11 +411,6 @@ interior `AntitoneOn (Set.Ioi 0)`.
 Mathlib has the monotone version only; this is its dual via `OrderDual.toDual`
 (an order-reversing homeomorphism on `β`), which sends `AntitoneOn f s` to
 `MonotoneOn (toDual ∘ f) s` and preserves `ContinuousWithinAt`.
-
-Independent honesty audit 2026-06-04 (fresh subagent): genuine 0 sorry, sorryAx-free
-(`#print axioms` = `[propext, Classical.choice, Quot.sound]`)、循環なし (body は
-Mathlib `MonotoneOn.insert_of_continuousWithinAt` の OrderDual mirror、`:= h` でない)、
-型クラス制約 (`OrderClosedTopology β` 等) は monotone 版と整合。
 @audit:ok -/
 theorem _root_.AntitoneOn.insert_of_continuousWithinAt
     {α β : Type*} [TopologicalSpace α] [LinearOrder α] [OrderTopology α]
@@ -567,17 +543,6 @@ in turn consumes the now-genuine layer-2 machinery. All former residuals are clo
 preconditions (regularity / input-distribution data); no continuity /
 density-identification conclusion is bundled (not load-bearing / circular /
 wall-misuse). 0 own sorry, 0 residual.
-
-Independent honesty audit 2026-06-05 (fresh subagent): PASS — EPI G2 endpoint
-continuity is genuine in general form and `wall:approx-identity-L1` is CLOSED.
-Verified: (1) body delegates to `heatFlowDifferentialEntropy_continuousWithinAt_zero`
-(`@audit:ok`) + `Real.continuous_exp` lift, no conclusion bundled; (2) the Vitali
-UI/UT/ae witnesses are deleted and no active `@residual(wall:approx-identity-L1)`
-sorry remains in `InformationTheory/` (all mentions are docstring prose); (3) the
-deletion is the legitimate removal of orphaned scaffolding (replaced by the genuine
-(α)/(β) sandwich), not concealment — `convDensityAdd_second_moment` etc. are retained
-and the module rebuilds clean; (4) `#print axioms` =
-`[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-checked).
 @audit:ok -/
 @[entry_point]
 theorem heatFlowEntropyPower_continuousWithinAt_zero

@@ -1009,14 +1009,6 @@ omit [DecidableEq α] [DecidableEq β] in
 pair `(R_X, R_Y)` with `R_X > H(X|Y)`, `R_Y > H(Y|X)`, `R_X + R_Y > H(X,Y)` is
 achievable: there are codebook sizes `M_X, M_Y` with the required asymptotic rates and
 encoders/decoders whose error probability → 0.
-
-Independent honesty audit (2026-05-30): signature carries only regularity + the C&T
-rate-region conditions `hRX/hRY/hRXY` (no load-bearing `*Hypothesis`/`*Reduction`
-predicate); conclusion is the genuine achievability `∃ … (swErrorProb → 0)` with
-`swErrorProb` the real misdecoding probability; error→0 chains F.1 → pigeonhole →
-E.5 squeeze with the conclusion decoder matching the `B n`-bounded witness; the whole
-transitive tree is `sorryAx`-free (`#print axioms` = `[propext, Classical.choice,
-Quot.sound]`).
 @audit:ok -/
 @[entry_point]
 theorem slepian_wolf_full_rate_region_achievability

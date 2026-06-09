@@ -152,8 +152,7 @@ is bounded by its prefactor `(√(2πv))⁻¹` (`gaussianPDFReal_le_prefactor`),
 load-bearing), supplied by the caller from `P.map X = withDensity (ofReal∘pX)` with `P`
 a probability measure.
 
-**Independent audit (this session)**: closes the former L-PT-β residual. No `sorry`, no
-load-bearing hypothesis (`hpX_int` / `hpX_nn` are regularity preconditions).
+**Independent audit (this session)**: closes the former L-PT-β residual.
 @audit:ok -/
 private theorem pPath_eq_convDensityAdd_lconvolution_bridge
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
@@ -272,7 +271,7 @@ noncomputable def heatFlow_density_heat_equation_kernel (σ u : ℝ) : ℝ :=
 /-- The explicit `ℝ`-kernel agrees with `gaussianPDFReal 0 ⟨σ,_⟩` for `σ > 0`.
 
 **Independent audit (commit `6f675ca`)**: genuine definitional agreement (`rfl` after
-`sub_zero`). sorryAx-free, 0 sorry / 0 residual.
+`sub_zero`).
 @audit:ok -/
 theorem heatFlow_density_heat_equation_kernel_eq
     {σ : ℝ} (hσ : 0 < σ) (u : ℝ) :
@@ -287,7 +286,7 @@ and variance `σ > 0`, `g_σ(u) = (√(2πσ))⁻¹ · exp(-u²/(2σ))`,
 `∂_u g_σ(u) = g_σ(u) · (-(u/σ))`.
 
 **Independent audit (commit `6f675ca`)**: genuine chain-rule computation, non-degenerate
-closed form (`-(u/σ)` factor). sorryAx-free, 0 sorry / 0 residual.
+closed form (`-(u/σ)` factor).
 @audit:ok -/
 theorem heatFlow_density_heat_equation_kernel_x_deriv1
     {σ : ℝ} (hσ : 0 < σ) (u : ℝ) :
@@ -308,7 +307,7 @@ theorem heatFlow_density_heat_equation_kernel_x_deriv1
 /-- **Kernel spatial 2nd derivative (genuine)**: `∂²_u g_σ(u) = g_σ(u) · (u²/σ² - 1/σ)`.
 
 **Independent audit (commit `6f675ca`)**: genuine product-rule computation, non-degenerate
-closed form (`u²/σ² - 1/σ` factor, `≠ 0` e.g. at `u = 0`). sorryAx-free, 0 sorry / 0 residual.
+closed form (`u²/σ² - 1/σ` factor, `≠ 0` e.g. at `u = 0`).
 @audit:ok -/
 theorem heatFlow_density_heat_equation_kernel_x_deriv2
     {σ : ℝ} (hσ : 0 < σ) (u : ℝ) :
@@ -329,7 +328,7 @@ theorem heatFlow_density_heat_equation_kernel_x_deriv2
 
 **Independent audit (commit `6f675ca`)**: genuine — differentiates both the prefactor
 `(√(2πσ))⁻¹` and the exponent in `σ`, closes via `√(2πσ)² = 2πσ`. Non-degenerate closed
-form. sorryAx-free, 0 sorry / 0 residual.
+form.
 @audit:ok -/
 theorem heatFlow_density_heat_equation_kernel_sigma_deriv
     {σ : ℝ} (hσ : 0 < σ) (u : ℝ) :
@@ -375,7 +374,7 @@ theorem heatFlow_density_heat_equation_kernel_sigma_deriv
 conjuncts are not vacuously-equal: σ-side derivative is `(1/2)·g·(u²/σ²-1/σ)`, x-2nd
 derivative is `g·(u²/σ²-1/σ)`, both non-trivially nonzero (e.g. `-1/σ ≠ 0` at `u = 0`), so
 the heat-equation link `∂_σ = (1/2)∂²_u` is a real identity (not both ≡ 0). Assembled from
-the two genuine kernel-derivative lemmas. sorryAx-free, 0 sorry / 0 residual.
+the two genuine kernel-derivative lemmas.
 @audit:ok -/
 @[entry_point]
 theorem heatFlow_density_heat_equation_kernel_heat_eq
@@ -711,8 +710,7 @@ Core lemma: `MeasureTheory.integral_mul_deriv_eq_deriv_mul_of_integrable`
 lemma's shape (`A := ℝ` is a `NormedRing`/`NormedAlgebra ℝ`): the support-wide
 `HasDerivAt` (`tsupport`) and the three integrability hyps are its preconditions; the
 boundary-term vanishing (tail decay) is discharged internally by the `_of_integrable`
-variant (no separate `Tendsto` hyp needed). Genuine, `exact`-closed (no residual).
-
+variant (no separate `Tendsto` hyp needed).
 @audit:ok -/
 theorem debruijn_ibp_step
     (u v u' v' : ℝ → ℝ)
@@ -771,8 +769,7 @@ below by a shifted Gaussian, so its support is all of `ℝ`. -/
 
 **Independent honesty audit (commit `eaced5a`)**: genuine. `hpX_int` is a regularity
 precondition; body discharges via `Integrable.mul_bdd` (integrable × bounded measurable),
-the Gaussian factor bounded by its prefactor (`gaussianPDFReal_le_prefactor`). No bundling,
-0 sorry / 0 residual.
+the Gaussian factor bounded by its prefactor (`gaussianPDFReal_le_prefactor`).
 @audit:ok -/
 private theorem convDensityAdd_integrand_integrable
     (pX : ℝ → ℝ) (hpX_int : Integrable pX volume) (v : ℝ≥0) (x : ℝ) :
@@ -839,7 +836,7 @@ theorem convDensityAdd_pos
 
 **Independent honesty audit (commit `eaced5a`)**: genuine. Body unfolds `gaussianPDFReal`,
 reduces to `u² ≤ w²` (from `|u| ≤ |w|` via `pow_le_pow_left₀` + `sq_abs`), handles the
-`v = 0` degenerate branch explicitly. No bundling, 0 sorry / 0 residual.
+`v = 0` degenerate branch explicitly.
 @audit:ok -/
 private theorem gaussianPDFReal_antitone_abs
     (v : ℝ≥0) {u w : ℝ} (huw : |u| ≤ |w|) :

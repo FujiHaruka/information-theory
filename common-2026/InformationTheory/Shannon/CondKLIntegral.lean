@@ -62,10 +62,7 @@ variable [IsFiniteMeasure μ] [IsFiniteKernel κ] [IsFiniteKernel η]
 When the two joint measures share the first marginal `μ`, the joint Radon-Nikodym derivative
 agrees almost everywhere with the pointwise kernel Radon-Nikodym derivative. This is the
 statement the `RadonNikodym.lean` `TODO` left open.
-
-Independent honesty audit 2026-06-05: genuine (sorryAx-free, `[propext, Classical.choice,
-Quot.sound]`). `h_ac` is an absolute-continuity precondition (regularity), the slice
-identity is the conclusion, not bundled in a hypothesis. `@audit:ok` -/
+@audit:ok -/
 theorem rnDeriv_compProd_eq_kernel_rnDeriv (h_ac : μ ⊗ₘ κ ≪ μ ⊗ₘ η) :
     (μ ⊗ₘ κ).rnDeriv (μ ⊗ₘ η) =ᵐ[μ ⊗ₘ η] fun p ↦ Kernel.rnDeriv κ η p.1 p.2 := by
   -- a.e. fibrewise absolute continuity from the joint absolute continuity
@@ -98,13 +95,7 @@ variable [IsFiniteMeasure μ] [IsMarkovKernel κ] [IsMarkovKernel η]
 /-- **Conditional Kullback-Leibler divergence, integral form** (Mathlib `ChainRule.lean` `TODO`).
 When the two joint measures `μ ⊗ₘ κ` and `μ ⊗ₘ η` share the first marginal `μ`, the `toReal`
 Kullback-Leibler divergence decomposes as the `μ`-average of the fibrewise divergences.
-
-Independent honesty audit 2026-06-05: genuine (sorryAx-free). `h_ac` (absolute continuity)
-and `h_int` (llr integrability = KL finiteness) are regularity preconditions; the integral
-decomposition is proved in-body via `toReal_klDiv_eq_integral_klFun` + `integral_compProd`
-(Fubini) + the slice identity, none of which is bundled in a hypothesis. The Mathlib gap
-is real (loogle: `condDistrib`+`klDiv` Found 0, this fills the `ChainRule.lean` TODO).
-`@audit:ok` -/
+@audit:ok -/
 theorem klDiv_compProd_toReal_integral
     (h_ac : μ ⊗ₘ κ ≪ μ ⊗ₘ η)
     (h_int : Integrable (llr (μ ⊗ₘ κ) (μ ⊗ₘ η)) (μ ⊗ₘ κ)) :
@@ -177,9 +168,7 @@ theorem klDiv_compProd_lintegral (h_ac : μ ⊗ₘ κ ≪ μ ⊗ₘ η) :
 /-- **Conditional KL divergence, integral form against a constant kernel.**
 Specialization of `klDiv_compProd_toReal_integral` to `η := Kernel.const 𝓧 ν`, the form used by
 the EPI G2 conditional differential-entropy bridge.
-
-Independent honesty audit 2026-06-05: genuine (sorryAx-free), thin specialization of
-`klDiv_compProd_toReal_integral`; preconditions regularity. `@audit:ok` -/
+@audit:ok -/
 theorem klDiv_compProd_const_toReal_integral {ν : Measure 𝓨} [IsProbabilityMeasure ν]
     (h_ac : μ ⊗ₘ κ ≪ μ ⊗ₘ (Kernel.const 𝓧 ν))
     (h_int : Integrable (llr (μ ⊗ₘ κ) (μ ⊗ₘ (Kernel.const 𝓧 ν))) (μ ⊗ₘ κ)) :

@@ -585,64 +585,7 @@ route T capstone Case 2 (`EPIInfiniteVarianceCapstone.lean:343`、`entropyPowerE
 honest。`hW_top` (h(W)=⊤) は場合分け precondition で load-bearing でない。
 
 route β' Phase 4 で埋める。
-
-独立 honesty audit 2026-06-08 (skeleton, 4-check + name-laundering PASS → honest_residual):
-**`_unconditional` 命名 = NOT name-laundering**。signature は既存 `differentialEntropyExt_top_of_indep_add`
-(`EPIUncondMonotone.lean:153`、(i-a) `differentialEntropyExt_indep_add_eq_add_klDiv` の transitive
-sorry を継承) と **完全同一の仮説群** (`hW`/`hV`/`hWV`/`hW_ac`/`hW_top`、結論も同一)。新規 load-bearing
-hypothesis を threading していない — `_unconditional` は「(i-a) sorry を継承しない別 route (truncation
-近似) で同結論を建てる」という proof-route の主張で、「仮説が無い」主張ではない (CORE doctrine の
-name_laundering は「open load-bearing hyp or 完成偽装 sorry-body」、本件は body sorry が `@residual`
-で正直にマーク済 = 偽装でない)。**`hW_top` load-bearing 判定**: `h(W)=⊤` は ⊤ 枝の場合分け
-precondition、結論の核 (= h(W+V)=⊤) を encode せず。hard core = 単調性 `h(W)≤h(W+V)` (#3 が供給)、
-`hW_top` + 単調性 → `h(W+V)≥⊤` → `=⊤` (`le_top`)。`le_top` は退化定義悪用でなく EReal ⊤ 表現の
-genuine 利用 (route T capstone Case 2 と同型)。(4) sufficiency — `h(W)=⊤` + 単調性で `h(W+V)=⊤` は
-正しい含意 (反例なし: 単調性が無条件で成立する以上 ⊤ 入力は ⊤ 出力)。`plan:` 妥当。
-
-**route (d'') assembly proof-done (Phase 4、0 sorry、2026-06-08)**: body は以下を組む。
-Step 0 — regularity: `ν = (P.map W) ∗ (P.map V)` (`IndepFun.map_add_eq_map_conv_map`)、
-`B(P.map W) ≠ ⊤` (新 helper `negPart_lintegral_ne_top_of_diffEntExt_top` で `hW_top` から導出 =
-signature に `hW_negPart_fin` を足さない鍵)、`ν ≪ volume` (conv の a.c. left-factor)、`B(ν) ≠ ⊤`
-(`negPart_negMulLog_conv_single_ne_top` un-truncated 適用)。Step 1 — `h(ν_n) → ⊤`: Phase 3
-`differentialEntropyExt_truncW_tendsto_top` (`h(Q_n.map W) → ⊤`) + per-n 単調性
-`differentialEntropyExt_mono_add_truncW` の squeeze (EReal `tendsto_nhds_top_iff_real`)。
-Steps 2–4 — `A(ν) = ⊤` by_contra: per-n Gibbs `ennreal_gibbs_rearranged` で
-`h(ν_n) ≤ (crossPos ν_n ν : EReal)`、atom 1 測度 domination (`ν_n ≤ c_n⁻¹ • ν`) で
-`crossPos ν_n ν ≤ c_n⁻¹ · A(ν) ≤ 2·A(ν)` (eventually `c_n⁻¹ ≤ 2`)、`A(ν) ≠ ⊤` 仮定下で
-`h(ν_n) ≤ (2·A(ν) : EReal)` (有限) が `h(ν_n) → ⊤` と矛盾。`A(ν) = ⊤` + `B(ν) ≠ ⊤` →
-`h(ν) = ⊤ − fin = ⊤` (`EReal.top_sub_coe`)。
-
-`#print axioms differentialEntropyExt_top_of_indep_add_unconditional`
-= `[propext, Classical.choice, Quot.sound]` (sorryAx-free 機械確認、olean refresh 後)。**核心: (i-a)
-`differentialEntropyExt_indep_add_eq_add_klDiv` の sorryAx を継承しない** (truncation 近似で無条件版② を
-bypass、axiom 出力に sorryAx 不在で機械裏取り)。
-
-honesty: (a) load-bearing hyp なし (`hW`/`hV`/`hWV`/`hW_ac` は regularity、`hW_top` は ⊤ 枝の場合分け
-precondition で結論核 = h(W+V)=⊤ を encode せず)、(b) `_unconditional` 命名 = NOT name-laundering
-(open load-bearing hyp も完成偽装 sorry-body も無し、proof-done 達成済)。(4) sufficiency — `h(W)=⊤`
-+ 無条件単調性で `h(W+V)=⊤` は正しい含意 (反例なし)。
-
-**独立 honesty audit 2026-06-08 (fresh subagent, route 完了 closure 監査, commit 803e489 → ok)**:
-4-check 全 PASS。(1) 非循環 — 結論 `h(P.map(W+V))=⊤` は 5 仮説のいずれとも非同型、body は
-genuine 全証明 (`:= h` でない)。(2) 非バンドル (core-reconstruction) — `hW`/`hV`/`hWV`/`hW_ac` は
-可測/独立/絶対連続、`hW_top` (h(W)=⊤) は ⊤ 枝 case-split precondition。5 仮説を全 grant しても
-結論 (= h(W+V)=⊤) の核は出ない: 核 = 無条件単調性 `h(W_n)≤h(W_n+V)` (#3 `differentialEntropyExt_
-mono_add_truncW`, `@audit:ok`) + `h(W_n)→⊤` (Phase 3, `@audit:ok`) で body が担う = 非 load-bearing。
-(3) 非退化 — 結論の `h(ν)=⊤` は `A(ν)=⊤` (by_contra + per-n Gibbs + 測度 domination で genuine 確立)
-+ `B(ν)≠⊤` から `⊤−fin=⊤` (`EReal.top_sub_coe`) で建てる genuine EReal ⊤ 利用、vacuous/exfalso でない。
-(4) **sufficiency (反例試行) — 含意 TRUE、反例構成不能**: 退化境界 3 通り試行 — V Dirac (W+V=W+c シフト,
-h 不変→⊤)、V 独立 a.c. (h(W+V)≥h(W)=⊤)、V atom/特異 (a.c. W との conv は a.c.、⊤-entropy シフト
-混合は⊤ 維持)。いずれも `h(W+V)=⊤` が生き、`h(W+V)≠⊤` 反例なし。核は無条件単調性 (任意独立 V で成立,
-V a.c. 不要) = 「独立ノイズ加算は微分エントロピーを減らさない」、`h(W)=⊤⟹h(W+V)=⊤` は genuine 含意。
-under-hypothesized でない。**name-laundering 最終判定 = NOT laundering**: signature は既存
-`differentialEntropyExt_top_of_indep_add` (EPIUncondMonotone.lean:153) と完全同一仮説群・同一結論、
-新規 hyp なし。`_unconditional` は「(i-a) `differentialEntropyExt_indep_add_eq_add_klDiv` の sorryAx を
-継承しない別 route (truncation 近似)」という proof-route 主張で正当 (open load-bearing hyp も偽装
-sorry-body も無し)。**機械裏取り (olean refresh 後)**: `#print axioms differentialEntropyExt_top_of_
-indep_add_unconditional` = `[propext, Classical.choice, Quot.sound]` (sorryAx **非依存**)、対して
-`#print axioms differentialEntropyExt_indep_add_eq_add_klDiv` (i-a) = `sorryAx` 保持。**非継承を独立
-再確認**: 同 commit で両 module を `lake build` リフレッシュ後 fresh `lake env lean` で確認、stale-olean
-artifact でなく truncation route が genuine に無条件版② chain rule を迂回。@audit:ok -/
+@audit:ok -/
 theorem differentialEntropyExt_top_of_indep_add_unconditional
     (W V : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hW : Measurable W) (hV : Measurable V) (hWV : IndepFun W V P)

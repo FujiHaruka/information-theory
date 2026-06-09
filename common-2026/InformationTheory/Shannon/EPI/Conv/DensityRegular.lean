@@ -36,9 +36,6 @@ open InformationTheory.Shannon.EPIConvDensity
 
 /-- Global sup bound of `gaussianPDFReal 0 v`: `g(x) ≤ (√(2πv))⁻¹` since
 `exp(-x²/(2v)) ≤ 1`.
-
-Independent honesty audit (2026-06-01, fresh auditor): verdict **ok**. Genuine analytic
-sup bound (`exp ≤ 1`); sorryAx-free.
 @audit:ok -/
 theorem gaussianPDFReal_abs_le (v : ℝ≥0) :
     ∀ w, |gaussianPDFReal 0 v w| ≤ (Real.sqrt (2 * Real.pi * v))⁻¹ := by
@@ -58,9 +55,6 @@ theorem gaussianPDFReal_abs_le (v : ℝ≥0) :
 /-- Global sup bound of `deriv (gaussianPDFReal 0 v)`. With
 `deriv g v x = -x/v · g v x` and `|x|·exp(-x²/(2v)) ≤ √(v)·exp(-1/2)·…`, the
 derivative is globally bounded.
-
-Independent honesty audit (2026-06-01, fresh auditor): verdict **ok**. Genuine global bound
-via `2|w| ≤ 1+w²`, `mul_exp_neg_le_exp_neg_one`, `exp ≤ 1`; `v ≠ 0` regularity. sorryAx-free.
 @audit:ok -/
 theorem deriv_gaussianPDFReal_abs_le {v : ℝ≥0} (hv : v ≠ 0) :
     ∃ M : ℝ, ∀ w, |deriv (gaussianPDFReal 0 v) w| ≤ M := by
@@ -110,10 +104,6 @@ theorem deriv_gaussianPDFReal_abs_le {v : ℝ≥0} (hv : v ≠ 0) :
 
 /-- The derivative of `convDensityAdd pX g_t` is the convolution of `pX` against
 `deriv g_t`: `deriv (convDensityAdd pX g_t) z = convDensityAdd pX (deriv g_t) z`.
-
-Independent honesty audit (2026-06-01, fresh auditor): verdict **ok**. Derivative identity
-derived from the audited gateway `HasDerivAt` (`.deriv`), not assumed; `Integrable pX` regularity.
-sorryAx-free.
 @audit:ok -/
 theorem deriv_convDensityAdd_eq {pX : ℝ → ℝ} {t : ℝ} (ht : 0 < t)
     (hpX_int : Integrable pX volume) :
@@ -141,10 +131,6 @@ For an integrable nonnegative `pX` and the Gaussian kernel `g = gaussianPDFReal 
 that is globally bounded by `M` and vanishes (after the `z - x` shift) along the
 filter `l`, the convolution `convDensityAdd pX g` vanishes along `l`. Dominated
 convergence with bound `pX · M`.
-
-Independent honesty audit (2026-06-01, fresh auditor): verdict **ok**. Genuine dominated-convergence
-argument (`tendsto_integral_filter_of_dominated_convergence`); `hpX_nn`/`hpX_int`/`hv` regularity,
-conclusion derived not assumed. sorryAx-free.
 @audit:ok -/
 theorem tendsto_convDensityAdd_gaussian_zero {pX : ℝ → ℝ} {v : ℝ≥0}
     (hv : v ≠ 0) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_int : Integrable pX volume)
@@ -192,13 +178,6 @@ theorem tendsto_convDensityAdd_gaussian_zero {pX : ℝ → ℝ} {v : ℝ≥0}
 
 /-- **A-5 precondition (1) producer.** `convDensityAdd pX g_t` is a regular V2
 density for `t > 0` and any probability density `pX`.
-
-Independent honesty audit (2026-06-01, fresh auditor): verdict **ok**. All four `pX` hyps
-(nonneg / measurable / integrable / positive mass) are regularity preconditions — none bundles
-a load-bearing core. All 6 `IsRegularDensityV2` fields are discharged from genuine infrastructure
-(gateway `diff`, `convDensityAdd_pos`, dominated-convergence tail vanishing, Tonelli envelope
-`integrable_deriv`, Fubini `integral_deriv_eq_zero`). Transitively sorryAx-free (`#print axioms`
-= `[propext, Classical.choice, Quot.sound]`, covers all downstream fields).
 @audit:ok -/
 theorem isRegularDensityV2_convDensityAdd_gaussian (pX : ℝ → ℝ) {t : ℝ} (ht : 0 < t)
     (hpX_nn : ∀ x, 0 ≤ pX x)

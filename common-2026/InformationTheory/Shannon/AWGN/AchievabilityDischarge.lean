@@ -610,11 +610,6 @@ Construction: `capacity` is continuous and strictly increasing in the variance;
 `R < capacity(P)` lies strictly below the value at `P`, so by continuity there is
 a left neighbourhood of `P` on which the capacity still exceeds `R`. Picking any
 `P'` in that neighbourhood with `0 < P' < P` works.
-
-Independent honesty audit (AWGN M5 Phase 3-β): GENUINE — 0 sorry / 0 residual.
-The strict `P' < P` is produced by a real closed-form construction
-(`Pmin := N·(exp(2R)−1)` < `P` via `exp(2R) < 1 + P/N`, midpoint `P' := (Pmin+P)/2`),
-not fabricated from a non-strict `≤`. Verified to type-check with no sorry warning.
 @audit:ok -/
 @[entry_point]
 theorem awgnPowerWitness_exists (P : ℝ) (hP : 0 < P) (N : ℝ≥0) (hN : (N : ℝ) ≠ 0)

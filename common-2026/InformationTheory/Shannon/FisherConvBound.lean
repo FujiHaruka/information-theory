@@ -51,8 +51,7 @@ open InformationTheory.Shannon.EPIConvDensity (convDensityAdd)
 Via `variance_fun_id_gaussianReal` (`Var[id; gaussianReal 0 s] = s`) +
 `variance_eq_integral` (centered, mean `0`) + `integral_gaussianReal_eq_integral_smul`
 (withDensity 橋).
-@audit:ok — independent audit (2026-06-01, commit b5e13e2): genuine (value `= s`, non-vacuous),
-sorryAx-free `[propext, Classical.choice, Quot.sound]`. -/
+@audit:ok -/
 theorem integral_sq_mul_gaussianPDFReal {s : ℝ} (hs : 0 < s) :
     ∫ u, u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u ∂volume = s := by
   have hv_ne : (⟨s, hs.le⟩ : ℝ≥0) ≠ 0 := by
@@ -73,8 +72,7 @@ theorem integral_sq_mul_gaussianPDFReal {s : ℝ} (hs : 0 < s) :
 
 /-- **Gaussian second moment integrability over `volume`**: `u ↦ u² · g_s(u)` is integrable
 (`u²` is `MemLp 2` under `gaussianReal 0 s`, transported to `volume` via the withDensity bridge).
-@audit:ok — independent audit (2026-06-01, commit b5e13e2): genuine `Integrable` output (regularity),
-sorryAx-free `[propext, Classical.choice, Quot.sound]`. -/
+@audit:ok -/
 theorem integrable_sq_mul_gaussianPDFReal {s : ℝ} (hs : 0 < s) :
     Integrable (fun u => u ^ 2 * gaussianPDFReal 0 ⟨s, hs.le⟩ u) volume := by
   have hv_ne : (⟨s, hs.le⟩ : ℝ≥0) ≠ 0 := by
@@ -94,8 +92,7 @@ theorem integrable_sq_mul_gaussianPDFReal {s : ℝ} (hs : 0 < s) :
 
 /-- **Per-`x` second-moment integrability**: `y ↦ (x-y)² · pX y · g_s(x-y)` is integrable
 (`(x-y)² g_s(x-y)` is a bounded poly×Gaussian, hence `≤ C·|pX y|`, integrable).
-@audit:ok — independent audit (2026-06-01, commit b5e13e2): genuine `Integrable` output (regularity),
-sorryAx-free `[propext, Classical.choice, Quot.sound]`. -/
+@audit:ok -/
 theorem convSecondMoment_integrand_integrable
     (pX : ℝ → ℝ) (_hpX_meas : Measurable pX) (hpX_int : Integrable pX volume)
     {s : ℝ} (hs : 0 < s) (x : ℝ) :
@@ -140,8 +137,7 @@ theorem convSecondMoment_integrand_integrable
 
 /-- **Pointwise Cauchy-Schwarz** (Hölder `p=q=2` over `volume`, per fixed `x`):
 `(∫ pX y (x-y) g_s(x-y))² ≤ p_s(x) · ∫ pX y (x-y)² g_s(x-y)`.
-@audit:ok — independent audit (2026-06-01, commit b5e13e2): genuine Hölder (p=q=2) inequality, both
-sides non-vacuous, sorryAx-free `[propext, Classical.choice, Quot.sound]`. -/
+@audit:ok -/
 theorem convScore_sq_le_pointwise
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) {s : ℝ} (hs : 0 < s) (x : ℝ) :
@@ -254,8 +250,7 @@ theorem convScore_sq_le_pointwise
 /-- **Step 1 deriv1 formula (per fixed `x`)**: `deriv p_s x = -(1/s)·∫ pX y (x-y) g_s(x-y)`.
 Reconstructs the 5 Gaussian-tail domination preconditions of `convDensityAdd_deriv1_gaussian_eq`
 from `hpX_meas`/`hpX_int`/`hs` only (mirrors `convDensityAdd_deriv_hasDerivAt_self`).
-@audit:ok — independent audit (2026-06-01, commit b5e13e2): genuine deriv1 formula, 5 domination hyps
-reconstructed in-body (not bundled as hypotheses), sorryAx-free `[propext, Classical.choice, Quot.sound]`. -/
+@audit:ok -/
 theorem convDensityAdd_deriv_eq
     (pX : ℝ → ℝ) (hpX_meas : Measurable pX) (hpX_int : Integrable pX volume)
     {s : ℝ} (hs : 0 < s) :
@@ -338,8 +333,7 @@ theorem convDensityAdd_deriv_eq
 
 /-- **Per-`x` Fisher integrand bound**: `(logDeriv p_s x)²·p_s x ≤ (1/s²)·∫ (x-y)² pX y g_s(x-y)`.
 Combines the Step-1 deriv formula, the pointwise CS, and division by `p_s x > 0`.
-@audit:ok — independent audit (2026-06-01, commit b5e13e2): genuine per-point inequality, `hpX_mass`
-used only for `0 < p_s x` positivity (regularity), sorryAx-free `[propext, Classical.choice, Quot.sound]`. -/
+@audit:ok -/
 theorem convLogDeriv_sq_mul_le
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)
@@ -394,14 +388,7 @@ Quot.sound]` (sorryAx-free)。証明の核は全て本 body 内 (Step1 deriv1 fo
 Step2 CS `convScore_sq_le_pointwise`, Step3 per-point `convLogDeriv_sq_mul_le`, Step4 Tonelli +
 Gaussian moment `integral_sq_mul_gaussianPDFReal = s`)。`hpX_nn`/`hpX_meas`/`hpX_int`/`hpX_mass`/`hs`
 は全て pX regularity precondition (`hpX_mass : ∫pX=1` = probability density 正規化、load-bearing でない)。
-
-@audit:ok — independent honesty audit (2026-06-01, fresh auditor, commit b5e13e2): genuine, sorryAx-free.
-`#print axioms` = `[propext, Classical.choice, Quot.sound]` (transient `#print axioms` + `lake env lean`,
-fresh olean). Signature honest: conclusion `fisherInfoOfDensity (…) ≤ ENNReal.ofReal (1/s)` is NOT
-embedded in any hypothesis; `hpX_nn`/`hpX_meas`/`hpX_int`/`hpX_mass`/`hs` are all pX regularity
-preconditions (core-reconstruction test: granting them does NOT hand the Fisher bound — it is proved
-in-body via Step1-4). loogle `fisherInfo`/`Blachman` = unknown identifier (Mathlib gap confirmed; the
-former wall was genuine and is now genuinely closed). -/
+@audit:ok -/
 theorem gaussianConv_fisher_le_inv_var
     (pX : ℝ → ℝ) (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
     (hpX_int : Integrable pX volume) (hpX_mass : (∫ y, pX y ∂volume) = 1)

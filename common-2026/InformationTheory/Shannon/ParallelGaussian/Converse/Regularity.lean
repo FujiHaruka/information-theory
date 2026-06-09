@@ -46,11 +46,7 @@ Built by identifying `μY.map (· i)` with the 1-D AWGN output law of the input 
 (`Measure.ext_of_lintegral`): on the joint `p ⊗ₘ W`, `∫⁻ f((y) i) ∂(W x) = ∫⁻ yi, f yi
 ∂(gaussianReal (x i) (N i))` (the `i`-marginal of the Gaussian product fibre, via
 `Measure.pi_map_eval`), which matches the 1-D AWGN fibre `(awgnChannel (N i)) (x i)`.
-
-Genuine, sorryAx-free (`#print axioms` = [propext, Classical.choice, Quot.sound]).
-Independent honesty audit (2026-05-29): genuine regularity/identity lemma, no
-load-bearing hypothesis (preconditions are AC/measurability/integrability/power-constraint
-membership), `#print axioms` sorryAx-free re-confirmed. @audit:ok -/
+@audit:ok -/
 theorem parallelOutput_marginal_eq_conv (i : Fin n) :
     (outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)).map
         (fun z => z i)
@@ -128,9 +124,7 @@ theorem parallelOutput_marginal_eq_conv (i : Fin n) :
 `parallelOutput_marginal_eq_conv`: the `i`-marginal of the correlated output equals the
 1-D AWGN output law `outputDistribution (p.map (· i)) (awgnChannel (N i))`. This lets all
 1-D AWGN Phase 6 lemmas (variance / log-density integrability) apply verbatim.
-
-Genuine, sorryAx-free. Independent honesty audit (2026-05-29): no load-bearing
-hypothesis, `#print axioms` sorryAx-free re-confirmed. @audit:ok -/
+@audit:ok -/
 theorem parallelOutput_marginal_eq_awgn_output (i : Fin n) :
     (outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)).map
         (fun z => z i)
@@ -143,9 +137,7 @@ theorem parallelOutput_marginal_eq_awgn_output (i : Fin n) :
 `∑ⱼ ∫⁻ (xⱼ)² ∂p ≤ P` dominates the single coordinate `∫⁻ (xᵢ)² ∂p`, and the marginal
 push-forward sends `∫⁻ y² ∂(p.map (· i)) = ∫⁻ (xᵢ)² ∂p`, so `p.map (· i) ∈
 awgnPowerConstraintSet P`.
-
-Genuine, sorryAx-free. Independent honesty audit (2026-05-29): no load-bearing
-hypothesis, `#print axioms` sorryAx-free re-confirmed. @audit:ok -/
+@audit:ok -/
 theorem parallelMarginal_mem_awgnPowerConstraintSet (P : ℝ)
     (hp : p ∈ parallelGaussianPowerConstraintSet P) (i : Fin n) :
     p.map (fun z => z i) ∈ AWGN.awgnPowerConstraintSet P := by
@@ -164,11 +156,7 @@ theorem parallelMarginal_mem_awgnPowerConstraintSet (P : ℝ)
 The output is the fibre mixture `μY s = ∫⁻ x, (W x) s ∂p`; each fibre
 `W x = Measure.pi (gaussianReal (x i) (N i)) ≪ volume` (Step A + `gaussianReal_absolutelyContinuous`,
 needs `hN`), so the mixture is `≪ volume`.
-
-Genuine, sorryAx-free (`#print axioms` = [propext, Classical.choice, Quot.sound]).
-Independent honesty audit (2026-05-29): genuine regularity/identity lemma, no
-load-bearing hypothesis (preconditions are AC/measurability/integrability/power-constraint
-membership), `#print axioms` sorryAx-free re-confirmed. @audit:ok -/
+@audit:ok -/
 theorem parallelOutput_absolutelyContinuous_volume (hN : ∀ i, (N i : ℝ) ≠ 0) :
     outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)
       ≪ (volume : Measure (Fin n → ℝ)) := by
@@ -192,11 +180,7 @@ theorem parallelOutput_absolutelyContinuous_volume (hN : ∀ i, (N i : ℝ) ≠ 
 /-- Each coordinate marginal `μY.map (· i) ≪ volume`.
 The marginal is `μY.map (· i)`; the fibre's `i`-marginal `gaussianReal (x i) (N i) ≪ volume`,
 so the mixture `i`-marginal is `≪ volume`.
-
-Genuine, sorryAx-free (`#print axioms` = [propext, Classical.choice, Quot.sound]).
-Independent honesty audit (2026-05-29): genuine regularity/identity lemma, no
-load-bearing hypothesis (preconditions are AC/measurability/integrability/power-constraint
-membership), `#print axioms` sorryAx-free re-confirmed. @audit:ok -/
+@audit:ok -/
 theorem parallelOutput_marginal_absolutelyContinuous_volume (hN : ∀ i, (N i : ℝ) ≠ 0)
     (i : Fin n) :
     (outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)).map
@@ -236,11 +220,7 @@ theorem parallelOutput_marginal_absolutelyContinuous_volume (hN : ∀ i, (N i : 
 /-- **Reverse full-support AC of each output coordinate marginal** `volume ≪ μY.map (· i)`.
 Mirror of `parallelOutput_marginal_absolutelyContinuous_volume` with the fibre marginal
 reverse AC `volume ≪ gaussianReal (x i) (N i)` (`gaussianReal_absolutelyContinuous'`).
-
-Genuine, sorryAx-free (`#print axioms` = [propext, Classical.choice, Quot.sound]).
-Independent honesty audit (2026-05-29): genuine regularity/identity lemma, no
-load-bearing hypothesis (preconditions are AC/measurability/integrability/power-constraint
-membership), `#print axioms` sorryAx-free re-confirmed. @audit:ok -/
+@audit:ok -/
 theorem volume_absolutelyContinuous_parallelOutput_marginal (hN : ∀ i, (N i : ℝ) ≠ 0)
     (i : Fin n) :
     (volume : Measure ℝ)
@@ -283,11 +263,7 @@ The output mixture `μY s = ∫⁻ x, (W x) s ∂p`; from `μY s = 0` the `p`-in
 nonnegative `x ↦ (W x) s` vanishes, so `(W x) s = 0` for `p`-a.e. `x` (in particular some
 `x`, as `p` is a probability measure), whence `volume s = 0` by the reverse Gaussian-product
 AC `volume ≪ W x` (`volume_absolutelyContinuous_pi_gaussian`, needs `hN`).
-
-Genuine, sorryAx-free (`#print axioms` = [propext, Classical.choice, Quot.sound]).
-Independent honesty audit (2026-05-29): genuine regularity/identity lemma, no
-load-bearing hypothesis (preconditions are AC/measurability/integrability/power-constraint
-membership), `#print axioms` sorryAx-free re-confirmed. @audit:ok -/
+@audit:ok -/
 theorem volume_absolutelyContinuous_parallelOutput (hN : ∀ i, (N i : ℝ) ≠ 0) :
     (volume : Measure (Fin n → ℝ))
       ≪ outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas) := by
@@ -319,11 +295,7 @@ reverse `volume ≪ Measure.pi (μY.map (· i))` from `pi_absolutelyContinuous_r
 componentwise mutual-AC hypotheses are the forward marginal AC
 (`parallelOutput_marginal_absolutelyContinuous_volume`) and the reverse marginal AC
 (`volume_absolutelyContinuous_parallelOutput_marginal`); all need `hN`.
-
-Genuine, sorryAx-free (`#print axioms` = [propext, Classical.choice, Quot.sound]).
-Independent honesty audit (2026-05-29): genuine regularity/identity lemma, no
-load-bearing hypothesis (preconditions are AC/measurability/integrability/power-constraint
-membership), `#print axioms` sorryAx-free re-confirmed. @audit:ok -/
+@audit:ok -/
 theorem parallelOutput_absolutelyContinuous_pi_marginals (hN : ∀ i, (N i : ℝ) ≠ 0) :
     outputDistribution p (parallelGaussianChannel N h_meas h_parallel_meas)
       ≪ Measure.pi (fun i =>
@@ -338,9 +310,7 @@ theorem parallelOutput_absolutelyContinuous_pi_marginals (hN : ∀ i, (N i : ℝ
 `log ((q.rnDeriv volume y).toReal)` is integrable against `q = outputDistribution p₁ (awgn N₁)`.
 Derived from the joint form `outputDistribution_logDensity_integrable_joint` by the
 snd-marginal pushforward (`q = (p₁ ⊗ₘ W).snd`).
-
-Genuine, sorryAx-free. Independent honesty audit (2026-05-29): no load-bearing
-hypothesis, `#print axioms` sorryAx-free re-confirmed. @audit:ok -/
+@audit:ok -/
 private theorem awgnOutput_logDensity_integrable_self (P : ℝ) (hP : 0 ≤ P)
     (Ni : ℝ≥0) (hNi : (Ni : ℝ) ≠ 0) (p₁ : Measure ℝ) [IsProbabilityMeasure p₁]
     (hp₁ : p₁ ∈ AWGN.awgnPowerConstraintSet P) :
@@ -368,9 +338,7 @@ private theorem awgnOutput_logDensity_integrable_self (P : ℝ) (hP : 0 ≤ P)
 /-- Marginal log-density joint integrability. The integrand depends only on the `i`-th
 coordinate; pushing forward to the marginal `μY.map(·i) = q` (1-D AWGN output), it reduces
 to `awgnOutput_logDensity_integrable_self`.
-
-Genuine, sorryAx-free. Independent honesty audit (2026-05-29): no load-bearing
-hypothesis, `#print axioms` sorryAx-free re-confirmed. @audit:ok -/
+@audit:ok -/
 theorem parallelOutput_marginal_logDensity_integrable (P : ℝ) (hP : 0 ≤ P) (i : Fin n)
     (hN : (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     Integrable

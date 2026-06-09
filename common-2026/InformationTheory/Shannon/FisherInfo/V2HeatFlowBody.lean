@@ -232,10 +232,7 @@ NOTE (2026-06-05 closure): `deBruijn_identity_v2` 自体は genuine (sorryAx-fre
 再組立するが genuine path (`pPath_eq_convDensityAdd` + atoms) は `h_time` の heat-
 equation 核を消費しない (vestigial、本 commit 由来でなく既存の load-bearing pass-
 through predicate)。
-
-@audit:ok — independent honesty audit (2026-06-05, fresh auditor, commit 94a3ae8):
-sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`)。新規
-`hX_ac`/`h_mom_X` は regularity precondition、load-bearing でない。 -/
+@audit:ok -/
 @[entry_point]
 theorem deBruijn_identity_v2_of_heat_subhyp
     {Ω : Type*} {_mΩ : MeasurableSpace Ω} {P : Measure Ω} [IsProbabilityMeasure P]

@@ -165,13 +165,7 @@ the spurious `∫ (x i)² ∂p = 0 ≤ P`, making the converse bound
 `∫⁻ ofReal((x i)²) < ∞`, hence genuine integrability of every coordinate `(x i)²`.
 `parallelGaussianPowerConstraintSet_mem_iff_integrable` bridges back to the Bochner
 moment + the integrability regularity used by the capacity proofs.
-
-Independent honesty audit (2026-05-29): genuine lintegral form, multivariate analogue of
-the `@audit:ok` `AWGN.awgnPowerConstraintSet`. Closes the tier-5 false-statement defect
-(naive Bochner `∑ᵢ ∫ (xᵢ)² ∂p ≤ P` admitted infinite-second-moment inputs via `integral_undef`,
-making the converse `∑ᵢ (1/2)log(1+Pᵢ/Nᵢ)` false). `parallelGaussianCapacity` / `miImage`
-both route through this named def (`parallelGaussianCapacity_eq_sSup_miImage` holds by `rfl`);
-no inline Bochner set survives in the repo. @audit:ok -/
+@audit:ok -/
 def parallelGaussianPowerConstraintSet {n : ℕ} (P : ℝ) : Set (Measure (Fin n → ℝ)) :=
   { p : Measure (Fin n → ℝ) | IsProbabilityMeasure p ∧
       ∑ i : Fin n, ∫⁻ x : Fin n → ℝ, ENNReal.ofReal ((x i) ^ 2) ∂p ≤ ENNReal.ofReal P }
@@ -181,13 +175,7 @@ the genuine per-coordinate integrability of `(x i)²` and the Bochner total
 second-moment bound `∑_i ∫ (x i)² ∂p ≤ P`. Multivariate analogue of
 `AWGN.awgnPowerConstraintSet_mem_iff_integrable`; the lintegral constraint carries the
 regularity (`Integrable (fun x => (x i)²) p`) the Bochner form alone cannot supply.
-
-Independent honesty audit (2026-05-29): genuine (0 sorry; `#print axioms` = [propext,
-Classical.choice, Quot.sound], no `sorryAx`). The only hypotheses are regularity
-(`0 ≤ P`, set membership); the integrability + Bochner-sum core is derived genuinely
-(`Finset.single_le_sum` + `hasFiniteIntegral_iff_ofReal` + `ofReal_integral_eq_lintegral_ofReal`
-+ `ENNReal.ofReal_le_ofReal_iff`), structurally identical to the `@audit:ok` 1-D template.
-No circular `:= h`, no `:True` slot, no load-bearing hypothesis. @audit:ok -/
+@audit:ok -/
 theorem parallelGaussianPowerConstraintSet_mem_iff_integrable {n : ℕ}
     (P : ℝ) (hP : 0 ≤ P) (p : Measure (Fin n → ℝ))
     (hp : p ∈ parallelGaussianPowerConstraintSet P) :

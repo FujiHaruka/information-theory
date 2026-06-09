@@ -218,13 +218,7 @@ merged-carrier の bridge は cost-level
 cost-level pivot (`docs/shannon/huffman-cost-level-optimality-plan.md`) で帰納核から
 `h_ident` 依存を除去した新 motor `huffmanLength_optimal_aux` を経由するため、FALSE
 predicate を **一切経由しない**。
-
-@audit:ok — independent audit (2026-05-30): signature は regularity のみ
-(`IsProbabilityMeasure` / full-support `0 < P.real{a}` / `hl_pos` / `hl_kraft`)、
-load-bearing/FALSE predicate 引数なし、結論は genuine な最適性
-`expectedLength P (huffmanLength P) ≤ expectedLength P l`。
-`#print axioms huffmanLength_optimal` = [propext, Classical.choice, Quot.sound]、
-sorryAx 非依存 (transitive 0 sorry 機械確認済)。 -/
+@audit:ok -/
 @[entry_point]
 theorem huffmanLength_optimal
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]

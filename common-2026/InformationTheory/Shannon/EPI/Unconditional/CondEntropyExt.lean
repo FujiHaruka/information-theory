@@ -47,10 +47,7 @@ open scoped ENNReal NNReal
 で clean に出る、(b) ② の statement `h_ext(X) = condEntExt + klDiv` が EReal 和で well-typed
 (差分 `⊤−⊤` を RHS に作らない sum 形)。`[IsFiniteMeasure μ]` は `μ.map Z` を有限にするため (Real 版 def
 `condDifferentialEntropy` と同じ)。
-
-独立 honesty audit 2026-06-07: **genuine** (退化定義悪用なし)。`differentialEntropyExt` (`@audit:ok`、def-fix で
-退化トラップ除去機械検証済) の正部 A_z / 負部 B_z lintegral を `μ.map Z` 上で平均した honest な EReal 差。
-`:True`/vacuous shape なし、各 fibre は条件付き法 `condDistrib X Z μ z` の正則密度を反映する非自明な値。 -/
+@audit:ok -/
 noncomputable def condDifferentialEntropyExt
     {Ω α : Type*} [MeasurableSpace Ω] [MeasurableSpace α]
     (X : Ω → ℝ) (Z : Ω → α) (μ : Measure Ω) [IsFiniteMeasure μ] : EReal :=
@@ -100,9 +97,7 @@ Real 版 `condDifferentialEntropy_indep_add_eq` (`EPIG2ConvEntropyMonotone.lean:
 で `μ.map X` に落とす。
 
 仮説は全 regularity precondition (measurability / `IndepFun` / a.c.)、load-bearing でない。
-独立 honesty audit 2026-06-07: **genuine** (PASS)。body は Real 版 `condDifferentialEntropy_indep_add_eq`
-(`@audit:ok`) の機械的 `∫`→`∫⁻` ミラー、独立 sorry なし (file の sorry warning は ② のみ = 本定理 sorryAx-free)。
-循環/バンドル/退化なし。@audit:ok -/
+@audit:ok -/
 theorem condDifferentialEntropyExt_indep_add_eq
     {Ω : Type*} [MeasurableSpace Ω] (X Z : Ω → ℝ) (μ : Measure Ω)
     [IsProbabilityMeasure μ] (c : ℝ)
@@ -158,17 +153,6 @@ finite subtrahend にし、`EReal.sub_add_cancel` / `EReal.add_sub_cancel_right`
 `(a1:E) + (b2:E) = ((a2:E) + (k:E)) + (b1:E)` の cancel 形に持ち込み、`EReal.coe_ennreal_add`
 で coe をまとめ `EReal.coe_ennreal_eq_coe_ennreal_iff` で ℝ≥0∞ 等式 `hbal` に還元する。
 a1 / a2 / k が `⊤` でも b1, b2 finite なので cancellation は通る (casework 不要)。
-
-独立 honesty audit 2026-06-08 (4-check, PASS): (1) 非循環 — 結論 (EReal 差分等式) は仮説
-`hbal` (ℝ≥0∞ レベル等式) と型が異なり非同型、body は `coe_ennreal_toReal`/`coe_ennreal_add`/
-`add_sub_cancel_right` の純 EReal 算術、`:= h` でない。(2) 非バンドル — core-reconstruction:
-`hbal` を grant しても結論は手に入らない、EReal の finite-subtrahend cancellation (b1,b2 有限を
-使う `EReal.sub_top` 回避) + coe 移送は body が担う、`hbal` は「ℝ≥0∞ で先に示すべき自明部分」の
-分離で load-bearing でない (呼出元 finite ② が `hbal` を step a'/b'/c' 結線で genuine に供給)。
-(3) 非退化 — `:True` slot なし、a1/a2/k が ⊤ でも通る casework-free 設計。(4) sufficiency —
-b1,b2 有限が cancellation に honest に必要 (⊤ subtrahend だと `(a1:E)-⊤=⊥` で LHS 潰れ FALSE)、
-`hb1`/`hb2` がこの枝を除外、含意は EReal AddCommMonoid で semantic に follow (反例棄却済)。
-sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`、機械確認)。
 @audit:ok -/
 theorem ereal_sub_eq_sub_add_of_ennreal_balance
     (a1 b1 a2 b2 k : ℝ≥0∞) (hb1 : b1 ≠ ∞) (hb2 : b2 ≠ ∞)
@@ -278,28 +262,6 @@ load-bearing でない: 結論 RHS の核 (klDiv 項 = I(X;Z)) を仮説に enco
 導出可能だが、step b' の `hKL` precondition を per-fibre で供給するための tractability 用に明示で取る
 (**redundant regularity、非 load-bearing**; 導出可能性が結論の核ではない)。`hcond_ne_bot` / `hX_ne_bot`
 は ⊥ 退化枝 (h(X|Z) = −∞ / h(X) = −∞) を honest に除外する scope (`⊥ + klDiv = ⊥` で恒等式が崩れる枝)。
-
-独立 honesty audit 2026-06-08 (4-check, PASS — genuine 完成、tier 1): (1) 非循環 — 結論
-(entropy 分解恒等式 `h_ext(X) = condEntExt + I(X;Z)`) は 11 仮説 (Measurable/≪/Integrable/≠∞/≠⊥)
-のいずれとも非同型、body (`:284-410`) は step a'/b'/c' + helper の genuine 配線 (hfib→hk_eq→
-hCpos_eq/hCneg_eq→hbal→hb1_ne/hb2_ne→`ereal_sub_eq_sub_add_of_ennreal_balance`)、`:= h` でない。
-(2) 非バンドル (各仮説 core-reconstruction test) — 全 11 仮説が regularity precondition:
-hX/hZ (可測)、hX_ac/h_ac/hκ_ac (絶対連続)、hκ_dens_meas (joint 密度可測)、hκ_logp_int/hκ_cross_int
-(fibre 可積分)、hκ_KL (fibre KL ≠ ∞)、hcond_ne_bot/hX_ne_bot (⊥ 除外)。**hκ_KL 弁明検証**: body
-`:328-330` で step b' (`klDiv_negMulLog_cross_balance_ennreal`、`@audit:ok`) の `hKL` 引数として
-per-fibre 供給、step b' 内で klDiv-term の有限性 (`add_ne_top`/`toReal_add` side-condition) にのみ
-使われ恒等式の核 (`klDiv.toReal=−h(P)−cross`) は step b' in-body Real sibling が担う ⟹ hκ_KL は
-klDiv-term finiteness の regularity で結論の klDiv 項を encode しない、redundant (他 3 仮説 + κz≪ν
-から導出可能) だが redundant regularity は defect でなく「導出可能なのに核を仮説化」でない (核は body)。
-**klDiv 項 = 結論 RHS の一部** (I(X;Z)、measure-level `InformationTheory.klDiv`) だが仮説に不等式核を
-抱えず、`hbal` 内で step a' (`klDiv_compProd_lintegral`) により `∫⁻ fibre KL` に genuine 展開 (`:332`/
-`:391`)、core-reconstruction 不発火。(3) 非退化 — `:True` slot なし、V≡0(Dirac Z): condDistrib=μ.map X・
-joint=product・klDiv=0 → `h(X)=h(X)+0` ✓。(4) sufficiency — finiteness-free 版 (現②) が per-fibre
-mass 相殺で証明不能なのに本版が genuine なのは fibre 有限性 (hκ_ac/hκ_logp_int/hκ_cross_int/hκ_KL) を
-**honest に補強したから** = 「選択 big を blocked と偽る」の逆、honest regularity 補強。反例枝全閉:
-b1=∞(h(X)=−∞)→hX_ne_bot 除外、b2=∞(h(X|Z)=−∞)→hcond_ne_bot 除外、fibre KL=∞→hκ_KL 除外。
-under-hypothesized でない。classification: `@residual` なし (sorryAx-free `[propext, Classical.choice,
-Quot.sound]` 機械確認)、step a'/b'/c'/helper の全 `@audit:ok` 配線と整合 ⟹ `@audit:ok` 付与妥当。
 @audit:ok -/
 theorem differentialEntropyExt_eq_condEntExt_add_klDiv_of_finite
     {Ω α : Type*} [MeasurableSpace Ω] [MeasurableSpace α]

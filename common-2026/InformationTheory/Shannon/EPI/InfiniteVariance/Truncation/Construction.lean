@@ -539,12 +539,6 @@ crux-usc chain 6 関数 + headline 呼出に同 precondition を threading 済 (
 `[propext, Classical.choice, Quot.sound]` (sorryAx-free、olean refresh 後機械確認)。これにより
 #2 (`integrable_negMulLog_map_condTrunc_sum`) + per-n EPI (`entropyPowerExt_condTrunc_add_ge`) も
 transitively genuine 化。
-
-独立 honesty audit 2026-06-07 (fresh auditor): ok (proof done)。Jensen 向き
-(`ConvexOn.map_integral_le`: `φ(∫f dμX)≤∫φ(f) dμX`、凸 `φ=t·log t`) + Tonelli + 平行移動不変
-で `∫⁻ G ≤ 1·C<∞`、C = `hqn_ent_int` (Z=Y) の正部から genuine。結論 (負部可積分性 = regularity) を
-仮説に bundle せず (非循環・非バンドル)、`hX_ent`/`hY_ent` は各成分 (別測度 P.map X/Y) の有限微分
-エントロピー precondition (load-bearing でない)。`#print axioms` sorryAx-free 機械再確認。
 @audit:ok -/
 theorem integrable_negPart_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y)
@@ -801,16 +795,6 @@ theorem integrable_negPart_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProba
 `negMulLog` 可積分性を正部/負部分解で。正部 `{r≤1}` は `negMulLog_le_one_sub_self` + `r` 可積分
 (probability measure の toReal rnDeriv)、負部 `{r>1}` は `h(condTrunc.map(X+Y)) ≥ h(condTrunc.map X)
 > -∞` から。黒箱 `entropyPowerExt_add_ge_of_finite_variance` は `hent_sum` を明示引数で要求。
-
-独立 honesty audit 2026-06-07: body genuine。(1) signature に和エントロピー仮説 sneak なし
-= `hX_ac`/`hY_ac`/`hXY`/`hpos` のみ (= 結論である和エントロピー可積分性を仮説で受けていない、
-循環/load-bearing でない、最重要チェック PASS)。(2) body は正部 `g₁` を compact support
-(`map_condTrunc_sum_concentrated`) + `negMulLog_le_one_sub_self` で genuine 構成 + 負部 `g₂` を
-#7 `integrable_negPart_negMulLog_map_condTrunc_sum` に委譲 + `negMulLog r = g₁ - g₂` split。
-(3) #7 が genuine 化したため `#print axioms` = `[propext, Classical.choice, Quot.sound]`
-(sorryAx-free、2026-06-07 fresh auditor 機械再確認、旧「transitive #7 由来」記述は stale)。
-正部 `g₁` は compact support + `negMulLog_le_one_sub_self` で genuine、負部 `g₂` は #7 へ委譲、
-`negMulLog r = g₁-g₂` split。`hX_ent`/`hY_ent` は各成分 regularity precondition。ok (proof done).
 @audit:ok -/
 theorem integrable_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y)
@@ -901,17 +885,6 @@ theorem integrable_negMulLog_map_condTrunc_sum (P : Measure Ω) [IsProbabilityMe
 /-- **per-n 有限分散 EPI** (黒箱 `entropyPowerExt_add_ge_of_finite_variance` への配線)。
 helper 1/2 で全 regularity を供給し、各 n (positive mass) で
 `Nₑ(P_n.map(X+Y)) ≥ Nₑ(P_n.map X) + Nₑ(P_n.map Y)` を得る。
-
-独立 honesty audit 2026-06-07: body は黒箱への genuine 配線 (黒箱が要求する 8 regularity 引数
-= indep/a.c.×2/2次モーメント×2/各成分 entropy×2/和 entropy をすべて helper 1/2 で供給)。
-signature の `hX_ent`/`hY_ent` は黒箱の各成分有限エントロピー precondition を `condTrunc.map` 側に
-再供給するための regularity precondition (`integrable_negMulLog_map_condTrunc` 経由)、結論 (per-n EPI
-不等式) を encode しない load-bearing でない。
-
-独立 honesty audit 2026-06-07 (fresh auditor): ok (proof done)。body は黒箱 8 引数の genuine 配線
-(indep/a.c.×2/2次モーメント×2/各成分 entropy×2/和 entropy を helper で供給)、結論を仮説で受けず。
-#7/#8 が genuine 化したため `#print axioms` = `[propext, Classical.choice, Quot.sound]`
-(sorryAx-free、機械再確認、旧「transitive #7」記述は stale)。
 @audit:ok -/
 theorem entropyPowerExt_condTrunc_add_ge (P : Measure Ω) [IsProbabilityMeasure P]
     {X Y : Ω → ℝ} (hX : Measurable X) (hY : Measurable Y) (hXY : IndepFun X Y P)

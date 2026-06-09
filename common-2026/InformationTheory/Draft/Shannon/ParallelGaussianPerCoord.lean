@@ -138,13 +138,7 @@ input lies in the (lintegral form) power-constrained set
 the sum-version of the 1-D `AWGN.gaussianInput_mem_constraintSet`. Per-coordinate
 integrability of `(x i)²` is genuine via `MeasureTheory.integrable_comp_eval` applied
 to `(memLp_id_gaussianReal 2).integrable_sq`.
-
-Independent honesty audit (2026-05-29): genuine re-proof against the stricter lintegral
-set (0 sorry; `#print axioms` = [propext, Classical.choice, Quot.sound], no `sorryAx`).
-The only hypothesis is `∑ᵢ Q i ≤ P`; feasibility comes from the non-vacuous chain
-`∑ᵢ ∫⁻ ofReal((xᵢ)²) = ∑ᵢ ofReal(Q i) = ofReal(∑ Q i) ≤ ofReal P` via the genuine
-`integral_sq_gaussianProductInput = Q i`. The Gaussian achiever stays feasible under the
-tightened set, so the achievability lower bound does not become vacuous. @audit:ok -/
+@audit:ok -/
 lemma gaussianProductInput_mem_constraintSet {n : ℕ} (P : ℝ) (Q : Fin n → ℝ≥0)
     (hQ : ∑ i : Fin n, (Q i : ℝ) ≤ P) :
     (gaussianProductInput Q) ∈ parallelGaussianPowerConstraintSet P := by

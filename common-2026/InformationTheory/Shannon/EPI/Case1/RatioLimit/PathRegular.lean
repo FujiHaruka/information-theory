@@ -32,14 +32,7 @@ the entropy power inequality holds.
 `R 0 ≥ R t` for every `t ≥ 0` (antitonicity); since `R t → 0` and the tail predicate
 `R 0 ≥ R t` holds eventually, `ge_of_tendsto` gives `R 0 ≥ 0`. The final EPI step is
 `epi_of_csiszarLogRatioGap_zero_nonneg` (genuine bridge).
-
-Genuine — no `sorry`, no load-bearing hypotheses (the antitone carrier and the limit
-are honest inputs, both about `R` itself, not the EPI conclusion).
-
-@audit:ok (independent honesty audit 2026-06-05: own body + transitive sorryAx-free
-[propext, Classical.choice, Quot.sound]; `h_anti`/`h_lim` are statements about `R`
-itself, not the EPI conclusion — non-load-bearing, sufficiency holds via `ge_of_tendsto`
-+ genuine `epi_of_csiszarLogRatioGap_zero_nonneg`). -/
+@audit:ok -/
 theorem epi_of_csiszarLogRatioGap_tendsto
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω)
     (h_anti : AntitoneOn (fun t => csiszarLogRatioGap X Y Z_X Z_Y P t) (Set.Ici (0 : ℝ)))
@@ -69,11 +62,7 @@ theorem epi_of_csiszarLogRatioGap_tendsto
 forward by `(· * √t)`; `entropyPower_map_mul_const` with `c = √t` (squared `= t`)
 finishes. The a.c. + entropy-integrability of the *unscaled* W-path law are honest
 regularity preconditions (consumed by `entropyPower_map_mul_const`).
-
-@audit:ok (independent honesty audit 2026-06-05: own body + transitive sorryAx-free;
-`h_ac`/`h_ent_int` are regularity preconditions of `entropyPower_map_mul_const`
-[a.c. + negMulLog integrability], NOT load-bearing — the scaling identity is genuine
-glue, conclusion `N(path) = t·N(W)` not encoded in any hypothesis). -/
+@audit:ok -/
 theorem entropyPower_path_scaling
     (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hA : Measurable A) (hB : Measurable B)
@@ -214,22 +203,7 @@ genuine envelope lemmas are threaded as **honest regularity preconditions**
 by genuine Mathlib / in-tree lemmas, and their common limit is computed here.
 
 `varA` (`= Var A`, threaded as a real regularity datum with `h_varA_nn : 0 ≤ varA`)
-makes the upper envelope `varA/t + v_B` an explicit decaying-to-`v_B` function whose
-limit is proved genuinely; it is **not** the conclusion bundled in.
-
-@audit:ok (independent honesty audit 2026-06-05: own body + transitive sorryAx-free
-[propext, Classical.choice, Quot.sound]. `IsRescaledPathRegular` bundle is regularity,
-NOT load-bearing — its conjuncts match verbatim the regularity preconditions of the two
-genuine envelope lemmas (lower: `differentialEntropy_add_ge_of_indep` X:=B,Y:=A/√t, 10
-IndepFun/≪/Integrable slots; upper: `differentialEntropy_le_gaussian_of_variance_le`
-ac/var-bound/integrabilities) and contains neither envelope inequality nor the conclusion.
-Variance-bound conjunct `∫(x-m)² ≤ varA/t + v_B` is the standard `h_var` input of the
-genuine max-entropy lemma: `varA` (only `0 ≤ varA`) is pinned `≥ Var A` by requiring the
-bound to hold for all t (real-measure regularity datum), and the limit `N(B) = 2πe·v_B`
-is computed independently of `varA` (since varA/t → 0) — `varA` sets only the decay rate,
-not the limit, so it does not smuggle the conclusion. Vacuity: conclusion is nontrivial
-via separate `hB_law`/`hv_B` (N(B) = 2πe·v_B ≠ 0). Sufficiency: squeeze of constant lower
-+ decaying upper to common limit N(B) is semantically valid.) -/
+@audit:ok -/
 theorem entropyPower_rescaled_path_tendsto
     (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
     (hA : Measurable A) (hB : Measurable B)

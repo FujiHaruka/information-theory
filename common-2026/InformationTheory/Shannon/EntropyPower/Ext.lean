@@ -49,13 +49,7 @@ a.c. 枝の値 `A − B`（`A := ∫⁻ ofReal(negMulLog f)`, `B := ∫⁻ ofRea
 
 `klDiv` (Mathlib) を precedent に `open Classical in` + `irreducible_def` で a.c. 判定を
 definitional 化する（`Decidable (μ ≪ volume)` 不在ゆえ classical instance を供給）。
-
-独立 honesty audit 2026-06-06 (def-fix): **degenerate-definition exploitation でない**。
-±∞ を正しい entropy power に写像していることを機械検証 (`/tmp/ereal_check.lean`):
-`⊤-⊤=⊥` (両発散→`exp⊥=0`、EPI 安全側) / `(fin)-⊤=⊥` (h=−∞ ピーク→`0`) /
-`⊤-(fin)=⊤` (h=+∞ 裾→`exp⊤=∞`) / 有限差→workhorse `differentialEntropy` 一致
-(bridge `_of_ac_integrable`)。素朴版「非可積分→⊤」が h=−∞ で作る別の偽命題を符号判別で回避。
-旧 a.c. 枝 (`ofReal(exp(2·differentialEntropy μ))`) の false-as-stated defect を訂正済。@audit:ok -/
+@audit:ok -/
 noncomputable irreducible_def differentialEntropyExt (μ : Measure ℝ) : EReal :=
   if μ ≪ volume then
     (((∫⁻ x, ENNReal.ofReal (Real.negMulLog ((μ.rnDeriv volume x).toReal)) ∂volume : ℝ≥0∞) : EReal)
@@ -69,7 +63,7 @@ noncomputable def entropyPowerExt (μ : Measure ℝ) : ℝ≥0∞ :=
   EReal.exp (2 * differentialEntropyExt μ)
 
 /-- a.c. 枝での `differentialEntropyExt` の raw value（正部・負部の `EReal` 差）。
-独立 honesty audit 2026-06-06 (def-fix): `irreducible_def` 展開のみ、循環/bundling なし。@audit:ok -/
+@audit:ok -/
 theorem differentialEntropyExt_of_ac {μ : Measure ℝ} (h : μ ≪ volume) :
     differentialEntropyExt μ
       = (((∫⁻ x, ENNReal.ofReal (Real.negMulLog ((μ.rnDeriv volume x).toReal)) ∂volume : ℝ≥0∞)
@@ -84,8 +78,7 @@ theorem differentialEntropyExt_of_ac {μ : Measure ℝ} (h : μ ≪ volume) :
 正部・負部の `EReal` 差を `MeasureTheory.integral_eq_lintegral_pos_part_sub_lintegral_neg_part`
 （Bochner = `toReal A − toReal B`）+ `EReal.coe_sub` + `EReal.coe_ennreal_toReal` で workhorse に橋渡し。
 正部/負部 lintegral 有限性は `Integrable.hasFiniteIntegral` + `ofReal(g) ≤ ‖g‖ₑ` の `lintegral_mono`。
-独立 honesty audit 2026-06-06 (def-fix): `hint` (negMulLog 可積分) は有限エントロピーを表明する
-regularity precondition、結論 (= workhorse 一致) を encode せず。sorryAx-free 機械確認。@audit:ok -/
+@audit:ok -/
 theorem differentialEntropyExt_of_ac_integrable {μ : Measure ℝ} (hac : μ ≪ volume)
     (hint : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
     differentialEntropyExt μ = (differentialEntropy μ : EReal) := by
@@ -107,14 +100,14 @@ theorem differentialEntropyExt_of_ac_integrable {μ : Measure ℝ} (hac : μ ≪
   rw [hwork, EReal.coe_sub, EReal.coe_ennreal_toReal hAfin, EReal.coe_ennreal_toReal hBfin]
 
 /-- 特異枝での `differentialEntropyExt` の値 (`⊥`)。
-独立 honesty audit 2026-06-06 (def-fix): `irreducible_def` 展開のみ。@audit:ok -/
+@audit:ok -/
 theorem differentialEntropyExt_singular {μ : Measure ℝ} (h : ¬ μ ≪ volume) :
     differentialEntropyExt μ = ⊥ := by
   rw [differentialEntropyExt]
   exact if_neg h
 
 /-- 有限 a.c. 枝での `entropyPowerExt` の値 (`ENNReal.ofReal (exp (2h))`)。
-独立 honesty audit 2026-06-06 (def-fix): `_of_ac_integrable` + `EReal.exp_coe` 合成。@audit:ok -/
+@audit:ok -/
 theorem entropyPowerExt_of_ac_integrable {μ : Measure ℝ} (hac : μ ≪ volume)
     (hint : Integrable (fun x => Real.negMulLog ((μ.rnDeriv volume x).toReal)) volume) :
     entropyPowerExt μ = ENNReal.ofReal (Real.exp (2 * differentialEntropy μ)) := by
@@ -125,14 +118,14 @@ theorem entropyPowerExt_of_ac_integrable {μ : Measure ℝ} (hac : μ ≪ volume
 
 /-- `differentialEntropyExt μ = ⊤` (`h = +∞`) のとき `entropyPowerExt μ = ⊤ = ∞`。
 無限エントロピー a.c. 入力で EPI が `∞ ≥ ...` の `le_top` で閉じるための bridge。
-独立 honesty audit 2026-06-06 (def-fix): `EReal.exp_top` で h=+∞ を正しく ∞ に写像。@audit:ok -/
+@audit:ok -/
 theorem entropyPowerExt_eq_top_of_diffEntExt_top {μ : Measure ℝ}
     (h : differentialEntropyExt μ = ⊤) : entropyPowerExt μ = ⊤ := by
   unfold entropyPowerExt
   rw [h, EReal.mul_top_of_pos (by norm_num), EReal.exp_top]
 
 /-- 特異枝（および `h = −∞`）での `entropyPowerExt` の値 (`0`、退化トラップ除去)。
-独立 honesty audit 2026-06-06 (def-fix): `EReal.exp_bot` で特異/h=−∞ を正しく 0 に写像。@audit:ok -/
+@audit:ok -/
 theorem entropyPowerExt_singular {μ : Measure ℝ} (h : ¬ μ ≪ volume) :
     entropyPowerExt μ = 0 := by
   unfold entropyPowerExt
@@ -140,7 +133,7 @@ theorem entropyPowerExt_singular {μ : Measure ℝ} (h : ¬ μ ≪ volume) :
 
 /-- **退化トラップ除去の verbatim 検証**: Dirac 測度のエントロピーパワーは `0`。
 旧 Real `entropyPower (dirac m) = exp 0 = 1` (誤) → 新 `entropyPowerExt (dirac m) = 0` (正)。
-独立 honesty audit 2026-06-06 (def-fix): 特異測度 sanity gate、genuine。@audit:ok -/
+@audit:ok -/
 theorem entropyPowerExt_dirac (m : ℝ) : entropyPowerExt (Measure.dirac m) = 0 := by
   apply entropyPowerExt_singular
   intro h_ac
@@ -152,7 +145,7 @@ theorem entropyPowerExt_dirac (m : ℝ) : entropyPowerExt (Measure.dirac m) = 0 
 /-- Gaussian 密度の `negMulLog` は volume 可積分（有限微分エントロピー）。
 `negMulLog(gaussianPDF) =ᵐ gaussianPDF·c₁ + gaussianPDF·(x-m)²/(2v)`、前者は密度可積分、
 後者は Gaussian 2 次モーメント有限（`memLp_id_gaussianReal`）から。sanity gate `_gaussianReal` 用。
-独立 honesty audit 2026-06-06 (def-fix): Gaussian 可積分性 (有限エントロピー witness)、genuine。@audit:ok -/
+@audit:ok -/
 theorem integrable_negMulLog_gaussianReal_density (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     Integrable (fun x => Real.negMulLog ((gaussianReal m v).rnDeriv volume x).toReal) volume := by
   -- pointwise: negMulLog(pdf) = pdf · (c₁ + (x-m)²/(2v))  (a.e. via density identification)
@@ -197,8 +190,7 @@ theorem integrable_negMulLog_gaussianReal_density (m : ℝ) {v : ℝ≥0} (hv : 
 
 /-- **a.c. 非自明値 ≠ 0 の sanity gate**: Gaussian (`v ≠ 0`、a.c.) のエントロピーパワーは
 `2πe·v` で `0` に潰れない (a.c. 判定が常時 false に転ぶ退化定義悪用の検出)。
-独立 honesty audit 2026-06-06 (def-fix): a.c. 枝が常時 0/false に潰れない genuine な gate。
-`v ≠ 0` で `2πe·v ≠ 0` を機械確認、def が退化していないことを保証。@audit:ok -/
+@audit:ok -/
 theorem entropyPowerExt_gaussianReal (m : ℝ) {v : ℝ≥0} (hv : v ≠ 0) :
     entropyPowerExt (gaussianReal m v)
       = ENNReal.ofReal (2 * Real.pi * Real.exp 1 * (v : ℝ)) := by

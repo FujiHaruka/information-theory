@@ -34,8 +34,7 @@ open scoped ENNReal NNReal
 
 /-- Uniform sup bound `gaussianPDFReal μ v x ≤ (√(2πv))⁻¹` (attained at `x = μ`),
 from `exp(-(x-μ)²/(2v)) ≤ 1`.
-@audit:ok — independent honesty audit (2026-05-31): 0-sorry genuine, sorryAx-free
-(`#print axioms` → [propext, Classical.choice, Quot.sound]). -/
+@audit:ok -/
 @[entry_point]
 theorem gaussianPDFReal_le (μ : ℝ) (v : ℝ≥0) (x : ℝ) :
     gaussianPDFReal μ v x ≤ (Real.sqrt (2 * Real.pi * v))⁻¹ := by
@@ -51,7 +50,7 @@ theorem gaussianPDFReal_le (μ : ℝ) (v : ℝ≥0) (x : ℝ) :
     _ = (Real.sqrt (2 * Real.pi * v))⁻¹ := mul_one _
 
 /-- Boundedness of `gaussianPDFReal μ v`.
-@audit:ok — independent honesty audit (2026-05-31): 0-sorry genuine, sorryAx-free. -/
+@audit:ok -/
 @[entry_point]
 theorem bdd_gaussianPDFReal (μ : ℝ) (v : ℝ≥0) :
     ∃ M : ℝ, ∀ w, |gaussianPDFReal μ v w| ≤ M :=
@@ -62,8 +61,7 @@ theorem bdd_gaussianPDFReal (μ : ℝ) (v : ℝ≥0) :
 /-- Elementary bound `s * exp(-s²/(2v)) ≤ √v` for `s ≥ 0`, `v > 0`.
 Proof: with `u = s/√v ≥ 0`, the claim is `u ≤ exp(u²/2)`, which follows from
 `u ≤ 1 + u²/2 ≤ exp(u²/2)`.
-@audit:ok — independent honesty audit (2026-05-31): elementary bound genuine
-(`u ≤ 1+u²/2` via `(u-1)²≥0`, `1+t ≤ exp t` via `add_one_le_exp`); sorryAx-free. -/
+@audit:ok -/
 @[entry_point]
 theorem mul_exp_neg_sq_le {v : ℝ} (hv : 0 < v) {s : ℝ} (hs : 0 ≤ s) :
     s * Real.exp (-s ^ 2 / (2 * v)) ≤ Real.sqrt v := by
@@ -97,7 +95,7 @@ theorem mul_exp_neg_sq_le {v : ℝ} (hv : 0 < v) {s : ℝ} (hs : 0 ≤ s) :
 
 /-- Continuity of `deriv (gaussianPDFReal m v)` via its closed form
 `-(x-m)/v · gaussianPDFReal m v x`.
-@audit:ok — independent honesty audit (2026-05-31): 0-sorry genuine, sorryAx-free. -/
+@audit:ok -/
 @[entry_point]
 theorem continuous_deriv_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) :
     Continuous (deriv (gaussianPDFReal m v)) := by
@@ -111,7 +109,7 @@ theorem continuous_deriv_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) 
 /-- Boundedness of `deriv (gaussianPDFReal m v)`.
 `deriv f w = -(w-m)/v · f w`, and `|w-m| · exp(-(w-m)²/(2v)) ≤ √v`
 (by `mul_exp_neg_sq_le`), so the derivative is uniformly bounded.
-@audit:ok — independent honesty audit (2026-05-31): 0-sorry genuine, sorryAx-free. -/
+@audit:ok -/
 @[entry_point]
 theorem bdd_deriv_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) :
     ∃ M : ℝ, ∀ w, |deriv (gaussianPDFReal m v) w| ≤ M := by
@@ -142,7 +140,7 @@ theorem bdd_deriv_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) :
 /-- `Integrable (fun x => logDeriv (gaussianPDFReal m v) x * gaussianPDFReal m v x)`.
 Since `logDeriv f · f = -(x-m)/v · f`, this is `-(1/v)` times
 `integrable_sub_mul_gaussianPDFReal`.
-@audit:ok — independent honesty audit (2026-05-31): 0-sorry genuine, sorryAx-free. -/
+@audit:ok -/
 @[entry_point]
 theorem integrable_logDeriv_mul_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) :
     Integrable (fun x => logDeriv (gaussianPDFReal m v) x * gaussianPDFReal m v x) volume := by
@@ -162,15 +160,7 @@ Built via the measure-level route
 `gaussianReal_conv_gaussianReal` + `gaussianReal_of_var_ne_zero`
 + `mconv_withDensity_eq_mlconvolution₀`, then ENNReal↔Real bridge and an
 a.e.→pointwise upgrade using continuity of both sides.
-
-@audit:ok — independent honesty audit (2026-05-31): genuine core-reconstruction.
-The 5-step measure-level route (lconvolution pointwise value → withDensity equality
-via `gaussianReal_conv_gaussianReal` + `conv_withDensity_eq_mlconvolution₀` →
-a.e. density equality via `withDensity_eq_iff_of_sigmaFinite` → ENNReal↔Real bridge →
-a.e.→pointwise via `Continuous.ae_eq_iff_eq`) reconstructs the stated pointwise
-closed form; no field is the conclusion-as-hypothesis. All cited Mathlib lemmas
-verified present (loogle/rg). `#print axioms` → [propext, Classical.choice, Quot.sound]
-(sorryAx-free, transitive 0 sorry). -/
+@audit:ok -/
 @[entry_point]
 theorem convDensityAdd_gaussian_closed_form
     {mX mY : ℝ} {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0) :
@@ -274,11 +264,7 @@ theorem convDensityAdd_gaussian_closed_form
 
 /-- `IsRegularDensityV2 (gaussianPDFReal m v)` — all six fields discharged from the
 existing Gaussian regularity lemmas in `FisherInfoGaussian`.
-
-@audit:ok — independent honesty audit (2026-05-31): all 6 fields (`diff`/`pos`/
-`tail_bot`/`tail_top`/`integrable_deriv`/`integral_deriv_eq_zero`) are pure regularity
-claims discharged by existing Gaussian lemmas, no core bundled. `#print axioms` →
-[propext, Classical.choice, Quot.sound] (sorryAx-free). -/
+@audit:ok -/
 @[entry_point]
 theorem isRegularDensityV2_gaussianPDFReal {m : ℝ} {v : ℝ≥0} (hv : v ≠ 0) :
     IsRegularDensityV2 (gaussianPDFReal m v) where
@@ -314,32 +300,7 @@ machine-confirmed for the density route.
 Structurally GENUINE — the witness is a plain `structure` literal `{mX mY vX vY}
 (hvX hvY)`; `IsBlachmanConvReady` carries ONLY `Integrable`/boundedness/positivity
 fields (no inequality/equality/value core), so this is not a load-bearing bundle.
-The Z-side `pos_pZ`/`int_fisherZ` route through the sorryAx-free linchpin
-`convDensityAdd_gaussian_closed_form`; `int_fisher{X,Y}` via the public
-`integrable_logDeriv_sq_mul_gaussianPDFReal`.
-
-@audit:ok — independent honesty audit (2026-05-31, commit `6e65535`): witness is
-proof done. `#print axioms isBlachmanConvReady_gaussianPDFReal` →
-[propext, Classical.choice, Quot.sound] (sorryAx-free, transitive 0 sorry,
-machine-verified after olean refresh of `EPIBlachmanDensity`). STRUCTURAL: plain
-`structure` literal taking only `hvX hvY : v ≠ 0`; `IsBlachmanConvReady` carries ONLY
-Integrable / boundedness / positivity fields (no inequality / equality / value core),
-so no load-bearing bundle — genuine inhabitant. The 5 newly-genuine fields
-(`int_Wsq` / `int_inner` / `int_prod1/2/3`) RECONSTRUCT `Integrable (…)` (not
-hypothesis-handed): `int_prod1/2/3` via the shear `measurePreserving_prod_sub_swap`
-(Mathlib `Group/Prod.lean:373`, additive form of `measurePreserving_prod_div_swap`,
-`(z,x) ↦ (x, z-x)`, `μ×ν → ν×μ` — direction + type verified) + `Integrable.mul_prod`
-(`Integral/Prod.lean:346`) + `MeasurePreserving.integrable_comp_of_integrable`;
-`int_inner` via `Integrable.integral_prod_left` (`Integral/Prod.lean:380`) marginal +
-`condDensityX·pZ = fX·fY(z-·)` cancellation; `int_Wsq` via 3-term `(a+b)²` expansion.
-All cited Mathlib lemmas verified present with correct signatures. NON-VACUOUSNESS
-SCOPE: this confirms a proven inhabitant of `IsBlachmanConvReady (gaussian)(gaussian)`,
-**now operationally consumed** by `convex_fisher_bound_gaussian_via_density_route`
-(this file, 段4) — the density-route convex Fisher bound `J(Z) ≤ λ² J(X) + (1-λ)² J(Y)`
-genuinely fires end-to-end on Gaussian densities through this witness (the witness is no
-longer an isolated existence proof). The upstream density-route predicates
-(`IsStamCauchySchwarzOptimal` / `IsStamCondExpCSHyp`) do not yet have a wired Gaussian
-inhabitant lemma — that remains the final density-route closure step. -/
+@audit:ok -/
 @[entry_point]
 theorem isBlachmanConvReady_gaussianPDFReal
     {mX mY : ℝ} {vX vY : ℝ≥0} (hvX : vX ≠ 0) (hvY : vY ≠ 0) :

@@ -302,9 +302,7 @@ joint factorization, **genuine closure** (旧 wall `awgn-converse-markov-regular
 `h_marginalA` reduction で検証する (precedent:
 `BlockwiseChannel.isMarkovChain_per_letter_input`)。`#print axioms` は sorryAx-free
 (`[propext, Classical.choice, Quot.sound]`、本 session 機械確認)。
-
-@audit:ok (2026-06-04: orchestrator が genuine 化後 fresh olean で `#print axioms`
-sorryAx-free を独立再確認、signature 不変・honest) -/
+@audit:ok -/
 @[entry_point]
 theorem awgnConverseMarkov_holds
     {P : ℝ} {N : ℝ≥0} (h_meas : IsAwgnChannelMeasurable N)

@@ -57,11 +57,7 @@ open scoped ENNReal NNReal Convolution
 if `P.map W = volume.withDensity (ofReal ∘ p)` with `P` a probability measure and `p ≥ 0`
 measurable, then `p` is `volume`-integrable with mass `1`. Copy of the `density_facts`
 local lemma in `EPIDensityForm.lean:321-340`, lifted to a top-level helper.
-
-@audit:ok — independent honesty audit (2026-06-06): genuine probability-density
-normalization (`withDensity` univ-mass = 1 → `Integrable` via
-`lintegral_ofReal_ne_top_iff_integrable` + Bochner mass = 1), 0 sorry, sorryAx-free
-(`[propext, Classical.choice, Quot.sound]`). Hyps are pure regularity; no bundled core. -/
+@audit:ok -/
 theorem density_int_mass {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω}
     [IsProbabilityMeasure P] (W : Ω → ℝ) (p : ℝ → ℝ)
     (hW : Measurable W) (hp_nn : ∀ x, 0 ≤ p x) (hp_meas : Measurable p)
@@ -91,13 +87,7 @@ Both `pXY` and `convDensityAdd pX pY` are densities of
 `P.map (X+Y) = (P.map X) ∗ (P.map Y)` (independence), and `withDensity` densities are
 a.e.-unique. This is an a.e. identity at the **un-smoothed input** level; the consumed
 `density_t` is pinned pointwise to the *smooth* convolution, so this a.e. seam is honest.
-
-@audit:ok — independent honesty audit (2026-06-06): genuine, non-vacuous, sound a.e.
-identity (not false-as-stated). Built from `IndepFun.map_add_eq_map_conv_map` +
-`conv_withDensity_eq_lconvolution` + `withDensity` a.e.-uniqueness + lconvolution→Bochner
-bridge (Tonelli mass `(∫⁻F)(∫⁻G)=1·1` finiteness + a.e.-`z` `ofReal_integral_eq_lintegral_ofReal`).
-The `hpXY_lmass ≠ ⊤` / `hp{X,Y}_lmass = 1` are genuine regularity inputs. 0 sorry,
-sorryAx-free. -/
+@audit:ok -/
 theorem indepSum_density_ae {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω}
     [IsProbabilityMeasure P] (X Y : Ω → ℝ) (hX : Measurable X) (hY : Measurable Y)
     (hXY : IndepFun X Y P)
@@ -201,14 +191,7 @@ interchange bridge `convDensityAdd_convGaussian_interchange_asym` (variance `σ+
 
 All hypotheses are regularity preconditions; the conclusion (19-field integrability /
 boundedness / positivity bundle) is genuinely derived. No bundled analytic core.
-
-@audit:ok — independent honesty audit (2026-06-06): every one of the 19 `IsBlachmanConvReady`
-fields is genuine regularity (`Integrable` / `∃ M, |·| ≤ M` boundedness / `0 < ·`
-positivity) built from the public per-arm conv-Gaussian producers at each arm's own time;
-NONE smuggles a Fisher inequality. `int_fisherZ` correctly uses the asym interchange to
-identify `conv(pX∗g_s)(pY∗g_t)` with `conv(pX∗pY) g_{s+t}` (variance `s+t`, not `2t`) then
-asserts only `Integrable` of the Fisher integrand at the sum-variance. 0 sorry, sorryAx-free
-(`[propext, Classical.choice, Quot.sound]`). -/
+@audit:ok -/
 theorem isBlachmanConvReady_convDensityAdd_gaussian_asym (pX pY : ℝ → ℝ) {s t : ℝ}
     (hs : 0 < s) (ht : 0 < t)
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX) (hpX_int : Integrable pX volume)

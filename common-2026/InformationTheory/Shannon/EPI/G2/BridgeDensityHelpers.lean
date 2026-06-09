@@ -50,10 +50,7 @@ where `P-density x := (P.rnDeriv volume x).toReal`.
 
 This is `rnDeriv P Q = rnDeriv P volume / rnDeriv Q volume` (a.e.) under the chain rule,
 pushed through `Real.log`.
-
-Independent honesty audit 2026-06-05: genuine (sorryAx-free). `hPv`/`hQv`/`hPQ` are
-absolute-continuity preconditions (regularity); the a.e. identity is the conclusion.
-`@audit:ok` -/
+@audit:ok -/
 theorem llr_eq_log_density_sub_log_density
     (P Q : Measure ℝ) [SigmaFinite P] [SigmaFinite Q]
     (hPv : P ≪ volume) (hQv : Q ≪ volume) (hPQ : P ≪ Q) :
@@ -90,13 +87,7 @@ and a cross-entropy term:
 
 The cross-term integrability `Integrable (fun x => (P.rnDeriv volume x).toReal · log ((Q.rnDeriv volume x).toReal)) volume`
 is a regularity precondition (the term may otherwise be non-integrable).
-
-Independent honesty audit 2026-06-05: genuine (sorryAx-free). All hypotheses are
-regularity: `hPv`/`hQv`/`hPQ` (absolute continuity), `hmass` (equal mass — discharged at
-the consumer for probability measures), `h_logp_int`/`h_cross_int` (integrability). The
-density expansion is proved in-body (`toReal_klDiv_of_measure_eq` + `llr` split +
-`integral_toReal_rnDeriv_mul`), not bundled. Sufficiency holds: this is a verified
-equality, not an asserted bound. `@audit:ok` -/
+@audit:ok -/
 theorem klDiv_toReal_eq_neg_differentialEntropy_sub_cross
     (P Q : Measure ℝ) [IsFiniteMeasure P] [IsFiniteMeasure Q]
     (hPv : P ≪ volume) (hQv : Q ≪ volume) (hPQ : P ≪ Q)
@@ -139,29 +130,7 @@ per-fibre に還元して消費)。fibre 有限性 (`h_logp_int`/`h_cross_int`/`
 precondition (load-bearing でない): KL 有限性は P ≪ ν の絶対連続性 + llr 可積分性を表明するだけで、
 per-fibre 恒等式の核 (= `klDiv_toReal_eq_neg_differentialEntropy_sub_cross`) を仮説に encode しない。
 5 項全有限なので両辺 `.toReal` の一致 (Real 兄弟 + pos/neg part 分解 + linarith) から ℝ≥0∞ 等式を得る。
-
-Independent honesty audit 2026-06-08 (4-check): (1) non-circular — conclusion is the ℝ≥0∞
-5-term lintegral identity `A + klDiv + Cpos = B + Cneg`, non-isomorphic to any hypothesis;
-body is a genuine 7-step proof (set abbrevs → per-term finiteness → `toReal_eq_toReal_iff'`
-→ pos/neg-part decomposition → Real-sibling call → `ring`), not `:= h`. (2) non-bundling —
-core-reconstruction test on `hKL : klDiv P ν ≠ ∞`: granting `hKL` (a mere `≠ ⊤` finiteness
-assertion) does NOT hand over the hard substance (`klDiv.toReal = −h(P) − cross`, the
-pos/neg-part sign matching); `hKL` is used only for klDiv-term finiteness (`:182`
-`add_ne_top` + `:187-188` `toReal_add` side-conditions), while the identity itself is carried
-in-body by `hKLreal` calling the `@audit:ok` Real sibling
-`klDiv_toReal_eq_neg_differentialEntropy_sub_cross`. `h_logp_int`/`h_cross_int` likewise feed
-only `hbound`-derived lintegral finiteness + Real-sibling regularity; `hPv`/`hνv`/`hPν` pass
-through as absolute-continuity preconditions. No `*Hypothesis` predicate bundles the core.
-(3) non-degenerate — no `:True` slot; degenerate boundary `P = ν` substituted: `klDiv = 0`,
-`A = Cneg`, `B = Cpos`, so LHS `= Cneg + 0 + Cpos = RHS`, the identity stays live (not
-vacuous). (4) sufficiency — without `hPν`/`hKL` the statement is FALSE on a `klDiv P ν = ∞`
-fibre (LHS `.toReal` collapses to a finite value via `ENNReal.toReal ⊤ = 0` while RHS stays
-finite), so both honestly close the counterexample branch; not over-hypothesized — A/B/Cpos/
-Cneg finiteness is DERIVED from the two `Integrable` hyps via `hbound`, only the klDiv term
-needs `hKL` independently (required for the `toReal_eq_toReal_iff'` premise). sorryAx-free
-(`#print axioms` = `[propext, Classical.choice, Quot.sound]`, mechanically verified).
-Consistent with Real sibling `@audit:ok` at `:99` and ℝ≥0∞ marginal siblings at `:326`/`:384`.
-`@audit:ok` -/
+@audit:ok -/
 theorem klDiv_negMulLog_cross_balance_ennreal
     (P ν : Measure ℝ) [IsProbabilityMeasure P] [IsProbabilityMeasure ν]
     (hPv : P ≪ volume) (hνv : ν ≪ volume) (hPν : P ≪ ν)
@@ -240,11 +209,7 @@ with `μ.map (fun ω => (Z ω, X ω))`; `Measure.integral_compProd` (Fubini, on
 `fun p => g p.2`) opens the joint integral into the iterated fibre integral; and
 `integral_map` reduces the joint integral to `∫ x, g x ∂(μ.map X)` via the second
 projection.
-
-Independent honesty audit 2026-06-05: genuine (sorryAx-free). `hX`/`hZ` (measurability)
-and `hg_int` (integrability against `μ.map X`) are regularity preconditions; the marginal
-identity is proved in-body via `compProd_map_condDistrib` + Fubini + `integral_map`.
-`@audit:ok` -/
+@audit:ok -/
 theorem integral_condDistrib_marginal_eq
     {Ω α : Type*} [MeasurableSpace Ω] [MeasurableSpace α]
     (X : Ω → ℝ) (Z : Ω → α) (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -288,11 +253,7 @@ where `qX x := ((μ.map X).rnDeriv volume x).toReal`.
 `hX_ac` (`μ.map X ≪ volume`), `hκ_ac` (each fibre `condDistrib X Z μ z ≪ volume`, a.e. `z`)
 and `h_logq_int` (integrability of `log qX` against `μ.map X`) are regularity
 preconditions inherited from the disintegration / sub-gap (a) finiteness.
-
-Independent honesty audit 2026-06-05: genuine (sorryAx-free). `hX_ac`/`hκ_ac`
-(absolute continuity) and `h_logq_int` (integrability) are regularity; the density-form
-identity is proved in-body (per-fibre `integral_toReal_rnDeriv_mul` +
-`integral_condDistrib_marginal_eq`). `@audit:ok` -/
+@audit:ok -/
 theorem integral_condDistrib_density_marginal_eq
     {Ω α : Type*} [MeasurableSpace Ω] [MeasurableSpace α]
     (X : Ω → ℝ) (Z : Ω → α) (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -336,17 +297,7 @@ with `μ.map (fun ω => (Z ω, X ω))`; `Measure.lintegral_compProd` (Tonelli on
 `fun p => g p.2`) opens the joint lintegral into the iterated fibre lintegral; and
 `lintegral_map` reduces the joint lintegral to `∫⁻ x, g x ∂(μ.map X)` via the second
 projection.
-
-Independent honesty audit 2026-06-07 (4-check): (1) non-circular — conclusion is the
-ℝ≥0∞ Fubini-marginal identity, not equal to any hypothesis; body is a genuine calc chain
-(`compProd_map_condDistrib` + `Measure.lintegral_compProd` + `lintegral_map`), not `:= h`.
-(2) non-bundling — `hX`/`hZ`/`hg` are all measurability regularity; no `*Hypothesis`
-predicate carries the core. (3) non-degenerate — no `:True` slot; holds on Dirac/singular
-fibres since ℝ≥0∞ lintegral is unconditional. (4) sufficiency — ℝ≥0∞ Tonelli needs no
-integrability side-condition, so `Measurable g` alone yields the conclusion (matches the
-`∫`/Bochner sibling `integral_condDistrib_marginal_eq` minus its `Integrable` hyp).
-sorryAx-free (`#print axioms` = `[propext, Classical.choice, Quot.sound]`, mechanically
-verified). Consistent with sibling `@audit:ok` at `:152`. `@audit:ok` -/
+@audit:ok -/
 theorem lintegral_condDistrib_marginal_eq
     {Ω α : Type*} [MeasurableSpace Ω] [MeasurableSpace α]
     (X : Ω → ℝ) (Z : Ω → α) (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -383,28 +334,7 @@ cross-term into its `ℝ≥0∞` positive/negative parts.
 
 All hypotheses are regularity preconditions (measurability, absolute continuity,
 homogeneity of `sign`); the marginal collapse is the conclusion.
-
-Independent honesty audit 2026-06-07 (4-check): (1) non-circular — conclusion is the
-density-form marginal-collapse lintegral equality, not equal to any hypothesis; body is a
-genuine 3-step proof (per-fibre `lintegral_rnDeriv_mul` rewrite + `lintegral_congr_ae` →
-`lintegral_condDistrib_marginal_eq` core → reverse density fold), not `:= h`. (2)
-non-bundling — `hsign_hom` (`sign (a*b) = a * sign b`) is checked NOT load-bearing: it
-only lets the non-negative `pz = κz`-density factor commute out of `sign` (used at the two
-`rw [hsign_hom]` / `rw [← hsign_hom]` sites to pair with `ofReal_mul` + `lintegral_rnDeriv_mul`);
-it does NOT encode the marginal collapse, which is carried in-body by the measure-level
-`lintegral_condDistrib_marginal_eq` (Fubini + condDistrib joint identification) + the
-rnDeriv absorption. core-reconstruction test: granting `hsign_hom` alone does NOT hand over
-the Fubini/disintegration substance. On the two values the assembly instantiates,
-`sign := id` gives `id(a*b)=a*b=a*id(b)` (trivial) and `sign := Neg.neg` gives `-(a*b)=a*(-b)`
-(`mul_neg`, trivial), so it is a 1-homogeneity regularity property of `sign`, not a smuggled
-conclusion. `hX`/`hZ`/`hsign_meas` (measurability), `hX_ac`/`hκ_ac` (absolute continuity)
-likewise regularity. (3) non-degenerate — no `:True` slot; not vacuous. (4) sufficiency —
-`hκ_ac` is honestly load-bearing-in-the-honest-sense: without per-fibre `κz ≪ volume` the
-density rewrite `∫⁻ (κz) f = ∫⁻ (κz).rnDeriv·f dvol` fails and the identity is false, so it
-is a genuine (non-excess) precondition, not a bundled core; the body discharges the
-conclusion from the granted hypotheses (sorryAx-free witness). sorryAx-free (`#print axioms`
-= `[propext, Classical.choice, Quot.sound]`, mechanically verified). Consistent with sibling
-`@audit:ok` at `:200`. `@audit:ok` -/
+@audit:ok -/
 theorem lintegral_condDistrib_cross_eq
     {Ω α : Type*} [MeasurableSpace Ω] [MeasurableSpace α]
     (X : Ω → ℝ) (Z : Ω → α) (μ : Measure Ω) [IsProbabilityMeasure μ]

@@ -80,12 +80,6 @@ form `log (eP(X+Y)) − log (eP X + eP Y)`.
 
 Uses `s 0 = r 0 = 0` (`IsMatchedTimePath.start_zero`) so the perturbations
 vanish (`√0 = 0`), `N(s 0, r 0) = eP(X+Y)`, and the `−t` term is `0`.
-
-Independent honesty audit 2026-06-06 (fresh subagent): PASS — `@audit:ok`.
-Mechanical start-zero reduction: `start_zero` (`s 0 = r 0 = 0`) + `√0 = 0` funext
-collapse the perturbation, `sub_zero` removes `−t`. No hypothesis is load-bearing
-(`h_path_*` used only for `start_zero`). `#print axioms` = `[propext,
-Classical.choice, Quot.sound]` (sorryAx-free).
 @audit:ok -/
 theorem twoTimeLogRatioGap_at_zero
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω)
@@ -281,23 +275,6 @@ threading the EXISTING single-noise `IsDeBruijnRegularityHyp (X+Y) Z P`. Its
 `withDensity` a.e.-pin (representative-escapable via the documented
 `fisherInfoOfDensityReal` pointwise `logDeriv`) is gone. No free Fisher-info
 variable remains.
-
-Independent honesty audit 2026-06-06 (post body-fill, `@audit:defect(false-statement)`
-re-audit): PASS. (1) All three Fisher infos pinned: `J_S` is directly embedded
-(no free variable) as `fisherInfoOfDensityReal ((h_reg_sum.reg_at (s t+r t) hτ).density_t)`,
-matching the body's `set J_S`; `density_t` is pointwise-pinned by
-`IsRegularDeBruijnHypV2.density_t_eq` (`∀ x, density_t x = convDensityAdd ...`,
-NOT a.e.) — the old a.e.-pin escape is structurally removed. `J_X`/`J_Y` stay
-density-pinned via `hJX_eq`/`hJY_eq`. (2) The 4 added preconditions
-(`hZX_law`/`hZY_law`/`hXY_ZXZY_pair`/`hZX_ZY`) are genuine regularity facts,
-consumed only by `matchedSum_law_eq` to identify the matched-sum law with a
-single-noise heat flow; they carry no derivative/EPI content (core-reconstruction:
-granting them does not hand over the conclusion's derivative value). (3) Body is
-genuine: `deBruijn_identity_v2` at `τ = s t+r t` + chain rule + `matchedSum_law_eq`
-+ `congr_of_eventuallyEq` on a genuine `s u,r u>0` neighborhood; no `:= h` / no
-degeneracy. (4) Sufficiency holds. `#print axioms` = `[propext, Classical.choice,
-Quot.sound]` (sorryAx-free, machine-verified; not transitively dependent on the
-file's remaining sorry lemmas).
 @audit:ok -/
 theorem twoTimeLogRatioGap_hasDerivAt
     (X Y Z_X Z_Y Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -450,15 +427,6 @@ them — the conclusion is pure abstract arith (`J_S·(1/J_X+1/J_Y) ≤ J_S·(1/
 that follows for ANY reals satisfying the hypotheses. Same shape as the honest
 `csiszar_ratio_deriv_le_zero_arith`. Contrast `_hasDerivAt` above, where the free
 `J_S` has NO constraining hypothesis (false-as-framed).
-
-Independent honesty audit 2026-06-06 (fresh subagent): PASS — `@audit:ok`.
-Pure abstract arith: `h_stam : 1/J_S ≥ 1/J_X+1/J_Y` + `hJS_pos` CONSTRAIN the free
-`J_S`, so `J_S·(1/J_X+1/J_Y) ≤ J_S·(1/J_S) = 1` follows for ANY reals (sufficiency
-holds; not false-as-framed). The free-vs-embed contrast with `_hasDerivAt` in the
-docstring is accurate (here `J_S` is constrained by `h_stam`, so it may stay free).
-`h_stam` is the genuine in-tree Stam producer's conclusion (sorryAx-free), not the
-EPI core. No `:= h` / no degeneracy. `#print axioms` = `[propext, Classical.choice,
-Quot.sound]` (sorryAx-free).
 @audit:ok -/
 theorem twoTimeLogRatioGap_deriv_le_zero
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -506,18 +474,6 @@ noise-distribution facts, not bundled EPI/derivative content.
 * `h_pos : ∀ t, 0 < t → 0 < s t ∧ 0 < r t` — the matched-path positivity on the
 interior (the strict-mono inverse-function path satisfies it), threaded as a
 precondition exactly as `_hasDerivAt` threads `hst`/`hrt`.
-
-Independent honesty audit 2026-06-06 (fresh subagent): PASS — `@audit:ok`.
-Genuine composition of the CLOSED endpoint atom
-`heatFlowEntropyPower_continuousWithinAt_zero` (`heatflow-continuity` superseded →
-`approx-identity-L1` CLOSED) with the continuous reparametrization `τ(t)=s t+r t`
-(`IsMatchedTimePath.cont`, `τ 0 = 0`, `MapsTo Ioi 0`), transferred to the gap via
-`matchedSum_law_eq` (`@audit:ok`, sorryAx-free) on a genuine `s t,r t>0` set and
-`.congr`. The eventual equality is honest (holds on all of `Ioi 0` by `h_pos`).
-All added preconditions (`Z`/noise laws, joint+pairwise indeps, `h_pos`,
-`IsHeatFlowEndpointRegular (X+Y) Z P`) are genuine regularity / the atom's input;
-none bundles EPI or derivative content. No `:= h` / no degeneracy / sufficiency
-holds. `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free).
 @audit:ok -/
 theorem twoTimeLogRatioGap_continuousWithinAt_zero
     (X Y Z_X Z_Y Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -635,25 +591,6 @@ bundling of the EPI conclusion (the `h_per_t` conjunction supplies positivity,
 the density-pin equalities, and the harmonic Stam `1/J_S ≥ 1/J_X + 1/J_Y` — the
 same shape as the model's `h_pos_stam`; the harmonic Stam is the genuine
 single-noise-sum producer's output, threaded per-`t`).
-
-Independent honesty audit 2026-06-06 (fresh subagent): PASS — `@audit:ok`.
-(1) `h_per_t` is NOT load-bearing of EPI. Core-reconstruction: granting the
-per-`t` bundle hands over only a scalar Fisher inequality `1/J_S ≥ 1/J_X+1/J_Y`
-(+ positivity + density-pins), NOT `AntitoneOn`/EPI — the genuine de Bruijn
-derivative (`_hasDerivAt`) and endpoint continuity (`heatflow-continuity` CLOSED)
-are still required. The harmonic Stam is exactly the genuine in-tree producer's
-conclusion (`IsStamInequalityHyp`/`isStamInequalityHyp_via_step3` →
-`stam_step2_density_wall`, sorryAx-free `@audit:ok`); supplying its applied scalar
-form per-`t` (vs. threading the predicate as the model does) is a plumbing-
-granularity choice, not conclusion-bundling. Same honest shape as
-`csiszarLogRatioGap_antitoneOn_Ici_zero`. (2) `J_S` is consistently the directly-
-embedded `fisherInfoOfDensityReal ((h_reg_sum.reg_at (s t+r t) hτ).density_t)` in
-both the `_deriv_le_zero` instantiation and the `_hasDerivAt.deriv` value — no
-proof-term mismatch detour. (3) Body genuine: `antitoneOn_of_deriv_nonpos` on
-`Ioi 0` (deriv ≤ 0 via `_hasDerivAt.deriv` + `_deriv_le_zero`) + endpoint insert
-via `_continuousWithinAt_zero`; no `:= h` / no degeneracy. (4) Sufficiency holds.
-`#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free,
-machine-verified; not transitively dependent on the file's remaining tendsto sorry).
 @audit:ok -/
 theorem twoTimeLogRatioGap_antitoneOn_Ici_zero
     (X Y Z_X Z_Y Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -772,33 +709,6 @@ matched path uses different times `s t ≠ r t`, so the re-keying is exactly the
 added preconditions (noise laws/independences, path divergence `s,r → ∞`, per-σ
 scaling regularity, the three `IsRescaledPathRegular` bundles) are genuine
 regularity — none of them encodes `A t / B t → 1`.
-
-Independent honesty audit 2026-06-06 (fresh subagent): PASS — `@audit:ok`.
-All four honesty checks pass. (1) Non-circular: no hypothesis has type ≡ the
-conclusion `Tendsto (R t) atTop (nhds 0)`; the two `IsMatchedTimePath` structs
-supply only `start_zero`/`matched_growth`/`cont`/`deriv_at`, and the body is a
-genuine multi-step derivation, not `:= h`. (2) Non-load-bearing: the
-core-reconstruction test fails to recover `A t / B t → 1` from the hypothesis
-bundle — the ratio limit is DERIVED in `have h_ratio_tendsto` by calling
-`entropyPower_path_scaling` (`@audit:ok`), `matchedSum_law_eq` (genuine measure
-equality), and `entropyPower_rescaled_path_tendsto` (`@audit:ok` squeeze). The §2
-preconditions are all regularity: measurability, unit-Gaussian noise laws
-(`= gaussianReal 0 1`), independences (`IndepFun`), a.c. (`≪ volume`), the per-σ
-a.c.+negMulLog-integrability bundles `h_scale_*` (verbatim preconditions of
-`entropyPower_path_scaling`), and the three `IsRescaledPathRegular` bundles
-(independently audited non-load-bearing in `EPICase1RatioLimit.lean`). Path
-divergence `hs_atTop`/`hr_atTop` is a genuine matched-path property (eᵗ growth
-forces time → ∞), consumed only to compose envelope limits — granting it does not
-hand over the conclusion. (3) Non-degenerate: no `:True` slot; conclusion
-nontrivial (`N_X, N_Y > 0` via `entropyPower_pos`). (4) Sufficiency: the limit
-genuinely follows — `B t = (N_X+N_Y)·eᵗ`, `A t = τ·NSr(τ)` (τ = s+r), `s/eᵗ →
-N_X/ν`, `r/eᵗ → N_Y/ν` (matched growth ÷ scaling), so `τ/eᵗ → (N_X+N_Y)/ν` and the
-common ν = N(𝒩(0,1)) (all three noises unit-Gaussian) cancels against `NSr(τ) → ν`,
-giving `A/eᵗ → N_X+N_Y` and `A/B → 1`. The 2026-06-06 independence strengthening
-(`hXY_ZXZY` → `hXY_ZXZY_pair`) is exactly a sufficiency fix for the scaled-noise
-independence, recorded honestly in `matchedSum_law_eq`. `#print axioms` =
-`[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified on fresh
-olean).
 @audit:ok -/
 theorem twoTimeLogRatioGap_tendsto_zero_atTop
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
@@ -1023,12 +933,6 @@ theorem twoTimeLogRatioGap_tendsto_zero_atTop
 `twoTimeLogRatioGap_at_zero` rewrites `R 0` to the EPI bridge form, so
 `R 0 ≥ 0 ⟺ entropyPower (X+Y) ≥ entropyPower X + entropyPower Y`. Mirrors
 `epi_of_csiszarLogRatioGap_zero_nonneg` (`EPIStamToBridge.lean:1030`).
-
-Independent honesty audit 2026-06-06 (fresh subagent): PASS — `@audit:ok`.
-Genuine bridge: `_at_zero` rewrites `R 0` to `log A − log B`, then
-`Real.log_le_log_iff` (both entropy powers `> 0` via `entropyPower_pos`) converts
-`0 ≤ log A − log B` to `B ≤ A`. No load-bearing hypothesis. `#print axioms` =
-`[propext, Classical.choice, Quot.sound]` (sorryAx-free).
 @audit:ok -/
 theorem epi_of_twoTimeLogRatioGap_zero_nonneg
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω)
@@ -1055,15 +959,6 @@ theorem epi_of_twoTimeLogRatioGap_zero_nonneg
 Order-limit bridge (`le_of_tendsto`) over `twoTimeLogRatioGap_antitoneOn_Ici_zero`
 + `twoTimeLogRatioGap_tendsto_zero_atTop`, then `epi_of_twoTimeLogRatioGap_zero_nonneg`.
 Mirrors `epi_of_csiszarLogRatioGap_tendsto` (`EPICase1RatioLimit.lean:103`).
-
-Independent honesty audit 2026-06-06 (fresh subagent): PASS — `@audit:ok`.
-Genuine order-limit bridge: `h_anti` + `h_lim` are taken as hypotheses (the
-antitonicity / tendsto are PROVED elsewhere, not bundled here — this decl only
-assembles them); `le_of_tendsto` on the eventual tail `R t ≤ R 0` gives `0 ≤ R 0`,
-then `epi_of_twoTimeLogRatioGap_zero_nonneg`. `h_anti`/`h_lim` are genuine
-(conclusion-shaped) facts supplied by their own genuine lemmas, consumed
-mechanically — not load-bearing of any unproven core. `#print axioms` = `[propext,
-Classical.choice, Quot.sound]` (sorryAx-free).
 @audit:ok -/
 theorem epi_of_twoTimeLogRatioGap_tendsto
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω)
@@ -1127,21 +1022,6 @@ entropy-power `HasDerivAt` (`hJ_deriv_*`) and the `heatFlowEP` divergence
 `matchedTimePath_exists`, (4) discharges Pillar B's `h_per_t` (density-pin by
 `dif_pos`, positivity + harmonic Stam from `h_stam_supply`), (5) closes with Pillar
 C and `epi_of_twoTimeLogRatioGap_tendsto`.
-
-Independent honesty audit 2026-06-06 (fresh subagent): PASS — `@audit:ok`.
-(1) J_X/J_Y are NOT free variables: pinned by `dif`-def to
-`fisherInfoOfDensityReal ((h_reg_*.reg_at σ hσ).density_t)`; the SAME `h_reg_X`/`h_reg_Y`
-feed both `matchedTimePath_exists`'s `hJ_deriv` (via `deBruijn_identity_v2`) and Pillar
-B's `h_per_t`. `density_t` is pointwise-pinned (`∀ x`, NOT a.e.) via
-`IsRegularDeBruijnHypV2.density_t_eq` — representative escape structurally impossible,
-mirroring the sibling `twoTimeLogRatioGap_hasDerivAt` honest mechanism. (2)
-Core-reconstruction: granting all preconditions the conclusion still requires Pillar
-B's de Bruijn antitonicity + Pillar C's scaling squeeze + the seam — non-trivial, not
-bundled. `h_stam_supply` is the Fisher-form `1/J_S ≥ 1/J_X+1/J_Y` (genuine producer
-`isStamInequalityHyp_via_step3`, sorryAx-free `@audit:ok`), a DIFFERENT statement from
-the entropy-power EPI conclusion; not load-bearing. (3) No circular `:= h`, no `:True`
-slot, no degenerate exploitation. (4) `#print axioms = [propext, Classical.choice,
-Quot.sound]` (sorryAx-free, machine-verified this audit).
 @audit:ok -/
 theorem entropyPower_add_ge_case1_of_regular_twotime
     (X Y Z_X Z_Y Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]

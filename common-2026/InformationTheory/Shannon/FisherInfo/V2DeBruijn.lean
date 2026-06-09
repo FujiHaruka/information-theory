@@ -315,19 +315,7 @@ integrand). This is what feeds `debruijnIdentityV2_holds_assembled` per time-poi
 `continuousOn_differentialEntropy_heat_flow_gaussian`).
 * `integrable` — the path integrand `(1/2) · J(X + √t·Z)` is interval-integrable
 on `(0, T)` (path integrability precondition).
-
-@audit:ok — independent honesty audit (2026-05-31): all 4 fields are genuine
-regularity preconditions, NOT load-bearing. Core-reconstruction test: granting
-`fPath` (bare data) + `reg_t` + `cont` + `integrable` does NOT yield the
-integration identity directly — `reg_t` only supplies per-time
-`IsRegularDeBruijnHypV2` inputs (2 fields `Z_law` + `density_t`, the
-`derivAt_entropy_eq_half_fisher_v2` field having been removed Phase 2.B), so the
-de Bruijn analytic core `(d/dt)h = (1/2)J` (heat eq + IBP) is NOT bundled here;
-it is produced only by calling the genuine per-time identity
-`debruijnIdentityV2_holds_assembled` (sorryAx-free) inside the consumer body. `cont` /
-`integrable` are standard FTC preconditions. Non-vacuous: Gaussian instance
-(`continuousOn_differentialEntropy_heat_flow_gaussian`, `bounded_T_ftc_gaussian`
-in EPIL3Integration) satisfies all fields. -/
+@audit:ok -/
 structure IsDeBruijnPathRegular {Ω : Type*} [MeasurableSpace Ω]
     (X Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P] (T : ℝ) where
   /-- Density witness path. -/

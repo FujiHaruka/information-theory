@@ -1075,9 +1075,7 @@ identity (FALSE) を経由せず立てる. `(a, b)` は確率最小 2 個 (`h_a_
 =[`huffmanCost_eq_of_prob_multiset` + min 同定]=
 `huffmanCost (initMultiset (mergedMeasure ...)) + (P{a}+P{b})`
 =[C1-b 逆]= `expectedLength (mergedMeasure ...) (huffmanLength (mergedMeasure ...)) + (P{a}+P{b})`.
-
-@audit:ok — independent audit (2026-05-30): regularity hyp のみ (確率測度 / 正値 / card / 最小2個)、
-FALSE predicate 非経由、genuine combinatorial proof。`#print axioms` = [propext, Classical.choice, Quot.sound]。 -/
+@audit:ok -/
 lemma expectedLength_merged_cost_bridge
     (P : Measure α) [IsProbabilityMeasure P] (_hP : ∀ a, 0 < P.real {a})
     (h_card : 2 ≤ Fintype.card α) (a b : α) (hab : a ≠ b)
@@ -1257,12 +1255,7 @@ step case の per-symbol bridge (`h_L'_link` + `huffmanLength_bridge_L`) を
 に差し替えた以外は元 motor と同一. `h_swap` (Hyp1, genuine) は引数で残す.
 無引数 headline `huffmanLength_optimal` は `HuffmanStrongForm.lean` で
 `swap_normalization_proof` を渡して publish する (import 向き: 後者が前者を import).
-
-@audit:ok — independent audit (2026-05-30): step case は `expectedLength_merged_cost_bridge`
-(cost-level、per-symbol depth identity FALSE 非経由) + IH で閉じ、FALSE な `h_ident`
-引数を一切取らない。残る `h_swap : SwapNormalizationHypothesis` は call site で
-`swap_normalization_proof` (genuine、HuffmanStrongForm.lean:153) で discharge されるため
-load-bearing でない。`#print axioms` = [propext, Classical.choice, Quot.sound] (sorryAx 非依存)。 -/
+@audit:ok -/
 theorem huffmanLength_optimal_aux (n : ℕ)
     (h_swap : SwapNormalizationHypothesis.{u})
     {α : Type u} [Fintype α] [DecidableEq α] [LinearOrder α] [Nonempty α]
