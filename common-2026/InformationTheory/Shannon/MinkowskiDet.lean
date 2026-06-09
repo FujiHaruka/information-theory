@@ -147,6 +147,9 @@ theorem geom_mean_superadditive
   rw [hN] at hkey ⊢
   exact hkey
 
+-- `[DecidableEq n]` は結論型 `(CFC.sqrt A).PosDef` (CFC.sqrt の定義) が要求するため必須。
+-- linter は "outside of proofs" 偽陽性を出すので局所的に無効化する。
+set_option linter.unusedDecidableInType false in
 /-- The CFC square root of a positive-definite matrix is positive definite.
 @audit:ok -/
 theorem posDef_cfcSqrt {n : Type*} [Fintype n] [DecidableEq n]
