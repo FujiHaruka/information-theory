@@ -4,19 +4,27 @@
 > roadmap 側は 1 行サマリ + 本ファイルへのポインタのみ。Ch.17 の詳細状態はここが SoT。
 > コード内の `@audit:*` / `@residual` タグが最終 SoT であることは不変 (`docs/audit/audit-tags.md`)。
 
-## 現状サマリ (1 行、2026-06-06 destale)
+## 現状サマリ (2026-06-10 destale — 一般 EPI **CLOSED**)
 
-**一般 EPI headline を除き Ch.17 は publishable。** 残る唯一の frontier は一般 EPI の genuine closure。
-**2026-06-06 実測 (`#print axioms`) で残壁は 1 個に局在確定**: `stamToEPIBridge_holds`
-(`EntropyPowerInequality.lean:251`、`@residual(plan:epi-stam-to-conclusion-plan)`) **のみ**。上流の Stam 不等式・
-de Bruijn・Gaussian additivity・G2 heat-flow 連続性はすべて sorryAx-free。`entropy_power_inequality_via_stamDeBruijn`
-(`EPIStamDeBruijnConclusion.lean:214`、pure primitives = 可測+独立のみ) が結論 `N(X+Y)≥N(X)+N(Y)` を出し、
-**唯一の transitive sorry は `stamToEPIBridge_holds`**。
+**Ch.17 は一般 EPI も含め全て publishable。scope 内 frontier は 0 件。**
+**一般 EPI は 2026-06-08 に完成** (`epi-unconditional-moonshot-plan` 完了、roadmap 判断ログ #18):
 
-> ⚠ **本ファイルは 2026-06-06 に大幅 destale 済**。旧記述の「次の一手 = A-5 配線」は無効 — A-5 頂点
-> `isStamToEPIScalingHyp_of_stam_debruijn` は 2026-06-06 判断 #8 で **dead として削除** (difference 形 bridge route
-> 全体を放棄、`epi-case1-twotime-restructure-plan.md` 判断 #8 参照)。bridge closure の生き残り route = **ratio 形**
-> (`csiszarLogRatioGap` line) + two-time terminal。下記「残作業」参照。
+- **完全無条件版** `entropyPowerExt_add_ge_unconditional` (`EPI/Unconditional/DispatchFull.lean`、
+  ℝ≥0∞ 値 `entropyPowerExt`、precondition = 可測+独立のみ、**sorryAx-free**、`@audit:ok`)。
+  **3-case dispatch** (両 a.c. / 混合 / 両特異) で組み、case-1 a.c. 枝の無限分散部は 2026-06-07 に
+  「無限分散 a.c. 壁」を FALSE WALL と判定 → **route T (truncation+Gibbs+DCT)** で closure。
+- **実数 a.c.+有限版** `entropy_power_inequality_of_ac` (sorryAx-free)。実数は型壁 (`EReal.exp_coe` が
+  a.c.+有限を要する) で完全無条件化不可、これが実数 headline の honest 限界。
+- **密度版** `entropy_power_inequality_of_density` (sorryAx-free、3-noise lift + two-time route)。
+
+再検証レシピ + 最後に通った commit は **`epi-facts.md` 行 25/27/28/29 が SoT** (本ファイルにキャッシュしない)。
+
+> ⚠ **2026-06-10 注記**: 下記「frontier = 一般 EPI headline closure のみ」「残作業 Route A/B」「active 独立壁」
+> の各節は **2026-06-06 時点 (無条件化完成前) の記述で obsolete**。一般 EPI は上記の通り別ルート (無条件
+> dispatch + route T) で closure 済み — Stam-bridge `stamToEPIBridge_holds` を closure する Route A/B は
+> **textbook goal の達成には不要**になった。`stamToEPIBridge_holds` は legacy Cover-Thomas 露出
+> `entropy_power_inequality` (実数・`h_stam` 仮説形) を保つためだけに残る 1 sorry で、コード側は
+> `@audit:superseded-by(epi-unconditional-moonshot-plan)` 付与済。以下の旧記述は履歴として残置 (参照しない)。
 
 ## proof-done (genuine, sorryAx-free)
 
@@ -27,7 +35,9 @@ de Bruijn・Gaussian additivity・G2 heat-flow 連続性はすべて sorryAx-fre
   variance additivity) ✅
 - CT 17.9 Minkowski determinant: Gaussian additivity から導出可能 (新規 ✅ promote 候補)
 
-## frontier = 一般 EPI headline closure のみ
+## ~~frontier = 一般 EPI headline closure のみ~~ (obsolete 2026-06-06、§現状サマリ参照)
+
+> この節以降は無条件化完成前 (2026-06-06) の記述。一般 EPI は別ルートで CLOSED 済 (§現状サマリ)。履歴として残置。
 
 headline `entropy_power_inequality` (`EntropyPowerInequality.lean:287`) は **proof done ではない**
 (transitive wall 経由で sorryAx 依存)。一般 EPI / log・exp form / `epi_via_stam_main` 等 12 件の

@@ -233,15 +233,24 @@ def IsStamToEPIBridge {Ω : Type*} [MeasurableSpace Ω]
 
 `IsStamInequalityResidual → IsEntropyPowerInequalityHypothesis` の coupling 引数
 (Cover-Thomas Lemma 17.7.3 path-integral coupling, Csiszár scaling-path / de Bruijn
-integration) は Mathlib 未収録の解析的 primitive。closure plan
-`epi-stam-to-conclusion-plan` で discharge 予定。
+integration) は Mathlib 未収録の解析的 primitive。
+
+**EPI の結論そのもの (textbook goal) は proof-done な後継で達成済** (2026-06-08、
+`epi-unconditional-moonshot-plan` 完了): `entropyPowerExt_add_ge_unconditional`
+(`EPI/Unconditional/DispatchFull.lean`、完全無条件 ℝ≥0∞ 版、precondition 0、sorryAx-free、
+`@audit:ok`) + `entropy_power_inequality_of_ac` (実数 a.c.+有限版、sorryAx-free) が **別ルート
+(3-case dispatch + route T)** で EPI を genuine に出す。本 bridge sorry はその後継に **supersede
+された legacy** であり、Cover-Thomas の `h_stam` 仮説形 (`entropy_power_inequality`) を保つためだけに
+残置 (live consumer あり、取り消し線化しない)。個別 closure は `epi-stam-to-conclusion-plan`
+Route B (ratio 形) が所有するが result が done のため低優先。
 
 migration 前は consumer (`entropy_power_inequality` 等) が `(h_bridge : IsStamToEPIBridge X Y P)`
 を load-bearing hypothesis として取っていたが、これは tier 5 honesty defect (核を仮説束に
 押し付け)。本補題に `sorry` を集約し、consumer は `stamToEPIBridge_holds X Y P h_stam` で
 discharge する。
 
-`@residual(plan:epi-stam-to-conclusion-plan)` -/
+`@residual(plan:epi-stam-to-conclusion-plan)`
+`@audit:superseded-by(epi-unconditional-moonshot-plan)` -/
 theorem stamToEPIBridge_holds {Ω : Type*} [MeasurableSpace Ω]
     (X Y : Ω → ℝ) (P : Measure Ω) :
     IsStamToEPIBridge X Y P := by
@@ -290,7 +299,9 @@ moonshot の完了により、proof-done な後継 2 本が in-tree に存在す
   ℝ≥0∞ 値 `entropyPowerExt`、`hX hY hXY` のみ = precondition ゼロ、sorryAx-free、`@audit:ok`)。
 **実数版は完全無条件化できない** (型壁: `h=±∞` を ℝ で表現不可、`EReal.exp_coe` 変換に
 a.c.+有限を要する) ため、a.c.+有限版が実数 headline の honest 限界。本 headline は Cover-Thomas
-の Stam-bridge 形を保つ legacy 露出として残置 (live consumer あり、取り消し線化しない)。 -/
+の Stam-bridge 形を保つ legacy 露出として残置 (live consumer あり、取り消し線化しない)。
+
+`@audit:superseded-by(epi-unconditional-moonshot-plan)` -/
 @[entry_point]
 theorem entropy_power_inequality {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (P : Measure Ω) [IsProbabilityMeasure P]

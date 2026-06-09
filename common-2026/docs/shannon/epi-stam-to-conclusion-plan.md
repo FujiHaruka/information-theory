@@ -1,13 +1,13 @@
 # EPI Stam → EPI conclusion — B-wire honest discharge plan
 
 > **Parent**: [`epi-unconditional-moonshot-plan.md`](epi-unconditional-moonshot-plan.md) (無条件 EPI moonshot の最終 wall "B-wire")
-> **Status**: `stamToEPIBridge_holds` (`EntropyPowerInequality.lean:251`、`@residual(plan:epi-stam-to-conclusion-plan)`) が唯一の残 transitive sorry。**W2 cluster は完全 CLOSED** (sorryAx-free、2026-06-06 機械検証済)。
+> **Status (2026-06-10 更新)**: **Phase B は SUPERSEDED** — 親 moonshot `epi-unconditional-moonshot-plan` が **無条件 dispatch + route T** で一般 EPI を別ルート closure 済 (`entropyPowerExt_add_ge_unconditional` sorryAx-free、2026-06-08)。本 plan の Phase B (legacy 実数 `entropy_power_inequality` を Stam-bridge 経由で sorryAx-free 化) は **textbook goal 達成には不要**になった。`stamToEPIBridge_holds` (`@residual(plan:epi-stam-to-conclusion-plan)`) は唯一の残 sorry だが、コード側で `@audit:superseded-by(epi-unconditional-moonshot-plan)` 付与済 = legacy Cover-Thomas 露出の局所 residual。Phase A (`entropy_power_inequality_of_density`) は **CLOSED** のまま (sorryAx-free)。W2 cluster も CLOSED。
 > **2026-06-06 全面 destale + 2-phase 再構成**: 旧 difference-form route (G1-G4/W0-W2 表、ratio 再frame route B、Phase A skeleton/A-close 等) は **すべて履歴**。W2-cluster CLOSED + assembly 部品が genuine 着地したのを受け、本 plan を **Phase A (密度あり標準形) + Phase B (完全一般形)** の 2-phase に再構成する。旧記述は本ファイル末尾「## 旧記述 (履歴、参照しない)」へ退避。
 
 ## 進捗
 
 - [x] Phase A — 密度あり標準形 EPI `entropy_power_inequality_of_density` **CLOSED** (sorryAx-free)。**3-noise lift + two-time route** で着地 (`EPIDensityForm.lean`)。旧 2-noise methodX route は判断ログ #5 で RETRACTED。再検証: `#print axioms InformationTheory.Shannon.EPIDensityForm.entropy_power_inequality_of_density` = `[propext, Classical.choice, Quot.sound]`。→ 下記 §Phase A (CLOSED 要約)
-- [ ] Phase B — 完全一般形 `entropy_power_inequality` を任意可測 X,Y で sorryAx-free 化 (密度 case split + 退化枝) 📋 → 下記 §Phase B (概略のみ)
+- [~] Phase B — **SUPERSEDED** (2026-06-10)。一般 EPI は親 moonshot が無条件 dispatch + route T で別ルート closure 済 (`entropyPowerExt_add_ge_unconditional`)。legacy 実数 `entropy_power_inequality` の Stam-bridge sorryAx-free 化は textbook goal に不要 (実数完全無条件は型壁で不可、a.c.+有限の `entropy_power_inequality_of_ac` が honest 限界)。`stamToEPIBridge_holds` は `@audit:superseded-by` 付き legacy residual として残置。下記 §Phase B は履歴。
 
 proof-log: yes (`docs/shannon/proof-log-epi-stam-to-conclusion-phaseA.md`)
 
