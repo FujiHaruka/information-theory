@@ -304,42 +304,6 @@ so the de Bruijn producers (`isDeBruijnRegularityHyp_of_methodX_unitnoise`) — 
 threaded `IsDeBruijnRegularityHyp` group (previously vacuous for `v_X ≠ 1`). The body
 re-introduces `v_X v_Y := (1 : ℝ≥0)` existentially to keep the `_of_regular` plumbing
 (general `v_B` on the §4 saturation side) unchanged.
-
-@audit-note: independent honesty audit (2026-06-05, fresh auditor, commit c0cd760).
-PB-1 restate VERIFIED to genuinely resolve the latent vacuity defect. The old signature
-took arbitrary nonzero `v_X v_Y` while threading `IsDeBruijnRegularityHyp X Z_X P`, whose
-`reg_at t ht .Z_law` (= `IsRegularDeBruijnHypV2.Z_law`, `FisherInfoV2DeBruijn.lean:210`)
-hardcodes `P.map Z_X = gaussianReal 0 1` — so for `v_X ≠ 1` the hypotheses `hZX_law` and
-`Z_law` were mutually unsatisfiable, making the theorem vacuously true (premises never
-jointly inhabitable). Fixing `hZX_law : P.map Z_X = gaussianReal 0 1` removes the
-contradiction. The body's `obtain ⟨v_X, hv_X, hZX_law⟩ : ∃ v, v≠0 ∧ … := ⟨1, one_ne_zero,
-hZX_law⟩` is HONEST (not circular `:= h`, not `:True`): it locally re-derives the
-`∃ v ≠ 0` shape the `_of_regular` plumbing expects, instantiated at the genuine witness
-`v = 1` carried by the unit hypothesis. The conclusion `N(X+Y) ≥ N(X)+N(Y)` is unchanged and
-not weakened; the noise is genuinely auxiliary (absent from the conclusion) so the unit
-restriction loses no generality. Wrapper itself sorryAx-free (orchestrator-confirmed); the
-threaded `IsDeBruijnRegularityHyp` / `h_reg_*` are honest preconditions (residuals live in
-the producer's `integrable_deriv`, see `isDeBruijnRegularityHyp_of_methodX_unitnoise`). Not
-`@audit:ok` only because it threads residual-carrying regularity hyps (type-check done, not
-proof done).
-
-This wrapper discharges the supply-able preconditions of
-`entropyPower_add_ge_case1_of_regular` from clean method-X data:
-* noise a.c. (`hZX_ac`/`hZY_ac`/`hZXZY_ac`) via `gaussianReal_absolutelyContinuous`
-  + `map_add_absolutelyContinuous`;
-* the four individual independences from the single 4-tuple
-  `iIndepFun ![X,Y,Z_X,Z_Y] P` (pairwise via `iIndepFun.indepFun`, joint via
-  `iIndepFun.indepFun_prodMk_prodMk` + `IndepFun.comp`);
-* the three `IsRescaledPathRegular` bundles via `isRescaledPathRegular_of_methodX`;
-* the per-`t` scaling regularity (`h_scale_*`) via the B(i)-identical density-witness
-  plumbing (`rescaledInput_density_witness` + `pPath_eq_convDensityAdd` +
-  `convDensityAdd_negMulLog_integrable_pub`);
-* the variance bounds (`varX/Y/S := Var[·;P]`) via `IndepFun.variance_fun_add` +
-  variance scaling, which hold with equality.
-
-The **de Bruijn per-time regularity group** (`h_reg_*'` / `h_endpt_*` / `h_pos_stam`)
-is **not supplied from method-X** (it depends on the moonshot
-`epi-debruijn-pertime-closure`) and is threaded as an honest precondition.
 @audit:ok -/
 theorem entropyPower_add_ge_case1_of_methodX
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]

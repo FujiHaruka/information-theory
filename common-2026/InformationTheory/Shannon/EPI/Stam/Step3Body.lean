@@ -115,9 +115,6 @@ Update 2026-05-31 (owner-level pivot, epi-wall-reattack-plan): `stam_step2_densi
 `#print axioms` sorryAx-free). The published `IsStamInequalityHyp` was pivoted in lockstep
 with `IsStamInequalityResidual` to carry the pointwise convolution constraint +
 `IsBlachmanConvReady` bundle, closing the former regularity-precondition signature gap.
-This wrapper is therefore **sorryAx-free** — it produces a genuine `IsStamInequalityHyp`.
-(2026-06-04 audit: `#print axioms isStamInequalityHyp_via_step3` =
-`[propext, Classical.choice, Quot.sound]` confirmed.)
 @audit:ok -/
 @[entry_point]
 theorem isStamInequalityHyp_via_step3 {Ω : Type*} {mΩ : MeasurableSpace Ω}

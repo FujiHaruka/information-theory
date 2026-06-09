@@ -71,7 +71,7 @@ theorem convDensityAdd_gaussian_nonneg {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤
     (fun y => gaussianPDFReal_nonneg 0 ⟨t, ht.le⟩ y) x
 
 /-- The smoothed-density measure `μ_t := volume.withDensity (ofReal ∘ f_t)` is a
-probability measure (Step 2). Genuine via `integral_convDensityAdd_gaussian_eq_one`.
+probability measure (Step 2).
 @audit:ok -/
 theorem convDensityAdd_gaussian_isProbabilityMeasure {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -95,7 +95,7 @@ theorem convDensityAdd_gaussian_isProbabilityMeasure {pX : ℝ → ℝ}
   simp
 
 /-- The differential entropy of the smoothed-density measure equals the entropy
-integral of the density (Step 2). Genuine via `rnDeriv_withDensity`.
+integral of the density (Step 2).
 @audit:ok -/
 theorem differentialEntropy_convDensityAdd_gaussian_eq {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -118,18 +118,7 @@ theorem differentialEntropy_convDensityAdd_gaussian_eq {pX : ℝ → ℝ}
   rw [hx, ENNReal.toReal_ofReal (hf_nn x)]
 
 /-- **Second-moment integrability of `f_t` (helper, GENUINELY CLOSED).**
-`x ↦ x² · f_t(x)` is `volume`-integrable. Genuine via the same lintegral-Tonelli chain
-that closes `convDensityAdd_second_moment` (value version): lift the nonneg integrand
-`K x y := x²·(pX y · g(x-y))` to `ℝ≥0∞`, swap with `lintegral_lintegral_swap`, collapse
-the inner integral via the inline Gaussian shift moment `∫ x, x²·g(x-y) = y²+t`
-(reconstructed from `∫ g = 1`, `∫ x·g = 0`, `∫ x²·g = t`, all public API), then the
-outer lintegral is finite from `hpX_mom`+`hpX_int`; the `Integrable` conclusion follows
-from AEStronglyMeasurable + finite norm-lintegral.
-
-`#print axioms = [propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-checked
-2026-06-04 with fresh olean). All `hpX_*` are pX regularity preconditions; the conclusion
-is an `Integrable` output, not bundled into any hypothesis. NOT load-bearing / circular /
-degenerate. Closes one of the two `plan:epi-g2-vitali-closure-plan` moment residuals.
+`x ↦ x² · f_t(x)` is `volume`-integrable.
 @audit:ok -/
 theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -282,17 +271,7 @@ theorem convDensityAdd_gaussian_sq_integrable {pX : ℝ → ℝ}
   exact ENNReal.ofReal_lt_top
 
 /-- **First-moment integrability of `f_t` (helper, GENUINELY CLOSED).**
-`x ↦ x · f_t(x)` is `volume`-integrable. Genuine via majorant domination
-(`Integrable.mono'`): since `f_t ≥ 0` and `|x| ≤ (1 + x²)/2`, we have
-`‖x·f_t x‖ = |x|·f_t x ≤ (f_t x + x²·f_t x)/2`, and the majorant is integrable from
-`f_t` integrability (`convDensityAdd_pXpY_integrable`) + second-moment integrability
-(`convDensityAdd_gaussian_sq_integrable`, above). No Gaussian absolute-moment computation
-needed.
-
-`#print axioms = [propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-checked
-2026-06-04 with fresh olean). All `hpX_*` are pX regularity preconditions; the conclusion
-is an `Integrable` output, not bundled into any hypothesis. NOT load-bearing / circular /
-degenerate. Closes the second `plan:epi-g2-vitali-closure-plan` moment residual.
+`x ↦ x · f_t(x)` is `volume`-integrable.
 @audit:ok -/
 theorem convDensityAdd_gaussian_id_integrable {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -324,18 +303,7 @@ theorem convDensityAdd_gaussian_id_integrable {pX : ℝ → ℝ}
 
 /-- **Maxent upper bound (Step 3, GENUINELY CLOSED).** The entropy integral
 `∫ negMulLog f_t` is bounded above by the Gaussian max-entropy `(1/2) log(2πe·V)` with
-`V = (∫ x² pX) + t`. Genuine via `differentialEntropy_le_gaussian_of_variance_le` on
-`μ_t`. The variance moments are supplied by `convDensityAdd_second_moment` (value) and
-the now-genuine moment-integrability helpers `convDensityAdd_gaussian_sq_integrable` /
-`_id_integrable`; the maxent application itself is a genuine reduction.
-
-`#print axioms = [propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-checked
-2026-06-04 with fresh olean, after closing the two moment-integrability helpers). Own
-body is `sorry`-free; the variance bound is built from `convDensityAdd_second_moment`
-(genuine) via `withDensity` moment transfer, NOT bundled into a hypothesis. `hV`/`hV0`
-constrain the auxiliary variance majorant `V` (regularity for the maxent application,
-not a bundled entropy value). NOT load-bearing / circular; sufficiency holds (maxent
-inequality follows from the variance bound).
+`V = (∫ x² pX) + t`.
 @audit:ok -/
 theorem negMulLog_convDensityAdd_gaussian_entropy_upper {pX : ℝ → ℝ}
     (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)

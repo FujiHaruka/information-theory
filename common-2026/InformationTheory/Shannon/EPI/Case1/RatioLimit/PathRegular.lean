@@ -464,13 +464,7 @@ Gaussian-fibre moment domination), the Gaussian noise law, `h_var_bound`.
 - The cross-entropy analytic core (`condDifferentialEntropy_le`'s
   `h_int`/`hκ_cross_int`/`h_cross_int`): integrability of the path-density `log g` against
   each Gaussian fibre, dominated by the `convDensityAdd_logFactor_poly_majorant`
-  `|log g| ≤ (A+1)+B·x²` and the Gaussian-fibre quadratic moments. Genuine, no `sorry`.
-
-Earlier honesty audit (2026-06-05, B(i)-cont, AFFIRMED): `hA_ac` non-load-bearing,
-`h_var_bound` pass-through non-circular (its type ≡ ONE conjunct of the constructed
-regularity bundle, not the theorem's conclusion; the substantive squeeze lives in the
-separate `@audit:ok` consumer `entropyPower_rescaled_path_tendsto`), honest naming
-`_of_methodX`. The bundle `IsRescaledPathRegular` is def-site `@audit:ok` regularity.
+  `|log g| ≤ (A+1)+B·x²` and the Gaussian-fibre quadratic moments.
 @audit:ok -/
 theorem isRescaledPathRegular_of_methodX
     (A B : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]

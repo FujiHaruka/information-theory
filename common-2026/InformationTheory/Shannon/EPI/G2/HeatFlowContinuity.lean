@@ -164,19 +164,6 @@ Layer 1' note), the differential-entropy integrals of the heat-smoothed densitie
 converge to the entropy integral of `pX` as `t → 0⁺`:
 
 `∫ negMulLog (convDensityAdd pX g_t) ∂volume → ∫ negMulLog pX ∂volume`.
-
-**Genuine, sorryAx-free (2026-06-05).** Sequentialisation of `𝓝[Ioi 0] 0`
-(`Filter.tendsto_iff_seq_tendsto`, `nhdsWithin` countably generated), then the
-two-sided sandwich described in the section header: (α) limsup upper bound +
-(β) per-`n` lower bound (both `@audit:ok`), squeezed by
-`tendsto_of_le_liminf_of_limsup_le` with the uniform upper-boundedness witness from
-the genuine Gaussian maxent bound `negMulLog_convDensityAdd_gaussian_entropy_upper`
-(`@audit:ok`). No `sorry`, no residual.
-
-`#print axioms differentialEntropy_convDensity_integral_tendsto` =
-`[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-checked 2026-06-05).
-All hypotheses are regularity / normalisation (hpX_nn/meas/int/mass/mom/ent); NOT
-circular / load-bearing / degenerate; sufficiency holds.
 @audit:ok -/
 @[entry_point]
 theorem differentialEntropy_convDensity_integral_tendsto
@@ -316,17 +303,6 @@ the layer-2 machinery `differentialEntropy_convDensity_integral_tendsto`
 is recovered with the endpoint value `differentialEntropy (P.map X) = ∫ negMulLog pX`
 (B-4). All fields are preconditions (regularity / input-distribution data); no
 continuity conclusion is bundled.
-
-**Genuine, sorryAx-free (2026-06-05).** After the layer-2 sandwich swap, the
-consumed `differentialEntropy_convDensity_integral_tendsto` is itself sorryAx-free,
-so this helper has no residual. `#print axioms
-heatFlowDifferentialEntropy_continuousWithinAt_zero` =
-`[propext, Classical.choice, Quot.sound]` (machine-checked 2026-06-05). The density
-bridge call (`pPath_eq_convDensityAdd`, `@audit:ok`) matches signatures verbatim;
-`differentialEntropy_convDensity_integral_tendsto.comp h_reparam` is a genuine
-`t' := t·v_Z` reparam. Sufficiency holds: conclusion follows from the regularity
-hypotheses (no free-variable counterexample — singular `P.map X` is excluded by the
-`hpX_law` density witness). NOT circular / load-bearing / degenerate.
 @audit:ok -/
 theorem heatFlowDifferentialEntropy_continuousWithinAt_zero
     {Ω : Type*} {mΩ : MeasurableSpace Ω} (X Z : Ω → ℝ) (P : Measure Ω)

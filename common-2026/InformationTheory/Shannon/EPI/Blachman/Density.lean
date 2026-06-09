@@ -74,15 +74,7 @@ theorem condDensityX_integral_eq_one (fX fY : ℝ → ℝ) (z : ℝ)
 
 /-- **S2 — symmetric derivative identity** of the convolution density:
 `∫ x, deriv fX x · fY (z - x) = ∫ x, fX x · deriv fY (z - x)` (both `= p_Z'(z)`).
-
-Genuine: apply the Phase 3a gateway `convDensityAdd_hasDerivAt_of_regular` in both
-factor orders, use `convDensityAdd_comm` + derivative uniqueness, then the
-volume-preserving reflection substitution `x ↦ z - x`.
-
-@audit:ok — all hyps are regularity preconditions (`IsRegularDensityV2` =
-diff/pos/tail/∫deriv=0, `Integrable`, `∃M` boundedness); none bundles the
-conclusion. Conclusion derived from the `@audit:ok` gateway in both factor orders
-+ `HasDerivAt.unique` + reflection. sorryAx-free. -/
+@audit:ok -/
 theorem symm_deriv_integral_eq (fX fY : ℝ → ℝ) (z : ℝ)
     (hregX : IsRegularDensityV2 fX) (hregY : IsRegularDensityV2 fY)
     (hX_int : Integrable fX volume) (hY_int : Integrable fY volume)
@@ -477,25 +469,7 @@ integrated against `p_Z ≥ 0` via `integral_mono_ae`;
 + translation invariance `integral_sub_right_eq_self` + normalization /
 `integral_logDeriv_density_eq_zero` for the cross term) yields
 `λ²·J_X + (1-λ)²·J_Y` (cross term `= 0`).
-
-2026-05-30 Phase 3c-fin genuine closure (0 sorry, `sorryAx`-free: `#print axioms` =
-`[propext, Classical.choice, Quot.sound]`).
-
-@audit:ok — independent honesty audit (2026-05-30): core-reconstruction test PASS.
-The newly-added `hint_prod1/2/3 : Integrable (uncurry fun z x => <concrete expanded
-term>) (volume.prod volume)` assert only product-measure integrability of the three
-fully-spelled-out expanded integrands — they carry the integrand verbatim but assert
-integrability, NOT the integral's value; granting all 3 does not hand over `J_sum ≤
-λ²J_X + (1-λ)²J_Y` (consumed only as Tonelli `integral_integral_swap` /
-`integral_integral` preconditions + helper-lemma args). Likewise `hint_inner`,
-per-z `hint_X/Y`, `hcond_int`, `hint_W/Wsq`, `hint_fisherX/Y/Z` are Integrable
-side-conditions; `hregX/hregY` (IsRegularDensityV2), `hX_bdd`/…, `hnormX/Y`, `hpZ`
-(0 < p_Z), `0 ≤ lam ≤ 1` are regularity preconditions. None bundles the inequality
-core. The bound is genuinely assembled from atom A (`@audit:ok`) + S4
-`score_sq_le_weighted_integral` (`@audit:ok`, Jensen pointwise) + `integral_mono_ae`
-+ condDensityX·p_Z cancellation + the 3 Tonelli helpers (each `@audit:ok` above).
-sorryAx-free verified transiently (`#print axioms` = `[propext, Classical.choice,
-Quot.sound]`, no transitive sorry). -/
+@audit:ok -/
 theorem convex_fisher_bound (fX fY : ℝ → ℝ) (lam : ℝ)
     (_hlam0 : 0 ≤ lam) (_hlam1 : lam ≤ 1)
     (hregX : IsRegularDensityV2 fX) (hregY : IsRegularDensityV2 fY)
@@ -743,11 +717,6 @@ sheared by `measurePreserving_prod_sub_swap` (`(z,x) ↦ (x, z-x)`).
 
 Consumed only by the (unused) API-completeness lemmas
 `isStamCauchySchwarz_symm` / `isStamCondExpCSHyp_symm`.
-
-Genuine reflection-invariance transport: 0 sorry, `#print axioms` =
-`[propext, Classical.choice, Quot.sound]` (sorryAx-free, machine-verified after olean
-refresh). No hypothesis bundling — `h` is the sibling regularity bundle, every field is
-*derived* from `h`'s fields, not handed by a load-bearing predicate.
 @audit:ok -/
 theorem isBlachmanConvReady_symm {fX fY : ℝ → ℝ}
     (h : IsBlachmanConvReady fX fY) : IsBlachmanConvReady fY fX := by

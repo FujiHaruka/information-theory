@@ -118,11 +118,7 @@ theorem gaussianConvolution_law_conv
 /-- **Closed-form Gaussian pdf bound (genuine)**: the Gaussian density is bounded above by
 the normalizing prefactor `(√(2πv))⁻¹` (since `exp` of a nonpositive exponent is `≤ 1`).
 Mathlib has `gaussianPDFReal_nonneg` / `_pos` but no upper bound; supplied here for the
-`Integrable.mul_bdd` domination in the L-PT-β bridge. Genuine, no `sorry`.
-
-**Independent audit (commit `6f675ca`)**: genuine non-degenerate upper bound
-(`exp` of a nonpositive exponent `≤ 1`, prefactor finite positive). `#print axioms` =
-`[propext, Classical.choice, Quot.sound]` (sorryAx-free), 0 sorry / 0 residual.
+`Integrable.mul_bdd` domination in the L-PT-β bridge.
 @audit:ok -/
 private theorem gaussianPDFReal_le_prefactor (μ : ℝ) (v : ℝ≥0) (x : ℝ) :
     gaussianPDFReal μ v x ≤ (Real.sqrt (2 * Real.pi * v))⁻¹ := by
@@ -723,8 +719,7 @@ precondition.
 `∫ ↔ (∫⁻ ofReal).toReal` round-trip via `ofReal_integral_eq_lintegral_ofReal` (uses
 `hint` + a.e. nonnegativity) and `ENNReal.toReal_ofReal` (uses `integral_nonneg`); both
 directions of the `.toReal` round-trip discharge their nonneg / integrability side-goals
-from the hyps. `#print axioms` = `[propext, Classical.choice, Quot.sound]` (sorryAx-free),
-0 sorry / 0 residual.
+from the hyps.
 @audit:ok -/
 theorem fisher_from_logDeriv
     (p : ℝ → ℝ) (hp_nn : ∀ x, 0 ≤ p x)

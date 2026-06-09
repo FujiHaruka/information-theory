@@ -852,12 +852,6 @@ max-entropy bound `h_max_ent` was a body `sorry`; here it is supplied genuinely 
 `awgn_per_input_mi_le_log`. The achievability bridge (`awgn_mi_gaussian_closed_form_of_out`),
 the MI decomposition (`isAwgnMIDecomp_of_densitySplit`) and the bind/conv
 output-Gaussian fact are all genuinely wired upstream.
-
-Residual status: 0 sorry. The Phase-6 mixture output log-density integrability
-(`outputDistribution_logDensity_integrable` / `_joint`) — formerly the dominant wall —
-is now genuinely discharged via the convolution density representation, the Gaussian
-upper/lower bounds, and the finite-second-moment domination. The whole AWGN
-single-letter capacity converse (Cover-Thomas 9.1) is complete.
 @audit:ok -/
 @[entry_point]
 theorem awgn_capacity_closed_form_genuine

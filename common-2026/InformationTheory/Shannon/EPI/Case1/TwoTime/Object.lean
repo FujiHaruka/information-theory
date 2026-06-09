@@ -1013,15 +1013,6 @@ and the path-producer divergence);
 * `h_stam_supply` the per-time harmonic-Stam + positivity supply (genuine producer
 `isStamInequalityHyp_via_step3`, NOT a bundled conclusion — `1/J_S ≥ 1/J_X+1/J_Y`
 is the Fisher form, a different statement from the EPI inequality).
-
-**Proof done (2026-06-06): sorryAx-free.** `#print axioms
-entropyPower_add_ge_case1_of_regular_twotime = [propext, Classical.choice,
-Quot.sound]`. The body (1) defines `J_X`/`J_Y` by `dif_pos`, (2) assembles the
-entropy-power `HasDerivAt` (`hJ_deriv_*`) and the `heatFlowEP` divergence
-(`hN_tendsto_*`), (3) constructs `s`/`r` via the strengthened
-`matchedTimePath_exists`, (4) discharges Pillar B's `h_per_t` (density-pin by
-`dif_pos`, positivity + harmonic Stam from `h_stam_supply`), (5) closes with Pillar
-C and `epi_of_twoTimeLogRatioGap_tendsto`.
 @audit:ok -/
 theorem entropyPower_add_ge_case1_of_regular_twotime
     (X Y Z_X Z_Y Z : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]

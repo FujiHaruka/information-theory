@@ -93,22 +93,6 @@ private theorem integral_sq_mul_gaussianPDFReal_shift {t : ℝ} (ht : 0 < t) (y 
 /-- **Convolution-density second moment (GENUINELY CLOSED)**.
 For `f_t = pX ∗ g_t` (Gaussian kernel of variance `t`):
 `∫ x², (convDensityAdd pX g_t) ∂volume = (∫ x², pX) + (∫ pX) · t`.
-
-Genuine, wall-free proof via lintegral-Tonelli (2026-06-04): lift the nonneg
-integrand `K x y := x² · (pX y · g_t(x-y)) ≥ 0` to `ℝ≥0∞` (`ofReal_integral_eq_lintegral_ofReal`),
-swap with `lintegral_lintegral_swap` (no prod-integrability needed since the
-integrand is `ℝ≥0∞`-valued), collapse the inner integral via the genuine helper
-`integral_sq_mul_gaussianPDFReal_shift` (`∫ x, x²·g_t(x-y) = y²+t`), then integrate
-in `y` against `pX·(y²+t)` (integrable from `hpX_mom`+`hpX_int`). The Bochner LHS
-integrability is recovered from finiteness of the lintegral chain, and both sides
-are equal by injectivity of `ENNReal.ofReal` on nonnegatives. The shifted
-second-moment integrability `x ↦ x²·g_t(x-y)` is established by the substitution
-`x = u+y` and the three Gaussian moments `∫ g_t`, `∫ u·g_t`, `∫ u²·g_t`.
-
-`#print axioms convDensityAdd_second_moment = [propext, Classical.choice, Quot.sound]`
-(sorryAx-free, machine-checked 2026-06-04 with fresh olean). All `hpX_*` are pX
-regularity preconditions; the conclusion is a second-moment EQUALITY reconstructed
-from the convolution structure, not bundled into any hypothesis. NOT load-bearing.
 @audit:ok -/
 theorem convDensityAdd_second_moment
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)
@@ -264,9 +248,6 @@ For a bounded positive variance sequence `u`, the second moments
 `∫ x², f_n = ∫ x² pX + (∫ pX)·u n` are uniformly bounded by
 `V := (∫ x² pX) + (∫ pX)·B` where `B` is any upper bound of `u`. This is the
 `n`-uniform majorant that drives the (parked) negMulLog tail estimate.
-
-Genuine, sorry-free: combines `convDensityAdd_second_moment` (Tonelli, closed
-above) with `hu_bdd` (regularity) and `∫ pX ≥ 0`.
 @audit:ok -/
 theorem convDensityAdd_second_moment_unif_bdd
     {pX : ℝ → ℝ} (hpX_nn : ∀ x, 0 ≤ pX x) (hpX_meas : Measurable pX)

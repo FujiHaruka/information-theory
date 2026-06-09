@@ -404,23 +404,6 @@ theorem parallelOutputMixtureDensity_log_abs_le (P : ℝ) (hP : 0 ≤ P)
 
 `log ((μY.rnDeriv volume z).toReal)` is integrable against `μY` (= finiteness of the joint
 differential entropy integrand) for the correlated Gaussian-smoothed output `μY`.
-
-**GENUINELY CLOSED (2026-05-29, plan `parallel-gaussian-converse-5-closure`, 0 sorry).**
-Lift of the 1-D AWGN Phase-6 mixture log-density integrability to the coordinate product.
-The mixture-density representation
-`μY = volume.withDensity (fun z => ∫⁻ x, ∏ᵢ gaussianPDF (x i)(N i)(z i) ∂p)`
-(`parallelOutput_eq_withDensity_mixture`) is `p`-independent: Tonelli swaps the `∂p` average to
-the outside, and the noise fibre `Measure.pi (gaussianReal (x i)(N i))` equals
-`volume.withDensity (∏ᵢ gaussianPDF (x i)(N i)·)` via `pi_withDensity_fin` — so the
-correlated input imposes no obstruction (this overturns the earlier `wall:multivariate-mi`
-classification, which conflated "`μY.rnDeriv` does not factor into marginal rnDerivs" (TRUE)
-with "no mixture-density representation exists" (FALSE)). Closure: density representation
-(`parallelOutput_rnDeriv_ae_mixture`) + Gaussian upper bound
-(`parallelOutputMixtureDensity_le_sup`) + coordinate-box Chebyshev concentration
-(`parallel_concentration_box`) + Gaussian-tail lower bound
-(`parallelOutput_logDensity_lower_bound`) → quadratic envelope
-(`parallelOutputMixtureDensity_log_abs_le`) → finite-second-moment domination
-(`Integrable.mono'` against the per-coordinate output second moments).
 @audit:ok -/
 theorem parallelOutput_joint_logDensity_integrable (P : ℝ) (hP : 0 ≤ P)
     (hN : ∀ i, (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
@@ -785,16 +768,7 @@ against `p ⊗ₘ W` since each per-coordinate quadratic `(yᵢ − xᵢ)²` is 
 fibre second moment + `(xᵢ)²` power constraint). The genuine multivariate assembly
 (`Measure.integrable_compProd_iff` + per-coordinate `Measure.pi` marginal integrals) mirrors
 the 1-D template at `Fin n` scale.
-
-Wave 4 (2026-05-29): GENUINE, sorryAx-free (`#print axioms` = [propext, Classical.choice,
-Quot.sound]). The log-of-product integrand is rewritten via `ENNReal.toReal_prod` +
-`Real.log_prod` (each `gaussianPDFReal > 0`) + `log_gaussianPDFReal_eq` into the coordinate
-sum `∑ᵢ (c₀ᵢ + c₁ᵢ (z.2 i − z.1 i)²)`; `integrable_finsetSum` reduces to per-coordinate
-summands, and each `(z.2 i − z.1 i)²` is integrable against `p ⊗ₘ W` by
-`Measure.integrable_compProd_iff` — the fibre `Measure.pi` integral of the `i`-coordinate
-quadratic is the 1-D Gaussian second moment `N i` via `integrable_comp_eval` /
-`integral_comp_eval` + `integral_sq_sub_self_gaussianReal`. The proof never uses that `p` is
-Gaussian. @audit:ok -/
+@audit:ok -/
 theorem parallelFibre_logProxy_integrable_compProd (P : ℝ) (hP : 0 ≤ P)
     (hN : ∀ i, (N i : ℝ) ≠ 0) (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     Integrable (fun z : (Fin n → ℝ) × (Fin n → ℝ) =>
@@ -865,21 +839,7 @@ Genuine reduction to the sorryAx-free Phase 2 lift
 genuinely. (An earlier draft left this as a residual because the `Measure.pi`-product proxy
 density blew the unifier's `whnf` heartbeat budget on the large lift signature; Wave 4 fixed
 this by naming the proxy as an atomic `def`. See below.)
-
-Wave 4 (2026-05-29): GENUINE reduction. The body is now a self-contained assembly that
-threads all Phase-2-lift preconditions and calls
-`parallel_mutualInfoOfChannel_toReal_eq_diffEntropyPi_sub` (`@audit:ok`, sorryAx-free): the
-AC lemmas (Wave 1/2), the joint AC `p ⊗ₘ W ≪ p.prod q` (in-tree 手筋), the proxy density
-`g = piGaussProxy N` (a named `def` so the lift receives a single atomic `g`, with
-`hg_ae = parallelFibre_rnDeriv_ae_proxy` and `hg_meas = piGaussProxy_measurable`), the fibre
-log-proxy integrability (`parallelFibre_logProxy_integrable_compProd`, now `@audit:ok`), and
-the output log-density integrability (#5, pushed from `μY` to `p ⊗ₘ W` via
-`integrable_map_measure` on `snd`).
-
-The body itself contains **0 `sorry`** — the genuine MI-decomposition assembly. With the #5
-leaf `parallelOutput_joint_logDensity_integrable` now genuinely closed (`@audit:ok`,
-independent honesty audit 2026-05-29), `#print axioms` is sorryAx-free
-([propext, Classical.choice, Quot.sound]); this declaration is therefore proof-done. -/
+@audit:ok -/
 theorem parallel_mi_decomp_value (P : ℝ) (hP : 0 ≤ P) (hN : ∀ i, (N i : ℝ) ≠ 0)
     (hp : p ∈ parallelGaussianPowerConstraintSet P) :
     (mutualInfoOfChannel p (parallelGaussianChannel N h_meas h_parallel_meas)).toReal

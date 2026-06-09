@@ -527,10 +527,7 @@ theorem epi_of_csiszarLogRatioGap_zero_nonneg
 /-- **R-5-a — `csiszarLogRatioGap X Y Z_X Z_Y P` is differentiable on the
 interior `Set.Ioi 0 = interior (Set.Ici 0)`**, via R-2
 (`csiszarLogRatioGap_hasDerivAt`) + `HasDerivAt.differentiableAt`.
-
-Genuine: R-2 is `@audit:ok` (sorryAx-free), so this differentiability is
-transparently genuine. (The difference-version differentiability lemma was
-deleted with the dead de Bruijn difference subgraph.) -/
+@audit:ok -/
 theorem csiszarLogRatioGap_differentiableOn_interior
     {Ω : Type*} {mΩ : MeasurableSpace Ω}
     (X Y Z_X Z_Y : Ω → ℝ) (P : Measure Ω) [IsProbabilityMeasure P]
